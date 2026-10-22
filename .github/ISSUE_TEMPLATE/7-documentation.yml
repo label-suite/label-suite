@@ -2,6 +2,7 @@ name: "📚 Documentation（文件需求/修正）"
 description: "新增、補齊或修正文件（README / Spec / API Doc / SOP 等）"
 title: "[Docs] "
 labels: ["docs"]
+type: Task
 body:
   - type: markdown
     attributes:

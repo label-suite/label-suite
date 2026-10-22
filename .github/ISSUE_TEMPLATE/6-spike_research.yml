@@ -2,6 +2,7 @@ name: "🔍 研究/試作"
 description: "用於技術/需求不確定時的探索、PoC、估工前研究"
 title: "[Spike] "
 labels: ["spike"]
+type: Task
 
 body:
   - type: markdown

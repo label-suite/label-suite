@@ -31,7 +31,7 @@ Every change follows the same four steps:
 | New feature, workflow, page, or module | Feature | `feature` | `[Feature] <scope>: <中文描述>` |
 | Change to an existing feature's behavior or screen | Feature | `enhancement` | `[Enhancement] <scope>: <中文描述>` |
 | Work blocked by an unclear or missing requirement | Task | `task` | `[Task] <scope>: <中文描述>` |
-| UI or styling defect | Bug | `ui` | `[UI] <scope>: <中文描述>` |
+| UI or styling change or defect | Feature | `ui` | `[UI] <scope>: <中文描述>` |
 | Technical uncertainty blocking implementation | Task | `spike` | `[Spike] <scope>: <中文描述>` |
 | Missing or incorrect documentation | Task | `docs` | `[Docs] <scope>: <中文描述>` |
 | Usage question | Task | `question` | `[Question] <scope>: <中文描述>` |
