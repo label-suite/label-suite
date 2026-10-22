@@ -1,0 +1,3 @@
+docs: add a very long subject line that keeps going well past the seventy-two limit (#4)
+
+- **Add** rules

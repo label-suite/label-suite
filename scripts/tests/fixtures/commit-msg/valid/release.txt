@@ -1,0 +1,3 @@
+chore(release): label-suite 0.1.0
+
+- **Update** every version field and the CHANGELOG for the 0.1.0 release

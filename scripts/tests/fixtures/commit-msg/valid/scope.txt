@@ -1,0 +1,3 @@
+fix(api): reject empty labels (#12)
+
+- **Fix** validation so empty labels no longer reach the database
