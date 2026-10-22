@@ -1,0 +1,3 @@
+docs add rules (#4)
+
+- **Add** rules

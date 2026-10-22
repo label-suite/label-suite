@@ -1,0 +1,2 @@
+docs: add rules (#4)
+- **Add** rules with no blank line after the subject

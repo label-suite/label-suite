@@ -1,0 +1,6 @@
+docs: add notes (#2)
+# 請輸入 commit 訊息
+
+- **Add** notes for contributors
+# ------------------------ >8 ------------------------
+中文 diff 內容

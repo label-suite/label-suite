@@ -1,0 +1,5 @@
+docs: add shared agent rules (#4)
+
+- **Add** AGENTS.md so both agents read one rule source
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

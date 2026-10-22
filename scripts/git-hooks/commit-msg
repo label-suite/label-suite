@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# commit-msg hook — runs the shared checker on the pending message.
+# Enabled by scripts/setup.sh. It can be skipped with --no-verify, so the
+# CI commit-messages job is the real gate.
+set -uo pipefail
+
+GIT_DIR=$(git rev-parse --git-dir)
+[ -f "$GIT_DIR/MERGE_HEAD" ] && exit 0
+
+exec "$(git rev-parse --show-toplevel)/scripts/check-commit-msg.sh" "$1"
