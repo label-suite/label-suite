@@ -83,6 +83,7 @@ Full rules: [docs/commit-and-release.md](docs/commit-and-release.md). The essent
 
 ## Required Behaviors
 
+- After cloning, run `scripts/setup.sh` once. It enables the commit-msg hook, which checks every commit message against the rules in [Commits](#commits). The `commit-messages` CI job runs the same checker on every commit in a pull request.
 - Read the relevant files before changing them.
 - Ask the maintainer about any decision that is theirs to make; do not proceed on an assumed default.
 - If a tool call fails twice, report the exact error before trying again.

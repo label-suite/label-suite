@@ -16,3 +16,4 @@ The release process is described in [docs/commit-and-release.md](docs/commit-and
 ### Internal
 
 - Agent rules for Claude Code and Codex in `AGENTS.md` and `CLAUDE.md`
+- Commit message checker shared by the local commit-msg hook and the `commit-messages` CI job; enable the hook with `scripts/setup.sh`
