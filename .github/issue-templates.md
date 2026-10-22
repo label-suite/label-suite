@@ -1,7 +1,6 @@
 # GitHub Issue Templates (gh CLI)
 
-> Extracted from `.claude/rules/issue-reporting.md` on 2026-07-03 to keep the always-loaded rules file small.
-> Read the scenario → issue-type mapping and the security escalation rules THERE first; come here only to copy a template.
+> Read the issue-type mapping and the security-finding rule in [AGENTS.md § Issue types and titles](../AGENTS.md#issue-types-and-titles) first; come here only to copy a template.
 >
 > **Language (issue #380)**: bodies are written in Traditional Chinese; titles use an English structural head plus a Chinese description (`[Bug] <component>: <中文描述>`); labels stay in English.
 
