@@ -85,7 +85,7 @@
 | docs | 僅文件變更 |
 | refactor | 重構，不改變行為 |
 | test | 僅新增或更新測試 |
-| style | 格式、空白、lint 修正 |
 | chore | 工具、設定、相依套件更新 |
 | perf | 效能優化 |
 | ci | CI/CD pipeline 變更 |
+| build | 建置系統或打包設定變更 |

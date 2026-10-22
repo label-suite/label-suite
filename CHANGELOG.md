@@ -12,3 +12,7 @@ The release process is described in [docs/commit-and-release.md](docs/commit-and
 
 - Apache-2.0 `LICENSE`, `NOTICE`, and `CITATION.cff` citation metadata
 - Commit and release conventions in `docs/commit-and-release.md`
+
+### Internal
+
+- Agent rules for Claude Code and Codex in `AGENTS.md` and `CLAUDE.md`
