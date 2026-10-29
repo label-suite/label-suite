@@ -1,0 +1,8 @@
+{
+  "name": "label-suite-workspace",
+  "private": true,
+  "packageManager": "pnpm@10.18.3",
+  "devDependencies": {
+    "@fission-ai/openspec": "1.14.1"
+  }
+}
