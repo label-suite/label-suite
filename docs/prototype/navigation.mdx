@@ -2,7 +2,7 @@
 title: Prototype 導航地圖
 ---
 
-全局導航地圖 — 依照 `design/prototype/` 目前最新 HTML prototype 整理，供 prototype 開發與測試使用。
+全局導航地圖：依照 `design/prototype/` 目前最新 HTML prototype 整理，供 prototype 開發與測試使用。
 
 **格式說明**
 - **Incoming**：哪些頁面會連結到此頁（由誰進入）
@@ -25,8 +25,8 @@ title: Prototype 導航地圖
 
 | # | 頁面名稱 | 頁面路徑 | 模組 | 複雜度 | 狀態 |
 |---|----------|----------|------|--------|------|
-| 001 | 登入 — Email/Password | `account/login` | account | ★★☆☆☆ | ✅ 完成 |
-| 003 | 註冊 — Email/Password | `account/register` | account | ★★☆☆☆ | ✅ 完成 |
+| 001 | 登入（Email/Password） | `account/login` | account | ★★☆☆☆ | ✅ 完成 |
+| 003 | 註冊（Email/Password） | `account/register` | account | ★★☆☆☆ | ✅ 完成 |
 | 004a | 忘記密碼 | `account/forgot-password` | account | ★☆☆☆☆ | ✅ 完成 |
 | 004b | 重設密碼 | `account/reset-password` | account | ★★☆☆☆ | ✅ 完成 |
 | 005 | 個人資料設定 | `account/profile` | account | ★★☆☆☆ | ✅ 完成 |
@@ -152,11 +152,11 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 
 | 方向 | 觸發條件 | 目標 |
 |------|---------|------|
-| Incoming | `/index.html` 自動導向 | — |
-| Incoming | 登出（任意已登入頁面） | — |
-| Incoming | `/account/register` 點擊「返回登入」 | — |
-| Incoming | `/account/forgot-password` 點擊「返回登入」 | — |
-| Incoming | `/account/reset-password` 重設成功 / 前往登入 | — |
+| Incoming | `/index.html` 自動導向 | 本頁 |
+| Incoming | 登出（任意已登入頁面） | 本頁 |
+| Incoming | `/account/register` 點擊「返回登入」 | 本頁 |
+| Incoming | `/account/forgot-password` 點擊「返回登入」 | 本頁 |
+| Incoming | `/account/reset-password` 重設成功 / 前往登入 | 本頁 |
 | Outgoing | Email/Password 登入成功 | `/dashboard/dashboard` |
 | Outgoing | 點擊「前往註冊」 | `/account/register` |
 | Outgoing | 點擊「忘記密碼」 | `/account/forgot-password` |
@@ -166,7 +166,7 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 
 | 方向 | 觸發條件 | 目標 |
 |------|---------|------|
-| Incoming | `/account/login` 點擊「前往註冊」 | — |
+| Incoming | `/account/login` 點擊「前往註冊」 | 本頁 |
 | Outgoing | 送出成功 | `/dashboard/dashboard` |
 | Outgoing | 點擊「返回登入」 | `/account/login` |
 | Inline | 重複 Email / 表單驗證錯誤 | 停留，顯示錯誤訊息 |
@@ -175,8 +175,8 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 
 | 方向 | 觸發條件 | 目標 |
 |------|---------|------|
-| Incoming | `/account/login` 點擊「忘記密碼」 | — |
-| Incoming | `/account/reset-password` token 無效 / 重新申請 | — |
+| Incoming | `/account/login` 點擊「忘記密碼」 | 本頁 |
+| Incoming | `/account/reset-password` token 無效 / 重新申請 | 本頁 |
 | Outgoing | 點擊「返回登入」 | `/account/login` |
 | Inline | 送出 Email（無論是否存在） | 停留，顯示通用提示 |
 
@@ -184,7 +184,7 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 
 | 方向 | 觸發條件 | 目標 |
 |------|---------|------|
-| Incoming | 使用者信箱中的重設連結（`?token=<UUID>`） | — |
+| Incoming | 使用者信箱中的重設連結（`?token=<UUID>`） | 本頁 |
 | Outgoing | 重設成功後點擊「前往登入」 | `/account/login` |
 | Outgoing | token 無效 / 已過期時點擊「重新申請」 | `/account/forgot-password` |
 | Outgoing | 點擊「返回登入」 | `/account/login` |
@@ -194,7 +194,7 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 
 | 方向 | 觸發條件 | 目標 |
 |------|---------|------|
-| Incoming | Shared sidebar / 使用者 chip 點擊個人設定 | — |
+| Incoming | Shared sidebar / 使用者 chip 點擊個人設定 | 本頁 |
 | Outgoing | Navbar Logo / 側欄 Dashboard | `/dashboard/dashboard` |
 | Outgoing | 側欄任務管理 | `/task-management/task-list` |
 | Outgoing | 側欄標記作業 | `/annotation/annotation-list` |
@@ -211,8 +211,8 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 
 | 方向 | 觸發條件 | 目標 |
 |------|---------|------|
-| Incoming | Shared sidebar → 系統管理 | — |
-| Incoming | `/admin/role-settings` 點擊「使用者管理」tab | — |
+| Incoming | Shared sidebar → 系統管理 | 本頁 |
+| Incoming | `/admin/role-settings` 點擊「使用者管理」tab | 本頁 |
 | Outgoing | 點擊「角色設定」tab | `/admin/role-settings` |
 | Outgoing | Shared sidebar → Dashboard | `/dashboard/dashboard` |
 | Outgoing | Shared sidebar → 任務管理 | `/task-management/task-list` |
@@ -226,7 +226,7 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 
 | 方向 | 觸發條件 | 目標 |
 |------|---------|------|
-| Incoming | `/admin/user-management` 點擊「角色設定」tab | — |
+| Incoming | `/admin/user-management` 點擊「角色設定」tab | 本頁 |
 | Outgoing | 點擊「使用者管理」tab | `/admin/user-management` |
 | Outgoing | Shared sidebar → Dashboard | `/dashboard/dashboard` |
 | Outgoing | Shared sidebar → 任務管理 | `/task-management/task-list` |
@@ -244,9 +244,9 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 
 | 方向 | 觸發條件 | 目標 |
 |------|---------|------|
-| Incoming | `/account/login` 登入成功 | — |
-| Incoming | `/account/register` 註冊成功 | — |
-| Incoming | Shared sidebar / Logo | — |
+| Incoming | `/account/login` 登入成功 | 本頁 |
+| Incoming | `/account/register` 註冊成功 | 本頁 |
+| Incoming | Shared sidebar / Logo | 本頁 |
 | Outgoing | Shared sidebar → 任務管理 | `/task-management/task-list` |
 | Outgoing | Shared sidebar → 標記作業 | `/annotation/annotation-list` |
 | Outgoing | Shared sidebar → 資料集分析 | `/dataset/dataset-analysis-list` |
@@ -265,10 +265,10 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 
 | 方向 | 觸發條件 | 目標 |
 |------|---------|------|
-| Incoming | Shared sidebar → 任務管理 | — |
-| Incoming | `/task-management/task-detail` 點擊任務管理麵包屑 | — |
-| Incoming | `/task-management/task-new` 取消 / 離開 | — |
-| Incoming | `/task-management/task-detail` annotator unauthorized redirect | — |
+| Incoming | Shared sidebar → 任務管理 | 本頁 |
+| Incoming | `/task-management/task-detail` 點擊任務管理麵包屑 | 本頁 |
+| Incoming | `/task-management/task-new` 取消 / 離開 | 本頁 |
+| Incoming | `/task-management/task-detail` annotator unauthorized redirect | 本頁 |
 | Outgoing | 點擊任務 | `/task-management/task-detail` |
 | Outgoing | 點擊「新增任務」 | `/task-management/task-new` |
 | Outgoing | Shared sidebar → Dashboard | `/dashboard/dashboard` |
@@ -285,8 +285,8 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 
 | 方向 | 觸發條件 | 目標 |
 |------|---------|------|
-| Incoming | `/task-management/task-list` 點擊「新增任務」 | — |
-| Incoming | `/dashboard/dashboard` 空狀態 CTA | — |
+| Incoming | `/task-management/task-list` 點擊「新增任務」 | 本頁 |
+| Incoming | `/dashboard/dashboard` 空狀態 CTA | 本頁 |
 | Outgoing | Step 3 點擊「建立任務」成功 | `/task-management/task-detail?task_id=<id>` |
 | Outgoing | 任一步驟點擊「取消」或確認離開 | `/task-management/task-list` |
 | Outgoing | Shared sidebar → Dashboard | `/dashboard/dashboard` |
@@ -303,9 +303,9 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 
 | 方向 | 觸發條件 | 目標 |
 |------|---------|------|
-| Incoming | `/task-management/task-list` 點擊任務 | — |
-| Incoming | `/task-management/task-new` 建立成功 | — |
-| Incoming | `/dataset/dataset-analysis-detail` 空狀態 / 前往任務詳情 | — |
+| Incoming | `/task-management/task-list` 點擊任務 | 本頁 |
+| Incoming | `/task-management/task-new` 建立成功 | 本頁 |
+| Incoming | `/dataset/dataset-analysis-detail` 空狀態 / 前往任務詳情 | 本頁 |
 | Outgoing | 任務管理麵包屑 | `/task-management/task-list` |
 | Outgoing | Shared sidebar → Dashboard | `/dashboard/dashboard` |
 | Outgoing | Shared sidebar → 標記作業 | `/annotation/annotation-list` |
@@ -324,8 +324,8 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 
 | 方向 | 觸發條件 | 目標 |
 |------|---------|------|
-| Incoming | Shared sidebar → 標記作業 | — |
-| Incoming | `/annotation/annotation-workspace` 完成 / 返回清單 | — |
+| Incoming | Shared sidebar → 標記作業 | 本頁 |
+| Incoming | `/annotation/annotation-workspace` 完成 / 返回清單 | 本頁 |
 | Outgoing | 開始 / 繼續標記 | `/annotation/annotation-workspace?task_id=<id>&sample_id=<id>&role=annotator&run_type=<type>&task_type=<type>` |
 | Outgoing | Reviewer 審查任務 | `/annotation/annotation-workspace?task_id=<id>&sample_id=<id>&role=reviewer&run_type=<type>&task_type=<type>` |
 | Outgoing | Shared sidebar → Dashboard | `/dashboard/dashboard` |
@@ -342,7 +342,7 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 
 | 方向 | 觸發條件 | 目標 |
 |------|---------|------|
-| Incoming | `/annotation/annotation-list` 開始 / 繼續 / 審查 | — |
+| Incoming | `/annotation/annotation-list` 開始 / 繼續 / 審查 | 本頁 |
 | Outgoing | 完成批次 / 返回清單 | `/annotation/annotation-list?task_type=<type>` |
 | Outgoing | Shared sidebar → Dashboard | `/dashboard/dashboard` |
 | Outgoing | Shared sidebar → 任務管理 | `/task-management/task-list` |
@@ -361,8 +361,8 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 
 | 方向 | 觸發條件 | 目標 |
 |------|---------|------|
-| Incoming | Shared sidebar → 資料集分析 | — |
-| Incoming | Dashboard 資料集分析快捷 | — |
+| Incoming | Shared sidebar → 資料集分析 | 本頁 |
+| Incoming | Dashboard 資料集分析快捷 | 本頁 |
 | Outgoing | 點擊任務分析列 | `/dataset/dataset-analysis-detail?task_id=<id>&tab=stats` |
 | Outgoing | Shared sidebar → Dashboard | `/dashboard/dashboard` |
 | Outgoing | Shared sidebar → 任務管理 | `/task-management/task-list` |
@@ -378,8 +378,8 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 
 | 方向 | 觸發條件 | 目標 |
 |------|---------|------|
-| Incoming | `/dataset/dataset-analysis-list` 點擊任務分析列 | — |
-| Incoming | 直接以 `?task_id=<id>&tab=stats` 或 `?task_id=<id>&tab=quality` 進入 | — |
+| Incoming | `/dataset/dataset-analysis-list` 點擊任務分析列 | 本頁 |
+| Incoming | 直接以 `?task_id=<id>&tab=stats` 或 `?task_id=<id>&tab=quality` 進入 | 本頁 |
 | Outgoing | 資料集分析麵包屑 | `/dataset/dataset-analysis-list` |
 | Outgoing | 空狀態 / 前往任務詳情 | `/task-management/task-detail?task_id=<id>` |
 | Outgoing | Shared sidebar → Dashboard | `/dashboard/dashboard` |
