@@ -9,8 +9,14 @@ context: |
   Every requirement in a delta must trace to a docs/ spec (cite its FR / AC ID). When
   a delta and docs/ disagree, docs/ wins: stop and raise the conflict as an open question
   for the maintainer instead of choosing one side.
-  Language: write artifacts in Traditional Chinese; keep OpenSpec structural headings
-  and the SHALL / MUST keywords in English (see the Language Rules in AGENTS.md).
+  AGENTS.md is the single rule source; this is only a pointer to the parts OpenSpec
+  work touches most. Read the named section before acting on it.
+  - Issue first: no change starts without an open issue that lists the work
+    (AGENTS.md "Hard Rules" and "Development Workflow").
+  - Branches and commits: never commit to main; commit messages follow AGENTS.md
+    "Commits", with the full rules in docs/commit-and-release.md.
+  - Language: artifacts are in Traditional Chinese; OpenSpec structural headings and
+    the SHALL / MUST keywords stay in English (AGENTS.md "Language Rules").
   Run the CLI as `npx openspec`.
 
 # Per-artifact rules (optional)
