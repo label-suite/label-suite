@@ -4,9 +4,12 @@
   "packageManager": "pnpm@10.18.3",
   "scripts": {
     "check:specs": "node scripts/check-specs.mjs docs",
-    "test:scripts": "node --test scripts/tests/check-specs.test.mjs"
+    "test:scripts": "node --test scripts/tests/",
+    "docs:serve": "notecraftapp serve docs --port 4330",
+    "prototype": "node scripts/serve-prototype.mjs"
   },
   "devDependencies": {
-    "@fission-ai/openspec": "1.14.1"
+    "@fission-ai/openspec": "1.14.1",
+    "notecraftapp": "1.13.0"
   }
 }
