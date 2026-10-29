@@ -600,15 +600,6 @@
           </select>
           <p class="form-hint" id="addRoleHint">任務角色（標記員、審核員等）在任務詳情頁個別指派</p>
         </div>
-        <div class="form-group">
-          <label class="form-label" for="addStatus">
-            <span id="addStatusLabel">帳號狀態</span><span class="required-indicator" aria-hidden="true">*</span>
-          </label>
-          <select id="addStatus" class="form-select" required>
-            <option value="active" id="addStatusActive">啟用</option>
-            <option value="disabled" id="addStatusDisabled">停用</option>
-          </select>
-        </div>
         <div class="modal-footer">
           <button type="button" class="btn-ghost" onclick="closeModal('addModal')" id="addCancelBtn">取消</button>
           <button type="button" class="btn-primary" onclick="submitAdd()" id="addSaveBtn">
@@ -658,15 +649,6 @@
           <select id="editRole" class="form-select" required>
             <option value="user">user</option>
             <option value="super_admin">super_admin</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="editStatus">
-            <span id="editStatusLabel">帳號狀態</span><span class="required-indicator" aria-hidden="true">*</span>
-          </label>
-          <select id="editStatus" class="form-select" required>
-            <option value="active"   id="editStatusActive">啟用</option>
-            <option value="disabled" id="editStatusDisabled">停用</option>
           </select>
         </div>
         <div class="modal-footer">
@@ -807,18 +789,12 @@
         addEmailHint:          '建立帳號後將寄送設定密碼信至此信箱',
         addRoleLabel:          '系統角色',
         addRoleHint:           '任務角色（標記員、審核員等）在任務詳情頁個別指派',
-        addStatusLabel:        '帳號狀態',
-        addStatusActive:       '啟用',
-        addStatusDisabled:     '停用',
         addCancelBtn:          '取消',
         addSaveBtnLabel:       '儲存',
         editModalTitle:        '編輯使用者',
         editNameLabel:         '姓名',
         editEmailLabel:        'Email',
         editRoleLabel:         '系統角色',
-        editStatusLabel:       '帳號狀態',
-        editStatusActive:      '啟用',
-        editStatusDisabled:    '停用',
         editCancelBtn:         '取消',
         editSaveBtnLabel:      '儲存',
         disableWarningText:    '停用帳號後，該使用者將立即無法登入，所有活躍 session/token 也會被撤銷。',
@@ -840,6 +816,11 @@
         toastReEnabled:        '帳號已重新啟用',
         toastDuplicateEmail:   'Email 已存在',
         toastMissingRequired:  '請填寫姓名與有效 Email',
+        resendBtnText:         '重發設定密碼信',
+        toastResent:           '設定密碼信已重新寄出，舊連結已作廢',
+        toastMailFailed:       '設定密碼信寄送失敗',
+        toastMailFailedNotCreated: '帳號未建立，請稍後再試',
+        toastMailFailedRetry:  '請稍後再試',
         auditDrawerTitle:      '異動紀錄',
         auditDrawerCloseBtn:   '關閉',
         auditDrawerEmptyText:  '尚無異動紀錄',
@@ -881,18 +862,12 @@
         addEmailHint:          'A password setup email will be sent to this address',
         addRoleLabel:          'System Role',
         addRoleHint:           'Task roles (annotator, reviewer, etc.) are assigned in the task detail page',
-        addStatusLabel:        'Account Status',
-        addStatusActive:       'Active',
-        addStatusDisabled:     'Disabled',
         addCancelBtn:          'Cancel',
         addSaveBtnLabel:       'Save',
         editModalTitle:        'Edit User',
         editNameLabel:         'Name',
         editEmailLabel:        'Email',
         editRoleLabel:         'System Role',
-        editStatusLabel:       'Account Status',
-        editStatusActive:      'Active',
-        editStatusDisabled:    'Disabled',
         editCancelBtn:         'Cancel',
         editSaveBtnLabel:      'Save',
         disableWarningText:    'After disabling, the user will immediately lose access and all active sessions/tokens will be revoked.',
@@ -914,6 +889,11 @@
         toastReEnabled:        'Account re-enabled',
         toastDuplicateEmail:   'Email already exists',
         toastMissingRequired:  'Enter a name and valid email',
+        resendBtnText:         'Resend invite',
+        toastResent:           'Set-password email resent; the old link no longer works',
+        toastMailFailed:       'Set-password email could not be sent',
+        toastMailFailedNotCreated: 'The account was not created. Try again later.',
+        toastMailFailedRetry:  'Try again later.',
         auditDrawerTitle:      'Change History',
         auditDrawerCloseBtn:   'Close',
         auditDrawerEmptyText:  'No changes recorded',
@@ -981,10 +961,9 @@
         'colName','colEmail','colRole','colStatus','colCreatedAt','colActions',
         'paginationInfo','emptyTitle','emptyDesc','clearFiltersBtn',
         'addModalTitle','addNameLabel','addEmailLabel','addEmailHint',
-        'addRoleLabel','addRoleHint','addStatusLabel','addStatusActive','addStatusDisabled',
+        'addRoleLabel','addRoleHint',
         'addCancelBtn','addSaveBtnLabel',
         'editModalTitle','editNameLabel','editEmailLabel','editRoleLabel',
-        'editStatusLabel','editStatusActive','editStatusDisabled',
         'editCancelBtn','editSaveBtnLabel',
         'disableModalTitle','disableConfirmPrefix','disableConfirmSuffix','disableWarningText','disableCancelBtn','disableConfirmBtnLabel',
       ];
@@ -1045,11 +1024,11 @@
 
     /* ── Sample data ────────────────────────────────────────────── */
     const sampleUsers = [
-      { id: 'u-001', name: 'Iris Tsai',  email: 'iris@labelsuite.io',     role: 'super_admin', status: 'active',   createdAt: '2026-01-05', isSeeder: true },
-      { id: 'u-002', name: 'Alex Wang',   email: 'alex.wang@labelsuite.io', role: 'user',        status: 'active',   createdAt: '2026-01-18' },
-      { id: 'u-003', name: 'Olivia Lin',  email: 'olivia.lin@labelsuite.io',role: 'user',        status: 'active',   createdAt: '2026-02-03' },
-      { id: 'u-004', name: 'Jason Huang', email: 'jason.h@labelsuite.io',   role: 'user',        status: 'disabled', createdAt: '2026-02-20' },
-      { id: 'u-005', name: 'Rachel Su',   email: 'rachel.su@labelsuite.io', role: 'user',        status: 'active',   createdAt: '2026-03-01' },
+      { id: 'u-001', name: 'Iris Tsai',  email: 'iris@labelsuite.io',     role: 'super_admin', status: 'active',   createdAt: '2026-01-05', passwordSet: true, isSeeder: true },
+      { id: 'u-002', name: 'Alex Wang',   email: 'alex.wang@labelsuite.io', role: 'user',        status: 'active',   createdAt: '2026-01-18', passwordSet: true },
+      { id: 'u-003', name: 'Olivia Lin',  email: 'olivia.lin@labelsuite.io',role: 'user',        status: 'active',   createdAt: '2026-02-03', passwordSet: true },
+      { id: 'u-004', name: 'Jason Huang', email: 'jason.h@labelsuite.io',   role: 'user',        status: 'disabled', createdAt: '2026-02-20', passwordSet: true },
+      { id: 'u-005', name: 'Rachel Su',   email: 'rachel.su@labelsuite.io', role: 'user',        status: 'active',   createdAt: '2026-03-01', passwordSet: false },
     ];
 
     /* ── Sample audit log data ─────────────────────────────────── */
@@ -1074,6 +1053,12 @@
         { actorName: 'System', actionType: 'create', diff: 'system_role: — → user\nstatus: — → active', createdAt: '2026-03-01 11:20' },
       ],
     };
+
+    /* Prototype-only stand-in for a mail outage: addresses on this domain fail to send */
+    const MAIL_FAILURE_DOMAIN = '@mail-fail.test';
+    function simulateMailFailure(email) {
+      return email.endsWith(MAIL_FAILURE_DOMAIN);
+    }
 
     function isValidEmail(value) {
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -1211,6 +1196,19 @@
         logBtn.appendChild(logSvg);
         actions.appendChild(logBtn);
 
+        // FR-006d: only accounts that have not set a password can be re-invited
+        if (!user.passwordSet) {
+          const resendBtn = document.createElement('button');
+          resendBtn.className = 'mini-btn';
+          resendBtn.type = 'button';
+          resendBtn.addEventListener('click', () => handleResendInvite(user.id));
+          const resendText = document.createElement('span');
+          resendText.className = 'resend-btn-text';
+          resendText.textContent = t.resendBtnText;
+          resendBtn.appendChild(resendText);
+          actions.appendChild(resendBtn);
+        }
+
         // Destructive action stays at the far right (MASTER dense-row mapping)
         if (user.status === 'active') {
           const disableBtn = document.createElement('button');
@@ -1320,7 +1318,6 @@
       document.getElementById('addName').value  = '';
       document.getElementById('addEmail').value = '';
       document.getElementById('addRole').value  = 'user';
-      document.getElementById('addStatus').value = 'active';
       openModal('addModal');
     }
 
@@ -1330,7 +1327,6 @@
       document.getElementById('editName').value   = u.name;
       document.getElementById('editEmail').value  = u.email;
       document.getElementById('editRole').value   = u.role;
-      document.getElementById('editStatus').value = u.status;
       openModal('editModal');
     }
 
@@ -1373,7 +1369,6 @@
       const name = document.getElementById('addName').value.trim();
       const email = document.getElementById('addEmail').value.trim().toLowerCase();
       const role = document.getElementById('addRole').value;
-      const status = document.getElementById('addStatus').value;
 
       if (!name || !isValidEmail(email)) {
         showToast('error', t.toastMissingRequired, '');
@@ -1383,13 +1378,20 @@
         showToast('error', t.toastDuplicateEmail, email);
         return;
       }
+      // FR-006b: a failed invitation email creates no account; the form stays open for a retry
+      if (simulateMailFailure(email)) {
+        showToast('error', t.toastMailFailed, t.toastMailFailedNotCreated);
+        return;
+      }
 
+      // New accounts are always active (006-Q2/Q3); status changes only through the row actions
       sampleUsers.push({
         id: 'u-' + Date.now(),
         name,
         email,
         role,
-        status,
+        status: 'active',
+        passwordSet: false,
         createdAt: new Date().toISOString().slice(0, 10),
       });
       currentPage = 1;
@@ -1417,7 +1419,6 @@
       user.name = name;
       user.email = email;
       user.role = document.getElementById('editRole').value;
-      user.status = document.getElementById('editStatus').value;
       renderUsers();
       closeModal('editModal');
       showToast('success', t.toastUpdated, '');
@@ -1434,6 +1435,18 @@
       closeModal('disableModal');
       showToast('success', t.toastDisabled, t.toastSessionRevoked);
       window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_user_disable_succeeded', { lang });
+    }
+
+    function handleResendInvite(userId) {
+      const t = i18n[lang];
+      const user = sampleUsers.find(item => item.id === userId);
+      if (!user || user.passwordSet) return;
+      if (simulateMailFailure(user.email)) {
+        showToast('error', t.toastMailFailed, t.toastMailFailedRetry);
+        return;
+      }
+      // FR-006c: a new link replaces the previous one
+      showToast('success', t.toastResent, user.email);
     }
 
     function handleReEnable(userId) {
