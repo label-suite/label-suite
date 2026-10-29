@@ -15,7 +15,7 @@ Co-Authored-By: <name> <email>
 
 - **type**: `feat` · `fix` · `docs` · `refactor` · `test` · `chore` · `ci` · `perf` · `build`
 - **Subject**: imperative mood ("add", not "added"), no trailing period. End with `(#N)` when the commit resolves or advances an issue.
-- **Body**: always present. Each bullet starts with a bold verb — `**Add**`, `**Fix**`, `**Remove**`, `**Update**`, `**Refactor**` — and says why the change is needed, not only what changed.
+- **Body**: always present. Each bullet starts with a bold verb (`**Add**`, `**Fix**`, `**Remove**`, `**Update**`, `**Refactor**`) and says why the change is needed, not only what changed.
 - **One purpose per commit.** When several changes must land together (for example, splitting them would leave an unbuildable intermediate state), say so in the body.
 - **AI assistance**: commits produced with an AI coding assistant carry a `Co-Authored-By` trailer naming the model. No other AI trailers are added.
 
