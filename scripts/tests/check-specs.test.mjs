@@ -1,4 +1,4 @@
-// Regression tests for scripts/check-specs.mjs. Run: node --test scripts/tests/
+// Regression tests for scripts/check-specs.mjs. Run: node --test scripts/tests/*.test.mjs
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -17,10 +17,13 @@ function docs(files) {
   return root;
 }
 
-const spec = (body = {}, extra = '') =>
-  SPEC_CHAPTERS.map((c) => `## ${c}\n\n${body[c] ?? ''}\n`).join('\n') + extra;
+const FRONTMATTER = '---\ntitle: 006 甲\ndescription: 甲。\ntags: [spec]\ncreatedAt: "2026-10-29"\nupdatedAt: "2026-10-29"\n---\n\n';
 
-const prd = (body = {}) => PRD_CHAPTERS.map((c, i) => `## ${i + 1}. ${c}\n\n${body[c] ?? ''}\n`).join('\n');
+const spec = (body = {}, extra = '') =>
+  FRONTMATTER + SPEC_CHAPTERS.map((c) => `## ${c}\n\n${body[c] ?? ''}\n`).join('\n') + extra;
+
+const prd = (body = {}) =>
+  FRONTMATTER + PRD_CHAPTERS.map((c, i) => `## ${i + 1}. ${c}\n\n${body[c] ?? ''}\n`).join('\n');
 
 const errorsFor = (files) => checkDocs(docs(files));
 
@@ -69,6 +72,27 @@ test('a reference to an undefined term is reported', () => {
 test('terms inside code fences and MDX comments are ignored', () => {
   const body = '```mdx\n:ref[甲]{id="term.甲"}\n```\n{/* :ref[乙]{id="term.乙"} */}';
   assert.deepEqual(errorsFor({ 'specs/006-x.mdx': spec({ 目標: body }) }), []);
+});
+
+test('an id with a space or an empty segment is reported, a CJK id passes', () => {
+  const def = (id) => `::::define{id="${id}" label="甲"}\n甲。\n::::`;
+  const ok = errorsFor({ '00-prd.mdx': prd({ 術語表: def('term.Seeder管理員_v-2') }) });
+  assert.deepEqual(ok, []);
+  const errors = errorsFor({
+    '00-prd.mdx': prd({ 術語表: `${def('term.Seeder 管理員')}\n\n${def('term..甲')}` }),
+    'specs/006-x.mdx': spec({ 目標: ':ref[甲]{id="term.Seeder 管理員"}' }),
+  }).join('\n');
+  assert.match(errors, /00-prd\.mdx:\d+: id "term\.Seeder 管理員" may only use/);
+  assert.match(errors, /00-prd\.mdx:\d+: id "term\.\.甲" may only use/);
+  assert.match(errors, /006-x\.mdx:\d+: id "term\.Seeder 管理員" may only use/);
+});
+
+test('ids outside the term namespace are format-checked but not resolved', () => {
+  assert.deepEqual(errorsFor({ 'specs/006-x.mdx': spec({ 目標: ':ref[甲]{id="flow.login"}' }) }), []);
+  assert.match(
+    errorsFor({ 'specs/006-x.mdx': spec({ 目標: ':ref[甲]{id="flow login"}' }) }).join('\n'),
+    /id "flow login" may only use/,
+  );
 });
 
 test('a term defined twice is reported', () => {
@@ -143,4 +167,36 @@ test('a legacy list without the mapping chapter is reported', () => {
     errorsFor({ 'specs/006-x.mdx': spec(), 'specs/legacy/006-x.ids': legacy }).join('\n'),
     /chapter "## 附錄：舊條文對照" is missing/,
   );
+});
+
+test('a spec or PRD without frontmatter is reported', () => {
+  const errors = errorsFor({
+    '00-prd.mdx': prd().replace(FRONTMATTER, ''),
+    'specs/006-x.mdx': spec().replace(FRONTMATTER, ''),
+  });
+  assert.equal(errors.length, 2);
+  for (const e of errors) assert.match(e, /:1: frontmatter is missing/);
+});
+
+test('a missing frontmatter field is reported', () => {
+  const errors = errorsFor({ 'specs/006-x.mdx': spec().replace('description: 甲。\n', '') });
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /frontmatter field "description" is missing/);
+});
+
+test('an unquoted or malformed date is reported with its line', () => {
+  const text = spec().replace('createdAt: "2026-10-29"', 'createdAt: 2026-10-29').replace('updatedAt: "2026-10-29"', 'updatedAt: "2026/10/29"');
+  const errors = errorsFor({ 'specs/006-x.mdx': text });
+  assert.equal(errors.length, 2);
+  assert.match(errors[0], /:5: createdAt must be a quoted "YYYY-MM-DD" string, got 2026-10-29/);
+  assert.match(errors[1], /:6: updatedAt must be a quoted "YYYY-MM-DD" string, got "2026\/10\/29"/);
+});
+
+test('single-quoted dates pass', () => {
+  const text = spec().replace('createdAt: "2026-10-29"', "createdAt: '2026-10-29'");
+  assert.deepEqual(errorsFor({ 'specs/006-x.mdx': text }), []);
+});
+
+test('files that are not the PRD or a spec need no frontmatter', () => {
+  assert.deepEqual(errorsFor({ 'prototype/navigation.mdx': '## 甲\n', 'specs/00-writing-order.mdx': '## 進度\n' }), []);
 });
