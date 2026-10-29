@@ -1,0 +1,52 @@
+<!-- Relation Extraction Statistics -->
+<!-- FR-009K: entity-type distribution is not duplicated here; it belongs to entity_recognition's own stats block. -->
+<section class="panel" aria-labelledby="statsRelRelDistTitle">
+  <div class="panel-head-row">
+    <div>
+      <h2 class="panel-title" id="statsRelRelDistTitle">關係類型分佈</h2>
+      <p class="panel-subtitle" id="statsRelRelDistDesc">各關係類型的三元組標記次數</p>
+    </div>
+  </div>
+  <div class="stats-hbar-chart" style="margin-top:var(--space-sm)">
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label" data-i18n="relationTypeLabels.treats">treats（治療）</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:72%"></div></div>
+      <div class="stats-hbar-value">38% · 199</div>
+    </div>
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label" data-i18n="relationTypeLabels.causes">causes（導致）</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:46%;opacity:.85"></div></div>
+      <div class="stats-hbar-value">24% · 126</div>
+    </div>
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label" data-i18n="relationTypeLabels.inhibits">inhibits（抑制）</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:34%;opacity:.7"></div></div>
+      <div class="stats-hbar-value">18% · 94</div>
+    </div>
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label" data-i18n="relationTypeLabels.binds">binds（結合）</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:23%;opacity:.6"></div></div>
+      <div class="stats-hbar-value">12% · 63</div>
+    </div>
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label" data-i18n="relationTypeLabels.regulates">regulates（調控）</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:15%;opacity:.5"></div></div>
+      <div class="stats-hbar-value">8% · 42</div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="statsRelTripleTitle">
+  <h2 class="panel-title" id="statsRelTripleTitle">Triple 統計摘要</h2>
+  <p class="panel-subtitle" id="statsRelTripleDesc">三元組（Subject, Relation, Object）層級的聚合統計</p>
+  <div class="stats-metric-grid" style="margin-top:var(--space-md)">
+    <div class="metric"><span id="statsRelTotalTripleLabel">Triple 總數</span><strong>524</strong><div class="metric-desc" id="statsRelTotalTripleDesc">所有標記員提交的 triple 總計</div></div>
+    <div class="metric"><span id="statsRelUniqueTripleLabel">唯一 Triple 數</span><strong>312</strong><div class="metric-desc" id="statsRelUniqueTripleDesc">去重後的 triple 集合大小</div></div>
+    <div class="metric"><span id="statsRelAvgTripleLabel">平均 / 句</span><strong>4.1</strong><div class="metric-desc" id="statsRelAvgTripleDesc">每個樣本平均標記的 triple 數</div></div>
+  </div>
+  <div class="stats-metric-grid" style="margin-top:12px">
+    <div class="metric"><span id="statsRelAnnotated5xLabel">≥ 5 次標記 Triple</span><strong>178</strong><div class="metric-desc" id="statsRelAnnotated5xDesc">達到一致性比較門檻的 triple 數</div></div>
+    <div class="metric"><span id="statsRelAvgAnnotatorsLabel">平均標記員數 / Triple</span><strong>3.2</strong><div class="metric-desc" id="statsRelAvgAnnotatorsDesc">每個唯一 triple 的平均覆蓋標記員數</div></div>
+    <div class="metric"><span id="statsRelMaxTripleLabel">單句最多 Triple</span><strong>12</strong><div class="metric-desc" id="statsRelMaxTripleDesc">單一樣本出現最多 triple 的數量</div></div>
+  </div>
+</section>

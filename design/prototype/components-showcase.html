@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Label Suite — Components Showcase</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/tokens.css" />
+  <link rel="stylesheet" href="pages/shared/date-range-picker.css" />
+  <style>
+    /* Living styleguide (issue singyichen/label-suite#183). Tokens come exclusively from
+       assets/tokens.css — this block styles the showcase chrome only. */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-surface);
+      color: var(--color-ink);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .showcase-header {
+      position: sticky;
+      top: 0;
+      z-index: var(--z-sticky);
+      height: 64px;
+      background: var(--color-white);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+    }
+
+    .showcase-title {
+      font-family: var(--font-serif-display);
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .showcase-note { font-size: 12px; color: var(--color-ink-muted); }
+
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 6px 12px;
+      background: var(--color-white);
+      color: var(--color-ink);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color var(--dur-fast), background var(--dur-fast);
+    }
+    .theme-toggle:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .theme-toggle:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
+    main { max-width: 960px; margin: 0 auto; padding: 32px 24px 96px; }
+
+    main > section { margin-bottom: 40px; }
+
+    .section-heading {
+      font-family: var(--font-serif-display);
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .section-note { font-size: 13px; color: var(--color-text-soft); margin-bottom: 16px; }
+
+    .subgroup-heading {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--color-ink-muted);
+      margin: 16px 0 8px;
+    }
+
+    .token-grid {
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 8px 16px;
+    }
+
+    .token-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      font-size: 13px;
+    }
+    .token-row + .token-row { border-top: 1px solid var(--color-border-muted, var(--color-border)); }
+
+    .token-name, .token-value { font-family: var(--font-mono, monospace); }
+    .token-name { flex-shrink: 0; min-width: 240px; }
+    .token-value { color: var(--color-ink-muted); overflow-wrap: anywhere; }
+
+    .swatch {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+    }
+    .swatch--radius { background: var(--color-primary-soft-bg); border-color: var(--color-primary); }
+    .swatch--plain { border-style: dashed; }
+
+    /* ---- Components section chrome ---- */
+    .component-card {
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+    .component-card h3 { font-size: 16px; font-weight: 600; }
+    .component-note { font-size: 12px; color: var(--color-ink-muted); margin: 2px 0 16px; }
+    .component-demo { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+    .component-demo + .component-demo { margin-top: 16px; }
+    .component-demo--stack { flex-direction: column; align-items: stretch; max-width: 360px; }
+    .component-demo--stack .input { width: 100%; }
+    /* Element-level resets: lower specificity than the canonical .btn-* /
+       .input class rules below, so every canonical declaration wins. */
+    button { font-family: inherit; font-size: 14px; border: none; background: transparent; }
+    input { font-family: inherit; }
+    .toggle-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; max-width: 360px; }
+    .toggle-info { display: flex; flex-direction: column; }
+    .toggle-label-text { font-size: 14px; font-weight: 500; }
+    .toggle-desc { font-size: 12px; color: var(--color-ink-muted); }
+
+    /* ==================================================================
+       MASTER.md canonical component CSS — copied verbatim from
+       §Buttons, §Inputs, §Toggle Switch, §Semantic State Colors,
+       §Status Pill, §Error / Alert Banner, §Toast (behavior per
+       UXC-07), §Skeleton, §Chip, §Pagination, §Breadcrumb,
+       §Color Dot, §Accordion, §Progress Bar, §Metric KPI Tile.
+       Do not edit here; change
+       MASTER.md first, then re-sync this block.
+       ================================================================== */
+
+    /* Primary Button */
+    .btn-primary {
+      background: var(--color-cta);
+      color: var(--color-on-cta);
+      padding: 10px 20px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      transition: all 200ms ease;
+      cursor: pointer;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    /* Secondary Button */
+    .btn-secondary {
+      background: transparent;
+      color: var(--color-primary);
+      border: 1px solid var(--color-border);
+      padding: 10px 20px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      transition: all 200ms ease;
+      cursor: pointer;
+    }
+
+    /* Danger Button — destructive actions (logout, delete) */
+    .btn-danger {
+      background: transparent;
+      color: #B91C1C;           /* red-700 */
+      border: 1px solid #E2E8F0;
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+      font-weight: 500;
+      transition: all 200ms ease;
+      cursor: pointer;
+    }
+
+    .btn-danger:hover {
+      color: #B91C1C;
+      background: #FEF2F2;      /* red-50 */
+      border-color: #FECACA;    /* red-200 */
+    }
+
+    /* Ghost / Text Button — low-emphasis actions (view all, cancel) */
+    .btn-ghost {
+      background: transparent;
+      color: var(--color-primary);
+      border: none;
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+      font-weight: 500;
+      transition: all 200ms ease;
+      cursor: pointer;
+    }
+
+    .btn-ghost:hover {
+      text-decoration: underline;
+    }
+
+    /* Loading state — applies to any button variant */
+    .btn-loading {
+      opacity: 0.7;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* Disabled state — applies to any button variant */
+    .btn-disabled,
+    button[disabled] {
+      opacity: 0.4;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* OAuth Button — third-party auth entry (Google, GitHub) */
+    .btn-oauth {
+      background: white;
+      color: #334155;           /* slate-700 */
+      border: 1px solid #E2E8F0;
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background-color 200ms ease, border-color 200ms ease;
+      cursor: pointer;
+    }
+
+    .btn-oauth:hover {
+      background: #F8FAFC;      /* slate-50 */
+      border-color: #CBD5E1;    /* slate-300 */
+    }
+
+    /* Icon-only Button — compact trigger (mobile menu, utility controls) */
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      border: 1px solid #E2E8F0;
+      border-radius: var(--radius-md);
+      background: white;
+      color: #475569;           /* slate-600 */
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease;
+      cursor: pointer;
+    }
+
+    .btn-icon:hover {
+      background: #F8FAFC;      /* slate-50 */
+      border-color: #CBD5E1;    /* slate-300 */
+      color: #1E293B;           /* slate-800 */
+    }
+
+    /* Language Toggle Button — locale switcher (zh-TW / EN) */
+    .btn-language {
+      background: white;
+      color: #334155;           /* slate-700 */
+      border: 1px solid #E2E8F0;
+      padding: 8px 12px;
+      min-height: 36px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background-color 200ms ease, border-color 200ms ease;
+      cursor: pointer;
+    }
+
+    .btn-language:hover {
+      background: #F8FAFC;      /* slate-50 */
+      border-color: #CBD5E1;    /* slate-300 */
+    }
+
+    .input {
+      padding: 12px 16px;
+      border: 1px solid #E2E8F0;
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      transition: border-color 200ms ease;
+    }
+
+    .input:focus {
+      border-color: var(--color-primary);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+    }
+
+    .input.error {
+      border-color: #B91C1C;
+    }
+
+    /* Readonly — managed by system, not user-editable (e.g. SSO email) */
+    .input[readonly],
+    .input.readonly {
+      background: #F8FAFC;      /* slate-50 */
+      border-color: #F1F5F9;    /* slate-100 */
+      color: #94A3B8;            /* slate-400 */
+      cursor: not-allowed;
+    }
+
+    /* Supporting text under field */
+    .field-hint {
+      margin-top: 6px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #64748B;            /* slate-500 */
+    }
+
+    .field-error {
+      margin-top: 6px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #B91C1C;            /* red-700 */
+    }
+
+    .toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-slider { position: absolute; inset: 0; background: var(--color-border); border-radius: var(--radius-full); cursor: pointer; transition: background var(--dur-fast); }
+    .toggle-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; border-radius: 50%; background: white; transition: transform var(--dur-fast); }
+    .toggle-switch input:checked + .toggle-slider { background: var(--color-primary); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+    /* §Semantic State Colors — base badge CSS (verbatim) */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.4;
+      white-space: nowrap;
+    }
+
+    /* §Semantic State Colors — Task Status Badge Mapping (values from table) */
+    .badge-draft          { color: #4B5563; background: #F9FAFB; border-color: #E5E7EB; }
+    .badge-dry-run-status { color: #6B7280; background: #F3F4F6; border-color: #D1D5DB; }
+    .badge-iaa            { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
+    .badge-in-progress    { color: var(--color-info); background: var(--color-info-bg); border-color: var(--color-info-border); }
+    .badge-completed      { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
+    .badge-error          { color: var(--color-error); background: var(--color-error-bg); border-color: var(--color-error-border); }
+
+    /* §Status Badges — role badge: rounded-full pill, primary family */
+    .badge-role {
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      color: var(--color-primary);
+      background: var(--color-primary-soft-bg);
+      border-color: var(--color-primary-border);
+    }
+
+    /* §Status Pill (borderless, soft) — shipped CSS (verbatim) */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-full);
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .status-submitted { color: var(--color-success);   background: var(--color-success-soft-bg); }
+    .status-saved     { color: var(--color-warning);   background: var(--color-warning-soft-bg); }
+    .status-pending   { color: var(--color-ink-muted); background: var(--color-border); }
+
+    /* §Error / Alert Banner — canonical sample in semantic tokens */
+    .alert-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 14px;
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-error-border);
+      background: var(--color-error-bg);
+      color: var(--color-error);
+    }
+    .alert-banner svg { flex-shrink: 0; margin-top: 2px; }
+
+    /* §Toast — UXC-07 canonical behavior (top-center, z-toast, 384px, single instance) */
+    #toast {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: var(--z-toast);
+      width: min(384px, calc(100vw - 32px));
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity var(--dur-fast), visibility 0s linear var(--dur-fast);
+    }
+    #toast.visible {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity var(--dur-fast);
+    }
+    .toast-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 14px;
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid;
+      box-shadow: var(--shadow-md); /* approved flat-design exception */
+    }
+    .toast-card.success { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
+    .toast-card.info    { color: var(--color-info);    background: var(--color-info-bg);    border-color: var(--color-info-border); }
+    .toast-card.warning { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
+    .toast-card.error   { color: var(--color-error);   background: var(--color-error-bg);   border-color: var(--color-error-border); }
+    .toast-msg { flex: 1; font-weight: 500; }
+    .toast-close { color: inherit; opacity: 0.7; cursor: pointer; font-size: 14px; line-height: 1.4; padding: 0; }
+    .toast-close:hover { opacity: 1; }
+
+    /* §Skeleton — Variant A pulse (verbatim) */
+    .skeleton-stack { display: grid; gap: var(--space-md); }
+    .skeleton-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-white);
+      padding: var(--space-lg);
+    }
+    .skeleton-line {
+      border-radius: var(--radius-sm);
+      background: var(--color-border);
+      animation: skeleton-pulse var(--dur-normal) var(--ease-standard) infinite alternate;
+    }
+    .skeleton-line.title { width: 220px; height: 20px; margin-bottom: 14px; }
+    .skeleton-line.body  { width: 100%;  height: 12px; margin-bottom: 10px; }
+    .skeleton-line.body.short { width: 65%; }
+    @keyframes skeleton-pulse {
+      0%   { opacity: 0.55; }
+      100% { opacity: 0.95; }
+    }
+
+    /* §Skeleton — Variant B shimmer (verbatim) */
+    .skeleton {
+      background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+      background-size: 200% 100%;
+      animation: skeleton-shimmer 1.5s infinite;
+      border-radius: var(--radius-md);
+    }
+    .skel-avatar { width: 72px; height: 72px; border-radius: var(--radius-full); }
+    .skel-line   { height: 14px; }
+    .skel-input  { height: 42px; width: 100%; margin-top: 6px; }
+    .skel-btn    { height: 40px; width: 90px; }
+    @keyframes skeleton-shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    html[data-theme="dark"] .skeleton {
+      background-image: linear-gradient(90deg, #1F1F28 25%, #2A2A35 50%, #1F1F28 75%);
+    }
+
+    /* §Chip — interactive select chip (verbatim) */
+    .task-type-chip-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .task-type-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-full);         /* 9999px — pill */
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-ink);
+      background: var(--color-white);
+      cursor: pointer;
+      user-select: none;
+      transition: border-color var(--dur-fast), background var(--dur-fast), color var(--dur-fast);
+    }
+    .task-type-chip:hover {
+      border-color: var(--color-primary);
+      background: var(--color-primary-soft-bg);
+      color: var(--color-primary);
+    }
+    .task-type-chip.selected {
+      border-color: var(--color-primary);
+      background: var(--color-primary-soft-bg);
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+    .task-type-chip-check {
+      width: 14px;
+      height: 14px;
+      border: 1.5px solid currentColor;
+      border-radius: 3px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .task-type-chip.selected .task-type-chip-check {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+    .task-type-chip.selected .task-type-chip-check::after {
+      content: "";
+      width: 8px;
+      height: 5px;
+      border-left: 2px solid white;
+      border-bottom: 2px solid white;
+      transform: rotate(-45deg) translate(1px, -1px);
+    }
+    .task-type-chip[role="radio"] .task-type-chip-check {
+      border-radius: 50%;
+    }
+    .task-type-chip[role="radio"].selected .task-type-chip-check::after {
+      width: 6px;
+      height: 6px;
+      border: none;
+      border-radius: 50%;
+      background: white;
+      transform: none;
+    }
+
+    /* §Chip — display chips (verbatim) */
+    .ar-classif-chip {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 9999px;
+      font-size: 12px;
+      white-space: nowrap;
+      background: #EDE9FE;              /* violet-100 */
+      color: #5B21B6;                    /* violet-800 */
+      border: 1px solid #DDD6FE;        /* violet-200 */
+    }
+    .ar-va-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 10px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-family: var(--font-mono);
+      border: 1px solid;
+      white-space: nowrap;
+    }
+    .ar-va-chip-normal  { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
+    .ar-va-chip-outlier { background: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }
+    .round-metric-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-soft);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .cause-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      background: var(--color-primary-soft-bg);
+      border: 1px solid var(--color-primary-border);   /* #C7D2FE */
+      color: var(--color-primary);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* §Pagination (verbatim) */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-md) var(--space-lg);  /* 16px 24px */
+      border-top: 1px solid var(--color-border);
+      font-size: 13px;
+      color: var(--color-text-soft);
+    }
+    .page-btn {
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);           /* 8px */
+      background: var(--color-white);
+      color: var(--color-ink);
+      font-size: 13px;
+      cursor: pointer;
+      transition: background var(--dur-fast), border-color var(--dur-fast);
+    }
+    .page-btn:hover {
+      background: var(--color-primary-soft-bg);
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+    .page-btn.active {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: var(--color-on-cta); /* WCAG AA foreground token, issue singyichen/label-suite#1019 */
+      font-weight: 600;
+    }
+    .page-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .page-size-select {
+      padding: 6px 28px 6px 10px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      background: var(--color-white);
+      appearance: none;
+    }
+
+    /* §Breadcrumb (verbatim) */
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--color-text-soft);
+      margin-bottom: 12px;
+    }
+    .breadcrumb a {
+      color: var(--color-primary);
+    }
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
+    .breadcrumb-sep {
+      color: var(--color-ink-muted);             /* #94A3B8 */
+      font-size: 11px;
+    }
+
+    /* §Review Status Track (verbatim) */
+    .review-track {
+      display: grid;
+      grid-template-columns: auto 28px auto auto 1fr 28px auto;
+      grid-template-rows: 34px 34px;
+      align-items: center;
+      justify-items: start;
+    }
+    .review-track-node {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-full);
+      background: var(--color-white);
+      color: var(--color-ink-muted);
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .review-track-node.done {
+      border-color: var(--color-cta);
+      background: var(--color-success-bg);
+      color: var(--color-cta);
+      font-weight: 600;
+    }
+    .review-track-node.current {
+      border-color: var(--color-primary);
+      background: var(--color-primary-soft-bg);
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+    .review-track-marker { font-size: 11px; font-weight: 600; }
+    .review-track-rail {
+      position: relative;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .review-track-rail::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 2px;
+      background: var(--color-border);
+    }
+    .review-track-rail.done::before { height: 3px; background: var(--color-cta); }
+    .review-track-branch {
+      position: relative;
+      justify-self: stretch;
+      text-align: center;
+      padding: 0 4px;
+      background: var(--color-white);
+      color: var(--color-ink-muted);
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .review-track-branch.done { color: var(--color-cta); font-weight: 600; }
+    .review-track-fork { display: block; line-height: 0; }
+
+    /* §Color Dot (verbatim) */
+    .entity-color-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: var(--radius-sm);           /* 4px — rounded square */
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      flex-shrink: 0;
+    }
+
+    /* Smaller variant for annotation previews */
+    .annotation-preview-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      flex-shrink: 0;
+    }
+
+    /* §Color Dot status-dot variant — 8×8 circle per the variants table;
+       shipped CSS (dataset-analysis-detail.html) */
+    .t-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* §Accordion (verbatim) */
+    .output-accordion {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);           /* 8px */
+      overflow: hidden;
+    }
+
+    .output-accordion + .output-accordion {
+      margin-top: var(--space-sm);               /* 8px */
+    }
+
+    .output-accordion-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: 12px var(--space-md);             /* 12px 16px */
+      background: var(--color-slate-50);         /* #F8FAFC */
+      cursor: pointer;
+      user-select: none;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-ink);
+      transition: background var(--dur-fast);
+    }
+
+    .output-accordion-header:hover {
+      background: var(--color-primary-soft-bg);  /* #EEF2FF */
+    }
+
+    .output-accordion-chevron {
+      width: 16px;
+      height: 16px;
+      margin-left: auto;
+      color: var(--color-text-soft);
+      transition: transform var(--dur-fast);
+    }
+
+    .output-accordion.collapsed .output-accordion-chevron {
+      transform: rotate(-90deg);
+    }
+
+    .output-accordion-body {
+      padding: var(--space-md);                  /* 16px */
+      border-top: 1px solid var(--color-border);
+    }
+
+    .output-accordion.collapsed .output-accordion-body {
+      display: none;
+    }
+
+    /* §Progress Bar (verbatim) */
+    .progress {
+      height: 6px;
+      border-radius: var(--radius-full);
+      background: var(--color-border);   /* shipped page uses literal #E2E8F0 — same value; migrate to the var (issue singyichen/label-suite#183) */
+      overflow: hidden;
+    }
+    .progress > span {
+      height: 100%;
+      border-radius: var(--radius-full);
+      background: var(--color-cta);
+      display: block;
+      transition: width 300ms ease;
+    }
+
+    /* §Metric KPI Tile (verbatim) */
+    .metric {
+      padding: var(--space-md);              /* 16px */
+      border-radius: var(--radius-lg);
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+    }
+    .metric span {                           /* label */
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--color-ink-muted);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .metric strong {                         /* value */
+      font-size: 1.35rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    /* §Divider — token-rendered (no canonical CSS block in MASTER §Divider;
+       its Tailwind-only samples are mapped to tokens here, per the
+       Banner/Toast precedent) */
+    .divider-hr {
+      height: 1px;                             /* h-px */
+      background: var(--color-border);         /* bg-slate-200 */
+      border: 0;
+      margin: 24px 0;                          /* my-6 */
+    }
+    .divider-text { display: flex; align-items: center; gap: 12px; margin: 24px 0; }
+    .divider-text .divider-hr { flex: 1; margin: 0; }
+    .divider-text span { font-size: 14px; color: var(--color-ink-muted); }  /* text-sm text-slate-400 */
+    .divider-list { list-style: none; }
+    .divider-list li { padding: 16px 0; font-size: 14px; }    /* py-4 */
+    .divider-list li + li { border-top: 1px solid #F1F5F9; }  /* divide-slate-100 — MASTER §Divider list variant literal */
+
+    /* §State Panel — token-rendered (MASTER §State Panel ships Tailwind-only
+       samples; mapped to tokens here per the Divider precedent; rounded-md →
+       var(--radius-md), matching the shipped account state panels) */
+    .state-panel {
+      border-radius: var(--radius-md);
+      border: 1px solid;
+      padding: 20px;                             /* p-5 */
+      text-align: center;
+    }
+    .state-panel--success {
+      background: var(--color-success-bg);       /* bg-green-50 */
+      border-color: var(--color-success-border); /* border-green-200 */
+    }
+    .state-panel--error {
+      background: var(--color-error-bg);         /* bg-red-50 */
+      border-color: var(--color-error-border);   /* border-red-200 */
+    }
+    .state-panel-icon {
+      width: 40px;                               /* w-10 h-10 */
+      height: 40px;
+      border-radius: var(--radius-full);
+      margin: 0 auto 12px;                       /* mx-auto mb-3 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .state-panel-icon svg { width: 20px; height: 20px; }
+    .state-panel--success .state-panel-icon {
+      background: #DCFCE7;      /* green-100 — MASTER §State Panel literal */
+      color: var(--color-success);               /* text-green-700 */
+    }
+    .state-panel--error .state-panel-icon {
+      background: #FEE2E2;      /* red-100 — MASTER §State Panel literal */
+      color: var(--color-error);                 /* text-red-700 */
+    }
+    .state-panel-title {
+      font-size: 16px;                           /* text-base */
+      font-weight: 600;                          /* font-semibold */
+    }
+    .state-panel--success .state-panel-title { color: #166534; }  /* green-800 — MASTER §State Panel literal */
+    .state-panel--error .state-panel-title { color: #991B1B; }    /* red-800 — MASTER §State Panel literal */
+    .state-panel-desc {
+      margin-top: 4px;                           /* mt-1 */
+      font-size: 14px;                           /* text-sm */
+    }
+    .state-panel--success .state-panel-desc { color: var(--color-success); }  /* text-green-700 */
+    .state-panel--error .state-panel-desc { color: var(--color-error); }      /* text-red-700 */
+    .state-panel-action {
+      display: inline-flex;                      /* mt-4 inline-flex */
+      margin-top: 16px;
+      font-size: 14px;                           /* text-sm */
+      font-weight: 500;                          /* font-medium */
+      color: var(--color-primary);               /* text-primary */
+      text-decoration: none;
+    }
+    .state-panel-action:hover { text-decoration: underline; }
+
+    /* §Avatar — token-rendered (Tailwind-only samples mapped to tokens; the
+       one canonical CSS line — the hover-overlay rule — is kept verbatim) */
+    .avatar-sm {
+      width: 32px;                               /* w-8 h-8 */
+      height: 32px;
+      border-radius: var(--radius-full);
+      border: 2px solid rgba(99, 102, 241, 0.2); /* border-primary/20 — MASTER §Avatar literal */
+    }
+    .avatar-wrap {
+      position: relative;
+      cursor: pointer;
+      flex-shrink: 0;
+      width: 80px;                               /* md:w-20 — desktop demo size */
+    }
+    .avatar-wrap:focus-visible {                 /* focus:ring-2 focus:ring-primary */
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+    .avatar-preview {
+      width: 80px;                               /* md:w-20 md:h-20 */
+      height: 80px;
+      border-radius: var(--radius-full);
+      background: var(--color-primary);          /* bg-primary */
+      color: var(--color-white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;                           /* md:text-2xl */
+      font-weight: 700;
+      overflow: hidden;
+      user-select: none;
+    }
+    .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-overlay {
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius-full);
+      background: rgba(0, 0, 0, 0.5);            /* bg-black/50 */
+      color: var(--color-white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity var(--dur-normal);     /* duration-200 */
+    }
+    .avatar-overlay svg { width: 20px; height: 20px; }  /* w-5 h-5 */
+
+    /* §Avatar canonical hover-overlay rule (verbatim) */
+    .avatar-wrap:hover .avatar-overlay { opacity: 1; }
+
+    .avatar-wrap input[type="file"] { display: none; }  /* class="hidden" in the sample */
+    .avatar-error { display: none; font-size: 12px; color: var(--color-error); margin-top: 4px; }  /* text-xs text-red-500 → error token */
+    .avatar-error.visible { display: block; }
+    .avatar-hint { font-size: 12px; color: var(--color-ink-muted); margin-top: 4px; }  /* text-xs text-slate-500 */
+
+    /* Showcase chrome — demo columns for skeleton variants (not canonical) */
+    .demo-col { flex: 1 1 240px; min-width: 240px; display: grid; gap: 10px; align-content: start; }
+
+    /* Showcase chrome — KPI demo grid (§Metric KPI Tile names the wrapper
+       spec but ships no class; non-canonical demo wrapper) */
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: var(--space-md);
+      width: 100%;
+    }
+    /* Shipped dashboard.layout.css gives .metric span/strong display:block;
+       MASTER §Metric KPI Tile omits it — mirrored here as chrome so the
+       canonical block above stays verbatim. */
+    .metric-grid .metric span, .metric-grid .metric strong { display: block; }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="showcase-header" role="banner">
+    <div>
+      <div class="showcase-title">Label Suite — Components Showcase</div>
+      <div class="showcase-note">Living styleguide · tokens enumerated at runtime from assets/tokens.css</div>
+    </div>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false">深色模式</button>
+  </header>
+
+  <main>
+    <section id="palette" aria-labelledby="paletteHeading">
+      <h2 class="section-heading" id="paletteHeading">Palette</h2>
+      <p class="section-note">核心色盤與別名。State 色系見下一節。</p>
+      <div class="token-grid" data-token-group="palette"></div>
+    </section>
+
+    <section id="state-colors" aria-labelledby="stateHeading">
+      <h2 class="section-heading" id="stateHeading">State Colors</h2>
+      <p class="section-note">success / error / warning / info 語意色家族。</p>
+      <div class="token-grid" data-token-group="state"></div>
+    </section>
+
+    <section id="typography" aria-labelledby="typeHeading">
+      <h2 class="section-heading" id="typeHeading">Typography</h2>
+      <p class="section-note">字族、字級與行高 token。</p>
+      <div class="token-grid" data-token-group="typography"></div>
+    </section>
+
+    <section id="spacing" aria-labelledby="spacingHeading">
+      <h2 class="section-heading" id="spacingHeading">Spacing</h2>
+      <div class="token-grid" data-token-group="spacing"></div>
+    </section>
+
+    <section id="radius" aria-labelledby="radiusHeading">
+      <h2 class="section-heading" id="radiusHeading">Radius</h2>
+      <div class="token-grid" data-token-group="radius"></div>
+    </section>
+
+    <section id="z-index" aria-labelledby="zHeading">
+      <h2 class="section-heading" id="zHeading">Z-index</h2>
+      <div class="token-grid" data-token-group="z"></div>
+    </section>
+
+    <section id="components" aria-labelledby="componentsHeading">
+      <h2 class="section-heading" id="componentsHeading">Components</h2>
+      <p class="section-note">MASTER.md canonical markup — controls 批次（Buttons / Inputs / Toggle Switch）+ feedback 批次（Badges / Banner / Toast / Skeleton）+ structure 批次（Chip / Pagination / Breadcrumb）+ composite 批次（Color Dot / Divider / Accordion / Progress / KPI）+ 最終批次（State Panel / Avatar）。</p>
+
+      <div class="component-card" id="comp-buttons">
+        <h3>Buttons</h3>
+        <p class="component-note">§Buttons — 七個 variant 與 loading / disabled 狀態；hover 效果為真實 :hover 規則，移入即可檢視。</p>
+        <div class="component-demo">
+          <button class="btn-primary" type="button">建立任務</button>
+          <button class="btn-secondary" type="button">儲存草稿</button>
+          <button class="btn-danger" type="button">刪除任務</button>
+          <button class="btn-ghost" type="button">查看全部</button>
+          <button class="btn-oauth" type="button"><img src="assets/google-g.svg" width="16" height="16" alt="" /> Continue with Google</button>
+          <button class="btn-icon" type="button" aria-label="設定"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
+          <button class="btn-language" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> EN</button>
+        </div>
+        <div class="component-demo">
+          <button class="btn-primary btn-loading" type="button">建立中…</button>
+          <button class="btn-primary" type="button" disabled>建立任務</button>
+          <button class="btn-secondary" type="button" disabled>儲存草稿</button>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-inputs">
+        <h3>Inputs</h3>
+        <p class="component-note">§Inputs — default（點擊可見 focus ring）/ error / readonly，搭配 field-hint 與 field-error。</p>
+        <div class="component-demo component-demo--stack">
+          <div>
+            <input class="input" type="text" placeholder="任務名稱" aria-label="任務名稱（default 示例）" />
+            <p class="field-hint">3–40 字元，建立後可修改。</p>
+          </div>
+          <div>
+            <input class="input error" type="text" value="＠＠" aria-label="任務名稱（error 示例）" />
+            <p class="field-error" role="alert">名稱含有不允許的字元。</p>
+          </div>
+          <input class="input" type="text" value="sso-user@example.com" readonly aria-label="Email（readonly 示例）" />
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-date-range-picker">
+        <h3>Date Range Picker</h3>
+        <p class="component-note">§Date Range Picker — 單一控制項框選日期區間（issue singyichen/label-suite#1101），點擊或 Enter/Space 開啟日曆，方向鍵移動日期焦點，Esc 關閉並捨棄未完成選取。</p>
+        <div class="component-demo">
+          <button type="button" class="date-range-trigger" id="showcaseDateRangeTrigger" aria-haspopup="dialog" aria-expanded="false">
+            <span class="date-range-trigger-text"></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-toggle">
+        <h3>Toggle Switch</h3>
+        <p class="component-note">§Toggle Switch — 40×22 track、16px thumb、checked 時 track 轉 --color-primary。</p>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-label-text">Dry-run mode</span>
+            <span class="toggle-desc">Run without materializing results</span>
+          </div>
+          <label class="toggle-switch" aria-label="Toggle dry-run mode">
+            <input type="checkbox">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-badges">
+        <h3>Status Badges &amp; Pills</h3>
+        <p class="component-note">§Semantic State Colors 任務狀態 badge 家族 + §Status Badges role badge（pill 形，識別身分）+ §Status Pill（無框軟底，密集清單列用）。</p>
+        <div class="component-demo">
+          <span class="badge badge-draft">Draft</span>
+          <span class="badge badge-dry-run-status">Dry Run</span>
+          <span class="badge badge-iaa">In Review</span>
+          <span class="badge badge-in-progress">In Progress</span>
+          <span class="badge badge-completed">Completed</span>
+          <span class="badge badge-error">Rejected</span>
+          <span class="badge badge-role">Reviewer</span>
+        </div>
+        <div class="component-demo">
+          <span class="status-badge status-submitted">已提交</span>
+          <span class="status-badge status-saved">已儲存</span>
+          <span class="status-badge status-pending">未開始</span>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-banner">
+        <h3>Error / Alert Banner</h3>
+        <p class="component-note">§Error / Alert Banner — 頁面層級錯誤的 inline 呈現（role="alert"）；動作結果回饋請用 Toast。</p>
+        <div class="component-demo component-demo--stack">
+          <div class="alert-banner" role="alert">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <span>帳號或密碼錯誤，請重新輸入。</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-toast">
+        <h3>Toast</h3>
+        <p class="component-note">§Toast / UXC-07 — 頂部置中 z-toast、單一實例；Success 3s / Info 5s / Warning 8s 自動消失，Error 僅能手動關閉。點按以觸發真實行為。</p>
+        <div class="component-demo">
+          <button class="btn-secondary" type="button" data-toast-variant="success">Success（3s）</button>
+          <button class="btn-secondary" type="button" data-toast-variant="info">Info（5s）</button>
+          <button class="btn-secondary" type="button" data-toast-variant="warning">Warning（8s）</button>
+          <button class="btn-secondary" type="button" data-toast-variant="error">Error（手動關閉）</button>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-skeleton">
+        <h3>Skeleton</h3>
+        <p class="component-note">§Skeleton — Variant A pulse（卡片/清單版面）與 Variant B shimmer（表單版面）；尺寸須貼合載入後內容以防 layout shift（UXC-08）。</p>
+        <div class="component-demo">
+          <div class="demo-col">
+            <div class="skeleton-stack" aria-live="polite" aria-busy="true">
+              <div class="skeleton-card">
+                <div class="skeleton-line title"></div>
+                <div class="skeleton-line body"></div>
+                <div class="skeleton-line body short"></div>
+              </div>
+            </div>
+          </div>
+          <div class="demo-col" aria-live="polite" aria-busy="true">
+            <div class="skeleton skel-avatar"></div>
+            <div class="skeleton skel-line"></div>
+            <div class="skeleton skel-input"></div>
+            <div class="skeleton skel-btn"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-chips">
+        <h3>Chip</h3>
+        <p class="component-note">§Chip — 選取 chip（checkbox 多選 / radio 單選，點擊可切換）與四種唯讀顯示 chip；語意狀態請改用 Status Badge。</p>
+        <div class="component-demo">
+          <div class="task-type-chip-grid" role="group" aria-label="任務類別（多選）">
+            <button class="task-type-chip selected" type="button" role="checkbox" aria-checked="true"><span class="task-type-chip-check" aria-hidden="true"></span>分類</button>
+            <button class="task-type-chip" type="button" role="checkbox" aria-checked="false"><span class="task-type-chip-check" aria-hidden="true"></span>實體辨識</button>
+            <button class="task-type-chip" type="button" role="checkbox" aria-checked="false"><span class="task-type-chip-check" aria-hidden="true"></span>自由文字</button>
+          </div>
+        </div>
+        <div class="component-demo">
+          <div class="task-type-chip-grid" role="radiogroup" aria-label="輸出類型（單選）">
+            <button class="task-type-chip selected" type="button" role="radio" aria-checked="true"><span class="task-type-chip-check" aria-hidden="true"></span>單一標籤</button>
+            <button class="task-type-chip" type="button" role="radio" aria-checked="false"><span class="task-type-chip-check" aria-hidden="true"></span>多重標籤</button>
+          </div>
+        </div>
+        <div class="component-demo">
+          <span class="ar-classif-chip">正面情緒</span>
+          <span class="ar-va-chip ar-va-chip-normal">V 6.2</span>
+          <span class="ar-va-chip ar-va-chip-outlier">A 1.4</span>
+          <span class="round-metric-chip">IAA 0.82</span>
+          <span class="cause-chip">標準不一致</span>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-pagination">
+        <h3>Pagination</h3>
+        <p class="component-note">§Pagination — 32px 頁碼鈕、最多 5 顆可見頁碼加省略號、每頁筆數選單；行為契約見 UXC-11（limit/offset、URL 同步）。</p>
+        <div class="component-demo">
+          <nav class="pagination" aria-label="Pagination" style="flex: 1;">
+            <div class="pagination-info">共 <strong>128</strong> 筆 · 第 <strong>1</strong>/<strong>7</strong> 頁</div>
+            <div class="pagination-controls">
+              <button class="page-btn" type="button" aria-label="Previous page" disabled>‹</button>
+              <button class="page-btn active" type="button" aria-current="page">1</button>
+              <button class="page-btn" type="button">2</button>
+              <button class="page-btn" type="button">3</button>
+              <span class="page-ellipsis">…</span>
+              <button class="page-btn" type="button">7</button>
+              <button class="page-btn" type="button" aria-label="Next page">›</button>
+            </div>
+            <div class="pagination-size">
+              <label>每頁
+                <select class="page-size-select">
+                  <option>20</option>
+                  <option>50</option>
+                  <option selected>100</option>
+                </select>
+              </label>
+            </div>
+          </nav>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-breadcrumb">
+        <h3>Breadcrumb</h3>
+        <p class="component-note">§Breadcrumb — 清單頁下一層的詳情頁路徑導覽；分隔符 ›（aria-hidden），最深兩層。</p>
+        <div class="component-demo">
+          <nav class="breadcrumb" aria-label="breadcrumb">
+            <a href="#comp-breadcrumb">任務管理</a>
+            <span class="breadcrumb-sep" aria-hidden="true">›</span>
+            <span aria-current="page">任務詳情</span>
+          </nav>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-review-track">
+        <h3>Review Status Track</h3>
+        <p class="component-note">§Review Status Track — 單一審核單位的雙軌狀態軌（7 欄版式）。issue singyichen/label-suite#596 起每個審核單位恰有一位審核員（annotation-015 FR-093），<code>approved</code>／<code>modified</code> 這兩個「已作答但未達門檻」的中繼節點結構上不可能發生，故只剩 待審／爭議中／已定稿 三個節點；上排為「審核員未改答案」軌（待審 → 已定稿），下排為「審核員改了答案」軌（待審 → 爭議中 → 已定稿），兩軌互斥，故不可改用線性 §Step Indicator（annotation-015 FR-051）。中繼節點退場後，單位走的是哪一軌只由 <code>.review-track-branch[data-branch]</code> 標籤（答案未修改／答案有修改／仲裁後）說明。當前節點以 <code>目前：</code> 文字前綴作為非顏色訊號，走過的節點、標籤與軌道另以 <code>font-weight: 600</code> 及線寬加粗（rail 2px→3px、fork stroke-width 2→3）區分，不僅靠顏色。此處示範一個走在差異軌、目前停在爭議中的單位。</p>
+        <div class="component-demo" style="display:block">
+          <nav class="breadcrumb" aria-label="breadcrumb">
+            <a href="#comp-review-track">審核作業</a>
+            <span class="breadcrumb-sep" aria-hidden="true">›</span>
+            <a href="#comp-review-track">審核流程示範：正式標記（單一審核員）</a>
+            <span class="breadcrumb-sep" aria-hidden="true">›</span>
+            <span aria-current="page">審核單位 ofs-05 · kioleemg12</span>
+          </nav>
+          <div class="review-track" role="list" aria-label="審核單位狀態">
+            <span class="review-track-node done" role="listitem" style="grid-column:1;grid-row:1/3">待審</span>
+            <span class="review-track-fork" aria-hidden="true" style="grid-column:2;grid-row:1/3"><svg width="28" height="68" viewBox="0 0 28 68" fill="none"><path d="M0 34 H12 V17 H28" stroke="var(--color-border)" stroke-width="2"/><path d="M0 34 H12 V51 H28" stroke="var(--color-cta)" stroke-width="3"/></svg></span>
+            <span class="review-track-branch" data-branch="same" style="grid-column:3;grid-row:1">答案未修改</span>
+            <span class="review-track-branch done" data-branch="differing" style="grid-column:3;grid-row:2">答案有修改</span>
+            <span class="review-track-rail" style="grid-column:4/6;grid-row:1"></span>
+            <span class="review-track-node current" role="listitem" aria-current="step" style="grid-column:4;grid-row:2"><span class="review-track-marker">目前：</span>爭議中</span>
+            <span class="review-track-rail" style="grid-column:5;grid-row:2"><span class="review-track-branch" data-branch="arbitrated">仲裁後</span></span>
+            <span class="review-track-fork" aria-hidden="true" style="grid-column:6;grid-row:1/3"><svg width="28" height="68" viewBox="0 0 28 68" fill="none"><path d="M0 17 H16 V34 H28" stroke="var(--color-border)" stroke-width="2"/><path d="M0 51 H16 V34 H28" stroke="var(--color-border)" stroke-width="2"/></svg></span>
+            <span class="review-track-node" role="listitem" style="grid-column:7;grid-row:1/3">已定稿</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-colordot">
+        <h3>Color Dot</h3>
+        <p class="component-note">§Color Dot — 三種尺寸：標準 20×20（4px 圓角方，表單實體類型列）/ 預覽 12×12 / 狀態圓點 .t-dot 8×8（IAA 門檻通過與否）；顏色一律以 inline style.background 套用。</p>
+        <div class="component-demo">
+          <!-- Default 8-color palette — hex values verbatim from MASTER §Color Dot -->
+          <span class="entity-color-dot" style="background: #6366F1" title="#6366F1"></span>
+          <span class="entity-color-dot" style="background: #10B981" title="#10B981"></span>
+          <span class="entity-color-dot" style="background: #F59E0B" title="#F59E0B"></span>
+          <span class="entity-color-dot" style="background: #EC4899" title="#EC4899"></span>
+          <span class="entity-color-dot" style="background: #8B5CF6" title="#8B5CF6"></span>
+          <span class="entity-color-dot" style="background: #0EA5E9" title="#0EA5E9"></span>
+          <span class="entity-color-dot" style="background: #F97316" title="#F97316"></span>
+          <span class="entity-color-dot" style="background: #14B8A6" title="#14B8A6"></span>
+        </div>
+        <div class="component-demo">
+          <span class="annotation-preview-color" style="background: #6366F1"></span>
+          <span class="annotation-preview-color" style="background: #10B981"></span>
+          <span class="annotation-preview-color" style="background: #F59E0B"></span>
+          <span class="t-dot" style="background: var(--color-success)" title="IAA 達標"></span>
+          <span class="t-dot" style="background: var(--color-error)" title="IAA 未達標"></span>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-divider">
+        <h3>Divider</h3>
+        <p class="component-note">§Divider — 水平線 / 文字分隔（僅登入頁 OAuth 與帳號登入之間）/ 清單分隔（divide-slate-100）；MASTER 僅提供 Tailwind 範例，此處以 token 對應呈現。</p>
+        <div class="component-demo component-demo--stack">
+          <div>
+            <div>區塊 A</div>
+            <hr class="divider-hr" />
+            <div>區塊 B</div>
+          </div>
+          <div class="divider-text">
+            <hr class="divider-hr" />
+            <span>or</span>
+            <hr class="divider-hr" />
+          </div>
+          <ul class="divider-list">
+            <li>建立任務「情緒分類 v2」</li>
+            <li>上傳資料集 reviews.csv</li>
+            <li>邀請 3 位標記員</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-accordion">
+        <h3>Accordion</h3>
+        <p class="component-note">§Accordion — 可折疊表單分區；點擊或 Enter / Space 切換，多面板可同時展開；header role="button" + aria-expanded，body role="region" 與 aria-controls 配對。</p>
+        <div class="component-demo component-demo--stack">
+          <div>
+            <div class="output-accordion" id="showcase-accordion-1">
+              <div class="output-accordion-header" role="button" tabindex="0" aria-expanded="true" aria-controls="showcase-accordion-1-body">
+                <span class="output-accordion-number">1</span>
+                <span class="output-accordion-title">分類設定</span>
+                <!-- chevron path inlined from assets/icons/chevron-down.svg (ADR-030 reuse-only) -->
+                <svg class="output-accordion-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </div>
+              <div class="output-accordion-body" id="showcase-accordion-1-body" role="region" aria-label="分類設定">標籤集、單選／多選與 Bypass 選項設定。</div>
+            </div>
+            <div class="output-accordion collapsed" id="showcase-accordion-2">
+              <div class="output-accordion-header" role="button" tabindex="0" aria-expanded="false" aria-controls="showcase-accordion-2-body">
+                <span class="output-accordion-number">2</span>
+                <span class="output-accordion-title">實體辨識設定</span>
+                <svg class="output-accordion-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </div>
+              <div class="output-accordion-body" id="showcase-accordion-2-body" role="region" aria-label="實體辨識設定">實體類型與顏色指派。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-progress">
+        <h3>Progress Bar</h3>
+        <p class="component-note">§Progress Bar — 6px 藥丸軌道，fill 一律 --color-cta（無逐狀態色，狀態語意請搭配 Status Badge）；wrapper 帶 role="progressbar" 與 aria-value*。</p>
+        <div class="component-demo component-demo--stack">
+          <div class="progress" role="progressbar" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100" aria-label="任務完成度 65%">
+            <span style="width: 65%"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-metric">
+        <h3>Metric KPI Tile</h3>
+        <p class="component-note">§Metric KPI Tile — dashboard 密集 16px KPI 磚：label 11px 大寫、value 1.35rem/700；grid wrapper repeat(auto-fit, minmax(100px, 1fr)) 為示範用、非正典。</p>
+        <div class="component-demo">
+          <div class="metric-grid">
+            <div class="metric"><span>已完成任務</span><strong>128</strong></div>
+            <div class="metric"><span>平均 IAA</span><strong>0.82</strong></div>
+            <div class="metric"><span>進行中批次</span><strong>6</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-statepanel">
+        <h3>State Panel</h3>
+        <p class="component-note">§State Panel — 表單層級狀態容器：提交成功或 token 驗證失敗後「取代」表單區塊（非堆疊於其上）；與 Alert Banner（表單仍在時的 inline 訊息）、Toast（浮動自動消失）區分。error 變體帶 role="alert"。</p>
+        <div class="component-demo component-demo--stack">
+          <!-- MASTER samples use h2 titles; h4 here keeps the showcase heading order -->
+          <section class="state-panel state-panel--success">
+            <div class="state-panel-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <h4 class="state-panel-title">Check your email</h4>
+            <p class="state-panel-desc">We've sent a reset link to your inbox.</p>
+            <a href="#comp-statepanel" class="state-panel-action">Back to login</a>
+          </section>
+          <section class="state-panel state-panel--error" role="alert">
+            <div class="state-panel-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            </div>
+            <h4 class="state-panel-title">Reset link is invalid</h4>
+            <p class="state-panel-desc">Please request a new password reset email.</p>
+            <a href="#comp-statepanel" class="state-panel-action">Request new link</a>
+          </section>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-avatar">
+        <h3>Avatar</h3>
+        <p class="component-note">§Avatar — 兩種模式：display-only（navbar 32px，2px primary/20 邊框）與 uploadable（profile 64/80px，initials fallback、hover 上傳遮罩、focus ring、鍵盤可觸發；格式 JPG/PNG/WebP ≤ 5 MB，違規以 role="alert" 錯誤呈現）。點擊下方 demo 可實際選檔預覽。</p>
+        <div class="component-demo">
+          <img src="assets/logo/icon-colored.svg" alt="User avatar" class="avatar-sm" />
+          <div>
+            <div class="avatar-wrap" role="button" tabindex="0"
+                 aria-label="Upload avatar" aria-describedby="avatar-error">
+              <div id="avatar-preview" class="avatar-preview">陳</div>
+              <div class="avatar-overlay" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              </div>
+              <input id="avatar-input" type="file" accept="image/jpeg,image/png,image/webp" aria-hidden="true" />
+            </div>
+            <p id="avatar-error" class="avatar-error" role="alert"></p>
+            <p class="avatar-hint">JPG, PNG, or WebP — max 5 MB</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="pages/shared/date-range-picker.js"></script>
+  <script>
+    /* Date Range Picker demo (issue singyichen/label-suite#1101) */
+    (function () {
+      var trigger = document.getElementById('showcaseDateRangeTrigger');
+      if (trigger && window.DateRangePicker) {
+        window.DateRangePicker.mount(trigger, {
+          value: { from: null, to: null },
+          lang: 'zh',
+          onChange: function () {},
+        });
+      }
+    })();
+    (function () {
+      'use strict';
+
+      var STATE_RE = /^--color-(success|error|warning|info)/;
+
+      /* Group predicates, checked in order. Anything unmatched lands in
+         the palette's trailing "Other tokens" subgroup so every variable
+         tokens.css defines renders live somewhere on this page. */
+      var GROUPS = [
+        { key: 'state',      test: function (n) { return STATE_RE.test(n); } },
+        { key: 'palette',    test: function (n) { return /^--(color|fg|bg)-/.test(n); } },
+        { key: 'typography', test: function (n) { return /^--(font|text|leading)-/.test(n); } },
+        { key: 'spacing',    test: function (n) { return /^--space-/.test(n); } },
+        { key: 'radius',     test: function (n) { return /^--radius-/.test(n); } },
+        { key: 'z',          test: function (n) { return /^--z-/.test(n); } },
+      ];
+
+      function collectTokenNames() {
+        var names = [];
+        var seen = {};
+        for (var s = 0; s < document.styleSheets.length; s++) {
+          var sheet = document.styleSheets[s];
+          if (!sheet.href || sheet.href.indexOf('tokens.css') === -1) continue;
+          var rules = sheet.cssRules;
+          for (var r = 0; r < rules.length; r++) {
+            var style = rules[r].style;
+            if (!style) continue;
+            for (var p = 0; p < style.length; p++) {
+              var prop = style[p];
+              if (prop.indexOf('--') === 0 && !seen[prop]) {
+                seen[prop] = true;
+                names.push(prop);
+              }
+            }
+          }
+        }
+        return names;
+      }
+
+      function groupOf(name) {
+        for (var i = 0; i < GROUPS.length; i++) {
+          if (GROUPS[i].test(name)) return GROUPS[i].key;
+        }
+        return 'other';
+      }
+
+      function swatchFor(name, group) {
+        var el = document.createElement('span');
+        el.setAttribute('aria-hidden', 'true');
+        if (group === 'palette' || group === 'state') {
+          el.className = 'swatch';
+          el.style.background = 'var(' + name + ')';
+        } else if (group === 'radius') {
+          el.className = 'swatch swatch--radius';
+          el.style.borderRadius = 'var(' + name + ')';
+        } else {
+          el.className = 'swatch swatch--plain';
+        }
+        return el;
+      }
+
+      function render() {
+        var names = collectTokenNames();
+        var rootStyle = getComputedStyle(document.documentElement);
+        var grids = {};
+        document.querySelectorAll('[data-token-group]').forEach(function (grid) {
+          grids[grid.getAttribute('data-token-group')] = grid;
+          grid.replaceChildren();
+        });
+
+        var otherHeadingAdded = false;
+        names.forEach(function (name) {
+          var group = groupOf(name);
+          var grid = grids[group === 'other' ? 'palette' : group];
+          if (!grid) return;
+          if (group === 'other' && !otherHeadingAdded) {
+            var h = document.createElement('div');
+            h.className = 'subgroup-heading';
+            h.textContent = 'Other tokens (shadow / motion / layout offsets)';
+            grid.appendChild(h);
+            otherHeadingAdded = true;
+          }
+          var row = document.createElement('div');
+          row.className = 'token-row';
+          row.appendChild(swatchFor(name, group));
+          var nameEl = document.createElement('code');
+          nameEl.className = 'token-name';
+          nameEl.textContent = name;
+          var valueEl = document.createElement('code');
+          valueEl.className = 'token-value';
+          valueEl.textContent = rootStyle.getPropertyValue(name).trim();
+          row.appendChild(nameEl);
+          row.appendChild(valueEl);
+          grid.appendChild(row);
+        });
+      }
+
+      var toggle = document.getElementById('themeToggle');
+      toggle.addEventListener('click', function () {
+        var dark = document.documentElement.getAttribute('data-theme') !== 'dark';
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+        toggle.setAttribute('aria-pressed', String(dark));
+        toggle.textContent = dark ? '淺色模式' : '深色模式';
+        render(); /* token values change with the theme */
+      });
+
+      render();
+
+      /* Toast — UXC-07: single instance, per-variant duration, error is manual-close only */
+      var TOAST_DURATIONS = { success: 3000, info: 5000, warning: 8000, error: 0 };
+      var TOAST_MESSAGES = {
+        success: '儲存成功',
+        info: '背景工作已開始',
+        warning: '部分結果尚未載入',
+        error: '儲存失敗，請稍後再試',
+      };
+      var toastEl = document.getElementById('toast');
+      var toastTimer = null;
+
+      function hideToast() {
+        toastEl.classList.remove('visible');
+      }
+
+      function showToast(variant) {
+        if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
+        var card = document.createElement('div');
+        card.className = 'toast-card ' + variant;
+        var msg = document.createElement('span');
+        msg.className = 'toast-msg';
+        msg.textContent = TOAST_MESSAGES[variant];
+        var close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'toast-close';
+        close.setAttribute('aria-label', '關閉通知');
+        close.textContent = '✕';
+        close.addEventListener('click', hideToast);
+        card.appendChild(msg);
+        card.appendChild(close);
+        toastEl.replaceChildren(card);
+        toastEl.classList.add('visible');
+        var duration = TOAST_DURATIONS[variant];
+        if (duration) toastTimer = setTimeout(hideToast, duration);
+      }
+
+      document.querySelectorAll('[data-toast-variant]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          showToast(btn.getAttribute('data-toast-variant'));
+        });
+      });
+
+      /* Chip — §Chip accessibility contract: aria-checked toggled on click */
+      function setChipState(chip, on) {
+        chip.classList.toggle('selected', on);
+        chip.setAttribute('aria-checked', String(on));
+      }
+      document.querySelectorAll('.task-type-chip[role="checkbox"]').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          setChipState(chip, chip.getAttribute('aria-checked') !== 'true');
+        });
+      });
+      document.querySelectorAll('[role="radiogroup"]').forEach(function (group) {
+        var radios = group.querySelectorAll('.task-type-chip[role="radio"]');
+        radios.forEach(function (chip) {
+          chip.addEventListener('click', function () {
+            radios.forEach(function (peer) { setChipState(peer, peer === chip); });
+          });
+        });
+      });
+
+      /* Accordion — §Accordion behavior: click / Enter / Space toggles
+         collapsed state + aria-expanded; panels are independent */
+      document.querySelectorAll('.output-accordion-header').forEach(function (header) {
+        function toggleAccordion() {
+          var collapsed = header.closest('.output-accordion').classList.toggle('collapsed');
+          header.setAttribute('aria-expanded', String(!collapsed));
+        }
+        header.addEventListener('click', toggleAccordion);
+        header.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            toggleAccordion();
+          }
+        });
+      });
+
+      /* Avatar — §Avatar upload contract: click / Enter / Space opens the
+         file picker; JPEG/PNG/WebP ≤ 5 MB, violations surface in the
+         role="alert" error line; preview via URL.createObjectURL with
+         revoke-on-load (never innerHTML) */
+      var avatarWrap = document.querySelector('#comp-avatar .avatar-wrap');
+      if (avatarWrap) {
+        var avatarInput = document.getElementById('avatar-input');
+        var avatarPreview = document.getElementById('avatar-preview');
+        var avatarError = document.getElementById('avatar-error');
+        var AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+        var AVATAR_MAX_BYTES = 5 * 1024 * 1024;
+
+        avatarWrap.addEventListener('click', function () { avatarInput.click(); });
+        avatarWrap.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            avatarInput.click();
+          }
+        });
+        avatarInput.addEventListener('change', function () {
+          var file = avatarInput.files && avatarInput.files[0];
+          if (!file) return;
+          var problem =
+            AVATAR_TYPES.indexOf(file.type) === -1 ? '僅接受 JPG、PNG 或 WebP 格式。'
+            : file.size > AVATAR_MAX_BYTES ? '檔案大小不可超過 5 MB。'
+            : '';
+          avatarError.textContent = problem;
+          avatarError.classList.toggle('visible', problem !== '');
+          if (problem) return;
+          var img = document.createElement('img');
+          var url = URL.createObjectURL(file);
+          img.addEventListener('load', function () { URL.revokeObjectURL(url); });
+          img.src = url;
+          img.alt = 'User avatar';
+          avatarPreview.replaceChildren(img);
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

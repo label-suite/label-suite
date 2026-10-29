@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<!-- Spec: specs/admin/006-user-management/spec.md, specs/admin/007-role-settings/spec.md -->
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Label Suite — 使用者管理</title>
+  <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../shared/modal.css" />
+  <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/button.css" />
+  <link rel="stylesheet" href="../shared/empty-state.css" />
+  <link rel="stylesheet" href="../shared/content-tabs.css" />
+  <script src="../../assets/theme-fouc.js"></script>
+  <style>
+    :root {
+      --navbar-mobile-height: 84px;
+      --navbar-mobile-top-height: 64px;
+    }
+
+    /* ── Reset ──────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-surface); color: var(--color-ink);
+      line-height: 1.8; min-height: 100vh; display: flex;
+    }
+    html[lang="en"] body { line-height: 1.6; }
+    a { color: inherit; text-decoration: none; }
+    :where(button, input, select) { font: inherit; cursor: pointer; }
+    .hidden { display: none !important; }
+
+    /* ── Main Layout ────────────────────────────────────────────── */
+    main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+    .layout { max-width: 1280px; width: 100%; margin: 0 auto; padding: var(--space-lg); }
+
+    /* ── Page Header ────────────────────────────────────────────── */
+    .page-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: var(--space-md);
+      margin-bottom: var(--space-lg); flex-wrap: wrap;
+    }
+    .page-header-left { flex: 1; min-width: 0; }
+    .page-main-title {
+      font-family: var(--font-serif-display);
+      font-size: 28px; line-height: 1.3; font-weight: 700; color: var(--color-ink); margin: 0 0 4px;
+    }
+    .page-main-subtitle { font-size: 14px; line-height: 1.8; color: var(--color-text-soft); margin: 0; }
+    .page-header-actions { display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap; }
+
+    /* ── Buttons ─────────────────────────────────────────────────── */
+    /* Layout only; the look comes from pages/shared/button.css */
+    .btn-primary, .btn-ghost { display: inline-flex; align-items: center; gap: 6px; }
+
+    /* ── Filter Bar ─────────────────────────────────────────────── */
+    .filter-bar {
+      display: flex; flex-wrap: wrap; gap: var(--space-sm);
+      align-items: center; margin-bottom: var(--space-lg);
+    }
+    .search-wrap { position: relative; flex: 1; min-width: 220px; max-width: 360px; }
+    .search-icon {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      width: 15px; height: 15px; color: var(--color-ink-muted); pointer-events: none;
+    }
+    .search-input {
+      width: 100%; padding: 9px 12px 9px 36px;
+      border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      font-size: 14px; color: var(--color-ink); background: var(--color-white);
+      transition: border-color 150ms; outline: none;
+    }
+    .search-input::placeholder { color: var(--color-ink-muted); }
+    .search-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .filter-select {
+      padding: 9px 32px 9px 12px; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); font-size: 14px; color: var(--color-ink);
+      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
+      appearance: none; -webkit-appearance: none; outline: none;
+      transition: border-color 150ms; cursor: pointer;
+    }
+    .filter-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+
+    /* ── Table ──────────────────────────────────────────────────── */
+    .table-container {
+      background: var(--color-white); border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg); overflow: hidden; margin-bottom: var(--space-lg);
+      min-width: 0; display: flex; flex-direction: column;
+    }
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; text-align: left; border-collapse: collapse; font-size: 14px; white-space: nowrap; min-width: 640px; }
+    thead tr { background: var(--color-slate-50); }
+    th { padding: 12px 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-ink-muted); border-bottom: 1px solid var(--color-border); white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid var(--color-border-muted); transition: background var(--dur-fast); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--color-slate-50); }
+    td { padding: 14px 20px; color: var(--color-ink); vertical-align: middle; }
+    td.td-muted { color: var(--color-text-soft); }
+    .td-actions { display: inline-flex; gap: 8px; align-items: center; }
+
+    /* ── Badges ─────────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 2px 8px; border-radius: var(--radius-sm);
+      font-size: 12px; font-weight: 500; line-height: 1.4; white-space: nowrap;
+      border: 1px solid transparent;
+    }
+    .badge-active   { background: var(--color-success-soft-bg); color: var(--color-success); border-color: var(--color-success-border); }
+    .badge-disabled { background: var(--color-slate-50); color: var(--color-text-soft); border-color: var(--color-border); }
+    .badge-admin    { background: var(--color-primary-soft-bg); color: var(--color-primary); border-color: var(--color-primary-border); }
+    .badge-user     { background: var(--color-success-soft-bg); color: var(--color-success); border-color: var(--color-success-border); }
+
+    /* ── Mini action buttons (aligned with task-list) ────────── */
+    .mini-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      height: 30px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      color: var(--color-ink);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 0 10px;
+      transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast), opacity var(--dur-fast);
+    }
+    .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+    .mini-btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+    }
+    .mini-btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+    .mini-btn-primary { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-white); }
+    .mini-btn-primary:hover:not(:disabled) { opacity: 0.9; border-color: var(--color-primary); color: var(--color-white); }
+    .mini-btn-primary:focus-visible { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18); }
+    .mini-btn-danger { background: var(--color-error-soft-bg); border-color: var(--color-error-soft-border); color: var(--color-error); }
+    .mini-btn-danger:hover:not(:disabled) { border-color: var(--color-error-soft-border); background: var(--color-error-soft-bg); color: var(--color-error); }
+    .mini-btn-success { background: var(--color-success-soft-bg); border-color: var(--color-success-soft-border); color: var(--color-success); }
+    .mini-btn-success:hover:not(:disabled) { background: var(--color-success-soft-bg); border-color: var(--color-success-soft-border); }
+
+    /* ── Pagination ─────────────────────────────────────────────── */
+    .pagination {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--space-md); flex-wrap: wrap;
+      padding: var(--space-md) var(--space-lg);
+      border-top: 1px solid var(--color-border);
+    }
+    .pagination-info { font-size: 13px; color: var(--color-text-soft); }
+    .pagination-controls { display: flex; align-items: center; gap: var(--space-xs); }
+    .page-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; border-radius: var(--radius-md);
+      border: 1px solid var(--color-border); background: var(--color-white);
+      font-size: 13px; color: var(--color-ink);
+      transition: all 150ms; cursor: pointer;
+    }
+    .page-btn:hover { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .page-btn.active { background: var(--color-primary); color: var(--color-on-cta); border-color: var(--color-primary); }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+    .page-size-select {
+      padding: 5px 28px 5px 10px; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); font-size: 13px; color: var(--color-ink);
+      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center;
+      appearance: none; -webkit-appearance: none; cursor: pointer;
+    }
+
+    /* ── Modal ──────────────────────────────────────────────────── */
+    .modal-overlay .modal { max-height: 90vh; overflow-y: auto; }
+    .modal-overlay .modal-footer {
+      margin-top: var(--space-lg); padding-top: var(--space-lg);
+      border-top: 1px solid var(--color-border);
+    }
+
+    /* ── Form ───────────────────────────────────────────────────── */
+    .form-group { margin-bottom: var(--space-md); }
+    .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--color-ink); margin-bottom: 6px; }
+    .required-indicator { color: var(--color-error); margin-left: 3px; }
+    .form-input {
+      width: 100%; padding: 10px 14px;
+      border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      font-size: 14px; color: var(--color-ink); background: var(--color-white);
+      transition: border-color 150ms; outline: none;
+    }
+    .form-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .form-select {
+      width: 100%; padding: 10px 36px 10px 14px;
+      border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      font-size: 14px; color: var(--color-ink);
+      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 12px center;
+      appearance: none; -webkit-appearance: none; outline: none;
+      transition: border-color 150ms; cursor: pointer;
+    }
+    .form-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .form-hint { margin-top: 5px; font-size: 12px; color: var(--color-text-soft); }
+
+    /* ── Alert Banner ──────────────────────────────────────────── */
+    .alert-banner {
+      display: flex; align-items: flex-start; gap: var(--space-sm);
+      padding: 12px 16px; border-radius: var(--radius-md); border: 1px solid;
+      font-size: 14px; margin-bottom: var(--space-md);
+    }
+    .alert-banner.warning {
+      background: var(--color-warning-soft-bg);
+      border-color: var(--color-warning-soft-border); color: var(--color-warning);
+    }
+
+    /* ── Toast (top-center, UXC-07 / MASTER §Toast) ─────────────── */
+    .toast-container {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: var(--z-toast);
+      width: min(384px, calc(100vw - 32px));
+      pointer-events: none;
+    }
+    .toast {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 16px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 500;
+      /* shadow-md: Toast is an approved exception to the no-shadow rule */
+      box-shadow: var(--shadow-md);
+      opacity: 0;
+      /* visibility keeps the hidden close button out of the tab order;
+         its 0s transition is delayed so the fade-out still plays. */
+      visibility: hidden;
+      transition: opacity var(--dur-fast), visibility 0s var(--dur-fast);
+    }
+    .toast.visible { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity var(--dur-fast); }
+    .toast-success { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
+    .toast-info    { color: var(--color-info);    background: var(--color-info-bg);    border-color: var(--color-info-border); }
+    .toast-warning { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
+    .toast-error   { color: var(--color-error);   background: var(--color-error-bg);   border-color: var(--color-error-border); }
+    .toast-body { flex: 1; }
+    .toast-msg { font-weight: 600; font-size: 14px; }
+    .toast-sub { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+    .toast-close {
+      flex-shrink: 0; background: transparent; border: none;
+      cursor: pointer; color: inherit; opacity: 0.6;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .toast-close:hover { opacity: 1; }
+
+    /* ── Mobile ─────────────────────────────────────────────────── */
+    @media (max-width: 767px) {
+      .layout { padding: var(--space-md); }
+      .page-header { flex-direction: column; }
+      .filter-bar { flex-direction: column; align-items: stretch; }
+      .search-wrap { max-width: 100%; }
+      .td-actions { flex-wrap: wrap; }
+    }
+
+    /* ── Audit Log icon button ──────────────────────────────────── */
+    .mini-btn-log {
+      background: var(--color-info-bg); border-color: var(--color-info-border); color: var(--color-info);
+    }
+    .mini-btn-log:hover:not(:disabled) {
+      border-color: var(--color-info); color: var(--color-info); background: var(--color-info-bg);
+    }
+    .mini-btn-icon { padding: 0 6px; }
+
+    /* ── Audit Drawer ───────────────────────────────────────────── */
+    .audit-drawer-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: var(--z-modal);
+      opacity: 0; pointer-events: none;
+      transition: opacity var(--dur-normal) var(--ease-standard);
+    }
+    .audit-drawer-overlay.open { opacity: 1; pointer-events: auto; }
+
+    .audit-drawer {
+      position: fixed; top: 0; right: 0; bottom: 0; width: 480px;
+      background: var(--color-white); z-index: calc(var(--z-modal) + 10);
+      display: flex; flex-direction: column;
+      transform: translateX(100%);
+      transition: transform var(--dur-normal) var(--ease-standard);
+      border-left: 1px solid var(--color-border);
+      box-shadow: var(--shadow-xl);
+    }
+    .audit-drawer.open { transform: translateX(0); }
+
+    .audit-drawer-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: var(--space-md); padding: var(--space-lg);
+      border-bottom: 1px solid var(--color-border); flex-shrink: 0;
+    }
+    .audit-drawer-title {
+      font-family: var(--font-serif-display);
+      font-size: 20px; font-weight: 700; color: var(--color-ink); margin: 0 0 2px;
+    }
+    .audit-drawer-subtitle { font-size: 13px; color: var(--color-text-soft); margin: 0; }
+
+    .audit-drawer-body { flex: 1; overflow-y: auto; padding: var(--space-lg); }
+    .audit-log-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .audit-log-entry {
+      background: var(--color-white); border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg); padding: var(--space-md);
+    }
+    .audit-log-entry-top {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--space-sm); margin-bottom: 8px;
+    }
+    .audit-log-time {
+      font-size: 12px; color: var(--color-text-soft);
+      font-family: var(--font-mono); flex-shrink: 0;
+    }
+    .audit-log-actor { font-size: 13px; color: var(--color-text-soft); margin-bottom: 6px; }
+    .audit-log-actor strong { color: var(--color-ink); }
+    .audit-log-diff {
+      font-family: var(--font-mono); font-size: 12px;
+      background: var(--color-slate-50); border: 1px solid var(--color-border-muted);
+      border-radius: var(--radius-sm); padding: 6px 10px;
+      color: var(--color-ink); word-break: break-all; margin: 0; white-space: pre-wrap;
+    }
+
+    .audit-badge-create     { background: var(--color-success-soft-bg); color: var(--color-success); border-color: var(--color-success-border); }
+    .audit-badge-edit       { background: var(--color-info-bg); color: var(--color-info); border-color: var(--color-info-border); }
+    .audit-badge-disable    { background: var(--color-error-soft-bg); color: var(--color-error); border-color: var(--color-error-soft-border); }
+    .audit-badge-enable     { background: var(--color-success-soft-bg); color: var(--color-success); border-color: var(--color-success-border); }
+    .audit-badge-role_change { background: var(--color-primary-soft-bg); color: var(--color-primary); border-color: var(--color-primary-border); }
+
+    @media (max-width: 767px) {
+      .audit-drawer {
+        top: auto; right: 0; left: 0; bottom: 0; width: 100%; height: 72vh;
+        border-left: none; border-top: 1px solid var(--color-border);
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        transform: translateY(100%);
+      }
+      .audit-drawer.open { transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .audit-drawer, .audit-drawer-overlay { transition-duration: 0.01ms; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- NAVBAR (injected by sidebar.js)                           -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div id="sharedSidebarMount"></div>
+  <script src="../shared/sidebar.js"></script>
+  <script>
+    window.LabelSuiteSharedSidebar.mountSidebar({
+      mountId:       'sharedSidebarMount',
+      activeNav:     'admin',
+      dashboardHref: '../dashboard/dashboard.html',
+      taskHref:      '../task-management/task-list.html',
+      profileHref:   '../account/profile.html',
+      loginHref:     '../account/login.html',
+      brandHref:     '../dashboard/dashboard.html',
+      adminHref:     'user-management.html',
+      userName:      'Iris Tsai',
+      roleIndicator: '系統管理員',
+    });
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- MAIN CONTENT                                               -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <main>
+    <div class="layout">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-header-left">
+          <h1 id="pageTitle" class="page-main-title">使用者管理</h1>
+          <p id="pageSubtitle" class="page-main-subtitle">管理全平台帳號與系統角色指派</p>
+        </div>
+      </div>
+
+      <!-- Admin Tabs -->
+      <div class="admin-tabs" id="adminTabs" role="tablist" aria-label="管理功能分頁">
+        <a id="tabUsers" class="admin-tab active" href="user-management.html" role="tab" aria-selected="true">使用者管理</a>
+        <a id="tabRoles" class="admin-tab" href="role-settings.html" role="tab" aria-selected="false">角色設定</a>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input
+            type="search" id="searchInput" class="search-input"
+            placeholder="搜尋姓名或 Email…"
+            aria-label="搜尋使用者"
+          />
+        </div>
+        <select class="filter-select" id="roleFilter" aria-label="角色篩選">
+          <option value=""           id="roleFilterAll">全部角色</option>
+          <option value="user"       id="roleFilterUser">user</option>
+          <option value="super_admin" id="roleFilterAdmin">super_admin</option>
+        </select>
+        <select class="filter-select" id="statusFilter" aria-label="狀態篩選">
+          <option value=""         id="statusFilterAll">全部狀態</option>
+          <option value="active"   id="statusFilterActive">啟用</option>
+          <option value="disabled" id="statusFilterDisabled">停用</option>
+        </select>
+        <button class="btn-primary" id="addUserBtn" onclick="openAddModal()" style="margin-left:auto;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <line x1="19" y1="8" x2="19" y2="14"/>
+            <line x1="22" y1="11" x2="16" y2="11"/>
+          </svg>
+          <span id="addUserBtnLabel">新增使用者</span>
+        </button>
+      </div>
+
+      <!-- User Table -->
+      <div class="table-container" id="userTableWrap">
+        <div class="table-scroll">
+          <table role="table" aria-label="使用者列表">
+            <thead>
+              <tr>
+                <th scope="col" id="colName">姓名</th>
+                <th scope="col" id="colEmail">Email</th>
+                <th scope="col" id="colRole">系統角色</th>
+                <th scope="col" id="colStatus">狀態</th>
+                <th scope="col" id="colCreatedAt">建立時間</th>
+                <th scope="col" id="colActions">操作</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody">
+              <!-- Row 1 — seeder super_admin (disable btn locked) -->
+              <tr>
+                <td><strong>Iris Tsai</strong></td>
+                <td class="td-muted">iris@labelsuite.io</td>
+                <td><span class="badge badge-admin">super_admin</span></td>
+                <td><span class="badge badge-active">啟用</span></td>
+                <td class="td-muted">2026-01-05</td>
+                <td>
+                  <div class="td-actions">
+                    <button class="mini-btn mini-btn-primary" onclick="openEditModal('u-001')">
+                      <span class="edit-btn-text">編輯</span>
+                    </button>
+                    <button class="mini-btn mini-btn-danger" disabled id="seederDisableBtn" title="Seeder 超管不可停用" aria-label="Seeder 超管不可停用">
+                      <span class="disable-btn-text">停用</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <!-- Row 2 -->
+              <tr>
+                <td><strong>Alex Wang</strong></td>
+                <td class="td-muted">alex.wang@labelsuite.io</td>
+                <td><span class="badge badge-user">user</span></td>
+                <td><span class="badge badge-active">啟用</span></td>
+                <td class="td-muted">2026-01-18</td>
+                <td>
+                  <div class="td-actions">
+                    <button class="mini-btn mini-btn-primary" onclick="openEditModal('u-002')">
+                      <span class="edit-btn-text">編輯</span>
+                    </button>
+                    <button class="mini-btn mini-btn-danger" onclick="openDisableModal('u-002')">
+                      <span class="disable-btn-text">停用</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <!-- Row 3 -->
+              <tr>
+                <td><strong>Olivia Lin</strong></td>
+                <td class="td-muted">olivia.lin@labelsuite.io</td>
+                <td><span class="badge badge-user">user</span></td>
+                <td><span class="badge badge-active">啟用</span></td>
+                <td class="td-muted">2026-02-03</td>
+                <td>
+                  <div class="td-actions">
+                    <button class="mini-btn mini-btn-primary" onclick="openEditModal('u-003')">
+                      <span class="edit-btn-text">編輯</span>
+                    </button>
+                    <button class="mini-btn mini-btn-danger" onclick="openDisableModal('u-003')">
+                      <span class="disable-btn-text">停用</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <!-- Row 4 — disabled account (show re-enable) -->
+              <tr>
+                <td><strong>Jason Huang</strong></td>
+                <td class="td-muted">jason.h@labelsuite.io</td>
+                <td><span class="badge badge-user">user</span></td>
+                <td><span class="badge badge-disabled">停用</span></td>
+                <td class="td-muted">2026-02-20</td>
+                <td>
+                  <div class="td-actions">
+                    <button class="mini-btn mini-btn-primary" onclick="openEditModal('u-004')">
+                      <span class="edit-btn-text">編輯</span>
+                    </button>
+                    <button class="mini-btn mini-btn-success" onclick="handleReEnable('u-004')">
+                      <span class="enable-btn-text">啟用</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <!-- Row 5 -->
+              <tr>
+                <td><strong>Rachel Su</strong></td>
+                <td class="td-muted">rachel.su@labelsuite.io</td>
+                <td><span class="badge badge-user">user</span></td>
+                <td><span class="badge badge-active">啟用</span></td>
+                <td class="td-muted">2026-03-01</td>
+                <td>
+                  <div class="td-actions">
+                    <button class="mini-btn mini-btn-primary" onclick="openEditModal('u-005')">
+                      <span class="edit-btn-text">編輯</span>
+                    </button>
+                    <button class="mini-btn mini-btn-danger" onclick="openDisableModal('u-005')">
+                      <span class="disable-btn-text">停用</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- Pagination -->
+        <nav class="pagination" id="paginationNav" aria-label="分頁">
+          <div style="display:flex;align-items:center;gap:var(--space-md)">
+            <span id="paginationInfo" class="pagination-info">共 24 筆 · 第 1 / 2 頁</span>
+            <select class="page-size-select" id="pageSizeSelect" aria-label="每頁顯示">
+              <option value="20">20 筆/頁</option>
+              <option value="50">50 筆/頁</option>
+              <option value="100">100 筆/頁</option>
+            </select>
+          </div>
+          <div class="pagination-controls">
+            <button class="page-btn" disabled aria-label="上一頁">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <button class="page-btn active" aria-current="page">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn" aria-label="下一頁">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </nav>
+      </div>
+
+      <!-- Empty State -->
+      <div class="table-container hidden" id="emptyState">
+        <div class="empty-state empty-state-page">
+          <div class="empty-state-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <p id="emptyTitle" class="empty-state-title">找不到符合條件的使用者</p>
+          <p id="emptyDesc" class="empty-state-desc">請嘗試清除篩選條件或使用不同的關鍵字</p>
+          <button class="btn-ghost empty-state-action" onclick="clearFilters()" id="clearFiltersBtn">清除篩選</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ADD USER MODAL                                             -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="addModal"
+       role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="addModalTitle" class="modal-title">新增使用者</h2>
+        <button class="modal-close" onclick="closeModal('addModal')" aria-label="關閉">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <form id="addForm" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="addName">
+            <span id="addNameLabel">姓名</span><span class="required-indicator" aria-hidden="true">*</span>
+          </label>
+          <input type="text" id="addName" class="form-input" required autocomplete="name" placeholder="e.g. Jane Doe" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="addEmail">
+            <span id="addEmailLabel">Email</span><span class="required-indicator" aria-hidden="true">*</span>
+          </label>
+          <input type="email" id="addEmail" class="form-input" required autocomplete="email" placeholder="e.g. jane@company.com" />
+          <p class="form-hint" id="addEmailHint">建立帳號後將寄送設定密碼信至此信箱</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="addRole">
+            <span id="addRoleLabel">系統角色</span><span class="required-indicator" aria-hidden="true">*</span>
+          </label>
+          <select id="addRole" class="form-select" required>
+            <option value="user">user</option>
+            <option value="super_admin">super_admin</option>
+          </select>
+          <p class="form-hint" id="addRoleHint">任務角色（標記員、審核員等）在任務詳情頁個別指派</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="addStatus">
+            <span id="addStatusLabel">帳號狀態</span><span class="required-indicator" aria-hidden="true">*</span>
+          </label>
+          <select id="addStatus" class="form-select" required>
+            <option value="active" id="addStatusActive">啟用</option>
+            <option value="disabled" id="addStatusDisabled">停用</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-ghost" onclick="closeModal('addModal')" id="addCancelBtn">取消</button>
+          <button type="button" class="btn-primary" onclick="submitAdd()" id="addSaveBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+            <span id="addSaveBtnLabel">儲存</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- EDIT USER MODAL                                            -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="editModal"
+       role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="editModalTitle" class="modal-title">編輯使用者</h2>
+        <button class="modal-close" onclick="closeModal('editModal')" aria-label="關閉">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <form id="editForm" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="editName">
+            <span id="editNameLabel">姓名</span><span class="required-indicator" aria-hidden="true">*</span>
+          </label>
+          <input type="text" id="editName" class="form-input" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="editEmail">
+            <span id="editEmailLabel">Email</span><span class="required-indicator" aria-hidden="true">*</span>
+          </label>
+          <input type="email" id="editEmail" class="form-input" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="editRole">
+            <span id="editRoleLabel">系統角色</span><span class="required-indicator" aria-hidden="true">*</span>
+          </label>
+          <select id="editRole" class="form-select" required>
+            <option value="user">user</option>
+            <option value="super_admin">super_admin</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="editStatus">
+            <span id="editStatusLabel">帳號狀態</span><span class="required-indicator" aria-hidden="true">*</span>
+          </label>
+          <select id="editStatus" class="form-select" required>
+            <option value="active"   id="editStatusActive">啟用</option>
+            <option value="disabled" id="editStatusDisabled">停用</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-ghost" onclick="closeModal('editModal')" id="editCancelBtn">取消</button>
+          <button type="button" class="btn-primary" onclick="submitEdit()" id="editSaveBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+            <span id="editSaveBtnLabel">儲存</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- DISABLE CONFIRM MODAL                                      -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="disableModal"
+       role="alertdialog" aria-modal="true" aria-labelledby="disableModalTitle">
+    <div class="modal" style="max-width:440px">
+      <div class="modal-header">
+        <h2 id="disableModalTitle" class="modal-title" style="color:var(--color-error)">停用帳號</h2>
+        <button class="modal-close" onclick="closeModal('disableModal')" aria-label="關閉">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="alert-banner warning" role="alert">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex-shrink:0;margin-top:2px">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <span id="disableWarningText">停用帳號後，該使用者將立即無法登入，所有活躍 session/token 也會被撤銷。</span>
+      </div>
+      <p id="disableConfirmText" style="font-size:14px;color:var(--color-ink);margin-top:var(--space-md)">
+        <span id="disableConfirmPrefix">確定要停用 </span><strong id="disableTargetName">Alex Wang</strong><span id="disableConfirmSuffix"> 的帳號嗎？</span>
+      </p>
+      <div class="modal-footer">
+        <button type="button" class="btn-ghost" onclick="closeModal('disableModal')" id="disableCancelBtn">取消</button>
+        <button type="button" id="disableConfirmBtn" class="btn-danger" onclick="confirmDisable()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728L5.636 5.636"/>
+          </svg>
+          <span id="disableConfirmBtnLabel">停用</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- AUDIT LOG DRAWER                                           -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div class="audit-drawer-overlay" id="auditDrawerOverlay"
+       aria-hidden="true" onclick="closeAuditDrawer()"></div>
+  <aside class="audit-drawer" id="auditDrawer"
+         role="complementary" aria-label="異動紀錄" aria-hidden="true">
+    <div class="audit-drawer-header">
+      <div>
+        <h2 id="auditDrawerTitle" class="audit-drawer-title">異動紀錄</h2>
+        <p id="auditDrawerSubtitle" class="audit-drawer-subtitle"></p>
+      </div>
+      <button class="modal-close" onclick="closeAuditDrawer()"
+              id="auditDrawerCloseBtn" aria-label="關閉">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="audit-drawer-body">
+      <div id="auditLogList" class="audit-log-list" role="list"></div>
+      <div id="auditDrawerEmpty" class="empty-state empty-state-compact hidden">
+        <p id="auditDrawerEmptyText">尚無異動紀錄</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- TOAST                                                      -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div class="toast-container" aria-live="polite" aria-atomic="true">
+    <div class="toast toast-success" id="toast">
+      <!-- success icon (shown by default) -->
+      <svg id="toastIconSuccess" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      <!-- error icon (hidden by default) -->
+      <svg id="toastIconError" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="hidden">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <div class="toast-body">
+        <p id="toastMsg" class="toast-msg">儲存成功</p>
+        <p id="toastSub" class="toast-sub"></p>
+      </div>
+      <button type="button" class="toast-close" id="toastClose" onclick="hideToast()" aria-label="關閉通知">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- SCRIPTS                                                    -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <script src="../../assets/theme.js"></script>
+  <script src="../../assets/analytics.js"></script>
+  <script>
+    /* ── i18n ──────────────────────────────────────────────────── */
+    const i18n = {
+      zh: {
+        pageTitle:             '使用者管理',
+        pageSubtitle:          '管理全平台帳號與系統角色指派',
+        tabUsers:              '使用者管理',
+        tabRoles:              '角色設定',
+        addUserBtnLabel:       '新增使用者',
+        searchPlaceholder:     '搜尋姓名或 Email…',
+        roleFilterAll:         '全部角色',
+        statusFilterAll:       '全部狀態',
+        statusFilterActive:    '啟用',
+        statusFilterDisabled:  '停用',
+        colName:               '姓名',
+        colEmail:              'Email',
+        colRole:               '系統角色',
+        colStatus:             '狀態',
+        colCreatedAt:          '建立時間',
+        colActions:            '操作',
+        paginationInfo:        '共 24 筆 · 第 1 / 2 頁',
+        emptyTitle:            '找不到符合條件的使用者',
+        emptyDesc:             '請嘗試清除篩選條件或使用不同的關鍵字',
+        clearFiltersBtn:       '清除篩選',
+        addModalTitle:         '新增使用者',
+        addNameLabel:          '姓名',
+        addEmailLabel:         'Email',
+        addEmailHint:          '建立帳號後將寄送設定密碼信至此信箱',
+        addRoleLabel:          '系統角色',
+        addRoleHint:           '任務角色（標記員、審核員等）在任務詳情頁個別指派',
+        addStatusLabel:        '帳號狀態',
+        addStatusActive:       '啟用',
+        addStatusDisabled:     '停用',
+        addCancelBtn:          '取消',
+        addSaveBtnLabel:       '儲存',
+        editModalTitle:        '編輯使用者',
+        editNameLabel:         '姓名',
+        editEmailLabel:        'Email',
+        editRoleLabel:         '系統角色',
+        editStatusLabel:       '帳號狀態',
+        editStatusActive:      '啟用',
+        editStatusDisabled:    '停用',
+        editCancelBtn:         '取消',
+        editSaveBtnLabel:      '儲存',
+        disableWarningText:    '停用帳號後，該使用者將立即無法登入，所有活躍 session/token 也會被撤銷。',
+        disableCancelBtn:      '取消',
+        disableConfirmBtnLabel:'停用',
+        editBtnText:           '編輯',
+        disableBtnText:        '停用',
+        enableBtnText:         '啟用',
+        statusBadgeActive:     '啟用',
+        statusBadgeDisabled:   '停用',
+        seederDisableTitle:    'Seeder 超管不可停用',
+        roleIndicatorLabel:    '系統管理員',
+        langToggleAria:        '切換語言',
+        toastUserCreated:      '使用者已建立',
+        toastPasswordSent:     '設定密碼信已寄出',
+        toastUpdated:          '帳號資訊已更新',
+        toastDisabled:         '帳號已停用',
+        toastSessionRevoked:   '所有活躍 session 已立即撤銷',
+        toastReEnabled:        '帳號已重新啟用',
+        toastDuplicateEmail:   'Email 已存在',
+        toastMissingRequired:  '請填寫姓名與有效 Email',
+        auditDrawerTitle:      '異動紀錄',
+        auditDrawerCloseBtn:   '關閉',
+        auditDrawerEmptyText:  '尚無異動紀錄',
+        auditBtnLabel:         '查看異動紀錄',
+        adminTabsAria:         '管理功能分頁',
+        paginationAria:        '分頁',
+        auditActorPrefix:      '操作者：',
+        auditActionCreate:     '新增',
+        auditActionEdit:       '編輯',
+        auditActionDisable:    '停用',
+        auditActionEnable:     '啟用',
+        auditActionRoleChange: '角色變更',
+        auditDrawerSubtitlePrefix: '目標帳號：',
+      },
+      en: {
+        pageTitle:             'User Management',
+        pageSubtitle:          'Manage platform accounts and system role assignments',
+        tabUsers:              'User Management',
+        tabRoles:              'Role Settings',
+        addUserBtnLabel:       'Add User',
+        searchPlaceholder:     'Search by name or email…',
+        roleFilterAll:         'All Roles',
+        statusFilterAll:       'All Statuses',
+        statusFilterActive:    'Active',
+        statusFilterDisabled:  'Disabled',
+        colName:               'Name',
+        colEmail:              'Email',
+        colRole:               'System Role',
+        colStatus:             'Status',
+        colCreatedAt:          'Created At',
+        colActions:            'Actions',
+        paginationInfo:        '24 records · Page 1 / 2',
+        emptyTitle:            'No users found',
+        emptyDesc:             'Try clearing filters or using different keywords',
+        clearFiltersBtn:       'Clear Filters',
+        addModalTitle:         'Add User',
+        addNameLabel:          'Name',
+        addEmailLabel:         'Email',
+        addEmailHint:          'A password setup email will be sent to this address',
+        addRoleLabel:          'System Role',
+        addRoleHint:           'Task roles (annotator, reviewer, etc.) are assigned in the task detail page',
+        addStatusLabel:        'Account Status',
+        addStatusActive:       'Active',
+        addStatusDisabled:     'Disabled',
+        addCancelBtn:          'Cancel',
+        addSaveBtnLabel:       'Save',
+        editModalTitle:        'Edit User',
+        editNameLabel:         'Name',
+        editEmailLabel:        'Email',
+        editRoleLabel:         'System Role',
+        editStatusLabel:       'Account Status',
+        editStatusActive:      'Active',
+        editStatusDisabled:    'Disabled',
+        editCancelBtn:         'Cancel',
+        editSaveBtnLabel:      'Save',
+        disableWarningText:    'After disabling, the user will immediately lose access and all active sessions/tokens will be revoked.',
+        disableCancelBtn:      'Cancel',
+        disableConfirmBtnLabel:'Disable',
+        editBtnText:           'Edit',
+        disableBtnText:        'Disable',
+        enableBtnText:         'Enable',
+        statusBadgeActive:     'Active',
+        statusBadgeDisabled:   'Disabled',
+        seederDisableTitle:    'Seeder super admin cannot be disabled',
+        roleIndicatorLabel:    'Super Admin',
+        langToggleAria:        'Switch language',
+        toastUserCreated:      'User created',
+        toastPasswordSent:     'Password setup email sent',
+        toastUpdated:          'Account updated',
+        toastDisabled:         'Account disabled',
+        toastSessionRevoked:   'All active sessions have been revoked',
+        toastReEnabled:        'Account re-enabled',
+        toastDuplicateEmail:   'Email already exists',
+        toastMissingRequired:  'Enter a name and valid email',
+        auditDrawerTitle:      'Change History',
+        auditDrawerCloseBtn:   'Close',
+        auditDrawerEmptyText:  'No changes recorded',
+        auditBtnLabel:         'View change history',
+        adminTabsAria:         'Admin sections',
+        paginationAria:        'Pagination',
+        auditActorPrefix:      'By: ',
+        auditActionCreate:     'Created',
+        auditActionEdit:       'Edited',
+        auditActionDisable:    'Disabled',
+        auditActionEnable:     'Enabled',
+        auditActionRoleChange: 'Role Changed',
+        auditDrawerSubtitlePrefix: 'Target: ',
+      },
+    };
+
+    Object.assign(i18n.zh, {
+      disableModalTitle: '\u505c\u7528\u5e33\u865f',
+      disableConfirmPrefix: '確定要停用 ',
+      disableConfirmSuffix: ' 的帳號嗎？',
+      pageSizeAria: '每頁顯示',
+      closeAria: '關閉',
+      toastCloseAria: '關閉通知',
+      searchAria: '搜尋使用者',
+      roleFilterAria: '角色篩選',
+      statusFilterAria: '狀態篩選',
+      usersTableAria: '使用者列表',
+      auditDrawerAria: '異動紀錄',
+      pageSizeOption: (n) => n + ' 筆/頁',
+    });
+    Object.assign(i18n.en, {
+      disableModalTitle: 'Disable Account',
+      disableConfirmPrefix: 'Are you sure you want to disable the account of ',
+      disableConfirmSuffix: '?',
+      pageSizeAria: 'Rows per page',
+      closeAria: 'Close',
+      toastCloseAria: 'Close notification',
+      searchAria: 'Search users',
+      roleFilterAria: 'Filter by role',
+      statusFilterAria: 'Filter by status',
+      usersTableAria: 'Users',
+      auditDrawerAria: 'Change History',
+      pageSizeOption: (n) => n + ' / page',
+    });
+
+    let lang = window.LabelSuiteSharedSidebar.getStoredLang();
+    let currentPage = 1;
+    let pageSize = 20;
+    let editingUserId = null;
+    let disablingUserId = null;
+    let auditUserId = null;
+
+    function applyLang(l) {
+      const nextLang = l === 'en' ? 'en' : 'zh';
+      const t = i18n[nextLang];
+      lang = window.LabelSuiteSharedSidebar.applyGlobalLanguage(nextLang, {
+        langToggleAria: t.langToggleAria,
+      });
+      document.title = 'Label Suite — ' + t.pageTitle;
+
+      const ids = [
+        'pageTitle','pageSubtitle',
+        'tabUsers','tabRoles','addUserBtnLabel',
+        'roleFilterAll','statusFilterAll','statusFilterActive','statusFilterDisabled',
+        'colName','colEmail','colRole','colStatus','colCreatedAt','colActions',
+        'paginationInfo','emptyTitle','emptyDesc','clearFiltersBtn',
+        'addModalTitle','addNameLabel','addEmailLabel','addEmailHint',
+        'addRoleLabel','addRoleHint','addStatusLabel','addStatusActive','addStatusDisabled',
+        'addCancelBtn','addSaveBtnLabel',
+        'editModalTitle','editNameLabel','editEmailLabel','editRoleLabel',
+        'editStatusLabel','editStatusActive','editStatusDisabled',
+        'editCancelBtn','editSaveBtnLabel',
+        'disableModalTitle','disableConfirmPrefix','disableConfirmSuffix','disableWarningText','disableCancelBtn','disableConfirmBtnLabel',
+      ];
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && t[id] !== undefined) el.textContent = t[id];
+      });
+
+      document.getElementById('searchInput').placeholder = t.searchPlaceholder;
+
+      const pageSizeSelectEl = document.getElementById('pageSizeSelect');
+      pageSizeSelectEl.setAttribute('aria-label', t.pageSizeAria);
+      document.querySelectorAll('.modal-close').forEach(b => b.setAttribute('aria-label', t.closeAria));
+      document.getElementById('toastClose').setAttribute('aria-label', t.toastCloseAria);
+      document.getElementById('searchInput').setAttribute('aria-label', t.searchAria);
+      document.getElementById('roleFilter').setAttribute('aria-label', t.roleFilterAria);
+      document.getElementById('statusFilter').setAttribute('aria-label', t.statusFilterAria);
+      document.querySelector('table[role="table"]').setAttribute('aria-label', t.usersTableAria);
+      document.getElementById('auditDrawer').setAttribute('aria-label', t.auditDrawerAria);
+      Array.from(pageSizeSelectEl.options).forEach(o => { o.textContent = t.pageSizeOption(o.value); });
+
+      const adminTabs = document.getElementById('adminTabs');
+      if (adminTabs && t.adminTabsAria) adminTabs.setAttribute('aria-label', t.adminTabsAria);
+      const paginationNav = document.getElementById('paginationNav');
+      if (paginationNav && t.paginationAria) paginationNav.setAttribute('aria-label', t.paginationAria);
+
+      // Update all repeated button labels in table rows
+      document.querySelectorAll('.edit-btn-text').forEach(el => { el.textContent = t.editBtnText; });
+      document.querySelectorAll('.disable-btn-text').forEach(el => { el.textContent = t.disableBtnText; });
+      document.querySelectorAll('.enable-btn-text').forEach(el => { el.textContent = t.enableBtnText; });
+
+      // Update status badges
+      document.querySelectorAll('.badge-active').forEach(el => { el.textContent = t.statusBadgeActive; });
+      document.querySelectorAll('.badge-disabled').forEach(el => { el.textContent = t.statusBadgeDisabled; });
+
+      // Update seeder button title and aria-label
+      const seederBtn = document.getElementById('seederDisableBtn');
+      if (seederBtn) {
+        seederBtn.title = t.seederDisableTitle;
+        seederBtn.setAttribute('aria-label', t.seederDisableTitle);
+      }
+
+      // Update user chip role label
+      window.LabelSuiteSharedSidebar.updateUserChip({ roleLabel: t.roleIndicatorLabel });
+
+      // Re-render audit drawer content if currently open
+      if (auditUserId) {
+        document.getElementById('auditDrawerTitle').textContent = t.auditDrawerTitle;
+        const auditUser = sampleUsers.find(u => u.id === auditUserId);
+        document.getElementById('auditDrawerSubtitle').textContent =
+          t.auditDrawerSubtitlePrefix + (auditUser ? auditUser.name : '');
+        document.getElementById('auditDrawerCloseBtn').setAttribute('aria-label', t.auditDrawerCloseBtn);
+        renderAuditLog(auditUserId);
+      }
+
+      renderUsers();
+    }
+
+    /* ── Sample data ────────────────────────────────────────────── */
+    const sampleUsers = [
+      { id: 'u-001', name: 'Iris Tsai',  email: 'iris@labelsuite.io',     role: 'super_admin', status: 'active',   createdAt: '2026-01-05', isSeeder: true },
+      { id: 'u-002', name: 'Alex Wang',   email: 'alex.wang@labelsuite.io', role: 'user',        status: 'active',   createdAt: '2026-01-18' },
+      { id: 'u-003', name: 'Olivia Lin',  email: 'olivia.lin@labelsuite.io',role: 'user',        status: 'active',   createdAt: '2026-02-03' },
+      { id: 'u-004', name: 'Jason Huang', email: 'jason.h@labelsuite.io',   role: 'user',        status: 'disabled', createdAt: '2026-02-20' },
+      { id: 'u-005', name: 'Rachel Su',   email: 'rachel.su@labelsuite.io', role: 'user',        status: 'active',   createdAt: '2026-03-01' },
+    ];
+
+    /* ── Sample audit log data ─────────────────────────────────── */
+    const sampleAuditLogs = {
+      'u-001': [
+        { actorName: 'System', actionType: 'create', diff: 'system_role: — → super_admin\nstatus: — → active', createdAt: '2026-01-05 09:00' },
+      ],
+      'u-002': [
+        { actorName: 'System',     actionType: 'create',      diff: 'system_role: — → user\nstatus: — → active',         createdAt: '2026-01-18 10:23' },
+        { actorName: 'Iris Tsai', actionType: 'role_change', diff: 'system_role: user → super_admin',                   createdAt: '2026-03-10 14:55' },
+        { actorName: 'Iris Tsai', actionType: 'role_change', diff: 'system_role: super_admin → user',                   createdAt: '2026-04-02 11:30' },
+      ],
+      'u-003': [
+        { actorName: 'System',     actionType: 'create', diff: 'system_role: — → user\nstatus: — → active', createdAt: '2026-02-03 15:10' },
+        { actorName: 'Iris Tsai', actionType: 'edit',   diff: 'name: "Olivia" → "Olivia Lin"',             createdAt: '2026-02-15 09:42' },
+      ],
+      'u-004': [
+        { actorName: 'System',     actionType: 'create',  diff: 'system_role: — → user\nstatus: — → active', createdAt: '2026-02-20 14:00' },
+        { actorName: 'Iris Tsai', actionType: 'disable', diff: 'status: active → disabled',                 createdAt: '2026-04-18 16:45' },
+      ],
+      'u-005': [
+        { actorName: 'System', actionType: 'create', diff: 'system_role: — → user\nstatus: — → active', createdAt: '2026-03-01 11:20' },
+      ],
+    };
+
+    function isValidEmail(value) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    }
+
+    /* ── URL state (UXC-11): q / role / status / limit / offset ── */
+    const VALID_URL_ROLES = ['user', 'super_admin'];
+    const VALID_URL_STATUSES = ['active', 'disabled'];
+    const VALID_URL_LIMITS = [20, 50, 100];
+
+    function applyListStateFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const q = (params.get('q') || '').trim();
+      if (q) document.getElementById('searchInput').value = q;
+      const role = params.get('role') || '';
+      if (VALID_URL_ROLES.includes(role)) document.getElementById('roleFilter').value = role;
+      const status = params.get('status') || '';
+      if (VALID_URL_STATUSES.includes(status)) document.getElementById('statusFilter').value = status;
+      const limit = parseInt(params.get('limit') || '', 10);
+      if (VALID_URL_LIMITS.includes(limit)) {
+        pageSize = limit;
+        document.getElementById('pageSizeSelect').value = String(limit);
+      }
+      const offset = parseInt(params.get('offset') || '', 10);
+      if (Number.isFinite(offset) && offset > 0) currentPage = Math.floor(offset / pageSize) + 1;
+    }
+
+    function syncUrlToListState() {
+      const params = new URLSearchParams();
+      const keyword = document.getElementById('searchInput').value.trim();
+      if (keyword) params.set('q', keyword);
+      const role = document.getElementById('roleFilter').value;
+      if (role) params.set('role', role);
+      const status = document.getElementById('statusFilter').value;
+      if (status) params.set('status', status);
+      if (pageSize !== 20) params.set('limit', String(pageSize));
+      const offset = (currentPage - 1) * pageSize;
+      if (offset > 0) params.set('offset', String(offset));
+      const query = params.toString();
+      window.history.replaceState(null, '', window.location.pathname + (query ? '?' + query : ''));
+    }
+
+    function getFilteredUsers() {
+      const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+      const role = document.getElementById('roleFilter').value;
+      const status = document.getElementById('statusFilter').value;
+
+      return sampleUsers
+        .filter(user => {
+          const matchesKeyword = !keyword ||
+            user.name.toLowerCase().includes(keyword) ||
+            user.email.toLowerCase().includes(keyword);
+          const matchesRole = !role || user.role === role;
+          const matchesStatus = !status || user.status === status;
+          return matchesKeyword && matchesRole && matchesStatus;
+        })
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    }
+
+    function makeCell(text, className) {
+      const td = document.createElement('td');
+      if (className) td.className = className;
+      td.textContent = text;
+      return td;
+    }
+
+    function renderUsers() {
+      const t = i18n[lang];
+      const filteredUsers = getFilteredUsers();
+      const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+      currentPage = Math.min(currentPage, totalPages);
+      const start = (currentPage - 1) * pageSize;
+      const pageUsers = filteredUsers.slice(start, start + pageSize);
+      const tbody = document.getElementById('userTableBody');
+      tbody.textContent = '';
+
+      pageUsers.forEach(user => {
+        const row = document.createElement('tr');
+        row.dataset.userId = user.id;
+
+        const nameCell = document.createElement('td');
+        const nameStrong = document.createElement('strong');
+        nameStrong.textContent = user.name;
+        nameCell.appendChild(nameStrong);
+        row.appendChild(nameCell);
+
+        row.appendChild(makeCell(user.email, 'td-muted'));
+
+        const roleCell = document.createElement('td');
+        const roleBadge = document.createElement('span');
+        roleBadge.className = 'badge ' + (user.role === 'super_admin' ? 'badge-admin' : 'badge-user');
+        roleBadge.textContent = user.role;
+        roleCell.appendChild(roleBadge);
+        row.appendChild(roleCell);
+
+        const statusCell = document.createElement('td');
+        const statusBadge = document.createElement('span');
+        statusBadge.className = 'badge ' + (user.status === 'active' ? 'badge-active' : 'badge-disabled');
+        statusBadge.textContent = user.status === 'active' ? t.statusBadgeActive : t.statusBadgeDisabled;
+        statusCell.appendChild(statusBadge);
+        row.appendChild(statusCell);
+
+        row.appendChild(makeCell(user.createdAt, 'td-muted'));
+
+        const actionCell = document.createElement('td');
+        const actions = document.createElement('div');
+        actions.className = 'td-actions';
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'mini-btn mini-btn-primary';
+        editBtn.type = 'button';
+        editBtn.addEventListener('click', () => openEditModal(user.id));
+        const editText = document.createElement('span');
+        editText.className = 'edit-btn-text';
+        editText.textContent = t.editBtnText;
+        editBtn.appendChild(editText);
+        actions.appendChild(editBtn);
+
+        const logBtn = document.createElement('button');
+        logBtn.className = 'mini-btn mini-btn-log mini-btn-icon';
+        logBtn.type = 'button';
+        logBtn.setAttribute('aria-label', t.auditBtnLabel);
+        logBtn.title = t.auditBtnLabel;
+        logBtn.addEventListener('click', () => openAuditDrawer(user.id));
+        // Lucide 'history' icon — static SVG, no user data
+        const logSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        logSvg.setAttribute('width', '16'); logSvg.setAttribute('height', '16');
+        logSvg.setAttribute('viewBox', '0 0 24 24'); logSvg.setAttribute('fill', 'none');
+        logSvg.setAttribute('stroke', 'currentColor'); logSvg.setAttribute('stroke-width', '2');
+        logSvg.setAttribute('aria-hidden', 'true');
+        ['M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8', 'M3 3v5h5', 'M12 7v5l4 2'].forEach(d => {
+          const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          p.setAttribute('d', d); logSvg.appendChild(p);
+        });
+        logBtn.appendChild(logSvg);
+        actions.appendChild(logBtn);
+
+        // Destructive action stays at the far right (MASTER dense-row mapping)
+        if (user.status === 'active') {
+          const disableBtn = document.createElement('button');
+          disableBtn.className = 'mini-btn mini-btn-danger';
+          disableBtn.type = 'button';
+          if (user.isSeeder) {
+            disableBtn.disabled = true;
+            disableBtn.id = 'seederDisableBtn';
+            disableBtn.title = t.seederDisableTitle;
+            disableBtn.setAttribute('aria-label', t.seederDisableTitle);
+          } else {
+            disableBtn.addEventListener('click', () => openDisableModal(user.id));
+          }
+          const disableText = document.createElement('span');
+          disableText.className = 'disable-btn-text';
+          disableText.textContent = t.disableBtnText;
+          disableBtn.appendChild(disableText);
+          actions.appendChild(disableBtn);
+        } else {
+          const enableBtn = document.createElement('button');
+          enableBtn.className = 'mini-btn mini-btn-success';
+          enableBtn.type = 'button';
+          enableBtn.addEventListener('click', () => handleReEnable(user.id));
+          const enableText = document.createElement('span');
+          enableText.className = 'enable-btn-text';
+          enableText.textContent = t.enableBtnText;
+          enableBtn.appendChild(enableText);
+          actions.appendChild(enableBtn);
+        }
+
+        actionCell.appendChild(actions);
+        row.appendChild(actionCell);
+        tbody.appendChild(row);
+      });
+
+      document.getElementById('userTableWrap').classList.toggle('hidden', filteredUsers.length === 0);
+      document.getElementById('emptyState').classList.toggle('hidden', filteredUsers.length !== 0);
+      document.getElementById('paginationInfo').textContent =
+        lang === 'zh'
+          ? `共 ${filteredUsers.length} 筆 · 第 ${currentPage} / ${totalPages} 頁`
+          : `${filteredUsers.length} records · Page ${currentPage} / ${totalPages}`;
+      renderPagination(totalPages);
+      syncUrlToListState();
+    }
+
+    // Lucide chevron SVG for pagination arrows — static points, no user data
+    function makeChevronSvg(points) {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('width', '14'); svg.setAttribute('height', '14');
+      svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', 'currentColor'); svg.setAttribute('stroke-width', '2');
+      svg.setAttribute('aria-hidden', 'true');
+      const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      polyline.setAttribute('points', points);
+      svg.appendChild(polyline);
+      return svg;
+    }
+
+    function renderPagination(totalPages) {
+      const controls = document.querySelector('.pagination-controls');
+      controls.textContent = '';
+
+      const prevBtn = document.createElement('button');
+      prevBtn.className = 'page-btn';
+      prevBtn.type = 'button';
+      prevBtn.disabled = currentPage === 1;
+      prevBtn.setAttribute('aria-label', lang === 'zh' ? '上一頁' : 'Previous page');
+      prevBtn.appendChild(makeChevronSvg('15 18 9 12 15 6'));
+      prevBtn.addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage -= 1;
+          renderUsers();
+        }
+      });
+      controls.appendChild(prevBtn);
+
+      for (let page = 1; page <= totalPages; page += 1) {
+        const pageBtn = document.createElement('button');
+        pageBtn.className = 'page-btn' + (page === currentPage ? ' active' : '');
+        pageBtn.type = 'button';
+        if (page === currentPage) pageBtn.setAttribute('aria-current', 'page');
+        pageBtn.textContent = String(page);
+        pageBtn.addEventListener('click', () => {
+          currentPage = page;
+          renderUsers();
+        });
+        controls.appendChild(pageBtn);
+      }
+
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'page-btn';
+      nextBtn.type = 'button';
+      nextBtn.disabled = currentPage >= totalPages;
+      nextBtn.setAttribute('aria-label', lang === 'zh' ? '下一頁' : 'Next page');
+      nextBtn.appendChild(makeChevronSvg('9 18 15 12 9 6'));
+      nextBtn.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+          currentPage += 1;
+          renderUsers();
+        }
+      });
+      controls.appendChild(nextBtn);
+    }
+
+    /* ── Modal helpers ─────────────────────────────────────────── */
+    function openAddModal() {
+      document.getElementById('addName').value  = '';
+      document.getElementById('addEmail').value = '';
+      document.getElementById('addRole').value  = 'user';
+      document.getElementById('addStatus').value = 'active';
+      openModal('addModal');
+    }
+
+    function openEditModal(userId) {
+      const u = sampleUsers.find(user => user.id === userId) || sampleUsers[1];
+      editingUserId = u.id;
+      document.getElementById('editName').value   = u.name;
+      document.getElementById('editEmail').value  = u.email;
+      document.getElementById('editRole').value   = u.role;
+      document.getElementById('editStatus').value = u.status;
+      openModal('editModal');
+    }
+
+    function openDisableModal(userId) {
+      const u = sampleUsers.find(user => user.id === userId) || sampleUsers[1];
+      disablingUserId = u.id;
+      document.getElementById('disableTargetName').textContent = u.name;
+      openModal('disableModal');
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    /* UXC-10: a destructive confirmation must not dismiss on overlay click */
+    ['addModal','editModal'].forEach(id => {
+      document.getElementById(id).addEventListener('click', e => {
+        if (e.target === document.getElementById(id)) closeModal(id);
+      });
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        ['addModal','editModal','disableModal'].forEach(closeModal);
+        closeAuditDrawer();
+        return;
+      }
+      /* UXC-10 keyboard: Enter confirms the open destructive dialog */
+      if (e.key === 'Enter' && document.getElementById('disableModal').classList.contains('show')) {
+        confirmDisable();
+      }
+    });
+
+    function submitAdd() {
+      const t = i18n[lang];
+      const name = document.getElementById('addName').value.trim();
+      const email = document.getElementById('addEmail').value.trim().toLowerCase();
+      const role = document.getElementById('addRole').value;
+      const status = document.getElementById('addStatus').value;
+
+      if (!name || !isValidEmail(email)) {
+        showToast('error', t.toastMissingRequired, '');
+        return;
+      }
+      if (sampleUsers.some(user => user.email.toLowerCase() === email)) {
+        showToast('error', t.toastDuplicateEmail, email);
+        return;
+      }
+
+      sampleUsers.push({
+        id: 'u-' + Date.now(),
+        name,
+        email,
+        role,
+        status,
+        createdAt: new Date().toISOString().slice(0, 10),
+      });
+      currentPage = 1;
+      renderUsers();
+      closeModal('addModal');
+      showToast('success', t.toastUserCreated, t.toastPasswordSent);
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_user_add_succeeded', { lang });
+    }
+
+    function submitEdit() {
+      const t = i18n[lang];
+      const user = sampleUsers.find(item => item.id === editingUserId);
+      const name = document.getElementById('editName').value.trim();
+      const email = document.getElementById('editEmail').value.trim().toLowerCase();
+
+      if (!user || !name || !isValidEmail(email)) {
+        showToast('error', t.toastMissingRequired, '');
+        return;
+      }
+      if (sampleUsers.some(item => item.id !== user.id && item.email.toLowerCase() === email)) {
+        showToast('error', t.toastDuplicateEmail, email);
+        return;
+      }
+
+      user.name = name;
+      user.email = email;
+      user.role = document.getElementById('editRole').value;
+      user.status = document.getElementById('editStatus').value;
+      renderUsers();
+      closeModal('editModal');
+      showToast('success', t.toastUpdated, '');
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_user_edit_succeeded', { lang });
+    }
+
+    function confirmDisable() {
+      const t = i18n[lang];
+      const user = sampleUsers.find(item => item.id === disablingUserId);
+      if (user && !user.isSeeder) {
+        user.status = 'disabled';
+        renderUsers();
+      }
+      closeModal('disableModal');
+      showToast('success', t.toastDisabled, t.toastSessionRevoked);
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_user_disable_succeeded', { lang });
+    }
+
+    function handleReEnable(userId) {
+      const t = i18n[lang];
+      const user = sampleUsers.find(item => item.id === userId);
+      if (user) {
+        user.status = 'active';
+        renderUsers();
+        showToast('success', t.toastReEnabled, user.name);
+      }
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_user_enable_succeeded', { lang });
+    }
+
+    function clearFilters() {
+      document.getElementById('searchInput').value   = '';
+      document.getElementById('roleFilter').value    = '';
+      document.getElementById('statusFilter').value  = '';
+      currentPage = 1;
+      renderUsers();
+    }
+
+    /* ── Audit Drawer ──────────────────────────────────────────── */
+    function openAuditDrawer(userId) {
+      const t = i18n[lang];
+      auditUserId = userId;
+      const user = sampleUsers.find(u => u.id === userId);
+      document.getElementById('auditDrawerTitle').textContent = t.auditDrawerTitle;
+      document.getElementById('auditDrawerSubtitle').textContent =
+        t.auditDrawerSubtitlePrefix + (user ? user.name : '');
+      document.getElementById('auditDrawerCloseBtn').setAttribute('aria-label', t.auditDrawerCloseBtn);
+      renderAuditLog(userId);
+      document.getElementById('auditDrawer').classList.add('open');
+      document.getElementById('auditDrawer').setAttribute('aria-hidden', 'false');
+      document.getElementById('auditDrawerOverlay').classList.add('open');
+      document.getElementById('auditDrawerOverlay').setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_audit_drawer_opened', { userId, lang });
+    }
+
+    function closeAuditDrawer() {
+      document.getElementById('auditDrawer').classList.remove('open');
+      document.getElementById('auditDrawer').setAttribute('aria-hidden', 'true');
+      document.getElementById('auditDrawerOverlay').classList.remove('open');
+      document.getElementById('auditDrawerOverlay').setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      auditUserId = null;
+    }
+
+    function renderAuditLog(userId) {
+      const t = i18n[lang];
+      const logs = (sampleAuditLogs[userId] || []).slice().reverse();
+      const list = document.getElementById('auditLogList');
+      const empty = document.getElementById('auditDrawerEmpty');
+      list.textContent = '';
+
+      if (logs.length === 0) {
+        list.classList.add('hidden');
+        empty.classList.remove('hidden');
+        document.getElementById('auditDrawerEmptyText').textContent = t.auditDrawerEmptyText;
+        return;
+      }
+      list.classList.remove('hidden');
+      empty.classList.add('hidden');
+
+      const actionLabels = {
+        create:      t.auditActionCreate,
+        edit:        t.auditActionEdit,
+        disable:     t.auditActionDisable,
+        enable:      t.auditActionEnable,
+        role_change: t.auditActionRoleChange,
+      };
+
+      logs.forEach(log => {
+        const entry = document.createElement('div');
+        entry.className = 'audit-log-entry';
+        entry.setAttribute('role', 'listitem');
+
+        const top = document.createElement('div');
+        top.className = 'audit-log-entry-top';
+
+        const time = document.createElement('span');
+        time.className = 'audit-log-time';
+        time.textContent = log.createdAt;
+
+        const badge = document.createElement('span');
+        badge.className = `badge audit-badge-${log.actionType}`;
+        badge.textContent = actionLabels[log.actionType] || log.actionType;
+
+        top.appendChild(time);
+        top.appendChild(badge);
+
+        const actor = document.createElement('p');
+        actor.className = 'audit-log-actor';
+        const actorLabel = document.createTextNode(t.auditActorPrefix);
+        const actorStrong = document.createElement('strong');
+        actorStrong.textContent = log.actorName;
+        actor.appendChild(actorLabel);
+        actor.appendChild(actorStrong);
+
+        const diff = document.createElement('pre');
+        diff.className = 'audit-log-diff';
+        diff.textContent = log.diff;
+
+        entry.appendChild(top);
+        entry.appendChild(actor);
+        entry.appendChild(diff);
+        list.appendChild(entry);
+      });
+    }
+
+    /* ── Toast ──────────────────────────────────────────────────── */
+    let toastTimer = null;
+    /* Auto-dismiss per UXC-07: Error never auto-dismisses (manual close only). */
+    const TOAST_DURATIONS = { success: 3000, info: 5000, warning: 8000, error: 0 };
+
+    function showToast(type, msg, sub) {
+      const variant = Object.prototype.hasOwnProperty.call(TOAST_DURATIONS, type) ? type : 'success';
+      document.getElementById('toastMsg').textContent = msg;
+      document.getElementById('toastSub').textContent = sub || '';
+      // swap icons using hidden class (no innerHTML)
+      document.getElementById('toastIconSuccess').classList.toggle('hidden', variant !== 'success');
+      document.getElementById('toastIconError').classList.toggle('hidden',   variant !== 'error');
+      document.getElementById('toast').className = 'toast toast-' + variant + ' visible';
+      clearTimeout(toastTimer);
+      if (TOAST_DURATIONS[variant] > 0) toastTimer = setTimeout(hideToast, TOAST_DURATIONS[variant]);
+    }
+    function hideToast() {
+      document.getElementById('toast').classList.remove('visible');
+      clearTimeout(toastTimer);
+    }
+
+    /* ── Language toggle ────────────────────────────────────────── */
+    function handleLangToggle(source) {
+      const prev = lang;
+      lang = lang === 'zh' ? 'en' : 'zh';
+      applyLang(lang);
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_lang_switched',
+        { source, from_lang: prev, to_lang: lang });
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('langToggle').addEventListener('click',
+        () => handleLangToggle('desktop'));
+      document.getElementById('mobileLangToggle').addEventListener('click',
+        () => handleLangToggle('mobile'));
+    });
+    document.getElementById('searchInput').addEventListener('input', () => {
+      currentPage = 1;
+      renderUsers();
+    });
+    document.getElementById('roleFilter').addEventListener('change', () => {
+      currentPage = 1;
+      renderUsers();
+    });
+    document.getElementById('statusFilter').addEventListener('change', () => {
+      currentPage = 1;
+      renderUsers();
+    });
+    document.getElementById('pageSizeSelect').addEventListener('change', (event) => {
+      pageSize = Number(event.target.value) || 20;
+      currentPage = 1;
+      renderUsers();
+    });
+
+    /* ── Analytics & Init ──────────────────────────────────────── */
+    const getCtx = () => ({ lang });
+    if (window.LabelSuiteAnalytics) {
+      window.LabelSuiteAnalytics.init({ page: 'user-management' });
+      window.LabelSuiteAnalytics.bindClickTracks([
+        { id: 'addUserBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'add_user' } },
+      ], getCtx);
+      window.LabelSuiteAnalytics.trackPageView('user-management', getCtx);
+    }
+    window.LabelSuiteSharedSidebar.updateUserChip({
+      userName:    'Iris Tsai',
+      roleLabel:   lang === 'zh' ? '系統管理員' : 'Super Admin',
+      avatarLabel: 'I',
+    });
+    applyListStateFromUrl();
+    applyLang(lang);
+  </script>
+</body>
+</html>

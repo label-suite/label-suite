@@ -1,0 +1,170 @@
+<div id="annotationResultsPanel" class="hidden">
+
+  <section class="panel" aria-labelledby="arFilterTitle">
+    <h2 class="panel-title" id="arFilterTitle">篩選列</h2>
+    <div class="ar-filter-grid">
+      <div>
+        <label class="field-label" id="arStageFilterLabel" for="arStageSelect">標記階段</label>
+        <select class="input-select" id="arStageSelect">
+          <option value="all">全部</option>
+          <option value="dry">試標</option>
+          <option value="official">正式標記</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label" id="arStatusFilterLabel" for="arStatusSelect">提交狀態</label>
+        <select class="input-select" id="arStatusSelect">
+          <option value="all">全部</option>
+          <option value="submitted">已提交</option>
+          <option value="draft">草稿</option>
+          <option value="pending">待處理</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label" id="arAnnotatorFilterLabel" for="arAnnotatorSelect">標記員</label>
+        <select class="input-select" id="arAnnotatorSelect">
+          <option value="all">全部標記員</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label" id="arReviewerFilterLabel" for="arReviewerSelect">審核員</label>
+        <select class="input-select" id="arReviewerSelect">
+          <option value="all">全部審核員</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label" id="arReviewStatusFilterLabel" for="arReviewStatusSelect">審核狀態</label>
+        <select class="input-select" id="arReviewStatusSelect">
+          <option value="all">全部</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="arTableTitle" id="arTableSection">
+    <h2 class="panel-title" id="arTableTitle">標記結果表</h2>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="member-table" id="arResultTable" role="table" aria-label="Sample annotation results">
+          <thead>
+            <tr>
+              <th style="width:36px;"></th>
+              <th id="thArSampleId">樣本 ID</th>
+              <th id="thArStatus">完成狀態</th>
+              <th id="thArCompletedAt">完成時間</th>
+              <th id="thArStage">標記階段</th>
+              <th id="thArTextPreview">文本摘要</th>
+              <th id="thArDistribution">標記分布統計</th>
+            </tr>
+          </thead>
+          <tbody id="arResultTableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="arPaginationBar">
+        <div class="pagination-left">
+          <span class="pagination-info" id="arPaginationInfo"></span>
+          <select class="page-size-select" id="arPageSizeSelect" aria-label="每頁筆數">
+            <option value="20" selected>20 筆/頁</option>
+            <option value="50">50 筆/頁</option>
+            <option value="100">100 筆/頁</option>
+          </select>
+        </div>
+        <div class="pagination-controls" id="arPaginationControls">
+          <button class="page-btn" id="arPrevPageBtn" aria-label="上一頁" disabled>
+            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="page-btn" id="arNextPageBtn" aria-label="下一頁">
+            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="arExportHistoryTitle" id="arExportSection">
+    <div class="ar-export-header">
+      <h2 class="panel-title" id="arExportHistoryTitle">匯出記錄表</h2>
+      <div class="action-row">
+        <button class="btn btn-secondary" type="button" id="arExportJsonBtn">匯出 JSON</button>
+        <button class="btn btn-secondary" type="button" id="arExportJsonMinBtn">匯出 JSON-MIN</button>
+      </div>
+    </div>
+      <div class="table-wrap ar-export-table-wrap">
+        <div class="table-scroll">
+        <table class="member-table" id="arExportHistoryTable" role="table" aria-label="Export history">
+          <thead>
+            <tr>
+              <th id="thArExportTime">匯出時間</th>
+              <th id="thArExportType">匯出類型</th>
+              <th id="thArExportStageCol">標記階段</th>
+              <th id="thArExportCount">筆數</th>
+              <th id="thArExportScope">任務範圍</th>
+              <th id="thArExportBy">匯出人</th>
+              <th id="thArExportFormat">格式</th>
+              <th id="thArExportOps">操作</th>
+            </tr>
+          </thead>
+          <tbody id="arExportHistoryBody"></tbody>
+        </table>
+      </div>
+      <p class="empty-state empty-state-compact hidden" id="arExportHistoryEmpty">尚未執行過匯出</p>
+      <div class="pagination hidden" id="arExportPaginationBar">
+        <div class="pagination-left">
+          <span class="pagination-info" id="arExportPaginationInfo"></span>
+          <select class="page-size-select" id="arExportPageSizeSelect" aria-label="每頁筆數">
+            <option value="20" selected>20 筆/頁</option>
+            <option value="50">50 筆/頁</option>
+            <option value="100">100 筆/頁</option>
+          </select>
+        </div>
+        <div class="pagination-controls" id="arExportPaginationControls">
+          <button class="page-btn" type="button" id="arExportPrevPageBtn" aria-label="上一頁" disabled>
+            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="page-btn" type="button" id="arExportNextPageBtn" aria-label="下一頁">
+            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- issue singyichen/label-suite#742 (design.md D6): markup only, reusing the `.modal-overlay`
+       show/hide and modal-focus.js focus-trap/Esc mechanism already used by
+       #riskModal (task-detail.html:2318). Selectors are the QA-owned Red
+       contract (tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts);
+       option lists and behaviour wiring land in a later task. -->
+  <div class="modal-overlay" id="arSeqExportModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="arSeqExportModalTitle">
+    <div class="modal">
+      <h2 id="arSeqExportModalTitle">序列標記匯出設定</h2>
+      <p id="arSeqExportModalBody">選擇本次匯出採用的標註方案與詞元單位。</p>
+      <div class="ar-seq-export-field">
+        <label class="field-label" id="arSeqExportSchemeLabel" for="arSeqExportSchemeSelect">標註方案</label>
+        <select class="input-select" id="arSeqExportSchemeSelect"></select>
+      </div>
+      <div class="ar-seq-export-field">
+        <label class="field-label" id="arSeqExportUnitLabel" for="arSeqExportUnitSelect">詞元單位</label>
+        <select class="input-select" id="arSeqExportUnitSelect"></select>
+      </div>
+      <div class="ar-seq-export-field hidden" id="arSeqExportTokenizerField">
+        <label class="field-label" id="arSeqExportTokenizerLabel" for="arSeqExportTokenizerSelect">切詞引擎</label>
+        <select class="input-select" id="arSeqExportTokenizerSelect"></select>
+      </div>
+      <div class="ar-seq-export-summary hidden" id="arSeqExportExpansionSummary"></div>
+      <div class="ar-seq-export-blocked hidden" id="arSeqExportBlockedNotice"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" type="button" id="arSeqExportCancelBtn">取消</button>
+        <button class="btn btn-primary" type="button" id="arSeqExportConfirmBtn">確認匯出</button>
+      </div>
+    </div>
+  </div>
+
+  <section class="panel hidden" id="arEmptyState" aria-labelledby="arEmptyTitle">
+    <div class="empty-state empty-state-panel">
+      <img src="../../assets/icons/file-text.svg" alt="" aria-hidden="true" class="empty-state-icon" />
+      <p class="empty-state-title" id="arEmptyTitle">尚無標記結果</p>
+      <p class="empty-state-desc" id="arEmptyHint">標記員提交後，結果將顯示於此。</p>
+    </div>
+  </section>
+
+</div>

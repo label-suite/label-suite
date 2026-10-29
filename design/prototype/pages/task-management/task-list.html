@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<!-- Spec: specs/task-management/010-task-list/spec.md -->
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Label Suite — 任務列表</title>
+  <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../shared/modal.css" />
+  <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/button.css" />
+  <link rel="stylesheet" href="../shared/empty-state.css" />
+  <link rel="stylesheet" href="../shared/list-page.css" />
+  <script src="../../assets/theme-fouc.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navbar-mobile-height: 84px; --navbar-mobile-top-height: 64px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-surface);
+      color: var(--color-ink);
+      line-height: 1.8;
+      min-height: 100vh;
+      display: flex; flex-direction: row;
+    }
+    html[lang="en"] body { line-height: 1.6; }
+    a { color: inherit; text-decoration: none; }
+    .hidden { display: none !important; }
+
+    /* ── Layout ──────────────────────────────────────────────── */
+    main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+    .layout { max-width: 1280px; width: 100%; margin: 0 auto; padding: var(--space-lg); }
+    .page { min-width: 0; }
+
+    /* ── Page header ─────────────────────────────────────────── */
+    .page-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: var(--space-md);
+      margin-bottom: var(--space-lg); flex-wrap: wrap;
+    }
+    .page-main-title { font-family: var(--font-serif-display); font-size: 28px; line-height: 1.3; font-weight: 700; color: var(--color-ink); margin: 0 0 4px; }
+    .page-main-subtitle { font-size: 14px; line-height: 1.8; color: var(--color-text-soft); margin: 0; }
+    .page-header-actions { display: none; }
+
+    /* ── Toolbar ─────────────────────────────────────────────── */
+    /* Shared list chrome lives in ../shared/list-page.css (singyichen/label-suite#1448). */
+    .toolbar-right { display: flex; align-items: center; gap: var(--space-sm); flex-shrink: 0; margin-left: auto; }
+    .filter-select { min-width: 140px; }
+    /* ── Buttons ─────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; white-space: nowrap;
+    }
+    /* Zero specificity so pages/shared/button.css wins for the standard buttons */
+    :where(.btn) {
+      padding: 10px 20px; border-radius: var(--radius-md);
+      border: 1px solid transparent; font-weight: 600; font-size: 14px;
+      transition: opacity var(--dur-fast), transform var(--dur-fast),
+                  border-color var(--dur-fast), background var(--dur-fast);
+    }
+    .btn:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(99,102,241,0.18), 0 0 0 4px white; }
+    .btn-icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* ── Panel ───────────────────────────────────────────────── */
+    .table-container {
+      border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+      background: var(--color-white); overflow: hidden;
+      margin-bottom: var(--space-lg);
+      min-width: 0; display: flex; flex-direction: column;
+    }
+
+    /* ── Task Table ──────────────────────────────────────────── */
+    .task-table { min-width: 640px; }
+    .task-table tbody tr { cursor: pointer; transition: background var(--dur-fast); }
+    .task-table tbody tr:hover { background: var(--color-slate-50); }
+    .task-table tbody tr:last-child td { border-bottom: none; }
+    .task-name-cell { font-weight: 600; line-height: 1.4; color: var(--color-ink); }
+    .updated-cell { color: var(--color-text-soft); font-size: 13px; white-space: nowrap; }
+    .actions-cell { min-width: 150px; }
+    .inline-actions { display: inline-flex; gap: 8px; align-items: center; }
+    .mini-btn {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      color: var(--color-ink);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 10px;
+      transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast), opacity var(--dur-fast);
+    }
+    .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+    .mini-btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+    }
+    .mini-btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+    .mini-btn-primary {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: var(--color-white);
+    }
+    .mini-btn-primary:hover:not(:disabled) { opacity: 0.9; border-color: var(--color-primary); color: var(--color-white); }
+    .mini-btn-primary:focus-visible { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18); }
+    .mini-btn-danger {
+      background: var(--color-error-soft-bg);
+      border-color: var(--color-error-soft-border);
+      color: var(--color-error);
+    }
+    .mini-btn-danger:hover:not(:disabled) { border-color: var(--color-error-soft-border); background: var(--color-error-soft-bg); color: var(--color-error); }
+    /* ── Badges ──────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center; padding: 2px 8px;
+      border-radius: var(--radius-sm); border: 1px solid transparent;
+      font-size: 12px; font-weight: 500; line-height: 1.4; white-space: nowrap;
+    }
+    .badge-draft           { color: #4B5563; background: #F9FAFB; border-color: #E5E7EB; }
+    .badge-dry-run-status  { color: #6B7280; background: #F3F4F6; border-color: #D1D5DB; }
+    .badge-iaa             { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
+    .badge-in-progress     { color: var(--color-info); background: var(--color-info-bg); border-color: var(--color-info-border); }
+    .badge-completed       { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
+    .badge-dry-run         { color: #6B7280; background: #F3F4F6; border-color: #D1D5DB; }
+    .badge-official        { color: #5B21B6; background: #EDE9FE; border-color: #DDD6FE; }
+    .badge-run-unmaterialized { color: #64748B; background: #F8FAFC; border-color: #CBD5E1; }
+    .output-type-cell { width: 280px; max-width: 280px; white-space: normal; }
+    .output-type-tags {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+      width: 100%; max-width: 280px; min-width: 0;
+    }
+    .output-type-tag { max-width: 100%; }
+
+    /* ── Pagination ──────────────────────────────────────────── */
+    .page-btn.active { color: var(--color-on-cta); }
+
+    /* ── Toast ───────────────────────────────────────────────── */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 400; pointer-events: none; }
+    .toast {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px; border-radius: var(--radius-lg);
+      background: var(--color-ink); color: var(--color-on-ink); font-size: 14px; font-weight: 500;
+      box-shadow: var(--shadow-lg); pointer-events: auto;
+      opacity: 0; transform: translateY(8px);
+      transition: opacity var(--dur-normal), transform var(--dur-normal);
+      max-width: 340px;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.toast-error { background: var(--color-error); }
+    .toast-icon { width: 18px; height: 18px; flex-shrink: 0; }
+
+    /* ── Responsive ──────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
+      .page-header { flex-direction: column; align-items: flex-start; }
+      .page-header-actions { width: 100%; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .toolbar-left { flex-direction: column; align-items: stretch; width: 100%; }
+      .toolbar-right { width: 100%; margin-left: 0; justify-content: flex-end; }
+      .search-wrap { width: 100%; min-width: 0; max-width: 100%; }
+      .filter-select { width: 100%; min-width: 0; }
+      .clear-btn { align-self: flex-start; }
+      .clear-btn.hide-clear { display: none; }
+      .toast-container { bottom: 100px; right: 12px; left: 12px; }
+      .toast { max-width: 100%; }
+    }
+    @media (max-width: 420px) {
+      .mobile-user-name { display: inline-block; max-width: 56px; font-size: 11px; }
+      .toolbar-right .btn { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; } }
+
+    /* ── Dark mode overrides ──────────────────────────────────── */
+    /* Table chrome, empty-state desc, and pagination info flip automatically:
+       their light rules use theme-aware tokens (slate-50 / border-muted / text-soft) */
+    html[data-theme="dark"] {
+      /* Status / run-phase badges */
+      .badge-draft          { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
+      .badge-dry-run-status { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
+      .badge-dry-run        { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
+      .badge-official       { color: #A78BFA; background: #1E1B4B; border-color: #3730A3; }
+      .badge-run-unmaterialized { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
+    }
+  </style>
+  <link rel="stylesheet" href="../shared/task-type-badge.css" />
+</head>
+
+<body>
+
+<!-- ══ NAVBAR ══════════════════════════════════════════════════ -->
+<div id="sharedSidebarMount"></div>
+<script src="../shared/sidebar.js"></script>
+<script src="../shared/modal-focus.js"></script>
+<script>
+  window.LabelSuiteSharedSidebar.mountSidebar({
+    mountId: 'sharedSidebarMount',
+    activeNav: 'task-management',
+    dashboardHref: '../dashboard/dashboard.html',
+    taskHref: '../task-management/task-list.html',
+    adminHref: '../admin/user-management.html',
+    profileHref: '../account/profile.html',
+    loginHref: '../account/login.html',
+    brandHref: '../dashboard/dashboard.html',
+  });
+</script>
+
+<!-- ══ MAIN ════════════════════════════════════════════════════ -->
+<main>
+  <div class="layout">
+    <section class="page">
+
+      <!-- Page header -->
+      <header class="page-header">
+        <div>
+          <h1 class="page-main-title" id="pageTitle">任務列表</h1>
+          <p class="page-main-subtitle" id="pageSubtitle">查看與管理所有標記任務</p>
+        </div>
+      </header>
+
+      <!-- Toolbar -->
+      <div class="toolbar" role="search" aria-label="任務搜尋與篩選">
+        <div class="toolbar-left">
+          <select class="filter-select" id="outputTypeFilter" aria-label="依輸出類型篩選">
+            <option value="">全部輸出類型</option>
+          </select>
+          <select class="filter-select" id="runTypeFilter" aria-label="依標記階段篩選">
+            <option value="">全部標記階段</option>
+          </select>
+          <select class="filter-select" id="statusFilter" aria-label="依狀態篩選">
+            <option value="">全部狀態</option>
+            <option value="draft">草稿</option>
+            <option value="dry_run_in_progress">試標進行中</option>
+            <option value="waiting_iaa_confirmation">待 IAA 確認</option>
+            <option value="official_run_in_progress">正式標記進行中</option>
+            <option value="completed">已完成</option>
+          </select>
+          <button class="clear-btn hide-clear" id="clearFiltersBtn" aria-label="清除篩選">
+            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            <span id="clearFiltersLabel">清除篩選</span>
+          </button>
+          <div class="search-wrap">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="search" class="search-input" id="searchInput"
+              placeholder="搜尋" aria-label="搜尋" />
+          </div>
+        </div>
+        <div class="toolbar-right">
+          <button class="btn btn-primary" id="newTaskBtn">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span id="newTaskBtnLabel">新增任務</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Task panel -->
+      <div class="table-container">
+        <div class="task-table-wrap" id="tableWrap">
+          <table class="task-table" aria-label="任務列表" id="taskTable">
+            <thead>
+              <tr>
+                <th id="thTaskName">任務名稱</th>
+                <th id="thTaskType">輸出類型</th>
+                <th id="thRunType">標記階段</th>
+                <th id="thStatus">狀態</th>
+                <th id="thUpdatedAt">更新時間</th>
+                <th id="thActions">操作</th>
+              </tr>
+            </thead>
+            <tbody id="taskTableBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="paginationBar">
+          <div class="pagination-left">
+            <span class="pagination-info" id="paginationInfo"></span>
+            <select class="page-size-select" id="pageSizeSelect" aria-label="每頁筆數">
+              <option value="20" selected>20 / 頁</option>
+              <option value="50">50 / 頁</option>
+              <option value="100">100 / 頁</option>
+            </select>
+          </div>
+          <div class="pagination-controls" id="paginationControls">
+            <button class="page-btn" id="prevPageBtn" aria-label="上一頁" disabled>
+              <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <button class="page-btn" id="nextPageBtn" aria-label="下一頁">
+              <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </div>
+</main>
+
+<div class="modal-overlay" id="deleteTaskModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="deleteTaskModalTitle">
+  <div class="modal">
+    <h2 id="deleteTaskModalTitle">確認刪除任務</h2>
+    <p id="deleteTaskModalBody">確認將任務軟刪除？此操作可由管理端復原。</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" type="button" id="deleteTaskCancelBtn">取消</button>
+      <button class="btn btn-danger" type="button" id="deleteTaskConfirmBtn">刪除</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOAST ═══════════════════════════════════════════════════ -->
+<div class="toast-container" aria-live="polite" aria-atomic="true">
+  <div class="toast" id="toast" role="alert">
+    <svg class="toast-icon" id="toastIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <span id="toastMsg"></span>
+  </div>
+</div>
+
+<script src="../../assets/theme.js"></script>
+<script src="../../assets/analytics.js"></script>
+<script src="./task-list.data.js"></script>
+<script>
+  /* ── i18n ────────────────────────────────────────────────────── */
+  var I18N = {
+    zh: {
+      docTitle: '任務列表 — Label Suite（原型）',
+      pageTitle: '任務列表', pageSubtitle: '查看與管理所有標記任務',
+      langCode: 'ZH', langToggleAria: '切換語言', logoutAria: '登出',
+      newTaskBtnLabel: '新增任務',
+      thTaskName: '任務名稱', thTaskType: '輸出類型', thRunType: '標記階段',
+      thStatus: '狀態', thUpdatedAt: '更新時間', thActions: '操作',
+      actionEdit: '編輯',
+      actionDelete: '刪除',
+      clearFiltersLabel: '清除篩選',
+      emptyNoTasksTitle: '尚無任務',
+      emptyNoTasksDesc: '你目前沒有任何任務。建立第一個任務以開始標記工作流程。',
+      emptyNoResultsTitle: '找不到符合條件的任務',
+      emptyNoResultsDesc: '請調整搜尋條件或清除篩選，重新查詢。',
+      emptyClearBtnLabel: '清除所有篩選',
+      errorLoadTitle: '任務列表載入失敗',
+      errorLoadDesc: '請重試或稍後再回到任務列表。',
+      errorRetryLabel: '重試',
+      searchPlaceholder: '搜尋',
+      searchAriaLabel: '搜尋（所有欄位）',
+      allOutputTypes: '全部輸出類型',
+      outputTypeFilterAria: '依輸出類型篩選',
+      outputTypeGroupAriaTpl: '輸出類型：{types}',
+      runTypeOptions: [
+        { value: '', label: '全部標記階段' },
+        { value: 'unmaterialized', label: '未建立清單' },
+        { value: 'dry_run', label: '試標' },
+        { value: 'official_run', label: '正式標記' },
+      ],
+      statusOptions: [
+        { value: '', label: '全部狀態' },
+        { value: 'draft', label: '草稿' },
+        { value: 'dry_run_in_progress', label: '試標進行中' },
+        { value: 'waiting_iaa_confirmation', label: '待 IAA 確認' },
+        { value: 'official_run_in_progress', label: '正式標記進行中' },
+        { value: 'completed', label: '已完成' },
+      ],
+      pageSizeLabel: ' 筆/頁',
+      paginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
+      toastNoPermission: '無權限檢視任務詳情',
+      toastNavigating: '前往任務詳情…',
+      toastTaskSoftDeleted: '任務已移至封存（軟刪除）',
+      toastDeleteNotAllowed: '此任務狀態不允許刪除',
+      toastDeleteForbidden: '無權限刪除任務',
+      toastNewTask: '已建立新任務',
+      deleteModalTitle: '確認刪除任務',
+      deleteModalBodyDefault: '確認將任務軟刪除？此操作可由管理端復原。',
+      deleteModalBodyTpl: '確認將「{name}」軟刪除？此操作可由管理端復原。',
+      deleteModalCancel: '取消',
+      deleteModalConfirm: '刪除',
+      roleLabel: { user: '一般使用者', super_admin: '系統管理員', project_leader: '專案負責人' },
+      userName: { user: 'Iris Tsai', super_admin: 'Super Admin', project_leader: 'Iris Tsai' },
+      statusBadge: {
+        draft: '草稿', dry_run_in_progress: '試標進行中',
+        waiting_iaa_confirmation: '待 IAA 確認',
+        official_run_in_progress: '正式標記中', completed: '已完成',
+      },
+      runBadge: { unmaterialized: '未建立清單', dry_run: '試標', official_run: '正式標記' },
+    },
+    en: {
+      docTitle: 'Task List — Label Suite (Prototype)',
+      pageTitle: 'Task list', pageSubtitle: 'View and manage all annotation tasks',
+      langCode: 'EN', langToggleAria: 'Switch language', logoutAria: 'Sign out',
+      newTaskBtnLabel: 'New task',
+      thTaskName: 'Task Name', thTaskType: 'Output types', thRunType: 'Annotation Stage',
+      thStatus: 'Status', thUpdatedAt: 'Updated', thActions: 'Actions',
+      actionEdit: 'Edit',
+      actionDelete: 'Delete',
+      clearFiltersLabel: 'Clear filters',
+      emptyNoTasksTitle: 'No tasks yet',
+      emptyNoTasksDesc: "You don't have any tasks. Create your first task to start the annotation workflow.",
+      emptyNoResultsTitle: 'No matching tasks',
+      emptyNoResultsDesc: 'Try adjusting your search or clearing the filters.',
+      emptyClearBtnLabel: 'Clear all filters',
+      errorLoadTitle: 'Task list failed to load',
+      errorLoadDesc: 'Retry or return to the task list later.',
+      errorRetryLabel: 'Retry',
+      searchPlaceholder: 'Search',
+      searchAriaLabel: 'Search (all columns)',
+      allOutputTypes: 'All output types',
+      outputTypeFilterAria: 'Filter by output type',
+      outputTypeGroupAriaTpl: 'Output types: {types}',
+      runTypeOptions: [
+        { value: '', label: 'All annotation stages' },
+        { value: 'unmaterialized', label: 'No list yet' },
+        { value: 'dry_run', label: 'Dry Run' },
+        { value: 'official_run', label: 'Official' },
+      ],
+      statusOptions: [
+        { value: '', label: 'All statuses' },
+        { value: 'draft', label: 'Draft' },
+        { value: 'dry_run_in_progress', label: 'Dry run in progress' },
+        { value: 'waiting_iaa_confirmation', label: 'Waiting IAA confirmation' },
+        { value: 'official_run_in_progress', label: 'Official run in progress' },
+        { value: 'completed', label: 'Completed' },
+      ],
+      pageSizeLabel: ' / page',
+      paginationTpl: 'Total {total} · Page {page} / {totalPages}',
+      toastNoPermission: 'No permission to view task detail',
+      toastNavigating: 'Navigating to task detail…',
+      toastTaskSoftDeleted: 'Task moved to archive (soft deleted)',
+      toastDeleteNotAllowed: 'This task status cannot be deleted',
+      toastDeleteForbidden: 'No permission to delete task',
+      toastNewTask: 'Task created',
+      deleteModalTitle: 'Confirm task deletion',
+      deleteModalBodyDefault: 'Soft delete this task? This action can be restored by admin.',
+      deleteModalBodyTpl: 'Soft delete "{name}"? This action can be restored by admin.',
+      deleteModalCancel: 'Cancel',
+      deleteModalConfirm: 'Delete',
+      roleLabel: { user: 'User', super_admin: 'Super Admin', project_leader: 'Project Leader' },
+      userName: { user: 'User', super_admin: 'Super Admin', project_leader: 'Iris Tsai' },
+      statusBadge: {
+        draft: 'Draft', dry_run_in_progress: 'Dry Run',
+        waiting_iaa_confirmation: 'Pending IAA',
+        official_run_in_progress: 'Official Run', completed: 'Completed',
+      },
+      runBadge: { unmaterialized: 'No list yet', dry_run: 'Dry Run', official_run: 'Official' },
+    },
+  };
+
+  /* ── Registry-driven task data ───────────────────────────────── */
+  var TASKS = [];
+  var TASK_LIST_DATA = window.LabelSuiteTaskListData || {};
+  var TASK_LIST_DATA_READY = Array.isArray(TASK_LIST_DATA.outputTypes)
+    && Array.isArray(TASK_LIST_DATA.tasks);
+  var OUTPUT_TYPES = TASK_LIST_DATA_READY ? TASK_LIST_DATA.outputTypes : [];
+
+  function loadCreatedTaskSeed() {
+    var seedTasks = Array.isArray(TASK_LIST_DATA.tasks) ? TASK_LIST_DATA.tasks : [];
+    TASKS = seedTasks.map(function (task) {
+      return {
+        id: task.id,
+        nameZh: task.nameZh,
+        nameEn: task.nameEn,
+        sourceFile: task.sourceFile,
+        outputTypes: Array.isArray(task.outputTypes) ? task.outputTypes.slice() : [],
+        runType: task.runType,
+        status: task.status,
+        updatedAt: task.updatedAt,
+        canViewDetail: task.canViewDetail,
+        isMine: task.isMine,
+        deletedAt: task.deletedAt || '',
+      };
+    });
+  }
+
+  var STATUS_BADGE_CLS = {
+    draft: 'badge-draft',
+    dry_run_in_progress: 'badge-dry-run-status',
+    waiting_iaa_confirmation: 'badge-iaa',
+    official_run_in_progress: 'badge-in-progress',
+    completed: 'badge-completed',
+  };
+  var RUN_BADGE_CLS = { unmaterialized: 'badge-run-unmaterialized', dry_run: 'badge-dry-run', official_run: 'badge-official' };
+
+  /* ── State ───────────────────────────────────────────────────── */
+  var state = { lang: 'zh', keyword: '', outputType: '', runType: '', status: '', limit: 20, offset: 0, loadFailed: !TASK_LIST_DATA_READY };
+  var pendingDeleteTaskId = null;
+  var toastTimer = null;
+  var pageTaskRole = 'user';
+  var pendingUnauthorizedToast = false;
+
+  /* ── Helpers ─────────────────────────────────────────────────── */
+  function t(key) { return (I18N[state.lang] || I18N.zh)[key] || key; }
+
+  function setTextContent(id, text) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = text;
+  }
+
+  function getCurrentSystemRole() {
+    if (window.LabelSuiteSharedSidebar && typeof window.LabelSuiteSharedSidebar.getStoredSystemRole === 'function') {
+      return window.LabelSuiteSharedSidebar.getStoredSystemRole() || 'user';
+    }
+    return 'user';
+  }
+
+  function normalizeTaskRole(role) {
+    /* issue singyichen/label-suite#1266: the URL alone never grants super_admin; the claim counts
+       only when the stored system role agrees (ADR-037: a route query must
+       not create a role). */
+    if (role === 'super_admin') return getCurrentSystemRole() === 'super_admin' ? role : 'user';
+    if (role === 'project_leader') return role;
+    return 'user';
+  }
+
+  function getDisplayedTaskRole() {
+    return normalizeTaskRole(pageTaskRole);
+  }
+
+  function getTaskRunStage(task) {
+    return task.status === 'draft' ? 'unmaterialized' : task.runType;
+  }
+
+  function getOutputTypeMeta(outputType) {
+    return OUTPUT_TYPES.find(function (item) { return item.key === outputType; }) || null;
+  }
+
+  function getOutputTypeLabel(outputType) {
+    var meta = getOutputTypeMeta(outputType);
+    if (!meta) return outputType;
+    return state.lang === 'en' ? meta.en : meta.zh;
+  }
+
+  function getTaskSearchText(task) {
+    var langMap = I18N[state.lang] || I18N.zh;
+    var runStage = getTaskRunStage(task);
+    var runLabel = (langMap.runBadge && langMap.runBadge[runStage]) || '';
+    var statusLabel = (langMap.statusBadge && langMap.statusBadge[task.status]) || '';
+    var outputTypeKeys = Array.isArray(task.outputTypes) ? task.outputTypes : [];
+    var outputTypeLabels = outputTypeKeys.map(getOutputTypeLabel);
+    return [
+      task.id,
+      task.nameZh,
+      task.nameEn,
+      outputTypeKeys.join(' '),
+      outputTypeLabels.join(' '),
+      runStage,
+      runLabel,
+      task.status,
+      statusLabel,
+      task.updatedAt
+    ].filter(Boolean).join(' ').toLowerCase();
+  }
+
+  function getFilteredTasks() {
+    var tasks = TASKS;
+    if (getDisplayedTaskRole() !== 'super_admin') {
+      tasks = tasks.filter(function(tk) { return tk.isMine; });
+    }
+    tasks = tasks.filter(function(tk) { return !tk.deletedAt; });
+    if (state.outputType) {
+      tasks = tasks.filter(function(tk) {
+        return Array.isArray(tk.outputTypes) && tk.outputTypes.includes(state.outputType);
+      });
+    }
+    if (state.runType) {
+      tasks = tasks.filter(function(tk) { return getTaskRunStage(tk) === state.runType; });
+    }
+    if (state.status) {
+      tasks = tasks.filter(function(tk) { return tk.status === state.status; });
+    }
+    if (state.keyword.trim()) {
+      var kw = state.keyword.trim().toLowerCase();
+      tasks = tasks.filter(function(tk) { return getTaskSearchText(tk).indexOf(kw) !== -1; });
+    }
+    return tasks;
+  }
+
+  function showToast(msg, isError) {
+    var toast = document.getElementById('toast');
+    setTextContent('toastMsg', msg);
+    toast.classList.toggle('toast-error', !!isError);
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 3000);
+  }
+
+  function getTrackingContext() {
+    return {
+      lang: state.lang,
+      role: getDisplayedTaskRole(),
+      keyword: state.keyword,
+      output_type: state.outputType,
+      run_type: state.runType,
+      status: state.status,
+      limit: state.limit,
+      offset: state.offset,
+      task_count: getFilteredTasks().length,
+    };
+  }
+
+  function trackAnalytics(eventName, extra) {
+    if (!window.LabelSuiteAnalytics) return;
+    var payload = getTrackingContext();
+    var ext = extra || {};
+    Object.keys(ext).forEach(function (key) { payload[key] = ext[key]; });
+    window.LabelSuiteAnalytics.track(eventName, payload);
+  }
+
+  function syncUrl() {
+    var p = new URLSearchParams();
+    if (state.loadFailed) p.set('view', 'error');
+    if (getDisplayedTaskRole() !== 'user') p.set('task_role', getDisplayedTaskRole());
+    if (state.keyword) p.set('keyword', state.keyword);
+    if (state.outputType) p.set('output_type', state.outputType);
+    if (state.runType) p.set('run_stage', state.runType);
+    if (state.status) p.set('status', state.status);
+    if (state.limit !== 20) p.set('limit', String(state.limit));
+    if (state.offset > 0) p.set('offset', String(state.offset));
+    history.replaceState(null, '', p.toString() ? location.pathname + '?' + p.toString() : location.pathname);
+  }
+
+  function navigateToTaskDetail(task, source) {
+    if (task.canViewDetail) {
+      trackAnalytics('prototype_task_row_clicked', { allowed: true, task_id: task.id, source: source || 'row' });
+      showToast(t('toastNavigating'), false);
+      window.setTimeout(function () {
+        /* issue singyichen/label-suite#1266: only a project leader / super admin viewer carries
+           project_leader on; anyone else sends no role and task-detail fails
+           closed. ponytail: per-task role resolution (member data) is a follow-up. */
+        var viewerRole = getDisplayedTaskRole();
+        var roleQuery = viewerRole === 'project_leader' || viewerRole === 'super_admin' ? '&task_role=project_leader' : '';
+        window.location.href = './task-detail.html?task_id=' + encodeURIComponent(task.id) + roleQuery;
+      }, 220);
+    } else {
+      trackAnalytics('prototype_task_row_clicked', { allowed: false, task_id: task.id, source: source || 'row' });
+      showToast(t('toastNoPermission'), true);
+    }
+  }
+
+  function softDeleteTask(task) {
+    if (getDisplayedTaskRole() !== 'super_admin' && getDisplayedTaskRole() !== 'project_leader') {
+      showToast(t('toastDeleteForbidden'), true);
+      return;
+    }
+    if (task.status !== 'draft') {
+      showToast(t('toastDeleteNotAllowed'), true);
+      return;
+    }
+    task.deletedAt = new Date().toISOString();
+    state.offset = 0;
+    trackAnalytics('prototype_task_soft_deleted', { task_id: task.id });
+    showToast(t('toastTaskSoftDeleted'));
+    render();
+  }
+
+  function openDeleteModal(task, triggerEl) {
+    if (getDisplayedTaskRole() !== 'super_admin' && getDisplayedTaskRole() !== 'project_leader') {
+      showToast(t('toastDeleteForbidden'), true);
+      return;
+    }
+    if (task.status !== 'draft') {
+      showToast(t('toastDeleteNotAllowed'), true);
+      return;
+    }
+    pendingDeleteTaskId = task.id;
+    var taskName = state.lang === 'en' ? task.nameEn : task.nameZh;
+    document.getElementById('deleteTaskModalBody').textContent = t('deleteModalBodyTpl').replace('{name}', taskName);
+    var modal = document.getElementById('deleteTaskModal');
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+    if (window.LabelSuiteModalFocus) {
+      window.LabelSuiteModalFocus.open(modal, { trigger: triggerEl, onClose: closeDeleteModal });
+    }
+  }
+
+  function closeDeleteModal() {
+    pendingDeleteTaskId = null;
+    var modal = document.getElementById('deleteTaskModal');
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+    if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
+  }
+
+  function confirmDeleteModal() {
+    if (!pendingDeleteTaskId) return;
+    var task = TASKS.find(function(item) { return item.id === pendingDeleteTaskId; });
+    if (task) softDeleteTask(task);
+    closeDeleteModal();
+  }
+
+  /* ── Render task rows via DOM (no innerHTML with user data) ──── */
+  function createTaskRow(task) {
+    var tr = document.createElement('tr');
+    tr.setAttribute('tabindex', '0');
+    tr.setAttribute('role', 'button');
+    tr.dataset.sourceFile = task.sourceFile || '';
+
+    var statusInfo = I18N[state.lang].statusBadge;
+    var runInfo = I18N[state.lang].runBadge;
+    var taskName = state.lang === 'en' ? task.nameEn : task.nameZh;
+    var runStage = getTaskRunStage(task);
+    var statusLabel = statusInfo[task.status] || task.status;
+    var runLabel = runInfo[runStage] || runStage;
+    var statusCls = STATUS_BADGE_CLS[task.status] || 'badge-draft';
+    var runCls = RUN_BADGE_CLS[runStage] || 'badge-dry-run';
+    var outputTypeKeys = Array.isArray(task.outputTypes) ? task.outputTypes : [];
+    var outputTypeLabels = outputTypeKeys.map(getOutputTypeLabel);
+
+    // Task name cell
+    var tdName = document.createElement('td');
+    tdName.className = 'task-name-cell';
+    tdName.textContent = taskName;
+
+    // Output types cell
+    var tdType = document.createElement('td');
+    tdType.className = 'output-type-cell';
+    var outputTypeTags = document.createElement('div');
+    outputTypeTags.className = 'output-type-tags';
+    outputTypeTags.setAttribute('role', 'group');
+    outputTypeTags.setAttribute(
+      'aria-label',
+      t('outputTypeGroupAriaTpl').replace('{types}', outputTypeLabels.join(', '))
+    );
+    outputTypeKeys.forEach(function (outputType, index) {
+      var meta = getOutputTypeMeta(outputType);
+      var outputTypeTag = document.createElement('span');
+      outputTypeTag.className = 'badge output-type-tag ' + (meta && meta.badgeClass ? meta.badgeClass : 'badge-task-type-default');
+      outputTypeTag.textContent = outputTypeLabels[index];
+      outputTypeTags.appendChild(outputTypeTag);
+    });
+    tdType.appendChild(outputTypeTags);
+
+    // Run type cell
+    var tdRun = document.createElement('td');
+    var spanRun = document.createElement('span');
+    spanRun.className = 'badge ' + runCls;
+    spanRun.textContent = runLabel;
+    tdRun.appendChild(spanRun);
+
+    // Status cell
+    var tdStatus = document.createElement('td');
+    var spanStatus = document.createElement('span');
+    spanStatus.className = 'badge ' + statusCls;
+    spanStatus.textContent = statusLabel;
+    tdStatus.appendChild(spanStatus);
+
+    // Updated at cell
+    var tdDate = document.createElement('td');
+    tdDate.className = 'updated-cell';
+    tdDate.textContent = task.updatedAt;
+
+    // Actions cell
+    var tdActions = document.createElement('td');
+    tdActions.className = 'actions-cell';
+    var actionWrap = document.createElement('div');
+    actionWrap.className = 'inline-actions';
+
+    var editBtn = document.createElement('button');
+    editBtn.className = 'mini-btn mini-btn-primary';
+    editBtn.type = 'button';
+    editBtn.textContent = t('actionEdit');
+    editBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      navigateToTaskDetail(task, 'action_edit');
+    });
+    editBtn.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
+    });
+
+    var deleteBtn = document.createElement('button');
+    var canDelete = (getDisplayedTaskRole() === 'super_admin' || getDisplayedTaskRole() === 'project_leader') && task.status === 'draft';
+    if (canDelete) {
+      deleteBtn.className = 'mini-btn mini-btn-danger';
+      deleteBtn.type = 'button';
+      deleteBtn.textContent = t('actionDelete');
+      deleteBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        openDeleteModal(task, e.target);
+      });
+      deleteBtn.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
+      });
+      actionWrap.appendChild(deleteBtn);
+    }
+    actionWrap.appendChild(editBtn);
+    tdActions.appendChild(actionWrap);
+
+    tr.appendChild(tdName);
+    tr.appendChild(tdType);
+    tr.appendChild(tdRun);
+    tr.appendChild(tdStatus);
+    tr.appendChild(tdDate);
+    tr.appendChild(tdActions);
+
+    function handleRowClick() { navigateToTaskDetail(task, 'row'); }
+    tr.addEventListener('click', handleRowClick);
+    tr.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleRowClick(); }
+    });
+
+    return tr;
+  }
+
+  function createEmptyRow(isNoResults) {
+    var tr = document.createElement('tr');
+    tr.className = 'empty-state-row';
+
+    var td = document.createElement('td');
+    td.className = 'empty-state-td';
+    td.colSpan = 6;
+
+    var wrap = document.createElement('div');
+    wrap.className = 'empty-state empty-state-cell';
+
+    var title = document.createElement('p');
+    title.className = 'empty-state-title';
+    title.textContent = isNoResults ? t('emptyNoResultsTitle') : t('emptyNoTasksTitle');
+
+    var desc = document.createElement('p');
+    desc.className = 'empty-state-desc';
+    desc.textContent = isNoResults ? t('emptyNoResultsDesc') : t('emptyNoTasksDesc');
+
+    wrap.appendChild(title);
+    wrap.appendChild(desc);
+
+    if (isNoResults) {
+      var clearBtn = document.createElement('button');
+      clearBtn.className = 'clear-btn';
+      clearBtn.textContent = t('emptyClearBtnLabel');
+      clearBtn.addEventListener('click', function () { clearFilters(); });
+      wrap.appendChild(clearBtn);
+    }
+
+    td.appendChild(wrap);
+    tr.appendChild(td);
+    return tr;
+  }
+
+  function createErrorRow() {
+    var tr = document.createElement('tr');
+    tr.className = 'error-row';
+
+    var td = document.createElement('td');
+    td.className = 'empty-state-td';
+    td.colSpan = 6;
+
+    var wrap = document.createElement('div');
+    wrap.className = 'empty-state empty-state-cell';
+
+    var title = document.createElement('p');
+    title.className = 'empty-state-title';
+    title.textContent = t('errorLoadTitle');
+
+    var desc = document.createElement('p');
+    desc.className = 'empty-state-desc';
+    desc.textContent = t('errorLoadDesc');
+
+    var retryBtn = document.createElement('button');
+    retryBtn.className = 'clear-btn';
+    retryBtn.type = 'button';
+    retryBtn.textContent = t('errorRetryLabel');
+    retryBtn.addEventListener('click', function () {
+      if (!TASK_LIST_DATA_READY) {
+        window.location.reload();
+        return;
+      }
+      state.loadFailed = false;
+      render();
+    });
+
+    wrap.appendChild(title);
+    wrap.appendChild(desc);
+    wrap.appendChild(retryBtn);
+    td.appendChild(wrap);
+    tr.appendChild(td);
+    return tr;
+  }
+
+  /* ── Main render ─────────────────────────────────────────────── */
+  function render() {
+    var filtered = state.loadFailed ? [] : getFilteredTasks();
+    var total = filtered.length;
+    var totalPages = Math.max(1, Math.ceil(total / state.limit));
+    var lastPageOffset = Math.max(0, (totalPages - 1) * state.limit);
+    if (state.offset > lastPageOffset) state.offset = lastPageOffset;
+    var currentPage = Math.floor(state.offset / state.limit) + 1;
+
+    var tableWrap = document.getElementById('tableWrap');
+    var paginationBar = document.getElementById('paginationBar');
+    var tbody = document.getElementById('taskTableBody');
+
+    var showEmpty = total === 0 && !state.keyword && !state.outputType && !state.runType && !state.status;
+    var showNoResults = total === 0 && (state.keyword || state.outputType || state.runType || state.status);
+
+    if (state.loadFailed) {
+      tableWrap.classList.remove('hidden');
+      paginationBar.classList.add('hidden');
+      while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+      tbody.appendChild(createErrorRow());
+    } else if (showEmpty) {
+      tableWrap.classList.remove('hidden');
+      paginationBar.classList.add('hidden');
+      while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+      tbody.appendChild(createEmptyRow(false));
+    } else if (showNoResults) {
+      tableWrap.classList.remove('hidden');
+      paginationBar.classList.add('hidden');
+      while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+      tbody.appendChild(createEmptyRow(true));
+    } else {
+      tableWrap.classList.remove('hidden');
+      paginationBar.classList.remove('hidden');
+
+      // Build rows using DOM methods
+      var paged = filtered.slice(state.offset, state.offset + state.limit);
+      while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+      paged.forEach(function(task) { tbody.appendChild(createTaskRow(task)); });
+    }
+
+    // Pagination info
+    var infoTpl = t('paginationTpl');
+    setTextContent(
+      'paginationInfo',
+      infoTpl
+        .replace('{total}', total)
+        .replace('{page}', currentPage)
+        .replace('{totalPages}', totalPages)
+    );
+
+    // Page size options label
+    var psSel = document.getElementById('pageSizeSelect');
+    Array.prototype.forEach.call(psSel.options, function(opt) {
+      opt.textContent = opt.value + t('pageSizeLabel');
+    });
+
+    // Prev/Next buttons
+    document.getElementById('prevPageBtn').disabled = state.offset <= 0;
+    document.getElementById('nextPageBtn').disabled = state.offset + state.limit >= total;
+
+    // Numbered page buttons
+    var controls = document.getElementById('paginationControls');
+    var nextBtn = document.getElementById('nextPageBtn');
+    controls.querySelectorAll('[data-page]').forEach(function(b) { b.remove(); });
+    var maxVisible = 5;
+    var startP = Math.max(1, currentPage - 2);
+    var endP = Math.min(totalPages, startP + maxVisible - 1);
+    if (endP - startP < maxVisible - 1) startP = Math.max(1, endP - maxVisible + 1);
+    for (var p = startP; p <= endP; p++) {
+      (function(pg) {
+        var btn = document.createElement('button');
+        btn.className = 'page-btn' + (pg === currentPage ? ' active' : '');
+        btn.dataset.page = pg;
+        btn.textContent = pg;
+        btn.addEventListener('click', function() {
+          state.offset = (pg - 1) * state.limit;
+          syncUrl();
+          render();
+        });
+        nextBtn.insertAdjacentElement('beforebegin', btn);
+      }(p));
+    }
+
+    // Clear filter button
+    var hasFilter = state.keyword.trim() || state.outputType || state.runType || state.status;
+    document.getElementById('clearFiltersBtn').classList.toggle('hide-clear', !hasFilter);
+
+    // Admin nav
+    var systemRole = getCurrentSystemRole();
+    if (window.LabelSuiteSharedSidebar) {
+      window.LabelSuiteSharedSidebar.setSystemRole(systemRole);
+    }
+
+    syncUrl();
+  }
+
+  /* ── Apply language ──────────────────────────────────────────── */
+  function applyLang(l) {
+    state.lang = l === 'en' ? 'en' : 'zh';
+    document.documentElement.lang = state.lang === 'zh' ? 'zh-TW' : 'en';
+    document.title = t('docTitle');
+
+    var simpleIds = [
+      'pageTitle', 'pageSubtitle', 'newTaskBtnLabel',
+      'thTaskName', 'thTaskType', 'thRunType', 'thStatus', 'thUpdatedAt', 'thActions',
+      'clearFiltersLabel',
+    ];
+    simpleIds.forEach(function(id) {
+      setTextContent(id, t(id));
+    });
+
+    if (window.LabelSuiteSharedSidebar) {
+      window.LabelSuiteSharedSidebar.applyGlobalLanguage(state.lang, {
+        langToggleAria: t('langToggleAria'),
+      });
+    }
+    document.getElementById('searchInput').placeholder = t('searchPlaceholder');
+    document.getElementById('searchInput').setAttribute('aria-label', t('searchAriaLabel'));
+    document.getElementById('searchInput').value = state.keyword;
+    document.getElementById('pageSizeSelect').value = String(state.limit);
+
+    var outputTypeSel = document.getElementById('outputTypeFilter');
+    outputTypeSel.setAttribute('aria-label', t('outputTypeFilterAria'));
+    while (outputTypeSel.firstChild) outputTypeSel.removeChild(outputTypeSel.firstChild);
+    var allOutputTypesOption = document.createElement('option');
+    allOutputTypesOption.value = '';
+    allOutputTypesOption.textContent = t('allOutputTypes');
+    allOutputTypesOption.selected = !state.outputType;
+    outputTypeSel.appendChild(allOutputTypesOption);
+    OUTPUT_TYPES.forEach(function(outputType) {
+      var opt = document.createElement('option');
+      opt.value = outputType.key;
+      opt.textContent = state.lang === 'en' ? outputType.en : outputType.zh;
+      if (outputType.key === state.outputType) opt.selected = true;
+      outputTypeSel.appendChild(opt);
+    });
+
+    var runSel = document.getElementById('runTypeFilter');
+    var runOpts = t('runTypeOptions');
+    while (runSel.firstChild) runSel.removeChild(runSel.firstChild);
+    runOpts.forEach(function(o) {
+      var opt = document.createElement('option');
+      opt.value = o.value;
+      opt.textContent = o.label;
+      if (o.value === state.runType) opt.selected = true;
+      runSel.appendChild(opt);
+    });
+
+    // Status filter options
+    var sel = document.getElementById('statusFilter');
+    var opts = t('statusOptions');
+    while (sel.firstChild) sel.removeChild(sel.firstChild);
+    opts.forEach(function(o) {
+      var opt = document.createElement('option');
+      opt.value = o.value;
+      opt.textContent = o.label;
+      if (o.value === state.status) opt.selected = true;
+      sel.appendChild(opt);
+    });
+
+    // User chip
+    var sysRole = getDisplayedTaskRole();
+    var roleLabels = (I18N[state.lang] || I18N.zh).roleLabel;
+    var userNames = (I18N[state.lang] || I18N.zh).userName;
+    var avatarMap = { user: 'U', super_admin: 'SA', project_leader: 'PL' };
+    if (window.LabelSuiteSharedSidebar) {
+      window.LabelSuiteSharedSidebar.updateUserChip({
+        roleLabel: roleLabels[sysRole] || roleLabels.user,
+        userName: userNames[sysRole] || userNames.user,
+        avatarLabel: avatarMap[sysRole] || 'U',
+      });
+    }
+    setTextContent('deleteTaskModalTitle', t('deleteModalTitle'));
+    setTextContent('deleteTaskCancelBtn', t('deleteModalCancel'));
+    setTextContent('deleteTaskConfirmBtn', t('deleteModalConfirm'));
+    if (pendingDeleteTaskId) {
+      var pendingTask = TASKS.find(function(item) { return item.id === pendingDeleteTaskId; });
+      if (pendingTask) {
+        var pendingName = state.lang === 'en' ? pendingTask.nameEn : pendingTask.nameZh;
+        setTextContent('deleteTaskModalBody', t('deleteModalBodyTpl').replace('{name}', pendingName));
+      }
+    } else {
+      setTextContent('deleteTaskModalBody', t('deleteModalBodyDefault'));
+    }
+
+    render();
+  }
+
+  /* ── Event bindings ──────────────────────────────────────────── */
+
+  document.getElementById('searchInput').addEventListener('input', function(e) {
+    state.keyword = e.target.value;
+    state.offset = 0;
+    trackAnalytics('prototype_task_list_search_changed', { keyword: state.keyword });
+    render();
+  });
+
+  document.getElementById('outputTypeFilter').addEventListener('change', function(e) {
+    state.outputType = e.target.value;
+    state.offset = 0;
+    trackAnalytics('prototype_task_list_filter_changed', { filter: 'output_type', value: state.outputType || '__all__' });
+    render();
+  });
+
+  document.getElementById('runTypeFilter').addEventListener('change', function(e) {
+    state.runType = e.target.value;
+    state.offset = 0;
+    trackAnalytics('prototype_task_list_filter_changed', { filter: 'run_stage', value: state.runType || '__all__' });
+    render();
+  });
+
+  document.getElementById('statusFilter').addEventListener('change', function(e) {
+    state.status = e.target.value;
+    state.offset = 0;
+    trackAnalytics('prototype_task_list_filter_changed', { filter: 'status', value: state.status || '__all__' });
+    render();
+  });
+
+  function clearFilters() {
+    state.keyword = '';
+    state.outputType = '';
+    state.runType = '';
+    state.status = '';
+    state.offset = 0;
+    document.getElementById('searchInput').value = '';
+    trackAnalytics('prototype_task_list_filters_cleared');
+    applyLang(state.lang);
+  }
+  document.getElementById('clearFiltersBtn').addEventListener('click', clearFilters);
+
+  document.getElementById('newTaskBtn').addEventListener('click', function() {
+    trackAnalytics('prototype_cta_clicked', { cta: 'new_task', destination: 'task-new' });
+    window.location.href = './task-new.html';
+  });
+
+  document.getElementById('prevPageBtn').addEventListener('click', function() {
+    if (state.offset > 0) {
+      state.offset = Math.max(0, state.offset - state.limit);
+      trackAnalytics('prototype_task_list_page_changed', {
+        source: 'prev',
+        to_page: Math.floor(state.offset / state.limit) + 1,
+        offset: state.offset,
+      });
+      render();
+    }
+  });
+  document.getElementById('nextPageBtn').addEventListener('click', function() {
+    var total = getFilteredTasks().length;
+    if (state.offset + state.limit < total) {
+      state.offset += state.limit;
+      trackAnalytics('prototype_task_list_page_changed', {
+        source: 'next',
+        to_page: Math.floor(state.offset / state.limit) + 1,
+        offset: state.offset,
+      });
+      render();
+    }
+  });
+
+  document.getElementById('pageSizeSelect').addEventListener('change', function(e) {
+    state.limit = parseInt(e.target.value, 10);
+    state.offset = 0;
+    trackAnalytics('prototype_task_list_limit_changed', { limit: state.limit, offset: state.offset });
+    render();
+  });
+
+  function handleLangToggle(source) {
+    var prev = state.lang;
+    applyLang(state.lang === 'zh' ? 'en' : 'zh');
+    trackAnalytics('prototype_lang_switched', { source: source, from_lang: prev, to_lang: state.lang });
+  }
+  var langToggle = document.getElementById('langToggle');
+  var mobileLangToggle = document.getElementById('mobileLangToggle');
+  if (langToggle) langToggle.addEventListener('click', function() { handleLangToggle('desktop'); });
+  if (mobileLangToggle) mobileLangToggle.addEventListener('click', function() { handleLangToggle('mobile'); });
+  document.getElementById('deleteTaskCancelBtn').addEventListener('click', closeDeleteModal);
+  document.getElementById('deleteTaskConfirmBtn').addEventListener('click', confirmDeleteModal);
+  document.getElementById('deleteTaskModal').addEventListener('click', function(e) {
+    if (e.target === this) closeDeleteModal();
+  });
+  /* Escape-to-close is now handled by the LabelSuiteModalFocus trap
+     (pages/shared/modal-focus.js), scoped to the modal itself. */
+
+  /* ── Init ────────────────────────────────────────────────────── */
+  (function initStateFromUrl() {
+    var q = new URLSearchParams(window.location.search);
+    var view = q.get('view');
+    var taskRole = normalizeTaskRole(q.get('task_role'));
+    if (view !== 'empty') {
+      loadCreatedTaskSeed();
+    }
+    var keyword = q.get('keyword');
+    var outputType = q.get('output_type');
+    var runStage = q.get('run_stage');
+    var status = q.get('status');
+    var limitQuery = q.get('limit');
+    var offsetQuery = q.get('offset');
+    var limit = limitQuery !== null && /^\d+$/.test(limitQuery) ? Number(limitQuery) : NaN;
+    var offset = offsetQuery !== null && /^\d+$/.test(offsetQuery) ? Number(offsetQuery) : NaN;
+    pendingUnauthorizedToast = !!q.get('unauthorized');
+    pageTaskRole = taskRole;
+    var validOutputTypes = OUTPUT_TYPES.map(function(item) { return item.key; });
+    var validRunStages = I18N.zh.runTypeOptions.map(function(item) { return item.value; });
+    var validStatuses = I18N.zh.statusOptions.map(function(item) { return item.value; });
+    state.loadFailed = view === 'error' || !TASK_LIST_DATA_READY;
+    if (keyword) state.keyword = keyword;
+    if (outputType && validOutputTypes.indexOf(outputType) !== -1) state.outputType = outputType;
+    if (runStage && validRunStages.indexOf(runStage) !== -1) state.runType = runStage;
+    if (status && validStatuses.indexOf(status) !== -1) state.status = status;
+    if (!isNaN(limit) && [20, 50, 100].indexOf(limit) !== -1) state.limit = limit;
+    if (!isNaN(offset) && offset >= 0) state.offset = offset;
+  }());
+
+  if (window.LabelSuiteSharedSidebar) {
+    applyLang(window.LabelSuiteSharedSidebar.getStoredLang());
+  } else {
+    applyLang('zh');
+  }
+
+  if (pendingUnauthorizedToast) {
+    /* render() (called from applyLang() above) already ran syncUrl(),
+       which drops `unauthorized` since it is not part of `state` --
+       nothing left to clean up here, and a refresh cannot re-trigger it. */
+    pendingUnauthorizedToast = false;
+    showToast(t('toastNoPermission'), true);
+  }
+
+  if (window.LabelSuiteAnalytics) {
+    window.LabelSuiteAnalytics.init({ page: 'task-list' });
+    window.LabelSuiteAnalytics.trackPageView('task-list', getTrackingContext);
+  }
+</script>
+</body>
+</html>

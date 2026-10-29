@@ -1,0 +1,2436 @@
+<!DOCTYPE html>
+<!-- Spec: specs/annotation/015-annotation-workspace/spec.md -->
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Label Suite — 標記清單</title>
+  <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/button.css" />
+  <link rel="stylesheet" href="../shared/empty-state.css" />
+  <link rel="stylesheet" href="../shared/list-page.css" />
+  <script src="../../assets/theme-fouc.js"></script>
+  <style>
+    :root {
+      --navbar-mobile-height: 84px;
+      --navbar-mobile-top-height: 64px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* Shared list chrome lives in ../shared/list-page.css (singyichen/label-suite#1448); keep UA cursors instead of the shared pointer. */
+    :where(button, input, select) { cursor: revert; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-surface);
+      color: var(--color-ink);
+      line-height: 1.8;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: row;
+    }
+    .hidden { display: none !important; }
+
+    .layout {
+      flex: 1;
+      max-width: 1280px;
+      width: 100%;
+      margin: 0 auto;
+      padding: var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+      min-width: 0;
+    }
+    .page-header { display: flex; align-items: flex-start; gap: var(--space-md); margin-bottom: 24px; }
+    .page-title {
+      font-family: var(--font-serif-display);
+      font-size: 28px;
+      line-height: 1.3;
+      font-weight: 700;
+      color: var(--color-ink);
+      margin: 0 0 4px;
+    }
+    .page-subtitle { font-size: 14px; line-height: 1.8; color: var(--color-text-soft); margin: 0; }
+    /* design/system/MASTER.md §Breadcrumb (compact form). Placed BELOW the
+       heading block exactly as task-detail.html does: shared spec 008 FR-017
+       pins every page's h1 to the Dashboard's y, so nothing may precede it. */
+    .breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-soft);margin:-12px 0 16px}
+    .breadcrumb a{color:var(--color-primary)}
+    .breadcrumb a:hover{text-decoration:underline}
+    .breadcrumb-sep{color:var(--color-ink-muted);font-size:11px}
+    .list {
+      display: grid;
+      gap: var(--space-sm);
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .list-item {
+      padding: var(--space-md);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: var(--color-white);
+      transition: background var(--dur-fast), border-color var(--dur-fast);
+    }
+    .list-item:hover {
+      border-color: var(--color-primary);
+      background: var(--color-slate-50);
+    }
+    .list-item-title {
+      display: block;
+      font-weight: 600;
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+    .list-item-detail {
+      display: block;
+      margin-top: 4px;
+      color: var(--color-ink-muted);
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+    .task-item-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .task-item-summary { min-width: 0; }
+    .task-item-badges {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    .task-item-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+    .task-item-actions {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    /* Zero specificity so pages/shared/button.css wins for the standard buttons */
+    :where(.btn) {
+      padding: 10px 20px;
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      font-weight: 600;
+      font-size: 14px;
+      transition: opacity var(--dur-fast), transform var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast);
+    }
+    .btn-primary.slim {
+      padding: 10px 18px;
+      min-width: 138px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+    .badge-info {
+      color: var(--color-info);
+      background: var(--color-info-bg);
+      border-color: var(--color-info-border);
+    }
+    .badge-warning {
+      color: var(--color-warning);
+      background: var(--color-warning-soft-bg);
+      border-color: var(--color-warning-soft-border);
+    }
+    .badge-success {
+      color: var(--color-success);
+      background: var(--color-success-soft-bg);
+      border-color: var(--color-success-soft-border);
+    }
+    .badge-dry-run {
+      color: #6B7280;
+      background: #F3F4F6;
+      border-color: #D1D5DB;
+    }
+    .badge-official {
+      color: #5B21B6;
+      background: #EDE9FE;
+      border-color: #DDD6FE;
+    }
+    .progress {
+      height: 6px;
+      border-radius: var(--radius-full);
+      background: var(--color-border);
+      overflow: hidden;
+    }
+    .progress > span {
+      display: block;
+      height: 100%;
+      border-radius: var(--radius-full);
+      background: var(--color-cta);
+      transition: width 300ms ease;
+    }
+    .filter-select { min-width: 180px; }
+    .table-container {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-white);
+      overflow: hidden;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .task-table { min-width: 640px; }
+    .task-table tbody tr:last-child td { border-bottom: none; }
+    #sampleRows tr {
+      cursor: pointer;
+      transition: background var(--dur-fast);
+    }
+    #sampleRows tr:hover { background: var(--color-slate-50); }
+    #sampleRows tr:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -2px;
+    }
+    /* Issue singyichen/label-suite#407: separates one sample's review-unit group (one row per
+       annotator, FR-055) from the next without inventing a new component --
+       a top border on every group-start row after the first. */
+    #sampleRows tr[data-group-start="true"]:not(:first-child) {
+      border-top: 1px solid var(--color-border);
+    }
+    /* De-emphasizes the repeated sample-ID text on a group's continuation
+       rows; the text itself is unchanged, only its color/weight. */
+    .list-review-id-muted {
+      color: var(--color-ink-muted);
+      font-weight: 400;
+    }
+    .text-snippet {
+      max-width: 520px;
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.6;
+    }
+    /* Fixed-line clamp by default (issue singyichen/label-suite#188) -- long-text tasks (QA /
+       summary / multi-turn) used to render the full original text and blow
+       up row height. The toggle below (per row) switches this to
+       overflow: visible / -webkit-line-clamp: unset. */
+    .text-snippet-content {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .text-snippet-content.expanded {
+      -webkit-line-clamp: unset;
+      overflow: visible;
+    }
+    .text-snippet-toggle {
+      display: block;
+      margin-top: 4px;
+      padding: 0;
+      border: none;
+      background: none;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-primary);
+      cursor: pointer;
+    }
+    .text-snippet-toggle:hover { text-decoration: underline; }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-full);
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .status-submitted { color: var(--color-success); background: var(--color-success-soft-bg); }
+    .status-saved { color: var(--color-warning); background: var(--color-warning-soft-bg); }
+    .status-pending { color: var(--color-ink-muted); background: var(--color-border); }
+    .mini-btn {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      color: var(--color-ink);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 10px;
+      cursor: pointer;
+      transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast), opacity var(--dur-fast);
+    }
+    .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+    .mini-btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+    }
+    .mini-btn-primary {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: var(--color-white);
+    }
+    .mini-btn-primary:hover:not(:disabled) { opacity: 0.9; border-color: var(--color-primary); color: var(--color-white); }
+    /* === Reviewer list styles === */
+    .reviewer-stats {
+      font-size: 12px; color: var(--color-text-soft); font-family: monospace;
+      display: block;
+      min-width: 0;
+      white-space: pre-line;
+      line-height: 1.6;
+    }
+    .reviewer-stats-cell {
+      min-width: 160px;
+      width: 160px;
+    }
+    /* Reviewer queue has 9 columns (the annotator list has 5): tighter cell
+       padding and a floor on 文本摘要 let it fit .task-table-wrap at 1440px
+       instead of squeezing the summary or pushing 操作 out of view (singyichen/label-suite#1444). */
+    .task-table:has(.reviewer-stats-cell) th,
+    .task-table:has(.reviewer-stats-cell) td { padding-left: 8px; padding-right: 8px; }
+    .task-table:has(.reviewer-stats-cell) td.text-snippet { min-width: 160px; }
+    /* English copy is longer (record ids, "Finalized by arbitration adopting B",
+       "Finalized . locked"): let the ID, review status and answer cells wrap
+       inside a capped width so the table fits with margin in zh and en. */
+    .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(1),
+    .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(3),
+    .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(6) {
+      white-space: normal;
+    }
+    /* Only record ids are unbroken tokens; status and answer text break at spaces. */
+    .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(1) { overflow-wrap: anywhere; }
+    /* A label chip never breaks inside a word; the arbitration note still wraps. */
+    .task-table:has(.reviewer-stats-cell) td:nth-child(6) .annotator-result-tag { white-space: nowrap; }
+    .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(1) { min-width: 100px; max-width: 120px; }
+    .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(3) { min-width: 96px; max-width: 110px; }
+    .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(6) { min-width: 100px; max-width: 140px; }
+    .reviewer-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    /* FR-091 processing summary: three stacked lines rather than one run-on
+       string, so a reader can find the same field at the same height on
+       every row. Fixed width keeps the two-line annotator variant and the
+       three-line reviewer variant from shifting the actions column. */
+    .list-summary {
+      display: flex; flex-direction: column; gap: 2px;
+      min-width: 150px; font-size: 12px; color: var(--color-text-soft);
+      line-height: 1.6;
+    }
+    .list-summary-line { font-family: monospace; }
+    /* One review unit's answers: one tag per composed output type, wrapping
+       rather than widening the cell on multi-output tasks. */
+    .annotator-answer { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .annotator-username { font-size: 13px; font-weight: 600; color: var(--color-ink); }
+    .annotator-result-tag {
+      font-size: 13px; color: var(--color-primary); background: var(--color-primary-soft-bg);
+      border: 1px solid var(--color-info-border); border-radius: var(--radius-md);
+      padding: 3px 12px; font-family: monospace; min-width: 80px; text-align: center;
+    }
+    .annotator-row-actions { display: flex; gap: 6px; margin-left: auto; }
+    /* Issue singyichen/label-suite#400/singyichen/label-suite#888: marks a review unit whose displayed outcome came
+       from arbitration or the project leader, rather than its original
+       annotator answer. */
+    .review-overwritten-badge {
+      font-size: 11px; color: var(--color-warning);
+      background: var(--color-warning-soft-bg);
+      border: 1px solid var(--color-warning-border);
+      border-radius: var(--radius-md); padding: 1px 8px;
+    }
+    /* FR-096 試標歷史回饋 (issue singyichen/label-suite#596): kept visually close to
+       .annotator-answer's tag styling so "my answer -> finalized result"
+       reads as the same kind of value the review table already shows. */
+    .dry-run-feedback-row {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+      padding: 10px 0; border-top: 1px solid var(--color-border);
+      font-size: 13px;
+    }
+    .dry-run-feedback-arrow { color: var(--color-text-soft); }
+    .dry-run-feedback-source { font-size: 12px; color: var(--color-text-soft); }
+    .dry-run-feedback-reason {
+      flex-basis: 100%; font-size: 12px; color: var(--color-text-soft);
+    }
+    .result-tag-green { color: #15803D !important; background: #DCFCE7 !important; border-color: #86EFAC !important; }
+    .result-tag-blue  { color: #1D4ED8 !important; background: #EFF6FF !important; border-color: #BFDBFE !important; }
+    .result-tag-red   { color: #DC2626 !important; background: #FEE2E2 !important; border-color: #FCA5A5 !important; }
+    @media (max-width: 768px) {
+      .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
+      .task-item-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .task-item-meta {
+        width: 100%;
+        margin-left: 0;
+        flex-wrap: wrap;
+        justify-content: space-between;
+      }
+      .task-item-badges {
+        justify-content: flex-start;
+      }
+      .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .toolbar-left {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+      }
+      .search-wrap {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+      }
+      .filter-select {
+        width: 100%;
+        min-width: 0;
+      }
+      .clear-btn { align-self: flex-start; }
+      .clear-btn.hide-clear { display: none; }
+      .pagination-left {
+        width: 100%;
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
+      .pagination-controls { width: 100%; justify-content: flex-end; }
+      .task-table td { vertical-align: top; }
+      .text-snippet {
+        max-width: 240px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+    @media (max-width: 420px) {
+      .mobile-user-name { max-width: 56px; font-size: 11px; }
+    }
+    /* ── Dark mode overrides ──────────────────────────────────── */
+    html[data-theme="dark"] {
+      /* Run-phase badges */
+      .badge-dry-run  { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
+      .badge-official { color: #A78BFA; background: #1E1B4B; border-color: #3730A3; }
+
+      /* Result tags with !important — need matching specificity */
+      .result-tag-green { color: #4ADE80 !important; background: #0F2A18 !important; border-color: #1F5132 !important; }
+      .result-tag-blue  { color: #60A5FA !important; background: #0F1F33 !important; border-color: #1E3A66 !important; }
+      .result-tag-red   { color: #F87171 !important; background: #2A1414 !important; border-color: #5B2222 !important; }
+    }
+  </style>
+  <link rel="stylesheet" href="../shared/task-type-badge.css" />
+</head>
+<body>
+<div id="sharedSidebarMount"></div>
+<script src="../shared/sidebar.js"></script>
+<script>
+  var annotationListHref = '../annotation/annotation-list.html' + window.location.search;
+  var urlTaskRole = (function () {
+    var role = new URLSearchParams(window.location.search).get('role');
+    return role === 'reviewer' ? 'reviewer' : role === 'project_leader' ? 'project_leader' : 'annotator';
+  })();
+  window.LabelSuiteSharedSidebar.mountSidebar({
+    mountId: 'sharedSidebarMount',
+    activeNav: 'annotation',
+    taskRole: urlTaskRole,
+    annotationHref: annotationListHref,
+    dashboardHref: '../dashboard/dashboard.html',
+    taskHref: '../task-management/task-list.html',
+    adminHref: '../admin/user-management.html',
+    profileHref: '../account/profile.html',
+    loginHref: '../account/login.html',
+    brandHref: '../dashboard/dashboard.html',
+  });
+</script>
+
+<main class="layout" data-testid="annotation-list-shell">
+  <section class="page-header">
+    <div>
+      <h1 class="page-title" id="pageTitle">標記清單</h1>
+      <p class="page-subtitle" id="pageSubtitle">請先選擇要處理的資料筆次，再進入標記作業頁。</p>
+    </div>
+  </section>
+
+  <nav class="breadcrumb" aria-label="breadcrumb" id="entryBreadcrumb" data-testid="entry-breadcrumb"></nav>
+
+  <section class="list hidden" id="taskInfoCard" aria-label="任務資訊" data-testid="list-task-info-card">
+    <article class="list-item">
+      <div class="task-item-header">
+        <div class="task-item-summary">
+          <span class="list-item-title" id="taskInfoTitle">-</span>
+          <span class="list-item-detail" id="taskInfoDetail">-</span>
+          <span class="list-item-detail hidden" id="taskInfoNotSubmittedNote" data-testid="list-not-submitted-note"></span>
+        </div>
+        <div class="task-item-meta">
+          <div class="task-item-badges" id="taskInfoOutputTypes"></div>
+          <div class="task-item-badges">
+            <span class="badge" id="taskInfoRunType">-</span>
+            <span class="badge" id="taskInfoStatus">-</span>
+          </div>
+          <div class="task-item-actions">
+            <button class="btn btn-primary slim" id="taskQuickContinueBtn" type="button" data-testid="list-quick-continue-btn">快速繼續</button>
+          </div>
+        </div>
+      </div>
+      <div class="progress" style="margin-top: 10px;" aria-hidden="true">
+        <span id="taskInfoProgressBar" style="width: 0%;"></span>
+      </div>
+    </article>
+  </section>
+
+  <!-- FR-096 試標歷史回饋 (issue singyichen/label-suite#596): annotator-only, dry_run-only. Filled
+       entirely by renderDryRunFeedback() -- content is data-driven, so no
+       static markup lives here. -->
+  <section class="list hidden" id="dryRunFeedbackCard" aria-label="試標歷史回饋" data-testid="ws-dry-run-feedback-card"></section>
+
+  <section class="empty-state empty-state-panel hidden" id="taskNotFound" data-testid="list-task-not-found"></section>
+
+  <!-- Issue singyichen/label-suite#449: shown when the reviewer arrived from the quick-review CTA
+       and no review unit on this task is actionable for them. -->
+  <section class="empty-state empty-state-panel hidden" id="noActionableNotice" role="status" data-testid="list-no-actionable-notice"></section>
+
+  <div class="toolbar" role="search" aria-label="標記清單搜尋與篩選" id="listToolbar">
+    <div class="toolbar-left">
+      <!-- Options are role-dependent (completion tri-state vs. review unit
+           五態) and are built by renderStatusFilterOptions(). -->
+      <select class="filter-select" id="statusFilter"></select>
+      <button class="clear-btn hide-clear" id="clearFiltersBtn" aria-label="清除篩選">
+        <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+        <span>清除篩選</span>
+      </button>
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="search" class="search-input" id="searchInput" placeholder="搜尋" aria-label="搜尋">
+      </div>
+    </div>
+  </div>
+
+  <section class="table-container" id="tableContainer">
+    <div class="task-table-wrap">
+      <table class="task-table" aria-label="標記清單" id="taskTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>完成狀態</th>
+            <th>完成時間</th>
+            <th>文本摘要</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="sampleRows"></tbody>
+      </table>
+    </div>
+    <div class="empty-state empty-state-page hidden" id="emptyState"></div>
+    <div class="pagination hidden" id="paginationBar">
+      <div class="pagination-left">
+        <span class="pagination-info" id="paginationInfo"></span>
+        <select class="page-size-select" id="pageSizeSelect" aria-label="每頁筆數">
+          <option value="20" selected>20 / 頁</option>
+          <option value="50">50 / 頁</option>
+          <option value="100">100 / 頁</option>
+        </select>
+      </div>
+      <div class="pagination-controls" id="paginationControls">
+        <button class="page-btn" id="prevPageBtn" aria-label="上一頁" disabled>
+          <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <button class="page-btn" id="nextPageBtn" aria-label="下一頁" disabled>
+          <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="../../assets/theme.js"></script>
+<script src="../../assets/analytics.js"></script>
+<script src="../task-management/task-list.data.js"></script>
+<script src="../task-management/task-detail.data.js"></script>
+<!-- issue singyichen/label-suite#489: dashboard.assignments.js derives T014's reviewer IAA via
+     LabelSuiteAnnotationWorkspaceData.computeIaaAlpha() at load time, so
+     annotation-workspace.data.js must load first (dashboard.html already
+     orders them this way). -->
+<script src="../shared/annotation-history.js"></script>
+<script src="annotation-workspace.data.js"></script>
+<script src="../dashboard/dashboard.assignments.js"></script>
+<script>
+  /* ── i18n ─────────────────────────────────────────────────────── */
+  var CURRENT_LANG = 'zh';
+  var I18N = {
+    zh: {
+      pageTitle: '標記清單',
+      pageSubtitleAnnotator: '請先選擇要處理的資料筆次，再進入標記作業頁。',
+      pageSubtitleReviewer: '請先選擇要審查的資料筆次，再進入審核作業頁。',
+      langToggleAria: '切換語言',
+      thStatus: '完成狀態',
+      thCompletedAt: '完成時間',
+      thProcessingSummary: '處理狀況',
+      thTextSummary: '文本摘要',
+      thActions: '操作',
+      runTypeLabelOfficial: '正式標記',
+      runTypeLabelDry: '試標',
+      crumbWorkAreaReviewer: '審核作業',
+      crumbWorkAreaAnnotator: '標記作業',
+      crumbTaskTpl: '{name}（{run}）',
+      statusSubmitted: '已提交',
+      statusSaved: '已儲存',
+      statusPending: '待處理',
+      taskStatusCompleted: '已完成',
+      taskStatusInProgress: '進行中',
+      quickContinueBtnAnnotator: '快速繼續',
+      quickContinueBtnReviewer: '快速審核',
+      editBtnLabel: '編輯',
+      searchPlaceholder: '搜尋',
+      searchAriaLabel: '搜尋',
+      statusFilterAll: '全部完成狀態',
+      clearFiltersLabel: '清除篩選',
+      emptyNoResults: '找不到符合條件的資料。',
+      emptyNoData: '目前尚無資料。',
+      paginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
+      pageSizeTpl: '{size} / 頁',
+      roleLabelAnnotator: '標記員',
+      roleLabelReviewer: '審核員',
+      sampleCountTpl: '共 {total} 筆資料',
+      trialRoundTpl: '試標回合 R{round}',
+      trialListCountTpl: '本回合清單 {total} 筆',
+      openSampleAriaTpl: '開啟樣本 {id}',
+      notFoundTitle: '找不到這個任務',
+      notFoundMessage: '任務代碼 {taskId} 不存在，請確認網址或回到儀表板重新選擇任務。',
+      notFoundNoTaskMessage: '未指定任務，請回到儀表板重新選擇任務。',
+      notFoundBackBtn: '回儀表板',
+      thLabelStats: '標記分布統計',
+      thAnswer: '標記結果',
+      thReviewStatus: '審核狀態',
+      reviewStatusFilterAll: '全部審核狀態',
+      reviewUnitPending: '待審',
+      reviewUnitDisputed: '爭議中',
+      arbitrateBtnLabel: '仲裁',
+      reviewUnitFinalized: '已定稿',
+      reviewFreeTextStats: '自由文本任務 — 請並列比對各標記員結果',
+      reviewBypassPill: window.LabelSuiteSharedSidebar.BYPASS_WORDING.zh.answer,
+      reviewFinalizationArbitrationAdoptB: '仲裁採 B 定稿',
+      reviewFinalizationPlCustom: 'PL 自訂答案定稿',
+      reviewFinalizationPlAdoptAnnotator: 'PL 採標記員答案定稿',
+      reviewFinalizationPlAdoptReviewer: 'PL 採審核員答案定稿',
+      reviewFinalizationPlExclude: 'PL 已排除資料',
+      reviewFinalizationLegacy: '定稿值已覆寫',
+      reviewNoAnswer: '（無）',
+      textExpandLabel: '展開全文',
+      textCollapseLabel: '收合',
+      notSubmittedNoteTpl: '其中 {count} 筆尚未提交，不計入審核清單：',
+      notSubmittedEntryLabel: '查看 {id}',
+      reviewUnitInterimNote: '未定稿',
+      reviewUnitFinalizedNote: '已鎖定',
+      dryRunFeedbackTitle: '試標歷史回饋',
+      dryRunFeedbackPending: '本回合尚在進行中，回合結束後才會開放試標歷史回饋。',
+      dryRunFeedbackSummaryTpl: '共 {total} 筆，其中 {modified} 筆經審核修正（{pct}%）',
+      dryRunFeedbackSourceTpl: '{action}・{actor}',
+      dryRunFeedbackGuidelineLink: '查看指南段落',
+    },
+    en: {
+      pageTitle: 'Annotation List',
+      pageSubtitleAnnotator: 'Select a sample to annotate, then open the annotation workspace.',
+      pageSubtitleReviewer: 'Select a sample to review, then open the review workspace.',
+      langToggleAria: 'Switch language',
+      thStatus: 'Status',
+      thCompletedAt: 'Completed At',
+      thProcessingSummary: 'Processing',
+      thTextSummary: 'Text Summary',
+      thActions: 'Actions',
+      runTypeLabelOfficial: 'Official',
+      runTypeLabelDry: 'Trial',
+      crumbWorkAreaReviewer: 'Review',
+      crumbWorkAreaAnnotator: 'Annotate',
+      crumbTaskTpl: '{name} ({run})',
+      statusSubmitted: 'Submitted',
+      statusSaved: 'Saved',
+      statusPending: 'Pending',
+      taskStatusCompleted: 'Completed',
+      taskStatusInProgress: 'In Progress',
+      quickContinueBtnAnnotator: 'Quick Resume',
+      quickContinueBtnReviewer: 'Quick Review',
+      editBtnLabel: 'Edit',
+      searchPlaceholder: 'Search',
+      searchAriaLabel: 'Search',
+      statusFilterAll: 'All statuses',
+      clearFiltersLabel: 'Clear filters',
+      emptyNoResults: 'No matching data.',
+      emptyNoData: 'No data yet.',
+      paginationTpl: 'Total {total} · Page {page} / {totalPages}',
+      pageSizeTpl: '{size} / page',
+      roleLabelAnnotator: 'Annotator',
+      roleLabelReviewer: 'Reviewer',
+      sampleCountTpl: '{total} samples total',
+      trialRoundTpl: 'Trial round R{round}',
+      trialListCountTpl: 'This round: {total} items',
+      openSampleAriaTpl: 'Open sample {id}',
+      notFoundTitle: 'Task not found',
+      notFoundMessage: 'Task {taskId} does not exist. Please check the URL or return to the dashboard to pick another task.',
+      notFoundNoTaskMessage: 'No task specified. Please return to the dashboard to pick a task.',
+      notFoundBackBtn: 'Back to dashboard',
+      thLabelStats: 'Label Distribution',
+      thAnswer: 'Annotation Result',
+      thReviewStatus: 'Review Status',
+      reviewStatusFilterAll: 'All review statuses',
+      reviewUnitPending: 'Pending review',
+      reviewUnitDisputed: 'Disputed',
+      arbitrateBtnLabel: 'Arbitrate',
+      reviewUnitFinalized: 'Finalized',
+      reviewFreeTextStats: 'Free-text task — compare annotator answers side by side',
+      reviewBypassPill: window.LabelSuiteSharedSidebar.BYPASS_WORDING.en.answer,
+      reviewFinalizationArbitrationAdoptB: 'Finalized by arbitration adopting B',
+      reviewFinalizationPlCustom: 'Finalized with PL custom answer',
+      reviewFinalizationPlAdoptAnnotator: 'Finalized by PL adopting annotator answer',
+      reviewFinalizationPlAdoptReviewer: 'Finalized by PL adopting reviewer answer',
+      reviewFinalizationPlExclude: 'Excluded by PL',
+      reviewFinalizationLegacy: 'Finalized value overwritten',
+      reviewNoAnswer: '(none)',
+      textExpandLabel: 'Show full text',
+      textCollapseLabel: 'Collapse',
+      notSubmittedNoteTpl: '{count} sample(s) not yet submitted, excluded from this review list:',
+      notSubmittedEntryLabel: 'View {id}',
+      reviewUnitInterimNote: 'not finalized',
+      reviewUnitFinalizedNote: 'locked',
+      dryRunFeedbackTitle: 'Trial History Feedback',
+      dryRunFeedbackPending: 'This round is still in progress. Trial history feedback opens once it concludes.',
+      dryRunFeedbackSummaryTpl: '{total} total, {modified} modified by review ({pct}%)',
+      dryRunFeedbackSourceTpl: '{action}・{actor}',
+      dryRunFeedbackGuidelineLink: 'View guideline section',
+    }
+  };
+  function t(key, vars) {
+    var str = (I18N[CURRENT_LANG] || I18N.zh)[key] || key;
+    if (vars) {
+      Object.keys(vars).forEach(function(k) { str = str.replace('{' + k + '}', String(vars[k])); });
+    }
+    return str;
+  }
+  function findAssignmentStats(taskId, role) {
+    var seeds = window.LabelSuiteAssignmentSeeds || [];
+    for (var i = 0; i < seeds.length; i += 1) {
+      if (seeds[i].exampleTaskId === taskId) {
+        return seeds[i][role === 'reviewer' ? 'reviewer' : 'annotator'] || null;
+      }
+    }
+    return null;
+  }
+  function getOutputTypeMeta(key) {
+    var registry = (window.LabelSuiteTaskListData && window.LabelSuiteTaskListData.outputTypes) || [];
+    for (var i = 0; i < registry.length; i += 1) {
+      if (registry[i].key === key) return registry[i];
+    }
+    return null;
+  }
+
+  function getOutputTypeLabel(key) {
+    var meta = getOutputTypeMeta(key);
+    if (!meta) return key;
+    return CURRENT_LANG === 'en' ? meta.en : meta.zh;
+  }
+
+  var ANNOTATION_COMPLETION_KEY = 'labelsuite.prototypeAnnotationCompletion';
+
+  /*
+   * Resolves a TaskProfile by task_id from the shared task-list/task-detail
+   * seeds (loaded via <script src>). Returns null when either seed source
+   * is missing the task_id, driving the not-found error state instead of a
+   * hardcoded per-task_id branch.
+   */
+  function resolveTaskProfile(taskId) {
+    if (!taskId) return null;
+    var listData = window.LabelSuiteTaskListData;
+    var detailData = window.LabelSuiteTaskDetailData;
+    if (!listData || !detailData) return null;
+
+    var listEntry = null;
+    for (var i = 0; i < listData.tasks.length; i += 1) {
+      if (listData.tasks[i].id === taskId) { listEntry = listData.tasks[i]; break; }
+    }
+    if (!listEntry) return null;
+
+    var detailProfile = detailData.profiles ? detailData.profiles[taskId] : null;
+    if (!detailProfile) return null;
+
+    return {
+      id: taskId,
+      nameZh: listEntry.nameZh,
+      nameEn: listEntry.nameEn,
+      status: listEntry.status,
+      outputTypes: listEntry.outputTypes || [],
+      fieldRoleMap: detailProfile.fieldRoleMap || {},
+      listTitleField: detailProfile.list_title_field ?? null,
+      dialogueFields: detailProfile.dialogue_fields ?? null,
+      guidelineFiles: detailProfile.guidelineFiles || [],
+      datasetRecords: detailProfile.datasetRecords || [],
+      materializedRuns: detailProfile.materializedRuns || null
+    };
+  }
+
+  /*
+   * Dataset record id-field names vary across seed profiles (id / ID /
+   * article_id / ...). Resolve generically instead of assuming `record.id`.
+   */
+  function getRecordId(record, index) {
+    if (!record) return String(index);
+    if (record.id !== undefined && record.id !== null) return String(record.id);
+    if (record.ID !== undefined && record.ID !== null) return String(record.ID);
+    var idKey = Object.keys(record).filter(function (key) { return (/_id$/i).test(key); })[0];
+    if (idKey) return String(record[idKey]);
+    return String(index);
+  }
+
+  /* FR-106: delegates to the helper shared with the workspace left rail. */
+  function getRecordSnippet(record, fieldRoleMap, listTitleField, dialogueFields) {
+    if (!record) return '-';
+    return window.LabelSuiteAnnotationWorkspaceData.getRecordSummaryText(
+      record, fieldRoleMap, listTitleField, CURRENT_LANG, dialogueFields
+    ) || '-';
+  }
+
+  function getRecordSearchText(record, fieldRoleMap, dialogueFields) {
+    return window.LabelSuiteAnnotationWorkspaceData.getRecordSearchText(
+      record, fieldRoleMap, CURRENT_LANG, dialogueFields
+    );
+  }
+
+  function completionStateKey(role, taskId, runType) {
+    return [role, taskId, runType].join('|');
+  }
+
+  function readCompletionStateMap() {
+    try {
+      var raw = window.localStorage.getItem(ANNOTATION_COMPLETION_KEY);
+      if (!raw) return {};
+      var parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') return parsed;
+    } catch (error) {
+      // Ignore storage errors in prototype mode.
+    }
+    return {};
+  }
+
+  function formatCompletedAt(timestamp) {
+    var date = new Date(timestamp);
+    if (isNaN(date.getTime())) return '-';
+    var pad = function (value) { return String(value).padStart(2, '0'); };
+    return [date.getFullYear(), '-', pad(date.getMonth() + 1), '-', pad(date.getDate())].join('');
+  }
+
+  function runTypeLabel(runType) {
+    return runType === 'official_run' ? t('runTypeLabelOfficial') : t('runTypeLabelDry');
+  }
+
+  function runTypeBadgeClass(runType) {
+    return runType === 'official_run' ? 'badge-official' : 'badge-dry-run';
+  }
+
+  /* Forwards whichever identity params this page was opened with (FR-049),
+     so a row and the workspace it opens address the same submission bucket.
+     Absent params stay absent: both pages then fall back to the same default
+     roster identity.
+
+     `annotatorId` overrides the forwarded annotator (FR-055): a reviewer row
+     IS one annotator's submission, so it must open that annotator's bucket
+     regardless of which one the reviewer arrived with. */
+  function identityQuery(context, annotatorId) {
+    var values = {
+      annotator_id: annotatorId || context.identityParams.annotator_id,
+      reviewer_id: context.identityParams.reviewer_id
+    };
+    return ['annotator_id', 'reviewer_id'].map(function (key) {
+      return values[key] ? '&' + key + '=' + encodeURIComponent(values[key]) : '';
+    }).join('');
+  }
+
+  /* FR-081 (issue singyichen/label-suite#456 AC-4): the workspace ignores params it does not know,
+     so carrying the list's view state through it costs nothing there and
+     lets every return path -- breadcrumb, sidebar, not-found redirect --
+     put the user back on the page they left instead of an unfiltered page 1.
+     Same keys applyListStateFromUrl() reads back, so the trip needs no
+     translation in either direction. */
+  function listStateQuery() {
+    var query = writeListStateParams(new URLSearchParams()).toString();
+    return query ? '&' + query : '';
+  }
+
+  function buildWorkspaceUrl(taskId, sampleId, context, annotatorId) {
+    return '../annotation/annotation-workspace.html' +
+      '?task_id=' + encodeURIComponent(taskId) +
+      '&sample_id=' + encodeURIComponent(sampleId) +
+      '&role=' + encodeURIComponent(context.role) +
+      '&run_type=' + encodeURIComponent(context.runType) +
+      identityQuery(context, annotatorId) +
+      listStateQuery();
+  }
+
+  /* Issue singyichen/label-suite#620 / FR-096 point 4: annotation-list is a standalone prototype
+     page, so it mirrors the workspace renderer's heading allocation rules
+     when resolving [[heading text]] citations. The Set reserves generated
+     suffixes as well as natural slugs (Foo, Foo, Foo-2 stays collision-free).
+     Allocation resets for each Markdown file, matching renderMarkdown(). */
+  function slugifyGuidelineHeading(text) {
+    var slug = String(text)
+      .trim()
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}]+/gu, '-')
+      .replace(/^-+|-+$/g, '');
+    return slug || 'section';
+  }
+  function allocateGuidelineHeadingId(text, used) {
+    var base = slugifyGuidelineHeading(text);
+    var candidate = base;
+    var suffix = 2;
+    while (used.has(candidate)) {
+      candidate = base + '-' + suffix;
+      suffix += 1;
+    }
+    used.add(candidate);
+    return candidate;
+  }
+  function guidelineHeadingAnchors(profile) {
+    var anchors = new Map();
+    ((profile && profile.guidelineFiles) || []).forEach(function (file) {
+      if (file.type !== 'markdown') return;
+      var used = new Set();
+      String(file.content || '').replace(/\r\n?/g, '\n').split('\n').forEach(function (line) {
+        var heading = /^(#{1,3})\s+(.+)$/.exec(line);
+        if (!heading) return;
+        var title = heading[2].trim();
+        var anchorId = allocateGuidelineHeadingId(title, used);
+        if (!anchors.has(title)) anchors.set(title, anchorId);
+      });
+    });
+    return anchors;
+  }
+  function renderGuidelineCitations(container, reason, profile, context, row) {
+    var anchors = guidelineHeadingAnchors(profile);
+    var citation = /\[\[([^\]\r\n]+)\]\]/g;
+    var cursor = 0;
+    var match = null;
+    var foundSyntax = false;
+    while ((match = citation.exec(reason)) !== null) {
+      foundSyntax = true;
+      if (match.index > cursor) {
+        container.appendChild(document.createTextNode(reason.slice(cursor, match.index)));
+      }
+      var title = match[1].trim();
+      var anchorId = anchors.get(title);
+      if (anchorId) {
+        var link = document.createElement('a');
+        link.setAttribute('data-testid', 'ws-dry-run-feedback-guideline-link');
+        link.textContent = title;
+        link.href = buildWorkspaceUrl(profile.id, row.sampleId, context) + '#' + encodeURIComponent(anchorId);
+        container.appendChild(link);
+      } else {
+        container.appendChild(document.createTextNode(title));
+      }
+      cursor = citation.lastIndex;
+    }
+    if (cursor < reason.length) {
+      container.appendChild(document.createTextNode(reason.slice(cursor)));
+    }
+    return foundSyntax;
+  }
+
+  function getSampleStatus(profile, context, record, index) {
+    return window.LabelSuiteAnnotationWorkspaceData.getSampleStatus(
+      profile.id, context.role, context.runType, getRecordId(record, index), context.identity);
+  }
+
+  /* Quick-continue target (spec 015 FR-004B): prefer the LAST pending
+     record, else the last saved record, else fall back to the task's last
+     record (everything already submitted). */
+  function findLatestUnfinishedSampleId(profile, context) {
+    var records = profile.datasetRecords || [];
+    if (records.length === 0) return '';
+    var lastPending = '';
+    var lastSaved = '';
+    records.forEach(function (record, index) {
+      var status = getSampleStatus(profile, context, record, index);
+      if (status === 'pending') lastPending = getRecordId(record, index);
+      else if (status === 'saved') lastSaved = getRecordId(record, index);
+    });
+    return lastPending || lastSaved || getRecordId(records[records.length - 1], records.length - 1);
+  }
+
+  function statusBadgeClass(status) {
+    if (status === 'submitted') return 'status-submitted';
+    if (status === 'saved') return 'status-saved';
+    return 'status-pending';
+  }
+
+  function statusText(status) {
+    if (status === 'submitted') return t('statusSubmitted');
+    if (status === 'saved') return t('statusSaved');
+    return t('statusPending');
+  }
+
+  /* Review unit 三態 (spec 015 v5.0.0, FR-055). Issue singyichen/label-suite#452: 已定稿 is the
+     ONLY terminal state, so it is the only one that keeps the submitted
+     badge — 爭議中 is unresolved and used to borrow a settled-looking one.
+     The badge text carries the same split in words (「爭議中 · 未定稿」 vs
+     「已定稿 · 已鎖定」) so the distinction never rests on colour alone. */
+  var REVIEW_UNIT_STATUS = window.LabelSuiteAnnotationWorkspaceData.REVIEW_UNIT_STATUS;
+  /* Derived, never enumerated (FR-055: 「MUST NOT 於選單硬編狀態清單」). The
+     five-state literal this replaces outlived two of its own entries when
+     issue singyichen/label-suite#596 collapsed the constant: APPROVED and MODIFIED became
+     undefined and reached the select as options labelled 全部審核狀態,
+     because the label lookup treats a falsy value as the all-statuses row.
+     Reading the constant's own key order means a state added or removed in
+     the data layer can never leave a stale option behind, and declaration
+     order there is already the lifecycle order this list wants. */
+  var REVIEW_UNIT_STATUS_ORDER = Object.keys(REVIEW_UNIT_STATUS).map(function (key) {
+    return REVIEW_UNIT_STATUS[key];
+  });
+  var ANNOTATOR_STATUS_ORDER = ['submitted', 'saved', 'pending'];
+
+  function reviewUnitStatusLabel(status) {
+    return t('reviewUnit' + status.charAt(0).toUpperCase() + status.slice(1));
+  }
+
+  /* Badge text only: the filter select keeps the bare state names, because a
+     qualifier like 未定稿 reads as a separate filterable state in a dropdown. */
+  function reviewUnitStatusText(status) {
+    var base = reviewUnitStatusLabel(status);
+    if (status === REVIEW_UNIT_STATUS.FINALIZED) return base + ' · ' + t('reviewUnitFinalizedNote');
+    if (status === REVIEW_UNIT_STATUS.PENDING) return base;
+    return base + ' · ' + t('reviewUnitInterimNote');
+  }
+
+  function reviewUnitBadgeClass(status) {
+    if (status === REVIEW_UNIT_STATUS.FINALIZED) return 'status-submitted';
+    if (status === REVIEW_UNIT_STATUS.PENDING) return 'status-pending';
+    return 'status-saved';
+  }
+
+  /* The two roles filter on different state machines, so the select is built
+     from whichever one applies rather than carrying both in static markup. */
+  function renderStatusFilterOptions(role) {
+    var statusFilter = document.getElementById('statusFilter');
+    if (!statusFilter) return;
+    var reviewer = role === 'reviewer';
+    var values = reviewer ? REVIEW_UNIT_STATUS_ORDER : ANNOTATOR_STATUS_ORDER;
+    var label = reviewer ? reviewUnitStatusLabel : statusText;
+
+    statusFilter.setAttribute('aria-label', reviewer ? t('reviewStatusFilterAll') : t('statusFilterAll'));
+    statusFilter.innerHTML = '';
+    [''].concat(values).forEach(function (value) {
+      var option = document.createElement('option');
+      option.value = value;
+      option.textContent = value
+        ? label(value)
+        : t(reviewer ? 'reviewStatusFilterAll' : 'statusFilterAll');
+      statusFilter.appendChild(option);
+    });
+    statusFilter.value = FILTER_STATE.status;
+    /* A status carried in the URL that this role's option list doesn't
+       offer would filter everything while the select shows 全部. */
+    if (statusFilter.value !== FILTER_STATE.status) FILTER_STATE.status = '';
+  }
+
+  function parseContext() {
+    var params = new URLSearchParams(window.location.search);
+    var role = params.get('role');
+    var runType = params.get('run_type');
+    var taskId = params.get('task_id');
+    return {
+      role: role === 'reviewer' ? 'reviewer' : 'annotator',
+      runType: runType === 'official_run' ? 'official_run' : 'dry_run',
+      taskId: taskId ? taskId.trim() : '',
+      identity: window.LabelSuiteAnnotationWorkspaceData.resolveIdentity(params),
+      identityParams: {
+        annotator_id: params.get('annotator_id'),
+        reviewer_id: params.get('reviewer_id')
+      },
+      notice: params.get('notice') || ''
+    };
+  }
+
+  var FILTER_STATE = {
+    status: '',
+    query: ''
+  };
+  var PAGINATION_STATE = {
+    page: 1,
+    pageSize: 20
+  };
+
+  /* UXC-11: filter/search/pagination live in the URL (limit/offset
+     convention) so F5 restores the view and the link is shareable.
+     Context params from parseContext() (task_id, role, identity…) are
+     left untouched; defaults are dropped to keep the URL clean. */
+  function applyListStateFromUrl() {
+    var params = new URLSearchParams(window.location.search);
+    FILTER_STATE.status = params.get('status') || '';
+    FILTER_STATE.query = (params.get('q') || '').trim();
+    var limit = parseInt(params.get('limit') || '', 10);
+    if ([20, 50, 100].indexOf(limit) !== -1) PAGINATION_STATE.pageSize = limit;
+    var offset = parseInt(params.get('offset') || '', 10);
+    if (Number.isFinite(offset) && offset > 0) {
+      PAGINATION_STATE.page = Math.floor(offset / PAGINATION_STATE.pageSize) + 1;
+    }
+  }
+
+  /* Writes the current view state onto whatever URLSearchParams the caller
+     is assembling. Two callers share it -- syncUrlToListState() below, which
+     writes the list back onto its own URL, and buildWorkspaceUrl(), which
+     hands the same state to the workspace so it can hand it back (FR-081).
+     One writer means the two URLs can never disagree. Defaults are deleted
+     rather than written, so a clean URL stays clean. */
+  function writeListStateParams(params) {
+    if (FILTER_STATE.status) params.set('status', FILTER_STATE.status); else params.delete('status');
+    if (FILTER_STATE.query) params.set('q', FILTER_STATE.query); else params.delete('q');
+    if (PAGINATION_STATE.pageSize !== 20) params.set('limit', String(PAGINATION_STATE.pageSize)); else params.delete('limit');
+    var offset = (PAGINATION_STATE.page - 1) * PAGINATION_STATE.pageSize;
+    if (offset > 0) params.set('offset', String(offset)); else params.delete('offset');
+    return params;
+  }
+
+  function syncUrlToListState() {
+    var params = writeListStateParams(new URLSearchParams(window.location.search));
+    window.history.replaceState(null, '', window.location.pathname + '?' + params.toString());
+  }
+
+  function updateClearFilterState() {
+    var clearFiltersBtn = document.getElementById('clearFiltersBtn');
+    if (!clearFiltersBtn) return;
+    if (FILTER_STATE.status || FILTER_STATE.query) {
+      clearFiltersBtn.classList.remove('hide-clear');
+      return;
+    }
+    clearFiltersBtn.classList.add('hide-clear');
+  }
+
+  function resetPaginationToFirstPage() {
+    PAGINATION_STATE.page = 1;
+  }
+
+  function updatePageSizeLabels() {
+    var pageSizeSelect = document.getElementById('pageSizeSelect');
+    if (!pageSizeSelect) return;
+    Array.prototype.forEach.call(pageSizeSelect.options, function (opt) {
+      opt.textContent = t('pageSizeTpl', { size: opt.value });
+    });
+  }
+
+  function renderPagination(totalCount, context) {
+    var paginationBar = document.getElementById('paginationBar');
+    var paginationInfo = document.getElementById('paginationInfo');
+    var paginationControls = document.getElementById('paginationControls');
+    var prevPageBtn = document.getElementById('prevPageBtn');
+    var nextPageBtn = document.getElementById('nextPageBtn');
+    var totalPages = Math.max(1, Math.ceil(totalCount / PAGINATION_STATE.pageSize));
+
+    if (!paginationBar || !paginationInfo || !paginationControls || !prevPageBtn || !nextPageBtn) {
+      return totalPages;
+    }
+
+    paginationControls.querySelectorAll('[data-page]').forEach(function (btn) { btn.remove(); });
+    updatePageSizeLabels();
+
+    if (totalCount === 0) {
+      paginationBar.classList.add('hidden');
+      paginationInfo.textContent = '';
+      prevPageBtn.disabled = true;
+      nextPageBtn.disabled = true;
+      return totalPages;
+    }
+
+    if (PAGINATION_STATE.page > totalPages) PAGINATION_STATE.page = totalPages;
+
+    paginationBar.classList.remove('hidden');
+    paginationInfo.textContent = t('paginationTpl', { total: totalCount, page: PAGINATION_STATE.page, totalPages: totalPages });
+    prevPageBtn.disabled = PAGINATION_STATE.page <= 1;
+    nextPageBtn.disabled = PAGINATION_STATE.page >= totalPages;
+
+    var maxVisible = 5;
+    var startPage = Math.max(1, PAGINATION_STATE.page - 2);
+    var endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    if (endPage - startPage < maxVisible - 1) startPage = Math.max(1, endPage - maxVisible + 1);
+
+    for (var p = startPage; p <= endPage; p += 1) {
+      (function (pageNumber) {
+        var btn = document.createElement('button');
+        btn.className = 'page-btn' + (pageNumber === PAGINATION_STATE.page ? ' active' : '');
+        btn.dataset.page = String(pageNumber);
+        btn.textContent = String(pageNumber);
+        btn.addEventListener('click', function () {
+          PAGINATION_STATE.page = pageNumber;
+          renderRows(context);
+        });
+        nextPageBtn.insertAdjacentElement('beforebegin', btn);
+      }(p));
+    }
+
+    return totalPages;
+  }
+
+  function filterRows(rows) {
+    return rows.filter(function (item) {
+      if (FILTER_STATE.status && item.status !== FILTER_STATE.status) return false;
+      if (!FILTER_STATE.query) return true;
+
+      var query = FILTER_STATE.query.toLowerCase();
+      return (
+        item.recordId.toLowerCase().indexOf(query) !== -1 ||
+        item.statusLabel.toLowerCase().indexOf(query) !== -1 ||
+        (item.annotator || '').toLowerCase().indexOf(query) !== -1 ||
+        item.completedAt.toLowerCase().indexOf(query) !== -1 ||
+        item.text.toLowerCase().indexOf(query) !== -1 ||
+        item.searchText.toLowerCase().indexOf(query) !== -1
+      );
+    });
+  }
+
+  function makeTd(content, className) {
+    var td = document.createElement('td');
+    if (className) td.className = className;
+    if (typeof content === 'string') {
+      td.textContent = content;
+    } else {
+      td.appendChild(content);
+    }
+    return td;
+  }
+
+  /* Text summary cell (issue singyichen/label-suite#188, FR-007I): clamps to a fixed line count by
+     default via .text-snippet-content's CSS, and only renders the expand
+     toggle when the text is long enough to plausibly overflow that clamp --
+     short snippets (e.g. single_label sentences) stay toggle-free. The
+     toggle stops propagation so it never triggers the row's own
+     click-to-open-workspace behavior (FR-008). */
+  var TEXT_SNIPPET_TOGGLE_THRESHOLD = 60;
+  function buildTextCell(text) {
+    var td = document.createElement('td');
+    td.className = 'text-snippet';
+
+    var content = document.createElement('span');
+    content.className = 'text-snippet-content';
+    content.textContent = text;
+    td.appendChild(content);
+
+    if (text && text.length > TEXT_SNIPPET_TOGGLE_THRESHOLD) {
+      var toggleBtn = document.createElement('button');
+      toggleBtn.type = 'button';
+      toggleBtn.className = 'text-snippet-toggle';
+      toggleBtn.setAttribute('data-testid', 'list-text-toggle');
+      toggleBtn.setAttribute('aria-expanded', 'false');
+      toggleBtn.textContent = t('textExpandLabel');
+      toggleBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var isExpanded = content.classList.toggle('expanded');
+        toggleBtn.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+        toggleBtn.textContent = t(isExpanded ? 'textCollapseLabel' : 'textExpandLabel');
+      });
+      td.appendChild(toggleBtn);
+    }
+
+    return td;
+  }
+
+  function makeTh(text, width) {
+    var th = document.createElement('th');
+    th.textContent = text;
+    if (width) th.style.width = width;
+    return th;
+  }
+
+  function renderTableHeader(role) {
+    var theadRow = document.querySelector('#taskTable thead tr');
+    if (!theadRow) return;
+    while (theadRow.firstChild) theadRow.removeChild(theadRow.firstChild);
+    if (role === 'reviewer') {
+      /* One row is one review unit in both run types (FR-055), so the
+         header no longer branches on run_type. */
+      theadRow.appendChild(makeTh('ID'));
+      theadRow.appendChild(makeTh(t('roleLabelAnnotator')));
+      theadRow.appendChild(makeTh(t('thReviewStatus')));
+      theadRow.appendChild(makeTh(t('thCompletedAt')));
+      theadRow.appendChild(makeTh(t('thTextSummary')));
+      theadRow.appendChild(makeTh(t('thAnswer')));
+      theadRow.appendChild(makeTh(t('thLabelStats'), '280px'));
+      theadRow.appendChild(makeTh(t('thProcessingSummary')));
+      theadRow.appendChild(makeTh(t('thActions')));
+    } else {
+      theadRow.appendChild(makeTh('ID'));
+      theadRow.appendChild(makeTh(t('thStatus')));
+      theadRow.appendChild(makeTh(t('thCompletedAt')));
+      theadRow.appendChild(makeTh(t('thTextSummary')));
+      theadRow.appendChild(makeTh(t('thProcessingSummary')));
+      theadRow.appendChild(makeTh(t('thActions')));
+    }
+  }
+
+  /* ── Reviewer rows (spec 015 v4.2.0, FR-055) ────────────────────────
+     One row is one review unit: sample × annotator × run_type. Both run
+     types render identically — the only thing official_run changes is how
+     many annotators a sample has. The list carries no decision of its own;
+     approve / reject / bypass all live on the workspace's review row
+     (FR-053), so there is exactly one place a decision can be made. */
+  function getMockRows(context, recordId) {
+    var profile = context.profile;
+    return window.LabelSuiteAnnotationWorkspaceData.getReviewUnitRows(
+      profile.id, context.runType, recordId, profile.outputTypes);
+  }
+
+  /* Per-output-type answer views feeding the shared stats algorithm in
+     annotation-workspace.data.js (same rows contract as the workspace
+     aggregate review card). */
+  function buildOutKeyRows(outKey, mockRows) {
+    return mockRows.map(function (row) {
+      return {
+        answer: row.answers ? row.answers[outKey] : undefined,
+        bypass: !!(row.bypass && row.bypass[outKey])
+      };
+    });
+  }
+
+  /* A FINALIZED unit's displayed answers must follow its per-output
+     responsibility chain (issues singyichen/label-suite#400/singyichen/label-suite#888). PL exception records settle a
+     whole output, while arbitration records settle individual dispute
+     items, so composite answers are rebuilt from the annotator value plus
+     each settled sub-item. */
+  function sameCompositeItem(outKey, left, right) {
+    return window.LabelSuiteAnnotationWorkspaceData.compareOutputAnswer(
+      outKey, [left], [right]).equal;
+  }
+
+  function applyFinalizedDisputeItem(outKey, answer, item, resolvedValue) {
+    if (item.key === item.outKey) return resolvedValue;
+    if (outKey === 'multi_dim') {
+      var dims = {};
+      Object.keys(answer || {}).forEach(function (name) { dims[name] = answer[name]; });
+      dims[item.key] = resolvedValue;
+      return dims;
+    }
+    if (Array.isArray(answer)) {
+      var next = answer.filter(function (entry) {
+        return !sameCompositeItem(outKey, entry, item.annotatorValue);
+      });
+      if (resolvedValue !== null &&
+          !next.some(function (entry) { return sameCompositeItem(outKey, entry, resolvedValue); })) {
+        next.push(resolvedValue);
+      }
+      return next;
+    }
+    return answer;
+  }
+
+  function getFinalizedOverwrites(profile, context, recordId, identity, originalAnswers) {
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+    var items = data.getDisputeItems(profile.id, context.runType, recordId, identity, profile.outputTypes);
+    var arbState = data.getArbitrationState(profile.id, context.runType, recordId, identity);
+    var exceptionPool = data.getExceptionPool(profile.id, context.runType, recordId, identity);
+    var overwrites = null;
+    var wholeOutKeys = {};
+    profile.outputTypes.forEach(function (outKey) {
+      /* issue singyichen/label-suite#1151: a bare-outKey record or a custom_answer settles the
+         whole output; an itemId-keyed adopt_* record settles one item. */
+      data.exceptionPoolEntries(exceptionPool, outKey).forEach(function (entry) {
+        var record = entry.record;
+        if (record.action === 'exclude_from_dataset' || !data.hasLegitimateFinalizedValue(record)) return;
+        if (entry.itemKey !== null && record.action !== 'custom_answer') return;
+        overwrites = overwrites || {};
+        overwrites[outKey] = record.finalized_value;
+        wholeOutKeys[outKey] = true;
+      });
+    });
+    items.forEach(function (item) {
+      if (wholeOutKeys[item.outKey]) return;
+      var resolvedValue;
+      var stored = arbState[item.outKey + '::' + item.key];
+      /* A whole-output disposition returned above; what is left is arbitration
+         or an itemId-keyed pool record (issue singyichen/label-suite#1151). A unit with neither a
+         `finalized_by` nor a legitimate finalized_value (issue singyichen/label-suite#914) has
+         nothing legitimate to overwrite with, so the row keeps the
+         annotator's original answer (issue singyichen/label-suite#903). */
+      var poolRecord = data.exceptionPoolRecordFor(exceptionPool, item);
+      if (stored && stored.finalized_by && data.hasLegitimateFinalizedValue(stored)) {
+        resolvedValue = stored.finalized_value;
+      } else if (poolRecord && poolRecord.action !== 'exclude_from_dataset' &&
+          data.hasLegitimateFinalizedValue(poolRecord)) {
+        resolvedValue = poolRecord.finalized_value;
+      }
+      if (resolvedValue !== undefined) {
+        overwrites = overwrites || {};
+        var currentAnswer = Object.prototype.hasOwnProperty.call(overwrites, item.outKey)
+          ? overwrites[item.outKey]
+          : originalAnswers[item.outKey];
+        overwrites[item.outKey] = applyFinalizedDisputeItem(
+          item.outKey, currentAnswer, item, resolvedValue);
+      }
+    });
+    return overwrites;
+  }
+
+  function getFinalizationSourceKeys(profile, context, recordId, identity, overwrites) {
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+    var exceptionPool = data.getExceptionPool(profile.id, context.runType, recordId, identity);
+    var exceptionSourceKeys = {
+      custom_answer: 'reviewFinalizationPlCustom',
+      adopt_annotator: 'reviewFinalizationPlAdoptAnnotator',
+      adopt_reviewer: 'reviewFinalizationPlAdoptReviewer',
+      exclude_from_dataset: 'reviewFinalizationPlExclude'
+    };
+    var sourceKeys = {};
+    profile.outputTypes.forEach(function (outKey) {
+      // issue singyichen/label-suite#1151: records may be keyed by bare outKey or itemId; the
+      // badge reports the first one that counts.
+      data.exceptionPoolEntries(exceptionPool, outKey).forEach(function (entry) {
+        var poolRecord = entry.record;
+        // issue singyichen/label-suite#914: exclude_from_dataset deliberately carries no
+        // finalized_value (D2 sentinel) and always counts; the other three
+        // actions must additionally carry a legitimate value, or the badge
+        // would claim a disposition getFinalizedOverwrites() didn't apply.
+        if (!sourceKeys[outKey] && exceptionSourceKeys[poolRecord.action] &&
+            (poolRecord.action === 'exclude_from_dataset' || data.hasLegitimateFinalizedValue(poolRecord))) {
+          sourceKeys[outKey] = exceptionSourceKeys[poolRecord.action];
+        }
+      });
+    });
+    var arbState = data.getArbitrationState(profile.id, context.runType, recordId, identity);
+    var itemIds = Object.keys(arbState);
+    profile.outputTypes.forEach(function (outKey) {
+      if (sourceKeys[outKey]) return;
+      var hasAdoptB = false;
+      var hasLegacyFinalization = false;
+      itemIds.forEach(function (itemId) {
+        if (itemId.indexOf(outKey + '::') !== 0) return;
+        var stored = arbState[itemId];
+        if (!stored || !stored.finalized_by || !data.hasLegitimateFinalizedValue(stored)) return;
+        var votes = Array.isArray(stored.votes) ? stored.votes : [];
+        var finalizedVote = null;
+        votes.forEach(function (vote) {
+          if (vote.arbiter_id === stored.finalized_by) finalizedVote = vote;
+        });
+        if (finalizedVote && finalizedVote.choice === 'adopt_b') hasAdoptB = true;
+        if (!finalizedVote) hasLegacyFinalization = true;
+      });
+      if (hasAdoptB) {
+        sourceKeys[outKey] = 'reviewFinalizationArbitrationAdoptB';
+      } else if (hasLegacyFinalization && overwrites &&
+                 Object.prototype.hasOwnProperty.call(overwrites, outKey)) {
+        sourceKeys[outKey] = 'reviewFinalizationLegacy';
+      }
+    });
+    return Object.keys(sourceKeys).length ? sourceKeys : null;
+  }
+
+  function buildReviewStatsText(profile, mockRows) {
+    if (mockRows.length === 0) return '-';
+    var multi = profile.outputTypes.length > 1;
+    return profile.outputTypes.map(function (outKey) {
+      var stats = window.LabelSuiteAnnotationWorkspaceData.computeReviewStats(
+        outKey, buildOutKeyRows(outKey, mockRows));
+      if (stats === null) stats = t('reviewFreeTextStats');
+      if (stats === '') stats = '-';
+      return multi ? getOutputTypeLabel(outKey) + '：' + stats : stats;
+    }).join('\n');
+  }
+
+  function formatCompactAnswer(outKey, answer) {
+    if (answer === undefined || answer === null || (Array.isArray(answer) && answer.length === 0)) {
+      return t('reviewNoAnswer');
+    }
+    var text;
+    switch (outKey) {
+      case 'multi_label':
+        text = answer.join(', ');
+        break;
+      case 'multi_dim':
+        text = '[' + Object.keys(answer).map(function (k) { return answer[k]; }).join(', ') + ']';
+        break;
+      case 'sequence_tagging':
+        text = answer.map(function (span) { return span.text + '/' + span.label; }).join(' ');
+        break;
+      case 'entity_recognition':
+        text = answer.map(function (ent) { return ent.text + '(' + ent.type + ')'; }).join(', ');
+        break;
+      case 'relation_identification':
+        text = answer.map(function (tr) { return tr.subj + '-' + tr.rel + '-' + tr.obj; }).join(', ');
+        break;
+      default:
+        text = String(answer);
+    }
+    return text.length > 40 ? text.slice(0, 39) + '…' : text;
+  }
+
+  /* Dimension result tags color by deviation from the sample's
+     cross-annotator mean (shared FR-014A algorithm in
+     annotation-workspace.data.js, same source as the workspace card). */
+  function dimColorClass(outKey, rowIdx, mockRows) {
+    return window.LabelSuiteAnnotationWorkspaceData.dimDeviationClass(outKey, buildOutKeyRows(outKey, mockRows), rowIdx);
+  }
+
+  /* This unit's own answers, one tag per composed output type. Read-only:
+     the reviewer edits them in the workspace, never on the list.
+     A FINALIZED unit's overwritten value (issue singyichen/label-suite#400) gets an explanatory
+     badge -- appended as a SIBLING of the tag wrapper, not inside it, so the
+     wrapper's own data-testid text stays exactly the answer text callers
+     already assert on. */
+  function buildAnswerCell(profile, item) {
+    var outer = document.createDocumentFragment();
+    var wrap = document.createElement('div');
+    wrap.className = 'annotator-answer';
+    wrap.setAttribute('data-testid', 'list-review-answer');
+    outer.appendChild(wrap);
+    var sourceBadges = [];
+    profile.outputTypes.forEach(function (outKey) {
+      var tagSpan = document.createElement('span');
+      var colorClass = dimColorClass(outKey, item.rowIdx, item.mockRows);
+      tagSpan.className = 'annotator-result-tag' + (colorClass ? ' ' + colorClass : '');
+      tagSpan.setAttribute('data-output-key', outKey);
+      var bypassed = !!(item.mockRow.bypass && item.mockRow.bypass[outKey]);
+      var overwritten = !bypassed && item.overwrites &&
+        Object.prototype.hasOwnProperty.call(item.overwrites, outKey);
+      var answer = overwritten
+        ? item.overwrites[outKey]
+        : (item.mockRow.answers ? item.mockRow.answers[outKey] : undefined);
+      tagSpan.textContent = bypassed ? t('reviewBypassPill') : formatCompactAnswer(outKey, answer);
+      wrap.appendChild(tagSpan);
+      var sourceKey = item.finalizationSourceKeys && item.finalizationSourceKeys[outKey];
+      if (sourceKey) {
+        var badge = document.createElement('span');
+        badge.className = 'review-overwritten-badge';
+        badge.setAttribute('data-testid', 'list-review-finalization-source-badge');
+        badge.setAttribute('data-output-key', outKey);
+        var legacyBadge = document.createElement('span');
+        legacyBadge.setAttribute('data-testid', 'list-review-overwritten-badge');
+        legacyBadge.setAttribute('data-output-key', outKey);
+        legacyBadge.textContent = t(sourceKey);
+        badge.appendChild(legacyBadge);
+        sourceBadges.push(badge);
+      }
+    });
+    sourceBadges.forEach(function (badge) { outer.appendChild(badge); });
+    return outer;
+  }
+
+  function renderReviewerRows(pagedRows, tbodyEl, context) {
+    var profile = context.profile;
+    pagedRows.forEach(function (item, index) {
+      var tr = document.createElement('tr');
+      tr.style.cursor = 'pointer';
+      tr.setAttribute('tabindex', '0');
+      tr.setAttribute('role', 'button');
+      tr.setAttribute('aria-label', t('openSampleAriaTpl', { id: item.recordId }));
+      tr.setAttribute('data-testid', 'ws-sample-item');
+
+      /* Visual grouping (issue singyichen/label-suite#407, RV-08): a sample with N annotators
+         renders N consecutive rows (FR-055) with nothing marking where one
+         sample's group ends and the next begins. Mark the first row of
+         each group so CSS can draw a boundary, and de-emphasize the
+         repeated sample-ID text on the group's continuation rows -- the
+         text itself is unchanged, only its style, so existing row lookups
+         that match on ID text (e.g. annotation-review-flow-demo-rows.spec.ts)
+         are unaffected. */
+      var isGroupStart = index === 0 || pagedRows[index - 1].recordId !== item.recordId;
+      tr.setAttribute('data-group-start', isGroupStart ? 'true' : 'false');
+
+      function openWorkspace() {
+        window.location.href = buildWorkspaceUrl(profile.id, item.recordId, context, item.annotator);
+      }
+      tr.addEventListener('click', openWorkspace);
+
+      var annotatorSpan = document.createElement('span');
+      annotatorSpan.className = 'annotator-username';
+      annotatorSpan.setAttribute('data-testid', 'list-review-annotator');
+      annotatorSpan.textContent = item.annotator;
+
+      var statusSpan = document.createElement('span');
+      statusSpan.className = 'status-badge ' + reviewUnitBadgeClass(item.status);
+      statusSpan.textContent = item.statusLabel;
+
+      var actionsDiv = document.createElement('div');
+      actionsDiv.className = 'reviewer-actions';
+
+      /* A disputed unit this reviewer may claim (FR-060) swaps the entry
+         label to 仲裁 -- same navigation, the workspace decides the layout. */
+      var editBtn = document.createElement('button');
+      editBtn.className = 'mini-btn mini-btn-primary';
+      editBtn.type = 'button';
+      if (item.arbiterEntry) {
+        editBtn.textContent = t('arbitrateBtnLabel');
+        editBtn.setAttribute('data-testid', 'list-arbitrate-entry');
+      } else {
+        editBtn.textContent = t('editBtnLabel');
+      }
+      editBtn.addEventListener('click', function (e) { e.stopPropagation(); openWorkspace(); });
+      actionsDiv.appendChild(editBtn);
+
+      /* Stats stay a per-sample cross-annotator figure (FR-047) and so
+         repeat across that sample's units — read-only context for judging
+         this one answer against its peers. */
+      var statsEl = document.createElement('span');
+      statsEl.className = 'reviewer-stats';
+      statsEl.setAttribute('data-testid', 'list-review-stats');
+      statsEl.textContent = buildReviewStatsText(profile, item.mockRows);
+
+      var textTd = buildTextCell(item.text);
+
+      var idTd = makeTd(item.recordId);
+      idTd.setAttribute('data-testid', 'list-review-id');
+      if (!isGroupStart) {
+        idTd.classList.add('list-review-id-muted');
+      }
+
+      tr.appendChild(idTd);
+      tr.appendChild(makeTd(annotatorSpan));
+      tr.appendChild(makeTd(statusSpan));
+      tr.appendChild(makeTd(item.completedAt));
+      tr.appendChild(textTd);
+      tr.appendChild(makeTd(buildAnswerCell(profile, item)));
+      tr.appendChild(makeTd(statsEl, 'reviewer-stats-cell'));
+      tr.appendChild(makeTd(buildSummaryCell(
+        context, item.recordId,
+        { annotatorId: item.annotator, reviewerId: context.identity.reviewerId })));
+      tr.appendChild(makeTd(actionsDiv));
+
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  /* Per-sample tri-state (FR-007B): each row reads its own submission entry
+     from the workspace store instead of the task-level completion flag, so
+     submitted / saved / pending can coexist in one list. */
+  function buildAnnotatorRows(context) {
+    var profile = context.profile;
+    return profile.datasetRecords.map(function (record, index) {
+      var recordId = getRecordId(record, index);
+      var status = getSampleStatus(profile, context, record, index);
+      var submittedAt = window.LabelSuiteAnnotationWorkspaceData.getSampleSubmittedAt(
+        profile.id, context.role, context.runType, recordId, context.identity);
+      return {
+        recordId: recordId,
+        status: status,
+        statusLabel: statusText(status),
+        completedAt: submittedAt ? formatCompletedAt(submittedAt) : '-',
+        text: getRecordSnippet(record, profile.fieldRoleMap, profile.listTitleField, profile.dialogueFields),
+        searchText: getRecordSearchText(record, profile.fieldRoleMap, profile.dialogueFields)
+      };
+    });
+  }
+
+  /* One row per review unit (FR-055): the sample list is flattened by its
+     annotators, so a sample marked by three people becomes three rows in
+     both run types. getReviewUnitStatus returns null while the annotator
+     has no stored submission — the mock row IS that annotator's answer, so
+     an un-stored unit is still awaiting review, not absent. Since issue
+     singyichen/label-suite#792, the per-sample row set also includes any annotator who submitted
+     for real but has no mock row (getReviewUnitRows(), design.md D1) — the
+     same union annotation-workspace.data.js's listReviewUnits() and
+     annotation-workspace.config.js's buildUnits() enumerate, so all three
+     pages agree on how many units a task holds. */
+  function buildAllReviewUnitRows(context) {
+    var profile = context.profile;
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+    var units = [];
+    profile.datasetRecords.forEach(function (record, index) {
+      var recordId = getRecordId(record, index);
+      var mockRows = getMockRows(context, recordId);
+      var text = getRecordSnippet(record, profile.fieldRoleMap, profile.listTitleField, profile.dialogueFields);
+      var searchText = getRecordSearchText(record, profile.fieldRoleMap, profile.dialogueFields);
+      mockRows.forEach(function (mockRow, rowIdx) {
+        var identity = { annotatorId: mockRow.annotator, reviewerId: context.identity.reviewerId };
+        var status = data.getReviewUnitStatus(
+          profile.id, context.runType, recordId, identity, profile.outputTypes) || REVIEW_UNIT_STATUS.PENDING;
+        var submittedAt = data.getSampleSubmittedAt(
+          profile.id, 'annotator', context.runType, recordId, identity);
+        var overwrites = status === REVIEW_UNIT_STATUS.FINALIZED
+          ? getFinalizedOverwrites(
+            profile, context, recordId, identity, mockRow.answers || {})
+          : null;
+        units.push({
+          recordId: recordId,
+          annotator: mockRow.annotator,
+          arbiterEntry: status === REVIEW_UNIT_STATUS.DISPUTED &&
+            data.isArbiterCandidate(profile.id, context.runType, recordId, identity),
+          mockRow: mockRow,
+          mockRows: mockRows,
+          rowIdx: rowIdx,
+          status: status,
+          statusLabel: reviewUnitStatusText(status),
+          completedAt: submittedAt ? formatCompletedAt(submittedAt) : '-',
+          text: text,
+          searchText: searchText,
+          overwrites: overwrites,
+          finalizationSourceKeys: getFinalizationSourceKeys(
+            profile, context, recordId, identity, overwrites)
+        });
+      });
+    });
+    return units;
+  }
+
+  /* Split from buildAllReviewUnitRows so the issue singyichen/label-suite#402 not-submitted note
+     keeps counting samples nobody submitted, task-wide. Reading the filtered
+     rows there would report every unit assigned to a COLLEAGUE as "not yet
+     submitted" -- a false statement about other people's work, and one that
+     would also offer this reviewer an entry into it. */
+  function buildReviewUnitRows(context) {
+    return filterToAssignedUnits(context, buildAllReviewUnitRows(context));
+  }
+
+  /* FR-093: a reviewer's list carries the units the system assigned to THEM,
+     not every unit in the task. The derivation itself lives in the data
+     layer (it owns the roster), so this only supplies the units and reads
+     the answer back.
+
+     Filtered out, not disabled: a greyed row for someone else's unit still
+     shows this reviewer the sample text and the annotator's answer, which is
+     work they were not given and context they do not need.
+
+     The `arbiterEntry` disjunct is not a convenience. FR-060 gives the 仲裁
+     entry to a reviewer who is flagged can_arbitrate AND holds no submission
+     on the unit -- and the unit's own assigned reviewer is exactly the
+     person who does hold one, so an eligible arbiter is never the assignee.
+     Filtering to assigned units alone would therefore delete every row on
+     which 仲裁 could appear and leave FR-060 unreachable. It stays narrow:
+     `arbiterEntry` is already `爭議中 AND isArbiterCandidate`, so a reviewer
+     without the flag gains nothing when a unit turns disputed. */
+  function filterToAssignedUnits(context, units) {
+    var reviewerId = context.identity && context.identity.reviewerId;
+    if (!reviewerId) return units;
+    var assigned = window.LabelSuiteAnnotationWorkspaceData.getAssignedReviewUnits(
+      context.taskId, context.runType, reviewerId,
+      units.map(function (unit) {
+        return { sample_id: unit.recordId, annotator_id: unit.annotator };
+      }));
+    /* NUL-joined: no sample or annotator id can contain one, so two
+       different units can never collide onto the same key. */
+    var mine = {};
+    assigned.forEach(function (unit) {
+      mine[unit.sample_id + '\u0000' + unit.annotator_id] = true;
+    });
+    return units.filter(function (unit) {
+      return mine[unit.recordId + '\u0000' + unit.annotator] === true || unit.arbiterEntry;
+    });
+  }
+
+  /* FR-091: the per-sample processing summary. All three values are derived
+     from that sample's history events on every render -- FR-091 forbids a
+     second stored copy, and a cached one would go stale the moment a
+     reviewer acts. `at` is already sorted ascending by getSampleHistory, so
+     the last element is the newest event.
+
+     Returns null when the sample has no events at all; the caller renders
+     the empty state from that, because a zero total and a 1970 date would
+     each be a false statement about a sample nobody has touched. */
+  function buildSampleSummary(context, recordId, identity) {
+    var events = window.LabelSuiteAnnotationWorkspaceData.getSampleHistory(
+      context.profile.id, context.runType, recordId, identity,
+      { role: context.role, actorId: viewerActorId(context, identity) });
+    if (!events.length) return null;
+    var latest = events[events.length - 1];
+    /* Per open session, not per event (issue singyichen/label-suite#606): legacy (pre-issue singyichen/label-suite#583)
+       data had one submit write the envelope plus one decision per outKey
+       and copy the same timing onto all of them, so the reduce this
+       replaces reported a three-output review as four times the reviewer's
+       real time. */
+    var totalLeadMs = window.LabelSuiteAnnotationHistory.totalLeadTime(events);
+    return { action: latest.action, at: latest.at, totalLeadMs: totalLeadMs };
+  }
+
+  /* The viewer identity the FR-090 masking runs against: an annotator is
+     their own actor, a reviewer is the reviewer on this context. */
+  function viewerActorId(context, identity) {
+    return context.role === 'reviewer'
+      ? (context.identity && context.identity.reviewerId) || null
+      : (identity && identity.annotatorId) || null;
+  }
+
+  /* Minute precision, unlike the 完成時間 column's date-only rendering --
+     "last activity" is read to judge how recently someone touched the
+     sample, which a bare date cannot answer. */
+  function formatActivityAt(timestamp) {
+    var date = new Date(timestamp);
+    if (isNaN(date.getTime())) return '-';
+    var pad = function (value) { return String(value).padStart(2, '0'); };
+    return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) +
+      ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes());
+  }
+
+  function buildSummaryCell(context, recordId, identity) {
+    var summary = buildSampleSummary(context, recordId, identity);
+    var wrap = document.createElement('div');
+    wrap.className = 'list-summary';
+
+    /* `read` is only called when there is a summary, so each line states its
+       value once instead of guarding the empty case a second time. */
+    function line(testId, attrName, read) {
+      var el = document.createElement('span');
+      el.className = 'list-summary-line';
+      el.setAttribute('data-testid', testId);
+      if (summary) {
+        var value = read(summary);
+        el.textContent = value[0];
+        el.setAttribute(attrName, value[1]);
+      } else {
+        el.textContent = '-';
+        el.setAttribute('data-empty', 'true');
+      }
+      wrap.appendChild(el);
+    }
+
+    /* The localized label, same lookup the workspace 歷程 badge uses
+       (issue singyichen/label-suite#600), so the two surfaces cannot drift into naming the same
+       event differently. data-action stays the raw value (FR-086's closed
+       set) for stable, language-independent selectors. */
+    line('list-summary-last-action', 'data-action', function (s) {
+      return [window.LabelSuiteAnnotationHistory.actionLabelFor(s.action), s.action];
+    });
+    line('list-summary-last-activity', 'data-at', function (s) { return [formatActivityAt(s.at), s.at]; });
+    /* FR-088 visibility: no annotator-facing path may carry a duration, so
+       the annotator view omits the element rather than blanking it. */
+    if (context.role === 'reviewer') {
+      line('list-summary-lead-time', 'data-lead-time-ms', function (s) {
+        return [window.LabelSuiteAnnotationHistory.formatLeadTime(s.totalLeadMs), String(s.totalLeadMs)];
+      });
+    }
+    return wrap;
+  }
+
+  function renderRows(context) {
+    var tbodyEl = document.getElementById('sampleRows');
+    var emptyEl = document.getElementById('emptyState');
+    var profile = context.profile;
+    if (!tbodyEl || !emptyEl || !profile) return;
+    tbodyEl.innerHTML = '';
+
+    var rows = context.role === 'reviewer'
+      ? buildReviewUnitRows(context)
+      : buildAnnotatorRows(context);
+
+    var visibleRows = filterRows(rows);
+    var totalPages = renderPagination(visibleRows.length, context);
+    if (PAGINATION_STATE.page > totalPages) PAGINATION_STATE.page = totalPages;
+    syncUrlToListState();
+
+    if (visibleRows.length === 0) {
+      renderEmptyState(emptyEl, rows.length > 0, context);
+      emptyEl.classList.remove('hidden');
+      return;
+    }
+    emptyEl.classList.add('hidden');
+
+    var startIndex = (PAGINATION_STATE.page - 1) * PAGINATION_STATE.pageSize;
+    var pagedRows = visibleRows.slice(startIndex, startIndex + PAGINATION_STATE.pageSize);
+
+    if (context.role === 'reviewer') {
+      renderReviewerRows(pagedRows, tbodyEl, context);
+      return;
+    }
+
+    pagedRows.forEach(function (item) {
+      var tr = document.createElement('tr');
+      tr.setAttribute('tabindex', '0');
+      tr.setAttribute('role', 'button');
+      tr.setAttribute('aria-label', t('openSampleAriaTpl', { id: item.recordId }));
+      tr.setAttribute('data-testid', 'ws-sample-item');
+
+      function openWorkspace() {
+        window.location.href = buildWorkspaceUrl(profile.id, item.recordId, context);
+      }
+
+      var statusSpan = document.createElement('span');
+      statusSpan.className = 'status-badge ' + statusBadgeClass(item.status);
+      statusSpan.textContent = statusText(item.status);
+
+      var editBtn = document.createElement('button');
+      editBtn.className = 'mini-btn mini-btn-primary';
+      editBtn.type = 'button';
+      editBtn.textContent = t('editBtnLabel');
+      editBtn.addEventListener('click', function (e) { e.stopPropagation(); openWorkspace(); });
+
+      var textTd = buildTextCell(item.text);
+
+      tr.appendChild(makeTd(item.recordId));
+      tr.appendChild(makeTd(statusSpan));
+      tr.appendChild(makeTd(item.completedAt));
+      tr.appendChild(textTd);
+      tr.appendChild(makeTd(buildSummaryCell(context, item.recordId, context.identity)));
+      tr.appendChild(makeTd(editBtn));
+
+      tr.addEventListener('click', openWorkspace);
+      tr.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openWorkspace(); }
+      });
+
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function bindPagination(context) {
+    var pageSizeSelect = document.getElementById('pageSizeSelect');
+    var prevPageBtn = document.getElementById('prevPageBtn');
+    var nextPageBtn = document.getElementById('nextPageBtn');
+
+    if (pageSizeSelect) {
+      pageSizeSelect.addEventListener('change', function (event) {
+        var nextPageSize = parseInt(event.target.value, 10);
+        PAGINATION_STATE.pageSize = Number.isFinite(nextPageSize) ? nextPageSize : 20;
+        resetPaginationToFirstPage();
+        renderRows(context);
+      });
+    }
+
+    if (prevPageBtn) {
+      prevPageBtn.addEventListener('click', function () {
+        if (PAGINATION_STATE.page <= 1) return;
+        PAGINATION_STATE.page -= 1;
+        renderRows(context);
+      });
+    }
+
+    if (nextPageBtn) {
+      nextPageBtn.addEventListener('click', function () {
+        PAGINATION_STATE.page += 1;
+        renderRows(context);
+      });
+    }
+  }
+
+  function bindFilters(context) {
+    var statusFilter = document.getElementById('statusFilter');
+    var searchInput = document.getElementById('searchInput');
+    var clearFiltersBtn = document.getElementById('clearFiltersBtn');
+
+    statusFilter.addEventListener('change', function (event) {
+      FILTER_STATE.status = event.target.value || '';
+      resetPaginationToFirstPage();
+      updateClearFilterState();
+      renderRows(context);
+    });
+
+    searchInput.addEventListener('input', function (event) {
+      FILTER_STATE.query = event.target.value.trim();
+      resetPaginationToFirstPage();
+      updateClearFilterState();
+      renderRows(context);
+    });
+
+    clearFiltersBtn.addEventListener('click', function () {
+      clearAllFilters(context);
+    });
+  }
+
+  function clearAllFilters(context) {
+    FILTER_STATE.status = '';
+    FILTER_STATE.query = '';
+    resetPaginationToFirstPage();
+    var statusFilter = document.getElementById('statusFilter');
+    var searchInput = document.getElementById('searchInput');
+    if (statusFilter) statusFilter.value = '';
+    if (searchInput) searchInput.value = '';
+    updateClearFilterState();
+    renderRows(context);
+  }
+
+  /* UXC-09: first-use "no data" and "filters matched nothing" are
+     different situations — only the latter offers a clear-filters CTA. */
+  function renderEmptyState(emptyEl, hasAnyRows, context) {
+    emptyEl.innerHTML = '';
+    var msg = document.createElement('p');
+    msg.className = 'empty-state-desc';
+    msg.textContent = t(hasAnyRows ? 'emptyNoResults' : 'emptyNoData');
+    emptyEl.appendChild(msg);
+    if (hasAnyRows) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'clear-btn empty-state-action';
+      btn.setAttribute('data-testid', 'empty-clear-filters');
+      btn.textContent = t('clearFiltersLabel');
+      btn.addEventListener('click', function () {
+        clearAllFilters(context);
+      });
+      emptyEl.appendChild(btn);
+    }
+  }
+
+  /* Issue singyichen/label-suite#402 (RV-07): the "共 N 筆資料" banner count keeps its existing
+     dataset-sample-count meaning (a multi-annotator task like T001/T014
+     legitimately has MORE review-unit rows than that count -- that is not
+     a bug). The actual gap is samples with ZERO review units at all
+     (nobody submitted, so buildReviewUnitRows() skips them entirely and
+     the list gives no way to reach them). This note makes that specific
+     gap explicit and links straight into each such sample's workspace,
+     which already renders the correct empty state (issue singyichen/label-suite#307). */
+  function renderNotSubmittedNote(context, profile) {
+    var noteEl = document.getElementById('taskInfoNotSubmittedNote');
+    if (!noteEl) return;
+    noteEl.innerHTML = '';
+
+    if (context.role !== 'reviewer') {
+      noteEl.classList.add('hidden');
+      return;
+    }
+
+    var recordIdsWithUnits = {};
+    buildAllReviewUnitRows(context).forEach(function (unit) {
+      recordIdsWithUnits[unit.recordId] = true;
+    });
+    var notSubmittedIds = profile.datasetRecords
+      .map(function (record, index) { return getRecordId(record, index); })
+      .filter(function (recordId) { return !recordIdsWithUnits[recordId]; });
+
+    if (notSubmittedIds.length === 0) {
+      noteEl.classList.add('hidden');
+      return;
+    }
+
+    noteEl.classList.remove('hidden');
+    var textSpan = document.createElement('span');
+    textSpan.textContent = t('notSubmittedNoteTpl', { count: notSubmittedIds.length });
+    noteEl.appendChild(textSpan);
+
+    notSubmittedIds.forEach(function (recordId) {
+      var entryBtn = document.createElement('button');
+      entryBtn.type = 'button';
+      entryBtn.className = 'mini-btn';
+      entryBtn.setAttribute('data-testid', 'list-not-submitted-entry');
+      entryBtn.textContent = t('notSubmittedEntryLabel', { id: recordId });
+      entryBtn.addEventListener('click', function () {
+        window.location.href = buildWorkspaceUrl(profile.id, recordId, context);
+      });
+      noteEl.appendChild(entryBtn);
+    });
+  }
+
+  function renderTaskInfo(context, profile) {
+    document.getElementById('taskInfoCard').classList.remove('hidden');
+    document.getElementById('listToolbar').classList.remove('hidden');
+    document.getElementById('tableContainer').classList.remove('hidden');
+    document.getElementById('taskNotFound').classList.add('hidden');
+
+    var isEn = CURRENT_LANG === 'en';
+    document.getElementById('taskInfoTitle').textContent =
+      (isEn && profile.nameEn) ? profile.nameEn : profile.nameZh;
+
+    /* Issue singyichen/label-suite#450: a reviewer's summary, progress bar and completion badge
+       are DERIVED from the live review-unit state via the shared
+       computeReviewSummary() formula, so they can never contradict the
+       review-unit rows below. Null for annotators only -- issue singyichen/label-suite#501 removed
+       the second condition (`derivable`, i.e. some unit already reviewed),
+       because a task nobody has reviewed still has a summary the formula can
+       state truthfully, and the seeded strings it fell back to on those
+       tasks described no state that existed. Dropped here in the same change
+       as in dashboard.js: the two pages promise the same numbers, so gating
+       them differently is how they would start disagreeing. */
+    var reviewSummary = null;
+    if (context.role === 'reviewer') {
+      reviewSummary = window.LabelSuiteAnnotationWorkspaceData.computeReviewSummary(
+        profile.id, context.runType);
+    }
+
+    var completionMap = readCompletionStateMap();
+    var completionState = completionMap[completionStateKey(context.role, profile.id, context.runType)];
+    /* 審核覆蓋率 100% is not "done": a covered unit may still be awaiting
+       quorum, modified or disputed, so only a fully finalized task counts
+       as completed for a reviewer (issue singyichen/label-suite#310/singyichen/label-suite#450). */
+    var isCompleted = reviewSummary
+      ? reviewSummary.unfinalized === 0
+      : Boolean(completionState && completionState.allSubmitted);
+
+    /* Count follows the materialized run context when the profile declares
+       one for this run_type (spec 015: list items are materialized by
+       task-detail run publish events, not raw dataset size). */
+    var runCtx = profile.materializedRuns && profile.materializedRuns[context.runType];
+    var totalCount = runCtx && typeof runCtx.total === 'number'
+      ? runCtx.total
+      : profile.datasetRecords.length;
+    /* Progress summary reuses the dashboard assignment seeds so the card
+       shows the exact stats/progress of the matching dashboard row
+       (FR-007C/FR-007D: same progress contract as the dashboard list).
+       Reviewers override that seed with the derived summary above -- both
+       pages compose it from the same formula, so they still agree. */
+    var stats = findAssignmentStats(profile.id, context.role);
+    var summaryText = reviewSummary
+      ? window.LabelSuiteAnnotationWorkspaceData.formatReviewSummary(
+          reviewSummary, stats ? stats.iaa : undefined)
+      : (stats ? stats.detail : null);
+    var detailParts = [];
+    if (summaryText) {
+      detailParts.push(isEn ? summaryText.en : summaryText.zh);
+    }
+    if (context.runType === 'dry_run') {
+      var round = runCtx && runCtx.round != null ? runCtx.round : 1;
+      detailParts.push(t('trialRoundTpl', { round: round }));
+      detailParts.push(t('trialListCountTpl', { total: totalCount }));
+    } else {
+      detailParts.push(t('sampleCountTpl', { total: totalCount }));
+    }
+    document.getElementById('taskInfoDetail').textContent = detailParts.join(' · ');
+    renderNotSubmittedNote(context, profile);
+
+    var outputTypesEl = document.getElementById('taskInfoOutputTypes');
+    outputTypesEl.innerHTML = '';
+    profile.outputTypes.forEach(function (key) {
+      var meta = getOutputTypeMeta(key);
+      var span = document.createElement('span');
+      span.className = 'badge output-type-tag ' + (meta ? meta.badgeClass : 'badge-task-type-default');
+      span.textContent = getOutputTypeLabel(key);
+      outputTypesEl.appendChild(span);
+    });
+
+    var runTypeEl = document.getElementById('taskInfoRunType');
+    runTypeEl.textContent = runTypeLabel(context.runType);
+    runTypeEl.className = 'badge ' + runTypeBadgeClass(context.runType);
+
+    var statusEl = document.getElementById('taskInfoStatus');
+    statusEl.textContent = isCompleted ? t('taskStatusCompleted') : t('taskStatusInProgress');
+    statusEl.className = 'badge ' + (isCompleted ? 'badge-success' : 'badge-info');
+
+    var progressPct = reviewSummary
+      ? reviewSummary.coveragePct
+      : (isCompleted
+        ? 100
+        : (stats && typeof stats.progress === 'number' ? stats.progress : 0));
+    document.getElementById('taskInfoProgressBar').style.width = progressPct + '%';
+
+    var quickBtn = document.getElementById('taskQuickContinueBtn');
+    quickBtn.textContent = context.role === 'reviewer' ? t('quickContinueBtnReviewer') : t('quickContinueBtnAnnotator');
+    quickBtn.onclick = function () {
+      var sampleId = findLatestUnfinishedSampleId(profile, context);
+      if (!sampleId) return;
+      window.location.href = buildWorkspaceUrl(profile.id, sampleId, context);
+    };
+  }
+
+  /* My answer -> finalized result, one tag per composed output type.
+     Reuses convertSubmissionAnswer (previewState -> plain answer, per
+     OUTPUT_TYPE_REGISTRY key) and formatCompactAnswer -- the same pair
+     buildAnswerCell() already uses for the review table -- so a row's
+     values are formatted identically whether an annotator or a reviewer
+     is looking at them. */
+  function buildDryRunFeedbackAnswerTags(profile, submission) {
+    var frag = document.createDocumentFragment();
+    profile.outputTypes.forEach(function (outKey) {
+      var answer = window.LabelSuiteAnnotationWorkspaceData.convertSubmissionAnswer(outKey, submission);
+      var tag = document.createElement('span');
+      tag.className = 'annotator-result-tag';
+      tag.textContent = formatCompactAnswer(outKey, answer);
+      frag.appendChild(tag);
+    });
+    return frag;
+  }
+
+  /* One FR-096 row. `row.modified === false` (审核員通過, unchanged) renders
+     the source line only -- no diff, matching the maintainer's ruling that
+     an approved-unchanged sample carries nothing to compare. Issue singyichen/label-suite#620
+     completes FR-096 point 4: [[heading text]] is resolved against the
+     task's Markdown guideline headings and links to that exact fragment. */
+  function buildDryRunFeedbackRowEl(context, profile, row) {
+    var history = window.LabelSuiteAnnotationHistory;
+    var rowEl = document.createElement('div');
+    rowEl.className = 'dry-run-feedback-row';
+    rowEl.setAttribute('data-testid', 'ws-dry-run-feedback-row');
+
+    if (row.modified) {
+      rowEl.appendChild(buildDryRunFeedbackAnswerTags(profile, row.myAnswer));
+      var arrow = document.createElement('span');
+      arrow.className = 'dry-run-feedback-arrow';
+      arrow.textContent = '→';
+      rowEl.appendChild(arrow);
+      rowEl.appendChild(buildDryRunFeedbackAnswerTags(profile, row.finalizedAnswer));
+    }
+
+    var sourceEl = document.createElement('span');
+    sourceEl.className = 'dry-run-feedback-source';
+    sourceEl.setAttribute('data-testid', 'ws-dry-run-feedback-source');
+    sourceEl.textContent = t('dryRunFeedbackSourceTpl', {
+      action: history ? history.actionLabelFor(row.action) : row.action,
+      actor: row.actorId
+    });
+    rowEl.appendChild(sourceEl);
+
+    if (row.reason) {
+      var reasonEl = document.createElement('span');
+      reasonEl.className = 'dry-run-feedback-reason';
+      reasonEl.setAttribute('data-testid', 'ws-dry-run-feedback-reason');
+      var hasCitationSyntax = renderGuidelineCitations(reasonEl, row.reason, profile, context, row);
+      rowEl.appendChild(reasonEl);
+
+      /* Preserve the pre-singyichen/label-suite#620 whole-guideline affordance for legacy reasons
+         that carry no citation syntax. Once a reason opts into [[...]], an
+         unknown title must degrade to plain text and create no false link. */
+      if (!hasCitationSyntax) {
+        var link = document.createElement('a');
+        link.setAttribute('data-testid', 'ws-dry-run-feedback-guideline-link');
+        link.textContent = t('dryRunFeedbackGuidelineLink');
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.href = buildWorkspaceUrl(profile.id, row.sampleId, context);
+        rowEl.appendChild(link);
+      }
+    }
+
+    return rowEl;
+  }
+
+  /* FR-096 試標歷史回饋 (issue singyichen/label-suite#834 design.md D2/D3): the disclosure gate is
+     judged per round inside getDryRunFeedback, so this renders whatever
+     ended rounds it returns, grouped by round with a per-round summary.
+     The pending note stays while a round can still be in progress (any
+     status before waiting_iaa_confirmation). Annotator + dry_run only
+     (falls on annotation-list.html, no separate screen). */
+  var DRY_RUN_FEEDBACK_ENDED_STATUSES = ['waiting_iaa_confirmation', 'official_run_in_progress', 'completed'];
+  function renderDryRunFeedback(context, profile) {
+    var card = document.getElementById('dryRunFeedbackCard');
+    if (!card) return;
+    card.innerHTML = '';
+    card.classList.add('hidden');
+    if (context.role !== 'annotator' || context.runType !== 'dry_run') return;
+
+    card.classList.remove('hidden');
+    var title = document.createElement('h2');
+    title.className = 'list-item-title';
+    title.textContent = t('dryRunFeedbackTitle');
+    card.appendChild(title);
+
+    if (DRY_RUN_FEEDBACK_ENDED_STATUSES.indexOf(profile.status) === -1) {
+      var pending = document.createElement('p');
+      pending.setAttribute('data-testid', 'ws-dry-run-feedback-pending');
+      pending.textContent = t('dryRunFeedbackPending');
+      card.appendChild(pending);
+    }
+
+    var rowsByRound = {};
+    window.LabelSuiteAnnotationWorkspaceData.getDryRunFeedback(
+      profile.id, context.runType, context.identity).forEach(function (row) {
+      (rowsByRound[row.round] = rowsByRound[row.round] || []).push(row);
+    });
+
+    Object.keys(rowsByRound).map(Number).sort(function (a, b) { return a - b; }).forEach(function (round) {
+      var rows = rowsByRound[round];
+      var group = document.createElement('section');
+      group.setAttribute('data-testid', 'ws-dry-run-feedback-round');
+      group.setAttribute('data-round', String(round));
+
+      var groupTitle = document.createElement('h3');
+      groupTitle.setAttribute('data-testid', 'ws-dry-run-feedback-round-title');
+      groupTitle.textContent = t('trialRoundTpl', { round: round });
+      group.appendChild(groupTitle);
+
+      var modifiedCount = rows.filter(function (row) { return row.modified; }).length;
+      var pct = Math.round((modifiedCount / rows.length) * 1000) / 10;
+      var summary = document.createElement('p');
+      summary.setAttribute('data-testid', 'ws-dry-run-feedback-summary');
+      summary.textContent = t('dryRunFeedbackSummaryTpl', { total: rows.length, modified: modifiedCount, pct: pct });
+      group.appendChild(summary);
+
+      rows.forEach(function (row) {
+        group.appendChild(buildDryRunFeedbackRowEl(context, profile, row));
+      });
+      card.appendChild(group);
+    });
+
+    // Maintainer ruling 2026-09-19: an ended trial with no feedback still
+    // states "共 0 筆" rather than showing only the card title.
+    if (!Object.keys(rowsByRound).length && DRY_RUN_FEEDBACK_ENDED_STATUSES.indexOf(profile.status) !== -1) {
+      var emptySummary = document.createElement('p');
+      emptySummary.setAttribute('data-testid', 'ws-dry-run-feedback-summary');
+      emptySummary.textContent = t('dryRunFeedbackSummaryTpl', { total: 0, modified: 0, pct: 0 });
+      card.appendChild(emptySummary);
+    }
+  }
+
+  function renderNotFound(taskId) {
+    document.getElementById('taskInfoCard').classList.add('hidden');
+    document.getElementById('listToolbar').classList.add('hidden');
+    document.getElementById('tableContainer').classList.add('hidden');
+
+    var el = document.getElementById('taskNotFound');
+    el.classList.remove('hidden');
+    el.innerHTML = '';
+    var title = document.createElement('strong');
+    title.style.display = 'block';
+    title.style.marginBottom = '4px';
+    title.textContent = t('notFoundTitle');
+    var message = document.createElement('span');
+    message.textContent = taskId
+      ? t('notFoundMessage', { taskId: taskId })
+      : t('notFoundNoTaskMessage');
+    el.appendChild(title);
+    el.appendChild(message);
+
+    var backLink = document.createElement('a');
+    backLink.className = 'mini-btn mini-btn-primary';
+    backLink.style.display = 'inline-block';
+    backLink.style.marginTop = 'var(--space-md)';
+    backLink.style.textDecoration = 'none';
+    backLink.href = '../dashboard/dashboard.html';
+    backLink.setAttribute('data-testid', 'list-not-found-dashboard-link');
+    backLink.textContent = t('notFoundBackBtn');
+    var linkRow = document.createElement('div');
+    linkRow.appendChild(backLink);
+    el.appendChild(linkRow);
+  }
+
+  /* Issue singyichen/label-suite#449: the reviewer quick-review CTA sends `notice` instead of
+     opening an arbitrary read-only unit when it finds nothing actionable.
+     Rendered from renderContext() so the language toggle re-renders it with
+     everything else. */
+  function renderNoActionableNotice(context) {
+    var el = document.getElementById('noActionableNotice');
+    if (!el) return;
+    if (context.notice !== 'no_actionable_review' || context.role !== 'reviewer') {
+      el.classList.add('hidden');
+      return;
+    }
+    /* FR-100 §3 (issue singyichen/label-suite#766): the wording is defined once in the data layer
+       and shared with the workspace's finalized-card zero state. */
+    var allLabels = window.LabelSuiteAnnotationWorkspaceData.NO_ACTIONABLE_REVIEW_LABELS;
+    var labels = allLabels[CURRENT_LANG] || allLabels.zh;
+    el.innerHTML = '';
+    var title = document.createElement('strong');
+    title.style.display = 'block';
+    title.style.marginBottom = '4px';
+    title.textContent = labels.title;
+    var message = document.createElement('span');
+    message.textContent = labels.message;
+    el.appendChild(title);
+    el.appendChild(message);
+    el.classList.remove('hidden');
+  }
+
+  /*
+   * Entry breadcrumb (issue singyichen/label-suite#456, FR-080). Every level is derived from the
+   * URL context so a cold deep link renders the same trail as an in-app
+   * navigation. Level 1 links to the dashboard rather than to a task-less
+   * annotation-list.html, because that URL is a not-found state whose own
+   * recovery CTA already points at the dashboard.
+   */
+  function renderEntryBreadcrumb(context) {
+    var nav = document.getElementById('entryBreadcrumb');
+    if (!nav) return;
+    nav.innerHTML = '';
+    var workArea = t(context.role === 'reviewer' ? 'crumbWorkAreaReviewer' : 'crumbWorkAreaAnnotator');
+
+    if (!context.profile) {
+      nav.appendChild(breadcrumbCurrent(workArea));
+      return;
+    }
+
+    var root = document.createElement('a');
+    root.href = '../dashboard/dashboard.html';
+    root.textContent = workArea;
+    nav.appendChild(root);
+
+    var sep = document.createElement('span');
+    sep.className = 'breadcrumb-sep';
+    sep.setAttribute('aria-hidden', 'true');
+    sep.textContent = '\u203A';
+    nav.appendChild(sep);
+
+    var isEn = CURRENT_LANG === 'en';
+    nav.appendChild(breadcrumbCurrent(t('crumbTaskTpl', {
+      name: (isEn && context.profile.nameEn) ? context.profile.nameEn : context.profile.nameZh,
+      run: runTypeLabel(context.runType)
+    })));
+  }
+
+  function breadcrumbCurrent(text) {
+    var span = document.createElement('span');
+    span.setAttribute('aria-current', 'page');
+    span.textContent = text;
+    return span;
+  }
+
+  function renderContext(context) {
+    renderEntryBreadcrumb(context);
+    document.getElementById('pageTitle').textContent = t('pageTitle');
+    document.getElementById('pageSubtitle').textContent =
+      context.role === 'reviewer' ? t('pageSubtitleReviewer') : t('pageSubtitleAnnotator');
+
+    var searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+      searchInput.placeholder = t('searchPlaceholder');
+      searchInput.setAttribute('aria-label', t('searchAriaLabel'));
+    }
+    renderStatusFilterOptions(context.role);
+    var clearFiltersBtn = document.getElementById('clearFiltersBtn');
+    if (clearFiltersBtn) clearFiltersBtn.setAttribute('aria-label', t('clearFiltersLabel'));
+
+    renderTableHeader(context.role);
+
+    if (context.profile) {
+      renderTaskInfo(context, context.profile);
+      renderDryRunFeedback(context, context.profile);
+      renderNoActionableNotice(context);
+    } else {
+      renderNotFound(context.taskId);
+    }
+  }
+
+  function init() {
+    var context = parseContext();
+    CURRENT_LANG = window.LabelSuiteSharedSidebar ? window.LabelSuiteSharedSidebar.getStoredLang() : 'zh';
+    context.profile = resolveTaskProfile(context.taskId);
+    applyListStateFromUrl();
+
+    renderContext(context);
+
+    if (context.profile) {
+      var searchInput = document.getElementById('searchInput');
+      if (searchInput) searchInput.value = FILTER_STATE.query;
+      var pageSizeSelect = document.getElementById('pageSizeSelect');
+      if (pageSizeSelect) pageSizeSelect.value = String(PAGINATION_STATE.pageSize);
+      bindPagination(context);
+      bindFilters(context);
+      updateClearFilterState();
+      updatePageSizeLabels();
+      renderRows(context);
+    }
+
+    if (window.LabelSuiteAnalytics) {
+      window.LabelSuiteAnalytics.init({ page: 'annotation-list' });
+      window.LabelSuiteAnalytics.trackPageView('annotation-list', {
+        role: context.role,
+        run_type: context.runType,
+        task_id: context.taskId || null
+      });
+    }
+
+    if (window.LabelSuiteSharedSidebar) {
+      window.LabelSuiteSharedSidebar.applyGlobalLanguage(CURRENT_LANG, {
+        langToggleAria: t('langToggleAria'),
+        roleLabel: context.role === 'reviewer' ? t('roleLabelReviewer') : t('roleLabelAnnotator'),
+      });
+    }
+
+    ['langToggle', 'mobileLangToggle'].forEach(function (id) {
+      var btn = document.getElementById(id);
+      if (!btn) return;
+      btn.addEventListener('click', function () {
+        CURRENT_LANG = CURRENT_LANG === 'zh' ? 'en' : 'zh';
+        if (window.LabelSuiteSharedSidebar) {
+          window.LabelSuiteSharedSidebar.applyGlobalLanguage(CURRENT_LANG, {
+            langToggleAria: t('langToggleAria'),
+            roleLabel: context.role === 'reviewer' ? t('roleLabelReviewer') : t('roleLabelAnnotator'),
+          });
+        }
+        renderContext(context);
+        if (context.profile) renderRows(context);
+      });
+    });
+  }
+
+  init();
+
+</script>
+</body>
+</html>

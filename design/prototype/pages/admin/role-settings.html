@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<!-- Spec: specs/admin/006-user-management/spec.md, specs/admin/007-role-settings/spec.md -->
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Label Suite — 角色設定</title>
+  <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../shared/modal.css" />
+  <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/button.css" />
+  <link rel="stylesheet" href="../shared/empty-state.css" />
+  <link rel="stylesheet" href="../shared/content-tabs.css" />
+  <script src="../../assets/theme-fouc.js"></script>
+  <style>
+    :root {
+      --color-task-soft-bg:        #F0FDFA;
+      --color-task-header:         #0D9488;
+      --navbar-mobile-height: 84px;
+      --navbar-mobile-top-height: 64px;
+    }
+
+    /* ── Reset ──────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-surface); color: var(--color-ink);
+      line-height: 1.8; min-height: 100vh; display: flex;
+    }
+    html[lang="en"] body { line-height: 1.6; }
+    a { color: inherit; text-decoration: none; }
+    button, input, select { font: inherit; cursor: pointer; }
+    .hidden { display: none !important; }
+
+    /* ── Page Layout ─────────────────────────────────────────────── */
+    .page-wrapper { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: clip; }
+    .main-content {
+      flex: 1; padding: var(--space-lg);
+      max-width: 1280px; width: 100%; margin: 0 auto;
+      overflow-y: auto; display: flex; flex-direction: column;
+    }
+
+    /* ── Banners ─────────────────────────────────────────────────── */
+    .banner {
+      border-radius: var(--radius-lg); padding: var(--space-md) var(--space-lg);
+      display: flex; align-items: center; gap: var(--space-md); font-size: 14px; font-weight: 500;
+      margin-bottom: var(--space-md);
+    }
+    .banner-icon { flex-shrink: 0; }
+    .banner-body { flex: 1; }
+    .banner-title { font-weight: 600; margin-bottom: 2px; }
+    .banner-desc { font-size: 13px; opacity: 0.85; }
+    .banner-action { flex-shrink: 0; }
+    .dirty-banner  { background: var(--color-warning-soft-bg); border: 1px solid var(--color-warning-soft-border); color: var(--color-warning); }
+    .conflict-banner { background: var(--color-error-soft-bg); border: 1px solid var(--color-error-soft-border); color: var(--color-error); }
+    .banner-reload-btn {
+      padding: 6px 14px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600;
+      border: 1px solid var(--color-error-soft-border); background: var(--color-white); color: var(--color-error);
+      transition: background 150ms;
+    }
+    .banner-reload-btn:hover { background: var(--color-error-soft-bg); }
+
+    /* ── Page Header ─────────────────────────────────────────────── */
+    .page-header { display: flex; flex-direction: column; gap: 0; margin-bottom: 24px; }
+    .page-header-main { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-lg); flex-wrap: wrap; }
+    .page-title { font-family: var(--font-serif-display); font-weight: 700; font-size: 28px; color: var(--color-ink); line-height: 1.3; margin: 0 0 4px; }
+    .page-subtitle { font-size: 14px; line-height: 1.8; color: var(--color-text-soft); margin: 0; }
+    .page-actions { display: flex; align-items: center; gap: var(--space-sm); flex-shrink: 0; }
+
+    /* ── Mini buttons (matching user-management) ───────────────── */
+    .mini-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      height: 30px; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); background: var(--color-white);
+      color: var(--color-ink); font-size: 12px; font-weight: 600; padding: 0 10px;
+      transition: background-color 150ms, border-color 150ms, color 150ms;
+    }
+    .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+    .mini-btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+    .mini-btn-log {
+      background: var(--color-info-bg); border-color: var(--color-info-border); color: var(--color-info);
+    }
+    .mini-btn-log:hover:not(:disabled) {
+      border-color: var(--color-info); color: var(--color-info); background: var(--color-info-bg);
+    }
+    .mini-btn-icon { padding: 0 6px; }
+
+    /* ── Buttons ─────────────────────────────────────────────────── */
+    .page-actions .btn-ghost,
+    .page-actions .btn-cta { display: inline-flex; align-items: center; gap: 6px; }
+
+    /* ── Mobile Notice ───────────────────────────────────────────── */
+    /* ── Matrix Section ──────────────────────────────────────────── */
+    .matrix-section { display: flex; flex-direction: column; gap: var(--space-lg); }
+    .section-title { font-family: var(--font-serif-display); font-weight: 600; font-size: 18px; color: var(--color-ink); }
+    .section-desc { font-size: 13px; color: var(--color-ink-muted); line-height: 1.6; margin-top: var(--space-xs); }
+
+    /* ── Matrix Table ────────────────────────────────────────────── */
+    .matrix-scroll-wrapper { overflow-x: auto; border-radius: var(--radius-lg); border: 1px solid var(--color-border); }
+    .matrix-table {
+      width: 100%; border-collapse: collapse; background: var(--color-white);
+      font-size: 13px; min-width: 780px;
+    }
+
+    /* Group headers */
+    .col-group-system {
+      background: var(--color-primary-soft-bg); color: var(--color-primary);
+      font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      text-align: center; padding: 8px var(--space-md);
+      border-bottom: 2px solid var(--color-primary); border-right: 1px solid var(--color-border);
+    }
+    .col-group-task {
+      background: var(--color-task-soft-bg); color: var(--color-task-header);
+      font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      text-align: center; padding: 8px var(--space-md);
+      border-bottom: 2px solid var(--color-task-header);
+    }
+    .col-perm-header {
+      background: var(--color-white); padding: 8px var(--space-md);
+      font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--color-ink-muted); text-align: left;
+      border-bottom: 1px solid var(--color-border); border-right: 1px solid var(--color-border);
+      position: sticky; left: 0; z-index: 10;
+    }
+    .col-role-header {
+      text-align: center; padding: 8px var(--space-md);
+      font-size: 12px; font-weight: 600; color: var(--color-ink);
+      border-bottom: 1px solid var(--color-border); border-right: 1px solid var(--color-border);
+      white-space: nowrap; vertical-align: middle;
+    }
+    .col-role-header.sys-col  { background: var(--color-primary-soft-bg); color: var(--color-primary); }
+    .col-role-header.sa-col   { border-right: 2px solid var(--color-border); }
+    .col-role-header.task-col { background: var(--color-task-soft-bg); color: var(--color-task-header); }
+    .col-role-header.last-col { border-right: none; }
+
+    /* Module header rows */
+    .module-row td {
+      background: var(--color-slate-50); padding: 6px var(--space-md);
+      font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+      color: var(--color-ink-muted);
+      border-top: 2px solid var(--color-border); border-bottom: 1px solid var(--color-border);
+    }
+
+    /* Permission rows */
+    .perm-row td { border-bottom: 1px solid var(--color-border); vertical-align: middle; }
+    .perm-row:last-child td { border-bottom: none; }
+    .perm-row:hover td { background: var(--color-primary-soft-bg); }
+
+    /* Sticky permission label column */
+    .perm-cell {
+      padding: var(--space-sm) var(--space-md); text-align: left;
+      position: sticky; left: 0; background: var(--color-white);
+      border-right: 1px solid var(--color-border); min-width: 250px; z-index: 5;
+    }
+    .perm-row:hover .perm-cell { background: var(--color-primary-soft-bg); }
+    .perm-key {
+      display: block; font-family: var(--font-mono);
+      font-size: 12px; font-weight: 600; color: var(--color-primary); line-height: 1.4;
+    }
+    .perm-desc {
+      display: block; font-size: 11px; color: var(--color-ink-muted); margin-top: 2px; line-height: 1.4;
+    }
+
+    /* Check / badge cells */
+    .check-cell {
+      text-align: center; padding: var(--space-sm);
+      border-right: 1px solid var(--color-border); min-width: 90px;
+    }
+    .check-cell.sys-bg  { background: rgba(99,102,241,0.025); }
+    .check-cell.sa-col  { border-right: 2px solid var(--color-border); }
+    .check-cell.task-bg { background: rgba(13,148,136,0.025); }
+    .check-cell.last-col { border-right: none; }
+
+    /* Editable checkboxes */
+    .matrix-checkbox {
+      width: 16px; height: 16px; cursor: pointer;
+      accent-color: var(--color-primary); border-radius: 3px;
+    }
+    .matrix-checkbox.task-check { accent-color: var(--color-task-header); }
+
+    /* Locked cells (super_admin base permissions) */
+    .locked-cell { background: var(--color-slate-50) !important; cursor: not-allowed; }
+    .locked-wrapper { display: inline-flex; align-items: center; justify-content: center; gap: 3px; color: var(--color-ink-muted); }
+
+    /* Admin-locked cells (super_admin admin permissions — FR-008a) */
+    .admin-locked-cell { background: var(--color-primary-soft-bg) !important; cursor: not-allowed; }
+    .admin-locked-wrapper { display: inline-flex; align-items: center; justify-content: center; gap: 3px; }
+
+    /* Task-role badge (⛔) */
+    .task-role-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: var(--text-label); font-weight: 700; color: var(--color-warning);
+      background: var(--color-warning-soft-bg); border: 1px solid var(--color-warning-soft-border);
+      border-radius: var(--radius-full); padding: 3px 8px; white-space: nowrap;
+    }
+
+    /* Read-only annotation */
+    .readonly-note { display: block; font-size: var(--text-label); color: var(--color-ink-muted); margin-top: 2px; white-space: nowrap; }
+
+    /* N/A cells */
+    .na-cell {
+      text-align: center; padding: var(--space-sm);
+      border-right: 1px solid var(--color-border);
+      color: var(--color-ink-muted); font-size: 16px; min-width: 90px;
+    }
+    .na-cell.last-col { border-right: none; }
+
+
+    /* ── Toast (top-center, UXC-07 / MASTER §Toast) ─────────────── */
+    .toast-container {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: var(--z-toast);
+      width: min(384px, calc(100vw - 32px));
+      pointer-events: none;
+    }
+    .toast {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 16px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 500;
+      /* shadow-md: Toast is an approved exception to the no-shadow rule */
+      box-shadow: var(--shadow-md);
+      opacity: 0;
+      /* visibility keeps the hidden close button out of the tab order;
+         its 0s transition is delayed so the fade-out still plays. */
+      visibility: hidden;
+      transition: opacity var(--dur-fast), visibility 0s var(--dur-fast);
+    }
+    .toast.visible { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity var(--dur-fast); }
+    .toast-success { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
+    .toast-info    { color: var(--color-info);    background: var(--color-info-bg);    border-color: var(--color-info-border); }
+    .toast-warning { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
+    .toast-error   { color: var(--color-error);   background: var(--color-error-bg);   border-color: var(--color-error-border); }
+    .toast-body { flex: 1; }
+    .toast-msg { font-weight: 600; font-size: 14px; }
+    .toast-sub { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+    .toast-close { background: none; border: none; color: currentColor; opacity: 0.6; padding: 2px; border-radius: var(--radius-sm); transition: opacity 150ms; }
+    .toast-close:hover { opacity: 1; }
+
+
+    /* ── Mobile ──────────────────────────────────────────────────── */
+    @media (max-width: 767px) {
+      .main-content { padding: var(--space-md); }
+      .page-header-main { flex-direction: column; gap: var(--space-md); }
+      .page-actions { width: 100%; }
+      .page-actions .btn-ghost,
+      .page-actions .btn-cta { flex: 1; justify-content: center; }
+    }
+
+    /* ── Modal ───────────────────────────────────────────────────── */
+    .modal-center { text-align: center; max-width: 400px; }
+    .modal-icon {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--color-warning-soft-bg); color: var(--color-warning);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto var(--space-md);
+    }
+
+    /* ── Audit Drawer ───────────────────────────────────── */
+    .audit-drawer-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: var(--z-modal);
+      opacity: 0; pointer-events: none;
+      transition: opacity 200ms ease;
+    }
+    .audit-drawer-overlay.open { opacity: 1; pointer-events: auto; }
+    .audit-drawer {
+      position: fixed; top: 0; right: 0; bottom: 0; width: 480px;
+      background: var(--color-white); z-index: calc(var(--z-modal) + 10);
+      display: flex; flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 200ms ease;
+      border-left: 1px solid var(--color-border);
+      box-shadow: var(--shadow-xl);
+    }
+    .audit-drawer.open { transform: translateX(0); }
+    .audit-drawer-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: var(--space-md); padding: var(--space-lg);
+      border-bottom: 1px solid var(--color-border); flex-shrink: 0;
+    }
+    .audit-drawer-title {
+      font-family: var(--font-serif-display);
+      font-size: 20px; font-weight: 700; color: var(--color-ink); margin: 0 0 2px;
+    }
+    .audit-drawer-subtitle { font-size: 13px; color: var(--color-text-soft); margin: 0; }
+    .audit-drawer-body { flex: 1; overflow-y: auto; padding: var(--space-lg); }
+    .audit-log-list { display: flex; flex-direction: column; gap: 12px; }
+    .audit-log-entry {
+      background: var(--color-white); border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg); padding: var(--space-md);
+    }
+    .audit-log-entry-top {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--space-sm); margin-bottom: 8px;
+    }
+    .audit-log-time { font-size: 12px; color: var(--color-text-soft); font-family: var(--font-mono); flex-shrink: 0; }
+    .audit-log-actor { font-size: 13px; color: var(--color-text-soft); margin-bottom: 6px; }
+    .audit-log-actor strong { color: var(--color-ink); }
+    .audit-log-diff {
+      font-family: var(--font-mono); font-size: 12px;
+      background: var(--color-slate-50); border: 1px solid var(--color-border-muted);
+      border-radius: var(--radius-sm); padding: 6px 10px;
+      color: var(--color-ink); word-break: break-all; margin: 0; white-space: pre-wrap;
+    }
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 2px 8px; border-radius: var(--radius-sm);
+      font-size: 12px; font-weight: 500; line-height: 1.4; white-space: nowrap;
+      border: 1px solid transparent;
+    }
+    .audit-badge-perm_update { background: var(--color-primary-soft-bg); color: var(--color-primary); border-color: var(--color-primary-border); }
+    @media (max-width: 767px) {
+      .audit-drawer {
+        top: auto; right: 0; left: 0; bottom: 0; width: 100%; height: 72vh;
+        border-left: none; border-top: 1px solid var(--color-border);
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        transform: translateY(100%);
+      }
+      .audit-drawer.open { transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .audit-drawer, .audit-drawer-overlay { transition-duration: 0.01ms; }
+    }
+
+    /* ── Dark mode overrides ──────────────────────────────────── */
+    html[data-theme="dark"] {
+      /* Teal task column — replace light mint with dark teal */
+      --color-task-soft-bg:  #0C2A27;
+      --color-task-header:   #2DD4BF;
+    }
+  </style>
+</head>
+<body>
+<!-- ─── Sidebar ─────────────────────────────────────────────────── -->
+  <div id="sharedSidebarMount"></div>
+
+  <!-- ─── Main Page ───────────────────────────────────────────────── -->
+  <div class="page-wrapper">
+    <main class="main-content">
+
+      <!-- Dirty Banner -->
+      <div id="dirtyBanner" class="banner dirty-banner hidden" role="alert">
+        <span class="banner-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </span>
+        <div class="banner-body">
+          <p class="banner-title" id="dirtyBannerTitle">有未儲存的變更</p>
+        </div>
+      </div>
+
+      <!-- Conflict Banner -->
+      <div id="conflictBanner" class="banner conflict-banner hidden" role="alert">
+        <span class="banner-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </span>
+        <div class="banner-body">
+          <p class="banner-title" id="conflictTitle">版本衝突：設定已被其他管理員修改</p>
+          <p class="banner-desc" id="conflictDesc">請重新載入最新設定後再進行編輯，以避免覆蓋他人變更</p>
+        </div>
+        <div class="banner-action">
+          <button class="banner-reload-btn" id="reloadBtn" onclick="reloadMatrix()">
+            <span id="reloadBtnLabel">重新載入</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-header-main">
+          <div>
+            <h1 class="page-title" id="pageTitle">角色設定</h1>
+            <p class="page-subtitle" id="pageSubtitle">設定系統角色與任務角色的功能存取權限</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin Tabs -->
+      <div class="admin-tabs" id="adminTabs" role="tablist" aria-label="管理功能分頁">
+        <a id="tabUsers" class="admin-tab" href="user-management.html" role="tab" aria-selected="false">使用者管理</a>
+        <a id="tabRoles" class="admin-tab active" href="role-settings.html" role="tab" aria-selected="true">角色設定</a>
+      </div>
+
+      <!-- Matrix Section -->
+      <div class="matrix-section">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-lg);flex-wrap:wrap;margin-bottom:var(--space-md);">
+          <div>
+            <h2 class="section-title" id="matrixSectionTitle">角色權限矩陣</h2>
+            <p class="section-desc" id="matrixSectionDesc">設定各角色對平台功能的存取權限。「需任務角色」徽章表示需透過任務角色授權，不由系統角色直接控制。鎖頭圖示表示核心管理權限，不可關閉。</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn-ghost" id="editBtn" onclick="enterEditMode()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+              <span id="editBtnLabel">編輯</span>
+            </button>
+            <button class="mini-btn mini-btn-log mini-btn-icon" id="auditLogBtn"
+                    onclick="openAuditDrawer()" title="操作紀錄" aria-label="操作紀錄">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+                <path d="M12 7v5l4 2"/>
+              </svg>
+            </button>
+            <button class="btn-ghost hidden" id="cancelBtn" onclick="cancelEdit()">
+              <span id="cancelBtnLabel">取消</span>
+            </button>
+            <button class="btn-cta hidden" id="saveBtn" onclick="saveMatrix()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+              </svg>
+              <span id="saveBtnLabel">儲存</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Matrix Table (all rows hardcoded; JS updates text content only) -->
+        <div class="matrix-scroll-wrapper" role="region" tabindex="0">
+          <table class="matrix-table" id="matrixTable">
+            <thead>
+              <tr>
+                <th class="col-perm-header" rowspan="2" scope="col" id="thPermission">功能權限</th>
+                <th class="col-group-system" colspan="2" id="thSystemRoles">系統角色</th>
+                <th class="col-group-task"   colspan="3" id="thTaskRoles">任務角色</th>
+              </tr>
+              <tr>
+                <th class="col-role-header sys-col"              scope="col" id="thRoleUser"          data-role="user">user</th>
+                <th class="col-role-header sys-col sa-col"       scope="col" id="thRoleSuperAdmin"    data-role="super_admin">super_admin</th>
+                <th class="col-role-header task-col"             scope="col" id="thRoleProjectLeader" data-role="project_leader">project_leader</th>
+                <th class="col-role-header task-col"             scope="col" id="thRoleReviewer"      data-role="reviewer">reviewer</th>
+                <th class="col-role-header task-col last-col"    scope="col" id="thRoleAnnotator"     data-role="annotator">annotator</th>
+              </tr>
+            </thead>
+            <tbody>
+
+              <!-- ══ Account ══ -->
+              <tr class="module-row">
+                <td colspan="6" id="moduleHeader_account">帳號（Account）</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">account.profile.view</code>
+                  <span class="perm-desc" id="permDesc_account_profile_view">檢視個人設定頁</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <input type="checkbox" class="matrix-checkbox" data-key="account.profile.view" data-role="user" checked onchange="onCheckboxChange()" aria-label="user - account.profile.view" />
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <input type="checkbox" class="matrix-checkbox" data-key="account.profile.view" data-role="super_admin" checked onchange="onCheckboxChange()" aria-label="super_admin - account.profile.view" />
+                </td>
+                <td class="na-cell">—</td>
+                <td class="na-cell">—</td>
+                <td class="na-cell last-col">—</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">account.profile.edit</code>
+                  <span class="perm-desc" id="permDesc_account_profile_edit">編輯個人資料與密碼</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <input type="checkbox" class="matrix-checkbox" data-key="account.profile.edit" data-role="user" checked onchange="onCheckboxChange()" aria-label="user - account.profile.edit" />
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <input type="checkbox" class="matrix-checkbox" data-key="account.profile.edit" data-role="super_admin" checked onchange="onCheckboxChange()" aria-label="super_admin - account.profile.edit" />
+                </td>
+                <td class="na-cell">—</td>
+                <td class="na-cell">—</td>
+                <td class="na-cell last-col">—</td>
+              </tr>
+
+              <!-- ══ Dashboard ══ -->
+              <tr class="module-row">
+                <td colspan="6" id="moduleHeader_dashboard">儀表板（Dashboard）</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">dashboard.view</code>
+                  <span class="perm-desc" id="permDesc_dashboard_view">檢視儀表板</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <input type="checkbox" class="matrix-checkbox" data-key="dashboard.view" data-role="user" data-fixed="true" checked onchange="onCheckboxChange()" aria-label="user - dashboard.view" />
+                </td>
+                <td class="check-cell sys-bg sa-col locked-cell" title="super_admin 基礎權限不可更改">
+                  <div class="locked-wrapper">
+                    <input type="checkbox" class="matrix-checkbox" data-key="dashboard.view" data-role="super_admin" data-fixed="true" checked onchange="onCheckboxChange()" aria-label="super_admin - dashboard.view" />
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                </td>
+                <td class="na-cell">—</td>
+                <td class="na-cell">—</td>
+                <td class="na-cell last-col">—</td>
+              </tr>
+
+              <!-- ══ Task Management ══ -->
+              <tr class="module-row">
+                <td colspan="6" id="moduleHeader_taskMgmt">任務管理（Task Management）</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">task.list.view</code>
+                  <span class="perm-desc" id="permDesc_task_list_view">檢視任務列表</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <input type="checkbox" class="matrix-checkbox" data-key="task.list.view" data-role="user" checked onchange="onCheckboxChange()" aria-label="user - task.list.view" />
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <input type="checkbox" class="matrix-checkbox" data-key="task.list.view" data-role="super_admin" checked onchange="onCheckboxChange()" aria-label="super_admin - task.list.view" />
+                </td>
+                <td class="na-cell">—</td>
+                <td class="na-cell">—</td>
+                <td class="na-cell last-col">—</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">task.create</code>
+                  <span class="perm-desc" id="permDesc_task_create">建立新任務</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <input type="checkbox" class="matrix-checkbox" data-key="task.create" data-role="user" checked onchange="onCheckboxChange()" aria-label="user - task.create" />
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <input type="checkbox" class="matrix-checkbox" data-key="task.create" data-role="super_admin" checked onchange="onCheckboxChange()" aria-label="super_admin - task.create" />
+                </td>
+                <td class="na-cell">—</td>
+                <td class="na-cell">—</td>
+                <td class="na-cell last-col">—</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">task.detail.view</code>
+                  <span class="perm-desc" id="permDesc_task_detail_view">檢視任務詳情</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.detail.view" data-role="project_leader" checked onchange="onCheckboxChange()" aria-label="project_leader - task.detail.view" />
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.detail.view" data-role="reviewer" checked onchange="onCheckboxChange()" aria-label="reviewer - task.detail.view" />
+                  <span class="readonly-note" id="readonlyNote_task_detail_view">（唯讀）</span>
+                </td>
+                <td class="check-cell task-bg last-col">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.detail.view" data-role="annotator" onchange="onCheckboxChange()" aria-label="annotator - task.detail.view" />
+                </td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">task.detail.edit</code>
+                  <span class="perm-desc" id="permDesc_task_detail_edit">編輯任務設定</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.detail.edit" data-role="project_leader" checked onchange="onCheckboxChange()" aria-label="project_leader - task.detail.edit" />
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.detail.edit" data-role="reviewer" onchange="onCheckboxChange()" aria-label="reviewer - task.detail.edit" />
+                </td>
+                <td class="check-cell task-bg last-col">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.detail.edit" data-role="annotator" onchange="onCheckboxChange()" aria-label="annotator - task.detail.edit" />
+                </td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">task.members.manage</code>
+                  <span class="perm-desc" id="permDesc_task_members_manage">管理任務成員與任務角色</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.members.manage" data-role="project_leader" checked onchange="onCheckboxChange()" aria-label="project_leader - task.members.manage" />
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.members.manage" data-role="reviewer" onchange="onCheckboxChange()" aria-label="reviewer - task.members.manage" />
+                </td>
+                <td class="check-cell task-bg last-col">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.members.manage" data-role="annotator" onchange="onCheckboxChange()" aria-label="annotator - task.members.manage" />
+                </td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">task.lifecycle.manage</code>
+                  <span class="perm-desc" id="permDesc_task_lifecycle_manage">發布、退回 draft、結案、重試 IAA、停用資料隔離</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.lifecycle.manage" data-role="project_leader" checked onchange="onCheckboxChange()" aria-label="project_leader - task.lifecycle.manage" />
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.lifecycle.manage" data-role="reviewer" onchange="onCheckboxChange()" aria-label="reviewer - task.lifecycle.manage" />
+                </td>
+                <td class="check-cell task-bg last-col">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.lifecycle.manage" data-role="annotator" onchange="onCheckboxChange()" aria-label="annotator - task.lifecycle.manage" />
+                </td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">task.delete</code>
+                  <span class="perm-desc" id="permDesc_task_delete">刪除 draft 任務</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.delete" data-role="project_leader" checked onchange="onCheckboxChange()" aria-label="project_leader - task.delete" />
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.delete" data-role="reviewer" onchange="onCheckboxChange()" aria-label="reviewer - task.delete" />
+                </td>
+                <td class="check-cell task-bg last-col">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.delete" data-role="annotator" onchange="onCheckboxChange()" aria-label="annotator - task.delete" />
+                </td>
+              </tr>
+
+              <!-- ══ Annotation ══ -->
+              <tr class="module-row">
+                <td colspan="6" id="moduleHeader_annotation">標記（Annotation）</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">annotation.workspace.annotate</code>
+                  <span class="perm-desc" id="permDesc_annotation_workspace_annotate">以 annotator 模式執行標記</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.annotate" data-role="project_leader" onchange="onCheckboxChange()" aria-label="project_leader - annotation.workspace.annotate" />
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.annotate" data-role="reviewer" onchange="onCheckboxChange()" aria-label="reviewer - annotation.workspace.annotate" />
+                </td>
+                <td class="check-cell task-bg last-col">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.annotate" data-role="annotator" checked onchange="onCheckboxChange()" aria-label="annotator - annotation.workspace.annotate" />
+                </td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">annotation.workspace.review</code>
+                  <span class="perm-desc" id="permDesc_annotation_workspace_review">以 reviewer 模式執行審核</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.review" data-role="project_leader" onchange="onCheckboxChange()" aria-label="project_leader - annotation.workspace.review" />
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.review" data-role="reviewer" checked onchange="onCheckboxChange()" aria-label="reviewer - annotation.workspace.review" />
+                </td>
+                <td class="check-cell task-bg last-col">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.review" data-role="annotator" onchange="onCheckboxChange()" aria-label="annotator - annotation.workspace.review" />
+                </td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">annotation.exception.resolve</code>
+                  <span class="perm-desc" id="permDesc_annotation_exception_resolve">最終例外池四種處置</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.exception.resolve" data-role="project_leader" checked onchange="onCheckboxChange()" aria-label="project_leader - annotation.exception.resolve" />
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.exception.resolve" data-role="reviewer" onchange="onCheckboxChange()" aria-label="reviewer - annotation.exception.resolve" />
+                </td>
+                <td class="check-cell task-bg last-col">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.exception.resolve" data-role="annotator" onchange="onCheckboxChange()" aria-label="annotator - annotation.exception.resolve" />
+                </td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">annotation.dispute.adjudicate</code>
+                  <span class="perm-desc" id="permDesc_annotation_dispute_adjudicate">arbiter_ids 為空時由專案負責人裁定爭議</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.dispute.adjudicate" data-role="project_leader" checked onchange="onCheckboxChange()" aria-label="project_leader - annotation.dispute.adjudicate" />
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.dispute.adjudicate" data-role="reviewer" onchange="onCheckboxChange()" aria-label="reviewer - annotation.dispute.adjudicate" />
+                </td>
+                <td class="check-cell task-bg last-col">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.dispute.adjudicate" data-role="annotator" onchange="onCheckboxChange()" aria-label="annotator - annotation.dispute.adjudicate" />
+                </td>
+              </tr>
+
+              <!-- ══ Dataset ══ -->
+              <tr class="module-row">
+                <td colspan="6" id="moduleHeader_dataset">資料集（Dataset）</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">dataset.stats.view</code>
+                  <span class="perm-desc" id="permDesc_dataset_stats_view">檢視資料集統計</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.stats.view" data-role="project_leader" checked onchange="onCheckboxChange()" aria-label="project_leader - dataset.stats.view" />
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.stats.view" data-role="reviewer" checked onchange="onCheckboxChange()" aria-label="reviewer - dataset.stats.view" />
+                </td>
+                <td class="check-cell task-bg last-col">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.stats.view" data-role="annotator" onchange="onCheckboxChange()" aria-label="annotator - dataset.stats.view" />
+                </td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">dataset.quality.view</code>
+                  <span class="perm-desc" id="permDesc_dataset_quality_view">檢視資料品質頁</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.quality.view" data-role="project_leader" checked onchange="onCheckboxChange()" aria-label="project_leader - dataset.quality.view" />
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.quality.view" data-role="reviewer" checked onchange="onCheckboxChange()" aria-label="reviewer - dataset.quality.view" />
+                </td>
+                <td class="check-cell task-bg last-col">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.quality.view" data-role="annotator" onchange="onCheckboxChange()" aria-label="annotator - dataset.quality.view" />
+                </td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">dataset.export</code>
+                  <span class="perm-desc" id="permDesc_dataset_export">下載/匯出資料結果</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.export" data-role="project_leader" checked onchange="onCheckboxChange()" aria-label="project_leader - dataset.export" />
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.export" data-role="reviewer" onchange="onCheckboxChange()" aria-label="reviewer - dataset.export" />
+                </td>
+                <td class="check-cell task-bg last-col">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.export" data-role="annotator" onchange="onCheckboxChange()" aria-label="annotator - dataset.export" />
+                </td>
+              </tr>
+
+              <!-- ══ Admin ══ -->
+              <tr class="module-row">
+                <td colspan="6" id="moduleHeader_admin">系統管理（Admin）</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">admin.user_management.view</code>
+                  <span class="perm-desc" id="permDesc_admin_user_management_view">進入使用者管理頁</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <input type="checkbox" class="matrix-checkbox" data-key="admin.user_management.view" data-role="user" data-fixed="true" onchange="onCheckboxChange()" aria-label="user - admin.user_management.view" />
+                </td>
+                <td class="check-cell sys-bg sa-col admin-locked-cell" title="核心管理權限不可關閉（FR-008a）">
+                  <div class="admin-locked-wrapper">
+                    <input type="checkbox" class="matrix-checkbox" data-key="admin.user_management.view" data-role="super_admin" data-fixed="true" checked onchange="onCheckboxChange()" aria-label="super_admin - admin.user_management.view" />
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                </td>
+                <td class="na-cell">—</td>
+                <td class="na-cell">—</td>
+                <td class="na-cell last-col">—</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">admin.user_management.manage</code>
+                  <span class="perm-desc" id="permDesc_admin_user_management_manage">新增/編輯/停用使用者、指派 system role</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <input type="checkbox" class="matrix-checkbox" data-key="admin.user_management.manage" data-role="user" data-fixed="true" onchange="onCheckboxChange()" aria-label="user - admin.user_management.manage" />
+                </td>
+                <td class="check-cell sys-bg sa-col admin-locked-cell" title="核心管理權限不可關閉（FR-008a）">
+                  <div class="admin-locked-wrapper">
+                    <input type="checkbox" class="matrix-checkbox" data-key="admin.user_management.manage" data-role="super_admin" data-fixed="true" checked onchange="onCheckboxChange()" aria-label="super_admin - admin.user_management.manage" />
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                </td>
+                <td class="na-cell">—</td>
+                <td class="na-cell">—</td>
+                <td class="na-cell last-col">—</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">admin.role_settings.view</code>
+                  <span class="perm-desc" id="permDesc_admin_role_settings_view">進入角色權限設定頁</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <input type="checkbox" class="matrix-checkbox" data-key="admin.role_settings.view" data-role="user" data-fixed="true" onchange="onCheckboxChange()" aria-label="user - admin.role_settings.view" />
+                </td>
+                <td class="check-cell sys-bg sa-col admin-locked-cell" title="核心管理權限不可關閉（FR-008a）">
+                  <div class="admin-locked-wrapper">
+                    <input type="checkbox" class="matrix-checkbox" data-key="admin.role_settings.view" data-role="super_admin" data-fixed="true" checked onchange="onCheckboxChange()" aria-label="super_admin - admin.role_settings.view" />
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                </td>
+                <td class="na-cell">—</td>
+                <td class="na-cell">—</td>
+                <td class="na-cell last-col">—</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">admin.role_settings.manage</code>
+                  <span class="perm-desc" id="permDesc_admin_role_settings_manage">編輯並儲存角色權限矩陣</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <input type="checkbox" class="matrix-checkbox" data-key="admin.role_settings.manage" data-role="user" data-fixed="true" onchange="onCheckboxChange()" aria-label="user - admin.role_settings.manage" />
+                </td>
+                <td class="check-cell sys-bg sa-col admin-locked-cell" title="核心管理權限不可關閉（FR-008a）">
+                  <div class="admin-locked-wrapper">
+                    <input type="checkbox" class="matrix-checkbox" data-key="admin.role_settings.manage" data-role="super_admin" data-fixed="true" checked onchange="onCheckboxChange()" aria-label="super_admin - admin.role_settings.manage" />
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                </td>
+                <td class="na-cell">—</td>
+                <td class="na-cell">—</td>
+                <td class="na-cell last-col">—</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">admin.platform_overview.view</code>
+                  <span class="perm-desc" id="permDesc_admin_platform_overview_view">檢視全平台統計</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <input type="checkbox" class="matrix-checkbox" data-key="admin.platform_overview.view" data-role="user" data-fixed="true" onchange="onCheckboxChange()" aria-label="user - admin.platform_overview.view" />
+                </td>
+                <td class="check-cell sys-bg sa-col admin-locked-cell" title="核心管理權限不可關閉（FR-008a）">
+                  <div class="admin-locked-wrapper">
+                    <input type="checkbox" class="matrix-checkbox" data-key="admin.platform_overview.view" data-role="super_admin" data-fixed="true" checked onchange="onCheckboxChange()" aria-label="super_admin - admin.platform_overview.view" />
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                </td>
+                <td class="na-cell">—</td>
+                <td class="na-cell">—</td>
+                <td class="na-cell last-col">—</td>
+              </tr>
+
+            </tbody>
+          </table>
+        </div><!-- /matrix-scroll-wrapper -->
+      </div><!-- /matrix-section -->
+
+
+    </main>
+  </div><!-- /page-wrapper -->
+
+  <!-- ─── Audit Log Drawer ────────────────────────────────────────── -->
+  <div class="audit-drawer-overlay" id="auditDrawerOverlay"
+       aria-hidden="true" onclick="closeAuditDrawer()"></div>
+  <aside class="audit-drawer" id="auditDrawer"
+         role="complementary" aria-labelledby="auditDrawerTitle" aria-hidden="true">
+    <div class="audit-drawer-header">
+      <div>
+        <h2 id="auditDrawerTitle" class="audit-drawer-title">操作紀錄</h2>
+        <p id="auditDrawerSubtitle" class="audit-drawer-subtitle">角色權限矩陣</p>
+      </div>
+      <button class="modal-close" onclick="closeAuditDrawer()"
+              id="auditDrawerCloseBtn" aria-label="關閉">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="audit-drawer-body">
+      <div id="auditLogList" class="audit-log-list" role="list"></div>
+      <div id="auditDrawerEmpty" class="empty-state empty-state-compact hidden">
+        <p id="auditDrawerEmptyText">尚無操作紀錄</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ─── Unsaved Changes Modal ────────────────────────────────────── -->
+  <div id="dirtyModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="dirtyModalTitle">
+    <div class="modal modal-center">
+      <div class="modal-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <h2 class="modal-title" id="dirtyModalTitle">有未儲存的變更</h2>
+      <p class="modal-desc" id="dirtyModalDesc">確定要放棄目前的修改？取消後所有變更將遺失。</p>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="hideDirtyModal()">
+          <span id="dirtyModalKeepLabel">繼續編輯</span>
+        </button>
+        <button class="btn-danger" onclick="confirmDiscardChanges()">
+          <span id="dirtyModalDiscardLabel">放棄變更</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Toast (UXC-07) ─────────────────────────────────────────── -->
+  <div class="toast-container" aria-live="polite" aria-atomic="true">
+    <div class="toast toast-success" id="toast">
+      <svg id="toastIconSuccess" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      <svg id="toastIconError" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="hidden">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <div class="toast-body">
+        <p id="toastMsg" class="toast-msg">儲存成功</p>
+        <p id="toastSub" class="toast-sub"></p>
+      </div>
+      <button type="button" class="toast-close" id="toastClose" onclick="hideToast()" aria-label="關閉通知">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ─── Scenario Switcher ───────────────────────────────────────── -->
+
+  <!-- ─── Scripts ─────────────────────────────────────────────────── -->
+  <script src="../shared/sidebar.js"></script>
+  <script src="../../assets/theme.js"></script>
+  <script src="../../assets/analytics.js"></script>
+  <script>
+    /* ── i18n ──────────────────────────────────────────────────────── */
+    const i18n = {
+      zh: {
+        pageTitle:               '角色設定',
+        pageSubtitle:            '設定系統角色與任務角色的功能存取權限',
+        tabUsers:                '使用者管理',
+        tabRoles:                '角色設定',
+        editBtnLabel:            '編輯',
+        cancelBtnLabel:          '取消',
+        saveBtnLabel:            '儲存',
+        matrixSectionTitle:      '角色權限矩陣',
+        matrixSectionDesc:       '設定各角色對平台功能的存取權限。「需任務角色」徽章表示需透過任務角色授權，不由系統角色直接控制。鎖頭圖示表示核心管理權限，不可關閉。',
+        thPermission:            '功能權限',
+        thSystemRoles:           '系統角色',
+        thTaskRoles:             '任務角色',
+        legendTaskBadgeText:     '需任務角色',
+        auditLogBtnLabel:        '操作紀錄',
+        adminTabsAria:           '管理功能分頁',
+        auditDrawerTitle:        '操作紀錄',
+        auditDrawerSubtitle:     '角色權限矩陣',
+        auditDrawerCloseBtn:     '關閉',
+        auditDrawerEmptyText:    '尚無操作紀錄',
+        auditActorPrefix:        '操作者：',
+        auditActionPermUpdate:   '權限更新',
+        dirtyModalTitle:         '有未儲存的變更',
+        dirtyModalDesc:          '確定要放棄目前的修改？取消後所有變更將遺失。',
+        dirtyModalKeepLabel:     '繼續編輯',
+        dirtyModalDiscardLabel:  '放棄變更',
+        conflictTitle:           '版本衝突：設定已被其他管理員修改',
+        conflictDesc:            '請重新載入最新設定後再進行編輯，以避免覆蓋他人變更',
+        reloadBtnLabel:          '重新載入',
+        toastSaved:              '角色權限設定已儲存',
+        toastConflict:           '版本衝突，請重新載入最新設定',
+        toastStoredInvalid:      '儲存的矩陣含未知或違反固定格的權限鍵，已拒絕並還原預設值',
+        readonlyNote:            '（唯讀）',
+        langToggleAria:          '切換語言',
+        moduleHeader_account:    '帳號（Account）',
+        moduleHeader_dashboard:  '儀表板（Dashboard）',
+        moduleHeader_taskMgmt:   '任務管理（Task Management）',
+        moduleHeader_annotation: '標記（Annotation）',
+        moduleHeader_dataset:    '資料集（Dataset）',
+        moduleHeader_admin:      '系統管理（Admin）',
+        permDesc_account_profile_view:              '檢視個人設定頁',
+        permDesc_account_profile_edit:              '編輯個人資料與密碼',
+        permDesc_dashboard_view:                    '檢視儀表板',
+        permDesc_task_list_view:                    '檢視任務列表',
+        permDesc_task_create:                       '建立新任務',
+        permDesc_task_detail_view:                  '檢視任務詳情',
+        permDesc_task_detail_edit:                  '編輯任務設定',
+        permDesc_task_members_manage:               '管理任務成員與任務角色，含審核名冊',
+        permDesc_task_lifecycle_manage: '發布、退回 draft、結案、重試 IAA、停用資料隔離',
+        permDesc_task_delete: '刪除 draft 任務',
+        permDesc_annotation_workspace_annotate:     '以 annotator 模式執行標記',
+        permDesc_annotation_workspace_review:       '以 reviewer 模式執行審核',
+        permDesc_annotation_exception_resolve: '最終例外池四種處置',
+        permDesc_annotation_dispute_adjudicate: 'arbiter_ids 為空時由專案負責人裁定爭議',
+        permDesc_dataset_stats_view:                '檢視資料集統計',
+        permDesc_dataset_quality_view:              '檢視資料品質頁',
+        permDesc_dataset_export:                    '下載/匯出資料結果',
+        permDesc_admin_user_management_view:        '進入使用者管理頁',
+        permDesc_admin_user_management_manage:      '新增/編輯/停用使用者、指派 system role',
+        permDesc_admin_role_settings_view:          '進入角色權限設定頁',
+        permDesc_admin_role_settings_manage:        '編輯並儲存角色權限矩陣',
+        permDesc_admin_platform_overview_view: '檢視全平台統計',
+        readonlyNote_task_detail_view:              '（唯讀）',
+        thRoleUser:                                 '一般使用者',
+        thRoleSuperAdmin:                           '超級管理員',
+        thRoleProjectLeader:                        '專案負責人',
+        thRoleReviewer:                             '審核員',
+        thRoleAnnotator:                            '標記員',
+        roleIndicatorLabel:                         '系統管理員',
+      },
+      en: {
+        pageTitle:               'Role Settings',
+        pageSubtitle:            'Configure access permissions for system roles and task roles',
+        tabUsers:                'User Management',
+        tabRoles:                'Role Settings',
+        editBtnLabel:            'Edit',
+        cancelBtnLabel:          'Cancel',
+        saveBtnLabel:            'Save',
+        matrixSectionTitle:      'Role Permission Matrix',
+        matrixSectionDesc:       'Configure feature access for each role. The "task role required" badge means delegated to task roles, not controlled by system roles. The lock icon means critical admin permission, cannot be disabled.',
+        thPermission:            'Permission',
+        thSystemRoles:           'System Roles',
+        thTaskRoles:             'Task Roles',
+        legendTaskBadgeText:     'Task role required',
+        auditLogBtnLabel:        'Change History',
+        adminTabsAria:           'Admin sections',
+        auditDrawerTitle:        'Change History',
+        auditDrawerSubtitle:     'Role Permission Matrix',
+        auditDrawerCloseBtn:     'Close',
+        auditDrawerEmptyText:    'No changes recorded',
+        auditActorPrefix:        'By: ',
+        auditActionPermUpdate:   'Permission Update',
+        dirtyModalTitle:         'Unsaved Changes',
+        dirtyModalDesc:          'Discard your current edits? All changes will be lost.',
+        dirtyModalKeepLabel:     'Keep Editing',
+        dirtyModalDiscardLabel:  'Discard Changes',
+        conflictTitle:           'Version conflict: settings were modified by another admin',
+        conflictDesc:            'Reload the latest settings before editing to avoid overwriting others\' changes',
+        reloadBtnLabel:          'Reload',
+        toastSaved:              'Role permissions saved',
+        toastConflict:           'Version conflict. Reload latest settings',
+        toastStoredInvalid:      'Stored matrix has unknown keys or violates fixed cells; rejected and defaults restored',
+        readonlyNote:            '(read-only)',
+        langToggleAria:          'Switch language',
+        moduleHeader_account:    'Account',
+        moduleHeader_dashboard:  'Dashboard',
+        moduleHeader_taskMgmt:   'Task Management',
+        moduleHeader_annotation: 'Annotation',
+        moduleHeader_dataset:    'Dataset',
+        moduleHeader_admin:      'Admin',
+        permDesc_account_profile_view:              'View profile page',
+        permDesc_account_profile_edit:              'Edit profile and password',
+        permDesc_dashboard_view:                    'View dashboard',
+        permDesc_task_list_view:                    'View task list',
+        permDesc_task_create:                       'Create new task',
+        permDesc_task_detail_view:                  'View task details',
+        permDesc_task_detail_edit:                  'Edit task settings',
+        permDesc_task_members_manage:               'Manage task members and roles, including the review roster',
+        permDesc_task_lifecycle_manage: 'Publish, return to draft, close, retry IAA, and disable data isolation',
+        permDesc_task_delete: 'Delete draft tasks',
+        permDesc_annotation_workspace_annotate:     'Annotate in annotator mode',
+        permDesc_annotation_workspace_review:       'Review in reviewer mode',
+        permDesc_annotation_exception_resolve: 'Resolve final exception pool items',
+        permDesc_annotation_dispute_adjudicate: 'Adjudicate disputes as project leader when no arbiter is set',
+        permDesc_dataset_stats_view:                'View dataset statistics',
+        permDesc_dataset_quality_view:              'View data quality page',
+        permDesc_dataset_export:                    'Download/export data results',
+        permDesc_admin_user_management_view:        'Access user management page',
+        permDesc_admin_user_management_manage:      'Manage users and assign system roles',
+        permDesc_admin_role_settings_view:          'Access role settings page',
+        permDesc_admin_role_settings_manage:        'Edit and save role permission matrix',
+        permDesc_admin_platform_overview_view: 'View platform-wide statistics',
+        readonlyNote_task_detail_view:              '(read-only)',
+        thRoleUser:                                 'User',
+        thRoleSuperAdmin:                           'Super Admin',
+        thRoleProjectLeader:                        'Project Leader',
+        thRoleReviewer:                             'Reviewer',
+        thRoleAnnotator:                            'Annotator',
+        roleIndicatorLabel:                         'Super Admin',
+      },
+    };
+
+    const MATRIX_STORAGE_KEY = 'labelsuite.roleSettings.matrix';
+    const MATRIX_VERSION_KEY = 'labelsuite.roleSettings.version';
+    const DEFAULT_MATRIX = {
+      'account.profile.view__user': true, 'account.profile.edit__user': true,
+      'dashboard.view__user': true,
+      'task.list.view__user': true, 'task.create__user': true,
+      'task.detail.view__project_leader': true, 'task.detail.view__reviewer': true, 'task.detail.view__annotator': false,
+      'task.members.manage__project_leader': true, 'task.members.manage__reviewer': false, 'task.members.manage__annotator': false,
+      'task.lifecycle.manage__project_leader': true, 'task.lifecycle.manage__reviewer': false, 'task.lifecycle.manage__annotator': false,
+      'task.delete__project_leader': true, 'task.delete__reviewer': false, 'task.delete__annotator': false,
+      'annotation.workspace.annotate__project_leader': false, 'annotation.workspace.annotate__reviewer': false, 'annotation.workspace.annotate__annotator': true,
+      'annotation.workspace.review__project_leader': false, 'annotation.workspace.review__reviewer': true, 'annotation.workspace.review__annotator': false,
+      'annotation.exception.resolve__project_leader': true, 'annotation.exception.resolve__reviewer': false, 'annotation.exception.resolve__annotator': false,
+      'annotation.dispute.adjudicate__project_leader': true, 'annotation.dispute.adjudicate__reviewer': false, 'annotation.dispute.adjudicate__annotator': false,
+      'dataset.stats.view__project_leader': true, 'dataset.stats.view__reviewer': true, 'dataset.stats.view__annotator': false,
+      'dataset.quality.view__project_leader': true, 'dataset.quality.view__reviewer': true, 'dataset.quality.view__annotator': false,
+      'dataset.export__project_leader': true, 'dataset.export__reviewer': false, 'dataset.export__annotator': false,
+      'admin.user_management.view__user': false, 'admin.user_management.manage__user': false,
+      'admin.role_settings.view__user': false, 'admin.role_settings.manage__user': false, 'admin.platform_overview.view__user': false,
+      'task.detail.edit__project_leader': true, 'task.detail.edit__reviewer': false, 'task.detail.edit__annotator': false,
+      'account.profile.view__super_admin': true, 'account.profile.edit__super_admin': true, 'dashboard.view__super_admin': true, 'task.list.view__super_admin': true, 'task.create__super_admin': true, 'admin.user_management.view__super_admin': true, 'admin.user_management.manage__super_admin': true, 'admin.role_settings.view__super_admin': true, 'admin.role_settings.manage__super_admin': true, 'admin.platform_overview.view__super_admin': true,
+    };
+
+    const ROLE_AUDIT_LOGS = [
+      {
+        id: 3,
+        createdAt: '2026-05-19 14:32',
+        actorName: '蔡宜蓁',
+        diff: 'reviewer · dataset.export              OFF → ON\nannotator · task.detail.view           ON  → OFF',
+      },
+      {
+        id: 2,
+        createdAt: '2026-05-10 09:15',
+        actorName: '系統管理員 A',
+        diff: 'annotator · task.members.manage        OFF → ON',
+      },
+      {
+        id: 1,
+        createdAt: '2026-04-28 16:47',
+        actorName: '蔡宜蓁',
+        diff: 'project_leader · annotation.workspace.annotate  OFF → ON\nreviewer · annotation.workspace.annotate         OFF → ON',
+      },
+    ];
+
+    let lang = window.LabelSuiteSharedSidebar.getStoredLang();
+    let matrixVersion = Number(window.localStorage.getItem(MATRIX_VERSION_KEY) || '1');
+
+    /* ── IDs requiring i18n text updates ──────────────────────────── */
+    const TEXT_IDS = [
+      'pageTitle', 'pageSubtitle', 'tabUsers', 'tabRoles',
+      'auditDrawerTitle', 'auditDrawerSubtitle', 'auditDrawerEmptyText',
+      'editBtnLabel', 'cancelBtnLabel', 'saveBtnLabel',
+      'matrixSectionTitle', 'matrixSectionDesc',
+      'thPermission', 'thSystemRoles', 'thTaskRoles',
+      'dirtyModalTitle', 'dirtyModalDesc', 'dirtyModalKeepLabel', 'dirtyModalDiscardLabel',
+      'conflictTitle', 'conflictDesc', 'reloadBtnLabel',
+      'moduleHeader_account', 'moduleHeader_dashboard', 'moduleHeader_taskMgmt',
+      'moduleHeader_annotation', 'moduleHeader_dataset', 'moduleHeader_admin',
+      'permDesc_account_profile_view', 'permDesc_account_profile_edit',
+      'permDesc_dashboard_view', 'permDesc_task_list_view', 'permDesc_task_create',
+      'permDesc_task_detail_view', 'permDesc_task_detail_edit', 'permDesc_task_members_manage', 'permDesc_task_lifecycle_manage', 'permDesc_task_delete',
+      'permDesc_annotation_workspace_annotate', 'permDesc_annotation_workspace_review',
+      'permDesc_annotation_exception_resolve', 'permDesc_annotation_dispute_adjudicate',
+      'permDesc_dataset_stats_view', 'permDesc_dataset_quality_view', 'permDesc_dataset_export',
+      'permDesc_admin_user_management_view', 'permDesc_admin_user_management_manage',
+      'permDesc_admin_role_settings_view', 'permDesc_admin_role_settings_manage', 'permDesc_admin_platform_overview_view',
+      'readonlyNote_task_detail_view',
+      'thRoleUser', 'thRoleSuperAdmin', 'thRoleProjectLeader', 'thRoleReviewer', 'thRoleAnnotator',
+    ];
+
+    /* ── Apply language ────────────────────────────────────────────── */
+    function applyLang(l) {
+      const nextLang = l === 'en' ? 'en' : 'zh';
+      const t = i18n[nextLang];
+      lang = window.LabelSuiteSharedSidebar.applyGlobalLanguage(nextLang, {
+        langToggleAria: t.langToggleAria,
+      });
+      document.title = 'Label Suite — ' + t.pageTitle;
+
+      const auditBtn = document.getElementById('auditLogBtn');
+      if (auditBtn && t.auditLogBtnLabel) {
+        auditBtn.title = t.auditLogBtnLabel;
+        auditBtn.setAttribute('aria-label', t.auditLogBtnLabel);
+      }
+
+      const adminTabs = document.getElementById('adminTabs');
+      if (adminTabs && t.adminTabsAria) adminTabs.setAttribute('aria-label', t.adminTabsAria);
+
+      /* Update all task-role badge texts (class selector, not innerHTML) */
+      document.querySelectorAll('.trb-text').forEach(el => {
+        el.textContent = t.legendTaskBadgeText;
+      });
+
+      /* Update all labeled text IDs */
+      TEXT_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && t[id] !== undefined) el.textContent = t[id];
+      });
+
+      window.LabelSuiteSharedSidebar.updateUserChip({ roleLabel: t.roleIndicatorLabel });
+    }
+
+    /* ── Edit mode state ───────────────────────────────────────────── */
+    let isEditMode = false;
+
+    function enterEditMode() {
+      isEditMode = true;
+      captureOriginalState();
+      document.getElementById('editBtn').classList.add('hidden');
+      document.getElementById('cancelBtn').classList.remove('hidden');
+      document.getElementById('saveBtn').classList.remove('hidden');
+      document.querySelectorAll('.matrix-checkbox').forEach(cb => { cb.disabled = cb.dataset.fixed === 'true'; });
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_role_settings_enter_edit', { page: 'role-settings' });
+    }
+
+    function exitEditMode() {
+      isEditMode = false;
+      document.getElementById('editBtn').classList.remove('hidden');
+      document.getElementById('cancelBtn').classList.add('hidden');
+      document.getElementById('saveBtn').classList.add('hidden');
+      document.querySelectorAll('.matrix-checkbox').forEach(cb => { cb.disabled = true; });
+    }
+
+    /* ── Original checkbox state (for cancel / dirty detection) ────── */
+    let originalState = {};
+
+    function getStorageVersion() {
+      return Number(window.localStorage.getItem(MATRIX_VERSION_KEY) || '1');
+    }
+
+    function getCheckboxKey(cb) {
+      return cb.dataset.key + '__' + cb.dataset.role;
+    }
+
+    function getCurrentMatrixState() {
+      const state = {};
+      document.querySelectorAll('.matrix-checkbox').forEach(cb => {
+        state[getCheckboxKey(cb)] = cb.checked;
+      });
+      return state;
+    }
+
+    function applyMatrixState(state) {
+      document.querySelectorAll('.matrix-checkbox').forEach(cb => {
+        const k = getCheckboxKey(cb);
+        if (state[k] !== undefined) cb.checked = Boolean(state[k]);
+      });
+    }
+
+    /* FR-011: reject the whole stored payload on unknown/layer-mismatched keys,
+       non-boolean values, or values that contradict a fixed cell. */
+    function isValidStoredMatrix(state) {
+      if (state === null || typeof state !== 'object' || Array.isArray(state)) return false;
+      const cells = Object.create(null);
+      document.querySelectorAll('.matrix-checkbox').forEach(cb => { cells[getCheckboxKey(cb)] = cb; });
+      return Object.keys(state).every(k => {
+        const cb = cells[k];
+        if (!cb || typeof state[k] !== 'boolean') return false;
+        return cb.dataset.fixed !== 'true' || state[k] === DEFAULT_MATRIX[k];
+      });
+    }
+
+    function getStoredMatrixState() {
+      let state = {};
+      try {
+        state = JSON.parse(window.localStorage.getItem(MATRIX_STORAGE_KEY) || '{}');
+      } catch (_error) {
+        return { valid: false, state: {} };
+      }
+      return isValidStoredMatrix(state) ? { valid: true, state } : { valid: false, state: {} };
+    }
+
+    function loadPersistedMatrix() {
+      applyMatrixState(DEFAULT_MATRIX);
+      const stored = getStoredMatrixState();
+      applyMatrixState(stored.state);
+      matrixVersion = getStorageVersion();
+      return stored.valid;
+    }
+
+    function captureOriginalState() {
+      originalState = {};
+      document.querySelectorAll('.matrix-checkbox').forEach(cb => {
+        originalState[getCheckboxKey(cb)] = cb.checked;
+      });
+    }
+
+    /* ── Dirty state ───────────────────────────────────────────────── */
+    let isDirty = false;
+
+    function onCheckboxChange() {
+      if (!isEditMode) return;
+      let dirty = false;
+      document.querySelectorAll('.matrix-checkbox').forEach(cb => {
+        const k = getCheckboxKey(cb);
+        if (originalState[k] !== undefined && originalState[k] !== cb.checked) dirty = true;
+      });
+      setDirty(dirty);
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_matrix_permission_toggled', { page: 'role-settings', dirty });
+    }
+
+    function setDirty(dirty) {
+      isDirty = dirty;
+      document.getElementById('dirtyBanner').classList.toggle('hidden', !dirty);
+    }
+
+    /* UXC-03: browser navigation (F5, close tab) gets the native guard */
+    window.addEventListener('beforeunload', (e) => {
+      if (!isDirty) return;
+      e.preventDefault();
+      e.returnValue = '';
+    });
+
+    /* UXC-10 keyboard: Escape cancels, Enter confirms the open dialog */
+    document.addEventListener('keydown', (e) => {
+      const dirtyModalOpen = document.getElementById('dirtyModal').classList.contains('show');
+      if (e.key === 'Escape') {
+        if (dirtyModalOpen) hideDirtyModal();
+        else closeAuditDrawer();
+      } else if (e.key === 'Enter' && dirtyModalOpen) {
+        confirmDiscardChanges();
+      }
+    });
+
+    /* ── Cancel: guard dirty edits behind the UXC-03 modal ──── */
+    function cancelEdit() {
+      if (isDirty) {
+        showDirtyModal();
+        return;
+      }
+      doExitCancel();
+    }
+
+    function showDirtyModal() {
+      document.getElementById('dirtyModal').classList.add('show');
+    }
+
+    function hideDirtyModal() {
+      document.getElementById('dirtyModal').classList.remove('show');
+    }
+
+    function confirmDiscardChanges() {
+      hideDirtyModal();
+      doExitCancel();
+    }
+
+    function doExitCancel() {
+      document.querySelectorAll('.matrix-checkbox').forEach(cb => {
+        const k = getCheckboxKey(cb);
+        if (originalState[k] !== undefined) cb.checked = originalState[k];
+      });
+      setDirty(false);
+      document.getElementById('conflictBanner').classList.add('hidden');
+      document.getElementById('saveBtn').disabled = false;
+      exitEditMode();
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_role_settings_cancel', { page: 'role-settings' });
+    }
+
+    /* ── Save ──────────────────────────────────────────────────────── */
+    function saveMatrix() {
+      const t = i18n[lang];
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_role_settings_save_attempted', { page: 'role-settings' });
+      if (getStorageVersion() !== matrixVersion) {
+        document.getElementById('conflictBanner').classList.remove('hidden');
+        document.getElementById('saveBtn').disabled = true;
+        showToast('error', t.toastConflict);
+        return;
+      }
+
+      const diff = buildDiff();
+      if (diff === '—') {
+        setDirty(false);
+        exitEditMode();
+        return;
+      }
+      const nextVersion = matrixVersion + 1;
+      window.localStorage.setItem(MATRIX_STORAGE_KEY, JSON.stringify(getCurrentMatrixState()));
+      window.localStorage.setItem(MATRIX_VERSION_KEY, String(nextVersion));
+      matrixVersion = nextVersion;
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      ROLE_AUDIT_LOGS.unshift({
+        id: Date.now(),
+        createdAt: `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`,
+        actorName: '管理員 A',
+        diff,
+      });
+      showToast('success', t.toastSaved);
+      setDirty(false);
+      captureOriginalState();
+      exitEditMode();
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_role_settings_save_succeeded', { page: 'role-settings' });
+    }
+
+    /* ── Reload (conflict resolution) ──────────────────────────────── */
+    function reloadMatrix() {
+      if (!loadPersistedMatrix()) showToast('error', i18n[lang].toastStoredInvalid);
+
+      captureOriginalState();
+      setDirty(false);
+      document.getElementById('conflictBanner').classList.add('hidden');
+      document.getElementById('saveBtn').disabled = false;
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_role_settings_conflict_reload', { page: 'role-settings' });
+    }
+
+    /* ── Toast (UXC-07) ────────────────────────────────────────────── */
+    let toastTimer = null;
+    /* Auto-dismiss per UXC-07: Error never auto-dismisses (manual close only). */
+    const TOAST_DURATIONS = { success: 3000, info: 5000, warning: 8000, error: 0 };
+
+    function showToast(type, msg, sub) {
+      const variant = Object.prototype.hasOwnProperty.call(TOAST_DURATIONS, type) ? type : 'success';
+      document.getElementById('toastIconSuccess').classList.toggle('hidden', variant !== 'success');
+      document.getElementById('toastIconError').classList.toggle('hidden',   variant !== 'error');
+      document.getElementById('toastMsg').textContent = msg || '';
+      document.getElementById('toastSub').textContent = sub || '';
+      document.getElementById('toast').className = 'toast toast-' + variant + ' visible';
+      if (toastTimer) clearTimeout(toastTimer);
+      if (TOAST_DURATIONS[variant] > 0) toastTimer = setTimeout(hideToast, TOAST_DURATIONS[variant]);
+    }
+
+    function hideToast() {
+      document.getElementById('toast').classList.remove('visible');
+      if (toastTimer) clearTimeout(toastTimer);
+    }
+
+    /* ── Audit drawer ──────────────────────────────────────────────── */
+    function buildDiff() {
+      const lines = [];
+      document.querySelectorAll('.matrix-checkbox').forEach(cb => {
+        const k = getCheckboxKey(cb);
+        if (originalState[k] !== undefined && originalState[k] !== cb.checked) {
+          const from = originalState[k] ? 'ON ' : 'OFF';
+          const to   = cb.checked       ? 'ON'  : 'OFF';
+          lines.push(`${cb.dataset.role} · ${cb.dataset.key}  ${from} → ${to}`);
+        }
+      });
+      return lines.join('\n') || '—';
+    }
+
+    function openAuditDrawer() {
+      const t = i18n[lang];
+      document.getElementById('auditDrawerTitle').textContent    = t.auditDrawerTitle;
+      document.getElementById('auditDrawerSubtitle').textContent = t.auditDrawerSubtitle;
+      document.getElementById('auditDrawerCloseBtn').setAttribute('aria-label', t.auditDrawerCloseBtn);
+      renderAuditLog();
+      document.getElementById('auditDrawer').classList.add('open');
+      document.getElementById('auditDrawer').setAttribute('aria-hidden', 'false');
+      document.getElementById('auditDrawerOverlay').classList.add('open');
+      document.getElementById('auditDrawerOverlay').setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_audit_drawer_opened', { page: 'role-settings', lang });
+    }
+
+    function closeAuditDrawer() {
+      document.getElementById('auditDrawer').classList.remove('open');
+      document.getElementById('auditDrawer').setAttribute('aria-hidden', 'true');
+      document.getElementById('auditDrawerOverlay').classList.remove('open');
+      document.getElementById('auditDrawerOverlay').setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    function renderAuditLog() {
+      const t = i18n[lang];
+      const list  = document.getElementById('auditLogList');
+      const empty = document.getElementById('auditDrawerEmpty');
+      list.textContent = '';
+
+      if (ROLE_AUDIT_LOGS.length === 0) {
+        list.classList.add('hidden');
+        empty.classList.remove('hidden');
+        document.getElementById('auditDrawerEmptyText').textContent = t.auditDrawerEmptyText;
+        return;
+      }
+      list.classList.remove('hidden');
+      empty.classList.add('hidden');
+
+      ROLE_AUDIT_LOGS.forEach(log => {
+        const entry = document.createElement('div');
+        entry.className = 'audit-log-entry';
+        entry.setAttribute('role', 'listitem');
+
+        const top = document.createElement('div');
+        top.className = 'audit-log-entry-top';
+
+        const time = document.createElement('span');
+        time.className = 'audit-log-time';
+        time.textContent = log.createdAt;
+
+        const badge = document.createElement('span');
+        badge.className = 'badge audit-badge-perm_update';
+        badge.textContent = t.auditActionPermUpdate;
+
+        top.appendChild(time);
+        top.appendChild(badge);
+
+        const actor = document.createElement('p');
+        actor.className = 'audit-log-actor';
+        actor.appendChild(document.createTextNode(t.auditActorPrefix));
+        const strong = document.createElement('strong');
+        strong.textContent = log.actorName;
+        actor.appendChild(strong);
+
+        const diff = document.createElement('pre');
+        diff.className = 'audit-log-diff';
+        diff.textContent = log.diff;
+
+        entry.appendChild(top);
+        entry.appendChild(actor);
+        entry.appendChild(diff);
+        list.appendChild(entry);
+      });
+    }
+
+    /* ── Language toggle wiring ────────────────────────────────────── */
+    function wireLangToggle(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('click', () => {
+        lang = lang === 'zh' ? 'en' : 'zh';
+        applyLang(lang);
+        window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_lang_switched', { lang, page: 'role-settings' });
+      });
+    }
+
+    /* ── Sidebar init ──────────────────────────────────────────────── */
+    function initSidebar() {
+      if (!window.LabelSuiteSharedSidebar) return;
+
+      window.LabelSuiteSharedSidebar.mountSidebar({
+        mountId:       'sharedSidebarMount',
+        activeNav:     'admin',
+        userName:      '管理員 A',
+        userEmail:     'admin@label-suite.dev',
+        adminHref:     'user-management.html',
+        dashboardHref: '../dashboard/dashboard.html',
+        taskHref:      '../task-management/task-list.html',
+        profileHref:   '../account/profile.html',
+        langToggleId:  'langToggle',
+      });
+
+      wireLangToggle('langToggle');
+    }
+
+    /* ── Init ──────────────────────────────────────────────────────── */
+    document.addEventListener('DOMContentLoaded', () => {
+      const storedValid = loadPersistedMatrix();
+      captureOriginalState();
+      document.querySelectorAll('.matrix-checkbox').forEach(cb => { cb.disabled = true; });
+      initSidebar();
+      applyLang(lang);
+      if (!storedValid) showToast('error', i18n[lang].toastStoredInvalid);
+      wireLangToggle('mobileLangToggle');
+
+      if (window.LabelSuiteAnalytics) {
+        window.LabelSuiteAnalytics.init({ page: 'role-settings' });
+        window.LabelSuiteAnalytics.trackPageView('role-settings', () => ({ lang, role: 'super_admin' }));
+      }
+    });
+  </script>
+</body>
+</html>

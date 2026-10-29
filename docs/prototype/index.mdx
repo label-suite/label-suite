@@ -1,0 +1,46 @@
+---
+title: Prototype 使用說明
+---
+
+`design/prototype/` 是 Label Suite 的 HTML prototype，當作模組規格的線框：規格寫「做什麼」，畫面長相以 prototype 為準。頁面之間的進出關係見 [Prototype 導航地圖](./navigation)。
+
+## 來源
+
+- 搬自 `singyichen/label-suite` 的 `design/prototype/`，版本 `4bdaf5a3`（2026-10-29）。
+- 只搬頁面與共用資產。Playwright 測試、`package.json`、`playwright.config.ts` 留在個人 repo 當參考（#16 維護者決定）。
+- 程式註解裡的 issue 編號都指個人 repo，已改寫成 `singyichen/label-suite#NNN`。
+- 示範資料的人名與 email 都是虛構的。
+
+## 啟動
+
+NoteCraft 需要 Node 22 以上，prototype 伺服器不限版本。兩個伺服器各開一個終端機：
+
+```bash
+pnpm prototype    # http://127.0.0.1:4331/ ，PROTOTYPE_PORT 可改 port
+pnpm docs:serve   # http://127.0.0.1:4330/ ，用 NoteCraft 檢視 docs/
+```
+
+兩個 port 避開維護者本機其他 NoteCraft 專案使用的 4321–4326。
+
+## 在規格裡嵌入線框
+
+NoteCraft 只服務 `docs/` 底下的圖片與 PDF，無法直接提供 prototype 的 HTML、JS、CSS，所以 prototype 由 `scripts/serve-prototype.mjs` 另外服務，規格用 `<iframe>` 嵌入。`src` 寫 prototype 頁面在 `design/prototype/` 底下的路徑：
+
+```mdx
+<iframe
+  src="http://127.0.0.1:4331/pages/admin/user-management.html"
+  title="使用者管理 prototype"
+  loading="lazy"
+  style={{ width: '100%', height: '640px', border: '1px solid #d4d4d8', borderRadius: '8px' }}
+/>
+```
+
+- `title` 必填，供螢幕閱讀器辨識。
+- 沒有啟動 `pnpm prototype` 時，iframe 會顯示連線失敗；規格文字本身不受影響。
+
+## 可用性追蹤
+
+`assets/analytics.js` 會載入 PostHog，供可用性研究使用。以下情況不追蹤：
+
+- 從 `localhost`、`127.0.0.1` 或區網位址開啟，所以本機的 `pnpm prototype` 與規格裡的線框都不會送出事件。
+- 沒有設定檔 `assets/analytics.config.local.json`。設定檔不進版控，格式參考同目錄的 `analytics.config.example.json`。
