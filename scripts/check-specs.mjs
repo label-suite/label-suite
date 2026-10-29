@@ -106,14 +106,23 @@ function chapterRange(text, title) {
   return start >= 0 ? [start, text.length] : null;
 }
 
-const TERM_DEF_RE = /^:{3,}define\{[^}]*\bid="(term\.[^"]+)"/gm;
-const TERM_REF_RE = /(?<![:\\]):ref\[[^\]]*\]\{[^}]*\bid="(term\.[^"]+)"/g;
+// Every define/ref id, whatever its namespace; term.* ids are also resolved.
+const DEF_ID_RE = /^:{3,}define\{[^}]*\bid="([^"]*)"/gm;
+const REF_ID_RE = /(?<![:\\]):ref\[[^\]]*\]\{[^}]*\bid="([^"]*)"/g;
+// Letters (CJK included), digits, _ and -, in .-separated segments. NoteCraft
+// fails the whole build on anything else, such as a space.
+const TERM_ID_RE = /^[\p{L}\p{N}_-]+(?:\.[\p{L}\p{N}_-]+)*$/u;
 
 function checkTerms(files, report) {
   const defined = new Map();
+  const checkFormat = (f, id, line) => {
+    if (!TERM_ID_RE.test(id)) report.error(f.rel, line, `id "${id}" may only use letters, digits, _ and - in .-separated segments`);
+  };
   for (const f of files) {
-    for (const m of f.text.matchAll(TERM_DEF_RE)) {
+    for (const m of f.text.matchAll(DEF_ID_RE)) {
       const line = lineOf(f.text, m.index);
+      checkFormat(f, m[1], line);
+      if (!m[1].startsWith('term.')) continue;
       if (defined.has(m[1])) {
         report.error(f.rel, line, `term "${m[1]}" is already defined in ${defined.get(m[1])}`);
       } else {
@@ -122,10 +131,39 @@ function checkTerms(files, report) {
     }
   }
   for (const f of files) {
-    for (const m of f.text.matchAll(TERM_REF_RE)) {
-      if (!defined.has(m[1])) {
-        report.error(f.rel, lineOf(f.text, m.index), `reference to undefined term "${m[1]}"`);
+    for (const m of f.text.matchAll(REF_ID_RE)) {
+      const line = lineOf(f.text, m.index);
+      checkFormat(f, m[1], line);
+      if (m[1].startsWith('term.') && !defined.has(m[1])) {
+        report.error(f.rel, line, `reference to undefined term "${m[1]}"`);
       }
+    }
+  }
+}
+
+export const FRONTMATTER_FIELDS = ['title', 'description', 'tags', 'createdAt', 'updatedAt'];
+const DATE_FIELDS = ['createdAt', 'updatedAt'];
+// NoteCraft drops a page whose dates YAML parses as Date objects, so they stay quoted strings.
+const QUOTED_DATE_RE = /^(["'])\d{4}-\d{2}-\d{2}\1$/;
+
+function checkFrontmatter(file, text, report) {
+  const m = text.match(/^---\n([\s\S]*?)\n---[ \t]*$/m);
+  if (!m || m.index !== 0) {
+    report.error(file, 1, 'frontmatter is missing');
+    return;
+  }
+  const fields = new Map();
+  m[1].split('\n').forEach((raw, i) => {
+    const f = raw.match(/^([A-Za-z]\w*):[ \t]*(.*?)\s*$/);
+    if (f) fields.set(f[1], { value: f[2], line: i + 2 });
+  });
+  for (const name of FRONTMATTER_FIELDS) {
+    if (!fields.has(name)) report.error(file, 1, `frontmatter field "${name}" is missing`);
+  }
+  for (const name of DATE_FIELDS) {
+    const f = fields.get(name);
+    if (f && !QUOTED_DATE_RE.test(f.value)) {
+      report.error(file, f.line, `${name} must be a quoted "YYYY-MM-DD" string, got ${f.value || 'nothing'}`);
     }
   }
 }
@@ -219,17 +257,18 @@ export function checkDocs(docsDir) {
   const errors = [];
   const report = { error: (file, line, msg) => errors.push(`${file}:${line}: ${msg}`) };
 
-  const files = listMdx(docsDir).map((p) => ({
-    path: p,
-    rel: relative(process.cwd(), p),
-    text: stripIgnored(readFileSync(p, 'utf8')),
-  }));
+  const files = listMdx(docsDir).map((p) => {
+    const raw = readFileSync(p, 'utf8');
+    return { path: p, rel: relative(process.cwd(), p), raw, text: stripIgnored(raw) };
+  });
 
   for (const f of files) {
     const name = basename(f.path);
     if (f.path === join(docsDir, '00-prd.mdx')) {
+      checkFrontmatter(f.rel, f.raw, report);
       checkChapterOrder(f.rel, f.text, PRD_CHAPTERS, null, report);
     } else if (f.path === join(docsDir, 'specs', name) && SPEC_FILE_RE.test(name)) {
+      checkFrontmatter(f.rel, f.raw, report);
       checkChapterOrder(f.rel, f.text, SPEC_CHAPTERS, MAPPING_CHAPTER, report);
       const legacy = readLegacyIds(join(docsDir, 'specs', 'legacy', name.replace(/\.mdx$/, '.ids')));
       checkSpecIds(f.rel, f.text, legacy, report);

@@ -1,82 +1,82 @@
 ---
 name: spec-writing
-description: Write or revise the Label Suite PRD (docs/00-prd.mdx) and module specs (docs/specs/NNN-*.mdx) with the fixed chapter skeleton, writing style, and legacy ID mapping, then run the structure checker. Use when drafting, rewriting, or reviewing any file under docs/ that describes product requirements or a module, or when porting a legacy spec into docs/specs/.
+description: 依固定章節骨架、寫作風格與舊編號對照規則，撰寫或修訂 Label Suite 的 PRD（docs/00-prd.mdx）與模組規格（docs/specs/NNN-*.mdx），完成後執行結構檢查。起草、改寫或審閱 docs/ 下描述產品需求或模組的檔案，或把舊規格搬進 docs/specs/ 時使用。
 ---
 
-# Spec Writing
+# 規格撰寫
 
-Label Suite keeps two layers of specification:
+Label Suite 的規格分兩層：
 
-| Layer | Path | Owner | Purpose |
-|-------|------|-------|---------|
-| Product docs | `docs/00-prd.mdx`, `docs/specs/NNN-*.mdx` | Maintainer | What the product does and why. Agents may draft and fix wording, but never change a requirement without the maintainer's decision. |
-| OpenSpec | `openspec/specs/`, `openspec/changes/` | Agents, via change deltas | The testable contract that implementation and tests follow. |
+| 層 | 路徑 | 負責人 | 用途 |
+|----|------|--------|------|
+| 產品文件 | `docs/00-prd.mdx`、`docs/specs/NNN-*.mdx` | 維護者 | 產品做什麼、為什麼這樣做。Agent 可以起草與修正文字，但未經維護者決定不得更動需求。 |
+| OpenSpec | `openspec/specs/`、`openspec/changes/` | Agent，透過 change delta | 實作與測試依循的可測契約。 |
 
-When the two disagree, the product docs win, and the disagreement becomes an open question in the spec's `## 待釐清` chapter. Do not resolve it silently in either layer.
+兩層不一致時以產品文件為準，並把不一致寫成該規格 `## 待釐清` 的問題；不得在任一層自行決定。
 
-This skill covers the product docs layer. Read `AGENTS.md` first; its language rules apply.
+本 skill 只涵蓋產品文件這一層。開始前先讀 `AGENTS.md`，其中的語言規則同樣適用。
 
-## Workflow
+## 工作流程
 
-1. Read the PRD, the module's current spec (if any), and the prototype pages it covers.
-2. Start from the template: [references/prd-template.mdx](references/prd-template.mdx) or [references/spec-template.mdx](references/spec-template.mdx). Keep every chapter, even when it only says `無`.
-3. Write the content under the rules below.
-4. When porting a legacy spec, follow [Legacy mapping](#legacy-mapping).
-5. Run `node scripts/check-specs.mjs` (or `corepack pnpm run check:specs`) and fix every `ERROR`.
-6. Re-read the result against the [style checklist](#style-checklist); the script cannot check style.
-7. Put every decision the maintainer still owes into `## 待釐清`, and ask the maintainer with AskUserQuestion instead of choosing a default.
+1. 閱讀 PRD、該模組現有的規格（若有）與它涵蓋的 prototype 頁面。
+2. 從範本開始：[references/prd-template.mdx](references/prd-template.mdx) 或 [references/spec-template.mdx](references/spec-template.mdx)。每個章節都要保留，沒有內容時寫 `無`。
+3. 依下列規則撰寫內容。
+4. 搬移舊規格時，依 [舊編號對照](#舊編號對照) 處理。
+5. 執行 `node scripts/check-specs.mjs`（或 `corepack pnpm run check:specs`），修正每一個 `ERROR`。
+6. 依 [風格檢查清單](#風格檢查清單) 重讀成果；腳本無法檢查風格。
+7. 維護者尚未決定的事項一律寫進 `## 待釐清`，並以 AskUserQuestion 詢問維護者，不得自行選定預設值。
 
-## PRD skeleton
+## PRD 骨架
 
-`docs/00-prd.mdx` has exactly these 14 H2 chapters, in this order. Chapters may be numbered (`## 3. 使用者角色`).
+`docs/00-prd.mdx` 恰有下列 14 個 H2 章節，順序固定。章節標題可以加編號（`## 3. 使用者角色`）。
 
-| # | Chapter | Holds |
-|---|---------|-------|
-| 1 | 文件資訊 | Version, status, owner, last update |
-| 2 | 專案概述 | Problem, goals, success measures |
-| 3 | 使用者角色 | Every role and what it may do, at the coarsest grain |
-| 4 | 專案範圍 | In scope and out of scope, as two lists |
-| 5 | 網站地圖 | The page tree, matching the prototype sidebar |
-| 6 | 業務流程 | End-to-end flows across modules |
-| 7 | 規格說明 | An index of `docs/specs/` files, one row per module |
-| 8 | 非功能需求 | Performance, security, privacy, accessibility, test-set protection |
-| 9 | 外部整合與依賴 | Services, models, and data sources the product depends on |
-| 10 | 時程 | Milestones |
-| 11 | 技術選型 | Stack decisions, with the reason for each |
-| 12 | 術語表 | Every term definition (see [Terms](#terms)) |
-| 13 | 待釐清事項 | A pointer to the open questions in each spec; no questions are kept here |
-| 14 | 變更紀錄 | Dated entries, newest first |
+| # | 章節 | 內容 |
+|---|------|------|
+| 1 | 文件資訊 | 版本、狀態、負責人、最後更新日期 |
+| 2 | 專案概述 | 問題、目標、成功指標 |
+| 3 | 使用者角色 | 每個角色及其可執行的事，以最粗的粒度描述 |
+| 4 | 專案範圍 | 範圍內與範圍外，各列一份清單 |
+| 5 | 網站地圖 | 頁面樹，與 prototype 側欄一致 |
+| 6 | 業務流程 | 跨模組的端到端流程 |
+| 7 | 規格說明 | `docs/specs/` 的索引，每個模組一列 |
+| 8 | 非功能需求 | 效能、安全、隱私、無障礙、測試集保護 |
+| 9 | 外部整合與依賴 | 產品依賴的服務、模型與資料來源 |
+| 10 | 時程 | 里程碑 |
+| 11 | 技術選型 | 技術決定與各自的理由 |
+| 12 | 術語表 | 所有術語定義（見 [術語](#術語)） |
+| 13 | 待釐清事項 | 指向各規格的待釐清章節；本章不收錄問題 |
+| 14 | 變更紀錄 | 依日期分組，新的在前 |
 
-## Module spec skeleton
+## 模組規格骨架
 
-Each module is one file, `docs/specs/NNN-<kebab-name>.mdx`, where `NNN` is a three-digit number. Its frontmatter has `title` (`NNN 模組名稱`), `description`, `tags`, `createdAt`, and `updatedAt`. Quote the dates (`createdAt: "2026-10-29"`); NoteCraft rejects unquoted YAML dates and drops the page. It has exactly these nine H2 chapters, in this order, plus the optional legacy appendix as the last chapter.
+每個模組一個檔案：`docs/specs/NNN-<kebab-name>.mdx`，`NNN` 為三位數編號。frontmatter 包含 `title`（`NNN 模組名稱`）、`description`、`tags`、`createdAt`、`updatedAt`。日期須加引號（`createdAt: "2026-10-29"`），因為 NoteCraft 不接受未加引號的 YAML 日期，會直接略過該頁；缺少欄位或日期未加引號時，檢查腳本會回報。檔案恰有下列九個 H2 章節，順序固定，最後可以再加一個選用的舊編號對照附錄。
 
-| # | Chapter | Holds |
-|---|---------|-------|
-| 1 | 目標 | What the module lets each role achieve, in two to four sentences |
-| 2 | 使用權限 | A role × action table. Permissions may only narrow what the PRD grants, never widen it. |
-| 3 | 操作流程 | The main flow and its branches, as numbered steps or a Mermaid diagram |
-| 4 | 資料模型 | Entities, fields, constraints, and state transitions the module owns |
-| 5 | 規格 | Requirements (`FR-NNN`), one H3 section per prototype sidebar page |
-| 6 | 卡控機制 | Guards against invalid or unsafe input, each in three layers |
-| 7 | 驗收標準 | Acceptance scenarios (`AC-N.N`) as a Given/When/Then table |
-| 8 | 待釐清 | Open questions, numbered `NNN-Qn` |
-| 9 | 決策紀錄 | Dated one-line decisions, newest first |
-| (opt.) | 附錄：舊條文對照 | Only for a spec ported from a legacy spec |
+| # | 章節 | 內容 |
+|---|------|------|
+| 1 | 目標 | 本模組讓各角色達成什麼，兩到四句 |
+| 2 | 使用權限 | 角色 × 動作表。權限只能比 PRD 給的更窄，不得更寬。 |
+| 3 | 操作流程 | 主要流程與分支，以編號步驟或 Mermaid 圖表示 |
+| 4 | 資料模型 | 本模組擁有的實體、欄位、約束與狀態轉換 |
+| 5 | 規格 | 需求（`FR-NNN`），每個 prototype 側欄頁面一個 H3 小節 |
+| 6 | 卡控機制 | 防止無效或不安全輸入的規則，每條分三層 |
+| 7 | 驗收標準 | 驗收情境（`AC-N.N`），以 Given/When/Then 表格呈現 |
+| 8 | 待釐清 | 未決問題，編號 `NNN-Qn` |
+| 9 | 決策紀錄 | 依日期分組的一行決策，新的在前 |
+| （選用） | 附錄：舊條文對照 | 僅限從舊規格搬移的規格 |
 
-### Chapter 5: one section per page
+### 第 5 章：每頁一個小節
 
-Split `## 規格` by the pages in the prototype sidebar, and name each H3 after the sidebar path, group first: `### 專案管理 › 任務設定`. A page that no requirement touches does not get a section. A requirement that spans pages goes in the first page where a user meets it, and the other pages reference its ID.
+`## 規格` 依 prototype 側欄的頁面拆分，每個 H3 以側欄路徑命名，分組在前：`### 專案管理 › 任務設定`。沒有任何需求涉及的頁面不建小節。跨頁的需求寫在使用者第一次遇到它的頁面，其他頁面引用其編號。
 
-### Chapter 5: embed the page first
+### 第 5 章：先嵌入頁面
 
-Each H3 in `## 規格` starts with the prototype page it describes, embedded with `PrototypeFrame` (`.notecraft/components/prototype-frame.tsx`), so the reader sees the screen before its rules. Import the component once, right after the frontmatter:
+`## 規格` 的每個 H3 都以它描述的 prototype 頁面開頭，用 `PrototypeFrame`（`.notecraft/components/prototype-frame.tsx`）嵌入，讓讀者先看到畫面再讀規則。在 frontmatter 之後匯入一次元件：
 
 ```mdx
 import PrototypeFrame from '@notes/components/prototype-frame';
 ```
 
-Then open each section with the embed:
+再以嵌入開啟每個小節：
 
 ```mdx
 ### 系統管理 › 使用者管理
@@ -86,42 +86,52 @@ Then open each section with the embed:
 - **FR-001**：…
 ```
 
-- `page` is the path under `design/prototype/pages/`, without `.html`. The component shows that source path under the frame, so do not repeat it in the text.
-- `client:idle` is required; without it the frame never leaves its loading state.
-- The frame needs `pnpm prototype` running. The spec text must still stand on its own without it.
-- A section for a page with no prototype file has no embed; add an open question for the missing page instead.
+- `page` 是 `design/prototype/pages/` 底下的路徑，不含 `.html`。元件會在框下方顯示來源路徑，內文不必重複。
+- `client:idle` 為必填；少了它，框會一直停在載入狀態。
+- 嵌入框需要 `pnpm prototype` 執行中。即使沒有嵌入框，規格文字本身也須能獨立閱讀。
+- 沒有 prototype 檔案的頁面不加嵌入，改為新增一個待釐清問題，說明頁面缺漏。
 
-### Requirements state constraints, not appearance
+### 需求寫約束，不寫外觀
 
-A requirement says what must hold, not how the screen looks. Layout, color, and component choice belong to the prototype.
+需求描述必須成立的條件，而不是畫面長相。版面、顏色與元件選擇屬於 prototype。
 
-| Write | Instead of |
-|-------|-----------|
+| 應寫 | 不寫 |
+|------|------|
 | 任務名稱須唯一，以利標記員在清單中辨識任務。 | 任務名稱欄位放在表單最上方，使用紅色星號。 |
 | 送出後應保留已填內容，讓標記員修正錯誤後不必重填。 | 送出按鈕在右下角。 |
 
-### Four-way mapping
+### 四方對應
 
-Every block of a prototype page must be traceable in four places. Before finishing, walk each page and confirm each block has:
+prototype 頁面上的每個區塊都須能在四處之一找到對應。完成前逐頁檢查，確認每個區塊都有：
 
-1. a requirement in `## 規格`,
-2. a guard in `## 卡控機制`, or an explicit `無` with the reason,
-3. an acceptance scenario in `## 驗收標準`,
-4. or, when any of the above is undecided, an entry in `## 待釐清`.
+1. `## 規格` 中的需求，
+2. `## 卡控機制` 中的卡控，或明寫 `無` 並附理由，
+3. `## 驗收標準` 中的驗收情境，
+4. 或在上述任一項尚未決定時，`## 待釐清` 中的一個問題。
 
-A block that appears in none of the four is a gap; add an open question rather than inventing behavior.
+四處都找不到的區塊就是缺口；應新增待釐清問題，不得自行補上行為。
 
-### Guards: three layers
+### 卡控：三層
 
-Each entry in `## 卡控機制` names the rule and then covers three layers:
+`## 卡控機制` 的每一條先寫規則名稱，再寫三層：
 
-- **前端**: what the page prevents or warns about before submitting.
-- **後端**: what the API rejects, and with which error. The backend check is required even when the frontend already blocks the input.
-- **例外**: who may bypass the guard, or `無`.
+- **前端**：送出前頁面會阻擋或提醒什麼。
+- **後端**：API 拒絕什麼、回覆什麼錯誤。即使前端已經阻擋，後端檢查仍為必要。
+- **例外**：誰可以略過這條卡控，或寫 `無`。
 
-Guards that protect test-set answers (`AGENTS.md` hard rule 6) state the backend layer explicitly, since a hidden field on the page is not protection.
+保護測試集答案的卡控（`AGENTS.md` 硬性規則 6）須明寫後端層，因為頁面上隱藏欄位不算保護。
 
-### Acceptance: one table per requirement group
+沒有頁面入口的規則同樣寫在這裡，不寫在 `## 規格`：初始化指令、併發或交易規則、資料庫層的約束。前端層寫 `無` 並附理由，讓讀者知道這是刻意留空：
+
+```mdx
+### 至少保留一位啟用中的系統管理員
+
+- **前端**：無，由後端判斷。
+- **後端**：檢查與更新須在同一個原子操作完成，以利併發請求也無法同時移除最後兩位系統管理員。
+- **例外**：無
+```
+
+### 驗收：每組需求一張表
 
 ```mdx
 | ID | Given | When | Then |
@@ -129,15 +139,27 @@ Guards that protect test-set answers (`AGENTS.md` hard rule 6) state the backend
 | AC-1.1 | 標記員已登入且被指派任務 | 開啟任務清單 | 只看到被指派的任務 |
 ```
 
-`AC-N.M`: `N` groups scenarios (usually one group per chapter 5 section), `M` counts within the group. Each `FR` is covered by at least one `AC`.
+`AC-N.M`：`N` 是情境分組（通常每個第 5 章小節一組），`M` 是組內序號。每個 `FR` 至少由一個 `AC` 涵蓋。
 
-### Open questions
+第 5 章只有一個小節（單頁模組）時，一組會裝下所有情境。此時改依主題分組，每組一個加編號的 H3，讓每張表短到能逐列審閱：
 
-Number each question `NNN-Qn` with the spec's number (`006-Q3`). The PRD's `## 待釐清事項` does not repeat them; it points to each spec's chapter. When a question is answered, delete it from `## 待釐清`, apply the answer to the relevant chapters, and add a line to `## 決策紀錄`.
+```mdx
+### 1. 帳號生命週期與降級
 
-### Decision log
+| ID | Given | When | Then |
+| --- | --- | --- | --- |
+| AC-1.1 | … | … | … |
 
-Group entries under a date heading, newest first, one line per decision:
+### 2. 存取與導覽
+```
+
+### 待釐清
+
+每個問題以規格編號命名為 `NNN-Qn`（`006-Q3`）。PRD 的 `## 待釐清事項` 不重複列出，只指向各規格的章節。問題有答案後，從 `## 待釐清` 刪除，把答案寫進相關章節，並在 `## 決策紀錄` 加一行。
+
+### 決策紀錄
+
+依日期標題分組，新的在前，每項決策一行：
 
 ```mdx
 ### 2026-10-29
@@ -145,23 +167,23 @@ Group entries under a date heading, newest first, one line per decision:
 - 匯出格式只支援 JSONL，以利下游訓練流程直接讀取（006-Q2）。
 ```
 
-## IDs
+## 編號
 
-The numbering inherited from the legacy specs stays:
+沿用舊規格的編號方式：
 
-| Prefix | Meaning | Shape | Defined where |
-|--------|---------|-------|---------------|
-| `FR` | Functional requirement | `FR-001`, sub-items `FR-004a` | `- **FR-001**：…` in `## 規格` |
-| `SC` | Success criterion | `SC-001` | `- **SC-001**：…` in `## 目標` |
-| `AC` | Acceptance scenario | `AC-1.1` | First cell of a `## 驗收標準` table row |
+| 前綴 | 意義 | 形式 | 定義位置 |
+|------|------|------|----------|
+| `FR` | 功能需求 | `FR-001`，子項 `FR-004a` | `## 規格` 中的 `- **FR-001**：…` |
+| `SC` | 成功指標 | `SC-001` | `## 目標` 中的 `- **SC-001**：…` |
+| `AC` | 驗收情境 | `AC-1.1` | `## 驗收標準` 表格列的第一格 |
 
-- An ID is defined once per spec; anywhere else it is a reference written bare (`見 FR-004`).
-- IDs are never reused within a spec, even after deletion; gaps are fine.
-- Different specs may use the same ID; refer across specs with the file name (`006 的 FR-002`).
+- 每個編號在一份規格內只定義一次；其他位置都是引用，直接寫編號（`見 FR-004`）。
+- 同一份規格內，編號刪除後也不得重複使用；跳號沒有關係。
+- 不同規格可以使用相同編號；跨規格引用時加上檔名（`006 的 FR-002`）。
 
-## Terms
+## 術語
 
-Define each domain term once, in the PRD's `## 術語表`:
+每個領域術語只在 PRD 的 `## 術語表` 定義一次：
 
 ```mdx
 ::::define{id="term.標記員" label="標記員"}
@@ -169,26 +191,26 @@ Define each domain term once, in the PRD's `## 術語表`:
 ::::
 ```
 
-Mark the first use of a term in each chapter with a reference, and write later uses as plain text:
+術語在每一章第一次出現時標上引用，之後直接寫純文字：
 
 ```mdx
 :ref[標記員]{id="term.標記員"} 只能看到被指派的任務。
 ```
 
-A reference to an undefined term fails the checker. Add the definition before using the term.
+引用未定義的術語會讓檢查失敗；使用前須先補上定義。
 
-A term `id` may use only letters (CJK included), digits, `_`, and `-`, in `.`-separated segments; no spaces. Keep the space in `label` only: `::::define{id="term.Seeder管理員" label="Seeder 管理員"}`. NoteCraft fails the whole build on a bad `id`, and the checker does not catch it.
+術語 `id` 只能使用字母（含中日韓文字）、數字、`_` 與 `-`，以 `.` 分段，不得有空白。空白只留在 `label`：`::::define{id="term.Seeder管理員" label="Seeder 管理員"}`。NoteCraft 遇到格式錯誤的 `id` 會讓整個 build 失敗；檢查腳本會回報任何 `define` 或 `ref` 中的錯誤 `id`。
 
-## Legacy mapping
+## 舊編號對照
 
-Porting a legacy spec must not lose a requirement silently. For each ported spec:
+搬移舊規格不得無聲地遺漏需求。每份搬移的規格：
 
-1. Snapshot the legacy IDs once:
+1. 先擷取一次舊編號：
    ```sh
    node scripts/check-specs.mjs --extract-legacy <legacy spec.md> > docs/specs/legacy/NNN-<name>.ids
    ```
-   The `.ids` file name matches the new spec's file name. Review it and commit it; it is the list the checker holds the mapping to.
-2. End the spec with the appendix, one row per legacy ID:
+   `.ids` 檔名與新規格檔名相同。檢查後提交；檢查腳本以這份清單核對對照表。
+2. 規格最後加上附錄，每個舊編號一列：
    ```mdx
    ## 附錄：舊條文對照
 
@@ -198,32 +220,47 @@ Porting a legacy spec must not lose a requirement silently. For each ported spec
    | FR-002 | 卡控機制 | 改寫為任務名稱唯一的卡控 |
    | FR-003 | 刪除 | 與 FR-001 重複 |
    ```
-3. `新位置` is an ID this spec defines, a chapter name, or `刪除`. A `刪除` row always gives the reason in `說明`.
+3. `新位置` 是本規格定義的編號、章節名稱或 `刪除`。`刪除` 的列一律在 `說明` 寫出理由。
+4. 舊 `SC` 只是重述某個 `FR` 時，併入該 `FR`，不保留為成功指標。對照表把它對應到該 `FR`，並在 `說明` 註明，讓合併可追溯：`| SC-004 | FR-011 | 與 FR-011 重複，併入 |`。合併前先把 `FR` 缺少的細節補進去。
 
-The checker fails when a legacy ID is missing, mapped twice, mapped to an undefined ID, or deleted without a reason.
+舊編號缺漏、重複對照、對應到未定義的編號，或標為刪除卻沒有理由時，檢查腳本會失敗。
 
-## Writing style
+## 從 docs 建立 OpenSpec
 
-These rules apply to the Chinese text in `docs/`.
+模組規格經維護者審閱後，可以把其中的可測契約轉成 OpenSpec capability。流程使用 OpenSpec 的 skill（先 `openspec-propose`，再 `openspec-archive-change`）；以下是本 repo 額外的規則。
 
-1. **State rules, do not address the reader.** Write `標記員應…`, not `你需要…` or `請…`.
-2. **Every rule carries its purpose.** Add a clause with `讓…` or `以利…` that says what the rule makes possible: `匯出檔須包含任務版本，以利重現訓練資料。`
-3. **Purposes look forward.** Say what the rule enables, not what went wrong before. Write `以利稽核`, not `因為之前出過錯`.
-4. **No dashes.** Do not use `——` or `—`. Split the sentence, or use `：` before a list or explanation.
-5. **Bold only terms and scope qualifiers.** Bold a term at its definition or a qualifier that changes the rule's scope (`**僅限**管理員`). Do not bold for emphasis.
-6. **Layer long sentences with `；`.** One condition per clause: `任務已關閉時，標記員不得送出結果；管理員可以重新開啟任務。`
-7. **Use the four modal verbs.** `應` (expected behavior), `須` (hard requirement), `不得` (prohibition), `可以` (permission). Do not write `SHALL` or `MUST` in `docs/`. OpenSpec deltas under `openspec/` keep `SHALL` / `MUST`, since OpenSpec parses them.
+1. capability 以模組命名（`006-user-management.mdx` → `user-management`）。其 `## Purpose` 寫明來源的 docs 檔案，並說明兩者不一致時以 docs 為準。
+2. `## 規格` 的需求與 `## 卡控機制` 的卡控轉成 `### Requirement:` 區塊，`## 驗收標準` 的表格列轉成其下的 `#### Scenario:` 區塊。只保留可觀察的行為：權限、資料規則、錯誤條件、稽核；版面交給 prototype。
+3. 每條 requirement 的描述最後加一行來源，列出它來自的編號，讓每條 requirement 都能追溯回 docs：
+   ```md
+   來源：FR-002、FR-011、SC-015；AC-1.3、AC-2.2。
+   ```
+4. 仍在 `## 待釐清` 的事項不寫成 requirement。在 proposal 中說明略過了哪些問題；維護者決定後再以新的 change 補上。
+5. 決策改動 docs 規格時，先更新 docs，再以新的 change 同步 capability；`MODIFIED` 的 requirement 須複製整個區塊，包含所有 scenario。
+6. 歸檔前執行 `npx openspec validate <change> --strict`，歸檔後執行 `npx openspec validate --specs --strict`。
 
-## Style checklist
+## 寫作風格
 
-The checker verifies chapters, terms, IDs, and the legacy mapping. Check the rest by reading:
+以下規則適用於 `docs/` 中的中文內容。
 
-- [ ] No `——` or `—` in the text (`rg '—' docs/`).
-- [ ] No `你` / `請` addressing the reader.
-- [ ] Each rule has a `讓` / `以利` purpose clause.
-- [ ] Bold is used only for terms and scope qualifiers.
-- [ ] No layout or color in `## 規格`.
-- [ ] Every chapter 5 section with a prototype page starts with its `PrototypeFrame`.
-- [ ] Every prototype block passes the four-way mapping.
-- [ ] Permissions in `## 使用權限` are no wider than the PRD's.
-- [ ] Every `FR` has at least one `AC`.
+1. **陳述規則，不對讀者說話。** 寫 `標記員應…`，不寫 `你需要…` 或 `請…`。
+2. **每條規則都附目的。** 以 `讓…` 或 `以利…` 子句說明規則讓什麼成為可能：`匯出檔須包含任務版本，以利重現訓練資料。`
+3. **目的向前看。** 說規則促成什麼，不說過去出過什麼錯。寫 `以利稽核`，不寫 `因為之前出過錯`。
+4. **不用破折號。** 不使用 `——` 或 `—`。拆成兩句，或在清單、說明前使用 `：`。
+5. **粗體只用於術語與範圍限定詞。** 在術語定義處，或在會改變規則範圍的限定詞上使用粗體（`**僅限**管理員`）。不為強調而加粗。
+6. **長句以 `；` 分層。** 每個子句一個條件：`任務已關閉時，標記員不得送出結果；管理員可以重新開啟任務。`
+7. **使用四個情態動詞。** `應`（預期行為）、`須`（硬性要求）、`不得`（禁止）、`可以`（允許）。`docs/` 中不寫 `SHALL` 或 `MUST`。`openspec/` 下的 OpenSpec delta 保留 `SHALL`／`MUST`，因為 OpenSpec 會解析它們。
+
+## 風格檢查清單
+
+檢查腳本會驗證 frontmatter、章節、術語與其 `id` 格式、編號，以及舊編號對照。其餘項目須靠閱讀檢查：
+
+- [ ] 內文沒有 `——` 或 `—`（`rg '—' docs/`）。
+- [ ] 沒有以 `你`／`請` 對讀者說話。
+- [ ] 每條規則都有 `讓`／`以利` 目的子句。
+- [ ] 粗體只用於術語與範圍限定詞。
+- [ ] `## 規格` 沒有版面或顏色描述。
+- [ ] 每個有 prototype 頁面的第 5 章小節都以 `PrototypeFrame` 開頭。
+- [ ] 每個 prototype 區塊都通過四方對應。
+- [ ] `## 使用權限` 的權限沒有比 PRD 更寬。
+- [ ] 每個 `FR` 至少有一個 `AC`。
