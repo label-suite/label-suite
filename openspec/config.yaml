@@ -1,36 +1,38 @@
 schema: spec-driven
 
 context: |
-  Two layers of specification:
-  - docs/00-prd.mdx and docs/specs/NNN-*.mdx describe what the product does and why.
-    The maintainer owns them; do not change a requirement there from an OpenSpec change.
-  - openspec/specs/ is the testable contract for implementation and tests. Change it
-    only through a change's spec deltas.
-  Every requirement in a delta must trace to a docs/ spec (cite its FR / AC ID). When
-  a delta and docs/ disagree, docs/ wins: stop and raise the conflict as an open question
-  for the maintainer instead of choosing one side.
-  Language: write artifacts in Traditional Chinese; keep OpenSpec structural headings
-  and the SHALL / MUST keywords in English (see the Language Rules in AGENTS.md).
-  Run the CLI as `npx openspec`.
+  規格分兩層：
+  - docs/00-prd.mdx 與 docs/specs/NNN-*.mdx 描述產品做什麼、為什麼這樣做。
+    由維護者擁有；不得透過 OpenSpec change 更動其中的需求。
+  - openspec/specs/ 是實作與測試依循的可測契約，只能透過 change 的 spec delta 修改。
+  delta 中的每條 requirement 都須追溯到 docs/ 的規格（註明其 FR／AC 編號）。delta 與
+  docs/ 不一致時以 docs/ 為準：停下來，把衝突列為待維護者回答的問題，不得自行選邊。
+  AGENTS.md 是唯一的規則來源；以下只指出 OpenSpec 工作最常用到的段落，動手前先讀該段落。
+  - Issue first：沒有列出工作項目的 open issue 就不開始 change
+    （AGENTS.md "Hard Rules" 與 "Development Workflow"）。
+  - 分支與 commit：不得直接 commit 到 main；commit message 依 AGENTS.md "Commits"，
+    完整規則見 docs/commit-and-release.md。
+  - 語言：artifact 以繁體中文撰寫；OpenSpec 結構標題與 SHALL／MUST 關鍵字維持英文
+    （AGENTS.md "Language Rules"）。
+  CLI 以 `npx openspec` 執行。
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
+# 個別 artifact 規則（選用）
+# 為特定 artifact 加上自訂規則。
+# 範例：
 #   rules:
 #     proposal:
-#       - Keep proposals under 500 words
-#       - Always state what is out of scope
+#       - proposal 不超過 500 字
+#       - 一律說明不在範圍內的事項
 #     tasks:
-#       - Break tasks into chunks of max 2 hours
+#       - 每個 task 拆到 2 小時以內
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
+# 個別操作指引（選用）
+# 說明 apply 與 archive 該如何進行的建議，與上方的 artifact 規則分開。
+# 範例：
 #   operations:
 #     apply:
 #       guidance:
-#         - Keep test summaries concise
+#         - 測試摘要保持簡短
 #     archive:
 #       guidance:
-#         - Summarize the archive outcome before finishing
+#         - 結束前先摘要歸檔結果
