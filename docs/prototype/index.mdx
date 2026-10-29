@@ -24,19 +24,19 @@ pnpm docs:serve   # http://127.0.0.1:4330/ ，用 NoteCraft 檢視 docs/
 
 ## 在規格裡嵌入線框
 
-NoteCraft 只服務 `docs/` 底下的圖片與 PDF，無法直接提供 prototype 的 HTML、JS、CSS，所以 prototype 由 `scripts/serve-prototype.mjs` 另外服務，規格用 `<iframe>` 嵌入。`src` 寫 prototype 頁面在 `design/prototype/` 底下的路徑：
+NoteCraft 只服務 `docs/` 底下的圖片與 PDF，無法直接提供 prototype 的 HTML、JS、CSS，所以 prototype 由 `scripts/serve-prototype.mjs` 另外服務，規格用 `.notecraft/components/prototype-frame.tsx` 的 `PrototypeFrame` 元件嵌入。`page` 寫頁面在 `design/prototype/pages/` 底下的路徑，不含 `.html`：
 
 ```mdx
-<iframe
-  src="http://127.0.0.1:4331/pages/admin/user-management.html"
-  title="使用者管理 prototype"
-  loading="lazy"
-  style={{ width: '100%', height: '640px', border: '1px solid #d4d4d8', borderRadius: '8px' }}
-/>
+import PrototypeFrame from '@notes/components/prototype-frame';
+
+<PrototypeFrame page="admin/user-management" caption="使用者管理" client:idle />
 ```
 
-- `title` 必填，供螢幕閱讀器辨識。
-- 沒有啟動 `pnpm prototype` 時，iframe 會顯示連線失敗；規格文字本身不受影響。
+- `caption` 必填，同時當 iframe 的 `title`，供螢幕閱讀器辨識。`height` 可省略，預設 640。
+- 畫面下方固定顯示原始檔路徑，例如 `design/prototype/pages/admin/user-management.html`。
+- 沒有啟動 `pnpm prototype` 時，元件改顯示提示文字，原始檔路徑照常顯示；規格文字本身不受影響。
+- `client:idle` 必填。少了它元件只會在伺服器端渲染一次，停在「載入 prototype…」。
+- 模組規格把嵌入放在第 5 章每個頁面段落的開頭，見 `.claude/skills/spec-writing/SKILL.md`。
 
 ## 可用性追蹤
 
