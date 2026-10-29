@@ -321,6 +321,7 @@
     .audit-badge-disable    { background: var(--color-error-soft-bg); color: var(--color-error); border-color: var(--color-error-soft-border); }
     .audit-badge-enable     { background: var(--color-success-soft-bg); color: var(--color-success); border-color: var(--color-success-border); }
     .audit-badge-role_change { background: var(--color-primary-soft-bg); color: var(--color-primary); border-color: var(--color-primary-border); }
+    .audit-badge-resend_invite { background: var(--color-info-bg); color: var(--color-info); border-color: var(--color-info-border); }
 
     @media (max-width: 767px) {
       .audit-drawer {
@@ -820,7 +821,7 @@
         toastResent:           '設定密碼信已重新寄出，舊連結已作廢',
         toastMailFailed:       '設定密碼信寄送失敗',
         toastMailFailedNotCreated: '帳號未建立，請稍後再試',
-        toastMailFailedRetry:  '請稍後再試',
+        toastMailFailedRetry:  '原連結仍然有效，請稍後再試',
         auditDrawerTitle:      '異動紀錄',
         auditDrawerCloseBtn:   '關閉',
         auditDrawerEmptyText:  '尚無異動紀錄',
@@ -833,6 +834,7 @@
         auditActionDisable:    '停用',
         auditActionEnable:     '啟用',
         auditActionRoleChange: '角色變更',
+        auditActionResendInvite: '重發設定密碼信',
         auditDrawerSubtitlePrefix: '目標帳號：',
       },
       en: {
@@ -893,7 +895,7 @@
         toastResent:           'Set-password email resent; the old link no longer works',
         toastMailFailed:       'Set-password email could not be sent',
         toastMailFailedNotCreated: 'The account was not created. Try again later.',
-        toastMailFailedRetry:  'Try again later.',
+        toastMailFailedRetry:  'The current link still works. Try again later.',
         auditDrawerTitle:      'Change History',
         auditDrawerCloseBtn:   'Close',
         auditDrawerEmptyText:  'No changes recorded',
@@ -906,6 +908,7 @@
         auditActionDisable:    'Disabled',
         auditActionEnable:     'Enabled',
         auditActionRoleChange: 'Role Changed',
+        auditActionResendInvite: 'Invite Resent',
         auditDrawerSubtitlePrefix: 'Target: ',
       },
     };
@@ -1029,6 +1032,8 @@
       { id: 'u-003', name: 'Olivia Lin',  email: 'olivia.lin@labelsuite.io',role: 'user',        status: 'active',   createdAt: '2026-02-03', passwordSet: true },
       { id: 'u-004', name: 'Jason Huang', email: 'jason.h@labelsuite.io',   role: 'user',        status: 'disabled', createdAt: '2026-02-20', passwordSet: true },
       { id: 'u-005', name: 'Rachel Su',   email: 'rachel.su@labelsuite.io', role: 'user',        status: 'active',   createdAt: '2026-03-01', passwordSet: false },
+      // Mail to this address fails, to demo the resend error (see MAIL_FAILURE_DOMAIN)
+      { id: 'u-006', name: 'Kevin Chen',  email: 'kevin.chen@mail-fail.test', role: 'user',      status: 'active',   createdAt: '2026-03-05', passwordSet: false },
     ];
 
     /* ── Sample audit log data ─────────────────────────────────── */
@@ -1051,6 +1056,9 @@
       ],
       'u-005': [
         { actorName: 'System', actionType: 'create', diff: 'system_role: — → user\nstatus: — → active', createdAt: '2026-03-01 11:20' },
+      ],
+      'u-006': [
+        { actorName: 'Iris Tsai', actionType: 'create', diff: 'system_role: — → user\nstatus: — → active', createdAt: '2026-03-05 10:05' },
       ],
     };
 
@@ -1441,11 +1449,18 @@
       const t = i18n[lang];
       const user = sampleUsers.find(item => item.id === userId);
       if (!user || user.passwordSet) return;
+      // FR-006d: a failed send rolls the resend back, so the current link stays valid and no log is written
       if (simulateMailFailure(user.email)) {
         showToast('error', t.toastMailFailed, t.toastMailFailedRetry);
         return;
       }
-      // FR-006c: a new link replaces the previous one
+      // FR-006c: a new link replaces the previous one; FR-013: a successful resend is logged without the link
+      (sampleAuditLogs[user.id] = sampleAuditLogs[user.id] || []).push({
+        actorName: 'Iris Tsai',
+        actionType: 'resend_invite',
+        diff: 'set_password_link: reissued',
+        createdAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
+      });
       showToast('success', t.toastResent, user.email);
     }
 
@@ -1517,6 +1532,7 @@
         disable:     t.auditActionDisable,
         enable:      t.auditActionEnable,
         role_change: t.auditActionRoleChange,
+        resend_invite: t.auditActionResendInvite,
       };
 
       logs.forEach(log => {
