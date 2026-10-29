@@ -32,3 +32,22 @@ jobs:
             fi
           done
           exit "$failed"
+
+  specs:
+    name: specs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          # No dependencies are installed, so skip the pnpm cache that
+          # packageManager in package.json would otherwise turn on.
+          package-manager-cache: false
+
+      - name: Checker regression tests
+        run: node --test scripts/tests/check-specs.test.mjs
+
+      - name: Check PRD and module specs
+        run: node scripts/check-specs.mjs docs

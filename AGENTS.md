@@ -78,6 +78,7 @@ Full rules: [docs/commit-and-release.md](docs/commit-and-release.md). The essent
 |----------|----------|
 | Code, comments, commit messages, API contracts, `AGENTS.md`, `CLAUDE.md` | English only |
 | `docs/` | Traditional Chinese allowed |
+| `openspec/` artifacts (proposals, designs, tasks, spec deltas) | Traditional Chinese; OpenSpec structural headings (`## ADDED Requirements`, `### Requirement:`, `#### Scenario:`) and the `SHALL` / `MUST` keywords stay in English |
 | Issues and PRs opened by an agent | Traditional Chinese for the body and the descriptive part of the title. The structural head (`[Bug]`, `feat:`), label names, code identifiers, file paths, commands, and verbatim error output stay in English |
 | Replies to the maintainer | Traditional Chinese |
 
