@@ -1,13 +1,17 @@
 schema: spec-driven
 
-# Project context (optional)
-# Add only constraints that should guide OpenSpec artifacts and workflows.
-# Include constraints an agent cannot infer by reading the code.
-# Keep general project documentation and discoverable codebase facts out.
-# Example:
-#   context: |
-#     Designs and tasks must cover Windows, macOS, and Linux
-#     Write all artifacts in Spanish
+context: |
+  Two layers of specification:
+  - docs/00-prd.mdx and docs/specs/NNN-*.mdx describe what the product does and why.
+    The maintainer owns them; do not change a requirement there from an OpenSpec change.
+  - openspec/specs/ is the testable contract for implementation and tests. Change it
+    only through a change's spec deltas.
+  Every requirement in a delta must trace to a docs/ spec (cite its FR / AC ID). When
+  a delta and docs/ disagree, docs/ wins: stop and raise the conflict as an open question
+  for the maintainer instead of choosing one side.
+  Language: write artifacts in Traditional Chinese; keep OpenSpec structural headings
+  and the SHALL / MUST keywords in English (see the Language Rules in AGENTS.md).
+  Run the CLI as `npx openspec`.
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
