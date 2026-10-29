@@ -68,6 +68,29 @@ Each module is one file, `docs/specs/NNN-<kebab-name>.mdx`, where `NNN` is a thr
 
 Split `## 規格` by the pages in the prototype sidebar, and name each H3 after the sidebar path, group first: `### 專案管理 › 任務設定`. A page that no requirement touches does not get a section. A requirement that spans pages goes in the first page where a user meets it, and the other pages reference its ID.
 
+### Chapter 5: embed the page first
+
+Each H3 in `## 規格` starts with the prototype page it describes, embedded with `PrototypeFrame` (`.notecraft/components/prototype-frame.tsx`), so the reader sees the screen before its rules. Import the component once, right after the frontmatter:
+
+```mdx
+import PrototypeFrame from '@notes/components/prototype-frame';
+```
+
+Then open each section with the embed:
+
+```mdx
+### 系統管理 › 使用者管理
+
+<PrototypeFrame page="admin/user-management" caption="使用者管理" client:idle />
+
+- **FR-001**：…
+```
+
+- `page` is the path under `design/prototype/pages/`, without `.html`. The component shows that source path under the frame, so do not repeat it in the text.
+- `client:idle` is required; without it the frame never leaves its loading state.
+- The frame needs `pnpm prototype` running. The spec text must still stand on its own without it.
+- A section for a page with no prototype file has no embed; add an open question for the missing page instead.
+
 ### Requirements state constraints, not appearance
 
 A requirement says what must hold, not how the screen looks. Layout, color, and component choice belong to the prototype.
@@ -198,6 +221,7 @@ The checker verifies chapters, terms, IDs, and the legacy mapping. Check the res
 - [ ] Each rule has a `讓` / `以利` purpose clause.
 - [ ] Bold is used only for terms and scope qualifiers.
 - [ ] No layout or color in `## 規格`.
+- [ ] Every chapter 5 section with a prototype page starts with its `PrototypeFrame`.
 - [ ] Every prototype block passes the four-way mapping.
 - [ ] Permissions in `## 使用權限` are no wider than the PRD's.
 - [ ] Every `FR` has at least one `AC`.
