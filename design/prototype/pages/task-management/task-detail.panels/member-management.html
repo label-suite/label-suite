@@ -1,0 +1,126 @@
+<div id="memberManagementPanel" class="hidden">
+  <section class="panel" aria-labelledby="memberAddTitle">
+    <h2 class="panel-title" id="memberAddTitle">加入成員</h2>
+    <p class="panel-subtitle" id="memberAddSubtitle">可透過搜尋平台現有成員，或直接填寫 Email 寄送邀請加入任務。</p>
+
+    <div class="member-entry-grid">
+      <section class="member-entry-card" aria-labelledby="memberSearchTitle">
+        <h3 class="member-entry-title" id="memberSearchTitle">搜尋平台成員</h3>
+        <p class="member-entry-hint" id="memberSearchSubtitle">支援以帳號、姓名或 Email 搜尋目前平台成員。</p>
+        <div class="member-entry-row">
+          <input class="input-text" id="memberSearchInput" type="text" placeholder="輸入帳號、姓名或 Email" />
+          <select class="role-select-inline" id="memberSearchRoleSelect">
+            <option value="annotator">標記員</option>
+            <option value="reviewer">審核員</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table class="member-table" role="table" aria-label="Search platform users table">
+              <thead>
+                <tr>
+                  <th id="thSearchAccount">帳號</th>
+                  <th id="thSearchName">姓名</th>
+                  <th id="thSearchEmail">Email</th>
+                  <th id="thSearchTaskCount">目前已在任務數量</th>
+                  <th id="thSearchActions">操作</th>
+                </tr>
+              </thead>
+              <tbody id="memberSearchResultsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="member-entry-card" aria-labelledby="memberInviteTitle">
+        <h3 class="member-entry-title" id="memberInviteTitle">Email 邀請</h3>
+        <p class="member-entry-hint" id="memberInviteSubtitle">填寫對方 Email 並指定任務角色後，寄送邀請加入任務。</p>
+        <div class="member-entry-stack">
+          <input class="input-text" id="memberInviteEmailInput" type="email" placeholder="輸入邀請 Email" />
+          <div class="member-entry-row">
+            <select class="role-select-inline" id="memberInviteRoleSelect">
+              <option value="annotator">標記員</option>
+              <option value="reviewer">審核員</option>
+            </select>
+            <button class="mini-btn mini-btn-primary" id="memberInviteSendBtn" type="button">寄送邀請</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="memberListTitle">
+    <h2 class="panel-title" id="memberListTitle">目前成員清單</h2>
+    <p class="panel-subtitle" id="memberListSubtitle">任務角色在加入時決定，既有成員不可中途改角色；如需變更請移除後重新加入。</p>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="member-table" role="table" aria-label="Task members table">
+          <thead>
+            <tr>
+              <th id="thMemberName">姓名</th>
+              <th id="thMemberEmail">Email</th>
+              <th id="thMemberTaskRole">任務角色</th>
+              <th id="thMemberReviewLoad">審核負荷</th>
+              <th id="thMemberStatus">狀態</th>
+              <th id="thMemberJoinedAt">加入時間</th>
+              <th id="thMemberLastActive">最後活動</th>
+              <th id="thMemberActions">操作</th>
+            </tr>
+          </thead>
+          <tbody id="memberTableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="memberPaginationBar">
+        <div class="pagination-left">
+          <span class="pagination-info" id="memberPaginationInfo"></span>
+          <select class="page-size-select" id="memberPageSizeSelect" aria-label="每頁筆數">
+            <option value="20" selected>20 / 頁</option>
+            <option value="50">50 / 頁</option>
+            <option value="100">100 / 頁</option>
+          </select>
+        </div>
+        <div class="pagination-controls" id="memberPaginationControls">
+          <button class="page-btn" id="memberPrevPageBtn" aria-label="上一頁" disabled type="button">
+            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="page-btn" id="memberNextPageBtn" aria-label="下一頁" disabled type="button">
+            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="reviewAssignmentTitle">
+    <div class="review-assignment-head">
+      <div>
+        <h2 class="panel-title" id="reviewAssignmentTitle">審核指派</h2>
+        <p class="panel-subtitle" id="reviewAssignmentHint"></p>
+      </div>
+      <div class="review-assignment-actions">
+        <span class="review-unassigned-count" id="reviewUnassignedCount"></span>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="member-table" role="table" aria-label="Review assignment table">
+          <thead>
+            <tr>
+              <th id="thAssignReviewer">審核員</th>
+              <th id="thAssignAssigned">已指派</th>
+              <th id="thAssignPending">待審</th>
+              <th id="thAssignDone">已完成</th>
+            </tr>
+          </thead>
+          <tbody id="reviewAssignmentBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="dispute-pool-row">
+      <span id="disputePoolText"></span>
+    </div>
+    <div class="exception-pool-row">
+      <span id="exceptionPoolText"></span>
+    </div>
+  </section>
+</div>

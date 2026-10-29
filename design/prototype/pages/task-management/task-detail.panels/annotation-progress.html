@@ -1,0 +1,162 @@
+<div id="annotationProgressPanel" class="hidden">
+  <section class="panel" aria-labelledby="progressSummaryTitle">
+    <div class="stage-filter-row">
+      <h2 class="panel-title" id="progressSummaryTitle" style="margin-bottom: 0;">整體進度摘要</h2>
+      <div class="stage-toggle" id="progressRoundPills" role="tablist" aria-label="Round selector"></div>
+    </div>
+    <div class="phase-flow" id="roundProgressList"></div>
+    <div class="progress-metric-grid">
+      <article class="metric"><span id="progressMetricTotalLabel">總樣本數</span><strong id="progressMetricTotalValue">-</strong></article>
+      <article class="metric"><span id="progressMetricCompletedLabel">已完成數</span><strong id="progressMetricCompletedValue">-</strong></article>
+      <article class="metric" data-testid="annotation-submission-progress"><span id="progressMetricRateLabel">標記提交進度</span><strong id="progressMetricRateValue">-</strong></article>
+      <article class="metric"><span id="progressMetricSpeedLabel">平均速度</span><strong id="progressMetricSpeedValue">-</strong></article>
+      <article class="metric"><span id="progressMetricEtaLabel">剩餘估計時間</span><strong id="progressMetricEtaValue">-</strong></article>
+      <article class="metric"><span id="progressMetricIAALabel">IAA</span><strong id="progressMetricIAAValue">-</strong></article>
+      <article class="metric review-progress-breakdown" data-testid="review-progress-breakdown" role="group" aria-label="審核定稿狀態">
+        <span id="reviewProgressBreakdownLabel">審核定稿狀態</span>
+        <div class="review-progress-values" aria-live="polite">
+          <span class="review-progress-value" id="reviewFinalizedCount" data-testid="review-finalized-count">-</span>
+          <span class="review-progress-value" id="reviewDisputedCount" data-testid="review-disputed-count">-</span>
+          <span class="review-progress-value" id="reviewPendingArbitrationCount" data-testid="review-pending-arbitration-count">-</span>
+          <span class="review-progress-value" id="reviewExceptionCount" data-testid="review-exception-count">-</span>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="panel hidden" aria-labelledby="unassignedAnnotationTitle" id="unassignedAnnotationSection">
+    <h2 class="panel-title" id="unassignedAnnotationTitle">未指派標記作業</h2>
+    <p class="panel-subtitle" id="unassignedAnnotationSubtitle">未指派試標作業會阻擋進入待 IAA 確認；正式標記未指派作業會影響完成率。請重新指派給啟用中的標記員，或排除並保留原因。</p>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="member-table" role="table" aria-label="Unassigned dry run assignments table">
+          <thead>
+            <tr>
+              <th id="thUnassignedStage">階段 / 回合</th>
+              <th id="thUnassignedSamples">樣本</th>
+              <th id="thUnassignedSource">來源成員</th>
+              <th id="thUnassignedReason">原因</th>
+              <th id="thUnassignedAssignTo">指派給</th>
+              <th id="thUnassignedActions">操作</th>
+            </tr>
+          </thead>
+          <tbody id="unassignedAnnotationBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="memberProgressTitle" id="memberProgressSection">
+    <h2 class="panel-title" id="memberProgressTitle">成員進度表</h2>
+    <div class="sort-row">
+      <label class="sort-label" id="progressSortLabel" for="memberProgressSort">排序</label>
+      <select class="sort-select" id="memberProgressSort" aria-label="Sort member progress">
+        <option value="completed_desc" id="progressSortCompleted">依已完成數（高到低）</option>
+        <option value="speed_desc" id="progressSortSpeed">依平均速度（高到低）</option>
+        <option value="submitted_desc" id="progressSortSubmitted">依最後提交（新到舊）</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="member-table" role="table" aria-label="Member progress table">
+          <thead>
+            <tr>
+              <th id="thProgressMemberName">成員姓名</th>
+              <th id="thProgressRole">角色</th>
+              <th id="thProgressCompleted">已完成數</th>
+              <th id="thProgressPending">待完成數</th>
+              <th id="thProgressTotal">總數量</th>
+              <th id="thProgressSpeed">平均速度</th>
+              <th id="thProgressBar">個人進度條</th>
+              <th id="thProgressLastSubmitted">最後提交時間</th>
+              <th id="thProgressQuality">品質旗標</th>
+              <th id="thProgressDetails">操作</th>
+            </tr>
+          </thead>
+          <tbody id="memberProgressTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel hidden" aria-labelledby="leaderAdjudicationTitle" id="leaderAdjudicationSection">
+    <h2 class="panel-title" id="leaderAdjudicationTitle">-</h2>
+    <p class="panel-subtitle" id="leaderAdjudicationSubtitle"></p>
+    <div id="leaderAdjudicationList"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="finalExceptionPoolTitle" id="finalExceptionPoolSection">
+    <h2 class="panel-title" id="finalExceptionPoolTitle">-</h2>
+    <p class="panel-subtitle" id="finalExceptionPoolSubtitle"></p>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="member-table" role="table" aria-label="Final exception pool table">
+          <thead>
+            <tr>
+              <th id="thFepSample">樣本 ID</th>
+              <th id="thFepAnnotator">標記員</th>
+              <th id="thFepReviewer">審核員</th>
+              <th id="thFepOutputType">爭議輸出類型</th>
+              <th id="thFepArbiter">仲裁者與理由</th>
+              <th id="thFepFellAt">落入例外池時間</th>
+              <th id="thFepActions">操作</th>
+            </tr>
+          </thead>
+          <tbody id="finalExceptionPoolBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <p class="empty-state empty-state-compact hidden" id="finalExceptionPoolEmpty"></p>
+  </section>
+
+  <section class="panel hidden" aria-labelledby="memberDetailTitle" id="memberDetailSection">
+    <div class="member-detail-header">
+      <h2 class="panel-title" id="memberDetailTitle"></h2>
+      <button class="modal-close" type="button" id="memberDetailCloseBtn" aria-label="關閉">
+        <svg class="modal-close-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="member-table" id="memberDetailTable" role="table" aria-labelledby="memberDetailTitle">
+          <thead>
+            <tr>
+              <th id="thDetailSampleId">樣本 ID</th>
+              <th id="thDetailTextPreview">文本摘要</th>
+              <th id="thDetailLabelResult">標記結果</th>
+              <th id="thDetailSubmittedAt">提交時間</th>
+              <th id="thDetailReviewStatus">審核狀態</th>
+            </tr>
+          </thead>
+          <tbody id="memberDetailTableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination hidden" id="mdPaginationBar">
+        <div class="pagination-left">
+          <span class="pagination-info" id="mdPaginationInfo"></span>
+          <select class="page-size-select" id="mdPageSizeSelect" aria-label="每頁筆數">
+            <option value="20" selected>20 筆/頁</option>
+            <option value="50">50 筆/頁</option>
+            <option value="100">100 筆/頁</option>
+          </select>
+        </div>
+        <div class="pagination-controls" id="mdPaginationControls">
+          <button class="page-btn" type="button" id="mdPrevPageBtn" aria-label="上一頁" disabled>
+            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="page-btn" type="button" id="mdNextPageBtn" aria-label="下一頁">
+            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <p class="empty-state empty-state-compact hidden" id="memberDetailEmpty"></p>
+  </section>
+
+  <section class="hidden" aria-labelledby="progressEmptyTitle" id="progressEmptyState">
+    <div class="empty-state empty-state-panel">
+      <p class="empty-state-title" id="progressEmptyTitle">尚無成員進度資料</p>
+      <button class="btn btn-secondary empty-state-action" type="button" id="progressBackToOverviewBtn">回到任務概覽</button>
+    </div>
+  </section>
+</div>

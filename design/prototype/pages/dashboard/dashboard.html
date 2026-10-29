@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<!-- Spec: specs/dashboard/012-dashboard/spec.md -->
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Label Suite — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/button.css" />
+  <script src="../../assets/theme-fouc.js"></script>
+  <link rel="stylesheet" href="./dashboard.layout.css" />
+  <link rel="stylesheet" href="./dashboard.components.css" />
+  <link rel="stylesheet" href="../shared/task-type-badge.css" />
+</head>
+
+<body>
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- NAVBAR                                                     -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div id="sharedSidebarMount"></div>
+  <script src="../shared/sidebar.js"></script>
+  <script>
+    window.LabelSuiteSharedSidebar.mountSidebar({
+      mountId: 'sharedSidebarMount',
+      activeNav: 'dashboard',
+      dashboardHref: '../dashboard/dashboard.html',
+      taskHref: '../task-management/task-list.html',
+      adminHref: '../admin/user-management.html',
+      profileHref: '../account/profile.html',
+      loginHref: '../account/login.html',
+      brandHref: '../dashboard/dashboard.html',
+    });
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- MAIN CONTENT                                               -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <main class="layout" data-testid="dashboard-shell">
+    <section class="page" id="top">
+      <section class="page-header" aria-labelledby="dashboardMainTitle">
+        <h1 id="dashboardMainTitle" class="page-main-title">儀表板</h1>
+        <p id="dashboardMainSubtitle" class="page-main-subtitle">掌握任務進度與團隊協作狀態</p>
+      </section>
+
+      <!-- Controls -->
+      <section class="controls">
+        <div>
+          <strong id="scenarioLabel" class="controls-label">場景模式</strong>
+          <span id="scenarioHint" class="controls-hint">切換不同的角色視圖</span>
+        </div>
+        <div class="scenario-list" id="scenarioList" data-testid="scenario-list">
+          <button class="scenario-pill active" data-scenario="user" disabled>一般使用者</button>
+          <button class="scenario-pill" data-scenario="super_admin_data" disabled>系統管理員</button>
+          <button class="scenario-pill" data-scenario="project_leader" disabled>專案負責人</button>
+          <button class="scenario-pill" data-scenario="annotator" disabled>標記員</button>
+          <button class="scenario-pill" data-scenario="reviewer" disabled>審核員</button>
+        </div>
+      </section>
+
+      <!-- Skeleton (FR-018): shown before the simulated task_membership load resolves -->
+      <section id="dashboardSkeleton" class="dashboard-skeleton" aria-busy="true" aria-live="polite" data-testid="dashboard-skeleton">
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="skeleton skel-line" style="width:100px;"></div>
+              <div class="skeleton skel-line" style="width:160px; margin-top:6px;"></div>
+            </div>
+          </div>
+          <div class="metrics">
+            <div class="metric"><div class="skeleton skel-metric"></div></div>
+            <div class="metric"><div class="skeleton skel-metric"></div></div>
+            <div class="metric"><div class="skeleton skel-metric"></div></div>
+            <div class="metric"><div class="skeleton skel-metric"></div></div>
+          </div>
+        </article>
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="skeleton skel-line" style="width:100px;"></div>
+              <div class="skeleton skel-line" style="width:160px; margin-top:6px;"></div>
+            </div>
+          </div>
+          <div class="list">
+            <div class="skeleton skel-row"></div>
+            <div class="skeleton skel-row"></div>
+            <div class="skeleton skel-row"></div>
+          </div>
+        </article>
+      </section>
+
+      <!-- Error state (FR-019): shown when the simulated task_membership load fails -->
+      <section id="dashboardErrorState" class="dashboard-error-state hidden" role="alert" data-testid="dashboard-error-state">
+        <svg class="error-state-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <p id="errorLoadTitle" class="error-state-title"></p>
+        <p id="errorLoadDesc" class="error-state-desc"></p>
+        <button id="errorRetryLabel" class="btn btn-primary" type="button"></button>
+      </section>
+
+      <!-- Content Grid -->
+      <div class="content-grid hidden" id="contentGrid">
+        <!-- User View (Default) -->
+        <section class="view is-active" id="view-user" data-scenario="user" data-testid="user-view">
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h2 id="userWorkflowTitle" class="panel-title">開始你的第一個工作流程</h2>
+                <span id="userWorkflowSubtitle" class="panel-subtitle">從三個行動入口開始，快速達成第一個可交付成果</span>
+              </div>
+            </div>
+            <div class="workflow-role-grid">
+              <!-- Card 1: Project Leader (emerald) -->
+              <div class="workflow-role-card">
+                <div class="role-avatar role-avatar--emerald">
+                  <img src="../../assets/icons/users.svg" alt="" aria-hidden="true" />
+                </div>
+                <strong id="roleLeaderTitle" class="role-name">建立標記專案</strong>
+                <span id="roleLeaderSubtitle" class="role-subtitle">上傳資料、設定標籤規則、指派團隊成員。</span>
+                <div class="workflow-steps-row">
+                  <div class="workflow-step">
+                    <div class="step-icon step-icon--emerald">
+                      <img src="../../assets/icons/plus.svg" alt="" aria-hidden="true" />
+                    </div>
+                    <strong id="stepLeader1Title" class="step-title">建立任務</strong>
+                    <span id="stepLeader1Desc" class="step-desc">設定任務目標與標籤規則</span>
+                  </div>
+                  <div class="workflow-step-connector" aria-hidden="true">
+                    <img src="../../assets/icons/arrow-right.svg" width="14" height="14" alt="" />
+                  </div>
+                  <div class="workflow-step">
+                    <div class="step-icon step-icon--emerald step-icon--ink">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 16 12 12 8 16"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path></svg>
+                    </div>
+                    <strong id="stepLeader2Title" class="step-title">上傳資料</strong>
+                    <span id="stepLeader2Desc" class="step-desc">上傳第一批資料，確認可被系統讀取</span>
+                  </div>
+                  <div class="workflow-step-connector" aria-hidden="true">
+                    <img src="../../assets/icons/arrow-right.svg" width="14" height="14" alt="" />
+                  </div>
+                  <div class="workflow-step">
+                    <div class="step-icon step-icon--emerald">
+                      <img src="../../assets/icons/users.svg" alt="" aria-hidden="true" />
+                    </div>
+                    <strong id="stepLeader3Title" class="step-title">指派人員</strong>
+                    <span id="stepLeader3Desc" class="step-desc">指派至少 1 位標記員與 1 位審核員</span>
+                  </div>
+                </div>
+                <div class="workflow-role-cta">
+                  <button class="btn btn-emerald btn-full" type="button" id="ctaLeaderBtn">
+                    <span id="ctaLeaderBtnLabel">開始建立任務</span>
+                  </button>
+                </div>
+              </div>
+              <!-- Card 2: Annotator (violet) -->
+              <div class="workflow-role-card">
+                <div class="role-avatar role-avatar--violet">
+                  <img src="../../assets/icons/tag.svg" alt="" aria-hidden="true" />
+                </div>
+                <strong id="roleAnnotatorTitle" class="role-name">進行資料標記</strong>
+                <span id="roleAnnotatorSubtitle" class="role-subtitle">查看待辦任務，完成資料標記並提交結果。</span>
+                <div class="workflow-steps-row">
+                  <div class="workflow-step">
+                    <div class="step-icon step-icon--violet">
+                      <img src="../../assets/icons/folder.svg" alt="" aria-hidden="true" />
+                    </div>
+                    <strong id="stepAnnotator1Title" class="step-title">開啟任務</strong>
+                    <span id="stepAnnotator1Desc" class="step-desc">進入標記工作區，查看待辦任務</span>
+                  </div>
+                  <div class="workflow-step-connector" aria-hidden="true">
+                    <img src="../../assets/icons/arrow-right.svg" width="14" height="14" alt="" />
+                  </div>
+                  <div class="workflow-step">
+                    <div class="step-icon step-icon--violet step-icon--ink">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </div>
+                    <strong id="stepAnnotator2Title" class="step-title">進行標記</strong>
+                    <span id="stepAnnotator2Desc" class="step-desc">依照標籤規則，完成標記工作</span>
+                  </div>
+                  <div class="workflow-step-connector" aria-hidden="true">
+                    <img src="../../assets/icons/arrow-right.svg" width="14" height="14" alt="" />
+                  </div>
+                  <div class="workflow-step">
+                    <div class="step-icon step-icon--violet step-icon--ink">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </div>
+                    <strong id="stepAnnotator3Title" class="step-title">提交標記</strong>
+                    <span id="stepAnnotator3Desc" class="step-desc">自我檢查標記一致性，提交標記結果</span>
+                  </div>
+                </div>
+                <div class="workflow-role-cta">
+                  <button class="btn btn-violet btn-full" type="button" id="ctaAnnotatorBtn">
+                    <span id="ctaAnnotatorBtnLabel">開始標記</span>
+                  </button>
+                </div>
+              </div>
+              <!-- Card 3: Reviewer (indigo) -->
+              <div class="workflow-role-card">
+                <div class="role-avatar role-avatar--indigo">
+                  <img src="../../assets/icons/file-text.svg" alt="" aria-hidden="true" />
+                </div>
+                <strong id="roleReviewerTitle" class="role-name">進行標記審核</strong>
+                <span id="roleReviewerSubtitle" class="role-subtitle">逐標記員獨立審核，直接修正結果，歧異交付仲裁。</span>
+                <div class="workflow-steps-row">
+                  <div class="workflow-step">
+                    <div class="step-icon step-icon--indigo">
+                      <img src="../../assets/icons/eye.svg" alt="" aria-hidden="true" />
+                    </div>
+                    <strong id="stepReviewer1Title" class="step-title">審核標記</strong>
+                    <span id="stepReviewer1Desc" class="step-desc">檢查標記內容，檢視標記與依據</span>
+                  </div>
+                  <div class="workflow-step-connector" aria-hidden="true">
+                    <img src="../../assets/icons/arrow-right.svg" width="14" height="14" alt="" />
+                  </div>
+                  <div class="workflow-step">
+                    <div class="step-icon step-icon--indigo">
+                      <img src="../../assets/icons/check.svg" alt="" aria-hidden="true" />
+                    </div>
+                    <strong id="stepReviewer2Title" class="step-title">修正或仲裁</strong>
+                    <span id="stepReviewer2Desc" class="step-desc">通過、修正或無法裁決；歧異交付仲裁與例外池</span>
+                  </div>
+                  <div class="workflow-step-connector" aria-hidden="true">
+                    <img src="../../assets/icons/arrow-right.svg" width="14" height="14" alt="" />
+                  </div>
+                  <div class="workflow-step">
+                    <div class="step-icon step-icon--indigo">
+                      <img src="../../assets/icons/list-checks.svg" alt="" aria-hidden="true" />
+                    </div>
+                    <strong id="stepReviewer3Title" class="step-title">完成審核</strong>
+                    <span id="stepReviewer3Desc" class="step-desc">確認審核列表，標記任務完成</span>
+                  </div>
+                </div>
+                <div class="workflow-role-cta">
+                  <button class="btn btn-indigo btn-full" type="button" id="ctaReviewerBtn">
+                    <span id="ctaReviewerBtnLabel">開始審核</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <!-- Super Admin View -->
+        <section class="view" id="view-super_admin_data" data-scenario="super_admin_data" data-testid="super-admin-view">
+          <div class="grid-3">
+            <!-- Platform Overview -->
+            <article class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 id="adminPlatformTitle" class="panel-title">平台使用者統計</h2>
+                  <span id="adminPlatformSubtitle" class="panel-subtitle">系統概況</span>
+                </div>
+              </div>
+              <div class="metrics metrics-readable-labels">
+                <div class="metric">
+                  <span id="adminTotalUsers">總用戶</span>
+                  <strong id="adminTotalUsersValue">156 人</strong>
+                </div>
+                <div class="metric">
+                  <span id="adminProjectLeaders">專案負責人</span>
+                  <strong id="adminProjectLeadersValue">18 人</strong>
+                </div>
+                <div class="metric">
+                  <span id="adminAnnotators">標記員</span>
+                  <strong id="adminAnnotatorsValue">112 人</strong>
+                </div>
+                <div class="metric">
+                  <span id="adminReviewers">審核員</span>
+                  <strong id="adminReviewersValue">26 人</strong>
+                </div>
+              </div>
+            </article>
+
+            <!-- Task Status -->
+            <article class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 id="adminTaskTitle" class="panel-title">任務概況</h2>
+                  <span id="adminTaskSubtitle" class="panel-subtitle">所有項目統計</span>
+                </div>
+              </div>
+              <div class="metrics metrics-readable-labels">
+                <div class="metric">
+                  <span id="adminTotalTasks">總任務</span>
+                  <strong id="adminTotalTasksValue">127 個</strong>
+                </div>
+                <div class="metric">
+                  <span id="adminActiveTasks">進行中</span>
+                  <strong id="adminActiveTasksValue">24 個</strong>
+                </div>
+                <div class="metric">
+                  <span id="adminPendingIaa">等待 IAA 確認</span>
+                  <strong id="adminPendingIaaValue" role="button" tabindex="0" aria-describedby="adminPendingIaa" style="cursor: pointer;">2 個</strong>
+                </div>
+                <div class="metric">
+                  <span id="adminSpeedAlert">速度異常</span>
+                  <strong id="adminSpeedAlertValue">3 個</strong>
+                </div>
+              </div>
+            </article>
+
+            <!-- Recent Alerts -->
+            <article class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 id="adminAlertsTitle" class="panel-title">最近提醒</h2>
+                  <span id="adminAlertsSubtitle" class="panel-subtitle">系統通知</span>
+                </div>
+              </div>
+              <ul class="list">
+                <li class="list-item">
+                  <span id="alertItem1Title" class="list-item-title">NER Benchmark</span>
+                  <span id="alertItem1Detail" class="list-item-detail">IAA 已達 0.81，待確認後啟動</span>
+                </li>
+                <li class="list-item">
+                  <span id="alertItem2Title" class="list-item-title">意圖分類 v2</span>
+                  <span id="alertItem2Detail" class="list-item-detail">2 位標記員低於標準速度</span>
+                </li>
+              </ul>
+            </article>
+          </div>
+
+          <!-- Task List -->
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h2 id="adminTaskListTitle" class="panel-title">任務列表</h2>
+                <span id="adminTaskListSubtitle" class="panel-subtitle">進行中的所有項目</span>
+              </div>
+              <div class="btn-row">
+                <button id="adminViewAllBtn" class="btn btn-secondary slim">查看全部</button>
+              </div>
+            </div>
+            <div class="list" id="adminTaskList"></div>
+          </article>
+        </section>
+
+        <!-- Project Leader View (Hidden by default) -->
+        <section class="view" id="view-project_leader" data-scenario="project_leader" data-testid="project-leader-view">
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h2 id="plTaskOverviewTitle" class="panel-title">任務概況</h2>
+                <span id="plTaskOverviewSubtitle" class="panel-subtitle">所有項目統計</span>
+              </div>
+            </div>
+            <div class="metrics metrics-readable-labels">
+              <div class="metric">
+                <span id="plTotalTasks">總任務</span>
+                <strong id="plTotalTasksValue">127 個</strong>
+              </div>
+              <div class="metric">
+                <span id="plActiveTasks">進行中</span>
+                <strong id="plActiveTasksValue">24 個</strong>
+              </div>
+              <div class="metric">
+                <span id="plPendingIaa">等待 IAA 確認</span>
+                <strong id="plPendingIaaValue" role="button" tabindex="0" aria-describedby="plPendingIaa" style="cursor: pointer;">2 個</strong>
+              </div>
+              <div class="metric">
+                <span id="plSpeedAlert">速度異常</span>
+                <strong id="plSpeedAlertValue">3 個</strong>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+              <div class="panel-header">
+              <div>
+                <h2 id="plTaskListTitle" class="panel-title">任務列表</h2>
+                <span id="plTaskListSubtitle" class="panel-subtitle">進行中的所有項目</span>
+              </div>
+              <div class="btn-row">
+                <button id="plViewAllBtn" class="btn btn-secondary slim">查看全部</button>
+              </div>
+            </div>
+            <div class="list" id="plTaskList"></div>
+          </article>
+        </section>
+
+        <!-- Annotator View (Hidden by default) -->
+        <section class="view" id="view-annotator" data-scenario="annotator" data-testid="annotator-view">
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h2 id="annotatorProgressTitle" class="panel-title">標記概況</h2>
+                <span id="annotatorProgressSubtitle" class="panel-subtitle">我的標記進度與待處理任務</span>
+              </div>
+            </div>
+            <div class="metrics">
+              <div class="metric">
+                <span id="annotatorCompletedLabel">待標記</span>
+                <strong id="annotatorCompletedValue">247 筆</strong>
+              </div>
+              <div class="metric">
+                <span id="annotatorTodayLabel">今日完成</span>
+                <strong id="annotatorTodayValue">53 筆</strong>
+              </div>
+              <div class="metric">
+                <span id="annotatorAvgSpeedLabel">平均速度</span>
+                <strong id="annotatorAvgSpeedValue">4.2 分/筆</strong>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h2 id="annotatorTaskListTitle" class="panel-title">任務列表</h2>
+                <span id="annotatorTaskListSubtitle" class="panel-subtitle">我的進行中任務</span>
+              </div>
+              <div class="btn-row">
+                <label id="annotatorSortLabel" for="annotatorSortSelect" class="controls-label">排序</label>
+                <select id="annotatorSortSelect" class="filter-select" data-testid="annotator-sort-select">
+                  <option id="annotatorSortOptionDefault" value="default">預設順序</option>
+                  <option id="annotatorSortOptionProgressDesc" value="progress_desc">進度：高到低</option>
+                  <option id="annotatorSortOptionProgressAsc" value="progress_asc">進度：低到高</option>
+                </select>
+              </div>
+            </div>
+            <div class="list" id="annotatorTaskList"></div>
+          </article>
+        </section>
+
+        <!-- Reviewer View (Hidden by default) -->
+        <section class="view" id="view-reviewer" data-scenario="reviewer" data-testid="reviewer-view">
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h2 id="reviewerPanelTitle" class="panel-title">審核概況</h2>
+                <span id="reviewerPanelSubtitle" class="panel-subtitle">我的審核進度與待處理項目</span>
+              </div>
+            </div>
+            <div class="metrics">
+              <div class="metric">
+                <span id="reviewerPendingLabel">待審總數</span>
+                <strong id="reviewerPendingValue">12 筆</strong>
+              </div>
+              <div class="metric">
+                <span id="reviewerTodayReviewedLabel">今日已審核</span>
+                <strong id="reviewerTodayReviewedValue">18 筆</strong>
+              </div>
+              <div class="metric">
+                <span id="reviewerIaaLabel">IAA 摘要</span>
+                <strong id="reviewerIaaValue">0.81</strong>
+              </div>
+            </div>
+            <!-- FR-024: these three cards are demo-only static values; the task
+                 rows below them are derived live (FR-020). The distinction has
+                 to be visible on screen, not only to assistive tech. -->
+            <p
+              id="reviewerMetricsDemoNote"
+              class="controls-hint metrics-demo-note"
+              data-testid="reviewer-metrics-demo-note"
+            >示範用靜態值：這三張指標卡不由審核單位狀態推導，不會隨審核動作更新。</p>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h2 id="reviewerTaskListTitle" class="panel-title">任務列表</h2>
+                <span id="reviewerTaskListSubtitle" class="panel-subtitle">我的待審任務</span>
+              </div>
+              <div class="btn-row">
+                <label id="reviewerSortLabel" for="reviewerSortSelect" class="controls-label">排序</label>
+                <select id="reviewerSortSelect" class="filter-select" data-testid="reviewer-sort-select">
+                  <option id="reviewerSortOptionDefault" value="default">預設順序</option>
+                  <option id="reviewerSortOptionProgressDesc" value="progress_desc">進度：高到低</option>
+                  <option id="reviewerSortOptionProgressAsc" value="progress_asc">進度：低到高</option>
+                </select>
+              </div>
+            </div>
+            <div class="list" id="reviewerTaskList"></div>
+          </article>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- INTERACTIVITY SCRIPT                                        -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <script src="../../assets/theme.js"></script>
+  <script src="../../assets/analytics.js"></script>
+  <!-- Issue singyichen/label-suite#450: the reviewer cards derive their summary from live
+       review-unit state, so the dashboard needs the same seeds and
+       derivation helpers annotation-list uses. -->
+  <script src="../task-management/task-list.data.js"></script>
+  <script src="../task-management/task-detail.data.js"></script>
+  <script src="../annotation/annotation-workspace.data.js"></script>
+  <script src="./dashboard.data.js"></script>
+  <script src="./dashboard.assignments.js"></script>
+  <script src="./dashboard.i18n.js"></script>
+  <script src="./dashboard.js"></script>
+</body>
+</html>

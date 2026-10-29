@@ -1,0 +1,90 @@
+<div id="workLogPanel" class="hidden">
+  <section class="panel" aria-labelledby="workLogFilterTitle">
+    <h2 class="panel-title" id="workLogFilterTitle">工時篩選列</h2>
+    <div class="worklog-filter-grid">
+      <div>
+        <label class="field-label" id="workLogDateRangeLabel" for="workLogDateRangeTrigger">日期區間</label>
+        <button type="button" class="date-range-trigger" id="workLogDateRangeTrigger" aria-haspopup="dialog" aria-expanded="false">
+          <span class="date-range-trigger-text"></span>
+        </button>
+      </div>
+      <div>
+        <label class="field-label" id="workLogStageLabel" for="workLogStageSelect">任務階段</label>
+        <select class="input-select" id="workLogStageSelect">
+          <option value="all">全部</option>
+          <option value="dry">Dry Run</option>
+          <option value="official">Official Run</option>
+        </select>
+      </div>
+      <div id="workLogMemberFilterWrap">
+        <label class="field-label" id="workLogMemberLabel" for="workLogMemberSelect">成員</label>
+        <select class="input-select" id="workLogMemberSelect">
+          <option value="all">全部成員</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="workLogTableTitle" id="workLogTableSection">
+    <h2 class="panel-title" id="workLogTableTitle">工時明細表</h2>
+    <div class="worklog-summary-grid" style="margin-bottom: 12px;">
+      <article class="metric"><span id="workLogSummaryHoursLabel">總工時</span><strong id="workLogSummaryHoursValue">-</strong></article>
+      <article class="metric"><span id="workLogSummaryAnnotatedLabel">總標記筆數</span><strong id="workLogSummaryAnnotatedValue">-</strong></article>
+      <article class="metric"><span id="workLogSummaryReviewedLabel">總審核筆數</span><strong id="workLogSummaryReviewedValue">-</strong></article>
+      <article class="metric"><span id="workLogSummarySpeedLabel">加權平均速度</span><strong id="workLogSummarySpeedValue">-</strong><small class="kv-sub" id="workLogSummaryAvgPerItemValue"></small></article>
+    </div>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="member-table" role="table" aria-label="Work log table">
+          <thead>
+            <tr>
+              <th id="thWorkLogDate">日期</th>
+              <th id="thWorkLogMember">成員</th>
+              <th id="thWorkLogRole">角色</th>
+              <th id="thWorkLogLoginLogout">登入／登出時間</th>
+              <th id="thWorkLogOnlineDuration">上線時長</th>
+              <th id="thWorkLogDuration">工作時長</th>
+              <th id="thWorkLogAnnotated">標記筆數</th>
+              <th id="thWorkLogReviewed">審核筆數</th>
+              <th id="thWorkLogArbitrated">仲裁筆數</th>
+              <th id="thWorkLogSpeed">平均速度</th>
+              <th id="thWorkLogStage">標記階段</th>
+            </tr>
+          </thead>
+          <tbody id="workLogTableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="wlPaginationBar">
+        <div class="pagination-left">
+          <span class="pagination-info" id="wlPaginationInfo"></span>
+          <select class="page-size-select" id="wlPageSizeSelect" aria-label="每頁筆數">
+            <option value="20" selected>20 筆/頁</option>
+            <option value="50">50 筆/頁</option>
+            <option value="100">100 筆/頁</option>
+          </select>
+        </div>
+        <div class="pagination-controls" id="wlPaginationControls">
+          <button class="page-btn" type="button" id="wlPrevPageBtn" aria-label="上一頁" disabled>
+            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="page-btn" type="button" id="wlNextPageBtn" aria-label="下一頁">
+            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="workLogAlertTitle" id="workLogAlertSection">
+    <h2 class="panel-title" id="workLogAlertTitle">異常提醒</h2>
+    <ul class="anomaly-list" id="workLogAlertList"></ul>
+  </section>
+
+  <section class="panel hidden" aria-labelledby="workLogEmptyTitle" id="workLogEmptyState">
+    <div class="empty-state empty-state-panel">
+      <img class="empty-state-icon" src="../../assets/icons/clock.svg" alt="" aria-hidden="true" />
+      <p class="empty-state-title" id="workLogEmptyTitle">尚無工時紀錄</p>
+      <button class="btn btn-secondary empty-state-action" type="button" id="workLogBackToOverviewBtn">回到任務概覽</button>
+    </div>
+  </section>
+</div>

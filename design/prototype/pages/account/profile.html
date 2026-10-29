@@ -1,0 +1,1672 @@
+<!DOCTYPE html>
+<!-- Spec: specs/account/005-profile-settings/spec.md -->
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Label Suite — 個人設定</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/button.css" />
+  <script src="../../assets/theme-fouc.js"></script>
+  <style>
+    /* ── Design Tokens ─────────────────────────────────────────── */
+    /* Color/spacing/radius tokens come from ../../assets/tokens.css.
+       Only layout offsets tokens.css does not provide live here. */
+    :root {
+      --navbar-mobile-height:     84px;
+      --navbar-mobile-top-height: 64px;
+    }
+
+    /* ── Reset ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* Form controls ignore the page font by default (UA Arial); inherit it. */
+    button, input, select, textarea { font: inherit; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-surface);
+      color: var(--color-ink);
+      min-height: 100vh;
+      line-height: 1.8;
+      display: flex;
+      flex-direction: row;
+    }
+
+    .hidden { display: none !important; }
+
+    /* ── Main Content ────────────────────────────────────────────── */
+    .main-content {
+      flex: 1;
+      padding: 24px 24px 80px;
+      overflow-x: hidden;
+    }
+
+    .content-inner { max-width: 1280px; width: 100%; margin: 0 auto; }
+
+    @media (min-width: 768px) { .main-content { padding: 24px 24px 64px; } }
+
+    /* ── Page Header ─────────────────────────────────────────────── */
+    .page-heading {
+      font-family: 'Crimson Pro', 'Noto Serif TC', serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--color-ink);
+      line-height: 1.3;
+      margin: 0 0 4px;
+    }
+
+    .page-subheading { font-size: 14px; line-height: 1.8; color: var(--color-text-soft); margin: 0 0 24px; }
+
+    /* ── Section Card ────────────────────────────────────────────── */
+    .section-card {
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .section-title { font-size: 16px; font-weight: 600; color: var(--color-ink); margin-bottom: 4px; }
+    .section-desc  { font-size: 13px; color: var(--color-text-soft); margin-bottom: 20px; }
+
+    /* ── Preferences row ──────────────────────────────────────────── */
+    .preference-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 0;
+    }
+
+    .preference-row + .preference-row {
+      border-top: 1px solid var(--color-border);
+    }
+
+    .preference-label { font-size: 14px; font-weight: 500; color: var(--color-ink); }
+
+    /* Three-icon appearance toggle */
+    .appearance-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      padding: 2px;
+      background: transparent;
+      border-radius: var(--radius-md);
+    }
+
+    .appearance-toggle button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: transparent;
+      color: var(--color-text-soft, #64748B);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background var(--dur-fast, 150ms), color var(--dur-fast, 150ms), opacity var(--dur-fast, 150ms);
+    }
+
+    .appearance-toggle button:hover { opacity: 0.7; }
+
+    .appearance-toggle button[aria-pressed="true"] {
+      background: var(--color-slate-50);
+      color: var(--color-ink);
+    }
+
+    .appearance-toggle button:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+
+    .appearance-toggle svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* ── Avatar ──────────────────────────────────────────────────── */
+    .avatar-area { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 24px; }
+
+    .avatar-wrap {
+      position: relative;
+      cursor: pointer;
+      border-radius: var(--radius-full);
+    }
+
+    .avatar-wrap:focus {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 3px;
+      border-radius: var(--radius-full);
+    }
+
+    .avatar-preview {
+      width: 72px;
+      height: 72px;
+      border-radius: var(--radius-full);
+      background: var(--color-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 24px;
+      font-weight: 700;
+      overflow: hidden;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .avatar-overlay {
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius-full);
+      background: rgba(0,0,0,0.48);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .avatar-wrap:hover .avatar-overlay { opacity: 1; }
+    .avatar-overlay svg { width: 20px; height: 20px; color: #fff; }
+    .avatar-hint { font-size: 12px; color: var(--color-text-soft); }
+
+    /* ── Form Group ──────────────────────────────────────────────── */
+    .form-group { margin-bottom: 16px; }
+
+    .field-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-ink);
+      margin-bottom: 6px;
+    }
+
+    .required-star { color: var(--color-error); margin-left: 2px; }
+
+    .input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-family: 'Inter', sans-serif;
+      color: var(--color-ink);
+      background: var(--color-white);
+      transition: border-color 0.15s, box-shadow 0.15s;
+      outline: none;
+    }
+
+    .input:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+
+    .input.error {
+      border-color: var(--color-error);
+      box-shadow: 0 0 0 3px rgba(185,28,28,0.1);
+    }
+
+    .field-error { margin-top: 5px; font-size: 12px; color: var(--color-error); }
+    .field-hint  { margin-top: 5px; font-size: 12px; color: var(--color-text-soft); }
+
+    /* ── Email Row (masked display + change link) ─────────────────── */
+    .email-row {
+      display: flex;
+      align-items: center;
+      padding: 10px 14px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-slate-50);
+      gap: 8px;
+    }
+
+    .email-masked {
+      flex: 1;
+      font-size: 15px;
+      color: var(--color-ink-muted);
+      font-family: 'Inter', 'Noto Sans TC', sans-serif;
+    }
+
+    .email-change-btn {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-primary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      transition: background 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .email-change-btn:hover { background: var(--color-primary-soft-bg); }
+
+    .email-change-btn:focus {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+
+    /* ── Password Input ──────────────────────────────────────────── */
+    .input-pw-wrap { position: relative; }
+    .input-pw-wrap .input { padding-right: 42px; }
+
+    .eye-toggle {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      color: #64748B;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+
+    .eye-toggle:hover { color: #334155; }
+    .eye-toggle svg { width: 16px; height: 16px; }
+
+    /* ── Info Banner ─────────────────────────────────────────────── */
+    .info-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: var(--color-info-bg);
+      border: 1px solid var(--color-info-border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: var(--color-info);
+      line-height: 1.5;
+    }
+
+    .info-banner svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Buttons ─────────────────────────────────────────────────── */
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+
+    .btn-primary:focus { outline: 2px solid var(--color-cta); outline-offset: 3px; }
+
+    /* UXC-06 / MASTER Loading state: opacity-70 + spinner while pending */
+    .btn-primary.is-loading {
+      opacity: 0.7;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .btn-primary.is-loading::before {
+      content: '';
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      margin-right: 8px;
+      vertical-align: -1px;
+      border: 2px solid rgba(255,255,255,0.35);
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: btn-spin 0.6s linear infinite;
+    }
+
+    @keyframes btn-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    #saveProfileBtn, #savePwBtn, #saveNotifBtn { margin-left: auto; }
+
+    .btn-secondary--back { width: auto; padding: 10px 28px; }
+    .btn-secondary:focus { outline: 2px solid var(--color-primary); outline-offset: 3px; }
+
+    /* ── Back Navigation ─────────────────────────────────────────── */
+    .page-back {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-text-soft);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: var(--radius-sm);
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .back-link:hover { color: var(--color-ink); background: var(--color-slate-50); }
+    .back-link svg { width: 14px; height: 14px; }
+
+    /* ── Email Sent Success Card ─────────────────────────────────── */
+    .sent-card {
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 40px 24px;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .sent-icon-wrap {
+      width: 64px;
+      height: 64px;
+      border-radius: var(--radius-full);
+      background: var(--color-success-bg);
+      border: 1px solid var(--color-success-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+    }
+
+    .sent-icon-wrap svg { width: 28px; height: 28px; color: var(--color-success); }
+
+    .sent-title {
+      font-family: 'Crimson Pro', 'Noto Serif TC', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--color-ink);
+      margin-bottom: 8px;
+    }
+
+    .sent-desc {
+      font-size: 14px;
+      color: var(--color-text-soft);
+      margin-bottom: 4px;
+      line-height: 1.6;
+    }
+
+    .sent-email-highlight {
+      font-weight: 600;
+      color: var(--color-ink);
+    }
+
+    .sent-hint {
+      font-size: 13px;
+      color: var(--color-ink-muted);
+      margin-bottom: 28px;
+      margin-top: 4px;
+    }
+
+    .sent-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .resend-link {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-primary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-color: transparent;
+      transition: text-decoration-color 0.15s;
+    }
+
+    .resend-link:hover { text-decoration-color: var(--color-primary); }
+
+    /* ── Toast (UXC-07: top-center stack, semantic variants) ────── */
+    #toast-container {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: var(--z-toast);
+      width: min(384px, calc(100vw - 32px));
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md); /* UXC-07 approved exception to the no-shadow rule */
+      font-size: 13px;
+      animation: toast-in 0.15s ease;
+      pointer-events: auto;
+    }
+
+    .toast.success {
+      background: var(--color-success-bg);
+      border: 1px solid var(--color-success-border);
+      color: var(--color-success);
+    }
+
+    .toast.error {
+      background: var(--color-error-bg);
+      border: 1px solid var(--color-error-border);
+      color: var(--color-error);
+    }
+
+    .toast.warning {
+      background: var(--color-warning-bg);
+      border: 1px solid var(--color-warning-border);
+      color: var(--color-warning);
+    }
+
+    .toast.info {
+      background: var(--color-info-bg);
+      border: 1px solid var(--color-info-border);
+      color: var(--color-info);
+    }
+
+    .toast-icon { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+    .toast-body { flex: 1; }
+    .toast-title { font-weight: 600; }
+    .toast-desc { font-size: 12px; margin-top: 2px; opacity: 0.8; }
+
+    .toast-close {
+      margin-left: auto;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: inherit;
+      opacity: 0.6;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .toast-close:hover { opacity: 1; }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Skeleton ────────────────────────────────────────────────── */
+    .skeleton {
+      background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: var(--radius-md);
+    }
+
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .skel-avatar { width: 72px; height: 72px; border-radius: var(--radius-full); }
+    .skel-line   { height: 14px; }
+    .skel-input  { height: 42px; width: 100%; margin-top: 6px; }
+    .skel-btn    { height: 40px; width: 90px; }
+
+    /* ── Notification section ───────────────────────────────────── */
+    .notif-pref-table { width: 100%; border-collapse: collapse; }
+
+    .notif-pref-table thead tr { border-bottom: 1px solid var(--color-border); }
+
+    .notif-pref-table th {
+      padding: 10px 0;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--color-ink-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      text-align: left;
+    }
+
+    .notif-pref-table th.col-ch { text-align: center; width: 90px; }
+
+    .notif-pref-table tbody tr { border-bottom: 1px solid var(--color-border); }
+    .notif-pref-table tbody tr:last-child { border-bottom: none; }
+
+    .notif-pref-table td { padding: 14px 0; vertical-align: middle; }
+    .notif-pref-table td.col-ch { text-align: center; }
+
+    .event-name { font-size: 14px; font-weight: 500; color: var(--color-ink); margin: 0 0 4px; }
+
+    .event-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    .event-trigger { font-size: 12px; color: var(--color-ink-muted); }
+
+    .toggle-wrap { display: flex; align-items: center; justify-content: center; }
+
+    /* MASTER toggle-switch contract: label > hidden input + .toggle-slider */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: var(--color-border);
+      border-radius: var(--radius-full);
+      transition: background var(--dur-fast);
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: white;
+      top: 3px;
+      left: 3px;
+      transition: transform var(--dur-fast);
+    }
+
+    .toggle-switch input:checked + .toggle-slider { background: var(--color-primary); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+    .toggle-switch input:focus-visible + .toggle-slider { box-shadow: 0 0 0 3px rgba(99,102,241,0.25); }
+
+    /* ── Responsive ──────────────────────────────────────────────── */
+    @media (max-width: 767px) {
+      .main-content { width: 100%; padding: 20px 16px 80px; }
+
+      .section-card { padding: 16px; }
+      .sent-card    { padding: 32px 16px; }
+      .btn-row { flex-direction: column; }
+      .btn-primary, .btn-secondary { width: 100%; text-align: center; }
+      .btn-secondary--back { width: auto; }
+      #saveProfileBtn, #savePwBtn { margin-left: 0; }
+    }
+
+    /* ── Dark mode overrides ──────────────────────────────────── */
+    html[data-theme="dark"] {
+      /* Eye toggle — light values are MASTER-verbatim literals, so the
+         dark counterpart stays a manual override. */
+      .eye-toggle { color: var(--color-ink-muted); }
+      .eye-toggle:hover { color: var(--color-ink); }
+
+      /* Skeleton gradient */
+      .skeleton {
+        background: linear-gradient(90deg, #1F1F28 25%, #2A2A35 50%, #1F1F28 75%);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- NAVBAR                                                     -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div id="sharedSidebarMount"></div>
+  <script src="../shared/sidebar.js"></script>
+  <script>
+    window.LabelSuiteSharedSidebar.mountSidebar({
+      mountId: 'sharedSidebarMount',
+      activeNav: 'profile',
+      dashboardHref: '../dashboard/dashboard.html',
+      taskHref: '../task-management/task-list.html',
+      adminHref: '../admin/user-management.html',
+      profileHref: '../account/profile.html',
+      loginHref: '../account/login.html',
+      brandHref: '../dashboard/dashboard.html',
+    });
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- MAIN CONTENT                                               -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <main class="main-content" id="mainContent">
+    <div class="content-inner">
+
+      <h1 class="page-heading" id="pageTitle">個人設定</h1>
+      <p class="page-subheading" id="pageSubtitle">管理您的個人資料與帳號安全</p>
+
+      <!-- ──────────────────────────────────────────────────────── -->
+      <!-- P-0: SKELETON STATE                                     -->
+      <!-- ──────────────────────────────────────────────────────── -->
+      <div id="skeletonState" aria-busy="true" aria-live="polite">
+        <!-- Profile section skeleton -->
+        <div class="section-card">
+          <div class="skeleton skel-line" style="width:100px; margin-bottom:8px;"></div>
+          <div class="skeleton skel-line" style="width:200px; margin-bottom:20px;"></div>
+          <div class="avatar-area">
+            <div class="skeleton skel-avatar"></div>
+          </div>
+          <div class="skeleton skel-line" style="width:60px; margin-bottom:6px;"></div>
+          <div class="skeleton skel-input"></div>
+          <div class="skeleton skel-line" style="width:80px; margin-top:16px; margin-bottom:6px;"></div>
+          <div class="skeleton skel-input"></div>
+          <div class="skeleton skel-line" style="width:50px; margin-top:16px; margin-bottom:6px;"></div>
+          <div class="skeleton skel-input"></div>
+          <div class="btn-row">
+            <div class="skeleton skel-btn"></div>
+          </div>
+        </div>
+        <!-- Password section skeleton -->
+        <div class="section-card">
+          <div class="skeleton skel-line" style="width:80px; margin-bottom:8px;"></div>
+          <div class="skeleton skel-line" style="width:220px; margin-bottom:20px;"></div>
+          <div class="skeleton skel-line" style="width:70px; margin-bottom:6px;"></div>
+          <div class="skeleton skel-input"></div>
+          <div class="skeleton skel-line" style="width:65px; margin-top:16px; margin-bottom:6px;"></div>
+          <div class="skeleton skel-input"></div>
+          <div class="skeleton skel-line" style="width:75px; margin-top:16px; margin-bottom:6px;"></div>
+          <div class="skeleton skel-input"></div>
+          <div class="btn-row">
+            <div class="skeleton skel-btn" style="width:120px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ──────────────────────────────────────────────────────── -->
+      <!-- P-1 / P-2 / P-3: LIVE STATES                           -->
+      <!-- ──────────────────────────────────────────────────────── -->
+      <div id="liveState" style="display:none;">
+
+        <!-- Section 1: 個人資料 -->
+        <section class="section-card" id="profile-section" aria-labelledby="profileSectionTitle">
+          <h2 class="section-title" id="profileSectionTitle">個人資料</h2>
+          <p class="section-desc" id="profileSectionDesc">修改您的姓名與聯絡方式</p>
+
+          <div class="avatar-area">
+            <div class="avatar-wrap" role="button" tabindex="0"
+                 id="avatarWrap"
+                 aria-label="上傳大頭照"
+                 onclick="document.getElementById('avatarInput').click()"
+                 onkeydown="if(event.key==='Enter'||event.key===' ')this.click()">
+              <div class="avatar-preview" id="avatarPreview">I</div>
+              <div class="avatar-overlay" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" width="20" height="20" aria-hidden="true">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                </svg>
+              </div>
+              <input id="avatarInput" type="file" accept="image/jpeg,image/png,image/webp"
+                     style="display:none;" aria-hidden="true" />
+            </div>
+            <div>
+              <p class="avatar-hint" id="avatarHintText">JPG, PNG 或 WebP，上限 5 MB</p>
+              <p class="field-error" id="avatarError" role="alert" style="display:none;"></p>
+            </div>
+          </div>
+
+          <!-- Name -->
+          <div class="form-group">
+            <label class="field-label" for="fieldName">
+              <span id="labelName">姓名</span>
+              <span class="required-star" aria-hidden="true"> *</span>
+            </label>
+            <input class="input" id="fieldName" type="text" value="Iris Tsai"
+                   autocomplete="name" required aria-required="true"
+                   aria-describedby="nameError" />
+            <p class="field-error" id="nameError" role="alert" style="display:none;"></p>
+          </div>
+
+          <!-- Contact info -->
+          <div class="form-group">
+            <label class="field-label" for="fieldContact" id="labelContact">聯絡方式</label>
+            <input class="input" id="fieldContact" type="text"
+                   maxlength="255"
+                   aria-describedby="contactHint contactCount"
+                   oninput="updateCharCount()" />
+            <div class="field-hint" style="display:flex; justify-content:space-between;">
+              <span id="contactHint">可填寫電話、LINE 或其他聯絡方式</span>
+              <span id="contactCount" style="white-space:nowrap; margin-left:8px;">0 / 255</span>
+            </div>
+            <p class="field-error" id="contactError" role="alert" style="display:none;"></p>
+          </div>
+
+          <!-- Email (masked display + change link) -->
+          <div class="form-group">
+            <label class="field-label" id="labelEmail">電子郵件</label>
+            <div class="email-row" role="group" aria-label="電子郵件">
+              <span class="email-masked" id="fieldEmailMasked" aria-label="電子郵件（已遮罩）">
+                ms.***@gmail.com
+              </span>
+              <button class="email-change-btn" id="emailChangeBtn"
+                      type="button"
+                      onclick="setState('emailChange')"
+                      aria-label="變更電子郵件">
+                <span id="labelEmailChange">變更</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn-primary" id="saveProfileBtn" type="button" onclick="handleSaveProfile()">
+              <span id="saveProfileLabel">儲存</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Section 2: 偏好設定 -->
+        <section class="section-card" id="preferences-section" aria-labelledby="prefSectionTitle">
+          <h2 class="section-title" id="prefSectionTitle">偏好設定</h2>
+          <p class="section-desc" id="prefSectionDesc">調整介面外觀</p>
+
+          <div class="preference-row">
+            <span class="preference-label" id="prefAppearance">外觀</span>
+            <div class="appearance-toggle" role="group" aria-labelledby="prefAppearance">
+              <button type="button" data-theme-choice="system" aria-pressed="false"
+                      id="apSystem" aria-label="跟隨系統">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="8" y1="21" x2="16" y2="21"></line>
+                  <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+              </button>
+              <button type="button" data-theme-choice="light" aria-pressed="false"
+                      id="apLight" aria-label="淺色">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="4"></circle>
+                  <line x1="12" y1="2" x2="12" y2="4"></line>
+                  <line x1="12" y1="20" x2="12" y2="22"></line>
+                  <line x1="4.93" y1="4.93" x2="6.34" y2="6.34"></line>
+                  <line x1="17.66" y1="17.66" x2="19.07" y2="19.07"></line>
+                  <line x1="2" y1="12" x2="4" y2="12"></line>
+                  <line x1="20" y1="12" x2="22" y2="12"></line>
+                  <line x1="4.93" y1="19.07" x2="6.34" y2="17.66"></line>
+                  <line x1="17.66" y1="6.34" x2="19.07" y2="4.93"></line>
+                </svg>
+              </button>
+              <button type="button" data-theme-choice="dark" aria-pressed="false"
+                      id="apDark" aria-label="深色">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 3: 密碼設定 -->
+        <section class="section-card" id="password-section" aria-labelledby="pwSectionTitle">
+          <h2 class="section-title" id="pwSectionTitle">密碼設定</h2>
+          <p class="section-desc" id="pwSectionDesc">定期更新密碼以維護帳號安全</p>
+
+          <!-- SSO info banner (P-2 only) -->
+          <div class="info-banner" id="ssoBanner" style="display:none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            <span id="ssoBannerText">設定密碼後即可同時使用 Email / Password 登入</span>
+          </div>
+
+          <!-- Current password (hidden for SSO) -->
+          <div class="form-group" id="currentPwGroup">
+            <label class="field-label" for="fieldCurrentPw" id="labelCurrentPw">現有密碼</label>
+            <div class="input-pw-wrap">
+              <input class="input" id="fieldCurrentPw" type="password"
+                     autocomplete="current-password"
+                     aria-describedby="currentPwError" />
+              <button class="eye-toggle" type="button"
+                      onclick="toggleEye('fieldCurrentPw', this)"
+                      aria-label="顯示密碼">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+            <p class="field-error" id="currentPwError" role="alert" style="display:none;"></p>
+          </div>
+
+          <!-- New password -->
+          <div class="form-group">
+            <label class="field-label" for="fieldNewPw" id="labelNewPw">新密碼</label>
+            <div class="input-pw-wrap">
+              <input class="input" id="fieldNewPw" type="password"
+                     autocomplete="new-password"
+                     aria-describedby="newPwHint newPwError" />
+              <button class="eye-toggle" type="button"
+                      onclick="toggleEye('fieldNewPw', this)"
+                      aria-label="顯示密碼">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+            <p class="field-hint" id="newPwHint">至少 8 個字元，含大寫英文、小寫英文與數字</p>
+            <p class="field-error" id="newPwError" role="alert" style="display:none;"></p>
+          </div>
+
+          <!-- Confirm password -->
+          <div class="form-group">
+            <label class="field-label" for="fieldConfirmPw" id="labelConfirmPw">確認新密碼</label>
+            <div class="input-pw-wrap">
+              <input class="input" id="fieldConfirmPw" type="password"
+                     autocomplete="new-password"
+                     aria-describedby="confirmPwError" />
+              <button class="eye-toggle" type="button"
+                      onclick="toggleEye('fieldConfirmPw', this)"
+                      aria-label="顯示密碼">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+            <p class="field-error" id="confirmPwError" role="alert" style="display:none;"></p>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn-primary" id="savePwBtn" type="button" onclick="handleSavePassword()">
+              <span id="savePwLabel">修改密碼</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Section 4: 通知設定 -->
+        <section class="section-card" id="notification-section" aria-labelledby="notifSectionTitle">
+          <h2 class="section-title" id="notifSectionTitle">通知設定</h2>
+          <p class="section-desc" id="notifSectionDesc">為每個事件選擇接收通知的方式</p>
+
+          <table class="notif-pref-table" aria-label="通知偏好設定">
+            <thead>
+              <tr>
+                <th id="notifThEvent">事件</th>
+                <th class="col-ch" id="notifThInApp">站內通知</th>
+                <th class="col-ch" id="notifThEmail">電子郵件</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <p class="event-name" id="notifE1Name">標記員完成標記作業</p>
+                  <div class="event-meta">
+                    <span class="event-trigger" id="notifE1Trigger">有人完成所有標記項目時通知我</span>
+                  </div>
+                </td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne1-inapp" checked aria-label="標記員完成標記作業 — 站內通知" /><span class="toggle-slider"></span></label></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne1-email" checked aria-label="標記員完成標記作業 — Email" /><span class="toggle-slider"></span></label></div></td>
+              </tr>
+              <tr>
+                <td>
+                  <p class="event-name" id="notifE2Name">審核員完成審核</p>
+                  <div class="event-meta">
+                    <span class="event-trigger" id="notifE2Trigger">有人完成所有審核項目時通知我</span>
+                  </div>
+                </td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne2-inapp" checked aria-label="審核員完成審核 — 站內通知" /><span class="toggle-slider"></span></label></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne2-email" checked aria-label="審核員完成審核 — Email" /><span class="toggle-slider"></span></label></div></td>
+              </tr>
+              <tr>
+                <td>
+                  <p class="event-name" id="notifE3Name">試標完成</p>
+                  <div class="event-meta">
+                    <span class="event-trigger" id="notifE3Trigger">試標的標註、必要審核與必要仲裁皆完成時通知我</span>
+                  </div>
+                </td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne3-inapp" checked aria-label="試標完成 — 站內通知" /><span class="toggle-slider"></span></label></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne3-email" checked aria-label="試標完成 — Email" /><span class="toggle-slider"></span></label></div></td>
+              </tr>
+              <tr>
+                <td>
+                  <p class="event-name" id="notifE4Name">正式標記全員完成</p>
+                  <div class="event-meta">
+                    <span class="event-trigger" id="notifE4Trigger">所有參與者完成正式標記時通知我</span>
+                  </div>
+                </td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne4-inapp" checked aria-label="正式標記全員完成 — 站內通知" /><span class="toggle-slider"></span></label></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne4-email" checked aria-label="正式標記全員完成 — Email" /><span class="toggle-slider"></span></label></div></td>
+              </tr>
+              <tr>
+                <td>
+                  <p class="event-name" id="notifE5Name">你被分配標記清單</p>
+                  <div class="event-meta">
+                    <span class="event-trigger" id="notifE5Trigger">有新的標記清單指派給我時通知我</span>
+                  </div>
+                </td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne5-inapp" checked aria-label="你被分配標記清單 — 站內通知" /><span class="toggle-slider"></span></label></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne5-email" checked aria-label="你被分配標記清單 — Email" /><span class="toggle-slider"></span></label></div></td>
+              </tr>
+              <tr>
+                <td>
+                  <p class="event-name" id="notifE6Name">你被分配審核清單</p>
+                  <div class="event-meta">
+                    <span class="event-trigger" id="notifE6Trigger">有新的審核清單指派給我時通知我</span>
+                  </div>
+                </td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne6-inapp" checked aria-label="你被分配審核清單 — 站內通知" /><span class="toggle-slider"></span></label></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne6-email" checked aria-label="你被分配審核清單 — Email" /><span class="toggle-slider"></span></label></div></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="btn-row">
+            <button class="btn-primary" id="saveNotifBtn" type="button" onclick="handleSaveNotif()">
+              <span id="saveNotifLabel">儲存設定</span>
+            </button>
+          </div>
+        </section>
+
+      </div><!-- /liveState -->
+
+      <!-- ──────────────────────────────────────────────────────── -->
+      <!-- P-4: EMAIL CHANGE FORM                                  -->
+      <!-- ──────────────────────────────────────────────────────── -->
+      <div id="emailChangeState" style="display:none;">
+
+        <div class="page-back">
+          <button class="back-link" type="button" onclick="setState('email')" aria-label="返回個人設定">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M19 12H5"/>
+              <path d="M12 19l-7-7 7-7"/>
+            </svg>
+            <span id="backToProfileLabel">返回個人設定</span>
+          </button>
+        </div>
+
+        <section class="section-card" aria-labelledby="emailChangeSectionTitle">
+          <h2 class="section-title" id="emailChangeSectionTitle">變更電子郵件</h2>
+          <p class="section-desc" id="emailChangeSectionDesc">
+            輸入新的電子郵件地址，系統將寄送驗證信至新信箱
+          </p>
+
+          <div class="form-group">
+            <label class="field-label" for="fieldNewEmail">
+              <span id="labelNewEmail">新電子郵件</span>
+            </label>
+            <input class="input" id="fieldNewEmail" type="email"
+                   placeholder="example@email.com"
+                   autocomplete="email"
+                   aria-describedby="newEmailError"
+                   oninput="handleNewEmailInput()" />
+            <p class="field-error" id="newEmailError" role="alert" style="display:none;"></p>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn-primary" id="emailChangeSubmitBtn"
+                    type="button"
+                    onclick="handleEmailChangeSubmit()"
+                    disabled>
+              <span id="emailChangeNextLabel">下一步</span>
+            </button>
+          </div>
+        </section>
+
+      </div><!-- /emailChangeState -->
+
+      <!-- ──────────────────────────────────────────────────────── -->
+      <!-- P-5: EMAIL VERIFICATION SENT                            -->
+      <!-- ──────────────────────────────────────────────────────── -->
+      <div id="emailSentState" style="display:none;">
+
+        <div class="page-back">
+          <button class="back-link" type="button" onclick="setState('email')" aria-label="返回個人設定">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M19 12H5"/>
+              <path d="M12 19l-7-7 7-7"/>
+            </svg>
+            <span id="backToProfileLabel2">返回個人設定</span>
+          </button>
+        </div>
+
+        <div class="sent-card" role="status" aria-live="polite">
+          <div class="sent-icon-wrap" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+          </div>
+          <p class="sent-title" id="emailSentTitle">驗證信已寄送</p>
+          <p class="sent-desc" id="emailSentDescPre">已寄送驗證信至</p>
+          <p class="sent-desc">
+            <span class="sent-email-highlight" id="sentEmailDisplay">—</span>
+          </p>
+          <p class="sent-hint" id="emailSentHint">請前往信箱點擊驗證連結，完成 Email 切換</p>
+
+          <div class="sent-actions">
+            <button class="btn-secondary btn-secondary--back" type="button" onclick="setState('email')">
+              <span id="backToProfileBtn">返回個人設定</span>
+            </button>
+            <button class="resend-link" type="button" onclick="handleResendVerification()">
+              <span id="resendLabel">重新寄送驗證信</span>
+            </button>
+          </div>
+        </div>
+
+      </div><!-- /emailSentState -->
+
+    </div><!-- /content-inner -->
+  </main>
+
+  <!-- ── Toast Container ──────────────────────────────────────── -->
+  <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- SCRIPTS                                                   -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <script>
+    /* ── i18n ──────────────────────────────────────────────────── */
+    const i18n = {
+      zh: {
+        pageTitle:               '個人設定',
+        pageSubtitle:            '管理您的個人資料與帳號安全',
+        userName:                'Iris Tsai',
+        roleIndicator:           '一般使用者',
+        roleSuperAdmin:          '系統管理員',
+        langLabel:               'ZH',
+        mobileLangLabel:         'ZH',
+        langToggleAria:          '切換語言',
+        logoutAria:              '登出',
+        logoutTitle:             '登出',
+        profileSectionTitle:     '個人資料',
+        profileSectionDesc:      '修改您的姓名與聯絡方式',
+        prefSectionTitle:        '偏好設定',
+        prefSectionDesc:         '調整介面外觀',
+        prefAppearance:          '外觀',
+        prefApSystemAria:        '跟隨系統',
+        prefApLightAria:         '淺色',
+        prefApDarkAria:          '深色',
+        labelName:               '姓名',
+        labelContact:            '聯絡方式',
+        labelEmail:              '電子郵件',
+        labelEmailChange:        '變更',
+        avatarHintText:          'JPG, PNG 或 WebP，上限 5 MB',
+        contactHint:             '可填寫電話、LINE 或其他聯絡方式',
+        saveProfileLabel:        '儲存',
+        pwSectionTitle:          '密碼設定',
+        pwSectionDesc:           '定期更新密碼以維護帳號安全',
+        ssoBannerText:           '設定密碼後即可同時使用 Email / Password 登入',
+        labelCurrentPw:          '現有密碼',
+        labelNewPw:              '新密碼',
+        labelConfirmPw:          '確認新密碼',
+        newPwHint:               '至少 8 個字元，含大寫英文、小寫英文與數字',
+        savePwLabel:             '修改密碼',
+        savePwLabelSSO:          '設定密碼',
+        backToProfileLabel:      '返回個人設定',
+        backToProfileLabel2:     '返回個人設定',
+        emailChangeSectionTitle: '變更電子郵件',
+        emailChangeSectionDesc:  '輸入新的電子郵件地址，系統將寄送驗證信至新信箱',
+        labelNewEmail:           '新電子郵件',
+        emailChangeNextLabel:    '下一步',
+        emailSentTitle:          '驗證信已寄送',
+        emailSentDescPre:        '已寄送驗證信至',
+        emailSentHint:           '請前往信箱點擊驗證連結，完成 Email 切換',
+        backToProfileBtn:        '返回個人設定',
+        resendLabel:             '重新寄送驗證信',
+        toastSaveSuccess:        '儲存成功',
+        toastSaveSuccessDesc:    '個人資料已更新',
+        toastPwSuccess:          '密碼修改成功',
+        toastPwSuccessDesc:      '其他裝置 session 已失效',
+        toastPwSetSuccess:       '密碼設定成功',
+        toastPwSetSuccessDesc:   '您現在可使用 Email / Password 登入',
+        toastResendSuccess:      '驗證信已重新寄送',
+        toastResendSuccessDesc:  '請前往信箱完成驗證',
+        notifSectionTitle:       '通知設定',
+        notifSectionDesc:        '為每個事件選擇接收通知的方式',
+        notifThEvent:            '事件',
+        notifThInApp:            '站內通知',
+        notifThEmail:            '電子郵件',
+        notifE1Name:             '標記員完成標記作業',
+        notifE1Trigger:          '有人完成所有標記項目時通知我',
+        notifE2Name:             '審核員完成審核',
+        notifE2Trigger:          '有人完成所有審核項目時通知我',
+        notifE3Name:             '試標完成',
+        notifE3Trigger:          '試標的標註、必要審核與必要仲裁皆完成時通知我',
+        notifE4Name:             '正式標記全員完成',
+        notifE4Trigger:          '所有參與者完成正式標記時通知我',
+        notifE5Name:             '你被分配標記清單',
+        notifE5Trigger:          '有新的標記清單指派給我時通知我',
+        notifE6Name:             '你被分配審核清單',
+        notifE6Trigger:          '有新的審核清單指派給我時通知我',
+        saveNotifLabel:          '儲存設定',
+        toastNotifSuccess:       '通知設定已儲存',
+        errNameRequired:         '姓名為必填欄位',
+        errContactTooLong:       '聯絡方式不能超過 255 個字元',
+        errAvatarInvalid:        '檔案格式或大小不符：請選擇 JPG、PNG 或 WebP，且不超過 5 MB',
+        toastPwFailed:           '密碼更新失敗',
+        errCurrentPwWrong:       '現有密碼錯誤',
+        errNewPwWeak:            '密碼須至少 8 個字元，含大寫英文、小寫英文與數字',
+        errPwMismatch:           '密碼不一致，請重新輸入',
+        errEmailInvalid:         '請輸入有效的電子郵件格式',
+        closeNotif:              '關閉通知',
+        showPw:                  '顯示密碼',
+        hidePw:                  '隱藏密碼',
+      },
+      en: {
+        pageTitle:               'Profile Settings',
+        pageSubtitle:            'Manage your profile and account security',
+        userName:                'Iris Tsai',
+        roleIndicator:           'User',
+        roleSuperAdmin:          'Super Admin',
+        langLabel:               'EN',
+        mobileLangLabel:         'EN',
+        langToggleAria:          'Switch language',
+        logoutAria:              'Sign out',
+        logoutTitle:             'Sign out',
+        profileSectionTitle:     'Profile',
+        profileSectionDesc:      'Update your name and contact information',
+        prefSectionTitle:        'Preferences',
+        prefSectionDesc:         'Customize how the interface looks',
+        prefAppearance:          'Appearance',
+        prefApSystemAria:        'Follow system',
+        prefApLightAria:         'Light',
+        prefApDarkAria:          'Dark',
+        labelName:               'Name',
+        labelContact:            'Contact Info',
+        labelEmail:              'Email',
+        labelEmailChange:        'Change',
+        avatarHintText:          'JPG, PNG, or WebP — max 5 MB',
+        contactHint:             'Phone, LINE, or any other contact method',
+        saveProfileLabel:        'Save',
+        pwSectionTitle:          'Password',
+        pwSectionDesc:           'Update your password regularly to keep your account secure',
+        ssoBannerText:           'Setting a password lets you also sign in with Email / Password',
+        labelCurrentPw:          'Current Password',
+        labelNewPw:              'New Password',
+        labelConfirmPw:          'Confirm New Password',
+        newPwHint:               'Min 8 chars with uppercase, lowercase, and a number',
+        savePwLabel:             'Change Password',
+        savePwLabelSSO:          'Set Password',
+        backToProfileLabel:      'Back to Profile',
+        backToProfileLabel2:     'Back to Profile',
+        emailChangeSectionTitle: 'Change Email',
+        emailChangeSectionDesc:  "Enter your new email address. We'll send a verification link to confirm.",
+        labelNewEmail:           'New Email',
+        emailChangeNextLabel:    'Next',
+        emailSentTitle:          'Verification Email Sent',
+        emailSentDescPre:        'A verification link has been sent to',
+        emailSentHint:           'Click the link in your inbox to complete the email change.',
+        backToProfileBtn:        'Back to Profile',
+        resendLabel:             'Resend verification email',
+        toastSaveSuccess:        'Saved',
+        toastSaveSuccessDesc:    'Profile updated successfully',
+        toastPwSuccess:          'Password Changed',
+        toastPwSuccessDesc:      'Other device sessions have been invalidated',
+        toastPwSetSuccess:       'Password Set',
+        toastPwSetSuccessDesc:   'You can now sign in with Email / Password',
+        toastResendSuccess:      'Email Resent',
+        toastResendSuccessDesc:  'Check your inbox to complete verification',
+        notifSectionTitle:       'Notification settings',
+        notifSectionDesc:        'Choose how you want to be notified for each event',
+        notifThEvent:            'Event',
+        notifThInApp:            'In-app',
+        notifThEmail:            'Email',
+        notifE1Name:             'Annotator completes annotation',
+        notifE1Trigger:          'Notify me when someone finishes all annotation items',
+        notifE2Name:             'Reviewer completes review',
+        notifE2Trigger:          'Notify me when someone finishes all review items',
+        notifE3Name:             'Dry run completed',
+        notifE3Trigger:          'Notify me when dry run annotation, required review and required arbitration are all done',
+        notifE4Name:             'All annotators complete formal annotation',
+        notifE4Trigger:          'Notify me when everyone finishes formal annotation',
+        notifE5Name:             'You are assigned an annotation list',
+        notifE5Trigger:          'Notify me when a new annotation list is assigned to me',
+        notifE6Name:             'You are assigned a review list',
+        notifE6Trigger:          'Notify me when a new review list is assigned to me',
+        saveNotifLabel:          'Save settings',
+        toastNotifSuccess:       'Notification settings saved',
+        errNameRequired:         'Name is required',
+        errContactTooLong:       'Contact info must be 255 characters or fewer',
+        errAvatarInvalid:        'Invalid file: choose a JPG, PNG or WebP up to 5 MB',
+        toastPwFailed:           'Password update failed',
+        errCurrentPwWrong:       'Current password is incorrect',
+        errNewPwWeak:            'Password must be 8+ chars with uppercase, lowercase, and a number',
+        errPwMismatch:           'Passwords do not match',
+        errEmailInvalid:         'Please enter a valid email address',
+        closeNotif:              'Close notification',
+        showPw:                  'Show password',
+        hidePw:                  'Hide password',
+      },
+    };
+
+    let lang = window.LabelSuiteSharedSidebar.getStoredLang();
+    let currentState = 'email';
+
+    function t(key) { return (i18n[lang] && i18n[lang][key]) || key; }
+
+    function applyLang(l) {
+      const nextLang = l === 'en' ? 'en' : 'zh';
+      const nextTranslations = i18n[nextLang];
+      lang = window.LabelSuiteSharedSidebar.applyGlobalLanguage(nextLang, {
+        langToggleAria: nextTranslations.langToggleAria,
+      });
+      document.title = t('pageTitle');
+
+      const ids = [
+        'langLabel', 'mobileLangLabel',
+        'pageTitle', 'pageSubtitle',
+        'profileSectionTitle', 'profileSectionDesc',
+        'prefSectionTitle', 'prefSectionDesc', 'prefAppearance',
+        'labelName', 'labelContact', 'labelEmail', 'labelEmailChange',
+        'avatarHintText', 'contactHint', 'saveProfileLabel',
+        'pwSectionTitle', 'pwSectionDesc', 'ssoBannerText',
+        'labelCurrentPw', 'labelNewPw', 'labelConfirmPw', 'newPwHint',
+        'backToProfileLabel', 'backToProfileLabel2',
+        'emailChangeSectionTitle', 'emailChangeSectionDesc',
+        'labelNewEmail', 'emailChangeNextLabel',
+        'emailSentTitle', 'emailSentDescPre', 'emailSentHint',
+        'backToProfileBtn', 'resendLabel',
+        'notifSectionTitle', 'notifSectionDesc',
+        'notifThEvent', 'notifThInApp', 'notifThEmail',
+        'notifE1Name', 'notifE1Trigger',
+        'notifE2Name', 'notifE2Trigger',
+        'notifE3Name', 'notifE3Trigger',
+        'notifE4Name', 'notifE4Trigger',
+        'notifE5Name', 'notifE5Trigger',
+        'notifE6Name', 'notifE6Trigger',
+        'saveNotifLabel',
+      ];
+
+      window.LabelSuiteSharedSidebar.updateUserChip({
+        roleLabel: window.LabelSuiteSharedSidebar.getStoredSystemRole() === 'super_admin'
+          ? t('roleSuperAdmin')
+          : t('roleIndicator'),
+      });
+
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = t(id);
+      });
+
+      document.getElementById('logoutBtn').setAttribute('aria-label', t('logoutAria'));
+      document.getElementById('logoutBtn').setAttribute('title', t('logoutTitle'));
+      document.getElementById('mobileLogoutBtn').setAttribute('aria-label', t('logoutAria'));
+      document.getElementById('mobileLogoutBtn').setAttribute('title', t('logoutTitle'));
+      document.getElementById('apSystem').setAttribute('aria-label', t('prefApSystemAria'));
+      document.getElementById('apLight').setAttribute('aria-label', t('prefApLightAria'));
+      document.getElementById('apDark').setAttribute('aria-label', t('prefApDarkAria'));
+      document.getElementById('savePwLabel').textContent =
+        currentState === 'sso' ? t('savePwLabelSSO') : t('savePwLabel');
+    }
+
+    document.getElementById('langToggle').addEventListener('click', () => {
+      const next = lang === 'zh' ? 'en' : 'zh';
+      applyLang(next);
+      window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_lang_switched', { to: lang });
+    });
+
+    document.getElementById('mobileLangToggle').addEventListener('click', () => {
+      const next = lang === 'zh' ? 'en' : 'zh';
+      applyLang(next);
+      window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_lang_switched', { to: lang, source: 'mobile' });
+    });
+
+    /* ── State Switcher ─────────────────────────────────────────── */
+    function setState(state) {
+      currentState = state;
+
+      const isSkeleton    = state === 'skeleton';
+      const isEmailChange = state === 'emailChange';
+      const isEmailSent   = state === 'emailSent';
+      const isLive        = !isSkeleton && !isEmailChange && !isEmailSent;
+
+      document.getElementById('skeletonState').style.display   = isSkeleton    ? '' : 'none';
+      document.getElementById('liveState').style.display        = isLive        ? '' : 'none';
+      document.getElementById('emailChangeState').style.display = isEmailChange ? '' : 'none';
+      document.getElementById('emailSentState').style.display   = isEmailSent   ? '' : 'none';
+
+      if (isLive) {
+        clearAllErrors();
+        document.getElementById('fieldCurrentPw').value = '';
+        document.getElementById('fieldNewPw').value     = '';
+        document.getElementById('fieldConfirmPw').value = '';
+
+        const isSSO   = state === 'sso';
+        const isError = state === 'error';
+
+        document.getElementById('ssoBanner').style.display      = isSSO ? '' : 'none';
+        document.getElementById('currentPwGroup').style.display = isSSO ? 'none' : '';
+
+        if (isError) {
+          document.getElementById('fieldCurrentPw').classList.add('error');
+          document.getElementById('currentPwError').style.display = '';
+          document.getElementById('currentPwError').textContent   = t('errCurrentPwWrong');
+        }
+
+        document.getElementById('savePwLabel').textContent = isSSO ? t('savePwLabelSSO') : t('savePwLabel');
+      }
+
+      if (isEmailChange) {
+        clearEmailChangeErrors();
+        const emailInput = document.getElementById('fieldNewEmail');
+        if (emailInput) emailInput.value = '';
+        const submitBtn = document.getElementById('emailChangeSubmitBtn');
+        if (submitBtn) submitBtn.disabled = true;
+      }
+    }
+
+    function clearAllErrors() {
+      ['fieldCurrentPw', 'fieldNewPw', 'fieldConfirmPw', 'fieldName'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('error');
+      });
+      ['nameError', 'contactError', 'currentPwError', 'newPwError', 'confirmPwError'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.style.display = 'none'; el.textContent = ''; }
+      });
+    }
+
+    function clearEmailChangeErrors() {
+      const input = document.getElementById('fieldNewEmail');
+      if (input) input.classList.remove('error');
+      const err = document.getElementById('newEmailError');
+      if (err) { err.style.display = 'none'; err.textContent = ''; }
+    }
+
+    /* ── Profile save ───────────────────────────────────────────── */
+    function handleSaveProfile() {
+      clearAllErrors();
+      const name    = document.getElementById('fieldName').value.trim();
+      const contact = document.getElementById('fieldContact').value;
+      let valid = true;
+
+      if (!name) {
+        showFieldError('fieldName', 'nameError', t('errNameRequired'));
+        valid = false;
+      }
+      if (contact.length > 255) {
+        showFieldError('fieldContact', 'contactError', t('errContactTooLong'));
+        valid = false;
+      }
+      if (!valid) {
+        window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_profile_info_failed_validation');
+        return;
+      }
+
+      window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_profile_info_attempted');
+      // UXC-06: loading state + double-submission guard while the (simulated) request runs.
+      setBtnLoading('saveProfileBtn', true);
+      setTimeout(() => {
+        setBtnLoading('saveProfileBtn', false);
+        document.getElementById('userName').textContent = name;
+        showToast('success', t('toastSaveSuccess'), t('toastSaveSuccessDesc'));
+        window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_profile_info_saved');
+      }, 600);
+    }
+
+    /* ── Password save ──────────────────────────────────────────── */
+    function handleSavePassword() {
+      clearAllErrors();
+      const isSSO     = currentState === 'sso';
+      const isError   = currentState === 'error';
+      const newPw     = document.getElementById('fieldNewPw').value;
+      const confirm   = document.getElementById('fieldConfirmPw').value;
+      const currentPw = document.getElementById('fieldCurrentPw').value;
+      let valid = true;
+
+      if (!isSSO && !currentPw) {
+        showFieldError('fieldCurrentPw', 'currentPwError', t('errCurrentPwWrong'));
+        valid = false;
+      }
+      if (!newPw || !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(newPw)) {
+        showFieldError('fieldNewPw', 'newPwError', t('errNewPwWeak'));
+        valid = false;
+      }
+      if (newPw !== confirm) {
+        showFieldError('fieldConfirmPw', 'confirmPwError', t('errPwMismatch'));
+        valid = false;
+      }
+      if (!valid) {
+        window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_password_failed_validation');
+        return;
+      }
+
+      window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_password_attempted');
+      // UXC-06: loading state; the error demo state resolves as a server-side
+      // failure — inputs stay intact, field error + error toast explain why.
+      setBtnLoading('savePwBtn', true);
+      setTimeout(() => {
+        setBtnLoading('savePwBtn', false);
+
+        if (isError) {
+          showFieldError('fieldCurrentPw', 'currentPwError', t('errCurrentPwWrong'));
+          showToast('error', t('toastPwFailed'), t('errCurrentPwWrong'));
+          window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_password_failed_validation', { reason: 'wrong_current_password' });
+          return;
+        }
+
+        const titleKey = isSSO ? 'toastPwSetSuccess'     : 'toastPwSuccess';
+        const descKey  = isSSO ? 'toastPwSetSuccessDesc' : 'toastPwSuccessDesc';
+        showToast('success', t(titleKey), t(descKey));
+        document.getElementById('fieldCurrentPw').value = '';
+        document.getElementById('fieldNewPw').value     = '';
+        document.getElementById('fieldConfirmPw').value = '';
+        window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_password_succeeded');
+      }, 600);
+    }
+
+    /* ── Email change handlers ──────────────────────────────────── */
+    function handleNewEmailInput() {
+      const val       = document.getElementById('fieldNewEmail').value.trim();
+      const emailRe   = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const submitBtn = document.getElementById('emailChangeSubmitBtn');
+      submitBtn.disabled = !emailRe.test(val);
+      clearEmailChangeErrors();
+    }
+
+    function handleEmailChangeSubmit() {
+      const newEmail = document.getElementById('fieldNewEmail').value.trim();
+      const emailRe  = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!emailRe.test(newEmail)) {
+        showFieldError('fieldNewEmail', 'newEmailError', t('errEmailInvalid'));
+        window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_email_change_failed_validation');
+        return;
+      }
+
+      window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_email_change_attempted');
+      document.getElementById('sentEmailDisplay').textContent = newEmail;
+      setState('emailSent');
+      window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_email_change_succeeded');
+    }
+
+    function handleResendVerification() {
+      showToast('success', t('toastResendSuccess'), t('toastResendSuccessDesc'));
+      window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_email_change_resent');
+    }
+
+    function handleSaveNotif() {
+      showToast('success', t('toastNotifSuccess'), '');
+      window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_cta_clicked', { cta: 'save_notification_settings' });
+    }
+
+    /* ── Helpers ────────────────────────────────────────────────── */
+    function setBtnLoading(btnId, loading) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      btn.disabled = loading;
+      btn.classList.toggle('is-loading', loading);
+    }
+
+    function showFieldError(inputId, errorId, msg) {
+      const input = document.getElementById(inputId);
+      if (input) input.classList.add('error');
+      if (errorId) {
+        const err = document.getElementById(errorId);
+        if (err) { err.textContent = msg; err.style.display = ''; }
+      }
+    }
+
+    // UXC-07 auto-dismiss tiers; errors stay until manually closed.
+    const TOAST_DURATIONS = { success: 3000, info: 5000, warning: 8000, error: 0 };
+    let toastTimer = null;
+
+    function showToast(type, title, desc) {
+      const container = document.getElementById('toast-container');
+      // UXC-07 single-instance rule: a new toast replaces the previous one.
+      clearTimeout(toastTimer);
+      container.replaceChildren();
+
+      const toast = document.createElement('div');
+      toast.className = 'toast ' + type;
+
+      const iconSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      iconSvg.setAttribute('viewBox', '0 0 24 24');
+      iconSvg.setAttribute('fill', 'none');
+      iconSvg.setAttribute('stroke', 'currentColor');
+      iconSvg.setAttribute('stroke-width', '2');
+      iconSvg.setAttribute('aria-hidden', 'true');
+      iconSvg.setAttribute('width', '16');
+      iconSvg.setAttribute('height', '16');
+      iconSvg.classList.add('toast-icon');
+
+      if (type === 'success') {
+        const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+        poly.setAttribute('points', '20 6 9 17 4 12');
+        iconSvg.appendChild(poly);
+      } else {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', '12'); circle.setAttribute('cy', '12'); circle.setAttribute('r', '10');
+        const l1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        l1.setAttribute('x1', '15'); l1.setAttribute('y1', '9'); l1.setAttribute('x2', '9');  l1.setAttribute('y2', '15');
+        const l2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        l2.setAttribute('x1', '9');  l2.setAttribute('y1', '9'); l2.setAttribute('x2', '15'); l2.setAttribute('y2', '15');
+        iconSvg.appendChild(circle); iconSvg.appendChild(l1); iconSvg.appendChild(l2);
+      }
+      toast.appendChild(iconSvg);
+
+      const body = document.createElement('div');
+      body.className = 'toast-body';
+      const titleEl = document.createElement('p');
+      titleEl.className = 'toast-title';
+      titleEl.textContent = title;
+      body.appendChild(titleEl);
+      if (desc) {
+        const descEl = document.createElement('p');
+        descEl.className = 'toast-desc';
+        descEl.textContent = desc;
+        body.appendChild(descEl);
+      }
+      toast.appendChild(body);
+
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'toast-close';
+      closeBtn.setAttribute('aria-label', t('closeNotif'));
+      closeBtn.addEventListener('click', () => toast.remove());
+      const closeSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      closeSvg.setAttribute('width', '14'); closeSvg.setAttribute('height', '14');
+      closeSvg.setAttribute('viewBox', '0 0 24 24'); closeSvg.setAttribute('fill', 'none');
+      closeSvg.setAttribute('stroke', 'currentColor'); closeSvg.setAttribute('stroke-width', '2');
+      const cl1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      cl1.setAttribute('x1', '18'); cl1.setAttribute('y1', '6'); cl1.setAttribute('x2', '6'); cl1.setAttribute('y2', '18');
+      const cl2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      cl2.setAttribute('x1', '6'); cl2.setAttribute('y1', '6'); cl2.setAttribute('x2', '18'); cl2.setAttribute('y2', '18');
+      closeSvg.appendChild(cl1); closeSvg.appendChild(cl2);
+      closeBtn.appendChild(closeSvg);
+      toast.appendChild(closeBtn);
+
+      container.appendChild(toast);
+      const duration = TOAST_DURATIONS[type] ?? TOAST_DURATIONS.info;
+      if (duration > 0) {
+        toastTimer = setTimeout(() => { if (toast.parentNode) toast.remove(); }, duration);
+      }
+    }
+
+    function toggleEye(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const isText = input.type === 'text';
+      input.type = isText ? 'password' : 'text';
+      btn.setAttribute('aria-label', isText ? t('showPw') : t('hidePw'));
+    }
+
+    function updateCharCount() {
+      const val = document.getElementById('fieldContact').value;
+      document.getElementById('contactCount').textContent = val.length + ' / 255';
+    }
+
+    /* ── Avatar upload ──────────────────────────────────────────── */
+    document.getElementById('avatarInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const avatarErr = document.getElementById('avatarError');
+      const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowed.includes(file.type) || file.size > 5 * 1024 * 1024) {
+        // Fail loudly: announce why the file was rejected instead of ignoring it.
+        avatarErr.textContent = t('errAvatarInvalid');
+        avatarErr.style.display = '';
+        return;
+      }
+      avatarErr.style.display = 'none';
+      avatarErr.textContent = '';
+      const url = URL.createObjectURL(file);
+      const preview = document.getElementById('avatarPreview');
+      const img = document.createElement('img');
+      img.alt = lang === 'zh' ? '大頭照' : 'Avatar';
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+      img.addEventListener('load', () => URL.revokeObjectURL(url));
+      img.src = url;
+      while (preview.firstChild) preview.removeChild(preview.firstChild);
+      preview.appendChild(img);
+    });
+
+    /* ── Init ───────────────────────────────────────────────────── */
+    applyLang(window.LabelSuiteSharedSidebar.getStoredLang());
+    setState('email');
+  </script>
+
+  <!-- ── Theme toggle ──────────────────────────────────────────── -->
+  <script src="../../assets/theme.js"></script>
+  <script>
+    (function wireAppearanceToggle() {
+      const buttons = document.querySelectorAll('.appearance-toggle button[data-theme-choice]');
+      function syncPressed(choice) {
+        buttons.forEach((btn) => {
+          btn.setAttribute('aria-pressed', btn.dataset.themeChoice === choice ? 'true' : 'false');
+        });
+      }
+      syncPressed(window.LabelSuiteTheme.getStoredChoice());
+      buttons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const choice = btn.dataset.themeChoice;
+          window.LabelSuiteTheme.setChoice(choice);
+          syncPressed(choice);
+          if (window.LabelSuiteAnalytics && typeof LabelSuiteAnalytics.track === 'function') {
+            LabelSuiteAnalytics.track('prototype_theme_changed', { choice: choice });
+          }
+        });
+      });
+    })();
+  </script>
+
+  <!-- ── Analytics ─────────────────────────────────────────────── -->
+  <script src="../../assets/analytics.js"></script>
+  <script>
+    if (window.LabelSuiteAnalytics) {
+      LabelSuiteAnalytics.init({ page: 'profile' });
+      LabelSuiteAnalytics.trackPageView('profile', () => ({
+        account_type: currentState === 'sso' ? 'google_sso' : 'email_password',
+        proto_state:  currentState,
+      }));
+    }
+  </script>
+
+</body>
+</html>

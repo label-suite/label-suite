@@ -1,0 +1,104 @@
+<div id="overviewPanel" class="hidden">
+  <!-- FR-027: stepper, verdict box, four metric cards, sample split, stop conditions + CTA, trial-round table (top to bottom) -->
+  <section class="panel" aria-labelledby="executionTitle">
+    <div class="panel-head-row">
+      <h2 class="panel-title" id="executionTitle">任務狀態與執行控制</h2>
+    </div>
+
+    <div id="runControlExecutionPanel">
+      <!-- Flow stepper: illustration only (SC-019) -->
+      <div class="status-stepper-wrap" aria-hidden="true">
+        <div class="status-stepper" id="statusStepper">
+          <div class="step" data-step="draft">
+            <div class="step-node"></div>
+            <span class="step-label-wrap" id="statusStepDraft">草稿</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step" data-step="trial_stage">
+            <div class="step-node"></div>
+            <span class="step-label-wrap" id="statusStepTrialStage">試標階段</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step" data-step="official_run_in_progress">
+            <div class="step-node"></div>
+            <span class="step-label-wrap" id="statusStepOfficialRun">正式標記中</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step" data-step="completed">
+            <div class="step-node"></div>
+            <span class="step-label-wrap" id="statusStepCompleted">已完成</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="exec-stage-banner">
+        <div class="exec-stage-copy">
+          <div class="exec-stage-decision" aria-live="polite">
+            <strong class="exec-stage-decision-title" id="trialDecisionTitle">R2 已達標，可啟動正式標記</strong>
+            <p class="exec-stage-decision-desc" id="trialDecisionDesc">系統將以尚未進入試標的剩餘樣本建立正式標記池，避免與前兩回合混用。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exactly four metrics -->
+      <div class="exec-round-grid" data-testid="overview-metrics">
+        <div class="metric" data-testid="overview-metric">
+          <span id="trialRoundLabel" data-testid="overview-metric-label">目前回合</span>
+          <strong id="trialRoundValue">R2</strong>
+        </div>
+        <div class="metric" data-testid="overview-metric">
+          <span id="currentAgreementLabel" data-testid="overview-metric-label">最新 IAA</span>
+          <strong id="currentAgreementValue">0.81</strong>
+        </div>
+        <div class="metric" data-testid="overview-metric">
+          <span id="trialUsedLabel" data-testid="overview-metric-label">已用試標</span>
+          <strong id="trialUsedValue">20 / 100</strong>
+        </div>
+        <div class="metric" data-testid="overview-metric">
+          <span id="officialPoolLabel" data-testid="overview-metric-label">正式標記池</span>
+          <strong id="officialPoolValue">80</strong>
+        </div>
+      </div>
+
+      <div class="data-split-viz exec-data-split-viz">
+        <div class="split-viz-head">
+          <span class="status-hint" id="executionSplitTitle">樣本池分配</span>
+        </div>
+        <div class="split-bar" id="dataSplitBar" role="img" aria-label="資料分配比例"></div>
+        <div class="split-legend split-legend-dynamic" id="splitLegendDynamic"></div>
+      </div>
+
+      <section class="next-step-card" id="nextStepCard" data-testid="next-step-card" aria-labelledby="nextStepTitle">
+        <div class="next-step-head">
+          <div class="next-step-head-text">
+            <h3 class="next-step-title" id="nextStepTitle"></h3>
+            <p class="status-hint next-step-desc" id="nextStepDesc"></p>
+          </div>
+          <div class="next-step-actions">
+            <div class="action-row" id="publishActionRow" style="margin:0;"></div>
+          </div>
+        </div>
+        <div class="next-step-conditions" id="nextStepConditions"></div>
+      </section>
+
+      <div class="exec-control-row">
+        <div class="exec-info">
+          <div class="exec-badges hidden">
+            <span id="statusBadge" class="badge badge-draft">草稿</span>
+            <span class="badge badge-isolated hidden" id="isolationBadge">isolated</span>
+          </div>
+        </div>
+      </div>
+
+      <section class="round-history-panel" aria-labelledby="roundHistoryTitle">
+        <div class="round-history-head">
+          <div>
+            <h3 class="sub-panel-title" id="roundHistoryTitle">試標回合歷程</h3>
+            <p class="status-hint" id="roundHistoryHint">每個回合使用新的抽樣樣本；通過的回合會解鎖正式標記。</p>
+          </div>
+        </div>
+        <div class="round-timeline" id="trialRoundTimeline"></div>
+      </section>
+    </div>
+  </section>
+</div>

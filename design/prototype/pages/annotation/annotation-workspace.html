@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<!-- Spec: specs/annotation/015-annotation-workspace/spec.md -->
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Label Suite — 標記作業</title>
+  <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../shared/modal.css" />
+  <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/button.css" />
+  <link rel="stylesheet" href="../shared/empty-state.css" />
+  <link rel="stylesheet" href="../shared/content-tabs.css" />
+  <link rel="stylesheet" href="../shared/input.css" />
+  <link rel="stylesheet" href="../task-management/task-config.css" />
+  <script src="../../assets/theme-fouc.js"></script>
+  <style>
+    :root {
+      --col-samples-width: 256px;
+      --col-guideline-width: 316px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-surface);
+      color: var(--color-ink);
+      line-height: 1.8;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: row;
+      overflow: hidden;
+    }
+    html[lang="en"] body { line-height: 1.6; }
+    a { color: inherit; text-decoration: none; }
+    :where(button, input, select, textarea) { font: inherit; }
+    button, input[type="checkbox"], input[type="radio"], select { cursor: pointer; }
+    .hidden { display: none !important; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; padding: 0; margin: -1px; }
+
+    /* ── Workspace Root ─────────────────────────────────────── */
+    .workspace-root {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      min-height: 0;
+      min-width: 0;
+    }
+
+    /* design/system/MASTER.md §Breadcrumb (compact form, as in task-detail.html).
+       The workspace shell has no page header, so the trail gets its own slim
+       bar above the three columns; margin-bottom is dropped because the bar's
+       padding already sets the rhythm. */
+    .breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-soft)}
+    .breadcrumb a{color:var(--color-primary)}
+    .breadcrumb a:hover{text-decoration:underline}
+    .breadcrumb-sep{color:var(--color-ink-muted);font-size:11px}
+    .workspace-crumb-bar {
+      flex: 0 0 auto;
+      padding: 10px var(--space-md);
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-white);
+      overflow-x: auto;
+    }
+    .workspace-crumb-bar .breadcrumb { flex-wrap: nowrap; white-space: nowrap; }
+
+    /* ── Workspace Body (3-column) ──────────────────────────── */
+    .workspace-body {
+      flex: 1;
+      display: grid;
+      grid-template-columns: var(--col-samples-width) 1fr var(--col-guideline-width);
+      overflow: hidden;
+      min-height: 0;
+      position: relative;
+    }
+
+    /* ── Left: Sample List ──────────────────────────────────── */
+    .col-samples {
+      border-right: 1px solid var(--color-border);
+      background: var(--color-white);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .col-header {
+      padding: var(--space-md);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .col-header-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--color-text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .col-header-count { font-size: 12px; color: var(--color-ink-muted); }
+    .sample-list { flex: 1; overflow-y: auto; padding: var(--space-sm); }
+    .sample-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background var(--dur-fast);
+      border: 1px solid transparent;
+      margin-bottom: 2px;
+      width: 100%;
+      background: transparent;
+      text-align: left;
+    }
+    .sample-item:hover { background: var(--color-surface); }
+    .sample-item.active { background: var(--color-primary-soft-bg); border-color: rgba(99,102,241,0.2); }
+    .sample-index {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: var(--color-surface);
+      color: var(--color-text-soft);
+      border: 1px solid var(--color-border);
+    }
+    .sample-item.active .sample-index { background: var(--color-primary); color: var(--color-white); border-color: var(--color-primary); }
+    .sample-item.status-submitted .sample-index { background: var(--color-cta); color: var(--color-white); border-color: var(--color-cta); }
+    .sample-item.status-saved .sample-index { background: var(--color-warning-bg); color: var(--color-warning); border-color: var(--color-warning-border); }
+    .sample-meta { flex: 1; min-width: 0; }
+    .sample-snippet {
+      font-size: 12px;
+      color: var(--color-ink);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    /* Reviewer-only sample group (issue singyichen/label-suite#455): the sample identity and the
+       snippet its units all share are hoisted here, once, so the entries
+       below carry only what differs. Built from existing tokens only. */
+    .sample-group { margin-bottom: var(--space-sm); }
+    .sample-group + .sample-group { border-top: 1px solid var(--color-border); padding-top: var(--space-sm); }
+    .sample-group-header { padding: 2px 12px 6px; }
+    .sample-group-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      min-width: 0;
+    }
+    .sample-group-id {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--color-ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .sample-group-count { font-size: 12px; color: var(--color-ink-muted); flex-shrink: 0; }
+    .sample-group-snippet {
+      margin-top: 2px;
+      font-size: 11px;
+      color: var(--color-text-soft);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    /* FR-106 clause 6: count tags beside the dialogue summary (existing tokens only). */
+    .sample-summary-tag {
+      display: inline-block;
+      margin: 2px 4px 0 0;
+      padding: 0 6px;
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--color-text-soft);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+    }
+    .sample-group.has-active .sample-group-id { color: var(--color-primary); }
+
+    /* Reviewer-only: names the review unit the entry stands for by its
+       annotator alone -- the sample ID lives once in the group header
+       (issue singyichen/label-suite#557 removed the muted per-row echo). */
+    .sample-unit-line {
+      display: flex;
+      align-items: center;
+      font-size: 11px;
+      min-width: 0;
+    }
+    .sample-unit-annotator {
+      font-weight: 600;
+      color: var(--color-ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .sample-status-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-top: 3px;
+    }
+    .status-color-submitted { color: var(--color-cta); }
+    .status-color-saved { color: var(--color-warning); }
+    .status-color-pending { color: var(--color-ink-muted); }
+
+    /* Exception-pool-only row (issue singyichen/label-suite#1060, FR-095 v9.1.0): the human-
+       readable output type and the "待處置"/pending status label sit on one
+       line, output on the left and status on the right, both short
+       registry/i18n strings so no truncation rule is needed here -- the
+       long-ID truncation this task requires already lives on
+       `.sample-group-id` / `.sample-unit-annotator` above, reused as-is. */
+    .sample-exception-meta-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 3px;
+    }
+    .sample-exception-meta-row .sample-status-label { margin-top: 0; }
+    .status-pending-exception { color: var(--color-warning); }
+
+    /* ── Middle: Content + Annotation ───────────────────────── */
+    .col-content {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--color-surface);
+      min-height: 0;
+    }
+    .content-scroll { flex: 1; height: 0; min-height: 0; overflow-y: auto; padding: var(--space-lg); display: flex; flex-direction: column; gap: var(--space-md); }
+    .content-scroll > * { flex-shrink: 0; }
+    .content-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-white);
+      padding: var(--space-lg);
+    }
+    .content-card-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--color-text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: var(--space-sm);
+    }
+    /* Engine renders question + output panels as flat siblings; the host
+       regroups them into two content-cards (wrapAnnotatorCards) with the
+       normal column gap between them. */
+    #annotationPreview { display: flex; flex-direction: column; gap: var(--space-md); }
+    /* The content-cards already frame each block, so the engine's own
+       preview chrome reads as doubled lines here (spec 015 v2.4.0):
+       input inner box, section dividers, and the bypass row's dashed
+       top rule (inline-styled by the engine, hence !important). */
+    #annotationPreview .annotation-preview-sample { border: none; padding: 0; background: transparent; }
+    #annotationPreview .annotation-preview-divider { display: none; }
+    #annotationPreview div[style*="dashed"] { border-top: none !important; padding-top: 0 !important; }
+    /* Same doubled-frame rule for the integrated ER+RI wrapper (v2.7.1). */
+    #annotationPreview .preview-unified { border: none; padding: 0; background: transparent; }
+
+    /* ── Sample nav (top of middle column) ───────────────────── */
+    .sample-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+    }
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: var(--color-white);
+      color: var(--color-ink);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .nav-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+    .nav-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .sample-progress-summary { flex: 1; max-width: 260px; min-width: 180px; }
+    .progress-text {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-soft);
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .progress-track {
+      height: 6px;
+      border-radius: var(--radius-full);
+      background: var(--color-border);
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: var(--radius-full);
+      background: var(--color-cta);
+      transition: width var(--dur-normal) var(--ease-standard);
+    }
+
+    .field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-soft);
+      margin-bottom: 6px;
+    }
+    /* Engine-rendered hints (e.g. the multi_label max-selections notice)
+       reuse the field-hint class defined inline by task-new/task-detail;
+       mirror the same rule here so they don't fall back to browser
+       defaults on this page. */
+    .field-hint { font-size: 12px; color: var(--color-text-soft); margin-top: 4px; }
+
+    /* ── Buttons ─────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      position: relative;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    /* Zero specificity so pages/shared/button.css wins for the standard buttons */
+    :where(.btn) {
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid transparent;
+      transition: opacity var(--dur-fast), transform var(--dur-fast);
+    }
+    .btn:hover:not(:disabled) { transform: translateY(-1px); }
+    /* issue singyichen/label-suite#1252: hover-only rectangle (border box + 2px below) keeps the hit area stable under the -1px lift, incl. the rounded corners */
+    .btn:hover:not(:disabled)::after { content: ""; position: absolute; inset: -1px -1px -2px; }
+    /* issue singyichen/label-suite#1247: unified disabled look (FR-101 lock keeps disabled +
+       aria-disabled; this is the visual layer only). Declared after the
+       variant :hover rules so the :not(:disabled) guards below win cleanly. */
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+    .btn-outline { background: var(--color-white); color: var(--color-ink); border-color: var(--color-border); }
+    .btn-outline[aria-pressed="true"] { background: var(--color-primary); color: var(--color-white); border-color: var(--color-primary); }
+
+    /* ── Annotator finalized lock (issue singyichen/label-suite#1247, FR-101 / AC-2.27) ──
+       Generic over every engine-rendered control: chips carry inline
+       cursor/background, hence !important. Selected answer keeps its hue
+       but is desaturated and stays more prominent than unselected ones. */
+    .ws-finalized-notice {
+      display: flex; align-items: flex-start; gap: 10px;
+      border-color: var(--color-info-border);
+      background: var(--color-info-bg);
+      color: var(--color-info);
+    }
+    .ws-finalized-notice[data-lock-reason="under_review"] {
+      border-color: var(--color-warning-border);
+      background: var(--color-warning-bg);
+      color: var(--color-warning);
+    }
+    .ws-finalized-notice svg { flex-shrink: 0; margin-top: 2px; }
+    .ws-finalized-notice-title { font-weight: 700; font-size: 14px; }
+    .ws-finalized-notice-desc { font-size: 13px; margin-top: 2px; }
+    #annotationPreview button:disabled,
+    #annotationPreview input:disabled,
+    #annotationPreview select:disabled,
+    #annotationPreview textarea:disabled {
+      opacity: 0.45; cursor: not-allowed !important; transform: none !important;
+    }
+    #annotationPreview button:disabled[aria-pressed="true"] {
+      opacity: 0.8; filter: saturate(0.5);
+    }
+
+    /* ── Reviewer mode: row-level direct correction (FR-024L/FR-024L-1) ── */
+    .review-row-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+
+    /* ── Reviewer mode: aggregate review card (FR-014, spec 015 v2.5.0) ── */
+    .rv-summary-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin: 10px 0;
+    }
+    .rv-summary-head { display: flex; align-items: center; margin-bottom: 4px; }
+    .rv-summary-chip {
+      display: inline-flex;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--color-primary);
+      background: var(--color-primary-soft-bg);
+      border: 1px solid var(--color-primary-border);
+      border-radius: var(--radius-full);
+      padding: 2px 8px;
+    }
+    .rv-summary-text { font-size: 13px; color: var(--color-ink); white-space: pre-line; }
+
+    /* ── Reviewer mode: review-unit context banner (issue singyichen/label-suite#302) ──
+       One strip above the review card naming the task's review model:
+       run type, quorum, annotator, reviewed progress, five-state pill.
+       FR-051 makes the review card identical for every model, so this
+       banner is what tells the four demo review models apart.
+       issue singyichen/label-suite#572: no surface, border or padding of its own -- the chips
+       sit bare above the review card, which already carries the frame. */
+    .rv-unit-context {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    /* issue singyichen/label-suite#525 PR-A: the way into the review-flow drawer. Sized and
+       shaped like the `.rv-unit-chip` siblings it sits beside so the banner
+       still reads as one row of chips, but primary-coloured because it is
+       the only thing in that row a reviewer can act on. */
+    .rv-flow-trigger {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-primary);
+      background: var(--color-white);
+      border: 1px solid var(--color-primary-border);
+      border-radius: var(--radius-full);
+      padding: 2px 10px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    /* design/system/MASTER.md §Review Status Track -- CSS verbatim. */
+    /* 7 columns: node / fork / branch caption / rail-or-node / rail / fork /
+       node. issue singyichen/label-suite#596 folded the former `.review-track-single` grid in as
+       the only grid: with one reviewer per unit (FR-093) the two interim
+       quorum nodes and their trailing rail cannot occur, so the 9-column
+       variant had no route left to draw. Rail columns are bare `1fr` rather
+       than `minmax(16px, 1fr)` so a rail carrying a branch caption can never
+       be squeezed below the caption's own width; `.rv-flow-track` already
+       scrolls horizontally when the whole grid outgrows the drawer. */
+    .review-track { display: grid; grid-template-columns: auto 28px auto auto 1fr 28px auto; grid-template-rows: 34px 34px; align-items: center; justify-items: start; }
+    .review-track-node { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-full); background: var(--color-white); color: var(--color-ink-muted); font-size: 13px; font-weight: 500; white-space: nowrap; }
+    .review-track-node.done { border-color: var(--color-cta); background: var(--color-success-bg); color: var(--color-cta); font-weight: 600; }
+    .review-track-node.current { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary); font-weight: 600; }
+    .review-track-marker { font-size: 11px; font-weight: 600; }
+    /* The line is the ::before, so a caption sitting on the rail neither
+       thickens it nor breaks the done/not-done thickness contrast. */
+    .review-track-rail { position: relative; width: 100%; display: flex; align-items: center; justify-content: center; }
+    .review-track-rail::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); height: 2px; background: var(--color-border); }
+    .review-track-rail.done::before { height: 3px; background: var(--color-cta); }
+    .review-track-branch { position: relative; justify-self: stretch; text-align: center; padding: 0 4px; background: var(--color-white); color: var(--color-ink-muted); font-size: 11px; font-weight: 500; white-space: nowrap; }
+    .review-track-branch.done { color: var(--color-cta); font-weight: 600; }
+    .review-track-fork { display: block; line-height: 0; }
+    .rv-unit-chip {
+      font-size: 12px;
+      color: var(--color-ink-muted);
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-full);
+      padding: 2px 10px;
+      white-space: nowrap;
+    }
+    .rv-unit-run {
+      color: var(--color-primary);
+      background: var(--color-primary-soft-bg);
+      border-color: var(--color-primary-border);
+      font-weight: 700;
+    }
+    /* issue singyichen/label-suite#525 PR-B: no `margin-left: auto`. It used to pin the state to
+       the far right, which only made sense while the state was the LAST
+       chip; now that it reads second, an auto margin would blow a gap
+       between the run chip and everything after it. */
+    .rv-unit-state {
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: var(--radius-full);
+      padding: 2px 10px;
+      white-space: nowrap;
+      color: var(--color-ink-muted);
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+    }
+    .rv-unit-state-approved { color: var(--color-info); background: var(--color-info-bg); border-color: var(--color-info-border); }
+    .rv-unit-state-modified { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
+    .rv-unit-state-disputed { color: var(--color-error); background: var(--color-error-bg); border-color: var(--color-error-border); }
+    .rv-unit-state-finalized { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
+
+    .rv-bulk-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 10px 0;
+    }
+    /* issue singyichen/label-suite#520: `flex: 1` was inert while the note lived inside the block
+       .content-card review row; as a direct child of the flex-column
+       #annotationPreview it would grow the paragraph, so it goes. */
+    /* issue singyichen/label-suite#550: the decision-note tooltip trigger sits in the banner
+       row after .rv-flow-trigger; inline-flex keeps it on the chip line and
+       lets the banner's flex-wrap carry it at 375px. */
+    .rv-review-note { display: inline-flex; align-items: center; font-size: 12px; color: var(--color-ink-muted); }
+    /* The shared .tooltip-bubble anchors above its trigger and hangs off
+       its left edge -- right for a form label at the left margin, wrong for
+       a trigger that flex-wrap may park anywhere along a 375px banner row.
+       Anchor the bubble to the BANNER instead (its .tooltip-wrap goes
+       static, the banner is the positioned ancestor) and open it below the
+       row at the banner's own width, so it can never run past either edge. */
+    .rv-unit-context { position: relative; }
+    .rv-review-note .tooltip-wrap { position: static; }
+    .rv-review-note .tooltip-bubble {
+      top: calc(100% + 6px);
+      bottom: auto;
+      left: 0;
+      right: 0;
+      width: auto;
+      max-width: none;
+    }
+    .rv-review-note .tooltip-bubble::after { display: none; }
+
+    /* issue singyichen/label-suite#880: finalized cards summarize the answer, not the audit trail.
+       A complex route adds original/final/basis rows; direct approval keeps
+       only the final row. The two-column layout collapses naturally because
+       the value column owns the remaining width and may wrap independently. */
+    .rv-finalized-summary {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      gap: 8px;
+      padding-top: 8px;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .rv-finalized-summary-label { color: var(--color-text-soft); font-weight: 700; }
+    .rv-finalized-summary-values { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .rv-finalized-summary-value { white-space: pre-line; overflow-wrap: anywhere; }
+    .rv-finalized-basis { color: var(--color-ink); }
+    .rv-bulk-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+    .rv-annotator-list { display: flex; flex-direction: column; gap: 8px; }
+    .rv-annotator-review-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 8px 12px;
+      background: var(--color-white);
+    }
+    .rv-annotator-review-row-sequence {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .rv-sequence-review-content {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed var(--color-border);
+      margin-bottom: 8px;
+    }
+    .rv-annotator-meta { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+    .rv-annotator-name { font-size: 12px; font-weight: 700; color: var(--color-ink); flex-shrink: 0; }
+
+    .rv-choice-group { display: flex; gap: 6px; flex-shrink: 0; }
+    .mini-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px solid var(--color-border);
+      background: var(--color-white);
+      color: var(--color-text-soft);
+      border-radius: var(--radius-md);
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity var(--dur-fast);
+    }
+    .mini-btn:hover { opacity: 0.8; }
+    .mini-btn-active-approve { background: var(--color-success-bg); color: var(--color-success); border-color: var(--color-success-border); }
+    .mini-btn-active-modify { background: var(--color-warning-bg); color: var(--color-warning); border-color: var(--color-warning-border); }
+    .mini-btn-active-bypass { background: var(--color-error-bg); color: var(--color-error); border-color: var(--color-error-border); }
+    /* issue singyichen/label-suite#907: exclude_from_dataset drops the sample out of the dataset
+       instead of adopting an answer, so it carries the design system's danger
+       scale rather than reading as a fourth interchangeable adopt choice. */
+    .mini-btn-danger { color: var(--color-error); border-color: var(--color-error-border); }
+    .rv-btn-icon { line-height: 1; }
+
+    .rv-answer-cell { flex: 1; min-width: 0; }
+    /* Dimension result tags: same rules as annotation-list's expanded
+       annotator rows (.annotator-result-tag + FR-014A deviation colors) so
+       the workspace card and the list read identically. */
+    .annotator-result-tag {
+      font-size: 13px; color: var(--color-primary); background: var(--color-primary-soft-bg);
+      border: 1px solid var(--color-info-border); border-radius: var(--radius-md);
+      padding: 3px 12px; font-family: monospace; min-width: 80px; text-align: center;
+      display: inline-block;
+    }
+    .result-tag-green { color: #15803D !important; background: #DCFCE7 !important; border-color: #86EFAC !important; }
+    .result-tag-blue  { color: #1D4ED8 !important; background: #EFF6FF !important; border-color: #BFDBFE !important; }
+    .result-tag-red   { color: #DC2626 !important; background: #FEE2E2 !important; border-color: #FCA5A5 !important; }
+    html[data-theme="dark"] .result-tag-green { color: #4ADE80 !important; background: #0F2A18 !important; border-color: #1F5132 !important; }
+    html[data-theme="dark"] .result-tag-blue  { color: #60A5FA !important; background: #0F1F33 !important; border-color: #1E3A66 !important; }
+    html[data-theme="dark"] .result-tag-red   { color: #F87171 !important; background: #2A1414 !important; border-color: #5B2222 !important; }
+    .rv-bypass-pill {
+      display: inline-flex;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-warning);
+      background: var(--color-warning-bg);
+      border: 1px solid var(--color-warning-border);
+      border-radius: var(--radius-full);
+      padding: 2px 8px;
+    }
+    .rv-answer-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .rv-answer-chip {
+      display: inline-flex;
+      align-items: center;
+      font-size: 12px;
+      color: var(--color-ink);
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 2px 8px;
+    }
+    /* Entity answers: rows come from the shared engine 實體列表 builder
+       (annotator-view parity); only the wrapper layout lives here. */
+    .rv-answer-entities { display: flex; flex-direction: column; }
+    /* 原始文本 card (entity tasks, reviewer view): inline highlight marks
+       carry their per-type colors inline; only layout lives here. */
+    .rv-source-title { font-size: 13px; font-weight: 700; color: var(--color-ink-muted); margin-bottom: 10px; }
+    .rv-source-body { font-size: 15px; line-height: 2; color: var(--color-ink); }
+    .rv-source-mark { padding: 1px 2px; border-radius: var(--radius-sm); }
+    .rv-source-badge {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--color-white);
+      border-radius: var(--radius-sm);
+      padding: 0 6px;
+      margin: 0 2px 0 4px;
+      vertical-align: middle;
+    }
+    .rv-answer-relations { display: flex; flex-direction: column; gap: 4px; }
+    .rv-answer-freetext { font-size: 13px; color: var(--color-ink); white-space: pre-line; }
+
+    .rv-correction-title { font-size: 12px; font-weight: 700; color: var(--color-ink-muted); margin: 12px 0 6px; }
+
+    /* ── Reviewer mode: merged span review card (FR-014N) ────── */
+    .rv-section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--color-ink-muted);
+      margin: 12px 0 6px;
+    }
+    .rv-merged-decision { display: flex; align-items: center; gap: 6px; }
+    .rv-merged-decision .rv-section-label { margin: 0; }
+
+    /* ── Reviewer mode: decision row, separate from the answer Bypass row
+       (issue singyichen/label-suite#926/singyichen/label-suite#927/#928, FR-014P revision) ── */
+    .rv-decision-row {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--color-border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+    /* issue singyichen/label-suite#926: the decision buttons are the review card's primary
+       action, so they read as a full-width segmented control at a WCAG
+       2.5.5 touch-target height -- scoped under .rv-decision-row so
+       arbitration's choice buttons and the exception-pool action buttons
+       (issue singyichen/label-suite#907), which also use the base .mini-btn/.rv-choice-group
+       rules, are unaffected. */
+    .rv-decision-row .rv-choice-group,
+    .rv-decision-row .rv-merged-decision { flex: 1; }
+    .rv-decision-row .mini-btn {
+      flex: 1;
+      justify-content: center;
+      min-height: 44px;
+      padding: 10px var(--space-md);
+      font-size: 14px;
+    }
+    /* ── Action bar ──────────────────────────────────────────── */
+    .action-bar {
+      flex-shrink: 0;
+      padding: var(--space-md) var(--space-lg);
+      background: var(--color-white);
+      border-top: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+    }
+    .autosave-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--color-text-soft);
+    }
+    .autosave-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    /* issue singyichen/label-suite#470: colour is a supplementary cue only -- #wsAutosaveLabel's
+       text is what actually states the INITIAL/DIRTY/SAVED state. */
+    .autosave-dot.initial { background: var(--color-border); }
+    .autosave-dot.dirty { background: var(--color-warning); }
+    .autosave-dot.saved { background: var(--color-cta); }
+    /* issue singyichen/label-suite#1247: finalized lock swaps the dot for a lock icon. */
+    .autosave-lock { width: 14px; height: 14px; flex-shrink: 0; color: var(--color-warning); }
+    /* issue singyichen/label-suite#563: margin-left:auto keeps the buttons on the right even when
+       renderAutosaveStatus() hides .autosave-status for reviewers -- with a
+       single flex child, space-between alone would pin them to the left. */
+    .action-bar-right { display: flex; align-items: stretch; gap: var(--space-sm); margin-left: auto; }
+    /* issue singyichen/label-suite#930 (FR-102): plain-text submit-consequence hint. */
+    .rv-submit-consequence { font-size: 12px; color: var(--color-ink-muted); }
+
+    /* ── Right: Guideline ────────────────────────────────────── */
+    .col-guideline {
+      border-left: 1px solid var(--color-border);
+      background: var(--color-white);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+      transition: opacity var(--dur-normal) var(--ease-standard), border-color var(--dur-normal) var(--ease-standard);
+    }
+    .workspace-body.guideline-collapsed { grid-template-columns: var(--col-samples-width) 1fr 0; }
+    .workspace-body.guideline-collapsed .col-guideline {
+      opacity: 0;
+      pointer-events: none;
+      border-left-color: transparent;
+    }
+    .guideline-collapse-btn {
+      position: absolute;
+      top: var(--space-md);
+      right: calc(var(--col-guideline-width) + 8px);
+      z-index: 40;
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--color-border);
+      background: var(--color-white);
+      color: var(--color-text-soft);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: right var(--dur-normal) var(--ease-standard);
+    }
+    .workspace-body.guideline-collapsed .guideline-collapse-btn { right: 8px; }
+    .guideline-collapse-btn svg { width: 16px; height: 16px; transition: transform var(--dur-normal) var(--ease-standard); }
+    .workspace-body.guideline-collapsed .guideline-collapse-btn svg { transform: rotate(180deg); }
+    .guideline-panel { flex: 1; overflow-y: auto; padding: var(--space-md); }
+    .history-list { display: flex; flex-direction: column; gap: var(--space-sm); }
+    .history-item {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      background: var(--color-white);
+    }
+    .history-item-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .history-actor { font-size: 12px; font-weight: 700; color: var(--color-ink); }
+    .history-meta { display: flex; align-items: center; gap: 8px; }
+    .history-time { font-size: 11px; color: var(--color-ink-muted); }
+    .history-action-badge {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      background: var(--color-surface);
+      color: var(--color-text-soft);
+    }
+    /* FR-086 (issue singyichen/label-suite#578): one badge per HISTORY_ACTIONS value, seven
+       pairwise-distinct semantic colors. The mapping action -> modifier
+       class lives in shared/annotation-history.js; only the colors are here,
+       so both themes resolve through tokens. An event whose action is
+       outside the set keeps the neutral base badge above. */
+    .history-action-badge.draft-saved { background: var(--color-warning-bg); color: var(--color-warning); }
+    .history-action-badge.submitted { background: var(--color-surface); color: var(--color-cta); }
+    .history-action-badge.modified { background: var(--color-info-bg); color: var(--color-info); }
+    .history-action-badge.accepted { background: var(--color-success-bg); color: var(--color-success); }
+    .history-action-badge.rejected { background: var(--color-error-bg); color: var(--color-error); }
+    .history-action-badge.adjudicated { background: var(--color-primary-soft-bg); color: var(--color-primary); }
+    /* v3.0.0 reviewer run_type split (spec 015 FR-040): dry_run
+       consensus-adjudication badge (ws-review-consensus-badge), reusing
+       .history-action-badge's shape. */
+    .history-action-badge.consensus { background: var(--color-surface); color: var(--color-text-soft); }
+    .history-action-badge.divergent { background: var(--color-error-bg); color: var(--color-error); }
+    .history-action-badge.overridden { background: var(--color-warning-bg); color: var(--color-warning); }
+    .history-summary {
+      margin-top: 6px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--color-text-soft);
+      white-space: pre-line;
+    }
+    /* FR-087 (issue singyichen/label-suite#578): the answer an event recorded. A first snapshot
+       reads as whole content; every later one reads as before → after, one
+       row per output type that actually changed. Both blocks are only
+       emitted when they have content, so a card without a snapshot keeps
+       its pre-v4.61.0 layout. */
+    .history-snapshot {
+      margin-top: 6px;
+      padding: 8px 10px;
+      border-radius: var(--radius-md);
+      background: var(--color-surface);
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--color-ink);
+      white-space: pre-line;
+    }
+    .history-diff { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+    .history-diff-item {
+      padding: 6px 10px;
+      border-left: 2px solid var(--color-info);
+      border-radius: var(--radius-sm);
+      background: var(--color-info-bg);
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--color-ink);
+    }
+    /* FR-089: the reason the actor typed for a skip, correction or
+       arbitration -- carried on the event, not on the sample. */
+    .history-reason {
+      margin-top: 6px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--color-text-soft);
+      white-space: pre-line;
+    }
+    .guideline-summary {
+      border: 1px solid rgba(99,102,241,0.2);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      background: var(--color-primary-soft-bg);
+      margin-bottom: var(--space-md);
+    }
+    .guideline-summary-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-primary);
+      margin-bottom: var(--space-sm);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .guideline-summary-text { font-size: 13px; line-height: 1.7; color: var(--color-ink); }
+    /* issue singyichen/label-suite#988: read-only review-gate callout (OFF_ROSTER/NOT_ASSIGNED/
+       EMPTY) -- reuses .guideline-summary's soft-blue/ⓘ token so it reads
+       as system copy, not as sample content sharing the .content-card's
+       visual weight. */
+    .review-blocked-note {
+      border: 1px solid rgba(99,102,241,0.2);
+      border-radius: var(--radius-lg);
+      background: var(--color-primary-soft-bg);
+      padding: var(--space-lg);
+    }
+    .review-blocked-note-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-primary);
+      margin-bottom: var(--space-sm);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .review-blocked-note-text { font-size: 13px; line-height: 1.7; color: var(--color-ink); }
+    .guideline-file-list { display: flex; flex-direction: column; gap: var(--space-sm); }
+    .guideline-file-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: var(--color-white);
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+      font-size: 13px;
+      color: var(--color-ink);
+    }
+    .guideline-file-item:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .guideline-file-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .guideline-file-icon.pdf { background: var(--color-error-soft-bg); color: var(--color-error); }
+    .guideline-file-icon.img { background: var(--color-primary-soft-bg); color: var(--color-primary); }
+    .guideline-file-icon.md { background: var(--color-surface); color: var(--color-file-markdown); }
+    html[data-theme="dark"] .guideline-file-icon.md { background: var(--color-primary-soft-bg); color: var(--color-file-markdown); }
+    .guideline-file-name { font-size: 13px; font-weight: 500; color: var(--color-ink); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .guideline-file-action { font-size: 11px; color: var(--color-ink-muted); flex-shrink: 0; }
+    /* Rendered Markdown body shared by the first-visit gate modal and the
+       Markdown preview modal (issue singyichen/label-suite#527). */
+    .guideline-md-preview {
+      margin-top: var(--space-md);
+      padding: var(--space-md);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-surface);
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--color-ink);
+    }
+    .guideline-md-preview > :first-child { margin-top: 0; }
+    .guideline-md-preview > :last-child { margin-bottom: 0; }
+    .guideline-md-preview h1, .guideline-md-preview h2, .guideline-md-preview h3 { font-weight: 600; margin: var(--space-md) 0 var(--space-sm); line-height: 1.4; }
+    .guideline-md-preview h1 { font-size: 16px; }
+    .guideline-md-preview h2 { font-size: 15px; }
+    .guideline-md-preview h3 { font-size: 14px; }
+    .guideline-md-preview p { margin: 0 0 var(--space-sm); font-size: inherit; color: inherit; line-height: inherit; }
+    .guideline-md-preview ul, .guideline-md-preview ol { margin: 0 0 var(--space-sm); padding-left: 20px; }
+    .guideline-md-preview li { margin-bottom: 4px; }
+    .guideline-md-preview code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; padding: 1px 4px; border-radius: 4px; background: var(--color-border-muted); }
+    .guideline-md-preview a { color: var(--color-primary); text-decoration: underline; }
+    .guideline-md-preview pre { margin: 0 0 var(--space-sm); padding: var(--space-sm) var(--space-md); border-radius: var(--radius-sm); background: var(--color-border-muted); overflow-x: auto; }
+    .guideline-md-preview pre code { padding: 0; background: transparent; white-space: pre; }
+    .guideline-md-preview table { border-collapse: collapse; margin: 0 0 var(--space-sm); width: 100%; }
+    .guideline-md-preview th, .guideline-md-preview td { border: 1px solid var(--color-border); padding: 4px 8px; text-align: left; vertical-align: top; }
+    .guideline-md-preview th { font-weight: 600; background: var(--color-border-muted); }
+    .guideline-md-preview img { max-width: 100%; height: auto; display: block; margin: 0 0 var(--space-sm); border-radius: var(--radius-sm); }
+    .md-modal { max-width: 720px; width: 92vw; }
+    .md-modal .guideline-md-preview { max-height: 70vh; overflow: auto; }
+    .image-modal { max-width: 720px; }
+    .image-modal .modal-header { align-items: center; }
+    .image-modal-preview { display: block; width: 100%; height: auto; max-height: 520px; object-fit: contain; border-radius: var(--radius-sm); }
+    .pdf-modal { max-width: 860px; width: 92vw; }
+    .pdf-modal-preview { display: block; width: 100%; height: 70vh; border: 0; border-radius: var(--radius-sm); background: var(--color-surface, #fff); }
+
+    /* ── Mobile drawer (spec 015 v2.0.0 AC-5.2) ────────────────── */
+    .mobile-drawer { display: none; }
+    @media (max-width: 767px) {
+      .workspace-body { grid-template-columns: 1fr; }
+      .workspace-body.guideline-collapsed { grid-template-columns: 1fr; }
+      .guideline-collapse-btn { display: none; }
+      .col-samples { display: none; }
+      .col-guideline { display: none; }
+      .mobile-drawer {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        max-height: 70vh;
+        background: var(--color-white);
+        border-top: 1px solid var(--color-border);
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        box-shadow: var(--shadow-lg);
+        z-index: 30;
+        transform: translateY(calc(100% - 52px));
+        transition: transform var(--dur-normal) var(--ease-standard);
+      }
+      .mobile-drawer.open { transform: translateY(0); }
+      .mobile-drawer-handle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 52px;
+        flex-shrink: 0;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 700;
+        font-family: inherit;
+        color: var(--color-ink);
+        border: none;
+        background: transparent;
+      }
+      .mobile-drawer-content { overflow-y: auto; padding: 0 var(--space-md) var(--space-md); }
+      .sample-progress-summary { min-width: 0; }
+      .nav-btn { white-space: nowrap; flex-shrink: 0; }
+      .action-bar { padding-bottom: calc(var(--space-md) + 52px); }
+    }
+
+    /* ── Modal ───────────────────────────────────────────────── */
+    .modal-overlay > .modal {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+    /* Review-flow drawer (issue singyichen/label-suite#525 PR-A): a right-edge sheet on desktop,
+       a full-width modal below 768px. It inherits `position: fixed` from
+       `.modal-overlay`, which is what keeps the review card's
+       getBoundingClientRect().top identical across open and close. */
+    .rv-flow-overlay { align-items: stretch; justify-content: flex-end; padding: 0; }
+    .rv-flow-drawer { max-width: 520px; height: 100%; border-radius: var(--radius-xl) 0 0 var(--radius-xl); overflow-y: auto; }
+    .rv-flow-body { display: flex; flex-direction: column; gap: var(--space-lg); }
+    .rv-flow-drawer .rv-flow-description { margin: 0; color: var(--color-text-soft); font-size: 13px; line-height: 1.6; }
+    .rv-flow-drawer .rv-flow-route-summary {
+      margin: 0;
+      padding-top: var(--space-md);
+      border-top: 1px solid var(--color-border);
+      color: var(--color-ink);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    /* Keep horizontal scrolling as a mobile fallback; the desktop drawer is
+       wide enough to show the complete three-state track without clipping. */
+    .rv-flow-track { overflow-x: auto; }
+    @media (max-width: 767px) {
+      .rv-flow-drawer { max-width: none; border-radius: 0; }
+    }
+
+    /* ── Toast (top-center, UXC-07 / MASTER §Toast) ──────────── */
+    .toast-container {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: var(--z-toast);
+      width: min(384px, calc(100vw - 32px));
+      pointer-events: none;
+    }
+    .toast {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 16px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 500;
+      /* shadow-md: Toast is an approved exception to the no-shadow rule */
+      box-shadow: var(--shadow-md);
+      opacity: 0;
+      /* visibility keeps the hidden close button out of the tab order;
+         its 0s transition is delayed so the fade-out still plays. */
+      visibility: hidden;
+      transition: opacity var(--dur-fast), visibility 0s var(--dur-fast);
+    }
+    .toast.visible { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity var(--dur-fast); }
+    .toast-success { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
+    .toast-info    { color: var(--color-info);    background: var(--color-info-bg);    border-color: var(--color-info-border); }
+    .toast-warning { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
+    .toast-error   { color: var(--color-error);   background: var(--color-error-bg);   border-color: var(--color-error-border); }
+    .toast-msg { flex: 1; }
+    .toast-close {
+      background: none;
+      border: none;
+      color: inherit;
+      opacity: 0.6;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1.4;
+      padding: 0;
+    }
+    .toast-close:hover { opacity: 1; }
+
+    /* ── Reviewer mode: original-answer label (AC-3.45) ───────────────── */
+    .rv-btn-text { line-height: 1; }
+    .rv-answer-origin { font-size: 12px; color: var(--color-ink-muted); margin-top: 12px; }
+    /* issue singyichen/label-suite#1082 (AC-3.66): the annotator's own Bypass reason, a sibling of
+       .rv-answer-origin rather than appended text on it. */
+    .rv-answer-origin-reason { font-size: 12px; color: var(--color-ink-muted); margin-top: 2px; }
+
+    /* ── Reviewer mode: review reason (issue singyichen/label-suite#552/singyichen/label-suite#596, FR-016A) ────────── */
+    .rv-review-reason { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+    /* Blocked look while a modify/bypass decision still lacks its reason;
+       the click stays live so the FR-083 toast can name the output types. */
+    #wsReviewSubmitBtn[data-submit-blocked] { opacity: 0.55; cursor: not-allowed; }
+    .rv-review-reason-label { font-size: 12px; font-weight: 600; color: var(--color-error); }
+
+    .rv-review-reason textarea {
+      border-color: var(--color-error-border);
+      min-height: 0;
+    }
+
+    /* ── Annotator mode: Bypass reason (issue singyichen/label-suite#1082, AC-2.29/FR-089) ──────
+       Docked inline in the same .preview-bypass-row as the Bypass chip it
+       belongs to (task-config.engine.js:2502's "consumers dock their own
+       trailing controls onto this row" contract). */
+    .ws-bypass-reason-group { display: flex; flex-direction: column; gap: 2px; flex: 1 1 220px; min-width: 200px; }
+    .ws-bypass-reason-error { font-size: 12px; color: var(--color-error); }
+    .ws-bypass-reason-helper { font-size: 12px; color: var(--color-text-soft); }
+  </style>
+</head>
+<body>
+
+<div id="sharedSidebarMount"></div>
+<script src="../shared/sidebar.js"></script>
+<script src="../shared/annotation-history.js"></script>
+<script src="../shared/modal-focus.js"></script>
+<script>
+  var annotationListHref = '../annotation/annotation-list.html' + window.location.search;
+  /* issue singyichen/label-suite#944: mirrors boot()'s role normalization in
+     annotation-workspace.config.js, read synchronously here because this
+     inline script runs before that file loads (script tag order below). */
+  var urlTaskRole = (function () {
+    var role = new URLSearchParams(window.location.search).get('role');
+    return role === 'reviewer' ? 'reviewer' : role === 'project_leader' ? 'project_leader' : 'annotator';
+  })();
+  window.LabelSuiteSharedSidebar.mountSidebar({
+    mountId: 'sharedSidebarMount',
+    activeNav: 'annotation',
+    taskRole: urlTaskRole,
+    annotationHref: annotationListHref,
+    dashboardHref: '../dashboard/dashboard.html',
+    taskHref: '../task-management/task-list.html',
+    adminHref: '../admin/user-management.html',
+    profileHref: '../account/profile.html',
+    loginHref: '../account/login.html',
+    brandHref: '../dashboard/dashboard.html',
+  });
+</script>
+
+<!-- Guideline modal (first-visit force-read gate) -->
+<div class="modal-overlay" id="wsGuidelineModal" role="dialog" aria-modal="true" aria-labelledby="wsGuidelineModalTitleText" data-testid="ws-guideline-modal">
+  <div class="modal">
+    <h2 class="modal-title" id="wsGuidelineModalTitleText"></h2>
+    <div class="guideline-md-preview" id="wsGuidelineModalBody" data-testid="ws-guideline-modal-body"></div>
+    <div class="modal-actions">
+      <button class="btn btn-cta" type="button" id="wsGuidelineModalConfirm" data-testid="ws-guideline-modal-confirm"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Guideline image preview modal (spec 015 v2.0.0 AC-5.3 / SC-005B):
+     three closing paths -- close button, backdrop click, Esc key. -->
+<div class="modal-overlay" id="wsGuidelineImageModal" role="dialog" aria-modal="true" aria-labelledby="wsGuidelineImageModalTitleText" data-testid="ws-guideline-image-modal">
+  <div class="modal image-modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="wsGuidelineImageModalTitleText"></h2>
+      <button class="modal-close" type="button" id="wsGuidelineImageModalClose" data-testid="ws-guideline-image-modal-close" aria-label="關閉圖片預覽">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <img class="image-modal-preview" id="wsGuidelineImageModalPreview" data-testid="ws-guideline-image-modal-preview" alt="">
+  </div>
+</div>
+
+<!-- Guideline PDF preview modal (spec 015 AC-5.3 / SC-005C, issue singyichen/label-suite#353):
+     mirrors the image modal's closing paths -- close button, backdrop
+     click, Esc key (Esc via the LabelSuiteModalFocus trap). -->
+<div class="modal-overlay" id="wsGuidelinePdfModal" role="dialog" aria-modal="true" aria-labelledby="wsGuidelinePdfModalTitleText" data-testid="ws-guideline-pdf-modal">
+  <div class="modal image-modal pdf-modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="wsGuidelinePdfModalTitleText"></h2>
+      <button class="modal-close" type="button" id="wsGuidelinePdfModalClose" data-testid="ws-guideline-pdf-modal-close" aria-label="關閉 PDF 預覽">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <iframe class="pdf-modal-preview" id="wsGuidelinePdfModalPreview" data-testid="ws-guideline-pdf-modal-preview" title="PDF 預覽"></iframe>
+  </div>
+</div>
+
+<!-- Guideline Markdown preview modal (spec 015 AC-5.3 / SC-005D, issue singyichen/label-suite#527):
+     same closing paths as the PDF modal -- close button, backdrop click,
+     Esc key (Esc via the LabelSuiteModalFocus trap). Body receives the
+     output of renderMarkdown() (config.js), never raw file content. -->
+<div class="modal-overlay" id="wsGuidelineMdModal" role="dialog" aria-modal="true" aria-labelledby="wsGuidelineMdModalTitleText" data-testid="ws-guideline-md-modal">
+  <div class="modal image-modal md-modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="wsGuidelineMdModalTitleText"></h2>
+      <button class="modal-close" type="button" id="wsGuidelineMdModalClose" data-testid="ws-guideline-md-modal-close" aria-label="關閉 Markdown 預覽">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="guideline-md-preview" id="wsGuidelineMdModalBody" data-testid="ws-guideline-md-modal-body"></div>
+  </div>
+</div>
+
+<!-- Review-flow drawer (issue singyichen/label-suite#525 PR-A, spec 015 FR-064 / AC-4.36): the
+     five-state review track used to sit inline in the FR-064 banner, where
+     `pending` -- every unreviewed unit's default and the state with the least
+     to say -- paid the most vertical space for it. The track moved here
+     verbatim; nothing about it was reduced. Reuses `.modal-overlay` so the
+     backdrop, `--z-modal` and the default `display:none` from the
+     accessibility tree stay one implementation; `.rv-flow-overlay` only
+     re-anchors the panel to the right edge. Esc / focus trap / focus return
+     come from the LabelSuiteModalFocus trap, same as the guideline modals. -->
+<div class="modal-overlay rv-flow-overlay" id="wsReviewFlowDrawer" role="dialog" aria-modal="true" aria-labelledby="wsReviewFlowDrawerTitle" data-testid="ws-review-flow-drawer">
+  <div class="modal rv-flow-drawer">
+    <div class="modal-header">
+      <h2 class="modal-title" id="wsReviewFlowDrawerTitle"></h2>
+      <button class="modal-close" type="button" id="wsReviewFlowDrawerClose" data-testid="ws-review-flow-drawer-close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="rv-flow-body" id="wsReviewFlowDrawerBody" data-testid="ws-review-flow-drawer-body"></div>
+  </div>
+</div>
+
+<main class="workspace-root" id="wsRoot" data-testid="ws-root" tabindex="-1">
+  <h1 class="sr-only" id="wsPageHeading"></h1>
+  <div class="workspace-crumb-bar">
+    <nav class="breadcrumb" aria-label="breadcrumb" id="entryBreadcrumb" data-testid="entry-breadcrumb"></nav>
+  </div>
+  <div class="workspace-body" id="workspaceBody">
+    <button class="guideline-collapse-btn" type="button" id="wsGuidelineCollapseBtn" data-testid="ws-guideline-collapse-btn" aria-label="收合說明區" aria-expanded="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+
+    <!-- Left: Sample List -->
+    <div class="col-samples">
+      <div class="col-header">
+        <span class="col-header-title" id="sampleListTitle"></span>
+        <span class="col-header-count" id="sampleListCount"></span>
+      </div>
+      <div class="sample-list" id="sampleList" role="listbox"></div>
+    </div>
+
+    <!-- Middle: Content + Controls -->
+    <div class="col-content">
+      <div class="content-scroll" id="contentScroll" data-testid="ws-content-scroll">
+
+        <!-- Sample nav: prev / progress summary / next -->
+        <div class="sample-nav">
+          <button class="nav-btn" type="button" id="wsPrevBtn" data-testid="ws-prev-btn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+            <span id="wsPrevBtnLabel"></span>
+          </button>
+          <div class="sample-progress-summary">
+            <span class="progress-text" id="wsProgressText" data-testid="ws-progress-text"></span>
+            <div class="progress-track" id="wsProgressTrack" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+              <div class="progress-fill" id="wsProgressFill" style="width:0%"></div>
+            </div>
+          </div>
+          <button class="nav-btn" type="button" id="wsNextBtn" data-testid="ws-next-btn">
+            <span id="wsNextBtnLabel"></span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+
+        <!-- Engine mounts the evidence card / input content / output-type
+             panels here (updateAnnotationPreview / renderOutputPreview) -->
+        <div id="annotationPreview"></div>
+
+        <!-- Reviewer mode only: original vs. corrected answer history,
+             populated after ws-review-submit-btn is clicked (FR-024L-1) -->
+        <div class="content-card hidden" id="wsReviewHistory" data-testid="ws-review-history"></div>
+      </div>
+
+      <div class="action-bar">
+        <div class="autosave-status" data-testid="ws-autosave-status">
+          <div class="autosave-dot initial" id="wsAutosaveDot"></div>
+          <span id="wsAutosaveLabel"></span>
+        </div>
+        <div class="action-bar-right">
+          <button class="btn btn-outline" type="button" id="wsSaveBtn" data-testid="ws-save-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            <span id="wsSaveLabel"></span>
+          </button>
+          <button class="btn btn-cta" type="button" id="wsSubmitBtn" data-testid="ws-submit-btn">
+            <span id="wsSubmitLabel"></span>
+          </button>
+          <!-- issue singyichen/label-suite#930 (FR-102): always-visible submit-consequence hint,
+               kept in sync with wsReviewSubmitBtn's own hidden state in JS.
+               Placed BEFORE the button (issue singyichen/label-suite#563: the button itself must
+               stay the row's rightmost visible element). -->
+          <span class="rv-submit-consequence hidden" id="wsReviewSubmitConsequence" data-testid="ws-review-submit-consequence"></span>
+          <button class="btn btn-cta hidden" type="button" id="wsReviewSubmitBtn" data-testid="ws-review-submit-btn">
+            <span id="wsReviewSubmitLabel"></span>
+          </button>
+          <!-- issue singyichen/label-suite#568: the arbitration submit shares the fixed action bar
+               with the review submit instead of trailing the arbitration card -->
+          <button class="btn btn-cta hidden" type="button" id="wsArbitrationSubmitBtn" data-testid="ws-arbitration-submit">
+            <span id="wsArbitrationSubmitLabel"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Guideline + History tabs -->
+    <div class="col-guideline" data-testid="ws-guideline-panel">
+      <div class="admin-tabs admin-tabs--panel">
+        <button class="admin-tab active" type="button" id="wsTabGuideline" data-testid="ws-guideline-tab-guideline"><span id="wsTabGuidelineLabel"></span></button>
+        <button class="admin-tab" type="button" id="wsTabHistory" data-testid="ws-guideline-tab-history"><span id="wsTabHistoryLabel"></span></button>
+      </div>
+      <div class="guideline-panel" id="wsGuidelinePanel">
+        <div class="guideline-summary">
+          <div class="guideline-summary-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="guidelineSummaryTitle"></span>
+          </div>
+          <p class="guideline-summary-text" id="guidelineSummaryText"></p>
+        </div>
+        <div class="guideline-file-list" id="wsGuidelineFileList"></div>
+      </div>
+      <div class="guideline-panel hidden" id="wsHistoryPanel" data-testid="ws-history-panel">
+        <div id="wsHistoryContainer"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Mobile drawer (spec 015 v2.0.0 AC-5.2): persistent guideline access
+       on mobile, open/closed state and content survive sample switching
+       because it is rendered once per task load, not per sample. -->
+  <div class="mobile-drawer" id="wsMobileDrawer" aria-label="說明與檔案">
+    <button class="mobile-drawer-handle" type="button" id="wsMobileDrawerHandle" aria-expanded="false" data-testid="ws-guideline-mobile-drawer-handle">
+      <span id="wsMobileDrawerTitle"></span>
+    </button>
+    <div class="mobile-drawer-content">
+      <p class="guideline-summary-text" id="wsMobileGuidelineSummaryText"></p>
+      <div class="guideline-file-list" id="wsGuidelineFileListMobile"></div>
+    </div>
+  </div>
+</main>
+
+<!-- Toast -->
+<div class="toast-container" aria-live="polite" aria-atomic="true">
+  <div class="toast" id="toast"><span id="toastMsg" class="toast-msg"></span><button type="button" class="toast-close" id="toastClose" aria-label="關閉通知">✕</button></div>
+</div>
+
+<!-- Hidden code-editor stub required by updateAnnotationPreview() -->
+<textarea id="codeEditor" class="hidden" aria-hidden="true"></textarea>
+
+<script src="../../assets/theme.js"></script>
+<script src="../../assets/analytics.js"></script>
+<script src="../task-management/task-list.data.js"></script>
+<script src="../task-management/task-detail.data.js"></script>
+<script src="../task-management/task-config.data.js"></script>
+<script src="../task-management/task-config.yaml.js"></script>
+<script src="../task-management/task-config.dataset.js"></script>
+<script src="../task-management/task-config.engine.js"></script>
+<script src="annotation-workspace.data.js"></script>
+<script src="annotation-workspace.config.js"></script>
+<!-- Mirrors the already-rendered, already role-aware breadcrumb (singyichen/label-suite#934) into
+     the sr-only <h1> above, so the heading always names the current task/
+     sample without duplicating any config.js logic. Kept in sync via
+     MutationObserver since renderEntryBreadcrumb() re-renders on sample
+     navigation without a full page reload.
+     ponytail: mirrors the breadcrumb via MutationObserver because
+     annotation-workspace.config.js was an in-flight conflict zone (singyichen/label-suite#931);
+     set the heading directly in renderEntryBreadcrumb() once singyichen/label-suite#931 has landed -->
+<script>
+(function () {
+  var heading = document.getElementById('wsPageHeading');
+  var crumb = document.getElementById('entryBreadcrumb');
+  if (!heading || !crumb) return;
+
+  function syncHeading() {
+    var parts = [];
+    crumb.querySelectorAll('a, [aria-current="page"]').forEach(function (node) {
+      var text = node.textContent.trim();
+      if (text) parts.push(text);
+    });
+    heading.textContent = parts.join(' - ');
+  }
+
+  syncHeading();
+  new MutationObserver(syncHeading).observe(crumb, { childList: true, subtree: true, characterData: true });
+})();
+</script>
+</body>
+</html>

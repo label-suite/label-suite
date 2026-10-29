@@ -1,1 +1,4 @@
 node_modules/
+
+# Prototype analytics config holds a real PostHog token
+design/prototype/assets/analytics.config.local.json

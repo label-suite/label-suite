@@ -1,0 +1,1233 @@
+@import url("./empty-state.css");
+/* Shared sidebar styles for prototype pages */
+.navbar {
+  width: 240px;
+  height: 100vh;
+  background: var(--color-white);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-lg) var(--space-md);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  overflow-y: auto;
+  flex-shrink: 0;
+  transition: width var(--dur-normal, 200ms), padding var(--dur-normal, 200ms);
+}
+
+.navbar a,
+.navbar a:hover,
+.navbar a:focus,
+.navbar a:active {
+  text-decoration: none;
+}
+
+/* The fragment ships its own affordance instead of relying on host-page button resets. */
+.sidebar-utility-btn,
+.lang-toggle,
+.mobile-lang-toggle,
+.logout-btn,
+.mobile-top-logout,
+.mobile-theme-toggle-btn,
+.shortcut-help-close {
+  cursor: pointer;
+}
+
+.brand-section {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xl);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.navbar-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar-logo svg {
+  width: 20px;
+  height: 20px;
+}
+
+.navbar-wordmark {
+  font-family: var(--font-serif-display, 'Crimson Pro', 'Noto Serif TC', serif);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--color-ink);
+  line-height: 1;
+}
+
+.brand-section .lang-toggle {
+  margin-left: auto;
+}
+
+.navbar-center {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-xl);
+  flex: 1;
+  min-width: 0;
+}
+
+.nav-link {
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+  transition: color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+}
+
+.nav-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+.nav-link:hover {
+  color: var(--color-ink);
+  background: var(--color-slate-50, #f8fafc);
+}
+
+.nav-link.active {
+  color: var(--color-primary);
+  background: var(--nav-active-bg, var(--color-surface));
+  font-weight: 600;
+}
+
+.nav-link.active .nav-icon {
+  color: var(--color-primary);
+}
+
+/* Admin submenu (issue singyichen/label-suite#725) */
+.nav-link-group {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Lucide "chevron-down" (https://lucide.dev/icons/chevron-down), reused
+   as-is from the existing filter-select caret markup in this codebase. */
+.nav-caret {
+  width: 12px;
+  height: 12px;
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--color-ink-muted);
+  transition: color var(--dur-fast) var(--ease-standard);
+}
+
+/* Expanded state is communicated by color only -- rotation is not an
+   approved animated transform in this design system. */
+.nav-link[aria-expanded="true"] .nav-caret {
+  color: var(--color-primary);
+}
+
+.nav-submenu {
+  display: none;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding-left: var(--space-xl);
+  margin-top: var(--space-xs);
+}
+
+.nav-submenu.open {
+  display: flex;
+}
+
+.nav-sublink {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-md);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+  transition: color var(--dur-fast) var(--ease-standard), background var(--dur-fast) var(--ease-standard);
+}
+
+.nav-sublink:hover {
+  color: var(--color-ink);
+  background: var(--color-slate-50);
+}
+
+.nav-sublink.current {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-caret,
+  .nav-sublink {
+    transition-duration: 0.01ms;
+  }
+}
+
+.nav-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-lg);
+  margin-top: auto;
+}
+
+.sidebar-utility-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.sidebar-utility-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 42px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  color: var(--color-ink-muted);
+  font-size: 13px;
+  font-weight: 600;
+  transition: color var(--dur-fast, 150ms), border-color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+}
+
+.sidebar-utility-btn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+}
+
+.sidebar-utility-btn:focus-visible,
+.mobile-theme-toggle-btn:focus-visible,
+.shortcut-help-close:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+}
+
+.sidebar-utility-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.sidebar-theme-toggle-btn [data-theme-toggle-icon="sun"],
+.mobile-theme-toggle-btn [data-theme-toggle-icon="sun"] {
+  display: none;
+}
+
+.sidebar-theme-toggle-btn.is-dark [data-theme-toggle-icon="moon"],
+.mobile-theme-toggle-btn.is-dark [data-theme-toggle-icon="moon"] {
+  display: none;
+}
+
+.sidebar-theme-toggle-btn.is-dark [data-theme-toggle-icon="sun"],
+.mobile-theme-toggle-btn.is-dark [data-theme-toggle-icon="sun"] {
+  display: block;
+}
+
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 6px 12px;
+  background: var(--color-white);
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 500;
+  transition: border-color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+  white-space: nowrap;
+}
+
+.lang-toggle:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.user-chip-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+  transition: opacity var(--dur-fast, 150ms);
+}
+
+.user-chip-profile:hover {
+  opacity: 0.75;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-white);
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 14px;
+  border: 2px solid rgba(99, 102, 241, 0.16);
+  flex-shrink: 0;
+}
+
+.user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name {
+  display: block;
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role {
+  display: block;
+  font-size: 11px;
+  color: var(--color-ink-muted);
+  line-height: 1.3;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--color-ink-muted);
+  flex-shrink: 0;
+  transition: color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+}
+
+.logout-btn:hover {
+  color: var(--color-error);
+  background: var(--color-error-soft-bg);
+}
+
+.mobile-top-logout {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-ink-muted);
+  transition: color var(--dur-fast, 150ms), border-color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+}
+
+.mobile-top-logout:hover {
+  color: var(--color-error);
+  border-color: var(--color-error-soft-border);
+  background: var(--color-error-soft-bg);
+}
+
+.mobile-theme-toggle-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-ink-muted);
+  transition: color var(--dur-fast, 150ms), border-color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+}
+
+.mobile-theme-toggle-btn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+}
+
+.shortcut-help-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(30, 27, 75, 0.36);
+}
+
+.shortcut-help-backdrop.hidden {
+  display: none;
+}
+
+.shortcut-help-dialog {
+  width: min(760px, 100%);
+  max-height: min(720px, calc(100vh - 48px));
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-white);
+  box-shadow: 0 24px 48px rgba(30, 27, 75, 0.18);
+  padding: 20px;
+}
+
+.shortcut-help-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 12px;
+}
+
+.shortcut-help-header h2 {
+  margin: 0 0 2px;
+  color: var(--color-ink);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.shortcut-help-header p {
+  margin: 0;
+  color: var(--color-text-soft, #64748B);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.shortcut-help-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  color: var(--color-ink-muted);
+  transition: color var(--dur-fast, 150ms), border-color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+}
+
+.shortcut-help-close:hover {
+  color: var(--color-ink);
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+}
+
+.shortcut-help-close svg {
+  width: 16px;
+  height: 16px;
+}
+
+.shortcut-help-section {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-white);
+  overflow: hidden;
+}
+
+.shortcut-help-section + .shortcut-help-section {
+  margin-top: 10px;
+}
+
+.shortcut-help-section-header {
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-white);
+}
+
+.shortcut-help-section h3 {
+  margin: 0;
+  color: var(--color-ink-muted, #94A3B8);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.shortcut-help-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0 16px;
+}
+
+.shortcut-help-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px;
+  padding: 8px 0;
+}
+
+.shortcut-help-row + .shortcut-help-row {
+  border-top: none;
+}
+
+.shortcut-help-list dt {
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.shortcut-help-list dt strong {
+  display: block;
+  font-weight: 500;
+}
+
+.shortcut-key-group {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin: 0;
+  min-width: 140px;
+  flex-wrap: wrap;
+}
+
+.shortcut-keycap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 7px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  color: var(--color-ink);
+  box-shadow: 0 1px 0 rgba(30, 27, 75, 0.12), 0 1px 3px rgba(30, 27, 75, 0.06);
+  font-family: var(--font-sans, -apple-system, sans-serif);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.mobile-lang-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+  background: var(--color-white);
+  color: var(--color-ink);
+  font-size: 12px;
+  font-weight: 600;
+  transition: border-color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+}
+
+.mobile-lang-toggle:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+}
+
+body.sidebar-collapsed .navbar {
+  width: 88px;
+  padding: var(--space-lg) 10px;
+}
+
+body.sidebar-collapsed .brand-section {
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+body.sidebar-collapsed .navbar-brand {
+  justify-content: center;
+}
+
+body.sidebar-collapsed .navbar-wordmark,
+body.sidebar-collapsed .nav-link span,
+body.sidebar-collapsed .user-info,
+body.sidebar-collapsed .lang-toggle {
+  display: none;
+}
+
+body.sidebar-collapsed .nav-link {
+  justify-content: center;
+  padding: 10px;
+}
+
+body.sidebar-collapsed .nav-actions {
+  padding-top: var(--space-md);
+}
+
+/* Admin submenu unavailable while collapsed (spec 008 FR-019D); defense-in-depth
+   alongside the JS isAdminSubmenuAvailable() guard. */
+body.sidebar-collapsed .nav-submenu,
+body.sidebar-collapsed .nav-caret {
+  display: none !important;
+}
+
+body.sidebar-collapsed .sidebar-utility-row {
+  justify-content: center;
+}
+
+body.sidebar-collapsed .sidebar-utility-btn {
+  width: 40px;
+}
+
+body.sidebar-collapsed .user-chip {
+  justify-content: center;
+  padding: 8px 0;
+  gap: 0;
+}
+
+body.sidebar-collapsed .user-chip-profile {
+  display: none;
+}
+
+body.sidebar-collapsed .logout-btn {
+  display: flex;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+}
+
+/* ── Dark mode overrides ──────────────────────────────────── */
+html[data-theme="dark"] .shortcut-keycap {
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.45), 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+html[data-theme="dark"] .shortcut-help-backdrop {
+  background: rgba(0, 0, 0, 0.60);
+}
+
+html[data-theme="dark"] .shortcut-help-dialog {
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.55);
+}
+
+/* ── Notification bell ──────────────────────────────────────── */
+.notif-bell-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notif-badge {
+  position: absolute;
+  top: -7px;
+  right: -9px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 9999px;
+  background: #B91C1C;   /* red-700 — WCAG AA fix (issue singyichen/label-suite#973), was #EF4444 (3.76:1). Reuses --color-error's light-mode value; still hardcoded (not var(--color-error)) and constant across themes per the issue singyichen/label-suite#183 arbitration — only the constant's value changed. */
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* ── Notification dropdown ──────────────────────────────────── */
+.notif-dropdown {
+  position: fixed;
+  left: 248px;
+  bottom: 24px;
+  width: 320px;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(30, 27, 75, 0.14);
+  z-index: 600;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.notif-dropdown.hidden { display: none; }
+
+.notif-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.notif-dropdown-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.notif-mark-all-btn {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity var(--dur-fast, 150ms);
+}
+
+.notif-mark-all-btn:hover { opacity: 0.7; }
+
+.notif-list {
+  max-height: 320px;
+  overflow-y: auto;
+}
+.notif-list > .empty-state-compact { margin: 12px; }
+
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-primary-soft-bg, #EEF2FF);
+  transition: background var(--dur-fast, 150ms);
+}
+
+.notif-item:last-child { border-bottom: none; }
+.notif-item.is-read { background: var(--color-white); }
+
+.notif-item-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.notif-item-icon svg {
+  width: 12px;
+  height: 12px;
+}
+
+.notif-icon-check {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.notif-icon-assign {
+  background: var(--color-primary-soft-bg);
+  color: var(--color-primary);
+}
+
+.notif-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-item-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-ink);
+  margin: 0 0 3px;
+  word-break: break-word;
+}
+
+.notif-item.is-read .notif-item-text { color: var(--color-ink-muted, #94A3B8); }
+
+.notif-item-time {
+  font-size: 11px;
+  color: var(--color-ink-muted, #94A3B8);
+}
+
+.notif-item-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  margin-top: 5px;
+}
+
+.mobile-notification-bell-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-ink-muted);
+  flex-shrink: 0;
+  cursor: pointer;
+  padding: 0;
+  transition: color var(--dur-fast, 150ms), border-color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+}
+
+.mobile-notification-bell-btn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+}
+
+body.sidebar-collapsed #shortcutHelpBtn { display: none; }
+body.sidebar-collapsed .notif-dropdown { left: 88px; }
+
+@media (max-width: 768px) {
+  body {
+    flex-direction: column;
+    padding-top: var(--navbar-mobile-top-height);
+    padding-bottom: var(--navbar-mobile-height);
+  }
+
+  .navbar {
+    width: 100%;
+    height: var(--navbar-mobile-height);
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    border-right: none;
+    border-top: 1px solid var(--color-border);
+    flex-direction: row;
+    padding: 0;
+    overflow: visible;
+    background: var(--color-white);
+    z-index: 300;
+  }
+
+  .brand-section {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--navbar-mobile-top-height);
+    margin: 0;
+    padding: 0 var(--space-md);
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-white);
+    display: flex;
+    align-items: center;
+    z-index: 320;
+  }
+
+  .navbar-brand {
+    width: auto;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .navbar-wordmark {
+    font-size: 13px;
+  }
+
+  .brand-section .lang-toggle {
+    display: none;
+  }
+
+  .mobile-lang-toggle {
+    display: inline-flex;
+    flex-shrink: 0;
+    padding: 6px 8px;
+  }
+
+  .mobile-notification-bell-btn {
+    display: inline-flex;
+  }
+
+  .notif-dropdown {
+    left: auto;
+    right: 8px;
+    top: var(--navbar-mobile-top-height, 64px);
+    bottom: auto;
+  }
+
+  .mobile-theme-toggle-btn {
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+
+  .mobile-top-logout {
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+
+  .navbar-center {
+    flex: 1;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: space-around;
+    gap: 0;
+    margin: 0;
+  }
+
+  .navbar-center .nav-link {
+    min-height: var(--navbar-mobile-top-height);
+    flex: 1;
+    padding: 8px 2px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+    font-size: 11px;
+    line-height: 1.2;
+  }
+
+  .navbar-center .nav-link span {
+    white-space: nowrap;
+  }
+
+  /* Admin submenu unavailable on Mobile bottom nav (spec 008 FR-019D);
+     defense-in-depth alongside the JS isAdminSubmenuAvailable() guard. */
+  .nav-submenu,
+  .nav-caret {
+    display: none !important;
+  }
+
+  .nav-actions {
+    display: none;
+  }
+}
+
+/* issue singyichen/label-suite#1121: pages style `main { overflow-y: auto }`, which makes <main> the
+   sticky bar's scroll container; since <main> grows to content height the
+   window scrolls instead and the bar scrolls away. Keep <main> a non-scroller
+   so `position: sticky` resolves against the viewport. `overflow-x: clip`
+   (not hidden/auto, which would turn <main> back into a scroller) plus
+   `min-width: 0` keep the wide tab strip from stretching the page sideways.
+   annotation-workspace (`.workspace-root`, 100vh + overflow:hidden) is excluded. */
+main:has(> .workspace-tab-bar):not(.workspace-root) {
+  overflow-x: clip;
+  overflow-y: visible;
+  min-width: 0;
+}
+
+/* ── Workspace Tabs (issue singyichen/label-suite#1075, specs/shared/019-workspace-tabs) ───────
+   Shell-level tab strip mounted as the first child of each page's <main>
+   by sidebar.js mountWorkspaceTabBar(). Distinct from a page's own in-page
+   "Desktop Content Tabs" (.admin-tabs on task-detail.html /
+   user-management.html) -- see design/system/MASTER.md's terminology note.
+   Mobile (<=MOBILE_BP, 767px) dropdown replacement is a later sub-group
+   (G2f, spec 019 FR-002/US6); hidden here instead of left broken. */
+.workspace-tab-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-white);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.workspace-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-right-color: var(--color-border);
+  border-bottom: none;
+  cursor: pointer;
+  white-space: nowrap;
+  flex: 1 1 0;
+  min-width: var(--workspace-tab-min-width);
+  max-width: var(--workspace-tab-max-width);
+}
+
+.workspace-tab.active {
+  color: var(--color-ink);
+  background: var(--color-tab-active-bg);
+}
+
+/* issue singyichen/label-suite#1099 G1: hover uses a neutral bg distinguishable from both the
+   default (transparent) and the active tab's --color-tab-active-bg; never
+   applied to the active tab itself. */
+.workspace-tab:not(.active):hover {
+  background: var(--color-tab-hover-bg);
+}
+
+.workspace-tab-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.workspace-tab-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* issue singyichen/label-suite#1280 / FR-010: the stage/mode colour lives on the kind chip, never
+   on the whole tab -- tab body text stays --color-ink-muted / --color-ink. */
+.workspace-tab-kind {
+  flex-shrink: 0;
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  background: var(--color-border-muted);
+  color: var(--color-text-soft);
+}
+
+.workspace-tab-kind--warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.workspace-tab-kind--primary {
+  background: var(--color-primary-soft-bg);
+  color: var(--color-primary);
+}
+
+.workspace-tab-kind--review {
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+
+.workspace-tab-kind--neutral {
+  background: var(--color-border-muted);
+  color: var(--color-text-soft);
+}
+
+.workspace-tab-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  /* issue singyichen/label-suite#1280: visibility (not display) keeps the tab width stable. */
+  visibility: hidden;
+}
+
+.workspace-tab.active .workspace-tab-close,
+.workspace-tab:hover .workspace-tab-close,
+.workspace-tab:focus-within .workspace-tab-close {
+  visibility: visible;
+}
+
+.workspace-tab-close:hover {
+  background: var(--color-border-muted);
+}
+
+@media (max-width: 767px) {
+  .workspace-tab-bar {
+    display: none;
+  }
+}
+
+/* Shared overview-menu component (issue singyichen/label-suite#1099 G2a/G2b, FR-023/FR-023A/
+   FR-023 MODIFIED) -- see the `--desktop`/`--mobile` modifiers below.
+   Trigger mirrors `.mobile-notification-bell-btn`'s look; menu panel
+   mirrors `.notif-dropdown`'s fixed-position/box-shadow pattern. */
+.workspace-tab-overview-trigger {
+  flex-shrink: 0;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 34px;
+  padding: 0 var(--space-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-ink-muted);
+  cursor: pointer;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.workspace-tab-overview-trigger--desktop {
+  position: sticky;
+  right: 0;
+  margin-left: auto;
+  z-index: 1;
+}
+
+.workspace-tab-overview-trigger--mobile {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .workspace-tab-overview-trigger--mobile {
+    display: inline-flex;
+  }
+}
+
+.workspace-tab-overview-menu {
+  position: fixed;
+  right: var(--space-md);
+  top: 72px;
+  width: 320px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(30, 27, 75, 0.14);
+  z-index: 600;
+  overflow: hidden;
+}
+
+.workspace-tab-overview-menu.hidden { display: none; }
+
+/* AC-023.3/.4 (issue singyichen/label-suite#1099 G2b): filter box above the row list. */
+.workspace-tab-overview-filter {
+  box-sizing: border-box;
+  margin: var(--space-sm) var(--space-sm) 0;
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+
+.workspace-tab-overview-list {
+  overflow-y: auto;
+  padding: var(--space-xs) 0;
+}
+
+.workspace-tab-overview-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 10px var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+}
+
+.workspace-tab-overview-item:last-child { border-bottom: none; }
+.workspace-tab-overview-item.active { background: var(--color-primary-soft-bg); }
+.workspace-tab-overview-item.hidden { display: none; }
+
+.workspace-tab-overview-item-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.workspace-tab-overview-item-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--color-ink);
+}
+
+.workspace-tab-overview-item-close {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-ink-muted);
+  cursor: pointer;
+}
+
+.workspace-tab-overview-item-close:hover { background: var(--color-border); }
+
+.workspace-tab-overview-actions {
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-top: 1px solid var(--color-border);
+}
+
+.workspace-tab-overview-reopen,
+.workspace-tab-overview-close-all {
+  flex: 1;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  color: var(--color-ink);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.workspace-tab-overview-reopen:disabled {
+  color: var(--color-ink-muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.workspace-tab-overview-close-all:hover { background: var(--color-border-muted); }

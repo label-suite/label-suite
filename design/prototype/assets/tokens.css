@@ -1,0 +1,277 @@
+/* ═══════════════════════════════════════════════════════════════
+   Label Suite — Canonical Design Tokens
+   Derived from design/system/MASTER.md (updated 2026-04-18)
+   Import this file instead of redefining tokens in each page.
+   ═══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+:root {
+  /* ── Core Palette ─────────────────────────────────────────── */
+  --color-primary:          #6366F1;   /* Indigo 500 */
+  --color-secondary:        #818CF8;   /* Indigo 400 */
+  --color-cta:              #047857;   /* Emerald 700 — WCAG AA fix (issue singyichen/label-suite#973), was #10B981 (2.54:1 white text) */
+  --color-cta-hover:        #065F46;   /* Emerald 800 — WCAG AA fix (issue singyichen/label-suite#973), kept darker than --color-cta */
+  --color-surface:          #F5F3FF;   /* Violet 50 — page bg */
+  --color-white:            #FFFFFF;
+  --color-ink:              #1E1B4B;   /* Indigo 950 — body text */
+  --color-primary-soft-bg:  #EEF2FF;
+  --color-primary-strong:   #4F46E5;   /* Indigo 600 — WCAG AA text on --color-primary-soft-bg (~5.6:1; --color-primary is ~4.0:1), issue singyichen/label-suite#1483 */
+  --color-primary-border:   #C7D2FE;   /* Indigo 200 */
+  --color-on-cta:           #FFFFFF;   /* text on --color-cta / --color-primary fills (e.g. .btn-primary, .page-btn.active) — WCAG AA fix (issue singyichen/label-suite#1019); 5.48:1 on --color-cta; 4.47:1 on --color-primary (light) — below AA, sanctioned accepted tradeoff, see MASTER.md Step Indicator arbitration record (issue singyichen/label-suite#1030) */
+  --color-on-ink:           #FFFFFF;   /* text on --color-ink fills (e.g. .toast) — WCAG AA fix (issue singyichen/label-suite#1019); 15.99:1 on --color-ink */
+
+  /* ── Supporting ───────────────────────────────────────────── */
+  --color-border:           #E2E8F0;   /* slate-200 */
+  --color-border-muted:     #F1F5F9;   /* slate-100 */
+  --color-text-muted:       #64748B;   /* slate-500 — WCAG AA fix (issue singyichen/label-suite#973), was #94A3B8 (2.56:1); deprecated alias, use --color-ink-muted */
+  --color-text-soft:        #64748B;   /* slate-500 */
+  --color-slate-50:         #F8FAFC;
+
+  /* Canonical muted-text token (MASTER.md v1.7.1) */
+  --color-ink-muted:        #64748B;   /* slate-500 — WCAG AA fix (issue singyichen/label-suite#973), was #94A3B8 (2.56:1); canonical, --color-text-muted is the legacy alias. Now equals --color-text-soft's value — the palette's next compliant step coincides with that token. */
+
+  /* ── Workspace Tabs (issue singyichen/label-suite#1099 G1) ─────────────────────────
+     --workspace-tab-min-width / --workspace-tab-max-width are non-color
+     layout constants (issue singyichen/label-suite#1280; replace the fixed 180px width), shared
+     by both themes (no dark override needed). Tabs share the strip with
+     flex: 1 1 0, clamped to this range. The two color tokens below
+     ARE theme-specific and are re-declared in the dark block. */
+  --workspace-tab-min-width: 104px;
+  --workspace-tab-max-width: 220px;
+  --color-tab-active-bg:    var(--color-slate-50);     /* neutral active-tab bg, replaces the old Violet 50 --color-surface */
+  --color-tab-hover-bg:     var(--color-border-muted); /* neutral hover bg, distinguishable from --color-tab-active-bg */
+
+  /* ── Semantic State Colors ────────────────────────────────── */
+  --color-error:            #B91C1C;
+  --color-error-bg:         #FEF2F2;
+  --color-error-border:     #FECACA;
+  --color-error-soft-bg:    #FEF2F2;   /* alias */
+  --color-error-soft-border:#FECACA;   /* alias */
+
+  --color-success:          #15803D;
+  --color-success-bg:       #F0FDF4;
+  --color-success-border:   #BBF7D0;
+  --color-success-soft-bg:  #F0FDF4;   /* alias */
+  --color-success-soft-border: #BBF7D0; /* alias */
+
+  --color-warning:          #A16207;
+  --color-warning-bg:       #FEFCE8;
+  --color-warning-border:   #FEF08A;
+  --color-warning-soft-bg:  #FEFCE8;   /* alias */
+  --color-warning-soft-border: #FEF08A; /* alias */
+
+  --color-info:             #1D4ED8;
+  --color-info-bg:          #EFF6FF;
+  --color-info-border:      #BFDBFE;
+
+  /* ── File-type Icon Accent (non-semantic) ────────────────────
+     Not a state/role token — see MASTER.md Changelog (issue singyichen/label-suite#935).
+     Distinguishes .guideline-file-icon.md from the .pdf/.img
+     variants, which already reuse --color-error/--color-primary. */
+  --color-file-markdown:    #8B5CF6;   /* Violet 500 */
+
+  /* ── Type Families ────────────────────────────────────────── */
+  --font-serif-display:  'Crimson Pro', 'Noto Serif TC', 'Source Han Serif TC', Georgia, serif;
+  --font-sans:           'Inter', 'Noto Sans TC', 'PingFang TC', -apple-system, sans-serif;
+  --font-sans-reading:   'Atkinson Hyperlegible', 'Noto Sans TC', 'PingFang TC', sans-serif;
+  --font-mono:           'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* ── Type Scale ───────────────────────────────────────────── */
+  --text-display:  48px;
+  --text-h1:       36px;
+  --text-h2:       24px;
+  --text-h3:       18px;
+  --text-body:     16px;
+  --text-caption:  14px;
+  --text-label:    12px;
+
+  /* ── Leading (line-height) ────────────────────────────────── */
+  --leading-tight:   1.2;   /* display */
+  --leading-snug:    1.3;   /* h1 */
+  --leading-normal:  1.4;   /* h2 */
+  --leading-relaxed: 1.5;   /* h3, captions */
+  --leading-body:    1.6;   /* body EN */
+  --leading-body-zh: 1.8;   /* body ZH */
+
+  /* ── Spacing ──────────────────────────────────────────────── */
+  --space-xs:   4px;
+  --space-sm:   8px;
+  --space-md:   16px;
+  --space-lg:   24px;
+  --space-xl:   32px;
+  --space-2xl:  48px;
+  --space-3xl:  64px;
+
+  /* ── Border Radius ────────────────────────────────────────── */
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-full: 9999px;
+
+  /* ── Shadows ──────────────────────────────────────────────── */
+  --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md:   0 4px 6px rgba(0, 0, 0, 0.10);
+  --shadow-lg:   0 10px 15px rgba(0, 0, 0, 0.10);
+  --shadow-xl:   0 20px 25px rgba(0, 0, 0, 0.15);
+  --shadow-card: 0 4px 24px rgba(99, 102, 241, 0.10), 0 1px 4px rgba(0, 0, 0, 0.06);
+
+  /* ── Z-index ──────────────────────────────────────────────── */
+  --z-base:     0;
+  --z-raised:   10;
+  --z-dropdown: 100;
+  --z-sticky:   200;
+  --z-modal:    300;
+  --z-toast:    400;
+  --z-tooltip:  500;
+
+  /* ── Motion ───────────────────────────────────────────────── */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast:   150ms;
+  --dur-normal: 200ms;
+}
+
+/* ── Semantic aliases ─────────────────────────────────────── */
+:root {
+  --fg-1:       var(--color-ink);
+  --fg-2:       var(--color-text-soft);
+  --fg-3:       var(--color-text-muted);
+  --bg-page:    var(--color-surface);
+  --bg-surface: var(--color-white);
+
+  /* Nav-active background — overridden in dark mode so the active pill
+     reads as "raised" (lighter than navbar) instead of fading into bg. */
+  --nav-active-bg: var(--color-surface);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Dark Theme — applied via <html data-theme="dark">
+   Strategy: re-map the same token names so every page that already
+   uses var(--color-*) flips automatically. No HTML changes needed.
+
+   Specificity note: existing prototype pages redefine these tokens
+   inside inline <style>{ :root { ... } } blocks. `:root` has
+   specificity (0,1,0); `html[data-theme="dark"]` has (0,1,1), so the
+   dark overrides win regardless of source order.
+   ═══════════════════════════════════════════════════════════════ */
+html[data-theme="dark"] {
+  /* ── Core palette ─────────────────────────────────────────── */
+  --color-primary:          #818CF8;   /* indigo-400, brighter on dark */
+  --color-secondary:        #A5B4FC;   /* indigo-300 */
+  --color-cta:              #34D399;   /* emerald-400 */
+  --color-cta-hover:        #10B981;
+  --color-surface:          #0B0B12;   /* page bg, near-black */
+  --color-white:            #16161F;   /* card / sidebar bg, raised 1 step */
+  --color-ink:              #E2E8F0;   /* slate-200, primary text */
+  --color-primary-soft-bg:  #1E1B4B;   /* indigo-950 */
+  --color-primary-strong:   #A5B4FC;   /* indigo-300 — text on dark --color-primary-soft-bg (issue singyichen/label-suite#1483) */
+  --color-primary-border:   #3730A3;   /* Indigo 800 */
+  --color-on-cta:           #1E1B4B;   /* dark theme's --color-cta/--color-primary are light — need dark ink text; WCAG AA fix (issue singyichen/label-suite#1019); 8.32:1 on --color-cta, 5.36:1 on --color-primary */
+  --color-on-ink:           #1E1B4B;   /* dark theme's --color-ink is light (#E2E8F0) — need dark ink text; WCAG AA fix (issue singyichen/label-suite#1019); 12.97:1 on --color-ink */
+
+  /* ── Supporting ───────────────────────────────────────────── */
+  --color-border:           #2A2A35;
+  --color-border-muted:     #1F1F28;
+  --color-text-muted:       #9CA3AF;   /* deprecated alias, use --color-ink-muted */
+  --color-text-soft:        #A1A1AA;   /* zinc-400 */
+  --color-slate-50:         #1F1F28;   /* hover bg in dark */
+
+  /* Canonical muted-text token (MASTER.md v1.7.1) */
+  --color-ink-muted:        #9CA3AF;   /* raised from zinc-500 for WCAG AA; --color-text-muted is the legacy alias */
+
+  /* ── Workspace Tabs (issue singyichen/label-suite#1099 G1) ──────────────────────────
+     --color-tab-hover-bg deliberately does NOT alias --color-border-muted
+     here: in dark mode --color-border-muted (#1F1F28) equals
+     --color-slate-50 (#1F1F28), so aliasing it would make hover and
+     active indistinguishable. --color-border (#2A2A35) is reused instead
+     -- same value already serving as a dark-mode hover bg for the sibling
+     .workspace-tab-mobile-item-close:hover rule (sidebar.css). */
+  --color-tab-active-bg:    var(--color-slate-50);
+  --color-tab-hover-bg:     var(--color-border);
+
+  /* ── Semantic state — desaturated for dark backgrounds ────── */
+  --color-error:            #F87171;
+  --color-error-bg:         #2A1414;
+  --color-error-border:     #5B2222;
+  --color-error-soft-bg:    #2A1414;
+  --color-error-soft-border:#5B2222;
+
+  --color-success:          #4ADE80;
+  --color-success-bg:       #0F2A18;
+  --color-success-border:   #1F5132;
+  --color-success-soft-bg:  #0F2A18;
+  --color-success-soft-border: #1F5132;
+
+  --color-warning:          #FACC15;
+  --color-warning-bg:       #2A2210;
+  --color-warning-border:   #5C4A1A;
+  --color-warning-soft-bg:  #2A2210;
+  --color-warning-soft-border: #5C4A1A;
+
+  --color-info:             #60A5FA;
+  --color-info-bg:          #0F1F33;
+  --color-info-border:      #1E3A66;
+
+  /* ── File-type Icon Accent (non-semantic) ────────────────── */
+  --color-file-markdown:    #A78BFA;   /* Violet 400, brighter on dark */
+
+  /* ── Shadows — much subtler on dark, mostly ring-style ────── */
+  --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.40);
+  --shadow-md:   0 4px 6px rgba(0, 0, 0, 0.45);
+  --shadow-lg:   0 10px 15px rgba(0, 0, 0, 0.50);
+  --shadow-xl:   0 20px 25px rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 0 0 1px rgba(129, 140, 248, 0.10), 0 4px 24px rgba(0, 0, 0, 0.40);
+
+  /* Nav-active pill: lighter than --color-white (#16161F) so it reads as raised */
+  --nav-active-bg: #2A2A35;
+}
+
+/* `data-theme` is always resolved to "light" or "dark" by theme.js.
+   The "system" choice is resolved client-side using matchMedia. */
+
+/* ── Semantic type rules ──────────────────────────────────── */
+html[lang="zh-TW"] body,
+html[lang="zh"] body { line-height: var(--leading-body-zh); }
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  color: var(--fg-1);
+  background: var(--bg-page);
+  line-height: var(--leading-body);
+}
+
+h1, .h1 {
+  font-family: var(--font-serif-display);
+  font-size: var(--text-h1);
+  font-weight: 700;
+  line-height: var(--leading-snug);
+  color: var(--fg-1);
+}
+
+h2, .h2 {
+  font-family: var(--font-serif-display);
+  font-size: var(--text-h2);
+  font-weight: 600;
+  line-height: var(--leading-normal);
+}
+
+.display {
+  font-family: var(--font-serif-display);
+  font-size: var(--text-display);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+}
+
+h3, .h3 {
+  font-family: var(--font-sans);
+  font-size: var(--text-h3);
+  font-weight: 600;
+  line-height: var(--leading-relaxed);
+}
+
+code, kbd, pre, .mono {
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+}
