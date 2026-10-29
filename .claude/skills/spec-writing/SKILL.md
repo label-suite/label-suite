@@ -49,7 +49,7 @@ This skill covers the product docs layer. Read `AGENTS.md` first; its language r
 
 ## Module spec skeleton
 
-Each module is one file, `docs/specs/NNN-<kebab-name>.mdx`, where `NNN` is a three-digit number. It has exactly these nine H2 chapters, in this order, plus the optional legacy appendix as the last chapter.
+Each module is one file, `docs/specs/NNN-<kebab-name>.mdx`, where `NNN` is a three-digit number. Its frontmatter has `title` (`NNN 模組名稱`), `description`, `tags`, `createdAt`, and `updatedAt`. Quote the dates (`createdAt: "2026-10-29"`); NoteCraft rejects unquoted YAML dates and drops the page. It has exactly these nine H2 chapters, in this order, plus the optional legacy appendix as the last chapter.
 
 | # | Chapter | Holds |
 |---|---------|-------|
@@ -68,14 +68,37 @@ Each module is one file, `docs/specs/NNN-<kebab-name>.mdx`, where `NNN` is a thr
 
 Split `## 規格` by the pages in the prototype sidebar, and name each H3 after the sidebar path, group first: `### 專案管理 › 任務設定`. A page that no requirement touches does not get a section. A requirement that spans pages goes in the first page where a user meets it, and the other pages reference its ID.
 
+### Chapter 5: embed the page first
+
+Each H3 in `## 規格` starts with the prototype page it describes, embedded with `PrototypeFrame` (`.notecraft/components/prototype-frame.tsx`), so the reader sees the screen before its rules. Import the component once, right after the frontmatter:
+
+```mdx
+import PrototypeFrame from '@notes/components/prototype-frame';
+```
+
+Then open each section with the embed:
+
+```mdx
+### 系統管理 › 使用者管理
+
+<PrototypeFrame page="admin/user-management" caption="使用者管理" client:idle />
+
+- **FR-001**：…
+```
+
+- `page` is the path under `design/prototype/pages/`, without `.html`. The component shows that source path under the frame, so do not repeat it in the text.
+- `client:idle` is required; without it the frame never leaves its loading state.
+- The frame needs `pnpm prototype` running. The spec text must still stand on its own without it.
+- A section for a page with no prototype file has no embed; add an open question for the missing page instead.
+
 ### Requirements state constraints, not appearance
 
 A requirement says what must hold, not how the screen looks. Layout, color, and component choice belong to the prototype.
 
 | Write | Instead of |
 |-------|-----------|
-| 任務名稱須唯一，以利標註員在清單中辨識任務。 | 任務名稱欄位放在表單最上方，使用紅色星號。 |
-| 送出後應保留已填內容，讓標註員修正錯誤後不必重填。 | 送出按鈕在右下角。 |
+| 任務名稱須唯一，以利標記員在清單中辨識任務。 | 任務名稱欄位放在表單最上方，使用紅色星號。 |
+| 送出後應保留已填內容，讓標記員修正錯誤後不必重填。 | 送出按鈕在右下角。 |
 
 ### Four-way mapping
 
@@ -103,7 +126,7 @@ Guards that protect test-set answers (`AGENTS.md` hard rule 6) state the backend
 ```mdx
 | ID | Given | When | Then |
 | --- | --- | --- | --- |
-| AC-1.1 | 標註員已登入且被指派任務 | 開啟任務清單 | 只看到被指派的任務 |
+| AC-1.1 | 標記員已登入且被指派任務 | 開啟任務清單 | 只看到被指派的任務 |
 ```
 
 `AC-N.M`: `N` groups scenarios (usually one group per chapter 5 section), `M` counts within the group. Each `FR` is covered by at least one `AC`.
@@ -141,18 +164,20 @@ The numbering inherited from the legacy specs stays:
 Define each domain term once, in the PRD's `## 術語表`:
 
 ```mdx
-::::define{id="term.標註員" label="標註員"}
-被指派任務、負責產出標註結果的使用者。
+::::define{id="term.標記員" label="標記員"}
+被指派任務、負責產出標記結果的使用者。
 ::::
 ```
 
 Mark the first use of a term in each chapter with a reference, and write later uses as plain text:
 
 ```mdx
-:ref[標註員]{id="term.標註員"} 只能看到被指派的任務。
+:ref[標記員]{id="term.標記員"} 只能看到被指派的任務。
 ```
 
 A reference to an undefined term fails the checker. Add the definition before using the term.
+
+A term `id` may use only letters (CJK included), digits, `_`, and `-`, in `.`-separated segments; no spaces. Keep the space in `label` only: `::::define{id="term.Seeder管理員" label="Seeder 管理員"}`. NoteCraft fails the whole build on a bad `id`, and the checker does not catch it.
 
 ## Legacy mapping
 
@@ -181,12 +206,12 @@ The checker fails when a legacy ID is missing, mapped twice, mapped to an undefi
 
 These rules apply to the Chinese text in `docs/`.
 
-1. **State rules, do not address the reader.** Write `標註員應…`, not `你需要…` or `請…`.
+1. **State rules, do not address the reader.** Write `標記員應…`, not `你需要…` or `請…`.
 2. **Every rule carries its purpose.** Add a clause with `讓…` or `以利…` that says what the rule makes possible: `匯出檔須包含任務版本，以利重現訓練資料。`
 3. **Purposes look forward.** Say what the rule enables, not what went wrong before. Write `以利稽核`, not `因為之前出過錯`.
 4. **No dashes.** Do not use `——` or `—`. Split the sentence, or use `：` before a list or explanation.
 5. **Bold only terms and scope qualifiers.** Bold a term at its definition or a qualifier that changes the rule's scope (`**僅限**管理員`). Do not bold for emphasis.
-6. **Layer long sentences with `；`.** One condition per clause: `任務已關閉時，標註員不得送出結果；管理員可以重新開啟任務。`
+6. **Layer long sentences with `；`.** One condition per clause: `任務已關閉時，標記員不得送出結果；管理員可以重新開啟任務。`
 7. **Use the four modal verbs.** `應` (expected behavior), `須` (hard requirement), `不得` (prohibition), `可以` (permission). Do not write `SHALL` or `MUST` in `docs/`. OpenSpec deltas under `openspec/` keep `SHALL` / `MUST`, since OpenSpec parses them.
 
 ## Style checklist
@@ -198,6 +223,7 @@ The checker verifies chapters, terms, IDs, and the legacy mapping. Check the res
 - [ ] Each rule has a `讓` / `以利` purpose clause.
 - [ ] Bold is used only for terms and scope qualifiers.
 - [ ] No layout or color in `## 規格`.
+- [ ] Every chapter 5 section with a prototype page starts with its `PrototypeFrame`.
 - [ ] Every prototype block passes the four-way mapping.
 - [ ] Permissions in `## 使用權限` are no wider than the PRD's.
 - [ ] Every `FR` has at least one `AC`.

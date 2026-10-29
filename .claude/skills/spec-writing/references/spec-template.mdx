@@ -1,6 +1,12 @@
 ---
 title: NNN 模組名稱
+description: 
+tags: []
+createdAt: "YYYY-MM-DD"
+updatedAt: "YYYY-MM-DD"
 ---
+
+import PrototypeFrame from '@notes/components/prototype-frame';
 
 {/* Template for docs/specs/NNN-<name>.mdx. Keep all nine chapters in this order; write 無 when a chapter has no content yet. */}
 
@@ -14,7 +20,7 @@ title: NNN 模組名稱
 
 {/* May only narrow what the PRD grants. */}
 
-| 動作 | 管理員 | :ref[標註員]{id="term.標註員"} |
+| 動作 | 管理員 | :ref[標記員]{id="term.標記員"} |
 | --- | --- | --- |
 | | ✓ | ✗ |
 
@@ -30,9 +36,11 @@ title: NNN 模組名稱
 
 ## 規格
 
-{/* One H3 per prototype sidebar page: 分組 › 項目. State constraints, not appearance. */}
+{/* One H3 per prototype sidebar page: 分組 › 項目. Open each section with its prototype page (path under design/prototype/pages/, no .html). State constraints, not appearance. */}
 
 ### 分組 › 項目
+
+<PrototypeFrame page="group/page" caption="項目" client:idle />
 
 - **FR-001**：
 
