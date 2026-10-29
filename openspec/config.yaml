@@ -11,7 +11,7 @@ context: |
   - Issue first：沒有列出工作項目的 open issue 就不開始 change
     （AGENTS.md "Hard Rules" 與 "Development Workflow"）。
   - 分支與 commit：不得直接 commit 到 main；commit message 依 AGENTS.md "Commits"，
-    完整規則見 docs/commit-and-release.md。
+    完整規則見 docs/development/commit-and-release.md。
   - 語言：artifact 以繁體中文撰寫；OpenSpec 結構標題與 SHALL／MUST 關鍵字維持英文
     （AGENTS.md "Language Rules"）。
   CLI 以 `npx openspec` 執行。

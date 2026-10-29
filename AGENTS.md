@@ -7,7 +7,7 @@ The single rule source for every coding agent working in this repository (Claude
 1. **Issue first** — no implementation starts without an open issue that lists the work.
 2. **No commits to `main`** — branch first (`<type>/<short-description>`, lowercase, `-` separated, e.g. `docs/agent-rules`), then open a pull request.
 3. **No `pip install` / `npm install`** — use `uv add` for Python and `pnpm add` for JavaScript so lockfiles stay in sync.
-4. **No version bumps** — do not change the version in `CITATION.cff`, `backend/pyproject.toml`, or `frontend/package.json`. The only exception is the `chore(release)` commit described in [docs/commit-and-release.md](docs/commit-and-release.md).
+4. **No version bumps** — do not change the version in `CITATION.cff`, `backend/pyproject.toml`, or `frontend/package.json`. The only exception is the `chore(release)` commit described in [docs/development/commit-and-release.md](docs/development/commit-and-release.md).
 5. **No hardcoded task logic** — task types are config-driven; adding one must not require changing core code.
 6. **No test-set answer exposure** — anything an annotator can reach must never include ground-truth answers.
 7. **No `any` in TypeScript**, and **no `allow_origins=["*"]`** in CORS — list origins explicitly.
@@ -54,7 +54,7 @@ The organization project **Label Suite** (https://github.com/orgs/label-suite/pr
 
 ## Commits
 
-Full rules: [docs/commit-and-release.md](docs/commit-and-release.md). The essentials:
+Full rules: [docs/development/commit-and-release.md](docs/development/commit-and-release.md). The essentials:
 
 - English [Conventional Commits](https://www.conventionalcommits.org/): `<type>: <imperative subject, ≤ 72 chars> (#<issue>)`.
 - Types: `feat` · `fix` · `docs` · `refactor` · `test` · `chore` · `ci` · `perf` · `build`.

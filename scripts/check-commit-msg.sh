@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # check-commit-msg.sh — validate one commit message file against the commit
-# rules in AGENTS.md § Commits and docs/commit-and-release.md.
+# rules in AGENTS.md § Commits and docs/development/commit-and-release.md.
 #
 # Usage: scripts/check-commit-msg.sh <message-file>
 # Shared by the local commit-msg hook and the CI commit-messages job, so the
