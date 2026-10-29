@@ -49,7 +49,7 @@ This skill covers the product docs layer. Read `AGENTS.md` first; its language r
 
 ## Module spec skeleton
 
-Each module is one file, `docs/specs/NNN-<kebab-name>.mdx`, where `NNN` is a three-digit number. Its frontmatter has `title` (`NNN 模組名稱`), `description`, `tags`, `createdAt`, and `updatedAt`. Quote the dates (`createdAt: "2026-10-29"`); NoteCraft rejects unquoted YAML dates and drops the page. It has exactly these nine H2 chapters, in this order, plus the optional legacy appendix as the last chapter.
+Each module is one file, `docs/specs/NNN-<kebab-name>.mdx`, where `NNN` is a three-digit number. Its frontmatter has `title` (`NNN 模組名稱`), `description`, `tags`, `createdAt`, and `updatedAt`. Quote the dates (`createdAt: "2026-10-29"`); NoteCraft rejects unquoted YAML dates and drops the page. The checker reports a missing field or an unquoted date. It has exactly these nine H2 chapters, in this order, plus the optional legacy appendix as the last chapter.
 
 | # | Chapter | Holds |
 |---|---------|-------|
@@ -121,6 +121,16 @@ Each entry in `## 卡控機制` names the rule and then covers three layers:
 
 Guards that protect test-set answers (`AGENTS.md` hard rule 6) state the backend layer explicitly, since a hidden field on the page is not protection.
 
+A rule that no page exposes still goes here, not in `## 規格`: an initialization command, a concurrency or transaction rule, a database-level constraint. Write its 前端 layer as `無` with the reason, so a reader sees the gap is deliberate:
+
+```mdx
+### 至少保留一位啟用中的系統管理員
+
+- **前端**：無，由後端判斷。
+- **後端**：檢查與更新須在同一個原子操作完成，以利併發請求也無法同時移除最後兩位系統管理員。
+- **例外**：無
+```
+
 ### Acceptance: one table per requirement group
 
 ```mdx
@@ -130,6 +140,18 @@ Guards that protect test-set answers (`AGENTS.md` hard rule 6) state the backend
 ```
 
 `AC-N.M`: `N` groups scenarios (usually one group per chapter 5 section), `M` counts within the group. Each `FR` is covered by at least one `AC`.
+
+When chapter 5 has a single section (a one-page module), one group would hold every scenario. Group by topic instead, with a numbered H3 per group, so each table stays short enough to review:
+
+```mdx
+### 1. 帳號生命週期與降級
+
+| ID | Given | When | Then |
+| --- | --- | --- | --- |
+| AC-1.1 | … | … | … |
+
+### 2. 存取與導覽
+```
 
 ### Open questions
 
@@ -177,7 +199,7 @@ Mark the first use of a term in each chapter with a reference, and write later u
 
 A reference to an undefined term fails the checker. Add the definition before using the term.
 
-A term `id` may use only letters (CJK included), digits, `_`, and `-`, in `.`-separated segments; no spaces. Keep the space in `label` only: `::::define{id="term.Seeder管理員" label="Seeder 管理員"}`. NoteCraft fails the whole build on a bad `id`, and the checker does not catch it.
+A term `id` may use only letters (CJK included), digits, `_`, and `-`, in `.`-separated segments; no spaces. Keep the space in `label` only: `::::define{id="term.Seeder管理員" label="Seeder 管理員"}`. NoteCraft fails the whole build on a bad `id`; the checker reports one in any `define` or `ref`.
 
 ## Legacy mapping
 
@@ -199,8 +221,23 @@ Porting a legacy spec must not lose a requirement silently. For each ported spec
    | FR-003 | 刪除 | 與 FR-001 重複 |
    ```
 3. `新位置` is an ID this spec defines, a chapter name, or `刪除`. A `刪除` row always gives the reason in `說明`.
+4. A legacy `SC` that only restates an `FR` is merged into that `FR` instead of kept as a success criterion. Map it to the `FR` and say so in `說明`, so the merge is traceable: `| SC-004 | FR-011 | 與 FR-011 重複，併入 |`. Move any detail the `FR` lacks into it before the merge.
 
 The checker fails when a legacy ID is missing, mapped twice, mapped to an undefined ID, or deleted without a reason.
+
+## From docs to OpenSpec
+
+Once the maintainer has reviewed a module spec, its testable contract can become an OpenSpec capability. Use the OpenSpec skills (`openspec-propose`, then `openspec-archive-change`); the rules below are what this repository adds.
+
+1. Name the capability after the module (`006-user-management.mdx` → `user-management`). Its `## Purpose` names the docs file and says the docs win when the two disagree.
+2. Turn the requirements in `## 規格` and the guards in `## 卡控機制` into `### Requirement:` blocks, and the rows of `## 驗收標準` into `#### Scenario:` blocks under them. Keep only observable behavior: permissions, data rules, error conditions, audit. Leave layout to the prototype.
+3. End each requirement's description with a source line naming the IDs it comes from, so every requirement traces back to the docs:
+   ```md
+   來源：FR-002、FR-011、SC-015；AC-1.3、AC-2.2。
+   ```
+4. Do not write a requirement for anything still in `## 待釐清`. Say in the proposal which questions are left out; add them in a later change once the maintainer decides.
+5. When a decision changes the docs spec, update the docs first, then sync the capability with a new change whose `MODIFIED` requirements copy the whole block, scenarios included.
+6. Run `npx openspec validate <change> --strict` before archiving and `npx openspec validate --specs --strict` after.
 
 ## Writing style
 
@@ -216,7 +253,7 @@ These rules apply to the Chinese text in `docs/`.
 
 ## Style checklist
 
-The checker verifies chapters, terms, IDs, and the legacy mapping. Check the rest by reading:
+The checker verifies frontmatter, chapters, terms and their `id` format, IDs, and the legacy mapping. Check the rest by reading:
 
 - [ ] No `——` or `—` in the text (`rg '—' docs/`).
 - [ ] No `你` / `請` addressing the reader.
