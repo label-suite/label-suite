@@ -46,22 +46,30 @@ That commit, and only that commit, updates every place that records the version:
 
 ### Branches
 
-Feature branches are cut from and merged into `dev`. `dev` is promoted to `release` for UAT, and `release` to `main` for production.
+`main` is currently the only long-lived branch. Feature branches are cut from and merged into `main`. Once a deployment environment exists, this changes to the three-branch model described in [Planned: three-branch flow](#planned-three-branch-flow).
 
 ### Release flow
 
 Each version is tracked by a GitHub Milestone named after it (for example `v0.1.0`). Issues meant for that version are attached to the Milestone. The release starts only when every issue in the Milestone is closed.
 
-1. **Release commit into `dev`.** Open `chore/release-X.Y.Z` from `dev`, make the release commit (all four version fields plus the CHANGELOG at once), and merge it into `dev`.
-2. **`dev` → `release`.** Promoting builds the image and deploys it to staging for UAT.
-3. **`release` → `main`.** After manual approval, the same image is deployed to production; it is not rebuilt. Tag the merge commit on `main` `vX.Y.Z`, push the tag, and add a `vX.Y.Z` alias tag in GHCR to the same image digest.
-4. **GitHub Release and DOI.** Create a GitHub Release from the tag, using the version's CHANGELOG section as the notes. Zenodo archives the release and mints a DOI. Close the Milestone.
-
-Pre-release tags such as `vX.Y.Z-rc.N` may be used for staging builds. They are optional.
+1. **Release commit into `main`.** Open `chore/release-X.Y.Z` from `main`, make the release commit (all four version fields plus the CHANGELOG at once), and merge it into `main`.
+2. **Tag.** Tag the merge commit on `main` `vX.Y.Z` and push the tag.
+3. **GitHub Release and DOI.** Create a GitHub Release from the tag, using the version's CHANGELOG section as the notes. Zenodo archives the release and mints a DOI. Close the Milestone.
 
 ### Hotfixes
 
-Cut the hotfix branch from `main`. It carries its own PATCH release commit. After it is merged into `main` and tagged, merge `main` back into `release` and `dev`.
+Cut the hotfix branch from `main`. It carries its own PATCH release commit, and is merged and tagged like any other release.
+
+### Planned: three-branch flow
+
+Not in use yet. It takes over from the single-`main` flow above once staging and production environments exist.
+
+- **Branches.** Feature branches are cut from and merged into `dev`. `dev` is promoted to `release` for UAT, and `release` to `main` for production.
+- **Release commit into `dev`.** The release commit is merged into `dev` before `dev` is promoted, because the image is built once on `release` and never rebuilt.
+- **`dev` → `release`.** Promoting builds the image and deploys it to staging for UAT.
+- **`release` → `main`.** After manual approval, the same image is deployed to production. Tag the merge commit on `main` `vX.Y.Z`, push the tag, and add a `vX.Y.Z` alias tag in GHCR to the same image digest. The GitHub Release and DOI step is unchanged.
+- **Pre-release tags** such as `vX.Y.Z-rc.N` may be used for staging builds. They are optional.
+- **Hotfixes** are cut from `main`; after merging and tagging, `main` is merged back into `release` and `dev`.
 
 ### What the version means
 
