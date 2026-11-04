@@ -4,7 +4,7 @@
 它不是系統流程圖：不畫系統內部怎麼處理，只畫角色做了什麼、系統回應了什麼（使用者看得到的部分）。
 
 每份流程圖都從同一份骨架開始，**外殼、圖形與走查機制固定，只換流程資料**，不同規格的流程圖看起來是同一套。
-樣式另依 `.claude/rules/notecraft-visualize.md`（改到 `docs/**` 時自動載入）。章節文字的寫法見 [writing-guide.md](writing-guide.md) 的「業務流程」。
+樣式另依 `docs/development/notecraft-visualize.md`。章節文字的寫法見 [writing-guide.md](writing-guide.md) 的「業務流程」。
 
 ## 放在哪
 
@@ -159,4 +159,4 @@ status: pending
 
 - `content-visualize` 會把標記改成 `status: generated`，並在下方寫入 `GeneratedFrame` 與 import
 - 規格的業務流程有修改時，把標記改回 `status: pending` 並更新 prompt，再請 Claude「處理 `docs/specs/xx/yy.mdx` 的視覺化標記」
-- 驗證：開 `pnpm docs:serve`（http://127.0.0.1:4330/） 實際切過每個流程 tab、走完每段走查；只改元件時 `pnpm exec notecraftapp build docs` 不會重新編譯，要靠預覽驗證
+- 驗證：開 `pnpm docs:serve`（http://127.0.0.1:4330/） 實際切過每個流程 tab、走完每段走查；只改元件、沒改 MDX 時，快取不會察覺，要改跑 `pnpm exec notecraftapp build --rebuild docs`

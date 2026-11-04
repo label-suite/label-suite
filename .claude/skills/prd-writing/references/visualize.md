@@ -1,7 +1,7 @@
 # PRD 視覺化寫法
 
 PRD 有三張固定的互動圖，各自從一份骨架複製：**【骨架】一字不改，只換【資料】**，不同專案的 PRD 看起來是同一套。
-樣式另依 `.claude/rules/notecraft-visualize.md`（改到 `docs/**` 時自動載入），生成與寫回 MDX 的流程依 `content-visualize` skill。
+樣式另依 `docs/development/notecraft-visualize.md`，生成與寫回 MDX 的流程依 `content-visualize` skill。
 
 | 圖         | 放在哪             | 元件 id                                           | 骨架                                                     | 不寫的情況       |
 | :--------- | :----------------- | :------------------------------------------------ | :------------------------------------------------------- | :--------------- |
@@ -14,7 +14,7 @@ PRD 有三張固定的互動圖，各自從一份骨架複製：**【骨架】�
 1. 整份複製到 `.notecraft/components/<元件 id>.tsx`
 2. 只改【資料】區段與 default export 的名稱；骨架少了需要的圖形或機制時，先問使用者，同意後改骨架參考檔再複製
 3. 標記 prompt 寫「核心洞察／互動／圖形／資料」，資料和章節正文**逐項一致**（正文是唯一來源，圖只是呈現）
-4. `pnpm exec notecraftapp build docs` 通過後，在瀏覽器實際操作每個互動，確認沒有重疊、裁切與 console 錯誤
+4. `pnpm exec notecraftapp build docs` 通過後（只改元件、沒改 MDX 時，快取不會察覺，要加 `--rebuild`），在瀏覽器實際操作每個互動，確認沒有重疊、裁切與 console 錯誤
 
 生成元件不能互相 import，所以用複製，不抽共用元件。
 
