@@ -15,7 +15,7 @@ import PrototypeFrame from '@notes/components/prototype-frame';
 
 > 來源：舊 repo `specs/account/003-register-email-password/spec.md`（26 條），釘在 `singyichen/label-suite@faf83356`，見 `docs/specs/legacy/01-02-register.ids` 的首行
 > 參考畫面：`design/prototype/pages/account/register.html`
-> 相關規格：[規格 01-01 登入](./01-login.mdx)、規格 01-03 忘記與重設密碼（未撰寫）、[規格 01-05 登入狀態與安全](./05-login-state.mdx)、規格 02-01 儀表板（未撰寫）、[規格 06-01 使用者管理](../06-admin/01-user-management.mdx)、[規格 07-01 側欄導覽](../07-shared/01-sidebar.mdx)
+> 相關規格：[規格 01-01 登入](./01-login.mdx)、[規格 01-03 忘記與重設密碼](./03-reset-password.mdx)、[規格 01-05 登入狀態與安全](./05-login-state.mdx)、規格 02-01 儀表板（未撰寫）、[規格 06-01 使用者管理](../06-admin/01-user-management.mdx)、[規格 07-01 側欄導覽](../07-shared/01-sidebar.mdx)
 
 ## 目標
 
@@ -139,7 +139,7 @@ status: pending
 3. 使用者在任一欄重新輸入 → 卡片上方的說明自動消失；沒有手動關閉的按鈕
 4. 使用者切換語言 → 說明也一併消失
 
-- 帳號 Email 的長度上限與大小寫規則見 [規格 06-01 §資料欄位](../06-admin/01-user-management.mdx#資料欄位)：不分大小寫、最多 254 字。比對前要怎麼統一寫法（正規化的做法）由[規格 01-05 登入狀態與安全](./05-login-state.mdx)定義（未撰寫），本頁不重複定義
+- 帳號 Email 的長度上限與大小寫規則見 [規格 06-01 §資料欄位](../06-admin/01-user-management.mdx#資料欄位)：不分大小寫、最多 254 字。比對前要怎麼統一寫法（正規化的做法）由 [規格 01-05 §Email 的識別規則](./05-login-state.mdx#email-的識別規則) 定義，本頁不重複定義
 - 要不要在註冊時就驗證這個 Email 真的屬於填寫的人，見 [§待釐清](#待釐清) Q1
 - **這條說明會揭露「某個 Email 已經在平台註冊過」**，與 [規格 01-01 §登入失敗](./01-login.mdx#登入失敗) 刻意不揭露同一件事的立場衝突——任何人在註冊頁輸入一個 Email 就能得到確答，登入頁的保護因此失效。這一題併在 [§待釐清](#待釐清) Q1，因為寄驗證信同時解掉它
 
@@ -400,7 +400,7 @@ status: pending
 | FR-009 | [§規格 › 密碼的顯示與隱藏](#密碼的顯示與隱藏) |  |
 | FR-010 | [§規格 › 欄位檢查與錯誤](#欄位檢查與錯誤) | 與 FR-005 重複，併入 |
 | FR-010A | Scenario：送出中按鈕停用 |  |
-| FR-011 | Scenario：Email 已經有人使用 | 來源用 `taken@example.com` 當原型示範值，不是業務規則；判斷兩個 Email 是否相同的規則由[規格 01-05](./05-login-state.mdx) 定義（未撰寫） |
+| FR-011 | Scenario：Email 已經有人使用 | 來源用 `taken@example.com` 當原型示範值，不是業務規則；判斷兩個 Email 是否相同的規則由 [規格 01-05 §Email 的識別規則](./05-login-state.mdx#email-的識別規則) 定義 |
 | FR-011A | Scenario：重新輸入會清掉卡片上方的說明 |  |
 | FR-012 | Scenario：註冊成功顯示訊息 | 導向儀表板這件事保留並列入待釐清 Q2；原型的 2 秒延遲不寫進規格 |
 | FR-013 | [§規格 › 不同螢幕寬度的呈現](#不同螢幕寬度的呈現) |  |
