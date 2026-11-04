@@ -7,6 +7,7 @@ description: 撰寫與維護專案層級的產品需求文件 PRD（docs/specs/0
 
 此 skill 寫的是**整個專案的全貌**：為什麼做、給誰用、做到哪裡、有哪些模組、模組之間怎麼串。
 單一頁面的規則交給 `spec-writing`；PRD 是 spec-writing 的上游，規格書的角色、範圍與模組都以 PRD 為準。
+給人看的流程說明（三層文件分工、兩個 skill 怎麼配合、怎麼交給 OpenSpec）見 `docs/development/spec-authoring.md`；兩者說法不同時以本 skill 為準，並回報給維護者。
 
 ## 何時使用
 

@@ -8,6 +8,7 @@ description: 依使用者的需求描述或參考文件，產生業務面的規�
 此 skill 是 SDD 流程的**起點**：在進入 OpenSpec（由開發者執行 propose）之前，把需求寫成相關人員（PM、業務、設計、工程、QA）都看得懂的規格書。
 規格書是 OpenSpec propose 的預設需求依據（見 `openspec/config.yaml` 的 `context`）。
 上游是 PRD（`docs/specs/00-prd.mdx`，由 `prd-writing` 維護）：規格書的角色、權限上限、範圍與模組劃分都以 PRD 為準，一份規格只展開 PRD 模組地圖裡的一個頁面。
+給人看的流程說明（三層文件分工、兩個 skill 怎麼配合、怎麼交給 OpenSpec）見 `docs/development/spec-authoring.md`；兩者說法不同時以本 skill 為準，並回報給維護者。
 
 ## 何時使用
 
