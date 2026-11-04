@@ -36,8 +36,8 @@ shared:FR-016B
 shared:FR-016C
 shared:FR-016D
 shared:FR-016E
-shared:FR-016F
 shared:FR-016G
+shared:FR-016F
 shared:FR-016H
 shared:FR-017
 shared:FR-018
@@ -98,9 +98,11 @@ shared:SC-012B
 shared:SC-013
 shared:SC-013A
 shared:SC-014
+foundation:FR-041
 foundation:FR-042
 foundation:FR-052
 foundation:FR-062
 foundation:FR-063
 foundation:FR-064
+foundation:FR-066
 foundation:FR-088
