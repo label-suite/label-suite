@@ -2,11 +2,13 @@ schema: spec-driven
 
 context: |
   規格分兩層：
-  - docs/00-prd.mdx 與 docs/specs/NNN-*.mdx 描述產品做什麼、為什麼這樣做。
-    由維護者擁有；不得透過 OpenSpec change 更動其中的需求。
+  - docs/specs/（00-prd.mdx、glossary.mdx、NN-<module>/NN-<page>.mdx）描述產品做什麼、
+    為什麼這樣做，只寫業務面。由維護者擁有；不得透過 OpenSpec change 更動其中的需求。
   - openspec/specs/ 是實作與測試依循的可測契約，只能透過 change 的 spec delta 修改。
-  delta 中的每條 requirement 都須追溯到 docs/ 的規格（註明其 FR／AC 編號）。delta 與
-  docs/ 不一致時以 docs/ 為準：停下來，把衝突列為待維護者回答的問題，不得自行選邊。
+    技術細節（API、資料模型、權限實作，以及測試集答案不外露的後端做法）寫在這一層。
+  delta 中的每條 requirement 都須追溯到 docs/specs/ 的規格（註明規格編號 NN-NN 與
+  Scenario 名稱，例：「來源：01-02 停用使用者」）。delta 與 docs/specs/ 不一致時以
+  docs/specs/ 為準：停下來，把衝突列為待維護者回答的問題，不得自行選邊。
   AGENTS.md 是唯一的規則來源；以下只指出 OpenSpec 工作最常用到的段落，動手前先讀該段落。
   - Issue first：沒有列出工作項目的 open issue 就不開始 change
     （AGENTS.md "Hard Rules" 與 "Development Workflow"）。
