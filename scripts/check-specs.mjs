@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-// Structural checks for docs/00-prd.mdx and docs/specs/NNN-*.mdx.
-// The writing rules live in .claude/skills/spec-writing/SKILL.md; this script
-// enforces the parts of them that a machine can verify.
+// Structural checks for the PRD, glossary and module specs under docs/specs/.
+// The writing rules live in .claude/skills/prd-writing/SKILL.md and
+// .claude/skills/spec-writing/SKILL.md; this script enforces the parts of them
+// that a machine can verify.
 //
 // Usage: node scripts/check-specs.mjs [docs-dir]   (default: docs)
 //        node scripts/check-specs.mjs --extract-legacy <legacy spec.md>
@@ -9,45 +10,44 @@
 // IDs a legacy spec defines, one per line, to seed docs/specs/legacy/*.ids.
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { basename, join, relative } from 'node:path';
+import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const PRD_CHAPTERS = [
-  '文件資訊',
-  '專案概述',
-  '使用者角色',
-  '專案範圍',
-  '網站地圖',
-  '業務流程',
-  '規格說明',
-  '非功能需求',
-  '外部整合與依賴',
-  '時程',
-  '技術選型',
-  '術語表',
-  '待釐清事項',
-  '變更紀錄',
-];
+export const PRD_PATH = 'specs/00-prd.mdx';
+export const GLOSSARY_PATH = 'specs/glossary.mdx';
+
+export const PRD_CHAPTERS = ['文件資訊', '專案概述', '使用者角色', '專案範圍', 'Site Map', '模組架構與串接', '術語'];
 
 export const SPEC_CHAPTERS = [
   '目標',
-  '使用權限',
-  '操作流程',
-  '資料模型',
+  '使用角色',
+  '業務流程',
   '規格',
   '卡控機制',
+  '邊界情況（Edge Case）',
   '驗收標準',
   '待釐清',
-  '決策紀錄',
+  '已確認決議',
+  '變更紀錄',
+  'Q&A',
 ];
 
-export const MAPPING_CHAPTER = '附錄：舊條文對照';
+export const MAPPING_CHAPTER = '附錄：舊編號對照';
+export const ACCEPTANCE_CHAPTER = '驗收標準';
 
-// FR-001, FR-004a, SC-012, AC-1.3: the numbering inherited from the legacy specs.
+// Transitional: files still in the pre-scaffold layout. They are skipped
+// entirely until #32 moves them into docs/specs/; remove this list there.
+export const LEGACY_PATHS = ['00-prd.mdx', 'specs/006-user-management.mdx'];
+
+// docs/specs/NN-<module>/NN-<page>.mdx; index.mdx inside a module is not a spec.
+const MODULE_DIR_RE = /^\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const SPEC_FILE_RE = /^\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*\.mdx$/;
+
+// FR-001, FR-004a, SC-012, AC-1.3: the numbering used by the legacy specs.
 const ID_SOURCE = String.raw`(?:FR|SC)-\d{2,3}[A-Za-z]?|AC-\d+(?:\.\d+)+`;
-const ID_RE = new RegExp(String.raw`\b(?:${ID_SOURCE})\b`, 'g');
-const SPEC_FILE_RE = /^\d{3}-[a-z0-9-]+\.mdx$/;
+const ID_RE = new RegExp(String.raw`^(?:${ID_SOURCE})$`);
 const DELETED_MARK = '刪除';
+const SCENARIO_PREFIX_RE = /^Scenario[：:]\s*/;
 
 // Blank out fenced code and MDX comments so examples inside them are not
 // checked, while keeping line numbers stable for the report.
@@ -62,17 +62,16 @@ function lineOf(text, index) {
   return text.slice(0, index).split('\n').length;
 }
 
-// H2 headings with their line numbers; a leading "N. " is dropped so the PRD
-// can number its chapters.
-export function chapters(text) {
+// Headings of the given depth with their line numbers.
+function headings(text, depth) {
   const out = [];
-  const re = /^## +(.+?)\s*$/gm;
+  const re = new RegExp(String.raw`^#{${depth}} +(.+?)\s*$`, 'gm');
   let m;
-  while ((m = re.exec(text)) !== null) {
-    out.push({ title: m[1].replace(/^\d+\.\s*/, ''), line: lineOf(text, m.index) });
-  }
+  while ((m = re.exec(text)) !== null) out.push({ title: m[1], line: lineOf(text, m.index), index: m.index });
   return out;
 }
+
+export const chapters = (text) => headings(text, 2);
 
 function checkChapterOrder(file, text, expected, allowedTail, report) {
   const found = chapters(text);
@@ -95,34 +94,60 @@ function checkChapterOrder(file, text, expected, allowedTail, report) {
 
 // Slice of text belonging to one H2 chapter, as [start, end) offsets.
 function chapterRange(text, title) {
-  const re = /^## +(.+?)\s*$/gm;
-  let m;
-  let start = -1;
-  while ((m = re.exec(text)) !== null) {
-    const t = m[1].replace(/^\d+\.\s*/, '');
-    if (start >= 0) return [start, m.index];
-    if (t === title) start = m.index;
+  const found = chapters(text);
+  const i = found.findIndex((c) => c.title === title);
+  if (i < 0) return null;
+  return [found[i].index, found[i + 1]?.index ?? text.length];
+}
+
+// Heading anchors as NoteCraft renders them (github-slugger rules): lowercase,
+// drop punctuation, spaces to "-", and a "-N" suffix for repeated headings.
+export function slug(title) {
+  return title
+    .trim()
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\p{M} _-]/gu, '')
+    .replace(/ /g, '-');
+}
+
+function anchors(text) {
+  const seen = new Map();
+  const out = new Set();
+  for (const h of [1, 2, 3, 4, 5, 6].flatMap((d) => headings(text, d)).sort((a, b) => a.index - b.index)) {
+    const base = slug(h.title);
+    const n = seen.get(base) ?? 0;
+    seen.set(base, n + 1);
+    out.add(n === 0 ? base : `${base}-${n}`);
   }
-  return start >= 0 ? [start, text.length] : null;
+  return out;
 }
 
 // Every define/ref id, whatever its namespace; term.* ids are also resolved.
 const DEF_ID_RE = /^:{3,}define\{[^}]*\bid="([^"]*)"/gm;
 const REF_ID_RE = /(?<![:\\]):ref\[[^\]]*\]\{[^}]*\bid="([^"]*)"/g;
-// Letters (CJK included), digits, _ and -, in .-separated segments. NoteCraft
-// fails the whole build on anything else, such as a space.
-const TERM_ID_RE = /^[\p{L}\p{N}_-]+(?:\.[\p{L}\p{N}_-]+)*$/u;
+// Letters, digits, _ and -, in .-separated segments. NoteCraft fails the whole
+// build on anything else, such as a space.
+const ID_FORMAT_RE = /^[\p{L}\p{N}_-]+(?:\.[\p{L}\p{N}_-]+)*$/u;
+// Glossary terms: term.<English kebab-case>, e.g. term.system-role.
+const TERM_ID_RE = /^term\.[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-function checkTerms(files, report) {
+function checkTerms(files, glossaryRel, report) {
   const defined = new Map();
   const checkFormat = (f, id, line) => {
-    if (!TERM_ID_RE.test(id)) report.error(f.rel, line, `id "${id}" may only use letters, digits, _ and - in .-separated segments`);
+    if (!ID_FORMAT_RE.test(id)) {
+      report.error(f.rel, line, `id "${id}" may only use letters, digits, _ and - in .-separated segments`);
+    } else if (id.startsWith('term.') && !TERM_ID_RE.test(id)) {
+      report.error(f.rel, line, `term id "${id}" must be term.<english-kebab-case>`);
+    }
   };
   for (const f of files) {
     for (const m of f.text.matchAll(DEF_ID_RE)) {
       const line = lineOf(f.text, m.index);
       checkFormat(f, m[1], line);
       if (!m[1].startsWith('term.')) continue;
+      if (f.rel !== glossaryRel) {
+        report.error(f.rel, line, `term "${m[1]}" must be defined in ${glossaryRel}`);
+      }
       if (defined.has(m[1])) {
         report.error(f.rel, line, `term "${m[1]}" is already defined in ${defined.get(m[1])}`);
       } else {
@@ -141,7 +166,7 @@ function checkTerms(files, report) {
   }
 }
 
-export const FRONTMATTER_FIELDS = ['title', 'description', 'tags', 'createdAt', 'updatedAt'];
+export const FRONTMATTER_FIELDS = ['title', 'description', 'category', 'tags', 'createdAt', 'updatedAt'];
 const DATE_FIELDS = ['createdAt', 'updatedAt'];
 // NoteCraft drops a page whose dates YAML parses as Date objects, so they stay quoted strings.
 const QUOTED_DATE_RE = /^(["'])\d{4}-\d{2}-\d{2}\1$/;
@@ -168,20 +193,6 @@ function checkFrontmatter(file, text, report) {
   }
 }
 
-// An ID is defined where it opens a list item in bold ("- **FR-001**：",
-// "1. **AC-1.1**：") or fills the first cell of a table row ("| AC-1.1 | ...").
-const DEF_RE = new RegExp(String.raw`^(?:\s*(?:[-*]|\d+\.) +\*\*(${ID_SOURCE})\*\*|\|\s*(${ID_SOURCE})\s*\|)`, 'gm');
-
-export function definedIds(text) {
-  const ids = new Map();
-  for (const m of text.matchAll(DEF_RE)) {
-    const id = m[1] ?? m[2];
-    if (!ids.has(id)) ids.set(id, []);
-    ids.get(id).push(lineOf(text, m.index));
-  }
-  return ids;
-}
-
 function tableRows(text, start, end) {
   const rows = [];
   const lines = text.slice(start, end).split('\n');
@@ -194,45 +205,83 @@ function tableRows(text, start, end) {
   return rows;
 }
 
-function checkSpecIds(file, text, legacyIds, report) {
-  const mapping = chapterRange(text, MAPPING_CHAPTER);
-  const scanned = mapping ? text.slice(0, mapping[0]) : text;
-  const ids = definedIds(scanned);
+// Scenario names from the first column of the acceptance table, header excluded.
+export function scenarios(text) {
+  const range = chapterRange(text, ACCEPTANCE_CHAPTER);
+  if (!range) return [];
+  return tableRows(text, range[0], range[1])
+    .slice(1)
+    .map(({ cells, line }) => ({ name: cells[0] ?? '', line }));
+}
 
-  for (const [id, lines] of ids) {
-    if (lines.length > 1) report.error(file, lines[1], `${id} is defined more than once (lines ${lines.join(', ')})`);
+function checkScenarios(file, text, report) {
+  const seen = new Map();
+  for (const { name, line } of scenarios(text)) {
+    if (!name) {
+      report.error(file, line, 'a Scenario row has no name');
+      continue;
+    }
+    if (seen.has(name)) report.error(file, line, `Scenario "${name}" is already used on line ${seen.get(name)}`);
+    else seen.set(name, line);
   }
+  return new Set(seen.keys());
+}
 
-  if (!legacyIds) return;
+const LINK_RE = /^\[[^\]]*\]\(#([^)\s]+)\)$/;
+
+function checkMapping(file, text, legacyIds, scenarioNames, report) {
+  const mapping = chapterRange(text, MAPPING_CHAPTER);
+  if (!legacyIds) {
+    if (mapping) report.error(file, chapters(text).at(-1).line, `"## ${MAPPING_CHAPTER}" exists but there is no legacy ID list`);
+    return;
+  }
   if (!mapping) {
     report.error(file, 1, `legacy ID list exists but chapter "## ${MAPPING_CHAPTER}" is missing`);
     return;
   }
 
+  const known = anchors(text.slice(0, mapping[0]));
   const covered = new Map();
-  const rows = tableRows(text, mapping[0], mapping[1]);
-  for (const { cells, line } of rows.slice(1)) {
+  for (const { cells, line } of tableRows(text, mapping[0], mapping[1]).slice(1)) {
     const [old, target = '', note = ''] = cells;
-    if (!old.match(ID_RE)) continue;
+    if (!ID_RE.test(old)) {
+      report.error(file, line, `"${old}" is not a legacy ID (FR-NNN, SC-NNN or AC-N.N)`);
+      continue;
+    }
     if (!legacyIds.has(old)) report.error(file, line, `${old} is not in the legacy ID list`);
     if (covered.has(old)) report.error(file, line, `${old} is mapped twice (line ${covered.get(old)})`);
     covered.set(old, line);
 
-    if (target.includes(DELETED_MARK)) {
+    if (target === DELETED_MARK) {
       if (!note) report.error(file, line, `${old} is marked ${DELETED_MARK} without a reason`);
       continue;
     }
-    const targets = target.match(ID_RE) ?? [];
-    if (targets.length === 0 && !SPEC_CHAPTERS.includes(target)) {
-      report.error(file, line, `${old} maps to "${target}", which is neither a defined ID, a chapter, nor ${DELETED_MARK}`);
+    const link = target.match(LINK_RE);
+    if (link) {
+      const anchor = decodeURIComponent(link[1]);
+      if (!known.has(anchor)) report.error(file, line, `${old} links to #${anchor}, which is not a heading in this spec`);
+      continue;
     }
-    for (const t of targets) {
-      if (!ids.has(t)) report.error(file, line, `${old} maps to ${t}, which this spec does not define`);
+    if (SCENARIO_PREFIX_RE.test(target)) {
+      const name = target.replace(SCENARIO_PREFIX_RE, '');
+      if (!scenarioNames.has(name)) report.error(file, line, `${old} maps to Scenario "${name}", which "## ${ACCEPTANCE_CHAPTER}" does not list`);
+      continue;
     }
+    report.error(file, line, `${old} maps to "${target}"; use a section link, "Scenario：<name>" or ${DELETED_MARK}`);
   }
   for (const id of legacyIds) {
     if (!covered.has(id)) report.error(file, 1, `legacy ${id} is missing from "## ${MAPPING_CHAPTER}"`);
   }
+}
+
+// Legacy IDs a legacy spec defines: a bold ID opening a list item
+// ("- **FR-001**：", "1. **AC-1.1**：") or the first cell of a table row.
+const LEGACY_DEF_RE = new RegExp(String.raw`^(?:\s*(?:[-*]|\d+\.) +\*\*(${ID_SOURCE})\*\*|\|\s*(${ID_SOURCE})\s*\|)`, 'gm');
+
+export function legacyIdsIn(text) {
+  const ids = new Set();
+  for (const m of text.matchAll(LEGACY_DEF_RE)) ids.add(m[1] ?? m[2]);
+  return ids;
 }
 
 export function readLegacyIds(path) {
@@ -253,34 +302,50 @@ function listMdx(dir) {
   });
 }
 
+// "02-task-management/01-task-list.mdx" -> "02-01-task-list" (legacy list name).
+function specKind(path) {
+  const parts = path.split('/');
+  if (parts.length !== 3 || parts[0] !== 'specs') return null;
+  const [, dir, file] = parts;
+  if (!MODULE_DIR_RE.test(dir) || !SPEC_FILE_RE.test(file)) return null;
+  return `${dir.slice(0, 2)}-${file.replace(/\.mdx$/, '')}`;
+}
+
 export function checkDocs(docsDir) {
   const errors = [];
   const report = { error: (file, line, msg) => errors.push(`${file}:${line}: ${msg}`) };
 
-  const files = listMdx(docsDir).map((p) => {
-    const raw = readFileSync(p, 'utf8');
-    return { path: p, rel: relative(process.cwd(), p), raw, text: stripIgnored(raw) };
-  });
+  const files = listMdx(docsDir)
+    .map((p) => {
+      const raw = readFileSync(p, 'utf8');
+      const path = relative(docsDir, p).split(sep).join('/');
+      return { path, rel: relative(process.cwd(), p), raw, text: stripIgnored(raw) };
+    })
+    .filter((f) => !LEGACY_PATHS.includes(f.path));
 
   for (const f of files) {
-    const name = basename(f.path);
-    if (f.path === join(docsDir, '00-prd.mdx')) {
+    if (f.path === PRD_PATH) {
       checkFrontmatter(f.rel, f.raw, report);
       checkChapterOrder(f.rel, f.text, PRD_CHAPTERS, null, report);
-    } else if (f.path === join(docsDir, 'specs', name) && SPEC_FILE_RE.test(name)) {
+    } else if (f.path === GLOSSARY_PATH) {
+      checkFrontmatter(f.rel, f.raw, report);
+    } else {
+      const legacyName = specKind(f.path);
+      if (!legacyName) continue;
       checkFrontmatter(f.rel, f.raw, report);
       checkChapterOrder(f.rel, f.text, SPEC_CHAPTERS, MAPPING_CHAPTER, report);
-      const legacy = readLegacyIds(join(docsDir, 'specs', 'legacy', name.replace(/\.mdx$/, '.ids')));
-      checkSpecIds(f.rel, f.text, legacy, report);
+      const names = checkScenarios(f.rel, f.text, report);
+      const legacy = readLegacyIds(join(docsDir, 'specs', 'legacy', `${legacyName}.ids`));
+      checkMapping(f.rel, f.text, legacy, names, report);
     }
   }
-  checkTerms(files, report);
+  checkTerms(files, relative(process.cwd(), join(docsDir, GLOSSARY_PATH)), report);
   return errors;
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url) && process.argv[2] === '--extract-legacy') {
   const text = stripIgnored(readFileSync(process.argv[3], 'utf8'));
-  for (const id of definedIds(text).keys()) console.log(id);
+  for (const id of legacyIdsIn(text)) console.log(id);
 } else if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const dir = process.argv[2] ?? 'docs';
   const errors = checkDocs(dir);

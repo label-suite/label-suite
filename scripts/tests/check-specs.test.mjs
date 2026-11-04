@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 
-import { PRD_CHAPTERS, SPEC_CHAPTERS, MAPPING_CHAPTER, checkDocs } from '../check-specs.mjs';
+import { PRD_CHAPTERS, SPEC_CHAPTERS, MAPPING_CHAPTER, checkDocs, slug } from '../check-specs.mjs';
 
 function docs(files) {
   const root = mkdtempSync(join(tmpdir(), 'check-specs-'));
@@ -17,186 +17,238 @@ function docs(files) {
   return root;
 }
 
-const FRONTMATTER = '---\ntitle: 006 甲\ndescription: 甲。\ntags: [spec]\ncreatedAt: "2026-10-29"\nupdatedAt: "2026-10-29"\n---\n\n';
+const FRONTMATTER =
+  "---\ntitle: 甲\ndescription: 甲。\ncategory: '規格書'\ntags: [規格書]\ncreatedAt: '2026-11-04'\nupdatedAt: '2026-11-04'\n---\n\n";
+
+const SPEC = 'specs/01-user-management/01-user-list.mdx';
+const LEGACY = 'specs/legacy/01-01-user-list.ids';
+const PRD = 'specs/00-prd.mdx';
+const GLOSSARY = 'specs/glossary.mdx';
+
+const ACCEPTANCE = '| Scenario | Given | When | Then |\n| --- | --- | --- | --- |\n| 新增使用者 | a | b | c |\n| 停用使用者 | a | b | c |';
 
 const spec = (body = {}, extra = '') =>
-  FRONTMATTER + SPEC_CHAPTERS.map((c) => `## ${c}\n\n${body[c] ?? ''}\n`).join('\n') + extra;
+  FRONTMATTER +
+  SPEC_CHAPTERS.map((c) => `## ${c}\n\n${body[c] ?? (c === '驗收標準' ? ACCEPTANCE : '')}\n`).join('\n') +
+  extra;
 
-const prd = (body = {}) =>
-  FRONTMATTER + PRD_CHAPTERS.map((c, i) => `## ${i + 1}. ${c}\n\n${body[c] ?? ''}\n`).join('\n');
+const prd = (body = {}) => FRONTMATTER + PRD_CHAPTERS.map((c) => `## ${c}\n\n${body[c] ?? ''}\n`).join('\n');
+
+const def = (id, label = '甲') => `:::define{id="${id}" label="${label}"}\n${label}。\n:::`;
+const glossary = (...defs) => FRONTMATTER + defs.join('\n\n') + '\n';
 
 const errorsFor = (files) => checkDocs(docs(files));
 
-test('a complete PRD and spec pass', () => {
+test('a complete PRD, glossary and spec pass', () => {
   assert.deepEqual(
     errorsFor({
-      '00-prd.mdx': prd({ 術語表: '::::define{id="term.標註員" label="標註員"}\n執行標註的人。\n::::' }),
-      'specs/006-user-management.mdx': spec({ 目標: '讓 :ref[標註員]{id="term.標註員"} 登入。' }),
+      [PRD]: prd({ 術語: '見 :ref[術語表]{id="term.annotator"}。' }),
+      [GLOSSARY]: glossary(def('term.annotator', '標註員')),
+      [SPEC]: spec({ 目標: '讓 :ref[標註員]{id="term.annotator"} 登入。' }),
     }),
     [],
   );
 });
 
 test('a missing spec chapter is reported', () => {
-  const text = spec().replace('## 卡控機制\n', '');
-  const errors = errorsFor({ 'specs/006-x.mdx': text });
+  const errors = errorsFor({ [SPEC]: spec().replace('## 卡控機制\n', '') });
   assert.equal(errors.length, 1);
   assert.match(errors[0], /missing chapter "## 卡控機制"/);
 });
 
 test('swapped spec chapters are reported as out of order', () => {
-  const text = spec().replace('## 規格\n', '## TMP\n').replace('## 資料模型\n', '## 規格\n').replace('## TMP\n', '## 資料模型\n');
-  assert.match(errorsFor({ 'specs/006-x.mdx': text }).join('\n'), /out of order/);
+  const text = spec().replace('## 目標\n', '## TMP\n').replace('## 使用角色\n', '## 目標\n').replace('## TMP\n', '## 使用角色\n');
+  assert.match(errorsFor({ [SPEC]: text }).join('\n'), /out of order/);
 });
 
 test('an extra spec chapter is reported, the mapping appendix is not', () => {
-  assert.match(errorsFor({ 'specs/006-x.mdx': spec({}, '## 附註\n') }).join('\n'), /unexpected chapter "## 附註"/);
-  assert.deepEqual(errorsFor({ 'specs/006-x.mdx': spec({}, `## ${MAPPING_CHAPTER}\n`) }), []);
+  assert.match(errorsFor({ [SPEC]: spec({}, '## 附註\n') }).join('\n'), /unexpected chapter "## 附註"/);
+  assert.match(
+    errorsFor({ [SPEC]: spec({}, `## ${MAPPING_CHAPTER}\n`) }).join('\n'),
+    /exists but there is no legacy ID list/,
+  );
 });
 
-test('PRD chapters are checked with their numbers stripped', () => {
-  const text = prd().replace('## 12. 術語表\n', '');
-  assert.match(errorsFor({ '00-prd.mdx': text }).join('\n'), /missing chapter "## 術語表"/);
+test('a missing PRD chapter is reported', () => {
+  assert.match(errorsFor({ [PRD]: prd().replace('## Site Map\n', '') }).join('\n'), /missing chapter "## Site Map"/);
 });
 
-test('files outside the naming pattern are not checked as specs', () => {
-  assert.deepEqual(errorsFor({ 'specs/00-writing-order.mdx': '## 進度\n' }), []);
+test('only NN-<module>/NN-<page>.mdx files are checked as specs', () => {
+  assert.deepEqual(
+    errorsFor({
+      'specs/index.mdx': '## 模組\n',
+      'specs/01-user-management/index.mdx': '## 規格一覽\n',
+      'specs/1-x/01-y.mdx': '## 甲\n',
+      'specs/01-x/01_y.mdx': '## 甲\n',
+      'specs/01-x/02-y/01-z.mdx': '## 甲\n',
+    }),
+    [],
+  );
+});
+
+test('the transitional legacy files are skipped', () => {
+  assert.deepEqual(
+    errorsFor({
+      '00-prd.mdx': '::::define{id="term.系統角色" label="甲"}\n甲。\n::::\n',
+      'specs/006-user-management.mdx': ':ref[甲]{id="term.系統角色"}\n',
+    }),
+    [],
+  );
+});
+
+test('a term defined outside the glossary is reported', () => {
+  const errors = errorsFor({ [SPEC]: spec({ 目標: def('term.annotator') }) }).join('\n');
+  assert.match(errors, /term "term\.annotator" must be defined in .*specs\/glossary\.mdx/);
+});
+
+test('a non-term define outside the glossary is allowed', () => {
+  assert.deepEqual(errorsFor({ [SPEC]: spec({ 目標: def('flow.login') }) }), []);
+});
+
+test('a term id that is not English kebab-case is reported', () => {
+  const errors = errorsFor({ [GLOSSARY]: glossary(def('term.系統角色'), def('term.systemRole'), def('term.system_role')) }).join('\n');
+  assert.match(errors, /term id "term\.系統角色" must be term\.<english-kebab-case>/);
+  assert.match(errors, /term id "term\.systemRole" must be/);
+  assert.match(errors, /term id "term\.system_role" must be/);
 });
 
 test('a reference to an undefined term is reported', () => {
-  const errors = errorsFor({ 'specs/006-x.mdx': spec({ 目標: ':ref[審核員]{id="term.審核員"}' }) });
+  const errors = errorsFor({ [SPEC]: spec({ 目標: ':ref[審核員]{id="term.reviewer"}' }) });
   assert.equal(errors.length, 1);
-  assert.match(errors[0], /undefined term "term\.審核員"/);
+  assert.match(errors[0], /undefined term "term\.reviewer"/);
 });
 
 test('terms inside code fences and MDX comments are ignored', () => {
-  const body = '```mdx\n:ref[甲]{id="term.甲"}\n```\n{/* :ref[乙]{id="term.乙"} */}';
-  assert.deepEqual(errorsFor({ 'specs/006-x.mdx': spec({ 目標: body }) }), []);
+  const body = '```mdx\n:ref[甲]{id="term.a"}\n```\n{/* :ref[乙]{id="term.b"} */}';
+  assert.deepEqual(errorsFor({ [SPEC]: spec({ 目標: body }) }), []);
 });
 
-test('an id with a space or an empty segment is reported, a CJK id passes', () => {
-  const def = (id) => `::::define{id="${id}" label="甲"}\n甲。\n::::`;
-  const ok = errorsFor({ '00-prd.mdx': prd({ 術語表: def('term.Seeder管理員_v-2') }) });
-  assert.deepEqual(ok, []);
+test('an id with a space or an empty segment is reported', () => {
   const errors = errorsFor({
-    '00-prd.mdx': prd({ 術語表: `${def('term.Seeder 管理員')}\n\n${def('term..甲')}` }),
-    'specs/006-x.mdx': spec({ 目標: ':ref[甲]{id="term.Seeder 管理員"}' }),
+    [GLOSSARY]: glossary(def('term.system role'), def('term..a')),
+    [SPEC]: spec({ 目標: ':ref[甲]{id="flow login"}' }),
   }).join('\n');
-  assert.match(errors, /00-prd\.mdx:\d+: id "term\.Seeder 管理員" may only use/);
-  assert.match(errors, /00-prd\.mdx:\d+: id "term\.\.甲" may only use/);
-  assert.match(errors, /006-x\.mdx:\d+: id "term\.Seeder 管理員" may only use/);
-});
-
-test('ids outside the term namespace are format-checked but not resolved', () => {
-  assert.deepEqual(errorsFor({ 'specs/006-x.mdx': spec({ 目標: ':ref[甲]{id="flow.login"}' }) }), []);
-  assert.match(
-    errorsFor({ 'specs/006-x.mdx': spec({ 目標: ':ref[甲]{id="flow login"}' }) }).join('\n'),
-    /id "flow login" may only use/,
-  );
+  assert.match(errors, /glossary\.mdx:\d+: id "term\.system role" may only use/);
+  assert.match(errors, /glossary\.mdx:\d+: id "term\.\.a" may only use/);
+  assert.match(errors, /01-user-list\.mdx:\d+: id "flow login" may only use/);
 });
 
 test('a term defined twice is reported', () => {
-  const def = '::::define{id="term.甲" label="甲"}\n甲。\n::::';
-  assert.match(errorsFor({ '00-prd.mdx': prd({ 術語表: `${def}\n\n${def}` }) }).join('\n'), /already defined/);
+  assert.match(errorsFor({ [GLOSSARY]: glossary(def('term.a'), def('term.a')) }).join('\n'), /already defined/);
 });
 
-test('an ID defined twice in one spec is reported', () => {
-  const body = '- **FR-001**：甲。\n- **FR-001**：乙。';
-  assert.match(errorsFor({ 'specs/006-x.mdx': spec({ 規格: body }) }).join('\n'), /FR-001 is defined more than once/);
+test('a repeated Scenario name is reported', () => {
+  const table = '| Scenario | Given | When | Then |\n| --- | --- | --- | --- |\n| 甲 | a | b | c |\n| 甲 | a | b | c |\n| | a | b | c |';
+  const errors = errorsFor({ [SPEC]: spec({ 驗收標準: table }) }).join('\n');
+  assert.match(errors, /Scenario "甲" is already used on line \d+/);
+  assert.match(errors, /a Scenario row has no name/);
 });
 
-test('the same ID in two specs is allowed', () => {
-  const body = { 規格: '- **FR-001**：甲。' };
-  assert.deepEqual(errorsFor({ 'specs/006-x.mdx': spec(body), 'specs/007-y.mdx': spec(body) }), []);
+test('heading slugs drop punctuation and turn spaces into dashes', () => {
+  assert.equal(slug(MAPPING_CHAPTER), '附錄舊編號對照');
+  assert.equal(slug('邊界情況（Edge Case）'), '邊界情況edge-case');
+  assert.equal(slug('Q&A'), 'qa');
 });
 
-test('a referenced ID is not a definition', () => {
-  const body = '- **FR-001**：甲，見 FR-001 與 `account/020` 的 FR-002。';
-  assert.deepEqual(errorsFor({ 'specs/006-x.mdx': spec({ 規格: body }) }), []);
-});
-
-const legacy = 'FR-001\nFR-002\nAC-1.1  # acceptance\n';
+const legacyIds = 'FR-001\nFR-002\nFR-003\nAC-1.1  # acceptance\nSC-001\n';
 const mapped = (rows) =>
   spec(
-    { 規格: '- **FR-001**：甲。', 驗收標準: '| ID | Given | When | Then |\n| --- | --- | --- | --- |\n| AC-1.1 | a | b | c |' },
+    { 規格: '### 使用者列表\n\n甲。' },
     `## ${MAPPING_CHAPTER}\n\n| 舊編號 | 新位置 | 說明 |\n| --- | --- | --- |\n${rows}\n`,
   );
+const ROWS = [
+  '| FR-001 | [§規格 › 使用者列表](#使用者列表) | |',
+  '| FR-002 | Scenario：新增使用者 | |',
+  '| FR-003 | 刪除 | 改由營運流程處理 |',
+  '| AC-1.1 | Scenario：停用使用者 | |',
+  '| SC-001 | Scenario：新增使用者 | 與 FR-002 重複，併入 |',
+];
 
 test('a mapping that covers every legacy ID passes', () => {
-  const rows = '| FR-001 | FR-001 | |\n| FR-002 | 刪除 | 與 FR-001 重複 |\n| AC-1.1 | AC-1.1 | |';
-  assert.deepEqual(errorsFor({ 'specs/006-x.mdx': mapped(rows), 'specs/legacy/006-x.ids': legacy }), []);
+  assert.deepEqual(errorsFor({ [SPEC]: mapped(ROWS.join('\n')), [LEGACY]: legacyIds }), []);
 });
 
 test('a legacy ID missing from the mapping is reported', () => {
-  const rows = '| FR-001 | FR-001 | |\n| AC-1.1 | AC-1.1 | |';
-  const errors = errorsFor({ 'specs/006-x.mdx': mapped(rows), 'specs/legacy/006-x.ids': legacy });
+  const errors = errorsFor({ [SPEC]: mapped(ROWS.slice(1).join('\n')), [LEGACY]: legacyIds });
   assert.equal(errors.length, 1);
-  assert.match(errors[0], /legacy FR-002 is missing/);
+  assert.match(errors[0], /legacy FR-001 is missing/);
 });
 
 test('a deletion without a reason is reported', () => {
-  const rows = '| FR-001 | FR-001 | |\n| FR-002 | 刪除 | |\n| AC-1.1 | AC-1.1 | |';
+  const rows = ROWS.map((r) => r.replace('改由營運流程處理', ''));
   assert.match(
-    errorsFor({ 'specs/006-x.mdx': mapped(rows), 'specs/legacy/006-x.ids': legacy }).join('\n'),
-    /FR-002 is marked 刪除 without a reason/,
+    errorsFor({ [SPEC]: mapped(rows.join('\n')), [LEGACY]: legacyIds }).join('\n'),
+    /FR-003 is marked 刪除 without a reason/,
   );
 });
 
-test('a mapping to an ID the spec does not define is reported', () => {
-  const rows = '| FR-001 | FR-001 | |\n| FR-002 | FR-009 | |\n| AC-1.1 | AC-1.1 | |';
+test('a link to a heading the spec does not have is reported', () => {
+  const rows = ROWS.map((r) => r.replace('(#使用者列表)', '(#不存在)'));
   assert.match(
-    errorsFor({ 'specs/006-x.mdx': mapped(rows), 'specs/legacy/006-x.ids': legacy }).join('\n'),
-    /FR-002 maps to FR-009, which this spec does not define/,
+    errorsFor({ [SPEC]: mapped(rows.join('\n')), [LEGACY]: legacyIds }).join('\n'),
+    /FR-001 links to #不存在, which is not a heading in this spec/,
   );
 });
 
-test('a mapping to a chapter name passes', () => {
-  const rows = '| FR-001 | FR-001 | |\n| FR-002 | 卡控機制 | 改寫成卡控 |\n| AC-1.1 | AC-1.1 | |';
-  assert.deepEqual(errorsFor({ 'specs/006-x.mdx': mapped(rows), 'specs/legacy/006-x.ids': legacy }), []);
+test('a Scenario the acceptance table does not list is reported', () => {
+  const rows = ROWS.map((r) => r.replace('Scenario：停用使用者', 'Scenario：刪除使用者'));
+  assert.match(
+    errorsFor({ [SPEC]: mapped(rows.join('\n')), [LEGACY]: legacyIds }).join('\n'),
+    /AC-1\.1 maps to Scenario "刪除使用者"/,
+  );
+});
+
+test('a bare chapter name or a new FR is not a valid target', () => {
+  const rows = ROWS.map((r) => r.replace('Scenario：停用使用者', '卡控機制'));
+  assert.match(
+    errorsFor({ [SPEC]: mapped(rows.join('\n')), [LEGACY]: legacyIds }).join('\n'),
+    /AC-1\.1 maps to "卡控機制"; use a section link/,
+  );
 });
 
 test('an ID that is not in the legacy list, or mapped twice, is reported', () => {
-  const rows = '| FR-001 | FR-001 | |\n| FR-001 | FR-001 | |\n| FR-002 | 刪除 | 重複 |\n| FR-003 | FR-001 | |\n| AC-1.1 | AC-1.1 | |';
-  const errors = errorsFor({ 'specs/006-x.mdx': mapped(rows), 'specs/legacy/006-x.ids': legacy }).join('\n');
+  const rows = [...ROWS, ROWS[0], '| FR-009 | 刪除 | 甲 |'];
+  const errors = errorsFor({ [SPEC]: mapped(rows.join('\n')), [LEGACY]: legacyIds }).join('\n');
   assert.match(errors, /FR-001 is mapped twice/);
-  assert.match(errors, /FR-003 is not in the legacy ID list/);
+  assert.match(errors, /FR-009 is not in the legacy ID list/);
 });
 
 test('a legacy list without the mapping chapter is reported', () => {
   assert.match(
-    errorsFor({ 'specs/006-x.mdx': spec(), 'specs/legacy/006-x.ids': legacy }).join('\n'),
-    /chapter "## 附錄：舊條文對照" is missing/,
+    errorsFor({ [SPEC]: spec(), [LEGACY]: legacyIds }).join('\n'),
+    /chapter "## 附錄：舊編號對照" is missing/,
   );
 });
 
-test('a spec or PRD without frontmatter is reported', () => {
+test('a PRD, glossary or spec without frontmatter is reported', () => {
   const errors = errorsFor({
-    '00-prd.mdx': prd().replace(FRONTMATTER, ''),
-    'specs/006-x.mdx': spec().replace(FRONTMATTER, ''),
+    [PRD]: prd().replace(FRONTMATTER, ''),
+    [GLOSSARY]: glossary().replace(FRONTMATTER, ''),
+    [SPEC]: spec().replace(FRONTMATTER, ''),
   });
-  assert.equal(errors.length, 2);
+  assert.equal(errors.length, 3);
   for (const e of errors) assert.match(e, /:1: frontmatter is missing/);
 });
 
 test('a missing frontmatter field is reported', () => {
-  const errors = errorsFor({ 'specs/006-x.mdx': spec().replace('description: 甲。\n', '') });
+  const errors = errorsFor({ [SPEC]: spec().replace("category: '規格書'\n", '') });
   assert.equal(errors.length, 1);
-  assert.match(errors[0], /frontmatter field "description" is missing/);
+  assert.match(errors[0], /frontmatter field "category" is missing/);
 });
 
 test('an unquoted or malformed date is reported with its line', () => {
-  const text = spec().replace('createdAt: "2026-10-29"', 'createdAt: 2026-10-29').replace('updatedAt: "2026-10-29"', 'updatedAt: "2026/10/29"');
-  const errors = errorsFor({ 'specs/006-x.mdx': text });
+  const text = spec().replace("createdAt: '2026-11-04'", 'createdAt: 2026-11-04').replace("updatedAt: '2026-11-04'", 'updatedAt: "2026/11/04"');
+  const errors = errorsFor({ [SPEC]: text });
   assert.equal(errors.length, 2);
-  assert.match(errors[0], /:5: createdAt must be a quoted "YYYY-MM-DD" string, got 2026-10-29/);
-  assert.match(errors[1], /:6: updatedAt must be a quoted "YYYY-MM-DD" string, got "2026\/10\/29"/);
+  assert.match(errors[0], /:6: createdAt must be a quoted "YYYY-MM-DD" string, got 2026-11-04/);
+  assert.match(errors[1], /:7: updatedAt must be a quoted "YYYY-MM-DD" string, got "2026\/11\/04"/);
 });
 
-test('single-quoted dates pass', () => {
-  const text = spec().replace('createdAt: "2026-10-29"', "createdAt: '2026-10-29'");
-  assert.deepEqual(errorsFor({ 'specs/006-x.mdx': text }), []);
+test('double-quoted dates pass', () => {
+  const text = spec().replace("createdAt: '2026-11-04'", 'createdAt: "2026-11-04"');
+  assert.deepEqual(errorsFor({ [SPEC]: text }), []);
 });
 
-test('files that are not the PRD or a spec need no frontmatter', () => {
-  assert.deepEqual(errorsFor({ 'prototype/navigation.mdx': '## 甲\n', 'specs/00-writing-order.mdx': '## 進度\n' }), []);
+test('files that are not the PRD, glossary or a spec need no frontmatter', () => {
+  assert.deepEqual(errorsFor({ 'prototype/navigation.mdx': '## 甲\n', 'specs/index.mdx': '## 模組\n' }), []);
 });
