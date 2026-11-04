@@ -1,0 +1,20 @@
+---
+title: 術語表
+description: 規格書共用的業務名詞定義。
+category: '規格書'
+tags: [規格書, 術語]
+createdAt: '{YYYY-MM-DD}'
+updatedAt: '{YYYY-MM-DD}'
+---
+
+# 術語表
+
+規格書中的業務名詞都定義在這裡，規格內用 `:ref[名詞]{id="term.xxx"}` 引用。
+
+- `id` 用 `term.<英文 kebab-case>`，全站唯一；改名時只改 label，不改 `id`
+- 只寫業務定義，不寫系統怎麼存
+- 依筆畫或模組分組皆可，新增時接在同組最後
+
+:::define{id="term.{english-name}" label="{名詞}"}
+<strong>{名詞}</strong>：{一到兩句業務定義；必要時寫出和相近名詞的差別}
+:::
