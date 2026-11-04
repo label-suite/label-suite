@@ -86,14 +86,13 @@ test('only NN-<module>/NN-<page>.mdx files are checked as specs', () => {
   );
 });
 
-test('the transitional legacy files are skipped', () => {
-  assert.deepEqual(
-    errorsFor({
-      '00-prd.mdx': '::::define{id="term.系統角色" label="甲"}\n甲。\n::::\n',
-      'specs/006-user-management.mdx': ':ref[甲]{id="term.系統角色"}\n',
-    }),
-    [],
-  );
+test('a ref inside inline code is not a reference', () => {
+  assert.deepEqual(errorsFor({ [GLOSSARY]: glossary('用 `:ref[名詞]{id="term.xxx"}` 引用。\n') }), []);
+});
+
+test('files outside docs/specs are checked for term ids too', () => {
+  const errors = errorsFor({ '00-prd.mdx': ':ref[甲]{id="term.系統角色"}\n' }).join('\n');
+  assert.match(errors, /00-prd\.mdx:1: term id "term\.系統角色" must be term\.<english-kebab-case>/);
 });
 
 test('a term defined outside the glossary is reported', () => {

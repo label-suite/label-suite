@@ -35,10 +35,6 @@ export const SPEC_CHAPTERS = [
 export const MAPPING_CHAPTER = '附錄：舊編號對照';
 export const ACCEPTANCE_CHAPTER = '驗收標準';
 
-// Transitional: files still in the pre-scaffold layout. They are skipped
-// entirely until #32 moves them into docs/specs/; remove this list there.
-export const LEGACY_PATHS = ['00-prd.mdx', 'specs/006-user-management.mdx'];
-
 // docs/specs/NN-<module>/NN-<page>.mdx; index.mdx inside a module is not a spec.
 const MODULE_DIR_RE = /^\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const SPEC_FILE_RE = /^\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*\.mdx$/;
@@ -49,13 +45,15 @@ const ID_RE = new RegExp(String.raw`^(?:${ID_SOURCE})$`);
 const DELETED_MARK = '刪除';
 const SCENARIO_PREFIX_RE = /^Scenario[：:]\s*/;
 
-// Blank out fenced code and MDX comments so examples inside them are not
-// checked, while keeping line numbers stable for the report.
+// Blank out fenced code, MDX comments and inline code so examples inside them
+// are not checked, while keeping line numbers stable for the report. Headings
+// keep their inline code, since it is part of the rendered anchor.
 export function stripIgnored(text) {
   const blank = (s) => s.replace(/[^\n]/g, '');
   return text
     .replace(/^(```|~~~)[^\n]*\n[\s\S]*?^\1[ \t]*$/gm, blank)
-    .replace(/\{\/\*[\s\S]*?\*\/\}/g, blank);
+    .replace(/\{\/\*[\s\S]*?\*\/\}/g, blank)
+    .replace(/^(?!#{1,6} ).*$/gm, (line) => line.replace(/(`+)[^`\n]+?\1/g, (s) => ' '.repeat(s.length)));
 }
 
 function lineOf(text, index) {
@@ -320,8 +318,7 @@ export function checkDocs(docsDir) {
       const raw = readFileSync(p, 'utf8');
       const path = relative(docsDir, p).split(sep).join('/');
       return { path, rel: relative(process.cwd(), p), raw, text: stripIgnored(raw) };
-    })
-    .filter((f) => !LEGACY_PATHS.includes(f.path));
+    });
 
   for (const f of files) {
     if (f.path === PRD_PATH) {
