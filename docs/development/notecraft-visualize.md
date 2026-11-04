@@ -61,10 +61,11 @@ status: pending
 
 - 檔案 `.notecraft/components/<id>.tsx`：default export、無 required props、根元素不自帶卡片外框（外框由 `GeneratedFrame` 提供）
 - import 白名單：`react`、`react-dom`、`motion`、`recharts`、`d3`、`lucide-react`、`clsx`、`tailwind-merge`、`three`
-- 3D（`three`）只在空間關係是重點、或作者明確要求時用；寫法依 `content-visualize` skill「3D 元件（three）」，HTML 部分仍照本檔用 inline style
+- 3D（`three`）只在空間關係是重點、或作者明確要求時用；寫法依 `content-visualize` skill「3D 元件（three）」，HTML 部分照下方「顏色與樣式」用 Tailwind class
 - **不從別的生成元件 import**；圖直接寫在檔內（SVG JSX，拆成檔內小函式元件）
-- **顏色用檔內常數**，每個常數以註解標出 `label-suite-design` 的 token 名稱，以 inline style／SVG 屬性套用；
-  生成元件的 Tailwind class 不會被編譯，不要靠 class 上色或排版
+- **顏色與樣式依 `label-suite-design` 的「怎麼用」**：HTML 元素（面板、按鈕、標籤、表格）用對照表裡的 Tailwind class；
+  SVG 屬性、tsx 骨架的色票常數與傳給 three 的值用檔內 hex 常數，每個常數以註解標出 token 名稱
+  - 生成元件的 Tailwind class 會被編譯；Tailwind 只產生有元件用到的 class，沒人用的 class 在建好的 CSS 裡搜不到是正常的
 - SVG 要有 `viewBox`、`width="100%"`、`role="img"` 與描述畫面的 `aria-label`
 - 禁止 emoji；尊重 `useReducedMotion()`（關閉動畫時直接呈現終態）
 - 按鈕列、選項不用 `<ul>`／`<ol>`（prose 樣式會加編號或圓點），改 `<div role="group">`
