@@ -1,0 +1,510 @@
+---
+name: content-visualize
+description: 為 NoteCraft 的 MDX 筆記生成豐富的視覺化與動態互動元件。當 MDX 筆記中含有 `@ai-visualize` 標記區塊、使用者要求「處理視覺化」/「重新生成」/「補上某張圖」、或希望將文字知識轉化為示意圖、圖表、時間軸、動態互動元件並嵌入 MDX 時，使用此 Skill。視覺樣式請遵循 `label-suite-design` Skill 所定義的設計系統。Also triggers on English requests like "process visualizations" or "generate diagrams from markers".
+---
+
+<!--
+  Localized for Label Suite from fullstack-ai-sdd-workflow-scaffold (content-visualize, see VERSION).
+  Label Suite changes: visual tokens come from the label-suite-design skill
+  (source: design/prototype/assets/tokens.css); notes live in docs/; commands use
+  pnpm docs:serve and pnpm exec notecraftapp build docs.
+
+  Path conventions in this file assume the "viewer" flavour:
+    - Generated components live at <notesDir>/.notecraft/components/<id>.tsx
+    - MDX imports go through the @notes alias:
+        import Foo from '@notes/components/foo'
+    - GeneratedFrame (@/components/GeneratedFrame.astro) is baked into the
+      viewer app and does NOT live in the user's project.
+-->
+
+# Content Visualize Skill
+
+從 MDX 筆記中的 `@ai-visualize` 標記區塊生成 React / SVG 元件。請依提示詞自行判斷適合的視覺化形式 —— 除非提示詞真的含糊不清，否則不要反問作者該用哪個函式庫。
+
+## 何時使用此 Skill
+
+- `<notesDir>/` 下的 MDX 檔含有一或多個 `@ai-visualize` 標記區塊，其 `status` 為 `pending`，或作者要求重新生成
+- 作者說出如「處理視覺化」、「重新生成 xxx.mdx 的標記」、「把 OAuth 那張圖補上」等指令
+- 作者要求為現有筆記新增一個視覺化
+
+## 何時不使用此 Skill
+
+- 作者只想做文字校對或潤稿 —— 用不到視覺化
+- MDX 檔沒有標記區塊，且作者也沒要求新增
+- 請求是關於整站樣式、Astro 設定，或其他與單篇筆記視覺元件無關的事
+
+## 工作流程
+
+### 1. 掃描
+
+讀取作者指名的每一個 `.mdx` 檔（若是全站性請求，則讀取 `<notesDir>/` 底下全部）。擷取每個 `@ai-visualize` 區塊，格式如下：
+
+```mdx
+{/* @ai-visualize
+id: <kebab-case-id>
+type: diagram | chart | timeline | table | motion | free
+prompt: |
+  <自然語言描述>
+caption: <選用，一行說明，顯示於外框卡片底部>
+status: pending | generated | locked | failed
+*/}
+```
+
+`caption` 為選用欄位：若填寫，寫回時會帶入外框卡片（`GeneratedFrame`）底部作為說明文字；省略則外框不顯示底部說明。
+
+`status: locked` 的區塊一律跳過；`status: generated` 的區塊僅在作者明確要求時才重新生成；`status: failed` 的區塊預設不重跑，除非作者調整 prompt 後明確要求重試。
+
+### 2. 決定視覺化方式
+
+**互動優先原則**：先問「用什麼互動能讓讀者**親身體驗**這個概念的差異與張力，而不只是閱讀？」一張會被拖動、能逐步揭露、可並排對照的互動元件，幾乎永遠勝過靜態示意圖。預設往互動與敘事走；只有當內容本質上是靜態的（純參考查表、單張結構快照）才回退到靜態形式。
+
+動手前先挖出**核心洞察**——這段內容真正想讓讀者記住的一句話，常常是作者沒明寫、藏在字裡行間的那層意思。元件應以它為收斂點，並把概念間的張力（有限 vs 無限、凍結 vs 流動、固定 vs 浮動）放大。
+
+對每個區塊套用以下決策樹，命中第一條符合的即停止。**3D（`three`）不是決策樹的預設出口**：只有第 6 條命中時才用，其他各條即使「轉起來好像很酷」也維持 2D。
+
+1. **可被「體驗」的概念對比 / 走查**（兩種情境的差異、隨某個變數推進的變化、需要逐步揭露的流程）—— 這是預設的首選。用 `motion` + react state 做成互動元件，讓讀者透過操作感受差異。常用互動隱喻：
+   - **時間軸 slider**：拖動推進，看兩條線「一條停下、一條繼續」
+   - **並排模擬按鈕**：點一下左右兩欄各跑出流程，對比輕重
+   - **tab / stepper 走查**：把多個面向收進分頁，形成敘事節奏
+   - **可增長 / 浮動列表**：用「長出新項目」「虛線占位」暗示持續變動
+   底層幾何（線段、流程、狀態）仍用手寫 SVG 繪製，再以 state / motion 驅動。
+
+2. **流程 / 時序 / 狀態機 / 架構圖** —— 描述「依序的步驟」、「角色對話」、「方塊與箭頭」。底層用手寫 SVG（vertical lanes / boxes-and-arrows / circles-and-transitions）。**若步驟有先後或值得逐步揭露，優先加上 motion 逐步播放或點擊推進**，而非一次全部畫出來的靜態圖。
+
+3. **有軸的量化資料（長條 / 折線 / 區域 / 散佈 / 圓餅）** —— 提示詞提到數值、隨時間比較、分佈。標準圖表使用 `recharts`；非標準圖表（Sankey、力導向圖、自訂幾何）才動用 `d3`。
+
+4. **時間軸 / Gantt / 階段推進** —— 描述「沿時間發生的事件」。自行繪製 SVG 時間軸；若能用 slider 或捲動推進，優先做成可互動。
+
+5. **含豐富欄位的比較表（圖示、徽章、迷你長條）** —— 以 Tailwind 樣式化的 HTML `<table>` 呈現，不要做成 SVG。表格本質靜態，通常不需互動；但若比較項目多到適合分頁或篩選，可考慮升級為 tab。
+
+6. **空間關係本身是重點（3D）** —— 層疊（哪一層疊在哪一層上）、拓撲裡的遠近與包含、需要轉個角度才看得清的結構（例：架構分層、平台拓撲、等角插圖風格的流程全景）。用 `three` 做等角（Orthographic）3D 場景，可旋轉、可點選，寫法見下方「3D 元件（three）」。先問自己：**「把它畫成等角 SVG 會不會損失資訊？」不會 → 用 SVG**。流程、比較、數值、時間軸、狀態機一律不用 3D——旋轉換不到任何資訊，只換到更大的 bundle 與更差的可讀性。
+
+7. **複合需求** —— 把上面幾種組合起來。例如「以動畫呈現 token bucket 的限流演算法」就是自訂 SVG + motion 的組合。請組合，不要二選一。
+
+8. **自由 / 含糊** —— 挑選最能讓讀者**體驗**該概念的形式；同樣優先互動。當兩種可行形式並列時，選更能放大概念張力的那一種。
+
+標記區塊中的 `type` 欄位只是提示，不是限制。若你想到明顯更好的做法，可以覆蓋它，但請在對話回覆中告訴作者你做了這個選擇。
+
+**跨標記合併（敘事整合）**：當一篇筆記有多個彼此相關的標記（同一組對比的不同切面），主動評估是否該把它們**合併成單一互動元件**——例如用 tab 串起「生命週期 / 需求變動 / 衡量標準」三面向，比三張各自獨立的圖更有敘事節奏。合併時：產出單一 `.tsx`（取一個涵蓋性的 id），並在對話中告知作者你合併了哪些標記；mdx-writer 寫回時，把元件接在第一個標記下方、其餘被併入的標記只更新 `status: generated` 並註明已併入哪個元件。也可反向建議拆分一個過載的標記。不確定是否該合併時，於對話中向作者確認。
+
+### 3. 生成元件
+
+開始撰寫程式碼前，若尚未在本次對話讀過 `label-suite-design` Skill，請先讀取，取得色票、字級、間距、圓角等設計 token；除非提示詞明確要求跳脫設計系統，否則一律以該 Skill 的規範為視覺基準。
+
+- 輸出路徑：`.notecraft/components/<id>.tsx`（kebab-case，與標記的 `id` 一致）
+- 元件必須：
+  - 是一個自包含的 React Functional Component，使用 default export
+  - 完整型別標註（`.tsx`，除非有理由並在註解中說明，否則禁用 `any`）
+  - 不可有 required props —— MDX 使用端不會傳入任何 props
+  - import 來源限制為：<!-- BEGIN:whitelist -->`react`、`react-dom`、`motion`、`recharts`、`d3`、`lucide-react`、`clsx`、`tailwind-merge`、`three`<!-- END:whitelist -->、以及專案內的相對路徑檔案。若需要其他套件，請先在對話中詢問作者
+  - **元件本體不得自帶外框卡片**：根（最外層）元素**禁止**同時或單獨加上 `border`／`shadow-*`／`rounded-*`（大圓角卡片）／白底（`bg-white`）等「卡片化」樣式，也**不要**自畫左上類型標籤或右上 `generated/<id>.tsx` 來源標頭、或外層 padding。這些外框、陰影、來源標頭、底部 caption 一律由系統元件 `GeneratedFrame` 在寫回時統一提供（見第 5 步），元件自帶會造成**雙層外框**。根元素只應是透明的版型容器（`flex`／`grid`／`space-y-*` 等），以及必要的 `max-w-*`、`mx-auto`、`not-prose`。**也不要 import 任何自製的 `Figure` 之類外框包裝元件**——外框只有 `GeneratedFrame` 一個來源。（內部的子卡片、面板、表格圓角等屬於內容結構，不在此限。）
+  - **禁止使用 emoji**（包含 Unicode emoji、表情符號、🚀 ✅ ⚠️ 等任何 emoji 字元），無論是 JSX 文字節點、字串、aria-label、註解、或 SVG `<text>` 內。需要表達狀態 / 物件 / 方向 / 警示等語意時，一律改用 `lucide-react` 的 icon 元件（例如 `<Check />`、`<TriangleAlert />`、`<ArrowRight />`），icon 大小以 `size` prop 控制，顏色用 Tailwind class 透過 `currentColor` 繼承
+  - 樣式使用 Tailwind utility classes；除非動畫需要，否則不要寫原生 CSS
+  - 純 SVG 元件請設定 `viewBox` 並用 `width="100%"` 讓它可縮放；挑一個合理的長寬比
+  - motion 元件預設動畫保持節制（200–400ms、ease-out）；並透過 `motion/react` 的 `useReducedMotion()` 尊重 `prefers-reduced-motion`
+  - **SSR 就要輸出最終的版面高度**：`client:visible` 的元件在伺服器端先渲染一次，hydrate 時若高度改變，會把下方內文往下推。**不要**用 `inView && <X />`、`mounted && <X />` 這類條件讓內容「進入視窗或掛載後才出現」；內容一律 render，只把進場動畫的 `animate` 狀態綁在 `useInView` 上（例：`animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}`）。需要量測容器寬度才能畫的部分（`ResizeObserver`），容器本身先以固定比例或 `min-height` 佔好位置。`useReducedMotion()` 在伺服器端恆為 `false`，不要用它切換「顯示哪些內容」，只用它切換動畫參數
+- 目標是讓元件看起來像「一位用心的設計師寫出來的」，而不是「程式生成的產物」。具體的顏色與間距，永遠勝過通用的灰色方塊。
+
+### 4. 驗證
+
+> 此步驟由 component-generator Subagent 在元件寫入後自行執行。
+
+<!-- BEGIN:validation-skill -->
+完成元件寫入後，**不要在使用者 cwd 跑 `npx tsc --noEmit` 或 `npx astro build`**——viewer 場景下 cwd 只是 md/mdx 資料夾、沒有 astro 專案設定，這兩個指令一定會失敗，錯誤訊息也對本次生成沒幫助。
+
+驗證的正確做法是**觀察使用者的 `pnpm docs:serve`**：mdx-writer 寫回 mdx 後，viewer 的 chokidar watcher 會在 300ms 內觸發 rebuild、SSE 廣播 auto reload；成功則瀏覽器直接看到元件、失敗則 fallback 頁顯示錯誤節錄。
+
+- 若作者離線測試（沒開 serve）：可跑 `pnpm exec notecraftapp build docs` 手動觸發一次 build 產物到 `~/.notecraft/cache/<hash>/dist/`
+- 若 rebuild 失敗、每次修正後仍不通過：3 次後放棄，**跳到第 5 步、將該 MDX 標記的 `status` 設為 `failed`**（保留原始 prompt），並在對話中回報錯誤節錄。驗證未通過前，不要進行第 5 步的 MDX 寫回。
+<!-- END:validation-skill -->
+
+### 5. 寫回 MDX
+
+> 此步驟通常由 mdx-writer Subagent 執行。
+
+對每個處理完且驗證通過的標記區塊，將其 `status: pending` 改為 `status: generated`，並確保該區塊正下方緊接著：
+
+```mdx
+import GeneratedFrame from '@/components/GeneratedFrame.astro'
+import <PascalCaseId> from '@notes/components/<id>'
+
+<GeneratedFrame id="<id>" type="<type>" prompt={<JSON 字串化的 prompt>} caption="<選用說明，可省略整個屬性>">
+  <<PascalCaseId> client:visible />
+</GeneratedFrame>
+```
+
+**統一外框（GeneratedFrame）**：每個 generated 元件一律以系統共用元件 `GeneratedFrame` 包住，它提供一致的外框卡片（左上角顯示視覺化類型、右上角顯示 `generated/<id>.tsx` 來源、一個「複製提示詞」按鈕、底部選用 caption 說明）。`GeneratedFrame` 是純展示容器，`client:*` directive 仍掛在被包住的生成元件上、不掛在外框上，因此互動 / 動畫不受影響。
+
+- 只有當元件含有 motion 或互動狀態時才在「被包住的元件」上加 `client:visible`；純靜態 SVG 請省略此 directive（但外框照常包）。
+- `GeneratedFrame` 的 import 每個檔案只需一次；若已存在不要重複。`type` 帶入標記的 `type` 值；`caption` 為選用，無說明時整個屬性省略。
+- `prompt` 帶入該標記的 `prompt` 原文，**採 JSON 字串化**（`prompt={"...\n..."}`）作為 JSX 屬性值，安全處理換行 / 引號 / 反引號 / `${`。讀者可藉外框上的按鈕複製此提示詞。
+  - **合併元件**：若把多個相關標記合併成單一 `GeneratedFrame`（frame 的 `id` 是來源標記的 `merged-into` 目標、而非任一標記自己的 `id`），`prompt` 取自被合併的來源標記；多個來源時依序串接（空行分隔）。不要因 id 不相符就略過 `prompt`。
+- 已存在的元件 import 不要重複，原地更新即可。
+
+**重要：拆掉包住標記的 code fence。** 有些作者會把 `{/* @ai-visualize ... */}` 標記寫在 ```` ```mdx ```` ／ ```` ``` ```` 圍欄裡（當成草稿時的可見範例）。MDX 註解 `{/* ... */}` 本身渲染後是隱形的，但一旦被圍欄包住，整段 prompt 與 `status` 就會被當成「程式碼區塊」**原樣顯示給讀者**（包含 `status: generated` 這種雜訊）。因此 generated 寫回時，**必須一併刪除標記上下兩行的圍欄**，讓標記回到純註解狀態，再把 import／JSX 緊接在 `*/}` 之後。委派 mdx-writer 時，請明確要求它「拆掉圍欄」，不要叫它「插在收尾 ``` 之後」——後者會把圍欄留下、導致 prompt 外露。
+
+驗證失敗的區塊：僅把 `status` 改為 `failed`，**不要寫入 import 與 JSX**（避免 MDX 引用到不可用的元件）；此時**保留**作者原本的圍欄，不要拆。
+
+## Astro / MDX 整合規範
+
+- 元件統一放在 `.notecraft/components/`；`tsconfig.json` 已設定 import 別名 `@notes/components/<id>`
+- `<notesDir>/` 下的 MDX 由 Astro 渲染。在 MDX 中嵌入的 React 元件，只有具備互動或動畫時才需要 `client:*` directive；純靜態 SVG 不加更快
+- 生成的元件不要加入頁面層級的版型、標題或外層包裝 —— 元件是嵌入於筆記之中，會繼承筆記本身的排版樣式。統一的外框卡片由系統元件 `GeneratedFrame` 在寫回時（第 5 步）提供，元件本體只需專注內容，**不要自行畫卡片 / 標題 / 邊框**，以免與外框重複包裝
+- 生成元件不得 import 另一個生成元件（避免相互耦合）
+
+## 3D 元件（three）
+
+只在決策樹第 6 條命中時使用。以下每一條都是硬規則；**先複製本節末的骨架再改，不要從零寫**。
+
+### 匯入
+
+- `import * as THREE from "three"`；控制器等擴充一律走 `three/addons/...`，**含 `.js` 副檔名**：`import { OrbitControls } from "three/addons/controls/OrbitControls.js"`
+- 禁用子路徑：`three/webgpu`、`three/tsl`、`three/src/*`、`three/examples/fonts/*`。也不載入任何外部檔（glTF、貼圖、字型）——幾何一律程式產生，元件必須自包含
+- 不用 `@react-three/fiber`／`drei`（不在白名單）
+
+### 生命週期（SSR 安全）
+
+- 模組頂層**不得**存取 `window`／`document`；`new THREE.WebGLRenderer()` 只在 `useEffect` 裡。頂層可以放純資料（顏色常數、座標表）與 `import * as THREE`
+- canvas 放進一個 React **不放任何子節點**的空 `<div>`（`appendChild`），不要插進 React 管理子節點的容器
+- cleanup 依序：`cancelAnimationFrame` → `ResizeObserver.disconnect()` → `IntersectionObserver.disconnect()` → 移除自己掛的 listener → `controls.dispose()` → 走訪 scene，對每個 geometry、material（含 material 上的貼圖）`dispose()` → `renderer.dispose()` → **`renderer.forceContextLoss()`** → 從 DOM 移除 canvas
+  - 只有 `dispose()` 時 context 要等 GC 才釋放，簡報連續翻頁會累積到瀏覽器上限（「Too many active WebGL contexts」）；`forceContextLoss()` 讓它立即釋放
+- 不要用模組層的單例 renderer：HMR 與 React 18 開發模式會 mount → unmount → mount，cleanup 寫對就自然成立
+
+### 效能
+
+- **隨需渲染**：不跑常駐的 rAF 迴圈。只有控制器在動（含阻尼）、或狀態改變時才排一幀（`controls.addEventListener("change", invalidate)`）
+- `IntersectionObserver`：離開可視範圍就不排幀，回來再補一幀
+- `renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))`
+- `new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "low-power" })`
+- 預設不開陰影；真的需要時只給一盞主光，`shadow.mapSize` ≤ 1024
+- 寫回 MDX 一律 `client:visible`（3D 元件必定互動）
+
+### 尺寸
+
+- 寬度跟著版面：`ResizeObserver` 觀察容器，更新 `renderer.setSize(w, H)` 與相機（Orthographic 改 left/right/top/bottom、Perspective 改 aspect）後 `updateProjectionMatrix()`
+- 高度固定、寫在元件內（例：`const H = 360`），容器以 `style={{ height: H }}` 在 SSR 就佔好位置
+- **raycaster 的座標一律以 `canvas.getBoundingClientRect()` 換算**，不用 `clientWidth`：「放大檢視」把元件搬進套了 CSS `transform: scale()` 的畫布，用 `clientWidth` 換算點選會偏
+- 點選要區分「點」與「拖」：pointerdown → pointerup 位移 < 4px 才算點選，拖曳旋轉不觸發選取
+
+### 相機與控制器
+
+- 等角視角：`OrthographicCamera`、`camera.position.set(d, d, d)`、`lookAt(0, 0, 0)`
+- `OrbitControls`：`enablePan = false`；`minPolarAngle`／`maxPolarAngle` 限制在俯視約 20°–70°（不能翻到底下）
+- **`enableZoom = false`**：滾輪要留給筆記頁捲動。縮放改由按鈕（＋／－）調 `camera.zoom`，夾在 `minZoom`／`maxZoom` 之間
+- `controls.saveState()`，「重設視角」按鈕呼叫 `controls.reset()`
+
+### 無障礙
+
+- 容器 `role="img"` + **描述畫面內容**的 `aria-label`（寫出看到什麼、關係是什麼；不要寫「3D 場景」這種空話）；canvas 容器 `aria-hidden`
+- 資訊放在 canvas 外的 HTML 面板（目前選中的物件名稱與說明），`aria-live="polite"`；說明文字長短不一時給面板 `min-h-*`（以最長的一則為準），否則切換時按鈕列會跳動、點不到
+- **一定要有按鈕操作**：上一步、下一步、播放／暫停、縮小、放大、重設視角，按鈕列包在 `<div role="group" aria-label="…">`；點 3D 物件只是捷徑，所有資訊都要能只用按鈕走完
+- 每顆圖示按鈕都要 `aria-label`；不在 canvas 或 window 掛全域 keydown（筆記頁、簡報頁都有自己的快捷鍵）
+
+### 減少動態
+
+`useReducedMotion()`（`motion/react`）為 true 時：`controls.enableDamping = false`、不做 autoRotate、不做補間動畫，每次狀態改變只重繪一次終態。「播放」照樣逐步切換，但每一步直接跳到終態。
+
+### 視覺
+
+- 顏色用**檔內常數**，每個常數註明對應的 `label-suite-design` token（例：`node: 0x4f46e5, // --color-primary-strong`）。WebGL 讀不到 CSS 變數，這是「不要硬編碼色碼」的明文例外，**只限傳給 three 的值**；HTML 面板、按鈕、標籤仍用 Tailwind／token class
+- 透明底：`alpha: true` + `renderer.setClearColor(0x000000, 0)`。白底與細框由 `GeneratedFrame` 提供，元件不自帶外框
+- 禁用：bloom、glow、fog、`EffectComposer` 與任何後處理、`TextGeometry`／3D 文字
+- 光：`HemisphereLight`（地面色取淺中性色）＋一盞 `DirectionalLight`；需要陰影時要淡（`ShadowMaterial` opacity ≤ 0.15）
+- 材質：`MeshLambertMaterial` 或低 metalness 的 `MeshStandardMaterial`；以 `EdgesGeometry` + `LineBasicMaterial` 描邊，做出插圖感
+- 文字標籤一律 **HTML overlay**：每幀渲染後以 `vector.project(camera)` 換算到容器座標，用 `transform: translate()` 定位、`pointer-events: none`；SSR 時 `opacity-0`，第一次渲染後才顯示
+
+### WebGL 不可用
+
+`new THREE.WebGLRenderer()` 包在 `try/catch`；失敗時不 throw（否則整塊變錯誤卡），改顯示一行說明，HTML 面板與按鈕照常可用。
+
+### 最小骨架
+
+等角 OrthographicCamera、OrbitControls（限制 polar、關滾輪縮放）、raycaster 點選、ResizeObserver、IntersectionObserver、reduced motion、HTML overlay 標籤與資訊面板、`role="group"` 按鈕列、完整 cleanup。換掉 `ITEMS` 與幾何就是一個新元件：
+
+```tsx
+import { useEffect, useRef, useState } from "react";
+import { useReducedMotion } from "motion/react";
+import { Minus, Pause, Play, Plus, RotateCcw, SkipBack, SkipForward } from "lucide-react";
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+// WebGL 讀不到 CSS 變數：傳給 three 的顏色集中成檔內常數，逐一註明 label-suite-design token
+const C = {
+  node: 0x4f46e5, // --color-primary-strong
+  edge: 0xc7d2fe, // --color-primary-border
+  active: 0xa16207, // --color-warning
+  ground: 0xe2e8f0, // --color-border
+} as const;
+
+const H = 360; // 高度固定、寫在元件內；寬度跟著版面
+const FRUSTUM = 7; // 正交相機的可視高度（世界單位）
+const ZOOM = { min: 0.7, max: 1.8, step: 0.2 };
+
+type Item = { label: string; desc: string; pos: [number, number, number] };
+const ITEMS: Item[] = [
+  { label: "前端", desc: "使用者操作的介面，請求從這裡出發。", pos: [-2, 1.6, 0] },
+  { label: "服務", desc: "處理商業邏輯，向下讀寫資料。", pos: [0, 0.6, 0] },
+  { label: "資料", desc: "持久化儲存，回應服務層的查詢。", pos: [2, -0.4, 0] },
+];
+
+type Api = { select: (i: number) => void; zoom: (d: number) => void; reset: () => void };
+
+export default function ThreeSkeleton() {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const glRef = useRef<HTMLDivElement>(null); // canvas 只放這裡，React 不在裡面放子節點
+  const labelRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const api = useRef<Api | null>(null);
+  const activeRef = useRef(0);
+  const [active, setActive] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const [webgl, setWebgl] = useState(true);
+  const reduce = useReducedMotion();
+
+  useEffect(() => {
+    const host = hostRef.current;
+    const gl = glRef.current;
+    if (!host || !gl) return;
+
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "low-power" });
+    } catch {
+      setWebgl(false); // 沒有 WebGL：只留 HTML 面板
+      return;
+    }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 0); // 透明底，白底與細框由 GeneratedFrame 提供
+    gl.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
+    camera.position.set(10, 10, 10); // 等角視角
+    camera.lookAt(0, 0, 0);
+    scene.add(new THREE.HemisphereLight(0xffffff, C.ground, 2.2));
+    const sun = new THREE.DirectionalLight(0xffffff, 1.1);
+    sun.position.set(4, 10, 6);
+    scene.add(sun);
+
+    const meshes = ITEMS.map((it, i) => {
+      const geo = new THREE.BoxGeometry(1.6, 0.5, 1.6);
+      const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ color: C.node }));
+      mesh.position.set(...it.pos);
+      mesh.userData.index = i;
+      mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: C.edge })));
+      scene.add(mesh);
+      return mesh;
+    });
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enablePan = false;
+    controls.enableZoom = false; // 滾輪留給頁面捲動；縮放走按鈕
+    controls.minPolarAngle = THREE.MathUtils.degToRad(20);
+    controls.maxPolarAngle = THREE.MathUtils.degToRad(70);
+    controls.enableDamping = !reduce;
+    controls.saveState();
+
+    // 隨需渲染：只有控制器在動（含阻尼）或狀態改變時才排一幀；離開可視範圍不排
+    let raf = 0;
+    let visible = true;
+    const v = new THREE.Vector3();
+    const frame = () => {
+      raf = 0;
+      const moving = controls.update();
+      renderer.render(scene, camera);
+      const w = host.clientWidth;
+      meshes.forEach((m, i) => {
+        const el = labelRefs.current[i];
+        if (!el) return;
+        v.copy(m.position).setY(m.position.y + 0.5).project(camera);
+        el.style.transform = `translate(${((v.x + 1) / 2) * w}px, ${((1 - v.y) / 2) * H}px) translate(-50%, -120%)`;
+        el.style.opacity = "1";
+      });
+      if (moving && !reduce) invalidate();
+    };
+    const invalidate = () => {
+      if (!raf && visible) raf = requestAnimationFrame(frame);
+    };
+    controls.addEventListener("change", invalidate);
+
+    const resize = () => {
+      const w = host.clientWidth;
+      const aspect = w / H;
+      renderer.setSize(w, H);
+      camera.left = (-FRUSTUM * aspect) / 2;
+      camera.right = (FRUSTUM * aspect) / 2;
+      camera.top = FRUSTUM / 2;
+      camera.bottom = -FRUSTUM / 2;
+      camera.updateProjectionMatrix();
+      invalidate();
+    };
+    const ro = new ResizeObserver(resize);
+    ro.observe(host);
+    resize();
+
+    const io = new IntersectionObserver(([e]) => {
+      visible = e.isIntersecting;
+      if (visible) invalidate();
+    });
+    io.observe(host);
+
+    // 點選：pointerdown→up 位移小於 4px 才算點擊（拖曳旋轉不觸發）
+    // NDC 一律以 getBoundingClientRect 換算：放大檢視套了 CSS transform，clientWidth 會偏
+    const ray = new THREE.Raycaster();
+    const ndc = new THREE.Vector2();
+    let down: { x: number; y: number } | null = null;
+    const onDown = (e: PointerEvent) => (down = { x: e.clientX, y: e.clientY });
+    const onUp = (e: PointerEvent) => {
+      if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 4) return;
+      const r = renderer.domElement.getBoundingClientRect();
+      ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+      ray.setFromCamera(ndc, camera);
+      const hit = ray.intersectObjects(meshes, false)[0];
+      if (hit) setActive(hit.object.userData.index as number);
+    };
+    renderer.domElement.addEventListener("pointerdown", onDown);
+    renderer.domElement.addEventListener("pointerup", onUp);
+
+    api.current = {
+      select: (i) => {
+        meshes.forEach((m, j) => (m.material as THREE.MeshLambertMaterial).color.setHex(i === j ? C.active : C.node));
+        invalidate();
+      },
+      zoom: (d) => {
+        camera.zoom = THREE.MathUtils.clamp(camera.zoom + d, ZOOM.min, ZOOM.max);
+        camera.updateProjectionMatrix();
+        invalidate();
+      },
+      reset: () => {
+        controls.reset();
+        invalidate();
+      },
+    };
+    api.current.select(activeRef.current);
+
+    return () => {
+      api.current = null;
+      if (raf) cancelAnimationFrame(raf);
+      ro.disconnect();
+      io.disconnect();
+      renderer.domElement.removeEventListener("pointerdown", onDown);
+      renderer.domElement.removeEventListener("pointerup", onUp);
+      controls.removeEventListener("change", invalidate);
+      controls.dispose();
+      scene.traverse((o) => {
+        if (!(o instanceof THREE.Mesh || o instanceof THREE.LineSegments)) return;
+        o.geometry.dispose();
+        const mats: THREE.Material[] = Array.isArray(o.material) ? o.material : [o.material];
+        mats.forEach((m) => {
+          Object.values(m).forEach((val) => val instanceof THREE.Texture && val.dispose());
+          m.dispose();
+        });
+      });
+      renderer.dispose();
+      renderer.forceContextLoss(); // 立即釋放 context，連續翻簡報頁才不會累積
+      renderer.domElement.remove();
+    };
+  }, [reduce]);
+
+  useEffect(() => {
+    activeRef.current = active;
+    api.current?.select(active);
+  }, [active]);
+
+  useEffect(() => {
+    if (!playing) return;
+    const t = window.setInterval(() => setActive((i) => (i + 1) % ITEMS.length), 1600);
+    return () => window.clearInterval(t);
+  }, [playing]);
+
+  const step = (d: number) => {
+    setPlaying(false);
+    setActive((i) => (i + d + ITEMS.length) % ITEMS.length);
+  };
+  const btn =
+    "inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500";
+
+  return (
+    <div className="not-prose space-y-3">
+      <div
+        ref={hostRef}
+        role="img"
+        aria-label="三層架構的等角立體圖：前端在最上層，服務在中間，資料在最下層，請求由上往下經過三層。"
+        className="relative w-full overflow-hidden"
+        style={{ height: H }}
+      >
+        <div ref={glRef} aria-hidden="true" className="absolute inset-0 cursor-grab active:cursor-grabbing" />
+        {ITEMS.map((it, i) => (
+          <span
+            key={it.label}
+            ref={(el) => {
+              labelRefs.current[i] = el;
+            }}
+            aria-hidden="true"
+            className="pointer-events-none absolute left-0 top-0 whitespace-nowrap rounded bg-white/90 px-1.5 py-0.5 text-xs font-medium text-indigo-950 opacity-0"
+          >
+            {it.label}
+          </span>
+        ))}
+      </div>
+      {!webgl && <p className="text-sm text-slate-500">此裝置無法顯示 3D，可用下方按鈕逐步瀏覽。</p>}
+      <div className="flex flex-wrap items-center gap-3">
+        <div role="group" aria-label="檢視控制" className="flex items-center gap-0.5">
+          <button type="button" className={btn} aria-label="上一步" onClick={() => step(-1)}>
+            <SkipBack size={16} />
+          </button>
+          <button type="button" className={btn} aria-label={playing ? "暫停" : "播放"} onClick={() => setPlaying((p) => !p)}>
+            {playing ? <Pause size={16} /> : <Play size={16} />}
+          </button>
+          <button type="button" className={btn} aria-label="下一步" onClick={() => step(1)}>
+            <SkipForward size={16} />
+          </button>
+          <button type="button" className={btn} aria-label="縮小" onClick={() => api.current?.zoom(-ZOOM.step)}>
+            <Minus size={16} />
+          </button>
+          <button type="button" className={btn} aria-label="放大" onClick={() => api.current?.zoom(ZOOM.step)}>
+            <Plus size={16} />
+          </button>
+          <button type="button" className={btn} aria-label="重設視角" onClick={() => api.current?.reset()}>
+            <RotateCcw size={16} />
+          </button>
+        </div>
+        <p aria-live="polite" className="text-sm text-indigo-950">
+          <span className="font-semibold text-indigo-950">{ITEMS[active].label}</span>：{ITEMS[active].desc}
+        </p>
+      </div>
+    </div>
+  );
+}
+```
+
+## 預設樣式 —— 依循 label-suite-design
+
+本專案的設計 token 整理在 `label-suite-design` Skill（來源是 `design/prototype/assets/tokens.css`），定義了色票、字體、字級、間距、圓角、陰影等視覺語彙。生成元件時，**請以 `label-suite-design` 為預設樣式來源**：
+
+- 在第 3 步「生成元件」之前，若尚未在本次對話中讀過 `label-suite-design`，先讀取其 SKILL.md，了解色票 token 與對應的 Tailwind class、字級與間距系統
+- 元件的色彩、字級、間距、圓角、陰影、互動狀態（hover / focus / active）等，一律遵循 `label-suite-design` 的規範
+- HTML 元素用該 Skill 對照表裡的 Tailwind class（例：主色 `indigo-500`、次要文字 `slate-500`）；SVG 屬性用檔內 hex 常數，每個常數以註解標出 token 名稱（例：`const PRIMARY = "#6366F1"; // --color-primary`）
+- `label-suite-design` 未涵蓋的細節（例如某些 SVG 線寬、特定動畫曲線），才回到本 Skill 的常識性原則決定
+
+只有當提示詞明確要求「跳脫設計系統」（例如「畫一張像黑板手繪的示意圖」、「請用 80 年代復古風」）時，才暫時忽略 `label-suite-design`，並在對話回覆中告知作者你做了這個決定與理由。
+
+## 對話回覆範本
+
+處理完成後，請用以下格式在對話中簡短摘要：
+
+> 已處理 `<filename>`：
+> - `<id-1>` —— 以「<採用的方式>」生成（例：「手寫 SVG 時序圖」）
+> - `<id-2>` —— 已重新生成；原本的 <舊方式> 改為 <新方式>，原因：<原因>
+> - `<id-3>` —— 嘗試 3 次後失敗：<錯誤節錄>
+
+不要把生成的元件原始碼整段貼回對話 —— 檔案已經在磁碟上了。
+
+## 參考資料
+
+以下是函式庫專屬樣式與較長範例的參考檔，需要時再讀取（非預載）：
+
+- `references/svg-patterns.md` —— 常見 SVG 示意圖樣式（時序、流程、架構）
+- `references/motion-patterns.md` —— 嵌入筆記中的 Framer Motion 範例
+- `references/recharts-patterns.md` —— recharts 組合技巧與常見陷阱
+
+僅在當前任務符合對應主題時才讀取上述檔案。
