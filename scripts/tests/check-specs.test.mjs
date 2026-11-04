@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 
-import { PRD_CHAPTERS, SPEC_CHAPTERS, MAPPING_CHAPTER, checkDocs, slug } from '../check-specs.mjs';
+import { PRD_CHAPTERS, SPEC_CHAPTERS, MAPPING_CHAPTER, checkDocs, legacyIdsIn, slug } from '../check-specs.mjs';
 
 function docs(files) {
   const root = mkdtempSync(join(tmpdir(), 'check-specs-'));
@@ -250,4 +250,90 @@ test('double-quoted dates pass', () => {
 
 test('files that are not the PRD, glossary or a spec need no frontmatter', () => {
   assert.deepEqual(errorsFor({ 'prototype/navigation.mdx': '## 甲\n', 'specs/index.mdx': '## 模組\n' }), []);
+});
+
+// --- legacy ID shapes, cross-page targets and source prefixes (#58) ---
+
+const SHAPES = [
+  'FR-001',
+  'FR-004a',
+  'FR-004aaa',
+  'FR-0010',
+  'FR-002c-1',
+  'FR-009A1',
+  'FR-024A-1',
+  'SC-003aa',
+  'AC-1.3',
+  'AC-2A.1',
+  'AC-2A.2a',
+  'AC-3.1A',
+];
+
+test('every ID shape the legacy specs use is extracted', () => {
+  const text = SHAPES.map((id, i) => `${i % 2 ? '-' : '1.'} **${id}**：甲`).join('\n');
+  assert.deepEqual([...legacyIdsIn(text)].sort(), [...SHAPES].sort());
+});
+
+test('a bold ID followed by a version note is still extracted', () => {
+  const text = '10. **AC-1.10（v3.0.0 新增，v3.2.0 修訂；v4.2.0 廢止）**：甲\n- **FR-005 (v2.0.0 廢止)**：甲';
+  assert.deepEqual([...legacyIdsIn(text)].sort(), ['AC-1.10', 'FR-005']);
+});
+
+test('a version note containing nested parentheses does not break extraction', () => {
+  const text = '49. **AC-4.49（v4.57.0 新增，對應 FR-084 與約束（a）～（c），issue #526；已撤銷 v4.59.0）**：甲';
+  assert.deepEqual([...legacyIdsIn(text)], ['AC-4.49']);
+});
+
+test('an extended-shape ID is a valid legacy ID in the mapping', () => {
+  const rows = [...ROWS, '| AC-2A.2a | Scenario：新增使用者 | |'];
+  assert.deepEqual(errorsFor({ [SPEC]: mapped(rows.join('\n')), [LEGACY]: `${legacyIds}AC-2A.2a\n` }), []);
+});
+
+const OTHER_SPEC = 'specs/01-user-management/02-user-detail.mdx';
+
+test('a cross-page target is accepted when that spec exists', () => {
+  const rows = ROWS.map((r) => r.replace('Scenario：停用使用者', '見 規格 01-02'));
+  const files = { [SPEC]: mapped(rows.join('\n')), [LEGACY]: legacyIds, [OTHER_SPEC]: spec() };
+  assert.deepEqual(errorsFor(files), []);
+});
+
+test('a cross-page target naming a spec that does not exist is reported', () => {
+  const rows = ROWS.map((r) => r.replace('Scenario：停用使用者', '見 規格 09-09'));
+  assert.match(
+    errorsFor({ [SPEC]: mapped(rows.join('\n')), [LEGACY]: legacyIds, [OTHER_SPEC]: spec() }).join('\n'),
+    /AC-1\.1 maps to 規格 09-09, which does not exist/,
+  );
+});
+
+test('a cross-page target pointing at the spec itself is reported', () => {
+  const rows = ROWS.map((r) => r.replace('Scenario：停用使用者', '見 規格 01-01'));
+  assert.match(
+    errorsFor({ [SPEC]: mapped(rows.join('\n')), [LEGACY]: legacyIds }).join('\n'),
+    /AC-1\.1 maps to 規格 01-01, which is this spec/,
+  );
+});
+
+test('a source prefix keeps same-named IDs from two legacy sources distinct', () => {
+  const ids = 'shared:FR-001\nfoundation:FR-001\n';
+  const rows = [
+    '| shared:FR-001 | [§規格 › 使用者列表](#使用者列表) | 來自 shared/008 |',
+    '| foundation:FR-001 | 刪除 | 來自 foundation/000，技術規範 |',
+  ];
+  assert.deepEqual(errorsFor({ [SPEC]: mapped(rows.join('\n')), [LEGACY]: ids }), []);
+});
+
+test('a prefixed ID still has to be in the legacy list', () => {
+  const rows = ['| shared:FR-001 | 刪除 | 甲 |', '| foundation:FR-002 | 刪除 | 甲 |'];
+  assert.match(
+    errorsFor({ [SPEC]: mapped(rows.join('\n')), [LEGACY]: 'shared:FR-001\n' }).join('\n'),
+    /foundation:FR-002 is not in the legacy ID list/,
+  );
+});
+
+test('a malformed source prefix is still reported as not a legacy ID', () => {
+  const rows = ['| 01 shared:FR-001 | 刪除 | 甲 |'];
+  assert.match(
+    errorsFor({ [SPEC]: mapped(rows.join('\n')), [LEGACY]: '01 shared:FR-001\n' }).join('\n'),
+    /is not a legacy ID/,
+  );
 });

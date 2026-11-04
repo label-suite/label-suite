@@ -39,9 +39,14 @@ export const ACCEPTANCE_CHAPTER = '驗收標準';
 const MODULE_DIR_RE = /^\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const SPEC_FILE_RE = /^\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*\.mdx$/;
 
-// FR-001, FR-004a, SC-012, AC-1.3: the numbering used by the legacy specs.
-const ID_SOURCE = String.raw`(?:FR|SC)-\d{2,3}[A-Za-z]?|AC-\d+(?:\.\d+)+`;
-const ID_RE = new RegExp(String.raw`^(?:${ID_SOURCE})$`);
+// The numbering the legacy specs actually use: FR-001, FR-004a, FR-004aaa,
+// FR-0010, FR-002c-1, FR-009A1, FR-024A-1, SC-003aa, AC-1.3, AC-2A.1,
+// AC-2A.2a, AC-3.1A.
+const ID_SOURCE = String.raw`(?:FR|SC)-\d{2,4}[A-Za-z]{0,3}\d*(?:-\d+)?|AC-\d+[A-Za-z]?(?:\.\d+[A-Za-z]?)+`;
+// A page that collects two legacy sources prefixes each ID with its source
+// ("shared:FR-001", "foundation:FR-001"), so same-named IDs stay distinct.
+const SOURCE_PREFIX = String.raw`(?:[a-z][a-z0-9-]*:)?`;
+const ID_RE = new RegExp(String.raw`^${SOURCE_PREFIX}(?:${ID_SOURCE})$`);
 const DELETED_MARK = '刪除';
 const SCENARIO_PREFIX_RE = /^Scenario[：:]\s*/;
 
@@ -226,8 +231,10 @@ function checkScenarios(file, text, report) {
 }
 
 const LINK_RE = /^\[[^\]]*\]\(#([^)\s]+)\)$/;
+// A legacy spec split across two pages points at the other one: "見 規格 04-02".
+const CROSS_PAGE_RE = /^見\s*§?規格\s*(\d{2}-\d{2})(?:\s+§.+)?$/;
 
-function checkMapping(file, text, legacyIds, scenarioNames, report) {
+function checkMapping(file, text, legacyIds, scenarioNames, specNumbers, self, report) {
   const mapping = chapterRange(text, MAPPING_CHAPTER);
   if (!legacyIds) {
     if (mapping) report.error(file, chapters(text).at(-1).line, `"## ${MAPPING_CHAPTER}" exists but there is no legacy ID list`);
@@ -243,7 +250,7 @@ function checkMapping(file, text, legacyIds, scenarioNames, report) {
   for (const { cells, line } of tableRows(text, mapping[0], mapping[1]).slice(1)) {
     const [old, target = '', note = ''] = cells;
     if (!ID_RE.test(old)) {
-      report.error(file, line, `"${old}" is not a legacy ID (FR-NNN, SC-NNN or AC-N.N)`);
+      report.error(file, line, `"${old}" is not a legacy ID (FR-NNN, SC-NNN, AC-N.N, optionally "<source>:" prefixed)`);
       continue;
     }
     if (!legacyIds.has(old)) report.error(file, line, `${old} is not in the legacy ID list`);
@@ -265,7 +272,14 @@ function checkMapping(file, text, legacyIds, scenarioNames, report) {
       if (!scenarioNames.has(name)) report.error(file, line, `${old} maps to Scenario "${name}", which "## ${ACCEPTANCE_CHAPTER}" does not list`);
       continue;
     }
-    report.error(file, line, `${old} maps to "${target}"; use a section link, "Scenario：<name>" or ${DELETED_MARK}`);
+    const cross = target.match(CROSS_PAGE_RE);
+    if (cross) {
+      const [, number] = cross;
+      if (number === self) report.error(file, line, `${old} maps to 規格 ${number}, which is this spec; point at a section instead`);
+      else if (!specNumbers.has(number)) report.error(file, line, `${old} maps to 規格 ${number}, which does not exist`);
+      continue;
+    }
+    report.error(file, line, `${old} maps to "${target}"; use a section link, "Scenario：<name>", "見 規格 NN-NN" or ${DELETED_MARK}`);
   }
   for (const id of legacyIds) {
     if (!covered.has(id)) report.error(file, 1, `legacy ${id} is missing from "## ${MAPPING_CHAPTER}"`);
@@ -274,7 +288,14 @@ function checkMapping(file, text, legacyIds, scenarioNames, report) {
 
 // Legacy IDs a legacy spec defines: a bold ID opening a list item
 // ("- **FR-001**：", "1. **AC-1.1**：") or the first cell of a table row.
-const LEGACY_DEF_RE = new RegExp(String.raw`^(?:\s*(?:[-*]|\d+\.) +\*\*(${ID_SOURCE})\*\*|\|\s*(${ID_SOURCE})\s*\|)`, 'gm');
+// The bold header may carry a version note, which the legacy specs add instead
+// of deleting superseded clauses: "**AC-1.10（v4.2.0 廢止）**". Those notes nest
+// parentheses ("約束（a）～（c）"), so the note is anything up to the closing "**".
+const DEF_NOTE = String.raw`[^*\n]*`;
+const LEGACY_DEF_RE = new RegExp(
+  String.raw`^(?:\s*(?:[-*]|\d+\.) +\*\*(${ID_SOURCE})${DEF_NOTE}\*\*|\|\s*(${ID_SOURCE})\s*\|)`,
+  'gm',
+);
 
 export function legacyIdsIn(text) {
   const ids = new Set();
@@ -300,13 +321,15 @@ function listMdx(dir) {
   });
 }
 
-// "02-task-management/01-task-list.mdx" -> "02-01-task-list" (legacy list name).
-function specKind(path) {
+// "02-task-management/01-task-list.mdx" -> the reference number "02-01" and
+// the legacy list name "02-01-task-list"; null when the path is not a spec.
+function specParts(path) {
   const parts = path.split('/');
   if (parts.length !== 3 || parts[0] !== 'specs') return null;
   const [, dir, file] = parts;
   if (!MODULE_DIR_RE.test(dir) || !SPEC_FILE_RE.test(file)) return null;
-  return `${dir.slice(0, 2)}-${file.replace(/\.mdx$/, '')}`;
+  const module = dir.slice(0, 2);
+  return { number: `${module}-${file.slice(0, 2)}`, legacyName: `${module}-${file.replace(/\.mdx$/, '')}` };
 }
 
 export function checkDocs(docsDir) {
@@ -320,6 +343,8 @@ export function checkDocs(docsDir) {
       return { path, rel: relative(process.cwd(), p), raw, text: stripIgnored(raw) };
     });
 
+  const specNumbers = new Set(files.map((f) => specParts(f.path)?.number).filter(Boolean));
+
   for (const f of files) {
     if (f.path === PRD_PATH) {
       checkFrontmatter(f.rel, f.raw, report);
@@ -327,13 +352,13 @@ export function checkDocs(docsDir) {
     } else if (f.path === GLOSSARY_PATH) {
       checkFrontmatter(f.rel, f.raw, report);
     } else {
-      const legacyName = specKind(f.path);
-      if (!legacyName) continue;
+      const spec = specParts(f.path);
+      if (!spec) continue;
       checkFrontmatter(f.rel, f.raw, report);
       checkChapterOrder(f.rel, f.text, SPEC_CHAPTERS, MAPPING_CHAPTER, report);
       const names = checkScenarios(f.rel, f.text, report);
-      const legacy = readLegacyIds(join(docsDir, 'specs', 'legacy', `${legacyName}.ids`));
-      checkMapping(f.rel, f.text, legacy, names, report);
+      const legacy = readLegacyIds(join(docsDir, 'specs', 'legacy', `${spec.legacyName}.ids`));
+      checkMapping(f.rel, f.text, legacy, names, specNumbers, spec.number, report);
     }
   }
   checkTerms(files, relative(process.cwd(), join(docsDir, GLOSSARY_PATH)), report);
