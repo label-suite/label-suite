@@ -77,6 +77,49 @@ updatedAt: '2026-11-04'
 <strong>任務</strong>：一次標記工作的單位，包含資料集、任務設定與成員；依序經過草稿、試標中、等待 IAA 確認、正式標記中、已完成五個狀態。
 :::
 
+:::define{id="term.output-type" label="輸出型別"}
+<strong>輸出型別</strong>：一個任務要產出哪一種標記結果；平台目前支援八種，由建立任務的人從中選一到多種組合出這個任務要標的東西。八種的中文名稱尚未定案（見規格 03-02 的待釐清）。任務不對應單一固定的「任務類型」。
+:::
+
+### 八種輸出型別
+
+:::define{id="term.single-label" label="單一標籤"}
+<strong>單一標籤</strong>：輸出型別之一；標記員從一組標籤裡**只選一個**。例如判斷一句話的情緒是正面、負面還是中立。
+:::
+
+:::define{id="term.multi-label" label="多標籤"}
+<strong>多標籤</strong>：輸出型別之一；標記員從一組標籤裡**選任意多個**，標籤本身可以有上下層的分類關係，每一層都能單獨勾選。
+:::
+
+:::define{id="term.single-dim" label="單維度"}
+<strong>單維度</strong>：輸出型別之一；標記員在**一個**尺度上給一個數值，例如情緒強度 1 到 5 分。
+:::
+
+:::define{id="term.multi-dim" label="多維度"}
+<strong>多維度</strong>：輸出型別之一；標記員在**多個**尺度上各給一個數值，例如同時評正負向與激動程度。
+:::
+
+:::define{id="term.sequence-tagging" label="序列標註"}
+<strong>序列標註</strong>：輸出型別之一；標記員把一段文字切成一個個單位，逐個標上類別。
+:::
+
+:::define{id="term.entity-recognition" label="實體辨識"}
+<strong>實體辨識</strong>：輸出型別之一；標記員在文字裡圈出一段範圍，並指定它是哪一種實體，例如人名、藥名。
+:::
+
+:::define{id="term.relation-identification" label="關係識別"}
+<strong>關係識別</strong>：輸出型別之一；標記員指出兩個對象之間是什麼關係。可以單獨使用；和實體辨識一起選時，圈出來的實體就是它可以連的對象。
+:::
+
+:::define{id="term.free-text" label="自由文字"}
+<strong>自由文字</strong>：輸出型別之一；標記員自己寫一段文字作答，例如摘要或回答問題。
+:::
+
+
+:::define{id="term.json-dataset" label="JSON 資料集"}
+<strong>JSON 資料集</strong>：建立任務時上傳的資料檔，一筆紀錄一個項目；平台只收這一種格式。同一個任務可以上傳多個檔案，它們合起來算同一個資料集。
+:::
+
 :::define{id="term.task-config" label="任務設定"}
 <strong>任務設定</strong>：決定一個任務的輸入形式、要產出哪些標記與資料欄位用途的設定；換一種研究任務只要換任務設定，不必修改平台。
 :::
