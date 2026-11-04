@@ -362,7 +362,7 @@ Scenario 名稱要唯一，後續 OpenSpec 的 specs 會沿用。
 
 ## 引用與連結
 
-規格裡指到其他段落時，一律寫成可以點擊的連結，讀者不用自己捲動找。語法與錨點規則見 `.claude/rules/notecraft-writing.md`「內部連結與錨點」（改到 `docs/**` 時自動載入）。
+規格裡指到其他段落時，一律寫成可以點擊的連結，讀者不用自己捲動找。語法與錨點規則見 `docs/development/notecraft-writing.md`「內部連結與錨點」。
 
 | 引用對象 | 寫法 |
 | :--- | :--- |
