@@ -33,8 +33,8 @@ Label Suite 是給學術 NLP 研究團隊用的資料標記與品質評估平台
 | [專案概述](#專案概述) | :badge[待確認]{variant="warning" icon="warning"} | SUS 問卷的受試者招募時程 |
 | [使用者角色](#使用者角色) | :badge[已完成]{variant="success" icon="check"} | — |
 | [專案範圍](#專案範圍) | :badge[待確認]{variant="warning" icon="warning"} | 說明按鈕是否永久排除 |
-| [Site Map](#site-map) | :badge[待生成]{variant="info" icon="info"} | Site Map 圖 |
-| [模組架構與串接](#模組架構與串接) | :badge[待生成]{variant="info" icon="info"} | 跨模組流程圖、狀態機圖 |
+| [Site Map](#site-map) | :badge[已完成]{variant="success" icon="check"} | — |
+| [模組架構與串接](#模組架構與串接) | :badge[已完成]{variant="success" icon="check"} | — |
 
 全部章節「已完成」時，文件狀態改為「定稿」。待確認的問題記在受影響的段落旁，不集中列在文末。
 
@@ -176,8 +176,15 @@ prompt: |
     PAGES 與 access：與本章條列逐項一致；06-01 specState written，其餘 reserved；權限依 §權限矩陣
   DEFAULT_SELECTED：01-01 登入
 caption: 切換模組看頁面；用角色篩選看誰進得去
-status: pending
+status: generated
 */}
+
+import GeneratedFrame from '@/components/GeneratedFrame.astro'
+import PrdSiteMap from '@notes/components/prd-site-map'
+
+<GeneratedFrame id="prd-site-map" type="interactive" prompt={"骨架：.claude/skills/prd-writing/references/site-map-skeleton.tsx（複製後只改【資料】）。\n核心洞察：系統角色決定進不進得了平台與系統管理，任務角色決定進不進得了任務詳情、標記與分析。\n互動：模組切換、角色篩選、點頁面看詳情面板（依骨架，不加更多）。\n圖形：縱向主幹樹＋右側詳情面板。\n資料：\n  ROLES：平台成員（User）、系統管理員（ShieldCheck）、Seeder 管理員（KeyRound）、專案負責人（Crown）、審核員（ClipboardCheck）、標記員（PenLine）\n  MODULES：入口（灰）、01 帳號、02 儀表板、03 任務管理、04 標記作業、05 資料集、06 系統管理、07 共用介面\n  GROUPS：無\n  PAGES 與 access：與本章條列逐項一致；06-01 specState written，其餘 reserved；權限依 §權限矩陣\nDEFAULT_SELECTED：01-01 登入\n"} caption="切換模組看頁面；用角色篩選看誰進得去">
+  <PrdSiteMap client:visible />
+</GeneratedFrame>
 
 - 未登入時
   - 登入，含 Google SSO 入口（所有人）：預留：規格 01-01，未撰寫
@@ -225,8 +232,14 @@ prompt: |
     交接 1～6 與替代流程：與本節條列逐項一致
     RESULT：任務已完成，匯出標記結果
 caption: 選「逐步走查」依序看每個交接
-status: pending
+status: generated
 */}
+
+import PrdTaskLifecycleFlow from '@notes/components/prd-task-lifecycle-flow'
+
+<GeneratedFrame id="prd-task-lifecycle-flow" type="motion" prompt={"骨架：.claude/skills/prd-writing/references/module-flow-skeleton.tsx（複製後只改【資料】）。\n核心洞察：一個任務在任務管理、標記作業、資料集三個模組之間來回交接，先試標確認一致性，才進入正式標記。\n互動：依骨架（逐步走查）。\n圖形：模組泳道，由上而下：03 任務管理、04 標記作業、05 資料集。\n資料：\n  TITLE：任務從建立到匯出\n  TRIGGER：專案負責人在任務管理建立任務\n  交接 1～6 與替代流程：與本節條列逐項一致\n  RESULT：任務已完成，匯出標記結果\n"} caption="選「逐步走查」依序看每個交接">
+  <PrdTaskLifecycleFlow client:visible />
+</GeneratedFrame>
 
 - **任務從建立到匯出**
   - 起點：專案負責人在任務管理用任務設定建立任務並上傳資料集，任務是「草稿」
@@ -252,11 +265,17 @@ prompt: |
   骨架：.claude/skills/prd-writing/references/state-machine-skeleton.tsx（複製後只改【資料】）。
   核心洞察：任務只能往前走；唯一的回頭路在「等待 IAA 確認」，可以退回草稿或再開一輪試標。
   互動：依骨架。
-  圖形：五個狀態，回頭線用黃色虛線。
+  圖形：五個狀態；回頭線是從「等待 IAA 確認」彎回去的弧線（已決議的轉移，不用待確認的黃色虛線）。
   資料：與本節表格逐項一致（狀態、進入條件、推進的模組、下一個狀態）。
 caption: 點狀態看進入條件與推進的模組
-status: pending
+status: generated
 */}
+
+import PrdTaskState from '@notes/components/prd-task-state'
+
+<GeneratedFrame id="prd-task-state" type="interactive" prompt={"骨架：.claude/skills/prd-writing/references/state-machine-skeleton.tsx（複製後只改【資料】）。\n核心洞察：任務只能往前走；唯一的回頭路在「等待 IAA 確認」，可以退回草稿或再開一輪試標。\n互動：依骨架。\n圖形：五個狀態；回頭線是從「等待 IAA 確認」彎回去的弧線（已決議的轉移，不用待確認的黃色虛線）。\n資料：與本節表格逐項一致（狀態、進入條件、推進的模組、下一個狀態）。\n"} caption="點狀態看進入條件與推進的模組">
+  <PrdTaskState client:visible />
+</GeneratedFrame>
 
 :ref[任務]{id="term.task"} 被任務管理、標記作業、資料集三個模組共同讀寫，狀態如下。除了下表列出的轉移，任務不能往回走。
 
