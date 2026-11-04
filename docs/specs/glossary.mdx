@@ -1,0 +1,52 @@
+---
+title: 術語表
+description: 規格書共用的業務名詞定義。
+category: '規格書'
+tags: [規格書, 術語]
+createdAt: '2026-11-04'
+updatedAt: '2026-11-04'
+---
+
+# 術語表
+
+規格書中的業務名詞都定義在這裡，規格內用 `:ref[名詞]{id="term.xxx"}` 引用。
+
+- `id` 用 `term.<英文 kebab-case>`，全站唯一；改名時只改 label，不改 `id`
+- 只寫業務定義，不寫系統怎麼存
+- 依筆畫或模組分組皆可，新增時接在同組最後
+
+## 角色
+
+:::define{id="term.system-role" label="系統角色"}
+<strong>系統角色</strong>：決定使用者在整個平台可以做什麼的角色，每個帳號恰有一個：平台成員或系統管理員。和任務角色無關。
+:::
+
+:::define{id="term.task-role" label="任務角色"}
+<strong>任務角色</strong>：決定使用者在單一任務內可以做什麼的角色，例如審核員、標記員；在任務內指派，和系統角色無關。
+:::
+
+:::define{id="term.platform-member" label="平台成員"}
+<strong>平台成員</strong>：系統角色為「平台成員」的使用者，可以參與被指派的任務，不能管理平台帳號與角色權限。
+:::
+
+:::define{id="term.system-admin" label="系統管理員"}
+<strong>系統管理員</strong>：系統角色為「系統管理員」的使用者，可以管理平台帳號與角色權限。
+:::
+
+:::define{id="term.seeder-admin" label="Seeder 管理員"}
+<strong>Seeder 管理員</strong>：平台部署時由部署者建立的第一位系統管理員；不能被停用、降級或移除，讓平台永遠保有一位管理者。
+:::
+
+:::define{id="term.annotator" label="標記員"}
+<strong>標記員</strong>：任務角色之一，負責在任務中產出標記結果的使用者。
+:::
+
+## 帳號
+
+:::define{id="term.audit-log" label="異動紀錄"}
+<strong>異動紀錄</strong>：帳號被新增、編輯、停用、啟用、變更系統角色或重發設定密碼信時留下的紀錄，包含操作者、時間、操作類型與變更前後的差異。
+:::
+
+:::define{id="term.password-setup-email" label="設定密碼信"}
+<strong>設定密碼信</strong>：新增帳號或重發時寄到該帳號 Email 的信，內含 24 小時內有效、只能使用一次的設定密碼連結，讓新使用者自己設定密碼。
+:::
