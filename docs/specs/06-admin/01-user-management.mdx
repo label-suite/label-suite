@@ -15,7 +15,7 @@ import PrototypeFrame from '@notes/components/prototype-frame';
 
 > 來源：舊規格 `specs/admin/006-user-management/spec.md` v1.4.0（`label-suite` repo，2026-10-12），以及 2026-10-29 的決議（#17）；本次依 Issue #32 改寫為新的章節結構
 > 參考畫面：`design/prototype/pages/admin/user-management.html`
-> 相關規格：06-02 角色設定（未撰寫）
+> 相關規格：[規格 06-02 角色設定](./02-role-settings.mdx)
 
 ## 目標
 
@@ -33,7 +33,7 @@ R：Read（可讀取）　C：Create（可新增）　E：Edit（可編輯）　
 
 - :ref[系統管理員]{id="term.system-admin"}：R/C/E
   - R 需要角色設定中的「進入使用者管理頁」權限；C、E（新增、編輯、停用、啟用、變更系統角色、重發設定密碼信）另需要「新增／編輯／停用使用者、指派系統角色」權限
-  - 這兩項權限只能在系統管理員之內收窄，不能開放給平台成員；設定方式見 06-02 角色設定（未撰寫）
+  - 這兩項權限只能在系統管理員之內收窄，不能開放給平台成員；設定方式見[規格 06-02 角色設定](./02-role-settings.mdx)
   - 帳號不能刪除，只能停用，所以沒有 D
 - :ref[平台成員]{id="term.platform-member"}：無權限
 - 未登入的訪客：無權限
@@ -113,7 +113,7 @@ import Spec0601AccountLifecycleFlow from '@notes/components/spec-06-01-account-l
 
   系統管理員從側欄進入「系統管理」，在「使用者管理」與「角色設定」兩個分頁之間切換。
   1. 進入「系統管理」 → 預設停在「使用者管理」分頁，顯示全平台帳號列表
-  2. 點擊「角色設定」分頁 → 進入 06-02 角色設定頁
+  2. 點擊「角色設定」分頁 → 進入[規格 06-02 角色設定](./02-role-settings.mdx)
   3. 未登入的訪客開啟本頁 → 導向登入頁
   4. 平台成員開啟本頁 → 導向儀表板，看不到任何帳號資料
   - 每次開啟或操作，都依帳號「當下」的系統角色與權限判斷；被降級或停用的人，即使仍在登入中，下一次操作就被擋下
