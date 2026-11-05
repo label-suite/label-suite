@@ -1,6 +1,6 @@
 # source: singyichen/label-suite@faf8335686863fdcf516a1c93ecd3aa49b40cf6d specs/annotation/015-annotation-workspace/spec.md
 # extracted: 2026-11-05
-# note: this source is split across two pages; the other 419 ids belong to spec 04-02 (see issue #78)
+# note: this source is split across two pages; the other 416 ids belong to spec 04-02 (see issue #78)
 AC-1.1
 AC-1.2
 AC-1.3
@@ -45,8 +45,10 @@ AC-1.41
 AC-4.31
 AC-4.33
 AC-4.43
+AC-4.59
 AC-4.62
 AC-4.67
+AC-4.77
 FR-001
 FR-0010
 FR-001A
@@ -97,5 +99,6 @@ SC-003D
 SC-004I
 SC-004N
 SC-004S
+SC-010
 SC-028
 SC-005A
