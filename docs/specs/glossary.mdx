@@ -164,6 +164,104 @@ updatedAt: '2026-11-04'
 <strong>爭議</strong>：審核時無法直接定稿的標記結果，例如標記員之間的答案衝突；由仲裁者做最終決定。
 :::
 
+## 權限
+
+:::define{id="term.permission-matrix" label="權限矩陣"}
+<strong>權限矩陣</strong>：把平台的每一個功能權限，對每一個角色給出「開」或「關」的那張對照表。它分成**系統角色**與**任務角色**兩層，兩層不互相推導；:ref[系統管理員]{id="term.system-admin"}在規格 06-02 檢視與調整它，但**只能在 PRD §權限矩陣 的上限內收窄、不能放寬**。矩陣格**不單獨賦予任何存取權**——它只是授權判斷的必要條件之一，操作還要過資源條件。
+:::
+
+### 平台層的權限（對系統角色給值）
+
+:::define{id="term.perm-profile-view" label="檢視個人設定頁"}
+<strong>檢視個人設定頁</strong>：看自己的個人設定頁。對應 PRD §權限矩陣「01 帳號」的 <code>R</code>。
+:::
+
+:::define{id="term.perm-profile-edit" label="編輯個人資料與密碼"}
+<strong>編輯個人資料與密碼</strong>：改自己的個人資料與密碼。對應「01 帳號」的 <code>E</code>。
+:::
+
+:::define{id="term.perm-dashboard-view" label="檢視儀表板"}
+<strong>檢視儀表板</strong>：進入儀表板。對應「02 儀表板」；兩種系統角色的這一格**固定開啟**。
+:::
+
+:::define{id="term.perm-task-list-view" label="檢視任務列表"}
+<strong>檢視任務列表</strong>：進入任務列表。對應「03 任務列表」。
+:::
+
+:::define{id="term.perm-task-create" label="建立新任務"}
+<strong>建立新任務</strong>：建立一個新任務。對應「03 新增任務」的 <code>C</code>。
+:::
+
+:::define{id="term.perm-user-management-view" label="進入使用者管理頁"}
+<strong>進入使用者管理頁</strong>：進入使用者管理頁並查看帳號列表與異動紀錄。對應「06 使用者管理」的 <code>R</code>；平台成員這一格**固定關閉**。
+:::
+
+:::define{id="term.perm-user-management-manage" label="新增／編輯／停用使用者、指派系統角色"}
+<strong>新增／編輯／停用使用者、指派系統角色</strong>：在使用者管理頁做寫入動作。對應「06 使用者管理」的 <code>C</code> 與 <code>E</code>；平台成員這一格**固定關閉**。
+:::
+
+:::define{id="term.perm-role-settings-view" label="進入角色權限設定頁"}
+<strong>進入角色權限設定頁</strong>：進入角色設定頁並檢視:ref[權限矩陣]{id="term.permission-matrix"}。對應「06 角色設定」的 <code>R</code>；平台成員這一格**固定關閉**。
+:::
+
+:::define{id="term.perm-role-settings-manage" label="編輯並儲存角色權限矩陣"}
+<strong>編輯並儲存角色權限矩陣</strong>：改並存:ref[權限矩陣]{id="term.permission-matrix"}。對應「06 角色設定」的 <code>E</code>；平台成員這一格**固定關閉**。
+:::
+
+:::define{id="term.perm-platform-overview-view" label="檢視全平台統計"}
+<strong>檢視全平台統計</strong>：看跨任務的全平台統計。**已登錄、待啟用**；能力由 PRD §權限矩陣「02 儀表板」系統管理員的 <code>R</code>（不帶「只限自己」）涵蓋，但來源把它歸在系統管理模組而 PRD 的系統管理沒有對應列——落位見規格 06-02 的待釐清。
+:::
+
+### 任務層的權限（對任務角色給值）
+
+:::define{id="term.perm-task-detail-view" label="檢視任務詳情"}
+<strong>檢視任務詳情</strong>：看一個任務的詳情。對應「03 任務詳情」的 <code>R</code>。
+:::
+
+:::define{id="term.perm-task-detail-edit" label="編輯任務設定"}
+<strong>編輯任務設定</strong>：改任務詳情裡允許修改的內容；仍受任務狀態與欄位規則限制。對應「03 任務詳情」的 <code>E</code>。
+:::
+
+:::define{id="term.perm-task-members-manage" label="管理任務成員與任務角色"}
+<strong>管理任務成員與任務角色</strong>：加減任務成員、指派任務角色，含審核與仲裁的名冊。對應「03 任務詳情」的 <code>E</code>。
+:::
+
+:::define{id="term.perm-task-lifecycle-manage" label="推進任務生命週期"}
+<strong>推進任務生命週期</strong>：發布、退回草稿、結案、重試 :ref[IAA]{id="term.iaa"}、停用:ref[資料隔離]{id="term.data-isolation"}。**已登錄、待啟用**；對應「03 任務詳情」的 <code>E</code>。
+:::
+
+:::define{id="term.perm-task-delete" label="刪除草稿任務"}
+<strong>刪除草稿任務</strong>：把一個還是草稿的任務移到:ref[封存]{id="term.archived-task"}。**已登錄、待啟用**；PRD §權限矩陣 整個 03 模組**沒有任何一格有 <code>D</code>**，這個落差見規格 03-01 與 06-02。
+:::
+
+:::define{id="term.perm-annotate" label="以標記員身分標記"}
+<strong>以標記員身分標記</strong>：在標記工作區產出標記。對應「04 標記清單與標記工作區（產出標記）」。
+:::
+
+:::define{id="term.perm-review" label="以審核員身分審核"}
+<strong>以審核員身分審核</strong>：在標記工作區審核標記結果。對應「04 標記清單與標記工作區（審核與仲裁）」的審核員 <code>R/E</code>。
+:::
+
+:::define{id="term.perm-exception-resolve" label="處置最終例外"}
+<strong>處置最終例外</strong>：在最終例外池做四種收尾處置。**已登錄、待啟用**；PRD 給專案負責人那一格的上限只有 <code>R</code>，而這是寫入動作，落差見規格 04-02 與 06-02。
+:::
+
+:::define{id="term.perm-dispute-adjudicate" label="裁定爭議"}
+<strong>裁定爭議</strong>：仲裁名冊為空時由:ref[專案負責人]{id="term.project-leader"}對:ref[爭議]{id="term.dispute"}做最終決定。**已登錄、待啟用**；上限落差同「處置最終例外」。
+:::
+
+:::define{id="term.perm-dataset-stats-view" label="看任務統計"}
+<strong>看任務統計</strong>：看一個任務的標記統計。對應「05 資料集分析」。
+:::
+
+:::define{id="term.perm-dataset-quality-view" label="看品質分析"}
+<strong>看品質分析</strong>：看一個任務的品質監控（含 :ref[IAA]{id="term.iaa"}）。對應「05 資料集分析」。
+:::
+
+:::define{id="term.perm-dataset-export" label="匯出資料"}
+<strong>匯出資料</strong>：下載或匯出標記結果。對應「03 匯出標記結果」的 <code>C</code>；來源把它歸在資料集模組，落位見規格 06-02 的待釐清。
+:::
+
 ## 共用介面
 
 :::define{id="term.appearance-mode" label="外觀模式"}
