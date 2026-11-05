@@ -1,0 +1,23 @@
+---
+title: '04 標記作業'
+description: '標記作業模組的規格一覽'
+category: '規格書'
+tags: [規格書, 索引, 標記作業]
+createdAt: '2026-11-05'
+updatedAt: '2026-11-05'
+---
+
+# 04 標記作業
+
+:ref[標記員]{id="term.annotator"} 在這個模組產出標記（只看得到被指派給自己的資料），:ref[審核員]{id="term.reviewer"} 以審核單位為粒度審查、:ref[仲裁者]{id="term.arbiter"} 收斂:ref[爭議]{id="term.dispute"}。:ref[標記員]{id="term.annotator"} 接觸得到的任何地方都看不到:ref[標準答案]{id="term.ground-truth"}。
+
+## 規格一覽
+
+| 編號 | 頁面／功能 | 狀態 | 說明 |
+| :--- | :--- | :--- | :--- |
+| 04-01 | [標記清單](./01-annotation-list.mdx) | :badge[草稿]{variant="warning" size="sm"} | 進標記模組的入口頁：先挑一筆要處理的資料再進工作區；撰寫中：階段一／四 |
+| 04-02 | 標記工作區（未撰寫） | — | 依任務設定作答、審核、處理爭議與仲裁 |
+
+## 這個模組的一份來源拆成兩頁
+
+兩頁共用同一份舊規格（`specs/annotation/015-annotation-workspace/spec.md`，**517 條**，18 份裡最大的一份）。依 `docs/development/spec-migration.md`，同一個舊編號只能落在其中一頁，另一頁的對照表寫「見 規格 04-0X」。分頁歸屬由 04-01 的最後一個階段決定，並留言到 Issue #78 讓 04-02 可以機械對帳。
