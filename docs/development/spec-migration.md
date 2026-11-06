@@ -59,20 +59,24 @@
 | :--- | :--- | :--- | :--- |
 | D1 | `shared/018-help-button` 要不要搬 | **不搬** | PRD §範圍外明寫「說明按鈕（平台說明入口）：最新的 prototype 沒有這個入口，這期不做」 |
 | D2 | `account/001` + `002` 併成一頁還是分兩頁 | **併成 01-01** | PRD Site Map 寫「登入，含 Google SSO 入口」是同一頁 |
-| D3 | 任務「要產出什麼」用哪一套業務名詞 | **以「輸出型別」8 種為主**；「任務類型」退役，不再是業務名詞 | prototype 的 partials 檔名已全部採用這一套；舊 013 是 `OUTPUT_TYPE_KEYS` 的 source of truth；PRD 也寫「任務類型完全由任務設定決定」 |
+| D3 | 任務「要產出什麼」用哪一套業務名詞 | **以「輸出類型」8 種為主**；「任務類型」退役，不再是業務名詞 | prototype 的 partials 檔名已全部採用這一套；舊 013 是 `OUTPUT_TYPE_KEYS` 的 source of truth；PRD 也寫「任務類型完全由任務設定決定」 |
 | D4 | `foundation/000~002` 與 `_governance/` 怎麼處理 | **整份不搬**，但先挑出其中屬於業務的規則併進 `07-01 側欄導覽`，並在 07-01 的舊編號對照列出來源 | 那些是技術與 CI 規範，屬 OpenSpec 範疇；但語言切換、通用錯誤呈現是 PRD 範圍內的業務規則，不能無聲遺漏 |
 | D5 | 來源 spec 狀態不一致（`in-progress`、同值異名未統一）怎麼辦 | **一律以 main 分支現況為準**；三組同值異名各自統一成一個中文業務名詞，並在該頁「已確認決議」記下採用哪一個與理由 | 草稿可以一次跑完，之後不必回頭重讀來源 |
 | D6 | 業務流程圖何時生成 | **草稿只留 `@ai-visualize` 標記（`status: pending`）與完整 prompt，不生成元件**；該頁定案後再生成 | 待釐清一有答案，流程步驟與對應的 Scenario 就會變，先生成等於白做一次 |
 | D7 | 待釐清從哪裡掃 | **一頁彙總清單** `docs/specs/open-questions.mdx`，各頁原生「待釐清」章節照 skill 保留 | 維護者開一個檔就能一路往下決定，不用開 17 個檔 |
-| D8 | 撰寫順序 | **07 → 01 → 03 → 04 → 05 → 06-02 → 02** | 07 是所有頁的外框且要收 foundation 的業務規則；03 定下任務設定與 8 種輸出型別；02 儀表板讀其他模組的結果，放最後最準 |
+| D8 | 撰寫順序 | **07 → 01 → 03 → 04 → 05 → 06-02 → 02** | 07 是所有頁的外框且要收 foundation 的業務規則；03 定下任務設定與 8 種輸出類型；02 儀表板讀其他模組的結果，放最後最準 |
 | D9 | `--extract-legacy` 認不出來源實際用的編號形狀 | **先修 `scripts/check-specs.mjs`**，開一個前置 `[Bug]` child，附單元測試；17 頁在它合併後才開始 | 現行 regex 在 `annotation/015` 一份就漏 226 條（實測 254／480）。不修就等於接受第一條反目標 |
 | D10 | `admin/007` 的 17 個權限鍵算不算超出已定稿的 PRD | **算合法**，視為在 PRD §權限矩陣上限內的細化：改寫成中文業務權限名詞進術語表，每一個都要對得上矩陣的某一格、不放寬 | PRD 那張表是粗粒度上限，不是權限鍵的窮舉；`06-01` 已經用中文權限名引用過其中兩個 |
 
-### D3 的中文名稱（待各頁落地時確認）
+### D3 的中文名稱
 
-8 種輸出型別的英文鍵（`sequence_tagging`、`entity_recognition`、`relation_identification`、`single_label`、`multi_label`、`single_dim`、`multi_dim`、`free_text`）
+> **2026-11-06 維護者裁定**：容器名詞一律用「**輸出類型**」。
+> 在這之前本文件與規格 07-01 寫的是「輸出型別」，而畫面與全部舊來源 `spec.md` 寫的是「輸出類型」，兩個名字並存。裁定選了後者，所以改的是規格這一側（327 處、11 個檔案，見 [Issue #131](https://github.com/label-suite/label-suite/issues/131)），`design/prototype/` 不動。
+> 術語表的 `term.output-type` 只改 `label`，**`id` 不動**。這一條**不影響**下面講的 8 個中文名稱——那是 03-02 Q10 另外定的。
+
+8 種輸出類型的英文鍵（`sequence_tagging`、`entity_recognition`、`relation_identification`、`single_label`、`multi_label`、`single_dim`、`multi_dim`、`free_text`）
 要對應 8 個中文業務名詞並進術語表。`03-02 新增任務` 是定義它們的那一頁，由它定名、其餘頁面 `:ref` 引用。
-`03-02` 落地時把這 8 個名稱當一題列入待釐清，附建議名稱。
+`03-02` 已經把這 8 個名稱定案（見該頁 §已確認決議 Q10，依據是來源自己三處已拍板的條文）；規格 03-01 Q4 與 07-01 Q6 仍在等那個答案折回。
 
 ### D5 的三組同值異名
 
@@ -158,7 +162,7 @@
 | 04-01 標記清單 | `annotation/015-annotation-workspace/spec.md` | 一份拆兩頁（來源標題是 Annotation List + Workspace） |
 | 04-02 標記工作區 | `annotation/015-annotation-workspace/spec.md` | 同上；來源 962KB，最大一份 |
 | 05-01 分析列表 | `dataset/016-dataset-analysis-list/spec.md` | D5 第三組的定名頁 |
-| 05-02 分析詳情 | `dataset/017-dataset-analysis-detail/spec.md` | 來源 133KB；prototype 有 16 個 partials（8 種輸出型別 × 統計／品質） |
+| 05-02 分析詳情 | `dataset/017-dataset-analysis-detail/spec.md` | 來源 133KB；prototype 有 16 個 partials（8 種輸出類型 × 統計／品質） |
 | 05-03 資料匯入與版本 | `dataset/021-dataset-ingestion-and-lineage/spec.md` | **沒有 prototype 頁面**，依 skill 列入待釐清 |
 | 06-01 使用者管理 | `admin/006-user-management/spec.md` | **已完成**，不重做 |
 | 06-02 角色設定 | `admin/007-role-settings/spec.md` | 權限不得超出 PRD §權限矩陣 |
@@ -196,7 +200,7 @@
    | 依據 | 例 |
    | :--- | :--- |
    | PRD 或術語表已經定的事項 | 角色名稱、權限矩陣、任務五狀態 |
-   | 本文件的 D1–D10 | 輸出型別、來源前綴、`foundation/000` 只取業務規則 |
+   | 本文件的 D1–D10 | 輸出類型、來源前綴、`foundation/000` 只取業務規則 |
    | 來源 `spec.md` 自己的 Clarifications 或已拍板條文（依 D5） | 手機不提供快捷鍵總覽、頁籤只記網址 |
    | 維護者在 Issue 或對話裡明確拍板，且已記下日期 | 07-01 的 Q1 與 Q3 |
 

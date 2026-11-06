@@ -5,16 +5,22 @@
 // The page is served by `pnpm prototype` (scripts/serve-prototype.mjs). When that
 // server is not running, the frame is replaced by a notice; the source path under
 // the frame always tells the reader which file to open.
-import { useEffect, useState } from 'react';
+// A prototype picks its layout from the iframe's own width, so a narrow note column
+// would switch it to the mobile layout. Below MIN_FRAME_WIDTH the iframe keeps that
+// width and is scaled down to fit, which keeps the desktop layout.
+import { useEffect, useRef, useState } from 'react';
 
 const PROTOTYPE_ORIGIN = 'http://127.0.0.1:4331';
+/** Just above the prototype's 767px mobile breakpoint, to keep the scale-down small. */
+const MIN_FRAME_WIDTH = 800;
+const BORDER_WIDTH = 1;
 
 type Props = {
   /** Page path under design/prototype/pages/, without the .html extension. */
   page: string;
   /** Short page name, used as the iframe title and the caption. */
   caption: string;
-  /** Frame height in pixels. */
+  /** Displayed frame height in pixels. */
   height?: number;
 };
 
@@ -24,6 +30,8 @@ export default function PrototypeFrame({ page, caption, height = 640 }: Props) {
   const url = `${PROTOTYPE_ORIGIN}/pages/${page}.html`;
   const source = `design/prototype/pages/${page}.html`;
   const [status, setStatus] = useState<Status>('checking');
+  const [figureWidth, setFigureWidth] = useState(0);
+  const figureRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     // An iframe fires load even when the connection is refused, so probe first.
@@ -38,17 +46,39 @@ export default function PrototypeFrame({ page, caption, height = 640 }: Props) {
     };
   }, [url]);
 
+  useEffect(() => {
+    const figure = figureRef.current;
+    if (!figure) return;
+    const observer = new ResizeObserver(([entry]) => setFigureWidth(entry.contentRect.width));
+    observer.observe(figure);
+    return () => observer.disconnect();
+  }, []);
+
   const box = {
+    boxSizing: 'border-box' as const,
     width: '100%',
     height: `${height}px`,
-    border: '1px solid #d4d4d8',
+    border: `${BORDER_WIDTH}px solid #d4d4d8`,
     borderRadius: '8px',
+  };
+  const innerWidth = figureWidth - BORDER_WIDTH * 2;
+  const innerHeight = height - BORDER_WIDTH * 2;
+  const scale = innerWidth > 0 && innerWidth < MIN_FRAME_WIDTH ? innerWidth / MIN_FRAME_WIDTH : 1;
+  const frame = {
+    display: 'block',
+    border: 0,
+    width: scale < 1 ? `${MIN_FRAME_WIDTH}px` : '100%',
+    height: `${innerHeight / scale}px`,
+    transform: scale < 1 ? `scale(${scale})` : undefined,
+    transformOrigin: 'top left',
   };
 
   return (
-    <figure style={{ margin: '1rem 0' }}>
+    <figure ref={figureRef} style={{ margin: '1rem 0' }}>
       {status === 'up' ? (
-        <iframe src={url} title={`${caption} prototype`} loading="lazy" style={box} />
+        <div style={{ ...box, overflow: 'hidden' }}>
+          <iframe src={url} title={`${caption} prototype`} loading="lazy" style={frame} />
+        </div>
       ) : (
         <div
           role="note"
