@@ -24,6 +24,7 @@ const SPEC = 'specs/01-user-management/01-user-list.mdx';
 const LEGACY = 'specs/legacy/01-01-user-list.ids';
 const PRD = 'specs/00-prd.mdx';
 const GLOSSARY = 'specs/glossary.mdx';
+const INDEX = 'specs/index.mdx';
 
 const ACCEPTANCE = '| Scenario | Given | When | Then |\n| --- | --- | --- | --- |\n| 新增使用者 | a | b | c |\n| 停用使用者 | a | b | c |';
 
@@ -572,4 +573,43 @@ test('a ref to an undefined term is reported once, not twice', () => {
   });
   assert.equal(errors.length, 1);
   assert.match(errors[0], /reference to undefined term "term\.nope"/);
+});
+
+test('a define that writes label before id still holds its references', () => {
+  const errors = errorsFor({
+    [GLOSSARY]: FRONTMATTER + ':::define{label="標註員" id="term.annotator"}\n標註員。\n:::\n',
+    [SPEC]: spec({ 目標: '讓 :ref[標記員]{id="term.annotator"} 登入。' }),
+  }).join('\n');
+  assert.match(errors, /ref text "標記員" does not match the label "標註員" of term\.annotator/);
+});
+
+// A spec page is read before the glossary, so only the glossary's own label may
+// be the one a reference is held to.
+test('a term define outside the glossary does not shadow the glossary label', () => {
+  const errors = errorsFor({
+    [GLOSSARY]: glossary(def('term.annotator', '標註員')),
+    [SPEC]: spec({ 目標: def('term.annotator', '標記員') + '\n\n讓 :ref[標註員]{id="term.annotator"} 登入。' }),
+  }).join('\n');
+  assert.doesNotMatch(errors, /does not match the label/);
+});
+
+// Nothing reports a duplicate id outside term.*, so the first one has to win or
+// the label a reference is held to would depend on the order files are read in.
+test('the first define of a non-term id settles its label', () => {
+  const errors = errorsFor({
+    [GLOSSARY]: glossary(def('term.annotator', '標註員')) + '\n' + def('specs.map', '甲') + '\n',
+    [INDEX]: FRONTMATTER + def('specs.map', '乙') + '\n',
+    [SPEC]: spec({ 目標: '見 :ref[甲]{id="specs.map"}。' }),
+  }).join('\n');
+  assert.doesNotMatch(errors, /does not match the label/);
+});
+
+test('a define with no label exempts its references from the label check', () => {
+  assert.deepEqual(
+    errorsFor({
+      [GLOSSARY]: FRONTMATTER + ':::define{id="term.annotator"}\n標註員。\n:::\n',
+      [SPEC]: spec({ 目標: '讓 :ref[隨便]{id="term.annotator"} 登入。' }),
+    }),
+    [],
+  );
 });
