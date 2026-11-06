@@ -346,6 +346,8 @@ function specParts(path) {
 // across lines, angle-bracket targets and extension-less in-site links are all
 // skipped. Writing a link one of those ways therefore bypasses this check.
 const ANCHOR_LINK_RE = /\]\(([^)\s#]*)#([^)\s]+)\)/g;
+// The same links written without a fragment: the target still has to exist.
+const PLAIN_LINK_RE = /\]\(([^)\s#]+\.mdx)\)/g;
 
 // A fragment copied from the browser's address bar arrives percent-encoded, and
 // every anchor here is Chinese, so compare against the decoded form.
@@ -375,6 +377,50 @@ function checkAnchorLinks(files, report) {
         report.error(f.rel, line, `link anchor "${target}#${anchor}" has no matching heading in ${where}`);
       }
     }
+    for (const m of f.text.matchAll(PLAIN_LINK_RE)) {
+      const [, target] = m;
+      const where = posix.normalize(posix.join(dir, target));
+      if (!known.has(where)) report.error(f.rel, lineOf(f.text, m.index), `link target "${target}" does not exist`);
+    }
+  }
+}
+
+// "規格 03-03 任務詳情（未撰寫）" and its variants. Each migrated page leaves
+// these behind in the pages that referenced it, and nothing notices: a reader
+// who sees "未撰寫" does not go looking for a page that has in fact shipped
+// (#150). The spec number may sit before or after the page name and the 規格
+// prefix is optional, so this looks backwards from 未撰寫 for a number rather
+// than matching one fixed phrasing.
+//
+// 00-prd.mdx is left out on purpose: it is maintained by the prd-writing skill,
+// not by spec migration, and its own stale markers are tracked in #85.
+// The claim is written several ways, so match them all; a page that has shipped
+// is just as badly described by 還沒撰寫 as by 未撰寫.
+const UNWRITTEN_RE = /(未撰寫|還沒撰寫|尚未撰寫)/g;
+// How far back to look for the number. Clamped to the containing line, so the
+// window never reaches into the line above or across a blanked code fence.
+const UNWRITTEN_LOOKBACK = 24;
+// A spec number, rejecting the MM-DD tail of a date such as 2026-02-01.
+const SPEC_NUMBER_NEAR_RE = /(?<![\d-])(\d{2}-\d{2})(?![\d-])/g;
+
+function checkStaleUnwritten(files, specPathByNumber, report) {
+  for (const f of files) {
+    // 00-prd.mdx is maintained by the prd-writing skill, not by spec migration,
+    // and its own stale markers are tracked in #85.
+    if (f.path === PRD_PATH) continue;
+    for (const m of f.text.matchAll(UNWRITTEN_RE)) {
+      const at = m.index;
+      const lineStart = f.text.lastIndexOf('\n', at) + 1;
+      const before = f.text.slice(Math.max(at - UNWRITTEN_LOOKBACK, lineStart), at);
+      const seen = new Set();
+      for (const n of before.matchAll(SPEC_NUMBER_NEAR_RE)) {
+        const number = n[1];
+        if (seen.has(number)) continue;
+        seen.add(number);
+        const target = specPathByNumber.get(number);
+        if (target) report.error(f.rel, lineOf(f.text, at), `spec ${number} is called ${m[1]} but ${target} exists`);
+      }
+    }
   }
 }
 
@@ -390,6 +436,12 @@ export function checkDocs(docsDir) {
     });
 
   const specNumbers = new Set(files.map((f) => specParts(f.path)?.number).filter(Boolean));
+  const specPathByNumber = new Map(
+    files.flatMap((f) => {
+      const n = specParts(f.path)?.number;
+      return n ? [[n, f.path]] : [];
+    }),
+  );
 
   for (const f of files) {
     if (f.path === PRD_PATH) {
@@ -408,6 +460,7 @@ export function checkDocs(docsDir) {
     }
   }
   checkAnchorLinks(files, report);
+  checkStaleUnwritten(files, specPathByNumber, report);
   checkTerms(files, relative(process.cwd(), join(docsDir, GLOSSARY_PATH)), report);
   return errors;
 }

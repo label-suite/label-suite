@@ -429,3 +429,109 @@ test('a percent-encoded anchor with no such heading is still reported', () => {
   const errors = errorsFor({ [SPEC]: spec({ 目標: '見 [x](#%E4%B8%8D%E5%AD%98)。' }) }).join('\n');
   assert.match(errors, /link anchor "#%E4%B8%8D%E5%AD%98" has no matching heading/);
 });
+
+// --- stale "未撰寫" cross-references (#150) --------------------------------
+
+const SPEC3 = 'specs/02-dashboard/01-dashboard.mdx';
+
+test('calling a spec page unwritten when it exists is reported', () => {
+  const errors = errorsFor({
+    [SPEC]: spec({ 目標: '見 規格 02-01 儀表板（未撰寫）。' }),
+    [SPEC3]: spec(),
+  }).join('\n');
+  assert.match(errors, /01-user-list\.mdx:\d+: spec 02-01 is called 未撰寫 but specs\/02-dashboard\/01-dashboard\.mdx exists/);
+});
+
+test('the number may come after the page name', () => {
+  const errors = errorsFor({
+    [SPEC]: spec({ 目標: '見 儀表板（規格 02-01，未撰寫）。' }),
+    [SPEC3]: spec(),
+  }).join('\n');
+  assert.match(errors, /spec 02-01 is called 未撰寫/);
+});
+
+test('the 規格 prefix is optional', () => {
+  const errors = errorsFor({
+    [SPEC]: spec({ 目標: '那一層屬 02-01（未撰寫）。' }),
+    [SPEC3]: spec(),
+  }).join('\n');
+  assert.match(errors, /spec 02-01 is called 未撰寫/);
+});
+
+test('calling a spec page unwritten when it really is absent passes', () => {
+  assert.deepEqual(errorsFor({ [SPEC]: spec({ 目標: '見 規格 09-09 還沒寫的頁（未撰寫）。' }) }), []);
+});
+
+test('未撰寫 with no spec number nearby is not reported', () => {
+  assert.deepEqual(errorsFor({ [SPEC]: spec({ 目標: '這一節未撰寫。' }), [SPEC3]: spec() }), []);
+});
+
+test('a spec number far from 未撰寫 is not pulled in', () => {
+  assert.deepEqual(
+    errorsFor({
+      [SPEC]: spec({ 目標: '見 規格 02-01 儀表板，那一頁講的是彙整任務與快速回到標記，另外有一段內容未撰寫。' }),
+      [SPEC3]: spec(),
+    }),
+    [],
+  );
+});
+
+test('未撰寫 inside a fenced code block is not reported', () => {
+  assert.deepEqual(
+    errorsFor({ [SPEC]: spec({ 目標: '```md\n規格 02-01（未撰寫）\n```\n' }), [SPEC3]: spec() }),
+    [],
+  );
+});
+
+test('a link to a spec page that does not exist is reported even without an anchor', () => {
+  const errors = errorsFor({ [SPEC]: spec({ 目標: '見 [規格 09-09](../09-nope/09-nope.mdx)。' }) }).join('\n');
+  assert.match(errors, /01-user-list\.mdx:\d+: link target "\.\.\/09-nope\/09-nope\.mdx" does not exist/);
+});
+
+test('a link to a spec page that exists passes without an anchor', () => {
+  assert.deepEqual(
+    errorsFor({ [SPEC]: spec({ 目標: '見 [規格 02-01](../02-dashboard/01-dashboard.mdx)。' }), [SPEC3]: spec() }),
+    [],
+  );
+});
+
+test('a date is not mistaken for a spec number', () => {
+  assert.deepEqual(
+    errorsFor({ [SPEC]: spec({ 目標: '這一版記在 2026-02-01，未撰寫。' }), [SPEC3]: spec() }),
+    [],
+  );
+});
+
+test('the look-back does not reach into the previous line', () => {
+  assert.deepEqual(
+    errorsFor({ [SPEC]: spec({ 目標: '見規格 02-01\n（未撰寫）。' }), [SPEC3]: spec() }),
+    [],
+  );
+});
+
+test('every spec number in the window is checked, not just the last', () => {
+  const errors = errorsFor({
+    [SPEC]: spec({ 目標: '見 規格 02-01、09-09（都未撰寫）。' }),
+    [SPEC3]: spec(),
+  }).join('\n');
+  assert.match(errors, /spec 02-01 is called 未撰寫/);
+});
+
+test('還沒撰寫 and 尚未撰寫 count as the same claim', () => {
+  const errors = errorsFor({
+    [SPEC]: spec({ 目標: '規格 02-01 還沒撰寫。', 卡控機制: '規格 02-01 尚未撰寫。' }),
+    [SPEC3]: spec(),
+  }).join('\n');
+  assert.equal((errors.match(/is called/g) ?? []).length, 2);
+});
+
+test('00-prd.mdx is skipped on purpose', () => {
+  assert.deepEqual(errorsFor({ [PRD]: prd({ 'Site Map': '儀表板：規格 02-01，未撰寫' }), [SPEC3]: spec() }), []);
+});
+
+test('未撰寫 inside a JSX comment is not reported', () => {
+  assert.deepEqual(
+    errorsFor({ [SPEC]: spec({ 目標: '{/* 規格 02-01（未撰寫） */}' }), [SPEC3]: spec() }),
+    [],
+  );
+});
