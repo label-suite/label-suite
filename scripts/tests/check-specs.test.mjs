@@ -42,7 +42,7 @@ const errorsFor = (files) => checkDocs(docs(files));
 test('a complete PRD, glossary and spec pass', () => {
   assert.deepEqual(
     errorsFor({
-      [PRD]: prd({ 術語: '見 :ref[術語表]{id="term.annotator"}。' }),
+      [PRD]: prd({ 術語: '見 :ref[標註員]{id="term.annotator"}。' }),
       [GLOSSARY]: glossary(def('term.annotator', '標註員')),
       [SPEC]: spec({ 目標: '讓 :ref[標註員]{id="term.annotator"} 登入。' }),
     }),
@@ -534,4 +534,42 @@ test('未撰寫 inside a JSX comment is not reported', () => {
     errorsFor({ [SPEC]: spec({ 目標: '{/* 規格 02-01（未撰寫） */}' }), [SPEC3]: spec() }),
     [],
   );
+});
+
+// --- ref display text vs glossary label (#150) ------------------------------
+
+test('a ref whose display text matches the define label passes', () => {
+  assert.deepEqual(
+    errorsFor({
+      [GLOSSARY]: glossary(def('term.annotator', '標註員')),
+      [SPEC]: spec({ 目標: '讓 :ref[標註員]{id="term.annotator"} 登入。' }),
+    }),
+    [],
+  );
+});
+
+test('a ref whose display text differs from the define label is reported', () => {
+  const errors = errorsFor({
+    [GLOSSARY]: glossary(def('term.annotator', '標註員')),
+    [SPEC]: spec({ 目標: '讓 :ref[標記員]{id="term.annotator"} 登入。' }),
+  }).join('\n');
+  assert.match(errors, /01-user-list\.mdx:\d+: ref text "標記員" does not match the label "標註員" of term\.annotator/);
+});
+
+test('a ref inside inline code is not checked for its label', () => {
+  assert.deepEqual(
+    errorsFor({
+      [GLOSSARY]: glossary(def('term.annotator', '標註員'), '用 `:ref[名詞]{id="term.annotator"}` 引用。'),
+    }),
+    [],
+  );
+});
+
+test('a ref to an undefined term is reported once, not twice', () => {
+  const errors = errorsFor({
+    [GLOSSARY]: glossary(def('term.annotator', '標註員')),
+    [SPEC]: spec({ 目標: ':ref[甲]{id="term.nope"}' }),
+  });
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /reference to undefined term "term\.nope"/);
 });

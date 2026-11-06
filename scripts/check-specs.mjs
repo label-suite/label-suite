@@ -127,7 +127,9 @@ function anchors(text) {
 
 // Every define/ref id, whatever its namespace; term.* ids are also resolved.
 const DEF_ID_RE = /^:{3,}define\{[^}]*\bid="([^"]*)"/gm;
-const REF_ID_RE = /(?<![:\\]):ref\[[^\]]*\]\{[^}]*\bid="([^"]*)"/g;
+// The same define, read for its label so a reference can be held to it.
+const DEF_LABEL_RE = /^:{3,}define\{[^}]*\bid="([^"]*)"[^}]*\blabel="([^"]*)"/gm;
+const REF_ID_RE = /(?<![:\\]):ref\[([^\]]*)\]\{[^}]*\bid="([^"]*)"/g;
 // Letters, digits, _ and -, in .-separated segments. NoteCraft fails the whole
 // build on anything else, such as a space.
 const ID_FORMAT_RE = /^[\p{L}\p{N}_-]+(?:\.[\p{L}\p{N}_-]+)*$/u;
@@ -158,12 +160,26 @@ function checkTerms(files, glossaryRel, report) {
       }
     }
   }
+  // Labels, so a reference can be held to the wording the glossary settled on.
+  const labels = new Map();
+  for (const f of files) {
+    for (const m of f.text.matchAll(DEF_LABEL_RE)) labels.set(m[1], m[2]);
+  }
   for (const f of files) {
     for (const m of f.text.matchAll(REF_ID_RE)) {
+      const [, display, id] = m;
       const line = lineOf(f.text, m.index);
-      checkFormat(f, m[1], line);
-      if (m[1].startsWith('term.') && !defined.has(m[1])) {
-        report.error(f.rel, line, `reference to undefined term "${m[1]}"`);
+      checkFormat(f, id, line);
+      if (id.startsWith('term.') && !defined.has(id)) {
+        report.error(f.rel, line, `reference to undefined term "${id}"`);
+        continue;
+      }
+      // A reference that renames the term quietly forks the vocabulary: the
+      // glossary says one thing and the page says another, and check:specs used
+      // to pass because the id resolved (#150).
+      const label = labels.get(id);
+      if (label !== undefined && display !== label) {
+        report.error(f.rel, line, `ref text "${display}" does not match the label "${label}" of ${id}`);
       }
     }
   }
