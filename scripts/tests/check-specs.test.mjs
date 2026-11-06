@@ -613,3 +613,117 @@ test('a define with no label exempts its references from the label check', () =>
     [],
   );
 });
+
+// --- question numbers (#150) -------------------------------------------------
+
+test('the same Q number twice in one page is reported at every occurrence', () => {
+  const errors = errorsFor({
+    [SPEC]: spec({ 待釐清: '### Q9. 甲\n\n甲。', 已確認決議: '### Q9. 乙\n\n乙。' }),
+  }).join('\n');
+  const lines = [...errors.matchAll(/01-user-list\.mdx:(\d+): question number "Q9"/g)].map((m) => m[1]);
+  assert.equal(lines.length, 2, `expected both occurrences, got:\n${errors}`);
+});
+
+test('two pages may each use the same Q number', () => {
+  assert.deepEqual(
+    errorsFor({
+      [SPEC]: spec({ 待釐清: '### Q9. 甲\n\n甲。' }),
+      [SPEC2]: spec({ 待釐清: '### Q9. 乙\n\n乙。' }),
+    }),
+    [],
+  );
+});
+
+test('a citation naming the wrong chapter for a Q number is reported', () => {
+  const errors = errorsFor({
+    [SPEC]: spec({ 目標: '見 [§待釐清](#待釐清) Q9。', 已確認決議: '### Q9. 甲\n\n甲。' }),
+  }).join('\n');
+  assert.match(errors, /01-user-list\.mdx:\d+: "Q9" is not in §待釐清 of specs\/01-user-management\/01-user-list\.mdx/);
+});
+
+test('a citation of a Q number that is in the chapter it names passes', () => {
+  assert.deepEqual(errorsFor({ [SPEC]: spec({ 目標: '見 [§待釐清](#待釐清) Q9。', 待釐清: '### Q9. 甲\n\n甲。' }) }), []);
+});
+
+test('a citation is resolved against the page its link points at', () => {
+  const errors = errorsFor({
+    [SPEC]: spec({ 目標: '見 [規格 01-02 §待釐清](./02-user-detail.mdx#待釐清) Q9。', 待釐清: '### Q9. 甲\n\n甲。' }),
+    [SPEC2]: spec({ 已確認決議: '### Q9. 乙\n\n乙。' }),
+  }).join('\n');
+  assert.match(errors, /"Q9" is not in §待釐清 of specs\/01-user-management\/02-user-detail\.mdx/);
+});
+
+test('a citation naming two Q numbers checks both', () => {
+  const errors = errorsFor({
+    [SPEC]: spec({ 目標: '見 [§待釐清](#待釐清) Q9 與 Q10。', 待釐清: '### Q9. 甲\n\n甲。' }),
+  }).join('\n');
+  assert.doesNotMatch(errors, /"Q9" is not in/);
+  assert.match(errors, /"Q10" is not in §待釐清/);
+});
+
+const OPEN_QUESTIONS = 'specs/open-questions.mdx';
+const row = (number, q, target, chapter) =>
+  `| ${number} ${q} | 甲 | 乙 | 丙 | [規格 ${number} §${chapter}](${target}#${chapter}) |`;
+
+test('an index row whose Q number is in the other chapter is reported', () => {
+  const errors = errorsFor({
+    [OPEN_QUESTIONS]: FRONTMATTER + row('01-01', 'Q9', './01-user-management/01-user-list.mdx', '待釐清') + '\n',
+    [SPEC]: spec({ 已確認決議: '### Q9. 甲\n\n甲。' }),
+  }).join('\n');
+  assert.match(errors, /open-questions\.mdx:\d+: "Q9" is not in §待釐清 of specs\/01-user-management\/01-user-list\.mdx/);
+});
+
+test('an index row whose Q number is in the chapter it names passes', () => {
+  assert.deepEqual(
+    errorsFor({
+      [OPEN_QUESTIONS]: FRONTMATTER + row('01-01', 'Q9', './01-user-management/01-user-list.mdx', '待釐清') + '\n',
+      [SPEC]: spec({ 待釐清: '### Q9. 甲\n\n甲。' }),
+    }),
+    [],
+  );
+});
+
+test('an index row naming one spec but linking to another is reported', () => {
+  const errors = errorsFor({
+    [OPEN_QUESTIONS]: FRONTMATTER + row('01-01', 'Q9', './01-user-management/02-user-detail.mdx', '待釐清') + '\n',
+    [SPEC]: spec({ 待釐清: '### Q9. 甲\n\n甲。' }),
+    [SPEC2]: spec({ 待釐清: '### Q9. 乙\n\n乙。' }),
+  }).join('\n');
+  assert.match(errors, /open-questions\.mdx:\d+: row names 規格 01-01 but links to specs\/01-user-management\/02-user-detail\.mdx/);
+});
+
+test('a citation whose target page has no such chapter is left to the anchor check', () => {
+  const errors = errorsFor({
+    [OPEN_QUESTIONS]: FRONTMATTER + '見 [§待釐清](./glossary.mdx#待釐清) Q1。\n',
+    [GLOSSARY]: glossary(def('term.annotator', '標註員')),
+  }).join('\n');
+  assert.match(errors, /has no matching heading in specs\/glossary\.mdx/);
+  assert.doesNotMatch(errors, /"Q1" is not in/);
+});
+
+test('a clause boundary after the link does not pull the next number in', () => {
+  assert.deepEqual(
+    errorsFor({
+      [SPEC]: spec({ 目標: '見 [規格 01-02 §待釐清](./02-user-detail.mdx#待釐清)，Q9 也在等。', 待釐清: '### Q9. 甲\n\n甲。' }),
+      [SPEC2]: spec({ 待釐清: '### Q1. 乙\n\n乙。' }),
+    }),
+    [],
+  );
+});
+
+// The row's own page is named by its last cell; an earlier cell may legitimately
+// cite another page's chapter, and that citation is checked as prose, not as the
+// row's own link (this was a false positive on open-questions.mdx:251).
+test('an index row citing another page mid-row is judged by its last link', () => {
+  assert.deepEqual(
+    errorsFor({
+      [OPEN_QUESTIONS]:
+        FRONTMATTER +
+        '| 01-01 Q9 | 甲 | 已由[規格 01-02 §已確認決議](./01-user-management/02-user-detail.mdx#已確認決議) Q1 結案 |' +
+        ' [規格 01-01 §待釐清](./01-user-management/01-user-list.mdx#待釐清) |\n',
+      [SPEC]: spec({ 待釐清: '### Q9. 甲\n\n甲。' }),
+      [SPEC2]: spec({ 已確認決議: '### Q1. 乙\n\n乙。' }),
+    }),
+    [],
+  );
+});
