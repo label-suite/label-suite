@@ -10,6 +10,6 @@
   },
   "devDependencies": {
     "@fission-ai/openspec": "1.14.1",
-    "notecraftapp": "1.13.0"
+    "notecraftapp": "1.15.0"
   }
 }
