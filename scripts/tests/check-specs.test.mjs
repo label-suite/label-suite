@@ -337,3 +337,95 @@ test('a malformed source prefix is still reported as not a legacy ID', () => {
     /is not a legacy ID/,
   );
 });
+
+// --- anchor links (#129) ---------------------------------------------------
+
+const SPEC2 = 'specs/01-user-management/02-user-detail.mdx';
+
+test('a same-file anchor that matches a heading passes', () => {
+  assert.deepEqual(errorsFor({ [SPEC]: spec({ 目標: '見 [§卡控機制](#卡控機制)。' }) }), []);
+});
+
+test('a same-file anchor with no such heading is reported', () => {
+  const errors = errorsFor({ [SPEC]: spec({ 目標: '見 [§不存在](#不存在的章節)。' }) }).join('\n');
+  assert.match(errors, /01-user-list\.mdx:\d+: link anchor "#不存在的章節" has no matching heading/);
+});
+
+test('a cross-file anchor that matches a heading in the target passes', () => {
+  assert.deepEqual(
+    errorsFor({
+      [SPEC]: spec({ 目標: '見 [規格 01-02 §卡控機制](./02-user-detail.mdx#卡控機制)。' }),
+      [SPEC2]: spec(),
+    }),
+    [],
+  );
+});
+
+test('a cross-file anchor with no such heading in the target is reported', () => {
+  const errors = errorsFor({
+    [SPEC]: spec({ 目標: '見 [規格 01-02 §停用與啟用帳號](./02-user-detail.mdx#停用與啟用帳號)。' }),
+    [SPEC2]: spec(),
+  }).join('\n');
+  assert.match(errors, /01-user-list\.mdx:\d+: link anchor "\.\/02-user-detail\.mdx#停用與啟用帳號" has no matching heading/);
+});
+
+test('a cross-file link to a file that does not exist is reported', () => {
+  const errors = errorsFor({ [SPEC]: spec({ 目標: '見 [規格 09-09](../09-nope/09-nope.mdx#目標)。' }) }).join('\n');
+  assert.match(errors, /01-user-list\.mdx:\d+: link target "\.\.\/09-nope\/09-nope\.mdx" does not exist/);
+});
+
+test('an anchor on a level-1 heading resolves', () => {
+  assert.deepEqual(errorsFor({ [SPEC]: spec({ 目標: '見 [頁首](#甲)。' }, '\n# 甲\n') }), []);
+});
+
+test('a repeated heading gets the -1 suffix anchor', () => {
+  assert.deepEqual(
+    errorsFor({ [SPEC]: spec({ 目標: '見 [第二個](#重複-1)。', 卡控機制: '### 重複\n\n### 重複\n' }) }),
+    [],
+  );
+});
+
+test('an anchor inside a fenced code block is not checked', () => {
+  assert.deepEqual(
+    errorsFor({ [SPEC]: spec({ 目標: '```md\n[x](#不存在的章節)\n```\n' }) }),
+    [],
+  );
+});
+
+test('a link with no anchor is not checked', () => {
+  assert.deepEqual(
+    errorsFor({ [SPEC]: spec({ 目標: '見 [規格 01-02](./02-user-detail.mdx)。' }), [SPEC2]: spec() }),
+    [],
+  );
+});
+
+test('an external URL with a fragment is not treated as a spec anchor', () => {
+  assert.deepEqual(
+    errorsFor({ [SPEC]: spec({ 目標: '見 [Issue](https://github.com/o/r/issues/1#issuecomment-2)。' }) }),
+    [],
+  );
+});
+
+test('a link to a non-mdx file with a fragment is not checked', () => {
+  assert.deepEqual(errorsFor({ [SPEC]: spec({ 目標: '見 [圖](./a.svg#layer1)。' }) }), []);
+});
+
+test('a percent-encoded anchor resolves to the decoded heading', () => {
+  assert.deepEqual(errorsFor({ [SPEC]: spec({ 目標: '見 [目標](#%E7%9B%AE%E6%A8%99)。' }) }), []);
+});
+
+test('a level-1 heading anchor is the plain slug, not a suffixed one', () => {
+  const errors = errorsFor({ [SPEC]: spec({ 目標: '見 [頁首](#甲-1)。' }, '\n# 甲\n') }).join('\n');
+  assert.match(errors, /link anchor "#甲-1" has no matching heading/);
+});
+
+test('a heading that appears once has no -1 anchor', () => {
+  const errors = errorsFor({ [SPEC]: spec({ 目標: '見 [第二個](#重複-1)。', 卡控機制: '### 重複\n' }) }).join('\n');
+  assert.match(errors, /link anchor "#重複-1" has no matching heading/);
+});
+
+test('a percent-encoded anchor with no such heading is still reported', () => {
+  // %E4%B8%8D%E5%AD%98 decodes to 不存 — reported, so the decode is not a blanket pass.
+  const errors = errorsFor({ [SPEC]: spec({ 目標: '見 [x](#%E4%B8%8D%E5%AD%98)。' }) }).join('\n');
+  assert.match(errors, /link anchor "#%E4%B8%8D%E5%AD%98" has no matching heading/);
+});

@@ -10,7 +10,7 @@
 // IDs a legacy spec defines, one per line, to seed docs/specs/legacy/*.ids.
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative, sep } from 'node:path';
+import { join, posix, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const PRD_PATH = 'specs/00-prd.mdx';
@@ -332,6 +332,52 @@ function specParts(path) {
   return { number: `${module}-${file.slice(0, 2)}`, legacyName: `${module}-${file.replace(/\.mdx$/, '')}` };
 }
 
+// Links of the form "](path.mdx#anchor)" and "](#anchor)": the target file must
+// exist and the anchor must match one of its headings. Neither check:specs' own
+// chapter checks nor the site build verify this, so a renamed heading silently
+// leaves dead links behind (#129).
+//
+// Deliberately narrow, so that what it does check, it checks exactly:
+//   - only inline "](...)" links, and only those whose target is empty
+//     (same file) or ends in ".mdx"; an external URL or an asset may carry a
+//     fragment that means nothing here
+//   - only ".mdx" source files, since that is what listMdx walks
+// Reference-style links, bare <a href>, links carrying a title, links split
+// across lines, angle-bracket targets and extension-less in-site links are all
+// skipped. Writing a link one of those ways therefore bypasses this check.
+const ANCHOR_LINK_RE = /\]\(([^)\s#]*)#([^)\s]+)\)/g;
+
+// A fragment copied from the browser's address bar arrives percent-encoded, and
+// every anchor here is Chinese, so compare against the decoded form.
+function decodeAnchor(anchor) {
+  try {
+    return decodeURIComponent(anchor);
+  } catch {
+    return anchor;
+  }
+}
+
+function checkAnchorLinks(files, report) {
+  const known = new Set(files.map((f) => f.path));
+  const anchorsOf = new Map(files.map((f) => [f.path, anchors(f.text)]));
+  for (const f of files) {
+    const dir = f.path.includes('/') ? f.path.slice(0, f.path.lastIndexOf('/')) : '';
+    for (const m of f.text.matchAll(ANCHOR_LINK_RE)) {
+      const [, target, anchor] = m;
+      if (target !== '' && !target.endsWith('.mdx')) continue;
+      const line = lineOf(f.text, m.index);
+      const where = target === '' ? f.path : posix.normalize(posix.join(dir, target));
+      if (target !== '' && !known.has(where)) {
+        report.error(f.rel, line, `link target "${target}" does not exist`);
+        continue;
+      }
+      if (!anchorsOf.get(where).has(decodeAnchor(anchor))) {
+        report.error(f.rel, line, `link anchor "${target}#${anchor}" has no matching heading in ${where}`);
+      }
+    }
+  }
+}
+
 export function checkDocs(docsDir) {
   const errors = [];
   const report = { error: (file, line, msg) => errors.push(`${file}:${line}: ${msg}`) };
@@ -361,6 +407,7 @@ export function checkDocs(docsDir) {
       checkMapping(f.rel, f.text, legacy, names, specNumbers, spec.number, report);
     }
   }
+  checkAnchorLinks(files, report);
   checkTerms(files, relative(process.cwd(), join(docsDir, GLOSSARY_PATH)), report);
   return errors;
 }
