@@ -24,6 +24,7 @@ const SPEC = 'specs/01-user-management/01-user-list.mdx';
 const LEGACY = 'specs/legacy/01-01-user-list.ids';
 const PRD = 'specs/00-prd.mdx';
 const GLOSSARY = 'specs/glossary.mdx';
+const INDEX = 'specs/index.mdx';
 
 const ACCEPTANCE = '| Scenario | Given | When | Then |\n| --- | --- | --- | --- |\n| 新增使用者 | a | b | c |\n| 停用使用者 | a | b | c |';
 
@@ -42,7 +43,7 @@ const errorsFor = (files) => checkDocs(docs(files));
 test('a complete PRD, glossary and spec pass', () => {
   assert.deepEqual(
     errorsFor({
-      [PRD]: prd({ 術語: '見 :ref[術語表]{id="term.annotator"}。' }),
+      [PRD]: prd({ 術語: '見 :ref[標註員]{id="term.annotator"}。' }),
       [GLOSSARY]: glossary(def('term.annotator', '標註員')),
       [SPEC]: spec({ 目標: '讓 :ref[標註員]{id="term.annotator"} 登入。' }),
     }),
@@ -532,6 +533,83 @@ test('00-prd.mdx is skipped on purpose', () => {
 test('未撰寫 inside a JSX comment is not reported', () => {
   assert.deepEqual(
     errorsFor({ [SPEC]: spec({ 目標: '{/* 規格 02-01（未撰寫） */}' }), [SPEC3]: spec() }),
+    [],
+  );
+});
+
+// --- ref display text vs glossary label (#150) ------------------------------
+
+test('a ref whose display text matches the define label passes', () => {
+  assert.deepEqual(
+    errorsFor({
+      [GLOSSARY]: glossary(def('term.annotator', '標註員')),
+      [SPEC]: spec({ 目標: '讓 :ref[標註員]{id="term.annotator"} 登入。' }),
+    }),
+    [],
+  );
+});
+
+test('a ref whose display text differs from the define label is reported', () => {
+  const errors = errorsFor({
+    [GLOSSARY]: glossary(def('term.annotator', '標註員')),
+    [SPEC]: spec({ 目標: '讓 :ref[標記員]{id="term.annotator"} 登入。' }),
+  }).join('\n');
+  assert.match(errors, /01-user-list\.mdx:\d+: ref text "標記員" does not match the label "標註員" of term\.annotator/);
+});
+
+test('a ref inside inline code is not checked for its label', () => {
+  assert.deepEqual(
+    errorsFor({
+      [GLOSSARY]: glossary(def('term.annotator', '標註員'), '用 `:ref[名詞]{id="term.annotator"}` 引用。'),
+    }),
+    [],
+  );
+});
+
+test('a ref to an undefined term is reported once, not twice', () => {
+  const errors = errorsFor({
+    [GLOSSARY]: glossary(def('term.annotator', '標註員')),
+    [SPEC]: spec({ 目標: ':ref[甲]{id="term.nope"}' }),
+  });
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /reference to undefined term "term\.nope"/);
+});
+
+test('a define that writes label before id still holds its references', () => {
+  const errors = errorsFor({
+    [GLOSSARY]: FRONTMATTER + ':::define{label="標註員" id="term.annotator"}\n標註員。\n:::\n',
+    [SPEC]: spec({ 目標: '讓 :ref[標記員]{id="term.annotator"} 登入。' }),
+  }).join('\n');
+  assert.match(errors, /ref text "標記員" does not match the label "標註員" of term\.annotator/);
+});
+
+// A spec page is read before the glossary, so only the glossary's own label may
+// be the one a reference is held to.
+test('a term define outside the glossary does not shadow the glossary label', () => {
+  const errors = errorsFor({
+    [GLOSSARY]: glossary(def('term.annotator', '標註員')),
+    [SPEC]: spec({ 目標: def('term.annotator', '標記員') + '\n\n讓 :ref[標註員]{id="term.annotator"} 登入。' }),
+  }).join('\n');
+  assert.doesNotMatch(errors, /does not match the label/);
+});
+
+// Nothing reports a duplicate id outside term.*, so the first one has to win or
+// the label a reference is held to would depend on the order files are read in.
+test('the first define of a non-term id settles its label', () => {
+  const errors = errorsFor({
+    [GLOSSARY]: glossary(def('term.annotator', '標註員')) + '\n' + def('specs.map', '甲') + '\n',
+    [INDEX]: FRONTMATTER + def('specs.map', '乙') + '\n',
+    [SPEC]: spec({ 目標: '見 :ref[甲]{id="specs.map"}。' }),
+  }).join('\n');
+  assert.doesNotMatch(errors, /does not match the label/);
+});
+
+test('a define with no label exempts its references from the label check', () => {
+  assert.deepEqual(
+    errorsFor({
+      [GLOSSARY]: FRONTMATTER + ':::define{id="term.annotator"}\n標註員。\n:::\n',
+      [SPEC]: spec({ 目標: '讓 :ref[隨便]{id="term.annotator"} 登入。' }),
+    }),
     [],
   );
 });

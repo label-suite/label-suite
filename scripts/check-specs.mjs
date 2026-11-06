@@ -127,7 +127,12 @@ function anchors(text) {
 
 // Every define/ref id, whatever its namespace; term.* ids are also resolved.
 const DEF_ID_RE = /^:{3,}define\{[^}]*\bid="([^"]*)"/gm;
-const REF_ID_RE = /(?<![:\\]):ref\[[^\]]*\]\{[^}]*\bid="([^"]*)"/g;
+// The same define, read for its label so a reference can be held to it.
+// Directive attributes are unordered, so the brace body is read whole and each
+// attribute picked out of it; keying on id-then-label missed label-first ones.
+const DEF_ATTRS_RE = /^:{3,}define\{([^}\n]*)/gm;
+const attrOf = (attrs, name) => attrs.match(new RegExp(`\\b${name}="([^"]*)"`))?.[1];
+const REF_ID_RE = /(?<![:\\]):ref\[([^\]]*)\]\{[^}]*\bid="([^"]*)"/g;
 // Letters, digits, _ and -, in .-separated segments. NoteCraft fails the whole
 // build on anything else, such as a space.
 const ID_FORMAT_RE = /^[\p{L}\p{N}_-]+(?:\.[\p{L}\p{N}_-]+)*$/u;
@@ -158,12 +163,37 @@ function checkTerms(files, glossaryRel, report) {
       }
     }
   }
+  // Labels, so a reference can be held to the wording the glossary settled on.
+  // A term.* label is the glossary's to settle (any other definition of one is
+  // already an error above) and the first definition of any other id wins, so a
+  // stray copy cannot turn every correct reference into a mismatch.
+  const labels = new Map();
+  for (const f of files) {
+    for (const m of f.text.matchAll(DEF_ATTRS_RE)) {
+      const id = attrOf(m[1], 'id');
+      const label = attrOf(m[1], 'label');
+      if (id === undefined || label === undefined) continue;
+      if (id.startsWith('term.') && f.rel !== glossaryRel) continue;
+      if (!labels.has(id)) labels.set(id, label);
+    }
+  }
   for (const f of files) {
     for (const m of f.text.matchAll(REF_ID_RE)) {
+      const [, display, id] = m;
       const line = lineOf(f.text, m.index);
-      checkFormat(f, m[1], line);
-      if (m[1].startsWith('term.') && !defined.has(m[1])) {
-        report.error(f.rel, line, `reference to undefined term "${m[1]}"`);
+      checkFormat(f, id, line);
+      if (id.startsWith('term.') && !defined.has(id)) {
+        report.error(f.rel, line, `reference to undefined term "${id}"`);
+        continue;
+      }
+      // A reference that renames the term quietly forks the vocabulary: the
+      // glossary says one thing and the page says another, and check:specs used
+      // to pass because the id resolved (#150).
+      // The display text has to be the bare label: emphasis or padding around it
+      // renders differently, so it is a rename like any other.
+      const label = labels.get(id);
+      if (label !== undefined && display !== label) {
+        report.error(f.rel, line, `ref text "${display}" does not match the label "${label}" of ${id}`);
       }
     }
   }
