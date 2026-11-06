@@ -415,6 +415,101 @@ function checkAnchorLinks(files, report) {
   }
 }
 
+// "### Q12." question headings. The number is how the page is cited elsewhere;
+// it is append-only and never reused, so two of the same in one page make any
+// tool that locates a question by its number work on the wrong one in silence
+// (#131 landed a settled decision in the wrong chapter exactly this way).
+const QUESTION_RE = /^#{3} +(Q\d+)\./gm;
+// A page citing a question: a link to the chapter, then the numbers. Only the
+// numbers written directly after the link are resolved, joined by nothing but
+// the list punctuation below — a full-width comma or semicolon ends the clause,
+// so a number past one belongs to a different thought and is not attributed to
+// this link.
+const QUESTION_CITE_RE = /\]\(([^)\s#]*)#([^)\s]+)\)((?:[ 、與和]*Q\d+)+)/g;
+// The same citation written as a row of the open-questions index, where the
+// number sits in its own cell *before* the link and so is invisible to the
+// regex above. The row carries the page twice, which is itself worth checking.
+const QUESTION_ROW_RE = /^\|\s*(\d{2}-\d{2}) +(Q\d+)\s*\|.*$/gm;
+// Still uncovered: a citation written without a link at all ("見該頁 §已確認決議
+// Q10"). There the page really cannot be read off the text, so resolving it
+// would mean guessing which page "該頁" is.
+const QUESTION_CHAPTERS = ['待釐清', '已確認決議'];
+
+function checkQuestions(files, report) {
+  const known = new Set(files.map((f) => f.path));
+  // Every question number in a page, with the chapter and line it sits in. Two
+  // pages' numbers are unrelated, so this is kept per page.
+  const questionsOf = new Map();
+  // Which of the two chapters a page has at all: a page missing one is
+  // checkAnchorLinks' error, not a missing-question error here.
+  const chaptersOf = new Map();
+  for (const f of files) {
+    const found = new Map();
+    for (const chapter of QUESTION_CHAPTERS) {
+      const range = chapterRange(f.text, chapter);
+      if (!range) continue;
+      for (const m of f.text.slice(range[0], range[1]).matchAll(QUESTION_RE)) {
+        const line = lineOf(f.text, range[0] + m.index);
+        if (!found.has(m[1])) found.set(m[1], []);
+        found.get(m[1]).push({ chapter, line });
+      }
+    }
+    questionsOf.set(f.path, found);
+    chaptersOf.set(f.path, new Set(QUESTION_CHAPTERS.filter((c) => chapterRange(f.text, c))));
+    for (const [q, at] of found) {
+      if (at.length < 2) continue;
+      // Every occurrence is reported: a tool reading only the first one is the
+      // failure this check exists to catch, so the report must not do the same.
+      const where = at.map((a) => `§${a.chapter}:${a.line}`).join(', ');
+      for (const a of at) {
+        report.error(f.rel, a.line, `question number "${q}" is used ${at.length} times in this page (${where})`);
+      }
+    }
+  }
+  for (const f of files) {
+    const dir = f.path.includes('/') ? f.path.slice(0, f.path.lastIndexOf('/')) : '';
+    // Where a link in this file points, or null when nothing here should judge it.
+    const resolve = (target, chapter) => {
+      if (!QUESTION_CHAPTERS.includes(chapter)) return null;
+      if (target !== '' && !target.endsWith('.mdx')) return null;
+      const where = target === '' ? f.path : posix.normalize(posix.join(dir, target));
+      // A target or an anchor that does not exist is checkAnchorLinks' to report.
+      if (!known.has(where) || !chaptersOf.get(where).has(chapter)) return null;
+      return where;
+    };
+    const check = (where, chapter, q, line) => {
+      if (!questionsOf.get(where).get(q)?.some((a) => a.chapter === chapter)) {
+        report.error(f.rel, line, `"${q}" is not in §${chapter} of ${where}`);
+      }
+    };
+    for (const m of f.text.matchAll(QUESTION_CITE_RE)) {
+      const [, target, anchor, cited] = m;
+      const chapter = decodeAnchor(anchor);
+      const where = resolve(target, chapter);
+      if (!where) continue;
+      const line = lineOf(f.text, m.index);
+      for (const q of cited.match(/Q\d+/g)) check(where, chapter, q, line);
+    }
+    for (const m of f.text.matchAll(QUESTION_ROW_RE)) {
+      const [row, number, q] = m;
+      // The row names its own page in its last cell. An earlier cell may cite
+      // another page's chapter — that citation is prose, caught by the loop
+      // above — so the row's own link is the last one, not the first.
+      const link = [...row.matchAll(ANCHOR_LINK_RE)].filter((l) => QUESTION_CHAPTERS.includes(decodeAnchor(l[2]))).at(-1);
+      if (!link) continue;
+      const chapter = decodeAnchor(link[2]);
+      const where = resolve(link[1], chapter);
+      if (!where) continue;
+      const line = lineOf(f.text, m.index);
+      if (specParts(where)?.number !== number) {
+        report.error(f.rel, line, `row names 規格 ${number} but links to ${where}`);
+        continue;
+      }
+      check(where, chapter, q, line);
+    }
+  }
+}
+
 // "規格 03-03 任務詳情（未撰寫）" and its variants. Each migrated page leaves
 // these behind in the pages that referenced it, and nothing notices: a reader
 // who sees "未撰寫" does not go looking for a page that has in fact shipped
@@ -491,6 +586,7 @@ export function checkDocs(docsDir) {
   }
   checkAnchorLinks(files, report);
   checkStaleUnwritten(files, specPathByNumber, report);
+  checkQuestions(files, report);
   checkTerms(files, relative(process.cwd(), join(docsDir, GLOSSARY_PATH)), report);
   return errors;
 }
