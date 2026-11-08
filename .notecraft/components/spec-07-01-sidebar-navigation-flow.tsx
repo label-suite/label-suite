@@ -544,8 +544,8 @@ const FLOWS: Flow[] = [
       { id: "a4", from: "n4", to: "n5" },
       { id: "a5", from: "n1", to: "n8", exception: true, exit: "top", enter: "top", via: laneTop(0) + 16 },
       { id: "a6", from: "n8", to: "n5", exception: true },
-      { id: "e1", from: "n2", to: "n6", exception: true, label: "否", exit: "bottom", enter: "bottom", via: laneBottom(1) - 8 },
-      { id: "e2", from: "n3", to: "n7", exception: true, label: "否", exit: "bottom", enter: "bottom", via: laneBottom(1) - 3 },
+      { id: "e1", from: "n2", to: "n6", exception: true, label: "否", exit: "bottom", enter: "bottom", via: laneBottom(1) - 3 },
+      { id: "e2", from: "n3", to: "n7", exception: true, label: "否", exit: "bottom", enter: "bottom", via: laneBottom(1) - 8 },
     ],
     steps: [
       {
@@ -595,7 +595,7 @@ const FLOWS: Flow[] = [
         body: "結果和主流程一樣——進到該模組的頁面。圖上不另外畫一條分支，因為終點相同，差別只在他為什麼進得去。",
         scenarios: ["專案負責人進得去標記作業"],
         ref: "A2",
-        highlight: ["n3", "n4"],
+        highlight: ["n3", "a3", "n4"],
       },
       {
         title: "替代：從「系統管理」直達角色設定",
