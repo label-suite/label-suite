@@ -4,7 +4,7 @@ description: 規格書共用的業務名詞定義。
 category: '規格書'
 tags: [規格書, 術語]
 createdAt: '2026-11-04'
-updatedAt: '2026-11-07'
+updatedAt: '2026-11-08'
 ---
 
 # 術語表
@@ -158,6 +158,10 @@ updatedAt: '2026-11-07'
 
 :::define{id="term.annotator-risk-level" label="風險等級"}
 <strong>風險等級</strong>：一位標記員在某一種:ref[輸出類型]{id="term.output-type"}上的標記品質評級，值域<strong>恰好三個</strong>——<strong>正常</strong>、<strong>觀察</strong>、<strong>高風險</strong>；判定規則（三條或邏輯的升級條件與各自的倍數門檻）由規格 05-02 擁有。已完成樣本數不足時<strong>不給等級</strong>，另有一個「資料不足」旗標為真，而畫面那一欄改顯示「資料不足」——所以<strong>顯示標籤有四個、值域仍是三個</strong>。規格 03-03 成員進度表的「品質旗標」是<strong>同一個訊號</strong>，沿用這一組名字、不另立一組（規格 05-02 §已確認決議 Q19，維護者裁定 2026-11-06）；「資料不足」怎麼呈現見同章 Q22（維護者裁定 2026-11-07）。
+:::
+
+:::define{id="term.sample-anomaly-status" label="樣本異常狀態"}
+<strong>樣本異常狀態</strong>：<strong>單一筆資料</strong>在逐:ref[輸出類型]{id="term.output-type"}區塊裡的異常偵測結果，值域恰好三個——<strong>正常</strong>、<strong>注意</strong>、<strong>異常</strong>。它和:ref[風險等級]{id="term.annotator-risk-level"}是<strong>兩個不同的訊號</strong>：這一個講「這一筆樣本標得怎樣」，那一個講「這位標記員整體標得怎樣」，所以兩組名字刻意不統一（維護者裁定 2026-11-08，見規格 05-02 §已確認決議 Q23）。兩組的英文中間值都是 <code>Watch</code>，那是巧合。
 :::
 
 :::define{id="term.ground-truth" label="標準答案"}
