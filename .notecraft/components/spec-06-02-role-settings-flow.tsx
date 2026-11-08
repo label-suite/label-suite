@@ -544,7 +544,7 @@ const FLOWS: Flow[] = [
       { id: "a4", from: "n4", to: "n5" },
       { id: "a5", from: "n5", to: "n6" },
       { id: "a6", from: "n6", to: "n7", label: "是" },
-      { id: "e1", from: "n3", to: "n8", exception: true, label: "否" },
+      { id: "e1", from: "n3", to: "n8", exception: true, label: "否", exit: "bottom", enter: "bottom", via: laneBottom(1) - 6 },
       { id: "e2", from: "n6", to: "n2", exception: true, label: "否", exit: "top", enter: "top", via: laneTop(0) + 12 },
     ],
     steps: [
@@ -599,7 +599,7 @@ const FLOWS: Flow[] = [
       },
       {
         title: "例外：版本不符",
-        body: "別人先存過時這一次被拒絕，顯示版本衝突橫幅與「重新載入」；不覆蓋別人的變更，而且未儲存的修改**不**保留。",
+        body: "別人先存過時這一次被拒絕，顯示版本衝突橫幅與「重新載入」；不覆蓋別人的變更，而且未儲存的修改一律不保留。",
         scenarios: ["版本不一致被拒絕", "版本資料不存在被拒絕"],
         ref: "E2",
         highlight: ["a5", "n6", "e2", "n2"],
