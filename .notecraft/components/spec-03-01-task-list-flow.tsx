@@ -578,7 +578,7 @@ const FLOWS: Flow[] = [
         body: "表頭留著，表格內顯示載入失敗與「重試」，不顯示成空資料——使用者不會把讀不到誤判成沒有任務。重試時那筆任務已經被別人封存的話，重試後的列表上就不會有它。流程結束。",
         scenarios: ["列表載入失敗", "載入失敗後重試", "重試時任務已被別人封存"],
         ref: "E1",
-        highlight: ["e2", "n7"],
+        highlight: ["n3", "e2", "n7"],
       },
       {
         title: "有任務嗎",
@@ -592,7 +592,7 @@ const FLOWS: Flow[] = [
         body: "表頭留著，表格內顯示尚無任務；整頁只保留那一顆「新增任務」，不出現分頁列。系統管理員在全平台都沒有任務時看到的是同一個狀態。流程結束。",
         scenarios: ["完全沒有任務", "系統管理員在全平台都沒有任務", "空狀態不顯示分頁列", "尚無任務時只有一顆新增"],
         ref: "A2",
-        highlight: ["e1", "n6"],
+        highlight: ["n4", "e1", "n6"],
       },
       {
         title: "結果：看到一張自己有權限看到的列表",
@@ -615,11 +615,11 @@ const FLOWS: Flow[] = [
       { id: "n2", lane: 1, col: 1, kind: "system", label: ["更新列表", "回第一頁"] },
       { id: "n3", lane: 1, col: 2, kind: "decision", label: ["有符合", "的？"] },
       { id: "n4", lane: 1, col: 3, kind: "system", end: true, label: ["看到要處理", "的那一筆"] },
-      { id: "n5", lane: 1, col: 4, kind: "system", exception: true, end: true, label: ["空結果與", "清除篩選"] },
+      { id: "n5", lane: 1, col: 4, kind: "system", exception: true, label: ["空結果與", "清除篩選"] },
     ],
     edges: [
       { id: "a0", from: "s", to: "n1" },
-      { id: "a1", from: "n1", to: "n2" },
+      { id: "a1", from: "n1", to: "n2", enter: "left" },
       { id: "a2", from: "n2", to: "n3" },
       { id: "a3", from: "n3", to: "n4", label: "是" },
       { id: "e1", from: "n3", to: "n5", exception: true, label: "否", exit: "bottom", enter: "bottom", via: laneBottom(1) - 8 },
@@ -645,7 +645,7 @@ const FLOWS: Flow[] = [
         body: "表頭留著，表格內顯示找不到符合條件的任務與「清除所有篩選」，而且不出現分頁列。使用者點清除就回到沒有篩選的列表，回到更新列表那一步。有條件時才看得到清除，沒有條件時它不出現。",
         scenarios: ["篩選後沒有結果", "從空結果一鍵清除", "清除所有篩選", "有條件時才出現清除", "沒有條件時不顯示清除"],
         ref: "A1",
-        highlight: ["e1", "n5", "a4"],
+        highlight: ["n3", "e1", "n5", "a4", "n2"],
       },
       {
         title: "結果：看到要處理的那幾筆",
@@ -699,7 +699,7 @@ const FLOWS: Flow[] = [
         body: "停在這一頁並顯示無權限檢視任務詳情，不跳頁、列表還在。從詳情那一頁被退回來的時候也要有說明，不能無聲地回到列表。流程結束。",
         scenarios: ["沒有權限時停在列表", "從詳情被退回也要有說明"],
         ref: "E1",
-        highlight: ["e1", "n4"],
+        highlight: ["n2", "e1", "n4"],
       },
       {
         title: "替代：點「新增任務」",
@@ -738,7 +738,7 @@ const FLOWS: Flow[] = [
       { id: "a0", from: "s", to: "n1" },
       { id: "e1", from: "n1", to: "n7", exception: true },
       { id: "a1", from: "n1", to: "n2" },
-      { id: "a2", from: "n2", to: "n3" },
+      { id: "a2", from: "n2", to: "n3", enter: "left" },
       { id: "a3", from: "n3", to: "n4", label: "是" },
       { id: "a4", from: "n3", to: "n6", exception: true, label: "否", exit: "bottom", enter: "bottom", via: laneBottom(0) - 8 },
       { id: "a5", from: "n4", to: "n5" },
@@ -771,7 +771,7 @@ const FLOWS: Flow[] = [
         body: "點「取消」、點視窗外面，或按 Esc 都算取消。視窗關閉，任務完全不變，使用者回到列表。流程結束。",
         scenarios: ["在確認視窗取消刪除", "按 Esc 關閉確認視窗"],
         ref: "A1",
-        highlight: ["a4", "n6"],
+        highlight: ["n3", "a4", "n6"],
       },
       {
         title: "確認之後送出刪除",
