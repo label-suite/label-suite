@@ -563,7 +563,7 @@ const FLOWS: Flow[] = [
       },
       {
         title: "替代：六件事沒有全部成立",
-        body: "下一步點不下去，欄位下方與頁首各顯示一次說明，指出是哪個欄位與怎麼改，使用者留在第一步繼續填。",
+        body: "下一步點不下去，使用者留在第一步繼續填；訊息會指出是哪個欄位與怎麼改。",
         scenarios: ["填完第一步才能進第二步", "任務名稱空白時不能前進", "沒選輸出類型時不能前進", "沒有資料集時不能前進", "沒選輸入類型時不能前進", "資料集只有一筆時在第一步擋下", "移除所有檔案後回到不能前進"],
         ref: "A1",
         highlight: ["n3", "e1", "n2"],
@@ -588,7 +588,7 @@ const FLOWS: Flow[] = [
       { id: "n1", lane: 0, col: 0, kind: "action", label: ["設定每種", "輸出類型"] },
       { id: "n2", lane: 1, col: 1, kind: "decision", label: ["必填", "都過？"] },
       { id: "n3", lane: 1, col: 2, kind: "system", end: true, label: ["進入第三步", "啟動設定"] },
-      { id: "n4", lane: 0, col: 2, kind: "action", exception: true, end: true, label: ["回第一步", "內容都在"] },
+      { id: "n4", lane: 1, col: 3, kind: "system", exception: true, end: true, label: ["回第一步", "內容都在"] },
     ],
     edges: [
       { id: "a0", from: "s", to: "n1" },
@@ -614,7 +614,7 @@ const FLOWS: Flow[] = [
       },
       {
         title: "替代：三個條件沒有全部通過",
-        body: "下一步點不下去，欄位下方與頁首各顯示一次說明，使用者留在第二步繼續設定。",
+        body: "下一步點不下去，使用者留在第二步繼續設定。",
         scenarios: ["必填設定沒過時不能前進", "有未儲存改動時擋下前進"],
         ref: "A1",
         highlight: ["n2", "e1", "n1"],
@@ -646,7 +646,7 @@ const FLOWS: Flow[] = [
       { id: "n1", lane: 0, col: 0, kind: "action", label: ["設定試標", "抽幾筆"] },
       { id: "n2", lane: 1, col: 1, kind: "decision", label: ["筆數", "過關？"] },
       { id: "n3", lane: 1, col: 2, kind: "system", end: true, label: ["進入第四步", "標記說明"] },
-      { id: "n4", lane: 0, col: 2, kind: "action", exception: true, end: true, label: ["回第二步", "內容都在"] },
+      { id: "n4", lane: 1, col: 3, kind: "system", exception: true, end: true, label: ["回第二步", "內容都在"] },
     ],
     edges: [
       { id: "a0", from: "s", to: "n1" },
