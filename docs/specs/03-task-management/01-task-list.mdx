@@ -471,7 +471,7 @@ import Spec0301TaskListFlow from '@notes/components/spec-03-01-task-list-flow'
 
 > 理由：PRD 是上游，而且**畫面自己就不一致**——`design/prototype/pages/task-management/task-list.html` 的篩選器（第 237 行）寫「正式標記進行中」，列上徽章（第 390 行）寫「正式標記中」，同一個狀態兩個名字。
 > 與 PRD 不同的共三處：試標進行中（PRD 是「試標中」）、待 IAA 確認（PRD 是「等待 IAA 確認」）、以及篩選器的「正式標記進行中」。
-> **儀表板只有一部分已經符合**：「等待 IAA 確認」在儀表板的兩處 KPI 標籤裡就是 PRD 的寫法（`design/prototype/pages/dashboard/dashboard.html:296`、`:361`）。但儀表板**任務列的狀態徽章是另一組字**（`dashboard.i18n.js:17` 的 `statusLabel`：進行中、待確認、繼續中、待繼續、待審核——PRD 的五個狀態一個都沒有），那一組由[規格 02-01 §待釐清](../02-dashboard/01-dashboard.mdx#待釐清) Q7 追蹤，**不在本條的範圍**。
+> **儀表板只有一部分已經符合**：「等待 IAA 確認」在儀表板的兩處 KPI 標籤裡就是 PRD 的寫法（`design/prototype/pages/dashboard/dashboard.html:296`、`:361`）。但儀表板**任務列的狀態徽章是另一組字**（`dashboard.i18n.js:17` 的 `statusLabel`：進行中、待確認、繼續中、待繼續、待審核——PRD 的五個狀態一個都沒有），那一組由[規格 02-01 §已確認決議](../02-dashboard/01-dashboard.mdx#已確認決議) Q7 追蹤（已於 2026-11-06 裁定跟著本題走，但畫面要怎麼改與那三個字要叫什麼另案處理），**不在本條的範圍**。
 > 這五個狀態由 03、04、05 三個模組共用。畫面的改動另開 Issue；本 skill 不改 `design/prototype/`（#114）。
 
 ### Q2. 「未建立清單」是不是第三個標記階段？（已定案，維護者裁定 2026-11-08）
