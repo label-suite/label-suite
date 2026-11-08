@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 // Mechanical checks for the business-process flow components under
 // .notecraft/components/*-flow.tsx and the spec chapters they belong to.
 // See https://github.com/label-suite/label-suite/issues/163 for why each
@@ -8,15 +9,20 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const DIVIDER = '【流程】';
+// The two banner comments that bracket the part a component must copy
+// verbatim. Matching on the banners, never on a line number, because the
+// skeleton grows -- and never on the bare 【流程】 string, which also appears
+// in the file's own header comment nine lines in.
+export const SKELETON_BANNER = /^\/\* =+ 【骨架】不可修改 =+ \*\/$/;
+export const FLOWS_BANNER = /^\/\* =+ 【流程】/;
 
-// Everything above the 【流程】 divider is copied verbatim from the skeleton.
-// The boundary is the divider itself, never a line number: the skeleton grows.
-export function skeletonPrefix(src) {
+// The body between the banners: everything a component copies unchanged.
+export function skeletonBody(src) {
   const lines = src.split('\n');
-  const at = lines.findIndex((l) => l.includes(DIVIDER));
-  if (at < 0) return null;
-  return lines.slice(0, at).join('\n') + (at > 0 ? '\n' : '');
+  const from = lines.findIndex((l) => SKELETON_BANNER.test(l));
+  const to = lines.findIndex((l) => FLOWS_BANNER.test(l));
+  if (from < 0 || to < 0 || to <= from) return null;
+  return lines.slice(from, to).join('\n') + '\n';
 }
 
 
@@ -71,27 +77,29 @@ export function geometryFrom(src) {
   };
 }
 
-// The skeleton functions the checker re-implements. Their source is hashed so
-// that editing any of them fails the suite and forces the port to be redone.
-const PINNED_FNS = ['colX', 'laneY', 'laneTop', 'laneBottom', 'center', 'halfSize', 'anchor', 'defaultSides', 'routePath', 'labelPos'];
+// Everything the checker re-implements lives in the skeleton's 幾何 section,
+// so hash that whole section rather than naming functions one by one -- naming
+// them is how isHorizontal was missed once already. The constants sit just
+// above it, so start from the first of them.
+const GEOMETRY_FROM = /^const LANE_LABEL_W /m;
+const GEOMETRY_TO = /^\/\* -+ 圖形/m;
+
+export function geometrySection(src) {
+  const from = src.search(GEOMETRY_FROM);
+  const to = src.search(GEOMETRY_TO);
+  if (from < 0 || to < 0 || to <= from) {
+    throw new Error('flow-skeleton.tsx no longer has a 幾何 section between the constants and 圖形');
+  }
+  return src.slice(from, to);
+}
 
 export function geometryFingerprint(src) {
-  const h = createHash('sha256');
-  for (const name of PINNED_FNS) {
-    const at = src.indexOf(`function ${name}(`);
-    if (at < 0) throw new Error(`flow-skeleton.tsx no longer declares ${name}()`);
-    // up to the first line that closes the declaration at column 0
-    const rest = src.slice(at);
-    const end = rest.indexOf('\n}\n');
-    h.update(name).update(rest.slice(0, end < 0 ? rest.length : end + 3));
-  }
-  for (const name of CONSTS) h.update(src.match(new RegExp(`const ${name}\\s*=\\s*[^;]+;`))?.[0] ?? '');
-  return h.digest('hex');
+  return createHash('sha256').update(geometrySection(src)).digest('hex');
 }
 
 // sha256 over the ten geometry declarations above plus the eight constants.
 // If this fails, re-derive the ported geometry by hand before updating it.
-export const PINNED_GEOMETRY_FINGERPRINT = '657d04b2c6955bc977ffacf6a28b73a45aaf05e2564fc803c36c774f7926e710';
+export const PINNED_GEOMETRY_FINGERPRINT = 'd55addf06ec7785febb8500c0300898740f1e38e5383cc6d565b5ceaf8f6d52f';
 
 export const COMPONENTS_DIR = join(HERE, '..', '.notecraft', 'components');
 
@@ -107,7 +115,7 @@ export function flowComponents(dir = COMPONENTS_DIR) {
 export function skeletonDerived(files = flowComponents()) {
   return files.filter((f) => {
     const src = readFileSync(f, 'utf8');
-    return src.includes(DIVIDER) && src.includes(FLOWS_DECL);
+    return FLOWS_BANNER.test(src.split('\n').find((l) => FLOWS_BANNER.test(l)) ?? '') && src.includes(FLOWS_DECL);
   });
 }
 
@@ -155,7 +163,7 @@ function balanced(src, from) {
   return null;
 }
 
-const field = (src, name) => src.match(new RegExp(`\\b${name}:\\s*"((?:[^"\\\\]|\\\\.)*)"`))?.[1];
+const field = (src, name) => src.match(new RegExp(`\\b${name}:\\s*"((?:[^"\\\\]|\\\\.)*)"`))?.[1]?.replace(/\\"/g, '"');
 const flag = (src, name) => new RegExp(`\\b${name}:\\s*true`).test(src);
 
 function viaOf(src, geo) {
@@ -169,12 +177,13 @@ function viaOf(src, geo) {
 }
 
 export function parseFlows(tsx, geo = geometryFrom(readFileSync(SKELETON, 'utf8'))) {
+  // eslint-disable-next-line no-use-before-define -- flows is built below
   const at = tsx.indexOf(FLOWS_DECL);
   if (at < 0) throw new Error(`component has no \`${FLOWS_DECL}\``);
   // start after the `=`, or the `[` inside `Flow[]` would close immediately
   const list = balanced(tsx, tsx.indexOf('=', at));
   if (!list) throw new Error('the FLOWS array is not balanced');
-  return objects(list.body).map((chunk) => {
+  const flows = objects(list.body).map((chunk) => {
     const sub = (name) => balanced(chunk, chunk.indexOf(`${name}:`))?.body ?? '';
     const nodes = objects(sub('nodes')).map((n) => ({
       id: field(n, 'id'),
@@ -213,6 +222,37 @@ export function parseFlows(tsx, geo = geometryFrom(readFileSync(SKELETON, 'utf8'
       steps,
     };
   });
+  // A field this parser cannot read becomes NaN or undefined, and NaN makes
+  // every geometry comparison false -- the node would simply stop being
+  // checked, with nothing said. Refuse instead.
+  for (const f of flows) {
+    const where = `flow ${f.id ?? '(unnamed)'}`;
+    if (!f.id || !f.label) throw new Error(`${where}: id or label did not parse`);
+    if (f.lanes.length === 0) throw new Error(`${where}: lanes did not parse`);
+    for (const n of f.nodes) {
+      if (!n.id || !n.kind) throw new Error(`${where}: a node is missing id or kind`);
+      if (!Number.isFinite(n.lane) || !Number.isFinite(n.col)) {
+        throw new Error(`${where}/${n.id}: lane or col did not parse as a number`);
+      }
+    }
+    for (const e of f.edges) {
+      if (!e.id || !e.from || !e.to) throw new Error(`${where}: an edge is missing id, from or to`);
+      if (!f.nodes.some((n) => n.id === e.from)) throw new Error(`${where}/${e.id}: from="${e.from}" is not a node`);
+      if (!f.nodes.some((n) => n.id === e.to)) throw new Error(`${where}/${e.id}: to="${e.to}" is not a node`);
+    }
+    for (const st of f.steps) if (!st.ref) throw new Error(`${where}: a walkthrough step has no ref`);
+  }
+  // Every `via:` written in the source must have been understood. flow.md
+  // allows colX(...) too, which the via reader does not handle yet; this
+  // turns that gap into a failure instead of a silently dropped route.
+  // count only inside the FLOWS array: the copied skeleton body carries a
+  // `via: number | undefined` in routePath's own signature
+  const written = [...list.body.matchAll(/\bvia:/g)].length;
+  const parsed = flows.flatMap((f) => f.edges).filter((e) => e.via !== undefined).length;
+  if (written !== parsed) {
+    throw new Error(`${written} \`via:\` written but ${parsed} understood; check-flows cannot read one of them`);
+  }
+  return flows;
 }
 
 // ---------------------------------------------------------------- geometry ---
@@ -299,7 +339,7 @@ function distSegBox(seg, box) {
   return Math.hypot(dx, dy);
 }
 
-export function checkGeometry(flow, geo, report) {
+export function checkGeometry(flow, geo, report, warn = () => {}) {
   const { nodes, edges, id: fid } = flow;
   const routes = new Map(edges.map((e) => [e.id, segmentsOf(e, nodes, geo)]));
   // a line must not run through a node that is not one of its endpoints
@@ -355,8 +395,12 @@ export function checkGeometry(flow, geo, report) {
           // so only an actual crossing is a defect — that happens when the
           // edge turns underneath its own label.
           if (d === 0) report.error(`${fid}/${e.id} label "${e.label}" is crossed by its own line`);
+        } else if (d === 0) {
+          report.error(`${fid}/${e.id} label "${e.label}" is crossed by ${fid}/${other.id}`);
         } else if (d < 4) {
-          report.error(`${fid}/${e.id} label "${e.label}" sits ${d.toFixed(1)}px from ${fid}/${other.id}`);
+          // the label box is estimated from fontSize and glyph count, so a
+          // near miss is a hint, not a verdict (see issue #163)
+          warn(`${fid}/${e.id} label "${e.label}" is only about ${d.toFixed(1)}px from ${fid}/${other.id}`);
         }
       }
     }
@@ -464,12 +508,19 @@ export function checkAgainstSpec(flow, page, report) {
     report.error(`${fid}: tab label "${flow.label}" is not a flow title in ${page.rel} §業務流程`);
   }
   for (const lane of flow.lanes) {
-    // A lane name is a role from §使用角色, 系統, or two roles joined with 或.
-    // Some pages name a participant in prose rather than with :ref, so the
-    // chapter text counts too.
-    const named = (part) => page.roles.has(part) || page.rolesChapter.includes(part);
+    // A lane name is a role from §使用角色, 系統, or roles joined with 或.
+    const named = (part) => page.roles.has(part);
     const ok = lane === '系統' || named(lane) || lane.split(/或|、|／/).every(named);
-    if (!ok) report.error(`${fid}: lane "${lane}" is not named in ${page.rel} §使用角色`);
+    if (!ok) report.error(`${fid}: lane "${lane}" is not a role in ${page.rel} §使用角色`);
+  }
+}
+
+export function checkRefs(flow, page, report) {
+  for (const code of new Set(flow.steps.map((s) => s.ref).filter((r) => /^[AE]\d/.test(r ?? '')))) {
+    // pages use two conventions: 「A1（第 2 步）…」 and 「…（替代流程 **A1**）」
+    if (!new RegExp(`(^|[^A-Za-z0-9])${code}([^0-9]|$)`, 'm').test(page.processChapter)) {
+      report.error(`${flow.id}: walkthrough step ${code} is not mentioned in ${page.rel} §業務流程`);
+    }
   }
 }
 
@@ -507,14 +558,21 @@ export function readPage(path, rel) {
       .map((l) => l.split('|')[1]?.trim())
       .filter(Boolean),
   );
-  const process = chapter(text, '業務流程');
+  const processChapter = chapter(text, '業務流程');
   const flowTitles = [
-    ...[...process.matchAll(/^### (.+)$/gm)].map((m) => m[1].trim()),
-    ...[...process.matchAll(/^- \*\*(.+?)\*\*\s*$/gm)].map((m) => m[1].trim()),
+    ...[...processChapter.matchAll(/^### (.+)$/gm)].map((m) => m[1].trim()),
+    ...[...processChapter.matchAll(/^- \*\*(.+?)\*\*\s*$/gm)].map((m) => m[1].trim()),
   ];
   const rolesChapter = chapter(text, '使用角色');
   const roles = new Set([...rolesChapter.matchAll(/:ref\[([^\]]+)\]/g)].map((m) => m[1]));
-  return { text, rel, scenarios, flowTitles, roles, rolesChapter, process };
+  // Some pages name a participant in prose rather than with :ref (06-01's
+  // 受邀的使用者). Take the entry heads -- list items, table cells and bold
+  // runs -- rather than the whole chapter text, which would accept any word
+  // that happens to appear in it.
+  for (const m of rolesChapter.matchAll(/^[-*] \*\*([^*]+)\*\*/gm)) roles.add(m[1].trim());
+  for (const m of rolesChapter.matchAll(/^[-*] ([^:：（(\n]{2,14})[（(:：]/gm)) roles.add(m[1].trim());
+  for (const m of rolesChapter.matchAll(/^\| ([^|]{2,16}) \|/gm)) roles.add(m[1].trim().replace(/\*\*/g, ''));
+  return { text, rel, scenarios, flowTitles, roles, rolesChapter, processChapter };
 }
 
 export function readMarker(page, componentId, report) {
@@ -573,15 +631,28 @@ export function checkFlowsIn({ files = skeletonDerived(), docsDir = DOCS_DIR, sk
   if (geometryFingerprint(skeletonSrc) !== PINNED_GEOMETRY_FINGERPRINT) {
     errors.push('flow-skeleton.tsx geometry changed; re-derive the ported functions in check-flows.mjs, then update PINNED_GEOMETRY_FINGERPRINT');
   }
-  const wanted = skeletonPrefix(skeletonSrc);
+  const wanted = skeletonBody(skeletonSrc);
+  if (wanted === null) {
+    errors.push('flow-skeleton.tsx has lost one of its 【骨架】/【流程】 banners, so nothing can be compared against it');
+    return { errors, warnings };
+  }
+  if (files.length === 0) {
+    errors.push('no skeleton-derived flow components were found; check-flows would pass by doing nothing');
+    return { errors, warnings };
+  }
   for (const file of files) {
     const base = file.split('/').at(-1).replace(/\.tsx$/, '');
     const src = readFileSync(file, 'utf8');
-    const prefix = skeletonPrefix(src);
-    if (prefix !== wanted) report.error(`${base}: the part above 【流程】 differs from flow-skeleton.tsx`);
+    const body = skeletonBody(src);
+    if (body === null) report.error(`${base}: has no 【骨架】/【流程】 banners to compare`);
+    else if (body !== wanted) report.error(`${base}: the 【骨架】 section differs from flow-skeleton.tsx`);
     const located = pageFor(base, docsDir);
     if (!located) { report.error(`${base}: no spec page matches this component name`); continue; }
     const page = readPage(located.path, located.rel);
+    // flow ids repeat across files (`enter` is in both 05-01 and 05-02), so
+    // every message carries the component name
+    const scoped = { error: (m) => errors.push(`${base}: ${m}`) };
+    const scopedWarn = (m) => warnings.push(`${base}: ${m}`);
     readMarker(page, base, report);
     const flows = parseFlows(src, geo);
     const labels = flows.map((f) => f.label);
@@ -590,12 +661,13 @@ export function checkFlowsIn({ files = skeletonDerived(), docsDir = DOCS_DIR, sk
       report.error(`${base}: the tabs are ordered [${labels.join(', ')}] but §業務流程 has [${order.join(', ')}]`);
     }
     for (const flow of flows) {
-      checkShape(flow, report);
-      checkGraph(flow, report);
-      checkWalkthrough(flow, report);
-      checkAgainstSpec(flow, page, report);
-      checkGeometry(flow, geo, report);
-      weakJumpWarnings(flow, warn);
+      checkShape(flow, scoped);
+      checkGraph(flow, scoped);
+      checkWalkthrough(flow, scoped);
+      checkAgainstSpec(flow, page, scoped);
+      checkRefs(flow, page, scoped);
+      checkGeometry(flow, geo, scoped, scopedWarn);
+      weakJumpWarnings(flow, scopedWarn);
     }
   }
   return { errors, warnings };
