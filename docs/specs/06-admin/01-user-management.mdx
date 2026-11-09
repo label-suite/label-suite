@@ -343,7 +343,7 @@ import Spec0601AccountLifecycleFlow from '@notes/components/spec-06-01-account-l
 - [x] 姓名 1–100 字，Email 最多 254 字
 
 > 理由：Email 254 字是信箱格式本身的上限；姓名 100 字可容納中英文全名，又不會撐壞列表。舊規格沒有寫長度，搬移時提出（#32）。
-> **依據待補（[#203](https://github.com/label-suite/label-suite/issues/203)）**：這一條沒有寫出[搬移設計文件](../../development/spec-migration.md)通則第 4 條那四種依據的任何一種。結論不變，但依據的帳是未結的。
+> **依據待補（[#203](https://github.com/label-suite/label-suite/issues/203)）**：這一條沒有寫出[搬移設計文件](../../development/spec-migration.md)通則第 4 條那五種依據的任何一種。結論不變，但依據的帳是未結的。
 
 ### Q2. 建立時間與異動紀錄的時間依哪個時區顯示？（已定案，2026-11-04）
 
@@ -351,7 +351,7 @@ import Spec0601AccountLifecycleFlow from '@notes/components/spec-06-01-account-l
 - [ ] 一律使用台北時間（UTC+8）
 
 > 理由：跨時區的系統管理員看到的都是自己的當地時間。舊規格沒有寫時區，搬移時提出（#32）。
-> **依據待補（[#203](https://github.com/label-suite/label-suite/issues/203)）**：這一條沒有寫出[搬移設計文件](../../development/spec-migration.md)通則第 4 條那四種依據的任何一種。結論不變，但依據的帳是未結的。
+> **依據待補（[#203](https://github.com/label-suite/label-suite/issues/203)）**：這一條沒有寫出[搬移設計文件](../../development/spec-migration.md)通則第 4 條那五種依據的任何一種。結論不變，但依據的帳是未結的。
 
 ### Q3. 列表要不要能依帳號狀態篩選？（已定案，2026-10-29）
 
@@ -360,13 +360,15 @@ import Spec0601AccountLifecycleFlow from '@notes/components/spec-06-01-account-l
 
 > 理由：**來源使用者故事 1 的介面定義**把「狀態篩選器（啟用 / 停用）」列為區塊 A 的必要元素，驗收情境 4 也要求換頁時保留目前的篩選條件。系統管理員需要快速找出停用中的帳號（#17，舊編號 006-Q1）。
 
-### Q4. 新增與編輯表單要不要有帳號狀態欄？（已定案，2026-10-29）
+### Q4. 新增與編輯表單要不要有帳號狀態欄？（已定案，2026-10-29；依據由維護者 2026-11-09 補裁）
 
 - [x] 不要；停用與啟用只能從列表操作
 - [ ] 要
 
 > 理由：讓停用一律經過確認、登入狀態失效與保護規則（#17，舊編號 006-Q2）。
-> ⚠️ **依據待補，而且這一條與來源相反（[#203](https://github.com/label-suite/label-suite/issues/203)）**：來源使用者故事 2 的介面定義把 `status`（啟用 / 停用）列為**新增/編輯表單的必要欄位**，本頁卻決議不要。來源的釐清紀錄沒有談過這個欄位，`PlatformUser` 那條「不另建重複的角色或狀態欄」講的是資料層不要重複的欄，不是表單控制項。**依通則第 4 條，這一條需要維護者裁定或退回待釐清**，不是補一個依據就好。
+> ⚠️ **這一條與來源相反，維護者 2026-11-09 裁定維持「不要」**（[#203](https://github.com/label-suite/label-suite/issues/203)）：來源使用者故事 2 的介面定義把 `status`（啟用 / 停用）列為**新增/編輯表單的必要欄位**，本頁決議不要。理由是狀態只由列上的「停用」／「啟用」動作改：停用必須經過確認視窗、會讓登入狀態失效、還要過保護規則，而那三件事在來源裡都掛在列上的那個動作（介面定義的列表操作欄、Clarifications 2026-05-22、驗收情境 5 與 6）。
+> 「表單再放一個欄位，同一件事就會有兩條路」這句是**本頁的解讀**，來源沒有這樣寫。
+> 來源的釐清紀錄沒有談過這個欄位，`PlatformUser` 那條「不另建重複的角色或狀態欄」講的是資料層不要重複的欄、不是表單控制項，所以**這是背離來源的裁定，不是來源本來就這樣寫**。畫面要不要跟著改由維護者決定；本頁不自行開畫面的工作項。
 
 ### Q5. 新增帳號時的帳號狀態是什麼？（已定案，2026-10-29）
 
@@ -374,7 +376,7 @@ import Spec0601AccountLifecycleFlow from '@notes/components/spec-06-01-account-l
 - [ ] 由系統管理員選擇
 
 > 理由：Q4 拿掉帳號狀態欄後，新增的帳號一律為啟用（#17，舊編號 006-Q3）。
-> **依據待補（[#203](https://github.com/label-suite/label-suite/issues/203)）**：這一條沒有寫出[搬移設計文件](../../development/spec-migration.md)通則第 4 條那四種依據的任何一種。結論不變，但依據的帳是未結的。
+> **依據待補（[#203](https://github.com/label-suite/label-suite/issues/203)）**：這一條沒有寫出[搬移設計文件](../../development/spec-migration.md)通則第 4 條那五種依據的任何一種。結論不變，但依據的帳是未結的。
 
 ### Q6. 重發設定密碼信放在哪裡？（已定案，2026-10-29）
 
@@ -390,7 +392,7 @@ import Spec0601AccountLifecycleFlow from '@notes/components/spec-06-01-account-l
 - [ ] 寫進規格
 
 > 理由：這些屬於畫面，規格只寫規則（#17）。
-> **依據待補（[#203](https://github.com/label-suite/label-suite/issues/203)）**：這一條沒有寫出[搬移設計文件](../../development/spec-migration.md)通則第 4 條那四種依據的任何一種。結論不變，但依據的帳是未結的。
+> **依據：方法論**——`spec-writing` 鐵律 1「只寫業務，不寫技術」與[搬移設計文件](../../development/spec-migration.md)的「非目標」。維護者 2026-11-09 裁定方法論算第五種依據（[#203](https://github.com/label-suite/label-suite/issues/203)）——那一條裁定同時把這個依據寫進了[搬移設計文件](../../development/spec-migration.md)通則第 4 條的表格。
 
 ### Q8. 技術細節（資料結構、同時寫入、資料庫保護）要留在規格嗎？（已定案，2026-11-04）
 
@@ -398,13 +400,14 @@ import Spec0601AccountLifecycleFlow from '@notes/components/spec-06-01-account-l
 - [ ] 保留在規格
 
 > 理由：規格只寫業務；舊規格的資料模型、同時寫入與資料庫層保護已在 openspec 寫明（#32）。
-> **依據待補（[#203](https://github.com/label-suite/label-suite/issues/203)）**：這一條沒有寫出[搬移設計文件](../../development/spec-migration.md)通則第 4 條那四種依據的任何一種。結論不變，但依據的帳是未結的。
+> **依據：方法論**——同 Q7，`spec-writing` 鐵律 1 與[搬移設計文件](../../development/spec-migration.md)的「非目標」；維護者 2026-11-09 裁定（[#203](https://github.com/label-suite/label-suite/issues/203)）。
 
 ## 變更紀錄
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | [#194](https://github.com/label-suite/label-suite/issues/194) | 2026-11-09 | §業務流程 | 「停用帳號」一段裡，A2（停用的是自己）畫成從「標示停用」再長出一條線到「自己登出」，而「標示停用」同時是主流程的結束節點——骨架不允許結束節點再長出連線，流程圖因此有一個機械檢查抓得到的缺陷 | A2 獨立成一段「停用的是自己」（觸發、前置條件、主流程三步、結果），兩段各自有結束節點。**沒有新增或刪除任何規則**：A2 原本那一句（確認後自己立即登出並回到登入頁，不回到列表）成為新一段的主流程第 3 步，前兩步是把「停用帳號」主流程 1、2 在這個情境下的樣子寫出來，另加章節形狀要求的觸發、前置條件與結果三行；流程圖與標記的 prompt 一併更新 | — |
+| [#203](https://github.com/label-suite/label-suite/issues/203) | 2026-11-09 | §已確認決議 | Q4 的依據待補，而且它與來源的介面定義相反；Q7、Q8 的依據是方法論，而四依據那張表沒有這一格 | **Q4 由維護者 2026-11-09 裁定維持「不要」**並寫明這是背離來源的裁定；**Q7、Q8 改寫成第五種依據（方法論）**，維護者同日裁定把它加進通則第 4 條。三條都拿掉「依據待補」標記，結論全部不變 | Q4、Q7、Q8（維護者裁定 2026-11-09） |
 | [#203](https://github.com/label-suite/label-suite/issues/203) | 2026-11-09 | §已確認決議 | Q1–Q8 都沒有寫出[搬移設計文件](../../development/spec-migration.md)通則第 4 條的四種依據（這一頁是最早搬的，那張表當時還不存在） | Q3 補上來源使用者故事 1 的介面定義；Q4 與 Q6 寫明依據只有一半或與來源相反；其餘五條各加一行「依據待補（#203）」。**八條的結論全部不變** | — |
 | 初版 | 2026-11-04 | 全部 | — | — | Q1–Q8 |
 
