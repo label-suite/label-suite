@@ -266,6 +266,26 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
   前置 `[Bug]` child 擋住全部 17 個第一輪 child；第一輪 child 之間依 D8 串成一條鏈（見「一頁一頁做，不並行」）；
   每個模組的第二輪 child blocked-by 該模組所有第一輪 child。
 
+## PR 的變更範圍
+
+搬移作業期間，**一張 PR 只能是下面三類中的一類**（`AGENTS.md` 的「One purpose per PR」）。合併前逐一看過 `gh pr view <N> --json files`，每個檔案都要落在那一類的允許清單裡；越界就拆成兩張。
+**release、相依套件升級與規則文件（`AGENTS.md`、`CLAUDE.md`）的 PR 不屬於這三類**，照 `AGENTS.md` 自己的規則走——判例 #147（升級 notecraftapp，動了 `package.json`、`pnpm-lock.yaml` 與一個共用元件）。
+
+| 類別 | 可以動 | 典型 |
+| :--- | :--- | :--- |
+| **文件 PR** | `docs/`；那一頁的流程圖已生成時，可同時更新它的 `.notecraft/components/*-flow.tsx` | 搬一頁規格、折回待釐清、改既有規格的條文、改 `docs/development/` 的設計文件 |
+| **流程圖 PR** | `docs/` 與 `.notecraft/components/` | 生成或更新業務流程圖 |
+| **工具 PR** | `scripts/`、`package.json`、`pnpm-lock.yaml`、`.github/`，以及下面那一條限定的 `docs/specs/` | 修 `check-specs.mjs`、新增機械檢查、調 CI |
+
+三類的差別是**目的**，不是檔案數：同樣動到一個 `*-flow.tsx`，目的是畫圖的算流程圖 PR，目的是改條文、順手讓圖跟上的算文件 PR。
+
+- **流程圖元件不住在 `docs/` 底下**：規格頁用 `GeneratedFrame` 從 `@notes/components/` 取元件，所以流程圖 PR 通常會同時動到 `docs/specs/` 的頁面與 `.notecraft/components/`。這是允許的，不必每次在留言裡解釋。判例 #175、#176、#177、#193、#198、#199。只修元件、完全不動 `docs/` 也算這一類（判例 #167）。
+- **文件 PR 可以順手更新那一頁已生成的流程圖**：條文改了而圖還是舊的，比圖沒更新更糟。判例 #200——折回 03-01 的範圍硬化規則時，同一張 PR 改了 `spec-03-01-task-list-flow.tsx` 的三行。
+- **工具 PR 可以動 `docs/specs/`，但只限修掉新檢查在既有頁面上抓到的違規**，而且要在 PR body 逐一列出；**不得新增或改寫規格條文**，也不得為了讓檢查器有東西可驗而去改真正的規格頁（測試資料放 `scripts/tests/`）。
+  原因在 CI：`specs` job 會在 **PR 分支上**跑 `node scripts/check-specs.mjs docs`，所以新檢查一加上去，既有頁面的違規就讓**那張工具 PR 自己**變紅；不在同一張修掉就過不了。判例 #149、#151、#152、#153 四張都是這個形狀。
+- 文件 PR 與流程圖 PR **不得動 `scripts/`、`package.json`、`.github/`**。搬移途中發現檢查器有缺陷時，開一張 `[Bug]` issue 與它對應的工具 PR 處理，不要夾帶。
+- **任何一類都不准動的**：`docs/specs/00-prd.mdx` 與 `design/prototype/`。這兩條在「非目標」那一節已經定了（要動 PRD 時回報並建議用 `prd-writing`；畫面與規格不一致時列入待釐清），這裡只是重申它們對三類 PR 都成立。
+
 ## 驗收
 
 這件事做完的定義：
