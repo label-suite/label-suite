@@ -33,7 +33,7 @@ description: 釐清 OpenSpec change 規劃產物（system-analysis、system-desi
 | 模式 | 時機 | 檢查範圍 | 產出 |
 | :--- | :--- | :--- | :--- |
 | 關卡模式 | propose 流程內，proposal 完成後、specs 之前（schema 的 `clarification` artifact） | system-analysis、system-design、ui-design、api-contract、proposal | `clarification.md` |
-| 完整模式 | 維護者手動觸發 | 全部九份規劃產物 | 對話中的 Clarify 報告 |
+| 完整模式 | 維護者手動觸發 | 全部九份規劃產物（含上一次的 `clarification.md`） | 對話中的 Clarify 報告 |
 
 判斷方式：change 目錄還沒有 `specs/`、`design.md`、`tasks.md`，或 `pnpm exec openspec status --change <name>` 顯示下一份待產生的是 `clarification` → 關卡模式；其餘為完整模式。
 
@@ -66,10 +66,11 @@ description: 釐清 OpenSpec change 規劃產物（system-analysis、system-desi
    ls -1dt openspec/changes/*/ 2>/dev/null | grep -v '/archive/' | head -5
    ```
 
-   （搜尋與讀檔用 `rg` 與一般的檔案讀取，見 `AGENTS.md` §Codex-Specific Notes）
 
    - 只有一個，或最新一個比次新的晚 10 分鐘以上 → 向維護者確認是否用這個
    - 否則列出前 3～5 個（附修改時間）請維護者選
+
+> 讀檔用一般的檔案讀取，搜尋優先用 `rg`（`AGENTS.md` §Codex-Specific Notes）；上面那段只是列目錄，照寫即可。
 
 ### 步驟 2：載入規劃產物
 
@@ -85,12 +86,13 @@ description: 釐清 OpenSpec change 規劃產物（system-analysis、system-desi
 | `specs/**/spec.md` | 是 | 各 capability 的 Requirement 與 Scenario |
 | `design.md` | 是 | |
 | `tasks.md` | 是 | |
+| `clarification.md` | **完整模式必要** | 上一次在停點一拍板的決議。**完整模式一定要讀**——不讀就會把已經決議的 Q 再問一次（正是 4.1 自己禁止的事）。關卡模式下它就是本次的產出，不算輸入 |
 
 任一必要檔缺失 → 停止並回報缺哪一份（可用 `pnpm exec openspec status --change <name>` 確認 artifact 狀態）。
 
 **關卡模式**只讀前五份（到 `proposal.md` 為止），`specs`、`design`、`tasks` 不算缺失；另跑 `pnpm exec openspec instructions clarification --change <name>` 取得範本與 `rules.clarification`。
 
-**`sa` 一定會留下待決問題。** 本專案的 `sa` agent 遇到找不到依據、依據互相矛盾、前置功能不存在時，**不停下來問，而是記進 `system-analysis.md` 的「待決問題」並繼續**。所以那張表是這個關卡的主要輸入，不是例外狀況——逐條都要變成一個 Q 或一個已回答的結論。
+**`sa` 的「待決問題」是這個關卡的主要輸入。** 本專案的 `sa` agent 遇到找不到依據、依據互相矛盾、前置功能不存在時，**不停下來問，而是記進 `system-analysis.md` 的「待決問題」並繼續**（故障類中斷例外，那些照樣停）。所以那張表**不是例外狀況**，而是預期會有內容的地方——逐條都要變成一個 Q 或一個已回答的結論；它是空的也要在報告裡寫明「`sa` 沒有留下待決問題」，不要當成沒看。
 
 ### 步驟 3：載入對照基準
 
@@ -137,7 +139,10 @@ description: 釐清 OpenSpec change 規劃產物（system-analysis、system-desi
 - [ ] 技術選型是否符合 `openspec/config.yaml` `context` 與 `docs/development/architecture.md` 列出的技術棧？不符合的地方要列出
 - [ ] 是否依賴尚未存在的功能？若有，是否標註為前置依賴？
 - [ ] 是否與既有架構衝突？**`backend/` 與 `frontend/` 目前都還不存在**，所以「與既有慣例衝突」在骨架 change 之前多半不適用，改為檢查「有沒有假設一個還不存在的結構」
-- [ ] **還沒定案的事有沒有被偷偷定掉**：後端目錄分層、成功回應的統一格式、`/api/v1` 前綴、前端版本與元件庫、client 生成工具。這五件在 `architecture.md` §待決清單 上，規劃產物應該把它們寫成提案或待決，不是寫成結論
+- [ ] **還沒定案的事有沒有被偷偷定掉**：逐列對過 `architecture.md` §待決清單（**九列**），只要這次的 change 碰到其中任何一列，規劃產物就該把它寫成提案或待決，不是寫成結論。
+      常碰到的是第 1 列（後端目錄分層）、第 2 列（成功回應的統一格式）、第 3 列（`/api/v1` 前綴）、第 8 列（前端版本、目錄分層與元件庫）；
+      但**第 4、5、6、7 列也會被順手定掉**——Lite 層沒有 Resend key 時的替代方案（使用者管理相關 change 之前要決定）、onboarding 與說明入口的界線、觀測性要做哪幾套、**Bruno 是否保留（第一個 API change 之前要決定，而這個關卡就在那個 change 的路上）**。
+      另有一件**不在那張表上**：前端的型別與 client 生成工具，出處是 `docs/development/openspec-fullstack-sdd.md` §四
 - [ ] task 數量與粒度是否合理？
 
 #### 4.5 邊界情況
@@ -161,7 +166,7 @@ description: 釐清 OpenSpec change 規劃產物（system-analysis、system-desi
 - [ ] tasks 是否有超出 design 範圍的項目（規格擴張）？
 - [ ] tasks 是否有 design 提到但遺漏的項目？
 - [ ] proposal 是否塞入不屬於本次 change 的工作？
-- [ ] 規劃產物有沒有要求改 **`docs/specs/00-prd.mdx`** 或 **`design/prototype/`**？那兩個任何角色都不准動——要動 PRD 就交給 `prd-writing`，畫面與規格不一致就列成待釐清
+- [ ] 規劃產物有沒有要求改 **`docs/specs/00-prd.mdx`** 或 **`design/prototype/`**？**這個 change 不得改動那兩個**——要動 PRD 交給 `prd-writing`（追蹤在 Issue #85），畫面的改動**另開 Issue**（`docs/specs/` 既有的做法），不夾帶在這次的 change 裡
 
 #### 4.9 任務設定驅動（`AGENTS.md` Hard Rule 5）
 - [ ] 這次的行為有沒有**寫死某一種任務類型**？有沒有任務名稱特判、固定的 `task.type` 分支？
@@ -235,7 +240,7 @@ description: 釐清 OpenSpec change 規劃產物（system-analysis、system-desi
 - 一次最多 4 個 Q，超過分批
 - P 項目不詢問，在步驟 7 一併修正
 
-**選項裡不要夾帶既定方向。** 維護者的技術選型題（`architecture.md` §待決清單 上的那些）要把現況、外部參考做法與差異的代價都寫出來，不要只給一個看起來唯一合理的選項。
+**選項裡不要夾帶既定方向。** 依 `AGENTS.md` §Required Behaviors「Ask the maintainer about any decision that is theirs to make; do not proceed on an assumed default」與本 skill 的邊界「不擅自做技術決策」：維護者的技術選型題（`architecture.md` §待決清單 上的那些）要把現況、外部參考做法與差異的代價都寫出來，不要只給一個看起來唯一合理的選項。
 
 **決議要記下日期。** 維護者在這裡拍板的事，日後是規格書「已確認決議」的合格依據之一（`docs/development/spec-migration.md` 通則第 4 條第四種），而那一條要求**維護者與日期同時寫出來**，否則查不回來。
 
