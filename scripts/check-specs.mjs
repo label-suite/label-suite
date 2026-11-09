@@ -566,7 +566,12 @@ const SOURCE_WORD = /來源|舊規格/;
 const SOURCE_ARTEFACT = /Clarification|釐清紀錄|拍板|明寫|明訂|定成|定義|條文|規格常數|行為規則|使用者故事|舊編號|逐字/;
 const LEGACY_ID = /(?:FR|SC|AC)-\d/;
 const METHOD_DOC = /spec-writing|搬移設計文件/;
-const METHOD_RULE = /鐵律|非目標|黑名單/;
+// 鐵律 covers technical vocabulary and 非目標 covers technical design, so
+// neither reaches a decision about layout or button order. The rule that does
+// is the skill's 「畫面長相以 prototype 為準」, so citing it has to count too
+// (#203): otherwise the check pushes a writer toward a rule that does not
+// actually govern the decision.
+const METHOD_RULE = /鐵律|非目標|黑名單|以 prototype 為準/;
 const DATE = String.raw`\d{4}-\d{2}-\d{2}`;
 
 // Naming a basis only to say it is absent is not a citation. 「舊規格沒有定義這
