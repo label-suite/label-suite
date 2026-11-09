@@ -4,6 +4,7 @@
   "packageManager": "pnpm@10.18.3",
   "scripts": {
     "check:specs": "node scripts/check-specs.mjs docs",
+    "check:flows": "node scripts/check-flows.mjs",
     "test:scripts": "node --test scripts/tests/*.test.mjs",
     "docs:serve": "notecraftapp serve docs --port 4330",
     "prototype": "node scripts/serve-prototype.mjs"

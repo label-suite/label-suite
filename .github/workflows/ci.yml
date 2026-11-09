@@ -49,8 +49,14 @@ jobs:
       - name: Checker regression tests
         run: node --test scripts/tests/check-specs.test.mjs
 
+      - name: Flow checker regression tests
+        run: node --test scripts/tests/check-flows.test.mjs
+
       - name: Prototype server tests
         run: node --test scripts/tests/serve-prototype.test.mjs
 
       - name: Check PRD and module specs
         run: node scripts/check-specs.mjs docs
+
+      - name: Check the business flow diagrams
+        run: node scripts/check-flows.mjs
