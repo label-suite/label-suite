@@ -799,6 +799,15 @@ test('a decision citing the writing method passes', () => {
   assert.deepEqual(errorsFor({ [SPEC]: settled('### Q9. 甲？（已定案）\n\n> 理由：這些屬於畫面，依 `spec-writing` 的技術用語黑名單不收。') }), []);
 });
 
+// 06-01 Q7 的依據是 skill 步驟 1 輸入表的「畫面長相以 prototype 為準，規格只寫規則」——
+// 鐵律 1 管的是技術用語，非目標管的是技術設計，兩者都沒有覆蓋版面與按鈕順序。
+test('a decision citing the prototype-precedence rule passes', () => {
+  assert.deepEqual(
+    errorsFor({ [SPEC]: settled('### Q9. 甲？（已定案）\n\n> 理由：依 `spec-writing`「畫面長相以 prototype 為準，規格只寫規則」，版面不寫進規格。') }),
+    [],
+  );
+});
+
 test('naming the method document without naming a rule is not a citation', () => {
   const errors = errorsFor({
     [SPEC]: settled('### Q9. 甲？（已定案）\n\n> 理由：這一頁用的 skill 叫 `spec-writing`，我自己判斷這樣比較好。'),
