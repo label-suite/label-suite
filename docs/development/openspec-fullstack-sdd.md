@@ -310,8 +310,8 @@ scaffold 是八項。本專案加兩項，對應 `AGENTS.md` 的 Hard Rule：
 
 | # | 問題 | 什麼時候決定 |
 | :--- | :--- | :--- |
-| 1 | schema 的名字（本文暫用 `label-suite-sdd`），以及它是不是 `openspec/config.yaml` 的預設 | 子 Issue 一開工前 |
-| 2 | 小型 change（文件、工具）要不要保留 `--schema spec-driven` 的逃生門 | 子 Issue 一開工前 |
+| ~~1~~ | ~~schema 的名字，以及它是不是 `openspec/config.yaml` 的預設~~ | **已定案（維護者 2026-11-04）**：名稱 `label-suite-sdd`，**就是預設**。落地於 #51 |
+| ~~2~~ | ~~小型 change（文件、工具）要不要保留 `--schema spec-driven` 的逃生門~~ | **已定案（維護者 2026-11-04）**：**保留**。實測：不帶 `--schema` 走 9 份產物，帶 `--schema spec-driven` 走 4 份。落地於 #51 |
 | 3 | FastAPI 的分層、回應包裝格式、`generate_unique_id_function` 策略、auth 實作層 | 由 `backend/` 骨架 change 的 `system-design` 在停點一拍板 |
 | 4 | 前端框架與元件庫 | 第一個前端 change 之前；在那之前 `ui-design` 寫「本次無 UI 變更」 |
 
@@ -331,3 +331,15 @@ scaffold 是八項。本專案加兩項，對應 `AGENTS.md` 的 Hard Rule：
 | skill 與 schema 無關 | 逐行比對本專案與 scaffold 的 `openspec-*/SKILL.md` | 差異只有 openspec 版號與 1.15.0 多出的輸出路徑檢查 |
 | 既有 change 的 schema 紀錄 | 讀 `openspec/changes/archive/*/.openspec.yaml` | 三個都是 `schema: spec-driven` |
 | `06-01` 的規格完成度 | 讀 `docs/specs/06-admin/01-user-management.mdx` | 待釐清是「目前沒有待釐清的問題」，驗收標準約 58 個 Scenario |
+
+子 Issue 一（#51）落地後補測：
+
+| 驗證 | 指令 | 結果 |
+| :--- | :--- | :--- |
+| schema 本體有效 | `pnpm exec openspec schema validate label-suite-sdd` | `✓ Schema 'label-suite-sdd' is valid`，9 份產物 |
+| 兩套並存 | `pnpm exec openspec schemas --json` | `label-suite-sdd`（project，9 份）與 `spec-driven`（package，4 份） |
+| 預設走新流程 | `pnpm exec openspec new change probe-default` | `.openspec.yaml` 寫入 `schema: label-suite-sdd` |
+| 依賴圖與本文第二節一致 | `pnpm exec openspec status --change probe-default` | `0/9`，`system-design` 與 `ui-design` 都只被 `system-analysis` 擋住（可平行），`tasks` 被 `api-contract`、`specs`、`design` 擋住 |
+| 逃生門可用 | `pnpm exec openspec new change probe-escape --schema spec-driven` | `0/4`，走 proposal → specs ∥ design → tasks |
+| 在地化真的進到 instruction | `pnpm exec openspec instructions system-design --change probe-default --json` | 輸出含「Router → Service」與「Alembic」，template 的 `classDiagram` 也在 |
+| CLI 的執行方式 | `pnpm exec openspec --version` | `1.14.1`（專案 devDependency；`npx` 在本環境會被權限分類器擋下） |

@@ -1,0 +1,373 @@
+name: label-suite-sdd
+version: 1
+description: label-suite 的 SDD 流程（system-analysis → system-design ∥ ui-design → api-contract → proposal → clarification → specs → design → tasks）
+artifacts:
+  - id: system-analysis
+    generates: system-analysis.md
+    description: 系統分析：需求依據、跨模組依賴、矛盾與待決問題、業務流程
+    template: system-analysis.md
+    instruction: |
+      盤點這次 change 涉及的需求文件章節（依 config context 列出的需求依據順序讀取：docs/specs/00-prd.mdx → 規格書 → openspec/specs/，
+      只引用章節與編號，不另抄一份）、跨模組依賴、需求文件之間的矛盾與待決問題。
+      業務流程以規格書的「業務流程」章節為準：只引用規格編號與流程名稱，不重畫；
+      涉及多份規格或模組時，用 Mermaid flowchart 畫串接圖（只展開交界處）；
+      規格書沒有業務流程時，才用 Mermaid flowchart 畫完整流程（happy path + 主要例外）並列入待決問題。
+      只寫業務，不寫技術：不出現框架、資料表、端點名稱。
+      待決問題一律**記進「待決問題」並繼續**，不要停下來問使用者、也不要自行假設：
+      所有需要維護者決定的事由 clarification 在停點一一次問完（本專案改掉 scaffold 的關卡 1）。
+    requires: []
+
+  - id: system-design
+    generates: system-design.md
+    description: 後端系統設計：FastAPI 分層 Class Diagram 與每個關鍵 Scenario 的 Sequence Diagram
+    template: system-design.md
+    instruction: |
+      依本專案的後端分層（**Router → Service → Repository／Model**）畫 Mermaid Class Diagram，
+      標出這次新增或修改的類別。每個關鍵情境一張 Sequence Diagram，標題用對應的情境名稱，
+      畫到 Router 回傳回應為止，不含畫面。
+      寫出資料模型異動（新表、欄位、索引）與**Alembic migration 是否可逆**、以及權限檢查點。
+      schema 只由 Alembic 管理；SQLite（Lite）與 PostgreSQL 都要能升級，寫出兩者的差異處。
+      分層與回應包裝的細節若尚未定案，寫成提案並列進待決問題，由 clarification 在停點一拍板。
+    requires:
+      - system-analysis
+
+  - id: ui-design
+    generates: ui-design.md
+    description: 前端設計：路由、元件樹、資料來源、四種畫面狀態與 design token 對應
+    template: ui-design.md
+    instruction: |
+      列出受影響的頁面與路由、每頁的元件樹、每塊資料對應的 API（operationId）與快取鍵、
+      loading／error／empty／無權限四種狀態的呈現、被遮蔽欄位的呈現方式，
+      以及用到的元件與語意 design token（**不寫色碼**）。
+      畫面長相以 `design/prototype/pages/` 為準；token 以 `design/prototype/assets/tokens.css` 與
+      `label-suite-design` skill 為唯一來源，不自行定義色值或間距。前端元件庫尚未定案，
+      元件名稱寫成語意描述（例如「主要按鈕」）而不是某個元件庫的 API。
+      沒有 UI 變更（例如純後端 repo）就只寫一行「本次無 UI 變更」。
+    requires:
+      - system-analysis
+
+  - id: api-contract
+    generates: api-contract.md
+    description: API Contract：前後端唯一的交接依據
+    template: api-contract.md
+    instruction: |
+      列出新增或修改的每個端點：method、path、operationId（全專案唯一）、
+      request（path／query／body 欄位、型別、必填、驗證規則）、response（欄位、型別、nullable）、
+      錯誤碼與觸發條件、需要的角色、會被遮蔽的欄位與遮蔽後的值。
+      operationId 由 FastAPI 的 `generate_unique_id_function` **固定成「動詞加資源」**（例 `listUsers`、`getUser`），**不手寫、不逐個覆寫**，
+      所以這份文件寫的 operationId 必須與那個策略算出來的一致。
+      成功回應的統一格式（要不要包一層 envelope）尚未定案：寫成提案並列進待決問題，
+      由 clarification 在停點一拍板，拍板前不要假設某一種格式。
+      204 無 body、檔案與串流的端點是例外，不套用統一格式。
+      這份是前後端同時開工的依據；實作後由後端產生的 openapi.json 必須與它一致。
+      沒有 API 變更就只寫一行「本次無 API 變更」。
+    requires:
+      - system-design
+
+  - id: proposal
+    generates: proposal.md
+    description: Initial proposal document outlining the change
+    template: proposal.md
+    instruction: |
+      Create the proposal document that establishes WHY this change is needed.
+
+      Sections:
+      - **Why**: 1-2 sentences on the problem or opportunity. What problem does this solve? Why now?
+      - **What Changes**: Bullet list of changes. Be specific about new capabilities, modifications, or removals. Mark breaking changes with **BREAKING**.
+      - **Capabilities**: Identify which specs will be created or modified:
+        - **New Capabilities**: List capabilities being introduced. Each becomes a new `specs/<capability-path>/spec.md`. Name each capability for a durable system behavior (for example, `user-auth`), not the work in this change (for example, `add-login-endpoint`). Choose a cohesive boundary that can own related requirements as the system evolves; avoid broad catch-all capabilities. Use kebab-case for path segments you introduce (e.g., `user-auth` or `identity/user-auth`) and follow the project's existing spec organization.
+        - **Modified Capabilities**: List existing capabilities whose REQUIREMENTS are changing. Only include if spec-level behavior changes (not just implementation details). Each needs a delta spec file. Use the exact existing path under `openspec/specs/`. Leave empty if no requirement changes.
+      - **Impact**: Affected code, APIs, dependencies, or systems.
+
+      IMPORTANT: The Capabilities section is critical. It creates the contract between
+      proposal and specs phases. Research existing specs before filling this in:
+      run `openspec list --specs` for the project's capability inventory, then
+      `openspec show "<spec-id>" --type spec --json --no-scenarios` for any that
+      look related - that returns a capability's purpose and requirement texts
+      without pulling whole spec files into context. Append `--store "<id>"` to
+      both commands only for a registered standalone store, and keep `--type
+      spec`: a change and a spec sharing a name is otherwise an ambiguous-item
+      error. `openspec list` without `--specs` lists in-flight changes, not
+      specs - it never shows what the project already covers. Reuse an existing
+      capability's exact path instead of introducing a near-duplicate name.
+      The filtered read is only an overview. Before deciding what is already
+      covered or what should change, read each relevant spec in full, including
+      scenarios, with `openspec show "<spec-id>" --type spec` (same `--store` rule).
+      Each capability listed here will need a corresponding spec file.
+
+      Every change must either declare at least one capability (new or
+      modified) or explicitly opt out of specs: `openspec validate` rejects a
+      change with zero deltas unless the change's `.openspec.yaml` sets
+      `skip_specs: true`. Use `skip_specs: true` only when no spec-level
+      behavior changes (pure refactor, tooling, docs) - specs describe
+      behavior, so if behavior does not change, no spec should change either.
+      Do not invent a requirement just to satisfy validation.
+
+      Keep it concise (1-2 pages). Focus on the "why" not the "how" -
+      implementation details belong in design.md.
+
+      This is the foundation - specs, design, and tasks all build on this.
+
+      本專案的補充：先讀 system-analysis、system-design、ui-design、api-contract 四份，
+      這份是它們的摘要，**不得與之矛盾**；引用規格書時寫出規格編號（例如「來源：規格 04-02 §耗時」）。
+    requires:
+      - system-analysis
+      - system-design
+      - ui-design
+      - api-contract
+
+  - id: clarification
+    generates: clarification.md
+    description: 釐清紀錄：proposal 定稿後，依 clarify skill 檢查上游五份產出的疏漏、矛盾、可行性與待決策項目
+    template: clarification.md
+    instruction: |
+      依 `.claude/skills/clarify/SKILL.md` 的「關卡模式」執行：檢查 system-analysis、system-design、
+      ui-design、api-contract、proposal 五份產出（specs、design、tasks 尚未產生，相關檢查項標「後續產物」）。
+      需要使用者決定的項目（Q）逐一提問，不自行假設；明確問題（P）列出位置與修正方式。
+      決議會改變需求時，先用 `spec-writing` 改 `docs/specs/` 的規格書，再回修 openspec 產出；
+      **不得透過 change 直接改 docs/specs 的需求**（見 config 的 context）。
+      回修由原撰寫角色處理（sa、sd、ui-ux、planner），回修後重新檢查受影響的面向。
+      clarification.md 記錄檢查結論、每個 Q 的決議與理由、已修正的 P；
+      後續的 specs、design、tasks 必須依這裡的決議撰寫。全數通過（沒有未決的 Q、P 都已修正）才算完成。
+    requires:
+      - proposal
+
+  - id: specs
+    generates: "specs/**/*.md"
+    description: Detailed specifications for the change
+    template: spec.md
+    instruction: |
+      Create specification files that define WHAT the system should do.
+
+      A spec is a behavior contract, not an implementation plan.
+
+      Good spec content:
+      - Observable behavior users or downstream systems rely on
+      - Inputs, outputs, and error conditions
+      - External constraints (security, privacy, reliability, compatibility)
+      - Scenarios that can be tested or explicitly validated
+
+      Avoid in specs:
+      - Internal class/function names
+      - Library or framework choices
+      - Step-by-step implementation details
+      - Detailed execution plans (those belong in design.md or tasks.md)
+
+      Quick test: if the implementation can change without changing externally
+      visible behavior, it likely does not belong in the spec.
+
+      Create one spec file per capability listed in the proposal's Capabilities section.
+      `<capability-path>` is the spec directory relative to `specs/` (for example,
+      `user-auth` or `identity/user-auth`). Preserve the full path:
+      - New capabilities: use the exact path from the proposal at `specs/<capability-path>/spec.md`. Any path segment newly introduced in the proposal must be kebab-case. Follow the project's existing organization; do not add a new domain level when the project uses a flat layout.
+      - Modified capabilities: use the exact existing path from `openspec/specs/<capability-path>/` when creating the delta at `specs/<capability-path>/spec.md`. Run `openspec list --specs` to confirm that path before writing the delta, appending `--store "<id>"` only for a registered standalone store - a mistyped or invented path targets a capability that does not exist rather than the one you meant. Do not move or rename the capability.
+
+      Write the spec files one at a time, so the user sees progress and an
+      interrupted run keeps the files it already wrote:
+      - Before writing anything, compare the capabilities the proposal lists
+        with the `specs/<capability-path>/spec.md` files that already exist,
+        and start with the first capability that has no file. Do not rewrite
+        an existing file unless the user asks you to.
+      - Before each file, say in one line which capability you are writing.
+      - Write each file as soon as you have drafted it. Do not plan every file
+        before writing the first.
+      - Stop when every capability the proposal lists has its file.
+
+      There must be at least one spec file unless the change's `.openspec.yaml`
+      sets `skip_specs: true` (no spec-level behavior change) - `openspec validate`
+      rejects a zero-delta change without that marker. If the proposal lists no
+      capabilities and `skip_specs` is not set, revisit the proposal first.
+
+      Delta operations (use ## headers):
+      - **ADDED Requirements**: New capabilities
+      - **MODIFIED Requirements**: Changed behavior - MUST include full updated content
+      - **REMOVED Requirements**: Deprecated features - MUST include **Reason** and **Migration**
+      - **RENAMED Requirements**: Name changes only - use FROM:/TO: format
+
+      Format requirements:
+      - Each requirement: `### Requirement: <name>` followed by description
+      - Use SHALL/MUST for normative requirements (avoid should/may)
+      - Each scenario: `#### Scenario: <name>` with WHEN/THEN format
+      - **CRITICAL**: Scenarios MUST use exactly 4 hashtags (`####`). Using 3 hashtags or bullets will fail silently.
+      - Every requirement MUST have at least one scenario.
+      - Keep each requirement's description (the text between `### Requirement:` and its first scenario) to 500 characters or fewer. `openspec validate` flags longer descriptions in ADDED requirements and in the main spec. This is a warning: normal validation still passes, but `openspec validate --strict` fails on it. When writing a new requirement, state one behavior per requirement: move examples and edge cases into scenarios, and split a requirement that covers several behaviors into separate `### Requirement:` blocks, each with its own scenarios. Under MODIFIED, keep the existing requirement block whole; never split, trim or rewrite existing text just to meet the length. Split an existing long requirement only when the user asks for it, in a change made for that purpose: under MODIFIED, keep its header and every scenario and cut its description down to one behavior without changing its meaning, then add each behavior you removed as its own ADDED requirement with its own scenarios.
+
+      New capabilities only: the delta spec's first section is `## Purpose` -
+      one or two sentences (50+ characters, or `openspec validate --strict`
+      reports it as too brief) describing what the capability is for. Archive
+      copies it into the main spec it creates; without it the new main spec is
+      left with a `TBD ... Update Purpose after archive` placeholder to fill in
+      by hand. Do NOT add `## Purpose` to a delta for an existing capability -
+      that spec already has one and the delta's is ignored. To change an
+      existing capability's Purpose - including a leftover `TBD` placeholder -
+      edit `<planningHome.root>/openspec/specs/<capability-path>/spec.md`
+      directly. `planningHome.root` comes from the `openspec instructions ...
+      --json` response. Always use it rather than a repo-relative path: it
+      resolves to the store whenever the change lives in one - whether that
+      came from `--store`, a project `store:` pointer, or a global default
+      store - and to the current repository otherwise. Do not try to work out
+      which case applies; the field already has.
+
+      MODIFIED requirements workflow:
+      1. Locate the existing requirement in `<planningHome.root>/openspec/specs/<capability-path>/spec.md` (the same store-aware root as above)
+      2. Copy the ENTIRE requirement block (from `### Requirement:` through all scenarios)
+      3. Paste under `## MODIFIED Requirements` and edit to reflect new behavior
+      4. Ensure header text matches exactly (whitespace-insensitive)
+
+      Common pitfall: Using MODIFIED with partial content loses detail at archive time.
+      If adding new concerns without changing existing behavior, use ADDED instead.
+
+      Example (a new capability, so its first section is `## Purpose`):
+      ```
+      # Spec Delta
+
+      ## Purpose
+
+      Lets users take their data out of the product in a portable format.
+
+      ## ADDED Requirements
+
+      ### Requirement: User can export data
+      The system SHALL allow users to export their data in CSV format.
+
+      #### Scenario: Successful export
+      - **WHEN** user clicks "Export" button
+      - **THEN** system downloads a CSV file with all user data
+
+      ## REMOVED Requirements
+
+      ### Requirement: Legacy export
+      **Reason**: Replaced by new export system
+      **Migration**: Use new export endpoint at /api/v2/export
+      ```
+
+      Specs should be testable - each scenario is a potential test case.
+
+      本專案的補充：依 clarification 的決議撰寫，**不得與之矛盾**。
+      Scenario 的名稱沿用規格書「驗收標準」那一條的名稱，讓兩層文件對得起來。
+      有欄位遮蔽時，寫出**遮蔽後 payload 的樣子**（哪個欄位不在、或換成什麼值），
+      不要只寫「會被遮蔽」。涉及測試集答案時，requirement 要寫成可驗證的負向情境。
+    requires:
+      - clarification
+
+  - id: design
+    generates: design.md
+    description: Technical design document with implementation details
+    template: design.md
+    instruction: |
+      Create the design document that explains HOW to implement the change.
+
+      When to include design.md (create only if any apply):
+      - Cross-cutting change (multiple services/modules) or new architectural pattern
+      - New external dependency or significant data model changes
+      - Security, performance, or migration complexity
+      - Ambiguity that benefits from technical decisions before coding
+
+      Sections:
+      - **Context**: Only the current state and constraints needed to explain the approach. Reference the proposal for motivation instead of restating it (e.g., "See proposal.md - Why").
+      - **Goals / Non-Goals**: What this design achieves and explicitly excludes. Don't restate the proposal's scope - add only design-level boundaries.
+      - **Decisions**: Key technical choices with rationale (why X over Y?). Include alternatives considered for each decision.
+      - **Risks / Trade-offs**: Known limitations, things that could go wrong. Format: [Risk] → Mitigation
+      - **Migration Plan**: Steps to deploy, rollback strategy (if applicable)
+      - **Open Questions**: Unknowns that can safely be answered later without
+        changing the specs, the approach, or the task breakdown. Omit if none.
+
+      Open questions are for genuinely deferrable unknowns, not decisions you
+      skipped. If a question would change the specs, the chosen approach, or
+      the task breakdown, resolve it now - ask the user instead of guessing.
+
+      Focus on architecture and approach, not line-by-line implementation.
+      The proposal covers why and what; design covers how. Reference the
+      proposal for motivation and, once written, the specs for requirements -
+      if a section would only restate them, point to them instead.
+
+      Good design docs explain the "why" behind technical decisions.
+
+      本專案的補充：依 clarification 的決議撰寫，**不得與之矛盾**。
+      每個決策都要對應到 system-design 或 api-contract 的某個段落；
+      那兩份已經寫過的內容不在這裡重寫，指過去就好。
+    requires:
+      - clarification
+
+  - id: tasks
+    generates: tasks.md
+    description: Implementation checklist with trackable tasks
+    template: tasks.md
+    instruction: |
+      Create the task list that breaks down the implementation work.
+
+      Before writing tasks, check design.md for Open Questions. If any of them
+      would change what gets built, resolve them with the user first - do not
+      bake an unstated assumption into the task list.
+
+      **IMPORTANT: Follow the template below for tracked tasks.** The apply phase parses
+      checkbox format to track progress. A box holding only `x` counts as done,
+      upper or lower case and with any spacing, so `- [ x]` is done too. Every
+      other marker, including `- [~]`, `- [-]` and an empty `- []`, reads as
+      unfinished. A line with no checkbox is not tracked at all.
+
+      Guidelines:
+      - Group related tracked tasks under ## numbered headings
+      - Each tracked task MUST be a checkbox: `- [ ] X.Y Task description`
+      - Tasks should be small enough to complete in one session
+      - Order tasks by dependency (what must be done first?)
+      - Track implementation and verification work that can be completed before
+        archive. If the requested workflow includes archive or work that requires
+        this change to be archived, preserve those steps as plain bullets in an
+        optional `## Workflow follow-up` section at the end of tasks.md. These
+        bullets are reference information outside tracked task progress.
+      - Each task MUST state how to verify completion (a test, command,
+        observable behavior, or delivered artifact). Put the verification in
+        that task's checkbox description. Use a separate verification task only
+        when it checks broader integration or system behavior that spans
+        multiple implementation tasks.
+      - Each task group MUST land the tests and documentation its own work
+        calls for. Do NOT collect testing or documentation into a final group -
+        when a late group first exercises work from an early one, the failures
+        cascade back through every group in between and force rework. A group
+        whose work calls for neither, such as scaffolding or dependency setup,
+        carries neither. A final group is for integration checks only, not for
+        the tests and docs an earlier group owed.
+
+      Example:
+      ```
+      # Tasks
+
+      ## 1. Setup
+
+      - [ ] 1.1 Create new module structure and verify expected files are present
+      - [ ] 1.2 Add dependencies to package.json and verify package installation succeeds
+
+      ## 2. Core Implementation
+
+      - [ ] 2.1 Implement data export function and verify the export test passes
+      - [ ] 2.2 Add CSV formatting utilities and verify unit tests cover quoting and delimiters
+      - [ ] 2.3 Document the export API in docs/export.md and verify the documented command runs as written
+      ```
+
+      When applicable, append workflow follow-up as plain bullets, for example:
+      ```
+      ## Workflow follow-up
+
+      - Archive the change after the project's review requirements are satisfied.
+      - Verify the archived result.
+      ```
+
+      Reference specs for what needs to be built, design for how to build it.
+
+      本專案的補充：依 clarification 的決議撰寫。每個 task **標一個負責角色**
+      （sa、sd、ui-ux、planner、backend-developer、frontend-developer、dba、
+      technical-writer、code-reviewer、acceptance-verifier、ops 之一）；
+      **可平行的 task 放同一個群組**；後端有改動時，群組**以契約同步收尾**
+      （重新產生 openapi.json 與前端型別，並確認與 api-contract 一致）。
+    requires:
+      - api-contract
+      - specs
+      - design
+
+apply:
+  requires: [ tasks ]
+  tracks: tasks.md
+  instruction: |
+    Read context files, work through pending tasks, mark complete as you go.
+    Pause if you hit blockers or need clarification.
