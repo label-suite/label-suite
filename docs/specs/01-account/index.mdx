@@ -4,20 +4,20 @@ description: '帳號模組的規格一覽'
 category: '規格書'
 tags: [規格書, 索引, 帳號]
 createdAt: '2026-11-05'
-updatedAt: '2026-11-05'
+updatedAt: '2026-11-09'
 ---
 
 # 01 帳號
 
-所有使用者的帳號入口：登入、註冊、忘記與重設密碼、個人設定，以及登入狀態的維持與失效。
+所有使用者的帳號入口：登入、註冊、用一次性連結設定密碼、個人設定，以及登入狀態的維持與失效。
 帳號本身的管理（新增、停用、指派系統角色）屬系統管理，見 [規格 06-01 使用者管理](../06-admin/01-user-management.mdx)。
 
 ## 規格一覽
 
 | 編號 | 頁面／功能 | 狀態 | 說明 |
 | :--- | :--- | :--- | :--- |
-| 01-01 | [登入](./01-login.mdx) | :badge[草稿]{variant="warning" size="sm"} | Email 與密碼登入，含用 Google 帳號登入的入口 |
-| 01-02 | [註冊](./02-register.mdx) | :badge[草稿]{variant="warning" size="sm"} | 自行填寫姓名、Email 與密碼建立帳號，成為平台成員 |
-| 01-03 | [忘記與重設密碼](./03-reset-password.mdx) | :badge[草稿]{variant="warning" size="sm"} | 用 Email 申請重設連結，再用那個連結設定新密碼 |
-| 01-04 | [個人設定](./04-profile.mdx) | :badge[草稿]{variant="warning" size="sm"} | 個人資料與頭像、變更 Email、修改密碼、通知與外觀偏好 |
-| 01-05 | [登入狀態與安全](./05-login-state.mdx) | :badge[草稿]{variant="warning" size="sm"} | 登入狀態的維持、登出與失效；沒有畫面，定的是其他頁共用的規則 |
+| 01-01 | [登入](./01-login.mdx) | :badge[已定案]{variant="success" size="sm"} | Email 與密碼登入，含用 Google 帳號登入的入口 |
+| 01-02 | [註冊](./02-register.mdx) | :badge[已定案]{variant="success" size="sm"} | 自行填寫姓名、Email 與密碼建立帳號，成為平台成員 |
+| 01-03 | [用一次性連結設定密碼](./03-reset-password.mdx) | :badge[已定案]{variant="success" size="sm"} | 兩條路共用同一個畫面：使用者自己申請重設連結，受邀者收到管理員寄的設定密碼信 |
+| 01-04 | [個人設定](./04-profile.mdx) | :badge[已定案]{variant="success" size="sm"} | 個人資料與頭像、變更 Email、修改密碼、通知與外觀偏好 |
+| 01-05 | [登入狀態與安全](./05-login-state.mdx) | :badge[已定案]{variant="success" size="sm"} | 登入狀態的維持、登出與失效；沒有畫面，定的是其他頁共用的規則 |
