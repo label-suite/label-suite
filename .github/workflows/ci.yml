@@ -57,3 +57,6 @@ jobs:
 
       - name: Check PRD and module specs
         run: node scripts/check-specs.mjs docs
+
+      - name: Check the business flow diagrams
+        run: node scripts/check-flows.mjs
