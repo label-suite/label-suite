@@ -392,7 +392,8 @@ import Spec0601AccountLifecycleFlow from '@notes/components/spec-06-01-account-l
 - [ ] 寫進規格
 
 > 理由：這些屬於畫面，規格只寫規則（#17）。
-> **依據：方法論**——`spec-writing` 鐵律 1「只寫業務，不寫技術」與[搬移設計文件](../../development/spec-migration.md)的「非目標」。維護者 2026-11-09 裁定方法論算第五種依據（[#203](https://github.com/label-suite/label-suite/issues/203)）——那一條裁定同時把這個依據寫進了[搬移設計文件](../../development/spec-migration.md)通則第 4 條的表格。
+> **依據：方法論**——`spec-writing` 在步驟 1 的輸入表寫明「畫面長相**以 prototype 為準**，規格只寫規則」，所以版面、按鈕順序、手機版的呈現與語言切換都不進規格。維護者 2026-11-09 裁定方法論算第五種依據（[#203](https://github.com/label-suite/label-suite/issues/203)），同時把它寫進[搬移設計文件](../../development/spec-migration.md)通則第 4 條的表格。
+> 這一條**不是**鐵律 1：那一條管的是技術用語（API、資料表、元件名稱等，清單在 `references/writing-guide.md` 的技術用語黑名單），不含版面與按鈕順序。
 
 ### Q8. 技術細節（資料結構、同時寫入、資料庫保護）要留在規格嗎？（已定案，2026-11-04）
 
@@ -400,7 +401,7 @@ import Spec0601AccountLifecycleFlow from '@notes/components/spec-06-01-account-l
 - [ ] 保留在規格
 
 > 理由：規格只寫業務；舊規格的資料模型、同時寫入與資料庫層保護已在 openspec 寫明（#32）。
-> **依據：方法論**——同 Q7，`spec-writing` 鐵律 1 與[搬移設計文件](../../development/spec-migration.md)的「非目標」；維護者 2026-11-09 裁定（[#203](https://github.com/label-suite/label-suite/issues/203)）。
+> **依據：方法論**——[搬移設計文件](../../development/spec-migration.md)的「非目標」第一條：「不寫技術設計、資料庫設計、API 設計、元件拆分（那是 OpenSpec 的 design 與 spec delta）」。資料結構、同時寫入與資料庫層保護正是這一類，所以改寫成業務語言、細節留給 openspec。維護者 2026-11-09 裁定方法論算第五種依據（[#203](https://github.com/label-suite/label-suite/issues/203)）。
 
 ## 變更紀錄
 
