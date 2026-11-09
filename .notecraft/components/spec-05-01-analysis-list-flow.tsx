@@ -540,7 +540,7 @@ const FLOWS: Flow[] = [
       { id: "a2", from: "n2", to: "n3", label: "是" },
       { id: "a3", from: "n3", to: "n4", label: "是" },
       { id: "e2", from: "n2", to: "n5", exception: true, label: "否", exit: "bottom", enter: "bottom", via: laneBottom(1) - 8 },
-      { id: "e1", from: "n3", to: "n6", exception: true, label: "否", exit: "bottom", enter: "bottom", via: laneBottom(1) - 24 },
+      { id: "e1", from: "n3", to: "n6", exception: true, label: "否", exit: "bottom", enter: "bottom", via: laneBottom(1) - 4 },
     ],
     steps: [
       {
@@ -603,10 +603,10 @@ const FLOWS: Flow[] = [
     ],
     edges: [
       { id: "a0", from: "s", to: "n1" },
-      { id: "a1", from: "n1", to: "n2" },
-      { id: "a2", from: "n2", to: "n3", label: "是" },
+      { id: "a1", from: "n1", to: "n2", exit: "right", enter: "left" },
+      { id: "a2", from: "n2", to: "n3", label: "是", exit: "top", enter: "bottom", via: laneTop(1) - 20 },
       { id: "a3", from: "n3", to: "n4" },
-      { id: "e1", from: "n2", to: "n5", exception: true, label: "否", exit: "bottom", enter: "bottom", via: laneBottom(1) - 24 },
+      { id: "e1", from: "n2", to: "n5", exception: true, label: "否", exit: "right", enter: "left" },
       { id: "e2", from: "n5", to: "n1", exception: true, exit: "bottom", enter: "bottom", via: laneBottom(1) - 8 },
     ],
     steps: [
