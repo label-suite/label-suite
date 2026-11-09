@@ -795,6 +795,29 @@ test('a missing basis may be deferred only by naming an issue', () => {
   assert.match(errors, /01-user-list\.mdx:\d+: decision "Q9" states no basis/);
 });
 
+test('a decision citing the writing method passes', () => {
+  assert.deepEqual(errorsFor({ [SPEC]: settled('### Q9. 甲？（已定案）\n\n> 理由：這些屬於畫面，依 `spec-writing` 的技術用語黑名單不收。') }), []);
+});
+
+test('naming the method document without naming a rule is not a citation', () => {
+  const errors = errorsFor({
+    [SPEC]: settled('### Q9. 甲？（已定案）\n\n> 理由：這一頁用的 skill 叫 `spec-writing`，我自己判斷這樣比較好。'),
+  }).join('\n');
+  assert.match(errors, /01-user-list\.mdx:\d+: decision "Q9" states no basis/);
+});
+
+// 審查示範過的誤放行：關鍵字出現在問題標題裡，理由卻是撰寫者自己的判斷。
+test('the writing method needs the document named, not just the word', () => {
+  const errors = errorsFor({
+    [SPEC]: settled('### Q9. 這一條算不算非目標？（已定案）\n\n> 理由：我自己判斷不算，所以收進規格。'),
+  }).join('\n');
+  assert.match(errors, /01-user-list\.mdx:\d+: decision "Q9" states no basis/);
+});
+
+test('a decision citing the migration document\'s non-goals passes', () => {
+  assert.deepEqual(errorsFor({ [SPEC]: settled('### Q9. 甲？（已定案）\n\n> 理由：搬移設計文件的「非目標」已經把這一類排除在外。') }), []);
+});
+
 test('every decision in a chapter is reported, not just the first', () => {
   const errors = errorsFor({
     [SPEC]: settled('### Q9. 甲？（已定案）\n\n> 理由：甲。\n\n### Q10. 乙？（已定案）\n\n> 理由：乙。'),
