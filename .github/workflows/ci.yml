@@ -33,6 +33,45 @@ jobs:
           done
           exit "$failed"
 
+  docs-site:
+    name: docs-site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          # notecraftapp needs Node 22 or newer.
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # notecraftapp downloads its own app bundle and installs that bundle's
+      # dependencies under ~/.notecraft the first time it runs. Issue #148 is the
+      # record of exactly that install failing on a registry hiccup, so the
+      # bundle is cached between runs: without the cache, every pull request
+      # would depend on the registry being healthy at that moment.
+      - name: Cache the notecraft app bundle
+        uses: actions/cache@v4
+        with:
+          path: ~/.notecraft
+          key: notecraft-${{ runner.os }}-${{ hashFiles('package.json') }}
+          restore-keys: |
+            notecraft-${{ runner.os }}-
+
+      # The build is the only gate that catches an MDX compile error; check-specs
+      # has passed three times on a page the build then refused.
+      #
+      # Known bug #172: the first --rebuild after an edit fails intermittently
+      # and the second always passes (measured 3 failures in 4 trials). Retry
+      # once rather than fail a pull request on a bug unrelated to its change.
+      - name: Build the docs site
+        run: pnpm exec notecraftapp build docs --rebuild || pnpm exec notecraftapp build docs --rebuild
+
   specs:
     name: specs
     runs-on: ubuntu-latest
