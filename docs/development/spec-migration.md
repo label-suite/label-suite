@@ -152,7 +152,7 @@
 | :--- | :--- | :--- |
 | 01-01 登入 | `account/001-login-email-password/spec.md`、`account/002-login-google-sso/spec.md` | 兩份併一頁（D2）；`001` 另有 `plan.md`，只讀不搬 |
 | 01-02 註冊 | `account/003-register-email-password/spec.md` | |
-| 01-03 忘記與重設密碼 | `account/004-forgot-reset-password/spec.md` | 對應兩個 prototype：`account/forgot-password`、`account/reset-password` |
+| 01-03 用一次性連結設定密碼 | `account/004-forgot-reset-password/spec.md` | 對應兩個 prototype：`account/forgot-password`、`account/reset-password` |
 | 01-04 個人設定 | `account/005-profile-settings/spec.md` | 來源 43KB |
 | 01-05 登入狀態與安全 | `account/020-auth-session-security/spec.md` | PRD 列為「不是獨立頁面」，無 prototype |
 | 02-01 儀表板 | `dashboard/012-dashboard/spec.md` | 來源 102KB |
