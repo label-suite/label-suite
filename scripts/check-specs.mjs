@@ -554,8 +554,9 @@ function checkStaleUnwritten(files, specPathByNumber, report) {
 // Unlike the other checks this one reads the raw text: a legacy ID is almost
 // always written as inline code, and stripIgnored blanks that, which would hide
 // the strongest basis there is.
-// 「已確認決議」 may only rest on one of the five bases the migration document's
-// general rule 4 lists. This does not judge whether the stated basis holds —
+// 「已確認決議」 may only rest on a basis the migration document's general rule 4
+// lists, plus the writing method the maintainer added on 2026-11-09 (#203); that
+// document's own table is updated by the same issue. This does not judge whether the stated basis holds —
 // that still needs a reader — it only fails a decision that names none at all,
 // which is how the same rule was broken three times in a row (#67, #68, #69).
 const SETTLED_CHAPTER = '已確認決議';
@@ -564,6 +565,8 @@ const DECISION_RE = /^#{3} +(Q\d+)\./gm;
 const SOURCE_WORD = /來源|舊規格/;
 const SOURCE_ARTEFACT = /Clarification|釐清紀錄|拍板|明寫|明訂|定成|定義|條文|規格常數|行為規則|使用者故事|舊編號|逐字/;
 const LEGACY_ID = /(?:FR|SC|AC)-\d/;
+const METHOD_DOC = /spec-writing|搬移設計文件/;
+const METHOD_RULE = /鐵律|非目標|黑名單/;
 const DATE = String.raw`\d{4}-\d{2}-\d{2}`;
 
 // Naming a basis only to say it is absent is not a citation. 「舊規格沒有定義這
@@ -581,11 +584,12 @@ const BASES = [
   (t) => LEGACY_ID.test(t) || (SOURCE_WORD.test(t) && SOURCE_ARTEFACT.test(t)),
   // The maintainer, with the date the ruling was given.
   (t) => new RegExp(`維護者[^。\\n]{0,30}${DATE}|${DATE}[^。\\n]{0,20}維護者`).test(t),
-  // The writing method itself. 「這些屬於畫面，規格只寫規則」 is settled by the
-  // skill's 鐵律 and this document's 非目標, not by the product — it is a
-  // decision about what belongs in the document (maintainer ruling 2026-11-09,
-  // #203).
-  (t) => /spec-writing|鐵律|非目標/.test(t),
+  // The writing method, which settles what belongs in a spec at all rather than
+  // how the product behaves (maintainer ruling 2026-11-09, #203). Both halves
+  // are required, like the source basis above: name the document that carries
+  // the rule, and name the kind of rule. A bare 「非目標」 in a question title
+  // with 「我自己判斷」 for a reason is exactly what this check exists to fail.
+  (t) => METHOD_DOC.test(t) && METHOD_RULE.test(t),
   // An admitted gap, which must name the issue that tracks it. This keeps a
   // missing basis visible instead of letting it read as settled.
   (t) => /依據待補[^。\n]{0,20}#\d+/.test(t),
@@ -603,7 +607,7 @@ function checkDecisionBases(file, text, report) {
     report.error(
       file,
       lineOf(text, range[0] + m.index),
-      `decision "${m[1]}" states no basis; cite the PRD or the glossary, a D rule of the migration document, this page's source, a dated maintainer ruling, or the writing method`,
+      `decision "${m[1]}" states no basis; cite the PRD or the glossary, a D rule of the migration document, this page's source, a dated maintainer ruling, or the writing method (name spec-writing or the migration document, and the 鐵律 or 非目標 you cite)`,
     );
   }
 }
