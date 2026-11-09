@@ -4,7 +4,7 @@ description: '系統管理員在這頁管理全平台帳號、系統角色與帳
 category: '規格書'
 tags: [規格書, 系統管理, 已定案]
 createdAt: '2026-11-04'
-updatedAt: '2026-11-04'
+updatedAt: '2026-11-09'
 ---
 
 import PrototypeFrame from '@notes/components/prototype-frame';
@@ -333,6 +333,7 @@ import Spec0601AccountLifecycleFlow from '@notes/components/spec-06-01-account-l
 - [x] 姓名 1–100 字，Email 最多 254 字
 
 > 理由：Email 254 字是信箱格式本身的上限；姓名 100 字可容納中英文全名，又不會撐壞列表。舊規格沒有寫長度，搬移時提出（#32）。
+> **依據待補（[#203](https://github.com/label-suite/label-suite/issues/203)）**：這一條沒有寫出[搬移設計文件](../../development/spec-migration.md)通則第 4 條那四種依據的任何一種。結論不變，但依據的帳是未結的。
 
 ### Q2. 建立時間與異動紀錄的時間依哪個時區顯示？（已定案，2026-11-04）
 
@@ -340,13 +341,14 @@ import Spec0601AccountLifecycleFlow from '@notes/components/spec-06-01-account-l
 - [ ] 一律使用台北時間（UTC+8）
 
 > 理由：跨時區的系統管理員看到的都是自己的當地時間。舊規格沒有寫時區，搬移時提出（#32）。
+> **依據待補（[#203](https://github.com/label-suite/label-suite/issues/203)）**：這一條沒有寫出[搬移設計文件](../../development/spec-migration.md)通則第 4 條那四種依據的任何一種。結論不變，但依據的帳是未結的。
 
 ### Q3. 列表要不要能依帳號狀態篩選？（已定案，2026-10-29）
 
 - [x] 要，選項為全部、啟用、停用，換頁時和其他條件一併保留
 - [ ] 不要
 
-> 理由：系統管理員需要快速找出停用中的帳號（#17，舊編號 006-Q1）。
+> 理由：**來源使用者故事 1 的介面定義**把「狀態篩選器（啟用 / 停用）」列為區塊 A 的必要元素，驗收情境 4 也要求換頁時保留目前的篩選條件。系統管理員需要快速找出停用中的帳號（#17，舊編號 006-Q1）。
 
 ### Q4. 新增與編輯表單要不要有帳號狀態欄？（已定案，2026-10-29）
 
@@ -354,6 +356,7 @@ import Spec0601AccountLifecycleFlow from '@notes/components/spec-06-01-account-l
 - [ ] 要
 
 > 理由：讓停用一律經過確認、登入狀態失效與保護規則（#17，舊編號 006-Q2）。
+> ⚠️ **依據待補，而且這一條與來源相反（[#203](https://github.com/label-suite/label-suite/issues/203)）**：來源使用者故事 2 的介面定義把 `status`（啟用 / 停用）列為**新增/編輯表單的必要欄位**，本頁卻決議不要。來源的釐清紀錄沒有談過這個欄位，`PlatformUser` 那條「不另建重複的角色或狀態欄」講的是資料層不要重複的欄，不是表單控制項。**依通則第 4 條，這一條需要維護者裁定或退回待釐清**，不是補一個依據就好。
 
 ### Q5. 新增帳號時的帳號狀態是什麼？（已定案，2026-10-29）
 
@@ -361,6 +364,7 @@ import Spec0601AccountLifecycleFlow from '@notes/components/spec-06-01-account-l
 - [ ] 由系統管理員選擇
 
 > 理由：Q4 拿掉帳號狀態欄後，新增的帳號一律為啟用（#17，舊編號 006-Q3）。
+> **依據待補（[#203](https://github.com/label-suite/label-suite/issues/203)）**：這一條沒有寫出[搬移設計文件](../../development/spec-migration.md)通則第 4 條那四種依據的任何一種。結論不變，但依據的帳是未結的。
 
 ### Q6. 重發設定密碼信放在哪裡？（已定案，2026-10-29）
 
@@ -368,6 +372,7 @@ import Spec0601AccountLifecycleFlow from '@notes/components/spec-06-01-account-l
 - [ ] 編輯表單內
 
 > 理由：受邀的使用者連結過期時，系統管理員從列表就能處理；寄信失敗時整個重發不生效，原本的連結仍然有效，重發成功才留下異動紀錄（#17，舊編號 006-Q4）。
+> **依據待補，只有一半（[#203](https://github.com/label-suite/label-suite/issues/203)）**：重發的**行為**有來源依據（`FR-006c`：重發要先讓原連結失效、連結 24 小時有效且只能用一次），但**放在列表哪裡**沒有——來源的列表操作欄按鈕順序只列了停用／啟用、編輯與異動紀錄，`FR-013` 的審計清單也沒有重發。位置這一半要維護者裁定或退回待釐清。
 
 ### Q7. 版面、按鈕順序、手機版異動紀錄的呈現與語言切換要寫進規格嗎？（已定案，2026-10-29）
 
@@ -375,6 +380,7 @@ import Spec0601AccountLifecycleFlow from '@notes/components/spec-06-01-account-l
 - [ ] 寫進規格
 
 > 理由：這些屬於畫面，規格只寫規則（#17）。
+> **依據待補（[#203](https://github.com/label-suite/label-suite/issues/203)）**：這一條沒有寫出[搬移設計文件](../../development/spec-migration.md)通則第 4 條那四種依據的任何一種。結論不變，但依據的帳是未結的。
 
 ### Q8. 技術細節（資料結構、同時寫入、資料庫保護）要留在規格嗎？（已定案，2026-11-04）
 
@@ -382,11 +388,13 @@ import Spec0601AccountLifecycleFlow from '@notes/components/spec-06-01-account-l
 - [ ] 保留在規格
 
 > 理由：規格只寫業務；舊規格的資料模型、同時寫入與資料庫層保護已在 openspec 寫明（#32）。
+> **依據待補（[#203](https://github.com/label-suite/label-suite/issues/203)）**：這一條沒有寫出[搬移設計文件](../../development/spec-migration.md)通則第 4 條那四種依據的任何一種。結論不變，但依據的帳是未結的。
 
 ## 變更紀錄
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#203](https://github.com/label-suite/label-suite/issues/203) | 2026-11-09 | §已確認決議 | Q1–Q8 都沒有寫出[搬移設計文件](../../development/spec-migration.md)通則第 4 條的四種依據（這一頁是最早搬的，那張表當時還不存在） | Q3 補上來源使用者故事 1 的介面定義；Q4 與 Q6 寫明依據只有一半或與來源相反；其餘五條各加一行「依據待補（#203）」。**八條的結論全部不變** | — |
 | 初版 | 2026-11-04 | 全部 | — | — | Q1–Q8 |
 
 ## Q&A

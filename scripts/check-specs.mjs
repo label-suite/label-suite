@@ -549,6 +549,60 @@ function checkStaleUnwritten(files, specPathByNumber, report) {
   }
 }
 
+// --- the basis of a settled decision (#90) -----------------------------------
+
+// Unlike the other checks this one reads the raw text: a legacy ID is almost
+// always written as inline code, and stripIgnored blanks that, which would hide
+// the strongest basis there is.
+// 「已確認決議」 may only rest on one of the four bases the migration document's
+// general rule 4 lists. This does not judge whether the stated basis holds —
+// that still needs a reader — it only fails a decision that names none at all,
+// which is how the same rule was broken three times in a row (#67, #68, #69).
+const SETTLED_CHAPTER = '已確認決議';
+const DECISION_RE = /^#{3} +(Q\d+)\./gm;
+
+const SOURCE_WORD = /來源|舊規格/;
+const SOURCE_ARTEFACT = /Clarification|釐清紀錄|拍板|明寫|明訂|定成|定義|條文|規格常數|行為規則|使用者故事|舊編號|逐字/;
+const LEGACY_ID = /(?:FR|SC|AC)-\d/;
+const DATE = String.raw`\d{4}-\d{2}-\d{2}`;
+
+// Naming a basis only to say it is absent is not a citation. 「舊規格沒有定義這
+// 一條，由我自己判斷」 mentions the source and what it would have defined, and
+// without this the co-occurrence below would read it as a source citation.
+const DENIAL = /(?:PRD|術語表|來源|舊規格|舊來源)[^。\n]{0,12}(?:沒有|沒寫|沒說|未寫|未定義|不存在|從來沒|並未)/g;
+const withoutDenials = (text) => text.replace(DENIAL, (s) => ' '.repeat(s.length));
+
+const BASES = [
+  // PRD or the glossary, both already settled elsewhere.
+  (t) => /PRD/.test(t) || /術語表/.test(t),
+  // A cross-page decision of the migration document itself: D1 to D10.
+  (t) => /(?<![A-Za-z0-9])D(?:10|[1-9])(?![0-9])/.test(t),
+  // This page's own source: a legacy ID, or the source plus what it settled.
+  (t) => LEGACY_ID.test(t) || (SOURCE_WORD.test(t) && SOURCE_ARTEFACT.test(t)),
+  // The maintainer, with the date the ruling was given.
+  (t) => new RegExp(`維護者[^。\\n]{0,30}${DATE}|${DATE}[^。\\n]{0,20}維護者`).test(t),
+  // An admitted gap, which must name the issue that tracks it. This keeps a
+  // missing basis visible instead of letting it read as settled.
+  (t) => /依據待補[^。\n]{0,20}#\d+/.test(t),
+];
+
+function checkDecisionBases(file, text, report) {
+  const range = chapterRange(text, SETTLED_CHAPTER);
+  if (!range) return;
+  const chapter = text.slice(range[0], range[1]);
+  const found = [...chapter.matchAll(DECISION_RE)];
+  for (const [i, m] of found.entries()) {
+    const end = i + 1 < found.length ? found[i + 1].index : chapter.length;
+    const block = chapter.slice(m.index, end);
+    if (BASES.some((has) => has(withoutDenials(block)))) continue;
+    report.error(
+      file,
+      lineOf(text, range[0] + m.index),
+      `decision "${m[1]}" states no basis; cite the PRD or the glossary, a D rule of the migration document, this page's source, or a dated maintainer ruling`,
+    );
+  }
+}
+
 export function checkDocs(docsDir) {
   const errors = [];
   const report = { error: (file, line, msg) => errors.push(`${file}:${line}: ${msg}`) };
@@ -580,6 +634,7 @@ export function checkDocs(docsDir) {
       checkFrontmatter(f.rel, f.raw, report);
       checkChapterOrder(f.rel, f.text, SPEC_CHAPTERS, MAPPING_CHAPTER, report);
       const names = checkScenarios(f.rel, f.text, report);
+      checkDecisionBases(f.rel, f.raw, report);
       const legacy = readLegacyIds(join(docsDir, 'specs', 'legacy', `${spec.legacyName}.ids`));
       checkMapping(f.rel, f.text, legacy, names, specNumbers, spec.number, report);
     }
