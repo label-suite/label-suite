@@ -795,6 +795,14 @@ test('a missing basis may be deferred only by naming an issue', () => {
   assert.match(errors, /01-user-list\.mdx:\d+: decision "Q9" states no basis/);
 });
 
+test('a decision citing the writing method passes', () => {
+  assert.deepEqual(errorsFor({ [SPEC]: settled('### Q9. 甲？（已定案）\n\n> 理由：這些屬於畫面，依 `spec-writing` 的鐵律 1「只寫業務」不收。') }), []);
+});
+
+test('a decision citing the migration document\'s non-goals passes', () => {
+  assert.deepEqual(errorsFor({ [SPEC]: settled('### Q9. 甲？（已定案）\n\n> 理由：搬移設計文件的「非目標」已經把這一類排除在外。') }), []);
+});
+
 test('every decision in a chapter is reported, not just the first', () => {
   const errors = errorsFor({
     [SPEC]: settled('### Q9. 甲？（已定案）\n\n> 理由：甲。\n\n### Q10. 乙？（已定案）\n\n> 理由：乙。'),

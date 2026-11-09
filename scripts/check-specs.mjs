@@ -554,7 +554,7 @@ function checkStaleUnwritten(files, specPathByNumber, report) {
 // Unlike the other checks this one reads the raw text: a legacy ID is almost
 // always written as inline code, and stripIgnored blanks that, which would hide
 // the strongest basis there is.
-// 「已確認決議」 may only rest on one of the four bases the migration document's
+// 「已確認決議」 may only rest on one of the five bases the migration document's
 // general rule 4 lists. This does not judge whether the stated basis holds —
 // that still needs a reader — it only fails a decision that names none at all,
 // which is how the same rule was broken three times in a row (#67, #68, #69).
@@ -581,6 +581,11 @@ const BASES = [
   (t) => LEGACY_ID.test(t) || (SOURCE_WORD.test(t) && SOURCE_ARTEFACT.test(t)),
   // The maintainer, with the date the ruling was given.
   (t) => new RegExp(`維護者[^。\\n]{0,30}${DATE}|${DATE}[^。\\n]{0,20}維護者`).test(t),
+  // The writing method itself. 「這些屬於畫面，規格只寫規則」 is settled by the
+  // skill's 鐵律 and this document's 非目標, not by the product — it is a
+  // decision about what belongs in the document (maintainer ruling 2026-11-09,
+  // #203).
+  (t) => /spec-writing|鐵律|非目標/.test(t),
   // An admitted gap, which must name the issue that tracks it. This keeps a
   // missing basis visible instead of letting it read as settled.
   (t) => /依據待補[^。\n]{0,20}#\d+/.test(t),
@@ -598,7 +603,7 @@ function checkDecisionBases(file, text, report) {
     report.error(
       file,
       lineOf(text, range[0] + m.index),
-      `decision "${m[1]}" states no basis; cite the PRD or the glossary, a D rule of the migration document, this page's source, or a dated maintainer ruling`,
+      `decision "${m[1]}" states no basis; cite the PRD or the glossary, a D rule of the migration document, this page's source, a dated maintainer ruling, or the writing method`,
     );
   }
 }
