@@ -528,7 +528,7 @@ const FLOWS: Flow[] = [
     nodes: [
       { id: "s", lane: 0, col: 0, kind: "start", label: [] },
       { id: "n1", lane: 0, col: 0, kind: "action", label: ["點「任務", "管理」"] },
-      { id: "n2", lane: 1, col: 1, kind: "system", label: ["依角色載", "入任務"] },
+      { id: "n2", lane: 1, col: 1, kind: "system", label: ["依身分與那", "一格載入"] },
       { id: "n3", lane: 1, col: 2, kind: "decision", label: ["載入", "成功？"] },
       { id: "n4", lane: 1, col: 3, kind: "decision", label: ["有任務？"] },
       { id: "n5", lane: 1, col: 4, kind: "system", end: true, label: ["顯示任務", "列表"] },
@@ -547,14 +547,14 @@ const FLOWS: Flow[] = [
     steps: [
       {
         title: "從側欄點「任務管理」",
-        body: "任何已登入的平台成員都進得了這一頁，看得到的內容才依角色而定。",
+        body: "已登入而且權限矩陣「檢視任務列表」那一格允許的人都進得了這一頁，看得到的內容才依身分而定。",
         scenarios: [],
         ref: "主流程 1",
         highlight: ["s", "a0", "n1"],
       },
       {
         title: "系統依角色載入任務",
-        body: "平台成員只載入自己參與的任務——他是該任務的專案負責人、審核員或標記員其中之一。沒有參與的任務從頭就不在這張列表上，不是被隱藏，而是沒有載入。",
+        body: "這一步的前提是權限矩陣「檢視任務列表」那一格允許；缺列或被關掉的人進不來，也取不到列表，所以不在這張圖上。平台成員只載入自己參與的任務——他是該任務的專案負責人、審核員或標記員其中之一。沒有參與的任務從頭就不在這張列表上，不是被隱藏，而是沒有載入。",
         scenarios: ["平台成員只看到自己參與的任務", "成員資格失效後看不到那個任務"],
         ref: "主流程 2",
         highlight: ["a1", "n2"],

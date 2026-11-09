@@ -8,7 +8,7 @@ import { ChevronLeft, ChevronRight, Play } from "lucide-react";
  * 使用方式：整份複製到 .notecraft/components/spec-<模組編號>-<頁面編號>-<主題>-flow.tsx，
  * 【骨架】一字不改；【流程】整段換成這份規格的流程資料，default export 改名。
  *
- * 【流程】填的是規格 06-01 使用者管理的三段業務流程：邀請新帳號、停用帳號、變更系統角色。
+ * 【流程】目前填的是規格 01-01 客戶聯絡紀錄，當作範例：
  * - FLOWS：每段業務流程一筆，包含泳道、節點、連線與走查步驟
  * - 節點位置用「泳道 lane × 欄 col」指定，連線由骨架自動走直角線；
  *   自動路線會穿過其他節點時，用 exit／enter／via 指定（見 flow.md「連線」）
@@ -534,7 +534,7 @@ const FLOWS: Flow[] = [
       { id: "n4", lane: 2, col: 4, kind: "action", label: ["開啟連結", "設定密碼"] },
       { id: "d2", lane: 1, col: 5, kind: "decision", label: ["連結", "可用？"] },
       { id: "n5", lane: 1, col: 6, kind: "system", end: true, label: ["完成設定", "可以登入"] },
-      { id: "n6", lane: 2, col: 6, kind: "system", exception: true, end: true, label: ["顯示連結", "無法使用"] },
+      { id: "n6", lane: 2, col: 6, kind: "system", exception: true, label: ["顯示連結", "無法使用"] },
     ],
     edges: [
       { id: "a0", from: "s", to: "n1" },
@@ -636,7 +636,6 @@ const FLOWS: Flow[] = [
       { id: "x2", lane: 0, col: 4, kind: "action", exception: true, end: true, label: ["點「取消」", "維持啟用"] },
       { id: "d3", lane: 1, col: 3, kind: "decision", label: ["保留一位", "管理員？"] },
       { id: "n3", lane: 1, col: 4, kind: "system", end: true, label: ["標示停用", "登入失效"] },
-      { id: "x4", lane: 0, col: 5, kind: "system", exception: true, end: true, label: ["自己登出", "回登入頁"] },
     ],
     edges: [
       { id: "a0", from: "s", to: "n1" },
@@ -647,7 +646,6 @@ const FLOWS: Flow[] = [
       { id: "a3", from: "d2", to: "d3", label: "是" },
       { id: "e3", from: "d3", to: "xb", exception: true, label: "否", exit: "bottom", enter: "bottom", via: laneBottom(1) - 8 },
       { id: "a4", from: "d3", to: "n3", label: "是" },
-      { id: "e4", from: "n3", to: "x4", exception: true },
     ],
     steps: [
       {
@@ -693,16 +691,57 @@ const FLOWS: Flow[] = [
         highlight: ["a3", "d3", "a4", "n3"],
       },
       {
-        title: "替代：停用的是自己",
-        body: "確認後自己立即登出並回到登入頁，不回到列表。流程結束。",
-        scenarios: ["確認停用自己"],
-        ref: "A2",
-        highlight: ["n3", "e4", "x4"],
-      },
-      {
         title: "結果：帳號無法登入",
         body: "帳號為停用，無法登入；之後重新啟用時，停用前的登入狀態不會恢復。異動紀錄多一筆「停用」。",
         scenarios: ["啟用停用中的帳號"],
+        ref: "結果",
+        highlight: ["n3"],
+      },
+    ],
+  },
+  {
+    id: "deactivate-self",
+    label: "停用的是自己",
+    trigger: "系統管理員要停用的，就是自己的帳號",
+    result: "和停用別人一樣留下一筆「停用」的異動紀錄；差別是操作者回到的是登入頁，不是列表",
+    lanes: ["系統管理員", "系統"],
+    nodes: [
+      { id: "s", lane: 0, col: 0, kind: "start", label: [] },
+      { id: "n1", lane: 0, col: 0, kind: "action", label: ["確認視窗", "點「停用」"] },
+      { id: "n2", lane: 1, col: 1, kind: "system", label: ["標示停用", "登入失效"] },
+      { id: "n3", lane: 1, col: 2, kind: "system", end: true, label: ["自己登出", "回登入頁"] },
+    ],
+    edges: [
+      { id: "a0", from: "s", to: "n1" },
+      { id: "a1", from: "n1", to: "n2" },
+      { id: "a2", from: "n2", to: "n3" },
+    ],
+    steps: [
+      {
+        title: "在確認視窗點擊「停用」，而目標就是自己的帳號",
+        body: "走到這一步表示保護規則都過了：自己不是 Seeder 管理員，而且停用之後平台還有別的啟用中的系統管理員。",
+        scenarios: [],
+        ref: "主流程 1",
+        highlight: ["s", "a0", "n1", "a1", "n2"],
+      },
+      {
+        title: "系統把帳號標示為停用，自己的登入狀態立即失效",
+        body: "和停用別人一樣：帳號留在列表上、標示為停用，異動紀錄多一筆「停用」。",
+        scenarios: [],
+        ref: "主流程 2",
+        highlight: ["n2"],
+      },
+      {
+        title: "自己立即登出並回到登入頁",
+        body: "不回到列表——列表需要的權限隨著帳號停用一起失效了，留在那裡只會看到一個進不去的畫面。",
+        scenarios: ["確認停用自己"],
+        ref: "主流程 3",
+        highlight: ["a2", "n3"],
+      },
+      {
+        title: "結果：操作者回到的是登入頁，不是列表",
+        body: "這一段之所以和「停用帳號」分開畫，是因為兩者各自結束在不同的地方：停用別人結束在列表，停用自己結束在登入頁。流程結束。",
+        scenarios: ["確認停用自己"],
         ref: "結果",
         highlight: ["n3"],
       },

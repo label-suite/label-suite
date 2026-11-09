@@ -722,8 +722,83 @@ test('an index row citing another page mid-row is judged by its last link', () =
         '| 01-01 Q9 | 甲 | 已由[規格 01-02 §已確認決議](./01-user-management/02-user-detail.mdx#已確認決議) Q1 結案 |' +
         ' [規格 01-01 §待釐清](./01-user-management/01-user-list.mdx#待釐清) |\n',
       [SPEC]: spec({ 待釐清: '### Q9. 甲\n\n甲。' }),
-      [SPEC2]: spec({ 已確認決議: '### Q1. 乙\n\n乙。' }),
+      [SPEC2]: spec({ 已確認決議: '### Q1. 乙（已定案，維護者裁定 2026-11-09）\n\n乙。' }),
     }),
     [],
   );
+});
+
+// --- the basis of a settled decision (#90) -----------------------------------
+
+const settled = (block) => spec({ 已確認決議: block });
+
+test('a decision citing the PRD passes', () => {
+  assert.deepEqual(errorsFor({ [SPEC]: settled('### Q9. 甲？（已定案）\n\n> 理由：PRD §使用者角色 已經把這一條定下來。') }), []);
+});
+
+test('a decision citing the glossary passes', () => {
+  assert.deepEqual(errorsFor({ [SPEC]: settled('### Q9. 甲？（已定案）\n\n> 理由：依術語表已定的名稱折回。') }), []);
+});
+
+test('a decision citing a D rule of the migration document passes', () => {
+  assert.deepEqual(errorsFor({ [SPEC]: settled('### Q9. 甲？（已定案）\n\n> 理由：依搬移設計文件的 D5，一律以 main 分支現況為準。') }), []);
+});
+
+// Deliberately cites nothing but the legacy ID, and writes it as inline code the
+// way every page does: this is what pins both the legacy-ID basis and the choice
+// to read the raw text, since stripIgnored would blank the ID.
+test("a decision citing this page's own source clause passes", () => {
+  assert.deepEqual(errorsFor({ [SPEC]: settled('### Q9. 甲？（已定案）\n\n> 理由：`FR-002` 已經定了這一條。') }), []);
+});
+
+test('naming a basis only to say it is absent is not a citation', () => {
+  const errors = errorsFor({
+    [SPEC]: settled('### Q9. 甲？（已定案）\n\n> 理由：舊規格沒有定義這一條，由我自己判斷 100 字夠用。'),
+  }).join('\n');
+  assert.match(errors, /01-user-list\.mdx:\d+: decision "Q9" states no basis/);
+});
+
+test("a decision citing the source's own clarification record passes", () => {
+  assert.deepEqual(errorsFor({ [SPEC]: settled('### Q9. 甲？（已定案）\n\n> 理由：舊來源的釐清紀錄逐字寫下這個答案。') }), []);
+});
+
+test('a decision citing a dated maintainer ruling passes', () => {
+  assert.deepEqual(errorsFor({ [SPEC]: settled('### Q9. 甲？（已定案，維護者裁定 2026-11-09）\n\n> 理由：乙。') }), []);
+});
+
+test('a maintainer ruling without a date is reported', () => {
+  const errors = errorsFor({ [SPEC]: settled('### Q9. 甲？（已定案，維護者裁定）\n\n> 理由：乙。') }).join('\n');
+  assert.match(errors, /01-user-list\.mdx:\d+: decision "Q9" states no basis/);
+});
+
+test("a decision resting only on the writer's own reasoning is reported", () => {
+  const errors = errorsFor({
+    [SPEC]: settled('### Q9. 甲？（已定案）\n\n> 理由：254 字是信箱格式本身的上限，100 字放得下中英文全名，又不會撐壞列表。'),
+  }).join('\n');
+  assert.match(errors, /01-user-list\.mdx:\d+: decision "Q9" states no basis/);
+});
+
+test('the basis may be written in the 依據 bullet instead of the 理由 quote', () => {
+  assert.deepEqual(
+    errorsFor({ [SPEC]: settled('### Q9. 甲？（已定案）\n\n- **依據**：來源的規格常數明寫這個值。') }),
+    [],
+  );
+});
+
+test('an unsettled question is not checked for a basis', () => {
+  assert.deepEqual(errorsFor({ [SPEC]: spec({ 待釐清: '### Q9. 甲？\n\n建議：乙。' }) }), []);
+});
+
+test('a missing basis may be deferred only by naming an issue', () => {
+  assert.deepEqual(errorsFor({ [SPEC]: settled('### Q9. 甲？（已定案）\n\n> 理由：依據待補（#123）。') }), []);
+  const errors = errorsFor({ [SPEC]: settled('### Q9. 甲？（已定案）\n\n> 理由：依據待補。') }).join('\n');
+  assert.match(errors, /01-user-list\.mdx:\d+: decision "Q9" states no basis/);
+});
+
+test('every decision in a chapter is reported, not just the first', () => {
+  const errors = errorsFor({
+    [SPEC]: settled('### Q9. 甲？（已定案）\n\n> 理由：甲。\n\n### Q10. 乙？（已定案）\n\n> 理由：乙。'),
+  }).join('\n');
+  assert.match(errors, /decision "Q9" states no basis/);
+  assert.match(errors, /decision "Q10" states no basis/);
 });

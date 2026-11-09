@@ -152,7 +152,7 @@
 | :--- | :--- | :--- |
 | 01-01 登入 | `account/001-login-email-password/spec.md`、`account/002-login-google-sso/spec.md` | 兩份併一頁（D2）；`001` 另有 `plan.md`，只讀不搬 |
 | 01-02 註冊 | `account/003-register-email-password/spec.md` | |
-| 01-03 忘記與重設密碼 | `account/004-forgot-reset-password/spec.md` | 對應兩個 prototype：`account/forgot-password`、`account/reset-password` |
+| 01-03 用一次性連結設定密碼 | `account/004-forgot-reset-password/spec.md` | 對應兩個 prototype：`account/forgot-password`、`account/reset-password` |
 | 01-04 個人設定 | `account/005-profile-settings/spec.md` | 來源 43KB |
 | 01-05 登入狀態與安全 | `account/020-auth-session-security/spec.md` | PRD 列為「不是獨立頁面」，無 prototype |
 | 02-01 儀表板 | `dashboard/012-dashboard/spec.md` | 來源 102KB |
@@ -204,9 +204,27 @@
    | 來源 `spec.md` 自己的 Clarifications 或已拍板條文（依 D5） | 手機不提供快捷鍵總覽、頁籤只記網址 |
    | 維護者在 Issue 或對話裡明確拍板，且已記下日期 | 07-01 的 Q1 與 Q3 |
 
-   **撰寫者自己的判斷不算依據**，即使理由充分、即使它和 prototype 一致。這一條被違反過兩次（07-01 的
-   「不嵌入 prototype」、07-02 的「不嵌入 prototype」與「來源釘樁」），兩次都由獨立審查抓到——
+   **撰寫者自己的判斷不算依據**，即使理由充分、即使它和 prototype 一致。這一條被違反過三次（07-01 的
+   「不嵌入 prototype」、07-02 的「不嵌入 prototype」與「來源釘樁」、01-01 的「登入不檢查密碼組成規則」），三次都由獨立審查抓到——
    寫下某一條時先問「這是誰決定的、記在哪」，答不出來就是待釐清。
+
+   **這四種依據已經是機械檢查**（`check-specs.mjs`，Issue #90）：每個 `### Q<n>.` 區塊（標題、選項與理由合起來算）
+   至少要命中下面一種寫法，否則 `pnpm check:specs` 報 ERROR。檢查只驗「有沒有寫出依據」，不驗那個依據成不成立——
+   後者仍然要人或獨立審查判斷。
+
+   | 依據 | 檢查認得的寫法 |
+   | :--- | :--- |
+   | PRD 或術語表 | 出現 `PRD` 或 `術語表` |
+   | 本文件的 D1–D10 | 出現 `D1`～`D10` |
+   | 來源 `spec.md` 自己的條文 | 出現舊編號（`FR-`、`SC-`、`AC-` 後接數字），或同時出現「來源／舊規格」與「Clarifications／釐清紀錄／拍板／明寫／明訂／定成／定義／條文／規格常數／行為規則／使用者故事／舊編號／逐字」其中之一 |
+   | 維護者拍板 | 「維護者」與一個 `YYYY-MM-DD` 日期出現在同一句（任一順序） |
+
+   **不被接受的寫法**：「prototype 與舊規格都已經這樣做」（和畫面一致不是依據）、「來源沒有定義這一條，所以…」
+   （指名一個依據只為了說它不存在，檢查會把這種否定句排除後再判）、「規格只寫業務」這類方法論理由
+   （它是 `spec-writing` 的鐵律，不是四種依據之一——這個缺口見 #203）。
+
+   還查不到依據、但結論必須先留著時，唯一的寫法是 **`依據待補（#<issue>）`**——一定要帶 issue 編號，
+   讓缺口被追蹤而不是看起來像已經定案。判例：06-01 的七條（#203）——那一頁原本有八條沒寫出依據，其中一條回到來源就查到了依據，剩下七條掛著這個標記。
 5. **狀態一律草稿**：frontmatter `tags` 放 `草稿`，頁首 `:badge[草稿]{variant="warning"}`。
 6. **Prototype 嵌入**：有對應頁面的大項以 `PrototypeFrame` 開頭（`client:idle` 必填）。
    `05-03` 沒有 prototype、`01-05`／`07-01`／`07-02` 不是獨立頁面，依 skill 處理並在待釐清說明。
@@ -265,6 +283,26 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 - 相依性用 GitHub issue dependencies（blocked-by）記，不只寫在文字裡：
   前置 `[Bug]` child 擋住全部 17 個第一輪 child；第一輪 child 之間依 D8 串成一條鏈（見「一頁一頁做，不並行」）；
   每個模組的第二輪 child blocked-by 該模組所有第一輪 child。
+
+## PR 的變更範圍
+
+搬移作業期間，**一張 PR 只能是下面三類中的一類**（`AGENTS.md` 的「One purpose per PR」）。合併前逐一看過 `gh pr view <N> --json files`，每個檔案都要落在那一類的允許清單裡；越界就拆成兩張。
+**release、相依套件升級與規則文件（`AGENTS.md`、`CLAUDE.md`）的 PR 不屬於這三類**，照 `AGENTS.md` 自己的規則走——判例 #147（升級 notecraftapp，動了 `package.json`、`pnpm-lock.yaml` 與一個共用元件）。
+
+| 類別 | 可以動 | 典型 |
+| :--- | :--- | :--- |
+| **文件 PR** | `docs/`；那一頁的流程圖已生成時，可同時更新它的 `.notecraft/components/*-flow.tsx` | 搬一頁規格、折回待釐清、改既有規格的條文、改 `docs/development/` 的設計文件 |
+| **流程圖 PR** | `docs/` 與 `.notecraft/components/` | 生成或更新業務流程圖 |
+| **工具 PR** | `scripts/`、`package.json`、`pnpm-lock.yaml`、`.github/`，以及下面那一條限定的 `docs/specs/` | 修 `check-specs.mjs`、新增機械檢查、調 CI |
+
+三類的差別是**目的**，不是檔案數：同樣動到一個 `*-flow.tsx`，目的是畫圖的算流程圖 PR，目的是改條文、順手讓圖跟上的算文件 PR。
+
+- **流程圖元件不住在 `docs/` 底下**：規格頁用 `GeneratedFrame` 從 `@notes/components/` 取元件，所以流程圖 PR 通常會同時動到 `docs/specs/` 的頁面與 `.notecraft/components/`。這是允許的，不必每次在留言裡解釋。判例 #175、#176、#177、#193、#198、#199。只修元件、完全不動 `docs/` 也算這一類（判例 #167）。
+- **文件 PR 可以順手更新那一頁已生成的流程圖**：條文改了而圖還是舊的，比圖沒更新更糟。判例 #200——折回 03-01 的範圍硬化規則時，同一張 PR 改了 `spec-03-01-task-list-flow.tsx` 的三行。
+- **工具 PR 可以動 `docs/specs/`，但只限修掉新檢查在既有頁面上抓到的違規**，而且要在 PR body 逐一列出；**不得新增或改寫規格條文**，也不得為了讓檢查器有東西可驗而去改真正的規格頁（測試資料放 `scripts/tests/`）。
+  原因在 CI：`specs` job 會在 **PR 分支上**跑 `node scripts/check-specs.mjs docs`，所以新檢查一加上去，既有頁面的違規就讓**那張工具 PR 自己**變紅；不在同一張修掉就過不了。判例 #149、#151、#152、#153 四張都是這個形狀。
+- 文件 PR 與流程圖 PR **不得動 `scripts/`、`package.json`、`.github/`**。搬移途中發現檢查器有缺陷時，開一張 `[Bug]` issue 與它對應的工具 PR 處理，不要夾帶。
+- **任何一類都不准動的**：`docs/specs/00-prd.mdx` 與 `design/prototype/`。這兩條在「非目標」那一節已經定了（要動 PRD 時回報並建議用 `prd-writing`；畫面與規格不一致時列入待釐清），這裡只是重申它們對三類 PR 都成立。
 
 ## 驗收
 
