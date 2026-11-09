@@ -24,13 +24,13 @@ model: opus
 5. token 與設計系統：`design/prototype/assets/tokens.css` 與 `label-suite-design` skill，這是**唯一**的視覺來源
 6. 若 `api-contract.md` 已存在，讀它對齊資料來源；不存在時以「預期需要的資料」描述，並列為待對齊
 7. `docs/development/architecture.md` §前端 與 §待決清單
-8. schema 範本：`openspec/schemas/label-suite-sdd/templates/ui-design.md`，以及 `openspec instructions ui-design --change <name>`
+8. schema 範本：`openspec/schemas/label-suite-sdd/templates/ui-design.md`，以及 `pnpm exec openspec instructions ui-design --change <name>`
 
 ## 設計前提
 
 - **框架已定**（ADR-004）：React 加 Vite 加 TypeScript strict 的 SPA，路由 React Router v6，伺服器狀態 TanStack Query
-- **元件庫還沒定**（`architecture.md` §待決清單 第 8 列，shadcn/ui 仍標「待決」）。所以**元件寫成語意描述**（「主要按鈕」「資料表」「分頁器」），**不要寫成某個元件庫的 API**；真的需要指名時列成待決問題
-- 圖示統一 **Lucide**（ADR-030，唯一圖示來源）；品牌 logo 與資料視覺化 SVG 是例外
+- **前端版本、目錄分層與元件庫都還沒定**（`architecture.md` §待決清單 第 8 列與落差 15；shadcn/ui 仍標「待決」）。所以**元件寫成語意描述**（「主要按鈕」「資料表」「分頁器」），**不要寫成某個元件庫的 API**；真的需要指名時列成待決問題
+- 圖示統一 **Lucide**（ADR-030，唯一圖示來源）；**只用** Lucide，不得用 emoji 或自己畫的 SVG 當圖示；例外只有品牌與 logo 標記（彩色 logo、banner、Google SSO 的 G）
 - 樣式只用 `tokens.css` 的**語意** token，**不寫色碼、不自訂間距**；需要新的語意時列為待決問題，不自行發明
 - 資料一律來自後端契約：每個區塊要標出對應的 **operationId**（由 `generate_unique_id_function` 固定成「動詞加資源」）
 - 被後端遮蔽的欄位要設計「已遮蔽」的呈現，**不可顯示成空白或「無資料」**——那兩種會讓使用者以為資料不存在

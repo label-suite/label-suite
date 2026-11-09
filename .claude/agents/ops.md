@@ -35,13 +35,13 @@ model: sonnet
 - [ ] ADDED／MODIFIED／REMOVED／RENAMED 正確合併到 `openspec/specs/<capability>/spec.md`
 - [ ] MODIFIED 以整段 Requirement 取代，沒有殘留舊版或重複的 Requirement
 - [ ] 新 capability 的 Purpose 依 proposal 的 Why 寫成一到兩句，**不留 TBD**
-- [ ] `openspec validate --all` 通過
+- [ ] `pnpm exec openspec validate --all` 通過
 
 ## 歸檔
 
 - [ ] 工作區乾淨，`tasks.md` 全部完成
 - [ ] 執行 archive，change 移到 `openspec/changes/archive/<日期>-<change>/`，內容完整（含規劃產出與驗收報告）
-- [ ] 歸檔後 `openspec list` 不再出現該 change
+- [ ] 歸檔後 `pnpm exec openspec list` 不再出現該 change
 
 ## 文件索引
 
@@ -65,6 +65,6 @@ model: sonnet
 - 主規格：{更新的 capability 清單；新 capability 的 Purpose}
 - 歸檔：{archive 路徑}
 - 文件索引：{更新的檔案}
-- 驗證：`openspec validate --all` {結果}、`check:specs` {結果}、文件站建置 {結果}
+- 驗證：`pnpm exec openspec validate --all` {結果}、`check:specs` {結果}、文件站建置 {結果}
 - 待處理：{需要其他角色或使用者決定的事項，無則寫「無」}
 ```

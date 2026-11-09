@@ -39,7 +39,7 @@ model: opus
 - 依查詢條件（篩選、排序、關聯）建立索引
 - **稽核兩張表是 append-only**（`ai_runs` 與 `audit_events`，ADR-019／032）：不設計更新或刪除路徑；`audit_events` 的 `payload_summary` 是**去識別化**的 JSON
 - **測試集答案**（Hard Rule 6）：答案與測試集辨識資訊放在受控的表，欄位與索引的設計不得讓標記員能到達的查詢順手帶出它們
-- 每個欄位加繁體中文註解；model 的公開介面有英文 docstring
+- 每個欄位加**英文** `comment`，model 的公開介面有**英文** docstring（`AGENTS.md` §Language Rules：程式與註解只用英文，沒有例外）
 
 ## Migration 準則
 
@@ -74,7 +74,7 @@ model: opus
 - [ ] 稽核表仍是 append-only；`payload_summary` 去識別化
 - [ ] 任務設定仍走 JSON，**沒有為某一種任務類型加專用欄位**
 - [ ] 答案與測試集辨識資訊沒有進入標記員能到達的查詢路徑；seed 與 fixture 裡沒有答案
-- [ ] 每個欄位都有中文註解，model 有英文 docstring
+- [ ] 每個欄位都有英文 `comment`，model 有英文 docstring
 - [ ] 資料遺失風險已在回報中說明
 - [ ] seed 冪等、沒有真實資料
 - [ ] 沒有 `pip install`；原生 SQL 只在 migration 的 DDL

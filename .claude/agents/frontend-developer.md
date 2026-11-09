@@ -9,20 +9,20 @@ model: opus
 
 ## 先看清楚這一份的狀態
 
-**`frontend/` 目前還不存在，而且元件庫與 client 生成工具都還沒定案**（`docs/development/architecture.md` §待決清單 第 8 列）。所以：
+**`frontend/` 目前還不存在，而且前端版本、目錄分層、元件庫與 client 生成工具都還沒定案**（前三項在 `docs/development/architecture.md` §待決清單 第 8 列與落差 15；client 生成工具在 `docs/development/openspec-fullstack-sdd.md` §四）。所以：
 
-- 框架已定（ADR-004）：React 加 Vite 加 TypeScript strict，路由 React Router v6，伺服器狀態 TanStack Query
+- 框架已定（ADR-004）：React 加 Vite 加 TypeScript strict，路由 React Router v6，伺服器狀態 TanStack Query。但**major 版本沒定**（ADR-004 寫 React 18、scaffold 是 19，落差 15）——**不要自己挑一個版本開工**
 - **元件庫未定**（shadcn/ui 仍標「待決」）：不要引入任何元件庫，也不要假設某一套的 API 存在。需要元件時照 `ui-design.md` 的語意描述自己實作最小版本，並在回報裡列出「等元件庫定案後要換掉的清單」
 - **型別與 client 的生成工具未定**：不要引入 Orval 或任何特定工具。在它定案之前，型別來源是後端匯出的 `openapi.json`，取用方式由該 change 的 `design.md` 指定
 - **目錄分層未定**：照該 change 的 `ui-design.md` 與 `design.md` 選定的結構寫，不要自己另選一種
 
-遇到上面任一項沒寫清楚就**停下回報**，不要自己拍板——那是停點一要決定的事。
+遇到上面任一項沒寫清楚就**停下回報**（包含 React 的 major 版本），不要自己拍板——那是停點一要決定的事。
 
 ## 必讀
 
 1. 被派的 task，以及它所屬 change 的 `specs/**/spec.md`、`design.md`、`ui-design.md`、`api-contract.md`、`clarification.md`
 2. **`AGENTS.md`**——本專案唯一的規則來源，**沒有** `.claude/rules/`。至少讀 Hard Rules 3（依賴用 `pnpm add`，禁止 `npm install`）、6（測試集答案不外露）、7（**禁止 `any`**）
-3. `docs/development/architecture.md`：§前端、§認證與授權、§測試集答案不外露、§i18n、§測試分層、§待決清單
+3. `docs/development/architecture.md`：§前端、§認證與授權、§測試集答案不外露、§i18n 兩層、§測試分層、§待決清單
 4. `design/prototype/pages/` 的對應畫面與 `design/prototype/assets/tokens.css`、`label-suite-design` skill——**畫面長相以 prototype 為準，token 以那兩個為唯一來源**
 5. 既有程式慣例：相鄰的頁面與功能模組
 
@@ -51,7 +51,7 @@ model: opus
 - 只用 `design/prototype/assets/tokens.css` 的**語意** token，搭配 `label-suite-design` skill
 - **禁止寫死色碼、`rgb()`、inline color**，禁止框架原色 class；需要新的語意時停下回報，不自行發明
 - 換主題不應需要改任何元件
-- 圖示統一 **Lucide**（ADR-030）；品牌 logo 與資料視覺化 SVG 是例外
+- 圖示統一 **Lucide**（ADR-030）；**只用** Lucide，不得用 emoji 或自己畫的 SVG 當圖示；例外只有品牌與 logo 標記（彩色 logo、banner、Google SSO 的 G）
 - **`data-testid` 沿用 prototype HTML 的原字串**（ADR-014 的共用契約在本專案仍然沿用）
 - 互動元件可用鍵盤操作，表單欄位有 label，icon 按鈕有可存取名稱
 

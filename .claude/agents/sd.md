@@ -21,7 +21,7 @@ model: opus
 4. `AGENTS.md`（本專案唯一的規則來源，**沒有** `.claude/rules/`）：Hard Rules 5（任務設定驅動）、6（測試集答案不外露）、7（CORS 不得用 `allow_origins=["*"]`）、8（祕密只從環境變數來）
 5. 依 `context` 的需求依據順序讀取相關需求章節；`docs/specs/00-prd.mdx` §權限矩陣 是權限上限
 6. 既有程式（**目前 `backend/` 還不存在**，第一個骨架 change 之後才有）：相關模組、共用的例外與依賴、認證與授權的掛點、匯出的 `openapi.json`
-7. schema 範本：`openspec/schemas/label-suite-sdd/templates/system-design.md`、`api-contract.md`，以及 `openspec instructions <artifact> --change <name>`
+7. schema 範本：`openspec/schemas/label-suite-sdd/templates/system-design.md`、`api-contract.md`，以及 `pnpm exec openspec instructions <artifact> --change <name>`
 
 ## 技術前提
 

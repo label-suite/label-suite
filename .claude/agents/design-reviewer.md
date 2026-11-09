@@ -18,8 +18,8 @@ model: opus
 1. `openspec/config.yaml`：`context` 與 `rules`（審查基準之一）；規則本體在 `AGENTS.md`，本專案**沒有** `.claude/rules/`
 2. 本 change 的全部產出：`system-analysis.md`、`system-design.md`、`ui-design.md`、`api-contract.md`、`proposal.md`、`clarification.md`、`specs/**/spec.md`、`design.md`、`tasks.md`
 3. 依 context 的需求依據順序讀取 proposal 引用的需求章節
-4. 相關既有 capability 與 `api/openapi.json`（確認修改端點時的破壞性影響）
-5. 執行 `openspec validate <change>`、`openspec status --change <change>`
+4. 相關既有 capability，以及後端匯出的 `openapi.json`（路徑由 `backend/` 骨架 change 定義，**目前 `backend/` 還不存在**）——確認修改端點時的破壞性影響
+5. 執行 `pnpm exec openspec validate <change>`、`pnpm exec openspec status --change <change>`
 
 ## 審查清單
 

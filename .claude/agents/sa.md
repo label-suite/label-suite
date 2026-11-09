@@ -20,9 +20,9 @@ model: opus
 2. 依 `context` 列出的需求依據順序讀取相關需求文件（順序在前者為準；不要只讀對話中提到的片段）：
    - 預設從 `docs/specs/index.mdx` 找到相關模組與規格，讀完整份規格（含驗收標準、待釐清、已確認決議）與 `docs/specs/glossary.mdx`
    - 派工時有指定文件或規格編號，以指定的為準，並一併檢查 `docs/specs/` 有沒有相關或矛盾的規格
-3. `openspec/specs/` 中與本需求相關的既有 capability（`openspec list --specs`、`openspec show <id> --type spec`）
+3. `openspec/specs/` 中與本需求相關的既有 capability（`pnpm exec openspec list --specs`、`pnpm exec openspec show <id> --type spec`）
 4. `openspec/changes/` 中進行中的其他 change，確認有無重疊或衝突
-5. 本 change 的 schema 範本：`openspec/schemas/label-suite-sdd/templates/system-analysis.md`，以及 `openspec instructions system-analysis --change <name>` 給的指示
+5. 本 change 的 schema 範本：`openspec/schemas/label-suite-sdd/templates/system-analysis.md`，以及 `pnpm exec openspec instructions system-analysis --change <name>` 給的指示
 
 ## 產出
 

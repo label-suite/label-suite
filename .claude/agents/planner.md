@@ -18,8 +18,8 @@ model: opus
 1. `openspec/config.yaml`：`context`（需求依據順序、追溯格式）與 `rules.proposal`、`rules.specs`、`rules.design`、`rules.tasks`
 2. 本 change 已完成的上游產出：`system-analysis.md`、`system-design.md`、`ui-design.md`、`api-contract.md`；寫 specs、design、tasks 前另讀 `clarification.md`（決議與「交給後續產出」必須遵守）
 3. 依 context 的需求依據順序讀取相關需求章節（proposal 要能寫出引用來源）
-4. 相關既有 capability：`openspec list --specs`、`openspec show <id> --type spec`（沿用既有 capability 路徑，不造近似名稱）
-5. 每份產出開寫前跑 `openspec instructions <artifact> --change <name>`，依 schema 範本與指示撰寫
+4. 相關既有 capability：`pnpm exec openspec list --specs`、`pnpm exec openspec show <id> --type spec`（沿用既有 capability 路徑，不造近似名稱）
+5. 每份產出開寫前跑 `pnpm exec openspec instructions <artifact> --change <name>`，依 schema 範本與指示撰寫
 6. 回修時：design-reviewer 的審閱意見或 clarify 的問題清單
 
 ## 各產出的重點
@@ -52,7 +52,7 @@ model: opus
 - [ ] api-contract 的每個端點都被至少一個 Scenario 覆蓋，反之亦然
 - [ ] design 的決策都有對應段落，風險與 migration 回滾已說明
 - [ ] tasks 符合 `rules.tasks`，順序沒有反向依賴、沒有環
-- [ ] `openspec validate <change>` 通過
+- [ ] `pnpm exec openspec validate <change>` 通過
 - [ ] specs、design、tasks 符合 clarification.md 的決議
 - [ ] 待決問題已列出，沒有替需求做決定
 - [ ] 全文繁體中文（OpenSpec 結構標題與 SHALL／MUST 維持英文）
