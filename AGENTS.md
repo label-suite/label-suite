@@ -149,14 +149,14 @@ This repository has no `.claude/rules/` canon and will not get one (decided in #
 
 | Area | Document | Issue |
 |------|----------|-------|
-| Cross-cutting — search first, dependency direction, smallest change, no premature abstraction, conflicts, locked scope, loud failure | [docs/development/agent-rules.md](docs/development/agent-rules.md) | #105 |
+| Cross-cutting — search first, dependency direction, smallest change, no excessive abstraction, conflicts, locked scope, loud failure | [docs/development/agent-rules.md](docs/development/agent-rules.md) | #105 |
 | Backend layering, database, background work | [docs/development/backend-agent-rules.md](docs/development/backend-agent-rules.md) | #106 |
 | Authorization, answer isolation, config-driven boundaries | [docs/development/security-agent-rules.md](docs/development/security-agent-rules.md) | #107 |
 | API contract sync, single frontend client | [docs/development/api-agent-rules.md](docs/development/api-agent-rules.md) | #108 |
 | Frontend dependency direction, type safety, shared UI | [docs/development/frontend-agent-rules.md](docs/development/frontend-agent-rules.md) | #109 |
-| Test layers, dual-database verification, delivery evidence | not built yet | #110 |
+| Test layers, dual-database verification, delivery evidence | [docs/development/testing-agent-rules.md](docs/development/testing-agent-rules.md) | #110 |
 
-"Not built yet" is literal: those documents do not exist, so none of their rules is being checked. Do not cite them, and do not report a check as passing when the check has not been built.
+All six documents now exist, but most of their rules are not being checked: `backend/`, `frontend/` and `e2e/` do not exist yet, so most of the checks those documents describe are marked as not built. The rest are marked as manual review, which means a person or an independent reviewer does them, not a tool. Read "not built" as literal, and do not report a check as passing when the check has not been built.
 
 Two rules are worth stating here because they are reversals of what the reference projects say:
 
