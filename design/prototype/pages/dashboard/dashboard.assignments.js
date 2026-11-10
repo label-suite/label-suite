@@ -102,9 +102,9 @@
         '34% Completed · 21 Today · Avg Speed 3.1',
         34,
         'official_run',
-        'continue'
+        'official_run_in_progress'
       ),
-      reviewer: reviewWorkItem('sent-001', 'official_run', 'pending_review', ''),
+      reviewer: reviewWorkItem('sent-001', 'official_run', 'official_run_in_progress', ''),
     },
     {
       exampleTaskId: 'T002',
@@ -115,9 +115,9 @@
         '48% Completed · 17 Today · Avg Speed 3.6',
         48,
         'dry_run',
-        'resume'
+        'dry_run_in_progress'
       ),
-      reviewer: reviewWorkItem('emo-001', 'dry_run', 'pending_review', ''),
+      reviewer: reviewWorkItem('emo-001', 'dry_run', 'dry_run_in_progress', ''),
     },
     {
       exampleTaskId: 'T003',
@@ -128,9 +128,9 @@
         '18% Completed · 53 Today · Avg Speed 3.0',
         18,
         'official_run',
-        'continue'
+        'official_run_in_progress'
       ),
-      reviewer: reviewWorkItem('taxonomy-001', 'official_run', 'pending_review', ''),
+      reviewer: reviewWorkItem('taxonomy-001', 'official_run', 'official_run_in_progress', ''),
     },
     {
       exampleTaskId: 'T004',
@@ -141,9 +141,9 @@
         '61% Completed · 29 Today · Avg Speed 2.9',
         61,
         'dry_run',
-        'resume'
+        'dry_run_in_progress'
       ),
-      reviewer: reviewWorkItem('read-001', 'dry_run', 'in_progress', ''),
+      reviewer: reviewWorkItem('read-001', 'dry_run', 'dry_run_in_progress', ''),
     },
     {
       exampleTaskId: 'T005',
@@ -154,9 +154,9 @@
         '76% Completed · 18 Today · Avg Speed 4.2',
         76,
         'dry_run',
-        'resume'
+        'dry_run_in_progress'
       ),
-      reviewer: reviewWorkItem('mt-001', 'dry_run', 'in_progress', ''),
+      reviewer: reviewWorkItem('mt-001', 'dry_run', 'dry_run_in_progress', ''),
     },
     {
       exampleTaskId: 'T006',
@@ -167,9 +167,9 @@
         '71% Completed · 12 Today · Avg Speed 2.5',
         71,
         'official_run',
-        'in_progress'
+        'official_run_in_progress'
       ),
-      reviewer: reviewWorkItem('sequence-tagging-001', 'official_run', 'pending_review', ''),
+      reviewer: reviewWorkItem('sequence-tagging-001', 'official_run', 'official_run_in_progress', ''),
     },
     {
       exampleTaskId: 'T007',
@@ -180,9 +180,9 @@
         '64% Completed · 31 Today · Avg Speed 2.8',
         64,
         'official_run',
-        'in_progress'
+        'official_run_in_progress'
       ),
-      reviewer: reviewWorkItem('entity-recognition-001', 'official_run', 'pending_review', ''),
+      reviewer: reviewWorkItem('entity-recognition-001', 'official_run', 'official_run_in_progress', ''),
     },
     {
       exampleTaskId: 'T008',
@@ -193,9 +193,9 @@
         '45% Completed · 16 Today · Avg Speed 4.8',
         45,
         'official_run',
-        'resume'
+        'official_run_in_progress'
       ),
-      reviewer: reviewWorkItem('rel-001', 'official_run', 'pending_review', ''),
+      reviewer: reviewWorkItem('rel-001', 'official_run', 'official_run_in_progress', ''),
     },
     {
       exampleTaskId: 'T009',
@@ -206,9 +206,9 @@
         '37% Completed · 9 Today · Avg Speed 5.4',
         37,
         'dry_run',
-        'in_progress'
+        'dry_run_in_progress'
       ),
-      reviewer: reviewWorkItem('sum-001', 'dry_run', 'in_progress', ''),
+      reviewer: reviewWorkItem('sum-001', 'dry_run', 'dry_run_in_progress', ''),
     },
     {
       exampleTaskId: 'T010',
@@ -219,9 +219,9 @@
         '53% Completed · 14 Today · Avg Speed 5.1',
         53,
         'official_run',
-        'resume'
+        'official_run_in_progress'
       ),
-      reviewer: reviewWorkItem('med-001', 'official_run', 'in_progress', ''),
+      reviewer: reviewWorkItem('med-001', 'official_run', 'official_run_in_progress', ''),
     },
     {
       exampleTaskId: 'T011',
@@ -232,9 +232,9 @@
         '82% Completed · 25 Today · Avg Speed 3.4',
         82,
         'dry_run',
-        'in_progress'
+        'dry_run_in_progress'
       ),
-      reviewer: reviewWorkItem('00183', 'dry_run', 'pending_review', ''),
+      reviewer: reviewWorkItem('00183', 'dry_run', 'dry_run_in_progress', ''),
     },
     {
       exampleTaskId: 'T012',
@@ -245,9 +245,9 @@
         '29% Completed · 8 Today · Avg Speed 5.8',
         29,
         'official_run',
-        'continue'
+        'official_run_in_progress'
       ),
-      reviewer: reviewWorkItem('eac8d013', 'official_run', 'pending_review', ''),
+      reviewer: reviewWorkItem('eac8d013', 'official_run', 'official_run_in_progress', ''),
     },
     {
       exampleTaskId: 'T013',
@@ -258,9 +258,9 @@
         '58% Completed · 13 Today · Avg Speed 5.0',
         58,
         'official_run',
-        'resume'
+        'official_run_in_progress'
       ),
-      reviewer: reviewWorkItem('absa-001', 'official_run', 'pending_review', ''),
+      reviewer: reviewWorkItem('absa-001', 'official_run', 'official_run_in_progress', ''),
     },
     /* T014-T016: review-flow demo tasks (issue singyichen/label-suite#302). Numbers follow the
        seeded review-state matrix staged at boot by
@@ -293,9 +293,9 @@
         '100% Completed · 15 Today · Avg Speed 2.4',
         100,
         'dry_run',
-        'in_progress'
+        'dry_run_in_progress'
       ),
-      reviewer: reviewWorkItem('dry-01-all-agree', 'dry_run', 'pending_review', 'reviewer_li'),
+      reviewer: reviewWorkItem('dry-01-all-agree', 'dry_run', 'dry_run_in_progress', 'reviewer_li'),
     },
     {
       exampleTaskId: 'T015',
@@ -306,10 +306,10 @@
         '80% Completed · 4 Today · Avg Speed 2.7',
         80,
         'official_run',
-        'continue'
+        'official_run_in_progress'
       ),
       reviewer: reviewWorkItem(
-        'ofs-01-agree-gold', 'official_run', 'pending_review', 'reviewer_wang'
+        'ofs-01-agree-gold', 'official_run', 'official_run_in_progress', 'reviewer_wang'
       ),
     },
     {
@@ -321,10 +321,10 @@
         '100% Completed · 15 Today · Avg Speed 2.9',
         100,
         'official_run',
-        'in_progress'
+        'official_run_in_progress'
       ),
       reviewer: reviewWorkItem(
-        'ofm-01-reviewer-corrects-b', 'official_run', 'in_progress', 'reviewer_chen'
+        'ofm-01-reviewer-corrects-b', 'official_run', 'official_run_in_progress', 'reviewer_chen'
       ),
     },
   ];

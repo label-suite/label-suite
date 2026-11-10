@@ -275,6 +275,21 @@
       border-color: var(--color-error-soft-border);
     }
 
+    /* issue label-suite/label-suite#179: the two task-state badges with no
+       semantic-token equivalent. Declarations copied verbatim from
+       task-list.html so the same state renders identically on both screens. */
+    .badge-draft {
+      color: #4B5563;
+      background: #F9FAFB;
+      border-color: #E5E7EB;
+    }
+
+    .badge-dry-run-status {
+      color: #6B7280;
+      background: #F3F4F6;
+      border-color: #D1D5DB;
+    }
+
     .badge-dry-run {
       color: #6B7280;
       background: #F3F4F6;

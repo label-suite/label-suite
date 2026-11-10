@@ -199,7 +199,7 @@
         ),
         progress: 89,
         runType: 'dry_run',
-        status: 'waiting_confirmation',
+        status: 'waiting_iaa_confirmation',
       },
       {
         exampleTaskId: 'T005',
@@ -210,7 +210,7 @@
         ),
         progress: 42,
         runType: 'official_run',
-        status: 'in_progress',
+        status: 'official_run_in_progress',
       },
       {
         exampleTaskId: 'T010',
@@ -221,7 +221,7 @@
         ),
         progress: 53,
         runType: 'official_run',
-        status: 'in_progress',
+        status: 'official_run_in_progress',
       },
     ],
     projectLeader: [
@@ -238,7 +238,7 @@
            both official_run -- was 'dry_run' and contradicted task-list.html
            /task-detail.html's official_run_in_progress status (issue singyichen/label-suite#194). */
         runType: 'official_run',
-        status: 'in_progress',
+        status: 'official_run_in_progress',
       },
       {
         exampleTaskId: 'T007',
@@ -249,7 +249,7 @@
         ),
         progress: 64,
         runType: 'official_run',
-        status: 'in_progress',
+        status: 'official_run_in_progress',
       },
       {
         exampleTaskId: 'T010',
@@ -260,7 +260,7 @@
         ),
         progress: 53,
         runType: 'official_run',
-        status: 'in_progress',
+        status: 'official_run_in_progress',
       },
     ],
   };
