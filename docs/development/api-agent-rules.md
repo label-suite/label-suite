@@ -67,7 +67,7 @@ updatedAt: '2026-11-10'
 | **檢查方式** | **待建置**。`response_model=` 是否齊全可用自寫 AST 檢查；欄位遮蔽的規則在 [security-agent-rules.md](security-agent-rules.md) 的 S4，跨角色的負向驗收矩陣在 S10 |
 | **來源** | 原始 repo `api.md` 的「**request body** 一律 Pydantic 驗證」（原文只寫 body；query 與 path 要驗是 #108 工作項 2 的要求，見下）「response schema 必須明確、不回裸 ORM model」「每條 route 都要 `response_model=`」**沿用**（[#106](https://github.com/label-suite/label-suite/issues/106) 的對照表已標「歸本張」）；共用 base 的做法來自原始 repo 的實作 `backend/app/schemas/common.py`（FR-103）**沿用原則**；遮蔽在後端是 [#107](https://github.com/label-suite/label-suite/issues/107) 的 S4，這裡只寫「不得先回前端」 |
 
-**未知欄位政策是本文件定的，不是裁定。** 工作項 2 要求政策要寫出來，而來源沒有任何一條定過它。本文件採 **`extra="forbid"`，在共用 base 上設定一次**，理由是 `AGENTS.md` 硬性規則 9（未經驗證的輸入不得進到查詢、樣板或回應）：Pydantic v2 的預設 `ignore` 會把打錯的欄位名靜默丟掉，呼叫端以為設定生效、實際沒有。**這一條若要改成 `ignore` 由維護者裁定**，不要由實作者逐個端點各自決定。
+**未知欄位政策由維護者裁定維持 `forbid`（2026-11-10）。** 工作項 2 要求政策要寫出來，而來源沒有任何一條定過它；本文件初版依 `AGENTS.md` 硬性規則 9 提議 **`extra="forbid"`，在共用 base 上設定一次**（Pydantic v2 的預設 `ignore` 會把打錯的欄位名靜默丟掉，呼叫端以為設定生效、實際沒有），**維護者當日裁定維持**。代價是前端先部署、後端還沒加那個欄位時整個請求會被拒絕，而不是忽略多餘欄位；實作者不得逐個端點改成 `ignore`。
 
 **共用 base 的 `from_attributes=True` 與 S4 的「不得 `from_attributes` 全收」不衝突。** S4 擋的是「回應 model 照抄整列 ORM 欄位」；`from_attributes=True` 只允許從 ORM 物件**建構**一個已經明列欄位的 schema，沒宣告的欄位不會被帶出去。所以兩條並存：**base 設定開著，但每個回應 schema 仍要明列欄位**，不得用它當作省略欄位清單的理由。
 
@@ -283,4 +283,5 @@ updatedAt: '2026-11-10'
 | :--- | :--- | :--- |
 | [#108](https://github.com/label-suite/label-suite/issues/108) | 2026-11-10 | 初版。十條規範（各帶適用路徑、禁止、正反例、例外條件、檢查方式與來源）、七條刻意不採用的來源條文、原始 repo（含它的 foundation spec 與實作程式）／scaffold／duty-mate 的逐條對照，以及 starter-kit 的實查紀錄 |
 | [#108](https://github.com/label-suite/label-suite/issues/108) | 2026-11-10 | 把十個工作項的並列子項逐字拆開再對照，補四處落點：**A2 的 `query` 未知參數**（`extra="forbid"` 只擋 body，FastAPI 不給你拒絕未宣告的 query 參數）、**A3 的三件要逐一寫進契約**、**A7 的 `401` 有「更新」與「清掉」兩個分支**（原本只寫了清掉那一支）、**A10 的破壞性變更審核方式**（三個落點） |
+| [#109](https://github.com/label-suite/label-suite/issues/109) | 2026-11-10 | A2 的未知欄位政策從「本文件定的，不是裁定」改寫成**維護者 2026-11-10 裁定維持 `extra="forbid"`**，並寫出代價（前端先部署、後端還沒加那個欄位時整個請求會被拒絕）。本文件初版把它標成可逆，裁定當日就落地，免得一份已合併的文件繼續說那是撰寫者自己定的 |
 | [#108](https://github.com/label-suite/label-suite/issues/108) | 2026-11-10 | 獨立審查後修九處：**A8 原本沒擋「`detail` 回 i18n key 本身」**（`backend.md` §i18n 明文禁止，而前端照「不透明字串直接顯示」會把 key 貼到畫面上）；**A1 漏掉 operationId「全專案唯一」**並補上撞名規則（`/tasks/{id}/members` 與 `/projects/{id}/members` 都算 `listMembers`）；**路徑的模組段改成明確不帶**，依據是 `architecture.md` 自己的 `GET /api/v1/submissions/{id}/status`；**A7 的 FR-085 引用更正**（「最多六次冗餘請求」不是「同時六個 refresh」，也不是實測數字），並標明 single-flight 與重放是本文件自推、後端那一面是 FR-075 的有界 grace；A9 補「送出期間 disabled」與「任務成員身分變更」在前端的落點；A2 寫明共用 base 的 `from_attributes=True` 與 S4 的「不得全收」不衝突；三處把 #107 的驗收矩陣誤指成 S4（實際是 S10）；A6 收下 S2 指派過來的那條測試；對照表把「已交辦」與「靜默遺漏」分開，`backend.md` §i18n 拆成三列 |

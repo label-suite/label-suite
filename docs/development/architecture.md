@@ -87,7 +87,11 @@ label-suite/
 │  ├─ bruno/                      可選的手動工具，**不是 pre-PR 關卡**（2026-11-10 裁定）
 │  └─ pyproject.toml              依賴只用 uv 管（ADR-002、Hard Rule 3）
 ├─ frontend/                      React + Vite + TypeScript strict（ADR-004）
+│  ├─ src/app/                    router、provider、全站 layout（依 scaffold 的四層，#109）
 │  ├─ src/{pages,features}/       React 19；pages 組頁面、features 放功能邏輯（2026-11-10 裁定）
+│  ├─ src/components/ui/          shadcn 元件，不知道業務（2026-11-10 裁定）
+│  ├─ src/api/generated/          Orval 產物，不手改（2026-11-10 裁定）
+│  ├─ src/{lib,styles}/           不含業務的工具；token 對照層（2026-11-10 裁定）
 │  └─ package.json                依賴只用 pnpm 管（ADR-002）
 ├─ e2e/                           正式全端 Playwright，依模組分目錄（ADR-034）
 │  └─ shared/fixtures/            各角色的 storageState 與 seed helper
@@ -315,6 +319,7 @@ FastAPI 預設的 422 `RequestValidationError` 不在這個契約內，需要本
 | 圖示 | **只用** Lucide（`lucide-react`）。不得加入其他圖示庫，不得用 emoji 或自己畫的 SVG 當圖示 | 030 |
 | design token | 只用語意 token，色值只寫在主題檔，見 `label-suite-design` skill 與 `design/prototype/assets/tokens.css` | 016、030 |
 | 權限 | 前端隱藏按鈕只是體驗，權限一律由後端擋 | 021、037 |
+| design token 的映射 | **寫一層對照**：`frontend/src/styles/` 定義 shadcn 的語意變數指向 `design/prototype/assets/tokens.css` 的值，**`tokens.css` 仍是唯一色值來源**；shadcn 的 dark variant 設成吃 `html[data-theme="dark"]`（prototype 用的就是那個屬性）。shadcn 元件不改寫（維護者 2026-11-10 裁定，紀錄在 [#109 的這則留言](https://github.com/label-suite/label-suite/issues/109#issuecomment-6764207805)） | 016 |
 | API client 與型別 | **Orval**，由 FastAPI 匯出的 `openapi.json` 產生到 `frontend/src/api/generated/`（TanStack Query hooks、型別、MSW mock）；Orval 的 mutator 就是那道單一 HTTP 邊界（維護者 2026-11-10 裁定，紀錄在 [#108 的這則留言](https://github.com/label-suite/label-suite/issues/108#issuecomment-6763329139)） | — |
 
 Lucide 的例外：prototype 的 HTML 必然把圖示內嵌成 SVG（設計層沒有 npm），只要每個字形都複製自真實的 Lucide 圖示就允許；
