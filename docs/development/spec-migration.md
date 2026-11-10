@@ -295,31 +295,39 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 ## PR 的變更範圍
 
 **一張 PR 只能是下面五類中的一類**（`AGENTS.md` 的「One purpose per PR」）。合併前逐一看過 `gh pr view <N> --json files`，每個檔案都要落在那一類的允許清單裡；越界就拆成兩張。
-**release、相依套件升級，以及單獨改規則文件（`AGENTS.md`、`CLAUDE.md`）的 PR 不屬於這五類**，照 `AGENTS.md` 自己的規則走——判例 #147（升級 notecraftapp，動了 `package.json`、`pnpm-lock.yaml` 與一個共用元件）。
+**release、相依套件升級，以及只改規則文件（`AGENTS.md`、`CLAUDE.md`）的 PR 不屬於這五類**，照 `AGENTS.md` 自己的規則走——判例 #147（升級 notecraftapp，動了 `package.json`、`pnpm-lock.yaml` 與一個共用元件）。
+
+**「只改規則文件」的判準**（整節只定義在這裡，下面兩處引用它）：**把 `AGENTS.md`／`CLAUDE.md` 本身排除之後，沒有動到文件 PR 或流程設定 PR 允許的其他路徑。**
+判準刻意只看那兩類——它們是唯一有「連帶規則文件」條款的。所以一張 `AGENTS.md` ＋ `pnpm-lock.yaml` 的升版 PR 仍然算「只改規則文件」，照這一條走，不會因為 `pnpm-lock.yaml` 落在工具 PR 的清單裡就兩邊落空。
+**判準不能寫成「沒有動到五類任一類允許的路徑」**：`AGENTS.md` 本身現在就在其中兩類的清單裡，那樣寫會讓這個例外永遠不成立。
 
 前三類是搬移作業期間的分類，後兩類在搬移結束後才用得到——**搬移已於 2026-11-09 全部完成（18 頁），所以現在新開的 PR 多半落在後兩類**。
 
 | 類別 | 可以動 | 典型 |
 | :--- | :--- | :--- |
-| **文件 PR** | `docs/`；那一頁的流程圖已生成時，可同時更新它的 `.notecraft/components/*-flow.tsx` | 搬一頁規格、折回待釐清、改既有規格的條文、改 `docs/development/` 的設計文件 |
+| **文件 PR** | `docs/`；那一頁的流程圖已生成時，可同時更新它的 `.notecraft/components/*-flow.tsx`；以及**連帶**修到的 `AGENTS.md`／`CLAUDE.md` | 搬一頁規格、折回待釐清、改既有規格的條文、改 `docs/development/` 的設計文件 |
 | **流程圖 PR** | `docs/` 與 `.notecraft/components/` | 生成或更新業務流程圖 |
 | **工具 PR** | `scripts/`、`package.json`、`pnpm-lock.yaml`、`.github/`，以及下面那一條限定的 `docs/specs/` | 修 `check-specs.mjs`、新增機械檢查、調 CI |
 | **畫面修正 PR** | `design/prototype/`、`docs/prototype/navigation.mdx`（限該檔 §維護說明 要求的同步），以及下面那一條限定的 `docs/specs/` | 依裁定改畫面的文案、欄位或徽章——`[UI]` 與 `[Enhancement]` issue 的本體 |
 | **流程設定 PR** | `openspec/`、`.claude/`（`agents/`、`skills/`、`commands/`）、`.agents/skills/`，以及**連帶**修到的 `docs/development/` 與 `AGENTS.md`／`CLAUDE.md` | 建 schema 與 template、寫 agent 角色定義、加 skill 或指令 |
 
 五類的差別是**目的**，不是檔案數：同樣動到一個 `*-flow.tsx`，目的是畫圖的算流程圖 PR，目的是改條文、順手讓圖跟上的算文件 PR。
-同理，同樣動到 `docs/development/` 的一份設計文件：**只動它、不動 `openspec/` 或 `.claude/` 的算文件 PR**（判例：本節這次補兩類的那張 PR 自己）；因為改了 schema、agent 或 skill 而連帶要更新那份文件的，算流程設定 PR。
+同理，同樣動到 `docs/development/` 的一份設計文件：**只動它與連帶的 `AGENTS.md`／`CLAUDE.md`、不動 `openspec/`、`.claude/` 或 `.agents/skills/` 的算文件 PR**（判例：#221 那張補五類表的，以及 #224）；因為改了 schema、agent 或 skill 而連帶要更新那份文件的，算流程設定 PR。
 
 - **流程圖元件不住在 `docs/` 底下**：規格頁用 `GeneratedFrame` 從 `@notes/components/` 取元件，所以流程圖 PR 通常會同時動到 `docs/specs/` 的頁面與 `.notecraft/components/`。這是允許的，不必每次在留言裡解釋。判例 #175、#176、#177、#193、#198、#199。只修元件、完全不動 `docs/` 也算這一類（判例 #167）。
+- **文件 PR 可以帶著它連帶修到的規則文件**，因為一份給 agent 讀的說明，它的入口本來就在 `AGENTS.md`：新增 `docs/development/` 的說明而同一張 PR 在 `AGENTS.md` 設索引，算文件 PR。判例 #224（#105：`docs/development/agent-rules.md` ＋ `AGENTS.md` 的 Agent Rules Index）。
+  這一條是**補出來的**：#221 補五類表時只給了流程設定 PR 這個連帶條款，而文件 PR 沒有，所以 #224 一度掉在五類之間——而那個形狀是 #105 工作項 1 的結構決定的（索引與被索引的文件必須同一張 PR 落地，否則合併後索引會指向不存在的檔案）。維護者 2026-11-10 裁定補上。
+  **連帶不等於夾帶**，而且這一條有程序掛勾（比照工具 PR 那條）：**規則文件的每一處改動都要在 PR body 逐一列出，並寫明它服務的是同一個目的**。合併閘第 2 條是純路徑比對，`AGENTS.md` 一進清單就機械上全部通過，所以這個限制只能靠 PR body 的逐項說明與獨立審查把關。
+  只改規則文件的 PR 仍然不屬五類，判準見上面。
 - **文件 PR 可以順手更新那一頁已生成的流程圖**：條文改了而圖還是舊的，比圖沒更新更糟。判例 #200——折回 03-01 的範圍硬化規則時，同一張 PR 改了 `spec-03-01-task-list-flow.tsx` 的三行。
 - **工具 PR 可以動 `docs/specs/`，但只限修掉新檢查在既有頁面上抓到的違規**，而且要在 PR body 逐一列出；**不得新增或改寫規格條文**，也不得為了讓檢查器有東西可驗而去改真正的規格頁（測試資料放 `scripts/tests/`）。
   原因在 CI：`specs` job 會在 **PR 分支上**跑 `node scripts/check-specs.mjs docs`，所以新檢查一加上去，既有頁面的違規就讓**那張工具 PR 自己**變紅；不在同一張修掉就過不了。判例 #149、#151、#152、#153 四張都是這個形狀。
 - **畫面修正 PR 可以動 `design/prototype/`，但那道關卡在 Ready 之前、不在 PR 階段**：規則本體寫在 `AGENTS.md` §Project Board and Dispatch 的 **Ready gate**（維護者 2026-11-10），這裡不複述以免兩份漂移。要記住的是：**卡片沒有合法地走過那道關卡，就不會有這一類 PR**；畫 artifact 不等於改畫面的授權。
   這一類也可以同時動 `docs/specs/`，**但只限兩種**：把這次改動打成假的既有斷言改掉，以及把裁定記成那一頁的「已確認決議」。判例 #220（儀表板狀態徽章改用 PRD 的五個名稱：六個 `design/prototype/pages/dashboard/` 的檔案，加上規格 02-01 新增 Q18、03-01 一處跨頁斷言失效）。
   **不得夾帶與這次裁定無關的條文改寫**——那是文件 PR。
-- **流程設定 PR** 管的是 agent 怎麼工作，不是產品要做什麼，所以它**不碰 `docs/specs/`**，只動 `openspec/`、`.claude/`（`agents/`、`skills/`、`commands/`）與 `.agents/skills/`，以及因此連帶要改的 `docs/development/` 設計文件。判例 #215（schema 與 `config.yaml`）、#216（十二個 agent 角色）、#217（clarify skill 的兩份副本）、#219（`/sdd` 指令與 `AGENTS.md` 的 SDD 一節）。
+- **流程設定 PR** 管的是 agent 怎麼工作，不是產品要做什麼，所以它**不碰 `docs/specs/`**，只動 `openspec/`、`.claude/`（`agents/`、`skills/`、`commands/`）與 `.agents/skills/`，以及因此連帶要改的 `docs/development/` 設計文件與 `AGENTS.md`／`CLAUDE.md`。判例 #215（schema 與 `config.yaml`）、#216（十二個 agent 角色）、#217（clarify skill 的兩份副本）、#219（`/sdd` 指令與 `AGENTS.md` 的 SDD 一節）。
   **同一次流程改動連帶的規則條文可以一起改**：#219 動了 `.claude/commands/sdd.md`、`AGENTS.md`（新增 §SDD Workflow 一節）與 `docs/development/spec-authoring.md`，三個檔都服務同一個目的，所以整張歸流程設定 PR，不必拆。
-  **單獨**改 `AGENTS.md` 或 `CLAUDE.md`（沒有同時動 `openspec/`、`.claude/` 或 `.agents/skills/`）的 PR 不屬於這五類，照上面那條走。
+  **只改**規則文件的 PR 不屬於這五類，照本節開頭那一條走；判準也定義在那裡。
 - 文件 PR 與流程圖 PR **不得動 `scripts/`、`package.json`、`.github/`**。搬移途中發現檢查器有缺陷時，開一張 `[Bug]` issue 與它對應的工具 PR 處理，不要夾帶。
 - **任何一類都不准動的**：`docs/specs/00-prd.mdx`。要動 PRD 時回報並建議用 `prd-writing`（見「非目標」）。
 - **`design/prototype/` 只有畫面修正 PR 能動，而且要先過上面那道 artifact 關卡。** 文件 PR、流程圖 PR、工具 PR 與流程設定 PR 都不准動它：搬移期間畫面與規格不一致時列入待釐清（見「非目標」），不要順手改畫面。
