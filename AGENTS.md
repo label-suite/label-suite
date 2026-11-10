@@ -140,6 +140,32 @@ Full rules: [docs/development/commit-and-release.md](docs/development/commit-and
 - If a tool call fails twice, report the exact error before trying again.
 - Remove debug `print` / `console.log` before finishing.
 
+## Agent Rules Index
+
+The rules themselves live in this file. [docs/development/agent-rules.md](docs/development/agent-rules.md) explains the cross-cutting ones — why they exist, worked examples, and how each is checked — and records, source clause by source clause, which parts of the reference projects were adopted, rewritten, rejected, or are still to be adopted. Where the two disagree, this file wins; report the discrepancy to the maintainer.
+
+This repository has no `.claude/rules/` canon and will not get one (decided in #53). Another project's rule files are reference material only: they carry no authority here unless this file adopts them.
+
+| Area | Document | Issue |
+|------|----------|-------|
+| Cross-cutting — search first, dependency direction, smallest change, no premature abstraction, conflicts, locked scope, loud failure | [docs/development/agent-rules.md](docs/development/agent-rules.md) | #105 |
+| Backend layering, database, background work | not built yet | #106 |
+| Authorization, answer isolation, config-driven boundaries | not built yet | #107 |
+| API contract sync, single frontend client | not built yet | #108 |
+| Frontend dependency direction, type safety, shared UI | not built yet | #109 |
+| Test layers, dual-database verification, delivery evidence | not built yet | #110 |
+
+"Not built yet" is literal: those documents do not exist, so none of their rules is being checked. Do not cite them, and do not report a check as passing when the check has not been built.
+
+Two rules are worth stating here because they are reversals of what the reference projects say:
+
+- **Conflicts are not yours to settle.** Follow this repository's settled decisions (`docs/specs/` decision sections, the ADR effect table in [docs/development/architecture.md](docs/development/architecture.md), this file). Where none covers the conflict, report it to the maintainer and stop. Never pick a side because one option is newer or easier to test.
+- **Scope, once locked, is not yours to shrink.** After an issue or spec has committed to an acceptance item, do not drop it for being unnecessary. Take it back to that issue or spec; never park a deferred requirement in a code comment.
+
+Size is judged by purpose, not by counting. This repository sets no file-count or diff-line ceiling for a pull request — see [Pull Requests](#pull-requests).
+
+Technical baselines (stack choices, layering, ADR status) are in [docs/development/architecture.md](docs/development/architecture.md), and the pull-request categories are in [docs/development/spec-migration.md](docs/development/spec-migration.md).
+
 ## Review Guidelines
 
 When reviewing, keep the review narrow, actionable, and tied to the requested scope:
