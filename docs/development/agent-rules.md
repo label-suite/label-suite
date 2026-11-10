@@ -216,12 +216,12 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 | `general.md` §Design Principles 的 SOLID、一函式一事、一模組一責任 | **待採用** | 本 repo 目前沒有條文。後端分層由 [#106](https://github.com/label-suite/label-suite/issues/106) 定時一併處理比較合適 |
 | `general.md` §Security 第二條（不硬寫 API key／token，用環境變數） | **沿用** | 已在 `AGENTS.md` 硬性規則 8 |
 | `general.md` §Security 第三條（CORS 不得 `allow_origins=["*"]`） | **沿用** | 已在 `AGENTS.md` 硬性規則 7 |
-| **`general.md` §Security 第一條（所有使用者輸入都要驗證與淨化，防 SQL Injection 與 XSS）** | **待採用** | **本 repo 兩邊都沒有這一條**：`AGENTS.md`、`CLAUDE.md` grep `sanitiz`／`validat`／`injection`／`xss` 全部零命中。這是**安全規範**，要不要進 `AGENTS.md` Hard Rules 由維護者決定；[#107](https://github.com/label-suite/label-suite/issues/107)（授權與答案隔離）是最相關的落點 |
+| `general.md` §Security 第一條（所有使用者輸入都要驗證與淨化，防 SQL Injection 與 XSS） | **沿用** | 本 repo 原本兩邊都沒有（grep `sanitiz`／`validat`／`injection`／`xss` 零命中）。**維護者 2026-11-10 裁定它進 Hard Rules**，本次已加為 `AGENTS.md` **硬性規則 9**（原第 9 條的破壞性指令順延為第 10 條；全 repo grep 過，沒有任何文件引用到那兩個編號） |
 | `general.md` §AI Agent Non-Negotiables 的「`uv add`／`pnpm add`」 | **沿用** | 已在 `AGENTS.md` 硬性規則 3 |
 | `general.md` §AI Agent Non-Negotiables 的「不改版號」 | **沿用** | 已在 `AGENTS.md` 硬性規則 4 |
 | `general.md` §AI Agent Non-Negotiables 的「移除 debug `print`／`console.log`」 | **沿用** | 已在 `AGENTS.md` Required Behaviors |
 | `general.md` §AI Agent Non-Negotiables 的「先讀既有匯出與呼叫端」 | **沿用** | 成為 R1 |
-| **`general.md` §AI Agent Non-Negotiables 的「後端指令一律走 `uv run`」** | **待採用** | **本 repo 沒有這一條**：`AGENTS.md` grep `uv run` 零命中（規則 3 只規定 `uv add`）。後端指令的規範歸 [#106](https://github.com/label-suite/label-suite/issues/106) |
+| `general.md` §AI Agent Non-Negotiables 的「後端指令一律走 `uv run`」 | **待採用（已有歸屬）** | 本 repo 沒有這一條（`AGENTS.md` grep `uv run` 零命中，規則 3 只規定 `uv add`）。**維護者 2026-11-10 裁定它歸 [#106](https://github.com/label-suite/label-suite/issues/106)**，不進本次的 Hard Rules——在沒有 `backend/` 之前它沒有適用對象 |
 | `general.md` §Fail Loudly | **沿用** | 成為 R7 |
 | **`general.md` §Conflicting Patterns（「pick one, prefer newer or better-tested」）** | **改寫** | **這一條被反轉**。本 repo 改成 R5：照已確認決議，沒有決議就回報維護者。理由：本 repo 已有「五個依據＋機械檢查」的決議機制，自行選邊會繞過它 |
 | `general.md` 的「200 行→50 行」與「出現 2 次就抽」 | **不採用** | 機械門檻，見[§刻意不採用的機械限制](#刻意不採用的機械限制) |
@@ -281,7 +281,7 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 
 已查：`trendlink` 組織底下所有 repo（含 `claude-plugins`、`trendlink-portal`、`lexpayroll`、`trendmile`、`fullstack-ai-sdd-workflow-scaffold`）、個人帳號、以及本機 `find ~ -name "core-principles*"`，**都沒有這兩個檔案**。本機唯一叫 starter-kit 的 `whest-starterkit` 是高斯動差／QMC 取樣的科學計算起始包（`.claude/agents/` 底下是 `gaussian-moment-analyst`、`qmc-sampling-specialist`），兩個檔案都不存在。
 
-**所以這一類仍然缺對照**，需要維護者提供位置，或確認它不存在、可從工作項移除。
+**維護者 2026-11-10 裁定：該來源不存在或已不適用，從 #105 的工作項移除。** 所以這一類沒有對照可做，也不再是缺口。
 
 > **這一節的教訓記在這裡**：本文件第一版把 duty-mate 也寫成「找不到」，並附了一份「已查」清單——而那份清單只掃了個人帳號與本機，**從來沒掃組織**。附帶搜尋清單的否定結論會勸退後面的人再查，所以結論錯了會錯得更久。獨立審查用 `gh search repos` 一次就找到。
 
@@ -291,3 +291,4 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 | :--- | :--- | :--- |
 | [#105](https://github.com/label-suite/label-suite/issues/105) | 2026-11-10 | 初版。七條跨領域規範（各帶適用路徑、禁止、正反例、例外、檢查方式與來源）、刻意不採用的三個機械門檻、開工前置條件、與 #50–#53 的分界，以及四個來源的逐條對照 |
 | [#105](https://github.com/label-suite/label-suite/issues/105) | 2026-11-10 | 獨立審查後修正四處：**duty-mate 其實存在**（`trendlink/duty-mate`，初版誤記為找不到，搜尋沒掃組織），補上 12 份規則的逐條對照；**兩列「沿用」改成「待採用」**（`general.md` 的輸入驗證與 `uv run` 在本 repo 兩邊都沒有條文）；scaffold 補上 16 份規則裡四份「共通」的逐條對照；**operationId 由 ⚠️ 待決改為 ✅ 已裁定**（早先已由 #51 落地，#105 留言明寫 2026-11-10 只裁前綴）。另把被誇大的「沿用」範圍逐列拆開（Think Before Coding、reach-for ladder、Design Principles、issue 類型對照表） |
+| [#105](https://github.com/label-suite/label-suite/issues/105) | 2026-11-10 | 依維護者當日的三項裁定收尾：`general.md` §Security 第一條（輸入驗證與淨化）**進 `AGENTS.md` 硬性規則 9**，對照表那一列由「待採用」改「沿用」；`uv run` 裁定歸 #106，維持待採用但已有歸屬；**starter-kit 那一類裁定從工作項移除**（該來源不存在或已不適用） |

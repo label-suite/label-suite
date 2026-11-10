@@ -12,7 +12,8 @@ The single rule source for every coding agent working in this repository (Claude
 6. **No test-set answer exposure** — anything an annotator can reach must never include ground-truth answers.
 7. **No `any` in TypeScript**, and **no `allow_origins=["*"]`** in CORS — list origins explicitly.
 8. **No hardcoded secrets** — API keys and tokens come from environment variables.
-9. **No unconfirmed destructive commands** — `rm -rf`, `git reset --hard`, `git push --force`, `git branch -D` need the maintainer's explicit confirmation first.
+9. **No unvalidated input** — validate and sanitize every user input before it reaches a query, a template, or a response, so SQL injection and XSS have nowhere to land.
+10. **No unconfirmed destructive commands** — `rm -rf`, `git reset --hard`, `git push --force`, `git branch -D` need the maintainer's explicit confirmation first.
 
 ## Development Workflow
 
