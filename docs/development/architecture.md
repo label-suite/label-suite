@@ -14,6 +14,8 @@ tags: [architecture, fastapi, react, adr]
 `system-design.md` 與 `api-contract.md` 的技術前提從這裡來。業務面的規格以 `docs/specs/` 為準，見 [需求文件撰寫](spec-authoring.md)。
 
 本文與 ADR 不一致時，以 ADR 為準並回報維護者修正本文；本文與 `docs/specs/` 不一致時，以 `docs/specs/` 為準。
+**唯一的例外是維護者已明文裁定覆寫的項目**——§ADR 效力總表 標成「被覆寫」「部分被覆寫」「本期不做」「本期部分採用」的那幾列，**以本文為準，不回退 ADR**。
+那些裁定的紀錄在 [Issue #105 的 2026-11-10 留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)。沒有那種標記的列，照上面那條規則走。
 
 ## ADR 效力總表
 
@@ -22,28 +24,28 @@ tags: [architecture, fastapi, react, adr]
 | 001 | Modular Monorepo Structure | Accepted | 需調整：`backend/` 加 `frontend/` 沿用，但 canon 規格在 `docs/specs/`，不是根目錄 `specs/` |
 | 002 | uv（後端）加 pnpm（前端） | Accepted | 沿用，等同 `AGENTS.md` Hard Rule 3 |
 | 003 | FastAPI | Accepted | 沿用 |
-| 004 | React 加 Vite SPA | Accepted | 需調整：ADR 寫 React 18，版本未定案 |
+| 004 | React 加 Vite SPA | Accepted | **部分被覆寫**（2026-11-10 裁定）：SPA 與 Vite 沿用，**版本改 React 19** |
 | 005 | PostgreSQL 16 | Accepted | 沿用，Lite 層由 024 補上 |
 | 006 | Redis 7（cache 加 broker） | Accepted | 沿用 |
 | 007 | Celery | Accepted | 沿用 |
 | 008 | Docker 加 Docker Compose | Accepted | 沿用 |
 | 009 | pytest 加 Playwright 加 TDD | Accepted | 沿用 |
 | 010 | Config-Driven Task Architecture | Accepted | 沿用原則，等同 Hard Rule 5；config schema 已由 029 取代 |
-| 011 | 前端垂直功能切片 | Accepted | 待決：與 scaffold 的 `pages/` 加 `features/` 不同 |
+| 011 | 前端垂直功能切片 | Accepted | **被覆寫**（2026-11-10 裁定）：改用 `pages/` 加 `features/` |
 | 012 | Vitest 加 RTL 加 Playwright | Accepted | 沿用，E2E 位置已由 034 取代 |
-| 013 | Resend 寄信 | Accepted | 需調整：沒有未設定時的降級路徑 |
+| 013 | Resend 寄信 | Accepted | 需調整：**降級路徑已由 2026-11-10 裁定補上**（未設定 key 時把連結印在伺服器 log） |
 | 014 | Prototype 層 Playwright 測試 | Accepted | 不適用：測試與 `package.json` 依 #16 留在個人 repo |
-| 015 | 角色導向漸進式 onboarding | Accepted | 待決：與 PRD「範圍外」的說明入口界線未定 |
-| 016 | shadcn/ui 加 Storybook | Accepted | 待決：元件庫未定案 |
+| 015 | 角色導向漸進式 onboarding | Accepted | **本期部分採用**（2026-11-10 裁定）：空狀態與情境提示做，**導覽與角色導向漸進揭露不做** |
+| 016 | shadcn/ui 加 Storybook | Accepted | **部分被覆寫**（2026-11-10 裁定）：採 shadcn/ui，但元件放 `components/ui/`。**Storybook 不在那次裁定的範圍裡，仍待決** |
 | 017 | 三層 agent（Planner／Generator／Evaluator） | Accepted | 已被取代：改用 #47 決議的 fullstack-sdd 角色分工 |
-| 018 | Prometheus 加 Grafana | Accepted | 待決：本期範圍未界定 |
-| 019 | AI 可追溯與稽核（`ai_runs`） | Accepted | 待決：本期範圍未界定 |
-| 020 | Sentry | Accepted | 待決：本期範圍未界定 |
+| 018 | Prometheus 加 Grafana | Accepted | **本期不做**（2026-11-10 裁定） |
+| 019 | AI 可追溯與稽核（`ai_runs`） | Accepted | 沿用，**本期要做**（2026-11-10 裁定：三套觀測性裡只做這一套） |
+| 020 | Sentry | Accepted | **本期不做**（2026-11-10 裁定） |
 | 021 | JWT 加 refresh token（httpOnly cookie） | Accepted | 沿用 |
-| 022 | 任務狀態機放 service 層 | Accepted | 沿用，轉移條件以 `docs/specs/` 為準 |
+| 022 | 任務狀態機放 service 層 | Accepted | 沿用，轉移條件以 `docs/specs/` 為準；但它舉的扁平 `app/services/` 路徑**已被** 2026-11-10 裁定 的模組內分層**覆寫** |
 | 023 | Compose 加 Nginx 加 Cloudflare 部署 | Accepted | 需調整：要搭 `commit-and-release.md` 的三分支與 GHCR |
 | 024 | 資料庫雙層（SQLite 加 PostgreSQL） | Accepted | 沿用 |
-| 025 | Bruno API collection | Accepted | 待決：與 `api-contract.md` 加 `openapi.json` 職責重疊 |
+| 025 | Bruno API collection | Accepted | **部分被覆寫**（2026-11-10 裁定）：Bruno 降級成可選的手動工具，**pre-PR 硬關卡取消** |
 | 026 | i18n 兩層 | Accepted | 沿用 |
 | 027 | GitHub Projects | Accepted | 已被取代：改用組織層專案，無 `STATUS.md` |
 | 028 | CI 安全掃描（SCA 加延後 SAST） | Accepted | 沿用，等同 Hard Rule 7、8 |
@@ -58,7 +60,20 @@ tags: [architecture, fastapi, react, adr]
 | 037 | 權限矩陣當授權輸入 | Accepted | 沿用 |
 | 038 | 資料保留、刪除與匿名化 | Accepted | 沿用 |
 
-二十一份照著做、五份要調整、四份已被取代、一份不適用、七份待決。
+2026-11-10 的裁定動到**九列**的效力，所以舊的分類統計（「二十一份照著做、五份要調整…」）已經不準，改成現況：
+
+| 效力 | 份數 | 哪幾份 |
+| :--- | :--- | :--- |
+| 沿用 | 22 | 含 **019**（原本待決，裁定後確定本期要做） |
+| 需調整 | 4 | 含 **013**（降級路徑已由裁定補上） |
+| 已被取代 | 4 | |
+| 不適用 | 1 | |
+| **整條被覆寫** | 1 | **011**（切片方式改成 `pages/` 加 `features/`） |
+| **部分被覆寫** | 4 | **004**（版本改 19）、**016**（元件位置改 `components/ui/`）、**022**（狀態機沿用，但它舉的扁平路徑被覆寫）、**025**（Bruno 的 pre-PR 關卡取消） |
+| **本期部分採用** | 1 | **015**（空狀態與情境提示做，導覽那一套不做） |
+| **本期不做** | 2 | **018**、**020** |
+
+**ADR-016 的 Storybook 沒有被裁定**，仍待決——那次問的是元件庫，不是 Storybook。它列在 §待決清單 第 10 列。
 
 ## 目錄
 
@@ -67,12 +82,12 @@ tags: [architecture, fastapi, react, adr]
 ```text
 label-suite/
 ├─ backend/                       FastAPI + SQLAlchemy 2.0 + Alembic（ADR-003、005）
-│  ├─ app/                        目錄分層未定案，見落差 1
+│  ├─ app/modules/<module>/       模組內分層：router、service、repository、schemas（2026-11-10 裁定）
 │  ├─ tests/                      pytest：unit 與 integration（ADR-009）
-│  ├─ bruno/                      Bruno collection，是否保留見待決 5（ADR-025）
+│  ├─ bruno/                      可選的手動工具，**不是 pre-PR 關卡**（2026-11-10 裁定）
 │  └─ pyproject.toml              依賴只用 uv 管（ADR-002、Hard Rule 3）
 ├─ frontend/                      React + Vite + TypeScript strict（ADR-004）
-│  ├─ src/                        目錄分層未定案，見待決 1
+│  ├─ src/{pages,features}/       React 19；pages 組頁面、features 放功能邏輯（2026-11-10 裁定）
 │  └─ package.json                依賴只用 pnpm 管（ADR-002）
 ├─ e2e/                           正式全端 Playwright，依模組分目錄（ADR-034）
 │  └─ shared/fixtures/            各角色的 storageState 與 seed helper
@@ -98,9 +113,9 @@ label-suite/
 | 快取與佇列 | Redis 7 | 006 |
 | 非同步任務 | Celery | 007 |
 | 寄信 | Resend | 013 |
-| 前端框架 | React 加 Vite 加 TypeScript strict | 004 |
+| 前端框架 | **React 19** 加 Vite 加 TypeScript strict（維護者 2026-11-10 裁定，覆寫 ADR-004 的 React 18） | 004 |
 | 路由與伺服器狀態 | React Router v6 加 TanStack Query | 004 |
-| 元件庫與圖示 | shadcn/ui（待決）加 Lucide（唯一圖示來源） | 016、030 |
+| 元件庫與圖示 | **shadcn/ui**（維護者 2026-11-10 裁定，元件放 `components/ui/`，覆寫 ADR-016 的 `shared/ui/`）加 Lucide（唯一圖示來源） | 016、030 |
 | 前端測試 | Vitest 加 React Testing Library | 012 |
 | E2E | Playwright | 009、034 |
 | 套件管理 | uv（Python）、pnpm（JavaScript） | 002 |
@@ -131,7 +146,7 @@ HTTP 請求
 任務狀態機只實作在 service 層（ADR-022）。反向轉移除了 `waiting_iaa_confirmation` 回 `draft` 與回 `dry_run_in_progress` 兩條之外都不允許，
 違反時丟 `InvalidTransitionError`。完整轉移條件以 `docs/specs/` 的規格書與 PRD §共用狀態機為準，不以 ADR-022 的表為準（ADR 的表帶著個人 repo 的 FR 編號）。
 
-**目錄分層尚未定案。** ADR 之間有兩種寫法並存，見[落差 1](#矛盾與落差)。`sd` 寫 `system-design.md` 時要把選定的分層當決策攤開，由 clarify 關卡拍板。
+**目錄分層已定案（維護者 2026-11-10 裁定）：模組內分層** `app/modules/<module>/`，一個業務模組一個資料夾，裡面放自己的 router、service、repository 與 schemas。ADR-022 的扁平 `app/services/` 寫法記為被覆寫（見[落差 1](#矛盾與落差)）。`sd` 寫 `system-design.md` 時照這個結構畫，不再當成待決。
 
 ## 認證與授權
 
@@ -224,9 +239,9 @@ Redis 7 同時當 Celery broker、result backend 與應用快取，用不同的 
 
 ```text
 上傳提交
-  → FastAPI 端點驗檔案 → 送進 scoring 佇列 → 回 {"task_id": "..."}
+  → FastAPI 端點驗檔案 → 送進 scoring 佇列 → 回 {"data": {"task_id": "..."}, ...}（envelope，裁定 2）
   → Celery worker：parse_submission → load_answers → compute_metrics → write_results
-  → FastAPI GET /submissions/{id}/status 回任務狀態與結果
+  → FastAPI GET /api/v1/submissions/{id}/status 回任務狀態與結果（前綴依裁定 3）
 ```
 
 評分任務走 `scoring` 佇列，雜務走 `default`；最多重試三次，退避 60、180、540 秒；單一評分工作硬性上限 300 秒；
@@ -280,7 +295,7 @@ FastAPI 預設的 422 `RequestValidationError` 不在這個契約內，需要本
 | 框架 | React 加 Vite 的 SPA，TypeScript strict，禁止 `any`（Hard Rule 7） | 004 |
 | 路由 | React Router v6 | 004 |
 | 伺服器狀態 | TanStack Query；表單狀態與純 UI 狀態分開放 | 004 |
-| 元件庫 | shadcn/ui 當原語，元件以原始碼形式放進 repo（待決 1、2） | 016 |
+| 元件庫 | shadcn/ui 當原語，元件以原始碼形式放進 `components/ui/`（2026-11-10 裁定）。**Storybook 仍待決** | 016 |
 | 圖示 | **只用** Lucide（`lucide-react`）。不得加入其他圖示庫，不得用 emoji 或自己畫的 SVG 當圖示 | 030 |
 | design token | 只用語意 token，色值只寫在主題檔，見 `label-suite-design` skill 與 `design/prototype/assets/tokens.css` | 016、030 |
 | 權限 | 前端隱藏按鈕只是體驗，權限一律由後端擋 | 021、037 |
@@ -333,9 +348,9 @@ image 在 `release` 建一次、不重建，`main` 合併後打 `vX.Y.Z` 並在 
 
 | # | 落差 | 影響 | 建議 |
 | :--- | :--- | :--- | :--- |
-| 1 | **後端目錄分層有兩種寫法並存。** ADR-022 寫 `app/services/task_service.py`（扁平 services），ADR-025 的 pre-PR gate 寫 `backend/app/modules/*/router.py`、`app/modules/*/schemas.py`（模組內分層），另有 `backend/app/schemas/`、`app/api/routes`、`app/core/deps.py` 零星出現。沒有任何 ADR 拍板 | `sd` 寫 `system-design.md` 的 Class Diagram 時無從依循；兩種混用會讓每個模組長得不一樣 | 由 `backend/` 骨架 change 的 `system-design` 攤開兩種方案，在 clarify 停點一拍板，然後補一份 ADR |
-| 2 | **沒有成功回應的統一格式決策。** ADR-026 提到 `ErrorResponse` 與 `SuccessResponse` 的 `detail` 欄位，但沒有 ADR 定義成功回應的外層結構 | 前後端交接缺一塊；每個端點可能各自決定要不要包一層 | 同上，由骨架 change 拍板。決定後 `api-contract.md` 的 response 段落才寫得準 |
-| 3 | **沒有 operationId 與 API 版本前綴的決策。** `/api/v1` 在 ADR 裡出現八次但沒有任何 ADR 決定它；FastAPI 預設的 operationId 是函式名加路徑組出來的長字串 | operationId 是前後端交接依據與前端產物的命名來源，不固定就不能當契約 | 用 `generate_unique_id_function` 固定成「動詞加資源」，與 `/api/v1` 一起寫進骨架 change |
+| 1 | **後端目錄分層有兩種寫法並存。** ADR-022 寫 `app/services/task_service.py`（扁平 services），ADR-025 的 pre-PR gate 寫 `backend/app/modules/*/router.py`、`app/modules/*/schemas.py`（模組內分層），另有 `backend/app/schemas/`、`app/api/routes`、`app/core/deps.py` 零星出現。沒有任何 ADR 拍板 | `sd` 寫 `system-design.md` 的 Class Diagram 時無從依循；兩種混用會讓每個模組長得不一樣 | **已裁定（維護者 2026-11-10 裁定）：模組內分層 `app/modules/*/`**。ADR-022 的扁平寫法記為被覆寫；建議在個人 repo 補一份 ADR |
+| 2 | **沒有成功回應的統一格式決策。** ADR-026 提到 `ErrorResponse` 與 `SuccessResponse` 的 `detail` 欄位，但沒有 ADR 定義成功回應的外層結構 | 前後端交接缺一塊；每個端點可能各自決定要不要包一層 | **已裁定（維護者 2026-11-10 裁定）：包一層 envelope**；204 無 body、檔案與串流是明文例外，例外清單要寫進契約 |
+| 3 | **沒有 operationId 與 API 版本前綴的決策。** `/api/v1` 在 ADR 裡出現八次但沒有任何 ADR 決定它；FastAPI 預設的 operationId 是函式名加路徑組出來的長字串 | operationId 是前後端交接依據與前端產物的命名來源，不固定就不能當契約 | **兩半都已定**：operationId 用 `generate_unique_id_function` 固定成「動詞加資源」（#51 已落地）；前綴**用 `/api/v1`**（維護者 2026-11-10 裁定） |
 | 4 | **ADR-036 已與現況脫節。** 它把規格 canon 留在個人 repo、本 repo 只放程式與 openspec；但 #29 到 #32 已把 PRD 與模組規格搬到本 repo 的 `docs/specs/`，`openspec/config.yaml` 也宣告 `docs/specs/` 由維護者擁有。ADR-036 仍是 Proposed | 兩個 repo 誰是 canon 的說法不一致，追溯會指錯地方 | 請維護者在個人 repo 更新或 supersede ADR-036，寫明規格 canon 已移至本 repo |
 | 5 | **ADR-033 與本 repo 的 openspec 規則方向相反。** 033 說 `openspec/specs/` 是衍生檢視、永不權威，且「寫回 `specs/[module]/NNN-feature/spec.md`」是合併的硬關卡；本 repo 的 `openspec/config.yaml` 說 `openspec/specs/` 是實作與測試依循的可測契約，而且 change **不得**更動 `docs/specs/` 裡的需求 | 兩份規則同時存在時，agent 不知道該寫回哪裡 | 本 repo 以 `openspec/config.yaml` 加 #47 決議為準；請維護者 supersede ADR-033 或標註它只適用個人 repo |
 | 6 | **ADR-033 的狀態不一致。** 檔案裡是 `**Status**: Accepted`，`README.md` 的索引寫 Proposed | 讀索引與讀檔案得到不同結論 | 請維護者修正 `README.md` 索引 |
@@ -343,25 +358,29 @@ image 在 `release` 建一次、不重建，`main` 合併後打 `vX.Y.Z` 並在 
 | 8 | **ADR 大量引用個人 repo 的條文編號**（FR-131、FR-105、FR-063、admin-007、spec 013／014／015／017 等），本 repo 沒有這些文件 | 追溯鏈在本 repo 斷掉 | 這些編號當成「去個人 repo 查」的指標即可；本 repo 的規格一律引 `docs/specs/NN-<module>/NN-<page>.mdx` |
 | 9 | **ADR-017 與 #47 決議的 SDD 流程重疊，且有一條直接衝突。** 017 的三層是 Planner／Generator／Evaluator，且**禁止** Generator 階段用 `/compact`；`CLAUDE.md` 要求約 70% context 時 compact | 兩套角色說法並存；compact 規則直接相反 | 本 repo 以 #47 的 fullstack-sdd 角色分工與 `CLAUDE.md` 為準。017 的「Evaluator 只用外部確定性工具、禁止自評」這個原則已由 `code-reviewer` 與 `acceptance-verifier` 承接 |
 | 10 | **ADR-027 部分被取代。** 027 用 repo 層 GitHub Projects 加 `specs/STATUS.md` 當規格階段的真相；本 repo 的 `AGENTS.md` 說組織層專案「Label Suite」是狀態的唯一記錄、不用 label 追狀態，也沒有 `STATUS.md` | 兩套專案管理說法 | 本 repo 以 `AGENTS.md` 為準 |
-| 11 | **ADR-013 的 Resend 沒有降級路徑。** ADR-035 給了 Google SSO「沒設 `GOOGLE_CLIENT_ID` 就退回 no-op」的 optional-integration 保證，Resend 沒有對應設計；而規格 06-01 的「重發設定密碼信」是使用者管理的核心功能 | Lite 層部署若沒有 Resend key，忘記密碼與重發設定信就不能用，與 ADR-024 的零前置條件啟動精神不符 | 請維護者決定 Lite 層的替代方案（例如把連結印在伺服器 log、或由管理員手動複製），並補進規格 |
-| 12 | **ADR-015 與 PRD 的範圍外衝突。** 015 要做角色導向的漸進式 onboarding；本 repo PRD 的「範圍外」寫「說明按鈕（平台說明入口）：這期不做」 | onboarding 與說明入口是不是同一件事沒有界定 | 請維護者界定：空狀態與首次操作的情境提示算不算在範圍內 |
-| 13 | **觀測性堆疊對研究原型可能過重。** ADR-018（Prometheus 加 Grafana）、019（`ai_runs`）、020（Sentry）各自是一套；PRD 說平台定位是研究原型、不是生產規模服務，範圍外包含大規模並發壓力測試 | 三套都做會吃掉相當多實作與維運成本 | 請維護者界定本期要做哪幾套。`audit_events`（032）與授權（037）是功能需求，不在這個取捨裡 |
-| 14 | **ADR-025 的 Bruno 與新流程職責重疊。** Bruno 是手動維護的 API collection，還帶一條 pre-PR 硬關卡；本 repo 的 `api-contract.md` 是規劃產物、`openapi.json` 由 FastAPI 自動產生 | 同一份 API 資訊要維護三個地方 | 請維護者決定 Bruno 是否保留。若保留，建議降級成可選的手動測試工具，不當 pre-PR 關卡 |
-| 15 | **前端細節尚未定案。** ADR-004 寫 React 18（scaffold 是 19）；ADR-011 的垂直功能切片與 scaffold 的 `pages/` 加 `features/` 不同；ADR-016 的 shadcn 元件放 `frontend/src/shared/ui/`，與 scaffold 的 `components/ui/` 不同 | `ui-ux` 與 `frontend-developer` agent 寫不完整（#53） | 第一個前端 change 之前定案。在那之前 `ui-design` 寫「本次無 UI 變更」 |
+| 11 | **ADR-013 的 Resend 沒有降級路徑。** ADR-035 給了 Google SSO「沒設 `GOOGLE_CLIENT_ID` 就退回 no-op」的 optional-integration 保證，Resend 沒有對應設計；而規格 06-01 的「重發設定密碼信」是使用者管理的核心功能 | Lite 層部署若沒有 Resend key，忘記密碼與重發設定信就不能用，與 ADR-024 的零前置條件啟動精神不符 | **已裁定（維護者 2026-11-10 裁定）：把設定密碼連結印在伺服器 log**，由部署者轉給使用者。連帶要求：Lite 層的 log 視為敏感，畫面要讓管理員知道信沒有寄出去。**延伸（我排的後續工作）**：規格 01-03 與 06-01 要補這一條，走 `spec-writing`；畫面的改動先畫 artifact 給維護者看 |
+| 12 | **ADR-015 與 PRD 的範圍外衝突。** 015 要做角色導向的漸進式 onboarding；本 repo PRD 的「範圍外」寫「說明按鈕（平台說明入口）：這期不做」 | onboarding 與說明入口是不是同一件事沒有界定 | **已裁定（維護者 2026-11-10 裁定）：空狀態與情境提示算在範圍內**（已在 18 頁裡的 11 頁）；ADR-015 的導覽與角色導向漸進揭露**不做**。PRD §範圍外 要補一句把「說明按鈕」與「情境提示」分開，改動交給 #85 |
+| 13 | **觀測性堆疊對研究原型可能過重。** ADR-018（Prometheus 加 Grafana）、019（`ai_runs`）、020（Sentry）各自是一套；PRD 說平台定位是研究原型、不是生產規模服務，範圍外包含大規模並發壓力測試 | 三套都做會吃掉相當多實作與維運成本 | **已裁定（維護者 2026-11-10 裁定）：只做 `ai_runs`（ADR-019）**；ADR-018 與 ADR-020 本期不做。`audit_events`（032）與授權（037）是功能需求，不在這個取捨裡 |
+| 14 | **ADR-025 的 Bruno 與新流程職責重疊。** Bruno 是手動維護的 API collection，還帶一條 pre-PR 硬關卡；本 repo 的 `api-contract.md` 是規劃產物、`openapi.json` 由 FastAPI 自動產生 | 同一份 API 資訊要維護三個地方 | **已裁定（維護者 2026-11-10 裁定）：保留但降級成可選的手動工具，拿掉 pre-PR 硬關卡**。唯一的契約真相是 `api-contract.md` 加 `openapi.json` |
+| 15 | **前端細節原本尚未定案（已於 2026-11-10 裁定）。** ADR-004 寫 React 18（scaffold 是 19）；ADR-011 的垂直功能切片與 scaffold 的 `pages/` 加 `features/` 不同；ADR-016 的 shadcn 元件放 `frontend/src/shared/ui/`，與 scaffold 的 `components/ui/` 不同 | `ui-ux` 與 `frontend-developer` agent 寫不完整（#53） | **已裁定（維護者 2026-11-10 裁定）：照 scaffold——React 19、`pages/` 加 `features/`、shadcn/ui 放 `components/ui/`**。ADR-004、011、016 三份記為被覆寫；#53 那兩個 agent 要回頭補上 |
 
 ## 待決清單
 
-| # | 待決 | 誰決定 | 什麼時候 |
-| :--- | :--- | :--- | :--- |
-| 1 | 後端目錄分層（落差 1） | 維護者，在 clarify 停點一 | `backend/` 骨架 change |
-| 2 | 成功回應的統一格式（落差 2） | 同上 | 同上 |
-| 3 | operationId 策略與 `/api/v1` 前綴（落差 3） | 同上 | 同上 |
-| 4 | Lite 層沒有 Resend key 時的替代方案（落差 11） | 維護者 | 使用者管理相關 change 之前 |
-| 5 | onboarding 與說明入口的界線（落差 12） | 維護者 | PRD 或規格層決定 |
-| 6 | 觀測性要做哪幾套（落差 13） | 維護者 | 部署相關 change 之前 |
-| 7 | Bruno 是否保留（落差 14） | 維護者 | 第一個 API change 之前 |
-| 8 | 前端版本、目錄分層與元件庫（落差 15） | 維護者 | 第一個前端 change 之前 |
-| 9 | ADR-029、033、036 與 `README.md` 索引的修訂（落差 4、5、6、7） | 維護者，在個人 repo | 不卡本 repo 的實作 |
+**第 1 到第 8 列已於 2026-11-10 全部由維護者裁定**。逐題的紀錄在 [Issue #105 的那則留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)；下表的「裁定」欄是維護者選定的選項與它描述裡一起接受的連帶，**不含我排的後續動作**（那些另標「延伸」）。
+原本那八列是 #105 到 #110（**六張**）的共同瓶頸——其中 #106、#108、#109 的第一個工作項明文是「由維護者確認…」。現在它們從「要猜」變成「照抄決策寫文件」。
+
+| # | 待決 | 裁定（2026-11-10） |
+| :--- | :--- | :--- |
+| ~~1~~ | 後端目錄分層（落差 1） | **模組內分層**：一個業務模組一個資料夾，裡面放自己的 router、service、repository、schemas。ADR-022 的扁平 `app/services/` 寫法記為被覆寫 |
+| ~~2~~ | 成功回應的統一格式（落差 2） | **包一層 envelope**。204 無 body、檔案與串流是明文例外（選項描述裡一起接受的連帶）。**延伸（本文要求，非裁定內容）**：「哪些是例外」要逐一寫進 `api-contract.md`，不逐案自由心證 |
+| ~~3~~ | operationId 策略與 `/api/v1` 前綴（落差 3） | **兩半都定了**：operationId 由 `generate_unique_id_function` 固定成「動詞加資源」（#51 已落地）；路徑前綴**用 `/api/v1`**。（選它的理由是 envelope 將來要改就是破壞性改動、版本前綴是那個逃生門——**那是理由，不是裁定內容**） |
+| ~~4~~ | Lite 層沒有 Resend key 時的替代方案（落差 11） | **把設定密碼連結印在伺服器 log**，由部署者自己轉給使用者。與 ADR-035 給 Google SSO 的 optional-integration 形狀一致。**連帶要求：Lite 層的 log 視為敏感**，而且畫面要讓管理員知道信沒有寄出去 |
+| ~~5~~ | onboarding 與說明入口的界線（落差 12） | **空狀態與情境提示算在範圍內**（已經寫在 18 頁裡的 11 頁）；**ADR-015 的導覽與角色導向漸進揭露不做**，ADR-015 記為本期部分採用。PRD §範圍外 要補一句把「說明按鈕」與「情境提示」分開——改動交給 [#85](https://github.com/label-suite/label-suite/issues/85) |
+| ~~6~~ | 觀測性要做哪幾套（落差 13） | **只做 `ai_runs`（ADR-019）**。它不是運維工具而是研究可追溯性，對標註平台而言屬於資料品質。ADR-018（Prometheus 加 Grafana）與 ADR-020（Sentry）**本期不做**，與 PRD「研究原型、不是生產規模服務」的定位一致。代價：出錯時只能看 log，沒有告警 |
+| ~~7~~ | Bruno 是否保留（落差 14） | **降級成可選的手動工具，拿掉 pre-PR 硬關卡**。唯一的契約真相是 `api-contract.md` 加 `openapi.json`；ADR-025 的那條關卡記為被覆寫 |
+| ~~8~~ | 前端版本、目錄分層與元件庫（落差 15） | **照 scaffold**：React 19、`pages/` 加 `features/`、shadcn/ui 放 `components/ui/`。**ADR-004、011、016 三份都記為被覆寫** |
+| 9 | ADR-029、033、036 與 `README.md` 索引的修訂（落差 4、5、6、7） | **仍待決**（不在 2026-11-10 的裁定範圍）：由維護者在個人 repo 處理，不卡本 repo 的實作 |
+| 10 | **ADR-016 的 Storybook 要不要用** | **仍待決**：2026-11-10 問的是元件庫，不是 Storybook。第一個前端 change 之前決定 |
 
 ## ADR 追溯
 
