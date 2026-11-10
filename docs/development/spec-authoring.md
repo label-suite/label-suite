@@ -278,10 +278,10 @@ PRD 不設待釐清專章，規格書的「待釐清」也只放這一頁自己�
 
 | 規格書 | OpenSpec 產出 |
 | :--- | :--- |
-| 目標、使用角色 | `system-analysis` 的需求依據與角色矩陣；`proposal` 的 Why 與影響範圍 |
+| 目標、使用角色 | `system-analysis` 的需求依據與範圍（它**只引用** PRD §權限矩陣、不抄一份）；角色真正落地在 `system-design` §權限檢查點、`api-contract` 每個端點的角色、`ui-design` 的「無權限」狀態；`proposal` 的 Why 與影響範圍 |
 | 業務流程 | `system-analysis` **引用**規格書的業務流程章節，不重畫；跨規格、跨模組的串接才在那裡補一張圖 |
-| 規格（功能、欄位、`PrototypeFrame` 畫面） | `ui-design` 的頁面、路由、元件樹與四種畫面狀態；`system-design` 的分層與資料模型；`api-contract` 的端點與欄位；`tasks` 的實作項目 |
-| 卡控機制、邊界情況 | spec delta 的 Requirement 與 Scenario；`api-contract` 的錯誤碼；`system-design` 的例外處理 |
+| 規格（功能、欄位、`PrototypeFrame` 畫面） | `ui-design` 的頁面、路由與元件樹；`system-design` 的分層與資料模型異動；`api-contract` 的端點與欄位；`tasks` 的實作項目 |
+| 卡控機制、邊界情況 | spec delta 的 Requirement 與 Scenario；`api-contract` 的錯誤碼與觸發條件；**`ui-design` 的 loading／error／empty／無權限四種狀態**；`design` 的 Risks／Trade-offs |
 | 驗收標準 | spec delta 的 Scenario，**沿用規格書的 Scenario 名稱**；`system-design` 每個關鍵 Scenario 一張 Sequence Diagram；`acceptance-verifier` 逐條驗收 |
 | 待釐清 | 必須清空才開 change。真的有缺口時由 `system-analysis` 的待決問題帶到停點一 |
 | 已確認決議 | 當成已定事項沿用，**不在 change 裡重新討論**（`clarify` 第 4.1 個面向會檢查這一點） |

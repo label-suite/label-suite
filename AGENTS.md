@@ -45,7 +45,7 @@ Ready-to-copy `gh issue create` commands for each type are in [.github/issue-tem
 
 The organization project **Label Suite** (https://github.com/orgs/label-suite/projects/1) is the only record of an issue's state. Its `Status` field moves Todo → Ready → In Progress → In Review → Done. No labels track state.
 
-- **Ready gate.** Only the maintainer moves an Epic to Ready. A child issue that maps to an item on its Epic's checklist counts as approved. New work outside any Epic checklist stays in Todo until the maintainer decides.
+- **Ready gate.** Only the maintainer moves an Epic to Ready. A child issue that maps to an item on its Epic's checklist counts as approved, **except when it changes a screen**: an issue that would change `design/prototype/` or any interface moves to Ready only after the maintainer has seen the proposed screen as an artifact and said it is fine (maintainer's instruction, 2026-11-10). Drawing the artifact is not permission to edit `design/prototype/`. New work outside any Epic checklist stays in Todo until the maintainer decides.
 - **Dependencies.** Record them as GitHub issue dependencies (blocked-by), not only in the issue text. A child moves to Ready only when every issue blocking it is closed. The `blocked` label is reserved for external conditions, such as a directory that does not exist yet.
 - **Claiming.** Before starting, move the card to In Progress and comment on the issue with the agent name and branch. Never pick up an issue that is already In Progress.
 - **Card moves.** The agent doing the work moves its card: In Progress when claiming, In Review when the PR is open, Done after the PR is merged and the issue is closed. An Epic moves to In Progress when its first child starts and to Done when its last child is done.
@@ -54,7 +54,7 @@ The organization project **Label Suite** (https://github.com/orgs/label-suite/pr
 
 ## SDD Workflow
 
-Every change follows the `label-suite-sdd` schema: nine planning and implementation artifacts whose order the OpenSpec CLI enforces. The schema lives in `openspec/schemas/label-suite-sdd/`; the dispatch order, the rules per artifact and the two checkpoints live in `openspec/config.yaml`.
+Every change follows the `label-suite-sdd` schema: nine planning and implementation artifacts whose order the OpenSpec CLI enforces. A documentation or tooling change may instead pass `--schema spec-driven` and use the four-artifact flow, the escape hatch the maintainer kept on 2026-11-04. The schema lives in `openspec/schemas/label-suite-sdd/`; the dispatch order, the rules per artifact and the two checkpoints live in `openspec/config.yaml`.
 
 ### Roles
 
@@ -74,7 +74,7 @@ Every change follows the `label-suite-sdd` schema: nine planning and implementat
 
 Each role is defined in `.claude/agents/<role>.md`. The main agent dispatches; it does not write planning artifacts itself, with `clarification.md` the one exception, and it does not change project code.
 
-**This is not the parallel-subagent pattern.** `CLAUDE.md` says subagents working in parallel each get their own worktree and never share an issue. That rule is about splitting unrelated issues across agents. The SDD roles are the opposite: they all serve one change, on one issue and one branch, dispatched in the order the schema enforces. Only `system-design` and `ui-design` run at the same time, and they write different files. Do not give an SDD role its own worktree or its own issue.
+**The SDD roles share one issue and one branch.** They all serve a single change and are dispatched in the order the schema enforces; only `system-design` and `ui-design` run at the same time, and they write different files. Do not give an SDD role its own worktree or its own issue. The separate-worktree, one-issue-each rule that `CLAUDE.md` states for parallel subagents is about splitting unrelated issues across agents, and does not apply here.
 
 ### The two checkpoints
 
@@ -91,12 +91,12 @@ Everything else - revising clear defects, the planning review, the code review, 
 
 `.claude/commands/sdd.md` is this project's own command. Running `/sdd <request>` is a maintainer request that authorizes **both planning and implementation** for that one change: the agent runs the plan stage, stops at checkpoint one, continues into apply after the maintainer answers, and stops at checkpoint two.
 
-The authorization lives in the command, not in `openspec/config.yaml`. `.claude/skills/openspec-propose/SKILL.md` states that project context cannot grant authorization or move the planning boundary, and `openspec update` overwrites that skill, so neither file is a place to put it. `openspec update` does not touch `.claude/commands/`.
+The authorization lives in the command, not in `openspec/config.yaml`. `.claude/skills/openspec-propose/SKILL.md` states that project context cannot grant authorization or move the planning boundary, and `openspec update` overwrites that skill, so neither file is a place to put it. `openspec update` does not touch `.claude/commands/sdd.md`; it only rewrites or removes the `opsx/` command files it generates itself.
 
 The authorization is per change and does not carry over. It covers the artifacts and the code that `tasks.md` lists, and nothing else:
 
 - It does not authorize changing `docs/specs/` requirements. A decision that changes a requirement goes through `spec-writing` first, and the maintainer owns those pages.
-- It does not authorize `docs/specs/00-prd.mdx` or `design/prototype/`. A proposed interface change is drawn as an artifact for the maintainer to look at first.
+- It does not authorize `docs/specs/00-prd.mdx` or `design/prototype/`. An interface change has its own gate, and it sits before Ready, not inside a run: see the Ready gate above.
 - It does not authorize merging, releasing, or closing an issue.
 - It does not lift any Hard Rule. Issue first still applies: no `/sdd` run starts without an open issue listing the work.
 
