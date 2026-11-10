@@ -1,6 +1,6 @@
 ---
 title: 需求文件撰寫
-description: 進入 OpenSpec 之前，怎麼用 prd-writing 寫 PRD、用 spec-writing 寫規格書：三層文件的分工、檔案結構與編號、撰寫方式、兩個 skill 的配合、待確認與衝突的處理，以及怎麼交給 /opsx:propose。
+description: 進入 OpenSpec 之前，怎麼用 prd-writing 寫 PRD、用 spec-writing 寫規格書：三層文件的分工、檔案結構與編號、撰寫方式、兩個 skill 的配合、待確認與衝突的處理，以及怎麼用 /sdd 交給 OpenSpec。
 tags: [prd, spec, prd-writing, spec-writing, sdd]
 ---
 
@@ -20,7 +20,7 @@ skill 本身的完整規則在 `.claude/skills/prd-writing/`、`.claude/skills/s
 | :--- | :--- | :--- | :--- | :--- |
 | PRD | 為什麼做、給誰用、做到哪裡、模組怎麼串 | 一個專案一份 | `prd-writing` | `docs/specs/00-prd.mdx` |
 | 規格書 | 誰能做什麼、操作後看到什麼、系統擋什麼、怎樣算做完 | 每個頁面或功能一份 | `spec-writing` | `docs/specs/NN-<module>/NN-<page>.mdx` |
-| OpenSpec change | 技術上怎麼做：proposal、spec delta、design、tasks | 每次變更一個 | `/opsx:propose` | `openspec/changes/<name>/` |
+| OpenSpec change | 技術上怎麼做：九份規劃與實作產物 | 每次變更一個 | **`/sdd`** | `openspec/changes/<name>/` |
 
 兩條規則讓三層保持一致：
 
@@ -122,7 +122,7 @@ PRD 的三張圖都從 `prd-writing` 的骨架複製、只換資料：
 
 ## 用 spec-writing 寫規格
 
-規格書一份只寫一個頁面或功能，是 `/opsx:propose` 的預設需求依據。說「幫我寫規格：」後面接需求描述、文件路徑或網址；
+規格書一份只寫一個頁面或功能，是 `/sdd` 的預設需求依據。說「幫我寫規格：」後面接需求描述、文件路徑或網址；
 需求變更來自 GitHub Issue 時，直接給 Issue 編號。範例規格是 [06-01 使用者管理](../specs/06-admin/01-user-management.mdx)。
 
 ### 提示詞範例
@@ -189,7 +189,8 @@ import PrototypeFrame from '@notes/components/prototype-frame';
 | 變更紀錄、Q&A | 因哪個 Issue 改過；規則背後的理由 | 變更紀錄必寫 |
 | 附錄：舊編號對照 | 舊規格的每個 `FR`／`AC`／`SC` 搬到哪裡 | 搬移舊規格時必寫，`pnpm check:specs` 會檢查 |
 
-待釐清清空後，規格的狀態從「草稿」改成「已定案」，才能進 `/opsx:propose`。
+待釐清清空後，規格的狀態從「草稿」改成「已定案」，才能進 `/sdd`。
+還有未決的待釐清時**不要硬進**：`sa` 會把它記成 `system-analysis.md` 的待決問題帶到停點一，但那是給「規格本來就有缺口」用的逃生門，不是跳過定案的捷徑。
 
 測試集保護（`AGENTS.md` Hard Rules 6）是「只寫業務」唯一的例外：涉及標準答案的頁面，規格用業務語言寫明「標記員能接觸到的任何地方都看不到標準答案」，
 並寫出對應的卡控與 Scenario；系統端怎麼做到不寫在規格，留給 OpenSpec change 的 design 與 spec delta。
@@ -248,29 +249,42 @@ PRD 不設待釐清專章，規格書的「待釐清」也只放這一頁自己�
 規格的狀態是「已定案」、待釐清清空後，才開 change。`openspec/config.yaml` 的 `context` 已把 `docs/specs/` 設為預設需求依據，所以一般只要：
 
 ```text
-/opsx:propose add-user-management（依規格 06-01）
+/sdd add-user-management（依規格 06-01）
 ```
 
 也可以不寫編號，用需求描述讓 agent 自己找；或另外指定其他文件，指定的文件會和 `docs/specs/` 一起當依據：
 
 ```text
-/opsx:propose add-login 依規格 01-01，另外參考 docs/meetings/2026-11-04.md 的 SSO 需求
+/sdd add-login 依規格 01-01，另外參考 docs/meetings/2026-11-04.md 的 SSO 需求
 ```
 
 開 change 之前，`AGENTS.md` 的 Issue first 一樣適用：先有列出工作項目的 open Issue，再開分支與 change。
 
+**`/sdd` 一次授權規劃與實作，中間只停兩次**（授權範圍與邊界見 `AGENTS.md` §SDD Workflow）：
+
+| 停點 | 在哪裡 | 停下來做什麼 |
+| :--- | :--- | :--- |
+| **一** | `clarification.md` 寫完（proposal 之後、specs 之前） | 需要維護者決定的項目（Q）逐題問完。明確問題（P）直接派原撰寫角色回修，**不問** |
+| **二** | apply 全部完成、`acceptance-verifier` 產出 `acceptance.md` 之後 | 維護者照報告裡的**人工驗收步驟**親自驗，確認無誤才下 `/opsx:archive` |
+
+其餘環節不問。但**故障不是關卡、故障照停**：task 描述有歧義、實作中發現規格有問題、工作超出 `tasks.md` 的範圍、指令出錯——那些代表規劃錯了，會停下來回報。
+
+只想做規劃、不要接著實作時，照舊用 `/opsx:propose`——那個 skill 的 planning boundary 明文只授權規劃，產物完成就停。
+
 ### 規格書怎麼對到 OpenSpec 產出
 
-本專案的 OpenSpec schema 是 `spec-driven`，change 產出 proposal、spec delta、design、tasks 四份：
+本專案的 OpenSpec schema 是 **`label-suite-sdd`**（`openspec/schemas/label-suite-sdd/`），change 產出**九份**。
+文件或工具類的小 change 可以帶 `--schema spec-driven` 走四份產物的舊流程（維護者 2026-11-04 裁定保留這個逃生門）。
 
 | 規格書 | OpenSpec 產出 |
 | :--- | :--- |
-| 目標、使用角色 | proposal 的 Why 與影響範圍 |
-| 業務流程 | design 的流程說明（引用規格、不重畫；跨規格的串接才補在 design） |
-| 規格（功能、欄位、`PrototypeFrame` 畫面） | design 的頁面、API 與資料模型；tasks 的實作項目 |
-| 卡控機制、邊界情況 | spec delta 的 Requirement 與 Scenario；design 的錯誤處理 |
-| 驗收標準 | spec delta 的 Scenario，沿用規格書的 Scenario 名稱；tasks 的測試項目 |
-| 待釐清 | 必須清空才開 change |
+| 目標、使用角色 | `system-analysis` 的需求依據與範圍（它**只引用** PRD §權限矩陣、不抄一份）；角色真正落地在 `system-design` §權限檢查點、`api-contract` 每個端點的角色、`ui-design` 的「無權限」狀態；`proposal` 的 Why 與影響範圍 |
+| 業務流程 | `system-analysis` **引用**規格書的業務流程章節，不重畫；跨規格、跨模組的串接才在那裡補一張圖 |
+| 規格（功能、欄位、`PrototypeFrame` 畫面） | `ui-design` 的頁面、路由與元件樹；`system-design` 的分層與資料模型異動；`api-contract` 的端點與欄位；`tasks` 的實作項目 |
+| 卡控機制、邊界情況 | spec delta 的 Requirement 與 Scenario；`api-contract` 的錯誤碼與觸發條件；**`ui-design` 的 loading／error／empty／無權限四種狀態**；`design` 的 Risks／Trade-offs |
+| 驗收標準 | spec delta 的 Scenario，**沿用規格書的 Scenario 名稱**；`system-design` 每個關鍵 Scenario 一張 Sequence Diagram；`acceptance-verifier` 逐條驗收 |
+| 待釐清 | 必須清空才開 change。真的有缺口時由 `system-analysis` 的待決問題帶到停點一 |
+| 已確認決議 | 當成已定事項沿用，**不在 change 裡重新討論**（`clarify` 第 4.1 個面向會檢查這一點） |
 
 delta 裡的每條 requirement 都要追溯到規格書，註明規格編號與 Scenario 名稱，例如「來源：06-01 停用登入中的帳號」。
 delta 和 `docs/specs/` 不一致時以 `docs/specs/` 為準：agent 會停下來，把衝突列成問題請維護者回答，不自行選邊。
