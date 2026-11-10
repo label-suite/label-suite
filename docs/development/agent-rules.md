@@ -24,7 +24,7 @@ updatedAt: '2026-11-10'
 | 跨領域（本文件） | `docs/development/agent-rules.md` | [#105](https://github.com/label-suite/label-suite/issues/105) | 本次建立 |
 | 後端分層、資料庫、背景工作 | [backend-agent-rules.md](backend-agent-rules.md) | [#106](https://github.com/label-suite/label-suite/issues/106) | 2026-11-10 建立 |
 | 授權、答案隔離、設定驅動邊界 | [security-agent-rules.md](security-agent-rules.md) | [#107](https://github.com/label-suite/label-suite/issues/107) | 2026-11-10 建立 |
-| API 契約同步、單一前端 Client | 待建置 | [#108](https://github.com/label-suite/label-suite/issues/108) | **待建置** |
+| API 契約同步、單一前端 Client | [api-agent-rules.md](api-agent-rules.md) | [#108](https://github.com/label-suite/label-suite/issues/108) | 2026-11-10 建立 |
 | 前端依賴方向、型別安全、UI 共用 | 待建置 | [#109](https://github.com/label-suite/label-suite/issues/109) | **待建置** |
 | 測試分層、雙資料庫驗證、交付證據 | 待建置 | [#110](https://github.com/label-suite/label-suite/issues/110) | **待建置** |
 

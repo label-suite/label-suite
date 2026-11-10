@@ -143,7 +143,7 @@ Full rules: [docs/development/commit-and-release.md](docs/development/commit-and
 
 ## Agent Rules Index
 
-The rules themselves live in this file. [docs/development/agent-rules.md](docs/development/agent-rules.md) explains the cross-cutting ones — why they exist, worked examples, and how each is checked — and records, source clause by source clause, which parts of the reference projects were adopted, rewritten, rejected, or are still to be adopted. Where the two disagree, this file wins; report the discrepancy to the maintainer.
+The rules themselves live in this file. The documents below explain one area each — why a rule exists, worked examples, and how each is checked — and record, source clause by source clause, which parts of the reference projects were adopted, rewritten, rejected, or are still to be adopted. They share one shape, so read any of them the same way. Where a document and this file disagree, this file wins; report the discrepancy to the maintainer.
 
 This repository has no `.claude/rules/` canon and will not get one (decided in #53). Another project's rule files are reference material only: they carry no authority here unless this file adopts them.
 
@@ -152,7 +152,7 @@ This repository has no `.claude/rules/` canon and will not get one (decided in #
 | Cross-cutting — search first, dependency direction, smallest change, no premature abstraction, conflicts, locked scope, loud failure | [docs/development/agent-rules.md](docs/development/agent-rules.md) | #105 |
 | Backend layering, database, background work | [docs/development/backend-agent-rules.md](docs/development/backend-agent-rules.md) | #106 |
 | Authorization, answer isolation, config-driven boundaries | [docs/development/security-agent-rules.md](docs/development/security-agent-rules.md) | #107 |
-| API contract sync, single frontend client | not built yet | #108 |
+| API contract sync, single frontend client | [docs/development/api-agent-rules.md](docs/development/api-agent-rules.md) | #108 |
 | Frontend dependency direction, type safety, shared UI | not built yet | #109 |
 | Test layers, dual-database verification, delivery evidence | not built yet | #110 |
 
