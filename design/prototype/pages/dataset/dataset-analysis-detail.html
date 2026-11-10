@@ -545,11 +545,18 @@ var I18N = {
        freshly mounted partial; once aggregateSharedBlocks has run, the header
        it writes is replaced and its id removed, so the key no longer reaches
        the screen. The prose note underneath comes from consistencyNotes. */
+    /* issue label-suite/label-suite#155: single_label's unit follows spec 05-02 §標記一致性
+       偏離分析 clause 3, which groups it with multi_label and multi_dim as
+       可比較句數. consistencyUnitHeader used to say 可比較樣本數 for it and won
+       at runtime, so the screen and that settled clause disagreed on one row
+       -- the clause's own justification was checked against the partials'
+       static markup, which says 可比較句數, not against what rendered. Both
+       keys now match the clause. The discrepancy is reported on #137. */
     outputTypeCol: '輸出類型',
     riskMetricCol: '主要一致性指標',
     consistencyUnitColFixed: '可比較單位數',
-    consistencyUnitName: { multi_dim:'句', multi_label:'句', entity_recognition:'span', sequence_tagging:'span', relation_identification:'標記 5 次的三元組', single_label:'樣本', single_dim:'樣本' },
-    consistencyUnitHeader: { multi_dim:'可比較句數', multi_label:'可比較句數', entity_recognition:'可比較 span 數', sequence_tagging:'可比較 span 數', relation_identification:'標記 5 次的三元組數', single_label:'可比較樣本數', single_dim:'可比較樣本數' },
+    consistencyUnitName: { multi_dim:'句', multi_label:'句', entity_recognition:'span', sequence_tagging:'span', relation_identification:'標記 5 次的三元組', single_label:'句', single_dim:'樣本' },
+    consistencyUnitHeader: { multi_dim:'可比較句數', multi_label:'可比較句數', entity_recognition:'可比較 span 數', sequence_tagging:'可比較 span 數', relation_identification:'標記 5 次的三元組數', single_label:'可比較句數', single_dim:'可比較樣本數' },
     consistencyNotes: {
       multi_dim:'以同一樣本之群體中位數為基準彙總；1.5xSTD 為觀測閾值，2xSTD 為較高偏離訊號。',
       multi_label:'分類任務以每句提交結果作為可比較單位；此區塊描述偏離現象，不直接代表標記正確性。',
@@ -916,8 +923,8 @@ var I18N = {
     outputTypeCol: 'Output Type',
     riskMetricCol: 'Primary Agreement Metric',
     consistencyUnitColFixed: 'Comparable Units',
-    consistencyUnitName: { multi_dim:'sentences', multi_label:'sentences', entity_recognition:'spans', sequence_tagging:'spans', relation_identification:'triples annotated 5 times', single_label:'samples', single_dim:'samples' },
-    consistencyUnitHeader: { multi_dim:'Comparable Sentences', multi_label:'Comparable Sentences', entity_recognition:'Comparable Spans', sequence_tagging:'Comparable Spans', relation_identification:'Triples Annotated 5 Times', single_label:'Comparable Samples', single_dim:'Comparable Samples' },
+    consistencyUnitName: { multi_dim:'sentences', multi_label:'sentences', entity_recognition:'spans', sequence_tagging:'spans', relation_identification:'triples annotated 5 times', single_label:'sentences', single_dim:'samples' },
+    consistencyUnitHeader: { multi_dim:'Comparable Sentences', multi_label:'Comparable Sentences', entity_recognition:'Comparable Spans', sequence_tagging:'Comparable Spans', relation_identification:'Triples Annotated 5 Times', single_label:'Comparable Sentences', single_dim:'Comparable Samples' },
     consistencyNotes: {
       multi_dim:'Aggregated against the group median for the same sample. 1.5xSTD is an observation threshold and 2xSTD signals stronger deviation.',
       multi_label:'For classification tasks, each submitted sentence is treated as one comparable unit. This block describes deviation, not ground-truth correctness.',
