@@ -1,3 +1,8 @@
+<!-- issue label-suite/label-suite#155 (Q13): these two values carry <strong> markup, so
+     they need data-i18n-html; under plain data-i18n applyDataI18n wrote them
+     with textContent and the tags showed up as literal text. The recommended
+     tier carries the (達標判定) mark because single-dimension scoring judges
+     on it, the opposite of multi-dimension. -->
 <section class="panel" aria-labelledby="iaaTitle">
   <div class="panel-head-row">
     <h2 class="panel-title" id="iaaTitle">IAA 報告</h2>
@@ -16,11 +21,11 @@
       <div class="iaa-threshold-row">
         <span class="iaa-threshold-item">
           <span class="t-dot t-dot-pass"></span>
-          <span id="lblSingleDimThrRec" data-i18n="singleDimQuality.thresholdRecommended">建議門檻 0.75 — <strong class="t-pass">通過</strong></span>
+          <span id="lblSingleDimThrRec" data-i18n-html="singleDimQuality.thresholdRecommended">建議門檻 0.75（達標判定）— <strong class="t-pass">通過</strong></span>
         </span>
         <span class="iaa-threshold-item">
           <span class="t-dot t-dot-fail"></span>
-          <span id="lblSingleDimThrStrict" data-i18n="singleDimQuality.thresholdStrict">嚴格門檻 0.80 — <strong class="t-fail">未達</strong></span>
+          <span id="lblSingleDimThrStrict" data-i18n-html="singleDimQuality.thresholdStrict">嚴格門檻 0.80 — <strong class="t-fail">未達</strong></span>
         </span>
       </div>
     </div>
@@ -56,7 +61,6 @@
             <th data-i18n="qualityListRank.headerSample">樣本</th>
             <th data-i18n="qualityListRank.headerScore">分歧分數</th>
             <th style="min-width:200px" data-i18n="qualityListRank.headerDetail">分歧描述</th>
-            <th data-i18n="qualityListRank.headerQueue">佇列狀態</th>
           </tr>
         </thead>
         <tbody>
@@ -64,13 +68,11 @@
             <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#05</span></td>
             <td><span class="badge badge-fail">0.58</span></td>
             <td style="white-space:normal;font-size:12px" data-i18n="singleDimListRank.sample1Detail">樣本 #05：3 位標記員對品質評分為 2、3、5，分歧達 3 分</td>
-            <td><span class="badge badge-warn" data-i18n="qualityListRank.queuePending">待審核</span></td>
           </tr>
           <tr>
             <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#02</span></td>
             <td><span class="badge badge-warn">0.41</span></td>
             <td style="white-space:normal;font-size:12px" data-i18n="singleDimListRank.sample2Detail">樣本 #02：對是否達到「可接受品質」門檻（3 分）意見不一致</td>
-            <td><span class="badge badge-neutral" data-i18n="qualityListRank.queueCompleted">已完成</span></td>
           </tr>
         </tbody>
       </table>

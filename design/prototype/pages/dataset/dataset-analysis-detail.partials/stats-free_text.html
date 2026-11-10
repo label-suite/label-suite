@@ -7,6 +7,12 @@
     </div>
   </div>
   <div style="margin-top:var(--space-md);display:grid;gap:10px;font-size:13px">
+    <!-- issue label-suite/label-suite#155 (Q10): submitted count INCLUDES blanks; the 214 in
+         the subtitle excludes them. 217 - 214 = 3 blanks, i.e. the 1.4% below. -->
+    <div style="display:flex;gap:var(--space-md)">
+      <span style="color:var(--color-text-soft);min-width:140px" id="statsFreeTextSubmittedLabel" data-i18n="freeTextStats.submittedLabel">已提交回答數</span>
+      <span style="font-family:var(--font-mono);font-weight:600">217</span>
+    </div>
     <div style="display:flex;gap:var(--space-md)">
       <span style="color:var(--color-text-soft);min-width:140px" id="statsFreeTextMeanLabel" data-i18n="freeTextStats.meanLabel">平均字數</span>
       <span style="font-family:var(--font-mono);font-weight:600">86.4</span>

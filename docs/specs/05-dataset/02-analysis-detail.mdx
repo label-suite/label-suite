@@ -4,14 +4,14 @@ description: '一個任務的分析詳情頁：同一個任務上下文底下，
 category: '規格書'
 tags: [規格書, 資料集, 已定案]
 createdAt: '2026-11-05'
-updatedAt: '2026-11-09'
+updatedAt: '2026-11-10'
 ---
 
 import PrototypeFrame from '@notes/components/prototype-frame';
 
 # 05-02 分析詳情
 
-:badge[已定案]{variant="success"} :badge[資料集]{variant="neutral"} :badge[五階段已寫完]{variant="success"} :badge[141 條舊編號全數對應]{variant="success"}
+:badge[已定案]{variant="success"} :badge[變更 #155]{variant="warning"} :badge[資料集]{variant="neutral"} :badge[五階段已寫完]{variant="success"} :badge[141 條舊編號全數對應]{variant="success"}
 
 > 來源：舊 repo `specs/dataset/017-dataset-analysis-detail/spec.md`（**141 條**），釘在 `singyichen/label-suite@faf83356`
 > 參考畫面：`design/prototype/pages/dataset/dataset-analysis-detail.html` 與同名的 `.partials/` 十六個面板
@@ -1749,7 +1749,7 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 - [x] **移除**——這份清單是獨立的觀測清單，不讀審核流程的狀態
 - [ ] 保留，並明確定義它讀的是什麼
 
-> 理由：來源明寫這份清單「**不得直接觸發或修改審核單位狀態機或爭議池的仲裁結果**」，兩者「資料來源與計算方式**互不相依**」；而畫面那一欄的值是 `待審核`／`已完成`（`design/prototype/pages/dataset/dataset-analysis-detail.html:577-578` 的 `queuePending`／`queueCompleted`）——那就是那個狀態機的值。這份清單要回答的是「哪些樣本標得不一致」，與它審到哪裡是兩件事。
+> 理由：來源明寫這份清單「**不得直接觸發或修改審核單位狀態機或爭議池的仲裁結果**」，兩者「資料來源與計算方式**互不相依**」；而畫面那一欄的值是 `待審核`／`已完成`（當時在 `dataset-analysis-detail.html` 的 `queuePending`／`queueCompleted` 兩個鍵）——那就是那個狀態機的值。<mark>那一欄與那兩個鍵已依本題於 2026-11-10 從七個 partial 與兩個語系一併移除</mark><sup>[#155](https://github.com/label-suite/label-suite/issues/155)</sup>。這份清單要回答的是「哪些樣本標得不一致」，與它審到哪裡是兩件事。
 > 依 `spec-migration.md` 通則步驟 4 的**第四個**依據（維護者明確拍板並記下日期）。來源的必要元素只有三項（樣本識別、分歧度數值、文本摘要）加說明文字，**沒有這一欄**；畫面有而來源沒有的不得默默漏掉，但牴觸來源的也不能寫成規則，所以原本只能列為待釐清。
 > **畫面要跟著改**：七個 `quality-*.html` partial 各有一欄要移除，併入 Issue #155 處理。
 
@@ -1776,6 +1776,7 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#155](https://github.com/label-suite/label-suite/issues/155) | 2026-11-10 | §已確認決議 Q20 的理由 | 「畫面那一欄的值是 `待審核`／`已完成`（`design/prototype/pages/dataset/dataset-analysis-detail.html:577-578` 的 `queuePending`／`queueCompleted`）」 | 改為過去式並註明那一欄與那兩個鍵已於 2026-11-10 移除；同時移除已失效的行號 `:577-578` | 本題（Q20，維護者 2026-11-07）；畫面側的實作見 #155 |
 | [#163](https://github.com/label-suite/label-suite/issues/163) | 2026-11-09 | §業務流程 | E3（停在這一頁之後資格失效）掛在「進入某個任務的分析詳情」那一段，而它在流程圖上是從該段的結束節點再長出一條線——骨架不允許結束節點有出邊，機械檢查因此報錯 | E3 獨立成一段「停在頁面上之後資格失效」（觸發、前置條件、主流程三步、結果），兩段各自有結束節點。**沒有新增或刪除任何規則**：E3 原本那一句成為新一段的主流程；流程圖與標記的 prompt 一併更新 | — |
 | [#137](https://github.com/label-suite/label-suite/issues/137) | 2026-11-08 | §業務流程（含 `@ai-visualize` prompt） | 標記是 `pending`；prompt 缺 `泳道`／`走查對應` | 生成流程圖（兩個 tab）並補齊兩個欄位。**沒有改任何規則**：E1 與 E3 在圖上共用同一個「導回分析列表」結束點，因為來源的 E3 明寫「依卡控處理」、就是 E1 那一道閘；A1 是預設值而不是另一種結果，所以有走查步、不佔節點 | 流程圖依既有決議繪製；**沒有新的決議** |
 | [#137](https://github.com/label-suite/label-suite/issues/137) | 2026-11-08 | §業務流程（含 `@ai-visualize` prompt）、§頁首與麵包屑、§共用五指標、§多標籤共現、§自由文字的統計、§逐型 IAA 報告的版面、§八種輸出類型各自的主指標與門檻、§邊界情況、§資料欄位、§卡控機制、§驗收標準、§待釐清、§已確認決議 | 十四題待釐清 | 全部定案，整頁改已定案；大標改為 `任務分析詳情`／`Task Analysis Detail`，E1 多一個封存觸發 | **Q2**、**Q3**、**Q6**–**Q8**、**Q10**、**Q11**、**Q13**–**Q16**、**Q23**–**Q25**（維護者裁定 2026-11-08） |

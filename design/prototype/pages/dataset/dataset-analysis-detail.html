@@ -91,6 +91,10 @@
     .t-dot-pass{background:var(--color-success)}
     .t-dot-fail{background:var(--color-error)}
     .t-dot-warn{background:var(--color-warning)}
+    /* issue label-suite/label-suite#155 (Q18): the output-type cell and the per-item type
+       tag in 異常偵測. Muted on purpose -- it identifies a row, it is not data. */
+    .row-output-type{color:var(--color-text-soft);white-space:nowrap}
+    .anomaly-type{display:inline-block;margin-left:8px;padding:0 6px;border-radius:999px;font-size:11px;font-weight:600;color:var(--color-text-soft);background:var(--color-border)}
     .t-pass{color:var(--color-success);font-weight:600}
     .t-fail{color:var(--color-error);font-weight:600}
     .t-warn{color:var(--color-warning);font-weight:600}
@@ -249,7 +253,7 @@
   <!-- Page header -->
   <header class="page-header">
     <div>
-      <h1 class="page-main-title" id="pageTitle">任務詳情</h1>
+      <h1 class="page-main-title" id="pageTitle">任務分析詳情</h1>
       <p class="page-main-subtitle" id="pageSubtitle">檢視統計總覽與品質監控</p>
     </div>
   </header>
@@ -269,17 +273,6 @@
 
   <!-- ═══ Stats Tab ══════════════════════════════════════════════ -->
   <div id="statsPanel" role="tabpanel" aria-labelledby="tabStats">
-    <!-- Empty state -->
-    <div id="statsEmpty" class="hidden empty-state empty-state-panel">
-      <div class="empty-state-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M3 3v18h18"/><path d="m7 16 4-4 4 4 4-4"/>
-        </svg>
-      </div>
-      <p class="empty-state-title" id="statsEmptyTitle">尚無標記資料</p>
-      <p class="empty-state-desc" id="statsEmptyDesc">標記員提交後，系統將自動計算統計資料。請先完成 Dry Run 並等待標記員提交。</p>
-      <a href="../task-management/task-detail.html?task_role=project_leader" class="btn btn-secondary btn-sm" id="statsEmptyBtn">前往任務詳情</a>
-    </div>
     <!-- Ready state -->
     <div id="statsReady">
       <!-- Shared metrics (FR-008) -->
@@ -288,11 +281,25 @@
         <div class="stats-metric-grid" style="margin-top:var(--space-md)">
           <div class="metric"><span id="statsLblSentence">句子數量</span><strong>1,248</strong><div class="metric-desc" id="statsDescSentence">分析母體</div></div>
           <div class="metric"><span id="statsLblToken">Token 數量</span><strong>42,816</strong><div class="metric-desc" id="statsDescToken">空格分詞</div></div>
-          <div class="metric"><span id="statsLblCompletion">完成率</span><strong style="color:var(--color-success)">87.5%</strong><div class="metric-desc" id="statsDescCompletion">1,092 / 1,248 已完成</div></div>
-          <div class="metric"><span id="statsLblSubmitted">已提交樣本</span><strong>1,092</strong><div class="metric-desc" id="statsDescSubmitted">至少 1 位已提交</div></div>
-          <div class="metric"><span id="statsLblAvgTime">平均標記時間</span><strong>48<small style="font-size:18px;font-weight:500">s</small></strong><div class="metric-desc" id="statsDescAvgTime">每句平均用時</div></div>
+          <div class="metric" data-stats-needs-submissions><span id="statsLblCompletion">完成率</span><strong style="color:var(--color-success)">87.5%</strong><div class="metric-desc" id="statsDescCompletion">1,092 / 1,248 已完成</div></div>
+          <div class="metric" data-stats-needs-submissions><span id="statsLblSubmitted">已提交樣本</span><strong>1,092</strong><div class="metric-desc" id="statsDescSubmitted">至少 1 位已提交</div></div>
+          <div class="metric" data-stats-needs-submissions><span id="statsLblAvgTime">平均標記時間</span><strong>48<small style="font-size:18px;font-weight:500">s</small></strong><div class="metric-desc" id="statsDescAvgTime">每句平均用時</div></div>
         </div>
       </section>
+      <!-- issue label-suite/label-suite#155 (Q6, maintainer 2026-11-08): the empty state
+           replaces only the per-type charts. The shared metrics above stay
+           visible, because sentence and token counts are computable before
+           anyone submits -- hiding them read as "no dataset yet". -->
+      <div id="statsEmpty" class="hidden empty-state empty-state-panel">
+        <div class="empty-state-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 3v18h18"/><path d="m7 16 4-4 4 4 4-4"/>
+          </svg>
+        </div>
+        <p class="empty-state-title" id="statsEmptyTitle">尚無標記資料</p>
+        <p class="empty-state-desc" id="statsEmptyDesc">標記員提交後，系統將自動計算統計資料。請先完成 Dry Run 並等待標記員提交。</p>
+        <a href="../task-management/task-detail.html?task_role=project_leader" class="btn btn-secondary btn-sm" id="statsEmptyBtn">前往任務詳情</a>
+      </div>
       <!-- Task-type specific stats (FR-009) -->
       <div id="statsPanelMount" aria-live="polite"></div>
     </div>
@@ -368,11 +375,18 @@ var I18N = {
   zh: {
     docTitle: '資料集分析詳情 — Label Suite（原型）',
     bcRoot: '資料集分析', bcCurrent: '任務詳情',
-    pageTitle: '任務詳情',
+    pageTitle: '任務分析詳情',
     pageSubtitle: '檢視統計總覽與品質監控',
     panelErrorTitle: '資料載入失敗',
     panelErrorDesc: '無法載入此面板的內容，請稍後再試。',
     panelErrorRetry: '重新載入',
+    /* issue label-suite/label-suite#155 (Q24, maintainer 2026-11-08): the 錯誤 state covers two
+       different causes (spec 05-02 §畫面狀態). Saying "could not be loaded"
+       when the data arrived and only the IAA could not be computed is a false
+       statement, and 重新載入 is the wrong thing to retry. */
+    calcErrorTitle: 'IAA 計算失敗',
+    calcErrorDesc: '這一輪試標的資料已經讀到了，但 IAA 算不出來。重新計算後仍失敗請聯絡維護者。',
+    calcErrorRetry: '重新計算',
     tabStats: '統計總覽', tabQuality: '品質監控',
     statsSharedTitle:'共用指標',
     statsLblSentence:'句子數量',statsDescSentence:'分析母體',
@@ -397,7 +411,7 @@ var I18N = {
     statsClsDistDesc:'各標籤在提交標記中的次數與比例（共 1,248 筆標記，多標籤任務）',
     statsClsDistNote:'平均每筆標記包含 1.96 個標籤（多標籤任務）',
     statsClsCooccTitle:'多標籤共現矩陣',
-    statsClsCooccDesc:'兩個標籤同時出現的次數。對角線為各標籤單獨出現的樣本數。',
+    statsClsCooccDesc:'兩個標籤同時出現的次數。對角線為各標籤出現的總次數。',
     statsClsCooccNote:'顏色深度反映共現頻率高低；白色格子代表極少共現。',
     classificationLabels: {
       politics: '政治',
@@ -453,6 +467,7 @@ var I18N = {
     iaaCompositeBadgeFmt: '{x}/{y} 達標', iaaExcludedSuffixFmt: ' · {N} 型排除',
     iaaPendingBadgeFmt: '—/{y} 待完成 Dry Run', iaaNotApplicableBadge: '不適用',
     iaaSmallSampleBadge: '小樣本估計', iaaNotComputable: '無法計算',
+    modRateNoReview: '尚無審核資料',
     compositeBadgeTitle: 'IAA 綜合結果',
     iaaMethodName: {
       multi_dim: 'ICC（Intraclass Correlation Coefficient）',
@@ -469,13 +484,18 @@ var I18N = {
     altHRelMetric:'指標', altHRelVal:'數值',
     altSeqStrictResult:'未達', altSeqPartialResult:'通過',
     lblV:'Valence（V）', lblA:'Arousal（A）', lblOverall:'Overall IAA', lblOverallCalc:'（V + A）/ 2',
-    lblVrec:'建議門檻 0.75 — ', lblVstr:'嚴格門檻 0.80 — ',
-    lblArec:'建議門檻 0.75 — ', lblAstr:'嚴格門檻 0.80 — ',
-    lblOrec:'建議門檻 0.75 — ', lblOstr:'嚴格門檻 0.80 — ',
+    /* issue label-suite/label-suite#155 (Q13, maintainer 2026-11-08): multi-dimension
+       scoring deliberately judges on the STRICT tier while single-dimension
+       judges on the recommended one. Both tiers and both verdicts are on
+       screen, so without this mark the reader has no way to tell which
+       verdict is the task's. */
+    lblVrec:'建議門檻 0.75 — ', lblVstr:'嚴格門檻 0.80（達標判定）— ',
+    lblArec:'建議門檻 0.75 — ', lblAstr:'嚴格門檻 0.80（達標判定）— ',
+    lblOrec:'建議門檻 0.75 — ', lblOstr:'嚴格門檻 0.80（達標判定）— ',
     tPass:'通過', tFail:'未達',
     lblClsThr:'門檻 0.80 — ',
-    lblSeqStrThr:'Strict 門檻 0.80 — ', lblSeqPartThr:'Relaxed 門檻 0.70 — ',
-    lblRelThr1:'門檻 0.75 — ', lblRelThr2:'高品質門檻 0.80 — ',
+    lblSeqStrThr:'Strict 門檻 0.80 — ', lblSeqPartThr:'Relaxed 參考值 0.70 — ',
+    lblRelThr1:'門檻 0.75 — ', lblRelThr2:'高品質參考值 0.80 — ',
     thVAName:'標記員', thVASpeed:'平均速度', thVAIaaV:'IAA_V', thVAIaaA:'IAA_A', thVADeltaV:'Δ V vs 群體', thVADeltaA:'Δ A vs 群體', thVAStatus:'狀態',
     thClsName:'標記員', thClsSpeed:'平均速度', thClsIaa:'Alpha', thClsDelta:'Δ vs 群體', thClsStatus:'狀態',
     thSeqName:'標記員', thSeqSpeed:'平均速度', thSeqIaa:'F1（strict）', thSeqDelta:'Δ vs 群體', thSeqStatus:'狀態',
@@ -518,6 +538,17 @@ var I18N = {
     anomSeqOut1Title:'樣本 #89 — 實體邊界 high_divergence 旗標', anomSeqOut1Detail:'Jordan Wu 的 span 邊界與群體中位跨度相差 3 個 token 以上；此旗標與個人風險等級分開處理。',
     anomRelSpeedTitle:'標記速度異常', anomRelOutlierTitle:'高分歧樣本', anomRelOutlierEmpty:'暫無 high_divergence 樣本',
     anomRelSpd1Title:'Jordan Wu — 標記速度過快', anomRelSpd1Detail:'平均 25s／句（門檻：≥ 45s），關係抽取任務複雜度較高',
+    /* issue label-suite/label-suite#155 (Q18, maintainer 2026-11-06/2026-11-10): the unit
+       column header is now FIXED, and the per-type unit noun moves into each
+       cell so one table can hold every output type. consistencyUnitHeader is
+       left in place only so updateConsistencyDeviationTexts keeps working on a
+       freshly mounted partial; once aggregateSharedBlocks has run, the header
+       it writes is replaced and its id removed, so the key no longer reaches
+       the screen. The prose note underneath comes from consistencyNotes. */
+    outputTypeCol: '輸出類型',
+    riskMetricCol: '主要一致性指標',
+    consistencyUnitColFixed: '可比較單位數',
+    consistencyUnitName: { multi_dim:'句', multi_label:'句', entity_recognition:'span', sequence_tagging:'span', relation_identification:'標記 5 次的三元組', single_label:'樣本', single_dim:'樣本' },
     consistencyUnitHeader: { multi_dim:'可比較句數', multi_label:'可比較句數', entity_recognition:'可比較 span 數', sequence_tagging:'可比較 span 數', relation_identification:'標記 5 次的三元組數', single_label:'可比較樣本數', single_dim:'可比較樣本數' },
     consistencyNotes: {
       multi_dim:'以同一樣本之群體中位數為基準彙總；1.5xSTD 為觀測閾值，2xSTD 為較高偏離訊號。',
@@ -573,9 +604,6 @@ var I18N = {
       headerSample: '樣本',
       headerScore: '分歧分數',
       headerDetail: '分歧描述',
-      headerQueue: '佇列狀態',
-      queuePending: '待審核',
-      queueCompleted: '已完成',
       rankingTitle: '標記員品質排名',
       rankingSubtitle: '依型別對應一致率計算方式排序；完成樣本數不足門檻者標示小樣本估計警示，但不剔除排名',
       rankHeaderRank: '名次',
@@ -679,7 +707,7 @@ var I18N = {
       methodSuffix: '— 主要指標',
       metricLabel: 'ICC（2,1）',
       calcDesc: '單一評分維度',
-      thresholdRecommended: '建議門檻 0.75 — <strong class="t-pass">通過</strong>',
+      thresholdRecommended: '建議門檻 0.75（達標判定）— <strong class="t-pass">通過</strong>',
       thresholdStrict: '嚴格門檻 0.80 — <strong class="t-fail">未達</strong>',
       altToggle: '輔助指標',
       altHeaderMetric: '指標',
@@ -713,6 +741,11 @@ var I18N = {
     freeTextStats: {
       lenTitle: '回覆長度分佈',
       lenDesc: '標記員提交的自由文字回覆字數分佈（共 214 筆有效回覆）',
+      /* issue label-suite/label-suite#155 (Q10, maintainer 2026-11-08): the source asks for the
+         submitted-answer count, which INCLUDES blanks, while lenDesc's 214 is
+         the valid count, which excludes them. Both have to be on screen, and
+         217 - 214 = 3 blanks reconciles with the 1.4% blank rate below. */
+      submittedLabel: '已提交回答數',
       meanLabel: '平均字數',
       medianLabel: '中位數字數',
       emptyLabel: '空白回覆比例',
@@ -726,11 +759,14 @@ var I18N = {
   en: {
     docTitle: 'Dataset Analysis Detail — Label Suite (Prototype)',
     bcRoot: 'Dataset Analysis', bcCurrent: 'Task Detail',
-    pageTitle: 'Task detail',
+    pageTitle: 'Task Analysis Detail',
     pageSubtitle: 'Review statistics and quality monitoring',
     panelErrorTitle: 'Failed to load data',
     panelErrorDesc: 'This panel could not be loaded. Please try again later.',
     panelErrorRetry: 'Reload',
+    calcErrorTitle: 'IAA calculation failed',
+    calcErrorDesc: 'This dry run\u2019s data was read, but the IAA could not be computed. Contact the maintainer if recomputing fails again.',
+    calcErrorRetry: 'Recompute',
     tabStats: 'Statistics', tabQuality: 'Quality Monitor',
     statsSharedTitle:'Shared Metrics',
     statsLblSentence:'Sentence Count',statsDescSentence:'Analysis population',
@@ -755,7 +791,7 @@ var I18N = {
     statsClsDistDesc:'Frequency and proportion of each label in submitted annotations (1,248 total, multi-label)',
     statsClsDistNote:'Average 1.96 labels per annotation (multi-label task)',
     statsClsCooccTitle:'Multi-label Co-occurrence Matrix',
-    statsClsCooccDesc:'Number of co-occurrences for any two labels. Diagonal = solo-label sample count.',
+    statsClsCooccDesc:'Number of co-occurrences for any two labels. Diagonal = total occurrences of each label.',
     statsClsCooccNote:'Color depth reflects co-occurrence frequency; white cells indicate rare co-occurrence.',
     classificationLabels: {
       politics: 'Politics',
@@ -811,6 +847,7 @@ var I18N = {
     iaaCompositeBadgeFmt: '{x}/{y} Passed', iaaExcludedSuffixFmt: ' · {N} type(s) excluded',
     iaaPendingBadgeFmt: '—/{y} Pending Dry Run', iaaNotApplicableBadge: 'Not applicable',
     iaaSmallSampleBadge: 'Small-sample estimate', iaaNotComputable: 'Cannot compute',
+    modRateNoReview: 'No review data yet',
     compositeBadgeTitle: 'IAA Composite Result',
     iaaMethodName: {
       multi_dim: 'ICC (Intraclass Correlation Coefficient)',
@@ -827,12 +864,12 @@ var I18N = {
     altHRelMetric:'Metric', altHRelVal:'Value',
     altSeqStrictResult:'Fail', altSeqPartialResult:'Pass',
     lblV:'Valence (V)', lblA:'Arousal (A)', lblOverall:'Overall IAA', lblOverallCalc:'(V + A) / 2',
-    lblVrec:'Recommended 0.75 — ', lblVstr:'Strict 0.80 — ',
-    lblArec:'Recommended 0.75 — ', lblAstr:'Strict 0.80 — ',
-    lblOrec:'Recommended 0.75 — ', lblOstr:'Strict 0.80 — ',
+    lblVrec:'Recommended 0.75 — ', lblVstr:'Strict 0.80 (decides) — ',
+    lblArec:'Recommended 0.75 — ', lblAstr:'Strict 0.80 (decides) — ',
+    lblOrec:'Recommended 0.75 — ', lblOstr:'Strict 0.80 (decides) — ',
     tPass:'Pass', tFail:'Fail',
     lblClsThr:'Threshold 0.80 — ',
-    lblSeqStrThr:'Strict threshold 0.80 — ', lblSeqPartThr:'Relaxed threshold 0.70 — ',
+    lblSeqStrThr:'Strict threshold 0.80 — ', lblSeqPartThr:'Relaxed reference 0.70 — ',
     lblRelThr1:'Threshold 0.75 — ', lblRelThr2:'High-quality 0.80 — ',
     thVAName:'Annotator', thVASpeed:'Avg Speed', thVAIaaV:'IAA_V', thVAIaaA:'IAA_A', thVADeltaV:'Δ V vs Group', thVADeltaA:'Δ A vs Group', thVAStatus:'Status',
     thClsName:'Annotator', thClsSpeed:'Avg Speed', thClsIaa:'Alpha', thClsDelta:'Δ vs Group', thClsStatus:'Status',
@@ -876,6 +913,10 @@ var I18N = {
     anomSeqOut1Title:'Sample #89 — high-divergence entity boundary flag', anomSeqOut1Detail:"Jordan Wu's span boundary differs from the group median by > 3 tokens; the flag stays sample-level only.",
     anomRelSpeedTitle:'Speed Anomalies', anomRelOutlierTitle:'High-divergence Samples', anomRelOutlierEmpty:'No high-divergence samples',
     anomRelSpd1Title:'Jordan Wu — Annotation speed too fast', anomRelSpd1Detail:'Avg 25s/sent (threshold: ≥ 45s); relation extraction is inherently complex',
+    outputTypeCol: 'Output Type',
+    riskMetricCol: 'Primary Agreement Metric',
+    consistencyUnitColFixed: 'Comparable Units',
+    consistencyUnitName: { multi_dim:'sentences', multi_label:'sentences', entity_recognition:'spans', sequence_tagging:'spans', relation_identification:'triples annotated 5 times', single_label:'samples', single_dim:'samples' },
     consistencyUnitHeader: { multi_dim:'Comparable Sentences', multi_label:'Comparable Sentences', entity_recognition:'Comparable Spans', sequence_tagging:'Comparable Spans', relation_identification:'Triples Annotated 5 Times', single_label:'Comparable Samples', single_dim:'Comparable Samples' },
     consistencyNotes: {
       multi_dim:'Aggregated against the group median for the same sample. 1.5xSTD is an observation threshold and 2xSTD signals stronger deviation.',
@@ -931,9 +972,6 @@ var I18N = {
       headerSample: 'Sample',
       headerScore: 'Disagreement Score',
       headerDetail: 'Disagreement Detail',
-      headerQueue: 'Queue Status',
-      queuePending: 'Pending review',
-      queueCompleted: 'Completed',
       rankingTitle: 'Annotator Quality Ranking',
       rankingSubtitle: 'Sorted by the agreement metric appropriate to this output type; annotators below the small-sample threshold are flagged but not excluded from ranking',
       rankHeaderRank: 'Rank',
@@ -1037,7 +1075,7 @@ var I18N = {
       methodSuffix: '— Primary metric',
       metricLabel: 'ICC(2,1)',
       calcDesc: 'Single scoring dimension',
-      thresholdRecommended: 'Recommended threshold 0.75 — <strong class="t-pass">Pass</strong>',
+      thresholdRecommended: 'Recommended threshold 0.75 (decides) — <strong class="t-pass">Pass</strong>',
       thresholdStrict: 'Strict threshold 0.80 — <strong class="t-fail">Fail</strong>',
       altToggle: 'Auxiliary metrics',
       altHeaderMetric: 'Metric',
@@ -1071,6 +1109,7 @@ var I18N = {
     freeTextStats: {
       lenTitle: 'Response Length Distribution',
       lenDesc: 'Character-count distribution of submitted free-text responses (214 valid responses)',
+      submittedLabel: 'Submitted responses',
       meanLabel: 'Mean length',
       medianLabel: 'Median length',
       emptyLabel: 'Empty response rate',
@@ -1427,13 +1466,40 @@ function applyStatsState() {
   var sState = params.get('s_state');
   var isEmpty = sState === 'empty';
   var emptyEl = document.getElementById('statsEmpty');
-  var readyEl = document.getElementById('statsReady');
+  var mountEl = document.getElementById('statsPanelMount');
+  /* issue label-suite/label-suite#155 (Q6, maintainer 2026-11-10): the shared metrics stay on
+     screen, but the three that cannot be computed before anyone submits show a
+     dash instead of a number. Leaving 完成率 87.5% next to 尚無標記資料 made
+     the page contradict itself. Sentence and token counts keep their values --
+     those are exactly the two the ruling's rationale names. */
+  Array.prototype.forEach.call(document.querySelectorAll('[data-stats-needs-submissions]'), function(metric) {
+    var value = metric.querySelector('strong');
+    if (value) {
+      /* The <strong> holds static markup -- no id, not in SIMPLE_IDS -- so the
+         stash taken on the first call is the real value and applyLang cannot
+         overwrite the dash. */
+      if (value.getAttribute('data-ready-value') === null) value.setAttribute('data-ready-value', value.innerHTML);
+      value.innerHTML = isEmpty ? '—' : value.getAttribute('data-ready-value');
+    }
+    var desc = metric.querySelector('.metric-desc');
+    /* The description IS i18n-driven (statsDescCompletion and friends are in
+       SIMPLE_IDS), so it is hidden rather than retyped -- setText would put
+       '1,092 / 1,248 已完成' straight back over a dash. */
+    if (desc) desc.classList.toggle('hidden', isEmpty);
+  });
+  /* issue label-suite/label-suite#155 (Q6): statsReady is never hidden any more --
+     only the per-type mount swaps with the empty state, so the shared
+     metrics stay on screen in both states. */
   if (emptyEl) emptyEl.classList.toggle('hidden', !isEmpty);
-  if (readyEl) readyEl.classList.toggle('hidden', isEmpty);
+  if (mountEl) mountEl.classList.toggle('hidden', isEmpty);
   updateStatsEmptyBtn();
 }
 
-function renderPanelLoadError(mountId) {
+/* issue label-suite/label-suite#155 (Q24): `cause` is 'load' (the partial could not be
+ * fetched) or 'calc' (the data is there, the IAA is not). Spec 05-02's 錯誤
+ * state covers both, and they need different copy and a different retry. */
+function renderPanelLoadError(mountId, cause) {
+  var isCalc = cause === 'calc';
   var mount = document.getElementById(mountId || 'qualityPanelMount');
   if (!mount) return;
   mount.innerHTML = '';
@@ -1442,14 +1508,17 @@ function renderPanelLoadError(mountId) {
   section.setAttribute('aria-live', 'polite');
   var title = document.createElement('p');
   title.className = 'panel-title';
-  title.textContent = t('panelErrorTitle');
+  title.textContent = t(isCalc ? 'calcErrorTitle' : 'panelErrorTitle');
   var desc = document.createElement('p');
   desc.className = 'panel-subtitle';
-  desc.textContent = t('panelErrorDesc');
+  desc.textContent = t(isCalc ? 'calcErrorDesc' : 'panelErrorDesc');
   var retry = document.createElement('button');
   retry.className = 'btn btn-secondary btn-sm';
   retry.type = 'button';
-  retry.textContent = t('panelErrorRetry');
+  retry.textContent = t(isCalc ? 'calcErrorRetry' : 'panelErrorRetry');
+  /* Both reload in the prototype -- there is no backend to recompute against.
+     The button's NAME is what Q24 settles; the action behind it is the
+     implementation's business (spec 05-02 only fixes the semantics). */
   retry.addEventListener('click', function() { window.location.reload(); });
   section.appendChild(title);
   section.appendChild(desc);
@@ -1764,8 +1833,13 @@ function computeAnnotatorModificationRates(taskId, outputs) {
   });
 }
 
+/* issue label-suite/label-suite#155 (Q21, maintainer 2026-11-07): a zero denominator
+ * used to fall through to pct = 0, printing '0 / 0 (0%)' -- indistinguishable
+ * on screen from '0 / 45 (0%)', which means "reviewed 45, none modified".
+ * A real 0% still prints its own numbers. */
 function modRateCellText(modified, reviewed) {
-  var pct = reviewed > 0 ? Math.round((modified / reviewed) * 100) : 0;
+  if (!(reviewed > 0)) return t('modRateNoReview');
+  var pct = Math.round((modified / reviewed) * 100);
   return modified + ' / ' + reviewed + ' (' + pct + '%)';
 }
 
@@ -1934,6 +2008,259 @@ function namespaceIds(root, suffix) {
   });
 }
 
+/* ── Q18: shared blocks cover every output type ──────────────────── */
+/* issue label-suite/label-suite#155 (Q18, maintainer 2026-11-06, shape ruled 2026-11-10).
+ *
+ * The three shared blocks (異常偵測 / 標記員風險評估 / 標記一致性偏離分析)
+ * already render ONCE per task -- they come from the primary type's partial
+ * and secondaries contribute IAA cards only (buildSecondaryIaaBlock). What was
+ * missing is that a composite task's non-primary types produced no rows at
+ * all: on T013 the 關係抽取 and 多維度評分 annotators were simply absent.
+ *
+ * So each row now carries its own 輸出類型, and rows from every type in
+ * outputs[] are merged into the one table. free_text contributes nothing --
+ * it has none of these three sections (quality-free_text.html).
+ */
+function qualityTypeLabel(type) {
+  var map = OUTPUT_TYPE_LABELS[S.lang] || OUTPUT_TYPE_LABELS.zh;
+  return map[type] || type;
+}
+
+function unitNameFor(type) {
+  var map = t('consistencyUnitName') || I18N.zh.consistencyUnitName;
+  return map[type] || '';
+}
+
+function typeCell(type) {
+  var td = document.createElement('td');
+  td.className = 'row-output-type';
+  td.textContent = qualityTypeLabel(type);
+  return td;
+}
+
+/* The unit noun moves into the cell, so one column serves every type.
+   Format ruled 2026-11-10: the number, then the unit in muted text. */
+function rewriteUnitCell(cell, type) {
+  if (!cell) return;
+  var value = (cell.textContent || '').trim();
+  var unit = unitNameFor(type);
+  cell.textContent = '';
+  var strong = document.createElement('strong');
+  strong.textContent = value;
+  cell.appendChild(strong);
+  if (unit) {
+    var span = document.createElement('span');
+    span.className = 'row-output-type';
+    span.textContent = ' ' + unit;
+    cell.appendChild(span);
+  }
+}
+
+/* The risk table cannot be merged as it stands: the metric column means a
+ * different thing per type (Alpha / ICC（2,1） / u-α / F1（strict） / Triple F1),
+ * and multi_dim splits it into TWO columns (IAA_V + IAA_A), so that type's
+ * rows carry one cell more than every other type's. Merging raw rows put each
+ * value under the wrong header and pushed multi_dim's action button into a
+ * ninth, header-less column.
+ *
+ * So the column is normalised first, exactly the way Q18 handles the unit
+ * column: one fixed header, and the metric's own name inside each cell
+ * (maintainer ruling 2026-11-10). After this every type has seven columns. */
+/* Reads the metric column's own name off a thead, without touching it. */
+function riskMetricInfo(table) {
+  var headRow = table.querySelector('thead tr');
+  if (!headRow) return null;
+  var ths = headRow.children;
+  var extra = ths.length - 7; /* 1 for multi_dim's second metric column, else 0 */
+  if (extra < 0) return null;
+  var parts = [ths[2].textContent.trim()];
+  if (extra > 0) parts.push(ths[3].textContent.trim());
+  return { name: parts.join(' / '), extra: extra };
+}
+
+/* Collapses a row's metric cells into one, with the metric's own name inside
+   it. Always called on a row that already lives in this document. */
+function normaliseRiskRow(tr, info) {
+  var cells = tr.children;
+  if (!info || cells.length < 3) return;
+  var values = [cells[2].textContent.trim()];
+  for (var k = 0; k < info.extra && cells.length > 3; k += 1) {
+    values.push(cells[3].textContent.trim());
+    tr.removeChild(cells[3]);
+  }
+  var cell = cells[2];
+  cell.textContent = '';
+  cell.removeAttribute('id');
+  var strong = document.createElement('strong');
+  strong.textContent = values.join(' / ');
+  cell.appendChild(strong);
+  var label = document.createElement('span');
+  label.className = 'row-output-type';
+  label.textContent = ' ' + info.name;
+  cell.appendChild(label);
+}
+
+function normaliseRiskHead(table, info) {
+  var headRow = table.querySelector('thead tr');
+  if (!headRow || !info) return;
+  headRow.children[2].textContent = t('riskMetricCol');
+  headRow.children[2].removeAttribute('id');
+  while (headRow.children.length > 7) headRow.removeChild(headRow.children[3]);
+}
+
+function sectionOf(root, titleId) {
+  return root.querySelector('section[aria-labelledby="' + titleId + '"]');
+}
+
+function parsePartial(html) {
+  return new DOMParser().parseFromString(html, 'text/html');
+}
+
+/* Adds the 輸出類型 header once, then tags every existing row with
+   `primary` and appends each secondary type's rows after them. */
+function mergeTableRows(mount, titleId, outputs, htmlList, mode) {
+  var isDeviation = mode === 'deviation';
+  var isRisk = mode === 'risk';
+  var section = sectionOf(mount, titleId);
+  if (!section) return;
+  var table = section.querySelector('table');
+  if (!table) return;
+  var headRow = table.querySelector('thead tr');
+  var body = table.querySelector('tbody');
+  if (!headRow || !body) return;
+
+  var primaryRisk = isRisk ? riskMetricInfo(table) : null;
+  if (isRisk) {
+    normaliseRiskHead(table, primaryRisk);
+    Array.prototype.forEach.call(body.querySelectorAll('tr'), function(tr) {
+      normaliseRiskRow(tr, primaryRisk);
+    });
+  }
+  if (isDeviation) {
+    var unitTh = headRow.children[1];
+    if (unitTh) {
+      unitTh.textContent = t('consistencyUnitColFixed');
+      unitTh.removeAttribute('id'); /* so updateConsistencyDeviationTexts cannot put the per-type name back */
+    }
+  }
+
+  var th = document.createElement('th');
+  th.textContent = t('outputTypeCol');
+  headRow.insertBefore(th, headRow.children[1] || null);
+
+  var primary = outputs[0];
+  Array.prototype.forEach.call(body.querySelectorAll('tr'), function(tr) {
+    if (isDeviation) rewriteUnitCell(tr.children[1], primary);
+    tr.insertBefore(typeCell(primary), tr.children[1] || null);
+  });
+
+  for (var i = 1; i < outputs.length; i += 1) {
+    var type = outputs[i];
+    if (type === 'free_text') continue;
+    var doc = parsePartial(htmlList[i] || '');
+    var src = sectionOf(doc, titleId);
+    if (!src) continue;
+    var srcTable = src.querySelector('table');
+    if (!srcTable) continue;
+    var srcRisk = isRisk ? riskMetricInfo(srcTable) : null;
+    var srcBody = srcTable.querySelector('tbody');
+    if (!srcBody) continue;
+    Array.prototype.forEach.call(srcBody.querySelectorAll('tr'), function(tr) {
+      /* importNode, not cloneNode: the parsed partial is a separate Document,
+         and these rows then get nodes created by THIS document appended into
+         them (the type cell, the metric label). */
+      var row = document.importNode(tr, true);
+      /* Localise with the SOURCE type's own keys before namespacing, then
+         namespace the ids so applySimpleIds cannot overwrite these cells with
+         the primary type's values and no id ends up duplicated. */
+      applyDataI18n(row);
+      namespaceIds(row, type);
+      if (isRisk) normaliseRiskRow(row, srcRisk);
+      if (isDeviation) rewriteUnitCell(row.children[1], type);
+      row.insertBefore(typeCell(type), row.children[1] || null);
+      body.appendChild(row);
+    });
+  }
+}
+
+/* 異常偵測 is a pair of lists, not a table, so each ITEM carries the tag. */
+function mergeAnomalyGroups(mount, outputs, htmlList) {
+  var section = sectionOf(mount, 'anomalyTitle');
+  if (!section) return;
+  var titles = section.querySelectorAll('.anomaly-group-title');
+  if (!titles.length) return;
+
+  function tag(item, type) {
+    var body = item.querySelector('.anomaly-title') || item;
+    var badge = document.createElement('span');
+    badge.className = 'anomaly-type';
+    badge.textContent = qualityTypeLabel(type);
+    body.appendChild(badge);
+  }
+  function listAfter(title) {
+    var el = title.nextElementSibling;
+    return (el && el.classList.contains('anomaly-list')) ? el : null;
+  }
+
+  Array.prototype.forEach.call(titles, function(title) {
+    var list = listAfter(title);
+    if (!list) return;
+    Array.prototype.forEach.call(list.querySelectorAll('.anomaly-item'), function(item) {
+      tag(item, outputs[0]);
+    });
+  });
+
+  for (var i = 1; i < outputs.length; i += 1) {
+    var type = outputs[i];
+    if (type === 'free_text') continue;
+    var doc = parsePartial(htmlList[i] || '');
+    var src = sectionOf(doc, 'anomalyTitle');
+    if (!src) continue;
+    var srcTitles = src.querySelectorAll('.anomaly-group-title');
+    Array.prototype.forEach.call(titles, function(title, idx) {
+      var srcTitle = srcTitles[idx];
+      if (!srcTitle) return;
+      var srcList = srcTitle.nextElementSibling;
+      if (!srcList || !srcList.classList || !srcList.classList.contains('anomaly-list')) return;
+      var target = listAfter(title);
+      if (!target) {
+        /* The primary type had no entries in this group, so it rendered an
+           empty state. A secondary type with entries replaces it. */
+        target = document.createElement('ul');
+        target.className = 'anomaly-list';
+        var placeholder = title.nextElementSibling;
+        if (placeholder && placeholder.classList && placeholder.classList.contains('empty-state')) {
+          title.parentNode.replaceChild(target, placeholder);
+        } else {
+          title.parentNode.insertBefore(target, title.nextSibling);
+        }
+      }
+      Array.prototype.forEach.call(srcList.querySelectorAll('.anomaly-item'), function(item) {
+        var clone = document.importNode(item, true); /* see mergeTableRows */
+        applyDataI18n(clone);
+        /* The anomaly items carry no data-i18n -- their text is keyed by id
+           through SIMPLE_IDS, and applySimpleIds has already run by now and
+           matches un-suffixed ids only. So translate by id BEFORE namespacing,
+           or these merged rows stay in Chinese when the page is in English. */
+        Array.prototype.forEach.call(clone.querySelectorAll('[id]'), function(el) {
+          if (SIMPLE_IDS.indexOf(el.id) === -1) return;
+          var value = t(el.id);
+          if (typeof value === 'string') el.textContent = value;
+        });
+        namespaceIds(clone, type);
+        tag(clone, type);
+        target.appendChild(clone);
+      });
+    });
+  }
+}
+
+function aggregateSharedBlocks(mount, outputs, htmlList) {
+  mergeTableRows(mount, 'annotatorTitle', outputs, htmlList, 'risk');
+  mergeTableRows(mount, 'consistencyTitle', outputs, htmlList, 'deviation');
+  mergeAnomalyGroups(mount, outputs, htmlList);
+}
+
 function buildSecondaryIaaBlock(html, type) {
   var doc = new DOMParser().parseFromString(html, 'text/html');
   var section = doc.querySelector('section[aria-labelledby="iaaTitle"]');
@@ -1955,11 +2282,17 @@ function buildSecondaryIaaBlock(html, type) {
 
 function loadQualityPanel() {
   var mount = document.getElementById('qualityPanelMount');
+  /* issue label-suite/label-suite#155 (Q24): the 計算失敗 state owns the whole mount -- no
+     partial is fetched, because the failure is not a loading failure. */
+  if (S.qState === 'report_failed') {
+    renderPanelLoadError('qualityPanelMount', 'calc');
+    return Promise.resolve();
+  }
   var taskMeta = TASK_META[S_ROUTE.taskId] || TASK_META[DEFAULT_TASK_ID];
   var outputs = (taskMeta && taskMeta.outputs && taskMeta.outputs.length) ? taskMeta.outputs : [S.type];
   if (!mount) return Promise.resolve();
   mount.innerHTML = '';
-  var finish = function() {
+  var finish = function(htmlList) {
     applySimpleIds(mount);
     applyDataI18n(mount);
     updateLowConsistencyCountBadge();
@@ -1972,6 +2305,12 @@ function loadQualityPanel() {
     applySingleLabelIaaCard();
     syncIaaCardStates(mount);
     applyAnnotatorModificationRates();
+    /* issue label-suite/label-suite#155 (Q18): after the calls above have localised the
+       primary type's rows, but BEFORE syncRoleUi and wireQualityPanelInteractions
+       -- the merged-in rows carry their own role-gated buttons, so they have to
+       exist before those two run or they keep the partial's default state and
+       stay unwired. */
+    aggregateSharedBlocks(mount, outputs, htmlList || []);
     syncRoleUi();
     wireQualityPanelInteractions();
   };
@@ -1983,13 +2322,15 @@ function loadQualityPanel() {
         if (!response.ok) throw new Error('Failed to load panel partial: ' + path);
         return response.text();
       })
-      .then(function(html) { mount.innerHTML = html.trim(); finish(); })
+      .then(function(html) { mount.innerHTML = html.trim(); finish([html]); })
       .catch(function() { renderPanelLoadError(); });
   }
   /* Composite task: 區塊A per-type IAA cards (outputs[] order, primary mounted in
      full then secondaries appended as IAA-only cards) followed by 區塊B — the
-     primary type's shared anomaly/risk/consistency sections, which stay singular
-     per task (spec.md:293-322). */
+     shared anomaly/risk/consistency sections, which stay singular per task
+     (spec.md:293-322) but, since issue label-suite/label-suite#155 (Q18), carry rows for EVERY
+     type in outputs[] with an 輸出類型 column. They used to show the primary
+     type's rows only, so a composite task's other annotators were absent. */
   return Promise.all(outputs.map(function(type) {
     return fetch(QUALITY_PANEL_PATHS[type], { cache: 'no-store' })
       .then(function(r) { if (!r.ok) throw new Error('Failed to load panel partial: ' + type); return r.text(); });
@@ -2008,7 +2349,7 @@ function loadQualityPanel() {
         insertAfter = block;
       }
     }
-    finish();
+    finish(htmlList);
   }).catch(function() { renderPanelLoadError(); });
 }
 
@@ -2030,7 +2371,12 @@ function applyTypeContent() {
 
 /* ── Quality state ──────────────────────────────────────────────── */
 function applyQualityState() {
-  var isEmpty = S.qState !== 'ready';
+  /* issue label-suite/label-suite#155 (Q24): report_failed is the 錯誤 state, not an empty one
+     (spec 05-02 §畫面狀態), so qualityReady stays visible and the mount shows
+     the calculation-failure copy. The mount is written by loadQualityPanel
+     alone -- rendering it here would be overwritten, because applyTypeContent
+     starts the partial fetch asynchronously just before this runs. */
+  var isEmpty = S.qState !== 'ready' && S.qState !== 'report_failed';
   document.getElementById('qualityEmpty').classList.toggle('hidden', !isEmpty);
   document.getElementById('qualityReady').classList.toggle('hidden', isEmpty);
   if (isEmpty) {
@@ -2050,12 +2396,36 @@ function applyQualityState() {
 }
 
 /* ── Tabs ────────────────────────────────────────────────────────── */
+/* issue label-suite/label-suite#155 (Q4, maintainer 2026-11-08): built from state only, never
+ * from the incoming query string, so an unknown condition is dropped by
+ * construction rather than by a delete list. This is the shape 05-01 already
+ * uses (dataset-analysis-list.js syncUrl); the two pages used to disagree, so
+ * a user moving between them saw the query string cleaned on one and kept on
+ * the other.
+ *
+ * q_state and s_state are PROTOTYPE-ONLY demo switches -- they pick which
+ * screen state to show (waiting / failed / empty) and the spec does not
+ * mention either. The maintainer ruled on 2026-11-10 that they are excluded
+ * from the whitelist rule rather than dropped, because dropping them breaks
+ * the prototype's own state switcher. A real product has neither parameter:
+ * do NOT carry them into the implementation. */
+/* s_state only: q_state is written from S.qState below, so it must not also
+   be copied from the incoming URL. Both are prototype-only all the same. */
+var PROTOTYPE_ONLY_PARAMS = ['s_state'];
+
 function syncUrlState() {
-  var params = new URLSearchParams(window.location.search);
+  var incoming;
+  try { incoming = new URLSearchParams(window.location.search); } catch (e) { incoming = null; }
+  var params = new URLSearchParams();
   params.set('task_id', S_ROUTE.taskId);
   params.set('tab', S.tab);
   if (S.qState !== 'ready') params.set('q_state', S.qState);
-  else params.delete('q_state');
+  if (incoming) {
+    PROTOTYPE_ONLY_PARAMS.forEach(function(key) {
+      var value = incoming.get(key);
+      if (value) params.set(key, value);
+    });
+  }
   window.history.replaceState({}, '', window.location.pathname + '?' + params.toString());
 }
 
@@ -2116,11 +2486,17 @@ function applyRouteTask(taskId) {
       window.location.href = './dataset-analysis-list.html?invalid_task=1';
       return;
     }
-    applyRouteTask(routeTaskId);
+    /* issue label-suite/label-suite#155 (Q24): q_state is read BEFORE applyRouteTask, which
+       starts the first loadQualityPanel. Read after it, that first load still
+       saw the default 'ready', fetched the partials, and its resolve -- always
+       later than this synchronous init -- overwrote the 計算失敗 panel with a
+       complete normal one. 'report_failed' is the demo route to that copy; it
+       is the 錯誤 state, not an empty one. */
     var qState = params.get('q_state');
-    if (qState === 'dry_run_in_progress' || qState === 'report_pending' || qState === 'report_generating' || qState === 'ready') {
+    if (qState === 'dry_run_in_progress' || qState === 'report_pending' || qState === 'report_generating' || qState === 'report_failed' || qState === 'ready') {
       S.qState = qState;
     }
+    applyRouteTask(routeTaskId);
   } catch(e) {
     applyRouteTask(DEFAULT_TASK_ID);
   }
