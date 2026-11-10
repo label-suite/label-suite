@@ -18,6 +18,11 @@ tags: [openspec, sdd, schema, fullstack-sdd]
 | openspec 版本 | 本專案 `@fission-ai/openspec` 1.14.1；scaffold 的 skill 產自 1.15.0 |
 | 本專案程式現況 | `backend/`、`frontend/` 都還不存在，只有 `docs/`、`design/prototype/`、`openspec/`、`scripts/` |
 
+> **本文件是 #47 當時的評估與盤點，不是現況。** 文內各張對照表寫「尚未定案／由骨架 change 拍板／要等…定案」的技術項目，
+> **多數已由維護者 2026-11-10 裁定**：後端模組內分層 `app/modules/<module>/`、成功回應包一層 envelope、前綴 `/api/v1`、
+> React 19、`pages/` 加 `features/`、shadcn/ui 放 `components/ui/`、前端型別與 client 用 **Orval**（輸出 `frontend/src/api/generated/`）。
+> 現況一律以 [architecture.md](architecture.md) §前端、§技術選型 與 §待決清單 為準；下面 [§七、待決問題](#七待決問題) 已逐列更新。
+
 ## 決議
 
 採用 fullstack-sdd 的完整九份產物流程，不分階段導入。人工關卡只留兩個：
@@ -137,11 +142,11 @@ propose 之後那一次要靠下面第三節第一項的做法解除。
 | `openspec/config.yaml` 的「結構」「提交」「分支」 | meta repo：`api/`、`web/` 是各自獨立的 git repo，一個 commit 不跨 repo | 單一 repo，提交規則在 `AGENTS.md` |
 | `rules.tasks` | `[@backend-developer]`、`[@frontend-developer]`、`[@dba]`、`[@technical-writer]` 四個角色標記；收尾 task 固定是 `npm run contract:sync`；JSDoc 依 `.claude/rules/jsdoc.md` | 角色標記可沿用；指令換成 `uv`／`pnpm`；JSDoc 那條刪掉 |
 | `operations.apply`／`archive` | `npm run lint`、`npm run check`、`eslint-plugin-jsdoc` | 本專案目前只有 `pnpm check:specs`、`pnpm test:scripts` |
-| `templates/system-design.md` | `ExampleController` → `ExampleService` → `ExampleEntity` 的分層、`ApiResponseDto` 回應包裝 | FastAPI 的 Router → Service → Repository／Model，回應包裝由骨架 change 拍板 |
+| `templates/system-design.md` | `ExampleController` → `ExampleService` → `ExampleEntity` 的分層、`ApiResponseDto` 回應包裝 | FastAPI 的 Router → Service → Repository／Model；回應包裝**已裁定為包一層 envelope**（2026-11-10） |
 | `templates/api-contract.md` | response 寫「`data` 內容」，預設有統一包裝 | 同上 |
 | `templates/ui-design.md` | shadcn 元件與語意 token | `design/prototype/assets/tokens.css` 與 `label-suite-design` skill |
 | `sd` agent | NestJS 分層、TypeORM、`ApiResponseDto`、`@nestjs/swagger`、必讀 `api/src/modules/`、`api/src/core/auth/`、`api/openapi.json` | 整份改寫成 FastAPI |
-| `ui-ux` agent | React 19 加 Vite、Orval 的 TanStack Query hooks、shadcn、`lucide-react`、必讀 `web/src/app/`、`web/src/components/ui/`、`web/src/styles/themes/` | 整份改寫，但前端框架尚未定案 |
+| `ui-ux` agent | React 19 加 Vite、Orval 的 TanStack Query hooks、shadcn、`lucide-react`、必讀 `web/src/app/`、`web/src/components/ui/`、`web/src/styles/themes/` | 整份改寫；前端框架與元件庫**已於 2026-11-10 裁定**（React 19、shadcn/ui 放 `components/ui/`） |
 | `acceptance-verifier` agent | `docker compose up -d`、`npm run migration:run`、`POST /dev/auth/token`、Playwright 寫在 `web/e2e/`、`npm run contract:sync`、`npm run check` | 驗收骨架照留，指令全部換，並加人工驗收步驟 |
 | `backend-developer`、`frontend-developer`、`dba`、`technical-writer`、`code-reviewer` | 綁 TypeScript 生態與 `.claude/rules/*.md` | 後端四個改 Python 生態；全部把規則引用改成 `AGENTS.md` |
 
@@ -220,9 +225,9 @@ scaffold 把 `acceptance-verifier` 放在 `operations.archive`，是歸檔前才
 | `clarification` | 照搬骨架，面向加兩項 | 見下一節 |
 | `proposal`／`specs`／`design` | 照搬 | 與 `spec-driven` 的差異只有三句，都與技術棧無關 |
 | `tasks` | 小改 | 角色標記沿用；契約同步指令換成 FastAPI 版，JSDoc 那條刪掉 |
-| `system-design` | 改寫 | 分層換成 FastAPI 的 Router → Service → Repository／Model，migration 換 Alembic，回應包裝由骨架 change 拍板 |
+| `system-design` | 改寫 | 分層換成 FastAPI 的 Router → Service → Repository／Model，migration 換 Alembic；回應包裝**已裁定為包一層 envelope**（2026-11-10） |
 | `api-contract` | 改寫 | 骨架（端點、角色、錯誤碼、遮蔽欄位）通用；operationId 在 FastAPI 預設是由函式名與路徑組出來的長字串，要用 `generate_unique_id_function` 固定成「動詞加資源」才能當交接依據 |
-| `ui-design` | 改寫，含待決項 | 四種狀態、資料來源、元件樹的骨架通用；shadcn 與 Orval 的部分要等前端框架與元件庫定案 |
+| `ui-design` | 改寫 | 四種狀態、資料來源、元件樹的骨架通用；shadcn 與 Orval **已於 2026-11-10 裁定**，不再是待決項 |
 
 不需要的部分：`.claude/rules/*.md` 的引用、`AUTH_MODE=dev` 的 `POST /dev/auth/token`、
 TypeORM 的 migration 慣例、`ApiResponseDto` 這個字面名稱、meta repo 的提交與分支規則。
@@ -312,8 +317,10 @@ scaffold 是八項。本專案加兩項，對應 `AGENTS.md` 的 Hard Rule：
 | :--- | :--- | :--- |
 | ~~1~~ | ~~schema 的名字，以及它是不是 `openspec/config.yaml` 的預設~~ | **已定案（維護者 2026-11-04）**：名稱 `label-suite-sdd`，**就是預設**。落地於 #51 |
 | ~~2~~ | ~~小型 change（文件、工具）要不要保留 `--schema spec-driven` 的逃生門~~ | **已定案（維護者 2026-11-04）**：**保留**。實測：不帶 `--schema` 走 9 份產物，帶 `--schema spec-driven` 走 4 份。落地於 #51 |
-| 3 | FastAPI 的分層、回應包裝格式、`generate_unique_id_function` 策略、auth 實作層 | 由 `backend/` 骨架 change 的 `system-design` 在停點一拍板 |
-| 4 | 前端框架與元件庫 | 第一個前端 change 之前；在那之前 `ui-design` 寫「本次無 UI 變更」 |
+| ~~3~~ | ~~FastAPI 的分層、回應包裝格式、`generate_unique_id_function` 策略~~ | **已定案**：分層、回應包裝與前綴由**維護者 2026-11-10 裁定**（模組內分層 `app/modules/<module>/`、包一層 envelope、`/api/v1`）；operationId 策略由 [#51](https://github.com/label-suite/label-suite/issues/51) 落地 |
+| 3' | **auth 的實作層次**（認證與授權 dependency 的掛點細節） | 身分來源與 CSRF 已由 [#107](https://github.com/label-suite/label-suite/issues/107) 落地（只認 httpOnly cookie、綁 session 的 CSRF token）；剩下的掛點細節由 `backend/` 骨架 change 的 `system-design` 在停點一確認 |
+| ~~4~~ | ~~前端框架與元件庫~~ | **已定案（維護者 2026-11-10）**：React 19、`pages/` 加 `features/`、shadcn/ui 放 `components/ui/`、前端型別與 client 用 Orval。`ui-design` **照常撰寫**，不再寫「本次無 UI 變更」 |
+| 5 | **Storybook** | 仍待決（`architecture.md` §待決清單 第 10 列）。第一個前端 change 之前決定 |
 
 ## 驗證紀錄
 

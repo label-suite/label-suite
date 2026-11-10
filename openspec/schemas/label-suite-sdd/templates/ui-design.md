@@ -34,6 +34,7 @@ PageName
 ## 元件與 design token
 
 <!-- token 以 design/prototype/assets/tokens.css 與 label-suite-design skill 為唯一來源，**不寫色碼、不自訂間距**。
-     框架依 ADR-004（React 加 Vite）；**只有元件庫尚未定案**（見 docs/development/architecture.md §前端），
-     所以元件寫成語意描述（例如「主要按鈕」「資料表」），不要寫成某個元件庫的 API。
+     框架依 ADR-004 加 2026-11-10 裁定（React 19 加 Vite、目錄分層 pages/ 加 features/、元件庫 shadcn/ui 放 components/ui/，
+     見 docs/development/architecture.md §前端）；**只有 Storybook 仍待決**，
+     元件以語意描述為主（例如「主要按鈕」「資料表」），需要時可指名 shadcn/ui 的元件，不貼實作程式碼。
      圖示統一 Lucide。 -->

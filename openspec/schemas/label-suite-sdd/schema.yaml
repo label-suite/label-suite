@@ -27,7 +27,8 @@ artifacts:
       畫到 Router 回傳回應為止，不含畫面。
       寫出資料模型異動（新表、欄位、索引）與**Alembic migration 是否可逆**、以及權限檢查點。
       schema 只由 Alembic 管理；SQLite（Lite）與 PostgreSQL 都要能升級，寫出兩者的差異處。
-      分層與回應包裝的細節若尚未定案，寫成提案並列進待決問題，由 clarification 在停點一拍板。
+      分層與回應包裝都已定案（維護者 2026-11-10 裁定）：**模組內分層** `app/modules/<module>/`、成功回應**包一層 envelope**。
+      照這兩項寫，不要再列成待決問題；其他真正還沒定的細節才寫成提案，由 clarification 在停點一拍板。
     requires:
       - system-analysis
 
@@ -40,8 +41,8 @@ artifacts:
       loading／error／empty／無權限四種狀態的呈現、被遮蔽欄位的呈現方式，
       以及用到的元件與語意 design token（**不寫色碼**）。
       畫面長相以 `design/prototype/pages/` 為準；token 以 `design/prototype/assets/tokens.css` 與
-      `label-suite-design` skill 為唯一來源，不自行定義色值或間距。前端元件庫尚未定案，
-      元件名稱寫成語意描述（例如「主要按鈕」）而不是某個元件庫的 API。
+      `label-suite-design` skill 為唯一來源，不自行定義色值或間距。前端目錄分層與元件庫已定（`pages/` 加 `features/`、shadcn/ui 的元件放 `components/ui/`，維護者 2026-11-10 裁定），
+      元件以語意描述為主（例如「主要按鈕」），需要時可指名 shadcn/ui 的元件，不貼實作程式碼。
       沒有 UI 變更（例如純後端 repo）就只寫一行「本次無 UI 變更」。
     requires:
       - system-analysis
@@ -56,9 +57,8 @@ artifacts:
       錯誤碼與觸發條件、需要的角色、會被遮蔽的欄位與遮蔽後的值。
       operationId 由 FastAPI 的 `generate_unique_id_function` **固定成「動詞加資源」**（例 `listUsers`、`getUser`），**不手寫、不逐個覆寫**，
       所以這份文件寫的 operationId 必須與那個策略算出來的一致。
-      成功回應的統一格式（要不要包一層 envelope）尚未定案：寫成提案並列進待決問題，
-      由 clarification 在停點一拍板，拍板前不要假設某一種格式。
-      204 無 body、檔案與串流的端點是例外，不套用統一格式。
+      成功回應**包一層 envelope**、路徑前綴一律 `/api/v1`（兩項都是維護者 2026-11-10 裁定），照這樣寫、不再列成待決問題。
+      **204 無 body、檔案與串流的端點是明文例外**，不套用 envelope；屬於例外的端點要在這份文件寫出它為什麼是例外。
       這份是前後端同時開工的依據；實作後由後端產生的 openapi.json 必須與它一致。
       沒有 API 變更就只寫一行「本次無 API 變更」。
     requires:

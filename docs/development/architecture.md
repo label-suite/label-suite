@@ -307,13 +307,15 @@ FastAPI 預設的 422 `RequestValidationError` 不在這個契約內，需要本
 
 | 面向 | 做法 | ADR |
 | :--- | :--- | :--- |
-| 框架 | React 加 Vite 的 SPA，TypeScript strict，禁止 `any`（Hard Rule 7） | 004 |
+| 框架 | **React 19** 加 Vite 的 SPA，TypeScript strict，禁止 `any`（Hard Rule 7）。版本由 2026-11-10 裁定（ADR-004 的 React 18 被覆寫），同 §技術選型 | 004 |
 | 路由 | React Router v6 | 004 |
 | 伺服器狀態 | TanStack Query；表單狀態與純 UI 狀態分開放 | 004 |
+| 目錄分層 | `pages/` 加 `features/`（2026-11-10 裁定，覆寫 ADR-011 的垂直功能切片） | 011 |
 | 元件庫 | shadcn/ui 當原語，元件以原始碼形式放進 `components/ui/`（2026-11-10 裁定）。**Storybook 仍待決** | 016 |
 | 圖示 | **只用** Lucide（`lucide-react`）。不得加入其他圖示庫，不得用 emoji 或自己畫的 SVG 當圖示 | 030 |
 | design token | 只用語意 token，色值只寫在主題檔，見 `label-suite-design` skill 與 `design/prototype/assets/tokens.css` | 016、030 |
 | 權限 | 前端隱藏按鈕只是體驗，權限一律由後端擋 | 021、037 |
+| API client 與型別 | **Orval**，由 FastAPI 匯出的 `openapi.json` 產生到 `frontend/src/api/generated/`（TanStack Query hooks、型別、MSW mock）；Orval 的 mutator 就是那道單一 HTTP 邊界（維護者 2026-11-10 裁定，紀錄在 [#108 的這則留言](https://github.com/label-suite/label-suite/issues/108#issuecomment-6763329139)） | — |
 
 Lucide 的例外：prototype 的 HTML 必然把圖示內嵌成 SVG（設計層沒有 npm），只要每個字形都複製自真實的 Lucide 圖示就允許；
 品牌與 logo 標記（彩色 logo、banner、Google SSO 的 G）不受這條限制。
@@ -377,7 +379,7 @@ image 在 `release` 建一次、不重建，`main` 合併後打 `vX.Y.Z` 並在 
 | 12 | **ADR-015 與 PRD 的範圍外衝突。** 015 要做角色導向的漸進式 onboarding；本 repo PRD 的「範圍外」寫「說明按鈕（平台說明入口）：這期不做」 | onboarding 與說明入口是不是同一件事沒有界定 | **已裁定（維護者 2026-11-10 裁定）：空狀態與情境提示算在範圍內**（已在 18 頁裡的 11 頁）；ADR-015 的導覽與角色導向漸進揭露**不做**。PRD §範圍外 要補一句把「說明按鈕」與「情境提示」分開，改動交給 #85 |
 | 13 | **觀測性堆疊對研究原型可能過重。** ADR-018（Prometheus 加 Grafana）、019（`ai_runs`）、020（Sentry）各自是一套；PRD 說平台定位是研究原型、不是生產規模服務，範圍外包含大規模並發壓力測試 | 三套都做會吃掉相當多實作與維運成本 | **已裁定（維護者 2026-11-10 裁定）：只做 `ai_runs`（ADR-019）**；ADR-018 與 ADR-020 本期不做。`audit_events`（032）與授權（037）是功能需求，不在這個取捨裡 |
 | 14 | **ADR-025 的 Bruno 與新流程職責重疊。** Bruno 是手動維護的 API collection，還帶一條 pre-PR 硬關卡；本 repo 的 `api-contract.md` 是規劃產物、`openapi.json` 由 FastAPI 自動產生 | 同一份 API 資訊要維護三個地方 | **已裁定（維護者 2026-11-10 裁定）：保留但降級成可選的手動工具，拿掉 pre-PR 硬關卡**。唯一的契約真相是 `api-contract.md` 加 `openapi.json` |
-| 15 | **前端細節原本尚未定案（已於 2026-11-10 裁定）。** ADR-004 寫 React 18（scaffold 是 19）；ADR-011 的垂直功能切片與 scaffold 的 `pages/` 加 `features/` 不同；ADR-016 的 shadcn 元件放 `frontend/src/shared/ui/`，與 scaffold 的 `components/ui/` 不同 | `ui-ux` 與 `frontend-developer` agent 寫不完整（#53） | **已裁定（維護者 2026-11-10 裁定）：照 scaffold——React 19、`pages/` 加 `features/`、shadcn/ui 放 `components/ui/`**。ADR-004、011、016 三份記為被覆寫；#53 那兩個 agent 要回頭補上 |
+| 15 | **前端細節原本尚未定案（已於 2026-11-10 裁定）。** ADR-004 寫 React 18（scaffold 是 19）；ADR-011 的垂直功能切片與 scaffold 的 `pages/` 加 `features/` 不同；ADR-016 的 shadcn 元件放 `frontend/src/shared/ui/`，與 scaffold 的 `components/ui/` 不同 | `ui-ux` 與 `frontend-developer` agent 寫不完整（#53） | **已裁定（維護者 2026-11-10 裁定）：照 scaffold——React 19、`pages/` 加 `features/`、shadcn/ui 放 `components/ui/`**。ADR-004、011、016 三份記為被覆寫；**#53 那兩個 agent（`ui-ux`、`frontend-developer`）已於 [#108](https://github.com/label-suite/label-suite/issues/108) 補上**，連同其餘仍寫成待決的流程產物一起 |
 
 ## 待決清單
 

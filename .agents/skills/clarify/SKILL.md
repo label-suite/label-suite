@@ -139,10 +139,10 @@ description: 釐清 OpenSpec change 規劃產物（system-analysis、system-desi
 - [ ] 技術選型是否符合 `openspec/config.yaml` `context` 與 `docs/development/architecture.md` 列出的技術棧？不符合的地方要列出
 - [ ] 是否依賴尚未存在的功能？若有，是否標註為前置依賴？
 - [ ] 是否與既有架構衝突？**`backend/` 與 `frontend/` 目前都還不存在**，所以「與既有慣例衝突」在骨架 change 之前多半不適用，改為檢查「有沒有假設一個還不存在的結構」
-- [ ] **還沒定案的事有沒有被偷偷定掉**：逐列對過 `architecture.md` §待決清單（**九列**），只要這次的 change 碰到其中任何一列，規劃產物就該把它寫成提案或待決，不是寫成結論。
-      常碰到的是第 1 列（後端目錄分層）、第 2 列（成功回應的統一格式）、第 3 列（`/api/v1` 前綴）、第 8 列（前端版本、目錄分層與元件庫）；
-      但**第 4、5、6、7 列也會被順手定掉**——Lite 層沒有 Resend key 時的替代方案（使用者管理相關 change 之前要決定）、onboarding 與說明入口的界線、觀測性要做哪幾套、**Bruno 是否保留（第一個 API change 之前要決定，而這個關卡就在那個 change 的路上）**。
-      另有一件**不在那張表上**：前端的型別與 client 生成工具，出處是 `docs/development/openspec-fullstack-sdd.md` §四
+- [ ] **待決與已裁定都要對過**：`architecture.md` §待決清單 共**十列**，第 1 到第 8 列已由**維護者 2026-11-10 裁定**，只剩第 9 列（ADR-029／033／036 與 README 索引的修訂，由維護者在個人 repo 處理）與第 10 列（ADR-016 的 Storybook）仍待決。所以這一關要查兩個反方向的錯：
+      （a）**還沒定的被偷偷定掉**——這次的 change 碰到第 9、10 列時，規劃產物要寫成提案或待決，不是寫成結論；
+      （b）**已裁定的被當成還沒定**——第 1 到第 8 列（後端模組內分層、成功回應包 envelope、`/api/v1` 前綴、Lite 層無 Resend key 的降級、onboarding 的界線、只做 `ai_runs`、Bruno 降級成可選工具、前端 React 19 加 `pages/` 與 `features/` 加 shadcn/ui）若又被列成待決問題，就是把拍過的板重新搬上停點一，照樣要指出來。
+      原本列在表外的「前端型別與 client 生成工具」也**已裁定：Orval**，輸出 `frontend/src/api/generated/`（見 `architecture.md` §前端），不再是待決
 - [ ] task 數量與粒度是否合理？
 
 #### 4.5 邊界情況

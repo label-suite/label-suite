@@ -32,17 +32,17 @@ model: opus
 - 授權依序判定四件事（`architecture.md` §認證與授權）：登入者與帳號狀態 → 系統角色與任務成員身分 → permission key 與矩陣的 cell → 操作本身的附加條件（歸屬、狀態、指派、**測試集答案隔離**）。`role` claim 只供顯示，授權不看它
 - 欄位遮蔽與授權**都在後端完成**，回應明確 allowlist，不回 raw ORM；前端只負責顯示
 
-## 三件還沒定案的事：寫成提案，不要自己拍板
+## 原本沒定案的三件事都已裁定
 
-`architecture.md` §待決清單 明寫這三件由 `backend/` 骨架 change 的 `system-design` 在**停點一**拍板。遇到它們時寫成提案並列進待決問題：
+三件都由**維護者 2026-11-10 裁定**（見 `architecture.md` §待決清單 第 1、2、3 列）。照裁定寫，**不要再列成待決、不要再問**：
 
-| # | 還沒定的 | 你要做的 |
+| # | 原本沒定的 | 你要做的 |
 | :--- | :--- | :--- |
-| 1 | **後端目錄分層**：扁平 `app/services/` 與模組內 `app/modules/*/` 兩種寫法並存，沒有 ADR 拍板 | 攤開兩種方案與各自的代價，標成待決；Class Diagram 畫**職責分層**（Router／Service／Repository／Model），不要畫成某一種目錄結構 |
-| 2 | **成功回應的統一格式**：有沒有外層 envelope 沒有 ADR 定義 | `api-contract.md` 的 Response 只寫**欄位本身**，不要預設它被包在哪一層；把兩種方案列成待決 |
-| 3 | **`/api/v1` 前綴** | 同上，列成待決；不要在契約裡寫死一個沒人定過的前綴 |
+| ~~1~~ | ~~**後端目錄分層**~~ | **已裁定（維護者 2026-11-10）：模組內分層** `app/modules/<module>/`，一個業務模組一個資料夾，裡面放自己的 router、service、repository 與 schemas。ADR-022 的扁平 `app/services/` 記為被覆寫。Class Diagram 仍畫**職責分層**（Router／Service／Repository／Model），目錄結構照裁定 |
+| ~~2~~ | ~~**成功回應的統一格式**~~ | **已裁定（維護者 2026-11-10）：包一層 envelope。** `api-contract.md` 的 Response 寫 envelope 裡那層資料的欄位；**204 無 body、檔案與串流是明文例外**，屬於例外的端點要寫出理由。不再列成待決 |
+| ~~3~~ | ~~**`/api/v1` 前綴**~~ | **已裁定（維護者 2026-11-10）：用 `/api/v1`。** 直接寫進契約，不再列成待決 |
 
-另外一件已知矛盾：`architecture.md` §認證與授權 的第一句同時出現 cookie 與 `Authorization` header，**那是矛盾不是規則**（追蹤在 Issue #107）。設計時以「只認 httpOnly cookie」為準，並把矛盾記成待決問題，不自己選邊。
+原本記在這裡的那件矛盾也已經解掉：`architecture.md` §認證與授權 曾在同一句出現 cookie 與 `Authorization` header，**維護者 2026-11-10 裁定後者是筆誤**，可接受的身分來源只有 httpOnly cookie（[#107](https://github.com/label-suite/label-suite/issues/107) 已落地，該句已改寫）。設計時直接照它寫，不必再記成待決。
 
 ## 產出一：system-design.md
 
@@ -75,6 +75,6 @@ model: opus
 - [ ] Sequence Diagram 止於 Router 回傳回應，沒有畫面或 render
 - [ ] api-contract 每個端點都有角色、錯誤碼、遮蔽欄位與測試集答案隔離的說明；operationId 符合「動詞加資源」且不與既有端點重複
 - [ ] **權限沒有超出 `docs/specs/00-prd.mdx` §權限矩陣**；需要超出時寫成待決問題，不默默放寬
-- [ ] 目錄分層、回應格式、`/api/v1` 三件**沒有自己拍板**，都列成待決問題
+- [ ] 目錄分層照 `app/modules/<module>/`、成功回應包一層 envelope、前綴 `/api/v1`——三件**都照 2026-11-10 的裁定寫**，沒有重新列成待決問題；屬於 envelope 例外（`204`、檔案、串流）的端點已寫出理由
 - [ ] 需要的 schema 變更已列出，交由 Alembic migration 處理，並寫出可逆性與雙資料庫差異
 - [ ] 章節與 schema 範本一致；全文繁體中文

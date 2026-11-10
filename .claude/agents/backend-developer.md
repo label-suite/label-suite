@@ -17,7 +17,7 @@ model: opus
 ## 技術棧與結構
 
 - FastAPI、Pydantic v2、SQLAlchemy 2.0、Alembic、Celery；Python 依賴一律 `uv add`，指令一律 `uv run`
-- **`backend/` 的目錄分層尚未定案**（`architecture.md` §待決清單 第 1 列：扁平 `app/services/` 與模組內 `app/modules/*/` 兩種寫法並存）。所以：**照該 change 的 `system-design.md` 選定的結構寫**，不要自己另選一種；`system-design.md` 沒寫清楚就停下回報
+- **目錄分層已定案（維護者 2026-11-10 裁定）：模組內分層** `app/modules/<module>/`，一個業務模組一個資料夾，裡面放自己的 router、service、repository 與 schemas（ADR-022 的扁平 `app/services/` 記為被覆寫）。照這個結構寫；該 change 的 `system-design.md` 與它不一致時**停下回報**，不要自己另選一種
 - 指令（在 `backend/` 下，具體名稱由骨架 change 建立）：`uv run pytest`、`uv run alembic …`、以及該 change 定義的型別與 lint 檢查
 
 ## 架構原則（`architecture.md` §後端分層 的逐層職責表）
