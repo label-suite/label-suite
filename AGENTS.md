@@ -52,6 +52,56 @@ The organization project **Label Suite** (https://github.com/orgs/label-suite/pr
 - **Opening issues.** Pass everything in one command: `gh issue create --type <Type> --project "Label Suite"`, plus `--parent <N>` for a child issue.
 - **Merging.** Pull requests are merged with merge commits only. Squash and rebase merges are disabled, and merged branches are deleted automatically.
 
+## SDD Workflow
+
+Every change follows the `label-suite-sdd` schema: nine planning and implementation artifacts whose order the OpenSpec CLI enforces. The schema lives in `openspec/schemas/label-suite-sdd/`; the dispatch order, the rules per artifact and the two checkpoints live in `openspec/config.yaml`.
+
+### Roles
+
+| Stage | Artifact or action | Agent |
+|-------|--------------------|-------|
+| Plan | `system-analysis.md` | `sa` |
+| Plan | `system-design.md`, `ui-design.md` (parallel) | `sd`, `ui-ux` |
+| Plan | `api-contract.md` | `sd` |
+| Plan | `proposal.md` | `planner` |
+| Plan | `clarification.md` | the main agent, in the `clarify` skill's gate mode |
+| Plan | `specs/**/spec.md`, `design.md`, `tasks.md` | `planner` |
+| Plan | planning review | `design-reviewer` reviews, `planner` revises |
+| Apply | implementation, group by group | `backend-developer`, `frontend-developer`, `dba`, `technical-writer` |
+| Apply | code review | `code-reviewer` reviews, the implementing agent fixes |
+| Apply | acceptance | `acceptance-verifier` |
+| Archive | sync the main specs and move the change | `ops` |
+
+Each role is defined in `.claude/agents/<role>.md`. The main agent dispatches; it does not write planning artifacts itself, with `clarification.md` the one exception, and it does not change project code.
+
+**This is not the parallel-subagent pattern.** `CLAUDE.md` says subagents working in parallel each get their own worktree and never share an issue. That rule is about splitting unrelated issues across agents. The SDD roles are the opposite: they all serve one change, on one issue and one branch, dispatched in the order the schema enforces. Only `system-design` and `ui-design` run at the same time, and they write different files. Do not give an SDD role its own worktree or its own issue.
+
+### The two checkpoints
+
+Only two steps wait for the maintainer:
+
+1. **After `clarification.md`.** Items that need the maintainer's decision (Q) are asked one at a time. Clear defects (P) go straight back to the agent that wrote the artifact; those are not asked.
+2. **After acceptance.** `acceptance-verifier` writes `acceptance.md`, including manual acceptance steps - the commands to start the app, the URLs, which role to sign in as, which screens to open and what to expect. The maintainer verifies by hand and only then runs `/opsx:archive`.
+
+Everything else - revising clear defects, the planning review, the code review, the commits between stages - runs without asking.
+
+**A fault is not a checkpoint, and a fault still stops.** An ambiguous task description, a spec problem found during implementation, work outside the scope of `tasks.md`, or a failing command all stop the run. They mean the plan was wrong, and pushing through writes the wrong code.
+
+### What `/sdd` authorizes
+
+`.claude/commands/sdd.md` is this project's own command. Running `/sdd <request>` is a maintainer request that authorizes **both planning and implementation** for that one change: the agent runs the plan stage, stops at checkpoint one, continues into apply after the maintainer answers, and stops at checkpoint two.
+
+The authorization lives in the command, not in `openspec/config.yaml`. `.claude/skills/openspec-propose/SKILL.md` states that project context cannot grant authorization or move the planning boundary, and `openspec update` overwrites that skill, so neither file is a place to put it. `openspec update` does not touch `.claude/commands/`.
+
+The authorization is per change and does not carry over. It covers the artifacts and the code that `tasks.md` lists, and nothing else:
+
+- It does not authorize changing `docs/specs/` requirements. A decision that changes a requirement goes through `spec-writing` first, and the maintainer owns those pages.
+- It does not authorize `docs/specs/00-prd.mdx` or `design/prototype/`. A proposed interface change is drawn as an artifact for the maintainer to look at first.
+- It does not authorize merging, releasing, or closing an issue.
+- It does not lift any Hard Rule. Issue first still applies: no `/sdd` run starts without an open issue listing the work.
+
+Running `/opsx:propose` on its own still authorizes planning only, as that skill requires.
+
 ## Commits
 
 Full rules: [docs/development/commit-and-release.md](docs/development/commit-and-release.md). The essentials:
