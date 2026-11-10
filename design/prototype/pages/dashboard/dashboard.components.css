@@ -420,6 +420,18 @@
       /* Badges — replace hardcoded light-bg with dark equivalents
          (info/success/warning need no override: light rules use semantic
          tokens that flip in tokens.css) */
+      /* issue label-suite/label-suite#179: dark equivalents for the two new
+         task-state badges, copied verbatim from task-list.html. */
+      .badge-draft {
+        color: #9CA3AF;
+        background: #1F1F28;
+        border-color: #2A2A35;
+      }
+      .badge-dry-run-status {
+        color: #9CA3AF;
+        background: #1F1F28;
+        border-color: #2A2A35;
+      }
       .badge-dry-run {
         color: #9CA3AF;
         background: #1F1F28;

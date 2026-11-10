@@ -22,12 +22,17 @@
     official_run: 'badge-official',
     dry_run: 'badge-dry-run',
   };
+  /* issue label-suite/label-suite#179: keyed by PRD §共用狀態機's five states.
+     The three classes reused here are byte-identical to task-list.html's
+     badge-iaa / badge-in-progress / badge-completed, so the same state renders
+     the same way on both screens; badge-draft and badge-dry-run-status are
+     copied into dashboard.layout.css for the same reason. */
   var STATUS_CLASS = {
-    in_progress: 'badge-info',
-    waiting_confirmation: 'badge-warning',
-    continue: 'badge-info',
-    resume: 'badge-warning',
-    pending_review: 'badge-warning',
+    draft: 'badge-draft',
+    dry_run_in_progress: 'badge-dry-run-status',
+    waiting_iaa_confirmation: 'badge-warning',
+    official_run_in_progress: 'badge-info',
+    completed: 'badge-success',
   };
 
   /* Issue singyichen/label-suite#187: sort control for the Annotator/Reviewer task lists.

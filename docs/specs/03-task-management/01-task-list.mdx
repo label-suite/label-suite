@@ -4,14 +4,14 @@ description: '使用者在這一頁找到自己要處理的任務，並從這裡
 category: '規格書'
 tags: [規格書, 任務管理, 已定案]
 createdAt: '2026-11-05'
-updatedAt: '2026-11-09'
+updatedAt: '2026-11-10'
 ---
 
 import PrototypeFrame from '@notes/components/prototype-frame';
 
 # 03-01 任務列表
 
-:badge[已定案]{variant="success"} :badge[任務管理]{variant="neutral"}
+:badge[已定案]{variant="success"} :badge[變更 #179]{variant="warning"} :badge[任務管理]{variant="neutral"}
 
 > 來源：舊 repo `specs/task-management/010-task-list/spec.md`（54 條），釘在 `singyichen/label-suite@faf83356`，見 `docs/specs/legacy/03-01-task-list.ids` 的首行
 > 參考畫面：`design/prototype/pages/task-management/task-list.html`
@@ -486,7 +486,7 @@ import Spec0301TaskListFlow from '@notes/components/spec-03-01-task-list-flow'
 
 > 理由：PRD 是上游，而且**畫面自己就不一致**——`design/prototype/pages/task-management/task-list.html` 的篩選器（第 237 行）寫「正式標記進行中」，列上徽章（第 390 行）寫「正式標記中」，同一個狀態兩個名字。
 > 與 PRD 不同的共三處：試標進行中（PRD 是「試標中」）、待 IAA 確認（PRD 是「等待 IAA 確認」）、以及篩選器的「正式標記進行中」。
-> **儀表板只有一部分已經符合**：「等待 IAA 確認」在儀表板的兩處 KPI 標籤裡就是 PRD 的寫法（`design/prototype/pages/dashboard/dashboard.html:296`、`:361`）。但儀表板**任務列的狀態徽章是另一組字**（`dashboard.i18n.js:17` 的 `statusLabel`：進行中、待確認、繼續中、待繼續、待審核——PRD 的五個狀態一個都沒有），那一組由[規格 02-01 §已確認決議](../02-dashboard/01-dashboard.mdx#已確認決議) Q7 追蹤（已於 2026-11-06 裁定跟著本題走，但畫面要怎麼改與那三個字要叫什麼另案處理），**不在本條的範圍**。
+> **儀表板只有一部分已經符合**：「等待 IAA 確認」在儀表板的兩處 KPI 標籤裡就是 PRD 的寫法（`design/prototype/pages/dashboard/dashboard.html:296`、`:361`）。<mark>儀表板任務列的狀態徽章已於 2026-11-10 依 [Issue #179](https://github.com/label-suite/label-suite/issues/179) 換成 PRD 的五個名稱</mark><sup>[#179](https://github.com/label-suite/label-suite/issues/179)</sup>（`dashboard.i18n.js` 的 `statusLabel`；那一題同時裁定作業列原本的 `繼續中`／`待繼續`／`待審核` 也當任務狀態處理，見[規格 02-01 §已確認決議](../02-dashboard/01-dashboard.mdx#已確認決議) Q7 與 Q18）。<mark>本條待補的只剩 `task-list.html` 自己那三個字：`試標進行中`、`待 IAA 確認`、`正式標記進行中`</mark><sup>[#179](https://github.com/label-suite/label-suite/issues/179)</sup>，**不在本條的範圍**，由 [Issue #170](https://github.com/label-suite/label-suite/issues/170) 處理。
 > 這五個狀態由 03、04、05 三個模組共用。畫面的改動另開 Issue；本 skill 不改 `design/prototype/`（#114）。
 
 ### Q2. 「未建立清單」是不是第三個標記階段？（已定案，維護者裁定 2026-11-08）
@@ -666,6 +666,7 @@ import Spec0301TaskListFlow from '@notes/components/spec-03-01-task-list-flow'
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#179](https://github.com/label-suite/label-suite/issues/179) | 2026-11-10 | §規格 › 三處分歧的註記 | 「儀表板**任務列的狀態徽章是另一組字**（`dashboard.i18n.js:17` 的 `statusLabel`：進行中、待確認、繼續中、待繼續、待審核——PRD 的五個狀態一個都沒有）……畫面要怎麼改與那三個字要叫什麼另案處理」 | 改為儀表板那一側已於 2026-11-10 依 #179 換成 PRD 的五個名稱，本條待補的只剩 `task-list.html` 自己的 `試標進行中`／`待 IAA 確認`／`正式標記進行中`（歸 #170）；同時移除已失效的 `:17` 行號 | 規格 02-01 §已確認決議 Q18（維護者 2026-11-10） |
 | [#140](https://github.com/label-suite/label-suite/issues/140) | 2026-11-09 | §規格 › 誰看得到哪些任務、§卡控機制、§驗收標準、§已確認決議、附錄 | §誰看得到哪些任務 只有五條，沒有「範圍只能來自當下的身分與權限矩陣那一格」；附錄把 `FR-002` 的權限格那一半與 `SC-016` 的「缺列或關閉不得取得列表」整段讓給[規格 06-02](../06-admin/02-role-settings.mdx)，而 06-02 只定義那一格存不存在與預設開關，兩邊都沒有落地 | 新增第 6～9 條（只有那一格允許才進得來並取得列表、缺列或關掉**不得進入也不得取得列表**、系統管理員的全平台範圍同樣要過當下那一格、範圍不由網址參數決定）、三條卡控與四條 Scenario；§業務流程「進到任務列表」的前置條件與第 2 步跟著改，流程圖一併更新；附錄那兩列改成指向新條文。依據是本頁來源的 `FR-002`、`SC-016` 與 2026-04-20 的修訂，不是新規則 | **Q20**（依本頁來源折回 2026-11-09） |
 | [#114](https://github.com/label-suite/label-suite/issues/114) | 2026-11-08 | §業務流程 | 兩段流程（找到要處理的任務、離開這一頁），流程圖未生成 | 同樣的規則改寫成四段（進到任務列表／篩到要處理的那一筆／從列表進入任務詳情／刪除草稿任務）並生成流程圖。第一段原本要畫 11 個節點、第二段 12 個：[§空狀態與載入失敗](#空狀態與載入失敗) 第 2、5 條要求尚無任務、載入失敗、篩選無結果三種長得不一樣，三個結束點不能併；離開這一頁又有詳情、新增、刪除三個各自獨立的出口。**沒有改任何規則**：新增的 E2（刪除送出之後失敗）只是把 [§刪除任務](#刪除任務) 第 8 條與既有 Scenario 寫進流程 | 流程圖依既有決議繪製；**沒有新的決議** |
 | [#114](https://github.com/label-suite/label-suite/issues/114) | 2026-11-08 | 頁首、§使用角色、§規格 › 誰看得到哪些任務／搜尋／輸出類型篩選／標記階段篩選／狀態篩選／排序與分頁／刪除任務／空狀態與載入失敗／資料欄位、§卡控機制、§邊界情況、§驗收標準、§待釐清、§已確認決議、附錄 | 九題列在待釐清；標記階段篩選器有三個選項；刪除的確認視窗承諾可由管理端復原；成員資格失效的後果未定義；刪除失敗沒有訊息 | 九題折回已確認決議，狀態改為已定案；標記階段篩選器只留兩個選項；確認視窗不承諾復原；成員資格失效後看不到那個任務；刪除失敗顯示可重試的說明；8 個輸出類型的中文名改引用術語表 | Q1、Q2、Q4–Q10 |

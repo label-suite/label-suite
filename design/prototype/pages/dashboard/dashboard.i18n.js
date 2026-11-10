@@ -14,12 +14,21 @@
       official_run: '正式標記',
       dry_run: '試標',
     },
+    /* issue label-suite/label-suite#179: the badge carries PRD §共用狀態機's five
+       task-state names, following 規格 02-01 Q7 (maintainer, 2026-11-06) and
+       規格 03-01 Q1. The five keys it replaced (in_progress /
+       waiting_confirmation / continue / resume / pending_review) mixed two
+       vocabularies in one slot: the maintainer ruled on 2026-11-10 that the
+       work-row values are task states too, so a single set covers every row.
+       Strings are PRD's own, which differ from task-list.html /
+       task-detail.html ('試標進行中', '待 IAA 確認') -- aligning those three
+       screens is issue label-suite/label-suite#170, not this one. */
     statusLabel: {
-      in_progress: '進行中',
-      waiting_confirmation: '待確認',
-      continue: '繼續中',
-      resume: '待繼續',
-      pending_review: '待審核',
+      draft: '草稿',
+      dry_run_in_progress: '試標中',
+      waiting_iaa_confirmation: '等待 IAA 確認',
+      official_run_in_progress: '正式標記中',
+      completed: '已完成',
     },
     actionLabel: {
       annotator: '快速繼續',
@@ -154,12 +163,17 @@
       official_run: 'Official Run',
       dry_run: 'Dry Run',
     },
+    /* Mirrors the zh set above (issue label-suite/label-suite#179). Strings are
+       task-detail.html's existing English, which is the set consistent with
+       PRD's Chinese names; task-list.html's shorter 'Dry Run' / 'Official Run'
+       would collide with the run-type badge in the same row. No ruling covers
+       the English wording -- 規格 03-01 Q1 settled the Chinese only. */
     statusLabel: {
-      in_progress: 'In Progress',
-      waiting_confirmation: 'Pending Confirmation',
-      continue: 'Continue',
-      resume: 'Resume',
-      pending_review: 'Pending Review',
+      draft: 'Draft',
+      dry_run_in_progress: 'Dry run in progress',
+      waiting_iaa_confirmation: 'Waiting IAA confirmation',
+      official_run_in_progress: 'Official run in progress',
+      completed: 'Completed',
     },
     actionLabel: {
       annotator: 'Continue',
