@@ -150,13 +150,28 @@ HTTP 請求
 
 ## 認證與授權
 
-後端只認 httpOnly cookie 裡的 token，不接受 `Authorization` header 以外的來源推定身分。角色只從驗證過的 token 與資料庫取，
+後端只認 httpOnly cookie 裡的 token，**不接受 cookie 以外的任何來源**推定身分——`Authorization` header、查詢字串、自訂 header 一概不看。
+（原文寫的是「不接受 `Authorization` header 以外的來源」，與前半句互相矛盾；**維護者 2026-11-10 裁定那是筆誤，可接受的來源只有 httpOnly cookie**，見 [#107](https://github.com/label-suite/label-suite/issues/107)。）**角色只從資料庫取**（JWT 裡的 `role` 只供顯示，授權不看它——ADR-037），
 權限一定在後端擋，前端隱藏按鈕只是體驗。
 
 | Token | 效期 | Cookie flag | 輪替 |
 | :--- | :--- | :--- | :--- |
 | Access token（JWT） | 15 分鐘 | `httpOnly`、`Secure`、`SameSite=Lax` | 每次 refresh 重發 |
 | Refresh token（不透明 UUID） | 7 天滑動 | `httpOnly`、`Secure`、`SameSite=Lax` | 每次使用輪替，一次性 |
+| CSRF token（`HMAC(secret, sid)`） | 與 session 同壽 | `__Host-` 前綴、`Secure`、`SameSite=Lax`、**非 `httpOnly`** | 登入時發，refresh 時重發 |
+
+**CSRF（維護者 2026-11-10 裁定加顯式防護）**：cookie 是 `SameSite=Lax`，瀏覽器就會擋掉跨網域的表單 POST——這一層由瀏覽器強制，**與伺服器的 CORS 設定無關**。它擋不住的是**同站子網域**：子網域屬同一個 eTLD+1，可以寫 `Domain=` 涵蓋主網域的 cookie。
+
+所以加 **double-submit token，而且要是綁定 session 的那一種**：
+
+| 要素 | 做法 | 為什麼不能省 |
+| :--- | :--- | :--- |
+| token 的值 | `HMAC(server_secret, sid)`，middleware **驗 HMAC**、不只是比對字串 | 只比對 cookie 與 header 是否相等的那種（naive double-submit）**擋不住子網域**：攻擊者從子網域把兩邊都設成自己選的值，比對一定過。OWASP 把它標為 naive |
+| cookie 名稱 | 加 `__Host-` 前綴 | 該前綴禁止 `Domain` 屬性，cookie 因此鎖在本主機，子網域**無法覆寫** |
+| 傳遞方式 | 前端把值複製到**自訂 header** | 自訂 header 會觸發 preflight，來源不在 CORS allowlist 就過不了。**所以這一層的強度等於 CORS allowlist 的嚴格程度**——CORS 來源必須逐一列出（Hard Rule 7） |
+| 責任位置 | **單一 middleware**，端點不各自處理 | 散在端點就會有人漏掉 |
+
+那個 CSRF cookie **刻意可被 JS 讀取**（double-submit 需要前端讀得到它），所以它是系統裡唯一非 `httpOnly` 的 cookie，見上面的 token 表。負向測試要涵蓋「缺 header」「header 與 cookie 不符」「HMAC 無效」三種。
 
 JWT payload 只放 `sub`、`sid`、`credential_version`、`role`、`iat`、`exp`。**任務角色不放進 JWT**，
 前端進任務頁後另外查成員身分（ADR-021）。`role` 只供顯示，授權不看它（ADR-037）。
