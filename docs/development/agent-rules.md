@@ -26,9 +26,9 @@ updatedAt: '2026-11-10'
 | 授權、答案隔離、設定驅動邊界 | [security-agent-rules.md](security-agent-rules.md) | [#107](https://github.com/label-suite/label-suite/issues/107) | 2026-11-10 建立 |
 | API 契約同步、單一前端 Client | [api-agent-rules.md](api-agent-rules.md) | [#108](https://github.com/label-suite/label-suite/issues/108) | 2026-11-10 建立 |
 | 前端依賴方向、型別安全、UI 共用 | [frontend-agent-rules.md](frontend-agent-rules.md) | [#109](https://github.com/label-suite/label-suite/issues/109) | 2026-11-10 建立 |
-| 測試分層、雙資料庫驗證、交付證據 | 待建置 | [#110](https://github.com/label-suite/label-suite/issues/110) | **待建置** |
+| 測試分層、雙資料庫驗證、交付證據 | [testing-agent-rules.md](testing-agent-rules.md) | [#110](https://github.com/label-suite/label-suite/issues/110) | 2026-11-10 建立 |
 
-**「待建置」就是字面意思**：那些文件還不存在，所以也還沒有任何檢查在跑。本文件不代那幾張寫內容，`AGENTS.md` 的索引也照實標成待建置——依 #105 的附註，尚無可執行檢查的規範必須註明待建置，不得宣稱已通過。
+**六份文件都已建立（2026-11-10 同日完成六份），但大多數規範還沒有任何自動檢查**：`backend/`、`frontend/` 與 `e2e/` 都還不存在，所以「檢查方式」大多標「待建置」；其餘標「**人工／獨立審查**」的那幾條**現在就要做**，只是沒有工具代勞（本文件的 **R1、R3、R4、R5、R6、R7** 與 [backend-agent-rules.md](backend-agent-rules.md) 的 **B8** 就是——程式化數過，共七條）。依 #105 的附註，尚無可執行檢查的規範必須註明待建置，**不得因為文件存在就宣稱規則已被強制**。自動 gate 的清單與歸屬在 [testing-agent-rules.md](testing-agent-rules.md) 的 T9。
 
 技術基準（選型、分層、ADR 效力）在 [architecture.md](architecture.md)，不在這裡重複。
 
