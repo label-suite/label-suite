@@ -22,13 +22,13 @@ updatedAt: '2026-11-10'
 | 領域 | 說明文件 | 負責的 Issue | 狀態 |
 | :--- | :--- | :--- | :--- |
 | 跨領域（本文件） | `docs/development/agent-rules.md` | [#105](https://github.com/label-suite/label-suite/issues/105) | 本次建立 |
-| 後端分層、資料庫、背景工作 | 待建置 | [#106](https://github.com/label-suite/label-suite/issues/106) | **待建置** |
+| 後端分層、資料庫、背景工作 | [backend-agent-rules.md](backend-agent-rules.md) | [#106](https://github.com/label-suite/label-suite/issues/106) | 2026-11-10 建立 |
 | 授權、答案隔離、設定驅動邊界 | 待建置 | [#107](https://github.com/label-suite/label-suite/issues/107) | **待建置** |
 | API 契約同步、單一前端 Client | 待建置 | [#108](https://github.com/label-suite/label-suite/issues/108) | **待建置** |
 | 前端依賴方向、型別安全、UI 共用 | 待建置 | [#109](https://github.com/label-suite/label-suite/issues/109) | **待建置** |
 | 測試分層、雙資料庫驗證、交付證據 | 待建置 | [#110](https://github.com/label-suite/label-suite/issues/110) | **待建置** |
 
-**「待建置」就是字面意思**：那些文件還不存在，所以也還沒有任何檢查在跑。本文件不代那五張寫內容，`AGENTS.md` 的索引也照實標成待建置——依 #105 的附註，尚無可執行檢查的規範必須註明待建置，不得宣稱已通過。
+**「待建置」就是字面意思**：那些文件還不存在，所以也還沒有任何檢查在跑。本文件不代那幾張寫內容，`AGENTS.md` 的索引也照實標成待建置——依 #105 的附註，尚無可執行檢查的規範必須註明待建置，不得宣稱已通過。
 
 技術基準（選型、分層、ADR 效力）在 [architecture.md](architecture.md)，不在這裡重複。
 
@@ -56,15 +56,15 @@ updatedAt: '2026-11-10'
 
 | | |
 | :--- | :--- |
-| **適用路徑** | `backend/`、`frontend/`（兩者都還不存在，所以這一條**現在沒有適用對象**） |
+| **適用路徑** | `frontend/`（還不存在，所以這一條**現在沒有適用對象**）。**`backend/` 由 [backend-agent-rules.md](backend-agent-rules.md) 的 B1 取代**——那一條寫明了層級與允許的 import，比這裡具體 |
 | **禁止** | 反向依賴：被依賴的那一層回頭 import 依賴它的那一層 |
-| **正例** | router → service → repository |
-| **反例** | repository import service；或 service import router 的型別 |
+| **正例** | 前端：`pages` → `features` → 共用的 `components/ui`（具體分層待 [#109](https://github.com/label-suite/label-suite/issues/109)）。**後端版本見 [backend-agent-rules.md](backend-agent-rules.md) 的 B1** |
+| **反例** | `components/ui` 的元件 import `features` 的東西；或共用層回頭依賴頁面層 |
 | **例外** | 無 |
-| **檢查方式** | **待建置**。後端的具體分層由 [#106](https://github.com/label-suite/label-suite/issues/106) 定、前端由 [#109](https://github.com/label-suite/label-suite/issues/109) 定；自動檢查要等那兩張 |
-| **來源** | **無來源條文。** 三份來源檔都沒有這一條；它來自 #105 工作項 6 的點名。具體分層由 [#106](https://github.com/label-suite/label-suite/issues/106)／[#109](https://github.com/label-suite/label-suite/issues/109) 定，屆時這一條可能整條移過去 |
+| **檢查方式** | **待建置**。後端的具體分層已由 [#106](https://github.com/label-suite/label-suite/issues/106) 定（見 B1），前端待 [#109](https://github.com/label-suite/label-suite/issues/109)；兩邊的自動檢查都要等實際有程式 |
+| **來源** | **無來源條文。** 三份來源檔都沒有這一條；它來自 #105 工作項 6 的點名。**後端那一半已於 2026-11-10 移進 B1**；前端那一半等 [#109](https://github.com/label-suite/label-suite/issues/109)，屆時這一條就只剩跨領域的原則敘述 |
 
-模組內分層（`app/modules/<module>/`）已由維護者 2026-11-10 裁定，見 [architecture.md](architecture.md)。
+模組內分層（`app/modules/<module>/`）已由維護者 2026-11-10 裁定，見 [architecture.md](architecture.md)；後端的落地規則見 [backend-agent-rules.md](backend-agent-rules.md) 的 B1。
 
 ### R3 最小變更
 
@@ -221,7 +221,7 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 | `general.md` §AI Agent Non-Negotiables 的「不改版號」 | **沿用** | 已在 `AGENTS.md` 硬性規則 4 |
 | `general.md` §AI Agent Non-Negotiables 的「移除 debug `print`／`console.log`」 | **沿用** | 已在 `AGENTS.md` Required Behaviors |
 | `general.md` §AI Agent Non-Negotiables 的「先讀既有匯出與呼叫端」 | **沿用** | 成為 R1 |
-| `general.md` §AI Agent Non-Negotiables 的「後端指令一律走 `uv run`」 | **待採用（已有歸屬）** | 本 repo 沒有這一條（`AGENTS.md` grep `uv run` 零命中，規則 3 只規定 `uv add`）。**維護者 2026-11-10 裁定它歸 [#106](https://github.com/label-suite/label-suite/issues/106)**，不進本次的 Hard Rules——在沒有 `backend/` 之前它沒有適用對象 |
+| `general.md` §AI Agent Non-Negotiables 的「後端指令一律走 `uv run`」 | **沿用** | 維護者 2026-11-10 裁定它歸 [#106](https://github.com/label-suite/label-suite/issues/106)，**已落地於 [backend-agent-rules.md](backend-agent-rules.md) 的 B2**。不進 `AGENTS.md` Hard Rules——它是後端指令的細節，而且在沒有 `backend/` 之前沒有適用對象 |
 | `general.md` §Fail Loudly | **沿用** | 成為 R7 |
 | **`general.md` §Conflicting Patterns（「pick one, prefer newer or better-tested」）** | **改寫** | **這一條被反轉**。本 repo 改成 R5：照已確認決議，沒有決議就回報維護者。理由：本 repo 已有「五個依據＋機械檢查」的決議機制，自行選邊會繞過它 |
 | `general.md` 的「200 行→50 行」與「出現 2 次就抽」 | **不採用** | 機械門檻，見[§刻意不採用的機械限制](#刻意不採用的機械限制) |
