@@ -41,7 +41,7 @@ model: opus
 - [ ] 看不到的資源回 **404**，沒有用 403 洩漏它存在；錯誤訊息沒有內部識別碼或堆疊
 - [ ] API 的 async session 與 worker 的 sync session **分離**，沒有跨請求或跨 task 共用可變 session
 - [ ] 符合 SOLID：單一職責、依賴注入、沒有循環依賴或萬能 Service
-- [ ] **目錄分層與該 change 的 `system-design.md` 選定的結構一致**（專案層級的分層仍未定案，不用個人偏好當基準）
+- [ ] **目錄分層是模組內分層** `app/modules/<module>/`（2026-11-10 裁定），而且與該 change 的 `system-design.md` 一致
 - [ ] request schema 有型別、範圍與未知欄位的驗證；query 參數有轉型
 - [ ] **operationId 符合「動詞加資源」**且全專案唯一
 - [ ] model 與 Alembic migration 一致，`downgrade()` 完整，**SQLite 與 PostgreSQL 兩層都能跑**
@@ -53,7 +53,7 @@ model: opus
 - [ ] 元件放對層，與 `ui-design.md` 一致；下層沒有反向 import 上層、沒有循環依賴
 - [ ] 每個資料區塊處理 loading／error／empty／**無權限**；遮蔽欄位的顯示符合 `ui-design.md`，**不是空白或「無資料」**
 - [ ] 只用 `tokens.css` 的語意 token，**沒有寫死色碼、inline color 或原色 class**
-- [ ] **沒有引入元件庫或 client 生成工具**（兩者都還沒定案）；最小實作已列在回報裡
+- [ ] 元件庫只用 shadcn/ui（元件在 `components/ui/`）、型別與 client 只來自 Orval 產物（`frontend/src/api/generated/`，未手改）；沒有其他元件庫或生成工具
 - [ ] 圖示是 Lucide；`data-testid` 沿用 prototype 的原字串
 - [ ] a11y：互動元素可鍵盤操作、有 label 或可存取名稱
 

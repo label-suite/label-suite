@@ -9,14 +9,14 @@ model: opus
 
 ## 先看清楚這一份的狀態
 
-**`frontend/` 目前還不存在，而且前端版本、目錄分層、元件庫與 client 生成工具都還沒定案**（前三項在 `docs/development/architecture.md` §待決清單 第 8 列與落差 15；client 生成工具在 `docs/development/openspec-fullstack-sdd.md` §四）。所以：
+**`frontend/` 目前還不存在**，但版本、目錄分層、元件庫與 client 生成工具**都已經由維護者 2026-11-10 裁定**（見 `docs/development/architecture.md` §前端 與 §待決清單 第 8 列）。所以照下面寫，不要再把它們當待決：
 
-- 框架已定（ADR-004）：React 加 Vite 加 TypeScript strict，路由 React Router v6，伺服器狀態 TanStack Query。但**major 版本沒定**（ADR-004 寫 React 18、scaffold 是 19，落差 15）——**不要自己挑一個版本開工**
-- **元件庫未定**（shadcn/ui 仍標「待決」）：不要引入任何元件庫，也不要假設某一套的 API 存在。需要元件時照 `ui-design.md` 的語意描述自己實作最小版本，並在回報裡列出「等元件庫定案後要換掉的清單」
-- **型別與 client 的生成工具未定**：不要引入 Orval 或任何特定工具。在它定案之前，型別來源是後端匯出的 `openapi.json`，取用方式由該 change 的 `design.md` 指定
-- **目錄分層未定**：照該 change 的 `ui-design.md` 與 `design.md` 選定的結構寫，不要自己另選一種
+- 框架與版本已定：**React 19** 加 Vite 加 TypeScript strict，路由 React Router v6，伺服器狀態 TanStack Query（ADR-004 的 React 18 記為被覆寫）
+- **元件庫已定：shadcn/ui**，元件以原始碼形式放進 `components/ui/`（覆寫 ADR-016 的 `shared/ui/`）。需要的元件照 `ui-design.md` 的語意描述加入。**Storybook 仍待決**（§待決清單 第 10 列），不要為了它加任何設定
+- **型別與 client 的生成工具已定：Orval**，由後端匯出的 `openapi.json` 產生到 `frontend/src/api/generated/`（TanStack Query hooks、型別、MSW mock）。**產物一律不手改**；Orval 的 mutator 就是那道單一 HTTP 邊界
+- **目錄分層已定：`pages/` 加 `features/`**（覆寫 ADR-011 的垂直功能切片）。照這個結構寫；該 change 的 `ui-design.md` 或 `design.md` 與它不一致時**停下回報**，不要自己另選一種
 
-遇到上面任一項沒寫清楚就**停下回報**（包含 React 的 major 版本），不要自己拍板——那是停點一要決定的事。
+上面每一項都是裁定，不是你能改的；真正還沒定的事（例如 Storybook）照樣**停下回報**，不要自己拍板——那是停點一要決定的事。
 
 ## 必讀
 
@@ -87,7 +87,7 @@ model: opus
 - [ ] **沒有 `any`（含隱含）與非空斷言**；例外都已列明
 - [ ] bundle、source map 與 mock 裡沒有標準答案或測試集辨識資訊
 - [ ] 沒有 `npm install`（依賴用 `pnpm add`）
-- [ ] **沒有引入元件庫或 client 生成工具**（兩者都還沒定案），需要換掉的最小實作已列在回報裡
+- [ ] 元件庫只用 shadcn/ui（元件在 `components/ui/`）、型別與 client 只來自 Orval 產物（`frontend/src/api/generated/`，未手改）；沒有引入其他元件庫或生成工具
 
 ## 回報格式
 
@@ -96,6 +96,6 @@ model: opus
 
 - 改動檔案：{清單}
 - 測試：元件與 hook {n} 通過；lint、型別檢查、build 通過
-- 等元件庫定案後要換掉的最小實作：{清單，無則寫「無」}
+- 暫以語意描述自行實作、待補 shadcn/ui 元件：{清單，無則寫「無」}
 - 待確認：{contract 缺口、ui-design 未涵蓋的狀態、需要停點一決定的事，無則寫「無」}
 ```

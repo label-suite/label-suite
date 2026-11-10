@@ -58,13 +58,14 @@ rules:
     - 每塊資料都要對應到 api-contract 的 operationId
     - loading／error／empty／無權限四種狀態都要寫；有遮蔽欄位時寫出呈現方式
     - 畫面長相以 design/prototype/pages/ 為準；token 只用 design/prototype/assets/tokens.css 與 label-suite-design skill 的語意名稱，不寫色碼
-    - 框架依 ADR-004（React 加 Vite 加 TypeScript strict，路由 React Router v6、伺服器狀態 TanStack Query）；**只有元件庫尚未定案**（shadcn/ui 待決，見 docs/development/architecture.md §前端），所以元件寫成語意描述、不要寫成某個元件庫的 API
+    - 框架依 ADR-004 加 2026-11-10 裁定（React 19 加 Vite 加 TypeScript strict，路由 React Router v6、伺服器狀態 TanStack Query，元件庫 shadcn/ui 放 components/ui/，目錄分層 pages/ 加 features/，見 docs/development/architecture.md §前端）；**只有 Storybook 仍待決**。元件以語意描述為主，需要時可指名 shadcn/ui 的元件，不貼實作程式碼
     - 沒有 UI 變更就只寫一行「本次無 UI 變更」
   api-contract:
     - operationId 全專案唯一，由 FastAPI 的 generate_unique_id_function **固定成「動詞加資源」**（例 listUsers、getUser），不手寫也不逐個覆寫
     - 每個端點都要列出角色、錯誤碼與遮蔽欄位（沒有就寫「無」）
     - 看不到的資源回 404，不得用 403 洩漏它存在；錯誤訊息不得回傳內部識別碼或堆疊
-    - 成功回應的統一格式尚未定案，寫成提案並列進待決問題，不要假設某一種格式
+    - 成功回應**包一層 envelope**（維護者 2026-11-10 裁定）；**204 無 body、檔案與串流是明文例外**，端點屬於例外時要寫出理由
+    - 路徑前綴一律 `/api/v1`（維護者 2026-11-10 裁定）
   proposal:
     - 列出引用的規格編號與章節（例：規格 02-03 §卡控機制）、其他需求文件章節與待決問題編號
     - 先讀 system-analysis、system-design、ui-design、api-contract 四份，不得與之矛盾

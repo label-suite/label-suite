@@ -28,8 +28,8 @@ model: opus
 
 ## 設計前提
 
-- **框架已定**（ADR-004）：React 加 Vite 加 TypeScript strict 的 SPA，路由 React Router v6，伺服器狀態 TanStack Query
-- **前端版本、目錄分層與元件庫都還沒定**（`architecture.md` §待決清單 第 8 列與落差 15；shadcn/ui 仍標「待決」）。所以**元件寫成語意描述**（「主要按鈕」「資料表」「分頁器」），**不要寫成某個元件庫的 API**；真的需要指名時列成待決問題
+- **框架與版本已定**（ADR-004 加 2026-11-10 裁定）：**React 19** 加 Vite 加 TypeScript strict 的 SPA，路由 React Router v6，伺服器狀態 TanStack Query
+- **目錄分層與元件庫也已定**（`architecture.md` §待決清單 第 8 列，2026-11-10 裁定）：`pages/` 加 `features/`、元件庫 **shadcn/ui**（元件放 `components/ui/`）。元件**以語意描述為主**（「主要按鈕」「資料表」「分頁器」），需要時可指名 shadcn/ui 的元件，但不貼實作程式碼。**只有 Storybook 仍待決**（第 10 列），不要為它設計任何產出
 - 圖示統一 **Lucide**（ADR-030，唯一圖示來源）；**只用** Lucide，不得用 emoji 或自己畫的 SVG 當圖示；例外只有品牌與 logo 標記（彩色 logo、banner、Google SSO 的 G）
 - 樣式只用 `tokens.css` 的**語意** token，**不寫色碼、不自訂間距**；需要新的語意時列為待決問題，不自行發明
 - 資料一律來自後端契約：每個區塊要標出對應的 **operationId**（由 `generate_unique_id_function` 固定成「動詞加資源」）
@@ -58,7 +58,7 @@ model: opus
 - [ ] 每個資料區塊都有 loading／error／empty／無權限四種狀態設計
 - [ ] 遮蔽欄位與唯讀角色的畫面差異已寫明，而且遮蔽不是顯示成空白
 - [ ] 只用語意 token，沒有色碼、沒有自訂間距、沒有依賴某一套主題
-- [ ] **元件沒有寫成某個元件庫的 API**（元件庫未定案）
+- [ ] 元件以語意描述為主；要指名時只指名 shadcn/ui（元件在 `components/ui/`），沒有貼實作程式碼
 - [ ] 標記員能到達的畫面沒有任何標準答案或測試集辨識資訊
 - [ ] prototype 與需求不一致處已列為待決問題，沒有自己選邊、沒有改 `design/prototype/`
 - [ ] 章節與 schema 範本一致；全文繁體中文
