@@ -25,7 +25,7 @@ updatedAt: '2026-11-10'
 | 後端分層、資料庫、背景工作 | [backend-agent-rules.md](backend-agent-rules.md) | [#106](https://github.com/label-suite/label-suite/issues/106) | 2026-11-10 建立 |
 | 授權、答案隔離、設定驅動邊界 | [security-agent-rules.md](security-agent-rules.md) | [#107](https://github.com/label-suite/label-suite/issues/107) | 2026-11-10 建立 |
 | API 契約同步、單一前端 Client | [api-agent-rules.md](api-agent-rules.md) | [#108](https://github.com/label-suite/label-suite/issues/108) | 2026-11-10 建立 |
-| 前端依賴方向、型別安全、UI 共用 | 待建置 | [#109](https://github.com/label-suite/label-suite/issues/109) | **待建置** |
+| 前端依賴方向、型別安全、UI 共用 | [frontend-agent-rules.md](frontend-agent-rules.md) | [#109](https://github.com/label-suite/label-suite/issues/109) | 2026-11-10 建立 |
 | 測試分層、雙資料庫驗證、交付證據 | 待建置 | [#110](https://github.com/label-suite/label-suite/issues/110) | **待建置** |
 
 **「待建置」就是字面意思**：那些文件還不存在，所以也還沒有任何檢查在跑。本文件不代那幾張寫內容，`AGENTS.md` 的索引也照實標成待建置——依 #105 的附註，尚無可執行檢查的規範必須註明待建置，不得宣稱已通過。

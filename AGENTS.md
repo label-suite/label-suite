@@ -153,7 +153,7 @@ This repository has no `.claude/rules/` canon and will not get one (decided in #
 | Backend layering, database, background work | [docs/development/backend-agent-rules.md](docs/development/backend-agent-rules.md) | #106 |
 | Authorization, answer isolation, config-driven boundaries | [docs/development/security-agent-rules.md](docs/development/security-agent-rules.md) | #107 |
 | API contract sync, single frontend client | [docs/development/api-agent-rules.md](docs/development/api-agent-rules.md) | #108 |
-| Frontend dependency direction, type safety, shared UI | not built yet | #109 |
+| Frontend dependency direction, type safety, shared UI | [docs/development/frontend-agent-rules.md](docs/development/frontend-agent-rules.md) | #109 |
 | Test layers, dual-database verification, delivery evidence | not built yet | #110 |
 
 "Not built yet" is literal: those documents do not exist, so none of their rules is being checked. Do not cite them, and do not report a check as passing when the check has not been built.
