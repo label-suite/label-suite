@@ -1,3 +1,8 @@
+<!-- issue label-suite/label-suite#155 (Q13): the verdict now sits OUTSIDE the id-bearing
+     span. applySimpleIds -> setText writes textContent on that span, which
+     used to delete the <strong> verdict as soon as the panel finished
+     loading. The strict tier carries the (達標判定) mark because
+     multi-dimension scoring judges on it. -->
 <section class="panel" aria-labelledby="iaaTitle">
   <div class="panel-head-row">
     <h2 class="panel-title" id="iaaTitle">IAA 報告</h2>
@@ -16,11 +21,11 @@
       <div class="iaa-threshold-row">
         <span class="iaa-threshold-item">
           <span class="t-dot t-dot-pass"></span>
-          <span id="lblVrec">建議門檻 0.75 — <strong class="t-pass">通過</strong></span>
+          <span id="lblVrec">建議門檻 0.75 — </span><strong class="t-pass">通過</strong>
         </span>
         <span class="iaa-threshold-item">
           <span class="t-dot t-dot-fail"></span>
-          <span id="lblVstr">嚴格門檻 0.80 — <strong class="t-fail">未達</strong></span>
+          <span id="lblVstr">嚴格門檻 0.80（達標判定）— </span><strong class="t-fail">未達</strong>
         </span>
       </div>
     </div>
@@ -32,11 +37,11 @@
       <div class="iaa-threshold-row">
         <span class="iaa-threshold-item">
           <span class="t-dot t-dot-pass"></span>
-          <span id="lblArec">建議門檻 0.75 — <strong class="t-pass">通過</strong></span>
+          <span id="lblArec">建議門檻 0.75 — </span><strong class="t-pass">通過</strong>
         </span>
         <span class="iaa-threshold-item">
           <span class="t-dot t-dot-pass"></span>
-          <span id="lblAstr">嚴格門檻 0.80 — <strong class="t-pass">通過</strong></span>
+          <span id="lblAstr">嚴格門檻 0.80（達標判定）— </span><strong class="t-pass">通過</strong>
         </span>
       </div>
     </div>
@@ -48,11 +53,11 @@
       <div class="iaa-threshold-row">
         <span class="iaa-threshold-item">
           <span class="t-dot t-dot-pass"></span>
-          <span id="lblOrec">建議門檻 0.75 — <strong class="t-pass">通過</strong></span>
+          <span id="lblOrec">建議門檻 0.75 — </span><strong class="t-pass">通過</strong>
         </span>
         <span class="iaa-threshold-item">
           <span class="t-dot t-dot-pass"></span>
-          <span id="lblOstr">嚴格門檻 0.80 — <strong class="t-pass">通過</strong></span>
+          <span id="lblOstr">嚴格門檻 0.80（達標判定）— </span><strong class="t-pass">通過</strong>
         </span>
       </div>
     </div>
@@ -89,7 +94,6 @@
             <th data-i18n="qualityListRank.headerSample">樣本</th>
             <th data-i18n="qualityListRank.headerScore">分歧分數</th>
             <th style="min-width:200px" data-i18n="qualityListRank.headerDetail">分歧描述</th>
-            <th data-i18n="qualityListRank.headerQueue">佇列狀態</th>
           </tr>
         </thead>
         <tbody>
@@ -97,13 +101,11 @@
             <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#47</span></td>
             <td><span class="badge badge-fail">0.66</span></td>
             <td style="white-space:normal;font-size:12px" data-i18n="multiDimListRank.sample1Detail">樣本 #47：Valence 評分在標記員間相差達 2.1 分（V: 1.2 vs 3.3）</td>
-            <td><span class="badge badge-warn" data-i18n="qualityListRank.queuePending">待審核</span></td>
           </tr>
           <tr>
             <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#112</span></td>
             <td><span class="badge badge-warn">0.50</span></td>
             <td style="white-space:normal;font-size:12px" data-i18n="multiDimListRank.sample2Detail">樣本 #112：Arousal 評分呈兩極化分布，標準差偏高</td>
-            <td><span class="badge badge-neutral" data-i18n="qualityListRank.queueCompleted">已完成</span></td>
           </tr>
         </tbody>
       </table>
