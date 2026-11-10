@@ -1,4 +1,7 @@
-schema: spec-driven
+schema: label-suite-sdd
+
+# 小型 change（文件、工具）仍可用 `--schema spec-driven` 走四份產物的舊流程
+# （維護者 2026-11-04 裁定，#51）。
 
 context: |
   規格分兩層：
@@ -9,6 +12,26 @@ context: |
   delta 中的每條 requirement 都須追溯到 docs/specs/ 的規格（註明規格編號 NN-NN 與
   Scenario 名稱，例：「來源：01-02 停用使用者」）。delta 與 docs/specs/ 不一致時以
   docs/specs/ 為準：停下來，把衝突列為待維護者回答的問題，不得自行選邊。
+
+  需求依據順序：維護者指定的需求文件與 docs/specs/ 的規格書 ＞ docs/specs/00-prd.mdx
+  ＞ docs/ 其他需求文件 ＞ openspec/。openspec 只引用規格的編號與章節，不另抄一份；
+  需求要改先用 spec-writing 改 docs/specs/。引用的規格標為「草稿」或「待釐清」仍有未決項時，
+  那一題記進 system-analysis 的待決問題，由 clarification 在停點一一次問完。
+
+  規劃階段的派工順序（整個 propose 由主 agent 依 schema 順序派工，除 clarification.md
+  以外主 agent 不自己寫規劃產出）：
+    sa 寫 system-analysis → sd 寫 system-design ∥ ui-ux 寫 ui-design → sd 寫 api-contract
+    → planner 寫 proposal → 主 agent 以 clarify skill 的關卡模式寫 clarification
+    → planner 寫 specs 與 design → planner 寫 tasks → design-reviewer 審閱、planner 回修。
+
+  **只有兩個人工停點**：
+  - 停點一：clarification 的 Q（需要維護者決定的項目）逐題問答。P（明確問題）直接派原
+    撰寫角色回修，不問維護者。
+  - 停點二：apply 全部完成、acceptance-verifier 產出驗收報告之後，由維護者親自驗收。
+  其餘環節（明確問題的回修、規劃審閱、程式審查、階段之間的提交）全部自動，不詢問。
+  **故障類中斷不算關卡，照停**：task 描述有歧義、實作中發現規格有問題、工作超出 tasks.md
+  的範圍、指令出錯——這些代表規劃錯了，不得硬推。
+
   AGENTS.md 是唯一的規則來源；以下只指出 OpenSpec 工作最常用到的段落，動手前先讀該段落。
   - Issue first：沒有列出工作項目的 open issue 就不開始 change
     （AGENTS.md "Hard Rules" 與 "Development Workflow"）。
@@ -16,25 +39,73 @@ context: |
     完整規則見 docs/development/commit-and-release.md。
   - 語言：artifact 以繁體中文撰寫；OpenSpec 結構標題與 SHALL／MUST 關鍵字維持英文
     （AGENTS.md "Language Rules"）。
-  CLI 以 `npx openspec` 執行。
+  - 任務設定驅動（Hard Rule 5）與測試集答案不外露（Hard Rule 6）是 clarification
+    第 9、10 個面向，在規劃階段就要有結論。
+  change 名稱：kebab-case、字母開頭。
+  CLI 以 `pnpm exec openspec` 執行（@fission-ai/openspec 是本專案的 devDependency）。
 
-# 個別 artifact 規則（選用）
-# 為特定 artifact 加上自訂規則。
-# 範例：
-#   rules:
-#     proposal:
-#       - proposal 不超過 500 字
-#       - 一律說明不在範圍內的事項
-#     tasks:
-#       - 每個 task 拆到 2 小時以內
+rules:
+  system-analysis:
+    - 只寫業務，不出現框架、資料表、端點名稱
+    - 業務流程以規格書的「業務流程」章節為準，只引用規格編號與流程名稱，不重畫
+    - 每個待決問題都要寫出「影響」；**記下來並繼續，不要停下來問維護者**——所有需要維護者決定的事由 clarification 在停點一一次問完
+  system-design:
+    - 分層是 Router → Service → Repository／Model；Router 不直接碰 Repository，資料層不處理 HTTP
+    - Sequence Diagram 的標題要與 specs 的 Scenario 名稱相同
+    - 有 migration 時寫明 Alembic 的 down 能不能還原，以及 SQLite 與 PostgreSQL 的差異
+    - 權限檢查與欄位遮蔽都在後端完成；權限不得超出 PRD §權限矩陣，需要超出時列進待決問題
+  ui-design:
+    - 每塊資料都要對應到 api-contract 的 operationId
+    - loading／error／empty／無權限四種狀態都要寫；有遮蔽欄位時寫出呈現方式
+    - 畫面長相以 design/prototype/pages/ 為準；token 只用 design/prototype/assets/tokens.css 與 label-suite-design skill 的語意名稱，不寫色碼
+    - 框架依 ADR-004（React 加 Vite 加 TypeScript strict，路由 React Router v6、伺服器狀態 TanStack Query）；**只有元件庫尚未定案**（shadcn/ui 待決，見 docs/development/architecture.md §前端），所以元件寫成語意描述、不要寫成某個元件庫的 API
+    - 沒有 UI 變更就只寫一行「本次無 UI 變更」
+  api-contract:
+    - operationId 全專案唯一，由 FastAPI 的 generate_unique_id_function **固定成「動詞加資源」**（例 listUsers、getUser），不手寫也不逐個覆寫
+    - 每個端點都要列出角色、錯誤碼與遮蔽欄位（沒有就寫「無」）
+    - 看不到的資源回 404，不得用 403 洩漏它存在；錯誤訊息不得回傳內部識別碼或堆疊
+    - 成功回應的統一格式尚未定案，寫成提案並列進待決問題，不要假設某一種格式
+  proposal:
+    - 列出引用的規格編號與章節（例：規格 02-03 §卡控機制）、其他需求文件章節與待決問題編號
+    - 先讀 system-analysis、system-design、ui-design、api-contract 四份，不得與之矛盾
+  clarification:
+    - 依 clarify skill 的關卡模式，**十個面向**都要有結論；specs、design、tasks 相關的檢查項標「後續產物」
+    - 第 9 面向「任務設定驅動」：這次的行為有沒有寫死某一種任務類型？新增任務類型要不要改核心程式？（Hard Rule 5）
+    - 第 10 面向「測試集答案不外露」：標記員能到達的端點與畫面，payload 裡有沒有標準答案或測試集標記？（Hard Rule 6）
+    - 每個決議寫出理由、日期與回修位置；改變需求的決議先用 spec-writing 回寫 docs/specs/ 的規格書
+    - 寫進規格書「已確認決議」的依據只有 docs/development/spec-migration.md 通則第 4 條那五種
+    - 不新增 proposal 沒有的功能，只釐清既有範圍
+  specs:
+    - 只寫 What，不寫 How；技術細節放 design 或 tasks
+    - 每個 Requirement 至少一個 Scenario，且可以直接寫成測試
+    - Scenario 沿用規格書「驗收標準」的 Scenario 名稱；規格書的卡控機制與邊界情況都要有對應的 Scenario
+    - 涉及欄位權限時，Scenario 要寫出被遮蔽時 payload 的樣子
+    - 涉及測試集答案時要有負向 Scenario：標記員能到達的地方取不到答案
+  design:
+    - 決策要對應到 system-design 或 api-contract 的段落；那兩份寫過的不在這裡重寫
+  tasks:
+    - task 群組以「可獨立提交且能 build 的單位」劃分，依相依順序排列
+    - 每個 task 結尾標一個負責角色：[@backend-developer]、[@frontend-developer]、[@dba]、[@technical-writer]
+    - 可平行的 task 放在同一個群組並在群組標題註明「（可平行）」
+    - 測試與實作放在同一個 task（TDD，見 docs/development/architecture.md §測試分層），不另拆測試 task
+    - 後端 API 有變動的群組，最後一個 task 是「重新產生 openapi.json 與前端型別並確認與 api-contract 一致」
+    - Python 用 uv、JavaScript 用 pnpm；不得出現 npm install 或 pip install
+    - tasks 定稿後先提交規劃產出物，再交由 design-reviewer 審閱；修訂由 planner 另開 commit
 
-# 個別操作指引（選用）
-# 說明 apply 與 archive 該如何進行的建議，與上方的 artifact 規則分開。
-# 範例：
-#   operations:
-#     apply:
-#       guidance:
-#         - 測試摘要保持簡短
-#     archive:
-#       guidance:
-#         - 結束前先摘要歸檔結果
+operations:
+  apply:
+    guidance:
+      - 每個 task 群組由主 agent 依標記派給對應角色，主 agent 不自己改程式
+      - 每完成一個 task 群組就提交一次，不要累積到最後；打勾代表實作與測試都完成
+      - 提交前該群組動到的部分要通過本專案現有的檢查：`pnpm check:specs`、`pnpm test:scripts`（動到 scripts/ 時）、`pnpm exec notecraftapp build docs --rebuild`（動到 docs/ 時）；不得以忽略規則略過
+      - 後端與前端的檢查指令等 backend/ 與 frontend/ 骨架 change 建好再補進這一節；在那之前不要寫不存在的指令，寫了等於每次都要手動略過
+      - 後端 API 有變動時，同一個群組內重新產生 openapi.json 與前端型別，並確認與 api-contract 一致
+      - 全部 task 完成且工作區乾淨後，交由 code-reviewer 審查；修正由實作角色另開 commit
+      - 審查通過後交由 acceptance-verifier 對照每個 Scenario 驗收，報告寫在 change 目錄的 acceptance.md；未通過不進入下一步
+      - acceptance.md 要附**人工驗收步驟**：啟動指令、用哪個角色登入、點哪幾頁、每一步預期看到什麼
+      - '**停點二**：步驟結束時自動提交，然後停下來等維護者親自驗收；維護者確認無誤才執行 /opsx:archive'
+  archive:
+    guidance:
+      - 歸檔前確認工作區乾淨；驗收已經在 apply 的最後做過，這裡不重做驗收判定
+      - 同步主規格與搬移到 archive 由 ops 執行；新 capability 的 Purpose 不留 TBD
+      - 步驟結束時自動提交；提交後停止，不自動開 PR
