@@ -150,7 +150,7 @@ This repository has no `.claude/rules/` canon and will not get one (decided in #
 | Area | Document | Issue |
 |------|----------|-------|
 | Cross-cutting — search first, dependency direction, smallest change, no premature abstraction, conflicts, locked scope, loud failure | [docs/development/agent-rules.md](docs/development/agent-rules.md) | #105 |
-| Backend layering, database, background work | not built yet | #106 |
+| Backend layering, database, background work | [docs/development/backend-agent-rules.md](docs/development/backend-agent-rules.md) | #106 |
 | Authorization, answer isolation, config-driven boundaries | not built yet | #107 |
 | API contract sync, single frontend client | not built yet | #108 |
 | Frontend dependency direction, type safety, shared UI | not built yet | #109 |
