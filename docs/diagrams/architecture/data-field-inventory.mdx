@@ -13,6 +13,8 @@ updatedAt: '2026-11-11'
 
 > 這一份是 [#233](https://github.com/label-suite/label-suite/issues/233) 三步的**第一步**：先確定哪些資料需要保存，再設計表。
 > **它不是資料表設計。** 候選表字典與關聯限制歸 [#235](https://github.com/label-suite/label-suite/issues/235)，ER 外掛呈現歸 [#236](https://github.com/label-suite/label-suite/issues/236)。
+>
+> 第二步與第三步都已經交付：[候選資料表字典與關聯限制](./data-table-dictionary.mdx)，以及可搜尋、可聚焦關聯的 **[候選資料表 ER 圖](/view/diagrams/architecture/database-schema.er)**（37 張表、328 欄、38 個單欄 FK）。ER 圖是從字典產生的，不是另一份獨立維護的資料；**本頁的分類與去留才是它的上游**。
 > 這裡**沒有 DDL、沒有 ORM、沒有 migration**，也沒有任何已部署的資料結構。
 
 ## 這份文件的邊界
@@ -476,7 +478,7 @@ updatedAt: '2026-11-11'
 
 **維護者 2026-11-11 裁定：這 64 列全部現算，不建分析表。** 它們本來就全是聚合推導值，現算就不會有「存下來的數字和重算的數字不一樣」這種問題。代價寫明在這裡，不要之後才發現：**共現矩陣、標記員排名與樣本層級的異常偵測都要掃全量標記**，資料量大時這一頁會慢；真的慢到不能用時，加快取或物化是**效能問題**而不是盤點問題——那時要帶實測數字回去請維護者重新裁定，**本文不預先替那個決定定流程**。
 
-所以 [#236](https://github.com/label-suite/label-suite/issues/236) 的 ER 圖**不會有分析表**——那是裁定的結果，不是缺口。
+所以 [ER 圖](/view/diagrams/architecture/database-schema.er)上**沒有分析表**——那是裁定的結果，不是缺口（[#236](https://github.com/label-suite/label-suite/issues/236) 已交付，圖上的 `meta` 也寫明了這一點）。
 :::
 
 #### [05-03 匯入與血緣](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)

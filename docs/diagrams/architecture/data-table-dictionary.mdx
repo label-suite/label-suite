@@ -7,18 +7,25 @@ createdAt: '2026-11-11'
 updatedAt: '2026-11-11'
 ---
 
+import PluginView from '@/components/PluginView.astro';
+
 # 候選資料表字典與關聯限制
 
 :badge[Issue #235]{variant="neutral"} :badge[規劃結構，非已落地]{variant="warning"}
 
 > 這一份是 [#233](https://github.com/label-suite/label-suite/issues/233) 三步的**第二步**。
 > 第一步是[資料欄位盤點總帳](./data-field-inventory.mdx)（哪些資料要存），第三步是 [#236](https://github.com/label-suite/label-suite/issues/236)（以 ER 外掛呈現）。
+>
+> **第三步已經交付**：[候選資料表 ER 圖](/view/diagrams/architecture/database-schema.er)。那份 `database-schema.er.json` 是**從本文件產生的**——表名、中文標籤、型別、可空性、單欄 FK、分組與表說明都來自這裡，所以本文件改了而圖沒跟著重新產生，就是圖錯了，不是本文件錯了。
+> 圖上**畫不出來**的兩類東西（**34 組複合 FK** 與 **22 條只能在應用層擋的限制**）只在本文件裡：數量見[§十 統計與驗收對照](#十統計與驗收對照)，逐條內容在各組的「組的關聯與限制」小節（[`admin`](#admin-組的關聯與限制)、[`dataset`](#dataset-組的關聯與限制)、[`run`](#run-組的關聯與限制)、[`annotation` 與 `review`](#annotation-與-review-組的關聯與限制)）。**圖上沒有線不代表沒有限制。**
 
 :::warning{title="這裡沒有任何已落地的資料結構"}
 `backend/` 不存在、`backend/alembic/versions/` 沒有任何 revision、也沒有 ORM model。**本文件每一張表都是候選設計**。
 
 要查「實際落地了什麼」，唯一的辦法是讀 Alembic revision 與資料庫 metadata——**不是讀這一份**。prototype 的 `localStorage` 與 fixture 也不是資料表。
 :::
+
+<PluginView src="diagrams/architecture/database-schema.er.json" caption="候選資料表 ER 圖（37 張表，從本文件產生）" />
 
 ## 這份文件的邊界
 
@@ -799,6 +806,15 @@ updatedAt: '2026-11-11'
 ## 七、`annotation` 與 `review` 標記與審核（8 張）
 
 **權威頁是 [04-02 標記工作區](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)**（43 列分四張子表，全專案對資料設計約束最多的一頁）。
+
+這一章收兩個分組，§一的分組表把它們分開列：
+
+| 分組 | 表 |
+| :--- | :--- |
+| **`annotation`**（2 張） | `annotation_record`、`annotation_history_event` |
+| **`review`**（6 張） | `annotation_review_draft`、`annotation_review_submission`、`annotation_review_submission_revision`、`annotation_review_decision`、`annotation_arbitration_vote`、`annotation_exception_resolution` |
+
+兩組合在同一章讀，是因為它們共用同一組單位鍵、而且審核的每一段都接在標記紀錄後面；但**分組不同**，ER 圖上是兩欄。
 
 **這八張裡有六張共用同一組三欄複合單位鍵**（`annotation_review_submission_revision` 與 `annotation_review_decision` 例外，它們以單欄 FK 指向 submission） `(task_id, run_id, assignment_id)`，指向 `task_annotation_assignment` 的唯一鍵 `(task_id, task_run_id, id)`。理由還是同一個：單欄 FK 擋不住「這個工作位屬於另一個任務或另一次執行」。
 
