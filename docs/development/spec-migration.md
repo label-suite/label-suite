@@ -241,7 +241,7 @@
 9. **自我檢查**：跑完 skill 步驟 6 的整份清單，特別是技術用語黑名單的 Grep（例外判定見上方「技術用語黑名單的例外」）。
 10. **更新索引**：模組 `index.mdx` 與 `docs/specs/index.mdx` 的 `specs.module-map`（補連結、拿掉「（未撰寫）」），新名詞進 `glossary.mdx`。
 11. **更新彙總清單**：把這頁的待釐清同步進 `docs/specs/open-questions.mdx`。
-12. **驗證**：`pnpm check:specs` 與 `pnpm exec notecraftapp build docs` 都要通過。
+12. **驗證**：`pnpm check:specs` 與 `pnpm exec notecraftapp build docs` 都要通過（build 第一次失敗要重跑一次，見[§建置閘門要重跑確認](#建置閘門要重跑確認)）。
 13. **提交**：照 skill 步驟 8.3 詢問後提交；分支 `docs/spec-NN-NN-<page>`，commit subject 結尾帶該頁 child issue 編號。
 
 ### 一頁一頁做，不並行
@@ -337,13 +337,60 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 - **任何一類都不准動的**：`docs/specs/00-prd.mdx`。要動 PRD 時回報並建議用 `prd-writing`（見「非目標」）。
 - **`design/prototype/` 只有畫面修正 PR 能動，而且要先過上面那道 artifact 關卡。** 文件 PR、流程圖 PR、工具 PR 與流程設定 PR 都不准動它：搬移期間畫面與規格不一致時列入待釐清（見「非目標」），不要順手改畫面。
 
+## 建置閘門要重跑確認
+
+`pnpm exec notecraftapp build docs --rebuild` 在編輯 `docs/` 之後的**第一次執行會間歇性失敗**，第二次起通過（[#172](https://github.com/label-suite/label-suite/issues/172)，實測 1 PASS／3 FAIL）。
+
+**規則：第一次失敗就再跑一次，只跑一次。** 第二次綠就算這一道閘通過；**兩次都失敗才是真的壞了**，去找真正的錯。
+
+這一條寫下來是因為兩個方向都會誤讀，而**第二種更危險**：
+
+| 誤判 | 後果 |
+| :--- | :--- |
+| 把第一次的失敗當成真的失敗 | 白花時間找一個不存在的 MDX 錯誤 |
+| 把第二次的成功當成「一次就綠」 | 哪天真的有一個**穩定**的 build 失敗，會被當成同一個偶發而重跑帶過 |
+
+**怎麼分辨真失敗**：真的 MDX 錯誤會印出檔案與位置、而且重跑**一模一樣地**再失敗一次。判例（2026-11-11）：一個標題裡放了半形雙引號，錯誤是 `docs/tmp-title-edge.mdx:14:22 Unexpected content after expression`，連跑兩次都相同——那不是 #172。#172 的形狀沒有檔案位置，堆疊收在 astro 的模組解析（`ModuleJob._link`／`ModuleLoader.import`），而且重跑就過。
+
+這條規則**已經有三份副本**，本章節是第四份，也是唯一寫了「怎麼分辨真失敗」的一份：`.github/workflows/ci.yml` 的 `docs-site` job（`… --rebuild || … --rebuild`，註解指向 #172）、[`.claude/agents/ops.md`](../../.claude/agents/ops.md) 與 [`.claude/agents/technical-writer.md`](../../.claude/agents/technical-writer.md) 的檢查清單。`openspec/config.yaml` 的 apply 階段也要求跑這道 build，但沒提重跑。
+
+**真正修掉 #172 之後，這四處的重跑要一起拿掉**（CI 那一處要另一類 PR——本文件 §PR 的變更範圍 明寫文件 PR 不得動 `.github/`）。
+
+### 併發的 build 會撞在一起，而且分得出哪一種併發
+
+**同一個 `docs/` 路徑的兩個 build 同時跑，後啟動的那個會失敗。** 2026-11-11 做了對照實驗，各 3 回：
+
+| 實驗 | 結果 |
+| :--- | :--- |
+| **同路徑**併發（相隔 1 秒啟動） | **3／3 第二個失敗**，形狀就是 #172 的那一種（`Cannot find module …/chunks/*.mjs` → `astro build exited with code 1`），第一個都 `Complete!` |
+| **不同路徑**併發（同時啟動） | **3／3 兩個都成功** |
+
+機制在 `~/.notecraft/app-1.15.0/bin/notecraftapp.mjs`：
+
+| 事實 | 出處 |
+| :--- | :--- |
+| 快取目錄 `~/.notecraft/cache/<雜湊>` = `sha1(絕對 docs 路徑)` 前 12 位 | `cacheDirFor()`，`:152-155` |
+| build 的暫存目錄 = **`~/.notecraft/app-<版本>/node_modules/.notecraft-build/<同一個雜湊>`** | `buildStageDir()`，`:573-575` |
+
+**那個 `node_modules` 是 app 自己的，不是你的 repo。** `buildCmd` 呼叫 `ensureBuild(packageRoot, …, process.cwd())`（`:758`），所以函式裡的 `cwd` 是 app 根、使用者的目錄是另一個參數；astro 也是從 app 根載入的（`:392`）。**repo 的 `node_modules` 完全不參與 build**——`<repo>/node_modules/.notecraft-build` 根本不存在，別去那裡找。上游自己的註解（`:571-572`）就寫「以快取 hash 命名，不同筆記資料夾可並行」。
+
+**還有兩份不帶雜湊的共用可變資源**：`~/.notecraft/app-<版本>/.astro/`（content layer 的 `dotAstroDir`，每次 build 都重寫）與 `node_modules/.vite/`。上面那 3 回不同路徑的併發沒有因為它們失敗，但 **3 回不等於所有時序都安全**；真的要大量平行建置時，這是第一個要懷疑的地方。
+
+**實務規則：會和別的 build 平行跑的 agent，給它自己的 git worktree**（不同路徑 → 不同雜湊）；否則請它不要跑 build，改讀既有產物。本 loop 的獨立審查會平行跑，所以這條直接決定每次派工怎麼下指示。
+
+兩個前提要寫出來，否則照做的人會卡住：
+
+- **worktree 要先有 `node_modules`。** `notecraftapp` 是 repo 的 devDependency，`pnpm exec` 靠 `node_modules/.bin/` 解析；剛 `git worktree add` 出來的 worktree 沒有它，命令會直接找不到。symlink 回主 checkout 就夠（build 用的是 app 的 `node_modules`，不是這一份）。
+- **SDD 角色不適用這條。** `AGENTS.md` §SDD Workflow 明寫「Do not give an SDD role its own worktree or its own issue」。那裡沒有衝突：會建置的 SDD 角色只有 `technical-writer`，而 SDD 的 apply 是逐群組**序列**派工的，不會有兩個 SDD build 同時跑。真正要避開的是**主流程與被派出去的角色同時建置**——那由派工的一方負責錯開。
+
+
 ## 驗收
 
 這件事做完的定義：
 
 1. `scripts/check-specs.mjs` 的三個缺陷都已修好並有單元測試；`annotation/015` 擷出 480 條、`06-01` 的既有對照表 46／46 不回歸（D9）。
 2. `docs/specs/` 有 18 頁規格（含已完成的 06-01），模組地圖 18 列全部有連結、沒有「（未撰寫）」。
-3. `pnpm check:specs` 與 `pnpm exec notecraftapp build docs` 全綠。
+3. `pnpm check:specs` 與 `pnpm exec notecraftapp build docs` 全綠（build 的重跑規則見[§建置閘門要重跑確認](#建置閘門要重跑確認)）。
 4. 18 份 `.ids` 的每個舊編號在對應的規格附錄都有新位置或帶理由的 `刪除`；廢止條文都逐條判定過，沒有整批判 `刪除`。
 5. 技術用語黑名單 Grep 的每個命中都判定過：判為例外的已進術語表並列在回報裡，其餘都已改寫。
 6. `docs/specs/open-questions.mdx` 存在、依模組分區段、每題都有建議與連結（第一輪完成時），或已清空（全部定案時）。
