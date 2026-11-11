@@ -139,7 +139,8 @@ PRD 不設待釐清專章。依問題決議後要改的地方，記在下列其�
 2. 角色與業務名詞第一次出現時用 `:ref[名詞]{id="term.xxx"}`；術語表沒有的，同時加進 `docs/specs/glossary.mdx`（格式見 spec-writing 的 [templates/glossary.mdx](../spec-writing/templates/glossary.mdx)）
 3. 模組地圖寫進 `docs/specs/index.mdx` 的 `specs.module-map` 定義區塊（`docs/specs/index.mdx` 不存在時，依 spec-writing 的 [templates/specs-index.mdx](../spec-writing/templates/specs-index.mdx) 建立）；PRD 只放 `::include{id="specs.module-map"}`
 4. 更新 §文件資訊 的章節完成度與 `updatedAt`；全部章節「已完成」時，文件狀態改為「定稿」
-5. 依 Issue 修改時：先清掉上一次的變更標示，再用 `<mark>` 加上標 `<sup>[#N](Issue 網址)</sup>` 標出這次的改動，頁首加 `:badge[變更 #N]`；
+5. 依 Issue **變更需求**時：先清掉上一次的變更標示，再用 `<mark>` 加上標 `<sup>[#N](Issue 網址)</sup>` 標出這次的改動，頁首加 `:badge[變更 #N]`；
+   只加導覽、修正被後續改動打成假的敘述這類**不改規則**的改動不加標示，只更新 `updatedAt`。
    規則同 spec-writing 的 [需求變更](../spec-writing/references/writing-guide.md#需求變更)，但 PRD 不寫變更紀錄章節（歷史看 git）
 
 ### 步驟 6：自我檢查
