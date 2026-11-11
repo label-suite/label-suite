@@ -792,3 +792,231 @@ updatedAt: '2026-11-11'
 | 審核單位的狀態 | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位) | 明寫**推導而非寫入，判定式恰五句** |
 | 完成率、清單筆數、尚未提交的樣本數 | [04-01](../../specs/04-annotation/01-annotation-list.mdx#資料欄位) | 每次讀取重算 |
 | 最新 IAA、品質旗標 | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) | 擁有者是 05-02，這一頁唯讀 |
+
+---
+
+## 七、`annotation` 與 `review` 標記與審核（8 張）
+
+**權威頁是 [04-02 標記工作區](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)**（43 列分四張子表，全專案對資料設計約束最多的一頁）。
+
+**這八張表共用同一組三欄複合單位鍵** `(task_id, run_id, assignment_id)`，指向 `task_annotation_assignment` 的唯一鍵 `(task_id, task_run_id, id)`。理由還是同一個：單欄 FK 擋不住「這個工作位屬於另一個任務或另一次執行」。
+
+### `annotation_record` — 標記草稿與提交嘗試
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `id` | 本次草稿／提交主鍵 | `uuid` | NOT NULL | **PK** | — |
+| `task_id` `run_id` `assignment_id` | 三欄複合單位鍵 | `uuid` ×3 | NOT NULL | **複合 FK → `task_annotation_assignment(task_id, task_run_id, id)`** | — |
+| `author_membership_id` | 當時受派的標記員 | `uuid` | NOT NULL | **複合 FK `(task_id, author_membership_id)` → `task_membership(task_id, id)`** | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：重派時舊紀錄轉已放棄並**保留原作者** |
+| `answer_payload` | 作答內容 | `json` | NOT NULL | — | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位) 的十四列作答欄位全在這裡，依釘住的設定驗證 |
+| `note` | 受派者備註 | `text` | **可空** | — | **這一欄本專案不渲染**，見下方說明 |
+| `version` | 樂觀鎖版本 | `integer` | NOT NULL | CHECK `>= 1` | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#版本衝突) 的版本衝突處理 |
+| `status` | 狀態 | `varchar(16)` | NOT NULL | CHECK 限 `saved`／`submitted`／`abandoned` | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：四個值裡**「待標記」是推導的**（尚無有效紀錄），只有三個落庫 |
+| `saved_at` | 最近一次保存 | `timestamptz` | NOT NULL | — | — |
+| `submitted_at` | 正式提交時間 | `timestamptz` | **可空** | **CHECK** `status='submitted' → submitted_at IS NOT NULL` | [04-01](../../specs/04-annotation/01-annotation-list.mdx#資料欄位) 的「完成時間」讀它：**還沒提交的沒有值** |
+| `abandoned_at` | 舊草稿退役時間 | `timestamptz` | **可空** | **CHECK** `status='abandoned' → abandoned_at IS NOT NULL` | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：未提交重派時寫一次 |
+
+**`answer_payload` 的結構**（[04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位) 的「標記員的作答」逐欄）：
+
+| 鍵 | 內容 | 規格要點 |
+| :--- | :--- | :--- |
+| `outputs[]` | 每一種輸出類型一筆，依設定的順序 | — |
+| `outputs[].kind` | 哪一種輸出類型 | 八種之一 |
+| `outputs[].value` | 作答值，形狀依型別 | 單選／階層路徑／評分／span／實體／三元組／自由文本 |
+| `outputs[].bypassed` | 是否勾了「無法判定」 | **勾了之後其餘作答內容須為空** |
+| `outputs[].bypass_reason` | 「無法判定」的理由 | **整份規格裡唯一仍然必填的理由**；沒填擋下送出 |
+
+四個**規格明文**的結構要點，照收進 `value` 的形狀：**多選階層標籤記從根到節點的完整路徑**；**序列標記與實體的終點本身不算在範圍內、範圍不得相交**；**三元組的位置只能來自本來就帶位置的來源，沒帶就是沒有、不得用字串比對回推**；**三元組的主體與客體各自記自己的所屬發言**。
+
+**`note` 這一欄留著但本專案不渲染。** [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#工作區不得有存不了的備註欄) 明寫工作區「**不渲染任何沒有持久化路徑的備註欄**」，而它確實有持久化路徑——所以不是「不該存」而是「目前沒有畫面」。**吸附單位不進表**：規格明寫它「只影響滑鼠落點，不影響存下來的值」。
+
+| | |
+| :--- | :--- |
+| **寫入者** | 受派標記員本人 |
+| **讀取權限** | 本人；審核員在[審核單位](../../specs/04-annotation/01-annotation-list.mdx#資料欄位)內讀受審者那一筆；**別的標記員讀不到**（[04-02](../../specs/04-annotation/02-annotation-workspace.mdx#盲審隔離還沒送出的判斷只有本人看得到)） |
+| **不可變** | 三欄單位鍵、`author_membership_id`；`status='submitted'` 之後**審核員首次提交後凍結**（**應用層**） |
+| **保留** | 永不刪除。重派不刪舊紀錄，轉 `abandoned` |
+
+### `annotation_review_draft` — 審核員私有草稿
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `id` | 私有草稿主鍵 | `uuid` | NOT NULL | **PK** | — |
+| `task_id` `run_id` `assignment_id` | 三欄複合單位鍵 | `uuid` ×3 | NOT NULL | **複合 FK** 同上；**部分唯一** `(run_id, assignment_id, reviewer_membership_id) WHERE invalidated_at IS NULL` | — |
+| `reviewer_membership_id` | **唯一可讀寫的審核員** | `uuid` | NOT NULL | **複合 FK → `task_membership(task_id, id)`** | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#盲審隔離還沒送出的判斷只有本人看得到)：**還沒送出的判斷只有本人看得到** |
+| `decision_payload` | 未提交的逐輸出決策與理由 | `json` | NOT NULL | — | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：與提交紀錄**分離** |
+| `version` | 樂觀鎖版本 | `integer` | NOT NULL | CHECK `>= 1` | — |
+| `updated_at` | 最近寫入 | `timestamptz` | NOT NULL | — | — |
+| `invalidated_at` | 失效時間 | `timestamptz` | **可空** | — | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：**送出成功後必須清除**；因稽核留存時以此失效並排除還原 |
+
+:::warning{title="這張表要獨立，而且連「存不存在」都不能洩漏"}
+[04-02](../../specs/04-annotation/02-annotation-workspace.mdx#盲審隔離還沒送出的判斷只有本人看得到) 明寫：還沒送出的判斷只有本人看得到，**連「已有動作」這個事實都不得外洩**。
+
+所以這不是「提交紀錄上多一個可為空的草稿欄」就能做到的——那樣任何能讀提交紀錄的人都會看到草稿存在。獨立一張表加上讀取權限只給 `reviewer_membership_id` 本人，才可能成立。**而結構只是讓它可能，實際擋住靠查詢層**。
+:::
+
+### `annotation_review_submission` — 已提交審核主檔
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `id` | 目前版本主鍵 | `uuid` | NOT NULL | **PK** | — |
+| `task_id` `run_id` `assignment_id` | 三欄複合單位鍵 | `uuid` ×3 | NOT NULL | **複合 FK** 同上；**唯一 `(run_id, assignment_id)`** | **這個唯一限制擋住兩位審核員並列正式提交**——審核單位只有一個提交者 |
+| `reviewer_membership_id` | **唯一正式提交者** | `uuid` | NOT NULL | **複合 FK → `task_membership(task_id, id)`** | 首次提交者即固定歸屬 |
+| `version` | 已提交修訂序號 | `integer` | NOT NULL | CHECK `>= 1` | 每次合法改判 +1 |
+| `submitted_at` | 首次提交時間 | `timestamptz` | NOT NULL | — | — |
+| `updated_at` | 最新改判時間 | `timestamptz` | NOT NULL | — | — |
+
+### `annotation_review_submission_revision` — 不可變的修訂快照
+
+**每次正式提交一份完整快照。`decision_payload` 是已提交決策的唯一權威紀錄。**
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `id` | 不可變修訂主鍵 | `uuid` | NOT NULL | **PK** | — |
+| `run_id` `assignment_id` | 同單位複合鍵 | `uuid` ×2 | NOT NULL | — | — |
+| `review_submission_id` | 所屬提交主檔 | `uuid` | NOT NULL | **FK → `annotation_review_submission.id`，RESTRICT**；**唯一 `(review_submission_id, version)`** | — |
+| `version` | 與主檔本次版本一致 | `integer` | NOT NULL | CHECK `>= 1` | — |
+| `decision_payload` | 本次全部輸出的決策、修正值與理由快照 | `json` | NOT NULL | — | **仲裁票參照投票時所見的這一份**，避免後續改判把來源改掉 |
+| `submitted_at` | 本次提交時間 | `timestamptz` | NOT NULL | — | — |
+
+| | |
+| :--- | :--- |
+| **不可變** | **整列不可變。** 這是「改判不得改變仲裁所依據的來源」的落點 |
+
+### `annotation_review_decision` — 逐輸出審核決策
+
+**這張表是最新修訂 `decision_payload` 的逐輸出投影，不是第二份權威副本。**
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `id` | 逐輸出決策主鍵 | `uuid` | NOT NULL | **PK** | — |
+| `review_submission_id` | 所屬目前版本 | `uuid` | NOT NULL | **FK → `annotation_review_submission.id`，CASCADE**；**唯一 `(review_submission_id, output_key)`** | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：三向決策**每個輸出類型一筆** |
+| `output_key` | 一個輸出類型 | `varchar(120)` | NOT NULL | 見上 | — |
+| `decision` | 三向決策 | `varchar(16)` | NOT NULL | CHECK 限三值 | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：通過、修正、無法裁決 |
+| `corrected_answer` | 修正後的答案 | `json` | **可空** | **CHECK** `decision='modify' → corrected_answer IS NOT NULL` | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：決策是修正時**不得為空**；初始值是**受審標記員本人的答案** |
+| `reason` | 修正／無法裁決的理由 | `text` | **NOT NULL，允許空字串** | — | **這一欄與原始規劃相反，見下** |
+| `decided_at` | 本次提交時間 | `timestamptz` | NOT NULL | — | — |
+
+:::note{title="`reason` 的可空性：原始規劃標「可空」，但本專案規格要求 NOT NULL 允許空字串"}
+[04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位) 明寫：「修正／無法裁決的理由……**選填**；空白**不得擋下送出**，**空值以空字串寫入、不得缺鍵**」。
+
+「選填」說的是**使用者可以不填**，不是**欄位可以沒有**。原始規劃把它標成 SQL `NULL` 可空，那會讓「沒填」與「沒這個鍵」變成同一件事，而規格刻意把兩者分開——所以這一欄是 **NOT NULL 並允許空字串**。
+
+同一條原則也套在 `annotation_arbitration_vote.reason` 與 `annotation_exception_resolution.reason`（原始規劃那兩張已經是 NOT NULL，與本專案一致）。
+:::
+
+### `annotation_arbitration_vote` — 逐爭議鍵的仲裁票
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `id` | 不可變票主鍵 | `uuid` | NOT NULL | **PK** | — |
+| `task_id` `run_id` `assignment_id` | 三欄複合單位鍵 | `uuid` ×3 | NOT NULL | **複合 FK** 同上 | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：**仲裁狀態以審核單位定址，不得寫進審核員自己的紀錄** |
+| `output_key` | 爭議的輸出類型 | `varchar(120)` | NOT NULL | **唯一 `(run_id, assignment_id, output_key, item_key)`** | **每項至多一張不可變票** |
+| `item_key` | 推導的子項鍵 | `text` | NOT NULL | 見上 | 子項粒度。**編碼方式待定**，見下 |
+| `arbiter_membership_id` | 仲裁者 | `uuid` | NOT NULL | **複合 FK → `task_membership(task_id, id)`** | [04-01](../../specs/04-annotation/01-annotation-list.mdx#資料欄位)：仲裁資格是**名冊勾選且在該單位沒有自己的審核提交**（**應用層**） |
+| `review_revision_id` | 投票所見的修訂版本 | `uuid` | NOT NULL | **FK → `annotation_review_submission_revision.id`，RESTRICT** | 避免後續改判把來源改掉 |
+| `choice` | 裁定 | `varchar(16)` | NOT NULL | CHECK 限三值 | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：採 A、採 B、兩者皆非 |
+| `reason` | 裁定理由 | `text` | **NOT NULL，允許空字串** | — | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：選填；空白時顯示 `未填寫理由`。[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) Q45（v14.0.0 BREAKING）：「兩者皆非」時**仍是選填** |
+| `has_finalized_value` | 本票是否產生定案值 | `boolean` | NOT NULL | — | **與 `finalized_value` 分開，因為合法的 JSON 空值也算有值** |
+| `finalized_value` | 定案值 | `json` | **可空** | — | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：**採 B 而來源是「無法裁決」時定案值就是空的——那是設計語意、不是缺陷** |
+| `source_digest` | 來源摘要 | `char(64)` | NOT NULL | — | 標記提交與審核修訂的來源摘要 |
+| `voted_at` | 投票時間 | `timestamptz` | NOT NULL | — | — |
+| `decision_batch_id` | 同一次原子仲裁的冪等 ID | `uuid` | NOT NULL | — | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：**全部裁定才送得出去**——一次批次提交全部爭議鍵 |
+| `decision_batch_digest` | 該批次內容摘要 | `char(64)` | NOT NULL | — | 同一個批次 ID 但內容不同時要擋下 |
+
+**`has_finalized_value` 這一欄為什麼不能省：** 規格明寫定案值可以是空的，而 JSON 的 `null` 也是合法的答案值。只用 `finalized_value IS NULL` 判斷，就分不出「這一票沒有產生定案值」與「定案值是 JSON null」。
+
+:::note{title="`item_key` 的編碼方式本文件不定"}
+`item_key` 是「爭議子項」的鍵——例如序列標記裡是哪一個 span、實體辨識裡是哪一個實體。粒度由 [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#爭議項是推導出來的不是存起來的) 定（爭議項是推導的），但**它的字串編碼、版本與碰撞測試規格沒有定**。
+
+這一欄的唯一限制 `(run_id, assignment_id, output_key, item_key)` 要成立，前提是編碼**無碰撞**——兩個不同的子項不能算出同一個鍵。**本文件不替它選編碼**，列為實作前要定的事。
+:::
+
+### `annotation_exception_resolution` — 例外池收尾
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `id` | 不可變收尾主鍵 | `uuid` | NOT NULL | **PK** | — |
+| `task_id` `run_id` `assignment_id` | 三欄複合單位鍵 | `uuid` ×3 | NOT NULL | **複合 FK** 同上 | — |
+| `output_key` `item_key` | 被收尾的爭議子項 | `varchar(120)` / `text` | NOT NULL | **唯一 `(run_id, assignment_id, output_key, item_key)`** | 一個子項最多收尾一次 |
+| `arbitration_vote_id` | 對應的「兩者皆非」票 | `uuid` | NOT NULL | **FK → `annotation_arbitration_vote.id`，RESTRICT**；**唯一** | 只在仲裁判「兩者皆非」後才進例外池 |
+| `resolved_by_membership_id` | 確認的專案負責人 | `uuid` | NOT NULL | **複合 FK → `task_membership(task_id, id)`** | — |
+| `action` | 四種處置 | `varchar(32)` | NOT NULL | CHECK 限四值 | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：採標記員答案、採審核員答案、自訂答案、排除於資料集 |
+| `reason` | 處置理由 | `text` | **NOT NULL，允許空字串** | — | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：選填，**但欄位本身必須隨每筆收尾寫入** |
+| `has_finalized_value` | 是否有定案值 | `boolean` | NOT NULL | — | 同仲裁票的理由 |
+| `finalized_value` | 採用或自訂的答案 | `json` | **可空** | **CHECK** `action='exclude' → has_finalized_value = false` | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：**排除不產生最終答案** |
+| `resolved_at` | 確認時間 | `timestamptz` | NOT NULL | — | — |
+
+**「自訂答案只適用正式標記」擋不進這張表的 CHECK**——`run_type` 在 `task_run` 上，CHECK 看不到另一張表。**應用層**。
+
+**「排除」排除的是爭議輸出項目，不是刪 `dataset_item`、執行項目或工作位。** 這一點要寫清楚，否則會有人以為排除要去刪上游的列。
+
+### `annotation_history_event` — 標記與審核的責任歷程
+
+**append-only。** [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位) 明寫「事件**永不刪除**，一般寫入路徑**只能追加**」。
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `id` | 事件主鍵 | `uuid` | NOT NULL | **PK** | — |
+| `task_id` `run_id` `assignment_id` | 三欄複合單位鍵 | `uuid` ×3 | NOT NULL | **複合 FK** 同上 | — |
+| `event_no` | 單位內單調序號 | `integer` | NOT NULL | **唯一 `(run_id, assignment_id, event_no)`**；CHECK `>= 1` | [04-01](../../specs/04-annotation/01-annotation-list.mdx#資料欄位)：「最後活動時間」**同時戳時取最後寫入的那一筆**——所以需要時戳以外的排序 |
+| `actor_membership_id` | 當次真實操作者 | `uuid` | NOT NULL | **複合 FK → `task_membership(task_id, id)`** | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：**真實身分**，不得用「目前這位」之類的字面值 |
+| `actor_task_role` | 當次角色快照 | `varchar(24)` | NOT NULL | — | 同上。**快照而非即時 JOIN**，角色事後改了歷程要留當時的 |
+| `account_session_id` | 可驗證的登入工作階段 | `uuid` | **可空** | **FK → `account_session.id`，RESTRICT** | **不得由操作者或時間猜測補值** |
+| `action` | 動作 | `varchar(24)` | NOT NULL | CHECK 限八值 | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：**不得是自由字串**；集合外的舊值**原樣顯示英文原值**（有兩個例外仍顯示中文標籤） |
+| `output_key` | 動作所涉輸出類型 | `varchar(120)` | **可空** | — | 整單位動作時為空 |
+| `reason` | 當次理由 | `text` | **可空** | — | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：**欄位必須隨事件寫入，空值以空字串表示**——但**依 `action` 決定是否寫入**，所以這一欄是真的可空 |
+| `result_snapshot` | 結果快照 | `json` | **可空** | **CHECK** 三種改變答案的 action → 非空 | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：**只有會改變答案的事件（提交、審核修正、仲裁定案）必須保存**；**必須排除原始文本與資料集欄位**；**差異在呈現時由相鄰兩筆計算、不另存** |
+| `started_at` | 起算時間 | `timestamptz` | **可空** | **CHECK** 與 `lead_time_ms` 同時為空或同時非空 | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：**一次作業只記一份**；審核員一次送出多筆事件時**只有第一筆帶** |
+| `lead_time_ms` | 耗時 | `integer` | **可空** | CHECK `>= 0`；見上 | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：**頁面可見時間累計**，切到背景暫停；**不得用事件時間相減**；**登入狀態失效的時間不得當結束時間**；算不出來就**留空並顯示「未知」、不補推估值**（不論原因，[#196](https://github.com/label-suite/label-suite/issues/196)） |
+| `occurred_at` | 動作完成時間 | `timestamptz` | NOT NULL | 索引 | — |
+| `annotation_record_id` | 來源：標記紀錄 | `uuid` | **可空** | **CHECK** 四個來源欄**至多一個非空** | 由哪一種動作產生的 |
+| `review_revision_id` | 來源：審核修訂 | `uuid` | **可空** | 同上 | — |
+| `arbitration_vote_id` | 來源：仲裁票 | `uuid` | **可空** | 同上 | — |
+| `exception_resolution_id` | 來源：例外收尾 | `uuid` | **可空** | 同上 | — |
+
+**`lead_time_ms` 不等於工時，兩個數不能共用一欄。** [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位) 明寫「這裡的耗時**不等於工時**——工時由 03-03 那一側計算」，而那一側是 `task_work_interval`。
+
+**未提交的審核員草稿不產生事件。** [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#盲審隔離還沒送出的判斷只有本人看得到) 的盲審隔離要求連「已有動作」都不得外洩，所以草稿**不寫歷程**——這是結構上的保證，不只是遮蔽。
+
+| | |
+| :--- | :--- |
+| **讀取權限** | 事件列對所有能檢視那一筆的人可見，但**`result_snapshot` 與 `reason` 依角色遮蔽**。另有兩道更嚴的：**別的標記員的事件不得進入標記員的輸出（連事件列都不行）**；**試標回合揭露之前，標記員的歷程輸出只含他本人的事件** |
+| **不可變** | **整列不可變，只能追加** |
+| **保留** | **永不刪除**（與 `audit_events` 的「至少一年」是兩套政策，見 [D3](./data-field-inventory.mdx#五裁定紀錄與待裁決)） |
+
+### `annotation` 與 `review` 組的關聯與限制
+
+| 限制 | 層級 | 內容 |
+| :--- | :--- | :--- |
+| 八張表的單位歸屬 | **DB** | 三欄複合 FK → `task_annotation_assignment(task_id, task_run_id, id)` |
+| 一個審核單位只有一個提交者 | **DB** | 唯一 `(run_id, assignment_id)` on submission |
+| 每項至多一張仲裁票 | **DB** | 唯一 `(run_id, assignment_id, output_key, item_key)`——**前提是 `item_key` 編碼無碰撞** |
+| 一個子項最多收尾一次 | **DB** | 同上鍵 on exception_resolution |
+| 一張「兩者皆非」票最多一筆收尾 | **DB** | 唯一 `arbitration_vote_id` |
+| 審核草稿每審核員每單位最多一份有效 | **DB** | 部分唯一 `WHERE invalidated_at IS NULL` |
+| 逐輸出決策每輸出一筆 | **DB** | 唯一 `(review_submission_id, output_key)` |
+| 修正時修正值不得為空 | **DB** | CHECK |
+| 排除不產生定案值 | **DB** | CHECK |
+| 四個來源欄至多一個非空 | **DB** | CHECK |
+| 起算時間與耗時成對 | **DB** | CHECK |
+| 改答案的事件必須有快照 | **DB** | CHECK |
+| **決策完整性**（每個釘住的輸出恰一次） | **應用層** | DB 不知道那次釘住的設定有幾個輸出 |
+| **仲裁資格**（名冊勾選且在該單位沒有自己的審核提交） | **應用層** | 跨表條件 |
+| **自訂答案只適用正式標記** | **應用層** | `run_type` 在另一張表 |
+| **首票後禁止改判** | **應用層** | — |
+| **審核員首次提交後凍結標記來源** | **應用層** | — |
+| **快照排除原始文本與資料集欄位** | **應用層** | JSON 內容的約束 |
+| **歷程只能追加** | **應用層**（可加觸發器） | DB 擋不住 DELETE |
+| **盲審隔離** | **應用層（查詢層）** | 結構讓它可能，擋住要靠查詢與回應模型 |
+
+### 不進表的推導值
+
+| 推導值 | 哪一頁 | 為什麼不存 |
+| :--- | :--- | :--- |
+| 審核單位的狀態 | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位) | **推導而非寫入，判定式恰五句**；已定稿是終態 |
+| 爭議項 | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#爭議項是推導出來的不是存起來的) | **每次讀取時重新推導、不實體化儲存** |
+| 差異比對 | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位) | **由相鄰兩筆事件計算、不另存** |
+| 最後動作、最後活動時間、鎖定狀態、累計耗時、標記分布統計、仲裁資格 | [04-01](../../specs/04-annotation/01-annotation-list.mdx#資料欄位) | 全部每次讀取重算 |
+| 整筆的「待標記」 | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位) | **由尚無有效紀錄推導**，不是 `status` 的第四個值 |
+| 吸附單位 | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位) | 規格明寫**只影響滑鼠落點，不影響存下來的值** |
