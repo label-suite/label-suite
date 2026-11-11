@@ -78,6 +78,9 @@
     }
     .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
     .mini-btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+    /* button.css 只替 .btn-primary／.btn-cta 定義 :disabled，所以 .btn-ghost 的「編輯」
+       鎖住之後看起來仍然能按、hover 還會出現底線。補在頁內，不動共用檔。 */
+    #editBtn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; text-decoration: none; }
     .mini-btn-log {
       background: var(--color-info-bg); border-color: var(--color-info-border); color: var(--color-info);
     }
@@ -1349,13 +1352,19 @@
         setDirty(false);
         originalState = {};
       }
+      else hideToast();   // error toast 的 duration 是 0，不自己收就會一直掛在畫面上
       document.getElementById('storedInvalidBanner').classList.toggle('hidden', !invalid);
       document.getElementById('matrixScrollWrapper').classList.toggle('hidden', invalid);
+      // 區段說明講的是鎖頭圖示與「需任務角色」徽章，矩陣藏起來之後它在描述一張看不到的表
+      document.getElementById('matrixSectionDesc').classList.toggle('hidden', invalid);
       document.getElementById('editBtn').disabled = invalid;
     }
 
     function retryLoadMatrix() {
+      // 失敗時要說話：橫幅本來就在，再 toggle 一次畫面毫無變化，
+      // 管理員分不清是「還沒修好」還是「按鈕壞了」。
       if (loadPersistedMatrix()) captureOriginalState();
+      else showToast('error', i18n[lang].toastStoredInvalid);
       window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_role_settings_stored_invalid_retry', { page: 'role-settings' });
     }
 
@@ -1440,6 +1449,10 @@
 
     /* ── Save ──────────────────────────────────────────────────────── */
     function saveMatrix() {
+      // 現在擋住寫入的是「diff 剛好為空」，不是狀態檢查。少了這一行，
+      // 日後任何讓 originalState 在這個狀態下非空的改動，都會把 DOM 裡
+      // 仍留著的預設矩陣整份寫回 localStorage。
+      if (storedMatrixInvalid) return;
       const t = i18n[lang];
       window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_role_settings_save_attempted', { page: 'role-settings' });
       if (getStorageVersion() !== matrixVersion) {
