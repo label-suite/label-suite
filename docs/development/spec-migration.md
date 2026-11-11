@@ -241,7 +241,7 @@
 9. **自我檢查**：跑完 skill 步驟 6 的整份清單，特別是技術用語黑名單的 Grep（例外判定見上方「技術用語黑名單的例外」）。
 10. **更新索引**：模組 `index.mdx` 與 `docs/specs/index.mdx` 的 `specs.module-map`（補連結、拿掉「（未撰寫）」），新名詞進 `glossary.mdx`。
 11. **更新彙總清單**：把這頁的待釐清同步進 `docs/specs/open-questions.mdx`。
-12. **驗證**：`pnpm check:specs` 與 `pnpm exec notecraftapp build docs` 都要通過。
+12. **驗證**：`pnpm check:specs` 與 `pnpm exec notecraftapp build docs` 都要通過（build 第一次失敗要重跑一次，見[§建置閘門要重跑確認](#建置閘門要重跑確認)）。
 13. **提交**：照 skill 步驟 8.3 詢問後提交；分支 `docs/spec-NN-NN-<page>`，commit subject 結尾帶該頁 child issue 編號。
 
 ### 一頁一頁做，不並行
@@ -337,13 +337,42 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 - **任何一類都不准動的**：`docs/specs/00-prd.mdx`。要動 PRD 時回報並建議用 `prd-writing`（見「非目標」）。
 - **`design/prototype/` 只有畫面修正 PR 能動，而且要先過上面那道 artifact 關卡。** 文件 PR、流程圖 PR、工具 PR 與流程設定 PR 都不准動它：搬移期間畫面與規格不一致時列入待釐清（見「非目標」），不要順手改畫面。
 
+## 建置閘門要重跑確認
+
+`pnpm exec notecraftapp build docs --rebuild` 在編輯 `docs/` 之後的**第一次執行會間歇性失敗**，第二次起通過（[#172](https://github.com/label-suite/label-suite/issues/172)，實測 1 PASS／3 FAIL）。
+
+**規則：第一次失敗就再跑一次，只跑一次。** 第二次綠就算這一道閘通過；**兩次都失敗才是真的壞了**，去找真正的錯。
+
+這一條寫下來是因為兩個方向都會誤讀，而**第二種更危險**：
+
+| 誤判 | 後果 |
+| :--- | :--- |
+| 把第一次的失敗當成真的失敗 | 白花時間找一個不存在的 MDX 錯誤 |
+| 把第二次的成功當成「一次就綠」 | 哪天真的有一個**穩定**的 build 失敗，會被當成同一個偶發而重跑帶過 |
+
+**怎麼分辨真失敗**：真的 MDX 錯誤會印出檔案與位置、而且重跑**一模一樣地**再失敗一次。判例（2026-11-11）：一個標題裡放了半形雙引號，錯誤是 `docs/tmp-title-edge.mdx:14:22 Unexpected content after expression`，連跑兩次都相同——那不是 #172。#172 的形狀沒有檔案位置，堆疊收在 astro 的模組解析（`ModuleJob._link`／`ModuleLoader.import`），而且重跑就過。
+
+CI 已經帶著同一道權宜：`.github/workflows/ci.yml` 的 `docs-site` job 寫成 `… --rebuild || … --rebuild`，註解裡指向 #172。**真正修掉 #172 之後，本機與 CI 的重跑要一起拿掉。**
+
+### 併發的 build 會穩定地撞在一起
+
+已知的加劇因素：**兩個 build 同時跑一定有一個失敗**。先完成的那一個把共用的暫存目錄搬走，另一個就在模組解析時找不到自己的 chunk（或反過來，在最後 rename 時發現目錄已經不在）。
+
+暫存目錄的位置與命名在 `~/.notecraft/app-1.15.0/bin/notecraftapp.mjs`：`cacheDirFor()`（`:152`）取**絕對 `docs/` 路徑的 SHA-1 前 12 位**，build 的暫存目錄是 `<cwd>/node_modules/.notecraft-build/<那個雜湊>`（`:574`）。
+
+所以**從不同路徑跑的 build 不會互撞**，即使共用同一個 `node_modules`——雜湊不同，子目錄就不同。2026-11-11 實測：主 checkout 的 `docs/` 是 `fea300f43cfd`，同一個 session 另開的 worktree 是 `d7bd33b09500`（兩個雜湊都用 `sha1(絕對路徑)[:12]` 複算吻合），那次 worktree 的 build 第一次就通過，也沒有動到主 checkout 的產物。
+
+**實務規則：要讓 subagent 跑文件站 build，就給它自己的 git worktree**；否則請它不要跑 build，改讀既有產物。本 loop 的獨立審查會平行跑，這一條直接影響它們要不要重建。
+
+---
+
 ## 驗收
 
 這件事做完的定義：
 
 1. `scripts/check-specs.mjs` 的三個缺陷都已修好並有單元測試；`annotation/015` 擷出 480 條、`06-01` 的既有對照表 46／46 不回歸（D9）。
 2. `docs/specs/` 有 18 頁規格（含已完成的 06-01），模組地圖 18 列全部有連結、沒有「（未撰寫）」。
-3. `pnpm check:specs` 與 `pnpm exec notecraftapp build docs` 全綠。
+3. `pnpm check:specs` 與 `pnpm exec notecraftapp build docs` 全綠（build 的重跑規則見[§建置閘門要重跑確認](#建置閘門要重跑確認)）。
 4. 18 份 `.ids` 的每個舊編號在對應的規格附錄都有新位置或帶理由的 `刪除`；廢止條文都逐條判定過，沒有整批判 `刪除`。
 5. 技術用語黑名單 Grep 的每個命中都判定過：判為例外的已進術語表並列在回報裡，其餘都已改寫。
 6. `docs/specs/open-questions.mdx` 存在、依模組分區段、每題都有建議與連結（第一輪完成時），或已清空（全部定案時）。
