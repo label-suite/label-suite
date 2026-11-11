@@ -139,6 +139,103 @@
       opacity: 0.4;
     }
 
+    /* ── Success Paths (規格 02-01 §三條最短成功路徑；#186) ── */
+    .success-paths {
+      margin-top: var(--space-lg);
+      padding-top: var(--space-lg);
+      border-top: 1px solid var(--color-border);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .success-paths-header { display: flex; flex-direction: column; gap: 2px; }
+
+    .success-paths-title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-ink);
+    }
+
+    .success-paths-subtitle {
+      font-size: 0.8125rem;
+      color: var(--color-ink-muted);
+    }
+
+    .success-path {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .success-path-head { display: flex; align-items: center; gap: var(--space-sm); }
+
+    .success-path-key {
+      width: 26px;
+      height: 26px;
+      flex-shrink: 0;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8125rem;
+      font-weight: 700;
+    }
+
+    .success-path-name {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--color-ink);
+    }
+
+    .success-path-steps {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: var(--space-xs);
+    }
+
+    .success-path-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .success-path-step-no {
+      width: 30px;
+      height: 30px;
+      flex-shrink: 0;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .success-path-step-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--color-ink);
+      line-height: 1.35;
+    }
+
+    .success-path--emerald .success-path-key,
+    .success-path--emerald .success-path-step-no { background: #D1FAE5; color: var(--color-cta-hover); }
+    .success-path--violet .success-path-key,
+    .success-path--violet .success-path-step-no  { background: #EDE9FE; color: #7C3AED; }
+    .success-path--indigo .success-path-key,
+    .success-path--indigo .success-path-step-no  { background: #E0E7FF; color: #4F46E5; }
+
     .workflow-role-cta {
       margin-top: auto;
       padding-top: var(--space-sm);
@@ -299,6 +396,11 @@
         grid-template-columns: 1fr;
       }
 
+      /* 五步在窄螢幕排一列會把 12px 的標籤壓成一字一行 */
+      .success-path-steps {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
       .metrics {
         grid-template-columns: repeat(2, 1fr);
       }
@@ -407,6 +509,14 @@
       .step-icon--emerald       { background: #059669; color: #D1FAE5; }
       .step-icon--violet        { background: #6D28D9; color: #EDE9FE; }
       .step-icon--indigo        { background: #4338CA; color: #E0E7FF; }
+
+      /* Success path markers — same vibrant treatment as the step icons above */
+      .success-path--emerald .success-path-key,
+      .success-path--emerald .success-path-step-no { background: #047857; color: #D1FAE5; } /* 不沿用 .step-icon--emerald 的 #059669：那裡裝圖示（3:1 即可），這裡裝文字，#D1FAE5 on #059669 只有 3.32:1 */
+      .success-path--violet .success-path-key,
+      .success-path--violet .success-path-step-no  { background: #6D28D9; color: #EDE9FE; }
+      .success-path--indigo .success-path-key,
+      .success-path--indigo .success-path-step-no  { background: #4338CA; color: #E0E7FF; }
 
       /* Role avatars — same vibrant treatment */
       .role-avatar--emerald { background: #059669; color: #D1FAE5; }
