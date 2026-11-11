@@ -6808,9 +6808,13 @@
     return run && run.guidelineVersionId ? run.guidelineVersionId : null;
   }
   function guidelineGateActorId() {
-    return currentRole === 'reviewer'
-      ? (currentIdentity && currentIdentity.reviewerId)
-      : currentAnnotatorId();
+    if (currentRole === 'reviewer') return currentIdentity && currentIdentity.reviewerId;
+    /* 負責人不能折進標記員的 id：折了的話負責人按過確認，同一台機器的標記員
+       就被抑制，正是第 8 條「共用電腦的第二個人照樣要讀」要擋的事。 */
+    if (currentRole === 'project_leader') {
+      return window.LabelSuiteAnnotationWorkspaceData.DEFAULT_PROJECT_LEADER_ID;
+    }
+    return currentAnnotatorId();
   }
   function guidelineModalStorageKey(taskId, actorId, versionId) {
     return 'labelsuite.guidelineModalSeen.' + actorId + '.' + taskId + '.' + versionId;

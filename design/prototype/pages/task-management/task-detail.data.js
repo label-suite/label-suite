@@ -249,11 +249,7 @@
          from task-detail run publish events, not raw dataset size). Seed
          demo: dry run round R2 materialized a 10-item list; the 5 records
          below are the prototype's rendered subset. */
-      /* #181 第 2 項：把指引閘門在這一張示範任務上打開，否則規格 04-02 §指引閘門
-         的行為（首次確認後不再重複、換版本要重新確認）在原型裡看不到也驗不了。
-         種子資料原本沒有任何一張任務開這個開關。 */
-      forceShowGuideline: true,
-      materializedRuns: { dry_run: { round: 2, total: 10, guidelineVersionId: 'gv-2026-05-22' } },
+      materializedRuns: { dry_run: { round: 2, total: 10 } },
       datasetFileName: 'single-dim.json',
       datasetRecords: [
         {
