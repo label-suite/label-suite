@@ -4,7 +4,7 @@ description: '三層測試的範圍與生命週期、TDD、行為測試與自證
 category: '開發說明'
 tags: [開發說明, Agent, 規範, 測試]
 createdAt: '2026-11-10'
-updatedAt: '2026-11-10'
+updatedAt: '2026-11-11'
 ---
 
 # 測試與交付證據規範
@@ -23,7 +23,7 @@ updatedAt: '2026-11-10'
 | 前提 | 狀態 |
 | :--- | :--- |
 | 三層的工具與位置 | 已定（[architecture.md](architecture.md) §測試分層）：後端 pytest 加 pytest-asyncio 加 httpx 放 `backend/tests/`；前端 Vitest 加 React Testing Library 與原始碼同目錄；正式 E2E 用 Playwright 放根目錄 `e2e/[module]/[page].spec.ts`。TDD 依 ADR-009，**測試與實作在同一個 task**（`openspec/config.yaml` 的 `rules.tasks`） |
-| 覆蓋率門檻 | **維護者 2026-11-10 裁定：只管「不得下降」加關鍵路徑 90% 分支覆蓋**，不把整體 80% 寫成硬閘。分母排除生成程式（Orval 產物）、Alembic migration 與設定檔。**「關鍵路徑」的五項範圍裡有兩項（答案隔離、IAA 計算）是本文件提議的，待裁定**，見 T10 |
+| 覆蓋率門檻 | **維護者 2026-11-10 裁定：只管「不得下降」加關鍵路徑 90% 分支覆蓋**，不把整體 80% 寫成硬閘。分母排除生成程式（Orval 產物）、Alembic migration 與設定檔。「關鍵路徑」的**五項範圍也已裁定**（維護者 2026-11-10 裁定維持五項），見 T10 |
 
 ---
 
@@ -165,11 +165,11 @@ updatedAt: '2026-11-10'
 | :--- | :--- |
 | **適用路徑** | 後端與前端的覆蓋率報告與 CI |
 | **禁止** | 把「整體 80%」當成硬閘；讓覆蓋率在一張 PR 裡下降；把生成程式算進分母來墊高數字；用刪測試或關規則的方式讓數字過關 |
-| **正例** | 兩條規則：（1）**不得下降**——每張 PR 的覆蓋率不低於它的基準；（2）**關鍵路徑 90% 分支覆蓋**（範圍見下；**其中「答案隔離」與「IAA 計算」兩項是本文件提議的，待維護者裁定**）。分母**排除** Orval 產物、Alembic migration 與設定檔 |
+| **正例** | 兩條規則：（1）**不得下降**——每張 PR 的覆蓋率不低於它的基準；（2）**關鍵路徑 90% 分支覆蓋**，範圍是**五項**：認證、授權與權限檢查、答案隔離、評分、IAA 計算（見下）。分母**排除** Orval 產物、Alembic migration 與設定檔 |
 | **反例** | 把 `src/api/generated/` 算進分母（產物是工具產生的，覆蓋它沒有意義，而且會讓整體數字看起來很高）；為了讓百分比好看而刪掉一個會紅的測試 |
 | **例外** | 骨架期（`backend/`、`frontend/` 剛建立）尚無足夠程式時，「不得下降」以第一次測得的基準為準 |
 | **檢查方式** | **待建置**。`pytest --cov` 與 `vitest --coverage` 可以產出報告；「不得下降」需要 CI 記住基準，歸 [#111](https://github.com/label-suite/label-suite/issues/111) |
-| **來源** | **維護者 2026-11-10 裁定**（只管「不得下降」加關鍵路徑 90% 分支；分母排除生成程式、migration 與設定檔）。**「關鍵路徑」有哪些是本文件列的**：來源寫的是三項（`auth`、`permission checks`、`score calculation`），本文件加上**答案隔離**（`AGENTS.md` 硬性規則 6 與 S5，違反就是測試集外洩）與**IAA 計算**（ADR-007 的 scoring 佇列算的就是它，屬 score calculation 的一部分）——這兩項的理由寫在這裡，**要改由維護者裁定**。兩個數字的出處本來就不同：**90% 關鍵路徑分支**來自原始 repo `testing-backend.md` 與 `testing-frontend.md`（「Critical paths (auth, permission checks, score calculation) require ≥ 90% branch coverage」）**沿用**；**整體 80%** 不在任何規則檔裡，而是原始 repo foundation spec 的 `SC-001`，**只管後端**而且自帶逃生條款（尚未達 80% 時正式 PR 不得再降低並須有提升計畫）——範圍不同，所以**不合成一條硬規定**，這正是 #110 工作項 10 要求先裁定的原因 |
+| **來源** | **維護者 2026-11-10 裁定**（只管「不得下降」加關鍵路徑 90% 分支；分母排除生成程式、migration 與設定檔）。**「關鍵路徑」的五項範圍由維護者 2026-11-10 裁定維持**：來源（原始 repo `testing-backend.md`／`testing-frontend.md` §Coverage）寫的是三項（`auth`、`permission checks`、`score calculation`），本文件初版另外提議**答案隔離**（`AGENTS.md` 硬性規則 6 與 S5，違反就是測試集外洩）與**IAA 計算**（ADR-007 的 scoring 佇列算的就是它，屬 `score calculation` 的一部分），當日裁定兩項都採用。紀錄在 [#110 的這則留言](https://github.com/label-suite/label-suite/issues/110#issuecomment-6765792713)。兩個數字的出處本來就不同：**90% 關鍵路徑分支**來自原始 repo `testing-backend.md` 與 `testing-frontend.md`（「Critical paths (auth, permission checks, score calculation) require ≥ 90% branch coverage」）**沿用**；**整體 80%** 不在任何規則檔裡，而是原始 repo foundation spec 的 `SC-001`，**只管後端**而且自帶逃生條款（尚未達 80% 時正式 PR 不得再降低並須有提升計畫）——範圍不同，所以**不合成一條硬規定**，這正是 #110 工作項 10 要求先裁定的原因 |
 
 ### T11 evidence
 
@@ -280,5 +280,6 @@ updatedAt: '2026-11-10'
 
 | Issue | 日期 | 變更 |
 | :--- | :--- | :--- |
+| [#111](https://github.com/label-suite/label-suite/issues/111) | 2026-11-11 | T10 的「關鍵路徑」範圍從「本文件提議、待裁定」改成裁定紀錄：**維護者 2026-11-10 裁定維持五項**（認證、授權與權限檢查、答案隔離、評分、IAA 計算）。前提表、T10 正例與來源三處同步。#110 已關閉，依硬性規則 1 折進 [#111](https://github.com/label-suite/label-suite/issues/111) 落地 |
 | [#110](https://github.com/label-suite/label-suite/issues/110) | 2026-11-10 | 獨立審查後修兩個 High：**七處來源標「沿用／成為 T…」卻在十二條裡找不到落點**（一個邏輯行為一個斷言、factory 位置、禁止快照測試、一個 spec 一條旅程、行為式命名、假時鐘、E2E 帳密單一來源），每一處二選一處理完——補進 T3／T5／T8 的禁止或正例格，或改標「不在本文件」並寫去處（`act()` 那一項屬 RTL 寫法，歸 F3）；**T1 的來源把前端測試位置標成沿用**（`__tests__/`），而本 repo 依 ADR-012 是與原始碼同目錄，照來源寫會撞上同條禁止格，已改成部分沿用並在不採用表補一列。另修：T10 的兩項自訂關鍵路徑在正例與前提表就地標「待裁定」、T1 例外的指路改成實際存在的落點、duty-mate 章節補上 `@c53cc453`／`develop` 並寫明它的鐵律編號與 scaffold 不同、`dto-boolean` 的事故成因是兩個不是一個 |
 | [#110](https://github.com/label-suite/label-suite/issues/110) | 2026-11-10 | 初版。十二條規範（各帶適用路徑、禁止、正反例、例外條件、檢查方式與來源）、六條刻意不採用、原始 repo 三份／scaffold 三份／duty-mate 四份／trendlink-portal 一份的逐條對照，以及 starter-kit 五輪搜尋後查出的真正原因。覆蓋率依維護者 2026-11-10 裁定寫成「不得下降」加關鍵路徑 90% 分支 |
