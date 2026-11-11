@@ -206,3 +206,212 @@ updatedAt: '2026-11-11'
 | 設定密碼狀態 | [06-01](../../specs/06-admin/01-user-management.mdx#資料欄位) | 由 `hashed_password` 有無推導。規格明寫「**不顯示成欄位**，只決定是否出現重發設定密碼信」 |
 | 語言、外觀模式、側欄收合狀態 | [01-04](../../specs/01-account/04-profile.mdx#資料欄位)、[07-01](../../specs/07-shared/01-sidebar.mdx#資料欄位) | **瀏覽器偏好**，規格明寫只記在這台瀏覽器 |
 | 確認密碼 | [01-02](../../specs/01-account/02-register.mdx#資料欄位)、[01-03](../../specs/01-account/03-reset-password.mdx#資料欄位)、[01-04](../../specs/01-account/04-profile.mdx#資料欄位) | **暫時輸入**。三頁都有這個畫面欄位，持久的只有一個雜湊 |
+
+---
+
+## 三、`admin` 系統管理（3 張）
+
+### `audit_events` — 操作稽核紀錄
+
+一張共用的稽核表，不按模組拆。[06-02](../../specs/06-admin/02-role-settings.mdx#資料欄位) 的「稽核紀錄」落在這裡。
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `id` | 流水號 | `bigint` | 系統寫入 | **PK** | — |
+| `actor_user_id` | 人員事件的操作者 | `uuid` | **可空** | **FK → `users.id`，RESTRICT**；**CHECK** 與 `actor_role` 互斥（系統事件時為空且 `actor_role='system'`） | [06-02](../../specs/06-admin/02-role-settings.mdx#資料欄位)：每筆含操作者 |
+| `actor_role` | 操作**當下**的角色快照 | `varchar` | NOT NULL | — | **寫入後不可變**；**不是即時 JOIN `users.role`**——角色事後改了，稽核要留當時的 |
+| `action` | 命名空間動詞 | `varchar` | NOT NULL | **不加 CHECK**——值由設定登錄管理 | 例如 `member.deactivated` |
+| `task_id` | 任務作用域 | `uuid` | **可空** | **FK → `task.id`，RESTRICT**；索引 | 非任務層事件為空 |
+| `target_type` | 操作對象種類 | `varchar` | NOT NULL | — | 例如 `user` |
+| `target_id` | 操作對象識別碼 | `varchar` | NOT NULL | **不加 FK**——對象可能在任何表，多型參照由服務驗證 | — |
+| `payload_summary` | 非敏感摘要 | `json` | NOT NULL | — | **不得含密碼、權杖、原始聯絡資料、標記答案或標準答案**（`AGENTS.md` 硬性規則 6 與 8） |
+| `request_id` | 對應 API log 的請求 ID | `varchar` | **可空** | — | — |
+| `occurred_at` | 伺服器端發生時間 | `timestamptz` | NOT NULL | 索引 | UTC |
+
+| | |
+| :--- | :--- |
+| **寫入者** | 全部系統寫入 |
+| **讀取權限** | 系統管理員（[06-02](../../specs/06-admin/02-role-settings.mdx) 的操作紀錄抽屜）；任務層事件另見 [03-03](../../specs/03-task-management/03-task-detail.mdx) |
+| **不可變** | **整列不可變，只能追加** |
+| **保留** | **至少保留 1 個曆年**（[06-02](../../specs/06-admin/02-role-settings.mdx#資料欄位) 明文）。這是本專案唯一一條規格裡寫明的保留期限 |
+
+**這張表與 `annotation_history_event` 是兩套政策，不可合併**：前者至少一年、後者**永不刪除**（[04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)）。差異寫進[盤點總帳的 D3](./data-field-inventory.mdx#五裁定紀錄與待裁決)，仍待裁。
+
+### `admin_role_permission` — 角色權限矩陣
+
+一列是一個**適用的**「角色 × 權限鍵」格。
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `role_type` | 角色層級 | `varchar` | NOT NULL | **複合 PK 之一**；CHECK 限 `system`／`task` | [06-02](../../specs/06-admin/02-role-settings.mdx#資料欄位)：系統角色／任務角色，**兩層不可互相推導** |
+| `role_key` | 角色 | `varchar` | NOT NULL | **複合 PK 之一** | `system` 時為 `user`／`super_admin`；`task` 時為專案負責人／審核員／標記員 |
+| `permission_key` | 權限鍵 | `varchar` | NOT NULL | **複合 PK 之一**。**不加 CHECK**——白名單在後端程式 | [06-02](../../specs/06-admin/02-role-settings.mdx#資料欄位)：**由後端白名單定義；白名單外一律拒絕** |
+| `allowed` | 是否允許 | `boolean` | NOT NULL | 固定格另加 **CHECK** | [06-02](../../specs/06-admin/02-role-settings.mdx#資料欄位)：**開或關兩種**；**「唯讀」由兩個鍵的組合表達，不是第三種值** |
+| `updated_at` | 最後被改變的時間 | `timestamptz` | NOT NULL | — | — |
+
+**[06-02](../../specs/06-admin/02-role-settings.mdx#資料欄位) 有十一個欄位概念，但只有四個進這張表。** 其餘七個的去處：
+
+| 06-02 的欄位 | 去處 | 依據 |
+| :--- | :--- | :--- |
+| 中文說明 | **不進表**——是 i18n 資源 | 規格寫「**跟著語系切換**」 |
+| 所屬模組、固定格、啟用狀態 | **不進表**——它們是**權限鍵本身的屬性**，而規格明寫權限鍵「**由後端白名單定義**」，所以這三個屬性也在程式側的登錄表，不在資料列上 | [06-02](../../specs/06-admin/02-role-settings.mdx#資料欄位) |
+| 錯層 | **不進表** | 規格明寫「**為真時不儲存任何資料列**」。缺列即拒絕——這是「不落庫」寫在規格裡的罕見例子 |
+| 矩陣版本 | 下一張表 | — |
+| 未儲存狀態 | **不進表**——暫時輸入 | 規格寫它只控制未儲存變更橫幅 |
+| 稽核紀錄 | `audit_events` | — |
+
+| | |
+| :--- | :--- |
+| **寫入者** | 系統管理員。固定格**改不動**（畫面加鎖頭） |
+| **讀取權限** | 系統管理員讀全部；授權判斷本身讀它 |
+| **不可變** | 三個 PK 欄 |
+| **保留** | 隨矩陣；變更歷程在 `audit_events` |
+
+### `admin_role_permission_version` — 矩陣版本號
+
+**單列表**，承載 [06-02](../../specs/06-admin/02-role-settings.mdx#資料欄位) 的「矩陣版本」樂觀鎖。
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `id` | 固定為 1 | `smallint` | 系統寫入 | **PK** 加 **CHECK `id = 1`**（限制最多一列） | — |
+| `version` | 目前矩陣版本 | `integer` | NOT NULL | CHECK `version >= 1` | [06-02](../../specs/06-admin/02-role-settings.mdx#資料欄位)：**每次儲存都要帶它驗樂觀鎖；真的沒變更就不遞增** |
+| `updated_at` | 最後一次儲存時間 | `timestamptz` | NOT NULL | — | — |
+
+**「真的沒變更就不遞增」是應用層的事，不是 DB 的。** DB 只能保證「比對預期版本後才允許寫」，判斷有沒有實際差異要在服務層做——這一條屬§應用層才擋得住的限制。
+
+### `admin` 組的關聯與限制
+
+| 限制 | 層級 | 內容 |
+| :--- | :--- | :--- |
+| 格子與版本同交易 | **應用層** | 改格子、遞增版本、寫稽核三件事要在**同一個交易**裡。DB 無法表達「這三張表必須一起變」 |
+| 樂觀鎖的 CAS | **應用層** | 比對送回的版本再遞增 |
+| 錯層格不存在 | **應用層** | 規格說缺列即拒絕。DB 不會阻止有人插入一個錯層的列 |
+| 稽核只能追加 | **應用層**（可加 DB 觸發器強化） | 規格說事件永不刪除 |
+
+---
+
+## 四、`dataset` 資料集（5 張）
+
+**權威頁是 [05-03 匯入與血緣](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)**——它沒有畫面，是全專案最接近資料層的一頁，22 列幾乎全是持久欄位，而且三個保護層級寫得最細。
+
+### `dataset` — 邏輯資料集
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `id` | 資料集身分 | `uuid` | 系統寫入 | **PK** | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：一個邏輯資料集 |
+| `created_by_user_id` | 建立者 | `uuid` | NOT NULL | **FK → `users.id`，RESTRICT** | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：建立這個資料集的人 |
+| `name` | 名稱 | `varchar` | NOT NULL | **不加唯一**——名稱不是身分 | [03-02](../../specs/03-task-management/02-task-new.mdx#資料欄位) 上傳時給 |
+| `created_at` | 建立時間 | `timestamptz` | 系統寫入 | — | UTC |
+
+**項目數不存。** [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) 的「資料集」檢視只顯示合計筆數——那是推導值，從 `dataset_item` 數出來。
+
+### `dataset_version` — 完整資料集快照
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `id` | 版本身分 | `uuid` | 系統寫入 | **PK** | — |
+| `dataset_id` | 所屬資料集 | `uuid` | NOT NULL | **FK → `dataset.id`，RESTRICT**；`(dataset_id, id)` 另供複合 FK 父鍵 | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位) |
+| `version_no` | 版本號 | `integer` | NOT NULL | **唯一 `(dataset_id, version_no)`**；CHECK `>= 1` | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：**在同一個資料集內唯一**；後繼版本必須遞增 |
+| `parent_version_id` | 父版本 | `uuid` | **可空** | **複合 FK `(dataset_id, parent_version_id)` → `(dataset_id, id)`**；CHECK `parent_version_id <> id` | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：**只作血緣**；**不得跨資料集、不得自參照、不得形成循環**；第一版沒有 |
+| `state` | 版本狀態 | `varchar(16)` | NOT NULL | CHECK 限 `draft`／`sealed` | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：**只能草稿 → 已定版，不得回頭** |
+| `manifest_sha256` | 版本摘要 | `char(64)` | **可空** | **CHECK** `state='sealed' → manifest_sha256 IS NOT NULL` | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：**已定版時必填**，完整快照的摘要 |
+| `created_at` | 建立時間 | `timestamptz` | 系統寫入 | — | UTC |
+| `sealed_at` | 定版時間 | `timestamptz` | **可空** | **CHECK** `state='sealed' → sealed_at IS NOT NULL` | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：**一律以 UTC 表示** |
+
+**三條血緣限制，只有兩條落得進 DB：**
+
+| 限制 | 層級 | 怎麼落 |
+| :--- | :--- | :--- |
+| 不得跨資料集 | **DB** | 複合 FK `(dataset_id, parent_version_id)` → `(dataset_id, id)`。這是複合 FK 存在的理由——單欄 FK 擋不住「父版本屬於另一個資料集」 |
+| 不得自參照 | **DB** | CHECK `parent_version_id <> id` |
+| **不得形成循環** | **應用層** | 一般 SQL 的 CHECK 與 FK **都表達不了**。要在寫入前走一次祖先鍊，或改用物化路徑。**本文件不替它選做法**，歸實作 |
+
+| | |
+| :--- | :--- |
+| **寫入者** | 系統寫入（匯入流程）。使用者只能觸發定版 |
+| **讀取權限** | 專案負責人、審核員 |
+| **不可變** | **定版後整列不可變**（`state='sealed'` 之後）。這是版本界線：發布後改設定不得回頭改變已發出的作業 |
+| **保留** | 永久保留供血緣追溯 |
+
+### `dataset_import_batch` — 單一來源檔批次
+
+一列是一個已接受的來源檔。[05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位) 的七個批次欄位全在這裡。
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `id` | 批次身分 | `uuid` | 系統寫入 | **PK** | — |
+| `dataset_version_id` | 所屬快照 | `uuid` | NOT NULL | **FK → `dataset_version.id`，RESTRICT** | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位) |
+| `source_ordinal` | 來源順序 | `integer` | NOT NULL | **唯一 `(dataset_version_id, source_ordinal)`**；CHECK `>= 1` | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：**在同一個版本內唯一** |
+| `source_name` | 來源名稱 | `varchar` | NOT NULL | — | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：來源檔的名稱。[03-02](../../specs/03-task-management/02-task-new.mdx#資料欄位)：只收 JSON、單檔 200 MB、UTF-8 |
+| `source_sha256` | 來源摘要碼 | `char(64)` | NOT NULL | — | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：匯入當時取得，**定版時要驗回執** |
+| `source_ref` | 受限來源參照 | `text` | NOT NULL | — | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：**受限且不可變**；**不在標記員拿得到的任何地方** |
+| `record_path` | 紀錄路徑 | `varchar` | NOT NULL | — | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：整檔為陣列或一行一筆時是 **`$`**；巢狀用 **RFC 6901** 的路徑表示法 |
+| `preprocessing_version` | 前處理版本 | `varchar` | NOT NULL | — | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：**不得從項目內容反推** |
+| `classification_manifest` | 欄位分類清單 | `json` | NOT NULL | — | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：**逐檔**保存、受限、**不含答案值**；兩類互斥；**留下版本**、寫入前驗證過；**定版後不可改** |
+
+**`classification_manifest` 的 JSON 結構要記下來，不能只寫「JSON」**（[#235](https://github.com/label-suite/label-suite/issues/235) 工作項 2 明文要求）：
+
+| 鍵 | 內容 | 依據 |
+| :--- | :--- | :--- |
+| `manifest_version` | 這份分類清單自己的版本 | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：「**留下版本**」 |
+| `visible[]` | 可公開的欄位名清單 | 三個保護層級的第一層 |
+| `protected[]` | 受保護但非答案的欄位名清單 | 第二層。**與 `visible` 互斥**（規格明寫「兩類互斥」） |
+| `answer_keys[]` | 答案欄位名清單 | 第三層。**清單裡只有鍵名，不含值**（規格明寫「不含答案值」） |
+
+**「兩類互斥」在 DB 擋不住**，JSON 內的集合關係要在寫入前驗證——規格也明寫「**寫入前驗證過**」。
+
+### `dataset_item` — 公開的項目
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `id` | 項目身分 | `uuid` | 系統寫入 | **PK** | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) 的「樣本 ID」、[04-01](../../specs/04-annotation/01-annotation-list.mdx#資料欄位) 的「樣本的 ID」都是它 |
+| `dataset_import_batch_id` | 所屬批次 | `uuid` | NOT NULL | **FK → `dataset_import_batch.id`，RESTRICT** | — |
+| `source_row_no` | 來源行序 | `integer` | NOT NULL | **唯一 `(dataset_import_batch_id, source_row_no)`**；CHECK `>= 1` | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：自 **1** 起算；**在同一批次內唯一** |
+| `public_payload` | 公開的部分 | `json` | NOT NULL | — | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：**只放允許清單裡的可見欄位**；可含明確選擇的預標記；**寫入前要先驗證過** |
+| `created_at` | 建立時間 | `timestamptz` | 系統寫入 | — | — |
+
+### `dataset_item_private` — 私有伴隨紀錄
+
+**這張表是 `AGENTS.md` 硬性規則 6 在資料層的落點。** 本專案規格從三個保護層級獨立得到「公開與隱藏分表」的結論，與原始規劃一致，**可以沿用**。
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `dataset_item_id` | 對應的項目 | `uuid` | NOT NULL | **PK**（與 `dataset_item` 一對一）；**FK → `dataset_item.id`，CASCADE** | — |
+| `declared_split` | 來源宣告的切分 | `varchar` | **可空** | — | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：**只是來源自己說的**，不是回合的抽樣結果 |
+| `hidden_answer` | 隱藏的答案 | `json` | **可空** | — | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：就是標準答案；**儲存後只有經授權的計分程序讀得到** |
+| `protected_payload` | 受保護但非答案的值 | `json` | **可空** | — | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：鍵名**一律取自分類清單**；**不得存答案**。讀取角色**維護者 2026-11-11 裁定與答案同級（僅計分程序）** |
+| `created_at` | 建立時間 | `timestamptz` | 系統寫入 | — | — |
+
+| | |
+| :--- | :--- |
+| **寫入者** | 系統寫入（匯入流程） |
+| **讀取權限** | **只有經授權的計分程序。** 三欄都是——`declared_split` 與 `hidden_answer` 規格明文，`protected_payload` 依 2026-11-11 的裁定同級 |
+| **不可變** | 隨 `dataset_version` 定版後不可變 |
+| **保留** | 隨項目 |
+
+:::warning{title="分表不等於隔離，分表只是讓隔離可能做到"}
+把答案放進另一張表**不會自動**讓標記員看不到。真正的隔離要靠：查詢層**永遠不 JOIN 這張表**到標記員的任何回應、API 的回應模型**不含這些欄位**、以及 [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#預填兩道方向相反的守門) 的兩道預填守門。
+
+**本字典只定結構，擋不住外洩。** 卡控的實作歸 [security-agent-rules.md](../../development/security-agent-rules.md) S5 與 [testing-agent-rules.md](../../development/testing-agent-rules.md) T10 的關鍵路徑覆蓋。
+:::
+
+### `dataset` 組的關聯與限制
+
+| 限制 | 層級 | 內容 |
+| :--- | :--- | :--- |
+| 父版本同資料集 | **DB** | 複合 FK `(dataset_id, parent_version_id)` → `(dataset_id, id)` |
+| 父版本不自參照 | **DB** | CHECK |
+| **血緣不得形成循環** | **應用層** | FK 與 CHECK 表達不了 |
+| 版本號同資料集唯一 | **DB** | 唯一 `(dataset_id, version_no)` |
+| 來源順序同版本唯一 | **DB** | 唯一 `(dataset_version_id, source_ordinal)` |
+| 行序同批次唯一 | **DB** | 唯一 `(dataset_import_batch_id, source_row_no)` |
+| 定版後整組不可變 | **應用層** | 跨四張表（版本、批次、項目、私有）。DB 無法表達「某個父列的狀態決定子列能不能改」 |
+| 分類清單兩類互斥 | **應用層** | JSON 內的集合關係 |
+| 公開內容只含允許清單裡的欄位 | **應用層** | 規格明寫「寫入前要先驗證過」 |
+
+### `dataset` 組不進表的推導值
+
+| 推導值 | 哪一頁 | 為什麼不存 |
+| :--- | :--- | :--- |
+| 資料集合計筆數 | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) | 從 `dataset_item` 數出來 |
+| 文本摘要 | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)、[04-01](../../specs/04-annotation/01-annotation-list.mdx#資料欄位) | 從 `public_payload` 現算。**只取用途是輸入或背景的欄位，不含輸出**——存下來會多一份可能洩漏的副本 |
