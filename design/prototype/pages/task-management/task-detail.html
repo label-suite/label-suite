@@ -463,6 +463,12 @@
       background: var(--color-error-bg);
       border-color: var(--color-error-border);
     }
+    /* 中性灰，刻意不用 success：「資料不足」是算不出來，不是沒問題 */
+    .quality-insufficient {
+      color: var(--color-text-soft);
+      background: var(--color-slate-50);
+      border-color: var(--color-border-muted);
+    }
     .stage-split-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2550,9 +2556,10 @@
       workLogDurationTpl: '{hours} 小時 {minutes} 分',
       workLogOnlineDurationTpl: '{hours} 小時 {minutes} 分',
       workLogSpeedUnit: '筆/小時',
-      qualityGood: '穩定',
+      qualityGood: '正常',
       qualityWatch: '觀察',
-      qualityRisk: '需複核',
+      qualityRisk: '高風險',
+      qualityInsufficient: '資料不足',
       progressSpeedUnit: '筆/小時',
       progressEtaNone: '-',
       progressStageMetaTpl: '{completed}/{total}（{rate}%）',
@@ -3119,9 +3126,10 @@
       workLogDurationTpl: '{hours}h {minutes}m',
       workLogOnlineDurationTpl: '{hours}h {minutes}m',
       workLogSpeedUnit: 'items/hour',
-      qualityGood: 'Stable',
+      qualityGood: 'Normal',
       qualityWatch: 'Watch',
-      qualityRisk: 'Need review',
+      qualityRisk: 'High Risk',
+      qualityInsufficient: 'Insufficient Data',
       progressSpeedUnit: 'items/hour',
       progressEtaNone: '-',
       progressStageMetaTpl: '{completed}/{total} ({rate}%)',
@@ -3440,6 +3448,9 @@
           members: [
             { name: 'Alex Wang', role: 'annotator', completed: 5, pending: 0, avgSpeed: 6.5, lastSubmitted: '2026-08-21 09:40', quality: 'good' },
             { name: 'Iris Tsai', role: 'reviewer', completed: 4, pending: 1, avgSpeed: 5.0, lastSubmitted: '2026-08-21 10:30', quality: 'good' },
+            /* 樣本數不足：quality 留空、qualityInsufficient 為真。那一欄顯示「資料不足」，
+               不是把 insufficient 寫成第四個等級值（維護者 2026-11-07 裁定）。 */
+            { name: 'Nina Chou', role: 'annotator', completed: 1, pending: 4, avgSpeed: 2.0, lastSubmitted: '2026-08-21 11:05', quality: '', qualityInsufficient: true },
           ],
         },
       ],
@@ -8153,13 +8164,26 @@ function getTaskTypeLabel() {
     return Math.max(0, Math.min(100, Math.round((completed / total) * 100)));
   }
 
-  function getQualityLabel(quality) {
+  /* 「資料不足」是獨立旗標，不是第四個等級值（維護者 2026-11-07 裁定：
+     來源禁止的是把它放進資料值域，畫面那一格要顯示什麼是另一件事）。
+     所以 quality 的值域仍然是 risk／watch／good 三個，樣本數不足時 quality 留空、
+     qualityInsufficient 為真。原本 good 是 fallback，於是還沒有足夠樣本的標記員
+     會顯示「正常」——把「算不出來」說成「沒問題」，那正是這次要修掉的。 */
+  function isQualityInsufficient(member) {
+    return !!(member && member.qualityInsufficient);
+  }
+
+  function getQualityLabel(member) {
+    if (isQualityInsufficient(member)) return t('qualityInsufficient');
+    var quality = member && member.quality;
     if (quality === 'risk') return t('qualityRisk');
     if (quality === 'watch') return t('qualityWatch');
     return t('qualityGood');
   }
 
-  function getQualityClass(quality) {
+  function getQualityClass(member) {
+    if (isQualityInsufficient(member)) return 'quality-flag quality-insufficient';
+    var quality = member && member.quality;
     if (quality === 'risk') return 'quality-flag quality-risk';
     if (quality === 'watch') return 'quality-flag quality-watch';
     return 'quality-flag quality-good';
@@ -8330,8 +8354,8 @@ function getTaskTypeLabel() {
 
       var tdQuality = document.createElement('td');
       var qualityFlag = document.createElement('span');
-      qualityFlag.className = getQualityClass(member.quality);
-      qualityFlag.textContent = getQualityLabel(member.quality);
+      qualityFlag.className = getQualityClass(member);
+      qualityFlag.textContent = getQualityLabel(member);
       tdQuality.appendChild(qualityFlag);
       tr.appendChild(tdQuality);
 
