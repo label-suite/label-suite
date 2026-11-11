@@ -4,7 +4,7 @@ description: '一個任務的分析詳情頁：同一個任務上下文底下，
 category: '規格書'
 tags: [規格書, 資料集, 已定案]
 createdAt: '2026-11-05'
-updatedAt: '2026-11-10'
+updatedAt: '2026-11-11'
 ---
 
 import PrototypeFrame from '@notes/components/prototype-frame';
@@ -1002,6 +1002,13 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 11. 第 6、7 條以及第 2 條的「說明原因」**屬於畫面呈現**，落地位置在[規格 03-03](../03-task-management/03-task-detail.mdx)；這一頁只定義**應該被回報的資料**，以及推導與中介資料的純函式行為**可以被獨立驗證**
 
 ### 資料欄位
+
+:::note{title="資料規劃入口"}
+這一頁的「資料欄位」已在[資料欄位盤點總帳](../../diagrams/architecture/data-field-inventory.mdx#05-02-分析詳情)逐列分類過（要不要存、存在哪一層）。**這 64 列全部現算、不建分析表**（維護者 2026-11-11 裁定），所以字典裡沒有對應的分析表。把本頁列為規格來源的 **2 張**（`task_trial_iaa_result`、`task_trial_round`）是**試標閘門的證據，不是分析報告**——逐欄定義見[候選資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)，整張關聯圖見 [ER 圖](/view/diagrams/architecture/database-schema.er)。
+
+**那是候選規劃，不是已落地的資料庫**；而且規格是它的依據，兩邊不一致時以規格為準（共用表的權威頁寫在字典各組開頭）。
+:::
+
 
 這一頁的欄位**全部是唯讀的聚合結果**。兩種角色看到的內容相同，唯一的差別是建議行動的兩個按鈕（見[§建議行動只有專案負責人能執行](#建議行動只有專案負責人能執行)）。
 

@@ -4,7 +4,7 @@ description: '標記員與審核員進入標記模組的入口頁：先在清單
 category: '規格書'
 tags: [規格書, 標記作業, 已定案]
 createdAt: '2026-11-05'
-updatedAt: '2026-11-09'
+updatedAt: '2026-11-11'
 ---
 
 import PrototypeFrame from '@notes/components/prototype-frame';
@@ -630,6 +630,13 @@ import Spec0401AnnotationListFlow from '@notes/components/spec-04-01-annotation-
 4. 儲存格的對齊**不得讓第一列明顯下沉**
 
 ### 資料欄位
+
+:::note{title="資料規劃入口"}
+這一頁的「資料欄位」已在[資料欄位盤點總帳](../../diagrams/architecture/data-field-inventory.mdx#04-01-標記清單)逐列分類過（要不要存、存在哪一層）。字典裡**把本頁列為規格來源**的候選表有 **5 張**：`annotation_arbitration_vote`、`annotation_history_event`、`annotation_record`、`dataset_item`、`task_run`——逐欄定義與關聯限制見[候選資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)，整張關聯圖見 [ER 圖](/view/diagrams/architecture/database-schema.er)。
+
+**那是候選規劃，不是已落地的資料庫**；而且規格是它的依據，兩邊不一致時以規格為準（共用表的權威頁寫在字典各組開頭）。
+:::
+
 
 四個階段的欄位都列在這裡。
 
