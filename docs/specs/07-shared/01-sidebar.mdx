@@ -9,7 +9,7 @@ updatedAt: '2026-11-11'
 
 # 07-01 側欄導覽
 
-:badge[已定案]{variant="success"} :badge[共用介面]{variant="neutral"}
+:badge[已定案]{variant="success"} :badge[變更 #249]{variant="info" href="https://github.com/label-suite/label-suite/issues/249"} :badge[共用介面]{variant="neutral"}
 
 > 來源：舊 repo `specs/shared/008-sidebar-navbar-shared/spec.md`（100 條）、`specs/foundation/000-foundation/spec.md` 的 6 條業務規則（依 [搬移設計文件](../../development/spec-migration.md) 的 D4）
 > 參考畫面：無獨立頁面，不嵌入 `PrototypeFrame`。側欄出現在每一個登入後頁面裡，畫面以 `design/prototype/pages/shared/sidebar.js` 與 `sidebar.css` 為準（[§已確認決議](#已確認決議) Q5）
@@ -403,7 +403,8 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 > 理由：系統角色是平台成員，任務角色是標記員，術語表沒有「一般使用者」這個名詞；而角色標示本來就是依任務角色解析的——審核員與專案負責人兩支都對得上術語表，只有標記員這一支用了表外的字。
 > **這一題其實有三個缺口，裁決一次補齊**：來源 `shared:FR-020A` 的第三個分支（`annotator` 或未提供）同時覆蓋「標記員」與「完全沒有任務角色」兩種人，所以改名標記員之後必須給後者一個名字；而 prototype 的 `'一般使用者'` 是**寫死的中文字面值**，不在 `taskRoleI18n` 字典裡（`design/prototype/pages/shared/sidebar.js:1867`），英文模式下角色標示會顯示中文，違反 `shared:FR-018C1` 與 `shared:FR-021` 的語言一致要求。
 > 「一般使用者」這個字保留給它真正適用的那種人——還沒有任何任務角色的使用者。
-> **這一條不涵蓋[規格 02-01](../02-dashboard/01-dashboard.mdx) 的儀表板版面**：02-01 的 [Q8](../02-dashboard/01-dashboard.mdx#已確認決議) 在隔天（維護者裁定 2026-11-09）**否決了「跟著本條讀作『一般使用者』」這個選項**，裁定那種版面**不定名**、一律用描述性的「還沒有任務角色」。本條管的是側欄的角色標示，Q8 管的是儀表板版面的稱呼，兩個是不同的位置。
+> <mark>**這一條不涵蓋[規格 02-01](../02-dashboard/01-dashboard.mdx) 的儀表板版面**：02-01 的 [§已確認決議](../02-dashboard/01-dashboard.mdx#已確認決議) Q8 在隔天（維護者裁定 2026-11-09）**否決了「跟著本條讀作『一般使用者』」這個選項**，裁定那種版面**不定名**、一律用描述性的「還沒有任務角色」。</mark><sup>[#249](https://github.com/label-suite/label-suite/issues/249)</sup>
+> 以下是**本頁的解讀**，不是依據：本條管的是側欄的角色標示，Q8 管的是儀表板版面的稱呼，兩個是不同的位置；Q8 只是拒絕把本條的用字搬過去，沒有推翻本條。
 > **本條不碰顯式覆寫**：`shared:FR-020A` 在「依任務角色解析」之前先寫了一個例外——呼叫端已明確傳入固定字串時（例如系統管理的頁面固定顯示「系統管理員」）不受該條影響，並在結尾重申「既有顯式覆寫入口之優先序與行為不變」。畫面確實在用這個入口（`design/prototype/pages/admin/user-management.html:358` 傳入「系統管理員」）。所以系統管理員停在系統管理頁時讀作「系統管理員」，**不是**「一般使用者」，即使他在目前任務沒有任務角色。
 > **英文是一處覆寫**：畫面目前對「一般使用者」用的英文是 `User`（`design/prototype/pages/account/profile.html:1167`），裁決定的是 `General user`。這一處**明確覆寫畫面現況**，不是漏看；要改的是 prototype 那一側。
 > prototype 的文字、字典補英文與這一處英文覆寫由 **[#165](https://github.com/label-suite/label-suite/issues/165)** 處理；本 skill 不改 `design/prototype/`（#86）。
