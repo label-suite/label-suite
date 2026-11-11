@@ -632,7 +632,7 @@ import Spec0401AnnotationListFlow from '@notes/components/spec-04-01-annotation-
 ### 資料欄位
 
 :::note{title="資料規劃入口"}
-這一頁的「資料欄位」已在[資料欄位盤點總帳](../../diagrams/architecture/data-field-inventory.mdx#04-01-標記清單)逐列分類過（要不要存、存在哪一層）。字典裡**把本頁列為規格來源**的候選表有 **5 張**：`annotation_arbitration_vote`、`annotation_history_event`、`annotation_record`、`dataset_item`、`task_run`——逐欄定義與關聯限制見[候選資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)，整張關聯圖見 [ER 圖](/view/diagrams/architecture/database-schema.er)。
+這一頁的「資料欄位」已在[資料欄位盤點總帳](../../diagrams/architecture/data-field-inventory.mdx#04-01-標記清單)逐列分類過（要不要存、存在哪一層）。字典裡**把本頁列為規格來源**的候選表有 **6 張**：`annotation_arbitration_vote`、`annotation_history_event`、`annotation_record`、`dataset_item`、`task_annotation_assignment`、`task_run`——逐欄定義與關聯限制見[候選資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)，整張關聯圖見 [ER 圖](/view/diagrams/architecture/database-schema.er)。
 
 **那是候選規劃，不是已落地的資料庫**；而且規格是它的依據，兩邊不一致時以規格為準（共用表的權威頁寫在字典各組開頭）。
 :::
