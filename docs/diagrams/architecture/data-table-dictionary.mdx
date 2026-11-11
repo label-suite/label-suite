@@ -18,7 +18,7 @@ import PluginView from '@/components/PluginView.astro';
 >
 > **第三步已經交付**：[候選資料表 ER 圖](/view/diagrams/architecture/database-schema.er)。那份 `docs/diagrams/architecture/database-schema.er.json` 是**從本文件產生的**——表名、中文標籤、型別、可空性、單欄 FK、分組與表說明都來自這裡，所以本文件改了而圖沒跟著重新產生，就是圖錯了，不是本文件錯了。
 > 圖上**畫不出來**的兩類東西——**複合 FK** 與**只能在應用層擋的限制**——只在本文件裡，逐條內容在各組的「組的關聯與限制」小節（[`admin`](#admin-組的關聯與限制)、[`dataset`](#dataset-組的關聯與限制)、[`run`](#run-組的關聯與限制)、[`annotation` 與 `review`](#annotation-與-review-組的關聯與限制)），以及 `task_reviewer_roster_member` 與 `task_trial_round` 自己的限制表。**圖上沒有線不代表沒有限制。**
-> [§十 統計與驗收對照](#十統計與驗收對照)寫的條數（34 組複合 FK、22 條應用層、「五張表合計」）**與逐列加總對不上**——我數到的是 31 與 21，而那是四個小節加上兩張表自己的限制表。ER 圖因此刻意不複述這兩個數字；重數與更正由 [#236](https://github.com/label-suite/label-suite/issues/236) 追。
+> **複合 FK 與應用層限制不寫條數**：那兩類沒有可機械重現的數法（理由見[§十 統計與驗收對照](#十統計與驗收對照)的「計數方式」列），所以本文件與 ER 圖都只指向逐條內容。
 
 :::warning{title="這裡沒有任何已落地的資料結構"}
 `backend/` 不存在、`backend/alembic/versions/` 沒有任何 revision、也沒有 ORM model。**本文件每一張表都是候選設計**。
@@ -1156,10 +1156,10 @@ import PluginView from '@/components/PluginView.astro';
 | 本專案新增的欄位 | **4**：`account_session.last_seen_at`（閒置限制的起點，原始沒有）、`task.archived_at` 與 `task.archived_by_user_id`（原始 `task` 沒有任何封存欄）、`task_membership.last_activity_at`（維護者 2026-11-11 裁定存成欄位） |
 | 本專案不收的原始欄位 | **6**：`users` 的 `google_subject`／`is_seeder`／`credential_version`、`task_config_version` 的 `schema_version_no`／`schema_digest`／`schema_registry_version` |
 | 單欄 FK | **38** |
-| **複合 FK** | **34 組**（圖上畫不出來，全部列在各組的§關聯與限制） |
-| 計數方式 | 單欄 FK 數 `(表, 欄)`；複合 FK 數**約束**——每表、每欄組、每目標各一。「另供複合 FK 父鍵」是這張表**提供**的唯一鍵，**不計入**它宣告的 FK |
+| **複合 FK** | 圖上畫不出來，**逐條內容**在各組的§關聯與限制。**這裡刻意不寫條數**，理由見下一列 |
+| 計數方式 | 單欄 FK 數 `(表, 欄)`，這個數**可以機械重現**（[#236](https://github.com/label-suite/label-suite/issues/236) 工作項 9 的一致性檢查器每次 CI 都比對它）。**複合 FK 與應用層限制沒有可機械重現的數法**：初版寫「每表、每欄組、每目標各一」，但「延後複合 FK」「自指而目標沒寫表名」「同上」這三種寫法算不算、怎麼算，那句話都沒有定——照不同的讀法會得到 27、30 或 31。所以這兩個數字拿掉，改成指向逐條內容（維護者 2026-11-11 裁定，見 [#236](https://github.com/label-suite/label-suite/issues/236)）。「另供複合 FK 父鍵」是這張表**提供**的唯一鍵，**不計入**它宣告的 FK |
 | 可空性與原始相反的欄位 | **2**：`annotation_review_decision.reason` 與 `annotation_history_event.reason`，原始都標 nullable，而 04-02 明寫**不得用「沒有這個欄位」來表示空** |
-| §關聯與限制 的限制條數 | **24 條落在 DB**、**22 條只能在應用層擋**（五張表合計） |
+| §關聯與限制 的兩層 | 每一條都標明是**落在 DB** 還是**只能在應用層擋**。**條數同樣不寫**：四個「組的關聯與限制」小節加總是一個數，全文所有「層」欄位是「應用層」的列又是另一個數，而初版寫的「五張表合計」實際上是四個小節加上 `task_reviewer_roster_member` 與 `task_trial_round` 自己的限制表 |
 
 ### 對照 [#235](https://github.com/label-suite/label-suite/issues/235) 的驗收條件
 
@@ -1177,7 +1177,7 @@ import PluginView from '@/components/PluginView.astro';
 | 定義模組分組、資料責任、表命名與每張表的用途 | ✅ §一的九個分組表；每張表的用途在標題下 |
 | 每個欄位記九項後設資料；JSON 需記結構與版本 | ✅ 逐欄表；四個 JSON 欄位另列結構 |
 | 定義寫入者、讀取權限、不可變與版本界線、封存／刪除／保留／撤銷規則，區別應用層驗證與 DB 約束 | ✅ 每張表的四格表；§關聯與限制分兩層 |
-| 檢查同任務／同資料集／同回合／同使用者複合關聯 | ✅ **34 組複合 FK**，每一組都寫明它擋住什麼 |
+| 檢查同任務／同資料集／同回合／同使用者複合關聯 | ✅ 每一組複合 FK 都寫明它擋住什麼，逐條列在各組的§關聯與限制 |
 | 區分公開 dataset item、受保護原始資料及隱藏答案 | ✅ `dataset_item` 與 `dataset_item_private` 分表；警示框寫明**分表不等於隔離** |
 | 輸出類型設定與答案資料維持 config-driven | ✅ 八種型別全在 `config_payload.output_configs{}` 與 `answer_payload.outputs[]`，**不建八張表、不加八個分支** |
 | 核對試標閘門 IAA 與分析報告的關係 | ✅ §六的「IAA 的兩套東西，不可混用」 |
@@ -1190,4 +1190,4 @@ import PluginView from '@/components/PluginView.astro';
 
 | Issue | 日期 | 變更 |
 | :--- | :--- | :--- |
-| [#235](https://github.com/label-suite/label-suite/issues/235) | 2026-11-11 | 初版。**37 張候選表、328 欄**逐欄字典，各帶識別碼、中文意義、型別、可空性、鍵與限制、規格來源；**34 組複合 FK** 逐組寫明它擋住什麼；**22 條只能在應用層擋的限制**（對 24 條落在 DB 的）分組列出，不假裝 DB 擋得住；四個 JSON 欄位另記結構與版本。本專案**新增 4 欄**（登入狀態的最後使用時間、兩個封存欄、成員的最後活動）、**不收 6 欄**（D7 的理由延伸，維護者 2026-11-11 裁定）、**修正 1 欄的可空性**（審核理由依規格改為 NOT NULL 允許空字串）。另記三件原始規劃有數字但本專案規格沒有的事（匯出期限 30 日、歷史保留一年、`item_key` 的編碼），依「依據和事實是兩件事」留作建議而非結案 |
+| [#235](https://github.com/label-suite/label-suite/issues/235) | 2026-11-11 | 初版。**37 張候選表、328 欄**逐欄字典，各帶識別碼、中文意義、型別、可空性、鍵與限制、規格來源；複合 FK 逐組寫明它擋住什麼（初版寫「34 組」，條數已於 #236 拿掉）；只能在應用層擋的限制分組列出，不假裝 DB 擋得住；四個 JSON 欄位另記結構與版本。本專案**新增 4 欄**（登入狀態的最後使用時間、兩個封存欄、成員的最後活動）、**不收 6 欄**（D7 的理由延伸，維護者 2026-11-11 裁定）、**修正 1 欄的可空性**（審核理由依規格改為 NOT NULL 允許空字串）。另記三件原始規劃有數字但本專案規格沒有的事（匯出期限 30 日、歷史保留一年、`item_key` 的編碼），依「依據和事實是兩件事」留作建議而非結案 |
