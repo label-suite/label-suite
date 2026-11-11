@@ -99,3 +99,9 @@ jobs:
 
       - name: Check the business flow diagrams
         run: node scripts/check-flows.mjs
+
+      - name: ER data checker regression tests
+        run: node --test scripts/tests/check-er-data.test.mjs
+
+      - name: Check the candidate table dictionary against the ER diagram
+        run: node scripts/check-er-data.mjs
