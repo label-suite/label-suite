@@ -142,7 +142,7 @@
       wsExceptionPoolNote: '仲裁判定兩者皆非的爭議項，由專案負責人逐項決定最終處置。',
       exceptionPoolContextTpl: '標記員：{a} · 審核員：{b}',
       exceptionPoolReasonPlaceholder: '處置理由（必填）',
-      exceptionPoolConfirmLabel: '確認',
+      exceptionPoolConfirmLabel: '確認處置',
       exceptionPoolOriginTpl: '仲裁者：{arbiter} · 兩者皆非理由：{reason}',
       exceptionPoolOriginLeaderTpl: '負責人裁定（無指定仲裁者） · 兩者皆非理由：{reason}',
       leaderAdjudicationSourceLabel: '負責人裁定（無指定仲裁者）',
@@ -312,7 +312,7 @@
       wsExceptionPoolNote: 'Dispute items arbitration marked neither side adoptable, decided one at a time by a project leader.',
       exceptionPoolContextTpl: 'Annotator: {a} · Reviewer: {b}',
       exceptionPoolReasonPlaceholder: 'Reason for this disposition (required)',
-      exceptionPoolConfirmLabel: 'Confirm',
+      exceptionPoolConfirmLabel: 'Confirm disposition',
       exceptionPoolOriginTpl: 'Arbiter: {arbiter} · Rejected because: {reason}',
       exceptionPoolOriginLeaderTpl: 'Leader adjudication (no arbiter designated) · Rejected because: {reason}',
       leaderAdjudicationSourceLabel: 'Leader adjudication (no arbiter designated)',
@@ -6795,8 +6795,29 @@
      confirming it for one task never suppresses it for another, and
      switching tasks (a fresh page load with a different task_id)
      re-evaluates against that task's own setting from scratch. */
-  function guidelineModalStorageKey(taskId) {
-    return 'labelsuite.guidelineModalSeen.' + taskId;
+  /* 規格 04-02 §指引閘門：確認紀錄要同時比對三件事。
+     第 3、8 條（Q3，2026-11-09 裁定）綁**帳號**不綁裝置——共用電腦的第二個人照樣要讀，
+     所以 key 帶上目前這個人；第 7 條要比對**當前回合釘住的指引版本**，而且明寫
+     「歷史回合的版本不得從任務的當前版本、最後一個試標回合或相同的回合顯示號去猜」，
+     所以版本是從回合讀出來的，不是推導的。版本進 key 讓兩個要求同時成立：
+     遇到新版本就是新 key（必須重新確認），而舊版本的 key 還在（舊確認不失效）。
+     原型沒有後端，localStorage 仍是唯一的儲存體，Q3 的語意在 key 的層級滿足。 */
+  function currentGuidelineVersionId() {
+    var runs = currentProfile && currentProfile.materializedRuns;
+    var run = runs && runs[currentRunType];
+    return run && run.guidelineVersionId ? run.guidelineVersionId : null;
+  }
+  function guidelineGateActorId() {
+    if (currentRole === 'reviewer') return currentIdentity && currentIdentity.reviewerId;
+    /* 負責人不能折進標記員的 id：折了的話負責人按過確認，同一台機器的標記員
+       就被抑制，正是第 8 條「共用電腦的第二個人照樣要讀」要擋的事。 */
+    if (currentRole === 'project_leader') {
+      return window.LabelSuiteAnnotationWorkspaceData.DEFAULT_PROJECT_LEADER_ID;
+    }
+    return currentAnnotatorId();
+  }
+  function guidelineModalStorageKey(taskId, actorId, versionId) {
+    return 'labelsuite.guidelineModalSeen.' + actorId + '.' + taskId + '.' + versionId;
   }
   function setupGuidelineModal() {
     var modal = document.getElementById('wsGuidelineModal');
@@ -6807,13 +6828,21 @@
       modal.classList.remove('show');
       return;
     }
-    var storageKey = guidelineModalStorageKey(currentProfile.id);
+    var versionId = currentGuidelineVersionId();
+    var actorId = guidelineGateActorId();
+    var storageKey = versionId && actorId
+      ? guidelineModalStorageKey(currentProfile.id, actorId, versionId)
+      : null;
     var seen = null;
-    try {
-      seen = window.localStorage.getItem(storageKey);
-    } catch (e) {
-      /* treat blocked storage as not-seen: showing the modal again is safe */
+    if (storageKey) {
+      try {
+        seen = window.localStorage.getItem(storageKey);
+      } catch (e) {
+        /* treat blocked storage as not-seen: showing the modal again is safe */
+      }
     }
+    /* 這個回合沒有釘版本（或認不出是誰）時一律顯示：第 7 條禁止用別的版本去猜，
+       而重看一次說明是安全的那一側。 */
     function hideGuidelineModal() {
       modal.classList.remove('show');
       if (body) body.textContent = '';
@@ -6855,10 +6884,14 @@
       if (body) body.textContent = '';
     }
     confirmBtn.addEventListener('click', function () {
-      try {
-        window.localStorage.setItem(storageKey, '1');
-      } catch (e) {
-        /* ignore quota/serialization errors in the prototype */
+      /* 沒有 key 就不寫：這個回合沒釘版本（或認不出是誰）時記不得，
+         下次照樣顯示，而不是寫出一個叫 "null" 的鍵。 */
+      if (storageKey) {
+        try {
+          window.localStorage.setItem(storageKey, '1');
+        } catch (e) {
+          /* ignore quota/serialization errors in the prototype */
+        }
       }
       hideGuidelineModal();
     });
