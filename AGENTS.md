@@ -167,6 +167,8 @@ Size is judged by purpose, not by counting. This repository sets no file-count o
 
 Technical baselines (stack choices, layering, ADR status) are in [docs/development/architecture.md](docs/development/architecture.md), and the pull-request categories are in [docs/development/spec-migration.md](docs/development/spec-migration.md).
 
+How a rule gets triggered — which agent or Git event fires it, which shared checker it calls, and whether it blocks or only warns — is in [docs/development/agent-hook-contract.md](docs/development/agent-hook-contract.md), together with an event-by-event comparison of what Claude Code and Codex each support. That document is a contract, not a second rule canon, and it adds no rules. No agent hook is wired yet: `.claude/settings.json` carries only the attribution setting, there is no `.codex/hooks.json`, and the only hook checker that runs today is `scripts/check-commit-msg.sh` through `scripts/git-hooks/commit-msg`. Claude's hook configuration, events and exit codes do not carry over to Codex; that document lists the gaps instead of claiming they do.
+
 ## Review Guidelines
 
 When reviewing, keep the review narrow, actionable, and tied to the requested scope:
