@@ -692,6 +692,12 @@ import Spec0302TaskNewFlow from '@notes/components/spec-03-02-task-new-flow'
 
 ### 資料欄位
 
+:::note{title="資料規劃入口"}
+這一頁的「資料欄位」已在[資料欄位盤點總帳](../../diagrams/architecture/data-field-inventory.mdx#03-02-新增任務)逐列分類過（要不要存、存在哪一層）。字典把它們放進 **5 張候選表**：`dataset`、`dataset_import_batch`、`task`、`task_config_version`、`task_guideline_version`——逐欄定義與關聯限制見[候選資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)，整張關聯圖見 [ER 圖](/view/diagrams/architecture/database-schema.er)。
+
+**那是候選規劃，不是已落地的資料庫**；而且規格是它的依據，兩邊不一致時以本頁為準。
+:::
+
 | 欄位 | 型別 | 必填 | 規則 | 使用者看到 |
 | :--- | :--- | :--- | :--- | :--- |
 | 任務名稱 | 文字 | 是 | 不得為空；上限 100 字；可以和其他任務重複 | 第一步的任務名稱欄與字數計數器 |

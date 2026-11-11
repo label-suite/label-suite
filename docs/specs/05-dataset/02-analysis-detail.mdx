@@ -1003,6 +1003,12 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 
 ### 資料欄位
 
+:::note{title="資料規劃入口"}
+這一頁的「資料欄位」已在[資料欄位盤點總帳](../../diagrams/architecture/data-field-inventory.mdx#05-02-分析詳情)逐列分類過（要不要存、存在哪一層）。字典把它們放進 **2 張候選表**：`task_trial_iaa_result`、`task_trial_round`——逐欄定義與關聯限制見[候選資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)，整張關聯圖見 [ER 圖](/view/diagrams/architecture/database-schema.er)。
+
+**那是候選規劃，不是已落地的資料庫**；而且規格是它的依據，兩邊不一致時以本頁為準。
+:::
+
 這一頁的欄位**全部是唯讀的聚合結果**。兩種角色看到的內容相同，唯一的差別是建議行動的兩個按鈕（見[§建議行動只有專案負責人能執行](#建議行動只有專案負責人能執行)）。
 
 **任務上下文**

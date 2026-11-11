@@ -345,6 +345,12 @@ import Spec0301TaskListFlow from '@notes/components/spec-03-01-task-list-flow'
 
 ### 資料欄位
 
+:::note{title="資料規劃入口"}
+這一頁的「資料欄位」已在[資料欄位盤點總帳](../../diagrams/architecture/data-field-inventory.mdx#03-01-任務列表)逐列分類過（要不要存、存在哪一層）。字典把它們放進 **2 張候選表**：`task`、`task_run`——逐欄定義與關聯限制見[候選資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)，整張關聯圖見 [ER 圖](/view/diagrams/architecture/database-schema.er)。
+
+**那是候選規劃，不是已落地的資料庫**；而且規格是它的依據，兩邊不一致時以本頁為準。
+:::
+
 | 欄位 | 型別 | 必填 | 規則 | 使用者看到 |
 | :--- | :--- | :--- | :--- | :--- |
 | 任務名稱 | 文字 | 是 | 可以重複；搜尋的比對範圍之一 | 第一欄 |

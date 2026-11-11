@@ -918,6 +918,12 @@ import Spec0303TaskDetailFlow from '@notes/components/spec-03-03-task-detail-flo
 
 ### 資料欄位
 
+:::note{title="資料規劃入口"}
+這一頁的「資料欄位」已在[資料欄位盤點總帳](../../diagrams/architecture/data-field-inventory.mdx#03-03-任務詳情)逐列分類過（要不要存、存在哪一層）。字典把它們放進 **14 張候選表**：`annotation_arbitration_vote`、`dataset`、`dataset_item`、`task`、`task_annotation_assignment`、`task_annotation_exclusion`、`task_export`、`task_export_run`、`task_guideline_version`、`task_membership`、`task_reviewer_roster_member`、`task_run_cycle`、`task_trial_round`、`task_work_interval`——逐欄定義與關聯限制見[候選資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)，整張關聯圖見 [ER 圖](/view/diagrams/architecture/database-schema.er)。
+
+**那是候選規劃，不是已落地的資料庫**；而且規格是它的依據，兩邊不一致時以本頁為準。
+:::
+
 四個階段的欄位都列在這裡。
 
 | 欄位 | 型別 | 必填 | 規則 | 使用者看到 |

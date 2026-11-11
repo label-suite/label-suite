@@ -283,6 +283,12 @@ import Spec0501AnalysisListFlow from '@notes/components/spec-05-01-analysis-list
 
 ### 資料欄位
 
+:::note{title="資料規劃入口"}
+這一頁的「資料欄位」已在[資料欄位盤點總帳](../../diagrams/architecture/data-field-inventory.mdx#05-01-分析列表)逐列分類過（要不要存、存在哪一層）。**候選資料表字典目前沒有任何一張表把本頁列為規格來源**，所以這裡沒有表清單；全站的候選表與關聯見[候選資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)與 [ER 圖](/view/diagrams/architecture/database-schema.er)。
+
+**那是候選規劃，不是已落地的資料庫**；而且規格是它的依據，兩邊不一致時以本頁為準。
+:::
+
 | 欄位 | 型別 | 必填 | 規則 | 使用者看到 |
 | :--- | :--- | :--- | :--- | :--- |
 | 任務代號 | 文字 | 是 | 點列時用它導向詳情 | 不直接顯示 |
