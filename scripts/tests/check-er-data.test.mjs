@@ -95,7 +95,9 @@ test('a table only in the diagram is reported', () => {
 test('a table only in the dictionary is reported', () => {
   const er = clone(ER);
   er.tables = er.tables.filter((t) => t.name !== 'task');
-  assert.match(run(er).join('\n'), /\btask\b/);
+  // Not /\btask\b/: the group-count check fires on the same word, so a loose
+  // assertion passes while this one is removed.
+  assert.match(run(er).join('\n'), /"task" is in the dictionary but not in the diagram/);
 });
 
 test('a renamed column is reported', () => {
@@ -129,9 +131,70 @@ test('a foreign key pointing at the wrong table is reported', () => {
 });
 
 test('a dangling foreign key is reported', () => {
+  // The dictionary itself points at a table that is not there, so the
+  // target-mismatch check agrees with the diagram and this is the only
+  // assertion left to catch it.
+  const dict = DICT.replace('FK → `users.id`', 'FK → `nowhere.id`');
   const er = clone(ER);
   er.tables[1].columns[1].fk = 'nowhere';
-  assert.match(run(er).join('\n'), /nowhere/);
+  assert.match(run(er, dict).join('\n'), /which is not a table/);
+});
+
+test('a layout column pointing at a group that does not exist is reported', () => {
+  const er = clone(ER);
+  er.layout.columns[0].groups = ['nope'];
+  assert.match(run(er).join('\n'), /layout column "account" points at group "nope"/);
+});
+
+test('a spec source link this checker cannot resolve is reported', () => {
+  const er = clone(ER);
+  er.tables[0].description = '**規格來源**：[01-05](../../specs/01-account/05-login-state.mdx#資料欄位)';
+  assert.match(run(er).join('\n'), /cannot resolve/);
+});
+
+test('a second spec source line is read too', () => {
+  const er = clone(ER);
+  er.tables[0].description = '**規格來源**：[01-05](/notes/specs/01-account/05-login-state#資料欄位)\n\n**規格來源**：[01-04](/notes/specs/01-account/99-nope#資料欄位)';
+  assert.match(run(er).join('\n'), /99-nope/);
+});
+
+test('a duplicate table in the dictionary is reported', () => {
+  const dict = DICT + DICT.slice(DICT.indexOf('### `users`'), DICT.indexOf('## 三、'));
+  assert.match(run(ER, dict).join('\n'), /duplicate table name "users" in the dictionary/);
+});
+
+test('a changed label is reported', () => {
+  const er = clone(ER);
+  er.tables[0].label = '完全錯的標籤';
+  assert.match(run(er).join('\n'), /label is "完全錯的標籤"/);
+});
+
+test('a summary sentence that no longer matches the checkable form is reported', () => {
+  const er = clone(ER);
+  er.meta.description = '本圖顯示 2 張候選表、5 欄、1 個單欄 FK。';
+  assert.match(run(er).join('\n'), /no longer matches the checkable form/);
+});
+
+test('a dictionary with no group table is reported', () => {
+  const dict = DICT.replace('### 九個領域分組', '### 分組');
+  assert.match(run(ER, dict).join('\n'), /no group table/);
+});
+
+test('a wording that denies a unique key in another form is not read as granting one', () => {
+  const dict = DICT.replace('| **唯一** |', '| **不設唯一索引** |');
+  const er = clone(ER);
+  delete er.tables[0].columns[1].unique;
+  assert.deepEqual(run(er, dict), []);
+});
+
+test('a composite unique written after the word is not flattened', () => {
+  const dict = DICT.replace('| **唯一** |', '| **唯一索引** `(id, email)` |');
+  assert.match(run(ER, dict).join('\n'), /email.*unique/i);
+});
+
+test('a Chinese gloss in parentheses is not mistaken for a column list', () => {
+  const dict = DICT.replace('| **唯一** |', '| **唯一**（一個帳號只有一個信箱，不可共用） |');
+  assert.deepEqual(run(ER, dict), []);
 });
 
 test('a duplicate table name is reported', () => {
@@ -239,6 +302,11 @@ test('a spec entry missing a table that cites it is reported', () => {
 test('a count that disagrees with the names in the same sentence is reported', () => {
   const pages = [{ code: '01-05', rel: 'specs/01-account/05-login-state.mdx', text: entry('候選表有 **2 張**：`users`') }];
   assert.match(checkSpecEntries(ER_WITH_SOURCES, pages).join('\n'), /says 2 tables but names 1/);
+});
+
+test('an entry that names tables but states no count is reported', () => {
+  const pages = [{ code: '01-05', rel: 'specs/01-account/05-login-state.mdx', text: entry('候選表：`users`') }];
+  assert.match(checkSpecEntries(ER_WITH_SOURCES, pages).join('\n'), /states no count in the checkable form/);
 });
 
 test('a spec page with no entry at all is reported', () => {

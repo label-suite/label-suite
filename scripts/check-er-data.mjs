@@ -45,10 +45,15 @@ function nullability(cell) {
 // denying one outright, and a substring search for 唯一 is bitten by it.
 function singleUnique(key) {
   const k = key.replace(/\*/g, '');
-  if (k.includes('不加唯一') || k.includes('部分唯一') || !k.includes('唯一')) return false;
-  const tail = k.slice(k.lastIndexOf('唯一') + 2);
-  const m = /^\s*`?[（(]([^）)]*)/.exec(tail);
-  if (m && /[,，]/.test(m[1])) return false;
+  if (!k.includes('唯一')) return false;
+  // The dictionary denies a unique key in more than one wording, and a
+  // whitelist of two literals is how a future 不設唯一 would be read as
+  // granting one -- the mistake this check exists to catch.
+  if (/(不[加設建立]|無|毋須|不需)[^。；]{0,6}唯一/.test(k)) return false;
+  if (k.includes('部分唯一')) return false;
+  // A column list is written in backticks. Prose in parentheses after 唯一
+  // is a gloss, not a list.
+  if (/`\s*[（(][^）)]*[,，][^）)]*[）)]\s*`/.test(k)) return false;
   return true;
 }
 
@@ -75,7 +80,10 @@ export function parseDictionary(text) {
     if (g) { group = g[1]; table = null; inColumns = false; continue; }
     const t = /^### `([a-z][a-z0-9_]*)` — (.+?)\s*$/.exec(line);
     if (t && group) {
-      table = { name: t[1], label: t[2].trim(), group, columns: [] };
+      // `group` is deliberately not carried: chapter seven covers two groups
+      // under one heading, so a chapter-derived group would be wrong for six
+      // tables. Group membership is checked against the declared counts.
+      table = { name: t[1], label: t[2].trim(), columns: [] };
       tables.push(table);
       inColumns = false;
       continue;
@@ -108,9 +116,11 @@ export function parseDictionary(text) {
 /** Every `[NN-NN](path)` on a table's `**規格來源**` line. Links elsewhere in
  *  the description are prose — often a contrast — and are not declarations. */
 function specSources(description) {
-  const line = /\*\*規格來源\*\*：(.*)/.exec(description || '');
-  if (!line) return [];
-  return [...line[1].matchAll(/\[(0[1-7]-0[0-9])\]\(([^)]+)\)/g)].map((m) => ({ code: m[1], href: m[2] }));
+  // Every such line, not the first: a description may carry more than one,
+  // and missing one makes a correct spec entry look like it over-lists.
+  const lines = [...(description || '').matchAll(/\*\*規格來源\*\*：(.*)/g)];
+  return lines.flatMap((line) =>
+    [...line[1].matchAll(/\[(0[1-7]-0[0-9])\]\(([^)]+)\)/g)].map((m) => ({ code: m[1], href: m[2] })));
 }
 
 function numbersIn(description) {
@@ -135,6 +145,11 @@ export function checkErData(dictText, er, { specsDir = SPECS_DIR } = {}) {
     }
   }
 
+  const dictSeen = new Set();
+  for (const t of dict.tables) {
+    if (dictSeen.has(t.name)) out.push(`duplicate table name "${t.name}" in the dictionary`);
+    dictSeen.add(t.name);
+  }
   const dictByName = new Map(dict.tables.map((t) => [t.name, t]));
   const erByName = new Map(erTables.map((t) => [t.name, t]));
   for (const name of erByName.keys()) {
@@ -153,6 +168,7 @@ export function checkErData(dictText, er, { specsDir = SPECS_DIR } = {}) {
       if (!groupKeys.has(g)) out.push(`layout column "${col.key}" points at group "${g}", which the diagram does not define`);
     }
   }
+  if (dict.groups.length === 0) out.push('§一 has no group table this checker can read counts from');
   for (const g of dict.groups) {
     const actual = erTables.filter((t) => t.group === g.key).length;
     if (actual !== g.count) out.push(`group "${g.key}" holds ${actual} tables in the diagram but the dictionary says ${g.count}`);
@@ -161,6 +177,7 @@ export function checkErData(dictText, er, { specsDir = SPECS_DIR } = {}) {
   for (const [name, dt] of dictByName) {
     const et = erByName.get(name);
     if (!et) continue;
+    if ((et.label || '') !== dt.label) out.push(`table "${name}": label is "${et.label}" in the diagram but "${dt.label}" in the dictionary`);
     const dCols = dt.columns.map((c) => c.name).join(',');
     const eCols = (et.columns || []).map((c) => c.name).join(',');
     if (dCols !== eCols) {
@@ -181,7 +198,9 @@ export function checkErData(dictText, er, { specsDir = SPECS_DIR } = {}) {
   }
 
   const claimed = numbersIn(er.meta?.description);
-  if (claimed) {
+  if (!claimed) {
+    out.push('the summary in meta.description no longer matches the checkable form "**N 張候選表、N 欄、N 個單欄 FK**"');
+  } else {
     const columns = erTables.reduce((n, t) => n + (t.columns || []).length, 0);
     const fks = erTables.reduce((n, t) => n + (t.columns || []).filter((c) => c.fk).length, 0);
     if (claimed.tables !== erTables.length) out.push(`the summary says ${claimed.tables} tables but the diagram holds ${erTables.length}`);
@@ -227,6 +246,8 @@ export function checkSpecEntries(er, pages) {
     const claimed = /\*\*(\d+) 張\*\*/.exec(note[1]);
     if (claimed && Number(claimed[1]) !== want.length) {
       out.push(`${rel}: the entry says ${claimed[1]} tables but names ${want.length}`);
+    } else if (!claimed && want.length > 0) {
+      out.push(`${rel}: the entry names ${want.length} tables but states no count in the checkable form "**N 張**"`);
     }
   }
   return out;
