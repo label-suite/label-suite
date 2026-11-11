@@ -361,6 +361,7 @@ updatedAt: '2026-11-11'
 | `record_path` | 紀錄路徑 | `varchar` | NOT NULL | — | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：整檔為陣列或一行一筆時是 **`$`**；巢狀用 **RFC 6901** 的路徑表示法 |
 | `preprocessing_version` | 前處理版本 | `varchar` | NOT NULL | — | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：**不得從項目內容反推** |
 | `classification_manifest` | 欄位分類清單 | `json` | NOT NULL | — | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：**逐檔**保存、受限、**不含答案值**；兩類互斥；**留下版本**、寫入前驗證過；**定版後不可改** |
+| `created_at` | 建立時間 | `timestamptz` | 系統寫入 | — | UTC |
 
 **`classification_manifest` 的 JSON 結構要記下來，不能只寫「JSON」**（[#235](https://github.com/label-suite/label-suite/issues/235) 工作項 2 明文要求）：
 
@@ -1020,3 +1021,155 @@ updatedAt: '2026-11-11'
 | 最後動作、最後活動時間、鎖定狀態、累計耗時、標記分布統計、仲裁資格 | [04-01](../../specs/04-annotation/01-annotation-list.mdx#資料欄位) | 全部每次讀取重算 |
 | 整筆的「待標記」 | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位) | **由尚無有效紀錄推導**，不是 `status` 的第四個值 |
 | 吸附單位 | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位) | 規格明寫**只影響滑鼠落點，不影響存下來的值** |
+
+---
+
+## 八、`export` 匯出（2 張）
+
+### `task_export` — 匯出請求與原始產物
+
+**[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) 明寫請求與執行是兩個時間點**：「匯出時間……記錄列與檔名用的是**實際讀取結果的那個時間**，不是請求被接受的時間」。所以 `requested_at` 與 `exported_at` 兩欄都要有，不能合併。
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `id` | 匯出請求主鍵 | `uuid` | NOT NULL | **PK**；`(task_id, id)` 另供複合 FK 父鍵 | — |
+| `task_id` | 所屬任務 | `uuid` | NOT NULL | **FK → `task.id`，RESTRICT** | — |
+| `requested_by_user_id` | 原始請求人 | `uuid` | NOT NULL | **FK → `users.id`，RESTRICT** | **下載仍需重新授權**——請求過不代表以後都能下載 |
+| `requested_at` | 請求被接受的時間 | `timestamptz` | NOT NULL | 索引（歷史排序） | — |
+| `exported_at` | **實際讀取結果的時間** | `timestamptz` | **可空** | **CHECK** `status='ready' → exported_at IS NOT NULL` | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：**記錄列與檔名用的是這一個**。未完成時**不冒稱已匯出** |
+| `completed_at` | 產物驗證完成、可下載的時間 | `timestamptz` | **可空** | — | — |
+| `status` | 狀態 | `varchar(16)` | NOT NULL | CHECK 限 `pending`／`processing`／`ready`／`failed` | — |
+| `export_format` | 匯出格式 | `varchar(16)` | NOT NULL | CHECK 限 `json`／`json-min` | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：**只有這兩種**（Q41） |
+| `export_format_version` | 檔案格式版本 | `integer` | NOT NULL | CHECK `>= 1` | — |
+| `conditions_version` | 條件快照的驗證規格版本 | `integer` | NOT NULL | CHECK `>= 1` | — |
+| `conditions_snapshot` | 條件快照 | `json` | NOT NULL | — | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：**經驗證且不可變**；供審計與重製驗證，**不是重新下載的資料來源**。**不含較晚的 `exported_at`** |
+| `scope_label` | 匯出範圍的顯示文案 | `varchar(120)` | NOT NULL | — | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：全任務／指定標記員。**另外存，不放進條件快照** |
+| `export_type` | 全部或篩選匯出 | `varchar(24)` | NOT NULL | — | 同上，歷史列顯示用 |
+| `request_idempotency_key` | 匯出重試鍵 | `varchar(120)` | NOT NULL | **唯一 `(task_id, requested_by_user_id, request_idempotency_key)`** | 避免重複匯出 |
+| `request_digest` | 請求內容摘要 | `char(64)` | NOT NULL | — | 同一個 key 但內容不同時要擋下 |
+| `row_count` | 實際輸出列數 | `integer` | **可空** | CHECK `>= 0` | **零列仍須保存清單**——零不等於失敗 |
+| `original_filename` | 首次下載所用檔名 | `varchar(255)` | **可空** | — | **之後不改**。檔名用的是 `exported_at` |
+| `artifact_ref` | 受限儲存的內部物件鍵 | `varchar(1024)` | **可空** | — | **不是下載網址**。這一欄不得外流 |
+| `artifact_sha256` | 原始檔案的摘要 | `char(64)` | **可空** | — | 重新下載要讀相同 bytes，靠它核對 |
+| `artifact_size_bytes` | 原始檔案大小 | `bigint` | **可空** | CHECK `>= 0` | — |
+| `expires_at` | 原檔下載期限 | `timestamptz` | **可空** | — | **待決**：期限幾天規格沒有定，見下 |
+| `revoked_at` | 停止下載的時間 | `timestamptz` | **可空** | — | 來源刪除或政策撤銷後 |
+| `failure_code` | 安全失敗代碼 | `varchar(64)` | **可空** | **CHECK** `status='failed' → failure_code IS NOT NULL` | **不存內部路徑或答案**（`AGENTS.md` 硬性規則 8） |
+
+:::note{title="`expires_at` 與保留期限：原始規劃有數字，本專案規格沒有"}
+原始字典寫「**30 日後不提供檔案，歷史資訊保留一年**」。但那個數字出現在**原始規劃的實體字典**裡，**不在本專案任何一頁規格**——[03-03](../../specs/03-task-management/03-task-detail.mdx) 的匯出那一段只定了格式、範圍、條件快照與時間語意，沒有定期限。
+
+依本 repo 的鐵律「**依據和事實是兩件事**」：數字查得到不等於可以結案，來源不對就是依據不足。所以這一欄**留著但期限不填**，數字當**建議**記在這裡，歸[待決 D3](./data-field-inventory.mdx#五裁定紀錄與待裁決)（保留政策那一題）。
+:::
+
+### `task_export_run` — 匯出納入的執行與順序
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `export_id` | 所屬匯出 | `uuid` | NOT NULL | **複合 PK 之一**；**複合 FK `(task_id, export_id)` → `task_export(task_id, id)`** | — |
+| `run_id` | 納入的執行 | `uuid` | NOT NULL | **複合 PK 之一**；**複合 FK `(task_id, run_id)` → `task_run(task_id, id)`** | — |
+| `task_id` | 同任務作用域 | `uuid` | NOT NULL | 見上**兩組**複合 FK | **刻意的反正規化**：它讓「匯出與執行必須屬同一任務」用兩個複合 FK 就擋得住 |
+| `position` | 清單中的順序 | `integer` | NOT NULL | **唯一 `(export_id, position)`**；CHECK `>= 1` | 從 1 開始。順序寫進產物的有序清單 |
+
+**這張表是反查出來的六項之一**（[盤點總帳§二](./data-field-inventory.mdx#二九條流程的反查)）：[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) 的畫面只顯示一個匯出時間，但「請求被接受」與「實際讀取結果」是兩個時刻，而一次匯出可以納入多次執行——所以要有這張表記順序。
+
+---
+
+## 九、`work` 工時（1 張）
+
+### `task_work_interval` — 任務前景工作區間
+
+**只記錄原始時間與歸屬，不存累計工時、完成數、速度或日報。**
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `id` | 工作區間主鍵 | `uuid` | 系統寫入 | **PK** | — |
+| `user_id` | 工作者帳號 | `uuid` | NOT NULL | 見下三組複合 FK | — |
+| `account_session_id` | 可驗證的登入工作階段 | `uuid` | NOT NULL | **複合 FK `(user_id, account_session_id)` → `account_session(user_id, id)`** | 這是「**只採信可信的紀錄**」的結構基礎——工作區間必須掛在一個真實的登入上 |
+| `task_id` | 所屬任務 | `uuid` | NOT NULL | 見下 | — |
+| `run_id` | 所屬執行 | `uuid` | NOT NULL | **複合 FK `(task_id, run_id)` → `task_run(task_id, id)`** | — |
+| `membership_id` | 當次任務成員資格 | `uuid` | NOT NULL | **複合 FK `(task_id, membership_id, user_id)` → `task_membership(task_id, id, user_id)`** | **三欄複合**，確保成員資格、任務與使用者三者一致 |
+| `work_kind` | 工作種類 | `varchar(16)` | NOT NULL | CHECK 限 `annotation`／`review`／`arbitration` | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：標記／審核／仲裁筆數**三欄分開** |
+| `started_at` | 前景工作開始 | `timestamptz` | NOT NULL | — | — |
+| `last_seen_at` | 最後一次有效前景心跳 | `timestamptz` | NOT NULL | CHECK `>= started_at` | **失聯時以此關閉，不補計等待時間** |
+| `ended_at` | 結束時間 | `timestamptz` | **可空** | **CHECK** 與 `close_reason` 同時為空或同時非空；CHECK `>= started_at` | 開啟中為空 |
+| `close_reason` | 結束原因 | `varchar(32)` | **可空** | 見上 | **這一欄承載「可不可信」**：正常結束與失聯關閉要分得出來 |
+
+**「每位使用者同時最多一段未結束區間」用部分唯一索引** `WHERE ended_at IS NULL` on `user_id`。這是本文件提議的落法。
+
+:::warning{title="三個時長是三件事，不能共用一欄"}
+[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) 與 [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位) 一共定了**三個**不同的時間數字：
+
+| 數字 | 哪一頁 | 從哪裡算 | 規格要點 |
+| :--- | :--- | :--- | :--- |
+| **上線時長** | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) | `account_session` 的 `started_at` 到失效 | 和工作時長是**兩個不同的數**；**只採信可信的紀錄** |
+| **工作時長** | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) | 這張表的區間加總 | 速度的分母；**不可信時相關的速度顯示「未知」**，`—` 只用於角色不適用 |
+| **耗時** | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位) | `annotation_history_event.lead_time_ms` | **頁面可見時間累計**；**不得用事件時間相減**；**不等於工時** |
+
+**三個都是推導值，這張表只存原始區間。** 把任何一個存成累計欄，就會與原始紀錄產生第二個真相。而「不可信時顯示未知、不補推估值」這條，只有在不存累計值的前提下才容易守住——存了之後，那個數字看起來永遠是可信的。
+:::
+
+| | |
+| :--- | :--- |
+| **寫入者** | 全部系統寫入（心跳） |
+| **讀取權限** | 專案負責人（[03-03](../../specs/03-task-management/03-task-detail.mdx) 的工時明細）；**標記員視角任何地方都不顯示耗時** |
+| **不可變** | 區間關閉後不可變 |
+| **保留** | **未定**，見 [D3](./data-field-inventory.mdx#五裁定紀錄與待裁決) |
+
+### `work` 組不進表的推導值
+
+| 推導值 | 哪一頁 | 為什麼不存 |
+| :--- | :--- | :--- |
+| 上線時長、工作時長 | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) | 見上方警示框 |
+| 標記／審核／仲裁筆數 | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) | 從紀錄數出來；**三欄分開**，角色用不到的顯示 `—` |
+| 今日完成筆數、平均速度 | [04-01](../../specs/04-annotation/01-annotation-list.mdx#資料欄位) | 每次讀取重算；**與儀表板同源** |
+| 日報投影 | — | 規格沒有定義日報；原始字典的 `WorkLogEntry` 是唯讀投影，**不另建表** |
+
+---
+
+## 十、統計與驗收對照
+
+### 候選表統計
+
+| 項目 | 數 |
+| :--- | ---: |
+| 候選表 | **37 張**（原始 40 扣掉 D7 的 3 張） |
+| 欄位 | **328 欄** |
+| 算式 | 原始 37 張共 **330 欄** − **6 欄**（D7 理由延伸，維護者 2026-11-11 裁定）＋ **4 欄**（本專案新增） = **328** |
+| 本專案新增的欄位 | **4**：`account_session.last_seen_at`（閒置限制的起點，原始沒有）、`task.archived_at` 與 `task.archived_by_user_id`（原始 `task` 沒有任何封存欄）、`task_membership.last_activity_at`（維護者 2026-11-11 裁定存成欄位） |
+| 本專案不收的原始欄位 | **6**：`users` 的 `google_subject`／`is_seeder`／`credential_version`、`task_config_version` 的 `schema_version_no`／`schema_digest`／`schema_registry_version` |
+| 單欄 FK | **32** |
+| **複合 FK** | **18 組**（圖上畫不出來，全部列在各組的§關聯與限制） |
+| 可空性與原始相反的欄位 | **1**：`annotation_review_decision.reason`（規格要求 NOT NULL 允許空字串） |
+| §關聯與限制 的限制條數 | **24 條落在 DB**、**22 條只能在應用層擋**（五張表合計） |
+
+### 對照 [#235](https://github.com/label-suite/label-suite/issues/235) 的驗收條件
+
+| 驗收條件 | 狀態 | 落在哪 |
+| :--- | :--- | :--- |
+| 所有需持久化項目可定位至欄位／JSON 路徑或具名待決 | ✅ | 每一欄一列；四個 JSON 欄位另列結構表（`classification_manifest`、`config_payload`、`answer_payload`、`result_payload`） |
+| 所有候選表都有規格依據 | ✅ | 每張表的「規格來源」欄指回 `docs/specs/`；沒有依據的 3 張表與 6 欄已移除 |
+| 唯一性、複合限制、刪除行為與敏感邊界**不僅存在 ER 線上，文字字典可完整閱讀** | ✅ | 每組末尾的§關聯與限制，分「DB」與「應用層」兩層；FK 的刪除行為（RESTRICT／CASCADE）逐欄寫明 |
+| **無 ORM、migration、API 或 DB 實作變更** | ✅ | 本文件不含 DDL；交付只有這一份 `.mdx` |
+
+### 對照工作項目
+
+| 任務項目 | 狀態 |
+| :--- | :--- |
+| 定義模組分組、資料責任、表命名與每張表的用途 | ✅ §一的九個分組表；每張表的用途在標題下 |
+| 每個欄位記九項後設資料；JSON 需記結構與版本 | ✅ 逐欄表；四個 JSON 欄位另列結構 |
+| 定義寫入者、讀取權限、不可變與版本界線、封存／刪除／保留／撤銷規則，區別應用層驗證與 DB 約束 | ✅ 每張表的四格表；§關聯與限制分兩層 |
+| 檢查同任務／同資料集／同回合／同使用者複合關聯 | ✅ **17 組複合 FK**，每一組都寫明它擋住什麼 |
+| 區分公開 dataset item、受保護原始資料及隱藏答案 | ✅ `dataset_item` 與 `dataset_item_private` 分表；警示框寫明**分表不等於隔離** |
+| 輸出類型設定與答案資料維持 config-driven | ✅ 八種型別全在 `config_payload.output_configs{}` 與 `answer_payload.outputs[]`，**不建八張表、不加八個分支** |
+| 核對試標閘門 IAA 與分析報告的關係 | ✅ §六的「IAA 的兩套東西，不可混用」 |
+| 核對帳號／通知偏好、權限矩陣版本、成員與名冊、指引政策與內容版本、抽樣快照、審核四段、匯出產物 | ✅ 逐組 |
+| 所有表雙向回指現行規格；標示為規劃結構 | ✅ 每欄的「規格來源」；開頭的警示框 |
+
+---
+
+## 變更紀錄
+
+| Issue | 日期 | 變更 |
+| :--- | :--- | :--- |
+| [#235](https://github.com/label-suite/label-suite/issues/235) | 2026-11-11 | 初版。**37 張候選表、328 欄**逐欄字典，各帶識別碼、中文意義、型別、可空性、鍵與限制、規格來源；**18 組複合 FK** 逐組寫明它擋住什麼；**22 條只能在應用層擋的限制**（對 24 條落在 DB 的）分組列出，不假裝 DB 擋得住；四個 JSON 欄位另記結構與版本。本專案**新增 4 欄**（登入狀態的最後使用時間、兩個封存欄、成員的最後活動）、**不收 6 欄**（D7 的理由延伸，維護者 2026-11-11 裁定）、**修正 1 欄的可空性**（審核理由依規格改為 NOT NULL 允許空字串）。另記三件原始規劃有數字但本專案規格沒有的事（匯出期限 30 日、歷史保留一年、`item_key` 的編碼），依「依據和事實是兩件事」留作建議而非結案 |
