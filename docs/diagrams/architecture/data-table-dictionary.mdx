@@ -817,7 +817,7 @@ import PluginView from '@/components/PluginView.astro';
 
 兩組合在同一章讀，是因為它們共用同一組單位鍵、而且審核的每一段都接在標記紀錄後面；但**分組不同**，ER 圖上是兩欄。
 
-**這八張裡有六張共用同一組三欄複合單位鍵**（`annotation_review_submission_revision` 與 `annotation_review_decision` 例外，它們以單欄 FK 指向 submission） `(task_id, run_id, assignment_id)`，指向 `task_annotation_assignment` 的唯一鍵 `(task_id, task_run_id, id)`。理由還是同一個：單欄 FK 擋不住「這個工作位屬於另一個任務或另一次執行」。
+**這八張裡有六張共用同一組三欄複合單位鍵**（`annotation_review_submission_revision` 與 `annotation_review_decision` 例外：前者帶 `run_id` `assignment_id` 兩欄但不設 FK，後者連那兩欄都沒有；兩張都以單欄 FK 指向 `annotation_review_submission`） `(task_id, run_id, assignment_id)`，指向 `task_annotation_assignment` 的唯一鍵 `(task_id, task_run_id, id)`。理由還是同一個：單欄 FK 擋不住「這個工作位屬於另一個任務或另一次執行」。
 
 ### `annotation_record` — 標記草稿與提交嘗試
 
@@ -1007,7 +1007,7 @@ import PluginView from '@/components/PluginView.astro';
 
 | 限制 | 層級 | 內容 |
 | :--- | :--- | :--- |
-| 八張表的單位歸屬 | **DB** | 三欄複合 FK → `task_annotation_assignment(task_id, task_run_id, id)` |
+| 六張表的單位歸屬 | **DB** | 三欄複合 FK → `task_annotation_assignment(task_id, task_run_id, id)`。這一章有八張表，另外兩張**不宣告這組複合 FK**：`annotation_review_submission_revision` 帶 `run_id` `assignment_id` 兩欄但**刻意不設 FK**，`annotation_review_decision` **連那兩欄都沒有**；兩張都以單欄 FK 指向 `annotation_review_submission` |
 | 一個審核單位只有一個提交者 | **DB** | 唯一 `(run_id, assignment_id)` on submission |
 | 每項至多一張仲裁票 | **DB** | 唯一 `(run_id, assignment_id, output_key, item_key)`——**前提是 `item_key` 編碼無碰撞** |
 | 一個子項最多收尾一次 | **DB** | 同上鍵 on exception_resolution |
@@ -1190,5 +1190,5 @@ import PluginView from '@/components/PluginView.astro';
 
 | Issue | 日期 | 變更 |
 | :--- | :--- | :--- |
-| [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-11 | 拿掉複合 FK 的條數（初版寫「34 組」，它把三個「見上／見下」的指路格重複計入），改成指向逐條內容；§關聯與限制 的 24／22 留著並把數法寫死為「表頭是『限制／層級/內容』的五張表合計」。無新決議 |
+| [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-11 | 拿掉複合 FK 的條數（初版寫「34 組」，它把三個「見上／見下」的指路格重複計入），改成指向逐條內容；§關聯與限制 的 24／22 留著並把數法寫死為「表頭是『限制／層級/內容』的五張表合計」；§七 限制表的「**八張表**的單位歸屬」改成**六張**並寫出兩張例外各自的差別。無新決議 |
 | [#235](https://github.com/label-suite/label-suite/issues/235) | 2026-11-11 | 初版。**37 張候選表、328 欄**逐欄字典，各帶識別碼、中文意義、型別、可空性、鍵與限制、規格來源；**34 組複合 FK** 逐組寫明它擋住什麼；**22 條只能在應用層擋的限制**（對 24 條落在 DB 的）分組列出，不假裝 DB 擋得住；四個 JSON 欄位另記結構與版本。本專案**新增 4 欄**（登入狀態的最後使用時間、兩個封存欄、成員的最後活動）、**不收 6 欄**（D7 的理由延伸，維護者 2026-11-11 裁定）、**修正 1 欄的可空性**（審核理由依規格改為 NOT NULL 允許空字串）。另記三件原始規劃有數字但本專案規格沒有的事（匯出期限 30 日、歷史保留一年、`item_key` 的編碼），依「依據和事實是兩件事」留作建議而非結案 |
