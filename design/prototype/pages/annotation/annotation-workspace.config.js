@@ -6933,6 +6933,13 @@
       toggle.addEventListener('click', function () {
         state.lang = state.lang === 'zh' ? 'en' : 'zh';
         persistLang(state.lang);
+        /* 側欄有自己的一批標籤（L0 導覽、系統管理子選單、快捷鍵說明、角色標示），
+           只有 applyGlobalLanguage 會重新解析它們。這一頁原本沒有呼叫它，所以切成
+           英文之後側欄仍是中文——FR-018C1 禁止的中英混用。
+           兩邊的 LANG_STORAGE_KEY 都是 'labelsuite.lang'，persistLang 重複寫同一個值。 */
+        if (window.LabelSuiteSharedSidebar) {
+          window.LabelSuiteSharedSidebar.applyGlobalLanguage(state.lang);
+        }
         applyDocumentLang();
         applyStaticI18nText();
         /* file-action labels (新分頁/預覽) are i18n text rendered into the

@@ -50,6 +50,22 @@
    * applyGlobalLanguage() can re-resolve #navAnnotation's role-dependent
    * label on every language switch, not just at initial mount. */
   var currentTaskRole = null;
+  /* 掛載時呼叫端有沒有傳 opts.roleIndicator。傳了就是 FR-020A 的顯式覆寫入口
+     （例如系統管理的頁面固定顯示「系統管理員」），切語言時不得被任務角色蓋掉。 */
+  var currentRoleIndicatorIsExplicit = false;
+
+  /* 規格 07-01 §已確認決議 Q2（維護者 2026-11-08）：標記員讀「標記員」，
+     完全沒有任務角色讀「一般使用者」。來源 shared:FR-020A 的第三支同時覆蓋這兩種人，
+     裁決把它們拆開，所以是四個分支。
+     注意兩種命名法：reviewer／project_leader 這兩個鍵本來就只當角色標示用，
+     而 roleAnnotator／roleNoTaskRole 加前綴是為了避開同字典裡的 annotator
+     ——那一個是導覽項標籤（「標記作業」），不是角色標示。 */
+  function resolveRoleIndicator(taskRole, labels) {
+    if (taskRole === 'reviewer') return labels.reviewer;
+    if (taskRole === 'project_leader') return labels.project_leader;
+    if (taskRole === 'annotator') return labels.roleAnnotator;
+    return labels.roleNoTaskRole;
+  }
 
   function normalizeSystemRole(role) {
     return role === 'super_admin' ? 'super_admin' : 'user';
@@ -345,13 +361,23 @@
     updateShortcutHelpLanguage(normalizedLang);
     updateAdminSubmenuLanguage(normalizedLang);
     updateL0NavLanguage(normalizedLang);
+    updateRoleIndicatorLanguage(normalizedLang);
 
+    /* 這一段放在 updateRoleIndicatorLanguage 之後：顯式覆寫入口的優先序不變。 */
     if (typeof opts.roleLabel === 'string') {
       var roleEl = document.getElementById('roleIndicator');
       if (roleEl) roleEl.textContent = opts.roleLabel;
     }
 
     return normalizedLang;
+  }
+
+  /* FR-021 要求 L0 標籤每次切語言都重新解析；角色標示同理，否則沒有傳顯式覆寫的頁面
+     在英文模式下會看到中文。掛載時傳了 opts.roleIndicator 的頁面不碰——那是顯式覆寫。 */
+  function updateRoleIndicatorLanguage(lang) {
+    if (currentRoleIndicatorIsExplicit) return;
+    var labels = taskRoleI18n[normalizeLang(lang)];
+    setTextById('roleIndicator', resolveRoleIndicator(currentTaskRole, labels));
   }
 
   function readStoredActiveTaskType() {
@@ -441,8 +467,8 @@
      overrides that annotation-workspace.config.js previously patched in
      post-mount (issue singyichen/label-suite#309, issue singyichen/label-suite#931). */
   var taskRoleI18n = {
-    zh: { reviewer: '審核員', project_leader: '專案負責人', annotationLabel: '審核作業', projectLeaderAnnotationLabel: '例外處置', annotator: '標記作業' },
-    en: { reviewer: 'Reviewer', project_leader: 'Project leader', annotationLabel: 'Review', projectLeaderAnnotationLabel: 'Exception Disposition', annotator: 'Annotation' }
+    zh: { reviewer: '審核員', project_leader: '專案負責人', annotationLabel: '審核作業', projectLeaderAnnotationLabel: '例外處置', annotator: '標記作業', roleAnnotator: '標記員', roleNoTaskRole: '一般使用者' },
+    en: { reviewer: 'Reviewer', project_leader: 'Project leader', annotationLabel: 'Review', projectLeaderAnnotationLabel: 'Exception Disposition', annotator: 'Annotation', roleAnnotator: 'Annotator', roleNoTaskRole: 'General user' }
   };
 
   /* issue singyichen/label-suite#1041 FR-021: the five non-annotation L0 labels' bilingual
@@ -1861,11 +1887,8 @@
     currentTaskRole = taskRole;
     var taskRoleLabels = taskRoleI18n[readStoredLang()];
     var l0NavLabels = l0NavI18n[readStoredLang()];
-    var roleIndicator = opts.roleIndicator || (
-      taskRole === 'reviewer' ? taskRoleLabels.reviewer :
-      taskRole === 'project_leader' ? taskRoleLabels.project_leader :
-      '一般使用者'
-    );
+    currentRoleIndicatorIsExplicit = typeof opts.roleIndicator === 'string' && opts.roleIndicator !== '';
+    var roleIndicator = opts.roleIndicator || resolveRoleIndicator(taskRole, taskRoleLabels);
 
     var navItems = [
       {
@@ -2436,6 +2459,9 @@
       }
     }
     if (typeof opts.roleLabel === 'string') {
+      /* 這也是 FR-020A 的顯式覆寫入口，和掛載時的 opts.roleIndicator 同級：
+         設了旗標，之後切語言才不會被任務角色解析蓋回去。 */
+      currentRoleIndicatorIsExplicit = true;
       var roleIndicator = document.getElementById('roleIndicator');
       if (roleIndicator) roleIndicator.textContent = opts.roleLabel;
     }
