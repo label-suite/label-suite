@@ -15,6 +15,29 @@
   var VALID_IAA_STATUSES = Object.keys(IAA_BADGE_CLS);
   var VALID_MEMBERSHIP_ROLES = Object.keys(ROLE_BADGE_CLS);
   var KNOWN_MEMBERSHIP_ROLES = VALID_MEMBERSHIP_ROLES.concat('annotator');
+  /* 徽章的排列順序。維護者 2026-11-11 裁定「專案負責人 → 審核員」，
+     依 PRD §權限矩陣 的欄序（00-prd.mdx:98）。規格 05-01 四處寫「依設定的角色順序」
+     但沒有任何一頁定義那個順序，所以它在這裡。 */
+  var MEMBERSHIP_ROLE_ORDER = ['project_leader', 'reviewer', 'annotator'];
+
+  /* 一個人在同一個任務可以身兼兩種任務角色（規格 05-01 §已確認決議 Q1，
+     維護者 2026-11-07 裁定兩個徽章都顯示）。資料一律是陣列。 */
+  function membershipRoles(task) {
+    return Array.isArray(task.membershipRole) ? task.membershipRole : [];
+  }
+
+  // 不在順序表裡的角色排最後。用 indexOf 的原值（-1）會讓它排到最前面，
+  // 而日後在 KNOWN_MEMBERSHIP_ROLES 加一個還沒進順序表的角色就會靜默排錯。
+  function membershipRoleRank(role) {
+    var i = MEMBERSHIP_ROLE_ORDER.indexOf(role);
+    return i === -1 ? MEMBERSHIP_ROLE_ORDER.length : i;
+  }
+
+  function orderedMembershipRoles(task) {
+    return membershipRoles(task).slice().sort(function (a, b) {
+      return membershipRoleRank(a) - membershipRoleRank(b);
+    });
+  }
   var VALID_LIMITS = [20, 50, 100];
 
   function isNonEmptyString(value) {
@@ -55,7 +78,11 @@
       && task.completionRate >= 0
       && task.completionRate <= 100
       && VALID_IAA_STATUSES.indexOf(task.iaaStatus) !== -1
-      && KNOWN_MEMBERSHIP_ROLES.indexOf(task.membershipRole) !== -1;
+      && Array.isArray(task.membershipRole)
+      && task.membershipRole.length > 0
+      && task.membershipRole.every(function (role) {
+        return KNOWN_MEMBERSHIP_ROLES.indexOf(role) !== -1;
+      });
   }
 
   function cloneOutputType(item) {
@@ -76,7 +103,7 @@
       outputTypes: task.outputTypes.slice(),
       completionRate: task.completionRate,
       iaaStatus: task.iaaStatus,
-      membershipRole: task.membershipRole,
+      membershipRole: task.membershipRole.slice(),
     };
   }
 
@@ -133,14 +160,20 @@
       outputLabels.join(' '),
       task.iaaStatus,
       translateNested('iaaBadge', task.iaaStatus),
-      task.membershipRole,
-      translateNested('roleLabel', task.membershipRole),
+      membershipRoles(task).join(' '),
+      membershipRoles(task).map(function (role) {
+        return translateNested('roleLabel', role);
+      }).join(' '),
     ].filter(Boolean).join(' ').toLowerCase();
   }
 
   function getFilteredTasks(translateNested) {
+    /* 身上至少有一個畫得出徽章的角色才列出來。只有 annotator 的仍然不列，
+       與改成陣列之前的行為一致。 */
     var tasks = state.tasks.filter(function (task) {
-      return VALID_MEMBERSHIP_ROLES.indexOf(task.membershipRole) !== -1;
+      return membershipRoles(task).some(function (role) {
+        return VALID_MEMBERSHIP_ROLES.indexOf(role) !== -1;
+      });
     });
 
     if (state.outputType) {
@@ -217,6 +250,7 @@
   global.LabelSuiteDatasetAnalysisModel = {
     IAA_BADGE_CLS: IAA_BADGE_CLS,
     ROLE_BADGE_CLS: ROLE_BADGE_CLS,
+    orderedMembershipRoles: orderedMembershipRoles,
     VALID_LIMITS: VALID_LIMITS,
     outputTypes: outputTypes,
     state: state,

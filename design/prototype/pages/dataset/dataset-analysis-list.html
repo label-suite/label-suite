@@ -106,6 +106,15 @@
     .progress-fill.complete { background: var(--color-cta); }
 
     .role-cell { color: var(--color-text-soft); font-size: 13px; }
+    /* 身兼兩種任務角色時第五欄要並排兩個徽章，窄螢幕換行而不是把欄寬撐壞。
+       flex 下在 td 裡面的這個 div 上，不是 td 本身——list-page.css 的
+       `.task-table td` 有 vertical-align: middle 與 border-bottom，把 td
+       變成 flex 容器會讓前者失效、後者不再貼到列底。同檔的 .output-type-tags
+       也是下在 td 裡的 div 上，這裡用同一個做法。 */
+    .role-badges {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+      min-width: 0; max-width: 100%;
+    }
 
     /* ── Badges ─────────────────────────────────────────────── */
     .badge {
