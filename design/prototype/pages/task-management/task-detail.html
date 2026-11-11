@@ -467,7 +467,9 @@
     .quality-insufficient {
       color: var(--color-text-soft);
       background: var(--color-slate-50);
-      border-color: var(--color-border-muted);
+      /* 與 05-02 的 .risk-level-badge.insufficient 同一組 token。用
+         --color-border-muted 的話，暗色主題下它與 --color-slate-50 同值，框線會消失。 */
+      border-color: var(--color-border);
     }
     .stage-split-grid {
       display: grid;
@@ -3449,8 +3451,9 @@
             { name: 'Alex Wang', role: 'annotator', completed: 5, pending: 0, avgSpeed: 6.5, lastSubmitted: '2026-08-21 09:40', quality: 'good' },
             { name: 'Iris Tsai', role: 'reviewer', completed: 4, pending: 1, avgSpeed: 5.0, lastSubmitted: '2026-08-21 10:30', quality: 'good' },
             /* 樣本數不足：quality 留空、qualityInsufficient 為真。那一欄顯示「資料不足」，
-               不是把 insufficient 寫成第四個等級值（維護者 2026-11-07 裁定）。 */
-            { name: 'Nina Chou', role: 'annotator', completed: 1, pending: 4, avgSpeed: 2.0, lastSubmitted: '2026-08-21 11:05', quality: '', qualityInsufficient: true },
+               不是把 insufficient 寫成第四個等級值（維護者 2026-11-07 裁定）。
+               用名冊上已有的標記員，筆數也不超出這一回合的 5 筆——這一輪是 5 / 5 完成。 */
+            { name: 'Derek Yeh', role: 'annotator', completed: 0, pending: 0, avgSpeed: 0, lastSubmitted: '-', quality: '', qualityInsufficient: true },
           ],
         },
       ],
@@ -8471,6 +8474,9 @@ function getTaskTypeLabel() {
     if (!target) {
       var member = TASK_MEMBERS.filter(function(item) { return item.email === memberEmail; })[0];
       if (member) {
+        /* 剛被指派、已完成 0 筆，樣本數必然不足。寫 quality: 'good' 會讓這一欄
+           顯示「正常」，而規格 03-03 §規格 第 12 條明寫「已完成樣本數不足時這一欄
+           顯示 `資料不足`，**不得**顯示預設的 `正常`」。 */
         target = {
           name: member.name,
           role: 'annotator',
@@ -8478,7 +8484,8 @@ function getTaskTypeLabel() {
           pending: 0,
           avgSpeed: 0,
           lastSubmitted: '-',
-          quality: 'good'
+          quality: '',
+          qualityInsufficient: true
         };
         stageData.members.push(target);
       }
