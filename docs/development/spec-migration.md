@@ -316,7 +316,7 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 
 - **流程圖元件不住在 `docs/` 底下**：規格頁用 `GeneratedFrame` 從 `@notes/components/` 取元件，所以流程圖 PR 通常會同時動到 `docs/specs/` 的頁面與 `.notecraft/components/`。這是允許的，不必每次在留言裡解釋。判例 #175、#176、#177、#193、#198、#199。只修元件、完全不動 `docs/` 也算這一類（判例 #167）。
 - **`.notecraft/plugins.json` 算文件 PR**（維護者 2026-11-11 裁定）。它把 NoteCraft 的外掛對應到 `docs/` 底下的資料檔（例如 `er-diagram-renderer` 對 `**/*.er.json`），所以它存在的唯一目的就是**讓 `docs/` 裡的那份資料被渲染出來**——依本節「五類的差別是**目的**，不是檔案數」，和它要呈現的那份資料同一類。
-  **原本它不在任何一類裡**：這張表只收了 `.notecraft/components/`，而 `plugins.json` 不在 `components/` 底下。判例 #236（以 ER 外掛呈現資料表規劃）。
+  **原本它不在任何一類裡**：這張表只收了 `.notecraft/components/`，而 `plugins.json` 不在 `components/` 底下。依據：issue #236（以 ER 外掛呈現資料表規劃）——**它還沒有交付 PR，所以這裡不是判例**；交付 PR 合併後再補上真正的判例編號。
   這一條**不擴及 `.notecraft/` 的其他檔案**：真的碰到別的，照本節開頭那三種例外的方式重新判斷，不要類推。
 - **文件 PR 可以帶著它連帶修到的規則文件**，因為一份給 agent 讀的說明，它的入口本來就在 `AGENTS.md`：新增 `docs/development/` 的說明而同一張 PR 在 `AGENTS.md` 設索引，算文件 PR。判例 #224（#105：`docs/development/agent-rules.md` ＋ `AGENTS.md` 的 Agent Rules Index）。
   這一條是**補出來的**：#221 補五類表時只給了流程設定 PR 這個連帶條款，而文件 PR 沒有，所以 #224 一度掉在五類之間——而那個形狀是 #105 工作項 1 的結構決定的（索引與被索引的文件必須同一張 PR 落地，否則合併後索引會指向不存在的檔案）。維護者 2026-11-10 裁定補上。
