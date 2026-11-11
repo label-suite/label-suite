@@ -352,19 +352,37 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 
 **怎麼分辨真失敗**：真的 MDX 錯誤會印出檔案與位置、而且重跑**一模一樣地**再失敗一次。判例（2026-11-11）：一個標題裡放了半形雙引號，錯誤是 `docs/tmp-title-edge.mdx:14:22 Unexpected content after expression`，連跑兩次都相同——那不是 #172。#172 的形狀沒有檔案位置，堆疊收在 astro 的模組解析（`ModuleJob._link`／`ModuleLoader.import`），而且重跑就過。
 
-CI 已經帶著同一道權宜：`.github/workflows/ci.yml` 的 `docs-site` job 寫成 `… --rebuild || … --rebuild`，註解裡指向 #172。**真正修掉 #172 之後，本機與 CI 的重跑要一起拿掉。**
+這條規則**已經有三份副本**，本章節是第四份，也是唯一寫了「怎麼分辨真失敗」的一份：`.github/workflows/ci.yml` 的 `docs-site` job（`… --rebuild || … --rebuild`，註解指向 #172）、[`.claude/agents/ops.md`](../../.claude/agents/ops.md) 與 [`.claude/agents/technical-writer.md`](../../.claude/agents/technical-writer.md) 的檢查清單。`openspec/config.yaml` 的 apply 階段也要求跑這道 build，但沒提重跑。
 
-### 併發的 build 會穩定地撞在一起
+**真正修掉 #172 之後，這四處的重跑要一起拿掉**（CI 那一處要另一類 PR——本文件 §PR 的變更範圍 明寫文件 PR 不得動 `.github/`）。
 
-已知的加劇因素：**兩個 build 同時跑一定有一個失敗**。先完成的那一個把共用的暫存目錄搬走，另一個就在模組解析時找不到自己的 chunk（或反過來，在最後 rename 時發現目錄已經不在）。
+### 併發的 build 會撞在一起，而且分得出哪一種併發
 
-暫存目錄的位置與命名在 `~/.notecraft/app-1.15.0/bin/notecraftapp.mjs`：`cacheDirFor()`（`:152`）取**絕對 `docs/` 路徑的 SHA-1 前 12 位**，build 的暫存目錄是 `<cwd>/node_modules/.notecraft-build/<那個雜湊>`（`:574`）。
+**同一個 `docs/` 路徑的兩個 build 同時跑，後啟動的那個會失敗。** 2026-11-11 做了對照實驗，各 3 回：
 
-所以**從不同路徑跑的 build 不會互撞**，即使共用同一個 `node_modules`——雜湊不同，子目錄就不同。2026-11-11 實測：主 checkout 的 `docs/` 是 `fea300f43cfd`，同一個 session 另開的 worktree 是 `d7bd33b09500`（兩個雜湊都用 `sha1(絕對路徑)[:12]` 複算吻合），那次 worktree 的 build 第一次就通過，也沒有動到主 checkout 的產物。
+| 實驗 | 結果 |
+| :--- | :--- |
+| **同路徑**併發（相隔 1 秒啟動） | **3／3 第二個失敗**，形狀就是 #172 的那一種（`Cannot find module …/chunks/*.mjs` → `astro build exited with code 1`），第一個都 `Complete!` |
+| **不同路徑**併發（同時啟動） | **3／3 兩個都成功** |
 
-**實務規則：要讓 subagent 跑文件站 build，就給它自己的 git worktree**；否則請它不要跑 build，改讀既有產物。本 loop 的獨立審查會平行跑，這一條直接影響它們要不要重建。
+機制在 `~/.notecraft/app-1.15.0/bin/notecraftapp.mjs`：
 
----
+| 事實 | 出處 |
+| :--- | :--- |
+| 快取目錄 `~/.notecraft/cache/<雜湊>` = `sha1(絕對 docs 路徑)` 前 12 位 | `cacheDirFor()`，`:152-155` |
+| build 的暫存目錄 = **`~/.notecraft/app-<版本>/node_modules/.notecraft-build/<同一個雜湊>`** | `buildStageDir()`，`:573-575` |
+
+**那個 `node_modules` 是 app 自己的，不是你的 repo。** `buildCmd` 呼叫 `ensureBuild(packageRoot, …, process.cwd())`（`:758`），所以函式裡的 `cwd` 是 app 根、使用者的目錄是另一個參數；astro 也是從 app 根載入的（`:392`）。**repo 的 `node_modules` 完全不參與 build**——`<repo>/node_modules/.notecraft-build` 根本不存在，別去那裡找。上游自己的註解（`:571-572`）就寫「以快取 hash 命名，不同筆記資料夾可並行」。
+
+**還有兩份不帶雜湊的共用可變資源**：`~/.notecraft/app-<版本>/.astro/`（content layer 的 `dotAstroDir`，每次 build 都重寫）與 `node_modules/.vite/`。上面那 3 回不同路徑的併發沒有因為它們失敗，但 **3 回不等於所有時序都安全**；真的要大量平行建置時，這是第一個要懷疑的地方。
+
+**實務規則：會和別的 build 平行跑的 agent，給它自己的 git worktree**（不同路徑 → 不同雜湊）；否則請它不要跑 build，改讀既有產物。本 loop 的獨立審查會平行跑，所以這條直接決定每次派工怎麼下指示。
+
+兩個前提要寫出來，否則照做的人會卡住：
+
+- **worktree 要先有 `node_modules`。** `notecraftapp` 是 repo 的 devDependency，`pnpm exec` 靠 `node_modules/.bin/` 解析；剛 `git worktree add` 出來的 worktree 沒有它，命令會直接找不到。symlink 回主 checkout 就夠（build 用的是 app 的 `node_modules`，不是這一份）。
+- **SDD 角色不適用這條。** `AGENTS.md` §SDD Workflow 明寫「Do not give an SDD role its own worktree or its own issue」。那裡沒有衝突：會建置的 SDD 角色只有 `technical-writer`，而 SDD 的 apply 是逐群組**序列**派工的，不會有兩個 SDD build 同時跑。真正要避開的是**主流程與被派出去的角色同時建置**——那由派工的一方負責錯開。
+
 
 ## 驗收
 
