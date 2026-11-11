@@ -106,16 +106,29 @@ function chapterRange(text, title) {
 // Heading anchors as NoteCraft renders them (github-slugger rules): lowercase,
 // drop punctuation, spaces to "-", and a "-N" suffix for repeated headings.
 //
-// A heading may itself be a link, and NoteCraft slugs the rendered text, not
-// the markdown. Keeping the raw source here pulled the URL into the anchor, so
-// every link to such a heading was reported broken while the built page worked.
+// A heading may hold links, images and inline code, and the anchor comes from
+// the text the reader sees (@astrojs/markdown-remark's rehypeHeadingIds walks
+// the HTML tree and collects text nodes only). So a link contributes its text
+// and not its URL, an image contributes nothing because its alt is an
+// attribute, and inline code contributes its contents verbatim — including any
+// `[a](b)` inside it, which is not a link at all.
 export function slug(title) {
+  const code = [];
+  // Trim the written heading, not what is left after an image is dropped: a
+  // heading that opens with an image really does start its anchor with "-".
   return title
-    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
     .trim()
+    .replace(/`[^`]*`/g, (m) => `\u0000${code.push(m) - 1}\u0000`)
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/\u0000(\d+)\u0000/g, (_, i) => code[Number(i)])
     .toLowerCase()
     .replace(/[^\p{L}\p{N}\p{M} _-]/gu, '')
-    .replace(/ /g, '-');
+    .replace(/ /g, '-')
+    // Astro drops one trailing dash after github-slugger runs
+    // (rehype-collect-headings.js: `if (slug.endsWith("-")) slug = slug.slice(0, -1)`),
+    // which is what a heading ending in an emoji leaves behind.
+    .replace(/-$/, '');
 }
 
 function anchors(text) {
