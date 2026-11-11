@@ -26,9 +26,16 @@
     return Array.isArray(task.membershipRole) ? task.membershipRole : [];
   }
 
+  // 不在順序表裡的角色排最後。用 indexOf 的原值（-1）會讓它排到最前面，
+  // 而日後在 KNOWN_MEMBERSHIP_ROLES 加一個還沒進順序表的角色就會靜默排錯。
+  function membershipRoleRank(role) {
+    var i = MEMBERSHIP_ROLE_ORDER.indexOf(role);
+    return i === -1 ? MEMBERSHIP_ROLE_ORDER.length : i;
+  }
+
   function orderedMembershipRoles(task) {
     return membershipRoles(task).slice().sort(function (a, b) {
-      return MEMBERSHIP_ROLE_ORDER.indexOf(a) - MEMBERSHIP_ROLE_ORDER.indexOf(b);
+      return membershipRoleRank(a) - membershipRoleRank(b);
     });
   }
   var VALID_LIMITS = [20, 50, 100];
@@ -243,7 +250,6 @@
   global.LabelSuiteDatasetAnalysisModel = {
     IAA_BADGE_CLS: IAA_BADGE_CLS,
     ROLE_BADGE_CLS: ROLE_BADGE_CLS,
-    VALID_MEMBERSHIP_ROLES: VALID_MEMBERSHIP_ROLES,
     orderedMembershipRoles: orderedMembershipRoles,
     VALID_LIMITS: VALID_LIMITS,
     outputTypes: outputTypes,

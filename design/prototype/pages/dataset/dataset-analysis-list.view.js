@@ -90,13 +90,16 @@
          畫不出徽章的角色（annotator）不給徽章，與改成陣列之前一致。 */
       var roleCell = document.createElement('td');
       roleCell.className = 'role-cell';
+      var roleGroup = document.createElement('div');
+      roleGroup.className = 'role-badges';
       model.orderedMembershipRoles(task).forEach(function (role) {
-        if (model.VALID_MEMBERSHIP_ROLES.indexOf(role) === -1) return;
+        if (!model.ROLE_BADGE_CLS[role]) return;
         var roleBadge = document.createElement('span');
         roleBadge.className = 'badge ' + model.ROLE_BADGE_CLS[role];
         roleBadge.textContent = tNested('roleLabel', role);
-        roleCell.appendChild(roleBadge);
+        roleGroup.appendChild(roleBadge);
       });
+      roleCell.appendChild(roleGroup);
 
       row.appendChild(nameCell);
       row.appendChild(outputCell);
