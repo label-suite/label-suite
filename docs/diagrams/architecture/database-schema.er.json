@@ -1,0 +1,2511 @@
+{
+ "$schema": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/er-diagram-renderer/schema.json",
+ "meta": {
+  "title": "Label Suite 候選資料表 ER 圖（37 張）",
+  "description": "**規劃結構，尚未部署。** 已落地業務表：**0**——`backend/` 不存在、`backend/alembic/versions/` 沒有任何 revision、也沒有 ORM model。要查「實際落地了什麼」，唯一的辦法是讀 Alembic revision 與資料庫 metadata，不是讀這張圖。\\n\\n本圖顯示 **37 張候選表、328 欄、38 個單欄 FK**。每一欄的中文意義、可空性與**規格來源**都來自[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)；哪些資料要存則來自[資料欄位盤點總帳](/notes/diagrams/architecture/data-field-inventory)。\\n\\n**這張圖畫不出來的東西有兩類，都在字典裡**：**複合 FK**（例如「父版本不得跨資料集」要 `(dataset_id, parent_version_id)` 兩欄一起比），以及**只能在應用層擋的限制**（例如血緣不得形成循環、名冊的子集合關係）。逐條內容在字典各組的「組的關聯與限制」小節，以及幾張表自己的限制表裡。**圖上沒有線不代表沒有限制。**這裡刻意不寫條數：字典 §十 寫的是「34 組複合 FK」與「22 條應用層」，而我逐列加總得到 31 與 21，§十 說的「五張表合計」也與實際的四個小節對不上——條數要先在字典那一側釐清，見 [issue #236](https://github.com/label-suite/label-suite/issues/236)。\\n\\n**分析報告沒有表**：05-02 的 64 個欄位列全部現算，維護者 2026-11-11 裁定不建分析表。那是裁定的結果，不是漏畫。",
+  "source": "/notes/diagrams/architecture/data-table-dictionary",
+  "backTo": "/notes/diagrams/architecture/data-field-inventory"
+ },
+ "options": {
+  "defaultRows": 6,
+  "sectionPrefix": "§",
+  "hint": "規劃圖：點一張表可聚焦它的單欄 FK。複合 FK 與應用層限制畫不出來，見字典。",
+  "searchPlaceholder": "搜尋候選表或欄位（例：task_run、dataset_item_private、annotation_history_event）"
+ },
+ "requirement": [
+  {
+   "key": "required",
+   "label": "必填",
+   "marker": "solid"
+  },
+  {
+   "key": "nullable",
+   "label": "可空",
+   "marker": "hollow",
+   "title": "空值有業務意義，意義寫在該欄的說明"
+  },
+  {
+   "key": "system",
+   "label": "系統寫入",
+   "marker": "muted",
+   "title": "使用者不能直接改；非空"
+  }
+ ],
+ "flags": [
+  {
+   "key": "pk",
+   "badge": "PK",
+   "tone": "danger",
+   "label": "候選主鍵"
+  },
+  {
+   "key": "fk",
+   "badge": "FK",
+   "tone": "info",
+   "label": "候選單欄外鍵"
+  },
+  {
+   "key": "unique",
+   "badge": "UQ",
+   "tone": "success",
+   "label": "候選唯一限制"
+  }
+ ],
+ "derivations": [],
+ "groups": [
+  {
+   "key": "account",
+   "label": "帳號與登入",
+   "description": "對應模組 01 帳號。資料責任：帳號本身、登入工作階段、一次性連結、通知開關。**全部是候選表，尚未進行資料庫遷移。**"
+  },
+  {
+   "key": "admin",
+   "label": "系統管理",
+   "description": "對應模組 06 系統管理。資料責任：稽核事件、權限矩陣與它的版本。**全部是候選表，尚未進行資料庫遷移。**"
+  },
+  {
+   "key": "dataset",
+   "label": "資料集與血緣",
+   "description": "對應模組 05 資料集。資料責任：資料集、版本與血緣、來源批次、項目與私有伴隨紀錄。**全部是候選表，尚未進行資料庫遷移。**"
+  },
+  {
+   "key": "task",
+   "label": "任務管理",
+   "description": "對應模組 03 任務管理。資料責任：任務本體、設定版本、指引版本、成員、審核員名冊。**全部是候選表，尚未進行資料庫遷移。**"
+  },
+  {
+   "key": "run",
+   "label": "發布與執行",
+   "description": "對應模組 03 加 04。資料責任：發布週期、試標回合、抽樣快照、執行紀錄、指派與排除。**全部是候選表，尚未進行資料庫遷移。**"
+  },
+  {
+   "key": "annotation",
+   "label": "標記作業",
+   "description": "對應模組 04 標記作業。資料責任：標記紀錄、歷程事件。**全部是候選表，尚未進行資料庫遷移。**"
+  },
+  {
+   "key": "review",
+   "label": "審核與仲裁",
+   "description": "對應模組 04 標記作業。資料責任：審核草稿／提交／修訂、決策、仲裁票、例外收尾。**全部是候選表，尚未進行資料庫遷移。**"
+  },
+  {
+   "key": "export",
+   "label": "匯出",
+   "description": "對應模組 03 任務詳情。資料責任：匯出請求與執行範圍。**全部是候選表，尚未進行資料庫遷移。**"
+  },
+  {
+   "key": "work",
+   "label": "工時",
+   "description": "對應模組 03 任務詳情。資料責任：工時原始區間。**全部是候選表，尚未進行資料庫遷移。**"
+  }
+ ],
+ "layout": {
+  "columns": [
+   {
+    "key": "account",
+    "groups": [
+     "account"
+    ]
+   },
+   {
+    "key": "admin",
+    "groups": [
+     "admin"
+    ]
+   },
+   {
+    "key": "dataset",
+    "groups": [
+     "dataset"
+    ]
+   },
+   {
+    "key": "task",
+    "groups": [
+     "task"
+    ]
+   },
+   {
+    "key": "run",
+    "groups": [
+     "run"
+    ]
+   },
+   {
+    "key": "annotation",
+    "groups": [
+     "annotation"
+    ]
+   },
+   {
+    "key": "review",
+    "groups": [
+     "review"
+    ]
+   },
+   {
+    "key": "export",
+    "groups": [
+     "export"
+    ]
+   },
+   {
+    "key": "work",
+    "groups": [
+     "work"
+    ]
+   }
+  ]
+ },
+ "tables": [
+  {
+   "name": "users",
+   "label": "平台帳號",
+   "group": "account",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "required",
+     "note": "帳號的內部識別碼；PK",
+     "pk": true
+    },
+    {
+     "name": "email",
+     "type": "varchar(254)",
+     "required": "required",
+     "note": "登入帳號，也是寄信地址；唯一（lower(email)）。來源：01-05：正規化後判重；上限 254 字在正規化之後計算",
+     "unique": true
+    },
+    {
+     "name": "name",
+     "type": "varchar(100)",
+     "required": "required",
+     "note": "顯示名稱；CHECK 長度 1–100。來源：01-04：1–100 字；06-01：可以和其他帳號重複"
+    },
+    {
+     "name": "contact_info",
+     "type": "varchar(255)",
+     "required": "required",
+     "note": "使用者自填的聯絡方式；CHECK 長度 ≤ 255。來源：01-04：可留空；最多 255 字。規格只說「可留空」、沒說怎麼表示空，所以沿用原始規劃的 NOT NULL default ''，與本文件其他「選填但欄位必填」的欄一致"
+    },
+    {
+     "name": "avatar_url",
+     "type": "text",
+     "required": "nullable",
+     "note": "頭像位置。來源：01-04：空值＝未上傳，顯示預設頭像。檔案另存，這裡只存位置"
+    },
+    {
+     "name": "hashed_password",
+     "type": "varchar",
+     "required": "nullable",
+     "note": "密碼雜湊。來源：01-05：空值＝沒有本地密碼，只能用 Google 登入；01-04 的密碼區塊因此少一欄。原文不得落庫"
+    },
+    {
+     "name": "role",
+     "type": "varchar",
+     "required": "required",
+     "note": "平台層級角色；CHECK 限 user／super_admin。來源：01-05：平台成員／系統管理員。不是任務內角色（那在 task_membership.task_role）"
+    },
+    {
+     "name": "is_active",
+     "type": "boolean",
+     "required": "required",
+     "note": "是否啟用。來源：01-05：停用立刻讓所有登入狀態失效；06-01：新增的帳號為啟用"
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "required": "system",
+     "note": "建立時間。來源：06-01：不可修改；列表顯示到日，依瀏覽者裝置時區"
+    },
+    {
+     "name": "updated_at",
+     "type": "timestamptz",
+     "required": "system",
+     "note": "最後修改時間"
+    }
+   ],
+   "description": "一列代表一位可登入的使用者。**PRD 明寫帳號沒有刪除，只有停用與啟用**，所以**不得有軟刪除欄**。\n\n**待決的兩欄**（原始規劃有、本專案規格沒有對應）——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**規格來源**：[01-04](/notes/specs/01-account/04-profile#資料欄位)、[01-05](/notes/specs/01-account/05-login-state#資料欄位)、[06-01](/notes/specs/06-admin/01-user-management#資料欄位)"
+  },
+  {
+   "name": "account_session",
+   "label": "一次登入的工作階段",
+   "group": "account",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "required",
+     "note": "一次登入的識別碼；PK；(user_id, id) 另供複合 FK 父鍵",
+     "pk": true
+    },
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "這次登入的帳號；FK → users.id，RESTRICT；索引。來源：01-05",
+     "fk": "users"
+    },
+    {
+     "name": "started_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "登入狀態的開始時間。來源：01-05：絕對上限從這一刻起算，之後的使用不會改變它"
+    },
+    {
+     "name": "last_seen_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "最後一次使用的時間。來源：01-05：閒置限制從這一刻起算，每次使用就更新。原始規劃沒有這一欄，本專案新增"
+    },
+    {
+     "name": "revoked_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "失效時間。來源：01-05：空值＝未失效。任何原因都算，含登出、安全撤銷與自然到期"
+    },
+    {
+     "name": "logged_out_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "明確登出的時間；CHECK logged_out_at IS NULL OR (revoked_at IS NOT NULL AND logged_out_at <= revoked_at)。來源：01-05：只記可驗證的明確登出；有值時該段必然已失效，且不晚於失效時間"
+    }
+   ],
+   "description": "一列代表一次登入。[01-05](/notes/specs/01-account/05-login-state#資料欄位) 的四個時間與狀態欄全在這裡。\n\n**`RESTRICT` 的理由**：工時區間（`task_work_interval`）與歷程事件（`annotation_history_event`）都參照登入工作階段當責任證據，刪掉它會讓歷史無法追溯。而帳號本來就沒有刪除，所以 `RESTRICT` 不會卡住任何合法操作。\n\n**規格來源**：[01-05](/notes/specs/01-account/05-login-state#資料欄位)"
+  },
+  {
+   "name": "account_password_token",
+   "label": "密碼重設與邀請連結",
+   "group": "account",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint",
+     "required": "required",
+     "note": "流水號；PK",
+     "pk": true
+    },
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "連結所屬帳號；FK → users.id，CASCADE；索引",
+     "fk": "users"
+    },
+    {
+     "name": "purpose",
+     "type": "varchar",
+     "required": "required",
+     "note": "用途；CHECK 限 reset／invite。來源：01-03 重設；06-01 的「重發設定密碼信」"
+    },
+    {
+     "name": "token_hash",
+     "type": "char(64)",
+     "required": "required",
+     "note": "連結權杖的雜湊；唯一。來源：原文不得落庫。01-03 的連結只能用一次",
+     "unique": true
+    },
+    {
+     "name": "expires_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "到期時間。來源：01-03：有效期 30 分鐘"
+    },
+    {
+     "name": "used_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "成功使用的時間。來源：01-03：空值＝尚未成功使用，不代表仍有效"
+    },
+    {
+     "name": "invalidated_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "作廢時間。來源：01-03：空值＝未作廢，仍須核對期限與 used_at"
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "required": "system",
+     "note": "寄出時間"
+    }
+   ],
+   "description": "重設密碼與受邀設定密碼**共用一張一次性連結表**。\n\n**三個欄位不能合成一個狀態欄。** [01-03](/notes/specs/01-account/03-reset-password#資料欄位) 的「重設連結的狀態」是**推導值**：不能用含過期、已用過、被作廢**三種**，而規格要求**畫面上不分原因**——那是顯示規則，不是儲存規則。稽核仍要分得出來是哪一種。\n\n**規格來源**：[01-03](/notes/specs/01-account/03-reset-password#資料欄位)、[06-01](/notes/specs/06-admin/01-user-management#資料欄位)"
+  },
+  {
+   "name": "account_email_change_request",
+   "label": "Email 變更申請",
+   "group": "account",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint",
+     "required": "required",
+     "note": "流水號；PK",
+     "pk": true
+    },
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "申請人；FK → users.id，CASCADE；部分唯一索引 WHERE verified_at IS NULL AND token_hash IS NOT NULL。來源：01-04：同一時間最多一筆，新的蓋掉舊的",
+     "fk": "users"
+    },
+    {
+     "name": "pending_email",
+     "type": "varchar(254)",
+     "required": "required",
+     "note": "待驗證的新 Email。來源：01-04。寫入前依 users.email 同一套正規化"
+    },
+    {
+     "name": "token_hash",
+     "type": "char(64)",
+     "required": "nullable",
+     "note": "驗證連結權杖的雜湊。來源：驗證成功後清為空值，所以非空值＝等待驗證中"
+    },
+    {
+     "name": "expires_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "驗證連結到期時間"
+    },
+    {
+     "name": "last_sent_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "最後一次寄出的時間。來源：用於重送冷卻"
+    },
+    {
+     "name": "verified_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "驗證完成時間。來源：空值＝未完成"
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "required": "system",
+     "note": "申請時間"
+    }
+   ],
+   "description": "**「同一時間最多一筆」是本專案規格明文，而原始規劃沒有對應的唯一限制。** 字典裡那條部分唯一索引是字典提議的落法——**提議，不是裁定**。\n\n**規格來源**：[01-04](/notes/specs/01-account/04-profile#資料欄位)"
+  },
+  {
+   "name": "account_notification_preference",
+   "label": "通知開關",
+   "group": "account",
+   "columns": [
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "設定所屬帳號；複合 PK 之一；FK → users.id，CASCADE。來源：01-04",
+     "pk": true,
+     "fk": "users"
+    },
+    {
+     "name": "event_key",
+     "type": "varchar",
+     "required": "required",
+     "note": "通知事件；複合 PK 之一。不加 CHECK——合法值由設定登錄管理，歸 #188。來源：01-04：六個事件",
+     "pk": true
+    },
+    {
+     "name": "in_app_enabled",
+     "type": "boolean",
+     "required": "required",
+     "note": "是否發站內通知。來源：01-04：兩種方式之一"
+    },
+    {
+     "name": "email_enabled",
+     "type": "boolean",
+     "required": "required",
+     "note": "是否寄信。來源：同上"
+    }
+   ],
+   "description": "**維護者 2026-11-11 裁定：字典做成事件鍵驅動。** 所以表的形狀確定，而**六個事件鍵的合法值清單留給 [#188](https://github.com/label-suite/label-suite/issues/188)**——清單之後怎麼變都不用改表。\n\n**「從來沒存過時全部開啟」是讀取時的預設，不是資料庫預設值。** [01-04](/notes/specs/01-account/04-profile#資料欄位) 明寫這一點：缺列時兩個頻道都當開啟，**讀取不建列**。所以這張表可以完全沒有某個使用者的列，那不代表他關掉了通知。\n\n**規格來源**：[01-04](/notes/specs/01-account/04-profile#資料欄位)"
+  },
+  {
+   "name": "audit_events",
+   "label": "操作稽核紀錄",
+   "group": "admin",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint",
+     "required": "system",
+     "note": "流水號；PK",
+     "pk": true
+    },
+    {
+     "name": "actor_user_id",
+     "type": "uuid",
+     "required": "nullable",
+     "note": "人員事件的操作者；FK → users.id，RESTRICT；CHECK 與 actor_role 互斥（系統事件時為空且 actor_role='system'）。來源：06-02：每筆含操作者",
+     "fk": "users"
+    },
+    {
+     "name": "actor_role",
+     "type": "varchar",
+     "required": "required",
+     "note": "操作當下的角色快照。來源：寫入後不可變；不是即時 JOIN users.role——角色事後改了，稽核要留當時的"
+    },
+    {
+     "name": "action",
+     "type": "varchar",
+     "required": "required",
+     "note": "命名空間動詞；不加 CHECK——值由設定登錄管理。來源：例如 member.deactivated"
+    },
+    {
+     "name": "task_id",
+     "type": "uuid",
+     "required": "nullable",
+     "note": "任務作用域；FK → task.id，RESTRICT；索引。來源：非任務層事件為空",
+     "fk": "task"
+    },
+    {
+     "name": "target_type",
+     "type": "varchar",
+     "required": "required",
+     "note": "操作對象種類。來源：例如 user"
+    },
+    {
+     "name": "target_id",
+     "type": "varchar",
+     "required": "required",
+     "note": "操作對象識別碼；不加 FK——對象可能在任何表，多型參照由服務驗證"
+    },
+    {
+     "name": "payload_summary",
+     "type": "json",
+     "required": "required",
+     "note": "非敏感摘要。來源：不得含密碼、權杖、原始聯絡資料、標記答案或標準答案（AGENTS.md 硬性規則 6 與 8）"
+    },
+    {
+     "name": "request_id",
+     "type": "varchar",
+     "required": "nullable",
+     "note": "對應 API log 的請求 ID"
+    },
+    {
+     "name": "occurred_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "伺服器端發生時間；索引。來源：UTC"
+    }
+   ],
+   "description": "一張共用的稽核表，不按模組拆。[06-02](/notes/specs/06-admin/02-role-settings#資料欄位) 的「稽核紀錄」落在這裡。\n\n**這張表與 `annotation_history_event` 是兩套政策，不可合併**：前者至少一年、後者**永不刪除**（[04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位)）。差異寫進[盤點總帳的 D3](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決)，仍待裁。\n\n**規格來源**：[06-02](/notes/specs/06-admin/02-role-settings#資料欄位)"
+  },
+  {
+   "name": "admin_role_permission",
+   "label": "角色權限矩陣",
+   "group": "admin",
+   "columns": [
+    {
+     "name": "role_type",
+     "type": "varchar",
+     "required": "required",
+     "note": "角色層級；複合 PK 之一；CHECK 限 system／task。來源：06-02：系統角色／任務角色，兩層不可互相推導",
+     "pk": true
+    },
+    {
+     "name": "role_key",
+     "type": "varchar",
+     "required": "required",
+     "note": "角色；複合 PK 之一。來源：system 時為 user／super_admin；task 時為專案負責人／審核員／標記員",
+     "pk": true
+    },
+    {
+     "name": "permission_key",
+     "type": "varchar",
+     "required": "required",
+     "note": "權限鍵；複合 PK 之一。不加 CHECK——白名單在後端程式。來源：06-02：由後端白名單定義；白名單外一律拒絕",
+     "pk": true
+    },
+    {
+     "name": "allowed",
+     "type": "boolean",
+     "required": "required",
+     "note": "是否允許；固定格另加 CHECK。來源：06-02：開或關兩種；「唯讀」由兩個鍵的組合表達，不是第三種值"
+    },
+    {
+     "name": "updated_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "最後被改變的時間"
+    }
+   ],
+   "description": "一列是一個**適用的**「角色 × 權限鍵」格。\n\n**[06-02](/notes/specs/06-admin/02-role-settings#資料欄位) 有十一個欄位概念，但只有三個進這張表**（權限鍵、角色層級、允許）。其餘**八個**的去處——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**規格來源**：[06-02](/notes/specs/06-admin/02-role-settings#資料欄位)"
+  },
+  {
+   "name": "admin_role_permission_version",
+   "label": "矩陣版本號",
+   "group": "admin",
+   "columns": [
+    {
+     "name": "id",
+     "type": "smallint",
+     "required": "system",
+     "note": "固定為 1；PK 加 CHECK id = 1（限制最多一列）",
+     "pk": true
+    },
+    {
+     "name": "version",
+     "type": "integer",
+     "required": "required",
+     "note": "目前矩陣版本；CHECK version >= 1。來源：06-02：每次儲存都要帶它驗樂觀鎖；真的沒變更就不遞增"
+    },
+    {
+     "name": "updated_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "最後一次儲存時間"
+    }
+   ],
+   "description": "**單列表**，承載 [06-02](/notes/specs/06-admin/02-role-settings#資料欄位) 的「矩陣版本」樂觀鎖。\n\n**「真的沒變更就不遞增」是應用層的事，不是 DB 的。** DB 只能保證「比對預期版本後才允許寫」，判斷有沒有實際差異要在服務層做——這一條屬§應用層才擋得住的限制。\n\n**規格來源**：[06-02](/notes/specs/06-admin/02-role-settings#資料欄位)"
+  },
+  {
+   "name": "dataset",
+   "label": "邏輯資料集",
+   "group": "dataset",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "system",
+     "note": "資料集身分；PK。來源：05-03：一個邏輯資料集",
+     "pk": true
+    },
+    {
+     "name": "created_by_user_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "建立者；FK → users.id，RESTRICT。來源：05-03：建立這個資料集的人",
+     "fk": "users"
+    },
+    {
+     "name": "name",
+     "type": "varchar",
+     "required": "required",
+     "note": "名稱；不加唯一——名稱不是身分。來源：03-02 上傳時給"
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "required": "system",
+     "note": "建立時間。來源：UTC"
+    }
+   ],
+   "description": "**項目數不存。** [03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 的「資料集」檢視只顯示合計筆數——那是推導值，從 `dataset_item` 數出來。\n\n**規格來源**：[03-02](/notes/specs/03-task-management/02-task-new#資料欄位)、[05-03](/notes/specs/05-dataset/03-ingestion-lineage#資料欄位)"
+  },
+  {
+   "name": "dataset_version",
+   "label": "完整資料集快照",
+   "group": "dataset",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "system",
+     "note": "版本身分；PK",
+     "pk": true
+    },
+    {
+     "name": "dataset_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "所屬資料集；FK → dataset.id，RESTRICT；(dataset_id, id) 另供複合 FK 父鍵。來源：05-03",
+     "fk": "dataset"
+    },
+    {
+     "name": "version_no",
+     "type": "integer",
+     "required": "required",
+     "note": "版本號；唯一 (dataset_id, version_no)；CHECK >= 1。來源：05-03：在同一個資料集內唯一；後繼版本必須遞增"
+    },
+    {
+     "name": "parent_version_id",
+     "type": "uuid",
+     "required": "nullable",
+     "note": "父版本；複合 FK (dataset_id, parent_version_id) → (dataset_id, id)；CHECK parent_version_id <> id。來源：05-03：只作血緣；不得跨資料集、不得自參照、不得形成循環；第一版沒有"
+    },
+    {
+     "name": "state",
+     "type": "varchar(16)",
+     "required": "required",
+     "note": "版本狀態；CHECK 限 draft／sealed。來源：05-03：只能草稿 → 已定版，不得回頭"
+    },
+    {
+     "name": "manifest_sha256",
+     "type": "char(64)",
+     "required": "nullable",
+     "note": "版本摘要；CHECK state='sealed' → manifest_sha256 IS NOT NULL。來源：05-03：已定版時必填，完整快照的摘要"
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "required": "system",
+     "note": "建立時間。來源：UTC"
+    },
+    {
+     "name": "sealed_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "定版時間；CHECK state='sealed' → sealed_at IS NOT NULL。來源：05-03：一律以 UTC 表示"
+    }
+   ],
+   "description": "**三條血緣限制，只有兩條落得進 DB——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**規格來源**：[05-03](/notes/specs/05-dataset/03-ingestion-lineage#資料欄位)"
+  },
+  {
+   "name": "dataset_import_batch",
+   "label": "單一來源檔批次",
+   "group": "dataset",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "system",
+     "note": "批次身分；PK",
+     "pk": true
+    },
+    {
+     "name": "dataset_version_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "所屬快照；FK → dataset_version.id，RESTRICT。來源：05-03",
+     "fk": "dataset_version"
+    },
+    {
+     "name": "source_ordinal",
+     "type": "integer",
+     "required": "required",
+     "note": "來源順序；唯一 (dataset_version_id, source_ordinal)；CHECK >= 1。來源：05-03：在同一個版本內唯一"
+    },
+    {
+     "name": "source_name",
+     "type": "varchar",
+     "required": "required",
+     "note": "來源名稱。來源：05-03：來源檔的名稱。03-02：只收 JSON、單檔 200 MB、UTF-8"
+    },
+    {
+     "name": "source_sha256",
+     "type": "char(64)",
+     "required": "required",
+     "note": "來源摘要碼。來源：05-03：匯入當時取得，定版時要驗回執"
+    },
+    {
+     "name": "source_ref",
+     "type": "text",
+     "required": "required",
+     "note": "受限來源參照。來源：05-03：受限且不可變；不在標記員拿得到的任何地方"
+    },
+    {
+     "name": "record_path",
+     "type": "varchar",
+     "required": "required",
+     "note": "紀錄路徑。來源：05-03：整檔為陣列或一行一筆時是 $；巢狀用 RFC 6901 的路徑表示法"
+    },
+    {
+     "name": "preprocessing_version",
+     "type": "varchar",
+     "required": "required",
+     "note": "前處理版本。來源：05-03：不得從項目內容反推"
+    },
+    {
+     "name": "classification_manifest",
+     "type": "json",
+     "required": "required",
+     "note": "欄位分類清單。來源：05-03：逐檔保存、受限、不含答案值；兩類互斥；留下版本、寫入前驗證過；定版後不可改"
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "required": "system",
+     "note": "建立時間。來源：UTC"
+    }
+   ],
+   "description": "一列是一個已接受的來源檔。[05-03](/notes/specs/05-dataset/03-ingestion-lineage#資料欄位) 的七個批次欄位全在這裡。\n\n**`classification_manifest` 的 JSON 結構要記下來，不能只寫「JSON」**（[#235](https://github.com/label-suite/label-suite/issues/235) 工作項 2 明文要求）——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**「兩類互斥」在 DB 擋不住**，JSON 內的集合關係要在寫入前驗證——規格也明寫「**寫入前驗證過**」。\n\n**規格來源**：[03-02](/notes/specs/03-task-management/02-task-new#資料欄位)、[05-03](/notes/specs/05-dataset/03-ingestion-lineage#資料欄位)"
+  },
+  {
+   "name": "dataset_item",
+   "label": "公開的項目",
+   "group": "dataset",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "system",
+     "note": "項目身分；PK。來源：03-03 的「樣本 ID」、04-01 的「樣本的 ID」都是它",
+     "pk": true
+    },
+    {
+     "name": "dataset_import_batch_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "所屬批次；FK → dataset_import_batch.id，RESTRICT",
+     "fk": "dataset_import_batch"
+    },
+    {
+     "name": "source_row_no",
+     "type": "integer",
+     "required": "required",
+     "note": "來源行序；唯一 (dataset_import_batch_id, source_row_no)；CHECK >= 1。來源：05-03：自 1 起算；在同一批次內唯一"
+    },
+    {
+     "name": "public_payload",
+     "type": "json",
+     "required": "required",
+     "note": "公開的部分。來源：05-03：只放允許清單裡的可見欄位；可含明確選擇的預標記；寫入前要先驗證過"
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "required": "system",
+     "note": "建立時間"
+    }
+   ],
+   "description": "**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)、[04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位)、[05-03](/notes/specs/05-dataset/03-ingestion-lineage#資料欄位)"
+  },
+  {
+   "name": "dataset_item_private",
+   "label": "私有伴隨紀錄",
+   "group": "dataset",
+   "columns": [
+    {
+     "name": "dataset_item_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "對應的項目；PK（與 dataset_item 一對一）；FK → dataset_item.id，CASCADE",
+     "pk": true,
+     "fk": "dataset_item"
+    },
+    {
+     "name": "declared_split",
+     "type": "varchar",
+     "required": "nullable",
+     "note": "來源宣告的切分。來源：05-03：只是來源自己說的，不是回合的抽樣結果"
+    },
+    {
+     "name": "hidden_answer",
+     "type": "json",
+     "required": "nullable",
+     "note": "隱藏的答案。來源：05-03：就是標準答案；儲存後只有經授權的計分程序讀得到"
+    },
+    {
+     "name": "protected_payload",
+     "type": "json",
+     "required": "nullable",
+     "note": "受保護但非答案的值。來源：05-03：鍵名一律取自分類清單；不得存答案。讀取角色維護者 2026-11-11 裁定與答案同級（僅計分程序）"
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "required": "system",
+     "note": "建立時間"
+    }
+   ],
+   "description": "**這張表是 `AGENTS.md` 硬性規則 6 在資料層的落點。** 本專案規格從三個保護層級獨立得到「公開與隱藏分表」的結論，與原始規劃一致，**可以沿用**。\n\n把答案放進另一張表**不會自動**讓標記員看不到。真正的隔離要靠：查詢層**永遠不 JOIN 這張表**到標記員的任何回應、API 的回應模型**不含這些欄位**、以及 [04-02](/notes/specs/04-annotation/02-annotation-workspace#預填兩道方向相反的守門) 的兩道預填守門。\n\n**本字典只定結構，擋不住外洩。** 卡控的實作歸 [security-agent-rules.md](/notes/development/security-agent-rules) S5 與 [testing-agent-rules.md](/notes/development/testing-agent-rules) T10 的關鍵路徑覆蓋。\n\n**規格來源**：[05-03](/notes/specs/05-dataset/03-ingestion-lineage#資料欄位)"
+  },
+  {
+   "name": "task",
+   "label": "當前任務",
+   "group": "task",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "required",
+     "note": "任務編號；PK。來源：03-03：不可編輯，麵包屑的第二節",
+     "pk": true
+    },
+    {
+     "name": "created_by_user_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "建立者；FK → users.id，RESTRICT",
+     "fk": "users"
+    },
+    {
+     "name": "dataset_version_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "當前綁定的已定版快照；FK → dataset_version.id，RESTRICT。來源：03-03：資料集至少一個；草稿可重綁",
+     "fk": "dataset_version"
+    },
+    {
+     "name": "current_config_version_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "當前設定版本；延後複合 FK (id, current_config_version_id) → task_config_version(task_id, id)。來源：03-02 的設定"
+    },
+    {
+     "name": "current_guideline_version_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "當前指引版本；延後複合 FK (id, current_guideline_version_id) → task_guideline_version(task_id, id)。來源：03-03：每一個回合釘住當時的版本"
+    },
+    {
+     "name": "current_run_cycle_id",
+     "type": "uuid",
+     "required": "nullable",
+     "note": "當前發布週期；延後複合 FK (id, current_run_cycle_id) → task_run_cycle(task_id, id)。來源：尚未發布或退回草稿後為空；已完成後保留指向最終已關閉週期"
+    },
+    {
+     "name": "name",
+     "type": "varchar(100)",
+     "required": "required",
+     "note": "任務名稱；CHECK 長度 ≤ 100；不加唯一。來源：03-02：上限 100 字、可以重複；03-01 搜尋比對它"
+    },
+    {
+     "name": "status",
+     "type": "varchar(32)",
+     "required": "required",
+     "note": "任務狀態；CHECK 限五值。來源：PRD §共用狀態機：草稿、試標中、等待 IAA 確認、正式標記中、已完成。03-01：只有草稿可以刪除"
+    },
+    {
+     "name": "sampling_value",
+     "type": "integer",
+     "required": "required",
+     "note": "每回合抽樣筆數；CHECK >= 1。來源：03-03：大於等於 1 且小於資料集總筆數（上界是應用層，DB 不知道總筆數）"
+    },
+    {
+     "name": "target_agreement_overrides",
+     "type": "json",
+     "required": "required",
+     "note": "目標一致性門檻；預設 {}。來源：03-03：每個輸出類型各一個，範圍 0 到 1；只有登錄過預設門檻的輸出類型可填"
+    },
+    {
+     "name": "min_annotators",
+     "type": "integer",
+     "required": "required",
+     "note": "最少標記者數；CHECK >= 2。來源：03-03：大於等於 2"
+    },
+    {
+     "name": "isolation_enabled",
+     "type": "boolean",
+     "required": "required",
+     "note": "資料隔離；預設 true。來源：03-02、03-03：預設開啟；關掉要風險警示並在發布前再確認"
+    },
+    {
+     "name": "force_guideline",
+     "type": "boolean",
+     "required": "required",
+     "note": "開始標記前強制顯示；預設 false。來源：03-02：預設關閉。放在這裡而不是指引版本表上，因為 03-03 明寫它是「顯示政策，不是指引內容；單獨改不跳版本」"
+    },
+    {
+     "name": "archived_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "封存時間。來源：03-01：非空＝已封存，不出現在列表。維護者 2026-11-11 裁定可逆，復原時清空"
+    },
+    {
+     "name": "archived_by_user_id",
+     "type": "uuid",
+     "required": "nullable",
+     "note": "封存的人；FK → users.id，RESTRICT；CHECK 兩欄同時為空或同時非空。來源：03-01：封存時記下。復原時一併清空，不記復原者（維護者 2026-11-11 裁定）",
+     "fk": "users"
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "建立時間"
+    },
+    {
+     "name": "updated_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "更新時間；索引（排序用）。來源：03-01：預設由新到舊排序"
+    }
+   ],
+   "description": "**只保存當前可變設定與版本指標**，不複製歷史執行的資料集、設定與指引——那些在各自的版本表裡。\n\n**兩欄是本專案新增的，原始規劃完全沒有：** `archived_at` 與 `archived_by_user_id`。原始 `task` 的 15 欄裡**沒有任何封存欄**，而 [03-01](/notes/specs/03-task-management/01-task-list#資料欄位) 明寫封存後「資料留著供查核與復原」。\n\n**三個「當前版本指標」是延後複合 FK，不是普通 FK。** 任務與它的設定版本互相參照（任務指向當前版本、版本指向擁有任務），所以建立時要在**同一個交易**裡預配置 UUID、兩邊都寫完才檢查。複合而不是單欄，是為了擋住「當前版本屬於另一個任務」——這和 `dataset_version` 的父版本同一個理由。\n\n**規格來源**：[03-01](/notes/specs/03-task-management/01-task-list#資料欄位)、[03-02](/notes/specs/03-task-management/02-task-new#資料欄位)、[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)"
+  },
+  {
+   "name": "task_config_version",
+   "label": "不可變的任務設定",
+   "group": "task",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "required",
+     "note": "設定版本主鍵；PK；(task_id, id) 另供複合 FK 父鍵",
+     "pk": true
+    },
+    {
+     "name": "task_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "擁有任務；FK → task.id，RESTRICT",
+     "fk": "task"
+    },
+    {
+     "name": "version_no",
+     "type": "integer",
+     "required": "required",
+     "note": "版本號；唯一 (task_id, version_no)；CHECK >= 1。來源：每次完整儲存 +1"
+    },
+    {
+     "name": "config_payload",
+     "type": "json",
+     "required": "required",
+     "note": "完整設定快照。來源：03-02 的十二列內嵌欄位全在這裡"
+    },
+    {
+     "name": "content_digest",
+     "type": "char(64)",
+     "required": "required",
+     "note": "內容摘要。來源：用來判斷「真的改過了嗎」"
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "建立時間"
+    }
+   ],
+   "description": "一列是同任務的一個完整設定快照。**這是本專案「JSON 內嵌」的主要落點。**\n\n**`config_payload` 的結構要記下來，不能只寫「JSON」——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**輸出類型維持 config-driven（[#235](https://github.com/label-suite/label-suite/issues/235) 工作項 6）**：八種型別的設定全部塞在 `output_configs{}` 裡，**不為它們建八張表、也不在核心加八個分支**。這直接接到 `AGENTS.md` 硬性規則 5「task 類型是 config-driven，加一種不得改核心程式」。\n\n**不收的三欄**（原始有、本專案規格沒有對應）：`schema_version_no`、`schema_digest`、`schema_registry_version`。它們是驗證定義的版本追溯機制，本專案規格沒有提到，同 D7 的理由不留；需要時另開 issue。\n\n**規格來源**：[03-02](/notes/specs/03-task-management/02-task-new#資料欄位)"
+  },
+  {
+   "name": "task_guideline_version",
+   "label": "不可變的指引內容",
+   "group": "task",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "required",
+     "note": "指引版本主鍵；PK；(task_id, id) 另供複合 FK 父鍵",
+     "pk": true
+    },
+    {
+     "name": "task_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "擁有任務；FK → task.id，RESTRICT",
+     "fk": "task"
+    },
+    {
+     "name": "version_no",
+     "type": "integer",
+     "required": "required",
+     "note": "內容版本號；唯一 (task_id, version_no)；CHECK >= 1。來源：03-03：內容真的改過就跳一個版本"
+    },
+    {
+     "name": "annotator_guideline_text",
+     "type": "text",
+     "required": "required",
+     "note": "標記員說明文字；預設空字串。來源：03-02：可以只填這個、不上傳檔案。空字串＝留空"
+    },
+    {
+     "name": "annotator_guideline_assets",
+     "type": "json",
+     "required": "required",
+     "note": "標記員附件參照清單；預設 []。來源：同上：PDF、PNG／JPG／JPEG／WebP 或 Markdown。存受控參照，不存檔案位元組"
+    },
+    {
+     "name": "reviewer_guideline_text",
+     "type": "text",
+     "required": "required",
+     "note": "審核員說明文字；預設空字串。來源：同上：與標記員那一組完全獨立"
+    },
+    {
+     "name": "reviewer_guideline_assets",
+     "type": "json",
+     "required": "required",
+     "note": "審核員附件參照清單；預設 []。來源：同上：清單彼此獨立"
+    },
+    {
+     "name": "content_digest",
+     "type": "char(64)",
+     "required": "required",
+     "note": "四欄內容摘要。來源：判斷「真的改過」才遞增版本的依據"
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "建立時間"
+    }
+   ],
+   "description": "**即使 [03-02](/notes/specs/03-task-management/02-task-new) 第四步全部留空也要建 v1**——否則回合釘不到版本。\n\n**`force_guideline` 不在這張表**，它在 `task` 上。理由是 [03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 明寫它是「**顯示政策，不是指引內容；單獨改不跳版本**」——放在版本表裡，改它就會逼出一個新版本，與規格相反。\n\n**規格來源**：[03-02](/notes/specs/03-task-management/02-task-new#資料欄位)、[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)"
+  },
+  {
+   "name": "task_membership",
+   "label": "一人於一任務的一個角色",
+   "group": "task",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "required",
+     "note": "成員資格主鍵；PK",
+     "pk": true
+    },
+    {
+     "name": "task_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "任務作用域；FK → task.id，RESTRICT；唯一 (task_id, user_id, task_role)",
+     "fk": "task"
+    },
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "真實使用者；FK → users.id，RESTRICT。來源：03-03",
+     "fk": "users"
+    },
+    {
+     "name": "task_role",
+     "type": "varchar(24)",
+     "required": "required",
+     "note": "任務角色；CHECK 限 project_leader／annotator／reviewer。來源：03-03：加入時決定、之後唯讀；同一個人可以各有一列"
+    },
+    {
+     "name": "membership_status",
+     "type": "varchar(16)",
+     "required": "required",
+     "note": "成員狀態；CHECK 限 invited／active／disabled。來源：03-03：啟用、停用、邀請中。「邀請中」只能移除"
+    },
+    {
+     "name": "last_activity_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "最後活動。來源：03-03 的「最後活動」。原始規劃沒有這一欄；盤點總帳把它歸為持久，見下"
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "加入時間"
+    },
+    {
+     "name": "updated_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "最後狀態變更"
+    }
+   ],
+   "description": "**同一人可以同時持有多個任務角色**，一個角色一列。\n\n[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 的「最後活動」**規則欄是 `—`**——規格只說成員清單要顯示它，沒說它怎麼來，所以存或算都要裁。\n\n**裁定存成欄位**：每次活動更新這一欄。代價是每個標記動作都要多寫一次；換到的是成員清單不必為了一個時間戳去查整張歷程表。另一個選項（取該成員最新一筆 `annotation_history_event` 的時間）已被排除。\n\n這與[盤點總帳](/notes/diagrams/architecture/data-field-inventory)把它歸為**持久**一致，兩份文件不必再對齊。\n\n**「任務角色加入時決定、之後唯讀」在 DB 擋不住。** 唯一限制 `(task_id, user_id, task_role)` 只保證不重複，**不保證沒人 UPDATE 那一欄**——那要在應用層擋，或加一個拒絕更新該欄的觸發器。\n\n**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)"
+  },
+  {
+   "name": "task_reviewer_roster_member",
+   "label": "審核員與仲裁者名冊",
+   "group": "task",
+   "columns": [
+    {
+     "name": "task_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "任務作用域；複合 PK 之一；FK → task.id，RESTRICT",
+     "pk": true,
+     "fk": "task"
+    },
+    {
+     "name": "reviewer_membership_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "名冊上的成員資格；複合 PK 之一；複合 FK (task_id, reviewer_membership_id) → task_membership(task_id, id)。來源：03-03：人選限啟用中且任務角色為審核員",
+     "pk": true
+    },
+    {
+     "name": "can_arbitrate",
+     "type": "boolean",
+     "required": "required",
+     "note": "是否在仲裁者名冊上；預設 false。來源：03-03：仲裁者名冊必須是審核員名冊的子集合——用一個布林表達子集合，比兩張表更擋得住"
+    },
+    {
+     "name": "sort_order",
+     "type": "integer",
+     "required": "required",
+     "note": "顯示順序"
+    }
+   ],
+   "description": "**用 `can_arbitrate` 而不是另一張仲裁者名冊表，是為了讓「子集合」這件事在結構上成立**：仲裁者只能是這張表上的列，不可能出現一個不在審核員名冊上的仲裁者。\n\n**複合 FK 是必要的**：單欄 FK 指向 `task_membership.id` 擋不住「這個成員資格屬於另一個任務」。這正是 [#235](https://github.com/label-suite/label-suite/issues/235) 工作項 4 要求檢查的——**合法 ID 被錯接到另一個上下文**。\n\n**兩條擋不住的——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)"
+  },
+  {
+   "name": "task_run_cycle",
+   "label": "一輪發布週期",
+   "group": "run",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "required",
+     "note": "發布週期主鍵；PK；(task_id, id) 另供複合 FK 父鍵",
+     "pk": true
+    },
+    {
+     "name": "task_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "擁有任務；FK → task.id，RESTRICT",
+     "fk": "task"
+    },
+    {
+     "name": "cycle_no",
+     "type": "integer",
+     "required": "required",
+     "note": "同任務序號；唯一 (task_id, cycle_no)；CHECK >= 1。來源：反查：退回草稿後另開新週期"
+    },
+    {
+     "name": "dataset_version_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "固定的已定版資料；FK → dataset_version.id，RESTRICT。來源：04-02：資料快照鎖定在發布時凍結的那一份",
+     "fk": "dataset_version"
+    },
+    {
+     "name": "config_version_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "固定的設定版本；複合 FK (task_id, config_version_id) → task_config_version(task_id, id)。來源：04-02：任務設定發布時凍結"
+    },
+    {
+     "name": "selection_seed",
+     "type": "varchar",
+     "required": "required",
+     "note": "抽樣隨機種子。來源：讓抽樣可重播"
+    },
+    {
+     "name": "selection_algorithm_version",
+     "type": "varchar",
+     "required": "required",
+     "note": "抽樣演算法版本。來源：同上"
+    },
+    {
+     "name": "opened_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "開啟時間"
+    },
+    {
+     "name": "closed_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "關閉時間；CHECK 與 close_reason 同時為空或同時非空。來源：退回草稿或正式標記完結。只關閉，不刪除"
+    },
+    {
+     "name": "close_reason",
+     "type": "varchar(16)",
+     "required": "nullable",
+     "note": "關閉原因；CHECK 限 rejected／completed。來源：rejected＝退回草稿；completed＝正式標記完結"
+    }
+   ],
+   "description": "**這張表是反查出來的**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 的「回合編號」規則欄寫「同一輪裡唯一，**退回草稿後新一輪從 1 重新算**」——「輪」就是週期，但它沒有畫面，使用者只看得到回合編號。\n\n**規格來源**：[04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位)"
+  },
+  {
+   "name": "task_trial_round",
+   "label": "週期內的一次試標回合",
+   "group": "run",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "required",
+     "note": "試標回合主鍵；PK；(task_id, id) 另供複合 FK 父鍵",
+     "pk": true
+    },
+    {
+     "name": "task_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "同任務參照作用域；見下方複合 FK"
+    },
+    {
+     "name": "task_run_cycle_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "所屬發布週期；複合 FK (task_id, task_run_cycle_id) → task_run_cycle(task_id, id)"
+    },
+    {
+     "name": "round_no",
+     "type": "integer",
+     "required": "required",
+     "note": "週期內序號；唯一 (task_run_cycle_id, round_no)；CHECK >= 1。來源：03-03：同一輪裡唯一，且只發布一次。唯一性的範圍是週期而不是任務"
+    },
+    {
+     "name": "guideline_version_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "發布時的指引版本；複合 FK (task_id, guideline_version_id) → task_guideline_version(task_id, id)。來源：03-03：每一個回合釘住當時的版本；04-02：之後另存新版不影響已開始的回合"
+    },
+    {
+     "name": "sampling_value",
+     "type": "integer",
+     "required": "required",
+     "note": "該回合實際抽出的筆數；CHECK >= 1。來源：03-03：已建立的回合顯示實際抽出的筆數（與 task.sampling_value 的「下一次要求筆數」是兩件事）"
+    },
+    {
+     "name": "prior_round_findings",
+     "type": "text",
+     "required": "nullable",
+     "note": "前一輪發現摘要；見下方應用層限制。來源：03-03：第二回合起是必填，不可為空"
+    },
+    {
+     "name": "guideline_change_summary",
+     "type": "text",
+     "required": "nullable",
+     "note": "指引異動摘要；同上。來源：同上：勾「本輪未變更指引」時改填未變更理由"
+    },
+    {
+     "name": "no_change_reason",
+     "type": "text",
+     "required": "nullable",
+     "note": "未變更理由；同上。來源：同上：兩者不可同時空白"
+    },
+    {
+     "name": "iaa_computation_status",
+     "type": "varchar(16)",
+     "required": "required",
+     "note": "IAA 計算狀態；CHECK 限 pending／done／failed；預設 pending。來源：05-02 的「品質指標就緒訊號」：只說 IAA 算完了沒，不說達不達標"
+    },
+    {
+     "name": "created_by_user_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "發布者；FK → users.id，RESTRICT",
+     "fk": "users"
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "發布時間"
+    },
+    {
+     "name": "completed_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "回合結束時間。來源：轉入「等待 IAA 確認」時寫一次"
+    }
+   ],
+   "description": "**三個摘要欄構成一組跨欄位條件限制，DB 擋不住——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)、[04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位)、[05-02](/notes/specs/05-dataset/02-analysis-detail#資料欄位)"
+  },
+  {
+   "name": "task_trial_iaa_result",
+   "label": "一次試標回合的完整計算結果",
+   "group": "run",
+   "columns": [
+    {
+     "name": "trial_round_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "試標回合；PK 兼 FK → task_trial_round.id，CASCADE。PK 即 FK 代表每回合最多一份結果",
+     "pk": true,
+     "fk": "task_trial_round"
+    },
+    {
+     "name": "result_schema_version",
+     "type": "integer",
+     "required": "required",
+     "note": "結果格式版本；CHECK >= 1。來源：讓舊結果讀得懂"
+    },
+    {
+     "name": "algorithm_version",
+     "type": "varchar",
+     "required": "required",
+     "note": "演算法版本。來源：讓計算可重現"
+    },
+    {
+     "name": "input_digest",
+     "type": "char(64)",
+     "required": "required",
+     "note": "輸入摘要。來源：標記來源集合與排除規則的摘要；不含答案"
+    },
+    {
+     "name": "result_payload",
+     "type": "json",
+     "required": "required",
+     "note": "逐輸出的指標。來源：05-02：主指標數值算不出來時是「無法計算」狀態，不得回退成 0.00"
+    },
+    {
+     "name": "computed_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "計算完成時間"
+    }
+   ],
+   "description": "**這張表是試標閘門的證據，不是分析報告。** 兩者的關係見[字典 §IAA 的兩套東西，不可混用](/notes/diagrams/architecture/data-table-dictionary#iaa-的兩套東西不可混用)。\n\n**`result_payload` 的結構要記下來——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**「結果與回合 `done` 狀態同交易」是應用層的事。** DB 可以保證外鍵存在，但無法保證「寫結果的同時把 `iaa_computation_status` 改成 `done`」——那要在同一個交易裡做。\n\n**規格來源**：[05-02](/notes/specs/05-dataset/02-analysis-detail#資料欄位)"
+  },
+  {
+   "name": "task_sample_snapshot",
+   "label": "單次發布的不可變抽樣回執",
+   "group": "run",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "required",
+     "note": "快照主鍵；PK",
+     "pk": true
+    },
+    {
+     "name": "task_run_cycle_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "所屬發布週期；FK → task_run_cycle.id，RESTRICT",
+     "fk": "task_run_cycle"
+    },
+    {
+     "name": "selection_seed",
+     "type": "varchar",
+     "required": "required",
+     "note": "該次使用的種子。來源：週期固定了種子，快照記下該次實際用的"
+    },
+    {
+     "name": "selection_algorithm_version",
+     "type": "varchar",
+     "required": "required",
+     "note": "該次演算法版本"
+    },
+    {
+     "name": "requested_sampling_value",
+     "type": "integer",
+     "required": "nullable",
+     "note": "試標要求筆數；CHECK 試標時非空、正式標記時為空。來源：正式標記沒有抽樣筆數——它取的是剩餘的池"
+    },
+    {
+     "name": "target_agreement_overrides",
+     "type": "json",
+     "required": "required",
+     "note": "發布時的門檻快照；預設 {}。來源：發布後改任務的門檻不影響已發出的"
+    },
+    {
+     "name": "min_annotators",
+     "type": "integer",
+     "required": "required",
+     "note": "發布時的人數下限；CHECK >= 2。來源：同上"
+    },
+    {
+     "name": "selection_manifest_ref",
+     "type": "text",
+     "required": "required",
+     "note": "清單回執的位置。來源：私有、不可覆寫、以內容定址。只含公開項目的 UUID，不含答案"
+    },
+    {
+     "name": "selected_item_digest",
+     "type": "char(64)",
+     "required": "required",
+     "note": "清單的摘要。來源：有序公開 UUID 清單的 SHA-256"
+    },
+    {
+     "name": "locked_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "鎖定時間"
+    },
+    {
+     "name": "locked_by_user_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "執行發布者；FK → users.id，RESTRICT",
+     "fk": "users"
+    }
+   ],
+   "description": "**回執只是回執，真正的成員在 `task_run_item`。** 這一點要寫清楚，否則會有人以為刪掉 `task_run_item` 還能從回執重建——回執只有摘要與外部參照，**不是資料來源**。"
+  },
+  {
+   "name": "task_run",
+   "label": "一次試標或正式標記的發布",
+   "group": "run",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "required",
+     "note": "本次執行主鍵；PK；(task_id, id) 另供複合 FK 父鍵",
+     "pk": true
+    },
+    {
+     "name": "task_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "同任務參照作用域；見下"
+    },
+    {
+     "name": "task_run_cycle_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "本次發布週期；複合 FK (task_id, task_run_cycle_id) → task_run_cycle(task_id, id)"
+    },
+    {
+     "name": "run_type",
+     "type": "varchar(16)",
+     "required": "required",
+     "note": "標記階段；CHECK 限 dry_run／official_run。來源：03-01、02-01：試標／正式標記。畫面上的「未建立清單」是顯示值不是階段"
+    },
+    {
+     "name": "trial_round_id",
+     "type": "uuid",
+     "required": "nullable",
+     "note": "試標回合；複合 FK (task_id, trial_round_id) → task_trial_round(task_id, id)；CHECK run_type='official_run' → trial_round_id IS NULL。來源：正式標記沒有回合"
+    },
+    {
+     "name": "sample_snapshot_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "本次專屬快照；FK → task_sample_snapshot.id，RESTRICT；唯一（一個快照只屬一次執行）",
+     "fk": "task_sample_snapshot",
+     "unique": true
+    },
+    {
+     "name": "guideline_version_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "本次的指引版本；複合 FK (task_id, guideline_version_id) → task_guideline_version(task_id, id)。來源：試標須與回合一致（應用層：DB 比不到另一張表的同名欄）"
+    },
+    {
+     "name": "item_count",
+     "type": "integer",
+     "required": "required",
+     "note": "本次的項目數；CHECK >= 1。來源：04-01 的「清單筆數」讀它"
+    },
+    {
+     "name": "publication_idempotency_key",
+     "type": "varchar",
+     "required": "required",
+     "note": "發布重試鍵；唯一 (trial_round_id, publication_idempotency_key)；正式標記另以 唯一 (task_id, publication_idempotency_key)。來源：避免重複發布"
+    },
+    {
+     "name": "publication_request_digest",
+     "type": "char(64)",
+     "required": "required",
+     "note": "請求內容摘要。來源：同一個 key 但內容不同時要擋下"
+    },
+    {
+     "name": "created_by_user_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "發布者；FK → users.id，RESTRICT",
+     "fk": "users"
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "發布時間"
+    }
+   ],
+   "description": "**「每個任務最多發布一次正式標記」擋不進 DB 的一般唯一限制**——它是「`run_type='official_run'` 時 `task_id` 唯一」，要用**部分唯一索引** `WHERE run_type='official_run'`。這是字典提議的落法。\n\n**規格來源**：[02-01](/notes/specs/02-dashboard/01-dashboard#資料欄位)、[03-01](/notes/specs/03-task-management/01-task-list#資料欄位)、[04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位)"
+  },
+  {
+   "name": "task_run_item",
+   "label": "依序納入執行的公開項目",
+   "group": "run",
+   "columns": [
+    {
+     "name": "task_run_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "所屬執行；複合 PK 之一；FK → task_run.id，CASCADE",
+     "pk": true,
+     "fk": "task_run"
+    },
+    {
+     "name": "dataset_item_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "公開資料項目；複合 PK 之一；FK → dataset_item.id，RESTRICT",
+     "pk": true,
+     "fk": "dataset_item"
+    },
+    {
+     "name": "task_run_cycle_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "經父執行約束的週期；唯一 (task_run_cycle_id, dataset_item_id)。來源：這個唯一限制就是「同一週期內試標與正式標記不得重複選取同一項目」的落點"
+    },
+    {
+     "name": "list_position",
+     "type": "integer",
+     "required": "required",
+     "note": "執行內排序；唯一 (task_run_id, list_position)；CHECK >= 1"
+    }
+   ],
+   "description": "**`task_run_cycle_id` 在這張表是刻意的反正規化。** 它可以從 `task_run` JOIN 出來，但那樣就**無法用一個唯一限制表達「同週期不重選」**——跨表的唯一性 DB 做不到。這是為了把一條規則落進 DB 而付的代價，寫在這裡免得後人誤刪。"
+  },
+  {
+   "name": "task_annotation_assignment",
+   "label": "固定的標記工作位",
+   "group": "run",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "required",
+     "note": "工作位主鍵；PK；唯一 (task_id, task_run_id, id) 供六張子表的三欄複合 FK 父鍵。來源：ID 不因停用、退回未指派池或重指派而改變",
+     "pk": true
+    },
+    {
+     "name": "task_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "同任務參照作用域；見下"
+    },
+    {
+     "name": "task_run_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "所屬執行；複合 FK (task_id, task_run_id) → task_run(task_id, id)"
+    },
+    {
+     "name": "dataset_item_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "該執行內的公開項目；複合 FK (task_run_id, dataset_item_id) → task_run_item(task_run_id, dataset_item_id)。來源：擋住「指派到一個不在這次執行裡的項目」"
+    },
+    {
+     "name": "slot_no",
+     "type": "integer",
+     "required": "required",
+     "note": "工作位序；唯一 (task_run_id, dataset_item_id, slot_no)；CHECK >= 1。來源：正式標記每個項目恰一個工作位；試標按重疊人數建立"
+    },
+    {
+     "name": "assignee_membership_id",
+     "type": "uuid",
+     "required": "nullable",
+     "note": "目前受派標記員；複合 FK (task_id, assignee_membership_id) → task_membership(task_id, id)。來源：空值＝待重派，不表示已排除——排除是另一張表"
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "建立時間"
+    },
+    {
+     "name": "updated_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "最後改動"
+    }
+   ],
+   "description": "**[04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位) 的「審核單位」就是「任務的某個回合 × 某一筆指派」**，所以這張表是審核單位定址的一半。\n\n**沒有 `status` 欄，這是刻意的。** [03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 明寫「標記作業狀態……**推導值，不另存**」，由終局排除、目前的標記紀錄與受派者**依序**判定。存一個 `status` 會與那個順序產生第二個真相。"
+  },
+  {
+   "name": "task_annotation_exclusion",
+   "label": "終局排除證據",
+   "group": "run",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "required",
+     "note": "排除證據主鍵；PK",
+     "pk": true
+    },
+    {
+     "name": "assignment_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "被排除的工作位；FK → task_annotation_assignment.id，RESTRICT；唯一。來源：03-03：一個工作位子最多一筆——唯一限制落得進 DB",
+     "fk": "task_annotation_assignment",
+     "unique": true
+    },
+    {
+     "name": "excluded_by_user_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "執行排除的人；FK → users.id，RESTRICT。來源：03-03：排除紀錄含排除者",
+     "fk": "users"
+    },
+    {
+     "name": "excluded_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "排除時間。來源：同上"
+    },
+    {
+     "name": "reason",
+     "type": "text",
+     "required": "required",
+     "note": "原因；CHECK 非空字串。來源：同上：排除時必填。這與其他「理由選填」的欄位相反"
+    }
+   ],
+   "description": "**與工作位分表，是為了避免「`assignee_membership_id` 是空的」被誤判成已排除。**\n\n**「終局、不可撤回」在 DB 擋不住 DELETE。** 唯一限制保證不會有第二筆，但不保證沒人刪掉第一筆——要靠應用層不提供刪除路徑，或加一個拒絕 DELETE 的觸發器。\n\n**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)"
+  },
+  {
+   "name": "annotation_record",
+   "label": "標記草稿與提交嘗試",
+   "group": "annotation",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "required",
+     "note": "本次草稿／提交主鍵；PK",
+     "pk": true
+    },
+    {
+     "name": "task_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "三欄複合單位鍵；複合 FK → task_annotation_assignment(task_id, task_run_id, id)"
+    },
+    {
+     "name": "run_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "三欄複合單位鍵；複合 FK → task_annotation_assignment(task_id, task_run_id, id)"
+    },
+    {
+     "name": "assignment_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "三欄複合單位鍵；複合 FK → task_annotation_assignment(task_id, task_run_id, id)"
+    },
+    {
+     "name": "author_membership_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "當時受派的標記員；複合 FK (task_id, author_membership_id) → task_membership(task_id, id)。來源：04-02：重派時舊紀錄轉已放棄並保留原作者"
+    },
+    {
+     "name": "answer_payload",
+     "type": "json",
+     "required": "required",
+     "note": "作答內容。來源：04-02 的十四列作答欄位全在這裡，依釘住的設定驗證"
+    },
+    {
+     "name": "note",
+     "type": "text",
+     "required": "nullable",
+     "note": "受派者備註。來源：這一欄本專案不渲染，見下方說明"
+    },
+    {
+     "name": "version",
+     "type": "integer",
+     "required": "required",
+     "note": "樂觀鎖版本；CHECK >= 1。來源：04-02 的版本衝突處理"
+    },
+    {
+     "name": "status",
+     "type": "varchar(16)",
+     "required": "required",
+     "note": "狀態；CHECK 限 saved／submitted／abandoned。來源：04-02：四個值裡「待標記」是推導的（尚無有效紀錄），只有三個落庫"
+    },
+    {
+     "name": "saved_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "最近一次保存"
+    },
+    {
+     "name": "submitted_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "正式提交時間；CHECK status='submitted' → submitted_at IS NOT NULL。來源：04-01 的「完成時間」讀它：還沒提交的沒有值"
+    },
+    {
+     "name": "abandoned_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "舊草稿退役時間；CHECK status='abandoned' → abandoned_at IS NOT NULL。來源：04-02：未提交重派時寫一次"
+    }
+   ],
+   "description": "**`answer_payload` 的結構**（[04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位) 的「標記員的作答」逐欄）——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n四個**規格明文**的結構要點，照收進 `value` 的形狀：**多選階層標籤記從根到節點的完整路徑**；**序列標記與實體的終點本身不算在範圍內、範圍不得相交**；**三元組的位置只能來自本來就帶位置的來源，沒帶就是沒有、不得用字串比對回推**；**三元組的主體與客體各自記自己的所屬發言**。\n\n**`note` 這一欄留著但本專案不渲染。** [04-02](/notes/specs/04-annotation/02-annotation-workspace#工作區不得有存不了的備註欄) 明寫工作區「**不渲染任何沒有持久化路徑的備註欄**」，而它確實有持久化路徑——所以不是「不該存」而是「目前沒有畫面」。**吸附單位不進表**：規格明寫它「只影響滑鼠落點，不影響存下來的值」。\n\n**規格來源**：[04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位)、[04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位)"
+  },
+  {
+   "name": "annotation_review_draft",
+   "label": "審核員私有草稿",
+   "group": "review",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "required",
+     "note": "私有草稿主鍵；PK",
+     "pk": true
+    },
+    {
+     "name": "task_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "三欄複合單位鍵；複合 FK 同上；部分唯一 (run_id, assignment_id, reviewer_membership_id) WHERE invalidated_at IS NULL"
+    },
+    {
+     "name": "run_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "三欄複合單位鍵；複合 FK 同上；部分唯一 (run_id, assignment_id, reviewer_membership_id) WHERE invalidated_at IS NULL"
+    },
+    {
+     "name": "assignment_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "三欄複合單位鍵；複合 FK 同上；部分唯一 (run_id, assignment_id, reviewer_membership_id) WHERE invalidated_at IS NULL"
+    },
+    {
+     "name": "reviewer_membership_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "唯一可讀寫的審核員；複合 FK → task_membership(task_id, id)。來源：04-02：還沒送出的判斷只有本人看得到"
+    },
+    {
+     "name": "decision_payload",
+     "type": "json",
+     "required": "required",
+     "note": "未提交的逐輸出決策與理由。來源：04-02：與提交紀錄分離"
+    },
+    {
+     "name": "version",
+     "type": "integer",
+     "required": "required",
+     "note": "樂觀鎖版本；CHECK >= 1"
+    },
+    {
+     "name": "updated_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "最近寫入"
+    },
+    {
+     "name": "invalidated_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "失效時間。來源：04-02：送出成功後必須清除；因稽核留存時以此失效並排除還原"
+    }
+   ],
+   "description": "[04-02](/notes/specs/04-annotation/02-annotation-workspace#盲審隔離還沒送出的判斷只有本人看得到) 明寫：還沒送出的判斷只有本人看得到，**連「已有動作」這個事實都不得外洩**。\n\n所以這不是「提交紀錄上多一個可為空的草稿欄」就能做到的——那樣任何能讀提交紀錄的人都會看到草稿存在。獨立一張表加上讀取權限只給 `reviewer_membership_id` 本人，才可能成立。**而結構只是讓它可能，實際擋住靠查詢層**。\n\n**規格來源**：[04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位)"
+  },
+  {
+   "name": "annotation_review_submission",
+   "label": "已提交審核主檔",
+   "group": "review",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "required",
+     "note": "目前版本主鍵；PK",
+     "pk": true
+    },
+    {
+     "name": "task_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "三欄複合單位鍵；複合 FK 同上；唯一 (run_id, assignment_id)。來源：這個唯一限制擋住兩位審核員並列正式提交——審核單位只有一個提交者"
+    },
+    {
+     "name": "run_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "三欄複合單位鍵；複合 FK 同上；唯一 (run_id, assignment_id)。來源：這個唯一限制擋住兩位審核員並列正式提交——審核單位只有一個提交者"
+    },
+    {
+     "name": "assignment_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "三欄複合單位鍵；複合 FK 同上；唯一 (run_id, assignment_id)。來源：這個唯一限制擋住兩位審核員並列正式提交——審核單位只有一個提交者"
+    },
+    {
+     "name": "reviewer_membership_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "唯一正式提交者；複合 FK → task_membership(task_id, id)。來源：首次提交者即固定歸屬"
+    },
+    {
+     "name": "version",
+     "type": "integer",
+     "required": "required",
+     "note": "已提交修訂序號；CHECK >= 1。來源：每次合法改判 +1"
+    },
+    {
+     "name": "submitted_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "首次提交時間"
+    },
+    {
+     "name": "updated_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "最新改判時間"
+    }
+   ]
+  },
+  {
+   "name": "annotation_review_submission_revision",
+   "label": "不可變的修訂快照",
+   "group": "review",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "required",
+     "note": "不可變修訂主鍵；PK",
+     "pk": true
+    },
+    {
+     "name": "run_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "同單位複合鍵"
+    },
+    {
+     "name": "assignment_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "同單位複合鍵"
+    },
+    {
+     "name": "review_submission_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "所屬提交主檔；FK → annotation_review_submission.id，RESTRICT；唯一 (review_submission_id, version)",
+     "fk": "annotation_review_submission"
+    },
+    {
+     "name": "version",
+     "type": "integer",
+     "required": "required",
+     "note": "與主檔本次版本一致；CHECK >= 1"
+    },
+    {
+     "name": "decision_payload",
+     "type": "json",
+     "required": "required",
+     "note": "本次全部輸出的決策、修正值與理由快照。來源：仲裁票參照投票時所見的這一份，避免後續改判把來源改掉"
+    },
+    {
+     "name": "submitted_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "本次提交時間"
+    }
+   ],
+   "description": "**每次正式提交一份完整快照。`decision_payload` 是已提交決策的唯一權威紀錄。**"
+  },
+  {
+   "name": "annotation_review_decision",
+   "label": "逐輸出審核決策",
+   "group": "review",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "required",
+     "note": "逐輸出決策主鍵；PK",
+     "pk": true
+    },
+    {
+     "name": "review_submission_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "所屬目前版本；FK → annotation_review_submission.id，CASCADE；唯一 (review_submission_id, output_key)。來源：04-02：三向決策每個輸出類型一筆",
+     "fk": "annotation_review_submission"
+    },
+    {
+     "name": "output_key",
+     "type": "varchar(120)",
+     "required": "required",
+     "note": "一個輸出類型；見上"
+    },
+    {
+     "name": "decision",
+     "type": "varchar(16)",
+     "required": "required",
+     "note": "三向決策；CHECK 限三值。來源：04-02：通過、修正、無法裁決"
+    },
+    {
+     "name": "corrected_answer",
+     "type": "json",
+     "required": "nullable",
+     "note": "修正後的答案；CHECK decision='modify' → corrected_answer IS NOT NULL。來源：04-02：決策是修正時不得為空；初始值是受審標記員本人的答案"
+    },
+    {
+     "name": "reason",
+     "type": "text",
+     "required": "required",
+     "note": "修正／無法裁決的理由。來源：這一欄與原始規劃相反，見下"
+    },
+    {
+     "name": "decided_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "本次提交時間"
+    }
+   ],
+   "description": "**這張表是最新修訂 `decision_payload` 的逐輸出投影，不是第二份權威副本。**\n\n[04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位) 明寫：「修正／無法裁決的理由……**選填**；空白**不得擋下送出**，**空值以空字串寫入、不得缺鍵**」。\n\n「選填」說的是**使用者可以不填**，不是**欄位可以沒有**。原始規劃把它標成 SQL `NULL` 可空，那會讓「沒填」與「沒這個鍵」變成同一件事，而規格刻意把兩者分開——所以這一欄是 **NOT NULL 並允許空字串**。\n\n同一條原則也套在 `annotation_arbitration_vote.reason` 與 `annotation_exception_resolution.reason`（原始規劃那兩張已經是 NOT NULL，與本專案一致）。\n\n**規格來源**：[04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位)"
+  },
+  {
+   "name": "annotation_arbitration_vote",
+   "label": "逐爭議鍵的仲裁票",
+   "group": "review",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "required",
+     "note": "不可變票主鍵；PK",
+     "pk": true
+    },
+    {
+     "name": "task_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "三欄複合單位鍵；複合 FK 同上。來源：04-02：仲裁狀態以審核單位定址，不得寫進審核員自己的紀錄"
+    },
+    {
+     "name": "run_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "三欄複合單位鍵；複合 FK 同上。來源：04-02：仲裁狀態以審核單位定址，不得寫進審核員自己的紀錄"
+    },
+    {
+     "name": "assignment_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "三欄複合單位鍵；複合 FK 同上。來源：04-02：仲裁狀態以審核單位定址，不得寫進審核員自己的紀錄"
+    },
+    {
+     "name": "output_key",
+     "type": "varchar(120)",
+     "required": "required",
+     "note": "爭議的輸出類型；唯一 (run_id, assignment_id, output_key, item_key)。來源：每項至多一張不可變票"
+    },
+    {
+     "name": "item_key",
+     "type": "text",
+     "required": "required",
+     "note": "推導的子項鍵；見上。來源：子項粒度。編碼方式待定，見下"
+    },
+    {
+     "name": "arbiter_membership_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "仲裁者；複合 FK → task_membership(task_id, id)。來源：04-01：仲裁資格是名冊勾選且在該單位沒有自己的審核提交（應用層）"
+    },
+    {
+     "name": "review_revision_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "投票所見的修訂版本；FK → annotation_review_submission_revision.id，RESTRICT。來源：避免後續改判把來源改掉",
+     "fk": "annotation_review_submission_revision"
+    },
+    {
+     "name": "choice",
+     "type": "varchar(16)",
+     "required": "required",
+     "note": "裁定；CHECK 限三值。來源：04-02：採 A、採 B、兩者皆非"
+    },
+    {
+     "name": "reason",
+     "type": "text",
+     "required": "required",
+     "note": "裁定理由。來源：04-02：選填；空白時顯示 未填寫理由。03-03 Q45（v14.0.0 BREAKING）：「兩者皆非」時仍是選填"
+    },
+    {
+     "name": "has_finalized_value",
+     "type": "boolean",
+     "required": "required",
+     "note": "本票是否產生定案值。來源：與 finalized_value 分開，因為合法的 JSON 空值也算有值"
+    },
+    {
+     "name": "finalized_value",
+     "type": "json",
+     "required": "nullable",
+     "note": "定案值。來源：04-02：採 B 而來源是「無法裁決」時定案值就是空的——那是設計語意、不是缺陷"
+    },
+    {
+     "name": "source_digest",
+     "type": "char(64)",
+     "required": "required",
+     "note": "來源摘要。來源：標記提交與審核修訂的來源摘要"
+    },
+    {
+     "name": "voted_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "投票時間"
+    },
+    {
+     "name": "decision_batch_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "同一次原子仲裁的冪等 ID。來源：04-02：全部裁定才送得出去——一次批次提交全部爭議鍵"
+    },
+    {
+     "name": "decision_batch_digest",
+     "type": "char(64)",
+     "required": "required",
+     "note": "該批次內容摘要。來源：同一個批次 ID 但內容不同時要擋下"
+    }
+   ],
+   "description": "**`has_finalized_value` 這一欄為什麼不能省：** 規格明寫定案值可以是空的，而 JSON 的 `null` 也是合法的答案值。只用 `finalized_value IS NULL` 判斷，就分不出「這一票沒有產生定案值」與「定案值是 JSON null」。\n\n`item_key` 是「爭議子項」的鍵——例如序列標記裡是哪一個 span、實體辨識裡是哪一個實體。粒度由 [04-02](/notes/specs/04-annotation/02-annotation-workspace#爭議項是推導出來的不是存起來的) 定（爭議項是推導的），但**它的字串編碼、版本與碰撞測試規格沒有定**。\n\n這一欄的唯一限制 `(run_id, assignment_id, output_key, item_key)` 要成立，前提是編碼**無碰撞**——兩個不同的子項不能算出同一個鍵。**字典不替它選編碼**，列為實作前要定的事。\n\n**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)、[04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位)、[04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位)"
+  },
+  {
+   "name": "annotation_exception_resolution",
+   "label": "例外池收尾",
+   "group": "review",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "required",
+     "note": "不可變收尾主鍵；PK",
+     "pk": true
+    },
+    {
+     "name": "task_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "三欄複合單位鍵；複合 FK 同上"
+    },
+    {
+     "name": "run_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "三欄複合單位鍵；複合 FK 同上"
+    },
+    {
+     "name": "assignment_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "三欄複合單位鍵；複合 FK 同上"
+    },
+    {
+     "name": "output_key",
+     "type": "varchar(120) / text",
+     "required": "required",
+     "note": "被收尾的爭議子項；唯一 (run_id, assignment_id, output_key, item_key)。來源：一個子項最多收尾一次"
+    },
+    {
+     "name": "item_key",
+     "type": "varchar(120) / text",
+     "required": "required",
+     "note": "被收尾的爭議子項；唯一 (run_id, assignment_id, output_key, item_key)。來源：一個子項最多收尾一次"
+    },
+    {
+     "name": "arbitration_vote_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "對應的「兩者皆非」票；FK → annotation_arbitration_vote.id，RESTRICT；唯一。來源：只在仲裁判「兩者皆非」後才進例外池",
+     "fk": "annotation_arbitration_vote",
+     "unique": true
+    },
+    {
+     "name": "resolved_by_membership_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "確認的專案負責人；複合 FK → task_membership(task_id, id)"
+    },
+    {
+     "name": "action",
+     "type": "varchar(32)",
+     "required": "required",
+     "note": "四種處置；CHECK 限四值。來源：04-02：採標記員答案、採審核員答案、自訂答案、排除於資料集"
+    },
+    {
+     "name": "reason",
+     "type": "text",
+     "required": "required",
+     "note": "處置理由。來源：04-02：選填，但欄位本身必須隨每筆收尾寫入"
+    },
+    {
+     "name": "has_finalized_value",
+     "type": "boolean",
+     "required": "required",
+     "note": "是否有定案值。來源：同仲裁票的理由"
+    },
+    {
+     "name": "finalized_value",
+     "type": "json",
+     "required": "nullable",
+     "note": "採用或自訂的答案；CHECK action='exclude' → has_finalized_value = false。來源：04-02：排除不產生最終答案"
+    },
+    {
+     "name": "resolved_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "確認時間"
+    }
+   ],
+   "description": "**「自訂答案只適用正式標記」擋不進這張表的 CHECK**——`run_type` 在 `task_run` 上，CHECK 看不到另一張表。**應用層**。\n\n**「排除」排除的是爭議輸出項目，不是刪 `dataset_item`、執行項目或工作位。** 這一點要寫清楚，否則會有人以為排除要去刪上游的列。\n\n**規格來源**：[04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位)"
+  },
+  {
+   "name": "annotation_history_event",
+   "label": "標記與審核的責任歷程",
+   "group": "annotation",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "required",
+     "note": "事件主鍵；PK",
+     "pk": true
+    },
+    {
+     "name": "task_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "三欄複合單位鍵；複合 FK 同上"
+    },
+    {
+     "name": "run_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "三欄複合單位鍵；複合 FK 同上"
+    },
+    {
+     "name": "assignment_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "三欄複合單位鍵；複合 FK 同上"
+    },
+    {
+     "name": "event_no",
+     "type": "integer",
+     "required": "required",
+     "note": "單位內單調序號；唯一 (run_id, assignment_id, event_no)；CHECK >= 1。來源：04-01：「最後活動時間」同時戳時取最後寫入的那一筆——所以需要時戳以外的排序"
+    },
+    {
+     "name": "actor_membership_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "當次真實操作者；複合 FK → task_membership(task_id, id)。來源：04-02：真實身分，不得用「目前這位」之類的字面值"
+    },
+    {
+     "name": "actor_task_role",
+     "type": "varchar(24)",
+     "required": "required",
+     "note": "當次角色快照。來源：同上。快照而非即時 JOIN，角色事後改了歷程要留當時的"
+    },
+    {
+     "name": "account_session_id",
+     "type": "uuid",
+     "required": "nullable",
+     "note": "可驗證的登入工作階段；FK → account_session.id，RESTRICT。來源：不得由操作者或時間猜測補值",
+     "fk": "account_session"
+    },
+    {
+     "name": "action",
+     "type": "varchar(24)",
+     "required": "required",
+     "note": "動作；CHECK 限八值。來源：04-02：不得是自由字串；集合外的舊值原樣顯示英文原值（有兩個例外仍顯示中文標籤）"
+    },
+    {
+     "name": "output_key",
+     "type": "varchar(120)",
+     "required": "nullable",
+     "note": "動作所涉輸出類型。來源：整單位動作時為空"
+    },
+    {
+     "name": "reason",
+     "type": "text",
+     "required": "required",
+     "note": "當次理由。來源：04-02：欄位仍然必須隨每筆事件寫入，空值以空字串表示，不得用「沒有這個欄位」來表示空。與 annotation_review_decision.reason 同一條原則"
+    },
+    {
+     "name": "result_snapshot",
+     "type": "json",
+     "required": "nullable",
+     "note": "結果快照；CHECK 三種改變答案的 action → 非空。來源：04-02：只有會改變答案的事件（提交、審核修正、仲裁定案）必須保存；必須排除原始文本與資料集欄位；差異在呈現時由相鄰兩筆計算、不另存"
+    },
+    {
+     "name": "started_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "起算時間；CHECK 與 lead_time_ms 同時為空或同時非空。來源：04-02：一次作業只記一份；審核員一次送出多筆事件時只有第一筆帶"
+    },
+    {
+     "name": "lead_time_ms",
+     "type": "integer",
+     "required": "nullable",
+     "note": "耗時；CHECK >= 0；見上。來源：04-02：頁面可見時間累計，切到背景暫停；不得用事件時間相減；登入狀態失效的時間不得當結束時間；算不出來就留空並顯示「未知」、不補推估值（不論原因，#196）"
+    },
+    {
+     "name": "occurred_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "動作完成時間；索引"
+    },
+    {
+     "name": "annotation_record_id",
+     "type": "uuid",
+     "required": "nullable",
+     "note": "來源：標記紀錄；CHECK 四個來源欄至多一個非空。來源：由哪一種動作產生的"
+    },
+    {
+     "name": "review_revision_id",
+     "type": "uuid",
+     "required": "nullable",
+     "note": "來源：審核修訂；同上"
+    },
+    {
+     "name": "arbitration_vote_id",
+     "type": "uuid",
+     "required": "nullable",
+     "note": "來源：仲裁票；同上"
+    },
+    {
+     "name": "exception_resolution_id",
+     "type": "uuid",
+     "required": "nullable",
+     "note": "來源：例外收尾；同上"
+    }
+   ],
+   "description": "**append-only。** [04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位) 明寫「事件**永不刪除**，一般寫入路徑**只能追加**」。\n\n**`lead_time_ms` 不等於工時，兩個數不能共用一欄。** [04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位) 明寫「這裡的耗時**不等於工時**——工時由 03-03 那一側計算」，而那一側是 `task_work_interval`。\n\n**未提交的審核員草稿不產生事件。** [04-02](/notes/specs/04-annotation/02-annotation-workspace#盲審隔離還沒送出的判斷只有本人看得到) 的盲審隔離要求連「已有動作」都不得外洩，所以草稿**不寫歷程**——這是結構上的保證，不只是遮蔽。\n\n**規格來源**：[04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位)、[04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位)"
+  },
+  {
+   "name": "task_export",
+   "label": "匯出請求與原始產物",
+   "group": "export",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "required",
+     "note": "匯出請求主鍵；PK；(task_id, id) 另供複合 FK 父鍵",
+     "pk": true
+    },
+    {
+     "name": "task_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "所屬任務；FK → task.id，RESTRICT",
+     "fk": "task"
+    },
+    {
+     "name": "requested_by_user_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "原始請求人；FK → users.id，RESTRICT。來源：下載仍需重新授權——請求過不代表以後都能下載",
+     "fk": "users"
+    },
+    {
+     "name": "requested_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "請求被接受的時間；索引（歷史排序）"
+    },
+    {
+     "name": "exported_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "實際讀取結果的時間；CHECK status='ready' → exported_at IS NOT NULL。來源：03-03：記錄列與檔名用的是這一個。未完成時不冒稱已匯出"
+    },
+    {
+     "name": "completed_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "產物驗證完成、可下載的時間"
+    },
+    {
+     "name": "status",
+     "type": "varchar(16)",
+     "required": "required",
+     "note": "狀態；CHECK 限 pending／processing／ready／failed"
+    },
+    {
+     "name": "export_format",
+     "type": "varchar(16)",
+     "required": "required",
+     "note": "匯出格式；CHECK 限 json／json-min。來源：03-03：只有這兩種（Q41）"
+    },
+    {
+     "name": "export_format_version",
+     "type": "integer",
+     "required": "required",
+     "note": "檔案格式版本；CHECK >= 1"
+    },
+    {
+     "name": "conditions_version",
+     "type": "integer",
+     "required": "required",
+     "note": "條件快照的驗證規格版本；CHECK >= 1"
+    },
+    {
+     "name": "conditions_snapshot",
+     "type": "json",
+     "required": "required",
+     "note": "條件快照。來源：03-03：經驗證且不可變；供審計與重製驗證，不是重新下載的資料來源。不含較晚的 exported_at"
+    },
+    {
+     "name": "scope_label",
+     "type": "varchar(120)",
+     "required": "required",
+     "note": "匯出範圍的顯示文案。來源：03-03：全任務／指定標記員。另外存，不放進條件快照"
+    },
+    {
+     "name": "export_type",
+     "type": "varchar(24)",
+     "required": "required",
+     "note": "全部或篩選匯出。來源：同上，歷史列顯示用"
+    },
+    {
+     "name": "request_idempotency_key",
+     "type": "varchar(120)",
+     "required": "required",
+     "note": "匯出重試鍵；唯一 (task_id, requested_by_user_id, request_idempotency_key)。來源：避免重複匯出"
+    },
+    {
+     "name": "request_digest",
+     "type": "char(64)",
+     "required": "required",
+     "note": "請求內容摘要。來源：同一個 key 但內容不同時要擋下"
+    },
+    {
+     "name": "row_count",
+     "type": "integer",
+     "required": "nullable",
+     "note": "實際輸出列數；CHECK >= 0。來源：零列仍須保存清單——零不等於失敗"
+    },
+    {
+     "name": "original_filename",
+     "type": "varchar(255)",
+     "required": "nullable",
+     "note": "首次下載所用檔名。來源：之後不改。檔名用的是 exported_at"
+    },
+    {
+     "name": "artifact_ref",
+     "type": "varchar(1024)",
+     "required": "nullable",
+     "note": "受限儲存的內部物件鍵。來源：不是下載網址。這一欄不得外流"
+    },
+    {
+     "name": "artifact_sha256",
+     "type": "char(64)",
+     "required": "nullable",
+     "note": "原始檔案的摘要。來源：重新下載要讀相同 bytes，靠它核對"
+    },
+    {
+     "name": "artifact_size_bytes",
+     "type": "bigint",
+     "required": "nullable",
+     "note": "原始檔案大小；CHECK >= 0"
+    },
+    {
+     "name": "expires_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "原檔下載期限。來源：待決：期限幾天規格沒有定，見下"
+    },
+    {
+     "name": "revoked_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "停止下載的時間。來源：來源刪除或政策撤銷後"
+    },
+    {
+     "name": "failure_code",
+     "type": "varchar(64)",
+     "required": "nullable",
+     "note": "安全失敗代碼；CHECK status='failed' → failure_code IS NOT NULL。來源：不存內部路徑或答案（AGENTS.md 硬性規則 8）"
+    }
+   ],
+   "description": "**[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 明寫請求與執行是兩個時間點**：「匯出時間……記錄列與檔名用的是**實際讀取結果的那個時間**，不是請求被接受的時間」。所以 `requested_at` 與 `exported_at` 兩欄都要有，不能合併。\n\n原始字典寫「**30 日後不提供檔案，歷史資訊保留一年**」。但那個數字出現在**原始規劃的實體字典**裡，**不在本專案任何一頁規格**——[03-03](/notes/specs/03-task-management/03-task-detail) 的匯出那一段只定了格式、範圍、條件快照與時間語意，沒有定期限。\n\n依本 repo 的鐵律「**依據和事實是兩件事**」：數字查得到不等於可以結案，來源不對就是依據不足。所以這一欄**留著但期限不填**，數字當**建議**記在這裡，歸[待決 D3](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決)（保留政策那一題）。\n\n**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)"
+  },
+  {
+   "name": "task_export_run",
+   "label": "匯出納入的執行與順序",
+   "group": "export",
+   "columns": [
+    {
+     "name": "export_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "所屬匯出；複合 PK 之一；複合 FK (task_id, export_id) → task_export(task_id, id)",
+     "pk": true
+    },
+    {
+     "name": "run_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "納入的執行；複合 PK 之一；複合 FK (task_id, run_id) → task_run(task_id, id)",
+     "pk": true
+    },
+    {
+     "name": "task_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "同任務作用域；見上兩組複合 FK。來源：刻意的反正規化：它讓「匯出與執行必須屬同一任務」用兩個複合 FK 就擋得住"
+    },
+    {
+     "name": "position",
+     "type": "integer",
+     "required": "required",
+     "note": "清單中的順序；唯一 (export_id, position)；CHECK >= 1。來源：從 1 開始。順序寫進產物的有序清單"
+    }
+   ],
+   "description": "**這張表是反查出來的六項之一**（[盤點總帳§二](/notes/diagrams/architecture/data-field-inventory#二九條流程的反查)）：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 的畫面只顯示一個匯出時間，但「請求被接受」與「實際讀取結果」是兩個時刻，而一次匯出可以納入多次執行——所以要有這張表記順序。"
+  },
+  {
+   "name": "task_work_interval",
+   "label": "任務前景工作區間",
+   "group": "work",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "system",
+     "note": "工作區間主鍵；PK",
+     "pk": true
+    },
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "工作者帳號；見下三組複合 FK"
+    },
+    {
+     "name": "account_session_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "可驗證的登入工作階段；複合 FK (user_id, account_session_id) → account_session(user_id, id)。來源：這是「只採信可信的紀錄」的結構基礎——工作區間必須掛在一個真實的登入上"
+    },
+    {
+     "name": "task_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "所屬任務；見下"
+    },
+    {
+     "name": "run_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "所屬執行；複合 FK (task_id, run_id) → task_run(task_id, id)"
+    },
+    {
+     "name": "membership_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "當次任務成員資格；複合 FK (task_id, membership_id, user_id) → task_membership(task_id, id, user_id)。來源：三欄複合，確保成員資格、任務與使用者三者一致"
+    },
+    {
+     "name": "work_kind",
+     "type": "varchar(16)",
+     "required": "required",
+     "note": "工作種類；CHECK 限 annotation／review／arbitration。來源：03-03：標記／審核／仲裁筆數三欄分開"
+    },
+    {
+     "name": "started_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "前景工作開始"
+    },
+    {
+     "name": "last_seen_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "最後一次有效前景心跳；CHECK >= started_at。來源：失聯時以此關閉，不補計等待時間"
+    },
+    {
+     "name": "ended_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "結束時間；CHECK 與 close_reason 同時為空或同時非空；CHECK >= started_at。來源：開啟中為空"
+    },
+    {
+     "name": "close_reason",
+     "type": "varchar(32)",
+     "required": "nullable",
+     "note": "結束原因；見上。來源：這一欄承載「可不可信」：正常結束與失聯關閉要分得出來"
+    }
+   ],
+   "description": "**只記錄原始時間與歸屬，不存累計工時、完成數、速度或日報。**\n\n**「每位使用者同時最多一段未結束區間」用部分唯一索引** `WHERE ended_at IS NULL` on `user_id`。這是字典提議的落法。\n\n[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 與 [04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位) 一共定了**三個**不同的時間數字——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**三個都是推導值，這張表只存原始區間。** 把任何一個存成累計欄，就會與原始紀錄產生第二個真相。而「不可信時顯示未知、不補推估值」這條，只有在不存累計值的前提下才容易守住——存了之後，那個數字看起來永遠是可信的。\n\n**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)"
+  }
+ ]
+}
