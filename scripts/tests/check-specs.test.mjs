@@ -144,6 +144,29 @@ test('a repeated Scenario name is reported', () => {
   assert.match(errors, /a Scenario row has no name/);
 });
 
+// Every expected value below was read back from the real pipeline
+// (@astrojs/markdown-remark's createMarkdownProcessor, metadata.headings[].slug),
+// not reasoned out, because slugging the raw markdown is exactly the mistake
+// these cases exist to catch.
+test('a heading slugs from the text a reader sees, not from its markdown', () => {
+  // A link contributes its text. The URL used to be dragged in, so every link
+  // to such a heading was reported broken while the built page worked.
+  assert.equal(slug('[01-01 登入](../../specs/01-account/01-login.mdx#資料欄位)'), '01-01-登入');
+  assert.equal(slug('看 [附錄](./a.mdx) 與 [總帳](./b.mdx)'), '看-附錄-與-總帳');
+  assert.equal(slug('對照 [#234](https://github.com/x/y/issues/234) 的驗收條件'), '對照-234-的驗收條件');
+  // An image contributes nothing: its alt text is an attribute, not a text node.
+  assert.equal(slug('圖 ![圖](./a.png) 標題'), '圖--標題');
+  assert.equal(slug('![圖](./a.png) 標題'), '-標題');
+  // Inline code contributes its contents verbatim, and what looks like a link
+  // inside it is not one. stripIgnored keeps inline code for this reason.
+  assert.equal(slug('寫成 `[文字](網址)` 的形式'), '寫成-文字網址-的形式');
+  assert.equal(slug('連結語法 `[a](b)` 與圖片語法 `![a](b)`'), '連結語法-ab-與圖片語法-ab');
+  // Astro drops one trailing dash, which is what a heading ending in an emoji
+  // (15 of them in docs/prototype/navigation.mdx) leaves behind.
+  assert.equal(slug('`/account/login` ✅'), 'accountlogin');
+  assert.equal(slug('標題 ✅ 結尾'), '標題--結尾');
+});
+
 test('heading slugs drop punctuation and turn spaces into dashes', () => {
   assert.equal(slug(MAPPING_CHAPTER), '附錄舊編號對照');
   assert.equal(slug('邊界情況（Edge Case）'), '邊界情況edge-case');
