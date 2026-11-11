@@ -4,7 +4,7 @@ description: '系統管理員在這頁檢視與修改角色權限矩陣：兩層
 category: '規格書'
 tags: [規格書, 系統管理, 已定案]
 createdAt: '2026-11-05'
-updatedAt: '2026-11-09'
+updatedAt: '2026-11-11'
 ---
 
 import PrototypeFrame from '@notes/components/prototype-frame';
@@ -501,10 +501,11 @@ import Spec0602RoleSettingsFlow from '@notes/components/spec-06-02-role-settings
 ### 資料欄位
 
 :::note{title="資料規劃入口"}
-這一頁的「資料欄位」已在[資料欄位盤點總帳](../../diagrams/architecture/data-field-inventory.mdx#06-02-角色與權限設定)逐列分類過（要不要存、存在哪一層）。字典把它們放進 **3 張候選表**：`admin_role_permission`、`admin_role_permission_version`、`audit_events`——逐欄定義與關聯限制見[候選資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)，整張關聯圖見 [ER 圖](/view/diagrams/architecture/database-schema.er)。
+這一頁的「資料欄位」已在[資料欄位盤點總帳](../../diagrams/architecture/data-field-inventory.mdx#06-02-角色與權限設定)逐列分類過（要不要存、存在哪一層）。字典裡**把本頁列為規格來源**的候選表有 **3 張**：`admin_role_permission`、`admin_role_permission_version`、`audit_events`——逐欄定義與關聯限制見[候選資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)，整張關聯圖見 [ER 圖](/view/diagrams/architecture/database-schema.er)。
 
-**那是候選規劃，不是已落地的資料庫**；而且規格是它的依據，兩邊不一致時以本頁為準。
+**那是候選規劃，不是已落地的資料庫**；而且規格是它的依據，兩邊不一致時以規格為準（共用表的權威頁寫在字典各組開頭）。
 :::
+
 
 | 欄位 | 型別 | 必填 | 規則 | 使用者看到 |
 | :--- | :--- | :--- | :--- | :--- |

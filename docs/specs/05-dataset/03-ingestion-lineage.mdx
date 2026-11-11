@@ -4,7 +4,7 @@ description: '資料集的匯入、版本與答案隔離契約：每一筆可標
 category: '規格書'
 tags: [規格書, 資料集, 已定案]
 createdAt: '2026-11-05'
-updatedAt: '2026-11-08'
+updatedAt: '2026-11-11'
 ---
 
 # 05-03 資料匯入與版本
@@ -333,10 +333,11 @@ import Spec0503IngestionLineageFlow from '@notes/components/spec-05-03-ingestion
 ### 資料欄位
 
 :::note{title="資料規劃入口"}
-這一頁的「資料欄位」已在[資料欄位盤點總帳](../../diagrams/architecture/data-field-inventory.mdx#05-03-匯入與血緣)逐列分類過（要不要存、存在哪一層）。字典把它們放進 **5 張候選表**：`dataset`、`dataset_import_batch`、`dataset_item`、`dataset_item_private`、`dataset_version`——逐欄定義與關聯限制見[候選資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)，整張關聯圖見 [ER 圖](/view/diagrams/architecture/database-schema.er)。
+這一頁的「資料欄位」已在[資料欄位盤點總帳](../../diagrams/architecture/data-field-inventory.mdx#05-03-匯入與血緣)逐列分類過（要不要存、存在哪一層）。字典裡**把本頁列為規格來源**的候選表有 **5 張**：`dataset`、`dataset_import_batch`、`dataset_item`、`dataset_item_private`、`dataset_version`——逐欄定義與關聯限制見[候選資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)，整張關聯圖見 [ER 圖](/view/diagrams/architecture/database-schema.er)。
 
-**那是候選規劃，不是已落地的資料庫**；而且規格是它的依據，兩邊不一致時以本頁為準。
+**那是候選規劃，不是已落地的資料庫**；而且規格是它的依據，兩邊不一致時以規格為準（共用表的權威頁寫在字典各組開頭）。
 :::
+
 
 這一頁沒有畫面，所以「使用者看到」那一欄寫的是**誰讀得到**。
 

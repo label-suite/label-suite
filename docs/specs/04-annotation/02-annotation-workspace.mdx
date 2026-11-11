@@ -4,7 +4,7 @@ description: '標記員、審核員與仲裁者逐筆作業的工作頁：左欄
 category: '規格書'
 tags: [規格書, 標記作業, 已定案]
 createdAt: '2026-11-05'
-updatedAt: '2026-11-09'
+updatedAt: '2026-11-11'
 ---
 
 import PrototypeFrame from '@notes/components/prototype-frame';
@@ -1698,10 +1698,11 @@ import Spec0402AnnotationWorkspaceFlow from '@notes/components/spec-04-02-annota
 ### 資料欄位
 
 :::note{title="資料規劃入口"}
-這一頁的「資料欄位」已在[資料欄位盤點總帳](../../diagrams/architecture/data-field-inventory.mdx#04-02-標記工作區)逐列分類過（要不要存、存在哪一層）。字典把它們放進 **11 張候選表**：`annotation_arbitration_vote`、`annotation_exception_resolution`、`annotation_history_event`、`annotation_record`、`annotation_review_decision`、`annotation_review_draft`、`audit_events`、`dataset_item_private`、`task_run_cycle`、`task_trial_round`、`task_work_interval`——逐欄定義與關聯限制見[候選資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)，整張關聯圖見 [ER 圖](/view/diagrams/architecture/database-schema.er)。
+這一頁的「資料欄位」已在[資料欄位盤點總帳](../../diagrams/architecture/data-field-inventory.mdx#04-02-標記工作區)逐列分類過（要不要存、存在哪一層）。字典裡**把本頁列為規格來源**的候選表有 **8 張**：`annotation_arbitration_vote`、`annotation_exception_resolution`、`annotation_history_event`、`annotation_record`、`annotation_review_decision`、`annotation_review_draft`、`task_run_cycle`、`task_trial_round`——逐欄定義與關聯限制見[候選資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)，整張關聯圖見 [ER 圖](/view/diagrams/architecture/database-schema.er)。
 
-**那是候選規劃，不是已落地的資料庫**；而且規格是它的依據，兩邊不一致時以本頁為準。
+**那是候選規劃，不是已落地的資料庫**；而且規格是它的依據，兩邊不一致時以規格為準（共用表的權威頁寫在字典各組開頭）。
 :::
+
 
 這一頁碰到的欄位分四群：**上下文與身分**（決定看到誰的哪一筆）、**標記員的作答**、**審核與仲裁的決策**、**歷程事件**。每一列的規則只寫該欄位自己的；行為規則在各自的章節，這裡用連結指過去。
 

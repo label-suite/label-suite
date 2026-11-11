@@ -4,7 +4,7 @@ description: '所有登入後的使用者用頁籤同時保留多個頁面的檢
 category: '規格書'
 tags: [規格書, 共用介面, 已定案]
 createdAt: '2026-11-04'
-updatedAt: '2026-11-08'
+updatedAt: '2026-11-11'
 ---
 
 # 07-02 工作頁籤
@@ -285,10 +285,11 @@ import Spec0702WorkspaceTabsFlow from '@notes/components/spec-07-02-workspace-ta
 ### 資料欄位
 
 :::note{title="資料規劃入口"}
-這一頁的「資料欄位」已在[資料欄位盤點總帳](../../diagrams/architecture/data-field-inventory.mdx#07-02-工作區頁籤)逐列分類過（要不要存、存在哪一層）。**候選資料表字典目前沒有任何一張表把本頁列為規格來源**，所以這裡沒有表清單；全站的候選表與關聯見[候選資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)與 [ER 圖](/view/diagrams/architecture/database-schema.er)。
+這一頁的「資料欄位」已在[資料欄位盤點總帳](../../diagrams/architecture/data-field-inventory.mdx#07-02-工作區頁籤)逐列分類過（要不要存、存在哪一層）。字典裡**沒有任何一張表把本頁列為規格來源**，所以這裡沒有表清單；全站的候選表與關聯見[候選資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)與 [ER 圖](/view/diagrams/architecture/database-schema.er)。
 
-**那是候選規劃，不是已落地的資料庫**；而且規格是它的依據，兩邊不一致時以本頁為準。
+**那是候選規劃，不是已落地的資料庫**；而且規格是它的依據，兩邊不一致時以規格為準（共用表的權威頁寫在字典各組開頭）。
 :::
+
 
 頁籤是使用者自己的工作狀態，不含任何業務資料。
 
