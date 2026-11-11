@@ -6,3 +6,16 @@ See the LICENSE file for the full license text.
 
 If you use Label Suite in academic work, please cite it as described in
 CITATION.cff.
+
+---
+
+This product bundles the following third-party component:
+
+  er-diagram-renderer, version 1.2.0
+  Copyright (c) 2026 SteveLin100132
+  Licensed under the MIT License.
+  Source: https://github.com/SteveLin100132/notecraft (commit
+  232375f61d6601f861473597431e05b275524ac3), path
+  plugins/er-diagram-renderer.
+  Vendored at .notecraft/plugins/er-diagram-renderer/, whose LICENSE.md
+  carries the full MIT license text.

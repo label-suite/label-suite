@@ -1,7 +1,7 @@
 {
   "id": "er-diagram-renderer",
   "origin": "https://github.com/SteveLin100132/notecraft/tree/HEAD/plugins/er-diagram-renderer",
-  "ref": null,
-  "commit": "HEAD",
+  "ref": "HEAD",
+  "commit": "232375f61d6601f861473597431e05b275524ac3",
   "installedAt": "2026-11-11T05:13:43.357Z"
 }
