@@ -78,6 +78,9 @@
     }
     .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
     .mini-btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+    /* button.css 只替 .btn-primary／.btn-cta 定義 :disabled，所以 .btn-ghost 的「編輯」
+       鎖住之後看起來仍然能按、hover 還會出現底線。補在頁內，不動共用檔。 */
+    #editBtn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; text-decoration: none; }
     .mini-btn-log {
       background: var(--color-info-bg); border-color: var(--color-info-border); color: var(--color-info);
     }
@@ -376,6 +379,25 @@
         </div>
       </div>
 
+      <!-- Stored Matrix Invalid Banner -->
+      <div id="storedInvalidBanner" class="banner conflict-banner hidden" role="alert">
+        <span class="banner-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </span>
+        <div class="banner-body">
+          <p class="banner-title" id="storedInvalidTitle">已儲存的權限設定有問題，無法顯示</p>
+          <p class="banner-desc" id="storedInvalidDesc">存檔裡有認不得的權限鍵，或固定格被改過。已儲存的內容保持原樣，沒有被覆蓋；在處理好之前不能編輯。</p>
+        </div>
+        <div class="banner-action">
+          <button class="banner-reload-btn" id="storedInvalidRetryBtn" onclick="retryLoadMatrix()">
+            <span id="storedInvalidRetryLabel">重試</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Page Header -->
       <div class="page-header">
         <div class="page-header-main">
@@ -429,7 +451,7 @@
         </div>
 
         <!-- Matrix Table (all rows hardcoded; JS updates text content only) -->
-        <div class="matrix-scroll-wrapper" role="region" tabindex="0">
+        <div class="matrix-scroll-wrapper" id="matrixScrollWrapper" role="region" tabindex="0">
           <table class="matrix-table" id="matrixTable">
             <thead>
               <tr>
@@ -1015,7 +1037,10 @@
         reloadBtnLabel:          '重新載入',
         toastSaved:              '角色權限設定已儲存',
         toastConflict:           '版本衝突，請重新載入最新設定',
-        toastStoredInvalid:      '儲存的矩陣含未知或違反固定格的權限鍵，已拒絕並還原預設值',
+        toastStoredInvalid:      '已儲存的權限設定有問題，整份無法顯示',
+        storedInvalidTitle:      '已儲存的權限設定有問題，無法顯示',
+        storedInvalidDesc:       '存檔裡有認不得的權限鍵，或固定格被改過。已儲存的內容保持原樣，沒有被覆蓋；在處理好之前不能編輯。',
+        storedInvalidRetryLabel: '重試',
         readonlyNote:            '（唯讀）',
         langToggleAria:          '切換語言',
         moduleHeader_account:    '帳號（Account）',
@@ -1085,7 +1110,10 @@
         reloadBtnLabel:          'Reload',
         toastSaved:              'Role permissions saved',
         toastConflict:           'Version conflict. Reload latest settings',
-        toastStoredInvalid:      'Stored matrix has unknown keys or violates fixed cells; rejected and defaults restored',
+        toastStoredInvalid:      'The saved permission settings are invalid and cannot be shown',
+        storedInvalidTitle:      'The saved permission settings are invalid and cannot be shown',
+        storedInvalidDesc:       'The save contains unknown permission keys, or a fixed cell was changed. What is stored is left untouched; editing stays unavailable until it is resolved.',
+        storedInvalidRetryLabel: 'Retry',
         readonlyNote:            '(read-only)',
         langToggleAria:          'Switch language',
         moduleHeader_account:    'Account',
@@ -1172,6 +1200,8 @@
 
     let lang = window.LabelSuiteSharedSidebar.getStoredLang();
     let matrixVersion = Number(window.localStorage.getItem(MATRIX_VERSION_KEY) || '1');
+    // 讀回的矩陣整份不合法。規格 06-02 §讀回的矩陣不合法時：一格都不顯示、編輯按不了、已儲存的內容不動。
+    let storedMatrixInvalid = false;
 
     /* ── IDs requiring i18n text updates ──────────────────────────── */
     const TEXT_IDS = [
@@ -1182,6 +1212,7 @@
       'thPermission', 'thSystemRoles', 'thTaskRoles',
       'dirtyModalTitle', 'dirtyModalDesc', 'dirtyModalKeepLabel', 'dirtyModalDiscardLabel',
       'conflictTitle', 'conflictDesc', 'reloadBtnLabel',
+      'storedInvalidTitle', 'storedInvalidDesc', 'storedInvalidRetryLabel',
       'moduleHeader_account', 'moduleHeader_dashboard', 'moduleHeader_taskMgmt',
       'moduleHeader_annotation', 'moduleHeader_dataset', 'moduleHeader_admin',
       'permDesc_account_profile_view', 'permDesc_account_profile_edit',
@@ -1232,6 +1263,7 @@
     let isEditMode = false;
 
     function enterEditMode() {
+      if (storedMatrixInvalid) return;
       isEditMode = true;
       captureOriginalState();
       document.getElementById('editBtn').classList.add('hidden');
@@ -1299,14 +1331,45 @@
     }
 
     function loadPersistedMatrix() {
-      applyMatrixState(DEFAULT_MATRIX);
       const stored = getStoredMatrixState();
-      applyMatrixState(stored.state);
+      if (stored.valid) {
+        applyMatrixState(DEFAULT_MATRIX);
+        applyMatrixState(stored.state);
+      }
       matrixVersion = getStorageVersion();
+      setStoredInvalid(!stored.valid);
       return stored.valid;
     }
 
+    // 整份拒絕：矩陣一格都不顯示、編輯按不了、已儲存的內容保持原樣等人處理。
+    // 和版本衝突是兩件事，所以用自己的橫幅，出口是「重試」而不是「重新載入」。
+    function setStoredInvalid(invalid) {
+      storedMatrixInvalid = invalid;
+      if (invalid) {
+        // 沒有一份可信的現況：離開編輯模式、丟掉舊的基準。
+        // 不丟的話，之後任何一次儲存都會把舊基準整份寫回去，無聲取代已儲存的內容。
+        exitEditMode();
+        setDirty(false);
+        originalState = {};
+      }
+      else hideToast();   // error toast 的 duration 是 0，不自己收就會一直掛在畫面上
+      document.getElementById('storedInvalidBanner').classList.toggle('hidden', !invalid);
+      document.getElementById('matrixScrollWrapper').classList.toggle('hidden', invalid);
+      // 區段說明講的是鎖頭圖示與「需任務角色」徽章，矩陣藏起來之後它在描述一張看不到的表
+      document.getElementById('matrixSectionDesc').classList.toggle('hidden', invalid);
+      document.getElementById('editBtn').disabled = invalid;
+    }
+
+    function retryLoadMatrix() {
+      // 失敗時要說話：橫幅本來就在，再 toggle 一次畫面毫無變化，
+      // 管理員分不清是「還沒修好」還是「按鈕壞了」。
+      if (loadPersistedMatrix()) captureOriginalState();
+      else showToast('error', i18n[lang].toastStoredInvalid);
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_role_settings_stored_invalid_retry', { page: 'role-settings' });
+    }
+
     function captureOriginalState() {
+      if (storedMatrixInvalid) return;
       originalState = {};
       document.querySelectorAll('.matrix-checkbox').forEach(cb => {
         originalState[getCheckboxKey(cb)] = cb.checked;
@@ -1386,6 +1449,10 @@
 
     /* ── Save ──────────────────────────────────────────────────────── */
     function saveMatrix() {
+      // 現在擋住寫入的是「diff 剛好為空」，不是狀態檢查。少了這一行，
+      // 日後任何讓 originalState 在這個狀態下非空的改動，都會把 DOM 裡
+      // 仍留著的預設矩陣整份寫回 localStorage。
+      if (storedMatrixInvalid) return;
       const t = i18n[lang];
       window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_role_settings_save_attempted', { page: 'role-settings' });
       if (getStorageVersion() !== matrixVersion) {
