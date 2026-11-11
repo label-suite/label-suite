@@ -2,7 +2,7 @@
  "$schema": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/er-diagram-renderer/schema.json",
  "meta": {
   "title": "Label Suite 候選資料表 ER 圖（37 張）",
-  "description": "**規劃結構，尚未部署。** 已落地業務表：**0**——`backend/` 不存在、`backend/alembic/versions/` 沒有任何 revision、也沒有 ORM model。要查「實際落地了什麼」，唯一的辦法是讀 Alembic revision 與資料庫 metadata，不是讀這張圖。\\n\\n本圖顯示 **37 張候選表、328 欄、38 個單欄 FK**。每一欄的中文意義、可空性與**規格來源**都來自[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)；哪些資料要存則來自[資料欄位盤點總帳](/notes/diagrams/architecture/data-field-inventory)。\\n\\n**這張圖畫不出來的東西有兩類，都在字典裡**：**34 組複合 FK**（例如「父版本不得跨資料集」要 `(dataset_id, parent_version_id)` 兩欄一起比），以及**22 條只能在應用層擋的限制**（例如血緣不得形成循環、名冊的子集合關係）。圖上沒有線不代表沒有限制。\\n\\n**分析報告沒有表**：05-02 的 64 個欄位列全部現算，維護者 2026-11-11 裁定不建分析表。那是裁定的結果，不是漏畫。",
+  "description": "**規劃結構，尚未部署。** 已落地業務表：**0**——`backend/` 不存在、`backend/alembic/versions/` 沒有任何 revision、也沒有 ORM model。要查「實際落地了什麼」，唯一的辦法是讀 Alembic revision 與資料庫 metadata，不是讀這張圖。\\n\\n本圖顯示 **37 張候選表、328 欄、38 個單欄 FK**。每一欄的中文意義、可空性與**規格來源**都來自[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)；哪些資料要存則來自[資料欄位盤點總帳](/notes/diagrams/architecture/data-field-inventory)。\\n\\n**這張圖畫不出來的東西有兩類，都在字典裡**：**複合 FK**（例如「父版本不得跨資料集」要 `(dataset_id, parent_version_id)` 兩欄一起比），以及**只能在應用層擋的限制**（例如血緣不得形成循環、名冊的子集合關係）。逐條內容在字典各組的「組的關聯與限制」小節，以及幾張表自己的限制表裡。**圖上沒有線不代表沒有限制。**這裡刻意不寫條數：字典 §十 寫的是「34 組複合 FK」與「22 條應用層」，而我逐列加總得到 31 與 21，§十 說的「五張表合計」也與實際的四個小節對不上——條數要先在字典那一側釐清，見 [issue #236](https://github.com/label-suite/label-suite/issues/236)。\\n\\n**分析報告沒有表**：05-02 的 64 個欄位列全部現算，維護者 2026-11-11 裁定不建分析表。那是裁定的結果，不是漏畫。",
   "source": "/notes/diagrams/architecture/data-table-dictionary",
   "backTo": "/notes/diagrams/architecture/data-field-inventory"
  },
@@ -350,8 +350,7 @@
      "type": "uuid",
      "required": "required",
      "note": "申請人；FK → users.id，CASCADE；部分唯一索引 WHERE verified_at IS NULL AND token_hash IS NOT NULL。來源：01-04：同一時間最多一筆，新的蓋掉舊的",
-     "fk": "users",
-     "unique": true
+     "fk": "users"
     },
     {
      "name": "pending_email",
@@ -390,7 +389,7 @@
      "note": "申請時間"
     }
    ],
-   "description": "**「同一時間最多一筆」是本專案規格明文，而原始規劃沒有對應的唯一限制。** 上面的部分唯一索引是本文件提議的落法——**提議，不是裁定**。\n\n**規格來源**：[01-04](/notes/specs/01-account/04-profile#資料欄位)"
+   "description": "**「同一時間最多一筆」是本專案規格明文，而原始規劃沒有對應的唯一限制。** 字典裡那條部分唯一索引是字典提議的落法——**提議，不是裁定**。\n\n**規格來源**：[01-04](/notes/specs/01-account/04-profile#資料欄位)"
   },
   {
    "name": "account_notification_preference",
@@ -589,8 +588,7 @@
      "name": "name",
      "type": "varchar",
      "required": "required",
-     "note": "名稱；不加唯一——名稱不是身分。來源：03-02 上傳時給",
-     "unique": true
+     "note": "名稱；不加唯一——名稱不是身分。來源：03-02 上傳時給"
     },
     {
      "name": "created_at",
@@ -624,8 +622,7 @@
      "name": "version_no",
      "type": "integer",
      "required": "required",
-     "note": "版本號；唯一 (dataset_id, version_no)；CHECK >= 1。來源：05-03：在同一個資料集內唯一；後繼版本必須遞增",
-     "unique": true
+     "note": "版本號；唯一 (dataset_id, version_no)；CHECK >= 1。來源：05-03：在同一個資料集內唯一；後繼版本必須遞增"
     },
     {
      "name": "parent_version_id",
@@ -658,7 +655,7 @@
      "note": "定版時間；CHECK state='sealed' → sealed_at IS NOT NULL。來源：05-03：一律以 UTC 表示"
     }
    ],
-   "description": "**三條血緣限制，只有兩條落得進 DB：**\n\n**規格來源**：[05-03](/notes/specs/05-dataset/03-ingestion-lineage#資料欄位)"
+   "description": "**三條血緣限制，只有兩條落得進 DB——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**規格來源**：[05-03](/notes/specs/05-dataset/03-ingestion-lineage#資料欄位)"
   },
   {
    "name": "dataset_import_batch",
@@ -683,8 +680,7 @@
      "name": "source_ordinal",
      "type": "integer",
      "required": "required",
-     "note": "來源順序；唯一 (dataset_version_id, source_ordinal)；CHECK >= 1。來源：05-03：在同一個版本內唯一",
-     "unique": true
+     "note": "來源順序；唯一 (dataset_version_id, source_ordinal)；CHECK >= 1。來源：05-03：在同一個版本內唯一"
     },
     {
      "name": "source_name",
@@ -754,8 +750,7 @@
      "name": "source_row_no",
      "type": "integer",
      "required": "required",
-     "note": "來源行序；唯一 (dataset_import_batch_id, source_row_no)；CHECK >= 1。來源：05-03：自 1 起算；在同一批次內唯一",
-     "unique": true
+     "note": "來源行序；唯一 (dataset_import_batch_id, source_row_no)；CHECK >= 1。來源：05-03：自 1 起算；在同一批次內唯一"
     },
     {
      "name": "public_payload",
@@ -860,8 +855,7 @@
      "name": "name",
      "type": "varchar(100)",
      "required": "required",
-     "note": "任務名稱；CHECK 長度 ≤ 100；不加唯一。來源：03-02：上限 100 字、可以重複；03-01 搜尋比對它",
-     "unique": true
+     "note": "任務名稱；CHECK 長度 ≤ 100；不加唯一。來源：03-02：上限 100 字、可以重複；03-01 搜尋比對它"
     },
     {
      "name": "status",
@@ -950,8 +944,7 @@
      "name": "version_no",
      "type": "integer",
      "required": "required",
-     "note": "版本號；唯一 (task_id, version_no)；CHECK >= 1。來源：每次完整儲存 +1",
-     "unique": true
+     "note": "版本號；唯一 (task_id, version_no)；CHECK >= 1。來源：每次完整儲存 +1"
     },
     {
      "name": "config_payload",
@@ -972,7 +965,7 @@
      "note": "建立時間"
     }
    ],
-   "description": "一列是同任務的一個完整設定快照。**這是本專案「JSON 內嵌」的主要落點。**\n\n**`config_payload` 的結構要記下來，不能只寫「JSON」：**\n\n**輸出類型維持 config-driven（[#235](https://github.com/label-suite/label-suite/issues/235) 工作項 6）**：八種型別的設定全部塞在 `output_configs{}` 裡，**不為它們建八張表、也不在核心加八個分支**。這直接接到 `AGENTS.md` 硬性規則 5「task 類型是 config-driven，加一種不得改核心程式」。\n\n**不收的三欄**（原始有、本專案規格沒有對應）：`schema_version_no`、`schema_digest`、`schema_registry_version`。它們是驗證定義的版本追溯機制，本專案規格沒有提到，同 D7 的理由不留；需要時另開 issue。\n\n**規格來源**：[03-02](/notes/specs/03-task-management/02-task-new#資料欄位)"
+   "description": "一列是同任務的一個完整設定快照。**這是本專案「JSON 內嵌」的主要落點。**\n\n**`config_payload` 的結構要記下來，不能只寫「JSON」——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**輸出類型維持 config-driven（[#235](https://github.com/label-suite/label-suite/issues/235) 工作項 6）**：八種型別的設定全部塞在 `output_configs{}` 裡，**不為它們建八張表、也不在核心加八個分支**。這直接接到 `AGENTS.md` 硬性規則 5「task 類型是 config-driven，加一種不得改核心程式」。\n\n**不收的三欄**（原始有、本專案規格沒有對應）：`schema_version_no`、`schema_digest`、`schema_registry_version`。它們是驗證定義的版本追溯機制，本專案規格沒有提到，同 D7 的理由不留；需要時另開 issue。\n\n**規格來源**：[03-02](/notes/specs/03-task-management/02-task-new#資料欄位)"
   },
   {
    "name": "task_guideline_version",
@@ -997,8 +990,7 @@
      "name": "version_no",
      "type": "integer",
      "required": "required",
-     "note": "內容版本號；唯一 (task_id, version_no)；CHECK >= 1。來源：03-03：內容真的改過就跳一個版本",
-     "unique": true
+     "note": "內容版本號；唯一 (task_id, version_no)；CHECK >= 1。來源：03-03：內容真的改過就跳一個版本"
     },
     {
      "name": "annotator_guideline_text",
@@ -1056,8 +1048,7 @@
      "type": "uuid",
      "required": "required",
      "note": "任務作用域；FK → task.id，RESTRICT；唯一 (task_id, user_id, task_role)",
-     "fk": "task",
-     "unique": true
+     "fk": "task"
     },
     {
      "name": "user_id",
@@ -1132,7 +1123,7 @@
      "note": "顯示順序"
     }
    ],
-   "description": "**用 `can_arbitrate` 而不是另一張仲裁者名冊表，是為了讓「子集合」這件事在結構上成立**：仲裁者只能是這張表上的列，不可能出現一個不在審核員名冊上的仲裁者。\n\n**複合 FK 是必要的**：單欄 FK 指向 `task_membership.id` 擋不住「這個成員資格屬於另一個任務」。這正是 [#235](https://github.com/label-suite/label-suite/issues/235) 工作項 4 要求檢查的——**合法 ID 被錯接到另一個上下文**。\n\n**兩條擋不住的：**\n\n**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)"
+   "description": "**用 `can_arbitrate` 而不是另一張仲裁者名冊表，是為了讓「子集合」這件事在結構上成立**：仲裁者只能是這張表上的列，不可能出現一個不在審核員名冊上的仲裁者。\n\n**複合 FK 是必要的**：單欄 FK 指向 `task_membership.id` 擋不住「這個成員資格屬於另一個任務」。這正是 [#235](https://github.com/label-suite/label-suite/issues/235) 工作項 4 要求檢查的——**合法 ID 被錯接到另一個上下文**。\n\n**兩條擋不住的——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)"
   },
   {
    "name": "task_run_cycle",
@@ -1157,8 +1148,7 @@
      "name": "cycle_no",
      "type": "integer",
      "required": "required",
-     "note": "同任務序號；唯一 (task_id, cycle_no)；CHECK >= 1。來源：反查：退回草稿後另開新週期",
-     "unique": true
+     "note": "同任務序號；唯一 (task_id, cycle_no)；CHECK >= 1。來源：反查：退回草稿後另開新週期"
     },
     {
      "name": "dataset_version_id",
@@ -1234,8 +1224,7 @@
      "name": "round_no",
      "type": "integer",
      "required": "required",
-     "note": "週期內序號；唯一 (task_run_cycle_id, round_no)；CHECK >= 1。來源：03-03：同一輪裡唯一，且只發布一次。唯一性的範圍是週期而不是任務",
-     "unique": true
+     "note": "週期內序號；唯一 (task_run_cycle_id, round_no)；CHECK >= 1。來源：03-03：同一輪裡唯一，且只發布一次。唯一性的範圍是週期而不是任務"
     },
     {
      "name": "guideline_version_id",
@@ -1293,7 +1282,7 @@
      "note": "回合結束時間。來源：轉入「等待 IAA 確認」時寫一次"
     }
    ],
-   "description": "**三個摘要欄構成一組跨欄位條件限制，DB 擋不住：**\n\n**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)、[04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位)、[05-02](/notes/specs/05-dataset/02-analysis-detail#資料欄位)"
+   "description": "**三個摘要欄構成一組跨欄位條件限制，DB 擋不住——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)、[04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位)、[05-02](/notes/specs/05-dataset/02-analysis-detail#資料欄位)"
   },
   {
    "name": "task_trial_iaa_result",
@@ -1339,7 +1328,7 @@
      "note": "計算完成時間"
     }
    ],
-   "description": "**這張表是試標閘門的證據，不是分析報告。** 兩者的關係見下方§IAA 的兩套東西。\n\n**`result_payload` 的結構要記下來：**\n\n**「結果與回合 `done` 狀態同交易」是應用層的事。** DB 可以保證外鍵存在，但無法保證「寫結果的同時把 `iaa_computation_status` 改成 `done`」——那要在同一個交易裡做。\n\n**規格來源**：[05-02](/notes/specs/05-dataset/02-analysis-detail#資料欄位)"
+   "description": "**這張表是試標閘門的證據，不是分析報告。** 兩者的關係見[字典 §IAA 的兩套東西，不可混用](/notes/diagrams/architecture/data-table-dictionary#iaa-的兩套東西不可混用)。\n\n**`result_payload` 的結構要記下來——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**「結果與回合 `done` 狀態同交易」是應用層的事。** DB 可以保證外鍵存在，但無法保證「寫結果的同時把 `iaa_computation_status` 改成 `done`」——那要在同一個交易裡做。\n\n**規格來源**：[05-02](/notes/specs/05-dataset/02-analysis-detail#資料欄位)"
   },
   {
    "name": "task_sample_snapshot",
@@ -1478,8 +1467,7 @@
      "name": "publication_idempotency_key",
      "type": "varchar",
      "required": "required",
-     "note": "發布重試鍵；唯一 (trial_round_id, publication_idempotency_key)；正式標記另以 唯一 (task_id, publication_idempotency_key)。來源：避免重複發布",
-     "unique": true
+     "note": "發布重試鍵；唯一 (trial_round_id, publication_idempotency_key)；正式標記另以 唯一 (task_id, publication_idempotency_key)。來源：避免重複發布"
     },
     {
      "name": "publication_request_digest",
@@ -1501,7 +1489,7 @@
      "note": "發布時間"
     }
    ],
-   "description": "**「每個任務最多發布一次正式標記」擋不進 DB 的一般唯一限制**——它是「`run_type='official_run'` 時 `task_id` 唯一」，要用**部分唯一索引** `WHERE run_type='official_run'`。這是本文件提議的落法。\n\n**規格來源**：[02-01](/notes/specs/02-dashboard/01-dashboard#資料欄位)、[03-01](/notes/specs/03-task-management/01-task-list#資料欄位)、[04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位)"
+   "description": "**「每個任務最多發布一次正式標記」擋不進 DB 的一般唯一限制**——它是「`run_type='official_run'` 時 `task_id` 唯一」，要用**部分唯一索引** `WHERE run_type='official_run'`。這是字典提議的落法。\n\n**規格來源**：[02-01](/notes/specs/02-dashboard/01-dashboard#資料欄位)、[03-01](/notes/specs/03-task-management/01-task-list#資料欄位)、[04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位)"
   },
   {
    "name": "task_run_item",
@@ -1528,15 +1516,13 @@
      "name": "task_run_cycle_id",
      "type": "uuid",
      "required": "required",
-     "note": "經父執行約束的週期；唯一 (task_run_cycle_id, dataset_item_id)。來源：這個唯一限制就是「同一週期內試標與正式標記不得重複選取同一項目」的落點",
-     "unique": true
+     "note": "經父執行約束的週期；唯一 (task_run_cycle_id, dataset_item_id)。來源：這個唯一限制就是「同一週期內試標與正式標記不得重複選取同一項目」的落點"
     },
     {
      "name": "list_position",
      "type": "integer",
      "required": "required",
-     "note": "執行內排序；唯一 (task_run_id, list_position)；CHECK >= 1",
-     "unique": true
+     "note": "執行內排序；唯一 (task_run_id, list_position)；CHECK >= 1"
     }
    ],
    "description": "**`task_run_cycle_id` 在這張表是刻意的反正規化。** 它可以從 `task_run` JOIN 出來，但那樣就**無法用一個唯一限制表達「同週期不重選」**——跨表的唯一性 DB 做不到。這是為了把一條規則落進 DB 而付的代價，寫在這裡免得後人誤刪。"
@@ -1551,8 +1537,7 @@
      "type": "uuid",
      "required": "required",
      "note": "工作位主鍵；PK；唯一 (task_id, task_run_id, id) 供六張子表的三欄複合 FK 父鍵。來源：ID 不因停用、退回未指派池或重指派而改變",
-     "pk": true,
-     "unique": true
+     "pk": true
     },
     {
      "name": "task_id",
@@ -1576,8 +1561,7 @@
      "name": "slot_no",
      "type": "integer",
      "required": "required",
-     "note": "工作位序；唯一 (task_run_id, dataset_item_id, slot_no)；CHECK >= 1。來源：正式標記每個項目恰一個工作位；試標按重疊人數建立",
-     "unique": true
+     "note": "工作位序；唯一 (task_run_id, dataset_item_id, slot_no)；CHECK >= 1。來源：正式標記每個項目恰一個工作位；試標按重疊人數建立"
     },
     {
      "name": "assignee_membership_id",
@@ -1656,19 +1640,19 @@
     },
     {
      "name": "task_id",
-     "type": "uuid ×3",
+     "type": "uuid",
      "required": "required",
      "note": "三欄複合單位鍵；複合 FK → task_annotation_assignment(task_id, task_run_id, id)"
     },
     {
      "name": "run_id",
-     "type": "uuid ×3",
+     "type": "uuid",
      "required": "required",
      "note": "三欄複合單位鍵；複合 FK → task_annotation_assignment(task_id, task_run_id, id)"
     },
     {
      "name": "assignment_id",
-     "type": "uuid ×3",
+     "type": "uuid",
      "required": "required",
      "note": "三欄複合單位鍵；複合 FK → task_annotation_assignment(task_id, task_run_id, id)"
     },
@@ -1737,24 +1721,21 @@
     },
     {
      "name": "task_id",
-     "type": "uuid ×3",
+     "type": "uuid",
      "required": "required",
-     "note": "三欄複合單位鍵；複合 FK 同上；部分唯一 (run_id, assignment_id, reviewer_membership_id) WHERE invalidated_at IS NULL",
-     "unique": true
+     "note": "三欄複合單位鍵；複合 FK 同上；部分唯一 (run_id, assignment_id, reviewer_membership_id) WHERE invalidated_at IS NULL"
     },
     {
      "name": "run_id",
-     "type": "uuid ×3",
+     "type": "uuid",
      "required": "required",
-     "note": "三欄複合單位鍵；複合 FK 同上；部分唯一 (run_id, assignment_id, reviewer_membership_id) WHERE invalidated_at IS NULL",
-     "unique": true
+     "note": "三欄複合單位鍵；複合 FK 同上；部分唯一 (run_id, assignment_id, reviewer_membership_id) WHERE invalidated_at IS NULL"
     },
     {
      "name": "assignment_id",
-     "type": "uuid ×3",
+     "type": "uuid",
      "required": "required",
-     "note": "三欄複合單位鍵；複合 FK 同上；部分唯一 (run_id, assignment_id, reviewer_membership_id) WHERE invalidated_at IS NULL",
-     "unique": true
+     "note": "三欄複合單位鍵；複合 FK 同上；部分唯一 (run_id, assignment_id, reviewer_membership_id) WHERE invalidated_at IS NULL"
     },
     {
      "name": "reviewer_membership_id",
@@ -1803,24 +1784,21 @@
     },
     {
      "name": "task_id",
-     "type": "uuid ×3",
+     "type": "uuid",
      "required": "required",
-     "note": "三欄複合單位鍵；複合 FK 同上；唯一 (run_id, assignment_id)。來源：這個唯一限制擋住兩位審核員並列正式提交——審核單位只有一個提交者",
-     "unique": true
+     "note": "三欄複合單位鍵；複合 FK 同上；唯一 (run_id, assignment_id)。來源：這個唯一限制擋住兩位審核員並列正式提交——審核單位只有一個提交者"
     },
     {
      "name": "run_id",
-     "type": "uuid ×3",
+     "type": "uuid",
      "required": "required",
-     "note": "三欄複合單位鍵；複合 FK 同上；唯一 (run_id, assignment_id)。來源：這個唯一限制擋住兩位審核員並列正式提交——審核單位只有一個提交者",
-     "unique": true
+     "note": "三欄複合單位鍵；複合 FK 同上；唯一 (run_id, assignment_id)。來源：這個唯一限制擋住兩位審核員並列正式提交——審核單位只有一個提交者"
     },
     {
      "name": "assignment_id",
-     "type": "uuid ×3",
+     "type": "uuid",
      "required": "required",
-     "note": "三欄複合單位鍵；複合 FK 同上；唯一 (run_id, assignment_id)。來源：這個唯一限制擋住兩位審核員並列正式提交——審核單位只有一個提交者",
-     "unique": true
+     "note": "三欄複合單位鍵；複合 FK 同上；唯一 (run_id, assignment_id)。來源：這個唯一限制擋住兩位審核員並列正式提交——審核單位只有一個提交者"
     },
     {
      "name": "reviewer_membership_id",
@@ -1862,13 +1840,13 @@
     },
     {
      "name": "run_id",
-     "type": "uuid ×2",
+     "type": "uuid",
      "required": "required",
      "note": "同單位複合鍵"
     },
     {
      "name": "assignment_id",
-     "type": "uuid ×2",
+     "type": "uuid",
      "required": "required",
      "note": "同單位複合鍵"
     },
@@ -1877,8 +1855,7 @@
      "type": "uuid",
      "required": "required",
      "note": "所屬提交主檔；FK → annotation_review_submission.id，RESTRICT；唯一 (review_submission_id, version)",
-     "fk": "annotation_review_submission",
-     "unique": true
+     "fk": "annotation_review_submission"
     },
     {
      "name": "version",
@@ -1918,8 +1895,7 @@
      "type": "uuid",
      "required": "required",
      "note": "所屬目前版本；FK → annotation_review_submission.id，CASCADE；唯一 (review_submission_id, output_key)。來源：04-02：三向決策每個輸出類型一筆",
-     "fk": "annotation_review_submission",
-     "unique": true
+     "fk": "annotation_review_submission"
     },
     {
      "name": "output_key",
@@ -1968,19 +1944,19 @@
     },
     {
      "name": "task_id",
-     "type": "uuid ×3",
+     "type": "uuid",
      "required": "required",
      "note": "三欄複合單位鍵；複合 FK 同上。來源：04-02：仲裁狀態以審核單位定址，不得寫進審核員自己的紀錄"
     },
     {
      "name": "run_id",
-     "type": "uuid ×3",
+     "type": "uuid",
      "required": "required",
      "note": "三欄複合單位鍵；複合 FK 同上。來源：04-02：仲裁狀態以審核單位定址，不得寫進審核員自己的紀錄"
     },
     {
      "name": "assignment_id",
-     "type": "uuid ×3",
+     "type": "uuid",
      "required": "required",
      "note": "三欄複合單位鍵；複合 FK 同上。來源：04-02：仲裁狀態以審核單位定址，不得寫進審核員自己的紀錄"
     },
@@ -1988,8 +1964,7 @@
      "name": "output_key",
      "type": "varchar(120)",
      "required": "required",
-     "note": "爭議的輸出類型；唯一 (run_id, assignment_id, output_key, item_key)。來源：每項至多一張不可變票",
-     "unique": true
+     "note": "爭議的輸出類型；唯一 (run_id, assignment_id, output_key, item_key)。來源：每項至多一張不可變票"
     },
     {
      "name": "item_key",
@@ -2059,7 +2034,7 @@
      "note": "該批次內容摘要。來源：同一個批次 ID 但內容不同時要擋下"
     }
    ],
-   "description": "**`has_finalized_value` 這一欄為什麼不能省：** 規格明寫定案值可以是空的，而 JSON 的 `null` 也是合法的答案值。只用 `finalized_value IS NULL` 判斷，就分不出「這一票沒有產生定案值」與「定案值是 JSON null」。\n\n`item_key` 是「爭議子項」的鍵——例如序列標記裡是哪一個 span、實體辨識裡是哪一個實體。粒度由 [04-02](/notes/specs/04-annotation/02-annotation-workspace#爭議項是推導出來的不是存起來的) 定（爭議項是推導的），但**它的字串編碼、版本與碰撞測試規格沒有定**。\n\n這一欄的唯一限制 `(run_id, assignment_id, output_key, item_key)` 要成立，前提是編碼**無碰撞**——兩個不同的子項不能算出同一個鍵。**本文件不替它選編碼**，列為實作前要定的事。\n\n**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)、[04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位)、[04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位)"
+   "description": "**`has_finalized_value` 這一欄為什麼不能省：** 規格明寫定案值可以是空的，而 JSON 的 `null` 也是合法的答案值。只用 `finalized_value IS NULL` 判斷，就分不出「這一票沒有產生定案值」與「定案值是 JSON null」。\n\n`item_key` 是「爭議子項」的鍵——例如序列標記裡是哪一個 span、實體辨識裡是哪一個實體。粒度由 [04-02](/notes/specs/04-annotation/02-annotation-workspace#爭議項是推導出來的不是存起來的) 定（爭議項是推導的），但**它的字串編碼、版本與碰撞測試規格沒有定**。\n\n這一欄的唯一限制 `(run_id, assignment_id, output_key, item_key)` 要成立，前提是編碼**無碰撞**——兩個不同的子項不能算出同一個鍵。**字典不替它選編碼**，列為實作前要定的事。\n\n**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)、[04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位)、[04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位)"
   },
   {
    "name": "annotation_exception_resolution",
@@ -2075,19 +2050,19 @@
     },
     {
      "name": "task_id",
-     "type": "uuid ×3",
+     "type": "uuid",
      "required": "required",
      "note": "三欄複合單位鍵；複合 FK 同上"
     },
     {
      "name": "run_id",
-     "type": "uuid ×3",
+     "type": "uuid",
      "required": "required",
      "note": "三欄複合單位鍵；複合 FK 同上"
     },
     {
      "name": "assignment_id",
-     "type": "uuid ×3",
+     "type": "uuid",
      "required": "required",
      "note": "三欄複合單位鍵；複合 FK 同上"
     },
@@ -2095,15 +2070,13 @@
      "name": "output_key",
      "type": "varchar(120) / text",
      "required": "required",
-     "note": "被收尾的爭議子項；唯一 (run_id, assignment_id, output_key, item_key)。來源：一個子項最多收尾一次",
-     "unique": true
+     "note": "被收尾的爭議子項；唯一 (run_id, assignment_id, output_key, item_key)。來源：一個子項最多收尾一次"
     },
     {
      "name": "item_key",
      "type": "varchar(120) / text",
      "required": "required",
-     "note": "被收尾的爭議子項；唯一 (run_id, assignment_id, output_key, item_key)。來源：一個子項最多收尾一次",
-     "unique": true
+     "note": "被收尾的爭議子項；唯一 (run_id, assignment_id, output_key, item_key)。來源：一個子項最多收尾一次"
     },
     {
      "name": "arbitration_vote_id",
@@ -2166,19 +2139,19 @@
     },
     {
      "name": "task_id",
-     "type": "uuid ×3",
+     "type": "uuid",
      "required": "required",
      "note": "三欄複合單位鍵；複合 FK 同上"
     },
     {
      "name": "run_id",
-     "type": "uuid ×3",
+     "type": "uuid",
      "required": "required",
      "note": "三欄複合單位鍵；複合 FK 同上"
     },
     {
      "name": "assignment_id",
-     "type": "uuid ×3",
+     "type": "uuid",
      "required": "required",
      "note": "三欄複合單位鍵；複合 FK 同上"
     },
@@ -2186,8 +2159,7 @@
      "name": "event_no",
      "type": "integer",
      "required": "required",
-     "note": "單位內單調序號；唯一 (run_id, assignment_id, event_no)；CHECK >= 1。來源：04-01：「最後活動時間」同時戳時取最後寫入的那一筆——所以需要時戳以外的排序",
-     "unique": true
+     "note": "單位內單調序號；唯一 (run_id, assignment_id, event_no)；CHECK >= 1。來源：04-01：「最後活動時間」同時戳時取最後寫入的那一筆——所以需要時戳以外的排序"
     },
     {
      "name": "actor_membership_id",
@@ -2367,8 +2339,7 @@
      "name": "request_idempotency_key",
      "type": "varchar(120)",
      "required": "required",
-     "note": "匯出重試鍵；唯一 (task_id, requested_by_user_id, request_idempotency_key)。來源：避免重複匯出",
-     "unique": true
+     "note": "匯出重試鍵；唯一 (task_id, requested_by_user_id, request_idempotency_key)。來源：避免重複匯出"
     },
     {
      "name": "request_digest",
@@ -2456,8 +2427,7 @@
      "name": "position",
      "type": "integer",
      "required": "required",
-     "note": "清單中的順序；唯一 (export_id, position)；CHECK >= 1。來源：從 1 開始。順序寫進產物的有序清單",
-     "unique": true
+     "note": "清單中的順序；唯一 (export_id, position)；CHECK >= 1。來源：從 1 開始。順序寫進產物的有序清單"
     }
    ],
    "description": "**這張表是反查出來的六項之一**（[盤點總帳§二](/notes/diagrams/architecture/data-field-inventory#二九條流程的反查)）：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 的畫面只顯示一個匯出時間，但「請求被接受」與「實際讀取結果」是兩個時刻，而一次匯出可以納入多次執行——所以要有這張表記順序。"
@@ -2535,7 +2505,7 @@
      "note": "結束原因；見上。來源：這一欄承載「可不可信」：正常結束與失聯關閉要分得出來"
     }
    ],
-   "description": "**只記錄原始時間與歸屬，不存累計工時、完成數、速度或日報。**\n\n**「每位使用者同時最多一段未結束區間」用部分唯一索引** `WHERE ended_at IS NULL` on `user_id`。這是本文件提議的落法。\n\n[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 與 [04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位) 一共定了**三個**不同的時間數字——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**三個都是推導值，這張表只存原始區間。** 把任何一個存成累計欄，就會與原始紀錄產生第二個真相。而「不可信時顯示未知、不補推估值」這條，只有在不存累計值的前提下才容易守住——存了之後，那個數字看起來永遠是可信的。\n\n**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)"
+   "description": "**只記錄原始時間與歸屬，不存累計工時、完成數、速度或日報。**\n\n**「每位使用者同時最多一段未結束區間」用部分唯一索引** `WHERE ended_at IS NULL` on `user_id`。這是字典提議的落法。\n\n[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 與 [04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位) 一共定了**三個**不同的時間數字——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**三個都是推導值，這張表只存原始區間。** 把任何一個存成累計欄，就會與原始紀錄產生第二個真相。而「不可信時顯示未知、不補推估值」這條，只有在不存累計值的前提下才容易守住——存了之後，那個數字看起來永遠是可信的。\n\n**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)"
   }
  ]
 }
