@@ -186,7 +186,7 @@ import PrototypeFrame from '@notes/components/prototype-frame';
 | 邊界情況（Edge Case） | 空狀態、極值、跨期、並發、載入失敗時使用者看到什麼？ | 是 |
 | 驗收標準 | 怎樣算做完？每個 Scenario 只有一個 When | 是 |
 | 待釐清、已確認決議 | 還沒決定的事；追問過的決議與理由 | 有才寫 |
-| 變更紀錄、Q&A | 因哪個 Issue 改過；規則背後的理由 | 變更紀錄必寫 |
+| 變更紀錄、Q&A | 因哪個 Issue 改過；規則背後的理由（Q&A 每題一個預設收合的 `tip`，維護者 2026-11-11 裁定，寫法見 skill 的 `references/writing-guide.md` §Q&A） | 變更紀錄必寫 |
 | 附錄：舊編號對照 | 舊規格的每個 `FR`／`AC`／`SC` 搬到哪裡 | 搬移舊規格時必寫，`pnpm check:specs` 會檢查 |
 
 待釐清清空後，規格的狀態從「草稿」改成「已定案」，才能進 `/sdd`。
