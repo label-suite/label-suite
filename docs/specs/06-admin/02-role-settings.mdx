@@ -11,7 +11,7 @@ import PrototypeFrame from '@notes/components/prototype-frame';
 
 # 06-02 角色設定
 
-:badge[已定案]{variant="success"} :badge[系統管理]{variant="neutral"} :badge[33 條舊編號全數對應]{variant="success"}
+:badge[已定案]{variant="success"} :badge[變更 #249]{variant="info" href="https://github.com/label-suite/label-suite/issues/249"} :badge[系統管理]{variant="neutral"} :badge[33 條舊編號全數對應]{variant="success"}
 
 > 來源：舊 repo `specs/admin/007-role-settings/spec.md`（**33 條**），釘在 `singyichen/label-suite@faf83356`
 > 參考畫面：`design/prototype/pages/admin/role-settings.html`
@@ -161,7 +161,7 @@ import Spec0602RoleSettingsFlow from '@notes/components/spec-06-02-role-settings
 2. 兩層**不能互相推導、也不能繼承**——系統管理員不會因為是管理員就取得任務層的權限
 3. 表頭分成兩組：`系統角色`、`任務角色`；整列的第一欄是 `功能權限`
 4. 矩陣的列**依模組分段**，六個段落的標題是 `帳號（Account）`、`儀表板（Dashboard）`、`任務管理（Task Management）`、`標記（Annotation）`、`資料集（Dataset）`、`系統管理（Admin）`
-5. 規格與矩陣一律用**術語表的名字**（平台成員、系統管理員）；畫面現在的欄名是 `一般使用者`／`超級管理員`，改畫面歸 [Issue #185](https://github.com/label-suite/label-suite/issues/185)（[§已確認決議](#已確認決議) Q4）
+5. 規格與矩陣一律用**術語表的名字**（平台成員、系統管理員）；<mark>**畫面的中文欄名也已經改成同一組名字**（[Issue #185](https://github.com/label-suite/label-suite/issues/185)，PR #243 合併 `df49a18`）；**英文那側還沒有**，見[§已確認決議](#已確認決議) Q4</mark><sup>[#249](https://github.com/label-suite/label-suite/issues/249)</sup>
 
 ### 權限鍵與它們對應的 PRD 格
 
@@ -455,7 +455,7 @@ import Spec0602RoleSettingsFlow from '@notes/components/spec-06-02-role-settings
 
 來源把這張表列為**初始值**，同時也是**回歸測試的基準**，所以逐格照收。`⛔` 是錯層、不儲存資料列。
 
-矩陣的角色欄名用**術語表的名字**：:ref[平台成員]{id="term.platform-member"} 與 :ref[系統管理員]{id="term.system-admin"}（[§已確認決議](#已確認決議) Q4）。**畫面現在的欄名是 `一般使用者`／`超級管理員`**，和同一個檔案自己的角色標示（寫「系統管理員」）就不一致；畫面那一側歸 [Issue #185](https://github.com/label-suite/label-suite/issues/185)。
+矩陣的角色欄名用**術語表的名字**：:ref[平台成員]{id="term.platform-member"} 與 :ref[系統管理員]{id="term.system-admin"}（[§已確認決議](#已確認決議) Q4）。<mark>**中文那側畫面已經一致**：[Issue #185](https://github.com/label-suite/label-suite/issues/185)（PR #243，合併 `df49a18`）把矩陣欄名從 `一般使用者`／`超級管理員` 改成同一組名字，與同一個檔案自己的角色標示（寫「系統管理員」）不再衝突。**英文那側仍不一致**：矩陣欄名現在是 `System Admin`，而同一個檔案的角色標示仍是 `Super Admin`——那是 #185 改中文時連帶造成的，殘餘記在 [Issue #165](https://github.com/label-suite/label-suite/issues/165)。</mark><sup>[#249](https://github.com/label-suite/label-suite/issues/249)</sup>
 
 1. **平台層的 10 個鍵**對兩個系統角色的初始值：
 
@@ -714,7 +714,7 @@ import Spec0602RoleSettingsFlow from '@notes/components/spec-06-02-role-settings
 - [ ] 用畫面現況的 `一般使用者` 與 `超級管理員`
 
 > 理由：術語表已經定了這兩個名詞，而[規格 06-01](./01-user-management.mdx)（同一個模組的另一個分頁）全頁用的就是「系統管理員」。
-> **畫面自己就不一致**：同一個檔案的矩陣欄名是 `一般使用者`／`超級管理員`，但它的角色標示寫的是 `系統管理員`。
+> <mark>**裁定當時畫面自己就不一致**：同一個檔案的矩陣欄名是 `一般使用者`／`超級管理員`，但它的角色標示寫的是 `系統管理員`。那個不一致**在中文那側**已經由 [Issue #185](https://github.com/label-suite/label-suite/issues/185)（PR #243，合併 `df49a18`）修掉（英文那側仍不一致，見[§矩陣的角色欄名](#兩層授權模型系統角色與任務角色)），所以**這一句現在只是裁定當時的紀錄，不是現況**；Q4 站得住的理由是上下那兩條。</mark><sup>[#249](https://github.com/label-suite/label-suite/issues/249)</sup>
 > 而「一般使用者」這一型在[規格 07-01 §已確認決議](../07-shared/01-sidebar.mdx#已確認決議) Q2 已於 2026-11-08 定案為一種**狀態**（完全沒有任務角色），**不是系統角色的名字**——用它當矩陣欄名會和系統角色混在一起。
 > 畫面那一側歸 [Issue #185](https://github.com/label-suite/label-suite/issues/185)（#139）。
 
@@ -794,6 +794,7 @@ import Spec0602RoleSettingsFlow from '@notes/components/spec-06-02-role-settings
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#249](https://github.com/label-suite/label-suite/issues/249) | 2026-11-11 | §規格（這一頁定什麼、矩陣的角色欄名）、§已確認決議 Q4 的理由 | 兩處寫「**畫面現在的**欄名是 `一般使用者`／`超級管理員`」，Q4 的理由另外拿「**畫面自己就不一致**」當依據 | 改成現況：[#185](https://github.com/label-suite/label-suite/issues/185)（PR #243，合併 `df49a18`）已把畫面的**中文**欄名改成同一組名字（**英文仍不一致**，殘餘記在 #165）；Q4 那一句改成裁定當時的紀錄 | 無新決議；Q4 的結論一字未動 |
 | [#139](https://github.com/label-suite/label-suite/issues/139) | 2026-11-09 | 頁首、§規格（權限鍵與它們對應的 PRD 格、兩層授權模型、適用格、預設矩陣、儲存成功與失敗的回饋）、§驗收標準、§待釐清、§已確認決議、§附錄 | 五題列在待釐清；「匯出資料」與「檢視全平台統計」兩列寫「對不上 PRD」；PRD 的「05 資料匯入與版本」沒有對應的鍵；矩陣欄名的中文未定；通知寫「4 秒後自動消失」 | 五題折回已確認決議（保留題號），這一頁改**已定案**。**Q1**：匯出資料的鍵留在資料集那一段、說明裡註明對應 PRD 的「03 匯出標記結果」。**Q2**：**補兩個任務層鍵**（看資料匯入與版本、匯入資料並建立版本），術語表同步新增兩條；來源的 22 鍵／56 格變成 24／62，**來源的數字原樣記著不改寫**。**Q3**：檢視全平台統計對應「02 儀表板」系統管理員那一格，**不新增 PRD 的列**。**Q4**：矩陣欄名用術語表的「平台成員」「系統管理員」，畫面歸 #185。**Q11**：通知秒數**照畫面**依類型分四種（成功 3／提示 5／警告 8／錯誤不自動消失），來源的「一律 4 秒」記為差異 | Q1、Q2、Q3、Q4、Q11（維護者裁定 2026-11-09） |
 | 初版 | 2026-11-05 | 全部 | — | — | Q6–Q10 已定案；Q1–Q5、Q11 待釐清 |
 | [#139](https://github.com/label-suite/label-suite/issues/139) | 2026-11-06 | §規格（新增〈讀回的矩陣不合法時〉）、§卡控機制、§邊界情況、§驗收標準、§已確認決議、§業務流程 | 讀回的矩陣不合法時沒有規則，邊界情況只記了畫面現況「整份拒絕並還原預設值」並註明來源未定義 | 整份拒絕載入、顯示錯誤與重試、**已儲存內容保持原樣**；三個禁止（不還原預設值、不只載入通得過的部分、不進編輯模式）、不寫稽核事件；新增 5 個 Scenario；流程圖補上這條例外路徑並生成 | **Q5**（維護者裁定 2026-11-06） |
