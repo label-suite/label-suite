@@ -49,7 +49,7 @@ import PluginView from '@/components/PluginView.astro';
 | D7 移除 | **−3 張 / −22 欄 / −2 單欄 FK** | `refresh_tokens`、`shared_idempotency_record`、`task_run_reviewer_candidate`——**本專案規格完全沒提到**，維護者 2026-11-11 裁定先拿掉 |
 | 本文件 | **37 張 / 328 欄 / 38 單欄 FK** | 複合 FK 另列於各組的§關聯 |
 
-移除不是「不需要那個機制」。更新權杖、冪等紀錄與審核員候選名單在實作時都可能真的需要，但那時要另開 issue 寫清楚為什麼——**這樣字典裡每一張表都追得到規格**。
+移除不是「不需要那個機制」。更新權杖、冪等紀錄與審核員候選名單在實作時都可能真的需要，但那時要另開 issue 寫清楚為什麼——**這樣字典裡每一張表都追得到規格**（**4 張除外**，見[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決) D11）。
 
 **維護者 2026-11-11 另裁：D7 的理由同樣適用到欄位。** 所以原始規劃有、但本專案規格完全沒提到的**六個欄位**也一併不收：
 
@@ -94,7 +94,7 @@ import PluginView from '@/components/PluginView.astro';
 
 每一張表另記**用途、寫入者、讀取權限、不可變與版本界線、保留規則**；**推導欄位不進字典**，它們列在每組的§不進表的推導值。
 
-**有三頁規格不持有業務資料，所以沒有任何一張表以它們為來源**（維護者 2026-11-11 裁定，見[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決) D9）。**這不是推測，三頁的規格自己就這樣寫**：[07-01 側欄](../../specs/07-shared/01-sidebar.mdx#資料欄位)「側欄自己不持有業務資料，只讀取與記住使用者的偏好」、[07-02 工作區頁籤](../../specs/07-shared/02-workspace-tabs.mdx#資料欄位)「頁籤是使用者自己的工作狀態，不含任何業務資料」、[05-01 分析列表](../../specs/05-dataset/01-analysis-list.mdx#資料欄位)的完成率是「**上游算好的摘要**，列表不得推導或計算」而 IAA 狀態「只顯示摘要狀態」——它讀的是 05-02 的計算結果。
+**有三頁規格不持有業務資料，所以沒有任何一張表以它們為來源**（維護者 2026-11-11 裁定，見[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決) D9）。**這不是推測，三頁的規格自己就這樣寫**：[07-01 側欄](../../specs/07-shared/01-sidebar.mdx#資料欄位)「側欄自己不持有業務資料，只讀取與記住使用者的偏好」、[07-02 工作區頁籤](../../specs/07-shared/02-workspace-tabs.mdx#資料欄位)「頁籤是使用者自己的工作狀態，不含任何業務資料」、[05-01 分析列表](../../specs/05-dataset/01-analysis-list.mdx#資料欄位)「這一頁的欄位**全是唯讀摘要**；**沒有任何一欄含答案內容**」（完成率是「上游算好的摘要，列表不得推導或計算」，它讀的是 05-02 的計算結果）。
 這和帳號層的**權威頁慣例**是同一回事：缺的不是來源，是一句說明。
 
 ---
@@ -1182,7 +1182,7 @@ import PluginView from '@/components/PluginView.astro';
 | 驗收條件 | 狀態 | 落在哪 |
 | :--- | :--- | :--- |
 | 所有需持久化項目可定位至欄位／JSON 路徑或具名待決 | ✅ | 每一欄一列；四個 JSON 欄位另列結構表（`classification_manifest`、`config_payload`、`answer_payload`、`result_payload`） |
-| 所有候選表都有規格依據 | ⚠ | 每張表的「規格來源」欄指回 `docs/specs/`；沒有依據的 3 張表與 6 欄已移除。**但 37 張裡有 4 張整節沒有任何 `docs/specs/` 連結**（`task_sample_snapshot`、`task_run_item`、`annotation_review_submission`、`annotation_review_submission_revision`），見[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決) D11 |
+| 所有候選表都有規格依據 | ⚠ | 每張表的依據寫在欄位的「規格來源」欄，或**表級的 `規格來源` 宣告行**（`task_annotation_assignment` 與 `task_export_run` 走後者，見 D8）；沒有依據的 3 張表與 6 欄已移除。**但 37 張裡有 4 張整節沒有任何 `docs/specs/` 連結**（`task_sample_snapshot`、`task_run_item`、`annotation_review_submission`、`annotation_review_submission_revision`），見[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決) D11 |
 | 唯一性、複合限制、刪除行為與敏感邊界**不僅存在 ER 線上，文字字典可完整閱讀** | ✅ | 每組末尾的§關聯與限制，分「DB」與「應用層」兩層；FK 的刪除行為（RESTRICT／CASCADE）逐欄寫明 |
 | **無 ORM、migration、API 或 DB 實作變更** | ✅ | 本文件不含 DDL；交付只有這一份 `.mdx` |
 
