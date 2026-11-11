@@ -415,3 +415,160 @@ updatedAt: '2026-11-11'
 | :--- | :--- | :--- |
 | 資料集合計筆數 | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) | 從 `dataset_item` 數出來 |
 | 文本摘要 | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)、[04-01](../../specs/04-annotation/01-annotation-list.mdx#資料欄位) | 從 `public_payload` 現算。**只取用途是輸入或背景的欄位，不含輸出**——存下來會多一份可能洩漏的副本 |
+
+---
+
+## 五、`task` 任務管理（5 張）
+
+**權威頁是 [03-03 任務詳情](../../specs/03-task-management/03-task-detail.mdx#資料欄位)**（47 列，全專案最多），建立時的設定來自 [03-02](../../specs/03-task-management/02-task-new.mdx#資料欄位)。
+
+### `task` — 當前任務
+
+**只保存當前可變設定與版本指標**，不複製歷史執行的資料集、設定與指引——那些在各自的版本表裡。
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `id` | 任務編號 | `uuid` | NOT NULL | **PK** | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：**不可編輯**，麵包屑的第二節 |
+| `created_by_user_id` | 建立者 | `uuid` | NOT NULL | **FK → `users.id`，RESTRICT** | — |
+| `dataset_version_id` | 當前綁定的已定版快照 | `uuid` | NOT NULL | **FK → `dataset_version.id`，RESTRICT** | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：資料集至少一個；**草稿可重綁** |
+| `current_config_version_id` | 當前設定版本 | `uuid` | NOT NULL | **延後複合 FK** `(id, current_config_version_id)` → `task_config_version(task_id, id)` | [03-02](../../specs/03-task-management/02-task-new.mdx#資料欄位) 的設定 |
+| `current_guideline_version_id` | 當前指引版本 | `uuid` | NOT NULL | **延後複合 FK** `(id, current_guideline_version_id)` → `task_guideline_version(task_id, id)` | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：**每一個回合釘住當時的版本** |
+| `current_run_cycle_id` | 當前發布週期 | `uuid` | **可空** | **延後複合 FK** `(id, current_run_cycle_id)` → `task_run_cycle(task_id, id)` | 尚未發布或**退回草稿後為空**；已完成後保留指向最終已關閉週期 |
+| `name` | 任務名稱 | `varchar(100)` | NOT NULL | CHECK 長度 ≤ 100；**不加唯一** | [03-02](../../specs/03-task-management/02-task-new.mdx#資料欄位)：上限 100 字、**可以重複**；[03-01](../../specs/03-task-management/01-task-list.mdx#資料欄位) 搜尋比對它 |
+| `status` | 任務狀態 | `varchar(32)` | NOT NULL | CHECK 限五值 | PRD §共用狀態機：草稿、試標中、等待 IAA 確認、正式標記中、已完成。[03-01](../../specs/03-task-management/01-task-list.mdx#資料欄位)：**只有草稿可以刪除** |
+| `sampling_value` | 每回合抽樣筆數 | `integer` | NOT NULL | CHECK `>= 1` | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：**大於等於 1 且小於資料集總筆數**（上界是**應用層**，DB 不知道總筆數） |
+| `target_agreement_overrides` | 目標一致性門檻 | `json` | NOT NULL | 預設 `{}` | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：**每個輸出類型各一個**，範圍 0 到 1；**只有登錄過預設門檻的輸出類型可填** |
+| `min_annotators` | 最少標記者數 | `integer` | NOT NULL | **CHECK `>= 2`** | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：大於等於 2 |
+| `isolation_enabled` | 資料隔離 | `boolean` | NOT NULL | 預設 `true` | [03-02](../../specs/03-task-management/02-task-new.mdx#資料欄位)、[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：**預設開啟**；關掉要風險警示並**在發布前再確認** |
+| `force_guideline` | 開始標記前強制顯示 | `boolean` | NOT NULL | 預設 `false` | [03-02](../../specs/03-task-management/02-task-new.mdx#資料欄位)：**預設關閉**。**放在這裡而不是指引版本表上**，因為 [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) 明寫它是「**顯示政策，不是指引內容；單獨改不跳版本**」 |
+| `archived_at` | 封存時間 | `timestamptz` | **可空** | — | [03-01](../../specs/03-task-management/01-task-list.mdx#資料欄位)：非空＝已封存，不出現在列表。**維護者 2026-11-11 裁定可逆**，復原時清空 |
+| `archived_by_user_id` | 封存的人 | `uuid` | **可空** | **FK → `users.id`，RESTRICT**；**CHECK** 兩欄同時為空或同時非空 | [03-01](../../specs/03-task-management/01-task-list.mdx#資料欄位)：封存時記下。**復原時一併清空，不記復原者**（維護者 2026-11-11 裁定） |
+| `created_at` | 建立時間 | `timestamptz` | NOT NULL | — | — |
+| `updated_at` | 更新時間 | `timestamptz` | NOT NULL | 索引（排序用） | [03-01](../../specs/03-task-management/01-task-list.mdx#資料欄位)：**預設由新到舊排序** |
+
+**兩欄是本專案新增的，原始規劃完全沒有：** `archived_at` 與 `archived_by_user_id`。原始 `task` 的 15 欄裡**沒有任何封存欄**，而 [03-01](../../specs/03-task-management/01-task-list.mdx#資料欄位) 明寫封存後「資料留著供查核與復原」。
+
+**三個「當前版本指標」是延後複合 FK，不是普通 FK。** 任務與它的設定版本互相參照（任務指向當前版本、版本指向擁有任務），所以建立時要在**同一個交易**裡預配置 UUID、兩邊都寫完才檢查。複合而不是單欄，是為了擋住「當前版本屬於另一個任務」——這和 `dataset_version` 的父版本同一個理由。
+
+| | |
+| :--- | :--- |
+| **寫入者** | 建立者與專案負責人。`status` 由狀態機驅動，**不是直接改** |
+| **讀取權限** | 依 PRD §權限矩陣。[03-01](../../specs/03-task-management/01-task-list.mdx) 的列表、[02-01](../../specs/02-dashboard/01-dashboard.mdx) 的任務列都只讀 |
+| **不可變** | `id`、`created_by_user_id`、`created_at` |
+| **版本界線** | **這張表只有「當前」。** 歷史在 `task_config_version`、`task_guideline_version`、`task_run_cycle` 裡，發布後不得回頭改變已發出的作業 |
+| **保留** | **封存不是刪除**。只有草稿可刪（[03-01](../../specs/03-task-management/01-task-list.mdx#資料欄位)），刪除行為與保留期限**未定**，見 [D3](./data-field-inventory.mdx#五裁定紀錄與待裁決) |
+
+### `task_config_version` — 不可變的任務設定
+
+一列是同任務的一個完整設定快照。**這是本專案「JSON 內嵌」的主要落點。**
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `id` | 設定版本主鍵 | `uuid` | NOT NULL | **PK**；`(task_id, id)` 另供複合 FK 父鍵 | — |
+| `task_id` | 擁有任務 | `uuid` | NOT NULL | **FK → `task.id`，RESTRICT** | — |
+| `version_no` | 版本號 | `integer` | NOT NULL | **唯一 `(task_id, version_no)`**；CHECK `>= 1` | 每次完整儲存 +1 |
+| `config_payload` | 完整設定快照 | `json` | NOT NULL | — | [03-02](../../specs/03-task-management/02-task-new.mdx#資料欄位) 的十二列內嵌欄位全在這裡 |
+| `content_digest` | 內容摘要 | `char(64)` | NOT NULL | — | 用來判斷「真的改過了嗎」 |
+| `created_at` | 建立時間 | `timestamptz` | NOT NULL | — | — |
+
+**`config_payload` 的結構要記下來，不能只寫「JSON」：**
+
+| 鍵 | 內容 | 規格來源 |
+| :--- | :--- | :--- |
+| `categories[]` | 大分類（分類／回歸／序列／生成），多選 | [03-02](../../specs/03-task-management/02-task-new.mdx#資料欄位) |
+| `input_type` | 輸入類型（單一項目／項目對），單選 | 同上：決定輸入欄位要幾個 |
+| `outputs[]` | 輸出類型，**有順序** | 同上：至少一個；**分類與回歸同組單選**，序列與生成多選。順序要保留（[02-01](../../specs/02-dashboard/01-dashboard.mdx#資料欄位) 明寫「依原始順序，不得只取第一種」） |
+| `output_configs{}` | **每一種輸出類型的設定**，結構隨型別而變 | 同上。**這是不建硬編表的理由**——八種型別各有不同欄位 |
+| `bypass_allowed{}` | 每型一個「允許無法判定」開關 | 同上：**預設開啟** |
+| `field_role_map{}` | 每個欄位的用途（不使用／背景／輸入／輸出） | 同上：預設不使用；**只帶已指定的欄位** |
+| `list_title` | 清單標題（自動或某一欄） | 同上：**選項不含用途是輸出的欄位** |
+| `thread_field_map` | 對話串四個對應，或「沒有」 | 同上；[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：非對話串任務**存成「沒有」** |
+| `pair_labels` | 項目對名稱（兩個文字） | 同上：**只在輸入類型是項目對時存在** |
+| `row_source` | 資料列來源 | 同上：系統偵測可手動換 |
+| `config_file_name` | 標記設定檔檔名 | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：沒上傳時為空；**標籤是「設定檔」不是「設定檔版本」** |
+
+**輸出類型維持 config-driven（[#235](https://github.com/label-suite/label-suite/issues/235) 工作項 6）**：八種型別的設定全部塞在 `output_configs{}` 裡，**不為它們建八張表、也不在核心加八個分支**。這直接接到 `AGENTS.md` 硬性規則 5「task 類型是 config-driven，加一種不得改核心程式」。
+
+**不收的三欄**（原始有、本專案規格沒有對應）：`schema_version_no`、`schema_digest`、`schema_registry_version`。它們是驗證定義的版本追溯機制，本專案規格沒有提到，同 D7 的理由不留；需要時另開 issue。
+
+| | |
+| :--- | :--- |
+| **寫入者** | 系統寫入（儲存設定時建新版） |
+| **讀取權限** | 讀得到任務的人；[04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位) 的工作區**唯讀**，發布時凍結 |
+| **不可變** | **整列不可變**。要改就建新版 |
+| **保留** | 永久，供已發布的作業追溯當時的設定 |
+
+### `task_guideline_version` — 不可變的指引內容
+
+**即使 [03-02](../../specs/03-task-management/02-task-new.mdx) 第四步全部留空也要建 v1**——否則回合釘不到版本。
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `id` | 指引版本主鍵 | `uuid` | NOT NULL | **PK**；`(task_id, id)` 另供複合 FK 父鍵 | — |
+| `task_id` | 擁有任務 | `uuid` | NOT NULL | **FK → `task.id`，RESTRICT** | — |
+| `version_no` | 內容版本號 | `integer` | NOT NULL | **唯一 `(task_id, version_no)`**；CHECK `>= 1` | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：**內容真的改過就跳一個版本** |
+| `annotator_guideline_text` | 標記員說明文字 | `text` | NOT NULL | 預設空字串 | [03-02](../../specs/03-task-management/02-task-new.mdx#資料欄位)：**可以只填這個、不上傳檔案**。空字串＝留空 |
+| `annotator_guideline_assets` | 標記員附件參照清單 | `json` | NOT NULL | 預設 `[]` | 同上：PDF、PNG／JPG／JPEG／WebP 或 Markdown。**存受控參照，不存檔案位元組** |
+| `reviewer_guideline_text` | 審核員說明文字 | `text` | NOT NULL | 預設空字串 | 同上：**與標記員那一組完全獨立** |
+| `reviewer_guideline_assets` | 審核員附件參照清單 | `json` | NOT NULL | 預設 `[]` | 同上：**清單彼此獨立** |
+| `content_digest` | 四欄內容摘要 | `char(64)` | NOT NULL | — | 判斷「真的改過」才遞增版本的依據 |
+| `created_at` | 建立時間 | `timestamptz` | NOT NULL | — | — |
+
+**`force_guideline` 不在這張表**，它在 `task` 上。理由是 [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) 明寫它是「**顯示政策，不是指引內容；單獨改不跳版本**」——放在版本表裡，改它就會逼出一個新版本，與規格相反。
+
+### `task_membership` — 一人於一任務的一個角色
+
+**同一人可以同時持有多個任務角色**，一個角色一列。
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `id` | 成員資格主鍵 | `uuid` | NOT NULL | **PK** | — |
+| `task_id` | 任務作用域 | `uuid` | NOT NULL | **FK → `task.id`，RESTRICT**；**唯一 `(task_id, user_id, task_role)`** | — |
+| `user_id` | 真實使用者 | `uuid` | NOT NULL | **FK → `users.id`，RESTRICT** | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) |
+| `task_role` | 任務角色 | `varchar(24)` | NOT NULL | CHECK 限 `project_leader`／`annotator`／`reviewer` | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：**加入時決定、之後唯讀**；**同一個人可以各有一列** |
+| `membership_status` | 成員狀態 | `varchar(16)` | NOT NULL | CHECK 限 `invited`／`active`／`disabled` | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：啟用、停用、邀請中。**「邀請中」只能移除** |
+| `last_activity_at` | 最後活動 | `timestamptz` | **可空** | — | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) 的「最後活動」。**原始規劃沒有這一欄**；盤點總帳把它歸為持久，見下 |
+| `created_at` | 加入時間 | `timestamptz` | NOT NULL | — | — |
+| `updated_at` | 最後狀態變更 | `timestamptz` | NOT NULL | — | — |
+
+:::note{title="`last_activity_at` 這一欄有兩種做法，規格沒有定"}
+[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) 的「最後活動」**規則欄是 `—`**——規格只說成員清單要顯示它，沒說它怎麼來。
+
+- **存成欄位**（上表的寫法）：每次活動更新一次，讀取便宜，但每個標記動作都要多寫一次。
+- **從 `annotation_history_event` 推導**：取該成員最新一筆事件的時間，不多寫，但成員清單每一列都要查歷程。
+
+[盤點總帳](./data-field-inventory.mdx)把它歸為**持久**，所以這裡給了欄位。**但這是分類而不是裁定**——真正要不要寫成欄位屬效能取捨，實作時若選推導，要回頭改盤點那一列。**本文件不替它裁。**
+:::
+
+**「任務角色加入時決定、之後唯讀」在 DB 擋不住。** 唯一限制 `(task_id, user_id, task_role)` 只保證不重複，**不保證沒人 UPDATE 那一欄**——那要在應用層擋，或加一個拒絕更新該欄的觸發器。
+
+### `task_reviewer_roster_member` — 審核員與仲裁者名冊
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `task_id` | 任務作用域 | `uuid` | NOT NULL | **複合 PK 之一**；**FK → `task.id`，RESTRICT** | — |
+| `reviewer_membership_id` | 名冊上的成員資格 | `uuid` | NOT NULL | **複合 PK 之一**；**複合 FK `(task_id, reviewer_membership_id)` → `task_membership(task_id, id)`** | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：人選**限啟用中且任務角色為審核員** |
+| `can_arbitrate` | 是否在仲裁者名冊上 | `boolean` | NOT NULL | 預設 `false` | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：仲裁者名冊**必須是審核員名冊的子集合**——用一個布林表達子集合，**比兩張表更擋得住** |
+| `sort_order` | 顯示順序 | `integer` | NOT NULL | — | — |
+
+**用 `can_arbitrate` 而不是另一張仲裁者名冊表，是為了讓「子集合」這件事在結構上成立**：仲裁者只能是這張表上的列，不可能出現一個不在審核員名冊上的仲裁者。
+
+**複合 FK 是必要的**：單欄 FK 指向 `task_membership.id` 擋不住「這個成員資格屬於另一個任務」。這正是 [#235](https://github.com/label-suite/label-suite/issues/235) 工作項 4 要求檢查的——**合法 ID 被錯接到另一個上下文**。
+
+**兩條擋不住的：**
+
+| 限制 | 層級 | 內容 |
+| :--- | :--- | :--- |
+| 審核員名冊至少一人 | **應用層** | DB 無法表達「這張表對某個 `task_id` 至少要有一列」 |
+| **扣掉仲裁者之後審核員仍須至少一人** | **應用層** | 同上，而且是個跨列條件 |
+
+### `task` 組不進表的推導值
+
+| 推導值 | 哪一頁 | 為什麼不存 |
+| :--- | :--- | :--- |
+| 審核負荷 | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) | 規格明寫「已指派」**恆為「待審加已完成」的推導值，不另存** |
+| 目前已在任務數量 | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) | 從 `task_membership` 數出來 |
+| 標記作業狀態 | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) | 規格明寫「**推導值，不另存**」，依五值的順序判定 |
+| 目前回合、已用試標筆數、正式標記池筆數 | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) | 從回合與抽樣快照算出來 |
+| 標記階段 | [03-01](../../specs/03-task-management/01-task-list.mdx#資料欄位) | 從 `task_run.run_type` 來；草稿任務顯示「未建立清單」是**顯示值不是階段** |
+| 任務角色摘要、完成率、審核覆蓋率 | [02-01](../../specs/02-dashboard/01-dashboard.mdx#資料欄位) | 儀表板**一個欄位都不能寫**（PRD §權限矩陣 只給 `R`） |
