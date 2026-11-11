@@ -149,8 +149,8 @@ matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Wr
 | **事件** | `SessionStart`（matcher `startup|resume|clear|compact|fork`，兩邊都支援這五種） |
 | **適用路徑／角色** | 整個 repo，不分角色 |
 | **payload 欄位** | `cwd`（定位 repo）、`hook_event_name`、`session_id`（只用於 log 關聯） |
-| **共用檢查器** | `scripts/check-env.sh`（**待建置**）：核對 `core.hooksPath` 是否指向 `scripts/git-hooks`、`AGENTS.md` 是否存在、`node`／`pnpm`／`uv` 版本，以及**本次的 hook 是不是真的會跑**——Claude 看 `disableAllHooks`，Codex 看 `[features] hooks` 是否被關掉、以及該 hook 有沒有被信任 |
-| **timeout** | **10 秒**（本文件提議，待裁定）。環境檢查不該讓對話等 |
+| **共用檢查器** | `scripts/check-env.sh`（**待建置**）：核對 `core.hooksPath` 是否指向 `scripts/git-hooks`、`AGENTS.md` 是否存在、`node`／`pnpm`／`uv` 版本，以及**本次的 hook 是不是真的會跑**——Claude 看 `disableAllHooks`，Codex 看 `[features] hooks` 是否被關掉、以及該 hook 有沒有被信任；另外**核對 `.claude/settings.json` 與 `.codex/hooks.json` 兩份設定指向的腳本是否都存在**——維護者裁定不做生成器之後，這道檢查是兩份設定唯一的防漂移機制（§能力缺口第 7 條的承接） |
+| **timeout** | **10 秒**（維護者 2026-11-11 裁定）。環境檢查不該讓對話等 |
 | **輸出與退出碼** | 一律 exit `0`，訊息走 stdout。缺東西時列出「缺什麼、怎麼補」 |
 | **阻擋或提醒** | **提醒**。`SessionStart` 在兩邊都擋不住，所以也不假裝它能擋 |
 | **缺工具／無適用檔案** | `backend/`、`frontend/` 還不存在時標 **not applicable** 而不是失敗（工作項 2 明文「不要求尚未建立的 backend/frontend 必須存在」）。**不讀 `.env` 的值**，只看檔案在不在 |
@@ -164,7 +164,7 @@ matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Wr
 | **適用路徑／角色** | 命令那組不分路徑；寫檔那組只看目標路徑。清單**沿用**參考 settings 的 `permissions.deny` 五類：`**/.env.*`、`*.pem`、`*.key`、`*id_rsa*`、`*credentials.json`。**合法例外**（工作項 3 明文要求定義）：`.env.example` 與其他 `*.example`、`*.pub`、`scripts/tests/fixtures/` 底下的假憑證——這些要放行，否則連範例設定檔都寫不了 |
 | **payload 欄位** | `tool_name`、`tool_input`（Bash 取 `command`；寫檔取檔案路徑）、`tool_use_id`、`cwd` |
 | **共用檢查器** | `scripts/check-command.sh`、`scripts/check-write-target.sh`（**兩者待建置**） |
-| **timeout** | **5 秒**（本文件提議，待裁定）。這支擋在每個工具呼叫前面，不能慢 |
+| **timeout** | **5 秒**（維護者 2026-11-11 裁定）。這支擋在每個工具呼叫前面，不能慢 |
 | **輸出與退出碼** | 擋下時 **exit `2`，原因寫 stderr**；`permissionDecision: "deny"` 加 `permissionDecisionReason` 兩邊也都收。優先用 exit `2` 的理由不是欄位名不同（`PreToolUse` 的欄位名兩邊一致），而是**Codex 的 `PreToolUse` 不支援 `continue`／`stopReason`／`suppressOutput`，回傳它們會讓該次 hook 被標為失敗並繼續執行那個工具**——exit `2` 沒有這個風險 |
 | **阻擋或提醒** | **阻擋**。工作項 2 明文「必須在動作前拒絕；不能只在執行後提醒」 |
 | **缺工具／無適用檔案** | 檢查器不存在或壞掉時，**兩個平台的預設都是讓動作照做**（fail-open）。Claude 的 `onFailure: "block"` 要 v2.1.295，本機 2.1.273 沒有，所以**現階段兩邊都只能靠腳本自己在無法判斷時 exit `2`**：包裝腳本一律先確認檢查器存在且可執行，不存在就 exit `2`。**不得用 `|| true` 把判斷不了變成通過**，也不得假設路徑打錯會被擋下 |
@@ -180,12 +180,12 @@ matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Wr
 | **適用路徑／角色** | 只對**本次受影響且已存在**的檔案，依副檔名分流：`.py` → `ruff` 加 `mypy`；`.ts`／`.tsx` → `tsc --noEmit` 加 `eslint`；`.mdx` → `node scripts/check-specs.mjs docs`。**排除** `frontend/src/api/generated/`、Alembic migration、`pnpm-lock.yaml`、`uv.lock` 與 vendor |
 | **payload 欄位** | `tool_name`、`tool_input` 的檔案路徑、`cwd` |
 | **共用檢查器** | `scripts/check-changed.sh`（**待建置**）。`.mdx` 那條沿用既有的 `scripts/check-specs.mjs` |
-| **timeout** | **30 秒**（本文件提議，待裁定） |
+| **timeout** | **30 秒**（維護者 2026-11-11 裁定） |
 | **輸出與退出碼** | 診斷走 stderr。**一律不以 exit `2` 阻擋**——見下 |
 | **阻擋或提醒** | **提醒**。`PostToolUse` 在兩邊都撤銷不了已發生的編輯，能做的只是替換 model 看到的結果；本契約**刻意不用**那個替換，因為把診斷藏進「替換後的結果」會讓失敗變得不明顯。真正的 gate 是 H4、H5 與 H7 |
 | **缺工具／無適用檔案** | 本次沒有命中的檔案（例如只改了 `.md`）→ 標 not applicable 並 exit `0`；檔案被刪除或改名 → 不對不存在的檔案報錯；`ruff`／`mypy`／`tsc` 不存在且該層尚未 bootstrap → 標 not applicable。**已宣告啟用的檢查缺工具時要明確失敗**，不是靜默通過 |
 
-**預設 check-only。** 要不要自動 format／fix 是維護者的政策決定（工作項 4），本文件不替它決定；未裁定前不自動改檔、不自動 `git add`。
+**check-only，維護者 2026-11-11 裁定。** H3 **只回報診斷，不改檔、不自動 `git add`**，連 formatter 都不自動套用；要修由 agent 自己依診斷修。這樣 hook 不會動到工作區裡其他未暫存的修改，PR 的 diff 也不會混進不是 agent 本意的改動。
 
 ### H4 Git pre-commit：檢查 staged 快照
 
@@ -226,7 +226,7 @@ matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Wr
 | **適用路徑／角色** | 整個 repo。`SubagentStart`／`SubagentStop` **兩邊都能以 agent／subagent type 當 matcher** 分流角色。但 **Codex 的 `Stop` 不吃 matcher**（`UserPromptSubmit`、`Interrupt` 也不吃），所以 `Stop` 那一支要自己從 payload 判斷 |
 | **payload 欄位** | **`stop_hook_active`**（防重入就靠它：為 `true` 代表這次結束本來就是上一個 stop hook 擋下所造成的）、`last_assistant_message`、`session_id`、`transcript_path`（只在本機用，**不外傳**）、`cwd`。`SubagentStop` 另有 `agent_type` 可供分流 |
 | **共用檢查器** | `scripts/check-evidence.sh`（**待建置**） |
-| **timeout** | **60 秒**（本文件提議，待裁定） |
+| **timeout** | **60 秒**（維護者 2026-11-11 裁定） |
 | **輸出與退出碼** | 擋下時 exit `2` 或 `decision: "block"`，原因要寫「缺哪一項證據」 |
 | **阻擋或提醒** | **阻擋**，但**必須防重入**：被擋下之後 agent 會再結束一次，又觸發自己。先讀 `stop_hook_active`，為 `true` 就直接放行——這是兩邊文件都提供的現成機制，不要自己另造標記檔（工作項 5） |
 | **缺工具／無適用檔案** | 只重用與**目前 snapshot、規則版本與驗證範圍一致**的 evidence；對不上就當沒有。`backend/`、`frontend/` 不存在時標 not applicable |
@@ -280,21 +280,28 @@ matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Wr
 6. **平台權限層的對照本次沒做。** Claude 的 `permissions.deny` 有見過實例（參考來源那份 settings 擋 `.env.*`、`*.pem`、`*.key`、`*id_rsa*`、`credentials.json` 的寫入）；Codex 的 `config.toml` 有 `permissions`、`default_permissions`、`sandbox_mode`、`sandbox_workspace_write` 等鍵，但**這次只查了 hook 文件，沒有核對權限設定的官方文件**。
    **承接**：列為實作 PR 的前置查核項。工作項 3 要求「平台權限控制」與「hook 攔截」分清楚，而這一半還沒查完——**不在這份文件裡假裝查過了**。
 7. **`.claude/` 與 `.codex/` 兩份設定有漂移風險。** 事件集合與工具名都不同，改一邊忘了另一邊不會有任何報錯。
-   **承接**：H1 的環境檢查核對兩份設定指向的腳本是否都存在；長遠作法（例如從單一來源生成兩份設定）列入下方待裁定。
+   **承接**：**維護者 2026-11-11 裁定手寫兩份、由 H1 核對**，不做生成器。所以 H1 的環境檢查要同時核對兩份設定指向的腳本是否都存在、兩邊是否都實際生效（Claude 看 `disableAllHooks`，Codex 看 `[features] hooks` 與信任狀態）——一致性靠這道檢查，不靠結構保證。
 
 ---
 
-## 待維護者裁定
+## 裁定紀錄與未決事項
 
-本文件提議、**尚未裁定**的事項。依 `AGENTS.md` §Required Behaviors，這些不自行決定：
+**維護者 2026-11-11 裁定四題**（當日以問答確認）：
+
+| 題目 | 裁定 | 落在哪 |
+| :--- | :--- | :--- |
+| 四個 timeout | **採用本文件的提議值**：H1 10 秒、H2 5 秒、H3 30 秒、H6 60 秒 | H1、H2、H3、H6 的 timeout 格 |
+| 自動 format／fix 的政策 | **只檢查，不自動修**。連 formatter 都不自動套用，不改檔、不自動 `git add` | H3 下方的說明 |
+| 兩份設定怎麼維護 | **手寫兩份，由 H1 核對**，不做單一來源生成器 | §能力缺口第 7 條 |
+| 要不要用 hook 擋住對 `docs/specs/00-prd.mdx` 的寫入 | **不擋** | 已從 H2 的受保護清單移除；理由見下 |
+
+`00-prd.mdx` 這一題值得留下理由：本文件初版把它寫進 H2 的受保護清單，**當成已定事實**，獨立審查退回。查核結果是沒有任何來源定過這一條——參考 settings 的 `permissions.deny` 只有五類 secret 路徑、裡面沒有它；`AGENTS.md` 寫的是「`/sdd` 不授權改 `00-prd.mdx`」，那是**授權範圍**而不是「任何工具都不得寫入」。而本 repo 的 `prd-writing` skill 的正常工作就是寫這個檔，hook 分不出「誰在寫」，擋下去會把維護者授權的流程一起擋掉。
+
+### 仍未決
 
 | 題目 | 本文件的提議 | 為什麼要裁 |
 | :--- | :--- | :--- |
-| 四個 timeout | H1 10 秒、H2 5 秒、H3 30 秒、H6 60 秒 | 太短會誤擋，太長會卡住對話。沒有任何來源定過這四個數字，所以是提議而不是依據 |
-| 自動 format／fix 的政策 | 預設 **check-only**，不自動改檔、不自動 `git add` | 工作項 4 明文「若要自動 format/fix，先確認維護者政策」 |
-| 兩份設定要不要從單一來源生成 | 先手寫兩份並由 H1 核對一致性 | 生成器是額外機制，值不值得由維護者決定 |
-| Codex hook 的信任要不要寫進 `scripts/setup.sh` 的指引 | 在 setup 輸出提示「Codex 使用者要跑 `/hooks` 信任」 | 這會影響新人上手流程 |
-| 要不要用 hook 擋住對 `docs/specs/00-prd.mdx` 的寫入 | **先不擋**（初版曾把它寫進 H2 的受保護清單，獨立審查退回） | 沒有任何來源定過這一條：參考 settings 的 `permissions.deny` 只有五類 secret 路徑，裡面沒有它；`AGENTS.md` 寫的是「`/sdd` 不授權改 `00-prd.mdx`」，那是**授權範圍**而不是「任何工具都不得寫入」。而本 repo 的 `prd-writing` skill 的正常工作就是寫這個檔——擋下去會把維護者授權的流程一起擋掉 |
+| Codex hook 的信任要不要寫進 `scripts/setup.sh` 的指引 | 在 setup 輸出提示「Codex 使用者要跑 `/hooks` 信任，否則 hook 會被跳過」 | 這會影響新人上手流程，而且 `setup.sh` 目前只做一件事（設 `core.hooksPath`），多印一段提示要不要算在它的職責內由維護者決定 |
 
 ---
 
@@ -316,5 +323,6 @@ matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Wr
 
 | Issue | 日期 | 變更 |
 | :--- | :--- | :--- |
+| [#111](https://github.com/label-suite/label-suite/issues/111) | 2026-11-11 | **維護者 2026-11-11 裁定四題**，全部落地：四個 timeout 採用提議值（H1 10 秒、H2 5 秒、H3 30 秒、H6 60 秒）；H3 **只檢查不自動修**（連 formatter 都不自動套用）；兩份設定**手寫兩份、由 H1 核對**，不做生成器；`docs/specs/00-prd.mdx` **不擋**。「待維護者裁定」一節改成裁定紀錄，只剩 `setup.sh` 要不要印信任提示一題未決 |
 | [#111](https://github.com/label-suite/label-suite/issues/111) | 2026-11-11 | 獨立審查後修兩個 High 與三個 Medium。**High 一**：初版宣稱「`PostToolUse` 的語意在兩邊相反」（Claude 純提醒、Codex 可擋後續），兩個方向都錯——Codex 的 `decision: "block"` 是「記下回饋、替換工具結果、讓 model 繼續」，Claude 則有 `decision: "block"` 與 `updatedToolOutput` 做同一件事；真正不對稱的是通用 `continue: false`（Claude 停住整個處理，Codex 只標記該次 hook run），已改寫矩陣、阻擋表、H3 與能力缺口 4。**High 二**：初版把 `onFailure: "block"` 當成 Claude 現成的 fail-closed 開關，但它**需 v2.1.295**而本機是 2.1.273，於是 H2 在檢查器 crash 時其實是 fail-open（文件原文「lets everything through」）——已改成兩邊都由腳本自己 exit `2`，並新增一列「hook 失敗或 timeout 時」把 fail-open 預設寫明。**三個 Medium**：Codex 的 `SubagentStart`／`SubagentStop` 官方明載吃 subagent type matcher，初版誤標「未確認」；Codex 有 `[features] hooks = false` 一行全關（初版漏了，H1 的檢查項與 H7 的四條跳過途徑同步補上）；H2 的受保護路徑把 `docs/specs/00-prd.mdx` 寫成已定事實，但沒有任何來源定過它、而 `prd-writing` 的正常工作就是寫那個檔，已移到待裁定並補上 `.env.example` 等合法例外。另修三處：H6 的 payload 補 `stop_hook_active`（防重入的現成機制）、H2 偏好 exit `2` 的理由換成真正的證據（Codex `PreToolUse` 不支援 `continue`／`stopReason`，回傳會讓 hook 失敗並繼續執行工具）、矩陣補 Claude 的 `PreCompact` 可阻擋 |
 | [#111](https://github.com/label-suite/label-suite/issues/111) | 2026-11-11 | 初版。工作項 1 的三個 bullet：**事件、阻擋能力、工具名稱、設定位置、timeout 與信任模型的雙平台矩陣**（Claude Code 2.1.273 與 codex-cli 0.153.0，均以官方文件加本機 runtime 實查）、**七個 hook 的契約表**（各帶九個欄位）、**repo 定位**六種情境，以及**七項能力缺口與承接**。四個 timeout、自動 fix 政策等四題標為待裁定。查核中發現三件會寫錯的事：本機沒有 `timeout`／`gtimeout`；Codex 事件名是 PascalCase 而 binary 內部 enum 是 snake_case；Codex 有綁 hash 的 hook 信任模型，改過的 hook 在信任前會被跳過 |
