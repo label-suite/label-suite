@@ -67,7 +67,7 @@
       outputTypes: ['single_label'],
       completionRate: 89,
       iaaStatus: 'pass',
-      membershipRole: 'project_leader'
+      membershipRole: ['project_leader']
     },
     {
       id: 'T002',
@@ -77,7 +77,7 @@
       outputTypes: ['multi_label'],
       completionRate: 42,
       iaaStatus: 'pending',
-      membershipRole: 'reviewer'
+      membershipRole: ['reviewer']
     },
     {
       id: 'T003',
@@ -87,7 +87,7 @@
       outputTypes: ['multi_label'],
       completionRate: 18,
       iaaStatus: 'not_started',
-      membershipRole: 'project_leader'
+      membershipRole: ['project_leader']
     },
     {
       id: 'T004',
@@ -97,7 +97,7 @@
       outputTypes: ['single_dim'],
       completionRate: 58,
       iaaStatus: 'pending',
-      membershipRole: 'reviewer'
+      membershipRole: ['reviewer']
     },
     {
       id: 'T005',
@@ -107,7 +107,7 @@
       outputTypes: ['multi_dim'],
       completionRate: 76,
       iaaStatus: 'pass',
-      membershipRole: 'reviewer'
+      membershipRole: ['reviewer']
     },
     {
       id: 'T006',
@@ -117,7 +117,7 @@
       outputTypes: ['sequence_tagging'],
       completionRate: 71,
       iaaStatus: 'pass',
-      membershipRole: 'reviewer'
+      membershipRole: ['reviewer']
     },
     {
       id: 'T007',
@@ -127,7 +127,7 @@
       outputTypes: ['entity_recognition'],
       completionRate: 64,
       iaaStatus: 'pass',
-      membershipRole: 'project_leader'
+      membershipRole: ['project_leader']
     },
     {
       id: 'T008',
@@ -137,7 +137,8 @@
       outputTypes: ['relation_identification'],
       completionRate: 37,
       iaaStatus: 'fail',
-      membershipRole: 'project_leader'
+      // 身兼兩種任務角色：第五欄要兩個徽章都顯示（規格 05-01 §已確認決議 Q1）
+      membershipRole: ['project_leader', 'reviewer']
     },
     {
       id: 'T009',
@@ -147,7 +148,7 @@
       outputTypes: ['free_text'],
       completionRate: 25,
       iaaStatus: 'not_applicable',
-      membershipRole: 'reviewer'
+      membershipRole: ['reviewer']
     },
     {
       id: 'T010',
@@ -157,7 +158,8 @@
       outputTypes: ['entity_recognition', 'relation_identification'],
       completionRate: 53,
       iaaStatus: 'pending',
-      membershipRole: 'project_leader'
+      // 刻意寫成反序：徽章的順序由 MEMBERSHIP_ROLE_ORDER 決定，不是資料順序
+      membershipRole: ['reviewer', 'project_leader']
     },
     {
       id: 'T011',
@@ -167,7 +169,7 @@
       outputTypes: ['single_label'],
       completionRate: 82,
       iaaStatus: 'pass',
-      membershipRole: 'reviewer'
+      membershipRole: ['reviewer']
     },
     {
       id: 'T012',
@@ -177,7 +179,7 @@
       outputTypes: ['free_text'],
       completionRate: 100,
       iaaStatus: 'not_applicable',
-      membershipRole: 'reviewer'
+      membershipRole: ['reviewer']
     },
     {
       id: 'T013',
@@ -191,7 +193,7 @@
       ],
       completionRate: 46,
       iaaStatus: 'fail',
-      membershipRole: 'project_leader'
+      membershipRole: ['project_leader']
     }
   ];
 

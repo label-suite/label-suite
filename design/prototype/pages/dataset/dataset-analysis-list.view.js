@@ -86,13 +86,17 @@
       iaaBadge.textContent = tNested('iaaBadge', task.iaaStatus);
       iaaCell.appendChild(iaaBadge);
 
+      /* 身兼兩種任務角色時兩個徽章都畫，依 model 的排序（規格 05-01 §已確認決議 Q1）。
+         畫不出徽章的角色（annotator）不給徽章，與改成陣列之前一致。 */
       var roleCell = document.createElement('td');
       roleCell.className = 'role-cell';
-      var roleBadge = document.createElement('span');
-      roleBadge.className = 'badge '
-        + (model.ROLE_BADGE_CLS[task.membershipRole] || 'badge-role-rev');
-      roleBadge.textContent = tNested('roleLabel', task.membershipRole);
-      roleCell.appendChild(roleBadge);
+      model.orderedMembershipRoles(task).forEach(function (role) {
+        if (model.VALID_MEMBERSHIP_ROLES.indexOf(role) === -1) return;
+        var roleBadge = document.createElement('span');
+        roleBadge.className = 'badge ' + model.ROLE_BADGE_CLS[role];
+        roleBadge.textContent = tNested('roleLabel', role);
+        roleCell.appendChild(roleBadge);
+      });
 
       row.appendChild(nameCell);
       row.appendChild(outputCell);

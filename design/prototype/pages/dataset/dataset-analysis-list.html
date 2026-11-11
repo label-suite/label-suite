@@ -105,7 +105,13 @@
     }
     .progress-fill.complete { background: var(--color-cta); }
 
-    .role-cell { color: var(--color-text-soft); font-size: 13px; }
+    /* 身兼兩種任務角色時第五欄要並排兩個徽章，窄螢幕換行而不是把欄寬撐壞。
+       寫法比照同檔的 .output-type-tags（它也是一欄放多個標籤）。 */
+    .role-cell {
+      color: var(--color-text-soft); font-size: 13px;
+      display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+      min-width: 0; max-width: 100%;
+    }
 
     /* ── Badges ─────────────────────────────────────────────── */
     .badge {
