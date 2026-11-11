@@ -3640,12 +3640,12 @@
      drift into different phrasings. */
   var NO_ACTIONABLE_REVIEW_LABELS = {
     zh: {
-      title: '目前沒有可處理項目',
-      message: '這個任務的審核單位都已定稿，或不在你的可處理範圍內。',
+      title: '這個任務沒有待你處理的審核',
+      message: '你在這個任務的審核工作都完成了。有新的提交或你取得仲裁資格時，這裡會再出現。',
     },
     en: {
-      title: 'No actionable items right now',
-      message: 'Every review unit on this task is finalized or outside what you can act on.',
+      title: 'No reviews waiting for you in this task',
+      message: "You've finished all review work in this task. Items will appear here when there are new submissions or when you become eligible to arbitrate.",
     },
   };
 
