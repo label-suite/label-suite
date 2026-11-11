@@ -1007,7 +1007,7 @@ import PluginView from '@/components/PluginView.astro';
 
 | 限制 | 層級 | 內容 |
 | :--- | :--- | :--- |
-| 八張表的單位歸屬 | **DB** | 三欄複合 FK → `task_annotation_assignment(task_id, task_run_id, id)` |
+| 六張表的單位歸屬 | **DB** | 三欄複合 FK → `task_annotation_assignment(task_id, task_run_id, id)`。這一章有八張表，但 `annotation_review_submission_revision` 與 `annotation_review_decision` 不帶單位鍵，它們以單欄 FK 指向 submission |
 | 一個審核單位只有一個提交者 | **DB** | 唯一 `(run_id, assignment_id)` on submission |
 | 每項至多一張仲裁票 | **DB** | 唯一 `(run_id, assignment_id, output_key, item_key)`——**前提是 `item_key` 編碼無碰撞** |
 | 一個子項最多收尾一次 | **DB** | 同上鍵 on exception_resolution |
