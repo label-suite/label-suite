@@ -425,8 +425,11 @@
       return createTaskCard(entry, task, role, index, outputTypeMap);
     }).join('');
     if (!markup) {
+      /* 審核員有自己的句子（規格 02-01 §邊界情況 第 2 條）：他的區塊副標是「我的待審任務」，
+         共用標記員的「目前沒有進行中的任務」語意對不上。 */
+      var emptyKey = role === 'reviewer' ? 'reviewerTaskListEmpty' : 'taskListEmpty';
       markup = '<p class="empty-state empty-state-compact" data-testid="task-list-empty">'
-        + escapeHtml(t('taskListEmpty'))
+        + escapeHtml(t(emptyKey))
         + '</p>';
     }
     container.innerHTML = markup;
