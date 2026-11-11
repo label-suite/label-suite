@@ -512,7 +512,7 @@
 
       /* Success path markers — same vibrant treatment as the step icons above */
       .success-path--emerald .success-path-key,
-      .success-path--emerald .success-path-step-no { background: #059669; color: #D1FAE5; }
+      .success-path--emerald .success-path-step-no { background: #047857; color: #D1FAE5; } /* 不沿用 .step-icon--emerald 的 #059669：那裡裝圖示（3:1 即可），這裡裝文字，#D1FAE5 on #059669 只有 3.32:1 */
       .success-path--violet .success-path-key,
       .success-path--violet .success-path-step-no  { background: #6D28D9; color: #EDE9FE; }
       .success-path--indigo .success-path-key,
