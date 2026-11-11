@@ -56,7 +56,10 @@
 
   /* 規格 07-01 §已確認決議 Q2（維護者 2026-11-08）：標記員讀「標記員」，
      完全沒有任務角色讀「一般使用者」。來源 shared:FR-020A 的第三支同時覆蓋這兩種人，
-     裁決把它們拆開，所以是四個分支。 */
+     裁決把它們拆開，所以是四個分支。
+     注意兩種命名法：reviewer／project_leader 這兩個鍵本來就只當角色標示用，
+     而 roleAnnotator／roleNoTaskRole 加前綴是為了避開同字典裡的 annotator
+     ——那一個是導覽項標籤（「標記作業」），不是角色標示。 */
   function resolveRoleIndicator(taskRole, labels) {
     if (taskRole === 'reviewer') return labels.reviewer;
     if (taskRole === 'project_leader') return labels.project_leader;
@@ -2456,6 +2459,9 @@
       }
     }
     if (typeof opts.roleLabel === 'string') {
+      /* 這也是 FR-020A 的顯式覆寫入口，和掛載時的 opts.roleIndicator 同級：
+         設了旗標，之後切語言才不會被任務角色解析蓋回去。 */
+      currentRoleIndicatorIsExplicit = true;
       var roleIndicator = document.getElementById('roleIndicator');
       if (roleIndicator) roleIndicator.textContent = opts.roleLabel;
     }
