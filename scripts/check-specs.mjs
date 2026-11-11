@@ -105,8 +105,13 @@ function chapterRange(text, title) {
 
 // Heading anchors as NoteCraft renders them (github-slugger rules): lowercase,
 // drop punctuation, spaces to "-", and a "-N" suffix for repeated headings.
+//
+// A heading may itself be a link, and NoteCraft slugs the rendered text, not
+// the markdown. Keeping the raw source here pulled the URL into the anchor, so
+// every link to such a heading was reported broken while the built page worked.
 export function slug(title) {
   return title
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
     .trim()
     .toLowerCase()
     .replace(/[^\p{L}\p{N}\p{M} _-]/gu, '')

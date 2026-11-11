@@ -144,6 +144,15 @@ test('a repeated Scenario name is reported', () => {
   assert.match(errors, /a Scenario row has no name/);
 });
 
+test('a heading whose title is a link slugs to the link text only', () => {
+  // NoteCraft renders the link, so the anchor comes from the text the reader
+  // sees. Slugging the raw markdown dragged the URL into the anchor, and every
+  // link to such a heading was reported as broken while the built page worked.
+  assert.equal(slug('[01-01 登入](../../specs/01-account/01-login.mdx#資料欄位)'), '01-01-登入');
+  assert.equal(slug('看 [附錄](./a.mdx) 與 [總帳](./b.mdx)'), '看-附錄-與-總帳');
+  assert.equal(slug('![圖](./a.png) 標題'), '圖-標題');
+});
+
 test('heading slugs drop punctuation and turn spaces into dashes', () => {
   assert.equal(slug(MAPPING_CHAPTER), '附錄舊編號對照');
   assert.equal(slug('邊界情況（Edge Case）'), '邊界情況edge-case');
