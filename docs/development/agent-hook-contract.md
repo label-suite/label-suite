@@ -149,7 +149,7 @@ matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Wr
 | **事件** | `SessionStart`（matcher `startup|resume|clear|compact|fork`，兩邊都支援這五種） |
 | **適用路徑／角色** | 整個 repo，不分角色 |
 | **payload 欄位** | `cwd`（定位 repo）、`hook_event_name`、`session_id`（只用於 log 關聯） |
-| **共用檢查器** | `scripts/check-env.sh`（**待建置**）：核對 `core.hooksPath` 是否指向 `scripts/git-hooks`、`AGENTS.md` 是否存在、`node`／`pnpm`／`uv` 版本，以及**本次的 hook 是不是真的會跑**——Claude 看 `disableAllHooks`，Codex 看 `[features] hooks` 是否被關掉、以及該 hook 有沒有被信任 |
+| **共用檢查器** | `scripts/check-env.sh`（**待建置**）：核對 `core.hooksPath` 是否指向 `scripts/git-hooks`、`AGENTS.md` 是否存在、`node`／`pnpm`／`uv` 版本，以及**本次的 hook 是不是真的會跑**——Claude 看 `disableAllHooks`，Codex 看 `[features] hooks` 是否被關掉、以及該 hook 有沒有被信任；另外**核對 `.claude/settings.json` 與 `.codex/hooks.json` 兩份設定指向的腳本是否都存在**——維護者裁定不做生成器之後，這道檢查是兩份設定唯一的防漂移機制（§能力缺口第 7 條的承接） |
 | **timeout** | **10 秒**（維護者 2026-11-11 裁定）。環境檢查不該讓對話等 |
 | **輸出與退出碼** | 一律 exit `0`，訊息走 stdout。缺東西時列出「缺什麼、怎麼補」 |
 | **阻擋或提醒** | **提醒**。`SessionStart` 在兩邊都擋不住，所以也不假裝它能擋 |
@@ -302,6 +302,8 @@ matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Wr
 | 題目 | 本文件的提議 | 為什麼要裁 |
 | :--- | :--- | :--- |
 | Codex hook 的信任要不要寫進 `scripts/setup.sh` 的指引 | 在 setup 輸出提示「Codex 使用者要跑 `/hooks` 信任，否則 hook 會被跳過」 | 這會影響新人上手流程，而且 `setup.sh` 目前只做一件事（設 `core.hooksPath`），多印一段提示要不要算在它的職責內由維護者決定 |
+
+---
 
 ## 來源對照
 
