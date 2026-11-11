@@ -1405,7 +1405,7 @@
      "fk": "users"
     }
    ],
-   "description": "**回執只是回執，真正的成員在 `task_run_item`。** 這一點要寫清楚，否則會有人以為刪掉 `task_run_item` 還能從回執重建——回執只有摘要與外部參照，**不是資料來源**。"
+   "description": "**回執只是回執，真正的成員在 `task_run_item`。** 這一點要寫清楚，否則會有人以為刪掉 `task_run_item` 還能從回執重建——回執只有摘要與外部參照，**不是資料來源**。\n\n**這張表在規格裡沒有直接對應的條文**：整節沒有任何指回 `docs/specs/` 的連結，欄位的「規格來源」欄寫的是設計理由，不是規格引用（[盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決) D11，仍待裁）。"
   },
   {
    "name": "task_run",
@@ -1525,7 +1525,7 @@
      "note": "執行內排序；唯一 (task_run_id, list_position)；CHECK >= 1"
     }
    ],
-   "description": "**`task_run_cycle_id` 在這張表是刻意的反正規化。** 它可以從 `task_run` JOIN 出來，但那樣就**無法用一個唯一限制表達「同週期不重選」**——跨表的唯一性 DB 做不到。這是為了把一條規則落進 DB 而付的代價，寫在這裡免得後人誤刪。"
+   "description": "**`task_run_cycle_id` 在這張表是刻意的反正規化。** 它可以從 `task_run` JOIN 出來，但那樣就**無法用一個唯一限制表達「同週期不重選」**——跨表的唯一性 DB 做不到。這是為了把一條規則落進 DB 而付的代價，寫在這裡免得後人誤刪。\n\n**這張表在規格裡沒有直接對應的條文**：整節沒有任何指回 `docs/specs/` 的連結，欄位的「規格來源」欄寫的是設計理由，不是規格引用（[盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決) D11，仍待裁）。"
   },
   {
    "name": "task_annotation_assignment",
@@ -1582,7 +1582,7 @@
      "note": "最後改動"
     }
    ],
-   "description": "**[04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位) 的「審核單位」就是「任務的某個回合 × 某一筆指派」**，所以這張表是審核單位定址的一半。\n\n**沒有 `status` 欄，這是刻意的。** [03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 明寫「標記作業狀態……**推導值，不另存**」，由終局排除、目前的標記紀錄與受派者**依序**判定。存一個 `status` 會與那個順序產生第二個真相。"
+   "description": "**[04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位) 的「審核單位」就是「任務的某個回合 × 某一筆指派」**，所以這張表是審核單位定址的一半。\n\n**規格來源**：[04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位)（`:666`「審核單位｜**任務的某個回合 × 某一筆指派**」——這張表就是那個單位的定址）、[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)（`:965`「標記作業狀態……**推導值，不另存**」——所以這張表刻意沒有 `status` 欄）。**這兩條是表說明引用的規格**，維護者 2026-11-11 裁定它們**算**來源（[盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決) D8）。\n\n**沒有 `status` 欄，這是刻意的。** [03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 明寫「標記作業狀態……**推導值，不另存**」，由終局排除、目前的標記紀錄與受派者**依序**判定。存一個 `status` 會與那個順序產生第二個真相。"
   },
   {
    "name": "task_annotation_exclusion",
@@ -1824,7 +1824,8 @@
      "required": "required",
      "note": "最新改判時間"
     }
-   ]
+   ],
+   "description": "**一個審核單位只有一個提交者。** 這張表就是那個約束的落點：三欄單位鍵上的**唯一 `(run_id, assignment_id)`** 擋住兩位審核員並列正式提交，而首次提交者即**固定歸屬**、之後每次合法改判把 `version` +1。\n\n**這一句是從下表的儲存格收上來的，不是另外寫的**——這張表在規格裡沒有直接對應的條文（**維護者 2026-11-11 裁定 D10：就用表自己的儲存格寫一句**）。它**仍然沒有規格來源**，那一題另外登記成 [盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決) D11。"
   },
   {
    "name": "annotation_review_submission_revision",
@@ -1876,7 +1877,7 @@
      "note": "本次提交時間"
     }
    ],
-   "description": "**每次正式提交一份完整快照。`decision_payload` 是已提交決策的唯一權威紀錄。**"
+   "description": "**每次正式提交一份完整快照。`decision_payload` 是已提交決策的唯一權威紀錄。**\n\n**這張表在規格裡沒有直接對應的條文**：整節沒有任何指回 `docs/specs/` 的連結，欄位的「規格來源」欄寫的是設計理由，不是規格引用（[盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決) D11，仍待裁）。"
   },
   {
    "name": "annotation_review_decision",
@@ -2430,7 +2431,7 @@
      "note": "清單中的順序；唯一 (export_id, position)；CHECK >= 1。來源：從 1 開始。順序寫進產物的有序清單"
     }
    ],
-   "description": "**這張表是反查出來的六項之一**（[盤點總帳§二](/notes/diagrams/architecture/data-field-inventory#二九條流程的反查)）：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 的畫面只顯示一個匯出時間，但「請求被接受」與「實際讀取結果」是兩個時刻，而一次匯出可以納入多次執行——所以要有這張表記順序。"
+   "description": "**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)（`:975`「匯出時間……記錄列與檔名用的是**實際讀取結果的那個時間**，不是請求被接受的時間」——兩個時刻各自成立，而一次匯出可以納入多次執行，所以要有這張表記順序）。**這一條是表說明引用的規格**，維護者 2026-11-11 裁定它**算**來源（[盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決) D8）。\n\n**這張表是反查出來的六項之一**（[盤點總帳§二](/notes/diagrams/architecture/data-field-inventory#二九條流程的反查)）：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 的畫面只顯示一個匯出時間，但「請求被接受」與「實際讀取結果」是兩個時刻，而一次匯出可以納入多次執行——所以要有這張表記順序。"
   },
   {
    "name": "task_work_interval",
