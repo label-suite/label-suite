@@ -36,6 +36,79 @@
    * TAB_SCROLL_STORAGE_KEY after it was just cleared. */
   var workspaceTabLoggingOut = false;
 
+  /* label-suite/label-suite#195（規格 01-01 Q3，維護者 2026-11-09）：已登入的人
+   * 直接開登入、註冊、忘記密碼或重設密碼這四頁 → 直接前往儀表板，不顯示該頁。
+   * 01-01 `:191` 定了這一條，01-02 `:37` 與 01-03 `:37` 各自寫「比照 01-01 Q3」，
+   * 所以涵蓋四頁、不只登入頁。
+   *
+   * 這份 prototype 原本完全沒有登入狀態的概念——登入頁的送出就是直接
+   * `location.href` 到儀表板，沒有任何地方記得你登入過。維護者 2026-11-12 裁定
+   * 用「旗標為主、網址參數當逃生口」：旗標在這裡，因為登出處理已經住在這個模組，
+   * 讓同一個地方負責設與清。 */
+  var LOGGED_IN_STORAGE_KEY = 'labelsuite.loggedIn';
+
+  /* label-suite/label-suite#195: 規格 01-04 §頭像 第 2、5、6 條要求存好的頭像在側欄
+   * 看得到、重新整理之後還在。側欄在每一頁都掛著，所以讀取與清除住在這裡，個人設定頁
+   * 只負責寫入；原本只有那一頁會畫，換頁之後 chip 又退回縮寫。
+   * 清除跟著登出走，比照旁邊的 clearStoredSystemRole()（FR-018／ADR-037：不讓下一個
+   * 人繼承上一位的東西）。 */
+  var AVATAR_STORAGE_KEY = 'label-suite-profile-avatar';
+
+  function readStoredAvatar() {
+    try { return window.localStorage.getItem(AVATAR_STORAGE_KEY) || null; } catch (error) { return null; }
+  }
+
+  /* 回傳是否真的寫進去了。data URL 比原檔大約三分之一，而 localStorage 大約只有
+     5 MB，所以一張合格的 5 MB 圖存不下——呼叫端要據此告訴使用者，不能顯示成功。 */
+  function writeStoredAvatar(dataUrl) {
+    try {
+      if (dataUrl) window.localStorage.setItem(AVATAR_STORAGE_KEY, dataUrl);
+      else window.localStorage.removeItem(AVATAR_STORAGE_KEY);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function clearStoredAvatar() {
+    try { window.localStorage.removeItem(AVATAR_STORAGE_KEY); } catch (error) { /* private mode */ }
+  }
+
+  function markLoggedIn() {
+    try { window.localStorage.setItem(LOGGED_IN_STORAGE_KEY, '1'); } catch (error) { /* private mode */ }
+  }
+
+  function clearLoggedIn() {
+    try { window.localStorage.removeItem(LOGGED_IN_STORAGE_KEY); } catch (error) { /* private mode */ }
+  }
+
+  function isLoggedIn() {
+    try { return window.localStorage.getItem(LOGGED_IN_STORAGE_KEY) === '1'; } catch (error) { return false; }
+  }
+
+  /* 四頁在載入時呼叫。回傳 true 表示已經導走、呼叫端不要再渲染。
+   *
+   * 兩個網址參數都是演示用的逃生口，比照任務詳情頁的 `?sim_403=1` 慣例：
+   *   `?sim_logged_out=1` 無論旗標如何都留在本頁——沒有它的話，旗標一寫下去
+   *     四頁都會把你導開，而這四頁上沒有側欄可以按登出，你就回不來了。
+   *   `?sim_logged_in=1` 無論旗標如何都導走，方便直接演示這一條。 */
+  function redirectIfLoggedIn(dashboardHref) {
+    /* 規格 01-01 Q3 說的是「已登入的人**開那一頁**」。規格書裡的線框不是在用
+       產品，是在看畫面：`PrototypeFrame` 用 iframe 載入同一個 origin
+       （`127.0.0.1:4331`）的頁面，所以旗標一寫下去，01-01、01-02、01-03 共 29 個
+       線框都會在框內跳走，讀者就看不到規格正在描述的那個畫面。元件只吃 `page`，
+       沒辦法替線框加上逃生口參數，所以這裡自己判斷。 */
+    if (window.top !== window.self) return false;
+    var params;
+    try { params = new URLSearchParams(window.location.search); } catch (error) { params = null; }
+    var forceOut = params && params.get('sim_logged_out') === '1';
+    var forceIn = params && params.get('sim_logged_in') === '1';
+    if (forceOut) return false;
+    if (!forceIn && !isLoggedIn()) return false;
+    window.location.replace(dashboardHref || '../dashboard/dashboard.html');
+    return true;
+  }
+
   /* FR-012 (issue singyichen/label-suite#1075 G2c-1): the predicate a page (annotation-workspace,
    * task-new) registers via registerWorkspaceUnsavedPredicate() below --
    * a zero-arg function this module polls only at the pagehide moment
@@ -139,6 +212,18 @@
   var BYPASS_WORDING = {
     zh: { answer: '無法判定 (Bypass)', decision: '無法裁決' },
     en: { answer: 'Unable to determine (Bypass)', decision: 'Cannot adjudicate' }
+  };
+
+  /* label-suite/label-suite#195 (spec 01-03 Q2, spec 01-02 §註冊成功 clause 3):
+   * one message for every reason a one-time link cannot be used -- expired,
+   * already used, or superseded by a later request. Two pages land on such a
+   * link (reset-password and verify-email) and 01-02 says they say the SAME
+   * thing, so the string is defined once here and both read it. Naming the
+   * cause would tell whoever holds the link that it existed and what became
+   * of it. The pages differ only in where the button goes. */
+  var ONE_TIME_LINK_WORDING = {
+    zh: { unusable: '連結無法使用，請重新申請' },
+    en: { unusable: 'This link can no longer be used. Please request a new one.' }
   };
 
   var shortcutI18n = {
@@ -2081,7 +2166,7 @@
     // issue singyichen/label-suite#946: userName must land in the DOM via textContent, not the
     // innerHTML string above, so a malicious userName can't be parsed as
     // markup. Reuses updateUserChip()'s existing safe-write path (DRY).
-    updateUserChip({ userName: resolveUserName(opts) });
+    updateUserChip({ userName: resolveUserName(opts), avatarImage: readStoredAvatar() });
     applySystemRole(resolveSystemRole(opts));
     var initialCollapsed = typeof opts.sidebarCollapsed === 'boolean'
       ? opts.sidebarCollapsed
@@ -2102,6 +2187,10 @@
         // shared-019 FR-018 / ADR-037: drop the stored system role so the next
         // session cannot inherit the previous user's privilege.
         clearStoredSystemRole();
+        /* label-suite/label-suite#195: 清掉登入旗標，否則登出之後那四頁仍然會把
+           使用者導回儀表板——登出就變成按不動。 */
+        clearLoggedIn();
+        clearStoredAvatar();
         try {
           window.sessionStorage.removeItem(WORKSPACE_TAB_STORAGE_KEY);
           window.sessionStorage.removeItem(WORKSPACE_TAB_SCROLL_STORAGE_KEY);
@@ -2467,8 +2556,47 @@
     }
     if (typeof opts.avatarLabel === 'string') {
       var avatar = document.getElementById('userAvatar');
-      if (avatar) avatar.textContent = opts.avatarLabel;
+      if (avatar) paintUserAvatar(avatar, null, opts.avatarLabel);
     }
+    /* label-suite/label-suite#195: 規格 01-04 §頭像 第 2、5 條要求存檔之後「側欄的
+       頭像立刻跟著變」，包含移除之後回到預設頭像。在此之前這個 chip 只放得下文字
+       縮寫，所以個人設定頁沒有辦法滿足那兩條。
+       規格 07-01 §規格 明寫「使用者名稱與縮寫的呈現以 prototype 為準，不寫進規格」，
+       所以這裡放圖不牴觸側欄自己的規格。
+       `null` 是「回到縮寫」，字串是圖片；`undefined` 代表這一次不動它。 */
+    if (opts.avatarImage !== undefined) {
+      var imgHost = document.getElementById('userAvatar');
+      if (imgHost) {
+        paintUserAvatar(
+          imgHost,
+          opts.avatarImage,
+          typeof opts.avatarLabel === 'string'
+            ? opts.avatarLabel
+            /* 沒給名字時就讀 chip 上現有的那一個，不另外猜一份來源。 */
+            : computeAvatarInitials(opts.userName || currentChipUserName())
+        );
+      }
+    }
+  }
+
+  function currentChipUserName() {
+    var el = document.getElementById('userName');
+    return (el && el.textContent) || '';
+  }
+
+  /* 把 chip 畫成圖片或縮寫。圖片用 object-fit 填滿圓形，和個人設定頁的預覽同形。 */
+  function paintUserAvatar(host, dataUrl, initials) {
+    while (host.firstChild) host.removeChild(host.firstChild);
+    if (!dataUrl) {
+      host.textContent = initials || '';
+      return;
+    }
+    var img = document.createElement('img');
+    img.alt = '';
+    img.setAttribute('aria-hidden', 'true');
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;';
+    img.src = dataUrl;
+    host.appendChild(img);
   }
 
   window.LabelSuiteSharedSidebar = {
@@ -2486,6 +2614,14 @@
     applyGlobalLanguage: applyGlobalLanguage,
     updateUserChip: updateUserChip,
     registerWorkspaceUnsavedPredicate: registerWorkspaceUnsavedPredicate,
+    markLoggedIn: markLoggedIn,
+    clearLoggedIn: clearLoggedIn,
+    isLoggedIn: isLoggedIn,
+    redirectIfLoggedIn: redirectIfLoggedIn,
+    readStoredAvatar: readStoredAvatar,
+    writeStoredAvatar: writeStoredAvatar,
+    clearStoredAvatar: clearStoredAvatar,
     BYPASS_WORDING: BYPASS_WORDING,
+    ONE_TIME_LINK_WORDING: ONE_TIME_LINK_WORDING,
   };
 })();

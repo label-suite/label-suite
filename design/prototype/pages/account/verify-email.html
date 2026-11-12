@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<!-- Spec: docs/specs/01-account/02-register.mdx (§註冊成功) -->
+<!-- label-suite/label-suite#195: the page a verification link lands on. The
+     source has no such screen, because the source created the account the
+     moment the form was submitted; spec 01-02 Q1 moved account creation to
+     the click on this link, and Q2 says that click goes straight to the
+     dashboard. -->
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Label Suite — 完成註冊</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Design Tokens ─────────────────────────────────────────── */
+    :root {
+      --color-primary:        #6366F1;
+      --color-primary-soft-bg:  #EEF2FF;
+      --color-cta:            #047857;
+      --color-cta-hover:      #065F46;
+      --color-surface:        #F5F3FF;
+      --color-card:           #FFFFFF;
+      --color-border:         #E2E8F0;
+      --color-border-focus:   #6366F1;
+      --color-ink:            #1E1B4B;
+      --color-ink-muted:     #64748B;
+      --color-error:          #B91C1C;
+      --color-error-bg:       #FEF2F2;
+      --color-error-border:   #FECACA;
+      --color-success:        #15803D;
+      --color-success-bg:     #F0FDF4;
+      --color-success-border: #BBF7D0;
+      --color-link:           #6366F1;
+      --radius-sm:            4px;
+      --radius-md:            8px;
+      --radius-lg:            12px;
+      --z-sticky:             200;
+      --shadow-card:          0 4px 24px rgba(99,102,241,0.10), 0 1px 4px rgba(0,0,0,0.06);
+      --font-sans:            'Inter', 'Noto Sans TC', 'PingFang TC', -apple-system, sans-serif;
+    }
+
+    /* ── Reset ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-surface);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Navbar ─────────────────────────────────────────────────── */
+    .navbar {
+      height: 64px;
+      background: var(--color-card);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      position: sticky;
+      top: 0;
+      z-index: var(--z-sticky);
+    }
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .navbar-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--color-primary);
+      flex-shrink: 0;
+    }
+    .navbar-wordmark {
+      font-family: 'Crimson Pro', serif;
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--color-ink);
+      line-height: 1;
+    }
+    .lang-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 6px 12px;
+      background: var(--color-card);
+      color: var(--color-ink);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      white-space: nowrap;
+    }
+    .lang-toggle:hover {
+      border-color: var(--color-primary);
+      background: var(--color-primary-soft-bg);
+    }
+    .lang-toggle svg { flex-shrink: 0; }
+
+    /* ── Main ───────────────────────────────────────────────────── */
+    .main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 16px;
+    }
+
+    /* ── Card ───────────────────────────────────────────────────── */
+    .card {
+      background: var(--color-card);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      padding: 40px 40px 36px;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    /* ── Card Header ────────────────────────────────────────────── */
+    .card-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+    .card-logo {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      flex-shrink: 0;
+    }
+    .card-title {
+      font-family: 'Crimson Pro', serif;
+      font-weight: 700;
+      font-size: 22px;
+      color: var(--color-ink);
+      line-height: 1.2;
+    }
+    .card-subtitle {
+      font-size: 15px;
+      color: var(--color-ink-muted);
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    /* ── Token Error Panel ──────────────────────────────────────── */
+    .token-error-panel {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      background: var(--color-error-bg);
+      border: 1px solid var(--color-error-border);
+      border-radius: var(--radius-md);
+      padding: 20px 24px;
+      text-align: center;
+    }
+    .token-error-panel.visible { display: flex; }
+    .token-error-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--color-error-border);
+      color: var(--color-error);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .token-error-msg {
+      font-size: 14px;
+      color: var(--color-error);
+      line-height: 1.6;
+    }
+    .token-error-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 38px;
+      padding: 0 20px;
+      border: 1px solid var(--color-error-border);
+      border-radius: var(--radius-md);
+      background: var(--color-card);
+      color: var(--color-error);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .token-error-action:hover {
+      background: var(--color-error-bg);
+      border-color: var(--color-error);
+    }
+    .token-error-action:focus-visible {
+      outline: 2px solid var(--color-error);
+      outline-offset: 2px;
+    }
+
+    /* ── Success Panel ──────────────────────────────────────────── */
+    .success-panel {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      background: var(--color-success-bg);
+      border: 1px solid var(--color-success-border);
+      border-radius: var(--radius-md);
+      padding: 20px 24px;
+      text-align: center;
+    }
+    .success-panel.visible { display: flex; }
+    .success-panel-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--color-success-border);
+      color: var(--color-success);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .success-panel-msg {
+      font-size: 14px;
+      color: var(--color-success);
+      line-height: 1.6;
+    }
+    .success-panel-hint {
+      font-size: 13px;
+      color: var(--color-ink-muted);
+      line-height: 1.6;
+    }
+
+    .success-panel-back {
+      font-size: 13px;
+      color: var(--color-link);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .success-panel-back:hover { text-decoration: underline; }
+
+    /* ── Prototype State Toggle ─────────────────────────────────── */
+    .proto-toggle-bar {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      background: rgba(30,27,75,0.92);
+      border-radius: 20px;
+      padding: 8px 16px;
+      z-index: 999;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    }
+    .proto-toggle-bar span {
+      font-size: 11px;
+      color: rgba(255,255,255,0.5);
+      line-height: 28px;
+      white-space: nowrap;
+    }
+    .proto-btn {
+      height: 28px;
+      padding: 0 12px;
+      border-radius: 12px;
+      border: none;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .proto-btn.active  { background: #6366F1; color: #fff; }
+    .proto-btn.inactive { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); }
+    .proto-btn.inactive:hover { background: rgba(255,255,255,0.2); }
+
+    /* ── Responsive ─────────────────────────────────────────────── */
+    @media (max-width: 767px) {
+      .navbar { height: 56px; padding: 0 16px; }
+      .navbar-logo { width: 28px; height: 28px; border-radius: 7px; }
+      .navbar-wordmark { font-size: 16px; }
+      .main { padding: 24px 16px; align-items: flex-start; }
+      .card { padding: 28px 20px 24px; border-radius: var(--radius-lg); }
+      .card-logo { width: 52px; height: 52px; border-radius: 13px; }
+      .proto-toggle-bar { bottom: 8px; padding: 6px 12px; }
+    }
+
+    /* ── Accessibility ──────────────────────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+
+    /* ── Dark mode overrides ──────────────────────────────────── */
+    html[data-theme="dark"] {
+      --color-surface:       #0B0B12;
+      --color-card:          #16161F;
+      --color-border:        #2A2A35;
+      --color-border-focus:  #818CF8;
+      --color-ink:           #E2E8F0;
+      --color-ink-muted:    #9CA3AF;
+      --color-link:          #818CF8;
+      --color-primary:       #818CF8;
+      --color-primary-soft-bg: #1E1B4B;
+      --color-error:         #F87171;
+      --color-error-bg:      #2A1414;
+      --color-error-border:  #5B2222;
+      --color-success:       #4ADE80;
+      --color-success-bg:    #0F2A18;
+      --color-success-border:#1F5132;
+      --shadow-card:         0 0 0 1px rgba(129,140,248,0.10), 0 4px 24px rgba(0,0,0,0.40);
+
+      /* Lang toggle hover */
+      .lang-toggle:hover { background: #1E1B4B; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Navbar ─────────────────────────────────────────────────── -->
+  <header class="navbar" role="banner">
+    <a class="navbar-brand" href="#" aria-label="Label Suite 首頁">
+      <svg class="navbar-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect width="32" height="32" rx="8" style="fill: var(--color-primary)"/>
+        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"
+              transform="translate(4,4) scale(0.75)"
+              stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <line x1="10.25" y1="10.25" x2="10.26" y2="10.26"
+              stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="navbar-wordmark">Label Suite</span>
+    </a>
+    <button class="lang-toggle" id="langToggle" data-testid="lang-toggle" aria-label="切換語言" type="button">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="2" y1="12" x2="22" y2="12"/>
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+      </svg>
+      <span id="langLabel" data-testid="lang-label">ZH</span>
+    </button>
+  </header>
+
+  <!-- ── Main ───────────────────────────────────────────────────── -->
+  <main class="main" role="main">
+    <div class="card" role="region" aria-label="完成註冊">
+
+      <!-- Card Header -->
+      <div class="card-header">
+        <svg class="card-logo" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="56" height="56" rx="14" style="fill: var(--color-primary)"/>
+          <path d="M36.59 22.41l-12.17 12.17a2 2 0 0 1-2.83 0L10 22V10h12l14.59 12.41a2 2 0 0 1 0 2z"
+                transform="translate(4,4) scale(0.857)"
+                stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <circle cx="20" cy="20" r="1.5" fill="white"/>
+        </svg>
+        <h1 class="card-title" id="cardTitle">完成註冊</h1>
+        <p class="card-subtitle" id="cardSubtitle">連結確認完成</p>
+      </div>
+
+      <!-- Link worked: the account exists from this moment (spec 01-02 clause 1) -->
+      <div class="success-panel" id="successPanel" role="status" aria-live="polite">
+        <div class="success-panel-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <p class="success-panel-msg" id="successMsg">帳號已建立</p>
+        <p class="success-panel-hint" id="successHint">正在帶你前往儀表板…</p>
+        <a href="../dashboard/dashboard.html" class="success-panel-back" id="dashboardLink">前往儀表板</a>
+      </div>
+
+      <!-- Link cannot be used: expired, already used, or superseded -->
+      <div class="token-error-panel" id="tokenErrorPanel" role="alert">
+        <div class="token-error-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <p class="token-error-msg" id="tokenErrorMsg">連結無法使用，請重新申請</p>
+        <a href="./register.html" class="token-error-action" id="tokenErrorAction" data-testid="reregister-link">重新註冊</a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ── Prototype State Toggle Bar ─────────────────────────────── -->
+  <!-- Landing here with no parameters is the real thing: the account is
+       created and you are taken to the dashboard, so the panel is barely
+       visible. `sim_hold=1` stops that one redirect so the panel can be
+       reviewed. The other two buttons name the underlying cause on purpose,
+       as reset-password.html's bar does: you need both to see that the panel
+       says the SAME thing either way (spec 01-03 Q2). They are a prototype
+       affordance, not a product feature -- do not "fix" their labels to
+       match the panel. -->
+  <div class="proto-toggle-bar" role="group" aria-label="原型狀態切換">
+    <span>原型狀態：</span>
+    <button class="proto-btn active" id="btnValid" onclick="showState('valid')" type="button">連結可用</button>
+    <button class="proto-btn inactive" id="btnExpired" onclick="showState('expired')" type="button">已過期</button>
+    <button class="proto-btn inactive" id="btnUsed" onclick="showState('used')" type="button">已使用</button>
+  </div>
+
+  <script src="../shared/sidebar.js"></script>
+  <script src="../../assets/analytics.js"></script>
+  <script>
+    window.LabelSuiteAnalytics.init({
+      page: 'verify-email',
+    });
+
+    /* ── i18n ──────────────────────────────────────────────────── */
+    const i18n = {
+      zh: {
+        pageTitle:            'Label Suite — 完成註冊',
+        langLabel:            'ZH',
+        cardTitle:            '完成註冊',
+        cardSubtitleValid:    '連結確認完成',
+        cardSubtitleError:    '連結無效',
+        successMsg:           '帳號已建立',
+        successHint:          '正在帶你前往儀表板…',
+        dashboardLink:        '前往儀表板',
+        tokenLinkUnusableMsg: window.LabelSuiteSharedSidebar.ONE_TIME_LINK_WORDING.zh.unusable,
+        tokenErrorAction:     '重新註冊',
+        cardRegion:           '完成註冊',
+        navAriaLabel:         'Label Suite 首頁',
+        langToggleAria:       '切換語言',
+      },
+      en: {
+        pageTitle:            'Label Suite — Finish Signing Up',
+        langLabel:            'EN',
+        cardTitle:            'Finish Signing Up',
+        cardSubtitleValid:    'Link confirmed',
+        cardSubtitleError:    'Invalid link',
+        successMsg:           'Your account is ready',
+        successHint:          'Taking you to the dashboard…',
+        dashboardLink:        'Go to dashboard',
+        tokenLinkUnusableMsg: window.LabelSuiteSharedSidebar.ONE_TIME_LINK_WORDING.en.unusable,
+        tokenErrorAction:     'Sign up again',
+        cardRegion:           'Finish Signing Up',
+        navAriaLabel:         'Label Suite home',
+        langToggleAria:       'Switch language',
+      },
+    };
+
+    let lang  = window.LabelSuiteSharedSidebar.getStoredLang();
+    let state = 'valid'; // 'valid' | 'expired' | 'used'
+    let redirectTimer = null;
+    const getTrackingContext = () => ({ lang, state });
+
+    function applyLang(l) {
+      const nextLang = l === 'en' ? 'en' : 'zh';
+      const t = i18n[nextLang];
+      lang = window.LabelSuiteSharedSidebar.applyGlobalLanguage(nextLang, {
+        langToggleAria: t.langToggleAria,
+        labelIds: ['langLabel'],
+        toggleIds: ['langToggle'],
+      });
+      document.title = t.pageTitle;
+
+      document.getElementById('cardTitle').textContent      = t.cardTitle;
+      document.getElementById('cardSubtitle').textContent   =
+        state === 'valid' ? t.cardSubtitleValid : t.cardSubtitleError;
+      document.getElementById('successMsg').textContent     = t.successMsg;
+      document.getElementById('successHint').textContent    = t.successHint;
+      document.getElementById('dashboardLink').textContent  = t.dashboardLink;
+      document.getElementById('tokenErrorMsg').textContent  = t.tokenLinkUnusableMsg;
+      document.getElementById('tokenErrorAction').textContent = t.tokenErrorAction;
+
+      document.querySelector('.navbar-brand').setAttribute('aria-label', t.navAriaLabel);
+      document.querySelector('[role="region"]').setAttribute('aria-label', t.cardRegion);
+    }
+
+    document.getElementById('langToggle').addEventListener('click', () => {
+      const previousLang = lang;
+      lang = lang === 'zh' ? 'en' : 'zh';
+      applyLang(lang);
+      window.LabelSuiteAnalytics.track('prototype_lang_switched', {
+        source: 'verify_email_lang_toggle',
+        from_lang: previousLang,
+        to_lang: lang,
+        state,
+      });
+    });
+
+    /* ── Prototype State Switcher ──────────────────────────────── */
+    function showState(s) {
+      state = s;
+      if (redirectTimer) {
+        window.clearTimeout(redirectTimer);
+        redirectTimer = null;
+      }
+
+      const valid = state === 'valid';
+      document.getElementById('successPanel').classList.toggle('visible', valid);
+      document.getElementById('tokenErrorPanel').classList.toggle('visible', !valid);
+
+      [['btnValid', 'valid'], ['btnExpired', 'expired'], ['btnUsed', 'used']].forEach(([id, value]) => {
+        const btn = document.getElementById(id);
+        btn.classList.toggle('active', state === value);
+        btn.classList.toggle('inactive', state !== value);
+      });
+
+      applyLang(lang);
+
+      if (valid) {
+        /* Clause 1: the account exists from this moment, not from the form
+           being submitted. Clause 2: no second sign-in, because the password
+           was set on the form. The flag is what the four account pages read
+           to send a signed-in visitor away (spec 01-01 Q3). */
+        window.LabelSuiteSharedSidebar.markLoggedIn();
+        window.LabelSuiteAnalytics.track('prototype_register_succeeded', {
+          ...getTrackingContext(),
+        });
+        if (!holdRequested()) {
+          redirectTimer = window.setTimeout(() => {
+            window.location.href = '../dashboard/dashboard.html';
+          }, 2000);
+        }
+      } else {
+        /* 連結不能用就沒有帳號被建立，所以不能留著登入旗標：留著的話按下
+           「重新註冊」會被 register.html 的 redirectIfLoggedIn() 立刻導去儀表板，
+           註冊頁根本看不到。 */
+        window.LabelSuiteSharedSidebar.clearLoggedIn();
+        window.LabelSuiteAnalytics.track('prototype_verify_email_link_unusable', {
+          ...getTrackingContext(),
+        });
+      }
+    }
+
+    /* `?sim_hold=1` keeps the success panel on screen instead of going to the
+       dashboard, so the state can be reviewed; without it this page does what
+       the spec says it does. */
+    function holdRequested() {
+      try {
+        return new URLSearchParams(window.location.search).get('sim_hold') === '1';
+      } catch (error) {
+        return false;
+      }
+    }
+
+    /* ── Init ──────────────────────────────────────────────────── */
+    window.LabelSuiteAnalytics.bindClickTracks(
+      [
+        { id: 'dashboardLink', eventName: 'prototype_navigate_dashboard_clicked', extra: { source: 'verify_email_success' } },
+        { id: 'tokenErrorAction', eventName: 'prototype_navigate_register_clicked', extra: { source: 'verify_email_unusable' } },
+      ],
+      getTrackingContext
+    );
+    applyLang(window.LabelSuiteSharedSidebar.getStoredLang());
+    showState('valid');
+    window.LabelSuiteAnalytics.trackPageView('verify-email', getTrackingContext);
+  </script>
+</body>
+</html>

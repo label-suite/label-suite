@@ -545,6 +545,15 @@
   </main>
 
   <script src="../shared/sidebar.js"></script>
+  <script>
+    /* label-suite/label-suite#195（規格 01-01 Q3）：已登入的人直接開這一頁 →
+       直接前往儀表板，不顯示本頁。四頁都做，因為 01-02 `:37` 與 01-03 `:37`
+       各自寫了「比照 01-01 Q3」。演示用的逃生口見 sidebar.js 的
+       redirectIfLoggedIn()：`?sim_logged_out=1` 強制留下、`?sim_logged_in=1`
+       強制導走。放在這裡（而不是 DOMContentLoaded）是為了在畫面畫出來之前
+       就決定，避免閃一下本頁再跳走。 */
+    window.LabelSuiteSharedSidebar.redirectIfLoggedIn('../dashboard/dashboard.html');
+  </script>
   <script src="../../assets/analytics.js"></script>
   <script>
     window.LabelSuiteAnalytics.init({
@@ -734,6 +743,10 @@
         ...getTrackingContext(),
         method: 'email_password',
       });
+      /* label-suite/label-suite#195: remember it, so spec 01-01 Q3's "an
+         already-signed-in visitor goes straight to the dashboard" has something
+         to read. The sidebar owns the flag because its logout clears it. */
+      window.LabelSuiteSharedSidebar.markLoggedIn();
       window.location.href = '../dashboard/dashboard.html';
     });
 
