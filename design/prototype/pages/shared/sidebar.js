@@ -2467,8 +2467,47 @@
     }
     if (typeof opts.avatarLabel === 'string') {
       var avatar = document.getElementById('userAvatar');
-      if (avatar) avatar.textContent = opts.avatarLabel;
+      if (avatar) paintUserAvatar(avatar, null, opts.avatarLabel);
     }
+    /* label-suite/label-suite#195: 規格 01-04 §頭像 第 2、5 條要求存檔之後「側欄的
+       頭像立刻跟著變」，包含移除之後回到預設頭像。在此之前這個 chip 只放得下文字
+       縮寫，所以個人設定頁沒有辦法滿足那兩條。
+       規格 07-01 §規格 明寫「使用者名稱與縮寫的呈現以 prototype 為準，不寫進規格」，
+       所以這裡放圖不牴觸側欄自己的規格。
+       `null` 是「回到縮寫」，字串是圖片；`undefined` 代表這一次不動它。 */
+    if (opts.avatarImage !== undefined) {
+      var imgHost = document.getElementById('userAvatar');
+      if (imgHost) {
+        paintUserAvatar(
+          imgHost,
+          opts.avatarImage,
+          typeof opts.avatarLabel === 'string'
+            ? opts.avatarLabel
+            /* 沒給名字時就讀 chip 上現有的那一個，不另外猜一份來源。 */
+            : computeAvatarInitials(opts.userName || currentChipUserName())
+        );
+      }
+    }
+  }
+
+  function currentChipUserName() {
+    var el = document.getElementById('userName');
+    return (el && el.textContent) || '';
+  }
+
+  /* 把 chip 畫成圖片或縮寫。圖片用 object-fit 填滿圓形，和個人設定頁的預覽同形。 */
+  function paintUserAvatar(host, dataUrl, initials) {
+    while (host.firstChild) host.removeChild(host.firstChild);
+    if (!dataUrl) {
+      host.textContent = initials || '';
+      return;
+    }
+    var img = document.createElement('img');
+    img.alt = '';
+    img.setAttribute('aria-hidden', 'true');
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;';
+    img.src = dataUrl;
+    host.appendChild(img);
   }
 
   window.LabelSuiteSharedSidebar = {

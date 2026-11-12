@@ -254,6 +254,25 @@
 
     .email-change-btn:hover { background: var(--color-primary-soft-bg); }
 
+    /* label-suite/label-suite#195: same shape as .email-change-btn -- this page's
+       idiom for a small inline text action -- in the error colour, because
+       removing the photo discards something the user put there. */
+    .avatar-remove-btn {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-error);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 8px;
+      margin: 0 0 4px -8px;
+      border-radius: var(--radius-sm);
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+
+    .avatar-remove-btn:hover { background: var(--color-error-soft-bg); }
+
     .email-change-btn:focus {
       outline: 2px solid var(--color-primary);
       outline-offset: 2px;
@@ -714,6 +733,14 @@
                      style="display:none;" aria-hidden="true" />
             </div>
             <div>
+              <!-- label-suite/label-suite#195 (spec 01-04 Q5, maintainer 2026-11-09):
+                   the source FR-004H requires upload, preview AND remove, and the
+                   screen only had upload. Hidden until a custom avatar exists --
+                   there is nothing to remove from the default initials. -->
+              <button class="avatar-remove-btn" id="avatarRemoveBtn" type="button"
+                      style="display:none;" onclick="handleAvatarRemove()">
+                <span id="avatarRemoveLabel">移除頭像</span>
+              </button>
               <p class="avatar-hint" id="avatarHintText">JPG, PNG 或 WebP，上限 5 MB</p>
               <p class="field-error" id="avatarError" role="alert" style="display:none;"></p>
             </div>
@@ -1098,7 +1125,8 @@
         labelContact:            '聯絡方式',
         labelEmail:              '電子郵件',
         labelEmailChange:        '變更',
-        avatarHintText:          'JPG, PNG 或 WebP，上限 5 MB',
+        avatarRemoveLabel:       '移除頭像',
+      avatarHintText:          'JPG, PNG 或 WebP，上限 5 MB',
         contactHint:             '可填寫電話、LINE 或其他聯絡方式',
         saveProfileLabel:        '儲存',
         pwSectionTitle:          '密碼設定',
@@ -1183,7 +1211,8 @@
         labelContact:            'Contact Info',
         labelEmail:              'Email',
         labelEmailChange:        'Change',
-        avatarHintText:          'JPG, PNG, or WebP — max 5 MB',
+        avatarRemoveLabel:       'Remove photo',
+      avatarHintText:          'JPG, PNG, or WebP — max 5 MB',
         contactHint:             'Phone, LINE, or any other contact method',
         saveProfileLabel:        'Save',
         pwSectionTitle:          'Password',
@@ -1407,6 +1436,7 @@
       setTimeout(() => {
         setBtnLoading('saveProfileBtn', false);
         document.getElementById('userName').textContent = name;
+        commitAvatar();
         showToast('success', t('toastSaveSuccess'), t('toastSaveSuccessDesc'));
         window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_profile_info_saved');
       }, 600);
@@ -1602,7 +1632,83 @@
       document.getElementById('contactCount').textContent = val.length + ' / 255';
     }
 
-    /* ── Avatar upload ──────────────────────────────────────────── */
+    /* ── Avatar ─────────────────────────────────────────────────
+       label-suite/label-suite#195 wires the whole of spec 01-04 §頭像, not just
+       the remove entry Q5 asked for -- the clauses around it were not met
+       either. Point 1: picking a file previews WITHOUT saving. Point 2: 儲存
+       commits it and the sidebar follows immediately. Point 4: remove puts the
+       preview back to the default initials and ALSO needs 儲存. Point 5: after
+       that save the sidebar goes back to the initials too. Point 6: leaving or
+       reloading without saving keeps whatever was last saved -- so the pending
+       choice lives in memory and only the saved one is persisted.
+
+       `pendingAvatar` is the staged change: undefined = untouched,
+       null = remove, string = a new data URL. A data URL rather than an object
+       URL because point 6 has to survive a reload. */
+    var AVATAR_STORAGE_KEY = 'label-suite-profile-avatar';
+    var pendingAvatar;
+
+    function readSavedAvatar() {
+      try { return localStorage.getItem(AVATAR_STORAGE_KEY) || null; } catch (_e) { return null; }
+    }
+
+    function writeSavedAvatar(dataUrl) {
+      try {
+        if (dataUrl) localStorage.setItem(AVATAR_STORAGE_KEY, dataUrl);
+        else localStorage.removeItem(AVATAR_STORAGE_KEY);
+      } catch (_e) { /* private mode / quota -- the screen still shows the change */ }
+    }
+
+    /* Paints one avatar host (the page preview or the sidebar chip) from a data
+       URL, or back to its initials when there is none. */
+    function paintAvatar(host, dataUrl, initials) {
+      if (!host) return;
+      while (host.firstChild) host.removeChild(host.firstChild);
+      if (!dataUrl) { host.textContent = initials; return; }
+      var img = document.createElement('img');
+      img.alt = lang === 'zh' ? '大頭照' : 'Avatar';
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:inherit;';
+      img.src = dataUrl;
+      host.appendChild(img);
+    }
+
+    function defaultInitials() {
+      var name = (document.getElementById('fieldName') || {}).value || '';
+      return name.trim().charAt(0).toUpperCase() || 'I';
+    }
+
+    /* The staged value if one is staged, else whatever is saved. */
+    function effectiveAvatar() {
+      return pendingAvatar === undefined ? readSavedAvatar() : pendingAvatar;
+    }
+
+    function refreshAvatarPreview() {
+      paintAvatar(document.getElementById('avatarPreview'), effectiveAvatar(), defaultInitials());
+      var removeBtn = document.getElementById('avatarRemoveBtn');
+      /* Nothing to remove when the effective avatar is already the default. */
+      if (removeBtn) removeBtn.style.display = effectiveAvatar() ? '' : 'none';
+    }
+
+    function handleAvatarRemove() {
+      pendingAvatar = null;
+      var avatarErr = document.getElementById('avatarError');
+      avatarErr.style.display = 'none';
+      avatarErr.textContent = '';
+      refreshAvatarPreview();
+    }
+
+    /* Called by handleSaveProfile() once its validation has passed. */
+    function commitAvatar() {
+      if (pendingAvatar === undefined) return;
+      writeSavedAvatar(pendingAvatar);
+      pendingAvatar = undefined;
+      refreshAvatarPreview();
+      window.LabelSuiteSharedSidebar.updateUserChip({
+        avatarImage: readSavedAvatar(),
+        avatarLabel: readSavedAvatar() ? undefined : defaultInitials(),
+      });
+    }
+
     document.getElementById('avatarInput').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -1616,19 +1722,23 @@
       }
       avatarErr.style.display = 'none';
       avatarErr.textContent = '';
-      const url = URL.createObjectURL(file);
-      const preview = document.getElementById('avatarPreview');
-      const img = document.createElement('img');
-      img.alt = lang === 'zh' ? '大頭照' : 'Avatar';
-      img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
-      img.addEventListener('load', () => URL.revokeObjectURL(url));
-      img.src = url;
-      while (preview.firstChild) preview.removeChild(preview.firstChild);
-      preview.appendChild(img);
+      var reader = new FileReader();
+      reader.addEventListener('load', function () {
+        pendingAvatar = String(reader.result);
+        refreshAvatarPreview();
+      });
+      reader.readAsDataURL(file);
+      /* Let the same file be picked again after a remove. */
+      e.target.value = '';
     });
 
     /* ── Init ───────────────────────────────────────────────────── */
     applyLang(window.LabelSuiteSharedSidebar.getStoredLang());
+    /* Point 6: the page comes back showing whatever was last saved. */
+    refreshAvatarPreview();
+    if (readSavedAvatar()) {
+      window.LabelSuiteSharedSidebar.updateUserChip({ avatarImage: readSavedAvatar() });
+    }
     setState('email');
   </script>
 
