@@ -8880,7 +8880,10 @@ function getTaskTypeLabel() {
      and only while the task has no EFFECTIVE arbiter -- taskArbiterRoster()
      ids filtered through getEffectiveArbiterIds(), because the workspace data
      layer cannot see member status (a disabled/removed arbiter loses authority
-     immediately, 014 FR-010t). One row per awaiting-arbitration item. */
+     immediately, 014 FR-010t); the same filtered set is passed into
+     submitLeaderAdjudication() below, so the two gates cannot disagree --
+     dropping that argument makes the submit fall back to the literal roster
+     and start refusing again. One row per awaiting-arbitration item. */
   function renderLeaderAdjudicationSection() {
     var section = document.getElementById('leaderAdjudicationSection');
     var list = document.getElementById('leaderAdjudicationList');

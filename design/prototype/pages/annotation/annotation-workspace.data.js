@@ -3217,9 +3217,21 @@
   }
 
   /* FR-023 (issue singyichen/label-suite#1120): project leader adjudicates open disputes when the
-     arbiter roster is empty. Guarded: refuses and writes nothing unless every
-     decision is valid. decisions = [{annotatorId, itemId, choice, reason}];
-     the A/B value is derived here, never taken from the caller. */
+     task has no ACTIVE arbiter -- Q46 of 規格 03-03 overrode `FR-023`'s literal
+     "roster is empty", because one designated arbiter who has been disabled
+     leaves a non-empty roster and nobody who can rule.
+     `activeArbiterIds` is the caller's active-arbiter set; omit it and the
+     literal roster is used instead, which is the stricter test.
+     **The caller owns clause 2** ("不得藉這一條繞過仲裁者"): this module cannot
+     see member status, so passing an empty array for a task that still has an
+     active arbiter will open the channel and write a real ruling. Intersecting
+     with the roster here would not catch that, and would turn an
+     over-blocking caller into an opening one, so the check stays with the
+     caller and, in production, with the backend (see the note at
+     submitArbitration about 015 AC-7.2).
+     Guarded otherwise: refuses and writes nothing unless every decision is
+     valid. decisions = [{annotatorId, itemId, choice, reason}]; the A/B value
+     is derived here, never taken from the caller. */
   function submitLeaderAdjudication(taskId, runType, sampleId, decisions, activeArbiterIds) {
     /* Q46 of 規格 03-03 (label-suite/label-suite#170, maintainer 2026-11-08):
        the test is whether any arbiter is still ACTIVE, not whether the roster
