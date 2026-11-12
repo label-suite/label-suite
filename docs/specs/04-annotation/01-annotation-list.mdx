@@ -4,14 +4,14 @@ description: '標記員與審核員進入標記模組的入口頁：先在清單
 category: '規格書'
 tags: [規格書, 標記作業, 已定案]
 createdAt: '2026-11-05'
-updatedAt: '2026-11-11'
+updatedAt: '2026-11-12'
 ---
 
 import PrototypeFrame from '@notes/components/prototype-frame';
 
 # 04-01 標記清單
 
-:badge[已定案]{variant="success"} :badge[變更 #196]{variant="warning"} :badge[標記作業]{variant="neutral"} :badge[四階段已寫完]{variant="success"}
+:badge[已定案]{variant="success"} :badge[變更 #282]{variant="warning"} :badge[標記作業]{variant="neutral"} :badge[四階段已寫完]{variant="success"}
 
 > 來源：舊 repo `specs/annotation/015-annotation-workspace/spec.md`（**517 條**，本頁分到 **101 條**），釘在 `singyichen/label-suite@faf83356`
 > 參考畫面：`design/prototype/pages/annotation/annotation-list.html`
@@ -47,7 +47,7 @@ import PrototypeFrame from '@notes/components/prototype-frame';
 
 [規格 04-02 標記工作區](./02-annotation-workspace.mdx) 已交付，七列都已各自落地：前四列它以「見 規格 04-01」指回本頁、沒有重寫一份；後三列由它補上，對應的小節見上表的連結。
 
-**這一頁已定案**：十六題全部結案（Q2、Q8、Q9 於 2026-11-09 由維護者裁定，其餘十三題先前已結），另新增已定案的 Q18（由[規格 01-05](../01-account/05-login-state.mdx) Q8 指過來），見[§已確認決議](#已確認決議)。畫面那一側的改動歸 [Issue #181](https://github.com/label-suite/label-suite/issues/181) 與 [#187](https://github.com/label-suite/label-suite/issues/187)。
+**這一頁已定案**：十六題全部結案（Q2、Q8、Q9 於 2026-11-09 由維護者裁定，其餘十三題先前已結），另新增已定案的 Q18（由[規格 01-05](../01-account/05-login-state.mdx) Q8 指過來）<mark>與 Q19（維護者 2026-11-12 裁定，退回草稿後的回饋揭露範圍）</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>，見[§已確認決議](#已確認決議)。畫面那一側的改動歸 [Issue #181](https://github.com/label-suite/label-suite/issues/181) 與 [#187](https://github.com/label-suite/label-suite/issues/187)。
 :::
 
 ## 目標
@@ -594,14 +594,17 @@ import Spec0401AnnotationListFlow from '@notes/components/spec-04-01-annotation-
 16. 第 15 條是**不可協商**的測試集保護：在標記進行中或一致性確認前揭露，等於把別人的答案分布回饋給還沒作答完的標記員，**構成測試集答案洩漏**
 17. 任何做法**不得以「反正已經算好了」為理由提前揭露**
 18. 回合還在進行中時，**那一回合的資料一律不揭露**，畫面要說明「本回合尚在進行中，回合結束後才會開放試標歷史回饋。」
-19. 揭露的閘門**以回合為單位判定，不以任務狀態整體判定**
+19. 揭露的閘門<mark>**以「輪次 ＋ 回合」為單位判定**</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>，**不以任務狀態整體判定**。<mark>退回草稿後新的一輪會讓回合編號從 R1 重算（[規格 03-03 §資料欄位](../03-task-management/03-task-detail.mdx#資料欄位)的「試標輪」與「回合編號」），所以單看回合號分不出是哪一輪的 R1</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>
 20. 某一回合的回饋在**它自己**轉入「等待 IAA 確認」之後開放
-21. 開放之後**不會被收回**：不因為任務建立了下一回合（任務狀態回到試標中）而消失，也不因為任務進到正式標記中或已完成而消失
+21. 開放之後**不會被收回**：不因為任務建立了下一回合（任務狀態回到試標中）而消失，也不因為任務進到正式標記中或已完成而消失，<mark>更不因為任務被**退回草稿**、開了新的一輪而消失（[§已確認決議](#已確認決議) Q19）</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>
 22. **進行中的回合一律不揭露**
-23. **判不出屬於哪一回合**的提交，在任務處於試標中時**視為屬於進行中的回合而不揭露**——**這是刻意的保守做法**
-24. 被修改筆數與占比**逐回合分列計算**，**不得把多個回合合併成單一分母**
+23. <mark>**判不出屬於哪一輪或哪一回合**</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>的提交，在任務處於試標中時**視為屬於進行中的回合而不揭露**——**這是刻意的保守做法**
+24. 被修改筆數與占比<mark>**逐輪次、逐回合分列計算**</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>，**不得把多個回合合併成單一分母**<mark>，也不得把不同輪次的同號回合合併</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>
+25. <mark>每一筆回饋都要**說得出它屬於哪一輪的哪一回合**；兩輪都有 R1 時，畫面上要分得出來（[§已確認決議](#已確認決議) Q19）</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>
 
 - 第 19 到 21 條解掉一個實際的壞情況：如果閘門看的是任務狀態，那麼負責人一建立下一回合，上一回合已經結束的回饋就會整段消失——而標記員正是在那個時候最需要它
+- <mark>**第 24、25 條裡，裁定的部分只有「每一筆要說得出屬於哪一輪」**；「不得把不同輪次的同號回合合併分母」與「兩輪都有 R1 時畫面上要分得出來」是為了落實它而導出的——分母合併會讓兩輪的占比互相污染，畫面分不出來則等於沒有標明</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>
+- <mark>**退回草稿是同一個壞情況的更嚴重版本**：它讓回合號從 R1 重算，所以只看回合號的閘門不只會讓舊回饋消失，還會在新的一輪跑到同一個號碼時，把舊一輪的回饋當成新一輪的揭露出來——歸屬錯了比看不到更糟。加上輪次維度同時解掉這兩件事</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>
 - 第 23 條的「判不出就不揭露」是刻意選了對標記員比較不利、但對資料比較安全的那一邊
 
 ### 空的與找不到
@@ -653,7 +656,8 @@ import Spec0401AnnotationListFlow from '@notes/components/spec-04-01-annotation-
 | 任務名稱 | 文字 | 是 | 跟著語言切換 | 麵包屑第 2 層、任務資訊卡 |
 | 輸出類型 | 清單 | 是 | **照任務設定裡的順序**顯示 | 任務資訊卡的標籤 |
 | 清單筆數 | 整數 | 是 | **依標記階段二選一**：正式標記顯示「共 N 筆資料」，試標顯示這一回合的筆數 | 任務資訊卡的進度摘要第二段 |
-| 試標回合 | 整數 | 否 | 只有試標階段顯示；讀不到已建立的回合時預設第一回合 | 任務資訊卡的進度摘要第二段 |
+| 試標回合 | 整數 | 否 | 只有試標階段顯示；讀不到已建立的回合時預設第一回合；<mark>**只在同一輪裡唯一**，退回草稿後新一輪從 1 重算</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | 任務資訊卡的進度摘要第二段 |
+| <mark>試標輪</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | 整數 | <mark>試標階段**是**</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | <mark>每個回合都屬於一輪；定義與寫入規則由[規格 03-03 §資料欄位](../03-task-management/03-task-detail.mdx#資料欄位)擁有，這一頁不重複定義，只用它判定揭露與分列</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | <mark>試標歷史回饋的每一筆</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> |
 | 完成率 | 百分比 | 否 | **進度條的長度就是它**；全數提交時覆寫 100%；查不到工作統計時進度條 0% | 任務資訊卡的進度摘要與進度條 |
 | 今日完成筆數／平均速度 | 整數／數值 | 否 | 標記員的工作統計三項之二；與儀表板同源 | 任務資訊卡的進度摘要第一段 |
 | 樣本的 ID | 文字 | 是 | 不可編輯 | 清單第一欄 |
@@ -671,7 +675,7 @@ import Spec0401AnnotationListFlow from '@notes/components/spec-04-01-annotation-
 | 累計耗時 | 時間 | 否 | **不得在標記員視角出現**；同一次開啟取最大、不逐筆相加 | 審核員視角的處理狀況欄 |
 | 仲裁資格 | 是／否 | 否 | **推導值**：名冊勾選**且**在該單位沒有自己的審核提交 | 決定那一列的動作是「編輯」還是「仲裁」 |
 | 尚未提交的樣本數 | 整數 | 否 | 沒有任何標記員提交的樣本；**不計入分頁總筆數** | 任務資訊卡下方的說明列 |
-| 被修改筆數與占比 | 整數／百分比 | 否 | **逐回合分列**計算，不得合併成單一分母 | 試標歷史回饋的摘要 |
+| 被修改筆數與占比 | 整數／百分比 | 否 | <mark>**逐輪次、逐回合分列**</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>計算，不得合併成單一分母 | 試標歷史回饋的摘要 |
 | 定案來源與決策者 | 文字 | 否 | 決策者必須**具名** | 試標歷史回饋的逐筆對照 |
 | 理由原文 | 文字 | **否** | 選填；為空時以佔位文案呈現，**那一筆對照不得被略過** | 試標歷史回饋的逐筆對照 |
 
@@ -759,10 +763,10 @@ import Spec0401AnnotationListFlow from '@notes/components/spec-04-01-annotation-
 | 優先序或資格判定對特定任務分流 | 不允許 |
 | 回合還在進行中就揭露那一回合的試標回饋 | **一律不允許**——構成測試集答案洩漏 |
 | 以「反正已經算好了」為理由提前揭露 | 不允許 |
-| 判不出屬於哪一回合的提交，而任務還在試標中 | **不揭露**（刻意保守） |
+| 判不出屬於<mark>哪一輪或</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>哪一回合的提交，而任務還在試標中 | **不揭露**（刻意保守） |
 | 試標回饋揭露別的標記員的答案 | **不允許**——只呈現本人 |
-| 某一回合開放後因為建立了下一回合而把回饋收回 | 不允許 |
-| 把多個回合的被修改筆數合併成單一分母 | 不允許——逐回合分列 |
+| 某一回合開放後因為建立了下一回合<mark>、或任務被退回草稿開了新的一輪</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>而把回饋收回 | 不允許 |
+| 把多個回合的被修改筆數合併成單一分母<mark>，或把不同輪次的同號回合合併</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | 不允許——<mark>逐輪次、逐回合分列</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> |
 | 理由為空就把那一筆對照略過 | **不允許**——標記員仍要看到自己的答案被改成什麼 |
 
 
@@ -814,9 +818,9 @@ import Spec0401AnnotationListFlow from '@notes/components/spec-04-01-annotation-
 | 審核員的累計耗時含一筆沒有起算時間的舊事件 | 那一筆獨立加上去 |
 | 快速審核時他被指派的單位全部已定稿、而且沒有他能仲裁的爭議 | 導向清單並顯示「沒有可處理」的空狀態，不開任何一筆 |
 | 試標第一回合已進入等待 IAA 確認，負責人又建立了第二回合 | 第一回合的回饋**還看得到**；第二回合的不揭露 |
-| 某筆提交判不出屬於哪一回合，任務還在試標中 | 不揭露 |
+| 某筆提交判不出屬於<mark>哪一輪或</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>哪一回合，任務還在試標中 | 不揭露 |
 | 某筆被修正但審核員沒填理由 | 那一筆對照照樣顯示，理由處顯示佔位文案 |
-| 任務已進到正式標記中或已完成 | 已經開放的試標回饋不會被收回 |
+| 任務已進到正式標記中或已完成<mark>，或被退回草稿開了新的一輪</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | 已經開放的試標回饋不會被收回 |
 | 某標記員只存了草稿、沒有提交 | 他**不構成**審核單位：不出現在審核員清單，也不計入任務摘要 |
 | 某審核員只被指派到 4 個單位，而任務共有 15 個 | 他的清單只有那 4 列（加上他具仲裁資格的爭議中單位） |
 | 某審核員被移出任務的審核員名冊，但他先前審過兩個單位 | 那兩個單位**仍在他的清單上**、歷程仍打得開；但他送不出新的決策 |
@@ -1000,7 +1004,10 @@ import Spec0401AnnotationListFlow from '@notes/components/spec-04-01-annotation-
 | 回合進行中不揭露回饋 | 某試標回合還在進行中 | 標記員查看試標歷史回饋 | 不揭露，畫面說明本回合尚在進行中、回合結束後才會開放 |
 | 回合結束後才揭露 | 某試標回合已進入等待 IAA 確認 | 標記員查看試標歷史回饋 | 看得到那一回合的被修改筆數與逐筆對照 |
 | 開放後不收回 | 同上，負責人接著建立了第二回合 | 再查看第一回合的回饋 | 還看得到 |
-| 判不出回合就不揭露 | 某筆提交判不出屬於哪一回合，任務還在試標中 | 查看回饋 | 那一筆不揭露 |
+| 判不出回合就不揭露 | 某筆提交<mark>判不出屬於哪一輪或哪一回合</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>，任務還在試標中 | 查看回饋 | 那一筆不揭露 |
+| <mark>退回草稿不收回舊輪次的回饋</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | <mark>任務跑過第一輪的 R1、R2 並已揭露，之後被退回草稿、開了新的一輪</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | <mark>標記員查看試標歷史回饋</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | <mark>第一輪 R1、R2 的回饋照樣看得到，沒有消失</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> |
+| <mark>兩輪的同號回合分得出來</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | <mark>第一輪的 R1 已揭露，新的一輪也發了 R1 並已結束</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | <mark>查看回饋</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | <mark>兩筆 R1 各自標出屬於哪一輪，不會被當成同一個回合，被修改筆數也分列計算</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> |
+| <mark>新一輪進行中的回合仍然不揭露</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | <mark>任務退回草稿後開了新的一輪，R1 還在進行中</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | <mark>標記員查看試標歷史回饋</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | <mark>看得到第一輪已揭露的回合，但新一輪的 R1 不揭露</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> |
 | 回饋只有自己的 | 某樣本由三位標記員標記 | 標記員查看自己的試標回饋 | 只有自己的答案與它的定案結果，看不到另兩人的答案 |
 | 逐筆對照含具名決策者 | 某筆被審核員修正 | 查看那一筆對照 | 有「我的答案 → 定案結果」、定案來源與具名的決策者 |
 | 沒填理由仍顯示對照 | 某筆被修正但審核員沒填理由 | 查看那一筆對照 | 對照照樣顯示，理由處是佔位文案 |
@@ -1028,7 +1035,7 @@ import Spec0401AnnotationListFlow from '@notes/components/spec-04-01-annotation-
 
 ## 待釐清
 
-**沒有未決問題。** 這一頁的十六題全部定案：十三題於 2026-11-08 之前裁定，**Q2、Q8、Q9 於 2026-11-09 裁定**，都在[§已確認決議](#已確認決議)（另有一條由別頁指過來的 Q18，也已定案）。題號**只往後加、不重編**，搬動時保留原號，所以決議區的號碼不連續；後續若有新題目從 Q18 起算。
+**沒有未決問題。** 這一頁的十六題全部定案：十三題於 2026-11-08 之前裁定，**Q2、Q8、Q9 於 2026-11-09 裁定**，都在[§已確認決議](#已確認決議)（另有一條由別頁指過來的 Q18，也已定案）。題號**只往後加、不重編**，搬動時保留原號，所以決議區的號碼不連續；<mark>Q19 已於 2026-11-12 由維護者裁定（見[§已確認決議](#已確認決議)），所以後續若有新題目從 **Q20** 起算</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>。（<mark>這一句原本寫「從 Q18 起算」，但 Q18 當時就已經被占用了</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>）
 
 ## 已確認決議
 
@@ -1167,6 +1174,20 @@ import Spec0401AnnotationListFlow from '@notes/components/spec-04-01-annotation-
 > 理由：來源的 `FR-055` 明寫清單粒度「必須為**審核單位**…同一樣本由 N 位標記員標記即渲染為 N 個連續資料列，**兩種 `run_type` 完全一致，不得存在任何依 `run_type` 分流的清單分支**」，而且「分頁總筆數計審核單位數」。
 > 介面定義的區塊 C′ 同步寫明這是 v4.2.0 的 BREAKING 變更：「無展開控制項、無展開明細、無任何清單層級決策控件」，並明寫舊版「`dry_run` 唯讀總覽／`official_run` 單標記員截斷」兩種分流**一併廢止**（#77）。
 
+### Q19. 退回草稿之後，已關閉輪次的試標回饋還要不要揭露？（已定案，維護者裁定 2026-11-12）
+
+- [x] <mark>**繼續揭露，但每一筆要說得出它屬於哪一輪**</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>
+- [ ] 新的一輪開始就收回舊輪次的回饋，只看當前這一輪
+- [ ] 只揭露最近一個已關閉的輪次
+
+> 理由：**維護者 2026-11-12 裁定，內容是「繼續揭露，但每一筆要說得出它屬於哪一輪」**。
+>
+> <mark>**以下到本段結束都是撰寫者的推論、不是裁定內容**：[規格 03-03 §已確認決議](../03-task-management/03-task-detail.mdx#已確認決議) Q29 在試標回合表那一側裁定「已關閉輪次的回合**留在表上**，每一輪一列分隔列標出輪次」，形狀和這一題同構；而本節第 21 條原本就寫「開放之後**不會被收回**」，只是它列舉的情況裡沒有退回草稿</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>。
+>
+> <mark>**提問時一併列出的另外兩個選項，以下是提問者評估它們的理由、不是裁定內容**：收回舊輪次會讓標記員看不到自己之前被指出來的錯；「只揭露最近一個」要多一條「誰算最近」的規則，而輪次一多就得再定一次</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>
+
+> <mark>**這一題是 [Issue #282](https://github.com/label-suite/label-suite/issues/282) 開出來的**：#170 讓回合編號在每一輪從 R1 重算之後，只看回合號的揭露閘門會把已關閉輪次的 R1 當成新一輪的 R1。畫面那一側歸 #282</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>
+
 ### Q15. 審核員可以在清單上直接做決策嗎？（已定案，沿用舊來源）
 
 - [x] 不行：沒有逐列或批次的通過／退回，也沒有「送出審核」；決策的唯一入口是工作區的審核卡
@@ -1186,17 +1207,20 @@ import Spec0401AnnotationListFlow from '@notes/components/spec-04-01-annotation-
 
 ### Q17. 試標歷史回饋什麼時候才能揭露？（已定案，沿用舊來源，v6.7.0 改以回合為單位）
 
-- [x] 以**回合**為單位：某一回合轉入「等待 IAA 確認」之後才開放，開放後不收回；進行中的回合一律不揭露；判不出回合的在任務還在試標中時**不揭露**
+- [x] 以**回合**為單位：某一回合轉入「等待 IAA 確認」之後才開放，開放後不收回；進行中的回合一律不揭露；判不出回合的在任務還在試標中時**不揭露**（<mark>判定單位已於 2026-11-12 擴充成**「輪次 ＋ 回合」**，見 [§已確認決議](#已確認決議) Q19——這一條的其餘部分不變</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>）
 - [ ] 以任務狀態整體判定
 
 > 理由：來源的 `FR-096` 把這一條標為 **Data Fairness（NON-NEGOTIABLE）**：「揭露時點必須**嚴格晚於**該輪試標進入 `waiting_iaa_confirmation` 之後——在標記進行中或一致性確認前揭露，等同於把他人的答案分布回饋給尚未作答完畢的標記員，**構成測試集答案洩漏**。任何實作不得以『先算好先顯示』為由提前揭露。」
 > v6.7.0 修訂明寫閘門「以**回合**為單位判定，不以任務狀態整體判定」，並說明理由：若看任務狀態，負責人一建立下一回合就會讓上一回合已結束的回饋「整段消失」。
 > 同一段也定了保守的預設：「無法判定所屬回合之提交，於任務處於 `dry_run_in_progress` 時視為屬於進行中回合而**不揭露（fail closed）**」（#77）。
+>
+> <mark>**2026-11-12 的補充**：[Issue #170](https://github.com/label-suite/label-suite/issues/170) 的「退回草稿」讓回合編號在每一輪從 R1 重算，所以單看回合號不再認得出一個回合。判定單位改成「輪次 ＋ 回合」，其餘（時點、不收回、進行中不揭露、判不出就保守）一字不變。見 Q19</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>
 
 ## 變更紀錄
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#282](https://github.com/label-suite/label-suite/issues/282) | 2026-11-12 | 頁首、§規格 › 什麼時候才能揭露、§卡控機制、§邊界情況、§資料欄位、§驗收標準、§待釐清、§已確認決議（Q17 與新增的 Q19） | 揭露閘門「以**回合**為單位判定」、「判不出屬於哪一回合」、「被修改筆數逐**回合**分列」；第 21 條的「不會被收回」只列到「建立下一回合」與「進入正式標記」 | 三處都加上**輪次**維度；第 21 條補上「退回草稿、開了新的一輪」；新增第 25 條（每一筆回饋要說得出屬於哪一輪的哪一回合）；§資料欄位 新增「試標輪」一列並指回 03-03；新增三條驗收；§卡控機制 三列與 §邊界情況 兩列的鏡像一併補上輪次；Q17 的勾選項註明判定單位已由 Q19 擴充 | **新增 Q19**（維護者 2026-11-12）：退回草稿後已關閉輪次的回饋**繼續揭露，但每一筆要標明輪次**。順帶修正 §待釐清 的「從 Q18 起算」——Q18 當時已被占用 |
 | [#181](https://github.com/label-suite/label-suite/issues/181) | 2026-11-11 | §已確認決議 Q13 的理由段 | 寫著那段文案的常數「**被引用兩次、零處定義**，所以畫面現在渲染不出文字——那是一個現存的潛在執行期錯誤」 | 改成實況：常數**定義一次、兩頁共讀**，本來就符合 `FR-100` 第 3 點，要改的是字面不是結構 | **無新決議**。那句話從寫下時就是假的——來源是 `grep` 在含中文的檔案上靜默回報 0，已用 python 複查（定義 1 處、匯出 1 處、引用 2 處） |
 | [#260](https://github.com/label-suite/label-suite/issues/260) | 2026-11-11 | §Q&A | 每題是 `### Q. …` 的 H3 標題，答案直接顯示 | 每題一個預設收合的 `tip`，題目是可點選的標題 | **無新決議**。§Q&A **3 題**全部從 `### Q. …` 標題改成預設收合的 `tip`，題目成為可點選的標題。題目的 H3 錨點因此消失（全站沒有任何連結指向它們，已逐題查過），也不再進右側目錄。**題目、答案與連結一字未改**，只有標題去掉「Q. 」前綴。格式依維護者 2026-11-11 的四個裁定（紀錄在[這則留言](https://github.com/label-suite/label-suite/issues/260#issuecomment-6792064965)） |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-11 | §規格 › 資料欄位（資料規劃入口） | 入口寫「把本頁列為規格來源的候選表有 **5 張**」 | 改成 **6 張**，新增 `task_annotation_assignment` | **無新決議**。依維護者 2026-11-11 對[盤點總帳 §五](../../diagrams/architecture/data-field-inventory.mdx#五裁定紀錄與待裁決) D8 的裁定（表說明引用的規格算成「規格來源」），那張表因此進入本頁的入口清單；本頁條文一字未改 |
