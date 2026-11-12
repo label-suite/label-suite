@@ -1519,6 +1519,12 @@
     var rounds = persisted && Array.isArray(persisted.trialRounds) ? persisted.trialRounds : null;
     if (!rounds || !rounds.length || !profiles[taskId]) return;
     profiles[taskId].trialRounds = rounds;
+    /* label-suite/label-suite#170 Q29: the trial cycle and the closed-cycle log
+     * travel with the rounds. Without them a reload resolves the open cycle to
+     * 1 -- the one that was closed -- and the round numbering, the current-IAA
+     * reading and the round table's separator labels all come back inverted. */
+    if (persisted.trialCycle) profiles[taskId].trialCycle = persisted.trialCycle;
+    if (Array.isArray(persisted.closedCycles)) profiles[taskId].closedCycles = persisted.closedCycles;
     profiles[taskId].materializedRuns = Object.assign({}, profiles[taskId].materializedRuns, {
       /* issue singyichen/label-suite#850 regression A: merge, not replace, so seeded dry_run
        * fields (e.g. total) survive the round overlay. */

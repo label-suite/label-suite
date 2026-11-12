@@ -1726,6 +1726,18 @@
        `.round-timeline` is `overflow-x: auto`, so a wider table scrolls in
        its wrapper rather than stretching the page. */
     .round-table td.round-date-cell { white-space: nowrap; }
+    /* The cycle separator is a group heading, not a second column header: it
+       must not inherit the header's nowrap, because it carries the free-text
+       reason the cycle was sent back and would otherwise stretch the table.
+       label-suite/label-suite#170 Q29. */
+    .round-table .round-cycle-separator th {
+      white-space: normal;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-ink);
+      text-transform: none;
+      padding-top: 14px;
+    }
     .round-status-badge { font-weight: 700; white-space: nowrap; }
     .round-status-badge.failed { color: var(--color-error); }
     .round-status-badge.passed { color: var(--color-success); }
@@ -4758,6 +4770,19 @@ function interpolate(template, payload) {
 
   function normalizeTaskRunState() {
     if (TASK_DATA.status === 'draft') {
+      /* Q29: draft no longer implies "no rounds were ever published". A task
+         sent back from 「等待 IAA 確認」 is draft AND keeps every round of the
+         cycle that was closed -- §狀態與轉換 第 5 條 and 第 7 條 say they are
+         neither deleted nor rewritten -- so only the current-cycle indicators
+         are cleared once a cycle has been closed. */
+      if ((TASK_DATA.closedCycles || []).length) {
+        TASK_DATA.trialRound = 0;
+        TASK_DATA.currentAgreement = null;
+        TASK_DATA.currentAnnotators = null;
+        TASK_DATA.currentStd = null;
+        if (!Array.isArray(TASK_DATA.trialRounds)) TASK_DATA.trialRounds = [];
+        return;
+      }
       resetRunProgressData();
       return;
     }
@@ -4876,6 +4901,10 @@ function interpolate(template, payload) {
        array as-is once non-empty, so TASK_DATA.trialRound (left at 0 by
        resetRunProgressData()) never matters for these profiles. */
     if (profile && profile.trialRounds) TASK_DATA.trialRounds = cloneData(profile.trialRounds);
+    /* Q29: paired with persistTrialRunState(); a profile with no cycle is from
+       before this existed and stays on cycle 1. */
+    if (profile && profile.trialCycle) TASK_DATA.trialCycle = profile.trialCycle;
+    if (profile && profile.closedCycles) TASK_DATA.closedCycles = cloneData(profile.closedCycles);
   }
 
   /* FR-028: not-found / forbidden keep the header with a fixed title; the task
@@ -5169,7 +5198,13 @@ function interpolate(template, payload) {
       var all = taskListData.loadTrialRunState();
       all[TASK_DATA.taskId] = {
         status: TASK_DATA.status,
-        trialRounds: cloneData(TASK_DATA.trialRounds || [])
+        trialRounds: cloneData(TASK_DATA.trialRounds || []),
+        /* Q29: the cycle has to travel with the rounds. Without it a reload
+           resolves the open cycle to 1 -- the one that was closed -- so the
+           round numbers, the IAA readings and the table's separator labels all
+           come back inverted, and the reason the task was sent back is gone. */
+        trialCycle: getCurrentTrialCycle(),
+        closedCycles: cloneData(TASK_DATA.closedCycles || [])
       };
       window.localStorage.setItem(taskListData.trialRunStateKey, JSON.stringify(all));
     } catch (error) {
@@ -5901,7 +5936,11 @@ function interpolate(template, payload) {
     var thead = document.createElement('thead');
     thead.appendChild(headRow);
     table.appendChild(thead);
+    /* One tbody per cycle when more than one is shown, so the separator's
+       `scope="rowgroup"` names the group it labels; appended as it is created,
+       so there is exactly one append per tbody. */
     var tbody = document.createElement('tbody');
+    table.appendChild(tbody);
     /* Q29 (maintainer, 2026-11-12): a closed cycle's rounds stay in this table
        and a separator row says which cycle they belong to -- and carries the
        reason it was sent back, which has no other home on the screen. Only
@@ -5914,7 +5953,12 @@ function interpolate(template, payload) {
     rounds.forEach(function(round) {
       var cycle = roundCycleOf(round);
       if (multiCycle && cycle !== lastCycle) {
-        lastCycle = cycle;
+        /* The first cycle reuses the tbody created above; each later one gets
+           its own. */
+        if (lastCycle !== null) {
+          tbody = document.createElement('tbody');
+          table.appendChild(tbody);
+        }
         var sepRow = document.createElement('tr');
         sepRow.className = 'round-cycle-separator';
         sepRow.setAttribute('data-trial-cycle', String(cycle));
@@ -5924,6 +5968,7 @@ function interpolate(template, payload) {
         sepCell.textContent = trialCycleLabel(cycle);
         sepRow.appendChild(sepCell);
         tbody.appendChild(sepRow);
+        lastCycle = cycle;
       }
       var row = document.createElement('tr');
       row.className = 'round-timeline-item';
@@ -5953,7 +5998,6 @@ function interpolate(template, payload) {
       row.appendChild(tdRoundDate);
       tbody.appendChild(row);
     });
-    table.appendChild(tbody);
     mount.appendChild(table);
   }
 
@@ -6014,6 +6058,10 @@ function interpolate(template, payload) {
     /* the current-cycle indicators, not the rounds */
     TASK_DATA.trialRound = 0;
     TASK_DATA.currentAgreement = null;
+    /* Every other status transition on this page persists; without this the
+       send-back lives only in this page session and a reload puts the task
+       back in 「等待 IAA 確認」. */
+    persistTrialRunState();
     trackEvent('prototype_task_back_to_draft', { from_cycle: cycle });
     showToast(t('toastBackToDraft'));
     renderStatus();
@@ -6498,7 +6546,9 @@ function interpolate(template, payload) {
         nextStepRow('reviewers', gaps.reviewers.length ? 'unmet' : 'met', t('nextStepCondReviewers'),
           gaps.reviewers.length ? gaps.reviewers.join(t('memberGapJoiner')) : interpolate(t('nextStepMemberCountTpl'), { count: getEffectiveReviewerIds(TASK_DATA.reviewerIds).length }))
       ]), nextStepGroup('reminder', [nextStepRow('iaa-later', 'info', t('nextStepCondIaaLater'), t('nextStepIaaLaterValue'))])];
-      buttonsHtml = '<button class="btn btn-primary" type="button" id="publishDryRunBtn"' + nextStepGateAttrs(nextStepUnmetIds(groups, ['required'])) + '>' + t('publishDryRun') + ' R1</button>';
+      /* Q29: the same count as every other label and as publishDryRun(), so a
+         task sent back to draft cannot show one number and publish another. */
+      buttonsHtml = '<button class="btn btn-primary" type="button" id="publishDryRunBtn"' + nextStepGateAttrs(nextStepUnmetIds(groups, ['required'])) + '>' + t('publishDryRun') + ' R' + nextRound + '</button>';
     } else if (status === 'dry_run_in_progress') {
       /* FR-013(1) / FR-008a: always disabled while the round runs; the rows say what is still open. */
       groups = [nextStepGroup('required', getCompletionRows('dry_run'))];
@@ -11355,7 +11405,12 @@ function getTaskTypeLabel() {
     if (!Array.isArray(TASK_DATA.trialRounds) || !TASK_DATA.trialRounds.length) {
       TASK_DATA.trialRounds = getTrialRounds();
     }
-    var nextRound = TASK_DATA.trialRounds.length + 1;
+    /* Q29 (label-suite/label-suite#170): the OPEN cycle, not the whole array.
+       §狀態與轉換 第 6 條 and §資料欄位 both say the round number restarts at 1
+       after a send-back, and the button label at the action row already counted
+       this way -- so the array length would have labelled the button R1 and
+       published R3. */
+    var nextRound = getTrialRounds().length + 1;
     var scenario = getTrialRoundScenario(nextRound);
     /* issue singyichen/label-suite#791 (D2): a round's IAA outcome is not known until it
        finishes -- only the round number, sample count, and date are real at
