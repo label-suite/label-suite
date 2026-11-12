@@ -27,7 +27,7 @@
       bypassReasonHelper: '理由會隨提交寫入歷程，審核員可見',
       toastBypassReasonRequired: '請填寫以下輸出類型「無法判定」的理由：{list}',
       arbitrationReasonPlaceholder: '裁定理由（選填）',
-        wsPrevBtnLabel: '上一筆',
+      wsPrevBtnLabel: '上一筆',
       wsNextBtnLabel: '下一筆',
       wsProgressText: '{done} / {total} 已提交',
       wsProgressTextReview: '我的審核提交 {done} / {total} 個審核單位',
@@ -73,7 +73,7 @@
       reviewSubmitConsequenceFinalizedDryRunSuffix: '（試標不產生最終答案，僅計入一致性統計）',
       reviewReasonLabel: '理由（選填）',
       reviewReasonPlaceholder: '請說明理由',
-        toastAnswerRequired: '以下輸出類型選了「修正」但修正後答案為空，請填寫答案：{list}',
+      toastAnswerRequired: '以下輸出類型選了「修正」但修正後答案為空，請填寫答案：{list}',
       reviewCorrectionTitle: '直接修正（審核員修正後答案）',
       toastSelectDecision: '請完成以下輸出類型的審核決策：{list}',
       toastReviewCorrectionReset: '偵測到直接修正的內容因重新整理而遺失，對應的審核決策已重置，請重新確認後再送出',
@@ -144,7 +144,8 @@
       exceptionPoolOriginTpl: '仲裁者：{arbiter} · 兩者皆非理由：{reason}',
       exceptionPoolOriginLeaderTpl: '負責人裁定（無指定仲裁者） · 兩者皆非理由：{reason}',
       leaderAdjudicationSourceLabel: '負責人裁定（無指定仲裁者）',
-      exceptionPoolNoSelectionLabel: '尚未選擇最終處置',
+      reasonNotProvided: '未填寫理由',
+    exceptionPoolNoSelectionLabel: '尚未選擇最終處置',
       exceptionPoolSummaryTpl: '已選擇：{action}',
       exceptionPoolSummaryWithValueTpl: '已選擇：{action}，定稿值：{value}',
       exceptionQueueTitle: '最終例外池',
@@ -195,7 +196,7 @@
       bypassReasonHelper: 'This reason is written into the history on submit, visible to the reviewer.',
       toastBypassReasonRequired: 'Please give a reason for marking the following output types undecidable: {list}',
       arbitrationReasonPlaceholder: 'Reason for this decision (optional)',
-        wsPrevBtnLabel: 'Previous',
+      wsPrevBtnLabel: 'Previous',
       wsNextBtnLabel: 'Next',
       wsProgressText: '{done} / {total} submitted',
       wsProgressTextReview: 'My review submissions {done} / {total} review units',
@@ -241,7 +242,7 @@
       reviewSubmitConsequenceFinalizedDryRunSuffix: ' (a dry run produces no final answer -- it only counts toward agreement statistics)',
       reviewReasonLabel: 'Reason (optional)',
       reviewReasonPlaceholder: 'Explain the reason',
-        toastAnswerRequired: 'The following output types are marked Modify but the corrected answer is empty: {list}',
+      toastAnswerRequired: 'The following output types are marked Modify but the corrected answer is empty: {list}',
       reviewCorrectionTitle: "Direct correction (reviewer's corrected answer)",
       toastSelectDecision: 'Please decide on the following output types before submitting: {list}',
       toastReviewCorrectionReset: 'The direct correction was lost on reload, so the matching review decision was reset -- please re-confirm before submitting',
@@ -312,7 +313,8 @@
       exceptionPoolOriginTpl: 'Arbiter: {arbiter} · Rejected because: {reason}',
       exceptionPoolOriginLeaderTpl: 'Leader adjudication (no arbiter designated) · Rejected because: {reason}',
       leaderAdjudicationSourceLabel: 'Leader adjudication (no arbiter designated)',
-      exceptionPoolNoSelectionLabel: 'No final disposition selected yet',
+      reasonNotProvided: 'No reason given',
+    exceptionPoolNoSelectionLabel: 'No final disposition selected yet',
       exceptionPoolSummaryTpl: 'Selected: {action}',
       exceptionPoolSummaryWithValueTpl: 'Selected: {action} · Final value: {value}',
       exceptionQueueTitle: 'Final exception pool',
@@ -4975,7 +4977,7 @@
       origin.style.cssText = 'font-size:12px;color:var(--color-text-soft);margin-bottom:8px;';
       origin.textContent = t(rejectVote.source === 'leader' ? 'exceptionPoolOriginLeaderTpl' : 'exceptionPoolOriginTpl')
         .replace('{arbiter}', rejectVote.arbiter_id || '')
-        .replace('{reason}', rejectVote.reason || '');
+        .replace('{reason}', rejectVote.reason || t('reasonNotProvided'));
       row.appendChild(origin);
     }
 
@@ -5082,7 +5084,7 @@
           });
           expandExceptionPoolAction(item, expandHost, action);
           refreshSummary();
-          confirmBtn.disabled = true;
+          refreshConfirmDisabled();
         });
         actionButtons[action] = btn;
         actionsWrap.appendChild(btn);
@@ -5094,12 +5096,15 @@
     row.appendChild(confirmBtn);
 
     confirmBtn.addEventListener('click', function () {
-      var reason = reasonInput.value.trim();
-      if (!selectedAction || !reason) return;
-      resolveFn(item, selectedAction, selectedActionValue(), reason);
+      /* label-suite/label-suite#187: the reason is optional, so only a missing
+         disposition stops a write here. Guarding on the reason too would make
+         an enabled button that silently does nothing. */
+      if (!selectedAction) return;
+      resolveFn(item, selectedAction, selectedActionValue(), reasonInput.value.trim());
     });
 
     refreshSummary();
+    refreshConfirmDisabled();
     return row;
   }
 
@@ -5289,8 +5294,11 @@
         text += '（' + t('reviewSubmittedValueLabel') + '：' + describeOutputAnswer(outKey, mySubmission) + '）';
       }
       var reason = mySubmission.reasons && mySubmission.reasons[outKey];
-      if (reason && reviewDecisionOffersReason(decision)) {
-        reasonsByOutKey[outKey] = reason;
+      /* label-suite/label-suite#187: the row is rendered whenever the decision
+         offers a reason -- a blank one shows 未填寫理由 (spec 04-02 §責任鏈
+         point 5), it does not make the row disappear. */
+      if (reviewDecisionOffersReason(decision)) {
+        reasonsByOutKey[outKey] = reason || t('reasonNotProvided');
       }
       line.textContent = text;
       values.appendChild(line);
@@ -6245,7 +6253,9 @@
              only in its structured `reason` field. */
           if (reviewDecisionOffersReason(decision)) {
             reasons[outKey] = reviewRowReason(outKey, annotatorId);
-            reviewHistoryLine += ' — ' + reasons[outKey];
+            /* label-suite/label-suite#187: spec 04-02 §責任鏈 point 5 -- a blank
+               reason shows 未填寫理由, never a bare trailing dash. */
+            reviewHistoryLine += ' — ' + (reasons[outKey] || t('reasonNotProvided'));
           }
         }
         decisionLines.push(line);
