@@ -2170,7 +2170,7 @@ function getRelationTypeOptions(relationTypes) {
   return opts;
 }
 
-/* Shared entity list-row builder -- the annotator's 實體列表 and the reviewer
+/* Shared entity list-row builder -- the annotator's 已標記實體 and the reviewer
    aggregate card's per-annotator entity rows both render through this single
    implementation so the two views can never drift. `ent` is the display shape
    {text, type, start?, end?} (positions render only when both are present);
@@ -2206,7 +2206,7 @@ function buildEntityListRow(ent, color, opts) {
   return row;
 }
 
-/* Shared relation triple-row builder -- the annotator's 關係識別 list and the
+/* Shared relation triple-row builder -- the annotator's 已建立的三元組 list and the
    reviewer aggregate card's per-annotator relation rows both render through
    this single implementation so the two views can never drift. `triple` is
    the display shape {subj, rel, obj, relType}; mutation stays with the
@@ -2635,7 +2635,7 @@ function renderAbsaUnifiedPreview(previewContainer) {
       var elTitle = document.createElement('div');
       elTitle.className = 'annotation-preview-task-title';
       elTitle.style.marginBottom = '6px';
-      elTitle.textContent = state.lang === 'zh' ? '實體列表' : 'Entity List';
+      elTitle.textContent = state.lang === 'zh' ? '已標記實體' : 'Entity List';
       previewContainer.appendChild(elTitle);
       var elWrap = document.createElement('div');
       elWrap.style.cssText = 'margin-bottom:12px;max-height:200px;overflow-y:auto;';
@@ -2665,7 +2665,7 @@ function renderAbsaUnifiedPreview(previewContainer) {
   var tlTitle = document.createElement('div');
   tlTitle.className = 'annotation-preview-task-title';
   tlTitle.style.marginBottom = '8px';
-  tlTitle.textContent = state.lang === 'zh' ? '關係識別' : 'Relation Identification';
+  tlTitle.textContent = state.lang === 'zh' ? '已建立的三元組' : 'Relation Identification';
   relSection.appendChild(tlTitle);
 
   var relList = document.createElement('div');
@@ -3569,7 +3569,7 @@ function renderSpanOnlyPreview(container, outKey) {
     var elTitle = document.createElement('div');
     elTitle.className = 'annotation-preview-task-title';
     elTitle.style.marginBottom = '6px';
-    elTitle.textContent = state.lang === 'zh' ? '實體列表' : 'Entity List';
+    elTitle.textContent = state.lang === 'zh' ? '已標記實體' : 'Entity List';
     container.appendChild(elTitle);
     var elWrap = document.createElement('div');
     elWrap.style.cssText = 'max-height:160px;overflow-y:auto;';
