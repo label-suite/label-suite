@@ -7,7 +7,8 @@ description: 為 NoteCraft 的 MDX 筆記生成豐富的視覺化與動態互動
   Localized for Label Suite from fullstack-ai-sdd-workflow-scaffold (content-visualize, see VERSION).
   Label Suite changes: visual tokens come from the label-suite-design skill
   (source: design/prototype/assets/tokens.css); notes live in docs/; commands use
-  pnpm docs:serve and pnpm exec notecraftapp build docs.
+  pnpm docs:serve and pnpm exec notecraftapp build docs; step 4 warns that the
+  serve watcher and a manual build must not run together (issue #172).
 
   Path conventions in this file assume the "viewer" flavour:
     - Generated components live at <notesDir>/.notecraft/components/<id>.tsx
@@ -115,6 +116,7 @@ status: pending | generated | locked | failed
 驗證的正確做法是**觀察使用者的 `pnpm docs:serve`**：mdx-writer 寫回 mdx 後，viewer 的 chokidar watcher 會在 300ms 內觸發 rebuild、SSE 廣播 auto reload；成功則瀏覽器直接看到元件、失敗則 fallback 頁顯示錯誤節錄。
 
 - 若作者離線測試（沒開 serve）：可跑 `pnpm exec notecraftapp build docs` 手動觸發一次 build 產物到 `~/.notecraft/cache/<hash>/dist/`
+- ⚠️ **這兩條驗證路徑只能走一條。** serve 的 watcher 和手動 build 共用同一個 `.astro/`、沒有跨行程鎖，同時跑其中一個會失敗（[#172](https://github.com/label-suite/label-suite/issues/172)，同路徑併發實測 3／3 恰有一個失敗）。用 watcher 驗就不要再手動 build；要手動 build 就先請作者停掉 `docs:serve`，或請他用 `--no-watch` 開
 - 若 rebuild 失敗、每次修正後仍不通過：3 次後放棄，**跳到第 5 步、將該 MDX 標記的 `status` 設為 `failed`**（保留原始 prompt），並在對話中回報錯誤節錄。驗證未通過前，不要進行第 5 步的 MDX 寫回。
 <!-- END:validation-skill -->
 

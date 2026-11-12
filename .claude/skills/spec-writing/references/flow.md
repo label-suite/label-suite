@@ -159,4 +159,4 @@ status: pending
 
 - `content-visualize` 會把標記改成 `status: generated`，並在下方寫入 `GeneratedFrame` 與 import
 - 規格的業務流程有修改時，把標記改回 `status: pending` 並更新 prompt，再請 Claude「處理 `docs/specs/xx/yy.mdx` 的視覺化標記」
-- 驗證：開 `pnpm docs:serve`（http://127.0.0.1:4330/） 實際切過每個流程 tab、走完每段走查；只改元件、沒改 MDX 時，快取不會察覺，要改跑 `pnpm exec notecraftapp build --rebuild docs`
+- 驗證：開 `pnpm docs:serve`（http://127.0.0.1:4330/） 實際切過每個流程 tab、走完每段走查；只改元件、沒改 MDX 時，快取不會察覺，要改跑 `pnpm exec notecraftapp build --rebuild docs`——**跑之前先停掉 `docs:serve`**，它的 watcher 和手動 build 共用同一個 `.astro/`、沒有跨行程鎖，同時跑其中一個會失敗（[#172](https://github.com/label-suite/label-suite/issues/172)）；或那一輪用 `--no-watch` 開 serve

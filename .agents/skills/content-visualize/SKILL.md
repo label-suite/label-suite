@@ -20,6 +20,8 @@ description: 為 NoteCraft 的 MDX 筆記生成豐富的視覺化與動態互動
 <!--
   Codex 版本：複製自 .claude/skills/content-visualize/SKILL.md，
   只改了「本專案的執行方式」與第 4、5 步的執行者說明。上游 skill 升級後要重新複製並套用這些修改。
+  第 4 步另有一條 Label Suite 自己加的警告（serve 的 watcher 不能和手動 build 同時跑，issue #172），
+  那一條在 .claude 版也有，重新複製時從那一份帶過來即可。
 -->
 
 # Content Visualize Skill
@@ -28,7 +30,7 @@ description: 為 NoteCraft 的 MDX 筆記生成豐富的視覺化與動態互動
 
 - `<notesDir>` 是專案根的 `docs/`；元件放在專案根的 `.notecraft/components/<id>.tsx`
 - 第 1～5 步全部由你自己依序執行（掃描 → 規劃 → 生成 → 驗證 → 寫回），沒有 subagent 可以分派
-- 驗證一律在專案根跑 `pnpm exec notecraftapp build docs`；使用者開著 `pnpm docs:serve` 時，也可以請使用者在瀏覽器確認畫面
+- 驗證在專案根跑 `pnpm exec notecraftapp build docs`，**或**請開著 `pnpm docs:serve` 的使用者在瀏覽器確認畫面——**兩者只能選一條**，理由見第 4 步的警告（[#172](https://github.com/label-suite/label-suite/issues/172)）
 - 樣式另依 `label-suite-design` skill（`.agents/skills/label-suite-design/SKILL.md`）
 
 從 MDX 筆記中的 `@ai-visualize` 標記區塊生成 React / SVG 元件。請依提示詞自行判斷適合的視覺化形式 —— 除非提示詞真的含糊不清，否則不要反問作者該用哪個函式庫。
@@ -127,6 +129,7 @@ status: pending | generated | locked | failed
 驗證的正確做法是**觀察使用者的 `pnpm docs:serve`**：mdx-writer 寫回 mdx 後，viewer 的 chokidar watcher 會在 300ms 內觸發 rebuild、SSE 廣播 auto reload；成功則瀏覽器直接看到元件、失敗則 fallback 頁顯示錯誤節錄。
 
 - 若作者離線測試（沒開 serve）：可跑 `pnpm exec notecraftapp build docs` 手動觸發一次 build 產物到 `~/.notecraft/cache/<hash>/dist/`
+- ⚠️ **這兩條驗證路徑只能走一條。** serve 的 watcher 和手動 build 共用同一個 `.astro/`、沒有跨行程鎖，同時跑其中一個會失敗（[#172](https://github.com/label-suite/label-suite/issues/172)，同路徑併發實測 3／3 恰有一個失敗）。用 watcher 驗就不要再手動 build；要手動 build 就先請作者停掉 `docs:serve`，或請他用 `--no-watch` 開
 - 若 rebuild 失敗、每次修正後仍不通過：3 次後放棄，**跳到第 5 步、將該 MDX 標記的 `status` 設為 `failed`**（保留原始 prompt），並在對話中回報錯誤節錄。驗證未通過前，不要進行第 5 步的 MDX 寫回。
 <!-- END:validation-skill -->
 
