@@ -39,7 +39,7 @@ model: opus
 - 依查詢條件（篩選、排序、關聯）建立索引
 - **稽核兩張表是 append-only**（`ai_runs` 與 `audit_events`，ADR-019／032）：不設計更新或刪除路徑；`audit_events` 的 `payload_summary` 是**去識別化**的 JSON
 - **測試集答案**（Hard Rule 6）：答案與測試集辨識資訊放在受控的表，欄位與索引的設計不得讓標記員能到達的查詢順手帶出它們
-- 每個欄位加**英文** `comment`，model 的公開介面有**英文** docstring（`AGENTS.md` §Language Rules：程式與註解只用英文，沒有例外）
+- 每個欄位加**英文** `comment`，model 的公開介面有**英文** docstring（`AGENTS.md` §Language Rules：程式與註解只用英文。該表 2026-11-12 新增一列，讓 `design/prototype/` 的註解可用繁體中文——那個資料夾不在這個角色的範圍內，所以**這裡沒有例外**）
 
 ## Migration 準則
 
