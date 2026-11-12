@@ -232,9 +232,9 @@
           <select class="filter-select" id="statusFilter" aria-label="依狀態篩選">
             <option value="">全部狀態</option>
             <option value="draft">草稿</option>
-            <option value="dry_run_in_progress">試標進行中</option>
-            <option value="waiting_iaa_confirmation">待 IAA 確認</option>
-            <option value="official_run_in_progress">正式標記進行中</option>
+            <option value="dry_run_in_progress">試標中</option>
+            <option value="waiting_iaa_confirmation">等待 IAA 確認</option>
+            <option value="official_run_in_progress">正式標記中</option>
             <option value="completed">已完成</option>
           </select>
           <button class="clear-btn hide-clear" id="clearFiltersBtn" aria-label="清除篩選">
@@ -307,7 +307,7 @@
 <div class="modal-overlay" id="deleteTaskModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="deleteTaskModalTitle">
   <div class="modal">
     <h2 id="deleteTaskModalTitle">確認刪除任務</h2>
-    <p id="deleteTaskModalBody">確認將任務軟刪除？此操作可由管理端復原。</p>
+    <p id="deleteTaskModalBody">移到封存？移到封存後不會再出現在任務列表。</p>
     <div class="modal-actions">
       <button class="btn btn-secondary" type="button" id="deleteTaskCancelBtn">取消</button>
       <button class="btn btn-danger" type="button" id="deleteTaskConfirmBtn">刪除</button>
@@ -357,16 +357,15 @@
       outputTypeGroupAriaTpl: '輸出類型：{types}',
       runTypeOptions: [
         { value: '', label: '全部標記階段' },
-        { value: 'unmaterialized', label: '未建立清單' },
         { value: 'dry_run', label: '試標' },
         { value: 'official_run', label: '正式標記' },
       ],
       statusOptions: [
         { value: '', label: '全部狀態' },
         { value: 'draft', label: '草稿' },
-        { value: 'dry_run_in_progress', label: '試標進行中' },
-        { value: 'waiting_iaa_confirmation', label: '待 IAA 確認' },
-        { value: 'official_run_in_progress', label: '正式標記進行中' },
+        { value: 'dry_run_in_progress', label: '試標中' },
+        { value: 'waiting_iaa_confirmation', label: '等待 IAA 確認' },
+        { value: 'official_run_in_progress', label: '正式標記中' },
         { value: 'completed', label: '已完成' },
       ],
       pageSizeLabel: ' 筆/頁',
@@ -376,17 +375,18 @@
       toastTaskSoftDeleted: '任務已移至封存（軟刪除）',
       toastDeleteNotAllowed: '此任務狀態不允許刪除',
       toastDeleteForbidden: '無權限刪除任務',
+      toastDeleteFailed: '刪除未完成，任務仍在列表上，請重試',
       toastNewTask: '已建立新任務',
       deleteModalTitle: '確認刪除任務',
-      deleteModalBodyDefault: '確認將任務軟刪除？此操作可由管理端復原。',
-      deleteModalBodyTpl: '確認將「{name}」軟刪除？此操作可由管理端復原。',
+      deleteModalBodyDefault: '移到封存？移到封存後不會再出現在任務列表。',
+      deleteModalBodyTpl: '將「{name}」移到封存？移到封存後不會再出現在任務列表。',
       deleteModalCancel: '取消',
       deleteModalConfirm: '刪除',
       roleLabel: { user: '一般使用者', super_admin: '系統管理員', project_leader: '專案負責人' },
       userName: { user: 'Iris Tsai', super_admin: 'Super Admin', project_leader: 'Iris Tsai' },
       statusBadge: {
-        draft: '草稿', dry_run_in_progress: '試標進行中',
-        waiting_iaa_confirmation: '待 IAA 確認',
+        draft: '草稿', dry_run_in_progress: '試標中',
+        waiting_iaa_confirmation: '等待 IAA 確認',
         official_run_in_progress: '正式標記中', completed: '已完成',
       },
       runBadge: { unmaterialized: '未建立清單', dry_run: '試標', official_run: '正式標記' },
@@ -416,7 +416,6 @@
       outputTypeGroupAriaTpl: 'Output types: {types}',
       runTypeOptions: [
         { value: '', label: 'All annotation stages' },
-        { value: 'unmaterialized', label: 'No list yet' },
         { value: 'dry_run', label: 'Dry Run' },
         { value: 'official_run', label: 'Official' },
       ],
@@ -435,18 +434,19 @@
       toastTaskSoftDeleted: 'Task moved to archive (soft deleted)',
       toastDeleteNotAllowed: 'This task status cannot be deleted',
       toastDeleteForbidden: 'No permission to delete task',
+      toastDeleteFailed: 'Delete did not complete, the task is still in the list, please retry',
       toastNewTask: 'Task created',
       deleteModalTitle: 'Confirm task deletion',
-      deleteModalBodyDefault: 'Soft delete this task? This action can be restored by admin.',
-      deleteModalBodyTpl: 'Soft delete "{name}"? This action can be restored by admin.',
+      deleteModalBodyDefault: 'Move this task to archive? It will no longer appear in the task list.',
+      deleteModalBodyTpl: 'Move "{name}" to archive? It will no longer appear in the task list.',
       deleteModalCancel: 'Cancel',
       deleteModalConfirm: 'Delete',
       roleLabel: { user: 'User', super_admin: 'Super Admin', project_leader: 'Project Leader' },
       userName: { user: 'User', super_admin: 'Super Admin', project_leader: 'Iris Tsai' },
       statusBadge: {
-        draft: 'Draft', dry_run_in_progress: 'Dry Run',
-        waiting_iaa_confirmation: 'Pending IAA',
-        official_run_in_progress: 'Official Run', completed: 'Completed',
+        draft: 'Draft', dry_run_in_progress: 'Dry run in progress',
+        waiting_iaa_confirmation: 'Waiting IAA confirmation',
+        official_run_in_progress: 'Official run in progress', completed: 'Completed',
       },
       runBadge: { unmaterialized: 'No list yet', dry_run: 'Dry Run', official_run: 'Official' },
     },
@@ -490,6 +490,7 @@
   /* ── State ───────────────────────────────────────────────────── */
   var state = { lang: 'zh', keyword: '', outputType: '', runType: '', status: '', limit: 20, offset: 0, loadFailed: !TASK_LIST_DATA_READY };
   var pendingDeleteTaskId = null;
+  var simulateDeleteFailure = false;
   var toastTimer = null;
   var pageTaskRole = 'user';
   var pendingUnauthorizedToast = false;
@@ -543,17 +544,23 @@
     var statusLabel = (langMap.statusBadge && langMap.statusBadge[task.status]) || '';
     var outputTypeKeys = Array.isArray(task.outputTypes) ? task.outputTypes : [];
     var outputTypeLabels = outputTypeKeys.map(getOutputTypeLabel);
+    /* Q9 (label-suite/label-suite#170) narrows the scope to the text this row
+       shows in the current language, and drops exactly three things: task.id
+       (an internal id, never rendered), the other language's task name, and
+       task.updatedAt -- an ISO date, so not language-dependent text
+       (maintainer, 2026-11-12).
+       The raw enum values stay: Q19 (settled 2026-05-22, see
+       docs/specs/03-task-management/01-task-list.mdx) requires the output
+       type, run stage and status columns to match the internal value AND the
+       current-language label, and FR-004ad says the same. */
     return [
-      task.id,
-      task.nameZh,
-      task.nameEn,
+      state.lang === 'en' ? task.nameEn : task.nameZh,
       outputTypeKeys.join(' '),
       outputTypeLabels.join(' '),
       runStage,
       runLabel,
       task.status,
-      statusLabel,
-      task.updatedAt
+      statusLabel
     ].filter(Boolean).join(' ').toLowerCase();
   }
 
@@ -578,7 +585,15 @@
       var kw = state.keyword.trim().toLowerCase();
       tasks = tasks.filter(function(tk) { return getTaskSearchText(tk).indexOf(kw) !== -1; });
     }
-    return tasks;
+    /* Q9 (label-suite/label-suite#170): DEFAULT_SORT = updated_at desc
+       (FR-004b). This page has no sort control, so the source default is
+       the only order there is. Copy first -- `tasks` is still TASKS itself
+       when no filter ran. updatedAt is YYYY-MM-DD, so string order is
+       chronological order. */
+    return tasks.slice().sort(function (a, b) {
+      if (a.updatedAt === b.updatedAt) return 0;
+      return a.updatedAt < b.updatedAt ? 1 : -1;
+    });
   }
 
   function showToast(msg, isError) {
@@ -615,6 +630,9 @@
   function syncUrl() {
     var p = new URLSearchParams();
     if (state.loadFailed) p.set('view', 'error');
+    /* Keep the prototype-only delete-failure simulation in the URL so a
+       refresh or a shared link reproduces it, the way `view=error` does. */
+    if (simulateDeleteFailure) p.set('sim_delete_error', '1');
     if (getDisplayedTaskRole() !== 'user') p.set('task_role', getDisplayedTaskRole());
     if (state.keyword) p.set('keyword', state.keyword);
     if (state.outputType) p.set('output_type', state.outputType);
@@ -650,6 +668,22 @@
     }
     if (task.status !== 'draft') {
       showToast(t('toastDeleteNotAllowed'), true);
+      return;
+    }
+    if (simulateDeleteFailure) {
+      /* Q8 (label-suite/label-suite#170): the delete was submitted and came
+         back failed. The task stays on the list and the message says it did
+         not complete and can be retried -- the load-failure pattern, not a
+         success toast and not an empty state. `?sim_delete_error=1` is the
+         prototype-only trigger, matching task-detail.html's `?sim_403=1`. */
+      trackAnalytics('prototype_task_soft_delete_failed', { task_id: task.id });
+      showToast(t('toastDeleteFailed'), true);
+      /* Clear it so the retry the message promises actually succeeds -- the
+         source's clause 8 says the user can retry, and a sticky flag would
+         fail every attempt forever. The next render() drops the parameter
+         from the URL. */
+      simulateDeleteFailure = false;
+      render();
       return;
     }
     task.deletedAt = new Date().toISOString();
@@ -1183,6 +1217,7 @@
     var limit = limitQuery !== null && /^\d+$/.test(limitQuery) ? Number(limitQuery) : NaN;
     var offset = offsetQuery !== null && /^\d+$/.test(offsetQuery) ? Number(offsetQuery) : NaN;
     pendingUnauthorizedToast = !!q.get('unauthorized');
+    simulateDeleteFailure = q.get('sim_delete_error') === '1';
     pageTaskRole = taskRole;
     var validOutputTypes = OUTPUT_TYPES.map(function(item) { return item.key; });
     var validRunStages = I18N.zh.runTypeOptions.map(function(item) { return item.value; });
@@ -1193,7 +1228,18 @@
     if (runStage && validRunStages.indexOf(runStage) !== -1) state.runType = runStage;
     if (status && validStatuses.indexOf(status) !== -1) state.status = status;
     if (!isNaN(limit) && [20, 50, 100].indexOf(limit) !== -1) state.limit = limit;
-    if (!isNaN(offset) && offset >= 0) state.offset = offset;
+    /* Q9 (label-suite/label-suite#170): an out-of-range `offset` is an
+       invalid value -- fall back to the first page and let syncUrl() rewrite
+       the URL, instead of clamping to the last page. render() still clamps
+       when a filter shrinks the result set; that is an adjustment to a valid
+       state, not a bad input. */
+    /* getFilteredTasks() filters on language-specific search text, so settle
+       the language first; applyLang() runs below and sets the same value. */
+    state.lang = window.LabelSuiteSharedSidebar
+      ? window.LabelSuiteSharedSidebar.getStoredLang()
+      : 'zh';
+    var availableTotal = state.loadFailed ? 0 : getFilteredTasks().length;
+    if (!isNaN(offset) && offset >= 0 && offset < availableTotal) state.offset = offset;
   }());
 
   if (window.LabelSuiteSharedSidebar) {
