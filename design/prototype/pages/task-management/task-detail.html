@@ -1719,6 +1719,13 @@
     .round-table th, .round-table td { padding: 8px 12px 8px 0; text-align: left; border-bottom: 1px solid var(--color-border); }
     .round-table th { font-size: 12px; font-weight: 600; color: var(--color-text-soft); white-space: nowrap; }
     .round-table td { color: var(--color-ink); }
+    /* Clause 29 of §試標回合表 (label-suite/label-suite#170 Q7): 「日期保持一行」.
+       The header row already had nowrap; the body cell did not, so a narrow
+       date column broke the date across two lines. Only the date cell is
+       pinned -- the clause asks for the date, not the whole row -- and
+       `.round-timeline` is `overflow-x: auto`, so a wider table scrolls in
+       its wrapper rather than stretching the page. */
+    .round-table td.round-date-cell { white-space: nowrap; }
     .round-status-badge { font-weight: 700; white-space: nowrap; }
     .round-status-badge.failed { color: var(--color-error); }
     .round-status-badge.passed { color: var(--color-success); }
@@ -5741,14 +5748,18 @@ function interpolate(template, payload) {
         String(round.annotators),
         formatIaaValue(round.agreement),
         Number(round.std || 0).toFixed(2),
-        result,
-        round.date || '-'
+        result
       ].forEach(function(value) {
         var td = document.createElement('td');
         if (typeof value === 'string') td.textContent = value;
         else td.appendChild(value);
         row.appendChild(td);
       });
+      /* Built apart from the loop so it can carry the nowrap class (Q7). */
+      var tdRoundDate = document.createElement('td');
+      tdRoundDate.className = 'round-date-cell';
+      tdRoundDate.textContent = round.date || '-';
+      row.appendChild(tdRoundDate);
       tbody.appendChild(row);
     });
     table.appendChild(tbody);
