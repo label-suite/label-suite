@@ -3222,7 +3222,13 @@
     var valid = Array.isArray(decisions) && decisions.length > 0 && decisions.every(function (decision) {
       if (!decision || !decision.annotatorId) return false;
       if (ARBITRATION_OUTCOMES.indexOf(decision.choice) === -1) return false;
-      if (decision.choice === 'reject' && !String(decision.reason || '').trim()) return false;
+      /* Q45 (label-suite/label-suite#170): 第 7 條 says a missing reason must
+         not block the submit, and 第 8 條 allows the field to be written
+         blank, so this is no longer a validity condition. Enabling the UI's
+         confirm alone would not have been enough -- this guard refused the
+         whole call with `adjudication_refused`. The exception-pool
+         resolution's own reason requirement is a different step (clause 4
+         sends a 「兩者皆非」 item there) and is untouched. */
       var identity = { annotatorId: decision.annotatorId };
       if (getReviewUnitStatus(taskId, runType, sampleId, identity, outKeys) !== REVIEW_UNIT_STATUS.DISPUTED) return false;
       var item = getDisputeItems(taskId, runType, sampleId, identity, outKeys).filter(function (candidate) {

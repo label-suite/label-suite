@@ -2456,11 +2456,11 @@
       fepReasonFallback: '（仲裁時未填寫理由）',
       leaderAdjudicationSourceLabel: '負責人裁定（無指定仲裁者）',
       leaderAdjudicationTitleTpl: '負責人裁定 · {count} 項待裁定',
-      leaderAdjudicationSubtitle: '本任務未指定仲裁者，爭議項目由專案負責人裁定；「兩者皆非」須填寫理由。',
+      leaderAdjudicationSubtitle: '本任務未指定仲裁者，爭議項目由專案負責人裁定；裁定理由選填。',
       leaderAdjudicationChoiceA: '採標記員答案',
       leaderAdjudicationChoiceB: '採審核員答案',
       leaderAdjudicationChoiceReject: '兩者皆非',
-      leaderAdjudicationReasonPlaceholder: '裁定理由（選「兩者皆非」時必填）',
+      leaderAdjudicationReasonPlaceholder: '裁定理由（選填）',
       leaderAdjudicationConfirm: '確認裁定',
       toastCompleteBlocked: '結案前置條件尚未滿足，無法標記完成：',
       completeBlockerExceptionPoolTpl: '最終例外池尚有 {count} 項待處置',
@@ -3033,11 +3033,11 @@
       fepReasonFallback: '(no reason recorded at arbitration)',
       leaderAdjudicationSourceLabel: 'Leader adjudication (no arbiter designated)',
       leaderAdjudicationTitleTpl: 'Leader adjudication · {count} awaiting a ruling',
-      leaderAdjudicationSubtitle: 'No arbiter is designated for this task, so the project leader rules on disputed items; "Neither" requires a reason.',
+      leaderAdjudicationSubtitle: 'No arbiter is designated for this task, so the project leader rules on disputed items; a reason is optional.',
       leaderAdjudicationChoiceA: 'Adopt annotator answer',
       leaderAdjudicationChoiceB: 'Adopt reviewer answer',
       leaderAdjudicationChoiceReject: 'Neither',
-      leaderAdjudicationReasonPlaceholder: 'Reason (required for "Neither")',
+      leaderAdjudicationReasonPlaceholder: 'Reason (optional)',
       leaderAdjudicationConfirm: 'Confirm ruling',
       toastCompleteBlocked: 'Completion preconditions not met, cannot mark complete: ',
       completeBlockerExceptionPoolTpl: 'Final exception pool still has {count} pending item(s)',
@@ -8913,8 +8913,11 @@ function getTaskTypeLabel() {
       var buttons = [];
       var reason = document.createElement('textarea');
       var confirm = document.createElement('button');
+      /* Q45 (label-suite/label-suite#170): 第 7 條 -- a missing reason must not
+         disable 「確認裁定」 and must not block the submit. Only the ruling
+         itself is required, so the confirm waits on the choice alone. */
       function syncConfirm() {
-        confirm.disabled = !choice || (choice === 'reject' && !reason.value.trim());
+        confirm.disabled = !choice;
       }
       [['adopt_a', 'leaderAdjudicationChoiceA'], ['adopt_b', 'leaderAdjudicationChoiceB'], ['reject', 'leaderAdjudicationChoiceReject']]
         .forEach(function(pair) {
@@ -8938,7 +8941,8 @@ function getTaskTypeLabel() {
       reason.style.cssText = 'display:block;width:100%;margin:6px 0;font:inherit;';
       reason.placeholder = t('leaderAdjudicationReasonPlaceholder');
       reason.setAttribute('aria-label', t('leaderAdjudicationReasonPlaceholder'));
-      reason.addEventListener('input', syncConfirm);
+      /* No input listener: syncConfirm() no longer reads the reason, so
+         listening here would be a no-op. 第 8 條 keeps the field itself. */
       row.appendChild(reason);
 
       confirm.type = 'button';
