@@ -2647,6 +2647,7 @@
       arExportScopeAll: '全任務',
       arStageBoth: '試標+正式',
       arExportDownload: '下載',
+      arExportBlockedByStatus: '任務完成後才能匯出',
       arExportHistoryEmpty: '尚未執行過匯出',
       toastExportJson: '已建立 JSON 匯出',
       toastExportJsonMin: '已建立精簡 JSON 匯出',
@@ -3223,6 +3224,7 @@
       arExportScopeAll: 'All tasks',
       arStageBoth: 'Dry + Official',
       arExportDownload: 'Download',
+      arExportBlockedByStatus: 'Export is available after the task is completed',
       arExportHistoryEmpty: 'No exports yet',
       toastExportJson: 'JSON export created',
       toastExportJsonMin: 'Compact JSON export created',
@@ -10284,8 +10286,43 @@ function getTaskTypeLabel() {
     return state.taskRole === 'project_leader';
   }
 
+  /* Q40 (label-suite/label-suite#170): the PRD opens export only once the task
+     is completed, and the source carries no such rule at all, so the PRD is
+     the ceiling. The source's own gate is role-only, which is why this is a
+     second condition rather than a change to canExportResults(): the role
+     decides whether the section exists, the status decides whether a new
+     export can start. The 卡控 says to disable and say why, not to hide. */
+  function isTaskCompletedForExport() {
+    return TASK_DATA.status === 'completed';
+  }
+
+  function canStartNewExport() {
+    return canExportResults() && isTaskCompletedForExport();
+  }
+
+  /* Q40: disable the two export buttons and say why, following the same idiom
+     the next-step gate uses -- `disabled` plus aria-describedby pointing at a
+     visible reason. Re-downloading a past record is deliberately NOT gated:
+     a record can only exist if an export already happened, and the source
+     says a re-download hands back the original file. */
+  function renderArExportStatusGate() {
+    var blocked = canExportResults() && !isTaskCompletedForExport();
+    var hint = document.getElementById('arExportStatusHint');
+    if (hint) {
+      hint.textContent = t('arExportBlockedByStatus');
+      hint.classList.toggle('hidden', !blocked);
+    }
+    ['arExportJsonBtn', 'arExportJsonMinBtn'].forEach(function (id) {
+      var btn = document.getElementById(id);
+      if (!btn) return;
+      btn.disabled = blocked;
+      if (blocked) btn.setAttribute('aria-describedby', 'arExportStatusHint');
+      else btn.removeAttribute('aria-describedby');
+    });
+  }
+
   function performArExport(format, seqOptions) {
-    if (!canExportResults()) return;
+    if (!canStartNewExport()) return;
     var conditions = buildArConditionsFromState();
     var samples = getArFilteredSamples(conditions);
     var exportedAt = downloadArExport(format, conditions, seqOptions);
@@ -10450,7 +10487,7 @@ function getTaskTypeLabel() {
      default scheme/unit (BIO/character) rather than remembering the last
      selection, per issue singyichen/label-suite#742 task 1.6 spec. */
   function openArSeqExportModal(format, triggerEl) {
-    if (!canExportResults()) return;
+    if (!canStartNewExport()) return;
     state.arSeqExportFormat = format;
     renderArSeqExportOptions();
     updateArSeqExportTokenizerVisibility();
@@ -10749,6 +10786,7 @@ function getTaskTypeLabel() {
   function renderAnnotationResults() {
     var arExportSection = document.getElementById('arExportSection');
     if (arExportSection) arExportSection.classList.toggle('hidden', !canExportResults());
+    renderArExportStatusGate();
     var arStageSelect = document.getElementById('arStageSelect');
     var arStatusSelect = document.getElementById('arStatusSelect');
     if (arStageSelect) arStageSelect.value = state.arStage;
@@ -11748,13 +11786,13 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
     });
 
     document.getElementById('arExportJsonBtn').addEventListener('click', function(e) {
-      if (!canExportResults()) return;
+      if (!canStartNewExport()) return;
       if (taskHasSequenceTaggingOutput()) { openArSeqExportModal('json', e.currentTarget); return; }
       performArExport('json');
     });
 
     document.getElementById('arExportJsonMinBtn').addEventListener('click', function(e) {
-      if (!canExportResults()) return;
+      if (!canStartNewExport()) return;
       if (taskHasSequenceTaggingOutput()) { openArSeqExportModal('json-min', e.currentTarget); return; }
       performArExport('json-min');
     });
