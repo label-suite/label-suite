@@ -9401,8 +9401,9 @@ function getTaskTypeLabel() {
   /* `fast`/`slow` are the anomaly bounds for Clause 11 of §工時紀錄: the alerts
      compare within one kind and one unit, never across the three. The source
      gives no per-kind numbers; these are the maintainer's, 2026-11-12.
-     Annotation keeps the screen's existing 24/9 -- six of the seven seeded
-     rows are annotation, so that is what those two were calibrated on -- and
+     Annotation keeps the screen's existing 24/9 -- it is the only kind with
+     more than a couple of seeded rows, so that is what those two were
+     calibrated on -- and
      review and arbitration scale down because their units are heavier per
      item. They live on the kind rather than in a table of their own so a
      fourth kind cannot be added without them. */
@@ -9441,8 +9442,8 @@ function getTaskTypeLabel() {
      sum is EXACT rather than apportioned: spec 03-03 §工時紀錄 point 9 separates
      rows by work kind, so a compliant row carries exactly one kind and its
      duration belongs wholly to that kind. A row carrying two kinds would be
-     charged to both denominators -- label-suite/label-suite#170 split the one
-     seed row that did that. */
+     charged to both denominators -- label-suite/label-suite#170 split the
+     FOUR seed rows that did that. */
   function getWorkLogSpeedSummaryLines(entries) {
     /* Same rule as the table cell, for the same reason: a reviewer only ever
        sees their own rows (§工時紀錄 的「審核員的工時紀錄只看得到自己的資料」,
@@ -9578,12 +9579,14 @@ function getTaskTypeLabel() {
     setMultilineText('workLogSummarySpeedValue', getWorkLogSpeedSummaryLines(entries));
   }
 
-  /* One alert per (row, kind) that falls outside that kind's range. A row
-     carrying two kinds can raise two, which is the point of Clause 11 of
-     §工時紀錄: the two are not comparable and must not be averaged into one
-     number. Nothing is raised for a speed that cannot be computed, because an
-     uncomputable speed is neither fast nor slow -- that covers both no
-     trustworthy duration (§工時紀錄 clause 5) and a zero completed count,
+  /* One alert per (row, kind) that falls outside that kind's range. Clause 9
+     of §工時紀錄 separates rows by work kind, so a compliant row carries one
+     kind and raises at most one alert; the per-kind loop still matters for
+     Clause 11 of §工時紀錄, which says the kinds are not comparable and must
+     not be averaged into one number. Nothing is raised for a speed that
+     cannot be computed, because an uncomputable speed is neither fast nor
+     slow -- that covers both no trustworthy duration (§工時紀錄 clause 5)
+     and a zero completed count,
      which §邊界情況 says reads 算不出來 rather than 0. */
   function getWorkLogAnomalies(entries) {
     var out = [];
