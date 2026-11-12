@@ -2031,6 +2031,26 @@
   </div>
 </div>
 
+<!-- FR-010f-5 / AC-3.40 (label-suite/label-suite#170 Q29): the only way back from
+     「等待 IAA 確認」. The maintainer ruled on 2026-11-11 that it takes a confirm
+     dialog and that the reason is optional. -->
+<div class="modal-overlay" id="backToDraftModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="backToDraftModalTitle">
+  <div class="modal">
+    <h2 id="backToDraftModalTitle"></h2>
+    <p id="backToDraftModalDesc"></p>
+    <div class="settings-edit-form">
+      <div class="field-group">
+        <label class="field-label" id="backToDraftReasonLabel" for="backToDraftReasonInput"></label>
+        <textarea class="input-textarea" id="backToDraftReasonInput"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" type="button" id="backToDraftCancelBtn"></button>
+        <button class="btn btn-danger" type="button" id="backToDraftConfirmBtn"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- FR-017 (issue singyichen/label-suite#838): revision note required before trial round R{n}, n >= 2. -->
 <div class="modal-overlay" id="trialRoundRevisionModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="trialRoundRevisionTitle">
   <div class="modal">
@@ -2286,6 +2306,16 @@
       officialRunDisabled: '開始正式標記（唯讀）',
       dryRunNextRoundReason: '本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合',
       retryIaaComputation: '重試計算',
+      backToDraftBtn: '退回草稿',
+      backToDraftModalTitle: '退回草稿？',
+      backToDraftModalDesc: '這會關閉目前這一輪試標並把任務退回草稿。已經發布的回合、樣本清單、作業指派與排除證據都不會被刪除或改寫；下一次發布試標會開新的一輪，回合從 R1 重新算。',
+      backToDraftReasonLabel: '退回原因（選填）',
+      backToDraftCancel: '取消',
+      backToDraftConfirm: '退回草稿',
+      toastBackToDraft: '任務已退回草稿',
+      trialCycleOpenTpl: '第 {n} 輪試標（進行中）',
+      trialCycleClosedTpl: '第 {n} 輪試標（已退回：{reason}）',
+      trialCycleClosedNoReasonTpl: '第 {n} 輪試標（已退回）',
       panelLoadErrorTitle: '這個分頁載入失敗',
       panelLoadErrorDesc: '其他分頁仍然可以使用。重試會重新載入整個頁面。',
       panelLoadRetry: '重試',
@@ -2865,6 +2895,16 @@
       officialRunDisabled: 'Start official run (Read-only)',
       dryRunNextRoundReason: 'Finish this round\'s annotation, required review and required arbitration before adding the next round',
       retryIaaComputation: 'Retry computation',
+      backToDraftBtn: 'Back to draft',
+      backToDraftModalTitle: 'Send back to draft?',
+      backToDraftModalDesc: 'This closes the current trial cycle and returns the task to draft. Published rounds, sample lists, assignments and exclusion evidence are neither deleted nor rewritten; the next dry run starts a new cycle numbered from R1.',
+      backToDraftReasonLabel: 'Reason (optional)',
+      backToDraftCancel: 'Cancel',
+      backToDraftConfirm: 'Back to draft',
+      toastBackToDraft: 'Task sent back to draft',
+      trialCycleOpenTpl: 'Trial cycle {n} (in progress)',
+      trialCycleClosedTpl: 'Trial cycle {n} (sent back: {reason})',
+      trialCycleClosedNoReasonTpl: 'Trial cycle {n} (sent back)',
       panelLoadErrorTitle: 'This tab failed to load',
       panelLoadErrorDesc: 'The other tabs still work. Retry reloads the whole page.',
       panelLoadRetry: 'Retry',
@@ -3298,6 +3338,8 @@
     isolationLastUpdated: '2026-04-20 19:42',
     reviewerIds: ['reviewer_wang', 'reviewer_li', 'reviewer_chen', 'reviewer_lin'],
     arbiterIds: [],
+    trialCycle: 1,
+    closedCycles: [],
     trialRounds: [
       {
         round: 1,
@@ -5507,6 +5549,11 @@ function interpolate(template, payload) {
     }
 
     applyPanelLoadErrorText();
+    setText('backToDraftModalTitle', t('backToDraftModalTitle'));
+    setText('backToDraftModalDesc', t('backToDraftModalDesc'));
+    setText('backToDraftReasonLabel', t('backToDraftReasonLabel'));
+    setText('backToDraftCancelBtn', t('backToDraftCancel'));
+    setText('backToDraftConfirmBtn', t('backToDraftConfirm'));
     renderOverview();
     renderMemberManagement();
     renderAnnotationProgress();
@@ -5615,9 +5662,34 @@ function interpolate(template, payload) {
     return Number(TASK_DATA.samplingValue) || 0;
   }
 
-  function getTrialRounds() {
+  /* Q29 (label-suite/label-suite#170): rounds belong to a trial cycle. Sending
+     a task back to draft closes the current cycle without deleting anything
+     (§狀態與轉換 第 5 條), and the next dry run opens a new cycle numbered from
+     R1 (第 6 條) -- so the round number has to come from the OPEN cycle only,
+     while the table still shows every cycle. A round with no `cycle` is from
+     before this existed and counts as cycle 1. */
+  function roundCycleOf(round) {
+    return Number(round && round.cycle) || 1;
+  }
+
+  function getCurrentTrialCycle() {
+    return Number(TASK_DATA.trialCycle) || 1;
+  }
+
+  /* Every round of every cycle, for the trial-round table. */
+  function getAllTrialRounds() {
     if (Array.isArray(TASK_DATA.trialRounds) && TASK_DATA.trialRounds.length) {
       return TASK_DATA.trialRounds.slice();
+    }
+    return getTrialRounds();
+  }
+
+  function getTrialRounds() {
+    if (Array.isArray(TASK_DATA.trialRounds) && TASK_DATA.trialRounds.length) {
+      var open = getCurrentTrialCycle();
+      return TASK_DATA.trialRounds.filter(function (round) {
+        return roundCycleOf(round) === open;
+      });
     }
     if (hasExplicitEmptyTrialRounds()) {
       return [];
@@ -5799,7 +5871,7 @@ function interpolate(template, payload) {
     var mount = document.getElementById('trialRoundTimeline');
     if (!mount) return;
     clearChildren(mount);
-    var rounds = getTrialRounds();
+    var rounds = getAllTrialRounds();
     if (!rounds.length) {
       var empty = document.createElement('p');
       empty.className = 'status-hint';
@@ -5830,7 +5902,29 @@ function interpolate(template, payload) {
     thead.appendChild(headRow);
     table.appendChild(thead);
     var tbody = document.createElement('tbody');
+    /* Q29 (maintainer, 2026-11-12): a closed cycle's rounds stay in this table
+       and a separator row says which cycle they belong to -- and carries the
+       reason it was sent back, which has no other home on the screen. Only
+       drawn when more than one cycle exists, so a task that was never sent
+       back looks exactly as before. */
+    var cyclesShown = {};
+    rounds.forEach(function (round) { cyclesShown[roundCycleOf(round)] = true; });
+    var multiCycle = Object.keys(cyclesShown).length > 1;
+    var lastCycle = null;
     rounds.forEach(function(round) {
+      var cycle = roundCycleOf(round);
+      if (multiCycle && cycle !== lastCycle) {
+        lastCycle = cycle;
+        var sepRow = document.createElement('tr');
+        sepRow.className = 'round-cycle-separator';
+        sepRow.setAttribute('data-trial-cycle', String(cycle));
+        var sepCell = document.createElement('th');
+        sepCell.setAttribute('scope', 'rowgroup');
+        sepCell.setAttribute('colspan', '7');
+        sepCell.textContent = trialCycleLabel(cycle);
+        sepRow.appendChild(sepCell);
+        tbody.appendChild(sepRow);
+      }
       var row = document.createElement('tr');
       row.className = 'round-timeline-item';
       row.setAttribute('data-testid', 'trial-round-row');
@@ -5863,6 +5957,70 @@ function interpolate(template, payload) {
     mount.appendChild(table);
   }
 
+
+  /* The reason is optional (maintainer, 2026-11-11), so a closed cycle with no
+     reason gets its own template rather than an empty parenthesis. */
+  function trialCycleLabel(cycle) {
+    if (cycle === getCurrentTrialCycle()) {
+      return interpolate(t('trialCycleOpenTpl'), { n: cycle });
+    }
+    var closed = (TASK_DATA.closedCycles || []).filter(function (entry) {
+      return Number(entry.cycle) === cycle;
+    })[0];
+    var reason = closed && String(closed.reason || '').trim();
+    return reason
+      ? interpolate(t('trialCycleClosedTpl'), { n: cycle, reason: reason })
+      : interpolate(t('trialCycleClosedNoReasonTpl'), { n: cycle });
+  }
+
+  function openBackToDraftModal(triggerEl) {
+    if (TASK_DATA.status !== 'waiting_iaa_confirmation') return;
+    var modal = document.getElementById('backToDraftModal');
+    var input = document.getElementById('backToDraftReasonInput');
+    if (!modal) return;
+    if (input) input.value = '';
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+    if (window.LabelSuiteModalFocus) {
+      window.LabelSuiteModalFocus.open(modal, { trigger: triggerEl, onClose: closeBackToDraftModal });
+    }
+  }
+
+  function closeBackToDraftModal() {
+    var modal = document.getElementById('backToDraftModal');
+    if (!modal) return;
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+    if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
+  }
+
+  /* §狀態與轉換 第 5 條 / `FR-010f-5`: closes the current cycle, records the
+     reason and clears the current-cycle metrics -- and deletes or rewrites
+     nothing. `TASK_DATA.trialRounds` is deliberately untouched; the rounds stay
+     and keep their own `cycle`, which is what the table reads.
+     第 3 條 of §狀態與轉換 also makes this the ONLY way back, and the 卡控 says
+     「試標中」 may not jump straight to draft, so the status is re-checked here
+     and not only at the button. */
+  function backToDraft(reason) {
+    if (TASK_DATA.status !== 'waiting_iaa_confirmation') return;
+    var cycle = getCurrentTrialCycle();
+    TASK_DATA.closedCycles = (TASK_DATA.closedCycles || []).concat([{
+      cycle: cycle,
+      reason: String(reason || '').trim(),
+      closedAt: new Date().toISOString().slice(0, 10)
+    }]);
+    TASK_DATA.trialCycle = cycle + 1;
+    TASK_DATA.status = 'draft';
+    /* the current-cycle indicators, not the rounds */
+    TASK_DATA.trialRound = 0;
+    TASK_DATA.currentAgreement = null;
+    trackEvent('prototype_task_back_to_draft', { from_cycle: cycle });
+    showToast(t('toastBackToDraft'));
+    renderStatus();
+    renderOverview();
+    renderAnnotationProgress();
+    renderTabs();
+  }
 
   function validateSamplingData(data) {
     if (data.samplingValue < 1 || data.samplingValue >= TASK_DATA.datasetTotal) {
@@ -6351,7 +6509,13 @@ function interpolate(template, payload) {
       groups = getWaitingGroups();
       buttonsHtml =
         '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn"' + nextStepGateAttrs(nextStepUnmetIds(groups, ['both', 'official-only'])) + '>' + t('publishOfficialRun') + '</button>' +
-        '<button class="btn btn-secondary" type="button" id="publishDryRunBtn"' + nextStepGateAttrs(nextStepUnmetIds(groups, ['both'])) + '>' + t('publishDryRun') + ' R' + nextRound + '</button>';
+        '<button class="btn btn-secondary" type="button" id="publishDryRunBtn"' + nextStepGateAttrs(nextStepUnmetIds(groups, ['both'])) + '>' + t('publishDryRun') + ' R' + nextRound + '</button>' +
+        /* Q29: the far right of the row (maintainer, 2026-11-12), secondary
+           style, and deliberately NOT gated by the two execution buttons'
+           conditions -- §狀態與轉換 第 11 條 says it is a third path that goes
+           back rather than forward, so it is not mutually exclusive with them
+           and an unmet IAA condition must not disable it. */
+        '<button class="btn btn-secondary" type="button" id="backToDraftBtn">' + t('backToDraftBtn') + '</button>';
     } else if (status === 'official_run_in_progress') {
       /* FR-008b / AC-3.9 / SC-037: native disabled + one row per condition. */
       groups = [nextStepGroup('required', getCompletionRows('official_run'))];
@@ -11199,6 +11363,7 @@ function getTaskTypeLabel() {
        syncStatusFromDryRunProgress() fills them in from this same scenario
        table once the round is fully submitted. */
     TASK_DATA.trialRounds.push({
+      cycle: getCurrentTrialCycle(),
       round: nextRound,
       sampleCount: Number(TASK_DATA.samplingValue) || 0,
       agreement: null,
@@ -11748,6 +11913,15 @@ function getTaskTypeLabel() {
       if (e.target.id === 'retryIaaComputationBtn') {
         retryIaaComputation();
       }
+
+      /* Q29: delegated like the two execution buttons, because the action row
+         is rebuilt with innerHTML on every render -- a direct binding would be
+         lost. No isolation-risk gate: this goes back to draft, it does not
+         publish anything. */
+      if (e.target.id === 'backToDraftBtn') {
+        trackEvent('prototype_cta_clicked', { cta: 'back_to_draft' });
+        openBackToDraftModal(e.target);
+      }
     });
 
     on('settingsSectionNav', 'click', function(e) {
@@ -11795,6 +11969,16 @@ function getTaskTypeLabel() {
     });
 
     on('noChangeCheckbox', 'change', syncNoChangeFields);
+    on('backToDraftCancelBtn', 'click', closeBackToDraftModal);
+    on('backToDraftConfirmBtn', 'click', function() {
+      var input = document.getElementById('backToDraftReasonInput');
+      var reason = input ? input.value : '';
+      closeBackToDraftModal();
+      backToDraft(reason);
+    });
+    on('backToDraftModal', 'click', function(e) {
+      if (e.target.id === 'backToDraftModal') closeBackToDraftModal();
+    });
     on('trialRoundRevisionCancelBtn', 'click', closeTrialRoundRevisionModal);
     on('trialRoundRevisionConfirmBtn', 'click', confirmTrialRoundRevision);
     on('trialRoundRevisionModal', 'click', function(e) {
