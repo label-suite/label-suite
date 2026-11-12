@@ -3171,7 +3171,13 @@
     var itemKey = arbitrationItemKey(bucketKey, sampleId, decision.itemId);
     var item = readArbitrationItem(itemKey) || { votes: [] };
     var vote = { arbiter_id: arbiterId, choice: decision.choice, voted_at: new Date().toISOString() };
-    if (decision.reason) vote.reason = decision.reason;
+    /* Q45 (label-suite/label-suite#170) 第 8 條: the reason goes into the
+       ruling record 「允許空白」, and the candidate table dictionary has the
+       column NOT NULL allowing an empty string -- so write it unconditionally
+       rather than dropping the key. Written here, not behind a `source`
+       branch, to keep this function's one-record-shape contract; every
+       consumer already reads it as `reason || ''` or through a fallback. */
+    vote.reason = decision.reason || '';
     if (source) vote.source = source;
     var existingIndex = -1;
     item.votes.forEach(function (v, i) {
@@ -3255,7 +3261,9 @@
       var entry = bucket[sampleId] || (bucket[sampleId] = { status: 'pending', answers: {} });
       appendHistoryEvent(
         entry, 'adjudicated', 'project_leader', 'leader adjudication: ' + step.decision.itemId,
-        DEFAULT_PROJECT_LEADER_ID, { reason: step.decision.reason || null, result_snapshot: snapshot }
+        /* Q45 第 8 條, as above: `|| ''` rather than `|| null`, because
+           appendHistoryEvent drops only null/undefined extras. */
+        DEFAULT_PROJECT_LEADER_ID, { reason: step.decision.reason || '', result_snapshot: snapshot }
       );
       writeSubmissionBucket(bucketKey, bucket);
     });
