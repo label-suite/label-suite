@@ -420,11 +420,11 @@
         <span id="errorMsg"></span>
       </div>
 
-      <!-- Success Banner -->
+      <!-- Verification email sent (label-suite/label-suite#195) -->
       <div class="banner banner--success" id="successBanner" data-testid="success-banner" role="status" aria-live="polite">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-          <polyline points="22 4 12 14.01 9 11.01"/>
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <path d="M22 7 12 13 2 7"/>
         </svg>
         <span id="successMsg"></span>
       </div>
@@ -605,8 +605,9 @@
         passwordTooShort:       '密碼至少需 8 個字元，含大寫英文、小寫英文與數字',
         confirmPasswordRequired:'請再次輸入密碼',
         passwordMismatch:       '密碼不一致，請重新確認',
-        emailTaken:             '此 Email 已被使用，請改用其他 Email 或直接登入',
-        successMsg:             '帳號建立成功！正在導向儀表板…',
+        sentTitle:              '驗證信已寄出',
+        sentBody:               '我們已經寄了一封信到 {email}。請打開信件並點裡面的連結，你的帳號會在那時候建立。',
+        sentSpam:               '沒收到的話，看一下垃圾郵件匣。',
         // aria
         navAriaLabel:           'Label Suite 首頁',
         langToggleAria:         '切換語言',
@@ -641,8 +642,9 @@
         passwordTooShort:       'Min 8 chars with uppercase, lowercase, and a number',
         confirmPasswordRequired:'Please confirm your password',
         passwordMismatch:       'Passwords do not match',
-        emailTaken:             'This email is already in use. Please try a different email or sign in.',
-        successMsg:             'Account created! Redirecting to dashboard…',
+        sentTitle:              'Verification email sent',
+        sentBody:               "We've sent an email to {email}. Open it and follow the link \u2014 that's when your account gets created.",
+        sentSpam:               "If it hasn't arrived, check your spam folder.",
         // aria
         navAriaLabel:           'Label Suite home',
         langToggleAria:         'Switch language',
@@ -657,6 +659,31 @@
     let lang = window.LabelSuiteSharedSidebar.getStoredLang();
     const getTrackingContext = () => ({ lang });
 
+    /* label-suite/label-suite#195: the address the verification email went to,
+       or null while the form is still editable. Spec 01-02 §驗證信已寄出 clause 3
+       and its edge case "正顯示「驗證信已寄出」時切換語言" require that panel to
+       follow the language without disappearing, so applyLang() repaints it from
+       here instead of the form being the only source of truth. */
+    let sentEmail = null;
+
+    /* Builds the panel out of nodes rather than innerHTML so the address the
+       visitor typed is never parsed as markup. */
+    function paintSentPanel() {
+      const t = i18n[lang];
+      const [before, after] = t.sentBody.split('{email}');
+      const msg = document.getElementById('successMsg');
+      const strong = document.createElement('strong');
+      strong.textContent = sentEmail;
+      msg.replaceChildren(
+        document.createTextNode(before),
+        strong,
+        document.createTextNode(after),
+        document.createElement('br'),
+        document.createTextNode(t.sentSpam),
+      );
+      document.getElementById('successBanner').classList.add('visible');
+    }
+
     function applyLang(l) {
       const nextLang = l === 'en' ? 'en' : 'zh';
       const t = i18n[nextLang];
@@ -667,8 +694,9 @@
       });
       document.title = t.pageTitle;
 
-      document.getElementById('cardTitle').textContent            = t.cardTitle;
+      document.getElementById('cardTitle').textContent            = sentEmail ? t.sentTitle : t.cardTitle;
       document.getElementById('cardSubtitle').textContent         = t.cardSubtitle;
+      document.getElementById('cardSubtitle').hidden              = Boolean(sentEmail);
       document.getElementById('nameLabel').textContent            = t.nameLabel;
       document.getElementById('name').placeholder                 = t.namePlaceholder;
       document.getElementById('emailLabel').textContent           = t.emailLabel;
@@ -693,6 +721,9 @@
 
       // Re-render any visible error messages in new language
       clearAllErrors();
+      /* label-suite/label-suite#195: clearAllErrors() also hides the sent
+         panel, so put it back in the new language. */
+      if (sentEmail) paintSentPanel();
     }
 
     document.getElementById('langToggle').addEventListener('click', () => {
@@ -820,43 +851,34 @@
 
       await new Promise(r => setTimeout(r, 1500));
 
-      // ── Simulate server response ─────────────────────────────
-      // Prototype rule: email "taken@example.com" triggers duplicate error
-      if (email === 'taken@example.com') {
-        btn.disabled = false;
-        btn.innerHTML = `<span id="submitBtnText">${t.submitBtnText}</span>`;
-
-        const errBanner = document.getElementById('errorBanner');
-        document.getElementById('errorMsg').textContent = t.emailTaken;
-        errBanner.classList.add('visible');
-        document.getElementById('email').classList.add('error');
-        document.getElementById('email').focus();
-        window.LabelSuiteAnalytics.track('prototype_register_failed_duplicate_email', {
-          ...getTrackingContext(),
-        });
-        return;
-      }
-
-      // ── Success ──────────────────────────────────────────────
-      btn.disabled = false;
+      /* ── The verification email was sent ─────────────────────
+         label-suite/label-suite#195 (spec 01-02 Q1, maintainer 2026-11-09):
+         submitting the form no longer creates an account and no longer says
+         anything about the address. There is deliberately no branch for
+         "this email is already in use": that message told anyone who asked
+         whether an address had registered, which spec 01-01 §登入失敗 refuses
+         to disclose. Both cases now get this one panel -- the difference is
+         which email arrives, which the screen cannot show. */
       btn.innerHTML = `<span id="submitBtnText">${t.submitBtnText}</span>`;
+      btn.hidden = true;
+      btn.disabled = true;
 
-      document.getElementById('successBanner').classList.add('visible');
-      document.getElementById('successMsg').textContent = t.successMsg;
+      sentEmail = email;
+      document.getElementById('cardTitle').textContent = t.sentTitle;
+      document.getElementById('cardSubtitle').hidden = true;
+      paintSentPanel();
 
-      // Disable form during redirect countdown
+      /* Clause 1: all four fields are disabled, because their contents have
+         already been sent and editing them would look like it still counts. */
       ['name','email','password','confirmPassword'].forEach(id => {
         document.getElementById(id).disabled = true;
       });
-      btn.disabled = true;
 
-      // Prototype: redirect to dashboard after 2s
-      setTimeout(() => {
-        window.LabelSuiteAnalytics.track('prototype_register_succeeded', {
-          ...getTrackingContext(),
-        });
-        window.location.href = '../dashboard/dashboard.html';
-      }, 2000);
+      /* Not `prototype_register_succeeded`: the account does not exist yet.
+         That event now belongs to verify-email.html, where it is created. */
+      window.LabelSuiteAnalytics.track('prototype_register_verification_email_sent', {
+        ...getTrackingContext(),
+      });
     });
 
     /* ── Init ──────────────────────────────────────────────────── */

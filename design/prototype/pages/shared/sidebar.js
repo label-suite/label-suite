@@ -181,6 +181,18 @@
     en: { answer: 'Unable to determine (Bypass)', decision: 'Cannot adjudicate' }
   };
 
+  /* label-suite/label-suite#195 (spec 01-03 Q2, spec 01-02 §註冊成功 clause 3):
+   * one message for every reason a one-time link cannot be used -- expired,
+   * already used, or superseded by a later request. Two pages land on such a
+   * link (reset-password and verify-email) and 01-02 says they say the SAME
+   * thing, so the string is defined once here and both read it. Naming the
+   * cause would tell whoever holds the link that it existed and what became
+   * of it. The pages differ only in where the button goes. */
+  var ONE_TIME_LINK_WORDING = {
+    zh: { unusable: '連結無法使用，請重新申請' },
+    en: { unusable: 'This link can no longer be used. Please request a new one.' }
+  };
+
   var shortcutI18n = {
     zh: {
       shortcutLabel: '快捷鍵',
@@ -2573,5 +2585,6 @@
     isLoggedIn: isLoggedIn,
     redirectIfLoggedIn: redirectIfLoggedIn,
     BYPASS_WORDING: BYPASS_WORDING,
+    ONE_TIME_LINK_WORDING: ONE_TIME_LINK_WORDING,
   };
 })();

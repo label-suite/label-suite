@@ -27,6 +27,7 @@ title: Prototype 導航地圖
 |---|----------|----------|------|--------|------|
 | 001 | 登入（Email/Password） | `account/login` | account | ★★☆☆☆ | ✅ 完成 |
 | 003 | 註冊（Email/Password） | `account/register` | account | ★★☆☆☆ | ✅ 完成 |
+| 003b | 驗證信連結落地頁 | `account/verify-email` | account | ★☆☆☆☆ | ✅ 完成 |
 | 004a | 忘記密碼 | `account/forgot-password` | account | ★☆☆☆☆ | ✅ 完成 |
 | 004b | 重設密碼 | `account/reset-password` | account | ★★☆☆☆ | ✅ 完成 |
 | 005 | 個人資料設定 | `account/profile` | account | ★★☆☆☆ | ✅ 完成 |
@@ -53,6 +54,7 @@ title: Prototype 導航地圖
 ## 全局導航流程圖
 
 > 節點顏色：✅ 已完成 / ⬜ 待建置。箭頭標籤說明觸發條件。
+> 虛線箭頭表示那一步不是畫面上的跳轉：使用者要先去收信，再從信裡的連結進來。
 
 ```mermaid
 flowchart LR
@@ -61,6 +63,7 @@ flowchart LR
     register["/account/register ✅"]
     forgot["/account/forgot-password ✅"]
     reset["/account/reset-password ✅"]
+    verify["/account/verify-email ✅"]
     profile["/account/profile ✅"]
   end
 
@@ -93,11 +96,17 @@ flowchart LR
   login      -->|"登入成功"| dashboard
   login      -->|"前往註冊"| register
   login      -->|"忘記密碼"| forgot
-  register   -->|"註冊成功"| dashboard
+  register   -.->|"送出成功 → 寄出驗證信（不在畫面上跳轉）"| verify
   register   -->|"返回登入"| login
+  verify     -->|"連結可用 → 帳號建立"| dashboard
+  verify     -->|"連結無法使用 → 重新註冊"| register
   forgot     -->|"返回登入"| login
   reset      -->|"重設成功"| login
   reset      -->|"重新申請 / token 無效"| forgot
+  login      -->|"已登入直接前往（規格 01-01 Q3）"| dashboard
+  register   -->|"已登入直接前往（規格 01-01 Q3）"| dashboard
+  forgot     -->|"已登入直接前往（規格 01-01 Q3）"| dashboard
+  reset      -->|"已登入直接前往（規格 01-01 Q3）"| dashboard
   profile    -->|"返回 / Logo"| dashboard
 
   %% Shared sidebar and dashboard dispatch
@@ -158,6 +167,7 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 | Incoming | `/account/forgot-password` 點擊「返回登入」 | 本頁 |
 | Incoming | `/account/reset-password` 重設成功 / 前往登入 | 本頁 |
 | Outgoing | Email/Password 登入成功 | `/dashboard/dashboard` |
+| Outgoing | 已登入的人開本頁（規格 01-01 Q3） | `/dashboard/dashboard` |
 | Outgoing | 點擊「前往註冊」 | `/account/register` |
 | Outgoing | 點擊「忘記密碼」 | `/account/forgot-password` |
 | Inline | 表單驗證失敗 | 停留，顯示欄位錯誤 |
@@ -167,9 +177,11 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 | 方向 | 觸發條件 | 目標 |
 |------|---------|------|
 | Incoming | `/account/login` 點擊「前往註冊」 | 本頁 |
-| Outgoing | 送出成功 | `/dashboard/dashboard` |
+| Incoming | `/account/verify-email` 連結無法使用後點擊「重新註冊」 | 本頁 |
 | Outgoing | 點擊「返回登入」 | `/account/login` |
-| Inline | 重複 Email / 表單驗證錯誤 | 停留，顯示錯誤訊息 |
+| Outgoing | 已登入的人開本頁（規格 01-01 Q3） | `/dashboard/dashboard` |
+| Inline | 送出成功 | 停留，顯示「驗證信已寄出」，四個欄位停用；帳號還沒有建立 |
+| Inline | 表單驗證錯誤 | 停留，顯示錯誤訊息 |
 
 ### `/account/forgot-password` ✅
 
@@ -178,6 +190,7 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 | Incoming | `/account/login` 點擊「忘記密碼」 | 本頁 |
 | Incoming | `/account/reset-password` token 無效 / 重新申請 | 本頁 |
 | Outgoing | 點擊「返回登入」 | `/account/login` |
+| Outgoing | 已登入的人開本頁（規格 01-01 Q3） | `/dashboard/dashboard` |
 | Inline | 送出 Email（無論是否存在） | 停留，顯示通用提示 |
 
 ### `/account/reset-password` ✅
@@ -186,9 +199,22 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 |------|---------|------|
 | Incoming | 使用者信箱中的重設連結（`?token=<UUID>`） | 本頁 |
 | Outgoing | 重設成功後點擊「前往登入」 | `/account/login` |
-| Outgoing | token 無效 / 已過期時點擊「重新申請」 | `/account/forgot-password` |
+| Outgoing | 連結無法使用時點擊「重新申請」 | `/account/forgot-password` |
 | Outgoing | 點擊「返回登入」 | `/account/login` |
+| Outgoing | 已登入的人開本頁（規格 01-01 Q3） | `/dashboard/dashboard` |
 | Inline | 密碼不一致 / 欄位驗證錯誤 | 停留，顯示前端錯誤 |
+| Inline | 連結無法使用（過期、已用過或已被作廢） | 停留，三種原因顯示同一句（規格 01-03 Q2） |
+
+### `/account/verify-email` ✅
+
+註冊的驗證信連結落在這一頁。規格 01-02 Q1 把建立帳號移到這一刻，Q2 說這一刻之後直接進儀表板。
+
+| 方向 | 觸發條件 | 目標 |
+|------|---------|------|
+| Incoming | 使用者信箱中的註冊驗證連結 | 本頁 |
+| Outgoing | 連結可用 → 帳號建立 | `/dashboard/dashboard` |
+| Outgoing | 連結無法使用時點擊「重新註冊」 | `/account/register` |
+| Inline | 連結無法使用（過期、已用過或已被作廢） | 停留，三種原因顯示同一句，與 `/account/reset-password` 同一份文案 |
 
 ### `/account/profile` ✅
 
@@ -245,7 +271,7 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 | 方向 | 觸發條件 | 目標 |
 |------|---------|------|
 | Incoming | `/account/login` 登入成功 | 本頁 |
-| Incoming | `/account/register` 註冊成功 | 本頁 |
+| Incoming | `/account/verify-email` 連結可用、帳號建立 | 本頁 |
 | Incoming | Shared sidebar / Logo | 本頁 |
 | Outgoing | Shared sidebar → 任務管理 | `/task-management/task-list` |
 | Outgoing | Shared sidebar → 標記作業 | `/annotation/annotation-list` |
@@ -422,6 +448,7 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.2.0 | 2026-11-12 | 新增 `/account/verify-email`（issue label-suite/label-suite#195，規格 01-02 Q1、Q2）：註冊送出只寄驗證信，帳號在連結被點過時才建立。同步四個帳號頁「已登入直接前往儀表板」的 Outgoing（規格 01-01 Q3），以及註冊頁移除「Email 已被使用」後的 Inline。 |
 | 1.1.1 | 2026-08-27 | `/components-showcase.html` 元件清單新增 Review Status Track（issue singyichen/label-suite#456 審核導覽元件）。 |
 | 1.1.0 | 2026-08-20 | 新增 `/components-showcase.html`（Design System Showcase）條目：living styleguide 參考頁，不在產品導航流程內。 |
 | 1.0.0 | 2026-05-20 | 依照最新 prototype 頁面同步導航地圖，包含標記清單、任務管理、資料集分析列表與詳情、動態 panels/partials，以及 shared sidebar 路由。 |
