@@ -9067,7 +9067,13 @@ function getTaskTypeLabel() {
     var lines = WORK_LOG_SPEED_KINDS.filter(function (kind) {
       return hasWorkLogKind(entry, kind.countKey);
     }).map(function (kind) {
-      if (!(entry.durationHours > 0)) return t(kind.nameKey) + ' ' + t('speedUnknown');
+      /* §邊界情況: 「某一類的完成筆數為零 → 那一類的速度顯示算不出來，不顯示 0」,
+         and the acceptance scenario repeats it, so a zero count reads 未知 for
+         the same reason an untrustworthy duration does -- there is no speed to
+         give, and 0.0 would read as "produced almost nothing". */
+      if (!(entry.durationHours > 0) || !(entry[kind.countKey] > 0)) {
+        return t(kind.nameKey) + ' ' + t('speedUnknown');
+      }
       return t(kind.nameKey) + ' ' + (entry[kind.countKey] / entry.durationHours).toFixed(1) + ' ' + t(kind.unitKey);
     });
     return lines.length ? lines : ['—'];
@@ -9095,7 +9101,9 @@ function getTaskTypeLabel() {
         hours += entry.durationHours || 0;
       });
       if (!carried) return null;
-      if (!(hours > 0)) return t(kind.nameKey) + ' ' + t('speedUnknown');
+      /* Same two conditions as the cell: no trustworthy duration, or nothing
+         completed in that kind -- §邊界情況 says the latter reads 算不出來 too. */
+      if (!(hours > 0) || !(count > 0)) return t(kind.nameKey) + ' ' + t('speedUnknown');
       return t(kind.nameKey) + ' ' + (count / hours).toFixed(1) + ' ' + t(kind.unitKey);
     }).filter(Boolean);
     return lines.length ? lines : ['—'];
