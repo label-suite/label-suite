@@ -344,6 +344,7 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 **根因已經查到（2026-11-12）：它就是下面那一節的「同路徑併發」，第二個 build 是 `notecraftapp serve docs` 的背景 watcher。** `serve` 的 `--watch` **預設是 `true`**（`bin/notecraftapp.mjs:786`），所以只要有人開著 `pnpm docs:serve`，每次存檔 `docs/**` 都會觸發它自己的一次 `atomicRebuild()`——而你手動跑的那一次正好同時開始。「編輯之後的第一次」之所以特別，不是因為編輯，而是因為**編輯就是 watcher 被觸發的那一刻**。
 
 所以**最便宜的對策不是重跑，是不要和 watcher 同時 build**：要手動跑 `--rebuild` 之前先停掉 `pnpm docs:serve`，或那一輪用 `--no-watch` 開它。
+⚠️ 但 `--no-watch` 只解掉「撞在一起」，**不解「瀏覽器看到舊的」**：`--rebuild` 輪替過 `dist` 之後，那個一直開著的 serve 會繼續服務 `dist.prev`（見 [#172](https://github.com/label-suite/label-suite/issues/172) §線索）。要在瀏覽器驗收，手動 build 之後要重開 serve。
 
 **這不是叫人別用 `docs:serve`。** 它的 watcher 本身就是一條合法的驗證路徑——[`content-visualize`](../../.claude/skills/content-visualize/SKILL.md) 正是靠「觀察使用者開著的 `docs:serve`，存檔後 watcher 自己 rebuild、SSE 推 auto reload」來驗元件的。要避免的只有**兩條路徑同時走**：用 watcher 驗就別再手動 build，要手動 build 就先讓 watcher 停下來。
 

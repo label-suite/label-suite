@@ -110,5 +110,5 @@ function useMeasuredWidth(min: number) {
 **只改了元件、沒改 MDX 時**，快取不會察覺，要跑 `pnpm exec notecraftapp build --rebuild docs`。
 在瀏覽器實際操作每個互動（tab、按鈕、逐步播放）再算完成。
 
-⚠️ **兩條路徑不要同時走。** `docs:serve` 的 `--watch` 預設開著，存檔會觸發它自己的一次 build；它和你手動跑的那一次共用同一個 `.astro/`，沒有跨行程鎖，其中一個會失敗（[#172](https://github.com/label-suite/label-suite/issues/172)，同路徑併發實測 3／3 恰有一個失敗）。要手動跑 `--rebuild` 之前先停掉 `docs:serve`，或那一輪用 `--no-watch` 開它。
-**這不是叫人別用 `docs:serve`**——用 watcher 驗就別再手動 build，要手動 build 就先讓 watcher 停下來。判準與怎麼分辨真失敗見 [spec-migration.md §建置閘門要重跑確認](./spec-migration.md#建置閘門要重跑確認)。
+⚠️ **兩條路徑不要同時走。** `docs:serve` 的 `--watch` 預設開著，存檔會觸發它自己的一次 build；它和你手動跑的那一次共用同一個 `.astro/`、沒有跨行程鎖，**撞在同一個瞬間時其中一個會失敗**（[#172](https://github.com/label-suite/label-suite/issues/172)）。這是**間歇**的，不是必定：碰撞視窗只有 build 最前面的一兩秒，watcher 那一輪落在什麼時間點也不受你控制。
+**這不是叫人別用 `docs:serve`**——用 watcher 驗就別再手動 build；要手動 build 就先停掉 `docs:serve`，**而且 build 完要重新開起來才看得到新產物**（`--rebuild` 輪替過 `dist` 之後，原本開著的那個 serve 會一直服務舊的 `dist.prev`）。判準與怎麼分辨真失敗見 [spec-migration.md §建置閘門要重跑確認](./spec-migration.md#建置閘門要重跑確認)。

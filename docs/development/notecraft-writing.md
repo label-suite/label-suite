@@ -9,6 +9,7 @@ tags: [notecraft, docs]
 專案文件由 NoteCraftApp 呈現：notesDir 是 `docs/`，生成元件放在專案根的 `.notecraft/components/`（不是 `docs/.notecraft/`）。
 NoteCraft 需要 Node 22 以上。預覽 `pnpm docs:serve`（http://127.0.0.1:4330/），驗證 `pnpm exec notecraftapp build docs`；
 只改了 `.notecraft/components/` 的元件時，快取不會察覺，要改跑 `pnpm exec notecraftapp build --rebuild docs`。
+**手動跑 build 之前先停掉 `docs:serve`**：它的 watcher 和手動 build 共用同一個 `.astro/`、沒有跨行程鎖，撞上時其中一個會失敗；判準與細節見 [spec-migration.md §建置閘門要重跑確認](./spec-migration.md#建置閘門要重跑確認)。
 規格檔另跑 `pnpm check:specs`。不在本專案跑 `tsc` 或 `astro build`。
 
 視覺化標記與生成元件的規範見 [notecraft-visualize.md](notecraft-visualize.md)。
