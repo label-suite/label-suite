@@ -4,14 +4,14 @@ description: '沒有帳號的人自行填寫姓名、Email 與密碼建立帳號
 category: '規格書'
 tags: [規格書, 帳號, 已定案]
 createdAt: '2026-11-05'
-updatedAt: '2026-11-11'
+updatedAt: '2026-11-12'
 ---
 
 import PrototypeFrame from '@notes/components/prototype-frame';
 
 # 01-02 註冊
 
-:badge[已定案]{variant="success"} :badge[帳號]{variant="neutral"}
+:badge[已定案]{variant="success"} :badge[變更 #291]{variant="warning"} :badge[帳號]{variant="neutral"}
 
 > 來源：舊 repo `specs/account/003-register-email-password/spec.md`（26 條），釘在 `singyichen/label-suite@faf83356`，見 `docs/specs/legacy/01-02-register.ids` 的首行
 > 參考畫面：`design/prototype/pages/account/register.html`
@@ -163,7 +163,7 @@ import Spec0102RegisterFlow from '@notes/components/spec-01-02-register-flow'
 
 - 帳號 Email 的長度上限與大小寫規則見 [規格 06-01 §資料欄位](../06-admin/01-user-management.mdx#資料欄位)：不分大小寫、最多 254 字。比對前要怎麼統一寫法（正規化的做法）由 [規格 01-05 §Email 的識別規則](./05-login-state.mdx#email-的識別規則) 定義，本頁不重複定義
 - **原本的「Email 已被使用」那一段不存在了。** 它會揭露「某個 Email 已經在平台註冊過」，而 [規格 01-01 §登入失敗](./01-login.mdx#登入失敗) 刻意不揭露同一件事——任何人在註冊頁輸入一個 Email 就能得到確答，登入頁的保護因此失效。寄驗證信同時解掉這個抵銷（[§已確認決議](#已確認決議) Q1）
-- 這一段的實際文案**來源與畫面都沒有**（畫面現在是「Email 已被使用」那一條），所以文案由[Issue #195](https://github.com/label-suite/label-suite/issues/195) 一併處理
+- <mark>這一段的文案**來源沒有**，由維護者 2026-11-12 裁定（提案的選項 A）：標題「驗證信已寄出」，說明「我們已經寄了一封信到 `{email}`。請打開信件並點裡面的連結，你的帳號會在那時候建立。」，另一行「沒收到的話，看一下垃圾郵件匣。」**刻意不提連結的有效期**——本頁沒有定義註冊這個連結能撐多久，寫上去就是憑空造一個數字。</mark><sup>[#291](https://github.com/label-suite/label-suite/issues/291)</sup>
 
 ### 註冊成功
 
@@ -175,6 +175,8 @@ import Spec0102RegisterFlow from '@notes/components/spec-01-02-register-flow'
 
 - 第 2 條的理由：密碼在送出表單時就設好了，再要他輸入一次是多一道手續；而「他記不記得密碼」在他下一次登入就會驗證
 - 第 1 條把「帳號什麼時候存在」講清楚：**送出表單不建立帳號**，所以同一個 Email 連點兩次註冊不會產生兩個帳號
+- 這一節描述的是**驗證連結落地的那一頁**（`design/prototype/pages/account/verify-email.html`），不是上面那個註冊表單。線框暫時還指著註冊表單：那一頁載入兩秒後就會前往儀表板、而且會寫下登入旗標，嵌在規格裡會變成讀者看不到面板、還被導離登入與註冊頁；要看它請直接開檔並加 `?sim_hold=1`。畫面那一側要先補一道「被嵌在框裡就不要跳轉」的保護（追蹤在 [Issue #297](https://github.com/label-suite/label-suite/issues/297)），之後再把這個線框改指過去。
+- <mark>這一節的文案**來源也沒有**，由維護者 2026-11-12 裁定：連結可用時顯示「帳號已建立」與「正在帶你前往儀表板…」；連結不能用時與 01-03 **共用同一句**「連結無法使用，請重新申請」，差別只在按鈕回**註冊頁**（01-03 那邊是回申請頁）。</mark><sup>[#291](https://github.com/label-suite/label-suite/issues/291)</sup>
 
 ### 密碼的顯示與隱藏
 
@@ -320,7 +322,7 @@ import Spec0102RegisterFlow from '@notes/components/spec-01-02-register-flow'
 
 > 理由：原本的流程**任何人都能用別人的 Email 註冊**——來源完全沒有驗證 Email 所有權的步驟，而[規格 06-01](../06-admin/01-user-management.mdx)由管理員邀請的帳號反而要靠一封設定密碼信才能用密碼登入，兩條路的把關強度不一致。PRD §假設與限制 也寫「使用者主要是實驗室成員，人數在數十人以內」，但完全開放的自行註冊和這個假設對不上。
 > **這一條同時解掉一個跨頁矛盾**：原本的「這個 Email 已經有人使用」會揭露某個 Email 註冊過沒有，而[規格 01-01 §登入失敗](./01-login.mdx#登入失敗)刻意不揭露同一件事——任何人在註冊頁輸入一個 Email 就能得到確答。寄驗證信之後**送出一律顯示「驗證信已寄出」**，畫面上看不出那個 Email 原本的狀態，所以 01-01 的保護不再被抵銷。
-> 落在[§填寫與送出](#填寫與送出)第 3、4 條與[§驗證信已寄出](#驗證信已寄出)；畫面那一側歸 [Issue #195](https://github.com/label-suite/label-suite/issues/195)（#183）。
+> 落在[§填寫與送出](#填寫與送出)第 3、4 條與[§驗證信已寄出](#驗證信已寄出)；<mark>畫面那一側已於 2026-11-12 落地（[Issue #195](https://github.com/label-suite/label-suite/issues/195)，[PR #290](https://github.com/label-suite/label-suite/pull/290)）。</mark><sup>[#291](https://github.com/label-suite/label-suite/issues/291)</sup>
 
 ### Q2. 註冊成功後是直接進入儀表板，還是回登入頁自己登入？（已定案，維護者裁定 2026-11-09）
 
@@ -328,7 +330,7 @@ import Spec0102RegisterFlow from '@notes/components/spec-01-02-register-flow'
 - [ ] 回到登入頁，請使用者用剛設定的密碼登入一次
 - [ ] 密碼改到驗證後才設
 
-> 理由：prototype 的成功訊息寫「帳號建立成功！正在導向儀表板…」，來源也導向儀表板——但來源把它標成「原型行為」，沒有說這是業務決定。
+> 理由：#195 之前 prototype 的成功訊息寫「帳號建立成功！正在導向儀表板…」，來源也導向儀表板——但來源把它標成「原型行為」，沒有說這是業務決定。（**那一句畫面上已經沒有了**：送出只顯示「驗證信已寄出」，而帳號建立的訊息改在落地頁，文案見[§註冊成功](#註冊成功)。）
 > Q1 把流程改成寄驗證信之後，「送出表單」與「完成註冊」已經是兩件事，所以這一題問的其實是**點完連結之後**要不要再登入一次。裁定直接進儀表板：密碼在送出表單時就設好了，再要他輸入一次是多一道手續，而「他記不記得密碼」在他下一次登入就會驗證。
 > 落在[§註冊成功](#註冊成功)第 2 條（#183）。
 
@@ -392,6 +394,7 @@ import Spec0102RegisterFlow from '@notes/components/spec-01-02-register-flow'
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#291](https://github.com/label-suite/label-suite/issues/291) | 2026-11-12 | 頁首、§規格（驗證信已寄出、註冊成功）、§已確認決議 Q1 與 Q2 的理由 | §驗證信已寄出 寫「這一段的實際文案**來源與畫面都沒有**（畫面現在是「Email 已被使用」那一條），所以文案由 Issue #195 一併處理」；Q1 的理由寫「畫面那一側歸 Issue #195」；Q2 的理由引用 prototype 的「帳號建立成功！正在導向儀表板…」；§註冊成功 沒有說它描述的是哪一頁 | **新增文案條文兩組**（維護者 2026-11-12 裁定提案選項 A）：§驗證信已寄出 的「驗證信已寄出」＋「我們已經寄了一封信到 `{email}`。請打開信件並點裡面的連結，你的帳號會在那時候建立。」＋「沒收到的話，看一下垃圾郵件匣。」，並寫明**刻意不提有效期**；§註冊成功 的「帳號已建立」／「正在帶你前往儀表板…」，失效時與 01-03 共用同一句、差別只在按鈕回註冊頁。**另修正兩處已成假的敘述**（不改規則）：Q1 的「畫面那一側歸 #195」改成已落地（[PR #290](https://github.com/label-suite/label-suite/pull/290)）、Q2 理由那一句註明畫面上已經沒有。§註冊成功 的線框**仍指著註冊表單**，並寫明它描述的是落地頁、以及為什麼還不能改指（[Issue #297](https://github.com/label-suite/label-suite/issues/297)） | Q1、Q2（不變） |
 | [#260](https://github.com/label-suite/label-suite/issues/260) | 2026-11-11 | §Q&A | 每題是 `### Q. …` 的 H3 標題，答案直接顯示 | 每題一個預設收合的 `tip`，題目是可點選的標題 | **無新決議**。§Q&A **3 題**全部從 `### Q. …` 標題改成預設收合的 `tip`，題目成為可點選的標題。題目的 H3 錨點因此消失（全站沒有任何連結指向它們，已逐題查過），也不再進右側目錄。**題目、答案與連結一字未改**，只有標題去掉「Q. 」前綴。格式依維護者 2026-11-11 的四個裁定（紀錄在[這則留言](https://github.com/label-suite/label-suite/issues/260#issuecomment-6792064965)） |
 | [#183](https://github.com/label-suite/label-suite/issues/183) | 2026-11-09 | 頁首、§業務流程、§規格（填寫與送出、欄位檢查與錯誤、**驗證信已寄出**（取代 Email 已被使用）、註冊成功）、§卡控機制、§邊界情況、§驗收標準、§Q&A、§待釐清、§已確認決議、§附錄 | 四題列在待釐清；送出後直接建立帳號並導向儀表板；「Email 已被使用」是使用者看得到的分支；姓名沒有長度上限 | 四題折回已確認決議（保留題號），這一頁改**已定案**。**Q1**：改成**寄驗證信、點連結才算完成**；送出一律顯示「驗證信已寄出」，**「Email 已被使用」那一段不再存在**——它原本會抵銷 01-01 刻意不揭露的立場。**Q2**：點驗證連結後直接進儀表板。**Q3**：送出失敗顯示可重試的說明並保留四欄。**Q4**：姓名 **1–100 字**，三頁統一，**取代本頁原本的 Q6**（舊的保留並標註被取代） | Q1、Q2、Q3、Q4（維護者裁定 2026-11-09） |
 | 初版 | 2026-11-05 | 全部 | — | — | Q5–Q9 |
