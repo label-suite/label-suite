@@ -26,9 +26,8 @@
       bypassReasonRequired: '請填寫無法判定的理由',
       bypassReasonHelper: '理由會隨提交寫入歷程，審核員可見',
       toastBypassReasonRequired: '請填寫以下輸出類型「無法判定」的理由：{list}',
-      arbitrationReasonPlaceholder: '裁定理由（必填）',
-      arbitrationNeedsReason: '請先填寫裁定理由再送出，尚未填寫的項目',
-      wsPrevBtnLabel: '上一筆',
+      arbitrationReasonPlaceholder: '裁定理由（選填）',
+        wsPrevBtnLabel: '上一筆',
       wsNextBtnLabel: '下一筆',
       wsProgressText: '{done} / {total} 已提交',
       wsProgressTextReview: '我的審核提交 {done} / {total} 個審核單位',
@@ -72,10 +71,9 @@
       reviewSubmitConsequenceDisputed: '送出後進入爭議池，待仲裁定案',
       reviewSubmitConsequenceFinalized: '送出後即定稿，成為最終答案',
       reviewSubmitConsequenceFinalizedDryRunSuffix: '（試標不產生最終答案，僅計入一致性統計）',
-      reviewReasonLabel: '理由（必填）',
+      reviewReasonLabel: '理由（選填）',
       reviewReasonPlaceholder: '請說明理由',
-      toastReasonRequired: '請填寫以下輸出類型的審核理由：{list}',
-      toastAnswerRequired: '以下輸出類型選了「修正」但修正後答案為空，請填寫答案：{list}',
+        toastAnswerRequired: '以下輸出類型選了「修正」但修正後答案為空，請填寫答案：{list}',
       reviewCorrectionTitle: '直接修正（審核員修正後答案）',
       toastSelectDecision: '請完成以下輸出類型的審核決策：{list}',
       toastReviewCorrectionReset: '偵測到直接修正的內容因重新整理而遺失，對應的審核決策已重置，請重新確認後再送出',
@@ -141,7 +139,7 @@
       wsExceptionPoolTitle: '例外池收尾',
       wsExceptionPoolNote: '仲裁判定兩者皆非的爭議項，由專案負責人逐項決定最終處置。',
       exceptionPoolContextTpl: '標記員：{a} · 審核員：{b}',
-      exceptionPoolReasonPlaceholder: '處置理由（必填）',
+      exceptionPoolReasonPlaceholder: '處置理由（選填）',
       exceptionPoolConfirmLabel: '確認處置',
       exceptionPoolOriginTpl: '仲裁者：{arbiter} · 兩者皆非理由：{reason}',
       exceptionPoolOriginLeaderTpl: '負責人裁定（無指定仲裁者） · 兩者皆非理由：{reason}',
@@ -196,9 +194,8 @@
       bypassReasonRequired: 'Give a reason for marking this undecidable',
       bypassReasonHelper: 'This reason is written into the history on submit, visible to the reviewer.',
       toastBypassReasonRequired: 'Please give a reason for marking the following output types undecidable: {list}',
-      arbitrationReasonPlaceholder: 'Reason for this decision (required)',
-      arbitrationNeedsReason: 'Give a reason before finalizing. Still missing',
-      wsPrevBtnLabel: 'Previous',
+      arbitrationReasonPlaceholder: 'Reason for this decision (optional)',
+        wsPrevBtnLabel: 'Previous',
       wsNextBtnLabel: 'Next',
       wsProgressText: '{done} / {total} submitted',
       wsProgressTextReview: 'My review submissions {done} / {total} review units',
@@ -242,10 +239,9 @@
       reviewSubmitConsequenceDisputed: 'Submitting sends this item to the dispute pool for arbitration',
       reviewSubmitConsequenceFinalized: 'Submitting finalizes this item as the final answer',
       reviewSubmitConsequenceFinalizedDryRunSuffix: ' (a dry run produces no final answer -- it only counts toward agreement statistics)',
-      reviewReasonLabel: 'Reason (required)',
+      reviewReasonLabel: 'Reason (optional)',
       reviewReasonPlaceholder: 'Explain the reason',
-      toastReasonRequired: 'Please give a review reason for the following output types: {list}',
-      toastAnswerRequired: 'The following output types are marked Modify but the corrected answer is empty: {list}',
+        toastAnswerRequired: 'The following output types are marked Modify but the corrected answer is empty: {list}',
       reviewCorrectionTitle: "Direct correction (reviewer's corrected answer)",
       toastSelectDecision: 'Please decide on the following output types before submitting: {list}',
       toastReviewCorrectionReset: 'The direct correction was lost on reload, so the matching review decision was reset -- please re-confirm before submitting',
@@ -311,7 +307,7 @@
       wsExceptionPoolTitle: 'Exception pool disposition',
       wsExceptionPoolNote: 'Dispute items arbitration marked neither side adoptable, decided one at a time by a project leader.',
       exceptionPoolContextTpl: 'Annotator: {a} · Reviewer: {b}',
-      exceptionPoolReasonPlaceholder: 'Reason for this disposition (required)',
+      exceptionPoolReasonPlaceholder: 'Reason for this disposition (optional)',
       exceptionPoolConfirmLabel: 'Confirm disposition',
       exceptionPoolOriginTpl: 'Arbiter: {arbiter} · Rejected because: {reason}',
       exceptionPoolOriginLeaderTpl: 'Leader adjudication (no arbiter designated) · Rejected because: {reason}',
@@ -3586,14 +3582,17 @@
   /* issue singyichen/label-suite#596 (design.md D2): REVIEW_DECISIONS = approve | modify | bypass,
      a closed vocabulary this file MUST render from, never hardcode as a
      per-value branch set (Generalization-First). `approve` is the sole
-     decision FR-016A does not require a reason for -- deriving the
-     reason-required subset by excluding it (rather than listing
-     modify/bypass by hand) keeps that single rule as the only literal. */
-  var REVIEW_REASON_REQUIRED_DECISIONS = window.LabelSuiteAnnotationWorkspaceData.REVIEW_DECISIONS.filter(
+     decision that gets no reason field at all -- deriving the subset that
+     offers one by excluding it (rather than listing modify/bypass by hand)
+     keeps that single rule as the only literal.
+     label-suite/label-suite#187: this says which decisions OFFER a reason
+     field, not which ones demand one. Spec 04-02 §審核員送出被擋 point 7 made
+     every review-side reason optional, so the name says `Offers`. */
+  var REVIEW_REASON_OFFERED_DECISIONS = window.LabelSuiteAnnotationWorkspaceData.REVIEW_DECISIONS.filter(
     function (decision) { return decision !== 'approve'; }
   );
-  function reviewDecisionRequiresReason(decision) {
-    return REVIEW_REASON_REQUIRED_DECISIONS.indexOf(decision) >= 0;
+  function reviewDecisionOffersReason(decision) {
+    return REVIEW_REASON_OFFERED_DECISIONS.indexOf(decision) >= 0;
   }
 
   function persistReviewDraft() {
@@ -3606,7 +3605,7 @@
       decisions[outKey] = { decision: decision, corrected: isRowCorrected(outKey) };
       /* issue singyichen/label-suite#552 (FR-016A, issue singyichen/label-suite#596 D2): the modify/bypass reason is part
          of the decision it explains, so it rides the same draft entry. */
-      if (reviewDecisionRequiresReason(decision) && reviewRowReasons[key]) decisions[outKey].reason = reviewRowReasons[key];
+      if (reviewDecisionOffersReason(decision) && reviewRowReasons[key]) decisions[outKey].reason = reviewRowReasons[key];
     });
     window.LabelSuiteAnnotationWorkspaceData.saveReviewRowDecisionDraft(
       currentProfile.id, currentRunType, currentSampleId, decisions, currentIdentity
@@ -4052,22 +4051,12 @@
     return (reviewRowReasons[decisionKey(outKey, rowName)] || '').trim();
   }
 
-  /* A modify/bypass decision may still lack its reason -- surface that on
-     the footer button as a blocked look (data attribute + CSS), never
-     `disabled` or `aria-disabled`: FR-083 needs the click to reach
-     handleReviewSubmit() so the toast can name the outKeys, and both of
-     those would stop it. */
-  function refreshReviewSubmitState() {
-    var reviewSubmitBtn = document.getElementById('wsReviewSubmitBtn');
-    if (!reviewSubmitBtn) return;
-    var rowName = currentAnnotatorId();
-    var missing = state.selectedOutputTypes.some(function (outKey) {
-      return reviewRowBlocker(outKey, rowName) === 'reason';
-    });
-    if (missing) reviewSubmitBtn.setAttribute('data-submit-blocked', 'reason');
-    else reviewSubmitBtn.removeAttribute('data-submit-blocked');
-  }
-
+  /* label-suite/label-suite#187: a modify/bypass decision may be submitted
+     with no reason at all, so this field carries no `required` and the footer
+     button carries no blocked look. The two blockers that remain (an
+     undecided output type, a modify with an empty corrected answer) still
+     reach handleReviewSubmit() unimpeded, which is what FR-083 needs so the
+     toast can name the outKeys. */
   function buildReviewReasonField(outKey, rowName) {
     var key = decisionKey(outKey, rowName);
     var wrap = document.createElement('div');
@@ -4082,32 +4071,29 @@
     var input = document.createElement('textarea');
     input.id = inputId;
     input.rows = 2;
-    input.required = true;
     input.className = 'input-textarea';
     input.setAttribute('data-testid', 'ws-review-reason');
     input.setAttribute('data-outkey', outKey);
     input.setAttribute('placeholder', t('reviewReasonPlaceholder'));
     input.addEventListener('input', function () {
       reviewRowReasons[key] = input.value;
-      refreshReviewSubmitState();
       persistReviewDraft();
     });
 
-    /* Mounted only while the row's decision requires a reason (FR-016A:
+    /* Mounted only while the row's decision offers a reason (FR-016A:
        通過時不出現); the typed text lives in reviewRowReasons, so a re-mount
        restores it. */
     function refresh() {
-      var needsReason = reviewDecisionRequiresReason(reviewRowDecisions[key]);
-      wrap.classList.toggle('hidden', !needsReason);
-      if (needsReason && input.parentNode !== wrap) {
+      var offersReason = reviewDecisionOffersReason(reviewRowDecisions[key]);
+      wrap.classList.toggle('hidden', !offersReason);
+      if (offersReason && input.parentNode !== wrap) {
         input.value = reviewRowReasons[key] || '';
         wrap.appendChild(label);
         wrap.appendChild(input);
-      } else if (!needsReason && input.parentNode === wrap) {
+      } else if (!offersReason && input.parentNode === wrap) {
         wrap.removeChild(label);
         wrap.removeChild(input);
       }
-      refreshReviewSubmitState();
     }
     refresh();
     reviewDecisionRefreshers.push(refresh);
@@ -4424,24 +4410,11 @@
      why any single one went the way it did. */
   var arbitrationReasons = {};
 
-  /* FR-061 point 3: reason is REQUIRED only for the 兩者皆非 exit -- 採 A／
-     採 B never re-annotate and have no correction of their own to justify.
-     An item with no choice yet, or with adopt_a/adopt_b, never counts as
-     missing a reason. */
-  function arbitrationItemsMissingReason() {
-    return arbitrationOpenItemIds.filter(function (id) {
-      var decision = arbitrationChoices[id];
-      return !!decision && decision.choice === 'reject' && !(arbitrationReasons[id] || '').trim();
-    });
-  }
-
-  /* Same blocked-not-disabled convention as the reviewer submit (singyichen/label-suite#552). */
-  function refreshArbitrationBlocker() {
-    var btn = document.getElementById('wsArbitrationSubmitBtn');
-    if (!btn) return;
-    if (arbitrationItemsMissingReason().length) btn.setAttribute('data-submit-blocked', 'reason');
-    else btn.removeAttribute('data-submit-blocked');
-  }
+  /* label-suite/label-suite#187: no reason-based blocker lives here any more.
+     Spec 04-02 §仲裁版面 point 7 makes the 兩者皆非 reason OPTIONAL and point 9
+     names "every dispute item decided" as the ONLY thing that stops a submit,
+     so neither the submit guard nor the blocked-look marker that went with it
+     has anything left to express. */
 
   function formatDisputeValue(value) {
     /* issue singyichen/label-suite#551: a naked reject carries the PURE_REJECT_VALUE sentinel
@@ -4554,7 +4527,6 @@
       + 'background:var(--color-surface);color:var(--color-ink);';
     reasonInput.addEventListener('input', function () {
       arbitrationReasons[itemId] = reasonInput.value;
-      refreshArbitrationBlocker();
     });
     row.appendChild(reasonInput);
 
@@ -4567,7 +4539,6 @@
         b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
         b.classList.toggle('mini-btn-active-approve', b === btn);
       });
-      refreshArbitrationBlocker();
     }
 
     var aBtn = buildArbitrationChoiceButton(
@@ -4842,7 +4813,6 @@
     arbitrationOpenItemIds = openItemIds;
     var arbitrationSubmitBtn = document.getElementById('wsArbitrationSubmitBtn');
     if (arbitrationSubmitBtn && openItemIds.length) arbitrationSubmitBtn.classList.remove('hidden');
-    refreshArbitrationBlocker();
 
     preview.appendChild(card);
   }
@@ -4852,15 +4822,6 @@
     if (!decisions.length) return;
     if (decisions.some(function (decision) { return !decision; })) {
       showToast(t('toastArbitrationIncomplete'), 'warning');
-      return;
-    }
-    /* FR-061 point 3 / FR-089 style: the toast NAMES the items still missing
-       a reason -- on a card finalizing several at once, "fill in the
-       reason" alone would not say which one. Only 兩者皆非 items can be
-       missing (arbitrationItemsMissingReason ignores adopt_a/adopt_b). */
-    var missing = arbitrationItemsMissingReason();
-    if (missing.length) {
-      showToast(t('arbitrationNeedsReason') + '：' + missing.join('、'), 'warning');
       return;
     }
     /* FR-061 point 4 / design.md D2: every decision -- including 兩者皆非 --
@@ -4892,9 +4853,10 @@
     renderSampleNav();
     /* issue singyichen/label-suite#719: shares the exact same "where next" step as
        handleReviewSubmit() -- every early return above (no open items, an
-       incomplete decision, a missing reject reason) is guaranteed to have
-       exited before submitArbitration() runs, so this line is only reached
-       once that write has landed. */
+       incomplete decision) is guaranteed to have exited before
+       submitArbitration() runs, so this line is only reached once that write
+       has landed. label-suite/label-suite#187 removed the third early return,
+       the one for a reject with no reason. */
     advanceToNextActionableReviewUnit();
   }
 
@@ -5073,21 +5035,20 @@
         : t('exceptionPoolSummaryTpl').replace('{action}', actionLabel);
     }
 
-    /* design.md D3: native `disabled`, a deliberate divergence from this
-       screen's other blocked-not-disabled reason-gating convention
-       (refreshArbitrationBlocker) per the maintainer's 2026-09-24 ruling.
-       Switching the selected action never clears the reason input's typed
-       text (design.md D1 -- the user may be comparing dispositions before
-       deciding) but always re-disables Confirm until the reason field is
-       (re)confirmed via its own `input` event, so a leftover reason typed
-       for a previously selected action cannot silently carry over as the
-       reason for a different one (AC-4.75's last bullet -- this is a
-       spec'd requirement, not an accidental side effect of the disabled
-       formula above). */
+    /* label-suite/label-suite#187: the only thing that disables Confirm is
+       having picked no disposition. Spec 04-02 §例外處置畫面的外殼 point 4 makes
+       all four dispositions' reasons optional and point 5 says the disabled
+       condition must no longer read the reason field at all. The maintainer
+       confirmed on 2026-11-12 that those clauses supersede the earlier
+       2026-09-24 ruling they were written against.
+       The protection that went with the old formula -- re-disabling Confirm
+       after an action switch so a reason typed for the previous one could not
+       carry over silently -- goes with it: point 3 forbids clearing the typed
+       reason on a switch, so there is no spec-legal way left to express it,
+       and the maintainer accepted that on 2026-11-12. */
     function refreshConfirmDisabled() {
-      confirmBtn.disabled = !selectedAction || !reasonInput.value.trim();
+      confirmBtn.disabled = !selectedAction;
     }
-    reasonInput.addEventListener('input', refreshConfirmDisabled);
 
     /* design.md D4: `custom_answer`'s expanded control is the shared
        config-driven renderOutputPreview() engine (Generalization-First) --
@@ -5328,7 +5289,7 @@
         text += '（' + t('reviewSubmittedValueLabel') + '：' + describeOutputAnswer(outKey, mySubmission) + '）';
       }
       var reason = mySubmission.reasons && mySubmission.reasons[outKey];
-      if (reason && reviewDecisionRequiresReason(decision)) {
+      if (reason && reviewDecisionOffersReason(decision)) {
         reasonsByOutKey[outKey] = reason;
       }
       line.textContent = text;
@@ -6078,17 +6039,18 @@
      multi-output task -- only the generic toastSelectDecision. This is the
      sole surviving "still undecided" derivation in the file; the submit
      guard below is its only caller. */
-  /* issue singyichen/label-suite#552/singyichen/label-suite#596 (FR-016A / FR-083): the ONE per-outKey answer to "does
-     this row block submit, and why" -- null, 'undecided', 'reason'
-     (modify/bypass without a reason), or 'answer' (issue singyichen/label-suite#818: modify whose
-     corrected answer is empty -- bypass stores no value by design, so it is
-     never checked). pendingReviewOutputKeys(), the footer button's
-     aria-disabled state and the blocking toast all read it; nothing else
-     recomputes it. */
+  /* issue singyichen/label-suite#552/singyichen/label-suite#596 (FR-083): the ONE per-outKey answer to "does
+     this row block submit, and why" -- null, 'undecided', or 'answer'
+     (issue singyichen/label-suite#818: modify whose corrected answer is empty -- bypass stores
+     no value by design, so it is never checked). pendingReviewOutputKeys()
+     and the blocking toast both read it; nothing else recomputes it.
+     label-suite/label-suite#187: a missing reason is NOT one of the answers.
+     Spec 04-02 §審核員送出被擋 point 7 says the reason stopped being a blocking
+     cause once modify/bypass reasons became optional, and §卡控機制 repeats it
+     twice ("不是阻擋原因", "不得阻擋送出"). */
   function reviewRowBlocker(outKey, rowName) {
     var decision = reviewRowDecisions[decisionKey(outKey, rowName)];
     if (!decision) return 'undecided';
-    if (reviewDecisionRequiresReason(decision) && !reviewRowReason(outKey, rowName)) return 'reason';
     if (decision === 'modify' && !currentRowAnswer(outKey)) return 'answer';
     return null;
   }
@@ -6255,7 +6217,7 @@
         return reviewRowBlocker(outKey, annotatorId);
       });
       var sameKind = kinds.every(function (kind) { return kind === kinds[0]; }) ? kinds[0] : null;
-      var toastKey = { reason: 'toastReasonRequired', answer: 'toastAnswerRequired' }[sameKind] || 'toastSelectDecision';
+      var toastKey = { answer: 'toastAnswerRequired' }[sameKind] || 'toastSelectDecision';
       var pendingOutputLabels = pendingOutputKeys.map(function (outKey) {
         var outReg = window.OUTPUT_TYPE_REGISTRY && window.OUTPUT_TYPE_REGISTRY[outKey];
         return (outReg && outReg[state.lang]) || outKey;
@@ -6281,7 +6243,7 @@
           /* issue singyichen/label-suite#881: keep the detailed in-workspace review note, while
              the persisted right-side history stores the same explanation
              only in its structured `reason` field. */
-          if (reviewDecisionRequiresReason(decision)) {
+          if (reviewDecisionOffersReason(decision)) {
             reasons[outKey] = reviewRowReason(outKey, annotatorId);
             reviewHistoryLine += ' — ' + reasons[outKey];
           }
