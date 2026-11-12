@@ -36,6 +36,46 @@
    * TAB_SCROLL_STORAGE_KEY after it was just cleared. */
   var workspaceTabLoggingOut = false;
 
+  /* label-suite/label-suite#195（規格 01-01 Q3，維護者 2026-11-09）：已登入的人
+   * 直接開登入、註冊、忘記密碼或重設密碼這四頁 → 直接前往儀表板，不顯示該頁。
+   * 01-01 `:191` 定了這一條，01-02 `:37` 與 01-03 `:37` 各自寫「比照 01-01 Q3」，
+   * 所以涵蓋四頁、不只登入頁。
+   *
+   * 這份 prototype 原本完全沒有登入狀態的概念——登入頁的送出就是直接
+   * `location.href` 到儀表板，沒有任何地方記得你登入過。維護者 2026-11-12 裁定
+   * 用「旗標為主、網址參數當逃生口」：旗標在這裡，因為登出處理已經住在這個模組，
+   * 讓同一個地方負責設與清。 */
+  var LOGGED_IN_STORAGE_KEY = 'labelsuite.loggedIn';
+
+  function markLoggedIn() {
+    try { window.localStorage.setItem(LOGGED_IN_STORAGE_KEY, '1'); } catch (error) { /* private mode */ }
+  }
+
+  function clearLoggedIn() {
+    try { window.localStorage.removeItem(LOGGED_IN_STORAGE_KEY); } catch (error) { /* private mode */ }
+  }
+
+  function isLoggedIn() {
+    try { return window.localStorage.getItem(LOGGED_IN_STORAGE_KEY) === '1'; } catch (error) { return false; }
+  }
+
+  /* 四頁在載入時呼叫。回傳 true 表示已經導走、呼叫端不要再渲染。
+   *
+   * 兩個網址參數都是演示用的逃生口，比照任務詳情頁的 `?sim_403=1` 慣例：
+   *   `?sim_logged_out=1` 無論旗標如何都留在本頁——沒有它的話，旗標一寫下去
+   *     四頁都會把你導開，而這四頁上沒有側欄可以按登出，你就回不來了。
+   *   `?sim_logged_in=1` 無論旗標如何都導走，方便直接演示這一條。 */
+  function redirectIfLoggedIn(dashboardHref) {
+    var params;
+    try { params = new URLSearchParams(window.location.search); } catch (error) { params = null; }
+    var forceOut = params && params.get('sim_logged_out') === '1';
+    var forceIn = params && params.get('sim_logged_in') === '1';
+    if (forceOut) return false;
+    if (!forceIn && !isLoggedIn()) return false;
+    window.location.replace(dashboardHref || '../dashboard/dashboard.html');
+    return true;
+  }
+
   /* FR-012 (issue singyichen/label-suite#1075 G2c-1): the predicate a page (annotation-workspace,
    * task-new) registers via registerWorkspaceUnsavedPredicate() below --
    * a zero-arg function this module polls only at the pagehide moment
@@ -2102,6 +2142,9 @@
         // shared-019 FR-018 / ADR-037: drop the stored system role so the next
         // session cannot inherit the previous user's privilege.
         clearStoredSystemRole();
+        /* label-suite/label-suite#195: 清掉登入旗標，否則登出之後那四頁仍然會把
+           使用者導回儀表板——登出就變成按不動。 */
+        clearLoggedIn();
         try {
           window.sessionStorage.removeItem(WORKSPACE_TAB_STORAGE_KEY);
           window.sessionStorage.removeItem(WORKSPACE_TAB_SCROLL_STORAGE_KEY);
@@ -2525,6 +2568,10 @@
     applyGlobalLanguage: applyGlobalLanguage,
     updateUserChip: updateUserChip,
     registerWorkspaceUnsavedPredicate: registerWorkspaceUnsavedPredicate,
+    markLoggedIn: markLoggedIn,
+    clearLoggedIn: clearLoggedIn,
+    isLoggedIn: isLoggedIn,
+    redirectIfLoggedIn: redirectIfLoggedIn,
     BYPASS_WORDING: BYPASS_WORDING,
   };
 })();
