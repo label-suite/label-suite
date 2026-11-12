@@ -273,6 +273,29 @@
 
     .avatar-remove-btn:hover { background: var(--color-error-soft-bg); }
 
+    /* ── 連結 Google 帳號（label-suite/label-suite#195） ───────────
+       只定這一區真正新的三件事；「連結之後會怎樣」那段用既有的
+       .info-banner，狀態說明的字級沿用 .section-desc 的 13px。 */
+    .google-status { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+
+    .google-linked-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+
+    .google-linked-check {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      flex-shrink: 0;
+      border-radius: var(--radius-full);
+      background: var(--color-success-soft-bg);
+      border: 1px solid var(--color-success-soft-border);
+      color: var(--color-success);
+    }
+
+    .google-account,
+    .google-no-unlink { font-size: 13px; color: var(--color-text-soft); }
+
     .email-change-btn:focus {
       outline: 2px solid var(--color-primary);
       outline-offset: 2px;
@@ -999,6 +1022,57 @@
           </div>
         </section>
 
+        <!-- ──────────────────────────────────────────────────────── -->
+        <!-- 連結 Google 帳號（第五個區塊）                           -->
+        <!-- label-suite/label-suite#195: spec 01-04 §連結 Google 帳號 -->
+        <!-- 收進這一頁是 規格 01-05 Q7 的裁決（「連結 Google 帳號由   -->
+        <!-- 01-04 擁有」）；在那之前 18 頁裡沒有任何一頁擁有它。      -->
+        <!-- 兩態用頁面既有的 `sso` 演示狀態區分：那個狀態本來就表示   -->
+        <!-- 「沒有本地密碼、只能用 Google 登入」，正是第 4 條的後果。 -->
+        <!-- ──────────────────────────────────────────────────────── -->
+        <section class="section-card" id="google-link-section" aria-labelledby="googleSectionTitle">
+          <h2 class="section-title" id="googleSectionTitle">連結 Google 帳號</h2>
+          <p class="section-desc" id="googleSectionDesc">用 Google 帳號登入這個平台</p>
+
+          <!-- 未連結 -->
+          <div id="googleUnlinkedState">
+            <p class="google-status" id="googleStatusUnlinked">尚未連結</p>
+            <div class="info-banner">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+              <span id="googleConsequence">連結之後，所有裝置都要重新登入，而且本地密碼會被清掉——之後只能用 Google 登入，除非你回到「密碼設定」重新設一組。</span>
+            </div>
+            <div class="btn-row">
+              <button class="btn-secondary" id="googleLinkBtn" type="button" onclick="handleGoogleLink()">
+                <span id="googleLinkLabel">連結 Google 帳號</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 已連結 -->
+          <div id="googleLinkedState" style="display:none;">
+            <div class="google-linked-row">
+              <span class="google-linked-check" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                     stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                  <path d="M20 6 9 17l-5-5"/>
+                </svg>
+              </span>
+              <div>
+                <p class="google-status" id="googleStatusLinked">已連結</p>
+                <p class="google-account" id="googleAccountEmail">iris@labelsuite.io</p>
+              </div>
+            </div>
+            <!-- 第 6 條：這一版刻意不提供解除連結。來源沒有這個動作，而解除之後
+                 那個帳號可能連一組密碼都沒有、會變成登不進來；要提供得先定
+                 「解除前必須先設一組密碼」這類規則，來源完全沒有這一段。 -->
+            <p class="google-no-unlink" id="googleNoUnlink">目前不提供解除連結。</p>
+          </div>
+        </section>
+
       </div><!-- /liveState -->
 
       <!-- ──────────────────────────────────────────────────────── -->
@@ -1126,7 +1200,7 @@
         labelEmail:              '電子郵件',
         labelEmailChange:        '變更',
         avatarRemoveLabel:       '移除頭像',
-      avatarHintText:          'JPG, PNG 或 WebP，上限 5 MB',
+        avatarHintText:          'JPG, PNG 或 WebP，上限 5 MB',
         contactHint:             '可填寫電話、LINE 或其他聯絡方式',
         saveProfileLabel:        '儲存',
         pwSectionTitle:          '密碼設定',
@@ -1157,6 +1231,14 @@
         toastPwSetSuccessDesc:   '您現在可使用 Email / Password 登入',
         toastResendSuccess:      '驗證信已重新寄送',
         toastResendSuccessDesc:  '請前往信箱完成驗證',
+        googleSectionTitle:      '連結 Google 帳號',
+        googleSectionDesc:       '用 Google 帳號登入這個平台',
+        googleStatusUnlinked:    '尚未連結',
+        googleConsequence:       '連結之後，所有裝置都要重新登入，而且本地密碼會被清掉——之後只能用 Google 登入，除非你回到「密碼設定」重新設一組。',
+        googleLinkLabel:         '連結 Google 帳號',
+        googleStatusLinked:      '已連結',
+        googleNoUnlink:          '目前不提供解除連結。',
+        toastGoogleLinking:      '正在前往 Google 驗證…',
         notifSectionTitle:       '通知設定',
         notifSectionDesc:        '為每個事件選擇接收通知的方式',
         notifThEvent:            '事件',
@@ -1212,7 +1294,7 @@
         labelEmail:              'Email',
         labelEmailChange:        'Change',
         avatarRemoveLabel:       'Remove photo',
-      avatarHintText:          'JPG, PNG, or WebP — max 5 MB',
+        avatarHintText:          'JPG, PNG, or WebP — max 5 MB',
         contactHint:             'Phone, LINE, or any other contact method',
         saveProfileLabel:        'Save',
         pwSectionTitle:          'Password',
@@ -1243,6 +1325,14 @@
         toastPwSetSuccessDesc:   'You can now sign in with Email / Password',
         toastResendSuccess:      'Email Resent',
         toastResendSuccessDesc:  'Check your inbox to complete verification',
+        googleSectionTitle:      'Link Google account',
+        googleSectionDesc:       'Sign in to this platform with your Google account',
+        googleStatusUnlinked:    'Not linked',
+        googleConsequence:       "Linking signs you out everywhere, and your local password is cleared — after that you can only sign in with Google, unless you set a new password under Password.",
+        googleLinkLabel:         'Link Google account',
+        googleStatusLinked:      'Linked',
+        googleNoUnlink:          'Unlinking is not available.',
+        toastGoogleLinking:      'Taking you to Google to verify…',
         notifSectionTitle:       'Notification settings',
         notifSectionDesc:        'Choose how you want to be notified for each event',
         notifThEvent:            'Event',
@@ -1295,7 +1385,7 @@
         'profileSectionTitle', 'profileSectionDesc',
         'prefSectionTitle', 'prefSectionDesc', 'prefAppearance',
         'labelName', 'labelContact', 'labelEmail', 'labelEmailChange',
-        'avatarHintText', 'contactHint', 'saveProfileLabel',
+        'avatarHintText', 'avatarRemoveLabel', 'contactHint', 'saveProfileLabel',
         'pwSectionTitle', 'pwSectionDesc', 'ssoBannerText',
         'labelCurrentPw', 'labelNewPw', 'labelConfirmPw', 'newPwHint',
         'backToProfileLabel', 'backToProfileLabel2',
@@ -1303,6 +1393,9 @@
         'labelNewEmail', 'emailChangeNextLabel',
         'emailSentTitle', 'emailSentDescPre', 'emailSentHint',
         'backToProfileBtn', 'resendLabel',
+        'googleSectionTitle', 'googleSectionDesc', 'googleStatusUnlinked',
+        'googleConsequence', 'googleLinkLabel', 'googleStatusLinked',
+        'googleAccountEmail', 'googleNoUnlink',
         'notifSectionTitle', 'notifSectionDesc',
         'notifThEvent', 'notifThInApp', 'notifThEmail',
         'notifE1Name', 'notifE1Trigger',
@@ -1373,6 +1466,15 @@
 
         document.getElementById('ssoBanner').style.display      = isSSO ? '' : 'none';
         document.getElementById('currentPwGroup').style.display = isSSO ? 'none' : '';
+
+        /* label-suite/label-suite#195: spec 01-04 §連結 Google 帳號 points 1, 2
+           and 5 -- the block says whether the account is linked, offers the
+           entry when it is not, and names the Google account when it is. The
+           existing `sso` demo state already means "no local password, Google
+           only", which is exactly point 4's consequence, so the two states ride
+           on it rather than inventing a second flag. */
+        document.getElementById('googleLinkedState').style.display   = isSSO ? '' : 'none';
+        document.getElementById('googleUnlinkedState').style.display = isSSO ? 'none' : '';
 
         if (isError) {
           document.getElementById('fieldCurrentPw').classList.add('error');
@@ -1572,6 +1674,16 @@
         const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
         poly.setAttribute('points', '20 6 9 17 4 12');
         iconSvg.appendChild(poly);
+      } else if (type === 'info') {
+        /* label-suite/label-suite#195: `.toast.info` had styles but no icon
+           branch, so an info toast came out wearing the error X. */
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', '12'); circle.setAttribute('cy', '12'); circle.setAttribute('r', '10');
+        const stem = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        stem.setAttribute('x1', '12'); stem.setAttribute('y1', '16'); stem.setAttribute('x2', '12'); stem.setAttribute('y2', '12');
+        const dot = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        dot.setAttribute('x1', '12'); dot.setAttribute('y1', '8'); dot.setAttribute('x2', '12.01'); dot.setAttribute('y2', '8');
+        iconSvg.appendChild(circle); iconSvg.appendChild(stem); iconSvg.appendChild(dot);
       } else {
         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         circle.setAttribute('cx', '12'); circle.setAttribute('cy', '12'); circle.setAttribute('r', '10');
@@ -1645,6 +1757,17 @@
        `pendingAvatar` is the staged change: undefined = untouched,
        null = remove, string = a new data URL. A data URL rather than an object
        URL because point 6 has to survive a reload. */
+    /* ── Google account link ────────────────────────────────────
+       Point 2: pressing it hands off to Google. There is no SSO provider in a
+       prototype, so this says where it is going and then shows the linked
+       state -- points 3 and 4 (every device signs out, the local password is
+       cleared) are owned by spec 01-05 and are not re-implemented here. */
+    function handleGoogleLink() {
+      window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_profile_google_link_attempted');
+      showToast('info', t('toastGoogleLinking'), '');
+      setTimeout(function () { setState('sso'); }, 600);
+    }
+
     var AVATAR_STORAGE_KEY = 'label-suite-profile-avatar';
     var pendingAvatar;
 
