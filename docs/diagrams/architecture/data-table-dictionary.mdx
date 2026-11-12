@@ -49,7 +49,7 @@ import PluginView from '@/components/PluginView.astro';
 | D7 移除 | **−3 張 / −22 欄 / −2 單欄 FK** | `refresh_tokens`、`shared_idempotency_record`、`task_run_reviewer_candidate`——**本專案規格完全沒提到**，維護者 2026-11-11 裁定先拿掉 |
 | 本文件 | **37 張 / 328 欄 / 38 單欄 FK** | 複合 FK 另列於各組的§關聯 |
 
-移除不是「不需要那個機制」。更新權杖、冪等紀錄與審核員候選名單在實作時都可能真的需要，但那時要另開 issue 寫清楚為什麼——**這樣字典裡每一張表都追得到規格**（**4 張除外**，見[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決) D11）。
+移除不是「不需要那個機制」。更新權杖、冪等紀錄與審核員候選名單在實作時都可能真的需要，但那時要另開 issue 寫清楚為什麼——**這樣字典裡其餘每一張表都追得到規格**——**4 張除外**，它們整節沒有任何指回 `docs/specs/` 的連結。那 4 張是另一種形態：結構由別頁的規則決定、本來就沒有自己的條文（維護者 2026-11-12 裁定 D11，見[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決)）。
 
 **維護者 2026-11-11 另裁：D7 的理由同樣適用到欄位。** 所以原始規劃有、但本專案規格完全沒提到的**六個欄位**也一併不收：
 
@@ -698,7 +698,7 @@ import PluginView from '@/components/PluginView.astro';
 
 **回執只是回執，真正的成員在 `task_run_item`。** 這一點要寫清楚，否則會有人以為刪掉 `task_run_item` 還能從回執重建——回執只有摘要與外部參照，**不是資料來源**。
 
-**這張表在規格裡沒有直接對應的條文**：整節沒有任何指回 `docs/specs/` 的連結，欄位的「規格來源」欄寫的是設計理由，不是規格引用（[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決) D11，仍待裁）。
+**這張表沒有自己的條文，而那是對的**：整節沒有指回 `docs/specs/` 的連結，欄位的「規格來源」欄寫的是設計理由而不是規格引用——因為它的結構是從別頁的規則推出來的。維護者 2026-11-12 裁定 D11：和 D9 同類，不另找依據也不硬補一條（[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決)）。
 
 ### `task_run` — 一次試標或正式標記的發布
 
@@ -730,7 +730,7 @@ import PluginView from '@/components/PluginView.astro';
 
 **`task_run_cycle_id` 在這張表是刻意的反正規化。** 它可以從 `task_run` JOIN 出來，但那樣就**無法用一個唯一限制表達「同週期不重選」**——跨表的唯一性 DB 做不到。這是為了把一條規則落進 DB 而付的代價，寫在這裡免得後人誤刪。
 
-**這張表在規格裡沒有直接對應的條文**：整節沒有任何指回 `docs/specs/` 的連結，欄位的「規格來源」欄寫的是設計理由，不是規格引用（[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決) D11，仍待裁）。
+**這張表沒有自己的條文，而那是對的**：整節沒有指回 `docs/specs/` 的連結，欄位的「規格來源」欄寫的是設計理由而不是規格引用——因為它的結構是從別頁的規則推出來的。維護者 2026-11-12 裁定 D11：和 D9 同類，不另找依據也不硬補一條（[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決)）。
 
 ### `task_annotation_assignment` — 固定的標記工作位
 
@@ -885,7 +885,7 @@ import PluginView from '@/components/PluginView.astro';
 ### `annotation_review_submission` — 已提交審核主檔
 
 **一個審核單位只有一個提交者。** 這張表就是那個約束的落點：三欄單位鍵上的**唯一 `(run_id, assignment_id)`** 擋住兩位審核員並列正式提交，而首次提交者即**固定歸屬**、之後每次合法改判把 `version` +1。
-**這一句是從下表的儲存格收上來的，不是另外寫的**——這張表在規格裡沒有直接對應的條文（**維護者 2026-11-11 裁定 D10：就用表自己的儲存格寫一句**）。它**仍然沒有規格來源**，那一題另外登記成 [盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決) D11。
+**這一句是從下表的儲存格收上來的，不是另外寫的**——這張表在規格裡沒有直接對應的條文（**維護者 2026-11-11 裁定 D10：就用表自己的儲存格寫一句**）。它**沒有自己的規格來源，而那是對的**：那一題登記成 D11，維護者 2026-11-12 裁定它和 D9 同類——結構由別頁的規則決定，本來就沒有自己的條文（[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決)）。
 
 | 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -900,7 +900,7 @@ import PluginView from '@/components/PluginView.astro';
 
 **每次正式提交一份完整快照。`decision_payload` 是已提交決策的唯一權威紀錄。**
 
-**這張表在規格裡沒有直接對應的條文**：整節沒有任何指回 `docs/specs/` 的連結，欄位的「規格來源」欄寫的是設計理由，不是規格引用（[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決) D11，仍待裁）。
+**這張表沒有自己的條文，而那是對的**：整節沒有指回 `docs/specs/` 的連結，欄位的「規格來源」欄寫的是設計理由而不是規格引用——因為它的結構是從別頁的規則推出來的。維護者 2026-11-12 裁定 D11：和 D9 同類，不另找依據也不硬補一條（[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決)）。
 
 | 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -1182,7 +1182,7 @@ import PluginView from '@/components/PluginView.astro';
 | 驗收條件 | 狀態 | 落在哪 |
 | :--- | :--- | :--- |
 | 所有需持久化項目可定位至欄位／JSON 路徑或具名待決 | ✅ | 每一欄一列；四個 JSON 欄位另列結構表（`classification_manifest`、`config_payload`、`answer_payload`、`result_payload`） |
-| 所有候選表都有規格依據 | ⚠ | 每張表的依據寫在欄位的「規格來源」欄，或**表級的 `規格來源` 宣告行**（`task_annotation_assignment` 與 `task_export_run` 走後者，見 D8）；沒有依據的 3 張表與 6 欄已移除。**但 37 張裡有 4 張整節沒有任何 `docs/specs/` 連結**（`task_sample_snapshot`、`task_run_item`、`annotation_review_submission`、`annotation_review_submission_revision`），見[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決) D11 |
+| 所有候選表都有規格依據 | ✅ | **依據有兩種形態。** 一是自己有條文可指：寫在欄位的「規格來源」欄，或**表級的 `規格來源` 宣告行**（`task_annotation_assignment` 與 `task_export_run` 走後者，見 D8）。二是**結構由別頁的規則決定、因此沒有自己的條文——也就是整節追不到任何 `docs/specs/` 連結**，共 4 張（`task_sample_snapshot`、`task_run_item`、`annotation_review_submission`、`annotation_review_submission_revision`）——維護者 2026-11-12 裁定 D11 確認這個狀態是對的，和 D9 的三頁同類。沒有依據的 3 張表與 6 欄已移除（D7） |
 | 唯一性、複合限制、刪除行為與敏感邊界**不僅存在 ER 線上，文字字典可完整閱讀** | ✅ | 每組末尾的§關聯與限制，分「DB」與「應用層」兩層；FK 的刪除行為（RESTRICT／CASCADE）逐欄寫明 |
 | **無 ORM、migration、API 或 DB 實作變更** | ✅ | 本文件不含 DDL；交付只有這一份 `.mdx` |
 
@@ -1206,6 +1206,7 @@ import PluginView from '@/components/PluginView.astro';
 
 | Issue | 日期 | 變更 |
 | :--- | :--- | :--- |
+| [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-12 | **D11 已裁定**（維護者 2026-11-12，和 D9 同類：這 4 張的結構由別頁的規則決定，本來就沒有自己的條文，不另找依據也不硬補一條）。`task_sample_snapshot`／`task_run_item`／`annotation_review_submission`／`annotation_review_submission_revision` 四節的說明句原本寫「沒有直接對應的條文（D11，仍待裁）」，改成「沒有自己的條文，而那是對的」；§十「所有候選表都有規格依據」那一列原本是 ⚠，改回 ✅ 並寫明依據有兩種形態；§一 D7 的說明同步。[`database-schema.er.json`](./database-schema.er.json) 的四段 `description` 是這四節的鏡像，一併改 |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-11 | 落地維護者同日對 D8–D10 的三個裁定：`task_annotation_assignment` 與 `task_export_run` 補上**規格來源**（D8，表說明引用的規格算來源），`annotation_review_submission` 以自己的儲存格補出表說明（D10），並在§一寫明三頁規格不持有業務資料、所以沒有表以它們為來源（D9，附三頁規格原文）。另把「所有候選表都有規格依據」從 ✅ 改成 ⚠：**4 張表整節沒有任何 `docs/specs/` 連結**，那一題登記成總帳的 D11 待裁，四節各自回指 |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-11 | 拿掉複合 FK 的條數（初版寫「34 組」，它把三個「見上／見下」的指路格重複計入），改成指向逐條內容；§關聯與限制 的 24／22 留著並把數法寫死為「表頭是『限制／層級/內容』的五張表合計」；§七 限制表的「**八張表**的單位歸屬」改成**六張**並寫出兩張例外各自的差別。無新決議 |
 | [#235](https://github.com/label-suite/label-suite/issues/235) | 2026-11-11 | 初版。**37 張候選表、328 欄**逐欄字典，各帶識別碼、中文意義、型別、可空性、鍵與限制、規格來源；**34 組複合 FK** 逐組寫明它擋住什麼；**22 條只能在應用層擋的限制**（對 24 條落在 DB 的）分組列出，不假裝 DB 擋得住；四個 JSON 欄位另記結構與版本。本專案**新增 4 欄**（登入狀態的最後使用時間、兩個封存欄、成員的最後活動）、**不收 6 欄**（D7 的理由延伸，維護者 2026-11-11 裁定）、**修正 1 欄的可空性**（審核理由依規格改為 NOT NULL 允許空字串）。另記三件原始規劃有數字但本專案規格沒有的事（匯出期限 30 日、歷史保留一年、`item_key` 的編碼），依「依據和事實是兩件事」留作建議而非結案 |

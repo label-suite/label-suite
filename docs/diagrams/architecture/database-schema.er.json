@@ -1405,7 +1405,7 @@
      "fk": "users"
     }
    ],
-   "description": "**回執只是回執，真正的成員在 `task_run_item`。** 這一點要寫清楚，否則會有人以為刪掉 `task_run_item` 還能從回執重建——回執只有摘要與外部參照，**不是資料來源**。\n\n**這張表在規格裡沒有直接對應的條文**：整節沒有任何指回 `docs/specs/` 的連結，欄位的「規格來源」欄寫的是設計理由，不是規格引用（[盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決) D11，仍待裁）。"
+   "description": "**回執只是回執，真正的成員在 `task_run_item`。** 這一點要寫清楚，否則會有人以為刪掉 `task_run_item` 還能從回執重建——回執只有摘要與外部參照，**不是資料來源**。\n\n**這張表沒有自己的條文，而那是對的**：整節沒有指回 `docs/specs/` 的連結，欄位的「規格來源」欄寫的是設計理由而不是規格引用——因為它的結構是從別頁的規則推出來的。維護者 2026-11-12 裁定 D11：和 D9 同類，不另找依據也不硬補一條（[盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決)）。"
   },
   {
    "name": "task_run",
@@ -1525,7 +1525,7 @@
      "note": "執行內排序；唯一 (task_run_id, list_position)；CHECK >= 1"
     }
    ],
-   "description": "**`task_run_cycle_id` 在這張表是刻意的反正規化。** 它可以從 `task_run` JOIN 出來，但那樣就**無法用一個唯一限制表達「同週期不重選」**——跨表的唯一性 DB 做不到。這是為了把一條規則落進 DB 而付的代價，寫在這裡免得後人誤刪。\n\n**這張表在規格裡沒有直接對應的條文**：整節沒有任何指回 `docs/specs/` 的連結，欄位的「規格來源」欄寫的是設計理由，不是規格引用（[盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決) D11，仍待裁）。"
+   "description": "**`task_run_cycle_id` 在這張表是刻意的反正規化。** 它可以從 `task_run` JOIN 出來，但那樣就**無法用一個唯一限制表達「同週期不重選」**——跨表的唯一性 DB 做不到。這是為了把一條規則落進 DB 而付的代價，寫在這裡免得後人誤刪。\n\n**這張表沒有自己的條文，而那是對的**：整節沒有指回 `docs/specs/` 的連結，欄位的「規格來源」欄寫的是設計理由而不是規格引用——因為它的結構是從別頁的規則推出來的。維護者 2026-11-12 裁定 D11：和 D9 同類，不另找依據也不硬補一條（[盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決)）。"
   },
   {
    "name": "task_annotation_assignment",
@@ -1825,7 +1825,7 @@
      "note": "最新改判時間"
     }
    ],
-   "description": "**一個審核單位只有一個提交者。** 這張表就是那個約束的落點：三欄單位鍵上的**唯一 `(run_id, assignment_id)`** 擋住兩位審核員並列正式提交，而首次提交者即**固定歸屬**、之後每次合法改判把 `version` +1。\n\n**這一句是從下表的儲存格收上來的，不是另外寫的**——這張表在規格裡沒有直接對應的條文（**維護者 2026-11-11 裁定 D10：就用表自己的儲存格寫一句**）。它**仍然沒有規格來源**，那一題另外登記成 [盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決) D11。"
+   "description": "**一個審核單位只有一個提交者。** 這張表就是那個約束的落點：三欄單位鍵上的**唯一 `(run_id, assignment_id)`** 擋住兩位審核員並列正式提交，而首次提交者即**固定歸屬**、之後每次合法改判把 `version` +1。\n\n**這一句是從下表的儲存格收上來的，不是另外寫的**——這張表在規格裡沒有直接對應的條文（**維護者 2026-11-11 裁定 D10：就用表自己的儲存格寫一句**）。它**沒有自己的規格來源，而那是對的**：那一題登記成 D11，維護者 2026-11-12 裁定它和 D9 同類——結構由別頁的規則決定，本來就沒有自己的條文（[盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決)）。"
   },
   {
    "name": "annotation_review_submission_revision",
@@ -1877,7 +1877,7 @@
      "note": "本次提交時間"
     }
    ],
-   "description": "**每次正式提交一份完整快照。`decision_payload` 是已提交決策的唯一權威紀錄。**\n\n**這張表在規格裡沒有直接對應的條文**：整節沒有任何指回 `docs/specs/` 的連結，欄位的「規格來源」欄寫的是設計理由，不是規格引用（[盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決) D11，仍待裁）。"
+   "description": "**每次正式提交一份完整快照。`decision_payload` 是已提交決策的唯一權威紀錄。**\n\n**這張表沒有自己的條文，而那是對的**：整節沒有指回 `docs/specs/` 的連結，欄位的「規格來源」欄寫的是設計理由而不是規格引用——因為它的結構是從別頁的規則推出來的。維護者 2026-11-12 裁定 D11：和 D9 同類，不另找依據也不硬補一條（[盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決)）。"
   },
   {
    "name": "annotation_review_decision",
