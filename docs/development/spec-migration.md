@@ -344,6 +344,7 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 **根因已經查到（2026-11-12）：它就是下面那一節的「同路徑併發」，第二個 build 是 `notecraftapp serve docs` 的背景 watcher。** `serve` 的 `--watch` **預設是 `true`**（`bin/notecraftapp.mjs:786`），所以只要有人開著 `pnpm docs:serve`，每次存檔 `docs/**` 都會觸發它自己的一次 `atomicRebuild()`——而你手動跑的那一次正好同時開始。「編輯之後的第一次」之所以特別，不是因為編輯，而是因為**編輯就是 watcher 被觸發的那一刻**。
 
 所以**最便宜的對策不是重跑，是不要和 watcher 同時 build**：要手動跑 `--rebuild` 之前先停掉 `pnpm docs:serve`，或那一輪用 `--no-watch` 開它。
+⚠️ 但 `--no-watch` 只解掉「撞在一起」，**不解「瀏覽器看到舊的」**：`--rebuild` 輪替過 `dist` 之後，那個一直開著的 serve 會繼續服務 `dist.prev`（見 [#172](https://github.com/label-suite/label-suite/issues/172) §線索）。要在瀏覽器驗收，手動 build 之後要重開 serve。
 
 **這不是叫人別用 `docs:serve`。** 它的 watcher 本身就是一條合法的驗證路徑——[`content-visualize`](../../.claude/skills/content-visualize/SKILL.md) 正是靠「觀察使用者開著的 `docs:serve`，存檔後 watcher 自己 rebuild、SSE 推 auto reload」來驗元件的。要避免的只有**兩條路徑同時走**：用 watcher 驗就別再手動 build，要手動 build 就先讓 watcher 停下來。
 
@@ -371,9 +372,11 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 
 形狀 B 印出來的路徑在 **`~/.notecraft/` 底下，不是你的 repo**——這是和真 MDX 錯誤最快的分辨方式；真的 MDX 錯誤指的一定是 `docs/` 裡的某一行。但還是以重跑為準。
 
-這條規則**已經有三份副本**，本章節是第四份，也是唯一寫了「怎麼分辨真失敗」的一份：`.github/workflows/ci.yml` 的 `docs-site` job（`… --rebuild || … --rebuild`，註解指向 #172）、[`.claude/agents/ops.md`](../../.claude/agents/ops.md) 與 [`.claude/agents/technical-writer.md`](../../.claude/agents/technical-writer.md) 的檢查清單。`openspec/config.yaml` 的 apply 階段也要求跑這道 build，但沒提重跑。
+這條規則**另外有兩份副本**，本章節是第三份，也是唯一寫了「怎麼分辨真失敗」的一份：[`.claude/agents/ops.md`](../../.claude/agents/ops.md) 與 [`.claude/agents/technical-writer.md`](../../.claude/agents/technical-writer.md) 的檢查清單。`openspec/config.yaml` 的 apply 階段也要求跑這道 build，但沒提重跑。
 
-**真正修掉 #172 之後，這四處的重跑要一起拿掉**（CI 那一處要另一類 PR——本文件 §PR 的變更範圍 明寫文件 PR 不得動 `.github/`）。
+**CI 那一份已經拿掉了**（2026-11-12，#172）：`.github/workflows/ci.yml` 的 `docs-site` job 原本寫 `… --rebuild || … --rebuild`，依據就是本節的實測數字。根因查到之後那個依據不成立了——併發來自本機的 `serve` watcher，而 CI 從不跑 `serve`，所以那個 `||` 只會遮住一個真的失敗兩次的 build，正好是下面表格第二列警告的那一種。
+
+**真正修掉 #172 之後，剩下這三處的重跑要一起拿掉。**
 
 ### 併發的 build 會撞在一起，而且分得出哪一種併發
 
