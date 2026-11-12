@@ -9042,24 +9042,19 @@ function getTaskTypeLabel() {
      summary card as 各類工作速度 and says speed is reported per work kind;
      `AC-1.31` says the three completed counts must never be added into a
      single speed. Each kind has its own unit, so the kind carries it. */
+  /* `fast`/`slow` are the anomaly bounds for Clause 11 of §工時紀錄: the alerts
+     compare within one kind and one unit, never across the three. The source
+     gives no per-kind numbers; these are the maintainer's, 2026-11-12.
+     Annotation keeps the screen's existing 24/9 -- six of the seven seeded
+     rows are annotation, so that is what those two were calibrated on -- and
+     review and arbitration scale down because their units are heavier per
+     item. They live on the kind rather than in a table of their own so a
+     fourth kind cannot be added without them. */
   var WORK_LOG_SPEED_KINDS = [
-    { countKey: 'annotatedCount', nameKey: 'workLogSpeedKindAnnotated', unitKey: 'workLogSpeedAnnotatedUnit' },
-    { countKey: 'reviewedCount', nameKey: 'workLogSpeedKindReviewed', unitKey: 'workLogSpeedReviewedUnit' },
-    { countKey: 'arbitratedCount', nameKey: 'workLogSpeedKindArbitrated', unitKey: 'workLogSpeedArbitratedUnit' },
+    { countKey: 'annotatedCount', nameKey: 'workLogSpeedKindAnnotated', unitKey: 'workLogSpeedAnnotatedUnit', fast: 24, slow: 9 },
+    { countKey: 'reviewedCount', nameKey: 'workLogSpeedKindReviewed', unitKey: 'workLogSpeedReviewedUnit', fast: 8, slow: 3 },
+    { countKey: 'arbitratedCount', nameKey: 'workLogSpeedKindArbitrated', unitKey: 'workLogSpeedArbitratedUnit', fast: 4, slow: 1 },
   ];
-
-  /* 第 11 條 (label-suite/label-suite#170): the anomaly alerts compare within
-     one kind and one unit, never across the three, so each kind carries its
-     own pair of bounds. The source gives no per-kind numbers; these are the
-     maintainer's, 2026-11-12. Annotation keeps the screen's existing 24/9 --
-     six of the seven seeded rows are annotation, so that is what those two
-     were calibrated on -- and review and arbitration scale down because their
-     units are heavier per item. */
-  var WORK_LOG_SPEED_THRESHOLDS = {
-    annotatedCount: { fast: 24, slow: 9 },
-    reviewedCount: { fast: 8, slow: 3 },
-    arbitratedCount: { fast: 4, slow: 1 },
-  };
 
   function hasWorkLogKind(entry, countKey) {
     return entry[countKey] !== null && entry[countKey] !== undefined;
@@ -9216,21 +9211,22 @@ function getTaskTypeLabel() {
   }
 
   /* One alert per (row, kind) that falls outside that kind's range. A row
-     carrying two kinds can raise two, which is the point of 第 11 條: the two
-     are not comparable and must not be averaged into one number. A row with no
-     trustworthy duration raises none -- its speed is 未知 (Q3), and an unknown
-     speed is neither fast nor slow. */
+     carrying two kinds can raise two, which is the point of Clause 11 of
+     §工時紀錄: the two are not comparable and must not be averaged into one
+     number. Nothing is raised for a speed that cannot be computed, because an
+     uncomputable speed is neither fast nor slow -- that covers both no
+     trustworthy duration (§工時紀錄 clause 5) and a zero completed count,
+     which §邊界情況 says reads 算不出來 rather than 0. */
   function getWorkLogAnomalies(entries) {
     var out = [];
     entries.forEach(function (entry) {
       if (!(entry.durationHours > 0)) return;
       WORK_LOG_SPEED_KINDS.forEach(function (kind) {
         if (!hasWorkLogKind(entry, kind.countKey)) return;
-        var bounds = WORK_LOG_SPEED_THRESHOLDS[kind.countKey];
-        if (!bounds) return;
+        if (!(entry[kind.countKey] > 0)) return;
         var speed = entry[kind.countKey] / entry.durationHours;
-        if (speed > bounds.fast) out.push({ entry: entry, kind: kind, speed: speed, fast: true });
-        else if (speed < bounds.slow) out.push({ entry: entry, kind: kind, speed: speed, fast: false });
+        if (speed > kind.fast) out.push({ entry: entry, kind: kind, speed: speed, fast: true });
+        else if (speed < kind.slow) out.push({ entry: entry, kind: kind, speed: speed, fast: false });
       });
     });
     return out;
@@ -9266,7 +9262,7 @@ function getTaskTypeLabel() {
         member: anomaly.entry.memberName,
         /* The kind and its unit ride inside {speed}, so the two message
            templates need no change -- and the reader can tell which kind the
-           number belongs to, which is what 第 11 條 is for. */
+           number belongs to, which is what Clause 11 is for. */
         speed: t(anomaly.kind.nameKey) + ' ' + anomaly.speed.toFixed(1) + ' ' + t(anomaly.kind.unitKey),
       })));
       list.appendChild(li);
