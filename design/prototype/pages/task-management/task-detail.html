@@ -10288,10 +10288,15 @@ function getTaskTypeLabel() {
 
   /* Q40 (label-suite/label-suite#170): the PRD opens export only once the task
      is completed, and the source carries no such rule at all, so the PRD is
-     the ceiling. The source's own gate is role-only, which is why this is a
-     second condition rather than a change to canExportResults(): the role
-     decides whether the section exists, the status decides whether a new
-     export can start. The 卡控 says to disable and say why, not to hide. */
+     the ceiling. This is a second condition rather than a change to
+     canExportResults() because the role decides whether the section exists
+     and the status decides whether a new export can start.
+     Three clauses of §標記結果 rule out hiding the section instead:
+     clause 3 says a reviewer 「看不到這張記錄表」 -- the spec says so
+     explicitly when it means hide, while clause 2 and the 卡控 say only
+     「不開放」 for an incomplete task; clause 6 requires the record table to
+     show 「尚未執行過匯出」 rather than nothing; and clause 14 lists what makes
+     a past export downloadable, where the task's status is not a condition. */
   function isTaskCompletedForExport() {
     return TASK_DATA.status === 'completed';
   }
@@ -10302,9 +10307,13 @@ function getTaskTypeLabel() {
 
   /* Q40: disable the two export buttons and say why, following the same idiom
      the next-step gate uses -- `disabled` plus aria-describedby pointing at a
-     visible reason. Re-downloading a past record is deliberately NOT gated:
-     a record can only exist if an export already happened, and the source
-     says a re-download hands back the original file. */
+     visible reason. Known limit, shared with that idiom: a disabled button is
+     not focusable, so the description does not reach a screen reader; the
+     reason is visible text, which is what the 卡控 asks for.
+     Re-downloading a past record is deliberately NOT gated by status --
+     clause 14 lists the download conditions and the task's status is not one
+     of them, and clause 11 says a re-download hands back the original file,
+     so gating it would withdraw what the source grants. */
   function renderArExportStatusGate() {
     var blocked = canExportResults() && !isTaskCompletedForExport();
     var hint = document.getElementById('arExportStatusHint');
