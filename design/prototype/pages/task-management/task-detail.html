@@ -2279,6 +2279,9 @@
       officialRunDisabled: '開始正式標記（唯讀）',
       dryRunNextRoundReason: '本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合',
       retryIaaComputation: '重試計算',
+      panelLoadErrorTitle: '這個分頁載入失敗',
+      panelLoadErrorDesc: '其他分頁仍然可以使用。重試會重新載入整個頁面。',
+      panelLoadRetry: '重試',
       officialPoolEmptyReason: '正式標記池剩餘 0 筆，無法開始正式標記',
       draftPoolEmptyReason: '依目前抽樣數，發布後正式標記池將剩 0 筆，請調降抽樣數',
       iaaComputationFailedReason: 'IAA 計算失敗，請重試計算',
@@ -2855,6 +2858,9 @@
       officialRunDisabled: 'Start official run (Read-only)',
       dryRunNextRoundReason: 'Finish this round\'s annotation, required review and required arbitration before adding the next round',
       retryIaaComputation: 'Retry computation',
+      panelLoadErrorTitle: 'This tab failed to load',
+      panelLoadErrorDesc: 'The other tabs still work. Retry reloads the whole page.',
+      panelLoadRetry: 'Retry',
       officialPoolEmptyReason: 'The official pool has 0 items remaining, so the official run cannot start',
       draftPoolEmptyReason: 'With the current sampling value the official pool would have 0 items left; lower the sampling value',
       iaaComputationFailedReason: 'IAA computation failed. Please retry the computation',
@@ -4485,6 +4491,19 @@
     'work-log': './task-detail.panels/work-log.html',
     'member-management': './task-detail.panels/member-management.html'
   };
+  /* Q5 (label-suite/label-suite#170): a panel whose partial fails to load
+     still needs an element under its own id, because renderTabs() and
+     showOverviewWithSkeleton() look every panel up by id and toggle `hidden`
+     on it with no null guard. The static tab bar's aria-controls carries the
+     same mapping; this is the lookup in the other direction. */
+  var TAB_PANEL_IDS = {
+    overview: 'overviewPanel',
+    settings: 'settingsPanel',
+    'annotation-results': 'annotationResultsPanel',
+    'annotation-progress': 'annotationProgressPanel',
+    'work-log': 'workLogPanel',
+    'member-management': 'memberManagementPanel'
+  };
   var DRY_RUN_PROGRESS_KEY = 'labelsuite.prototypeDryRunProgress';
   var STATUS_ORDER = ['draft', 'dry_run_in_progress', 'waiting_iaa_confirmation', 'official_run_in_progress', 'completed'];
   var toastTimer = null;
@@ -4517,13 +4536,69 @@
      task-config.engine.js (loaded before this script) and operate on the
      shared #datasetPreviewModal markup. */
 
-  function renderPanelLoadError() {
+  /* Clauses 1 and 4 of §分頁載入 (Q5): a panel that fails to load shows its own
+     error with a retry, and the failure stays inside that panel -- the shared
+     header and the tab bar stay, and the other five tabs keep working. This
+     used to replace the whole shared mount with a hardcoded
+     「Panel 載入失敗，請重新整理頁面。」, which took all six down at once and
+     was not even translated.
+     The retry reloads the page rather than re-injecting this one panel:
+     bindEvents() is page-wide and not idempotent (86 listeners), so
+     re-running it would fire every handler twice, and injecting the partial
+     without it would leave controls that look live and do nothing. Splitting
+     bindEvents() per panel is a refactor beyond this item, so the copy says
+     plainly that retry reloads. */
+  function appendPanelLoadError(tabName) {
     var mount = document.getElementById('tabPanelMount');
-    if (!mount) return;
-    mount.innerHTML = '' +
-      '<section class="panel" aria-live="polite">' +
-      '<p class="status-hint">Panel 載入失敗，請重新整理頁面。</p>' +
-      '</section>';
+    var panelId = TAB_PANEL_IDS[tabName];
+    if (!mount || !panelId) return;
+    var section = document.createElement('section');
+    section.id = panelId;
+    section.className = 'panel hidden';
+    section.setAttribute('data-panel-load-failed', '');
+    section.setAttribute('aria-live', 'polite');
+    var owner = document.querySelector('.admin-tabs [aria-controls="' + panelId + '"]');
+    if (owner) {
+      section.setAttribute('role', 'tabpanel');
+      section.setAttribute('aria-labelledby', owner.id);
+    }
+    var title = document.createElement('p');
+    title.className = 'panel-title';
+    title.setAttribute('data-panel-load-error-title', '');
+    section.appendChild(title);
+    var desc = document.createElement('p');
+    desc.className = 'status-hint';
+    desc.setAttribute('data-panel-load-error-desc', '');
+    section.appendChild(desc);
+    var retry = document.createElement('button');
+    retry.type = 'button';
+    retry.className = 'btn btn-secondary';
+    retry.setAttribute('data-panel-load-retry', '');
+    retry.addEventListener('click', function() { window.location.reload(); });
+    section.appendChild(retry);
+    mount.appendChild(section);
+    applyPanelLoadErrorText();
+  }
+
+  /* Called from applyLang too, so a language switch reaches placeholders that
+     were built before it. */
+  function applyPanelLoadErrorText() {
+    document.querySelectorAll('[data-panel-load-error-title]').forEach(function (el) {
+      el.textContent = t('panelLoadErrorTitle');
+    });
+    document.querySelectorAll('[data-panel-load-error-desc]').forEach(function (el) {
+      el.textContent = t('panelLoadErrorDesc');
+    });
+    document.querySelectorAll('[data-panel-load-retry]').forEach(function (el) {
+      el.textContent = t('panelLoadRetry');
+    });
+  }
+
+  /* The five per-panel renders below each assume their own panel is in the
+     DOM; a placeholder has none of their elements. */
+  function panelReady(tabName) {
+    var el = document.getElementById(TAB_PANEL_IDS[tabName]);
+    return !!el && !el.hasAttribute('data-panel-load-failed');
   }
 
   function fetchPanelPartial(path, retriesLeft) {
@@ -4551,8 +4626,8 @@
       });
   }
 
-  function appendPanelPartial(path) {
-    return fetchPanelPartial(path, 3)
+  function appendPanelPartial(tabName) {
+    return fetchPanelPartial(TAB_PANEL_PATHS[tabName], 3)
       .then(function(html) {
         var mount = document.getElementById('tabPanelMount');
         if (!mount) return;
@@ -4568,6 +4643,11 @@
           }
           mount.appendChild(root);
         }
+      })
+      .catch(function() {
+        /* Q5 clause 1: resolve with a placeholder instead of rejecting, so the
+           remaining panels still load and the other tabs still work. */
+        appendPanelLoadError(tabName);
       });
   }
 
@@ -4579,7 +4659,7 @@
     var order = ['overview', 'settings', 'member-management', 'annotation-progress', 'annotation-results', 'work-log'];
     return order.reduce(function(promise, tabName) {
       return promise.then(function() {
-        return appendPanelPartial(TAB_PANEL_PATHS[tabName]);
+        return appendPanelPartial(tabName);
       });
     }, Promise.resolve()).then(function() {
       return true;
@@ -5403,6 +5483,7 @@ function interpolate(template, payload) {
       workLogStageSelect.value = state.workLogStage;
     }
 
+    applyPanelLoadErrorText();
     renderOverview();
     renderMemberManagement();
     renderAnnotationProgress();
@@ -7331,6 +7412,7 @@ function getTaskTypeLabel() {
   }
 
   function renderOverview() {
+    if (!panelReady('overview')) return;
     var taskName = getCurrentTaskName();
     var datasetSummary = TASK_DATA.datasetTotal + (state.lang === 'zh' ? ' 筆' : ' items');
     var settingsSummary = getSettingsSummary();
@@ -8009,6 +8091,7 @@ function getTaskTypeLabel() {
   }
 
   function renderMemberManagement() {
+    if (!panelReady('member-management')) return;
     renderMemberTable();
     renderMemberSearchResults();
     renderReviewAssignment();
@@ -8983,6 +9066,7 @@ function getTaskTypeLabel() {
   }
 
   function renderAnnotationProgress() {
+    if (!panelReady('annotation-progress')) return;
     renderProgressRoundPills();
     renderProgressSummary();
     renderUnassignedAnnotationAssignments();
@@ -9365,6 +9449,7 @@ function getTaskTypeLabel() {
   }
 
   function renderWorkLog() {
+    if (!panelReady('work-log')) return;
     var workLogDateRangeValue = { from: state.workLogDateFrom || null, to: state.workLogDateTo || null };
     if (!workLogDateRangeHandle) {
       workLogDateRangeHandle = window.DateRangePicker.mount(document.getElementById('workLogDateRangeTrigger'), {
@@ -10842,6 +10927,7 @@ function getTaskTypeLabel() {
   }
 
   function renderAnnotationResults() {
+    if (!panelReady('annotation-results')) return;
     var arExportSection = document.getElementById('arExportSection');
     if (arExportSection) arExportSection.classList.toggle('hidden', !canExportResults());
     renderArExportStatusGate();
@@ -12074,10 +12160,10 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
 
     loadAllTabPanels()
       .then(function(loaded) {
-        if (!loaded) {
-          renderPanelLoadError();
-          return;
-        }
+        /* `loaded` is false only when the shared mount itself is missing, in
+           which case there is nothing to render into. A panel that failed now
+           leaves a placeholder and does not reach here (Q5). */
+        if (!loaded) return;
 
         applyLang(state.lang);
         bindEvents();
@@ -12094,7 +12180,12 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
         }
       })
       .catch(function() {
-        renderPanelLoadError();
+        /* Unreachable for a panel failure after Q5 -- appendPanelPartial
+           resolves with a placeholder. Left as a last resort so an unexpected
+           throw does not leave the tabs permanently disabled. */
+        document.querySelectorAll('.admin-tabs [role="tab"]').forEach(function(tabEl) {
+          tabEl.removeAttribute('aria-disabled');
+        });
       });
   }
 
