@@ -1135,6 +1135,10 @@
       background: var(--color-primary-soft-bg);
     }
     .required { color: var(--color-error); margin-left: 2px; }
+    /* The speed summary card carries one line per work kind (FR-007b), so its
+       value cannot use the single-number size. label-suite/label-suite#170 Q4. */
+    .metric strong.speed-by-kind { font-size: 0.95rem; line-height: 1.6; font-weight: 600; }
+    .worklog-speed-cell { white-space: nowrap; line-height: 1.5; }
     /* .field-label-row / .field-help-tooltip / .tooltip-bubble moved to task-config.css (shared with task-new) */
     .field-hint {
       font-size: 12px;
@@ -2546,8 +2550,14 @@
       workLogSummaryHoursLabel: '總工時',
       workLogSummaryAnnotatedLabel: '總標記筆數',
       workLogSummaryReviewedLabel: '總審核筆數',
-      workLogSummarySpeedLabel: '加權平均速度',
-      workLogSummaryAvgPerItemTpl: '每筆平均耗時 {minutes} 分',
+      workLogSummarySpeedLabel: '各類工作速度',
+      speedUnknown: '未知',
+      workLogSpeedKindAnnotated: '標記',
+      workLogSpeedKindReviewed: '審核',
+      workLogSpeedKindArbitrated: '仲裁',
+      workLogSpeedAnnotatedUnit: '標記件／時',
+      workLogSpeedReviewedUnit: '審核單位／時',
+      workLogSpeedArbitratedUnit: '仲裁項／時',
       workLogAlertTitle: '異常提醒',
       workLogAlertNone: '目前篩選條件下無速度異常紀錄。',
       workLogAnomalyFast: '{date} · {member} 速度偏快（{speed}）',
@@ -3116,8 +3126,14 @@
       workLogSummaryHoursLabel: 'Total hours',
       workLogSummaryAnnotatedLabel: 'Total annotated',
       workLogSummaryReviewedLabel: 'Total reviewed',
-      workLogSummarySpeedLabel: 'Weighted avg speed',
-      workLogSummaryAvgPerItemTpl: 'Avg. {minutes} min per item',
+      workLogSummarySpeedLabel: 'Speed by work kind',
+      speedUnknown: 'Unknown',
+      workLogSpeedKindAnnotated: 'Annotation',
+      workLogSpeedKindReviewed: 'Review',
+      workLogSpeedKindArbitrated: 'Arbitration',
+      workLogSpeedAnnotatedUnit: 'annotated items/hr',
+      workLogSpeedReviewedUnit: 'review units/hr',
+      workLogSpeedArbitratedUnit: 'arbitration items/hr',
       workLogAlertTitle: 'Anomaly alerts',
       workLogAlertNone: 'No speed anomalies under current filters.',
       workLogAnomalyFast: '{date} · {member} speed is too fast ({speed})',
@@ -8193,7 +8209,9 @@ function getTaskTypeLabel() {
   }
 
   function formatProgressSpeed(speed) {
-    return speed > 0 ? speed.toFixed(1) + ' ' + t('progressSpeedUnit') : '-';
+    /* Clause 27 of §標記進度 reuses the work-log algorithm and cites Q3, so an
+       uncomputable speed reads 未知 here too, not a bare dash. */
+    return speed > 0 ? speed.toFixed(1) + ' ' + t('progressSpeedUnit') : t('speedUnknown');
   }
 
   /* One map, two readers: the comparator lookup below and URL_VIEW_STATE's
@@ -9021,9 +9039,60 @@ function getTaskTypeLabel() {
     return count === null || count === undefined ? '—' : String(count);
   }
 
-  function formatWorkLogSpeedByEntry(entry) {
-    var speed = entry.durationHours > 0 ? getWorkLogEntryTotal(entry) / entry.durationHours : 0;
-    return speed.toFixed(1) + ' ' + t('workLogSpeedUnit');
+  /* label-suite/label-suite#170 Q4: `FR-007b` (v9.0.0) defines the fourth
+     summary card as 各類工作速度 and says speed is reported per work kind;
+     `AC-1.31` says the three completed counts must never be added into a
+     single speed. Each kind has its own unit, so the kind carries it. */
+  var WORK_LOG_SPEED_KINDS = [
+    { countKey: 'annotatedCount', nameKey: 'workLogSpeedKindAnnotated', unitKey: 'workLogSpeedAnnotatedUnit' },
+    { countKey: 'reviewedCount', nameKey: 'workLogSpeedKindReviewed', unitKey: 'workLogSpeedReviewedUnit' },
+    { countKey: 'arbitratedCount', nameKey: 'workLogSpeedKindArbitrated', unitKey: 'workLogSpeedArbitratedUnit' },
+  ];
+
+  function hasWorkLogKind(entry, countKey) {
+    return entry[countKey] !== null && entry[countKey] !== undefined;
+  }
+
+  /* Q3 (#170): 「未知」 is "there is such a column but it cannot be computed";
+     `—` stays reserved for "this role has no such column", which is why a
+     kind the row does not carry is left out instead of printed as 未知. */
+  function formatWorkLogSpeedLines(entry) {
+    var lines = WORK_LOG_SPEED_KINDS.filter(function (kind) {
+      return hasWorkLogKind(entry, kind.countKey);
+    }).map(function (kind) {
+      if (!(entry.durationHours > 0)) return t(kind.nameKey) + ' ' + t('speedUnknown');
+      return t(kind.nameKey) + ' ' + (entry[kind.countKey] / entry.durationHours).toFixed(1) + ' ' + t(kind.unitKey);
+    });
+    return lines.length ? lines : ['—'];
+  }
+
+  /* The card is task-level, so every kind is shown; a kind with no usable
+     denominator reads 未知 rather than `0.0` (Q3 and Q4). The denominator is
+     the trustworthy work duration of the rows that carry that kind -- the
+     seed has one duration per row, so there is no finer split available. */
+  function getWorkLogSpeedSummaryLines(entries) {
+    return WORK_LOG_SPEED_KINDS.map(function (kind) {
+      var count = 0;
+      var hours = 0;
+      entries.forEach(function (entry) {
+        if (!hasWorkLogKind(entry, kind.countKey)) return;
+        count += entry[kind.countKey];
+        hours += entry.durationHours || 0;
+      });
+      if (!(hours > 0)) return t(kind.nameKey) + ' ' + t('speedUnknown');
+      return t(kind.nameKey) + ' ' + (count / hours).toFixed(1) + ' ' + t(kind.unitKey);
+    });
+  }
+
+  function setMultilineText(id, lines, cls) {
+    var node = document.getElementById(id);
+    if (!node) return;
+    while (node.firstChild) node.removeChild(node.firstChild);
+    if (cls) node.className = cls;
+    lines.forEach(function (line, index) {
+      if (index > 0) node.appendChild(document.createElement('br'));
+      node.appendChild(document.createTextNode(line));
+    });
   }
 
   function getTaskRoleByEmail(email) {
@@ -9094,7 +9163,13 @@ function getTaskTypeLabel() {
       tr.appendChild(td(formatWorkLogCount(entry.annotatedCount)));
       tr.appendChild(td(formatWorkLogCount(entry.reviewedCount)));
       tr.appendChild(td(formatWorkLogCount(entry.arbitratedCount)));
-      tr.appendChild(td(formatWorkLogSpeedByEntry(entry)));
+      var tdSpeed = document.createElement('td');
+      tdSpeed.className = 'worklog-speed-cell';
+      formatWorkLogSpeedLines(entry).forEach(function (line, index) {
+        if (index > 0) tdSpeed.appendChild(document.createElement('br'));
+        tdSpeed.appendChild(document.createTextNode(line));
+      });
+      tr.appendChild(tdSpeed);
 
       var tdStage = document.createElement('td');
       var stageBadge = document.createElement('span');
@@ -9110,21 +9185,13 @@ function getTaskTypeLabel() {
     var totalHours = entries.reduce(function(sum, entry) { return sum + entry.durationHours; }, 0);
     var totalAnnotated = entries.reduce(function(sum, entry) { return sum + (entry.annotatedCount || 0); }, 0);
     var totalReviewed = entries.reduce(function(sum, entry) { return sum + (entry.reviewedCount || 0); }, 0);
-    var totalItems = entries.reduce(function(sum, entry) { return sum + getWorkLogEntryTotal(entry); }, 0);
-    var weightedSpeed = totalHours > 0 ? totalItems / totalHours : 0;
-    var avgMinutesPerItem = totalItems > 0 ? (totalHours * 60) / totalItems : 0;
 
     setText('workLogSummaryHoursValue', formatWorkLogDuration(totalHours));
     setText('workLogSummaryAnnotatedValue', String(totalAnnotated));
     setText('workLogSummaryReviewedValue', String(totalReviewed));
-    setText(
-      'workLogSummarySpeedValue',
-      (weightedSpeed > 0 ? weightedSpeed.toFixed(1) : '0.0') + ' ' + t('workLogSpeedUnit')
-    );
-    setText(
-      'workLogSummaryAvgPerItemValue',
-      totalItems > 0 ? interpolate(t('workLogSummaryAvgPerItemTpl'), { minutes: avgMinutesPerItem.toFixed(1) }) : ''
-    );
+    /* The 每筆平均耗時 sub-line was the reciprocal of the weighted speed, so it
+       carried the same forbidden aggregate (AC-1.31) and goes with it. */
+    setMultilineText('workLogSummarySpeedValue', getWorkLogSpeedSummaryLines(entries), 'speed-by-kind');
   }
 
   function renderWorkLogAlerts(entries) {
