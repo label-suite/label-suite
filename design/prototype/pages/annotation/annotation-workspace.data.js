@@ -610,7 +610,7 @@
     Object.keys(decisions).forEach(function (outKey) {
       var action = REVIEW_DECISION_EVENT_ACTION[decisions[outKey]];
       if (!action) return;
-      var extra = { result_snapshot: buildResultSnapshot(payload), reason: reasons[outKey] || null, outKey: outKey };
+      var extra = { result_snapshot: buildResultSnapshot(payload), reason: reasons[outKey] || '', outKey: outKey };
       var attachingTiming = !timingWritten;
       if (attachingTiming) {
         Object.assign(extra, timingFields(payload && payload.timing));
@@ -856,10 +856,12 @@
    * Status is deliberately untouched. `adjudicated` is an event, not a
    * sample state, so entryStatus() keeps its three-value contract.
    *
-   * `reason` is required by FR-089 rather than merely expected: without the
-   * guard, appendHistoryEvent's null-key drop would quietly emit a
-   * reason-less event, which is the exact outcome FR-089 forbids. Silent
-   * return follows markSampleRejected's run_type guard.
+   * label-suite/label-suite#187: a BLANK reason is legal now, so the guard
+   * only rejects a caller that passed no reason argument at all. Spec 04-02
+   * §責任鏈 point 6 requires the field on EVERY event with an empty string
+   * standing for "none", and dropping the whole event instead would take the
+   * 誰／在哪個環節／做了什麼決定 answers down with it. Silent return follows
+   * markSampleRejected's run_type guard.
    *
    * `resultSnapshot` (issue singyichen/label-suite#754) is optional and appended last so every
    * pre-existing positional call site keeps passing undefined for it without
@@ -868,7 +870,7 @@
    * arbitration `reject`/`兩者皆非` outcome) ends up with no
    * `result_snapshot` key at all, same as before this parameter existed. */
   function appendSampleTimelineEvent(taskId, runType, sampleId, action, role, reason, historySummary, identity, timing, resultSnapshot) {
-    if (!reason) return false;
+    if (reason == null) return false;
     /* FR-101 (issue singyichen/label-suite#908): same guard as markSampleSubmitted -- see its
        comment for the trigger's reasoning. submitArbitration()'s reviewer-
        role call and any other non-annotator caller are unaffected. */
@@ -3057,16 +3059,12 @@
    * appendSampleTimelineEvent use for a reviewer/arbiter act on someone
    * else's unit (comment at appendSampleTimelineEvent above), and the same reason
    * getSampleHistory's FR-062 masking only admits a `submitted` reviewer
-   * bucket. Unlike appendSampleTimelineEvent, this function itself does not
-   * reject an empty `reason` (`reason || ''` below) -- issue singyichen/label-suite#920 moved
-   * reason-required enforcement for all four actions to the UI layer (the
-   * select-then-confirm screen's Confirm control stays natively disabled
-   * until the reason field is non-empty, see annotation-workspace.config.js
-   * buildExceptionPoolItemRow()/AC-4.75), so by the time this data-layer
-   * function is ever called, `reason` is already guaranteed non-empty in
-   * practice. Kept permissive here rather than throwing, matching this
-   * file's existing storage-layer stance of not re-validating what the UI
-   * already gated. */
+   * bucket. An empty `reason` is a LEGAL input (`reason || ''` below): spec
+   * 04-02 §例外處置畫面的外殼 point 4 makes all four dispositions' reasons
+   * optional and point 5 forbids gating Confirm on the field, so there is no
+   * UI gate left for this layer to lean on -- label-suite/label-suite#187
+   * removed the one issue singyichen/label-suite#920 had put there. This layer
+   * writes what it is given, unchanged. */
   function resolveExceptionPoolItem(taskId, runType, sampleId, identity, key, action, value, reason) {
     var pool = getExceptionPool(taskId, runType, sampleId, identity);
     var record = {
@@ -3099,7 +3097,7 @@
       'project_leader',
       'exception pool resolved: ' + key,
       DEFAULT_PROJECT_LEADER_ID,
-      { reason: reason || null }
+      { reason: reason || '' }
     );
     writeSubmissionBucket(bucketKey, bucket);
   }
