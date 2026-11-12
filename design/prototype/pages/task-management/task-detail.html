@@ -2794,6 +2794,8 @@
       overviewReadonlyDraftOnly: '',
       overviewSaveSuccess: 'Task basics updated',
       overviewEditTaskNameRequired: 'Task name is required.',
+      overviewEditTaskTypeRequired: 'Pick at least one category, input type and output type.',
+      overviewEditDatasetRequired: 'Upload a dataset.',
       settingsEditBtn: 'Edit label settings',
       settingsSaveBtn: 'Save',
       settingsCancelBtn: 'Cancel',
@@ -3629,20 +3631,30 @@
     { date: '2026-04-20', memberEmail: 'olivia.lin@labelsuite.io', memberName: 'Olivia Lin', loginAt: '14:06', logoutAt: '16:54', durationHours: 2.4, annotatedCount: 20, reviewedCount: null, arbitratedCount: null, stage: 'dry' },
     { date: '2026-04-21', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '09:35', logoutAt: '12:47', durationHours: 2.9, annotatedCount: 18, reviewedCount: null, arbitratedCount: null, stage: 'official' },
     { date: '2026-04-21', memberEmail: 'olivia.lin@labelsuite.io', memberName: 'Olivia Lin', loginAt: '13:12', logoutAt: '16:36', durationHours: 3.1, annotatedCount: 44, reviewedCount: null, arbitratedCount: null, stage: 'official' },
-    { date: '2026-04-21', memberEmail: 'iris@labelsuite.io', memberName: 'Iris Tsai', loginAt: '15:08', logoutAt: '17:21', durationHours: 1.8, annotatedCount: null, reviewedCount: 7, arbitratedCount: 2, stage: 'official' },
+    /* label-suite/label-suite#170: one row carries ONE work kind. Spec 03-03
+       §工時紀錄 point 9 separates rows by work kind among other things, so a
+       row holding both a review count and an arbitration count is not data
+       this screen is allowed to receive -- and it made the summary card
+       charge the same duration to both kinds' denominators. Split into the
+       two stretches it actually was; the hours still add up to 1.8. */
+    { date: '2026-04-21', memberEmail: 'iris@labelsuite.io', memberName: 'Iris Tsai', loginAt: '15:08', logoutAt: '16:20', durationHours: 1.2, annotatedCount: null, reviewedCount: 7, arbitratedCount: null, stage: 'official' },
+    { date: '2026-04-21', memberEmail: 'iris@labelsuite.io', memberName: 'Iris Tsai', loginAt: '16:25', logoutAt: '17:21', durationHours: 0.6, annotatedCount: null, reviewedCount: null, arbitratedCount: 2, stage: 'official' },
   ];
   var WORK_LOG_ENTRIES_BY_TASK = {
     T014: [
       { date: '2026-08-21', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '09:00', logoutAt: '09:40', durationHours: 0.7, annotatedCount: 5, reviewedCount: null, arbitratedCount: null, stage: 'dry' },
-      { date: '2026-08-21', memberEmail: 'iris@labelsuite.io', memberName: 'Iris Tsai', loginAt: '10:00', logoutAt: '10:30', durationHours: 0.5, annotatedCount: null, reviewedCount: 4, arbitratedCount: 1, stage: 'dry' },
+      { date: '2026-08-21', memberEmail: 'iris@labelsuite.io', memberName: 'Iris Tsai', loginAt: '10:00', logoutAt: '10:40', durationHours: 0.6, annotatedCount: null, reviewedCount: 4, arbitratedCount: null, stage: 'dry' },
+      { date: '2026-08-21', memberEmail: 'iris@labelsuite.io', memberName: 'Iris Tsai', loginAt: '10:45', logoutAt: '11:05', durationHours: 0.3, annotatedCount: null, reviewedCount: null, arbitratedCount: 1, stage: 'dry' },
     ],
     T015: [
       { date: '2026-08-21', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '09:00', logoutAt: '09:35', durationHours: 0.6, annotatedCount: 4, reviewedCount: null, arbitratedCount: null, stage: 'official' },
-      { date: '2026-08-21', memberEmail: 'iris@labelsuite.io', memberName: 'Iris Tsai', loginAt: '10:00', logoutAt: '10:25', durationHours: 0.4, annotatedCount: null, reviewedCount: 3, arbitratedCount: 1, stage: 'official' },
+      { date: '2026-08-21', memberEmail: 'iris@labelsuite.io', memberName: 'Iris Tsai', loginAt: '10:00', logoutAt: '10:35', durationHours: 0.5, annotatedCount: null, reviewedCount: 3, arbitratedCount: null, stage: 'official' },
+      { date: '2026-08-21', memberEmail: 'iris@labelsuite.io', memberName: 'Iris Tsai', loginAt: '10:40', logoutAt: '11:00', durationHours: 0.3, annotatedCount: null, reviewedCount: null, arbitratedCount: 1, stage: 'official' },
     ],
     T016: [
       { date: '2026-08-21', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '09:00', logoutAt: '09:40', durationHours: 0.7, annotatedCount: 5, reviewedCount: null, arbitratedCount: null, stage: 'official' },
-      { date: '2026-08-21', memberEmail: 'iris@labelsuite.io', memberName: 'Iris Tsai', loginAt: '10:00', logoutAt: '10:40', durationHours: 0.7, annotatedCount: null, reviewedCount: 5, arbitratedCount: 1, stage: 'official' },
+      { date: '2026-08-21', memberEmail: 'iris@labelsuite.io', memberName: 'Iris Tsai', loginAt: '10:00', logoutAt: '10:50', durationHours: 0.8, annotatedCount: null, reviewedCount: 5, arbitratedCount: null, stage: 'official' },
+      { date: '2026-08-21', memberEmail: 'iris@labelsuite.io', memberName: 'Iris Tsai', loginAt: '10:55', logoutAt: '11:15', durationHours: 0.3, annotatedCount: null, reviewedCount: null, arbitratedCount: 1, stage: 'official' },
     ],
   };
   var WORK_LOG_ENTRIES = cloneData(DEFAULT_WORK_LOG_ENTRIES);
@@ -9425,8 +9437,12 @@ function getTaskTypeLabel() {
 
   /* The card is task-level, so every kind is shown; a kind with no usable
      denominator reads 未知 rather than `0.0` (Q3 and Q4). The denominator is
-     the trustworthy work duration of the rows that carry that kind -- the
-     seed has one duration per row, so there is no finer split available. */
+     the trustworthy work duration of the rows that carry that kind, and that
+     sum is EXACT rather than apportioned: spec 03-03 §工時紀錄 point 9 separates
+     rows by work kind, so a compliant row carries exactly one kind and its
+     duration belongs wholly to that kind. A row carrying two kinds would be
+     charged to both denominators -- label-suite/label-suite#170 split the one
+     seed row that did that. */
   function getWorkLogSpeedSummaryLines(entries) {
     /* Same rule as the table cell, for the same reason: a reviewer only ever
        sees their own rows (§工時紀錄 的「審核員的工時紀錄只看得到自己的資料」,
