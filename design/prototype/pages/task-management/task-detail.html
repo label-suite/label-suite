@@ -534,12 +534,6 @@
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 10px;
     }
-    .worklog-summary-grid .kv-sub {
-      display: block;
-      margin-top: 2px;
-      font-size: 11px;
-      color: var(--color-ink-muted);
-    }
     .anomaly-list {
       list-style: none;
       display: grid;
@@ -8285,7 +8279,12 @@ function getTaskTypeLabel() {
     setText('progressMetricCompletedValue', String(stageData.completedSamples));
     setText('progressMetricRateValue', rateText);
     setText('progressMetricSpeedValue', formatProgressSpeed(stageData.avgSpeed));
-    setText('progressMetricEtaValue', state.lang === 'zh' ? stageData.remainingEta : stageData.remainingEtaEn);
+    /* Clause 27 names 平均速度 **and** 剩餘估計時間 together and says both read
+       未知 when they cannot be computed. The seed carries `-` for a stage with
+       no usable speed, which is the symbol Q3 reserves for a column the role
+       does not have. */
+    var stageEta = state.lang === 'zh' ? stageData.remainingEta : stageData.remainingEtaEn;
+    setText('progressMetricEtaValue', (!stageEta || stageEta === '-') ? t('speedUnknown') : stageEta);
     setText('progressMetricIAAValue', (state.progressStage !== 'official' && unassignedCount)
       ? t('unassignedIaaBlocked')
       : formatIaaValue(getIaaAlphaValue(iaaResult)));
@@ -9071,24 +9070,33 @@ function getTaskTypeLabel() {
      the trustworthy work duration of the rows that carry that kind -- the
      seed has one duration per row, so there is no finer split available. */
   function getWorkLogSpeedSummaryLines(entries) {
-    return WORK_LOG_SPEED_KINDS.map(function (kind) {
+    /* Same rule as the table cell, for the same reason: a reviewer only ever
+       sees their own rows (§工時紀錄 的「審核員的工時紀錄只看得到自己的資料」,
+       enforced by getFilteredWorkLogEntries), so a kind that none of the
+       visible rows carries is "this role has no such column" -- Q3 reserves
+       `—`/omission for that and 未知 for "there is such a column but it
+       cannot be computed". */
+    var lines = WORK_LOG_SPEED_KINDS.map(function (kind) {
+      var carried = false;
       var count = 0;
       var hours = 0;
       entries.forEach(function (entry) {
         if (!hasWorkLogKind(entry, kind.countKey)) return;
+        carried = true;
         count += entry[kind.countKey];
         hours += entry.durationHours || 0;
       });
+      if (!carried) return null;
       if (!(hours > 0)) return t(kind.nameKey) + ' ' + t('speedUnknown');
       return t(kind.nameKey) + ' ' + (count / hours).toFixed(1) + ' ' + t(kind.unitKey);
-    });
+    }).filter(Boolean);
+    return lines.length ? lines : ['—'];
   }
 
-  function setMultilineText(id, lines, cls) {
+  function setMultilineText(id, lines) {
     var node = document.getElementById(id);
     if (!node) return;
     while (node.firstChild) node.removeChild(node.firstChild);
-    if (cls) node.className = cls;
     lines.forEach(function (line, index) {
       if (index > 0) node.appendChild(document.createElement('br'));
       node.appendChild(document.createTextNode(line));
@@ -9182,7 +9190,7 @@ function getTaskTypeLabel() {
   }
 
   function renderWorkLogSummary(entries) {
-    var totalHours = entries.reduce(function(sum, entry) { return sum + entry.durationHours; }, 0);
+    var totalHours = entries.reduce(function(sum, entry) { return sum + (entry.durationHours || 0); }, 0);
     var totalAnnotated = entries.reduce(function(sum, entry) { return sum + (entry.annotatedCount || 0); }, 0);
     var totalReviewed = entries.reduce(function(sum, entry) { return sum + (entry.reviewedCount || 0); }, 0);
 
@@ -9191,7 +9199,7 @@ function getTaskTypeLabel() {
     setText('workLogSummaryReviewedValue', String(totalReviewed));
     /* The 每筆平均耗時 sub-line was the reciprocal of the weighted speed, so it
        carried the same forbidden aggregate (AC-1.31) and goes with it. */
-    setMultilineText('workLogSummarySpeedValue', getWorkLogSpeedSummaryLines(entries), 'speed-by-kind');
+    setMultilineText('workLogSummarySpeedValue', getWorkLogSpeedSummaryLines(entries));
   }
 
   function renderWorkLogAlerts(entries) {
