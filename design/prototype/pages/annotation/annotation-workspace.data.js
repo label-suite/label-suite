@@ -3220,8 +3220,19 @@
      arbiter roster is empty. Guarded: refuses and writes nothing unless every
      decision is valid. decisions = [{annotatorId, itemId, choice, reason}];
      the A/B value is derived here, never taken from the caller. */
-  function submitLeaderAdjudication(taskId, runType, sampleId, decisions) {
-    if (taskArbiterRoster(taskId).length) return { ok: false, error: 'arbiter_roster_not_empty' };
+  function submitLeaderAdjudication(taskId, runType, sampleId, decisions, activeArbiterIds) {
+    /* Q46 of 規格 03-03 (label-suite/label-suite#170, maintainer 2026-11-08):
+       the test is whether any arbiter is still ACTIVE, not whether the roster
+       is literally empty. `FR-023`'s own wording is the latter, but it is
+       overridden, because one designated arbiter who has been disabled leaves
+       a non-empty roster and nobody who can rule -- exactly what that clause
+       exists to prevent. This module cannot see member status, so the caller
+       passes the active ids; with none passed it falls back to the literal
+       roster, which is what every caller got before. */
+    var blockingArbiters = Array.isArray(activeArbiterIds)
+      ? activeArbiterIds
+      : taskArbiterRoster(taskId);
+    if (blockingArbiters.length) return { ok: false, error: 'arbiter_roster_not_empty' };
     var listEntry = findTaskListEntry(taskId);
     var outKeys = (listEntry && listEntry.outputTypes) || [];
     var planned = [];

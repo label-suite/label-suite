@@ -8955,12 +8955,17 @@ function getTaskTypeLabel() {
       confirm.textContent = t('leaderAdjudicationConfirm');
       confirm.disabled = true;
       confirm.addEventListener('click', function() {
+        /* Q46: hand the data layer the same effective-arbiter set this section
+           gates itself on, so the two cannot disagree. Before this, the screen
+           asked "is any arbiter active" while the data layer asked "is the
+           roster empty" -- disabling the only arbiter opened the section and
+           made every submit fail. */
         var result = wsData.submitLeaderAdjudication(item.taskId, item.runType, item.sampleId, [{
           annotatorId: item.annotatorId,
           itemId: item.outKey + '::' + item.key,
           choice: choice,
           reason: reason.value.trim()
-        }]);
+        }], getEffectiveArbiterIds(wsData.taskArbiterRoster(item.taskId)));
         if (!result || result.ok === false) return;
         /* The results tab reads a snapshot built at load; refresh it so the
            ruling shows up in history and in the export without a reload. */
