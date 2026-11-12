@@ -440,6 +440,8 @@ ENOENT: no such file or directory, rename
 
 這三條都是**檢查全綠、東西其實壞了**的形狀，維護者 2026-11-12 裁示記進來（[Issue #292](https://github.com/label-suite/label-suite/issues/292)）。它們的共同點是：**驗證的對象和要保證的事不是同一件**，所以綠燈不代表什麼。
 
+同一類還有第四個實例，記在[§建置閘門要重跑確認](#建置閘門要重跑確認)：`pgrep -f 'notecraftapp serve'` 比不到實際的 `notecraftapp.mjs serve`，於是「沒有 serve 在跑」這個結論是錯的——**查的東西和要確認的事不是同一件**。
+
 ### 一、`s.count(pattern) == 1` 不驗縮排
 
 用「這個模式在檔案裡只出現一次」當安全檢查，只保證**唯一**，不保證**縮排對**：6 個空白的模式是 8 個空白那一行的子字串，所以它會命中，而你插進去的那一段少了 2 格。
@@ -454,13 +456,15 @@ ENOENT: no such file or directory, rename
 
 判例（2026-11-12，#195）：`setState` 的兩態切換與 `applyLang` 的三處新增同時消失，是回頭逐條對規格才發現的，當時所有機械檢查都通過。
 
-怎麼做：**逐條 apply-and-write**。每一條編輯自己斷言、自己落地；某一條失敗就只有那一條沒做，而且看得出來是哪一條。
+真正**靜默**的不是「有失敗」——那會拋錯——而是**哪幾條被丟掉**：拋錯的是第四條，而消失的是前三條。
+
+怎麼做：**逐條 apply-and-write**。每一條編輯自己斷言、自己落地；某一條失敗就只有那一條沒做，而且 `git diff` 看得出來是哪幾條落地了。代價是檔案可能停在半套用的狀態（語法合法、行為不一致），但那是**看得見**的半套用，比看不見的全丟掉好。
 
 ### 三、斷言物件屬性不等於斷言畫面行為
 
 測試裡寫 `expect(el.hidden).toBe(true)` 只證明**那個屬性被設了**，不證明**畫面上真的看不到**。CSS 的作者規則會蓋掉瀏覽器預設。
 
-判例（2026-11-12，#195）：`register.html` 在「驗證信已寄出」之後設 `btn.hidden = true`，harness 的 `submitBtn.hidden === true` 通過；但 `.submit-btn { display: flex }` 是作者規則、勝過瀏覽器預設的 `[hidden] { display: none }`，所以按鈕還看得見。由獨立審查抓到，修法是補一條 `.submit-btn[hidden] { display: none; }`。
+判例（2026-11-12，#195）：`design/prototype/pages/account/register.html` 在「驗證信已寄出」之後設 `btn.hidden = true`，harness 的 `submitBtn.hidden === true` 通過；但 `.submit-btn { display: flex }` 是作者規則、勝過瀏覽器預設的 `[hidden] { display: none }`，所以按鈕還看得見。由獨立審查抓到，修法是補一條 `.submit-btn[hidden] { display: none; }`。
 
 怎麼做：斷言要落在**使用者看得到的那一層**（有沒有那個樣式規則、算出來的 `display` 是什麼），不是只落在屬性上；寫下「這個屬性要生效，需要哪一條 CSS 配合」並把那一條也驗進去。
 
