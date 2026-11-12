@@ -544,15 +544,22 @@
     var statusLabel = (langMap.statusBadge && langMap.statusBadge[task.status]) || '';
     var outputTypeKeys = Array.isArray(task.outputTypes) ? task.outputTypes : [];
     var outputTypeLabels = outputTypeKeys.map(getOutputTypeLabel);
-    /* Q9 (label-suite/label-suite#170): only the text this row shows in the
-       current language. Dropped: task.id (an internal id, never rendered),
-       the other language's task name, the raw output-type / run-stage /
-       status keys, and task.updatedAt -- it is an ISO date, so it is not
-       language-dependent text (maintainer, 2026-11-12). */
+    /* Q9 (label-suite/label-suite#170) narrows the scope to the text this row
+       shows in the current language, and drops exactly three things: task.id
+       (an internal id, never rendered), the other language's task name, and
+       task.updatedAt -- an ISO date, so not language-dependent text
+       (maintainer, 2026-11-12).
+       The raw enum values stay: Q19 (settled 2026-05-22, see
+       docs/specs/03-task-management/01-task-list.mdx) requires the output
+       type, run stage and status columns to match the internal value AND the
+       current-language label, and FR-004ad says the same. */
     return [
       state.lang === 'en' ? task.nameEn : task.nameZh,
+      outputTypeKeys.join(' '),
       outputTypeLabels.join(' '),
+      runStage,
       runLabel,
+      task.status,
       statusLabel
     ].filter(Boolean).join(' ').toLowerCase();
   }
@@ -671,6 +678,12 @@
          prototype-only trigger, matching task-detail.html's `?sim_403=1`. */
       trackAnalytics('prototype_task_soft_delete_failed', { task_id: task.id });
       showToast(t('toastDeleteFailed'), true);
+      /* Clear it so the retry the message promises actually succeeds -- the
+         source's clause 8 says the user can retry, and a sticky flag would
+         fail every attempt forever. The next render() drops the parameter
+         from the URL. */
+      simulateDeleteFailure = false;
+      render();
       return;
     }
     task.deletedAt = new Date().toISOString();
@@ -1220,6 +1233,11 @@
        the URL, instead of clamping to the last page. render() still clamps
        when a filter shrinks the result set; that is an adjustment to a valid
        state, not a bad input. */
+    /* getFilteredTasks() filters on language-specific search text, so settle
+       the language first; applyLang() runs below and sets the same value. */
+    state.lang = window.LabelSuiteSharedSidebar
+      ? window.LabelSuiteSharedSidebar.getStoredLang()
+      : 'zh';
     var availableTotal = state.loadFailed ? 0 : getFilteredTasks().length;
     if (!isNaN(offset) && offset >= 0 && offset < availableTotal) state.offset = offset;
   }());
