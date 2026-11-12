@@ -316,9 +316,9 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 
 - **流程圖元件不住在 `docs/` 底下**：規格頁用 `GeneratedFrame` 從 `@notes/components/` 取元件，所以流程圖 PR 通常會同時動到 `docs/specs/` 的頁面與 `.notecraft/components/`。這是允許的，不必每次在留言裡解釋。判例 #175、#176、#177、#193、#198、#199。只修元件、完全不動 `docs/` 也算這一類（判例 #167）。
 - **`.notecraft/plugins.json` 算文件 PR**（維護者 2026-11-11 裁定）。它把 NoteCraft 的外掛對應到 `docs/` 底下的資料檔（例如 `er-diagram-renderer` 對 `**/*.er.json`），它的作用就是決定 `docs/` 底下的那份資料交給哪個 renderer（頂層 `disabled` 的站台級啟停、每條映射的 `options` 也在這裡），依本節「五類的差別是**目的**，不是檔案數」，和它要呈現的那份資料同一類。
-  **原本它不在任何一類裡**：這張表只收了 `.notecraft/components/`，而 `plugins.json` 不在 `components/` 底下。依據：issue #236（以 ER 外掛呈現資料表規劃）——**它還沒有交付 PR，所以這裡不是判例**；交付 PR 合併後再補上真正的判例編號。
+  **原本它不在任何一類裡**：這張表只收了 `.notecraft/components/`，而 `plugins.json` 不在 `components/` 底下。**判例 #246**（issue #236 的交付 PR，`93a8b4f`）：它把 `.notecraft/plugins.json` 與 `docs/diagrams/architecture/` 的三個檔（`database-schema.er.json`、`data-table-dictionary.mdx`、`data-field-inventory.mdx`）一起當文件 PR 合併，四個檔服務同一個目的——決定那份 ER 資料交給哪個 renderer，以及它從哪份盤點來。
   **這一條有程序掛勾**（比照下面規則文件那條）：**`plugins.json` 的每一處改動都要在 PR body 列出，並寫明它服務的是同一個目的**。原因同樣是合併閘第 2 條只比對路徑——而這個檔會被工具改寫：`pnpm docs:serve` 在 `/plugins` 停用一個外掛，dev API 就會改寫它頂層的 `disabled` 陣列（`notecraftapp@1.15.0` 的 `src/dev-api/handlers.mjs` `PUT /api/plugins/:id`）。那種改動與 PR 的目的無關，但在機械閘上會無聲通過。
-  **`.notecraft/plugins/<id>/`（裝進版控的外掛本體）不算文件 PR**，照本節開頭「相依套件」那個例外處理，**不屬五類**，照 `AGENTS.md` 自己的規則走——比照判例 #147（升級 notecraftapp）。維護者 2026-11-11 裁定另開一張相依套件 PR、先合併它，再合併用到它的文件 PR；順序反過來會讓 `plugins.json` 指向沒裝的外掛而 build 失敗。
+  **`.notecraft/plugins/<id>/`（裝進版控的外掛本體）不算文件 PR**，照本節開頭「相依套件」那個例外處理，**不屬五類**，照 `AGENTS.md` 自己的規則走——比照判例 #147（升級 notecraftapp）。維護者 2026-11-11 裁定另開一張相依套件 PR、先合併它，再合併用到它的文件 PR；順序反過來會讓 `plugins.json` 指向沒裝的外掛而 build 失敗。**判例 #245**（`ec1af4f`）就是那張相依套件 PR，比 #246 早 22 分鐘合併。它的範圍是 `.notecraft/plugins/`（外掛本體與 `_types.d.ts`）加上根目錄的 `NOTICE`——**散入版控的第三方程式要同時交代授權**，所以 `NOTICE` 跟著外掛走，不另開一張。
   除了上面這兩條，**不擴及 `.notecraft/` 的其他檔案**：真的碰到別的，照本節開頭那三種例外的方式重新判斷，不要類推。
 - **文件 PR 可以帶著它連帶修到的規則文件**，因為一份給 agent 讀的說明，它的入口本來就在 `AGENTS.md`：新增 `docs/development/` 的說明而同一張 PR 在 `AGENTS.md` 設索引，算文件 PR。判例 #224（#105：`docs/development/agent-rules.md` ＋ `AGENTS.md` 的 Agent Rules Index）。
   這一條是**補出來的**：#221 補五類表時只給了流程設定 PR 這個連帶條款，而文件 PR 沒有，所以 #224 一度掉在五類之間——而那個形狀是 #105 工作項 1 的結構決定的（索引與被索引的文件必須同一張 PR 落地，否則合併後索引會指向不存在的檔案）。維護者 2026-11-10 裁定補上。
