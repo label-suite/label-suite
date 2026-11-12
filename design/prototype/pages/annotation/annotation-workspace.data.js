@@ -3171,7 +3171,13 @@
     var itemKey = arbitrationItemKey(bucketKey, sampleId, decision.itemId);
     var item = readArbitrationItem(itemKey) || { votes: [] };
     var vote = { arbiter_id: arbiterId, choice: decision.choice, voted_at: new Date().toISOString() };
-    if (decision.reason) vote.reason = decision.reason;
+    /* Q45 (label-suite/label-suite#170) 第 8 條: the reason goes into the
+       ruling record 「允許空白」, and the candidate table dictionary has the
+       column NOT NULL allowing an empty string -- so write it unconditionally
+       rather than dropping the key. Written here, not behind a `source`
+       branch, to keep this function's one-record-shape contract; every
+       consumer already reads it as `reason || ''` or through a fallback. */
+    vote.reason = decision.reason || '';
     if (source) vote.source = source;
     var existingIndex = -1;
     item.votes.forEach(function (v, i) {
@@ -3222,7 +3228,13 @@
     var valid = Array.isArray(decisions) && decisions.length > 0 && decisions.every(function (decision) {
       if (!decision || !decision.annotatorId) return false;
       if (ARBITRATION_OUTCOMES.indexOf(decision.choice) === -1) return false;
-      if (decision.choice === 'reject' && !String(decision.reason || '').trim()) return false;
+      /* Q45 (label-suite/label-suite#170): 第 7 條 says a missing reason must
+         not block the submit, and 第 8 條 allows the field to be written
+         blank, so this is no longer a validity condition. Enabling the UI's
+         confirm alone would not have been enough -- this guard refused the
+         whole call with `adjudication_refused`. The exception-pool
+         resolution's own reason requirement is a different step (clause 4
+         sends a 「兩者皆非」 item there) and is untouched. */
       var identity = { annotatorId: decision.annotatorId };
       if (getReviewUnitStatus(taskId, runType, sampleId, identity, outKeys) !== REVIEW_UNIT_STATUS.DISPUTED) return false;
       var item = getDisputeItems(taskId, runType, sampleId, identity, outKeys).filter(function (candidate) {
@@ -3249,7 +3261,9 @@
       var entry = bucket[sampleId] || (bucket[sampleId] = { status: 'pending', answers: {} });
       appendHistoryEvent(
         entry, 'adjudicated', 'project_leader', 'leader adjudication: ' + step.decision.itemId,
-        DEFAULT_PROJECT_LEADER_ID, { reason: step.decision.reason || null, result_snapshot: snapshot }
+        /* Q45 第 8 條, as above: `|| ''` rather than `|| null`, because
+           appendHistoryEvent drops only null/undefined extras. */
+        DEFAULT_PROJECT_LEADER_ID, { reason: step.decision.reason || '', result_snapshot: snapshot }
       );
       writeSubmissionBucket(bucketKey, bucket);
     });
