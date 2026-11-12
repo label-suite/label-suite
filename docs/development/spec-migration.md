@@ -371,9 +371,11 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 
 形狀 B 印出來的路徑在 **`~/.notecraft/` 底下，不是你的 repo**——這是和真 MDX 錯誤最快的分辨方式；真的 MDX 錯誤指的一定是 `docs/` 裡的某一行。但還是以重跑為準。
 
-這條規則**已經有三份副本**，本章節是第四份，也是唯一寫了「怎麼分辨真失敗」的一份：`.github/workflows/ci.yml` 的 `docs-site` job（`… --rebuild || … --rebuild`，註解指向 #172）、[`.claude/agents/ops.md`](../../.claude/agents/ops.md) 與 [`.claude/agents/technical-writer.md`](../../.claude/agents/technical-writer.md) 的檢查清單。`openspec/config.yaml` 的 apply 階段也要求跑這道 build，但沒提重跑。
+這條規則**另外有兩份副本**，本章節是第三份，也是唯一寫了「怎麼分辨真失敗」的一份：[`.claude/agents/ops.md`](../../.claude/agents/ops.md) 與 [`.claude/agents/technical-writer.md`](../../.claude/agents/technical-writer.md) 的檢查清單。`openspec/config.yaml` 的 apply 階段也要求跑這道 build，但沒提重跑。
 
-**真正修掉 #172 之後，這四處的重跑要一起拿掉**（CI 那一處要另一類 PR——本文件 §PR 的變更範圍 明寫文件 PR 不得動 `.github/`）。
+**CI 那一份已經拿掉了**（2026-11-12，#172）：`.github/workflows/ci.yml` 的 `docs-site` job 原本寫 `… --rebuild || … --rebuild`，依據就是本節的實測數字。根因查到之後那個依據不成立了——併發來自本機的 `serve` watcher，而 CI 從不跑 `serve`，所以那個 `||` 只會遮住一個真的失敗兩次的 build，正好是下面表格第二列警告的那一種。
+
+**真正修掉 #172 之後，剩下這三處的重跑要一起拿掉。**
 
 ### 併發的 build 會撞在一起，而且分得出哪一種併發
 

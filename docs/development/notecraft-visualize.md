@@ -106,6 +106,9 @@ function useMeasuredWidth(min: number) {
 
 ## 驗證
 
-生成或修改元件後，觀察開著的 `pnpm docs:serve`，或跑 `pnpm exec notecraftapp build docs`。
+生成或修改元件後，觀察開著的 `pnpm docs:serve`，**或**跑 `pnpm exec notecraftapp build docs`。
 **只改了元件、沒改 MDX 時**，快取不會察覺，要跑 `pnpm exec notecraftapp build --rebuild docs`。
 在瀏覽器實際操作每個互動（tab、按鈕、逐步播放）再算完成。
+
+⚠️ **兩條路徑不要同時走。** `docs:serve` 的 `--watch` 預設開著，存檔會觸發它自己的一次 build；它和你手動跑的那一次共用同一個 `.astro/`，沒有跨行程鎖，其中一個會失敗（[#172](https://github.com/label-suite/label-suite/issues/172)，同路徑併發實測 3／3 恰有一個失敗）。要手動跑 `--rebuild` 之前先停掉 `docs:serve`，或那一輪用 `--no-watch` 開它。
+**這不是叫人別用 `docs:serve`**——用 watcher 驗就別再手動 build，要手動 build 就先讓 watcher 停下來。判準與怎麼分辨真失敗見 [spec-migration.md §建置閘門要重跑確認](./spec-migration.md#建置閘門要重跑確認)。
