@@ -66,11 +66,18 @@ jobs:
       # The build is the only gate that catches an MDX compile error; check-specs
       # has passed three times on a page the build then refused.
       #
-      # Known bug #172: the first --rebuild after an edit fails intermittently
-      # and the second always passes (measured 3 failures in 4 trials). Retry
-      # once rather than fail a pull request on a bug unrelated to its change.
+      # No retry here on purpose. This step used to run the build twice
+      # (`... || ...`) because of issue #172, where the first --rebuild after an
+      # edit fails intermittently. That bug's root cause turned out to be a
+      # local `notecraftapp serve docs` watcher racing a manual build over the
+      # same `.astro/` directory, with no lock between the two processes. CI
+      # never runs `serve`, so it cannot hit it: the docs-site job's first
+      # attempt has not failed once in the six runs checked on 2026-11-12, nor
+      # in the clean-checkout run recorded on the issue. Retrying would only
+      # mask a build that genuinely fails twice -- the second row of the
+      # warning table in the issue itself.
       - name: Build the docs site
-        run: pnpm exec notecraftapp build docs --rebuild || pnpm exec notecraftapp build docs --rebuild
+        run: pnpm exec notecraftapp build docs --rebuild
 
   specs:
     name: specs
