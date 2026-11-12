@@ -5195,7 +5195,13 @@ function interpolate(template, payload) {
     setText('currentStdLabel', t('currentStdLabel'));
     setText('officialPoolLabel', t('officialPoolLabel'));
     renderStatusStepperLabels();
-    setText('labelSamplingValueControl', t('labelSamplingValueControl'));
+    /* Q21 (label-suite/label-suite#170): §抽樣設定 第 17 條 -- 「檢視狀態的
+       『每回合抽樣筆數』是必填，標籤旁要有紅色 `*`」. The edit label below
+       already had it; the display label did not, which is the one half
+       §設定分頁 第 22 條 ("顯示模式裡凡是必填的欄位") was missing. The other
+       three rows of this block are not listed as required, so they keep
+       setText. */
+    setRequiredLabel('labelSamplingValueControl', t('labelSamplingValueControl'));
     setText('labelMinAnnotatorsControl', t('labelMinAnnotatorsControl'));
     setText('totalSamplesLabel', t('totalSamplesLabel'));
     setText('labelIsolationControl', t('labelIsolationControl'));
