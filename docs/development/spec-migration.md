@@ -341,6 +341,14 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 
 `pnpm exec notecraftapp build docs --rebuild` 在編輯 `docs/` 之後的**第一次執行會間歇性失敗**，第二次起通過（[#172](https://github.com/label-suite/label-suite/issues/172)，實測 1 PASS／3 FAIL）。
 
+**根因已經查到（2026-11-12）：它就是下面那一節的「同路徑併發」，第二個 build 是 `notecraftapp serve docs` 的背景 watcher。** `serve` 的 `--watch` **預設是 `true`**（`bin/notecraftapp.mjs:786`），所以只要有人開著 `pnpm docs:serve`，每次存檔 `docs/**` 都會觸發它自己的一次 `atomicRebuild()`——而你手動跑的那一次正好同時開始。「編輯之後的第一次」之所以特別，不是因為編輯，而是因為**編輯就是 watcher 被觸發的那一刻**。
+
+所以**最便宜的對策不是重跑，是不要和 watcher 同時 build**：要手動跑 `--rebuild` 之前先停掉 `pnpm docs:serve`，或那一輪用 `--no-watch` 開它。
+
+**這不是叫人別用 `docs:serve`。** 它的 watcher 本身就是一條合法的驗證路徑——[`content-visualize`](../../.claude/skills/content-visualize/SKILL.md) 正是靠「觀察使用者開著的 `docs:serve`，存檔後 watcher 自己 rebuild、SSE 推 auto reload」來驗元件的。要避免的只有**兩條路徑同時走**：用 watcher 驗就別再手動 build，要手動 build 就先讓 watcher 停下來。
+
+這移掉的是目前已知的唯一併發來源；**沒有另外做「關掉 serve 之後連跑 N 次全綠」的驗證**，所以這裡不保證第一次一定過。重跑規則留著當保險。
+
 **規則：第一次失敗就再跑一次，只跑一次。** 第二次綠就算這一道閘通過；**兩次都失敗才是真的壞了**，去找真正的錯。
 
 這一條寫下來是因為兩個方向都會誤讀，而**第二種更危險**：
@@ -350,7 +358,18 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 | 把第一次的失敗當成真的失敗 | 白花時間找一個不存在的 MDX 錯誤 |
 | 把第二次的成功當成「一次就綠」 | 哪天真的有一個**穩定**的 build 失敗，會被當成同一個偶發而重跑帶過 |
 
-**怎麼分辨真失敗**：真的 MDX 錯誤會印出檔案與位置、而且重跑**一模一樣地**再失敗一次。判例（2026-11-11）：一個標題裡放了半形雙引號，錯誤是 `docs/tmp-title-edge.mdx:14:22 Unexpected content after expression`，連跑兩次都相同——那不是 #172。#172 的形狀沒有檔案位置，堆疊收在 astro 的模組解析（`ModuleJob._link`／`ModuleLoader.import`），而且重跑就過。
+**怎麼分辨真失敗**：唯一可靠的判準是 **重跑會不會一模一樣地再失敗一次**。真的 MDX 錯誤會穩定重現；#172 重跑就過。
+
+判例（2026-11-11）：一個標題裡放了半形雙引號，錯誤是 `docs/tmp-title-edge.mdx:14:22 Unexpected content after expression`，連跑兩次都相同——那不是 #172。
+
+⚠️ **「有沒有印出檔案位置」不是判準，這一條 2026-11-12 更正過。** 原本寫「真的 MDX 錯誤會印出檔案與位置，#172 的形狀沒有檔案位置」。**#172 有兩種形狀，其中一種印得出檔案路徑**：
+
+| 形狀 | 錯誤 | 落在哪個共用資源 |
+| :--- | :--- | :--- |
+| A | `Cannot find module …/chunks/*.mjs`，堆疊收在 `ModuleJob._link`／`ModuleLoader.import`，**沒有檔案位置** | staging 目錄 `node_modules/.notecraft-build/<雜湊>` |
+| B | `ENOENT: no such file or directory, rename '…/.astro/content-modules.mjs.tmp' -> '…/.astro/content-modules.mjs'`，堆疊收在 `MutableDataStore.writeModuleImports`，**印得出完整路徑** | `~/.notecraft/app-<版本>/.astro/` |
+
+形狀 B 印出來的路徑在 **`~/.notecraft/` 底下，不是你的 repo**——這是和真 MDX 錯誤最快的分辨方式；真的 MDX 錯誤指的一定是 `docs/` 裡的某一行。但還是以重跑為準。
 
 這條規則**已經有三份副本**，本章節是第四份，也是唯一寫了「怎麼分辨真失敗」的一份：`.github/workflows/ci.yml` 的 `docs-site` job（`… --rebuild || … --rebuild`，註解指向 #172）、[`.claude/agents/ops.md`](../../.claude/agents/ops.md) 與 [`.claude/agents/technical-writer.md`](../../.claude/agents/technical-writer.md) 的檢查清單。`openspec/config.yaml` 的 apply 階段也要求跑這道 build，但沒提重跑。
 
@@ -358,7 +377,7 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 
 ### 併發的 build 會撞在一起，而且分得出哪一種併發
 
-**同一個 `docs/` 路徑的兩個 build 同時跑，後啟動的那個會失敗。** 2026-11-11 做了對照實驗，各 3 回：
+**同一個 `docs/` 路徑的兩個 build 同時跑，其中一個會失敗。** 2026-11-11 做了對照實驗，各 3 回：
 
 | 實驗 | 結果 |
 | :--- | :--- |
@@ -374,7 +393,32 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 
 **那個 `node_modules` 是 app 自己的，不是你的 repo。** `buildCmd` 呼叫 `ensureBuild(packageRoot, …, process.cwd())`（`:758`），所以函式裡的 `cwd` 是 app 根、使用者的目錄是另一個參數；astro 也是從 app 根載入的（`:392`）。**repo 的 `node_modules` 完全不參與 build**——`<repo>/node_modules/.notecraft-build` 根本不存在，別去那裡找。上游自己的註解（`:571-572`）就寫「以快取 hash 命名，不同筆記資料夾可並行」。
 
-**還有兩份不帶雜湊的共用可變資源**：`~/.notecraft/app-<版本>/.astro/`（content layer 的 `dotAstroDir`，每次 build 都重寫）與 `node_modules/.vite/`。上面那 3 回不同路徑的併發沒有因為它們失敗，但 **3 回不等於所有時序都安全**；真的要大量平行建置時，這是第一個要懷疑的地方。
+**還有幾份不帶雜湊的共用可變資源**：`~/.notecraft/app-<版本>/.astro/`（content layer 的 `dotAstroDir`，每次 build 都重寫）、`node_modules/.vite/`，以及**快取目錄自己的輪替區** `~/.notecraft/cache/<雜湊>/` 底下的 `dist`／`dist.next`／`dist.prev`——`atomicRebuild()` 開頭對後兩者無條件 `fs.rm`（`:594-597`）、結尾的兩次 rename（`:608-612`）同樣沒有互斥。上面那 3 回不同路徑的併發沒有因為它們失敗，但 **3 回不等於所有時序都安全**；真的要大量平行建置時，這是第一個要懷疑的地方。
+
+**但 2026-11-12 的複驗顯示 `.astro/` 確實會害死同路徑的併發**，而且是當天抓到的唯一形狀：同時開兩個 `build --rebuild`，**3／3 每組正好一個失敗**，三次的 `Caused by` 逐字相同——
+
+```
+ENOENT: no such file or directory, rename
+  '…/.notecraft/app-1.15.0/.astro/content-modules.mjs.tmp'
+  -> '…/.notecraft/app-1.15.0/.astro/content-modules.mjs'
+  at MutableDataStore.writeModuleImports
+```
+
+兩個 build 各自寫同一個 `.tmp` 再 rename，先完成的把它改名走，後到的就 ENOENT。所以同路徑併發**至少同時踩到兩份共用資源**（staging 與 `.astro/`），兩者各自產生目前觀察到的兩種失敗形狀（見上一節那張表）。輪替區是第三份，只是兩次實驗都走不到它——總有一個 build 在 astro 階段就先死了。不同路徑只分開了 staging，`.astro/` 仍然共用——上面「3 回不等於所有時序都安全」那句話要當真。
+
+### 第二個 build 從哪裡來：`serve` 的 watcher
+
+平常不會有人手動開兩個 build，但**`notecraftapp serve docs` 本身就是第二個 build**：
+
+| 事實 | 出處 |
+| :--- | :--- |
+| `serve` 的 `--watch` **預設 `true`**，開著就有背景 rebuild | `:786-790` |
+| watcher 觸發時呼叫的是**同一個** `atomicRebuild(cwd, notesDir, cacheDir, userCwd)` | `startBackgroundRebuild()` → `runOnce()`，`:863`、`:906` |
+| 它的 `rebuilding`／`pending` 旗標只讓 watcher **和自己**排隊，不知道有別的行程在 build | `:897`、`:927` |
+
+所以「編輯 `docs/` 之後的第一次失敗」並不是編輯本身有什麼特別，而是**編輯就是 watcher 被觸發的那一刻**；你手動跑的那一次剛好和它撞上。這也解釋了為什麼 **CI 不會踩到**（CI 沒有 `serve` 在跑），以及為什麼它是**間歇**的——兩邊的 content-sync 階段都落在 build 的最前面一小段（整次 build 約 25～30 秒，這一段目測只有一兩秒，**沒有實際量過**），要撞在同一個瞬間才會壞。
+
+**一個否定結果也記下來**：2026-11-12 另外做過 A／B——「編輯後立刻 build」對「編輯後等 watcher 跑完才 build」，各 3 回，**兩邊都 3／3 PASS，沒有分開**（當時 `serve` 確實開著、watcher 也確實在觸發）。所以**不能**說「編輯後立刻 build 就會失敗」；watcher 有 300ms debounce 又有自己的佇列，它那一輪落在什麼時間點不受你控制。
 
 **實務規則：會和別的 build 平行跑的 agent，給它自己的 git worktree**（不同路徑 → 不同雜湊）；否則請它不要跑 build，改讀既有產物。本 loop 的獨立審查會平行跑，所以這條直接決定每次派工怎麼下指示。
 
