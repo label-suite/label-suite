@@ -72,7 +72,8 @@
       return; // no matchMedia -- nothing to listen to
     }
     if (!mq) return;
-    var onChange = function () {
+    /* Not named onChange: that name is already the module's subscribe function. */
+    var onSystemChange = function () {
       if (getStoredChoice() !== 'system') return;
       var resolved = resolveChoice('system');
       applyResolved(resolved);
@@ -81,8 +82,8 @@
       });
     };
     /* Safari below 14 has no addEventListener on MediaQueryList. */
-    if (mq.addEventListener) mq.addEventListener('change', onChange);
-    else if (mq.addListener) mq.addListener(onChange);
+    if (mq.addEventListener) mq.addEventListener('change', onSystemChange);
+    else if (mq.addListener) mq.addListener(onSystemChange);
   }
 
   // Apply on script load (the inline <head> snippet has already set

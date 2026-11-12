@@ -530,6 +530,10 @@
           }, 2000);
         }
       } else {
+        /* 連結不能用就沒有帳號被建立，所以不能留著登入旗標：留著的話按下
+           「重新註冊」會被 register.html 的 redirectIfLoggedIn() 立刻導去儀表板，
+           註冊頁根本看不到。 */
+        window.LabelSuiteSharedSidebar.clearLoggedIn();
         window.LabelSuiteAnalytics.track('prototype_verify_email_link_unusable', {
           ...getTrackingContext(),
         });

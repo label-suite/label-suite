@@ -1225,6 +1225,8 @@
         resendLabel:             '重新寄送驗證信',
         toastSaveSuccess:        '儲存成功',
         toastSaveSuccessDesc:    '個人資料已更新',
+        toastAvatarFailed:       '頭像沒有存成功',
+        toastAvatarFailedDesc:   '瀏覽器的儲存空間放不下這張圖，請換一張小一點的；其他欄位已經存好了',
         toastPwSuccess:          '密碼修改成功',
         toastPwSuccessDesc:      '其他裝置 session 已失效',
         toastPwSetSuccess:       '密碼設定成功',
@@ -1319,6 +1321,8 @@
         resendLabel:             'Resend verification email',
         toastSaveSuccess:        'Saved',
         toastSaveSuccessDesc:    'Profile updated successfully',
+        toastAvatarFailed:       'Photo not saved',
+        toastAvatarFailedDesc:   'Your browser has no room for this image. Pick a smaller one — the other fields were saved',
         toastPwSuccess:          'Password Changed',
         toastPwSuccessDesc:      'Other device sessions have been invalidated',
         toastPwSetSuccess:       'Password Set',
@@ -1395,7 +1399,7 @@
         'backToProfileBtn', 'resendLabel',
         'googleSectionTitle', 'googleSectionDesc', 'googleStatusUnlinked',
         'googleConsequence', 'googleLinkLabel', 'googleStatusLinked',
-        'googleAccountEmail', 'googleNoUnlink',
+        'googleNoUnlink',
         'notifSectionTitle', 'notifSectionDesc',
         'notifThEvent', 'notifThInApp', 'notifThEmail',
         'notifE1Name', 'notifE1Trigger',
@@ -1538,8 +1542,12 @@
       setTimeout(() => {
         setBtnLoading('saveProfileBtn', false);
         document.getElementById('userName').textContent = name;
-        commitAvatar();
-        showToast('success', t('toastSaveSuccess'), t('toastSaveSuccessDesc'));
+        if (commitAvatar()) {
+          showToast('success', t('toastSaveSuccess'), t('toastSaveSuccessDesc'));
+        } else {
+          /* 其他欄位已經存好了，只有圖沒存進去——說成功會是假的。 */
+          showToast('error', t('toastAvatarFailed'), t('toastAvatarFailedDesc'));
+        }
         window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_profile_info_saved');
       }, 600);
     }
@@ -1768,18 +1776,11 @@
       setTimeout(function () { setState('sso'); }, 600);
     }
 
-    var AVATAR_STORAGE_KEY = 'label-suite-profile-avatar';
     var pendingAvatar;
 
+    /* 存放的地方在 sidebar.js：側欄每一頁都在，讀取與清除歸它，這一頁只負責寫入。 */
     function readSavedAvatar() {
-      try { return localStorage.getItem(AVATAR_STORAGE_KEY) || null; } catch (_e) { return null; }
-    }
-
-    function writeSavedAvatar(dataUrl) {
-      try {
-        if (dataUrl) localStorage.setItem(AVATAR_STORAGE_KEY, dataUrl);
-        else localStorage.removeItem(AVATAR_STORAGE_KEY);
-      } catch (_e) { /* private mode / quota -- the screen still shows the change */ }
+      return window.LabelSuiteSharedSidebar.readStoredAvatar();
     }
 
     /* Paints one avatar host (the page preview or the sidebar chip) from a data
@@ -1820,16 +1821,22 @@
       refreshAvatarPreview();
     }
 
-    /* Called by handleSaveProfile() once its validation has passed. */
+    /* Called by handleSaveProfile() once its validation has passed. Returns false
+       when the picked image could not be stored, so the caller does not claim a
+       save that did not happen: a data URL is about a third larger than the file
+       and localStorage holds roughly 5 MB, so an image the screen accepts (the
+       hint says 5 MB) can still fail to fit. The staged value is kept in that
+       case, so the preview keeps showing what the user picked. */
     function commitAvatar() {
-      if (pendingAvatar === undefined) return;
-      writeSavedAvatar(pendingAvatar);
+      if (pendingAvatar === undefined) return true;
+      if (!window.LabelSuiteSharedSidebar.writeStoredAvatar(pendingAvatar)) return false;
       pendingAvatar = undefined;
       refreshAvatarPreview();
       window.LabelSuiteSharedSidebar.updateUserChip({
         avatarImage: readSavedAvatar(),
         avatarLabel: readSavedAvatar() ? undefined : defaultInitials(),
       });
+      return true;
     }
 
     document.getElementById('avatarInput').addEventListener('change', function(e) {

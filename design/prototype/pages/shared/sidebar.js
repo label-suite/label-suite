@@ -47,6 +47,33 @@
    * 讓同一個地方負責設與清。 */
   var LOGGED_IN_STORAGE_KEY = 'labelsuite.loggedIn';
 
+  /* label-suite/label-suite#195: 規格 01-04 §頭像 第 2、5、6 條要求存好的頭像在側欄
+   * 看得到、重新整理之後還在。側欄在每一頁都掛著，所以讀取與清除住在這裡，個人設定頁
+   * 只負責寫入；原本只有那一頁會畫，換頁之後 chip 又退回縮寫。
+   * 清除跟著登出走，比照旁邊的 clearStoredSystemRole()（FR-018／ADR-037：不讓下一個
+   * 人繼承上一位的東西）。 */
+  var AVATAR_STORAGE_KEY = 'label-suite-profile-avatar';
+
+  function readStoredAvatar() {
+    try { return window.localStorage.getItem(AVATAR_STORAGE_KEY) || null; } catch (error) { return null; }
+  }
+
+  /* 回傳是否真的寫進去了。data URL 比原檔大約三分之一，而 localStorage 大約只有
+     5 MB，所以一張合格的 5 MB 圖存不下——呼叫端要據此告訴使用者，不能顯示成功。 */
+  function writeStoredAvatar(dataUrl) {
+    try {
+      if (dataUrl) window.localStorage.setItem(AVATAR_STORAGE_KEY, dataUrl);
+      else window.localStorage.removeItem(AVATAR_STORAGE_KEY);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function clearStoredAvatar() {
+    try { window.localStorage.removeItem(AVATAR_STORAGE_KEY); } catch (error) { /* private mode */ }
+  }
+
   function markLoggedIn() {
     try { window.localStorage.setItem(LOGGED_IN_STORAGE_KEY, '1'); } catch (error) { /* private mode */ }
   }
@@ -66,6 +93,12 @@
    *     四頁都會把你導開，而這四頁上沒有側欄可以按登出，你就回不來了。
    *   `?sim_logged_in=1` 無論旗標如何都導走，方便直接演示這一條。 */
   function redirectIfLoggedIn(dashboardHref) {
+    /* 規格 01-01 Q3 說的是「已登入的人**開那一頁**」。規格書裡的線框不是在用
+       產品，是在看畫面：`PrototypeFrame` 用 iframe 載入同一個 origin
+       （`127.0.0.1:4331`）的頁面，所以旗標一寫下去，01-01、01-02、01-03 共 29 個
+       線框都會在框內跳走，讀者就看不到規格正在描述的那個畫面。元件只吃 `page`，
+       沒辦法替線框加上逃生口參數，所以這裡自己判斷。 */
+    if (window.top !== window.self) return false;
     var params;
     try { params = new URLSearchParams(window.location.search); } catch (error) { params = null; }
     var forceOut = params && params.get('sim_logged_out') === '1';
@@ -2133,7 +2166,7 @@
     // issue singyichen/label-suite#946: userName must land in the DOM via textContent, not the
     // innerHTML string above, so a malicious userName can't be parsed as
     // markup. Reuses updateUserChip()'s existing safe-write path (DRY).
-    updateUserChip({ userName: resolveUserName(opts) });
+    updateUserChip({ userName: resolveUserName(opts), avatarImage: readStoredAvatar() });
     applySystemRole(resolveSystemRole(opts));
     var initialCollapsed = typeof opts.sidebarCollapsed === 'boolean'
       ? opts.sidebarCollapsed
@@ -2157,6 +2190,7 @@
         /* label-suite/label-suite#195: 清掉登入旗標，否則登出之後那四頁仍然會把
            使用者導回儀表板——登出就變成按不動。 */
         clearLoggedIn();
+        clearStoredAvatar();
         try {
           window.sessionStorage.removeItem(WORKSPACE_TAB_STORAGE_KEY);
           window.sessionStorage.removeItem(WORKSPACE_TAB_SCROLL_STORAGE_KEY);
@@ -2584,6 +2618,9 @@
     clearLoggedIn: clearLoggedIn,
     isLoggedIn: isLoggedIn,
     redirectIfLoggedIn: redirectIfLoggedIn,
+    readStoredAvatar: readStoredAvatar,
+    writeStoredAvatar: writeStoredAvatar,
+    clearStoredAvatar: clearStoredAvatar,
     BYPASS_WORDING: BYPASS_WORDING,
     ONE_TIME_LINK_WORDING: ONE_TIME_LINK_WORDING,
   };

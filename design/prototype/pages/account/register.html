@@ -288,6 +288,9 @@
       transition: background 0.15s, transform 0.1s;
       margin-top: 4px;
     }
+    /* `display: flex` above beats the UA's `[hidden] { display: none }`, so the
+       sent-mail state's `btn.hidden = true` would otherwise do nothing. */
+    .submit-btn[hidden] { display: none; }
     .submit-btn:hover:not(:disabled) {
       background: var(--color-cta-hover);
     }

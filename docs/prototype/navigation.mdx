@@ -228,6 +228,8 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 | Outgoing | 側欄系統管理 | `/admin/user-management` |
 | Outgoing | 登出 | `/account/login` |
 | Inline | 儲存個人資料 / 通知設定 | 停留，顯示 Toast 或即時更新狀態 |
+| Inline | 選圖或點「移除頭像」 | 停留，只改預覽；要按「儲存」才生效（規格 01-04 §頭像）|
+| Inline | 點「連結 Google 帳號」 | 停留，第五個區塊切成已連結狀態（規格 01-04 §連結 Google 帳號）|
 
 ---
 
@@ -448,6 +450,7 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.2.1 | 2026-11-12 | `/account/profile` 補上頭像與「連結 Google 帳號」兩條 Inline（issue label-suite/label-suite#195 第 4、6 項）。 |
 | 1.2.0 | 2026-11-12 | 新增 `/account/verify-email`（issue label-suite/label-suite#195，規格 01-02 Q1、Q2）：註冊送出只寄驗證信，帳號在連結被點過時才建立。同步四個帳號頁「已登入直接前往儀表板」的 Outgoing（規格 01-01 Q3），以及註冊頁移除「Email 已被使用」後的 Inline。 |
 | 1.1.1 | 2026-08-27 | `/components-showcase.html` 元件清單新增 Review Status Track（issue singyichen/label-suite#456 審核導覽元件）。 |
 | 1.1.0 | 2026-08-20 | 新增 `/components-showcase.html`（Design System Showcase）條目：living styleguide 參考頁，不在產品導航流程內。 |
