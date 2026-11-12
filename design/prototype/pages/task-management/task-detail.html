@@ -4556,7 +4556,6 @@
     section.id = panelId;
     section.className = 'panel hidden';
     section.setAttribute('data-panel-load-failed', '');
-    section.setAttribute('aria-live', 'polite');
     var owner = document.querySelector('.admin-tabs [aria-controls="' + panelId + '"]');
     if (owner) {
       section.setAttribute('role', 'tabpanel');
@@ -4568,6 +4567,10 @@
     section.appendChild(title);
     var desc = document.createElement('p');
     desc.className = 'status-hint';
+    /* `role="alert"` rather than aria-live on the section: the section is
+       built hidden and its text is written while hidden, and a live region
+       does not announce because it became visible. */
+    desc.setAttribute('role', 'alert');
     desc.setAttribute('data-panel-load-error-desc', '');
     section.appendChild(desc);
     var retry = document.createElement('button');
@@ -4596,6 +4599,19 @@
 
   /* The five per-panel renders below each assume their own panel is in the
      DOM; a placeholder has none of their elements. */
+  /* Q5: bindEvents() wires 43 controls by id, 29 of them inside the six
+     injected panels. A panel that failed to load leaves only its placeholder,
+     so a bare `getElementById(x).addEventListener` threw there and aborted the
+     whole post-load sequence -- the skeleton never came down and every
+     listener after the throw stayed unbound. Binding through this helper
+     skips what is not there and leaves the rest of the page working.
+     Deliberately not a try/catch around bindEvents(): that would stop the
+     throw but still leave controls bound only up to the throw point. */
+  function on(id, type, handler) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener(type, handler);
+  }
+
   function panelReady(tabName) {
     var el = document.getElementById(TAB_PANEL_IDS[tabName]);
     return !!el && !el.hasAttribute('data-panel-load-failed');
@@ -7412,7 +7428,12 @@ function getTaskTypeLabel() {
   }
 
   function renderOverview() {
-    if (!panelReady('overview')) return;
+    /* No panelReady guard here on purpose. Despite the name this renders the
+       settings summary -- all twelve ids it writes live in settings.html --
+       so gating it on the overview panel blanked a settings panel that had
+       loaded fine. Its whole call tree is null-safe already (setText and
+       renderSettingsSummaryRows both return early on a missing element), so
+       it needs no guard of its own. */
     var taskName = getCurrentTaskName();
     var datasetSummary = TASK_DATA.datasetTotal + (state.lang === 'zh' ? ' 筆' : ' items');
     var settingsSummary = getSettingsSummary();
@@ -11427,7 +11448,7 @@ function getTaskTypeLabel() {
       trackEvent('prototype_tab_switched', { tab: 'overview' });
     });
 
-    document.getElementById('tabSettings').addEventListener('click', function() {
+    on('tabSettings', 'click', function() {
       if (!setTabByRole('settings')) return;
       renderTabs();
       trackEvent('prototype_tab_switched', { tab: 'settings' });
@@ -11451,7 +11472,7 @@ function getTaskTypeLabel() {
       if (document.querySelector('.admin-tabs [role="tab"].active') !== before) next.focus();
     });
 
-    document.getElementById('tabAnnotationResults').addEventListener('click', function() {
+    on('tabAnnotationResults', 'click', function() {
       var allowed = setTabByRole('annotation-results');
       if (!allowed) return;
       renderTabs();
@@ -11688,7 +11709,7 @@ function getTaskTypeLabel() {
     }
 
     /* issue singyichen/label-suite#1403: delegated on the card so the retry button inside the iaa-computed row is covered too. */
-    document.getElementById('nextStepCard').addEventListener('click', function(e) {
+    on('nextStepCard', 'click', function(e) {
       if (e.target.id === 'publishDryRunBtn') {
         trackEvent('prototype_cta_clicked', { cta: 'publish_dry_run' });
         if (isTrialRoundCreationBlocked()) return;
@@ -11718,12 +11739,12 @@ function getTaskTypeLabel() {
       }
     });
 
-    document.getElementById('settingsSectionNav').addEventListener('click', function(e) {
+    on('settingsSectionNav', 'click', function(e) {
       var tab = e.target.closest('[role="tab"]');
       if (tab) selectSettingsSection(tab.dataset.section);
     });
 
-    document.getElementById('settingsSectionNav').addEventListener('keydown', function(e) {
+    on('settingsSectionNav', 'keydown', function(e) {
       var step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
       var isEdge = e.key === 'Home' || e.key === 'End';
       if ((!step && !isEdge) || e.altKey || e.ctrlKey || e.metaKey) return;
@@ -11735,19 +11756,19 @@ function getTaskTypeLabel() {
       if (selectSettingsSection(next.slug)) document.getElementById('settingsTab-' + next.slug).focus();
     });
 
-    document.getElementById('settingsLeaveCancelBtn').addEventListener('click', closeSettingsLeaveConfirm);
+    on('settingsLeaveCancelBtn', 'click', closeSettingsLeaveConfirm);
 
-    document.getElementById('settingsLeaveConfirmBtn').addEventListener('click', function() {
+    on('settingsLeaveConfirmBtn', 'click', function() {
       var proceed = pendingSettingsLeave;
       closeSettingsLeaveConfirm();
       if (proceed) proceed();
     });
 
-    document.getElementById('riskCancelBtn').addEventListener('click', function() {
+    on('riskCancelBtn', 'click', function() {
       closeRiskModal();
     });
 
-    document.getElementById('riskConfirmBtn').addEventListener('click', function() {
+    on('riskConfirmBtn', 'click', function() {
       state.isolationConfirmed = true;
       trackEvent('prototype_isolation_risk_confirmed');
       var action = state.pendingAction;
@@ -11756,16 +11777,16 @@ function getTaskTypeLabel() {
       if (action === 'publishOfficialRun') publishOfficialRun();
     });
 
-    document.getElementById('riskModal').addEventListener('click', function(e) {
+    on('riskModal', 'click', function(e) {
       if (e.target.id === 'riskModal') {
         closeRiskModal();
       }
     });
 
-    document.getElementById('noChangeCheckbox').addEventListener('change', syncNoChangeFields);
-    document.getElementById('trialRoundRevisionCancelBtn').addEventListener('click', closeTrialRoundRevisionModal);
-    document.getElementById('trialRoundRevisionConfirmBtn').addEventListener('click', confirmTrialRoundRevision);
-    document.getElementById('trialRoundRevisionModal').addEventListener('click', function(e) {
+    on('noChangeCheckbox', 'change', syncNoChangeFields);
+    on('trialRoundRevisionCancelBtn', 'click', closeTrialRoundRevisionModal);
+    on('trialRoundRevisionConfirmBtn', 'click', confirmTrialRoundRevision);
+    on('trialRoundRevisionModal', 'click', function(e) {
       if (e.target.id === 'trialRoundRevisionModal') {
         closeTrialRoundRevisionModal();
       }
@@ -11782,15 +11803,15 @@ function getTaskTypeLabel() {
       });
     }
 
-    document.getElementById('memberActionCancelBtn').addEventListener('click', function() {
+    on('memberActionCancelBtn', 'click', function() {
       closeMemberActionModal();
     });
 
-    document.getElementById('memberActionConfirmBtn').addEventListener('click', function() {
+    on('memberActionConfirmBtn', 'click', function() {
       executeMemberAction();
     });
 
-    document.getElementById('memberActionModal').addEventListener('click', function(e) {
+    on('memberActionModal', 'click', function(e) {
       if (e.target.id === 'memberActionModal') {
         closeMemberActionModal();
       }
@@ -11857,101 +11878,101 @@ function getTaskTypeLabel() {
       });
     }
 
-document.getElementById('memberProgressSort').addEventListener('change', function(e) {
+on('memberProgressSort', 'change', function(e) {
       state.progressSort = e.target.value;
       renderAnnotationProgress();
       trackEvent('prototype_progress_sort_changed', { sort_by: state.progressSort });
     });
 
-    document.getElementById('memberDetailCloseBtn').addEventListener('click', function() {
+    on('memberDetailCloseBtn', 'click', function() {
       document.getElementById('memberDetailSection').classList.add('hidden');
     });
 
-    document.getElementById('mdPrevPageBtn').addEventListener('click', function() {
+    on('mdPrevPageBtn', 'click', function() {
       if (state.mdPage > 1) { state.mdPage--; renderMdDetailPage(); }
     });
 
-    document.getElementById('mdNextPageBtn').addEventListener('click', function() {
+    on('mdNextPageBtn', 'click', function() {
       var totalPages = Math.max(1, Math.ceil(state.mdRows.length / state.mdPageSize));
       if (state.mdPage < totalPages) { state.mdPage++; renderMdDetailPage(); }
     });
 
-    document.getElementById('mdPageSizeSelect').addEventListener('change', function(e) {
+    on('mdPageSizeSelect', 'change', function(e) {
       state.mdPageSize = parseInt(e.target.value, 10) || 20;
       state.mdPage = 1;
       renderMdDetailPage();
     });
 
-    document.getElementById('progressBackToOverviewBtn').addEventListener('click', function() {
+    on('progressBackToOverviewBtn', 'click', function() {
       setTabByRole('overview');
       renderTabs();
       trackEvent('prototype_tab_switched', { tab: 'overview', source: 'progress_empty_state_cta' });
     });
 
-    document.getElementById('workLogBackToOverviewBtn').addEventListener('click', function() {
+    on('workLogBackToOverviewBtn', 'click', function() {
       setTabByRole('overview');
       renderTabs();
       trackEvent('prototype_tab_switched', { tab: 'overview', source: 'work_log_empty_state_cta' });
     });
 
-    document.getElementById('arStageSelect').addEventListener('change', function(e) {
+    on('arStageSelect', 'change', function(e) {
       state.arStage = e.target.value || 'all';
       state.arPage = 1;
       renderAnnotationResults();
       trackEvent('prototype_ar_filter_changed', { filter: 'stage', value: state.arStage });
     });
 
-    document.getElementById('arStatusSelect').addEventListener('change', function(e) {
+    on('arStatusSelect', 'change', function(e) {
       state.arStatus = e.target.value || 'all';
       state.arPage = 1;
       renderAnnotationResults();
       trackEvent('prototype_ar_filter_changed', { filter: 'status', value: state.arStatus });
     });
 
-    document.getElementById('arAnnotatorSelect').addEventListener('change', function(e) {
+    on('arAnnotatorSelect', 'change', function(e) {
       state.arAnnotator = e.target.value || 'all';
       state.arPage = 1;
       renderAnnotationResults();
       trackEvent('prototype_ar_filter_changed', { filter: 'annotator', value: state.arAnnotator });
     });
 
-    document.getElementById('arReviewerSelect').addEventListener('change', function(e) {
+    on('arReviewerSelect', 'change', function(e) {
       state.arReviewer = e.target.value || 'all';
       state.arPage = 1;
       renderAnnotationResults();
       trackEvent('prototype_ar_filter_changed', { filter: 'reviewer', value: state.arReviewer });
     });
 
-    document.getElementById('arReviewStatusSelect').addEventListener('change', function(e) {
+    on('arReviewStatusSelect', 'change', function(e) {
       state.arReviewStatus = e.target.value || 'all';
       state.arPage = 1;
       renderAnnotationResults();
       trackEvent('prototype_ar_filter_changed', { filter: 'review_status', value: state.arReviewStatus });
     });
 
-    document.getElementById('arExportJsonBtn').addEventListener('click', function(e) {
+    on('arExportJsonBtn', 'click', function(e) {
       if (!canStartNewExport()) return;
       if (taskHasSequenceTaggingOutput()) { openArSeqExportModal('json', e.currentTarget); return; }
       performArExport('json');
     });
 
-    document.getElementById('arExportJsonMinBtn').addEventListener('click', function(e) {
+    on('arExportJsonMinBtn', 'click', function(e) {
       if (!canStartNewExport()) return;
       if (taskHasSequenceTaggingOutput()) { openArSeqExportModal('json-min', e.currentTarget); return; }
       performArExport('json-min');
     });
 
-    document.getElementById('arSeqExportUnitSelect').addEventListener('change', updateArSeqExportTokenizerVisibility);
+    on('arSeqExportUnitSelect', 'change', updateArSeqExportTokenizerVisibility);
 
-    document.getElementById('arSeqExportCancelBtn').addEventListener('click', function() {
+    on('arSeqExportCancelBtn', 'click', function() {
       closeArSeqExportModal();
     });
 
-    document.getElementById('arSeqExportModal').addEventListener('click', function(e) {
+    on('arSeqExportModal', 'click', function(e) {
       if (e.target.id === 'arSeqExportModal') closeArSeqExportModal();
     });
 
-    document.getElementById('arSeqExportConfirmBtn').addEventListener('click', function() {
+    on('arSeqExportConfirmBtn', 'click', function() {
       var unit = document.getElementById('arSeqExportUnitSelect').value;
       var format = state.arSeqExportFormat;
       if (unit === 'word') {
@@ -12004,14 +12025,14 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
       performArExport(format, seqOptions);
     });
 
-    document.getElementById('arPrevPageBtn').addEventListener('click', function() {
+    on('arPrevPageBtn', 'click', function() {
       if (state.arPage > 1) {
         state.arPage--;
         renderAnnotationResults();
       }
     });
 
-    document.getElementById('arNextPageBtn').addEventListener('click', function() {
+    on('arNextPageBtn', 'click', function() {
       var total = getArFilteredSamples().length;
       var totalPages = Math.max(1, Math.ceil(total / state.arPageSize));
       if (state.arPage < totalPages) {
@@ -12020,20 +12041,20 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
       }
     });
 
-    document.getElementById('arPageSizeSelect').addEventListener('change', function(e) {
+    on('arPageSizeSelect', 'change', function(e) {
       state.arPageSize = parseInt(e.target.value, 10) || 20;
       state.arPage = 1;
       renderAnnotationResults();
     });
 
-    document.getElementById('arExportPrevPageBtn').addEventListener('click', function() {
+    on('arExportPrevPageBtn', 'click', function() {
       if (state.arExportPage > 1) {
         state.arExportPage--;
         renderArExportHistory();
       }
     });
 
-    document.getElementById('arExportNextPageBtn').addEventListener('click', function() {
+    on('arExportNextPageBtn', 'click', function() {
       var total = (TASK_DATA.exportHistory || []).length;
       var totalPages = Math.max(1, Math.ceil(total / state.arExportPageSize));
       if (state.arExportPage < totalPages) {
@@ -12042,20 +12063,20 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
       }
     });
 
-    document.getElementById('arExportPageSizeSelect').addEventListener('change', function(e) {
+    on('arExportPageSizeSelect', 'change', function(e) {
       state.arExportPageSize = parseInt(e.target.value, 10) || 20;
       state.arExportPage = 1;
       renderArExportHistory();
     });
 
-    document.getElementById('workLogStageSelect').addEventListener('change', function(e) {
+    on('workLogStageSelect', 'change', function(e) {
       state.workLogStage = e.target.value || 'all';
       state.wlPage = 1;
       renderWorkLog();
       trackEvent('prototype_work_log_filter_changed', { filter: 'run_stage', value: state.workLogStage });
     });
 
-    document.getElementById('workLogMemberSelect').addEventListener('change', function(e) {
+    on('workLogMemberSelect', 'change', function(e) {
       state.workLogMember = e.target.value || 'all';
       state.wlPage = 1;
       renderWorkLog();
@@ -12180,9 +12201,11 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
         }
       })
       .catch(function() {
-        /* Unreachable for a panel failure after Q5 -- appendPanelPartial
-           resolves with a placeholder. Left as a last resort so an unexpected
-           throw does not leave the tabs permanently disabled. */
+        /* A panel failure no longer reaches here: appendPanelPartial resolves
+           with a placeholder, and bindEvents() binds through on(), so nothing
+           in the sequence throws on a missing panel. Kept as a last resort --
+           and it must at least release the tabs, because the skeleton is only
+           taken down by showOverviewWithSkeleton(). */
         document.querySelectorAll('.admin-tabs [role="tab"]').forEach(function(tabEl) {
           tabEl.removeAttribute('aria-disabled');
         });
