@@ -378,10 +378,10 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 
 **真正修掉 #172 之後，剩下這三處的重跑要一起拿掉。**
 
-**[#172](https://github.com/label-suite/label-suite/issues/172) 已於 2026-11-12 關閉**，倉庫內能做的都做完了（移除 CI 的重跑，另外六個檔不再把 watcher 與手動 build 並列：`notecraft-visualize.md`、`notecraft-writing.md`、兩份 `spec-writing/references/flow.md`、兩份 `content-visualize/SKILL.md`）。**剩下的修法在 `notecraftapp` 上游、不在本倉庫**：兩條路是「以 `cacheDir` 為單位加跨行程鎖」或「把 build 的 staging 目錄與 `.astro/` 做成每行程唯一」。所以這一節是現在唯一的追蹤點——**升級 `notecraftapp` 時（`package.json` 的 `devDependencies`）要重測一次**：關掉 `docs:serve`、編輯一個 `docs/` 檔、連跑三次 `--rebuild`，三次都綠就把上面那三處的重跑規則一起拿掉；還會壞就回頭開一張新的 issue，不要重開 #172。
+**[#172](https://github.com/label-suite/label-suite/issues/172) 倉庫內的工作已於 2026-11-12 全部完成**，依維護者同日的裁示結案（移除 CI 的重跑，另外六個檔不再把 watcher 與手動 build 並列：`notecraft-visualize.md`、`notecraft-writing.md`、兩份 `spec-writing/references/flow.md`、兩份 `content-visualize/SKILL.md`）。**剩下的修法在 `notecraftapp` 上游、不在本倉庫**：兩條路是「以 `cacheDir` 為單位加跨行程鎖」或「把 build 的 staging 目錄與 `.astro/` 做成每行程唯一」。所以這一節是現在唯一的追蹤點——**升級 `notecraftapp` 時（`package.json` 的 `devDependencies`）要重測一次**：關掉 `docs:serve`、編輯一個 `docs/` 檔、連跑三次 `--rebuild`，三次都綠就把**四處**的重跑規則一起拿掉：本節、[`.claude/agents/ops.md`](../../.claude/agents/ops.md) 與 [`.claude/agents/technical-writer.md`](../../.claude/agents/technical-writer.md) 的檢查清單，以及本文件 §單頁搬移通則 第 12 步那一句（它自帶規則、不只是交叉引用）；還會壞就開一張新的 issue，不要重開這一張。
 
-⚠️ **要確認 serve 停了沒，別用 `pgrep -f 'notecraftapp serve'`。** 實際的指令字串是 `node …/notecraftapp.mjs serve docs --port 4330`，中間隔著 `.mjs`，所以那個模式永遠比不到，會回報「沒有 serve 在跑」。用 `pgrep -f 'notecraftapp.mjs serve'` 或 `ps -eo pid,etime,command | grep notecraftapp`。
-判例（2026-11-12）：照那個錯模式檢查之後，一連串「沒有 serve 卻還是第一次失敗」的觀察被當成根因不成立的證據，差點據此改掉本節的結論——而 `ps` 顯示 watcher 從 11-08 起就一直開著（4 天），根因其實完全成立。**這也是為什麼本節的判準是「重跑會不會一模一樣地再失敗」，而不是「有沒有別的行程在跑」**：前者不依賴你有沒有把行程查對。
+⚠️ **要確認 serve 停了沒，別用 `pgrep -f 'notecraftapp serve'`。** 實際的指令字串是 `node …/notecraftapp.mjs serve docs --port 4330`，中間隔著 `.mjs`，所以那個模式永遠比不到，會回報「沒有 serve 在跑」。用 `pgrep -lf 'notecraftapp.mjs serve docs --port 4330'`——**限定到這個 port**，否則別的專案的 `notecraftapp` 行程也會被列出來，讓人以為還有 serve 在跑。
+判例（2026-11-12）：照那個錯模式檢查之後，一連串「沒有 serve 卻還是第一次失敗」的觀察被當成根因不成立的證據，差點據此改掉本節的結論——而 `ps` 顯示 watcher 從 11-08 起就一直開著（4 天）。**所以那些觀察不構成反證**——但也僅止於此：根因仍然只以「同路徑併發 3／3 重現」為依據，而「關掉 serve 之後連跑 N 次全綠」這個正面驗證**到現在還是沒做**（見本節上文）。**這也是為什麼本節的判準是「重跑會不會一模一樣地再失敗」，而不是「有沒有別的行程在跑」**：前者不依賴你有沒有把行程查對。
 
 ### 併發的 build 會撞在一起，而且分得出哪一種併發
 
