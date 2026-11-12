@@ -129,6 +129,7 @@ Full rules: [docs/development/commit-and-release.md](docs/development/commit-and
 |----------|----------|
 | Code, comments, commit messages, API contracts, `AGENTS.md`, `CLAUDE.md` | English only |
 | `docs/` | Traditional Chinese allowed |
+| Comments in `design/prototype/` | Traditional Chinese allowed (maintainer's ruling, 2026-11-12). Those comments mostly say which spec clause or which ruling a line implements, and the clauses themselves are in Chinese, so translating them only adds a second translation to check back against. Code, identifiers and the user-facing strings in those files follow their own rows above. |
 | `openspec/` artifacts (proposals, designs, tasks, spec deltas) | Traditional Chinese; OpenSpec structural headings (`## ADDED Requirements`, `### Requirement:`, `#### Scenario:`) and the `SHALL` / `MUST` keywords stay in English |
 | Issues and PRs opened by an agent | Traditional Chinese for the body and the descriptive part of the title. The structural head (`[Bug]`, `feat:`), label names, code identifiers, file paths, commands, and verbatim error output stay in English |
 | Replies to the maintainer | Traditional Chinese |
