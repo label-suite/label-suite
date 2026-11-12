@@ -343,7 +343,11 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 
 **根因已經查到（2026-11-12）：它就是下面那一節的「同路徑併發」，第二個 build 是 `notecraftapp serve docs` 的背景 watcher。** `serve` 的 `--watch` **預設是 `true`**（`bin/notecraftapp.mjs:786`），所以只要有人開著 `pnpm docs:serve`，每次存檔 `docs/**` 都會觸發它自己的一次 `atomicRebuild()`——而你手動跑的那一次正好同時開始。「編輯之後的第一次」之所以特別，不是因為編輯，而是因為**編輯就是 watcher 被觸發的那一刻**。
 
-所以**最便宜的對策不是重跑，是不要製造併發**：做規格工作時不要同時開著 `pnpm docs:serve`，或開的時候加 `--no-watch`。這樣第一次就會過，也不會再有下表第二種誤判的風險。重跑規則留著當保險。
+所以**最便宜的對策不是重跑，是不要和 watcher 同時 build**：要手動跑 `--rebuild` 之前先停掉 `pnpm docs:serve`，或那一輪用 `--no-watch` 開它。
+
+**這不是叫人別用 `docs:serve`。** 它的 watcher 本身就是一條合法的驗證路徑——[`content-visualize`](../../.claude/skills/content-visualize/SKILL.md) 正是靠「觀察使用者開著的 `docs:serve`，存檔後 watcher 自己 rebuild、SSE 推 auto reload」來驗元件的。要避免的只有**兩條路徑同時走**：用 watcher 驗就別再手動 build，要手動 build 就先讓 watcher 停下來。
+
+這移掉的是目前已知的唯一併發來源；**沒有另外做「關掉 serve 之後連跑 N 次全綠」的驗證**，所以這裡不保證第一次一定過。重跑規則留著當保險。
 
 **規則：第一次失敗就再跑一次，只跑一次。** 第二次綠就算這一道閘通過；**兩次都失敗才是真的壞了**，去找真正的錯。
 
@@ -389,7 +393,7 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 
 **那個 `node_modules` 是 app 自己的，不是你的 repo。** `buildCmd` 呼叫 `ensureBuild(packageRoot, …, process.cwd())`（`:758`），所以函式裡的 `cwd` 是 app 根、使用者的目錄是另一個參數；astro 也是從 app 根載入的（`:392`）。**repo 的 `node_modules` 完全不參與 build**——`<repo>/node_modules/.notecraft-build` 根本不存在，別去那裡找。上游自己的註解（`:571-572`）就寫「以快取 hash 命名，不同筆記資料夾可並行」。
 
-**還有兩份不帶雜湊的共用可變資源**：`~/.notecraft/app-<版本>/.astro/`（content layer 的 `dotAstroDir`，每次 build 都重寫）與 `node_modules/.vite/`。上面那 3 回不同路徑的併發沒有因為它們失敗。
+**還有幾份不帶雜湊的共用可變資源**：`~/.notecraft/app-<版本>/.astro/`（content layer 的 `dotAstroDir`，每次 build 都重寫）、`node_modules/.vite/`，以及**快取目錄自己的輪替區** `~/.notecraft/cache/<雜湊>/` 底下的 `dist`／`dist.next`／`dist.prev`——`atomicRebuild()` 開頭對後兩者無條件 `fs.rm`（`:594-597`）、結尾的兩次 rename（`:608-612`）同樣沒有互斥。上面那 3 回不同路徑的併發沒有因為它們失敗，但 **3 回不等於所有時序都安全**；真的要大量平行建置時，這是第一個要懷疑的地方。
 
 **但 2026-11-12 的複驗顯示 `.astro/` 確實會害死同路徑的併發**，而且是當天抓到的唯一形狀：同時開兩個 `build --rebuild`，**3／3 每組正好一個失敗**，三次的 `Caused by` 逐字相同——
 
@@ -400,7 +404,7 @@ ENOENT: no such file or directory, rename
   at MutableDataStore.writeModuleImports
 ```
 
-兩個 build 各自寫同一個 `.tmp` 再 rename，先完成的把它改名走，後到的就 ENOENT。所以同路徑併發**同時踩到兩份共用資源**（staging 與 `.astro/`），兩者各自產生一種失敗形狀（見上一節那張表）。不同路徑只分開了 staging，`.astro/` 仍然共用——上面「3 回不等於所有時序都安全」那句話要當真。
+兩個 build 各自寫同一個 `.tmp` 再 rename，先完成的把它改名走，後到的就 ENOENT。所以同路徑併發**至少同時踩到兩份共用資源**（staging 與 `.astro/`），兩者各自產生目前觀察到的兩種失敗形狀（見上一節那張表）。輪替區是第三份，只是兩次實驗都走不到它——總有一個 build 在 astro 階段就先死了。不同路徑只分開了 staging，`.astro/` 仍然共用——上面「3 回不等於所有時序都安全」那句話要當真。
 
 ### 第二個 build 從哪裡來：`serve` 的 watcher
 
@@ -412,7 +416,7 @@ ENOENT: no such file or directory, rename
 | watcher 觸發時呼叫的是**同一個** `atomicRebuild(cwd, notesDir, cacheDir, userCwd)` | `startBackgroundRebuild()` → `runOnce()`，`:863`、`:906` |
 | 它的 `rebuilding`／`pending` 旗標只讓 watcher **和自己**排隊，不知道有別的行程在 build | `:897`、`:927` |
 
-所以「編輯 `docs/` 之後的第一次失敗」並不是編輯本身有什麼特別，而是**編輯就是 watcher 被觸發的那一刻**；你手動跑的那一次剛好和它撞上。這也解釋了為什麼 **CI 不會踩到**（CI 沒有 `serve` 在跑），以及為什麼它是**間歇**的——兩邊的 content-sync 階段只佔 25 秒 build 的最前面約一秒，要落在同一個瞬間才會壞。
+所以「編輯 `docs/` 之後的第一次失敗」並不是編輯本身有什麼特別，而是**編輯就是 watcher 被觸發的那一刻**；你手動跑的那一次剛好和它撞上。這也解釋了為什麼 **CI 不會踩到**（CI 沒有 `serve` 在跑），以及為什麼它是**間歇**的——兩邊的 content-sync 階段都落在 build 的最前面一小段（整次 build 約 25～30 秒，這一段目測只有一兩秒，**沒有實際量過**），要撞在同一個瞬間才會壞。
 
 **一個否定結果也記下來**：2026-11-12 另外做過 A／B——「編輯後立刻 build」對「編輯後等 watcher 跑完才 build」，各 3 回，**兩邊都 3／3 PASS，沒有分開**（當時 `serve` 確實開著、watcher 也確實在觸發）。所以**不能**說「編輯後立刻 build 就會失敗」；watcher 有 300ms debounce 又有自己的佇列，它那一輪落在什麼時間點不受你控制。
 
