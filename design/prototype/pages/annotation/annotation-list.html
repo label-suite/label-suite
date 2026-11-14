@@ -2073,12 +2073,23 @@
       detailParts.push(isEn ? summaryText.en : summaryText.zh);
     }
     if (context.runType === 'dry_run') {
-      var round = runCtx && runCtx.round != null ? runCtx.round : 1;
       /* label-suite/label-suite#282：規格 04-01 §任務資訊卡 第 8 條的字面已經加上
          輪次（維護者 2026-11-14 裁定，Q20），第 17 條另外要求**一律顯示**、不因為
          只有一輪就省略。輪次讀任務詳情的 profile，和揭露閘門同一個來源。
          只有試標階段標輪次：正式標記階段走下面那一支，顯示「共 N 筆資料」。 */
-      var cycle = window.LabelSuiteAnnotationWorkspaceData.getCurrentTrialCycle(profile.id);
+      var data = window.LabelSuiteAnnotationWorkspaceData;
+      var cycle = data.getCurrentTrialCycle(profile.id);
+      var round = runCtx && runCtx.round != null ? runCtx.round : 1;
+      /* 回合號要收在它自己那一輪裡。`materializedRuns.dry_run.round` 取的是
+         `trialRounds` 的最後一筆、不按輪次篩，而「退回草稿」會把輪次加一卻刻意
+         不動 `trialRounds`（task-detail.html 的 backToDraft）。所以新一輪還沒發佈
+         任何回合的那段視窗，兩個值併起來會變成「第 2 輪 · R3」——R3 屬於第 1 輪，
+         這個組合從未存在。改動之前只寫回合號，語意上與輪次無涉，是把兩個值寫進
+         同一句字面之後才成為一句假話。
+         那一輪還沒有任何回合時依第 9 條顯示第一回合。 */
+      var cycleMax = data.maxRoundOfCycle(profile.id, cycle);
+      if (cycleMax === null) round = 1;
+      else if (round > cycleMax) round = cycleMax;
       detailParts.push(t('trialCycleRoundTpl', { cycle: cycle, round: round }));
       detailParts.push(t('trialListCountTpl', { total: totalCount }));
     } else {
