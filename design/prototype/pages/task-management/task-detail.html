@@ -2505,7 +2505,17 @@
       thFepFellAt: '落入例外池時間',
       thFepActions: '操作',
       fepResolveLinkLabel: '進入處置',
-      fepReasonFallback: '（仲裁時未填寫理由）',
+      /* label-suite/label-suite#170（維護者 2026-11-14 裁定）：和規格 04-02 用同一個
+         字面。原本寫「（仲裁時未填寫理由）」，但同一格的來源可能是
+         `leaderAdjudicationSourceLabel`（負責人裁定、無指定仲裁者），那時根本沒有
+         仲裁，那句話會把負責人的裁定說成仲裁時未填。04-02 §責任鏈 已經把空理由的
+         佔位定成「未填寫理由」（annotation-workspace.config.js 的 reasonNotProvided；
+         規格 04-02 在一處條文（§責任鏈 第 5 條）、§資料欄位 兩列、§邊界情況與
+         §驗收標準 各一列照字面釘住），兩頁同一件事用同一個字面。
+         ⚠️ 這一欄的表頭仍是「仲裁者與理由」，對 source === 'leader' 的那一列還是把
+         負責人裁定歸給仲裁。不在這裡改：規格 03-03 §最終例外池 第 5 條與 §驗收標準
+         都只寫「仲裁者帳號」，改欄名會自己製造一條假斷言。已回報在 #170。 */
+      fepReasonFallback: '未填寫理由',
       leaderAdjudicationSourceLabel: '負責人裁定（無指定仲裁者）',
       leaderAdjudicationTitleTpl: '負責人裁定 · {count} 項待裁定',
       leaderAdjudicationSubtitle: '本任務未指定仲裁者，爭議項目由專案負責人裁定；裁定理由選填。',
@@ -3096,7 +3106,8 @@
       thFepFellAt: 'Entered pool at',
       thFepActions: 'Actions',
       fepResolveLinkLabel: 'Resolve',
-      fepReasonFallback: '(no reason recorded at arbitration)',
+      /* Same literal as 04-02's reasonNotProvided; why, at the zh entry. */
+      fepReasonFallback: 'No reason given',
       leaderAdjudicationSourceLabel: 'Leader adjudication (no arbiter designated)',
       leaderAdjudicationTitleTpl: 'Leader adjudication · {count} awaiting a ruling',
       leaderAdjudicationSubtitle: 'No arbiter is designated for this task, so the project leader rules on disputed items; a reason is optional.',
