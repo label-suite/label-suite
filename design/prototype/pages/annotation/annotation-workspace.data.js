@@ -563,6 +563,9 @@
        round rather than per task status. */
     if (role === 'annotator' && runType === 'dry_run') {
       entry.trialRound = currentTrialRound(taskId);
+      /* label-suite/label-suite#282：輪次也要蓋，否則退回草稿之後兩輪的 R1
+         分不開（規格 04-01 第 19、25 條）。 */
+      entry.trialCycle = currentTrialCycle(taskId);
     }
     bucket[sampleId] = entry;
     writeSubmissionBucket(key, bucket);
@@ -742,7 +745,7 @@
     if (runType === 'dry_run' && !seesUnmaskedHistory(viewer)) {
       if (viewer && viewer.role === 'annotator') {
         var own = readSubmissionBucket(annotatorKey)[sampleId];
-        preReveal = disclosedTrialRound(taskId, own && own.trialRound) === null;
+        preReveal = disclosedTrialRound(taskId, own && own.trialCycle, own && own.trialRound) === null;
       } else {
         preReveal = true;
       }
@@ -767,9 +770,15 @@
   function getCurrentRoundSubmittedCount(taskId, role, runType, identity) {
     var bucket = readSubmissionBucket(submissionBucketKey(taskId, role, runType, identity));
     var round = currentTrialRound(taskId);
+    /* label-suite/label-suite#282：連輪次一起比。只比回合號的話，退回草稿之後
+       第 2 輪的 R1 會把第 1 輪 R1 的殘留提交算成自己的進度，新的一輪一開始就
+       看起來已經做完了——和 #850 當初要解的是同一種誤算，只是多了一個維度。
+       缺章的提交只可能是 #282 之前的工作，也就是第 1 輪（同上一行的裁定）。 */
+    var cycle = currentTrialCycle(taskId);
     return Object.keys(bucket).filter(function (sampleId) {
       var entry = bucket[sampleId];
       if (entryStatus(entry) !== 'submitted') return false;
+      if ((entry.trialCycle >= 1 ? entry.trialCycle : 1) !== cycle) return false;
       return (entry.trialRound >= 1 ? entry.trialRound : 1) === round;
     }).length;
   }
@@ -2250,6 +2259,16 @@
     return round >= 1 ? round : 1;
   }
 
+  /* label-suite/label-suite#282：任務目前的試標輪次，`currentTrialRound()` 的兄弟。
+   * #170 讓每一輪的回合編號從 R1 重算，所以單一個回合號不再認得出一個回合
+   * （規格 04-01 §試標歷史回饋 第 19 條：判定單位是「輪次 ＋ 回合」）。
+   * 預設與 task-detail.html 的 getCurrentTrialCycle() 同樣是 1——種子資料沒有
+   * trialCycle 這個欄位，只有退回草稿之後才會存進來。 */
+  function currentTrialCycle(taskId) {
+    var detail = findTaskDetailProfile(taskId);
+    return Number(detail && detail.trialCycle) || 1;
+  }
+
   /* Highest disclosable trial round per task status (design.md D2): the
    * in-progress round R{r} is never disclosable; every ended round is,
    * including after official_run starts. 0 = nothing disclosable. */
@@ -2266,14 +2285,33 @@
    * round stamp (written before D1) is unrevealed while a round is in
    * progress (fail closed) and attributed to the current round otherwise
    * (design.md D4). */
-  function disclosedTrialRound(taskId, trialRound) {
+  function disclosedTrialRound(taskId, trialCycle, trialRound) {
     var listEntry = findTaskListEntry(taskId);
     if (!listEntry || !Object.prototype.hasOwnProperty.call(DISCLOSED_ROUND_OFFSET, listEntry.status)) return null;
+    var inProgress = listEntry.status === 'dry_run_in_progress';
+    var currentCycle = currentTrialCycle(taskId);
+
+    /* 輪次：沒蓋章的提交是 #282 之前寫的。維護者 2026-11-14 裁定：試標中時
+       不揭露（第 23 條的保守做法），其餘情況歸第 1 輪——#170 之前只存在過
+       那一輪。 */
+    var cycle = trialCycle >= 1 ? trialCycle : inProgress ? null : 1;
+    if (cycle === null || cycle > currentCycle) return null;
+
+    if (cycle < currentCycle) {
+      /* 已關閉的輪次：每個回合都已經開放過，因為「退回草稿」只能從
+         「等待 IAA 確認」做（task-detail.html 的 openBackToDraftModal），所以
+         那一輪的最後一個回合必然已經轉入等待確認、也就必然已開放；而第 21 條
+         說開放之後不會被收回，退回草稿也不例外（§已確認決議 Q19）。
+         回合號缺章就無從判定：那一輪的「目前回合」已經不存在，憑空歸一個號碼
+         會把它併進別的回合的分母（第 24 條），所以保守不揭露。 */
+      return trialRound >= 1 ? { cycle: cycle, round: trialRound } : null;
+    }
+
+    /* 目前這一輪：照原本的 status offset。 */
     var currentRound = currentTrialRound(taskId);
     var maxRound = currentRound + DISCLOSED_ROUND_OFFSET[listEntry.status];
-    var inProgress = listEntry.status === 'dry_run_in_progress';
     var round = trialRound >= 1 ? trialRound : inProgress ? null : currentRound;
-    return round !== null && round <= maxRound ? round : null;
+    return round !== null && round <= maxRound ? { cycle: cycle, round: round } : null;
   }
 
   /* FR-096 試標歷史回饋 (Data Fairness NON-NEGOTIABLE): the annotator's own
@@ -2298,11 +2336,14 @@
     Object.keys(bucket).forEach(function (sampleId) {
       var entry = bucket[sampleId];
       if (entryStatus(entry) !== 'submitted') return;
-      var round = disclosedTrialRound(taskId, entry.trialRound);
-      if (round === null) return;
+      var disclosed = disclosedTrialRound(taskId, entry.trialCycle, entry.trialRound);
+      if (disclosed === null) return;
       var row = buildDryRunFeedbackRow(taskId, runType, sampleId, entry, scopedIdentity);
       if (!row) return;
-      row.round = round;
+      row.round = disclosed.round;
+      /* label-suite/label-suite#282：每一列帶著它的輪次，呼叫端才分得出兩輪的
+         同號回合（規格 04-01 第 24、25 條）。 */
+      row.cycle = disclosed.cycle;
       rows.push(row);
     });
     return rows;
@@ -4247,6 +4288,9 @@
     readReviewerSubmissions: readReviewerSubmissions,
     getReworkReasons: getReworkReasons,
     getDryRunFeedback: getDryRunFeedback,
+    /* label-suite/label-suite#282：annotation-list.html 的清單列說明與回饋
+       面板的分隔列都要知道目前是第幾輪。 */
+    getCurrentTrialCycle: currentTrialCycle,
     getArbitrationState: getArbitrationState,
     getExceptionPool: getExceptionPool,
     exceptionPoolRecordFor: exceptionPoolRecordFor,

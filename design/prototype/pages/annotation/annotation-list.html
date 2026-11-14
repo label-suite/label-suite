@@ -606,6 +606,9 @@
       roleLabelReviewer: '審核員',
       sampleCountTpl: '共 {total} 筆資料',
       trialRoundTpl: '試標回合 R{round}',
+      trialCycleRoundTpl: '第 {cycle} 輪 · 試標回合 R{round}',
+      trialCycleOpenTpl: '第 {cycle} 輪（進行中）',
+      trialCycleClosedTpl: '第 {cycle} 輪（已關閉）',
       trialListCountTpl: '本回合清單 {total} 筆',
       openSampleAriaTpl: '開啟樣本 {id}',
       notFoundTitle: '找不到這個任務',
@@ -676,6 +679,9 @@
       roleLabelReviewer: 'Reviewer',
       sampleCountTpl: '{total} samples total',
       trialRoundTpl: 'Trial round R{round}',
+      trialCycleRoundTpl: 'Cycle {cycle} · trial round R{round}',
+      trialCycleOpenTpl: 'Cycle {cycle} (in progress)',
+      trialCycleClosedTpl: 'Cycle {cycle} (closed)',
       trialListCountTpl: 'This round: {total} items',
       openSampleAriaTpl: 'Open sample {id}',
       notFoundTitle: 'Task not found',
@@ -2068,6 +2074,10 @@
     }
     if (context.runType === 'dry_run') {
       var round = runCtx && runCtx.round != null ? runCtx.round : 1;
+      /* label-suite/label-suite#282：這一段**刻意不加輪次**。規格 04-01
+         §進度摘要 第 8 條把字面釘成「試標回合 R〈回合數〉 · 本回合清單 N 筆」，
+         §驗收標準 還有一條 Scenario 照字面驗；加上輪次會把那兩處打成假的。
+         要不要加是條文的事，已回報在 #282（第 25 條管的是「回饋」，不是這一段）。 */
       detailParts.push(t('trialRoundTpl', { round: round }));
       detailParts.push(t('trialListCountTpl', { total: totalCount }));
     } else {
@@ -2208,21 +2218,48 @@
       card.appendChild(pending);
     }
 
+    /* label-suite/label-suite#282：分組鍵是「輪次 ＋ 回合」，不是回合號。
+       #170 之後兩輪都有 R1，只按回合號分組會把它們併成一組、共用一個分母
+       （規格 04-01 第 24 條禁止），而第 25 條要求每一筆說得出屬於哪一輪。
+       每一輪另外插一列分隔列，形狀比照試標回合表（#170 Q29）。 */
     var rowsByRound = {};
     window.LabelSuiteAnnotationWorkspaceData.getDryRunFeedback(
       profile.id, context.runType, context.identity).forEach(function (row) {
-      (rowsByRound[row.round] = rowsByRound[row.round] || []).push(row);
+      var key = (row.cycle || 1) + ':' + row.round;
+      (rowsByRound[key] = rowsByRound[key] || []).push(row);
     });
 
-    Object.keys(rowsByRound).map(Number).sort(function (a, b) { return a - b; }).forEach(function (round) {
-      var rows = rowsByRound[round];
+    var currentCycle = window.LabelSuiteAnnotationWorkspaceData.getCurrentTrialCycle(profile.id);
+    var lastCycle = null;
+    Object.keys(rowsByRound).sort(function (a, b) {
+      var pa = a.split(':').map(Number);
+      var pb = b.split(':').map(Number);
+      return pa[0] - pb[0] || pa[1] - pb[1];
+    }).forEach(function (key) {
+      var rows = rowsByRound[key];
+      var parts = key.split(':').map(Number);
+      var cycle = parts[0];
+      var round = parts[1];
+
+      if (cycle !== lastCycle) {
+        var separator = document.createElement('p');
+        separator.setAttribute('data-testid', 'ws-dry-run-feedback-cycle');
+        separator.setAttribute('data-cycle', String(cycle));
+        separator.textContent = cycle === currentCycle
+          ? t('trialCycleOpenTpl', { cycle: cycle })
+          : t('trialCycleClosedTpl', { cycle: cycle });
+        card.appendChild(separator);
+        lastCycle = cycle;
+      }
+
       var group = document.createElement('section');
       group.setAttribute('data-testid', 'ws-dry-run-feedback-round');
       group.setAttribute('data-round', String(round));
+      group.setAttribute('data-cycle', String(cycle));
 
       var groupTitle = document.createElement('h3');
       groupTitle.setAttribute('data-testid', 'ws-dry-run-feedback-round-title');
-      groupTitle.textContent = t('trialRoundTpl', { round: round });
+      groupTitle.textContent = t('trialCycleRoundTpl', { cycle: cycle, round: round });
       group.appendChild(groupTitle);
 
       var modifiedCount = rows.filter(function (row) { return row.modified; }).length;
