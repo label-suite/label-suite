@@ -762,7 +762,7 @@ import Spec0303TaskDetailFlow from '@notes/components/spec-03-03-task-detail-flo
 
 - 第 9 條與[§標記進度](#標記進度)第 25 條是同一條線：不同階段、不同單位的數字不能相加
 - <mark>第 11 條那個「中性欄頭」的理由：不然負責人裁定那一列會被歸到一個它不屬於的名目底下。**這是本頁補充的說明，不是裁定的字句**——裁定只到「欄名改中性、條文一起改」。</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup>
-- <mark>⚠️ **畫面的欄頭還沒跟上**：`design/prototype/pages/task-management/task-detail.html` 目前仍是「仲裁者與理由」，所以第 11 條與 §驗收標準 的「欄頭不是只寫『仲裁者』」那一條在畫面上還是失敗的。畫面那一側歸 [Issue #170](https://github.com/label-suite/label-suite/issues/170)，等這一頁合併之後才改（先改畫面會反過來和舊條文對不上）。</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup>
+- <mark>**畫面的欄頭已經跟上**：改成「定案來源與理由」（[Issue #170](https://github.com/label-suite/label-suite/issues/170)，PR #306）。那一欄的表頭有兩個落點都改了——`design/prototype/pages/task-management/task-detail.html` 的 i18n 值，以及 `task-detail.panels/annotation-progress.html` 的靜態 `<th>`。英文側是中文字面的直譯，**第 11 條只約束「中性、不得只寫仲裁者」、沒有定英文字串**。</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup>
 - 第 5 條會顯示<mark>**定案來源那一方**</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup>給的理由，而理由是**選填**的，見[§負責人裁定](#負責人裁定)第 7 條；理由空白時的呈現由[規格 04-02 §責任鏈與它誠實的那一句](../04-annotation/02-annotation-workspace.mdx#責任鏈與它誠實的那一句)第 5 條擁有
 
 ### 負責人裁定
