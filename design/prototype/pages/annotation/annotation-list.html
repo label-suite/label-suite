@@ -607,8 +607,9 @@
       sampleCountTpl: '共 {total} 筆資料',
       trialRoundTpl: '試標回合 R{round}',
       trialCycleRoundTpl: '第 {cycle} 輪 · 試標回合 R{round}',
-      trialCycleOpenTpl: '第 {cycle} 輪（進行中）',
-      trialCycleClosedTpl: '第 {cycle} 輪（已關閉）',
+      trialCycleOpenTpl: '第 {cycle} 輪試標（進行中）',
+      trialCycleClosedTpl: '第 {cycle} 輪試標（已退回）',
+      trialCyclePlainTpl: '第 {cycle} 輪試標',
       trialListCountTpl: '本回合清單 {total} 筆',
       openSampleAriaTpl: '開啟樣本 {id}',
       notFoundTitle: '找不到這個任務',
@@ -680,8 +681,9 @@
       sampleCountTpl: '{total} samples total',
       trialRoundTpl: 'Trial round R{round}',
       trialCycleRoundTpl: 'Cycle {cycle} · trial round R{round}',
-      trialCycleOpenTpl: 'Cycle {cycle} (in progress)',
-      trialCycleClosedTpl: 'Cycle {cycle} (closed)',
+      trialCycleOpenTpl: 'Trial cycle {cycle} (in progress)',
+      trialCycleClosedTpl: 'Trial cycle {cycle} (sent back)',
+      trialCyclePlainTpl: 'Trial cycle {cycle}',
       trialListCountTpl: 'This round: {total} items',
       openSampleAriaTpl: 'Open sample {id}',
       notFoundTitle: 'Task not found',
@@ -2194,10 +2196,12 @@
   /* FR-096 試標歷史回饋 (issue singyichen/label-suite#834 design.md D2/D3): the disclosure gate is
      judged per round inside getDryRunFeedback, so this renders whatever
      ended rounds it returns, grouped by round with a per-round summary.
-     The pending note stays while a round can still be in progress (any
-     status before waiting_iaa_confirmation). Annotator + dry_run only
-     (falls on annotation-list.html, no separate screen). */
-  var DRY_RUN_FEEDBACK_ENDED_STATUSES = ['waiting_iaa_confirmation', 'official_run_in_progress', 'completed'];
+     Annotator + dry_run only (falls on annotation-list.html, no separate
+     screen).
+     label-suite/label-suite#282：原本這裡有一張 DRY_RUN_FEEDBACK_ENDED_STATUSES
+     清單，用「不在清單裡」當成「有回合在進行中」。退回草稿之後的 `draft` 也不在
+     清單裡，卻沒有任何回合在跑，所以那句 pending 說明會說謊、而且「共 0 筆」的
+     空摘要不會出現。改成直接問狀態是不是 `dry_run_in_progress`，清單就不需要了。 */
   function renderDryRunFeedback(context, profile) {
     var card = document.getElementById('dryRunFeedbackCard');
     if (!card) return;
@@ -2211,7 +2215,12 @@
     title.textContent = t('dryRunFeedbackTitle');
     card.appendChild(title);
 
-    if (DRY_RUN_FEEDBACK_ENDED_STATUSES.indexOf(profile.status) === -1) {
+    /* label-suite/label-suite#282：這句說的是「本回合尚在進行中」，所以只有
+       真的有回合在進行中才顯示。原本的判準是「不在已結束狀態清單裡」，而
+       `draft`（退回草稿之後、新一輪還沒發佈）也落在那裡——那段視窗根本沒有
+       回合在跑，卻會對標記員說有。 */
+    var roundInProgress = profile.status === 'dry_run_in_progress';
+    if (roundInProgress) {
       var pending = document.createElement('p');
       pending.setAttribute('data-testid', 'ws-dry-run-feedback-pending');
       pending.textContent = t('dryRunFeedbackPending');
@@ -2245,9 +2254,14 @@
         var separator = document.createElement('p');
         separator.setAttribute('data-testid', 'ws-dry-run-feedback-cycle');
         separator.setAttribute('data-cycle', String(cycle));
-        separator.textContent = cycle === currentCycle
-          ? t('trialCycleOpenTpl', { cycle: cycle })
-          : t('trialCycleClosedTpl', { cycle: cycle });
+        /* 三態：已關閉的輪次說「已退回」（和任務詳情的回合表同一個詞）；目前
+           這一輪只有真的有回合在跑才說「進行中」，否則中性寫法——單輪任務進到
+           正式標記或已完成時，寫「進行中」會和同一張卡片上的事實矛盾。 */
+        separator.textContent = cycle < currentCycle
+          ? t('trialCycleClosedTpl', { cycle: cycle })
+          : roundInProgress
+            ? t('trialCycleOpenTpl', { cycle: cycle })
+            : t('trialCyclePlainTpl', { cycle: cycle });
         card.appendChild(separator);
         lastCycle = cycle;
       }
@@ -2277,7 +2291,7 @@
 
     // Maintainer ruling 2026-09-19: an ended trial with no feedback still
     // states "共 0 筆" rather than showing only the card title.
-    if (!Object.keys(rowsByRound).length && DRY_RUN_FEEDBACK_ENDED_STATUSES.indexOf(profile.status) !== -1) {
+    if (!Object.keys(rowsByRound).length && !roundInProgress) {
       var emptySummary = document.createElement('p');
       emptySummary.setAttribute('data-testid', 'ws-dry-run-feedback-summary');
       emptySummary.textContent = t('dryRunFeedbackSummaryTpl', { total: 0, modified: 0, pct: 0 });

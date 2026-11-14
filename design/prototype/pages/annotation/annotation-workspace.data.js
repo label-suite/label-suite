@@ -2285,9 +2285,24 @@
    * round stamp (written before D1) is unrevealed while a round is in
    * progress (fail closed) and attributed to the current round otherwise
    * (design.md D4). */
+  /* 某一輪已經建立過的最大回合號，從任務詳情的 trialRounds 推。那張表的每一筆
+   * 自 #170 起都帶 `cycle`（task-detail.html 發佈回合時寫入）；種子資料的舊筆沒有
+   * 這個欄位，一律當第 1 輪。回傳 null 表示那一輪在這份資料裡沒有任何回合。 */
+  function maxRoundOfCycle(taskId, cycle) {
+    var detail = findTaskDetailProfile(taskId);
+    var rounds = (detail && detail.trialRounds) || [];
+    var max = null;
+    rounds.forEach(function (entry) {
+      if ((Number(entry.cycle) || 1) !== cycle) return;
+      var round = Number(entry.round);
+      if (round >= 1 && (max === null || round > max)) max = round;
+    });
+    return max;
+  }
+
   function disclosedTrialRound(taskId, trialCycle, trialRound) {
     var listEntry = findTaskListEntry(taskId);
-    if (!listEntry || !Object.prototype.hasOwnProperty.call(DISCLOSED_ROUND_OFFSET, listEntry.status)) return null;
+    if (!listEntry) return null;
     var inProgress = listEntry.status === 'dry_run_in_progress';
     var currentCycle = currentTrialCycle(taskId);
 
@@ -2298,16 +2313,26 @@
     if (cycle === null || cycle > currentCycle) return null;
 
     if (cycle < currentCycle) {
-      /* 已關閉的輪次：每個回合都已經開放過，因為「退回草稿」只能從
-         「等待 IAA 確認」做（task-detail.html 的 openBackToDraftModal），所以
-         那一輪的最後一個回合必然已經轉入等待確認、也就必然已開放；而第 21 條
-         說開放之後不會被收回，退回草稿也不例外（§已確認決議 Q19）。
+      /* 已關閉的輪次：揭露，而且**不看任務現在是什麼狀態**。第 21 條逐項列舉
+         了「不會被收回」的情況，其中包含「被退回草稿、開了新的一輪」——而退回
+         草稿之後任務就是 `draft`，那個狀態不在下面的 offset 表裡。狀態檢查留在
+         目前這一輪那條路上就好，不然第一輪的回饋會在「退回草稿、新一輪還沒發佈」
+         那段視窗整段消失，正是本 issue 要修的第一個缺陷換一個狀態重演。
+         上界用資料自己收：已關閉輪次建立過的最大回合號。不這樣做的話，這個分支
+         的上界完全來自別頁的不變量（「只能從等待 IAA 確認退回」），哪天多一條從
+         試標中關閉輪次的路徑，就會把進行中回合的資料揭露出去（第 16、22 條）。
+         那一輪在資料裡查不到任何回合時（trialRounds 沒持久化）沿用原本的行為揭露，
+         否則等於把第 21 條又關掉。
          回合號缺章就無從判定：那一輪的「目前回合」已經不存在，憑空歸一個號碼
          會把它併進別的回合的分母（第 24 條），所以保守不揭露。 */
-      return trialRound >= 1 ? { cycle: cycle, round: trialRound } : null;
+      if (!(trialRound >= 1)) return null;
+      var closedMax = maxRoundOfCycle(taskId, cycle);
+      if (closedMax !== null && trialRound > closedMax) return null;
+      return { cycle: cycle, round: trialRound };
     }
 
     /* 目前這一輪：照原本的 status offset。 */
+    if (!Object.prototype.hasOwnProperty.call(DISCLOSED_ROUND_OFFSET, listEntry.status)) return null;
     var currentRound = currentTrialRound(taskId);
     var maxRound = currentRound + DISCLOSED_ROUND_OFFSET[listEntry.status];
     var round = trialRound >= 1 ? trialRound : inProgress ? null : currentRound;
@@ -2329,7 +2354,10 @@
   function getDryRunFeedback(taskId, runType, identity) {
     if (runType !== 'dry_run') return [];
     var listEntry = findTaskListEntry(taskId);
-    if (!listEntry || !Object.prototype.hasOwnProperty.call(DISCLOSED_ROUND_OFFSET, listEntry.status)) return [];
+    /* label-suite/label-suite#282：這裡不再按任務狀態早退。已關閉輪次的回饋
+       在任何狀態下都該揭露（第 21 條，含 `draft`），逐筆由
+       disclosedTrialRound() 判——它自己才知道那一筆屬於哪一輪。 */
+    if (!listEntry) return [];
     var scopedIdentity = { annotatorId: (identity && identity.annotatorId) || DEFAULT_ANNOTATOR_ID };
     var bucket = readSubmissionBucket(submissionBucketKey(taskId, 'annotator', runType, scopedIdentity));
     var rows = [];
