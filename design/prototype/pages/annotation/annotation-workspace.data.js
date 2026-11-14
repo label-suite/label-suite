@@ -4319,6 +4319,9 @@
     /* label-suite/label-suite#282：annotation-list.html 的清單列說明與回饋
        面板的分隔列都要知道目前是第幾輪。 */
     getCurrentTrialCycle: currentTrialCycle,
+    /* label-suite/label-suite#282：進度摘要要把回合號收在它自己那一輪裡，
+       不然退回草稿後會配出「第 2 輪 · R3」這種從未存在的組合。 */
+    maxRoundOfCycle: maxRoundOfCycle,
     getArbitrationState: getArbitrationState,
     getExceptionPool: getExceptionPool,
     exceptionPoolRecordFor: exceptionPoolRecordFor,
