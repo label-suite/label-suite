@@ -520,23 +520,63 @@
            being submitted. Clause 2: no second sign-in, because the password
            was set on the form. The flag is what the four account pages read
            to send a signed-in visitor away (spec 01-01 Q3). */
-        window.LabelSuiteSharedSidebar.markLoggedIn();
-        window.LabelSuiteAnalytics.track('prototype_register_succeeded', {
-          ...getTrackingContext(),
-        });
-        if (!holdRequested()) {
-          redirectTimer = window.setTimeout(() => {
-            window.location.href = '../dashboard/dashboard.html';
-          }, 2000);
+        if (embedded()) {
+          /* label-suite/label-suite#297（維護者 2026-11-14 裁定「兩件都跳過」）：
+             被嵌在規格書的線框裡時，這兩件事都不做——面板照樣顯示，但不跳轉、
+             也不寫旗標。
+             跳轉：規格 01-02 §註冊成功 的線框要展示的就是這個面板，兩秒後跳走
+             等於展示不出來；而 `PrototypeFrame` 組網址時硬接 `.html`
+             （`.notecraft/components/prototype-frame.tsx`），帶不進 `?sim_hold=1`。
+             旗標：框裡的「帳號已建立」是在展示畫面、不是真的建了帳號。線框和
+             prototype 同一個 origin，旗標一寫下去，讀者之後直接開登入、註冊、
+             忘記密碼、重設密碼都會被導走，而那四頁上沒有側欄可以清它。
+             側欄的 redirectIfLoggedIn() 已經有同一道判斷（#195）。
+             成功事件也不送。**注意它在線框裡本來就不會送**：`PrototypeFrame`
+             的 origin 寫死 `http://127.0.0.1:4331`，而 `analytics.js` 在
+             localhost／127.0.0.1 一律 `trackingDisabled = true`。所以這一行
+             只對「prototype 被放到非 localhost 的主機、又被嵌進某個 iframe」
+             那種情況有意義——那時送出去的會是一筆沒有人註冊過的轉換。
+             裁定說的是「兩件」，這是第三件；它是延伸，如果不該跳過請退回。
+             （頁面瀏覽事件維持原樣：那是整份 prototype 既有的行為，29 個
+             線框都一樣，不在本張範圍。） */
+        } else {
+          window.LabelSuiteSharedSidebar.markLoggedIn();
+          window.LabelSuiteAnalytics.track('prototype_register_succeeded', {
+            ...getTrackingContext(),
+          });
+          if (!holdRequested()) {
+            redirectTimer = window.setTimeout(() => {
+              window.location.href = '../dashboard/dashboard.html';
+            }, 2000);
+          }
         }
       } else {
         /* 連結不能用就沒有帳號被建立，所以不能留著登入旗標：留著的話按下
            「重新註冊」會被 register.html 的 redirectIfLoggedIn() 立刻導去儀表板，
-           註冊頁根本看不到。 */
-        window.LabelSuiteSharedSidebar.clearLoggedIn();
+           註冊頁根本看不到。
+           label-suite/label-suite#297：框裡也不碰這個旗標。清掉同樣是改到
+           prototype origin 的跨頁狀態（讀者在線框裡按一下「已過期」就會把自己
+           的登入旗標抹掉），而且框內本來就不需要——register.html 的
+           redirectIfLoggedIn() 在框裡一律 return false。本張卡的標題寫的是
+           「不該寫登入旗標」，移除也是一種寫。 */
+        if (!embedded()) window.LabelSuiteSharedSidebar.clearLoggedIn();
         window.LabelSuiteAnalytics.track('prototype_verify_email_link_unusable', {
           ...getTrackingContext(),
         });
+      }
+    }
+
+    /* True when this page is being shown inside a frame — in practice the
+       `PrototypeFrame` wireframes embedded in the specs. Reading
+       `window.top` never throws (only reaching into another origin's
+       properties does), so the try/catch is belt and braces. It fails
+       closed: a check that cannot be made counts as embedded, because both
+       side effects are the kind that only cause harm by happening. */
+    function embedded() {
+      try {
+        return window.top !== window.self;
+      } catch (error) {
+        return true;
       }
     }
 

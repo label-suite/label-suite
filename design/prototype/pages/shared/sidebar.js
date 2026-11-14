@@ -97,7 +97,10 @@
        產品，是在看畫面：`PrototypeFrame` 用 iframe 載入同一個 origin
        （`127.0.0.1:4331`）的頁面，所以旗標一寫下去，01-01、01-02、01-03 共 29 個
        線框都會在框內跳走，讀者就看不到規格正在描述的那個畫面。元件只吃 `page`，
-       沒辦法替線框加上逃生口參數，所以這裡自己判斷。 */
+       沒辦法替線框加上逃生口參數，所以這裡自己判斷。
+       同一個判準在 `pages/account/verify-email.html` 的 `embedded()` 還有一份
+       （label-suite/label-suite#297，那一頁自己的跳轉與旗標也要擋）。兩處各
+       一行、沒有抽成共用，改其中一邊時記得看另一邊。 */
     if (window.top !== window.self) return false;
     var params;
     try { params = new URLSearchParams(window.location.search); } catch (error) { params = null; }
