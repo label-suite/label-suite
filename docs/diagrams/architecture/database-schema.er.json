@@ -2,7 +2,7 @@
  "$schema": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/er-diagram-renderer/schema.json",
  "meta": {
   "title": "Label Suite 候選資料表 ER 圖（37 張）",
-  "description": "**規劃結構，尚未部署。** 已落地業務表：**0**——`backend/` 不存在、`backend/alembic/versions/` 沒有任何 revision、也沒有 ORM model。要查「實際落地了什麼」，唯一的辦法是讀 Alembic revision 與資料庫 metadata，不是讀這張圖。\\n\\n本圖顯示 **37 張候選表、328 欄、38 個單欄 FK**。每一欄的中文意義、可空性與**規格來源**都來自[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)；哪些資料要存則來自[資料欄位盤點總帳](/notes/diagrams/architecture/data-field-inventory)。\\n\\n**這張圖畫不出來的東西有兩類，都在字典裡**：**複合 FK**（例如「父版本不得跨資料集」要 `(dataset_id, parent_version_id)` 兩欄一起比），以及**只能在應用層擋的限制**（例如血緣不得形成循環、名冊的子集合關係）。逐條內容在字典各組的「組的關聯與限制」小節，以及幾張表自己的限制表裡。**圖上沒有線不代表沒有限制。**應用層的限制字典數得出來（**24 條落在 DB、22 條只能在應用層擋**，數法寫在字典 §十）；**複合 FK 刻意不寫條數**，理由同樣在 §十。\\n\\n**分析報告沒有表**：05-02 的 64 個欄位列全部現算，維護者 2026-11-11 裁定不建分析表。那是裁定的結果，不是漏畫。",
+  "description": "**規劃結構，尚未部署。** 已落地業務表：**0**——`backend/` 不存在、`backend/alembic/versions/` 沒有任何 revision、也沒有 ORM model。要查「實際落地了什麼」，唯一的辦法是讀 Alembic revision 與資料庫 metadata，不是讀這張圖。\\n\\n本圖顯示 **37 張候選表、329 欄、38 個單欄 FK**。每一欄的中文意義、可空性與**規格來源**都來自[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)；哪些資料要存則來自[資料欄位盤點總帳](/notes/diagrams/architecture/data-field-inventory)。\\n\\n**這張圖畫不出來的東西有兩類，都在字典裡**：**複合 FK**（例如「父版本不得跨資料集」要 `(dataset_id, parent_version_id)` 兩欄一起比），以及**只能在應用層擋的限制**（例如血緣不得形成循環、名冊的子集合關係）。逐條內容在字典各組的「組的關聯與限制」小節，以及幾張表自己的限制表裡。**圖上沒有線不代表沒有限制。**應用層的限制字典數得出來（**24 條落在 DB、22 條只能在應用層擋**，數法寫在字典 §十）；**複合 FK 刻意不寫條數**，理由同樣在 §十。\\n\\n**分析報告沒有表**：05-02 的 64 個欄位列全部現算，維護者 2026-11-11 裁定不建分析表。那是裁定的結果，不是漏畫。",
   "source": "/notes/diagrams/architecture/data-table-dictionary",
   "backTo": "/notes/diagrams/architecture/data-field-inventory"
  },
@@ -1148,7 +1148,7 @@
      "name": "cycle_no",
      "type": "integer",
      "required": "required",
-     "note": "同任務序號；唯一 (task_id, cycle_no)；CHECK >= 1。來源：反查：退回草稿後另開新週期"
+     "note": "同任務序號；唯一 (task_id, cycle_no)；CHECK >= 1。來源：03-03：試標輪……每個回合都屬於一輪；同一個任務同時最多只有一輪沒關掉，退回草稿會關掉目前這一輪並開始下一輪（#170）。原本只有反查依據"
     },
     {
      "name": "dataset_version_id",
@@ -1192,9 +1192,15 @@
      "type": "varchar(16)",
      "required": "nullable",
      "note": "關閉原因；CHECK 限 rejected／completed。來源：rejected＝退回草稿；completed＝正式標記完結"
+    },
+    {
+     "name": "rejection_reason",
+     "type": "text",
+     "required": "required",
+     "note": "退回原因。來源：03-03：選填，允許空白；隨那一輪的關閉一起寫入，不得省略欄位（#170）。空值以空字串表示，與 annotation_review_decision.reason 同一條原則。和 close_reason 是兩件事：那一欄是列舉，這一欄是負責人填的那段文字，completed 關閉時留空"
     }
    ],
-   "description": "**這張表是反查出來的**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 的「回合編號」規則欄寫「同一輪裡唯一，**退回草稿後新一輪從 1 重新算**」——「輪」就是週期，但它沒有畫面，使用者只看得到回合編號。\n\n**規格來源**：[04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位)"
+   "description": "**這張表是反查出來的**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 的「回合編號」規則欄寫「同一輪裡唯一，**退回草稿後新一輪從 1 重新算**」——「輪」就是週期。**反查當時它沒有畫面**，使用者只看得到回合編號；[#170](https://github.com/label-suite/label-suite/issues/170) 於 2026-11-12 把「試標輪」與「退回原因」寫進同一頁的「資料欄位」、[#282](https://github.com/label-suite/label-suite/issues/282) 於 2026-11-12 把「試標輪」鏡像進 [04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位)，所以今天序號與退回原因都有條文可指，而畫面上試標回合表與 04-01 的回饋面板都標著「第 N 輪」。\n\n**規格來源**：[04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位)、[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)（`:969` 的「試標輪」與 `:970` 的「退回原因」，#170）"
   },
   {
    "name": "task_trial_round",
@@ -1582,7 +1588,7 @@
      "note": "最後改動"
     }
    ],
-   "description": "**[04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位) 的「審核單位」就是「任務的某個回合 × 某一筆指派」**，所以這張表是審核單位定址的一半。\n\n**規格來源**：[04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位)（`:666`「審核單位｜**任務的某個回合 × 某一筆指派**」——這張表就是那個單位的定址）、[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)（`:965`「標記作業狀態……**推導值，不另存**」——所以這張表刻意沒有 `status` 欄）。**這兩條是表說明引用的規格**，維護者 2026-11-11 裁定它們**算**來源（[盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決) D8）。\n\n**沒有 `status` 欄，這是刻意的。** [03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 明寫「標記作業狀態……**推導值，不另存**」，由終局排除、目前的標記紀錄與受派者**依序**判定。存一個 `status` 會與那個順序產生第二個真相。"
+   "description": "**[04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位) 的「審核單位」就是「任務的某個回合 × 某一筆指派」**，所以這張表是審核單位定址的一半。\n\n**規格來源**：[04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位)（`:674`「審核單位｜**任務的某個回合 × 某一筆指派**」——這張表就是那個單位的定址）、[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)（`:974`「標記作業狀態……**推導值，不另存**」——所以這張表刻意沒有 `status` 欄）。**這兩條是表說明引用的規格**，維護者 2026-11-11 裁定它們**算**來源（[盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決) D8）。\n\n**沒有 `status` 欄，這是刻意的。** [03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 明寫「標記作業狀態……**推導值，不另存**」，由終局排除、目前的標記紀錄與受派者**依序**判定。存一個 `status` 會與那個順序產生第二個真相。"
   },
   {
    "name": "task_annotation_exclusion",
@@ -2431,7 +2437,7 @@
      "note": "清單中的順序；唯一 (export_id, position)；CHECK >= 1。來源：從 1 開始。順序寫進產物的有序清單"
     }
    ],
-   "description": "**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)（`:975`「匯出時間……記錄列與檔名用的是**實際讀取結果的那個時間**，不是請求被接受的時間」——兩個時刻各自成立，而一次匯出可以納入多次執行，所以要有這張表記順序）。**這一條是表說明引用的規格**，維護者 2026-11-11 裁定它**算**來源（[盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決) D8）。\n\n**這張表是反查出來的六項之一**（[盤點總帳§二](/notes/diagrams/architecture/data-field-inventory#二九條流程的反查)）：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 的畫面只顯示一個匯出時間，但「請求被接受」與「實際讀取結果」是兩個時刻，而一次匯出可以納入多次執行——所以要有這張表記順序。"
+   "description": "**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)（`:984`「匯出時間……記錄列與檔名用的是**實際讀取結果的那個時間**，不是請求被接受的時間」——兩個時刻各自成立，而一次匯出可以納入多次執行，所以要有這張表記順序）。**這一條是表說明引用的規格**，維護者 2026-11-11 裁定它**算**來源（[盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決) D8）。\n\n**這張表是反查出來的六項之一**（[盤點總帳§二](/notes/diagrams/architecture/data-field-inventory#二九條流程的反查)）：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 的畫面只顯示一個匯出時間，但「請求被接受」與「實際讀取結果」是兩個時刻，而一次匯出可以納入多次執行——所以要有這張表記順序。"
   },
   {
    "name": "task_work_interval",
