@@ -607,7 +607,7 @@ import PluginView from '@/components/PluginView.astro';
 
 ### `task_run_cycle` — 一輪發布週期
 
-**這張表是反查出來的**：[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) 的「回合編號」規則欄寫「同一輪裡唯一，**退回草稿後新一輪從 1 重新算**」——「輪」就是週期。**反查當時它沒有畫面**，使用者只看得到回合編號；[#170](https://github.com/label-suite/label-suite/issues/170) 於 2026-11-12 把「試標輪」與「退回原因」寫進同一頁的「資料欄位」、[#282](https://github.com/label-suite/label-suite/issues/282) 於 2026-11-14 把「試標輪」鏡像進 [04-01](../../specs/04-annotation/01-annotation-list.mdx#資料欄位)，所以今天序號與退回原因都有條文可指（見下面那兩欄的「規格來源」），而畫面上試標回合表與 04-01 的回饋面板都標著「第 N 輪」。
+**這張表是反查出來的**：[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) 的「回合編號」規則欄寫「同一輪裡唯一，**退回草稿後新一輪從 1 重新算**」——「輪」就是週期。**反查當時它沒有畫面**，使用者只看得到回合編號；[#170](https://github.com/label-suite/label-suite/issues/170) 於 2026-11-12 把「試標輪」與「退回原因」寫進同一頁的「資料欄位」、[#282](https://github.com/label-suite/label-suite/issues/282) 於 2026-11-12 把「試標輪」鏡像進 [04-01](../../specs/04-annotation/01-annotation-list.mdx#資料欄位)，所以今天序號與退回原因都有條文可指（見下面那兩欄的「規格來源」），而畫面上試標回合表與 04-01 的回饋面板都標著「第 N 輪」。
 
 | 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -748,7 +748,7 @@ import PluginView from '@/components/PluginView.astro';
 | `created_at` | 建立時間 | `timestamptz` | NOT NULL | — | — |
 | `updated_at` | 最後改動 | `timestamptz` | NOT NULL | — | — |
 
-**規格來源**：[04-01](../../specs/04-annotation/01-annotation-list.mdx#資料欄位)（`:666`「審核單位｜**任務的某個回合 × 某一筆指派**」——這張表就是那個單位的定址）、[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)（`:965`「標記作業狀態……**推導值，不另存**」——所以這張表刻意沒有 `status` 欄）。**這兩條是表說明引用的規格**，維護者 2026-11-11 裁定它們**算**來源（[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決) D8）。
+**規格來源**：[04-01](../../specs/04-annotation/01-annotation-list.mdx#資料欄位)（`:674`「審核單位｜**任務的某個回合 × 某一筆指派**」——這張表就是那個單位的定址）、[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)（`:974`「標記作業狀態……**推導值，不另存**」——所以這張表刻意沒有 `status` 欄）。**這兩條是表說明引用的規格**，維護者 2026-11-11 裁定它們**算**來源（[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決) D8）。
 
 **沒有 `status` 欄，這是刻意的。** [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) 明寫「標記作業狀態……**推導值，不另存**」，由終局排除、目前的標記紀錄與受派者**依序**判定。存一個 `status` 會與那個順序產生第二個真相。
 
@@ -1103,7 +1103,7 @@ import PluginView from '@/components/PluginView.astro';
 | `task_id` | 同任務作用域 | `uuid` | NOT NULL | 見上**兩組**複合 FK | **刻意的反正規化**：它讓「匯出與執行必須屬同一任務」用兩個複合 FK 就擋得住 |
 | `position` | 清單中的順序 | `integer` | NOT NULL | **唯一 `(export_id, position)`**；CHECK `>= 1` | 從 1 開始。順序寫進產物的有序清單 |
 
-**規格來源**：[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)（`:975`「匯出時間……記錄列與檔名用的是**實際讀取結果的那個時間**，不是請求被接受的時間」——兩個時刻各自成立，而一次匯出可以納入多次執行，所以要有這張表記順序）。**這一條是表說明引用的規格**，維護者 2026-11-11 裁定它**算**來源（[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決) D8）。
+**規格來源**：[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)（`:984`「匯出時間……記錄列與檔名用的是**實際讀取結果的那個時間**，不是請求被接受的時間」——兩個時刻各自成立，而一次匯出可以納入多次執行，所以要有這張表記順序）。**這一條是表說明引用的規格**，維護者 2026-11-11 裁定它**算**來源（[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決) D8）。
 
 **這張表是反查出來的六項之一**（[盤點總帳§二](./data-field-inventory.mdx#二九條流程的反查)）：[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) 的畫面只顯示一個匯出時間，但「請求被接受」與「實際讀取結果」是兩個時刻，而一次匯出可以納入多次執行——所以要有這張表記順序。
 
@@ -1207,7 +1207,7 @@ import PluginView from '@/components/PluginView.astro';
 
 | Issue | 日期 | 變更 |
 | :--- | :--- | :--- |
-| [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-14 | **「輪」已經有條文與畫面了，這一節跟上。** `task_run_cycle` 的表說明原本寫「它沒有畫面，使用者只看得到回合編號」——[#170](https://github.com/label-suite/label-suite/issues/170) 於 2026-11-12 把「試標輪」與「退回原因」寫進 03-03 §資料欄位、[#282](https://github.com/label-suite/label-suite/issues/282) 於 2026-11-14 把「試標輪」鏡像進 04-01，那句已經是假的。`cycle_no` 的「規格來源」從「反查」換成 03-03 的「試標輪」條文；**新增 `rejection_reason`**（03-03 的「退回原因」是持久、選填、「不得省略欄位」，而 `close_reason` 是 `rejected`／`completed` 的列舉、載不了那段文字），可空性照本檔四個同形狀理由欄的慣例寫成 NOT NULL 允許空字串。欄數 **328 → 329**、本專案新增欄位 **4 → 5**。03-03 的入口清單 12 → 13 張 |
+| [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-14 | **「輪」已經有條文與畫面了，這一節跟上。** `task_run_cycle` 的表說明原本寫「它沒有畫面，使用者只看得到回合編號」——[#170](https://github.com/label-suite/label-suite/issues/170) 於 2026-11-12 把「試標輪」與「退回原因」寫進 03-03 §資料欄位、[#282](https://github.com/label-suite/label-suite/issues/282) 於 2026-11-12 把「試標輪」鏡像進 04-01，那句已經是假的。`cycle_no` 的「規格來源」從「反查」換成 03-03 的「試標輪」條文；**新增 `rejection_reason`**（03-03 的「退回原因」是持久、選填、「不得省略欄位」，而 `close_reason` 是 `rejected`／`completed` 的列舉、載不了那段文字），可空性照本檔四個同形狀理由欄的慣例寫成 NOT NULL 允許空字串。欄數 **328 → 329**、本專案新增欄位 **4 → 5**。03-03 的入口清單 12 → 13 張。另修三個被 #170／#282 插列打歪的行號引用（`task_annotation_assignment` 的 `:666`→`:674`、`:965`→`:974`，`task_export_run` 的 `:975`→`:984`），引號裡的原文都還對得上它們指的那一列 |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-12 | **D11 已裁定**（維護者 2026-11-12，和 D9 同類：這 4 張的結構由別頁的規則決定，本來就沒有自己的條文，不另找依據也不硬補一條）。`task_sample_snapshot`／`task_run_item`／`annotation_review_submission`／`annotation_review_submission_revision` 四節的說明句原本寫「沒有直接對應的條文（D11，仍待裁）」，改成「沒有自己的條文，而那是對的」；§十「所有候選表都有規格依據」那一列原本是 ⚠，改回 ✅ 並寫明依據有兩種形態；§一 D7 的說明同步。[`database-schema.er.json`](./database-schema.er.json) 的四段 `description` 是這四節的鏡像，一併改 |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-11 | 落地維護者同日對 D8–D10 的三個裁定：`task_annotation_assignment` 與 `task_export_run` 補上**規格來源**（D8，表說明引用的規格算來源），`annotation_review_submission` 以自己的儲存格補出表說明（D10），並在§一寫明三頁規格不持有業務資料、所以沒有表以它們為來源（D9，附三頁規格原文）。另把「所有候選表都有規格依據」從 ✅ 改成 ⚠：**4 張表整節沒有任何 `docs/specs/` 連結**，那一題登記成總帳的 D11 待裁，四節各自回指 |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-11 | 拿掉複合 FK 的條數（初版寫「34 組」，它把三個「見上／見下」的指路格重複計入），改成指向逐條內容；§關聯與限制 的 24／22 留著並把數法寫死為「表頭是『限制／層級/內容』的五張表合計」；§七 限制表的「**八張表**的單位歸屬」改成**六張**並寫出兩張例外各自的差別。無新決議 |
