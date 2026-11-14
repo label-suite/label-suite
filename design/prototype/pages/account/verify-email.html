@@ -520,14 +520,32 @@
            being submitted. Clause 2: no second sign-in, because the password
            was set on the form. The flag is what the four account pages read
            to send a signed-in visitor away (spec 01-01 Q3). */
-        window.LabelSuiteSharedSidebar.markLoggedIn();
-        window.LabelSuiteAnalytics.track('prototype_register_succeeded', {
-          ...getTrackingContext(),
-        });
-        if (!holdRequested()) {
-          redirectTimer = window.setTimeout(() => {
-            window.location.href = '../dashboard/dashboard.html';
-          }, 2000);
+        if (embedded()) {
+          /* label-suite/label-suite#297（維護者 2026-11-14 裁定「兩件都跳過」）：
+             被嵌在規格書的線框裡時，這兩件事都不做——面板照樣顯示，但不跳轉、
+             也不寫旗標。
+             跳轉：規格 01-02 §註冊成功 的線框要展示的就是這個面板，兩秒後跳走
+             等於展示不出來；而 `PrototypeFrame` 組網址時硬接 `.html`
+             （`.notecraft/components/prototype-frame.tsx`），帶不進 `?sim_hold=1`。
+             旗標：框裡的「帳號已建立」是在展示畫面、不是真的建了帳號。線框和
+             prototype 同一個 origin，旗標一寫下去，讀者之後直接開登入、註冊、
+             忘記密碼、重設密碼都會被導走，而那四頁上沒有側欄可以清它。
+             側欄的 redirectIfLoggedIn() 已經有同一道判斷（#195）。
+             成功事件也不送：`analytics.js` 的 track() 會送到 PostHog，而框裡
+             沒有人真的註冊，送出去就是一筆憑空的轉換。裁定說的是「兩件」，
+             這是第三件、同一個理由，如果不該跳過請退回這一行。
+             （頁面瀏覽事件維持原樣：那是整份 prototype 既有的行為，29 個
+             線框都一樣，不在本張範圍。） */
+        } else {
+          window.LabelSuiteSharedSidebar.markLoggedIn();
+          window.LabelSuiteAnalytics.track('prototype_register_succeeded', {
+            ...getTrackingContext(),
+          });
+          if (!holdRequested()) {
+            redirectTimer = window.setTimeout(() => {
+              window.location.href = '../dashboard/dashboard.html';
+            }, 2000);
+          }
         }
       } else {
         /* 連結不能用就沒有帳號被建立，所以不能留著登入旗標：留著的話按下
@@ -537,6 +555,21 @@
         window.LabelSuiteAnalytics.track('prototype_verify_email_link_unusable', {
           ...getTrackingContext(),
         });
+      }
+    }
+
+    /* True when this page is being shown inside a frame — in practice the
+       `PrototypeFrame` wireframes embedded in the specs. Reading
+       `window.top` never throws (only reaching into another origin's
+       properties does), but the try/catch keeps a hostile embedder from
+       turning the whole page into a blank one. Fails closed: if the check
+       cannot be made, treat it as embedded and do nothing with side
+       effects. */
+    function embedded() {
+      try {
+        return window.top !== window.self;
+      } catch (error) {
+        return true;
       }
     }
 
