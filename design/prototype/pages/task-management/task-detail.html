@@ -2501,7 +2501,10 @@
       thFepAnnotator: '標記員',
       thFepReviewer: '審核員',
       thFepOutputType: '爭議輸出類型',
-      thFepArbiter: '仲裁者與理由',
+      /* label-suite/label-suite#170：規格 03-03 §最終例外池 第 11 條（維護者
+         2026-11-14 裁定）要求這一欄的欄頭用中性字樣、不得只寫「仲裁者」——那一欄
+         的來源有兩種，負責人裁定（無指定仲裁者）那一列並沒有仲裁者。 */
+      thFepArbiter: '定案來源與理由',
       thFepFellAt: '落入例外池時間',
       thFepActions: '操作',
       fepResolveLinkLabel: '進入處置',
@@ -2512,9 +2515,8 @@
          佔位定成「未填寫理由」（annotation-workspace.config.js 的 reasonNotProvided；
          規格 04-02 在一處條文（§責任鏈 第 5 條）、§資料欄位 兩列、§邊界情況與
          §驗收標準 各一列照字面釘住），兩頁同一件事用同一個字面。
-         ⚠️ 這一欄的表頭仍是「仲裁者與理由」，對 source === 'leader' 的那一列還是把
-         負責人裁定歸給仲裁。不在這裡改：規格 03-03 §最終例外池 第 5 條與 §驗收標準
-         都只寫「仲裁者帳號」，改欄名會自己製造一條假斷言。已回報在 #170。 */
+         欄頭已於 2026-11-14 改成中性字樣（規格 03-03 §最終例外池 第 11 條），所以
+         負責人裁定那一列不再坐在一個寫著「仲裁者」的欄底下。 */
       fepReasonFallback: '未填寫理由',
       leaderAdjudicationSourceLabel: '負責人裁定（無指定仲裁者）',
       leaderAdjudicationTitleTpl: '負責人裁定 · {count} 項待裁定',
@@ -3102,7 +3104,7 @@
       thFepAnnotator: 'Annotator',
       thFepReviewer: 'Reviewer',
       thFepOutputType: 'Disputed output type',
-      thFepArbiter: 'Arbiter & reason',
+      thFepArbiter: 'Decision source & reason',
       thFepFellAt: 'Entered pool at',
       thFepActions: 'Actions',
       fepResolveLinkLabel: 'Resolve',
