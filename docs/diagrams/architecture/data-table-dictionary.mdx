@@ -1,10 +1,10 @@
 ---
 title: '候選資料表字典與關聯限制'
-description: '37 張候選資料表、328 欄的逐欄字典：英文識別碼、中文業務意義、型別、可空性、鍵與限制、規格來源，以及寫入者、讀取權限、不可變與版本界線、複合關聯與敏感邊界。規劃結構，不是已落地的資料庫。'
+description: '37 張候選資料表、329 欄的逐欄字典：英文識別碼、中文業務意義、型別、可空性、鍵與限制、規格來源，以及寫入者、讀取權限、不可變與版本界線、複合關聯與敏感邊界。規劃結構，不是已落地的資料庫。'
 category: '架構'
 tags: [架構, 資料模型, 字典, 關聯限制]
 createdAt: '2026-11-11'
-updatedAt: '2026-11-11'
+updatedAt: '2026-11-14'
 ---
 
 import PluginView from '@/components/PluginView.astro';
@@ -47,7 +47,7 @@ import PluginView from '@/components/PluginView.astro';
 | :--- | ---: | :--- |
 | 原始規劃 | **40 張 / 352 欄 / 34 單欄 FK** | 解析原始 repo 的 `database-schema.er.json` 核對過 |
 | D7 移除 | **−3 張 / −22 欄 / −2 單欄 FK** | `refresh_tokens`、`shared_idempotency_record`、`task_run_reviewer_candidate`——**本專案規格完全沒提到**，維護者 2026-11-11 裁定先拿掉 |
-| 本文件 | **37 張 / 328 欄 / 38 單欄 FK** | 複合 FK 另列於各組的§關聯 |
+| 本文件 | **37 張 / 329 欄 / 38 單欄 FK** | 複合 FK 另列於各組的§關聯 |
 
 移除不是「不需要那個機制」。更新權杖、冪等紀錄與審核員候選名單在實作時都可能真的需要，但那時要另開 issue 寫清楚為什麼——**這樣字典裡其餘每一張表都追得到規格**——**4 張除外**，它們整節沒有任何指回 `docs/specs/` 的連結。那 4 張是另一種形態：結構由別頁的規則決定、本來就沒有自己的條文（維護者 2026-11-12 裁定 D11，見[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決)）。
 
@@ -62,7 +62,7 @@ import PluginView from '@/components/PluginView.astro';
 | `task_config_version.schema_digest` | 規格化 outputs 與欄位用途的摘要 |
 | `task_config_version.schema_registry_version` | 驗證定義的版本 |
 
-同一條原則：**沒有規格依據就不留**，需要時另開 issue 寫清楚為什麼。所以本文件比原始這 37 張的 330 欄**少這六欄、另新增四欄**，合計 328。
+同一條原則：**沒有規格依據就不留**，需要時另開 issue 寫清楚為什麼。所以本文件比原始這 37 張的 330 欄**少這六欄、另新增五欄**，合計 329。
 
 ### 九個領域分組
 
@@ -601,19 +601,19 @@ import PluginView from '@/components/PluginView.astro';
 
 ## 六、`run` 發布與執行（8 張）
 
-這一組承接[盤點總帳§二](./data-field-inventory.mdx#二九條流程的反查)九條流程反查出的**六項**——發布週期、設定與資料的發布快照、紀錄有效性、審核單位、仲裁定址、匯出請求與執行分離。前四項落在這一組。
+這一組承接[盤點總帳§二](./data-field-inventory.mdx#二九條流程的反查)九條流程反查出的**六項**——發布週期、設定與資料的發布快照、紀錄有效性、審核單位、仲裁定址、匯出請求與執行分離。前四項落在這一組。**其中「發布週期」已經不只有反查依據**：[#170](https://github.com/label-suite/label-suite/issues/170)／[#282](https://github.com/label-suite/label-suite/issues/282) 把「試標輪」寫進 03-03 與 04-01 的「資料欄位」。
 
 **這組的複合 FK 最多，而理由只有一個**：[#235](https://github.com/label-suite/label-suite/issues/235) 工作項 4 要求「避免合法 ID 被錯接到另一個上下文」。單欄 FK 只保證「那個 ID 存在」，擋不住「它屬於另一個任務／另一個週期」。
 
 ### `task_run_cycle` — 一輪發布週期
 
-**這張表是反查出來的**：[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) 的「回合編號」規則欄寫「同一輪裡唯一，**退回草稿後新一輪從 1 重新算**」——「輪」就是週期，但它沒有畫面，使用者只看得到回合編號。
+**這張表是反查出來的**：[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) 的「回合編號」規則欄寫「同一輪裡唯一，**退回草稿後新一輪從 1 重新算**」——「輪」就是週期。**反查當時它沒有畫面**，使用者只看得到回合編號；[#170](https://github.com/label-suite/label-suite/issues/170) 於 2026-11-12 把「試標輪」與「退回原因」寫進同一頁的「資料欄位」、[#282](https://github.com/label-suite/label-suite/issues/282) 於 2026-11-14 把「試標輪」鏡像進 [04-01](../../specs/04-annotation/01-annotation-list.mdx#資料欄位)，所以今天序號與退回原因都有條文可指（見下面那兩欄的「規格來源」），而畫面上試標回合表與 04-01 的回饋面板都標著「第 N 輪」。
 
 | 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `id` | 發布週期主鍵 | `uuid` | NOT NULL | **PK**；`(task_id, id)` 另供複合 FK 父鍵 | — |
 | `task_id` | 擁有任務 | `uuid` | NOT NULL | **FK → `task.id`，RESTRICT** | — |
-| `cycle_no` | 同任務序號 | `integer` | NOT NULL | **唯一 `(task_id, cycle_no)`**；CHECK `>= 1` | 反查：退回草稿後另開新週期 |
+| `cycle_no` | 同任務序號 | `integer` | NOT NULL | **唯一 `(task_id, cycle_no)`**；CHECK `>= 1` | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：「**試標輪**……每個回合都屬於一輪；同一個任務同時**最多只有一輪沒關掉**，退回草稿會關掉目前這一輪並開始下一輪」（[#170](https://github.com/label-suite/label-suite/issues/170)）。**原本只有反查依據**，條文是後來補的 |
 | `dataset_version_id` | 固定的已定版資料 | `uuid` | NOT NULL | **FK → `dataset_version.id`，RESTRICT** | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：資料快照**鎖定在發布時凍結的那一份** |
 | `config_version_id` | 固定的設定版本 | `uuid` | NOT NULL | **複合 FK `(task_id, config_version_id)` → `task_config_version(task_id, id)`** | [04-02](../../specs/04-annotation/02-annotation-workspace.mdx#資料欄位)：任務設定**發布時凍結** |
 | `selection_seed` | 抽樣隨機種子 | `varchar` | NOT NULL | — | 讓抽樣可重播 |
@@ -621,10 +621,11 @@ import PluginView from '@/components/PluginView.astro';
 | `opened_at` | 開啟時間 | `timestamptz` | NOT NULL | — | — |
 | `closed_at` | 關閉時間 | `timestamptz` | **可空** | **CHECK** 與 `close_reason` 同時為空或同時非空 | 退回草稿或正式標記完結。**只關閉，不刪除** |
 | `close_reason` | 關閉原因 | `varchar(16)` | **可空** | CHECK 限 `rejected`／`completed` | `rejected`＝退回草稿；`completed`＝正式標記完結 |
+| `rejection_reason` | 退回原因 | `text` | **NOT NULL，允許空字串** | — | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：「**選填**，允許空白；隨那一輪的關閉一起寫入，**不得省略欄位**」（[#170](https://github.com/label-suite/label-suite/issues/170)）。空值以空字串表示，與 `annotation_review_decision.reason` 同一條原則。**和 `close_reason` 是兩件事**：那一欄是列舉，這一欄是負責人填的那段文字，`completed` 關閉時留空 |
 
 | | |
 | :--- | :--- |
-| **不可變** | **開啟後除了 `closed_at`／`close_reason` 都不可改。** 這是版本界線的核心：週期固定了資料集、設定、種子與演算法，發布後改任務設定不會回頭改變已發出的作業 |
+| **不可變** | **開啟後除了 `closed_at`／`close_reason`／`rejection_reason` 都不可改。** 這是版本界線的核心：週期固定了資料集、設定、種子與演算法，發布後改任務設定不會回頭改變已發出的作業 |
 | **保留** | **永不刪除。** 退回草稿只是關閉舊週期，再試標時另開新的 |
 
 ### `task_trial_round` — 週期內的一次試標回合
@@ -1167,9 +1168,9 @@ import PluginView from '@/components/PluginView.astro';
 | 項目 | 數 |
 | :--- | ---: |
 | 候選表 | **37 張**（原始 40 扣掉 D7 的 3 張） |
-| 欄位 | **328 欄** |
-| 算式 | 原始 37 張共 **330 欄** − **6 欄**（D7 理由延伸，維護者 2026-11-11 裁定）＋ **4 欄**（本專案新增） = **328** |
-| 本專案新增的欄位 | **4**：`account_session.last_seen_at`（閒置限制的起點，原始沒有）、`task.archived_at` 與 `task.archived_by_user_id`（原始 `task` 沒有任何封存欄）、`task_membership.last_activity_at`（維護者 2026-11-11 裁定存成欄位） |
+| 欄位 | **329 欄** |
+| 算式 | 原始 37 張共 **330 欄** − **6 欄**（D7 理由延伸，維護者 2026-11-11 裁定）＋ **5 欄**（本專案新增） = **329** |
+| 本專案新增的欄位 | **5**：`account_session.last_seen_at`（閒置限制的起點，原始沒有）、`task.archived_at` 與 `task.archived_by_user_id`（原始 `task` 沒有任何封存欄）、`task_membership.last_activity_at`（維護者 2026-11-11 裁定存成欄位）、`task_run_cycle.rejection_reason`（03-03 的「退回原因」，[#170](https://github.com/label-suite/label-suite/issues/170)；原始沒有） |
 | 本專案不收的原始欄位 | **6**：`users` 的 `google_subject`／`is_seeder`／`credential_version`、`task_config_version` 的 `schema_version_no`／`schema_digest`／`schema_registry_version` |
 | 單欄 FK | **38** |
 | **複合 FK** | 圖上畫不出來，**逐條內容**在各組的§關聯與限制。**這裡刻意不寫條數**，理由見下一列 |
@@ -1206,6 +1207,7 @@ import PluginView from '@/components/PluginView.astro';
 
 | Issue | 日期 | 變更 |
 | :--- | :--- | :--- |
+| [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-14 | **「輪」已經有條文與畫面了，這一節跟上。** `task_run_cycle` 的表說明原本寫「它沒有畫面，使用者只看得到回合編號」——[#170](https://github.com/label-suite/label-suite/issues/170) 於 2026-11-12 把「試標輪」與「退回原因」寫進 03-03 §資料欄位、[#282](https://github.com/label-suite/label-suite/issues/282) 於 2026-11-14 把「試標輪」鏡像進 04-01，那句已經是假的。`cycle_no` 的「規格來源」從「反查」換成 03-03 的「試標輪」條文；**新增 `rejection_reason`**（03-03 的「退回原因」是持久、選填、「不得省略欄位」，而 `close_reason` 是 `rejected`／`completed` 的列舉、載不了那段文字），可空性照本檔四個同形狀理由欄的慣例寫成 NOT NULL 允許空字串。欄數 **328 → 329**、本專案新增欄位 **4 → 5**。03-03 的入口清單 12 → 13 張 |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-12 | **D11 已裁定**（維護者 2026-11-12，和 D9 同類：這 4 張的結構由別頁的規則決定，本來就沒有自己的條文，不另找依據也不硬補一條）。`task_sample_snapshot`／`task_run_item`／`annotation_review_submission`／`annotation_review_submission_revision` 四節的說明句原本寫「沒有直接對應的條文（D11，仍待裁）」，改成「沒有自己的條文，而那是對的」；§十「所有候選表都有規格依據」那一列原本是 ⚠，改回 ✅ 並寫明依據有兩種形態；§一 D7 的說明同步。[`database-schema.er.json`](./database-schema.er.json) 的四段 `description` 是這四節的鏡像，一併改 |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-11 | 落地維護者同日對 D8–D10 的三個裁定：`task_annotation_assignment` 與 `task_export_run` 補上**規格來源**（D8，表說明引用的規格算來源），`annotation_review_submission` 以自己的儲存格補出表說明（D10），並在§一寫明三頁規格不持有業務資料、所以沒有表以它們為來源（D9，附三頁規格原文）。另把「所有候選表都有規格依據」從 ✅ 改成 ⚠：**4 張表整節沒有任何 `docs/specs/` 連結**，那一題登記成總帳的 D11 待裁，四節各自回指 |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-11 | 拿掉複合 FK 的條數（初版寫「34 組」，它把三個「見上／見下」的指路格重複計入），改成指向逐條內容；§關聯與限制 的 24／22 留著並把數法寫死為「表頭是『限制／層級/內容』的五張表合計」；§七 限制表的「**八張表**的單位歸屬」改成**六張**並寫出兩張例外各自的差別。無新決議 |
