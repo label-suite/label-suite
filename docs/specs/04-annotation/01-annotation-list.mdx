@@ -47,7 +47,7 @@ import PrototypeFrame from '@notes/components/prototype-frame';
 
 [規格 04-02 標記工作區](./02-annotation-workspace.mdx) 已交付，七列都已各自落地：前四列它以「見 規格 04-01」指回本頁、沒有重寫一份；後三列由它補上，對應的小節見上表的連結。
 
-**這一頁已定案**：十六題全部結案（Q2、Q8、Q9 於 2026-11-09 由維護者裁定，其餘十三題先前已結），另新增已定案的 Q18（由[規格 01-05](../01-account/05-login-state.mdx) Q8 指過來）<mark>與 Q19（維護者 2026-11-12 裁定，退回草稿後的回饋揭露範圍）</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>，見[§已確認決議](#已確認決議)。畫面那一側的改動歸 [Issue #181](https://github.com/label-suite/label-suite/issues/181) 與 [#187](https://github.com/label-suite/label-suite/issues/187)。
+**這一頁已定案**：十六題全部結案（Q2、Q8、Q9 於 2026-11-09 由維護者裁定，其餘十三題先前已結），另新增已定案的 Q18（由[規格 01-05](../01-account/05-login-state.mdx) Q8 指過來）<mark>與 Q19（維護者 2026-11-12 裁定，退回草稿後的回饋揭露範圍）、Q20（維護者 2026-11-14 裁定，進度摘要也標輪次）</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>，見[§已確認決議](#已確認決議)。畫面那一側的改動歸 [Issue #181](https://github.com/label-suite/label-suite/issues/181) 與 [#187](https://github.com/label-suite/label-suite/issues/187)。
 :::
 
 ## 目標
@@ -231,7 +231,7 @@ import Spec0401AnnotationListFlow from '@notes/components/spec-04-01-annotation-
 5. 任務狀態徽章顯示「已完成」或「進行中」
 6. **進度摘要由兩段組成**，依序以 ` · ` 串接：**工作統計**，然後是**這個標記階段的清單筆數**
 7. 工作統計依角色呈現：標記員是**完成率、今日完成筆數、平均速度**三項（審核員那一側見階段三）
-8. 清單筆數那一段**依標記階段二選一，不是相加**：試標階段顯示<mark>「第〈輪次〉輪 · 試標回合 R〈回合數〉 · 本回合清單 〈筆數〉 筆」</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>；正式標記階段顯示「共 〈筆數〉 筆資料」
+8. 清單筆數那一段**依標記階段二選一，不是相加**：試標階段顯示<mark>「第 〈輪次〉 輪 · 試標回合 R〈回合數〉 · 本回合清單 〈筆數〉 筆」</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>；正式標記階段顯示「共 〈筆數〉 筆資料」
 9. 試標階段**沒有已建立的回合可讀**時，回合數預設顯示第一回合
 10. **進度條的長度就是工作統計裡的完成率**
 11. 這個任務在當前標記階段**全數提交**時，進度條覆寫成 100%，任務狀態徽章**同步**顯示「已完成」
@@ -240,7 +240,10 @@ import Spec0401AnnotationListFlow from '@notes/components/spec-04-01-annotation-
 14. 這張卡的視覺樣式與儀表板的任務列表列項一致，徽章與進度條用同一套規格
 15. 工作統計的數值**必須與儀表板同一個任務、同一個角色的列項一致**——同一份資料來源，**不得兩處各自維護**
 16. 審核員視圖另外會在這張卡下方出現一則「尚未提交、不計入審核清單」的說明列（見階段三）
-17. <mark>第 8 條的輪次**一律顯示**，不因為只有一輪就省略（維護者 2026-11-14 裁定）。[§試標歷史回饋](#試標歷史回饋)第 19、25 條已經把揭露的判定單位改成「輪次 ＋ 回合」，而回合編號每一輪從 R1 重算（[規格 03-03 §資料欄位](../03-task-management/03-task-detail.mdx#資料欄位)的「試標輪」），所以單看回合號分不出是哪一輪的。</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>
+17. <mark>第 8 條的輪次**一律顯示**，不因為只有一輪就省略。</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>
+<mark>**第 17 條的依據分兩層**：維護者 2026-11-14 裁定「進度摘要要加輪次，條文與 Scenario 一起改」；「一律顯示、不省略」那一半來自同日對[試標回饋面板](#試標歷史回饋)的裁定（提案的裁決點 B），**把它延伸到進度摘要是撰寫者為了讓兩處讀起來一致而導出的，不是裁定的字句**。</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>
+<mark>**為什麼要標輪次**（以下也是本頁補充的說明）：[§試標歷史回饋](#試標歷史回饋)第 19、25 條已經把揭露的判定單位改成「輪次 ＋ 回合」，而回合編號每一輪從 R1 重新算（[規格 03-03 §資料欄位](../03-task-management/03-task-detail.mdx#資料欄位)的「回合編號」與「試標輪」兩列），所以單看回合號分不出是哪一輪的。</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>
+<mark>⚠️ 這一條和[規格 03-03 §概覽](../03-task-management/03-task-detail.mdx#概覽)第 27 條**刻意不同**：那裡裁的是試標回合表的輪次分隔列「只在表上同時有兩輪以上時出現」（維護者 2026-11-12）。不同畫面、各有裁定，不要為了「對齊」去改其中一頁。</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>
 
 - 第 15 條是來源明寫的：同一個進度在兩個頁面出現兩個數字，使用者會不知道該信哪一個
 - 第 11 條把「全數提交」與那個徽章綁在一起，所以[§邊界情況（Edge Case）](#邊界情況edge-case)那一列「任務已完成」講的是同一件事
@@ -658,7 +661,7 @@ import Spec0401AnnotationListFlow from '@notes/components/spec-04-01-annotation-
 | 輸出類型 | 清單 | 是 | **照任務設定裡的順序**顯示 | 任務資訊卡的標籤 |
 | 清單筆數 | 整數 | 是 | **依標記階段二選一**：正式標記顯示「共 N 筆資料」，試標顯示這一回合的筆數 | 任務資訊卡的進度摘要第二段 |
 | 試標回合 | 整數 | 否 | 只有試標階段顯示；讀不到已建立的回合時預設第一回合；<mark>**只在同一輪裡唯一**，退回草稿後新一輪從 1 重算</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | 任務資訊卡的進度摘要第二段 |
-| <mark>試標輪</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | 整數 | <mark>試標階段**是**</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | <mark>每個回合都屬於一輪；定義與寫入規則由[規格 03-03 §資料欄位](../03-task-management/03-task-detail.mdx#資料欄位)擁有，這一頁不重複定義，只用它判定揭露與分列</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | <mark>試標歷史回饋的每一筆</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> |
+| <mark>試標輪</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | 整數 | <mark>試標階段**是**</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | <mark>每個回合都屬於一輪；定義與寫入規則由[規格 03-03 §資料欄位](../03-task-management/03-task-detail.mdx#資料欄位)擁有，這一頁不重複定義，只用它判定揭露與分列</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | <mark>任務資訊卡的進度摘要第二段、試標歷史回饋的每一筆</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> |
 | 完成率 | 百分比 | 否 | **進度條的長度就是它**；全數提交時覆寫 100%；查不到工作統計時進度條 0% | 任務資訊卡的進度摘要與進度條 |
 | 今日完成筆數／平均速度 | 整數／數值 | 否 | 標記員的工作統計三項之二；與儀表板同源 | 任務資訊卡的進度摘要第一段 |
 | 樣本的 ID | 文字 | 是 | 不可編輯 | 清單第一欄 |
@@ -784,7 +787,7 @@ import Spec0401AnnotationListFlow from '@notes/components/spec-04-01-annotation-
 | 從麵包屑第 2 層回清單 | 回到同一個任務、同一個角色、同一個標記階段 |
 | 套了篩選之後進工作區再返回 | 篩選與頁碼都還在 |
 | 沒套篩選就進工作區 | 工作區的網址上不會多出空的篩選參數 |
-| 任務還在試標第 2 回合 | 任務資訊卡顯示回合數與這一回合的清單筆數 |
+| 任務還在試標第 2 回合 | 任務資訊卡顯示<mark>輪次、</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>回合數與這一回合的清單筆數 |
 | 任務已完成 | 任務狀態徽章顯示「已完成」 |
 | 篩選之後一筆都不剩 | 「找不到符合條件的資料。」 |
 | 任務本來就還沒有資料 | 「目前尚無資料。」 |
@@ -793,7 +796,7 @@ import Spec0401AnnotationListFlow from '@notes/components/spec-04-01-annotation-
 | 查不到這個人的工作統計 | 進度摘要只剩清單筆數那一段，進度條 0%（只適用標記員） |
 | 這個任務在當前標記階段全數提交 | 進度條 100%，任務狀態徽章同時顯示「已完成」 |
 | 試標階段讀不到已建立的回合 | 回合數顯示第一回合 |
-| 試標階段 | 進度摘要顯示回合與這一回合的筆數，**不顯示**「共 N 筆資料」 |
+| 試標階段 | 進度摘要顯示<mark>輪次、</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>回合與這一回合的筆數，**不顯示**「共 N 筆資料」 |
 | 資料還沒讀進來 | 顯示載入中，不是「目前尚無資料。」也不是一張空表格 |
 | 某位標記員是被動登出（過期或閒置超限）的 | 他那一筆的累計耗時不計入，審核員那一欄不出現一個用失效時間算出來的數字 |
 | 從工作區返回清單 | 除了篩選與頁碼，捲動位置也回到離開前的地方 |
@@ -882,9 +885,9 @@ import Spec0401AnnotationListFlow from '@notes/components/spec-04-01-annotation-
 | 沒有待處理就取已儲存 | 某任務沒有待處理、但有已儲存的樣本 | 按「快速繼續」 | 落在最後一筆已儲存那一筆 |
 | 全部做完就回退最後一筆 | 某任務的樣本全部已提交 | 按「快速繼續」 | 落在該任務最後一筆，不是空畫面 |
 | 進度摘要的兩段 | 使用者是某任務的標記員，該任務在正式標記階段 | 查看任務資訊卡的進度摘要 | 先是完成率、今日完成筆數與平均速度，然後是「共 N 筆資料」，兩段之間以點號分隔 |
-| 試標階段的筆數段二選一 | 同一個任務改看試標階段的第 2 回合 | 查看進度摘要 | <mark>顯示「第 1 輪 · 試標回合 R2 · 本回合清單 N 筆」</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>，**沒有**「共 N 筆資料」 |
+| 試標階段的筆數段二選一 | 同一個任務改看試標階段的第 2 回合<mark>，而它從未退回草稿</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | 查看進度摘要 | <mark>顯示「第 1 輪 · 試標回合 R2 · 本回合清單 N 筆」</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>，**沒有**「共 N 筆資料」 |
 | <mark>進度摘要分得出哪一輪</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | <mark>某任務退回草稿後開了第 2 輪，現在看第 2 輪的 R1</mark> | <mark>查看進度摘要</mark> | <mark>顯示「第 2 輪 · 試標回合 R1 · 本回合清單 N 筆」，而不是只寫「試標回合 R1」</mark> |
-| <mark>只有一輪也標輪次</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | <mark>某任務從未退回草稿，仍在第 1 輪</mark> | <mark>查看進度摘要</mark> | <mark>照樣顯示「第 1 輪 · …」，不因為只有一輪而省略（第 17 條）</mark> |
+| <mark>只有一輪也標輪次</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | <mark>某任務在**試標階段**、從未退回草稿，仍在第 1 輪</mark> | <mark>查看進度摘要</mark> | <mark>照樣顯示「第 1 輪 · …」，不因為只有一輪而省略（[§任務資訊卡](#任務資訊卡)第 17 條）</mark> |
 | 進度條等於完成率 | 某任務的標記員完成率是 40% | 查看進度條 | 長度是 40% |
 | 全數提交覆寫成 100% | 某任務在當前標記階段全數提交 | 查看進度條與任務狀態徽章 | 進度條 100%，徽章同時顯示「已完成」 |
 | 查不到工作統計就退回筆數段 | 某標記員在這個任務查不到工作統計 | 查看進度摘要與進度條 | 摘要只剩清單筆數那一段，進度條 0% |
@@ -1038,7 +1041,7 @@ import Spec0401AnnotationListFlow from '@notes/components/spec-04-01-annotation-
 
 ## 待釐清
 
-**沒有未決問題。** 這一頁的十六題全部定案：十三題於 2026-11-08 之前裁定，**Q2、Q8、Q9 於 2026-11-09 裁定**，都在[§已確認決議](#已確認決議)（另有一條由別頁指過來的 Q18，也已定案）。題號**只往後加、不重編**，搬動時保留原號，所以決議區的號碼不連續；<mark>Q19 已於 2026-11-12 由維護者裁定（見[§已確認決議](#已確認決議)），所以後續若有新題目從 **Q20** 起算</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>。（<mark>這一句原本寫「從 Q18 起算」，但 Q18 當時就已經被占用了</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>）
+**沒有未決問題。** 這一頁的十六題全部定案：十三題於 2026-11-08 之前裁定，**Q2、Q8、Q9 於 2026-11-09 裁定**，都在[§已確認決議](#已確認決議)（另有一條由別頁指過來的 Q18，也已定案）。題號**只往後加、不重編**，搬動時保留原號，所以決議區的號碼不連續；<mark>Q19 已於 2026-11-12 由維護者裁定、Q20 於 2026-11-14 裁定（都在[§已確認決議](#已確認決議)），所以後續若有新題目從 **Q21** 起算</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>。（<mark>這一句原本寫「從 Q18 起算」，但 Q18 當時就已經被占用了</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>）
 
 ## 已確認決議
 
@@ -1191,6 +1194,16 @@ import Spec0401AnnotationListFlow from '@notes/components/spec-04-01-annotation-
 
 > <mark>**這一題是 [Issue #282](https://github.com/label-suite/label-suite/issues/282) 開出來的**：#170 讓回合編號在每一輪從 R1 重算之後，只看回合號的揭露閘門會把已關閉輪次的 R1 當成新一輪的 R1。畫面那一側歸 #282</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>
 
+### Q20. 進度摘要那一段要不要也標輪次？（已定案，維護者裁定 2026-11-14）
+
+- [x] <mark>**要，而且一律顯示**——字面變成「第 〈輪次〉 輪 · 試標回合 R〈回合數〉 · 本回合清單 〈筆數〉 筆」</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>
+- [ ] 不標，只在回饋面板分輪次
+- [ ] 只有兩輪以上才標
+
+> <mark>理由：**維護者 2026-11-14 裁定「加，條文與 Scenario 一起改」**。這一題是 Q19 的延伸——Q19 把揭露的判定單位改成「輪次 ＋ 回合」之後，[§試標歷史回饋](#試標歷史回饋)那一側已經分得出輪次，而[§任務資訊卡](#任務資訊卡)第 8 條的進度摘要仍只寫回合號。</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>
+> <mark>**「一律顯示」那一半的依據**：同日對回饋面板的裁定（提案的裁決點 B）。**把它延伸到進度摘要是撰寫者為了讓兩處一致而導出的，不是裁定的字句**，見[§任務資訊卡](#任務資訊卡)第 17 條。</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>
+> <mark>落在[§任務資訊卡](#任務資訊卡)第 8、17 條、§資料欄位 的「試標輪」列、§邊界情況 兩列與 §驗收標準 三條。畫面那一側歸 [Issue #282](https://github.com/label-suite/label-suite/issues/282)。</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>
+
 ### Q15. 審核員可以在清單上直接做決策嗎？（已定案，沿用舊來源）
 
 - [x] 不行：沒有逐列或批次的通過／退回，也沒有「送出審核」；決策的唯一入口是工作區的審核卡
@@ -1223,7 +1236,7 @@ import Spec0401AnnotationListFlow from '@notes/components/spec-04-01-annotation-
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| [#282](https://github.com/label-suite/label-suite/issues/282) | 2026-11-14 | §規格 › 任務資訊卡、§驗收標準 | 第 8 條把試標階段的筆數段字面釘成「試標回合 R〈回合數〉 · 本回合清單 〈筆數〉 筆」，**沒有輪次**；§驗收標準 那一條照字面驗 | **改一條字面、新增一條條文與兩條驗收**：第 8 條的字面加上「第〈輪次〉輪 · 」，新增第 17 條寫明輪次**一律顯示**、不因為只有一輪就省略（維護者 2026-11-14 裁定）；Scenario 跟著改並新增「兩輪並存時分得出哪一輪」與「只有一輪也標輪次」。**畫面尚未跟上**：`annotation-list.html` 的進度摘要目前仍只寫「試標回合 R1」，畫面那一側歸本 issue，等這一頁合併後才改 | 第 17 條（維護者 2026-11-14 裁定） |
+| [#282](https://github.com/label-suite/label-suite/issues/282) | 2026-11-14 | §規格 › 任務資訊卡、§驗收標準 | 第 8 條把試標階段的筆數段字面釘成「試標回合 R〈回合數〉 · 本回合清單 〈筆數〉 筆」，**沒有輪次**；§驗收標準 那一條照字面驗 | **改一條字面、新增一條條文與兩條驗收**：第 8 條的字面加上「第〈輪次〉輪 · 」，新增第 17 條寫明輪次**一律顯示**、不因為只有一輪就省略（維護者 2026-11-14 裁定）；Scenario 跟著改並新增「兩輪並存時分得出哪一輪」與「只有一輪也標輪次」。**畫面尚未跟上**：`annotation-list.html` 的進度摘要目前仍只寫「試標回合 R1」，畫面那一側歸本 issue，等這一頁合併後才改。⚠️ 那一檔 `:2080` 附近還有一段註解主張「這一段**刻意不加輪次**」並引用本條的舊字面，本次之後整段變成反話（它還把本條所在的節名誤寫成「§進度摘要」，實際在 §任務資訊卡）——文件 PR 碰不到 `design/prototype/`，交由畫面那一張依 `spec-migration.md` §PR 的變更範圍 撤掉 | 第 17 條（維護者 2026-11-14 裁定） |
 | [#282](https://github.com/label-suite/label-suite/issues/282) | 2026-11-12 | 頁首、§規格 › 什麼時候才能揭露、§卡控機制、§邊界情況、§資料欄位、§驗收標準、§待釐清、§已確認決議（Q17 與新增的 Q19） | 揭露閘門「以**回合**為單位判定」、「判不出屬於哪一回合」、「被修改筆數逐**回合**分列」；第 21 條的「不會被收回」只列到「建立下一回合」與「進入正式標記」 | 三處都加上**輪次**維度；第 21 條補上「退回草稿、開了新的一輪」；新增第 25 條（每一筆回饋要說得出屬於哪一輪的哪一回合）；§資料欄位 新增「試標輪」一列並指回 03-03；新增三條驗收；§卡控機制 三列與 §邊界情況 兩列的鏡像一併補上輪次；Q17 的勾選項註明判定單位已由 Q19 擴充 | **新增 Q19**（維護者 2026-11-12）：退回草稿後已關閉輪次的回饋**繼續揭露，但每一筆要標明輪次**。順帶修正 §待釐清 的「從 Q18 起算」——Q18 當時已被占用 |
 | [#181](https://github.com/label-suite/label-suite/issues/181) | 2026-11-11 | §已確認決議 Q13 的理由段 | 寫著那段文案的常數「**被引用兩次、零處定義**，所以畫面現在渲染不出文字——那是一個現存的潛在執行期錯誤」 | 改成實況：常數**定義一次、兩頁共讀**，本來就符合 `FR-100` 第 3 點，要改的是字面不是結構 | **無新決議**。那句話從寫下時就是假的——來源是 `grep` 在含中文的檔案上靜默回報 0，已用 python 複查（定義 1 處、匯出 1 處、引用 2 處） |
 | [#260](https://github.com/label-suite/label-suite/issues/260) | 2026-11-11 | §Q&A | 每題是 `### Q. …` 的 H3 標題，答案直接顯示 | 每題一個預設收合的 `tip`，題目是可點選的標題 | **無新決議**。§Q&A **3 題**全部從 `### Q. …` 標題改成預設收合的 `tip`，題目成為可點選的標題。題目的 H3 錨點因此消失（全站沒有任何連結指向它們，已逐題查過），也不再進右側目錄。**題目、答案與連結一字未改**，只有標題去掉「Q. 」前綴。格式依維護者 2026-11-11 的四個裁定（紀錄在[這則留言](https://github.com/label-suite/label-suite/issues/260#issuecomment-6792064965)） |
