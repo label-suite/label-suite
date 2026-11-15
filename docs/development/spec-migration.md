@@ -337,6 +337,47 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 - **任何一類都不准動的**：`docs/specs/00-prd.mdx`。要動 PRD 時回報並建議用 `prd-writing`（見「非目標」）。
 - **`design/prototype/` 只有畫面修正 PR 能動，而且要先過上面那道 artifact 關卡。** 文件 PR、流程圖 PR、工具 PR 與流程設定 PR 都不准動它：搬移期間畫面與規格不一致時列入待釐清（見「非目標」），不要順手改畫面。
 
+## 合併閘第 3 條：怎麼判斷一個 job 真的跑完了
+
+合併閘第 3 條要求「該 sha 至少有一個 run，且**每個 job 都 completed 且 success**」，並明寫「run 層級會說謊」——因為 run 可以在某個 job 還排隊時就顯示成功。所以判定一律下到 job 層級。
+
+**但 job 層級的 `status` 自己也會卡住。** 判例（維護者 2026-11-15 裁定，[#188](https://github.com/label-suite/label-suite/issues/188)／[PR #312](https://github.com/label-suite/label-suite/pull/312)）：
+
+```
+docs-site        status=completed    conclusion=success  completed_at=12:33:44Z
+commit-messages  status=in_progress  conclusion=success  completed_at=12:32:43Z   ← 卡住
+specs            status=completed    conclusion=success  completed_at=12:32:53Z
+run:             status=completed    conclusion=success
+```
+
+`commit-messages` **同時**有終局的 `conclusion=success` 與一個早就過去的 `completed_at`，但 `status` 停在 `in_progress`。兩個端點（`/commits/<sha>/check-runs` 與 `/actions/runs/<id>/jobs`）說法一致，間隔重查六次、等超過一小時都沒有變。
+
+**裁定**：`conclusion=success` ＋ 有 `completed_at` ＋ run 層級 `completed`，三者同時成立就算滿足閘 3。
+
+**這一條不適用於下面這些**，它們是真的還在跑，要等：
+
+| 狀況 | 為什麼不適用 |
+| :--- | :--- |
+| `conclusion` 為 `null` | 沒有終局結果，連「過了」都還不知道 |
+| 沒有 `completed_at` | 沒有任何證據說它跑完了 |
+| `status=queued` | 還沒開始，`status` 不是卡住而是正確的 |
+| run 層級不是 `completed` | 這時 job 的奇怪狀態更可能是真的在跑 |
+| `conclusion` 是 `failure`／`cancelled`／`timed_out` | 那是失敗，與這條無關 |
+
+**為什麼這不算放寬閘門**：閘 3 的目的是「不要在 job 還在跑的時候合併」。這一條處理的是**跑完了但狀態欄位卡住**，三個條件合起來正是「跑完了」的證據；而上表那五種情形一條都不放過。
+
+查的指令（`status` 與 `conclusion` 都要印出來，只看其中一個會判錯）：
+
+```sh
+sha=$(gh pr view <N> --json headRefOid --jq .headRefOid)
+gh api repos/label-suite/label-suite/commits/$sha/check-runs \
+  --jq '.check_runs[]|"\(.name) status=\(.status) conclusion=\(.conclusion) completed=\(.completed_at)"'
+gh api repos/label-suite/label-suite/actions/runs/<run-id> --jq '"run: status=\(.status) conclusion=\(.conclusion)"'
+```
+
+**遇到這種情形要在 issue 留言寫出三個值**（`status`、`conclusion`、`completed_at`）與 run 層級的狀態，再依這一條合併；只寫「CI 綠」會讓後人看不出你是依哪一條過的。
+
+
 ## 建置閘門要重跑確認
 
 `pnpm exec notecraftapp build docs --rebuild` 在編輯 `docs/` 之後的**第一次執行會間歇性失敗**，第二次起通過（[#172](https://github.com/label-suite/label-suite/issues/172)，實測 1 PASS／3 FAIL）。
