@@ -9,7 +9,7 @@ updatedAt: '2026-11-15'
 
 # 07-01 側欄導覽
 
-:badge[已定案]{variant="success"} :badge[變更 #249]{variant="info" href="https://github.com/label-suite/label-suite/issues/249"} :badge[共用介面]{variant="neutral"}
+:badge[已定案]{variant="success"} :badge[變更 #188]{variant="warning"} :badge[共用介面]{variant="neutral"}
 
 > 來源：舊 repo `specs/shared/008-sidebar-navbar-shared/spec.md`（100 條）、`specs/foundation/000-foundation/spec.md` 的 6 條業務規則（依 [搬移設計文件](../../development/spec-migration.md) 的 D4）
 > 參考畫面：無獨立頁面，不嵌入 `PrototypeFrame`。側欄出現在每一個登入後頁面裡，畫面以 `design/prototype/pages/shared/sidebar.js` 與 `sidebar.css` 為準（[§已確認決議](#已確認決議) Q5）
@@ -197,7 +197,7 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 3. 使用者沒有未讀通知 → 不顯示數量
 4. 使用者點通知入口 → 展開通知清單，清單上有「全部標為已讀」
 5. 使用者點「全部標為已讀」→ 未讀數量歸零、不再顯示
-6. 每一則通知顯示發生了什麼事、相關的任務、是誰做的，以及多久以前發生（相對時間）
+6. 每一則通知顯示發生了什麼事、相關的任務、是誰做的，以及多久以前發生（相對時間）。<mark>**例外**：系統自己產生、沒有操作者的事件沒有「是誰做的」那一行（[規格 07-04 §已確認決議](./04-notification-events.mdx#已確認決議) Q5，維護者 2026-11-15）</mark><sup>[#188](https://github.com/label-suite/label-suite/issues/188)</sup>
 7. 使用者再點一次入口或點清單以外的地方 → 清單收起
 
 - 通知清單不提供通知偏好設定的入口；偏好設定在 [規格 01-04 個人設定](../01-account/04-profile.mdx)
@@ -350,7 +350,8 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 | 從來沒設定過外觀 | 使用者從未切換過外觀 | 第一次載入登入後頁面 | 當成跟隨系統、**依作業系統的設定呈現** |
 | 關閉動態效果時不播動畫 | 使用者在作業系統關閉了動態效果 | 收合側欄或展開次選單 | 不播動畫，操作本身照常可用 |
 | 角色被改掉時側欄不立刻變 | 使用者的系統角色在側欄開著的時候被改掉 | 繼續停在目前頁面 | 側欄維持原本的導覽項，從下一次操作起才依新角色顯示 |
-| 每一則通知顯示發生了什麼 | 使用者有未讀通知 | 展開通知清單 | 每一則都看得到事件、相關任務、是誰做的與多久以前 |
+| <mark>有操作者的通知顯示四件事</mark><sup>[#188](https://github.com/label-suite/label-suite/issues/188)</sup> | 使用者有未讀通知，而那一則有操作者 | 展開通知清單 | 看得到事件、相關任務、是誰做的與多久以前 |
+| <mark>沒有操作者的通知少一行</mark><sup>[#188](https://github.com/label-suite/label-suite/issues/188)</sup> | 有一則系統自己產生、沒有操作者的通知（例如匯出完成） | 展開通知清單 | 那一則沒有「是誰做的」那一行，其餘三件事照樣看得到 |
 | 沒有未讀通知 | 使用者沒有未讀通知 | 查看通知入口 | 不顯示數量 |
 | 未讀通知數超過九 | 使用者有十二則未讀通知 | 查看通知入口 | 顯示「9+」 |
 | 全部標為已讀 | 使用者有未讀通知且通知清單已展開 | 點「全部標為已讀」 | 未讀數量歸零、不再顯示 |
@@ -410,7 +411,7 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 > 理由：系統角色是平台成員，任務角色是標記員，術語表沒有「一般使用者」這個名詞；而角色標示本來就是依任務角色解析的——審核員與專案負責人兩支都對得上術語表，只有標記員這一支用了表外的字。
 > **這一題其實有三個缺口，裁決一次補齊**：來源 `shared:FR-020A` 的第三個分支（`annotator` 或未提供）同時覆蓋「標記員」與「完全沒有任務角色」兩種人，所以改名標記員之後必須給後者一個名字；而 prototype 的 `'一般使用者'` 是**寫死的中文字面值**，不在 `taskRoleI18n` 字典裡（`design/prototype/pages/shared/sidebar.js:1867`），英文模式下角色標示會顯示中文，違反 `shared:FR-018C1` 與 `shared:FR-021` 的語言一致要求。
 > 「一般使用者」這個字保留給它真正適用的那種人——還沒有任何任務角色的使用者。
-> <mark>**這一條不涵蓋[規格 02-01](../02-dashboard/01-dashboard.mdx) 的儀表板版面**：02-01 的 [§已確認決議](../02-dashboard/01-dashboard.mdx#已確認決議) Q8 在隔天（維護者裁定 2026-11-09）**否決了「跟著本條讀作『一般使用者』」這個選項**，裁定那種版面**不定名**、一律用描述性的「還沒有任務角色」。</mark><sup>[#249](https://github.com/label-suite/label-suite/issues/249)</sup>
+> **這一條不涵蓋[規格 02-01](../02-dashboard/01-dashboard.mdx) 的儀表板版面**：02-01 的 [§已確認決議](../02-dashboard/01-dashboard.mdx#已確認決議) Q8 在隔天（維護者裁定 2026-11-09）**否決了「跟著本條讀作『一般使用者』」這個選項**，裁定那種版面**不定名**、一律用描述性的「還沒有任務角色」。
 > 以下是**本頁的解讀**，不是依據：本條管的是側欄的角色標示，Q8 管的是儀表板版面的稱呼，兩個是不同的位置；Q8 只是拒絕把本條的用字搬過去，沒有推翻本條。
 > **本條不碰顯式覆寫**：`shared:FR-020A` 在「依任務角色解析」之前先寫了一個例外——呼叫端已明確傳入固定字串時（例如系統管理的頁面固定顯示「系統管理員」）不受該條影響，並在結尾重申「既有顯式覆寫入口之優先序與行為不變」。畫面確實在用這個入口（`design/prototype/pages/admin/user-management.html:358` 傳入「系統管理員」）。所以系統管理員停在系統管理頁時讀作「系統管理員」，**不是**「一般使用者」，即使他在目前任務沒有任務角色。
 > **英文是一處覆寫**：畫面目前對「一般使用者」用的英文是 `User`（`design/prototype/pages/account/profile.html:1167`），裁決定的是 `General user`。這一處**明確覆寫畫面現況**，不是漏看；要改的是 prototype 那一側。
@@ -531,6 +532,7 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#188](https://github.com/label-suite/label-suite/issues/188) | 2026-11-15 | §規格 › 通知 第 6 條 | 第 6 條無條件要求每一則通知顯示「發生了什麼事、相關的任務、是誰做的，以及多久以前發生」 | **加一個例外**：系統自己產生、沒有操作者的事件沒有「是誰做的」那一行（維護者 2026-11-15 裁定，見[規格 07-04 §已確認決議](./04-notification-events.mdx#已確認決議) Q5）。頁首的 `變更 #249` 依 `spec-writing` 步驟 5 第 6 點換成 `變更 #188`，#249 那一輪的 `<mark>` 一併清掉、文字保留 | 07-04 Q5 |
 | [#188](https://github.com/label-suite/label-suite/issues/188) | 2026-11-15 | §規格 › 通知、§已確認決議 Q4 | §規格 › 通知 最後一條只寫「通知的資料由所在頁面提供」、沒有指向任何一頁；Q4 寫「事件清單留給後續的通知 Epic」與「這一條不等於平台層的通知事件清單已有歸屬」 | 三處都改成指向[規格 07-04 通知事件](./04-notification-events.mdx)（維護者 2026-11-15 裁定落點）；§通知 那一條**保留原本的「通知的資料由所在頁面提供」**，只在它後面接上事件清單的去處 | **無新決議**，本頁條文一字未改 |
 | [#260](https://github.com/label-suite/label-suite/issues/260) | 2026-11-11 | §Q&A | 每題是 `### Q. …` 的 H3 標題，答案直接顯示 | 每題一個預設收合的 `tip`，題目是可點選的標題 | **無新決議**。§Q&A **4 題**全部從 `### Q. …` 標題改成預設收合的 `tip`，題目成為可點選的標題。題目的 H3 錨點因此消失（全站沒有任何連結指向它們，已逐題查過），也不再進右側目錄。**題目、答案與連結一字未改**，只有標題去掉「Q. 」前綴。格式依維護者 2026-11-11 的四個裁定（紀錄在[這則留言](https://github.com/label-suite/label-suite/issues/260#issuecomment-6792064965)） |
 | [#249](https://github.com/label-suite/label-suite/issues/249) | 2026-11-11 | §已確認決議 Q2 的理由 | 「這同時是規格 02-01 Q8 **在等的答案**」 | Q8 已於 2026-11-09 裁定，而且**否決了**跟著本條讀作「一般使用者」；改成寫明兩題各自管哪個位置 | 無新決議；Q2 的結論一字未動 |
