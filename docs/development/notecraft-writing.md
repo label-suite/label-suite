@@ -12,7 +12,7 @@ NoteCraft 需要 Node 22 以上。預覽 `pnpm docs:serve`（http://127.0.0.1:43
 **手動跑 build 之前先停掉 `docs:serve`**：它的 watcher 和手動 build 共用同一個 `.astro/`、沒有跨行程鎖，撞上時其中一個會失敗；判準與細節見 [spec-migration.md §建置閘門要重跑確認](./spec-migration.md#建置閘門要重跑確認)。
 規格檔另跑 `pnpm check:specs`。不在本專案跑 `tsc` 或 `astro build`。
 
-視覺化標記與生成元件的規範見 [notecraft-visualize.md](notecraft-visualize.md)。
+視覺化標記與生成元件的規範見 [notecraft-visualize.md](notecraft-visualize.md)，筆記轉簡報見 [notecraft-present.md](notecraft-present.md)。
 
 ## 撰寫規範
 
