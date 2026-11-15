@@ -8,7 +8,7 @@ tags: [notecraft, docs]
 
 目標是**幫助理解**，不是每篇都要有圖。調性：專業、克制，像技術文件或顧問報告裡的圖，不走 Q 版或卡通路線。
 生成流程依 `content-visualize` skill，視覺 token 依 `label-suite-design` skill（來源 `design/prototype/assets/tokens.css`）。
-文件語法見 [notecraft-writing.md](notecraft-writing.md)。
+文件語法見 [notecraft-writing.md](notecraft-writing.md)；把整篇筆記轉成簡報是另一條流程，見 [notecraft-present.md](notecraft-present.md)。
 
 ## `@ai-visualize` 標記
 
