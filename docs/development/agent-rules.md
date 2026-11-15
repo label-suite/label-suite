@@ -176,7 +176,7 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 | 寄信降級 | ✅ 已裁定（2026-11-10）：連結印在伺服器 log，Lite 版的 log 視為敏感 |
 | 觀測性 | ✅ 已裁定（2026-11-10）：只做 `ai_runs`（ADR-019） |
 | onboarding | ✅ 已裁定（2026-11-10）：空狀態與情境提示算在內，ADR-015 的導覽不做 |
-| 通知事件清單 | ⚠️ 無歸屬，由 [#188](https://github.com/label-suite/label-suite/issues/188) 追蹤 |
+| 通知事件清單 | 已落在[規格 07-04 通知事件](../specs/07-shared/04-notification-events.mdx)（維護者 2026-11-15 裁定八個事件）；收件者與文案仍待裁定，由 [#188](https://github.com/label-suite/label-suite/issues/188) 追蹤 |
 
 本 Epic **不自行擴增功能**：上表的範圍以本期 PRD 為準，要加功能另開可追溯的 Issue。
 
