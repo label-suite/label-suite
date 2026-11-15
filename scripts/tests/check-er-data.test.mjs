@@ -6,7 +6,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { checkErData, checkSpecEntries, parseDictionary } from '../check-er-data.mjs';
+import { checkErData, checkLineCitations, checkSpecEntries, parseDictionary } from '../check-er-data.mjs';
 
 // A two-table dictionary in the real document's shape: a group table in §一,
 // a chapter per group, a prose line and a column table per table.
@@ -317,4 +317,115 @@ test('a spec page with no entry at all is reported', () => {
 test('a page no table cites passes with an entry that names none', () => {
   const pages = [{ code: '07-01', rel: 'specs/07-shared/01-sidebar.mdx', text: entry('沒有任何一張表把本頁列為規格來源') }];
   assert.deepEqual(checkSpecEntries(ER_WITH_SOURCES, pages), []);
+});
+
+// --- line citations -----------------------------------------------------
+// #236, 2026-11-14: three citations in the dictionary and the ER data had
+// drifted because #170 and #282 inserted rows into a spec's 資料欄位 table.
+// Nothing saw it: the spec-source check only proves the cited .mdx exists.
+const CITED_PAGE = {
+  code: '03-03',
+  rel: 'specs/03-task-management/03-task-detail.mdx',
+  text: [
+    '---',                                                              // 1
+    "title: '任務詳情'",                                                 // 2
+    '---',                                                              // 3
+    '',                                                                 // 4
+    '### 資料欄位',                                                      // 5
+    '',                                                                 // 6
+    '| 欄位 | 規則 |',                                                   // 7
+    '| :--- | :--- |',                                                  // 8
+    '| 匯出時間 | 用的是**實際讀取結果的那個時間**，不是請求被接受的時間 |', // 9
+    '| 排除紀錄 | 終局，不可刪除 |',                                      // 10
+    '| 審核單位 | 任務的某個回合 × 某一筆指派 |',                          // 11
+  ].join('\n'),
+};
+const cite = (body) => [{ rel: 'diagrams/architecture/x.mdx', text: body }];
+const link = '[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)';
+
+test('a line citation that lands on the row it quotes passes', () => {
+  assert.deepEqual(checkLineCitations(cite(`**規格來源**：${link}（\`:9\`「匯出時間……**實際讀取結果的那個時間**」）`), [CITED_PAGE]), []);
+});
+
+test('a line citation one row off is reported', () => {
+  const out = checkLineCitations(cite(`${link}（\`:10\`「匯出時間……實際讀取結果的那個時間」）`), [CITED_PAGE]);
+  assert.match(out.join('\n'), /:10/);
+  assert.match(out.join('\n'), /匯出時間/);
+});
+
+test('a line citation past the end of the page is reported', () => {
+  assert.match(checkLineCitations(cite(`${link}（\`:4000\`「匯出時間」）`), [CITED_PAGE]).join('\n'), /4000/);
+});
+
+test('a line citation of a page code no spec page has is reported', () => {
+  const body = '[06-09](../../specs/06-admin/09-nope.mdx#資料欄位)（`:9`「匯出時間」）';
+  assert.match(checkLineCitations(cite(body), [CITED_PAGE]).join('\n'), /06-09/);
+});
+
+test('bold, full-width pipes and spaces do not count as drift', () => {
+  // The dictionary quotes a table row as 欄名｜值, which the page writes as | 欄名 | 值 |.
+  assert.deepEqual(checkLineCitations(cite(`${link}（\`:11\`「審核單位｜**任務的某個回合 × 某一筆指派**」）`), [CITED_PAGE]), []);
+});
+
+test('every fragment of an ellipsis-joined quote must be on that line', () => {
+  // The first half is on :9, the second half is not anywhere.
+  assert.match(checkLineCitations(cite(`${link}（\`:9\`「匯出時間……**由系統自動決定**」）`), [CITED_PAGE]).join('\n'), /由系統自動決定/);
+});
+
+test('a line number with no quote after it is not a citation', () => {
+  // The shape a 變更紀錄 row uses to record this very fix.
+  assert.deepEqual(checkLineCitations(cite('| [#236](https://x) | 2026-11-14 | 修好三個行號：`:965`→`:974`、`:666`→`:674` |'), [CITED_PAGE]), []);
+});
+
+test('a quoted line number that names no spec page is reported', () => {
+  assert.match(checkLineCitations(cite('那一頁的 `:9`「匯出時間」就是依據'), [CITED_PAGE]).join('\n'), /names no spec page/);
+});
+
+test('the 的「」 shape is a citation too', () => {
+  // database-schema.er.json writes `:969` 的「試標輪」, not `:969`「試標輪」.
+  const out = checkLineCitations(cite(`${link}（\`:10\` 的「匯出時間」）`), [CITED_PAGE]);
+  assert.match(out.join('\n'), /:10/);
+});
+
+test('a citation naming a page that exists but a row that moved reports both sides', () => {
+  const out = checkLineCitations(cite(`${link}（\`:11\`「匯出時間」）`), [CITED_PAGE]).join('\n');
+  assert.match(out, /03-03/);
+  assert.match(out, /審核單位/);
+});
+
+const OTHER_PAGE = {
+  code: '04-01',
+  rel: 'specs/04-annotation/01-annotation-list.mdx',
+  text: ['---', "title: '標記清單'", '---', '', '| 審核單位 | 任務的某個回合 × 某一筆指派 |'].join('\n'),
+};
+const other = '[04-01](../../specs/04-annotation/01-annotation-list.mdx#資料欄位)';
+
+test('the page code nearest the citation wins, not the first on the line', () => {
+  // The real shape: data-table-dictionary.mdx:751 cites two pages on one line.
+  // Reading the first code for both citations would check 04-01 line 9.
+  const body = `${other}（\`:5\`「審核單位」）、${link}（\`:9\`「匯出時間」）`;
+  assert.deepEqual(checkLineCitations(cite(body), [CITED_PAGE, OTHER_PAGE]), []);
+});
+
+test('a bare page code in prose does not steal the citation', () => {
+  // `specSources()` already refuses prose links because a mention is often a
+  // contrast, not a declaration; attribution has to be just as strict.
+  const body = `${link}（不同於 [04-01] 的寫法）（\`:9\`「匯出時間」）`;
+  assert.deepEqual(checkLineCitations(cite(body), [CITED_PAGE, OTHER_PAGE]), []);
+});
+
+test('a quote longer than a line of prose is still checked', () => {
+  const quote = '錯'.repeat(300);
+  assert.match(checkLineCitations(cite(`${link}（\`:9\`「${quote}」）`), [CITED_PAGE]).join('\n'), /:9/);
+});
+
+test('every ellipsis in use joins fragments', () => {
+  for (const dots of ['……', '⋯⋯', '...']) {
+    const body = `${link}（\`:9\`「匯出時間${dots}不是請求被接受的時間」）`;
+    assert.deepEqual(checkLineCitations(cite(body), [CITED_PAGE]), [], `fragments split on ${dots}`);
+  }
+});
+
+test('line :0 is reported rather than read as the last line', () => {
+  assert.match(checkLineCitations(cite(`${link}（\`:0\`「匯出時間」）`), [CITED_PAGE]).join('\n'), /:0/);
 });
