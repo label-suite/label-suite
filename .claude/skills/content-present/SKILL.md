@@ -412,7 +412,7 @@ function MyPage({ dark, live, play, area, outerScale }: CustomSlideProps) { … 
 
 | 層 | 誰做 | 內容 |
 | --- | --- | --- |
-| 1. 型別 / build | `slide-generator` | 本專案是 viewer 模式，**不能**跑 `tsc` / `astro build`（cwd 只是筆記資料夾）：作者開著 `pnpm docs:serve` 時觀察它的背景 rebuild，沒開才跑 `pnpm exec notecraftapp build docs --rebuild`。一份還沒 commit 的 deck 檔不會讓快取失效（build 只看 commit 過的內容），所以**一定要帶 `--rebuild`**；**第一次失敗先重跑一次**（[#172](https://github.com/label-suite/label-suite/issues/172) 的間歇失敗），穩定失敗兩次才是真的錯誤。 |
+| 1. 型別 / build | `slide-generator` | 本專案是 viewer 模式，**不能**跑 `tsc` / `astro build`（cwd 只是筆記資料夾）：作者開著 `pnpm docs:serve` 時觀察它的背景 rebuild，沒開才跑 `pnpm exec notecraftapp build docs --rebuild`。`.notecraft/components/` 下的檔案**不在 build 的快取失效判斷內**（它只掃 notesDir 的 md/mdx 與資料 json、`.notecraft/plugins/**`、`.notecraft/*.json` 與附件來源），所以手動 build **一定要帶 `--rebuild`**，commit 與否都一樣；**第一次失敗先重跑一次**（[#172](https://github.com/label-suite/label-suite/issues/172) 的間歇失敗），穩定失敗兩次才是真的錯誤。 |
 | 2. 溢出偵測 | **主 Agent** | 看 dev console 的 `[deck]` 警告與畫面上的紅框 |
 | 3. 逐頁截圖 | **主 Agent** | 開 dev server、逐頁看 |
 

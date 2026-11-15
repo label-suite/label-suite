@@ -17,8 +17,8 @@ tags: [notecraft, docs]
 ## 怎麼觸發
 
 - 在對話裡說「把 `docs/development/agent-rules.md` 轉成簡報」「重新生成 xxx 的簡報」
-- 或在 `pnpm docs:serve` 的筆記頁按「生成簡報」（只在 dev 模式出現），它會把提示詞複製到剪貼簿，貼進對話即可
-- 已經有 deck 的筆記，頁首那顆按鈕會變成「簡報」，直接連到 `/present/<slug>`
+- 或在筆記頁按「生成簡報」，它會把提示詞複製到剪貼簿，貼進對話即可。**這顆按鈕只在 dev 模式出現**，也就是 `pnpm exec notecraftapp view docs`（astro dev）；`pnpm docs:serve` 服務的是 build 產物，不會顯示它
+- 已經有 deck 的筆記，頁首那顆按鈕會變成「簡報」，直接連到 `/present/<slug>`（這顆不分 dev 與正式）
 
 ## 產物與命名
 
@@ -30,7 +30,7 @@ tags: [notecraft, docs]
 | `slug` 欄位 | **帶資料夾**，等於筆記頁網址的 slug | `development/agent-rules` |
 | `source` 欄位 | 筆記的專案相對路徑 | `docs/development/agent-rules.md` |
 
-路由 `/present/<slug>`、筆記頁的「簡報」入口與 Dashboard 的「已生成簡報」統計都只比對 `slug` 欄位，
+路由 `/present/<slug>` 與筆記頁、抽屜裡的「簡報」入口都只比對 `slug` 欄位，
 **檔名不參與比對**；檔名要攤平是因為 viewer 以 `@notes/components/*.deck.tsx` 這個 glob 掃 deck，不掃子資料夾。
 兩個資料夾有同名筆記時，檔名加上層資料夾（`development-agent-rules.deck.tsx`），`slug` 照舊。
 
@@ -55,7 +55,7 @@ tags: [notecraft, docs]
 
 第 1 層在本專案**不是** `tsc` 或 `astro build`（notesDir 只是筆記資料夾，這兩個指令必定失敗），而是：
 維護者開著 `pnpm docs:serve` 時看它的背景 rebuild；沒開才跑 `pnpm exec notecraftapp build docs --rebuild`。
-還沒 commit 的 deck 檔不會讓快取失效，所以**一定要帶 `--rebuild`**；**第一次失敗先重跑一次**，
+`.notecraft/components/` 下的檔案不在 build 的快取失效判斷內（它只掃 notesDir 的 md/mdx 與資料 json、`.notecraft/plugins/**`、`.notecraft/*.json` 與附件來源），所以手動 build **一定要帶 `--rebuild`**，commit 與否都一樣；**第一次失敗先重跑一次**，
 穩定失敗兩次才是真的錯誤（[#172](https://github.com/label-suite/label-suite/issues/172)，判準見 [spec-migration.md §建置閘門要重跑確認](./spec-migration.md#建置閘門要重跑確認)）。
 watcher 與手動 build **只能走一條**。
 
@@ -74,7 +74,7 @@ watcher 與手動 build **只能走一條**。
 ## 升級 notecraftapp 時
 
 `content-present`、`present-planner`、`slide-generator` 都是從 `notecraftapp` 內建的 `skill-template/` 複製後改寫的
-（版本記在 `.claude/skills/content-present/VERSION`）。升級 `notecraftapp` 之後要重新比對一次上游，把本專案的改寫重套上去：
+（版本記在 `.claude/skills/content-present/VERSION`）。`references/atoms.md` 的正文沒有本地化（只換了檔頭註解——上游那段指向本專案不存在的路徑與指令——以及行尾 CRLF → LF），升級時整份重新複製、再套回這兩件事即可；`SKILL.md` 與兩個 agent 檔要重新比對一次上游，把本專案的改寫重套上去：
 notesDir 是 `docs/`、設計系統是 `label-suite-design`、第 1 層驗證是 `build docs --rebuild`、Codex 版沒有 subagent。
 
 **不要跑 `notecraftapp init-skill --force`**：它會覆寫本專案已客製的 `content-visualize`，並帶進用不到的 `trendlink-design`。

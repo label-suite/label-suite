@@ -66,7 +66,7 @@ model: sonnet
 
    deck 檔寫到 `.notecraft/components/<name>.deck.tsx` 後，作者開著 `pnpm docs:serve` 時：watcher 會觸發 rebuild、成功則 SSE 廣播 auto reload；失敗則 fallback 頁顯示錯誤節錄。
    作者沒開 serve 時才在專案根跑 `pnpm exec notecraftapp build docs --rebuild`。
-   一份還沒 commit 的 deck 檔不會讓快取失效（build 只看 commit 過的內容），所以**一定要帶 `--rebuild`**；**第一次失敗先重跑一次**（[#172](https://github.com/label-suite/label-suite/issues/172) 的間歇失敗），穩定失敗兩次才是真的錯誤。
+   `.notecraft/components/` 下的檔案**不在 build 的快取失效判斷內**（它只掃 notesDir 的 md/mdx 與資料 json、`.notecraft/plugins/**`、`.notecraft/*.json` 與附件來源），所以手動 build **一定要帶 `--rebuild`**，commit 與否都一樣；**第一次失敗先重跑一次**（[#172](https://github.com/label-suite/label-suite/issues/172) 的間歇失敗），穩定失敗兩次才是真的錯誤。
    ⚠️ **這兩條只能走一條**：serve 的 watcher 與手動 build 共用同一個 `.astro/`、沒有跨行程鎖，撞在同一瞬間時其中一個會失敗（[#172](https://github.com/label-suite/label-suite/issues/172)）。用 watcher 驗就不要再手動 build。
 
    **溢出偵測與逐頁截圖由主 Agent 執行，不是你。** 你的工具清單沒有瀏覽器 / preview 工具，做不到，也不要嘗試。你能做的是**在回報中標出需要重點看的頁**：區塊最密的頁、單頁 block 數最多的頁、嵌入既有元件的頁（那些元件是為網頁內文設計的，常常比 900px 高）。
@@ -89,7 +89,7 @@ function PainpointPage({ dark, live, area }: CustomSlideProps) {
 }
 ```
 
-- **props**：`dark`（取色）、`live`（動畫只在 true 時啟動）、`area`（chrome 佔用後的可用區，px）。
+- **props**：`dark`（取色）、`live`（動畫只在 true 時啟動）、`play`（全螢幕播放中；`<CanvasViewport>` 的 `mode` 要用它推導）、`area`（chrome 佔用後的可用區，px）、`outerScale`（外層 `SlideFrame` 的縮放倍率；放 `<CanvasViewport>` 時必須往下傳）。
 - 系統已把 `render` 外層包成高度確定的 flex 欄（含 `gap: DGAP.md`），所以直接回傳幾個 block 就會自動分高度。要固定為自然高度的 block 傳 `style={{ flex: "none" }}`；要完全自訂版面就在裡面再包一層自己的 div。
 - **照規劃書指定的原子寫，不要自己改選型。** 規劃書已經在 `references/atoms.md` 的速查表裡選過了；
   你覺得選錯就回報，不要默默換一個 —— 換掉會讓「整頁級原子不重複」的清單失準。
@@ -106,12 +106,16 @@ function PainpointPage({ dark, live, area }: CustomSlideProps) {
   下面只列**最容易寫錯**的幾條。
 - 沒做成元件的三件事直接寫 JSX：左右分欄 → `display: flex` + `DGAP`；段落 → `<p>` + `DS.body`；嵌入既有元件 → `import` 進來放。
 - **動畫**：200–400ms ease-out、`useReducedMotion()`、且 `live === false` 時不啟動。
-- **嵌入既有 @ai-visualize 元件時，兩件事必做**（它們是為網頁內文設計的，不是為 900px 固定高度）：
-  1. 可能比 `area` 高 → 用 `<FitToArea area={area}>` 包起來（`@/components/deck/FitToArea`）。
-     **不要自己寫 `transform: scale()` 硬編比例**，元件內容一改就錯。
-  2. 元件含互動（按鈕 / 拖曳）→ `live === false` 時回一個占位 div，不要掛載真元件。
-     縮覽項本身是 `<button>`，掛進去會變成 button 嵌 button 的無效 HTML，而且十幾頁一起掛會拖慢整頁。
-  純靜態的 `custom` 頁不需要第 2 點。
+- **嵌入既有 @ai-visualize 元件時，預設用 `<CanvasViewport>`**（`@/components/deck/CanvasViewport`），
+  **不是 `<FitToArea>`** —— 完整寫法見 SKILL.md〈嵌入既有元件〉，那一節的範例可以直接照抄。兩件事必做：
+  1. **`mode` 三態**，由 `live` / `play` 推導：`!live` → `"thumb"`、`play` → `"play"`、其餘 `"view"`。
+     `"thumb"` 時畫布只畫骨架、不掛載真元件 —— 縮覽側欄會同時掛十幾頁，而縮覽項本身是 `<button>`，
+     元件內的按鈕掛進去會變成 button 嵌 button 的無效 HTML。給了 `mode="thumb"` 就**不必**再自己寫
+     `if (!live) return <占位/>`，畫布已經處理掉了。
+  2. **`outerScale` 一定要往下傳**，漏傳（預設 1）拖曳就不跟手；`w` / `h` 直接吃 `area`。
+
+  `<FitToArea area={area}>` 只留給「元件不高、單純想保險別被裁」的情況 —— 它縮完就不能再互動探索，
+  密度高的架構圖 / 矩陣縮完會看不清。兩者都**不要自己寫 `transform: scale()` 硬編比例**，元件內容一改就錯。
 - **單一 block 撐滿整頁時，項數要接近上限**（Compare 每側 5–6 列、Rows 5–6 列、Cards 4–6 欄）；
   只有 3 列卻佔整頁會留一大片空白。真的只有 3 列就加第二個 block 或改用 `full-visual`。
 

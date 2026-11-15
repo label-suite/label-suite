@@ -34,7 +34,7 @@ description: 把一篇 NoteCraft MDX 筆記轉成一份 16:9 多頁簡報（deck
   Claude Code 那邊的 `present-planner` / `slide-generator` 在這裡不存在，但**規劃與寫檔仍是兩個步驟**：
   先寫出大綱（含每頁用哪個原子、整頁級原子使用清單），再照大綱寫檔
 - 第 1 層驗證在專案根跑 `pnpm exec notecraftapp build docs --rebuild`，**或**請開著 `pnpm docs:serve` 的使用者在瀏覽器確認畫面——**兩者只能選一條**（[#172](https://github.com/label-suite/label-suite/issues/172)）；
-  走 build 那條時，一份還沒 commit 的 deck 檔不會讓快取失效（build 只看 commit 過的內容），所以**一定要帶 `--rebuild`**；**第一次失敗先重跑一次**（[#172](https://github.com/label-suite/label-suite/issues/172) 的間歇失敗），穩定失敗兩次才是真的錯誤。
+  走 build 那條時，`.notecraft/components/` 下的檔案**不在 build 的快取失效判斷內**（它只掃 notesDir 的 md/mdx 與資料 json、`.notecraft/plugins/**`、`.notecraft/*.json` 與附件來源），所以手動 build **一定要帶 `--rebuild`**，commit 與否都一樣；**第一次失敗先重跑一次**（[#172](https://github.com/label-suite/label-suite/issues/172) 的間歇失敗），穩定失敗兩次才是真的錯誤。
 - 第 2、3 層（溢出警告、逐頁截圖）要有瀏覽器才做得到；你沒有瀏覽器工具時，就把「需要重點看的頁」列給使用者，由他在 `/present/<slug>` 逐頁看，**不要把 build 綠燈當作完成**
 - 樣式另依 `label-suite-design` skill（`.agents/skills/label-suite-design/SKILL.md`）
 
@@ -427,7 +427,7 @@ function MyPage({ dark, live, play, area, outerScale }: CustomSlideProps) { … 
 
 | 層 | 誰做 | 內容 |
 | --- | --- | --- |
-| 1. 型別 / build | 你自己 | 本專案是 viewer 模式，**不能**跑 `tsc` / `astro build`（cwd 只是筆記資料夾）：作者開著 `pnpm docs:serve` 時觀察它的背景 rebuild，沒開才跑 `pnpm exec notecraftapp build docs --rebuild`。一份還沒 commit 的 deck 檔不會讓快取失效（build 只看 commit 過的內容），所以**一定要帶 `--rebuild`**；**第一次失敗先重跑一次**（[#172](https://github.com/label-suite/label-suite/issues/172) 的間歇失敗），穩定失敗兩次才是真的錯誤。 |
+| 1. 型別 / build | 你自己 | 本專案是 viewer 模式，**不能**跑 `tsc` / `astro build`（cwd 只是筆記資料夾）：作者開著 `pnpm docs:serve` 時觀察它的背景 rebuild，沒開才跑 `pnpm exec notecraftapp build docs --rebuild`。`.notecraft/components/` 下的檔案**不在 build 的快取失效判斷內**（它只掃 notesDir 的 md/mdx 與資料 json、`.notecraft/plugins/**`、`.notecraft/*.json` 與附件來源），所以手動 build **一定要帶 `--rebuild`**，commit 與否都一樣；**第一次失敗先重跑一次**（[#172](https://github.com/label-suite/label-suite/issues/172) 的間歇失敗），穩定失敗兩次才是真的錯誤。 |
 | 2. 溢出偵測 | 你自己，或作者代看 | 看 dev console 的 `[deck]` 警告與畫面上的紅框 |
 | 3. 逐頁截圖 | 你自己，或作者代看 | 在作者開著的站台逐頁看 |
 
