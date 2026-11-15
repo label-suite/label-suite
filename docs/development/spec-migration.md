@@ -339,44 +339,60 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 
 ## 合併閘第 3 條：怎麼判斷一個 job 真的跑完了
 
-合併閘第 3 條要求「該 sha 至少有一個 run，且**每個 job 都 completed 且 success**」，並明寫「run 層級會說謊」——因為 run 可以在某個 job 還排隊時就顯示成功。所以判定一律下到 job 層級。
+**六閘的條文不在這個倉庫裡**：它在維護者給輪詢 loop 的工作指示中，倉庫內沒有副本（整個倉庫掃過，「每個 job 都 completed 且 success」這類字串一處都沒有），所以本節是它在倉庫裡的第一份紀錄——**而本節只處理第 3 條的一個例外，不是六閘的全文**。第 3 條要求「該 sha 至少有一個 run，且**每個 job 都 completed 且 success**」，並且叮囑不要信 run 層級，因為 run 可以在某個 job 還排隊時就顯示成功。所以判定一律下到 job 層級。
 
-**但 job 層級的 `status` 自己也會卡住。** 判例（維護者 2026-11-15 裁定，[#188](https://github.com/label-suite/label-suite/issues/188)／[PR #312](https://github.com/label-suite/label-suite/pull/312)）：
+**但 job 層級的 `status` 自己也會卡住。** 判例（維護者 2026-11-15 裁定，[#188](https://github.com/label-suite/label-suite/issues/188)／[PR #312](https://github.com/label-suite/label-suite/pull/312)，sha `228dfa1fc407fa69fbe6a6f94a4acd250e8b5340`）：
 
 ```
 docs-site        status=completed    conclusion=success  completed_at=12:33:44Z
 commit-messages  status=in_progress  conclusion=success  completed_at=12:32:43Z   ← 卡住
 specs            status=completed    conclusion=success  completed_at=12:32:53Z
-run:             status=completed    conclusion=success
+run CI 43714379546: status=completed  conclusion=success        （該 sha 只有這一個 run）
 ```
 
-`commit-messages` **同時**有終局的 `conclusion=success` 與一個早就過去的 `completed_at`，但 `status` 停在 `in_progress`。兩個端點（`/commits/<sha>/check-runs` 與 `/actions/runs/<id>/jobs`）說法一致，間隔重查六次、等超過一小時都沒有變。
+`commit-messages` **同時**有終局的 `conclusion=success` 與一個已經過去的 `completed_at`，但 `status` 停在 `in_progress`。兩個端點（`/commits/<sha>/check-runs` 與 `/actions/runs/<id>/jobs`）回同樣的三組值；間隔重查六次（約 2 分鐘）沒有變，`completed_at` 到最後一次查詢已經過去約 40 分鐘。
+⚠️ 判例來源的 issue 留言把那段間隔寫成「超過一小時」，**實際是 34 到 42 分鐘**（`completed_at` 12:32:43Z、第三則留言 13:07:41Z）。寫判例時以這裡的數字為準，不要照抄那句。
 
-**裁定**：`conclusion=success` ＋ 有 `completed_at` ＋ run 層級 `completed`，三者同時成立就算滿足閘 3。
+**裁定**：下面三個條件**同時**成立就算滿足閘 3。
 
-**這一條不適用於下面這些**，它們是真的還在跑，要等：
+1. 那個 job 的 `conclusion` 是 `success`
+2. 那個 job 有 `completed_at`，而且它已經過去一段時間（不是剛剛那一秒）
+3. **該 sha 的每一個 run 都是 `completed`**——不是「某一個 run」。同一個 sha 可以有多個 run（按過 Re-run，或日後多一個 workflow）；舊的那個 `completed/success`、新的還在跑時，只查舊的就會誤放一張其實還在跑的 PR
+
+**這一條不適用於下面這些**，它們是真的還在跑、或真的沒過：
 
 | 狀況 | 為什麼不適用 |
 | :--- | :--- |
-| `conclusion` 為 `null` | 沒有終局結果，連「過了」都還不知道 |
+| `conclusion` 是 `null` | 沒有終局結果，連「過了」都還不知道 |
+| `conclusion` 不是 `success` | `failure`／`cancelled`／`timed_out`／`neutral`／`skipped`／`stale`／`action_required` 都算。**`skipped` 特別像**：它會帶著 `completed_at` 與 completed 的 run 一起出現，形狀幾乎和「跑完了」一樣 |
 | 沒有 `completed_at` | 沒有任何證據說它跑完了 |
 | `status=queued` | 還沒開始，`status` 不是卡住而是正確的 |
-| run 層級不是 `completed` | 這時 job 的奇怪狀態更可能是真的在跑 |
-| `conclusion` 是 `failure`／`cancelled`／`timed_out` | 那是失敗，與這條無關 |
+| 該 sha 有任何一個 run 不是 `completed` | 見上面第 3 個條件 |
 
-**為什麼這不算放寬閘門**：閘 3 的目的是「不要在 job 還在跑的時候合併」。這一條處理的是**跑完了但狀態欄位卡住**，三個條件合起來正是「跑完了」的證據；而上表那五種情形一條都不放過。
+**為什麼這不算放寬閘門**：閘 3 的目的是「不要在 job 還在跑的時候合併」。這一條處理的是**跑完了但狀態欄位卡住**，三個條件合起來正是「跑完了」的證據，而上表五種情形一條都不放過。
+至於「不要信 run 層級」與「要求每個 run 都 completed」並不衝突：run 只會在**說成功**的方向樂觀地說謊（它會在 job 還排隊時就先顯示成功），所以把它當**必要**條件是加嚴，不是把判定交回給它。
 
-查的指令（`status` 與 `conclusion` 都要印出來，只看其中一個會判錯）：
+查的三道指令（`status` 與 `conclusion` 都要印出來，只看其中一個會判錯）：
 
 ```sh
 sha=$(gh pr view <N> --json headRefOid --jq .headRefOid)
+
+# 1. job 層級（check-runs）。預設 filter=latest，所以重跑留下的舊同名項不會混進來
 gh api repos/label-suite/label-suite/commits/$sha/check-runs \
-  --jq '.check_runs[]|"\(.name) status=\(.status) conclusion=\(.conclusion) completed=\(.completed_at)"'
-gh api repos/label-suite/label-suite/actions/runs/<run-id> --jq '"run: status=\(.status) conclusion=\(.conclusion)"'
+  --jq '.check_runs[]|"\(.name) status=\(.status) conclusion=\(.conclusion) completed_at=\(.completed_at)"'
+
+# 2. job 層級的第二個來源，用來交叉印證（逐個 run 查它的 jobs）
+gh run list --commit $sha --json databaseId --jq '.[].databaseId' | while read id; do
+  gh api repos/label-suite/label-suite/actions/runs/$id/jobs \
+    --jq '.jobs[]|"\(.name) status=\(.status) conclusion=\(.conclusion) completed_at=\(.completed_at)"'
+done
+
+# 3. 該 sha 的每一個 run（不是只查一個）
+gh run list --commit $sha --json databaseId,workflowName,status,conclusion \
+  --jq '.[]|"\(.workflowName) run=\(.databaseId) \(.status)/\(.conclusion)"'
 ```
 
-**遇到這種情形要在 issue 留言寫出三個值**（`status`、`conclusion`、`completed_at`）與 run 層級的狀態，再依這一條合併；只寫「CI 綠」會讓後人看不出你是依哪一條過的。
-
+**遇到這種情形要在 issue 留言寫出那個 job 的三個值**（`status`、`conclusion`、`completed_at`）、**該 sha 全部 run 的狀態**，以及重查了幾次、間隔多久；只寫「CI 綠」會讓後人看不出你是依哪一條過的。
 
 ## 建置閘門要重跑確認
 
