@@ -361,24 +361,34 @@ ADR-014 的 prototype 層 Playwright 測試**不適用本 repo**：那些測試�
 Semgrep 上線時至少要蓋兩條專案禁令：CORS 的 `allow_origins=["*"]`，以及寫死的 API key 與 secret（ADR-028，等同 Hard Rule 7、8）。
 DAST 與 API fuzzing 都明確先不做，條件寫在 ADR-028。
 
-### 相依套件的升級邊界（2026-11-15）
-
-**現在整個 repo 只有一條相依線，而且它全在 `devDependencies`**：`package.json` 只有 `notecraftapp`（文件站）與 `@fission-ai/openspec`。`backend/` 與 `frontend/` 都還不存在，所以**沒有任何產品相依、也沒有任何部署**。
-
-**維護者 2026-11-15 裁定：dependabot 目前那些未修的警示接受風險、不升，並把理由記在這裡。** 三件事讓這個取捨站得住：
-
-1. **警示全部落在 `development` scope**。逐一查過 dependabot 的 open alerts，`dependency.scope` 一律是 `development`，manifest 一律是 `pnpm-lock.yaml`。
-2. **上面那條 ADR-028 的前端閘門本來就不涵蓋它們**：`pnpm audit --prod --audit-level high` 的 `--prod` 只看 production 相依。所以這個取捨**與 ADR-028 同向，不是它的例外**。
-3. **升不上去，而且不是本 repo 能解的**。`notecraftapp` 的最新版就是我們鎖的那一版，而它自己 pin 的是 `astro ^5.0.5`；dependabot 指的修正版在 astro 6／7。要跨過去只能在 `pnpm.overrides` 強推一個 `notecraftapp` 沒有針對它寫過的 astro 大版本，**而文件站是目前唯一跑得起來的驗證路徑**（`check:specs`、`check-er-data`、`notecraftapp build docs` 三道閘都靠它）。
-
-**解除條件**：`notecraftapp` 發布支援新版 `astro` 的版本時，照相依套件 PR 的形狀升（不屬五類、要另開一張並先合併，判例 #147、#245，見 [`spec-migration.md` §PR 的變更範圍](spec-migration.md#pr-的變更範圍)），**不要用 `pnpm.overrides` 繞**。升完要照 [`spec-migration.md` §建置閘門要重跑確認](spec-migration.md#建置閘門要重跑確認) 的指示重測 build 閘門。
-
-**這一節刻意不列 CVE 編號、也不寫任何利用路徑**：依 `AGENTS.md` §Security findings，Critical 與 High 不進公開 issue；要看明細請開 repo 的 dependabot 頁面（只有維護者看得到）。這裡記的是**取捨、限制與解除條件**。
-
-⚠️ **這個取捨只在「沒有部署、沒有產品相依」這個前提下成立。** `backend/` 或 `frontend/` 一出現，ADR-028 的兩道閘門就會真的有東西可掃，這一節要重新評估；屆時 `--prod` 的範圍也不再是空的。
-
 分支與映像推進以 `commit-and-release.md` 為準：目前只有 `main`，等 staging 與 production 環境存在後改成 `dev` → `release` → `main` 三分支，
 image 在 `release` 建一次、不重建，`main` 合併後打 `vX.Y.Z` 並在 GHCR 加同 digest 的別名 tag。ADR-023 沒有寫這一段。
+
+### 相依套件的升級邊界（維護者 2026-11-15 裁定）
+
+**現在整個 repo 只有一條相依線，而且它全在 `devDependencies`**：`package.json` 的 `dependencies` 是空的，只有 `notecraftapp`（文件站）與 `@fission-ai/openspec` 兩個 devDependency。`backend/` 與 `frontend/` 都還不存在，所以**沒有任何產品相依、也沒有任何部署**。
+
+**維護者 2026-11-15 裁定：dependabot 目前那些未修的警示接受風險、不升，並把理由記在這裡。** 當天的基準是 **18 筆 open alerts，嚴重度 1 critical／5 high／7 medium／5 low**，全部 `development` scope、manifest 全是 `pnpm-lock.yaml`。三件事讓這個取捨站得住：
+
+1. **警示全部落在 `development` scope**。逐筆查過 dependabot 的 open alerts，`dependency.scope` 一律是 `development`。
+2. **上面那條 ADR-028 的前端閘門本來就不涵蓋它們**：`pnpm audit --prod --audit-level high` 的 `--prod` 只看 production 相依，而這 18 筆全是 development scope；那道閘門本身也掛在還不存在的 `frontend/`。所以這個取捨**與 ADR-028 同向，不是它的例外**。注意它只證明「CI 閘門沒有漏掉什麼」，不證明「沒有風險」——後者見本節最後那一段。
+3. **升不上去，而且不是本 repo 能解的**。`notecraftapp` 的最新版就是我們鎖的那一版（1.15.0），而它宣告的是 `astro ^5.0.5`（caret range，lock 解析到 astro 5 線的最新版）。那 18 筆分成四個套件，**各自被什麼擋住不一樣**：
+
+   | 套件 | 筆數 | 修正版落在 | 誰擋住 |
+   | :--- | ---: | :--- | :--- |
+   | `astro` | 13 | astro 6 與 7 | `notecraftapp` 宣告 `astro ^5.0.5` |
+   | `sharp` | 3（全是 high） | 0.35.x | 它是 astro 的 optional 相依；要跨過去**得升到 astro 7** |
+   | `katex` | 1 | 0.18.x | **`notecraftapp` 自己宣告 `katex ^0.16.47`**——升 astro 修不到這一筆 |
+   | `esbuild` | 1 | 0.28.x | 經 astro 帶進來；astro 7 之後改走 vite 8、不再直接依賴它 |
+
+   要跨過去只能在 `pnpm.overrides` 強推 `notecraftapp` 沒有針對它寫過的大版本，**而 `notecraftapp build docs` 是目前唯一跑得起來的端到端驗證路徑**（CI 的 `docs-site` job）。`check:specs`、`check:flows`、`check:er` 三支只 import Node 內建模組，不裝相依就能跑——CI 的 `specs` job 自己就寫著「No dependencies are installed」——所以它們不受這個取捨影響。
+
+**解除條件**：`notecraftapp` 發布支援新版 `astro` 的版本時，照相依套件 PR 的形狀升——它不屬五類，照 `AGENTS.md` 自己的規則走、另開一張（判例 #147、#245，見 [`spec-migration.md` §PR 的變更範圍](spec-migration.md#pr-的變更範圍)；#245 的「先合併」是為了 `plugins.json` 不指向沒裝的外掛，純升版沒有搭配的文件 PR 時不必照那個順序）。**不要用 `pnpm.overrides` 繞**。升完要照 [`spec-migration.md` §建置閘門要重跑確認](spec-migration.md#建置閘門要重跑確認) 重測 build 閘門。
+**那一次升版不會清掉 `katex` 那一筆**：它是 `notecraftapp` 自己的相依，要等上游把 `katex` 的 range 往前推，屆時另行確認。追蹤見 [§待決清單](#待決清單) 第 11 列。
+
+**這一節刻意不列 CVE 編號、也不寫任何利用路徑**：依 `AGENTS.md` §Security findings，Critical 與 High 不進公開 issue；要看明細請開 repo 的 dependabot 頁面（只有維護者看得到）。這裡記的是**取捨、限制與解除條件**，以及可以複查的量級（上面那個 1／5／7／5）。
+
+⚠️ **這個取捨只在「沒有部署、沒有產品相依」這個前提下成立。** `backend/` 或 `frontend/` 一出現，ADR-028 的兩道閘門就會真的有東西可掃，這一節要重新評估；屆時 `--prod` 的範圍也不再是空的。
 
 ## 矛盾與落差
 
@@ -419,6 +429,7 @@ image 在 `release` 建一次、不重建，`main` 合併後打 `vX.Y.Z` 並在 
 | ~~8~~ | 前端版本、目錄分層與元件庫（落差 15） | **照 scaffold**：React 19、`pages/` 加 `features/`、shadcn/ui 放 `components/ui/`。**ADR-004、011、016 三份都記為被覆寫** |
 | 9 | ADR-029、033、036 與 `README.md` 索引的修訂（落差 4、5、6、7） | **仍待決**（不在 2026-11-10 的裁定範圍）：由維護者在個人 repo 處理，不卡本 repo 的實作 |
 | 10 | **ADR-016 的 Storybook 要不要用** | **仍待決**：2026-11-10 問的是元件庫，不是 Storybook。第一個前端 change 之前決定 |
+| 11 | **`notecraftapp` 的相依警示什麼時候清掉** | **接受風險、不升**（維護者 2026-11-15，見 [§部署與維運 › 相依套件的升級邊界](#相依套件的升級邊界維護者-2026-11-15-裁定)）。解除條件：上游升 `astro` 之後照相依套件 PR 升；`katex` 那一筆要等上游另外推進。`backend/` 或 `frontend/` 出現時要重新評估 |
 
 ## ADR 追溯
 
