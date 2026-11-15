@@ -361,6 +361,22 @@ ADR-014 的 prototype 層 Playwright 測試**不適用本 repo**：那些測試�
 Semgrep 上線時至少要蓋兩條專案禁令：CORS 的 `allow_origins=["*"]`，以及寫死的 API key 與 secret（ADR-028，等同 Hard Rule 7、8）。
 DAST 與 API fuzzing 都明確先不做，條件寫在 ADR-028。
 
+### 相依套件的升級邊界（2026-11-15）
+
+**現在整個 repo 只有一條相依線，而且它全在 `devDependencies`**：`package.json` 只有 `notecraftapp`（文件站）與 `@fission-ai/openspec`。`backend/` 與 `frontend/` 都還不存在，所以**沒有任何產品相依、也沒有任何部署**。
+
+**維護者 2026-11-15 裁定：dependabot 目前那些未修的警示接受風險、不升，並把理由記在這裡。** 三件事讓這個取捨站得住：
+
+1. **警示全部落在 `development` scope**。逐一查過 dependabot 的 open alerts，`dependency.scope` 一律是 `development`，manifest 一律是 `pnpm-lock.yaml`。
+2. **上面那條 ADR-028 的前端閘門本來就不涵蓋它們**：`pnpm audit --prod --audit-level high` 的 `--prod` 只看 production 相依。所以這個取捨**與 ADR-028 同向，不是它的例外**。
+3. **升不上去，而且不是本 repo 能解的**。`notecraftapp` 的最新版就是我們鎖的那一版，而它自己 pin 的是 `astro ^5.0.5`；dependabot 指的修正版在 astro 6／7。要跨過去只能在 `pnpm.overrides` 強推一個 `notecraftapp` 沒有針對它寫過的 astro 大版本，**而文件站是目前唯一跑得起來的驗證路徑**（`check:specs`、`check-er-data`、`notecraftapp build docs` 三道閘都靠它）。
+
+**解除條件**：`notecraftapp` 發布支援新版 `astro` 的版本時，照相依套件 PR 的形狀升（不屬五類、要另開一張並先合併，判例 #147、#245，見 [`spec-migration.md` §PR 的變更範圍](spec-migration.md#pr-的變更範圍)），**不要用 `pnpm.overrides` 繞**。升完要照 [`spec-migration.md` §建置閘門要重跑確認](spec-migration.md#建置閘門要重跑確認) 的指示重測 build 閘門。
+
+**這一節刻意不列 CVE 編號、也不寫任何利用路徑**：依 `AGENTS.md` §Security findings，Critical 與 High 不進公開 issue；要看明細請開 repo 的 dependabot 頁面（只有維護者看得到）。這裡記的是**取捨、限制與解除條件**。
+
+⚠️ **這個取捨只在「沒有部署、沒有產品相依」這個前提下成立。** `backend/` 或 `frontend/` 一出現，ADR-028 的兩道閘門就會真的有東西可掃，這一節要重新評估；屆時 `--prod` 的範圍也不再是空的。
+
 分支與映像推進以 `commit-and-release.md` 為準：目前只有 `main`，等 staging 與 production 環境存在後改成 `dev` → `release` → `main` 三分支，
 image 在 `release` 建一次、不重建，`main` 合併後打 `vX.Y.Z` 並在 GHCR 加同 digest 的別名 tag。ADR-023 沒有寫這一段。
 
