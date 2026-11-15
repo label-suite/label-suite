@@ -21,6 +21,9 @@ export const ER_PATH = join(HERE, '..', 'docs', 'diagrams', 'architecture', 'dat
 export const INVENTORY_PATH = join(HERE, '..', 'docs', 'diagrams', 'architecture', 'data-field-inventory.mdx');
 const SPECS_DIR = join(HERE, '..', 'docs', 'specs');
 
+// One shape for a spec page code, so the two readers of it cannot drift apart.
+const SPEC_CODE = '(0[1-7]-0[0-9])';
+
 const NAME = /`([a-z][a-z0-9_]*)`/;
 const SEP = /^\|[\s:\-|]+\|$/;
 
@@ -121,7 +124,7 @@ function specSources(description) {
   // and missing one makes a correct spec entry look like it over-lists.
   const lines = [...(description || '').matchAll(/\*\*規格來源\*\*：(.*)/g)];
   return lines.flatMap((line) =>
-    [...line[1].matchAll(/\[(0[1-7]-0[0-9])\]\(([^)]+)\)/g)].map((m) => ({ code: m[1], href: m[2] })));
+    [...line[1].matchAll(new RegExp(`\\[${SPEC_CODE}\\]\\(([^)]+)\\)`, 'g'))].map((m) => ({ code: m[1], href: m[2] })));
 }
 
 function numbersIn(description) {
@@ -221,11 +224,6 @@ export function checkErData(dictText, er, { specsDir = SPECS_DIR } = {}) {
   return out;
 }
 
-/** The table list each spec page's planning entry names must be exactly the
- *  tables whose `**規格來源**` cites that page. PR #252 shipped a first
- *  attempt that read every link in a table's description, so `audit_events`
- *  appeared under 04-02 on the strength of a sentence saying that table and
- *  `annotation_history_event` are two policies that must not be merged. */
 /** Every `` `:N`「quote」 `` in the generated artifacts must land on the line it
  *  quotes. #236, 2026-11-14: three of them had drifted, because #170 and #282
  *  inserted rows into a spec's 資料欄位 table and pushed every later row down.
@@ -234,9 +232,16 @@ export function checkErData(dictText, er, { specsDir = SPECS_DIR } = {}) {
  *
  *  A line number with no quote after it is not a citation: that is the shape a
  *  變更紀錄 row uses to record a fix (`` `:965`→`:974` ``), and reading those as
- *  citations would make every such row fail the moment it is written. */
-const CITATION = /`:(\d+)`\s*(?:的\s*)?「([^」]{2,200})」/g;
-const CITED_PAGE = /\[(0[1-7]-0[0-9])\]/g;
+ *  citations would make every such row fail the moment it is written.
+ *
+ *  The comparison is substring containment, so a quote only protects as well as
+ *  it is chosen: pick wording that appears on that row and nowhere else on the
+ *  page, or a drifted line number can still land on a decoy. */
+const CITATION = /`:(\d+)`\s*(?:的\s*)?「([^」]{2,})」/g;
+// A link, not a bare mention: `specSources()` refuses prose links for the same
+// reason — a page named in passing is usually a contrast, not a declaration —
+// and attribution has to be at least as strict, or a contrast steals the quote.
+const citedPage = () => new RegExp(`\\[${SPEC_CODE}\\]\\(`, 'g');
 
 // The dictionary quotes a table row as 欄名｜值 while the page writes it as
 // | 欄名 | 值 |, and bold moves around, so compare without either.
@@ -249,7 +254,7 @@ export function checkLineCitations(sources, pages) {
     for (const [i, line] of text.split('\n').entries()) {
       for (const m of line.matchAll(CITATION)) {
         const where = `${rel}:${i + 1}`;
-        const codes = [...line.slice(0, m.index).matchAll(CITED_PAGE)];
+        const codes = [...line.slice(0, m.index).matchAll(citedPage())];
         if (codes.length === 0) {
           out.push(`${where} quotes :${m[1]} but names no spec page before it, so nothing can check that line`);
           continue;
@@ -267,7 +272,7 @@ export function checkLineCitations(sources, pages) {
         }
         const actual = flatten(lines[n - 1]);
         // An ellipsis joins fragments of one row, so every fragment must be there.
-        for (const fragment of m[2].split(/…+/)) {
+        for (const fragment of m[2].split(/[…⋯]+|\.{3,}/)) {
           const want = flatten(fragment);
           if (want.length < 2) continue;
           if (!actual.includes(want)) {
@@ -280,6 +285,11 @@ export function checkLineCitations(sources, pages) {
   return out;
 }
 
+/** The table list each spec page's planning entry names must be exactly the
+ *  tables whose `**規格來源**` cites that page. PR #252 shipped a first
+ *  attempt that read every link in a table's description, so `audit_events`
+ *  appeared under 04-02 on the strength of a sentence saying that table and
+ *  `annotation_history_event` are two policies that must not be merged. */
 export function checkSpecEntries(er, pages) {
   const out = [];
   const expected = new Map();

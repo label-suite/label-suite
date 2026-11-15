@@ -378,7 +378,7 @@ test('a line number with no quote after it is not a citation', () => {
 });
 
 test('a quoted line number that names no spec page is reported', () => {
-  assert.match(checkLineCitations(cite('那一頁的 `:9`「匯出時間」就是依據'), [CITED_PAGE]).join('\n'), /names no spec page|:9/);
+  assert.match(checkLineCitations(cite('那一頁的 `:9`「匯出時間」就是依據'), [CITED_PAGE]).join('\n'), /names no spec page/);
 });
 
 test('the 的「」 shape is a citation too', () => {
@@ -391,4 +391,41 @@ test('a citation naming a page that exists but a row that moved reports both sid
   const out = checkLineCitations(cite(`${link}（\`:11\`「匯出時間」）`), [CITED_PAGE]).join('\n');
   assert.match(out, /03-03/);
   assert.match(out, /審核單位/);
+});
+
+const OTHER_PAGE = {
+  code: '04-01',
+  rel: 'specs/04-annotation/01-annotation-list.mdx',
+  text: ['---', "title: '標記清單'", '---', '', '| 審核單位 | 任務的某個回合 × 某一筆指派 |'].join('\n'),
+};
+const other = '[04-01](../../specs/04-annotation/01-annotation-list.mdx#資料欄位)';
+
+test('the page code nearest the citation wins, not the first on the line', () => {
+  // The real shape: data-table-dictionary.mdx:751 cites two pages on one line.
+  // Reading the first code for both citations would check 04-01 line 9.
+  const body = `${other}（\`:5\`「審核單位」）、${link}（\`:9\`「匯出時間」）`;
+  assert.deepEqual(checkLineCitations(cite(body), [CITED_PAGE, OTHER_PAGE]), []);
+});
+
+test('a bare page code in prose does not steal the citation', () => {
+  // `specSources()` already refuses prose links because a mention is often a
+  // contrast, not a declaration; attribution has to be just as strict.
+  const body = `${link}（不同於 [04-01] 的寫法）（\`:9\`「匯出時間」）`;
+  assert.deepEqual(checkLineCitations(cite(body), [CITED_PAGE, OTHER_PAGE]), []);
+});
+
+test('a quote longer than a line of prose is still checked', () => {
+  const quote = '錯'.repeat(300);
+  assert.match(checkLineCitations(cite(`${link}（\`:9\`「${quote}」）`), [CITED_PAGE]).join('\n'), /:9/);
+});
+
+test('every ellipsis in use joins fragments', () => {
+  for (const dots of ['……', '⋯⋯', '...']) {
+    const body = `${link}（\`:9\`「匯出時間${dots}不是請求被接受的時間」）`;
+    assert.deepEqual(checkLineCitations(cite(body), [CITED_PAGE]), [], `fragments split on ${dots}`);
+  }
+});
+
+test('line :0 is reported rather than read as the last line', () => {
+  assert.match(checkLineCitations(cite(`${link}（\`:0\`「匯出時間」）`), [CITED_PAGE]).join('\n'), /:0/);
 });
