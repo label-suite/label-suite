@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const DICT_PATH = join(HERE, '..', 'docs', 'diagrams', 'architecture', 'data-table-dictionary.mdx');
 export const ER_PATH = join(HERE, '..', 'docs', 'diagrams', 'architecture', 'database-schema.er.json');
+export const INVENTORY_PATH = join(HERE, '..', 'docs', 'diagrams', 'architecture', 'data-field-inventory.mdx');
 const SPECS_DIR = join(HERE, '..', 'docs', 'specs');
 
 const NAME = /`([a-z][a-z0-9_]*)`/;
@@ -225,6 +226,60 @@ export function checkErData(dictText, er, { specsDir = SPECS_DIR } = {}) {
  *  attempt that read every link in a table's description, so `audit_events`
  *  appeared under 04-02 on the strength of a sentence saying that table and
  *  `annotation_history_event` are two policies that must not be merged. */
+/** Every `` `:N`「quote」 `` in the generated artifacts must land on the line it
+ *  quotes. #236, 2026-11-14: three of them had drifted, because #170 and #282
+ *  inserted rows into a spec's 資料欄位 table and pushed every later row down.
+ *  Nothing could see it — `specSources()` only proves the cited page exists,
+ *  and `check-specs.mjs` never reads `docs/diagrams/`.
+ *
+ *  A line number with no quote after it is not a citation: that is the shape a
+ *  變更紀錄 row uses to record a fix (`` `:965`→`:974` ``), and reading those as
+ *  citations would make every such row fail the moment it is written. */
+const CITATION = /`:(\d+)`\s*(?:的\s*)?「([^」]{2,200})」/g;
+const CITED_PAGE = /\[(0[1-7]-0[0-9])\]/g;
+
+// The dictionary quotes a table row as 欄名｜值 while the page writes it as
+// | 欄名 | 值 |, and bold moves around, so compare without either.
+const flatten = (text) => text.replace(/\*\*/g, '').replace(/｜/g, '|').replace(/\s+/g, '');
+
+export function checkLineCitations(sources, pages) {
+  const out = [];
+  const byCode = new Map(pages.map((p) => [p.code, p.text.split('\n')]));
+  for (const { rel, text } of sources) {
+    for (const [i, line] of text.split('\n').entries()) {
+      for (const m of line.matchAll(CITATION)) {
+        const where = `${rel}:${i + 1}`;
+        const codes = [...line.slice(0, m.index).matchAll(CITED_PAGE)];
+        if (codes.length === 0) {
+          out.push(`${where} quotes :${m[1]} but names no spec page before it, so nothing can check that line`);
+          continue;
+        }
+        const code = codes[codes.length - 1][1];
+        const lines = byCode.get(code);
+        if (!lines) {
+          out.push(`${where} cites ${code} at :${m[1]}, but no spec page has that code`);
+          continue;
+        }
+        const n = Number(m[1]);
+        if (n < 1 || n > lines.length) {
+          out.push(`${where} cites ${code} at :${m[1]}, but that page has ${lines.length} lines`);
+          continue;
+        }
+        const actual = flatten(lines[n - 1]);
+        // An ellipsis joins fragments of one row, so every fragment must be there.
+        for (const fragment of m[2].split(/…+/)) {
+          const want = flatten(fragment);
+          if (want.length < 2) continue;
+          if (!actual.includes(want)) {
+            out.push(`${where} cites ${code} at :${n} for 「${fragment.trim()}」, but that line reads 「${lines[n - 1].trim().slice(0, 60)}」`);
+          }
+        }
+      }
+    }
+  }
+  return out;
+}
+
 export function checkSpecEntries(er, pages) {
   const out = [];
   const expected = new Map();
@@ -268,10 +323,18 @@ function specPages(specsDir = SPECS_DIR) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const er = JSON.parse(readFileSync(ER_PATH, 'utf8'));
-  const errors = checkErData(readFileSync(DICT_PATH, 'utf8'), er)
-    .concat(checkSpecEntries(er, specPages()));
+  const dictText = readFileSync(DICT_PATH, 'utf8');
+  const erText = readFileSync(ER_PATH, 'utf8');
+  const er = JSON.parse(erText);
+  const pages = specPages();
+  const errors = checkErData(dictText, er)
+    .concat(checkSpecEntries(er, pages))
+    .concat(checkLineCitations([
+      { rel: 'diagrams/architecture/data-table-dictionary.mdx', text: dictText },
+      { rel: 'diagrams/architecture/database-schema.er.json', text: erText },
+      { rel: 'diagrams/architecture/data-field-inventory.mdx', text: readFileSync(INVENTORY_PATH, 'utf8') },
+    ], pages));
   for (const e of errors) console.error(`ERROR ${e}`);
   if (errors.length > 0) process.exit(1);
-  console.log('check-er-data: dictionary, diagram and spec entries agree');
+  console.log('check-er-data: dictionary, diagram, spec entries and line citations agree');
 }
