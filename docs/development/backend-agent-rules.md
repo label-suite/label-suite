@@ -195,8 +195,8 @@ Celery task 只收可序列化的識別資訊，在自己的行程裡重新查�
 | 不採用 | 出處 | 為什麼 |
 | :--- | :--- | :--- |
 | 「業務刪除一律 `softDelete()`，禁止 `delete()`」，以及「新 entity 一律繼承軟刪除基底」 | **scaffold 與 duty-mate 的 `database.md` §軟刪除（兩份都列為鐵律）** | 刪除語意是規格問題。本專案依 ADR-038 與功能規格逐種決定；稽核列永遠不刪、帶答案的歷史不匿名化，兩者都不是「軟刪除」能表達的 |
-| 「所有 migration 同時 transaction 加 `CONCURRENTLY`」 | — | 自相矛盾：`CREATE INDEX CONCURRENTLY` 不能在交易裡執行 |
-| 「寄完信再 commit」 | — | 寄信失敗會吃掉已成立的業務結果。本專案把外部呼叫放在 commit 之後、失敗走補償 |
+| 「所有 migration 同時 transaction 加 `CONCURRENTLY`」 | 起草後端規範時列出的待寫要求 | 自相矛盾：`CREATE INDEX CONCURRENTLY` 不能在交易裡執行 |
+| 「寄完信再 commit」 | 起草後端規範時列出的待寫要求 | 寄信失敗會吃掉已成立的業務結果。本專案把外部呼叫放在 commit 之後、失敗走補償 |
 | NestJS／TypeORM 的具體寫法（`@InjectRepository`、`dataSource.transaction`、`synchronize: false` 的設定鍵） | scaffold 與 duty-mate 的 `database.md` | 棧不同（本專案是 SQLAlchemy）。**原則沿用、寫法不沿用** |
 | 原始 repo `backend.md` 的 Accept-Language 解析長段 | `backend.md` §i18n | 那是實作規格不是規則。i18n 兩層的決定在 ADR-026（沿用），實際的解析行為屬 `docs/specs/` 或該模組的 api-contract，不放進規則文件 |
 | 原始 repo `api.md` 的 `app/schemas/`、`backend.md` 的 `app/i18n/zh_TW/` 等集中路徑 | 兩份皆是 | 被模組內分層覆寫，見[決策紀錄](#決策紀錄) |
@@ -261,7 +261,7 @@ Celery task 只收可序列化的識別資訊，在自己的行程裡重新查�
 
 ### starter-kit
 
-**仍然對不上。** 它的 `backend/architecture.md` 與 `backend/database.md` 找不到來源。維護者已裁定「該來源不存在或已不適用，從工作項移除」：`trendlink` 組織底下所有 repo、個人帳號與本機都查過，`core-principles.md`／`workflow.md` 都不存在；本機唯一叫 starter-kit 的 `whest-starterkit` 是科學計算起始包。
+**仍然對不上。** 它的 `backend/architecture.md` 與 `backend/database.md` 找不到來源。維護者已裁定「該來源不存在或已不適用，不做對照」：`trendlink` 組織底下所有 repo、個人帳號與本機都查過，`core-principles.md`／`workflow.md` 都不存在；本機唯一叫 starter-kit 的 `whest-starterkit` 是科學計算起始包。
 
 另外又實查了一次（因為點名的檔名不同，而 `agent-rules.md` 自己記的教訓正是「附帶搜尋清單的否定結論會勸退後面的人再查」）：`trendlink` 組織底下 24 個 repo（含 `backend`、`frontend`、`deid-kit`）的 tree、`singyichen` 的 repo 清單、以及本機 `find ~/project` 找 `backend/architecture.md`／`backend/database.md`，**全部零命中**。論證見 [#106](https://github.com/label-suite/label-suite/issues/106)。
 
