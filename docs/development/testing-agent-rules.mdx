@@ -10,7 +10,7 @@ updatedAt: '2026-11-16'
 # 測試與交付證據規範
 
 本文說明測試與交付證據的十二條規範，由 `AGENTS.md` 的 Agent Rules Index 指過來；`AGENTS.md` 是規則本體，兩邊說法不同時以 `AGENTS.md` 為準，並回報給維護者。
-跨領域的規範在 [agent-rules.md](agent-rules.md)、後端在 [backend-agent-rules.md](backend-agent-rules.md)、授權與答案隔離在 [security-agent-rules.md](security-agent-rules.md)、API 契約在 [api-agent-rules.md](api-agent-rules.md)、前端在 [frontend-agent-rules.md](frontend-agent-rules.md)，這裡不重複。
+跨領域的規範在 [agent-rules.mdx](agent-rules.mdx)、後端在 [backend-agent-rules.mdx](backend-agent-rules.mdx)、授權與答案隔離在 [security-agent-rules.mdx](security-agent-rules.mdx)、API 契約在 [api-agent-rules.mdx](api-agent-rules.mdx)、前端在 [frontend-agent-rules.mdx](frontend-agent-rules.mdx)，這裡不重複。
 
 **`backend/`、`frontend/` 與 `e2e/` 目前都不存在**，所以每條的「檢查方式」幾乎都還沒有自動檢查。標「待建置」就是字面意思：**不得因為這份文件存在就宣稱測試或 gate 已經在跑**，因為本文件談的正是「怎麼證明事情做完了」。
 
@@ -71,7 +71,7 @@ updatedAt: '2026-11-16'
 | **適用路徑** | 所有測試 |
 | **禁止** | 用「原始碼含有某個字串」、regex 或 AST 片段、函式簽章存在、設定鍵存在這類**自證測試**充當功能驗收；把架構或政策的靜態檢查混在功能測試裡而不標明；斷言實作細節（私有方法被呼叫幾次、內部狀態）；**快照測試**——它破了也沒有意圖，不能當行為驗收 |
 | **正例** | 斷言**可觀察的結果**：HTTP 回應的欄位值、資料庫裡那一列的內容、畫面上使用者看得到的文字與狀態、稽核事件有沒有寫進去。測試名稱**寫行為與預期**（「審核員刪任務回 403」）而不是實作細節；**一個測試只驗一件事**（一個邏輯行為一個斷言，共用 setup 時才合併成一個測試）。同一個 Scenario 跨層都有覆蓋時，**只有一層是主責**，其他層寫的是補充、**不能取代主責那一層**。架構與政策檢查**可以**用靜態分析，但要放在獨立的 lint 工作並**標成 lint**（例如「import 邊界 lint」），不計入功能驗收 |
-| **例外** | 架構與政策的靜態檢查本身是合法且必要的（見 T9），只是不能冒充行為測試。生成產物的 drift 比對（[api-agent-rules.md](api-agent-rules.md) A5）同樣屬 lint 類 |
+| **例外** | 架構與政策的靜態檢查本身是合法且必要的（見 T9），只是不能冒充行為測試。生成產物的 drift 比對（[api-agent-rules.mdx](api-agent-rules.mdx) A5）同樣屬 lint 類 |
 
 :::note{title="T3 的反例與檢查方式" collapsible}
 - **反例**：`assert "credentials" in Path("frontend/src/api/mutator.ts").read_text()`（證明的是字串存在，不是 cookie 真的被送出）；`assert hasattr(service, "anonymize_user")`；把「每個 router 都有 `response_model=`」寫成一個 `test_api_contract` 放進功能測試的計數裡
@@ -123,7 +123,7 @@ integration 測試走真實路由、真認證授權、真 test DB，harness 不�
 
 :::note{title="T6 的反例與檢查方式" collapsible}
 - **反例**：測試用真的 Resend API key 寄一封信出去；fixture 裡放一份有標準答案的資料集；前端測試用 MSW 回一個「管理員」身分就宣稱權限測過了
-- **檢查方式**：**待建置**。可用 CI 的 secret 掃描擋住 fixture 裡的金鑰（見 T9）；「答案不在 fixture 裡」屬 [security-agent-rules.md](security-agent-rules.md) S5 的覆蓋面
+- **檢查方式**：**待建置**。可用 CI 的 secret 掃描擋住 fixture 裡的金鑰（見 T9）；「答案不在 fixture 裡」屬 [security-agent-rules.mdx](security-agent-rules.mdx) S5 的覆蓋面
 :::
 
 ### T7 多維輸入用決策表
@@ -139,7 +139,7 @@ integration 測試走真實路由、真認證授權、真 test DB，harness 不�
 
 :::note{title="T7 的反例與檢查方式" collapsible}
 - **反例**：一個 `test_update_task` 測管理員改草稿任務就收工；`assert resp.status_code == 200` 之後不讀回來比對；只測「送一次」而不測重送同一筆
-- **檢查方式**：**待建置**。`pytest.mark.parametrize` 與 `it.each` 可以讓每一列各自成案例；表格是否齊全要靠審查，並與 [security-agent-rules.md](security-agent-rules.md) S10 的驗收矩陣對齊
+- **檢查方式**：**待建置**。`pytest.mark.parametrize` 與 `it.each` 可以讓每一列各自成案例；表格是否齊全要靠審查，並與 [security-agent-rules.mdx](security-agent-rules.mdx) S10 的驗收矩陣對齊
 :::
 
 ### T8 E2E 的選擇器、設定與等待
@@ -171,12 +171,12 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 
 | gate | 政策寫在哪 |
 | :--- | :--- |
-| Python lint 與型別檢查 | [backend-agent-rules.md](backend-agent-rules.md) B2（`mypy --strict`、`ruff` 的 `D` 規則） |
-| TypeScript strict 與 React Hooks | [frontend-agent-rules.md](frontend-agent-rules.md) F2、F3 |
+| Python lint 與型別檢查 | [backend-agent-rules.mdx](backend-agent-rules.mdx) B2（`mypy --strict`、`ruff` 的 `D` 規則） |
+| TypeScript strict 與 React Hooks | [frontend-agent-rules.mdx](frontend-agent-rules.mdx) F2、F3 |
 | import 邊界（前端分層、後端分層） | F1 與 B1 |
-| OpenAPI 與前端 client 的 drift | [api-agent-rules.md](api-agent-rules.md) A5 |
+| OpenAPI 與前端 client 的 drift | [api-agent-rules.mdx](api-agent-rules.mdx) A5 |
 | migration 在 SQLite 與 PostgreSQL 兩層都能跑 | B6、B7 與本文 T4 |
-| 授權與答案隔離的回歸 | [security-agent-rules.md](security-agent-rules.md) S5、S10 與本文 T7 |
+| 授權與答案隔離的回歸 | [security-agent-rules.mdx](security-agent-rules.mdx) S5、S10 與本文 T7 |
 | 依賴、secret 與 CORS 掃描 | `AGENTS.md` 硬性規則 7、8 與 ADR-028（SCA 加延後 SAST、Semgrep 擋 `allow_origins=["*"]`；ADR-028 已定方向） |
 
 :::note{title="T9 的反例與檢查方式" collapsible}
@@ -237,7 +237,7 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 | 不採用 | 出處 | 為什麼 |
 | :--- | :--- | :--- |
 | 整體 80% 當硬閘 | 原始 repo foundation spec `SC-001` | 只管「不得下降」加關鍵路徑 90%（T10）。該條只管後端且自帶逃生條款，範圍與 90% 那條不同 |
-| `AUTH_MODE=dev` 的測試 token | scaffold `integration-test-http.md` 鐵律四 | [security-agent-rules.md](security-agent-rules.md) S1 已明文禁止 dev-token 模式；測試要走真的登入或簽一個真的 session cookie |
+| `AUTH_MODE=dev` 的測試 token | scaffold `integration-test-http.md` 鐵律四 | [security-agent-rules.mdx](security-agent-rules.mdx) S1 已明文禁止 dev-token 模式；測試要走真的登入或簽一個真的 session cookie |
 | `createTestApp()` 的 `listen(0)`／`closeTestApp()` 生命週期修法 | scaffold `integration-test-http.md` 鐵律一、二 | NestJS 與 supertest 的框架細節，pytest 沒有對應問題，起草工作項明文不得逐字搬 |
 | Jest mock 佇列的 `rounds` 寫法 | duty-mate `jest-mock-queue.md` | 同上。它的**紀律**（紅燈原因未確認前不改實作）沿用在 T2 |
 | 診斷用的 `lsof` 埠號指紋與 `ps` 行程檢查 | scaffold `integration-test-http.md` 鐵律五、六 | 那是 Node 與 supertest 的臨時埠問題。「同時只跑一個共用 test DB 的行程」與「輸出先落檔」兩條原則沿用在 T5 |
@@ -254,10 +254,10 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 | T1 | [architecture.mdx](architecture.mdx) §測試分層（工具、範圍、位置、三層不重疊）**沿用**；ADR-009、012、034。**「用 Supertest 打 API 叫 integration，不叫 e2e」**來自 scaffold `testing.md` §測試名詞**沿用**（本 repo 換成 httpx）；原始 repo 的位置慣例**部分沿用**：後端 `tests/[module]/test_[file].py` 與 e2e `e2e/[module]/[page].spec.ts` **沿用**；**前端的 `src/[module]/__tests__/[file].test.tsx` 不採用**——本 repo 依 ADR-012 與 [architecture.mdx](architecture.mdx) §測試分層 是**與原始碼同目錄**，照來源寫會撞上 T1 禁止格的「測試檔放在與下表不同的位置」 |
 | T2 | ADR-009 與 [architecture.mdx](architecture.mdx)（TDD、測試與實作同一個 task）**沿用**；scaffold `testing.md` §TDD 的三步與「**測試紅了先判斷是測試缺陷還是實作缺陷，未確認前不改實作**」**沿用**；「不以測試數量代替驗收行為」是起草工作項的明文，本條照收 |
 | T3 | 起草工作項列的四種自證形式（source includes、regex／AST 片段、簽章、config key 存在），本條照收。**owner layer 的概念取自 `trendlink/trendlink-portal` 的 `.claude/rules/testing-architecture.md`**（每個 Scenario 只有一個主責層，其他層只能寫補充、不能取代），本文件沿用它的**原則**；它的 ledger 與骨架產生器是工具，要另開可追溯的 Issue，不在這份文件偷渡實作 |
-| T4 | 原始 repo `testing-backend.md` 的「**資料庫測試要用真的 test DB，不 mock ORM 層**」**沿用**；scaffold `integration-test-http.md` **鐵律三「harness 不得比 production 寬鬆」與鐵律四「真 test db、schema 以 migration 建立」沿用**（含「反向與外部替身不在此限」那句例外）；雙資料庫來自 ADR-024 與 [backend-agent-rules.md](backend-agent-rules.md) B6、B7。**它的 `AUTH_MODE=dev` 測試 token 不採用**，見上表 |
+| T4 | 原始 repo `testing-backend.md` 的「**資料庫測試要用真的 test DB，不 mock ORM 層**」**沿用**；scaffold `integration-test-http.md` **鐵律三「harness 不得比 production 寬鬆」與鐵律四「真 test db、schema 以 migration 建立」沿用**（含「反向與外部替身不在此限」那句例外）；雙資料庫來自 ADR-024 與 [backend-agent-rules.mdx](backend-agent-rules.mdx) B6、B7。**它的 `AUTH_MODE=dev` 測試 token 不採用**，見上表 |
 | T5 | 原始 repo `testing-backend.md` 的 fixture 慣例**沿用**；scaffold `integration-test-http.md` 的**紀律沿用**（同時只跑一個共用 test DB 的行程、輸出先落檔再讀、`--detectOpenHandles` 綠燈不代表沒有 open handle、間歇性問題要能重現才算結案），**它的 NestJS 生命週期修法與 duty-mate 的 Jest 佇列修法都不逐字搬**，為起草工作項的明文 |
 | T6 | `AGENTS.md` 硬性規則 6（測試集答案不外露）與 8（祕密只從環境變數來）；ADR-013、ADR-035 與寄信降級的決定（見[決策紀錄](#決策紀錄)）；scaffold `testing.md` 的「web 端以 MSW handler 模擬 API（優先用 Orval 產生的 mock），**不 mock `fetch` 本身**」**沿用**；`trendlink/trendlink-portal` `testing-architecture.md` 的 **L2-contract 層**（決定性替身、不連真實第三方）**沿用原則**。「MSW 不代替真後端的授權驗證」是起草工作項的明文 |
-| T7 | scaffold `testing.md` §Decision Table 寫法**沿用**（編號對回 Scenario、缺值拆兩格、邊界值各一列、「斷言要看值，不只看狀態碼：建立後要讀回並比對欄位」）；**拆格有事故背書**——duty-mate `dto-boolean.md` 的決策表就是因為沒把「key 存在但值為 undefined」與「key 不存在」分開，漏掉了真正的缺陷；而它那次事故（2026-07-07「列入排班時好時壞」）**兩個方向都錯**，成因也有兩個：陣列 fall through，以及 **`Boolean('false') === true` 的隱式轉型**，所以 `false` 那一格是第三格而不是「缺值」的一種；角色×成員×狀態的維度來自 [security-agent-rules.md](security-agent-rules.md) S10 與 PRD §權限矩陣 |
+| T7 | scaffold `testing.md` §Decision Table 寫法**沿用**（編號對回 Scenario、缺值拆兩格、邊界值各一列、「斷言要看值，不只看狀態碼：建立後要讀回並比對欄位」）；**拆格有事故背書**——duty-mate `dto-boolean.md` 的決策表就是因為沒把「key 存在但值為 undefined」與「key 不存在」分開，漏掉了真正的缺陷；而它那次事故（2026-07-07「列入排班時好時壞」）**兩個方向都錯**，成因也有兩個：陣列 fall through，以及 **`Boolean('false') === true` 的隱式轉型**，所以 `false` 那一格是第三格而不是「缺值」的一種；角色×成員×狀態的維度來自 [security-agent-rules.mdx](security-agent-rules.mdx) S10 與 PRD §權限矩陣 |
 | T8 | 原始 repo `testing-e2e.md` **沿用**（位置、一個 spec 一條旅程、role／label／text 優先、`storageState`、不寫死埠而讀 `baseURL`）；[architecture.mdx](architecture.mdx) 的「`data-testid` 的共用契約仍然值得沿用」與「ADR-014 的 prototype 層 Playwright 測試**不適用本 repo**」（留在個人 repo）**沿用**；scaffold `testing.md` 的「不用 `setTimeout` 等待」**沿用** |
 | T9 | 七項為起草工作項所列，本條照收；分工為本文件定義測試與 gate 的政策，如何觸發與傳遞結果歸 CI 與 hook 的建置工作 |
 | T10 | **90% 關鍵路徑分支**來自原始 repo `testing-backend.md` 與 `testing-frontend.md`（「Critical paths (auth, permission checks, score calculation) require ≥ 90% branch coverage」）**沿用**；來源寫的是三項（`auth`、`permission checks`、`score calculation`），本文件另外納入**答案隔離**（`AGENTS.md` 硬性規則 6 與 S5，違反就是測試集外洩）與 **IAA 計算**（ADR-007 的 scoring 佇列算的就是它，屬 `score calculation` 的一部分），共五項。**整體 80%** 不在任何規則檔裡，而是原始 repo foundation spec 的 `SC-001`，**只管後端**而且自帶逃生條款（尚未達 80% 時正式 PR 不得再降低並須有提升計畫）——範圍不同，所以**不合成一條硬規定**，這是需要先由維護者決定的原因 |
@@ -272,7 +272,7 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 | `testing-backend.md` §Backend（pytest fixture、真 test DB 不 mock ORM、`pytest-asyncio`、factory 放 `tests/factories/`、慢測試標 `@pytest.mark.integration`） | **沿用** | 成為 T1（`-m integration`）、T4（真 test DB）、T5（fixture 與 factory 位置） |
 | `testing-backend.md`／`testing-frontend.md` §Coverage 的「新程式不得降低整體覆蓋率」與「關鍵路徑 ≥ 90% 分支」 | **沿用** | 成為 T10，正是維護者採用的那兩條 |
 | `testing-frontend.md` §Frontend（測行為不測實作、用 role／label／text 查元素、只在網路邊界 mock、**禁止快照測試**） | **沿用** | 成為 T3（含快照禁令）、T6、T8 |
-| `testing-frontend.md` §Frontend 的「不手動包 `act()`，用 `userEvent`」 | **不在本文件** | 那是 React Testing Library 的寫法細節，不是測試政策；落在前端的元件測試慣例（[frontend-agent-rules.md](frontend-agent-rules.md) F3 的 Hooks 規則與 RTL 用法） |
+| `testing-frontend.md` §Frontend 的「不手動包 `act()`，用 `userEvent`」 | **不在本文件** | 那是 React Testing Library 的寫法細節，不是測試政策；落在前端的元件測試慣例（[frontend-agent-rules.mdx](frontend-agent-rules.mdx) F3 的 Hooks 規則與 RTL 用法） |
 | `testing-e2e.md`（位置、一個 spec 一條旅程、語意選擇器優先、`storageState`、不寫死埠、執行命令） | **沿用** | 成為 T1（位置與命令）與 T8（其餘四項，「一條旅程」在禁止與正例格） |
 | foundation spec `SC-001` 的整體 80% | **不採用為硬閘** | 見上方「刻意不採用的來源條文」與 T10 |
 
@@ -300,7 +300,7 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 | `jest-mock-queue.md`（替身供應被吃光造成假紅、先數佇列再動實作） | **沿用紀律** | 成為 T2 |
 | `integration-test-http.md`（含 harness 不得寬鬆） | **沿用** | 與 scaffold 那份同向但**鐵律編號不同**（duty-mate 是三＝harness、四＝診斷指紋、五＝只跑一個行程、六＝輸出落檔，而且**沒有**「真 Postgres test db／`AUTH_MODE=dev`」那一條）。本文件引用的鐵律編號**一律指 scaffold 那份** |
 | `dto-boolean.md` 的「缺值要拆成兩格」決策表要求 | **沿用** | 成為 T7 的事故背書 |
-| `database.md` 的 **E2E 測試帳密以設定檔為單一來源**與測試清庫允許硬刪 | **沿用原則** | 兩項都成為 T5。清庫不是業務刪除，與 [backend-agent-rules.md](backend-agent-rules.md) B8 不衝突 |
+| `database.md` 的 **E2E 測試帳密以設定檔為單一來源**與測試清庫允許硬刪 | **沿用原則** | 兩項都成為 T5。清庫不是業務刪除，與 [backend-agent-rules.mdx](backend-agent-rules.mdx) B8 不衝突 |
 
 ### trendlink-portal（`trendlink/trendlink-portal`，`.claude/rules/testing-architecture.md`）
 
@@ -321,7 +321,7 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 
 而該表其他列給的本機路徑是 `/Users/mandychen/mandy/project/...`——**那是維護者另一台機器的家目錄**（本機是 `/Users/mandy610425`，`/Users/mandychen` 不存在）。
 
-查過的範圍：`trendlink` 組織 24 個 repo 的 tree（`truncated: false` 已確認）、`singyichen` 的全部 repo、`trendlink/lexpayroll`（**空 repo**，它宣告的子 repo `lexpayroll-api`／`lexpayroll-web` 在 `trendlink` 下是 404）、組織內以 `starter` 搜尋 repo 名稱（0 筆）、以及本機 `find ~`（只有 `whest-starterkit`，那是科學計算起始包，[agent-rules.md](agent-rules.md) 已排除）。
+查過的範圍：`trendlink` 組織 24 個 repo 的 tree（`truncated: false` 已確認）、`singyichen` 的全部 repo、`trendlink/lexpayroll`（**空 repo**，它宣告的子 repo `lexpayroll-api`／`lexpayroll-web` 在 `trendlink` 下是 404）、組織內以 `starter` 搜尋 repo 名稱（0 筆）、以及本機 `find ~`（只有 `whest-starterkit`，那是科學計算起始包，[agent-rules.mdx](agent-rules.mdx) 已排除）。
 
 所以這一類的結論是「存在但這個 loop 讀不到」，而且該 issue 已經規定「交付物不得依賴其他開發者擁有這些目錄」。要納入對照需要維護者把那幾份檔案貼進 Issue 或放進本 repo，見 [§待決](#待決)。
 

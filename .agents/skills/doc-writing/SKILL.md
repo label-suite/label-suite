@@ -148,7 +148,7 @@ issue 編號只出現在兩處：`## 決策紀錄` 的來源欄，以及「論�
 | 不要 | 要 |
 | :--- | :--- |
 | 標題下一排 `Issue #105`、`正式開發前` 徽章；索引表有「負責的 Issue｜狀態：本次建立」兩欄 | 不放徽章；索引表只留「領域｜說明文件」 |
-| 附錄寫「其餘六份對應 #106–#110」「測試歸 #110」，標題寫「原始 repo（`singyichen/label-suite`，釘在 `faf83356`）」 | 「其餘六份見 [backend-agent-rules.md](backend-agent-rules.md)…」「見 [testing-agent-rules.md](testing-agent-rules.md)」；標題只寫「原始 repo」，附錄開頭一句「比對的版本：原始 repo `faf83356`、duty-mate `c53cc453`」 |
+| 附錄寫「其餘六份對應 #106–#110」「測試歸 #110」，標題寫「原始 repo（`singyichen/label-suite`，釘在 `faf83356`）」 | 「其餘六份見 [backend-agent-rules.mdx](backend-agent-rules.mdx)…」「見 [testing-agent-rules.mdx](testing-agent-rules.mdx)」；標題只寫「原始 repo」，附錄開頭一句「比對的版本：原始 repo `faf83356`、duty-mate `c53cc453`」 |
 
 ---
 
