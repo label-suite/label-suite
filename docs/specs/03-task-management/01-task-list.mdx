@@ -4,14 +4,14 @@ description: '使用者在這一頁找到自己要處理的任務，並從這裡
 category: '規格書'
 tags: [規格書, 任務管理, 已定案]
 createdAt: '2026-11-05'
-updatedAt: '2026-11-12'
+updatedAt: '2026-11-16'
 ---
 
 import PrototypeFrame from '@notes/components/prototype-frame';
 
 # 03-01 任務列表
 
-:badge[已定案]{variant="success"} :badge[變更 #170]{variant="warning"} :badge[任務管理]{variant="neutral"}
+:badge[已定案]{variant="success"} :badge[變更 #170]{variant="warning" href="https://github.com/label-suite/label-suite/issues/170"} :badge[任務管理]{variant="neutral"}
 
 > 來源：舊 repo `specs/task-management/010-task-list/spec.md`（54 條），釘在 `singyichen/label-suite@faf83356`，見 `docs/specs/legacy/03-01-task-list.ids` 的首行
 > 參考畫面：`design/prototype/pages/task-management/task-list.html`
@@ -685,6 +685,7 @@ import Spec0301TaskListFlow from '@notes/components/spec-03-01-task-list-flow'
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#188](https://github.com/label-suite/label-suite/issues/188) | 2026-11-16 | 頁首 | `變更 #170` 徽章是 `warning` 但沒有 `href` | 統一成 `variant="warning"` 加 `href`（維護者 2026-11-16 裁定，規則見 `writing-guide.md` §變更標示） | **無新決議**，條文一字未改 |
 | [#170](https://github.com/label-suite/label-suite/issues/170) | 2026-11-12 | 頁首、§規格 › 搜尋／標記階段篩選／狀態篩選／排序與分頁／刪除任務／資料欄位、§驗收標準、§待釐清、§已確認決議、附錄 | §搜尋 第 2 條把「更新時間」列進比對範圍、§資料欄位 更新時間那一列寫「搜尋的比對範圍之一」；另有**七處**寫著「畫面目前 X，依決議要改」（搜尋範圍、標記階段篩選器、三個狀態的字、沒有排序、確認視窗承諾復原、未建立清單，以及 Q1 理由裡「本條待補的只剩那三個字」），附錄 `FR-004a`／`FR-004ac`／`FR-004b` **三列**也寫著「要跟著改」；Q1 與 Q7 的理由另有兩個已失效的行號 | §搜尋 第 2 條改成不含更新時間並補第 4 條分類欄位仍比對內部值的釐清、§資料欄位 那一列改成「不在搜尋的比對範圍」；六處與附錄兩列改成已於 2026-11-12 落地（[PR #269](https://github.com/label-suite/label-suite/pull/269)）；新增 Scenario「搜尋不比對更新時間」並加進走查清單 | **新增 Q21**（維護者 2026-11-12）：搜尋不比對更新時間。Q19 的「每一欄」裡更新時間那一欄被 Q21 取代，其餘不變；Q1、Q2、Q7、Q8、Q9 的畫面改動在 #170 落地 |
 | [#260](https://github.com/label-suite/label-suite/issues/260) | 2026-11-11 | §Q&A | 每題是 `### Q. …` 的 H3 標題，答案直接顯示 | 每題一個預設收合的 `tip`，題目是可點選的標題 | **無新決議**。§Q&A **4 題**全部從 `### Q. …` 標題改成預設收合的 `tip`，題目成為可點選的標題。題目的 H3 錨點因此消失（全站沒有任何連結指向它們，已逐題查過），也不再進右側目錄。**題目、答案與連結一字未改**，只有標題去掉「Q. 」前綴。格式依維護者 2026-11-11 的四個裁定（紀錄在[這則留言](https://github.com/label-suite/label-suite/issues/260#issuecomment-6792064965)） |
 | [#179](https://github.com/label-suite/label-suite/issues/179) | 2026-11-10 | §規格 › 三處分歧的註記 | 「儀表板**任務列的狀態徽章是另一組字**（`dashboard.i18n.js:17` 的 `statusLabel`：進行中、待確認、繼續中、待繼續、待審核——PRD 的五個狀態一個都沒有）……畫面要怎麼改與那三個字要叫什麼另案處理」 | 改為儀表板那一側已於 2026-11-10 依 #179 換成 PRD 的五個名稱，本條待補的只剩 `task-list.html` 自己的 `試標進行中`／`待 IAA 確認`／`正式標記進行中`（歸 #170）；同時移除已失效的 `:17` 行號 | 規格 02-01 §已確認決議 Q18（維護者 2026-11-10） |
