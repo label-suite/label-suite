@@ -532,6 +532,7 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §已確認決議 Q11 的兩段理由 | `:558`、`:559` 前面那個路徑沒帶行號，沿用不到；`user-management.html:358` 的引文與引用之間隔了「傳入」 | 第一筆補完整路徑、兩筆各自帶上 `roleNoTaskRole` 的中英值；第二筆改成緊接在後的「roleIndicator: '系統管理員'」。**條文一字未改** | **無新決議** |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §已確認決議 Q11 的三段理由 | 兩句寫成現在式的畫面現況已成假：「prototype 的 `'一般使用者'` 是寫死的中文字面值，**不在 `taskRoleI18n` 字典裡**（`sidebar.js:1867`）」與「畫面**目前**對『一般使用者』用的英文是 `User`（`profile.html:1167`）」；兩個行號也都已失效 | 改寫成「裁決當時」，並寫明 prototype 那一側已於 2026-11-11 依 [#165](https://github.com/label-suite/label-suite/issues/165) 落地（`sidebar.js:558`／`:559` 的 `roleNoTaskRole` 中英兩鍵、`profile.html:1279` 的 `General user`）；第三段的 #165 補上已關閉。**條文一字未改**，不加標示也不清掉上一輪的 #188 標示 | **無新決議** |
 | [#188](https://github.com/label-suite/label-suite/issues/188) | 2026-11-16 | 頁首 | `變更 #188` 徽章是 `warning` 但沒有 `href` | 統一成 `variant="warning"` 加 `href`（維護者 2026-11-16 裁定，規則見 `writing-guide.md` §變更標示） | **無新決議**，條文一字未改 |
 | [#188](https://github.com/label-suite/label-suite/issues/188) | 2026-11-15 | §規格 › 通知 第 6 條 | 第 6 條無條件要求每一則通知顯示「發生了什麼事、相關的任務、是誰做的，以及多久以前發生」 | **加一個例外**：系統自己產生、沒有操作者的事件沒有「是誰做的」那一行（維護者 2026-11-15 裁定，見[規格 07-04 §已確認決議](./04-notification-events.mdx#已確認決議) Q5）。頁首的 `變更 #249` 依 `spec-writing` 步驟 5 第 6 點換成 `變更 #188`，#249 那一輪的 `<mark>` 一併清掉、文字保留 | 07-04 Q5 |

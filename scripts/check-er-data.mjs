@@ -25,7 +25,7 @@ const ROOT = join(HERE, '..');
 // the documents beside it, and the rules it quotes. Anything else is a path
 // `checkPathCitations` will report as missing, which is the right answer.
 const CITABLE = ['design/prototype', 'docs', 'scripts', '.claude/skills', '.agents/skills'];
-const CITABLE_EXT = /\.(html|js|mjs|cjs|json|mdx|md|css|ts|tsx)$/;
+const CITABLE_EXT = /\.(html|js|mjs|cjs|json|mdx|md|css|ts|tsx|svg)$/;
 
 // One shape for a spec page code, so the two readers of it cannot drift apart.
 const SPEC_CODE = '(0[1-7]-0[0-9])';
@@ -315,8 +315,14 @@ export function checkPathCitations(sources, files) {
   const paths = [...files.keys()];
   for (const { rel, text } of sources) {
     let section = '';
+    let fenced = false;
     let lastPath = null;
     for (const [i, line] of text.split('\n').entries()) {
+      // A fence hides both kinds of line: a `foo.js:12` inside an example is
+      // not a citation, and a `## 變更紀錄` inside one must not silence the
+      // rest of the page.
+      if (/^\s*(```|~~~)/.test(line)) { fenced = !fenced; continue; }
+      if (fenced) continue;
       if (line.startsWith('## ')) section = line.slice(3).trim();
       if (section === '變更紀錄') continue;
       lastPath = null;
@@ -427,7 +433,8 @@ export function citableFiles(root = ROOT, roots = CITABLE) {
     const abs = join(root, rel);
     if (!existsSync(abs)) return;
     for (const e of readdirSync(abs, { withFileTypes: true })) {
-      if (e.name.startsWith('.') && e.name !== '.claude' && e.name !== '.agents') continue;
+      // The roots above already name the dot directories that count.
+      if (e.name.startsWith('.')) continue;
       if (e.name === 'node_modules') continue;
       const next = `${rel}/${e.name}`;
       if (e.isDirectory()) walk(next);

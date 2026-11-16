@@ -484,12 +484,16 @@ test('a bare line number inherits the path named earlier on the same line', () =
 });
 
 test('a bare line number with no path before it on the line is reported', () => {
-  assert.match(checkPathCitations(spec('（`:2` 的「標記員」）'), FILES).join('\n'), /no file/);
+  // Not /no file/: without the guard the path is `null` and the lookup says
+  // "no file in the repository is null", which passes that pattern too.
+  const out = checkPathCitations(spec('（`:2` 的「標記員」）'), FILES).join('\n');
+  assert.match(out, /names no file before it/);
 });
 
 test('a bare line number does not inherit across lines', () => {
   const text = '# 07-01\n\n## 規格\n\n（`design/prototype/pages/shared/sidebar.js:2` 的「標記員」）\n（`:3` 的「Annotator」）\n';
-  assert.match(checkPathCitations([{ rel: 'specs/07-shared/01-sidebar.mdx', text }], FILES).join('\n'), /no file/);
+  const out = checkPathCitations([{ rel: 'specs/07-shared/01-sidebar.mdx', text }], FILES).join('\n');
+  assert.match(out, /names no file before it/);
 });
 
 test('a line past the end of the file is reported', () => {
@@ -525,7 +529,10 @@ test('a line range is reported when the quote is on neither line', () => {
 });
 
 test('a backwards range is reported rather than read as empty', () => {
-  assert.match(checkPathCitations(spec('（`docs/specs/00-prd.mdx:2-1` 的「R/C」）'), FILES).join('\n'), /2-1/);
+  // Not /2-1/: with the guard gone the quote check reports the same range,
+  // so only the reason tells the two apart.
+  const out = checkPathCitations(spec('（`docs/specs/00-prd.mdx:2-1` 的「R/C」）'), FILES).join('\n');
+  assert.match(out, /ends before it starts/);
 });
 
 test('rows in 變更紀錄 are skipped, because they quote the text they removed', () => {
@@ -546,4 +553,39 @@ test('bold and spacing do not count as drift, as in the spec-code checker', () =
 
 test('a one-character quote is too weak to be an anchor and is reported', () => {
   assert.match(checkPathCitations(spec('（`docs/specs/00-prd.mdx:2` 的「R」）'), FILES).join('\n'), /too short/);
+});
+
+test('a quote further down the line is not an anchor', () => {
+  // The rule that forced 07-01:416 to be rewritten: the citation read
+  // `…user-management.html:358` 傳入「系統管理員」, two words apart.
+  const body = '（`design/prototype/pages/account/profile.html:2` 傳入 `roleIndicator`）';
+  assert.match(checkPathCitations(spec(body), FILES).join('\n'), /no quote after it/);
+});
+
+test('a bare file name matches a whole segment, not a suffix of one', () => {
+  const files = new Map([['design/prototype/pages/shared/my-sidebar.js', 'var a = 1;\n']]);
+  const out = checkPathCitations(spec('（`sidebar.js:1` 的「var a」）'), files).join('\n');
+  assert.match(out, /no file in the repository is sidebar\.js/);
+});
+
+test('only a level-two heading opens 變更紀錄, so a deeper one keeps checking', () => {
+  const text = '# x\n\n## 規格\n\n### 變更紀錄\n\n（`docs/specs/00-prd.mdx:9` 的「R/C」）\n';
+  assert.match(checkPathCitations([{ rel: 'x.mdx', text }], FILES).join('\n'), /:9/);
+});
+
+test('every fragment of an ellipsis-joined quote must be on that line', () => {
+  const ok = '（`docs/specs/00-prd.mdx:2` 的「05 資料匯入與版本……R/C」）';
+  assert.deepEqual(checkPathCitations(spec(ok), FILES), []);
+  const bad = '（`docs/specs/00-prd.mdx:2` 的「05 資料匯入與版本……由系統決定」）';
+  assert.match(checkPathCitations(spec(bad), FILES).join('\n'), /由系統決定/);
+});
+
+test('a citation inside a fenced code block is left alone', () => {
+  const text = '# x\n\n## 規格\n\n```js\nconsole.log(`app.js:12`);\n```\n';
+  assert.deepEqual(checkPathCitations([{ rel: 'x.mdx', text }], FILES), []);
+});
+
+test('a 變更紀錄 heading inside a fence does not silence the rest of the page', () => {
+  const text = '# x\n\n## 規格\n\n```md\n## 變更紀錄\n```\n\n（`docs/specs/00-prd.mdx:9` 的「R/C」）\n';
+  assert.match(checkPathCitations([{ rel: 'x.mdx', text }], FILES).join('\n'), /:9/);
 });
