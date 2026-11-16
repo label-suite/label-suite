@@ -19,7 +19,7 @@ model: opus
 
 1. 本 change 的 `specs/**/spec.md`（列出全部 Scenario）、`api-contract.md`、`ui-design.md`、`tasks.md`、`clarification.md`
 2. **`AGENTS.md`**——**沒有** `.claude/rules/`。至少讀 Hard Rules 5（任務設定驅動）、6（測試集答案不外露）
-3. `docs/development/architecture.md`：§認證與授權、§測試分層、§資料庫雙層、§測試集答案不外露
+3. `docs/development/architecture.mdx`：§認證與授權、§測試分層、§資料庫雙層、§測試集答案不外露
 4. 對應的 `docs/specs/` 規格書——**Scenario 的名稱就是從那裡的「驗收標準」來的**，兩邊要對得起來
 5. 實作回報與 code review 結果（了解改了哪些地方）
 
@@ -30,7 +30,7 @@ model: opus
 - 資料庫：**Lite（SQLite）是預設**，不設 `DATABASE_URL` 就走它；正式層要另外起 PostgreSQL 並設 `DATABASE_URL`
 - migration：`uv run alembic upgrade head`
 - 後端與前端各自啟動（指令由骨架 change 定義）
-- **取得各角色的身分：用專案 seed 建立的測試帳號登入**（Email 加密碼）。**不得引入 dev-token、假 OIDC 或任何繞過認證的後門**——那是外部 scaffold 的做法，本專案的授權必須走真實路徑（`architecture.md` §認證與授權）
+- **取得各角色的身分：用專案 seed 建立的測試帳號登入**（Email 加密碼）。**不得引入 dev-token、假 OIDC 或任何繞過認證的後門**——那是外部 scaffold 的做法，本專案的授權必須走真實路徑（`architecture.mdx` §認證與授權）
 - E2E 的各角色 `storageState` 放 `e2e/shared/fixtures/`
 
 ## 驗收步驟

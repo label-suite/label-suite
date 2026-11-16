@@ -17,7 +17,7 @@ updatedAt: '2026-11-10'
 
 **`backend/` 目前不存在**，所以下面每一條的「檢查方式」都還沒有自動檢查。標「待建置」就是字面意思：那些檢查要等實際有程式才寫得出來，**不得因為這份文件存在就宣稱架構已被強制**。
 
-技術選型與 ADR 效力在 [architecture.md](architecture.md)：FastAPI、Pydantic v2、SQLAlchemy 2.0（async）、Alembic、Celery、PostgreSQL 16 正式／SQLite Lite。
+技術選型與 ADR 效力在 [architecture.mdx](architecture.mdx)：FastAPI、Pydantic v2、SQLAlchemy 2.0（async）、Alembic、Celery、PostgreSQL 16 正式／SQLite Lite。
 
 ---
 
@@ -35,7 +35,7 @@ updatedAt: '2026-11-10'
 | **反例** | Router 裡 `await repo.get(...)` 然後自己組回應；Repository 裡 `raise HTTPException(404)` |
 | **例外** | 無。唯讀的健康檢查之類不碰業務資料的端點不在此列 |
 | **檢查方式** | **待建置**。可用 import linter（例如 `import-linter` 的 layered contract）機械擋住反向 import，但要等 `backend/` 存在 |
-| **來源** | **維護者 2026-11-10 裁定模組內分層** `app/modules/<module>/`（一個業務模組一個資料夾，裡面放自己的 router、service、repository 與 schemas），見 [architecture.md](architecture.md)。狀態機只在 service 來自 ADR-022（沿用；它舉的扁平 `app/services/` 路徑已被那次裁定覆寫）。原始 repo `api.md` 的 `app/schemas/` 集中寫法同樣被覆寫 |
+| **來源** | **維護者 2026-11-10 裁定模組內分層** `app/modules/<module>/`（一個業務模組一個資料夾，裡面放自己的 router、service、repository 與 schemas），見 [architecture.mdx](architecture.mdx)。狀態機只在 service 來自 ADR-022（沿用；它舉的扁平 `app/services/` 路徑已被那次裁定覆寫）。原始 repo `api.md` 的 `app/schemas/` 集中寫法同樣被覆寫 |
 
 **完整的轉移條件以 `docs/specs/` 與 PRD §共用狀態機 為準**，不以 ADR-022 的表為準——那張表帶著個人 repo 的 FR 編號。
 
@@ -55,13 +55,13 @@ updatedAt: '2026-11-10'
 
 | | |
 | :--- | :--- |
-| **適用路徑** | `backend/app/**`（含模組內的 Celery 進入點）。**不寫 `backend/worker/`**：`architecture.md` 的 `worker` 是與 `backend` 共用同一個 image 的 container，不是一個目錄；2026-11-10 的裁定給的是 `app/modules/<module>/` |
+| **適用路徑** | `backend/app/**`（含模組內的 Celery 進入點）。**不寫 `backend/worker/`**：`architecture.mdx` 的 `worker` 是與 `backend` 共用同一個 image 的 container，不是一個目錄；2026-11-10 的裁定給的是 `app/modules/<module>/` |
 | **禁止** | 跨請求或跨 task 共用同一個可變 session；把 session 存進模組層的全域變數；在 Celery task 裡用 async engine |
 | **正例** | API 用 `db: AsyncSession = Depends(get_db)`，一個請求一個 session；worker 用同步 session，一個 task 一個，結束就關 |
 | **反例** | `SESSION = async_session()` 放在 module top-level，所有請求共用；把 `AsyncSession` 當參數塞進 `task.delay(...)` |
 | **例外** | 無。例外發生時一律 rollback 並釋放連線，不讓連線留在交易中回到 pool |
 | **檢查方式** | **待建置**。整合測試可斷言「請求結束後 pool 的 checked-out 連線回到 0」；需要 `backend/` 的測試 harness |
-| **來源** | [architecture.md](architecture.md)：「同一層的 API 與 worker 用不同的驅動，因為 Celery 跑在同步執行緒裡，不能用 async engine」（Lite 用 `sqlite+aiosqlite` / 同步 URL；正式用 `postgresql+asyncpg` / `psycopg2`）。scaffold `database.md` §連線管理 的「透過 DI 取得、不用全域 connection」**沿用原則** |
+| **來源** | [architecture.mdx](architecture.mdx)：「同一層的 API 與 worker 用不同的驅動，因為 Celery 跑在同步執行緒裡，不能用 async engine」（Lite 用 `sqlite+aiosqlite` / 同步 URL；正式用 `postgresql+asyncpg` / `psycopg2`）。scaffold `database.md` §連線管理 的「透過 DI 取得、不用全域 connection」**沿用原則** |
 
 ### B4 交易的擁有層
 
@@ -72,7 +72,7 @@ updatedAt: '2026-11-10'
 | **正例** | **交易由 service 擁有**：多步寫入在同一個交易內，業務資料與必要稽核一起 commit；外部呼叫（寄信、第三方 API）**與 task 派送**都放在 commit 之後，失敗走補償路徑 |
 | **反例** | `repo.create()` 裡面自己 `await session.commit()`，讓上層的交易邊界失效；在交易裡 `await smtp.send()`，把 DB 連線佔住到網路逾時；**交易內就 `score.delay(submission_id)`——worker 搶先查不到那一列** |
 | **例外** | 稽核事件若規格要求「即使業務失敗也要留痕」，那一筆走獨立交易，而且要在程式註解寫明為什麼分開 |
-| **失敗補償要寫明** | commit 之後的每一個外部動作（寄信、派送 task）都要有**明確的補償路徑**，#106 工作項 4 點名這一點：寄信失敗照[寄信降級的裁定](architecture.md)（連結印在伺服器 log）；**派送失敗**則由該筆資料的狀態欄留在「待派送」，由排程補送或人工重送——不得靜默吞掉 |
+| **失敗補償要寫明** | commit 之後的每一個外部動作（寄信、派送 task）都要有**明確的補償路徑**，#106 工作項 4 點名這一點：寄信失敗照[寄信降級的裁定](architecture.mdx)（連結印在伺服器 log）；**派送失敗**則由該筆資料的狀態欄留在「待派送」，由排程補送或人工重送——不得靜默吞掉 |
 | **檢查方式** | **待建置**。可用「Repository 層不得出現 `commit`」的靜態檢查 |
 | **來源** | scaffold `database.md` §連線管理 的「多步驟寫入用 `dataSource.transaction`，transaction 內只用 `manager`」**沿用原則**（轉成 SQLAlchemy 的 session 邊界）。**「寄完信再 commit」刻意不採用**——那個順序會讓寄信失敗吃掉已成立的業務結果，#106 工作項 4 明文要求不照搬 |
 
@@ -86,7 +86,7 @@ updatedAt: '2026-11-10'
 | **反例** | `session.execute(text(f"SELECT * FROM tasks WHERE id = '{task_id}'"))` |
 | **例外** | **三種**：(1) Alembic migration 裡的 DDL；(2) schema API 表達不了的 DDL（partial index、extension、RLS 之類）；(3) **migration 內的資料遷移（DML）**。三者都要在該 migration 的 docstring 寫明為什麼只能這樣寫；第 (3) 項另外要寫明**影響的列數量級、能不能重跑、以及怎麼回復**（#106 工作項 5 要求「資料遷移需個別說明」） |
 | **檢查方式** | **待建置**。可用「`app/` 底下不得 import `text`」的靜態檢查，migration 目錄排除 |
-| **來源** | scaffold `database.md` §ORM 唯一原則（**沿用**，含它的 DDL 例外）；[architecture.md](architecture.md) 的分層表已寫「不寫原生 SQL（migration DDL 例外）」。**#106 工作項 5 另外要求：資料遷移要個別說明，不把 migration 變成任意 SQL 逃生門** |
+| **來源** | scaffold `database.md` §ORM 唯一原則（**沿用**，含它的 DDL 例外）；[architecture.mdx](architecture.mdx) 的分層表已寫「不寫原生 SQL（migration DDL 例外）」。**#106 工作項 5 另外要求：資料遷移要個別說明，不把 migration 變成任意 SQL 逃生門** |
 
 ### B6 schema 只由 Alembic 管
 
@@ -98,7 +98,7 @@ updatedAt: '2026-11-10'
 | **反例** | 測試 fixture 裡 `Base.metadata.create_all(engine)`；直接編輯上一版已部署的 migration 檔 |
 | **例外** | **不可逆的變更**（刪欄位、改型別導致資料遺失）允許 `down` 無法完全還原，但要在 migration 的 docstring 寫明不可逆的部分，並經維護者審核 |
 | **檢查方式** | **待建置**。CI 可跑 `upgrade → downgrade → upgrade`；`create_all` 可靜態擋 |
-| **來源** | scaffold `database.md` §Migration（**沿用**：不用 synchronize、可 up 可 down、已部署凍結、讀過產物）；[architecture.md](architecture.md)「schema 一律走 Alembic migration，不用 `synchronize` 類的自動同步」。**「所有 migration 同時 transaction 加 CONCURRENTLY」這類互相衝突的要求不採用**（#106 工作項 6 明文）——`CREATE INDEX CONCURRENTLY` 不能在交易裡跑，兩個要求放一起必然矛盾 |
+| **來源** | scaffold `database.md` §Migration（**沿用**：不用 synchronize、可 up 可 down、已部署凍結、讀過產物）；[architecture.mdx](architecture.mdx)「schema 一律走 Alembic migration，不用 `synchronize` 類的自動同步」。**「所有 migration 同時 transaction 加 CONCURRENTLY」這類互相衝突的要求不採用**（#106 工作項 6 明文）——`CREATE INDEX CONCURRENTLY` 不能在交易裡跑，兩個要求放一起必然矛盾 |
 
 ### B7 雙資料庫的測試要求
 
@@ -110,7 +110,7 @@ updatedAt: '2026-11-10'
 | **反例** | 整個測試套件只跑 SQLite，PR 寫「資料層測試通過」 |
 | **例外** | 不碰上述差異的純邏輯測試只跑一邊即可 |
 | **檢查方式** | **待建置**。CI 要有兩條 job（SQLite 與真 PostgreSQL），而這要等 `backend/` 與 CI 設定 |
-| **來源** | ADR-024 資料庫雙層（**沿用**）；[architecture.md](architecture.md) 的兩層表與驅動推導。scaffold `integration-test-http.md` 的「真 Postgres test db」**沿用原則**，但它的 NestJS harness 不轉用（測試分層歸 [#110](https://github.com/label-suite/label-suite/issues/110)） |
+| **來源** | ADR-024 資料庫雙層（**沿用**）；[architecture.mdx](architecture.mdx) 的兩層表與驅動推導。scaffold `integration-test-http.md` 的「真 Postgres test db」**沿用原則**，但它的 NestJS harness 不轉用（測試分層歸 [#110](https://github.com/label-suite/label-suite/issues/110)） |
 
 ### B8 刪除、軟刪除與匿名化
 
@@ -122,7 +122,7 @@ updatedAt: '2026-11-10'
 | **反例** | 新增 entity 時順手繼承一個「含 `deleted_at` 的共用基底」並把查詢預設都加上排除條件——那是把別的專案的預設搬過來，不是本專案的規格 |
 | **例外** | 規格明確要求軟刪除的那些資料照做，並在 model 的 docstring 指向該規格 |
 | **檢查方式** | **人工／獨立審查**。刪除語意是規格問題，沒有辦法機械判定 |
-| **來源** | ADR-038 資料保留、刪除與匿名化（**沿用**）；[architecture.md](architecture.md) 的保留政策列與稽核 append-only。**scaffold `database.md` §軟刪除（鐵律）刻意不採用**——它要求「業務刪除一律 `softDelete()`，禁止 `delete()`」，而 #106 工作項 8 明文要求不套用「所有 entity 一律軟刪除」 |
+| **來源** | ADR-038 資料保留、刪除與匿名化（**沿用**）；[architecture.mdx](architecture.mdx) 的保留政策列與稽核 append-only。**scaffold `database.md` §軟刪除（鐵律）刻意不採用**——它要求「業務刪除一律 `softDelete()`，禁止 `delete()`」，而 #106 工作項 8 明文要求不套用「所有 entity 一律軟刪除」 |
 
 ### B9 Celery 的界線
 
@@ -132,9 +132,9 @@ updatedAt: '2026-11-10'
 | **禁止** | 把 HTTP 物件（request、response、`UploadFile`）或 DB session 塞進 task 參數；無界重試；task 的結果與失敗狀態不落地 |
 | **正例** | 只傳可序列化的識別資訊（`task_id`、`submission_id`）；task 在自己的行程裡**重新查權限與資料版本**；重試有上限、task 冪等（重跑同一個 task 不會產生第二筆結果）；結果與失敗狀態寫進資料庫 |
 | **反例** | `score.delay(submission=upload_file, db=session)`；`autoretry_for=(Exception,)` 不設 `max_retries` |
-| **例外** | Celery 只用於**長時間工作**（評分、IAA 計算、匯出）走 `scoring` 佇列；雜務走 `default`（`architecture.md`）。既定的界線也在那裡：**最多重試三次、退避 60／180／540 秒、單一評分工作硬上限 300 秒、結果在 result backend 留 24 小時**（ADR-007）——「重試有界」就是指這組數字，不要另訂 |
+| **例外** | Celery 只用於**長時間工作**（評分、IAA 計算、匯出）走 `scoring` 佇列；雜務走 `default`（`architecture.mdx`）。既定的界線也在那裡：**最多重試三次、退避 60／180／540 秒、單一評分工作硬上限 300 秒、結果在 result backend 留 24 小時**（ADR-007）——「重試有界」就是指這組數字，不要另訂 |
 | **檢查方式** | **待建置**。「task 參數只能是基本型別」可用靜態檢查；冪等性要靠測試（重跑同一個 task 斷言只有一筆結果） |
-| **來源** | ADR-007 Celery（**沿用**）；[architecture.md](architecture.md) 的 Celery 分層列（「不處理 HTTP、不回傳使用者可見訊息」）與評分流程圖。**「重新查權限」這一條與授權規範相接**，授權本身歸 [#107](https://github.com/label-suite/label-suite/issues/107) |
+| **來源** | ADR-007 Celery（**沿用**）；[architecture.mdx](architecture.mdx) 的 Celery 分層列（「不處理 HTTP、不回傳使用者可見訊息」）與評分流程圖。**「重新查權限」這一條與授權規範相接**，授權本身歸 [#107](https://github.com/label-suite/label-suite/issues/107) |
 
 ### B10 設定與 secret
 
@@ -219,4 +219,4 @@ updatedAt: '2026-11-10'
 | Issue | 日期 | 變更 |
 | :--- | :--- | :--- |
 | [#106](https://github.com/label-suite/label-suite/issues/106) | 2026-11-10 | 初版。十條後端規範（各帶適用路徑、禁止、正反例、例外、檢查方式與來源）、六條刻意不採用的來源條文、原始 repo／scaffold／duty-mate 的逐條對照（starter-kit 沿用 #105 的裁定） |
-| [#106](https://github.com/label-suite/label-suite/issues/106) | 2026-11-10 | 獨立審查後修五處：**B4 補上 task 派送與 commit 的先後**（工作項 4 的「排程」原本只處理了寄信那一半，而交易內 `.delay()` 是經典的 dual-write 錯誤）；**B5 的例外補第 (3) 項資料遷移**（工作項 5 要求「資料遷移需個別說明」，原本只寫在來源欄）；**`backend/worker/**` 這個路徑是憑空寫的**，全 `docs/` 只有本檔在用，改成裁定的 `app/modules/<module>/`；**duty-mate 的對照補五列**，其中 §軟刪除唯一原則（含「新 entity 一律繼承 `SoftDeletableEntity`」）改標**不採用**——它正是工作項 8 點名的那一條，原本整份被標成「原則沿用」；B9 的「重試有界」接上 `architecture.md` 的既定數字 |
+| [#106](https://github.com/label-suite/label-suite/issues/106) | 2026-11-10 | 獨立審查後修五處：**B4 補上 task 派送與 commit 的先後**（工作項 4 的「排程」原本只處理了寄信那一半，而交易內 `.delay()` 是經典的 dual-write 錯誤）；**B5 的例外補第 (3) 項資料遷移**（工作項 5 要求「資料遷移需個別說明」，原本只寫在來源欄）；**`backend/worker/**` 這個路徑是憑空寫的**，全 `docs/` 只有本檔在用，改成裁定的 `app/modules/<module>/`；**duty-mate 的對照補五列**，其中 §軟刪除唯一原則（含「新 entity 一律繼承 `SoftDeletableEntity`」）改標**不採用**——它正是工作項 8 點名的那一條，原本整份被標成「原則沿用」；B9 的「重試有界」接上 `architecture.mdx` 的既定數字 |

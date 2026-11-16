@@ -22,7 +22,7 @@ updatedAt: '2026-11-11'
 
 | 前提 | 狀態 |
 | :--- | :--- |
-| 三層的工具與位置 | 已定（[architecture.md](architecture.md) §測試分層）：後端 pytest 加 pytest-asyncio 加 httpx 放 `backend/tests/`；前端 Vitest 加 React Testing Library 與原始碼同目錄；正式 E2E 用 Playwright 放根目錄 `e2e/[module]/[page].spec.ts`。TDD 依 ADR-009，**測試與實作在同一個 task**（`openspec/config.yaml` 的 `rules.tasks`） |
+| 三層的工具與位置 | 已定（[architecture.mdx](architecture.mdx) §測試分層）：後端 pytest 加 pytest-asyncio 加 httpx 放 `backend/tests/`；前端 Vitest 加 React Testing Library 與原始碼同目錄；正式 E2E 用 Playwright 放根目錄 `e2e/[module]/[page].spec.ts`。TDD 依 ADR-009，**測試與實作在同一個 task**（`openspec/config.yaml` 的 `rules.tasks`） |
 | 覆蓋率門檻 | **維護者 2026-11-10 裁定：只管「不得下降」加關鍵路徑 90% 分支覆蓋**，不把整體 80% 寫成硬閘。分母排除生成程式（Orval 產物）、Alembic migration 與設定檔。「關鍵路徑」的**五項範圍也已裁定**（維護者 2026-11-10 裁定維持五項），見 T10 |
 
 ---
@@ -41,7 +41,7 @@ updatedAt: '2026-11-11'
 | **反例** | `e2e/annotation/submit.spec.ts` 裡其實是用 httpx 打 `/api/v1/...`（那是 integration）；用 Playwright 驗一個日期格式化函式 |
 | **例外** | 無。跨層的補充覆蓋允許，但**要寫明哪一層是主責**（見 T3 正例的最後一句） |
 | **檢查方式** | **待建置**。位置與命名可由 CI 的路徑規則檢查；「名字對不對」要靠審查 |
-| **來源** | [architecture.md](architecture.md) §測試分層（工具、範圍、位置、三層不重疊）**沿用**；ADR-009、012、034。**「用 Supertest 打 API 叫 integration，不叫 e2e」**來自 scaffold `testing.md` §測試名詞**沿用**（本 repo 換成 httpx）；原始 repo 的位置慣例**部分沿用**：後端 `tests/[module]/test_[file].py` 與 e2e `e2e/[module]/[page].spec.ts` **沿用**；**前端的 `src/[module]/__tests__/[file].test.tsx` 不採用**——本 repo 依 ADR-012 與 [architecture.md](architecture.md) §測試分層 是**與原始碼同目錄**，照來源寫會撞上本條禁止格的「測試檔放在與下表不同的位置」 |
+| **來源** | [architecture.mdx](architecture.mdx) §測試分層（工具、範圍、位置、三層不重疊）**沿用**；ADR-009、012、034。**「用 Supertest 打 API 叫 integration，不叫 e2e」**來自 scaffold `testing.md` §測試名詞**沿用**（本 repo 換成 httpx）；原始 repo 的位置慣例**部分沿用**：後端 `tests/[module]/test_[file].py` 與 e2e `e2e/[module]/[page].spec.ts` **沿用**；**前端的 `src/[module]/__tests__/[file].test.tsx` 不採用**——本 repo 依 ADR-012 與 [architecture.mdx](architecture.mdx) §測試分層 是**與原始碼同目錄**，照來源寫會撞上本條禁止格的「測試檔放在與下表不同的位置」 |
 
 | 層 | 工具 | 範圍 | 位置 | 指令 |
 | :--- | :--- | :--- | :--- | :--- |
@@ -61,7 +61,7 @@ updatedAt: '2026-11-11'
 | **反例** | 測「衝突要回 409」卻紅在「找不到資料」——那是替身的供應被吃光了（見下），**這時候去改實作會把對的程式改壞**；在 `tasks.md` 開一個「補測試」的 task |
 | **例外** | 既有程式沒有測試而這次要改它時，允許先補一個描述**現況**的測試當安全網，但要在 PR 寫明那不是 TDD 的紅燈 |
 | **檢查方式** | **待建置**，而且這一條**本質上沒有機械檢查**：事後看不出測試是先寫還是後寫。由 `code-reviewer` 看 commit 順序與測試是否真的會紅 |
-| **來源** | ADR-009 與 [architecture.md](architecture.md)（TDD、測試與實作同一個 task）**沿用**；scaffold `testing.md` §TDD 的三步與「**測試紅了先判斷是測試缺陷還是實作缺陷，未確認前不改實作**」**沿用**；「不以測試數量代替驗收行為」是 #110 工作項 2 明文，本條照收 |
+| **來源** | ADR-009 與 [architecture.mdx](architecture.mdx)（TDD、測試與實作同一個 task）**沿用**；scaffold `testing.md` §TDD 的三步與「**測試紅了先判斷是測試缺陷還是實作缺陷，未確認前不改實作**」**沿用**；「不以測試數量代替驗收行為」是 #110 工作項 2 明文，本條照收 |
 
 **假紅的指紋來自 duty-mate 的一次事故，值得照搬的是紀律而不是寫法。** 它的 `jest-mock-queue.md` 記著：`await expect(...)` 每出現一次就是**一次真實呼叫**，所以用「只供應一次」的替身鋪佇列時，第二個斷言會拿到空值，SUT 走進「查無此筆」分支，**錯誤訊息完全不是你在測的那件事**。它的結論是「**看到前置檢查類例外出現在不該出現的測試裡，先數替身的供應次數，不要去改實作**」。pytest 的對應陷阱是 `side_effect` 清單被耗盡後丟 `StopIteration`。**#110 工作項 5 明文要求不得把 Jest 的佇列修法逐字搬過來**，所以這裡收的是紀律：**紅燈的原因沒確認之前，不動實作**。
 
@@ -135,7 +135,7 @@ updatedAt: '2026-11-11'
 | **反例** | `page.locator('.task-row > td:nth-child(3)')`；`await page.waitForTimeout(3000)`；在每個 spec 開頭走一次登入表單 |
 | **例外** | 沒有語意替代時才用 `data-testid`——而本 repo 的 prototype 契約**就是那個例外的主要來源**，沿用它不算違規 |
 | **檢查方式** | **待建置**。可用 lint 擋 `waitForTimeout` 與 CSS locator；`baseURL` 是否集中由設定檔結構保證 |
-| **來源** | 原始 repo `testing-e2e.md` **沿用**（位置、一個 spec 一條旅程、role／label／text 優先、`storageState`、不寫死埠而讀 `baseURL`）；[architecture.md](architecture.md) 的「`data-testid` 的共用契約仍然值得沿用」與「ADR-014 的 prototype 層 Playwright 測試**不適用本 repo**，依 [#16](https://github.com/label-suite/label-suite/issues/16) 留在個人 repo」**沿用**；scaffold `testing.md` 的「不用 `setTimeout` 等待」**沿用** |
+| **來源** | 原始 repo `testing-e2e.md` **沿用**（位置、一個 spec 一條旅程、role／label／text 優先、`storageState`、不寫死埠而讀 `baseURL`）；[architecture.mdx](architecture.mdx) 的「`data-testid` 的共用契約仍然值得沿用」與「ADR-014 的 prototype 層 Playwright 測試**不適用本 repo**，依 [#16](https://github.com/label-suite/label-suite/issues/16) 留在個人 repo」**沿用**；scaffold `testing.md` 的「不用 `setTimeout` 等待」**沿用** |
 
 ### T9 開發前要落實的自動 gate
 

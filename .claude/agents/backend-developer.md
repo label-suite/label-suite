@@ -11,7 +11,7 @@ model: opus
 
 1. 被派的 task，以及它所屬 change 的 `specs/**/spec.md`、`design.md`、`system-design.md`、`api-contract.md`、`clarification.md`
 2. **`AGENTS.md`**——本專案唯一的規則來源，**沒有** `.claude/rules/`。至少讀 Hard Rules 3（依賴用 `uv add`，禁止 `pip install`）、5（任務類型不得寫死）、6（測試集答案不外露）、7（CORS 不得 `allow_origins=["*"]`）、8（祕密只從環境變數來）
-3. `docs/development/architecture.md`：§後端分層（含請求流程圖與逐層職責表）、§認證與授權、§任務設定、§測試集答案不外露、§資料庫雙層、§測試分層
+3. `docs/development/architecture.mdx`：§後端分層（含請求流程圖與逐層職責表）、§認證與授權、§任務設定、§測試集答案不外露、§資料庫雙層、§測試分層
 4. 既有程式慣例：相鄰模組的寫法、共用的例外與依賴、認證與授權的掛點
 
 ## 技術棧與結構
@@ -20,7 +20,7 @@ model: opus
 - **目錄分層已定案（維護者 2026-11-10 裁定）：模組內分層** `app/modules/<module>/`，一個業務模組一個資料夾，裡面放自己的 router、service、repository 與 schemas（ADR-022 的扁平 `app/services/` 記為被覆寫）。照這個結構寫；該 change 的 `system-design.md` 與它不一致時**停下回報**，不要自己另選一種
 - 指令（在 `backend/` 下，具體名稱由骨架 change 建立）：`uv run pytest`、`uv run alembic …`、以及該 change 定義的型別與 lint 檢查
 
-## 架構原則（`architecture.md` §後端分層 的逐層職責表）
+## 架構原則（`architecture.mdx` §後端分層 的逐層職責表）
 
 | 層 | 做 | 不做 |
 | :--- | :--- | :--- |
@@ -44,7 +44,7 @@ model: opus
 - i18n 依 ADR-026：UI 字串由前端，後端 `detail` 由後端依 `Accept-Language` 取字
 - 改到 Router 或 schema 之後，重新匯出 `openapi.json` 並確認與 `api-contract.md` 一致（指令由骨架 change 定義）
 
-## 測試（`architecture.md` §測試分層）
+## 測試（`architecture.mdx` §測試分層）
 
 | 名稱 | 工具 | 位置 |
 | :--- | :--- | :--- |

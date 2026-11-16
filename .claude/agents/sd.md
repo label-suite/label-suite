@@ -17,7 +17,7 @@ model: opus
 
 1. `openspec/config.yaml` 的 `context`（兩層規格的分工、需求依據順序、派工順序與兩個停點）與 `rules.system-design`、`rules.api-contract`
 2. 本 change 的 `system-analysis.md`（脈絡基準，必讀）
-3. `docs/development/architecture.md`：§技術選型、§後端分層、§認證與授權、§測試集答案不外露、§資料庫雙層、§矛盾與落差、§待決清單
+3. `docs/development/architecture.mdx`：§技術選型、§後端分層、§認證與授權、§測試集答案不外露、§資料庫雙層、§矛盾與落差、§待決清單
 4. `AGENTS.md`（本專案唯一的規則來源，**沒有** `.claude/rules/`）：Hard Rules 5（任務設定驅動）、6（測試集答案不外露）、7（CORS 不得用 `allow_origins=["*"]`）、8（祕密只從環境變數來）
 5. 依 `context` 的需求依據順序讀取相關需求章節；`docs/specs/00-prd.mdx` §權限矩陣 是權限上限
 6. 既有程式（**目前 `backend/` 還不存在**，第一個骨架 change 之後才有）：相關模組、共用的例外與依賴、認證與授權的掛點、匯出的 `openapi.json`
@@ -29,12 +29,12 @@ model: opus
 - **分層是 Router → Service → Repository／Model**：Router 不直接碰 Repository，資料層不處理 HTTP，狀態機只在 Service
 - 資料：SQLAlchemy 2.0 加 Alembic；**SQLite（Lite）與 PostgreSQL 都是支援範圍**，schema 只由 Alembic 管理
 - 認證：後端只認 **httpOnly cookie** 裡的 token（access JWT 15 分鐘、refresh 7 天滑動且一次性輪替）；**任務角色不放進 JWT**，進任務頁另查成員身分
-- 授權依序判定四件事（`architecture.md` §認證與授權）：登入者與帳號狀態 → 系統角色與任務成員身分 → permission key 與矩陣的 cell → 操作本身的附加條件（歸屬、狀態、指派、**測試集答案隔離**）。`role` claim 只供顯示，授權不看它
+- 授權依序判定四件事（`architecture.mdx` §認證與授權）：登入者與帳號狀態 → 系統角色與任務成員身分 → permission key 與矩陣的 cell → 操作本身的附加條件（歸屬、狀態、指派、**測試集答案隔離**）。`role` claim 只供顯示，授權不看它
 - 欄位遮蔽與授權**都在後端完成**，回應明確 allowlist，不回 raw ORM；前端只負責顯示
 
 ## 原本沒定案的三件事都已裁定
 
-三件都由**維護者 2026-11-10 裁定**（見 `architecture.md` §待決清單 第 1、2、3 列）。照裁定寫，**不要再列成待決、不要再問**：
+三件都由**維護者 2026-11-10 裁定**（見 `architecture.mdx` §待決清單 第 1、2、3 列）。照裁定寫，**不要再列成待決、不要再問**：
 
 | # | 原本沒定的 | 你要做的 |
 | :--- | :--- | :--- |
@@ -42,7 +42,7 @@ model: opus
 | ~~2~~ | ~~**成功回應的統一格式**~~ | **已裁定（維護者 2026-11-10）：包一層 envelope。** `api-contract.md` 的 Response 寫 envelope 裡那層資料的欄位；**204 無 body、檔案與串流是明文例外**，屬於例外的端點要寫出理由。不再列成待決 |
 | ~~3~~ | ~~**`/api/v1` 前綴**~~ | **已裁定（維護者 2026-11-10）：用 `/api/v1`。** 直接寫進契約，不再列成待決 |
 
-原本記在這裡的那件矛盾也已經解掉：`architecture.md` §認證與授權 曾在同一句出現 cookie 與 `Authorization` header，**維護者 2026-11-10 裁定後者是筆誤**，可接受的身分來源只有 httpOnly cookie（[#107](https://github.com/label-suite/label-suite/issues/107) 已落地，該句已改寫）。設計時直接照它寫，不必再記成待決。
+原本記在這裡的那件矛盾也已經解掉：`architecture.mdx` §認證與授權 曾在同一句出現 cookie 與 `Authorization` header，**維護者 2026-11-10 裁定後者是筆誤**，可接受的身分來源只有 httpOnly cookie（[#107](https://github.com/label-suite/label-suite/issues/107) 已落地，該句已改寫）。設計時直接照它寫，不必再記成待決。
 
 ## 產出一：system-design.md
 
