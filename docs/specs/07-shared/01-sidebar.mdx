@@ -409,13 +409,13 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 - [ ] 標記員改名，沒有任務角色的另取別名
 
 > 理由：系統角色是平台成員，任務角色是標記員，術語表沒有「一般使用者」這個名詞；而角色標示本來就是依任務角色解析的——審核員與專案負責人兩支都對得上術語表，只有標記員這一支用了表外的字。
-> **這一題其實有三個缺口，裁決一次補齊**：來源 `shared:FR-020A` 的第三個分支（`annotator` 或未提供）同時覆蓋「標記員」與「完全沒有任務角色」兩種人，所以改名標記員之後必須給後者一個名字；而 prototype 的 `'一般使用者'` 是**寫死的中文字面值**，不在 `taskRoleI18n` 字典裡（`design/prototype/pages/shared/sidebar.js:1867`），英文模式下角色標示會顯示中文，違反 `shared:FR-018C1` 與 `shared:FR-021` 的語言一致要求。
+> **這一題其實有三個缺口，裁決一次補齊**：來源 `shared:FR-020A` 的第三個分支（`annotator` 或未提供）同時覆蓋「標記員」與「完全沒有任務角色」兩種人，所以改名標記員之後必須給後者一個名字；而**裁決當時** prototype 的 `'一般使用者'` 是寫死的中文字面值、不在 `taskRoleI18n` 字典裡，英文模式下角色標示會顯示中文，違反 `shared:FR-018C1` 與 `shared:FR-021` 的語言一致要求。那一側已於 2026-11-11 依 [Issue #165](https://github.com/label-suite/label-suite/issues/165) 落地：`design/prototype/pages/shared/sidebar.js` 的 `taskRoleI18n` 現在中英各有一個 `roleNoTaskRole` 鍵（`:558` 的 `zh`、`:559` 的 `en`）。
 > 「一般使用者」這個字保留給它真正適用的那種人——還沒有任何任務角色的使用者。
 > **這一條不涵蓋[規格 02-01](../02-dashboard/01-dashboard.mdx) 的儀表板版面**：02-01 的 [§已確認決議](../02-dashboard/01-dashboard.mdx#已確認決議) Q8 在隔天（維護者裁定 2026-11-09）**否決了「跟著本條讀作『一般使用者』」這個選項**，裁定那種版面**不定名**、一律用描述性的「還沒有任務角色」。
 > 以下是**本頁的解讀**，不是依據：本條管的是側欄的角色標示，Q8 管的是儀表板版面的稱呼，兩個是不同的位置；Q8 只是拒絕把本條的用字搬過去，沒有推翻本條。
 > **本條不碰顯式覆寫**：`shared:FR-020A` 在「依任務角色解析」之前先寫了一個例外——呼叫端已明確傳入固定字串時（例如系統管理的頁面固定顯示「系統管理員」）不受該條影響，並在結尾重申「既有顯式覆寫入口之優先序與行為不變」。畫面確實在用這個入口（`design/prototype/pages/admin/user-management.html:358` 傳入「系統管理員」）。所以系統管理員停在系統管理頁時讀作「系統管理員」，**不是**「一般使用者」，即使他在目前任務沒有任務角色。
-> **英文是一處覆寫**：畫面目前對「一般使用者」用的英文是 `User`（`design/prototype/pages/account/profile.html:1167`），裁決定的是 `General user`。這一處**明確覆寫畫面現況**，不是漏看；要改的是 prototype 那一側。
-> prototype 的文字、字典補英文與這一處英文覆寫由 **[#165](https://github.com/label-suite/label-suite/issues/165)** 處理；本 skill 不改 `design/prototype/`（#86）。
+> **英文是一處覆寫**：**裁決當時**畫面對「一般使用者」用的英文是 `User`，裁決定的是 `General user`——這一處**明確覆寫畫面現況**，不是漏看。prototype 那一側已於 2026-11-11 依 [Issue #165](https://github.com/label-suite/label-suite/issues/165) 改完（`design/prototype/pages/account/profile.html:1279` 的 `roleIndicator: 'General user'`）。
+> prototype 的文字、字典補英文與這一處英文覆寫由 **[#165](https://github.com/label-suite/label-suite/issues/165)** 處理，**已於 2026-11-11 關閉、三項都已落地**；本 skill 不改 `design/prototype/`（#86）。
 
 ### Q3. 「標記作業」這個導覽項的名稱要依任務角色變化嗎？（已定案，維護者裁定 2026-11-04，2026-11-09 再次確認）
 
@@ -532,6 +532,7 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §已確認決議 Q11 的三段理由 | 兩句寫成現在式的畫面現況已成假：「prototype 的 `'一般使用者'` 是寫死的中文字面值，**不在 `taskRoleI18n` 字典裡**（`sidebar.js:1867`）」與「畫面**目前**對『一般使用者』用的英文是 `User`（`profile.html:1167`）」；兩個行號也都已失效 | 改寫成「裁決當時」，並寫明 prototype 那一側已於 2026-11-11 依 [#165](https://github.com/label-suite/label-suite/issues/165) 落地（`sidebar.js:558`／`:559` 的 `roleNoTaskRole` 中英兩鍵、`profile.html:1279` 的 `General user`）；第三段的 #165 補上已關閉。**條文一字未改**，不加標示也不清掉上一輪的 #188 標示 | **無新決議** |
 | [#188](https://github.com/label-suite/label-suite/issues/188) | 2026-11-16 | 頁首 | `變更 #188` 徽章是 `warning` 但沒有 `href` | 統一成 `variant="warning"` 加 `href`（維護者 2026-11-16 裁定，規則見 `writing-guide.md` §變更標示） | **無新決議**，條文一字未改 |
 | [#188](https://github.com/label-suite/label-suite/issues/188) | 2026-11-15 | §規格 › 通知 第 6 條 | 第 6 條無條件要求每一則通知顯示「發生了什麼事、相關的任務、是誰做的，以及多久以前發生」 | **加一個例外**：系統自己產生、沒有操作者的事件沒有「是誰做的」那一行（維護者 2026-11-15 裁定，見[規格 07-04 §已確認決議](./04-notification-events.mdx#已確認決議) Q5）。頁首的 `變更 #249` 依 `spec-writing` 步驟 5 第 6 點換成 `變更 #188`，#249 那一輪的 `<mark>` 一併清掉、文字保留 | 07-04 Q5 |
 | [#188](https://github.com/label-suite/label-suite/issues/188) | 2026-11-15 | §規格 › 通知、§已確認決議 Q4 | §規格 › 通知 最後一條只寫「通知的資料由所在頁面提供」、沒有指向任何一頁；Q4 寫「事件清單留給後續的通知 Epic」與「這一條不等於平台層的通知事件清單已有歸屬」 | 三處都改成指向[規格 07-04 通知事件](./04-notification-events.mdx)（維護者 2026-11-15 裁定落點）；§通知 那一條**保留原本的「通知的資料由所在頁面提供」**，只在它後面接上事件清單的去處 | **無新決議**，本頁條文一字未改 |
