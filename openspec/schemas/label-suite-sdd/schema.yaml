@@ -26,6 +26,7 @@ artifacts:
       標出這次新增或修改的類別。每個關鍵情境一張 Sequence Diagram，標題用對應的情境名稱，
       畫到 Router 回傳回應為止，不含畫面。
       寫出資料模型異動（新表、欄位、索引）與**Alembic migration 是否可逆**、以及權限檢查點。
+      資料模型有異動時，先改資料表字典、再同步 ER、跑 `pnpm check:er`，異動節寫出兩者路徑與摘要。
       schema 只由 Alembic 管理；SQLite（Lite）與 PostgreSQL 都要能升級，寫出兩者的差異處。
       分層與回應包裝都已定案（維護者 2026-11-10 裁定）：**模組內分層** `app/modules/<module>/`、成功回應**包一層 envelope**。
       照這兩項寫，不要再列成待決問題；其他真正還沒定的細節才寫成提案，由 clarification 在停點一拍板。

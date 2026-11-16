@@ -19,7 +19,7 @@ model: opus
 
 在乾淨的工作區跑該 change 定義的檢查（後端 `uv run`、前端 `pnpm`），以及重新匯出 `openapi.json`，再看 `git status`：有差異代表契約產物沒更新，列為必須修正，並用 `git restore` 還原剛產生的檔案、不留下改動。工具能抓到的問題直接列為必須修正，不必逐條人工找。
 
-動到 `docs/` 或 `scripts/` 時另外跑 `pnpm check:specs` 與 `pnpm test:scripts`。
+動到 `docs/` 或 `scripts/` 時另外跑 `pnpm check:specs` 與 `pnpm test:scripts`。動到 model 或 Alembic migration 時另外跑 `pnpm check:er`。
 
 ## 審查清單
 
@@ -45,6 +45,7 @@ model: opus
 - [ ] request schema 有型別、範圍與未知欄位的驗證；query 參數有轉型
 - [ ] **operationId 符合「動詞加資源」**且全專案唯一
 - [ ] model 與 Alembic migration 一致，`downgrade()` 完整，**SQLite 與 PostgreSQL 兩層都能跑**
+- [ ] model 與 migration 和**資料表字典、ER** 一致：實作和設計不同的地方已回寫到字典再同步 ER；這次建立的表標了「已落地」與 revision id；`pnpm check:er` 通過
 
 **前端（`frontend/`）**
 
@@ -96,6 +97,7 @@ No blocking findings. ／ 結論：需修正
 - 前端：{指令與結果}
 - 契約：產物與程式一致／不一致（列出差異檔）
 - 動到 docs/ 或 scripts/ 時：check:specs {結果}、test:scripts {結果}
+- 動到 model 或 migration 時：check:er {結果}
 ```
 
 **只有 Critical 與 High 擋合併。** 非阻擋項不得用「必須修正」「擋合併」這類字眼。每條意見都要可執行、指明負責角色，並且**由改動的程式、周邊程式、失敗的檢查或 `AGENTS.md` 的條文支撐**——不擴張到無關的重構、風格偏好或推測性的邊界情況。

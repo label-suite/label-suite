@@ -37,10 +37,15 @@ sequenceDiagram
 
 ## 資料模型異動
 
-<!-- schema 只由 Alembic 管理（含 dev 與 test）。已部署的 migration 不再修改。 -->
+<!-- schema 只由 Alembic 管理（含 dev 與 test）。已部署的 migration 不再修改。
+     先改字典、再同步 ER、跑 `pnpm check:er`；這一節只寫路徑與異動摘要，不重抄整張表的欄位。
+     沒有資料模型異動時，刪掉路徑與表格，只寫一行「本次無資料模型異動」。 -->
 
-| 表 | 異動 | 欄位／索引 | Alembic migration 可逆 | SQLite 與 PostgreSQL 的差異 |
-| :--- | :--- | :--- | :--- | :--- |
+- 字典：`docs/diagrams/architecture/data-table-dictionary.mdx`
+- ER：`docs/diagrams/architecture/database-schema.er.json`
+
+| 表 | 異動 | 欄位／索引 | 波及的表（依字典 FK 與被參照） | Alembic migration 可逆 | SQLite 與 PostgreSQL 的差異 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
 
 ## 權限檢查點
 

@@ -53,6 +53,8 @@ rules:
     - 分層是 Router → Service → Repository／Model；Router 不直接碰 Repository，資料層不處理 HTTP
     - Sequence Diagram 的標題要與 specs 的 Scenario 名稱相同
     - 有 migration 時寫明 Alembic 的 down 能不能還原，以及 SQLite 與 PostgreSQL 的差異
+    - 資料模型有異動時，先改 docs/diagrams/architecture/data-table-dictionary.mdx、再同步 database-schema.er.json、跑 `pnpm check:er`；「資料模型異動」節寫出這兩個路徑與異動摘要，不重抄整張表
+    - classDiagram 的 Model 只畫屬性；表間關聯與多重性以 ER 為準
     - 權限檢查與欄位遮蔽都在後端完成；權限不得超出 PRD §權限矩陣，需要超出時列進待決問題
   ui-design:
     - 每塊資料都要對應到 api-contract 的 operationId
@@ -90,6 +92,7 @@ rules:
     - 可平行的 task 放在同一個群組並在群組標題註明「（可平行）」
     - 測試與實作放在同一個 task（TDD，見 docs/development/architecture.mdx §測試分層），不另拆測試 task
     - 後端 API 有變動的群組，最後一個 task 是「重新產生 openapi.json 與前端型別並確認與 api-contract 一致」
+    - 有 schema 變更的 [@dba] task 要含「依實作校正資料表字典與 ER、為建立的表標記已落地與 Alembic revision、`pnpm check:er` 通過」
     - Python 用 uv、JavaScript 用 pnpm；不得出現 npm install 或 pip install
     - tasks 定稿後先提交規劃產出物，再交由 design-reviewer 審閱；修訂由 planner 另開 commit
 

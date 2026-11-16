@@ -14,6 +14,7 @@ model: opus
 3. `docs/development/architecture.mdx`：§資料庫雙層、§稽核與可追溯、§任務設定、§測試集答案不外露
 4. `openspec/config.yaml` 的 `context`：需求依據中有欄位清單或資料字典時依其順序為準
 5. 既有 schema：相關的 SQLAlchemy model、Alembic 的 `versions/`（**目前 `backend/` 還不存在**，第一個骨架 change 之後才有）
+6. 資料規劃：`docs/diagrams/architecture/data-table-dictionary.mdx`（候選表字典，sd 在規劃階段已改好）與由它產生的 `database-schema.er.json`。model 以字典為設計依據；實作時發現字典不可行，**回到字典改**，不讓 model 和字典各走各的
 
 ## 技術前提：兩層資料庫，不是一層
 
@@ -64,6 +65,7 @@ model: opus
 2. 檢查表結構：欄位型別、NULL、預設值、約束、索引與 model 一致
 3. `uv run alembic downgrade -1` 成功、結構回到變更前，再 `upgrade head` 一次確認可重跑——**兩層都做**
 4. 跑 `uv run pytest` 的 integration 測試確認既有行為不受影響
+5. **校正字典與 ER**：逐表比對 model、migration 與字典。實作與 sd 的設計不同（改了型別、加了索引、拆了欄位）時，**先改字典、再同步 ER**，讓兩份描述的是實際建出來的結構。這次 migration 建立的每張表，在字典的表標題下方與 ER 該表的 `description` 開頭各加一行 `**已落地**：Alembic revision \`<revision id>\``，並把 ER `meta.description` 的「已落地業務表：**N**」加上這次的張數。最後跑 `pnpm check:er`，它會比對兩邊的標記、張數，以及每個 revision 是否真的出現在 `backend/alembic/versions/`
 
 ## 完成前自我檢查
 
@@ -77,6 +79,7 @@ model: opus
 - [ ] 每個欄位都有英文 `comment`，model 有英文 docstring
 - [ ] 資料遺失風險已在回報中說明
 - [ ] seed 冪等、沒有真實資料
+- [ ] 字典與 ER 已依實作校正；這次建立的表都標了「已落地」與 revision id，`pnpm check:er` 通過
 - [ ] 沒有 `pip install`；原生 SQL 只在 migration 的 DDL
 
 ## 回報格式
@@ -84,8 +87,9 @@ model: opus
 ```markdown
 ## Task {編號} 完成
 
-- 改動檔案：{model、migration、seed}
+- 改動檔案：{model、migration、seed、資料表字典、ER}
 - 結構變更：{表／欄位／索引／約束摘要}
 - 驗證：SQLite upgrade / downgrade / upgrade 成功；PostgreSQL 同；pytest 通過
+- 字典／ER 校正：{與 sd 設計不同之處，逐表列出；完全照設計則寫「無」}；已落地：{表名與 revision id}
 - 風險：{資料遺失、鎖表時間、SQLite 不支援的操作怎麼處理，無則寫「無」}
 ```
