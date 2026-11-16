@@ -2,7 +2,7 @@
   "packageVersion": 1,
   "generatedAt": "2026-11-16",
   "source": {
-    "commit": "31c202e8934ff9b1229280daf79e7256a5fe386e",
+    "commit": "3c8d9aa71ab60e5dc072ba983cb057d1a7cf6695",
     "prototypeTree": "4cb347d5e720203418701a0a4a6b521cc117c64e",
     "specsTree": "a4b0e889a5a39f3a02a3dd5db7fc81a3c877ff44",
     "navigationBlob": "83d6ee8674b1a5bee73a963c437e0fbc776ba279",
@@ -11,7 +11,7 @@
       "commit": "faf8335"
     },
     "openWith": [
-      "git switch --detach 31c202e8934ff9b1229280daf79e7256a5fe386e",
+      "git switch --detach 3c8d9aa71ab60e5dc072ba983cb057d1a7cf6695",
       "pnpm prototype"
     ]
   },
@@ -41,6 +41,14 @@
           "evidence": [
             "design/prototype/pages/shared/sidebar.js",
             "docs/prototype/navigation.mdx"
+          ]
+        },
+        {
+          "id": "account/forgot-password#sim-logged-out",
+          "how": "加 `?sim_logged_out=1`：不論登入旗標如何都留在本頁（見 `sidebar.js:92`）",
+          "spec": "docs/specs/01-account/03-reset-password.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.js"
           ]
         },
         {
@@ -90,6 +98,14 @@
           ]
         },
         {
+          "id": "account/login#sim-logged-out",
+          "how": "加 `?sim_logged_out=1`：**不論登入旗標如何都留在本頁**。登入成功後 `login.html` 會寫下旗標，之後這四個帳號頁都會被導走，而它們沒有側欄可以按登出——`sidebar.js:92`–`:93` 自己寫明這個旗標是唯一的回頭路",
+          "spec": "docs/specs/01-account/01-login.mdx#已確認決議",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.js"
+          ]
+        },
+        {
           "id": "account/login#state-default",
           "how": "開 pages/account/login.html",
           "spec": "docs/specs/01-account/01-login.mdx#規格",
@@ -104,6 +120,14 @@
           "evidence": [
             "design/prototype/pages/account/login.html",
             "docs/prototype/navigation.mdx"
+          ]
+        },
+        {
+          "id": "account/login#state-submitting",
+          "how": "送出登入後的送出中狀態：按鈕停用、文字換成 `aria-label=\"載入中\"` 的 spinner（`login.html:729`–`:736`）",
+          "spec": "docs/specs/01-account/01-login.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/account/login.html"
           ]
         }
       ]
@@ -197,6 +221,14 @@
           ]
         },
         {
+          "id": "account/register#sim-logged-out",
+          "how": "加 `?sim_logged_out=1`：不論登入旗標如何都留在本頁（見 `sidebar.js:92`）",
+          "spec": "docs/specs/01-account/01-login.mdx#已確認決議",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.js"
+          ]
+        },
+        {
           "id": "account/register#state-default",
           "how": "開 pages/account/register.html",
           "spec": "docs/specs/01-account/02-register.mdx#規格",
@@ -276,6 +308,14 @@
             "design/prototype/pages/account/reset-password.html",
             "docs/prototype/navigation.mdx"
           ]
+        },
+        {
+          "id": "account/reset-password#state-success",
+          "how": "在 proto-valid 的表單裡填一致且合格的新密碼後送出：`#successPanel` 加上 `visible`（`reset-password.html:594`、`:883`），顯示重設成功、請重新登入",
+          "spec": "docs/specs/01-account/03-reset-password.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/account/reset-password.html"
+          ]
         }
       ]
     },
@@ -330,6 +370,14 @@
           "spec": "docs/specs/01-account/02-register.mdx#規格",
           "evidence": [
             "design/prototype/pages/account/verify-email.html"
+          ]
+        },
+        {
+          "id": "account/verify-email#sim-logged-out",
+          "how": "加 `?sim_logged_out=1`：不論登入旗標如何都留在本頁（見 `sidebar.js:92`）",
+          "spec": "docs/specs/01-account/02-register.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.js"
           ]
         }
       ]
@@ -506,6 +554,14 @@
       "spec": "docs/specs/04-annotation/01-annotation-list.mdx",
       "views": [
         {
+          "id": "annotation/annotation-list#param-notice-no-actionable-review",
+          "how": "加 `?notice=no_actionable_review` **並且** `?role=reviewer`：才會顯示 `#noActionableNotice` 那一列。`annotation-list.html:2351` 的條件是兩個同時成立，光是「沒有可處理項目」不會顯示它",
+          "spec": "docs/specs/04-annotation/01-annotation-list.mdx#空的與找不到",
+          "evidence": [
+            "design/prototype/pages/annotation/annotation-list.html"
+          ]
+        },
+        {
           "id": "annotation/annotation-list#param-run-type",
           "how": "加 `?run_type=`：切換試標／正式標記的回合",
           "spec": "docs/specs/04-annotation/01-annotation-list.mdx#路由上下文與回退",
@@ -515,7 +571,7 @@
         },
         {
           "id": "annotation/annotation-list#role-project-leader",
-          "how": "加 `?role=project_leader`：例外處置視角",
+          "how": "加 `?role=project_leader`：**只改到側欄的項目名稱與角色標示**（`annotation-list.html:440`）。這一頁的 `role` 解析只認 `reviewer` 與 `annotator`（`:1053`），所以清單本體與標記員的預設完全相同",
           "spec": "docs/specs/04-annotation/01-annotation-list.mdx#規格",
           "evidence": [
             "design/prototype/pages/annotation/annotation-list.html"
@@ -548,14 +604,6 @@
         {
           "id": "annotation/annotation-list#state-filtered-empty",
           "how": "用 `?q=`／`?status=` 篩到沒有符合的列",
-          "spec": "docs/specs/04-annotation/01-annotation-list.mdx#空的與找不到",
-          "evidence": [
-            "design/prototype/pages/annotation/annotation-list.html"
-          ]
-        },
-        {
-          "id": "annotation/annotation-list#state-no-actionable-notice",
-          "how": "沒有可處理項目時的提示列（`#noActionableNotice`）",
           "spec": "docs/specs/04-annotation/01-annotation-list.mdx#空的與找不到",
           "evidence": [
             "design/prototype/pages/annotation/annotation-list.html"
@@ -997,7 +1045,7 @@
         },
         {
           "id": "dataset/dataset-analysis-detail#state-quality-entity-recognition",
-          "how": "同上並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-entity_recognition.html",
+          "how": "帶一個輸出類型是 `entity_recognition` 的 `?task_id=` 並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-entity_recognition.html",
           "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#八種輸出類型各自的主指標與門檻",
           "evidence": [
             "design/prototype/pages/dataset/dataset-analysis-detail.html",
@@ -1006,7 +1054,7 @@
         },
         {
           "id": "dataset/dataset-analysis-detail#state-quality-free-text",
-          "how": "同上並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-free_text.html",
+          "how": "帶一個輸出類型是 `free_text` 的 `?task_id=` 並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-free_text.html",
           "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#八種輸出類型各自的主指標與門檻",
           "evidence": [
             "design/prototype/pages/dataset/dataset-analysis-detail.html",
@@ -1015,7 +1063,7 @@
         },
         {
           "id": "dataset/dataset-analysis-detail#state-quality-multi-dim",
-          "how": "同上並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-multi_dim.html",
+          "how": "帶一個輸出類型是 `multi_dim` 的 `?task_id=` 並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-multi_dim.html",
           "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#八種輸出類型各自的主指標與門檻",
           "evidence": [
             "design/prototype/pages/dataset/dataset-analysis-detail.html",
@@ -1024,7 +1072,7 @@
         },
         {
           "id": "dataset/dataset-analysis-detail#state-quality-multi-label",
-          "how": "同上並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-multi_label.html",
+          "how": "帶一個輸出類型是 `multi_label` 的 `?task_id=` 並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-multi_label.html",
           "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#八種輸出類型各自的主指標與門檻",
           "evidence": [
             "design/prototype/pages/dataset/dataset-analysis-detail.html",
@@ -1033,7 +1081,7 @@
         },
         {
           "id": "dataset/dataset-analysis-detail#state-quality-relation-identification",
-          "how": "同上並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-relation_identification.html",
+          "how": "帶一個輸出類型是 `relation_identification` 的 `?task_id=` 並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-relation_identification.html",
           "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#八種輸出類型各自的主指標與門檻",
           "evidence": [
             "design/prototype/pages/dataset/dataset-analysis-detail.html",
@@ -1042,7 +1090,7 @@
         },
         {
           "id": "dataset/dataset-analysis-detail#state-quality-sequence-tagging",
-          "how": "同上並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-sequence_tagging.html",
+          "how": "帶一個輸出類型是 `sequence_tagging` 的 `?task_id=` 並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-sequence_tagging.html",
           "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#八種輸出類型各自的主指標與門檻",
           "evidence": [
             "design/prototype/pages/dataset/dataset-analysis-detail.html",
@@ -1051,7 +1099,7 @@
         },
         {
           "id": "dataset/dataset-analysis-detail#state-quality-single-dim",
-          "how": "同上並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-single_dim.html",
+          "how": "帶一個輸出類型是 `single_dim` 的 `?task_id=` 並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-single_dim.html",
           "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#八種輸出類型各自的主指標與門檻",
           "evidence": [
             "design/prototype/pages/dataset/dataset-analysis-detail.html",
@@ -1060,11 +1108,27 @@
         },
         {
           "id": "dataset/dataset-analysis-detail#state-quality-single-label",
-          "how": "同上並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-single_label.html",
+          "how": "帶一個輸出類型是 `single_label` 的 `?task_id=` 並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-single_label.html",
           "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#八種輸出類型各自的主指標與門檻",
           "evidence": [
             "design/prototype/pages/dataset/dataset-analysis-detail.html",
             "design/prototype/pages/dataset/dataset-analysis-detail.partials/quality-single_label.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#state-seq-match-partial",
+          "how": "同上點 `#matchPartial`：改顯示 `#seqPartialCard`",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#序列標註的統計",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#state-seq-match-strict",
+          "how": "在序列標註任務的統計總覽點 `#matchStrict`：`syncSequenceUi()`（`dataset-analysis-detail.html:1947`）顯示 `#seqStrictCard`",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#序列標註的統計",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html"
           ]
         },
         {
@@ -1211,9 +1275,9 @@
           ]
         },
         {
-          "id": "dataset/dataset-analysis-list#param-view",
-          "how": "加 `?view=`：切換列表視圖",
-          "spec": "docs/specs/05-dataset/01-analysis-list.mdx#規格",
+          "id": "dataset/dataset-analysis-list#param-view-empty",
+          "how": "加 `?view=empty`：`dataset-analysis-list.model.js:237` 把 `state.tasks` 清空，看空清單。這個參數**只認 `empty` 這一個值**，裸的 `?view=` 什麼都不會發生",
+          "spec": "docs/specs/05-dataset/01-analysis-list.mdx#邊界情況edge-case",
           "evidence": [
             "design/prototype/pages/dataset/dataset-analysis-list.model.js"
           ]
@@ -1264,6 +1328,8 @@
         "design/prototype/assets/analytics.js",
         "design/prototype/assets/guidelines/annotation-guideline-sample.pdf",
         "design/prototype/assets/icons/alert-circle.svg",
+        "design/prototype/assets/icons/clock.svg",
+        "design/prototype/assets/icons/file-text.svg",
         "design/prototype/assets/images/task-management/VA_emj.png",
         "design/prototype/assets/images/task-management/generic-guideline-example.svg",
         "design/prototype/assets/theme-fouc.js",
@@ -1322,7 +1388,7 @@
         },
         {
           "id": "task-management/task-detail#role-annotator",
-          "how": "加 `?task_role=annotator`（或 `?role=`；不給、或給不認得的值都 fail closed 落到 annotator）",
+          "how": "加 `?task_role=annotator`（或 `?role=`；不給、或給不認得的值都 fail closed 落到 annotator）。**這一頁不算繪給標記員看**——`task-detail.html:5176` 直接導到 `./task-list.html?unauthorized=annotator`",
           "spec": "docs/specs/03-task-management/03-task-detail.mdx#誰進得來誰看得到哪些分頁",
           "evidence": [
             "design/prototype/pages/task-management/task-detail.html"
@@ -1472,6 +1538,14 @@
           ]
         },
         {
+          "id": "task-management/task-list#param-view-error",
+          "how": "加 `?view=error`：`state.loadFailed` 為真（`task-list.html:1225`），清單換成載入失敗、筆數歸零",
+          "spec": "docs/specs/03-task-management/01-task-list.mdx#邊界情況edge-case",
+          "evidence": [
+            "design/prototype/pages/task-management/task-list.html"
+          ]
+        },
+        {
           "id": "task-management/task-list#role-task-role",
           "how": "加 `?task_role=project_leader`／`reviewer`／`annotator`：換成那個任務角色看得到的清單與操作",
           "spec": "docs/specs/03-task-management/01-task-list.mdx#誰看得到哪些任務",
@@ -1598,6 +1672,65 @@
       "why": "右欄「任務說明」區只算繪任務名稱（`annotation-workspace.config.js` 的 `setText('guidelineSummaryText', taskName)`），規格要求的「任務目標」與「操作指引」兩段在整個 prototype 沒有落點，連資料欄位都沒有。",
       "spec": "docs/specs/04-annotation/02-annotation-workspace.mdx#右欄說明與檔案操作紀錄",
       "tracked": "https://github.com/label-suite/label-suite/issues/187"
+    }
+  ],
+  "uncollected": [
+    {
+      "axis": "shared/app-shell#param-ap-stage",
+      "what": "頁籤上的階段徽章。`?ap_stage=r<N>` 給 `dry_run`（`sidebar.js:769`）、`?ap_stage=official` 給 `official_run`（`:772`），算繪成 `data-stage-badge`（`:1252`）",
+      "hosts": 14,
+      "spec": "docs/specs/07-shared/02-workspace-tabs.mdx",
+      "evidence": [
+        "design/prototype/pages/shared/sidebar.js"
+      ]
+    },
+    {
+      "axis": "shared/app-shell#role-super-admin",
+      "what": "只有系統管理員看得到的系統管理群組。`sidebar.js:536` 在 systemRole 不是 `super_admin` 時隱藏 `#navAdminItem`（`:627`），角色記在 localStorage 的 `labelsuite.systemRole`（`:175`）",
+      "hosts": 14,
+      "spec": "docs/specs/07-shared/01-sidebar.mdx",
+      "evidence": [
+        "design/prototype/pages/shared/sidebar.js"
+      ]
+    },
+    {
+      "axis": "shared/app-shell#state-lang-en",
+      "what": "中／英語言。`#langToggle`（`sidebar.js:2046`）呼叫 `applyGlobalLanguage()`（`:427`），記在 localStorage 的 `labelsuite.lang`（`:412`）",
+      "hosts": 14,
+      "spec": "docs/specs/07-shared/01-sidebar.mdx",
+      "evidence": [
+        "design/prototype/pages/shared/sidebar.js"
+      ]
+    },
+    {
+      "axis": "shared/app-shell#state-sidebar-collapsed",
+      "what": "側欄收合。切 `body.sidebar-collapsed`（`sidebar.js:2524`），記在 localStorage 的 `labelsuite.sidebarCollapsed`（`:497`），桌機斷點是 `matchMedia` 的 `min-width: 769px`（`:513`）",
+      "hosts": 14,
+      "spec": "docs/specs/07-shared/01-sidebar.mdx",
+      "evidence": [
+        "design/prototype/pages/shared/sidebar.css",
+        "design/prototype/pages/shared/sidebar.js"
+      ]
+    },
+    {
+      "axis": "shared/app-shell#state-theme-dark",
+      "what": "深／淺色主題。`#sidebarThemeToggleBtn`（`sidebar.js:2080`）與行動版 `#mobileThemeToggleBtn`（`:2054`）切換，寫 `data-theme`（`:374`），記在 localStorage 的 `label-suite-theme`（`:348`）",
+      "hosts": 14,
+      "spec": "docs/specs/07-shared/01-sidebar.mdx",
+      "evidence": [
+        "design/prototype/assets/theme.js",
+        "design/prototype/pages/shared/sidebar.js"
+      ]
+    },
+    {
+      "axis": "shared/app-shell#state-workspace-tabs",
+      "what": "工作頁籤整條：頁籤列（`sidebar.js:1524` 的 `workspace-tab-bar`）、總覽選單、重開、全部關閉，以及上限／改鍵／關閉三種通知。狀態分散在 6 個 sessionStorage 鍵，`sidebar.css` 有 42 條 `workspace-tab*` 規則",
+      "hosts": 14,
+      "spec": "docs/specs/07-shared/02-workspace-tabs.mdx",
+      "evidence": [
+        "design/prototype/pages/shared/sidebar.css",
+        "design/prototype/pages/shared/sidebar.js"
+      ]
     }
   ],
   "retired": []

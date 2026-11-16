@@ -1,6 +1,6 @@
 # 規格章節索引
 
-交付包版本：commit `31c202e8934f`，prototype tree `4cb347d5e720`。
+交付包版本：commit `3c8d9aa71ab6`，prototype tree `4cb347d5e720`。
 
 由 `manifest.json` 反轉而成：規格頁 → 指向它的視圖。「規格有、畫面沒有」一眼看得出來——沒有出現在下表的規格頁，就是沒有任何視圖指向它。
 
@@ -11,8 +11,11 @@
 | `#卡控機制` | `account/login#state-field-error` |
 | `#已確認決議` | `account/forgot-password#sim-logged-in` |
 | `#已確認決議` | `account/login#sim-logged-in` |
+| `#已確認決議` | `account/login#sim-logged-out` |
 | `#已確認決議` | `account/register#sim-logged-in` |
+| `#已確認決議` | `account/register#sim-logged-out` |
 | `#規格` | `account/login#state-default` |
+| `#規格` | `account/login#state-submitting` |
 
 ## `docs/specs/01-account/02-register.mdx`
 
@@ -25,6 +28,7 @@
 | `#規格` | `account/register#state-submitted` |
 | `#規格` | `account/verify-email#proto-valid` |
 | `#規格` | `account/verify-email#sim-hold` |
+| `#規格` | `account/verify-email#sim-logged-out` |
 
 ## `docs/specs/01-account/03-reset-password.mdx`
 
@@ -34,8 +38,10 @@
 | `#卡控機制` | `account/reset-password#state-mismatch` |
 | `#已確認決議` | `account/reset-password#proto-expired` |
 | `#已確認決議` | `account/reset-password#proto-used` |
+| `#規格` | `account/forgot-password#sim-logged-out` |
 | `#規格` | `account/forgot-password#state-default` |
 | `#規格` | `account/reset-password#proto-valid` |
+| `#規格` | `account/reset-password#state-success` |
 
 ## `docs/specs/01-account/04-profile.mdx`
 
@@ -71,6 +77,7 @@
 | `#規格` | `task-management/task-list#state-default` |
 | `#誰看得到哪些任務` | `task-management/task-list#role-task-role` |
 | `#邊界情況edge-case` | `task-management/task-list#param-view-empty` |
+| `#邊界情況edge-case` | `task-management/task-list#param-view-error` |
 | `#邊界情況edge-case` | `task-management/task-list#sim-delete-error` |
 | `#邊界情況edge-case` | `task-management/task-list#state-filtered-empty` |
 
@@ -105,9 +112,9 @@
 | 章節錨點 | 視圖 |
 | :--- | :--- |
 | `#審核員的處理狀況與逐列統計` | `annotation/annotation-list#role-reviewer` |
+| `#空的與找不到` | `annotation/annotation-list#param-notice-no-actionable-review` |
 | `#空的與找不到` | `annotation/annotation-list#state-empty` |
 | `#空的與找不到` | `annotation/annotation-list#state-filtered-empty` |
-| `#空的與找不到` | `annotation/annotation-list#state-no-actionable-notice` |
 | `#空的與找不到` | `annotation/annotation-list#state-task-not-found` |
 | `#規格` | `annotation/annotation-list#role-project-leader` |
 | `#規格` | `annotation/annotation-list#state-default` |
@@ -136,9 +143,9 @@
 
 | 章節錨點 | 視圖 |
 | :--- | :--- |
-| `#規格` | `dataset/dataset-analysis-list#param-view` |
 | `#規格` | `dataset/dataset-analysis-list#state-default` |
 | `#邊界情況edge-case` | `dataset/dataset-analysis-list#param-invalid-task` |
+| `#邊界情況edge-case` | `dataset/dataset-analysis-list#param-view-empty` |
 | `#邊界情況edge-case` | `dataset/dataset-analysis-list#state-filtered-empty` |
 
 ## `docs/specs/05-dataset/02-analysis-detail.mdx`
@@ -165,6 +172,8 @@
 | `#多標籤的統計` | `dataset/dataset-analysis-detail#state-stats-multi-label` |
 | `#多維度的統計` | `dataset/dataset-analysis-detail#state-stats-multi-dim` |
 | `#實體辨識的統計` | `dataset/dataset-analysis-detail#state-stats-entity-recognition` |
+| `#序列標註的統計` | `dataset/dataset-analysis-detail#state-seq-match-partial` |
+| `#序列標註的統計` | `dataset/dataset-analysis-detail#state-seq-match-strict` |
 | `#序列標註的統計` | `dataset/dataset-analysis-detail#state-stats-sequence-tagging` |
 | `#自由文字的統計` | `dataset/dataset-analysis-detail#state-stats-free-text` |
 | `#邊界情況edge-case` | `dataset/dataset-analysis-detail#state-stats-empty` |
@@ -194,11 +203,11 @@
 
 ## `docs/specs/07-shared/01-sidebar.mdx`
 
-沒有視圖指向它。原因：PRD §Site Map「不是獨立頁面」；實體落在每一頁都載入的 `shared/sidebar.js` 與 `shared/sidebar.css`。
+沒有視圖指向它。原因：**不是「沒有畫面」而是「這一版沒收」**：它的狀態落在 14 個畫面都載入的 `shared/sidebar.js`，可以重現，見 `manifest.json` 的 `uncollected` 與 `coverage.md` §八。
 
 ## `docs/specs/07-shared/02-workspace-tabs.mdx`
 
-沒有視圖指向它。原因：PRD §Site Map「不是獨立頁面」。
+沒有視圖指向它。原因：**不是「沒有畫面」而是「這一版沒收」**：工作頁籤整條在 `shared/sidebar.js` 裡，可以重現，見 `manifest.json` 的 `uncollected` 與 `coverage.md` §八。
 
 ## `docs/specs/07-shared/03-denied-and-not-found.mdx`
 
