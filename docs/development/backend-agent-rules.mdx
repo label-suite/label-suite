@@ -214,7 +214,7 @@ Celery task 只收可序列化的識別資訊，在自己的行程裡重新查�
 | B3 | [architecture.mdx](architecture.mdx)：「同一層的 API 與 worker 用不同的驅動，因為 Celery 跑在同步執行緒裡，不能用 async engine」。scaffold `database.md` §連線管理 的「透過 DI 取得、不用全域 connection」**沿用原則** |
 | B4 | scaffold `database.md` §連線管理 的「多步驟寫入用 `dataSource.transaction`，transaction 內只用 `manager`」**沿用原則**（轉成 SQLAlchemy 的 session 邊界）。**「寄完信再 commit」刻意不採用**，不照搬 |
 | B5 | scaffold `database.md` §ORM 唯一原則（**沿用**，含它的 DDL 例外）；[architecture.mdx](architecture.mdx) 的分層表已寫「不寫原生 SQL（migration DDL 例外）」。另外，資料遷移要個別說明，不把 migration 變成任意 SQL 逃生門 |
-| B6 | scaffold `database.md` §Migration（**沿用**：不用 synchronize、可 up 可 down、已部署凍結、讀過產物）；[architecture.mdx](architecture.mdx)「schema 一律走 Alembic migration，不用 `synchronize` 類的自動同步」。「所有 migration 同時 transaction 加 CONCURRENTLY」不採用 |
+| B6 | scaffold `database.md` §Migration（**沿用**：不用 synchronize、可 up 可 down、已部署凍結、讀過產物）；[architecture.mdx](architecture.mdx) 的「schema 一律走 Alembic migration」與「不用 `synchronize` 類的自動同步」（分屬兩節）。「所有 migration 同時 transaction 加 CONCURRENTLY」不採用 |
 | B7 | ADR-024 資料庫雙層（**沿用**）；[architecture.mdx](architecture.mdx) 的兩層表與驅動推導。scaffold `integration-test-http.md` 的「真 Postgres test db」**沿用原則**，但它的 NestJS harness 不轉用（測試分層見 [testing-agent-rules.mdx](testing-agent-rules.mdx)） |
 | B8 | ADR-038 資料保留、刪除與匿名化（**沿用**）；[architecture.mdx](architecture.mdx) 的保留政策列與稽核 append-only。scaffold `database.md` §軟刪除（鐵律）刻意不採用，不套用「所有 entity 一律軟刪除」 |
 | B9 | ADR-007 Celery（**沿用**）；[architecture.mdx](architecture.mdx) 的 Celery 分層列（「不處理 HTTP、不回傳使用者可見訊息」）與評分流程圖。授權本身見 [security-agent-rules.mdx](security-agent-rules.mdx) |
