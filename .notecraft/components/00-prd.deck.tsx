@@ -3,7 +3,6 @@ import { Compare, Roster, Table, Triad } from "@/components/deck/blocks";
 import ArchitectureContainerView from "@notes/components/architecture-container-view";
 import PrdSystemContext from "@notes/components/prd-system-context";
 import PrdTaskLifecycleFlow from "@notes/components/prd-task-lifecycle-flow";
-import PrdTaskState from "@notes/components/prd-task-state";
 
 // PART 01 — 三個卡住現有流程的問題，收斂成一句要證明的事。
 function ProblemsPage({ dark }: CustomSlideProps) {
@@ -122,14 +121,14 @@ const deck: Deck = {
       eyebrow: "PRODUCT · 定稿",
       title: "Label Suite：給學術 NLP 團隊的標記與品質平台",
       subtitle: "一個設定驅動的平台，走完試標、正式標記、審核與資料品質分析",
-      meta: ["由 docs/specs/00-prd.mdx 生成", "10 頁 · 16:9"],
+      meta: ["由 docs/specs/00-prd.mdx 生成", "9 頁 · 16:9"],
       agenda: [
         { n: "01", title: "問題與定位", sub: "三個痛點，一個論文目標" },
         { n: "02", title: "六項目標", sub: "怎麼衡量做到了" },
         { n: "03", title: "六個角色", sub: "系統角色與任務角色互不影響" },
         { n: "04", title: "範圍邊界", sub: "這期做什麼、不做什麼" },
         { n: "05", title: "系統架構", sub: "C4 第一層與第二層" },
-        { n: "06", title: "任務生命週期", sub: "六次交接、五個狀態" },
+        { n: "06", title: "任務生命週期", sub: "三個模組之間的六次交接" },
       ],
     },
     {
@@ -206,14 +205,6 @@ const deck: Deck = {
       viz: PrdTaskLifecycleFlow,
       vizLabel: "@ai-visualize · prd-task-lifecycle-flow",
       vizHint: "選『逐步走查』依序看每個交接；A1／A2 是退回草稿或再開一輪試標的替代流程。",
-    },
-    {
-      layout: "full-visual",
-      nav: "任務的五個狀態",
-      title: "任務只能往前走，唯一的回頭路在等待 IAA 確認",
-      viz: PrdTaskState,
-      vizLabel: "@ai-visualize · prd-task-state",
-      vizHint: "點狀態看進入條件與推進的模組；唯一回頭路可退回草稿或再開一輪試標。",
     },
     {
       layout: "closing",
