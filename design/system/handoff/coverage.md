@@ -1,14 +1,14 @@
 # 覆蓋核對
 
-交付包版本：commit `328ab7ea7d54317c05811d711950d0d7d3d2f20a`，prototype tree `4cb347d5e720203418701a0a4a6b521cc117c64e`。
+交付包版本：commit `b1fd43c84031f254b82e195e9659ba41dfa3a41a`，prototype tree `4cb347d5e720203418701a0a4a6b521cc117c64e`。
 產生依據：[`design-handoff` skill](../../../.claude/skills/design-handoff/SKILL.md) 的步驟 4。工作源頭是 [Issue #248](https://github.com/label-suite/label-suite/issues/248)。
 
-**本次是第二版**（第一次重跑）。差異見 §九。
+**本次是第三版**（第二次重跑）。差異見 §九。
 
 | 項目 | 數 |
 | :--- | ---: |
 | 條目 | 19（18 個畫面 ＋ 1 個共用外殼） |
-| 視圖 | 135 |
+| 視圖 | 140 |
 | 批次 | 5（`b0` 本 skill 做完，`b1`–`b4` 交給 `design-system-setup`） |
 | 無法重現的視圖 | 2 |
 | 沒有規格可連的視圖 | 2 |
@@ -34,33 +34,28 @@
 
 `navigation.mdx` 共 **24 列 `Inline`**，分佈在 16 個頁面（`index.html` 與 `components-showcase.html` 沒有）。**每一列都對得到至少一個視圖**——視圖就是從那些列加上掃出來的 URL 參數展開的。
 
-這是一個**刻意寬鬆**的斷言：「至少一個」不等於逐項涵蓋。逐列看，`task-detail` 的「設定、抽樣、guideline、run control、成員操作、匯出」整列只對到六個分頁與 `state-panel-load-failed`——一個 12,501 行、6 個 panel、含日期區間選擇器與分類刪除彈窗的畫面只收 12 個視圖，`modal-`／`toast-` 一個都沒有。`design-system-setup` 在 `b2` 會吃到這個缺口。
+這是一個**刻意寬鬆**的斷言：「至少一個」不等於逐項涵蓋。逐列看，`task-detail` 的「設定、抽樣、guideline、run control、成員操作、匯出」整列對到六個分頁、五個設定區段（`#param-section-*`，第二次重跑才補上）與 `state-panel-load-failed`，但「run control、成員操作、匯出」三項仍然沒有各自的視圖——一個 12,501 行、6 個 panel、含日期區間選擇器與分類刪除彈窗的畫面只收 17 個視圖，`modal-`／`toast-` 一個都沒有。`design-system-setup` 在 `b2` 會吃到這個缺口。
 
-視圖數比 `Inline` 列多很多（135 vs 24），因為 `Inline` 把「搜尋／篩選／排序／分頁」這類寫成一列，而 URL 參數掃描把它們拆成可個別重現的狀態。
+視圖數比 `Inline` 列多很多（140 vs 24），因為 `Inline` 把「搜尋／篩選／排序／分頁」這類寫成一列，而 URL 參數掃描把它們拆成可個別重現的狀態。
 
 ### 另一道對照：網址參數契約 vs 掃出來的全集
 
 [PR #398](https://github.com/label-suite/label-suite/pull/398) 把參數寫成契約之後，多了一道機械對照：**`navigation.mdx` §網址參數 宣告的，與逐檔掃 `.get('<名稱>')` 得到的全集，兩個方向都要對得上**。
 
-本次結果：**契約有而程式沒有 0 筆；程式有而契約沒有 14 筆。**
+本次結果（**第三版，兩步掃描**）：**兩個方向各 0 筆。**
 
-第一版寫「兩個方向各 0 筆」，**那是錯的**，因為掃描法本身有結構性盲點：它逐字找 `.get('<名稱>')`，而 `task-detail.html` 把 16 個參數定義在一張 `URL_VIEW_STATE` 表裡（`:5042`），用 `params.get(entry.param)` 讀（`:5117`）——**字面量掃描對這種寫法完全瞎掉**。獨立審查抓到。
+第二版寫「兩個方向各 0 筆」而**那是錯的**，因為掃描法只找字面量 `.get('<名稱>')`，看不見把參數名放在表裡、以變數讀的寫法。獨立審查連續兩輪抓到四處這種寫法：
 
-沒有被宣告的 14 個，全部在 `/task-management/task-detail`：
+| 位置 | 名字從哪來 | 宣告新參數 |
+| :--- | :--- | ---: |
+| `task-detail.html:5117` | `URL_VIEW_STATE` | **16** |
+| `annotation-workspace.config.js:1552` | `LIST_VIEW_STATE_KEYS` ＋ `LIST_IDENTITY_KEYS` | **6** |
+| `dataset-analysis-detail.html:2432` | `PROTOTYPE_ONLY_PARAMS` | 0（`s_state` 已在表上） |
+| `sidebar.js:731` | 列舉既有鍵 | 0 |
 
-| 參數 | 管什麼 |
-| :--- | :--- |
-| `section` | 設定分頁的區段（`onlyTab: 'settings'`） |
-| `ap_stage`、`ap_sort` | 標記進度的階段與排序（`ap_stage` 已宣告，`ap_sort` 沒有） |
-| `ar_stage`、`ar_status`、`ar_annotator`、`ar_reviewer`、`ar_review_status`、`ar_page` | 標記結果的五個篩選與分頁 |
-| `mm_page` | 成員管理的分頁 |
-| `wl_from`、`wl_to`、`wl_stage`、`wl_member`、`wl_page` | 工時紀錄的日期區間、兩個篩選與分頁 |
+兩輪的修法：[PR #400](https://github.com/label-suite/label-suite/pull/400) 把那 22 個名字補進 `navigation.mdx` 的契約，本版把掃描法改成兩步，所以 `params` 欄現在才是真的全集——`task-management/task-detail` 從 11 個變 **25** 個、`annotation/annotation-workspace` 從 9 個變 **13** 個。
 
-依 skill 步驟 4 那一列的規則，**本 skill 不改 `navigation.mdx`**，所以這裡只回報：那 14 個要補進 §網址參數，另開一張文件 PR。
-
-**連帶**：`task-management/task-detail` 目前只有 12 個視圖，`modal-`／`toast-` 一個都沒有（§二 已自承）。這 14 個參數是最便宜的補法——`?section=` 叫得出五個設定區段，`?ar_*`／`?wl_*`／`?mm_page` 叫得出篩選與分頁狀態。
-
-這一條是 §網址參數 存在的理由——沒有它，契約隔天就會過期，而過期的契約比沒有契約更糟（`design-handoff` 第 3 步正是依它展開視圖）。**而它第一次執行就漏掉了最大的一頁**，所以 skill 的掃描法已經改成兩步：先掃字面量，**再掃 `.get(<變數>)` 並回查它的來源表**。
+這一條是 §網址參數 存在的理由——沒有它，契約隔天就會過期，而過期的契約比沒有契約更糟（`design-handoff` 第 3 步正是依它展開視圖）。**它前兩次執行都報了假的 0 筆**，所以 skill 現在明寫掃描要兩步走。
 
 ### 這一輪刻意做的三個判斷
 
@@ -106,7 +101,7 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 **22 個動態片段全部存在**（6 個 panel ＋ 16 個 partial），路徑是從兩個畫面的路徑對應表讀出來的、不是用檔名猜的。
 `task-detail.html` 自己的註解寫明降級行為：某個 panel 載入失敗時只留下它的佔位符，其餘 panel 仍載入、其他分頁仍可用——已收為 `task-management/task-detail#state-panel-load-failed`。
 
-`manifest.json` 一共指到 **447 個檔案路徑**（`loads` 230、`views[].evidence` 198、`screens[].file` 19），逐一確認存在，**0 筆缺失**。
+`manifest.json` 一共指到 **457 個檔案路徑**（`loads` 230、`views[].evidence` 208、`screens[].file` 19），逐一確認存在，**0 筆缺失**。
 
 > **注入片段的素材路徑是相對於宿主文件寫的，不是相對於片段自己的目錄。** `task-detail.panels/work-log.html:85` 寫 `../../assets/icons/clock.svg`，那個相對路徑只有從 `pages/task-management/` 解得開。本檔第一版用片段自己的目錄當基準，所以 `clock.svg` 與 `file-text.svg`（`annotation-results.html:165`）被靜默丟掉，連帶讓下面那個「全文搜不到」的斷言變成假的。獨立審查抓到，已修。
 
@@ -168,6 +163,8 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 **受影響的判定只看證據**：某個視圖的 `evidence` 或 `spec` 指到的檔變了，它就是受影響。`manifest.json` 的 `screens` 與 `views` 都依 `id` 字典序排，所以 diff 讀得出來。
 
+**但只看證據不夠。** 參數驅動的視圖大多不以 `navigation.mdx` 為 `evidence`，所以改動那份文件時，它們一個都不會被這條規則點到。§九 因此改成兩欄並列，第二欄是「該批的參數驅動視圖」；兩次重跑的紀錄都照這個格式寫。
+
 ---
 
 ## 八、共用外殼 `shared/app-shell`
@@ -213,7 +210,47 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 ---
 
-## 九、本次重跑（第一次）
+## 九、重跑紀錄
+
+### 第二次（本版）
+
+[PR #400](https://github.com/label-suite/label-suite/pull/400) 把 `/task-management/task-detail` 的 16 個畫面狀態參數與工作區的 6 個補進 §網址參數，`navigationBlob` 再次改變。
+
+| 欄位 | 第二版 | 本版 | |
+| :--- | :--- | :--- | :--- |
+| `commit` | `328ab7ea7d54` | `b1fd43c84031` | 必然變 |
+| `prototypeTree` | `4cb347d5e720` | `4cb347d5e720` | **沒變** |
+| `specsTree` | `a4b0e889a5a3` | `a4b0e889a5a3` | **沒變** |
+| `navigationBlob` | `9ff44128884e` | `c64128a7e7a5` | **變了** |
+
+**畫面與規格仍然一個位元組都沒動**，這已經是連續第二次：導覽文件在長，而它描述的東西沒變。
+
+| 類 | 數 | 內容 |
+| :--- | ---: | :--- |
+| 新增 | 5 | `task-management/task-detail#param-section-basic`／`-labeling`／`-guideline`／`-sampling`／`-review`——設定分頁的五個區段（`SETTINGS_SECTIONS` 的 slug），各自對到 03-03 的一節 |
+| 移除 | 0 | |
+| `params` 欄修正 | 2 個條目 | `task-detail` 11 → **25**、`annotation-workspace` 9 → **13**（兩步掃描才看得到的那些） |
+| 受影響 | 26 | `evidence` 指到 `navigation.mdx` 的全部視圖 |
+
+**為什麼只加五個視圖而不是 22 個**：其餘 17 個新參數是篩選（`ar_*` 六個、`wl_stage`、`wl_member`、`wl_from`／`wl_to` 這組日期區間、`ap_sort`，加上工作區的 `status`／`q`／`limit`／`offset`）與分頁（`ar_page`、`wl_page`、`mm_page`），而 §二 的第一個判斷早就定下「篩選參數不各自成一個視圖」。`section` 不是篩選——它切換的是設定分頁裡**五個不同的區段**，所以逐一成視圖。
+
+**這條引用要打一個折扣。** §二 判斷一是對**清單頁**寫的，它承諾的替代是「每個清單頁只收 `state-default` 與 `state-filtered-empty` 兩種」；而 `task-management/task-detail` 這兩個視圖**一個都沒有**，所以在這一頁，判斷一只擋掉了 13 個參數，沒有給出任何補償視圖。這個缺口 §二 已經自己記著（「`b2` 會吃到這個缺口」），這裡不另開一筆，但不要把它讀成「已經涵蓋」。
+
+### 應重驗的批次
+
+| 批次 | 依 `evidence` 算出的 | 該批的參數驅動視圖 |
+| :--- | ---: | ---: |
+| `b1-shared-account` | 17 | 9 |
+| `b2-admin-dashboard-task` | 8 | 30 |
+| `b3-annotation-review` | 1 | 10 |
+| `b4-dataset-sweep` | 0 | 27 |
+
+**兩欄都要看**，理由見下面第一次重跑那一節——`evidence` 這條規則兩個方向都不夠，而右邊那一欄是補左邊漏掉的那一半。
+
+---
+
+## 九之一、第一次重跑
+
 
 [PR #398](https://github.com/label-suite/label-suite/pull/398) 把 §網址參數 寫進 `navigation.mdx`，換掉了 `navigationBlob` 的 sha。依 §七 的規則重跑。
 

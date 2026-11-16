@@ -2,16 +2,16 @@
   "packageVersion": 1,
   "generatedAt": "2026-11-16",
   "source": {
-    "commit": "328ab7ea7d54317c05811d711950d0d7d3d2f20a",
+    "commit": "b1fd43c84031f254b82e195e9659ba41dfa3a41a",
     "prototypeTree": "4cb347d5e720203418701a0a4a6b521cc117c64e",
     "specsTree": "a4b0e889a5a39f3a02a3dd5db7fc81a3c877ff44",
-    "navigationBlob": "9ff44128884e92f20d54ea7968fe98b3a4f29638",
+    "navigationBlob": "c64128a7e7a523ebd7a2897bc1a339535592a9a7",
     "referenceDesignDocs": {
       "repo": "singyichen/label-suite",
       "commit": "faf8335"
     },
     "openWith": [
-      "git switch --detach 328ab7ea7d54317c05811d711950d0d7d3d2f20a",
+      "git switch --detach b1fd43c84031f254b82e195e9659ba41dfa3a41a",
       "pnpm prototype"
     ]
   },
@@ -661,12 +661,16 @@
       "params": [
         "annotator_id",
         "ap_stage",
+        "limit",
+        "offset",
+        "q",
         "reviewer_id",
         "role",
         "run_type",
         "sample_id",
         "sim_logged_in",
         "sim_logged_out",
+        "status",
         "task_id"
       ],
       "entry": "/annotation/annotation-list 點一筆資料；儀表板「繼續上次」",
@@ -1492,20 +1496,79 @@
       ],
       "params": [
         "annotator_id",
+        "ap_sort",
         "ap_stage",
+        "ar_annotator",
+        "ar_page",
+        "ar_review_status",
+        "ar_reviewer",
+        "ar_stage",
+        "ar_status",
+        "mm_page",
         "reviewer_id",
         "role",
+        "section",
         "sim_403",
         "sim_logged_in",
         "sim_logged_out",
         "status",
         "tab",
         "task_id",
-        "task_role"
+        "task_role",
+        "wl_from",
+        "wl_member",
+        "wl_page",
+        "wl_stage",
+        "wl_to"
       ],
       "entry": "/task-management/task-list 點任務；/task-management/task-new 建立成功",
       "spec": "docs/specs/03-task-management/03-task-detail.mdx",
       "views": [
+        {
+          "id": "task-management/task-detail#param-section-basic",
+          "how": "`?tab=settings&section=basic`（預設）：設定分頁停在基本資料區段。五個 slug 定在 `task-detail.html` 的 `SETTINGS_SECTIONS`，`section` 只在 `tab=settings` 時生效",
+          "spec": "docs/specs/03-task-management/03-task-detail.mdx#基本資料",
+          "evidence": [
+            "design/prototype/pages/task-management/task-detail.html",
+            "design/prototype/pages/task-management/task-detail.panels/settings.html"
+          ]
+        },
+        {
+          "id": "task-management/task-detail#param-section-guideline",
+          "how": "`?tab=settings&section=guideline`：標記說明區段",
+          "spec": "docs/specs/03-task-management/03-task-detail.mdx#標記說明",
+          "evidence": [
+            "design/prototype/pages/task-management/task-detail.html",
+            "design/prototype/pages/task-management/task-detail.panels/settings.html"
+          ]
+        },
+        {
+          "id": "task-management/task-detail#param-section-labeling",
+          "how": "`?tab=settings&section=labeling`：標記設定區段",
+          "spec": "docs/specs/03-task-management/03-task-detail.mdx#標記設定",
+          "evidence": [
+            "design/prototype/pages/task-management/task-detail.html",
+            "design/prototype/pages/task-management/task-detail.panels/settings.html"
+          ]
+        },
+        {
+          "id": "task-management/task-detail#param-section-review",
+          "how": "`?tab=settings&section=review`：審核設定區段",
+          "spec": "docs/specs/03-task-management/03-task-detail.mdx#審核設定",
+          "evidence": [
+            "design/prototype/pages/task-management/task-detail.html",
+            "design/prototype/pages/task-management/task-detail.panels/settings.html"
+          ]
+        },
+        {
+          "id": "task-management/task-detail#param-section-sampling",
+          "how": "`?tab=settings&section=sampling`：抽樣設定區段",
+          "spec": "docs/specs/03-task-management/03-task-detail.mdx#抽樣設定",
+          "evidence": [
+            "design/prototype/pages/task-management/task-detail.html",
+            "design/prototype/pages/task-management/task-detail.panels/settings.html"
+          ]
+        },
         {
           "id": "task-management/task-detail#param-status",
           "how": "加 `?status=<任務狀態>`：以那個狀態算繪整頁（狀態與轉換、回合表都跟著變）",
