@@ -341,7 +341,7 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做。
 | 本機與 CI | `docker compose up`；CI 用 workflow 的 service container 起 PostgreSQL 與 Redis |
 | 正式環境 | Compose 加 Nginx；有的話用 Cloudflare 當 DNS、CDN 與 TLS 邊緣，Nginx 仍要擋安全標頭與隔離內部服務 |
 | image | 後端與 worker 共用一個多階段 Dockerfile；前端 build 完由 `nginx:alpine` 服務 `/dist` |
-| 寄信 | Resend；沒設 key 時把設定密碼連結印在伺服器 log，由部署者轉給使用者。因此 Lite 層的 log 視為敏感，畫面要讓管理員知道信沒有寄出去 |
+| 寄信 | Resend；沒設 key 時把設定密碼連結印在伺服器 log，由部署者轉給使用者。因此 Lite 層的 log 視為敏感，畫面要讓管理員知道信沒有寄出去（條文見[規格 06-01](../specs/06-admin/01-user-management.mdx#已確認決議) Q9–Q11） |
 | 監控 | Prometheus、Grafana、Sentry 本期不做，與 PRD「研究原型、不是生產規模服務」的定位一致；代價是出錯時只能看 log，沒有告警 |
 | CI 安全掃描 | 後端 `uv run pip-audit --fail-on high`、前端 `pnpm audit --prod --audit-level high`；SAST（Semgrep）等有程式再接 |
 | 相依套件 | dependabot 警示的升級邊界見 [相依套件政策](dependency-policy.mdx) |
@@ -417,7 +417,7 @@ ADR 引用的 FR-131、admin-007、spec 013 這類編號屬於個人 repo，本 
 | :--- | :--- | :--- | :--- |
 | 1 | 個人 repo 的 ADR 修訂：029 的 `sequence_tagging` 列、033 改 supersede 或標註只適用個人 repo、033 檔案與 `README.md` 索引的狀態不一致（Accepted 對 Proposed）、036 寫明規格 canon 已移到本 repo | 不卡本 repo 實作；兩個 repo 的說法不一致，追溯會指錯地方 | 維護者，在個人 repo 處理 |
 | 2 | ADR-016 的 Storybook 要不要用 | 第一個前端 change 之前要決定 | 維護者 |
-| 3 | 規格 01-03 與 06-01 補上 Resend 未設定時的降級路徑（見 [§部署與維運](#部署與維運)；[#339](https://github.com/label-suite/label-suite/issues/339)） | 規格與本文說法不一致；畫面改動要先畫 artifact 給維護者看 | 維護者，走 `spec-writing` |
+| 3 | 沒設 Resend key 時，[規格 01-02](../specs/01-account/02-register.mdx) 的自行註冊走不通：驗證信寄不出去，而帳號「在點連結這一刻才建立」 | 降級路徑只涵蓋設定密碼連結，沒有涵蓋註冊驗證信；Lite 部署目前只能由系統管理員邀請 | 維護者 |
 
 ## 決策紀錄
 
