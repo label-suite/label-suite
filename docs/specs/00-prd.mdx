@@ -194,6 +194,39 @@ import PrdSiteMap from '@notes/components/prd-site-map'
 
 ## 模組架構與串接
 
+### 系統情境
+
+C4 model 第一層：把 Label Suite 當成一個整體，只看誰使用它、它依賴哪些外部系統。平台內部的模組見下方的模組地圖。
+
+{/* @ai-visualize
+id: prd-system-context
+type: interactive
+prompt: |
+  核心洞察：Label Suite 對外只有兩個依賴，而且都是可選的；兩個都沒設定時平台照樣能跑，只是 Google 按鈕退回 no-op、設定密碼連結改由部署者從伺服器 log 轉交。
+  互動：點人或系統看說明與關係（其餘連線壓暗）；「部署設定」切換 Google OIDC、Resend 是否設定，未設定的連線變灰虛線，Resend 未設定時亮出黃色虛線的替代路徑。
+  圖形：C4 第一層。上排三種人（部署者、系統管理員、平台成員），中間 Label Suite，下排兩個可選外部系統（Google OIDC、Resend，虛線框）；Resend 寄信給使用者的線沿右側繞到平台成員。
+  資料：與本節表格逐項一致（對象、類型、關係）；不畫第二層的內部元件。
+caption: 點對象看關係；切換「部署設定」看外部整合沒設定時的樣子
+status: generated
+*/}
+
+import PrdSystemContext from '@notes/components/prd-system-context'
+
+<GeneratedFrame id="prd-system-context" type="interactive" prompt={"核心洞察：Label Suite 對外只有兩個依賴，而且都是可選的；兩個都沒設定時平台照樣能跑，只是 Google 按鈕退回 no-op、設定密碼連結改由部署者從伺服器 log 轉交。\n互動：點人或系統看說明與關係（其餘連線壓暗）；「部署設定」切換 Google OIDC、Resend 是否設定，未設定的連線變灰虛線，Resend 未設定時亮出黃色虛線的替代路徑。\n圖形：C4 第一層。上排三種人（部署者、系統管理員、平台成員），中間 Label Suite，下排兩個可選外部系統（Google OIDC、Resend，虛線框）；Resend 寄信給使用者的線沿右側繞到平台成員。\n資料：與本節表格逐項一致（對象、類型、關係）；不畫第二層的內部元件。\n"} caption="點對象看關係；切換「部署設定」看外部整合沒設定時的樣子">
+  <PrdSystemContext client:visible />
+</GeneratedFrame>
+
+| 對象 | 類型 | 和 Label Suite 的關係 |
+| :--- | :--- | :--- |
+| :ref[平台成員]{id="term.platform-member"} | 人 | 註冊與登入；依任務角色建立任務、標記、審核、匯出標記結果 |
+| :ref[系統管理員]{id="term.system-admin"} | 人 | 管理平台帳號、系統角色與角色權限；包含部署時建立的 :ref[Seeder 管理員]{id="term.seeder-admin"} |
+| 部署者 | 人，不是系統角色 | 部署平台、建立 Seeder 管理員、直接匯入批次資料；Resend 未設定時，從伺服器 log 取得設定密碼連結轉給使用者 |
+| Google（OIDC） | 外部系統，可選 | 登入頁的 Google SSO；`GOOGLE_CLIENT_ID` 沒設定時按鈕退回 no-op，Email 與密碼登入照常可用 |
+| Resend | 外部系統，可選 | 寄出註冊驗證信、忘記密碼信與設定密碼信；沒有設定 key 時，設定密碼連結改印在伺服器 log，由部署者轉給使用者 |
+
+- 範圍外的「開放其他系統串接與第三方整合」不在圖上：這期除了上面兩個可選整合，沒有其他外部系統
+- 平台內部的元件（前端、API、背景工作、資料庫）屬於 C4 第二層，見 [技術架構](../development/architecture.md)
+
 ### 模組地圖
 
 模組與頁面的清單定義在 [規格總索引](./index.mdx)，新增模組或頁面時改那裡，這裡自動同步。
