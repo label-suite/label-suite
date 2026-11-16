@@ -25,12 +25,16 @@ import PrdSystemContext from "@notes/components/prd-system-context";
 import PrdTaskLifecycleFlow from "@notes/components/prd-task-lifecycle-flow";
 import PrototypeFrame from "@notes/components/prototype-frame";
 
+// Joins every character with WORD JOINER (U+2060) and turns spaces into
+// no-break spaces, so the browser cannot wrap inside the phrase.
+const keepTogether = (s: string): string => s.replace(/ /g, "\u00a0").split("").join("\u2060");
+
 // PART 01 — 三個卡住現有流程的問題，收斂成一句要證明的事。
 function ProblemsPage({ dark }: CustomSlideProps) {
   return (
     <Triad
       dark={dark}
-      statement="設定驅動的標記流程，是這篇 Demo Paper 要證明的事"
+      statement={`設定驅動的標記流程，${keepTogether("是這篇 Demo Paper 要證明的事")}`}
       emphasis="設定驅動的標記流程"
       items={[
         {
@@ -401,7 +405,6 @@ const deck: Deck = {
       eyebrow: "PRODUCT · 定稿",
       title: "Label Suite：給學術 NLP 團隊的標記與品質平台",
       subtitle: "一個設定驅動的平台，走完試標、正式標記、審核與資料品質分析",
-      meta: ["由 docs/specs/00-prd.mdx 生成", "10 頁 · 16:9"],
       agenda: [
         { n: "01", title: "問題與定位", sub: "三個痛點，一個論文目標" },
         { n: "02", title: "六個角色", sub: "系統角色與任務角色互不影響" },
@@ -435,25 +438,28 @@ const deck: Deck = {
     {
       layout: "full-visual",
       nav: "系統情境：C4 第一層",
+      num: "03",
+      eyebrow: "PART 03 · 系統架構",
       title: "C4 第一層・系統情境：誰在用、碰到哪些外部系統",
       viz: PrdSystemContext,
-      vizLabel: "@ai-visualize · prd-system-context",
       vizHint: "點人或系統看互動；切換『部署設定』看 Google、Resend 未設定時的樣子。",
     },
     {
       layout: "full-visual",
       nav: "容器視圖：C4 第二層",
+      num: "03",
+      eyebrow: "PART 03 · 系統架構",
       title: "C4 第二層・容器視圖：六個容器，只有 Nginx 對外",
       viz: ArchitectureContainerView,
-      vizLabel: "@ai-visualize · architecture-container-view",
       vizHint: "點容器看關係；切換『資料庫層』看 Lite 與正式部署的差異。",
     },
     {
       layout: "full-visual",
       nav: "任務生命週期：六次交接",
+      num: "04",
+      eyebrow: "PART 04 · 任務生命週期",
       title: "任務從建立到匯出：三個模組之間的六次交接",
       viz: PrdTaskLifecycleFlow,
-      vizLabel: "@ai-visualize · prd-task-lifecycle-flow",
       vizHint: "選『逐步走查』依序看每個交接；A1／A2 是退回草稿或再開一輪試標的替代流程。",
     },
     {
