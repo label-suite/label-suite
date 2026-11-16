@@ -64,7 +64,7 @@ prompt: |
   核心洞察：一個 Label Suite 部署只有六個容器，而且只有 Nginx 對外；讀測試集答案的只有 worker；資料庫層只換驅動與檔案位置，容器不變。
   互動：點容器或對象看說明與關係（其餘連線壓暗）；「資料庫層」切換 Lite（SQLite）與正式（PostgreSQL），資料庫與它的連線說明跟著換；「部署設定」切換 Google OIDC、Resend 是否設定，未設定的連線變灰虛線，Resend 未設定時亮出黃色虛線的替代路徑。
   圖形：C4 第二層。上排是部署者與使用者，中間虛線框是 Label Suite，框內上排前端 SPA 與 Nginx、中排背景 worker、Redis、API、下排資料庫（內含加鎖的測試集答案表），框外下排是兩個可選外部系統。
-  資料：六個容器與它們的職責與本節表格逐項一致（那張表只有「容器」「職責」兩欄）；技術、資料庫層與可選外部系統取自 §技術選型、§測試集答案不外露、§資料庫雙層、§非同步任務、§部署與維運；人與外部系統沿用 PRD 的系統情境，不畫第三層的模組。
+  資料：六個容器與它們的職責與本節表格逐項一致（那張表只有「容器」「職責」兩欄）；技術取自 §技術選型；API 與前端 SPA 的說明取自 §認證與授權（含 §授權四步）與 §API 契約；資料庫層與佇列取自 §資料庫雙層、§非同步任務；測試集答案表與讀它的那條連線取自 §測試集答案不外露；可選外部系統取自 §部署與維運；人與外部系統沿用 PRD 的系統情境，不畫第三層的模組。
 caption: 點容器看關係；切換「資料庫層」與「部署設定」看不同部署的樣子
 status: generated
 */}
@@ -72,7 +72,7 @@ status: generated
 import GeneratedFrame from '@/components/GeneratedFrame.astro'
 import ArchitectureContainerView from '@notes/components/architecture-container-view'
 
-<GeneratedFrame id="architecture-container-view" type="interactive" prompt={"核心洞察：一個 Label Suite 部署只有六個容器，而且只有 Nginx 對外；讀測試集答案的只有 worker；資料庫層只換驅動與檔案位置，容器不變。\n互動：點容器或對象看說明與關係（其餘連線壓暗）；「資料庫層」切換 Lite（SQLite）與正式（PostgreSQL），資料庫與它的連線說明跟著換；「部署設定」切換 Google OIDC、Resend 是否設定，未設定的連線變灰虛線，Resend 未設定時亮出黃色虛線的替代路徑。\n圖形：C4 第二層。上排是部署者與使用者，中間虛線框是 Label Suite，框內上排前端 SPA 與 Nginx、中排背景 worker、Redis、API、下排資料庫（內含加鎖的測試集答案表），框外下排是兩個可選外部系統。\n資料：六個容器與它們的職責與本節表格逐項一致（那張表只有「容器」「職責」兩欄）；技術、資料庫層與可選外部系統取自 §技術選型、§測試集答案不外露、§資料庫雙層、§非同步任務、§部署與維運；人與外部系統沿用 PRD 的系統情境，不畫第三層的模組。\n"} caption="點容器看關係；切換「資料庫層」與「部署設定」看不同部署的樣子">
+<GeneratedFrame id="architecture-container-view" type="interactive" prompt={"核心洞察：一個 Label Suite 部署只有六個容器，而且只有 Nginx 對外；讀測試集答案的只有 worker；資料庫層只換驅動與檔案位置，容器不變。\n互動：點容器或對象看說明與關係（其餘連線壓暗）；「資料庫層」切換 Lite（SQLite）與正式（PostgreSQL），資料庫與它的連線說明跟著換；「部署設定」切換 Google OIDC、Resend 是否設定，未設定的連線變灰虛線，Resend 未設定時亮出黃色虛線的替代路徑。\n圖形：C4 第二層。上排是部署者與使用者，中間虛線框是 Label Suite，框內上排前端 SPA 與 Nginx、中排背景 worker、Redis、API、下排資料庫（內含加鎖的測試集答案表），框外下排是兩個可選外部系統。\n資料：六個容器與它們的職責與本節表格逐項一致（那張表只有「容器」「職責」兩欄）；技術取自 §技術選型；API 與前端 SPA 的說明取自 §認證與授權（含 §授權四步）與 §API 契約；資料庫層與佇列取自 §資料庫雙層、§非同步任務；測試集答案表與讀它的那條連線取自 §測試集答案不外露；可選外部系統取自 §部署與維運；人與外部系統沿用 PRD 的系統情境，不畫第三層的模組。\n"} caption="點容器看關係；切換「資料庫層」與「部署設定」看不同部署的樣子">
   <ArchitectureContainerView client:visible />
 </GeneratedFrame>
 
@@ -97,7 +97,7 @@ type: interactive
 prompt: |
   核心洞察：一個請求先過三道全站共用的關卡（CORS、認證、授權）才進到模組；進模組之後，同一個 app/modules/<module>/ 資料夾裡的 schemas、router、service、repository 依序各管一件事。
   互動：點任一站或用上一站／下一站逐站走，已走過的站淡色、目前那站實心、還沒到的灰色；右側面板顯示該站的程式位置、做什麼、不做什麼。
-  資料（依序九站，與本節的層表一致）：1 CORS，來源逐一列出，禁止 allow_origins=["*"]；2 認證 dependency，驗 httpOnly cookie 裡的 access JWT，取 sub、sid、credential_version；3 授權 dependency，權限矩陣四步判定；4 pydantic 驗證 request schema；5 Router，HTTP 轉接、取得呼叫者、套用欄位遮蔽、把 model 轉成 response schema；6 Service，商業邏輯、狀態機、寫 audit_events；7 Repository，SQLAlchemy model；8 PostgreSQL 或 SQLite；9 回應，i18n 訊息依 Accept-Language 取字。
+  資料（依序九站；第 5–7 站取自本節的層表，那張表另有「Celery task」一列不屬九站；第 1 站依 `AGENTS.md` 硬性規則 7，第 2、3 站取自 §認證與授權 與 §授權四步，第 4 站的 pydantic 取自 §技術選型，第 8 站取自 §資料庫雙層，第 9 站取自 §i18n 兩層）：1 CORS，來源逐一列出，禁止 allow_origins=["*"]；2 認證 dependency，驗 httpOnly cookie 裡的 access JWT，取 sub、sid、credential_version；3 授權 dependency，權限矩陣四步判定；4 pydantic 驗證 request schema；5 Router，HTTP 轉接、取得呼叫者、套用欄位遮蔽、把 model 轉成 response schema；6 Service，商業邏輯、狀態機、寫 audit_events；7 Repository，SQLAlchemy model；8 PostgreSQL 或 SQLite；9 回應，i18n 訊息依 Accept-Language 取字。
   圖形：由上往下的直列，1–3 包在「全站共用」虛線框，4–7 包在 app/modules/<module>/ 虛線框，8、9 在框外。
 caption: 點任一站或逐站走，看一個請求在哪一層被處理
 status: generated
@@ -105,7 +105,7 @@ status: generated
 
 import ArchitectureBackendLayers from '@notes/components/architecture-backend-layers'
 
-<GeneratedFrame id="architecture-backend-layers" type="interactive" prompt={"核心洞察：一個請求先過三道全站共用的關卡（CORS、認證、授權）才進到模組；進模組之後，同一個 app/modules/<module>/ 資料夾裡的 schemas、router、service、repository 依序各管一件事。\n互動：點任一站或用上一站／下一站逐站走，已走過的站淡色、目前那站實心、還沒到的灰色；右側面板顯示該站的程式位置、做什麼、不做什麼。\n資料（依序九站，與本節的層表一致）：1 CORS，來源逐一列出，禁止 allow_origins=[\"*\"]；2 認證 dependency，驗 httpOnly cookie 裡的 access JWT，取 sub、sid、credential_version；3 授權 dependency，權限矩陣四步判定；4 pydantic 驗證 request schema；5 Router，HTTP 轉接、取得呼叫者、套用欄位遮蔽、把 model 轉成 response schema；6 Service，商業邏輯、狀態機、寫 audit_events；7 Repository，SQLAlchemy model；8 PostgreSQL 或 SQLite；9 回應，i18n 訊息依 Accept-Language 取字。\n圖形：由上往下的直列，1–3 包在「全站共用」虛線框，4–7 包在 app/modules/<module>/ 虛線框，8、9 在框外。\n"} caption="點任一站或逐站走，看一個請求在哪一層被處理">
+<GeneratedFrame id="architecture-backend-layers" type="interactive" prompt={"核心洞察：一個請求先過三道全站共用的關卡（CORS、認證、授權）才進到模組；進模組之後，同一個 app/modules/<module>/ 資料夾裡的 schemas、router、service、repository 依序各管一件事。\n互動：點任一站或用上一站／下一站逐站走，已走過的站淡色、目前那站實心、還沒到的灰色；右側面板顯示該站的程式位置、做什麼、不做什麼。\n資料（依序九站；第 5–7 站取自本節的層表，那張表另有「Celery task」一列不屬九站；第 1 站依 `AGENTS.md` 硬性規則 7，第 2、3 站取自 §認證與授權 與 §授權四步，第 4 站的 pydantic 取自 §技術選型，第 8 站取自 §資料庫雙層，第 9 站取自 §i18n 兩層）：1 CORS，來源逐一列出，禁止 allow_origins=[\"*\"]；2 認證 dependency，驗 httpOnly cookie 裡的 access JWT，取 sub、sid、credential_version；3 授權 dependency，權限矩陣四步判定；4 pydantic 驗證 request schema；5 Router，HTTP 轉接、取得呼叫者、套用欄位遮蔽、把 model 轉成 response schema；6 Service，商業邏輯、狀態機、寫 audit_events；7 Repository，SQLAlchemy model；8 PostgreSQL 或 SQLite；9 回應，i18n 訊息依 Accept-Language 取字。\n圖形：由上往下的直列，1–3 包在「全站共用」虛線框，4–7 包在 app/modules/<module>/ 虛線框，8、9 在框外。\n"} caption="點任一站或逐站走，看一個請求在哪一層被處理">
   <ArchitectureBackendLayers client:visible />
 </GeneratedFrame>
 

@@ -4,8 +4,10 @@ import { useReducedMotion } from "motion/react";
 import { KeyRound, Lock, Mail, Server, Users } from "lucide-react";
 
 // C4 model level 2 (Container) for Label Suite.
-// Source of truth: docs/development/architecture.mdx §容器視圖 table and the sections it cites
-// (技術選型, 測試集答案不外露, 資料庫雙層, 非同步任務, 部署與維運). Every node and edge matches a row there.
+// Source of truth: docs/development/architecture.mdx §容器視圖 (the 容器/職責 table, two
+// columns) plus 技術選型, 認證與授權 (with 授權四步), API 契約, 測試集答案不外露, 資料庫雙層,
+// 非同步任務 and 部署與維運. The people and the optional external systems come from the
+// PRD system context instead. Every node and edge traces back to one of those.
 
 // SVG colours: label-suite-design tokens
 const C = {
