@@ -1,9 +1,13 @@
+import { ArrowLeft, ArrowRight, ClipboardCheck, Crown, KeyRound, MonitorPlay, PenLine, ShieldCheck, User } from "lucide-react";
 import type { CustomSlideProps, Deck } from "@/lib/decks";
-import { Compare, Roster, Table, Triad } from "@/components/deck/blocks";
+import { Triad } from "@/components/deck/blocks";
+import { DGAP, DS, DTRACK } from "@/components/deck/scale";
+import { toneColor } from "@/components/deck/SlideChrome";
+import { dkt } from "@/components/deck/theme";
 import ArchitectureContainerView from "@notes/components/architecture-container-view";
 import PrdSystemContext from "@notes/components/prd-system-context";
 import PrdTaskLifecycleFlow from "@notes/components/prd-task-lifecycle-flow";
-import PrdTaskState from "@notes/components/prd-task-state";
+import PrototypeFrame from "@notes/components/prototype-frame";
 
 // PART 01 — 三個卡住現有流程的問題，收斂成一句要證明的事。
 function ProblemsPage({ dark }: CustomSlideProps) {
@@ -30,83 +34,198 @@ function ProblemsPage({ dark }: CustomSlideProps) {
   );
 }
 
-// PART 02 — 六項目標 × 受益角色 × 衡量方式的交叉表。
-function GoalsTablePage({ dark }: CustomSlideProps) {
+// PART 02 — 一人兩軸：左邊系統角色（全平台恰一個），右邊同一人在不同任務各有任務角色。
+// 圖示與 prd-site-map 的 ROLES 一致。
+type RoleIcon = typeof User;
+
+const SYSTEM_ROLES: { label: string; icon: RoleIcon; note: string }[] = [
+  { label: "平台成員", icon: User, note: "自行註冊或受邀加入" },
+  { label: "系統管理員", icon: ShieldCheck, note: "管理帳號與角色權限" },
+];
+
+const TASK_SAMPLES: { task: string; role: string; icon: RoleIcon; note: string }[] = [
+  { task: "任務 A", role: "專案負責人", icon: Crown, note: "建立任務的人自動取得" },
+  { task: "任務 B", role: "標記員", icon: PenLine, note: "看不到標準答案" },
+  { task: "任務 C", role: "審核員", icon: ClipboardCheck, note: "同時擔任仲裁者" },
+];
+
+function RolesPage({ dark }: CustomSlideProps) {
+  const c = dkt(dark);
+  const sys = toneColor("blue", c);
+  const task = toneColor("orange", c);
+
+  const panel = (t: { fg: string; soft: string }) => ({
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: DGAP.sm,
+    padding: DGAP.md,
+    borderRadius: "var(--radius-lg)",
+    background: dark ? c.sunken : "var(--neutral-50)",
+    border: `1px solid ${c.borderSoft}`,
+    borderTop: `4px solid ${t.fg}`,
+  });
+  const head = (t: { fg: string }, title: string, sub: string) => (
+    <div style={{ display: "flex", alignItems: "baseline", gap: DGAP.sm, flexWrap: "wrap" }}>
+      <span style={{ fontSize: DS.h3, fontWeight: 900, color: t.fg }}>{title}</span>
+      <span style={{ fontSize: DS.small, fontWeight: 700, color: c.body }}>{sub}</span>
+    </div>
+  );
+  const foot = (text: string) => (
+    <div style={{ marginTop: "auto", paddingTop: DGAP.xs, borderTop: `1px dashed ${c.border}`, fontSize: DS.small, color: c.body }}>
+      {text}
+    </div>
+  );
+  const chip = (t: { fg: string; soft: string }, Icon: RoleIcon, label: string, note: string, size = 30) => (
+    <div style={{ display: "flex", alignItems: "center", gap: DGAP.sm, minWidth: 0 }}>
+      <span
+        style={{
+          flex: "none",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: size + 22,
+          height: size + 22,
+          borderRadius: 999,
+          background: t.soft,
+          color: t.fg,
+        }}
+      >
+        <Icon size={size} strokeWidth={2.2} />
+      </span>
+      <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <span style={{ fontSize: DS.h4, fontWeight: 800, color: c.ink }}>{label}</span>
+        <span style={{ fontSize: DS.small, color: c.body }}>{note}</span>
+      </span>
+    </div>
+  );
+  const arrow = (Icon: RoleIcon, t: { fg: string }, label: string) => (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, color: t.fg }}>
+      <Icon size={48} strokeWidth={2.4} />
+      <span style={{ fontSize: DS.small, fontWeight: 800, letterSpacing: DTRACK.label }}>{label}</span>
+    </div>
+  );
+
   return (
-    <Table
-      dark={dark}
-      head={["目標", "受益角色", "衡量方式"]}
-      rows={[
-        [{ text: "走完一次完整標記流程" }, { text: "專案負責人" }, { text: "能實際示範建任務到匯出" }],
-        [{ text: "換任務不改平台" }, { text: "專案負責人" }, { text: "至少五種研究示例只靠任務設定建立" }],
-        [{ text: "建任務步驟比現有工具少" }, { text: "專案負責人" }, { text: "操作步驟數少於 Label Studio" }],
-        [
-          { text: "標記中就看到資料統計" },
-          { text: "專案負責人、審核員" },
-          { text: "句詞標籤統計與人工計算完全一致" },
-        ],
-        [{ text: "平台好上手" }, { text: "標記員、審核員" }, { text: "5–10 位實驗室成員填 SUS、整體 ≥ 75 分" }],
-        [{ text: "向論文讀者重現使用情境" }, { text: "專案負責人" }, { text: "示範影片呈現 2–3 個情境" }],
-      ]}
-    />
+    <div
+      style={{
+        height: "100%",
+        display: "grid",
+        gridTemplateColumns: "minmax(0, 1fr) auto auto auto minmax(0, 1.15fr)",
+        alignItems: "stretch",
+        columnGap: DGAP.md,
+      }}
+    >
+      <div style={panel(sys)}>
+        {head(sys, "系統角色", "全平台・每人恰一個")}
+        {chip(sys, SYSTEM_ROLES[0].icon, SYSTEM_ROLES[0].label, SYSTEM_ROLES[0].note)}
+        <div style={{ display: "flex", alignItems: "center", gap: DGAP.xs, color: c.muted, fontSize: DS.small, fontWeight: 700 }}>
+          <span style={{ flex: 1, borderTop: `1px solid ${c.border}` }} />或<span style={{ flex: 1, borderTop: `1px solid ${c.border}` }} />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: DGAP.sm, padding: DGAP.sm, borderRadius: "var(--radius-md)", border: `1.5px solid ${sys.fg}` }}>
+          {chip(sys, SYSTEM_ROLES[1].icon, SYSTEM_ROLES[1].label, SYSTEM_ROLES[1].note)}
+          <div style={{ marginLeft: DGAP.lg, padding: DGAP.xs, borderRadius: "var(--radius-sm)", border: `1px dashed ${sys.fg}` }}>
+            {chip(sys, KeyRound, "Seeder 管理員", "部署時建立，不能停用或移除", 22)}
+          </div>
+        </div>
+        {foot("決定：帳號、系統管理、看得到哪些任務列表")}
+      </div>
+
+      {arrow(ArrowLeft, sys, "擇一")}
+
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: DGAP.xs }}>
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 132,
+            height: 132,
+            borderRadius: 999,
+            background: c.slide,
+            border: `3px solid ${c.ink}`,
+            color: c.ink,
+          }}
+        >
+          <User size={64} strokeWidth={2} />
+        </span>
+        <span style={{ fontSize: DS.h4, fontWeight: 900, color: c.ink }}>同一個人</span>
+      </div>
+
+      {arrow(ArrowRight, task, "依任務")}
+
+      <div style={panel(task)}>
+        {head(task, "任務角色", "只在自己參與的任務・每個任務各自指定")}
+        <div style={{ display: "flex", flexDirection: "column", gap: DGAP.sm, flex: 1, justifyContent: "center" }}>
+          {TASK_SAMPLES.map((it) => (
+            <div key={it.task} style={{ display: "flex", alignItems: "center", gap: DGAP.sm }}>
+              <span
+                style={{
+                  flex: "none",
+                  width: 96,
+                  padding: "6px 0",
+                  textAlign: "center",
+                  borderRadius: "var(--radius-sm)",
+                  background: c.slide,
+                  border: `1px solid ${c.border}`,
+                  fontSize: DS.small,
+                  fontWeight: 800,
+                  color: c.body,
+                }}
+              >
+                {it.task}
+              </span>
+              <span style={{ flex: "none", width: 24, borderTop: `2px solid ${task.fg}` }} />
+              {chip(task, it.icon, it.role, it.note)}
+            </div>
+          ))}
+        </div>
+        {foot("決定：能不能進任務詳情、標記、審核與分析")}
+      </div>
+    </div>
   );
 }
 
-// PART 03 — 一個中心（一人多角色）+ 六個無先後順序的角色。
-function RolesPage({ dark, area }: CustomSlideProps) {
-  return (
-    <Roster
-      dark={dark}
-      width={area.w}
-      height={area.h}
-      lead="一人有一個系統角色 × 多個任務角色，兩者互不影響"
-      center={{ label: "一人多角色", note: "系統角色 × 任務角色並存" }}
-      actors={[
-        { label: "平台成員", role: "自行註冊或受邀加入，建立並參與任務", icon: "users" },
-        { label: "系統管理員", role: "管理帳號與角色權限，可看所有任務列表", icon: "settings" },
-        { label: "Seeder 管理員", role: "部署時建立的第一位系統管理員，不能被停用或移除", icon: "database" },
-        { label: "專案負責人", role: "設定任務、指派成員，推進試標與正式標記", icon: "target" },
-        { label: "審核員", role: "審核標記結果，處理爭議與仲裁", icon: "check" },
-        { label: "標記員", role: "在被指派的資料上產出標記，看不到標準答案" },
-      ]}
-    />
-  );
-}
-
-// PART 04 — 範圍內／範圍外兩份並列清單的對照，不給建議徽章（這是已拍板的邊界，不是互相競爭的方案）。
-function ScopePage({ dark }: CustomSlideProps) {
-  return (
-    <Compare
-      dark={dark}
-      axis="邊界"
-      left={{
-        tag: "範圍內",
-        name: "六大核心模組",
-        tone: "blue",
-        rows: [
-          ["01", "帳號"],
-          ["02", "儀表板"],
-          ["03", "任務管理"],
-          ["04", "標記作業"],
-          ["05", "資料集"],
-          ["06", "系統管理"],
-        ],
-      }}
-      right={{
-        tag: "範圍外",
-        name: "六項排除，另兩項見註腳",
-        tone: "orange",
-        rows: [
-          ["批次匯入精靈", "部署者這期直接匯入"],
-          ["AI 輔助標記建議", "列為未來工作"],
-          ["標準格式匯出", "CoNLL／BIO／JSON-L，未來工作"],
-          ["並發壓力測試", "研究原型，非生產規模"],
-          ["第三方系統整合", "這期以展示平台能力為主"],
-          ["手機原生 App", "網頁應用，用瀏覽器操作"],
-        ],
-      }}
-    />
-  );
+// PART 05 — 實際操作畫面：嵌入 design/prototype 的頁面，簡報時現場操作。
+// 需要先執行 `pnpm prototype`（port 4331）；未啟動時 PrototypeFrame 會顯示提示。
+// 縮覽圖（live === false）不掛 iframe，只畫佔位，避免側欄同時載入多份 prototype。
+// 任務詳情與標記工作區要帶 task_id 等參數才有內容，參數格式見 docs/prototype/navigation.mdx。
+// 在 iframe 內點擊後鍵盤焦點會留在 prototype 裡，→ 不會翻頁：先點 iframe 外面再翻。
+function prototypePage(page: string, caption: string, query?: string) {
+  function PrototypePage({ dark, live, area }: CustomSlideProps) {
+    const c = dkt(dark);
+    if (!live) {
+      return (
+        <div
+          style={{
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: DGAP.sm,
+            borderRadius: "var(--radius-lg)",
+            border: `2px dashed ${c.border}`,
+            color: c.muted,
+          }}
+        >
+          <MonitorPlay size={96} strokeWidth={1.6} />
+          <span style={{ fontSize: DS.h3, fontWeight: 800, color: c.body }}>{caption}</span>
+        </div>
+      );
+    }
+    // PrototypeFrame 底下還有一行 caption 與上下 margin，扣掉約 64px。
+    // 簡報一律用亮色介面，不跟著觀看者的系統暗色模式（維護者指示）。
+        return (
+          <PrototypeFrame
+            page={page}
+            caption={caption}
+            query={query}
+            colorScheme="light"
+            height={Math.max(320, area.h - 64)}
+          />
+        );
+  }
+  return PrototypePage;
 }
 
 const deck: Deck = {
@@ -125,11 +244,10 @@ const deck: Deck = {
       meta: ["由 docs/specs/00-prd.mdx 生成", "10 頁 · 16:9"],
       agenda: [
         { n: "01", title: "問題與定位", sub: "三個痛點，一個論文目標" },
-        { n: "02", title: "六項目標", sub: "怎麼衡量做到了" },
-        { n: "03", title: "六個角色", sub: "系統角色與任務角色互不影響" },
-        { n: "04", title: "範圍邊界", sub: "這期做什麼、不做什麼" },
-        { n: "05", title: "系統架構", sub: "C4 第一層與第二層" },
-        { n: "06", title: "任務生命週期", sub: "六次交接、五個狀態" },
+        { n: "02", title: "六個角色", sub: "系統角色與任務角色互不影響" },
+        { n: "03", title: "系統架構", sub: "C4 第一層與第二層" },
+        { n: "04", title: "任務生命週期", sub: "三個模組之間的六次交接" },
+        { n: "05", title: "實際操作畫面", sub: "建立任務、任務詳情、標記工作區" },
       ],
     },
     {
@@ -142,18 +260,9 @@ const deck: Deck = {
     },
     {
       layout: "custom",
-      nav: "六項目標",
-      num: "02",
-      eyebrow: "PART 02 · 專案概述",
-      title: "六項目標，每項都有可驗收的衡量方式",
-      footnotes: [{ n: "1", text: "SUS 問卷在正式標記功能完成後才招募受試者，需預留填答與分析時間。" }],
-      render: GoalsTablePage,
-    },
-    {
-      layout: "custom",
       nav: "六個角色",
-      num: "03",
-      eyebrow: "PART 03 · 使用者角色",
+      num: "02",
+      eyebrow: "PART 02 · 使用者角色",
       title: "六個角色，系統角色與任務角色互不影響",
       callout: {
         icon: "lock",
@@ -163,30 +272,9 @@ const deck: Deck = {
       render: RolesPage,
     },
     {
-      layout: "custom",
-      nav: "範圍邊界",
-      num: "04",
-      eyebrow: "PART 04 · 專案範圍",
-      title: "範圍已拍板：六大模組在內，AI 建議與手機 App 在外",
-      pill: { text: "定稿範圍", tone: "blue" },
-      footnotes: [
-        { n: "1", text: "07 共用介面（側欄導覽、工作頁籤、語言切換）貫穿所有模組，不另外佔一列。" },
-        {
-          n: "2",
-          text: "多語言僅排除「第三種以上」，繁中與英文切換仍在範圍內；說明按鈕這期不做，下一期依 SUS 問卷結果決定。",
-        },
-      ],
-      callout: {
-        icon: "alert",
-        tone: "warning",
-        text: "假設：任務類型完全由任務設定決定；不成立時目標二無法達成",
-      },
-      render: ScopePage,
-    },
-    {
       layout: "full-visual",
       nav: "系統情境：C4 第一層",
-      title: "誰在用、碰到哪些外部系統：Google 與 Resend 都可不設定",
+      title: "C4 第一層・系統情境：誰在用、碰到哪些外部系統",
       viz: PrdSystemContext,
       vizLabel: "@ai-visualize · prd-system-context",
       vizHint: "點人或系統看互動；切換『部署設定』看 Google、Resend 未設定時的樣子。",
@@ -194,7 +282,7 @@ const deck: Deck = {
     {
       layout: "full-visual",
       nav: "容器視圖：C4 第二層",
-      title: "六個容器只有 Nginx 對外，測試集答案只有 worker 讀",
+      title: "C4 第二層・容器視圖：六個容器，只有 Nginx 對外",
       viz: ArchitectureContainerView,
       vizLabel: "@ai-visualize · architecture-container-view",
       vizHint: "點容器看關係；切換『資料庫層』看 Lite 與正式部署的差異。",
@@ -208,12 +296,32 @@ const deck: Deck = {
       vizHint: "選『逐步走查』依序看每個交接；A1／A2 是退回草稿或再開一輪試標的替代流程。",
     },
     {
-      layout: "full-visual",
-      nav: "任務的五個狀態",
-      title: "任務只能往前走，唯一的回頭路在等待 IAA 確認",
-      viz: PrdTaskState,
-      vizLabel: "@ai-visualize · prd-task-state",
-      vizHint: "點狀態看進入條件與推進的模組；唯一回頭路可退回草稿或再開一輪試標。",
+      layout: "custom",
+      nav: "操作：建立任務",
+      num: "05",
+      eyebrow: "PART 05 · 實際操作畫面",
+      title: "建立任務：選任務類型、填設定，不用改程式",
+      render: prototypePage("task-management/task-new", "建立任務"),
+    },
+    {
+      layout: "custom",
+      nav: "操作：任務詳情",
+      num: "05",
+      eyebrow: "PART 05 · 實際操作畫面",
+      title: "任務詳情：進度、成員與結果都在同一個任務裡",
+      render: prototypePage("task-management/task-detail", "任務詳情", "task_id=T003&task_role=project_leader"),
+    },
+    {
+      layout: "custom",
+      nav: "操作：標記工作區",
+      num: "05",
+      eyebrow: "PART 05 · 實際操作畫面",
+      title: "標記工作區：標記員看到的畫面，沒有標準答案",
+      render: prototypePage(
+        "annotation/annotation-workspace",
+        "標記工作區",
+        "task_id=T001&sample_id=sent-001&role=annotator&run_type=official_run",
+      ),
     },
     {
       layout: "closing",
