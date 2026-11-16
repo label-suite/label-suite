@@ -126,6 +126,43 @@ label-suite/
 | 容器 | Docker 加 Docker Compose | 008 |
 | 反向代理 | Nginx，前面可接 Cloudflare | 023 |
 
+## 容器視圖（C4 第二層）
+
+C4 model 第二層：打開 [PRD 的系統情境](../specs/00-prd.mdx) 裡那個「Label Suite」方塊，看裡面有哪些可以各自部署、各自執行的容器，以及它們怎麼互相呼叫。下表的每一列都來自本文件後面的章節，圖只是呈現；兩邊不一致時以正文為準。
+
+{/* @ai-visualize
+id: architecture-container-view
+type: interactive
+prompt: |
+  核心洞察：一個 Label Suite 部署只有六個容器，而且只有 Nginx 對外；讀測試集答案的只有 worker；資料庫層只換驅動與檔案位置，容器不變。
+  互動：點容器或對象看說明與關係（其餘連線壓暗）；「資料庫層」切換 Lite（SQLite）與正式（PostgreSQL），資料庫與它的連線說明跟著換；「部署設定」切換 Google OIDC、Resend 是否設定，未設定的連線變灰虛線，Resend 未設定時亮出黃色虛線的替代路徑。
+  圖形：C4 第二層。上排是部署者與使用者，中間虛線框是 Label Suite，框內上排前端 SPA 與 Nginx、中排背景 worker、Redis、API、下排資料庫（內含加鎖的測試集答案表），框外下排是兩個可選外部系統。
+  資料：與本節表格逐項一致（容器、技術、職責、ADR）；人與外部系統沿用 PRD 的系統情境，不畫第三層的模組。
+caption: 點容器看關係；切換「資料庫層」與「部署設定」看不同部署的樣子
+status: generated
+*/}
+
+import GeneratedFrame from '@/components/GeneratedFrame.astro'
+import ArchitectureContainerView from '@notes/components/architecture-container-view'
+
+<GeneratedFrame id="architecture-container-view" type="interactive" prompt={"核心洞察：一個 Label Suite 部署只有六個容器，而且只有 Nginx 對外；讀測試集答案的只有 worker；資料庫層只換驅動與檔案位置，容器不變。\n互動：點容器或對象看說明與關係（其餘連線壓暗）；「資料庫層」切換 Lite（SQLite）與正式（PostgreSQL），資料庫與它的連線說明跟著換；「部署設定」切換 Google OIDC、Resend 是否設定，未設定的連線變灰虛線，Resend 未設定時亮出黃色虛線的替代路徑。\n圖形：C4 第二層。上排是部署者與使用者，中間虛線框是 Label Suite，框內上排前端 SPA 與 Nginx、中排背景 worker、Redis、API、下排資料庫（內含加鎖的測試集答案表），框外下排是兩個可選外部系統。\n資料：與本節表格逐項一致（容器、技術、職責、ADR）；人與外部系統沿用 PRD 的系統情境，不畫第三層的模組。\n"} caption="點容器看關係；切換「資料庫層」與「部署設定」看不同部署的樣子">
+  <ArchitectureContainerView client:visible />
+</GeneratedFrame>
+
+| 容器 | 技術 | 職責 | ADR |
+| :--- | :--- | :--- | :--- |
+| Nginx | `nginx:alpine`，前面可接 Cloudflare | 唯一的公開入口：服務前端的 `/dist`，把 `/api/v1` 反向代理到 API，擋安全標頭並隔離內部服務 | 023、008 |
+| 前端 SPA | React 19 加 Vite 加 TypeScript strict | 在使用者的瀏覽器執行，經 Nginx 以 JSON 呼叫 `/api/v1`，身分放在 httpOnly cookie | 004 |
+| API | FastAPI 加 pydantic v2 加 uvicorn | 認證、授權四步判定與業務邏輯；評分只送進佇列、之後回查狀態；以 OIDC 驗證 Google 登入、透過 Resend 寄信 | 003、035、013 |
+| 背景 worker | Celery，與 API 共用同一個 image | 從 `scoring`、`default` 佇列取任務；評分流程 `parse_submission` → `load_answers` → `compute_metrics` → `write_results` | 007、008 |
+| Redis | Redis 7 | broker `/0`、result backend `/1`、應用快取 `/2` | 006 |
+| 資料庫 | Lite 層 SQLite（預設）／正式層 PostgreSQL 16（設 `DATABASE_URL`） | 業務資料與獨立、受存取控制的測試集答案表；Lite 層的 `./data` 是 backend 與 worker 共用的持久化 volume | 005、024 |
+
+- 圖上只有 Nginx 對外；API、worker、Redis 與資料庫都在內部，見[部署與維運](#部署與維運)
+- 測試集答案表只畫 worker 讀它這一條線，對應[測試集答案不外露](#測試集答案不外露)的第二道
+- 寄信畫在 API 上：本文件沒有規定信是由 API 直接寄出，還是送進 `default` 佇列由 worker 寄出，這一點留給後端設計決定
+- 監控（Prometheus、Grafana、Sentry）這期不做，不在圖上
+
 ## 後端分層
 
 ```text
