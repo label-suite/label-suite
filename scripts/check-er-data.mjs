@@ -20,6 +20,12 @@ export const DICT_PATH = join(HERE, '..', 'docs', 'diagrams', 'architecture', 'd
 export const ER_PATH = join(HERE, '..', 'docs', 'diagrams', 'architecture', 'database-schema.er.json');
 export const INVENTORY_PATH = join(HERE, '..', 'docs', 'diagrams', 'architecture', 'data-field-inventory.mdx');
 const SPECS_DIR = join(HERE, '..', 'docs', 'specs');
+const ROOT = join(HERE, '..');
+// The roots a spec page is allowed to cite by line: the screens it describes,
+// the documents beside it, and the rules it quotes. Anything else is a path
+// `checkPathCitations` will report as missing, which is the right answer.
+const CITABLE = ['design/prototype', 'docs', 'scripts', '.claude/skills', '.agents/skills'];
+const CITABLE_EXT = /\.(html|js|mjs|cjs|json|mdx|md|css|ts|tsx)$/;
 
 // One shape for a spec page code, so the two readers of it cannot drift apart.
 const SPEC_CODE = '(0[1-7]-0[0-9])';
@@ -285,6 +291,88 @@ export function checkLineCitations(sources, pages) {
   return out;
 }
 
+/** `docs/specs/` cites prototype files and the PRD the other way round: by
+ *  path and line (`` `sidebar.js:558` ``), not by spec code, so
+ *  `checkLineCitations` cannot see any of them.
+ *
+ *  Measured on 2026-11-16: three of the six live citations pointed at
+ *  unrelated lines, and two of those three also asserted a screen state that
+ *  #165 had changed five days earlier. **Existence alone catches none of
+ *  them** — every stale line number was still well inside its file — so a
+ *  citation with no quote after it is itself the finding, not a pass.
+ *
+ *  That is the opposite of the rule next door, where a bare line number marks
+ *  a 變更紀錄 row recording a fix. Here those rows are skipped wholesale
+ *  instead: a row quotes the sentence it removed, line number and all, so
+ *  reading them as citations would fail every page that ever fixed one. */
+const PATH_CITE = /`([\w./-]*\.[A-Za-z]\w*)?:(\d+)(?:-(\d+))?`/g;
+const ANCHOR = /^(?:\s*的)?\s*(?:「([^」]*)」|`([^`]*)`)/;
+
+/** `files` maps a repo-relative path to its text; a bare file name resolves
+ *  through it only when exactly one path ends in that name. */
+export function checkPathCitations(sources, files) {
+  const out = [];
+  const paths = [...files.keys()];
+  for (const { rel, text } of sources) {
+    let section = '';
+    let lastPath = null;
+    for (const [i, line] of text.split('\n').entries()) {
+      if (line.startsWith('## ')) section = line.slice(3).trim();
+      if (section === '變更紀錄') continue;
+      lastPath = null;
+      for (const m of line.matchAll(PATH_CITE)) {
+        const where = `${rel}:${i + 1}`;
+        const cite = `${m[1] || ''}:${m[2]}${m[3] ? `-${m[3]}` : ''}`;
+        let path = m[1] || lastPath;
+        if (!path) {
+          out.push(`${where} cites :${m[2]} but names no file before it on that line`);
+          continue;
+        }
+        lastPath = path;
+        let hits = paths.includes(path) ? [path] : paths.filter((p) => p.endsWith(`/${path}`));
+        if (hits.length === 0) {
+          out.push(`${where} cites ${cite}, but no file in the repository is ${path}`);
+          continue;
+        }
+        if (hits.length > 1) {
+          out.push(`${where} cites ${cite}, but ${path} is ambiguous: ${hits.join(', ')}`);
+          continue;
+        }
+        const lines = files.get(hits[0]).split('\n');
+        const from = Number(m[2]);
+        const to = m[3] ? Number(m[3]) : from;
+        if (from < 1 || to > lines.length) {
+          out.push(`${where} cites ${cite}, but ${hits[0]} has ${lines.length} lines`);
+          continue;
+        }
+        if (to < from) {
+          out.push(`${where} cites ${cite}, but that range ends before it starts`);
+          continue;
+        }
+        const rest = line.slice(m.index + m[0].length);
+        const a = ANCHOR.exec(rest);
+        const quote = a ? (a[1] ?? a[2]) : null;
+        if (quote === null) {
+          out.push(`${where} cites ${cite} with no quote after it, so nothing can check that line`);
+          continue;
+        }
+        const span = lines.slice(from - 1, to).map(flatten);
+        for (const fragment of quote.split(/[…⋯]+|\.{3,}/)) {
+          const want = flatten(fragment);
+          if (want.length < 2) {
+            out.push(`${where} cites ${cite} for 「${fragment.trim()}」, which is too short to anchor anything`);
+            continue;
+          }
+          if (!span.some((l) => l.includes(want))) {
+            out.push(`${where} cites ${cite} for 「${fragment.trim()}」, but ${hits[0]} reads 「${lines[from - 1].trim().slice(0, 60)}」 there`);
+          }
+        }
+      }
+    }
+  }
+  return out;
+}
+
 /** The table list each spec page's planning entry names must be exactly the
  *  tables whose `**規格來源**` cites that page. PR #252 shipped a first
  *  attempt that read every link in a table's description, so `audit_events`
@@ -332,6 +420,31 @@ function specPages(specsDir = SPECS_DIR) {
   return pages.sort((a, b) => a.code.localeCompare(b.code));
 }
 
+/** Every file a spec page may cite, read only when a citation names it. */
+export function citableFiles(root = ROOT, roots = CITABLE) {
+  const paths = [];
+  const walk = (rel) => {
+    const abs = join(root, rel);
+    if (!existsSync(abs)) return;
+    for (const e of readdirSync(abs, { withFileTypes: true })) {
+      if (e.name.startsWith('.') && e.name !== '.claude' && e.name !== '.agents') continue;
+      if (e.name === 'node_modules') continue;
+      const next = `${rel}/${e.name}`;
+      if (e.isDirectory()) walk(next);
+      else if (CITABLE_EXT.test(e.name)) paths.push(next);
+    }
+  };
+  for (const r of roots) walk(r);
+  const cache = new Map();
+  return {
+    keys: () => paths,
+    get: (p) => {
+      if (!cache.has(p)) cache.set(p, readFileSync(join(root, p), 'utf8'));
+      return cache.get(p);
+    },
+  };
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const dictText = readFileSync(DICT_PATH, 'utf8');
   const erText = readFileSync(ER_PATH, 'utf8');
@@ -343,8 +456,12 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       { rel: 'diagrams/architecture/data-table-dictionary.mdx', text: dictText },
       { rel: 'diagrams/architecture/database-schema.er.json', text: erText },
       { rel: 'diagrams/architecture/data-field-inventory.mdx', text: readFileSync(INVENTORY_PATH, 'utf8') },
-    ], pages));
+    ], pages))
+    .concat(checkPathCitations(
+      pages.map((p) => ({ rel: p.rel, text: p.text })),
+      citableFiles(),
+    ));
   for (const e of errors) console.error(`ERROR ${e}`);
   if (errors.length > 0) process.exit(1);
-  console.log('check-er-data: dictionary, diagram, spec entries and line citations agree');
+  console.log('check-er-data: dictionary, diagram, spec entries and both kinds of line citation agree');
 }
