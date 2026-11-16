@@ -18,7 +18,7 @@ import PrototypeFrame from '@notes/components/prototype-frame';
 > 相關規格：[規格 05-01 分析列表](./01-analysis-list.mdx)、[規格 03-03 任務詳情](../03-task-management/03-task-detail.mdx)、[規格 04-02 標記工作區](../04-annotation/02-annotation-workspace.mdx)、[規格 07-01 側欄導覽](../07-shared/01-sidebar.mdx)
 
 :::info{title="五個階段都寫完了，本頁的舊編號帳已結清"}
-來源 141 條舊編號，但規則密度遠高於編號數（光是常數章就有一百多行判定式，`FR-039` 到 `FR-045` 七條展開就是四十餘條規則），所以依 `docs/development/spec-migration.mdx` 的「大頁分階段」分五個階段寫。**一頁只有一份規格**，分的是工作、不是檔案——五個階段都寫在這一個檔案裡。
+來源 141 條舊編號，但規則密度遠高於編號數（光是常數章就有一百多行判定式，`FR-039` 到 `FR-045` 七條展開就是四十餘條規則），所以這一頁分五個階段寫。**一頁只有一份規格**，分的是工作、不是檔案——五個階段都寫在這一個檔案裡。
 
 | 階段 | 範圍 | 狀態 |
 | :--- | :--- | :--- |
@@ -1784,6 +1784,7 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#372](https://github.com/label-suite/label-suite/issues/372) | 2026-11-16 | 頁首的警示框 | 寫「依 `docs/development/spec-migration.md` 的『大頁分階段』分五個階段寫」，而那份文件**從來沒有這一節**（`git log -S` 查過全 repo 歷史：那段文字是 2026-11-05 的 `cec7d96`，也就是本頁階段一自己寫進來的） | 刪掉那個引用，保留「這一頁分五個階段寫」這個事實——階段表與頁首徽章本來就在，不需要外部依據。**條文一字未改**；依 `writing-guide.md` 不改規則的改動不加變更標示 | **無新決議**（維護者 2026-11-16 裁定刪引用，[紀錄在這則留言](https://github.com/label-suite/label-suite/issues/372#issuecomment-6908325749)） |
 | [#188](https://github.com/label-suite/label-suite/issues/188) | 2026-11-16 | 頁首 | `變更 #155` 徽章是 `warning` 但沒有 `href` | 統一成 `variant="warning"` 加 `href`（維護者 2026-11-16 裁定，規則見 `writing-guide.md` §變更標示） | **無新決議**，條文一字未改 |
 | [#260](https://github.com/label-suite/label-suite/issues/260) | 2026-11-11 | §Q&A | 每題是 `### Q. …` 的 H3 標題，答案直接顯示 | 每題一個預設收合的 `tip`，題目是可點選的標題 | **無新決議**。§Q&A **15 題**全部從 `### Q. …` 標題改成預設收合的 `tip`，題目成為可點選的標題。題目的 H3 錨點因此消失（全站沒有任何連結指向它們，已逐題查過），也不再進右側目錄。**題目、答案與連結一字未改**，只有標題去掉「Q. 」前綴，以及一個標題去掉行內程式碼的反引號（`title` 只吃純文字，反引號會原字照印）。格式依維護者 2026-11-11 的四個裁定（紀錄在[這則留言](https://github.com/label-suite/label-suite/issues/260#issuecomment-6792064965)） |
 | [#137](https://github.com/label-suite/label-suite/issues/137) | 2026-11-10 | §驗收標準 › 可比較單位的名稱跟著那一列的型別 | Then 寫「單維度那一列的單位是 `可比較樣本數`、序列標註那一列是 `可比較 span 數`」 | 改為「欄名是 `可比較單位數`；單維度那一列的單位名詞是 `樣本`、序列標註那一列是 `span`」——Q18 把欄名固定、單位名詞改成逐列的短名，照原字面這條驗不過 | 本頁 Q18（維護者 2026-11-06，形狀 2026-11-10）；畫面側見 #155／PR #222 |
