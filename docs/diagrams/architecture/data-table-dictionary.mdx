@@ -512,7 +512,7 @@ import PluginView from '@/components/PluginView.astro';
 | `row_source` | 資料列來源 | 同上：系統偵測可手動換 |
 | `config_file_name` | 標記設定檔檔名 | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：沒上傳時為空；**標籤是「設定檔」不是「設定檔版本」** |
 
-**輸出類型維持 config-driven（[#235](https://github.com/label-suite/label-suite/issues/235) 工作項 6）**：八種型別的設定全部塞在 `output_configs{}` 裡，**不為它們建八張表、也不在核心加八個分支**。這直接接到 `AGENTS.md` 硬性規則 5「task 類型是 config-driven，加一種不得改核心程式」。
+**輸出類型維持 config-driven（[#235](https://github.com/label-suite/label-suite/issues/235) 工作項 6）**：八種型別的設定全部塞在 `output_configs{}` 裡，**不為它們建八張表、也不在核心加八個分支**。這直接接到 `AGENTS.md` 的「No hardcoded task logic」（硬性規則 5：型別由設定驅動，加一種不得改核心程式）。
 
 **不收的三欄**（原始有、本專案規格沒有對應）：`schema_version_no`、`schema_digest`、`schema_registry_version`。它們是驗證定義的版本追溯機制，本專案規格沒有提到，同 D7 的理由不留；需要時另開 issue。
 
