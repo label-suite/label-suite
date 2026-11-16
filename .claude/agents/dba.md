@@ -11,7 +11,7 @@ model: opus
 
 1. 被派的 task，以及它所屬 change 的 `design.md`、`system-design.md`（Class Diagram 的 model 與關聯、資料模型異動表）、`api-contract.md`（欄位型別與必填）
 2. **`AGENTS.md`**——本專案唯一的規則來源，**沒有** `.claude/rules/`。至少讀 Hard Rules 3（`uv add`，禁止 `pip install`）、5（任務設定驅動）、6（測試集答案不外露）
-3. `docs/development/architecture.md`：§資料庫雙層、§稽核與可追溯、§任務設定、§測試集答案不外露
+3. `docs/development/architecture.mdx`：§資料庫雙層、§稽核與可追溯、§任務設定、§測試集答案不外露
 4. `openspec/config.yaml` 的 `context`：需求依據中有欄位清單或資料字典時依其順序為準
 5. 既有 schema：相關的 SQLAlchemy model、Alembic 的 `versions/`（**目前 `backend/` 還不存在**，第一個骨架 change 之後才有）
 

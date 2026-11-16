@@ -11,7 +11,7 @@ model: opus
 
 1. 本 change 的 `design.md`、`system-design.md`、`ui-design.md`、`api-contract.md`、`tasks.md`、`clarification.md`
 2. **`AGENTS.md`**——本專案唯一的規則來源與審查基準，**沒有** `.claude/rules/`。§Hard Rules 與 §Review Guidelines（嚴重度分級、最多 5 項、每項指明檔案與行號）都適用
-3. `docs/development/architecture.md`：§後端分層、§認證與授權、§任務設定、§測試集答案不外露、§資料庫雙層、§測試分層
+3. `docs/development/architecture.mdx`：§後端分層、§認證與授權、§任務設定、§測試集答案不外露、§資料庫雙層、§測試分層
 4. 審查範圍的 diff：`git diff <base>...HEAD`，以及改動檔案的上下文與相鄰既有寫法。**本專案是單一 repo**，沒有子 repo 要分別看
 5. 可輔助使用 `/code-review` skill 取得逐行的 bug 與安全面意見；**最終判定由你負責，報告不是證據**
 

@@ -30,7 +30,7 @@ updatedAt: '2026-11-10'
 
 **六份文件都已建立（2026-11-10 同日完成六份），但大多數規範還沒有任何自動檢查**：`backend/`、`frontend/` 與 `e2e/` 都還不存在，所以「檢查方式」大多標「待建置」；其餘標「**人工／獨立審查**」的那幾條**現在就要做**，只是沒有工具代勞（本文件的 **R1、R3、R4、R5、R6、R7** 與 [backend-agent-rules.md](backend-agent-rules.md) 的 **B8** 就是——程式化數過，共七條）。依 #105 的附註，尚無可執行檢查的規範必須註明待建置，**不得因為文件存在就宣稱規則已被強制**。自動 gate 的清單與歸屬在 [testing-agent-rules.md](testing-agent-rules.md) 的 T9。
 
-技術基準（選型、分層、ADR 效力）在 [architecture.md](architecture.md)，不在這裡重複。
+技術基準（選型、分層、ADR 效力）在 [architecture.mdx](architecture.mdx)，不在這裡重複。
 
 ---
 
@@ -64,7 +64,7 @@ updatedAt: '2026-11-10'
 | **檢查方式** | **待建置**。後端的具體分層已由 [#106](https://github.com/label-suite/label-suite/issues/106) 定（見 B1），前端待 [#109](https://github.com/label-suite/label-suite/issues/109)；兩邊的自動檢查都要等實際有程式 |
 | **來源** | **無來源條文。** 三份來源檔都沒有這一條；它來自 #105 工作項 6 的點名。**後端那一半已於 2026-11-10 移進 B1**；前端那一半等 [#109](https://github.com/label-suite/label-suite/issues/109)，屆時這一條就只剩跨領域的原則敘述 |
 
-模組內分層（`app/modules/<module>/`）已由維護者 2026-11-10 裁定，見 [architecture.md](architecture.md)；後端的落地規則見 [backend-agent-rules.md](backend-agent-rules.md) 的 B1。
+模組內分層（`app/modules/<module>/`）已由維護者 2026-11-10 裁定，見 [architecture.mdx](architecture.mdx)；後端的落地規則見 [backend-agent-rules.md](backend-agent-rules.md) 的 B1。
 
 ### R3 最小變更
 
@@ -100,7 +100,7 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 | :--- | :--- |
 | **適用路徑** | 全部 |
 | **禁止** | 以「比較新」或「比較好測」為理由自行選邊；靜默挑一個 |
-| **正例** | 發現兩套相反的慣例 → 先查本 repo 的**已確認決議**（`docs/specs/` 的已確認決議、`architecture.md` 的 ADR 效力表、`AGENTS.md`）→ 有決議就照決議 |
+| **正例** | 發現兩套相反的慣例 → 先查本 repo 的**已確認決議**（`docs/specs/` 的已確認決議、`architecture.mdx` 的 ADR 效力表、`AGENTS.md`）→ 有決議就照決議 |
 | **反例** | 「A 的寫法比較新，所以照 A」然後繼續做下去 |
 | **例外** | 無。沒有決議可循時**回報維護者並停下來**，不自己裁 |
 | **檢查方式** | **人工／獨立審查**。`scripts/check-specs.mjs` 的 `BASES` 只驗規格頁的決議有沒有寫出依據，不驗程式層的慣例衝突 |
@@ -152,7 +152,7 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 
 ## 開工前置條件
 
-[architecture.md](architecture.md) §待決清單 的項目**不是建議，是前置條件**：沒有維護者的裁定，相關的程式工作不開工。
+[architecture.mdx](architecture.mdx) §待決清單 的項目**不是建議，是前置條件**：沒有維護者的裁定，相關的程式工作不開工。
 
 截至 2026-11-10 的狀態：
 
@@ -164,10 +164,10 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 | 前端版本與分層、元件庫 | ✅ **已裁定**（2026-11-10）：React 19、`pages/` ＋ `features/`、`components/ui/` |
 | Bruno | ✅ **已裁定**（2026-11-10）：降級成可選工具，拿掉 pre-PR 硬關卡 |
 | operationId | ✅ **已裁定**（早於 2026-11-10）：`generate_unique_id_function` 固定成「動詞加資源」，由 [#51](https://github.com/label-suite/label-suite/issues/51) 落地。它與 API 前綴同列，但 2026-11-10 只裁前綴那一半 |
-| 前端 API client 與型別工具 | ✅ **已裁定**（2026-11-10）：**Orval**，輸出 `frontend/src/api/generated/`。這一項**不在** `architecture.md` §待決清單 的那八列裡（它原本記在 `openspec-fullstack-sdd.md` §四 的逐項判斷表，`frontend-developer` agent 也是指那裡），裁定紀錄在 [#108 的這則留言](https://github.com/label-suite/label-suite/issues/108#issuecomment-6763329139) |
-| **Storybook** | ⚠️ **仍待決**。2026-11-10 問的是元件庫，不是 Storybook（`architecture.md` 自己註明了這一點） |
+| 前端 API client 與型別工具 | ✅ **已裁定**（2026-11-10）：**Orval**，輸出 `frontend/src/api/generated/`。這一項**不在** `architecture.mdx` §待決清單 的那八列裡（它原本記在 `openspec-fullstack-sdd.md` §四 的逐項判斷表，`frontend-developer` agent 也是指那裡），裁定紀錄在 [#108 的這則留言](https://github.com/label-suite/label-suite/issues/108#issuecomment-6763329139) |
+| **Storybook** | ⚠️ **仍待決**。2026-11-10 問的是元件庫，不是 Storybook（`architecture.mdx` 自己註明了這一點） |
 
-**裁定的紀錄**在 [#105 的這則留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)（前六列）與 [#108 的這則留言](https://github.com/label-suite/label-suite/issues/108#issuecomment-6763329139)（API client 與型別工具那一列），都已落到 `architecture.md`。本文件不把建議寫成已核准：上表只有真的有裁定紀錄的才標 ✅。
+**裁定的紀錄**在 [#105 的這則留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)（前六列）與 [#108 的這則留言](https://github.com/label-suite/label-suite/issues/108#issuecomment-6763329139)（API client 與型別工具那一列），都已落到 `architecture.mdx`。本文件不把建議寫成已核准：上表只有真的有裁定紀錄的才標 ✅。
 
 ### 其他議題的決策時點
 
@@ -262,7 +262,7 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 
 **這個來源存在**，只是不在個人帳號底下而在 `trendlink` 組織，而且 `.claude/rules/` 只在 `develop`（`main` 只有兩行 `README.md`）。`.claude/rules/` 有 **12 份**。
 
-**它的技術棧與本 repo 不同**：duty-mate 是 NestJS ＋ Handlebars ＋ SQLite／TypeORM，本 repo 是 FastAPI ＋ React ＋ PostgreSQL（見 [architecture.md](architecture.md)）。所以多數規則**不採用的理由是棧不同，不是規則不好**。
+**它的技術棧與本 repo 不同**：duty-mate 是 NestJS ＋ Handlebars ＋ SQLite／TypeORM，本 repo 是 FastAPI ＋ React ＋ PostgreSQL（見 [architecture.mdx](architecture.mdx)）。所以多數規則**不採用的理由是棧不同，不是規則不好**。
 
 | 來源條文 | 處理 | 說明 |
 | :--- | :--- | :--- |

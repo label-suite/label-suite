@@ -161,12 +161,12 @@ All six documents now exist, but most of their rules are not being checked: `bac
 
 Two rules are worth stating here because they are reversals of what the reference projects say:
 
-- **Conflicts are not yours to settle.** Follow this repository's settled decisions (`docs/specs/` decision sections, the ADR effect table in [docs/development/architecture.md](docs/development/architecture.md), this file). Where none covers the conflict, report it to the maintainer and stop. Never pick a side because one option is newer or easier to test.
+- **Conflicts are not yours to settle.** Follow this repository's settled decisions (`docs/specs/` decision sections, the ADR effect table in [docs/development/architecture.mdx](docs/development/architecture.mdx), this file). Where none covers the conflict, report it to the maintainer and stop. Never pick a side because one option is newer or easier to test.
 - **Scope, once locked, is not yours to shrink.** After an issue or spec has committed to an acceptance item, do not drop it for being unnecessary. Take it back to that issue or spec; never park a deferred requirement in a code comment.
 
 Size is judged by purpose, not by counting. This repository sets no file-count or diff-line ceiling for a pull request — see [Pull Requests](#pull-requests).
 
-Technical baselines (stack choices, layering, ADR status) are in [docs/development/architecture.md](docs/development/architecture.md), and the pull-request categories are in [docs/development/spec-migration.md](docs/development/spec-migration.md).
+Technical baselines (stack choices, layering, ADR status) are in [docs/development/architecture.mdx](docs/development/architecture.mdx), and the pull-request categories are in [docs/development/spec-migration.md](docs/development/spec-migration.md).
 
 How a rule gets triggered — which agent or Git event fires it, which shared checker it calls, and whether it blocks or only warns — is in [docs/development/agent-hook-contract.md](docs/development/agent-hook-contract.md), together with an event-by-event comparison of what Claude Code and Codex each support. That document is a contract, not a second rule canon, and it adds no rules. No agent hook is wired yet: `.claude/settings.json` carries only the attribution setting, there is no `.codex/hooks.json`, and the only hook checker that runs today is `scripts/check-commit-msg.sh` through `scripts/git-hooks/commit-msg`. Claude's hook configuration, events and exit codes do not carry over to Codex; that document lists the gaps instead of claiming they do.
 

@@ -9,7 +9,7 @@ model: opus
 
 ## 先看清楚這一份的狀態
 
-**`frontend/` 目前還不存在**，但版本、目錄分層、元件庫與 client 生成工具**都已經由維護者 2026-11-10 裁定**（見 `docs/development/architecture.md` §前端 與 §待決清單 第 8 列）。所以照下面寫，不要再把它們當待決：
+**`frontend/` 目前還不存在**，但版本、目錄分層、元件庫與 client 生成工具**都已經由維護者 2026-11-10 裁定**（見 `docs/development/architecture.mdx` §前端 與 §待決清單 第 8 列）。所以照下面寫，不要再把它們當待決：
 
 - 框架與版本已定：**React 19** 加 Vite 加 TypeScript strict，路由 React Router v6，伺服器狀態 TanStack Query（ADR-004 的 React 18 記為被覆寫）
 - **元件庫已定：shadcn/ui**，元件以原始碼形式放進 `components/ui/`（覆寫 ADR-016 的 `shared/ui/`）。需要的元件照 `ui-design.md` 的語意描述加入。**Storybook 仍待決**（§待決清單 第 10 列），不要為了它加任何設定
@@ -22,7 +22,7 @@ model: opus
 
 1. 被派的 task，以及它所屬 change 的 `specs/**/spec.md`、`design.md`、`ui-design.md`、`api-contract.md`、`clarification.md`
 2. **`AGENTS.md`**——本專案唯一的規則來源，**沒有** `.claude/rules/`。至少讀 Hard Rules 3（依賴用 `pnpm add`，禁止 `npm install`）、6（測試集答案不外露）、7（**禁止 `any`**）
-3. `docs/development/architecture.md`：§前端、§認證與授權、§測試集答案不外露、§i18n 兩層、§測試分層、§待決清單
+3. `docs/development/architecture.mdx`：§前端、§認證與授權、§測試集答案不外露、§i18n 兩層、§測試分層、§待決清單
 4. `design/prototype/pages/` 的對應畫面與 `design/prototype/assets/tokens.css`、`label-suite-design` skill——**畫面長相以 prototype 為準，token 以那兩個為唯一來源**
 5. 既有程式慣例：相鄰的頁面與功能模組
 
@@ -30,7 +30,7 @@ model: opus
 
 - **只透過單一 HTTP 邊界**：base URL、cookie credentials、`Accept-Language`、CSRF、取消與錯誤轉換集中在那一層；業務元件**不得自行 `fetch`／`axios`**，也不得另寫與契約重複的型別
 - **不手寫 API 型別、不修改生成的產物**；需要的端點或欄位不存在時**停下回報**（要後端改 contract 並重新匯出），不自行補型別或繞過
-- **token 完全不經前端**：access 與 refresh 都是 **httpOnly cookie**（`architecture.md` §認證與授權）。前端**不儲存、不讀取 token**，**不放 localStorage／sessionStorage**，也**不從可修改的 UI state 判斷權限**
+- **token 完全不經前端**：access 與 refresh 都是 **httpOnly cookie**（`architecture.mdx` §認證與授權）。前端**不儲存、不讀取 token**，**不放 localStorage／sessionStorage**，也**不從可修改的 UI state 判斷權限**
 - 401 的處理：更新或清掉 session，並處理併發 refresh；**403 不重試**；看不到的資源後端回 404，前端不得據此推斷它存在
 - mutation 成功後依 `ui-design.md` 指定的查詢 invalidate
 - i18n 依 ADR-026：UI 字串由前端提供，後端的 `detail` 由後端依 `Accept-Language` 取字，**前端不重複翻譯後端訊息**
@@ -62,7 +62,7 @@ model: opus
 - 元件 props 宣告成具名 `interface XxxProps`，每個欄位都有說明；不寫 inline props 型別
 - 註解與 docstring 用英文（`AGENTS.md` §Language Rules）
 
-## 測試（`architecture.md` §測試分層）
+## 測試（`architecture.mdx` §測試分層）
 
 | 名稱 | 工具 | 位置 |
 | :--- | :--- | :--- |

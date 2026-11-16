@@ -21,7 +21,7 @@ tags: [openspec, sdd, schema, fullstack-sdd]
 > **本文件是 #47 當時的評估與盤點，不是現況。** 文內各張對照表寫「尚未定案／由骨架 change 拍板／要等…定案」的技術項目，
 > **多數已由維護者 2026-11-10 裁定**：後端模組內分層 `app/modules/<module>/`、成功回應包一層 envelope、前綴 `/api/v1`、
 > React 19、`pages/` 加 `features/`、shadcn/ui 放 `components/ui/`、前端型別與 client 用 **Orval**（輸出 `frontend/src/api/generated/`）。
-> 現況一律以 [architecture.md](architecture.md) §前端、§技術選型 與 §待決清單 為準；下面 [§七、待決問題](#七待決問題) 已逐列更新。
+> 現況一律以 [architecture.mdx](architecture.mdx) §前端、§技術選型 與 §待決清單 為準；下面 [§七、待決問題](#七待決問題) 已逐列更新。
 
 ## 決議
 
@@ -320,7 +320,7 @@ scaffold 是八項。本專案加兩項，對應 `AGENTS.md` 的 Hard Rule：
 | ~~3~~ | ~~FastAPI 的分層、回應包裝格式、`generate_unique_id_function` 策略~~ | **已定案**：分層、回應包裝與前綴由**維護者 2026-11-10 裁定**（模組內分層 `app/modules/<module>/`、包一層 envelope、`/api/v1`）；operationId 策略由 [#51](https://github.com/label-suite/label-suite/issues/51) 落地 |
 | 3' | **auth 的實作層次**（認證與授權 dependency 的掛點細節） | 身分來源與 CSRF 已由 [#107](https://github.com/label-suite/label-suite/issues/107) 落地（只認 httpOnly cookie、綁 session 的 CSRF token）；剩下的掛點細節由 `backend/` 骨架 change 的 `system-design` 在停點一確認 |
 | ~~4~~ | ~~前端框架與元件庫~~ | **已定案（維護者 2026-11-10）**：React 19、`pages/` 加 `features/`、shadcn/ui 放 `components/ui/`、前端型別與 client 用 Orval。`ui-design` **照常撰寫**，不再寫「本次無 UI 變更」 |
-| 5 | **Storybook** | 仍待決（`architecture.md` §待決清單 第 10 列）。第一個前端 change 之前決定 |
+| 5 | **Storybook** | 仍待決（`architecture.mdx` §待決清單 第 10 列）。第一個前端 change 之前決定 |
 
 ## 驗證紀錄
 

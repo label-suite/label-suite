@@ -26,7 +26,7 @@ updatedAt: '2026-11-10'
 | :--- | :--- |
 | 版本與框架 | **React 19** 加 Vite 加 TypeScript strict（**版本**由維護者 2026-11-10 裁定，覆寫 ADR-004 的 React 18）；路由 React Router v6、伺服器狀態 TanStack Query（**ADR-004 沿用**，不在那次裁定的範圍裡） |
 | 目錄分層 | **`pages/` 加 `features/`**（維護者 2026-11-10 裁定，覆寫 ADR-011 的垂直功能切片） |
-| 元件庫 | **shadcn/ui**，元件以原始碼形式放進 `components/ui/`（覆寫 ADR-016 的 `shared/ui/`）。**Storybook 仍待決**（[architecture.md](architecture.md) §待決清單 第 10 列） |
+| 元件庫 | **shadcn/ui**，元件以原始碼形式放進 `components/ui/`（覆寫 ADR-016 的 `shared/ui/`）。**Storybook 仍待決**（[architecture.mdx](architecture.mdx) §待決清單 第 10 列） |
 | API client 與型別 | **Orval**，產物在 `src/api/generated/`；規則在 [api-agent-rules.md](api-agent-rules.md) |
 | design token 的映射 | **寫一層對照，`design/prototype/assets/tokens.css` 仍是唯一色值來源**（維護者 2026-11-10 裁定，見 F6） |
 | 深色模式 | **要做**：側欄一鍵切換、立即生效、跨頁保持（規格 07-01 §外觀切換）；「跟隨系統」**跟著作業系統的設定變**（規格 01-04 §偏好設定 第 4 條、規格 07-01 §已確認決議 Q14，**維護者 2026-11-09 裁定**，Q14 取代 Q10） |
@@ -152,9 +152,9 @@ src/
 | **禁止** | 加入 Lucide 以外的圖示庫（Heroicons、react-icons、Font Awesome…）；用 emoji 當圖示；為了一個圖示自己手畫 inline SVG；圖示寫死顏色或用 HTML 的 `width`／`height` 屬性 |
 | **正例** | 一律 `lucide-react`；尺寸與顏色由呼叫端用語意 class 傳入（`className="w-4 h-4 text-muted-foreground"`）；Lucide 缺某個圖示時**回報**，不自己畫 |
 | **反例** | `import { FiUser } from 'react-icons/fi'`；`<span>✅</span>` 當狀態圖示；`<svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>` 自己畫一個勾 |
-| **例外** | 四類，各自有來源：（1）**品牌與 logo 標記**（彩色 logo、banner、Google SSO 的 G）——[architecture.md](architecture.md) §前端 明文；（2）**資料視覺化的 SVG**——長條圖、趨勢圖、分佈圖是畫資料不是畫圖示（規格 05-02 統計總覽分頁的各型統計區塊（§單一標籤的統計、§多標籤的統計、§實體辨識的統計、§多維度的統計）的橫向長條、軸標籤與圖例），顏色仍只能用 token；（3）**`design/prototype/` 的 inline SVG**——設計層沒有 npm，architecture.md 已明文允許，條件是每個字形都複製自真實的 Lucide 圖示；（4）**文件生成的 `.notecraft/components/*.tsx`**——NoteCraft 的視覺化元件自己畫圖，不是產品碼 |
+| **例外** | 四類，各自有來源：（1）**品牌與 logo 標記**（彩色 logo、banner、Google SSO 的 G）——[architecture.mdx](architecture.mdx) §前端 明文；（2）**資料視覺化的 SVG**——長條圖、趨勢圖、分佈圖是畫資料不是畫圖示（規格 05-02 統計總覽分頁的各型統計區塊（§單一標籤的統計、§多標籤的統計、§實體辨識的統計、§多維度的統計）的橫向長條、軸標籤與圖例），顏色仍只能用 token；（3）**`design/prototype/` 的 inline SVG**——設計層沒有 npm，architecture.mdx 已明文允許，條件是每個字形都複製自真實的 Lucide 圖示；（4）**文件生成的 `.notecraft/components/*.tsx`**——NoteCraft 的視覺化元件自己畫圖，不是產品碼 |
 | **檢查方式** | **待建置**。可用 lint 擋住 `lucide-react` 以外的圖示套件 import，並掃產品碼裡的 `<svg`（例外要逐一標註）；prototype 的 Lucide 一致性目前只有人工 |
-| **來源** | ADR-030（Lucide 是唯一圖示來源）與 [architecture.md](architecture.md) §前端 的例外**沿用**；duty-mate `icon-usage.md` 的**理由與事故沿用**（集中管理才能保證 `stroke-width`、`viewBox` 與端點風格一致；它散寫 inline SVG 的結果是 `stroke-width` 混用 1.5／1.9／2／2.5、尺寸單位混用三種），它的 Handlebars partial 做法不適用。**工作項 7 明文要求不得把「禁手繪 icon」擴張成「禁所有 SVG」**，所以例外（2）（3）（4）是本條的必要部分 |
+| **來源** | ADR-030（Lucide 是唯一圖示來源）與 [architecture.mdx](architecture.mdx) §前端 的例外**沿用**；duty-mate `icon-usage.md` 的**理由與事故沿用**（集中管理才能保證 `stroke-width`、`viewBox` 與端點風格一致；它散寫 inline SVG 的結果是 `stroke-width` 混用 1.5／1.9／2／2.5、尺寸單位混用三種），它的 Handlebars partial 做法不適用。**工作項 7 明文要求不得把「禁手繪 icon」擴張成「禁所有 SVG」**，所以例外（2）（3）（4）是本條的必要部分 |
 
 ### F8 四種畫面狀態與表單
 
@@ -166,7 +166,7 @@ src/
 | **反例** | `if (isLoading) return null`（版面跳動）；`403` 顯示「載入失敗，請重試」（重試永遠不會成功）；後端已經把欄位遮成固定值，前端又依角色再判斷一次要不要顯示 |
 | **例外** | 不取資料的靜態區塊沒有這四種狀態。樂觀更新允許，但要在該 change 的 `design.md` 寫出回滾方式。**逐頁的規格可以比這四種更嚴**：規格 05-01 §四種互斥的頁面狀態 與規格 05-02 §兩個分頁各有一組自己的狀態（統計四種、品質六種，明文「不得互相代用」）就是更嚴的版本，那兩頁以規格為準 |
 | **檢查方式** | **待建置**。四種狀態與遮蔽欄位的呈現由該 change 的 `ui-design.md` 逐區塊寫出，`design-reviewer` 與 `code-reviewer` 的 checklist 已各有一條；E2E 由規格的 Scenario 驗——但要注意**規格 03-01 §空狀態與載入失敗 只涵蓋三種**（完全沒有任務、篩選後沒有符合、載入失敗），**沒有 `403`**；無權限那一種的 Scenario 在各頁的權限條文裡（例如規格 03-01 的「沒有權限時停在列表」） |
-| **來源** | [architecture.md](architecture.md) §前端 的「每個資料區塊都要寫出 loading、error、empty、無權限四種狀態，以及被遮蔽欄位的呈現方式」**沿用**（它明寫 ADR 沒有定義這個最低要求，由 OpenSpec 的 `ui-design` 產出負責）；scaffold `frontend.md` §四種畫面狀態 的判斷與呈現**沿用**（含「`403` 不顯示重試」）。「遮蔽依契約呈現、不自行猜角色」來自 [security-agent-rules.md](security-agent-rules.md) S4 與 [api-agent-rules.md](api-agent-rules.md) A2；「送出期間 disabled」在 A9 |
+| **來源** | [architecture.mdx](architecture.mdx) §前端 的「每個資料區塊都要寫出 loading、error、empty、無權限四種狀態，以及被遮蔽欄位的呈現方式」**沿用**（它明寫 ADR 沒有定義這個最低要求，由 OpenSpec 的 `ui-design` 產出負責）；scaffold `frontend.md` §四種畫面狀態 的判斷與呈現**沿用**（含「`403` 不顯示重試」）。「遮蔽依契約呈現、不自行猜角色」來自 [security-agent-rules.md](security-agent-rules.md) S4 與 [api-agent-rules.md](api-agent-rules.md) A2；「送出期間 disabled」在 A9 |
 
 ### F9 無障礙的最低要求
 
@@ -240,7 +240,7 @@ src/
 | §Architecture Principles 的 **State management** 那一段的「`useState` 管局部元件狀態」 | **沿用** | 成為 F4 的第三格 |
 | §Architecture Principles 的 **Role model** 那一段的兩層角色（系統角色與任務角色） | **沿用但不在本文件** | 授權的規則在 [security-agent-rules.md](security-agent-rules.md) S3；前端只負責「角色決定顯示哪一種版面」 |
 | §Architecture Principles 的 **Localization** 那一段的命名空間與「不要放後端 `detail` 副本」 | **不在本文件** | 歸 [api-agent-rules.md](api-agent-rules.md) A8 |
-| §Icons（Lucide 是唯一圖示庫、不用 emoji 與手畫 inline SVG、**prototype 的素材要遵循同一套 Lucide 視覺語彙**：24×24、2px stroke、`currentColor`） | **沿用** | 成為 F7。注意它那一條是**把規則延伸到 prototype**，不是豁免 prototype；真正的豁免（設計層沒有 npm，所以允許內嵌 SVG）在本 repo 的 [architecture.md](architecture.md) §前端 |
+| §Icons（Lucide 是唯一圖示庫、不用 emoji 與手畫 inline SVG、**prototype 的素材要遵循同一套 Lucide 視覺語彙**：24×24、2px stroke、`currentColor`） | **沿用** | 成為 F7。注意它那一條是**把規則延伸到 prototype**，不是豁免 prototype；真正的豁免（設計層沒有 npm，所以允許內嵌 SVG）在本 repo 的 [architecture.mdx](architecture.mdx) §前端 |
 | §TypeScript Code Style 的「strict、禁 `any`、props 用 `interface`、`type` 給 union」 | **沿用** | 成為 F2 與 F11 |
 | §TypeScript Code Style 的「優先函式元件加 hooks」 | **沿用** | 成為 F3 的前提（本 repo 不寫 class 元件） |
 | foundation spec FR-013（`shared/` 只放跨兩個以上 feature 且 domain-neutral 的程式，生成型別是唯一例外） | **沿用其精神** | 本 repo 沒有 `shared/`；對應的例外是 `api/generated/`，見 F1 的例外格 |

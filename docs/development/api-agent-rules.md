@@ -24,10 +24,10 @@ updatedAt: '2026-11-10'
 
 | 前提 | 狀態 |
 | :--- | :--- |
-| 路徑前綴 | **`/api/v1`**（維護者 2026-11-10 裁定，[architecture.md](architecture.md) 待決清單 第 3 列） |
+| 路徑前綴 | **`/api/v1`**（維護者 2026-11-10 裁定，[architecture.mdx](architecture.mdx) 待決清單 第 3 列） |
 | operationId | **由 FastAPI 的 `generate_unique_id_function` 固定成「動詞加資源」**，不手寫也不逐個覆寫（[#51](https://github.com/label-suite/label-suite/issues/51) 已落地在 `openspec/schemas/label-suite-sdd/`） |
 | 成功回應格式 | **包一層 envelope**；**204 無 body、檔案與串流是明文例外**（維護者 2026-11-10 裁定，待決清單 第 2 列） |
-| 前端型別與 client 生成工具 | **Orval**，由後端匯出的 `openapi.json` 產生到 `frontend/src/api/generated/`（維護者 2026-11-10 裁定，見 [architecture.md](architecture.md) §前端） |
+| 前端型別與 client 生成工具 | **Orval**，由後端匯出的 `openapi.json` 產生到 `frontend/src/api/generated/`（維護者 2026-11-10 裁定，見 [architecture.mdx](architecture.mdx) §前端） |
 | Bruno | **降級成可選的手動工具，pre-PR 硬關卡取消**；唯一的契約真相是 `api-contract.md` 加 `openapi.json`（待決清單 第 7 列） |
 | i18n | ADR-026 兩層；前端只負責 UI 字串，後端 `detail` 由後端依 `Accept-Language` 解析（沿用） |
 
@@ -45,11 +45,11 @@ updatedAt: '2026-11-10'
 | **禁止** | 端點不帶 `/api/v1` 前綴；路徑在 `/api/v1` 之後插一段模組名；operationId 與既有端點撞名卻不處理；手寫或逐個覆寫 operationId；讓 operationId 從 Python 函式名推導；自由心證地擴大 envelope 的例外；非 CRUD 動作用動詞式路徑而不在 api-contract 寫理由；建立成功回 `200`、刪除成功回 `200` 帶 body |
 | **正例** | `GET /api/v1/tasks` → `listTasks`；集合端點用複數名詞；**operationId 全專案唯一**；非 CRUD 動作寫成 subresource（`/tasks/{id}/assignments`）、狀態轉移資源（`/submissions/{id}/status-changes`）或命令資源（`/exports`）。成功 status：讀取與更新 `200`、**建立 `201` 並帶 `Location` header**、刪除 `204` 無 body。`200` 的回應包一層 envelope；`204`、檔案與串流在 api-contract 標成例外 |
 | **反例** | `POST /api/v1/tasks/{id}/doPublish`（動詞式又沒記理由）；`@router.get(..., operation_id="get_task_by_id_v2")`（逐個覆寫）；「這個端點只回一個布林，所以不包 envelope」 |
-| **例外** | `204` 無 body、檔案下載與串流不套 envelope。**例外要逐一寫進該 change 的 `api-contract.md` 並寫出理由**，不逐案自由心證（裁定 2 的延伸要求，見 [architecture.md](architecture.md) 待決清單 第 2 列） |
+| **例外** | `204` 無 body、檔案下載與串流不套 envelope。**例外要逐一寫進該 change 的 `api-contract.md` 並寫出理由**，不逐案自由心證（裁定 2 的延伸要求，見 [architecture.mdx](architecture.mdx) 待決清單 第 2 列） |
 | **檢查方式** | **待建置**。前綴與複數名詞可用自寫腳本掃匯出的 `openapi.json`；operationId 的穩定性靠 A10 的 snapshot diff。兩者都要等 `backend/` 與 CI 存在 |
 | **來源** | 維護者 2026-11-10 裁定（envelope、`/api/v1`）；[#51](https://github.com/label-suite/label-suite/issues/51) 已落地的 operationId 策略（含 `openspec/config.yaml` 明寫的「**全專案唯一**」）。原始 repo `api.md` §Design Conventions（RESTful、複數名詞）與 §Status Codes（`200` 讀取與更新、`201` 建立並帶 `Location`、`204` 刪除無 body）**沿用**；原始 repo `specs/foundation/000-foundation/spec.md` 的 FR-128（非 CRUD 的三種 pattern）**沿用**、FR-120（operationId 必須穩定、改名視同破壞性變更）**沿用該要求但不採用它的機制** |
 
-**路徑不帶模組段，依據是本 repo 自己的例子。** `api.md` 的 route pattern 寫 `/api/v1/[module]/[resource]`，但 [architecture.md](architecture.md) §非同步任務 的流程圖寫的是 `GET /api/v1/submissions/{id}/status`——**資源直接接在 `/api/v1` 後面**，沒有模組段；FR-128 舉的三個 pattern（`/tasks/{id}/assignments`、`/submissions/{id}/status-changes`、`/exports`）也都不帶。而 operationId 是「動詞加資源」，模組名不進那個名字。所以 `api.md` 那一條是**沿用但去掉模組段**；後端的模組邊界由目錄（`app/modules/<module>/`）表達，不由路徑表達。
+**路徑不帶模組段，依據是本 repo 自己的例子。** `api.md` 的 route pattern 寫 `/api/v1/[module]/[resource]`，但 [architecture.mdx](architecture.mdx) §非同步任務 的流程圖寫的是 `GET /api/v1/submissions/{id}/status`——**資源直接接在 `/api/v1` 後面**，沒有模組段；FR-128 舉的三個 pattern（`/tasks/{id}/assignments`、`/submissions/{id}/status-changes`、`/exports`）也都不帶。而 operationId 是「動詞加資源」，模組名不進那個名字。所以 `api.md` 那一條是**沿用但去掉模組段**；後端的模組邊界由目錄（`app/modules/<module>/`）表達，不由路徑表達。
 
 **「全專案唯一」不等於「動詞加資源」就自動成立。** 兩個不同父資源底下的同名子資源會算出同一個名字——`/api/v1/tasks/{id}/members` 與 `/api/v1/projects/{id}/members` 都是 `listMembers`。規則：**撞名時在該 change 的 `api-contract.md` 把名字加上父資源**（`listTaskMembers`），並寫一行理由；不改成手寫覆寫，`generate_unique_id_function` 仍是唯一的產生處。
 
@@ -127,7 +127,7 @@ updatedAt: '2026-11-10'
 | **反例** | 原始 repo 的實作 `frontend/src/shared/services/api-client.ts` 就是反例：它**沒有 `credentials: 'include'`**，所以 httpOnly cookie 根本不會隨請求送出；也沒有 `Accept-Language`、沒有 CSRF header、沒有 timeout。元件裡 `const r = await fetch('/api/v1/tasks')` 同樣是反例 |
 | **例外** | 檔案上傳與下載不走 JSON 解析，但仍然走同一層（base URL、credentials、CSRF、取消都一樣要） |
 | **檢查方式** | **待建置**。可用 lint 規則禁止 `pages/` 與 `features/` 直接用 `fetch`／`axios`，並禁止 import 產物目錄以外的 API 型別。**#107 的 S2 把一條測試指派到這裡**：斷言元件不自己帶 `credentials`（`credentials` 的統一責任位置就是這一層），那條測試等 `frontend/` 存在才寫得出來 |
-| **來源** | #108 工作項 6 的六項明文（本條照收）；FR-058（集中 base URL、credentials、headers、**timeout**、401 refresh 與 `ErrorResponse` 解析）**沿用並補上它多出來的 timeout**；scaffold `api-client.md` 鐵律二、三**沿用**；CSRF 的形狀來自 #107 的 S2 與 [architecture.md](architecture.md) §認證與授權 的 CSRF 段 |
+| **來源** | #108 工作項 6 的六項明文（本條照收）；FR-058（集中 base URL、credentials、headers、**timeout**、401 refresh 與 `ErrorResponse` 解析）**沿用並補上它多出來的 timeout**；scaffold `api-client.md` 鐵律二、三**沿用**；CSRF 的形狀來自 #107 的 S2 與 [architecture.mdx](architecture.mdx) §認證與授權 的 CSRF 段 |
 
 **自訂 header 只加在寫入請求上。** 原始 repo 那支 client 的註解寫得對：`application/json` 不在 CORS safelist 裡，所以只在有 body 時才設 `Content-Type`，免得每個 `GET` 都觸發 preflight。CSRF 的自訂 header 同理——**只在會改變狀態的請求加**，`GET` 不加，才留得住那個免 preflight 的好處。寫入請求本來就有 body，preflight 無論如何都會發生。這一層的強度等於 CORS allowlist 的嚴格程度（#107 已記）。
 
@@ -139,7 +139,7 @@ updatedAt: '2026-11-10'
 | **禁止** | 用錯誤字串猜 status；`403` 自動重試；把「看不到的資源」回 `403`；顯示原始堆疊、資料庫錯誤或未處理的 HTTP 物件；在元件各自 try/catch 吞錯；`401` 時讓多個 refresh 同時在飛 |
 | **正例** | 單一 error 型別帶 `status`、`detail` 與 correlation id。`401`：先試 refresh，**同時只允許一個在飛**（single-flight），其餘請求等它的結果。**refresh 成功就更新 session 並重放原請求**；**refresh 失敗就清掉前端的登入狀態並導向登入**，而且要往上傳明確的 auth failure 旗標，讓 `QueryClient` 的 `retry` 對 auth error 回 `false`。`403`：不重試，顯示無權限狀態。`404`：同時代表不存在與刻意隱藏。`409`：**在表單情境**顯示在表單上（refresh 併發也會回 `409`，那一種由 A6 那層處理、不進畫面）。`400`：與 `422` 分開——FR-006 的 `400` 是語意或應用規則錯誤、`422` 是 schema 驗證失敗，兩者都回到觸發它的欄位或表單。`422`：`detail` 是 `ErrorDetail[]`，逐欄位顯示。`5xx`：顯示通用錯誤並附 correlation id |
 | **反例** | `if (String(err).includes('403'))`；讓 TanStack Query 的預設 retry 跟 refresh 搶——FR-085 寫的是這樣**最多疊出六次冗餘請求**；把使用者看不到的任務回 `403`（洩漏它存在）；把 `detail` 的 `ErrorDetail[]` 直接 `JSON.stringify` 貼到畫面 |
-| **例外** | FastAPI 預設的 `422` `RequestValidationError` **不在 i18n 契約內**（[architecture.md](architecture.md) §i18n 兩層），要本地化得另註冊 handler；A6 提到的最後手段診斷字串（回應沒有 body 或不是 JSON 時由 client 自己合成）留英文 |
+| **例外** | FastAPI 預設的 `422` `RequestValidationError` **不在 i18n 契約內**（[architecture.mdx](architecture.mdx) §i18n 兩層），要本地化得另註冊 handler；A6 提到的最後手段診斷字串（回應沒有 body 或不是 JSON 時由 client 自己合成）留英文 |
 | **檢查方式** | **待建置**。`retry` 對 auth error 回 `false` 可用前端單元測試鎖住；`403`／`404` 的隱藏行為屬 #107 的 S10 驗收矩陣 |
 | **來源** | #108 工作項 7 的明文（本條照收）；FR-006（`400`／`401`／`403`／`404`／`422` 的語意）**沿用**；FR-085（401 retry 與 refresh 的競爭）**沿用**；FR-041（不顯示原始堆疊與資料庫錯誤）**沿用**，它的業務面已經收進規格 07-01 §卡控機制（`docs/specs/legacy/07-01-sidebar.ids` 的 `foundation:FR-041` 對照列）；FR-046 與 FR-123（每個請求一個 `X-Correlation-ID`，client 把它附到正規化後的錯誤）**沿用**；`api.md` §Status Codes 與「`403` vs `404`」**沿用**（後端那一面歸 #107）；scaffold `api-client.md` 鐵律三**沿用** |
 
@@ -157,7 +157,7 @@ updatedAt: '2026-11-10'
 | **反例** | `t(error.detail)`；在 `zh-TW/common.json` 放一份後端訊息；`raise HTTPException(400, "任務名稱重複")`（字面值寫在商業邏輯裡）；`detail: "task.name.duplicate"`（回了 key，前端照「不透明字串直接顯示」會把 key 貼到畫面上） |
 | **例外** | `422` 的 `ErrorDetail[]`（見 A7）；client 在沒有後端 body 時合成的診斷字串 |
 | **檢查方式** | **待建置**。後端可用整合測試斷言同一條錯誤在 `zh-TW` 與 `en` 下的 `detail`；前端可 grep 語系檔裡有沒有後端訊息的副本 |
-| **來源** | ADR-026（沿用）與 [architecture.md](architecture.md) §i18n 兩層；原始 repo `backend.md` §i18n 的「訊息字串由後端擁有、不硬寫在 handler」**沿用**（它的 `app/i18n/zh_TW/` 路徑已被模組內分層覆寫，解析長段屬實作規格，見 #106 的對照）；原始 repo `frontend.md` §Localization 的「**不要**把後端 `detail` 放進語系檔」**沿用** |
+| **來源** | ADR-026（沿用）與 [architecture.mdx](architecture.mdx) §i18n 兩層；原始 repo `backend.md` §i18n 的「訊息字串由後端擁有、不硬寫在 handler」**沿用**（它的 `app/i18n/zh_TW/` 路徑已被模組內分層覆寫，解析長段屬實作規格，見 #106 的對照）；原始 repo `frontend.md` §Localization 的「**不要**把後端 `detail` 放進語系檔」**沿用** |
 
 ### A9 server state 與快取
 
@@ -167,9 +167,9 @@ updatedAt: '2026-11-10'
 | **禁止** | 把 API 回應複製進全域 store；在元件或 hook 裡用 inline 字串陣列當 query key；mutation 成功後不失效相關查詢；切換登入者或任務之後沿用前一個人的快取 |
 | **正例** | query key 的**唯一來源是 Orval 產物匯出的 `get*QueryKey`**；mutation 成功後用它失效對應的 list 與 detail；登出、切換帳號、`credential_version` 變動時整個 `queryClient.clear()`；切換任務時失效帶 `taskId` 的 key；**mutation 進行中，送出入口 disabled**，避免同一筆被送兩次 |
 | **反例** | `useQuery(['tasks', id], ...)` 手寫 key（另一處寫成 `['task', id]`，失效就打不中）；把 `listTasks` 的結果再存一份進 Zustand；登出只清 cookie 不清 cache——下一個在同一台機器登入的人會先看到上一個人的列表 |
-| **例外** | 表單狀態與純 UI 狀態**不**進 TanStack Query（[architecture.md](architecture.md) §前端） |
+| **例外** | 表單狀態與純 UI 狀態**不**進 TanStack Query（[architecture.mdx](architecture.mdx) §前端） |
 | **檢查方式** | **待建置**。inline key 可用 lint 規則擋；跨帳號不外洩要有前端測試：登出再登入另一個帳號後列表不得出現前一個帳號的資料 |
-| **來源** | ADR-004（TanStack Query）與 [architecture.md](architecture.md) §前端；FR-059（server state 的單一邊界、不得用全域 store 複製）**沿用**；FR-084（單一 queryKey 慣例、禁止 inline）**沿用原則但換掉來源**；跨帳號與跨任務的快取清理對應 #107 S4 的失效規則（帳號停用、系統角色變更、任務成員身分變更）；scaffold `api-client.md` §Mutation 慣例 的「送出期間 disabled」**沿用** |
+| **來源** | ADR-004（TanStack Query）與 [architecture.mdx](architecture.mdx) §前端；FR-059（server state 的單一邊界、不得用全域 store 複製）**沿用**；FR-084（單一 queryKey 慣例、禁止 inline）**沿用原則但換掉來源**；跨帳號與跨任務的快取清理對應 #107 S4 的失效規則（帳號停用、系統角色變更、任務成員身分變更）；scaffold `api-client.md` §Mutation 慣例 的「送出期間 disabled」**沿用** |
 
 **S4 的三個失效事件在前端各有不同的落點。** 帳號停用與系統角色變更會讓 session 失效，下一個請求拿到 `401`，由 A7 清掉整個 cache。**任務成員身分變更不會讓 session 失效**——使用者還登著，只是某個任務不再屬於他。那一格的做法是：收到該任務的 `403` 或 `404` 時，失效帶那個 `taskId` 的 key 並退回列表（規格 03-01 §點任務進入任務詳情 已經寫了「停在列表並顯示無權限」），**不是整個 `clear()`**。
 
@@ -284,4 +284,4 @@ updatedAt: '2026-11-10'
 | [#108](https://github.com/label-suite/label-suite/issues/108) | 2026-11-10 | 初版。十條規範（各帶適用路徑、禁止、正反例、例外條件、檢查方式與來源）、七條刻意不採用的來源條文、原始 repo（含它的 foundation spec 與實作程式）／scaffold／duty-mate 的逐條對照，以及 starter-kit 的實查紀錄 |
 | [#108](https://github.com/label-suite/label-suite/issues/108) | 2026-11-10 | 把十個工作項的並列子項逐字拆開再對照，補四處落點：**A2 的 `query` 未知參數**（`extra="forbid"` 只擋 body，FastAPI 不給你拒絕未宣告的 query 參數）、**A3 的三件要逐一寫進契約**、**A7 的 `401` 有「更新」與「清掉」兩個分支**（原本只寫了清掉那一支）、**A10 的破壞性變更審核方式**（三個落點） |
 | [#109](https://github.com/label-suite/label-suite/issues/109) | 2026-11-10 | A2 的未知欄位政策從「本文件定的，不是裁定」改寫成**維護者 2026-11-10 裁定維持 `extra="forbid"`**，並寫出代價（前端先部署、後端還沒加那個欄位時整個請求會被拒絕）。本文件初版把它標成可逆，裁定當日就落地，免得一份已合併的文件繼續說那是撰寫者自己定的 |
-| [#108](https://github.com/label-suite/label-suite/issues/108) | 2026-11-10 | 獨立審查後修九處：**A8 原本沒擋「`detail` 回 i18n key 本身」**（`backend.md` §i18n 明文禁止，而前端照「不透明字串直接顯示」會把 key 貼到畫面上）；**A1 漏掉 operationId「全專案唯一」**並補上撞名規則（`/tasks/{id}/members` 與 `/projects/{id}/members` 都算 `listMembers`）；**路徑的模組段改成明確不帶**，依據是 `architecture.md` 自己的 `GET /api/v1/submissions/{id}/status`；**A7 的 FR-085 引用更正**（「最多六次冗餘請求」不是「同時六個 refresh」，也不是實測數字），並標明 single-flight 與重放是本文件自推、後端那一面是 FR-075 的有界 grace；A9 補「送出期間 disabled」與「任務成員身分變更」在前端的落點；A2 寫明共用 base 的 `from_attributes=True` 與 S4 的「不得全收」不衝突；三處把 #107 的驗收矩陣誤指成 S4（實際是 S10）；A6 收下 S2 指派過來的那條測試；對照表把「已交辦」與「靜默遺漏」分開，`backend.md` §i18n 拆成三列 |
+| [#108](https://github.com/label-suite/label-suite/issues/108) | 2026-11-10 | 獨立審查後修九處：**A8 原本沒擋「`detail` 回 i18n key 本身」**（`backend.md` §i18n 明文禁止，而前端照「不透明字串直接顯示」會把 key 貼到畫面上）；**A1 漏掉 operationId「全專案唯一」**並補上撞名規則（`/tasks/{id}/members` 與 `/projects/{id}/members` 都算 `listMembers`）；**路徑的模組段改成明確不帶**，依據是 `architecture.mdx` 自己的 `GET /api/v1/submissions/{id}/status`；**A7 的 FR-085 引用更正**（「最多六次冗餘請求」不是「同時六個 refresh」，也不是實測數字），並標明 single-flight 與重放是本文件自推、後端那一面是 FR-075 的有界 grace；A9 補「送出期間 disabled」與「任務成員身分變更」在前端的落點；A2 寫明共用 base 的 `from_attributes=True` 與 S4 的「不得全收」不衝突；三處把 #107 的驗收矩陣誤指成 S4（實際是 S10）；A6 收下 S2 指派過來的那條測試；對照表把「已交辦」與「靜默遺漏」分開，`backend.md` §i18n 拆成三列 |
