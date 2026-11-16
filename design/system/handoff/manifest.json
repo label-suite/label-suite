@@ -2,16 +2,16 @@
   "packageVersion": 1,
   "generatedAt": "2026-11-16",
   "source": {
-    "commit": "75084e22bf7967da360c5319bff5bf25983969d8",
+    "commit": "328ab7ea7d54317c05811d711950d0d7d3d2f20a",
     "prototypeTree": "4cb347d5e720203418701a0a4a6b521cc117c64e",
     "specsTree": "a4b0e889a5a39f3a02a3dd5db7fc81a3c877ff44",
-    "navigationBlob": "83d6ee8674b1a5bee73a963c437e0fbc776ba279",
+    "navigationBlob": "9ff44128884e92f20d54ea7968fe98b3a4f29638",
     "referenceDesignDocs": {
       "repo": "singyichen/label-suite",
       "commit": "faf8335"
     },
     "openWith": [
-      "git switch --detach 75084e22bf7967da360c5319bff5bf25983969d8",
+      "git switch --detach 328ab7ea7d54317c05811d711950d0d7d3d2f20a",
       "pnpm prototype"
     ]
   },
@@ -301,6 +301,14 @@
           ]
         },
         {
+          "id": "account/reset-password#sim-logged-out",
+          "how": "加 `?sim_logged_out=1`：不論登入旗標如何都留在本頁。本頁與 login／register／forgot-password **是唯四呼叫 `redirectIfLoggedIn()` 的頁面**（`sidebar.js:89` 自己寫「四頁在載入時呼叫」）；`verify-email.html` 那三處是註解，不是呼叫",
+          "spec": "docs/specs/01-account/03-reset-password.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.js"
+          ]
+        },
+        {
           "id": "account/reset-password#state-mismatch",
           "how": "在 proto-valid 的表單裡兩個密碼欄填不一致後送出：停在本頁顯示前端錯誤",
           "spec": "docs/specs/01-account/03-reset-password.mdx#卡控機制",
@@ -370,14 +378,6 @@
           "spec": "docs/specs/01-account/02-register.mdx#規格",
           "evidence": [
             "design/prototype/pages/account/verify-email.html"
-          ]
-        },
-        {
-          "id": "account/verify-email#sim-logged-out",
-          "how": "加 `?sim_logged_out=1`：不論登入旗標如何都留在本頁（見 `sidebar.js:92`）",
-          "spec": "docs/specs/01-account/02-register.mdx#規格",
-          "evidence": [
-            "design/prototype/pages/shared/sidebar.js"
           ]
         }
       ]
