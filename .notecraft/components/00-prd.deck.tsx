@@ -1,5 +1,7 @@
 import type { CustomSlideProps, Deck } from "@/lib/decks";
 import { Compare, Roster, Table, Triad } from "@/components/deck/blocks";
+import ArchitectureContainerView from "@notes/components/architecture-container-view";
+import PrdSystemContext from "@notes/components/prd-system-context";
 import PrdTaskLifecycleFlow from "@notes/components/prd-task-lifecycle-flow";
 import PrdTaskState from "@notes/components/prd-task-state";
 
@@ -120,13 +122,14 @@ const deck: Deck = {
       eyebrow: "PRODUCT · 定稿",
       title: "Label Suite：給學術 NLP 團隊的標記與品質平台",
       subtitle: "一個設定驅動的平台，走完試標、正式標記、審核與資料品質分析",
-      meta: ["由 docs/specs/00-prd.mdx 生成", "8 頁 · 16:9"],
+      meta: ["由 docs/specs/00-prd.mdx 生成", "10 頁 · 16:9"],
       agenda: [
         { n: "01", title: "問題與定位", sub: "三個痛點，一個論文目標" },
         { n: "02", title: "六項目標", sub: "怎麼衡量做到了" },
         { n: "03", title: "六個角色", sub: "系統角色與任務角色互不影響" },
         { n: "04", title: "範圍邊界", sub: "這期做什麼、不做什麼" },
-        { n: "05", title: "任務生命週期", sub: "六次交接、五個狀態" },
+        { n: "05", title: "系統架構", sub: "C4 第一層與第二層" },
+        { n: "06", title: "任務生命週期", sub: "六次交接、五個狀態" },
       ],
     },
     {
@@ -179,6 +182,22 @@ const deck: Deck = {
         text: "假設：任務類型完全由任務設定決定；不成立時目標二無法達成",
       },
       render: ScopePage,
+    },
+    {
+      layout: "full-visual",
+      nav: "系統情境：C4 第一層",
+      title: "誰在用、碰到哪些外部系統：Google 與 Resend 都可不設定",
+      viz: PrdSystemContext,
+      vizLabel: "@ai-visualize · prd-system-context",
+      vizHint: "點人或系統看互動；切換『部署設定』看 Google、Resend 未設定時的樣子。",
+    },
+    {
+      layout: "full-visual",
+      nav: "容器視圖：C4 第二層",
+      title: "六個容器只有 Nginx 對外，測試集答案只有 worker 讀",
+      viz: ArchitectureContainerView,
+      vizLabel: "@ai-visualize · architecture-container-view",
+      vizHint: "點容器看關係；切換『資料庫層』看 Lite 與正式部署的差異。",
     },
     {
       layout: "full-visual",

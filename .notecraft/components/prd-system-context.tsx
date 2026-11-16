@@ -323,7 +323,9 @@ export default function PrdSystemContext() {
         </div>
       </div>
 
-      <div className="w-full overflow-x-auto">
+      {/* side by side when the container is wide enough (slides); stacked in the 596px note column */}
+      <div className="flex flex-wrap items-start gap-3">
+        <div className="min-w-0 flex-[3_1_560px] overflow-x-auto">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           width="100%"
@@ -470,7 +472,7 @@ export default function PrdSystemContext() {
         </svg>
       </div>
 
-      <div aria-live="polite" className="min-h-[188px] rounded-xl border border-slate-200 bg-white p-4">
+        <div aria-live="polite" className="min-h-[188px] flex-[1_1_260px] rounded-xl border border-slate-200 bg-white p-4">
         <div className="flex flex-wrap items-baseline gap-2">
           <span className="text-base font-semibold text-indigo-950">{sel.title}</span>
           <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-xs font-medium text-indigo-600">{sel.typeLabel}</span>
@@ -504,6 +506,7 @@ export default function PrdSystemContext() {
             );
           })}
         </div>
+      </div>
       </div>
 
       <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-500">
