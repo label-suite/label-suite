@@ -1,27 +1,14 @@
 ---
 title: OpenSpec：導入 fullstack-sdd 流程
-description: 採用 scaffold 的九份產物 SDD 流程、把人工關卡收斂成兩個停點的導入決議。含流程圖、產物與關卡盤點、三處要特別處理的地方、要改的檔案清單，以及評估階段查證過的事實。
+description: 本專案的九份產物 SDD 流程、兩個人工停點、三處要特別處理的地方與 clarify 的十個面向。附錄收導入時的盤點、要改的檔案清單與評估階段查證過的事實。
 tags: [openspec, sdd, schema, fullstack-sdd]
 ---
 
 # OpenSpec：導入 fullstack-sdd 流程
 
-這份文件起初是 Spike [#47](https://github.com/label-suite/label-suite/issues/47) 的評估報告。
-維護者看完評估後決定採用完整的九份產物流程，並把人工關卡收斂成兩個，所以本文現在記錄的是導入決議：
-流程長什麼樣、哪三處要特別處理、要改哪些檔案，以及評估階段實際查證過的事實。
-
-| 項目 | 內容 |
-| :--- | :--- |
-| 調查對象 | `trendlink/fullstack-ai-sdd-workflow-scaffold`，commit `7198845`（2026-11-04），本機路徑 `~/project/fullstack-ai-sdd-workflow-scaffold` |
-| scaffold 的 schema | `openspec/schemas/fullstack-sdd/`，九份產物 |
-| 本專案現用的 schema | `openspec/config.yaml` 的 `schema: spec-driven`（openspec 內建四份產物） |
-| openspec 版本 | 本專案 `@fission-ai/openspec` 1.14.1；scaffold 的 skill 產自 1.15.0 |
-| 本專案程式現況 | `backend/`、`frontend/` 都還不存在，只有 `docs/`、`design/prototype/`、`openspec/`、`scripts/` |
-
-> **本文件是 #47 當時的評估與盤點，不是現況。** 文內各張對照表寫「尚未定案／由骨架 change 拍板／要等…定案」的技術項目，
-> **多數已由維護者 2026-11-10 裁定**：後端模組內分層 `app/modules/<module>/`、成功回應包一層 envelope、前綴 `/api/v1`、
-> React 19、`pages/` 加 `features/`、shadcn/ui 放 `components/ui/`、前端型別與 client 用 **Orval**（輸出 `frontend/src/api/generated/`）。
-> 現況一律以 [architecture.mdx](architecture.mdx) §前端、§技術選型 與 §待決 為準；下面 [§七、待決問題](#七待決問題) 已逐列更新。
+本文說明本專案的 SDD 流程：九份產物怎麼依序產出、哪兩個停點等維護者、導入時哪三處要特別處理，以及 clarify 檢查哪十個面向。
+流程的規則本體在 `AGENTS.md` §SDD Workflow 與 `openspec/config.yaml`，本文與它們說法不同時以它們為準，並回報給維護者；技術選型與分層以 [architecture.mdx](architecture.mdx) 為準。
+附錄是導入當時的盤點與要改的檔案清單，查出處用；正文不依賴它。摺疊區塊是實作與規劃時才查的細節，預設收起。
 
 ## 決議
 
@@ -33,7 +20,9 @@ tags: [openspec, sdd, schema, fullstack-sdd]
 其餘環節（明確問題的回修、規劃審閱、程式審查、階段之間的提交）全部自動進行，不詢問。
 故障類的中斷不算關卡，見[故障仍會停](#故障仍會停)。
 
-## 一、流程
+## 流程
+
+一次 `/sdd <需求>` 從規劃跑到驗收，中間只在兩個停點等維護者。
 
 ```text
 你：/sdd <需求>                    ← 專案自有指令，一次授權規劃與實作
@@ -78,16 +67,16 @@ apply（接續，不停）
 
 ### 故障仍會停
 
+「只有兩個停點」指的是例行關卡，故障照停。
 `openspec-apply-change` 有幾個中斷條件：task 描述有歧義、實作過程發現規格有問題、工作超出 `tasks.md` 的範圍、指令出錯。
 這些不關掉也不該關掉，它們代表規劃錯了，硬推下去只會寫出錯的程式。
-「只有兩個停點」指的是例行關卡，故障照停。
 
-## 二、fullstack-sdd 盤點
+### 九份產物與依賴
 
-### 九份產物
+九份產物的依賴由 CLI 強制：前五份是 fullstack-sdd 新增的，後四份是 openspec 內建 `spec-driven` 的四份，只在 `instruction` 末尾加上「先讀上游產物」「遵守 clarification 的決議」。
+`system-design` 與 `ui-design` 都只依賴 `system-analysis`，所以兩者可平行；`sd` 寫完 `system-design` 才能寫 `api-contract`。
 
-前五份是 fullstack-sdd 新增的，後四份是 openspec 內建 `spec-driven` 的四份，只在 `instruction` 末尾加上「先讀上游產物」「遵守 clarification 的決議」。
-
+:::note{title="九份產物的用途與依賴" collapsible}
 | # | 產物 | 依賴 | 用途 | 撰寫角色 | 綁 NestJS |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | 1 | `system-analysis.md` | 無 | 需求依據盤點、範圍、業務流程引用、跨模組依賴、需求矛盾、待決問題。明文禁止出現框架、資料表、端點名稱 | `sa` | 無 |
@@ -100,7 +89,7 @@ apply（接續，不停）
 | 8 | `design.md` | 6 | 與 `spec-driven` 相同，加上「決策要對應到 system-design 或 api-contract 的段落」 | `planner` | 無 |
 | 9 | `tasks.md` | 4,7,8 | 與 `spec-driven` 相同，加上每個 task 標一個負責角色、可平行的放同群組、後端有改動就以契約同步收尾 | `planner` | 中 |
 
-依賴不只是文件上的說法，CLI 會擋。在 `openspec 1.14.1` 下用這個 schema 開一個空 change，`openspec status` 的輸出是：
+在 `openspec 1.14.1` 下用這個 schema 開一個空 change，`openspec status` 的輸出是：
 
 ```text
 Progress: 0/9 artifacts complete
@@ -115,12 +104,11 @@ Progress: 0/9 artifacts complete
 [-] design (blocked by: clarification)
 [-] tasks (blocked by: api-contract, specs, design)
 ```
+:::
 
-`system-design` 與 `ui-design` 都只依賴 `system-analysis`，所以兩者可平行；`sd` 寫完 `system-design` 才能寫 `api-contract`。
+### scaffold 的六道關卡
 
-### scaffold 的六道關卡與本專案的處理
-
-關卡不在 schema 的 `artifacts` 裡，而是散在 `openspec/config.yaml` 的 `context`、`rules`、`operations` 三處。
+關卡不在 schema 的 `artifacts` 裡，而是散在 `openspec/config.yaml` 的 `context`、`rules`、`operations` 三處；本專案保留五道（其中一道移位），改掉一道。
 
 | # | scaffold 的關卡 | 位置 | 本專案怎麼處理 |
 | :--- | :--- | :--- | :--- |
@@ -132,30 +120,15 @@ Progress: 0/9 artifacts complete
 | 6 | 歸檔前由 `acceptance-verifier` 驗收，不通過不可歸檔 | `operations.archive` | **移位**。移到 `operations.apply` 的最後，成為停點二 |
 
 scaffold 另外在 propose、apply、archive 三個階段結束時各停一次等使用者確認。本專案只留 apply 之後那一次（停點二），
-propose 之後那一次要靠下面第三節第一項的做法解除。
+propose 之後那一次要靠下面[三處要特別處理的地方](#三處要特別處理的地方)第一項的做法解除。
 
-### 和 NestJS 綁在一起的部分
+## 三處要特別處理的地方
 
-| 位置 | 綁的內容 | 本專案的對應 |
-| :--- | :--- | :--- |
-| `openspec/config.yaml` `context` | NestJS 11 加 TypeORM 加 PostgreSQL、`api/`／`web/` 兩個目錄、`@nestjs/swagger` 產 `openapi.json`、Orval 產前端型別、`npm run contract:sync`、OIDC 與 `AUTH_MODE=dev`、admin／viewer 兩個角色 | FastAPI、`backend/`／`frontend/`、Email 加密碼登入、PRD 權限矩陣的多個角色 |
-| `openspec/config.yaml` 的「結構」「提交」「分支」 | meta repo：`api/`、`web/` 是各自獨立的 git repo，一個 commit 不跨 repo | 單一 repo，提交規則在 `AGENTS.md` |
-| `rules.tasks` | `[@backend-developer]`、`[@frontend-developer]`、`[@dba]`、`[@technical-writer]` 四個角色標記；收尾 task 固定是 `npm run contract:sync`；JSDoc 依 `.claude/rules/jsdoc.md` | 角色標記可沿用；指令換成 `uv`／`pnpm`；JSDoc 那條刪掉 |
-| `operations.apply`／`archive` | `npm run lint`、`npm run check`、`eslint-plugin-jsdoc` | 本專案目前只有 `pnpm check:specs`、`pnpm test:scripts` |
-| `templates/system-design.md` | `ExampleController` → `ExampleService` → `ExampleEntity` 的分層、`ApiResponseDto` 回應包裝 | FastAPI 的 Router → Service → Repository／Model；回應包裝**已裁定為包一層 envelope**（2026-11-10） |
-| `templates/api-contract.md` | response 寫「`data` 內容」，預設有統一包裝 | 同上 |
-| `templates/ui-design.md` | shadcn 元件與語意 token | `design/prototype/assets/tokens.css` 與 `label-suite-design` skill |
-| `sd` agent | NestJS 分層、TypeORM、`ApiResponseDto`、`@nestjs/swagger`、必讀 `api/src/modules/`、`api/src/core/auth/`、`api/openapi.json` | 整份改寫成 FastAPI |
-| `ui-ux` agent | React 19 加 Vite、Orval 的 TanStack Query hooks、shadcn、`lucide-react`、必讀 `web/src/app/`、`web/src/components/ui/`、`web/src/styles/themes/` | 整份改寫；前端框架與元件庫**已於 2026-11-10 裁定**（React 19、shadcn/ui 放 `components/ui/`） |
-| `acceptance-verifier` agent | `docker compose up -d`、`npm run migration:run`、`POST /dev/auth/token`、Playwright 寫在 `web/e2e/`、`npm run contract:sync`、`npm run check` | 驗收骨架照留，指令全部換，並加人工驗收步驟 |
-| `backend-developer`、`frontend-developer`、`dba`、`technical-writer`、`code-reviewer` | 綁 TypeScript 生態與 `.claude/rules/*.md` | 後端四個改 Python 生態；全部把規則引用改成 `AGENTS.md` |
-
-`.claude/rules/` 是個獨立的問題：scaffold 有六個 agent 引用它，用 `paths:` frontmatter 做條件載入。
-本專案的 Hard Rule 1 是「`AGENTS.md` 是唯一的規則來源」，所以引進來的 agent 一律把這些引用改成指向 `AGENTS.md` 的章節，不建立 `.claude/rules/`。
-
-## 三、三處要特別處理的地方
+導入時 scaffold 有三處與本專案的流程衝突，各用一個做法解掉。
 
 ### 1. propose 到 apply 的停點，`config.yaml` 解不掉
+
+授權要放在 skill 管不到、位階又在 skill 之上的地方：專案自有的 slash command `.claude/commands/sdd.md`，加上 `AGENTS.md` 的說明。
 
 `.claude/skills/openspec-propose/SKILL.md` 第 15 行有 Planning boundary：規劃產物完成後停止，等新的使用者請求才進入 apply。
 第 65 行把 `openspec/config.yaml` 明文排除在外：
@@ -169,7 +142,7 @@ propose 之後那一次要靠下面第三節第一項的做法解除。
 改 skill 本身也不行。實測：在 `.claude/skills/openspec-propose/SKILL.md` 放一行 marker，
 跑 `openspec update` 之後整份被覆寫、marker 消失。那個目錄由 openspec 管理，每次 update 都會回到原狀。
 
-做法是把授權放在 skill 管不到、位階又在 skill 之上的地方：
+做法：
 
 - 新增專案自有的 slash command `.claude/commands/sdd.md`，由它同時授權規劃與實作，串接 propose 與 apply
 - 在 `AGENTS.md` 寫明 `/sdd` 的授權範圍與兩個停點
@@ -178,8 +151,8 @@ propose 之後那一次要靠下面第三節第一項的做法解除。
 
 ### 2. 驗收從 archive 移到 apply 的最後
 
+停點二要求維護者先親自驗完才下 `/opsx:archive`，所以驗收報告必須在那個指令之前就產好。
 scaffold 把 `acceptance-verifier` 放在 `operations.archive`，是歸檔前才驗。
-但停點二要求維護者先親自驗完才下 `/opsx:archive`，所以驗收報告必須在那個指令之前就產好。
 
 - `operations.apply` 的最後一步加上：`code-reviewer` 審查通過後跑 `acceptance-verifier`，寫 `acceptance.md`
 - `operations.archive` 拿掉驗收判定，只留同步主規格與搬檔
@@ -190,51 +163,15 @@ scaffold 把 `acceptance-verifier` 放在 `operations.archive`，是歸檔前才
 
 ### 3. `sa` 的「停下回報」改成「記成 Q」
 
-`sa` agent 現在遇到找不到需求依據、需求依據互相矛盾、依賴的前置功能不存在，會停下來回報。
-要改成記進 `system-analysis.md` 的待決問題，由 clarify 在停點一一次問完。
+`sa` 遇到找不到需求依據、需求依據互相矛盾、依賴的前置功能不存在，要記進 `system-analysis.md` 的待決問題，由 clarify 在停點一一次問完，不停下來回報。
 
 代價要講清楚：上游真的矛盾時，`sd`、`ui-ux`、`proposal` 會先基於帶問號的分析做一輪，
 停點一決議後由原撰寫角色回修。本專案的 `docs/specs/` 由維護者擁有、`06-01` 的「待釐清」是「目前沒有待釐清的問題」，
 所以這種情況應該少，但不是零。
 
-## 四、要改寫的部分
+## clarify 的十個面向
 
-### 本專案與 scaffold 的落差
-
-| 面向 | scaffold | 本專案 | 影響 |
-| :--- | :--- | :--- | :--- |
-| 後端 | NestJS 11 加 TypeORM | FastAPI（`backend/pyproject.toml`），目錄還不存在 | `system-design` 與 `sd` 要改寫 |
-| 前端 | React 19 加 Vite 加 shadcn 加 Orval 加 TanStack Query | 只有 HTML prototype，框架與元件庫未定案 | `ui-design` 與 `ui-ux` 要改寫，且有待決項 |
-| 套件管理 | npm | `uv`（Python）、`pnpm`（JavaScript） | 所有指令要換 |
-| repo 結構 | meta repo 加兩個子 repo | 單一 repo | `context` 的提交與分支段落不適用 |
-| 登入 | OIDC，admin／viewer | Email 加密碼，PRD 權限矩陣多角色 | 驗收取 token 的方式要重寫 |
-| 規則來源 | `.claude/rules/` 加 `CLAUDE.md` | `AGENTS.md` 單一來源 | agent 的引用要改寫 |
-| agent | 18 個 | 0 個（`.claude/agents/` 不存在） | 要新建 12 個 |
-| 需求文件 | `docs/specs/` 加 `00-prd.mdx`，`prd-writing`／`spec-writing` 產生 | 完全相同（#29、#30 已引入並在地化） | `sa`、`planner` 的假設可直接沿用 |
-| design token | shadcn 語意 token | `design/prototype/assets/tokens.css` 加 `label-suite-design` skill | `ui-design` 的 token 段落換來源 |
-
-最後兩列是導入成本能壓低的原因。本專案的 `docs/specs/` 章節（目標、使用角色、業務流程、規格、卡控機制、邊界情況、驗收標準、待釐清、已確認決議）
-和 scaffold 同源，`scripts/check-specs.mjs` 還在機器檢查這些章節存在。
-`sa` 的「業務流程引用規格書、不重畫」與 `planner` 的「Scenario 沿用驗收標準的名稱」兩條規則因此可以原封不動沿用。
-
-### 逐項判斷
-
-| 產物 | 判斷 | 說明 |
-| :--- | :--- | :--- |
-| `system-analysis` | 照搬，只改路徑與停下規則 | template 零技術用語；`sa` 只需改 schema 路徑、`.claude/rules` 引用與第三節第 3 項的停下規則 |
-| `clarification` | 照搬骨架，面向加兩項 | 見下一節 |
-| `proposal`／`specs`／`design` | 照搬 | 與 `spec-driven` 的差異只有三句，都與技術棧無關 |
-| `tasks` | 小改 | 角色標記沿用；契約同步指令換成 FastAPI 版，JSDoc 那條刪掉 |
-| `system-design` | 改寫 | 分層換成 FastAPI 的 Router → Service → Repository／Model，migration 換 Alembic；回應包裝**已裁定為包一層 envelope**（2026-11-10） |
-| `api-contract` | 改寫 | 骨架（端點、角色、錯誤碼、遮蔽欄位）通用；operationId 在 FastAPI 預設是由函式名與路徑組出來的長字串，要用 `generate_unique_id_function` 固定成「動詞加資源」才能當交接依據 |
-| `ui-design` | 改寫 | 四種狀態、資料來源、元件樹的骨架通用；shadcn 與 Orval **已於 2026-11-10 裁定**，不再是待決項 |
-
-不需要的部分：`.claude/rules/*.md` 的引用、`AUTH_MODE=dev` 的 `POST /dev/auth/token`、
-TypeORM 的 migration 慣例、`ApiResponseDto` 這個字面名稱、meta repo 的提交與分支規則。
-
-### clarify 的十個面向
-
-scaffold 是八項。本專案加兩項，對應 `AGENTS.md` 的 Hard Rule：
+clarify 檢查十個面向：scaffold 的八項，加上兩項對應 `AGENTS.md` Hard Rule 的檢查。
 
 | | 面向 | 來源 |
 | :--- | :--- | :--- |
@@ -251,7 +188,83 @@ scaffold 是八項。本專案加兩項，對應 `AGENTS.md` 的 Hard Rule：
 
 第 9、10 項放在規劃階段是刻意的。等到 `code-reviewer` 或驗收才發現任務類型被寫死、或答案從 API 漏出去，已經太晚。
 
-## 五、完整流程現在就能跑
+## 不要做的事
+
+- **不建立 `.claude/rules/`**。與 Hard Rule 1「`AGENTS.md` 是唯一的規則來源」衝突。
+- **不改 `.claude/skills/openspec-*/SKILL.md`**。`openspec update` 會覆寫，實測見[附錄：驗證紀錄](#附錄驗證紀錄)。
+- **不直接沿用 scaffold 的 `operations` 指令**。`npm run lint`、`npm run check`、`eslint-plugin-jsdoc` 在本專案都不存在，
+  寫進去等於每次都要手動略過，關卡會失去效力。
+- **不在有進行中 change 的時候改 schema 檔案**。`requires` 一變，進行中的 change 會突然多出未完成的產物。
+
+`.claude/rules/` 是個獨立的問題：scaffold 有六個 agent 引用它，用 `paths:` frontmatter 做條件載入。
+本專案不建立它，所以引進來的 agent 一律把這些引用改成指向 `AGENTS.md` 的章節。
+
+## 附錄：導入評估的對象與版本
+
+下面是導入當時評估的對象；本節與其後的附錄都是追溯用，現況以正文與 [architecture.mdx](architecture.mdx) §前端、§技術選型、§待決 為準。
+文內各張對照表寫「尚未定案／由骨架 change 拍板／要等…定案」的技術項目，多數已定案：後端模組內分層 `app/modules/<module>/`、成功回應包一層 envelope、前綴 `/api/v1`、
+React 19、`pages/` 加 `features/`、shadcn/ui 放 `components/ui/`、前端型別與 client 用 **Orval**（輸出 `frontend/src/api/generated/`）；定案的來源見[決策紀錄](#決策紀錄)。
+
+| 項目 | 內容 |
+| :--- | :--- |
+| 調查對象 | `trendlink/fullstack-ai-sdd-workflow-scaffold`，commit `7198845`（2026-11-04），本機路徑 `~/project/fullstack-ai-sdd-workflow-scaffold` |
+| scaffold 的 schema | `openspec/schemas/fullstack-sdd/`，九份產物 |
+| 本專案現用的 schema | `openspec/config.yaml` 的 `schema: spec-driven`（openspec 內建四份產物） |
+| openspec 版本 | 本專案 `@fission-ai/openspec` 1.14.1；scaffold 的 skill 產自 1.15.0 |
+| 本專案程式現況 | `backend/`、`frontend/` 都還不存在，只有 `docs/`、`design/prototype/`、`openspec/`、`scripts/` |
+
+## 附錄：和 NestJS 綁在一起的部分
+
+| 位置 | 綁的內容 | 本專案的對應 |
+| :--- | :--- | :--- |
+| `openspec/config.yaml` `context` | NestJS 11 加 TypeORM 加 PostgreSQL、`api/`／`web/` 兩個目錄、`@nestjs/swagger` 產 `openapi.json`、Orval 產前端型別、`npm run contract:sync`、OIDC 與 `AUTH_MODE=dev`、admin／viewer 兩個角色 | FastAPI、`backend/`／`frontend/`、Email 加密碼登入、PRD 權限矩陣的多個角色 |
+| `openspec/config.yaml` 的「結構」「提交」「分支」 | meta repo：`api/`、`web/` 是各自獨立的 git repo，一個 commit 不跨 repo | 單一 repo，提交規則在 `AGENTS.md` |
+| `rules.tasks` | `[@backend-developer]`、`[@frontend-developer]`、`[@dba]`、`[@technical-writer]` 四個角色標記；收尾 task 固定是 `npm run contract:sync`；JSDoc 依 `.claude/rules/jsdoc.md` | 角色標記可沿用；指令換成 `uv`／`pnpm`；JSDoc 那條刪掉 |
+| `operations.apply`／`archive` | `npm run lint`、`npm run check`、`eslint-plugin-jsdoc` | 本專案目前只有 `pnpm check:specs`、`pnpm test:scripts` |
+| `templates/system-design.md` | `ExampleController` → `ExampleService` → `ExampleEntity` 的分層、`ApiResponseDto` 回應包裝 | FastAPI 的 Router → Service → Repository／Model；回應包裝已定案為包一層 envelope |
+| `templates/api-contract.md` | response 寫「`data` 內容」，預設有統一包裝 | 同上 |
+| `templates/ui-design.md` | shadcn 元件與語意 token | `design/prototype/assets/tokens.css` 與 `label-suite-design` skill |
+| `sd` agent | NestJS 分層、TypeORM、`ApiResponseDto`、`@nestjs/swagger`、必讀 `api/src/modules/`、`api/src/core/auth/`、`api/openapi.json` | 整份改寫成 FastAPI |
+| `ui-ux` agent | React 19 加 Vite、Orval 的 TanStack Query hooks、shadcn、`lucide-react`、必讀 `web/src/app/`、`web/src/components/ui/`、`web/src/styles/themes/` | 整份改寫；前端框架與元件庫已定案（React 19、shadcn/ui 放 `components/ui/`） |
+| `acceptance-verifier` agent | `docker compose up -d`、`npm run migration:run`、`POST /dev/auth/token`、Playwright 寫在 `web/e2e/`、`npm run contract:sync`、`npm run check` | 驗收骨架照留，指令全部換，並加人工驗收步驟 |
+| `backend-developer`、`frontend-developer`、`dba`、`technical-writer`、`code-reviewer` | 綁 TypeScript 生態與 `.claude/rules/*.md` | 後端四個改 Python 生態；全部把規則引用改成 `AGENTS.md` |
+
+## 附錄：本專案與 scaffold 的落差與逐項判斷
+
+### 落差
+
+| 面向 | scaffold | 本專案 | 影響 |
+| :--- | :--- | :--- | :--- |
+| 後端 | NestJS 11 加 TypeORM | FastAPI（`backend/pyproject.toml`），目錄還不存在 | `system-design` 與 `sd` 要改寫 |
+| 前端 | React 19 加 Vite 加 shadcn 加 Orval 加 TanStack Query | 只有 HTML prototype，框架與元件庫未定案 | `ui-design` 與 `ui-ux` 要改寫，且有待決項 |
+| 套件管理 | npm | `uv`（Python）、`pnpm`（JavaScript） | 所有指令要換 |
+| repo 結構 | meta repo 加兩個子 repo | 單一 repo | `context` 的提交與分支段落不適用 |
+| 登入 | OIDC，admin／viewer | Email 加密碼，PRD 權限矩陣多角色 | 驗收取 token 的方式要重寫 |
+| 規則來源 | `.claude/rules/` 加 `CLAUDE.md` | `AGENTS.md` 單一來源 | agent 的引用要改寫 |
+| agent | 18 個 | 0 個（`.claude/agents/` 不存在） | 要新建 12 個 |
+| 需求文件 | `docs/specs/` 加 `00-prd.mdx`，`prd-writing`／`spec-writing` 產生 | 完全相同（已引入並在地化） | `sa`、`planner` 的假設可直接沿用 |
+| design token | shadcn 語意 token | `design/prototype/assets/tokens.css` 加 `label-suite-design` skill | `ui-design` 的 token 段落換來源 |
+
+最後兩列是導入成本能壓低的原因。本專案的 `docs/specs/` 章節（目標、使用角色、業務流程、規格、卡控機制、邊界情況、驗收標準、待釐清、已確認決議）
+和 scaffold 同源，`scripts/check-specs.mjs` 還在機器檢查這些章節存在。
+`sa` 的「業務流程引用規格書、不重畫」與 `planner` 的「Scenario 沿用驗收標準的名稱」兩條規則因此可以原封不動沿用。
+
+### 逐項判斷
+
+| 產物 | 判斷 | 說明 |
+| :--- | :--- | :--- |
+| `system-analysis` | 照搬，只改路徑與停下規則 | template 零技術用語；`sa` 只需改 schema 路徑、`.claude/rules` 引用與[三處要特別處理的地方](#三處要特別處理的地方)第 3 項的停下規則 |
+| `clarification` | 照搬骨架，面向加兩項 | 見[clarify 的十個面向](#clarify-的十個面向) |
+| `proposal`／`specs`／`design` | 照搬 | 與 `spec-driven` 的差異只有三句，都與技術棧無關 |
+| `tasks` | 小改 | 角色標記沿用；契約同步指令換成 FastAPI 版，JSDoc 那條刪掉 |
+| `system-design` | 改寫 | 分層換成 FastAPI 的 Router → Service → Repository／Model，migration 換 Alembic；回應包裝已定案為包一層 envelope |
+| `api-contract` | 改寫 | 骨架（端點、角色、錯誤碼、遮蔽欄位）通用；operationId 在 FastAPI 預設是由函式名與路徑組出來的長字串，要用 `generate_unique_id_function` 固定成「動詞加資源」才能當交接依據 |
+| `ui-design` | 改寫 | 四種狀態、資料來源、元件樹的骨架通用；shadcn 與 Orval 已定案，不再是待決項 |
+
+不需要的部分：`.claude/rules/*.md` 的引用、`AUTH_MODE=dev` 的 `POST /dev/auth/token`、
+TypeORM 的 migration 慣例、`ApiResponseDto` 這個字面名稱、meta repo 的提交與分支規則。
+
+## 附錄：導入時評估「完整流程現在就能跑」
 
 `ui-design` 與 `api-contract` 的 template 本身允許整份只寫「本次無 UI 變更」「本次無 API 變更」，
 `ui-ux` agent 也明文要求沒有 UI 變更時照樣產出那一句。所以九份產物的流程套在 `backend/` 骨架那個 change 上不會空轉。
@@ -262,11 +275,11 @@ scaffold 是八項。本專案加兩項，對應 `AGENTS.md` 的 Hard Rule：
 
 `ui-ux` agent 可以等前端框架定案再補完，在那之前 `ui-design` 都是那一句話。
 
-## 六、要改的檔案
+## 附錄：導入時要改的檔案
 
-分三個子 Issue。子 Issue 一完成才動二和三，因為 agent 與 clarify skill 都要引用 schema 的範本路徑與面向定義。
+分三批。第一批完成才動第二、三批，因為 agent 與 clarify skill 都要引用 schema 的範本路徑與面向定義。
 
-### 子 Issue 一：schema 與 config
+### 第一批：schema 與 config
 
 | # | 檔案 | 動作 |
 | :--- | :--- | :--- |
@@ -279,17 +292,17 @@ scaffold 是八項。本專案加兩項，對應 `AGENTS.md` 的 Hard Rule：
 | 7 | `templates/{proposal,spec,design,tasks}.md` | fork 帶出來的四份，不改 |
 | 8 | `openspec/config.yaml` | `schema:` 換成 `label-suite-sdd`；`context` 寫派工順序與兩個停點；`rules.*` 九組；`operations.apply` 加驗收與人工驗收輸出；`operations.archive` 拿掉驗收 |
 
-### 子 Issue 二：授權與 clarify skill
+### 第二批：授權與 clarify skill
 
 | # | 檔案 | 動作 |
 | :--- | :--- | :--- |
-| 1 | `.claude/commands/sdd.md` | 新增，串接 propose 與 apply 並授權實作（第三節第 1 項） |
+| 1 | `.claude/commands/sdd.md` | 新增，串接 propose 與 apply 並授權實作（見[三處要特別處理的地方](#三處要特別處理的地方)第 1 項） |
 | 2 | `AGENTS.md` | 新增一節：SDD 流程的角色分工、兩個停點、`/sdd` 的授權範圍，以及與 subagent worktree 規則的界線 |
 | 3 | `.claude/skills/clarify/SKILL.md` | 搬入並在地化：十個面向、規則引用改 `AGENTS.md`、路徑改 `backend/`／`frontend/` |
 | 4 | `.agents/skills/clarify/SKILL.md` | 與上一份同步的副本（Codex 讀這個目錄） |
 | 5 | `docs/development/spec-authoring.md` | 「怎麼交給 `/opsx:propose`」改成 `/sdd`，補上兩個停點 |
 
-### 子 Issue 三：十二個 agent
+### 第三批：十二個 agent
 
 | 群組 | agent | 動作 |
 | :--- | :--- | :--- |
@@ -300,29 +313,10 @@ scaffold 是八項。本專案加兩項，對應 `AGENTS.md` 的 Hard Rule：
 | 實作 | `frontend-developer` | 依前端技術棧改寫；元件庫待定 |
 | 實作 | `technical-writer` | 搬入，文件規範改 `docs/development/notecraft-writing.md` |
 | 審查 | `code-reviewer` | 改寫，檢查項改成本專案的 Hard Rules |
-| 驗收 | `acceptance-verifier` | 改寫指令，加人工驗收步驟輸出（第三節第 2 項） |
+| 驗收 | `acceptance-verifier` | 改寫指令，加人工驗收步驟輸出（見[三處要特別處理的地方](#三處要特別處理的地方)第 2 項） |
 | 雜務 | `ops` | 搬入，GitHub label 段落改成本專案的 Issue 規則 |
 
-### 不要做的事
-
-- **不建立 `.claude/rules/`**。與 Hard Rule 1「`AGENTS.md` 是唯一的規則來源」衝突。
-- **不改 `.claude/skills/openspec-*/SKILL.md`**。`openspec update` 會覆寫，實測見驗證紀錄。
-- **不直接沿用 scaffold 的 `operations` 指令**。`npm run lint`、`npm run check`、`eslint-plugin-jsdoc` 在本專案都不存在，
-  寫進去等於每次都要手動略過，關卡會失去效力。
-- **不在有進行中 change 的時候改 schema 檔案**。`requires` 一變，進行中的 change 會突然多出未完成的產物。
-
-## 七、待決問題
-
-| # | 問題 | 什麼時候決定 |
-| :--- | :--- | :--- |
-| ~~1~~ | ~~schema 的名字，以及它是不是 `openspec/config.yaml` 的預設~~ | **已定案（維護者 2026-11-04）**：名稱 `label-suite-sdd`，**就是預設**。落地於 #51 |
-| ~~2~~ | ~~小型 change（文件、工具）要不要保留 `--schema spec-driven` 的逃生門~~ | **已定案（維護者 2026-11-04）**：**保留**。實測：不帶 `--schema` 走 9 份產物，帶 `--schema spec-driven` 走 4 份。落地於 #51 |
-| ~~3~~ | ~~FastAPI 的分層、回應包裝格式、`generate_unique_id_function` 策略~~ | **已定案**：分層、回應包裝與前綴由**維護者 2026-11-10 裁定**（模組內分層 `app/modules/<module>/`、包一層 envelope、`/api/v1`）；operationId 策略由 [#51](https://github.com/label-suite/label-suite/issues/51) 落地 |
-| 3' | **auth 的實作層次**（認證與授權 dependency 的掛點細節） | 身分來源與 CSRF 已由 [#107](https://github.com/label-suite/label-suite/issues/107) 落地（只認 httpOnly cookie、綁 session 的 CSRF token）；剩下的掛點細節由 `backend/` 骨架 change 的 `system-design` 在停點一確認 |
-| ~~4~~ | ~~前端框架與元件庫~~ | **已定案（維護者 2026-11-10）**：React 19、`pages/` 加 `features/`、shadcn/ui 放 `components/ui/`、前端型別與 client 用 Orval。`ui-design` **照常撰寫**，不再寫「本次無 UI 變更」 |
-| 5 | **Storybook** | 仍待決（`architecture.mdx` §待決 第 2 列）。第一個前端 change 之前決定 |
-
-## 驗證紀錄
+## 附錄：驗證紀錄
 
 為避免只憑閱讀下判斷，以下在本機實際跑過（在 scratchpad 的臨時目錄，未改動本專案的 `openspec/` 與 `.claude/`）：
 
@@ -339,14 +333,32 @@ scaffold 是八項。本專案加兩項，對應 `AGENTS.md` 的 Hard Rule：
 | 既有 change 的 schema 紀錄 | 讀 `openspec/changes/archive/*/.openspec.yaml` | 三個都是 `schema: spec-driven` |
 | `06-01` 的規格完成度 | 讀 `docs/specs/06-admin/01-user-management.mdx` | 待釐清是「目前沒有待釐清的問題」，驗收標準約 58 個 Scenario |
 
-子 Issue 一（#51）落地後補測：
+schema 與 config 落地後補測：
 
 | 驗證 | 指令 | 結果 |
 | :--- | :--- | :--- |
 | schema 本體有效 | `pnpm exec openspec schema validate label-suite-sdd` | `✓ Schema 'label-suite-sdd' is valid`，9 份產物 |
 | 兩套並存 | `pnpm exec openspec schemas --json` | `label-suite-sdd`（project，9 份）與 `spec-driven`（package，4 份） |
 | 預設走新流程 | `pnpm exec openspec new change probe-default` | `.openspec.yaml` 寫入 `schema: label-suite-sdd` |
-| 依賴圖與本文第二節一致 | `pnpm exec openspec status --change probe-default` | `0/9`，`system-design` 與 `ui-design` 都只被 `system-analysis` 擋住（可平行），`tasks` 被 `api-contract`、`specs`、`design` 擋住 |
+| 依賴圖與[九份產物與依賴](#九份產物與依賴)一致 | `pnpm exec openspec status --change probe-default` | `0/9`，`system-design` 與 `ui-design` 都只被 `system-analysis` 擋住（可平行），`tasks` 被 `api-contract`、`specs`、`design` 擋住 |
 | 逃生門可用 | `pnpm exec openspec new change probe-escape --schema spec-driven` | `0/4`，走 proposal → specs ∥ design → tasks |
 | 在地化真的進到 instruction | `pnpm exec openspec instructions system-design --change probe-default --json` | 輸出含「Router → Service」與「Alembic」，template 的 `classDiagram` 也在 |
 | CLI 的執行方式 | `pnpm exec openspec --version` | `1.14.1`（專案 devDependency；`npx` 在本環境會被權限分類器擋下） |
+
+## 待決
+
+| # | 問題 | 卡住什麼 | 誰決定 |
+| :--- | :--- | :--- | :--- |
+| 1 | auth 的實作層次（認證與授權 dependency 的掛點細節）。身分來源與 CSRF 已由 [#107](https://github.com/label-suite/label-suite/issues/107) 落地：只認 httpOnly cookie、綁 session 的 CSRF token | 掛點細節；由 `backend/` 骨架 change 的 `system-design` 在停點一確認 | 維護者 |
+| 2 | Storybook（`architecture.mdx` §待決 第 2 列） | 第一個前端 change 之前決定 | 維護者 |
+
+## 決策紀錄
+
+| 日期 | 決策 | 取代了什麼 | 來源 |
+| :--- | :--- | :--- | :--- |
+| 2026-11-04 | 採用 fullstack-sdd 的完整九份產物流程，人工關卡收斂成兩個停點（[§決議](#決議)） | 原評估的分階段導入選項與 scaffold 的三個階段停點 | [#47](https://github.com/label-suite/label-suite/issues/47) |
+| 2026-11-04 | schema 名稱 `label-suite-sdd`，並設為 `openspec/config.yaml` 的預設 | 本專案原用的 `spec-driven` | [#51](https://github.com/label-suite/label-suite/issues/51) |
+| 2026-11-04 | 小型 change（文件、工具）保留 `--schema spec-driven` 的逃生門：不帶 `--schema` 走 9 份產物，帶 `--schema spec-driven` 走 4 份 | — | [#51](https://github.com/label-suite/label-suite/issues/51) |
+| 2026-11-10 | 後端模組內分層 `app/modules/<module>/`、成功回應包一層 envelope、路徑前綴 `/api/v1` | 評估階段「FastAPI 的分層、回應包裝格式尚未定案」 | 維護者裁定，見 [architecture.mdx](architecture.mdx) |
+| 2026-11-09 | operationId 由 `generate_unique_id_function` 固定成「動詞加資源」 | 評估階段「`generate_unique_id_function` 策略待決」 | [#51](https://github.com/label-suite/label-suite/issues/51) |
+| 2026-11-10 | 前端採 React 19、`pages/` 加 `features/`、shadcn/ui 放 `components/ui/`、前端型別與 client 用 Orval；`ui-design` 照常撰寫，不再寫「本次無 UI 變更」 | 評估階段「前端框架與元件庫待決」 | 維護者裁定，見 [architecture.mdx](architecture.mdx) §前端 |
