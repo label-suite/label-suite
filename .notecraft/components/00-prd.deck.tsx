@@ -1,5 +1,8 @@
-import type { CustomSlideProps, Deck } from "@/lib/decks";
-import { Roster, Table, Triad } from "@/components/deck/blocks";
+import type { CustomSlideProps, Deck, SeriesTone } from "@/lib/decks";
+import { Roster, Triad } from "@/components/deck/blocks";
+import { DGAP, DS, DTRACK } from "@/components/deck/scale";
+import { toneColor } from "@/components/deck/SlideChrome";
+import { dkt } from "@/components/deck/theme";
 import ArchitectureContainerView from "@notes/components/architecture-container-view";
 import PrdSystemContext from "@notes/components/prd-system-context";
 import PrdTaskLifecycleFlow from "@notes/components/prd-task-lifecycle-flow";
@@ -29,25 +32,111 @@ function ProblemsPage({ dark }: CustomSlideProps) {
   );
 }
 
-// PART 02 — 六項目標 × 受益角色 × 衡量方式的交叉表。
-function GoalsTablePage({ dark }: CustomSlideProps) {
+// PART 02 — 六項目標依受益角色分三組：上方色帶標角色，每張卡以一個大字寫出驗收門檻。
+type GoalGroup = { label: string; tone: SeriesTone; goals: { value: string; goal: string; measure: string }[] };
+
+const GOAL_GROUPS: GoalGroup[] = [
+  {
+    label: "專案負責人",
+    tone: "blue",
+    goals: [
+      { value: "端到端", goal: "走完一次完整標記流程", measure: "能實際示範從建任務到匯出" },
+      { value: "≥ 5 種", goal: "換任務不改平台", measure: "研究示例只靠任務設定建立" },
+      { value: "步驟更少", goal: "建任務步驟比現有工具少", measure: "操作步驟數少於 Label Studio" },
+      { value: "2–3 個", goal: "向論文讀者重現使用情境", measure: "示範影片呈現的情境數" },
+    ],
+  },
+  {
+    label: "專案負責人、審核員",
+    tone: "orange",
+    goals: [{ value: "100%", goal: "標記中就看到資料統計", measure: "句詞標籤統計與人工計算一致" }],
+  },
+  {
+    label: "標記員、審核員",
+    tone: "muted",
+    goals: [{ value: "SUS ≥ 75", goal: "平台好上手", measure: "5–10 位實驗室成員填寫的整體分數" }],
+  },
+];
+
+function GoalsPage({ dark }: CustomSlideProps) {
+  const c = dkt(dark);
+  const total = GOAL_GROUPS.reduce((n, g) => n + g.goals.length, 0);
   return (
-    <Table
-      dark={dark}
-      head={["目標", "受益角色", "衡量方式"]}
-      rows={[
-        [{ text: "走完一次完整標記流程" }, { text: "專案負責人" }, { text: "能實際示範建任務到匯出" }],
-        [{ text: "換任務不改平台" }, { text: "專案負責人" }, { text: "至少五種研究示例只靠任務設定建立" }],
-        [{ text: "建任務步驟比現有工具少" }, { text: "專案負責人" }, { text: "操作步驟數少於 Label Studio" }],
-        [
-          { text: "標記中就看到資料統計" },
-          { text: "專案負責人、審核員" },
-          { text: "句詞標籤統計與人工計算完全一致" },
-        ],
-        [{ text: "平台好上手" }, { text: "標記員、審核員" }, { text: "5–10 位實驗室成員填 SUS、整體 ≥ 75 分" }],
-        [{ text: "向論文讀者重現使用情境" }, { text: "專案負責人" }, { text: "示範影片呈現 2–3 個情境" }],
-      ]}
-    />
+    <div
+      style={{
+        height: "100%",
+        display: "grid",
+        gridTemplateColumns: `repeat(${total}, 1fr)`,
+        gridTemplateRows: "auto 1fr",
+        columnGap: DGAP.sm,
+        rowGap: DGAP.xs,
+      }}
+    >
+      {GOAL_GROUPS.map((g) => {
+        const t = toneColor(g.tone, c);
+        // muted 是標記色、不是文字色；灰色組的文字改穿正文 token 才讀得清楚。
+        const ink = g.tone === "muted" ? c.body : t.fg;
+        return (
+          <div
+            key={g.label}
+            style={{
+              gridColumn: `span ${g.goals.length}`,
+              padding: "6px 12px",
+              borderRadius: "var(--radius-sm)",
+              background: t.soft,
+              color: ink,
+              fontSize: DS.micro,
+              fontWeight: 800,
+              letterSpacing: DTRACK.label,
+              textAlign: "center",
+            }}
+          >
+            {g.label}
+          </div>
+        );
+      })}
+      {GOAL_GROUPS.flatMap((g) => {
+        const t = toneColor(g.tone, c);
+        const ink = g.tone === "muted" ? c.body : t.fg;
+        return g.goals.map((it) => (
+          <div
+            key={it.goal}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: DGAP.sm,
+              padding: DGAP.md,
+              borderRadius: "var(--radius-md)",
+              background: dark ? c.sunken : "var(--neutral-50)",
+              border: `1px solid ${c.borderSoft}`,
+              borderTop: `4px solid ${t.fg}`,
+            }}
+          >
+            <div style={{ minHeight: "2.7em", fontSize: DS.h4, fontWeight: 800, lineHeight: 1.35, color: c.ink, textWrap: "balance" }}>
+              {it.goal}
+            </div>
+            <div
+              style={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                fontSize: 48,
+                fontWeight: 900,
+                lineHeight: 1.1,
+                letterSpacing: DTRACK.tight,
+                color: ink,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {it.value}
+            </div>
+            <div style={{ minHeight: "3em", fontSize: DS.small, lineHeight: 1.5, color: c.body, textWrap: "balance" }}>
+              {it.measure}
+            </div>
+          </div>
+        ));
+      })}
+    </div>
   );
 }
 
@@ -109,7 +198,7 @@ const deck: Deck = {
       eyebrow: "PART 02 · 專案概述",
       title: "六項目標，每項都有可驗收的衡量方式",
       footnotes: [{ n: "1", text: "SUS 問卷在正式標記功能完成後才招募受試者，需預留填答與分析時間。" }],
-      render: GoalsTablePage,
+      render: GoalsPage,
     },
     {
       layout: "custom",
