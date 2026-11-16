@@ -13,6 +13,7 @@ NoteCraft 需要 Node 22 以上。預覽 `pnpm docs:serve`（http://127.0.0.1:43
 規格檔另跑 `pnpm check:specs`。不在本專案跑 `tsc` 或 `astro build`。
 
 視覺化標記與生成元件的規範見 [notecraft-visualize.md](notecraft-visualize.md)，筆記轉簡報見 [notecraft-present.md](notecraft-present.md)。
+本文只管語法；非規格文件「寫什麼、寫在哪、寫多少」由 `doc-writing` skill 規範（`.claude/skills/doc-writing/`），規格由 `prd-writing`、`spec-writing` 規範。
 
 ## 撰寫規範
 
