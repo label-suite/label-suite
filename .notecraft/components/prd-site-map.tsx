@@ -348,7 +348,7 @@ const PAGES: PageNode[] = [
     specState: "written",
     desc: "不是獨立頁面：各頁共用的側欄、語言與外觀切換、登出。",
     entry: "登入後的每一頁",
-    access: SIGNED_IN("read", "R；不是獨立頁面"),
+    access: SIGNED_IN("op", "R/E (o)：不是獨立頁面；E 只作用在自己的偏好與通知已讀狀態"),
   },
   {
     id: "work-tabs",
@@ -359,7 +359,7 @@ const PAGES: PageNode[] = [
     specState: "written",
     desc: "不是獨立頁面：在工作區之間切換的頁籤。",
     entry: "登入後的每一頁",
-    access: SIGNED_IN("read", "R；不是獨立頁面"),
+    access: SIGNED_IN("op", "R/E (o)：不是獨立頁面；E 只作用在自己的頁籤狀態"),
   },
   {
     id: "denied-and-not-found",
@@ -370,7 +370,7 @@ const PAGES: PageNode[] = [
     specState: "written",
     desc: "不是獨立頁面：那一筆不存在，或存在但這個使用者不能看，取代內容區顯示。",
     entry: "任何一頁被擋下時",
-    access: SIGNED_IN("read", "R；不是獨立頁面"),
+    access: SIGNED_IN("read", "R；不是獨立頁面，這個畫面沒有可編輯的東西"),
   },
   {
     id: "notification-events",
@@ -381,7 +381,7 @@ const PAGES: PageNode[] = [
     specState: "written",
     desc: "連畫面都沒有：平台層的事件清單，定義哪些事會通知人、誰收得到、出現在側欄還是儀表板。",
     entry: "側欄的通知清單與儀表板的最近提醒",
-    access: SIGNED_IN("read", "R；沒有自己的畫面"),
+    access: SIGNED_IN("op", "R/E (o)：沒有自己的畫面；E 只作用在自己的已讀狀態"),
   },
 ];
 
