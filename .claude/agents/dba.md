@@ -65,7 +65,7 @@ model: opus
 2. 檢查表結構：欄位型別、NULL、預設值、約束、索引與 model 一致
 3. `uv run alembic downgrade -1` 成功、結構回到變更前，再 `upgrade head` 一次確認可重跑——**兩層都做**
 4. 跑 `uv run pytest` 的 integration 測試確認既有行為不受影響
-5. **校正字典與 ER**：逐表比對 model、migration 與字典。實作與 sd 的設計不同（改了型別、加了索引、拆了欄位）時，**先改字典、再同步 ER**，讓兩份描述的是實際建出來的結構。這次 migration 建立的每張表，在字典的表標題下方與 ER 該表的 `description` 開頭各加一行 `**已落地**：Alembic revision \`<revision id>\``，並把 ER `meta.description` 的「已落地業務表：**N**」加上這次的張數。最後跑 `pnpm check:er`，它會比對兩邊的標記、張數，以及每個 revision 是否真的出現在 `backend/alembic/versions/`
+5. **校正字典與 ER**：逐表比對 model、migration 與字典。實作與 sd 的設計不同（改了型別、加了索引、拆了欄位）時，**先改字典、再同步 ER**，讓兩份描述的是實際建出來的結構。這次 migration 建立的每張表，在字典的表標題下方與 ER 該表的 `description` 開頭各加一行 `` **已落地**：Alembic revision `<revision id>` ``，並把 ER `meta.description` 的「已落地業務表：**N**」加上這次的張數。最後跑 `pnpm check:er`，它會比對兩邊的標記、張數，以及每個 revision 是否真的出現在 `backend/alembic/versions/`
 
 ## 完成前自我檢查
 
