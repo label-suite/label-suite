@@ -58,12 +58,12 @@ updatedAt: '2026-11-16'
 | :--- | :--- |
 | **適用路徑** | `frontend/`（還不存在，所以這一條**現在沒有適用對象**）。**`backend/` 由 [backend-agent-rules.md](backend-agent-rules.md) 的 B1 取代**——那一條寫明了層級與允許的 import，比這裡具體 |
 | **例外** | 無 |
-| **檢查方式** | **待建置**。後端的具體分層已由 B1 定，前端待 [#109](https://github.com/label-suite/label-suite/issues/109)；兩邊的自動檢查都要等實際有程式 |
+| **檢查方式** | **待建置**。後端的具體分層由 B1 定，前端由 [frontend-agent-rules.md 的 F1](frontend-agent-rules.md#f1-分層與允許的-import) 定；兩邊的自動檢查都要等實際有程式 |
 
 模組內分層（`app/modules/<module>/`）見 [architecture.mdx](architecture.mdx)，後端的落地規則見 B1；前端那一半落地後，這一條只剩跨領域的原則敘述。
 
 :::note{title="正例與反例（摺疊）" collapsible}
-- 正例：前端 `pages` → `features` → 共用的 `components/ui`（具體分層待 [#109](https://github.com/label-suite/label-suite/issues/109)）。後端版本見 B1。
+- 正例：前端 `pages` → `features` → 共用的 `components/ui`（具體分層見 [frontend-agent-rules.md 的 F1](frontend-agent-rules.md#f1-分層與允許的-import)）。後端版本見 B1。
 - 反例：`components/ui` 的元件 import `features` 的東西；或共用層回頭依賴頁面層。
 :::
 
@@ -247,8 +247,8 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 | 來源條文 | 處理 | 說明 |
 | :--- | :--- | :--- |
 | `typescript.md` 禁止 `any` | **沿用** | 已在 `AGENTS.md` 硬性規則 7 |
-| `typescript.md` 禁止非空斷言 `!`、禁止 `as`、`as const` 取代 enum、named export | **待採用** | 本 repo 沒有這些條文。前端型別安全歸 [#109](https://github.com/label-suite/label-suite/issues/109) |
-| `date-handling.md` 日期一律走單一入口、禁止 `new Date()`／`Date.now()` | **待採用** | 本 repo 沒有條文，也還沒有 `frontend/`。歸 [#109](https://github.com/label-suite/label-suite/issues/109) |
+| `typescript.md` 禁止非空斷言 `!`、禁止 `as`、`as const` 取代 enum、named export | **移交前端規範** | 是否採用以 [frontend-agent-rules.md 的 F2](frontend-agent-rules.md#f2-型別安全) 為準 |
+| `date-handling.md` 日期一律走單一入口、禁止 `new Date()`／`Date.now()` | **移交前端規範** | 是否採用以 [frontend-agent-rules.md 的 F10](frontend-agent-rules.md#f10-日期時區與可測的時鐘) 為準 |
 | `jsdoc.md` 最嚴格 JSDoc（所有具名函式、方法、class、interface 與欄位） | **待採用** | 本 repo 沒有條文。注意它要求 DTO 欄位與 `@ApiProperty` 一致，而本 repo 的後端是 FastAPI 不是 NestJS，照搬不成立 |
 | `testing.md` 測試名詞 unit／integration／e2e、Decision Table、TDD | **待採用** | 歸 [#110](https://github.com/label-suite/label-suite/issues/110) |
 | 其餘 12 份（`database`、`api-contract`、`auth-oidc`、`dto-boolean`、`integration-test-http`、`jest-mock-queue`、`frontend`、`api-client`、`design-tokens`、`notecraft-*`、`index`） | **不在本文件** | 分領域，歸 #106–#110；其中 `notecraft-*` 兩份本 repo 已有自己的版本（`docs/development/notecraft-writing.md`、`notecraft-visualize.md`） |
@@ -265,8 +265,8 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 | 來源條文 | 處理 | 說明 |
 | :--- | :--- | :--- |
 | `typescript.md` 禁止 `any` | **沿用** | 已在 `AGENTS.md` 硬性規則 7（與 scaffold 同一條，兩個來源一致） |
-| `typescript.md` 禁止非空斷言 `!`、命名與匯出規範 | **待採用** | 同 scaffold 那一列，歸 [#109](https://github.com/label-suite/label-suite/issues/109) |
-| `date-handling.md` 日期一律從單一入口 import、禁止 `new Date()`／`Date.now()` | **待採用** | 與 scaffold 同向（兩個來源都這樣要求），歸 [#109](https://github.com/label-suite/label-suite/issues/109) |
+| `typescript.md` 禁止非空斷言 `!`、命名與匯出規範 | **移交前端規範** | 同 scaffold 那一列，以 [frontend-agent-rules.md 的 F2](frontend-agent-rules.md#f2-型別安全) 為準 |
+| `date-handling.md` 日期一律從單一入口 import、禁止 `new Date()`／`Date.now()` | **移交前端規範** | 與 scaffold 同向，以 [frontend-agent-rules.md 的 F10](frontend-agent-rules.md#f10-日期時區與可測的時鐘) 為準 |
 | `index.md` 的「規則帶 `paths:` frontmatter 自動載入、index 永遠載入、新增規則不改 `CLAUDE.md`」 | **不採用** | 同 scaffold：本 repo 不建 `.claude/rules/`（#53）。不過**「新增規則不改 `CLAUDE.md`」這個目標本文件照辦了**——索引在 `AGENTS.md`，新增分領域文件只動 `docs/development/` |
 | `integration-test-http.md`（`listen(0,'127.0.0.1')`、`closeTestApp`、harness 不比 production 寬鬆） | **不在本文件** | 測試分層歸 [#110](https://github.com/label-suite/label-suite/issues/110)；而且它是 NestJS 的 harness，FastAPI 要重寫 |
 | `database.md`（SQLite ＋ TypeORM、禁原生 SQL、migration 規範） | **不採用** | 棧不同：本 repo 是 PostgreSQL ＋ SQLAlchemy／Alembic。資料庫規範歸 [#106](https://github.com/label-suite/label-suite/issues/106) |
@@ -306,7 +306,7 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 | 2026-11-10 | 觀測性只做 `ai_runs`（ADR-019） | — | [#105 留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393) |
 | 2026-11-10 | onboarding 的空狀態與情境提示算在範圍內，ADR-015 的導覽不做 | — | [#105 留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393) |
 | 2026-11-15 | 通知事件清單落在[規格 07-04 通知事件](../specs/07-shared/04-notification-events.mdx)，八個事件已定 | — | [#188](https://github.com/label-suite/label-suite/issues/188) |
-| 2026-11-16 | 通知事件的收件者與文案已定，#188 的題目全部裁定完畢（issue 本身待 PR 合併後關閉） | — | [#188](https://github.com/label-suite/label-suite/issues/188) |
+| 2026-11-16 | 通知事件的收件者與文案已定，#188 的題目全部裁定完畢 | — | [#188](https://github.com/label-suite/label-suite/issues/188) |
 | 2026-11-10 | `general.md` §Security 第一條（輸入驗證與淨化）進 `AGENTS.md` 硬性規則 9，原第 9 條的破壞性指令順延為第 10 條；來源對照那一列由「待採用」改「沿用」 | 原本兩邊都沒有條文 | [#105](https://github.com/label-suite/label-suite/issues/105) |
 | 2026-11-10 | `uv run` 歸 #106，已落地於 B2，不進 `AGENTS.md` Hard Rules | — | [#105](https://github.com/label-suite/label-suite/issues/105) |
 | 2026-11-10 | starter-kit 那一類從 #105 工作項移除（該來源不存在或已不適用） | #105 工作項對 starter-kit 的點名 | [#105](https://github.com/label-suite/label-suite/issues/105) |
