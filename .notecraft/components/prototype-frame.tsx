@@ -22,12 +22,14 @@ type Props = {
   caption: string;
   /** Displayed frame height in pixels. */
   height?: number;
+  /** Optional query string without the leading "?", e.g. "task_id=T003&task_role=project_leader". */
+  query?: string;
 };
 
 type Status = 'checking' | 'up' | 'down';
 
-export default function PrototypeFrame({ page, caption, height = 640 }: Props) {
-  const url = `${PROTOTYPE_ORIGIN}/pages/${page}.html`;
+export default function PrototypeFrame({ page, caption, height = 640, query }: Props) {
+  const url = `${PROTOTYPE_ORIGIN}/pages/${page}.html${query ? `?${query}` : ''}`;
   const source = `design/prototype/pages/${page}.html`;
   const [status, setStatus] = useState<Status>('checking');
   const [figureWidth, setFigureWidth] = useState(0);
