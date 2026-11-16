@@ -194,43 +194,45 @@ Celery task 只收可序列化的識別資訊，在自己的行程裡重新查�
 
 | 不採用 | 出處 | 為什麼 |
 | :--- | :--- | :--- |
-| 「業務刪除一律 `softDelete()`，禁止 `delete()`」，以及「新 entity 一律繼承軟刪除基底」 | **scaffold 與 duty-mate 的 `database.md` §軟刪除（兩份都列為鐵律）** | 刪除語意是規格問題。本專案依 ADR-038 與功能規格逐種決定；稽核列永遠不刪、帶答案的歷史不匿名化，兩者都不是「軟刪除」能表達的。#106 工作項 8 明文點名不套用這一條 |
-| 「所有 migration 同時 transaction 加 `CONCURRENTLY`」 | #106 工作項 6 點名的那類要求 | 自相矛盾：`CREATE INDEX CONCURRENTLY` 不能在交易裡執行 |
-| 「寄完信再 commit」 | #106 工作項 4 點名 | 寄信失敗會吃掉已成立的業務結果。本專案把外部呼叫放在 commit 之後、失敗走補償 |
+| 「業務刪除一律 `softDelete()`，禁止 `delete()`」，以及「新 entity 一律繼承軟刪除基底」 | **scaffold 與 duty-mate 的 `database.md` §軟刪除（兩份都列為鐵律）** | 刪除語意是規格問題。本專案依 ADR-038 與功能規格逐種決定；稽核列永遠不刪、帶答案的歷史不匿名化，兩者都不是「軟刪除」能表達的 |
+| 「所有 migration 同時 transaction 加 `CONCURRENTLY`」 | — | 自相矛盾：`CREATE INDEX CONCURRENTLY` 不能在交易裡執行 |
+| 「寄完信再 commit」 | — | 寄信失敗會吃掉已成立的業務結果。本專案把外部呼叫放在 commit 之後、失敗走補償 |
 | NestJS／TypeORM 的具體寫法（`@InjectRepository`、`dataSource.transaction`、`synchronize: false` 的設定鍵） | scaffold 與 duty-mate 的 `database.md` | 棧不同（本專案是 SQLAlchemy）。**原則沿用、寫法不沿用** |
 | 原始 repo `backend.md` 的 Accept-Language 解析長段 | `backend.md` §i18n | 那是實作規格不是規則。i18n 兩層的決定在 ADR-026（沿用），實際的解析行為屬 `docs/specs/` 或該模組的 api-contract，不放進規則文件 |
 | 原始 repo `api.md` 的 `app/schemas/`、`backend.md` 的 `app/i18n/zh_TW/` 等集中路徑 | 兩份皆是 | 被模組內分層覆寫，見[決策紀錄](#決策紀錄) |
 
 ## 附錄：來源對照
 
+比對的版本：原始 repo `faf83356`、duty-mate `c53cc453`（`develop`）；scaffold 為本機副本，無固定版本。
+
 ### 各條規範的來源
 
 | 規範 | 來源 |
 | :--- | :--- |
 | B1 | 模組內分層來自維護者裁定，見 [architecture.mdx](architecture.mdx)。狀態機只在 service 來自 ADR-022（沿用；它舉的扁平 `app/services/` 路徑已被裁定覆寫）。原始 repo `api.md` 的 `app/schemas/` 集中寫法同樣被覆寫 |
-| B2 | 原始 repo `backend.md` §Python Code Style（**沿用**：docstring 英文加完整型別、指令走 `uv run`）。`uv run` 這一條是 [#105](https://github.com/label-suite/label-suite/issues/105) 的來源對照裡標「待採用、歸本張」的那一條。相依一律 `uv add` 已在 `AGENTS.md` 硬性規則 3 |
+| B2 | 原始 repo `backend.md` §Python Code Style（**沿用**：docstring 英文加完整型別、指令走 `uv run`）。`uv run` 這一條在 [agent-rules.md](agent-rules.md) 的來源對照裡標為待採用。相依一律 `uv add` 已在 `AGENTS.md` 硬性規則 3 |
 | B3 | [architecture.mdx](architecture.mdx)：「同一層的 API 與 worker 用不同的驅動，因為 Celery 跑在同步執行緒裡，不能用 async engine」。scaffold `database.md` §連線管理 的「透過 DI 取得、不用全域 connection」**沿用原則** |
-| B4 | scaffold `database.md` §連線管理 的「多步驟寫入用 `dataSource.transaction`，transaction 內只用 `manager`」**沿用原則**（轉成 SQLAlchemy 的 session 邊界）。**「寄完信再 commit」刻意不採用**，#106 工作項 4 明文要求不照搬 |
-| B5 | scaffold `database.md` §ORM 唯一原則（**沿用**，含它的 DDL 例外）；[architecture.mdx](architecture.mdx) 的分層表已寫「不寫原生 SQL（migration DDL 例外）」。#106 工作項 5 另外要求：資料遷移要個別說明，不把 migration 變成任意 SQL 逃生門 |
-| B6 | scaffold `database.md` §Migration（**沿用**：不用 synchronize、可 up 可 down、已部署凍結、讀過產物）；[architecture.mdx](architecture.mdx)「schema 一律走 Alembic migration，不用 `synchronize` 類的自動同步」。「所有 migration 同時 transaction 加 CONCURRENTLY」不採用（#106 工作項 6 明文） |
-| B7 | ADR-024 資料庫雙層（**沿用**）；[architecture.mdx](architecture.mdx) 的兩層表與驅動推導。scaffold `integration-test-http.md` 的「真 Postgres test db」**沿用原則**，但它的 NestJS harness 不轉用（測試分層歸 [#110](https://github.com/label-suite/label-suite/issues/110)） |
-| B8 | ADR-038 資料保留、刪除與匿名化（**沿用**）；[architecture.mdx](architecture.mdx) 的保留政策列與稽核 append-only。scaffold `database.md` §軟刪除（鐵律）刻意不採用，#106 工作項 8 明文要求不套用「所有 entity 一律軟刪除」 |
-| B9 | ADR-007 Celery（**沿用**）；[architecture.mdx](architecture.mdx) 的 Celery 分層列（「不處理 HTTP、不回傳使用者可見訊息」）與評分流程圖。授權本身歸 [#107](https://github.com/label-suite/label-suite/issues/107) |
-| B10 | `AGENTS.md` 硬性規則 8（祕密只從環境變數）與硬性規則 9（輸入驗證）；ADR-035 Google SSO 可選；寄信降級的維護者裁定（見[決策紀錄](#決策紀錄)）。「自行印出密碼或重設連結」是 #106 工作項 10 明文要防的，降級的做法未決時不自己決定 |
+| B4 | scaffold `database.md` §連線管理 的「多步驟寫入用 `dataSource.transaction`，transaction 內只用 `manager`」**沿用原則**（轉成 SQLAlchemy 的 session 邊界）。**「寄完信再 commit」刻意不採用**，不照搬 |
+| B5 | scaffold `database.md` §ORM 唯一原則（**沿用**，含它的 DDL 例外）；[architecture.mdx](architecture.mdx) 的分層表已寫「不寫原生 SQL（migration DDL 例外）」。另外，資料遷移要個別說明，不把 migration 變成任意 SQL 逃生門 |
+| B6 | scaffold `database.md` §Migration（**沿用**：不用 synchronize、可 up 可 down、已部署凍結、讀過產物）；[architecture.mdx](architecture.mdx)「schema 一律走 Alembic migration，不用 `synchronize` 類的自動同步」。「所有 migration 同時 transaction 加 CONCURRENTLY」不採用 |
+| B7 | ADR-024 資料庫雙層（**沿用**）；[architecture.mdx](architecture.mdx) 的兩層表與驅動推導。scaffold `integration-test-http.md` 的「真 Postgres test db」**沿用原則**，但它的 NestJS harness 不轉用（測試分層見 [testing-agent-rules.md](testing-agent-rules.md)） |
+| B8 | ADR-038 資料保留、刪除與匿名化（**沿用**）；[architecture.mdx](architecture.mdx) 的保留政策列與稽核 append-only。scaffold `database.md` §軟刪除（鐵律）刻意不採用，不套用「所有 entity 一律軟刪除」 |
+| B9 | ADR-007 Celery（**沿用**）；[architecture.mdx](architecture.mdx) 的 Celery 分層列（「不處理 HTTP、不回傳使用者可見訊息」）與評分流程圖。授權本身見 [security-agent-rules.md](security-agent-rules.md) |
+| B10 | `AGENTS.md` 硬性規則 8（祕密只從環境變數）與硬性規則 9（輸入驗證）；ADR-035 Google SSO 可選；寄信降級的維護者裁定（見[決策紀錄](#決策紀錄)）。「自行印出密碼或重設連結」是要防的，降級的做法未決時不自己決定 |
 
-### 原始 repo（`singyichen/label-suite@faf83356`）
+### 原始 repo（`singyichen/label-suite`）
 
 | 來源條文 | 處理 | 說明 |
 | :--- | :--- | :--- |
 | `backend.md` §Python Code Style 的 docstring 英文加完整型別 | **沿用** | 成為 B2 |
-| `backend.md` 的「指令一律走 `uv run`」 | **沿用** | 成為 B2。這是 #105 標「待採用、歸本張」的那一條 |
-| `backend.md` 的「用 pytest 不用 unittest」、「f-string 優先」 | **不在本文件** | 測試框架歸 [#110](https://github.com/label-suite/label-suite/issues/110)；f-string 屬風格，本 repo 未立條文 |
+| `backend.md` 的「指令一律走 `uv run`」 | **沿用** | 成為 B2 |
+| `backend.md` 的「用 pytest 不用 unittest」、「f-string 優先」 | **不在本文件** | 測試框架見 [testing-agent-rules.md](testing-agent-rules.md)；f-string 屬風格，本 repo 未立條文 |
 | `backend.md` §i18n 的「訊息字串由後端擁有、不硬寫在 handler」 | **沿用** | ADR-026 沿用；落點是各模組的 api-contract |
 | `backend.md` §i18n 的 `app/i18n/zh_TW/` 路徑與 Accept-Language 解析長段 | **改寫／不採用** | 路徑被模組內分層覆寫；解析長段是實作規格，見上表 |
-| `api.md` §Design Conventions 的 RESTful 與 `/api/v1/[module]/[resource]` | **沿用** | 前綴 `/api/v1` 已由維護者裁定（見[決策紀錄](#決策紀錄)）。**API 契約的規範歸 [#108](https://github.com/label-suite/label-suite/issues/108)**，這裡只記對照 |
-| `api.md` 的 Pydantic 驗證、不回傳裸 ORM model、`response_model=` 必填 | **沿用** | 歸 [#108](https://github.com/label-suite/label-suite/issues/108) |
-| `api.md` 的 `PaginatedResponse[T]` 與 `next_offset` | **沿用** | 與維護者的 envelope 裁定同向；細節歸 #108 |
-| `api.md` §Status Codes、§Auth & Permissions（含 `403` vs `404`） | **不在本文件** | 授權與資源隱藏歸 [#107](https://github.com/label-suite/label-suite/issues/107) |
+| `api.md` §Design Conventions 的 RESTful 與 `/api/v1/[module]/[resource]` | **沿用** | 前綴 `/api/v1` 已由維護者裁定（見[決策紀錄](#決策紀錄)）。**API 契約的規範見 [api-agent-rules.md](api-agent-rules.md)**，這裡只記對照 |
+| `api.md` 的 Pydantic 驗證、不回傳裸 ORM model、`response_model=` 必填 | **沿用** | 見 [api-agent-rules.md](api-agent-rules.md) |
+| `api.md` 的 `PaginatedResponse[T]` 與 `next_offset` | **沿用** | 與維護者的 envelope 裁定同向；細節見 [api-agent-rules.md](api-agent-rules.md) |
+| `api.md` §Status Codes、§Auth & Permissions（含 `403` vs `404`） | **不在本文件** | 授權與資源隱藏見 [security-agent-rules.md](security-agent-rules.md) |
 | `api.md` §FastAPI Specifics 的 `Depends(get_db)` | **沿用** | 成為 B3 的正例 |
 | `api.md` 的 `app/schemas/` 集中路徑 | **改寫** | 被模組內分層覆寫 |
 
@@ -243,25 +245,25 @@ Celery task 只收可序列化的識別資訊，在自己的行程裡重新查�
 | `database.md` §軟刪除（鐵律） | **不採用** | 見上方「刻意不採用的來源條文」 |
 | `database.md` §連線管理（DI 取 repository、多步寫入用 transaction） | **沿用原則** | 成為 B3 與 B4 |
 | `database.md` 的 TypeORM 具體 API | **不採用** | 棧不同 |
-| `integration-test-http.md` 的「真 Postgres test db」 | **沿用原則** | 成為 B7；它的 NestJS harness 歸 #110 |
+| `integration-test-http.md` 的「真 Postgres test db」 | **沿用原則** | 成為 B7；它的 NestJS harness 見 [testing-agent-rules.md](testing-agent-rules.md) |
 
-### duty-mate（`trendlink/duty-mate@c53cc453`，`develop`）
+### duty-mate（`trendlink/duty-mate`）
 
 | 來源條文 | 處理 | 說明 |
 | :--- | :--- | :--- |
 | `database.md` §ORM 唯一原則（鐵律，禁原生 SQL，含測試程式碼同樣適用） | **沿用原則** | 與 B5 同向。它的 TypeORM Schema API 寫法不採用（本專案是 SQLAlchemy），SQLite-only 的前提也不適用——本專案 SQLite 只是 Lite 層，正式是 PostgreSQL |
 | `database.md` §Migration 規範（必用 Migration API、冪等性、包含 down） | **沿用原則** | 與 B6 同向 |
-| **`database.md` §軟刪除唯一原則（鐵律）**：業務刪除禁用硬刪一律軟刪、查詢預設自動過濾軟刪列、唯一性用 partial unique index 帶 `WHERE deletedAt IS NULL`、**新 entity 一律繼承 `SoftDeletableEntity`** | **不採用** | **這一節是 #106 工作項 8 點名要防的那一條**，而 duty-mate 正是那個「所有 entity 一律軟刪除」的專案。本專案依 ADR-038 與功能規格逐種決定刪除語意，見 B8——它舉的反例就是「新增 entity 時順手繼承一個含 `deleted_at` 的共用基底」 |
+| **`database.md` §軟刪除唯一原則（鐵律）**：業務刪除禁用硬刪一律軟刪、查詢預設自動過濾軟刪列、唯一性用 partial unique index 帶 `WHERE deletedAt IS NULL`、**新 entity 一律繼承 `SoftDeletableEntity`** | **不採用** | **這一節就是「所有 entity 一律軟刪除」那一條**，而 duty-mate 正是那個「所有 entity 一律軟刪除」的專案。本專案依 ADR-038 與功能規格逐種決定刪除語意，見 B8——它舉的反例就是「新增 entity 時順手繼承一個含 `deleted_at` 的共用基底」 |
 | `database.md` §Session / Connection 管理（禁止全域 connection／session、用 DI 管理、每個 request 結束後連線歸還 pool） | **沿用原則** | 與 B3 幾乎逐字同向。它的 `@InjectRepository`／`@InjectDataSource` 寫法不採用 |
-| `database.md` 的 E2E 測試帳密與測試清庫例外 | **不在本文件** | 測試歸 [#110](https://github.com/label-suite/label-suite/issues/110)。附帶一提它的「測試清庫允許硬刪」與 B8 不衝突——那不是業務刪除 |
+| `database.md` 的 E2E 測試帳密與測試清庫例外 | **不在本文件** | 測試見 [testing-agent-rules.md](testing-agent-rules.md)。附帶一提它的「測試清庫允許硬刪」與 B8 不衝突——那不是業務刪除 |
 | `command.md`（nest-commander） | **不採用** | 棧不同。本專案的 CLI 若要規範，另案處理 |
 | 其餘九份 | **不在本文件** | 見 [agent-rules.md](agent-rules.md) §來源對照 的 duty-mate 一節 |
 
 ### starter-kit
 
-**仍然對不上。** #106 點名它的 `backend/architecture.md` 與 `backend/database.md`。維護者已在 [#105](https://github.com/label-suite/label-suite/issues/105) 裁定「該來源不存在或已不適用，從工作項移除」——#105 查過 `trendlink` 組織底下所有 repo、個人帳號與本機，`core-principles.md`／`workflow.md` 都不存在；本機唯一叫 starter-kit 的 `whest-starterkit` 是科學計算起始包。
+**仍然對不上。** 它的 `backend/architecture.md` 與 `backend/database.md` 找不到來源。維護者已裁定「該來源不存在或已不適用，從工作項移除」：`trendlink` 組織底下所有 repo、個人帳號與本機都查過，`core-principles.md`／`workflow.md` 都不存在；本機唯一叫 starter-kit 的 `whest-starterkit` 是科學計算起始包。
 
-#106 另外實查了一次（因為 #106 點的是不同檔名，而 `agent-rules.md` 自己記的教訓正是「附帶搜尋清單的否定結論會勸退後面的人再查」）：`trendlink` 組織底下 24 個 repo（含 `backend`、`frontend`、`deid-kit`）的 tree、`singyichen` 的 repo 清單、以及本機 `find ~/project` 找 `backend/architecture.md`／`backend/database.md`，**全部零命中**。
+另外又實查了一次（因為點名的檔名不同，而 `agent-rules.md` 自己記的教訓正是「附帶搜尋清單的否定結論會勸退後面的人再查」）：`trendlink` 組織底下 24 個 repo（含 `backend`、`frontend`、`deid-kit`）的 tree、`singyichen` 的 repo 清單、以及本機 `find ~/project` 找 `backend/architecture.md`／`backend/database.md`，**全部零命中**。論證見 [#106](https://github.com/label-suite/label-suite/issues/106)。
 
 所以這一類沒有對照可做，也不編造。
 
