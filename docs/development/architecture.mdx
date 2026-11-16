@@ -64,7 +64,7 @@ prompt: |
   核心洞察：一個 Label Suite 部署只有六個容器，而且只有 Nginx 對外；讀測試集答案的只有 worker；資料庫層只換驅動與檔案位置，容器不變。
   互動：點容器或對象看說明與關係（其餘連線壓暗）；「資料庫層」切換 Lite（SQLite）與正式（PostgreSQL），資料庫與它的連線說明跟著換；「部署設定」切換 Google OIDC、Resend 是否設定，未設定的連線變灰虛線，Resend 未設定時亮出黃色虛線的替代路徑。
   圖形：C4 第二層。上排是部署者與使用者，中間虛線框是 Label Suite，框內上排前端 SPA 與 Nginx、中排背景 worker、Redis、API、下排資料庫（內含加鎖的測試集答案表），框外下排是兩個可選外部系統。
-  資料：與本節表格逐項一致（容器、技術、職責、ADR）；人與外部系統沿用 PRD 的系統情境，不畫第三層的模組。
+  資料：六個容器與它們的職責與本節表格逐項一致（那張表只有「容器」「職責」兩欄）；技術、資料庫層與可選外部系統取自 §技術選型、§測試集答案不外露、§資料庫雙層、§非同步任務、§部署與維運；人與外部系統沿用 PRD 的系統情境，不畫第三層的模組。
 caption: 點容器看關係；切換「資料庫層」與「部署設定」看不同部署的樣子
 status: generated
 */}
@@ -72,7 +72,7 @@ status: generated
 import GeneratedFrame from '@/components/GeneratedFrame.astro'
 import ArchitectureContainerView from '@notes/components/architecture-container-view'
 
-<GeneratedFrame id="architecture-container-view" type="interactive" prompt={"核心洞察：一個 Label Suite 部署只有六個容器，而且只有 Nginx 對外；讀測試集答案的只有 worker；資料庫層只換驅動與檔案位置，容器不變。\n互動：點容器或對象看說明與關係（其餘連線壓暗）；「資料庫層」切換 Lite（SQLite）與正式（PostgreSQL），資料庫與它的連線說明跟著換；「部署設定」切換 Google OIDC、Resend 是否設定，未設定的連線變灰虛線，Resend 未設定時亮出黃色虛線的替代路徑。\n圖形：C4 第二層。上排是部署者與使用者，中間虛線框是 Label Suite，框內上排前端 SPA 與 Nginx、中排背景 worker、Redis、API、下排資料庫（內含加鎖的測試集答案表），框外下排是兩個可選外部系統。\n資料：與本節表格逐項一致（容器、技術、職責、ADR）；人與外部系統沿用 PRD 的系統情境，不畫第三層的模組。\n"} caption="點容器看關係；切換「資料庫層」與「部署設定」看不同部署的樣子">
+<GeneratedFrame id="architecture-container-view" type="interactive" prompt={"核心洞察：一個 Label Suite 部署只有六個容器，而且只有 Nginx 對外；讀測試集答案的只有 worker；資料庫層只換驅動與檔案位置，容器不變。\n互動：點容器或對象看說明與關係（其餘連線壓暗）；「資料庫層」切換 Lite（SQLite）與正式（PostgreSQL），資料庫與它的連線說明跟著換；「部署設定」切換 Google OIDC、Resend 是否設定，未設定的連線變灰虛線，Resend 未設定時亮出黃色虛線的替代路徑。\n圖形：C4 第二層。上排是部署者與使用者，中間虛線框是 Label Suite，框內上排前端 SPA 與 Nginx、中排背景 worker、Redis、API、下排資料庫（內含加鎖的測試集答案表），框外下排是兩個可選外部系統。\n資料：六個容器與它們的職責與本節表格逐項一致（那張表只有「容器」「職責」兩欄）；技術、資料庫層與可選外部系統取自 §技術選型、§測試集答案不外露、§資料庫雙層、§非同步任務、§部署與維運；人與外部系統沿用 PRD 的系統情境，不畫第三層的模組。\n"} caption="點容器看關係；切換「資料庫層」與「部署設定」看不同部署的樣子">
   <ArchitectureContainerView client:visible />
 </GeneratedFrame>
 
