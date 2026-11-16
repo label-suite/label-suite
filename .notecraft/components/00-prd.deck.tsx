@@ -271,7 +271,7 @@ function ProgressPage({ dark }: CustomSlideProps) {
   const span = 100 - inset * 2;
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", justifyContent: "center", gap: DGAP.lg }}>
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", justifyContent: "center", gap: DGAP.md }}>
       <div style={{ position: "relative", display: "grid", gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}>
         <div
           aria-hidden="true"
@@ -375,7 +375,7 @@ function ProgressPage({ dark }: CustomSlideProps) {
                 {STATE_LABEL[p.state]}
               </span>
               <span style={{ fontSize: DS.h3, fontWeight: 900, color: p.state === "todo" ? c.body : c.ink }}>{p.title}</span>
-              <ul style={{ margin: 0, paddingLeft: "1.1em", display: "flex", flexDirection: "column", gap: DGAP.sm, fontSize: DS.body, lineHeight: 1.5, color: c.body }}>
+              <ul style={{ margin: 0, paddingLeft: "1.1em", display: "flex", flexDirection: "column", gap: DGAP.xs, fontSize: DS.small, lineHeight: 1.5, color: c.body }}>
                 {p.outputs.map((o) => (
                   <li key={o}>{o}</li>
                 ))}
