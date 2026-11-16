@@ -21,7 +21,7 @@ updatedAt: '2026-11-16'
 | 不是規則來源 | hook 只呼叫本 repo 的共用檢查器。檢查器要擋什麼，依六份規範文件 |
 | hook 不等於權限控制 | hook 攔不住平台權限層、產品授權與 CI 要負責的事。**本機 hook 通過不能代替 CI**（T9 的禁止格） |
 | 不宣稱兩邊等價 | Claude 的設定、事件名稱、exit code 與工具名稱**不會**自動在 Codex 生效。見[§平台支援矩陣](#平台支援矩陣)與[§能力缺口與承接](#能力缺口與承接) |
-| 不在 `pnpm check:specs` 範圍內 | `scripts/check-specs.mjs` 的 `listMdx` 只收 `.mdx`，而 `docs/development/` 底下是 `.md`；它的機械驗證只有 docs build（MDX 編譯）。本文件的事實正確性靠實查與獨立審查，**不得因為 `check:specs` 綠就當成這份對過了** |
+| `check:specs` 驗得到的只有形狀 | `scripts/check-specs.mjs` 的 `listMdx` **自 [PR #395](https://github.com/label-suite/label-suite/pull/395) 起也收 `.md`**，所以本文件會走 `checkTerms`、`checkAnchorLinks`、`checkQuestions` 與 `checkCitedNames` 四個檢查；但 `specParts()` 的鍵是 `NN-<模組>/NN-<頁面>.mdx`，所以 frontmatter、章節順序、Scenario、決議依據、舊編號對照**都套不到**。也就是說：術語、連結錨點與引文驗得到，**事實正確性驗不到**——那仍然靠實查與獨立審查，**不得因為 `check:specs` 綠就當成這份對過了** |
 
 ## 本 repo 的 Hook 契約
 
@@ -65,7 +65,7 @@ updatedAt: '2026-11-16'
 | :--- | :--- |
 | **目的** | 剛改過的檔案立刻拿到可修正的診斷，而不是等 CI |
 | **事件** | `PostToolUse`。Claude matcher `Edit|Write|NotebookEdit`；Codex matcher `apply_patch` |
-| **適用路徑／角色** | 只對**本次受影響且已存在**的檔案，依副檔名分流：`.py` → `ruff` 加 `mypy`；`.ts`／`.tsx` → `tsc --noEmit` 加 `eslint`；`.mdx` → `node scripts/check-specs.mjs docs`。**排除** `frontend/src/api/generated/`、Alembic migration、`pnpm-lock.yaml`、`uv.lock` 與 vendor |
+| **適用路徑／角色** | 只對**本次受影響且已存在**的檔案，依副檔名分流：`.py` → `ruff` 加 `mypy`；`.ts`／`.tsx` → `tsc --noEmit` 加 `eslint`；`docs/` 底下的 `.mdx` **與 `.md`** → `node scripts/check-specs.mjs docs`（自 [PR #395](https://github.com/label-suite/label-suite/pull/395) 起兩種副檔名都在它的範圍內）。**排除** `frontend/src/api/generated/`、Alembic migration、`pnpm-lock.yaml`、`uv.lock` 與 vendor |
 | **payload 欄位** | `tool_name`、`tool_input` 的檔案路徑、`cwd` |
 | **共用檢查器** | `scripts/check-changed.sh`（**待建置**）。`.mdx` 那條沿用既有的 `scripts/check-specs.mjs` |
 | **timeout** | **30 秒** |
@@ -319,6 +319,7 @@ matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Wr
 
 | 日期 | 決策 | 取代了什麼 | 來源 |
 | :--- | :--- | :--- | :--- |
+| 2026-11-16 | 本文件**進入 `pnpm check:specs` 的範圍**（四個檢查：術語、連結錨點、Q 編號、引文），但事實正確性仍然驗不到 | 原本寫「不在 `pnpm check:specs` 範圍內，因為 `listMdx` 只收 `.mdx`」——[PR #395](https://github.com/label-suite/label-suite/pull/395) 把 `listMdx` 擴到 `.md` 之後那個理由不成立 | [#236](https://github.com/label-suite/label-suite/issues/236) |
 | 2026-11-11 | 建立契約：雙平台矩陣（只用共通子集）、七個 hook 的九欄契約、repo 定位六種情境、七項能力缺口；本機沒有 `timeout`、Codex 事件名為 PascalCase、Codex 有綁 hash 的信任模型三點寫入[§查核方式](#查核方式) | — | [#111](https://github.com/label-suite/label-suite/issues/111) |
 | 2026-11-11 | 四個 timeout 採用提議值：H1 10 秒、H2 5 秒、H3 30 秒、H6 60 秒（維護者當日以問答確認） | 初版標為待裁定 | [#111](https://github.com/label-suite/label-suite/issues/111) |
 | 2026-11-11 | H3 只檢查不自動修：不改檔、不自動 `git add`，連 formatter 都不自動套用 | 初版標為待裁定 | [#111](https://github.com/label-suite/label-suite/issues/111) |
