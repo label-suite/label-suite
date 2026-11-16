@@ -275,7 +275,9 @@ server state 只放 TanStack Query，query key 一律來自 Orval 產物匯出�
 
 ## 附錄：來源對照
 
-### 原始 repo（`singyichen/label-suite@faf83356`）
+比對的版本：原始 repo `faf83356`、duty-mate `c53cc453`（`develop`）。
+
+### 原始 repo（`singyichen/label-suite`）
 
 **這張表的範圍是 API 契約與前端 client。** 來源檔裡的非 API 條文（`frontend.md` 的 ADR-011 切片與 `shared/` 准入規則、§Icons、§TypeScript Code Style）**刻意不在這裡對照**，歸 [frontend-agent-rules.md](frontend-agent-rules.md)；`api.md` §Auth & Permissions 歸 [security-agent-rules.md](security-agent-rules.md)；`backend.md` 的分層與指令歸 [backend-agent-rules.md](backend-agent-rules.md)。所以某一節沒出現在下表，是被排除、不是被漏掉。
 
@@ -325,7 +327,7 @@ server state 只放 TanStack Query，query key 一律來自 Orval 產物匯出�
 | `api-client.md` §測試與 mock（MSW handler 優先取自 Orval 產生的 mock、測試內覆寫不改產物） | **不在本文件** | 測試分層歸 [testing-agent-rules.md](testing-agent-rules.md)；「不改產物」那一面在 A4 |
 | `ApiResponseDto` 的具體欄位、`@ApiBearerAuth()`、`bigint id` 轉字串 | **不採用** | 見 [附錄：刻意不採用的來源條文](#附錄刻意不採用的來源條文) |
 
-### duty-mate（`trendlink/duty-mate@c53cc453`，`develop`）
+### duty-mate（`trendlink/duty-mate`）
 
 **它沒有 API 契約或 API client 的規則檔**，`.claude/rules/` 的十二份裡沒有 `api-*`，因為它是 SSR（NestJS 加 Handlebars），沒有 SPA client 要對接。所以這一類大部分沒有可對照的條文，不編造。
 
