@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, ClipboardCheck, Crown, KeyRound, PenLine, ShieldCheck, User } from "lucide-react";
+import { ArrowLeft, ArrowRight, ClipboardCheck, Crown, KeyRound, MonitorPlay, PenLine, ShieldCheck, User } from "lucide-react";
 import type { CustomSlideProps, Deck } from "@/lib/decks";
 import { Triad } from "@/components/deck/blocks";
 import { DGAP, DS, DTRACK } from "@/components/deck/scale";
@@ -7,6 +7,7 @@ import { dkt } from "@/components/deck/theme";
 import ArchitectureContainerView from "@notes/components/architecture-container-view";
 import PrdSystemContext from "@notes/components/prd-system-context";
 import PrdTaskLifecycleFlow from "@notes/components/prd-task-lifecycle-flow";
+import PrototypeFrame from "@notes/components/prototype-frame";
 
 // PART 01 — 三個卡住現有流程的問題，收斂成一句要證明的事。
 function ProblemsPage({ dark }: CustomSlideProps) {
@@ -184,6 +185,40 @@ function RolesPage({ dark }: CustomSlideProps) {
   );
 }
 
+// PART 05 — 實際操作畫面：嵌入 design/prototype 的頁面，簡報時現場操作。
+// 需要先執行 `pnpm prototype`（port 4331）；未啟動時 PrototypeFrame 會顯示提示。
+// 縮覽圖（live === false）不掛 iframe，只畫佔位，避免側欄同時載入多份 prototype。
+// 任務詳情與標記工作區要帶 task_id 等參數才有內容，參數格式見 docs/prototype/navigation.mdx。
+// 在 iframe 內點擊後鍵盤焦點會留在 prototype 裡，→ 不會翻頁：先點 iframe 外面再翻。
+function prototypePage(page: string, caption: string, query?: string) {
+  function PrototypePage({ dark, live, area }: CustomSlideProps) {
+    const c = dkt(dark);
+    if (!live) {
+      return (
+        <div
+          style={{
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: DGAP.sm,
+            borderRadius: "var(--radius-lg)",
+            border: `2px dashed ${c.border}`,
+            color: c.muted,
+          }}
+        >
+          <MonitorPlay size={96} strokeWidth={1.6} />
+          <span style={{ fontSize: DS.h3, fontWeight: 800, color: c.body }}>{caption}</span>
+        </div>
+      );
+    }
+    // PrototypeFrame 底下還有一行 caption 與上下 margin，扣掉約 64px。
+    return <PrototypeFrame page={page} caption={caption} query={query} height={Math.max(320, area.h - 64)} />;
+  }
+  return PrototypePage;
+}
+
 const deck: Deck = {
   slug: "specs/00-prd",
   title: "Label Suite：給學術 NLP 團隊的標記與品質平台",
@@ -197,12 +232,13 @@ const deck: Deck = {
       eyebrow: "PRODUCT · 定稿",
       title: "Label Suite：給學術 NLP 團隊的標記與品質平台",
       subtitle: "一個設定驅動的平台，走完試標、正式標記、審核與資料品質分析",
-      meta: ["由 docs/specs/00-prd.mdx 生成", "7 頁 · 16:9"],
+      meta: ["由 docs/specs/00-prd.mdx 生成", "10 頁 · 16:9"],
       agenda: [
         { n: "01", title: "問題與定位", sub: "三個痛點，一個論文目標" },
         { n: "02", title: "六個角色", sub: "系統角色與任務角色互不影響" },
         { n: "03", title: "系統架構", sub: "C4 第一層與第二層" },
         { n: "04", title: "任務生命週期", sub: "三個模組之間的六次交接" },
+        { n: "05", title: "實際操作畫面", sub: "建立任務、任務詳情、標記工作區" },
       ],
     },
     {
@@ -249,6 +285,34 @@ const deck: Deck = {
       viz: PrdTaskLifecycleFlow,
       vizLabel: "@ai-visualize · prd-task-lifecycle-flow",
       vizHint: "選『逐步走查』依序看每個交接；A1／A2 是退回草稿或再開一輪試標的替代流程。",
+    },
+    {
+      layout: "custom",
+      nav: "操作：建立任務",
+      num: "05",
+      eyebrow: "PART 05 · 實際操作畫面",
+      title: "建立任務：選任務類型、填設定，不用改程式",
+      render: prototypePage("task-management/task-new", "建立任務"),
+    },
+    {
+      layout: "custom",
+      nav: "操作：任務詳情",
+      num: "05",
+      eyebrow: "PART 05 · 實際操作畫面",
+      title: "任務詳情：進度、成員與結果都在同一個任務裡",
+      render: prototypePage("task-management/task-detail", "任務詳情", "task_id=T003&task_role=project_leader"),
+    },
+    {
+      layout: "custom",
+      nav: "操作：標記工作區",
+      num: "05",
+      eyebrow: "PART 05 · 實際操作畫面",
+      title: "標記工作區：標記員看到的畫面，沒有標準答案",
+      render: prototypePage(
+        "annotation/annotation-workspace",
+        "標記工作區",
+        "task_id=T001&sample_id=sent-001&role=annotator&run_type=official_run",
+      ),
     },
     {
       layout: "closing",
