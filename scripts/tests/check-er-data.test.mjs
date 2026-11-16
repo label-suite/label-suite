@@ -6,7 +6,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { checkErData, checkLineCitations, checkPathCitations, checkSpecEntries, parseDictionary } from '../check-er-data.mjs';
+import { checkErData, checkLandedRevisions, checkLineCitations, checkPathCitations, checkSpecEntries, parseDictionary } from '../check-er-data.mjs';
 
 // A two-table dictionary in the real document's shape: a group table in §一,
 // a chapter per group, a prose line and a column table per table.
@@ -48,7 +48,7 @@ title: '候選資料表字典與關聯限制'
 `;
 
 const ER = {
-  meta: { title: 'x', description: '本圖顯示 **2 張候選表、5 欄、1 個單欄 FK**。' },
+  meta: { title: 'x', description: '已落地業務表：**0**。本圖顯示 **2 張候選表、5 欄、1 個單欄 FK**。' },
   groups: [{ key: 'account', label: '帳號' }, { key: 'task', label: '任務' }],
   layout: { columns: [{ key: 'account', groups: ['account'] }, { key: 'task', groups: ['task'] }] },
   tables: [
@@ -173,6 +173,69 @@ test('a summary sentence that no longer matches the checkable form is reported',
   const er = clone(ER);
   er.meta.description = '本圖顯示 2 張候選表、5 欄、1 個單欄 FK。';
   assert.match(run(er).join('\n'), /no longer matches the checkable form/);
+});
+
+// Landed status (#381): the dictionary marks a table under its heading, the
+// diagram carries the same line in the table description, and the summary
+// counts them. A plan that says a table exists when Alembic never built it is
+// the drift this guards against.
+const LANDED_LINE = '**已落地**：Alembic revision `a1b2c3d4e5f6`';
+const landedDict = DICT.replace('一列代表一位可登入的使用者。', `${LANDED_LINE}\n\n一列代表一位可登入的使用者。`);
+const landedEr = () => {
+  const er = clone(ER);
+  er.meta.description = er.meta.description.replace('已落地業務表：**0**', '已落地業務表：**1**');
+  er.tables[0].description = `${LANDED_LINE}\n\n一列代表一位可登入的使用者。`;
+  return er;
+};
+
+test('the dictionary reads a landed marker under the table heading', () => {
+  const d = parseDictionary(landedDict);
+  assert.equal(d.tables[0].landed, 'a1b2c3d4e5f6');
+  assert.equal(d.tables[1].landed, null);
+});
+
+test('a table landed in both with the same revision passes', () => {
+  assert.deepEqual(run(landedEr(), landedDict), []);
+});
+
+test('a table landed in the dictionary but not in the diagram is reported', () => {
+  const er = landedEr();
+  delete er.tables[0].description;
+  assert.match(run(er, landedDict).join('\n'), /"users": landed revision is none in the diagram but "a1b2c3d4e5f6"/);
+});
+
+test('a different landed revision in the diagram is reported', () => {
+  const er = landedEr();
+  er.tables[0].description = er.tables[0].description.replace('a1b2c3d4e5f6', 'ffffffffffff');
+  assert.match(run(er, landedDict).join('\n'), /"users": landed revision is "ffffffffffff" in the diagram/);
+});
+
+test('a landed count that disagrees with the dictionary is reported', () => {
+  assert.match(run(ER, landedDict).join('\n'), /says 0 landed tables but the dictionary marks 1/);
+});
+
+test('a summary with no landed count is reported', () => {
+  const er = clone(ER);
+  er.meta.description = er.meta.description.replace('已落地業務表：**0**。', '');
+  assert.match(run(er).join('\n'), /landed count in the checkable form/);
+});
+
+test('a landed revision some migration declares passes', () => {
+  const migration = "revision: str = 'a1b2c3d4e5f6'\ndown_revision = None\n";
+  assert.deepEqual(checkLandedRevisions(landedDict, [migration]), []);
+});
+
+test('a landed revision only named as down_revision is reported', () => {
+  const migration = "revision: str = 'zzz'\ndown_revision = 'a1b2c3d4e5f6'\n";
+  assert.match(checkLandedRevisions(landedDict, [migration]).join('\n'), /no migration in backend\/alembic\/versions\/ declares/);
+});
+
+test('a landed table with no versions directory is reported', () => {
+  assert.match(checkLandedRevisions(landedDict, null).join('\n'), /does not exist/);
+});
+
+test('no landed table needs no versions directory', () => {
+  assert.deepEqual(checkLandedRevisions(DICT, null), []);
 });
 
 test('a dictionary with no group table is reported', () => {

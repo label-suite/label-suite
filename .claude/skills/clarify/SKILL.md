@@ -64,6 +64,7 @@ description: 釐清 OpenSpec change 規劃產物（system-analysis、system-desi
 | `specs/**/spec.md` | 是 | 各 capability 的 Requirement 與 Scenario |
 | `design.md` | 是 | |
 | `tasks.md` | 是 | |
+| `docs/diagrams/architecture/data-table-dictionary.mdx` | system-design 有資料模型異動時必要 | 候選表字典：每張表的 FK 欄與「被誰參照」，是判斷 schema 異動波及哪些表的依據（4.6）。ER（`database-schema.er.json`）由它產生，兩份不一致時以字典為準，並跑 `pnpm check:er` 確認 |
 | `clarification.md` | **完整模式必要** | 上一次在停點一拍板的決議。**完整模式一定要讀**——不讀就會把已經決議的 Q 再問一次（正是 4.1 自己禁止的事）。關卡模式下它就是本次的產出，不算輸入 |
 
 任一必要檔缺失 → 停止並回報缺哪一份（可用 `pnpm exec openspec status --change <name>` 確認 artifact 狀態）。
@@ -133,6 +134,8 @@ description: 釐清 OpenSpec change 規劃產物（system-analysis、system-desi
 - [ ] 對其他模組的副作用，design 是否說明？
 - [ ] 是否要改共用的認證、授權、版面或 HTTP 邊界？若有，tasks 是否體現？
 - [ ] 資料庫 schema 變更是否影響其他模組？是否有對應的 Alembic migration task？**SQLite 與 PostgreSQL 兩層是否都考慮到？**
+- [ ] **被改的表，上下游都查過了嗎？** 依字典逐表看它的 FK 欄（它參照誰）與「被誰參照」，列出受波及的表與所屬模組；system-design 的異動表沒提到的，就是一個問題
+- [ ] 字典與 ER 是否已在規劃階段改好、`pnpm check:er` 通過？只改了 ER 或只寫在 system-design、字典沒動，是 P 類缺陷，退回 `sd`
 
 #### 4.7 可測試性
 - [ ] 每個 Scenario 是否可被自動化測試覆蓋（後端 pytest、前端 Vitest、E2E Playwright）？

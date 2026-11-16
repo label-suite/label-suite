@@ -21,6 +21,7 @@ export const ER_PATH = join(HERE, '..', 'docs', 'diagrams', 'architecture', 'dat
 export const INVENTORY_PATH = join(HERE, '..', 'docs', 'diagrams', 'architecture', 'data-field-inventory.mdx');
 const SPECS_DIR = join(HERE, '..', 'docs', 'specs');
 const ROOT = join(HERE, '..');
+const VERSIONS_DIR = join(ROOT, 'backend', 'alembic', 'versions');
 // The roots a spec page is allowed to cite by line: the screens it describes,
 // the documents beside it, and the rules it quotes. Anything else is a path
 // `checkPathCitations` will report as missing, which is the right answer.
@@ -32,6 +33,11 @@ const SPEC_CODE = '(0[1-7]-0[0-9])';
 
 const NAME = /`([a-z][a-z0-9_]*)`/;
 const SEP = /^\|[\s:\-|]+\|$/;
+// How a table is marked as landed, in the dictionary (a line of its own under
+// the table heading) and in the diagram (a line in the table description).
+// The revision id is what ties the plan to the schema Alembic actually built.
+const LANDED = /\*\*已落地\*\*：Alembic revision `([0-9A-Za-z_]+)`/;
+const LANDED_COUNT = /已落地業務表：\*\*(\d+)\*\*/;
 
 function strip(cell) {
   return cell
@@ -93,11 +99,13 @@ export function parseDictionary(text) {
       // `group` is deliberately not carried: chapter seven covers two groups
       // under one heading, so a chapter-derived group would be wrong for six
       // tables. Group membership is checked against the declared counts.
-      table = { name: t[1], label: t[2].trim(), columns: [] };
+      table = { name: t[1], label: t[2].trim(), columns: [], landed: null };
       tables.push(table);
       inColumns = false;
       continue;
     }
+    const landed = table && !inColumns && line.startsWith('**已落地**') ? LANDED.exec(line) : null;
+    if (landed) { table.landed = landed[1]; continue; }
     if (line.startsWith('| 識別碼 | 中文意義 |')) { inColumns = true; continue; }
     if (!inColumns || !table) continue;
     if (!line.startsWith('|')) { inColumns = false; continue; }
@@ -216,6 +224,24 @@ export function checkErData(dictText, er, { specsDir = SPECS_DIR } = {}) {
     if (claimed.tables !== erTables.length) out.push(`the summary says ${claimed.tables} tables but the diagram holds ${erTables.length}`);
     if (claimed.columns !== columns) out.push(`the summary says ${claimed.columns} columns but the diagram holds ${columns}`);
     if (claimed.fks !== fks) out.push(`the summary says ${claimed.fks} single-column foreign keys but the diagram holds ${fks}`);
+  }
+
+  // Landed status: the dictionary is upstream, so a revision the diagram
+  // does not carry (or carries differently) is the diagram having drifted.
+  for (const [name, dt] of dictByName) {
+    const et = erByName.get(name);
+    if (!et) continue;
+    const erLanded = LANDED.exec(et.description || '')?.[1] ?? null;
+    if (erLanded !== dt.landed) {
+      out.push(`table "${name}": landed revision is ${erLanded ? `"${erLanded}"` : 'none'} in the diagram but ${dt.landed ? `"${dt.landed}"` : 'none'} in the dictionary`);
+    }
+  }
+  const landedClaim = LANDED_COUNT.exec(er.meta?.description || '');
+  const landedCount = dict.tables.filter((t) => t.landed).length;
+  if (!landedClaim) {
+    out.push('meta.description no longer states the landed count in the checkable form "已落地業務表：**N**"');
+  } else if (Number(landedClaim[1]) !== landedCount) {
+    out.push(`meta.description says ${landedClaim[1]} landed tables but the dictionary marks ${landedCount}`);
   }
 
   for (const t of erTables) {
@@ -379,6 +405,30 @@ export function checkPathCitations(sources, files) {
   return out;
 }
 
+/** Every landed revision must be a revision Alembic actually has. `files` is
+ *  the text of each migration under `backend/alembic/versions/`, or null when
+ *  that directory does not exist yet. */
+export function checkLandedRevisions(dictText, files) {
+  const out = [];
+  for (const t of parseDictionary(dictText).tables) {
+    if (!t.landed) continue;
+    if (files === null) {
+      out.push(`table "${t.name}" is marked landed at revision "${t.landed}", but backend/alembic/versions/ does not exist`);
+      continue;
+    }
+    const decl = new RegExp(`^revision(?::\\s*str)?\\s*=\\s*['"]${t.landed}['"]`, 'm');
+    if (!files.some((f) => decl.test(f))) {
+      out.push(`table "${t.name}" is marked landed at revision "${t.landed}", which no migration in backend/alembic/versions/ declares`);
+    }
+  }
+  return out;
+}
+
+function migrationFiles(dir = VERSIONS_DIR) {
+  if (!existsSync(dir)) return null;
+  return readdirSync(dir).filter((f) => f.endsWith('.py')).map((f) => readFileSync(join(dir, f), 'utf8'));
+}
+
 /** The table list each spec page's planning entry names must be exactly the
  *  tables whose `**規格來源**` cites that page. PR #252 shipped a first
  *  attempt that read every link in a table's description, so `audit_events`
@@ -459,6 +509,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const pages = specPages();
   const errors = checkErData(dictText, er)
     .concat(checkSpecEntries(er, pages))
+    .concat(checkLandedRevisions(dictText, migrationFiles()))
     .concat(checkLineCitations([
       { rel: 'diagrams/architecture/data-table-dictionary.mdx', text: dictText },
       { rel: 'diagrams/architecture/database-schema.er.json', text: erText },
@@ -470,5 +521,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     ));
   for (const e of errors) console.error(`ERROR ${e}`);
   if (errors.length > 0) process.exit(1);
-  console.log('check-er-data: dictionary, diagram, spec entries and both kinds of line citation agree');
+  console.log('check-er-data: dictionary, diagram, landed revisions, spec entries and both kinds of line citation agree');
 }
