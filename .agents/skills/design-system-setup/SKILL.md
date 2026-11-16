@@ -101,7 +101,7 @@ design/system/
 | 變體 | 有幾種樣子、怎麼決定用哪一種 | 同上 |
 | 適用狀態 | 預設、hover、focus、disabled、載入中、錯誤、空 —— **只寫畫面上真的有的** | 同上；沒有的寫進 `design-gaps.md` |
 | token | 用到哪些 `--color-*`／字級／間距／圓角 | `tokens.css` 的 token 名，**不抄 hex**（值見 `label-suite-design`） |
-| 鍵盤與焦點 | Tab 順序、Enter／Esc、焦點是否被困在 modal 裡 | prototype 的 `*.js`（例：`shared/modal-focus.js`） |
+| 鍵盤與焦點 | Tab 順序、Enter／Esc、焦點是否被困在 modal 裡 | prototype 的 `*.js`（例：`design/prototype/pages/shared/modal-focus.js`） |
 | 樣式出處 | 這個樣子是哪個 CSS 檔的哪一段決定的 | 檔名加行號 |
 | 可重現樣本 | 怎麼在 prototype 上看到它：哪個視圖 ID、怎麼走到 | 交付包的視圖 ID |
 
@@ -169,7 +169,7 @@ design/system/
    - 這一批交付包裡的每個視圖，都能在某個 `pages/` 檔裡找到
    - `design-gaps.md` 每一筆四欄齊全
    - 全文沒有 hex 色值（除非是 `design-gaps.md` 在引用畫面上的違規值）
-3. 跑 `pnpm check:specs`、`pnpm exec notecraftapp build docs --rebuild`（本 skill 不寫 `docs/`，但要確認沒有連帶打破）
+3. 跑 `pnpm check:specs`、`pnpm check:flows`、`pnpm check:er`。**不要跑 `notecraftapp build`**：本 skill 不寫 `docs/`，而對 git worktree 建置會污染共用的 Astro 快取
 
 ### 步驟 9：重跑
 

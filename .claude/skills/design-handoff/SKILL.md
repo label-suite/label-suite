@@ -87,21 +87,22 @@ ID 是 `design-system-setup` 重跑時比對「哪些東西受影響」的鍵，
 | 視圖（同一個畫面的一種狀態） | `<模組>/<頁面>#<視圖>` | `task-management/task-detail#tab-overview` |
 
 - 模組與頁面照 `design/prototype/pages/` 的實際路徑，不自己改名
-- 視圖名用 kebab-case 英文，取**叫出它的那個條件**，不是它長什麼樣：`role-annotator`、`tab-overview`、`state-empty`、`modal-export`、`error-invalid-token`
+- 視圖名用 kebab-case 英文，取**叫出它的那個條件**，不是它長什麼樣：`role-annotator`、`sim-403`、`param-status-draft`、`tab-overview`、`state-empty`、`modal-export`、`proto-expired`。前綴只用下表那七個
 - 頁面改名或視圖合併時，**不改舊 ID**：在新條目加 `renamedFrom`，舊 ID 留在 `retired` 清單並寫原因
 
 ### 視圖從哪裡來
 
-這個 prototype 的狀態幾乎全部由 **URL 參數**驅動，所以展開視圖的主力是把參數掃出來，不是靠點。六種條件：
+這個 prototype 的狀態幾乎全部由 **URL 參數**驅動，所以展開視圖的主力是把參數掃出來，不是靠點。七種條件：
 
 | 條件 | 怎麼叫出來 | ID 前綴 |
 | :--- | :--- | :--- |
 | 角色 | `?role=`。`shared/sidebar.js`、`task-management/task-detail.html`、`annotation/annotation-list.html`、`annotation/annotation-workspace.html`、`admin/user-management.html` 都讀它；任務角色另有 `?task_role=` | `role-` |
 | **模擬旗標** | `?sim_<情況>=1`，prototype 自己的約定，專門用來叫出**正常走不到或會被自動導走**的狀態：`sim_403`（`task-detail.html`）、`sim_delete_error`（`task-list.html`）、`sim_hold`（`verify-email.html`，擋住成功後的導向好讓面板留在畫面上）、`sim_logged_in`／`sim_logged_out`（`sidebar.js`） | `sim-` |
 | 其他 URL 參數 | 篩選與定位：`task_id`、`status`、`run_type`、`view`、`scenario`、`q`／`keyword`、`limit`／`offset`、`output_type`、`iaa_status`、`ap_stage`、`run_stage`、`q_state`／`s_state`、`invalid_task`、`unauthorized`、`notice` | `param-` |
-| 分頁 | `?tab=`，或頁內切換；含動態載入的 `*.panels/` | `tab-` |
+| 分頁 | `?tab=`，或頁內切換；含動態載入的 `*.panels/`（`task-detail`）與 `*.partials/`（`dataset-analysis-detail`） | `tab-` |
 | 設定或資料 | 改種子資料（`*.data.js`）才看得到的：空清單、極值、不同狀態值 | `state-` |
 | 覆蓋層 | modal、toast、下拉、側滑 | `modal-`／`toast-` |
+| **頁內原型開關** | `proto-btn` 按鈕呼叫 `showState('valid'｜'expired'｜'used')`，只存在於 `account/reset-password.html` 與 `account/verify-email.html`。那幾個連結狀態**沒有別的叫法**——不是角色、不是參數、不是 tab、不是資料 | `proto-` |
 
 **參數要掃出來，不要用猜的**：把每個 HTML 與它載入的 `.js` 裡的 `.get('<名稱>')` 全部列出來，那就是這一頁認得的參數全集。上表的名單是寫這份時的現況，不是上限。
 `sim_` 那一族要特別掃一遍——它們存在的理由就是那些狀態點不到，漏掉它們等於把一批真的存在的視圖寫成「無法重現」。
@@ -121,6 +122,8 @@ ID 是 `design-system-setup` 重跑時比對「哪些東西受影響」的鍵，
 | `b2-admin-dashboard-task` | `pages/admin/`、`pages/dashboard/`、`pages/task-management/` | 2 ＋ 1 ＋ 3 |
 | `b3-annotation-review` | `pages/annotation/` | 2 |
 | `b4-dataset-sweep` | `pages/dataset/`，以及全站覆蓋複查 | 2 |
+
+`index.html` 與 `components-showcase.html` 在 `pages/` 之外，不屬於任何產品模組，**隨 `b1` 一起處理**：前者是站台入口，後者是 living styleguide，而它正是 `design-system-setup` 的元件樣本主來源，沒有批次歸屬等於元件正典沒有歸屬。
 
 `pages/shared/` **一個 HTML 都沒有**，裡面是別頁載入的 CSS 與 JS（側欄、modal、日期區間、空狀態、輸入框…）。它排在 `b1` 是因為那些檔決定了全站共用元件的樣子，要先定案；它本身不產生畫面。
 畫面數是寫這份時的現況（`pages/**/*.html` 共 16 個，加兩個根層入口＝18），不是上限；每次 `b0` 重跑都要重數。
@@ -159,7 +162,7 @@ ID 是 `design-system-setup` 重跑時比對「哪些東西受影響」的鍵，
 | `navigation.mdx` 的 `Inline` 列 vs 展開出來的視圖 | 每一列都要對得到一個視圖，或寫出為什麼叫不出來 |
 | `docs/specs/` 的頁面 vs 畫面 | 規格有而畫面沒有 → 「無法重現」；畫面有而規格沒有 → 記進 `coverage.md` 的「沒有規格可連的視圖」 |
 
-另外逐一確認：**動態 partial 與素材載得起來**（`task-detail.panels/`、`assets/images/`、`assets/guidelines/`、`assets/icons/`）。載不起來的視圖算「無法重現」，原因寫「素材缺失」。
+另外逐一確認：**動態 partial 與素材載得起來**（`task-management/task-detail.panels/` 6 個、`dataset/dataset-analysis-detail.partials/` 16 個，以及 `assets/images/`、`assets/guidelines/`、`assets/icons/`）。載不起來的視圖算「無法重現」，原因寫「素材缺失」。
 
 > 執行環境的瀏覽器工具不一定連得到本機 `pnpm prototype`（這個 repo 的輪詢 loop 就連不到）。需要真的開畫面才能確認的，寫進回報請維護者代看，**不要反覆重試**，也不要因為開不起來就把視圖當成不存在。
 
@@ -176,6 +179,7 @@ ID 是 `design-system-setup` 重跑時比對「哪些東西受影響」的鍵，
     "prototypeTree": "<sha>",
     "specsTree": "<sha>",
     "navigationBlob": "<sha>",
+    "referenceDesignDocs": { "repo": "singyichen/label-suite", "commit": "faf8335" },
     "openWith": ["git switch --detach <sha>", "pnpm prototype"]
   },
   "screens": [
@@ -204,12 +208,14 @@ ID 是 `design-system-setup` 重跑時比對「哪些東西受影響」的鍵，
 ```
 
 - `screens` 依 `id` 字典序排、`views` 也是。**順序固定是重跑可比的前提**
+- 視圖的批次**繼承它所屬的畫面**，不在 `views` 裡重複一欄——同一個畫面的視圖不可能分到兩批
+- `referenceDesignDocs` 記的是原始 repo 的設計文件（#248「參考」區塊指名的那一版）。它只是**參照**，不是現況證據，所以**它變了不觸發重驗**；記下來是為了讓「當時拿哪一版對照過」有據可查
 - `coverage.md` 寫步驟 4 的三張對照結果與「無法重現」的完整清單，每條都要有重現步驟卡住的那一步
 - `spec-index.md` 是反向索引：規格頁 → 哪些視圖指向它，順便讓「規格有、畫面沒有」一眼看得出來
 
 ### 步驟 6：重跑
 
-重跑時**先比 `source` 的四個 sha**：
+重跑時**先比 `source` 的四個 sha**（`referenceDesignDocs` 不在比對範圍內，理由見上）：
 
 | 情況 | 做法 |
 | :--- | :--- |
