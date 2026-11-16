@@ -1177,7 +1177,7 @@ import Spec0303TaskDetailFlow from '@notes/components/spec-03-03-task-detail-flo
 | 審核員的概覽是唯讀 | 同上 | 查看概覽的推進按鈕 | 按鈕在原位但不可用 |
 | 標記員被帶回任務列表 | 使用者在某任務只有標記員的角色 | 直接開那個任務的任務詳情 | 被帶回任務列表並顯示無權限提示 |
 | 沒有任務角色的系統管理員進不來 | 使用者是系統管理員，但在那個任務沒有任務角色 | 直接開那個任務的任務詳情 | 被帶回任務列表並顯示無權限提示 |
-| <mark>權限被撤銷時留在本頁</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup> | <mark>任務存在，但這個人在上面的權限已被撤銷</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup> | <mark>開那個任務的任務詳情</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup> | <mark>留在本頁看到無權限面板，面板寫出是哪一個任務，並有回任務列表的連結</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup> |
+| 權限被撤銷時留在本頁 | <mark>任務存在，但這個人在上面的權限已被撤銷</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup> | <mark>開那個任務的任務詳情</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup> | <mark>留在本頁看到無權限面板，面板寫出是哪一個任務，並有回任務列表的連結</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup> |
 | 同一人有多個角色取聯集 | 使用者在某任務既是專案負責人又是審核員 | 進入任務詳情 | 看得到六個分頁而且能操作 |
 | 分頁依固定順序排列 | 已登入的專案負責人在任務詳情 | 查看分頁列 | 順序是概覽、設定、成員管理、標記進度、標記結果、工時紀錄 |
 | 切換分頁不換頁 | 使用者在概覽 | 點「工時紀錄」 | 內容換成工時紀錄，整頁沒有重新載入 |
@@ -1451,8 +1451,8 @@ import Spec0303TaskDetailFlow from '@notes/components/spec-03-03-task-detail-flo
 | 兩張表的分頁互不干擾 | 標記結果表在第 3 頁 | 把匯出記錄表翻到第 2 頁 | 標記結果表還在第 3 頁 |
 | 例外池為零仍顯示區塊 | 某任務的最終例外池待處置是 0 | 開啟標記進度 | 區塊還在，顯示「最終例外池已清空」，不是整塊消失 |
 | 例外池逐筆欄位 | 某任務有 2 筆正式標記的待處置例外 | 查看最終例外池 | 標題列顯示 2，逐列呈現樣本 ID、標記員帳號、審核員帳號、爭議的輸出類型、<mark>定案來源（仲裁者那一列顯示他的帳號）</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup>與理由、落入時間 |
-| <mark>例外池的空理由顯示佔位</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup> | <mark>某任務有一筆待處置例外，而它的仲裁理由是空白</mark> | <mark>查看最終例外池</mark> | <mark>那一列的理由那一半顯示 `未填寫理由`，不是留白、也不是系統內部的空值字樣</mark> |
-| <mark>負責人裁定的來源看得出來</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup> | <mark>某任務沒有指定仲裁者，某一筆由負責人裁定「兩者皆非」</mark> | <mark>查看最終例外池那一列</mark> | <mark>定案來源顯示「負責人裁定（無指定仲裁者）」，欄頭不是只寫「仲裁者」</mark> |
+| 例外池的空理由顯示佔位 | <mark>某任務有一筆待處置例外，而它的仲裁理由是空白</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup> | <mark>查看最終例外池</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup> | <mark>那一列的理由那一半顯示 `未填寫理由`，不是留白、也不是系統內部的空值字樣</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup> |
+| 負責人裁定的來源看得出來 | <mark>某任務沒有指定仲裁者，某一筆由負責人裁定「兩者皆非」</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup> | <mark>查看最終例外池那一列</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup> | <mark>定案來源顯示「負責人裁定（無指定仲裁者）」，欄頭不是只寫「仲裁者」</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup> |
 | 例外池兩階段不相加 | 某任務有 1 筆試標待處置、0 筆正式標記待處置 | 查看例外池與結案條件 | 兩者各自計數，結案條件只看正式標記那 0 筆，試標那 1 筆計入試標完成條件 |
 | 只有負責人看得到例外池 | 使用者在某任務只有審核員的角色 | 開啟標記進度 | 看不到最終例外池；用網址直連時導回概覽並提示無權限 |
 | 名冊非空就沒有負責人裁定 | 任務的仲裁者名冊有一位<mark>**啟用中的**仲裁者</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup> | 專案負責人查看爭議項 | 沒有自己裁定的通道 |
@@ -1948,6 +1948,7 @@ import Spec0303TaskDetailFlow from '@notes/components/spec-03-03-task-detail-flo
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §驗收標準 的 3 列 | 那三列的 Scenario 名稱欄包著 `<mark>`＋`<sup>[#170]` | 名稱欄的標示拿掉、文字保留，改標 Given／When／Then。其中兩列（例外池的空理由顯示佔位、負責人裁定的來源看得出來）的三格原本**有 `<mark>` 但沒有上標**，上標只掛在名稱欄，所以一併補上 `<sup>[#170]`。依 `writing-guide.md` §變更標示 2026-11-16 新增的例外：`check-flows.mjs` 的 `readPage()` 逐字讀第一格、不剝標籤，名稱一包標示流程圖元件就永遠對不上那一列 | **無新決議**，Scenario 的文字與條文一字未改 |
 | [#188](https://github.com/label-suite/label-suite/issues/188) | 2026-11-16 | 頁首 | `變更 #170` 徽章是 `warning` 但沒有 `href` | 統一成 `variant="warning"` 加 `href`（維護者 2026-11-16 裁定，規則見 `writing-guide.md` §變更標示） | **無新決議**，條文一字未改 |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-14 | §規格 › 資料欄位（資料規劃入口） | 入口寫「把本頁列為規格來源的候選表有 **12 張**」 | 改成 **13 張**，新增 `task_run_cycle` | **無新決議**。[#170](https://github.com/label-suite/label-suite/issues/170) 把「試標輪」與「退回原因」寫進本頁 §資料欄位 之後，候選表字典把 `task_run_cycle.cycle_no` 的「規格來源」從「反推」換成本頁的條文，並為「退回原因」新增 `rejection_reason`，所以那張表進入本頁的入口清單；**本頁條文一字未改** |
 | [#170](https://github.com/label-suite/label-suite/issues/170) | 2026-11-14 | §規格 › 最終例外池、§資料欄位、§邊界情況、§驗收標準、§已確認決議 Q45 的理由 | §資料欄位 的「仲裁理由」列與 §邊界情況 那一列只寫「選填、允許空白」「照樣顯示那一列」，**沒有定空白時顯示什麼**；Q45 只記到 2026-11-12 那一半 | **新增條文兩條與驗收兩條**：空白時顯示 `未填寫理由`、與 04-02 同一個字面（維護者 2026-11-14 裁定；禁令本身由 04-01 第 11 條擁有，本頁只引用）；第 5 條的「仲裁者帳號」改成「定案來源」並新增**第 11 條**寫明兩種來源與「欄頭用中性字樣」（同日裁定）；§驗收標準 補兩條（空理由顯示佔位、負責人裁定的來源看得出來）。英文字面**沒有規格依據**，已在 Q45 寫明只存在於畫面。畫面那一側**只有空理由的佔位文案**已落地（[PR #304](https://github.com/label-suite/label-suite/pull/304)）：原本寫「（仲裁時未填寫理由）」，而同一格的來源可能是負責人裁定、那時並沒有仲裁。**欄頭還沒改**，見第 11 條下方的註記 | Q45（補記 2026-11-14 的裁定） |
