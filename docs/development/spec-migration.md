@@ -1,25 +1,27 @@
+---
+title: 搬移舊 repo 規格到 docs/specs/ — 設計文件
+description: 舊 repo 18 份規格搬進 docs/specs/ 的跨頁決議（D1–D10）與單頁搬移通則（含「已確認決議」的五種依據），以及搬移結束後仍沿用的 PR 變更範圍五類表、合併閘第 3 條、建置閘門重跑規則與機械編輯的驗證陷阱。
+tags: [規格, 搬移, PR, CI]
+---
+
 # 搬移舊 repo 規格到 docs/specs/ — 設計文件
 
-- 日期：2026-11-04
-- 狀態：維護者 2026-11-04 拍板；搬移已於 2026-11-09 全部完成
-- 來源 repo：`singyichen/label-suite`（`specs/`，main 分支）
-- 目標：`label-suite-oss` 的 `docs/specs/`
+本文管兩件事：舊 repo 規格搬進 `docs/specs/` 的規則（跨頁決議 D1–D10、單頁搬移通則），以及搬移結束後仍沿用的 PR 分類、CI 閘門與驗證陷阱。
+18 頁已全部搬完；與 `AGENTS.md` 說法衝突時以 `AGENTS.md` 為準，後續的 PR 分類沿用[§PR 的變更範圍](#pr-的變更範圍)。
 
 ## 意圖
 
-舊 repo 的 `specs/` 有 22 份以 `FR-NNN`／`AC-N.N`／`SC-NNN` 編號的規格，混著業務規則與技術設計，單份最大 962KB。
-本專案已經改採三層文件分工（PRD → 規格書 → OpenSpec），規格書由 `spec-writing` skill 產生、只寫業務。
-這件事要把舊規格的業務需求一條不漏地搬進新結構，讓 `/opsx:propose` 有可用的需求依據。
+- 來源 repo：`singyichen/label-suite`（`specs/`，main 分支）；目標：`label-suite-oss` 的 `docs/specs/`。
+- 舊 repo 的 `specs/` 有 22 份以 `FR-NNN`／`AC-N.N`／`SC-NNN` 編號的規格，混著業務規則與技術設計，單份最大 962KB。
+- 本專案採三層文件分工（PRD → 規格書 → OpenSpec），規格書由 `spec-writing` skill 產生、只寫業務。
+- 這件事把舊規格的業務需求一條不漏地搬進新結構，讓 `/opsx:propose` 有可用的需求依據。
 
-18 頁已於 **2026-11-09 全部完成**（`06-01 使用者管理` 是第一頁）。本文件保留下來的作用是記住那些判例與通則，後續的 PR 分類也沿用[§PR 的變更範圍](#pr-的變更範圍)。
+### 兩段式：跨頁地基先問完，單頁決策進待釐清
 
-### 為什麼不是一頁一頁慢慢問
+維護者的時間是瓶頸，不是撰寫本身：`06-01` 一頁就產出 8 條「已確認決議」、分兩天決定，17 頁照比例是一百題上下。所以：
 
-維護者的時間是瓶頸，不是撰寫本身。`06-01` 一頁產出 8 條「已確認決議」、分兩天決定；17 頁照比例是一百題上下。
-如果每頁都卡在互動追問，整件事會拖成十幾次獨立的 session。
-
-所以改成兩段：**跨頁的地基決策先一次問完**（已完成，見下方「本局決議」），**單頁的決策全部寫進各頁「待釐清」**，
-維護者有空時從一份彙總清單往下掃，掃完再跑第二輪把答案折回規格、狀態改「已定案」。
+1. **跨頁的地基決策先一次問完**（見[§跨頁決議](#跨頁決議)）。
+2. **單頁的決策全部寫進各頁「待釐清」**，維護者從一份彙總清單往下掃，掃完再跑第二輪把答案折回規格、狀態改「已定案」。
 
 ## 目標
 
@@ -32,14 +34,14 @@
 
 - 不寫技術設計、資料庫設計、API 設計、元件拆分（那是 OpenSpec 的 design 與 spec delta）。
 - 不改 `docs/specs/00-prd.mdx`（PRD 已定稿；要動 PRD 時回報並建議用 `prd-writing`）。
-- 搬移期間不改 `design/prototype/`；畫面與規格不一致時列入待釐清。**搬移結束後**，依裁定改畫面是「畫面修正 PR」的事，見 [§PR 的變更範圍](#pr-的變更範圍)——那一類有一道 artifact 前置關卡。
-- 不搬舊 repo 的技術規範（見「不搬的來源」）。
+- 搬移期間不改 `design/prototype/`；畫面與規格不一致時列入待釐清。**搬移結束後**，依維護者的決定改畫面是「畫面修正 PR」的事，見 [§PR 的變更範圍](#pr-的變更範圍)——那一類有一道 artifact 前置關卡。
+- 不搬舊 repo 的技術規範（見[附錄的「不搬的來源」](#不搬的來源)）。
 - 不在這件事裡做實作，也不開 OpenSpec change。
 
 ## 反目標（做到了也算失敗）
 
 - **靜默遺漏**：17 頁都寫完了，但某些舊 `FR` 沒有新位置也沒有刪除理由。這比沒搬更糟，因為之後沒人會回頭查。
-- **腦補成定案**：把我的建議寫成「已確認決議」，讓維護者以為那是他決定的。待釐清的事一律標成待釐清。
+- **腦補成定案**：把建議寫成「已確認決議」，讓維護者以為那是他決定的。待釐清的事一律標成待釐清。
 - **跨頁矛盾**：17 份草稿各用一套名詞，角色名稱或任務狀態前後不一致，`:ref` 與 `規格 NN-NN` 連結斷掉。
 - **規格裡留技術語言**：直接把舊 spec 的 `TASK_STATUS_ENUM`、路由、斷點 px 值搬進新規格。
 
@@ -49,11 +51,11 @@
 - 語言：`docs/` 允許繁體中文；規格內文一律繁體中文、全形標點。
 - 流程：一律照 `spec-writing` skill 的步驟與鐵律，本文件只在「步驟 4 的追問改成寫入待釐清」這一點上調整它，其餘不改。
 - 工具鏈：`pnpm check:specs`、`pnpm exec notecraftapp build docs`（需 Node 22 以上）可用；
-  但 `scripts/check-specs.mjs --extract-legacy` 目前有三個缺陷，必須先修（D9），否則「一條不漏」這個目標無法成立。
+  `scripts/check-specs.mjs --extract-legacy` 原有三個缺陷，必須先修（D9），否則「一條不漏」這個目標無法成立。
 
-## 本局決議（維護者 2026-11-04 拍板）
+## 跨頁決議
 
-這八條是 17 份草稿的地基，各頁不得自行推翻；要推翻時回報維護者。
+這十條（D1–D10）是 17 份草稿的地基，各頁不得自行推翻；要推翻時回報維護者。
 
 | # | 問題 | 決議 | 理由 |
 | :--- | :--- | :--- | :--- |
@@ -70,13 +72,11 @@
 
 ### D3 的中文名稱
 
-> **2026-11-06 維護者裁定**：容器名詞一律用「**輸出類型**」。
-> 在這之前本文件與規格 07-01 寫的是「輸出型別」，而畫面與全部舊來源 `spec.md` 寫的是「輸出類型」，兩個名字並存。裁定選了後者，所以改的是規格這一側（327 處、11 個檔案，見 [Issue #131](https://github.com/label-suite/label-suite/issues/131)），`design/prototype/` 不動。
-> 術語表的 `term.output-type` 只改 `label`，**`id` 不動**。這一條**不影響**下面講的 8 個中文名稱——那是 03-02 Q10 另外定的。
+容器名詞一律用「**輸出類型**」，改的是規格這一側（327 處、11 個檔案），`design/prototype/` 不動。術語表的 `term.output-type` 只改 `label`，**`id` 不動**。
 
-8 種輸出類型的英文鍵（`sequence_tagging`、`entity_recognition`、`relation_identification`、`single_label`、`multi_label`、`single_dim`、`multi_dim`、`free_text`）
-要對應 8 個中文業務名詞並進術語表。`03-02 新增任務` 是定義它們的那一頁，由它定名、其餘頁面 `:ref` 引用。
-`03-02` 已經把這 8 個名稱定案（見該頁 §已確認決議 Q10，依據是來源自己三處已拍板的條文）；規格 03-01 Q4 已於 2026-11-08 依術語表折回定案；07-01 Q6 同日獨立定案（整條移除側欄的類型沿用機制），不再依賴它。
+8 種輸出類型的英文鍵（`sequence_tagging`、`entity_recognition`、`relation_identification`、`single_label`、`multi_label`、`single_dim`、`multi_dim`、`free_text`）要對應 8 個中文業務名詞並進術語表。
+`03-02 新增任務` 是定義它們的那一頁，由它定名、其餘頁面 `:ref` 引用；`03-02` 已定案（見該頁 §已確認決議 Q10，依據是來源自己三處已拍板的條文）。
+「輸出類型」這一條**不影響**那 8 個中文名稱——那是 03-02 Q10 另外定的。規格 03-01 Q4 已依術語表折回定案；07-01 Q6 獨立定案（整條移除側欄的類型沿用機制），不依賴它。
 
 ### D5 的三組同值異名
 
@@ -88,9 +88,18 @@
 
 前兩組 PRD 與術語表已經定好，直接用；第三組由 `05-01 分析列表` 定名，列入該頁待釐清。
 
-### D9 要修的三個缺陷
+### D9 的三個缺陷與兩種跨頁寫法
 
-全部在 `scripts/check-specs.mjs`。前置 `[Bug]` child 的工作項：
+三個缺陷全部在 `scripts/check-specs.mjs`，修完後對照表多兩種合法寫法，各頁照用（`spec-writing` 的「搬移舊規格」同步記了）：
+
+| 情況 | `舊編號` 欄 | `新位置` 欄 |
+| :--- | :--- | :--- |
+| 一份來源拆兩頁（04-01／04-02） | 照原樣 | `見 規格 04-02`；指向不存在的規格或指向自己時 `check:specs` 失敗 |
+| 一頁收兩份來源（07-01） | 加來源前綴：`shared:FR-001`、`foundation:FR-001` | 照原樣 |
+
+:::note{title="D9 要修的三個缺陷與實測基準" collapsible}
+
+前置 `[Bug]` child 的工作項：
 
 | # | 缺陷 | 現況 | 要改成 |
 | :--- | :--- | :--- | :--- |
@@ -99,13 +108,6 @@
 | 3 | 跨頁與多來源 | 對照表的「新位置」只接受本頁章節連結、`Scenario：<名稱>`、`刪除`；`.ids` 是純字串集合，分不出同名編號屬於哪一份來源 | 新增「跨頁目標」（讓 04-01／04-02 能寫「見 §規格 04-0X」）與「來源前綴」（讓 07-01 能區分 `shared/008` 與 `foundation/000` 的 36 個同名編號） |
 
 修完要重跑一次 `06-01` 的既有對照表，確認 46／46 仍然通過、沒有回歸。
-
-修好之後對照表多兩種合法的寫法，各頁照用（`spec-writing` 的「搬移舊規格」同步記了）：
-
-| 情況 | `舊編號` 欄 | `新位置` 欄 |
-| :--- | :--- | :--- |
-| 一份來源拆兩頁（04-01／04-02） | 照原樣 | `見 規格 04-02`；指向不存在的規格或指向自己時 `check:specs` 失敗 |
-| 一頁收兩份來源（07-01） | 加來源前綴：`shared:FR-001`、`foundation:FR-001` | 照原樣 |
 
 **實測基準**（修完後用來驗證，數字應該只增不減）：
 
@@ -118,6 +120,8 @@
 
 `shared/008` 與 `foundation/000` 之間有 36 個字串完全相同的編號，是缺陷 3 的直接成因。
 
+:::
+
 ### D10 的落地方式
 
 - 17 個權限鍵各自改寫成一個中文業務權限名詞，進 `glossary.mdx`；`06-01` 已引用的「進入使用者管理頁」「新增／編輯／停用使用者、指派系統角色」沿用、不改名。
@@ -129,7 +133,7 @@
 
 ### 已廢止的舊條文怎麼處理
 
-來源有大量自我廢止條文（`annotation/015` 光粗體定義就有 77 條標「廢止」，`013`、`014` 也有），而且來源的 changelog 明寫過「條文原文不刪除、僅加刪除線」。規則：
+來源有大量自我廢止條文（`annotation/015` 光粗體定義就有 77 條標「廢止」，`013`、`014` 也有），而且來源的 changelog 明寫過「條文原文不刪除、僅加刪除線」。
 
 1. 標「廢止」「已取代」或加刪除線的條文，**判 `刪除` 之前一定要讀過該條**。
 2. 條文的業務規則被後續版本的條文承接 → 對到承接它的新位置，不判 `刪除`；「說明」寫「來源 vN 廢止，規則由 FR-NNN 承接」。
@@ -143,44 +147,6 @@
 - `JSON` 資料集與 `JSON`／`JSON-MIN` 匯出格式是 PRD §範圍內指名的業務格式，**可以保留**，第一次出現時進術語表。影響 03-02、03-03、05-03。
 - `01-05` 的 `session`／`token` **不適用例外**，一律改寫成 PRD 用的業務說法「登入狀態」。
 - 驗收第 4 條因此不是字面零命中：Grep 命中時要逐條判定是例外還是該改寫，自我檢查時把判為例外的命中列在回報裡。
-
-## 來源與目標對照
-
-### 要搬的（18 份來源 → 18 頁，**2026-11-09 全部完成**）
-
-| 目標頁 | 來源 | 備註 |
-| :--- | :--- | :--- |
-| 01-01 登入 | `account/001-login-email-password/spec.md`、`account/002-login-google-sso/spec.md` | 兩份併一頁（D2）；`001` 另有 `plan.md`，只讀不搬 |
-| 01-02 註冊 | `account/003-register-email-password/spec.md` | |
-| 01-03 用一次性連結設定密碼 | `account/004-forgot-reset-password/spec.md` | 對應兩個 prototype：`account/forgot-password`、`account/reset-password` |
-| 01-04 個人設定 | `account/005-profile-settings/spec.md` | 來源 43KB |
-| 01-05 登入狀態與安全 | `account/020-auth-session-security/spec.md` | PRD 列為「不是獨立頁面」，無 prototype |
-| 02-01 儀表板 | `dashboard/012-dashboard/spec.md` | 來源 102KB |
-| 03-01 任務列表 | `task-management/010-task-list/spec.md` | |
-| 03-02 新增任務 | `task-management/013-task-new/spec.md` | 來源 212KB；D3 的定名頁 |
-| 03-03 任務詳情 | `task-management/014-task-detail/spec.md` | 來源 341KB；prototype 有 6 個 panels |
-| 04-01 標記清單 | `annotation/015-annotation-workspace/spec.md` | 一份拆兩頁（來源標題是 Annotation List + Workspace） |
-| 04-02 標記工作區 | `annotation/015-annotation-workspace/spec.md` | 同上；來源 962KB，最大一份 |
-| 05-01 分析列表 | `dataset/016-dataset-analysis-list/spec.md` | D5 第三組的定名頁 |
-| 05-02 分析詳情 | `dataset/017-dataset-analysis-detail/spec.md` | 來源 133KB；prototype 有 16 個 partials（8 種輸出類型 × 統計／品質） |
-| 05-03 資料匯入與版本 | `dataset/021-dataset-ingestion-and-lineage/spec.md` | **沒有 prototype 頁面**，依 skill 列入待釐清 |
-| 06-01 使用者管理 | `admin/006-user-management/spec.md` | **已完成**，不重做 |
-| 06-02 角色設定 | `admin/007-role-settings/spec.md` | 權限不得超出 PRD §權限矩陣 |
-| 07-01 側欄導覽 | `shared/008-sidebar-navbar-shared/spec.md` + `foundation/000-foundation/spec.md` 的業務規則（D4） | 來源 81KB；PRD 列為「不是獨立頁面」，無 prototype |
-| 07-02 工作頁籤 | `shared/019-workspace-tabs/spec.md` | 來源 68KB；無 prototype |
-
-### 不搬的來源
-
-| 來源 | 理由 |
-| :--- | :--- |
-| `shared/018-help-button/` | PRD §範圍外（D1） |
-| `foundation/000-foundation/` | 技術規範；只挑業務規則併進 07-01（D4） |
-| `foundation/001-project-sdd-lint/` | CI 與 lint 規範，不是業務 |
-| `foundation/002-user-path-map-freshness-check/` | 同上 |
-| `_governance/` 四份 constitution | 工程規範，對應本專案的 `AGENTS.md` 與 OpenSpec |
-| `_shared/constants.md` | 技術常數；只當搬移時的對照參考，不進 `docs/specs/` |
-| `specs/STATUS.md` | 舊 repo 的進度表 |
-| 各來源目錄下的 `plan.md`、`diagrams/`、`diagrams.mdx` | 技術規劃與舊版圖表；新圖依 `spec-writing` 步驟 7 重畫 |
 
 ## 單頁搬移通則
 
@@ -209,7 +175,7 @@
    「不嵌入 prototype」、07-02 的「不嵌入 prototype」與「來源釘樁」、01-01 的「登入不檢查密碼組成規則」），三次都由獨立審查抓到——
    寫下某一條時先問「這是誰決定的、記在哪」，答不出來就是待釐清。
 
-   **這五種依據已經是機械檢查**（`check-specs.mjs`，Issue #90 與 #203）：每個 `### Q<n>.` 區塊（標題、選項與理由合起來算）
+   **這五種依據已經是機械檢查**（`check-specs.mjs`）：每個 `### Q<n>.` 區塊（標題、選項與理由合起來算）
    至少要命中下面一種寫法，否則 `pnpm check:specs` 報 ERROR。檢查只驗「有沒有寫出依據」，不驗那個依據成不成立——
    後者仍然要人或獨立審查判斷。
 
@@ -223,16 +189,23 @@
 
    **不被接受的寫法**：「prototype 與舊規格都已經這樣做」（和畫面一致不是依據）、「來源沒有定義這一條，所以…」
    （指名一個依據只為了說它不存在，檢查會把這種否定句排除後再判）。
-   方法論理由（「規格只寫業務」）**是**第五種依據，維護者 2026-11-09 裁定（#203）——它決定的是「什麼東西該進這份文件」，
+   方法論理由（「規格只寫業務」）**是**第五種依據——它決定的是「什麼東西該進這份文件」，
    不是產品行為；但它只能用在這一類範圍決定上，不能拿來替產品規則背書——**這一條檢查驗不到，由獨立審查判斷**。
 
    還查不到依據、但結論必須先留著時，唯一的寫法是 **`依據待補（#<issue>）`**——一定要帶 issue 編號，
-   讓缺口被追蹤而不是看起來像已經定案。判例：06-01 曾有四條掛這個標記（Q1、Q2、Q5、Q6），**現在全部結清**（#203）。
-   那一頁原本有八條沒寫出依據，逐條回查的結果值得記下來，因為八條裡只有兩條真的是「沒有依據」：一條在來源就查到；
-   三條（Q4、Q5、Q6）的依據是**維護者 2026-10-29 的裁定**，頁面卻把它寫成「舊編號 `006-Q2`／`Q3`／`Q4`」，看起來像來源條文編號，所以連撰寫者自己都判成「來源沒有」；
-   兩條（Q7、Q8）屬第五種依據；剩下 Q1 與 Q2 由維護者 2026-11-09 兩句裁定結案。
-   **所以這一輪真正的缺口不是檢查太嚴，是裁定落地時沒把「誰在哪一天裁的」寫進頁面**——07-01 的 Q1 與 Q3 也一樣（維護者 2026-11-04 裁定，頁面只留下一個日期）。
-   寫「已確認決議」時，裁定的出處要寫到**讀者循線查得到**：issue 編號、工作項或留言、必要時連 commit。
+   讓缺口被追蹤而不是看起來像已經定案。
+   **寫「已確認決議」時，把「誰在哪一天拍板」寫進頁面，並寫到讀者循線查得到**：issue 編號、工作項或留言、必要時連 commit。
+   缺的往往不是依據本身，而是出處沒落地。
+
+   :::note{title="判例：06-01 八條決議的依據回查" collapsible}
+
+   06-01 曾有四條掛「依據待補」（Q1、Q2、Q5、Q6），現在全部結清。那一頁原本有八條沒寫出依據，逐條回查的結果：八條裡只有兩條真的是「沒有依據」，一條在來源就查到；
+   三條（Q4、Q5、Q6）的依據是**維護者的拍板**，頁面卻把它寫成「舊編號 `006-Q2`／`Q3`／`Q4`」，看起來像來源條文編號，所以連撰寫者自己都判成「來源沒有」；
+   兩條（Q7、Q8）屬第五種依據；剩下 Q1 與 Q2 由維護者兩句話結案。
+   所以那一輪真正的缺口不是檢查太嚴，是拍板落地時沒把「誰在哪一天拍的」寫進頁面——07-01 的 Q1 與 Q3 也一樣（維護者拍板，頁面只留下一個日期）。
+
+   :::
+
 5. **狀態一律草稿**：frontmatter `tags` 放 `草稿`，頁首 `:badge[草稿]{variant="warning"}`。
 6. **Prototype 嵌入**：有對應頁面的大項以 `PrototypeFrame` 開頭（`client:idle` 必填）。
    `05-03` 沒有 prototype、`01-05`／`07-01`／`07-02` 不是獨立頁面，依 skill 處理並在待釐清說明。
@@ -256,7 +229,7 @@
 
 ## 待釐清彙總清單
 
-新檔 `docs/specs/open-questions.mdx`，依模組分組，每題一列：
+所有頁的待釐清集中在新檔 `docs/specs/open-questions.mdx`，依模組分組，每題一列：
 
 | 欄 | 內容 |
 | :--- | :--- |
@@ -273,7 +246,9 @@
 
 ## Issue 與專案板結構
 
-Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
+搬移的 issue 共 **1 + 7 Epic + 17 + 7 = 32** 張，一律 `gh issue create --type <Type> --project "Label Suite"`，child 加 `--parent <N>`。
+
+:::note{title="各類 issue 的內容與相依" collapsible}
 
 - **1 個前置 child**：`[Bug] check-specs: <中文描述>`，Issue Type `Bug`、label `bug`，內容依 D9 的三個缺陷與實測基準表。
   **這一個合併之前不開始寫任何規格**，因為 `.ids` 要用修好的工具重新擷取。它不屬於任何模組 Epic。
@@ -282,7 +257,6 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 - **17 個第一輪 child**，一頁一個。Issue Type `Task`、label `docs`、標題 `[Docs] <NN-NN>: <中文描述>`。
   body 必須寫死：來源路徑、`.ids` 檔名、目標檔路徑、對應的 prototype 頁面（或「無」）、本文件連結。
 - 四個大頁（04-02 962KB、03-03 341KB、03-02 212KB、05-02 133KB）**現在不拆**；輪到它、讀完來源知道怎麼切了再開 sub-issue。
-- 一律 `gh issue create --type <Type> --project "Label Suite"`，child 加 `--parent <N>`。
 - Ready gate 在維護者手上：Epic 一個模組一個放行，順序照 D8。
 - 卡片由做事的 agent 自己移動：領取時 In Progress、PR 開了 In Review、合併且 issue 關閉後 Done。
 - **7 個第二輪 child**，一個模組一個：`[Docs] <模組>: 待釐清定案與流程圖生成`，掛在同一個模組 Epic 下。
@@ -291,6 +265,8 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 - 相依性用 GitHub issue dependencies（blocked-by）記，不只寫在文字裡：
   前置 `[Bug]` child 擋住全部 17 個第一輪 child；第一輪 child 之間依 D8 串成一條鏈（見「一頁一頁做，不並行」）；
   每個模組的第二輪 child blocked-by 該模組所有第一輪 child。
+
+:::
 
 ## PR 的變更範圍
 
@@ -301,35 +277,35 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 判準刻意只看那兩類——它們是唯一有「連帶規則文件」條款的。所以一張 `AGENTS.md` ＋ `pnpm-lock.yaml` 的升版 PR 仍然算「只改規則文件」，照這一條走，不會因為 `pnpm-lock.yaml` 落在工具 PR 的清單裡就兩邊落空。
 **判準不能寫成「沒有動到五類任一類允許的路徑」**：`AGENTS.md` 本身現在就在其中兩類的清單裡，那樣寫會讓這個例外永遠不成立。
 
-前三類是搬移作業期間的分類，後兩類在搬移結束後才用得到——**搬移已於 2026-11-09 全部完成（18 頁），所以現在新開的 PR 多半落在後兩類**。
+前三類是搬移作業期間的分類，後兩類在搬移結束後才用得到——**搬移已全部完成（18 頁），所以現在新開的 PR 多半落在後兩類**。
 
 | 類別 | 可以動 | 典型 |
 | :--- | :--- | :--- |
 | **文件 PR** | `docs/`；那一頁的流程圖已生成時，可同時更新它的 `.notecraft/components/*-flow.tsx`；**`.notecraft/plugins.json`**（見下）；以及**連帶**修到的 `AGENTS.md`／`CLAUDE.md` | 搬一頁規格、折回待釐清、改既有規格的條文、改 `docs/development/` 的設計文件 |
 | **流程圖 PR** | `docs/` 與 `.notecraft/components/` | 生成或更新業務流程圖 |
 | **工具 PR** | `scripts/`、`package.json`、`pnpm-lock.yaml`、`.github/`，以及下面那一條限定的 `docs/specs/` | 修 `check-specs.mjs`、新增機械檢查、調 CI |
-| **畫面修正 PR** | `design/prototype/`、`docs/prototype/navigation.mdx`（限該檔 §維護說明 要求的同步），以及下面那一條限定的 `docs/specs/` | 依裁定改畫面的文案、欄位或徽章——`[UI]` 與 `[Enhancement]` issue 的本體 |
+| **畫面修正 PR** | `design/prototype/`、`docs/prototype/navigation.mdx`（限該檔 §維護說明 要求的同步），以及下面那一條限定的 `docs/specs/` | 依決定改畫面的文案、欄位或徽章——`[UI]` 與 `[Enhancement]` issue 的本體 |
 | **流程設定 PR** | `openspec/`、`.claude/`（`agents/`、`skills/`、`commands/`）、`.agents/skills/`，以及**連帶**修到的 `docs/development/` 與 `AGENTS.md`／`CLAUDE.md` | 建 schema 與 template、寫 agent 角色定義、加 skill 或指令 |
 
 五類的差別是**目的**，不是檔案數：同樣動到一個 `*-flow.tsx`，目的是畫圖的算流程圖 PR，目的是改條文、順手讓圖跟上的算文件 PR。
 同理，同樣動到 `docs/development/` 的一份設計文件：**只動它與連帶的 `AGENTS.md`／`CLAUDE.md`、不動 `openspec/`、`.claude/` 或 `.agents/skills/` 的算文件 PR**（判例：#221 那張補五類表的，以及 #224）；因為改了 schema、agent 或 skill 而連帶要更新那份文件的，算流程設定 PR。
 
 - **流程圖元件不住在 `docs/` 底下**：規格頁用 `GeneratedFrame` 從 `@notes/components/` 取元件，所以流程圖 PR 通常會同時動到 `docs/specs/` 的頁面與 `.notecraft/components/`。這是允許的，不必每次在留言裡解釋。判例 #175、#176、#177、#193、#198、#199。只修元件、完全不動 `docs/` 也算這一類（判例 #167）。
-- **`.notecraft/plugins.json` 算文件 PR**（維護者 2026-11-11 裁定）。它把 NoteCraft 的外掛對應到 `docs/` 底下的資料檔（例如 `er-diagram-renderer` 對 `**/*.er.json`），它的作用就是決定 `docs/` 底下的那份資料交給哪個 renderer（頂層 `disabled` 的站台級啟停、每條映射的 `options` 也在這裡），依本節「五類的差別是**目的**，不是檔案數」，和它要呈現的那份資料同一類。
-  **原本它不在任何一類裡**：這張表只收了 `.notecraft/components/`，而 `plugins.json` 不在 `components/` 底下。**判例 #246**（issue #236 的交付 PR，`93a8b4f`）：它把 `.notecraft/plugins.json` 與 `docs/diagrams/architecture/` 的三個檔（`database-schema.er.json`、`data-table-dictionary.mdx`、`data-field-inventory.mdx`）一起當文件 PR 合併，四個檔服務同一個目的——決定那份 ER 資料交給哪個 renderer，以及它從哪份盤點來。
-  **這一條有程序掛勾**（比照下面規則文件那條）：**`plugins.json` 的每一處改動都要在 PR body 列出，並寫明它服務的是同一個目的**。原因同樣是合併閘第 2 條只比對路徑——而這個檔會被工具改寫：`pnpm docs:serve` 在 `/plugins` 停用一個外掛，dev API 就會改寫它頂層的 `disabled` 陣列（`notecraftapp@1.15.0` 的 `src/dev-api/handlers.mjs` `PUT /api/plugins/:id`）。那種改動與 PR 的目的無關，但在機械閘上會無聲通過。
-  **`.notecraft/plugins/<id>/`（裝進版控的外掛本體）不算文件 PR**，照本節開頭「相依套件」那個例外處理，**不屬五類**，照 `AGENTS.md` 自己的規則走——比照判例 #147（升級 notecraftapp）。維護者 2026-11-11 裁定另開一張相依套件 PR、先合併它，再合併用到它的文件 PR；順序反過來會讓 `plugins.json` 指向沒裝的外掛而 build 失敗。**判例 #245**（`ec1af4f`）就是那張相依套件 PR，比 #246 早 22 分鐘合併。它的範圍是 `.notecraft/plugins/`（外掛本體與 `_types.d.ts`）加上根目錄的 `NOTICE`——**散入版控的第三方程式要同時交代授權**，所以 `NOTICE` 跟著外掛走，不另開一張。
+- **`.notecraft/plugins.json` 算文件 PR。** 它把 NoteCraft 的外掛對應到 `docs/` 底下的資料檔（例如 `er-diagram-renderer` 對 `**/*.er.json`），它的作用就是決定 `docs/` 底下的那份資料交給哪個 renderer（頂層 `disabled` 的站台級啟停、每條映射的 `options` 也在這裡），依「五類的差別是**目的**，不是檔案數」，和它要呈現的那份資料同一類。
+  判例 #246（issue #236 的交付 PR，`93a8b4f`）：它把 `.notecraft/plugins.json` 與 `docs/diagrams/architecture/` 的三個檔（`database-schema.er.json`、`data-table-dictionary.mdx`、`data-field-inventory.mdx`）一起當文件 PR 合併，四個檔服務同一個目的——決定那份 ER 資料交給哪個 renderer，以及它從哪份盤點來。
+  **這一條有程序掛勾**（比照下面規則文件那條）：**`plugins.json` 的每一處改動都要在 PR body 列出，並寫明它服務的是同一個目的**。原因是合併閘第 2 條只比對路徑——而這個檔會被工具改寫：`pnpm docs:serve` 在 `/plugins` 停用一個外掛，dev API 就會改寫它頂層的 `disabled` 陣列（`notecraftapp@1.15.0` 的 `src/dev-api/handlers.mjs` `PUT /api/plugins/:id`）。那種改動與 PR 的目的無關，但在機械閘上會無聲通過。
+  **`.notecraft/plugins/<id>/`（裝進版控的外掛本體）不算文件 PR**，照本節開頭「相依套件」那個例外處理，**不屬五類**，照 `AGENTS.md` 自己的規則走——比照判例 #147（升級 notecraftapp）。另開一張相依套件 PR、先合併它，再合併用到它的文件 PR；順序反過來會讓 `plugins.json` 指向沒裝的外掛而 build 失敗。判例 #245（`ec1af4f`）就是那張相依套件 PR，比 #246 早 22 分鐘合併。它的範圍是 `.notecraft/plugins/`（外掛本體與 `_types.d.ts`）加上根目錄的 `NOTICE`——**散入版控的第三方程式要同時交代授權**，所以 `NOTICE` 跟著外掛走，不另開一張。
   除了上面這兩條，**不擴及 `.notecraft/` 的其他檔案**：真的碰到別的，照本節開頭那三種例外的方式重新判斷，不要類推。
 - **文件 PR 可以帶著它連帶修到的規則文件**，因為一份給 agent 讀的說明，它的入口本來就在 `AGENTS.md`：新增 `docs/development/` 的說明而同一張 PR 在 `AGENTS.md` 設索引，算文件 PR。判例 #224（#105：`docs/development/agent-rules.md` ＋ `AGENTS.md` 的 Agent Rules Index）。
-  這一條是**補出來的**：#221 補五類表時只給了流程設定 PR 這個連帶條款，而文件 PR 沒有，所以 #224 一度掉在五類之間——而那個形狀是 #105 工作項 1 的結構決定的（索引與被索引的文件必須同一張 PR 落地，否則合併後索引會指向不存在的檔案）。維護者 2026-11-10 裁定補上。
+  索引與被索引的文件必須同一張 PR 落地，否則合併後索引會指向不存在的檔案。
   **連帶不等於夾帶**，而且這一條有程序掛勾（比照工具 PR 那條）：**規則文件的每一處改動都要在 PR body 逐一列出，並寫明它服務的是同一個目的**。合併閘第 2 條是純路徑比對，`AGENTS.md` 一進清單就機械上全部通過，所以這個限制只能靠 PR body 的逐項說明與獨立審查把關。
   只改規則文件的 PR 仍然不屬五類，判準見上面。
 - **文件 PR 可以順手更新那一頁已生成的流程圖**：條文改了而圖還是舊的，比圖沒更新更糟。判例 #200——折回 03-01 的範圍硬化規則時，同一張 PR 改了 `spec-03-01-task-list-flow.tsx` 的三行。
 - **工具 PR 可以動 `docs/specs/`，但只限修掉新檢查在既有頁面上抓到的違規**，而且要在 PR body 逐一列出；**不得新增或改寫規格條文**，也不得為了讓檢查器有東西可驗而去改真正的規格頁（測試資料放 `scripts/tests/`）。
   原因在 CI：`specs` job 會在 **PR 分支上**跑 `node scripts/check-specs.mjs docs`，所以新檢查一加上去，既有頁面的違規就讓**那張工具 PR 自己**變紅；不在同一張修掉就過不了。判例 #149、#151、#152、#153 四張都是這個形狀。
-- **畫面修正 PR 可以動 `design/prototype/`，但那道關卡在 Ready 之前、不在 PR 階段**：規則本體寫在 `AGENTS.md` §Project Board and Dispatch 的 **Ready gate**（維護者 2026-11-10），這裡不複述以免兩份漂移。要記住的是：**卡片沒有合法地走過那道關卡，就不會有這一類 PR**；畫 artifact 不等於改畫面的授權。
-  這一類也可以同時動 `docs/specs/`，**但只限兩種**：把這次改動打成假的既有斷言改掉，以及把裁定記成那一頁的「已確認決議」。判例 #220（儀表板狀態徽章改用 PRD 的五個名稱：六個 `design/prototype/pages/dashboard/` 的檔案，加上規格 02-01 新增 Q18、03-01 一處跨頁斷言失效）。
-  **不得夾帶與這次裁定無關的條文改寫**——那是文件 PR。
+- **畫面修正 PR 可以動 `design/prototype/`，但那道關卡在 Ready 之前、不在 PR 階段**：規則本體寫在 `AGENTS.md` §Project Board and Dispatch 的 **Ready gate**，這裡不複述以免兩份漂移。要記住的是：**卡片沒有合法地走過那道關卡，就不會有這一類 PR**；畫 artifact 不等於改畫面的授權。
+  這一類也可以同時動 `docs/specs/`，**但只限兩種**：把這次改動打成假的既有斷言改掉，以及把決定記成那一頁的「已確認決議」。判例 #220（儀表板狀態徽章改用 PRD 的五個名稱：六個 `design/prototype/pages/dashboard/` 的檔案，加上規格 02-01 新增 Q18、03-01 一處跨頁斷言失效）。
+  **不得夾帶與這次決定無關的條文改寫**——那是文件 PR。
 - **流程設定 PR** 管的是 agent 怎麼工作，不是產品要做什麼，所以它**不碰 `docs/specs/`**，只動 `openspec/`、`.claude/`（`agents/`、`skills/`、`commands/`）與 `.agents/skills/`，以及因此連帶要改的 `docs/development/` 設計文件與 `AGENTS.md`／`CLAUDE.md`。判例 #215（schema 與 `config.yaml`）、#216（十二個 agent 角色）、#217（clarify skill 的兩份副本）、#219（`/sdd` 指令與 `AGENTS.md` 的 SDD 一節）。
   **同一次流程改動連帶的規則條文可以一起改**：#219 動了 `.claude/commands/sdd.md`、`AGENTS.md`（新增 §SDD Workflow 一節）與 `docs/development/spec-authoring.md`，三個檔都服務同一個目的，所以整張歸流程設定 PR，不必拆。
   **只改**規則文件的 PR 不屬於這五類，照本節開頭那一條走；判準也定義在那裡。
@@ -339,25 +315,14 @@ Issue 總數 **1 + 7 Epic + 17 + 7 = 32**。
 
 ## 合併閘第 3 條：怎麼判斷一個 job 真的跑完了
 
-**六閘的條文不在這個倉庫裡**：它在維護者給輪詢 loop 的工作指示中，倉庫內沒有副本（整個倉庫掃過，「每個 job 都 completed 且 success」這類字串一處都沒有），所以本節是它在倉庫裡的第一份紀錄——**而本節只處理第 3 條的一個例外，不是六閘的全文**。第 3 條要求「該 sha 至少有一個 run，且**每個 job 都 completed 且 success**」，並且叮囑不要信 run 層級，因為 run 可以在某個 job 還排隊時就顯示成功。所以判定一律下到 job 層級。
-
-**但 job 層級的 `status` 自己也會卡住。** 判例（維護者 2026-11-15 裁定，[#188](https://github.com/label-suite/label-suite/issues/188)／[PR #312](https://github.com/label-suite/label-suite/pull/312)，sha `228dfa1fc407fa69fbe6a6f94a4acd250e8b5340`）：
-
-```
-docs-site        status=completed    conclusion=success  completed_at=12:33:44Z
-commit-messages  status=in_progress  conclusion=success  completed_at=12:32:43Z   ← 卡住
-specs            status=completed    conclusion=success  completed_at=12:32:53Z
-run CI 43714379546: status=completed  conclusion=success        （該 sha 只有這一個 run）
-```
-
-`commit-messages` **同時**有終局的 `conclusion=success` 與一個已經過去的 `completed_at`，但 `status` 停在 `in_progress`。兩個端點（`/commits/<sha>/check-runs` 與 `/actions/runs/<id>/jobs`）回同樣的三組值；間隔重查六次（約 2 分鐘）沒有變，`completed_at` 到最後一次查詢已經過去約 40 分鐘。
-⚠️ 判例來源的 issue 留言把那段間隔寫成「超過一小時」，**實際是 34 到 42 分鐘**（`completed_at` 12:32:43Z、第三則留言 13:07:41Z）。寫判例時以這裡的數字為準，不要照抄那句。
-
-**裁定**：下面三個條件**同時**成立就算滿足閘 3。
+**下面三個條件同時成立，就算滿足閘 3，即使 job 的 `status` 停在 `in_progress`：**
 
 1. 那個 job 的 `conclusion` 是 `success`
 2. 那個 job 有 `completed_at`，而且它已經過去一段時間（不是剛剛那一秒）
 3. **該 sha 的每一個 run 都是 `completed`**——不是「某一個 run」。同一個 sha 可以有多個 run（按過 Re-run，或日後多一個 workflow）；舊的那個 `completed/success`、新的還在跑時，只查舊的就會誤放一張其實還在跑的 PR
+
+**六閘的條文不在這個倉庫裡**：它在維護者給輪詢 loop 的工作指示中，倉庫內沒有副本（整個倉庫掃過，「每個 job 都 completed 且 success」這類字串一處都沒有），所以本節是它在倉庫裡的第一份紀錄——**而本節只處理第 3 條的一個例外，不是六閘的全文**。
+第 3 條要求「該 sha 至少有一個 run，且**每個 job 都 completed 且 success**」，並且叮囑不要信 run 層級，因為 run 可以在某個 job 還排隊時就顯示成功。所以判定一律下到 job 層級。
 
 **這一條不適用於下面這些**，它們是真的還在跑、或真的沒過：
 
@@ -369,10 +334,14 @@ run CI 43714379546: status=completed  conclusion=success        （該 sha 只�
 | `status=queued` | 還沒開始，`status` 不是卡住而是正確的 |
 | 該 sha 有任何一個 run 不是 `completed` | 見上面第 3 個條件 |
 
-**為什麼這不算放寬閘門**：閘 3 的目的是「不要在 job 還在跑的時候合併」。這一條處理的是**跑完了但狀態欄位卡住**，三個條件合起來正是「跑完了」的證據，而上表五種情形一條都不放過。
+**這不算放寬閘門**：閘 3 的目的是「不要在 job 還在跑的時候合併」。這一條處理的是**跑完了但狀態欄位卡住**，三個條件合起來正是「跑完了」的證據，而上表五種情形一條都不放過。
 至於「不要信 run 層級」與「要求每個 run 都 completed」並不衝突：run 只會在**說成功**的方向樂觀地說謊（它會在 job 還排隊時就先顯示成功），所以把它當**必要**條件是加嚴，不是把判定交回給它。
 
-查的三道指令（`status` 與 `conclusion` 都要印出來，只看其中一個會判錯）：
+**遇到這種情形要在 issue 留言寫出那個 job 的三個值**（`status`、`conclusion`、`completed_at`）、**該 sha 全部 run 的狀態**，以及重查了幾次、間隔多久；只寫「CI 綠」會讓後人看不出你是依哪一條過的。
+
+:::note{title="查的三道指令" collapsible}
+
+`status` 與 `conclusion` 都要印出來，只看其中一個會判錯：
 
 ```sh
 sha=$(gh pr view <N> --json headRefOid --jq .headRefOid)
@@ -392,22 +361,35 @@ gh run list --commit $sha --json databaseId,workflowName,status,conclusion \
   --jq '.[]|"\(.workflowName) run=\(.databaseId) \(.status)/\(.conclusion)"'
 ```
 
-**遇到這種情形要在 issue 留言寫出那個 job 的三個值**（`status`、`conclusion`、`completed_at`）、**該 sha 全部 run 的狀態**，以及重查了幾次、間隔多久；只寫「CI 綠」會讓後人看不出你是依哪一條過的。
+:::
+
+:::note{title="判例：job 的 status 卡在 in_progress" collapsible}
+
+**job 層級的 `status` 自己也會卡住。** 判例（[#188](https://github.com/label-suite/label-suite/issues/188)／[PR #312](https://github.com/label-suite/label-suite/pull/312)，sha `228dfa1fc407fa69fbe6a6f94a4acd250e8b5340`）：
+
+```
+docs-site        status=completed    conclusion=success  completed_at=12:33:44Z
+commit-messages  status=in_progress  conclusion=success  completed_at=12:32:43Z   ← 卡住
+specs            status=completed    conclusion=success  completed_at=12:32:53Z
+run CI 43714379546: status=completed  conclusion=success        （該 sha 只有這一個 run）
+```
+
+`commit-messages` **同時**有終局的 `conclusion=success` 與一個已經過去的 `completed_at`，但 `status` 停在 `in_progress`。兩個端點（`/commits/<sha>/check-runs` 與 `/actions/runs/<id>/jobs`）回同樣的三組值；間隔重查六次（約 2 分鐘）沒有變，`completed_at` 到最後一次查詢已經過去約 40 分鐘。
+⚠️ 判例來源的 issue 留言把那段間隔寫成「超過一小時」，**實際是 34 到 42 分鐘**（`completed_at` 12:32:43Z、第三則留言 13:07:41Z）。寫判例時以這裡的數字為準，不要照抄那句。
+
+:::
 
 ## 建置閘門要重跑確認
 
-`pnpm exec notecraftapp build docs --rebuild` 在編輯 `docs/` 之後的**第一次執行會間歇性失敗**，第二次起通過（[#172](https://github.com/label-suite/label-suite/issues/172)，實測 1 PASS／3 FAIL）。
+**第一次 build 失敗就再跑一次，只跑一次。** `pnpm exec notecraftapp build docs --rebuild` 在編輯 `docs/` 之後的第一次執行會間歇性失敗，第二次起通過（[#172](https://github.com/label-suite/label-suite/issues/172)，實測 1 PASS／3 FAIL）。第二次綠就算這一道閘通過；**兩次都失敗才是真的壞了**，去找真正的錯。
 
-**根因已經查到（2026-11-12）：它就是下面那一節的「同路徑併發」，第二個 build 是 `notecraftapp serve docs` 的背景 watcher。** `serve` 的 `--watch` **預設是 `true`**（`bin/notecraftapp.mjs:786`），所以只要有人開著 `pnpm docs:serve`，每次存檔 `docs/**` 都會觸發它自己的一次 `atomicRebuild()`——而你手動跑的那一次正好同時開始。「編輯之後的第一次」之所以特別，不是因為編輯，而是因為**編輯就是 watcher 被觸發的那一刻**。
-
-所以**最便宜的對策不是重跑，是不要和 watcher 同時 build**：要手動跑 `--rebuild` 之前先停掉 `pnpm docs:serve`，或那一輪用 `--no-watch` 開它。
+**最便宜的對策不是重跑，是不要和 watcher 同時 build**：`notecraftapp serve docs` 的 `--watch` 預設開啟，每次存檔 `docs/**` 都會觸發它自己的背景 rebuild，和你手動跑的 build 撞在同一個路徑上。
+要手動跑 `--rebuild` 之前先停掉 `pnpm docs:serve`，或那一輪用 `--no-watch` 開它。
 ⚠️ 但 `--no-watch` 只解掉「撞在一起」，**不解「瀏覽器看到舊的」**：`--rebuild` 輪替過 `dist` 之後，那個一直開著的 serve 會繼續服務 `dist.prev`（見 [#172](https://github.com/label-suite/label-suite/issues/172) §線索）。要在瀏覽器驗收，手動 build 之後要重開 serve。
 
 **這不是叫人別用 `docs:serve`。** 它的 watcher 本身就是一條合法的驗證路徑——[`content-visualize`](../../.claude/skills/content-visualize/SKILL.md) 正是靠「觀察使用者開著的 `docs:serve`，存檔後 watcher 自己 rebuild、SSE 推 auto reload」來驗元件的。要避免的只有**兩條路徑同時走**：用 watcher 驗就別再手動 build，要手動 build 就先讓 watcher 停下來。
 
-這移掉的是目前已知的唯一併發來源；**沒有另外做「關掉 serve 之後連跑 N 次全綠」的驗證**，所以這裡不保證第一次一定過。重跑規則留著當保險。
-
-**規則：第一次失敗就再跑一次，只跑一次。** 第二次綠就算這一道閘通過；**兩次都失敗才是真的壞了**，去找真正的錯。
+停 serve 只移掉目前已知的唯一併發來源，**不保證第一次一定過**，所以重跑規則留著當保險；「關掉 serve 之後連跑 N 次全綠」的驗證還沒做，見[§待決](#待決)第 1 列。
 
 這一條寫下來是因為兩個方向都會誤讀，而**第二種更危險**：
 
@@ -417,10 +399,9 @@ gh run list --commit $sha --json databaseId,workflowName,status,conclusion \
 | 把第二次的成功當成「一次就綠」 | 哪天真的有一個**穩定**的 build 失敗，會被當成同一個偶發而重跑帶過 |
 
 **怎麼分辨真失敗**：唯一可靠的判準是 **重跑會不會一模一樣地再失敗一次**。真的 MDX 錯誤會穩定重現；#172 重跑就過。
-
 判例（2026-11-11）：一個標題裡放了半形雙引號，錯誤是 `docs/tmp-title-edge.mdx:14:22 Unexpected content after expression`，連跑兩次都相同——那不是 #172。
 
-⚠️ **「有沒有印出檔案位置」不是判準，這一條 2026-11-12 更正過。** 原本寫「真的 MDX 錯誤會印出檔案與位置，#172 的形狀沒有檔案位置」。**#172 有兩種形狀，其中一種印得出檔案路徑**：
+⚠️ **「有沒有印出檔案位置」不是判準。** #172 有兩種形狀，其中一種印得出檔案路徑：
 
 | 形狀 | 錯誤 | 落在哪個共用資源 |
 | :--- | :--- | :--- |
@@ -429,18 +410,18 @@ gh run list --commit $sha --json databaseId,workflowName,status,conclusion \
 
 形狀 B 印出來的路徑在 **`~/.notecraft/` 底下，不是你的 repo**——這是和真 MDX 錯誤最快的分辨方式；真的 MDX 錯誤指的一定是 `docs/` 裡的某一行。但還是以重跑為準。
 
-這條規則**另外有兩份副本**，本章節是第三份，也是唯一寫了「怎麼分辨真失敗」的一份：[`.claude/agents/ops.md`](../../.claude/agents/ops.md) 與 [`.claude/agents/technical-writer.md`](../../.claude/agents/technical-writer.md) 的檢查清單。`openspec/config.yaml` 的 apply 階段也要求跑這道 build，但沒提重跑。
+**會和別的 build 平行跑的 agent，給它自己的 git worktree**（不同路徑 → 不同雜湊）；否則請它不要跑 build，改讀既有產物。獨立審查會平行跑，所以這條直接決定每次派工怎麼下指示。兩個前提：
 
-**CI 那一份已經拿掉了**（2026-11-12，#172）：`.github/workflows/ci.yml` 的 `docs-site` job 原本寫 `… --rebuild || … --rebuild`，依據就是本節的實測數字。根因查到之後那個依據不成立了——併發來自本機的 `serve` watcher，而 CI 從不跑 `serve`，所以那個 `||` 只會遮住一個真的失敗兩次的 build，正好是下面表格第二列警告的那一種。
+- **worktree 要先有 `node_modules`。** `notecraftapp` 是 repo 的 devDependency，`pnpm exec` 靠 `node_modules/.bin/` 解析；剛 `git worktree add` 出來的 worktree 沒有它，命令會直接找不到。symlink 回主 checkout 就夠（build 用的是 app 的 `node_modules`，不是這一份）。
+- **SDD 角色不適用這條。** `AGENTS.md` §SDD Workflow 明寫「Do not give an SDD role its own worktree or its own issue」。那裡沒有衝突：會建置的 SDD 角色只有 `technical-writer`，而 SDD 的 apply 是逐群組**序列**派工的，不會有兩個 SDD build 同時跑。真正要避開的是**主流程與被派出去的角色同時建置**——那由派工的一方負責錯開。
 
-**真正修掉 #172 之後，剩下這三處的重跑要一起拿掉。**
-
-**[#172](https://github.com/label-suite/label-suite/issues/172) 倉庫內的工作已於 2026-11-12 全部完成**，依維護者同日的裁示結案（移除 CI 的重跑，另外六個檔不再把 watcher 與手動 build 並列：`notecraft-visualize.md`、`notecraft-writing.md`、兩份 `spec-writing/references/flow.md`、兩份 `content-visualize/SKILL.md`）。**剩下的修法在 `notecraftapp` 上游、不在本倉庫**：兩條路是「以 `cacheDir` 為單位加跨行程鎖」或「把 build 的 staging 目錄與 `.astro/` 做成每行程唯一」。所以這一節是現在唯一的追蹤點——**升級 `notecraftapp` 時（`package.json` 的 `devDependencies`）要重測一次**：關掉 `docs:serve`、編輯一個 `docs/` 檔、連跑三次 `--rebuild`，三次都綠就把**四處**的重跑規則一起拿掉：本節、[`.claude/agents/ops.md`](../../.claude/agents/ops.md) 與 [`.claude/agents/technical-writer.md`](../../.claude/agents/technical-writer.md) 的檢查清單，以及本文件 §單頁搬移通則 第 12 步那一句（它自帶規則、不只是交叉引用）；還會壞就開一張新的 issue，不要重開這一張。
+**這條規則另外有兩份副本**，本節是第三份，也是唯一寫了「怎麼分辨真失敗」的一份：[`.claude/agents/ops.md`](../../.claude/agents/ops.md) 與 [`.claude/agents/technical-writer.md`](../../.claude/agents/technical-writer.md) 的檢查清單。`openspec/config.yaml` 的 apply 階段也要求跑這道 build，但沒提重跑。
+CI 的 `docs-site` job 不重跑：併發來自本機的 `serve` watcher，CI 從不跑 `serve`，所以 `|| ` 重跑只會遮住一個真的失敗兩次的 build，正好是上面表格第二列警告的那一種。
 
 ⚠️ **要確認 serve 停了沒，別用 `pgrep -f 'notecraftapp serve'`。** 實際的指令字串是 `node …/notecraftapp.mjs serve docs --port 4330`，中間隔著 `.mjs`，所以那個模式永遠比不到，會回報「沒有 serve 在跑」。用 `pgrep -lf 'notecraftapp.mjs serve docs --port 4330'`——**限定到這個 port**，否則別的專案的 `notecraftapp` 行程也會被列出來，讓人以為還有 serve 在跑。
-判例（2026-11-12）：照那個錯模式檢查之後，一連串「沒有 serve 卻還是第一次失敗」的觀察被當成根因不成立的證據，差點據此改掉本節的結論——而 `ps` 顯示 watcher 從 11-08 起就一直開著（4 天）。**所以那些觀察不構成反證**——但也僅止於此：根因仍然只以「同路徑併發 3／3 重現」為依據，而「關掉 serve 之後連跑 N 次全綠」這個正面驗證**到現在還是沒做**（見本節上文）。**這也是為什麼本節的判準是「重跑會不會一模一樣地再失敗」，而不是「有沒有別的行程在跑」**：前者不依賴你有沒有把行程查對。
+**這也是為什麼本節的判準是「重跑會不會一模一樣地再失敗」，而不是「有沒有別的行程在跑」**：前者不依賴你有沒有把行程查對。
 
-### 併發的 build 會撞在一起，而且分得出哪一種併發
+:::note{title="根因：同路徑併發與 serve 的 watcher" collapsible}
 
 **同一個 `docs/` 路徑的兩個 build 同時跑，其中一個會失敗。** 2026-11-11 做了對照實驗，各 3 回：
 
@@ -469,15 +450,13 @@ ENOENT: no such file or directory, rename
   at MutableDataStore.writeModuleImports
 ```
 
-兩個 build 各自寫同一個 `.tmp` 再 rename，先完成的把它改名走，後到的就 ENOENT。所以同路徑併發**至少同時踩到兩份共用資源**（staging 與 `.astro/`），兩者各自產生目前觀察到的兩種失敗形狀（見上一節那張表）。輪替區是第三份，只是兩次實驗都走不到它——總有一個 build 在 astro 階段就先死了。不同路徑只分開了 staging，`.astro/` 仍然共用——上面「3 回不等於所有時序都安全」那句話要當真。
+兩個 build 各自寫同一個 `.tmp` 再 rename，先完成的把它改名走，後到的就 ENOENT。所以同路徑併發**至少同時踩到兩份共用資源**（staging 與 `.astro/`），兩者各自產生目前觀察到的兩種失敗形狀（見上面那張形狀表）。輪替區是第三份，只是兩次實驗都走不到它——總有一個 build 在 astro 階段就先死了。不同路徑只分開了 staging，`.astro/` 仍然共用——上面「3 回不等於所有時序都安全」那句話要當真。
 
-### 第二個 build 從哪裡來：`serve` 的 watcher
-
-平常不會有人手動開兩個 build，但**`notecraftapp serve docs` 本身就是第二個 build**：
+**第二個 build 從哪裡來：`serve` 的 watcher。** 平常不會有人手動開兩個 build，但 `notecraftapp serve docs` 本身就是第二個 build：
 
 | 事實 | 出處 |
 | :--- | :--- |
-| `serve` 的 `--watch` **預設 `true`**，開著就有背景 rebuild | `:786-790` |
+| `serve` 的 `--watch` **預設 `true`**（`bin/notecraftapp.mjs:786`），開著就有背景 rebuild | `:786-790` |
 | watcher 觸發時呼叫的是**同一個** `atomicRebuild(cwd, notesDir, cacheDir, userCwd)` | `startBackgroundRebuild()` → `runOnce()`，`:863`、`:906` |
 | 它的 `rebuilding`／`pending` 旗標只讓 watcher **和自己**排隊，不知道有別的行程在 build | `:897`、`:927` |
 
@@ -485,50 +464,39 @@ ENOENT: no such file or directory, rename
 
 **一個否定結果也記下來**：2026-11-12 另外做過 A／B——「編輯後立刻 build」對「編輯後等 watcher 跑完才 build」，各 3 回，**兩邊都 3／3 PASS，沒有分開**（當時 `serve` 確實開著、watcher 也確實在觸發）。所以**不能**說「編輯後立刻 build 就會失敗」；watcher 有 300ms debounce 又有自己的佇列，它那一輪落在什麼時間點不受你控制。
 
-**實務規則：會和別的 build 平行跑的 agent，給它自己的 git worktree**（不同路徑 → 不同雜湊）；否則請它不要跑 build，改讀既有產物。本 loop 的獨立審查會平行跑，所以這條直接決定每次派工怎麼下指示。
+**用錯誤的 pgrep 模式造成的誤判**（2026-11-12）：照那個錯模式檢查之後，一連串「沒有 serve 卻還是第一次失敗」的觀察被當成根因不成立的證據，差點據此改掉本節的結論——而 `ps` 顯示 watcher 從 11-08 起就一直開著（4 天）。**所以那些觀察不構成反證**——但也僅止於此：根因仍然只以「同路徑併發 3／3 重現」為依據，而「關掉 serve 之後連跑 N 次全綠」這個正面驗證**到現在還是沒做**。
 
-兩個前提要寫出來，否則照做的人會卡住：
-
-- **worktree 要先有 `node_modules`。** `notecraftapp` 是 repo 的 devDependency，`pnpm exec` 靠 `node_modules/.bin/` 解析；剛 `git worktree add` 出來的 worktree 沒有它，命令會直接找不到。symlink 回主 checkout 就夠（build 用的是 app 的 `node_modules`，不是這一份）。
-- **SDD 角色不適用這條。** `AGENTS.md` §SDD Workflow 明寫「Do not give an SDD role its own worktree or its own issue」。那裡沒有衝突：會建置的 SDD 角色只有 `technical-writer`，而 SDD 的 apply 是逐群組**序列**派工的，不會有兩個 SDD build 同時跑。真正要避開的是**主流程與被派出去的角色同時建置**——那由派工的一方負責錯開。
-
+:::
 
 ## 機械編輯的驗證陷阱
 
-這三條都是**檢查全綠、東西其實壞了**的形狀，維護者 2026-11-12 裁示記進來（[Issue #292](https://github.com/label-suite/label-suite/issues/292)）。它們的共同點是：**驗證的對象和要保證的事不是同一件**，所以綠燈不代表什麼。
-
+下面三條都是**檢查全綠、東西其實壞了**的形狀；共同點是**驗證的對象和要保證的事不是同一件**，所以綠燈不代表什麼。
 同一類還有第四個實例，記在[§建置閘門要重跑確認](#建置閘門要重跑確認)：`pgrep -f 'notecraftapp serve'` 比不到實際的 `notecraftapp.mjs serve`，於是「沒有 serve 在跑」這個結論是錯的——**查的東西和要確認的事不是同一件**。
 
 ### 一、`s.count(pattern) == 1` 不驗縮排
 
 用「這個模式在檔案裡只出現一次」當安全檢查，只保證**唯一**，不保證**縮排對**：6 個空白的模式是 8 個空白那一行的子字串，所以它會命中，而你插進去的那一段少了 2 格。
+做法：模式要**連同縮排一起寫進去**（從檔案裡複製整行，不要手打），或改用「比對整行、不是比對片段」的方式；拿不準就 `git show origin/main:<檔案>` 看原樣。
 
 判例（2026-11-12，#195）：`design/prototype/pages/account/profile.html` 的 i18n 鍵實際縮 **8** 格、`zh:`／`en:` 縮 **6** 格；我拿 6 格的模式去比對，命中之後插進去的鍵全部少 2 格。接著寫的「修正」腳本又反過來把 `zh:`／`en:` 從 6 改成 8——兩次都「只命中一次」。最後是 `git show origin/main:<檔案>` 才定出哪一邊是真的。
 
-怎麼做：模式要**連同縮排一起寫進去**（從檔案裡複製整行，不要手打），或改用「比對整行、不是比對片段」的方式；拿不準就 `git show origin/main:<檔案>` 看原樣。
-
 ### 二、「全部編輯都成功才寫檔」會靜默丟掉做對的編輯
 
-把多筆編輯收集起來、最後一次寫入，任何一條斷言拋錯就整批不寫——**前面已經算好的正確編輯一起消失**，而語法檢查仍然是綠的（檔案根本沒被改壞，它只是沒被改）。
+把多筆編輯收集起來、最後一次寫入，任何一條斷言拋錯就整批不寫——**前面已經算好的正確編輯一起消失**，而語法檢查仍然是綠的（檔案根本沒被改壞，它只是沒被改）。真正**靜默**的不是「有失敗」——那會拋錯——而是**哪幾條被丟掉**：拋錯的是第四條，而消失的是前三條。
+做法：**逐條 apply-and-write**。每一條編輯自己斷言、自己落地；某一條失敗就只有那一條沒做，而且 `git diff` 看得出來是哪幾條落地了。代價是檔案可能停在半套用的狀態（語法合法、行為不一致），但那是**看得見**的半套用，比看不見的全丟掉好。
 
 判例（2026-11-12，#195）：`setState` 的兩態切換與 `applyLang` 的三處新增同時消失，是回頭逐條對規格才發現的，當時所有機械檢查都通過。
-
-真正**靜默**的不是「有失敗」——那會拋錯——而是**哪幾條被丟掉**：拋錯的是第四條，而消失的是前三條。
-
-怎麼做：**逐條 apply-and-write**。每一條編輯自己斷言、自己落地；某一條失敗就只有那一條沒做，而且 `git diff` 看得出來是哪幾條落地了。代價是檔案可能停在半套用的狀態（語法合法、行為不一致），但那是**看得見**的半套用，比看不見的全丟掉好。
 
 ### 三、斷言物件屬性不等於斷言畫面行為
 
 測試裡寫 `expect(el.hidden).toBe(true)` 只證明**那個屬性被設了**，不證明**畫面上真的看不到**。CSS 的作者規則會蓋掉瀏覽器預設。
+做法：斷言要落在**使用者看得到的那一層**（有沒有那個樣式規則、算出來的 `display` 是什麼），不是只落在屬性上；寫下「這個屬性要生效，需要哪一條 CSS 配合」並把那一條也驗進去。
 
 判例（2026-11-12，#195）：`design/prototype/pages/account/register.html` 在「驗證信已寄出」之後設 `btn.hidden = true`，harness 的 `submitBtn.hidden === true` 通過；但 `.submit-btn { display: flex }` 是作者規則、勝過瀏覽器預設的 `[hidden] { display: none }`，所以按鈕還看得見。由獨立審查抓到，修法是補一條 `.submit-btn[hidden] { display: none; }`。
 
-怎麼做：斷言要落在**使用者看得到的那一層**（有沒有那個樣式規則、算出來的 `display` 是什麼），不是只落在屬性上；寫下「這個屬性要生效，需要哪一條 CSS 配合」並把那一條也驗進去。
-
-
 ## 驗收
 
-這件事做完的定義：
+搬移完成的定義是下面七條全成立：
 
 1. `scripts/check-specs.mjs` 的三個缺陷都已修好並有單元測試；`annotation/015` 擷出 480 條、`06-01` 的既有對照表 46／46 不回歸（D9）。
 2. `docs/specs/` 有 18 頁規格（含已完成的 06-01），模組地圖 18 列全部有連結、沒有「（未撰寫）」。
@@ -564,3 +532,69 @@ ENOENT: no such file or directory, rename
 - 第二輪的 issue 結構（第一輪 child 以草稿交付關閉，每模組另開一個定案 child）。
 - 技術用語黑名單的例外認定（`JSON` 可留並進術語表，`session`／`token` 一律改寫成「登入狀態」）。
 - 來源 spec 自帶的 `## Open Questions` 段落併進該頁「待釐清」並附建議，不另列一類。
+
+## 附錄：來源與目標對照
+
+查舊來源對到哪一頁、哪些來源不搬時用；正文不依賴它。
+
+### 要搬的（18 份來源 → 18 頁，已全部完成）
+
+| 目標頁 | 來源 | 備註 |
+| :--- | :--- | :--- |
+| 01-01 登入 | `account/001-login-email-password/spec.md`、`account/002-login-google-sso/spec.md` | 兩份併一頁（D2）；`001` 另有 `plan.md`，只讀不搬 |
+| 01-02 註冊 | `account/003-register-email-password/spec.md` | |
+| 01-03 用一次性連結設定密碼 | `account/004-forgot-reset-password/spec.md` | 對應兩個 prototype：`account/forgot-password`、`account/reset-password` |
+| 01-04 個人設定 | `account/005-profile-settings/spec.md` | 來源 43KB |
+| 01-05 登入狀態與安全 | `account/020-auth-session-security/spec.md` | PRD 列為「不是獨立頁面」，無 prototype |
+| 02-01 儀表板 | `dashboard/012-dashboard/spec.md` | 來源 102KB |
+| 03-01 任務列表 | `task-management/010-task-list/spec.md` | |
+| 03-02 新增任務 | `task-management/013-task-new/spec.md` | 來源 212KB；D3 的定名頁 |
+| 03-03 任務詳情 | `task-management/014-task-detail/spec.md` | 來源 341KB；prototype 有 6 個 panels |
+| 04-01 標記清單 | `annotation/015-annotation-workspace/spec.md` | 一份拆兩頁（來源標題是 Annotation List + Workspace） |
+| 04-02 標記工作區 | `annotation/015-annotation-workspace/spec.md` | 同上；來源 962KB，最大一份 |
+| 05-01 分析列表 | `dataset/016-dataset-analysis-list/spec.md` | D5 第三組的定名頁 |
+| 05-02 分析詳情 | `dataset/017-dataset-analysis-detail/spec.md` | 來源 133KB；prototype 有 16 個 partials（8 種輸出類型 × 統計／品質） |
+| 05-03 資料匯入與版本 | `dataset/021-dataset-ingestion-and-lineage/spec.md` | **沒有 prototype 頁面**，依 skill 列入待釐清 |
+| 06-01 使用者管理 | `admin/006-user-management/spec.md` | **已完成**，不重做 |
+| 06-02 角色設定 | `admin/007-role-settings/spec.md` | 權限不得超出 PRD §權限矩陣 |
+| 07-01 側欄導覽 | `shared/008-sidebar-navbar-shared/spec.md` + `foundation/000-foundation/spec.md` 的業務規則（D4） | 來源 81KB；PRD 列為「不是獨立頁面」，無 prototype |
+| 07-02 工作頁籤 | `shared/019-workspace-tabs/spec.md` | 來源 68KB；無 prototype |
+
+### 不搬的來源
+
+| 來源 | 理由 |
+| :--- | :--- |
+| `shared/018-help-button/` | PRD §範圍外（D1） |
+| `foundation/000-foundation/` | 技術規範；只挑業務規則併進 07-01（D4） |
+| `foundation/001-project-sdd-lint/` | CI 與 lint 規範，不是業務 |
+| `foundation/002-user-path-map-freshness-check/` | 同上 |
+| `_governance/` 四份 constitution | 工程規範，對應本專案的 `AGENTS.md` 與 OpenSpec |
+| `_shared/constants.md` | 技術常數；只當搬移時的對照參考，不進 `docs/specs/` |
+| `specs/STATUS.md` | 舊 repo 的進度表 |
+| 各來源目錄下的 `plan.md`、`diagrams/`、`diagrams.mdx` | 技術規劃與舊版圖表；新圖依 `spec-writing` 步驟 7 重畫 |
+
+## 待決
+
+| # | 問題 | 卡住什麼 | 誰決定 |
+| :--- | :--- | :--- | :--- |
+| 1 | 建置閘門重跑規則何時拿掉：修法在 `notecraftapp` 上游（「以 `cacheDir` 為單位加跨行程鎖」或「把 build 的 staging 目錄與 `.astro/` 做成每行程唯一」），本倉庫沒有可做的；升級 `notecraftapp`（`package.json` 的 `devDependencies`）時要重測：關掉 `docs:serve`、編輯一個 `docs/` 檔、連跑三次 `--rebuild`，三次都綠就把**四處**的重跑規則一起拿掉——[§建置閘門要重跑確認](#建置閘門要重跑確認)、[`.claude/agents/ops.md`](../../.claude/agents/ops.md) 與 [`.claude/agents/technical-writer.md`](../../.claude/agents/technical-writer.md) 的檢查清單，以及本文件 §單頁搬移通則 第 12 步那一句（它自帶規則、不只是交叉引用）；還會壞就開一張新的 issue，不要重開 #172 | 上游沒修，且「關掉 serve 之後連跑 N 次全綠」的正面驗證還沒做；本節是現在唯一的追蹤點 | 維護者，在升級 `notecraftapp` 的 PR |
+
+## 決策紀錄
+
+| 日期 | 決策 | 取代了什麼 | 來源 |
+| :--- | :--- | :--- | :--- |
+| 2026-11-04 | 搬移設計與十條跨頁決議 D1–D10、17 頁序列不並行等「作者自行決定」項（[§跨頁決議](#跨頁決議)、§本文件作者自行決定的事）；原標題寫「八條」，表內實有 D1–D10 | — | 維護者口頭裁定 |
+| 2026-11-04 | 07-01 的 Q1、Q3 由維護者拍板（頁面當時只留下日期） | — | 維護者口頭裁定 |
+| 2026-10-29 | 06-01 的 Q4、Q5、Q6 依據是維護者拍板 | 頁面寫成「舊編號 `006-Q2`／`Q3`／`Q4`」，看起來像來源條文編號 | [#203](https://github.com/label-suite/label-suite/issues/203) |
+| 2026-11-06 | 容器名詞一律用「輸出類型」，改規格這一側（327 處、11 個檔案），`design/prototype/` 不動，術語表 `term.output-type` 只改 `label`（§D3 的中文名稱） | 本文件與規格 07-01 原寫的「輸出型別」（畫面與全部舊來源 `spec.md` 寫的是「輸出類型」，兩個名字並存） | [#131](https://github.com/label-suite/label-suite/issues/131) |
+| 2026-11-08 | 規格 03-01 Q4 依術語表折回定案；07-01 Q6 同日獨立定案，整條移除側欄的類型沿用機制 | — | 規格 03-01、07-01 |
+| 2026-11-09 | 「已確認決議」的五種依據改成機械檢查（`check-specs.mjs`）（[§單頁搬移通則](#單頁搬移通則)第 4 步） | 只靠人與獨立審查判斷依據 | [#90](https://github.com/label-suite/label-suite/issues/90) |
+| 2026-11-09 | 方法論理由（「規格只寫業務」）算第五種依據，只限範圍決定；06-01 的 Q1、Q2 由維護者兩句話結案，「依據待補」標記清零 | 06-01 的 Q1–Q8 當時沒有寫出依據（那一頁最早搬，那張表當時還不存在） | [#203](https://github.com/label-suite/label-suite/issues/203) |
+| 2026-11-09 | 18 頁搬移全部完成，新開的 PR 多半落在畫面修正 PR 與流程設定 PR（[§PR 的變更範圍](#pr-的變更範圍)） | — | — |
+| 2026-11-10 | 改畫面的卡片要先過 Ready 之前的 artifact 關卡，規則本體在 `AGENTS.md`（[§PR 的變更範圍](#pr-的變更範圍)） | — | `AGENTS.md` §Project Board and Dispatch |
+| 2026-11-10 | 文件 PR 可以帶連帶修到的 `AGENTS.md`／`CLAUDE.md`（[§PR 的變更範圍](#pr-的變更範圍)） | #221 補五類表時只給流程設定 PR 連帶條款、文件 PR 沒有，#224 一度掉在五類之間；#105 工作項 1 的結構決定了索引與被索引的文件必須同一張 PR 落地 | [#224](https://github.com/label-suite/label-suite/pull/224) |
+| 2026-11-11 | `.notecraft/plugins.json` 算文件 PR；`.notecraft/plugins/<id>/` 不算、另開相依套件 PR 先合併（[§PR 的變更範圍](#pr-的變更範圍)） | 原本 `plugins.json` 不在任何一類裡：五類表只收了 `.notecraft/components/` | [#246](https://github.com/label-suite/label-suite/pull/246)、[#245](https://github.com/label-suite/label-suite/pull/245) |
+| 2026-11-12 | 建置閘門第一次失敗的根因是同路徑併發，第二個 build 是 `serve` 的 watcher；對策是不同時 build，重跑規則留作保險（[§建置閘門要重跑確認](#建置閘門要重跑確認)） | 原判準「真的 MDX 錯誤會印出檔案與位置，#172 的形狀沒有檔案位置」：#172 有一種形狀印得出路徑 | [#172](https://github.com/label-suite/label-suite/issues/172) |
+| 2026-11-12 | 拿掉 CI 的重跑；#172 倉庫內的工作全部完成，另外六個檔（`notecraft-visualize.md`、`notecraft-writing.md`、兩份 `spec-writing/references/flow.md`、兩份 `content-visualize/SKILL.md`）不再把 watcher 與手動 build 並列 | `.github/workflows/ci.yml` 的 `docs-site` job 原寫 `… --rebuild \|\| … --rebuild`，依據是當時的實測數字 | [#172](https://github.com/label-suite/label-suite/issues/172) |
+| 2026-11-12 | 機械編輯的三條驗證陷阱記進本文件（[§機械編輯的驗證陷阱](#機械編輯的驗證陷阱)） | — | [#292](https://github.com/label-suite/label-suite/issues/292) |
+| 2026-11-15 | 閘 3 在三個條件同時成立時，`status` 卡住的 job 也算跑完（§合併閘第 3 條） | 只看 job 的 `status` 就判沒跑完 | [#188](https://github.com/label-suite/label-suite/issues/188)、[PR #312](https://github.com/label-suite/label-suite/pull/312) |
