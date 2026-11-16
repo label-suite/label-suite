@@ -15,7 +15,6 @@ type Step = {
   where: string; // where the code lives
   does: string;
   doesNot?: string;
-  cite: string;
 };
 
 const STEPS: Step[] = [
@@ -26,7 +25,6 @@ const STEPS: Step[] = [
     where: "app 層 middleware",
     does: "來源逐一列出。",
     doesNot: "不用 allow_origins=[\"*\"]。",
-    cite: "Hard Rule 7",
   },
   {
     id: "authn",
@@ -35,7 +33,6 @@ const STEPS: Step[] = [
     where: "app 層 dependency",
     does: "驗 httpOnly cookie 裡的 access JWT，取 sub、sid、credential_version。",
     doesNot: "不從 Authorization header、查詢字串或自訂 header 推定身分；JWT 裡的 role 只供顯示。",
-    cite: "ADR-021",
   },
   {
     id: "authz",
@@ -44,7 +41,6 @@ const STEPS: Step[] = [
     where: "app 層 dependency",
     does: "權限矩陣四步判定：驗身分與 token family → 讀系統角色與任務成員身分 → permission key 的 cell 為 allowed → 附加條件（任務歸屬、指派、測試集答案隔離）。",
     doesNot: "cell 為 true 也蓋不過附加條件；被隱藏的任務不洩漏它存在。",
-    cite: "ADR-037",
   },
   {
     id: "schema",
@@ -52,7 +48,6 @@ const STEPS: Step[] = [
     zone: "module",
     where: "app/modules/<module>/schemas",
     does: "驗證 request schema，不合格的輸入不會進到 Router。",
-    cite: "Hard Rule 9",
   },
   {
     id: "router",
@@ -61,7 +56,6 @@ const STEPS: Step[] = [
     where: "app/modules/<module>/router",
     does: "HTTP 轉接、取得呼叫者、套用欄位遮蔽、把 model 轉成 response schema。",
     doesNot: "不碰 Repository、不寫商業邏輯。",
-    cite: "ADR-003",
   },
   {
     id: "service",
@@ -70,7 +64,6 @@ const STEPS: Step[] = [
     where: "app/modules/<module>/service",
     does: "商業邏輯、任務狀態機、權限以外的業務卡控、寫 audit_events。",
     doesNot: "不組 HTTP 回應、不自己讀 Accept-Language。",
-    cite: "ADR-022、032",
   },
   {
     id: "repo",
@@ -79,7 +72,6 @@ const STEPS: Step[] = [
     where: "app/modules/<module>/repository",
     does: "透過 SQLAlchemy model 讀寫資料；schema 只由 Alembic migration 管。",
     doesNot: "不寫原生 SQL（migration DDL 例外）。",
-    cite: "ADR-005",
   },
   {
     id: "db",
@@ -87,7 +79,6 @@ const STEPS: Step[] = [
     zone: "store",
     where: "設了 DATABASE_URL 走 PostgreSQL，沒設走 SQLite",
     does: "業務資料與獨立、受存取控制的測試集答案表。",
-    cite: "ADR-024",
   },
   {
     id: "resp",
@@ -95,7 +86,6 @@ const STEPS: Step[] = [
     zone: "out",
     where: "app/i18n/<lang>/",
     does: "成功回應包 envelope；使用者看得到的訊息依 Accept-Language 取字。",
-    cite: "ADR-026",
   },
 ];
 
@@ -224,7 +214,6 @@ export default function ArchitectureBackendLayers() {
                 {cur.doesNot}
               </p>
             )}
-            <p className="mt-3 text-xs text-slate-500">依據：{cur.cite}</p>
           </motion.div>
 
           <div role="group" aria-label="逐站走請求" className="flex items-center gap-2">

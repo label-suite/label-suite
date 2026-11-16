@@ -96,8 +96,8 @@ id: architecture-backend-layers
 type: interactive
 prompt: |
   核心洞察：一個請求先過三道全站共用的關卡（CORS、認證、授權）才進到模組；進模組之後，同一個 app/modules/<module>/ 資料夾裡的 schemas、router、service、repository 依序各管一件事。
-  互動：點任一站或用上一站／下一站逐站走，已走過的站淡色、目前那站實心、還沒到的灰色；右側面板顯示該站的程式位置、做什麼、不做什麼與依據。
-  資料（依序九站，與本節的層表一致）：1 CORS，來源逐一列出，禁止 allow_origins=["*"]（Hard Rule 7）；2 認證 dependency，驗 httpOnly cookie 裡的 access JWT，取 sub、sid、credential_version（ADR-021）；3 授權 dependency，權限矩陣四步判定（ADR-037）；4 pydantic 驗證 request schema；5 Router，HTTP 轉接、取得呼叫者、套用欄位遮蔽、把 model 轉成 response schema；6 Service，商業邏輯、狀態機、寫 audit_events；7 Repository，SQLAlchemy model；8 PostgreSQL 或 SQLite；9 回應，i18n 訊息依 Accept-Language 取字（ADR-026）。
+  互動：點任一站或用上一站／下一站逐站走，已走過的站淡色、目前那站實心、還沒到的灰色；右側面板顯示該站的程式位置、做什麼、不做什麼。
+  資料（依序九站，與本節的層表一致）：1 CORS，來源逐一列出，禁止 allow_origins=["*"]；2 認證 dependency，驗 httpOnly cookie 裡的 access JWT，取 sub、sid、credential_version；3 授權 dependency，權限矩陣四步判定；4 pydantic 驗證 request schema；5 Router，HTTP 轉接、取得呼叫者、套用欄位遮蔽、把 model 轉成 response schema；6 Service，商業邏輯、狀態機、寫 audit_events；7 Repository，SQLAlchemy model；8 PostgreSQL 或 SQLite；9 回應，i18n 訊息依 Accept-Language 取字。
   圖形：由上往下的直列，1–3 包在「全站共用」虛線框，4–7 包在 app/modules/<module>/ 虛線框，8、9 在框外。
 caption: 點任一站或逐站走，看一個請求在哪一層被處理
 status: generated
@@ -105,7 +105,7 @@ status: generated
 
 import ArchitectureBackendLayers from '@notes/components/architecture-backend-layers'
 
-<GeneratedFrame id="architecture-backend-layers" type="interactive" prompt={"核心洞察：一個請求先過三道全站共用的關卡（CORS、認證、授權）才進到模組；進模組之後，同一個 app/modules/<module>/ 資料夾裡的 schemas、router、service、repository 依序各管一件事。\n互動：點任一站或用上一站／下一站逐站走，已走過的站淡色、目前那站實心、還沒到的灰色；右側面板顯示該站的程式位置、做什麼、不做什麼與依據。\n資料（依序九站，與本節的層表一致）：1 CORS，來源逐一列出，禁止 allow_origins=[\"*\"]（Hard Rule 7）；2 認證 dependency，驗 httpOnly cookie 裡的 access JWT，取 sub、sid、credential_version（ADR-021）；3 授權 dependency，權限矩陣四步判定（ADR-037）；4 pydantic 驗證 request schema；5 Router，HTTP 轉接、取得呼叫者、套用欄位遮蔽、把 model 轉成 response schema；6 Service，商業邏輯、狀態機、寫 audit_events；7 Repository，SQLAlchemy model；8 PostgreSQL 或 SQLite；9 回應，i18n 訊息依 Accept-Language 取字（ADR-026）。\n圖形：由上往下的直列，1–3 包在「全站共用」虛線框，4–7 包在 app/modules/<module>/ 虛線框，8、9 在框外。\n"} caption="點任一站或逐站走，看一個請求在哪一層被處理">
+<GeneratedFrame id="architecture-backend-layers" type="interactive" prompt={"核心洞察：一個請求先過三道全站共用的關卡（CORS、認證、授權）才進到模組；進模組之後，同一個 app/modules/<module>/ 資料夾裡的 schemas、router、service、repository 依序各管一件事。\n互動：點任一站或用上一站／下一站逐站走，已走過的站淡色、目前那站實心、還沒到的灰色；右側面板顯示該站的程式位置、做什麼、不做什麼。\n資料（依序九站，與本節的層表一致）：1 CORS，來源逐一列出，禁止 allow_origins=[\"*\"]；2 認證 dependency，驗 httpOnly cookie 裡的 access JWT，取 sub、sid、credential_version；3 授權 dependency，權限矩陣四步判定；4 pydantic 驗證 request schema；5 Router，HTTP 轉接、取得呼叫者、套用欄位遮蔽、把 model 轉成 response schema；6 Service，商業邏輯、狀態機、寫 audit_events；7 Repository，SQLAlchemy model；8 PostgreSQL 或 SQLite；9 回應，i18n 訊息依 Accept-Language 取字。\n圖形：由上往下的直列，1–3 包在「全站共用」虛線框，4–7 包在 app/modules/<module>/ 虛線框，8、9 在框外。\n"} caption="點任一站或逐站走，看一個請求在哪一層被處理">
   <ArchitectureBackendLayers client:visible />
 </GeneratedFrame>
 
