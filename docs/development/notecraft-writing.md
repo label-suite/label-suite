@@ -18,7 +18,7 @@ NoteCraft 需要 Node 22 以上。預覽 `pnpm docs:serve`（http://127.0.0.1:43
 ## 撰寫規範
 
 - 一律放在 `docs/` 底下，依主題分資料夾；slug ＝ 相對 `docs/` 的路徑去副檔名
-- 有互動元件用 `.mdx`，純文字可用 `.md`；檔名 kebab-case 英文
+- 一律優先用 `.mdx`（才能嵌圖與互動元件）；既有的 `.md` 改寫時改名，步驟見 `doc-writing` skill。檔名 kebab-case 英文
 - frontmatter 選用，建議至少寫 `title`、`description`、`tags`
 
   ```yaml
