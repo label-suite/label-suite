@@ -350,8 +350,8 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 | 從來沒設定過外觀 | 使用者從未切換過外觀 | 第一次載入登入後頁面 | 當成跟隨系統、**依作業系統的設定呈現** |
 | 關閉動態效果時不播動畫 | 使用者在作業系統關閉了動態效果 | 收合側欄或展開次選單 | 不播動畫，操作本身照常可用 |
 | 角色被改掉時側欄不立刻變 | 使用者的系統角色在側欄開著的時候被改掉 | 繼續停在目前頁面 | 側欄維持原本的導覽項，從下一次操作起才依新角色顯示 |
-| <mark>有操作者的通知顯示四件事</mark><sup>[#188](https://github.com/label-suite/label-suite/issues/188)</sup> | 使用者有未讀通知，而那一則有操作者 | 展開通知清單 | 看得到事件、相關任務、是誰做的與多久以前 |
-| <mark>沒有操作者的通知少一行</mark><sup>[#188](https://github.com/label-suite/label-suite/issues/188)</sup> | 有一則系統自己產生、沒有操作者的通知（例如匯出完成） | 展開通知清單 | 那一則沒有「是誰做的」那一行，其餘三件事照樣看得到 |
+| 有操作者的通知顯示四件事 | <mark>使用者有未讀通知，而那一則有操作者</mark><sup>[#188](https://github.com/label-suite/label-suite/issues/188)</sup> | <mark>展開通知清單</mark><sup>[#188](https://github.com/label-suite/label-suite/issues/188)</sup> | <mark>看得到事件、相關任務、是誰做的與多久以前</mark><sup>[#188](https://github.com/label-suite/label-suite/issues/188)</sup> |
+| 沒有操作者的通知少一行 | <mark>有一則系統自己產生、沒有操作者的通知（例如匯出完成）</mark><sup>[#188](https://github.com/label-suite/label-suite/issues/188)</sup> | <mark>展開通知清單</mark><sup>[#188](https://github.com/label-suite/label-suite/issues/188)</sup> | <mark>那一則沒有「是誰做的」那一行，其餘三件事照樣看得到</mark><sup>[#188](https://github.com/label-suite/label-suite/issues/188)</sup> |
 | 沒有未讀通知 | 使用者沒有未讀通知 | 查看通知入口 | 不顯示數量 |
 | 未讀通知數超過九 | 使用者有十二則未讀通知 | 查看通知入口 | 顯示「9+」 |
 | 全部標為已讀 | 使用者有未讀通知且通知清單已展開 | 點「全部標為已讀」 | 未讀數量歸零、不再顯示 |
@@ -532,6 +532,7 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §驗收標準 的 2 列 | 那兩列**只有** Scenario 名稱欄包著 `<mark>`＋`<sup>[#188]`，其餘三格沒有 | 名稱欄的標示拿掉、文字保留，改標 Given／When／Then（原本沒有標示的格一併補上）。依 `writing-guide.md` §變更標示 2026-11-16 新增的例外：`check-flows.mjs` 的 `readPage()` 逐字讀第一格、不剝標籤，名稱一包標示流程圖元件就永遠對不上那一列 | **無新決議**，Scenario 的文字與條文一字未改 |
 | [#85](https://github.com/label-suite/label-suite/issues/85) | 2026-11-16 | §使用角色、§已確認決議 Q1 與 Q3 的理由 | 四處寫「PRD 目前的上限還是 `R`／註明由 #85 處理」 | 改成 PRD 已於 2026-11-16 放寬成 `R／E (o)`、兩處註明也已落地 | **無新決議**，條文一字未改 |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §已確認決議 Q11 的兩段理由 | `:558`、`:559` 前面那個路徑沒帶行號，沿用不到；`user-management.html:358` 的引文與引用之間隔了「傳入」 | 第一筆補完整路徑、兩筆各自帶上 `roleNoTaskRole` 的中英值；第二筆改成緊接在後的「roleIndicator: '系統管理員'」。**條文一字未改** | **無新決議** |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §已確認決議 Q11 的三段理由 | 兩句寫成現在式的畫面現況已成假：「prototype 的 `'一般使用者'` 是寫死的中文字面值，**不在 `taskRoleI18n` 字典裡**（`sidebar.js:1867`）」與「畫面**目前**對『一般使用者』用的英文是 `User`（`profile.html:1167`）」；兩個行號也都已失效 | 改寫成「裁決當時」，並寫明 prototype 那一側已於 2026-11-11 依 [#165](https://github.com/label-suite/label-suite/issues/165) 落地（`sidebar.js:558`／`:559` 的 `roleNoTaskRole` 中英兩鍵、`profile.html:1279` 的 `General user`）；第三段的 #165 補上已關閉。**條文一字未改**，不加標示也不清掉上一輪的 #188 標示 | **無新決議** |
