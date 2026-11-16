@@ -253,7 +253,7 @@ const PHASES: { title: string; icon: RoleIcon; state: PhaseState; outputs: strin
   { title: "頁面規格", icon: ListChecks, state: "done", outputs: ["逐頁的業務流程", "驗收標準與待釐清"] },
   { title: "互動原型", icon: MonitorPlay, state: "done", outputs: ["規格頁嵌入可操作畫面", "畫面改動先給維護者看"] },
   { title: "架構與開發規範", icon: Network, state: "active", outputs: ["容器、分層與 ADR 效力", "Agent 規則與 SDD 流程"] },
-  { title: "實作", icon: Code, state: "todo", outputs: ["依 SDD 一個 change 一個 change 做", "後端、前端與 E2E 驗收"] },
+  { title: "實作", icon: Code, state: "todo", outputs: ["依 SDD 逐一實作 change", "後端、前端與 E2E 驗收"] },
 ];
 
 const STATE_LABEL: Record<PhaseState, string> = { done: "已完成", active: "進行中", todo: "未開始" };
@@ -271,7 +271,7 @@ function ProgressPage({ dark }: CustomSlideProps) {
   const span = 100 - inset * 2;
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", gap: DGAP.md }}>
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", justifyContent: "center", gap: DGAP.lg }}>
       <div style={{ position: "relative", display: "grid", gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}>
         <div
           aria-hidden="true"
@@ -301,16 +301,17 @@ function ProgressPage({ dark }: CustomSlideProps) {
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  width: 104,
-                  height: 104,
+                  width: 120,
+                  height: 120,
                   borderRadius: 999,
-                  background: p.state === "todo" ? c.slide : t.soft,
+                  // 先鋪不透明的投影片底，軌道才不會從半透明的 soft 底透出來
+                  background: p.state === "todo" ? c.slide : `linear-gradient(${t.soft}, ${t.soft}), ${c.slide}`,
                   color: t.fg,
                   border: p.state === "todo" ? `3px dashed ${c.border}` : `3px solid ${t.fg}`,
                   boxShadow: p.state === "active" ? `0 0 0 10px ${now.soft}` : undefined,
                 }}
               >
-                <Icon size={46} strokeWidth={2} />
+                <Icon size={54} strokeWidth={2} />
                 {p.state === "done" && (
                   <span
                     style={{
@@ -337,7 +338,7 @@ function ProgressPage({ dark }: CustomSlideProps) {
         })}
       </div>
 
-      <div style={{ flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))`, gap: DGAP.sm }}>
+      <div style={{ display: "grid", gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))`, gap: DGAP.sm }}>
         {PHASES.map((p) => {
           const t = tone(p.state);
           return (
@@ -373,8 +374,8 @@ function ProgressPage({ dark }: CustomSlideProps) {
                 {p.state === "done" ? <Check size={16} strokeWidth={3} /> : p.state === "active" ? <Clock size={16} strokeWidth={2.6} /> : null}
                 {STATE_LABEL[p.state]}
               </span>
-              <span style={{ fontSize: DS.h4, fontWeight: 900, color: p.state === "todo" ? c.body : c.ink }}>{p.title}</span>
-              <ul style={{ margin: 0, paddingLeft: "1.1em", display: "flex", flexDirection: "column", gap: DGAP.xs, fontSize: DS.small, color: c.body }}>
+              <span style={{ fontSize: DS.h3, fontWeight: 900, color: p.state === "todo" ? c.body : c.ink }}>{p.title}</span>
+              <ul style={{ margin: 0, paddingLeft: "1.1em", display: "flex", flexDirection: "column", gap: DGAP.sm, fontSize: DS.body, lineHeight: 1.5, color: c.body }}>
                 {p.outputs.map((o) => (
                   <li key={o}>{o}</li>
                 ))}
