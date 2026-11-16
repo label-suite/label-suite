@@ -7,11 +7,10 @@
 
 | 項目 | 數 |
 | :--- | ---: |
-| 畫面 | 18 |
-| 視圖 | 124 |
+| 條目 | 19（18 個畫面 ＋ 1 個共用外殼） |
+| 視圖 | 130 |
 | 批次 | 5 |
 | 無法重現的視圖 | 2 |
-| **可重現但這一版沒收的狀態** | **6**（見 §八） |
 | 沒有規格可連的視圖 | 2 |
 
 ---
@@ -27,7 +26,7 @@
 | `task-management/task-detail.panels/` | 6 | `task-detail.html` | 分頁名（`overview`、`settings`、`member-management`、`annotation-progress`、`annotation-results`、`work-log`） |
 | `dataset/dataset-analysis-detail.partials/` | 16 | `dataset-analysis-detail.html` | 「統計／品質」× 八種輸出類型 |
 
-`pages/shared/` **一個 HTML 都沒有**（15 個 CSS 與 JS），所以它不產生畫面；它排在 `b1` 是因為那些檔決定全站共用元件的樣子。
+`pages/shared/` **一個 HTML 都沒有**（15 個 CSS 與 JS），所以它不產生「畫面」——但它產生一個**共用外殼條目** `shared/app-shell`，見 §八。加上它，交付包共 **19 個條目**。
 
 ---
 
@@ -37,7 +36,7 @@
 
 這是一個**刻意寬鬆**的斷言：「至少一個」不等於逐項涵蓋。逐列看，`task-detail` 的「設定、抽樣、guideline、run control、成員操作、匯出」整列只對到六個分頁與 `state-panel-load-failed`——一個 12,501 行、6 個 panel、含日期區間選擇器與分類刪除彈窗的畫面只收 12 個視圖，`modal-`／`toast-` 一個都沒有。`design-system-setup` 在 `b2` 會吃到這個缺口。
 
-視圖數比 `Inline` 列多很多（124 vs 24），因為 `Inline` 把「搜尋／篩選／排序／分頁」這類寫成一列，而 URL 參數掃描把它們拆成可個別重現的狀態。
+視圖數比 `Inline` 列多很多（130 vs 24），因為 `Inline` 把「搜尋／篩選／排序／分頁」這類寫成一列，而 URL 參數掃描把它們拆成可個別重現的狀態。
 
 ### 這一輪刻意做的三個判斷
 
@@ -51,25 +50,23 @@
 
 ## 三、`docs/specs/` 的頁面 vs 畫面
 
-20 份規格頁（不含 `index.mdx`、`glossary.mdx`、`00-prd.mdx`、`open-questions.mdx`），**16 份有視圖指向它**，4 份沒有。逐頁對照見 [`spec-index.md`](./spec-index.md)。
+20 份規格頁（不含 `index.mdx`、`glossary.mdx`、`00-prd.mdx`、`open-questions.mdx`），**18 份有視圖指向它**，2 份沒有。逐頁對照見 [`spec-index.md`](./spec-index.md)。
 
-### 規格有、畫面沒有：**2 筆**，另有 **2 筆是這一版沒收**
-
-4 份沒有視圖的規格頁分成兩種，**不是同一回事**：
+### 規格有、畫面沒有：**2 筆**，兩筆都有紀錄
 
 | 規格頁 | 為什麼沒有畫面 |
 | :--- | :--- |
 | `01-account/05-login-state.mdx` | PRD §Site Map 列在「不是獨立頁面」 |
-| `07-shared/01-sidebar.mdx` | ⚠️ **不是「沒有畫面」，是這一版沒收。** 它的狀態落在 14 個畫面都載入的 `shared/sidebar.js`，可以重現 —— 見 §八 |
-| `07-shared/02-workspace-tabs.mdx` | ⚠️ 同上：工作頁籤整條在 `shared/sidebar.js` 裡，可以重現 —— 見 §八 |
 | `05-dataset/03-ingestion-lineage.mdx` | 該頁 §已確認決議 **Q1**（維護者 2026-11-08 裁定）**刻意**不補畫面；建立者的入口在規格 03-02 第一步、出口在 03-03 的試標發布 |
 
-所以「規格有、畫面沒有」真正成立的只有上表前兩列（`01-05`、`05-03`）。
+PRD §Site Map 另外三份列為「不是獨立頁面」的規格**都有視圖指向它**，因為它們的行為落在別的東西上：
 
-另兩份 PRD 也列為「不是獨立頁面」的規格**有視圖指向它**，因為它們的行為落在別的畫面上——這正是 `07-01`／`07-02` 該走而這一版沒走的路：
-
+- `07-shared/01-sidebar.mdx` ← `shared/app-shell` 的四個視圖（主題、語言、收合、系統管理群組）
+- `07-shared/02-workspace-tabs.mdx` ← `shared/app-shell#state-workspace-tabs`、`#param-ap-stage`
 - `07-shared/03-denied-and-not-found.mdx` ← `task-management/task-detail#sim-403`、`task-management/task-list#param-unauthorized`
 - `07-shared/04-notification-events.mdx` ← `dashboard/dashboard#modal-notification`
+
+**第一版把 07-01／07-02 歸進「沒有畫面」是錯的**——同一節對 07-03／07-04 用的是相反的邏輯，而側欄的行為顯然落在 16 個畫面上。獨立審查抓到，已改。
 
 ### 畫面有、沒有規格可連：**2 筆**
 
@@ -85,7 +82,7 @@
 **22 個動態片段全部存在**（6 個 panel ＋ 16 個 partial），路徑是從兩個畫面的路徑對應表讀出來的、不是用檔名猜的。
 `task-detail.html` 自己的註解寫明降級行為：某個 panel 載入失敗時只留下它的佔位符，其餘 panel 仍載入、其他分頁仍可用——已收為 `task-management/task-detail#state-panel-load-failed`。
 
-`manifest.json` 一共指到 **440 個檔案路徑**（`loads` 228、`views[].evidence` 185、`uncollected[].evidence` 9、`screens[].file` 18），逐一確認存在，**0 筆缺失**。
+`manifest.json` 一共指到 **443 個檔案路徑**（`loads` 230、`views[].evidence` 194、`screens[].file` 19），逐一確認存在，**0 筆缺失**。
 
 > **注入片段的素材路徑是相對於宿主文件寫的，不是相對於片段自己的目錄。** `task-detail.panels/work-log.html:85` 寫 `../../assets/icons/clock.svg`，那個相對路徑只有從 `pages/task-management/` 解得開。本檔第一版用片段自己的目錄當基準，所以 `clock.svg` 與 `file-text.svg`（`annotation-results.html:165`）被靜默丟掉，連帶讓下面那個「全文搜不到」的斷言變成假的。獨立審查抓到，已修。
 
@@ -149,35 +146,32 @@
 
 ---
 
-## 八、可以重現、但這一版沒收的 6 個狀態
+## 八、共用外殼 `shared/app-shell`
 
-獨立審查在 [PR #394](https://github.com/label-suite/label-suite/pull/394) 抓到的：**整個共用外殼（`design/prototype/pages/shared/sidebar.js`）的狀態一個都沒收**，而 18 個畫面裡有 14 個載入它。完整清單在 `manifest.json` 的 `uncollected`，每一筆都附檔名與行號。
+`design/prototype/pages/shared/sidebar.js` 被 18 個畫面裡的 **16 個**載入（只有 `index.html` 與 `components-showcase.html` 沒有），而它自己有一組狀態：
 
-| 軸 | 怎麼叫出來（摘要） | 規格 |
+| 視圖 | 怎麼叫出來（摘要） | 規格 |
 | :--- | :--- | :--- |
-| `state-theme-dark` | 側欄或行動版的主題鈕 → `data-theme` | 07-01 |
-| `state-lang-en` | `#langToggle` → `applyGlobalLanguage()` | 07-01 |
-| `state-sidebar-collapsed` | 切 `body.sidebar-collapsed`；桌機斷點 769px | 07-01 |
-| `role-super-admin` | systemRole 不是系統管理員時隱藏 `#navAdminItem` | 07-01 |
-| `state-workspace-tabs` | 頁籤列、總覽選單、重開、全部關閉與三種通知 | 07-02 |
-| `param-ap-stage` | `?ap_stage=r<N>`／`official` → 頁籤的階段徽章 | 07-02 |
+| `#state-theme-dark` | 側欄或行動版的主題鈕 → `data-theme` | 07-01 |
+| `#state-lang-en` | `#langToggle` → `applyGlobalLanguage()` | 07-01 |
+| `#state-sidebar-collapsed` | 收合鈕 → `body.sidebar-collapsed`；桌機斷點 769px | 07-01 |
+| `#role-super-admin` | `labelsuite.systemRole` 設成 `super_admin` 才看得到 `#navAdminItem` | 07-01 |
+| `#state-workspace-tabs` | 頁籤列、總覽選單、重開、全部關閉與三種通知 | 07-02 |
+| `#param-ap-stage` | `?ap_stage=r1`／`official` → 頁籤的階段徽章 | 07-02 |
 
-### 為什麼漏掉，以及為什麼沒有就地補
+### 為什麼它自成一個條目
 
-漏掉的原因是**我的掃描只看每個畫面自己的 `.get()` 與頁內開關，沒有把共用外殼當成一個獨立的來源**。這也讓兩件事一起歪掉：
+這些狀態**屬於同一組元件**，不是 16 組。維護者 2026-11-16 裁定走「一個 `shared/app-shell` 條目」，而不是把同一組狀態複製進 16 個畫面的 `views`（那會是 96 筆重複，而下游盤元件時還要自己收回 6 組）。
 
-1. §三 原本寫「規格有、畫面沒有：**0 筆**」，而它把 `07-01`／`07-02` 用「PRD 說不是獨立頁面」結案——**但同一節對 `07-03`／`07-04` 用的是相反的邏輯**（不是獨立頁面、但行為落在別的畫面上，所以有視圖）。側欄的行為顯然落在 14 個畫面上，§三 自己也這麼寫。已改正。
-2. 依 §七「`evidence` 指到的檔變了才算受影響」，`sidebar.js` 的任何改動**不會把任何批次標成應重驗**。這一條在那 6 個軸收進來之前都成立。
+代價是它**不是 HTML 入口**，所以 `design-handoff` 的「畫面＝一個 HTML 入口」定義跟著放寬了——skill 的 §穩定 ID 新增一段寫明判準是**「這組狀態由誰擁有」**，不是「它出現在幾個畫面上」。
 
-**沒有就地補成視圖**，因為那要改資料形狀，而兩種改法都不是本次執行可以自己定的：
+條目帶一個 `hosts` 欄位列出載入它的 16 個畫面，所以 `sidebar.js` 改動時，受影響的範圍查得到。
 
-| 做法 | 代價 |
-| :--- | :--- |
-| 加在 14 個畫面各自的 `views` 裡 | 6 × 14 = 84 筆重複；而它們其實是**同一組元件**的狀態，不是 14 組 |
-| 新增一個 `shared/app-shell` 條目 | 它不是 HTML 入口，違反 skill「畫面＝一個 HTML 入口」的定義 |
+### 第一版漏掉它，連帶兩件事也歪了
 
-所以這一版把它們放進 `uncollected`，**可以重現就寫可以重現**，不假裝是「無法重現」也不假裝「沒有畫面」。要走哪一條，等維護者裁示。
+1. §三 原本寫「規格有、畫面沒有：**0 筆**」，而它把 `07-01`／`07-02` 用「PRD 說不是獨立頁面」結案——**但同一節對 `07-03`／`07-04` 用的是相反的邏輯**。那個「0 筆」靠的是前後不一致的歸類。現在 07-01／07-02 有視圖了，真正沒有畫面的是 2 筆。
+2. 依 §七「`evidence` 指到的檔變了才算受影響」，`sidebar.js` 的任何改動**當時不會把任何批次標成應重驗**。現在會。
 
-### 連帶的一個事實
+### 一個仍然成立的觀察
 
-`pages/shared/` 排在 `b1`，而 `b1` 的八個畫面（`index`、`components-showcase` 與六個帳號頁）**沒有一個算繪側欄**——帳號頁載入 `sidebar.js` 只是為了那段登入導向判斷。也就是說**共用外殼所屬的批次裡沒有任何畫面會顯示它**。這也是上面那張表要裁的同一件事。
+`b1` 的另外八個條目（兩個根層入口與六個帳號頁）**都不算繪側欄**——帳號頁載入 `sidebar.js` 只是為了那段登入導向判斷。所以 `b1` 要定的共用元件裡最大的一組，只靠這個外殼條目承載。

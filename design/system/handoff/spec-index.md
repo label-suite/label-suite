@@ -1,6 +1,6 @@
 # 規格章節索引
 
-交付包版本：commit `3c8d9aa71ab6`，prototype tree `4cb347d5e720`。
+交付包版本：commit `ca1d9f1522d6`，prototype tree `4cb347d5e720`。
 
 由 `manifest.json` 反轉而成：規格頁 → 指向它的視圖。「規格有、畫面沒有」一眼看得出來——沒有出現在下表的規格頁，就是沒有任何視圖指向它。
 
@@ -203,11 +203,19 @@
 
 ## `docs/specs/07-shared/01-sidebar.mdx`
 
-沒有視圖指向它。原因：**不是「沒有畫面」而是「這一版沒收」**：它的狀態落在 14 個畫面都載入的 `shared/sidebar.js`，可以重現，見 `manifest.json` 的 `uncollected` 與 `coverage.md` §八。
+| 章節錨點 | 視圖 |
+| :--- | :--- |
+| `#規格` | `shared/app-shell#role-super-admin` |
+| `#規格` | `shared/app-shell#state-lang-en` |
+| `#規格` | `shared/app-shell#state-sidebar-collapsed` |
+| `#規格` | `shared/app-shell#state-theme-dark` |
 
 ## `docs/specs/07-shared/02-workspace-tabs.mdx`
 
-沒有視圖指向它。原因：**不是「沒有畫面」而是「這一版沒收」**：工作頁籤整條在 `shared/sidebar.js` 裡，可以重現，見 `manifest.json` 的 `uncollected` 與 `coverage.md` §八。
+| 章節錨點 | 視圖 |
+| :--- | :--- |
+| `#規格` | `shared/app-shell#param-ap-stage` |
+| `#規格` | `shared/app-shell#state-workspace-tabs` |
 
 ## `docs/specs/07-shared/03-denied-and-not-found.mdx`
 
