@@ -698,15 +698,39 @@ export function citedFiles(root) {
   const cache = new Map();
   return {
     resolve: (doc) => paths.filter((p) => p === doc || p.endsWith(`/${doc}`)),
+    // Blanked the same way the citing page is: a heading or a sentence that
+    // only exists inside a fenced example is not something to cite.
     read: (p) => {
-      if (!cache.has(p)) cache.set(p, readFileSync(join(root, ...p.split('/')), 'utf8'));
+      if (!cache.has(p)) cache.set(p, withoutBlocks(readFileSync(join(root, ...p.split('/')), 'utf8')));
       return cache.get(p);
     },
   };
 }
 
+// Every heading with its depth and position, in document order, so a cited
+// section can be turned into the slice of the page that belongs to it.
 function citedHeadings(text) {
-  return [1, 2, 3, 4, 5, 6].flatMap((d) => headings(text, d)).map((h) => citeNorm(h.title));
+  return [1, 2, 3, 4, 5, 6]
+    .flatMap((d) => headings(text, d).map((h) => ({ ...h, depth: d, name: citeNorm(h.title) })))
+    .sort((a, b) => a.index - b.index);
+}
+
+// Either direction counts: a citation may name the heading only as far as it
+// is unique ("§本文件作者自行決定的事" for a heading that goes on
+// "（維護者可推翻）"), and prose is often glued straight onto the name
+// ("§審核設定那條").
+const headingMatches = (h, wanted) => h.name.includes(wanted) || wanted.startsWith(h.name);
+
+// The text under a heading, down to the next heading of the same or a higher
+// level. A quotation that names a section has to be in that section, which is
+// the whole point of naming it: 06-01 cited an ADR section whose page did
+// carry the words somewhere else.
+function sectionSlice(text, wanted) {
+  const hs = citedHeadings(text);
+  const i = hs.findIndex((h) => headingMatches(h, wanted));
+  if (i < 0) return null;
+  const end = hs.slice(i + 1).find((h) => h.depth <= hs[i].depth);
+  return text.slice(hs[i].index, end ? end.index : text.length);
 }
 
 function checkCitedNames(files, docsRel, repoRoot, repo, report) {
@@ -732,21 +756,26 @@ function checkCitedNames(files, docsRel, repoRoot, repo, report) {
       if (targets.length === 0) continue;
       const line = lineOf(raw, m.index);
       const where = targets.join('", "');
-      if (section !== undefined) {
-        const wanted = citeNorm(section);
-        const ok = targets.some((p) =>
-          // Either direction counts: a citation may name the heading only as
-          // far as it is unique ("§本文件作者自行決定的事" for a heading that
-          // goes on "（維護者可推翻）"), and prose is often glued straight onto
-          // the name ("§審核設定那條").
-          citedHeadings(repo.read(p)).some((h) => h.includes(wanted) || wanted.startsWith(h)),
-        );
-        if (!ok) report.error(f.rel, line, `cited section "${section}" has no matching heading in "${where}"`);
+      const wanted = section === undefined ? null : citeNorm(section);
+      // What the quotation is held against: the named section where there is
+      // one, the whole page otherwise. A section that matches nothing is
+      // reported on its own and leaves the quotation on the whole page, so one
+      // mistake is not reported twice.
+      let scopes = targets.map((p) => repo.read(p));
+      if (wanted !== null) {
+        const found = targets.map((p) => sectionSlice(repo.read(p), wanted)).filter(Boolean);
+        if (found.length === 0) {
+          report.error(f.rel, line, `cited section "${section}" has no matching heading in "${where}"`);
+        } else {
+          scopes = found;
+        }
       }
       if (quote !== undefined) {
+        const inScope = scopes.map(citeNorm);
         for (const part of citeParts(quote)) {
-          if (!targets.some((p) => citeNorm(repo.read(p)).includes(part))) {
-            report.error(f.rel, line, `quoted "${part}" does not appear in "${where}"`);
+          if (!inScope.some((text) => text.includes(part))) {
+            const place = wanted === null ? `"${where}"` : `"${where}" §${section}`;
+            report.error(f.rel, line, `quoted "${part}" does not appear in ${place}`);
           }
         }
       }

@@ -871,7 +871,7 @@ const cited = (body) => ({
   [SPEC]: spec({ 規格: body }),
   'AGENTS.md': '# AGENTS.md\n\n## Hard Rules\n\n5. **No hardcoded task logic** — task types are config-driven.\n\n## Pull Requests\n\n- **One purpose per PR.**\n',
   'docs/development/architecture.mdx':
-    '# 架構\n\n## 審核設定\n\n一句話。\n\n## 本文件作者自行決定的事（維護者可推翻）\n\n另一句。\n',
+    '# 架構\n\n## 審核設定\n\n一句話。\n\n## 認證與授權\n\n開頭。\n\n### 授權四步\n\n只在子節裡的那一句。\n\n## 本文件作者自行決定的事（維護者可推翻）\n\n另一句。\n',
 });
 
 test('a quoted name that appears in the cited document passes', () => {
@@ -889,7 +889,9 @@ test('the inner quote marks are checked the same way', () => {
 });
 
 test('bold, inline code and spacing do not count as a difference', () => {
-  assert.deepEqual(errorsFor(cited('見 `AGENTS.md` 的「**No hardcoded `task` logic**」。')), []);
+  // The bold here is where the source has none, so dropping the ** rule in
+  // citeNorm makes this fail; a quotation bolded end to end would not.
+  assert.deepEqual(errorsFor(cited('見 `AGENTS.md` 的「No hardcoded **`task`** logic」。')), []);
 });
 
 test('a document outside the repository is left alone', () => {
@@ -969,4 +971,33 @@ test('a name that two files share is reported when neither has the text', () => 
     '.agents/skills/spec-writing/references/writing-guide.md': '# 甲\n',
   }).join('\n');
   assert.match(errors, /quoted "兩份都沒有" does not appear in/);
+});
+
+test('a heading that only exists inside a fenced example is not a section', () => {
+  const errors = errorsFor({
+    ...cited('見 `architecture.mdx` §範例標題。'),
+    'docs/development/architecture.mdx':
+      '# 架構\n\n## 審核設定\n\n一句話。\n\n## 本文件作者自行決定的事（維護者可推翻）\n\n另一句。\n\n```md\n## 範例標題\n```\n',
+  }).join('\n');
+  assert.match(errors, /cited section "範例標題" has no matching heading/);
+});
+
+test('naming a section holds the quotation to that section', () => {
+  const errors = errorsFor(cited('見 `AGENTS.md` §Hard Rules 的「One purpose per PR」。')).join('\n');
+  assert.match(errors, /quoted "OnepurposeperPR" does not appear in "AGENTS\.md" §Hard Rules/);
+});
+
+test('a section that matches nothing leaves the quotation on the whole page', () => {
+  const errors = errorsFor(cited('見 `AGENTS.md` §Nowhere 的「One purpose per PR」。')).join('\n');
+  assert.match(errors, /cited section "Nowhere" has no matching heading/);
+  assert.doesNotMatch(errors, /quoted/);
+});
+
+test('a section reaches down through its own sub-headings', () => {
+  assert.deepEqual(errorsFor(cited('見 `architecture.mdx` §認證與授權 的「只在子節裡的那一句」。')), []);
+});
+
+test('a section stops at the next heading of the same level', () => {
+  const errors = errorsFor(cited('見 `architecture.mdx` §審核設定 的「只在子節裡的那一句」。')).join('\n');
+  assert.match(errors, /quoted "只在子節裡的那一句" does not appear in .* §審核設定/);
 });
