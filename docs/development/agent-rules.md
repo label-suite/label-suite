@@ -189,11 +189,11 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 | 規範 | 來源 |
 | :--- | :--- |
 | R1 | 原始 repo `general.md` §Simplicity First 的 reach-for ladder 第 2 階，以及 §AI Agent Non-Negotiables 的「先讀既有匯出與呼叫端」 |
-| R2 | **無來源條文。** 三份來源檔都沒有這一條；它是被點名要寫的一條（工作項 6） |
+| R2 | **無來源條文。** 三份來源檔都沒有這一條，是本 repo 自己加的 |
 | R3 | 原始 repo `general.md` §Surgical Changes（整節沿用，去掉行數門檻） |
 | R4 | 原始 repo `general.md` §Simplicity First 開頭四條、§DRY 的「一處邏輯一處定義」、§Design Principles 的「DRY 過度抽象時 KISS 優先」 |
-| R5 | **改寫**原始 repo `general.md` §Conflicting Patterns（原文要求 `pick one (prefer newer or better-tested)`，本條反轉它）；工作項 5 |
-| R6 | 工作項 7。原始 repo `general.md` §Simplicity First 的 reach-for ladder 第 1 階有同向的說法（「Rung 1 是範圍問題，屬 Planner，不得在 apply 階段觸發」），本條沿用那個分界 |
+| R5 | **改寫**原始 repo `general.md` §Conflicting Patterns（原文要求 `pick one (prefer newer or better-tested)`，本條反轉它） |
+| R6 | 原始 repo `general.md` §Simplicity First 的 reach-for ladder 第 1 階有同向的說法（「Rung 1 是範圍問題，屬 Planner，不得在 apply 階段觸發」），本條沿用那個分界 |
 | R7 | 原始 repo `general.md` §Fail Loudly |
 
 ### 原始 repo（`singyichen/label-suite`）
@@ -276,11 +276,11 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 
 ### starter-kit
 
-**對不上。** 當初點名的是 starter-kit 的 `core-principles.md` 與 `workflow.md`。
+**對不上。** 要比對的是 starter-kit 的 `core-principles.md` 與 `workflow.md`。
 
 已查：`trendlink` 組織底下所有 repo（含 `claude-plugins`、`trendlink-portal`、`lexpayroll`、`trendmile`、`fullstack-ai-sdd-workflow-scaffold`）、個人帳號、以及本機 `find ~ -name "core-principles*"`，**都沒有這兩個檔案**。本機唯一叫 starter-kit 的 `whest-starterkit` 是高斯動差／QMC 取樣的科學計算起始包（`.claude/agents/` 底下是 `gaussian-moment-analyst`、`qmc-sampling-specialist`），兩個檔案都不存在。
 
-**維護者裁定：該來源不存在或已不適用，從工作項移除。** 所以這一類沒有對照可做，也不再是缺口。
+**維護者裁定：該來源不存在或已不適用，不做對照。** 所以這一類沒有對照可做，也不再是缺口。
 
 
 
