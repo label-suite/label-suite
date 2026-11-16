@@ -1,6 +1,6 @@
 # 規格章節索引
 
-交付包版本：commit `328ab7ea7d54`，prototype tree `4cb347d5e720`。
+交付包版本：commit `b1fd43c84031`，prototype tree `4cb347d5e720`。
 
 由 `manifest.json` 反轉而成：規格頁 → 指向它的視圖。「規格有、畫面沒有」一眼看得出來——沒有出現在下表的規格頁，就是沒有任何視圖指向它。
 
@@ -95,10 +95,15 @@
 | 章節錨點 | 視圖 |
 | :--- | :--- |
 | `#任務的五個狀態與轉換` | `task-management/task-detail#param-status` |
+| `#基本資料` | `task-management/task-detail#param-section-basic` |
+| `#審核設定` | `task-management/task-detail#param-section-review` |
 | `#工時紀錄` | `task-management/task-detail#tab-work-log` |
 | `#成員管理` | `task-management/task-detail#tab-member-management` |
+| `#抽樣設定` | `task-management/task-detail#param-section-sampling` |
 | `#概覽` | `task-management/task-detail#tab-overview` |
 | `#標記結果` | `task-management/task-detail#tab-annotation-results` |
+| `#標記設定` | `task-management/task-detail#param-section-labeling` |
+| `#標記說明` | `task-management/task-detail#param-section-guideline` |
 | `#標記進度` | `task-management/task-detail#tab-annotation-progress` |
 | `#設定分頁的區塊導覽與編輯` | `task-management/task-detail#tab-settings` |
 | `#誰進得來誰看得到哪些分頁` | `task-management/task-detail#role-annotator` |
