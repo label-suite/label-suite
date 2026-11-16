@@ -1,0 +1,1737 @@
+{
+  "packageVersion": 1,
+  "generatedAt": "2026-11-16",
+  "source": {
+    "commit": "3c8d9aa71ab60e5dc072ba983cb057d1a7cf6695",
+    "prototypeTree": "4cb347d5e720203418701a0a4a6b521cc117c64e",
+    "specsTree": "a4b0e889a5a39f3a02a3dd5db7fc81a3c877ff44",
+    "navigationBlob": "83d6ee8674b1a5bee73a963c437e0fbc776ba279",
+    "referenceDesignDocs": {
+      "repo": "singyichen/label-suite",
+      "commit": "faf8335"
+    },
+    "openWith": [
+      "git switch --detach 3c8d9aa71ab60e5dc072ba983cb057d1a7cf6695",
+      "pnpm prototype"
+    ]
+  },
+  "screens": [
+    {
+      "id": "account/forgot-password",
+      "batch": "b1-shared-account",
+      "file": "design/prototype/pages/account/forgot-password.html",
+      "loads": [
+        "design/prototype/assets/analytics.js",
+        "design/prototype/pages/shared/sidebar.js"
+      ],
+      "params": [
+        "ap_stage",
+        "role",
+        "sim_logged_in",
+        "sim_logged_out",
+        "task_id"
+      ],
+      "entry": "/account/login 點「忘記密碼」；/account/reset-password token 無效後重新申請",
+      "spec": "docs/specs/01-account/03-reset-password.mdx",
+      "views": [
+        {
+          "id": "account/forgot-password#sim-logged-in",
+          "how": "加 `?sim_logged_in=1`，本頁導向 /dashboard/dashboard",
+          "spec": "docs/specs/01-account/01-login.mdx#已確認決議",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.js",
+            "docs/prototype/navigation.mdx"
+          ]
+        },
+        {
+          "id": "account/forgot-password#sim-logged-out",
+          "how": "加 `?sim_logged_out=1`：不論登入旗標如何都留在本頁（見 `sidebar.js:92`）",
+          "spec": "docs/specs/01-account/03-reset-password.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.js"
+          ]
+        },
+        {
+          "id": "account/forgot-password#state-default",
+          "how": "開 pages/account/forgot-password.html",
+          "spec": "docs/specs/01-account/03-reset-password.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/account/forgot-password.html"
+          ]
+        },
+        {
+          "id": "account/forgot-password#state-submitted",
+          "how": "送出任一 Email（不論存不存在）：停在本頁顯示同一句通用提示",
+          "spec": "docs/specs/01-account/03-reset-password.mdx#卡控機制",
+          "evidence": [
+            "design/prototype/pages/account/forgot-password.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "account/login",
+      "batch": "b1-shared-account",
+      "file": "design/prototype/pages/account/login.html",
+      "loads": [
+        "design/prototype/assets/analytics.js",
+        "design/prototype/pages/shared/sidebar.js"
+      ],
+      "params": [
+        "ap_stage",
+        "role",
+        "sim_logged_in",
+        "sim_logged_out",
+        "task_id"
+      ],
+      "entry": "由 /index.html 自動導向；登出、從註冊／忘記密碼／重設成功返回也都回到這裡",
+      "spec": "docs/specs/01-account/01-login.mdx",
+      "views": [
+        {
+          "id": "account/login#sim-logged-in",
+          "how": "加 `?sim_logged_in=1`：sidebar.js 判定已登入，本頁直接導向 /dashboard/dashboard（規格 01-01 Q3）",
+          "spec": "docs/specs/01-account/01-login.mdx#已確認決議",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.js",
+            "docs/prototype/navigation.mdx"
+          ]
+        },
+        {
+          "id": "account/login#sim-logged-out",
+          "how": "加 `?sim_logged_out=1`：**不論登入旗標如何都留在本頁**。登入成功後 `login.html` 會寫下旗標，之後這四個帳號頁都會被導走，而它們沒有側欄可以按登出——`sidebar.js:92`–`:93` 自己寫明這個旗標是唯一的回頭路",
+          "spec": "docs/specs/01-account/01-login.mdx#已確認決議",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.js"
+          ]
+        },
+        {
+          "id": "account/login#state-default",
+          "how": "開 pages/account/login.html",
+          "spec": "docs/specs/01-account/01-login.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/account/login.html"
+          ]
+        },
+        {
+          "id": "account/login#state-field-error",
+          "how": "帳號或密碼留空（或填不合格式）後送出，停在本頁並顯示欄位錯誤",
+          "spec": "docs/specs/01-account/01-login.mdx#卡控機制",
+          "evidence": [
+            "design/prototype/pages/account/login.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        },
+        {
+          "id": "account/login#state-submitting",
+          "how": "送出登入後的送出中狀態：按鈕停用、文字換成 `aria-label=\"載入中\"` 的 spinner（`login.html:729`–`:736`）",
+          "spec": "docs/specs/01-account/01-login.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/account/login.html"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "account/profile",
+      "batch": "b1-shared-account",
+      "file": "design/prototype/pages/account/profile.html",
+      "loads": [
+        "design/prototype/assets/analytics.js",
+        "design/prototype/assets/theme-fouc.js",
+        "design/prototype/assets/theme.js",
+        "design/prototype/assets/tokens.css",
+        "design/prototype/pages/shared/button.css",
+        "design/prototype/pages/shared/empty-state.css",
+        "design/prototype/pages/shared/sidebar.css",
+        "design/prototype/pages/shared/sidebar.js"
+      ],
+      "params": [
+        "ap_stage",
+        "role",
+        "sim_logged_in",
+        "sim_logged_out",
+        "task_id"
+      ],
+      "entry": "任何已登入頁面的使用者 chip",
+      "spec": "docs/specs/01-account/04-profile.mdx",
+      "views": [
+        {
+          "id": "account/profile#state-avatar-preview",
+          "how": "選一張圖或點「移除頭像」：只改預覽，要按「儲存」才生效",
+          "spec": "docs/specs/01-account/04-profile.mdx#頭像",
+          "evidence": [
+            "design/prototype/pages/account/profile.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        },
+        {
+          "id": "account/profile#state-default",
+          "how": "開 pages/account/profile.html",
+          "spec": "docs/specs/01-account/04-profile.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/account/profile.html"
+          ]
+        },
+        {
+          "id": "account/profile#state-google-linked",
+          "how": "點「連結 Google 帳號」：第五個區塊切成已連結狀態",
+          "spec": "docs/specs/01-account/04-profile.mdx#連結-google-帳號",
+          "evidence": [
+            "design/prototype/pages/account/profile.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        },
+        {
+          "id": "account/profile#toast-saved",
+          "how": "改個人資料或通知設定後儲存：停在本頁顯示 Toast 或即時更新狀態",
+          "spec": "docs/specs/01-account/04-profile.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/account/profile.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "account/register",
+      "batch": "b1-shared-account",
+      "file": "design/prototype/pages/account/register.html",
+      "loads": [
+        "design/prototype/assets/analytics.js",
+        "design/prototype/pages/shared/sidebar.js"
+      ],
+      "params": [
+        "ap_stage",
+        "role",
+        "sim_logged_in",
+        "sim_logged_out",
+        "task_id"
+      ],
+      "entry": "/account/login 點「前往註冊」；/account/verify-email 連結無法使用後點「重新註冊」",
+      "spec": "docs/specs/01-account/02-register.mdx",
+      "views": [
+        {
+          "id": "account/register#sim-logged-in",
+          "how": "加 `?sim_logged_in=1`，本頁導向 /dashboard/dashboard",
+          "spec": "docs/specs/01-account/01-login.mdx#已確認決議",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.js",
+            "docs/prototype/navigation.mdx"
+          ]
+        },
+        {
+          "id": "account/register#sim-logged-out",
+          "how": "加 `?sim_logged_out=1`：不論登入旗標如何都留在本頁（見 `sidebar.js:92`）",
+          "spec": "docs/specs/01-account/01-login.mdx#已確認決議",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.js"
+          ]
+        },
+        {
+          "id": "account/register#state-default",
+          "how": "開 pages/account/register.html",
+          "spec": "docs/specs/01-account/02-register.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/account/register.html"
+          ]
+        },
+        {
+          "id": "account/register#state-field-error",
+          "how": "欄位留空或格式不符後送出，停在本頁顯示錯誤訊息",
+          "spec": "docs/specs/01-account/02-register.mdx#卡控機制",
+          "evidence": [
+            "design/prototype/pages/account/register.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        },
+        {
+          "id": "account/register#state-submitted",
+          "how": "填妥四個欄位送出：停在本頁、顯示「驗證信已寄出」、四個欄位停用，而帳號還沒有建立",
+          "spec": "docs/specs/01-account/02-register.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/account/register.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "account/reset-password",
+      "batch": "b1-shared-account",
+      "file": "design/prototype/pages/account/reset-password.html",
+      "loads": [
+        "design/prototype/assets/analytics.js",
+        "design/prototype/pages/shared/sidebar.js"
+      ],
+      "params": [
+        "ap_stage",
+        "role",
+        "sim_logged_in",
+        "sim_logged_out",
+        "task_id"
+      ],
+      "entry": "使用者信箱裡的重設連結（`?token=<UUID>` 形式的外部入口）",
+      "spec": "docs/specs/01-account/03-reset-password.mdx",
+      "views": [
+        {
+          "id": "account/reset-password#proto-expired",
+          "how": "同上，切到 showState('expired')：顯示連結無法使用的那一句",
+          "spec": "docs/specs/01-account/03-reset-password.mdx#已確認決議",
+          "evidence": [
+            "design/prototype/pages/account/reset-password.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        },
+        {
+          "id": "account/reset-password#proto-used",
+          "how": "同上，切到 showState('used')：與 expired **顯示同一句**（規格 01-03 Q2：三種原因不分辨）",
+          "spec": "docs/specs/01-account/03-reset-password.mdx#已確認決議",
+          "evidence": [
+            "design/prototype/pages/account/reset-password.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        },
+        {
+          "id": "account/reset-password#proto-valid",
+          "how": "開 pages/account/reset-password.html，點頁面上的原型切換鈕（`proto-btn`）選「valid」，呼叫 showState('valid')：顯示可以設定新密碼的表單",
+          "spec": "docs/specs/01-account/03-reset-password.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/account/reset-password.html"
+          ]
+        },
+        {
+          "id": "account/reset-password#state-mismatch",
+          "how": "在 proto-valid 的表單裡兩個密碼欄填不一致後送出：停在本頁顯示前端錯誤",
+          "spec": "docs/specs/01-account/03-reset-password.mdx#卡控機制",
+          "evidence": [
+            "design/prototype/pages/account/reset-password.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        },
+        {
+          "id": "account/reset-password#state-success",
+          "how": "在 proto-valid 的表單裡填一致且合格的新密碼後送出：`#successPanel` 加上 `visible`（`reset-password.html:594`、`:883`），顯示重設成功、請重新登入",
+          "spec": "docs/specs/01-account/03-reset-password.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/account/reset-password.html"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "account/verify-email",
+      "batch": "b1-shared-account",
+      "file": "design/prototype/pages/account/verify-email.html",
+      "loads": [
+        "design/prototype/assets/analytics.js",
+        "design/prototype/pages/shared/sidebar.js"
+      ],
+      "params": [
+        "ap_stage",
+        "role",
+        "sim_hold",
+        "sim_logged_in",
+        "sim_logged_out",
+        "task_id"
+      ],
+      "entry": "使用者信箱裡的驗證連結（外部入口）",
+      "spec": "docs/specs/01-account/02-register.mdx",
+      "views": [
+        {
+          "id": "account/verify-email#proto-expired",
+          "how": "切到 showState('expired')：連結無法使用，與 /account/reset-password 同一份文案",
+          "spec": "docs/specs/01-account/02-register.mdx#卡控機制",
+          "evidence": [
+            "design/prototype/pages/account/verify-email.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        },
+        {
+          "id": "account/verify-email#proto-used",
+          "how": "切到 showState('used')：與 expired 同一句",
+          "spec": "docs/specs/01-account/02-register.mdx#卡控機制",
+          "evidence": [
+            "design/prototype/pages/account/verify-email.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        },
+        {
+          "id": "account/verify-email#proto-valid",
+          "how": "開 pages/account/verify-email.html，原型切換鈕切到 showState('valid')",
+          "spec": "docs/specs/01-account/02-register.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/account/verify-email.html"
+          ]
+        },
+        {
+          "id": "account/verify-email#sim-hold",
+          "how": "加 `?sim_hold=1`：擋住驗證成功後的那一次導向，讓成功面板留在畫面上（prototype 自己的註解寫明這是為了把面板看清楚，因為 PrototypeFrame 帶不進這個參數）",
+          "spec": "docs/specs/01-account/02-register.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/account/verify-email.html"
+          ]
+        },
+        {
+          "id": "account/verify-email#sim-logged-out",
+          "how": "加 `?sim_logged_out=1`：不論登入旗標如何都留在本頁（見 `sidebar.js:92`）",
+          "spec": "docs/specs/01-account/02-register.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.js"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "admin/role-settings",
+      "batch": "b2-admin-dashboard-task",
+      "file": "design/prototype/pages/admin/role-settings.html",
+      "loads": [
+        "design/prototype/assets/analytics.js",
+        "design/prototype/assets/theme-fouc.js",
+        "design/prototype/assets/theme.js",
+        "design/prototype/assets/tokens.css",
+        "design/prototype/pages/shared/button.css",
+        "design/prototype/pages/shared/content-tabs.css",
+        "design/prototype/pages/shared/empty-state.css",
+        "design/prototype/pages/shared/modal.css",
+        "design/prototype/pages/shared/sidebar.css",
+        "design/prototype/pages/shared/sidebar.js"
+      ],
+      "params": [
+        "ap_stage",
+        "role",
+        "sim_logged_in",
+        "sim_logged_out",
+        "task_id"
+      ],
+      "entry": "/admin/user-management 的頁內分頁切換",
+      "spec": "docs/specs/06-admin/02-role-settings.mdx",
+      "views": [
+        {
+          "id": "admin/role-settings#state-conflict",
+          "how": "儲存時遇到衝突：顯示 conflict 提示",
+          "spec": "docs/specs/06-admin/02-role-settings.mdx#邊界情況edge-case",
+          "evidence": [
+            "design/prototype/pages/admin/role-settings.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        },
+        {
+          "id": "admin/role-settings#state-default",
+          "how": "由 /admin/user-management 的頁內分頁切到角色設定，或直接開 pages/admin/role-settings.html",
+          "spec": "docs/specs/06-admin/02-role-settings.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/admin/role-settings.html"
+          ]
+        },
+        {
+          "id": "admin/role-settings#state-dirty",
+          "how": "調整權限矩陣任一格但還沒儲存：顯示 dirty state",
+          "spec": "docs/specs/06-admin/02-role-settings.mdx#卡控機制",
+          "evidence": [
+            "design/prototype/pages/admin/role-settings.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        },
+        {
+          "id": "admin/role-settings#toast-saved",
+          "how": "儲存或還原成功：顯示 Toast",
+          "spec": "docs/specs/06-admin/02-role-settings.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/admin/role-settings.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "admin/user-management",
+      "batch": "b2-admin-dashboard-task",
+      "file": "design/prototype/pages/admin/user-management.html",
+      "loads": [
+        "design/prototype/assets/analytics.js",
+        "design/prototype/assets/theme-fouc.js",
+        "design/prototype/assets/theme.js",
+        "design/prototype/assets/tokens.css",
+        "design/prototype/pages/shared/button.css",
+        "design/prototype/pages/shared/content-tabs.css",
+        "design/prototype/pages/shared/empty-state.css",
+        "design/prototype/pages/shared/modal.css",
+        "design/prototype/pages/shared/sidebar.css",
+        "design/prototype/pages/shared/sidebar.js"
+      ],
+      "params": [
+        "ap_stage",
+        "limit",
+        "offset",
+        "q",
+        "role",
+        "sim_logged_in",
+        "sim_logged_out",
+        "status",
+        "task_id"
+      ],
+      "entry": "側欄「系統管理」",
+      "spec": "docs/specs/06-admin/01-user-management.mdx",
+      "views": [
+        {
+          "id": "admin/user-management#modal-invite",
+          "how": "點「邀請使用者」開啟邀請 modal（`shared/modal.css`、`shared/modal-focus.js` 不在本頁，modal 樣式來自 `shared/modal.css`）",
+          "spec": "docs/specs/06-admin/01-user-management.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/admin/user-management.html",
+            "design/prototype/pages/shared/modal.css"
+          ]
+        },
+        {
+          "id": "admin/user-management#state-default",
+          "how": "開 pages/admin/user-management.html",
+          "spec": "docs/specs/06-admin/01-user-management.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/admin/user-management.html"
+          ]
+        },
+        {
+          "id": "admin/user-management#state-filtered-empty",
+          "how": "用 `?q=`／`?status=`／`?role=` 篩到沒有符合的列：顯示空狀態（`shared/empty-state.css`）",
+          "spec": "docs/specs/06-admin/01-user-management.mdx#邊界情況edge-case",
+          "evidence": [
+            "design/prototype/pages/admin/user-management.html",
+            "design/prototype/pages/shared/empty-state.css"
+          ]
+        },
+        {
+          "id": "admin/user-management#toast-action",
+          "how": "啟用或停用某個帳號：停在本頁、列表即時更新並顯示 Toast",
+          "spec": "docs/specs/06-admin/01-user-management.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/admin/user-management.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "annotation/annotation-list",
+      "batch": "b3-annotation-review",
+      "file": "design/prototype/pages/annotation/annotation-list.html",
+      "loads": [
+        "design/prototype/assets/analytics.js",
+        "design/prototype/assets/guidelines/annotation-guideline-sample.pdf",
+        "design/prototype/assets/images/task-management/generic-guideline-example.svg",
+        "design/prototype/assets/theme-fouc.js",
+        "design/prototype/assets/theme.js",
+        "design/prototype/assets/tokens.css",
+        "design/prototype/pages/annotation/annotation-workspace.data.js",
+        "design/prototype/pages/dashboard/dashboard.assignments.js",
+        "design/prototype/pages/shared/annotation-history.js",
+        "design/prototype/pages/shared/button.css",
+        "design/prototype/pages/shared/empty-state.css",
+        "design/prototype/pages/shared/list-page.css",
+        "design/prototype/pages/shared/sidebar.css",
+        "design/prototype/pages/shared/sidebar.js",
+        "design/prototype/pages/shared/task-type-badge.css",
+        "design/prototype/pages/task-management/task-detail.data.js",
+        "design/prototype/pages/task-management/task-list.data.js"
+      ],
+      "params": [
+        "annotator_id",
+        "ap_stage",
+        "limit",
+        "notice",
+        "offset",
+        "q",
+        "reviewer_id",
+        "role",
+        "run_type",
+        "sim_logged_in",
+        "sim_logged_out",
+        "status",
+        "task_id"
+      ],
+      "entry": "側欄的標記作業項（名稱依任務角色變化）；儀表板的待處理項",
+      "spec": "docs/specs/04-annotation/01-annotation-list.mdx",
+      "views": [
+        {
+          "id": "annotation/annotation-list#param-notice-no-actionable-review",
+          "how": "加 `?notice=no_actionable_review` **並且** `?role=reviewer`：才會顯示 `#noActionableNotice` 那一列。`annotation-list.html:2351` 的條件是兩個同時成立，光是「沒有可處理項目」不會顯示它",
+          "spec": "docs/specs/04-annotation/01-annotation-list.mdx#空的與找不到",
+          "evidence": [
+            "design/prototype/pages/annotation/annotation-list.html"
+          ]
+        },
+        {
+          "id": "annotation/annotation-list#param-run-type",
+          "how": "加 `?run_type=`：切換試標／正式標記的回合",
+          "spec": "docs/specs/04-annotation/01-annotation-list.mdx#路由上下文與回退",
+          "evidence": [
+            "design/prototype/pages/annotation/annotation-list.html"
+          ]
+        },
+        {
+          "id": "annotation/annotation-list#role-project-leader",
+          "how": "加 `?role=project_leader`：**只改到側欄的項目名稱與角色標示**（`annotation-list.html:440`）。這一頁的 `role` 解析只認 `reviewer` 與 `annotator`（`:1053`），所以清單本體與標記員的預設完全相同",
+          "spec": "docs/specs/04-annotation/01-annotation-list.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/annotation/annotation-list.html"
+          ]
+        },
+        {
+          "id": "annotation/annotation-list#role-reviewer",
+          "how": "加 `?role=reviewer`：換成審核員的處理狀況與逐列統計",
+          "spec": "docs/specs/04-annotation/01-annotation-list.mdx#審核員的處理狀況與逐列統計",
+          "evidence": [
+            "design/prototype/pages/annotation/annotation-list.html"
+          ]
+        },
+        {
+          "id": "annotation/annotation-list#state-default",
+          "how": "開 pages/annotation/annotation-list.html（不給 `?role=` 時當標記員）",
+          "spec": "docs/specs/04-annotation/01-annotation-list.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/annotation/annotation-list.html"
+          ]
+        },
+        {
+          "id": "annotation/annotation-list#state-empty",
+          "how": "某任務沒有任何可處理的資料：顯示「目前尚無資料。」（`#emptyState`）",
+          "spec": "docs/specs/04-annotation/01-annotation-list.mdx#空的與找不到",
+          "evidence": [
+            "design/prototype/pages/annotation/annotation-list.html"
+          ]
+        },
+        {
+          "id": "annotation/annotation-list#state-filtered-empty",
+          "how": "用 `?q=`／`?status=` 篩到沒有符合的列",
+          "spec": "docs/specs/04-annotation/01-annotation-list.mdx#空的與找不到",
+          "evidence": [
+            "design/prototype/pages/annotation/annotation-list.html"
+          ]
+        },
+        {
+          "id": "annotation/annotation-list#state-no-task",
+          "how": "不帶 `?task_id=`：不進空白清單，依規格的回退規則處理",
+          "spec": "docs/specs/04-annotation/01-annotation-list.mdx#路由上下文與回退",
+          "evidence": [
+            "design/prototype/pages/annotation/annotation-list.html"
+          ]
+        },
+        {
+          "id": "annotation/annotation-list#state-task-not-found",
+          "how": "帶一個種子資料裡沒有的 `?task_id=`：顯示任務查不到（`#taskNotFound`）",
+          "spec": "docs/specs/04-annotation/01-annotation-list.mdx#空的與找不到",
+          "evidence": [
+            "design/prototype/pages/annotation/annotation-list.html"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "annotation/annotation-workspace",
+      "batch": "b3-annotation-review",
+      "file": "design/prototype/pages/annotation/annotation-workspace.html",
+      "loads": [
+        "design/prototype/assets/analytics.js",
+        "design/prototype/assets/guidelines/annotation-guideline-sample.pdf",
+        "design/prototype/assets/images/task-management/VA_emj.png",
+        "design/prototype/assets/images/task-management/generic-guideline-example.svg",
+        "design/prototype/assets/theme-fouc.js",
+        "design/prototype/assets/theme.js",
+        "design/prototype/assets/tokens.css",
+        "design/prototype/pages/annotation/annotation-workspace.config.js",
+        "design/prototype/pages/annotation/annotation-workspace.data.js",
+        "design/prototype/pages/shared/annotation-history.js",
+        "design/prototype/pages/shared/button.css",
+        "design/prototype/pages/shared/content-tabs.css",
+        "design/prototype/pages/shared/empty-state.css",
+        "design/prototype/pages/shared/input.css",
+        "design/prototype/pages/shared/modal-focus.js",
+        "design/prototype/pages/shared/modal.css",
+        "design/prototype/pages/shared/sidebar.css",
+        "design/prototype/pages/shared/sidebar.js",
+        "design/prototype/pages/task-management/task-config.css",
+        "design/prototype/pages/task-management/task-config.data.js",
+        "design/prototype/pages/task-management/task-config.dataset.js",
+        "design/prototype/pages/task-management/task-config.engine.js",
+        "design/prototype/pages/task-management/task-config.yaml.js",
+        "design/prototype/pages/task-management/task-detail.data.js",
+        "design/prototype/pages/task-management/task-list.data.js"
+      ],
+      "params": [
+        "annotator_id",
+        "ap_stage",
+        "reviewer_id",
+        "role",
+        "run_type",
+        "sample_id",
+        "sim_logged_in",
+        "sim_logged_out",
+        "task_id"
+      ],
+      "entry": "/annotation/annotation-list 點一筆資料；儀表板「繼續上次」",
+      "spec": "docs/specs/04-annotation/02-annotation-workspace.mdx",
+      "views": [
+        {
+          "id": "annotation/annotation-workspace#modal-guideline-gate",
+          "how": "進場時的指引閘門彈窗（標題「請先閱讀任務說明」，確認後才開始標記）",
+          "spec": "docs/specs/04-annotation/02-annotation-workspace.mdx#指引閘門第一次進來先讀說明",
+          "evidence": [
+            "design/prototype/pages/annotation/annotation-workspace.config.js"
+          ]
+        },
+        {
+          "id": "annotation/annotation-workspace#modal-guideline-image",
+          "how": "在說明檔案清單點一個圖片檔：頁面內圖片預覽彈窗",
+          "spec": "docs/specs/04-annotation/02-annotation-workspace.mdx#說明檔案的三種預覽",
+          "evidence": [
+            "design/prototype/pages/annotation/annotation-workspace.config.js",
+            "design/prototype/pages/annotation/annotation-workspace.html"
+          ]
+        },
+        {
+          "id": "annotation/annotation-workspace#modal-guideline-md",
+          "how": "點一個 Markdown 檔：Markdown 預覽彈窗",
+          "spec": "docs/specs/04-annotation/02-annotation-workspace.mdx#說明檔案的三種預覽",
+          "evidence": [
+            "design/prototype/pages/annotation/annotation-workspace.config.js"
+          ]
+        },
+        {
+          "id": "annotation/annotation-workspace#modal-guideline-pdf",
+          "how": "點一個 PDF 檔（`assets/guidelines/annotation-guideline-sample.pdf`）：PDF 預覽彈窗",
+          "spec": "docs/specs/04-annotation/02-annotation-workspace.mdx#說明檔案的三種預覽",
+          "evidence": [
+            "design/prototype/assets/guidelines/annotation-guideline-sample.pdf",
+            "design/prototype/pages/annotation/annotation-workspace.config.js"
+          ]
+        },
+        {
+          "id": "annotation/annotation-workspace#modal-mobile-drawer",
+          "how": "把視窗縮到行動版寬度，點底部抽屜把手：抽屜承載說明與檔案（不含歷程頁籤）",
+          "spec": "docs/specs/04-annotation/02-annotation-workspace.mdx#工作區的外殼三欄與行動版",
+          "evidence": [
+            "design/prototype/pages/annotation/annotation-workspace.html"
+          ]
+        },
+        {
+          "id": "annotation/annotation-workspace#role-annotator",
+          "how": "開 pages/annotation/annotation-workspace.html（不給 `?role=` 時 annotation-workspace 的 mode 是 annotate）",
+          "spec": "docs/specs/04-annotation/02-annotation-workspace.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/annotation/annotation-workspace.html",
+            "design/prototype/pages/shared/sidebar.js"
+          ]
+        },
+        {
+          "id": "annotation/annotation-workspace#role-reviewer",
+          "how": "加 `?role=reviewer`：sidebar.js 把 mode 設成 review，換成審核版面",
+          "spec": "docs/specs/04-annotation/02-annotation-workspace.mdx#審核卡兩個標記階段同一套版面",
+          "evidence": [
+            "design/prototype/pages/annotation/annotation-workspace.html",
+            "design/prototype/pages/shared/sidebar.js"
+          ]
+        },
+        {
+          "id": "annotation/annotation-workspace#state-arbitration",
+          "how": "仲裁版面：對一個爭議項做裁定（理由選填）",
+          "spec": "docs/specs/04-annotation/02-annotation-workspace.mdx#仲裁版面仲裁者選邊不重新標記",
+          "evidence": [
+            "design/prototype/pages/annotation/annotation-workspace.config.js"
+          ]
+        },
+        {
+          "id": "annotation/annotation-workspace#state-exception-pool",
+          "how": "例外池收尾：選一個處置後按「確認處置」（停用條件只看有沒有選處置）",
+          "spec": "docs/specs/04-annotation/02-annotation-workspace.mdx#最終例外池是最後一道出口",
+          "evidence": [
+            "design/prototype/pages/annotation/annotation-workspace.config.js"
+          ]
+        },
+        {
+          "id": "annotation/annotation-workspace#state-review-decision",
+          "how": "審核版面選「通過」／「修正」／「無法裁決」其中一個決策",
+          "spec": "docs/specs/04-annotation/02-annotation-workspace.mdx#三向決策",
+          "evidence": [
+            "design/prototype/pages/annotation/annotation-workspace.config.js"
+          ]
+        },
+        {
+          "id": "annotation/annotation-workspace#state-submitted-next",
+          "how": "提交當前這一筆而還有剩餘：停在本頁並切到下一筆",
+          "spec": "docs/specs/04-annotation/02-annotation-workspace.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/annotation/annotation-workspace.config.js",
+            "docs/prototype/navigation.mdx"
+          ]
+        },
+        {
+          "id": "annotation/annotation-workspace#tab-guideline",
+          "how": "右欄停在「說明與檔案」分頁（預設）",
+          "spec": "docs/specs/04-annotation/02-annotation-workspace.mdx#右欄說明與檔案操作紀錄",
+          "evidence": [
+            "design/prototype/pages/annotation/annotation-workspace.html"
+          ]
+        },
+        {
+          "id": "annotation/annotation-workspace#tab-history",
+          "how": "右欄切到「操作紀錄」分頁",
+          "spec": "docs/specs/04-annotation/02-annotation-workspace.mdx#操作紀錄裡的每一筆事件",
+          "evidence": [
+            "design/prototype/pages/annotation/annotation-workspace.html"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "components-showcase",
+      "batch": "b1-shared-account",
+      "file": "design/prototype/components-showcase.html",
+      "loads": [
+        "design/prototype/assets/google-g.svg",
+        "design/prototype/assets/icons/chevron-down.svg",
+        "design/prototype/assets/logo/icon-colored.svg",
+        "design/prototype/assets/tokens.css",
+        "design/prototype/pages/shared/date-range-picker.css",
+        "design/prototype/pages/shared/date-range-picker.js"
+      ],
+      "params": [],
+      "entry": "開發與設計參考頁，不在產品導航流程內，沒有 Incoming／Outgoing 連結",
+      "spec": null,
+      "views": [
+        {
+          "id": "components-showcase#state-default",
+          "how": "直接開 design/prototype/components-showcase.html。它即時列出 assets/tokens.css 的全部 token，並以正典 CSS 呈現 18 張元件卡（Buttons／Inputs／Toggle／Badges／Banner／Toast／Skeleton／Chip／Pagination／Breadcrumb／Review Status Track／Color Dot／Divider／Accordion／Progress／KPI／State Panel／Avatar）",
+          "spec": null,
+          "evidence": [
+            "design/prototype/components-showcase.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dashboard/dashboard",
+      "batch": "b2-admin-dashboard-task",
+      "file": "design/prototype/pages/dashboard/dashboard.html",
+      "loads": [
+        "design/prototype/assets/analytics.js",
+        "design/prototype/assets/guidelines/annotation-guideline-sample.pdf",
+        "design/prototype/assets/icons/arrow-right.svg",
+        "design/prototype/assets/icons/check.svg",
+        "design/prototype/assets/icons/eye.svg",
+        "design/prototype/assets/icons/file-text.svg",
+        "design/prototype/assets/icons/folder.svg",
+        "design/prototype/assets/icons/list-checks.svg",
+        "design/prototype/assets/icons/plus.svg",
+        "design/prototype/assets/icons/tag.svg",
+        "design/prototype/assets/icons/users.svg",
+        "design/prototype/assets/images/task-management/generic-guideline-example.svg",
+        "design/prototype/assets/theme-fouc.js",
+        "design/prototype/assets/theme.js",
+        "design/prototype/assets/tokens.css",
+        "design/prototype/pages/annotation/annotation-workspace.data.js",
+        "design/prototype/pages/dashboard/dashboard.assignments.js",
+        "design/prototype/pages/dashboard/dashboard.components.css",
+        "design/prototype/pages/dashboard/dashboard.data.js",
+        "design/prototype/pages/dashboard/dashboard.i18n.js",
+        "design/prototype/pages/dashboard/dashboard.js",
+        "design/prototype/pages/dashboard/dashboard.layout.css",
+        "design/prototype/pages/shared/button.css",
+        "design/prototype/pages/shared/empty-state.css",
+        "design/prototype/pages/shared/metric.css",
+        "design/prototype/pages/shared/sidebar.css",
+        "design/prototype/pages/shared/sidebar.js",
+        "design/prototype/pages/shared/task-type-badge.css",
+        "design/prototype/pages/task-management/task-detail.data.js",
+        "design/prototype/pages/task-management/task-list.data.js"
+      ],
+      "params": [
+        "annotator_id",
+        "ap_stage",
+        "reviewer_id",
+        "role",
+        "scenario",
+        "sim_logged_in",
+        "sim_logged_out",
+        "task_id",
+        "view"
+      ],
+      "entry": "登入成功後的落點；側欄「Dashboard」",
+      "spec": "docs/specs/02-dashboard/01-dashboard.mdx",
+      "views": [
+        {
+          "id": "dashboard/dashboard#modal-notification",
+          "how": "點通知鈴：停在本頁展開通知選單",
+          "spec": "docs/specs/07-shared/04-notification-events.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/dashboard/dashboard.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        },
+        {
+          "id": "dashboard/dashboard#modal-shortcut",
+          "how": "點快捷鍵說明：停在本頁顯示 modal",
+          "spec": "docs/specs/02-dashboard/01-dashboard.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/dashboard/dashboard.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        },
+        {
+          "id": "dashboard/dashboard#param-scenario-annotator",
+          "how": "加 `?scenario=annotator`（dashboard.html 必須有對應的 `id=\"view-annotator\"`，否則 applyScenario 不生效）",
+          "spec": "docs/specs/02-dashboard/01-dashboard.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/dashboard/dashboard.html",
+            "design/prototype/pages/dashboard/dashboard.js"
+          ]
+        },
+        {
+          "id": "dashboard/dashboard#param-scenario-project-leader",
+          "how": "加 `?scenario=project_leader`",
+          "spec": "docs/specs/02-dashboard/01-dashboard.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/dashboard/dashboard.html",
+            "design/prototype/pages/dashboard/dashboard.js"
+          ]
+        },
+        {
+          "id": "dashboard/dashboard#param-scenario-reviewer",
+          "how": "加 `?scenario=reviewer`",
+          "spec": "docs/specs/02-dashboard/01-dashboard.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/dashboard/dashboard.html",
+            "design/prototype/pages/dashboard/dashboard.js"
+          ]
+        },
+        {
+          "id": "dashboard/dashboard#param-scenario-super-admin-data",
+          "how": "加 `?scenario=super_admin_data`",
+          "spec": "docs/specs/02-dashboard/01-dashboard.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/dashboard/dashboard.html",
+            "design/prototype/pages/dashboard/dashboard.js"
+          ]
+        },
+        {
+          "id": "dashboard/dashboard#param-scenario-user",
+          "how": "加 `?scenario=user`：還沒有任何任務角色的人看到的版面（規格 02-01 Q8 裁定這種版面不定名）",
+          "spec": "docs/specs/02-dashboard/01-dashboard.mdx#已確認決議",
+          "evidence": [
+            "design/prototype/pages/dashboard/dashboard.html",
+            "design/prototype/pages/dashboard/dashboard.js"
+          ]
+        },
+        {
+          "id": "dashboard/dashboard#param-view-error",
+          "how": "加 `?view=error`：顯示載入失敗",
+          "spec": "docs/specs/02-dashboard/01-dashboard.mdx#邊界情況edge-case",
+          "evidence": [
+            "design/prototype/pages/dashboard/dashboard.js"
+          ]
+        },
+        {
+          "id": "dashboard/dashboard#param-view-skeleton",
+          "how": "加 `?view=skeleton`：載入骨架**永遠停在載入中**，dashboard.js 的註解寫明這是為了可重複測試",
+          "spec": "docs/specs/02-dashboard/01-dashboard.mdx#邊界情況edge-case",
+          "evidence": [
+            "design/prototype/pages/dashboard/dashboard.js"
+          ]
+        },
+        {
+          "id": "dashboard/dashboard#state-default",
+          "how": "開 pages/dashboard/dashboard.html",
+          "spec": "docs/specs/02-dashboard/01-dashboard.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/dashboard/dashboard.html"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dataset/dataset-analysis-detail",
+      "batch": "b4-dataset-sweep",
+      "file": "design/prototype/pages/dataset/dataset-analysis-detail.html",
+      "loads": [
+        "design/prototype/assets/analytics.js",
+        "design/prototype/assets/guidelines/annotation-guideline-sample.pdf",
+        "design/prototype/assets/images/task-management/VA_emj.png",
+        "design/prototype/assets/images/task-management/generic-guideline-example.svg",
+        "design/prototype/assets/theme-fouc.js",
+        "design/prototype/assets/theme.js",
+        "design/prototype/assets/tokens.css",
+        "design/prototype/pages/annotation/annotation-workspace.data.js",
+        "design/prototype/pages/dataset/dataset-analysis-detail.partials/quality-entity_recognition.html",
+        "design/prototype/pages/dataset/dataset-analysis-detail.partials/quality-free_text.html",
+        "design/prototype/pages/dataset/dataset-analysis-detail.partials/quality-multi_dim.html",
+        "design/prototype/pages/dataset/dataset-analysis-detail.partials/quality-multi_label.html",
+        "design/prototype/pages/dataset/dataset-analysis-detail.partials/quality-relation_identification.html",
+        "design/prototype/pages/dataset/dataset-analysis-detail.partials/quality-sequence_tagging.html",
+        "design/prototype/pages/dataset/dataset-analysis-detail.partials/quality-single_dim.html",
+        "design/prototype/pages/dataset/dataset-analysis-detail.partials/quality-single_label.html",
+        "design/prototype/pages/dataset/dataset-analysis-detail.partials/stats-entity_recognition.html",
+        "design/prototype/pages/dataset/dataset-analysis-detail.partials/stats-free_text.html",
+        "design/prototype/pages/dataset/dataset-analysis-detail.partials/stats-multi_dim.html",
+        "design/prototype/pages/dataset/dataset-analysis-detail.partials/stats-multi_label.html",
+        "design/prototype/pages/dataset/dataset-analysis-detail.partials/stats-relation_identification.html",
+        "design/prototype/pages/dataset/dataset-analysis-detail.partials/stats-sequence_tagging.html",
+        "design/prototype/pages/dataset/dataset-analysis-detail.partials/stats-single_dim.html",
+        "design/prototype/pages/dataset/dataset-analysis-detail.partials/stats-single_label.html",
+        "design/prototype/pages/shared/button.css",
+        "design/prototype/pages/shared/content-tabs.css",
+        "design/prototype/pages/shared/empty-state.css",
+        "design/prototype/pages/shared/metric.css",
+        "design/prototype/pages/shared/sidebar.css",
+        "design/prototype/pages/shared/sidebar.js",
+        "design/prototype/pages/task-management/task-config.data.js",
+        "design/prototype/pages/task-management/task-detail.data.js",
+        "design/prototype/pages/task-management/task-list.data.js"
+      ],
+      "params": [
+        "annotator_id",
+        "ap_stage",
+        "q_state",
+        "reviewer_id",
+        "role",
+        "s_state",
+        "sim_logged_in",
+        "sim_logged_out",
+        "tab",
+        "task_id"
+      ],
+      "entry": "/dataset/dataset-analysis-list 點一列",
+      "spec": "docs/specs/05-dataset/02-analysis-detail.mdx",
+      "views": [
+        {
+          "id": "dataset/dataset-analysis-detail#param-q-state-dry-run-in-progress",
+          "how": "加 `?q_state=dry_run_in_progress`：品質監控以這個狀態算繪",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#品質監控要先有試標才有東西看",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#param-q-state-ready",
+          "how": "加 `?q_state=ready`：品質監控以這個狀態算繪",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#品質指標就緒訊號",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#param-q-state-report-failed",
+          "how": "加 `?q_state=report_failed`：品質監控以這個狀態算繪",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#品質指標就緒訊號",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#param-q-state-report-generating",
+          "how": "加 `?q_state=report_generating`：品質監控以這個狀態算繪",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#品質指標就緒訊號",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#param-q-state-report-pending",
+          "how": "加 `?q_state=report_pending`：品質監控以這個狀態算繪",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#品質指標就緒訊號",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#state-quality-entity-recognition",
+          "how": "帶一個輸出類型是 `entity_recognition` 的 `?task_id=` 並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-entity_recognition.html",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#八種輸出類型各自的主指標與門檻",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html",
+            "design/prototype/pages/dataset/dataset-analysis-detail.partials/quality-entity_recognition.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#state-quality-free-text",
+          "how": "帶一個輸出類型是 `free_text` 的 `?task_id=` 並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-free_text.html",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#八種輸出類型各自的主指標與門檻",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html",
+            "design/prototype/pages/dataset/dataset-analysis-detail.partials/quality-free_text.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#state-quality-multi-dim",
+          "how": "帶一個輸出類型是 `multi_dim` 的 `?task_id=` 並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-multi_dim.html",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#八種輸出類型各自的主指標與門檻",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html",
+            "design/prototype/pages/dataset/dataset-analysis-detail.partials/quality-multi_dim.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#state-quality-multi-label",
+          "how": "帶一個輸出類型是 `multi_label` 的 `?task_id=` 並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-multi_label.html",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#八種輸出類型各自的主指標與門檻",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html",
+            "design/prototype/pages/dataset/dataset-analysis-detail.partials/quality-multi_label.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#state-quality-relation-identification",
+          "how": "帶一個輸出類型是 `relation_identification` 的 `?task_id=` 並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-relation_identification.html",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#八種輸出類型各自的主指標與門檻",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html",
+            "design/prototype/pages/dataset/dataset-analysis-detail.partials/quality-relation_identification.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#state-quality-sequence-tagging",
+          "how": "帶一個輸出類型是 `sequence_tagging` 的 `?task_id=` 並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-sequence_tagging.html",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#八種輸出類型各自的主指標與門檻",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html",
+            "design/prototype/pages/dataset/dataset-analysis-detail.partials/quality-sequence_tagging.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#state-quality-single-dim",
+          "how": "帶一個輸出類型是 `single_dim` 的 `?task_id=` 並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-single_dim.html",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#八種輸出類型各自的主指標與門檻",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html",
+            "design/prototype/pages/dataset/dataset-analysis-detail.partials/quality-single_dim.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#state-quality-single-label",
+          "how": "帶一個輸出類型是 `single_label` 的 `?task_id=` 並加 `?tab=quality`：品質監控載入 dataset-analysis-detail.partials/quality-single_label.html",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#八種輸出類型各自的主指標與門檻",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html",
+            "design/prototype/pages/dataset/dataset-analysis-detail.partials/quality-single_label.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#state-seq-match-partial",
+          "how": "同上點 `#matchPartial`：改顯示 `#seqPartialCard`",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#序列標註的統計",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#state-seq-match-strict",
+          "how": "在序列標註任務的統計總覽點 `#matchStrict`：`syncSequenceUi()`（`dataset-analysis-detail.html:1947`）顯示 `#seqStrictCard`",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#序列標註的統計",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#state-stats-empty",
+          "how": "加 `?s_state=empty`：統計總覽顯示空狀態（`#statsEmpty`）",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#邊界情況edge-case",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#state-stats-entity-recognition",
+          "how": "帶一個輸出類型是 `entity_recognition` 的 `?task_id=`：統計總覽載入 dataset-analysis-detail.partials/stats-entity_recognition.html",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#實體辨識的統計",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html",
+            "design/prototype/pages/dataset/dataset-analysis-detail.partials/stats-entity_recognition.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#state-stats-free-text",
+          "how": "帶一個輸出類型是 `free_text` 的 `?task_id=`：統計總覽載入 dataset-analysis-detail.partials/stats-free_text.html",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#自由文字的統計",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html",
+            "design/prototype/pages/dataset/dataset-analysis-detail.partials/stats-free_text.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#state-stats-multi-dim",
+          "how": "帶一個輸出類型是 `multi_dim` 的 `?task_id=`：統計總覽載入 dataset-analysis-detail.partials/stats-multi_dim.html",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#多維度的統計",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html",
+            "design/prototype/pages/dataset/dataset-analysis-detail.partials/stats-multi_dim.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#state-stats-multi-label",
+          "how": "帶一個輸出類型是 `multi_label` 的 `?task_id=`：統計總覽載入 dataset-analysis-detail.partials/stats-multi_label.html",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#多標籤的統計",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html",
+            "design/prototype/pages/dataset/dataset-analysis-detail.partials/stats-multi_label.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#state-stats-relation-identification",
+          "how": "帶一個輸出類型是 `relation_identification` 的 `?task_id=`：統計總覽載入 dataset-analysis-detail.partials/stats-relation_identification.html",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#關係識別的統計",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html",
+            "design/prototype/pages/dataset/dataset-analysis-detail.partials/stats-relation_identification.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#state-stats-sequence-tagging",
+          "how": "帶一個輸出類型是 `sequence_tagging` 的 `?task_id=`：統計總覽載入 dataset-analysis-detail.partials/stats-sequence_tagging.html",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#序列標註的統計",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html",
+            "design/prototype/pages/dataset/dataset-analysis-detail.partials/stats-sequence_tagging.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#state-stats-single-dim",
+          "how": "帶一個輸出類型是 `single_dim` 的 `?task_id=`：統計總覽載入 dataset-analysis-detail.partials/stats-single_dim.html",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#單維度的統計",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html",
+            "design/prototype/pages/dataset/dataset-analysis-detail.partials/stats-single_dim.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#state-stats-single-label",
+          "how": "帶一個輸出類型是 `single_label` 的 `?task_id=`：統計總覽載入 dataset-analysis-detail.partials/stats-single_label.html",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#單一標籤的統計",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html",
+            "design/prototype/pages/dataset/dataset-analysis-detail.partials/stats-single_label.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#tab-quality",
+          "how": "`?tab=quality`：切到品質監控",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#分頁列與網址上的分頁參數",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-detail#tab-stats",
+          "how": "`?tab=` 停在統計總覽（預設）",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#分頁列與網址上的分頁參數",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dataset/dataset-analysis-list",
+      "batch": "b4-dataset-sweep",
+      "file": "design/prototype/pages/dataset/dataset-analysis-list.html",
+      "loads": [
+        "design/prototype/assets/analytics.js",
+        "design/prototype/assets/theme-fouc.js",
+        "design/prototype/assets/theme.js",
+        "design/prototype/assets/tokens.css",
+        "design/prototype/pages/dataset/dataset-analysis-list.data.js",
+        "design/prototype/pages/dataset/dataset-analysis-list.i18n.js",
+        "design/prototype/pages/dataset/dataset-analysis-list.js",
+        "design/prototype/pages/dataset/dataset-analysis-list.model.js",
+        "design/prototype/pages/dataset/dataset-analysis-list.view.js",
+        "design/prototype/pages/shared/empty-state.css",
+        "design/prototype/pages/shared/list-page.css",
+        "design/prototype/pages/shared/sidebar.css",
+        "design/prototype/pages/shared/sidebar.js",
+        "design/prototype/pages/shared/task-type-badge.css"
+      ],
+      "params": [
+        "ap_stage",
+        "iaa_status",
+        "invalid_task",
+        "keyword",
+        "limit",
+        "offset",
+        "output_type",
+        "role",
+        "sim_logged_in",
+        "sim_logged_out",
+        "task_id",
+        "view"
+      ],
+      "entry": "側欄「資料集分析」",
+      "spec": "docs/specs/05-dataset/01-analysis-list.mdx",
+      "views": [
+        {
+          "id": "dataset/dataset-analysis-list#param-invalid-task",
+          "how": "加 `?invalid_task=1`：模擬指定的任務不合法",
+          "spec": "docs/specs/05-dataset/01-analysis-list.mdx#邊界情況edge-case",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-list.js"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-list#param-view-empty",
+          "how": "加 `?view=empty`：`dataset-analysis-list.model.js:237` 把 `state.tasks` 清空，看空清單。這個參數**只認 `empty` 這一個值**，裸的 `?view=` 什麼都不會發生",
+          "spec": "docs/specs/05-dataset/01-analysis-list.mdx#邊界情況edge-case",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-list.model.js"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-list#state-default",
+          "how": "開 pages/dataset/dataset-analysis-list.html",
+          "spec": "docs/specs/05-dataset/01-analysis-list.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-list.html"
+          ]
+        },
+        {
+          "id": "dataset/dataset-analysis-list#state-filtered-empty",
+          "how": "用 `?keyword=`／`?iaa_status=`／`?output_type=` 篩到沒有符合的列",
+          "spec": "docs/specs/05-dataset/01-analysis-list.mdx#邊界情況edge-case",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-list.model.js"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "index",
+      "batch": "b1-shared-account",
+      "file": "design/prototype/index.html",
+      "loads": [],
+      "params": [],
+      "entry": "站台根目錄。meta refresh 到 /account/login，另附一個 fallback 連結",
+      "spec": null,
+      "views": [
+        {
+          "id": "index#state-default",
+          "how": "直接開 design/prototype/index.html，它用 meta refresh 導向 pages/account/login.html；下方另有一個 fallback 連結",
+          "spec": null,
+          "evidence": [
+            "design/prototype/index.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "task-management/task-detail",
+      "batch": "b2-admin-dashboard-task",
+      "file": "design/prototype/pages/task-management/task-detail.html",
+      "loads": [
+        "design/prototype/assets/analytics.js",
+        "design/prototype/assets/guidelines/annotation-guideline-sample.pdf",
+        "design/prototype/assets/icons/alert-circle.svg",
+        "design/prototype/assets/icons/clock.svg",
+        "design/prototype/assets/icons/file-text.svg",
+        "design/prototype/assets/images/task-management/VA_emj.png",
+        "design/prototype/assets/images/task-management/generic-guideline-example.svg",
+        "design/prototype/assets/theme-fouc.js",
+        "design/prototype/assets/theme.js",
+        "design/prototype/assets/tokens.css",
+        "design/prototype/pages/annotation/annotation-workspace.data.js",
+        "design/prototype/pages/shared/button.css",
+        "design/prototype/pages/shared/content-tabs.css",
+        "design/prototype/pages/shared/date-range-picker.css",
+        "design/prototype/pages/shared/date-range-picker.js",
+        "design/prototype/pages/shared/empty-state.css",
+        "design/prototype/pages/shared/metric.css",
+        "design/prototype/pages/shared/modal-focus.js",
+        "design/prototype/pages/shared/modal.css",
+        "design/prototype/pages/shared/sidebar.css",
+        "design/prototype/pages/shared/sidebar.js",
+        "design/prototype/pages/shared/span-tagging-export.js",
+        "design/prototype/pages/task-management/task-config.css",
+        "design/prototype/pages/task-management/task-config.data.js",
+        "design/prototype/pages/task-management/task-config.dataset.js",
+        "design/prototype/pages/task-management/task-config.engine.js",
+        "design/prototype/pages/task-management/task-config.yaml.js",
+        "design/prototype/pages/task-management/task-detail.config.js",
+        "design/prototype/pages/task-management/task-detail.data.js",
+        "design/prototype/pages/task-management/task-detail.panels/annotation-progress.html",
+        "design/prototype/pages/task-management/task-detail.panels/annotation-results.html",
+        "design/prototype/pages/task-management/task-detail.panels/member-management.html",
+        "design/prototype/pages/task-management/task-detail.panels/overview.html",
+        "design/prototype/pages/task-management/task-detail.panels/settings.html",
+        "design/prototype/pages/task-management/task-detail.panels/work-log.html",
+        "design/prototype/pages/task-management/task-list.data.js"
+      ],
+      "params": [
+        "annotator_id",
+        "ap_stage",
+        "reviewer_id",
+        "role",
+        "sim_403",
+        "sim_logged_in",
+        "sim_logged_out",
+        "status",
+        "tab",
+        "task_id",
+        "task_role"
+      ],
+      "entry": "/task-management/task-list 點任務；/task-management/task-new 建立成功",
+      "spec": "docs/specs/03-task-management/03-task-detail.mdx",
+      "views": [
+        {
+          "id": "task-management/task-detail#param-status",
+          "how": "加 `?status=<任務狀態>`：以那個狀態算繪整頁（狀態與轉換、回合表都跟著變）",
+          "spec": "docs/specs/03-task-management/03-task-detail.mdx#任務的五個狀態與轉換",
+          "evidence": [
+            "design/prototype/pages/task-management/task-detail.html"
+          ]
+        },
+        {
+          "id": "task-management/task-detail#role-annotator",
+          "how": "加 `?task_role=annotator`（或 `?role=`；不給、或給不認得的值都 fail closed 落到 annotator）。**這一頁不算繪給標記員看**——`task-detail.html:5176` 直接導到 `./task-list.html?unauthorized=annotator`",
+          "spec": "docs/specs/03-task-management/03-task-detail.mdx#誰進得來誰看得到哪些分頁",
+          "evidence": [
+            "design/prototype/pages/task-management/task-detail.html"
+          ]
+        },
+        {
+          "id": "task-management/task-detail#role-project-leader",
+          "how": "加 `?task_role=project_leader`",
+          "spec": "docs/specs/03-task-management/03-task-detail.mdx#誰進得來誰看得到哪些分頁",
+          "evidence": [
+            "design/prototype/pages/task-management/task-detail.html"
+          ]
+        },
+        {
+          "id": "task-management/task-detail#role-reviewer",
+          "how": "加 `?task_role=reviewer`",
+          "spec": "docs/specs/03-task-management/03-task-detail.mdx#誰進得來誰看得到哪些分頁",
+          "evidence": [
+            "design/prototype/pages/task-management/task-detail.html"
+          ]
+        },
+        {
+          "id": "task-management/task-detail#sim-403",
+          "how": "加 `?sim_403=1`：對一個在種子資料裡**找得到**的任務模擬無權限（不是找不到）",
+          "spec": "docs/specs/07-shared/03-denied-and-not-found.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/task-management/task-detail.html"
+          ]
+        },
+        {
+          "id": "task-management/task-detail#state-panel-load-failed",
+          "how": "讓某個 panel 的請求失敗：那一個分頁只留下它的佔位符，其餘 panel 仍然載入、其他分頁仍可用（task-detail.html 的註解明寫這個降級行為）",
+          "spec": "docs/specs/03-task-management/03-task-detail.mdx#載入中空的與載入失敗",
+          "evidence": [
+            "design/prototype/pages/task-management/task-detail.html"
+          ]
+        },
+        {
+          "id": "task-management/task-detail#tab-annotation-progress",
+          "how": "`?tab=annotation-progress`：載入 task-detail.panels/annotation-progress.html",
+          "spec": "docs/specs/03-task-management/03-task-detail.mdx#標記進度",
+          "evidence": [
+            "design/prototype/pages/task-management/task-detail.html",
+            "design/prototype/pages/task-management/task-detail.panels/annotation-progress.html"
+          ]
+        },
+        {
+          "id": "task-management/task-detail#tab-annotation-results",
+          "how": "`?tab=annotation-results`：載入 task-detail.panels/annotation-results.html",
+          "spec": "docs/specs/03-task-management/03-task-detail.mdx#標記結果",
+          "evidence": [
+            "design/prototype/pages/task-management/task-detail.html",
+            "design/prototype/pages/task-management/task-detail.panels/annotation-results.html"
+          ]
+        },
+        {
+          "id": "task-management/task-detail#tab-member-management",
+          "how": "`?tab=member-management`：載入 task-detail.panels/member-management.html",
+          "spec": "docs/specs/03-task-management/03-task-detail.mdx#成員管理",
+          "evidence": [
+            "design/prototype/pages/task-management/task-detail.html",
+            "design/prototype/pages/task-management/task-detail.panels/member-management.html"
+          ]
+        },
+        {
+          "id": "task-management/task-detail#tab-overview",
+          "how": "`?tab=overview`（預設）：載入 task-detail.panels/overview.html",
+          "spec": "docs/specs/03-task-management/03-task-detail.mdx#概覽",
+          "evidence": [
+            "design/prototype/pages/task-management/task-detail.html",
+            "design/prototype/pages/task-management/task-detail.panels/overview.html"
+          ]
+        },
+        {
+          "id": "task-management/task-detail#tab-settings",
+          "how": "`?tab=settings`：載入 task-detail.panels/settings.html",
+          "spec": "docs/specs/03-task-management/03-task-detail.mdx#設定分頁的區塊導覽與編輯",
+          "evidence": [
+            "design/prototype/pages/task-management/task-detail.html",
+            "design/prototype/pages/task-management/task-detail.panels/settings.html"
+          ]
+        },
+        {
+          "id": "task-management/task-detail#tab-work-log",
+          "how": "`?tab=work-log`：載入 task-detail.panels/work-log.html",
+          "spec": "docs/specs/03-task-management/03-task-detail.mdx#工時紀錄",
+          "evidence": [
+            "design/prototype/pages/task-management/task-detail.html",
+            "design/prototype/pages/task-management/task-detail.panels/work-log.html"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "task-management/task-list",
+      "batch": "b2-admin-dashboard-task",
+      "file": "design/prototype/pages/task-management/task-list.html",
+      "loads": [
+        "design/prototype/assets/analytics.js",
+        "design/prototype/assets/theme-fouc.js",
+        "design/prototype/assets/theme.js",
+        "design/prototype/assets/tokens.css",
+        "design/prototype/pages/shared/button.css",
+        "design/prototype/pages/shared/empty-state.css",
+        "design/prototype/pages/shared/list-page.css",
+        "design/prototype/pages/shared/modal-focus.js",
+        "design/prototype/pages/shared/modal.css",
+        "design/prototype/pages/shared/sidebar.css",
+        "design/prototype/pages/shared/sidebar.js",
+        "design/prototype/pages/shared/task-type-badge.css",
+        "design/prototype/pages/task-management/task-list.data.js"
+      ],
+      "params": [
+        "ap_stage",
+        "keyword",
+        "limit",
+        "offset",
+        "output_type",
+        "role",
+        "run_stage",
+        "sim_delete_error",
+        "sim_logged_in",
+        "sim_logged_out",
+        "status",
+        "task_id",
+        "task_role",
+        "unauthorized",
+        "view"
+      ],
+      "entry": "側欄「任務管理」",
+      "spec": "docs/specs/03-task-management/01-task-list.mdx",
+      "views": [
+        {
+          "id": "task-management/task-list#param-unauthorized",
+          "how": "加 `?unauthorized=1`：進頁時跳一則無權限 Toast",
+          "spec": "docs/specs/07-shared/03-denied-and-not-found.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/task-management/task-list.html"
+          ]
+        },
+        {
+          "id": "task-management/task-list#param-view-empty",
+          "how": "加 `?view=empty`：**不載入種子資料**，直接看空清單",
+          "spec": "docs/specs/03-task-management/01-task-list.mdx#邊界情況edge-case",
+          "evidence": [
+            "design/prototype/pages/task-management/task-list.html"
+          ]
+        },
+        {
+          "id": "task-management/task-list#param-view-error",
+          "how": "加 `?view=error`：`state.loadFailed` 為真（`task-list.html:1225`），清單換成載入失敗、筆數歸零",
+          "spec": "docs/specs/03-task-management/01-task-list.mdx#邊界情況edge-case",
+          "evidence": [
+            "design/prototype/pages/task-management/task-list.html"
+          ]
+        },
+        {
+          "id": "task-management/task-list#role-task-role",
+          "how": "加 `?task_role=project_leader`／`reviewer`／`annotator`：換成那個任務角色看得到的清單與操作",
+          "spec": "docs/specs/03-task-management/01-task-list.mdx#誰看得到哪些任務",
+          "evidence": [
+            "design/prototype/pages/task-management/task-list.html"
+          ]
+        },
+        {
+          "id": "task-management/task-list#sim-delete-error",
+          "how": "加 `?sim_delete_error=1` 後刪除任務：模擬刪除失敗",
+          "spec": "docs/specs/03-task-management/01-task-list.mdx#邊界情況edge-case",
+          "evidence": [
+            "design/prototype/pages/task-management/task-list.html"
+          ]
+        },
+        {
+          "id": "task-management/task-list#state-default",
+          "how": "開 pages/task-management/task-list.html",
+          "spec": "docs/specs/03-task-management/01-task-list.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/task-management/task-list.html"
+          ]
+        },
+        {
+          "id": "task-management/task-list#state-filtered-empty",
+          "how": "用 `?keyword=`／`?status=`／`?output_type=`／`?run_stage=` 篩到沒有符合的列",
+          "spec": "docs/specs/03-task-management/01-task-list.mdx#邊界情況edge-case",
+          "evidence": [
+            "design/prototype/pages/task-management/task-list.html"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "task-management/task-new",
+      "batch": "b2-admin-dashboard-task",
+      "file": "design/prototype/pages/task-management/task-new.html",
+      "loads": [
+        "design/prototype/assets/analytics.js",
+        "design/prototype/assets/images/task-management/VA_emj.png",
+        "design/prototype/assets/theme-fouc.js",
+        "design/prototype/assets/theme.js",
+        "design/prototype/assets/tokens.css",
+        "design/prototype/pages/annotation/annotation-workspace.data.js",
+        "design/prototype/pages/shared/button.css",
+        "design/prototype/pages/shared/empty-state.css",
+        "design/prototype/pages/shared/modal.css",
+        "design/prototype/pages/shared/sidebar.css",
+        "design/prototype/pages/shared/sidebar.js",
+        "design/prototype/pages/task-management/task-config.css",
+        "design/prototype/pages/task-management/task-config.data.js",
+        "design/prototype/pages/task-management/task-config.dataset.js",
+        "design/prototype/pages/task-management/task-config.engine.js",
+        "design/prototype/pages/task-management/task-config.yaml.js"
+      ],
+      "params": [
+        "annotator_id",
+        "ap_stage",
+        "reviewer_id",
+        "role",
+        "sim_logged_in",
+        "sim_logged_out",
+        "task_id"
+      ],
+      "entry": "/task-management/task-list 點「新增任務」",
+      "spec": "docs/specs/03-task-management/02-task-new.mdx",
+      "views": [
+        {
+          "id": "task-management/task-new#modal-dataset-preview",
+          "how": "在第一步點資料集預覽：停在本頁顯示 modal",
+          "spec": "docs/specs/03-task-management/02-task-new.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/task-management/task-new.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        },
+        {
+          "id": "task-management/task-new#modal-leave-confirm",
+          "how": "填了一半要離開：停在本頁顯示離開確認",
+          "spec": "docs/specs/03-task-management/02-task-new.mdx#邊界情況edge-case",
+          "evidence": [
+            "design/prototype/pages/task-management/task-new.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        },
+        {
+          "id": "task-management/task-new#state-step1",
+          "how": "開 pages/task-management/task-new.html，停在第一步（基本資料與資料來源）",
+          "spec": "docs/specs/03-task-management/02-task-new.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/task-management/task-new.html"
+          ]
+        },
+        {
+          "id": "task-management/task-new#state-step2",
+          "how": "在第一步填妥後進第二步（標記方式設定）",
+          "spec": "docs/specs/03-task-management/02-task-new.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/task-management/task-new.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        },
+        {
+          "id": "task-management/task-new#state-step3",
+          "how": "進第三步（啟動條件）",
+          "spec": "docs/specs/03-task-management/02-task-new.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/task-management/task-new.html",
+            "docs/prototype/navigation.mdx"
+          ]
+        }
+      ]
+    }
+  ],
+  "unreproducible": [
+    {
+      "id": "annotation/annotation-list#state-loading",
+      "why": "這一頁沒有任何載入狀態。python 掃 `skeleton`／`loading`／`載入` 在 annotation-list.html 都是 0 次，而同一個 repo 的 task-detail、dashboard、profile 各有一套骨架。讀取有延遲時畫面會先顯示「目前尚無資料。」——而那句話的意思是「這個任務還沒發布資料」。",
+      "spec": "docs/specs/04-annotation/01-annotation-list.mdx#空的與找不到",
+      "tracked": "https://github.com/label-suite/label-suite/issues/187"
+    },
+    {
+      "id": "annotation/annotation-workspace#state-task-goal-and-instruction",
+      "why": "右欄「任務說明」區只算繪任務名稱（`annotation-workspace.config.js` 的 `setText('guidelineSummaryText', taskName)`），規格要求的「任務目標」與「操作指引」兩段在整個 prototype 沒有落點，連資料欄位都沒有。",
+      "spec": "docs/specs/04-annotation/02-annotation-workspace.mdx#右欄說明與檔案操作紀錄",
+      "tracked": "https://github.com/label-suite/label-suite/issues/187"
+    }
+  ],
+  "uncollected": [
+    {
+      "axis": "shared/app-shell#param-ap-stage",
+      "what": "頁籤上的階段徽章。`?ap_stage=r<N>` 給 `dry_run`（`sidebar.js:769`）、`?ap_stage=official` 給 `official_run`（`:772`），算繪成 `data-stage-badge`（`:1252`）",
+      "hosts": 14,
+      "spec": "docs/specs/07-shared/02-workspace-tabs.mdx",
+      "evidence": [
+        "design/prototype/pages/shared/sidebar.js"
+      ]
+    },
+    {
+      "axis": "shared/app-shell#role-super-admin",
+      "what": "只有系統管理員看得到的系統管理群組。`sidebar.js:536` 在 systemRole 不是 `super_admin` 時隱藏 `#navAdminItem`（`:627`），角色記在 localStorage 的 `labelsuite.systemRole`（`:175`）",
+      "hosts": 14,
+      "spec": "docs/specs/07-shared/01-sidebar.mdx",
+      "evidence": [
+        "design/prototype/pages/shared/sidebar.js"
+      ]
+    },
+    {
+      "axis": "shared/app-shell#state-lang-en",
+      "what": "中／英語言。`#langToggle`（`sidebar.js:2046`）呼叫 `applyGlobalLanguage()`（`:427`），記在 localStorage 的 `labelsuite.lang`（`:412`）",
+      "hosts": 14,
+      "spec": "docs/specs/07-shared/01-sidebar.mdx",
+      "evidence": [
+        "design/prototype/pages/shared/sidebar.js"
+      ]
+    },
+    {
+      "axis": "shared/app-shell#state-sidebar-collapsed",
+      "what": "側欄收合。切 `body.sidebar-collapsed`（`sidebar.js:2524`），記在 localStorage 的 `labelsuite.sidebarCollapsed`（`:497`），桌機斷點是 `matchMedia` 的 `min-width: 769px`（`:513`）",
+      "hosts": 14,
+      "spec": "docs/specs/07-shared/01-sidebar.mdx",
+      "evidence": [
+        "design/prototype/pages/shared/sidebar.css",
+        "design/prototype/pages/shared/sidebar.js"
+      ]
+    },
+    {
+      "axis": "shared/app-shell#state-theme-dark",
+      "what": "深／淺色主題。`#sidebarThemeToggleBtn`（`sidebar.js:2080`）與行動版 `#mobileThemeToggleBtn`（`:2054`）切換，寫 `data-theme`（`:374`），記在 localStorage 的 `label-suite-theme`（`:348`）",
+      "hosts": 14,
+      "spec": "docs/specs/07-shared/01-sidebar.mdx",
+      "evidence": [
+        "design/prototype/assets/theme.js",
+        "design/prototype/pages/shared/sidebar.js"
+      ]
+    },
+    {
+      "axis": "shared/app-shell#state-workspace-tabs",
+      "what": "工作頁籤整條：頁籤列（`sidebar.js:1524` 的 `workspace-tab-bar`）、總覽選單、重開、全部關閉，以及上限／改鍵／關閉三種通知。狀態分散在 6 個 sessionStorage 鍵，`sidebar.css` 有 42 條 `workspace-tab*` 規則",
+      "hosts": 14,
+      "spec": "docs/specs/07-shared/02-workspace-tabs.mdx",
+      "evidence": [
+        "design/prototype/pages/shared/sidebar.css",
+        "design/prototype/pages/shared/sidebar.js"
+      ]
+    }
+  ],
+  "retired": []
+}
