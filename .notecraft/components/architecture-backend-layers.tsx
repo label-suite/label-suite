@@ -3,8 +3,10 @@ import { motion, useReducedMotion } from "motion/react";
 import { ArrowDown, ChevronLeft, ChevronRight, Database, Folder, Globe, Languages, ShieldCheck } from "lucide-react";
 
 // Backend request flow for Label Suite.
-// Source of truth: docs/development/architecture.mdx §後端分層 (the layer table) and §認證與授權.
-// The marker prompt repeats all eight steps in order, because agents read the raw .mdx, not this render.
+// Source of truth: docs/development/architecture.mdx §後端分層 (the layer table covers steps
+// 5-7 only; its Celery task row is not one of the nine), §認證與授權 with §授權四步 (2, 3),
+// §技術選型 (pydantic, 4), §資料庫雙層 (8), §i18n 兩層 (9) and AGENTS.md hard rule 7 (CORS, 1).
+// The marker prompt repeats all nine steps in order, because agents read the raw .mdx, not this render.
 
 type Zone = "gate" | "module" | "store" | "out";
 
