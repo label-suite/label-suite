@@ -1,15 +1,15 @@
 # 覆蓋核對
 
-交付包版本：commit `75084e22bf7967da360c5319bff5bf25983969d8`，prototype tree `4cb347d5e720203418701a0a4a6b521cc117c64e`。
+交付包版本：commit `328ab7ea7d54317c05811d711950d0d7d3d2f20a`，prototype tree `4cb347d5e720203418701a0a4a6b521cc117c64e`。
 產生依據：[`design-handoff` skill](../../../.claude/skills/design-handoff/SKILL.md) 的步驟 4。工作源頭是 [Issue #248](https://github.com/label-suite/label-suite/issues/248)。
 
-**本次是第一版**，所以沒有「本次重跑」那一節。
+**本次是第二版**（第一次重跑）。差異見 §九。
 
 | 項目 | 數 |
 | :--- | ---: |
 | 條目 | 19（18 個畫面 ＋ 1 個共用外殼） |
 | 視圖 | 135 |
-| 批次 | 5 |
+| 批次 | 5（`b0` 本 skill 做完，`b1`–`b4` 交給 `design-system-setup`） |
 | 無法重現的視圖 | 2 |
 | 沒有規格可連的視圖 | 2 |
 
@@ -37,6 +37,30 @@
 這是一個**刻意寬鬆**的斷言：「至少一個」不等於逐項涵蓋。逐列看，`task-detail` 的「設定、抽樣、guideline、run control、成員操作、匯出」整列只對到六個分頁與 `state-panel-load-failed`——一個 12,501 行、6 個 panel、含日期區間選擇器與分類刪除彈窗的畫面只收 12 個視圖，`modal-`／`toast-` 一個都沒有。`design-system-setup` 在 `b2` 會吃到這個缺口。
 
 視圖數比 `Inline` 列多很多（135 vs 24），因為 `Inline` 把「搜尋／篩選／排序／分頁」這類寫成一列，而 URL 參數掃描把它們拆成可個別重現的狀態。
+
+### 另一道對照：網址參數契約 vs 掃出來的全集
+
+[PR #398](https://github.com/label-suite/label-suite/pull/398) 把參數寫成契約之後，多了一道機械對照：**`navigation.mdx` §網址參數 宣告的，與逐檔掃 `.get('<名稱>')` 得到的全集，兩個方向都要對得上**。
+
+本次結果：**契約有而程式沒有 0 筆；程式有而契約沒有 14 筆。**
+
+第一版寫「兩個方向各 0 筆」，**那是錯的**，因為掃描法本身有結構性盲點：它逐字找 `.get('<名稱>')`，而 `task-detail.html` 把 16 個參數定義在一張 `URL_VIEW_STATE` 表裡（`:5042`），用 `params.get(entry.param)` 讀（`:5117`）——**字面量掃描對這種寫法完全瞎掉**。獨立審查抓到。
+
+沒有被宣告的 14 個，全部在 `/task-management/task-detail`：
+
+| 參數 | 管什麼 |
+| :--- | :--- |
+| `section` | 設定分頁的區段（`onlyTab: 'settings'`） |
+| `ap_stage`、`ap_sort` | 標記進度的階段與排序（`ap_stage` 已宣告，`ap_sort` 沒有） |
+| `ar_stage`、`ar_status`、`ar_annotator`、`ar_reviewer`、`ar_review_status`、`ar_page` | 標記結果的五個篩選與分頁 |
+| `mm_page` | 成員管理的分頁 |
+| `wl_from`、`wl_to`、`wl_stage`、`wl_member`、`wl_page` | 工時紀錄的日期區間、兩個篩選與分頁 |
+
+依 skill 步驟 4 那一列的規則，**本 skill 不改 `navigation.mdx`**，所以這裡只回報：那 14 個要補進 §網址參數，另開一張文件 PR。
+
+**連帶**：`task-management/task-detail` 目前只有 12 個視圖，`modal-`／`toast-` 一個都沒有（§二 已自承）。這 14 個參數是最便宜的補法——`?section=` 叫得出五個設定區段，`?ar_*`／`?wl_*`／`?mm_page` 叫得出篩選與分頁狀態。
+
+這一條是 §網址參數 存在的理由——沒有它，契約隔天就會過期，而過期的契約比沒有契約更糟（`design-handoff` 第 3 步正是依它展開視圖）。**而它第一次執行就漏掉了最大的一頁**，所以 skill 的掃描法已經改成兩步：先掃字面量，**再掃 `.get(<變數>)` 並回查它的來源表**。
 
 ### 這一輪刻意做的三個判斷
 
@@ -186,3 +210,63 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 ### 一個仍然成立的觀察
 
 `b1` 的另外八個條目（兩個根層入口與六個帳號頁）**都不算繪側欄**——帳號頁載入 `sidebar.js` 只是為了那段登入導向判斷。所以 `b1` 要定的共用元件裡最大的一組，只靠這個外殼條目承載。
+
+---
+
+## 九、本次重跑（第一次）
+
+[PR #398](https://github.com/label-suite/label-suite/pull/398) 把 §網址參數 寫進 `navigation.mdx`，換掉了 `navigationBlob` 的 sha。依 §七 的規則重跑。
+
+### 四個 sha 的比對
+
+| 欄位 | 上一版 | 本版 | 變了嗎 |
+| :--- | :--- | :--- | :--- |
+| `commit` | `75084e22bf79` | `328ab7ea7d54` | 必然變（它是「哪個 commit 產生這一版」） |
+| `prototypeTree` | `4cb347d5e720` | `4cb347d5e720` | **沒變** |
+| `specsTree` | `a4b0e889a5a3` | `a4b0e889a5a3` | **沒變** |
+| `navigationBlob` | `83d6ee8674b1` | `9ff44128884e` | **變了** |
+
+畫面與規格一個位元組都沒動，所以這一輪的差異全部來自導覽文件。
+
+### 新增、移除、受影響
+
+| 類 | 數 | 內容 |
+| :--- | ---: | :--- |
+| 新增 | 1 | `account/reset-password#sim-logged-out` |
+| 移除 | 1 | `account/verify-email#sim-logged-out` |
+| 受影響 | **26** | `evidence` 指到 `docs/prototype/navigation.mdx` 的全部視圖 |
+
+新增與移除**不是**這次來源變動造成的，是**修掉上一版的一個錯**：`verify-email.html` 根本不呼叫 `redirectIfLoggedIn()`（它那三處都是註解），唯四呼叫的是 login、register、forgot-password 與 reset-password（`sidebar.js:89` 自己寫「四頁在載入時呼叫」）。那是 [PR #394](https://github.com/label-suite/label-suite/pull/394) 補 `sim_logged_out` 時挑錯了頁面，寫 §網址參數 時才查出來。
+
+### 應重驗的批次
+
+| 批次 | 依 `evidence` 算出的受影響視圖 | **實際應重驗** |
+| :--- | ---: | :--- |
+| `b1-shared-account` | 17 | 17 ＋ 該批 9 個參數驅動視圖 |
+| `b2-admin-dashboard-task` | 8 | 8 ＋ 該批 24 個參數驅動視圖 |
+| `b3-annotation-review` | 1 | 1 ＋ 該批 10 個參數驅動視圖 |
+| `b4-dataset-sweep` | **0** | **27 個參數驅動視圖——這一批跟這次變更最相關** |
+
+`design-system-setup` 讀的就是這一節，所以**左邊那一欄不能直接當成應重驗清單**。原因見下。
+
+**這一輪的「受影響」要讀準**：26 個視圖被標出來，是因為它們的重現步驟引用了導覽文件，而那份文件的內容變了——**畫面本身沒有任何改動**。所以重驗的範圍是「那些 `how` 寫得對不對」，不是「那些畫面長什麼樣變了沒」。
+
+### 這一次重跑驗到了什麼
+
+交付包到上一版為止**只產生過、沒重跑過**，§七 寫的規則一直沒有被執行過。這一輪是第一次，結果是：
+
+- 四個 sha 的比對**照寫的那樣運作**：只有真的變了的那一個被標出來
+- 「受影響只看證據」這條**機械上照寫的那樣運作**：26 個視圖是算出來的，不是憑印象挑的
+
+**但那條規則本身在這一輪被證明不夠用，而且是兩個方向都不夠：**
+
+| 方向 | 實測 |
+| :--- | :--- |
+| **多標** | 26 個裡只有 **3 個**是參數驅動的，其餘 23 個（`account/profile#toast-saved`、`index#state-default`、`components-showcase#state-default`…）只用到轉場表，與這次新增的 §網址參數 無關 |
+| **少標（更嚴重）** | 全部 135 個視圖裡有 **70 個**的 `how` 直接由某個網址參數驅動（`?scenario=`、`?tab=`、`?q_state=`、`?task_role=`、`?sim_403=`…），其中 **67 個的 `evidence` 不含 `navigation.mdx`，所以一個都沒被標** |
+
+少標的後果直接寫在上面那張表上：`b4-dataset-sweep` 依 `evidence` 算是 **0**，可是這次 §網址參數 新宣告的值域事實（`/dataset/dataset-analysis-detail` 的 `task_id` 必填、`tab` 只認 `quality`、`q_state` 五值、`s_state` 只認 `empty`）**正是那一批 27 個視圖的 `how` 所斷言的東西**。照 `evidence` 讀，`design-system-setup` 會**完全跳過 b4**——跳過與這次變更最相關的那一批。
+
+所以本輪的應重驗範圍**不是**「`evidence` 指到 `navigation.mdx` 的 26 個」，而是**那 26 個加上四批的全部參數驅動視圖**。
+
+根因是 `evidence` 的顆粒度是「檔」而不是「章節」，而且它記的是「這個視圖的證據在哪」，不是「這個視圖依賴哪些宣告」。要修得改資料形狀——**那是另一件事，不在這一輪**，但在改掉之前，重跑的應重驗清單**不能只讀 `evidence`**。

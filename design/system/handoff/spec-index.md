@@ -1,6 +1,6 @@
 # 規格章節索引
 
-交付包版本：commit `75084e22bf79`，prototype tree `4cb347d5e720`。
+交付包版本：commit `328ab7ea7d54`，prototype tree `4cb347d5e720`。
 
 由 `manifest.json` 反轉而成：規格頁 → 指向它的視圖。「規格有、畫面沒有」一眼看得出來——沒有出現在下表的規格頁，就是沒有任何視圖指向它。
 
@@ -28,7 +28,6 @@
 | `#規格` | `account/register#state-submitted` |
 | `#規格` | `account/verify-email#proto-valid` |
 | `#規格` | `account/verify-email#sim-hold` |
-| `#規格` | `account/verify-email#sim-logged-out` |
 
 ## `docs/specs/01-account/03-reset-password.mdx`
 
@@ -41,6 +40,7 @@
 | `#規格` | `account/forgot-password#sim-logged-out` |
 | `#規格` | `account/forgot-password#state-default` |
 | `#規格` | `account/reset-password#proto-valid` |
+| `#規格` | `account/reset-password#sim-logged-out` |
 | `#規格` | `account/reset-password#state-success` |
 
 ## `docs/specs/01-account/04-profile.mdx`

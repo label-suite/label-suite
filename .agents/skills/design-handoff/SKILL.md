@@ -38,7 +38,7 @@ description: 把某個版本的 design/prototype/ 連同它的規格與導覽文
 | 輸入 | 怎麼用 |
 | :--- | :--- |
 | `design/prototype/`（釘住版本） | **畫面的唯一現況證據**。HTML、它載入的 `.js`／`.css`／`partial`、`assets/` |
-| `docs/prototype/navigation.mdx` | 每一頁的 Incoming／Outgoing／Inline 轉場表，是「入口」與「覆蓋核對」的主要來源 |
+| `docs/prototype/navigation.mdx` | 兩件事：每一頁的 Incoming／Outgoing／Inline 轉場表（「入口」與覆蓋核對的主要來源），以及 **§網址參數**——這個 prototype 認得的參數契約，`design-handoff` 展開視圖就是依它（[#248](https://github.com/label-suite/label-suite/issues/248) 寫進去的） |
 | `docs/specs/`（釘住版本） | 每個視圖連回哪一條規格。只用來**連結**，不用來推測畫面 |
 | `design/prototype/assets/tokens.css` | 色值的唯一來源；本 skill 只記路徑，不抄值（值見 `label-suite-design`） |
 | 原始 repo 的 `design/system/` | **參照，不是依據。** 可以拿來比對「舊版盤到哪些畫面」，但本交付包只記本 repo 這個版本實際存在的東西 |
@@ -113,7 +113,14 @@ ID 是 `design-system-setup` 重跑時比對「哪些東西受影響」的鍵，
 | 覆蓋層 | modal、toast、下拉、側滑 | `modal-`／`toast-` |
 | **頁內原型開關** | `proto-btn` 按鈕呼叫 `showState('valid'｜'expired'｜'used')`，只存在於 `account/reset-password.html` 與 `account/verify-email.html`。那幾個連結狀態**沒有別的叫法**——不是角色、不是參數、不是 tab、不是資料 | `proto-` |
 
-**參數要掃出來，不要用猜的**：把每個 HTML 與它載入的 `.js` 裡的 `.get('<名稱>')` 全部列出來，那就是這一頁認得的參數全集。上表的名單是寫這份時的現況，不是上限。
+**參數要掃出來，不要用猜的**——但**逐字掃 `.get('<名稱>')` 掃不到全部**。`task-detail.html` 把 16 個參數定義在一張 `URL_VIEW_STATE` 表裡（`:5042`），以 `params.get(entry.param)` 讀（`:5117`）；字面量掃描對這種寫法完全瞎掉，第一次跑就漏了 14 個（判例：[PR #399](https://github.com/label-suite/label-suite/pull/399) 的獨立審查）。
+
+所以兩步都要做：
+
+1. 掃 `.get('<名稱>')` 的字面量
+2. **再掃 `.get(<變數>)`，回去把那個變數的來源表讀出來**——`params.get(x)`、`searchParams.get(x)` 只要引數不是字串常數，就一定有一張表或一組常數在別處
+
+上表的名單是寫這份時的現況，不是上限。
 `sim_` 那一族要特別掃一遍——它們存在的理由就是那些狀態點不到，漏掉它們等於把一批真的存在的視圖寫成「無法重現」。
 
 叫不出來的不列為視圖。規格寫了而畫面沒有的，進 `coverage.md` 的「無法重現」。
@@ -158,7 +165,7 @@ ID 是 `design-system-setup` 重跑時比對「哪些東西受影響」的鍵，
 
 對每個畫面，依上面「視圖從哪裡來」的七種條件逐一試：
 
-1. 先讀 `docs/prototype/navigation.mdx` 該頁的轉場表。`Inline` 那幾列就是視圖的主要線索
+1. 先讀 `docs/prototype/navigation.mdx`：該頁的轉場表（`Inline` 那幾列是視圖的主要線索），以及 §網址參數 裡該頁認得的參數與值域
 2. 把該頁 HTML 與它載入的 `.js` 裡的 `.get('<名稱>')` 全部掃出來，逐個試；`sim_` 開頭的一定要試
 3. 每個視圖寫一條**重現步驟**：從哪一頁開始、改哪個東西、點哪裡、看到什麼為止
 4. 試不出來的寫進「無法重現」，並寫清楚**卡在哪一步**
@@ -171,6 +178,7 @@ ID 是 `design-system-setup` 重跑時比對「哪些東西受影響」的鍵，
 | :--- | :--- |
 | `navigation.mdx` 的頁面 vs `pages/**/*.html` | 文件有而檔案沒有 → 記進 `coverage.md`；檔案有而文件沒有 → 同上，並在回報裡建議補 `navigation.mdx`（本 skill 不改它） |
 | `navigation.mdx` 的 `Inline` 列 vs 展開出來的視圖 | 每一列都要對得到一個視圖，或寫出為什麼叫不出來 |
+| `navigation.mdx` §網址參數 vs 逐檔掃出來的參數全集 | **兩個方向都要對**：契約有而程式沒有的是過期或編的；程式有而契約沒有的要回報建議補進 `navigation.mdx`（本 skill 不改它）。**掃的時候要照上面「視圖從哪裡來」那兩步做**——只掃字面量會漏掉表格驅動的讀取，這一條第一次執行就是這樣漏了 14 個。這一條是 §網址參數 存在的理由，沒有它契約隔天就會過期 |
 | `docs/specs/` 的頁面 vs 畫面 | 規格有而畫面沒有 → 「無法重現」；畫面有而規格沒有 → 記進 `coverage.md` 的「沒有規格可連的視圖」 |
 
 另外逐一確認：**動態 partial 與素材載得起來**（`task-management/task-detail.panels/` 6 個、`dataset/dataset-analysis-detail.partials/` 16 個，以及 `assets/images/`、`assets/guidelines/`、`assets/icons/`）。載不起來的視圖算「無法重現」，原因寫「素材缺失」。
@@ -243,7 +251,7 @@ ID 是 `design-system-setup` 重跑時比對「哪些東西受影響」的鍵，
 ## 交付包已產生
 
 - 版本：commit `<sha>`，prototype tree `<sha>`
-- 畫面 n 個、視圖 n 個、批次 5 個
+- 條目 n 個（含共用外殼）、視圖 n 個、批次 5 個（`b0` 本 skill 做完，`b1`–`b4` 交給下游）
 - 覆蓋：navigation n 頁全數對上／缺 n 頁（已列出）
 - 無法重現：n 個（原因分類：素材缺失 n、叫不出那個狀態 n、需要維護者代看 n）
 - 沒有規格可連的視圖：n 個
