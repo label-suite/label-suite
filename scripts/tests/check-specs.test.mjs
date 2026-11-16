@@ -1001,3 +1001,35 @@ test('a section stops at the next heading of the same level', () => {
   const errors = errorsFor(cited('見 `architecture.mdx` §審核設定 的「只在子節裡的那一句」。')).join('\n');
   assert.match(errors, /quoted "只在子節裡的那一句" does not appear in .* §審核設定/);
 });
+
+// docs/ holds .md pages as well as .mdx ones (spec-authoring.md,
+// notecraft-writing.md and three more). listMdx walked only .mdx, so none of
+// the checks ever opened them (#236).
+
+test('a .md page under docs is checked for term references', () => {
+  const errors = errorsFor({
+    [GLOSSARY]: glossary(def('term.annotator', '標註員')),
+    [SPEC]: spec(),
+    'development/guide.md': '# 指南\n\n見 :ref[不存在的詞]{id="term.nope"}。\n',
+  }).join('\n');
+  assert.match(errors, /guide\.md:\d+: reference to undefined term "term\.nope"/);
+});
+
+test('a .md page under docs is checked for cited names', () => {
+  const errors = errorsFor({
+    ...cited('見 `AGENTS.md` 的「No hardcoded task logic」。'),
+    'development/guide.md': '# 指南\n\n見 `AGENTS.md` 的「不寫死任務邏輯」。\n',
+  }).join('\n');
+  assert.match(errors, /guide\.md:\d+: quoted "不寫死任務邏輯" does not appear in "AGENTS\.md"/);
+});
+
+test('a .md page is not mistaken for a spec page', () => {
+  // specParts() keys on NN-<module>/NN-<page>.mdx, so a .md file never picks up
+  // the frontmatter, chapter-order, scenario or legacy-mapping checks. The
+  // fixture carries the NN- prefix on purpose: without it the name fails
+  // SPEC_FILE_RE for the wrong reason and the extension goes untested.
+  assert.deepEqual(
+    errorsFor({ [SPEC]: spec(), 'specs/01-user-management/02-notes.md': '# 筆記\n\n一句話。\n' }),
+    [],
+  );
+});

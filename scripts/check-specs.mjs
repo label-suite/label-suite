@@ -360,12 +360,18 @@ export function readLegacyIds(path) {
   return new Set(ids);
 }
 
+// Every page under docs/, both extensions. docs/development/ holds five .md
+// files (spec-authoring, notecraft-writing, commit-and-release, notecraft-present,
+// notecraft-visualize) that walking only ".mdx" left out of every check (#236).
+// Only specParts() decides what counts as a spec page, and it keys on
+// NN-<module>/NN-<page>.mdx, so a .md file still skips the frontmatter,
+// chapter-order, scenario, decision-basis and legacy-mapping checks.
 function listMdx(dir) {
   if (!existsSync(dir)) return [];
   return readdirSync(dir).flatMap((name) => {
     const p = join(dir, name);
     if (statSync(p).isDirectory()) return listMdx(p);
-    return name.endsWith('.mdx') ? [p] : [];
+    return name.endsWith('.mdx') || name.endsWith('.md') ? [p] : [];
   });
 }
 
@@ -389,7 +395,11 @@ function specParts(path) {
 //   - only inline "](...)" links, and only those whose target is empty
 //     (same file) or ends in ".mdx"; an external URL or an asset may carry a
 //     fragment that means nothing here
-//   - only ".mdx" source files, since that is what listMdx walks
+//   - only ".mdx" link targets, although listMdx now also walks ".md" pages.
+//     Widening the target to ".md" would flag the five links docs/ makes into
+//     .claude/, which exist on disk but are outside docsDir and so are not in
+//     the known set; teaching this check about files outside docs/ is a
+//     separate change (#236)
 // Reference-style links, bare <a href>, links carrying a title, links split
 // across lines, angle-bracket targets and extension-less in-site links are all
 // skipped. Writing a link one of those ways therefore bypasses this check.
