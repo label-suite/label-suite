@@ -185,7 +185,7 @@ docs/specs/
 4. 待釐清有未決項目時，frontmatter `tags` 放 `草稿`、開頭 badge 用 `:badge[草稿]{variant="warning"}`；全部決議後改成 `已定案`、`variant="success"`
 5. 修改既有規格時：只改受影響的段落，更新 `updatedAt`；改變既有決議時，在「已確認決議」補一條新的，不刪舊的（舊的標註被哪一條取代）
 6. 依 Issue 修改時，依 [references/writing-guide.md](references/writing-guide.md)「需求變更」：
-   - 先清掉上一次的變更標示，再用 `<mark>` 加上標 `<sup>[#N](Issue 網址)</sup>` 標出這次所有改動，頁首加 `:badge[變更 #N]`
+   - 先清掉上一次的變更標示，再用 `<mark>` 加上標 `<sup>[#N](Issue 網址)</sup>` 標出這次所有改動，頁首加 `:badge[變更 #N]{variant="warning" href="Issue 網址"}`
    - 「變更紀錄」最上面新增一列；舊的規則不留在正文，寫在這一列的「原本」
    - 新增規格時「變更紀錄」只有「初版」一列
 
@@ -208,7 +208,7 @@ docs/specs/
 - [ ] 有對應 prototype 頁面的規格大項都以 `PrototypeFrame` 開頭；prototype 上的每個區塊都能在規格、卡控、驗收標準或待釐清其中一處找到
 - [ ] 搬移的規格：附錄「舊編號對照」涵蓋 `.ids` 的每個舊編號，`刪除` 的列都有理由
 - [ ] 有寫 Q&A 的話：每題是一個預設收合的 `tip`，標題是問題本文的**純文字**（沒有「Q. 」前綴、沒有行內程式碼或粗體），答案寫在 directive 本體
-- [ ] 依 Issue 修改時：上一次的標示都已清掉；這次每個改動都有 `<mark>` 與連到 Issue 的上標（含流程、卡控、邊界、驗收）；頁首有 `:badge[變更 #N]`；「變更紀錄」最上面一列寫了原本與修改後
+- [ ] 依 Issue 修改時：上一次的標示都已清掉；這次每個改動都有 `<mark>` 與連到 Issue 的上標（含流程、卡控、邊界、驗收）；頁首有 `:badge[變更 #N]{variant="warning" href="Issue 網址"}`；「變更紀錄」最上面一列寫了原本與修改後
 
 ### 步驟 7：Prototype 嵌入與流程圖
 
