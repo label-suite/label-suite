@@ -1,6 +1,6 @@
 # 覆蓋核對
 
-交付包版本：commit `31c202e8934ff9b1229280daf79e7256a5fe386e`，prototype tree `4cb347d5e720203418701a0a4a6b521cc117c64e`。
+交付包版本：commit `75084e22bf7967da360c5319bff5bf25983969d8`，prototype tree `4cb347d5e720203418701a0a4a6b521cc117c64e`。
 產生依據：[`design-handoff` skill](../../../.claude/skills/design-handoff/SKILL.md) 的步驟 4。工作源頭是 [Issue #248](https://github.com/label-suite/label-suite/issues/248)。
 
 **本次是第一版**，所以沒有「本次重跑」那一節。
@@ -8,7 +8,7 @@
 | 項目 | 數 |
 | :--- | ---: |
 | 條目 | 19（18 個畫面 ＋ 1 個共用外殼） |
-| 視圖 | 130 |
+| 視圖 | 135 |
 | 批次 | 5 |
 | 無法重現的視圖 | 2 |
 | 沒有規格可連的視圖 | 2 |
@@ -36,7 +36,7 @@
 
 這是一個**刻意寬鬆**的斷言：「至少一個」不等於逐項涵蓋。逐列看，`task-detail` 的「設定、抽樣、guideline、run control、成員操作、匯出」整列只對到六個分頁與 `state-panel-load-failed`——一個 12,501 行、6 個 panel、含日期區間選擇器與分類刪除彈窗的畫面只收 12 個視圖，`modal-`／`toast-` 一個都沒有。`design-system-setup` 在 `b2` 會吃到這個缺口。
 
-視圖數比 `Inline` 列多很多（130 vs 24），因為 `Inline` 把「搜尋／篩選／排序／分頁」這類寫成一列，而 URL 參數掃描把它們拆成可個別重現的狀態。
+視圖數比 `Inline` 列多很多（135 vs 24），因為 `Inline` 把「搜尋／篩選／排序／分頁」這類寫成一列，而 URL 參數掃描把它們拆成可個別重現的狀態。
 
 ### 這一輪刻意做的三個判斷
 
@@ -59,12 +59,12 @@
 | `01-account/05-login-state.mdx` | PRD §Site Map 列在「不是獨立頁面」 |
 | `05-dataset/03-ingestion-lineage.mdx` | 該頁 §已確認決議 **Q1**（維護者 2026-11-08 裁定）**刻意**不補畫面；建立者的入口在規格 03-02 第一步、出口在 03-03 的試標發布 |
 
-PRD §Site Map 另外三份列為「不是獨立頁面」的規格**都有視圖指向它**，因為它們的行為落在別的東西上：
+PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有視圖指向它**，因為它們的行為落在別的東西上：
 
 - `07-shared/01-sidebar.mdx` ← `shared/app-shell` 的四個視圖（主題、語言、收合、系統管理群組）
 - `07-shared/02-workspace-tabs.mdx` ← `shared/app-shell#state-workspace-tabs`、`#param-ap-stage`
 - `07-shared/03-denied-and-not-found.mdx` ← `task-management/task-detail#sim-403`、`task-management/task-list#param-unauthorized`
-- `07-shared/04-notification-events.mdx` ← `dashboard/dashboard#modal-notification`
+- `07-shared/04-notification-events.mdx` ← `shared/app-shell#modal-notification`
 
 **第一版把 07-01／07-02 歸進「沒有畫面」是錯的**——同一節對 07-03／07-04 用的是相反的邏輯，而側欄的行為顯然落在 16 個畫面上。獨立審查抓到，已改。
 
@@ -82,7 +82,7 @@ PRD §Site Map 另外三份列為「不是獨立頁面」的規格**都有視圖
 **22 個動態片段全部存在**（6 個 panel ＋ 16 個 partial），路徑是從兩個畫面的路徑對應表讀出來的、不是用檔名猜的。
 `task-detail.html` 自己的註解寫明降級行為：某個 panel 載入失敗時只留下它的佔位符，其餘 panel 仍載入、其他分頁仍可用——已收為 `task-management/task-detail#state-panel-load-failed`。
 
-`manifest.json` 一共指到 **443 個檔案路徑**（`loads` 230、`views[].evidence` 194、`screens[].file` 19），逐一確認存在，**0 筆缺失**。
+`manifest.json` 一共指到 **447 個檔案路徑**（`loads` 230、`views[].evidence` 198、`screens[].file` 19），逐一確認存在，**0 筆缺失**。
 
 > **注入片段的素材路徑是相對於宿主文件寫的，不是相對於片段自己的目錄。** `task-detail.panels/work-log.html:85` 寫 `../../assets/icons/clock.svg`，那個相對路徑只有從 `pages/task-management/` 解得開。本檔第一版用片段自己的目錄當基準，所以 `clock.svg` 與 `file-text.svg`（`annotation-results.html:165`）被靜默丟掉，連帶讓下面那個「全文搜不到」的斷言變成假的。獨立審查抓到，已修。
 
@@ -148,29 +148,40 @@ PRD §Site Map 另外三份列為「不是獨立頁面」的規格**都有視圖
 
 ## 八、共用外殼 `shared/app-shell`
 
-`design/prototype/pages/shared/sidebar.js` 被 18 個畫面裡的 **16 個**載入（只有 `index.html` 與 `components-showcase.html` 沒有），而它自己有一組狀態：
+`design/prototype/pages/shared/sidebar.js` 被 18 個畫面裡的 **16 個**載入（只有 `index.html` 與 `components-showcase.html` 沒有），而它自己有 **13 個狀態**：
 
-| 視圖 | 怎麼叫出來（摘要） | 規格 |
-| :--- | :--- | :--- |
-| `#state-theme-dark` | 側欄或行動版的主題鈕 → `data-theme` | 07-01 |
-| `#state-lang-en` | `#langToggle` → `applyGlobalLanguage()` | 07-01 |
-| `#state-sidebar-collapsed` | 收合鈕 → `body.sidebar-collapsed`；桌機斷點 769px | 07-01 |
-| `#role-super-admin` | `labelsuite.systemRole` 設成 `super_admin` 才看得到 `#navAdminItem` | 07-01 |
-| `#state-workspace-tabs` | 頁籤列、總覽選單、重開、全部關閉與三種通知 | 07-02 |
-| `#param-ap-stage` | `?ap_stage=r1`／`official` → 頁籤的階段徽章 | 07-02 |
+| 視圖 | 證據（摘要） |
+| :--- | :--- |
+| `#state-theme-dark` | 主題鈕 `:2080`／`:2054`；載入 `theme.js` 的 11 頁走它的 `setChoice()`（`:364`–`:367` 提前 return），其餘 5 個帳號頁走 `:370`／`:374` |
+| `#state-lang-en` | `#langToggle` `:2046`／`#mobileLangToggle` `:2050` → `applyGlobalLanguage()` `:427` |
+| `#state-sidebar-collapsed` | **桌機**（`:513` 的 `min-width: 769px`）收合 → `body.sidebar-collapsed` `:2524` |
+| `#state-mobile` | `sidebar.css` 的 `@media (max-width: 768px)`：另一套版面，另有 `#mobileLangToggle`／`#mobileThemeToggleBtn`／`#mobileLogoutBtn` |
+| `#state-user-chip` | `#userAvatar` `:2097`、`#userName`、`#roleIndicator` `:2100`；頭像取自 `label-suite-profile-avatar` `:55` |
+| `#state-logout` | `#logoutBtn` `:2103`／`#mobileLogoutBtn` `:2064`，一次清掉 7 個 storage 鍵 |
+| `#modal-notification` | `#notificationDropdown` `:2259`、`#notifMarkAllBtn` `:2274`、`#notificationBadge` |
+| `#modal-shortcut` | `#shortcutHelpModal` `:2108`，開關在 `:2208` |
+| `#role-super-admin` | `:536` 在不是 `super_admin` 時隱藏 `#navAdminItem` `:627` |
+| `#state-admin-submenu-open` | `:539`–`:541`：桌機且未收合才展開成兩個連結 |
+| `#state-active-task-type` | `labelsuite.activeTaskType` `:4` 決定標記作業那一項的標籤與 `#roleIndicator` |
+| `#state-workspace-tabs` | 頁籤列 `:1524`、總覽選單、重開、全部關閉與三種通知；6 個 sessionStorage 鍵 |
+| `#param-ap-stage` | **任務詳情**才讀（`:762`）：`:769`／`:772` 設 `stageBadge` → `data-stage-badge` `:1252` |
 
 ### 為什麼它自成一個條目
 
-這些狀態**屬於同一組元件**，不是 16 組。維護者 2026-11-16 裁定走「一個 `shared/app-shell` 條目」，而不是把同一組狀態複製進 16 個畫面的 `views`（那會是 96 筆重複，而下游盤元件時還要自己收回 6 組）。
+這些狀態**屬於同一組元件**，不是 16 組。維護者 2026-11-16 裁定走「一個 `shared/app-shell` 條目」，而不是把同一組狀態複製進 16 個畫面的 `views`（以 13 個狀態算就是 208 筆重複，而下游盤元件時還要自己收回 13 組）。
 
 代價是它**不是 HTML 入口**，所以 `design-handoff` 的「畫面＝一個 HTML 入口」定義跟著放寬了——skill 的 §穩定 ID 新增一段寫明判準是**「這組狀態由誰擁有」**，不是「它出現在幾個畫面上」。
 
 條目帶一個 `hosts` 欄位列出載入它的 16 個畫面，所以 `sidebar.js` 改動時，受影響的範圍查得到。
 
-### 第一版漏掉它，連帶兩件事也歪了
+### 這個條目改過兩次，兩次都是審查抓的
 
-1. §三 原本寫「規格有、畫面沒有：**0 筆**」，而它把 `07-01`／`07-02` 用「PRD 說不是獨立頁面」結案——**但同一節對 `07-03`／`07-04` 用的是相反的邏輯**。那個「0 筆」靠的是前後不一致的歸類。現在 07-01／07-02 有視圖了，真正沒有畫面的是 2 筆。
-2. 依 §七「`evidence` 指到的檔變了才算受影響」，`sidebar.js` 的任何改動**當時不會把任何批次標成應重驗**。現在會。
+| 輪次 | 問題 |
+| :--- | :--- |
+| [PR #394](https://github.com/label-suite/label-suite/pull/394) | 外殼的視圖**一個都沒收**。當時先放進 `uncollected` 欄位，因為補成視圖要改資料形狀 |
+| [PR #397](https://github.com/label-suite/label-suite/pull/397) 第一版 | 建了條目，但**只收六個狀態**，而且把 `#modal-notification` 與 `#modal-shortcut` 記成 `dashboard/dashboard` 的視圖——那兩套程式**整個在 `sidebar.js` 裡**（`dashboard.html` 全檔 `notif` 出現 **0 次**），正好違反同一張 PR 新寫進 skill 的那條判準。現在 13 個 |
+
+第二次的教訓和第一次一樣：**我數了「我想到的」，沒有把那兩個檔從頭讀到尾**。
 
 ### 一個仍然成立的觀察
 

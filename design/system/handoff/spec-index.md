@@ -1,6 +1,6 @@
 # 規格章節索引
 
-交付包版本：commit `ca1d9f1522d6`，prototype tree `4cb347d5e720`。
+交付包版本：commit `75084e22bf79`，prototype tree `4cb347d5e720`。
 
 由 `manifest.json` 反轉而成：規格頁 → 指向它的視圖。「規格有、畫面沒有」一眼看得出來——沒有出現在下表的規格頁，就是沒有任何視圖指向它。
 
@@ -61,7 +61,6 @@
 | 章節錨點 | 視圖 |
 | :--- | :--- |
 | `#已確認決議` | `dashboard/dashboard#param-scenario-user` |
-| `#規格` | `dashboard/dashboard#modal-shortcut` |
 | `#規格` | `dashboard/dashboard#param-scenario-annotator` |
 | `#規格` | `dashboard/dashboard#param-scenario-project-leader` |
 | `#規格` | `dashboard/dashboard#param-scenario-reviewer` |
@@ -205,10 +204,16 @@
 
 | 章節錨點 | 視圖 |
 | :--- | :--- |
+| `#規格` | `shared/app-shell#modal-shortcut` |
 | `#規格` | `shared/app-shell#role-super-admin` |
+| `#規格` | `shared/app-shell#state-active-task-type` |
+| `#規格` | `shared/app-shell#state-admin-submenu-open` |
 | `#規格` | `shared/app-shell#state-lang-en` |
+| `#規格` | `shared/app-shell#state-logout` |
+| `#規格` | `shared/app-shell#state-mobile` |
 | `#規格` | `shared/app-shell#state-sidebar-collapsed` |
 | `#規格` | `shared/app-shell#state-theme-dark` |
+| `#規格` | `shared/app-shell#state-user-chip` |
 
 ## `docs/specs/07-shared/02-workspace-tabs.mdx`
 
@@ -228,4 +233,4 @@
 
 | 章節錨點 | 視圖 |
 | :--- | :--- |
-| `#規格` | `dashboard/dashboard#modal-notification` |
+| `#規格` | `shared/app-shell#modal-notification` |

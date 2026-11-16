@@ -81,11 +81,11 @@ git switch --detach <commit> && pnpm prototype
 
 ID 是 `design-system-setup` 重跑時比對「哪些東西受影響」的鍵，**一旦發出就不再改字面**。
 
-### 共用外殼算一個條目，不是 18 份重複
+### 共用外殼算一個條目，不是 16 份重複
 
-大部分條目是一個 HTML 入口，但**不是全部**。`design/prototype/pages/shared/sidebar.js` 被 18 個畫面裡的 16 個載入（只有 `index.html` 與 `components-showcase.html` 沒有），它自己有主題、語言、側欄收合、系統管理群組、工作頁籤與階段徽章這些狀態；那些狀態**屬於同一組元件**，不是 14 組。
+大部分條目是一個 HTML 入口，但**不是全部**。`design/prototype/pages/shared/sidebar.js` 被 18 個畫面裡的 16 個載入（只有 `index.html` 與 `components-showcase.html` 沒有），它自己有一整組狀態——主題、語言、側欄收合、行動版版面、使用者區、登出、通知、快捷鍵、系統管理群組與它的次選單、工作頁籤與階段徽章；那些狀態**屬於同一組元件**，不是 16 組。
 
-所以共用外殼用 `shared/<名稱>` 自成一個條目，`file` 指向它的本體（例：`shared/sidebar.js`），`hosts` 記它被哪些畫面載入。維護者 2026-11-16 裁定走這條，而不是把同一組狀態複製進 14 個畫面的 `views`（那會是 84 筆重複，而下游盤元件時還要自己收回 6 組）。
+所以共用外殼用 `shared/<名稱>` 自成一個條目，`file` 指向它的本體（例：`shared/sidebar.js`），`hosts` 記它被哪些畫面載入。維護者 2026-11-16 裁定走這條，而不是把同一組狀態複製進 16 個畫面的 `views`（以目前的 13 個狀態算就是 208 筆重複，而下游盤元件時還要自己收回 13 組）。
 
 判準是**「這組狀態由誰擁有」**，不是「它出現在幾個畫面上」：`shared/` 底下的檔定義它、而任何單一畫面都只是載入它，就自成一個條目。只在某一頁出現的東西仍然是那一頁的視圖。
 
@@ -96,7 +96,7 @@ ID 是 `design-system-setup` 重跑時比對「哪些東西受影響」的鍵，
 | 視圖（同一個畫面或外殼的一種狀態） | `<上面那個 ID>#<視圖>` | `task-management/task-detail#tab-overview`、`shared/app-shell#state-theme-dark` |
 
 - 模組與頁面照 `design/prototype/pages/` 的實際路徑，不自己改名
-- 視圖名用 kebab-case 英文，取**叫出它的那個條件**，不是它長什麼樣：`role-annotator`、`sim-403`、`param-status-draft`、`tab-overview`、`state-empty`、`modal-export`、`proto-expired`。前綴只用下表那七個
+- 視圖名用 kebab-case 英文，取**叫出它的那個條件**，不是它長什麼樣：`role-annotator`、`sim-403`、`param-status-draft`、`tab-overview`、`state-empty`、`modal-export`、`toast-saved`、`proto-expired`。前綴只用下表那七列給的八個
 - 頁面改名或視圖合併時，**不改舊 ID**：在新條目加 `renamedFrom`，舊 ID 留在 `retired` 清單並寫原因
 
 ### 視圖從哪裡來
@@ -124,7 +124,7 @@ ID 是 `design-system-setup` 重跑時比對「哪些東西受影響」的鍵，
 
 依 [Issue #248](https://github.com/label-suite/label-suite/issues/248) 的首輪執行順序，固定五批。`b0` 由本 skill 一次做完，其餘四批是 `design-system-setup` 的執行單位。
 
-| 批次 ID | 範圍 | 畫面數 |
+| 批次 ID | 範圍 | 條目數 |
 | :--- | :--- | ---: |
 | `b0-inventory` | 全站點名（本 skill 一次完成，並固定交付包版本） | 19 |
 | `b1-shared-account` | `pages/shared/`（含共用外殼條目）、`pages/account/`，加上 `index.html` 與 `components-showcase.html` | 1 ＋ 6 ＋ 2 |
@@ -156,7 +156,7 @@ ID 是 `design-system-setup` 重跑時比對「哪些東西受影響」的鍵，
 
 ### 步驟 3：展開視圖
 
-對每個畫面，依上面「視圖從哪裡來」的五種條件逐一試：
+對每個畫面，依上面「視圖從哪裡來」的七種條件逐一試：
 
 1. 先讀 `docs/prototype/navigation.mdx` 該頁的轉場表。`Inline` 那幾列就是視圖的主要線索
 2. 把該頁 HTML 與它載入的 `.js` 裡的 `.get('<名稱>')` 全部掃出來，逐個試；`sim_` 開頭的一定要試
