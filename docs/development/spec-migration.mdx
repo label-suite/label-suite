@@ -260,7 +260,7 @@ tags: [規格, 搬移, PR, CI]
 - Ready gate 在維護者手上：Epic 一個模組一個放行，順序照 D8。
 - 卡片由做事的 agent 自己移動：領取時 In Progress、PR 開了 In Review、合併且 issue 關閉後 Done。
 - **7 個第二輪 child**，一個模組一個：`[Docs] <模組>: 待釐清定案與流程圖生成`，掛在同一個模組 Epic 下。
-  第一輪 child 以「草稿交付」為完成就關閉，不為這件事破 `AGENTS.md`「PR 合併後關閉 issue」的流程；
+  第一輪 child 以「草稿交付」為完成就關閉，不為這件事破 `AGENTS.md`「Close the issue only after the PR is merged」的流程；
   「規格已定案」由第二輪 child 負責。Epic 要等它的第二輪 child 也關閉才 Done。
 - 相依性用 GitHub issue dependencies（blocked-by）記，不只寫在文字裡：
   前置 `[Bug]` child 擋住全部 17 個第一輪 child；第一輪 child 之間依 D8 串成一條鏈（見「一頁一頁做，不並行」）；

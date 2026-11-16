@@ -369,7 +369,7 @@ import Spec0303TaskDetailFlow from '@notes/components/spec-03-03-task-detail-flo
 
 - 第 4 條是來源特別交代過的：回合一旦建立，筆數就是那一回合實際抽出來的數目，事後改資料集不會讓歷史回合的數字跟著跑
 - :ref[IAA]{id="term.iaa"} 怎麼算、達標怎麼判，由[規格 05-02 分析詳情](../05-dataset/02-analysis-detail.mdx)擁有；這一頁只負責顯示指標名稱與讓人覆寫目標門檻
-- 第 12 條那句「不需要為它改任何東西」對應 `AGENTS.md` 的「不寫死任務邏輯」
+- 第 12 條那句「不需要為它改任何東西」對應 `AGENTS.md` 的「No hardcoded task logic」（硬性規則 5）
 
 ### 審核設定
 
@@ -1948,6 +1948,7 @@ import Spec0303TaskDetailFlow from '@notes/components/spec-03-03-task-detail-flo
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §規格 › 抽樣設定 的註解 | 第 12 條下方那一行引 `AGENTS.md` 的「不寫死任務邏輯」，而 `AGENTS.md` 全篇是英文、從來沒有這七個字——那是轉述，不是原文 | 改引硬性規則 5 的原文「No hardcoded task logic」。維護者 2026-11-16 裁定引英文原文，不為了讓中文讀起來順而放水；`check-specs` **將新增**的節名引用檢查會逐字比對被引的文件（[#236](https://github.com/label-suite/label-suite/issues/236)，尚未落地） | **無新決議**，條文一字未改 |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §驗收標準 的 3 列 | 那三列的 Scenario 名稱欄包著 `<mark>`＋`<sup>[#170]` | 名稱欄的標示拿掉、文字保留，改標 Given／When／Then。其中兩列（例外池的空理由顯示佔位、負責人裁定的來源看得出來）的三格原本**有 `<mark>` 但沒有上標**，上標只掛在名稱欄，所以一併補上 `<sup>[#170]`。依 `writing-guide.md` §變更標示 2026-11-16 新增的例外：`check-flows.mjs` 的 `readPage()` 逐字讀第一格、不剝標籤，名稱一包標示流程圖元件就永遠對不上那一列 | **無新決議**，Scenario 的文字與條文一字未改 |
 | [#188](https://github.com/label-suite/label-suite/issues/188) | 2026-11-16 | 頁首 | `變更 #170` 徽章是 `warning` 但沒有 `href` | 統一成 `variant="warning"` 加 `href`（維護者 2026-11-16 裁定，規則見 `writing-guide.md` §變更標示） | **無新決議**，條文一字未改 |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-14 | §規格 › 資料欄位（資料規劃入口） | 入口寫「把本頁列為規格來源的候選表有 **12 張**」 | 改成 **13 張**，新增 `task_run_cycle` | **無新決議**。[#170](https://github.com/label-suite/label-suite/issues/170) 把「試標輪」與「退回原因」寫進本頁 §資料欄位 之後，候選表字典把 `task_run_cycle.cycle_no` 的「規格來源」從「反推」換成本頁的條文，並為「退回原因」新增 `rejection_reason`，所以那張表進入本頁的入口清單；**本頁條文一字未改** |
