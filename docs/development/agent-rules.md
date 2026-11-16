@@ -162,7 +162,7 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 
 ## 與 SDD 工作流程的分界
 
-本文件提供規則來源與說明、跨領域規範、衝突處理與前置條件；不重複開發那十二個 agent 角色（`.claude/agents/`）、SDD schema 與 `openspec/config.yaml`、`/sdd` 指令與 clarify skill，也不新增人工關卡：`/sdd` 的兩個停點（clarify 與驗收）由 Epic [#50](https://github.com/label-suite/label-suite/issues/50) 定義，本文件不加第三個。
+本文件提供規則來源與說明、跨領域規範、衝突處理與前置條件；不重複開發那十二個 agent 角色（`.claude/agents/`）、SDD schema 與 `openspec/config.yaml`、`/sdd` 指令與 clarify skill，也不新增人工關卡：`/sdd` 的兩個停點（clarify 與驗收）由 `AGENTS.md` 的 SDD Workflow 定義，本文件不加第三個。
 
 ---
 
@@ -182,23 +182,23 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 
 ## 附錄：來源對照
 
-四個參考來源逐類註明。**其他專案的文件只是參考，不會自動取得本 repo 的指令效力**——本 repo 的效力只來自 `AGENTS.md` 與它明確引用的文件。
+四個參考來源逐類註明。比對的版本：原始 repo `faf83356`、duty-mate `c53cc453`（`develop`）；scaffold 為本機檔案，未釘版本。**其他專案的文件只是參考，不會自動取得本 repo 的指令效力**——本 repo 的效力只來自 `AGENTS.md` 與它明確引用的文件。
 
 ### 本文件各規範的來源
 
 | 規範 | 來源 |
 | :--- | :--- |
 | R1 | 原始 repo `general.md` §Simplicity First 的 reach-for ladder 第 2 階，以及 §AI Agent Non-Negotiables 的「先讀既有匯出與呼叫端」 |
-| R2 | **無來源條文。** 三份來源檔都沒有這一條；它來自 [#105](https://github.com/label-suite/label-suite/issues/105) 工作項 6 的點名 |
+| R2 | **無來源條文。** 三份來源檔都沒有這一條；它是被點名要寫的一條（工作項 6） |
 | R3 | 原始 repo `general.md` §Surgical Changes（整節沿用，去掉行數門檻） |
 | R4 | 原始 repo `general.md` §Simplicity First 開頭四條、§DRY 的「一處邏輯一處定義」、§Design Principles 的「DRY 過度抽象時 KISS 優先」 |
-| R5 | **改寫**原始 repo `general.md` §Conflicting Patterns（原文要求 `pick one (prefer newer or better-tested)`，本條反轉它）；依 #105 工作項 5 |
-| R6 | #105 工作項 7。原始 repo `general.md` §Simplicity First 的 reach-for ladder 第 1 階有同向的說法（「Rung 1 是範圍問題，屬 Planner，不得在 apply 階段觸發」），本條沿用那個分界 |
+| R5 | **改寫**原始 repo `general.md` §Conflicting Patterns（原文要求 `pick one (prefer newer or better-tested)`，本條反轉它）；工作項 5 |
+| R6 | 工作項 7。原始 repo `general.md` §Simplicity First 的 reach-for ladder 第 1 階有同向的說法（「Rung 1 是範圍問題，屬 Planner，不得在 apply 階段觸發」），本條沿用那個分界 |
 | R7 | 原始 repo `general.md` §Fail Loudly |
 
-### 原始 repo（`singyichen/label-suite`，釘在 `faf83356`）
+### 原始 repo（`singyichen/label-suite`）
 
-跨領域的三份：`.claude/rules/general.md`、`git-workflow.md`、`issue-reporting.md`。其餘六份（`api`、`backend`、`frontend`、`testing-*`）對應 [#106](https://github.com/label-suite/label-suite/issues/106)–[#110](https://github.com/label-suite/label-suite/issues/110)，不在本文件。
+跨領域的三份：`.claude/rules/general.md`、`git-workflow.md`、`issue-reporting.md`。其餘六份（`api`、`backend`、`frontend`、`testing-*`）見 [backend-agent-rules.md](backend-agent-rules.md)、[security-agent-rules.md](security-agent-rules.md)、[api-agent-rules.md](api-agent-rules.md)、[frontend-agent-rules.md](frontend-agent-rules.md)、[testing-agent-rules.md](testing-agent-rules.md)，不在本文件。
 
 | 來源條文 | 處理 | 說明 |
 | :--- | :--- | :--- |
@@ -212,7 +212,7 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 | `general.md` §Surgical Changes | **沿用** | 成為 R3 |
 | `general.md` §DRY 的「一處邏輯一處定義」 | **沿用** | 成為 R4 的例外條件 |
 | `general.md` §Design Principles 的「DRY 過度抽象時 KISS 優先」 | **沿用** | 成為 R4 的收尾一句 |
-| `general.md` §Design Principles 的 SOLID、一函式一事、一模組一責任 | **待採用** | 本 repo 目前沒有條文。後端分層由 [#106](https://github.com/label-suite/label-suite/issues/106) 定時一併處理比較合適 |
+| `general.md` §Design Principles 的 SOLID、一函式一事、一模組一責任 | **待採用** | 本 repo 目前沒有條文。後端分層見 [backend-agent-rules.md](backend-agent-rules.md) 的 B1 |
 | `general.md` §Security 第二條（不硬寫 API key／token，用環境變數） | **沿用** | 已在 `AGENTS.md` 硬性規則 8 |
 | `general.md` §Security 第三條（CORS 不得 `allow_origins=["*"]`） | **沿用** | 已在 `AGENTS.md` 硬性規則 7 |
 | `general.md` §Security 第一條（所有使用者輸入都要驗證與淨化，防 SQL Injection 與 XSS） | **沿用** | 本 repo 原本兩邊都沒有（grep `sanitiz`／`validat`／`injection`／`xss` 零命中）。**維護者裁定它進 Hard Rules**，已加為 `AGENTS.md` **硬性規則 9**（原第 9 條的破壞性指令順延為第 10 條；全 repo grep 過，沒有任何文件引用到那兩個編號） |
@@ -220,12 +220,12 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 | `general.md` §AI Agent Non-Negotiables 的「不改版號」 | **沿用** | 已在 `AGENTS.md` 硬性規則 4 |
 | `general.md` §AI Agent Non-Negotiables 的「移除 debug `print`／`console.log`」 | **沿用** | 已在 `AGENTS.md` Required Behaviors |
 | `general.md` §AI Agent Non-Negotiables 的「先讀既有匯出與呼叫端」 | **沿用** | 成為 R1 |
-| `general.md` §AI Agent Non-Negotiables 的「後端指令一律走 `uv run`」 | **沿用** | 維護者裁定它歸 [#106](https://github.com/label-suite/label-suite/issues/106)，**已落地於 [backend-agent-rules.md](backend-agent-rules.md) 的 B2**。不進 `AGENTS.md` Hard Rules——它是後端指令的細節，而且在沒有 `backend/` 之前沒有適用對象 |
+| `general.md` §AI Agent Non-Negotiables 的「後端指令一律走 `uv run`」 | **沿用** | 維護者裁定它屬後端規範，**已落地於 [backend-agent-rules.md](backend-agent-rules.md) 的 B2**。不進 `AGENTS.md` Hard Rules——它是後端指令的細節，而且在沒有 `backend/` 之前沒有適用對象 |
 | `general.md` §Fail Loudly | **沿用** | 成為 R7 |
 | **`general.md` §Conflicting Patterns（「pick one, prefer newer or better-tested」）** | **改寫** | **這一條被反轉**。本 repo 改成 R5：照已確認決議，沒有決議就回報維護者。理由：本 repo 已有「五個依據＋機械檢查」的決議機制，自行選邊會繞過它 |
 | `general.md` 的「200 行→50 行」與「出現 2 次就抽」 | **不採用** | 機械門檻，見 [§附錄：刻意不採用的來源條文](#附錄刻意不採用的來源條文) |
 | `general.md` 的 `ponytail:` 標記（含其 MIT 出處） | **不採用** | 那個標記綁著外部 skill 的工具鏈，本 repo 沒有那條工具鏈 |
-| `general.md` §What simplicity does not override 的 Red test contracts（`senior-qa`、`--cov-fail-under=80`）與兩份 constitution | **不採用** | 本 repo 沒有那些憲章與角色。測試門檻由 [#110](https://github.com/label-suite/label-suite/issues/110) 定 |
+| `general.md` §What simplicity does not override 的 Red test contracts（`senior-qa`、`--cov-fail-under=80`）與兩份 constitution | **不採用** | 本 repo 沒有那些憲章與角色。測試門檻見 [testing-agent-rules.md](testing-agent-rules.md) |
 | `general.md` §What simplicity does not override 的 Prose outside code（commit body 要 WHY、PR／issue 是審查文件） | **沿用** | 已在 `AGENTS.md` Commits（每條 bullet 粗體動詞加原因）與 Pull Requests |
 | `general.md` 把 `specs/` 當 SSoT 的寫法 | **改寫** | 本 repo 的業務需求來源是 `docs/specs/`、可測契約是 `openspec/specs/`，兩者分開 |
 | `git-workflow.md` §PR Scope 單一目的與「一句話不含 and／also」的判準 | **沿用** | 已在 `AGENTS.md` Pull Requests |
@@ -238,11 +238,11 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 | `issue-reporting.md` 的安全升級協定 | **沿用** | 已在 `AGENTS.md` 的 Security findings |
 | `issue-reporting.md` 的語言規則 | **沿用** | 已在 `AGENTS.md` 的 Language Rules |
 | `issue-reporting.md` §Templates（讀 `.github/issue-templates.md` 再逐字填） | **沿用** | 已在 `AGENTS.md` 的 Issue types and titles 末句 |
-| `issue-reporting.md` 的 team-lead／specialist 轉報路由與 Progress Report 格式 | **不採用** | 本 repo 沒有 team-lead 這個角色，而 #53 的十二個 agent 都有 Bash，可自行開 issue |
+| `issue-reporting.md` 的 team-lead／specialist 轉報路由與 Progress Report 格式 | **不採用** | 本 repo 沒有 team-lead 這個角色，而十二個 agent 都有 Bash，可自行開 issue |
 
 ### scaffold（`fullstack-ai-sdd-workflow-scaffold`，本機）
 
-`.claude/rules/` 有 **16 份**，它的 `index.md` 自己把四份歸成「**共通（前後端）**」—— 那四份正是本文件的範圍，其餘 12 份歸 [#106](https://github.com/label-suite/label-suite/issues/106)–[#110](https://github.com/label-suite/label-suite/issues/110)。
+`.claude/rules/` 有 **16 份**，它的 `index.md` 自己把四份歸成「**共通（前後端）**」—— 那四份正是本文件的範圍，其餘 12 份見 [backend-agent-rules.md](backend-agent-rules.md)、[security-agent-rules.md](security-agent-rules.md)、[api-agent-rules.md](api-agent-rules.md)、[frontend-agent-rules.md](frontend-agent-rules.md)、[testing-agent-rules.md](testing-agent-rules.md)。
 
 | 來源條文 | 處理 | 說明 |
 | :--- | :--- | :--- |
@@ -250,13 +250,13 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 | `typescript.md` 禁止非空斷言 `!`、禁止 `as`、`as const` 取代 enum、named export | **移交前端規範** | 是否採用以 [frontend-agent-rules.md 的 F2](frontend-agent-rules.md#f2-型別安全) 為準 |
 | `date-handling.md` 日期一律走單一入口、禁止 `new Date()`／`Date.now()` | **移交前端規範** | 是否採用以 [frontend-agent-rules.md 的 F10](frontend-agent-rules.md#f10-日期時區與可測的時鐘) 為準 |
 | `jsdoc.md` 最嚴格 JSDoc（所有具名函式、方法、class、interface 與欄位） | **待採用** | 本 repo 沒有條文。注意它要求 DTO 欄位與 `@ApiProperty` 一致，而本 repo 的後端是 FastAPI 不是 NestJS，照搬不成立 |
-| `testing.md` 測試名詞 unit／integration／e2e、Decision Table、TDD | **待採用** | 歸 [#110](https://github.com/label-suite/label-suite/issues/110) |
-| 其餘 12 份（`database`、`api-contract`、`auth-oidc`、`dto-boolean`、`integration-test-http`、`jest-mock-queue`、`frontend`、`api-client`、`design-tokens`、`notecraft-*`、`index`） | **不在本文件** | 分領域，歸 #106–#110；其中 `notecraft-*` 兩份本 repo 已有自己的版本（`docs/development/notecraft-writing.md`、`notecraft-visualize.md`） |
-| `index.md` 的「規則帶 `paths:` 自動載入、index 永遠載入」機制 | **不採用** | 本 repo **不建立** `.claude/rules/`（#53 的決議）。等價的目錄功能由 `AGENTS.md` 的 Agent Rules Index 承擔 |
-| SDD 流程骨架（九份產物、兩個停點、十二個角色） | **沿用** | 屬 Epic [#50](https://github.com/label-suite/label-suite/issues/50) 的範圍，已由 #51／#52／#53 落地，本文件不重述 |
-| `--schema spec-driven` 的預設 | **改寫** | 改成本 repo 自己的 `label-suite-sdd`（#51） |
+| `testing.md` 測試名詞 unit／integration／e2e、Decision Table、TDD | **待採用** | 見 [testing-agent-rules.md](testing-agent-rules.md) 的 T1、T2、T7 |
+| 其餘 12 份（`database`、`api-contract`、`auth-oidc`、`dto-boolean`、`integration-test-http`、`jest-mock-queue`、`frontend`、`api-client`、`design-tokens`、`notecraft-*`、`index`） | **不在本文件** | 分領域，見上列五份分領域文件；其中 `notecraft-*` 兩份本 repo 已有自己的版本（`docs/development/notecraft-writing.md`、`notecraft-visualize.md`） |
+| `index.md` 的「規則帶 `paths:` 自動載入、index 永遠載入」機制 | **不採用** | 本 repo **不建立** `.claude/rules/`（維護者的決議）。等價的目錄功能由 `AGENTS.md` 的 Agent Rules Index 承擔 |
+| SDD 流程骨架（九份產物、兩個停點、十二個角色） | **沿用** | 屬 `AGENTS.md` 的 SDD Workflow 範圍，已落地，本文件不重述 |
+| `--schema spec-driven` 的預設 | **改寫** | 改成本 repo 自己的 `label-suite-sdd` |
 
-### duty-mate（`trendlink/duty-mate`，釘在 `c53cc453`，`develop` 分支）
+### duty-mate（`trendlink/duty-mate`，`develop` 分支）
 
 **這個來源存在**，只是不在個人帳號底下而在 `trendlink` 組織，而且 `.claude/rules/` 只在 `develop`（`main` 只有兩行 `README.md`）。`.claude/rules/` 有 **12 份**。
 
@@ -267,20 +267,20 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 | `typescript.md` 禁止 `any` | **沿用** | 已在 `AGENTS.md` 硬性規則 7（與 scaffold 同一條，兩個來源一致） |
 | `typescript.md` 禁止非空斷言 `!`、命名與匯出規範 | **移交前端規範** | 同 scaffold 那一列，以 [frontend-agent-rules.md 的 F2](frontend-agent-rules.md#f2-型別安全) 為準 |
 | `date-handling.md` 日期一律從單一入口 import、禁止 `new Date()`／`Date.now()` | **移交前端規範** | 與 scaffold 同向，以 [frontend-agent-rules.md 的 F10](frontend-agent-rules.md#f10-日期時區與可測的時鐘) 為準 |
-| `index.md` 的「規則帶 `paths:` frontmatter 自動載入、index 永遠載入、新增規則不改 `CLAUDE.md`」 | **不採用** | 同 scaffold：本 repo 不建 `.claude/rules/`（#53）。不過**「新增規則不改 `CLAUDE.md`」這個目標本文件照辦了**——索引在 `AGENTS.md`，新增分領域文件只動 `docs/development/` |
-| `integration-test-http.md`（`listen(0,'127.0.0.1')`、`closeTestApp`、harness 不比 production 寬鬆） | **不在本文件** | 測試分層歸 [#110](https://github.com/label-suite/label-suite/issues/110)；而且它是 NestJS 的 harness，FastAPI 要重寫 |
-| `database.md`（SQLite ＋ TypeORM、禁原生 SQL、migration 規範） | **不採用** | 棧不同：本 repo 是 PostgreSQL ＋ SQLAlchemy／Alembic。資料庫規範歸 [#106](https://github.com/label-suite/label-suite/issues/106) |
+| `index.md` 的「規則帶 `paths:` frontmatter 自動載入、index 永遠載入、新增規則不改 `CLAUDE.md`」 | **不採用** | 同 scaffold：本 repo 不建 `.claude/rules/`。不過**「新增規則不改 `CLAUDE.md`」這個目標本文件照辦了**——索引在 `AGENTS.md`，新增分領域文件只動 `docs/development/` |
+| `integration-test-http.md`（`listen(0,'127.0.0.1')`、`closeTestApp`、harness 不比 production 寬鬆） | **不在本文件** | 測試分層見 [testing-agent-rules.md](testing-agent-rules.md)；而且它是 NestJS 的 harness，FastAPI 要重寫 |
+| `database.md`（SQLite ＋ TypeORM、禁原生 SQL、migration 規範） | **不採用** | 棧不同：本 repo 是 PostgreSQL ＋ SQLAlchemy／Alembic。資料庫規範見 [backend-agent-rules.md](backend-agent-rules.md) |
 | `hbs-partials.md`、`hbs-inline-script.md`、`icon-usage.md`、`tailwind-theme.md` | **不採用** | Handlebars 與該專案的 Tailwind 設定專屬，本 repo 用 React |
 | `command.md`（nest-commander ＋ `@inquirer/prompts`） | **不採用** | 棧不同 |
 | `dto-boolean.md`、`jest-mock-queue.md` | **不採用** | NestJS／Jest 專屬；本 repo 後端是 pytest |
 
 ### starter-kit
 
-**對不上。** #105 點名的是 starter-kit 的 `core-principles.md` 與 `workflow.md`。
+**對不上。** 當初點名的是 starter-kit 的 `core-principles.md` 與 `workflow.md`。
 
 已查：`trendlink` 組織底下所有 repo（含 `claude-plugins`、`trendlink-portal`、`lexpayroll`、`trendmile`、`fullstack-ai-sdd-workflow-scaffold`）、個人帳號、以及本機 `find ~ -name "core-principles*"`，**都沒有這兩個檔案**。本機唯一叫 starter-kit 的 `whest-starterkit` 是高斯動差／QMC 取樣的科學計算起始包（`.claude/agents/` 底下是 `gaussian-moment-analyst`、`qmc-sampling-specialist`），兩個檔案都不存在。
 
-**維護者裁定：該來源不存在或已不適用，從 #105 的工作項移除。** 所以這一類沒有對照可做，也不再是缺口。
+**維護者裁定：該來源不存在或已不適用，從工作項移除。** 所以這一類沒有對照可做，也不再是缺口。
 
 
 
