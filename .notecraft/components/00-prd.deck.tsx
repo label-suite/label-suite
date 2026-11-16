@@ -229,7 +229,7 @@ const deck: Deck = {
     {
       layout: "full-visual",
       nav: "系統情境：C4 第一層",
-      title: "誰在用、碰到哪些外部系統：Google 與 Resend 都可不設定",
+      title: "C4 第一層・系統情境：誰在用、碰到哪些外部系統",
       viz: PrdSystemContext,
       vizLabel: "@ai-visualize · prd-system-context",
       vizHint: "點人或系統看互動；切換『部署設定』看 Google、Resend 未設定時的樣子。",
@@ -237,7 +237,7 @@ const deck: Deck = {
     {
       layout: "full-visual",
       nav: "容器視圖：C4 第二層",
-      title: "六個容器只有 Nginx 對外，測試集答案只有 worker 讀",
+      title: "C4 第二層・容器視圖：六個容器，只有 Nginx 對外",
       viz: ArchitectureContainerView,
       vizLabel: "@ai-visualize · architecture-container-view",
       vizHint: "點容器看關係；切換『資料庫層』看 Lite 與正式部署的差異。",
