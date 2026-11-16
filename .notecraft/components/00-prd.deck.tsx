@@ -408,6 +408,7 @@ const deck: Deck = {
         { n: "03", title: "系統架構", sub: "C4 第一層與第二層" },
         { n: "04", title: "任務生命週期", sub: "三個模組之間的六次交接" },
         { n: "05", title: "實際操作畫面", sub: "建立任務、任務詳情、標記工作區" },
+        { n: "06", title: "目前進度", sub: "規格與原型完成，正在補齊開發規範" },
       ],
     },
     {
@@ -486,7 +487,8 @@ const deck: Deck = {
     {
       layout: "custom",
       nav: "目前進度",
-      eyebrow: "專案進度",
+      num: "06",
+      eyebrow: "PART 06 · 專案進度",
       title: "目前進度：規格與原型已完成，正在補齊開發規範",
       render: ProgressPage,
     },
