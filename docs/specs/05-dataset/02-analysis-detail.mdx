@@ -1784,6 +1784,7 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#188](https://github.com/label-suite/label-suite/issues/188) | 2026-11-16 | 頁首 | `變更 #155` 徽章是 `warning` 但沒有 `href` | 統一成 `variant="warning"` 加 `href`（維護者 2026-11-16 裁定，規則見 `writing-guide.md` §變更標示） | **無新決議**，條文一字未改 |
 | [#260](https://github.com/label-suite/label-suite/issues/260) | 2026-11-11 | §Q&A | 每題是 `### Q. …` 的 H3 標題，答案直接顯示 | 每題一個預設收合的 `tip`，題目是可點選的標題 | **無新決議**。§Q&A **15 題**全部從 `### Q. …` 標題改成預設收合的 `tip`，題目成為可點選的標題。題目的 H3 錨點因此消失（全站沒有任何連結指向它們，已逐題查過），也不再進右側目錄。**題目、答案與連結一字未改**，只有標題去掉「Q. 」前綴，以及一個標題去掉行內程式碼的反引號（`title` 只吃純文字，反引號會原字照印）。格式依維護者 2026-11-11 的四個裁定（紀錄在[這則留言](https://github.com/label-suite/label-suite/issues/260#issuecomment-6792064965)） |
 | [#137](https://github.com/label-suite/label-suite/issues/137) | 2026-11-10 | §驗收標準 › 可比較單位的名稱跟著那一列的型別 | Then 寫「單維度那一列的單位是 `可比較樣本數`、序列標註那一列是 `可比較 span 數`」 | 改為「欄名是 `可比較單位數`；單維度那一列的單位名詞是 `樣本`、序列標註那一列是 `span`」——Q18 把欄名固定、單位名詞改成逐列的短名，照原字面這條驗不過 | 本頁 Q18（維護者 2026-11-06，形狀 2026-11-10）；畫面側見 #155／PR #222 |
 | [#137](https://github.com/label-suite/label-suite/issues/137) | 2026-11-10 | §標記一致性偏離分析 第 3 條的分組理由 | 「上表的分組以**畫面為準**，逐檔核對過七個 `quality-*.html`」 | 改為「依七個 `quality-*.html` 的**靜態標記**逐檔核對」，並補一條說明：那次核對讀的不是渲染後的畫面，`updateConsistencyDeviationTexts()` 會用 `consistencyUnitHeader` 覆蓋表頭，而該表曾把單一標籤配成 `可比較樣本數`；畫面已於 2026-11-10 依本條對齊 | 維護者 2026-11-10 裁定（本條的**結論**不變，只改敘述不準的理由） |
