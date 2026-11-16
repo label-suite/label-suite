@@ -1,4 +1,20 @@
-import { ArrowLeft, ArrowRight, ClipboardCheck, Crown, KeyRound, MonitorPlay, PenLine, ShieldCheck, User } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  ClipboardCheck,
+  Clock,
+  Code,
+  Crown,
+  FileText,
+  KeyRound,
+  ListChecks,
+  MonitorPlay,
+  Network,
+  PenLine,
+  ShieldCheck,
+  User,
+} from "lucide-react";
 import type { CustomSlideProps, Deck } from "@/lib/decks";
 import { Triad } from "@/components/deck/blocks";
 import { DGAP, DS, DTRACK } from "@/components/deck/scale";
@@ -228,6 +244,149 @@ function prototypePage(page: string, caption: string, query?: string) {
   return PrototypePage;
 }
 
+// 結尾 — 目前進度：五段里程碑軌道。不寫數字（頁數會過時，維護者指示）。
+// 狀態改了只要改 PHASES 的 state；軌道填色自動跟到「進行中」那一段。
+type PhaseState = "done" | "active" | "todo";
+
+const PHASES: { title: string; icon: RoleIcon; state: PhaseState; outputs: string[] }[] = [
+  { title: "產品需求", icon: FileText, state: "done", outputs: ["角色與權限矩陣", "範圍與模組地圖"] },
+  { title: "頁面規格", icon: ListChecks, state: "done", outputs: ["逐頁的業務流程", "驗收標準與待釐清"] },
+  { title: "互動原型", icon: MonitorPlay, state: "done", outputs: ["規格頁嵌入可操作畫面", "畫面改動先給維護者看"] },
+  { title: "架構與開發規範", icon: Network, state: "active", outputs: ["容器、分層與 ADR 效力", "Agent 規則與 SDD 流程"] },
+  { title: "實作", icon: Code, state: "todo", outputs: ["依 SDD 一個 change 一個 change 做", "後端、前端與 E2E 驗收"] },
+];
+
+const STATE_LABEL: Record<PhaseState, string> = { done: "已完成", active: "進行中", todo: "未開始" };
+
+function ProgressPage({ dark }: CustomSlideProps) {
+  const c = dkt(dark);
+  const good = toneColor("good", c);
+  const now = toneColor("orange", c);
+  const tone = (s: PhaseState) => (s === "done" ? good : s === "active" ? now : { fg: c.muted, soft: "transparent" });
+
+  const n = PHASES.length;
+  const at = PHASES.findIndex((p) => p.state === "active");
+  const reach = at < 0 ? (PHASES.every((p) => p.state === "done") ? n - 1 : 0) : at;
+  const inset = 50 / n; // 軌道從第一個節點中心畫到最後一個節點中心（%）
+  const span = 100 - inset * 2;
+
+  return (
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", gap: DGAP.md }}>
+      <div style={{ position: "relative", display: "grid", gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}>
+        <div
+          aria-hidden="true"
+          style={{ position: "absolute", top: "50%", left: `${inset}%`, width: `${span}%`, height: 6, marginTop: -3, borderRadius: 999, background: c.border }}
+        />
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: `${inset}%`,
+            width: `${(span * reach) / (n - 1)}%`,
+            height: 6,
+            marginTop: -3,
+            borderRadius: 999,
+            background: `linear-gradient(90deg, ${good.fg}, ${now.fg})`,
+          }}
+        />
+        {PHASES.map((p) => {
+          const t = tone(p.state);
+          const Icon = p.icon;
+          return (
+            <div key={p.title} style={{ position: "relative", display: "flex", justifyContent: "center" }}>
+              <span
+                style={{
+                  position: "relative",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 104,
+                  height: 104,
+                  borderRadius: 999,
+                  background: p.state === "todo" ? c.slide : t.soft,
+                  color: t.fg,
+                  border: p.state === "todo" ? `3px dashed ${c.border}` : `3px solid ${t.fg}`,
+                  boxShadow: p.state === "active" ? `0 0 0 10px ${now.soft}` : undefined,
+                }}
+              >
+                <Icon size={46} strokeWidth={2} />
+                {p.state === "done" && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      right: -4,
+                      bottom: -4,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 36,
+                      height: 36,
+                      borderRadius: 999,
+                      background: good.fg,
+                      color: c.slide,
+                      border: `3px solid ${c.slide}`,
+                    }}
+                  >
+                    <Check size={20} strokeWidth={3} />
+                  </span>
+                )}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{ flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))`, gap: DGAP.sm }}>
+        {PHASES.map((p) => {
+          const t = tone(p.state);
+          return (
+            <div
+              key={p.title}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: DGAP.sm,
+                padding: DGAP.md,
+                borderRadius: "var(--radius-lg)",
+                background: p.state === "active" ? now.soft : dark ? c.sunken : "var(--neutral-50)",
+                border: p.state === "todo" ? `2px dashed ${c.border}` : `1px solid ${p.state === "active" ? now.fg : c.borderSoft}`,
+                borderTop: p.state === "todo" ? undefined : `4px solid ${t.fg}`,
+              }}
+            >
+              <span
+                style={{
+                  alignSelf: "flex-start",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "4px 12px",
+                  borderRadius: 999,
+                  fontSize: DS.small,
+                  fontWeight: 800,
+                  letterSpacing: DTRACK.label,
+                  color: p.state === "todo" ? c.muted : t.fg,
+                  background: p.state === "todo" ? "transparent" : dark ? c.sunken : c.slide,
+                  border: `1px solid ${p.state === "todo" ? c.border : t.fg}`,
+                }}
+              >
+                {p.state === "done" ? <Check size={16} strokeWidth={3} /> : p.state === "active" ? <Clock size={16} strokeWidth={2.6} /> : null}
+                {STATE_LABEL[p.state]}
+              </span>
+              <span style={{ fontSize: DS.h4, fontWeight: 900, color: p.state === "todo" ? c.body : c.ink }}>{p.title}</span>
+              <ul style={{ margin: 0, paddingLeft: "1.1em", display: "flex", flexDirection: "column", gap: DGAP.xs, fontSize: DS.small, color: c.body }}>
+                {p.outputs.map((o) => (
+                  <li key={o}>{o}</li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 const deck: Deck = {
   slug: "specs/00-prd",
   title: "Label Suite：給學術 NLP 團隊的標記與品質平台",
@@ -324,16 +483,11 @@ const deck: Deck = {
       ),
     },
     {
-      layout: "closing",
-      nav: "回顧與下一步",
-      title: "回顧：設定驅動的標記與品質平台",
-      items: [
-        { n: "01", k: "定位", v: "碩士論文 Demo Paper 的核心成果：設定驅動的標記流程" },
-        { n: "02", k: "範圍", v: "七大模組、六個角色，標記員看不到標準答案" },
-        { n: "03", k: "狀態", v: "任務單向推進，唯一回頭路在等待 IAA 確認" },
-      ],
-      cta: "回到筆記看完整規格、權限矩陣與術語表",
-      ctaMeta: "/notes/specs/00-prd",
+      layout: "custom",
+      nav: "目前進度",
+      eyebrow: "專案進度",
+      title: "目前進度：規格與原型已完成，正在補齊開發規範",
+      render: ProgressPage,
     },
   ],
 };
