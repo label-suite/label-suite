@@ -4,7 +4,7 @@ description: '所有人用 Email 與密碼登入平台；登入頁同時提供�
 category: '規格書'
 tags: [規格書, 帳號, 已定案]
 createdAt: '2026-11-05'
-updatedAt: '2026-11-11'
+updatedAt: '2026-11-16'
 ---
 
 import PrototypeFrame from '@notes/components/prototype-frame';
@@ -170,7 +170,7 @@ import Spec0101LoginFlow from '@notes/components/spec-01-01-login-flow'
 
 - 這個入口和 Email 登入並列在同一頁，不是另開一頁
 - 按鈕的位置與文字**不因為接上而改變**，使用者不需要重新認識它
-- ⚠️ **PRD 的上限是「保留入口」**：PRD §範圍內寫的是「登入頁**保留** Google SSO 入口」，而本期接上是維護者 2026-11-09 的裁定。**這一頁不默默放寬**——PRD 的改動由 [Issue #85](https://github.com/label-suite/label-suite/issues/85) 處理
+- **PRD 已跟上**：PRD §範圍內 原本寫「登入頁**保留** Google SSO 入口」，而本期接上是維護者 2026-11-09 的裁定；PRD 已於 2026-11-16 依 [Issue #85](https://github.com/label-suite/label-suite/issues/85) 改成「登入頁的 Google SSO 本期接上」，兩邊不再有落差
 - 「怎麼把一個既有帳號**連結**到 Google 帳號」不在這一頁：那是[規格 01-04 個人設定](./04-profile.mdx)的第五個區塊（[規格 01-05 §已確認決議](./05-login-state.mdx#已確認決議) Q7）
 
 ### 送出中的狀態
@@ -338,8 +338,8 @@ import Spec0101LoginFlow from '@notes/components/spec-01-01-login-flow'
 - [x] **本期就接上**，點下去真的能用 Google 帳號登入
 - [ ] 只保留入口，點下去明確告知此功能尚未開放
 
-> ⚠️ **這一條超出 PRD 的字面。** PRD §範圍內寫的是「登入頁**保留** Google SSO 入口」，讀起來是保留位置而不是本期實作；舊來源 `002` 也明寫目前點擊不做任何事、整合留待後續。
-> 依本專案的規則**不默默放寬**：這一頁明寫 PRD 的上限是「保留入口」，本期接上是維護者 2026-11-09 的裁定，**PRD 的改動由 [Issue #85](https://github.com/label-suite/label-suite/issues/85) 處理**。
+> **這一條當時超出 PRD 的字面。** PRD §範圍內 原本寫「登入頁**保留** Google SSO 入口」，讀起來是保留位置而不是本期實作；舊來源 `002` 也明寫目前點擊不做任何事、整合留待後續。
+> 依本專案的規則**不默默放寬**：這一頁當時明寫 PRD 的上限是「保留入口」，本期接上是維護者 2026-11-09 的裁定。**PRD 已於 2026-11-16 依 [Issue #85](https://github.com/label-suite/label-suite/issues/85) 改成本期接上**，落差已消除。
 > 同一天的[規格 01-05 §已確認決議](./05-login-state.mdx#已確認決議) Q7 也裁定「怎麼連結 Google 帳號」收進[規格 01-04](./04-profile.mdx)當第五個區塊——兩題一致（#183）。
 
 ### Q8. 登入時要不要檢查密碼的組成規則？（已定案，維護者裁定 2026-11-09）
@@ -384,6 +384,7 @@ import Spec0101LoginFlow from '@notes/components/spec-01-01-login-flow'
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#85](https://github.com/label-suite/label-suite/issues/85) | 2026-11-16 | §使用角色、§已確認決議 Q4 的理由、附錄兩列 | 四處寫「超出 PRD『保留入口』的字面，PRD 的改動由 #85 處理」 | 改成 PRD 已於 2026-11-16 依 #85 落地、落差已消除 | **無新決議**，條文一字未改 |
 | [#260](https://github.com/label-suite/label-suite/issues/260) | 2026-11-11 | §Q&A | 每題是 `### Q. …` 的 H3 標題，答案直接顯示 | 每題一個預設收合的 `tip`，題目是可點選的標題 | **無新決議**。§Q&A **3 題**全部從 `### Q. …` 標題改成預設收合的 `tip`，題目成為可點選的標題。題目的 H3 錨點因此消失（全站沒有任何連結指向它們，已逐題查過），也不再進右側目錄。**題目、答案與連結一字未改**，只有標題去掉「Q. 」前綴。格式依維護者 2026-11-11 的四個裁定（紀錄在[這則留言](https://github.com/label-suite/label-suite/issues/260#issuecomment-6792064965)） |
 | [#183](https://github.com/label-suite/label-suite/issues/183) | 2026-11-09 | 頁首、§規格（欄位檢查與錯誤、登入失敗、用 Google 帳號登入、導向其他頁面）、§待釐清、§已確認決議 | 五題列在待釐清；失敗訊息寫「什麼時候消失見待釐清」；Google 按鈕寫「顯示此功能尚未開放」；沒有「已登入的人開登入頁」這一條；送出前的檢查沒寫明只有兩項 | 五題折回已確認決議（保留題號），這一頁改**已定案**。**Q1＋Q2**：三種情況（含帳號被停用）同一句話，連續失敗 10 次擋 30 分鐘，送出失敗顯示可重試的說明並保留已填。**Q3**：已登入的人直接前往儀表板。**Q4**：⚠️ **本期就接上 Google 登入**——超出 PRD「保留入口」的字面，已明寫上限並把 PRD 改動交給 #85。**Q8**：登入不檢查密碼的組成規則 | Q1、Q2、Q3、Q4、Q8（維護者裁定 2026-11-09） |
 | 初版 | 2026-11-05 | 全部 | — | — | Q5、Q6、Q7、Q9 |
@@ -441,7 +442,7 @@ import Spec0101LoginFlow from '@notes/components/spec-01-01-login-flow'
 | email-password:FR-009 | [§規格 › 密碼的顯示與隱藏](#密碼的顯示與隱藏) |  |
 | email-password:FR-010 | [§規格 › 送出中的狀態](#送出中的狀態) |  |
 | email-password:FR-011 | [§規格 › 導向其他頁面](#導向其他頁面) | 導向儀表板這件事保留；原型的 800 毫秒延遲不寫進規格 |
-| email-password:FR-012 | [§規格 › 用 Google 帳號登入](#用-google-帳號登入) | 第 2 條。維護者 2026-11-09 裁定**本期就接上**（[§已確認決議](#已確認決議) Q4）；⚠️ 超出 PRD「保留入口」的字面，PRD 的改動在 #85 |
+| email-password:FR-012 | [§規格 › 用 Google 帳號登入](#用-google-帳號登入) | 第 2 條。維護者 2026-11-09 裁定**本期就接上**（[§已確認決議](#已確認決議) Q4）；當時超出 PRD「保留入口」的字面，PRD 已於 2026-11-16 依 #85 改成本期接上 |
 | email-password:FR-013 | Scenario：點忘記密碼前往重設 |  |
 | email-password:FR-014 | Scenario：點前往註冊 |  |
 | email-password:FR-015 | [§規格 › 不同螢幕寬度的呈現](#不同螢幕寬度的呈現) |  |
@@ -459,7 +460,7 @@ import Spec0101LoginFlow from '@notes/components/spec-01-01-login-flow'
 | google-sso:FR-003 | Scenario：Google 按鈕的文字隨語言切換 |  |
 | google-sso:FR-004 | Scenario：Google 按鈕的文字隨語言切換 | 與 FR-003 重複，併入 |
 | google-sso:FR-004A | Scenario：從註冊頁回到登入頁仍是同一種語言 | 來源獨有的「返回 login 頁時不得回到預設語言」這個方向 |
-| google-sso:FR-005 | [§規格 › 用 Google 帳號登入](#用-google-帳號登入) | 第 2 條。維護者 2026-11-09 裁定**本期就接上**（[§已確認決議](#已確認決議) Q4）；⚠️ 超出 PRD「保留入口」的字面，PRD 的改動在 #85 |
+| google-sso:FR-005 | [§規格 › 用 Google 帳號登入](#用-google-帳號登入) | 第 2 條。維護者 2026-11-09 裁定**本期就接上**（[§已確認決議](#已確認決議) Q4）；當時超出 PRD「保留入口」的字面，PRD 已於 2026-11-16 依 #85 改成本期接上 |
 | google-sso:FR-006 | [§規格 › 用 Google 帳號登入](#用-google-帳號登入) | 只取「日後接上時按鈕的位置、文字與說明文字不變」；按鈕的識別碼屬技術 |
 | google-sso:SC-001 | [§規格 › 登入頁的內容](#登入頁的內容) | 與 FR-001 重複，併入 |
 | google-sso:SC-002 | Scenario：Google 按鈕的文字隨語言切換 | 與 FR-003、FR-004 重複，併入 |
