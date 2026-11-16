@@ -34,7 +34,7 @@
 
 `navigation.mdx` 共 **24 列 `Inline`**，分佈在 16 個頁面（`index.html` 與 `components-showcase.html` 沒有）。**每一列都對得到至少一個視圖**——視圖就是從那些列加上掃出來的 URL 參數展開的。
 
-這是一個**刻意寬鬆**的斷言：「至少一個」不等於逐項涵蓋。逐列看，`task-detail` 的「設定、抽樣、guideline、run control、成員操作、匯出」整列只對到六個分頁與 `state-panel-load-failed`——一個 12,501 行、6 個 panel、含日期區間選擇器與分類刪除彈窗的畫面只收 12 個視圖，`modal-`／`toast-` 一個都沒有。`design-system-setup` 在 `b2` 會吃到這個缺口。
+這是一個**刻意寬鬆**的斷言：「至少一個」不等於逐項涵蓋。逐列看，`task-detail` 的「設定、抽樣、guideline、run control、成員操作、匯出」整列對到六個分頁、五個設定區段（`#param-section-*`，第二次重跑才補上）與 `state-panel-load-failed`，但「run control、成員操作、匯出」三項仍然沒有各自的視圖——一個 12,501 行、6 個 panel、含日期區間選擇器與分類刪除彈窗的畫面只收 17 個視圖，`modal-`／`toast-` 一個都沒有。`design-system-setup` 在 `b2` 會吃到這個缺口。
 
 視圖數比 `Inline` 列多很多（140 vs 24），因為 `Inline` 把「搜尋／篩選／排序／分頁」這類寫成一列，而 URL 參數掃描把它們拆成可個別重現的狀態。
 
@@ -163,6 +163,8 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 **受影響的判定只看證據**：某個視圖的 `evidence` 或 `spec` 指到的檔變了，它就是受影響。`manifest.json` 的 `screens` 與 `views` 都依 `id` 字典序排，所以 diff 讀得出來。
 
+**但只看證據不夠。** 參數驅動的視圖大多不以 `navigation.mdx` 為 `evidence`，所以改動那份文件時，它們一個都不會被這條規則點到。§九 因此改成兩欄並列，第二欄是「該批的參數驅動視圖」；兩次重跑的紀錄都照這個格式寫。
+
 ---
 
 ## 八、共用外殼 `shared/app-shell`
@@ -230,14 +232,16 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 | `params` 欄修正 | 2 個條目 | `task-detail` 11 → **25**、`annotation-workspace` 9 → **13**（兩步掃描才看得到的那些） |
 | 受影響 | 26 | `evidence` 指到 `navigation.mdx` 的全部視圖 |
 
-**為什麼只加五個視圖而不是 22 個**：其餘的新參數是篩選（`ar_*`、`wl_stage`、`wl_member`、`ap_sort`、工作區那四個）與分頁（`*_page`），而 §二 的第一個判斷早就定下「篩選參數不各自成一個視圖」。`section` 不是篩選——它切換的是設定分頁裡**五個不同的區段**，所以逐一成視圖。
+**為什麼只加五個視圖而不是 22 個**：其餘 17 個新參數是篩選（`ar_*` 六個、`wl_stage`、`wl_member`、`wl_from`／`wl_to` 這組日期區間、`ap_sort`，加上工作區的 `status`／`q`／`limit`／`offset`）與分頁（`ar_page`、`wl_page`、`mm_page`），而 §二 的第一個判斷早就定下「篩選參數不各自成一個視圖」。`section` 不是篩選——它切換的是設定分頁裡**五個不同的區段**，所以逐一成視圖。
+
+**這條引用要打一個折扣。** §二 判斷一是對**清單頁**寫的，它承諾的替代是「每個清單頁只收 `state-default` 與 `state-filtered-empty` 兩種」；而 `task-management/task-detail` 這兩個視圖**一個都沒有**，所以在這一頁，判斷一只擋掉了 13 個參數，沒有給出任何補償視圖。這個缺口 §二 已經自己記著（「`b2` 會吃到這個缺口」），這裡不另開一筆，但不要把它讀成「已經涵蓋」。
 
 ### 應重驗的批次
 
 | 批次 | 依 `evidence` 算出的 | 該批的參數驅動視圖 |
 | :--- | ---: | ---: |
 | `b1-shared-account` | 17 | 9 |
-| `b2-admin-dashboard-task` | 8 | 29 |
+| `b2-admin-dashboard-task` | 8 | 30 |
 | `b3-annotation-review` | 1 | 10 |
 | `b4-dataset-sweep` | 0 | 27 |
 
