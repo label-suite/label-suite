@@ -7,7 +7,7 @@ tags: [openspec, sdd, schema, fullstack-sdd]
 # OpenSpec：導入 fullstack-sdd 流程
 
 本文說明本專案的 SDD 流程：九份產物怎麼依序產出、哪兩個停點等維護者、導入時哪三處要特別處理，以及 clarify 檢查哪十個面向。
-流程的規則本體在 `AGENTS.md` §SDD Workflow 與 `openspec/config.yaml`，本文與它們說法不同時以它們為準，並回報給維護者；技術選型與分層以 [architecture.mdx](architecture.mdx) 為準。
+流程的規則本體在 `AGENTS.md` §SDD Workflow 與 `openspec/config.yaml`；技術選型與分層以 [architecture.mdx](architecture.mdx) 為準。
 附錄是導入當時的盤點與要改的檔案清單，查出處用；正文不依賴它。摺疊區塊是實作與規劃時才查的細節，預設收起。
 
 ## 決議
@@ -231,6 +231,8 @@ React 19、`pages/` 加 `features/`、shadcn/ui 放 `components/ui/`、前端型
 
 ## 附錄：本專案與 scaffold 的落差與逐項判斷
 
+> 本節是導入評估當時的狀態，寫「未定案」「待定」的技術項目現已定案，見[決策紀錄](#決策紀錄)。
+
 ### 落差
 
 | 面向 | scaffold | 本專案 | 影響 |
@@ -266,6 +268,8 @@ TypeORM 的 migration 慣例、`ApiResponseDto` 這個字面名稱、meta repo �
 
 ## 附錄：導入時評估「完整流程現在就能跑」
 
+> 本節是導入評估當時的狀態，寫「未定案」「待定」的技術項目現已定案，見[決策紀錄](#決策紀錄)。
+
 `ui-design` 與 `api-contract` 的 template 本身允許整份只寫「本次無 UI 變更」「本次無 API 變更」，
 `ui-ux` agent 也明文要求沒有 UI 變更時照樣產出那一句。所以九份產物的流程套在 `backend/` 骨架那個 change 上不會空轉。
 
@@ -276,6 +280,8 @@ TypeORM 的 migration 慣例、`ApiResponseDto` 這個字面名稱、meta repo �
 `ui-ux` agent 可以等前端框架定案再補完，在那之前 `ui-design` 都是那一句話。
 
 ## 附錄：導入時要改的檔案
+
+> 本節是導入評估當時的狀態，寫「未定案」「待定」的技術項目現已定案，見[決策紀錄](#決策紀錄)。
 
 分三批。第一批完成才動第二、三批，因為 agent 與 clarify skill 都要引用 schema 的範本路徑與面向定義。
 
