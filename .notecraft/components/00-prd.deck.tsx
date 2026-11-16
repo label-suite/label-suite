@@ -1,5 +1,6 @@
-import type { CustomSlideProps, Deck, SeriesTone } from "@/lib/decks";
-import { Roster, Triad } from "@/components/deck/blocks";
+import { ArrowLeft, ArrowRight, ClipboardCheck, Crown, KeyRound, PenLine, ShieldCheck, User } from "lucide-react";
+import type { CustomSlideProps, Deck } from "@/lib/decks";
+import { Triad } from "@/components/deck/blocks";
 import { DGAP, DS, DTRACK } from "@/components/deck/scale";
 import { toneColor } from "@/components/deck/SlideChrome";
 import { dkt } from "@/components/deck/theme";
@@ -32,132 +33,154 @@ function ProblemsPage({ dark }: CustomSlideProps) {
   );
 }
 
-// PART 02 — 六項目標依受益角色分三組：上方色帶標角色，每張卡以一個大字寫出驗收門檻。
-type GoalGroup = { label: string; tone: SeriesTone; goals: { value: string; goal: string; measure: string }[] };
+// PART 02 — 一人兩軸：左邊系統角色（全平台恰一個），右邊同一人在不同任務各有任務角色。
+// 圖示與 prd-site-map 的 ROLES 一致。
+type RoleIcon = typeof User;
 
-const GOAL_GROUPS: GoalGroup[] = [
-  {
-    label: "專案負責人",
-    tone: "blue",
-    goals: [
-      { value: "端到端", goal: "走完一次完整標記流程", measure: "能實際示範從建任務到匯出" },
-      { value: "≥ 5 種", goal: "換任務不改平台", measure: "研究示例只靠任務設定建立" },
-      { value: "步驟更少", goal: "建任務步驟比現有工具少", measure: "操作步驟數少於 Label Studio" },
-      { value: "2–3 個", goal: "向論文讀者重現使用情境", measure: "示範影片呈現的情境數" },
-    ],
-  },
-  {
-    label: "專案負責人、審核員",
-    tone: "orange",
-    goals: [{ value: "100%", goal: "標記中就看到資料統計", measure: "句詞標籤統計與人工計算一致" }],
-  },
-  {
-    label: "標記員、審核員",
-    tone: "muted",
-    goals: [{ value: "SUS ≥ 75", goal: "平台好上手", measure: "5–10 位實驗室成員填寫的整體分數" }],
-  },
+const SYSTEM_ROLES: { label: string; icon: RoleIcon; note: string }[] = [
+  { label: "平台成員", icon: User, note: "自行註冊或受邀加入" },
+  { label: "系統管理員", icon: ShieldCheck, note: "管理帳號與角色權限" },
 ];
 
-function GoalsPage({ dark }: CustomSlideProps) {
+const TASK_SAMPLES: { task: string; role: string; icon: RoleIcon; note: string }[] = [
+  { task: "任務 A", role: "專案負責人", icon: Crown, note: "建立任務的人自動取得" },
+  { task: "任務 B", role: "標記員", icon: PenLine, note: "看不到標準答案" },
+  { task: "任務 C", role: "審核員", icon: ClipboardCheck, note: "同時擔任仲裁者" },
+];
+
+function RolesPage({ dark }: CustomSlideProps) {
   const c = dkt(dark);
-  const total = GOAL_GROUPS.reduce((n, g) => n + g.goals.length, 0);
+  const sys = toneColor("blue", c);
+  const task = toneColor("orange", c);
+
+  const panel = (t: { fg: string; soft: string }) => ({
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: DGAP.sm,
+    padding: DGAP.md,
+    borderRadius: "var(--radius-lg)",
+    background: dark ? c.sunken : "var(--neutral-50)",
+    border: `1px solid ${c.borderSoft}`,
+    borderTop: `4px solid ${t.fg}`,
+  });
+  const head = (t: { fg: string }, title: string, sub: string) => (
+    <div style={{ display: "flex", alignItems: "baseline", gap: DGAP.sm, flexWrap: "wrap" }}>
+      <span style={{ fontSize: DS.h3, fontWeight: 900, color: t.fg }}>{title}</span>
+      <span style={{ fontSize: DS.small, fontWeight: 700, color: c.body }}>{sub}</span>
+    </div>
+  );
+  const foot = (text: string) => (
+    <div style={{ marginTop: "auto", paddingTop: DGAP.xs, borderTop: `1px dashed ${c.border}`, fontSize: DS.small, color: c.body }}>
+      {text}
+    </div>
+  );
+  const chip = (t: { fg: string; soft: string }, Icon: RoleIcon, label: string, note: string, size = 30) => (
+    <div style={{ display: "flex", alignItems: "center", gap: DGAP.sm, minWidth: 0 }}>
+      <span
+        style={{
+          flex: "none",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: size + 22,
+          height: size + 22,
+          borderRadius: 999,
+          background: t.soft,
+          color: t.fg,
+        }}
+      >
+        <Icon size={size} strokeWidth={2.2} />
+      </span>
+      <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <span style={{ fontSize: DS.h4, fontWeight: 800, color: c.ink }}>{label}</span>
+        <span style={{ fontSize: DS.small, color: c.body }}>{note}</span>
+      </span>
+    </div>
+  );
+  const arrow = (Icon: RoleIcon, t: { fg: string }, label: string) => (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, color: t.fg }}>
+      <Icon size={48} strokeWidth={2.4} />
+      <span style={{ fontSize: DS.small, fontWeight: 800, letterSpacing: DTRACK.label }}>{label}</span>
+    </div>
+  );
+
   return (
     <div
       style={{
         height: "100%",
         display: "grid",
-        gridTemplateColumns: `repeat(${total}, 1fr)`,
-        gridTemplateRows: "auto 1fr",
-        columnGap: DGAP.sm,
-        rowGap: DGAP.xs,
+        gridTemplateColumns: "minmax(0, 1fr) auto auto auto minmax(0, 1.15fr)",
+        alignItems: "stretch",
+        columnGap: DGAP.md,
       }}
     >
-      {GOAL_GROUPS.map((g) => {
-        const t = toneColor(g.tone, c);
-        // muted 是標記色、不是文字色；灰色組的文字改穿正文 token 才讀得清楚。
-        const ink = g.tone === "muted" ? c.body : t.fg;
-        return (
-          <div
-            key={g.label}
-            style={{
-              gridColumn: `span ${g.goals.length}`,
-              padding: "6px 12px",
-              borderRadius: "var(--radius-sm)",
-              background: t.soft,
-              color: ink,
-              fontSize: DS.micro,
-              fontWeight: 800,
-              letterSpacing: DTRACK.label,
-              textAlign: "center",
-            }}
-          >
-            {g.label}
+      <div style={panel(sys)}>
+        {head(sys, "系統角色", "全平台・每人恰一個")}
+        {chip(sys, SYSTEM_ROLES[0].icon, SYSTEM_ROLES[0].label, SYSTEM_ROLES[0].note)}
+        <div style={{ display: "flex", alignItems: "center", gap: DGAP.xs, color: c.muted, fontSize: DS.small, fontWeight: 700 }}>
+          <span style={{ flex: 1, borderTop: `1px solid ${c.border}` }} />或<span style={{ flex: 1, borderTop: `1px solid ${c.border}` }} />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: DGAP.sm, padding: DGAP.sm, borderRadius: "var(--radius-md)", border: `1.5px solid ${sys.fg}` }}>
+          {chip(sys, SYSTEM_ROLES[1].icon, SYSTEM_ROLES[1].label, SYSTEM_ROLES[1].note)}
+          <div style={{ marginLeft: DGAP.lg, padding: DGAP.xs, borderRadius: "var(--radius-sm)", border: `1px dashed ${sys.fg}` }}>
+            {chip(sys, KeyRound, "Seeder 管理員", "部署時建立，不能停用或移除", 22)}
           </div>
-        );
-      })}
-      {GOAL_GROUPS.flatMap((g) => {
-        const t = toneColor(g.tone, c);
-        const ink = g.tone === "muted" ? c.body : t.fg;
-        return g.goals.map((it) => (
-          <div
-            key={it.goal}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: DGAP.sm,
-              padding: DGAP.md,
-              borderRadius: "var(--radius-md)",
-              background: dark ? c.sunken : "var(--neutral-50)",
-              border: `1px solid ${c.borderSoft}`,
-              borderTop: `4px solid ${t.fg}`,
-            }}
-          >
-            <div style={{ minHeight: "2.7em", fontSize: DS.h4, fontWeight: 800, lineHeight: 1.35, color: c.ink, textWrap: "balance" }}>
-              {it.goal}
-            </div>
-            <div
-              style={{
-                flex: 1,
-                display: "flex",
-                alignItems: "center",
-                fontSize: 48,
-                fontWeight: 900,
-                lineHeight: 1.1,
-                letterSpacing: DTRACK.tight,
-                color: ink,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {it.value}
-            </div>
-            <div style={{ minHeight: "3em", fontSize: DS.small, lineHeight: 1.5, color: c.body, textWrap: "balance" }}>
-              {it.measure}
-            </div>
-          </div>
-        ));
-      })}
-    </div>
-  );
-}
+        </div>
+        {foot("決定：帳號、系統管理、看得到哪些任務列表")}
+      </div>
 
-// PART 03 — 一個中心（一人多角色）+ 六個無先後順序的角色。
-function RolesPage({ dark, area }: CustomSlideProps) {
-  return (
-    <Roster
-      dark={dark}
-      width={area.w}
-      height={area.h}
-      lead="一人有一個系統角色 × 多個任務角色，兩者互不影響"
-      center={{ label: "一人多角色", note: "系統角色 × 任務角色並存" }}
-      actors={[
-        { label: "平台成員", role: "自行註冊或受邀加入，建立並參與任務", icon: "users" },
-        { label: "系統管理員", role: "管理帳號與角色權限，可看所有任務列表", icon: "settings" },
-        { label: "Seeder 管理員", role: "部署時建立的第一位系統管理員，不能被停用或移除", icon: "database" },
-        { label: "專案負責人", role: "設定任務、指派成員，推進試標與正式標記", icon: "target" },
-        { label: "審核員", role: "審核標記結果，處理爭議與仲裁", icon: "check" },
-        { label: "標記員", role: "在被指派的資料上產出標記，看不到標準答案" },
-      ]}
-    />
+      {arrow(ArrowLeft, sys, "擇一")}
+
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: DGAP.xs }}>
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 132,
+            height: 132,
+            borderRadius: 999,
+            background: c.slide,
+            border: `3px solid ${c.ink}`,
+            color: c.ink,
+          }}
+        >
+          <User size={64} strokeWidth={2} />
+        </span>
+        <span style={{ fontSize: DS.h4, fontWeight: 900, color: c.ink }}>同一個人</span>
+      </div>
+
+      {arrow(ArrowRight, task, "依任務")}
+
+      <div style={panel(task)}>
+        {head(task, "任務角色", "只在自己參與的任務・每個任務各自指定")}
+        <div style={{ display: "flex", flexDirection: "column", gap: DGAP.sm, flex: 1, justifyContent: "center" }}>
+          {TASK_SAMPLES.map((it) => (
+            <div key={it.task} style={{ display: "flex", alignItems: "center", gap: DGAP.sm }}>
+              <span
+                style={{
+                  flex: "none",
+                  width: 96,
+                  padding: "6px 0",
+                  textAlign: "center",
+                  borderRadius: "var(--radius-sm)",
+                  background: c.slide,
+                  border: `1px solid ${c.border}`,
+                  fontSize: DS.small,
+                  fontWeight: 800,
+                  color: c.body,
+                }}
+              >
+                {it.task}
+              </span>
+              <span style={{ flex: "none", width: 24, borderTop: `2px solid ${task.fg}` }} />
+              {chip(task, it.icon, it.role, it.note)}
+            </div>
+          ))}
+        </div>
+        {foot("決定：能不能進任務詳情、標記、審核與分析")}
+      </div>
+    </div>
   );
 }
 
@@ -174,13 +197,12 @@ const deck: Deck = {
       eyebrow: "PRODUCT · 定稿",
       title: "Label Suite：給學術 NLP 團隊的標記與品質平台",
       subtitle: "一個設定驅動的平台，走完試標、正式標記、審核與資料品質分析",
-      meta: ["由 docs/specs/00-prd.mdx 生成", "8 頁 · 16:9"],
+      meta: ["由 docs/specs/00-prd.mdx 生成", "7 頁 · 16:9"],
       agenda: [
         { n: "01", title: "問題與定位", sub: "三個痛點，一個論文目標" },
-        { n: "02", title: "六項目標", sub: "怎麼衡量做到了" },
-        { n: "03", title: "六個角色", sub: "系統角色與任務角色互不影響" },
-        { n: "04", title: "系統架構", sub: "C4 第一層與第二層" },
-        { n: "05", title: "任務生命週期", sub: "三個模組之間的六次交接" },
+        { n: "02", title: "六個角色", sub: "系統角色與任務角色互不影響" },
+        { n: "03", title: "系統架構", sub: "C4 第一層與第二層" },
+        { n: "04", title: "任務生命週期", sub: "三個模組之間的六次交接" },
       ],
     },
     {
@@ -193,18 +215,9 @@ const deck: Deck = {
     },
     {
       layout: "custom",
-      nav: "六項目標",
-      num: "02",
-      eyebrow: "PART 02 · 專案概述",
-      title: "六項目標，每項都有可驗收的衡量方式",
-      footnotes: [{ n: "1", text: "SUS 問卷在正式標記功能完成後才招募受試者，需預留填答與分析時間。" }],
-      render: GoalsPage,
-    },
-    {
-      layout: "custom",
       nav: "六個角色",
-      num: "03",
-      eyebrow: "PART 03 · 使用者角色",
+      num: "02",
+      eyebrow: "PART 02 · 使用者角色",
       title: "六個角色，系統角色與任務角色互不影響",
       callout: {
         icon: "lock",
