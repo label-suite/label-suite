@@ -886,8 +886,8 @@ import Spec0401AnnotationListFlow from '@notes/components/spec-04-01-annotation-
 | 全部做完就回退最後一筆 | 某任務的樣本全部已提交 | 按「快速繼續」 | 落在該任務最後一筆，不是空畫面 |
 | 進度摘要的兩段 | 使用者是某任務的標記員，該任務在正式標記階段 | 查看任務資訊卡的進度摘要 | 先是完成率、今日完成筆數與平均速度，然後是「共 N 筆資料」，兩段之間以點號分隔 |
 | 試標階段的筆數段二選一 | 同一個任務改看試標階段的第 2 回合<mark>，而它從未退回草稿</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | 查看進度摘要 | <mark>顯示「第 1 輪 · 試標回合 R2 · 本回合清單 N 筆」</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup>，**沒有**「共 N 筆資料」 |
-| 進度摘要分得出哪一輪 | <mark>某任務退回草稿後開了第 2 輪，現在看第 2 輪的 R1</mark> | <mark>查看進度摘要</mark> | <mark>顯示「第 2 輪 · 試標回合 R1 · 本回合清單 N 筆」，而不是只寫「試標回合 R1」</mark> |
-| 只有一輪也標輪次 | <mark>某任務在**試標階段**、從未退回草稿，仍在第 1 輪</mark> | <mark>查看進度摘要</mark> | <mark>照樣顯示「第 1 輪 · …」，不因為只有一輪而省略（[§任務資訊卡](#任務資訊卡)第 17 條）</mark> |
+| 進度摘要分得出哪一輪 | <mark>某任務退回草稿後開了第 2 輪，現在看第 2 輪的 R1</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | <mark>查看進度摘要</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | <mark>顯示「第 2 輪 · 試標回合 R1 · 本回合清單 N 筆」，而不是只寫「試標回合 R1」</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> |
+| 只有一輪也標輪次 | <mark>某任務在**試標階段**、從未退回草稿，仍在第 1 輪</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | <mark>查看進度摘要</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> | <mark>照樣顯示「第 1 輪 · …」，不因為只有一輪而省略（[§任務資訊卡](#任務資訊卡)第 17 條）</mark><sup>[#282](https://github.com/label-suite/label-suite/issues/282)</sup> |
 | 進度條等於完成率 | 某任務的標記員完成率是 40% | 查看進度條 | 長度是 40% |
 | 全數提交覆寫成 100% | 某任務在當前標記階段全數提交 | 查看進度條與任務狀態徽章 | 進度條 100%，徽章同時顯示「已完成」 |
 | 查不到工作統計就退回筆數段 | 某標記員在這個任務查不到工作統計 | 查看進度摘要與進度條 | 摘要只剩清單筆數那一段，進度條 0% |
@@ -1236,7 +1236,7 @@ import Spec0401AnnotationListFlow from '@notes/components/spec-04-01-annotation-
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §驗收標準 的 5 列 | 那五列的 Scenario 名稱欄包著 `<mark>`＋`<sup>[#282]` | 名稱欄的標示拿掉、文字保留，改標 Given／When／Then（原本沒有標示的格一併補上）。依 `writing-guide.md` §變更標示 2026-11-16 新增的例外：`check-flows.mjs` 的 `readPage()` 逐字讀第一格、不剝標籤，名稱一包標示流程圖元件就永遠對不上那一列 | **無新決議**，Scenario 的文字與條文一字未改 |
+| [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §驗收標準 的 5 列 | 那五列的 Scenario 名稱欄包著 `<mark>`＋`<sup>[#282]` | 名稱欄的標示拿掉、文字保留，改標 Given／When／Then。其中兩列（進度摘要分得出哪一輪、只有一輪也標輪次）的三格原本**有 `<mark>` 但沒有上標**，所以一併補上 `<sup>[#282]`。依 `writing-guide.md` §變更標示 2026-11-16 新增的例外：`check-flows.mjs` 的 `readPage()` 逐字讀第一格、不剝標籤，名稱一包標示流程圖元件就永遠對不上那一列 | **無新決議**，Scenario 的文字與條文一字未改 |
 | [#85](https://github.com/label-suite/label-suite/issues/85) | 2026-11-16 | §使用角色（表格第三欄與那條註）、§已確認決議 Q1 的理由 | 三處寫「PRD 同一列給專案負責人 `R`」「處置超出 `R`，矩陣的改動交給 #85」 | 改成 PRD 已於 2026-11-16 把那一列放寬成 `R/E`（`E` 只用在例外池） | **無新決議**，條文一字未改 |
 | [#188](https://github.com/label-suite/label-suite/issues/188) | 2026-11-16 | 頁首 | `變更 #282` 徽章是 `warning` 但沒有 `href` | 統一成 `variant="warning"` 加 `href`（維護者 2026-11-16 裁定，規則見 `writing-guide.md` §變更標示） | **無新決議**，條文一字未改 |
 | [#282](https://github.com/label-suite/label-suite/issues/282) | 2026-11-14 | §規格 › 任務資訊卡、§驗收標準 | 第 8 條把試標階段的筆數段字面釘成「試標回合 R〈回合數〉 · 本回合清單 〈筆數〉 筆」，**沒有輪次**；§驗收標準 那一條照字面驗 | **改一條字面、新增一條條文與兩條驗收**：第 8 條的字面加上「第〈輪次〉輪 · 」，新增第 17 條寫明輪次**一律顯示**、不因為只有一輪就省略（維護者 2026-11-14 裁定）；Scenario 跟著改並新增「兩輪並存時分得出哪一輪」與「只有一輪也標輪次」。**畫面已於 [PR #308](https://github.com/label-suite/label-suite/pull/308) 跟上**：進度摘要改用帶輪次的樣板，舊註解與成為死鍵的 `trialRoundTpl` 一併移除；回合號另外收在它自己那一輪裡（退回草稿後新一輪還沒發佈回合的那段視窗，否則會配出「第 2 輪 · R3」這種從未存在的組合，依第 9 條顯示第一回合） | 第 17 條（維護者 2026-11-14 裁定） |
