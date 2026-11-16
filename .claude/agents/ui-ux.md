@@ -23,13 +23,13 @@ model: opus
 4. `design/prototype/pages/` 的對應頁面——**實際打開讀過**，不要只看規格書的描述。來源常只給英文識別名，**中文文案以畫面為準**
 5. token 與設計系統：`design/prototype/assets/tokens.css` 與 `label-suite-design` skill，這是**唯一**的視覺來源
 6. 若 `api-contract.md` 已存在，讀它對齊資料來源；不存在時以「預期需要的資料」描述，並列為待對齊
-7. `docs/development/architecture.mdx` §前端 與 §待決清單
+7. `docs/development/architecture.mdx` §前端 與 §待決
 8. schema 範本：`openspec/schemas/label-suite-sdd/templates/ui-design.md`，以及 `pnpm exec openspec instructions ui-design --change <name>`
 
 ## 設計前提
 
 - **框架與版本已定**（ADR-004 加 2026-11-10 裁定）：**React 19** 加 Vite 加 TypeScript strict 的 SPA，路由 React Router v6，伺服器狀態 TanStack Query
-- **目錄分層與元件庫也已定**（`architecture.mdx` §待決清單 第 8 列，2026-11-10 裁定）：`pages/` 加 `features/`、元件庫 **shadcn/ui**（元件放 `components/ui/`）。元件**以語意描述為主**（「主要按鈕」「資料表」「分頁器」），需要時可指名 shadcn/ui 的元件，但不貼實作程式碼。**只有 Storybook 仍待決**（第 10 列），不要為它設計任何產出
+- **目錄分層與元件庫也已定**（`architecture.mdx` §前端，裁定見 §決策紀錄）：`pages/` 加 `features/`、元件庫 **shadcn/ui**（元件放 `components/ui/`）。元件**以語意描述為主**（「主要按鈕」「資料表」「分頁器」），需要時可指名 shadcn/ui 的元件，但不貼實作程式碼。**只有 Storybook 仍待決**（§待決 第 2 列），不要為它設計任何產出
 - 圖示統一 **Lucide**（ADR-030，唯一圖示來源）；**只用** Lucide，不得用 emoji 或自己畫的 SVG 當圖示；例外只有品牌與 logo 標記（彩色 logo、banner、Google SSO 的 G）
 - 樣式只用 `tokens.css` 的**語意** token，**不寫色碼、不自訂間距**；需要新的語意時列為待決問題，不自行發明
 - 資料一律來自後端契約：每個區塊要標出對應的 **operationId**（由 `generate_unique_id_function` 固定成「動詞加資源」）

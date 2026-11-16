@@ -77,7 +77,7 @@ description: 釐清 OpenSpec change 規劃產物（system-analysis、system-desi
 1. `openspec/config.yaml` 的 `context`：兩層規格的分工、需求依據順序、派工順序與兩個停點、語言規範
 2. **`AGENTS.md`**——本專案唯一的規則來源，**沒有** `.claude/rules/`。Hard Rules 全部適用，第 5（任務設定驅動）與第 6（測試集答案不外露）是下面第 4.9、4.10 個面向
 3. `context` 指到的需求文件中，本次 change 相關的章節：`docs/specs/00-prd.mdx`（PRD，**權限上限**）與 `docs/specs/NN-<module>/NN-<page>.mdx` 的規格書
-4. `docs/development/architecture.mdx` 的 §待決清單——**那上面還沒答的題目不要在這裡自己答**，但要確認規劃產物把它們留成待決而不是偷偷定掉
+4. `docs/development/architecture.mdx` 的 §待決——**那上面還沒答的題目不要在這裡自己答**，但要確認規劃產物把它們留成待決而不是偷偷定掉
 5. `openspec/specs/` 中被本次 change 修改的主規格
 
 對照重點：
@@ -117,9 +117,9 @@ description: 釐清 OpenSpec change 規劃產物（system-analysis、system-desi
 - [ ] 技術選型是否符合 `openspec/config.yaml` `context` 與 `docs/development/architecture.mdx` 列出的技術棧？不符合的地方要列出
 - [ ] 是否依賴尚未存在的功能？若有，是否標註為前置依賴？
 - [ ] 是否與既有架構衝突？**`backend/` 與 `frontend/` 目前都還不存在**，所以「與既有慣例衝突」在骨架 change 之前多半不適用，改為檢查「有沒有假設一個還不存在的結構」
-- [ ] **待決與已裁定都要對過**：`architecture.mdx` §待決清單 共**十列**，第 1 到第 8 列已由**維護者 2026-11-10 裁定**，只剩第 9 列（ADR-029／033／036 與 README 索引的修訂，由維護者在個人 repo 處理）與第 10 列（ADR-016 的 Storybook）仍待決。所以這一關要查兩個反方向的錯：
-      （a）**還沒定的被偷偷定掉**——這次的 change 碰到第 9、10 列時，規劃產物要寫成提案或待決，不是寫成結論；
-      （b）**已裁定的被當成還沒定**——第 1 到第 8 列（後端模組內分層、成功回應包 envelope、`/api/v1` 前綴、Lite 層無 Resend key 的降級、onboarding 的界線、只做 `ai_runs`、Bruno 降級成可選工具、前端 React 19 加 `pages/` 與 `features/` 加 shadcn/ui）若又被列成待決問題，就是把拍過的板重新搬上停點一，照樣要指出來。
+- [ ] **待決與已裁定都要對過**：`architecture.mdx` §待決 只列還沒定的題目（目前四列：個人 repo 的 ADR 修訂、ADR-016 的 Storybook、`notecraftapp` 相依警示、規格補 Resend 降級路徑）；已裁定的集中在同檔 §決策紀錄。所以這一關要查兩個反方向的錯：
+      （a）**還沒定的被偷偷定掉**——這次的 change 碰到 §待決 的任一列時，規劃產物要寫成提案或待決，不是寫成結論；
+      （b）**已裁定的被當成還沒定**——§決策紀錄 的各列（後端模組內分層、成功回應包 envelope、`/api/v1` 前綴、Lite 層無 Resend key 的降級、onboarding 的界線、只做 `ai_runs`、Bruno 降級成可選工具、前端 React 19 加 `pages/` 與 `features/` 加 shadcn/ui、Orval、token 對照層、cookie-only 身分與 CSRF）若又被列成待決問題，就是把拍過的板重新搬上停點一，照樣要指出來。
       原本列在表外的「前端型別與 client 生成工具」也**已裁定：Orval**，輸出 `frontend/src/api/generated/`（見 `architecture.mdx` §前端），不再是待決
 - [ ] task 數量與粒度是否合理？
 
@@ -218,7 +218,7 @@ description: 釐清 OpenSpec change 規劃產物（system-analysis、system-desi
 - 一次最多 4 個 Q，超過分批；`multiSelect: false`
 - P 項目不詢問，在步驟 7 一併修正
 
-**選項裡不要夾帶既定方向。** 依 `AGENTS.md` §Required Behaviors「Ask the maintainer about any decision that is theirs to make; do not proceed on an assumed default」與本 skill 的邊界「不擅自做技術決策」：維護者的技術選型題（`architecture.mdx` §待決清單 上的那些）要把現況、外部參考做法與差異的代價都寫出來，不要只給一個看起來唯一合理的選項。
+**選項裡不要夾帶既定方向。** 依 `AGENTS.md` §Required Behaviors「Ask the maintainer about any decision that is theirs to make; do not proceed on an assumed default」與本 skill 的邊界「不擅自做技術決策」：維護者的技術選型題（`architecture.mdx` §待決 上的那些）要把現況、外部參考做法與差異的代價都寫出來，不要只給一個看起來唯一合理的選項。
 
 **決議要記下日期。** 維護者在這裡拍板的事，日後是規格書「已確認決議」的合格依據之一（`docs/development/spec-migration.md` 通則第 4 條第四種），而那一條要求**維護者與日期同時寫出來**，否則查不回來。
 
@@ -243,7 +243,7 @@ description: 釐清 OpenSpec change 規劃產物（system-analysis、system-desi
 ## 邊界
 
 - 不新增 design 未提及的功能（那是規劃階段的工作）
-- **不擅自做技術決策**，待釐清項目留給維護者選；`architecture.mdx` §待決清單 上的題目尤其不自己答
+- **不擅自做技術決策**，待釐清項目留給維護者選；`architecture.mdx` §待決 上的題目尤其不自己答
 - 不跳過任何檢查面向，顯然通過也要標註
 - 未經同意不修改任何規劃產物（關卡模式下，維護者回答 Q 即視為同意依決議回修）
 - **不改 `docs/specs/` 的需求**：決議要改需求時走 `spec-writing`，而 `docs/specs/00-prd.mdx` 與 `design/prototype/` 任何情況都不動

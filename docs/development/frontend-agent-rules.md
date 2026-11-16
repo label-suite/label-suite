@@ -26,7 +26,7 @@ updatedAt: '2026-11-10'
 | :--- | :--- |
 | 版本與框架 | **React 19** 加 Vite 加 TypeScript strict（**版本**由維護者 2026-11-10 裁定，覆寫 ADR-004 的 React 18）；路由 React Router v6、伺服器狀態 TanStack Query（**ADR-004 沿用**，不在那次裁定的範圍裡） |
 | 目錄分層 | **`pages/` 加 `features/`**（維護者 2026-11-10 裁定，覆寫 ADR-011 的垂直功能切片） |
-| 元件庫 | **shadcn/ui**，元件以原始碼形式放進 `components/ui/`（覆寫 ADR-016 的 `shared/ui/`）。**Storybook 仍待決**（[architecture.mdx](architecture.mdx) §待決清單 第 10 列） |
+| 元件庫 | **shadcn/ui**，元件以原始碼形式放進 `components/ui/`（覆寫 ADR-016 的 `shared/ui/`）。**Storybook 仍待決**（[architecture.mdx](architecture.mdx) §待決 第 2 列） |
 | API client 與型別 | **Orval**，產物在 `src/api/generated/`；規則在 [api-agent-rules.md](api-agent-rules.md) |
 | design token 的映射 | **寫一層對照，`design/prototype/assets/tokens.css` 仍是唯一色值來源**（維護者 2026-11-10 裁定，見 F6） |
 | 深色模式 | **要做**：側欄一鍵切換、立即生效、跨頁保持（規格 07-01 §外觀切換）；「跟隨系統」**跟著作業系統的設定變**（規格 01-04 §偏好設定 第 4 條、規格 07-01 §已確認決議 Q14，**維護者 2026-11-09 裁定**，Q14 取代 Q10） |

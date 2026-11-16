@@ -24,11 +24,11 @@ updatedAt: '2026-11-10'
 
 | 前提 | 狀態 |
 | :--- | :--- |
-| 路徑前綴 | **`/api/v1`**（維護者 2026-11-10 裁定，[architecture.mdx](architecture.mdx) 待決清單 第 3 列） |
+| 路徑前綴 | **`/api/v1`**（維護者 2026-11-10 裁定，[architecture.mdx §API 契約](architecture.mdx#api-契約)） |
 | operationId | **由 FastAPI 的 `generate_unique_id_function` 固定成「動詞加資源」**，不手寫也不逐個覆寫（[#51](https://github.com/label-suite/label-suite/issues/51) 已落地在 `openspec/schemas/label-suite-sdd/`） |
-| 成功回應格式 | **包一層 envelope**；**204 無 body、檔案與串流是明文例外**（維護者 2026-11-10 裁定，待決清單 第 2 列） |
+| 成功回應格式 | **包一層 envelope**；**204 無 body、檔案與串流是明文例外**（維護者 2026-11-10 裁定，見 architecture.mdx §API 契約） |
 | 前端型別與 client 生成工具 | **Orval**，由後端匯出的 `openapi.json` 產生到 `frontend/src/api/generated/`（維護者 2026-11-10 裁定，見 [architecture.mdx](architecture.mdx) §前端） |
-| Bruno | **降級成可選的手動工具，pre-PR 硬關卡取消**；唯一的契約真相是 `api-contract.md` 加 `openapi.json`（待決清單 第 7 列） |
+| Bruno | **降級成可選的手動工具，pre-PR 硬關卡取消**；唯一的契約真相是 `api-contract.md` 加 `openapi.json`（見 architecture.mdx §API 契約） |
 | i18n | ADR-026 兩層；前端只負責 UI 字串，後端 `detail` 由後端依 `Accept-Language` 解析（沿用） |
 
 ---
@@ -45,7 +45,7 @@ updatedAt: '2026-11-10'
 | **禁止** | 端點不帶 `/api/v1` 前綴；路徑在 `/api/v1` 之後插一段模組名；operationId 與既有端點撞名卻不處理；手寫或逐個覆寫 operationId；讓 operationId 從 Python 函式名推導；自由心證地擴大 envelope 的例外；非 CRUD 動作用動詞式路徑而不在 api-contract 寫理由；建立成功回 `200`、刪除成功回 `200` 帶 body |
 | **正例** | `GET /api/v1/tasks` → `listTasks`；集合端點用複數名詞；**operationId 全專案唯一**；非 CRUD 動作寫成 subresource（`/tasks/{id}/assignments`）、狀態轉移資源（`/submissions/{id}/status-changes`）或命令資源（`/exports`）。成功 status：讀取與更新 `200`、**建立 `201` 並帶 `Location` header**、刪除 `204` 無 body。`200` 的回應包一層 envelope；`204`、檔案與串流在 api-contract 標成例外 |
 | **反例** | `POST /api/v1/tasks/{id}/doPublish`（動詞式又沒記理由）；`@router.get(..., operation_id="get_task_by_id_v2")`（逐個覆寫）；「這個端點只回一個布林，所以不包 envelope」 |
-| **例外** | `204` 無 body、檔案下載與串流不套 envelope。**例外要逐一寫進該 change 的 `api-contract.md` 並寫出理由**，不逐案自由心證（裁定 2 的延伸要求，見 [architecture.mdx](architecture.mdx) 待決清單 第 2 列） |
+| **例外** | `204` 無 body、檔案下載與串流不套 envelope。**例外要逐一寫進該 change 的 `api-contract.md` 並寫出理由**，不逐案自由心證（裁定 2 的延伸要求，見 [architecture.mdx §API 契約](architecture.mdx#api-契約)） |
 | **檢查方式** | **待建置**。前綴與複數名詞可用自寫腳本掃匯出的 `openapi.json`；operationId 的穩定性靠 A10 的 snapshot diff。兩者都要等 `backend/` 與 CI 存在 |
 | **來源** | 維護者 2026-11-10 裁定（envelope、`/api/v1`）；[#51](https://github.com/label-suite/label-suite/issues/51) 已落地的 operationId 策略（含 `openspec/config.yaml` 明寫的「**全專案唯一**」）。原始 repo `api.md` §Design Conventions（RESTful、複數名詞）與 §Status Codes（`200` 讀取與更新、`201` 建立並帶 `Location`、`204` 刪除無 body）**沿用**；原始 repo `specs/foundation/000-foundation/spec.md` 的 FR-128（非 CRUD 的三種 pattern）**沿用**、FR-120（operationId 必須穩定、改名視同破壞性變更）**沿用該要求但不採用它的機制** |
 
@@ -103,7 +103,7 @@ updatedAt: '2026-11-10'
 | **反例** | 在產物裡補一個後端還沒有的欄位讓前端先動工；`openapi.json` 與程式不一致時手動修 JSON；「Bruno 裡能跑就算對」 |
 | **例外** | 無。Bruno 保留成**可選的手動工具**，既不是契約也沒有 pre-PR 關卡（裁定 7） |
 | **檢查方式** | **待建置**。產物未被手改要靠 A5 的 CI 重產比對；`api-contract.md` 與 `openapi.json` 的一致性目前只有人工與獨立審查 |
-| **來源** | 維護者 2026-11-10 裁定（Bruno 降級，待決清單 第 7 列、落差 14）；scaffold `api-contract.md` §與規劃版 contract 的關係、`api-client.md` 鐵律一（禁止手改產物）**沿用**；本 repo 的 api-contract artifact 定義在 `openspec/schemas/label-suite-sdd/`（#51） |
+| **來源** | 維護者 2026-11-10 裁定（Bruno 降級，見 architecture.mdx §API 契約 與 §決策紀錄）；scaffold `api-contract.md` §與規劃版 contract 的關係、`api-client.md` 鐵律一（禁止手改產物）**沿用**；本 repo 的 api-contract artifact 定義在 `openspec/schemas/label-suite-sdd/`（#51） |
 
 ### A5 重產與 drift 檢查
 
@@ -185,7 +185,7 @@ updatedAt: '2026-11-10'
 | **反例** | 把 `listTasks` 改名成 `getTaskList` 當成單純重構（前端 hook 名稱跟著變）；把回應從 envelope 改成裸物件而不走版本——裁定 3 的理由明寫**版本前綴就是那個逃生門** |
 | **例外** | Bruno 可以留著當手動工具，但它不是關卡 |
 | **檢查方式** | **待建置**。snapshot diff 與 compatibility test 都要等 CI 與 `backend/` 存在；前兩個落點的 agent 檢查項已經在 `.claude/agents/design-reviewer.md` 與 `code-reviewer.md` 裡 |
-| **來源** | 維護者 2026-11-10 裁定（Bruno 降級、關卡取消，落差 14）；scaffold `api-contract.md` §與規劃版 contract 的關係（破壞性變更寫進 design）**沿用**；FR-118（每個 major version 的 artifact 與 deprecation 標示）**沿用**；FR-120（operationId 變動視同破壞性變更、由 artifact diff 偵測）**沿用** |
+| **來源** | 維護者 2026-11-10 裁定（Bruno 降級、關卡取消，見 architecture.mdx §決策紀錄）；scaffold `api-contract.md` §與規劃版 contract 的關係（破壞性變更寫進 design）**沿用**；FR-118（每個 major version 的 artifact 與 deprecation 標示）**沿用**；FR-120（operationId 變動視同破壞性變更、由 artifact diff 偵測）**沿用** |
 
 **「審核方式」有三個落點，不另立流程**（工作項 10 要求定義它）：規劃階段由 `design-reviewer` 對 `api-contract.md` 與 `design.md` 檢查影響範圍；實作階段由 `code-reviewer` 的「端點與 `api-contract.md` 一致」與「operationId 符合『動詞加資源』且全專案唯一」兩條檢查；CI 的 artifact snapshot diff 擋住沒被宣告的改名。三者看的是同一份 `openapi.json`。**原始 repo 那條 Bruno 的 pre-PR 關卡不在落點裡**——它已被裁定取消。
 

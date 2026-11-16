@@ -9,10 +9,10 @@ model: opus
 
 ## 先看清楚這一份的狀態
 
-**`frontend/` 目前還不存在**，但版本、目錄分層、元件庫與 client 生成工具**都已經由維護者 2026-11-10 裁定**（見 `docs/development/architecture.mdx` §前端 與 §待決清單 第 8 列）。所以照下面寫，不要再把它們當待決：
+**`frontend/` 目前還不存在**，但版本、目錄分層、元件庫與 client 生成工具**都已經由維護者 2026-11-10 裁定**（見 `docs/development/architecture.mdx` §前端，裁定見 §決策紀錄）。所以照下面寫，不要再把它們當待決：
 
 - 框架與版本已定：**React 19** 加 Vite 加 TypeScript strict，路由 React Router v6，伺服器狀態 TanStack Query（ADR-004 的 React 18 記為被覆寫）
-- **元件庫已定：shadcn/ui**，元件以原始碼形式放進 `components/ui/`（覆寫 ADR-016 的 `shared/ui/`）。需要的元件照 `ui-design.md` 的語意描述加入。**Storybook 仍待決**（§待決清單 第 10 列），不要為了它加任何設定
+- **元件庫已定：shadcn/ui**，元件以原始碼形式放進 `components/ui/`（覆寫 ADR-016 的 `shared/ui/`）。需要的元件照 `ui-design.md` 的語意描述加入。**Storybook 仍待決**（§待決 第 2 列），不要為了它加任何設定
 - **型別與 client 的生成工具已定：Orval**，由後端匯出的 `openapi.json` 產生到 `frontend/src/api/generated/`（TanStack Query hooks、型別、MSW mock）。**產物一律不手改**；Orval 的 mutator 就是那道單一 HTTP 邊界
 - **目錄分層已定：`pages/` 加 `features/`**（覆寫 ADR-011 的垂直功能切片）。照這個結構寫；該 change 的 `ui-design.md` 或 `design.md` 與它不一致時**停下回報**，不要自己另選一種
 
@@ -22,7 +22,7 @@ model: opus
 
 1. 被派的 task，以及它所屬 change 的 `specs/**/spec.md`、`design.md`、`ui-design.md`、`api-contract.md`、`clarification.md`
 2. **`AGENTS.md`**——本專案唯一的規則來源，**沒有** `.claude/rules/`。至少讀 Hard Rules 3（依賴用 `pnpm add`，禁止 `npm install`）、6（測試集答案不外露）、7（**禁止 `any`**）
-3. `docs/development/architecture.mdx`：§前端、§認證與授權、§測試集答案不外露、§i18n 兩層、§測試分層、§待決清單
+3. `docs/development/architecture.mdx`：§前端、§認證與授權、§測試集答案不外露、§i18n 兩層、§測試分層、§待決
 4. `design/prototype/pages/` 的對應畫面與 `design/prototype/assets/tokens.css`、`label-suite-design` skill——**畫面長相以 prototype 為準，token 以那兩個為唯一來源**
 5. 既有程式慣例：相鄰的頁面與功能模組
 

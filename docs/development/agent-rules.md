@@ -152,7 +152,7 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 
 ## 開工前置條件
 
-[architecture.mdx](architecture.mdx) §待決清單 的項目**不是建議，是前置條件**：沒有維護者的裁定，相關的程式工作不開工。
+[architecture.mdx](architecture.mdx) §待決 的項目**不是建議，是前置條件**：沒有維護者的裁定，相關的程式工作不開工。
 
 截至 2026-11-10 的狀態：
 
@@ -164,7 +164,7 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 | 前端版本與分層、元件庫 | ✅ **已裁定**（2026-11-10）：React 19、`pages/` ＋ `features/`、`components/ui/` |
 | Bruno | ✅ **已裁定**（2026-11-10）：降級成可選工具，拿掉 pre-PR 硬關卡 |
 | operationId | ✅ **已裁定**（早於 2026-11-10）：`generate_unique_id_function` 固定成「動詞加資源」，由 [#51](https://github.com/label-suite/label-suite/issues/51) 落地。它與 API 前綴同列，但 2026-11-10 只裁前綴那一半 |
-| 前端 API client 與型別工具 | ✅ **已裁定**（2026-11-10）：**Orval**，輸出 `frontend/src/api/generated/`。這一項**不在** `architecture.mdx` §待決清單 的那八列裡（它原本記在 `openspec-fullstack-sdd.md` §四 的逐項判斷表，`frontend-developer` agent 也是指那裡），裁定紀錄在 [#108 的這則留言](https://github.com/label-suite/label-suite/issues/108#issuecomment-6763329139) |
+| 前端 API client 與型別工具 | ✅ **已裁定**（2026-11-10）：**Orval**，輸出 `frontend/src/api/generated/`。現行做法見 [architecture.mdx §API 契約](architecture.mdx#api-契約)，裁定列在同檔 §決策紀錄；原始紀錄在 [#108 的這則留言](https://github.com/label-suite/label-suite/issues/108#issuecomment-6763329139) |
 | **Storybook** | ⚠️ **仍待決**。2026-11-10 問的是元件庫，不是 Storybook（`architecture.mdx` 自己註明了這一點） |
 
 **裁定的紀錄**在 [#105 的這則留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)（前六列）與 [#108 的這則留言](https://github.com/label-suite/label-suite/issues/108#issuecomment-6763329139)（API client 與型別工具那一列），都已落到 `architecture.mdx`。本文件不把建議寫成已核准：上表只有真的有裁定紀錄的才標 ✅。

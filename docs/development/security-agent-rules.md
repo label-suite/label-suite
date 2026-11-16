@@ -90,7 +90,7 @@ updatedAt: '2026-11-10'
 | **反例** | 錯誤訊息裡回「期望值是 X」；或 mock handler 直接複製一份含答案的真實回應 |
 | **例外** | 無。這是 `AGENTS.md` 硬性規則 6 |
 | **檢查方式** | **待建置**。`acceptance-verifier` 的檢查清單已有這一項（以標記員身分逐端點斷言），但它要等有端點才跑得起來 |
-| **來源** | `AGENTS.md` 硬性規則 6；[architecture.mdx](architecture.mdx) §測試集答案隔離 的四道；規格 03-02 與 04-01 已把它寫成卡控與 Scenario。**覆蓋面那一串是 #107 工作項 5 列的**，本條照收 |
+| **來源** | `AGENTS.md` 硬性規則 6；[architecture.mdx §測試集答案不外露](architecture.mdx#測試集答案不外露) 的四道；規格 03-02 與 04-01 已把它寫成卡控與 Scenario。**覆蓋面那一串是 #107 工作項 5 列的**，本條照收 |
 
 ### S6 受控答案表與 worker 的讀取邊界
 
