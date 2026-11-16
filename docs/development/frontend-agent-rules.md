@@ -226,7 +226,7 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | :--- | :--- |
 | **適用路徑** | `frontend/src/**`（日期的讀寫、比較與格式化） |
 | **禁止** | 在元件各自 `new Date()`／`Date.now()` 做邏輯；把只有日期的欄位當成時間點處理；把顯示用的時區寫死成某個固定時區；在元件裡自己拼日期格式字串；測試依賴真實時間 |
-| **正例** | 四種概念分開：**時間點**在傳輸與儲存一律 UTC 的 ISO 8601 字串（`YYYY-MM-DDTHH:mm:ss.sssZ`）；**只有日期**的欄位用 `YYYY-MM-DD` 字串傳輸，不轉成時間點；**顯示**依瀏覽者裝置的時區；**報表的日期區間**固定以台北時區計算。所有格式化與比較走 `src/lib/date.ts` 單一入口，入口裡可以注入時鐘讓測試固定「現在」 |
+| **正例** | 四種概念分開：**時間點**在傳輸與儲存一律 UTC 的 ISO 8601 字串（`2026-11-10T02:30:00.000Z`）；**只有日期**的欄位用 `YYYY-MM-DD` 字串傳輸，不轉成時間點；**顯示**依瀏覽者裝置的時區；**報表的日期區間**固定以台北時區計算。所有格式化與比較走 `src/lib/date.ts` 單一入口，入口裡可以注入時鐘讓測試固定「現在」 |
 | **例外** | 第三方套件要求原生 `Date` 時，在呼叫處轉換；測試用的假時鐘（`vi.setSystemTime`）屬框架機制。**本條不全面禁止原生 `Date`**：要求的是「邏輯走單一入口」，不是「某個 API 一律不准出現」 |
 
 顯示時區依瀏覽者裝置在規格已定（規格 06-01 Q2，它的 Scenario 寫明東京時區的裝置看到的是當地時間；規格 03-01 §任務列的欄位 比照規格 06-01 §資料欄位）；報表固定台北時區見規格 03-03 §工時紀錄 第 10 條（跨日的部分在查詢時以當地午夜切開）。
@@ -283,7 +283,7 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | F3 | React 的 Hooks 規則（框架層，不是本專案的決定）；scaffold `frontend.md` §狀態管理 的「不把 API 資料複製到 `useState`／context、衍生值直接從 query data 計算」**沿用**；原始 repo foundation spec FR-059（server state 的單一邊界）**沿用**。合法訂閱與瀏覽器同步不全面禁 `useEffect`，所以例外那一格是本條的必要部分 |
 | F4 | ADR-004（TanStack Query，沿用）；scaffold `frontend.md` §狀態管理 的「篩選分頁放 URL search params、不引入全域 store 除非 design 有理由」**沿用**。網址那一格是本 repo 規格已定：規格 03-01 §查詢條件保留在網址（關鍵字、三個篩選器、每頁筆數與頁次都寫進網址，無效值忽略並正規化）與規格 03-03 §網址與畫面狀態同步（分頁與篩選寫進網址，分享網址重現同一個畫面）。原始 repo `frontend.md` 的「Zustand 存 auth token／user／role」**不採用**（`httpOnly` cookie 的意義就是 JS 讀不到，見 [security-agent-rules.md](security-agent-rules.md)） |
 | F5 | [agent-rules.md](agent-rules.md) 的 R1（先搜尋再新增）與 **R4（不過度抽象）沿用**，本條只是前端的落點。R4 的判準是「兩個地方有同一段邏輯，而它**確實是同一個概念**」，而 `agent-rules.md` §來源對照 已把原始 repo `general.md` 的「同一段程式出現 2 次以上就抽出共用」標為**不採用**（「出現兩次不代表是同一個概念」）。scaffold `frontend.md` 的「**一個檔案一個主要元件；超過約 200 行就拆**」**不採用那個數字**，「一個檔案一個主要元件」沿用 |
-| F6 | 維護者選定：寫一層對照、`tokens.css` 仍是唯一色值來源；被否決的另一個選項是「shadcn 元件一行都不改」。`tokens.css` 與 `label-suite-design` skill 是視覺基準；scaffold `design-tokens.md` 的**結構沿用**（色值只寫在一處、元件只用語意 token、換主題不改元件、新增 token 要每個主題檔都補），但它的 `themes/neutral.css`／`trendlink.css` **不採用**。深色模式是本 repo 規格已定（規格 07-01 §外觀切換、規格 01-04 §偏好設定、規格 03-02 的深色 Scenario）；「跟隨系統」跟著作業系統見規格 01-04 Q7、規格 07-01 Q14（取代 Q10） |
+| F6 | 維護者選定：寫一層對照、`tokens.css` 仍是唯一色值來源，選定方案明文「shadcn 元件一行都不改」；改寫 shadcn 元件去讀別的變數名是被否決的另一個選項。`tokens.css` 與 `label-suite-design` skill 是視覺基準；scaffold `design-tokens.md` 的**結構沿用**（色值只寫在一處、元件只用語意 token、換主題不改元件、新增 token 要每個主題檔都補），但它的 `themes/neutral.css`／`trendlink.css` **不採用**。深色模式是本 repo 規格已定（規格 07-01 §外觀切換、規格 01-04 §偏好設定、規格 03-02 的深色 Scenario）；「跟隨系統」跟著作業系統見規格 01-04 Q7、規格 07-01 Q14（取代 Q10） |
 | F7 | ADR-030（Lucide 是唯一圖示來源）與 [architecture.mdx](architecture.mdx) §前端 的例外**沿用**；duty-mate `icon-usage.md` 的**理由與事故沿用**（集中管理才能保證 `stroke-width`、`viewBox` 與端點風格一致；它散寫 inline SVG 的結果是 `stroke-width` 混用 1.5／1.9／2／2.5、尺寸單位混用三種），它的 Handlebars partial 做法不適用。不得把「禁手繪 icon」擴張成「禁所有 SVG」，所以例外（2）（3）（4）是本條的必要部分 |
 | F8 | [architecture.mdx](architecture.mdx) §前端 的「每個資料區塊都要寫出 loading、error、empty、無權限四種狀態，以及被遮蔽欄位的呈現方式」**沿用**（它明寫 ADR 沒有定義這個最低要求，由 OpenSpec 的 `ui-design` 產出負責）；scaffold `frontend.md` §四種畫面狀態 的判斷與呈現**沿用**（含「`403` 不顯示重試」）。「遮蔽依契約呈現、不自行猜角色」來自 [security-agent-rules.md](security-agent-rules.md) S4 與 [api-agent-rules.md](api-agent-rules.md) A2；「送出期間 disabled」在 A9 |
 | F9 | scaffold `frontend.md` §無障礙 的**五條**（語意元素、標籤與錯誤關聯、icon button 名稱、鍵盤與 Dialog 焦點、狀態不只靠顏色）**沿用**；**「減少動態效果」是本 repo 規格已定**：規格 03-02 §深色模式與動畫 第 2 條與它的 Scenario「要求減少動畫時動畫降到最低」，規格 07-01 的邊界情況「使用者在作業系統關閉了動態效果 → 側欄收合、次選單展開與通知清單展開都不播動畫，操作本身照常可用」與對應 Scenario |
@@ -376,7 +376,7 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | 2026-11-10 | 前端用 React 19 加 Vite 加 TypeScript strict（[前提](#前提)）；React Router v6 與 TanStack Query 不在這次範圍，沿用 | ADR-004 的 React 18 | [#109](https://github.com/label-suite/label-suite/issues/109) |
 | 2026-11-10 | 目錄分層採 `pages/` 加 `features/`（[F1](#f1-分層與允許的-import)） | ADR-011 的垂直功能切片；原始 repo 的 `shared/` 准入規則 | [#109](https://github.com/label-suite/label-suite/issues/109) |
 | 2026-11-10 | 元件庫用 shadcn/ui，元件以原始碼放進 `components/ui/`（[前提](#前提)） | ADR-016 的 `shared/ui/` | [#109](https://github.com/label-suite/label-suite/issues/109) |
-| 2026-11-10 | design token 寫一層對照，`tokens.css` 仍是唯一色值來源（[F6](#f6-視覺基準與-design-token-的映射)） | 被否決的另一個選項：shadcn 元件一行都不改 | [#109](https://github.com/label-suite/label-suite/issues/109) |
+| 2026-11-10 | design token 寫一層對照，`tokens.css` 仍是唯一色值來源（[F6](#f6-視覺基準與-design-token-的映射)） | 被否決的另一個選項：改寫 shadcn 元件去讀別的變數名（選定方案明文 shadcn 元件一行都不改） | [#109](https://github.com/label-suite/label-suite/issues/109) |
 | 2026-11-09 | 深色模式的「跟隨系統」跟著作業系統的設定變（[前提](#前提)） | 規格 07-01 Q10 的「固定呈現淺色」；`glossary.mdx` 的過期敘述（已一併改正） | 規格 01-04 §已確認決議 Q7、規格 07-01 §已確認決議 Q14 |
 | 2026-11-04 | 日期的顯示時區依瀏覽者裝置（[F10](#f10-日期時區與可測的時鐘)）；依據於 2026-11-09 由維護者補裁定 | scaffold `date-handling.md` 的「顯示時轉 `Asia/Taipei`」 | 規格 06-01 Q2 |
 | 2026-11-10 | F2 與 F11 沿用 scaffold 與 duty-mate 的 `as`、default export 規則及其例外，並增補第三方型別缺口與 `.notecraft/components/*.tsx` 兩類；F10 不全面禁原生 `Date`，改為單一入口 | 初版把這三條標成不採用，建立在來源誤述上（它們本來就各有例外） | [#109](https://github.com/label-suite/label-suite/issues/109) |
