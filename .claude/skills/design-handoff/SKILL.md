@@ -81,13 +81,22 @@ git switch --detach <commit> && pnpm prototype
 
 ID 是 `design-system-setup` 重跑時比對「哪些東西受影響」的鍵，**一旦發出就不再改字面**。
 
+### 共用外殼算一個條目，不是 16 份重複
+
+大部分條目是一個 HTML 入口，但**不是全部**。`design/prototype/pages/shared/sidebar.js` 被 18 個畫面裡的 16 個載入（只有 `index.html` 與 `components-showcase.html` 沒有），它自己有一整組狀態——主題、語言、側欄收合、行動版版面、使用者區、登出、通知、快捷鍵、系統管理群組與它的次選單、工作頁籤與階段徽章；那些狀態**屬於同一組元件**，不是 16 組。
+
+所以共用外殼用 `shared/<名稱>` 自成一個條目，`file` 指向它的本體（例：`shared/sidebar.js`），`hosts` 記它被哪些畫面載入。維護者 2026-11-16 裁定走這條，而不是把同一組狀態複製進 16 個畫面的 `views`（以目前的 13 個狀態算就是 208 筆重複，而下游盤元件時還要自己收回 13 組）。
+
+判準是**「這組狀態由誰擁有」**，不是「它出現在幾個畫面上」：`shared/` 底下的檔定義它、而任何單一畫面都只是載入它，就自成一個條目。只在某一頁出現的東西仍然是那一頁的視圖。
+
 | 對象 | 形式 | 例 |
 | :--- | :--- | :--- |
 | 畫面（一個 HTML 入口） | `<模組>/<頁面>` | `task-management/task-detail` |
-| 視圖（同一個畫面的一種狀態） | `<模組>/<頁面>#<視圖>` | `task-management/task-detail#tab-overview` |
+| **共用外殼**（不是 HTML 入口，但自己有狀態） | `shared/<名稱>` | `shared/app-shell` |
+| 視圖（同一個畫面或外殼的一種狀態） | `<上面那個 ID>#<視圖>` | `task-management/task-detail#tab-overview`、`shared/app-shell#state-theme-dark` |
 
 - 模組與頁面照 `design/prototype/pages/` 的實際路徑，不自己改名
-- 視圖名用 kebab-case 英文，取**叫出它的那個條件**，不是它長什麼樣：`role-annotator`、`sim-403`、`param-status-draft`、`tab-overview`、`state-empty`、`modal-export`、`proto-expired`。前綴只用下表那七個
+- 視圖名用 kebab-case 英文，取**叫出它的那個條件**，不是它長什麼樣：`role-annotator`、`sim-403`、`param-status-draft`、`tab-overview`、`state-empty`、`modal-export`、`toast-saved`、`proto-expired`。前綴只用下表那七列給的八個
 - 頁面改名或視圖合併時，**不改舊 ID**：在新條目加 `renamedFrom`，舊 ID 留在 `retired` 清單並寫原因
 
 ### 視圖從哪裡來
@@ -115,18 +124,19 @@ ID 是 `design-system-setup` 重跑時比對「哪些東西受影響」的鍵，
 
 依 [Issue #248](https://github.com/label-suite/label-suite/issues/248) 的首輪執行順序，固定五批。`b0` 由本 skill 一次做完，其餘四批是 `design-system-setup` 的執行單位。
 
-| 批次 ID | 範圍 | 畫面數 |
+| 批次 ID | 範圍 | 條目數 |
 | :--- | :--- | ---: |
-| `b0-inventory` | 全站點名（本 skill 一次完成，並固定交付包版本） | 18 |
-| `b1-shared-account` | `pages/shared/`、`pages/account/`，加上 `index.html` 與 `components-showcase.html` | 6 ＋ 2 |
+| `b0-inventory` | 全站點名（本 skill 一次完成，並固定交付包版本） | 19 |
+| `b1-shared-account` | `pages/shared/`（含共用外殼條目）、`pages/account/`，加上 `index.html` 與 `components-showcase.html` | 1 ＋ 6 ＋ 2 |
 | `b2-admin-dashboard-task` | `pages/admin/`、`pages/dashboard/`、`pages/task-management/` | 2 ＋ 1 ＋ 3 |
 | `b3-annotation-review` | `pages/annotation/` | 2 |
 | `b4-dataset-sweep` | `pages/dataset/`，以及全站覆蓋複查 | 2 |
 
 `index.html` 與 `components-showcase.html` 在 `pages/` 之外，不屬於任何產品模組，**隨 `b1` 一起處理**：前者是站台入口，後者是 living styleguide，而它正是 `design-system-setup` 的元件樣本主來源，沒有批次歸屬等於元件正典沒有歸屬。
 
-`pages/shared/` **一個 HTML 都沒有**，裡面是別頁載入的 CSS 與 JS（側欄、modal、日期區間、空狀態、輸入框…）。它排在 `b1` 是因為那些檔決定了全站共用元件的樣子，要先定案；它本身不產生畫面。
-畫面數是寫這份時的現況（`pages/**/*.html` 共 16 個，加兩個根層入口＝18），不是上限；每次 `b0` 重跑都要重數。
+`pages/shared/` **一個 HTML 都沒有**，裡面是別頁載入的 CSS 與 JS（側欄、modal、日期區間、空狀態、輸入框…），所以它不產生「畫面」——但它產生一個**共用外殼條目**（`shared/app-shell`），見上面的穩定 ID。
+它排在 `b1` 是因為那些檔決定了全站共用元件的樣子，要先定案；而 `b1` 的其他八個條目（兩個根層入口與六個帳號頁）**都不算繪側欄**——帳號頁載入 `sidebar.js` 只是為了登入導向判斷。沒有外殼條目的話，`b1` 要定的共用元件裡最大的一組沒有落點。
+條目數是寫這份時的現況（`pages/**/*.html` 共 16 個，加兩個根層入口與一個共用外殼＝19），不是上限；每次 `b0` 重跑都要重數。
 
 ---
 
@@ -141,11 +151,12 @@ ID 是 `design-system-setup` 重跑時比對「哪些東西受影響」的鍵，
 
 1. 列出 `design/prototype/pages/**/*.html` 的每一個檔，一個檔一個畫面
 2. `index.html` 與 `components-showcase.html` 也要收：前者是入口，後者是 living styleguide，`design-system-setup` 會拿它當元件樣本的現成來源
-3. 每個畫面記下它實際載入的檔（`<script src>`、`<link href>`、`fetch` 的 partial）。**打開 HTML 看，不要用檔名猜**——`task-detail.html` 的 tab 內容在 `task-detail.panels/` 底下，檔名看不出來
+3. **再加共用外殼的條目**：`pages/shared/` 底下定義全站共用狀態的檔（目前是 `sidebar.js` 與 `sidebar.css`）自成一個 `shared/<名稱>` 條目，`hosts` 記它被哪些畫面載入
+4. 每個畫面記下它實際載入的檔（`<script src>`、`<link href>`、`fetch` 的 partial）。**打開 HTML 看，不要用檔名猜**——`task-detail.html` 的 tab 內容在 `task-detail.panels/` 底下，檔名看不出來
 
 ### 步驟 3：展開視圖
 
-對每個畫面，依上面「視圖從哪裡來」的五種條件逐一試：
+對每個畫面，依上面「視圖從哪裡來」的七種條件逐一試：
 
 1. 先讀 `docs/prototype/navigation.mdx` 該頁的轉場表。`Inline` 那幾列就是視圖的主要線索
 2. 把該頁 HTML 與它載入的 `.js` 裡的 `.get('<名稱>')` 全部掃出來，逐個試；`sim_` 開頭的一定要試

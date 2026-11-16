@@ -2,7 +2,7 @@
   "packageVersion": 1,
   "generatedAt": "2026-11-16",
   "source": {
-    "commit": "3c8d9aa71ab60e5dc072ba983cb057d1a7cf6695",
+    "commit": "75084e22bf7967da360c5319bff5bf25983969d8",
     "prototypeTree": "4cb347d5e720203418701a0a4a6b521cc117c64e",
     "specsTree": "a4b0e889a5a39f3a02a3dd5db7fc81a3c877ff44",
     "navigationBlob": "83d6ee8674b1a5bee73a963c437e0fbc776ba279",
@@ -11,7 +11,7 @@
       "commit": "faf8335"
     },
     "openWith": [
-      "git switch --detach 3c8d9aa71ab60e5dc072ba983cb057d1a7cf6695",
+      "git switch --detach 75084e22bf7967da360c5319bff5bf25983969d8",
       "pnpm prototype"
     ]
   },
@@ -861,24 +861,6 @@
       "spec": "docs/specs/02-dashboard/01-dashboard.mdx",
       "views": [
         {
-          "id": "dashboard/dashboard#modal-notification",
-          "how": "點通知鈴：停在本頁展開通知選單",
-          "spec": "docs/specs/07-shared/04-notification-events.mdx#規格",
-          "evidence": [
-            "design/prototype/pages/dashboard/dashboard.html",
-            "docs/prototype/navigation.mdx"
-          ]
-        },
-        {
-          "id": "dashboard/dashboard#modal-shortcut",
-          "how": "點快捷鍵說明：停在本頁顯示 modal",
-          "spec": "docs/specs/02-dashboard/01-dashboard.mdx#規格",
-          "evidence": [
-            "design/prototype/pages/dashboard/dashboard.html",
-            "docs/prototype/navigation.mdx"
-          ]
-        },
-        {
           "id": "dashboard/dashboard#param-scenario-annotator",
           "how": "加 `?scenario=annotator`（dashboard.html 必須有對應的 `id=\"view-annotator\"`，否則 applyScenario 不生效）",
           "spec": "docs/specs/02-dashboard/01-dashboard.mdx#規格",
@@ -1321,6 +1303,152 @@
       ]
     },
     {
+      "id": "shared/app-shell",
+      "batch": "b1-shared-account",
+      "file": "design/prototype/pages/shared/sidebar.js",
+      "loads": [
+        "design/prototype/pages/shared/sidebar.css",
+        "design/prototype/pages/shared/sidebar.js"
+      ],
+      "params": [
+        "ap_stage",
+        "role",
+        "sim_logged_in",
+        "sim_logged_out",
+        "task_id"
+      ],
+      "entry": "不是 HTML 入口。它被 hosts 列的畫面載入，在那些畫面上算繪成側欄、工作頁籤與全站的主題與語言開關",
+      "hosts": [
+        "account/forgot-password",
+        "account/login",
+        "account/profile",
+        "account/register",
+        "account/reset-password",
+        "account/verify-email",
+        "admin/role-settings",
+        "admin/user-management",
+        "annotation/annotation-list",
+        "annotation/annotation-workspace",
+        "dashboard/dashboard",
+        "dataset/dataset-analysis-detail",
+        "dataset/dataset-analysis-list",
+        "task-management/task-detail",
+        "task-management/task-list",
+        "task-management/task-new"
+      ],
+      "spec": "docs/specs/07-shared/01-sidebar.mdx",
+      "views": [
+        {
+          "id": "shared/app-shell#modal-notification",
+          "how": "點側欄的通知鈴：`sidebar.js:2259` 建 `#notificationDropdown`，`:2274` 的 `#notifMarkAllBtn` 是「全部標為已讀」，未讀數在 `#notificationBadge`。**整套都在 `sidebar.js` 裡**——`dashboard.html` 全檔 `notif` 出現 0 次",
+          "spec": "docs/specs/07-shared/04-notification-events.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.js"
+          ]
+        },
+        {
+          "id": "shared/app-shell#modal-shortcut",
+          "how": "點快捷鍵說明：`sidebar.js:2108` 的 `#shortcutHelpModal` 從 `hidden` 打開（開關在 `:2208`）。同樣整套都在 `sidebar.js` 裡",
+          "spec": "docs/specs/07-shared/01-sidebar.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.js"
+          ]
+        },
+        {
+          "id": "shared/app-shell#param-ap-stage",
+          "how": "在**任務詳情**的網址加 `?ap_stage=r1`（試標）或 `?ap_stage=official`（正式）——`sidebar.js:762` 只在 `pageKind === 'task-detail'` 時讀它；`:769`／`:772` 設 `stageBadge`，算繪成頁籤上的 `data-stage-badge`（`:1252`）",
+          "spec": "docs/specs/07-shared/02-workspace-tabs.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.js"
+          ]
+        },
+        {
+          "id": "shared/app-shell#role-super-admin",
+          "how": "把 localStorage 的 `labelsuite.systemRole`（`sidebar.js:175`）設成 `super_admin`：`#navAdminItem`（`:627`）才會出現——`:536` 在不是這個角色時隱藏它",
+          "spec": "docs/specs/07-shared/01-sidebar.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.js"
+          ]
+        },
+        {
+          "id": "shared/app-shell#state-active-task-type",
+          "how": "改 localStorage 的 `labelsuite.activeTaskType`（`sidebar.js:4`）：側欄標記作業那一項的標籤與 `#roleIndicator` 跟著換（規格 07-01 §已確認決議 Q3 定的那組依任務角色變化的名稱）",
+          "spec": "docs/specs/07-shared/01-sidebar.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.js"
+          ]
+        },
+        {
+          "id": "shared/app-shell#state-admin-submenu-open",
+          "how": "以系統管理員身分、**桌機且側欄未收合**時點「系統管理」：它展開成兩個連結的次選單（`sidebar.js:539`–`:541` 的註解寫明只有這個條件下才有）。`#role-super-admin` 只管它看不看得到，不管展開態",
+          "spec": "docs/specs/07-shared/01-sidebar.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.js"
+          ]
+        },
+        {
+          "id": "shared/app-shell#state-lang-en",
+          "how": "點 `#langToggle`（`sidebar.js:2046`）或行動版的 `#mobileLangToggle`（`:2050`）：`applyGlobalLanguage()`（`:427`）把全站切成英文，寫進 localStorage 的 `labelsuite.lang`（`:421` 寫、`:412` 讀）",
+          "spec": "docs/specs/07-shared/01-sidebar.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.js"
+          ]
+        },
+        {
+          "id": "shared/app-shell#state-logout",
+          "how": "點 `#logoutBtn`（`sidebar.js:2103`）或行動版的 `#mobileLogoutBtn`（`:2064`）：handler 一次清掉 7 個 storage 鍵再導回登入頁",
+          "spec": "docs/specs/07-shared/01-sidebar.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.js"
+          ]
+        },
+        {
+          "id": "shared/app-shell#state-mobile",
+          "how": "把視窗縮到 768px 以下：`sidebar.css` 的 `@media (max-width: 768px)` 換成另一套版面——側欄變成固定底部列、品牌區變成固定頂部列，而頂部列另有 `#mobileLangToggle`（`sidebar.js:2050`）、`#mobileThemeToggleBtn`（`:2054`）、`#mobileLogoutBtn`（`:2064`）這組只在行動版出現的控制項",
+          "spec": "docs/specs/07-shared/01-sidebar.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.css",
+            "design/prototype/pages/shared/sidebar.js"
+          ]
+        },
+        {
+          "id": "shared/app-shell#state-sidebar-collapsed",
+          "how": "**桌機**（`matchMedia` 的 `min-width: 769px`，`sidebar.js:513`）點側欄的收合鈕：`body` 加上 `sidebar-collapsed`（`:2524`），寫進 localStorage 的 `labelsuite.sidebarCollapsed`（`:505` 寫、`:497` 讀）。行動版是另一套版面，見 `#state-mobile`",
+          "spec": "docs/specs/07-shared/01-sidebar.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.css",
+            "design/prototype/pages/shared/sidebar.js"
+          ]
+        },
+        {
+          "id": "shared/app-shell#state-theme-dark",
+          "how": "點側欄的 `#sidebarThemeToggleBtn`（`sidebar.js:2080`）或行動版的 `#mobileThemeToggleBtn`（`:2054`）。載入 `assets/theme.js` 的 11 個畫面走它的 `setChoice()`（`sidebar.js:364`–`:367` 提前 return）；其餘 5 個帳號頁走 `:370` 寫 localStorage 的 `label-suite-theme`、`:374` 設 `data-theme`",
+          "spec": "docs/specs/07-shared/01-sidebar.mdx#規格",
+          "evidence": [
+            "design/prototype/assets/theme.js",
+            "design/prototype/pages/shared/sidebar.js"
+          ]
+        },
+        {
+          "id": "shared/app-shell#state-user-chip",
+          "how": "側欄下方的使用者區：`#userAvatar`（`sidebar.js:2097`）、`#userName`、`#roleIndicator`（`:2100`）。localStorage 的 `label-suite-profile-avatar`（`:55`）有值就顯示圖，沒有就顯示姓名縮寫",
+          "spec": "docs/specs/07-shared/01-sidebar.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.js"
+          ]
+        },
+        {
+          "id": "shared/app-shell#state-workspace-tabs",
+          "how": "開過兩個以上的工作頁之後，頁籤列（`sidebar.js:1524` 的 `workspace-tab-bar`）出現；總覽選單、重開、全部關閉與上限／改鍵／關閉三種通知都在那一條上。狀態分散在 6 個 sessionStorage 鍵，`sidebar.css` 裡 `workspace-tab` 這個字出現 45 次",
+          "spec": "docs/specs/07-shared/02-workspace-tabs.mdx#規格",
+          "evidence": [
+            "design/prototype/pages/shared/sidebar.css",
+            "design/prototype/pages/shared/sidebar.js"
+          ]
+        }
+      ]
+    },
+    {
       "id": "task-management/task-detail",
       "batch": "b2-admin-dashboard-task",
       "file": "design/prototype/pages/task-management/task-detail.html",
@@ -1672,65 +1800,6 @@
       "why": "右欄「任務說明」區只算繪任務名稱（`annotation-workspace.config.js` 的 `setText('guidelineSummaryText', taskName)`），規格要求的「任務目標」與「操作指引」兩段在整個 prototype 沒有落點，連資料欄位都沒有。",
       "spec": "docs/specs/04-annotation/02-annotation-workspace.mdx#右欄說明與檔案操作紀錄",
       "tracked": "https://github.com/label-suite/label-suite/issues/187"
-    }
-  ],
-  "uncollected": [
-    {
-      "axis": "shared/app-shell#param-ap-stage",
-      "what": "頁籤上的階段徽章。`?ap_stage=r<N>` 給 `dry_run`（`sidebar.js:769`）、`?ap_stage=official` 給 `official_run`（`:772`），算繪成 `data-stage-badge`（`:1252`）",
-      "hosts": 14,
-      "spec": "docs/specs/07-shared/02-workspace-tabs.mdx",
-      "evidence": [
-        "design/prototype/pages/shared/sidebar.js"
-      ]
-    },
-    {
-      "axis": "shared/app-shell#role-super-admin",
-      "what": "只有系統管理員看得到的系統管理群組。`sidebar.js:536` 在 systemRole 不是 `super_admin` 時隱藏 `#navAdminItem`（`:627`），角色記在 localStorage 的 `labelsuite.systemRole`（`:175`）",
-      "hosts": 14,
-      "spec": "docs/specs/07-shared/01-sidebar.mdx",
-      "evidence": [
-        "design/prototype/pages/shared/sidebar.js"
-      ]
-    },
-    {
-      "axis": "shared/app-shell#state-lang-en",
-      "what": "中／英語言。`#langToggle`（`sidebar.js:2046`）呼叫 `applyGlobalLanguage()`（`:427`），記在 localStorage 的 `labelsuite.lang`（`:412`）",
-      "hosts": 14,
-      "spec": "docs/specs/07-shared/01-sidebar.mdx",
-      "evidence": [
-        "design/prototype/pages/shared/sidebar.js"
-      ]
-    },
-    {
-      "axis": "shared/app-shell#state-sidebar-collapsed",
-      "what": "側欄收合。切 `body.sidebar-collapsed`（`sidebar.js:2524`），記在 localStorage 的 `labelsuite.sidebarCollapsed`（`:497`），桌機斷點是 `matchMedia` 的 `min-width: 769px`（`:513`）",
-      "hosts": 14,
-      "spec": "docs/specs/07-shared/01-sidebar.mdx",
-      "evidence": [
-        "design/prototype/pages/shared/sidebar.css",
-        "design/prototype/pages/shared/sidebar.js"
-      ]
-    },
-    {
-      "axis": "shared/app-shell#state-theme-dark",
-      "what": "深／淺色主題。`#sidebarThemeToggleBtn`（`sidebar.js:2080`）與行動版 `#mobileThemeToggleBtn`（`:2054`）切換，寫 `data-theme`（`:374`），記在 localStorage 的 `label-suite-theme`（`:348`）",
-      "hosts": 14,
-      "spec": "docs/specs/07-shared/01-sidebar.mdx",
-      "evidence": [
-        "design/prototype/assets/theme.js",
-        "design/prototype/pages/shared/sidebar.js"
-      ]
-    },
-    {
-      "axis": "shared/app-shell#state-workspace-tabs",
-      "what": "工作頁籤整條：頁籤列（`sidebar.js:1524` 的 `workspace-tab-bar`）、總覽選單、重開、全部關閉，以及上限／改鍵／關閉三種通知。狀態分散在 6 個 sessionStorage 鍵，`sidebar.css` 有 42 條 `workspace-tab*` 規則",
-      "hosts": 14,
-      "spec": "docs/specs/07-shared/02-workspace-tabs.mdx",
-      "evidence": [
-        "design/prototype/pages/shared/sidebar.css",
-        "design/prototype/pages/shared/sidebar.js"
-      ]
     }
   ],
   "retired": []
