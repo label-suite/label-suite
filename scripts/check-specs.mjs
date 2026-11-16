@@ -10,7 +10,7 @@
 // IDs a legacy spec defines, one per line, to seed docs/specs/legacy/*.ids.
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, posix, relative, sep } from 'node:path';
+import { dirname, join, posix, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const PRD_PATH = 'specs/00-prd.mdx';
@@ -635,7 +635,155 @@ function checkDecisionBases(file, text, report) {
   }
 }
 
-export function checkDocs(docsDir) {
+// A document in docs/ cites another document two ways: by section name
+// ("`AGENTS.md` §Hard Rules") and by quoting a name or a sentence out of it
+// ("`AGENTS.md` 的「No hardcoded task logic」"). Neither was checked, and all
+// three drifts found on 2026-11-16 were of exactly this shape: 06-01 cited
+// 「ADR-024『零前置條件啟動』」 (that ADR is about the two database tiers) and
+// 05-02 cited spec-migration's 「大頁分階段」 (a section that never existed).
+// Both read as evidence and neither was.
+
+// Where a cited name is resolved. openspec/ is deliberately absent: its
+// template file names (api-contract.md, design.md, tasks.md) collide with the
+// reference projects' rule files that the 附錄：來源對照 tables cite, so every
+// such row would resolve to the wrong file — and `openspec update` rewrites
+// those templates anyway.
+const CITED_ROOTS = ['docs', 'scripts', 'design/prototype', '.github', '.claude/skills', '.agents/skills'];
+const CITED_EXT = /\.(mdx|md|mjs|cjs|js|ts|tsx|json|css|html|svg|sh|ya?ml)$/;
+
+// The document: a file name in inline code, or a link to a page. stripIgnored
+// blanks inline code, so this one check reads the raw page.
+const CITED_DOC = String.raw`(?:\`([^\`\n]*\.[A-Za-z][A-Za-z0-9]*)\`|\]\(([^)\s#]+\.(?:mdx|md))(?:#[^)\s]*)?\))`;
+// "§節名". The run stops at punctuation and crosses a space only when an ASCII
+// word follows, so "§Hard Rules" survives whole while "§審核設定那條規則" does
+// not swallow the Chinese prose that is not part of the heading.
+const CITED_SECTION = String.raw`(?:[ \t]*§[ \t]*((?:[^\s\`「」『』，。、；：（）()|]|[ \t](?=[A-Za-z])){1,40}))?`;
+// The quoted name, with or without the 的 that usually introduces it.
+const CITED_QUOTE = String.raw`(?:(?:[ \t]*的)?[ \t]*(?:「([^」\n]{1,80})」|『([^』\n]{1,80})』))?`;
+const CITED_RE = new RegExp(CITED_DOC + CITED_SECTION + CITED_QUOTE, 'g');
+
+const CHANGELOG_CHAPTER = '變更紀錄';
+// Bold, inline code, the full-width bar and all whitespace are formatting, not
+// wording; an ellipsis marks text the citation left out, so each side of it is
+// matched on its own.
+const citeNorm = (s) => s.replace(/\*\*/g, '').replace(/`/g, '').replace(/｜/g, '|').replace(/\s+/g, '');
+const citeParts = (s) => s.split(/…+|\.{3,}/).map(citeNorm).filter((part) => part.length > 1);
+
+// Fenced code and MDX comments, blanked so line numbers stay put. Inline code
+// is kept: the file name being cited is written in it.
+function withoutBlocks(text) {
+  const blank = (s) => s.replace(/[^\n]/g, '');
+  return text
+    .replace(/^(```|~~~)[^\n]*\n[\s\S]*?^\1[ \t]*$/gm, blank)
+    .replace(/\{\/\*[\s\S]*?\*\/\}/g, blank);
+}
+
+export function citedFiles(root) {
+  const paths = [];
+  const walk = (rel) => {
+    const abs = join(root, ...rel.split('/'));
+    if (!existsSync(abs)) return;
+    for (const e of readdirSync(abs, { withFileTypes: true })) {
+      if (e.name === 'node_modules') continue;
+      const next = `${rel}/${e.name}`;
+      if (e.isDirectory()) walk(next);
+      else if (CITED_EXT.test(e.name)) paths.push(next);
+    }
+  };
+  for (const r of CITED_ROOTS) walk(r);
+  // Root-level rule documents: AGENTS.md, CLAUDE.md, README.md.
+  for (const e of readdirSync(root, { withFileTypes: true })) {
+    if (e.isFile() && CITED_EXT.test(e.name)) paths.push(e.name);
+  }
+  const cache = new Map();
+  return {
+    resolve: (doc) => paths.filter((p) => p === doc || p.endsWith(`/${doc}`)),
+    // Blanked the same way the citing page is: a heading or a sentence that
+    // only exists inside a fenced example is not something to cite.
+    read: (p) => {
+      if (!cache.has(p)) cache.set(p, withoutBlocks(readFileSync(join(root, ...p.split('/')), 'utf8')));
+      return cache.get(p);
+    },
+  };
+}
+
+// Every heading with its depth and position, in document order, so a cited
+// section can be turned into the slice of the page that belongs to it.
+function citedHeadings(text) {
+  return [1, 2, 3, 4, 5, 6]
+    .flatMap((d) => headings(text, d).map((h) => ({ ...h, depth: d, name: citeNorm(h.title) })))
+    .sort((a, b) => a.index - b.index);
+}
+
+// Either direction counts: a citation may name the heading only as far as it
+// is unique ("§本文件作者自行決定的事" for a heading that goes on
+// "（維護者可推翻）"), and prose is often glued straight onto the name
+// ("§審核設定那條").
+const headingMatches = (h, wanted) => h.name.includes(wanted) || wanted.startsWith(h.name);
+
+// The text under a heading, down to the next heading of the same or a higher
+// level. A quotation that names a section has to be in that section, which is
+// the whole point of naming it: 06-01 cited an ADR section whose page did
+// carry the words somewhere else.
+function sectionSlice(text, wanted) {
+  const hs = citedHeadings(text);
+  const i = hs.findIndex((h) => headingMatches(h, wanted));
+  if (i < 0) return null;
+  const end = hs.slice(i + 1).find((h) => h.depth <= hs[i].depth);
+  return text.slice(hs[i].index, end ? end.index : text.length);
+}
+
+function checkCitedNames(files, docsRel, repoRoot, repo, report) {
+  for (const f of files) {
+    const raw = withoutBlocks(f.raw);
+    const changelog = chapterRange(raw, CHANGELOG_CHAPTER);
+    const here = docsRel === '' ? f.path : `${docsRel}/${f.path}`;
+    for (const m of raw.matchAll(CITED_RE)) {
+      const [, inCode, inLink, section, outer, inner] = m;
+      const quote = outer ?? inner;
+      if (section === undefined && quote === undefined) continue;
+      // The changelog is where a page records the wording it used to carry, so
+      // a citation quoted there is history and not a claim about today.
+      if (changelog && m.index >= changelog[0] && m.index < changelog[1]) continue;
+      const doc = inCode ?? inLink;
+      const targets = inLink
+        ? [posix.normalize(posix.join(posix.dirname(here), inLink))].filter((p) =>
+            existsSync(join(repoRoot, ...p.split('/'))),
+          )
+        : repo.resolve(doc);
+      // A rule file of one of the reference projects: nothing here to read it
+      // against, so nothing to assert.
+      if (targets.length === 0) continue;
+      const line = lineOf(raw, m.index);
+      const where = targets.join('", "');
+      const wanted = section === undefined ? null : citeNorm(section);
+      // What the quotation is held against: the named section where there is
+      // one, the whole page otherwise. A section that matches nothing is
+      // reported on its own and leaves the quotation on the whole page, so one
+      // mistake is not reported twice.
+      let scopes = targets.map((p) => repo.read(p));
+      if (wanted !== null) {
+        const found = targets.map((p) => sectionSlice(repo.read(p), wanted)).filter(Boolean);
+        if (found.length === 0) {
+          report.error(f.rel, line, `cited section "${section}" has no matching heading in "${where}"`);
+        } else {
+          scopes = found;
+        }
+      }
+      if (quote !== undefined) {
+        const inScope = scopes.map(citeNorm);
+        for (const part of citeParts(quote)) {
+          if (!inScope.some((text) => text.includes(part))) {
+            const place = wanted === null ? `"${where}"` : `"${where}" §${section}`;
+            report.error(f.rel, line, `quoted "${part}" does not appear in ${place}`);
+          }
+        }
+      }
+    }
+  }
+}
+
+export function checkDocs(docsDir, repoRoot = dirname(resolve(docsDir))) {
   const errors = [];
   const report = { error: (file, line, msg) => errors.push(`${file}:${line}: ${msg}`) };
 
@@ -672,6 +820,7 @@ export function checkDocs(docsDir) {
     }
   }
   checkAnchorLinks(files, report);
+  checkCitedNames(files, relative(repoRoot, resolve(docsDir)).split(sep).join('/'), repoRoot, citedFiles(repoRoot), report);
   checkStaleUnwritten(files, specPathByNumber, report);
   checkQuestions(files, report);
   checkTerms(files, relative(process.cwd(), join(docsDir, GLOSSARY_PATH)), report);
