@@ -92,15 +92,19 @@ ID 是 `design-system-setup` 重跑時比對「哪些東西受影響」的鍵，
 
 ### 視圖從哪裡來
 
-一個畫面要展開成哪些視圖，只看**真的叫得出來**的五種條件：
+這個 prototype 的狀態幾乎全部由 **URL 參數**驅動，所以展開視圖的主力是把參數掃出來，不是靠點。六種條件：
 
 | 條件 | 怎麼叫出來 | ID 前綴 |
 | :--- | :--- | :--- |
-| 角色 | 側欄或資料檔切換身分（例：`sidebar.js`、`*.data.js` 的角色欄位） | `role-` |
-| URL 參數 | `?token=`、`?task=` 之類 | `param-` |
-| 分頁 | 頁內 tab 切換，含動態載入的 `*.panels/` | `tab-` |
-| 設定或資料 | 空清單、極值、不同 `runType`、不同狀態值 | `state-` |
+| 角色 | `?role=`。`shared/sidebar.js`、`task-management/task-detail.html`、`annotation/annotation-list.html`、`annotation/annotation-workspace.html`、`admin/user-management.html` 都讀它；任務角色另有 `?task_role=` | `role-` |
+| **模擬旗標** | `?sim_<情況>=1`，prototype 自己的約定，專門用來叫出**正常走不到或會被自動導走**的狀態：`sim_403`（`task-detail.html`）、`sim_delete_error`（`task-list.html`）、`sim_hold`（`verify-email.html`，擋住成功後的導向好讓面板留在畫面上）、`sim_logged_in`／`sim_logged_out`（`sidebar.js`） | `sim-` |
+| 其他 URL 參數 | 篩選與定位：`task_id`、`status`、`run_type`、`view`、`scenario`、`q`／`keyword`、`limit`／`offset`、`output_type`、`iaa_status`、`ap_stage`、`run_stage`、`q_state`／`s_state`、`invalid_task`、`unauthorized`、`notice` | `param-` |
+| 分頁 | `?tab=`，或頁內切換；含動態載入的 `*.panels/` | `tab-` |
+| 設定或資料 | 改種子資料（`*.data.js`）才看得到的：空清單、極值、不同狀態值 | `state-` |
 | 覆蓋層 | modal、toast、下拉、側滑 | `modal-`／`toast-` |
+
+**參數要掃出來，不要用猜的**：把每個 HTML 與它載入的 `.js` 裡的 `.get('<名稱>')` 全部列出來，那就是這一頁認得的參數全集。上表的名單是寫這份時的現況，不是上限。
+`sim_` 那一族要特別掃一遍——它們存在的理由就是那些狀態點不到，漏掉它們等於把一批真的存在的視圖寫成「無法重現」。
 
 叫不出來的不列為視圖。規格寫了而畫面沒有的，進 `coverage.md` 的「無法重現」。
 
@@ -110,13 +114,16 @@ ID 是 `design-system-setup` 重跑時比對「哪些東西受影響」的鍵，
 
 依 [Issue #248](https://github.com/label-suite/label-suite/issues/248) 的首輪執行順序，固定五批。`b0` 由本 skill 一次做完，其餘四批是 `design-system-setup` 的執行單位。
 
-| 批次 ID | 範圍 |
-| :--- | :--- |
-| `b0-inventory` | 全站點名（本 skill 一次完成，並固定交付包版本） |
-| `b1-shared-account` | `pages/shared/`、`pages/account/` |
-| `b2-admin-dashboard-task` | `pages/admin/`、`pages/dashboard/`、`pages/task-management/` |
-| `b3-annotation-review` | `pages/annotation/` |
-| `b4-dataset-sweep` | `pages/dataset/`，以及全站覆蓋複查 |
+| 批次 ID | 範圍 | 畫面數 |
+| :--- | :--- | ---: |
+| `b0-inventory` | 全站點名（本 skill 一次完成，並固定交付包版本） | 18 |
+| `b1-shared-account` | `pages/shared/`、`pages/account/`，加上 `index.html` 與 `components-showcase.html` | 6 ＋ 2 |
+| `b2-admin-dashboard-task` | `pages/admin/`、`pages/dashboard/`、`pages/task-management/` | 2 ＋ 1 ＋ 3 |
+| `b3-annotation-review` | `pages/annotation/` | 2 |
+| `b4-dataset-sweep` | `pages/dataset/`，以及全站覆蓋複查 | 2 |
+
+`pages/shared/` **一個 HTML 都沒有**，裡面是別頁載入的 CSS 與 JS（側欄、modal、日期區間、空狀態、輸入框…）。它排在 `b1` 是因為那些檔決定了全站共用元件的樣子，要先定案；它本身不產生畫面。
+畫面數是寫這份時的現況（`pages/**/*.html` 共 16 個，加兩個根層入口＝18），不是上限；每次 `b0` 重跑都要重數。
 
 ---
 
@@ -138,7 +145,7 @@ ID 是 `design-system-setup` 重跑時比對「哪些東西受影響」的鍵，
 對每個畫面，依上面「視圖從哪裡來」的五種條件逐一試：
 
 1. 先讀 `docs/prototype/navigation.mdx` 該頁的轉場表。`Inline` 那幾列就是視圖的主要線索
-2. 再讀 HTML 與它的 `.js`：切換身分的開關、讀哪個資料檔、哪些分支會換畫面
+2. 把該頁 HTML 與它載入的 `.js` 裡的 `.get('<名稱>')` 全部掃出來，逐個試；`sim_` 開頭的一定要試
 3. 每個視圖寫一條**重現步驟**：從哪一頁開始、改哪個東西、點哪裡、看到什麼為止
 4. 試不出來的寫進「無法重現」，並寫清楚**卡在哪一步**
 
