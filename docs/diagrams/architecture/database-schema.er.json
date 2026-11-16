@@ -805,7 +805,7 @@
      "note": "建立時間"
     }
    ],
-   "description": "**這張表是 `AGENTS.md` 硬性規則 6 在資料層的落點。** 本專案規格從三個保護層級獨立得到「公開與隱藏分表」的結論，與原始規劃一致，**可以沿用**。\n\n把答案放進另一張表**不會自動**讓標記員看不到。真正的隔離要靠：查詢層**永遠不 JOIN 這張表**到標記員的任何回應、API 的回應模型**不含這些欄位**、以及 [04-02](/notes/specs/04-annotation/02-annotation-workspace#預填兩道方向相反的守門) 的兩道預填守門。\n\n**本字典只定結構，擋不住外洩。** 卡控的實作歸 [security-agent-rules.md](/notes/development/security-agent-rules) S5 與 [testing-agent-rules.md](/notes/development/testing-agent-rules) T10 的關鍵路徑覆蓋。\n\n**規格來源**：[05-03](/notes/specs/05-dataset/03-ingestion-lineage#資料欄位)"
+   "description": "**這張表是 `AGENTS.md` 硬性規則 6 在資料層的落點。** 本專案規格從三個保護層級獨立得到「公開與隱藏分表」的結論，與原始規劃一致，**可以沿用**。\n\n把答案放進另一張表**不會自動**讓標記員看不到。真正的隔離要靠：查詢層**永遠不 JOIN 這張表**到標記員的任何回應、API 的回應模型**不含這些欄位**、以及 [04-02](/notes/specs/04-annotation/02-annotation-workspace#預填兩道方向相反的守門) 的兩道預填守門。\n\n**本字典只定結構，擋不住外洩。** 卡控的實作歸 [security-agent-rules.mdx](/notes/development/security-agent-rules) S5 與 [testing-agent-rules.mdx](/notes/development/testing-agent-rules) T10 的關鍵路徑覆蓋。\n\n**規格來源**：[05-03](/notes/specs/05-dataset/03-ingestion-lineage#資料欄位)"
   },
   {
    "name": "task",

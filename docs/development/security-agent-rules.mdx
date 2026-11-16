@@ -10,7 +10,7 @@ updatedAt: '2026-11-16'
 # 授權與答案隔離規範
 
 本文說明授權與答案隔離的十條開發規範，由 `AGENTS.md` 的 Agent Rules Index 指過來；`AGENTS.md` 是規則本體，兩邊說法不同時以 `AGENTS.md` 為準，並回報給維護者。
-跨領域的規範在 [agent-rules.md](agent-rules.md)，後端的在 [backend-agent-rules.md](backend-agent-rules.md)，技術選型在 [architecture.mdx](architecture.mdx)，這裡不重複。
+跨領域的規範在 [agent-rules.mdx](agent-rules.mdx)，後端的在 [backend-agent-rules.mdx](backend-agent-rules.mdx)，技術選型在 [architecture.mdx](architecture.mdx)，這裡不重複。
 
 **這份管的是產品不變量，不是 UI 約定。** 每條的「禁止」被違反，影響的是誰能看到什麼資料，不是體驗好不好。
 
@@ -50,7 +50,7 @@ updatedAt: '2026-11-16'
 :::note{title="S2 的反例與檢查方式" collapsible}
 - **反例**：把 token 放進 Zustand 或任何前端 store——`httpOnly` 的意義就是 JS 讀不到它，會這樣寫表示架構被誤解了；每個寫入端點各自檢查 CSRF；**或把 CSRF 做成只比對 cookie 與 header 是否相等**——那種擋不住子網域覆寫 cookie
 - **檢查方式**：**待建置**。負向測試要涵蓋「缺 CSRF header」「header 與 cookie 不符」「HMAC 無效」三種；CORS 的 `allow_origins=["*"]` 已列在 Semgrep 禁令
-- **統一責任位置**：`credentials` 在 [api-agent-rules.md](api-agent-rules.md) 的單一前端 HTTP client，cookie flags 在後端單一發 cookie 的 helper；兩者各要一條測試（斷言沒有第二處設 cookie、斷言元件不自己帶 credentials）
+- **統一責任位置**：`credentials` 在 [api-agent-rules.mdx](api-agent-rules.mdx) 的單一前端 HTTP client，cookie flags 在後端單一發 cookie 的 helper；兩者各要一條測試（斷言沒有第二處設 cookie、斷言元件不自己帶 credentials）
 :::
 
 ### S3 授權的四段順序
@@ -164,7 +164,7 @@ updatedAt: '2026-11-16'
 | :--- | :--- |
 | **適用路徑** | `backend/app/**` 寫稽核的地方；所有 log |
 | **禁止** | 更新或刪除 `audit_events` 的列；把 PII 或 secret 寫進 log；對帶答案的歷史做匿名化或單獨刪除；**為了「清理輸入」而改寫研究原文** |
-| **正例** | **刪除與保留的規則本體在 [backend-agent-rules.md](backend-agent-rules.md) 的 B8**（`audit_events` append-only、過了最短保留期只能墓碑化、帶答案的歷史不匿名化不單獨刪除），本條不重寫它、只補安全面：log 裡的 PII 與 secret **脫敏**；XSS 由**安全渲染**處理（輸出轉義），**不是改輸入** |
+| **正例** | **刪除與保留的規則本體在 [backend-agent-rules.mdx](backend-agent-rules.mdx) 的 B8**（`audit_events` append-only、過了最短保留期只能墓碑化、帶答案的歷史不匿名化不單獨刪除），本條不重寫它、只補安全面：log 裡的 PII 與 secret **脫敏**；XSS 由**安全渲染**處理（輸出轉義），**不是改輸入** |
 | **例外** | 無 |
 
 :::note{title="S9 的反例與檢查方式" collapsible}
@@ -188,7 +188,7 @@ updatedAt: '2026-11-16'
 
 :::note{title="S10 的反例與檢查方式" collapsible}
 - **反例**：只測「管理員可以、匿名不行」兩種，中間那些（停用、失效、非成員、別的任務）全沒測——而那幾種正是實際會出事的
-- **檢查方式**：**待建置**。測試分層與證據要求見 [testing-agent-rules.md](testing-agent-rules.md)，本條只定矩陣要蓋哪幾格
+- **檢查方式**：**待建置**。測試分層與證據要求見 [testing-agent-rules.mdx](testing-agent-rules.mdx)，本條只定矩陣要蓋哪幾格
 :::
 
 ## 附錄：刻意不採用的來源條文
@@ -206,7 +206,7 @@ updatedAt: '2026-11-16'
 
 比對的版本：原始 repo `faf83356`；scaffold 為本機副本，無固定版本。
 
-**這份對照的範圍只含安全相關的條文。** 來源檔裡的非安全條文（`frontend.md` 的 ADR-011 切片與 `shared/` 准入規則、§Localization、§Icons、§TypeScript Code Style；`api.md` 的分頁與狀態碼慣例）刻意不在這裡對照，分別見 [frontend-agent-rules.md](frontend-agent-rules.md) 與 [api-agent-rules.md](api-agent-rules.md)。所以某一節沒出現在下表，是被排除、不是被漏掉。
+**這份對照的範圍只含安全相關的條文。** 來源檔裡的非安全條文（`frontend.md` 的 ADR-011 切片與 `shared/` 准入規則、§Localization、§Icons、§TypeScript Code Style；`api.md` 的分頁與狀態碼慣例）刻意不在這裡對照，分別見 [frontend-agent-rules.mdx](frontend-agent-rules.mdx) 與 [api-agent-rules.mdx](api-agent-rules.mdx)。所以某一節沒出現在下表，是被排除、不是被漏掉。
 
 ### 各條規範的來源
 
@@ -231,7 +231,7 @@ updatedAt: '2026-11-16'
 | `api.md` 的「權限檢查放 route handler 或專屬 `permissions.py`，不放 CRUD helper」 | **沿用原則** | 與 S3／S4 同向（授權在後端、不在資料層）；具體檔案位置依模組內分層 |
 | `api.md` 的「任務範圍的操作要先驗 `task_membership`」 | **沿用** | 成為 S3 第 (2) 段 |
 | `api.md` 的「`403` vs `404`：對無權限者隱藏存在時偏好 `404`」 | **沿用** | 與 [architecture.mdx](architecture.mdx)「被隱藏的任務要在不洩漏它存在的前提下回應」同向 |
-| `api.md` 的「Response schemas must be explicit，不回裸 ORM model」 | **沿用（與 api-agent-rules.md 分工）** | 同一條服務兩個目的：**本文取它的安全面**（allowlist 防欄位外洩）成為 S4；**合約面**（`response_model=` 每條路由必填、Pydantic 驗證）見 [api-agent-rules.md](api-agent-rules.md)，[backend-agent-rules.md](backend-agent-rules.md) 也是這樣標的 |
+| `api.md` 的「Response schemas must be explicit，不回裸 ORM model」 | **沿用（與 api-agent-rules.mdx 分工）** | 同一條服務兩個目的：**本文取它的安全面**（allowlist 防欄位外洩）成為 S4；**合約面**（`response_model=` 每條路由必填、Pydantic 驗證）見 [api-agent-rules.mdx](api-agent-rules.mdx)，[backend-agent-rules.mdx](backend-agent-rules.mdx) 也是這樣標的 |
 | `frontend.md` §State management 的「Zustand 存 auth token」 | **不採用** | 見上方「刻意不採用的來源條文」 |
 | `frontend.md` §Role model 的「System role（JWT）」當授權依據 | **不採用** | 見上方「刻意不採用的來源條文」 |
 | `frontend.md` §Role model 的「任務角色不放 JWT、進任務頁另查成員身分」 | **沿用** | 與 ADR-021／S3 一致 |
@@ -246,7 +246,7 @@ updatedAt: '2026-11-16'
 | `auth-oidc.md` §後端鐵律 的「全域 guard 預設都要登入，不需登入的明確標註」 | **沿用原則** | default-deny。本專案的落點是認證 dependency 加 S3 的四段 |
 | `auth-oidc.md` §後端鐵律 3 的「權限一定在後端擋、guard 統一判斷、前端藏按鈕只是 UX」 | **沿用** | 成為 S4 |
 | `auth-oidc.md` §後端鐵律 4 的後端那一半（service 依角色組回應 DTO、被遮蔽欄位回 `null`、欄位保留） | **沿用原則，但位置不同** | 遮蔽的決定在後端這一點沿用；它把遮蔽放在 service，而 [architecture.mdx](architecture.mdx) 的分層表把回應組裝放在 Router——**本專案依分層表** |
-| `auth-oidc.md` §前端鐵律 的「401 清 session 導回登入、403 顯示無權限且不重試」 | **沿用原則** | 落點在 [frontend-agent-rules.md](frontend-agent-rules.md)，本文只記對照 |
+| `auth-oidc.md` §前端鐵律 的「401 清 session 導回登入、403 顯示無權限且不重試」 | **沿用原則** | 落點在 [frontend-agent-rules.mdx](frontend-agent-rules.mdx)，本文只記對照 |
 | `auth-oidc.md` §測試要求 的「遮蔽欄位以 Decision Table 驗證」 | **沿用** | S4 的檢查方式用的就是它 |
 | `auth-oidc.md` 的「401 與 403 分清楚」 | **沿用** | 但 `403` vs `404` 的取捨依本 repo（見上） |
 | `auth-oidc.md` 的「錯誤訊息不洩漏驗證細節」 | **沿用** | 成為 S9 的 log 脫敏與 S1 的錯誤回應 |

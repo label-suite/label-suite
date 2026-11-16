@@ -150,12 +150,12 @@ This repository has no `.claude/rules/` canon and will not get one (decided in #
 
 | Area | Document | Issue |
 |------|----------|-------|
-| Cross-cutting — search first, dependency direction, smallest change, no excessive abstraction, conflicts, locked scope, loud failure | [docs/development/agent-rules.md](docs/development/agent-rules.md) | #105 |
-| Backend layering, database, background work | [docs/development/backend-agent-rules.md](docs/development/backend-agent-rules.md) | #106 |
-| Authorization, answer isolation, config-driven boundaries | [docs/development/security-agent-rules.md](docs/development/security-agent-rules.md) | #107 |
-| API contract sync, single frontend client | [docs/development/api-agent-rules.md](docs/development/api-agent-rules.md) | #108 |
-| Frontend dependency direction, type safety, shared UI | [docs/development/frontend-agent-rules.md](docs/development/frontend-agent-rules.md) | #109 |
-| Test layers, dual-database verification, delivery evidence | [docs/development/testing-agent-rules.md](docs/development/testing-agent-rules.md) | #110 |
+| Cross-cutting — search first, dependency direction, smallest change, no excessive abstraction, conflicts, locked scope, loud failure | [docs/development/agent-rules.mdx](docs/development/agent-rules.mdx) | #105 |
+| Backend layering, database, background work | [docs/development/backend-agent-rules.mdx](docs/development/backend-agent-rules.mdx) | #106 |
+| Authorization, answer isolation, config-driven boundaries | [docs/development/security-agent-rules.mdx](docs/development/security-agent-rules.mdx) | #107 |
+| API contract sync, single frontend client | [docs/development/api-agent-rules.mdx](docs/development/api-agent-rules.mdx) | #108 |
+| Frontend dependency direction, type safety, shared UI | [docs/development/frontend-agent-rules.mdx](docs/development/frontend-agent-rules.mdx) | #109 |
+| Test layers, dual-database verification, delivery evidence | [docs/development/testing-agent-rules.mdx](docs/development/testing-agent-rules.mdx) | #110 |
 
 All six documents now exist, but most of their rules are not being checked: `backend/`, `frontend/` and `e2e/` do not exist yet, so most of the checks those documents describe are marked as not built. The rest are marked as manual review, which means a person or an independent reviewer does them, not a tool. Read "not built" as literal, and do not report a check as passing when the check has not been built.
 
@@ -166,9 +166,9 @@ Two rules are worth stating here because they are reversals of what the referenc
 
 Size is judged by purpose, not by counting. This repository sets no file-count or diff-line ceiling for a pull request — see [Pull Requests](#pull-requests).
 
-Technical baselines (stack choices, layering, ADR status) are in [docs/development/architecture.mdx](docs/development/architecture.mdx), and the pull-request categories are in [docs/development/spec-migration.md](docs/development/spec-migration.md).
+Technical baselines (stack choices, layering, ADR status) are in [docs/development/architecture.mdx](docs/development/architecture.mdx), and the pull-request categories are in [docs/development/spec-migration.mdx](docs/development/spec-migration.mdx).
 
-How a rule gets triggered — which agent or Git event fires it, which shared checker it calls, and whether it blocks or only warns — is in [docs/development/agent-hook-contract.md](docs/development/agent-hook-contract.md), together with an event-by-event comparison of what Claude Code and Codex each support. That document is a contract, not a second rule canon, and it adds no rules. No agent hook is wired yet: `.claude/settings.json` carries only the attribution setting, there is no `.codex/hooks.json`, and the only hook checker that runs today is `scripts/check-commit-msg.sh` through `scripts/git-hooks/commit-msg`. Claude's hook configuration, events and exit codes do not carry over to Codex; that document lists the gaps instead of claiming they do.
+How a rule gets triggered — which agent or Git event fires it, which shared checker it calls, and whether it blocks or only warns — is in [docs/development/agent-hook-contract.mdx](docs/development/agent-hook-contract.mdx), together with an event-by-event comparison of what Claude Code and Codex each support. That document is a contract, not a second rule canon, and it adds no rules. No agent hook is wired yet: `.claude/settings.json` carries only the attribution setting, there is no `.codex/hooks.json`, and the only hook checker that runs today is `scripts/check-commit-msg.sh` through `scripts/git-hooks/commit-msg`. Claude's hook configuration, events and exit codes do not carry over to Codex; that document lists the gaps instead of claiming they do.
 
 ## Review Guidelines
 

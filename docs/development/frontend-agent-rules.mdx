@@ -10,7 +10,7 @@ updatedAt: '2026-11-16'
 # 前端開發規範
 
 本文說明前端的十一條開發規範，由 `AGENTS.md` 的 Agent Rules Index 指過來；`AGENTS.md` 是規則本體，兩邊說法不同時以 `AGENTS.md` 為準，並回報給維護者。
-跨領域的規範在 [agent-rules.md](agent-rules.md)、後端在 [backend-agent-rules.md](backend-agent-rules.md)、授權與答案隔離在 [security-agent-rules.md](security-agent-rules.md)、API 契約與單一 HTTP 邊界在 [api-agent-rules.md](api-agent-rules.md)，這裡不重複。
+跨領域的規範在 [agent-rules.mdx](agent-rules.mdx)、後端在 [backend-agent-rules.mdx](backend-agent-rules.mdx)、授權與答案隔離在 [security-agent-rules.mdx](security-agent-rules.mdx)、API 契約與單一 HTTP 邊界在 [api-agent-rules.mdx](api-agent-rules.mdx)，這裡不重複。
 
 **`frontend/` 目前不存在**，所以每條的「檢查方式」幾乎都還沒有自動檢查。標「待建置」就是字面意思：那些檢查要等實際有程式與 lint 設定才寫得出來，**不得因為這份文件存在就宣稱規則已被強制**。
 
@@ -25,7 +25,7 @@ updatedAt: '2026-11-16'
 | 版本與框架 | **React 19** 加 Vite 加 TypeScript strict；路由 React Router v6、伺服器狀態 TanStack Query |
 | 目錄分層 | **`pages/` 加 `features/`**，見 [F1](#f1-分層與允許的-import) |
 | 元件庫 | **shadcn/ui**，元件以原始碼形式放進 `components/ui/`。**Storybook 仍待決**（[architecture.mdx](architecture.mdx) §待決 第 2 列） |
-| API client 與型別 | **Orval**，產物在 `src/api/generated/`；規則在 [api-agent-rules.md](api-agent-rules.md) |
+| API client 與型別 | **Orval**，產物在 `src/api/generated/`；規則在 [api-agent-rules.mdx](api-agent-rules.mdx) |
 | design token 的映射 | **寫一層對照，`design/prototype/assets/tokens.css` 仍是唯一色值來源**，見 [F6](#f6-視覺基準與-design-token-的映射) |
 | 深色模式 | **要做**：側欄一鍵切換、立即生效、跨頁保持（規格 07-01 §外觀切換）；「跟隨系統」**跟著作業系統的設定變**（規格 01-04 §偏好設定 第 4 條、規格 07-01 §已確認決議 Q14） |
 
@@ -81,11 +81,11 @@ TypeScript 不用 `any`，不用 `as` 或 `!` 掩蓋缺值，外部資料先當 
 | | |
 | :--- | :--- |
 | **適用路徑** | `frontend/**/*.ts`、`frontend/**/*.tsx` |
-| **禁止** | `any`（含隱含 `any`：沒標註的參數、`catch (e)` 當 `any` 用）；用 `as` 或 `!` 掩蓋可能的缺值；手寫 API 型別（見 [api-agent-rules.md](api-agent-rules.md) A6）；關掉 `strict` 底下任何一項 |
+| **禁止** | `any`（含隱含 `any`：沒標註的參數、`catch (e)` 當 `any` 用）；用 `as` 或 `!` 掩蓋可能的缺值；手寫 API 型別（見 [api-agent-rules.mdx](api-agent-rules.mdx) A6）；關掉 `strict` 底下任何一項 |
 | **正例** | `tsconfig` 開 `strict`；外部資料先當 `unknown`，再用 runtime schema 或 type guard 收窄；`catch (error: unknown)` 後用 helper 轉成已知型別；要擴充 API 型別時從產物衍生（`Pick<TaskDto, 'id' \| 'name'>`） |
 | **例外** | （1）`as const`；（2）`src/api/generated/`：產物由工具產生，不受本條約束也不得手改；（3）第三方套件的型別缺口：允許一處 `as`，但要在**同一行**寫註解指出是哪個套件的哪個缺口；（4）框架要求 `export default` 的檔案（Vite／Vitest／Playwright／Orval 的設定檔），見 F11 |
 
-「外部資料」指的是契約以外的來源。API 回應經 Orval 產物已經有型別，而且契約有 CI 把關（見 [api-agent-rules.md](api-agent-rules.md) A5），所以不必再寫一層 runtime schema。要先當 `unknown` 的是：query string 與路由參數、`localStorage`／`sessionStorage`、使用者上傳的檔案內容、第三方 SDK 的回呼參數、`postMessage`；這幾種都是 `AGENTS.md` 硬性規則 9 所說的「使用者輸入」。
+「外部資料」指的是契約以外的來源。API 回應經 Orval 產物已經有型別，而且契約有 CI 把關（見 [api-agent-rules.mdx](api-agent-rules.mdx) A5），所以不必再寫一層 runtime schema。要先當 `unknown` 的是：query string 與路由參數、`localStorage`／`sessionStorage`、使用者上傳的檔案內容、第三方 SDK 的回呼參數、`postMessage`；這幾種都是 `AGENTS.md` 硬性規則 9 所說的「使用者輸入」。
 
 :::note{title="F2 的反例與檢查方式" collapsible}
 - **反例**：`const task = list.find(t => t.id === id)!`（找不到就是 `undefined`，`!` 只是把問題延後到執行期）；`JSON.parse(raw) as TaskDraft`（`raw` 來自 `localStorage`，沒有任何驗證）；`function onChange(e)`（隱含 `any`）
@@ -115,14 +115,14 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | | |
 | :--- | :--- |
 | **適用路徑** | `frontend/src/**` |
-| **禁止** | 把可分享的篩選或分頁只放在元件 state；為了「以後可能需要」先裝一個全域 store；把 token 或角色放進前端 store 當授權依據。（「不得把 API 回應複製進全域 store」在 [api-agent-rules.md](api-agent-rules.md) A9，這裡不重複，只標出它是三分法的第一格） |
-| **正例** | 三分法：**伺服器狀態走 TanStack Query**（細節見 [api-agent-rules.md](api-agent-rules.md) A9）、**可分享的狀態走網址的 query string**（關鍵字、篩選、每頁筆數、頁次、目前分頁）、**純局部 UI 狀態走 `useState`**（下拉開合、游標位置、未送出的表單草稿） |
+| **禁止** | 把可分享的篩選或分頁只放在元件 state；為了「以後可能需要」先裝一個全域 store；把 token 或角色放進前端 store 當授權依據。（「不得把 API 回應複製進全域 store」在 [api-agent-rules.mdx](api-agent-rules.mdx) A9，這裡不重複，只標出它是三分法的第一格） |
+| **正例** | 三分法：**伺服器狀態走 TanStack Query**（細節見 [api-agent-rules.mdx](api-agent-rules.mdx) A9）、**可分享的狀態走網址的 query string**（關鍵字、篩選、每頁筆數、頁次、目前分頁）、**純局部 UI 狀態走 `useState`**（下拉開合、游標位置、未送出的表單草稿） |
 | **例外** | 需要全域 store 時**要在該 change 的 `design.md` 寫出理由**（跨路由共用、而且不是 server 狀態、也不適合放網址），經規劃審閱同意才引入。本條不預先禁止所有全域狀態。另有**第四個去處是規格定的**：外觀偏好（淺色／深色／跟隨系統）**只記在使用者這台瀏覽器**，換一台裝置要重新選一次（規格 01-04 §偏好設定），所以它既不是 server 狀態也不進網址 |
 
 網址那一格在規格已定：規格 03-01 §查詢條件保留在網址、規格 03-03 §網址與畫面狀態同步。
 
 :::note{title="F4 的反例與檢查方式" collapsible}
-- **反例**：篩選條件只存在 `useState`——重新整理就掉了，而規格要求「重新整理還原查詢條件」；把 `listTasks` 的結果再存一份進 Zustand；用全域 store 存「目前使用者的角色」並以它決定能不能取得資料（角色只供顯示，見 [security-agent-rules.md](security-agent-rules.md) S3）
+- **反例**：篩選條件只存在 `useState`——重新整理就掉了，而規格要求「重新整理還原查詢條件」；把 `listTasks` 的結果再存一份進 Zustand；用全域 store 存「目前使用者的角色」並以它決定能不能取得資料（角色只供顯示，見 [security-agent-rules.mdx](security-agent-rules.mdx) S3）
 - **檢查方式**：**待建置**。可用 lint 擋住 `features/` 直接 import 任何 store 套件（在它被引入之前，那條規則等於「不得引入」）；網址同步的行為由規格的 Scenario 驗（E2E）。外觀偏好另有一條規格 Scenario 要驗：「重新整理後仍然是深色，**載入時不先閃一下淺色**」（規格 01-04）
 :::
 
@@ -134,7 +134,7 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | :--- | :--- |
 | **適用路徑** | `frontend/src/**` |
 | **禁止** | 新寫一個 component／hook／util 之前沒有先搜尋既有的；每一頁各自重造 Button、Dialog、Table、Skeleton；把還只有一處用到的程式先抽成共用元件；無差別地 `memo`／`useMemo`／`useCallback` 包一層 |
-| **正例** | 先 grep 既有的名稱與相近語意，再決定新增；shadcn 已有的元件優先用 `components/ui/`，不夠用時先擴充它的 props；**兩處確實是同一個概念時**才抽（判準見 [agent-rules.md](agent-rules.md) R4），不以出現次數為門檻；`memo` 只在有量測到的重繪問題時加，並在註解寫出原因；一個檔案一個主要元件 |
+| **正例** | 先 grep 既有的名稱與相近語意，再決定新增；shadcn 已有的元件優先用 `components/ui/`，不夠用時先擴充它的 props；**兩處確實是同一個概念時**才抽（判準見 [agent-rules.mdx](agent-rules.mdx) R4），不以出現次數為門檻；`memo` 只在有量測到的重繪問題時加，並在註解寫出原因；一個檔案一個主要元件 |
 | **例外** | 無。設計上需要一次抽象（例如同一個 change 內同時建立三個同構頁面）時，在該 change 的 `design.md` 寫明 |
 
 :::note{title="F5 的反例與檢查方式" collapsible}
@@ -259,11 +259,11 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | 不採用 | 出處 | 為什麼 |
 | :--- | :--- | :--- |
 | 垂直功能切片與 `shared/` 准入規則 | 原始 repo `frontend.md` §Architecture Principles（ADR-011） | ADR-011 已被覆寫成 `pages/` 加 `features/`，見[決策紀錄](#決策紀錄)。用意由 F1 的「往下搬到 `components/ui/` 或 `lib/`」承接 |
-| 「Zustand 存 auth token／user／role」 | 原始 repo `frontend.md` §State management | 與 httpOnly cookie 根本不相容（[security-agent-rules.md](security-agent-rules.md) 已列為不採用） |
-| 「System role 從 JWT 取」當授權依據 | 原始 repo `frontend.md` §Role model | ADR-037：`role` 只供顯示。決定版面可以，當成能否取得資料的依據不行（[security-agent-rules.md](security-agent-rules.md) S3） |
+| 「Zustand 存 auth token／user／role」 | 原始 repo `frontend.md` §State management | 與 httpOnly cookie 根本不相容（[security-agent-rules.mdx](security-agent-rules.mdx) 已列為不採用） |
+| 「System role 從 JWT 取」當授權依據 | 原始 repo `frontend.md` §Role model | ADR-037：`role` 只供顯示。決定版面可以，當成能否取得資料的依據不行（[security-agent-rules.mdx](security-agent-rules.mdx) S3） |
 | 「禁止型別斷言 `as`」只留 `as const` 一個例外 | scaffold `typescript.md`（「唯一例外是 `as const`」）、duty-mate `typescript.md`（標題寫「escape hatch 除外」） | **沿用其禁止與 `as const` 例外，另增補一類**：第三方套件的型別缺口允許一處，但要在同一行註明是哪個套件的哪個缺口（F2 例外 3）。例外要列出來 |
 | 「Named export，禁止 default export」的例外清單 | scaffold `typescript.md`（例外已含 Vite／Vitest／Playwright／Orval 設定檔與 `*.config.ts`） | **沿用，另增補一類**：本 repo 有 22 個 `.notecraft/components/*.tsx` 依 NoteCraft 契約必須 default export（F11 例外 4）。來源沒有這一類，因為它沒有 NoteCraft |
-| 「超過約 200 行就拆檔」 | scaffold `frontend.md` §元件分層 | [agent-rules.md](agent-rules.md) 已駁回三個機械門檻（200 行、第二次重複才抽、5 檔案／300 diff 行），不以固定行數取代職責審查 |
+| 「超過約 200 行就拆檔」 | scaffold `frontend.md` §元件分層 | [agent-rules.mdx](agent-rules.mdx) 已駁回三個機械門檻（200 行、第二次重複才抽、5 檔案／300 diff 行），不以固定行數取代職責審查 |
 | `themes/neutral.css`（shadcn 預設）與 `themes/trendlink.css` | scaffold `design-tokens.md` | 不得混入。本 repo 的唯一色值來源是 `tokens.css` |
 | 顯示時轉 `Asia/Taipei` | scaffold `date-handling.md` | 與規格 06-01 Q2 已定案的內容相反——本 repo 顯示依**瀏覽者裝置**的時區。只有「報表的日期區間」才固定台北（規格 03-03） |
 | 「禁止原生 `Date` API」這條鐵律本身 | duty-mate `date-handling.md`、scaffold `date-handling.md`（兩份都另有 `## 例外`，含第三方 adapter 與測試假時鐘） | **不採用那條鐵律**（不盲抄框架細節），改成要求**單一入口**與四種概念的分界；**它們的例外清單沿用**第三方 adapter 與假時鐘兩條（F10 例外） |
@@ -278,21 +278,21 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 
 | 規範 | 來源 |
 | :--- | :--- |
-| F1 | `pages/` 加 `features/`、`components/ui/` 來自維護者的選定；scaffold `frontend.md` §元件分層 的四層表**沿用**（路徑換成本 repo 的 `frontend/src/`）。原始 repo `frontend.md` 的垂直功能切片與 `shared/` 准入規則（「被兩個以上 feature 直接 import 才能進 `shared/`」）**不採用**——ADR-011 已被覆寫；它的用意（共用要有門檻）改由「往下搬到 `components/ui/` 或 `lib/`」承接。原始 repo foundation spec FR-013 的「生成型別是 `shared/` 的唯一 domain-specific 例外」**沿用其精神**：本 repo 沒有 `shared/`，對應的例外是 `api/generated/`。**分層表七層裡只有 `pages/`、`features/`、`components/ui/` 來自維護者的選定**；`app/` 與 `lib/` 來自 scaffold 的四層表（它的 `src/app/` 與 `src/lib/utils.ts`），`api/` 來自 [api-agent-rules.md](api-agent-rules.md) 的 Orval 輸出路徑，`styles/` 來自 token 映射與 scaffold `design-tokens.md` 的 `web/src/styles/` |
+| F1 | `pages/` 加 `features/`、`components/ui/` 來自維護者的選定；scaffold `frontend.md` §元件分層 的四層表**沿用**（路徑換成本 repo 的 `frontend/src/`）。原始 repo `frontend.md` 的垂直功能切片與 `shared/` 准入規則（「被兩個以上 feature 直接 import 才能進 `shared/`」）**不採用**——ADR-011 已被覆寫；它的用意（共用要有門檻）改由「往下搬到 `components/ui/` 或 `lib/`」承接。原始 repo foundation spec FR-013 的「生成型別是 `shared/` 的唯一 domain-specific 例外」**沿用其精神**：本 repo 沒有 `shared/`，對應的例外是 `api/generated/`。**分層表七層裡只有 `pages/`、`features/`、`components/ui/` 來自維護者的選定**；`app/` 與 `lib/` 來自 scaffold 的四層表（它的 `src/app/` 與 `src/lib/utils.ts`），`api/` 來自 [api-agent-rules.mdx](api-agent-rules.mdx) 的 Orval 輸出路徑，`styles/` 來自 token 映射與 scaffold `design-tokens.md` 的 `web/src/styles/` |
 | F2 | `AGENTS.md` 硬性規則 7（TypeScript 不得有 `any`）；原始 repo `frontend.md` §TypeScript Code Style 的「strict、禁 `any`、props 用 `interface`」**沿用**；scaffold `typescript.md` 與 duty-mate `typescript.md` 的 `unknown` 加收窄**沿用**。兩者的「禁止 `as`」**沿用**，連它們自己的例外（scaffold 的「唯一例外是 `as const`」、duty-mate 的「escape hatch 除外」）一起收下，**另增補第三方型別缺口那一類**；scaffold 的「禁止 default export」同樣沿用它既有的工具設定檔例外，並**增補 `.notecraft/components/*.tsx`**。要的是「例外明列」，不是推翻禁止 |
 | F3 | React 的 Hooks 規則（框架層，不是本專案的決定）；scaffold `frontend.md` §狀態管理 的「不把 API 資料複製到 `useState`／context、衍生值直接從 query data 計算」**沿用**；原始 repo foundation spec FR-059（server state 的單一邊界）**沿用**。合法訂閱與瀏覽器同步不全面禁 `useEffect`，所以例外那一格是本條的必要部分 |
-| F4 | ADR-004（TanStack Query，沿用）；scaffold `frontend.md` §狀態管理 的「篩選分頁放 URL search params、不引入全域 store 除非 design 有理由」**沿用**。網址那一格是本 repo 規格已定：規格 03-01 §查詢條件保留在網址（關鍵字、三個篩選器、每頁筆數與頁次都寫進網址，無效值忽略並正規化）與規格 03-03 §網址與畫面狀態同步（分頁與篩選寫進網址，分享網址重現同一個畫面）。原始 repo `frontend.md` 的「Zustand 存 auth token／user／role」**不採用**（`httpOnly` cookie 的意義就是 JS 讀不到，見 [security-agent-rules.md](security-agent-rules.md)） |
-| F5 | [agent-rules.md](agent-rules.md) 的 R1（先搜尋再新增）與 **R4（不過度抽象）沿用**，本條只是前端的落點。R4 的判準是「兩個地方有同一段邏輯，而它**確實是同一個概念**」，而 `agent-rules.md` §來源對照 已把原始 repo `general.md` 的「同一段程式出現 2 次以上就抽出共用」標為**不採用**（「出現兩次不代表是同一個概念」）。scaffold `frontend.md` 的「**一個檔案一個主要元件；超過約 200 行就拆**」**不採用那個數字**，「一個檔案一個主要元件」沿用 |
+| F4 | ADR-004（TanStack Query，沿用）；scaffold `frontend.md` §狀態管理 的「篩選分頁放 URL search params、不引入全域 store 除非 design 有理由」**沿用**。網址那一格是本 repo 規格已定：規格 03-01 §查詢條件保留在網址（關鍵字、三個篩選器、每頁筆數與頁次都寫進網址，無效值忽略並正規化）與規格 03-03 §網址與畫面狀態同步（分頁與篩選寫進網址，分享網址重現同一個畫面）。原始 repo `frontend.md` 的「Zustand 存 auth token／user／role」**不採用**（`httpOnly` cookie 的意義就是 JS 讀不到，見 [security-agent-rules.mdx](security-agent-rules.mdx)） |
+| F5 | [agent-rules.mdx](agent-rules.mdx) 的 R1（先搜尋再新增）與 **R4（不過度抽象）沿用**，本條只是前端的落點。R4 的判準是「兩個地方有同一段邏輯，而它**確實是同一個概念**」，而 `agent-rules.mdx` §來源對照 已把原始 repo `general.md` 的「同一段程式出現 2 次以上就抽出共用」標為**不採用**（「出現兩次不代表是同一個概念」）。scaffold `frontend.md` 的「**一個檔案一個主要元件；超過約 200 行就拆**」**不採用那個數字**，「一個檔案一個主要元件」沿用 |
 | F6 | 維護者選定：寫一層對照、`tokens.css` 仍是唯一色值來源，選定方案明文「shadcn 元件一行都不改」；改寫 shadcn 元件去讀別的變數名是被否決的另一個選項。`tokens.css` 與 `label-suite-design` skill 是視覺基準；scaffold `design-tokens.md` 的**結構沿用**（色值只寫在一處、元件只用語意 token、換主題不改元件、新增 token 要每個主題檔都補），但它的 `themes/neutral.css`／`trendlink.css` **不採用**。深色模式是本 repo 規格已定（規格 07-01 §外觀切換、規格 01-04 §偏好設定、規格 03-02 的深色 Scenario）；「跟隨系統」跟著作業系統見規格 01-04 Q7、規格 07-01 Q14（取代 Q10） |
 | F7 | ADR-030（Lucide 是唯一圖示來源）與 [architecture.mdx](architecture.mdx) §前端 的例外**沿用**；duty-mate `icon-usage.md` 的**理由與事故沿用**（集中管理才能保證 `stroke-width`、`viewBox` 與端點風格一致；它散寫 inline SVG 的結果是 `stroke-width` 混用 1.5／1.9／2／2.5、尺寸單位混用三種），它的 Handlebars partial 做法不適用。不得把「禁手繪 icon」擴張成「禁所有 SVG」，所以例外（2）（3）（4）是本條的必要部分 |
-| F8 | [architecture.mdx](architecture.mdx) §前端 的「每個資料區塊都要寫出 loading、error、empty、無權限四種狀態，以及被遮蔽欄位的呈現方式」**沿用**（它明寫 ADR 沒有定義這個最低要求，由 OpenSpec 的 `ui-design` 產出負責）；scaffold `frontend.md` §四種畫面狀態 的判斷與呈現**沿用**（含「`403` 不顯示重試」）。「遮蔽依契約呈現、不自行猜角色」來自 [security-agent-rules.md](security-agent-rules.md) S4 與 [api-agent-rules.md](api-agent-rules.md) A2；「送出期間 disabled」在 A9 |
+| F8 | [architecture.mdx](architecture.mdx) §前端 的「每個資料區塊都要寫出 loading、error、empty、無權限四種狀態，以及被遮蔽欄位的呈現方式」**沿用**（它明寫 ADR 沒有定義這個最低要求，由 OpenSpec 的 `ui-design` 產出負責）；scaffold `frontend.md` §四種畫面狀態 的判斷與呈現**沿用**（含「`403` 不顯示重試」）。「遮蔽依契約呈現、不自行猜角色」來自 [security-agent-rules.mdx](security-agent-rules.mdx) S4 與 [api-agent-rules.mdx](api-agent-rules.mdx) A2；「送出期間 disabled」在 A9 |
 | F9 | scaffold `frontend.md` §無障礙 的**五條**（語意元素、標籤與錯誤關聯、icon button 名稱、鍵盤與 Dialog 焦點、狀態不只靠顏色）**沿用**；**「減少動態效果」是本 repo 規格已定**：規格 03-02 §深色模式與動畫 第 2 條與它的 Scenario「要求減少動畫時動畫降到最低」，規格 07-01 的邊界情況「使用者在作業系統關閉了動態效果 → 側欄收合、次選單展開與通知清單展開都不播動畫，操作本身照常可用」與對應 Scenario |
 | F10 | 顯示時區依瀏覽者裝置、報表固定台北時區見規格 06-01 Q2、規格 03-01 §任務列的欄位、規格 03-03 §工時紀錄 第 10 條。UTC 儲存與 ISO 傳輸、date-only 用字串**沿用** scaffold `date-handling.md`，但它的「顯示時轉 `Asia/Taipei`」**不採用**（與本 repo 的裝置時區相反）。duty-mate `date-handling.md` 的**單一入口理由沿用**（集中管理 timezone、locale 與 plugin，避免各檔案重複 setup 導致行為分歧），它的「全面禁止原生 `Date` API」**不採用**——不盲抄 duty-mate 全面禁 Date／day.js 的框架細節 |
 | F11 | `AGENTS.md` §Language Rules（程式與註解只用英文）；scaffold `jsdoc.md` 的**內容要求沿用**（描述要寫名稱看不出來的資訊、不寫型別、`@throws` 寫觸發條件、props 用具名 `interface`、**不寫其他專案的需求編號**、產物與測試檔不寫），但它**開頭引言**的「每個具名的程式單位都要有 JSDoc」與 §內容要求 第 1 條的「描述句用繁體中文」**都不採用**；它的 §適用範圍 表（哪些要寫、哪些不寫）本文件沿用成 F11 的例外。原始 repo `frontend.md` §TypeScript Code Style 的「props 用 `interface`」**沿用** |
 
 ### 原始 repo（`singyichen/label-suite`）
 
-**這張表的範圍是前端的依賴方向、型別安全與 UI 共用。** `frontend.md` §Architecture Principles 的 **Localization** 那一段的 i18n 分工歸 [api-agent-rules.md](api-agent-rules.md) A8，§Architecture Principles 的 **State management** 那一段的 TanStack Query 細節歸 A9，所以某一節沒出現在下表，是被排除、不是被漏掉。
+**這張表的範圍是前端的依賴方向、型別安全與 UI 共用。** `frontend.md` §Architecture Principles 的 **Localization** 那一段的 i18n 分工歸 [api-agent-rules.mdx](api-agent-rules.mdx) A8，§Architecture Principles 的 **State management** 那一段的 TanStack Query 細節歸 A9，所以某一節沒出現在下表，是被排除、不是被漏掉。
 
 | 來源條文 | 處理 | 說明 |
 | :--- | :--- | :--- |
@@ -300,8 +300,8 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | §Architecture Principles 的 **State management** 那一段的「TanStack Query 管所有 API／server state」 | **沿用** | 成為 F4 的第一格；細節在 A9 |
 | §Architecture Principles 的 **State management** 那一段的「Zustand 存 token／user／role」 | **不採用** | 見上表 |
 | §Architecture Principles 的 **State management** 那一段的「`useState` 管局部元件狀態」 | **沿用** | 成為 F4 的第三格 |
-| §Architecture Principles 的 **Role model** 那一段的兩層角色（系統角色與任務角色） | **沿用但不在本文件** | 授權的規則在 [security-agent-rules.md](security-agent-rules.md) S3；前端只負責「角色決定顯示哪一種版面」 |
-| §Architecture Principles 的 **Localization** 那一段的命名空間與「不要放後端 `detail` 副本」 | **不在本文件** | 歸 [api-agent-rules.md](api-agent-rules.md) A8 |
+| §Architecture Principles 的 **Role model** 那一段的兩層角色（系統角色與任務角色） | **沿用但不在本文件** | 授權的規則在 [security-agent-rules.mdx](security-agent-rules.mdx) S3；前端只負責「角色決定顯示哪一種版面」 |
+| §Architecture Principles 的 **Localization** 那一段的命名空間與「不要放後端 `detail` 副本」 | **不在本文件** | 歸 [api-agent-rules.mdx](api-agent-rules.mdx) A8 |
 | §Icons（Lucide 是唯一圖示庫、不用 emoji 與手畫 inline SVG、**prototype 的素材要遵循同一套 Lucide 視覺語彙**：24×24、2px stroke、`currentColor`） | **沿用** | 成為 F7。注意它那一條是**把規則延伸到 prototype**，不是豁免 prototype；真正的豁免（設計層沒有 npm，所以允許內嵌 SVG）在本 repo 的 [architecture.mdx](architecture.mdx) §前端 |
 | §TypeScript Code Style 的「strict、禁 `any`、props 用 `interface`、`type` 給 union」 | **沿用** | 成為 F2 與 F11 |
 | §TypeScript Code Style 的「優先函式元件加 hooks」 | **沿用** | 成為 F3 的前提（本 repo 不寫 class 元件） |
@@ -319,10 +319,10 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | `frontend.md` §元件 的「shadcn 優先、沒有的先 `npx shadcn add`、只用語意 token、icon 一律 `lucide-react`」 | **沿用** | 分別成為 F5、F6、F7 |
 | `frontend.md` §四種畫面狀態（鐵律）的判斷與呈現表 | **沿用** | 成為 F8 |
 | `frontend.md` §無障礙 的**五條**（語意元素、`Label htmlFor` 與 `aria-describedby`、icon button 的 `aria-label`、鍵盤與 Dialog 焦點、狀態不只靠顏色） | **沿用** | 成為 F9。**reduced motion 不在它裡面**——全 scaffold grep `reduced`／`動態效果` 零命中，那一項的依據是本 repo 的規格 |
-| `frontend.md` §測試 的 Vitest 加 RTL 加 MSW、用 role 與可見文字查元素 | **不在本文件** | 見 [testing-agent-rules.md](testing-agent-rules.md) |
+| `frontend.md` §測試 的 Vitest 加 RTL 加 MSW、用 role 與可見文字查元素 | **不在本文件** | 見 [testing-agent-rules.mdx](testing-agent-rules.mdx) |
 | `typescript.md` §型別安全 的 `unknown` 加收窄、禁 `any` | **沿用** | 成為 F2 |
 | `typescript.md` 的全面禁 `as`、全面禁 default export | **不採用** | 見上方「刻意不採用的來源條文」 |
-| `typescript.md` §型別定義 的「禁原生 `enum`，用 `as const` 加 union」、Utility Types、「API 型別一律來自產物」 | **沿用** | 前兩項成為 F2 的正例；第三項在 [api-agent-rules.md](api-agent-rules.md) A6 |
+| `typescript.md` §型別定義 的「禁原生 `enum`，用 `as const` 加 union」、Utility Types、「API 型別一律來自產物」 | **沿用** | 前兩項成為 F2 的正例；第三項在 [api-agent-rules.mdx](api-agent-rules.mdx) A6 |
 | `typescript.md` §命名 的表（檔名 kebab-case、元件 PascalCase、常數 UPPER_SNAKE、布林 `is/has/should`、hook `use` 開頭、`interface` 不加 `I`） | **沿用** | 本文件不重抄整張表，F1 的範例與 F11 的正例照它寫 |
 | `typescript.md` §匯出 的「直接從模組檔匯入，避免多層 barrel 造成循環依賴」 | **沿用** | 成為 F1 的禁止事項 |
 | `typescript.md` §錯誤處理 的 `catch (error: unknown)`、禁空 catch | **沿用** | 成為 F2 |
@@ -334,7 +334,7 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | `date-handling.md` 的「顯示時轉 `Asia/Taipei`」與「全面禁原生 `Date`」 | **不採用** | 見上方「刻意不採用的來源條文」 |
 | `jsdoc.md` §內容要求 的八條 | **沿用原則** | 成為 F11（含「不寫其他專案的需求編號」） |
 | `jsdoc.md` §適用範圍 的「每個具名單位都要有」與繁中描述 | **不採用** | 見上方「刻意不採用的來源條文」 |
-| `api-client.md`、`api-contract.md` | **不在本文件** | 見 [api-agent-rules.md](api-agent-rules.md) |
+| `api-client.md`、`api-contract.md` | **不在本文件** | 見 [api-agent-rules.mdx](api-agent-rules.mdx) |
 
 ### duty-mate（`trendlink/duty-mate`）
 
@@ -351,11 +351,11 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | **`tailwind-theme.md` §禁止映射數字 spacing key（鐵律）與它的事故** | **沿用事故** | `@theme` 定義具名 `--spacing-10` 後 `w-10` 從 40px 變 80px，開關圓鈕位移比例全錯。本 repo 的間距 token 是 t-shirt 命名，不會逐字重演，但 namespace 覆蓋的風險一樣，見 F6 摺疊區塊第 3 點 |
 | `tailwind-theme.md` §需要 token 間距時的寫法（任意值引用變數） | **沿用** | 成為 F6 第 3 點的做法 |
 | `tailwind-theme.md` §Layout 同步（兩份 `@theme inline` 要同步）與 hbs 快取 | **不採用** | Handlebars 的框架細節 |
-| `dto-boolean.md`、`database.md`、`command.md`、`hbs-*.md`、`jest-mock-queue.md`、`integration-test-http.md` | **不在本文件** | 見 [api-agent-rules.md](api-agent-rules.md)、[backend-agent-rules.md](backend-agent-rules.md) 與 [testing-agent-rules.md](testing-agent-rules.md) 的對照 |
+| `dto-boolean.md`、`database.md`、`command.md`、`hbs-*.md`、`jest-mock-queue.md`、`integration-test-http.md` | **不在本文件** | 見 [api-agent-rules.mdx](api-agent-rules.mdx)、[backend-agent-rules.mdx](backend-agent-rules.mdx) 與 [testing-agent-rules.mdx](testing-agent-rules.mdx) 的對照 |
 
 ### starter-kit
 
-**仍然對不上。** 它的 `frontend/react-typescript.md` 找不到來源，而其他來源點名的檔名各不相同（`core-principles.md`／`workflow.md`、`backend/architecture.md`／`backend/database.md`、`backend/api-design.md`／`frontend/api-client.md`）。依 [agent-rules.md](agent-rules.md) 記的教訓（「附帶搜尋清單的否定結論會勸退後面的人再查」），又實查一次：
+**仍然對不上。** 它的 `frontend/react-typescript.md` 找不到來源，而其他來源點名的檔名各不相同（`core-principles.md`／`workflow.md`、`backend/architecture.md`／`backend/database.md`、`backend/api-design.md`／`frontend/api-client.md`）。依 [agent-rules.mdx](agent-rules.mdx) 記的教訓（「附帶搜尋清單的否定結論會勸退後面的人再查」），又實查一次：
 
 - `trendlink` 組織底下每個 repo 的 git tree，grep `react-typescript`：**零命中**
 - `singyichen` 底下每個 repo 的 git tree，grep 同字串：**零命中**
@@ -380,7 +380,7 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | 2026-11-09 | 深色模式的「跟隨系統」跟著作業系統的設定變（[前提](#前提)） | 規格 07-01 Q10 的「固定呈現淺色」；`glossary.mdx` 的過期敘述（已一併改正） | 規格 01-04 §已確認決議 Q7、規格 07-01 §已確認決議 Q14 |
 | 2026-11-04 | 日期的顯示時區依瀏覽者裝置（[F10](#f10-日期時區與可測的時鐘)）；依據於 2026-11-09 由維護者補裁定 | scaffold `date-handling.md` 的「顯示時轉 `Asia/Taipei`」 | 規格 06-01 Q2 |
 | 2026-11-10 | F2 與 F11 沿用 scaffold 與 duty-mate 的 `as`、default export 規則及其例外，並增補第三方型別缺口與 `.notecraft/components/*.tsx` 兩類；F10 不全面禁原生 `Date`，改為單一入口 | 初版把這三條標成不採用，建立在來源誤述上（它們本來就各有例外） | [#109](https://github.com/label-suite/label-suite/issues/109) |
-| 2026-11-10 | F5 的判準採 R4「確實是同一個概念」，標題由「不過早抽象」改為「不過度抽象」 | 初版正例把 [agent-rules.md](agent-rules.md) 已駁回的「第二個使用點出現時才抽」門檻寫回來 | [#109](https://github.com/label-suite/label-suite/issues/109) |
+| 2026-11-10 | F5 的判準採 R4「確實是同一個概念」，標題由「不過早抽象」改為「不過度抽象」 | 初版正例把 [agent-rules.mdx](agent-rules.mdx) 已駁回的「第二個使用點出現時才抽」門檻寫回來 | [#109](https://github.com/label-suite/label-suite/issues/109) |
 | 2026-11-10 | 前提表的「跟隨系統」改寫為跟著作業系統 | 初版把被推翻的「固定呈現淺色」寫成前提（出自 `glossary.mdx` 的過期敘述） | [#109](https://github.com/label-suite/label-suite/issues/109) |
 | 2026-11-10 | 補上 F4 的第四個去處（外觀偏好只記在這台瀏覽器）、F6 禁止列的「不得改寫 shadcn 元件」、F8 的逐頁更嚴規格、F1 分層表哪三層來自維護者的選定；修正章節名與計數（scaffold §無障礙 是五條、§狀態管理 是五條、`tokens.css` 是 92 個不重複變數名、原始 repo `frontend.md` 只有三個章節、§Icons 的 prototype 條文是延伸不是豁免） | 初版的來源誤述與計數錯誤 | [#109](https://github.com/label-suite/label-suite/issues/109) |
 | 2026-11-10 | starter-kit 的 `frontend/react-typescript.md` 實查零命中（查核日 2026-11-10：`trendlink` 組織與 `singyichen` 各 repo 的 git tree、本機 `find`），不做對照 | 該來源點名的檔名 | [#109](https://github.com/label-suite/label-suite/issues/109) |

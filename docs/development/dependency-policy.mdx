@@ -25,7 +25,7 @@ dependabot 目前的警示接受風險、不升：它們全在 `development` sco
 ## 怎麼升
 
 - **不要用 `pnpm.overrides` 繞**：`notecraftapp build docs`（CI 的 `docs-site` job）是目前唯一的端到端驗證路徑，強推它沒測過的大版本會弄壞它。`check:specs`、`check:flows`、`check:er` 只用 Node 內建模組，不受影響
-- **解除條件**：`notecraftapp` 發布支援新版 `astro` 的版本時，照相依套件 PR 的形狀另開一張升（判例 #147、#245，見 [`spec-migration.md` §PR 的變更範圍](spec-migration.md#pr-的變更範圍)；純升版不必照 #245 的「先合併」順序），升完照 [§建置閘門要重跑確認](spec-migration.md#建置閘門要重跑確認) 重測 build 閘門
+- **解除條件**：`notecraftapp` 發布支援新版 `astro` 的版本時，照相依套件 PR 的形狀另開一張升（判例 #147、#245，見 [`spec-migration.mdx` §PR 的變更範圍](spec-migration.mdx#pr-的變更範圍)；純升版不必照 #245 的「先合併」順序），升完照 [§建置閘門要重跑確認](spec-migration.mdx#建置閘門要重跑確認) 重測 build 閘門
 - `katex` 那一筆要等上游把它的 range 往前推，見 [§待決](#待決)
 
 ## 待決
