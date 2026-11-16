@@ -277,7 +277,7 @@ tags: [規格, 搬移, PR, CI]
 判準刻意只看那兩類——它們是唯一有「連帶規則文件」條款的。所以一張 `AGENTS.md` ＋ `pnpm-lock.yaml` 的升版 PR 仍然算「只改規則文件」，照這一條走，不會因為 `pnpm-lock.yaml` 落在工具 PR 的清單裡就兩邊落空。
 **判準不能寫成「沒有動到六類任一類允許的路徑」**：`AGENTS.md` 本身現在就在其中兩類的清單裡，那樣寫會讓這個例外永遠不成立。
 
-前三類是搬移作業期間的分類，後三類在搬移結束後才用得到——**搬移已全部完成（18 頁），所以現在新開的 PR 多半落在後兩類**。
+前三類是搬移作業期間的分類，後三類在搬移結束後才用得到——**搬移已全部完成（18 頁），所以現在新開的 PR 多半落在畫面修正 PR 與流程設定 PR**。
 
 | 類別 | 可以動 | 典型 |
 | :--- | :--- | :--- |
@@ -286,9 +286,9 @@ tags: [規格, 搬移, PR, CI]
 | **工具 PR** | `scripts/`、`package.json`、`pnpm-lock.yaml`、`.github/`，以及下面那一條限定的 `docs/specs/` | 修 `check-specs.mjs`、新增機械檢查、調 CI |
 | **畫面修正 PR** | `design/prototype/`、`docs/prototype/navigation.mdx`（限該檔 §維護說明 要求的同步），以及下面那一條限定的 `docs/specs/` | 依決定改畫面的文案、欄位或徽章——`[UI]` 與 `[Enhancement]` issue 的本體 |
 | **流程設定 PR** | `openspec/`、`.claude/`（`agents/`、`skills/`、`commands/`）、`.agents/skills/`，以及**連帶**修到的 `docs/development/` 與 `AGENTS.md`／`CLAUDE.md` | 建 schema 與 template、寫 agent 角色定義、加 skill 或指令 |
-| **設計系統 PR** | `design/system/`，以及**連帶**修到的 `.claude/skills/design-*` 與 `.agents/skills/design-*` | 從 prototype 重建元件規格、記錄設計差異——`design/prototype/` 仍然只有畫面修正 PR 能動 |
+| **設計系統 PR** | `design/system/`，以及**連帶**修到的 `.claude/skills/design-*` 與 `.agents/skills/design-*` | 從 prototype 重建元件規格、記錄設計差異 |
 
-六類的差別是**目的**，不是檔案數：同樣動到 `.notecraft/components/` 的一個元件，目的是畫圖的算流程圖 PR，目的是改條文、順手讓圖跟上的算文件 PR（判例 #380：只改 `architecture.mdx` 裡那張圖的 prompt，讓它與剛拿掉 `cite` 的元件一致）。
+六類的差別是**目的**，不是檔案數：同樣動到 `.notecraft/components/` 的一個元件，目的是畫圖的算流程圖 PR，目的是改條文、順手讓圖跟上的算文件 PR（判例：後端分層圖拿掉各層的 ADR 出處時，元件那一半走 #378、`architecture.mdx` 裡那張圖的 prompt 那一半走 #380，兩張拆開合併，**都不是畫圖**）。
 同理，同樣動到 `docs/development/` 的一份設計文件：**只動它與連帶的 `AGENTS.md`／`CLAUDE.md`、不動 `openspec/`、`.claude/` 或 `.agents/skills/` 的算文件 PR**（判例：#221 那張補五類表的，以及 #224）；因為改了 schema、agent 或 skill 而連帶要更新那份文件的，算流程設定 PR。
 
 - **流程圖元件不住在 `docs/` 底下**：規格頁用 `GeneratedFrame` 從 `@notes/components/` 取元件，所以流程圖 PR 通常會同時動到 `docs/specs/` 的頁面與 `.notecraft/components/`。這是允許的，不必每次在留言裡解釋。判例 #175、#176、#177、#193、#198、#199。只修元件、完全不動 `docs/` 也算這一類（判例 #167）。
@@ -301,7 +301,7 @@ tags: [規格, 搬移, PR, CI]
   索引與被索引的文件必須同一張 PR 落地，否則合併後索引會指向不存在的檔案。
   **連帶不等於夾帶**，而且這一條有程序掛勾（比照工具 PR 那條）：**規則文件的每一處改動都要在 PR body 逐一列出，並寫明它服務的是同一個目的**。合併閘第 2 條是純路徑比對，`AGENTS.md` 一進清單就機械上全部通過，所以這個限制只能靠 PR body 的逐項說明與獨立審查把關。
   只改規則文件的 PR 仍然不屬六類，判準見上面。
-- **文件 PR 可以順手更新那一頁已生成的流程圖**：條文改了而圖還是舊的，比圖沒更新更糟。判例 #200——折回 03-01 的範圍硬化規則時，同一張 PR 改了 `spec-03-01-task-list-flow.tsx` 的三行。
+- **文件 PR 可以順手更新那一頁已生成的視覺化元件**（不限流程圖）：條文改了而圖還是舊的，比圖沒更新更糟。判例 #200——折回 03-01 的範圍硬化規則時，同一張 PR 改了 `spec-03-01-task-list-flow.tsx` 的三行；判例 #355——PRD 清掉 19 處「未撰寫」時，同一張 PR 把 `prd-site-map.tsx` 的 19 個 `specState` 一起改成 `written`，那個檔不是 `*-flow.tsx`。
 - **工具 PR 可以動 `docs/specs/`，但只限修掉新檢查在既有頁面上抓到的違規**，而且要在 PR body 逐一列出；**不得新增或改寫規格條文**，也不得為了讓檢查器有東西可驗而去改真正的規格頁（測試資料放 `scripts/tests/`）。
   原因在 CI：`specs` job 會在 **PR 分支上**跑 `node scripts/check-specs.mjs docs`，所以新檢查一加上去，既有頁面的違規就讓**那張工具 PR 自己**變紅；不在同一張修掉就過不了。判例 #149、#151、#152、#153 四張都是這個形狀。
 - **畫面修正 PR 可以動 `design/prototype/`，但那道關卡在 Ready 之前、不在 PR 階段**：規則本體寫在 `AGENTS.md` §Project Board and Dispatch 的 **Ready gate**，這裡不複述以免兩份漂移。要記住的是：**卡片沒有合法地走過那道關卡，就不會有這一類 PR**；畫 artifact 不等於改畫面的授權。
@@ -311,8 +311,9 @@ tags: [規格, 搬移, PR, CI]
   **同一次流程改動連帶的規則條文可以一起改**：#219 動了 `.claude/commands/sdd.md`、`AGENTS.md`（新增 §SDD Workflow 一節）與 `docs/development/spec-authoring.md`，三個檔都服務同一個目的，所以整張歸流程設定 PR，不必拆。
   **只改**規則文件的 PR 不屬於這六類，照本節開頭那一條走；判準也定義在那裡。
 - 文件 PR 與流程圖 PR **不得動 `scripts/`、`package.json`、`.github/`**。搬移途中發現檢查器有缺陷時，開一張 `[Bug]` issue 與它對應的工具 PR 處理，不要夾帶。
+- **設計系統 PR 的 `design-*` skill 是連帶，不是夾帶**，而且有程序掛勾（比照下面規則文件那條）：**那兩個 skill 的每一處改動都要在 PR body 逐一列出，並寫明它服務的是同一個目的**。原因同樣是合併閘第 2 條只比對路徑——`.claude/skills/design-*` 同時落在流程設定 PR 的 `.claude/` 清單裡，機械上分不出來。只寫 skill、還沒產出 `design/system/` 的那一段（判例：#248 的第一段）仍然是流程設定 PR。
 - **任何一類都不准動的**：`docs/specs/00-prd.mdx`。要動 PRD 時回報並建議用 `prd-writing`（見「非目標」）。
-- **`design/prototype/` 只有畫面修正 PR 能動，而且要先過上面那道 artifact 關卡。** 文件 PR、流程圖 PR、工具 PR 與流程設定 PR 都不准動它：搬移期間畫面與規格不一致時列入待釐清（見「非目標」），不要順手改畫面。
+- **`design/prototype/` 只有畫面修正 PR 能動，而且要先過上面那道 artifact 關卡。** 文件 PR、流程圖 PR、工具 PR、流程設定 PR 與設計系統 PR 都不准動它：搬移期間畫面與規格不一致時列入待釐清（見「非目標」），不要順手改畫面。
 
 ## 合併閘第 3 條：怎麼判斷一個 job 真的跑完了
 
@@ -584,6 +585,7 @@ ENOENT: no such file or directory, rename
 
 | 日期 | 決策 | 取代了什麼 | 來源 |
 | :--- | :--- | :--- | :--- |
+| 2026-11-16 | 文件 PR 可動那一頁**已生成的視覺化元件**（不限 `*-flow.tsx`）；新增第六類**設計系統 PR**（`design/system/`）（[§PR 的變更範圍](#pr-的變更範圍)） | 原本表格只收 `*-flow.tsx`，而 #355 的 `prd-site-map.tsx`、#378 的 `architecture-backend-layers.tsx` 都不是；`design/system/` 在這份文件裡原本出現 0 次，六類（當時五類）沒有一類收得了 #248 要產出的東西 | [#236](https://github.com/label-suite/label-suite/issues/236)、[#248](https://github.com/label-suite/label-suite/issues/248) |
 | 2026-11-04 | 搬移設計與十條跨頁決議 D1–D10、17 頁序列不並行等「作者自行決定」項（[§跨頁決議](#跨頁決議)、§本文件作者自行決定的事）；原標題寫「八條」，表內實有 D1–D10 | — | 維護者口頭裁定 |
 | 2026-11-04 | 07-01 的 Q1、Q3 由維護者拍板（頁面當時只留下日期） | — | 維護者口頭裁定 |
 | 2026-10-29 | 06-01 的 Q4、Q5、Q6 依據是維護者拍板 | 頁面寫成「舊編號 `006-Q2`／`Q3`／`Q4`」，看起來像來源條文編號 | [#203](https://github.com/label-suite/label-suite/issues/203) |
