@@ -1,5 +1,5 @@
 import type { CustomSlideProps, Deck } from "@/lib/decks";
-import { Compare, Roster, Table, Triad } from "@/components/deck/blocks";
+import { Roster, Table, Triad } from "@/components/deck/blocks";
 import ArchitectureContainerView from "@notes/components/architecture-container-view";
 import PrdSystemContext from "@notes/components/prd-system-context";
 import PrdTaskLifecycleFlow from "@notes/components/prd-task-lifecycle-flow";
@@ -72,42 +72,6 @@ function RolesPage({ dark, area }: CustomSlideProps) {
   );
 }
 
-// PART 04 — 範圍內／範圍外兩份並列清單的對照，不給建議徽章（這是已拍板的邊界，不是互相競爭的方案）。
-function ScopePage({ dark }: CustomSlideProps) {
-  return (
-    <Compare
-      dark={dark}
-      axis="邊界"
-      left={{
-        tag: "範圍內",
-        name: "六大核心模組",
-        tone: "blue",
-        rows: [
-          ["01", "帳號"],
-          ["02", "儀表板"],
-          ["03", "任務管理"],
-          ["04", "標記作業"],
-          ["05", "資料集"],
-          ["06", "系統管理"],
-        ],
-      }}
-      right={{
-        tag: "範圍外",
-        name: "六項排除，另兩項見註腳",
-        tone: "orange",
-        rows: [
-          ["批次匯入精靈", "部署者這期直接匯入"],
-          ["AI 輔助標記建議", "列為未來工作"],
-          ["標準格式匯出", "CoNLL／BIO／JSON-L，未來工作"],
-          ["並發壓力測試", "研究原型，非生產規模"],
-          ["第三方系統整合", "這期以展示平台能力為主"],
-          ["手機原生 App", "網頁應用，用瀏覽器操作"],
-        ],
-      }}
-    />
-  );
-}
-
 const deck: Deck = {
   slug: "specs/00-prd",
   title: "Label Suite：給學術 NLP 團隊的標記與品質平台",
@@ -121,14 +85,13 @@ const deck: Deck = {
       eyebrow: "PRODUCT · 定稿",
       title: "Label Suite：給學術 NLP 團隊的標記與品質平台",
       subtitle: "一個設定驅動的平台，走完試標、正式標記、審核與資料品質分析",
-      meta: ["由 docs/specs/00-prd.mdx 生成", "9 頁 · 16:9"],
+      meta: ["由 docs/specs/00-prd.mdx 生成", "8 頁 · 16:9"],
       agenda: [
         { n: "01", title: "問題與定位", sub: "三個痛點，一個論文目標" },
         { n: "02", title: "六項目標", sub: "怎麼衡量做到了" },
         { n: "03", title: "六個角色", sub: "系統角色與任務角色互不影響" },
-        { n: "04", title: "範圍邊界", sub: "這期做什麼、不做什麼" },
-        { n: "05", title: "系統架構", sub: "C4 第一層與第二層" },
-        { n: "06", title: "任務生命週期", sub: "三個模組之間的六次交接" },
+        { n: "04", title: "系統架構", sub: "C4 第一層與第二層" },
+        { n: "05", title: "任務生命週期", sub: "三個模組之間的六次交接" },
       ],
     },
     {
@@ -160,27 +123,6 @@ const deck: Deck = {
         chip: "資料安全切割",
       },
       render: RolesPage,
-    },
-    {
-      layout: "custom",
-      nav: "範圍邊界",
-      num: "04",
-      eyebrow: "PART 04 · 專案範圍",
-      title: "範圍已拍板：六大模組在內，AI 建議與手機 App 在外",
-      pill: { text: "定稿範圍", tone: "blue" },
-      footnotes: [
-        { n: "1", text: "07 共用介面（側欄導覽、工作頁籤、語言切換）貫穿所有模組，不另外佔一列。" },
-        {
-          n: "2",
-          text: "多語言僅排除「第三種以上」，繁中與英文切換仍在範圍內；說明按鈕這期不做，下一期依 SUS 問卷結果決定。",
-        },
-      ],
-      callout: {
-        icon: "alert",
-        tone: "warning",
-        text: "假設：任務類型完全由任務設定決定；不成立時目標二無法達成",
-      },
-      render: ScopePage,
     },
     {
       layout: "full-visual",
