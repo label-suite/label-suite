@@ -1025,9 +1025,11 @@ test('a .md page under docs is checked for cited names', () => {
 
 test('a .md page is not mistaken for a spec page', () => {
   // specParts() keys on NN-<module>/NN-<page>.mdx, so a .md file never picks up
-  // the frontmatter, chapter-order, scenario or legacy-mapping checks.
+  // the frontmatter, chapter-order, scenario or legacy-mapping checks. The
+  // fixture carries the NN- prefix on purpose: without it the name fails
+  // SPEC_FILE_RE for the wrong reason and the extension goes untested.
   assert.deepEqual(
-    errorsFor({ [SPEC]: spec(), 'specs/01-user-management/notes.md': '# 筆記\n\n一句話。\n' }),
+    errorsFor({ [SPEC]: spec(), 'specs/01-user-management/02-notes.md': '# 筆記\n\n一句話。\n' }),
     [],
   );
 });
