@@ -24,11 +24,18 @@ type Props = {
   height?: number;
   /** Optional query string without the leading "?", e.g. "task_id=T003&task_role=project_leader". */
   query?: string;
+  /**
+   * Forces the prototype's light or dark theme. The prototype follows
+   * prefers-color-scheme, and inside an iframe that query reads the iframe
+   * element's color-scheme, so this overrides the viewer's OS setting.
+   * A theme the viewer picked inside the prototype (localStorage) still wins.
+   */
+  colorScheme?: 'light' | 'dark';
 };
 
 type Status = 'checking' | 'up' | 'down';
 
-export default function PrototypeFrame({ page, caption, height = 640, query }: Props) {
+export default function PrototypeFrame({ page, caption, height = 640, query, colorScheme }: Props) {
   const url = `${PROTOTYPE_ORIGIN}/pages/${page}.html${query ? `?${query}` : ''}`;
   const source = `design/prototype/pages/${page}.html`;
   const [status, setStatus] = useState<Status>('checking');
@@ -79,7 +86,7 @@ export default function PrototypeFrame({ page, caption, height = 640, query }: P
     <figure ref={figureRef} style={{ margin: '1rem 0' }}>
       {status === 'up' ? (
         <div style={{ ...box, overflow: 'hidden' }}>
-          <iframe src={url} title={`${caption} prototype`} loading="lazy" style={frame} />
+          <iframe src={url} title={`${caption} prototype`} loading="lazy" style={colorScheme ? { ...frame, colorScheme } : frame} />
         </div>
       ) : (
         <div

@@ -214,7 +214,16 @@ function prototypePage(page: string, caption: string, query?: string) {
       );
     }
     // PrototypeFrame 底下還有一行 caption 與上下 margin，扣掉約 64px。
-    return <PrototypeFrame page={page} caption={caption} query={query} height={Math.max(320, area.h - 64)} />;
+    // 簡報一律用亮色介面，不跟著觀看者的系統暗色模式（維護者指示）。
+        return (
+          <PrototypeFrame
+            page={page}
+            caption={caption}
+            query={query}
+            colorScheme="light"
+            height={Math.max(320, area.h - 64)}
+          />
+        );
   }
   return PrototypePage;
 }
