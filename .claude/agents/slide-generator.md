@@ -45,7 +45,7 @@ model: sonnet
    - 每個要嵌入的元件 `import Xxx from "@notes/components/<id>";`
    - **`custom` 頁的元件定義在同一個檔案裡**，緊接 `const deck` 之前
    - `const deck: Deck = { slug, title, eyebrow, generatedAt, source, slides: [...] };`
-     本專案的 `slug` **要帶筆記所在的資料夾**（`development/agent-rules`，等於 `/notes/<slug>` 的 slug；路由與筆記頁的入口只比對這個欄位），`source` 寫專案相對路徑（`docs/development/agent-rules.md`），而**檔名攤平**放在專案根的 `.notecraft/components/<name>.deck.tsx`
+     本專案的 `slug` **要帶筆記所在的資料夾**（`development/agent-rules`，等於 `/notes/<slug>` 的 slug；路由與筆記頁的入口只比對這個欄位），`source` 寫專案相對路徑（`docs/development/agent-rules.mdx`），而**檔名攤平**放在專案根的 `.notecraft/components/<name>.deck.tsx`
    - `export default deck;`
    - 每頁必有 `nav`；`custom` 用 `render: MyPage`（元件參照）；`full-visual` 用 `viz: Xxx`
 4. **自我把關**（跑驗證前必做）：Read 剛寫的檔案，逐項確認

@@ -9,7 +9,7 @@ updatedAt: '2026-11-16'
 
 # Agent Hook 契約與平台支援矩陣
 
-`AGENTS.md` 是規則本體；本文件只定「怎麼觸發、怎麼傳遞結果」，不是第二份規則 canon，一條新規則也沒有。規則內容在 [agent-rules.md](agent-rules.md)、[backend-agent-rules.md](backend-agent-rules.md)、[security-agent-rules.md](security-agent-rules.md)、[api-agent-rules.md](api-agent-rules.md)、[frontend-agent-rules.md](frontend-agent-rules.md)、[testing-agent-rules.md](testing-agent-rules.md)，自動 gate 的政策在 testing-agent-rules 的 T9。兩邊說法不同時以 `AGENTS.md` 為準，並回報給維護者。
+`AGENTS.md` 是規則本體；本文件只定「怎麼觸發、怎麼傳遞結果」，不是第二份規則 canon，一條新規則也沒有。規則內容在 [agent-rules.mdx](agent-rules.mdx)、[backend-agent-rules.mdx](backend-agent-rules.mdx)、[security-agent-rules.mdx](security-agent-rules.mdx)、[api-agent-rules.mdx](api-agent-rules.mdx)、[frontend-agent-rules.mdx](frontend-agent-rules.mdx)、[testing-agent-rules.mdx](testing-agent-rules.mdx)，自動 gate 的政策在 testing-agent-rules 的 T9。兩邊說法不同時以 `AGENTS.md` 為準，並回報給維護者。
 
 ## 邊界
 
@@ -17,7 +17,7 @@ updatedAt: '2026-11-16'
 
 | 邊界 | 說明 |
 | :--- | :--- |
-| 不實作任何 gate | [T9](testing-agent-rules.md) 明文禁止在規範文件裡實作 gate。`.claude/` 的設定與 `scripts/`、`.github/` 的檢查器由 [#111](https://github.com/label-suite/label-suite/issues/111) 後兩張 PR 實作 |
+| 不實作任何 gate | [T9](testing-agent-rules.mdx) 明文禁止在規範文件裡實作 gate。`.claude/` 的設定與 `scripts/`、`.github/` 的檢查器由 [#111](https://github.com/label-suite/label-suite/issues/111) 後兩張 PR 實作 |
 | 不是規則來源 | hook 只呼叫本 repo 的共用檢查器。檢查器要擋什麼，依六份規範文件 |
 | hook 不等於權限控制 | hook 攔不住平台權限層、產品授權與 CI 要負責的事。**本機 hook 通過不能代替 CI**（T9 的禁止格） |
 | 不宣稱兩邊等價 | Claude 的設定、事件名稱、exit code 與工具名稱**不會**自動在 Codex 生效。見[§平台支援矩陣](#平台支援矩陣)與[§能力缺口與承接](#能力缺口與承接) |
@@ -109,7 +109,7 @@ updatedAt: '2026-11-16'
 
 | | |
 | :--- | :--- |
-| **目的** | 在 agent 宣告做完之前，核對該跑的驗證有沒有跑、evidence 齊不齊（[T11](testing-agent-rules.md)） |
+| **目的** | 在 agent 宣告做完之前，核對該跑的驗證有沒有跑、evidence 齊不齊（[T11](testing-agent-rules.mdx)） |
 | **事件** | `Stop` 與 `SubagentStop`（兩邊都有，且**兩邊都可阻擋**） |
 | **適用路徑／角色** | 整個 repo。`SubagentStart`／`SubagentStop` **兩邊都能以 agent／subagent type 當 matcher** 分流角色。但 **Codex 的 `Stop` 不吃 matcher**（`UserPromptSubmit`、`Interrupt` 也不吃），所以 `Stop` 那一支要自己從 payload 判斷 |
 | **payload 欄位** | **`stop_hook_active`**（防重入就靠它：為 `true` 代表這次結束本來就是上一個 stop hook 擋下所造成的）、`last_assistant_message`、`session_id`、`transcript_path`（只在本機用，**不外傳**）、`cwd`。`SubagentStop` 另有 `agent_type` 可供分流 |
@@ -119,7 +119,7 @@ updatedAt: '2026-11-16'
 | **阻擋或提醒** | **阻擋**，但**必須防重入**：被擋下之後 agent 會再結束一次，又觸發自己。先讀 `stop_hook_active`，為 `true` 就直接放行——這是兩邊文件都提供的現成機制，不要自己另造標記檔 |
 | **缺工具／無適用檔案** | 只重用與**目前 snapshot、規則版本與驗證範圍一致**的 evidence；對不上就當沒有。`backend/`、`frontend/` 不存在時標 not applicable |
 
-**不新增第三個停點。** [T12](testing-agent-rules.md) 明文只有兩個停點；H6 是機械核對，不是要維護者確認的關卡。
+**不新增第三個停點。** [T12](testing-agent-rules.mdx) 明文只有兩個停點；H6 是機械核對，不是要維護者確認的關卡。
 
 ### H7 CI：重跑必要檢查
 
@@ -132,7 +132,7 @@ updatedAt: '2026-11-16'
 | **共用檢查器** | 與 H3、H4、H5 **同一組**。CI 與本機共用邏輯是防漂移的唯一辦法 |
 | **timeout** | 由 workflow 設定 |
 | **輸出與退出碼** | job 失敗即擋下合併（搭配 branch protection） |
-| **阻擋或提醒** | **阻擋**。**本機通過不能代替 CI**（[T9](testing-agent-rules.md) 的禁止格） |
+| **阻擋或提醒** | **阻擋**。**本機通過不能代替 CI**（[T9](testing-agent-rules.mdx) 的禁止格） |
 | **缺工具／無適用檔案** | CI 不得標 not applicable 來跳過已宣告啟用的必要檢查。branch protection 的啟用是**維護者的設定權限**，不是實作這份契約的人能改的——這兩件事要分清楚 |
 
 ---
@@ -305,7 +305,7 @@ matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Wr
 | `codex` binary 的 strings | 內部 enum 是 snake_case | **不採為依據**，並在查核方式裡寫明理由，避免後人重蹈 |
 | 本 repo | `scripts/setup.sh`（`core.hooksPath`）、`scripts/git-hooks/commit-msg`（`git rev-parse --show-toplevel` 加共用 checker）、`.github/workflows/ci.yml`（三個 job）、`.claude/settings.json`（目前只有 attribution） | **保留並擴充既有入口**，不另建重複的 commit checker |
 | 參考來源的 `.claude/settings.json`（原始本機 repo） | 七支腳本與 `SessionStart`／`PreToolUse`／`PostToolUse`／`PreCompact`／`Stop`／`UserPromptSubmit` 的接線、`permissions.deny` 清單、`command -v harness ... || true` 的選用外部呼叫 | 參考**事件分工**；移除個人絕對路徑與外部 harness 假設。其 matcher 含 `Read|Grep|Glob|NotebookEdit`，搬到 Codex 會空轉，已在§工具名稱寫明 |
-| [testing-agent-rules.md](testing-agent-rules.md) T9、T11、T12 | 七個 gate 的政策與歸屬、evidence 的五個欄位、兩個停點 | H6 與 H7 直接接到這三條，不另定政策 |
+| [testing-agent-rules.mdx](testing-agent-rules.mdx) T9、T11、T12 | 七個 gate 的政策與歸屬、evidence 的五個欄位、兩個停點 | H6 與 H7 直接接到這三條，不另定政策 |
 
 ---
 
