@@ -443,17 +443,17 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 
 > 寫下它的理由：這套慣例原本只存在於程式裡。[Issue #248](https://github.com/label-suite/label-suite/issues/248) 寫 `design-handoff` 時只能逐檔 grep `.get('<名稱>')` 反推，而第一版因此編出兩個**不存在**的參數（`?token=`、`?task=`，實際是 `task_id`）。參數被宣告出來，下一個人才不必用猜的。
 
-### 由共用腳本讀（每一頁都載入它，實際作用依頁面而定）
+### 由共用腳本讀（除兩個根層入口外每一頁都載入，實際作用依頁面而定）
 
 `pages/shared/sidebar.js`：
 
 | 參數 | 值 | 作用 |
 |------|-----|------|
-| `role` | `reviewer` \| 其他 | 工作頁籤記的是標記還是審核模式（`:749`）。各頁另有自己的 `role` 解讀，見下 |
-| `task_id` | 任務代號 | 工作頁籤的去重鍵與標題（`:748`、`:760`、`:763`） |
+| `role` | `reviewer` \| 其他 | 工作頁籤記的是標記還是審核模式（`:749`）。**各頁另有自己的 `role` 解讀與值域，見下** |
+| `task_id` | 任務代號 | 工作頁籤的去重鍵與標題（`:748`、`:760`、`:763`）。**兩個頁面把它當成必填的路由閘，見下** |
 | `ap_stage` | `r<N>` \| `official` | **只有任務詳情讀**（`:762`）：頁籤上的試標／正式階段徽章（`:769`、`:772`） |
-| `sim_logged_in` | `1` | 不論登入旗標如何都**導走**（`:108`） |
-| `sim_logged_out` | `1` | 不論登入旗標如何都**留在本頁**（`:107`）。登入後四個帳號頁會被導走，而它們沒有側欄可以登出，所以這是唯一的回頭路（`:92`–`:93`） |
+| `sim_logged_in` | `1` | 不論登入旗標如何都**導走**（`:108`）。只有呼叫 `redirectIfLoggedIn()` 的**四個帳號頁**有作用（`:89`） |
+| `sim_logged_out` | `1` | 不論登入旗標如何都**留在本頁**（`:107`）。登入旗標（`labelsuite.loggedIn`，`:48`）一寫下去，那四個帳號頁都會把你導開，而它們沒有側欄可以登出，所以這是唯一的回頭路（`:92`–`:93`） |
 
 `pages/annotation/annotation-workspace.data.js`（標記清單、工作區、儀表板、任務詳情、新增任務、資料集分析詳情都載入它）：
 
@@ -471,30 +471,30 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 | `sim_403` | `/task-management/task-detail` | 對一個**種子資料裡找得到**的任務模擬無權限（不是找不到） |
 | `sim_delete_error` | `/task-management/task-list` | 刪除任務時模擬失敗 |
 | `sim_hold` | `/account/verify-email` | 擋住驗證成功後的那一次導向，讓成功面板留在畫面上 |
-| `sim_logged_in` ／ `sim_logged_out` | 全站 | 見上 |
+| `sim_logged_in` ／ `sim_logged_out` | `/account/login`、`/account/register`、`/account/forgot-password`、`/account/reset-password` | 見上。**只有這四頁呼叫 `redirectIfLoggedIn()`**；其餘 14 頁帶這兩個參數沒有作用 |
 
 ### 各頁專屬
 
-沒有列出的頁面不讀任何自己的參數（`/index.html`、`/components-showcase.html` 與六個帳號頁中的五個）。
+沒有列出的**九個**頁面不讀任何自己的參數：`/index.html`、`/components-showcase.html`、六個帳號頁中的五個（除 `/account/verify-email`）、`/admin/role-settings`、`/task-management/task-new`。
 
 | 頁面 | 參數 |
 |------|------|
 | `/account/verify-email` | `sim_hold` |
-| `/admin/user-management` | `q`、`status`、`limit`、`offset` |
+| `/admin/user-management` | `role`（`user` \| `super_admin`，`:1076` 的 `VALID_URL_ROLES`；不在清單內的值忽略）、`q`、`status`、`limit`、`offset` |
 | `/task-management/task-list` | `keyword`、`status`、`output_type`、`run_stage`、`task_role`、`limit`、`offset`、`view`（只認 `empty` 與 `error`）、`unauthorized`、`sim_delete_error` |
-| `/task-management/task-detail` | `task_role`（`project_leader` \| `reviewer` \| `annotator`，不給或不認得一律落到 `annotator`）、`tab`（六個 panel 名）、`status`、`sim_403` |
-| `/annotation/annotation-list` | `role`（只解析 `reviewer` 與 `annotator`）、`run_type`、`status`、`q`、`notice`（`no_actionable_review`，而且要同時 `role=reviewer`）、`limit`、`offset` |
-| `/annotation/annotation-workspace` | `role`、`run_type`、`sample_id` |
+| `/task-management/task-detail` | `task_role`（`project_leader` \| `reviewer` \| `annotator`，不給或不認得一律落到 `annotator`）；**`role` 是它的別名，`task_role` 優先**（`:5145`）、`tab`（六個 panel 名）、`status`、`sim_403` |
+| `/annotation/annotation-list` | `role`（`reviewer` \| `project_leader` \| `annotator`：**清單本體只二分** `reviewer`／`annotator`（`:1057`），`project_leader` 只改側欄那一項的名稱與角色標示（`:438`–`:441`））、`run_type`、`status`、`q`、`notice`（`no_actionable_review`，而且要同時 `role=reviewer`）、`limit`、`offset` |
+| `/annotation/annotation-workspace` | **`task_id`（必填）**——解不到任務就導回清單（`annotation-workspace.config.js:6976`–`:6979`）、`role`（`reviewer` \| `project_leader` \| `annotator`）、`run_type`、`sample_id` |
 | `/dashboard/dashboard` | `view`（`skeleton` \| `error`）、`scenario`（`annotator` \| `reviewer` \| `project_leader` \| `super_admin_data` \| `user`，而且 `dashboard.html` 要有對應的 `id="view-<值>"`） |
 | `/dataset/dataset-analysis-list` | `keyword`、`iaa_status`、`output_type`、`view`（只認 `empty`）、`invalid_task`、`limit`、`offset` |
-| `/dataset/dataset-analysis-detail` | `tab`、`q_state`（`dry_run_in_progress` \| `report_pending` \| `report_generating` \| `report_failed` \| `ready`）、`s_state`（只認 `empty`） |
+| `/dataset/dataset-analysis-detail` | **`task_id`（必填）**——缺少、不認得或成員角色不在允許清單，一律導回列表並帶 `invalid_task=1`（`:2486`–`:2495`）、`tab`（**只認 `quality`**，其餘一律落到統計總覽，`:2521`）、`q_state`（`dry_run_in_progress` \| `report_pending` \| `report_generating` \| `report_failed` \| `ready`）、`s_state`（只認 `empty`） |
 
 ### 不靠網址的兩種狀態
 
 | 機制 | 哪裡 |
 |------|------|
-| 頁內原型開關 | `/account/reset-password` 與 `/account/verify-email` 的 `proto-btn` 按鈕呼叫 `showState('valid' \| 'expired' \| 'used')`。那幾個連結狀態**沒有別的叫法** |
-| 瀏覽器儲存 | 主題 `label-suite-theme`、語言 `labelsuite.lang`、側欄收合 `labelsuite.sidebarCollapsed`、系統角色 `labelsuite.systemRole`、頭像 `label-suite-profile-avatar`、標記作業類型 `labelsuite.activeTaskType`，以及工作頁籤的 6 個 `sessionStorage` 鍵 |
+| 頁內原型開關 | `/account/reset-password` 與 `/account/verify-email` 的 `proto-btn` 按鈕呼叫 `showState()`，值是 `valid`、`expired`、`used` 三種。那幾個連結狀態**沒有別的叫法** |
+| 瀏覽器儲存 | `localStorage` **7 個**：登入旗標 `labelsuite.loggedIn`、主題 `label-suite-theme`、語言 `labelsuite.lang`、側欄收合 `labelsuite.sidebarCollapsed`、系統角色 `labelsuite.systemRole`、頭像 `label-suite-profile-avatar`、標記作業類型 `labelsuite.activeTaskType`；工作頁籤另有 **6 個 `sessionStorage` 鍵** |
 
 ---
 
@@ -506,12 +506,13 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 2. 全局導航流程圖
 3. 對應頁面的 Incoming / Outgoing / Inline 表格
 4. 若新增動態 partial 或 panel，也同步更新「動態載入片段」
-5. 若新增、移除或改變任何網址參數的語意，同步更新「網址參數」那一節——那一節是契約，`design-handoff` 依它展開視圖
+5. **此外**，只要網址參數的名稱、值域或生效條件變動——**即使沒有頁面增減**——也要同步更新「網址參數」那一節。那一節是契約，`design-handoff` 依它展開視圖
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.3.0 | 2026-11-16 | 新增 §網址參數：把這個 prototype 認得的參數寫成契約（共用腳本讀的、`sim_*` 模擬旗標、各頁專屬、以及不靠網址的頁內開關與瀏覽器儲存），並在 §維護說明 加第 5 點。起因是 [Issue #248](https://github.com/label-suite/label-suite/issues/248)：這套慣例原本只存在於程式裡，`design-handoff` 只能逐檔 grep `.get()` 反推，第一版因此編出兩個不存在的參數。 |
 | 1.2.1 | 2026-11-12 | `/account/profile` 補上頭像與「連結 Google 帳號」兩條 Inline（issue label-suite/label-suite#195 第 4、6 項）。 |
 | 1.2.0 | 2026-11-12 | 新增 `/account/verify-email`（issue label-suite/label-suite#195，規格 01-02 Q1、Q2）：註冊送出只寄驗證信，帳號在連結被點過時才建立。同步四個帳號頁「已登入直接前往儀表板」的 Outgoing（規格 01-01 Q3），以及註冊頁移除「Email 已被使用」後的 Inline。 |
 | 1.1.1 | 2026-08-27 | `/components-showcase.html` 元件清單新增 Review Status Track（issue singyichen/label-suite#456 審核導覽元件）。 |
