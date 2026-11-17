@@ -25,10 +25,10 @@
 
 ## 1. 實作前的事實查核（可平行）
 
-- [ ] 1.1 重新核對本機 runtime：Claude Code 版本、codex-cli 版本、`codex features list` 的 `hooks` 狀態、`command -v timeout`／`gtimeout` 是否存在；把實際值寫進完成報告。與 proposal §前置查核所記的 2.1.273／0.153.0 不同時**停下回報**，不逕行調整設計（#111 §1 第 2 項；契約 §查核方式；design §Context）[@backend-developer]
-- [ ] 1.2 四個版本閘鍵逐一與本機 runtime 比對並記錄可用與否：`onFailure`（2.1.295）、`permissions.blockReadsOutsideWorkingDirectories`（2.1.257）、`permissions.blockWritesOutsideWorkingDirectories`（2.1.314）、`permissions.denyInsteadOfPrompting`（2.1.319）。驗證方式為實際寫入設定後觀察 runtime 是否接受，不以文件有欄位當作可用；若 `onFailure` 已可用則停下回報（D15 的「不寫 `onFailure`」前提改變）[@backend-developer]
-- [ ] 1.3 核對官方文件確認 Codex `hooks.json` 的 `command` 欄位是字串還是陣列，記下網址、查核日與原文；結果作為 task 6.2 的實作依據，並於 task 7.1 回填契約（D16；D21 末段的兩個待確認項之一）[@backend-developer]
-- [ ] 1.4 核對官方文件確認 Codex `apply_patch` 的 `tool_input` 路徑欄位名稱；**查得到就寫進 task 3.3 的辨識清單，查不到就維持「找不到可辨識路徑欄位即 `exit 2`」不變**（D11），兩種結果都寫進完成報告並於 task 7.1 回填契約（D11；D21 末段）[@backend-developer]
+- [x] 1.1 重新核對本機 runtime：Claude Code 版本、codex-cli 版本、`codex features list` 的 `hooks` 狀態、`command -v timeout`／`gtimeout` 是否存在；把實際值寫進完成報告。與 proposal §前置查核所記的 2.1.273／0.153.0 不同時**停下回報**，不逕行調整設計（#111 §1 第 2 項；契約 §查核方式；design §Context）[@backend-developer]
+- [x] 1.2 四個版本閘鍵逐一與本機 runtime 比對並記錄可用與否：`onFailure`（2.1.295）、`permissions.blockReadsOutsideWorkingDirectories`（2.1.257）、`permissions.blockWritesOutsideWorkingDirectories`（2.1.314）、`permissions.denyInsteadOfPrompting`（2.1.319）。驗證方式為實際寫入設定後觀察 runtime 是否接受，不以文件有欄位當作可用；若 `onFailure` 已可用則停下回報（D15 的「不寫 `onFailure`」前提改變）[@backend-developer]
+- [x] 1.3 核對官方文件確認 Codex `hooks.json` 的 `command` 欄位是字串還是陣列，記下網址、查核日與原文；結果作為 task 6.2 的實作依據，並於 task 7.1 回填契約（D16；D21 末段的兩個待確認項之一）[@backend-developer]
+- [x] 1.4 核對官方文件確認 Codex `apply_patch` 的 `tool_input` 路徑欄位名稱；**查得到就寫進 task 3.3 的辨識清單，查不到就維持「找不到可辨識路徑欄位即 `exit 2`」不變**（D11），兩種結果都寫進完成報告並於 task 7.1 回填契約（D11；D21 末段）[@backend-developer]
 - [ ] 1.5 在 macOS 與 CI 的 Linux 各驗一次 `head -c 65536` 的截斷行為（含多位元組字元落在邊界時的輸出），記錄兩邊是否一致；不一致時把差異與因應寫進完成報告，作為 task 2.3 的實作依據（D6）[@backend-developer]
 
 ## 2. 支援層與測試工具箱
