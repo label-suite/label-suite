@@ -26,7 +26,7 @@
 
   **又一次「欄位存在 ≠ 這個版本有」**（契約 §查核方式 第 4 點的同類陷阱，而且不只 `onFailure` 一個）：`permissions.blockReadsOutsideWorkingDirectories` 需 2.1.257（本機**可用**）、`permissions.blockWritesOutsideWorkingDirectories` 需 2.1.314（**不可用**）、`permissions.denyInsteadOfPrompting` 需 2.1.319（**不可用**）。連同 `onFailure` 需 2.1.295，四個鍵都要和本機 2.1.273 比對過才能依賴。
 
-  **所以契約 §能力缺口 第 6 條可以結案**：兩側都查完了。剩下的 Q2 是選擇題，不是查核問題。
+  **所以契約 §能力缺口 第 6 條可以結案**：兩側都查完了。剩下的 Q1（原 Q2）是選擇題，不是查核問題。
 - **重新核對實作當時版本的官方 hook 文件與 runtime**（#111 §1 第 2 項；契約 §查核方式要求實作前再核一次）。2026-11-17 已複查並與契約一致：Claude Code **2.1.273**（故 `onFailure: "block"` 仍不可用，它需 v2.1.295）、codex-cli **0.153.0**、`codex features list` 的 `hooks` 為 `stable`／`true`、本機**沒有** `timeout` 也沒有 `gtimeout`。
 
 ### 五支待建置的共用檢查器
@@ -57,7 +57,7 @@
 - 執行時間與輸出大小上限一律用**平台 hook 設定的 `timeout` 欄位**，不得用 shell `timeout`（本機沒有，契約 §查核方式第 1 點）。
 - `Stop`／`SubagentStop` 的防重入用 payload 的 `stop_hook_active`，不自造標記檔（契約 §H6）。
 - 本機診斷 log（若保留）只記脫敏 metadata、有上限與 ignore，與產品 `audit_events` 分開（#111 §5 第 5 項）。
-- `scripts/setup.sh` 的安裝流程可重複執行、沿用現有 `core.hooksPath`、偵測既有自訂設定衝突、提供停用與復原方法（#111 §驗收條件第 2 項）。
+- `scripts/setup.sh` 的安裝流程可重複執行、沿用現有 `core.hooksPath`、偵測既有自訂設定衝突、提供停用與復原方法（#111 §驗收條件第 2 項），並**輸出 Codex 的 hook 信任指引**（**維護者 2026-11-17 裁定**，即契約 §待決第 1 題的答案；理由見 `design.md` D18）。
 
 ### 測試與證據
 
@@ -99,7 +99,7 @@
 | 類別 | 受影響對象 |
 | :--- | :--- |
 | 新增檔案 | `scripts/check-env.sh`、`scripts/check-command.sh`、`scripts/check-write-target.sh`、`scripts/check-changed.sh`、`scripts/check-evidence.sh`、`scripts/lib/hook-payload.mjs`、`scripts/lib/hook-common.sh`（五支檢查器共用的支援層，`design.md` D1）、`scripts/git-hooks/pre-commit`、`.codex/hooks.json`、`scripts/tests/` 下對應的測試 |
-| 修改檔案 | `.claude/settings.json`（新增 `hooks` 鍵）、`scripts/setup.sh`（安裝流程與衝突偵測）、`.github/workflows/ci.yml`（接上同一組檢查器）、`docs/development/agent-hook-contract.mdx`（「待建置」標記回填）、`AGENTS.md` §Agent Rules Index 末段的現況敘述 |
+| 修改檔案 | `.claude/settings.json`（新增 `hooks` 鍵）、`scripts/setup.sh`（安裝流程、衝突偵測與 Codex 的 hook 信任指引）、`.github/workflows/ci.yml`（接上同一組檢查器）、`docs/development/agent-hook-contract.mdx`（「待建置」標記回填）、`AGENTS.md` §Agent Rules Index 末段的現況敘述 |
 | 不動 | `scripts/check-commit-msg.sh`、`scripts/git-hooks/commit-msg`、`scripts/check-specs.mjs`／`check-flows.mjs`／`check-er-data.mjs` 的既有行為、`docs/specs/`、`design/prototype/` |
 | 相依工具 | Claude Code 2.1.273、codex-cli 0.153.0、Git、`node`／`pnpm`（`uv` 待 `backend/` 出現後才適用）。不新增任何套件相依 |
 | 對人的影響 | 全體開發者的提交流程；Codex 使用者每次 hook 變更後需重新信任，否則 hook 被跳過 |
@@ -116,11 +116,11 @@
 | `AGENTS.md`（唯一規則來源） | Hard Rules 2、3、8、9、10；§Commits；§Language Rules；§Agent Rules Index（末段的 hook 現況敘述） |
 | `docs/development/testing-agent-rules.mdx` | T9（本機 hook 通過不能代替 CI）、T11（evidence）、T12（只有兩個停點）——由契約 §H6、§H7 轉引，本 change 不另定政策 |
 
-**待決問題（留給停點一，本 change 不自行決定）**
+**待決問題（本 change 不自行決定）**
 
-- **Q1 ＝ 契約 §待決第 1 題：Codex hook 的信任指引要不要寫進 `scripts/setup.sh`。** 提議是在 setup 輸出提示「Codex 使用者要跑 `/hooks` 信任，否則 hook 會被跳過」。卡住的是：這會影響新人上手流程，而 `setup.sh` 目前只做一件事（設 `core.hooksPath`），多印一段提示算不算它的職責。**由維護者決定**；本 proposal 不作答，`design.md` 與 `tasks.md` 需等這題有結論才能定 `setup.sh` 的工作範圍。
+**編號在 2026-11-17 重編過，舊號不再使用。** 維護者當日裁定了原 Q1（Codex 信任指引要不要寫進 `scripts/setup.sh`：**要寫**）以及 `design.md` 自行登記的原 Q3、Q4、Q5，四題都已落回 spec delta 與 `design.md` 的決策，不再待決。本節因此只剩一題，**原 Q2 改編為 Q1**，不留空號。`design.md` §Open Questions 另登記一題 **Q2（原 Q6）：權限層什麼時候設**——它決定的是後續 change 的排程，不改變本 change 的任何產出，所以不登記在這裡；新舊編號的對照表在 `design.md` §Open Questions。**兩題都不阻擋本 change 進入 apply。**
 
-- **Q2（2026-11-17 查核後新增）：本 repo 的 Codex 設定採 permission profile 還是 sandbox？** 官方文件明寫兩者不可混用（原文見 §前置查核）。這個選擇會改變**每一位用 Codex 的開發者**的預設行為，不是實作者能決定的。**由維護者決定**；在有結論之前，`design.md` 不得假定 `.codex/` 會長成哪一種形狀。
+- **Q1（原 Q2，2026-11-17 查核後新增）：本 repo 的 Codex 設定採 permission profile 還是 sandbox？** 官方文件明寫兩者不可混用（原文見 §前置查核）。這個選擇會改變**每一位用 Codex 的開發者**的預設行為，不是實作者能決定的。**由維護者決定**；在有結論之前，`design.md` 不得假定 `.codex/` 會長成哪一種形狀。
 
 **前置查核的現況**
 

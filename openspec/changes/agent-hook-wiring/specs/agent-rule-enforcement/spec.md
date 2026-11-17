@@ -215,9 +215,9 @@
 
 ### Requirement: 破壞性命令在執行前被拒絕
 
-系統 SHALL 在工具執行前事件（H2）拒絕 `AGENTS.md` 硬性規則 10 所列、未經維護者確認的破壞性命令：`rm -rf`、`git reset --hard`、`git push --force`、`git branch -D`。拒絕 MUST 以 exit `2` 表達、原因寫 stderr，且 MUST 發生在命令執行之前。系統 MUST NOT 自行推定維護者已確認，也 MUST NOT 因為改用另一個工具呼叫同一個動作就視為已授權。
+系統 SHALL 在工具執行前事件（H2）**無條件**拒絕 `AGENTS.md` 硬性規則 10 所列的破壞性命令：`rm -rf`、`git reset --hard`、`git push --force`、`git branch -D`。系統 MUST NOT 嘗試判別維護者是否已確認：因為系統 MUST NOT 自行推定維護者已確認，而任何 agent 送得出來的「已確認」訊號都等於讓 agent 自我授權。已確認後的執行路徑在 hook 之外。拒絕 MUST 以 exit `2` 表達、原因寫 stderr，MUST 發生在命令執行之前，且 MUST NOT 因改用另一個工具呼叫同一個動作就視為已授權。
 
-來源：契約 §H2；#111 §3 第 1 項。
+來源：契約 §H2；#111 §3 第 1 項；`AGENTS.md` Hard Rule 10（規則本身不變，本條只定義 hook 在其中擔任的角色）；**維護者 2026-11-17 裁定**（hook 一律拒絕，已確認的路徑走 hook 之外：維護者自行執行，或暫時停用 hook）。
 
 #### Scenario: H2 擋下 rm -rf
 
@@ -233,6 +233,12 @@
 
 - **WHEN** 同一個破壞性動作改以另一個工具或另一種寫法送出
 - **THEN** 仍然被拒絕，不因為前一次已被擋過就放行
+
+#### Scenario: 已獲維護者確認的破壞性命令仍被拒絕
+
+- **WHEN** 維護者已確認某個破壞性命令，而該命令仍以 agent 的工具呼叫送出
+- **THEN** 該次工具呼叫一樣以 exit `2` 被拒絕，系統不以任何「已確認」的宣稱作為放行依據
+- **AND** 維護者自行在終端機執行同一個命令時不經過 H2，該途徑不受本條影響
 
 ### Requirement: 提交與推送到 main 的目標被拒絕
 
@@ -273,14 +279,20 @@
 
 ### Requirement: 受保護路徑的寫入被拒絕且合法例外放行
 
-系統 SHALL 在 H2 拒絕對 secret 類路徑的寫入：`**/.env.*`、`*.pem`、`*.key`、`*id_rsa*`、`*credentials.json`。系統 SHALL 放行合法例外：`.env.example` 與其他 `*.example`、`*.pub`，以及測試 fixture 目錄下的假憑證。`docs/specs/00-prd.mdx` MUST NOT 列入受保護清單。
+系統 SHALL 在 H2 拒絕對 secret 類路徑的寫入：`**/.env`、`**/.env.*`、`*.pem`、`*.key`、`*id_rsa*`、`*credentials.json`。系統 SHALL 放行合法例外：`.env.example` 與其他 `*.example`、`*.pub`，以及測試 fixture 目錄下的假憑證。`docs/specs/00-prd.mdx` MUST NOT 列入受保護清單。
 
-來源：契約 §H2「適用路徑／角色」、§決策紀錄 2026-11-11（不用 hook 擋 PRD）；#111 §3 第 3 項。
+來源：契約 §H2「適用路徑／角色」、§決策紀錄 2026-11-11（不用 hook 擋 PRD）；#111 §3 第 3 項；`**/.env` 一項為**維護者 2026-11-17 裁定**新增——`**/.env.*` 命中 `.env.local` 與 `config/.env.local`，不命中裸檔名 `.env` 與 `config/.env`（以 git 自身的樣式比對實測）。
 
 #### Scenario: H2 擋下寫入 .env
 
 - **WHEN** agent 要寫入 `.env.local`
 - **THEN** 該次寫檔被拒絕，檔案內容沒有改變
+
+#### Scenario: H2 擋下寫入裸檔名 .env
+
+- **WHEN** agent 要寫入 repo 根的 `.env`，或子目錄下的 `config/.env`
+- **THEN** 兩者都被拒絕，檔案內容沒有改變
+- **AND** 同一組樣式下 `.env.example` 仍然放行
 
 #### Scenario: H2 放行 .env.example
 
@@ -517,9 +529,9 @@
 
 ### Requirement: 安裝流程可重複執行且不靜默覆寫既有設定
 
-系統 SHALL 讓安裝流程可重複執行並得到相同結果，沿用 repo 現有的 Git hook 啟用方式。偵測到使用者已有的自訂設定與本 repo 設定衝突時，MUST 回報衝突而 MUST NOT 靜默覆寫使用者層或全域設定。安裝流程 SHALL 提供停用與復原的方法，且停用本機 hook MUST NOT 使 CI 的必要檢查失效。
+系統 SHALL 讓安裝流程可重複執行並得到相同結果，沿用 repo 現有的 Git hook 啟用方式。偵測到使用者已有的自訂設定與本 repo 設定衝突時，MUST 回報衝突而 MUST NOT 靜默覆寫使用者層或全域設定。安裝流程 SHALL 提供停用與復原的方法，且停用本機 hook MUST NOT 使 CI 的必要檢查失效。安裝流程 SHALL 另外輸出 Codex 的 hook 信任指引，內容含「未信任時 hook 會被靜默跳過」與重新信任的方式。
 
-來源：#111 §驗收條件第 2 項；契約 §H7、§設定位置（managed／使用者層／專案層）。
+來源：#111 §驗收條件第 2 項；契約 §H7、§設定位置（managed／使用者層／專案層）、§待決第 1 題；信任指引一項為**維護者 2026-11-17 裁定**（契約 §待決第 1 題的答案：要寫進安裝流程）。
 
 #### Scenario: 重複執行安裝
 
@@ -535,6 +547,11 @@
 
 - **WHEN** 開發者依提供的方法停用本機 hook
 - **THEN** 本機 hook 不再觸發，CI 的必要檢查仍然執行
+
+#### Scenario: 安裝流程輸出 Codex 的 hook 信任指引
+
+- **WHEN** 開發者執行安裝流程
+- **THEN** 輸出含一段指引，說明 Codex 使用者必須信任本 repo 的 hook，否則 hook 會被靜默跳過，並寫出重新信任的方式
 
 ### Requirement: 文件中的 hook 現況敘述與實際狀態一致
 
@@ -592,7 +609,7 @@
 #### Scenario: Codex 的兩套機制互斥
 
 - **WHEN** 描述 Codex 的權限設定
-- **THEN** 陳述 permission profile 與舊的 sandbox 設定不可混用，且本 repo 採哪一套尚未決定（Q2）
+- **THEN** 陳述 permission profile 與舊的 sandbox 設定不可混用，且本 repo 採哪一套尚未決定（Q1）
 
 #### Scenario: Claude 的拒絕規則涵蓋讀取且不等信任
 
@@ -604,7 +621,8 @@
 - **WHEN** 要依賴某個平台設定鍵
 - **THEN** 一併查出它的版本下限並與本機 runtime 比對，不以「文件有這個欄位」當作本機可用
 
-## 待決問題（留給停點一，本 delta 不自行決定）
+## 待決問題（本 delta 不自行決定）
 
-- **Q1（契約 §待決第 1 題）**：Codex hook 的信任指引要不要寫進專案的安裝流程。提議是在安裝流程輸出提示「Codex 使用者要重新信任 hook，否則 hook 會被跳過」。卡住的是安裝流程目前只做一件事，多印一段提示算不算它的職責。**由維護者決定**；在有結論之前，「安裝流程可重複執行且不靜默覆寫既有設定」這條 requirement 不涵蓋信任指引的輸出內容。
-- **Q2（2026-11-17 查核後新增）**：本 repo 的 Codex 設定採 permission profile 還是舊的 sandbox 設定。官方文件明寫兩者不可混用，而這個選擇會改變每一位使用 Codex 的開發者的預設行為。**由維護者決定**；在有結論之前，本 delta 只陳述兩者互斥，不假定本 repo 採哪一種。
+**編號說明**：維護者 2026-11-17 已裁定原 Q1（信任指引寫進安裝流程）、原 Q3（裸檔名 `.env`）、原 Q4（workspace 之外的路徑）、原 Q5（已確認的破壞性命令），四題都已落回對應的 requirement 與 `design.md` 的決策。本節因此重新編號且不留空號：**原 Q2 改編為 Q1**，是本 delta 唯一的待決題。`design.md` §Open Questions 另有一題 Q2（權限層什麼時候設定，原 Q6），它只影響後續 change 的排程，不改變本 delta 的任何 requirement。兩題都不阻擋本 change 進入 apply。
+
+- **Q1（原 Q2，2026-11-17 查核後新增）**：本 repo 的 Codex 設定採 permission profile 還是舊的 sandbox 設定。官方文件明寫兩者不可混用，而這個選擇會改變每一位使用 Codex 的開發者的預設行為。**由維護者決定**；在有結論之前，本 delta 只陳述兩者互斥，不假定本 repo 採哪一種。

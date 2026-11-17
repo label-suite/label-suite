@@ -16,10 +16,12 @@
    「本 design 的判斷，無來源」**。這件事已回報給派工者，不自行補一份 system-design。
 2. **`AGENTS.md` 是唯一規則來源。** 契約文件自己的 §邊界 寫明它「不是規則來源」。本文件同樣
    不產生任何規則，只決定既有規則用什麼機制執行。
-3. **兩題未決（Q1、Q2）橫在 `scripts/setup.sh` 與 `.codex/` 的權限設定上**（proposal §待決問題、
-   spec delta §待決問題）。本設計刻意把受影響的部分隔離，使兩題的任一答案都不需要重做其餘設計；
-   見 [D18](#d18-setupsh-的職責在-q1-有答案前只做與-q1-無關的部分) 與
+3. **一題未決（Q1，原 Q2）橫在 `.codex/` 的權限設定上**（proposal §待決問題、spec delta §待決問題）。
+   本設計刻意把受影響的部分隔離，使它的任一答案都不需要重做其餘設計；
+   見 [D16](#d16-codexhooksjson手寫新目錄註冊與-q1-切開) 與
    [D19](#d19-平台權限層不在本-change-設定只負責把歸屬講清楚)。
+   原本並列的另一題（Codex 信任指引要不要寫進 `scripts/setup.sh`）已由**維護者 2026-11-17 裁定**為「要寫」，
+   記在 [D18](#d18-setupsh-的職責三件安裝流程本體的事加一段-codex-信任指引)；§Open Questions 的編號也隨之重編。
 
 既有可沿用的形狀（實測於 2026-11-17）：`scripts/setup.sh` 只設 `core.hooksPath=scripts/git-hooks`；
 `scripts/git-hooks/commit-msg` 以 `git rev-parse --show-toplevel` 定位後 `exec` 共用檢查器；
@@ -85,7 +87,7 @@ H4 把同一個判定編碼成非零，**兩者的診斷文字完全相同**。�
 
 「事件 payload 一律走 stdin、argv 只放固定字面值」是**安全上的核心不變量**：
 不受信任的字串永遠不會出現在 argv，也就永遠不會經過任何一層 shell 重新解析
-（spec「事件輸入須先驗證且不經由 shell 拼接執行」）。這個不變量也讓 [D16](#d16-codexhooksjson手寫新目錄註冊與-q2-切開) 的
+（spec「事件輸入須先驗證且不經由 shell 拼接執行」）。這個不變量也讓 [D16](#d16-codexhooksjson手寫新目錄註冊與-q1-切開) 的
 「Codex `command` 欄位是字串還是陣列」這個未知**不影響安全性**。
 
 **退出碼字彙**（全部五支共用）：
@@ -339,6 +341,14 @@ spec「執行時間與輸出大小有上限且由平台設定控制」。
    **這條界線是本 design 的判斷**：契約只說「擋明顯的情況」，沒有定義「明顯」的邊界。
 6. **每一則攔截訊息都附一句邊界說明**（spec「攔截訊息說明邊界」）：字串比對涵蓋不了變數展開、
    編碼後的命令與動態組出來的命令，真正的保護在平台權限層與 branch protection。
+7. **拒絕是無條件的，檢查器不試圖判別「維護者已確認」**（**維護者 2026-11-17 裁定**，原 §Open Questions Q5，
+   已結案；行為與原本的設計相同，變的是把理由寫定）。`AGENTS.md` 硬性規則 10 仍然寫著這四個命令
+   「need the maintainer's explicit confirmation first」——**規則本身不變**，本決策只講明 hook 在其中的角色：
+   **確認過的那條路走 hook 之外**（維護者自己在終端機執行，或暫時停用 hook），不經過 H2。
+   本設計**不引入任何 in-band 的「已確認」訊號**——送得出那個訊號的 agent 就能自我授權，
+   正是 spec「MUST NOT 自行推定維護者已確認」要防的事。因此比對一命中就擋，沒有例外分支，
+   `tasks.md` 的測試矩陣也不需要「已確認」這一組輸入（spec「破壞性命令在執行前被拒絕」的第四個 scenario
+   斷言的就是這件事）。
 
 ### D11 `check-write-target.sh`（H2 寫檔那組）：只看路徑，例外先於拒絕
 
@@ -346,8 +356,13 @@ spec「執行時間與輸出大小有上限且由平台設定控制」。
 
 **決策。** 判定順序固定為：取出路徑 → 正規化 → workspace 範圍 → 合法例外 → 拒絕清單。
 
-- **拒絕清單**（照 spec 一字不差，不自行加項）：`**/.env.*`、`*.pem`、`*.key`、`*id_rsa*`、`*credentials.json`。
+- **拒絕清單**（照 spec 一字不差，不自行加項）：`**/.env`、`**/.env.*`、`*.pem`、`*.key`、`*id_rsa*`、`*credentials.json`。
+  **第六個樣式 `**/.env` 由維護者 2026-11-17 裁定加入**（原 §Open Questions Q3，已結案）：以 git 自身的樣式比對實測，
+  `**/.env.*` 命中 `.env.local` 與 `config/.env.local`，**不**命中裸檔名 `.env` 與 `config/.env`；
+  兩個樣式並列之後，有後綴與裸檔名在任何層級都被涵蓋。這是**加一個樣式，不是放寬**。
 - **合法例外，先於拒絕判斷**：`*.example`（含 `.env.example`）、`*.pub`、`scripts/tests/fixtures/**` 底下的假憑證。
+  **新增 `**/.env` 不收窄這些例外**：例外仍然先於拒絕清單判斷，`.env.example` 等三類照常放行
+  （spec 的三個放行 scenario 與新增的裸檔名 scenario 一起驗這件事）。
 - **`docs/specs/00-prd.mdx` 不在清單上**，H2 完全不介入（spec「H2 不擋 PRD」）。
 - **取不到路徑就擋。** Claude 的 `Edit`／`Write` 用 `file_path`、`NotebookEdit` 用 `notebook_path`；
   **Codex 的 `apply_patch` 的 `tool_input` 欄位名稱，契約沒有記錄**。所以規則定成：
@@ -356,7 +371,11 @@ spec「執行時間與輸出大小有上限且由平台設定控制」。
 - **workspace 之外的寫入目標 → `exit 2`。** spec 寫「超出範圍的路徑 MUST 被視為不適用而非被檢查或被寫入」，
   對一個阻擋型觸發點來說，「不適用」與「不被寫入」只有擋下來才同時成立。
   相對地在 H3（純診斷）那邊，workspace 之外的路徑是**略過並註明原因**。
-  **這兩個觸發點採不同處理，是本 design 對那句話的解讀**，已列入 §Open Questions。
+  **這兩個觸發點採不同處理，已由維護者 2026-11-17 裁定維持**（原 §Open Questions Q4，已結案；**行為不變**）。
+  裁定的理由值得寫下來，省得下一位讀者重開這題：workspace 之外的寫入**正是檢查器判斷不了的情形**，
+  spec「無法判斷不得回報為通過」因此適用，H2 必須以 `exit 2` 擋；而 H3 是 `PostToolUse`，
+  兩個平台在那裡都撤銷不了已發生的編輯，阻擋得不到任何效果，所以只略過並說明。
+  `tasks.md` 3.3／3.4 的斷言照舊，不需要改。
 - **不得宣稱已涵蓋所有寫入途徑**（spec「寫檔攔截不得被宣稱已覆蓋所有寫入途徑」）：
   以 shell 改檔走的是 D10 那組；Codex 沒有讀取類工具名，hook 層沒有讀取攔截點（契約 §工具名稱、§能力缺口第 3 條）。
   這兩句要同時出現在 H1 的輸出、攔截訊息與契約回填的文字裡。
@@ -487,16 +506,16 @@ spec「執行時間與輸出大小有上限且由平台設定控制」。
 - **`MultiEdit` 不寫進 matcher。** 契約明說它是否仍是有效工具名「本次沒有確認」，
   照抄一個不確定的名字只會得到誤以為有效的設定。要納入前先用 `/hooks` 與真實事件對過。
 
-### D16 `.codex/hooks.json`：手寫、新目錄、註冊與 Q2 切開
+### D16 `.codex/hooks.json`：手寫、新目錄、註冊與 Q1 切開
 
-**依據：** 契約 §設定位置、§工具名稱、§能力缺口第 7 條；proposal §待決問題 Q2。
+**依據：** 契約 §設定位置、§工具名稱、§能力缺口第 7 條；proposal §待決問題 Q1（原 Q2）。
 
 **決策。** 新建 `.codex/` 目錄，**只放 `hooks.json` 一個檔**。
 
-**這件事與 Q2 無關，可以現在做。** `hooks.json` 是 hook 註冊；Q2 要決定的是 permission profile 還是舊的
+**這件事與 Q1 無關，可以現在做。** `hooks.json` 是 hook 註冊；Q1 要決定的是 permission profile 還是舊的
 sandbox 設定，那會寫在 `config.toml`。兩者是不同檔、不同機制。
 **所以本設計不碰 `.codex/config.toml`，也不假定它會長成哪一種形狀**（spec「平台權限層的能力以核對過的事實陳述」）。
-Q2 無論答什麼，`hooks.json` 都不用改。
+Q1 無論答什麼，`hooks.json` 都不用改。
 
 對應關係（事件名稱兩邊相同，matcher 與工具名不同——契約 §工具名稱）：
 
@@ -537,20 +556,30 @@ argv 只有固定字面值，payload 走 stdin，所以兩種形狀都不會把�
 **branch protection 的啟用不在本 change**（契約 §H7：那是維護者的設定權限）——
 所以本 change 交付後，CI job 會紅但技術上還擋不住合併，這件事要寫進完成報告，不得宣稱 gate 已完整。
 
-### D18 `setup.sh` 的職責：在 Q1 有答案前，只做與 Q1 無關的部分
+### D18 `setup.sh` 的職責：三件安裝流程本體的事，加一段 Codex 信任指引
 
-**依據：** spec「安裝流程可重複執行且不靜默覆寫既有設定」；proposal §待決問題 Q1。
+**依據：** spec「安裝流程可重複執行且不靜默覆寫既有設定」（含其「安裝流程輸出 Codex 的 hook 信任指引」scenario）；
+**維護者 2026-11-17 裁定**（契約 §待決第 1 題的答案：要寫進 `scripts/setup.sh`；原 §Open Questions Q1，已結案）。
 
-**決策。** `scripts/setup.sh` 本次只加三件**與 Q1 無關**的事：
+**決策。** `scripts/setup.sh` 本次加四件事。前三件是安裝流程本體：
 
 1. **冪等**：設 `core.hooksPath` 前先讀現值；已是 `scripts/git-hooks` 就印一行「已啟用」不重設（spec「重複執行安裝」）。
 2. **衝突偵測**：現值是別的路徑、或使用者層／全域有相衝的設定 → **回報衝突與處理方式，不覆寫**（spec「既有自訂設定衝突」）。
 3. **停用與復原**：印出停用方式（`git config --unset core.hooksPath`、Claude 的 `disableAllHooks`、
    Codex 的 `[features] hooks = false`）與復原方式，同時寫明**停用本機 hook 不會讓 CI 的必要檢查失效**（spec「停用本機 hook」）。
 
-**Q1（Codex 信任指引要不要寫進 `setup.sh`）所影響的那段輸出，隔離成一個只被呼叫一次的函式。**
-Q1 答「要」就填內容並呼叫它；答「不要」就連函式帶呼叫一起刪。**兩種答案都不影響上面三件事。**
-`tasks.md` 要把它列成一個獨立、由 Q1 決定的 task，不得與上面三件混在同一個 task 裡。
+第四件由維護者 2026-11-17 裁定加入：
+
+4. **Codex hook 信任指引**：輸出一段說明——Codex 使用者必須信任本 repo 的 hook（`/hooks`），
+   否則 hook 會被**靜默**跳過——並寫出重新信任的方式（spec「安裝流程輸出 Codex 的 hook 信任指引」）。
+
+**為什麼值得印這一段：** Codex 的信任綁 hook 定義的 hash，所以**每改一次 hook，所有 Codex 開發者那邊都會重新變成未信任而被跳過**，
+而版控裡的檔案看起來完全正常（契約 §能力缺口第 1 條）。沒有這段輸出，用 Codex 的人會以為 hook 正在跑。
+H1 的摘要比對（D9 第四段）只在 session 開始時說得出這件事；安裝當下就先講一次，才不會有人從頭到尾沒聽過。
+
+**實作位置不變：** 這段輸出仍然是**一個只被呼叫一次的函式**（當初這樣切是為了讓兩種答案都只動一處），
+現在內容已確定，函式與呼叫點都保留。`tasks.md` 仍把它列成獨立的 task（task 4.4），
+好讓它的驗證與前三件分開，而不是混進同一個 task。
 
 ### D19 平台權限層不在本 change 設定，只負責把歸屬講清楚
 
@@ -561,8 +590,8 @@ spec「平台權限層與 hook 攔截分開陳述」、「平台權限層的能�
 
 理由（三點，第一點是本 design 的判斷）：
 
-1. Claude 側技術上**不被 Q2 擋住**（`permissions.deny` 可用，`deny` 立即生效不等工作區信任，2026-11-17 查核），
-   但加上它會改變**每一位 Claude 開發者**讀檔的預設行為，與 Q2 同屬維護者的選擇，
+1. Claude 側技術上**不被 Q1（原 Q2）擋住**（`permissions.deny` 可用，`deny` 立即生效不等工作區信任，2026-11-17 查核），
+   但加上它會改變**每一位 Claude 開發者**讀檔的預設行為，與 Q1 同屬維護者的選擇，
    而 proposal §Impact 的「修改檔案」欄只列了 `.claude/settings.json` 的 `hooks` 鍵。
    在沒有核准的情況下擴張，等於替維護者作決定。
 2. 文件寫到的鍵不等於本機可用：`blockWritesOutsideWorkingDirectories` 需 2.1.314、
@@ -655,33 +684,30 @@ Codex 的 `[features] hooks = false`。四條跳過途徑的存在正是 CI 必�
 
 ## Open Questions
 
-前兩題是 proposal 與 spec delta 已登記、**留給停點一**的，本設計不作答，只說明它們各自卡住什麼：
+**編號在 2026-11-17 重編過，舊號不再使用。** 維護者當日裁定了原 Q1、Q3、Q4、Q5 四題，它們已落回對應的決策，
+不再是待決問題；剩下的兩題重新編為 Q1、Q2，本節不留空號：
 
-- **Q1：Codex hook 的信任指引要不要寫進 `scripts/setup.sh`。** D18 已把受影響的輸出隔離成單一函式、單一呼叫點，
-  兩種答案都不改其餘設計；`tasks.md` 要把它列成獨立的、Q1 決定的 task。
-- **Q2：本 repo 的 Codex 設定採 permission profile 還是舊的 sandbox 設定。**
-  D16 已把 hook 註冊（`hooks.json`）與權限設定（`config.toml`）切開，Q2 的任一答案都不改 `hooks.json`。
+| 現在的編號 | 原編號 | 題目 |
+| :--- | :--- | :--- |
+| Q1 | Q2 | 本 repo 的 Codex 設定採 permission profile 還是舊的 sandbox 設定 |
+| Q2 | Q6 | 平台權限層什麼時候設 |
 
-以下四題是本設計過程中浮現、**需要維護者或後續 change 決定、但不改變本設計的做法與工作拆解**的。
-Q3 起的編號是本文件自己的（proposal 與 spec delta 只登記了 Q1、Q2）：
+| 已裁定（2026-11-17） | 原編號 | 結論落在哪裡 |
+| :--- | :--- | :--- |
+| Codex 信任指引要不要寫進 `scripts/setup.sh` | Q1 | 要寫。D18 第 4 點、spec「安裝流程…」的信任指引 scenario、task 4.4 |
+| 裸檔名 `.env` 要不要納入受保護樣式 | Q3 | 要。`**/.env` 成為第六個樣式：D11 拒絕清單、spec 受保護路徑 requirement 與其裸檔名 scenario、task 3.3 |
+| workspace 之外的路徑在阻擋型觸發點怎麼算 | Q4 | 維持 D11 的做法：H2 `exit 2`、H3 略過並註明。行為不變，理由寫進 D11 |
+| 「經維護者確認的破壞性命令」怎麼走 | Q5 | hook 一律拒絕，確認過的路徑走 hook 之外。D10 第 7 點、spec「破壞性命令…」及其第四個 scenario |
 
-- **Q3：`.env` 本身不在受保護樣式內。** spec 與契約的五類樣式是 `**/.env.*`、`*.pem`、`*.key`、`*id_rsa*`、
-  `*credentials.json`；`**/.env.*` 要求 `.env` 後面還有一段，所以**裸檔名 `.env` 寫入不會被擋**
-  （spec 的 scenario 用的是 `.env.local`，命中）。本設計**照 spec 一字不差實作，不自行放寬**（D11）。
-  要不要補上 `.env` 屬於改需求，得先走 spec。
-- **Q4：「workspace 之外的路徑」在阻擋型觸發點怎麼算。** spec 寫「視為不適用而非被檢查或被寫入」，
-  D11 解讀成 H2 擋下（`exit 2`）、H3 略過並註明。如果維護者的意思是 H2 也只略過，那是放行一個判不出來的寫入，
-  與「無法判斷不得回報為通過」相衝——這個張力值得確認。
-- **Q5：「經維護者確認的破壞性命令」怎麼走，現在整份規劃都沒有這條路。**
-  `AGENTS.md` 硬性規則 10 寫的是這四個命令「need the maintainer's explicit confirmation first」，
-  spec「破壞性命令在執行前被拒絕」也照著寫成拒絕**未經維護者確認的**破壞性命令、且 MUST NOT 自行推定已確認；
-  但那條 requirement 的三個 scenario **全部是被擋的情形，沒有一個涵蓋已確認的情形**。
-  於是「未經維護者確認的」這幾個字在目前的規劃裡不產生任何行為差異：D10 的比對一命中就擋，無條件。
-  張力在於：硬性規則承認有一條「確認後可以執行」的路，而本 change 沒有提供它——維護者要嘛接受這些命令
-  在 agent 工具呼叫這條途徑上一律被擋（人工在終端機執行不受 hook 影響），要嘛需要一個確認機制，
-  而那會新增 spec scenario，屬於改需求。**本設計不自行發明機制**（發明一個「已確認」的訊號，
-  等於讓 agent 可以自己宣稱已獲確認，正是 spec 禁止的推定）。
-- **Q6：權限層什麼時候設。** D19 把它整個排除在本 change 之外，所以契約 §能力缺口第 3 條的承接在本 change 之後
+**本 change 的 proposal 與 spec delta 只登記 Q1**（它是停點一仍在等的那一題）；**Q2 只登記在本文件**，
+因為它要決定的是後續 change 的排程，不改變本 change 的任何 requirement、決策或工作拆解。
+**兩題都不阻擋本 change 進入 apply。**
+
+- **Q1（原 Q2）：本 repo 的 Codex 設定採 permission profile 還是舊的 sandbox 設定。**
+  官方文件明寫兩者不可混用（proposal §前置查核）。
+  D16 已把 hook 註冊（`hooks.json`）與權限設定（`config.toml`）切開，Q1 的任一答案都不改 `hooks.json`，
+  所以本 change 不需要等它。
+- **Q2（原 Q6）：權限層什麼時候設。** D19 把它整個排除在本 change 之外，所以契約 §能力缺口第 3 條的承接在本 change 之後
   仍是「已查明機制、尚未設定」。它需要一張自己的 issue。
 
 最後一項不是問題而是必須記下的差異：**契約 §H4 寫「腳本自己設上限」，本設計依 spec 不實作 watchdog**（D5）。
