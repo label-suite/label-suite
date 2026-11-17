@@ -6,7 +6,7 @@
 
 ## 編號為什麼從 03 開始
 
-`UXC-NN` 這套編號**不是本批次發明的**，是 prototype 的註解裡已經在用的。全 prototype 共 **20 處**引用，分布在 UXC-03 到 UXC-11。
+`UXC-NN` 這套編號**不是本批次發明的**，是 prototype 的註解裡已經在用的。全 prototype 共 **41 行、42 處**引用（`annotation-workspace.config.js:657` 一行同時寫了 UXC-04 與 UXC-05），分布在 UXC-03 到 UXC-11：UXC-07 ×20、UXC-10 ×6、UXC-03 ×4、UXC-11 ×4、UXC-06 ×3、UXC-04 ×2、UXC-05／08／09 各 ×1。
 
 維護者 2026-11-17 裁定：**沿用 03–11，01／02 留空**。重編會把那 20 處註解全部打成懸空引用，而本 repo 的第八條鐵律正是「不要把別處的斷言打成假的」。UXC-01 與 UXC-02 的內容本 repo 無從得知，記在 [`design-gaps.md`](design-gaps.md) G-34。
 
@@ -54,7 +54,7 @@
 
 遵守它的元件：[Toast](components/toast.md) 本身，以及 [App Shell](components/app-shell.md) 的通知（待 b2 核對是否同一套）。
 
-這是 prototype 引用最多的一條（20 處裡佔 4 處），`components-showcase.html:142` 甚至把它寫進正典 CSS 區塊的標頭。
+這是 prototype 引用最多的一條：42 處裡獨佔 **20 處**，其中 4 處在 `components-showcase.html`（`:142`、`:397`、`:1116`、`:1499`），`:142` 甚至把它寫進正典 CSS 區塊的標頭。
 
 ## UXC-08：Skeleton 尺寸要貼合載入後的內容
 

@@ -23,11 +23,11 @@
 
 | 元件 | 說明 |
 | :--- | :--- |
-| `.success-panel` ＋ `-icon`／`-msg`／`-back`／**`-hint`** | 比另外兩頁多一個 `-hint`，定義也與它們**不同** → `../design-gaps.md` G-28 |
+| `.success-panel` ＋ `-icon`／`-msg`／`-back`／**`-hint`** | `.success-panel` 本身與另外兩頁完全相同；本頁多一個 `-hint`，所以**規則家族**不同 → `../design-gaps.md` G-28 |
 | `.token-error-panel` ＋ 三件套 | 與 `reset-password` 的那一組同名 |
 | `.proto-toggle-bar`／`.proto-btn`（`:412`–`:414`） | 原型鷹架 |
 
-本頁的 `.card` 與 `.navbar` 和 `reset-password` 同一份定義（五頁裡這兩頁是一組）。
+本頁的 Auth Card 與 Auth Navbar **規則家族**和 `reset-password` 同一份（五頁裡這兩頁是一組，差別在 `.card-logo`／`.navbar-logo`）；`.card` 與 `.navbar` 這兩個 class 本身則是五頁共通的。
 
 ## 業務行為
 

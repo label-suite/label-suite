@@ -16,7 +16,7 @@
 
 ## 變體
 
-沒有宣告的變體，但**實際上有四份互不相同的定義**。以 `.card` 的規則集做雜湊比對：
+沒有宣告的變體，但**整個規則家族已經有四份互不相同的定義**。雜湊比對的範圍是 `.card` ＋ `.card-header` ＋ `.card-logo` ＋ `.card-title` ＋ `.card-subtitle`：
 
 | 定義 | 出現在 |
 | :--- | :--- |
@@ -25,7 +25,7 @@
 | C | `account/forgot-password` |
 | D | `account/reset-password`、`account/verify-email` |
 
-五頁看起來一樣的卡片，複製了五份、已經分裂成四種 → `../design-gaps.md` G-28。
+分歧**不在 `.card` 本身**：`.card` 只有兩份（`register` 的行動版覆寫少一行 `border-radius`），`.card-header` 與 `.card-title` 五頁全同。推成四份的是 `.card-logo`（{login, register, forgot} vs {reset, verify}）與 `.card-subtitle`（login vs 其餘四頁）。細節見 `../design-gaps.md` G-28。
 
 ## 適用狀態
 

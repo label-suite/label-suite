@@ -23,7 +23,7 @@
 | `.btn-danger` | 破壞性確認 | `design/prototype/pages/shared/modal.css:80`（**實心**，維護者 2026-11-17 裁定為正典）；`components-showcase.html:177` 另有一份外框版，見 `../design-gaps.md` G-01 |
 | `.btn-oauth` | 第三方登入入口 | **只有** `components-showcase.html:226` |
 | `.btn-icon` | 純圖示觸發器 | `components-showcase.html:247`、另有 `pages/task-management/task-list.html:68` 與 `task-new.html:132` 各自一份 |
-| `.btn-language` | 語言切換（zh-TW／EN） | **只有** `components-showcase.html:268` |
+| `.btn-language` | 語言切換（zh-TW／EN） | **只有** `components-showcase.html:268`；細節見 [Language Toggle](lang-toggle.md)，依維護者 2026-11-17 裁定兩者是同一個元件 |
 
 `.btn.btn-danger` 另有一條還原規則（`modal.css:99`）：`.btn-danger` 的 (0,1,0) 會蓋掉 `:where(.btn)` 的零特異性，所以要把 `10px 20px` 的內距與 1px 透明邊框補回來，讓確認鈕和旁邊的「取消」等高。
 
@@ -43,7 +43,7 @@
 
 `--color-cta`、`--color-on-cta`、`--color-primary`、`--color-primary-soft-bg`、`--color-border`、`--color-error`、`--radius-md`、`--text-caption`。
 
-`.btn-danger`（showcase 版）、`.btn-oauth`、`.btn-icon`、`.btn-language` 共寫死 **11 個**色值（`components-showcase.html:177`–`:287`），`tokens.css` 沒有對應的 token；原值見 `../design-gaps.md` G-02。
+`.btn-danger`（showcase 版）、`.btn-oauth`、`.btn-icon`、`.btn-language` 在 `components-showcase.html:177`–`:287` 共寫死 **18 處**色值（**9 個相異值**，無 `rgba()`），`tokens.css` 沒有對應的 token；原值見 `../design-gaps.md` G-02。
 
 ## 鍵盤與焦點
 

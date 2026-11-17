@@ -25,7 +25,7 @@
 | 欄 | 內容 |
 | :--- | :--- |
 | **重現方式** | 開 `components-showcase.html`，切到深色模式（右上「深色模式」鈕）。Palette 區塊的色票會跟著換；但 `#comp-buttons` 的 `.btn-oauth`／`.btn-icon`／`.btn-language` 仍是白底灰框，`#comp-chips` 的紫／綠／紅唯讀 chip 也不變。 |
-| **受影響範圍** | [Button](components/button.md)（11 個 hex）、[Input](components/input.md)（6）、[Badge](components/badge.md)（**42**：`task-type-badge.css` 淺深各 18 ＋ `.badge-draft`／`.badge-dry-run-status` 6）、[Chip](components/chip.md)（9）、[Color Dot](components/color-dot.md)（8 色盤）、[Skeleton](components/skeleton.md)（6）、[State Panel](components/state-panel.md)（4）、[Avatar](components/avatar.md)（2）、[Divider](components/divider.md)（1）、[Spinner](components/spinner.md)（2）、[List Toolbar](components/list-toolbar.md)（2） |
+| **受影響範圍** | [Button](components/button.md)（18 處／9 個相異值）、[Input](components/input.md)（6）、[Badge](components/badge.md)（**42**：`task-type-badge.css` 淺深各 18 ＋ `.badge-draft`／`.badge-dry-run-status` 6）、[Chip](components/chip.md)（9）、[Color Dot](components/color-dot.md)（8 色盤）、[Skeleton](components/skeleton.md)（6）、[State Panel](components/state-panel.md)（4）、[Avatar](components/avatar.md)（2）、[Divider](components/divider.md)（1）、[Spinner](components/spinner.md)（2）、[List Toolbar](components/list-toolbar.md)（2） |
 | **依據** | 例：`pages/shared/task-type-badge.css:6`「`.badge-task-type-single { color: #0E7490; background: #ECFEFF; border-color: #A5F3FC; }`」，`assets/tokens.css` 全檔沒有 `#0E7490`。反例（做對的）：`components-showcase.html:379`「`.status-submitted { color: var(--color-success); background: var(--color-success-soft-bg); }`」。 |
 | **待決問題** | 這些值要不要補成 token？若要，哪些是**語意色**（該進 `tokens.css`）、哪些是**資料色**（像 Color Dot 的 8 色盤，本來就該是任意值）？`design-system-setup` 鐵律 3 禁止撰寫者替它們取名，所以這題只能由維護者決定。 |
 
@@ -44,7 +44,7 @@
 | :--- | :--- |
 | **重現方式** | 開 `components-showcase.html` 的 `#comp-inputs`，點輸入框看 focus ring。再開任何載入 `shared/input.css` 的頁面做同樣的事。兩者的 ring 來源不同。 |
 | **受影響範圍** | [Input](components/input.md)、[List Toolbar](components/list-toolbar.md) |
-| **依據** | `pages/shared/input.css:21`「`box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);`」 vs `components-showcase.html:300`「`box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);`」。同樣寫死的還有 `pages/shared/list-page.css:30`、`:39`。另外正典多出 `.input.error`（`:303`）、`.input[readonly]`（`:308`）、`.field-hint`（`:317`）、`.field-error`（`:324`）四條，`input.css` 一條都沒有。 |
+| **依據** | `pages/shared/input.css:21`「`box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);`」 vs `components-showcase.html:300`「`box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);`」。同樣寫死的還有 `pages/shared/list-page.css:30`、`:39`。另外正典多出 `.input.error`（`components-showcase.html:303`）、`.input[readonly]`（`components-showcase.html:308`）、`.field-hint`（`components-showcase.html:317`）、`.field-error`（`components-showcase.html:324`）四條，`input.css` 一條都沒有。 |
 | **待決問題** | 正典多出的四條要不要搬進 `input.css`？`color-mix` 與 `rgba` 哪一個是目標寫法？ |
 
 ### G-07 Alert Banner 只有 error，但出貨頁面需要更多
@@ -98,7 +98,20 @@
 | :--- | :--- |
 | **重現方式** | 並排開五個登出帳號頁，肉眼幾乎一樣。檢視各自 `<style>` 裡的 `.card`、`.navbar`、`.spinner`、`.submit-btn`、`.success-panel`。 |
 | **受影響範圍** | [Auth Card](components/auth-card.md)、[Auth Navbar](components/auth-navbar.md)、[Spinner](components/spinner.md)、[Button](components/button.md)、[State Panel](components/state-panel.md)、[Password Eye Toggle](components/password-eye-toggle.md)；五個登出帳號頁 ＋ `account/profile` |
-| **依據** | 以各頁 `<style>` 裡該 class 的規則集做雜湊比對：`.card` **四份**（login／register／forgot-password／{reset-password,verify-email}）、`.navbar` **兩份**（{login,register,forgot-password}／{reset-password,verify-email}）、`.spinner` **兩份**（{login,forgot-password,reset-password}／register）、`.submit-btn` **兩份**（register／{forgot-password,reset-password}）、`.success-panel` **兩份**（{forgot-password,reset-password}／verify-email，後者多一個 `-hint`）。**只有 `.lang-toggle` 五頁完全相同**，`.field-error` 四頁相同，`.eye-toggle` 三頁相同。代表位置：`login.html:120`（`.card`）、`:49`（`.navbar`）、`:328`（`.spinner`）、`:88`（`.lang-toggle`）。 |
+| **依據** | 比對方式是**對整個元件的規則家族**（不是單一 class）做雜湊：Auth Card 取 `.card` ＋ `.card-header` ＋ `.card-logo` ＋ `.card-title` ＋ `.card-subtitle`，Auth Navbar 取 `.navbar` ＋ `-brand` ＋ `-logo` ＋ `-wordmark`。
+
+| 元件（規則家族） | 份數 | 分組 |
+| :--- | ---: | :--- |
+| Auth Card | **4** | login／register／forgot-password／{reset-password, verify-email} |
+| Auth Navbar | **2** | {login, register, forgot-password}／{reset-password, verify-email} |
+| `.spinner` | **2** | {login, forgot-password, reset-password}／register |
+| `.submit-btn` | **2** | register（`:hover:not(:disabled)`、`[hidden]`）／{forgot-password, reset-password}（`:hover`、`:active`） |
+
+**逐個 class 看的話分歧少得多**，這點要寫清楚以免誤導：`.navbar`、`.navbar-brand`、`.navbar-wordmark`、`.card-header`、`.card-title`、`.lang-toggle`、`.success-panel` 這七個**五頁（或三頁）完全相同**；`.card` 只有兩份（`register.html` 的行動版覆寫少了一行 `border-radius`）。
+
+把家族推成 4 份與 2 份的其實是三個子元件：`.card-logo` 與 `.navbar-logo`（{login, register, forgot-password} vs {reset-password, verify-email}）、`.card-subtitle`（login vs 其餘四頁）。`verify-email` 的 `.success-panel` 家族多一個 `-hint`，但 `.success-panel` 本身三頁相同。
+
+代表位置：`login.html:120`（`.card`）、`:49`（`.navbar`）、`:328`（`.spinner`）、`:88`（`.lang-toggle`）。 |
 | **待決問題** | 要抽成 `pages/shared/auth.css` 嗎？若要，四份 `.card` 以哪一份為準？（本批次不挑，挑了就是撰寫者自己的判斷。） |
 
 ### G-29 `--color-card` 是五個帳號頁的私有 token
@@ -235,13 +248,17 @@ showcase 說明寫「profile 64/80px」（`:1356`），它的 CSS 是 80px（`:9
 
 `shared/list-page.css:49`–`:72` 不提供 `aria-sort` 或排序樣式，但 `ap_sort` 這類排序參數確實存在（見 `docs/prototype/navigation.mdx` §網址參數）。`.task-table-wrap` 沒有 `tabindex="0"`，所以鍵盤無法捲動它。
 
-### G-30 帳號頁沒有 `prefers-reduced-motion`
+### G-30 `account/profile` 是唯一沒有 `prefers-reduced-motion` 的帳號頁
 
-`components-showcase.html:971`–`:973` 有全域的 `@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }`，但那只涵蓋 showcase 自己。[Spinner](components/spinner.md) 的 `animation: spin 0.7s linear infinite`（`login.html:328`）在四個帳號頁都不受這條保護。
+五個登出帳號頁**各自都有**（`login.html:364`、`register.html:338`、`forgot-password.html:329`、`reset-password.html:424`、`verify-email.html:303`），規則是 `*, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }`，`*` 蓋得住 [Spinner](components/spinner.md) 的 `animation: spin 0.7s linear infinite`（`login.html:334`）。
+
+**`account/profile.html` 一條都沒有**，而它是 b1 動畫最多的一頁：`skeleton` 相關 class 出現 49 處。它的骨架動畫不受減少動態保護。`components-showcase.html:971`–`:973` 的那條只涵蓋 showcase 自己。
+
+> 本條原本寫反了（寫成「五個帳號頁都沒有」），自審時以逐頁掃描更正。
 
 ### G-34 UXC-01 與 UXC-02 的內容未知
 
-全 prototype 20 處 UXC 引用只覆蓋 03–11。維護者 2026-11-17 裁定沿用編號、兩格留空。原始 MASTER.md 屬**參照不是依據**（`design-handoff` 鐵律），所以本 repo 無從補。
+全 prototype 42 處 UXC 引用只覆蓋 03–11。維護者 2026-11-17 裁定沿用編號、兩格留空。原始 MASTER.md 屬**參照不是依據**（`design-handoff` 鐵律），所以本 repo 無從補。
 
 ---
 

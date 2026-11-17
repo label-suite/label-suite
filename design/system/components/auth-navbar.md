@@ -16,14 +16,14 @@
 
 ## 變體
 
-兩份定義：
+規則家族（`.navbar` ＋ `-brand` ＋ `-logo` ＋ `-wordmark`）有兩份：
 
 | 定義 | 出現在 |
 | :--- | :--- |
 | A | `account/login`、`account/register`、`account/forgot-password` |
 | B | `account/reset-password`、`account/verify-email` |
 
-→ `../design-gaps.md` G-28
+**`.navbar` 本身五頁完全相同**（`login.html:49`、`register.html:52`、`forgot-password.html:51`、`reset-password.html:52`、`verify-email.html:57`），`-brand` 與 `-wordmark` 也是。分歧只來自 `.navbar-logo` 一個。→ `../design-gaps.md` G-28
 
 ## 適用狀態
 

@@ -26,7 +26,7 @@ B 另有深色模式覆寫（`components-showcase.html:468`–`:470`，同樣是
 | :--- | :--- | :--- |
 | 載入中 | 這就是它的唯一狀態 | `components-showcase.html:443`、`:457` |
 | 預設／hover／focus／disabled／錯誤／空 | 不適用 | — |
-| 減少動態 | 有。`@media (prefers-reduced-motion: reduce)` 把全頁的 `animation` 關掉 | `components-showcase.html:971`–`:973`（`* { animation: none !important }`） |
+| 減少動態 | **分頁面而定**。showcase 有全域的一條；但實際用到 Skeleton 最多的 `account/profile`（49 處）**沒有**任何 `prefers-reduced-motion` | `components-showcase.html:971`–`:973`（`* { animation: none !important }`）；`profile.html` 全檔 0 命中 → `../design-gaps.md` G-30 |
 
 ## token
 

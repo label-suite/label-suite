@@ -23,7 +23,7 @@
 | :--- | :--- | :--- |
 | 預設 | 有 | `list-page.css:84` |
 | hover | 有。正典無條件套用；**shipped 版多了 `:not(:disabled):not(.active)` 兩個排除** | `components-showcase.html:609` vs `list-page.css:91` |
-| 目前頁 | 有。`.active` 實心 primary，樣本帶 `aria-current="page"` | `list-page.css:92`、樣本 `:1180` |
+| 目前頁 | 有。`.active` 實心 primary，樣本帶 `aria-current="page"` | `list-page.css:92`、樣本 `components-showcase.html:1180` |
 | disabled | 有。`opacity .4`；**shipped 版多 `pointer-events: none`** | `components-showcase.html:620` vs `list-page.css:93` |
 | focus | **未觀察到**。`.page-btn` 與 `.page-size-select` 兩份都沒有 `:focus`／`:focus-visible` | 正典 `components-showcase.html:585`–`:631` 0 命中；`list-page.css` 全檔只有 2 個 `:focus`，都在工具列（`:30` 的 `.search-input`、`:39` 的 `.filter-select`），分頁一個都沒有 → `../design-gaps.md` G-05 |
 | 載入中／錯誤 | 不適用 | — |

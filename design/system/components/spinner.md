@@ -26,7 +26,7 @@
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
 | 旋轉中 | 這是它唯一的狀態 | `login.html:328` |
-| 減少動態 | **未觀察到**。帳號頁沒有 `prefers-reduced-motion`；showcase 有（`components-showcase.html:971`），但不涵蓋帳號頁 | → `../design-gaps.md` G-30 |
+| 減少動態 | **有**。五個登出帳號頁各自都寫了 `@media (prefers-reduced-motion: reduce)`，以 `*, *::before, *::after { animation-duration: 0.01ms !important; }` 蓋掉旋轉 | `login.html:364`–`:366`，另四頁同理（`register.html:338`、`forgot-password.html:329`、`reset-password.html:424`、`verify-email.html:303`） |
 | 其他 | 不適用 | — |
 
 ## token

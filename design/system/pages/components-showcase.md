@@ -21,7 +21,7 @@
 
 | 區塊（`id`） | 行 | 元件 |
 | :--- | ---: | :--- |
-| `#comp-buttons` | 1024 | [Button](../components/button.md)（七個 variant ＋ loading ＋ disabled），含只在這裡存在的 `.btn-oauth`、`.btn-language` |
+| `#comp-buttons` | 1024 | [Button](../components/button.md)（七個 variant ＋ loading ＋ disabled），含只在這裡存在的 `.btn-oauth`；其中 `.btn-language`（`:1034`）是 [Language Toggle](../components/lang-toggle.md) 的正典形式 |
 | `#comp-inputs` | 1043 | [Input](../components/input.md)（default／error／readonly ＋ `.field-hint`／`.field-error`） |
 | `#comp-date-range-picker` | 1059 | [Date Range Picker](../components/date-range-picker.md)，**可實際操作** |
 | `#comp-toggle` | 1069 | [Toggle Switch](../components/toggle-switch.md) |
