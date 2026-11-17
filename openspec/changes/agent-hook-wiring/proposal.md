@@ -53,7 +53,7 @@
 ### 跨 hook 的可靠性、隱私與安裝
 
 - Payload 驗證、路徑正規化與 workspace 範圍限制，不用 `eval` 或拼接不受信任 shell（#111 §5 第 1 項）。
-- malformed JSON、未知事件、缺工具、timeout、runner crash、非零退出、過大輸出的處理一律明列；**不得用 `|| true` 把判斷不了變成通過**（#111 §5 第 2 項；契約 §H2、§H3）。H2 的包裝腳本自行 fail-closed（檢查器不存在或無法判斷就 exit `2`），因為兩個平台的預設都是 fail-open（契約 §能力缺口第 5 條）。
+- malformed JSON、未知事件、缺工具、timeout、runner crash、非零退出、過大輸出的處理一律明列；**不得用 `|| true` 把判斷不了變成通過**（#111 §5 第 2 項；契約 §H2、§H3）。阻擋型的檢查器**自行** fail-closed（無法判斷就 exit `2`），因為兩個平台的預設都是 fail-open（契約 §能力缺口第 5 條）。契約 §H2 的措辭是「包裝腳本一律先確認檢查器存在且可執行」，但 design D7 不另建包裝腳本、註冊設定直接指向檢查器——理由是包裝腳本只把「哪個檔必須存在」往前移一格，失效面一模一樣。這處偏離與其回填一併記在 design D7 與 task 7.1。
 - 執行時間與輸出大小上限一律用**平台 hook 設定的 `timeout` 欄位**，不得用 shell `timeout`（本機沒有，契約 §查核方式第 1 點）。
 - `Stop`／`SubagentStop` 的防重入用 payload 的 `stop_hook_active`，不自造標記檔（契約 §H6）。
 - 本機診斷 log（若保留）只記脫敏 metadata、有上限與 ignore，與產品 `audit_events` 分開（#111 §5 第 5 項）。
@@ -98,7 +98,7 @@
 
 | 類別 | 受影響對象 |
 | :--- | :--- |
-| 新增檔案 | `scripts/check-env.sh`、`scripts/check-command.sh`、`scripts/check-write-target.sh`、`scripts/check-changed.sh`、`scripts/check-evidence.sh`、`scripts/git-hooks/pre-commit`、`.codex/hooks.json`、`scripts/tests/` 下對應的測試 |
+| 新增檔案 | `scripts/check-env.sh`、`scripts/check-command.sh`、`scripts/check-write-target.sh`、`scripts/check-changed.sh`、`scripts/check-evidence.sh`、`scripts/lib/hook-payload.mjs`、`scripts/lib/hook-common.sh`（五支檢查器共用的支援層，`design.md` D1）、`scripts/git-hooks/pre-commit`、`.codex/hooks.json`、`scripts/tests/` 下對應的測試 |
 | 修改檔案 | `.claude/settings.json`（新增 `hooks` 鍵）、`scripts/setup.sh`（安裝流程與衝突偵測）、`.github/workflows/ci.yml`（接上同一組檢查器）、`docs/development/agent-hook-contract.mdx`（「待建置」標記回填）、`AGENTS.md` §Agent Rules Index 末段的現況敘述 |
 | 不動 | `scripts/check-commit-msg.sh`、`scripts/git-hooks/commit-msg`、`scripts/check-specs.mjs`／`check-flows.mjs`／`check-er-data.mjs` 的既有行為、`docs/specs/`、`design/prototype/` |
 | 相依工具 | Claude Code 2.1.273、codex-cli 0.153.0、Git、`node`／`pnpm`（`uv` 待 `backend/` 出現後才適用）。不新增任何套件相依 |
@@ -112,7 +112,7 @@
 | 來源 | 引用的章節 |
 | :--- | :--- |
 | `docs/development/agent-hook-contract.mdx` | §邊界、§本 repo 的 Hook 契約 H1–H7、§能力缺口與承接 1–7、§Repo 定位、§平台支援矩陣（事件／阻擋能力與退出碼／工具名稱／設定位置）、§查核方式、§待決、§決策紀錄 |
-| GitHub issue #111 | §需求目標、§1 第 2 項、§2 事件分工表與其兩項、§2b（第二項排除）、§3 全部五項、§4 全部四項、§5 第 1–5 項、§驗收條件第 1–4、6 項、§附註 |
+| GitHub issue #111 | §需求目標、§1 第 2 項、§2 事件分工表與其兩項、§2b（第二項排除）、§3 六項（含 2026-11-16 補列的第 6 項；其中第 5 項已勾）、§4 全部四項、§5 第 1–5 項、§驗收條件第 1–4、6 項、§附註 |
 | `AGENTS.md`（唯一規則來源） | Hard Rules 2、3、8、9、10；§Commits；§Language Rules；§Agent Rules Index（末段的 hook 現況敘述） |
 | `docs/development/testing-agent-rules.mdx` | T9（本機 hook 通過不能代替 CI）、T11（evidence）、T12（只有兩個停點）——由契約 §H6、§H7 轉引，本 change 不另定政策 |
 
@@ -124,5 +124,6 @@
 
 **前置查核的現況**
 
-- 契約 §能力缺口第 6 條的對照**做了一半**：Codex 側已於 2026-11-17 完成（結果見 §前置查核），Claude 側的 `permissions.deny` 仍未核對官方文件。後者仍是本 change 的前置查核任務，必須在 H2 實作前完成；在它完成之前，任何「Claude 的權限層能擋住某事」的敘述都沒有依據。
+- 契約 §能力缺口第 6 條的對照**兩側都已於 2026-11-17 完成**（Codex 與 Claude 的結果各見 §前置查核的前兩項），該條因此結案，不再是 H2 實作前的待辦。
+- **查完 ≠ 設好。** 本 change 只把查核結果寫進契約與 H1／H2 的輸出（§文件回填），**不設定任何平台權限層**（Claude 的 `permissions.deny`、Codex 的 `config.toml`）；那屬於 `design.md` D19 排除的範圍，需要另開一張 issue。在權限層真的設好之前，契約 §能力缺口第 3 條的承接狀態是「已查明機制、尚未設定」。
 - 外部文件會改版，所以上面每一條都附了查核日與網址。**引用這些結論之前要重查**，不要把舊結果當現況再講一次。

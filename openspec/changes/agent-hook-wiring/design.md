@@ -31,7 +31,7 @@
 **Goals:**
 
 - 一份判定邏輯同時服務四個呼叫者（Claude hook、Codex hook、Git hook、CI），四邊對同一份輸入得到同一個結論。
-- 在兩個平台都 fail-open 的前提下，讓阻擋型觸發點（H2、H6）在「判斷不出來」時仍然擋得住。
+- 在兩個平台都 fail-open 的前提下，讓阻擋型觸發點（H2、H4、H6、H7）在「判斷不出來」時仍然擋得住。
 - 把兩份手寫設定的漂移風險收斂到一道可機器執行的核對（H1 加 CI），而不是靠人記得改兩邊。
 - 讓「hook 層能做什麼」與「平台權限層能做什麼」在程式、輸出與文件三處都分得開。
 
@@ -64,9 +64,10 @@ H4 把同一個判定編碼成非零，**兩者的診斷文字完全相同**。�
 **替代方案（否決）：** 讓每個觸發點自己帶一小段判斷（例如 H3 只對 `docs/` 跑）。
 否決理由：那會讓同一份輸入在 H3 與 H4 得到不同結論，直接違反 spec 第一條 requirement。
 
-**支援層是本 design 新增的檔案，超出 proposal §Impact「新增檔案」欄的清單。** 理由：
-payload 解析、路徑正規化、遮蔽與截斷五支檢查器都要用，寫五份就等於放棄「一支檢查器服務四個呼叫者」
-的目標。這一點已在交付回報中標出，`tasks.md` 需把這兩個檔列入。
+**支援層是本 design 新增的檔案。** 理由：payload 解析、路徑正規化、遮蔽與截斷五支檢查器都要用，
+寫五份就等於放棄「一支檢查器服務四個呼叫者」的目標。
+它原本不在 proposal §Impact 的「新增檔案」欄，**2026-11-17 的規劃回修已把這兩個檔補進 Impact**，
+`tasks.md` 也已列入（task 2.2、2.3）。
 
 ### D2 檢查器的共同介面：輸入模式、輸出流、退出碼
 
@@ -92,8 +93,23 @@ payload 解析、路徑正規化、遮蔽與截斷五支檢查器都要用，寫
 | 碼 | 意義 | 哪幾支會用 |
 | :--- | :--- | :--- |
 | `0` | 通過，或判定為 not applicable | 全部 |
-| `1` | 有違規（非阻擋型語境的「不通過」） | `check-changed.sh` |
-| `2` | 阻擋：違規，或**無法判斷** | `check-command.sh`、`check-write-target.sh`、`check-evidence.sh` |
+| `1` | 有違規（非阻擋型語境的「不通過」） | `check-changed.sh` 在 `--staged`／`--range`／`--files` 下；`--event`（H3）下同一個違規改以 `exit 0` 加診斷表達（D1 的編碼差異，見 D12） |
+| `2` | 阻擋：違規，或**無法判斷** | `check-command.sh`、`check-write-target.sh`、`check-evidence.sh`；`check-changed.sh` 在 `--staged`／`--range`／`--files` 下的**無法判斷** |
+
+**`check-changed.sh` 的「無法判斷」依模式而定。** 同一支檢查器同時服務提醒型（H3）與阻擋型（H4、H7），
+所以 spec「阻擋型觸發點（H2、H4、H6、H7）在無法判斷時 MUST 以阻擋的退出碼結束」在這一支上**不能只有一種編碼**：
+
+| 模式 | 觸發點 | 無法判斷時 |
+| :--- | :--- | :--- |
+| `--event` | H3，提醒型 | `exit 0`，並在 stderr 寫一行 `UNKNOWN:` 指名哪一項沒判成（契約 §H3「一律不以 exit `2` 阻擋」；spec「提醒型觸發點 MUST 在輸出中明寫哪一項沒有判定成功」） |
+| `--staged` | H4，阻擋型 | `exit 2` |
+| `--range`（含 CI 的 `--list-routes` 斷言） | H7，阻擋型 | `exit 2` |
+| `--files` | 人工、測試 | 比照阻擋型，`exit 2`（本 design 的判斷：直接模式沒有自己的觸發點，取較嚴的一邊） |
+
+（`--ci` 不是 `check-changed.sh` 的模式，它只屬於 `check-env.sh`；`check-env.sh` 在 `--ci` 下同樣以非零表達無法判斷，見下方兩段與 D9。）
+
+「無法判斷」的情況與 [D7](#d7-fail-closed兩組阻擋型檢查器的進場守衛以及一條禁止--true-的-ci-lint) 的進場守衛清單相同。
+**判定內容在四種模式下完全相同，差的只有編碼**，與 D1 一致。
 
 `check-env.sh` 在 `--event SessionStart` 下**一律 exit `0`**（契約 §H1；spec「H1 不阻擋」），
 無法判斷的項目以輸出中的 `UNKNOWN:` 行表達（spec「提醒型觸發點 MUST 在輸出中明寫哪一項沒有判定成功」）。
@@ -192,13 +208,19 @@ spec「執行時間與輸出大小有上限且由平台設定控制」。
 - **截斷發生在判定確定之後**，退出碼由判定決定，與有沒有截斷無關（spec「輸出被截斷並標示截斷，判定結果與未截斷時相同」）。
 - `head -c` 在 BSD 與 GNU 都有，但**本設計沒有實測過兩邊的行為**；實作時要在 macOS 與 CI 的 Linux 各驗一次（列入 `tasks.md`）。
 
-### D7 fail-closed：H2 與 H6 的進場守衛，以及一條禁止 `|| true` 的 CI lint
+### D7 fail-closed：兩組阻擋型檢查器的進場守衛，以及一條禁止 `|| true` 的 CI lint
 
 **依據：** 契約 §H2「缺工具／無適用檔案」、§能力缺口與承接第 5 條（兩平台預設 fail-open，
 `onFailure: "block"` 需 Claude Code 2.1.295，本機 2.1.273 沒有）；spec「無法判斷不得回報為通過」。
 
-**決策。** `check-command.sh`、`check-write-target.sh`、`check-evidence.sh` 在做任何判定**之前**依序守衛，
-任一步不成立就 `exit 2` 並在 stderr 說明：
+**決策。** 兩組檢查器在做任何判定**之前**依序守衛，任一步不成立就 `exit 2` 並在 stderr 說明：
+
+- **一律守衛**：`check-command.sh`（H2）、`check-write-target.sh`（H2）、`check-evidence.sh`（H6）。
+- **依模式守衛**：`check-changed.sh` 在 `--staged`（H4）、`--range`／`--list-routes`（H7）、`--files` 下同樣 `exit 2`；
+  只有 `--event`（H3，提醒型）例外——守衛不成立時它 `exit 0` 並印 `UNKNOWN:` 行（D2 的模式表）。
+  **這一條是 H4 與 H7 的 fail-closed 落點**：spec 把 H4、H7 列為阻擋型，而它們呼叫的就是這一支。
+
+守衛順序：
 
 1. `set -uo pipefail`，外加 `trap` 把**任何未預期的結束**轉成 `exit 2` 並印出一行 `BLOCK: checker aborted unexpectedly`。
    （不用 `set -e`：要的是「意外一律變成擋」，不是「意外就靜悄悄離開」。）
@@ -210,7 +232,9 @@ spec「執行時間與輸出大小有上限且由平台設定控制」。
 **明文禁止：** 這五支檢查器的判定路徑上不得出現 `|| true`、`|| exit 0`、`|| :`。
 **執行方式（本 design 的判斷，無來源）：** CI 的新 job 加一個 grep 步驟，在
 `scripts/check-*.sh`、`scripts/lib/*.sh`、`scripts/git-hooks/*` 裡搜到 `|| true`、`|| exit 0`
-或 `\btimeout\b` 就讓 job 失敗。這把一條只靠人記得的禁止變成會紅的檢查。
+或**命令位置**的 `timeout`／`gtimeout` 就讓 job 失敗。**樣式必須綁在命令位置**
+（例如 `(^|[;&|(]\s*)(timeout|gtimeout)[[:space:]]`），否則會命中「上限由平台的 `timeout` 欄位控制」
+這類合法的英文註解；`--fix`、`--write`、`git add` 同理（D12）。這把一條只靠人記得的禁止變成會紅的檢查。
 
 **「檢查器不存在就 exit 2」的無限回歸，與為什麼不做包裝腳本。**
 契約 §H2 寫「包裝腳本一律先確認檢查器存在且可執行」。本設計**不另建包裝腳本**，
@@ -288,18 +312,24 @@ spec「執行時間與輸出大小有上限且由平台設定控制」。
    前導的 `VAR=value` 環境指派略過；`<<` 之後的 heredoc 內文整段略過（`git commit -F -` 的情形）。
 3. **比對規則**（對應 `AGENTS.md` Hard Rules 2、3、10）：
 
-   | 規則 | 命中條件 |
-   | :--- | :--- |
-   | HR10 | `rm` 同時帶 `-r` 與 `-f`（含 `-rf`、`-fr`、分開寫、`--recursive --force`） |
-   | HR10 | `git … reset` 帶 `--hard` |
-   | HR10 | `git … push` 帶 `--force`／`-f`／`--force-with-lease`，或 refspec 以 `+` 開頭 |
-   | HR10 | `git … branch` 帶 `-D`，或 `-d` 加 `--force` |
-   | HR2 | `git … commit` 且目標 checkout 的現行分支是 `main` |
-   | HR2 | `git … push` 的 refspec 目的端是 `main`／`refs/heads/main`；或無 refspec 而上游是 `main` |
-   | HR3 | `pip install`、`pip3 install`、`npm install`、`npm i`、`npm add` |
+   來源欄標示每一列的依據：**源**＝`AGENTS.md` 硬性規則與 spec 條文的字面；**本 design 判斷**＝超出字面、由本設計納入的寫法。
+
+   | 規則 | 命中條件 | 依據 |
+   | :--- | :--- | :--- |
+   | HR10 | `rm -rf` | 源（HR10；spec「破壞性命令在執行前被拒絕」） |
+   | HR10 | 同一個 `rm` 的其他寫法：`-fr`、`-r` 與 `-f` 分開寫、`--recursive --force` | **本 design 判斷**（同一個動作的等價寫法） |
+   | HR10 | `git … reset --hard` | 源 |
+   | HR10 | `git … push --force` | 源 |
+   | HR10 | `git … push` 帶 `-f`／`--force-with-lease`，或 refspec 以 `+` 開頭 | **本 design 判斷**（`-f` 是 `--force` 的短旗標；`--force-with-lease` 與 `+` refspec 是**另外的命令寫法**，不是 `--force` 的別名，納入是為了涵蓋同樣會改寫遠端歷史的動作） |
+   | HR10 | `git … branch -D` | 源 |
+   | HR10 | `git … branch` 的 `-d` 加 `--force` | **本 design 判斷**（等價寫法） |
+   | HR2 | `git … commit` 且目標 checkout 的現行分支是 `main` | 源（HR2；spec「提交與推送到 main 的目標被拒絕」） |
+   | HR2 | `git … push` 的 refspec 目的端是 `main`／`refs/heads/main`；或無 refspec 而上游是 `main` | 源（spec 的三個 scenario） |
+   | HR3 | `pip install`、`npm install` | 源（HR3；spec「不符本 repo 套件管理方式的安裝命令被拒絕」） |
+   | HR3 | `pip3 install`、`npm i`、`npm add` | **本 design 判斷**（同一個動作的明顯寫法；`AGENTS.md` 與 spec 都只點名 `pip install`／`npm install`） |
 
    `uv add`、`pnpm add` 明確放行（spec「H2 放行 pnpm add」）。
-   `npm i`／`npm add` 是**本 design 判斷**納入的別名；spec 只點名 `npm install`，但它們是同一個動作的明顯寫法。
+   **標為「本 design 判斷」的列，`tasks.md` 的測試矩陣要指回 D10，不得當成 spec 條文的要求。**
 
 4. **目標 checkout 的解析**：`git -C <path>`、`--git-dir`、`--work-tree` 都要納入，
    分支以 `git -C <解析出的路徑> symbolic-ref --short HEAD` 取得（spec「H2 擋下指定其他工作目錄的提交」）。
@@ -377,7 +407,7 @@ spec「執行時間與輸出大小有上限且由平台設定控制」。
 
 **H3 不得改動工作區**（spec「編輯後檢查不改動工作區」）：所有子工具一律以檢查模式呼叫
 （`ruff check` 而非 `ruff format`，`eslint` 不加 `--fix`），且不得呼叫 `git add`。
-這條同樣列進 D7 的 CI lint（搜 `--fix`、`--write`、`git add`）。
+這條同樣列進 D7 的 CI lint（搜 `--fix`、`--write`、`git add`，**比對綁在參數／命令位置**，見 D7）。
 
 ### D13 `scripts/git-hooks/pre-commit`（H4）：以 `git checkout-index` 物化索引，不碰工作區
 
@@ -535,8 +565,9 @@ spec「平台權限層與 hook 攔截分開陳述」、「平台權限層的能�
    但加上它會改變**每一位 Claude 開發者**讀檔的預設行為，與 Q2 同屬維護者的選擇，
    而 proposal §Impact 的「修改檔案」欄只列了 `.claude/settings.json` 的 `hooks` 鍵。
    在沒有核准的情況下擴張，等於替維護者作決定。
-2. 兩個已驗證可用的鍵也還是不能依賴：`blockWritesOutsideWorkingDirectories` 需 2.1.314、
-   `denyInsteadOfPrompting` 需 2.1.319，本機 2.1.273 都沒有（`blockReadsOutsideWorkingDirectories` 需 2.1.257，可用）。
+2. 文件寫到的鍵不等於本機可用：`blockWritesOutsideWorkingDirectories` 需 2.1.314、
+   `denyInsteadOfPrompting` 需 2.1.319，**兩者的版本下限都高於本機的 2.1.273，所以現在用不了**
+   （只有 `blockReadsOutsideWorkingDirectories` 需 2.1.257，本機已達）。
 3. spec 要求的是**把歸屬講清楚**，不是把它設好。
 
 **於是本 change 要落實的是陳述的正確性**，三處都要一致：
@@ -593,7 +624,7 @@ Codex `apply_patch` 的路徑欄位名（D11）。
 | **H3 的 30 秒對大型 `tsc --noEmit` 可能不夠**，被平台中斷。 | H3 本來就是提醒（契約 §H3），真正的 gate 在 H4、H7。被中斷時 D2 的 `UNKNOWN:` 行會寫出哪一項沒判完，不會偽裝成通過。 |
 | **新增的 pre-commit 與 H2 會改變既有工作習慣**（proposal §破壞性變更）。 | D18 的 setup 輸出寫明停用與復原方式；誤擋屬「故障」，依 `AGENTS.md` §SDD Workflow 停下回報，不得靠放寬規則收場。 |
 | **`backend/`、`frontend/` 都不存在，`.py`／`.ts` 路由在本 change 裡無法對真工具驗證。** | D21 第 1 點的假 runner 驗「路由與啟用語意」；真工具的驗證要等那兩層 bootstrap，完成報告列為未覆蓋能力。 |
-| **D1 的支援層（`scripts/lib/`）超出 proposal §Impact 的檔案清單。** | 已在交付回報中標出；`tasks.md` 要列進去。若維護者不接受，退路是把那段邏輯內嵌進五支檢查器——代價是五份副本，與本 change 的目標相反。 |
+| **D1 的支援層（`scripts/lib/`）是 design 階段才長出來的檔案。** | 2026-11-17 回修已補進 proposal §Impact 並列入 `tasks.md`（task 2.2、2.3）。若維護者不接受這兩個檔，退路是把那段邏輯內嵌進五支檢查器——代價是五份副本，與本 change 的目標相反。 |
 
 ## Migration Plan
 
@@ -631,16 +662,26 @@ Codex 的 `[features] hooks = false`。四條跳過途徑的存在正是 CI 必�
 - **Q2：本 repo 的 Codex 設定採 permission profile 還是舊的 sandbox 設定。**
   D16 已把 hook 註冊（`hooks.json`）與權限設定（`config.toml`）切開，Q2 的任一答案都不改 `hooks.json`。
 
-以下三題是本設計過程中浮現、**需要維護者或後續 change 決定、但不改變本設計的做法與工作拆解**的：
+以下四題是本設計過程中浮現、**需要維護者或後續 change 決定、但不改變本設計的做法與工作拆解**的。
+Q3 起的編號是本文件自己的（proposal 與 spec delta 只登記了 Q1、Q2）：
 
-- **`.env` 本身不在受保護樣式內。** spec 與契約的五類樣式是 `**/.env.*`、`*.pem`、`*.key`、`*id_rsa*`、
+- **Q3：`.env` 本身不在受保護樣式內。** spec 與契約的五類樣式是 `**/.env.*`、`*.pem`、`*.key`、`*id_rsa*`、
   `*credentials.json`；`**/.env.*` 要求 `.env` 後面還有一段，所以**裸檔名 `.env` 寫入不會被擋**
   （spec 的 scenario 用的是 `.env.local`，命中）。本設計**照 spec 一字不差實作，不自行放寬**（D11）。
   要不要補上 `.env` 屬於改需求，得先走 spec。
-- **「workspace 之外的路徑」在阻擋型觸發點怎麼算。** spec 寫「視為不適用而非被檢查或被寫入」，
+- **Q4：「workspace 之外的路徑」在阻擋型觸發點怎麼算。** spec 寫「視為不適用而非被檢查或被寫入」，
   D11 解讀成 H2 擋下（`exit 2`）、H3 略過並註明。如果維護者的意思是 H2 也只略過，那是放行一個判不出來的寫入，
   與「無法判斷不得回報為通過」相衝——這個張力值得確認。
-- **權限層什麼時候設。** D19 把它整個排除在本 change 之外，所以契約 §能力缺口第 3 條的承接在本 change 之後
+- **Q5：「經維護者確認的破壞性命令」怎麼走，現在整份規劃都沒有這條路。**
+  `AGENTS.md` 硬性規則 10 寫的是這四個命令「need the maintainer's explicit confirmation first」，
+  spec「破壞性命令在執行前被拒絕」也照著寫成拒絕**未經維護者確認的**破壞性命令、且 MUST NOT 自行推定已確認；
+  但那條 requirement 的三個 scenario **全部是被擋的情形，沒有一個涵蓋已確認的情形**。
+  於是「未經維護者確認的」這幾個字在目前的規劃裡不產生任何行為差異：D10 的比對一命中就擋，無條件。
+  張力在於：硬性規則承認有一條「確認後可以執行」的路，而本 change 沒有提供它——維護者要嘛接受這些命令
+  在 agent 工具呼叫這條途徑上一律被擋（人工在終端機執行不受 hook 影響），要嘛需要一個確認機制，
+  而那會新增 spec scenario，屬於改需求。**本設計不自行發明機制**（發明一個「已確認」的訊號，
+  等於讓 agent 可以自己宣稱已獲確認，正是 spec 禁止的推定）。
+- **Q6：權限層什麼時候設。** D19 把它整個排除在本 change 之外，所以契約 §能力缺口第 3 條的承接在本 change 之後
   仍是「已查明機制、尚未設定」。它需要一張自己的 issue。
 
 最後一項不是問題而是必須記下的差異：**契約 §H4 寫「腳本自己設上限」，本設計依 spec 不實作 watchdog**（D5）。
