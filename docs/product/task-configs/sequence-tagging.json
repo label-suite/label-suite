@@ -1,0 +1,20 @@
+{
+  "task_category": "sequence",
+  "input_type": "single_item",
+  "typical_tasks": ["Sequence Tagging（序列標註）"],
+  "outputs": [
+    {
+      "type": "sequence_tagging",
+      "config": {
+        "entities": [
+          { "name": "PER", "color": "#E74C3C" },
+          { "name": "ORG", "color": "#3498DB" },
+          { "name": "LOC", "color": "#2ECC71" },
+          { "name": "TIME", "color": "#F39C12" }
+        ],
+        "snap_unit": "character",
+        "allow_bypass": true
+      }
+    }
+  ]
+}
