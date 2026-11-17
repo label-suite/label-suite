@@ -103,7 +103,7 @@
 | 不動 | `scripts/check-commit-msg.sh`、`scripts/git-hooks/commit-msg`、`scripts/check-specs.mjs`／`check-flows.mjs`／`check-er-data.mjs` 的既有行為、`docs/specs/`、`design/prototype/` |
 | 相依工具 | Claude Code 2.1.273、codex-cli 0.153.0、Git、`node`／`pnpm`（`uv` 待 `backend/` 出現後才適用）。不新增任何套件相依 |
 | 對人的影響 | 全體開發者的提交流程；Codex 使用者每次 hook 變更後需重新信任，否則 hook 被跳過 |
-| 風險 | 兩份設定漂移（承接：H1 核對）；字串比對不是完整的命令安全邊界（承接：平台權限層與 branch protection）；兩平台預設 fail-open（承接：腳本自行 exit `2` 加 CI） |
+| 風險 | 兩份設定漂移（承接：H1 核對）；字串比對不是完整的命令安全邊界（承接：平台權限層與 branch protection）；兩平台預設 fail-open（承接：腳本自行 exit `2` 加 CI）；**Codex 的 `apply_patch` 沒有路徑欄位，hook 層在該途徑沒有寫檔目標保護，與 Claude 側不對等**（官方文件 2026-11-17 查核；承接：平台權限層，**本次未設定**——維護者 2026-11-17 裁定，見 `design.md` D11、D19） |
 
 ## 來源與追溯
 
