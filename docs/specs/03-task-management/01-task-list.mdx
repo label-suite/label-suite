@@ -4,7 +4,7 @@ description: '使用者在這一頁找到自己要處理的任務，並從這裡
 category: '規格書'
 tags: [規格書, 任務管理, 已定案]
 createdAt: '2026-11-05'
-updatedAt: '2026-11-16'
+updatedAt: '2026-11-17'
 ---
 
 import PrototypeFrame from '@notes/components/prototype-frame';
@@ -495,7 +495,7 @@ import Spec0301TaskListFlow from '@notes/components/spec-03-01-task-list-flow'
 
 > 理由：PRD 是上游，而且**裁定當時畫面自己就不一致**——`design/prototype/pages/task-management/task-list.html` 的篩選器寫「正式標記進行中」，列上徽章寫「正式標記中」，同一個狀態兩個名字。<mark>行號已移除：那兩處都已於 2026-11-12 改成「正式標記中」，原本的行號會指到相反的內容</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup>。
 > 與 PRD 不同的共三處：試標進行中（PRD 是「試標中」）、待 IAA 確認（PRD 是「等待 IAA 確認」）、以及篩選器的「正式標記進行中」。
-> **儀表板那一側先落地**：「等待 IAA 確認」在儀表板的兩處 KPI 標籤裡本來就是 PRD 的寫法（`design/prototype/pages/dashboard/dashboard.html:389`「等待 IAA 確認」與 `:454`「等待 IAA 確認」），任務列的狀態徽章則於 2026-11-10 依 [Issue #179](https://github.com/label-suite/label-suite/issues/179) 換成 PRD 的五個名稱（`dashboard.i18n.js` 的 `statusLabel`；那一題同時裁定作業列原本的 `繼續中`／`待繼續`／`待審核` 也當任務狀態處理，見[規格 02-01 §已確認決議](../02-dashboard/01-dashboard.mdx#已確認決議) Q7 與 Q18）。<mark>`task-list.html` 自己那三個字（`試標進行中`、`待 IAA 確認`、`正式標記進行中`）已於 2026-11-12 依 [Issue #170](https://github.com/label-suite/label-suite/issues/170) 改完，本條全部落地</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup>。
+> **儀表板那一側先落地**：「等待 IAA 確認」在儀表板的兩處 KPI 標籤裡本來就是 PRD 的寫法（`design/prototype/pages/dashboard/dashboard.html:298`「等待 IAA 確認」與 `:363`「等待 IAA 確認」），任務列的狀態徽章則於 2026-11-10 依 [Issue #179](https://github.com/label-suite/label-suite/issues/179) 換成 PRD 的五個名稱（`dashboard.i18n.js` 的 `statusLabel`；那一題同時裁定作業列原本的 `繼續中`／`待繼續`／`待審核` 也當任務狀態處理，見[規格 02-01 §已確認決議](../02-dashboard/01-dashboard.mdx#已確認決議) Q7 與 Q18）。<mark>`task-list.html` 自己那三個字（`試標進行中`、`待 IAA 確認`、`正式標記進行中`）已於 2026-11-12 依 [Issue #170](https://github.com/label-suite/label-suite/issues/170) 改完，本條全部落地</mark><sup>[#170](https://github.com/label-suite/label-suite/issues/170)</sup>。
 > 這五個狀態由 03、04、05 三個模組共用。畫面的改動另開 Issue；本 skill 不改 `design/prototype/`（#114）。
 
 ### Q2. 「未建立清單」是不是第三個標記階段？（已定案，維護者裁定 2026-11-08）
@@ -685,6 +685,7 @@ import Spec0301TaskListFlow from '@notes/components/spec-03-01-task-list-flow'
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#403](https://github.com/label-suite/label-suite/issues/403) | 2026-11-17 | §已確認決議 Q1 的理由 | 儀表板兩處 KPI 標籤的行號寫 `dashboard.html:389`、`:454` | 改為 `:298`、`:363`。儀表板移除「三條最短成功路徑」區塊後該檔淨少 91 行（刪 93、補 2 行追溯註解），兩個行號一起上移；**條文一字未改**，引文「等待 IAA 確認」照舊 | **無新決議** |
 | [#85](https://github.com/label-suite/label-suite/issues/85) | 2026-11-16 | §使用角色 的警示框、§規格 › 刪除任務、§已確認決議 Q5 的理由、附錄 FR-010e | 五處寫「刪除整件事超出 PRD，改動由 #85 處理」，警示框的標題也是「超出 PRD」 | 改成已於 2026-11-16 落地，並寫出兩格各自的落點（任務角色表一列、矩陣之外的硬邊界註記） | **無新決議**，條文一字未改 |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §已確認決議 Q1 的理由 | 兩個行號引用沒有帶引文，機械檢查無從核對 | 各自帶上「等待 IAA 確認」。**條文一字未改**，只是把引文挪到緊接引用之後 | **無新決議** |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §已確認決議 Q1 的理由 | 儀表板兩處 KPI 標籤的行號寫 `dashboard.html:296`、`:361`——那兩行現在是「完成首筆」與「標記員」，引用已失效 | 改成 `:389`、`:454`（`adminPendingIaa` 與 `plPendingIaa` 兩個「等待 IAA 確認」的 span）。**條文一字未改**，依 `writing-guide.md` §變更標示「不改規則的改動不加標示」，也不清掉上一輪的標示 | **無新決議** |

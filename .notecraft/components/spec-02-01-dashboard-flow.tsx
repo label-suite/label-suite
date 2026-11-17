@@ -532,7 +532,7 @@ const FLOWS: Flow[] = [
       { id: "n3", lane: 1, col: 2, kind: "decision", label: ["系統管", "理員？"] },
       { id: "n4", lane: 1, col: 3, kind: "decision", label: ["有任務", "角色？"] },
       { id: "n5", lane: 1, col: 4, kind: "system", end: true, label: ["顯示對應", "的版面"] },
-      { id: "n6", lane: 1, col: 5, kind: "system", exception: true, end: true, label: ["入口卡與", "三條路徑"] },
+      { id: "n6", lane: 1, col: 5, kind: "system", exception: true, end: true, label: ["三張行動", "入口卡"] },
       { id: "n7", lane: 1, col: 6, kind: "system", exception: true, end: true, label: ["導向", "登入頁"] },
     ],
     edges: [
@@ -576,8 +576,8 @@ const FLOWS: Flow[] = [
       },
       {
         title: "替代：一個任務角色都沒有",
-        body: "同時顯示三張行動入口卡與「三條最短成功路徑」兩個區塊，不是只有其中一個。三張卡的按鈕都是真的入口，沒有任務可做時由那一頁顯示它自己的空狀態。流程結束。",
-        scenarios: ["沒有任務角色的人拿到行動入口", "兩個區塊同時顯示", "三條最短成功路徑各五步", "三張卡的按鈕都走到模組入口頁"],
+        body: "顯示三張行動入口卡。三張卡的按鈕都是真的入口，沒有任務可做時由那一頁顯示它自己的空狀態。流程結束。",
+        scenarios: ["沒有任務角色的人拿到行動入口", "三張卡的按鈕都走到模組入口頁"],
         ref: "A1",
         highlight: ["n4", "e1", "n6"],
       },
