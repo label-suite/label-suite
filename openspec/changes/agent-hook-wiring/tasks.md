@@ -1,0 +1,77 @@
+# Tasks
+
+本清單依 `design.md` §Migration Plan 的上線順序排列：**支援層與檢查器 → Git hook 與安裝 → CI → hook 註冊設定 → 文件回填 → 整合驗證**。
+把 CI（群組 5）排在 hook 註冊（群組 6）之前是刻意的——先讓「檢查器本身有 bug」被擋在 PR 上，而不是先去干擾每一位開發者的每一次工具呼叫。
+
+## 共通約束（非追蹤項，適用於每一個 task）
+
+- **程式註解一律英文**（`AGENTS.md` §Language Rules；`design.md` D21 第 4 點）。`design/prototype/` 的中文註解例外不涵蓋 `scripts/`。群組 8 有一道整體核對。
+- **判定邏輯只寫在檢查器層**，註冊層（兩份設定、`pre-commit`、CI job）只宣告事件、matcher、呼叫對象與 timeout（D1）。
+- **判定路徑上不得出現 `|| true`、`|| exit 0`、`|| :`、shell `timeout`／`gtimeout`、`pkill`／`killall`、`--fix`／`--write`／`git add`**（D5、D7、D12）；群組 5 有一道會紅的 lint。
+- **完成報告**：群組 1、8 要記錄的事實統一寫在 `openspec/changes/agent-hook-wiring/completion-report.md`，交付時併進 PR 說明（**本清單的判斷，無來源**——D21 第 3 點與 #111 §驗收條件第 6 項只要求「有完成報告」，沒有指定位置）。
+- JavaScript 一律 `pnpm`，不出現 `npm install`／`pip install`。本 change 不新增任何套件相依。
+
+## 與 proposal §Impact 的差異（非追蹤項）
+
+- `scripts/lib/hook-payload.mjs` 與 `scripts/lib/hook-common.sh`（task 2.2、2.3）是 `design.md` D1 新增的支援層，**不在 proposal §Impact 的「新增檔案」欄**。實作前需由維護者確認 Impact 補上這兩個檔；若不接受，退路是把邏輯內嵌進五支檢查器（代價是五份副本）。
+- `scripts/tests/lib/hook-harness.sh`（task 2.1）屬 Impact 已涵蓋的「`scripts/tests/` 下對應的測試」。
+
+## 明確不在本清單內（非追蹤項）
+
+- **coverage gate**（#111 §2b 第二項）：`backend/` 不存在就無法開始，留在 #111 上。
+- **平台權限層的任何設定**（Claude 的 `permissions.deny`、Codex 的 `config.toml`）：D19 把它整個排除在本 change 之外，需要另開 issue。本清單只負責「把歸屬講清楚」（task 3.1、3.3、7.2）。
+- **回答 Q1 或 Q2**：那是停點一的事。task 4.4 由 Q1 的結論決定，但不由實作者作答。
+- **把受保護樣式放寬到裸檔名 `.env`**：`**/.env.*` 命中 `.env.local`、`config/.env.local`，不命中 `.env`、`config/.env`（2026-11-17 以 git 自身的樣式比對實測）。放寬屬於改需求，要先走 spec；本清單照 spec 一字不差實作（D11、design §Open Questions）。
+
+## 1. 實作前的事實查核（可平行）
+
+- [ ] 1.1 重新核對本機 runtime：Claude Code 版本、codex-cli 版本、`codex features list` 的 `hooks` 狀態、`command -v timeout`／`gtimeout` 是否存在；把實際值寫進完成報告。與 proposal §前置查核所記的 2.1.273／0.153.0 不同時**停下回報**，不逕行調整設計（#111 §1 第 2 項；契約 §查核方式；design §Context）[@backend-developer]
+- [ ] 1.2 四個版本閘鍵逐一與本機 runtime 比對並記錄可用與否：`onFailure`（2.1.295）、`permissions.blockReadsOutsideWorkingDirectories`（2.1.257）、`permissions.blockWritesOutsideWorkingDirectories`（2.1.314）、`permissions.denyInsteadOfPrompting`（2.1.319）。驗證方式為實際寫入設定後觀察 runtime 是否接受，不以文件有欄位當作可用；若 `onFailure` 已可用則停下回報（D15 的「不寫 `onFailure`」前提改變）[@backend-developer]
+- [ ] 1.3 核對官方文件確認 Codex `hooks.json` 的 `command` 欄位是字串還是陣列，記下網址、查核日與原文；結果作為 task 6.2 的實作依據，並於 task 7.1 回填契約（D16；D21 末段的兩個待確認項之一）[@backend-developer]
+- [ ] 1.4 核對官方文件確認 Codex `apply_patch` 的 `tool_input` 路徑欄位名稱；**查得到就寫進 task 3.3 的辨識清單，查不到就維持「找不到可辨識路徑欄位即 `exit 2`」不變**（D11），兩種結果都寫進完成報告並於 task 7.1 回填契約（D11；D21 末段）[@backend-developer]
+- [ ] 1.5 在 macOS 與 CI 的 Linux 各驗一次 `head -c 65536` 的截斷行為（含多位元組字元落在邊界時的輸出），記錄兩邊是否一致；不一致時把差異與因應寫進完成報告，作為 task 2.3 的實作依據（D6）[@backend-developer]
+
+## 2. 支援層與測試工具箱
+
+- [ ] 2.1 新增 `scripts/tests/lib/hook-harness.sh`：以 `mktemp -d` 加 `git init` 建隔離 repo、以 `PATH` 前置假的 `ruff`／`mypy`／`tsc`／`eslint`（固定輸出與固定退出碼）、產生各事件的假 payload、結束時 `trap` 清除。驗證：harness 自身的 smoke 測試能建立並拆除隔離 repo，且證明被呼叫到的是假工具而不是真工具（D21 第 1 點；#111 §驗收條件第 3 項）[@backend-developer]
+- [ ] 2.2 先寫 `scripts/tests/hook-payload.test.mjs` 再實作 `scripts/lib/hook-payload.mjs`：四類事件的必要欄位比對（H1／H2／H3／H6）、malformed JSON 與缺欄位回 `3`、`path.resolve` 加符號連結解析、標出 workspace 之外的路徑、以 NUL 分隔的 `名稱\x1F值` 輸出且名稱取自固定 allowlist。驗證：`pnpm test:scripts` 通過，且測試涵蓋「payload 字串永遠不進 argv」這條不變量（D2、D4；spec「事件輸入須先驗證且不經由 shell 拼接執行」、「事件觸發點以事件提供的工作目錄定位 repo」）[@backend-developer]
+- [ ] 2.3 先寫 `scripts/tests/hook-common-tests.sh` 再實作 `scripts/lib/hook-common.sh`：唯一輸出出口 `emit_out`／`emit_err`、D8 的三組遮蔽樣式、64 KiB 截斷與 `TRUNCATED:` 補行（截斷標記不計入預算）、NUL 分隔檔案清單讀取、`trap … EXIT` 只清自己建立的暫存目錄。驗證：測試斷言「輸出被截斷時退出碼與未截斷時相同」「含 token／`ghp_`／長 hex 的字串不回顯原值」「含空白與中文的路徑完整傳遞」，依 task 1.5 的結果確認 macOS 與 Linux 行為一致（D6、D8；spec「執行時間與輸出大小有上限且由平台設定控制」「攔截原因與診斷不得回顯 secret 值」「本機診斷紀錄只保留脫敏 metadata」）[@backend-developer]
+
+## 3. 五支共用檢查器
+
+- [ ] 3.1 實作 `scripts/check-env.sh`（H1）與 `scripts/tests/check-env-tests.sh`：四段 stdout 輸出（Git 與規則入口／工具版本／兩份註冊設定核對／本次 hook 是否真的會跑），`--event SessionStart` 以 `trap` 強制 `exit 0`，`--ci` 下同一判定改以非零表達；佔位符以字面取代、不執行 shell 展開，出現其他 `$VAR`／`$( … )` 標 `UNKNOWN:` 且不算通過；`uv` 在 `backend/` 不存在時標 `NA:`；Codex 信任狀態以「被誰叫起來」加 `hook-defs.sha256` 摘要比對推斷，查不到的項目明寫 `UNKNOWN:`；輸出中明寫「Codex 的 hook 層沒有讀取攔截點，該項由權限層承接，而權限層尚未設定」。驗證：隔離 repo 測試涵蓋「一邊設定漏改被指名」「兩份一致時有肯定的 `PASS:` 行」「`disableAllHooks` 為真時明寫本次 hook 不會執行」「不讀任何 secret 檔案內容（只用 `test -e`）」（D9、D19；spec「Session 開始時回報規則執行環境的現況」「…回報本次 hook 是否真的會執行」「…核對兩份 hook 註冊設定」「尚未建立的層標為 not applicable 而不是失敗」「環境檢查不讀取 secret 檔案的內容」「平台權限層與 hook 攔截分開陳述」）[@backend-developer]
+- [ ] 3.2 實作 `scripts/check-command.sh`（H2 命令那組）與 `scripts/tests/check-command-tests.sh`：引號外切段、理解引號與反斜線的切詞、略過前導 `VAR=value` 與 heredoc 內文、D10 的七條比對規則、`git -C`／`--git-dir`／`--work-tree` 的目標 checkout 解析、D7 的五道進場守衛、每則攔截訊息附邊界說明；「無法判斷」只限引號不成對／`eval`、`sh -c`、`bash -c` 的參數非字面字串／命令位置本身是命令替換這三類，其餘命令替換照常放行。驗證：測試矩陣涵蓋複合命令、引號變體、參數變體（`-rf`／`-fr`／分開寫／`--recursive --force`）、`--force-with-lease`、`+` 開頭 refspec、`git -C <另一個 checkout>` 的 main 提交、`pip install`／`npm install`／`npm i`／`npm add` 被擋而 `uv add`／`pnpm add` 放行、以及「commit body 或 issue 內文中提到 `rm -rf` 不被誤判」；**破壞性命令只驗對字串的判定，一次都不真的執行**（D7、D10；spec「破壞性命令在執行前被拒絕」「提交與推送到 main 的目標被拒絕」「不符本 repo 套件管理方式的安裝命令被拒絕」「命令比對不得把文件中提到的命令當成執行」「無法判斷不得回報為通過」）[@backend-developer]
+- [ ] 3.3 實作 `scripts/check-write-target.sh`（H2 寫檔那組）與 `scripts/tests/check-write-target-tests.sh`：判定順序固定為取路徑 → 正規化 → workspace 範圍 → 合法例外 → 拒絕清單；拒絕清單照 spec 一字不差（`**/.env.*`、`*.pem`、`*.key`、`*id_rsa*`、`*credentials.json`），**不自行加項**；例外先於拒絕（`*.example`、`*.pub`、`scripts/tests/fixtures/**`）；路徑欄位辨識 `file_path`／`notebook_path` 加 task 1.4 的結果，找不到可辨識欄位即 `exit 2`；workspace 之外的寫入目標 `exit 2`；攔截訊息同時寫出「以 shell 改檔走命令那組」與「Codex 沒有讀取類工具名，hook 層沒有讀取攔截點」。驗證：測試涵蓋 `.env.local` 被擋、`.env.example` 與 `*.pub` 放行、`docs/specs/00-prd.mdx` 不被擋、無路徑欄位時 `exit 2`、workspace 外 `exit 2`（D11、D19；spec「受保護路徑的寫入被拒絕且合法例外放行」「寫檔攔截不得被宣稱已覆蓋所有寫入途徑」「平台權限層的能力以核對過的事實陳述」）[@backend-developer]
+- [ ] 3.4 實作 `scripts/check-changed.sh`（H3／H4／H7 同一支）與 `scripts/tests/check-changed-tests.sh`：D2 的四種輸入模式（`--event`／`--staged`／`--range`／`--files`）共用同一張副檔名路由表與排除清單；整樹檢查的診斷原樣輸出不過濾，前面加一行說明是哪些被改的檔觸發；`--list-routes` 列出啟用中的路由；所有子工具以檢查模式呼叫、不得 `git add`；每次執行結束寫一筆證據到 `"$(git rev-parse --git-dir)"/label-suite/evidence/`（T11 的五欄加 `HEAD` sha、涵蓋路徑內容摘要、`AGENTS.md` sha256），紀錄經 `emit_*` 出口因而被遮蔽，並維持 200 筆／1 MiB 的留存上限。Alembic migration 的排除樣式先以 `backend/**/alembic/versions/**` 佔位，**在 backend bootstrap 時確認實際路徑**。驗證：隔離 repo 測試涵蓋「`backend/` 不存在 + 改 `.py` → `NA:` 且 `exit 0`」「`backend/` 存在 + 假 `ruff` 不在 `PATH` → 明確失敗並指名缺什麼」「沒命中任何路由 → `NA:` 加 `exit 0`」「被刪除或改名的路徑不報假錯」「產物與 lockfile 被排除」「workspace 之外的路徑被略過且印出原因」「執行前後工作區無任何變化」（D12、D14；spec「編輯後依路徑回報診斷但不阻擋」「編輯後檢查只涵蓋本次受影響且已存在的檔案」「編輯後檢查不改動工作區」「缺工具時區分 not applicable 與明確失敗」）[@backend-developer]
+- [ ] 3.5 實作 `scripts/check-evidence.sh`（H6）與 `scripts/tests/check-evidence-tests.sh`：第一步讀 payload 的 `stop_hook_active`，為真即 `exit 0`（不自造標記檔）；對「自 `HEAD` 以來有變更且命中已啟用路由」的每個檔案要求一筆涵蓋它且通過的新鮮證據，三個摘要任一對不上就當作沒有該證據；缺項 `exit 2` 並在 stderr 指名缺哪一項；`backend/`／`frontend/` 不存在時那些項標 `NA:` 不擋；不新增任何等待人輸入的關卡。驗證：測試涵蓋「重複觸發收斂成一次」「證據產生後檔案又被改 → 擋下」「`frontend/` 不存在 → 不因此擋下」（D14；spec「宣告完成前核對證據」「證據核對的重複觸發須收斂」「只重用與目前狀態一致的證據」）[@backend-developer]
+- [ ] 3.6 為五支檢查器補一組共同介面的一致性測試（`scripts/tests/checker-contract-tests.sh`）並修正測出來的不一致：退出碼字彙（`0`／`1`／`2`）、輸出流分派（H1 走 stdout，其餘走 stderr）、固定前綴（`PASS:`／`FAIL:`／`BLOCK:`／`NA:`／`UNKNOWN:`）、D7 的進場守衛（`node` 不存在、`scripts/lib/` 缺檔、payload 回 `3`、repo 定位失敗四種情況在三支阻擋型檢查器上都 `exit 2`）、同一份輸入在 `--event` 與 `--staged`／`--range` 下得到相同的診斷文字。驗證：該測試在隔離 repo 內以假 `PATH` 製造每一種守衛情境並斷言退出碼（D1、D2、D7；spec「規則判定一律來自共用檢查器」「無法判斷不得回報為通過」「只終止本次觸發所啟動的子程序」）[@backend-developer]
+
+## 4. Git hook 與安裝流程
+
+- [ ] 4.1 新增 `scripts/git-hooks/pre-commit`（三行形狀：`cd "$(git rev-parse --show-toplevel)"` 後 `exec scripts/check-changed.sh --staged`），並在 `check-changed.sh` 實作 `--staged` 的取得方式：`git diff --cached --name-only --diff-filter=ACMR -z` 取清單、逐檔用 `git show :"<path>"` 寫進鏡像暫存目錄、整樹檢查用 `git checkout-index -a --prefix="$TMP/"`、`trap … EXIT` 清理、**不得使用 `git stash`**。驗證：隔離 repo 測試涵蓋「工作區已修好但沒 stage 仍被擋」「部分暫存只判 staged 內容」「在子目錄執行仍涵蓋整份 staged 清單」「含空白與中文的檔名」「執行前後工作區無任何變化」「`--no-verify` 可跳過」（D13；spec「提交前以 staged 快照判定」）[@backend-developer]
+- [ ] 4.2 確認 H5 行為不變：在 pre-commit 落地後重跑既有的 `bash scripts/tests/check-commit-msg-tests.sh`，並在隔離 repo 驗證兩個 hook 各自獨立觸發、`scripts/check-commit-msg.sh` 與 `scripts/git-hooks/commit-msg` 的檔案內容零 diff（契約 §H5；spec「提交訊息檢查的現行行為不變」）[@backend-developer]
+- [ ] 4.3 修改 `scripts/setup.sh` 加入三件與 Q1 無關的事並補 `scripts/tests/setup-tests.sh`：設 `core.hooksPath` 前先讀現值，已是 `scripts/git-hooks` 就印「已啟用」不重設；現值是別的路徑或使用者層／全域有衝突設定時**回報衝突與處理方式、不覆寫**；印出停用方式（`git config --unset core.hooksPath`、Claude 的 `disableAllHooks`、Codex 的 `[features] hooks = false`）與復原方式，並寫明停用本機 hook 不會讓 CI 的必要檢查失效。驗證：隔離 repo 測試連跑兩次 `setup.sh` 結果相同且第二次不重設，衝突情境下設定值未被改動（D18；spec「安裝流程可重複執行且不靜默覆寫既有設定」；#111 §驗收條件第 2 項）[@backend-developer]
+- [ ] 4.4 **（由 Q1 決定，停點一有結論前不得開工）** 依 Q1 的答案處理 `setup.sh` 中 Codex hook 信任指引的那個單一函式與單一呼叫點：答「要」就填入提示內容（跑 `/hooks` 信任，否則 hook 會被跳過）並保留呼叫；答「不要」就連函式帶呼叫一起刪除。驗證：task 4.3 的三項測試在兩種答案下都不變，且 `setup.sh` 中與信任指引相關的程式碼只存在於這一個函式（D18；proposal §待決問題 Q1）[@backend-developer]
+
+## 5. CI
+
+- [ ] 5.1 在 `.github/workflows/ci.yml` 新增一個 job（既有三個 job 不動），明寫 `timeout-minutes`，依序執行：五支檢查器的回歸測試（`pnpm test:scripts` 與各支的 shell 測試）、`scripts/check-env.sh --ci`、`scripts/check-changed.sh --list-routes` 的路由集合斷言、`scripts/check-changed.sh --range "$BASE..$HEAD"`（`BASE`／`HEAD` 沿用 `commit-messages` job 已在用的 `github.event.pull_request.base.sha`／`head.sha`，清單取法為 `git diff --name-only --diff-filter=ACMR -z`）。驗證：本 PR 上該 job 轉綠；刻意讓路由集合改變時 job 會紅。**注意：`--ci` 的兩份設定核對在群組 6 落地前必然報缺 `.codex/hooks.json`**，這是預期，群組 8 的整合驗證才確認全綠（D5、D12、D17；spec「CI 重跑必要檢查並作為合併前的 gate」）[@backend-developer]
+- [ ] 5.2 在同一個 job 加入禁止用語的 lint 步驟：在 `scripts/check-*.sh`、`scripts/lib/*.sh`、`scripts/git-hooks/*` 搜到 `|| true`、`|| exit 0`、`|| :`、`\btimeout\b`、`\bgtimeout\b`、`pkill`、`killall`、`--fix`、`--write`、`git add` 任一即讓 job 失敗。驗證：以 `scripts/tests/fixtures/` 下的反例檔證明 lint 會紅，移除後會綠（D5、D7、D12；spec「無法判斷不得回報為通過」「只終止本次觸發所啟動的子程序」「編輯後檢查不改動工作區」）[@backend-developer]
+
+## 6. Hook 註冊設定
+
+- [ ] 6.1 在 `.claude/settings.json` 新增 `hooks` 鍵，註冊 D15 表列的五個 handler（`SessionStart` 10 秒、兩個 `PreToolUse` 各 5 秒、`PostToolUse` 30 秒、`Stop`／`SubagentStop` 60 秒），路徑用 `${CLAUDE_PROJECT_DIR}/scripts/<checker>.sh`；**不寫 `onFailure`**（除非 task 1.2 證明本機已達 2.1.295，屆時先回報）；**不寫 `MultiEdit`**；`$schema` 與 `attribution` 原封不動。驗證：`node -e 'JSON.parse(...)'` 通過、`git diff` 顯示 `attribution.sessionUrl` 未被改動、`scripts/check-env.sh --ci` 的 Claude 半邊全為 `PASS:`（D15；spec「Session 開始時核對兩份 hook 註冊設定」「執行時間與輸出大小有上限且由平台設定控制」）[@backend-developer]
+- [ ] 6.2 新建 `.codex/hooks.json`（`.codex/` 目錄本次新建，**只放這一個檔，不碰 `config.toml`**），依 D16 的對應表註冊同一批腳本，matcher 用 Codex 的工具名（`Bash`、`apply_patch`），`Stop` 從 payload 自行判斷，timeout 數值與 6.1 相同，路徑用 `"$(git rev-parse --show-toplevel)"/scripts/<checker>.sh`，`command` 欄位依 task 1.3 查到的 wire 形狀撰寫。驗證：`scripts/check-env.sh --ci` 兩份設定皆為 `PASS:`，且 `.codex/` 下只有 `hooks.json` 一個檔（D16；spec「Session 開始時核對兩份 hook 註冊設定」）[@backend-developer]
+
+## 7. 文件回填
+
+- [ ] 7.1 在 `docs/development/agent-hook-contract.mdx` 把五支檢查器的「**待建置**」標記改為現況（建置日與對應 PR）；把 §H4 的 timeout 格從「腳本自己設上限」改成現況——本 change 依 spec 不自建 watchdog，H4 的上限由執行環境承擔、H7 以 `timeout-minutes` 表達；補入 task 1.3、1.4 查到的 Codex `command` wire 形狀與 `apply_patch` 路徑欄位事實（1.4 查不到就維持標記並寫明仍未確認）。**本次仍未建置的項目維持標記**（權限層、branch protection）。驗證：`pnpm check:specs` 與 `pnpm exec notecraftapp build docs --rebuild` 通過，且文中沒有任何一支本次未建置的檢查器被標成已建置（D5、D20；spec「文件中的 hook 現況敘述與實際狀態一致」）[@technical-writer]
+- [ ] 7.2 在同一份契約回填兩條能力缺口：第 3 條的「承接」從「靠 `.gitignore` 與硬性規則 8」改寫成指名權限層的宣告式機制（Codex 的 `filesystem = "deny"`、Claude 的 `permissions.deny`），並明寫**本 change 未設定權限層**；第 6 條從「本次沒做」改為兩側已於 2026-11-17 查完（附網址與查核日），並明記「查完 ≠ 設好」，且 Codex 的 permission profile 與舊 sandbox 設定**互斥、不得並列成四個鍵**。驗證：`pnpm check:specs` 通過；文中關於權限層的每一句都能指回一個有查核日的來源（D19；spec「平台權限層與 hook 攔截分開陳述」「平台權限層的能力以核對過的事實陳述」）[@technical-writer]
+- [ ] 7.3 更新 `AGENTS.md` §Agent Rules Index 末段（現行第 171 行）「No agent hook is wired yet: …」一句，改寫成本 change 落地後的實際狀態。**只改事實陳述**。驗證：該檔 `git diff` 僅限這一段，硬性規則條數、六份文件的表格內容與其餘段落零異動（D20；spec「文件中的 hook 現況敘述與實際狀態一致」）[@technical-writer]
+
+## 8. 整合驗證與完成報告
+
+- [ ] 8.1 實際 runtime 事件 smoke test：在 Claude Code 與 Codex **各跑一次真的事件**，確認註冊生效、matcher 命中、payload 欄位與預期相同、回饋在對話中看得到、H2 的攔截真的擋下動作（受測命令用安全字串，不真的執行破壞性操作）。逐次記錄事件名稱、payload 摘要、輸出與退出碼到完成報告；任一平台跑不起來就照實記為未覆蓋，不以腳本測試頂替（D21 第 2 點；#111 §驗收條件第 4 項）[@backend-developer]
+- [ ] 8.2 全量回歸與效能實測：`pnpm test:scripts`、五支檢查器與 harness 的 shell 測試、`pnpm check:specs`、`pnpm check:flows`、`pnpm check:er` 全綠；在隔離 repo 跑一次完整的 allow／deny／warning／合法例外矩陣（含退出碼、輸出上限、缺工具、staged 與 unstaged、含空白與中文的路徑、產物排除、防重入）；實測 H2 在冷快取下的 p95 耗時，超過約 1 秒就依 Risks 第一列改用純 bash 解析 H2 需要的三個欄位並重測（D21 第 1 點、design §Risks；#111 §驗收條件第 3 項）[@backend-developer]
+- [ ] 8.3 核對本 change 新增與修改的每一個 `scripts/`、`.github/workflows/` 檔案，程式註解與 CI 步驟名稱全為英文。驗證：逐檔檢視，無任何非英文註解（`AGENTS.md` §Language Rules；D21 第 4 點）[@backend-developer]
+- [ ] 8.4 完成 `openspec/changes/agent-hook-wiring/completion-report.md`：測試命令、工具版本（task 1.1、1.2 的結果）、退出碼、snapshot，以及未覆蓋能力——至少含「branch protection 未啟用，CI job 會紅但技術上還擋不住合併」「平台權限層未設定」「`backend/`／`frontend/` 不存在，`.py`／`.ts` 路由只以假 runner 驗過路由與啟用語意，未對真工具驗證」「Alembic migration 的排除樣式仍是佔位」「Q1 未決時 `setup.sh` 的輸出範圍」；若 task 1.4 未查到路徑欄位名，一併列為未覆蓋。驗證：#111 §驗收條件第 6 項的五類資訊都有對應段落，且報告中沒有任何一句宣稱本 change 已把 gate 做完整（D17、D19、D21 第 3 點）[@technical-writer]
