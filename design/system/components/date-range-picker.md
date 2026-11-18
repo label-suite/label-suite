@@ -46,7 +46,7 @@ h.setLang('en'); h.setValue({ from: null, to: null }); h.destroy();
 
 ## token
 
-`--color-white`、`--color-border`、`--color-ink`、`--color-primary`、`--color-primary-strong`、`--color-primary-soft-bg`、`--color-on-cta`、`--radius-md`、`--radius-sm`、`--shadow-lg`、`--z-dropdown`、`--space-sm`、`--space-xs`、`--font-sans`。
+`--color-white`、`--color-border`（彈出層）、`--color-border-control`（觸發鈕）、`--color-ink`、`--color-primary`、`--color-primary-strong`、`--color-primary-soft-bg`、`--color-on-cta`、`--radius-md`、`--radius-sm`、`--shadow-lg`、`--z-dropdown`、`--space-sm`、`--space-xs`、`--font-sans`。
 
 檔頭註解明寫「Tokens from assets/tokens.css only」（`date-range-picker.css:1`），**全檔沒有任何寫死色值**——b1 唯一做到這件事的共用 CSS。
 

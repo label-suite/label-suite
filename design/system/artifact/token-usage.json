@@ -14,7 +14,7 @@
     "color-on-cta": "放在 {color-cta}、{color-primary}、{color-error} 實心底上的文字。淺色主題白字壓 {color-primary} 為 4.47:1，是已裁定接受的例外（brand.md 唯一的對比豁免）。",
     "color-on-ink": "放在 {color-ink} 實心底（`.toast`）上的文字。",
     "color-border": "裝飾用的邊框與分隔線：卡片、表格標頭底線、分隔線、按鈕外框。不用於表單控制項的外框（改用 {color-border-control}）。",
-    "color-border-control": "表單控制項的外框：輸入框、下拉選單、文字區塊、搜尋框、勾選框，對白底至少 3:1（WCAG 1.4.11）。焦點與錯誤狀態仍用各自的 token。",
+    "color-border-control": "表單控制項的外框：輸入框、下拉選單、文字區塊、搜尋框、勾選框，以及長得像欄位的觸發鈕（日期區間、分類選擇），對白底至少 3:1（WCAG 1.4.11）。焦點與錯誤狀態仍用各自的 token。",
     "color-border-muted": "較淡的分隔線（表格列之間）與分頁 hover 底。",
     "color-text-muted": "已棄用的舊名，值等同 {color-ink-muted}。新樣式一律用 {color-ink-muted}。",
     "color-text-soft": "次要文字：說明、描述、分頁資訊、彈窗內文。",

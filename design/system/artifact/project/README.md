@@ -16,7 +16,7 @@ Label Suite 是研究團隊用的 NLP 標記平台：以設定驅動的流程走
 10. **互動元件要有 `prefers-reduced-motion` 的退路。**
 11. **圖示一律用 SVG。** 不用 emoji，也不用 `✕`、`←`、`→`、`✓`、`▾` 這類字元充當圖示。
 12. **破壞性動作先確認**（UXC-10）：確認視窗點遮罩不關，Esc 取消、Enter 確認，確認鈕用實心 `.btn-danger`。
-13. **控制項外框用 `--color-border-control`，`--color-border` 只做裝飾。** 輸入框、下拉選單、文字區塊、搜尋框、勾選框的外框要過 3:1；卡片、表格、分隔線用 `--color-border`。
+13. **控制項外框用 `--color-border-control`，`--color-border` 只做裝飾。** 輸入框、下拉選單、文字區塊、搜尋框、勾選框，以及長得像欄位的觸發鈕（日期區間、分類選擇）的外框要過 3:1；卡片、表格、分隔線用 `--color-border`。
 14. **`--color-primary-border` 不能是唯一的提示。** 只靠邊框標示的狀態（例如日期選擇器的今天）改用 `--color-primary`。
 
 ## 色彩
@@ -32,7 +32,7 @@ Label Suite 是研究團隊用的 NLP 標記平台：以設定驅動的流程走
 | 頁面層次 | `--color-surface`（頁底）、`--color-white`（卡片）、`--color-slate-50`（交錯列） | 語意別名是 `--bg-page`、`--bg-surface` |
 | 文字 | `--color-ink`、`--color-ink-muted`、`--color-on-ink` | 別名 `--fg-1`、`--fg-2`、`--fg-3`。`--color-text-muted` 是舊別名，新元件不用 |
 | 分隔 | `--color-border`、`--color-border-muted` | 分隔線與裝飾性外框 |
-| 控制項外框 | `--color-border-control` | 輸入框、下拉選單、文字區塊、搜尋框、勾選框 |
+| 控制項外框 | `--color-border-control` | 輸入框、下拉選單、文字區塊、搜尋框、勾選框，以及長得像欄位的觸發鈕（日期區間、分類選擇） |
 | 四個語意 | `--color-{success,warning,error,info}`，各配 `-bg`、`-border`；前三者另有 `-soft-bg`、`-soft-border` | 狀態、banner、toast、badge |
 | 工作頁籤 | `--color-tab-active-bg`、`--color-tab-hover-bg`、`--nav-active-bg` | 側欄的工作頁籤與導覽選取 |
 | 非語意強調 | `--color-file-markdown` | 只用來區分檔案類型圖示 |
