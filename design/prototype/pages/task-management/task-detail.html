@@ -5827,7 +5827,8 @@ function interpolate(template, payload) {
   }
 
   function getRoundColor(roundNumber) {
-    var palette = ['#6366F1', '#F59E0B', '#EC4899', '#8B5CF6', '#0EA5E9'];
+    /* 輪次色在 assets/data-palette.css（#420 Q4）；值只當 style.background 用 */
+    var palette = ['var(--data-round-1)', 'var(--data-round-2)', 'var(--data-round-3)', 'var(--data-round-4)', 'var(--data-round-5)'];
     return palette[(Math.max(roundNumber, 1) - 1) % palette.length];
   }
 
@@ -6219,7 +6220,7 @@ function interpolate(template, payload) {
             label: t(isMaterializedOfficialPool ? 'officialReserveLabel' : 'totalSamplesLabel'),
             valueText: TASK_DATA.datasetTotal + unitText,
             count: Number(TASK_DATA.datasetTotal) || 0,
-            color: isMaterializedOfficialPool ? '#14B8A6' : '#94A3B8'
+            color: isMaterializedOfficialPool ? 'var(--data-split-official)' : 'var(--data-split-total)'
           }];
         }
         /* issue singyichen/label-suite#1120 (acceptance 12): once the official run is the stage
@@ -6230,7 +6231,7 @@ function interpolate(template, payload) {
             label: t('officialReserveLabel'),
             valueText: String(reserveCount) + unitText,
             count: reserveCount,
-            color: '#14B8A6'
+            color: 'var(--data-split-official)'
           }];
         }
         var segments = rounds.map(function(round) {
@@ -6246,7 +6247,7 @@ function interpolate(template, payload) {
             label: t('officialReserveLabel'),
             valueText: String(reserveCount) + unitText,
             count: reserveCount,
-            color: '#14B8A6'
+            color: 'var(--data-split-official)'
           });
         }
         return segments;
@@ -6275,7 +6276,7 @@ function interpolate(template, payload) {
           label: t('officialReserveLabel'),
           valueText: reserveCount + (state.lang === 'zh' ? ' 筆' : ' items'),
           count: reserveCount,
-          color: '#14B8A6'
+          color: 'var(--data-split-official)'
         }
       ], TASK_DATA.datasetTotal);
     }

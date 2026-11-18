@@ -60,9 +60,9 @@
       height: 32px;
     }
 
-    .role-avatar--emerald { background: #D1FAE5; color: var(--color-cta-hover); }
-    .role-avatar--violet  { background: #EDE9FE; color: #7C3AED; }
-    .role-avatar--indigo  { background: #E0E7FF; color: #4F46E5; }
+    .role-avatar--emerald { background: var(--data-role-emerald-bg); color: var(--data-role-emerald-fg); }
+    .role-avatar--violet  { background: var(--data-role-violet-bg); color: var(--data-role-violet-fg); }
+    .role-avatar--indigo  { background: var(--data-role-indigo-bg); color: var(--data-role-indigo-fg); }
 
     .role-name {
       font-size: 1.0625rem;
@@ -111,10 +111,11 @@
       height: 20px;
     }
 
-    .step-icon--emerald       { background: #D1FAE5; color: var(--color-cta-hover); }
-    .step-icon--violet        { background: #EDE9FE; color: #7C3AED; }
-    .step-icon--indigo        { background: #E0E7FF; color: #4F46E5; }
-    .step-icon--ink           { color: var(--color-ink); }
+    .step-icon--emerald       { background: var(--data-role-emerald-bg); color: var(--data-role-emerald-fg); }
+    .step-icon--violet        { background: var(--data-role-violet-bg); color: var(--data-role-violet-fg); }
+    .step-icon--indigo        { background: var(--data-role-indigo-bg); color: var(--data-role-indigo-fg); }
+    /* --ink 只在淺色主題壓過角色前景色；深色主題沿用 data-palette 的角色前景色（#420 前由深色區塊的高權重規則達成） */
+    html:not([data-theme="dark"]) .step-icon--ink { color: var(--color-ink); }
 
     .step-title {
       display: block;
@@ -316,7 +317,7 @@
     }
 
     .skeleton {
-      background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+      background: linear-gradient(90deg, var(--color-border) 25%, var(--color-border-muted) 50%, var(--color-border) 75%);
       background-size: 200% 100%;
       animation: dashboard-skeleton-shimmer 1.5s infinite;
       border-radius: var(--radius-md);
@@ -350,21 +351,9 @@
 
     /* ── Dark mode overrides ──────────────────────────────────── */
     html[data-theme="dark"] {
-      /* .dashboard-error-state uses --color-white/--color-border, which
-         tokens.css already redefines for dark mode; only the skeleton
-         shimmer's hardcoded gradient stops need an explicit override. */
-      .skeleton {
-        background: linear-gradient(90deg, #1F1F28 25%, #2A2A35 50%, #1F1F28 75%);
-      }
-      /* Step icons — match brightness with lighter icon */
-      .step-icon--emerald       { background: #059669; color: #D1FAE5; }
-      .step-icon--violet        { background: #6D28D9; color: #EDE9FE; }
-      .step-icon--indigo        { background: #4338CA; color: #E0E7FF; }
-
-      /* Role avatars — same vibrant treatment */
-      .role-avatar--emerald { background: #059669; color: #D1FAE5; }
-      .role-avatar--violet  { background: #6D28D9; color: #EDE9FE; }
-      .role-avatar--indigo  { background: #4338CA; color: #E0E7FF; }
+      /* .dashboard-error-state, the skeleton, the role cards (data-palette.css)
+         and the task-state badges all read tokens that flip on their own
+         (#420); only the <img> icons below need a dark rule. */
 
       /* Workflow connector — invert to white; opacity pulled back since white reads heavier */
       .workflow-step-connector { opacity: 0.45; }

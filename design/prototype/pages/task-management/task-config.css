@@ -80,15 +80,16 @@
     .s2-code-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm); }
 
     /* ── Regression slider ── */
-    .regression-slider-control { --regression-dimension-color: #4F46E5; }
-    .regression-dimension-color-0 { --regression-dimension-color: #4F46E5; }
-    .regression-dimension-color-1 { --regression-dimension-color: #0369A1; }
-    .regression-dimension-color-2 { --regression-dimension-color: #047857; }
-    .regression-dimension-color-3 { --regression-dimension-color: #B45309; }
-    .regression-dimension-color-4 { --regression-dimension-color: #BE185D; }
-    .regression-dimension-color-5 { --regression-dimension-color: #7E22CE; }
-    .regression-dimension-color-6 { --regression-dimension-color: #C2410C; }
-    .regression-dimension-color-7 { --regression-dimension-color: #0F766E; }
+    /* 維度色在 assets/data-palette.css（#420 Q4），淺深兩組都在那裡 */
+    .regression-slider-control { --regression-dimension-color: var(--data-regression-0); }
+    .regression-dimension-color-0 { --regression-dimension-color: var(--data-regression-0); }
+    .regression-dimension-color-1 { --regression-dimension-color: var(--data-regression-1); }
+    .regression-dimension-color-2 { --regression-dimension-color: var(--data-regression-2); }
+    .regression-dimension-color-3 { --regression-dimension-color: var(--data-regression-3); }
+    .regression-dimension-color-4 { --regression-dimension-color: var(--data-regression-4); }
+    .regression-dimension-color-5 { --regression-dimension-color: var(--data-regression-5); }
+    .regression-dimension-color-6 { --regression-dimension-color: var(--data-regression-6); }
+    .regression-dimension-color-7 { --regression-dimension-color: var(--data-regression-7); }
     .regression-slider-shell {
       display: grid;
       grid-template-columns: auto minmax(0, 1fr) 68px;
@@ -565,14 +566,6 @@
     .task-type-chip[role="radio"].selected .task-type-chip-check::after { width: 6px; height: 6px; border: none; border-radius: 50%; background: white; transform: none; }
 
     /* ── Dark-mode rules for engine-generated components (shared by task-new + task-detail) ── */
-    html[data-theme="dark"] .regression-dimension-color-0 { --regression-dimension-color: #A5B4FC; }
-    html[data-theme="dark"] .regression-dimension-color-1 { --regression-dimension-color: #7DD3FC; }
-    html[data-theme="dark"] .regression-dimension-color-2 { --regression-dimension-color: #6EE7B7; }
-    html[data-theme="dark"] .regression-dimension-color-3 { --regression-dimension-color: #FCD34D; }
-    html[data-theme="dark"] .regression-dimension-color-4 { --regression-dimension-color: #F9A8D4; }
-    html[data-theme="dark"] .regression-dimension-color-5 { --regression-dimension-color: #D8B4FE; }
-    html[data-theme="dark"] .regression-dimension-color-6 { --regression-dimension-color: #FDBA74; }
-    html[data-theme="dark"] .regression-dimension-color-7 { --regression-dimension-color: #5EEAD4; }
     html[data-theme="dark"] .regression-value-input { background: var(--color-surface); }
     html[data-theme="dark"] .code-editor { background: #0D0D14; border-color: var(--color-border-control); }
     html[data-theme="dark"] .entity-color-dot,

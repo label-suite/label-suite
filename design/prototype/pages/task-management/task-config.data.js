@@ -608,6 +608,9 @@ var DEFAULT_GUIDELINE_FILES_BY_TASK_TYPE = {
     { name: 'VA_emj.png', type: 'Image', size: 584508, assetPath: '../../assets/images/task-management/VA_emj.png' },
   ],
 };
+// Entity / label palette. CSS mirror: assets/data-palette.css --data-entity-1..8 (#420 Q4).
+// Kept as 6-digit hex here because the engine appends alpha (c + '33') and feeds <input type=color>;
+// change both together.
 var ENTITY_COLORS = ['#6366F1','#10B981','#F59E0B','#EC4899','#8B5CF6','#0EA5E9','#F97316','#14B8A6'];
 var USER_DIRECTORY = [
   { name: 'Alex Wang', email: 'alex.wang@labelsuite.io', systemRole: 'user' },

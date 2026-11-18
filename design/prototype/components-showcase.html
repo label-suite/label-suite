@@ -1240,20 +1240,20 @@
         <h3>Color Dot</h3>
         <p class="component-note">§Color Dot — 三種尺寸：標準 20×20（4px 圓角方，表單實體類型列）/ 預覽 12×12 / 狀態圓點 .t-dot 8×8（IAA 門檻通過與否）；顏色一律以 inline style.background 套用。</p>
         <div class="component-demo">
-          <!-- Default 8-color palette — hex values verbatim from MASTER §Color Dot -->
-          <span class="entity-color-dot" style="background: #6366F1" title="#6366F1"></span>
-          <span class="entity-color-dot" style="background: #10B981" title="#10B981"></span>
-          <span class="entity-color-dot" style="background: #F59E0B" title="#F59E0B"></span>
-          <span class="entity-color-dot" style="background: #EC4899" title="#EC4899"></span>
-          <span class="entity-color-dot" style="background: #8B5CF6" title="#8B5CF6"></span>
-          <span class="entity-color-dot" style="background: #0EA5E9" title="#0EA5E9"></span>
-          <span class="entity-color-dot" style="background: #F97316" title="#F97316"></span>
-          <span class="entity-color-dot" style="background: #14B8A6" title="#14B8A6"></span>
+          <!-- Default 8-color palette — assets/data-palette.css --data-entity-1..8 (#420 Q4), same values as ENTITY_COLORS -->
+          <span class="entity-color-dot" style="background: var(--data-entity-1)" title="--data-entity-1"></span>
+          <span class="entity-color-dot" style="background: var(--data-entity-2)" title="--data-entity-2"></span>
+          <span class="entity-color-dot" style="background: var(--data-entity-3)" title="--data-entity-3"></span>
+          <span class="entity-color-dot" style="background: var(--data-entity-4)" title="--data-entity-4"></span>
+          <span class="entity-color-dot" style="background: var(--data-entity-5)" title="--data-entity-5"></span>
+          <span class="entity-color-dot" style="background: var(--data-entity-6)" title="--data-entity-6"></span>
+          <span class="entity-color-dot" style="background: var(--data-entity-7)" title="--data-entity-7"></span>
+          <span class="entity-color-dot" style="background: var(--data-entity-8)" title="--data-entity-8"></span>
         </div>
         <div class="component-demo">
-          <span class="annotation-preview-color" style="background: #6366F1"></span>
-          <span class="annotation-preview-color" style="background: #10B981"></span>
-          <span class="annotation-preview-color" style="background: #F59E0B"></span>
+          <span class="annotation-preview-color" style="background: var(--data-entity-1)"></span>
+          <span class="annotation-preview-color" style="background: var(--data-entity-2)"></span>
+          <span class="annotation-preview-color" style="background: var(--data-entity-3)"></span>
           <span class="t-dot" style="background: var(--color-success)" title="IAA 達標"></span>
           <span class="t-dot" style="background: var(--color-error)" title="IAA 未達標"></span>
         </div>
