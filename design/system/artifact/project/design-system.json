@@ -1,0 +1,70 @@
+{
+  "v": 3,
+  "layout": "files",
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-11-18T05:50:22Z"
+  },
+  "title": "Label Suite Design System",
+  "namespace": "LabelSuite",
+  "libraries": [],
+  "sections": {},
+  "groups": [
+    "Logos"
+  ],
+  "assetGroups": {
+    "Logos": {
+      "name": "Logos",
+      "tile": "l",
+      "order": [
+        "icon-colored.svg",
+        "icon.svg",
+        "logo-horizontal.svg",
+        "banner.svg",
+        "social-preview.svg"
+      ],
+      "files": {
+        "icon-colored.svg": {
+          "name": "icon-colored.svg",
+          "blob": "7585fa394573cfe1b012d73d4def5de5",
+          "size": 522,
+          "type": "image/svg+xml"
+        },
+        "icon.svg": {
+          "name": "icon.svg",
+          "blob": "646c75fe319d188651ce430f856b4b81",
+          "size": 420,
+          "type": "image/svg+xml"
+        },
+        "logo-horizontal.svg": {
+          "name": "logo-horizontal.svg",
+          "blob": "d1fe694ca8afc361edf15aef46b5ec09",
+          "size": 658,
+          "type": "image/svg+xml"
+        },
+        "banner.svg": {
+          "name": "banner.svg",
+          "blob": "f3c5afb38d4a06d4c6bfa8082c80ec41",
+          "size": 995,
+          "type": "image/svg+xml"
+        },
+        "social-preview.svg": {
+          "name": "social-preview.svg",
+          "blob": "53c1f308fc6091e39cc25ca6cda537f8",
+          "size": 991,
+          "type": "image/svg+xml"
+        }
+      }
+    }
+  },
+  "blobs": {},
+  "docs": {
+    "sections": []
+  },
+  "lastChange": {
+    "by": "陳欣怡",
+    "at": "2026-11-18T05:50:22Z",
+    "via": "Claude Code · label-suite/label-suite feat/design-system-artifact",
+    "note": "First publish from design/system/artifact (#413)"
+  }
+}
