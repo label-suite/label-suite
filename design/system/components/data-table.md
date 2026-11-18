@@ -70,5 +70,7 @@
 | `admin/role-settings#state-default` | `.matrix-table`（`role-settings.html:104`），sticky 首欄與表頭（`:127`、`:156`），外層 `role="region" tabindex="0"`——**鍵盤可捲**，與 G-27 相反 |
 | `task-management/task-detail`（`#tab-member-management`、`#tab-annotation-progress`、`#tab-annotation-results`、`#tab-work-log`） | `.member-table`（`member-management.html:19`；`annotation-progress.html:32`；`annotation-results.html:48`；`work-log.html:38`） |
 | `annotation/annotation-list`（`#state-default`、`#role-*`） | `.task-table`（`annotation-list.html:524`）。標記員的列是 `tr role="button" tabindex="0"`，Enter／Space 進工作區（`:1875`）；空狀態**不放進表格**，另用 [Empty State](empty-state.md) |
+| `dataset/dataset-analysis-list`（`#state-default`、`#state-filtered-empty`、`#param-view-empty`） | `.task-table`（`dataset-analysis-list.html:271`），一列 `tr role="button" tabindex="0"`（`dataset-analysis-list.view.js:18`–`:19`）；焦點環寫死 rgba（`:76`）→ `../design-gaps.md` G-02 |
+| `dataset/dataset-analysis-detail`（`#tab-quality`、`#state-quality-*`） | 本頁 `.annotator-table`（`dataset-analysis-detail.html:135`–`:139`、markup `:334`–`:353`）→ G-10 |
 
-b2 已補上（見上表）。b3 已補上（見上表）。b4（`dataset/dataset-analysis-list`），待 b4 補。
+b2 已補上（見上表）。b3 已補上（見上表）。b4 已補上（見上表）。

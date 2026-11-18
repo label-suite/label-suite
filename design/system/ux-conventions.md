@@ -1,6 +1,6 @@
 # UX Conventions
 
-> 批次 `b1-shared-account` 建立、`b2-admin-dashboard-task`、`b3-annotation-review` 補寫 ｜交付包 commit `b1fd43c` → `eb9a884`
+> 批次 `b1-shared-account` 建立、`b2-admin-dashboard-task`、`b3-annotation-review`、`b4-dataset-sweep` 補寫 ｜交付包 commit `b1fd43c` → `eb9a884`
 
 跨元件成立的約定。收錄條件（`design-system-setup` 步驟 5）：**至少兩個元件在遵守它**；只有一個元件這樣做的，寫在那個元件自己的檔裡。
 
@@ -20,7 +20,7 @@
 | [UXC-06](#uxc-06-送出中的載入態與重複送出防護) | 送出中的載入態與重複送出防護 | **可以** |
 | [UXC-07](#uxc-07-toast-單一實例與分級存續時間) | Toast 單一實例與分級存續時間 | **可以** |
 | [UXC-08](#uxc-08-skeleton-尺寸要貼合載入後的內容) | Skeleton 尺寸要貼合載入後的內容 | **可以** |
-| [UXC-09](#uxc-09-首次使用的空與篩不到的空是兩種) | 首次使用的「空」與篩不到的「空」是兩種 | **b2 寫完**，b3 核對 |
+| [UXC-09](#uxc-09-首次使用的空與篩不到的空是兩種) | 首次使用的「空」與篩不到的「空」是兩種 | **b2 寫完**，b3、b4 核對 |
 | [UXC-10](#uxc-10-刪除分支要先確認) | 刪除分支要先確認 | **b2 寫完** |
 | [UXC-11](#uxc-11-篩選搜尋與分頁的狀態放在網址上) | 篩選、搜尋與分頁的狀態放在網址上 | **部分** |
 
@@ -58,6 +58,8 @@
 
 **b3 核對**：`annotation/annotation-workspace` 照抄 `TOAST_DURATIONS`（`annotation-workspace.config.js:422`–`:439`），遵守。`annotation-list` 沒有 toast。
 
+**b4 核對**：`dataset/dataset-analysis-list` 照抄 `TOAST_DURATIONS`（`design/prototype/pages/dataset/dataset-analysis-list.js:25`），遵守。`dataset/dataset-analysis-detail` 有 toast 的 markup 與關閉鈕（`dataset-analysis-detail.html:362`–`:363`、`:2463`），卻沒有任何程式顯示它，無從核對 → [`design-gaps.md`](design-gaps.md) G-55。
+
 這是 prototype 引用最多的一條：42 處裡獨佔 **20 處**，其中 4 處在 `components-showcase.html`（`:142`、`:397`、`:1116`、`:1499`），`:142` 甚至把它寫進正典 CSS 區塊的標頭。
 
 ## UXC-08：Skeleton 尺寸要貼合載入後的內容
@@ -82,6 +84,8 @@
 遵守它的元件：[Pagination](components/pagination.md)、[List Toolbar](components/list-toolbar.md)。兩者在 b1 都**沒有可重現的視圖**（showcase 只展示版面、不展示網址行為），所以這一條在本批次只記到契約層。
 
 **b2 補上可重現的樣本**：`admin/user-management#state-filtered-empty`（`?q=`／`?status=`／`?role=`）與 `task-management/task-list#state-filtered-empty`（`?keyword=`／`?status=`／`?output_type=`／`?run_stage=`，規格 [`01-task-list.mdx` §查詢條件保留在網址](../../docs/specs/03-task-management/01-task-list.mdx)）。
+
+**b4 補上**：`dataset/dataset-analysis-list#state-filtered-empty`（`?keyword=`／`?iaa_status=`／`?output_type=`，由 `syncUrl` 只從狀態組網址，`design/prototype/pages/dataset/dataset-analysis-list.js:71`）。`dataset/dataset-analysis-detail` 的 `syncUrlState`（`dataset-analysis-detail.html:2423`）同樣只從狀態組網址（#155 Q4，維護者 2026-11-08），但它保存的是 `task_id` 與 `tab`，不是清單狀態。
 
 這條和 `docs/prototype/navigation.mdx` §網址參數 是同一件事的兩面：那一節是**宣告有哪些參數**，這一條是**為什麼要有**。
 
@@ -112,6 +116,8 @@
 依據的規格：[`03-task-management/01-task-list.mdx` §空狀態與載入失敗](../../docs/specs/03-task-management/01-task-list.mdx)（三種情況的文案表，且「不放第二顆新增任務」）。第三種「載入失敗」**絕對不能顯示成空資料**，`task-list` 用另一列錯誤列（`:881`–`:913`）處理。
 
 **b3 核對**：`annotation/annotation-list` 遵守。`renderEmptyState`（`design/prototype/pages/annotation/annotation-list.html:1951`–`:1966`）用同一個 `empty-state-page` 容器，只依「本來有沒有資料」換文案（「找不到符合條件的資料。」／「目前尚無資料。」），只有前者加清除篩選。對應規格 [`04-annotation/01-annotation-list.mdx` §空的與找不到](../../docs/specs/04-annotation/01-annotation-list.mdx) 第 4–6 條。
+
+**b4 核對**：`dataset/dataset-analysis-list` 遵守。`createEmptyRow(noResults)`（`design/prototype/pages/dataset/dataset-analysis-list.view.js:133`）沿用 `task-list` 的「表格裡的一列」做法，依參數換文案（`dataset-analysis-list.i18n.js:38`–`:41`）；篩不到時的文案叫人「清除篩選」，清除鈕在工具列（`.clear-btn`，`dataset-analysis-list.html:254`），空狀態裡不另放。載入失敗另有錯誤列（`createErrorRow`，`dataset-analysis-list.view.js:159`），不顯示成空資料。`dataset/dataset-analysis-detail` 的兩種空（統計 `#statsEmpty`、品質 `#qualityEmpty`）是「還沒有資料」的空，沒有篩選，這一條不適用。
 
 ## UXC-10：刪除分支要先確認
 

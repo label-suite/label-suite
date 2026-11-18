@@ -1,6 +1,6 @@
 # Design Gaps
 
-> 批次 `b1-shared-account` 建立、`b2-admin-dashboard-task`、`b3-annotation-review` 補寫 ｜交付包 commit `b1fd43c` → `eb9a884`、prototype tree `815b853`
+> 批次 `b1-shared-account` 建立、`b2-admin-dashboard-task`、`b3-annotation-review`、`b4-dataset-sweep` 補寫 ｜交付包 commit `b1fd43c` → `eb9a884`、prototype tree `815b853`
 
 每一筆四欄齊全：**重現方式**（不截圖）、**受影響範圍**、**依據**（兩邊原文都引出來）、**待決問題**。
 分三類：原型與業務規格差異 ／ 缺少狀態證據 ／ 待重新設計。
@@ -30,6 +30,8 @@
 | **待決問題** | 這些值要不要補成 token？若要，哪些是**語意色**（該進 `tokens.css`）、哪些是**資料色**（像 Color Dot 的 8 色盤，本來就該是任意值）？`design-system-setup` 鐵律 3 禁止撰寫者替它們取名，所以這題只能由維護者決定。 |
 
 **b3 核對**：`annotation/annotation-list` 的 CSS 約 30 個寫死 hex ＋ 1 個 rgba，集中在階段徽章（`annotation-list.html:167`–`:174`）、結果標籤（`:364`–`:366`）與暗色模式覆寫（`:422`–`:428`）；`annotation-workspace` 把同一組結果標籤 hex 再寫一份（`annotation-workspace.html:613`–`:618`），另有 `rgba(99,102,241,0.2)`（`:851`、`:872`）與 `var(--color-surface, #…)` 的 hex 後備值（`:953`）。作答控制項的 hex 在引擎裡 → G-50。
+
+**b4 核對**：`dataset/dataset-analysis-list` 只有一個寫死值，焦點環的 `rgba(99, 102, 241, 0.18)`（`dataset-analysis-list.html:76`）；輸出類型徽章載入 `task-type-badge.css`，那 36 個 hex 已算在上面。`dataset/dataset-analysis-detail` 與十六個 partial 沒有 hex 或 rgba，SVG 與 inline `style` 全用 `var(--*)`；只有平均標記時間的 `<small style="font-size:18px">`（`dataset-analysis-detail.html:286`）寫死字級。
 
 ### G-03 帳號頁一個正典 `.btn-*` 都沒用，各自重寫
 
@@ -77,6 +79,8 @@
 | **受影響範圍** | [Divider](components/divider.md)；`account/login` |
 | **依據** | 正典：`components-showcase.html:1262`「`§Divider — 水平線 / 文字分隔（僅登入頁 OAuth 與帳號登入之間）…`」，CSS 是 `.divider-text` ＋ 兩個 `<hr class="divider-hr">`（`:836`–`:838`）。實作：`pages/account/login.html:205` 的 `.divider` 用 `::before`／`::after`（`:213`），markup 是 `<div class="divider"><span id="dividerText">或</span></div>`（`:466`）。`.divider-hr` 全 prototype 只有 showcase 用。 |
 | **待決問題** | 正典要不要改成 `::before`／`::after` 的做法（少兩個 DOM 節點），還是 `login.html` 改用正典？ |
+
+**b4 核對**：`dataset-analysis-detail` 又有一份做法，`hr.panel-divider`（`dataset-analysis-detail.html:54`，用 `--color-border-muted`），用在 `stats-single_dim.html:27` 與 `stats-multi_dim.html:61`；也不是正典的 `.divider-hr`。
 
 ### G-19 `.metric` 的正典少了 `display: block`
 
@@ -151,6 +155,8 @@
 
 **b3 核對**：`.mini-btn` 又多兩份——`annotation-list.html:266`–`:287`（焦點環寫死 rgba，`:280`）與 `annotation-workspace.html:578`–`:600`（全用 token，另有 `-active-approve`／`-modify`／`-bypass`、`-danger` 四個 variant，審核三向決策靠它）。全 prototype 共四份。
 
+**b4 核對**：`dataset-analysis-detail` 載入正典 `button.css` 後又在頁內重寫 `.btn`（`dataset-analysis-detail.html:166`–`:172`，零特異性）；`dataset-analysis-list` 沒有載入 `button.css`，按鈕是 `list-page.css` 的 `.clear-btn`／`.page-btn`。b4 沒有 `.mini-btn`。
+
 ### G-39 三個任務管理頁的 toast 不照 UXC-07，`role-settings` 的位置與規格不同
 
 > b2 新增。
@@ -174,6 +180,8 @@
 | **待決問題** | 要不要抽成 `pages/shared/card.css`、以哪一份為準？ |
 
 **b3 核對**：第五份是 `annotation-workspace.html:248`–`:252` 的 `.content-card`，同樣四條規則。
+
+**b4 核對**：第六份是 `dataset-analysis-detail.html:49` 的 `.panel`，十六個 partial 全用它。
 
 ### G-42 `task-detail` 重新定義了 Toggle Switch，與同頁載入的正典不同
 
@@ -229,6 +237,28 @@
 | **受影響範圍** | [Empty State](components/empty-state.md)；`annotation/annotation-list#state-no-task` |
 | **依據** | `renderNotFound`（`annotation-list.html:2312`–`:2342`）兩種情況共用標題 `notFoundTitle`（`:2323`、文案 `:614`），只換說明（`:2327`、`:616`）。規格 [`04-annotation/01-annotation-list.mdx`](../../docs/specs/04-annotation/01-annotation-list.mdx) §路由上下文與回退 第 6 條只寫「顯示『未指定任務，請回到儀表板重新選擇任務。』與一個回儀表板的入口」，第 7 條才是「顯示『找不到這個任務』」。 |
 | **待決問題** | 沒帶任務時要不要有標題？有的話用什麼字？ |
+
+### G-52 交付包說切換鈕在序列標註的統計總覽，實際在實體辨識的品質監控
+
+> b4 新增。屬交付包，不是本 skill 能改的。
+
+| 欄 | 內容 |
+| :--- | :--- |
+| **重現方式** | 照交付包的 `dataset/dataset-analysis-detail#state-seq-match-strict` 開一個序列標註任務的統計總覽：找不到 `#matchStrict`。改開實體辨識任務並加 `?tab=quality`，品質監控最上面的卡片才有 `Strict match`／`Partial overlap` 兩顆鈕。 |
+| **受影響範圍** | `dataset/dataset-analysis-detail#state-seq-match-strict`、`#state-seq-match-partial` |
+| **依據** | 交付包 `handoff/manifest.json` 這兩個視圖的 `how`：「在序列標註任務的統計總覽點 `#matchStrict`」。原型：`#matchStrict`／`#matchPartial`／`#seqStrictCard`／`#seqPartialCard` 只在 `dataset-analysis-detail.partials/quality-entity_recognition.html:11`–`:30`，`quality-sequence_tagging.html` 與八個 `stats-*` 都沒有。規格 [`05-dataset/02-analysis-detail.mdx`](../../docs/specs/05-dataset/02-analysis-detail.mdx) §八種輸出類型各自的主指標與門檻：實體辨識列寫「部分重疊的 F1（只能切換顯示）」，第 5 條提到「同一張卡的切換鈕」。視圖 ID 也叫 `seq-`，與它實際所屬的型別對不上。 |
+| **待決問題** | 下一次重跑 `design-handoff` 時，要不要把這兩個視圖的重現方式改成實體辨識的品質監控，ID 要不要改名？本 skill 不改交付包。 |
+
+### G-53 「部分重疊」與關係識別的第二個數值，畫面上仍叫「門檻」
+
+> b4 新增。
+
+| 欄 | 內容 |
+| :--- | :--- |
+| **重現方式** | 開實體辨識任務的品質監控，切到 `Partial overlap`：卡片寫「Relaxed 門檻 0.70 — 通過」。再開關係識別任務的品質監控：第二列寫「高品質門檻 0.80 — 未達」。 |
+| **受影響範圍** | `dataset/dataset-analysis-detail#state-quality-entity-recognition`、`#state-quality-relation-identification`、`#state-seq-match-partial` |
+| **依據** | 原型：`quality-entity_recognition.html:40`「`Relaxed 門檻 0.70`」、`:53` 替代指標表頭也叫「門檻」；`quality-relation_identification.html:23`「`高品質門檻 0.80`」。規格 [`05-dataset/02-analysis-detail.mdx`](../../docs/specs/05-dataset/02-analysis-detail.mdx) §八種輸出類型各自的主指標與門檻 第 11 條：「它的 0.70 **不得叫『門檻』**……畫面要改成不帶『門檻』的字（例如『參考值』），關係識別的 `高品質門檻 0.80` 同一個問題、一併改」（Q15，維護者 2026-11-08）。 |
+| **待決問題** | 規格已裁定要改；改原型屬**畫面修正**，要走 Ready gate。改成什麼字（規格只舉例「參考值」）、何時改，由維護者決定。 |
 
 ## 二、缺少狀態證據
 
@@ -314,6 +344,17 @@
 | **依據** | 審核流程抽屜 `wsReviewFlowDrawer`（`annotation-workspace.html:1197`，`annotation-workspace.config.js:5681` 起）；通知 `#toast`（`annotation-workspace.html:1328`，`showToast`，`annotation-workspace.config.js:422`）；試標歷史回饋卡 `#dryRunFeedbackCard`（`annotation-list.html:494`，`renderDryRunFeedback`，`:2215`–`:2220`）。交付包的 `annotation-list` 九個視圖、`annotation-workspace` 十三個視圖都不含它們。 |
 | **待決問題** | 要不要在下一次重跑 `design-handoff` 時補上這些視圖？本 skill 不替它們取 ID。 |
 
+### G-54 b4 有兩個錯誤狀態沒有被收為視圖
+
+> b4 新增。同 G-31、G-40、G-51 的性質：屬交付包，不是本 skill 能改的。
+
+| 欄 | 內容 |
+| :--- | :--- |
+| **重現方式** | `dataset-analysis-list`：讓資料腳本載入失敗（`state.loadFailed`），表格只剩一列錯誤與重試鈕。`dataset-analysis-detail`：讓任一個 partial 的請求失敗，那個分頁顯示「載入失敗」面板與重試鈕。兩者都沒有網址參數可以觸發，也沒有視圖 ID。 |
+| **受影響範圍** | [Data Table](components/data-table.md)、[Card](components/card.md)、[Button](components/button.md)；`dataset/dataset-analysis-list`、`dataset/dataset-analysis-detail` |
+| **依據** | 清單：`createErrorRow`（`dataset-analysis-list.view.js:159`），條件 `dataset-analysis-list.model.js:138`，樣式 `.error-title`（`dataset-analysis-list.html:149`）。詳情：`renderPanelLoadError(mountId, 'load')`（`dataset-analysis-detail.html:1508`），`aria-live="polite"`（`:1515`）。同一個函式以 `'calc'` 呼叫時就是交付包有列的 `#param-q-state-report-failed`，`'load'` 這一支沒有列。交付包 `dataset-analysis-list` 四個視圖、`dataset-analysis-detail` 二十六個視圖都不含它們。 |
+| **待決問題** | 要不要在下一次重跑 `design-handoff` 時補上這兩個視圖？沒有網址參數能觸發，要不要先在原型加一個示範開關（屬畫面修正，走 Ready gate）？ |
+
 ---
 
 ## 三、待重新設計
@@ -332,9 +373,13 @@
 
 **b3 核對**：Toast 的 b3 那一份（`annotation-workspace.html:1030`–`:1073`，`TOAST_DURATIONS` 在 `annotation-workspace.config.js:422`–`:439`）照 UXC-07。另找到：結果標籤的 hex 在 `annotation-list` 與 `annotation-workspace` 各寫一份（G-02）、卡片第五份（G-41）、`.mini-btn` 第三與第四份（G-37）、Progress Bar 兩頁各重寫一份（`annotation-list.html:176`–`:188` 的 `.progress`、`annotation-workspace.html:307`–`:318` 的 `.progress-track`）、Status Pill 換名複製（`annotation-list.html:254`–`:265`）。Skeleton 在 `shared/sidebar.js`、`shared/modal.css` 的那幾處只是字面上的「skeleton」，不是這個元件。b4 的部分待 b4。
 
+**b4 核對**：Toast 的 b4 兩份——`dataset-analysis-list` 照 UXC-07（`TOAST_DURATIONS`，`dataset-analysis-list.js:25`）；`dataset-analysis-detail` 只有 markup 與關閉鈕，沒有任何程式顯示它 → G-55。另找到：卡片第六份（`dataset-analysis-detail.html:49` 的 `.panel`，G-41）、徽章再重寫兩份（`dataset-analysis-list.html:120`–`:146`、`dataset-analysis-detail.html:57`–`:62`）、表格樣式 `.annotator-table`（`:135`–`:139`）、分隔線 `.panel-divider`（`:54`，G-18）、進度條兩份（`dataset-analysis-list.html:97`–`:106` 的 `.progress-track`、`dataset-analysis-detail.html:83`–`:87` 的 `.iaa-bar-*`）、圓點 `.t-dot`（`:90`–`:93`，G-14）。
+
 ### G-11 §Chip 其實是兩個元件
 
 正典把「可點的選取器」（`.task-type-chip`，`role="checkbox"`／`"radio"`）與「唯讀標籤」（`.ar-classif-chip` 等四種）收進同一章節。前者對應 shadcn 的 `ToggleGroup`，後者對應 `Badge`。依據：`components-showcase.html:1149` 的說明自己就寫「語意狀態請改用 Status Badge」。
+
+**b4 核對**：`dataset-analysis-detail` 的 `.cause-chip`（`dataset-analysis-detail.html:153`）是唯讀標籤，又一個屬於「後者」的實作。
 
 ### G-13 Breadcrumb 的「最深兩層」與實際用法不符
 
@@ -345,6 +390,8 @@
 ### G-14 Color Dot 的語意只靠顏色
 
 `title` 屬性在觸控裝置上看不到（`components-showcase.html:1242`、`:1255`），而顏色是唯一的訊號。對照組：[Review Status Track](components/review-status-track.md) 刻意做了文字前綴與線寬兩種非顏色訊號（`:1214`）。
+
+**b4 核對**：`dataset-analysis-detail` 的 `.t-dot`（`dataset-analysis-detail.html:90`–`:93`）不是正典 `.color-dot`，但同樣只靠顏色；旁邊有文字標籤時才不成問題，各 partial 的用法不一。
 
 ### G-15 Accordion 有兩個 class 只出現在 markup
 
@@ -366,6 +413,8 @@ showcase 說明寫「profile 64/80px」（`:1356`），它的 CSS 是 80px（`:9
 
 **b3 核對**：`annotation-workspace` 的 `.admin-tabs--panel`（`annotation-workspace.html:1291`–`:1292`）是兩顆 `<button>`，**沒有補上**語意，只能點（`annotation-workspace.config.js:6695`–`:6713`）。
 
+**b4 核對**：`dataset-analysis-detail` 的 `.admin-tabs`（`dataset-analysis-detail.html:269`–`:271`）**自己補上了** `role="tablist"`／`tab`／`tabpanel` 與 `aria-selected`、`aria-controls`，但沒有方向鍵，只能點（`:2455`–`:2460`）。
+
 ### G-23 覆蓋層有兩套焦點處理
 
 [Modal](components/modal.md) 用共用的 `shared/modal-focus.js`（`:1`–`:88`）；[App Shell](components/app-shell.md) 的 `#shortcutHelpModal`（`sidebar.js:2108`）與 `#notificationDropdown`（`:2259`）整套自建，`sidebar.js` 全檔 `LabelSuiteModalFocus` 出現 **0 次**。另外 `modal.css`／`modal-focus.js` 都不保證 `role="dialog"`／`aria-modal`／`aria-labelledby`，也沒有點遮罩關閉。
@@ -379,6 +428,8 @@ showcase 說明寫「profile 64/80px」（`:1356`），它的 CSS 是 80px（`:9
 **b2 已逐條核對**：`sidebar.css` 用到 40 個 `--*` token，38 個在 `tokens.css`。另外兩個 `--navbar-mobile-height`、`--navbar-mobile-top-height`（`sidebar.css:831`–`:837`，窄視窗規則）**不在 `tokens.css`**，由宿主頁面自己定義：b2 六頁裡五頁寫在頁內 `<style>`，`dashboard` 寫在 `dashboard.layout.css:6`；b1 的 `account/profile` 也有。`annotation-workspace` 沒有定義，待 b3 核對它的窄視窗版面。`sidebar.css` 另有 19 處寫死 hex、12 處寫死 rgba → G-02。`components/app-shell.md` 提到的 `--z-dropdown` 在 `sidebar.css` 沒有用到（只用 `--z-sticky`）。
 
 **b3 核對**：`annotation-list` 自己定義了那兩個變數（`annotation-list.html:15`–`:17`）；`annotation-workspace` **沒有**（全檔 0 次），而 `sidebar.css:828`–`:837` 的窄視窗規則用到它們且沒有後備值。另外 `sidebar.css` 的規則寫在 `max-width: 768px`，工作區的抽屜斷點是 767px 以下（`annotation-workspace.html:955` 起），差一個像素。
+
+**b4 核對**：b4 兩頁都自己定義了那兩個變數（`dataset-analysis-list.html:20`、`dataset-analysis-detail.html:24`）。全站只剩 `annotation-workspace` 沒有。
 
 ### G-25 `MASTER.md` 的 terminology note 還不存在
 
@@ -431,6 +482,18 @@ showcase 說明寫「profile 64/80px」（`:1356`），它的 CSS 是 80px（`:9
 > b3 新增。延伸 G-02。
 
 `annotation-workspace` 的作答區由 `task-config.engine.js` 的 `renderOutputPreview`（`:3671`）畫出，例如單選標籤 `renderSingleLabelPreview`（`:2871`）：按鈕的樣式全寫在 inline `style` 上，選中色寫死 `#fff` 與後備值 `#6366F1`（`:2888` 等），「無法判定」chip 寫死 `#64748B`（`makeBypassChip`，`:2816`–`:2828`）。引擎全檔 18 個 hex。它們長得像 [Chip](components/chip.md)，但沒有用任何 `.task-type-chip` 或 `.chip` class，所以 Chip 的 b3 用到 0 次。
+
+### G-55 `dataset-analysis-detail` 的 toast 沒有任何程式會顯示它
+
+> b4 新增。延伸 G-10。
+
+`dataset-analysis-detail.html` 有 `.toast*` 樣式（`:175`–`:187`）、`#toast` markup（`:362`–`:363`）與關閉鈕的處理（`:2463`），但全檔沒有 `showToast` 或任何把 `#toast` 加上 `visible` 的程式。本頁也沒有需要通知的操作（風險處置鈕直接導頁，`:1573`–`:1580`）。要刪掉這段死 markup，還是本頁其實該有通知（例如重試成功）？維護者決定。
+
+### G-56 品質監控的「Strict／Partial」切換鈕讀不出目前選哪一個
+
+> b4 新增。
+
+`.match-btn`（`dataset-analysis-detail.html:103`–`:106`，markup `quality-entity_recognition.html:11`–`:12`）是兩顆原生 `<button>`，目前選項只靠 `.active` 的樣式表示（`syncSequenceUi`，`:1947`–`:1957`），沒有 `aria-pressed`，也不是 `role="radiogroup"`。對照組：`annotation-workspace` 的審核三向決策 `.mini-btn` 有 `aria-pressed`。這是全站唯一的分段切換鈕，不屬任何元件。
 
 ---
 

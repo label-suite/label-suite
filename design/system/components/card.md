@@ -64,3 +64,4 @@
 | `task-management/task-detail`（`#tab-*`、`#sim-403`、`#state-panel-load-failed`） | 本頁 `.panel`，`taskForbidden`／`taskNotFound` 面板也是它 |
 | `task-management/task-new`（`#state-step1`～`#state-step3`） | `.form-card` |
 | `annotation/annotation-workspace`（`#role-*`、`#state-arbitration`、`#state-exception-pool`） | 本頁 `.content-card`（`annotation-workspace.html:248`–`:252`），同樣四條規則的第五份 → `../design-gaps.md` G-41 |
+| `dataset/dataset-analysis-detail`（全部視圖，含十六個 partial） | 本頁 `.panel`（`dataset-analysis-detail.html:49`），第六份；`renderPanelLoadError` 的 `.panel.panel-load-error`（`:1508`）也是它 → `../design-gaps.md` G-41 |

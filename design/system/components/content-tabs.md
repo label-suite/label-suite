@@ -69,5 +69,6 @@ Tab 可達（原生 `<a>`／`<button>`），但**沒有焦點樣式**，也沒�
 | `admin/user-management#state-default`、`admin/role-settings#state-default` | `.admin-tabs`（`user-management.html:377`–`:379`、`role-settings.html:412`–`:414`）；兩個分頁是 `<a>` 換頁，**頁面自己補了** `role="tablist"`／`role="tab"`／`aria-selected`，沒有方向鍵 |
 | `task-management/task-detail`（全部 `#tab-*`） | `.admin-tabs`（`task-detail.html:1955`–`:1962`），按鈕＋`role="tab"`，初始化前 `aria-disabled`；**方向鍵巡覽在本頁**（`:11721`–`:11732`）→ `../design-gaps.md` G-22 |
 | `annotation/annotation-workspace`（`#tab-guideline`、`#tab-history`） | `.admin-tabs.admin-tabs--panel`（`annotation-workspace.html:1291`–`:1292`）。按鈕沒有 `tablist`／`tab`／`aria-selected`，只能點（`setupGuidelineTabs`，`annotation-workspace.config.js:6695`–`:6713`）→ `../design-gaps.md` G-22 |
+| `dataset/dataset-analysis-detail`（`#tab-stats`、`#tab-quality`） | `.admin-tabs role="tablist"`（`dataset-analysis-detail.html:269`–`:271`），兩顆 `<button role="tab">` 帶 `aria-selected`／`aria-controls`，面板 `role="tabpanel"`；只能點，沒有方向鍵（`:2455`–`:2460`）→ `../design-gaps.md` G-22 |
 
-b2 已補上（見上表）。b3 已補上（見上表）。b4（`dataset/dataset-analysis-detail`），待 b4 補。`shared/sidebar.css` 也提到它，待 [app-shell](app-shell.md) 一併確認。
+b2 已補上（見上表）。b3 已補上（見上表）。b4 已補上（見上表）。`shared/sidebar.css` 也提到它，見 [app-shell](app-shell.md) 與 `../design-gaps.md` G-25。

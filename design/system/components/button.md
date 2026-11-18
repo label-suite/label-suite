@@ -79,6 +79,7 @@
 | `task-management/task-detail`（全部視圖） | 正典 variant ＋ 本頁的 `.mini-btn`（`task-detail.html:777`–`:799`，29 處）→ G-37 |
 | `annotation/annotation-list`（`#state-default`） | `.btn.btn-primary.slim` 快速繼續（`annotation-list.html:467`–`:488`）；回儀表板與清除篩選用本頁的 `.mini-btn`／`.clear-btn` → `../design-gaps.md` G-37 |
 | `annotation/annotation-workspace`（`#modal-guideline-gate`、`#state-review-decision`、`#state-arbitration`） | 指引閘門的確認是 `.btn.btn-cta`（`annotation-workspace.html:1133` 起）；審核三向決策是本頁的 `.mini-btn mini-btn-active-*`，帶 `aria-pressed`（`annotation-workspace.config.js:3630`–`:3670`）→ G-37 |
+| `dataset/dataset-analysis-detail`（`#state-stats-empty`、`#param-q-state-*`、`#state-quality-*`） | 載入正典 `button.css`，用 `.btn.btn-secondary.btn-sm`（空狀態的連結、重試、`.risk-action-btn`）；頁內又在 `:166`–`:172` 重寫 `.btn` → `../design-gaps.md` G-37 |
 
 五個登出狀態的帳號頁**一個正典 variant 都沒用**，它們自己寫 `.login-btn`／`.submit-btn`／`.sso-btn`／`.lang-toggle`／`.eye-toggle`／`.proto-btn` → `../design-gaps.md` G-03。
-b2、b3 已補上（見上表）；b4 待 b4 補。
+b2、b3、b4 已補上（見上表）。`dataset-analysis-list` 沒有載入 `button.css`，它的按鈕是 [List Toolbar](list-toolbar.md) 的 `.clear-btn` 與 [Pagination](pagination.md) 的 `.page-btn`。
