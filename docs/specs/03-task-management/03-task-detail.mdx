@@ -4,7 +4,7 @@ description: '任務建立之後的指揮台：六個分頁讓專案負責人管
 category: '規格書'
 tags: [規格書, 任務管理, 已定案]
 createdAt: '2026-11-05'
-updatedAt: '2026-11-16'
+updatedAt: '2026-11-18'
 ---
 
 import PrototypeFrame from '@notes/components/prototype-frame';
@@ -49,12 +49,22 @@ R：Read（可讀取）　C：Create（可新增）　E：Edit（可編輯）　
 
 這一頁的三個任務角色**讀取邊界差很大**，是本頁最容易寫錯的地方。
 
-- :ref[專案負責人]{id="term.project-leader"}：R／E（六個分頁全看得到，設定與成員與推進都能操作）／C（[§匯出](#匯出)）
-- :ref[審核員]{id="term.reviewer"}：R（**看得到五個分頁，看不到成員管理**）；他在看得到的分頁上**一律唯讀**
-- :ref[標記員]{id="term.annotator"}：**無權限**——直接開這一頁會被帶回 [規格 03-01 任務列表](./01-task-list.mdx) 並顯示無權限提示
-- 這和 PRD §權限矩陣 的「03 任務詳情：專案負責人 R/E、審核員 R、標記員 —」一致，沒有超出
+**依任務角色**
+
+| 角色 | 這一頁能做什麼 | PRD §權限矩陣的上限 |
+| :--- | :--- | :--- |
+| :ref[專案負責人]{id="term.project-leader"} | R／E（六個分頁全看得到，設定與成員與推進都能操作）／C（[§匯出](#匯出)） | 「03 任務詳情（設定、成員、試標與正式標記的推進）」給專案負責人 `R/E`；`C` 來自「03 匯出標記結果」那一列的 `C` |
+| :ref[審核員]{id="term.reviewer"} | R（**看得到五個分頁，看不到成員管理**）；在看得到的分頁上**一律唯讀** | 同一列給審核員 `R`；「03 匯出標記結果」給他 `—` |
+| :ref[標記員]{id="term.annotator"} | **無權限**——直接開這一頁會被帶回 [規格 03-01 任務列表](./01-task-list.mdx) 並顯示無權限提示 | 兩列都給標記員 `—` |
+
+**依系統角色**
+
+| 角色 | 這一頁能做什麼 | PRD §權限矩陣的上限 |
+| :--- | :--- | :--- |
+| :ref[系統管理員]{id="term.system-admin"} | 沒有任務角色時**進不了這一頁**，即使他在 [規格 03-01](./01-task-list.mdx) 看得到這個任務 | 「依系統角色」那張表**沒有「03 任務詳情」這一列**；PRD 在兩張表下方的註記寫明這件事 |
+
+- 第二欄沒有一格超出第三欄
 - 同一個人在同一個任務裡可能有多個角色（例如既是專案負責人又是審核員）→ 以**兩者的聯集**判定他看得到什麼
-- :ref[系統管理員]{id="term.system-admin"} 沒有任務角色時**進不了這一頁**，即使他在 [規格 03-01](./01-task-list.mdx) 看得到這個任務（PRD §權限矩陣 的註記）
 
 ## 業務流程
 
@@ -1948,6 +1958,7 @@ import Spec0303TaskDetailFlow from '@notes/components/spec-03-03-task-detail-flo
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#415](https://github.com/label-suite/label-suite/issues/415) | 2026-11-18 | §使用角色 | 角色、權限與條件寫成條列 | 改成正典的三欄表格（角色／這一頁能做什麼／PRD §權限矩陣的上限），條件、理由與跨頁連結移到表格下方的條列。第三欄是**新增的資訊**：逐列指出 PRD §權限矩陣 的哪一列，對不到的寫出原因。形狀依 `spec-writing` 範本（[PR #417](https://github.com/label-suite/label-suite/pull/417)） | **無新決議，條文一字未改** |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §規格 › 抽樣設定 的註解 | 第 12 條下方那一行引 `AGENTS.md` 的「不寫死任務邏輯」，而 `AGENTS.md` 全篇是英文、從來沒有這七個字——那是轉述，不是原文 | 改引硬性規則 5 的原文「No hardcoded task logic」。維護者 2026-11-16 裁定引英文原文，不為了讓中文讀起來順而放水；`check-specs` **將新增**的節名引用檢查會逐字比對被引的文件（[#236](https://github.com/label-suite/label-suite/issues/236)，尚未落地） | **無新決議**，條文一字未改 |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §驗收標準 的 3 列 | 那三列的 Scenario 名稱欄包著 `<mark>`＋`<sup>[#170]` | 名稱欄的標示拿掉、文字保留，改標 Given／When／Then。其中兩列（例外池的空理由顯示佔位、負責人裁定的來源看得出來）的三格原本**有 `<mark>` 但沒有上標**，上標只掛在名稱欄，所以一併補上 `<sup>[#170]`。依 `writing-guide.md` §變更標示 2026-11-16 新增的例外：`check-flows.mjs` 的 `readPage()` 逐字讀第一格、不剝標籤，名稱一包標示流程圖元件就永遠對不上那一列 | **無新決議**，Scenario 的文字與條文一字未改 |
 | [#188](https://github.com/label-suite/label-suite/issues/188) | 2026-11-16 | 頁首 | `變更 #170` 徽章是 `warning` 但沒有 `href` | 統一成 `variant="warning"` 加 `href`（維護者 2026-11-16 裁定，規則見 `writing-guide.md` §變更標示） | **無新決議**，條文一字未改 |

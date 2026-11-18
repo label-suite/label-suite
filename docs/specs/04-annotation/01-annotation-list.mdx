@@ -4,7 +4,7 @@ description: '標記員與審核員進入標記模組的入口頁：先在清單
 category: '規格書'
 tags: [規格書, 標記作業, 已定案]
 createdAt: '2026-11-05'
-updatedAt: '2026-11-16'
+updatedAt: '2026-11-18'
 ---
 
 import PrototypeFrame from '@notes/components/prototype-frame';
@@ -60,6 +60,10 @@ import PrototypeFrame from '@notes/components/prototype-frame';
 | 讓標記員在清單上看得到自己的處理狀況，但**看不到標準答案** | 整個標記品質管線——答案一旦外洩，這個任務的資料就不能用了 |
 
 ## 使用角色
+
+:::tip{title="權限代號"}
+R：Read（可讀取）　C：Create（可新增）　E：Edit（可編輯）　D：Delete（可刪除）　(o)：只限自己的資料　—：無權限
+:::
 
 | 角色 | 這一頁能做什麼 | PRD §權限矩陣的上限 |
 | :--- | :--- | :--- |
@@ -1236,6 +1240,7 @@ import Spec0401AnnotationListFlow from '@notes/components/spec-04-01-annotation-
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#415](https://github.com/label-suite/label-suite/issues/415) | 2026-11-18 | §使用角色 | 章節開頭沒有「權限代號」提示框，表格裡卻用著 `R／C／E` 與 `(o)` 這些代號 | 補上「權限代號」提示框，與其他規格一致（範本見 [PR #417](https://github.com/label-suite/label-suite/pull/417)）。表格一字未動 | **無新決議，條文一字未改** |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §規格 › 第 33 條的括號、§待釐清 的一段引述 | 兩處引[規格 03-03](../03-task-management/03-task-detail.mdx) 的條文，而引號裡的字在 03-03 裡都找不到：「仲裁者不接收新審核工作」與「標記清單只在新增試標回合與開始正式標記兩個事件才建立」 | 改成 03-03 的原文「仲裁者不收新的審核工作」與「標記清單只在兩件事發生時才建立：新增試標回合、開始正式標記」 | **無新決議**，兩條規則本身沒變，本頁條文一字未改 |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §驗收標準 的 5 列 | 那五列的 Scenario 名稱欄包著 `<mark>`＋`<sup>[#282]` | 名稱欄的標示拿掉、文字保留，改標 Given／When／Then。其中兩列（進度摘要分得出哪一輪、只有一輪也標輪次）的三格原本**有 `<mark>` 但沒有上標**，所以一併補上 `<sup>[#282]`。依 `writing-guide.md` §變更標示 2026-11-16 新增的例外：`check-flows.mjs` 的 `readPage()` 逐字讀第一格、不剝標籤，名稱一包標示流程圖元件就永遠對不上那一列 | **無新決議**，Scenario 的文字與條文一字未改 |
 | [#85](https://github.com/label-suite/label-suite/issues/85) | 2026-11-16 | §使用角色（表格第三欄與那條註）、§已確認決議 Q1 的理由 | 三處寫「PRD 同一列給專案負責人 `R`」「處置超出 `R`，矩陣的改動交給 #85」 | 改成 PRD 已於 2026-11-16 把那一列放寬成 `R/E`（`E` 只用在例外池） | **無新決議**，條文一字未改 |

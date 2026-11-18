@@ -4,7 +4,7 @@ description: '使用者登入後的登入狀態能撐多久、什麼時候會失
 category: '規格書'
 tags: [規格書, 帳號, 已定案]
 createdAt: '2026-11-05'
-updatedAt: '2026-11-16'
+updatedAt: '2026-11-18'
 ---
 
 # 01-05 登入狀態與安全
@@ -34,7 +34,12 @@ R：Read（可讀取）　C：Create（可新增）　E：Edit（可編輯）　
 
 本頁沒有畫面，也沒有任何人「操作」它；它規定的是其他頁的操作會對 :ref[登入狀態]{id="term.login-state"} 造成什麼結果。
 
-- :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"}、:ref[Seeder 管理員]{id="term.seeder-admin"}：R (o)（自己目前是不是登入著）／E (o)（登出自己這一台，也就是結束自己的登入狀態）
+| 角色 | 這一頁能做什麼 | PRD §權限矩陣的上限 |
+| :--- | :--- | :--- |
+| :ref[平台成員]{id="term.platform-member"} | R (o)（自己目前是不是登入著）／E (o)（登出自己這一台，也就是結束自己的登入狀態） | 「01 帳號（自己的帳號與個人設定）」給平台成員 `R/E (o)` |
+| :ref[系統管理員]{id="term.system-admin"} | 同上 | 同一列給系統管理員 `R/E (o)` |
+| :ref[Seeder 管理員]{id="term.seeder-admin"} | 同上 | 矩陣**沒有這一欄**；PRD §使用者角色 寫明他「權限同系統管理員」 |
+
 - 登出寫成 E 而不是 D：PRD §權限矩陣 給「01 帳號（自己的帳號與個人設定）」的上限是 `R／E (o)`，而且 PRD 明寫「帳號沒有刪除，只有停用與啟用」。結束一段登入狀態不是刪除任何東西——那段紀錄還留著（見 [§登出紀錄只記真正的登出](#登出紀錄只記真正的登出)），所以本頁不超出 PRD
 - 系統管理員額外能透過 [規格 06-01](../06-admin/01-user-management.mdx) 停用別人的帳號，連帶讓對方的登入狀態失效；那一頁定操作，本頁定結果
 - **沒有任何角色能看到或登出別人的某一台裝置**；使用者自己也**看不到**「我有哪些裝置登入著」、不能遠端登出某一台（[§已確認決議](#已確認決議) Q5）
@@ -578,6 +583,7 @@ import Spec0105LoginStateFlow from '@notes/components/spec-01-05-login-state-flo
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#415](https://github.com/label-suite/label-suite/issues/415) | 2026-11-18 | §使用角色 | 角色、權限與條件寫成條列 | 改成正典的三欄表格（角色／這一頁能做什麼／PRD §權限矩陣的上限），條件、理由與跨頁連結移到表格下方的條列。第三欄是**新增的資訊**：逐列指出 PRD §權限矩陣 的哪一列，對不到的寫出原因。形狀依 `spec-writing` 範本（[PR #417](https://github.com/label-suite/label-suite/pull/417)） | **無新決議，條文一字未改** |
 | [#85](https://github.com/label-suite/label-suite/issues/85) | 2026-11-16 | §使用角色 的註、§已確認決議 Q7 與 Q8 的理由 | 三處把裝置清單與 01-04 的 PRD 描述都寫成「記在 #85」 | #85 已結案：01-04 的描述已落地；裝置清單**不在**那一單的範圍內，要做時另開單 | **無新決議**，條文一字未改 |
 | [#188](https://github.com/label-suite/label-suite/issues/188) | 2026-11-16 | 頁首 | `變更 #196` 徽章是 `warning` 但沒有 `href` | 統一成 `variant="warning"` 加 `href`（維護者 2026-11-16 裁定，規則見 `writing-guide.md` §變更標示） | **無新決議**，條文一字未改 |
 | [#291](https://github.com/label-suite/label-suite/issues/291) | 2026-11-12 | §已確認決議 Q7 的理由 | Q7 的理由寫「畫面那一側歸 [Issue #195]」 | **無新規則，純粹修正已成假的敘述**，所以依 `spec-writing` 步驟 5.6 第三點**不加變更標示**，只更新 `updatedAt` 與本列。改成已落地（[PR #290](https://github.com/label-suite/label-suite/pull/290)）；PRD 那一側仍在 #85。頁首上一輪的 `:badge[變更 #196]` 保持不動 | Q7（不變） |

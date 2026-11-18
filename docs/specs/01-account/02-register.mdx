@@ -4,7 +4,7 @@ description: '沒有帳號的人自行填寫姓名、Email 與密碼建立帳號
 category: '規格書'
 tags: [規格書, 帳號, 已定案]
 createdAt: '2026-11-05'
-updatedAt: '2026-11-16'
+updatedAt: '2026-11-18'
 ---
 
 import PrototypeFrame from '@notes/components/prototype-frame';
@@ -32,9 +32,16 @@ R：Read（可讀取）　C：Create（可新增）　E：Edit（可編輯）　
 
 這一頁在登入之前，沒有任何角色能從它讀到或改到既有的業務資料。
 
-- 未登入的訪客：R（只有這一頁本身的內容）／C（建立一個自己的帳號）；讀不到任何既有資料，也不能編輯或刪除任何東西
-- :ref[平台成員]{id="term.platform-member"}：自行註冊建立的帳號，:ref[系統角色]{id="term.system-role"} 一律是平台成員（PRD §使用者角色）；這一頁不能選角色
-- :ref[系統管理員]{id="term.system-admin"}、:ref[Seeder 管理員]{id="term.seeder-admin"}：不從這一頁產生。管理員要替別人開帳號走 [規格 06-01 使用者管理](../06-admin/01-user-management.mdx)
+| 角色 | 這一頁能做什麼 | PRD §權限矩陣的上限 |
+| :--- | :--- | :--- |
+| 未登入的訪客 | R（只有這一頁本身的內容）／C（建立一個自己的帳號） | **對不到任何一列**：PRD §使用者角色 沒有「訪客」，§權限矩陣 的兩張表也沒有這一欄——矩陣管的是登入之後的功能 |
+| :ref[平台成員]{id="term.platform-member"} | 自行註冊建立的帳號，:ref[系統角色]{id="term.system-role"} 一律是平台成員（PRD §使用者角色） | **對不到任何一列**：「01 帳號」那一列的範圍是「自己的帳號與個人設定」，不含註冊這個動作 |
+| :ref[系統管理員]{id="term.system-admin"} | **不從這一頁產生** | 同上，這一列講的是這一頁不產生什麼角色 |
+| :ref[Seeder 管理員]{id="term.seeder-admin"} | **不從這一頁產生**；他由平台部署時建立（PRD §使用者角色） | 矩陣**沒有這一欄** |
+
+- 未登入的訪客讀不到任何既有資料，也不能編輯或刪除任何東西
+- 這一頁**不能選角色**
+- 管理員要替別人開帳號走 [規格 06-01 使用者管理](../06-admin/01-user-management.mdx)
 - 已經登入的人直接開這一頁 → **直接前往儀表板**，比照 [規格 01-01 §已確認決議](./01-login.mdx#已確認決議) Q3
 
 ## 業務流程
@@ -395,6 +402,7 @@ import Spec0102RegisterFlow from '@notes/components/spec-01-02-register-flow'
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#415](https://github.com/label-suite/label-suite/issues/415) | 2026-11-18 | §使用角色 | 角色、權限與條件寫成條列 | 改成正典的三欄表格（角色／這一頁能做什麼／PRD §權限矩陣的上限），條件、理由與跨頁連結移到表格下方的條列。第三欄是**新增的資訊**：逐列指出 PRD §權限矩陣 的哪一列，對不到的寫出原因。形狀依 `spec-writing` 範本（[PR #417](https://github.com/label-suite/label-suite/pull/417)） | **無新決議，條文一字未改** |
 | [#188](https://github.com/label-suite/label-suite/issues/188) | 2026-11-16 | 頁首 | `變更 #291` 徽章是 `warning` 但沒有 `href` | 統一成 `variant="warning"` 加 `href`（維護者 2026-11-16 裁定，規則見 `writing-guide.md` §變更標示） | **無新決議**，條文一字未改 |
 | [#297](https://github.com/label-suite/label-suite/issues/297) | 2026-11-14 | §規格 › 註冊成功 | 線框指著 `account/register`，並附一段「為什麼還不能改指」的說明 | **無新規則，純粹修正已成假的敘述**，所以依 `spec-writing` 步驟 5.6 第三點**不加變更標示**，只更新 `updatedAt` 與本列。線框改指 `account/verify-email`——這一節描述的就是那一頁；畫面那一側已補上「被嵌在框裡就不跳轉、不動旗標」的保護（[PR #301](https://github.com/label-suite/label-suite/pull/301)），所以那段暫時說明不再需要。頁首的「參考畫面」補上第二頁並比照 01-03 說明那三顆原型狀態按鈕不是產品功能；說明裡保留 `?sim_hold=1`（直接開那一頁時停住跳轉的唯一辦法，全站文件只有這一處寫它） | Q2（不變） |
 | [#291](https://github.com/label-suite/label-suite/issues/291) | 2026-11-12 | 頁首、§規格（驗證信已寄出、註冊成功）、§已確認決議 Q1 與 Q2 的理由 | §驗證信已寄出 寫「這一段的實際文案**來源與畫面都沒有**（畫面現在是「Email 已被使用」那一條），所以文案由 Issue #195 一併處理」；Q1 的理由寫「畫面那一側歸 Issue #195」；Q2 的理由引用 prototype 的「帳號建立成功！正在導向儀表板…」；§註冊成功 沒有說它描述的是哪一頁 | **新增文案條文兩組**（維護者 2026-11-12 裁定提案選項 A）：§驗證信已寄出 的「驗證信已寄出」＋「我們已經寄了一封信到 `{email}`。請打開信件並點裡面的連結，你的帳號會在那時候建立。」＋「沒收到的話，看一下垃圾郵件匣。」，並寫明**刻意不提有效期**；§註冊成功 的「帳號已建立」／「正在帶你前往儀表板…」，失效時與 01-03 共用同一句、差別只在按鈕回註冊頁。**另修正兩處已成假的敘述**（不改規則）：Q1 的「畫面那一側歸 #195」改成已落地（[PR #290](https://github.com/label-suite/label-suite/pull/290)）、Q2 理由那一句註明畫面上已經沒有。§註冊成功 的線框**仍指著註冊表單**，並寫明它描述的是落地頁、以及為什麼還不能改指（[Issue #297](https://github.com/label-suite/label-suite/issues/297)） | Q1、Q2（不變） |
