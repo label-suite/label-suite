@@ -151,7 +151,7 @@
 | **重現方式** | 開 `pages/dashboard/dashboard.html`，Tab 到任一顆 `.btn`：焦點環是一圈寫死的半透明色，不是 `tokens.css` 的焦點 token。再開 `pages/task-management/task-detail.html?tab=member-management`，表格列上的小按鈕是 `.mini-btn`，與正典 `button.css` 的任何 variant 都不同尺寸。 |
 | **受影響範圍** | [Button](components/button.md)、[Tooltip](components/tooltip.md)、[List Toolbar](components/list-toolbar.md)、[Pagination](components/pagination.md)；`dashboard/dashboard`、`task-management/task-detail`、`task-list`、`admin/user-management`、`admin/role-settings` |
 | **依據** | `dashboard.layout.css:211`–`:240` 自建 `.btn` 系統（`.btn-emerald`／`.btn-violet`／`.btn-indigo` 正典沒有），`:235` 焦點環寫死 rgba；`task-detail.html:777`–`:799` 的 `.mini-btn`（29 處），`:799` 同樣寫死 rgba；`role-settings.html:93`–`:94`、`:257`–`:258` 重寫 `.btn-ghost`／`.btn-cta`；`user-management.html:54` 重寫 `.btn-primary`／`.btn-ghost`、`:166`–`:167` 重寫 modal 規則；`task-list.html:160`–`:166` 已載 `list-page.css` 又重寫工具列；`task-config.css:293` 的 tooltip 觸發鈕焦點環也是寫死 rgba。 |
-| **待決問題** | `.mini-btn` 與 dashboard 的彩色按鈕要收進正典成為 variant，還是改用既有 variant？（維護者決定；本 skill 不作答。） |
+| **待決問題** | **已裁定（2026-11-18）**：`.mini-btn` 收進 `button.css` 成為小尺寸 variant，dashboard 彩色鈕改用既有 variant。修正於 #423。原題保留：`.mini-btn` 與 dashboard 的彩色按鈕要收進正典成為 variant，還是改用既有 variant？（維護者決定；本 skill 不作答。） |
 
 **b3 核對**：`.mini-btn` 又多兩份——`annotation-list.html:266`–`:287`（焦點環寫死 rgba，`:280`）與 `annotation-workspace.html:578`–`:600`（全用 token，另有 `-active-approve`／`-modify`／`-bypass`、`-danger` 四個 variant，審核三向決策靠它）。全 prototype 共四份。
 
@@ -166,7 +166,7 @@
 | **重現方式** | 開 `pages/task-management/task-list.html?unauthorized=1`：錯誤 toast 3 秒後自己消失。開 `pages/admin/role-settings.html`，改一格後儲存：成功 toast 出現在**畫面上方置中**。 |
 | **受影響範圍** | [Toast](components/toast.md)、[`ux-conventions.md`](ux-conventions.md) UXC-07；`task-management/task-list`、`task-new`、`task-detail`、`admin/role-settings` |
 | **依據** | 時長：`task-list.html:599`–`:606` 的 `showToast` 一律 3000 ms，`task-new.html:858`–`:865` 一律 3500 ms，`task-detail.html:11255` 一律 2400 ms——三者都不分類型，錯誤也會自動消失；UXC-07 要求 error 為 0（只能手動關，`components-showcase.html:1500`）。位置：`role-settings.html:213`「`/* ── Toast (top-center, UXC-07 / MASTER §Toast) */`」、`:216` `top: 24px` vs [`06-admin/02-role-settings.mdx`](../../docs/specs/06-admin/02-role-settings.mdx) 第 343 行「通知出現在頁面**右下角**，**依類型決定多久自動消失**」與驗收標準第 663–664 行「通知出現在右下角」。 |
-| **待決問題** | 一、三個任務管理頁的 toast 是否要改成 UXC-07 的分級時長？二、`role-settings` 的 toast 位置以規格的右下角為準，還是規格要改成上方置中？（規格屬維護者。） |
+| **待決問題** | **已裁定（2026-11-18）**：三頁的 toast 對齊 UXC-07 分級時長；`role-settings` 的位置以規格的右下角為準，規格不改。修正於 #423。原題保留：一、三個任務管理頁的 toast 是否要改成 UXC-07 的分級時長？二、`role-settings` 的 toast 位置以規格的右下角為準，還是規格要改成上方置中？（規格屬維護者。） |
 
 ### G-41 卡片有四份實作，沒有共用檔
 
@@ -177,7 +177,7 @@
 | **重現方式** | 在 `dashboard/dashboard`、`task-management/task-detail`、`task-management/task-new` 與 b1 的 `account/profile` 各看一張卡片：外觀相同（邊框、圓角、白底、內距），但 class 分別是 `.panel`、`.panel`、`.form-card`、`.section-card`，各寫在自己的檔案裡。 |
 | **受影響範圍** | [Card](components/card.md)；上列四頁 |
 | **依據** | `dashboard.layout.css:171`–`:180`（註解自稱 MASTER §Cards）、`task-detail.html:91`–`:95`、`task-new.html:51`–`:52`、`account/profile.html` 的 `.section-card`。`pages/shared/` 底下沒有卡片的 CSS。 |
-| **待決問題** | 要不要抽成 `pages/shared/card.css`、以哪一份為準？ |
+| **待決問題** | **已裁定（2026-11-18）**：抽成 `pages/shared/card.css`，以 `.panel` 為準。修正於 #423。原題保留：要不要抽成 `pages/shared/card.css`、以哪一份為準？ |
 
 **b3 核對**：第五份是 `annotation-workspace.html:248`–`:252` 的 `.content-card`，同樣四條規則。
 
@@ -192,7 +192,7 @@
 | **重現方式** | 開 `pages/task-management/task-detail.html?tab=settings`，再開 `pages/task-management/task-new.html` 第二步：兩邊的開關一個 42×24、開啟時是 CTA 色，另一個 40×22、開啟時是主色。 |
 | **受影響範圍** | [Toggle Switch](components/toggle-switch.md)；`task-management/task-detail#tab-settings`、`task-new#state-step2` |
 | **依據** | `task-detail.html:306`–`:332` 定義 `.toggle-switch`（42×24，`--color-cta`）；同頁也載入 `task-config.css`，其 `:242`–`:247` 與 `components-showcase.html:331`–`:336` 逐字相同（40×22，`--color-primary`）。頁內 `<style>` 在後，蓋過正典。 |
-| **待決問題** | 設定分頁的開關以哪一份為準？ |
+| **待決問題** | **已裁定（2026-11-18）**：以正典為準（40×22、開啟為主色）。修正於 #423。原題保留：設定分頁的開關以哪一份為準？ |
 
 ### G-45 刪除任務的確認視窗可以點遮罩關閉，與 UXC-10 相反，但規格要它這樣
 
@@ -203,7 +203,7 @@
 | **重現方式** | 開 `pages/task-management/task-list.html`，叫出刪除確認，點視窗外面：視窗關閉。再開 `pages/admin/user-management.html`，叫出停用確認，點視窗外面：視窗不關。 |
 | **受影響範圍** | [Modal](components/modal.md)、[`ux-conventions.md`](ux-conventions.md) UXC-10；`task-management/task-list#sim-delete-error` |
 | **依據** | `task-list.html:1197`–`:1199` 點遮罩即關 vs `user-management.html:1357`「`/* UXC-10: a destructive confirmation must not dismiss on overlay click */`」。規格站在 `task-list` 那邊：[`03-task-management/01-task-list.mdx`](../../docs/specs/03-task-management/01-task-list.mdx) §刪除任務 第 5 條「點視窗外面，或按 Esc → 視窗關閉」。 |
-| **待決問題** | UXC-10 的「點遮罩不關」要不要適用到刪除任務？若要，規格那一條要改（屬維護者）；若不要，UXC-10 要寫明例外。 |
+| **待決問題** | **已裁定（2026-11-18）**：刪除任務也適用 UXC-10，點遮罩不關。規格那一條要改，屬維護者。原型修正於 #423。原題保留：UXC-10 的「點遮罩不關」要不要適用到刪除任務？若要，規格那一條要改（屬維護者）；若不要，UXC-10 要寫明例外。 |
 
 ### G-46 指引閘門按 Esc 就能不確認直接開始
 
@@ -214,7 +214,7 @@
 | **重現方式** | 開一個要求先讀說明、這個帳號尚未確認的任務的 `pages/annotation/annotation-workspace.html`，指引閘門出現後按 Esc：彈窗關閉，可以開始作答。重新整理：彈窗再出現（確認沒有被記下）。 |
 | **受影響範圍** | [Modal](components/modal.md)；`annotation/annotation-workspace#modal-guideline-gate` |
 | **依據** | `annotation-workspace.config.js:6845`–`:6850` 開閘門時傳 `onClose: hideGuidelineModal`，`hideGuidelineModal`（`:6818`–`:6822`）只關彈窗、不寫確認紀錄；`pages/shared/modal-focus.js:42`–`:44` 在 Esc 時呼叫 `onClose`。規格 [`04-annotation/02-annotation-workspace.mdx`](../../docs/specs/04-annotation/02-annotation-workspace.mdx) §指引閘門 第 3 條「開關開著時，進場顯示說明彈窗，**使用者按確認按鈕才開始**」。 |
-| **待決問題** | 閘門要不要忽略 Esc（只能按確認）？若 Esc 可以關，關掉之後算不算「開始」——要不要擋住作答？ |
+| **待決問題** | **已裁定（2026-11-18）**：閘門忽略 Esc，只能按確認，保留返回清單的出口。修正於 #423。原題保留：閘門要不要忽略 Esc（只能按確認）？若 Esc 可以關，關掉之後算不算「開始」——要不要擋住作答？ |
 
 ### G-47 送出被擋時，畫面看不出是哪一個區塊擋住
 
@@ -225,7 +225,7 @@
 | **重現方式** | 開 `pages/annotation/annotation-workspace.html`，選一筆有兩個以上輸出類型的樣本，只作答其中一個就按「提交」：出現「請完成所有標記項目後再提交」的通知，但未完成的那個區塊外觀不變。 |
 | **受影響範圍** | [Card](components/card.md)、[Toast](components/toast.md)、[`ux-conventions.md`](ux-conventions.md) UXC-04；`annotation/annotation-workspace#role-annotator` |
 | **依據** | `annotation-workspace.config.js:3048` 對未完成的區塊設 `data-error="true"`（`:2926` 清掉），但全 prototype 沒有任何 CSS 選到 `[data-error]`。規格 [`04-annotation/02-annotation-workspace.mdx`](../../docs/specs/04-annotation/02-annotation-workspace.mdx) §作答完整性與提交阻擋 第 2 條「任一個還沒完成時：**阻擋提交並提示對應的那個區塊**」，第 4 條要「**可定位的**錯誤」。 |
-| **待決問題** | 「提示對應的那個區塊」要長什麼樣（框線換色、區塊內的錯誤文字、捲到第一個）？是否另需讓輔助科技讀得到？ |
+| **待決問題** | **已裁定（2026-11-18）**：未完成區塊框線換錯誤色，區塊內顯示錯誤文字（以 `aria-describedby` 綁定），焦點捲到第一個未完成區塊。修正於 #423。原題保留：「提示對應的那個區塊」要長什麼樣（框線換色、區塊內的錯誤文字、捲到第一個）？是否另需讓輔助科技讀得到？ |
 
 ### G-48 標記清單沒帶任務時，借用了「找不到這個任務」的標題
 
@@ -236,7 +236,7 @@
 | **重現方式** | 開 `pages/annotation/annotation-list.html`，不帶 `task_id`：面板標題是「找不到這個任務」，說明是「未指定任務，請回到儀表板重新選擇任務。」。 |
 | **受影響範圍** | [Empty State](components/empty-state.md)；`annotation/annotation-list#state-no-task` |
 | **依據** | `renderNotFound`（`annotation-list.html:2312`–`:2342`）兩種情況共用標題 `notFoundTitle`（`:2323`、文案 `:614`），只換說明（`:2327`、`:616`）。規格 [`04-annotation/01-annotation-list.mdx`](../../docs/specs/04-annotation/01-annotation-list.mdx) §路由上下文與回退 第 6 條只寫「顯示『未指定任務，請回到儀表板重新選擇任務。』與一個回儀表板的入口」，第 7 條才是「顯示『找不到這個任務』」。 |
-| **待決問題** | 沒帶任務時要不要有標題？有的話用什麼字？ |
+| **待決問題** | **已裁定（2026-11-18）**：標題改「尚未選擇任務」。修正於 #423。原題保留：沒帶任務時要不要有標題？有的話用什麼字？ |
 
 ### G-52 交付包說切換鈕在序列標註的統計總覽，實際在實體辨識的品質監控
 
@@ -247,7 +247,7 @@
 | **重現方式** | 照交付包的 `dataset/dataset-analysis-detail#state-seq-match-strict` 開一個序列標註任務的統計總覽：找不到 `#matchStrict`。改開實體辨識任務並加 `?tab=quality`，品質監控最上面的卡片才有 `Strict match`／`Partial overlap` 兩顆鈕。 |
 | **受影響範圍** | `dataset/dataset-analysis-detail#state-seq-match-strict`、`#state-seq-match-partial` |
 | **依據** | 交付包 `handoff/manifest.json` 這兩個視圖的 `how`：「在序列標註任務的統計總覽點 `#matchStrict`」。原型：`#matchStrict`／`#matchPartial`／`#seqStrictCard`／`#seqPartialCard` 只在 `dataset-analysis-detail.partials/quality-entity_recognition.html:11`–`:30`，`quality-sequence_tagging.html` 與八個 `stats-*` 都沒有。規格 [`05-dataset/02-analysis-detail.mdx`](../../docs/specs/05-dataset/02-analysis-detail.mdx) §八種輸出類型各自的主指標與門檻：實體辨識列寫「部分重疊的 F1（只能切換顯示）」，第 5 條提到「同一張卡的切換鈕」。視圖 ID 也叫 `seq-`，與它實際所屬的型別對不上。 |
-| **待決問題** | 下一次重跑 `design-handoff` 時，要不要把這兩個視圖的重現方式改成實體辨識的品質監控，ID 要不要改名？本 skill 不改交付包。 |
+| **待決問題** | **已裁定（2026-11-18）**：下次重跑 `design-handoff` 時改重現方式，視圖 ID 不改名。原題保留：下一次重跑 `design-handoff` 時，要不要把這兩個視圖的重現方式改成實體辨識的品質監控，ID 要不要改名？本 skill 不改交付包。 |
 
 ### G-53 「部分重疊」與關係識別的第二個數值，畫面上仍叫「門檻」
 
@@ -258,7 +258,7 @@
 | **重現方式** | 開實體辨識任務的品質監控，切到 `Partial overlap`：卡片寫「Relaxed 門檻 0.70 — 通過」。再開關係識別任務的品質監控：第二列寫「高品質門檻 0.80 — 未達」。 |
 | **受影響範圍** | `dataset/dataset-analysis-detail#state-quality-entity-recognition`、`#state-quality-relation-identification`、`#state-seq-match-partial` |
 | **依據** | 原型：`quality-entity_recognition.html:40`「`Relaxed 門檻 0.70`」、`:53` 替代指標表頭也叫「門檻」；`quality-relation_identification.html:23`「`高品質門檻 0.80`」。規格 [`05-dataset/02-analysis-detail.mdx`](../../docs/specs/05-dataset/02-analysis-detail.mdx) §八種輸出類型各自的主指標與門檻 第 11 條：「它的 0.70 **不得叫『門檻』**……畫面要改成不帶『門檻』的字（例如『參考值』），關係識別的 `高品質門檻 0.80` 同一個問題、一併改」（Q15，維護者 2026-11-08）。 |
-| **待決問題** | 規格已裁定要改；改原型屬**畫面修正**，要走 Ready gate。改成什麼字（規格只舉例「參考值」）、何時改，由維護者決定。 |
+| **待決問題** | **已裁定（2026-11-18）**：改成「參考值」，並拿掉「通過／未達」的判定語氣。修正於 #423。原題保留：規格已裁定要改；改原型屬**畫面修正**，要走 Ready gate。改成什麼字（規格只舉例「參考值」）、何時改，由維護者決定。 |
 
 ## 二、缺少狀態證據
 
@@ -318,7 +318,7 @@
 | **重現方式** | 開 `pages/task-management/task-new.html`，第一到第三步填妥後按「下一步」：出現第四步「標記說明」。交付包只有 `#state-step1`～`#state-step3`。 |
 | **受影響範圍** | [Step Indicator](components/step-indicator.md)、[Modal](components/modal.md)、[Skeleton](components/skeleton.md)；`task-management/task-new`、`task-detail`、`admin/user-management`、`admin/role-settings` |
 | **依據** | `task-new.html:430` 的 `step4Panel`，步驟條畫了四格（`:226`–`:245`）。同樣找得到但沒有視圖 ID 的：`task-new` 的 `taxonomyDeleteModal`（`:529`）與頂端錯誤橫幅（`:220`）；`task-detail` 的載入骨架（`:1964`–`:1975`）與 `taskNotFound`（`:1979`）；`user-management` 的 `editModal`（`:622`）與異動紀錄抽屜（`:709`）；`role-settings` 的 `#dirtyModal`（`:958`）、異動紀錄抽屜（`:933`）與 `storedInvalidBanner`（`:383`）。 |
-| **待決問題** | 要不要在下一次重跑 `design-handoff` 時補上這些視圖？本 skill 不替它們取 ID。 |
+| **待決問題** | **已裁定（2026-11-18）**：下次重跑 `design-handoff` 時補上這些視圖。原題保留：要不要在下一次重跑 `design-handoff` 時補上這些視圖？本 skill 不替它們取 ID。 |
 
 ### G-36 五條 UX 約定在本批次沒有證據
 
@@ -342,7 +342,7 @@
 | **重現方式** | 開 `pages/annotation/annotation-workspace.html?role=reviewer`，打開審核流程抽屜；作答後按「儲存草稿」看右上的通知。再開 `pages/annotation/annotation-list.html?task_id=<試標中的任務>`，以標記員身分看試標歷史回饋卡。三者都沒有視圖 ID。 |
 | **受影響範圍** | [Modal](components/modal.md)、[Toast](components/toast.md)；`annotation/annotation-workspace`、`annotation/annotation-list` |
 | **依據** | 審核流程抽屜 `wsReviewFlowDrawer`（`annotation-workspace.html:1197`，`annotation-workspace.config.js:5681` 起）；通知 `#toast`（`annotation-workspace.html:1328`，`showToast`，`annotation-workspace.config.js:422`）；試標歷史回饋卡 `#dryRunFeedbackCard`（`annotation-list.html:494`，`renderDryRunFeedback`，`:2215`–`:2220`）。交付包的 `annotation-list` 九個視圖、`annotation-workspace` 十三個視圖都不含它們。 |
-| **待決問題** | 要不要在下一次重跑 `design-handoff` 時補上這些視圖？本 skill 不替它們取 ID。 |
+| **待決問題** | **已裁定（2026-11-18）**：下次重跑 `design-handoff` 時補上這些視圖。原題保留：要不要在下一次重跑 `design-handoff` 時補上這些視圖？本 skill 不替它們取 ID。 |
 
 ### G-54 b4 有兩個錯誤狀態沒有被收為視圖
 
@@ -353,7 +353,7 @@
 | **重現方式** | `dataset-analysis-list`：讓資料腳本載入失敗（`state.loadFailed`），表格只剩一列錯誤與重試鈕。`dataset-analysis-detail`：讓任一個 partial 的請求失敗，那個分頁顯示「載入失敗」面板與重試鈕。兩者都沒有網址參數可以觸發，也沒有視圖 ID。 |
 | **受影響範圍** | [Data Table](components/data-table.md)、[Card](components/card.md)、[Button](components/button.md)；`dataset/dataset-analysis-list`、`dataset/dataset-analysis-detail` |
 | **依據** | 清單：`createErrorRow`（`dataset-analysis-list.view.js:159`），條件 `dataset-analysis-list.model.js:138`，樣式 `.error-title`（`dataset-analysis-list.html:149`）。詳情：`renderPanelLoadError(mountId, 'load')`（`dataset-analysis-detail.html:1508`），`aria-live="polite"`（`:1515`）。同一個函式以 `'calc'` 呼叫時就是交付包有列的 `#param-q-state-report-failed`，`'load'` 這一支沒有列。交付包 `dataset-analysis-list` 四個視圖、`dataset-analysis-detail` 二十六個視圖都不含它們。 |
-| **待決問題** | 要不要在下一次重跑 `design-handoff` 時補上這兩個視圖？沒有網址參數能觸發，要不要先在原型加一個示範開關（屬畫面修正，走 Ready gate）？ |
+| **待決問題** | **已裁定（2026-11-18）**：下次重跑 `design-handoff` 時補上這兩個視圖；原型先加 `?error=1` 示範開關，於 #422 處理。原題保留：要不要在下一次重跑 `design-handoff` 時補上這兩個視圖？沒有網址參數能觸發，要不要先在原型加一個示範開關（屬畫面修正，走 Ready gate）？ |
 
 ---
 
@@ -457,6 +457,8 @@ showcase 說明寫「profile 64/80px」（`:1356`），它的 CSS 是 80px（`:9
 
 `admin/user-management`（`user-management.html:273`、`:709`–`:727`）與 `admin/role-settings`（`role-settings.html:277`、`:933`–`:951`）各有一份 `.audit-drawer`，CSS 與 markup 幾乎相同，沒有共用檔。兩份都是 `role="complementary"`，開啟時焦點不被留在抽屜裡（兩頁 `modal-focus.js` 0 次），Esc 可關（`user-management.html:1366`、`role-settings.html:1410`）。
 
+**已裁定（2026-11-18）**：修正：抽成共用檔並接上焦點陷阱。修正於 #422。
+
 ### G-43 b2 的 modal 有一半沒有接 `modal-focus.js`
 
 > b2 新增。延伸 G-23。
@@ -465,11 +467,15 @@ showcase 說明寫「profile 64/80px」（`:1356`），它的 CSS 是 80px（`:9
 
 **b3 核對**：`annotation-workspace` 全部接上（見 G-23 的 b3 核對）。
 
+**已裁定（2026-11-18）**：修正：未接的 modal 全部接上 `modal-focus.js`。修正於 #422。
+
 ### G-44 Step Indicator 的目前步驟沒有非視覺標示
 
 > b2 新增。
 
 `task-new.html:226`–`:245` 每一步是 `<div class="step-item">`，目前步驟只靠 `.active` 換色，沒有 `aria-current="step"`；完成的步驟也只靠 `.done` 換色。螢幕閱讀器讀不出現在第幾步、哪幾步已完成。
+
+**已裁定（2026-11-18）**：修正：目前步驟加 `aria-current="step"`。修正於 #422。
 
 ### G-49 審核流程抽屜的關閉鈕沒有名稱
 
@@ -477,11 +483,15 @@ showcase 說明寫「profile 64/80px」（`:1356`），它的 CSS 是 80px（`:9
 
 `annotation-workspace.html:1201` 的 `#wsReviewFlowDrawerClose` 裡只有一個 `aria-hidden` 的 svg，沒有 `aria-label`，`annotation-workspace.config.js:5769` 取得它之後也沒有補上。同頁另外三個預覽的關閉鈕都有（`:1149`、`:1164`、`:1180`）。螢幕閱讀器只會讀出「按鈕」。
 
+**已裁定（2026-11-18）**：修正：補 `aria-label`。修正於 #422。
+
 ### G-50 作答控制項不屬任何元件，樣式全是 inline 與寫死 hex
 
 > b3 新增。延伸 G-02。
 
 `annotation-workspace` 的作答區由 `task-config.engine.js` 的 `renderOutputPreview`（`:3671`）畫出，例如單選標籤 `renderSingleLabelPreview`（`:2871`）：按鈕的樣式全寫在 inline `style` 上，選中色寫死 `#fff` 與後備值 `#6366F1`（`:2888` 等），「無法判定」chip 寫死 `#64748B`（`makeBypassChip`，`:2816`–`:2828`）。引擎全檔 18 個 hex。它們長得像 [Chip](components/chip.md)，但沒有用任何 `.task-type-chip` 或 `.chip` class，所以 Chip 的 b3 用到 0 次。
+
+**已裁定（2026-11-18）**：併入 #420：改套 `.chip` class，色值改用 token。
 
 ### G-55 `dataset-analysis-detail` 的 toast 沒有任何程式會顯示它
 
@@ -489,11 +499,15 @@ showcase 說明寫「profile 64/80px」（`:1356`），它的 CSS 是 80px（`:9
 
 `dataset-analysis-detail.html` 有 `.toast*` 樣式（`:175`–`:187`）、`#toast` markup（`:362`–`:363`）與關閉鈕的處理（`:2463`），但全檔沒有 `showToast` 或任何把 `#toast` 加上 `visible` 的程式。本頁也沒有需要通知的操作（風險處置鈕直接導頁，`:1573`–`:1580`）。要刪掉這段死 markup，還是本頁其實該有通知（例如重試成功）？維護者決定。
 
+**已裁定（2026-11-18）**：刪掉死 markup 與樣式。修正於 #423。
+
 ### G-56 品質監控的「Strict／Partial」切換鈕讀不出目前選哪一個
 
 > b4 新增。
 
 `.match-btn`（`dataset-analysis-detail.html:103`–`:106`，markup `quality-entity_recognition.html:11`–`:12`）是兩顆原生 `<button>`，目前選項只靠 `.active` 的樣式表示（`syncSequenceUi`，`:1947`–`:1957`），沒有 `aria-pressed`，也不是 `role="radiogroup"`。對照組：`annotation-workspace` 的審核三向決策 `.mini-btn` 有 `aria-pressed`。這是全站唯一的分段切換鈕，不屬任何元件。
+
+**已裁定（2026-11-18）**：修正：加 `aria-pressed`。修正於 #422。
 
 ---
 
