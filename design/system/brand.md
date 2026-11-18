@@ -344,9 +344,9 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 | `social-preview.svg:4` | 頁面底色 | `--color-surface` | 是 |
 | `banner.svg:5` | 白底 | `--color-white`（淺色值） | 是 |
 | `banner.svg:21` | 副標 | `--color-ink-muted` | 是 |
-| **`social-preview.svg:19`** | 副標 | **沒有對應 token**；最接近 `--color-ink-muted`，但色值不同（是 Tailwind gray 的值，不是 slate） | **否，這是不符的一處** |
+| `social-preview.svg:19` | 副標 | `--color-ink-muted` | 是 |
 
-`social-preview.svg` 的副標 32px，屬大字（WCAG 大字門檻 3:1），所以不構成對比問題；它只是跟 `banner.svg` 副標用了兩種灰。**規則（維護者裁定 2026-11-18）：副標用 `--color-ink-muted` 的 slate 灰**；現況寫死的是 gray，列在落差表，SVG 本次不改。順帶一提：`--color-ink-muted` 在 #427 調為 `#5E6B7F` 後，疊在 `--color-surface` 上是 4.93:1、白底上 5.40:1，兩個 SVG 的副標跟著改成同一值。
+**規則（維護者裁定 2026-11-18）：副標用 `--color-ink-muted` 的 slate 灰**；`social-preview.svg` 原本寫死的 gray 已於 #418 改掉（落差表 Q12）。`--color-ink-muted` 在 #427 調為 `#5E6B7F` 後，疊在 `--color-surface` 上是 4.93:1、白底上 5.40:1，兩個 SVG 的副標跟著改成同一值。
 
 ### 深色主題的 logo（量測）
 
