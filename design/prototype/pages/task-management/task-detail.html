@@ -8249,6 +8249,10 @@ function getTaskTypeLabel() {
     var modal = document.getElementById('memberActionModal');
     modal.classList.add('show');
     modal.setAttribute('aria-hidden', 'false');
+    /* G-43: focus trap and focus return via shared/modal-focus.js */
+    if (window.LabelSuiteModalFocus) {
+      window.LabelSuiteModalFocus.open(modal, { trigger: document.activeElement, onClose: closeMemberActionModal });
+    }
   }
 
   function closeMemberActionModal() {
@@ -8256,6 +8260,7 @@ function getTaskTypeLabel() {
     var modal = document.getElementById('memberActionModal');
     modal.classList.remove('show');
     modal.setAttribute('aria-hidden', 'true');
+    if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
   }
 
   function executeMemberAction() {

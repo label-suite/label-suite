@@ -6136,8 +6136,15 @@ function showDatasetPreviewModal(idx) {
   var record = (recs && recs.length) ? recs[0] : root;
   el('datasetPreviewJson').textContent = JSON.stringify(record, null, 2);
   el('datasetPreviewModal').classList.add('show');
+  /* G-43: focus trap and focus return via shared/modal-focus.js */
+  if (window.LabelSuiteModalFocus) {
+    window.LabelSuiteModalFocus.open(el('datasetPreviewModal'), { trigger: document.activeElement, onClose: hideDatasetPreviewModal });
+  }
 }
-function hideDatasetPreviewModal() { el('datasetPreviewModal').classList.remove('show'); }
+function hideDatasetPreviewModal() {
+  el('datasetPreviewModal').classList.remove('show');
+  if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(el('datasetPreviewModal'));
+}
 function makeFileSvg() {
   var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('class', 'guideline-item-icon');
@@ -6201,9 +6208,18 @@ function showTaxonomyDeleteModal(descendantCount, onConfirm) {
   el('taxonomyDeleteCancelBtn').textContent = state.lang === 'en' ? 'Cancel' : '取消';
   el('taxonomyDeleteConfirmBtn').textContent = state.lang === 'en' ? 'Delete' : '刪除';
   el('taxonomyDeleteModal').classList.add('show');
+  /* G-43: focus trap and focus return via shared/modal-focus.js; the
+     confirm button keeps its existing initial focus. */
+  if (window.LabelSuiteModalFocus) {
+    window.LabelSuiteModalFocus.open(el('taxonomyDeleteModal'), { trigger: document.activeElement, onClose: hideTaxonomyDeleteModal });
+  }
   el('taxonomyDeleteConfirmBtn').focus();
 }
-function hideTaxonomyDeleteModal() { el('taxonomyDeleteModal').classList.remove('show'); state.taxonomyDeleteCallback = null; }
+function hideTaxonomyDeleteModal() {
+  el('taxonomyDeleteModal').classList.remove('show');
+  state.taxonomyDeleteCallback = null;
+  if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(el('taxonomyDeleteModal'));
+}
 /* ── Flat chip: extract items from TASK_TAXONOMY ────────────── */
 function extractTaxonomyItems() {
   var categories = [];

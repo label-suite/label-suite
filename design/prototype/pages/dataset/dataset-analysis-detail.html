@@ -1444,11 +1444,23 @@ function applyDataI18n(root) {
   });
 }
 
+/* PROTOTYPE-ONLY demo switch (G-54): ?error=1 makes every panel partial "fail"
+ * so the load-failed panel can be reproduced. Captured once at script load,
+ * because syncUrlState() rewrites the query string and does not carry it over;
+ * that also makes the panel's Retry button (a reload) recover, like a real
+ * retry. A real product has no such parameter. */
+var DEMO_LOAD_ERROR = false;
+try { DEMO_LOAD_ERROR = new URLSearchParams(window.location.search).get('error') === '1'; } catch (e) { DEMO_LOAD_ERROR = false; }
+
 function loadStatsPanel() {
   var mount = document.getElementById('statsPanelMount');
   var path = STATS_PANEL_PATHS[S.type] || STATS_PANEL_PATHS.multi_dim;
   if (!mount || !path) return Promise.resolve();
   mount.innerHTML = '';
+  if (DEMO_LOAD_ERROR) {
+    renderPanelLoadError('statsPanelMount');
+    return Promise.resolve();
+  }
   return fetch(path, { cache: 'no-store' })
     .then(function(r) {
       if (!r.ok) throw new Error('stats panel load failed: ' + path);
@@ -1954,6 +1966,9 @@ function syncSequenceUi() {
   var isStrict = S.seqMode !== 'partial';
   strictBtn.classList.toggle('active', isStrict);
   partialBtn.classList.toggle('active', !isStrict);
+  /* G-56: the selected option is exposed to assistive tech, not only by .active */
+  strictBtn.setAttribute('aria-pressed', String(isStrict));
+  partialBtn.setAttribute('aria-pressed', String(!isStrict));
   strictCard.classList.toggle('hidden', !isStrict);
   partialCard.classList.toggle('hidden', isStrict);
 }
@@ -2294,6 +2309,10 @@ function loadQualityPanel() {
      partial is fetched, because the failure is not a loading failure. */
   if (S.qState === 'report_failed') {
     renderPanelLoadError('qualityPanelMount', 'calc');
+    return Promise.resolve();
+  }
+  if (DEMO_LOAD_ERROR) {
+    renderPanelLoadError('qualityPanelMount');
     return Promise.resolve();
   }
   var taskMeta = TASK_META[S_ROUTE.taskId] || TASK_META[DEFAULT_TASK_ID];

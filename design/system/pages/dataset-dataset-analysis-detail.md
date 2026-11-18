@@ -44,7 +44,7 @@
 | `.badge*`（`:57`–`:62`）、`.risk-level-badge`（`:147`–`:151`） | 本頁重寫的徽章，全用 token → [Badge](../components/badge.md) |
 | `.iaa-score-card`（`:73`–`:76`）、`.iaa-bar-*`（`:83`–`:87`） | 達標分數卡與分數條；分數條沒有 `role="progressbar"`，數字在旁邊的文字 → [Progress Bar](../components/progress-bar.md) |
 | `.t-dot`（`:90`–`:93`） | 與 Color Dot 同用途的圓點，只靠顏色 → [Color Dot](../components/color-dot.md)、G-14 |
-| `.match-toggle`／`.match-btn`（`:103`–`:106`） | 分段切換鈕，只此一頁；用 `.active` 表示目前選項，**沒有 `aria-pressed`**，螢幕閱讀器讀不出選了哪一個 → G-56 |
+| `.match-toggle`／`.match-btn`（`:103`–`:106`） | 分段切換鈕，只此一頁；用 `.active` 表示目前選項；已於 #422 補上 `aria-pressed` 並與 `.active` 同步 → G-56 |
 | `.alt-toggle-btn`／`.alt-metrics-body`（`:109`–`:114`） | 原生 `<button>`，帶 `aria-expanded`／`aria-controls`（例如 `quality-single_label.html:24`），收合時 body 設 `aria-hidden`（`wireAltToggle`，`:1919`）→ [Accordion](../components/accordion.md) |
 | `.anomaly-item`（`:126`） | 異常提示列，用 warning token |
 | `.annotator-table`（`:135`–`:139`） | 第 N 份表格樣式 → [Data Table](../components/data-table.md)、G-10 |

@@ -352,8 +352,10 @@
 | :--- | :--- |
 | **重現方式** | `dataset-analysis-list`：讓資料腳本載入失敗（`state.loadFailed`），表格只剩一列錯誤與重試鈕。`dataset-analysis-detail`：讓任一個 partial 的請求失敗，那個分頁顯示「載入失敗」面板與重試鈕。兩者都沒有網址參數可以觸發，也沒有視圖 ID。 |
 | **受影響範圍** | [Data Table](components/data-table.md)、[Card](components/card.md)、[Button](components/button.md)；`dataset/dataset-analysis-list`、`dataset/dataset-analysis-detail` |
-| **依據** | 清單：`createErrorRow`（`dataset-analysis-list.view.js:159`），條件 `dataset-analysis-list.model.js:138`，樣式 `.error-title`（`dataset-analysis-list.html:149`）。詳情：`renderPanelLoadError(mountId, 'load')`（`dataset-analysis-detail.html:1508`），`aria-live="polite"`（`:1515`）。同一個函式以 `'calc'` 呼叫時就是交付包有列的 `#param-q-state-report-failed`，`'load'` 這一支沒有列。交付包 `dataset-analysis-list` 四個視圖、`dataset-analysis-detail` 二十六個視圖都不含它們。 |
+| **依據** | 清單：`createErrorRow`（`dataset-analysis-list.view.js:159`），條件 `dataset-analysis-list.model.js:138`，樣式 `.error-title`（`dataset-analysis-list.html:149`）。詳情：`renderPanelLoadError(mountId, 'load')`（`dataset-analysis-detail.html:1521`），`aria-live="polite"`（`:1528`）。同一個函式以 `'calc'` 呼叫時就是交付包有列的 `#param-q-state-report-failed`，`'load'` 這一支沒有列。交付包 `dataset-analysis-list` 四個視圖、`dataset-analysis-detail` 二十六個視圖都不含它們。 |
 | **待決問題** | **已裁定（2026-11-18）**：下次重跑 `design-handoff` 時補上這兩個視圖；原型先加 `?error=1` 示範開關，於 #422 處理。原題保留：要不要在下一次重跑 `design-handoff` 時補上這兩個視圖？沒有網址參數能觸發，要不要先在原型加一個示範開關（屬畫面修正，走 Ready gate）？ |
+
+**狀態（#422）**：原型已加 `?error=1` 示範開關。`dataset-analysis-list.html?error=1` 讓 `state.loadFailed` 為真（`dataset-analysis-list.model.js:241`），只剩錯誤列與重試鈕；`dataset-analysis-detail.html?task_id=<id>&error=1` 讓統計與品質兩個 partial 都顯示載入失敗面板。參數只在載入時讀取，`syncUrl` 不會帶著它，所以重試（重新載入）會恢復，和真實的重試一致。視圖 ID 要等下次重跑 `design-handoff` 才補，這裡不處理。
 
 ---
 
@@ -459,6 +461,8 @@ showcase 說明寫「profile 64/80px」（`:1356`），它的 CSS 是 80px（`:9
 
 **已裁定（2026-11-18）**：修正：抽成共用檔並接上焦點陷阱。修正於 #422。
 
+**狀態（#422）**：已修正。兩頁共用 `pages/shared/audit-drawer.css` 與 `pages/shared/audit-drawer.js`（自我掛載，標題與空狀態文字由 `<script>` 的 `data-*` 帶入；`LabelSuiteAuditDrawer.open({trigger})`／`.close()`）。抽屜改為 `role="dialog" aria-modal="true"` 並以 `aria-labelledby` 指向標題，關閉時為 `inert`；開啟時接上 `modal-focus.js`，Tab 不離開抽屜，Esc 或關閉鈕後焦點回到觸發鈕。各頁只留自己的 `.audit-badge-*`。上文的行號指的是修正前。
+
 ### G-43 b2 的 modal 有一半沒有接 `modal-focus.js`
 
 > b2 新增。延伸 G-23。
@@ -469,6 +473,8 @@ showcase 說明寫「profile 64/80px」（`:1356`），它的 CSS 是 80px（`:9
 
 **已裁定（2026-11-18）**：修正：未接的 modal 全部接上 `modal-focus.js`。修正於 #422。
 
+**狀態（#422）**：已修正。`user-management`（新增、編輯、停用）、`role-settings`（未儲存確認）、`task-new`（離開確認、類別刪除、資料集預覽）、`task-detail`（成員操作，以及與 `task-new` 共用 `task-config.engine.js` 的類別刪除、資料集預覽）都接上 `LabelSuiteModalFocus.open`／`.close`，並以 Playwright 逐一驗證 Tab 不離開、Esc 關閉、焦點回到觸發鈕。前提的更正：核對時 `task-detail` 其實已有五個 modal 接上（上文寫四個）；現在全部都接了。
+
 ### G-44 Step Indicator 的目前步驟沒有非視覺標示
 
 > b2 新增。
@@ -477,6 +483,8 @@ showcase 說明寫「profile 64/80px」（`:1356`），它的 CSS 是 80px（`:9
 
 **已裁定（2026-11-18）**：修正：目前步驟加 `aria-current="step"`。修正於 #422。
 
+**狀態（#422）**：已修正。`task-new.html` 的 `.step-item` 各有 id（`si1`–`si4`），`updateStepIndicator` 在目前步驟上設 `aria-current="step"`、其餘移除；完成的步驟在圓圈內加一個只給螢幕閱讀器讀的「已完成／Completed」文字（`.step-sr-only`），語言切換時重新套用。
+
 ### G-49 審核流程抽屜的關閉鈕沒有名稱
 
 > b3 新增。
@@ -484,6 +492,8 @@ showcase 說明寫「profile 64/80px」（`:1356`），它的 CSS 是 80px（`:9
 `annotation-workspace.html:1201` 的 `#wsReviewFlowDrawerClose` 裡只有一個 `aria-hidden` 的 svg，沒有 `aria-label`，`annotation-workspace.config.js:5769` 取得它之後也沒有補上。同頁另外三個預覽的關閉鈕都有（`:1149`、`:1164`、`:1180`）。螢幕閱讀器只會讀出「按鈕」。
 
 **已裁定（2026-11-18）**：修正：補 `aria-label`。修正於 #422。
+
+**狀態（#422）**：已修正。`#wsReviewFlowDrawerClose` 在 markup 上加了 `aria-label="關閉流程與目前狀態"`（`annotation-workspace.html:1204`）。前提的更正：`annotation-workspace.config.js` 在執行期早就用 `flowDrawerCloseAria` 設定這個名稱（`:6926` 一帶），所以螢幕閱讀器實際讀得到；缺的是靜態 markup。這次補的是靜態那一份，與執行期的字串一致。
 
 ### G-50 作答控制項不屬任何元件，樣式全是 inline 與寫死 hex
 
@@ -508,6 +518,8 @@ showcase 說明寫「profile 64/80px」（`:1356`），它的 CSS 是 80px（`:9
 `.match-btn`（`dataset-analysis-detail.html:103`–`:106`，markup `quality-entity_recognition.html:11`–`:12`）是兩顆原生 `<button>`，目前選項只靠 `.active` 的樣式表示（`syncSequenceUi`，`:1947`–`:1957`），沒有 `aria-pressed`，也不是 `role="radiogroup"`。對照組：`annotation-workspace` 的審核三向決策 `.mini-btn` 有 `aria-pressed`。這是全站唯一的分段切換鈕，不屬任何元件。
 
 **已裁定（2026-11-18）**：修正：加 `aria-pressed`。修正於 #422。
+
+**狀態（#422）**：已修正。`quality-entity_recognition.html` 的 `#matchStrict`／`#matchPartial` 帶 `aria-pressed`，`syncSequenceUi` 每次切換都與 `.active` 同步更新（`dataset-analysis-detail.html:1960` 起）。`.match-btn` 樣式現在在 `:105`–`:107`。
 
 ---
 

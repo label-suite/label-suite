@@ -1,0 +1,68 @@
+/* Shared change-history drawer (#422 / design-gaps G-38).
+ * Layout only. The per-action badge colours (.audit-badge-*) stay in each
+ * page, because each page owns its own set of action types. */
+.audit-drawer-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: var(--z-modal);
+  opacity: 0; pointer-events: none;
+  transition: opacity var(--dur-normal) var(--ease-standard);
+}
+.audit-drawer-overlay.open { opacity: 1; pointer-events: auto; }
+
+.audit-drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; width: 480px;
+  background: var(--color-white); z-index: calc(var(--z-modal) + 10);
+  display: flex; flex-direction: column;
+  transform: translateX(100%);
+  transition: transform var(--dur-normal) var(--ease-standard);
+  border-left: 1px solid var(--color-border);
+  box-shadow: var(--shadow-xl);
+}
+.audit-drawer.open { transform: translateX(0); }
+
+.audit-drawer-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: var(--space-md); padding: var(--space-lg);
+  border-bottom: 1px solid var(--color-border); flex-shrink: 0;
+}
+.audit-drawer-title {
+  font-family: var(--font-serif-display);
+  font-size: 20px; font-weight: 700; color: var(--color-ink); margin: 0 0 2px;
+}
+.audit-drawer-subtitle { font-size: 13px; color: var(--color-text-soft); margin: 0; }
+
+.audit-drawer-body { flex: 1; overflow-y: auto; padding: var(--space-lg); }
+.audit-log-list { display: flex; flex-direction: column; gap: 12px; }
+
+.audit-log-entry {
+  background: var(--color-white); border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg); padding: var(--space-md);
+}
+.audit-log-entry-top {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-sm); margin-bottom: 8px;
+}
+.audit-log-time {
+  font-size: 12px; color: var(--color-text-soft);
+  font-family: var(--font-mono); flex-shrink: 0;
+}
+.audit-log-actor { font-size: 13px; color: var(--color-text-soft); margin-bottom: 6px; }
+.audit-log-actor strong { color: var(--color-ink); }
+.audit-log-diff {
+  font-family: var(--font-mono); font-size: 12px;
+  background: var(--color-slate-50); border: 1px solid var(--color-border-muted);
+  border-radius: var(--radius-sm); padding: 6px 10px;
+  color: var(--color-ink); word-break: break-all; margin: 0; white-space: pre-wrap;
+}
+
+@media (max-width: 767px) {
+  .audit-drawer {
+    top: auto; right: 0; left: 0; bottom: 0; width: 100%; height: 72vh;
+    border-left: none; border-top: 1px solid var(--color-border);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    transform: translateY(100%);
+  }
+  .audit-drawer.open { transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .audit-drawer, .audit-drawer-overlay { transition-duration: 0.01ms; }
+}
