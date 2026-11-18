@@ -1,9 +1,9 @@
 # 覆蓋核對
 
-交付包版本：commit `296af36cfe642bb25efa8d97f47dfb63027ec6c9`，prototype tree `a93ce77ce72f683e7bd602296303663ebe94773b`。
+交付包版本：commit `c77da22351dd298093fe63a0f1c9c22dc8952f86`，prototype tree `86b43b19dca27ea3d250c7455f6463f39b224932`。
 產生依據：[`design-handoff` skill](../../../.claude/skills/design-handoff/SKILL.md) 的步驟 4。工作源頭是 [Issue #248](https://github.com/label-suite/label-suite/issues/248)。
 
-**本次是第六版**（第五次重跑）。差異見 §九。
+**本次是第七版**（第六次重跑）。差異見 §九。
 
 | 項目 | 數 |
 | :--- | ---: |
@@ -219,7 +219,42 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 ## 九、重跑紀錄
 
-### 第五次（本版）
+### 第六次（本版）
+
+[Issue #427](https://github.com/label-suite/label-suite/issues/427) 第五次重跑之後，維護者 2026-11-18 的兩輪裁定又改了 prototype：淺色 `--color-border-control` 從 `#8592A6` 加深為 `#7C899D`（在 surface 上也過 3:1）；日期區間與分類選擇這兩個長得像欄位的觸發鈕改用 `--color-border-control`；五個帳號頁的 `--color-link` 在兩種主題都對齊 `--color-primary-strong`（淺色 `#4F46E5`、深色 `#A5B4FC`）。規格沒有變動。
+
+| 欄位 | 第六版 | 本版 | |
+| :--- | :--- | :--- | :--- |
+| `commit` | `296af36cfe64` | `c77da22351dd` | 必然變 |
+| `prototypeTree` | `a93ce77ce72f` | `86b43b19dca2` | **變了** |
+| `specsTree` | `e8362d715d6b` | `e8362d715d6b` | **沒變** |
+| `navigationBlob` | `c64128a7e7a5` | `c64128a7e7a5` | **沒變** |
+
+變動的檔共 8 個，全在 prototype：`assets/tokens.css`、五個帳號頁、`shared/date-range-picker.css`、`task-management/task-config.css`。
+
+| 類 | 數 | 內容 |
+| :--- | ---: | :--- |
+| 新增 | 0 | 只改顏色，沒有新的狀態 |
+| 移除 | 0 | |
+| 改寫 | 0 | 重現步驟都沒變 |
+| `loads` 欄 | 0 | 沒有新增或移除 `<script src>`、`<link href>` |
+| 行號 | 0 | 8 個檔都是原地替換，行數不變 |
+| 受影響 | 17 | 依 `evidence`／`spec` 算出的，全在 `b1-shared-account`（五個帳號頁）；見下表 |
+
+**只看證據會低估**：`tokens.css`、`date-range-picker.css`、`task-config.css` 三個檔沒有被任何視圖列為 `evidence`。`tokens.css` 被 19 個條目裡的 12 個載入，四批都有；`date-range-picker.css` 由 `components-showcase`（b1）與 `task-management/task-detail`（b2）載入；`task-config.css` 由 `task-management/task-detail`、`task-management/task-new`（b2）與 `annotation/annotation-workspace`（b3）載入。所以淺色主題的控制項外框幾乎在每個有表單控制項的視圖都變了。
+
+### 應重驗的批次（第六次）
+
+| 批次 | 依 `evidence`／`spec` 算出的 | 新增 | 該批的參數驅動視圖 |
+| :--- | ---: | ---: | ---: |
+| `b1-shared-account` | 17／43 | 0 | 0（`navigationBlob` 沒變） |
+| `b2-admin-dashboard-task` | 0／54 | 0 | 0（同上） |
+| `b3-annotation-review` | 0／25 | 0 | 0 |
+| `b4-dataset-sweep` | 0／30 | 0 | 0 |
+
+四批都要重驗，但只需要重看**顏色**：淺色主題的表單控制項外框（四批），日期區間與分類選擇觸發鈕的外框（b1 的 `components-showcase`、b2 的任務頁、b3 的標註工作區），以及帳號頁兩種主題的連結色（b1）。版面、文案、狀態都沒變。
+
+### 第五次
 
 [Issue #427](https://github.com/label-suite/label-suite/issues/427) 依對比裁定改了 token 與控制項外框：`tokens.css` 的次要文字色改值、新增 `--color-border-control`，主色當文字的宣告改用 `--color-primary-strong`，控制項外框改用 `--color-border-control`，日期選擇器的「今天」改用 `--color-primary` 邊框。同一段期間 main 改了兩份規格引用 prototype 的行號（只動行號，標題沒變）。
 
