@@ -154,7 +154,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #fff;
+      color: var(--color-on-cta);   /* 主色底上的字（#420 深色對比修正） */
       font-size: 24px;
       font-weight: 700;
       overflow: hidden;
@@ -311,7 +311,7 @@
       height: 28px;
       border: none;
       background: transparent;
-      color: #64748B;
+      color: var(--color-ink-muted);
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -319,7 +319,7 @@
       transition: color 0.15s;
     }
 
-    .eye-toggle:hover { color: #334155; }
+    .eye-toggle:hover { color: var(--color-ink); }
     .eye-toggle svg { width: 16px; height: 16px; }
 
     /* ── Info Banner ─────────────────────────────────────────────── */
@@ -546,7 +546,7 @@
 
     /* ── Skeleton ────────────────────────────────────────────────── */
     .skeleton {
-      background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+      background: linear-gradient(90deg, var(--color-border) 25%, var(--color-border-muted) 50%, var(--color-border) 75%);
       background-size: 200% 100%;
       animation: shimmer 1.5s infinite;
       border-radius: var(--radius-md);
@@ -647,17 +647,8 @@
     }
 
     /* ── Dark mode overrides ──────────────────────────────────── */
-    html[data-theme="dark"] {
-      /* Eye toggle — light values are MASTER-verbatim literals, so the
-         dark counterpart stays a manual override. */
-      .eye-toggle { color: var(--color-ink-muted); }
-      .eye-toggle:hover { color: var(--color-ink); }
-
-      /* Skeleton gradient */
-      .skeleton {
-        background: linear-gradient(90deg, #1F1F28 25%, #2A2A35 50%, #1F1F28 75%);
-      }
-    }
+    /* None needed: the eye toggle and the skeleton read tokens that flip in
+       tokens.css (#420). */
   </style>
 </head>
 <body>

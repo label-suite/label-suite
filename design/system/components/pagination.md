@@ -6,12 +6,12 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.pagination` 容器（`<nav aria-label="Pagination">`） | 必填 | `components-showcase.html:586`、樣本 `:1176` |
-| `.pagination-info` 總筆數與頁次 | 選用 | `pages/shared/list-page.css:82`、樣本 `components-showcase.html:1177` |
+| `.pagination` 容器（`<nav aria-label="Pagination">`） | 必填 | `components-showcase.html:584`、樣本 `:1174` |
+| `.pagination-info` 總筆數與頁次 | 選用 | `pages/shared/list-page.css:82`、樣本 `components-showcase.html:1175` |
 | `.pagination-controls` > `.page-btn` ×n ＋ `.page-ellipsis` | 必填 | `list-page.css:83`、`:94`、樣本 `:1178`–`:1186` |
-| `.page-size-select` 每頁筆數 | 選用 | `components-showcase.html:624`、`list-page.css:100` |
+| `.page-size-select` 每頁筆數 | 選用 | `components-showcase.html:622`、`list-page.css:100` |
 
-**最多 5 顆可見頁碼加省略號**（`components-showcase.html:1174` 的說明）；樣本是 `1 2 3 … 7`。
+**最多 5 顆可見頁碼加省略號**（`components-showcase.html:1172` 的說明）；樣本是 `1 2 3 … 7`。
 
 ## 變體
 
@@ -22,10 +22,10 @@
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
 | 預設 | 有 | `list-page.css:84` |
-| hover | 有。正典無條件套用；**shipped 版多了 `:not(:disabled):not(.active)` 兩個排除** | `components-showcase.html:609` vs `list-page.css:91` |
-| 目前頁 | 有。`.active` 實心 primary，樣本帶 `aria-current="page"` | `list-page.css:92`、樣本 `components-showcase.html:1180` |
-| disabled | 有。`opacity .4`；**shipped 版多 `pointer-events: none`** | `components-showcase.html:620` vs `list-page.css:93` |
-| focus | **未觀察到**。`.page-btn` 與 `.page-size-select` 兩份都沒有 `:focus`／`:focus-visible` | 正典 `components-showcase.html:585`–`:631` 0 命中；`list-page.css` 全檔只有 2 個 `:focus`，都在工具列（`:30` 的 `.search-input`、`:39` 的 `.filter-select`），分頁一個都沒有 → `../design-gaps.md` G-05 |
+| hover | 有。正典無條件套用；**shipped 版多了 `:not(:disabled):not(.active)` 兩個排除** | `components-showcase.html:607` vs `list-page.css:91` |
+| 目前頁 | 有。`.active` 實心 primary，樣本帶 `aria-current="page"` | `list-page.css:92`、樣本 `components-showcase.html:1178` |
+| disabled | 有。`opacity .4`；**shipped 版多 `pointer-events: none`** | `components-showcase.html:618` vs `list-page.css:93` |
+| focus | **未觀察到**。`.page-btn` 與 `.page-size-select` 兩份都沒有 `:focus`／`:focus-visible` | 正典 `components-showcase.html:583`–`:629` 0 命中；`list-page.css` 全檔只有 2 個 `:focus`，都在工具列（`:30` 的 `.search-input`、`:39` 的 `.filter-select`），分頁一個都沒有 → `../design-gaps.md` G-05 |
 | 載入中／錯誤 | 不適用 | — |
 | 空 | 未觀察到。沒有「0 筆時分頁長什麼樣」的樣式 | — |
 
@@ -33,7 +33,7 @@
 
 `--color-border`、`--color-border-control`、`--color-white`、`--color-ink`、`--color-primary`、`--color-primary-strong`、`--color-primary-soft-bg`、`--color-text-soft`、`--radius-md`、`--space-md`、`--space-lg`、`--space-xs`、`--dur-fast`。
 
-**一個色 token 兩份定義不一致**：`.page-btn.active` 的文字色，正典是 `--color-on-cta`（`components-showcase.html:617`，註解明寫「WCAG AA foreground token, issue singyichen/label-suite#1019」），shipped 的 `list-page.css:92` 是 `--color-white`。前者會隨主題換（深色下不是白），後者固定白 → `../design-gaps.md` G-12。
+**一個色 token 兩份定義不一致**：`.page-btn.active` 的文字色，正典是 `--color-on-cta`（`components-showcase.html:615`，註解明寫「WCAG AA foreground token, issue singyichen/label-suite#1019」），shipped 的 `list-page.css:92` 是 `--color-white`。淺色下兩者都是白；深色下兩者都不是白，但值不同——前者是 `--color-on-cta` 的深色值（深靛色），後者是 `--color-white` 的深色值（深色卡片底色），疊在深色 `--color-primary` 上的對比不同（`dataset-analysis-list` 實測）。`task-list` 與 `user-management` 在頁內改回 `--color-on-cta` → `../design-gaps.md` G-12。
 
 `.page-size-select` 與 `.filter-select` 的下拉箭頭是 data-URI SVG，裡面寫死 `%2394A3B8`（`list-page.css:103`、`:34`）。
 
@@ -43,11 +43,11 @@
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:585`–`:631`（正典）、`design/prototype/pages/shared/list-page.css:74`–`:105`（shipped，7 個頁面載入它）。
+`design/prototype/components-showcase.html:583`–`:629`（正典）、`design/prototype/pages/shared/list-page.css:74`–`:105`（shipped，7 個頁面載入它）。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-pagination`（`components-showcase.html:1172`）。
+`components-showcase#state-default` → `#comp-pagination`（`components-showcase.html:1170`）。
 
 ## shadcn 對照
 
@@ -63,9 +63,9 @@
 | :--- | :--- |
 | `components-showcase#state-default` | 樣本 |
 | `admin/user-management#state-default` | 本頁重寫的 `.page-btn`（`user-management.html:115`–`:133`） |
-| `task-management/task-list#state-default` | 本頁重寫的 `.page-btn`（`task-list.html:110`；markup `:262`–`:275`）；三種空／錯誤狀態整條隱藏 |
+| `task-management/task-list#state-default` | 本頁重寫的 `.page-btn`（`task-list.html:111`；markup `:256`–`:269`）；三種空／錯誤狀態整條隱藏 |
 | `task-management/task-detail`（`#tab-member-management`、`#tab-annotation-progress`、`#tab-annotation-results`、`#tab-work-log`） | 各 panel 的 `.page-btn`（`annotation-progress.html:134`、`annotation-results.html:63`、`:112` 等） |
-| `annotation/annotation-list#state-default` | `.pagination`（`annotation-list.html:517`），「共 N 筆 · 第 N / N 頁」 |
-| `dataset/dataset-analysis-list`（`#state-default`） | `list-page.css` 的 `.pagination`（`dataset-analysis-list.html:284`–`:300`），`.page-size-select` 與 `.page-btn`；目前頁 `aria-current="page"`（`dataset-analysis-list.view.js:239`） |
+| `annotation/annotation-list#state-default` | `.pagination`（`annotation-list.html:508`），「共 N 筆 · 第 N / N 頁」 |
+| `dataset/dataset-analysis-list`（`#state-default`） | `list-page.css` 的 `.pagination`（`dataset-analysis-list.html:285`–`:301`），`.page-size-select` 與 `.page-btn`；目前頁 `aria-current="page"`（`dataset-analysis-list.view.js:239`） |
 
 b1 的帳號頁一個都沒用。b2 已補上（見上表）。b3 已補上（見上表）。b4 已補上（見上表）。

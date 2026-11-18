@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/tokens.css" />
+  <link rel="stylesheet" href="assets/data-palette.css" />
   <link rel="stylesheet" href="pages/shared/date-range-picker.css" />
   <style>
     /* Living styleguide (issue singyichen/label-suite#183). Tokens come exclusively from
@@ -177,8 +178,8 @@
     /* Danger Button — destructive actions (logout, delete) */
     .btn-danger {
       background: transparent;
-      color: #B91C1C;           /* red-700 */
-      border: 1px solid #E2E8F0;
+      color: var(--color-error);
+      border: 1px solid var(--color-border);
       padding: 8px 12px;
       border-radius: var(--radius-md);
       font-weight: 500;
@@ -187,9 +188,9 @@
     }
 
     .btn-danger:hover {
-      color: #B91C1C;
-      background: #FEF2F2;      /* red-50 */
-      border-color: #FECACA;    /* red-200 */
+      color: var(--color-error);
+      background: var(--color-error-bg);
+      border-color: var(--color-error-border);
     }
 
     /* Ghost / Text Button — low-emphasis actions (view all, cancel) */
@@ -225,9 +226,9 @@
 
     /* OAuth Button — third-party auth entry (Google, GitHub) */
     .btn-oauth {
-      background: white;
-      color: #334155;           /* slate-700 */
-      border: 1px solid #E2E8F0;
+      background: var(--color-white);
+      color: var(--color-ink);
+      border: 1px solid var(--color-border-control);
       padding: 10px 16px;
       border-radius: var(--radius-md);
       font-weight: 500;
@@ -240,18 +241,18 @@
     }
 
     .btn-oauth:hover {
-      background: #F8FAFC;      /* slate-50 */
-      border-color: #CBD5E1;    /* slate-300 */
+      background: var(--color-slate-50);
+      border-color: var(--color-border-hover);
     }
 
     /* Icon-only Button — compact trigger (mobile menu, utility controls) */
     .btn-icon {
       width: 36px;
       height: 36px;
-      border: 1px solid #E2E8F0;
+      border: 1px solid var(--color-border-control);
       border-radius: var(--radius-md);
-      background: white;
-      color: #475569;           /* slate-600 */
+      background: var(--color-white);
+      color: var(--color-ink-muted);
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -260,16 +261,16 @@
     }
 
     .btn-icon:hover {
-      background: #F8FAFC;      /* slate-50 */
-      border-color: #CBD5E1;    /* slate-300 */
-      color: #1E293B;           /* slate-800 */
+      background: var(--color-slate-50);
+      border-color: var(--color-border-hover);
+      color: var(--color-ink);
     }
 
     /* Language Toggle Button — locale switcher (zh-TW / EN) */
     .btn-language {
-      background: white;
-      color: #334155;           /* slate-700 */
-      border: 1px solid #E2E8F0;
+      background: var(--color-white);
+      color: var(--color-ink);
+      border: 1px solid var(--color-border-control);
       padding: 8px 12px;
       min-height: 36px;
       border-radius: var(--radius-md);
@@ -283,8 +284,8 @@
     }
 
     .btn-language:hover {
-      background: #F8FAFC;      /* slate-50 */
-      border-color: #CBD5E1;    /* slate-300 */
+      background: var(--color-slate-50);
+      border-color: var(--color-border-hover);
     }
 
     .input {
@@ -302,15 +303,15 @@
     }
 
     .input.error {
-      border-color: #B91C1C;
+      border-color: var(--color-error);
     }
 
     /* Readonly — managed by system, not user-editable (e.g. SSO email) */
     .input[readonly],
     .input.readonly {
-      background: #F8FAFC;      /* slate-50 */
-      border-color: #F1F5F9;    /* slate-100 */
-      color: #94A3B8;            /* slate-400 */
+      background: var(--color-slate-50);
+      border-color: var(--color-border-muted);
+      color: var(--color-ink-muted);
       cursor: not-allowed;
     }
 
@@ -319,14 +320,14 @@
       margin-top: 6px;
       font-size: 12px;
       line-height: 1.4;
-      color: #64748B;            /* slate-500 */
+      color: var(--color-ink-muted);
     }
 
     .field-error {
       margin-top: 6px;
       font-size: 12px;
       line-height: 1.4;
-      color: #B91C1C;            /* red-700 */
+      color: var(--color-error);
     }
 
     .toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
@@ -350,8 +351,8 @@
     }
 
     /* §Semantic State Colors — Task Status Badge Mapping (values from table) */
-    .badge-draft          { color: #4B5563; background: #F9FAFB; border-color: #E5E7EB; }
-    .badge-dry-run-status { color: #6B7280; background: #F3F4F6; border-color: #D1D5DB; }
+    .badge-draft          { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
+    .badge-dry-run-status { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
     .badge-iaa            { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
     .badge-in-progress    { color: var(--color-info); background: var(--color-info-bg); border-color: var(--color-info-border); }
     .badge-completed      { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
@@ -453,7 +454,7 @@
 
     /* §Skeleton — Variant B shimmer (verbatim) */
     .skeleton {
-      background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+      background: linear-gradient(90deg, var(--color-border) 25%, var(--color-border-muted) 50%, var(--color-border) 75%);
       background-size: 200% 100%;
       animation: skeleton-shimmer 1.5s infinite;
       border-radius: var(--radius-md);
@@ -465,9 +466,6 @@
     @keyframes skeleton-shimmer {
       0%   { background-position: 200% 0; }
       100% { background-position: -200% 0; }
-    }
-    html[data-theme="dark"] .skeleton {
-      background-image: linear-gradient(90deg, #1F1F28 25%, #2A2A35 50%, #1F1F28 75%);
     }
 
     /* §Chip — interactive select chip (verbatim) */
@@ -543,9 +541,9 @@
       border-radius: 9999px;
       font-size: 12px;
       white-space: nowrap;
-      background: #EDE9FE;              /* violet-100 */
-      color: #5B21B6;                    /* violet-800 */
-      border: 1px solid #DDD6FE;        /* violet-200 */
+      background: var(--color-accent-bg);
+      color: var(--color-accent);
+      border: 1px solid var(--color-accent-border);
     }
     .ar-va-chip {
       display: inline-flex;
@@ -557,8 +555,8 @@
       border: 1px solid;
       white-space: nowrap;
     }
-    .ar-va-chip-normal  { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
-    .ar-va-chip-outlier { background: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }
+    .ar-va-chip-normal  { background: var(--color-success-bg); color: var(--color-success); border-color: var(--color-success-border); }
+    .ar-va-chip-outlier { background: var(--color-error-bg); color: var(--color-error); border-color: var(--color-error-border); }
     .round-metric-chip {
       display: inline-flex;
       align-items: center;
@@ -647,7 +645,7 @@
       text-decoration: underline;
     }
     .breadcrumb-sep {
-      color: var(--color-ink-muted);             /* #94A3B8 */
+      color: var(--color-ink-muted);
       font-size: 11px;
     }
 
@@ -839,7 +837,7 @@
     .divider-text span { font-size: 14px; color: var(--color-ink-muted); }  /* text-sm text-slate-400 */
     .divider-list { list-style: none; }
     .divider-list li { padding: 16px 0; font-size: 14px; }    /* py-4 */
-    .divider-list li + li { border-top: 1px solid #F1F5F9; }  /* divide-slate-100 — MASTER §Divider list variant literal */
+    .divider-list li + li { border-top: 1px solid var(--color-border-muted); }  /* divide-slate-100 */
 
     /* §State Panel — token-rendered (MASTER §State Panel ships Tailwind-only
        samples; mapped to tokens here per the Divider precedent; rounded-md →
@@ -869,19 +867,19 @@
     }
     .state-panel-icon svg { width: 20px; height: 20px; }
     .state-panel--success .state-panel-icon {
-      background: #DCFCE7;      /* green-100 — MASTER §State Panel literal */
+      background: var(--color-success-border);   /* bg-green-100；圖示圓在 success-bg 面板上，用 -border 一階才分得出來（#420） */
       color: var(--color-success);               /* text-green-700 */
     }
     .state-panel--error .state-panel-icon {
-      background: #FEE2E2;      /* red-100 — MASTER §State Panel literal */
+      background: var(--color-error-border);     /* bg-red-100；同上 */
       color: var(--color-error);                 /* text-red-700 */
     }
     .state-panel-title {
       font-size: 16px;                           /* text-base */
       font-weight: 600;                          /* font-semibold */
     }
-    .state-panel--success .state-panel-title { color: #166534; }  /* green-800 — MASTER §State Panel literal */
-    .state-panel--error .state-panel-title { color: #991B1B; }    /* red-800 — MASTER §State Panel literal */
+    .state-panel--success .state-panel-title { color: var(--color-success); }  /* text-green-800 → success 族（#420 Q3） */
+    .state-panel--error .state-panel-title { color: var(--color-error); }      /* text-red-800 → error 族（#420 Q3） */
     .state-panel-desc {
       margin-top: 4px;                           /* mt-1 */
       font-size: 14px;                           /* text-sm */
@@ -1239,20 +1237,20 @@
         <h3>Color Dot</h3>
         <p class="component-note">§Color Dot — 三種尺寸：標準 20×20（4px 圓角方，表單實體類型列）/ 預覽 12×12 / 狀態圓點 .t-dot 8×8（IAA 門檻通過與否）；顏色一律以 inline style.background 套用。</p>
         <div class="component-demo">
-          <!-- Default 8-color palette — hex values verbatim from MASTER §Color Dot -->
-          <span class="entity-color-dot" style="background: #6366F1" title="#6366F1"></span>
-          <span class="entity-color-dot" style="background: #10B981" title="#10B981"></span>
-          <span class="entity-color-dot" style="background: #F59E0B" title="#F59E0B"></span>
-          <span class="entity-color-dot" style="background: #EC4899" title="#EC4899"></span>
-          <span class="entity-color-dot" style="background: #8B5CF6" title="#8B5CF6"></span>
-          <span class="entity-color-dot" style="background: #0EA5E9" title="#0EA5E9"></span>
-          <span class="entity-color-dot" style="background: #F97316" title="#F97316"></span>
-          <span class="entity-color-dot" style="background: #14B8A6" title="#14B8A6"></span>
+          <!-- Default 8-color palette — assets/data-palette.css --data-entity-1..8 (#420 Q4), same values as ENTITY_COLORS -->
+          <span class="entity-color-dot" style="background: var(--data-entity-1)" title="--data-entity-1"></span>
+          <span class="entity-color-dot" style="background: var(--data-entity-2)" title="--data-entity-2"></span>
+          <span class="entity-color-dot" style="background: var(--data-entity-3)" title="--data-entity-3"></span>
+          <span class="entity-color-dot" style="background: var(--data-entity-4)" title="--data-entity-4"></span>
+          <span class="entity-color-dot" style="background: var(--data-entity-5)" title="--data-entity-5"></span>
+          <span class="entity-color-dot" style="background: var(--data-entity-6)" title="--data-entity-6"></span>
+          <span class="entity-color-dot" style="background: var(--data-entity-7)" title="--data-entity-7"></span>
+          <span class="entity-color-dot" style="background: var(--data-entity-8)" title="--data-entity-8"></span>
         </div>
         <div class="component-demo">
-          <span class="annotation-preview-color" style="background: #6366F1"></span>
-          <span class="annotation-preview-color" style="background: #10B981"></span>
-          <span class="annotation-preview-color" style="background: #F59E0B"></span>
+          <span class="annotation-preview-color" style="background: var(--data-entity-1)"></span>
+          <span class="annotation-preview-color" style="background: var(--data-entity-2)"></span>
+          <span class="annotation-preview-color" style="background: var(--data-entity-3)"></span>
           <span class="t-dot" style="background: var(--color-success)" title="IAA 達標"></span>
           <span class="t-dot" style="background: var(--color-error)" title="IAA 未達標"></span>
         </div>

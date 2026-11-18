@@ -1267,7 +1267,7 @@ function renderOutputTypeFields(container, outKey) {
             row.className = 'entity-row';
             var dot = document.createElement('div');
             dot.className = 'entity-color-dot';
-            dot.style.background = ent.color || ENTITY_COLORS[i % ENTITY_COLORS.length];
+            dot.style.background = entityPaintColor(ent.color || ENTITY_COLORS[i % ENTITY_COLORS.length]);
             var nameInp = document.createElement('input');
             nameInp.type = 'text'; nameInp.className = 'entity-name-input';
             nameInp.value = ent.name;
@@ -2117,7 +2117,7 @@ function buildRelationStateMachine(container, relationTypes, refresh, allowEntit
     b.type = 'button';
     b.disabled = !enabled;
     var base = 'padding:4px 12px;border-radius:6px;font-size:0.8rem;font-weight:600;transition:all 0.15s;';
-    if (enabled) b.style.cssText = base + 'border:1.5px solid var(--color-primary);background:var(--color-primary);color:#fff;cursor:pointer;';
+    if (enabled) b.style.cssText = base + 'border:1.5px solid var(--color-primary);background:var(--color-primary);color:var(--color-on-cta);cursor:pointer;';
     else b.style.cssText = base + 'border:1.5px solid var(--color-border);background:transparent;color:var(--color-text-soft);cursor:not-allowed;opacity:0.6;';
     b.textContent = label;
     if (enabled) b.addEventListener('click', onClick);
@@ -2193,7 +2193,7 @@ function buildEntityListRow(ent, color, opts) {
   row.setAttribute('data-testid', (opts && opts.testid) || 'entity-list-row');
   row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 10px;margin-bottom:4px;background:var(--color-slate-50);border-radius:6px;font-size:0.85rem;';
   var badge = document.createElement('span');
-  badge.style.cssText = 'display:inline-block;padding:1px 6px;border-radius:4px;font-size:0.7rem;font-weight:700;color:#fff;background:' + (color || '#6366F1') + ';flex-shrink:0;';
+  badge.style.cssText = 'display:inline-block;padding:1px 6px;border-radius:4px;font-size:0.7rem;font-weight:700;color:var(--color-on-cta);background:' + entityPaintColor(color || ENTITY_COLORS[0]) + ';flex-shrink:0;';
   badge.textContent = ent.type;
   row.appendChild(badge);
   var txt = document.createElement('span');
@@ -2369,8 +2369,8 @@ function fillDialogueUtterance(txEl, text, uttId) {
     var span = document.createElement('span');
     span.className = 'absa-span-highlight';
     if (rs && rs.start <= ent.start && rs.end >= ent.end) span.classList.add('rel-sel-highlight');
-    var c = colorMap[ent.type] || '#6366F1';
-    span.style.background = c + '33'; span.style.borderBottom = '2px solid ' + c; span.style.color = c;
+    var c = colorMap[ent.type] || ENTITY_COLORS[0];
+    span.style.background = entityWashColor(c); span.style.borderBottom = '2px solid ' + entityPaintColor(c); span.style.color = entityPaintColor(c);
     span.title = ent.type + ' (#' + ent.utt_id + ':' + ent.start + ',' + ent.end + ')';
     span.appendChild(document.createTextNode(text.substring(ent.start, ent.end)));
     txEl.appendChild(span);
@@ -2546,8 +2546,8 @@ function renderAbsaUnifiedPreview(previewContainer) {
         var _rsEnd = state.relSel.start + (state.relSel.text ? state.relSel.text.length : 0);
         if (state.relSel.start <= ent.start && _rsEnd >= _entEnd) span.classList.add('rel-sel-highlight');
       }
-      var c = typeColorMap[ent.type] || '#6366F1';
-      span.style.background = c + '33'; span.style.borderBottom = '2px solid ' + c; span.style.color = c;
+      var c = typeColorMap[ent.type] || ENTITY_COLORS[0];
+      span.style.background = entityWashColor(c); span.style.borderBottom = '2px solid ' + entityPaintColor(c); span.style.color = entityPaintColor(c);
       span.title = ent.type + ' (' + ent.start + ',' + ent.end + ')';
       span.appendChild(document.createTextNode(ent.text || realText.substring(ent.start, ent.end + 1)));
       textEl.appendChild(span);
@@ -2619,11 +2619,12 @@ function renderAbsaUnifiedPreview(previewContainer) {
     var legendRow = document.createElement('div');
     legendRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;';
     typeOrder.forEach(function(typeName) {
-      var c = typeColorMap[typeName] || '#6366F1';
+      var c = typeColorMap[typeName] || ENTITY_COLORS[0];
       var chip = document.createElement('button');
       chip.type = 'button';
       var isActive = state.activeEntityType === typeName;
-      chip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ' + c + ';color:' + (isActive ? '#fff' : c) + ';background:' + (isActive ? c : 'transparent') + ';transition:all 0.15s;';
+      chip.className = 'chip' + (isActive ? ' is-active' : '');
+      chip.style.setProperty('--chip-color', entityPaintColor(c));
       chip.textContent = typeName;
       chip.addEventListener('click', function() {
         if (state.relSel) {
@@ -2652,7 +2653,7 @@ function renderAbsaUnifiedPreview(previewContainer) {
       var elWrap = document.createElement('div');
       elWrap.style.cssText = 'margin-bottom:12px;max-height:200px;overflow-y:auto;';
       state.previewEntities.forEach(function(ent, i) {
-        elWrap.appendChild(buildEntityListRow(ent, typeColorMap[ent.type] || '#6366F1', {
+        elWrap.appendChild(buildEntityListRow(ent, typeColorMap[ent.type] || ENTITY_COLORS[0], {
           lang: state.lang,
           onDelete: function() { state.previewEntities.splice(i, 1); renderAbsaUnifiedPreview_refresh(previewContainer); }
         }));
@@ -2827,13 +2828,12 @@ function reconcileOutputConfigs() {
 
 function makeBypassChip(outKey, refresh, labelText) {
   var active = !!state.previewBypass[outKey];
-  var c = '#64748B';
   var chip = document.createElement('button');
   chip.type = 'button';
   chip.setAttribute('aria-pressed', active ? 'true' : 'false');
-  chip.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;font-size:0.8rem;font-weight:600;cursor:pointer;transition:all 0.15s;border:2px dashed ' + c + ';color:' + (active ? '#fff' : c) + ';background:' + (active ? c : 'transparent') + ';';
+  chip.className = 'chip chip--bypass' + (active ? ' is-active' : '');
   var box = document.createElement('span');
-  box.style.cssText = 'width:14px;height:14px;border-radius:3px;border:2px solid ' + (active ? '#fff' : c) + ';display:inline-flex;align-items:center;justify-content:center;font-size:10px;';
+  box.className = 'chip-mark chip-mark--box';
   if (active) box.innerHTML = taxonomyIcon(LUCIDE_CHECK, 10); /* static markup */
   chip.appendChild(box);
   chip.appendChild(document.createTextNode(labelText));
@@ -2897,11 +2897,11 @@ function renderSingleLabelPreview(container, outKey) {
     var chip = document.createElement('button');
     chip.type = 'button';
     var isActive = ps.selected === label.name;
-    var c = safeCssColor(label.color, '#6366F1');
-    chip.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;border:2px solid ' + c + ';color:' + (isActive ? '#fff' : c) + ';background:' + (isActive ? c : 'transparent') + ';transition:all 0.15s;';
+    var c = safeCssColor(label.color, ENTITY_COLORS[0]);
+    chip.className = 'chip chip--lg' + (isActive ? ' is-active' : '');
+    chip.style.setProperty('--chip-color', entityPaintColor(c));
     var radio = document.createElement('span');
-    radio.style.cssText = 'width:14px;height:14px;border-radius:50%;border:2px solid ' + (isActive ? '#fff' : c) + ';display:inline-flex;align-items:center;justify-content:center;';
-    if (isActive) { var dot = document.createElement('span'); dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:#fff;'; radio.appendChild(dot); }
+    radio.className = 'chip-mark chip-mark--radio';
     chip.appendChild(radio);
     chip.appendChild(document.createTextNode(label.name));
     chip.addEventListener('click', function() { ps.selected = ps.selected === label.name ? null : label.name; refreshOutputPreview(container, outKey); });
@@ -3353,13 +3353,13 @@ function renderSpanTaggingPreview(container, outKey) {
     var el = document.createElement('span');
     if (spanIndex !== undefined) {
       var span = ps.spans[spanIndex];
-      var color = labelColor[span.label] || '#6366F1';
+      var color = labelColor[span.label] || ENTITY_COLORS[0];
       el.className = 'absa-span-highlight';
       el.setAttribute('data-testid', 'sequence-span');
       el.setAttribute('data-start', String(span.start));
       el.setAttribute('data-end', String(span.end));
       el.setAttribute('data-label', span.label);
-      el.style.cssText = 'background:' + color + '33;border-bottom:2px solid ' + color + ';color:' + color + ';';
+      el.style.cssText = 'background:' + entityWashColor(color) + ';border-bottom:2px solid ' + entityPaintColor(color) + ';color:' + entityPaintColor(color) + ';';
       el.title = span.label;
       if (blockingSpanIndexes[spanIndex]) {
         el.setAttribute('data-overlap-blocked', 'true');
@@ -3425,11 +3425,12 @@ function renderSpanTaggingPreview(container, outKey) {
   var chipWrap = document.createElement('div');
   chipWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;';
   labels.forEach(function(label) {
-    var color = labelColor[label.name] || '#6366F1';
+    var color = labelColor[label.name] || ENTITY_COLORS[0];
     var chip = document.createElement('button');
     chip.type = 'button';
     chip.setAttribute('data-testid', 'sequence-label-option');
-    chip.style.cssText = 'padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ' + color + ';color:' + color + ';background:transparent;';
+    chip.className = 'chip';
+    chip.style.setProperty('--chip-color', entityPaintColor(color));
     chip.textContent = label.name;
     chip.addEventListener('click', function() {
       var selected = ps.pendingSelection;
@@ -3465,7 +3466,7 @@ function renderSpanTaggingPreview(container, outKey) {
     ps.spans.forEach(function(span, i) {
       var row = buildEntityListRow(
         { type: span.label, text: text.substring(span.start, span.end), start: span.start, end: span.end },
-        labelColor[span.label] || '#6366F1',
+        labelColor[span.label] || ENTITY_COLORS[0],
         {
           lang: state.lang,
           testid: 'sequence-span-item',
@@ -3515,8 +3516,8 @@ function renderSpanOnlyPreview(container, outKey) {
         var entEnd = ent.start + (ent.text || realText.substring(ent.start, (ent.end || ent.start) + 1)).length - 1;
         if (ps.pendingSelection.start <= ent.start && ps.pendingSelection.end >= entEnd) span.classList.add('rel-sel-highlight');
       }
-      var c = typeColorMap[ent.type] || '#6366F1';
-      span.style.background = c + '33'; span.style.borderBottom = '2px solid ' + c; span.style.color = c; span.title = ent.type;
+      var c = typeColorMap[ent.type] || ENTITY_COLORS[0];
+      span.style.background = entityWashColor(c); span.style.borderBottom = '2px solid ' + entityPaintColor(c); span.style.color = entityPaintColor(c); span.title = ent.type;
       span.appendChild(document.createTextNode(ent.text || realText.substring(ent.start, ent.end + 1)));
       textEl.appendChild(span);
       charPos = (ent.end || ent.start) + 1;
@@ -3552,10 +3553,11 @@ function renderSpanOnlyPreview(container, outKey) {
   var legendRow = document.createElement('div');
   legendRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;';
   typeOrder.forEach(function(typeName) {
-    var c = typeColorMap[typeName] || '#6366F1';
+    var c = typeColorMap[typeName] || ENTITY_COLORS[0];
     var chip = document.createElement('button'); chip.type = 'button';
     var isActive = state.activeEntityType === typeName;
-    chip.style.cssText = 'padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ' + c + ';color:' + (isActive ? '#fff' : c) + ';background:' + (isActive ? c : 'transparent') + ';';
+    chip.className = 'chip' + (isActive ? ' is-active' : '');
+    chip.style.setProperty('--chip-color', entityPaintColor(c));
     chip.textContent = typeName;
     chip.addEventListener('click', function() {
       if (ps.pendingSelection) {
@@ -3586,7 +3588,7 @@ function renderSpanOnlyPreview(container, outKey) {
     var elWrap = document.createElement('div');
     elWrap.style.cssText = 'max-height:160px;overflow-y:auto;';
     state.previewEntities.forEach(function(ent, i) {
-      elWrap.appendChild(buildEntityListRow(ent, typeColorMap[ent.type] || '#6366F1', {
+      elWrap.appendChild(buildEntityListRow(ent, typeColorMap[ent.type] || ENTITY_COLORS[0], {
         lang: state.lang,
         onDelete: function() { state.previewEntities.splice(i, 1); refreshOutputPreview(container, outKey); }
       }));
@@ -4119,7 +4121,7 @@ function buildEntityList(field) {
 
       var dot = document.createElement('div');
       dot.className = 'entity-color-dot';
-      dot.style.background = ent.color || ENTITY_COLORS[i % ENTITY_COLORS.length];
+      dot.style.background = entityPaintColor(ent.color || ENTITY_COLORS[i % ENTITY_COLORS.length]);
 
       var nameInp = document.createElement('input');
       nameInp.type = 'text'; nameInp.className = 'entity-name-input';
@@ -4555,12 +4557,12 @@ function renderRelationExtractionPreview(preview, config) {
 
   var btnsRow = document.createElement('div');
   btnsRow.className = 're-preview-entity-btns';
-  (entityTypes.length ? entityTypes : [{ name: 'BODY', color: '#6366F1' }, { name: 'SYMP', color: '#F59E0B' }]).forEach(function(et) {
+  (entityTypes.length ? entityTypes : [{ name: 'BODY', color: ENTITY_COLORS[0] }, { name: 'SYMP', color: ENTITY_COLORS[2] }]).forEach(function(et) {
     var btn = document.createElement('span');
     btn.className = 're-preview-entity-btn';
     btn.textContent = et.name;
-    btn.style.borderColor = et.color || '#94A3B8';
-    btn.style.color = et.color || '#94A3B8';
+    btn.style.borderColor = et.color ? entityPaintColor(et.color) : 'var(--color-border-control)';
+    btn.style.color = et.color ? entityPaintColor(et.color) : 'var(--color-ink-muted)';
     btnsRow.appendChild(btn);
   });
   preview.appendChild(btnsRow);
@@ -4572,8 +4574,8 @@ function renderRelationExtractionPreview(preview, config) {
   preview.appendChild(elLabel);
 
   var sampleEntities = state.lang === 'zh'
-    ? [{ text: '阿司匹靈', type: 'DRUG', color: '#10B981' }, { text: '頭痛', type: 'SYMP', color: '#F59E0B' }]
-    : [{ text: 'Aspirin', type: 'DRUG', color: '#10B981' }, { text: 'headache', type: 'SYMP', color: '#F59E0B' }];
+    ? [{ text: '阿司匹靈', type: 'DRUG', color: ENTITY_COLORS[1] }, { text: '頭痛', type: 'SYMP', color: ENTITY_COLORS[2] }]
+    : [{ text: 'Aspirin', type: 'DRUG', color: ENTITY_COLORS[1] }, { text: 'headache', type: 'SYMP', color: ENTITY_COLORS[2] }];
   var entityListEl = document.createElement('div');
   entityListEl.className = 're-preview-entity-list';
   sampleEntities.forEach(function(e) {

@@ -4,19 +4,15 @@
  * (tokens come from the artifact's compiled tokens.css) and account-page blocks are scoped
  * under .auth-page. Where the showcase and a shared file disagree, the shared file wins and
  * the ruled side of each design gap is kept (G-01: the solid .btn-danger from modal.css).
- * login.html's dark block (:368-394) is not copied: its re-mapped values equal the dark tokens,
- * and its .login-btn / .sso-btn rules belong to buttons G-03 maps onto the canonical variants.
+ * The account pages load tokens.css since #420 (G-03), so they no longer carry a :root mirror
+ * or a dark block; their .login-btn / .sso-btn rules belong to buttons G-03 maps onto the
+ * canonical variants and are not copied. Data colours (task-type badges, entity dots) come from
+ * design/prototype/assets/data-palette.css, copied below because the compiled tokens.css does
+ * not hold them.
  */
 @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap');
 
-/* Page-local aliases the account pages use (login.html :root); bound to tokens so both themes follow. */
-:root {
-  --color-card: var(--color-white);
-  --color-border-focus: var(--color-primary);
-  --color-link: var(--color-primary-strong);
-}
-
-/* ═══ Source: design/prototype/assets/tokens.css:235-279 — semantic type rules (element rules the compiled tokens.css does not emit) ═══ */
+/* ═══ Source: design/prototype/assets/tokens.css:272-316 — semantic type rules (element rules the compiled tokens.css does not emit) ═══ */
 /* ── Semantic type rules ──────────────────────────────────── */
 html[lang="zh-TW"] body,
 html[lang="zh"] body { line-height: var(--leading-body-zh); }
@@ -63,16 +59,16 @@ code, kbd, pre, .mono {
   font-size: 0.95em;
 }
 
-/* ═══ Source: design/prototype/components-showcase.html:15 — box-sizing / margin reset ═══ */
+/* ═══ Source: design/prototype/components-showcase.html:17 — box-sizing / margin reset ═══ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ═══ Source: design/prototype/components-showcase.html:129-132 — element-level button / input resets ═══ */
+/* ═══ Source: design/prototype/components-showcase.html:131-134 — element-level button / input resets ═══ */
 /* Element-level resets: lower specificity than the canonical .btn-* /
    .input class rules below, so every canonical declaration wins. */
 button { font-family: inherit; font-size: 14px; border: none; background: transparent; }
 input { font-family: inherit; }
 
-/* ═══ Source: design/prototype/components-showcase.html:210-287 — Buttons: loading, disabled, oauth, icon, language (primary / secondary / ghost come from button.css; the outline .btn-danger at :176-192 is left out per G-01) ═══ */
+/* ═══ Source: design/prototype/components-showcase.html:212-289 — Buttons: loading, disabled, oauth, icon, language (primary / secondary / ghost come from button.css; the outline .btn-danger at :178-194 is left out per G-01) ═══ */
 /* Loading state — applies to any button variant */
 .btn-loading {
   opacity: 0.7;
@@ -90,9 +86,9 @@ button[disabled] {
 
 /* OAuth Button — third-party auth entry (Google, GitHub) */
 .btn-oauth {
-  background: white;
-  color: #334155;           /* slate-700 */
-  border: 1px solid #E2E8F0;
+  background: var(--color-white);
+  color: var(--color-ink);
+  border: 1px solid var(--color-border-control);
   padding: 10px 16px;
   border-radius: var(--radius-md);
   font-weight: 500;
@@ -105,18 +101,18 @@ button[disabled] {
 }
 
 .btn-oauth:hover {
-  background: #F8FAFC;      /* slate-50 */
-  border-color: #CBD5E1;    /* slate-300 */
+  background: var(--color-slate-50);
+  border-color: var(--color-border-hover);
 }
 
 /* Icon-only Button — compact trigger (mobile menu, utility controls) */
 .btn-icon {
   width: 36px;
   height: 36px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border-control);
   border-radius: var(--radius-md);
-  background: white;
-  color: #475569;           /* slate-600 */
+  background: var(--color-white);
+  color: var(--color-ink-muted);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -125,16 +121,16 @@ button[disabled] {
 }
 
 .btn-icon:hover {
-  background: #F8FAFC;      /* slate-50 */
-  border-color: #CBD5E1;    /* slate-300 */
-  color: #1E293B;           /* slate-800 */
+  background: var(--color-slate-50);
+  border-color: var(--color-border-hover);
+  color: var(--color-ink);
 }
 
 /* Language Toggle Button — locale switcher (zh-TW / EN) */
 .btn-language {
-  background: white;
-  color: #334155;           /* slate-700 */
-  border: 1px solid #E2E8F0;
+  background: var(--color-white);
+  color: var(--color-ink);
+  border: 1px solid var(--color-border-control);
   padding: 8px 12px;
   min-height: 36px;
   border-radius: var(--radius-md);
@@ -148,8 +144,8 @@ button[disabled] {
 }
 
 .btn-language:hover {
-  background: #F8FAFC;      /* slate-50 */
-  border-color: #CBD5E1;    /* slate-300 */
+  background: var(--color-slate-50);
+  border-color: var(--color-border-hover);
 }
 
 /* ═══ Source: design/prototype/pages/shared/button.css ═══ */
@@ -344,17 +340,17 @@ button[disabled] {
   min-height: 100px;
 }
 
-/* ═══ Source: design/prototype/components-showcase.html:303-329 — Inputs: error, readonly, field-hint, field-error (the base .input comes from input.css) ═══ */
+/* ═══ Source: design/prototype/components-showcase.html:305-331 — Inputs: error, readonly, field-hint, field-error (the base .input comes from input.css) ═══ */
 .input.error {
-  border-color: #B91C1C;
+  border-color: var(--color-error);
 }
 
 /* Readonly — managed by system, not user-editable (e.g. SSO email) */
 .input[readonly],
 .input.readonly {
-  background: #F8FAFC;      /* slate-50 */
-  border-color: #F1F5F9;    /* slate-100 */
-  color: #94A3B8;            /* slate-400 */
+  background: var(--color-slate-50);
+  border-color: var(--color-border-muted);
+  color: var(--color-ink-muted);
   cursor: not-allowed;
 }
 
@@ -363,17 +359,17 @@ button[disabled] {
   margin-top: 6px;
   font-size: 12px;
   line-height: 1.4;
-  color: #64748B;            /* slate-500 */
+  color: var(--color-ink-muted);
 }
 
 .field-error {
   margin-top: 6px;
   font-size: 12px;
   line-height: 1.4;
-  color: #B91C1C;            /* red-700 */
+  color: var(--color-error);
 }
 
-/* ═══ Source: design/prototype/components-showcase.html:331-336 — Toggle Switch ═══ */
+/* ═══ Source: design/prototype/components-showcase.html:333-338 — Toggle Switch ═══ */
 .toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
 .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
 .toggle-slider { position: absolute; inset: 0; background: var(--color-border); border-radius: var(--radius-full); cursor: pointer; transition: background var(--dur-fast); }
@@ -381,7 +377,7 @@ button[disabled] {
 .toggle-switch input:checked + .toggle-slider { background: var(--color-primary); }
 .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
 
-/* ═══ Source: design/prototype/components-showcase.html:338-583 — Badge, Status Pill, Alert Banner, Toast, Skeleton, Chip ═══ */
+/* ═══ Source: design/prototype/components-showcase.html:340-582 — Badge, Status Pill, Alert Banner, Toast, Skeleton, Chip ═══ */
 /* §Semantic State Colors — base badge CSS (verbatim) */
 .badge {
   display: inline-flex;
@@ -396,8 +392,8 @@ button[disabled] {
 }
 
 /* §Semantic State Colors — Task Status Badge Mapping (values from table) */
-.badge-draft          { color: #4B5563; background: #F9FAFB; border-color: #E5E7EB; }
-.badge-dry-run-status { color: #6B7280; background: #F3F4F6; border-color: #D1D5DB; }
+.badge-draft          { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
+.badge-dry-run-status { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
 .badge-iaa            { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
 .badge-in-progress    { color: var(--color-info); background: var(--color-info-bg); border-color: var(--color-info-border); }
 .badge-completed      { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
@@ -499,7 +495,7 @@ button[disabled] {
 
 /* §Skeleton — Variant B shimmer (verbatim) */
 .skeleton {
-  background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+  background: linear-gradient(90deg, var(--color-border) 25%, var(--color-border-muted) 50%, var(--color-border) 75%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.5s infinite;
   border-radius: var(--radius-md);
@@ -511,9 +507,6 @@ button[disabled] {
 @keyframes skeleton-shimmer {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
-}
-html[data-theme="dark"] .skeleton {
-  background-image: linear-gradient(90deg, #1F1F28 25%, #2A2A35 50%, #1F1F28 75%);
 }
 
 /* §Chip — interactive select chip (verbatim) */
@@ -589,9 +582,9 @@ html[data-theme="dark"] .skeleton {
   border-radius: 9999px;
   font-size: 12px;
   white-space: nowrap;
-  background: #EDE9FE;              /* violet-100 */
-  color: #5B21B6;                    /* violet-800 */
-  border: 1px solid #DDD6FE;        /* violet-200 */
+  background: var(--color-accent-bg);
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent-border);
 }
 .ar-va-chip {
   display: inline-flex;
@@ -603,8 +596,8 @@ html[data-theme="dark"] .skeleton {
   border: 1px solid;
   white-space: nowrap;
 }
-.ar-va-chip-normal  { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
-.ar-va-chip-outlier { background: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }
+.ar-va-chip-normal  { background: var(--color-success-bg); color: var(--color-success); border-color: var(--color-success-border); }
+.ar-va-chip-outlier { background: var(--color-error-bg); color: var(--color-error); border-color: var(--color-error-border); }
 .round-metric-chip {
   display: inline-flex;
   align-items: center;
@@ -629,27 +622,143 @@ html[data-theme="dark"] .skeleton {
   font-weight: 600;
 }
 
+/* ═══ Source: design/prototype/assets/data-palette.css — data colours (#420 Q4); the compiled tokens.css does not hold them ═══ */
+/* ═══════════════════════════════════════════════════════════════
+   Label Suite — Data Palette
+   資料色：用來區分「哪一筆資料」，不帶語意（成功／錯誤等語意色在 tokens.css）。
+   維護者 2026-11-18 裁定（#420 Q4、Q5）：資料色集中在本檔，淺深兩組。
+   載入順序：放在 tokens.css 之後；本檔只宣告變數，不寫任何元件規則。
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── 實體／標籤 8 色盤 ──────────────────────────────────────
+     JS 端的同一組淺色值是 task-config.data.js 的 ENTITY_COLORS（唯一一份）：
+     任務設定存的是六位 hex（<input type="color"> 只吃這種），兩邊要一起改。
+     引擎上色時經 entityPaintColor() 把預設色換成這裡的變數，深色主題才換得到下面那組；
+     使用者自選、不在色盤裡的顏色照原值畫。 */
+  --data-entity-1: #6366F1;
+  --data-entity-2: #10B981;
+  --data-entity-3: #F59E0B;
+  --data-entity-4: #EC4899;
+  --data-entity-5: #8B5CF6;
+  --data-entity-6: #0EA5E9;
+  --data-entity-7: #F97316;
+  --data-entity-8: #14B8A6;
+
+  /* ── 試標輪次與資料切分圖（task-detail） ──────────────────── */
+  --data-round-1: var(--data-entity-1);
+  --data-round-2: var(--data-entity-3);
+  --data-round-3: var(--data-entity-4);
+  --data-round-4: var(--data-entity-5);
+  --data-round-5: var(--data-entity-6);
+  --data-split-official: var(--data-entity-8);   /* 正式標註保留量 */
+  --data-split-total:    #94A3B8;                /* 尚未切分的總數；只當色塊，不當文字 */
+
+  /* ── 任務類型徽章（pages/shared/task-type-badge.css） ──────── */
+  --data-task-type-single-fg:       #0E7490;
+  --data-task-type-single-bg:       #ECFEFF;
+  --data-task-type-single-border:   #A5F3FC;
+  --data-task-type-sequence-fg:     #7C2D12;
+  --data-task-type-sequence-bg:     #FFF7ED;
+  --data-task-type-sequence-border: #FDBA74;
+  --data-task-type-relation-fg:     #155E75;
+  --data-task-type-relation-bg:     #ECFEFF;
+  --data-task-type-relation-border: #67E8F9;
+  --data-task-type-pairs-fg:        #065F46;
+  --data-task-type-pairs-bg:        #ECFDF5;
+  --data-task-type-pairs-border:    #A7F3D0;
+  --data-task-type-scoring-fg:      #7E22CE;
+  --data-task-type-scoring-bg:      #FAF5FF;
+  --data-task-type-scoring-border:  #E9D5FF;
+  /* default 那組是中性灰，依 Q1 直接用 tokens.css 的 ink-muted／slate-50／border，不在本檔 */
+
+  /* ── 回歸評分維度（task-config.css 的 .regression-dimension-color-N） ── */
+  --data-regression-0: #4F46E5;
+  --data-regression-1: #0369A1;
+  --data-regression-2: #047857;
+  --data-regression-3: #B45309;
+  --data-regression-4: #BE185D;
+  --data-regression-5: #7E22CE;
+  --data-regression-6: #C2410C;
+  --data-regression-7: #0F766E;
+
+  /* ── 儀表板角色卡（dashboard.components.css，#420 Q5 併入資料色） ── */
+  --data-role-emerald-bg: #D1FAE5;
+  --data-role-emerald-fg: var(--color-cta-hover);
+  --data-role-violet-bg:  #EDE9FE;
+  --data-role-violet-fg:  #7C3AED;
+  --data-role-indigo-bg:  #E0E7FF;
+  --data-role-indigo-fg:  #4F46E5;
+}
+
+html[data-theme="dark"] {
+  /* 實體色盤：同色相的 400 階，比淺色那組亮，對深色卡片 --color-white 都在 6:1 以上
+     （當色塊、底線與標註文字用，至少要 3:1）；--color-on-cta 深色字疊上去也讀得到。
+     輪次與「正式標註保留量」是 var(--data-entity-N)，跟著換，不重宣告。 */
+  --data-entity-1: #818CF8;
+  --data-entity-2: #34D399;
+  --data-entity-3: #FBBF24;
+  --data-entity-4: #F472B6;
+  --data-entity-5: #A78BFA;
+  --data-entity-6: #38BDF8;
+  --data-entity-7: #FB923C;
+  --data-entity-8: #2DD4BF;
+  /* 尚未切分的總數：改用 Slate 500。Slate 400 在深色底上反而比各輪次的色塊亮，
+     會搶走焦點；Slate 500 對深色卡片 3.78:1，仍是看得見的色塊，但退在後面 */
+  --data-split-total: #64748B;
+
+
+  --data-task-type-single-fg:       #A5F3FC;
+  --data-task-type-single-bg:       #0C2230;
+  --data-task-type-single-border:   #155E75;
+  --data-task-type-sequence-fg:     #FB923C;
+  --data-task-type-sequence-bg:     #2A1805;
+  --data-task-type-sequence-border: #7C3A16;
+  --data-task-type-relation-fg:     #A5F3FC;
+  --data-task-type-relation-bg:     #0C2230;
+  --data-task-type-relation-border: #155E75;
+  --data-task-type-pairs-fg:        #4ADE80;
+  --data-task-type-pairs-bg:        #0F2A18;
+  --data-task-type-pairs-border:    #1F5132;
+  --data-task-type-scoring-fg:      #C084FC;
+  --data-task-type-scoring-bg:      #1A0A2E;
+  --data-task-type-scoring-border:  #4C1D95;
+
+  --data-regression-0: #A5B4FC;
+  --data-regression-1: #7DD3FC;
+  --data-regression-2: #6EE7B7;
+  --data-regression-3: #FCD34D;
+  --data-regression-4: #F9A8D4;
+  --data-regression-5: #D8B4FE;
+  --data-regression-6: #FDBA74;
+  --data-regression-7: #5EEAD4;
+
+  /* 深色角色卡反轉：實心底、淺字 */
+  --data-role-emerald-bg: #059669;
+  --data-role-emerald-fg: #D1FAE5;
+  --data-role-violet-bg:  #6D28D9;
+  --data-role-violet-fg:  #EDE9FE;
+  --data-role-indigo-bg:  #4338CA;
+  --data-role-indigo-fg:  #E0E7FF;
+}
+
 /* ═══ Source: design/prototype/pages/shared/task-type-badge.css — after the .badge base, as its header asks ═══ */
 /* Task-type badge palette — single source (issue singyichen/label-suite#1448 PR-C).
    Link AFTER the page's inline <style>: the page `.badge` base rule uses the
    `border: 1px solid transparent` shorthand, which would reset border-color
    at equal specificity if this file loaded first.
-   Dark rules are flat selectors (not CSS-nested) to keep specificity (0,2,1). */
-.badge-task-type-single   { color: #0E7490; background: #ECFEFF; border-color: #A5F3FC; }
-.badge-task-type-sequence { color: #7C2D12; background: #FFF7ED; border-color: #FDBA74; }
-.badge-task-type-relation { color: #155E75; background: #ECFEFF; border-color: #67E8F9; }
-.badge-task-type-pairs    { color: #065F46; background: #ECFDF5; border-color: #A7F3D0; }
-.badge-task-type-scoring  { color: #7E22CE; background: #FAF5FF; border-color: #E9D5FF; }
-.badge-task-type-default  { color: #334155; background: #F8FAFC; border-color: #CBD5E1; }
+   Colours come from assets/data-palette.css (#420 Q4), which owns the light
+   and dark sets, so this file needs no dark rules; every page that links this
+   file links data-palette.css too. The default (neutral) badge uses the Q1
+   neutral tokens from tokens.css. */
+.badge-task-type-single   { color: var(--data-task-type-single-fg); background: var(--data-task-type-single-bg); border-color: var(--data-task-type-single-border); }
+.badge-task-type-sequence { color: var(--data-task-type-sequence-fg); background: var(--data-task-type-sequence-bg); border-color: var(--data-task-type-sequence-border); }
+.badge-task-type-relation { color: var(--data-task-type-relation-fg); background: var(--data-task-type-relation-bg); border-color: var(--data-task-type-relation-border); }
+.badge-task-type-pairs    { color: var(--data-task-type-pairs-fg); background: var(--data-task-type-pairs-bg); border-color: var(--data-task-type-pairs-border); }
+.badge-task-type-scoring  { color: var(--data-task-type-scoring-fg); background: var(--data-task-type-scoring-bg); border-color: var(--data-task-type-scoring-border); }
+.badge-task-type-default  { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
 
-html[data-theme="dark"] .badge-task-type-single   { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
-html[data-theme="dark"] .badge-task-type-sequence { color: #FB923C; background: #2A1805; border-color: #7C3A16; }
-html[data-theme="dark"] .badge-task-type-relation { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
-html[data-theme="dark"] .badge-task-type-pairs    { color: #4ADE80; background: #0F2A18; border-color: #1F5132; }
-html[data-theme="dark"] .badge-task-type-scoring  { color: #C084FC; background: #1A0A2E; border-color: #4C1D95; }
-html[data-theme="dark"] .badge-task-type-default  { color: #94A3B8; background: #1F1F28; border-color: #2A2A35; }
-
-/* ═══ Source: design/prototype/components-showcase.html:633-804 — Breadcrumb, Review Status Track, Color Dot, Accordion, Progress Bar ═══ */
+/* ═══ Source: design/prototype/components-showcase.html:632-803 — Breadcrumb, Review Status Track, Color Dot, Accordion, Progress Bar ═══ */
 /* §Breadcrumb (verbatim) */
 .breadcrumb {
   display: flex;
@@ -862,7 +971,7 @@ html[data-theme="dark"] .badge-task-type-default  { color: #94A3B8; background: 
   font-size: 2.5rem;
 }
 
-/* ═══ Source: design/prototype/components-showcase.html:827-953 — Divider, State Panel, Avatar ═══ */
+/* ═══ Source: design/prototype/components-showcase.html:826-952 — Divider, State Panel, Avatar ═══ */
 /* §Divider — token-rendered (no canonical CSS block in MASTER §Divider;
    its Tailwind-only samples are mapped to tokens here, per the
    Banner/Toast precedent) */
@@ -877,7 +986,7 @@ html[data-theme="dark"] .badge-task-type-default  { color: #94A3B8; background: 
 .divider-text span { font-size: 14px; color: var(--color-ink-muted); }  /* text-sm text-slate-400 */
 .divider-list { list-style: none; }
 .divider-list li { padding: 16px 0; font-size: 14px; }    /* py-4 */
-.divider-list li + li { border-top: 1px solid #F1F5F9; }  /* divide-slate-100 — MASTER §Divider list variant literal */
+.divider-list li + li { border-top: 1px solid var(--color-border-muted); }  /* divide-slate-100 */
 
 /* §State Panel — token-rendered (MASTER §State Panel ships Tailwind-only
    samples; mapped to tokens here per the Divider precedent; rounded-md →
@@ -907,19 +1016,19 @@ html[data-theme="dark"] .badge-task-type-default  { color: #94A3B8; background: 
 }
 .state-panel-icon svg { width: 20px; height: 20px; }
 .state-panel--success .state-panel-icon {
-  background: #DCFCE7;      /* green-100 — MASTER §State Panel literal */
+  background: var(--color-success-border);   /* bg-green-100；圖示圓在 success-bg 面板上，用 -border 一階才分得出來（#420） */
   color: var(--color-success);               /* text-green-700 */
 }
 .state-panel--error .state-panel-icon {
-  background: #FEE2E2;      /* red-100 — MASTER §State Panel literal */
+  background: var(--color-error-border);     /* bg-red-100；同上 */
   color: var(--color-error);                 /* text-red-700 */
 }
 .state-panel-title {
   font-size: 16px;                           /* text-base */
   font-weight: 600;                          /* font-semibold */
 }
-.state-panel--success .state-panel-title { color: #166534; }  /* green-800 — MASTER §State Panel literal */
-.state-panel--error .state-panel-title { color: #991B1B; }    /* red-800 — MASTER §State Panel literal */
+.state-panel--success .state-panel-title { color: var(--color-success); }  /* text-green-800 → success 族（#420 Q3） */
+.state-panel--error .state-panel-title { color: var(--color-error); }      /* text-red-800 → error 族（#420 Q3） */
 .state-panel-desc {
   margin-top: 4px;                           /* mt-1 */
   font-size: 14px;                           /* text-sm */
@@ -1728,7 +1837,7 @@ html[data-theme="dark"] .badge-task-type-default  { color: #94A3B8; background: 
 
 .shortcut-help-section h3 {
   margin: 0;
-  color: var(--color-ink-muted, #94A3B8);
+  color: var(--color-ink-muted);
   font-size: 12px;
   font-weight: 600;
   line-height: 1.25;
@@ -1912,7 +2021,7 @@ html[data-theme="dark"] .shortcut-help-dialog {
   height: 16px;
   padding: 0 4px;
   border-radius: 9999px;
-  background: #B91C1C;   /* red-700 — WCAG AA fix (issue singyichen/label-suite#973), was #EF4444 (3.76:1). Reuses --color-error's light-mode value; still hardcoded (not var(--color-error)) and constant across themes per the issue singyichen/label-suite#183 arbitration — only the constant's value changed. */
+  background: var(--color-badge-notify);   /* constant across themes (issue singyichen/label-suite#183 arbitration); the value and its 6.47:1 contrast live in tokens.css (#420 Q5) */
   color: #fff;
   font-size: 10px;
   font-weight: 700;
@@ -2024,11 +2133,11 @@ html[data-theme="dark"] .shortcut-help-dialog {
   word-break: break-word;
 }
 
-.notif-item.is-read .notif-item-text { color: var(--color-ink-muted, #94A3B8); }
+.notif-item.is-read .notif-item-text { color: var(--color-ink-muted); }
 
 .notif-item-time {
   font-size: 11px;
-  color: var(--color-ink-muted, #94A3B8);
+  color: var(--color-ink-muted);
 }
 
 .notif-item-dot {
@@ -2580,7 +2689,7 @@ main:has(> .workspace-tab-bar):not(.workspace-root) {
   opacity: 1;
 }
 
-/* ═══ Source: design/prototype/pages/task-management/task-new.html:38-48 — Step Indicator ═══ */
+/* ═══ Source: design/prototype/pages/task-management/task-new.html:41-53 — Step Indicator ═══ */
 /* ── Step indicator ── */
 .step-indicator { display: flex; align-items: center; margin-bottom: var(--space-lg); }
 .step-item { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
@@ -2593,11 +2702,11 @@ main:has(> .workspace-tab-bar):not(.workspace-root) {
 .step-connector { flex: 1; height: 2px; background: var(--color-border); margin: 0 8px; margin-bottom: 18px; transition: background var(--dur-fast); }
 .step-connector.done { background: var(--color-cta); }
 
-/* ═══ Source: design/prototype/pages/account/login.html:48-108 — Auth Navbar, Lang Toggle; scoped under .auth-page because .navbar, .lang-toggle, .card, .divider and label collide with shared rules; the login / SSO buttons are left out because G-03 maps them to the canonical button variants ═══ */
+/* ═══ Source: design/prototype/pages/account/login.html:28-88 — Auth Navbar, Lang Toggle; scoped under .auth-page because .navbar, .lang-toggle, .card, .divider and label collide with shared rules; the login / SSO buttons are left out because G-03 maps them to the canonical button variants ═══ */
 /* ── Navbar ─────────────────────────────────────────────────── */
 .auth-page .navbar {
   height: 64px;
-  background: var(--color-card);
+  background: var(--color-white);
   border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
@@ -2641,7 +2750,7 @@ main:has(> .workspace-tab-bar):not(.workspace-root) {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 6px 12px;
-  background: var(--color-card);
+  background: var(--color-white);
   color: var(--color-ink);
   font-family: 'Inter', sans-serif;
   font-size: 13px;
@@ -2658,10 +2767,10 @@ main:has(> .workspace-tab-bar):not(.workspace-root) {
 /* artifact adapter, not in the prototype: undo the App Shell's sidebar .navbar geometry inside .auth-page */
 .auth-page .navbar { width: auto; flex-direction: row; border-right: none; overflow: visible; }
 
-/* ═══ Source: design/prototype/pages/account/login.html:119-162 — Auth Card (scoped under .auth-page) ═══ */
+/* ═══ Source: design/prototype/pages/account/login.html:99-142 — Auth Card (scoped under .auth-page) ═══ */
 /* ── Card ───────────────────────────────────────────────────── */
 .auth-page .card {
-  background: var(--color-card);
+  background: var(--color-white);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   padding: 40px 40px 36px;
@@ -2704,7 +2813,7 @@ main:has(> .workspace-tab-bar):not(.workspace-root) {
   line-height: 1.5;
 }
 
-/* ═══ Source: design/prototype/pages/account/login.html:204-218 — Auth Card divider (scoped under .auth-page) ═══ */
+/* ═══ Source: design/prototype/pages/account/login.html:184-198 — Auth Card divider (scoped under .auth-page) ═══ */
 /* ── Divider ────────────────────────────────────────────────── */
 .auth-page .divider {
   display: flex;
@@ -2721,7 +2830,7 @@ main:has(> .workspace-tab-bar):not(.workspace-root) {
   background: var(--color-border);
 }
 
-/* ═══ Source: design/prototype/pages/account/login.html:220-301 — Auth Card form fields, Password Eye Toggle (scoped under .auth-page) ═══ */
+/* ═══ Source: design/prototype/pages/account/login.html:200-281 — Auth Card form fields, Password Eye Toggle (scoped under .auth-page) ═══ */
 /* ── Form ───────────────────────────────────────────────────── */
 .auth-page .form { display: flex; flex-direction: column; gap: 16px; }
 
@@ -2739,7 +2848,7 @@ main:has(> .workspace-tab-bar):not(.workspace-root) {
 }
 .auth-page .forgot-link {
   font-size: 13px;
-  color: var(--color-link);
+  color: var(--color-primary-strong);
   text-decoration: none;
   font-weight: 500;
 }
@@ -2766,13 +2875,13 @@ main:has(> .workspace-tab-bar):not(.workspace-root) {
   font-family: 'Inter', sans-serif;
   font-size: 14px;
   color: var(--color-ink);
-  background: var(--color-card);
+  background: var(--color-white);
   transition: border-color 0.15s, box-shadow 0.15s;
   outline: none;
 }
 .auth-page .input-wrapper input::placeholder { color: var(--color-ink-muted); }
 .auth-page .input-wrapper input:focus {
-  border-color: var(--color-border-focus);
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
 }
 .auth-page .input-wrapper input.error {
@@ -2807,19 +2916,19 @@ main:has(> .workspace-tab-bar):not(.workspace-root) {
 /* artifact adapter, not in the prototype: undo the Tooltip label row's fit-content width so the forgot-password link sits right */
 .auth-page .field-label-row { width: auto; }
 
-/* ═══ Source: design/prototype/pages/account/login.html:327-336 — Spinner (scoped under .auth-page) ═══ */
+/* ═══ Source: design/prototype/pages/account/login.html:307-316 — Spinner (scoped under .auth-page) ═══ */
 /* Spinner */
 .auth-page .spinner {
   width: 18px;
   height: 18px;
   border: 2.5px solid rgba(255,255,255,0.4);
-  border-top-color: #ffffff;
+  border-top-color: var(--color-on-cta);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ═══ Source: design/prototype/pages/account/reset-password.html:377-410 — Proto Toggle Bar (prototype scaffolding, not a product component) ═══ */
+/* ═══ Source: design/prototype/pages/account/reset-password.html:357-390 — Proto Toggle Bar (prototype scaffolding, not a product component) ═══ */
 /* ── Prototype State Toggle ─────────────────────────────────── */
 .proto-toggle-bar {
   position: fixed;
@@ -2851,11 +2960,11 @@ main:has(> .workspace-tab-bar):not(.workspace-root) {
   transition: background 0.15s, color 0.15s;
   white-space: nowrap;
 }
-.proto-btn.active  { background: #6366F1; color: #fff; }
+.proto-btn.active  { background: var(--color-primary); color: var(--color-on-cta); }
 .proto-btn.inactive { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); }
 .proto-btn.inactive:hover { background: rgba(255,255,255,0.2); }
 
-/* ═══ Source: design/prototype/components-showcase.html:971-973 — reduced motion ═══ */
+/* ═══ Source: design/prototype/components-showcase.html:970-972 — reduced motion ═══ */
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }

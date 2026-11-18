@@ -7,6 +7,7 @@
   <link rel="icon" type="image/svg+xml" href="../../assets/logo/icon-colored.svg">
   <title>Label Suite — 任務詳情</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../../assets/data-palette.css" />
   <link rel="stylesheet" href="../shared/modal.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <link rel="stylesheet" href="../shared/button.css" />
@@ -125,7 +126,7 @@
     .badge-draft { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
     .badge-dry-run { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
     .badge-iaa { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
-    .badge-official { color: #5B21B6; background: #EDE9FE; border-color: #DDD6FE; }
+    .badge-official { color: var(--color-accent); background: var(--color-accent-bg); border-color: var(--color-accent-border); }
     .badge-completed { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
     .badge-isolated { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
     .badge-non-isolated { color: var(--color-error); background: var(--color-error-bg); border-color: var(--color-error-border); }
@@ -862,9 +863,9 @@
       border: 1px solid var(--color-info-border); border-radius: var(--radius-md);
       padding: 3px 12px; font-family: monospace; min-width: 80px; text-align: center;
     }
-    .result-tag-green { color: #15803D !important; background: #DCFCE7 !important; border-color: #86EFAC !important; }
-    .result-tag-blue  { color: #1D4ED8 !important; background: #EFF6FF !important; border-color: #BFDBFE !important; }
-    .result-tag-red   { color: #DC2626 !important; background: #FEE2E2 !important; border-color: #FCA5A5 !important; }
+    .result-tag-green { color: var(--color-success) !important; background: var(--color-success-bg) !important; border-color: var(--color-success-border) !important; }
+    .result-tag-blue  { color: var(--color-info) !important; background: var(--color-info-bg) !important; border-color: var(--color-info-border) !important; }
+    .result-tag-red   { color: var(--color-error) !important; background: var(--color-error-bg) !important; border-color: var(--color-error-border) !important; }
     .annotator-meta {
       display: flex;
       align-items: center;
@@ -909,16 +910,16 @@
     .ar-dist-text { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
     .ar-dist-dot { color: var(--color-ink-muted); }
     .ar-va-chip { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 9999px; font-size: 13px; font-family: var(--font-mono); border: 1px solid; white-space: nowrap; }
-    .ar-va-chip-normal { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
-    .ar-va-chip-outlier { background: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }
+    .ar-va-chip-normal { background: var(--color-success-bg); color: var(--color-success); border-color: var(--color-success-border); }
+    .ar-va-chip-outlier { background: var(--color-error-bg); color: var(--color-error); border-color: var(--color-error-border); }
     .ar-va-chip-default { background: var(--color-surface); color: var(--color-ink); border-color: var(--color-border); }
     .ar-classif-chips { display: flex; flex-wrap: wrap; gap: 4px; }
-    .ar-classif-chip { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 12px; background: #EDE9FE; color: #5B21B6; border: 1px solid #DDD6FE; white-space: nowrap; }
+    .ar-classif-chip { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 12px; background: var(--color-accent-bg); color: var(--color-accent); border: 1px solid var(--color-accent-border); white-space: nowrap; }
     .member-detail-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-sm); }
     .md-id-cell { font-family: var(--font-mono); font-size: 12px; font-weight: 700; white-space: nowrap; }
     .md-text-cell { font-size: 13px; max-width: 280px; }
     .md-chips { display: flex; flex-wrap: wrap; gap: 4px; }
-    .md-chip { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 12px; background: #EDE9FE; color: #5B21B6; border: 1px solid #DDD6FE; white-space: nowrap; }
+    .md-chip { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 12px; background: var(--color-accent-bg); color: var(--color-accent); border: 1px solid var(--color-accent-border); white-space: nowrap; }
     .md-time-cell { font-size: 12px; color: var(--color-text-soft); white-space: nowrap; font-family: var(--font-mono); }
     .btn-view-detail { padding: 2px 10px; font-size: 12px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); color: var(--color-primary-strong); cursor: pointer; white-space: nowrap; }
     .btn-view-detail:hover { background: var(--color-primary-soft-bg); }
@@ -1836,19 +1837,9 @@
 
     /* ── Dark mode overrides ──────────────────────────────────── */
     html[data-theme="dark"] {
-      /* Result tags (with !important in base CSS) */
-      .result-tag-green { color: #4ADE80 !important; background: #0F2A18 !important; border-color: #1F5132 !important; }
-      .result-tag-blue  { color: #60A5FA !important; background: #0F1F33 !important; border-color: #1E3A66 !important; }
-      .result-tag-red   { color: #F87171 !important; background: #2A1414 !important; border-color: #5B2222 !important; }
-
-      /* VA scoring chips */
-      .ar-va-chip-normal  { background: #0F2A18; color: #4ADE80; border-color: #1F5132; }
-      .ar-va-chip-outlier { background: #2A1414; color: #F87171; border-color: #5B2222; }
-
-      /* Classification chip */
-      .ar-classif-chip { background: #1E1B4B; color: #A78BFA; border-color: #3730A3; }
-      .md-chip { background: #1E1B4B; color: #A78BFA; border-color: #3730A3; }
-
+      /* Result tags, VA chips, classification chips and .badge-official read
+         the success / info / error / accent token families (#420 Q2, Q3),
+         which flip in tokens.css; no dark copy needed. */
       /* Round status badges flip automatically: the light rules use the
          semantic error/success/primary token families */
     }
@@ -5826,7 +5817,8 @@ function interpolate(template, payload) {
   }
 
   function getRoundColor(roundNumber) {
-    var palette = ['#6366F1', '#F59E0B', '#EC4899', '#8B5CF6', '#0EA5E9'];
+    /* 輪次色在 assets/data-palette.css（#420 Q4）；值只當 style.background 用 */
+    var palette = ['var(--data-round-1)', 'var(--data-round-2)', 'var(--data-round-3)', 'var(--data-round-4)', 'var(--data-round-5)'];
     return palette[(Math.max(roundNumber, 1) - 1) % palette.length];
   }
 
@@ -6218,7 +6210,7 @@ function interpolate(template, payload) {
             label: t(isMaterializedOfficialPool ? 'officialReserveLabel' : 'totalSamplesLabel'),
             valueText: TASK_DATA.datasetTotal + unitText,
             count: Number(TASK_DATA.datasetTotal) || 0,
-            color: isMaterializedOfficialPool ? '#14B8A6' : '#94A3B8'
+            color: isMaterializedOfficialPool ? 'var(--data-split-official)' : 'var(--data-split-total)'
           }];
         }
         /* issue singyichen/label-suite#1120 (acceptance 12): once the official run is the stage
@@ -6229,7 +6221,7 @@ function interpolate(template, payload) {
             label: t('officialReserveLabel'),
             valueText: String(reserveCount) + unitText,
             count: reserveCount,
-            color: '#14B8A6'
+            color: 'var(--data-split-official)'
           }];
         }
         var segments = rounds.map(function(round) {
@@ -6245,7 +6237,7 @@ function interpolate(template, payload) {
             label: t('officialReserveLabel'),
             valueText: String(reserveCount) + unitText,
             count: reserveCount,
-            color: '#14B8A6'
+            color: 'var(--data-split-official)'
           });
         }
         return segments;
@@ -6274,7 +6266,7 @@ function interpolate(template, payload) {
           label: t('officialReserveLabel'),
           valueText: reserveCount + (state.lang === 'zh' ? ' 筆' : ' items'),
           count: reserveCount,
-          color: '#14B8A6'
+          color: 'var(--data-split-official)'
         }
       ], TASK_DATA.datasetTotal);
     }

@@ -6,13 +6,13 @@
 
 `task-management/task-list` 點任務名稱。
 
-載入：`assets/tokens.css`、`pages/shared/modal.css`、`sidebar.css`、`button.css`、`date-range-picker.css`、`empty-state.css`、`content-tabs.css`、`metric.css`、`task-config.css`；腳本 `sidebar.js`、`date-range-picker.js`、`modal-focus.js`、`span-tagging-export.js`、`task-config.engine.js`、`task-detail.config.js` 等。六個分頁的內容由 `fetchPanelPartial` 從 `task-detail.panels/*.html` 載入（`:4645`–`:4707`）。
+載入：`assets/tokens.css`、`assets/data-palette.css`（#420）、`pages/shared/modal.css`、`sidebar.css`、`button.css`、`date-range-picker.css`、`empty-state.css`、`content-tabs.css`、`metric.css`、`task-config.css`；腳本 `sidebar.js`、`date-range-picker.js`、`modal-focus.js`、`span-tagging-export.js`、`task-config.engine.js`、`task-detail.config.js` 等。六個分頁的內容由 `fetchPanelPartial` 從 `task-detail.panels/*.html` 載入（`:4645`–`:4707`）。
 
 ## 視圖與元件
 
 | 視圖 | 怎麼走到 | 用到的元件 |
 | :--- | :--- | :--- |
-| `#tab-overview` | `?tab=overview`（預設） | [App Shell](../components/app-shell.md)、[Breadcrumb](../components/breadcrumb.md)（`:1947`–`:1950`）、[Content Tabs](../components/content-tabs.md)（`.admin-tabs`，`:1890`–`:1962`）、[Card](../components/card.md)（本頁的 `.panel`，`:92`）、[Metric](../components/metric.md)（`overview.html`，4 處）、[Badge](../components/badge.md)（`:113`–`:128`） |
+| `#tab-overview` | `?tab=overview`（預設） | [App Shell](../components/app-shell.md)、[Breadcrumb](../components/breadcrumb.md)（`:1875`–`:1879`）、[Content Tabs](../components/content-tabs.md)（`.admin-tabs`，`:1883`–`:1890`）、[Card](../components/card.md)（本頁的 `.panel`，`:92`）、[Metric](../components/metric.md)（`overview.html`，4 處）、[Badge](../components/badge.md)（`:113`–`:128`） |
 | `#tab-member-management` | `?tab=member-management` | [Data Table](../components/data-table.md)（`.member-table`，`member-management.html:19`、`:57`、`:106`）、[Pagination](../components/pagination.md)、[Modal](../components/modal.md)（`memberAction`，`:2031`） |
 | `#tab-annotation-progress` | `?tab=annotation-progress` | [Metric](../components/metric.md)（6 處）、[Data Table](../components/data-table.md)（`annotation-progress.html:32`、`:61`、`:93`、`:121`）、[Pagination](../components/pagination.md)（`:134`）、[Empty State](../components/empty-state.md)（`empty-state-panel`，`:157`） |
 | `#tab-annotation-results` | `?tab=annotation-results` | [Data Table](../components/data-table.md)（`annotation-results.html:48`、`:95`）、[Pagination](../components/pagination.md)（`:63`、`:112`）、[Empty State](../components/empty-state.md)（`:164`）、[Modal](../components/modal.md)（`arSeqExportModal`，`:138`） |
@@ -27,10 +27,10 @@
 | `#role-project-leader` | `?task_role=project_leader` | 同 `#tab-overview`，操作最多 |
 | `#role-reviewer` | `?task_role=reviewer` | 同 `#tab-overview`，操作減少 |
 | `#role-annotator` | `?task_role=annotator`，或不給、給錯值（fail closed，`:5087`） | **不算繪**，直接導到 `task-list.html?unauthorized=1`（`:5114`），看到的是 `task-management/task-list#param-unauthorized` |
-| `#sim-403` | `?sim_403=1`（`:5101`） | `taskForbidden` 面板（`:1979`–`:1925`） |
+| `#sim-403` | `?sim_403=1`（`:5101`） | `taskForbidden` 面板（`:1914`–`:1918`） |
 | `#state-panel-load-failed` | 讓某一個 partial 請求失敗：只有那個分頁留佔位與重試，其他照常（`:4583`–`:4645`） | `.panel` ＋ [Button](../components/button.md)（`.mini-btn`） |
 
-載入中的骨架（`.skeleton-stack`／`.skeleton-card`／`.skeleton-line`，`:1899`–`:1910`）與「任務不存在」面板（`taskNotFound`，`:1914`）找得到，交付包沒有列成視圖 → [Skeleton](../components/skeleton.md)。操作結果的通知（`showToast`，`:11255`）也沒有對應視圖 → [Toast](../components/toast.md)。
+載入中的骨架（`.skeleton-stack`／`.skeleton-card`／`.skeleton-line`，`:1899`–`:1910`）與「任務不存在」面板（`taskNotFound`，`:1914`）找得到，交付包沒有列成視圖 → [Skeleton](../components/skeleton.md)。操作結果的通知（`showToast`，`:11219`）也沒有對應視圖 → [Toast](../components/toast.md)。
 
 ## 這一頁專屬的
 
@@ -39,11 +39,11 @@
 | `.mini-btn` | #423 起用正典 `pages/shared/button.css` 的小尺寸 variant，本頁不再重新定義 → G-37 |
 | `.panel`（`:94`） | 容器在 `pages/shared/card.css`，和 `dashboard` 共用；本頁只加 `margin-bottom`（#423）→ [Card](../components/card.md)、G-41 |
 | `.toggle-switch` | 用 `task-config.css` 的正典版（40×22、開啟色 `--color-primary`）；本頁的重新定義（42×24、`--color-cta`）已於 #423 刪除 → G-42 |
-| `.skeleton-*`（`:68`–`:84`） | [Skeleton](../components/skeleton.md)：與 showcase 的 pulse 變體逐字相同（`components-showcase.html:436` 起） |
+| `.skeleton-*`（`:68`–`:84`） | [Skeleton](../components/skeleton.md)：與 showcase 的 pulse 變體逐字相同（`components-showcase.html:437` 起） |
 | `.toast*` | [Toast](../components/toast.md)：#423 起 `showToast` 依 `TOAST_DURATIONS`（`:11251`）分級，error 只能手動關 → G-39 |
 | `.breadcrumb`（`:46`–`:48`） | 本頁一行式的版本 |
 
-八個 modal 都接了 `modal-focus.js`：`backToDraft`（`:5995`）、`settingsLeave`（`:7745`）、`memberAction`（`:8192`）、`arSeqExport`（`:10885`）、`risk`（`:11259`）、`trialRoundRevision`（`:11313`），`taxonomyDelete` 與 `datasetPreview` 由 `task-config.engine.js`（`:6214`、`:6141`）接上 → G-43。
+八個 modal 都接了 `modal-focus.js`：`backToDraft`（`:5995`）、`settingsLeave`（`:7745`）、`memberAction`（`:8192`）、`arSeqExport`（`:10885`）、`risk`（`:11259`）、`trialRoundRevision`（`:11313`），`taxonomyDelete` 與 `datasetPreview` 由 `task-config.engine.js`（`:6216`、`:6143`）接上 → G-43。
 
 ## 業務行為
 

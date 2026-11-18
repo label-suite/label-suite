@@ -9,7 +9,7 @@
 本檔是依 [`design-system-setup`](../../.claude/skills/design-system-setup/SKILL.md) 的四種依據，**從 prototype 的實際程式碼反推重建**的。因此：
 
 - **章節名沿用**那些註解指名的名字（§Buttons、§Inputs、§Empty State、§Desktop Content Tabs、§Metric KPI Tile…），這樣既有註解才不會變成懸空引用。
-- **版本號與行號引用無法重現**：`tokens.css:3`（「updated 2026-04-18」）、`:32` 與 `:182`（「MASTER.md v1.7.1」）、`:70`（「MASTER.md Changelog」）、`annotation-workspace.config.js:3985`（「MASTER.md:1423-1482」）、`:3988`（「MASTER.md:1482」）指的都是原件的版本與行數。本檔從第 1 版重新起算，**那五處引用在本 repo 解析不到**，記在 [`design-gaps.md`](design-gaps.md) G-25。
+- **版本號與行號引用無法重現**：`tokens.css:3`（「updated 2026-04-18」）、`:33` 與 `:204`（「MASTER.md v1.7.1」）、`:91`（「MASTER.md Changelog」）、`annotation-workspace.config.js:3985`（「MASTER.md:1423-1482」）、`:3988`（「MASTER.md:1482」）指的都是原件的版本與行數。本檔從第 1 版重新起算，**那五處引用在本 repo 解析不到**，記在 [`design-gaps.md`](design-gaps.md) G-25。
 - 原始 repo 的 `design/system/` 依 `design-handoff` 鐵律是**參照，不是依據**，所以本檔沒有從它抄任何內容。
 
 ## 怎麼查
@@ -51,7 +51,7 @@
 
 ### 正典區塊定義的（20）
 
-來源是 `design/prototype/components-showcase.html:139`–`:973` 的「MASTER.md canonical component CSS」。
+來源是 `design/prototype/components-showcase.html:140`–`:971` 的「MASTER.md canonical component CSS」。
 
 | 元件 | 正典章節 | b1 | b2 | b3 | b4 | 狀態 |
 | :--- | :--- | ---: | ---: | ---: | ---: | :--- |
@@ -118,7 +118,7 @@ prototype 的註解另外指名的章節裡，這一個不是元件（b1 原列�
 
 | 章節 | 引用處 | 待 |
 | :--- | :--- | :--- |
-| §Changelog | `assets/tokens.css:70` | 原件的版本紀錄，本檔從第 1 版起算 |
+| §Changelog | `assets/tokens.css:91` | 原件的版本紀錄，本檔從第 1 版起算 |
 
 ## 批次狀態
 
@@ -157,8 +157,8 @@ prototype 的註解另外指名的章節裡，這一個不是元件（b1 原列�
 ### b3 接手時要先讀的
 
 1. G-01、G-03、G-28、G-33、G-34 已有裁定，不要重開；G-37～G-45 的待決問題等維護者。
-2. [`ux-conventions.md`](ux-conventions.md) 的 UXC-04、05 證據在 `annotation-workspace.config.js:666`、`:3099`；UXC-03、09 還有 b3 的引用要核對（`:1989`、`:2041`，`annotation-list.html:1930`）。
-3. [Tooltip](components/tooltip.md) 的第二處（`annotation-workspace.config.js:3943`）、Toast 與 Skeleton 在 b3 的那幾份（G-10）、`annotation-workspace` 沒有定義側欄的兩個窄視窗 token（G-24）。
+2. [`ux-conventions.md`](ux-conventions.md) 的 UXC-04、05 證據在 `annotation-workspace.config.js:666`、`:3099`；UXC-03、09 還有 b3 的引用要核對（`:1989`、`:2041`，`annotation-list.html:1921`）。
+3. [Tooltip](components/tooltip.md) 的第二處（`annotation-workspace.config.js:4000`）、Toast 與 Skeleton 在 b3 的那幾份（G-10）、`annotation-workspace` 沒有定義側欄的兩個窄視窗 token（G-24）。
 4. **別批的使用關係要保留**（鐵律 5）。
 
 ### b3 的成果
@@ -205,3 +205,4 @@ prototype 的註解另外指名的章節裡，這一個不是元件（b1 原列�
 | 2 | 2026-11-18 | `b2-admin-dashboard-task`：新增 Card、Tooltip、Step Indicator 三份元件與六份畫面規格；UXC-03／09／10；G-37～G-45；元件一覽改成分批用量。 |
 | 3 | 2026-11-18 | `b3-annotation-review`：兩份畫面規格；UXC-04／05；Tooltip 補審核說明變體；G-46～G-51；元件一覽加 b3 欄。 |
 | 4 | 2026-11-18 | `b4-dataset-sweep`：兩份畫面規格；全站覆蓋複查；G-52～G-56；元件一覽加 b4 欄。 |
+| 5 | 2026-11-18 | #420 色值複查（b1～b4，只看顏色）：寫死色值換成 token 與 `data-palette.css` 後，同步元件與畫面規格的取色說明；G-02、G-03、G-29、G-50 加修正狀態；行號依修正後的 prototype 重新對齊。 |

@@ -6,7 +6,7 @@
 
 單一 `<button class="lang-toggle">`，內含地球圖示與目前語言代碼。
 
-依據：`pages/account/login.html:88`（CSS）、`:413`（markup，帶 `data-testid="lang-toggle"` 與 `aria-label="切換語言"`）。
+依據：`pages/account/login.html:66`（CSS）、`:363`（markup，帶 `data-testid="lang-toggle"` 與 `aria-label="切換語言"`）。
 
 ## 變體
 
@@ -20,31 +20,31 @@
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| 預設 | 有 | `login.html:88` |
+| 預設 | 有 | `login.html:66` |
 | hover | 待逐頁確認 | — |
 | focus | **未觀察到** | → `../design-gaps.md` G-05 |
 | disabled／載入中／錯誤／空 | 不適用 | — |
 
 ## token
 
-`--color-border`、`--radius-md`、`--color-card`（頁面私有）、`--color-ink-muted`。內距 `6px 12px` 與 `gap: 6px` 是字面值。
+`--color-border`、`--radius-md`、`--color-white`（#420 之前是頁面私有的 `--color-card`）、`--color-ink`；hover 另用 `--color-primary`（邊框）與 `--color-primary-soft-bg`（底，`login.html:84`–`:87`）。內距 `6px 12px` 與 `gap: 6px` 是字面值。
 
 ## 鍵盤與焦點
 
-原生 `<button>`，帶 `aria-label="切換語言"`（`login.html:413`）。沒有焦點樣式。
+原生 `<button>`，帶 `aria-label="切換語言"`（`login.html:363`）。沒有焦點樣式。
 
-切換後**不只換這顆鈕**：整頁文案由各頁自己的字串表換掉（例：`login.html:570`／`:593` 的 `dividerText`），所以它實際上是一個頁面層級的控制項。
+切換後**不只換這顆鈕**：整頁文案由各頁自己的字串表換掉（例：`login.html:515`／`:538` 的 `dividerText`），所以它實際上是一個頁面層級的控制項。
 
 ## 樣式出處
 
-五頁各自的 `<style>`，內容相同。代表定義：`design/prototype/pages/account/login.html:88`。
-正典的對應品 `.btn-language` 在 `design/prototype/components-showcase.html:268`——**兩者沒有共用任何程式碼**。
+五頁各自的 `<style>`，內容相同。代表定義：`design/prototype/pages/account/login.html:66`。
+正典的對應品 `.btn-language` 在 `design/prototype/components-showcase.html:269`——**兩者沒有共用任何程式碼**。
 
 ## 可重現樣本
 
 | 視圖 | 怎麼走到 |
 | :--- | :--- |
-| `components-showcase#state-default` | `#comp-buttons` 的 `.btn-language`（`components-showcase.html:1034`），**正典版** |
+| `components-showcase#state-default` | `#comp-buttons` 的 `.btn-language`（`components-showcase.html:1032`），**正典版** |
 | `account/login#state-default` 等五個 | 右上角，**實際版**；點了會真的換語言 |
 
 ## shadcn 對照

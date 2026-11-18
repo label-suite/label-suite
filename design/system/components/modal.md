@@ -28,7 +28,7 @@
 | :--- | :--- | :--- |
 | 關閉（預設） | 有，`display: none` | `modal.css:11` |
 | 開啟 | 有，`.show` → `display: flex` | `:16` |
-| hover | 只有 `.modal-close` 有（底色換 `--color-slate-50`） | `:75` |
+| hover | 只有 `.modal-close` 有（底色換 `--color-slate-50`、圖示換 `--color-ink`） | `:75` |
 | focus | **未觀察到樣式**，但**行為完整**（見下） | 以 `:focus` 掃全檔，0 命中 → `../design-gaps.md` G-05 |
 | disabled／載入中／錯誤／空 | 不適用，由內容自理 | — |
 
@@ -79,11 +79,11 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | 無（b1） | — |
-| `task-management/task-list#sim-delete-error` | `#deleteTaskModal`（`task-list.html:286`–`:294`）；**有接** `modal-focus.js`（`:705`、`:715`）；點遮罩不關（UXC-10，#423 起）→ `../design-gaps.md` G-45 |
-| `task-management/task-new`（`#modal-dataset-preview`、`#modal-leave-confirm`） | `datasetPreviewModal`（`.modal-xl`，`task-new.html:541`）、`leaveModal`（`:517`）、`taxonomyDeleteModal`（`:529`）；**沒有接** `modal-focus.js` |
-| `task-management/task-detail`（`#tab-*`、`#param-status`、`#param-section-labeling`） | 八個 modal（`task-detail.html:1930`–`:2031`、`annotation-results.html:138`），只有四個接了 `modal-focus.js` → `../design-gaps.md` G-43 |
-| `admin/user-management`（`#modal-invite`、`#toast-action`） | `addModal`（`:569`）、`editModal`（`:622`）、`disableModal`（`:673`），帶 `role="dialog"`／`aria-modal`；**沒有接** `modal-focus.js` |
-| `admin/role-settings`（離開確認，交付包未列） | `#dirtyModal`（`role-settings.html:958`）；**沒有接** `modal-focus.js` |
-| `annotation/annotation-workspace`（`#modal-guideline-gate`、`#modal-guideline-image`、`#modal-guideline-pdf`、`#modal-guideline-md`） | 五個 overlay 全部接 `modal-focus.js`（`annotation-workspace.config.js:6384`、`:6408`、`:6573`、`:5741`、`:6887`）。指引閘門自 #423 起把 `onClose` 設成空函式（`:6898`），**Esc 不關**，只能按確認或「返回標記清單」離開 → `../design-gaps.md` G-46；審核流程抽屜（`wsReviewFlowDrawer`，`annotation-workspace.html:1196`）的關閉鈕沒有名稱 → G-49 |
+| `task-management/task-list#sim-delete-error` | `#deleteTaskModal`（`task-list.html:280`–`:288`）；**有接** `modal-focus.js`（`:705`、`:715`）；點遮罩不關（UXC-10，#423 起）→ `../design-gaps.md` G-45 |
+| `task-management/task-new`（`#modal-dataset-preview`、`#modal-leave-confirm`） | `datasetPreviewModal`（`.modal-xl`，`task-new.html:554`）、`leaveModal`（`:530`）、`taxonomyDeleteModal`（`:542`）；**沒有接** `modal-focus.js` |
+| `task-management/task-detail`（`#tab-*`、`#param-status`、`#param-section-labeling`） | 八個 modal（`task-detail.html:1921`–`:2022`、`annotation-results.html:138`），只有四個接了 `modal-focus.js` → `../design-gaps.md` G-43 |
+| `admin/user-management`（`#modal-invite`、`#toast-action`） | `addModal`（`:472`）、`editModal`（`:525`）、`disableModal`（`:576`），帶 `role="dialog"`／`aria-modal`；**沒有接** `modal-focus.js` |
+| `admin/role-settings`（離開確認，交付包未列） | `#dirtyModal`（`role-settings.html:858`）；**沒有接** `modal-focus.js` |
+| `annotation/annotation-workspace`（`#modal-guideline-gate`、`#modal-guideline-image`、`#modal-guideline-pdf`、`#modal-guideline-md`） | 五個 overlay 全部接 `modal-focus.js`（`annotation-workspace.config.js:6384`、`:6408`、`:6573`、`:5741`、`:6887`）。指引閘門自 #423 起把 `onClose` 設成空函式（`:6898`），**Esc 不關**，只能按確認或「返回標記清單」離開 → `../design-gaps.md` G-46；審核流程抽屜（`wsReviewFlowDrawer`，`annotation-workspace.html:1194`）的關閉鈕沒有名稱 → G-49 |
 
 b2 已補上並核對（見上表）：五頁裡只有 `task-list` 全部接上 → G-43。b3 已補上（見上表）：`annotation-workspace` 全部接上。

@@ -8,7 +8,7 @@
 
 | 部分 | 必填 | 依據（以 `login.html` 為代表） |
 | :--- | :--- | :--- |
-| `.card`（白底、`--radius-lg`、`--shadow-card`、`padding: 40px 40px 36px`、`max-width: 480px`） | 必填 | `pages/account/login.html:120` |
+| `.card`（白底、`--radius-lg`、`--shadow-card`、`padding: 40px 40px 36px`、`max-width: 480px`） | 必填 | `pages/account/login.html:98` |
 | `.card-header` | 必填 | 五頁皆有 |
 | `.card-logo` | 必填 | 同上 |
 | `.card-title` | 必填 | 同上 |
@@ -33,13 +33,13 @@
 | :--- | :--- |
 | 預設 | 有 |
 | hover／focus／disabled／載入中／錯誤／空 | 不適用，是容器 |
-| 深色 | 有，透過 `--color-card` 的深色覆寫（見下） |
+| 深色 | 有，透過 `--color-white` 在 `tokens.css` 的深色覆寫（見下） |
 
 ## token
 
-`--radius-lg`、`--shadow-card`、`--color-border`、`--color-border-control`（欄位外框；有輸入框的四個帳號頁各自鏡像 `tokens.css` 的值），以及 **`--color-card`**。
+`--radius-lg`、`--shadow-card`、`--color-border`、`--color-border-control`（欄位外框），以及卡片底色 **`--color-white`**。#420 起五個帳號頁都改載 `tokens.css`，這些 token 不再各自鏡像。
 
-`--color-card` **不在 `tokens.css` 裡**。它是五個帳號頁各自在自己的 `:root` 定義的頁面私有 token（淺色與深色各一個值，五頁一致，原值見 `../design-gaps.md` G-29），定義重複了十次（`login.html:19` 與 `:372`、`register.html:19`／`:348`、`forgot-password.html:19`／`:336`、`reset-password.html:19`／`:431`、`verify-email.html:24`／`:310`），全站共 22 處引用 → `../design-gaps.md` G-29。
+#420 之前，卡片底色是頁面私有的 `--color-card`：五個帳號頁各自在 `:root` 定義，淺色與深色共重複十次，全站 22 處引用（原值見 `../design-gaps.md` G-29）。#420 起各頁改載 `tokens.css` 並刪掉本地鏡像，`--color-card` 換成同值的 `--color-white`，深色覆寫交給 `tokens.css` → `../design-gaps.md` G-03、G-29。
 
 ## 鍵盤與焦點
 
@@ -47,7 +47,7 @@
 
 ## 樣式出處
 
-五頁各自的 `<style>`，沒有共用檔。代表定義：`design/prototype/pages/account/login.html:120`。
+五頁各自的 `<style>`，沒有共用檔。代表定義：`design/prototype/pages/account/login.html:98`。
 
 ## 可重現樣本
 

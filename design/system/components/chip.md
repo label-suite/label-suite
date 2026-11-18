@@ -8,8 +8,8 @@
 
 | 類 | 結構 | 依據 |
 | :--- | :--- | :--- |
-| 選取 chip | `.task-type-chip-grid` > `<button class="task-type-chip">` > `.task-type-chip-check` ＋ 文字 | `components-showcase.html:473`–`:536` |
-| 顯示 chip（唯讀） | 單一 `<span>` | `components-showcase.html:538`–`:583` |
+| 選取 chip | `.task-type-chip-grid` > `<button class="task-type-chip">` > `.task-type-chip-check` ＋ 文字 | `components-showcase.html:471`–`:534` |
+| 顯示 chip（唯讀） | 單一 `<span>` | `components-showcase.html:536`–`:581` |
 
 `.task-type-chip-check` 的勾是 `::after` 的兩條 2px 白邊旋轉 −45°（`:518`–`:525`）；radio 模式下改成 6×6 實心圓（`:529`–`:536`）。
 
@@ -19,20 +19,20 @@
 | :--- | :--- | :--- |
 | `.task-type-chip` | 選取，`role="checkbox"` 多選 | token（primary 系列） |
 | `.task-type-chip[role="radio"]` | 選取，單選；勾選框改圓形 | 同上 |
-| `.ar-classif-chip` | 顯示，分類結果 | **寫死** violet-100／800／200 |
-| `.ar-va-chip` ＋ `-normal`／`-outlier` | 顯示，數值與離群標記，`--font-mono` | **寫死** 綠／紅各三色 |
+| `.ar-classif-chip` | 顯示，分類結果 | `--color-accent-bg`／`--color-accent`／`--color-accent-border`（#420 Q2；原本寫死 violet-100／800／200） |
+| `.ar-va-chip` ＋ `-normal`／`-outlier` | 顯示，數值與離群標記，`--font-mono` | `--color-success-bg`／`--color-success`／`--color-success-border` 與 error 族同三個（#420 Q3；原本寫死綠／紅各三色） |
 | `.round-metric-chip` | 顯示，指標 | token |
 | `.cause-chip` | 顯示，原因標籤 | token |
 
-依據：`components-showcase.html:478`、`:526`、`:539`、`:549`、`:561`、`:573`。
+依據：`components-showcase.html:476`、`:524`、`:537`、`:545`、`:559`、`:571`。
 
 ## 適用狀態
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| 預設 | 有 | `components-showcase.html:478` |
-| hover | 有（僅選取 chip）：邊框與文字換 primary、底色 `--color-primary-soft-bg` | `components-showcase.html:493` |
-| 選中 | 有：同 hover 的色，字重升到 600，勾選框填滿 | `components-showcase.html:498`、`:514` |
+| 預設 | 有 | `components-showcase.html:476` |
+| hover | 有（僅選取 chip）：邊框與文字換 primary、底色 `--color-primary-soft-bg` | `components-showcase.html:491` |
+| 選中 | 有：同 hover 的色，字重升到 600，勾選框填滿 | `components-showcase.html:496`、`:512` |
 | focus | **未觀察到**。`.task-type-chip` 是 `<button>`，但沒有 `:focus` 或 `:focus-visible` 規則 | 以 `:focus` 掃 `:473`–`:583`，0 命中 → `../design-gaps.md` G-05 |
 | disabled | **未觀察到** | 同上，無 `:disabled` |
 | 載入中／錯誤／空 | 不適用 | — |
@@ -41,24 +41,24 @@
 
 `--color-border`、`--color-primary`、`--color-primary-strong`、`--color-primary-soft-bg`、`--color-primary-border`、`--color-ink`、`--color-white`、`--color-text-soft`、`--radius-full`、`--dur-fast`、`--font-mono`。
 
-顯示 chip 共寫死 **9 個**色值（`components-showcase.html:545`–`:560`），原值見 `../design-gaps.md` G-02。
+顯示 chip 原本寫死 9 個色值，#420 起全部改用 token（`components-showcase.html:538`–`:559`），原值見 `../design-gaps.md` G-02。作答區另有一組 `.chip`（`task-config.css`，#420 為 G-50 新增），每個標籤的顏色是任務資料，經 `--chip-color` 傳入（預設色盤裡的顏色由 `entityPaintColor()` 換成 `--data-entity-N`，深色主題跟著換）；它和本元件的 `.task-type-chip` 還沒合併 → `../design-gaps.md` G-50。
 另有三處圓角寫 `9999px`／`999px` 字面值而不是 `--radius-full`（`:542`、`:553`、`:566`），同一個章節內三種寫法並存。
 
 ## 鍵盤與焦點
 
-選取 chip 是原生 `<button>`，Tab 可達、Enter／Space 原生觸發 `click`，並帶 `role="checkbox"`／`role="radio"` 與 `aria-checked`（`components-showcase.html:1152`、`:1159`）。容器帶 `role="group"`／`role="radiogroup"` 與 `aria-label`（`:1151`、`:1158`）。
+選取 chip 是原生 `<button>`，Tab 可達、Enter／Space 原生觸發 `click`，並帶 `role="checkbox"`／`role="radio"` 與 `aria-checked`（`components-showcase.html:1150`、`:1157`）。容器帶 `role="group"`／`role="radiogroup"` 與 `aria-label`（`:1149`、`:1156`）。
 
-行為由腳本維持：`components-showcase.html:1541`–`:1558`，註解自稱「§Chip accessibility contract: aria-checked toggled on click」。checkbox 各自切換（`:1546`），radio 則把同組其他的設回 false（`:1555`）。
+行為由腳本維持：`components-showcase.html:1539`–`:1556`，註解自稱「§Chip accessibility contract: aria-checked toggled on click」。checkbox 各自切換（`:1544`），radio 則把同組其他的設回 false（`:1553`）。
 
 兩個缺口：**沒有焦點樣式**（見上）；`role="radiogroup"` 只綁 `click`（`:1554`），**沒有方向鍵巡覽**，而 radio group 的鍵盤契約是左右鍵切換、整組只佔一個 Tab 位。
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:472`–`:583`。shipped 的那一份在 `pages/task-management/task-config.css`（b2）。
+`design/prototype/components-showcase.html:471`–`:582`。shipped 的那一份在 `pages/task-management/task-config.css`（b2）。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-chips`（`components-showcase.html:1147`）：三組 demo——多選（`:1151`）、單選（`:1158`）、五種唯讀顯示 chip（`:1164`–`:1168`）。
+`components-showcase#state-default` → `#comp-chips`（`components-showcase.html:1145`）：三組 demo——多選（`:1149`）、單選（`:1156`）、五種唯讀顯示 chip（`:1162`–`:1166`）。
 
 ## shadcn 對照
 
@@ -73,7 +73,7 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 兩類全部樣本 |
-| `task-management/task-new#state-step2` | `.task-type-chip`（`task-config.css:556`–`:559`），引擎依情境發 `role="checkbox"` 或 `"radio"` 與 `aria-checked`（`task-config.engine.js:6235`–`:6239`） |
+| `task-management/task-new#state-step2` | `.task-type-chip`（`task-config.css:556`–`:559`），引擎依情境發 `role="checkbox"` 或 `"radio"` 與 `aria-checked`（`task-config.engine.js:6237`–`:6241`） |
 | `task-management/task-detail#tab-settings` | 同一份，`settings.html:74`、`:78` |
 | `dataset/dataset-analysis-detail`（`#state-quality-*`） | 唯讀的原因標籤 `.cause-chip`（`dataset-analysis-detail.html:154`），屬「唯讀標籤」那一類 → `../design-gaps.md` G-11 |
 

@@ -608,7 +608,25 @@ var DEFAULT_GUIDELINE_FILES_BY_TASK_TYPE = {
     { name: 'VA_emj.png', type: 'Image', size: 584508, assetPath: '../../assets/images/task-management/VA_emj.png' },
   ],
 };
+// Entity / label palette. CSS mirror: assets/data-palette.css --data-entity-1..8 (#420 Q4).
+// Kept as 6-digit hex here because a label's colour is task data and <input type=color> needs hex;
+// change both together.
 var ENTITY_COLORS = ['#6366F1','#10B981','#F59E0B','#EC4899','#8B5CF6','#0EA5E9','#F97316','#14B8A6'];
+
+// Paint-time mapping: a stored colour that is one of the default palette entries is painted
+// through its --data-entity-N variable, so the dark theme's lighter set applies. Any other
+// colour (one the task owner picked) is painted as stored. Never write the result back into
+// task data: it is a CSS value, not a hex.
+function entityPaintColor(color) {
+  var hex = typeof color === 'string' ? color.toUpperCase() : '';
+  var index = ENTITY_COLORS.indexOf(hex);
+  return index === -1 ? color : 'var(--data-entity-' + (index + 1) + ')';
+}
+
+// Translucent wash behind a highlighted span: the paint colour at 20% (the old hex + '33').
+function entityWashColor(color) {
+  return 'color-mix(in srgb, ' + entityPaintColor(color) + ' 20%, transparent)';
+}
 var USER_DIRECTORY = [
   { name: 'Alex Wang', email: 'alex.wang@labelsuite.io', systemRole: 'user' },
   { name: 'Olivia Lin', email: 'olivia.lin@labelsuite.io', systemRole: 'user' },

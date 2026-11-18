@@ -1,6 +1,6 @@
 # 規格章節索引
 
-交付包版本：commit `c77da22351dd`，prototype tree `86b43b19dca2`。
+交付包版本：commit `5b1cb921515b`，prototype tree `d9c2ab67868b`。
 
 由 `manifest.json` 反轉而成：規格頁 → 指向它的視圖。「規格有、畫面沒有」一眼看得出來——沒有出現在下表的規格頁，就是沒有任何視圖指向它。
 
@@ -154,6 +154,7 @@
 
 | 章節錨點 | 視圖 |
 | :--- | :--- |
+| `#四種互斥的頁面狀態` | `dataset/dataset-analysis-list#param-error` |
 | `#規格` | `dataset/dataset-analysis-list#state-default` |
 | `#邊界情況edge-case` | `dataset/dataset-analysis-list#param-invalid-task` |
 | `#邊界情況edge-case` | `dataset/dataset-analysis-list#param-view-empty` |
@@ -187,6 +188,7 @@
 | `#序列標註的統計` | `dataset/dataset-analysis-detail#state-seq-match-strict` |
 | `#序列標註的統計` | `dataset/dataset-analysis-detail#state-stats-sequence-tagging` |
 | `#自由文字的統計` | `dataset/dataset-analysis-detail#state-stats-free-text` |
+| `#載入失敗只換掉內容區` | `dataset/dataset-analysis-detail#param-error` |
 | `#邊界情況edge-case` | `dataset/dataset-analysis-detail#state-stats-empty` |
 | `#關係識別的統計` | `dataset/dataset-analysis-detail#state-stats-relation-identification` |
 

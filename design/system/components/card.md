@@ -8,9 +8,9 @@
 | :--- | :--- | :--- |
 | 容器：`1px solid --color-border`、`--radius-lg`、`--color-white` 底、`--space-lg` 內距 | 必填 | `pages/shared/card.css`（#423 起唯一一份）；`.panel` 是正典 class，`.form-card`、`.section-card`、`.content-card` 是同一個容器的別名 |
 | `.panel-header`（標題與動作分置兩端） | 選用，只在 `dashboard` | `dashboard.layout.css:180` |
-| `.panel-title`（1.05rem／600） | 選用，只在 `dashboard`；`task-detail` 另有一份 16px 的同名規則（`task-detail.html:95`） | `dashboard.layout.css:187` |
+| `.panel-title`（1.05rem／600） | 選用，只在 `dashboard`；`task-detail` 另有一份 16px 的同名規則（`task-detail.html:96`） | `dashboard.layout.css:187` |
 | `.panel-subtitle`（`--color-ink-muted`、0.875rem） | 選用，只在 `dashboard` | `:194` |
-| `.form-card-title`（16px／600，下緣一條 `--color-border` 分隔線） | 選用，只在 `.form-card` | `task-new.html:56` |
+| `.form-card-title`（16px／600，下緣一條 `--color-border` 分隔線） | 選用，只在 `.form-card` | `task-new.html:57` |
 
 **共用檔**：容器四條規則原本在六個頁面各寫一份（`dashboard` 與 `task-detail` 的 `.panel`、`task-new` 的 `.form-card`、`account/profile` 的 `.section-card`、`annotation-workspace` 的 `.content-card`、`dataset-analysis-detail` 的 `.panel`）。#423 依維護者 2026-11-18 裁定抽成 `pages/shared/card.css`、以 `.panel` 為準；舊的 class 名保留為別名，頁面只留自己的變體規則 → `../design-gaps.md` G-41。
 
@@ -19,10 +19,10 @@
 | 變體 | 差別 | 依據 |
 | :--- | :--- | :--- |
 | `dashboard` 的 `.panel` | 直向 flex、子元素間距 `--space-md`、`min-width: 0` | `dashboard.layout.css:173`–`:178` |
-| `task-detail` 的 `.panel` | `margin-bottom: --space-md` | `task-detail.html:94` |
-| `task-new` 的 `.form-card` | `margin-bottom: --space-md` 與帶分隔線的標題 | `task-new.html:55`–`:56` |
+| `task-detail` 的 `.panel` | `margin-bottom: --space-md` | `task-detail.html:95` |
+| `task-new` 的 `.form-card` | `margin-bottom: --space-md` 與帶分隔線的標題 | `task-new.html:56`–`:57` |
 | `account/profile` 的 `.section-card` | `margin-bottom: --space-lg`，手機版內距縮成 16px | `profile.html:68` |
-| `annotation-workspace` 的 `.content-card` | 只有容器四條 | `annotation-workspace.html:250`（只剩指向共用檔的註解） |
+| `annotation-workspace` 的 `.content-card` | 只有容器四條 | `annotation-workspace.html:251`（只剩指向共用檔的註解） |
 | `dataset-analysis-detail` 的 `.panel` | `margin-bottom: --space-md` | `dataset-analysis-detail.html:50` |
 
 ## 適用狀態
@@ -31,8 +31,8 @@
 | :--- | :--- | :--- |
 | 預設 | 有 | 同上 |
 | hover／focus | 未觀察到（卡片本身不可互動） | 三處定義都沒有 `:hover`／`:focus` |
-| 載入中 | 有，由 [Skeleton](skeleton.md) 放進卡片裡 | `dashboard.html:66`–`:78`；`task-detail.html:1899`–`:1910` 的 `.skeleton-card` 沿用同一組容器規則（`:72`–`:76`） |
-| 錯誤 | 頁面自理：`dashboard` 換成 `.dashboard-error-state`（同一組容器規則，`dashboard.components.css` 的 Error state 區塊） | `dashboard.html:97` |
+| 載入中 | 有，由 [Skeleton](skeleton.md) 放進卡片裡 | `dashboard.html:67`–`:79`；`task-detail.html:1890`–`:1901` 的 `.skeleton-card` 沿用同一組容器規則（`:73`–`:77`） |
+| 錯誤 | 頁面自理：`dashboard` 換成 `.dashboard-error-state`（同一組容器規則，`dashboard.components.css` 的 Error state 區塊） | `dashboard.html:98` |
 | 空 | 由 [Empty State](empty-state.md) 放進卡片裡 | `dashboard.js:431` |
 
 ## token

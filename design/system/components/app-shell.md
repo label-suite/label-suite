@@ -1,6 +1,6 @@
 # App Shell（Sidebar）
 
-> 正典章節：`MASTER.md` — Sidebar（`pages/task-management/task-new.html:20` 這樣引用它）｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
+> 正典章節：`MASTER.md` — Sidebar（`pages/task-management/task-new.html:21` 這樣引用它）｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
 >
 > 這是交付包的 `shared/app-shell` 條目：**一個沒有自己 HTML 檔的畫面**。`pages/shared/` 一個 `.html` 都沒有，外殼整套由 `sidebar.js` 注入。
 
@@ -55,7 +55,7 @@ hover／focus／disabled 等元件層狀態**未逐項盤點**——外殼不是
 
 ## token
 
-`--nav-active-bg`、`--color-tab-active-bg`、`--color-tab-hover-bg`、`--workspace-tab-min-width`、`--workspace-tab-max-width`、`--z-sticky`、`--z-dropdown` 等；`tokens.css` 有一整組**只為側欄與頁籤存在**的 token。b2 已逐條核對：`sidebar.css` 用到 40 個 token，38 個在 `tokens.css`（加入 `--color-primary-strong` 後是 41 個、39 個）；`--navbar-mobile-height`、`--navbar-mobile-top-height` 兩個要宿主頁面自己定義（`sidebar.css:831`–`:837` 的窄視窗規則用它們）→ `../design-gaps.md` G-24。
+`--nav-active-bg`、`--color-tab-active-bg`、`--color-tab-hover-bg`、`--workspace-tab-min-width`、`--workspace-tab-max-width`、`--z-sticky`、`--z-dropdown` 等；`tokens.css` 有一整組**只為側欄與頁籤存在**的 token。b2 已逐條核對：`sidebar.css` 用到 40 個 token，38 個在 `tokens.css`（加入 `--color-primary-strong` 後是 41 個、39 個，#420 再加 `--color-badge-notify` 後是 42 個、40 個）；`--navbar-mobile-height`、`--navbar-mobile-top-height` 兩個要宿主頁面自己定義（`sidebar.css:831`–`:837` 的窄視窗規則用它們）→ `../design-gaps.md` G-24。
 
 ## 鍵盤與焦點
 
@@ -90,8 +90,8 @@ hover／focus／disabled 等元件層狀態**未逐項盤點**——外殼不是
 | `account/profile` | 唯一連結 `sidebar.css` 的 b1 畫面 |
 | `account/login`／`register`／`forgot-password`／`reset-password`／`verify-email` | **只載 `sidebar.js`**，用 `redirectIfLoggedIn()`；沒有外殼 |
 | `admin/user-management`、`admin/role-settings`、`dashboard/dashboard`、`task-management/task-list`、`task-new`、`task-detail`（b2 全部視圖） | 連結 `sidebar.css` ＋ `sidebar.js`；除 `dashboard` 外各自在 `<style>` 定義 `--navbar-mobile-height`／`--navbar-mobile-top-height`，`dashboard` 定義在 `dashboard.layout.css:6` → `../design-gaps.md` G-24 |
-| `annotation/annotation-list`（全部九個視圖） | `shared/sidebar.css`＋`sidebar.js`；本頁自己定義 `--navbar-mobile-height: 84px`、`--navbar-mobile-top-height: 64px`（`annotation-list.html:15`–`:17`） |
+| `annotation/annotation-list`（全部九個視圖） | `shared/sidebar.css`＋`sidebar.js`；本頁自己定義 `--navbar-mobile-height: 84px`、`--navbar-mobile-top-height: 64px`（`annotation-list.html:16`–`:18`） |
 | `annotation/annotation-workspace`（全部十三個視圖） | 同一份外殼，但**沒有定義**那兩個行動版變數，`sidebar.css:828`–`:837` 在窄螢幕拿到空值 → `../design-gaps.md` G-24 |
-| `dataset/dataset-analysis-list`（全部四個視圖）、`dataset/dataset-analysis-detail`（全部二十六個視圖） | `shared/sidebar.css`＋`sidebar.js`；兩頁都自己定義 `--navbar-mobile-height`／`--navbar-mobile-top-height`（`dataset-analysis-list.html:20`、`dataset-analysis-detail.html:23`） |
+| `dataset/dataset-analysis-list`（全部四個視圖）、`dataset/dataset-analysis-detail`（全部二十六個視圖） | `shared/sidebar.css`＋`sidebar.js`；兩頁都自己定義 `--navbar-mobile-height`／`--navbar-mobile-top-height`（`dataset-analysis-list.html:21`、`dataset-analysis-detail.html:23`） |
 
 b2 的六頁、b3 的兩頁、b4 的兩頁已補上（見上表）。

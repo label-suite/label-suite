@@ -6,7 +6,7 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.output-accordion` 外框（`overflow: hidden`） | 必填 | `components-showcase.html:742` |
+| `.output-accordion` 外框（`overflow: hidden`） | 必填 | `components-showcase.html:740` |
 | `.output-accordion-header`（`role="button"`、`tabindex="0"`、`aria-expanded`、`aria-controls`） | 必填 | `:752`、樣本 `:1288` |
 | `.output-accordion-number` 序號 | 選用 | 樣本 `:1289`，**CSS 沒有這個 class 的規則** |
 | `.output-accordion-title` 標題 | 必填 | 樣本 `:1290`，同樣沒有 CSS 規則 |
@@ -25,7 +25,7 @@
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| 展開（預設） | 有 | `components-showcase.html:742` |
+| 展開（預設） | 有 | `components-showcase.html:740` |
 | 收合 | 有。`.collapsed` 讓 body `display: none`、箭頭轉 −90° | `:778`、`:787` |
 | hover | 有，header 底色換 `--color-primary-soft-bg` | `:766` |
 | focus | **未觀察到**。header 有 `tabindex="0"`、聚焦得到也按得動，但沒有任何 `:focus` 樣式 | 以 `:focus` 掃 `:741`–`:789`，0 命中 → `../design-gaps.md` G-05 |
@@ -37,17 +37,17 @@
 
 ## 鍵盤與焦點
 
-header 是 `<div role="button" tabindex="0">` 而不是 `<button>`，原生的 Enter／Space 不會觸發 `click`，所以行為由腳本補齊：`components-showcase.html:1562`–`:1574` 對每個 header 綁 `click`，另綁 `keydown` 攔 `Enter` 與 `Space`（`:1569`），切換 `.collapsed` 並同步 `aria-expanded`（`:1565`）。面板彼此獨立。
+header 是 `<div role="button" tabindex="0">` 而不是 `<button>`，原生的 Enter／Space 不會觸發 `click`，所以行為由腳本補齊：`components-showcase.html:1560`–`:1572` 對每個 header 綁 `click`，另綁 `keydown` 攔 `Enter` 與 `Space`（`:1567`），切換 `.collapsed` 並同步 `aria-expanded`（`:1563`）。面板彼此獨立。
 
 唯一缺的是**焦點樣式**（見上）：鍵盤使用者聚焦到 header 時沒有可見指示。
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:741`–`:789`。shipped 的那一份在 `pages/task-management/task-config.css`（b2）。
+`design/prototype/components-showcase.html:739`–`:787`。shipped 的那一份在 `pages/task-management/task-config.css`（b2）。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-accordion`（`components-showcase.html:1282`）：第一個展開（`aria-expanded="true"`），第二個收合。兩者都是**可操作的**——點或按 Enter／Space 會真的切換。
+`components-showcase#state-default` → `#comp-accordion`（`components-showcase.html:1280`）：第一個展開（`aria-expanded="true"`），第二個收合。兩者都是**可操作的**——點或按 Enter／Space 會真的切換。
 
 ## shadcn 對照
 

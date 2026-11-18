@@ -1,14 +1,14 @@
 # 覆蓋核對
 
-交付包版本：commit `c77da22351dd298093fe63a0f1c9c22dc8952f86`，prototype tree `86b43b19dca27ea3d250c7455f6463f39b224932`。
+交付包版本：commit `5b1cb921515bb5ef0237626b3f1a8d2c1ee883ad`，prototype tree `d9c2ab67868bd56cb9015953e4b947f6fb472950`。
 產生依據：[`design-handoff` skill](../../../.claude/skills/design-handoff/SKILL.md) 的步驟 4。工作源頭是 [Issue #248](https://github.com/label-suite/label-suite/issues/248)。
 
-**本次是第七版**（第六次重跑）。差異見 §九。
+**本次是第九版**（第八次重跑）。差異見 §九。
 
 | 項目 | 數 |
 | :--- | ---: |
 | 條目 | 19（18 個畫面 ＋ 1 個共用外殼） |
-| 視圖 | 152 |
+| 視圖 | 154 |
 | 批次 | 5（`b0` 本 skill 做完，`b1`–`b4` 交給 `design-system-setup`） |
 | 無法重現的視圖 | 3 |
 | 沒有規格可連的視圖 | 2 |
@@ -36,7 +36,7 @@
 
 這是一個**刻意寬鬆**的斷言：「至少一個」不等於逐項涵蓋。逐列看，`task-detail` 的「設定、抽樣、guideline、run control、成員操作、匯出」整列對到六個分頁、五個設定區段（`#param-section-*`，第二次重跑才補上）與 `state-panel-load-failed`，但「run control、成員操作、匯出」三項仍然沒有各自的視圖——一個 12,501 行、6 個 panel、含日期區間選擇器與分類刪除彈窗的畫面只收 17 個視圖，`modal-`／`toast-` 一個都沒有。`design-system-setup` 在 `b2` 會吃到這個缺口。
 
-視圖數比 `Inline` 列多很多（152 vs 24），因為 `Inline` 把「搜尋／篩選／排序／分頁」這類寫成一列，而 URL 參數掃描把它們拆成可個別重現的狀態。
+視圖數比 `Inline` 列多很多（154 vs 24），因為 `Inline` 把「搜尋／篩選／排序／分頁」這類寫成一列，而 URL 參數掃描把它們拆成可個別重現的狀態。
 
 ### 另一道對照：網址參數契約 vs 掃出來的全集
 
@@ -44,12 +44,16 @@
 
 本次結果（**第三版，兩步掃描**）：**兩個方向各 0 筆。**
 
+第七次重跑時（第八版）多了一筆：[Issue #422](https://github.com/label-suite/label-suite/issues/422) 在 `dataset-analysis-list.model.js:241` 與 `dataset-analysis-detail.html:1434` 新增 `error`（只認 `1`），**程式有、契約沒有**。建議把它補進 `navigation.mdx` §網址參數 的兩列資料集分析頁（本 skill 不改那份文件）。兩個視圖已收為 `#param-error`。
+
+第八次重跑時（第九版）這一筆已關閉：`navigation.mdx` 的兩列資料集分析頁補上了 `error`，兩個方向又是各 0 筆。
+
 第二版寫「兩個方向各 0 筆」而**那是錯的**，因為掃描法只找字面量 `.get('<名稱>')`，看不見把參數名放在表裡、以變數讀的寫法。獨立審查連續兩輪抓到四處這種寫法：
 
 | 位置 | 名字從哪來 | 宣告新參數 |
 | :--- | :--- | ---: |
-| `task-detail.html:5119` | `URL_VIEW_STATE` | **16** |
-| `annotation-workspace.config.js:1552` | `LIST_VIEW_STATE_KEYS` ＋ `LIST_IDENTITY_KEYS` | **6** |
+| `task-detail.html:5048` | `URL_VIEW_STATE` | **16** |
+| `annotation-workspace.config.js:1561` | `LIST_VIEW_STATE_KEYS` ＋ `LIST_IDENTITY_KEYS` | **6** |
 | `dataset-analysis-detail.html:2433` | `PROTOTYPE_ONLY_PARAMS` | 0（`s_state` 已在表上） |
 | `sidebar.js:732` | 列舉既有鍵 | 0 |
 
@@ -140,7 +144,7 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 ### 3. `task-management/task-new#state-banner-error`
 
-- **卡在哪一步**：頂端錯誤橫幅 `#bannerError`（`task-new.html:221`）只有「下一步」的 click handler 會呼叫 `showBannerError()`（`:1605`–`:1640`）。但第一步與第三步每次輸入都跑 `revalidateCurrentStep()`（`:1100`），驗證不過就把「下一步」設成 disabled，所以那段 handler 永遠走不到。
+- **卡在哪一步**：頂端錯誤橫幅 `#bannerError`（`task-new.html:233`）只有「下一步」的 click handler 會呼叫 `showBannerError()`（`:1650`–`:1685`）。但第一步與第三步每次輸入都跑 `revalidateCurrentStep()`（`:1136`），驗證不過就把「下一步」設成 disabled，所以那段 handler 永遠走不到。
 - **實測**：清空任務名稱、把第三步抽樣筆數改成 0，「下一步」都是停用，橫幅不出現。
 - **規格**：[03-02 §卡控機制](../../../docs/specs/03-task-management/02-task-new.mdx#卡控機制)。
 - **待決**：G-40 的裁定要把它補成視圖，但畫面目前叫不出來。是畫面要改成讓按鈕可按、還是這個視圖本來就不該列，要維護者決定，本 skill 不判斷。
@@ -219,7 +223,82 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 ## 九、重跑紀錄
 
-### 第六次（本版）
+### 第八次（本版）
+
+上一版釘在 `e69cc99`。之後同一張單（[Issue #420](https://github.com/label-suite/label-suite/issues/420)）依維護者的裁示再改了四個 prototype 檔，並改了 `navigation.mdx`。
+
+| 欄位 | 第八版 | 本版 | |
+| :--- | :--- | :--- | :--- |
+| `commit` | `e69cc9925435` | `5b1cb921515b` | 必然變 |
+| `prototypeTree` | `6241519a5d37` | `d9c2ab67868b` | **變了** |
+| `specsTree` | `58bee0ccf9d5` | `58bee0ccf9d5` | 沒變 |
+| `navigationBlob` | `fab9fabe0dab` | `29e4eea42c99` | **變了** |
+
+變動的檔：
+- `tokens.css`：淺色 `--color-task` 改成 Teal 700，讓它在 `--color-task-bg` 上的文字對比到 4.5:1。
+- `data-palette.css`：實體色、輪次色與切分色加上深色那一組（原本兩種主題共用一組）。
+- `task-config.data.js`：在 `ENTITY_COLORS` 後面加 `entityPaintColor()`／`entityWashColor()`。
+- `task-config.engine.js`：上色處改走這兩個函式，每處只換一行，所以行號沒動。
+- `navigation.mdx`：重新對齊行號，並在兩列資料集分析頁補上 `error`。
+
+| 類 | 數 | 內容 |
+| :--- | ---: | :--- |
+| 新增 | 0 | |
+| 移除 | 0 | |
+| 改寫 | 0 | 重現步驟引用的行號都不在變動的範圍內 |
+| `loads` 欄 | 0 | 沒有新增或移除載入的檔 |
+| 參數 | 0 | 掃出來的全集不變；`error` 這次補進了契約，§二 的缺口關閉 |
+| 受影響 | 140 | 154 個視圖中有 140 個的畫面載入了變動的檔（`tokens.css` 140 個、`data-palette.css` 72 個、`task-config.*` 68 個） |
+
+### 應重驗的批次（第八次）
+
+| 批次 | 載入變動檔的視圖 | 新增 | 該批的參數驅動視圖 |
+| :--- | ---: | ---: | ---: |
+| `b1-shared-account` | 29／43 | 0 | 沒變 |
+| `b2-admin-dashboard-task` | 54／54 | 0 | 沒變 |
+| `b3-annotation-review` | 25／25 | 0 | 沒變 |
+| `b4-dataset-sweep` | 32／32 | 0 | 沒變；`error` 已在契約裡 |
+
+這次只動到**顏色**，沒有改行為或版面。四批不必重做結構，只要重看顏色。這次已在同一張單裡把 `components/`（35 份）、`pages/`（19 份）與 `MASTER.md` 的每一句顏色描述，逐句對照 HEAD 上淺色與深色兩種主題的實際算出值：17 份元件文件改了 25 處，頁面文件與 `MASTER.md` 0 處。畫不出來的狀態（例如錯誤列、`.pass`／`.warn` 進度條、偽元素的開關鈕）只以 CSS 核對。
+
+### 第七次
+
+上一版釘在 `c77da22`。之後 main 合併了 [Issue #422](https://github.com/label-suite/label-suite/issues/422)（無障礙修正）與 [Issue #423](https://github.com/label-suite/label-suite/issues/423)（元件一致性），兩者都改了 prototype 卻沒有重跑交付包；本分支再加上 [Issue #420](https://github.com/label-suite/label-suite/issues/420) 的寫死色值改 token。這一版把三張單一起算。
+
+| 欄位 | 第七版 | 本版 | |
+| :--- | :--- | :--- | :--- |
+| `commit` | `c77da22351dd` | `e69cc9925435` | 必然變 |
+| `prototypeTree` | `86b43b19dca2` | `6241519a5d37` | **變了** |
+| `specsTree` | `e8362d715d6b` | `58bee0ccf9d5` | **變了** |
+| `navigationBlob` | `c64128a7e7a5` | `fab9fabe0dab` | **變了** |
+
+變動的檔：prototype 34 個（#422／#423 改 22 個，#420 改 25 個，有重疊）；規格 2 個（`03-task-management/01-task-list.mdx`、`07-shared/01-sidebar.mdx`，兩次都只改引用 prototype 的行號，標題沒變）；`navigation.mdx` 只改引用行號。
+
+| 類 | 數 | 內容 |
+| :--- | ---: | :--- |
+| 新增 | 2 | `dataset/dataset-analysis-list#param-error`、`dataset/dataset-analysis-detail#param-error`（#422 的 `?error=1`）。兩個都在執行中的 prototype 開過才記：清單只剩一列「資料集分析載入失敗」與「重試」、分頁列隱藏；詳情頁兩個面板都換成「資料載入失敗」與「重新載入」 |
+| 移除 | 0 | #423 移除的分析詳情 toast 原本就沒有收成視圖 |
+| 改寫 | 17 | 重現步驟裡的行號依修正後的檔重新對齊（只搬動內容沒變的行）；兩個 `#modal-audit-log` 的抽屜由 #422 抽到 `shared/audit-drawer.js`，改引用那個檔，並把它加進 `evidence` |
+| `loads` 欄 | 17 | #420：五個帳號頁加 `tokens.css`、登入頁加 `google-g.svg`、八個條目加 `data-palette.css`；#422／#423：兩個管理頁加 `audit-drawer.css`／`audit-drawer.js`、三個條目加 `modal-focus.js`、六個條目加 `card.css` |
+| 參數 | 2 | 兩個資料集分析條目的 `params` 加 `error`；契約缺口見 §二 |
+| 受影響 | 141 | 依 `evidence`／`spec` 算出的；見下表 |
+
+規格錨點逐一對過：新增兩個視圖指到的 `#四種互斥的頁面狀態`、`#載入失敗只換掉內容區` 都是現有標題。
+
+**只看證據仍會低估**：`tokens.css`、`data-palette.css`、`card.css`、`audit-drawer.css` 與 `shared/` 的多個樣式檔沒有被任何視圖列為 `evidence`，而 #420 把 22 個檔的寫死色值換成 token，幾乎每個視圖的顏色來源都變了。
+
+### 應重驗的批次（第七次）
+
+| 批次 | 依 `evidence`／`spec` 算出的 | 新增 | 該批的參數驅動視圖 |
+| :--- | ---: | ---: | ---: |
+| `b1-shared-account` | 33／43 | 0 | `navigationBlob` 有變，但只改行號，沒有改參數 |
+| `b2-admin-dashboard-task` | 52／54 | 0 | 同上 |
+| `b3-annotation-review` | 25／25 | 0 | 同上 |
+| `b4-dataset-sweep` | 31／32 | 2 | 同上；`error` 是程式新增、契約還沒有的參數 |
+
+四批都要重驗。#420 的部分只需要重看**顏色**（`design-system-setup` 已做 b1～b4 的色值複查，見 `MASTER.md` 變更紀錄第 5 列）；#422／#423 的部分改了行為（彈窗焦點、Esc 與遮罩、提交受阻時的指引、參考值、卡片與按鈕抽成共用樣式），那幾批的元件與畫面規格要依各自的單重驗，本次重跑只記錄它們動到哪些視圖。
+
+### 第六次
 
 [Issue #427](https://github.com/label-suite/label-suite/issues/427) 第五次重跑之後，維護者 2026-11-18 的兩輪裁定又改了 prototype：淺色 `--color-border-control` 從 `#8592A6` 加深為 `#7C899D`（在 surface 上也過 3:1）；日期區間與分類選擇這兩個長得像欄位的觸發鈕改用 `--color-border-control`；五個帳號頁的 `--color-link` 在兩種主題都對齊 `--color-primary-strong`（淺色 `#4F46E5`、深色 `#A5B4FC`）。規格沒有變動。
 

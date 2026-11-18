@@ -4,7 +4,7 @@
 
 ## 入口
 
-註冊驗證信裡的連結。載入 `assets/analytics.js`、`pages/shared/sidebar.js`，**無共用 CSS**。
+註冊驗證信裡的連結。載入 `assets/tokens.css`（#420 起）、`assets/analytics.js`、`pages/shared/sidebar.js`，**無其他共用 CSS**。
 
 **這一頁沒有表單**，所以也沒有 [Input](../components/input.md)、[Spinner](../components/spinner.md) 或 [Password Eye Toggle](../components/password-eye-toggle.md)——是 b1 唯一一個純結果頁。
 

@@ -14,35 +14,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../assets/tokens.css" />
   <style>
-    /* ── Design Tokens ─────────────────────────────────────────── */
-    :root {
-      --color-primary:        #6366F1;
-      --color-on-cta:        #FFFFFF;   /* mirrors tokens.css; logo line art on --color-primary */
-      --color-primary-soft-bg:  #EEF2FF;
-      --color-cta:            #047857;
-      --color-cta-hover:      #065F46;
-      --color-surface:        #F5F3FF;
-      --color-card:           #FFFFFF;
-      --color-border:         #E2E8F0;
-      --color-border-focus:   #6366F1;
-      --color-ink:            #1E1B4B;
-      --color-ink-muted:     #5E6B7F;
-      --color-error:          #B91C1C;
-      --color-error-bg:       #FEF2F2;
-      --color-error-border:   #FECACA;
-      --color-success:        #15803D;
-      --color-success-bg:     #F0FDF4;
-      --color-success-border: #BBF7D0;
-      --color-link:           #4F46E5;   /* mirrors --color-primary-strong in both themes (issue #427) */
-      --radius-sm:            4px;
-      --radius-md:            8px;
-      --radius-lg:            12px;
-      --z-sticky:             200;
-      --shadow-card:          0 4px 24px rgba(99,102,241,0.10), 0 1px 4px rgba(0,0,0,0.06);
-      --font-sans:            'Inter', 'Noto Sans TC', 'PingFang TC', -apple-system, sans-serif;
-    }
-
     /* ── Reset ─────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { font-size: 16px; }
@@ -54,11 +27,13 @@
       display: flex;
       flex-direction: column;
     }
+    /* 改載 tokens.css（G-03）前本頁沒有設 line-height；保留原本的行高，排版不變 */
+    html[lang] body { line-height: normal; }
 
     /* ── Navbar ─────────────────────────────────────────────────── */
     .navbar {
       height: 64px;
-      background: var(--color-card);
+      background: var(--color-white);
       border-bottom: 1px solid var(--color-border);
       display: flex;
       align-items: center;
@@ -95,7 +70,7 @@
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
       padding: 6px 12px;
-      background: var(--color-card);
+      background: var(--color-white);
       color: var(--color-ink);
       font-family: 'Inter', sans-serif;
       font-size: 13px;
@@ -121,7 +96,7 @@
 
     /* ── Card ───────────────────────────────────────────────────── */
     .card {
-      background: var(--color-card);
+      background: var(--color-white);
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-card);
       padding: 40px 40px 36px;
@@ -194,7 +169,7 @@
       padding: 0 20px;
       border: 1px solid var(--color-error-border);
       border-radius: var(--radius-md);
-      background: var(--color-card);
+      background: var(--color-white);
       color: var(--color-error);
       font-family: 'Inter', sans-serif;
       font-size: 13px;
@@ -249,7 +224,7 @@
 
     .success-panel-back {
       font-size: 13px;
-      color: var(--color-link);
+      color: var(--color-primary-strong);
       text-decoration: none;
       font-weight: 500;
     }
@@ -286,7 +261,7 @@
       transition: background 0.15s, color 0.15s;
       white-space: nowrap;
     }
-    .proto-btn.active  { background: #6366F1; color: #fff; }
+    .proto-btn.active  { background: var(--color-primary); color: var(--color-on-cta); }
     .proto-btn.inactive { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); }
     .proto-btn.inactive:hover { background: rgba(255,255,255,0.2); }
 
@@ -306,29 +281,6 @@
       *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
     }
 
-    /* ── Dark mode overrides ──────────────────────────────────── */
-    html[data-theme="dark"] {
-      --color-surface:       #0B0B12;
-      --color-card:          #16161F;
-      --color-border:        #2A2A35;
-      --color-border-focus:  #818CF8;
-      --color-ink:           #E2E8F0;
-      --color-ink-muted:    #9CA3AF;
-      --color-link:          #A5B4FC;   /* mirrors --color-primary-strong in both themes (issue #427) */
-      --color-primary:       #818CF8;
-      --color-on-cta:       #1E1B4B;   /* mirrors tokens.css dark theme */
-      --color-primary-soft-bg: #1E1B4B;
-      --color-error:         #F87171;
-      --color-error-bg:      #2A1414;
-      --color-error-border:  #5B2222;
-      --color-success:       #4ADE80;
-      --color-success-bg:    #0F2A18;
-      --color-success-border:#1F5132;
-      --shadow-card:         0 0 0 1px rgba(129,140,248,0.10), 0 4px 24px rgba(0,0,0,0.40);
-
-      /* Lang toggle hover */
-      .lang-toggle:hover { background: #1E1B4B; }
-    }
   </style>
 </head>
 <body>

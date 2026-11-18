@@ -32,7 +32,7 @@
 
 ## token
 
-`--color-ink-muted`、`--color-ink`、`--color-white`、`--dur-fast`。寫死：泡泡圓角 6px（`:305`）、`z-index: 500`（`:301`，`tokens.css` 有 `--z-*` 系列卻沒用） → G-02。
+`--color-ink-muted`、`--color-ink`、`--color-white`、`--color-primary`（觸發鈕 focus）、`--dur-fast`。寫死：泡泡圓角 6px（`:305`）、`z-index: 500`（`:301`，`tokens.css` 有 `--z-*` 系列卻沒用） → G-02。
 
 ## 鍵盤與焦點
 
@@ -44,11 +44,11 @@
 
 ## 樣式出處
 
-`design/prototype/pages/task-management/task-config.css:259`–`:329`（`task-new` 與 `task-detail` 共用；`task-detail.html:1071` 的註解寫明搬過來共用）。
+`design/prototype/pages/task-management/task-config.css:259`–`:329`（`task-new` 與 `task-detail` 共用；`task-detail.html:1072` 的註解寫明搬過來共用）。
 
 ## 可重現樣本
 
-`task-management/task-new#state-step3`（`task-new.html:393`–`:398`）、`task-management/task-detail#tab-settings`（`settings.html:321`–`:323`）、`annotation/annotation-workspace#role-reviewer`（審核說明）。
+`task-management/task-new#state-step3`（`task-new.html:408`–`:411`）、`task-management/task-detail#tab-settings`（`settings.html:321`–`:323`）、`annotation/annotation-workspace#role-reviewer`（審核說明）。
 
 ## shadcn 對照
 

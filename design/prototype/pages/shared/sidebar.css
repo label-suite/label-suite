@@ -488,7 +488,7 @@
 
 .shortcut-help-section h3 {
   margin: 0;
-  color: var(--color-ink-muted, #94A3B8);
+  color: var(--color-ink-muted);
   font-size: 12px;
   font-weight: 600;
   line-height: 1.25;
@@ -672,7 +672,7 @@ html[data-theme="dark"] .shortcut-help-dialog {
   height: 16px;
   padding: 0 4px;
   border-radius: 9999px;
-  background: #B91C1C;   /* red-700 — WCAG AA fix (issue singyichen/label-suite#973), was #EF4444 (3.76:1). Reuses --color-error's light-mode value; still hardcoded (not var(--color-error)) and constant across themes per the issue singyichen/label-suite#183 arbitration — only the constant's value changed. */
+  background: var(--color-badge-notify);   /* constant across themes (issue singyichen/label-suite#183 arbitration); the value and its 6.47:1 contrast live in tokens.css (#420 Q5) */
   color: #fff;
   font-size: 10px;
   font-weight: 700;
@@ -784,11 +784,11 @@ html[data-theme="dark"] .shortcut-help-dialog {
   word-break: break-word;
 }
 
-.notif-item.is-read .notif-item-text { color: var(--color-ink-muted, #94A3B8); }
+.notif-item.is-read .notif-item-text { color: var(--color-ink-muted); }
 
 .notif-item-time {
   font-size: 11px;
-  color: var(--color-ink-muted, #94A3B8);
+  color: var(--color-ink-muted);
 }
 
 .notif-item-dot {

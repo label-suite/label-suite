@@ -272,31 +272,21 @@
       border-color: var(--color-error-soft-border);
     }
 
-    /* issue label-suite/label-suite#179: the two task-state badges with no
-       semantic-token equivalent. Declarations copied verbatim from
-       task-list.html so the same state renders identically on both screens. */
-    .badge-draft {
-      color: #4B5563;
-      background: #F9FAFB;
-      border-color: #E5E7EB;
-    }
-
-    .badge-dry-run-status {
-      color: #6B7280;
-      background: #F3F4F6;
-      border-color: #D1D5DB;
-    }
-
+    /* issue label-suite/label-suite#179: task-state badges. #420 Q1 maps the
+       neutral ones to ink-muted / slate-50 / border and Q2 maps "official" to
+       the accent family; all of them flip in tokens.css, no dark override. */
+    .badge-draft,
+    .badge-dry-run-status,
     .badge-dry-run {
-      color: #6B7280;
-      background: #F3F4F6;
-      border-color: #D1D5DB;
+      color: var(--color-ink-muted);
+      background: var(--color-slate-50);
+      border-color: var(--color-border);
     }
 
     .badge-official {
-      color: #5B21B6;
-      background: #EDE9FE;
-      border-color: #DDD6FE;
+      color: var(--color-accent);
+      background: var(--color-accent-bg);
+      border-color: var(--color-accent-border);
     }
 
     /* ── Metrics ───────────────────────────────────────────────– */

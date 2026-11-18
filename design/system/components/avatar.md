@@ -8,7 +8,7 @@
 
 | 模式 | 結構 | 依據 |
 | :--- | :--- | :--- |
-| display-only | 單一 `<img class="avatar-sm">`（32×32，2px primary/20 邊框） | `components-showcase.html:902`、樣本 `:1358` |
+| display-only | 單一 `<img class="avatar-sm">`（32×32，2px primary/20 邊框） | `components-showcase.html:900`、樣本 `:1356` |
 | uploadable | `.avatar-wrap`（`role="button"`、`tabindex="0"`、`aria-label`、`aria-describedby`）> `.avatar-preview` ＋ `.avatar-overlay`（`aria-hidden`）＋ 隱藏的 `<input type="file">`；外加 `.avatar-error`（`role="alert"`）與 `.avatar-hint` | `:908`–`:953`、樣本 `:1360`–`:1369` |
 
 `.avatar-preview` 的預設內容是**姓名首字**（樣本是「陳」，`:1362`）；選了檔案後換成 `<img>`。
@@ -28,7 +28,7 @@ showcase 的說明寫「profile 64/80px」（`:1356`），它自己的 CSS 是 8
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| 預設（首字） | 有 | `components-showcase.html:918`、`:1362` |
+| 預設（首字） | 有 | `components-showcase.html:916`、`:1360` |
 | 已上傳 | 有，`<img>` 蓋滿、`object-fit: cover` | `:932`、腳本 `:1605`–`:1610` |
 | hover | 有，遮罩 `opacity: 0 → 1`（唯一一條標為 verbatim 的正典 CSS，`:947`–`:948`） | `:948` |
 | focus | **有**。`.avatar-wrap:focus-visible` 畫 2px primary outline，`outline-offset: 2px` | `:914`–`:917` — 這是 b1 唯一一個有焦點樣式的元件 |
@@ -39,7 +39,7 @@ showcase 的說明寫「profile 64/80px」（`:1356`），它自己的 CSS 是 8
 
 `--radius-full`、`--color-primary`、`--color-white`、`--color-error`、`--color-ink-muted`、`--dur-normal`。
 
-寫死三個：邊框 `rgba(99, 102, 241, 0.2)`（`:906`，註解標為 MASTER §Avatar literal）、遮罩 `rgba(0, 0, 0, 0.5)`（`:937`），以及 80px／32px／24px 等尺寸 → `../design-gaps.md` G-02。
+寫死三個：邊框是 20% 不透明的 primary 色（`:906`，註解標為 MASTER §Avatar literal）、遮罩是 50% 不透明的黑（`:937`），兩者深色模式下都不變，以及 80px／32px／24px 等尺寸 → `../design-gaps.md` G-02。
 
 ## 鍵盤與焦點
 
@@ -49,11 +49,11 @@ showcase 的說明寫「profile 64/80px」（`:1356`），它自己的 CSS 是 8
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:900`–`:953`（CSS）、`:1576`–`:1612`（行為）。
+`design/prototype/components-showcase.html:898`–`:951`（CSS）、`:1574`–`:1610`（行為）。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-avatar`（`components-showcase.html:1354`）。**可實際選檔**：選一張超過 5 MB 或非 JPG／PNG／WebP 的檔，錯誤列會出現；選合格的檔，首字換成縮圖。
+`components-showcase#state-default` → `#comp-avatar`（`components-showcase.html:1352`）。**可實際選檔**：選一張超過 5 MB 或非 JPG／PNG／WebP 的檔，錯誤列會出現；選合格的檔，首字換成縮圖。
 
 ## shadcn 對照
 
@@ -68,6 +68,6 @@ showcase 的說明寫「profile 64/80px」（`:1356`），它自己的 CSS 是 8
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 兩種模式，uploadable 可實操 |
-| `account/profile`（`state-default`、`state-avatar-preview`） | `profile.html` 的頭像區，含「移除頭像」（`profile.html:759`）——**正典沒有這個動作** → `../design-gaps.md` G-17 |
+| `account/profile`（`state-default`、`state-avatar-preview`） | `profile.html` 的頭像區，含「移除頭像」（`profile.html:750`）——**正典沒有這個動作** → `../design-gaps.md` G-17 |
 
 `shared/sidebar.js` 另以 `#userAvatar` 呈現使用者頭像（見 [app-shell](app-shell.md)），待確認是不是 display-only 模式的同一個。

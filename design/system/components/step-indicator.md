@@ -6,7 +6,7 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.step-indicator` 容器（橫向 flex），帶 `aria-label` | 必填 | `task-new.html:40`、markup `:226` |
+| `.step-indicator` 容器（橫向 flex），帶 `aria-label` | 必填 | `task-new.html:41`、markup `:239` |
 | `.step-item`：`.step-circle`（32px 圓，數字）＋ `.step-label` | 必填 | `:40`–`:46`、`:227`–`:230` |
 | `.step-connector`（2px 連接線） | 必填 | `:47`–`:48` |
 
@@ -25,7 +25,7 @@
 | 完成（`.done`） | 有：`--color-cta` 底，連接線也變 `--color-cta` | `:43`、`:46`、`:48` |
 | hover／focus／disabled | 未觀察到（步驟不可點） | — |
 
-`--color-on-cta` 疊在 `--color-primary` 上的對比低於 AA，`tokens.css:21` 註明是「已裁定接受的取捨」，裁定記錄在原件 → `../design-gaps.md` G-25。
+淺色下 `--color-on-cta` 疊在 `--color-primary` 上的對比約 4.47:1，低於 AA，`tokens.css:21` 註明是「已裁定接受的取捨」，裁定記錄在原件 → `../design-gaps.md` G-25。深色下兩者都換成深色值，對比約 5.36:1，達 AA。
 
 ## token
 
@@ -37,7 +37,7 @@
 
 ## 樣式出處
 
-`design/prototype/pages/task-management/task-new.html:40`–`:49`（頁內 `<style>`）。
+`design/prototype/pages/task-management/task-new.html:41`–`:50`（頁內 `<style>`）。
 
 ## 可重現樣本
 

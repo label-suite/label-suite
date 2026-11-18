@@ -8,10 +8,10 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.proto-toggle-bar`（`position: fixed; bottom: 16px; left: 50%`、`rgba(30,27,75,0.92)` 底、`border-radius: 20px`） | 必填 | `pages/account/reset-password.html:378` |
-| `.proto-btn` ×3（28px 高、11px 字、`.active`／`.inactive`） | 必填 | `reset-password.html:397`；markup 見 `verify-email.html:412`–`:414` |
+| `.proto-toggle-bar`（`position: fixed; bottom: 16px; left: 50%`、`rgba(30,27,75,0.92)` 底、`border-radius: 20px`） | 必填 | `pages/account/reset-password.html:353` |
+| `.proto-btn` ×3（28px 高、11px 字、`.active`／`.inactive`） | 必填 | `reset-password.html:372`；markup 見 `verify-email.html:364`–`:366` |
 
-按鈕以 `onclick="showState('valid'｜'expired'｜'used')"` 直接呼叫頁面函式（`verify-email.html:412`–`:414`）。
+按鈕以 `onclick="showState('valid'｜'expired'｜'used')"` 直接呼叫頁面函式（`verify-email.html:364`–`:366`）。
 
 ## 變體
 
@@ -21,7 +21,7 @@
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| `.active` | 有 | `reset-password.html:397` 之後的規則 |
+| `.active` | 有 | `reset-password.html:372` 之後的規則 |
 | `.inactive` | 有 | 同上 |
 | hover | 有（`transition: background .15s, color .15s`，`:397`） | — |
 | focus | **未觀察到** | → `../design-gaps.md` G-05 |
@@ -29,9 +29,9 @@
 
 ## token
 
-**一個都沒有**：底色 `rgba(30,27,75,0.92)`、圓角 `20px`／`12px`、高度 `28px`、字級 `11px` 全部寫死。
+**只有選中鈕用 token**：`.proto-btn.active` 是 `--color-primary` 底、`--color-on-cta` 字（`reset-password.html:388`），會跟著主題換。其餘——列底色 `rgba(30,27,75,0.92)`、未選中鈕的半透明白底與白字（`:389`–`:390`）、圓角 `20px`／`12px`、高度 `28px`、字級 `11px`——全部寫死，兩種主題相同。
 
-這是刻意的：它是原型的鷹架，不該和產品共用 token，換主題時也不該跟著變 → **不列入 `design-gaps.md`**，而是記在這裡當作已知且正確的例外。
+這是刻意的：它是原型的鷹架，不該和產品共用 token，列本身換主題時也不該跟著變（選中鈕是例外）→ **不列入 `design-gaps.md`**，而是記在這裡當作已知且正確的例外。
 
 ## 鍵盤與焦點
 
@@ -39,7 +39,7 @@
 
 ## 樣式出處
 
-`design/prototype/pages/account/reset-password.html:378`、`:397`，以及 `verify-email.html` 的同一組。
+`design/prototype/pages/account/reset-password.html:353`、`:372`，以及 `verify-email.html` 的同一組。
 
 ## 可重現樣本
 
