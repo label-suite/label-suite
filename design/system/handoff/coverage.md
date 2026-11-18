@@ -1,9 +1,9 @@
 # 覆蓋核對
 
-交付包版本：commit `e69cc99254350c1dae4f0d9bbe1dc5dc0f6adf4c`，prototype tree `6241519a5d37e1482aa427f06ffcf35a155805d7`。
+交付包版本：commit `5b1cb921515bb5ef0237626b3f1a8d2c1ee883ad`，prototype tree `d9c2ab67868bd56cb9015953e4b947f6fb472950`。
 產生依據：[`design-handoff` skill](../../../.claude/skills/design-handoff/SKILL.md) 的步驟 4。工作源頭是 [Issue #248](https://github.com/label-suite/label-suite/issues/248)。
 
-**本次是第八版**（第七次重跑）。差異見 §九。
+**本次是第九版**（第八次重跑）。差異見 §九。
 
 | 項目 | 數 |
 | :--- | ---: |
@@ -45,6 +45,8 @@
 本次結果（**第三版，兩步掃描**）：**兩個方向各 0 筆。**
 
 第七次重跑時（第八版）多了一筆：[Issue #422](https://github.com/label-suite/label-suite/issues/422) 在 `dataset-analysis-list.model.js:241` 與 `dataset-analysis-detail.html:1434` 新增 `error`（只認 `1`），**程式有、契約沒有**。建議把它補進 `navigation.mdx` §網址參數 的兩列資料集分析頁（本 skill 不改那份文件）。兩個視圖已收為 `#param-error`。
+
+第八次重跑時（第九版）這一筆已關閉：`navigation.mdx` 的兩列資料集分析頁補上了 `error`，兩個方向又是各 0 筆。
 
 第二版寫「兩個方向各 0 筆」而**那是錯的**，因為掃描法只找字面量 `.get('<名稱>')`，看不見把參數名放在表裡、以變數讀的寫法。獨立審查連續兩輪抓到四處這種寫法：
 
@@ -221,7 +223,45 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 ## 九、重跑紀錄
 
-### 第七次（本版）
+### 第八次（本版）
+
+上一版釘在 `e69cc99`。之後同一張單（[Issue #420](https://github.com/label-suite/label-suite/issues/420)）依維護者的裁示再改了四個 prototype 檔，並改了 `navigation.mdx`。
+
+| 欄位 | 第八版 | 本版 | |
+| :--- | :--- | :--- | :--- |
+| `commit` | `e69cc9925435` | `5b1cb921515b` | 必然變 |
+| `prototypeTree` | `6241519a5d37` | `d9c2ab67868b` | **變了** |
+| `specsTree` | `58bee0ccf9d5` | `58bee0ccf9d5` | 沒變 |
+| `navigationBlob` | `fab9fabe0dab` | `29e4eea42c99` | **變了** |
+
+變動的檔：
+- `tokens.css`：淺色 `--color-task` 改成 Teal 700，讓它在 `--color-task-bg` 上的文字對比到 4.5:1。
+- `data-palette.css`：實體色、輪次色與切分色加上深色那一組（原本兩種主題共用一組）。
+- `task-config.data.js`：在 `ENTITY_COLORS` 後面加 `entityPaintColor()`／`entityWashColor()`。
+- `task-config.engine.js`：上色處改走這兩個函式，每處只換一行，所以行號沒動。
+- `navigation.mdx`：重新對齊行號，並在兩列資料集分析頁補上 `error`。
+
+| 類 | 數 | 內容 |
+| :--- | ---: | :--- |
+| 新增 | 0 | |
+| 移除 | 0 | |
+| 改寫 | 0 | 重現步驟引用的行號都不在變動的範圍內 |
+| `loads` 欄 | 0 | 沒有新增或移除載入的檔 |
+| 參數 | 0 | 掃出來的全集不變；`error` 這次補進了契約，§二 的缺口關閉 |
+| 受影響 | 140 | 154 個視圖中有 140 個的畫面載入了變動的檔（`tokens.css` 140 個、`data-palette.css` 72 個、`task-config.*` 68 個） |
+
+### 應重驗的批次（第八次）
+
+| 批次 | 載入變動檔的視圖 | 新增 | 該批的參數驅動視圖 |
+| :--- | ---: | ---: | ---: |
+| `b1-shared-account` | 29／43 | 0 | 沒變 |
+| `b2-admin-dashboard-task` | 54／54 | 0 | 沒變 |
+| `b3-annotation-review` | 25／25 | 0 | 沒變 |
+| `b4-dataset-sweep` | 32／32 | 0 | 沒變；`error` 已在契約裡 |
+
+這次只動到**顏色**，沒有改行為或版面。四批不必重做結構，只要重看顏色。這次已在同一張單裡把 `components/`（35 份）、`pages/`（19 份）與 `MASTER.md` 的每一句顏色描述，逐句對照 HEAD 上淺色與深色兩種主題的實際算出值：17 份元件文件改了 25 處，頁面文件與 `MASTER.md` 0 處。畫不出來的狀態（例如錯誤列、`.pass`／`.warn` 進度條、偽元素的開關鈕）只以 CSS 核對。
+
+### 第七次
 
 上一版釘在 `c77da22`。之後 main 合併了 [Issue #422](https://github.com/label-suite/label-suite/issues/422)（無障礙修正）與 [Issue #423](https://github.com/label-suite/label-suite/issues/423)（元件一致性），兩者都改了 prototype 卻沒有重跑交付包；本分支再加上 [Issue #420](https://github.com/label-suite/label-suite/issues/420) 的寫死色值改 token。這一版把三張單一起算。
 
