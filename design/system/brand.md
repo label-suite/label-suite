@@ -39,6 +39,7 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 9. **同一組一次性連結失效用同一句話。**`ONE_TIME_LINK_WORDING` 是單一來源（`pages/shared/sidebar.js:227`），重設密碼與驗證信兩頁都引用它（`reset-password.html:657`、`verify-email.html:435`）。
 10. **每個畫面同時支援繁中與英文、淺色與深色。**語言與外觀是共用介面的一部分（`00-prd.mdx:136`、`docs/specs/07-shared/01-sidebar.mdx`）；元件要用語意 token，深色主題靠 `html[data-theme="dark"]` 重新對映同名 token，頁面不寫兩份（`tokens.css` 深色區塊的檔頭說明）。
 11. **互動元件要有 `prefers-reduced-motion` 的退路。**共用 CSS 與 showcase 都有（`pages/shared/sidebar.css:185`、`components-showcase.html:971`）；`account/profile` 是唯一漏掉的帳號頁（G-30）。
+12. **圖示一律用 SVG，不用 emoji，也不用文字字元（`✕`、`←`、`→`、`✓` 等）充當圖示。**維護者裁定（2026-11-18）；repo 內早有同向的依據：ADR-030「Lucide 是唯一圖示來源」，`task-config.engine.js:869`、`:965` 的註解寫「no text-glyph icons」「no hand-drawn glyphs」。細節見 [§圖示](#圖示)。
 
 ## 設計決策
 
@@ -53,8 +54,30 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 | 語言 | 兩種：`zh`、`en`；沒有儲存值時預設 `zh`；選擇存在 `labelsuite.lang` | `pages/shared/sidebar.js:3`、`:410`–`:415` |
 | 說明按鈕 | 這期不做，下一期依 SUS 結果再決定 | `00-prd.mdx:147` |
 | 引用 `MASTER.md` 版號 | `tokens.css` 與 prototype 註解引用的 `MASTER.md` 版號、行號指向原件，本 repo 解析不到 | `MASTER.md` §這份檔是重建的、G-25 |
+| 中文稱謂 | 全部中文介面文案用「你」，不用「您」 | 維護者裁定 2026-11-18 |
+| 送出用語 | 統一「送出」＋受詞（送出標記、送出審核、送出仲裁），不用「提交」 | 維護者裁定 2026-11-18 |
+| 圖示 | 一律 SVG，不用 emoji、不用文字字元；圖示來源是 Lucide（ISC 授權），線寬統一為 2 | 維護者裁定 2026-11-18 |
+| 日期、時間、數字格式 | 日期 `YYYY-MM-DD`、時間 24 小時制 `HH:mm`（例：2026-11-18 14:30）、千分位用逗號、百分比小數一位 | 維護者裁定 2026-11-18 |
+| Email 用語 | 中文介面一律「電子郵件」，英文介面一律「Email」；後續要補進 glossary | 維護者裁定 2026-11-18 |
+| 招牌做法 | 維持 §招牌做法 的 5 項，不再增補 | 維護者裁定 2026-11-18 |
+| logo 規範 | 圓角比、最小尺寸、安全留白、圖文間距，以 `icon-colored.svg` 量得的值為準（見 §CIS） | 維護者裁定 2026-11-18 |
+| favicon | 來源是 `assets/logo/icon-colored.svg` | 維護者裁定 2026-11-18 |
+| 深淺主題的 logo | 量測後結論：白色標籤線稿疊在深色主題 `--color-primary` 上不到 3:1，深色主題需要另備一版（見 §CIS） | 維護者裁定 2026-11-18 要求依量測結果決定 |
+| banner 與 social preview | banner.svg 是 README 橫幅，social-preview.svg 是 GitHub social preview；兩個 SVG 保留寫死色值，對應 token 見 §CIS | 維護者裁定 2026-11-18 |
+| 本檔的地位 | 本檔是規則，prototype 是現況；兩者不符時，列在 [§與 prototype 的落差](#與-prototype-的落差)，改 prototype 走 Ready gate | 維護者裁定 2026-11-18 |
 
-「為什麼是這個設計」的取捨紀錄（例如為什麼選 indigo 為主色、為什麼大標題用襯線體）**本 repo 沒有留下來**，不在這裡補寫；見 [§未決](#未決)。
+### 原件記載的品牌決策
+
+原件 `singyichen/label-suite` 的 `design/system/MASTER.md`（讀取時的 `main` 為 `faf8335`）有以下**直接寫出**的品牌層記載；以下只轉錄，不推論：
+
+- **品牌基線已定稿**：「Maintainer decision 2026-10-07 (issue #935): the current brand is final, not a placeholder」，React 的 Tailwind 轉寫「carries these values over unchanged」（`MASTER.md:37`）。
+- **基線內容**：主色 indigo、介面字體 Inter、logo 是「Lucide `tag` glyph in white on a … rounded square, wordmark in Crimson Pro」，圓角與字級刻度維持原狀（`MASTER.md:39`–`:44`）；「No custom logo design or full corporate identity system」（`:46`）。
+- **色彩**：「Indigo primary + emerald CTA」（`:58`）；原件**沒有**寫為什麼選這兩色。emerald CTA 只有一次調整紀錄，原因是對比（淺色 `--color-cta` 因 WCAG AA 加深，`:3023` 的 v1.38）。
+- **字體**：標題 Crimson Pro、內文 Inter、閱讀 Atkinson Hyperlegible、等寬 JetBrains Mono；「Mood: academic, research, scholarly, accessible, readable, educational」（`:401`–`:406`）。Crimson Pro 沒有中日韓字形，所以標題字體的備援一定要接「Noto Serif TC」（`:456`）。這是原件對襯線字體**唯一**寫出的取向，沒有逐項說明「為什麼是襯線」。
+- **風格**：Flat Design，關鍵字含「tool-oriented」，適用「annotation tools」；無漸層、無裝飾陰影；hover 只允許 `translateY` 最多 `-2px` 的唯一例外（`:2879`–`:2897`）。
+- **圖示**：「Minimal, purposeful icons (Lucide — the project's single icon library)」（`:2893`）。
+
+**沒找到**：為什麼選 indigo 為主色、為什麼 emerald 當 CTA、為什麼大標用襯線——原件只有結果與氛圍關鍵字，沒有取捨紀錄。這部分留在 [§未決](#未決) Q13。
 
 ---
 
@@ -70,22 +93,20 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 
 ### 稱謂
 
-**原型沒有一致的稱呼。**同一份 `profile.html` 同時出現「您」（5 處）與「你」（10 處）；整個 prototype 統計下來「你」多於「您」（`profile.html`：您 5、你 10；`task-detail.html`：您 2、你 2；`register.html`：您 2、你 1；`login.html`、`forgot-password.html`、`verify-email.html`、`task-new.html`、`sidebar.js`：只有「你」）。規格書也兩種都有（`04-profile.mdx:127` 用「您」，`01-dashboard.mdx:217` 用「你」）。
+**規則：全部中文介面文案用「你」，不用「您」。**維護者裁定（2026-11-18）。
 
-- 只能說：**偏向「你」的口語**，尤其是動作與後果說明（例：`profile.html:1239`「除非你回到『密碼設定』重新設一組」）；「您」多出現在區塊副標與成功通知（`profile.html:1191`「修改您的姓名與聯絡方式」、`:1233`「您現在可使用…」、`register.html:590`）。
-- 這是現況觀察，不是規則 → [§未決](#未決) Q1。
+- 動作與後果說明本來就用「你」（例：`profile.html:1239`「除非你回到『密碼設定』重新設一組」），區塊副標與成功通知也一律改「你」（例：`profile.html:1191`、`:1233`、`register.html:590`）。
+- 現況有 13 行出現「您」，列在 [§與 prototype 的落差](#與-prototype-的落差)。規格書 `docs/specs/04-profile.mdx:127` 也用「您」，但 `docs/specs/` 是維護者擁有的頁面，這裡只記錄，不改。
 
 ### 按鈕用語
 
-規則是從現有文案歸納的，沒有原文明列：
-
-- **帳號流程用「動詞＋受詞」說出結果，不寫「確定」「送出」這種空動詞。**登入、建立帳號、寄送重設連結、更新密碼、重新寄送驗證信、前往登入（`register.html:600`、`forgot-password.html:486`、`reset-password.html:651`、`profile.html:1224`）。英文對應：Sign In、Create Account、Send Reset Link、Update Password（Title Case，無句點）。
-- **表單通用鈕是「儲存」與「取消」**（`user-management.html:793`–`:802`、`task-new.html:622`–`:623`）。
-- **標記作業用「提交」，審核與仲裁用「送出」**：標記員按「提交」（`annotation-workspace.config.js:21`）；審核員「送出審核」、仲裁「送出仲裁」（`:60`、`:84`）。標記員另有「儲存草稿」（`:22`）。
+- **「送出」＋受詞，不用「提交」。**維護者裁定（2026-11-18）：標記員「送出標記」、審核員「送出審核」（`annotation-workspace.config.js:60` 已是這個寫法）、仲裁「送出仲裁」（`:84`）；狀態詞「已提交」改「已送出」，「提交時間」改「送出時間」。現況與這條不符的行數列在 [§與 prototype 的落差](#與-prototype-的落差)。
+- **帳號流程用「動詞＋受詞」說出結果，不寫「確定」這種空動詞。**登入、建立帳號、寄送重設連結、更新密碼、重新寄送驗證信、前往登入（`register.html:600`、`forgot-password.html:486`、`reset-password.html:651`、`profile.html:1224`）。英文對應：Sign In、Create Account、Send Reset Link、Update Password（Title Case，無句點）。
+- **表單通用鈕是「儲存」與「取消」**（`user-management.html:793`–`:802`、`task-new.html:622`–`:623`）。標記員另有「儲存草稿」（`annotation-workspace.config.js:22`）。
 - **送出鈕旁說明後果。**審核送出旁會寫「送出後進入爭議池，待仲裁定案」或「送出後即定稿，成為最終答案」（`annotation-workspace.config.js:71`–`:72`、`annotation-workspace.html:1276`）。
 - **載入中的按鈕文字**：進行式加刪節號，「建立中…」（`components-showcase.html:1037`）；登入頁的送出鈕改以 spinner 取代文字並帶 `aria-label="載入中"`（UXC-06）。
 - **破壞性動作要先確認，確認句型**：「確定要停用 …」（`user-management.html:918`）、未儲存離開：「你有尚未儲存的變更，離開將會遺失所有已填寫的內容。」（`task-new.html:629`）。UXC-10、UXC-03 在 b2／b3 才寫完。
-- **返回類連結**：「返回登入」「返回個人設定」「前往登入」（`register.html:562`、`profile.html:1224`、`reset-password.html:603`）；`reset-password` 的返回連結帶箭頭字元「← 返回登入」（`:653`）。
+- **返回類連結**：「返回登入」「返回個人設定」「前往登入」（`register.html:562`、`profile.html:1224`、`reset-password.html:603`）；**不帶箭頭字元**（見鐵律 12）；現況的 `← 返回登入` 列在落差表。
 
 ### 錯誤與驗證訊息
 
@@ -94,7 +115,7 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 - **登入失敗不指出是帳號還是密碼**：「帳號或密碼錯誤，請再試一次」（`login.html:578`）；英文 `Invalid email or password`（`:601`）。
 - **說出原因與下一步。**「瀏覽器的儲存空間放不下這張圖，請換一張小一點的；其他欄位已經存好了」（`profile.html:1229`）——先說發生什麼，再說怎麼辦，並交代沒壞的部分。
 - **一次性連結失效**：「連結無法使用，請重新申請」；英文 `This link can no longer be used. Please request a new one.`（`sidebar.js:228`–`:229`）。
-- **標記員被擋下時說明條件**：「請完成所有標記項目後再提交」（`annotation-workspace.config.js:58`）；審核員失去資格時說明還能做什麼：「…可檢視自己審核過的內容與歷程，但無法再提交審核決策。」（`:112`）。
+- **標記員被擋下時說明條件**：句型是「請完成所有標記項目後再送出」（現況寫「提交」，`annotation-workspace.config.js:58`）；審核員失去資格時說明還能做什麼：「…可檢視自己審核過的內容與歷程，但無法再送出審核決策。」（現況同樣寫「提交」，`:112`）。
 - **無障礙名稱（aria-label）和可見文字一樣要兩種語言**（`login.html:584`–`:586`、`:607`–`:609`）。
 
 ### 標點與格式
@@ -102,12 +123,23 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 - 中文句末多數不加句號（欄位標籤、toast 標題、按鈕），完整句子才加（例：`task-new.html:629`）；toast 副文字是子句，不加句號（`profile.html:1233`）。
 - 「？」用全形（「忘記密碼？」「還沒有帳號？」，`login.html:574`、`:576`）。
 - 破折號用全形雙線「——」（`profile.html:1239`）。
-- 日期與時間格式、數字格式：**沒有統一證據** → Q4。
+- **日期、時間、數字（維護者裁定 2026-11-18）：**
+
+| 項目 | 格式 | 範例 |
+| :--- | :--- | :--- |
+| 日期 | `YYYY-MM-DD` | 2026-11-18 |
+| 時間 | 24 小時制 `HH:mm` | 14:30 |
+| 日期加時間 | 日期、空格、時間 | 2026-11-18 14:30 |
+| 千分位 | 逗號 | 1,248 |
+| 百分比 | 小數一位 | 87.5% |
+
+  依據之外的觀察：prototype 內 `YYYY-MM-DD` 形式出現 358 次，沒有 `YYYY/MM/DD`、`YYYY年M月` 形式，也沒有 12 小時制（上午／下午、AM／PM），所以這條規則與現況一致。千分位與百分比小數位沒有逐項盤點，不聲稱現況一致。
 
 ### Email 與專有名詞
 
-- 「Email」與「電子郵件」並存：標籤用「電子郵件」（`login.html:571`），說明與成功訊息用「Email / Password」（`profile.html:1208`、`:1233`）、「Email 已存在」（`user-management.html:818`）。→ Q5。
-- 術語以 `docs/specs/` 的 glossary 為準（標記員、審核員、專案負責人、任務設定；`00-prd.mdx` 的 `:ref` 引用）。本檔不重列。
+- **中文介面一律寫「電子郵件」，英文介面一律寫「Email」。**維護者裁定（2026-11-18）。現況在中文文案裡寫「Email」的行數列在落差表。
+- **後續**：這個用語要補進 `docs/specs/` 的 glossary。`docs/specs/` 由維護者擁有，本檔不改；請維護者決定何時補。
+- 其他術語以 glossary 為準（標記員、審核員、專案負責人、任務設定；`00-prd.mdx` 的 `:ref` 引用）。本檔不重列。
 
 ---
 
@@ -171,7 +203,7 @@ token 名與值以 `tokens.css` 為準；本節只寫**怎麼用**。
 4. **後果寫在按鈕旁**：送出前就讓審核員知道會進爭議池還是定稿（見 §按鈕用語）。
 5. **角色與任務型別用 badge 辨識**：角色 badge 是 `--radius-full` 藥丸、任務型別是各自一組色（[`components/badge.md`](components/badge.md)）。
 
-只有一份證據、不能算「做法」的，不列入。若維護者認為還有別的招牌做法，請補（Q8）。
+**維持這 5 項（維護者裁定 2026-11-18）。**只有一份證據、不能算「做法」的，不列入。
 
 ---
 
@@ -182,25 +214,24 @@ token 名與值以 `tokens.css` 為準；本節只寫**怎麼用**。
 - **登入後的每一頁共用側欄**：品牌區（logo＋wordmark＋語言切換）在最上、分隔線、導覽列（`sidebar.js:2034`–`:2048`、`sidebar.css:37`–`:44`）。側欄可收合，狀態存在 `labelsuite.sidebarCollapsed`（`sidebar.js:5`）。
 - **工作頁籤**上限 8 個、重開堆疊上限 10（`sidebar.js` 的 `TAB_CAP`、`TAB_REOPEN_CAP`）。「工作頁籤」與頁內「Content Tabs」是兩個東西，命名見 [`MASTER.md`](MASTER.md) §命名約定。
 - **帳號頁**是置中的單卡版面，頂部 navbar 只有 logo 與語言切換（`login.html` 的 `.navbar`、`:396`–`:411`）。
-- 響應式斷點、內容最大寬度、網格欄數：**沒有統一證據**（各頁各寫各的媒體查詢）→ Q6。
+- 響應式斷點、內容最大寬度：**尚未定案，維護者要求先歸納**；盤點結果與建議值見 [§未決](#未決) Q6。網格欄數沒有任何共用規則。
 
 ---
 
 ## 圖示
 
-### 來源
+### 來源與規則
 
-- `design/prototype/assets/icons/` 有 **28 個** SVG，全部是 24×24 的 `viewBox`、`fill="none"`、`stroke="currentColor"`、`stroke-width="2"`、圓角端點與圓角轉角、`aria-hidden="true"`（抽查 `check.svg`、`tag.svg`）。
-- **形狀來自 Lucide**：側欄與 CSS 的註解明寫引用 Lucide 的 `chevron-down`（`sidebar.js:665`、`sidebar.css:134`）；logo 的標籤形與 `icons/tag.svg` 同一路徑（見 §CIS）。檔案名稱（`chevron-down`、`bar-chart-3`、`layout-dashboard`、`more-horizontal`）也是 Lucide 的命名。
-- **repo 沒有記錄整套圖示的來源、授權與版本** → Q7。
+- **圖示來源是 [Lucide](https://lucide.dev/)，授權 ISC。**維護者裁定（2026-11-18）。repo 內的依據：`sidebar.js:665` 的註解引用 `https://lucide.dev/icons/chevron-down`；`docs/development/frontend-agent-rules.mdx:287` 寫「ADR-030（Lucide 是唯一圖示來源）」；原件 `MASTER.md:2893` 寫「the project's single icon library」。
+- **版本：未知。**`assets/icons/` 的 28 個 SVG 與 `assets/logo/icon.svg` 都沒有版本註解，prototype 內也沒有 `lucide` 套件或版號；原件 `MASTER.md` 同樣沒寫。要寫入版本需要維護者提供當初取用的版本，或之後改以套件鎖版（那是 `frontend/` 的事，現在不存在）。
+- **線寬統一為 2。**`assets/icons/` 28 個全部是 `stroke-width="2"`，`24×24`、`fill="none"`、`stroke="currentColor"`、圓角端點與轉角、`aria-hidden="true"`（抽查 `check.svg`、`tag.svg`）。內嵌圖示不是 2 的行列在落差表。
+- **一律 SVG。不用 emoji，也不用 `✕`、`←`、`→`、`✓`、`▾` 等字元。**關閉用 Lucide 的 `x`，返回用 `arrow-left`／`chevron-left`，勾選用 `check`，下拉箭頭用 `chevron-down`。這是鐵律 12。
 
 ### 用法
 
 - 線條圖示，單色，顏色由 `currentColor` 繼承；不另外上色。
 - 大多數頁面**不載入 `assets/icons/` 的檔案，而是把 `<svg>` 內嵌在 HTML／JS 裡**（`login.html:403`–`:408`、`sidebar.js:2039`；全 prototype 只有 `components-showcase.html` 以檔案引用 `chevron-down.svg`，見 [`pages/components-showcase.md`](pages/components-showcase.md)）。所以 `assets/icons/` 現況比較像**圖示資料庫**，不是頁面實際引用的來源。
-- 內嵌圖示的 `stroke-width` 以 `2` 為多；`banner.svg` 內縮放後的標籤線稿用 `1.8`。**沒有定出單一線寬**→ Q7。
 - 純裝飾圖示加 `aria-hidden="true"`；單獨成為控制項的圖示要有 `aria-label`（`login.html:413`–`:414` 的語言切換是圖示加文字，所以圖示本身 `aria-hidden`）。
-- **有文字字元充當圖示的例外**：toast 的關閉鈕用字元 `✕`（`components-showcase.html` toast、[`components/toast.md`](components/toast.md)），不是 SVG → Q7。
 
 ---
 
@@ -216,11 +247,69 @@ token 名與值以 `tokens.css` 為準；本節只寫**怎麼用**。
 | `banner.svg` | 1280×200 | 白底；左側 144 圓角方（`rx` 32）＋標籤；右側 wordmark 96 粗體、其下副標「NLP Annotation Portal」24 | 檔內寫死 |
 | `social-preview.svg` | 1280×640 | 頁面底色；左側 160 圓角方（`rx` 40）＋標籤；右側 wordmark 80 粗體、其下副標 32 | 檔內寫死 |
 
-### 結構規則
+### 結構規則（維護者裁定 2026-11-18）
 
-- **圓角方的圓角約為邊長的四分之一**：48→12、144→32（約 22%）、160→40（25%）、頁面的 32px 版本 8px（`login.html:67`）、側欄 36px 版本用 `--radius-md`（`sidebar.css:52`–`:58`）。圓角比不是單一值，**沒有被明訂**，見 Q9。
-- **wordmark 永遠是襯線粗體的「Label Suite」**，字體是 Crimson Pro（`logo-horizontal.svg`、`banner.svg`、`social-preview.svg`、`login.html:82`）。副標用 Atkinson Hyperlegible（`banner.svg`）。
-- **圖形與文字的關係**：圖形在左，wordmark 在右，垂直置中；banner 的副標比 wordmark 縮進 6px（`banner.svg`）。
+數值取自 `icon-colored.svg`（48×48 的圓角方）。`icon.svg` 本身是 24×24 的線稿，**沒有圓角方**，所以圓角比只能量 `icon-colored.svg`。
+
+| 規則 | 值 | 怎麼量的 |
+| :--- | :--- | :--- |
+| 圓角比 | 邊長的 25% | `icon-colored.svg`：`rx` 12 ÷ 48。`logo-horizontal.svg`、`social-preview.svg`（40 ÷ 160）、`login.html:67`（8 ÷ 32）同為 25% |
+| 最小尺寸 | 16px | 維護者裁定；原件 `assets/logo/README.md:49` 也寫 16 px（圖示）與 100 px（橫式 lockup） |
+| 安全留白 | 圖示高度的 25% | `icon-colored.svg` 48 → 12 單位。原件 `README.md:50` 寫「at least 12 units」，與此相同 |
+| 圖示與 wordmark 的間距 | 圖示高度的三分之一 | `logo-horizontal.svg`：圖示 0–48，文字起點 `x` 64，間距 16 ÷ 48 |
+| 標籤線稿線寬 | 2（24 單位的畫布裡） | `icon.svg`、`icon-colored.svg`、`logo-horizontal.svg` |
+| wordmark | 永遠是襯線粗體「Label Suite」，Crimson Pro | `logo-horizontal.svg`、`banner.svg`、`social-preview.svg`、`login.html:82`。副標用 Atkinson Hyperlegible（`banner.svg`） |
+| 圖形與文字 | 圖形在左、wordmark 在右，垂直置中 | 各 SVG |
+
+原件另有「不要」清單（`assets/logo/README.md:54`–`:57`），直接轉錄意思：不拉伸、傾斜、旋轉或裁切，只等比縮放；不在 token 之外改色；不替換 wordmark 字體、不改圖文間距；不加陰影、漸層、描邊、光暈。
+
+**素材之間的不一致（要處理時走 UI／素材 issue）：**
+
+| 檔案 | 量得 | 與規則的差 |
+| :--- | :--- | :--- |
+| `banner.svg:8` | 圓角 32 ÷ 144 ≈ **22%** | 規則是 25%（應為 36） |
+| `banner.svg:13`、`:14` | 標籤線稿線寬 1.8、點用 `circle` | 其餘素材線寬 2、點用 `line`；縮放後視覺線寬約 6.0（`1.8 × 3.33`），其餘約 6.7 |
+| `banner.svg:12` | 圖形占圓角方 55.6%（24 × 3.33 ÷ 144） | `icon-colored.svg` 與 `social-preview.svg` 都是 50% |
+| `banner.svg:8`、`:18` | 圖與 wordmark 的間距 36 ÷ 144 = 25% | `logo-horizontal.svg` 是三分之一；`social-preview.svg`（40 ÷ 160）也是 25%。**圖文間距有兩種比例**，規則採 `logo-horizontal.svg` 的三分之一，另兩個是否照改由維護者決定 |
+| `social-preview.svg:19` | 副標色與 token 不符 | 見下方色彩對應 |
+
+### 素材用途
+
+| 檔案 | 用途 |
+| :--- | :--- |
+| `icon.svg` | 繼承文字色的單色圖示（`currentColor`） |
+| `icon-colored.svg` | App 圖示、頭像、**favicon 來源** |
+| `logo-horizontal.svg` | 頁首、文件、簡報 |
+| `banner.svg` | **README 橫幅** |
+| `social-preview.svg` | **GitHub social preview** |
+
+### SVG 寫死色值對應的 token
+
+SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18）。下表是每個寫死顏色對應的 token（取**淺色主題**的值）：
+
+| 檔案 | 位置 | 對應 token | 是否完全相同 |
+| :--- | :--- | :--- | :--- |
+| 四個圓角方素材 | 圓角方填色 | `--color-primary` | 是 |
+| 四個圓角方素材 | 標籤線稿 `white` | `--color-on-cta`（淺色值為白色） | 是 |
+| `logo-horizontal.svg:13`、`banner.svg:18`、`social-preview.svg:16` | wordmark | `--color-ink` | 是 |
+| `social-preview.svg:4` | 頁面底色 | `--color-surface` | 是 |
+| `banner.svg:5` | 白底 | `--color-white`（淺色值） | 是 |
+| `banner.svg:21` | 副標 | `--color-ink-muted` | 是 |
+| **`social-preview.svg:19`** | 副標 | **沒有對應 token**；最接近 `--color-ink-muted`，但色值不同（是 Tailwind gray 的值，不是 slate） | **否，這是不符的一處** |
+
+`social-preview.svg` 的副標 32px，屬大字（WCAG 大字門檻 3:1），所以不符不構成對比問題；它只是跟 `banner.svg` 副標用了兩種灰。**建議把它改成與 `banner.svg` 相同的灰**（對應 `--color-ink-muted`）。順帶一提：`--color-ink-muted` 疊在 `--color-surface` 上的對比是 4.34:1，略低於 4.5:1；`banner.svg` 疊在白底上是 4.76:1。
+
+### 深色主題的 logo（量測）
+
+深色主題把 `--color-primary` 換成較亮的靛藍，而產品內 logo 的標籤線稿固定 `white`（`login.html:403`–`:408`）。以 WCAG 相對亮度公式、`tokens.css` 的值（深色 `--color-primary`：`tokens.css:160`；線稿：白色）量測：
+
+| 組合 | 對比 |
+| :--- | :--- |
+| 白色線稿 ／ 淺色主題 `--color-primary` | **4.47 : 1** |
+| 白色線稿 ／ 深色主題 `--color-primary` | **2.98 : 1**（未達 3:1） |
+| 深色主題 `--color-on-cta` ／ 深色主題 `--color-primary` | 5.36 : 1 |
+
+**結論：白色線稿在深色主題上不到 3:1（差 0.02），所以不能「深淺主題共用一版」；深色主題需要另備一版。**建議做法是深色版的線稿改用 `--color-on-cta`（深色主題的值是深墨色，量得 5.36:1），與按鈕在深色主題的處理（`tokens.css:170`）一致。這一版的實作屬 UI 修正，列在落差表。
 
 ### 在產品裡實際怎麼用
 
@@ -238,27 +327,149 @@ token 名與值以 `tokens.css` 為準；本節只寫**怎麼用**。
 
 ### 沒有證據、不寫的
 
-favicon、最小尺寸、安全留白、深色背景版本、單色版本、禁止用法、與字標的間距比例，以及 banner 與 social preview 要放在哪裡（GitHub、README、論文簡報）——repo 內**找不到任何記錄**。見 Q9–Q12。
+- **單色版本、「禁止用法」以外的深色背景版本細節**：本 repo 沒有素材；`icon.svg` 以 `currentColor` 承擔單色用途。
+- **favicon 的尺寸清單與格式**：來源已定為 `icon-colored.svg`；原件 `assets/logo/README.md:146`–`:157` 用 inkscape 轉 16／32／48 px 再合成 `.ico`，那是原件的做法，本 repo 沒有採用的紀錄，所以不抄成規則。要補哪一個放進 UI issue。
+
+---
+
+## 與 prototype 的落差
+
+本檔是規則，prototype 是現況。下表列出 prototype **目前違反**已定規則之處，供另開 UI issue 使用（改 `design/prototype/` 屬畫面修正，要先走 `AGENTS.md` 的 Ready gate；本檔與本次提交都沒有動它）。行號是撰寫當時（`main` 的 `eb9a884`）的位置。
+
+| 類別 | 規則 | 行數 |
+| :--- | :--- | :--- |
+| Q1 「您」 | 全部中文文案用「你」 | 13 |
+| Q2 「提交」 | 統一「送出」＋受詞 | 93（26 個檔案） |
+| Q3 字元圖示 | 一律 SVG | 27 |
+| Q5 中文文案裡的「Email」 | 中文用「電子郵件」 | 33 |
+| Q7 線寬非 2 的圖示 | 線寬統一為 2 | 29（內嵌圖示）＋ 1（`banner.svg`） |
+| Q9 logo 素材 | 圓角 25%、線寬 2 | 見 §CIS 的不一致表（5 項） |
+| Q10 favicon | 每頁要有 `<link rel="icon">` | 40 個 HTML 全缺 |
+| Q11 深色主題 logo | 深色主題另備一版 | 帳號頁與側欄的內嵌 logo（見下） |
+| Q12 social preview 副標色 | 對應 token | `social-preview.svg:19` 1 處 |
+| G-02 寫死色值 | 只用 token | 22 個檔案、658 個六位色碼（頁面與 showcase，不含 `tokens.css` 與 logo）；細節與分類見 [`design-gaps.md`](design-gaps.md) G-02，該檔另有人在編輯，這裡不重列 |
+
+### Q1：「您」（13 行）
+
+- 介面文案 11 行：`task-detail.html:2138`、`:2468`；`dataset-analysis-list.i18n.js:46`；`annotation-workspace.config.js:67`；`profile.html:693`、`:740`、`:1181`、`:1191`、`:1233`；`register.html:413`、`:590`。
+- 樣本資料 2 行（標記範例裡的對話文字，是否同改由維護者決定）：`task-detail.data.js:909`、`:917`。
+
+### Q2：「提交」（93 行）
+
+已排除 6 行（5 行註解：`annotation-workspace.config.js:1920`、`:1933`、`:2033`、`:2252`、`:3316`；1 行 showcase 的說明文字 `components-showcase.html:1332`）。含少量樣本資料（`task-detail.data.js`、`annotation-workspace.data.js`）。「已提交」「提交時間」等狀態詞與名詞同樣要改。
+
+  - `components-showcase.html`（1）：:1097
+  - `pages/annotation/annotation-list.html`（2）：:589, :637
+  - `pages/annotation/annotation-workspace.config.js`（21）：:21, :27, :32, :33, :39, :58, :59, :86, :110, :111, :112, :113, :114, :115, :121, :122, :176, :178, :179, :182, :183
+  - `pages/annotation/annotation-workspace.data.js`（3）：:774, :776, :3748
+  - `pages/dashboard/dashboard.html`（3）：:167, :193, :194
+  - `pages/dashboard/dashboard.i18n.js`（3）：:53, :66, :67
+  - `pages/dataset/dataset-analysis-detail.html`（19）：:285, :300, :338, :395, :398, :411, :424, :448, :514, :537, :562, :566, :567, :629, :672, :684, :730, :750, :755
+  - `…detail.partials/quality-entity_recognition.html`（1）：:152
+  - `…detail.partials/quality-multi_dim.html`（1）：:149
+  - `…detail.partials/quality-multi_label.html`（1）：:151
+  - `…detail.partials/quality-sequence_tagging.html`（1）：:110
+  - `…detail.partials/quality-single_dim.html`（1）：:153
+  - `…detail.partials/quality-single_label.html`（1）：:143
+  - `…detail.partials/stats-entity_recognition.html`（1）：:6
+  - `…detail.partials/stats-free_text.html`（2）：:6, :13
+  - `…detail.partials/stats-multi_label.html`（1）：:6
+  - `…detail.partials/stats-relation_identification.html`（1）：:43
+  - `…detail.partials/stats-sequence_tagging.html`（1）：:6
+  - `…detail.partials/stats-single_label.html`（1）：:6
+  - `pages/shared/annotation-history.js`（1）：:81
+  - `pages/shared/sidebar.js`（2）：:242, :2134
+  - `pages/task-management/task-config.data.js`（1）：:658
+  - `pages/task-management/task-detail.data.js`（2）：:1085, :1422
+  - `pages/task-management/task-detail.html`（15）：:2309, :2397, :2486, :2532, :2538, :2563, :2571, :2578, :2640, :2641, :2650, :2652, :2666, :2695, :2732
+  - `…detail.panels/annotation-progress.html`（4）：:11, :56, :71, :127
+  - `…detail.panels/annotation-results.html`（3）：:15, :18, :167
+
+### Q3：字元圖示（27 行）
+
+- `✕`（4）：`components-showcase.html:1525`、`dataset-analysis-list.html:312`、`dataset-analysis-detail.html:363`、`annotation-workspace.html:1328`（toast 關閉鈕）。
+- `←`（9）：`reset-password.html:588`、`:653`、`:679`；`forgot-password.html:438`、`:453`、`:488`、`:491`、`:506`、`:509`。
+- `▾`（1）：`task-config.engine.js:662`。
+- `✓`、`✗`、`✎`、`○`、`ⓘ`（7）：`task-config.engine.js:2258`、`:2825`；`task-detail.html:6455`、`:8602`、`:8604`；`annotation-workspace.config.js:3628`、`:3629`。
+- `→`（6）：`annotation-list.html:2168`；`task-config.engine.js:2225`、`:2229`、`:4632`；`task-detail.html:2678`、`:3270`。
+- 沒有 emoji。唯一的 `⛔` 在註解（`role-settings.html:193`）。
+- **我的範圍判斷（請維護者確認）**：資料內容裡的箭頭與乘號（關係三元組 `(DRUG:…)→treats→(SYMP:…)`、`×2`，`task-detail.html:3854`–`:4134`）與說明句中的流程箭頭（`task-config.engine.js:2067`–`:2068`）視為資料或文句，不算字元圖示，沒有列入。
+
+### Q5：中文文案裡的「Email」（33 行）
+
+`components-showcase.html:1055`；`forgot-password.html:451`、`:490`；`profile.html:873`、`:963`、`:973`、`:983`、`:993`、`:1003`、`:1013`、`:1153`、`:1208`、`:1223`、`:1233`；`user-management.html:390`、`:772`、`:818`、`:819`；`task-detail.html:2430`、`:2432`、`:2433`、`:2434`、`:2435`、`:2436`、`:2460`、`:2466`；`task-detail.panels/member-management.html:4`、`:9`、`:11`、`:36`、`:37`、`:39`；`task-new.html:641`。
+
+### Q7：線寬不是 2 的內嵌圖示（29 處＋ logo 1 處）
+
+- 2.5（21）：`task-config.engine.js:1315`、`:2495`、`:4053`；`dataset-analysis-detail.partials/quality-multi_label.html:25`、`quality-single_dim.html:34`、`quality-entity_recognition.html:47`、`quality-multi_dim.html:66`、`quality-relation_identification.html:29`、`quality-single_label.html:25`；`annotation-workspace.html:1150`、`:1165`、`:1181`、`:1202`、`:1216`、`:1235`、`:1246`；`verify-email.html:376`、`:388`；`forgot-password.html:446`；`reset-password.html:501`、`:596`。
+- 1.5（3）：`dataset-analysis-detail.html:295`、`:314`；`user-management.html:550`。
+- 3（2）：`components-showcase.html:1225`、`task-new.html:899`。
+- 2.2（2）：`verify-email.html:366`、`reset-password.html:491`。
+- 2.4（1）：`profile.html:1059`。
+- logo（1）：`assets/logo/banner.svg:13` 的 1.8。
+- 未列入：`dataset-analysis-detail.partials/stats-*.html` 裡寫 1、1.5、0.5 的線條是圖表的格線與軸線，不是圖示。
+
+### Q10：favicon
+
+全部 40 個 HTML 都沒有 `<link rel="icon">`；`assets/` 底下沒有 favicon 檔。`index.html:6` 的標題是「Label Suite Prototype」（與品牌頁面標題格式 `Label Suite — <頁名>` 也不同）。
+
+### Q11：深色主題 logo
+
+產品內 logo 是內嵌 SVG，標籤線稿固定 `white`：`login.html:403`–`:408`（帳號頁 navbar）、`sidebar.css:52`–`:58` 與 `sidebar.js:2039`（側欄品牌區）。深色主題下對比 2.98:1，需要另備深色版（見 §CIS）。
 
 ---
 
 ## 未決
 
-以下每一題都是：證據不足以定案，或證據彼此衝突。**撰寫者不自己回答**。
+只剩兩題。**撰寫者不自己回答。**
 
-| # | 問題 | 為什麼卡住 | 證據 |
+| # | 問題 | 狀態 | 內容 |
 | :--- | :--- | :--- | :--- |
-| **Q1** | 稱謂用「你」還是「您」？是否依場景分（動作說明用「你」、正式提示用「您」）？ | 同一頁同時有兩種；規格書也兩種都有。這會決定全部中文文案的語氣 | §內容與語氣 §稱謂 |
-| **Q2** | 按鈕用語要不要寫成規則？特別是標記作業「提交」與審核／仲裁「送出」並存，是刻意的還是尚未統一？ | 兩組動詞在同一個工作區並存 | `annotation-workspace.config.js:21`、`:60`、`:84` |
-| **Q3** | 是否允許 emoji 與字元圖示（`✕`、`←`）？ | 沒有任何文件禁止或允許；toast 關閉鈕與返回連結已經在用字元 | `components-showcase.html` toast、`reset-password.html:653` |
-| **Q4** | 日期、時間、數字的顯示格式是什麼？ | prototype 沒有統一的格式化函式或說明 | — |
-| **Q5** | 「Email」與「電子郵件」哪個是正式用語？是否放進術語表？ | 標籤與說明文案混用 | `login.html:571`、`profile.html:1208` |
-| **Q6** | 響應式斷點、內容最大寬度、網格欄數的標準值？ | 各頁各自寫媒體查詢，沒有 token | §版面 |
-| **Q7** | `assets/icons/` 的來源、授權與版本；單一線寬；`✕` 這類字元要不要換成 SVG？ | 檔名與路徑像 Lucide，但 repo 沒有記錄；線寬 1.8 與 2 並存 | §圖示 |
-| **Q8** | 招牌做法是否還有別的？（維護者想強調的產品特色） | 本檔只收有證據的 5 項 | §招牌做法 |
-| **Q9** | logo 的規範：圓角比（約 22% 與 25% 兩種）、最小尺寸、安全留白、與 wordmark 的間距比？ | SVG 原檔量得出尺寸，但沒有「這是規定」的說明 | §CIS |
-| **Q10** | favicon 要怎麼做、放哪裡？ | 所有 HTML 都沒有 `<link rel="icon">`，`assets/` 也沒有 favicon 檔；`index.html` 的標題是「Label Suite Prototype」 | §CIS |
-| **Q11** | logo 的深色背景版本與單色版本要不要有？目前深色主題下 logo 底色會變亮（`--color-primary`），但標籤線稿固定白色，對比未量測 | `tokens.css` 深色區塊 `--color-primary`；`login.html:403`–`:408` | §CIS |
-| **Q12** | banner 與 social preview 的用途與放置位置（GitHub social preview？README？簡報？）；兩者的字幕色與底色是否該改成對應 token？ | 素材存在，但沒有任何檔案引用或說明；SVG 內寫死色值，與 `tokens.css` 的對應關係無記錄 | `assets/logo/banner.svg`、`social-preview.svg` |
-| **Q13** | 為什麼選 indigo 為主色、襯線為大標字體、`--color-cta` 用 emerald？這些品牌決策有沒有決策紀錄要補進 §設計決策？ | `tokens.css` 檔頭指向 `MASTER.md`（原件）2026-04-18 版，本 repo 沒有那份 | `MASTER.md` §這份檔是重建的 |
-| **Q14** | 這份品牌書成為「依據」的方式：prototype 與它不符時，改 prototype 還是改它？（例如鐵律 1 與 G-02 的落差） | 改 `design/prototype/` 屬畫面修正，要走 Ready gate | `AGENTS.md` §Ready gate |
+| **Q6** | 響應式斷點與內容最大寬度的標準值 | **歸納中** | 維護者尚未裁定。盤點與建議值如下 |
+| **Q13** | 為什麼選 indigo 為主色、emerald 為 CTA、襯線為大標字體？ | 部分找到 | 原件 `MASTER.md` 只有結果與氛圍關鍵字，沒有取捨紀錄（見 §設計決策 §原件記載的品牌決策）。要不要補一段由維護者口述的理由，請維護者決定 |
+
+### Q6：盤點
+
+**媒體查詢（`design/prototype/`，CSS 共 31 條寬度查詢、JS 2 處；另有 `prefers-reduced-motion` 14 條、`hover` 1 條不計）：**
+
+| 斷點 | 條數 | 位置 |
+| :--- | :--- | :--- |
+| `max-width: 767px` | 16 | `dataset-analysis-detail.html:217`、`role-settings.html:253`、`:323`、`dataset-analysis-list.html:199`、`annotation-workspace.html:957`、`:1026`、`verify-email.html:292`、`sidebar.css:1086`、`:1124`、`login.html:354`、`user-management.html:248`、`:326`、`register.html:328`、`profile.html:641`、`forgot-password.html:319`、`reset-password.html:413` |
+| `max-width: 768px` | 8 | `task-list.html:156`、`task-new.html:149`、`task-detail.html:1002`、`:1869`、`dashboard.components.css:275`、`content-tabs.css:36`、`annotation-list.html:367`、`sidebar.css:828` |
+| `min-width: 768px` | 1 | `profile.html:50` |
+| `max-width: 420px` | 3 | `task-list.html:170`、`task-detail.html:1036`、`annotation-list.html:416` |
+| `max-width: 480px` | 1 | `task-new.html:170` |
+| `max-width: 640px` | 1 | `task-detail.html:1892` |
+| `max-width: 1100px` | 1 | `task-new.html:183` |
+| JS `matchMedia` | 2 | `sidebar.js:513`（`min-width: 769px`）、`:518`（`min-width: 768px`） |
+
+**內容最大寬度（`max-width`）：**
+
+| 值 | 用在 | 位置（節選） |
+| :--- | :--- | :--- |
+| 1280px | 登入後頁面的內容區（10 頁） | `task-list.html:38`、`task-new.html:31`、`task-detail.html:42`、`dataset-analysis-list.html:38`、`dataset-analysis-detail.html:35`、`user-management.html:36`、`annotation-list.html:35`、`profile.html:48`、`role-settings.html:40`、`dashboard.layout.css:58` |
+| 480px | 帳號頁的單卡（5 頁） | `login.html:126`、`register.html:129`、`forgot-password.html:128`、`reset-password.html:122`、`verify-email.html:127` |
+| 400／440／520／720／860／1280px | Modal 與抽屜寬度（各自寫） | `role-settings.html:262`（400）、`user-management.html:675`（440）、`task-detail.html:888`、`annotation-list.html:223`、`annotation-workspace.html:1012`（520）、`annotation-workspace.html:947`、`:949`（720）、`:952`（860）、`task-new.html:70`（1280） |
+| 520／420px | 空狀態（一般／緊湊） | `empty-state.css:11`、`:16` |
+| 960px | 元件展示頁 | `components-showcase.html:63` |
+
+**觀察：**
+
+1. 「手機／桌面」的分界已經高度一致，只差 1px：24 條在 767／768 附近（767 有 16 條、768 有 8 條），加上 `profile.html:50` 的 `min-width: 768px`；`sidebar.js` 的 `matchMedia` 一處用 769、一處用 768（`:513`、`:518`），與 CSS 的 768 差 1px，**同一頁會有 1px 區間 CSS 與 JS 不一致**。`sidebar.css` 自己就兩種寫法（`:828` 是 768，`:1086`、`:1124` 是 767）。
+2. 小螢幕的第二層分界只有 420px（3 條）。
+3. 480、640、1100 各只有 1 條，是個別頁面自己的版面需要（`task-new`、`task-detail`）。
+4. 內容最大寬度 1280px 非常一致（10／10 個登入後頁面）；帳號頁單卡 480px 也一致（5／5）。Modal 寬度各寫各的。
+
+**建議（待維護者裁定）：**
+
+| 項目 | 建議值 | 理由 |
+| :--- | :--- | :--- |
+| 手機／桌面分界 | **`max-width: 767px`（桌面 `min-width: 768px`）** | 條數最多（16 對 8），且 767／768 互補才不留 1px 縫；順便把 `sidebar.js:513` 的 769 改成 768 |
+| 小螢幕 | **`max-width: 420px`** | 3 頁已一致使用 |
+| 登入後內容最大寬度 | **1280px** | 10／10 頁一致 |
+| 帳號頁單卡最大寬度 | **480px** | 5／5 頁一致 |
+| Modal 寬度 | **小 400、中 520、大 720**；860 與 1280 視為個案例外（`pdf-modal`、`modal-xl`） | 520（4 處）與 720（2 處）最多；其餘 440 併入 400 或 520 要維護者看畫面決定 |
+| 480／640／1100 三條 | 保留為頁面自己的版面斷點，不列入共用斷點 | 各只有 1 頁用，不是共用規則 |
+
+這組值是歸納，不是裁定；要變成規則，需要維護者回覆採用與否。
+
