@@ -415,7 +415,7 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 > 「一般使用者」這個字保留給它真正適用的那種人——還沒有任何任務角色的使用者。
 > **這一條不涵蓋[規格 02-01](../02-dashboard/01-dashboard.mdx) 的儀表板版面**：02-01 的 [§已確認決議](../02-dashboard/01-dashboard.mdx#已確認決議) Q8 在隔天（維護者裁定 2026-11-09）**否決了「跟著本條讀作『一般使用者』」這個選項**，裁定那種版面**不定名**、一律用描述性的「還沒有任務角色」。
 > 以下是**本頁的解讀**，不是依據：本條管的是側欄的角色標示，Q8 管的是儀表板版面的稱呼，兩個是不同的位置；Q8 只是拒絕把本條的用字搬過去，沒有推翻本條。
-> **本條不碰顯式覆寫**：`shared:FR-020A` 在「依任務角色解析」之前先寫了一個例外——呼叫端已明確傳入固定字串時（例如系統管理的頁面固定顯示「系統管理員」）不受該條影響，並在結尾重申「既有顯式覆寫入口之優先序與行為不變」。畫面確實在用這個入口（`design/prototype/pages/admin/user-management.html:359` 的「roleIndicator: '系統管理員'」，就是那個傳入值）。所以系統管理員停在系統管理頁時讀作「系統管理員」，**不是**「一般使用者」，即使他在目前任務沒有任務角色。
+> **本條不碰顯式覆寫**：`shared:FR-020A` 在「依任務角色解析」之前先寫了一個例外——呼叫端已明確傳入固定字串時（例如系統管理的頁面固定顯示「系統管理員」）不受該條影響，並在結尾重申「既有顯式覆寫入口之優先序與行為不變」。畫面確實在用這個入口（`design/prototype/pages/admin/user-management.html:294` 的「roleIndicator: '系統管理員'」，就是那個傳入值）。所以系統管理員停在系統管理頁時讀作「系統管理員」，**不是**「一般使用者」，即使他在目前任務沒有任務角色。
 > **英文是一處覆寫**：**裁決當時**畫面對「一般使用者」用的英文是 `User`，裁決定的是 `General user`——這一處**明確覆寫畫面現況**，不是漏看。prototype 那一側已於 2026-11-11 依 [Issue #165](https://github.com/label-suite/label-suite/issues/165) 改完（`design/prototype/pages/account/profile.html:1280` 的 `roleIndicator: 'General user'`）。
 > prototype 的文字、字典補英文與這一處英文覆寫由 **[#165](https://github.com/label-suite/label-suite/issues/165)** 處理，**已於 2026-11-11 關閉、三項都已落地**；本 skill 不改 `design/prototype/`（#86）。
 
