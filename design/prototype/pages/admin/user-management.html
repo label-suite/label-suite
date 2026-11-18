@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="../shared/button.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
   <link rel="stylesheet" href="../shared/content-tabs.css" />
+  <link rel="stylesheet" href="../shared/audit-drawer.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <style>
     :root {
@@ -263,79 +264,13 @@
     }
     .mini-btn-icon { padding: 0 6px; }
 
-    /* ── Audit Drawer ───────────────────────────────────────────── */
-    .audit-drawer-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: var(--z-modal);
-      opacity: 0; pointer-events: none;
-      transition: opacity var(--dur-normal) var(--ease-standard);
-    }
-    .audit-drawer-overlay.open { opacity: 1; pointer-events: auto; }
-
-    .audit-drawer {
-      position: fixed; top: 0; right: 0; bottom: 0; width: 480px;
-      background: var(--color-white); z-index: calc(var(--z-modal) + 10);
-      display: flex; flex-direction: column;
-      transform: translateX(100%);
-      transition: transform var(--dur-normal) var(--ease-standard);
-      border-left: 1px solid var(--color-border);
-      box-shadow: var(--shadow-xl);
-    }
-    .audit-drawer.open { transform: translateX(0); }
-
-    .audit-drawer-header {
-      display: flex; align-items: flex-start; justify-content: space-between;
-      gap: var(--space-md); padding: var(--space-lg);
-      border-bottom: 1px solid var(--color-border); flex-shrink: 0;
-    }
-    .audit-drawer-title {
-      font-family: var(--font-serif-display);
-      font-size: 20px; font-weight: 700; color: var(--color-ink); margin: 0 0 2px;
-    }
-    .audit-drawer-subtitle { font-size: 13px; color: var(--color-text-soft); margin: 0; }
-
-    .audit-drawer-body { flex: 1; overflow-y: auto; padding: var(--space-lg); }
-    .audit-log-list { display: flex; flex-direction: column; gap: 12px; }
-
-    .audit-log-entry {
-      background: var(--color-white); border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg); padding: var(--space-md);
-    }
-    .audit-log-entry-top {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: var(--space-sm); margin-bottom: 8px;
-    }
-    .audit-log-time {
-      font-size: 12px; color: var(--color-text-soft);
-      font-family: var(--font-mono); flex-shrink: 0;
-    }
-    .audit-log-actor { font-size: 13px; color: var(--color-text-soft); margin-bottom: 6px; }
-    .audit-log-actor strong { color: var(--color-ink); }
-    .audit-log-diff {
-      font-family: var(--font-mono); font-size: 12px;
-      background: var(--color-slate-50); border: 1px solid var(--color-border-muted);
-      border-radius: var(--radius-sm); padding: 6px 10px;
-      color: var(--color-ink); word-break: break-all; margin: 0; white-space: pre-wrap;
-    }
-
+    /* ── Audit Drawer: layout is shared/audit-drawer.css (#422) ── */
     .audit-badge-create     { background: var(--color-success-soft-bg); color: var(--color-success); border-color: var(--color-success-border); }
     .audit-badge-edit       { background: var(--color-info-bg); color: var(--color-info); border-color: var(--color-info-border); }
     .audit-badge-disable    { background: var(--color-error-soft-bg); color: var(--color-error); border-color: var(--color-error-soft-border); }
     .audit-badge-enable     { background: var(--color-success-soft-bg); color: var(--color-success); border-color: var(--color-success-border); }
     .audit-badge-role_change { background: var(--color-primary-soft-bg); color: var(--color-primary-strong); border-color: var(--color-primary-border); }
     .audit-badge-resend_invite { background: var(--color-info-bg); color: var(--color-info); border-color: var(--color-info-border); }
-
-    @media (max-width: 767px) {
-      .audit-drawer {
-        top: auto; right: 0; left: 0; bottom: 0; width: 100%; height: 72vh;
-        border-left: none; border-top: 1px solid var(--color-border);
-        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-        transform: translateY(100%);
-      }
-      .audit-drawer.open { transform: translateY(0); }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .audit-drawer, .audit-drawer-overlay { transition-duration: 0.01ms; }
-    }
   </style>
 </head>
 <body>
@@ -704,32 +639,7 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════════ -->
-  <!-- AUDIT LOG DRAWER                                           -->
-  <!-- ═══════════════════════════════════════════════════════════ -->
-  <div class="audit-drawer-overlay" id="auditDrawerOverlay"
-       aria-hidden="true" onclick="closeAuditDrawer()"></div>
-  <aside class="audit-drawer" id="auditDrawer"
-         role="complementary" aria-label="異動紀錄" aria-hidden="true">
-    <div class="audit-drawer-header">
-      <div>
-        <h2 id="auditDrawerTitle" class="audit-drawer-title">異動紀錄</h2>
-        <p id="auditDrawerSubtitle" class="audit-drawer-subtitle"></p>
-      </div>
-      <button class="modal-close" onclick="closeAuditDrawer()"
-              id="auditDrawerCloseBtn" aria-label="關閉">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-    </div>
-    <div class="audit-drawer-body">
-      <div id="auditLogList" class="audit-log-list" role="list"></div>
-      <div id="auditDrawerEmpty" class="empty-state empty-state-compact hidden">
-        <p id="auditDrawerEmptyText">尚無異動紀錄</p>
-      </div>
-    </div>
-  </aside>
+  <!-- Audit log drawer: markup and focus trap live in shared/audit-drawer.js (#422) -->
 
   <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- TOAST                                                      -->
@@ -761,6 +671,8 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <script src="../../assets/theme.js"></script>
   <script src="../../assets/analytics.js"></script>
+  <script src="../shared/modal-focus.js"></script>
+  <script src="../shared/audit-drawer.js" data-title="異動紀錄" data-empty-text="尚無異動紀錄" data-close-label="關閉"></script>
   <script>
     /* ── i18n ──────────────────────────────────────────────────── */
     const i18n = {
@@ -925,7 +837,6 @@
       roleFilterAria: '角色篩選',
       statusFilterAria: '狀態篩選',
       usersTableAria: '使用者列表',
-      auditDrawerAria: '異動紀錄',
       pageSizeOption: (n) => n + ' 筆/頁',
     });
     Object.assign(i18n.en, {
@@ -939,7 +850,6 @@
       roleFilterAria: 'Filter by role',
       statusFilterAria: 'Filter by status',
       usersTableAria: 'Users',
-      auditDrawerAria: 'Change History',
       pageSizeOption: (n) => n + ' / page',
     });
 
@@ -986,7 +896,6 @@
       document.getElementById('roleFilter').setAttribute('aria-label', t.roleFilterAria);
       document.getElementById('statusFilter').setAttribute('aria-label', t.statusFilterAria);
       document.querySelector('table[role="table"]').setAttribute('aria-label', t.usersTableAria);
-      document.getElementById('auditDrawer').setAttribute('aria-label', t.auditDrawerAria);
       Array.from(pageSizeSelectEl.options).forEach(o => { o.textContent = t.pageSizeOption(o.value); });
 
       const adminTabs = document.getElementById('adminTabs');
@@ -1191,7 +1100,7 @@
         logBtn.type = 'button';
         logBtn.setAttribute('aria-label', t.auditBtnLabel);
         logBtn.title = t.auditBtnLabel;
-        logBtn.addEventListener('click', () => openAuditDrawer(user.id));
+        logBtn.addEventListener('click', () => openAuditDrawer(user.id, logBtn));
         // Lucide 'history' icon — static SVG, no user data
         const logSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         logSvg.setAttribute('width', '16'); logSvg.setAttribute('height', '16');
@@ -1485,7 +1394,7 @@
     }
 
     /* ── Audit Drawer ──────────────────────────────────────────── */
-    function openAuditDrawer(userId) {
+    function openAuditDrawer(userId, triggerEl) {
       const t = i18n[lang];
       auditUserId = userId;
       const user = sampleUsers.find(u => u.id === userId);
@@ -1494,20 +1403,12 @@
         t.auditDrawerSubtitlePrefix + (user ? user.name : '');
       document.getElementById('auditDrawerCloseBtn').setAttribute('aria-label', t.auditDrawerCloseBtn);
       renderAuditLog(userId);
-      document.getElementById('auditDrawer').classList.add('open');
-      document.getElementById('auditDrawer').setAttribute('aria-hidden', 'false');
-      document.getElementById('auditDrawerOverlay').classList.add('open');
-      document.getElementById('auditDrawerOverlay').setAttribute('aria-hidden', 'false');
-      document.body.style.overflow = 'hidden';
+      window.LabelSuiteAuditDrawer.open({ trigger: triggerEl });
       window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_audit_drawer_opened', { userId, lang });
     }
 
     function closeAuditDrawer() {
-      document.getElementById('auditDrawer').classList.remove('open');
-      document.getElementById('auditDrawer').setAttribute('aria-hidden', 'true');
-      document.getElementById('auditDrawerOverlay').classList.remove('open');
-      document.getElementById('auditDrawerOverlay').setAttribute('aria-hidden', 'true');
-      document.body.style.overflow = '';
+      window.LabelSuiteAuditDrawer.close();
       auditUserId = null;
     }
 
