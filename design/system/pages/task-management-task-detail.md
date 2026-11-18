@@ -38,7 +38,7 @@
 | :--- | :--- |
 | `.mini-btn` | #423 起用正典 `pages/shared/button.css` 的小尺寸 variant，本頁不再重新定義 → G-37 |
 | `.panel`（`:94`） | 容器在 `pages/shared/card.css`，和 `dashboard` 共用；本頁只加 `margin-bottom`（#423）→ [Card](../components/card.md)、G-41 |
-| `.toggle-switch`（`:306`–`:332`） | 本頁**重新定義**：42×24、開啟色 `--color-cta`；同頁也載了 `task-config.css` 的正典版（40×22、`--color-primary`）→ G-42 |
+| `.toggle-switch` | 用 `task-config.css` 的正典版（40×22、開啟色 `--color-primary`）；本頁的重新定義（42×24、`--color-cta`）已於 #423 刪除 → G-42 |
 | `.skeleton-*`（`:67`–`:83`） | [Skeleton](../components/skeleton.md)：與 showcase 的 pulse 變體逐字相同（`components-showcase.html:436` 起） |
 | `.toast*` | [Toast](../components/toast.md)：#423 起 `showToast` 依 `TOAST_DURATIONS`（`:11251`）分級，error 只能手動關 → G-39 |
 | `.breadcrumb`（`:45`–`:47`） | 本頁一行式的版本 |
