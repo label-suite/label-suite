@@ -449,7 +449,7 @@
     /* Sort select — mirrors task-list.html .filter-select until singyichen/label-suite#1448 extracts a shared rule.
        Chevron stroke #94A3B8 is mid-tone so it stays visible on light and dark backgrounds. */
     .filter-select {
-      padding: 9px 32px 9px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      padding: 9px 32px 9px 12px; border: 1px solid var(--color-border-control); border-radius: var(--radius-md);
       font-size: 14px; color: var(--color-ink);
       background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
       outline: none; min-width: 140px;

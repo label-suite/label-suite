@@ -4527,7 +4527,7 @@
     reasonInput.setAttribute('aria-label', t('arbitrationReasonPlaceholder'));
     reasonInput.style.cssText =
       'width:100%;font:inherit;font-size:13px;padding:5px 8px;margin-bottom:6px;'
-      + 'border:1px solid var(--color-border);border-radius:var(--radius-sm);'
+      + 'border:1px solid var(--color-border-control);border-radius:var(--radius-sm);'
       + 'background:var(--color-surface);color:var(--color-ink);';
     reasonInput.addEventListener('input', function () {
       arbitrationReasons[itemId] = reasonInput.value;
@@ -5007,7 +5007,7 @@
     reasonInput.setAttribute('aria-label', t('exceptionPoolReasonPlaceholder'));
     reasonInput.style.cssText =
       'width:100%;font:inherit;font-size:13px;padding:5px 8px;margin:8px 0;'
-      + 'border:1px solid var(--color-border);border-radius:var(--radius-sm);'
+      + 'border:1px solid var(--color-border-control);border-radius:var(--radius-sm);'
       + 'background:var(--color-surface);color:var(--color-ink);';
 
     var summary = document.createElement('div');
