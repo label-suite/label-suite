@@ -226,6 +226,8 @@
 | **依據** | `annotation-workspace.config.js:6845`–`:6850` 開閘門時傳 `onClose: hideGuidelineModal`，`hideGuidelineModal`（`:6818`–`:6822`）只關彈窗、不寫確認紀錄；`pages/shared/modal-focus.js:42`–`:44` 在 Esc 時呼叫 `onClose`。規格 [`04-annotation/02-annotation-workspace.mdx`](../../docs/specs/04-annotation/02-annotation-workspace.mdx) §指引閘門 第 3 條「開關開著時，進場顯示說明彈窗，**使用者按確認按鈕才開始**」。 |
 | **待決問題** | **已裁定（2026-11-18）**：閘門忽略 Esc，只能按確認，保留返回清單的出口。修正於 #423。原題保留：閘門要不要忽略 Esc（只能按確認）？若 Esc 可以關，關掉之後算不算「開始」——要不要擋住作答？ |
 
+**狀態（#423）**：已修正。閘門開啟時傳給 `modal-focus.js` 的 `onClose` 改成空函式，Esc 只被取消、不關彈窗；只有確認鈕會關閉並寫確認紀錄。原本閘門沒有確認以外的出口，所以在確認鈕左邊加了 `.btn-secondary`「返回標記清單／Back to annotation list」，走 `buildListReturnUrl()`，不寫確認紀錄，下次進來照樣顯示。淺深色實測：按 Esc（焦點在彈窗內、Tab 之後再按）彈窗都還在；返回鈕回到 `annotation-list.html?task_id=…&role=…&run_type=…`；確認鈕關閉彈窗。開啟時的初始焦點因此落在返回鈕（第一個可聚焦元素）。上文的行號指的是修正前。
+
 ### G-47 送出被擋時，畫面看不出是哪一個區塊擋住
 
 > b3 新增。

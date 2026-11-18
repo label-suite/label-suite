@@ -167,7 +167,7 @@ prototype 的註解另外指名的章節裡，這一個不是元件（b1 原列�
 - 畫面規格 **2 份**，涵蓋交付包 b3 的全部 22 個視圖；其中 `annotation/annotation-list#state-loading` 與 `annotation/annotation-workspace#state-task-goal-and-instruction` 是交付包列為**無法重現**的視圖，畫面檔照實寫明，追蹤在 label-suite/label-suite#187。
 - 跨元件約定新寫 **2 條**（UXC-04／05），共 9 條寫完；UXC-03、07、09 加上 b3 的核對。
 - 差異新增 **6 筆**（G-46～G-51），共 48 筆：原型與規格差異 20、缺狀態證據 8、待重新設計 20。G-02、G-04、G-10、G-13、G-22、G-23、G-24、G-36、G-37、G-41、G-43 追加了 b3 的核對結果，過去的裁定不動。
-- `annotation-workspace` 的六個 overlay 都接了 `modal-focus.js`，但指引閘門按 Esc 就能略過（G-46）。
+- `annotation-workspace` 的六個 overlay 都接了 `modal-focus.js`，但指引閘門按 Esc 就能略過（G-46，#423 已修正）。
 
 ### b4 接手時要先讀的
 

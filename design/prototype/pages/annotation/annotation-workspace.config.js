@@ -49,6 +49,7 @@
       wsHistoryDiffBoundary: '邊界變更',
       guidelineModalTitle: '請先閱讀任務說明',
       guidelineModalConfirm: '我已閱讀，開始標記',
+      guidelineModalBack: '返回標記清單',
       guidelineSummaryTitle: '任務說明',
       guidelineFileActionPreview: '預覽',
       mobileDrawerTitle: '說明與檔案',
@@ -218,6 +219,7 @@
       wsHistoryDiffBoundary: 'Boundary',
       guidelineModalTitle: 'Please read the task guideline first',
       guidelineModalConfirm: "I've read it, start annotating",
+      guidelineModalBack: 'Back to annotation list',
       guidelineSummaryTitle: 'Task Guideline',
       guidelineFileActionPreview: 'Preview',
       mobileDrawerTitle: 'Guidelines & Files',
@@ -6796,6 +6798,7 @@
   function setupGuidelineModal() {
     var modal = document.getElementById('wsGuidelineModal');
     var confirmBtn = document.getElementById('wsGuidelineModalConfirm');
+    var backBtn = document.getElementById('wsGuidelineModalBack');
     var body = document.getElementById('wsGuidelineModalBody');
     if (!modal || !confirmBtn) return;
     if (!currentProfile || !currentProfile.forceShowGuideline) {
@@ -6848,9 +6851,12 @@
         /* No user click triggers this modal (shown automatically on first
            visit), so focus returns to the workspace root landmark on close
            rather than to a trigger element. */
+        /* 閘門忽略 Esc（#423, design-gaps G-46）：規格 §指引閘門 第 3 條「按確認按鈕才開始」，
+           所以 onClose 是空函式，modal-focus.js 收到 Esc 只取消預設動作、不關彈窗。
+           不想確認的人走「返回標記清單」離開。 */
         window.LabelSuiteModalFocus.open(modal, {
           trigger: document.getElementById('wsRoot'),
-          onClose: hideGuidelineModal
+          onClose: function () {}
         });
       }
     } else {
@@ -6869,6 +6875,12 @@
       }
       hideGuidelineModal();
     });
+    if (backBtn) {
+      /* 不寫確認紀錄：沒確認就離開，下次進來照樣顯示閘門。 */
+      backBtn.addEventListener('click', function () {
+        window.location.href = buildListReturnUrl();
+      });
+    }
   }
 
   /* ── Language toggle (spec 015 v2.2.0): the workspace no longer renders
@@ -6913,6 +6925,7 @@
     setText('wsTabHistoryLabel', t('wsTabHistory'));
     setText('wsGuidelineModalTitleText', t('guidelineModalTitle'));
     setText('wsGuidelineModalConfirm', t('guidelineModalConfirm'));
+    setText('wsGuidelineModalBack', t('guidelineModalBack'));
     setText('guidelineSummaryTitle', t('guidelineSummaryTitle'));
     setText('wsGuidelineImageModalTitleText', t('guidelineSummaryTitle'));
     setText('wsMobileDrawerTitle', t('mobileDrawerTitle'));
