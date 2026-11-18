@@ -592,6 +592,7 @@
       trialListCountTpl: '本回合清單 {total} 筆',
       openSampleAriaTpl: '開啟樣本 {id}',
       notFoundTitle: '找不到這個任務',
+      noTaskTitle: '尚未選擇任務',
       notFoundMessage: '任務代碼 {taskId} 不存在，請確認網址或回到儀表板重新選擇任務。',
       notFoundNoTaskMessage: '未指定任務，請回到儀表板重新選擇任務。',
       notFoundBackBtn: '回儀表板',
@@ -665,6 +666,7 @@
       trialListCountTpl: 'This round: {total} items',
       openSampleAriaTpl: 'Open sample {id}',
       notFoundTitle: 'Task not found',
+      noTaskTitle: 'No task selected',
       notFoundMessage: 'Task {taskId} does not exist. Please check the URL or return to the dashboard to pick another task.',
       notFoundNoTaskMessage: 'No task specified. Please return to the dashboard to pick a task.',
       notFoundBackBtn: 'Back to dashboard',
@@ -2311,7 +2313,8 @@
     var title = document.createElement('strong');
     title.style.display = 'block';
     title.style.marginBottom = '4px';
-    title.textContent = t('notFoundTitle');
+    /* 沒帶 task_id 不是「找不到」，標題分開（#423, design-gaps G-48；規格 04-01 §路由上下文與回退 第 6、7 條）。 */
+    title.textContent = taskId ? t('notFoundTitle') : t('noTaskTitle');
     var message = document.createElement('span');
     message.textContent = taskId
       ? t('notFoundMessage', { taskId: taskId })
