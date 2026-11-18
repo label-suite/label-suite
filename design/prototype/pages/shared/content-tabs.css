@@ -29,8 +29,8 @@
   border-top: none;
   white-space: nowrap;
 }
-.admin-tab:hover { color: var(--color-primary); }
-.admin-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
+.admin-tab:hover { color: var(--color-primary-strong); }
+.admin-tab.active { color: var(--color-primary-strong); border-bottom-color: var(--color-primary); font-weight: 600; }
 
 /* Narrow viewport: stay on one row and scroll horizontally (scrollbar hidden). */
 @media (max-width: 767px) {

@@ -1445,7 +1445,7 @@ function renderOutputTypeFields(container, outKey) {
     } else if (field.type === 'select') {
       var sel = document.createElement('select');
       sel.className = 'select-field';
-      sel.style.cssText = 'width:100%;padding:8px 12px;border:1.5px solid var(--color-border);border-radius:var(--radius-md);font-size:0.9rem;';
+      sel.style.cssText = 'width:100%;padding:8px 12px;border:1.5px solid var(--color-border-control);border-radius:var(--radius-md);font-size:0.9rem;';
       sel.setAttribute('data-testid', field.testId || (outKey.replace(/_/g, '-') + '-' + field.key.replace(/_/g, '-') + '-select'));
       var selectLabels = (field.optionLabels && field.optionLabels[state.lang]) || {};
       var selectedValue = getOutputConfigFieldValue(cfg, field);
@@ -2086,7 +2086,7 @@ function buildRelationStateMachine(container, relationTypes, refresh, allowEntit
   function chip(label, slot, active) {
     var c = document.createElement('span');
     var filled = !!slot;
-    c.style.cssText = 'display:inline-flex;gap:4px;padding:2px 8px;border-radius:999px;border:1.5px solid ' + (active ? 'var(--color-primary)' : 'var(--color-border)') + ';background:' + (filled ? 'var(--color-primary-soft-bg)' : 'transparent') + ';color:' + (filled ? 'var(--color-primary)' : 'var(--color-text-soft)') + ';font-weight:600;';
+    c.style.cssText = 'display:inline-flex;gap:4px;padding:2px 8px;border-radius:999px;border:1.5px solid ' + (active ? 'var(--color-primary)' : 'var(--color-border)') + ';background:' + (filled ? 'var(--color-primary-soft-bg)' : 'transparent') + ';color:' + (filled ? 'var(--color-primary-strong)' : 'var(--color-text-soft)') + ';font-weight:600;';
     c.textContent = label + '：' + (filled ? fmtRelSpan(slot) : '—');
     return c;
   }
@@ -2256,7 +2256,7 @@ function buildRelationTripleRow(triple, allRelTypes, opts) {
     typeWrap.style.cssText = 'position:relative;flex-shrink:0;margin-left:8px;';
     var typeBtn = document.createElement('button');
     typeBtn.type = 'button';
-    typeBtn.style.cssText = 'border:1.5px solid var(--color-primary);background:transparent;color:var(--color-primary);border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;';
+    typeBtn.style.cssText = 'border:1.5px solid var(--color-primary);background:transparent;color:var(--color-primary-strong);border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;';
     typeBtn.textContent = lang === 'zh' ? '類型' : 'type';
     var typeMenu = document.createElement('div');
     typeMenu.style.cssText = 'display:none;position:absolute;right:0;bottom:calc(100% + 4px);background:var(--color-white);border:1px solid var(--color-border);border-radius:8px;padding:4px 0;min-width:180px;max-height:220px;overflow-y:auto;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,0.3);';
@@ -3657,7 +3657,7 @@ function renderFreeTextPreview(container, outKey) {
   responseArea.appendChild(ansTitle);
 
   var textarea = document.createElement('textarea');
-  textarea.style.cssText = 'width:100%;min-height:100px;padding:10px 12px;border:1.5px solid var(--color-border);border-radius:var(--radius-md);font-size:0.9rem;resize:vertical;font-family:inherit;';
+  textarea.style.cssText = 'width:100%;min-height:100px;padding:10px 12px;border:1.5px solid var(--color-border-control);border-radius:var(--radius-md);font-size:0.9rem;resize:vertical;font-family:inherit;';
   textarea.placeholder = state.lang === 'zh' ? '在此輸入回答…' : 'Type your answer here…';
   textarea.setAttribute('aria-label', outputInstruction);
   textarea.setAttribute('data-testid', 'generation-answer-input');
@@ -4417,7 +4417,7 @@ function renderSentencePairsPreview(preview, config) {
     var noteTextarea = document.createElement('textarea');
     noteTextarea.disabled = true;
     noteTextarea.placeholder = state.lang === 'en' ? 'Add a note (optional)' : '新增備註（選填）';
-    noteTextarea.style.cssText = 'width:100%;border:1px solid var(--color-border);border-radius:6px;padding:6px 10px;font-size:0.8rem;resize:vertical;min-height:48px;background:var(--color-slate-50);color:var(--color-ink-muted);';
+    noteTextarea.style.cssText = 'width:100%;border:1px solid var(--color-border-control);border-radius:6px;padding:6px 10px;font-size:0.8rem;resize:vertical;min-height:48px;background:var(--color-slate-50);color:var(--color-ink-muted);';
     noteWrap.appendChild(noteTextarea);
     preview.appendChild(noteWrap);
   }

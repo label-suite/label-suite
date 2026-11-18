@@ -24,7 +24,7 @@
 
 | 狀態 | 表現 |
 | :--- | :--- |
-| 預設 | `--color-white` 底、`--color-border` 外框、`--radius-md` |
+| 預設 | `--color-white` 底、`--radius-md`；`.search-input` 與 `.filter-select` 用 `--color-border-control` 外框，`.clear-btn` 用 `--color-border` |
 | 有篩選可清除 | 顯示 `.clear-btn`；hover 時文字與邊框變深 |
 | 沒有可清除的篩選 | `.clear-btn.hide-clear`：`visibility: hidden` ＋ `pointer-events: none`，**保留佔位，不跳版**（預覽第二列可見那段空位） |
 | focus | `.search-input` 與 `.filter-select` 換 primary 邊框加 3px 焦點環 |

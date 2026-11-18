@@ -39,7 +39,7 @@
 
 ## token
 
-`--color-border`、`--color-primary`、`--color-primary-soft-bg`、`--color-primary-border`、`--color-ink`、`--color-white`、`--color-text-soft`、`--radius-full`、`--dur-fast`、`--font-mono`。
+`--color-border`、`--color-primary`、`--color-primary-strong`、`--color-primary-soft-bg`、`--color-primary-border`、`--color-ink`、`--color-white`、`--color-text-soft`、`--radius-full`、`--dur-fast`、`--font-mono`。
 
 顯示 chip 共寫死 **9 個**色值（`components-showcase.html:545`–`:560`），原值見 `../design-gaps.md` G-02。
 另有三處圓角寫 `9999px`／`999px` 字面值而不是 `--radius-full`（`:542`、`:553`、`:566`），同一個章節內三種寫法並存。

@@ -20,7 +20,7 @@ Auth Card 是登出狀態帳號頁正中央的卡片，上面是品牌標誌、�
   - 文字分隔 `.divider` 加「或」；
   - `form.form` 裡是 `.field`，每個 `.field` 有 `label`、`.input-wrapper`（`.input-icon` 加 input，密碼欄另加 `.eye-toggle`）、`.field-error`；
   - 送出用正典的 `.btn-primary`（G-03），不是原件的 `.login-btn`。
-- token：`--radius-lg`、`--shadow-card`、`--color-border`、`--color-card`。
+- token：`--radius-lg`、`--shadow-card`、`--color-border`、`--color-border-control`（欄位外框）、`--color-card`。
   - `--color-card` 不在 `tokens.css`，是五頁各自定義的頁面私有 token，重複了十次（G-29）。
   - bundle 暫時在 `:root` 補了別名。
 

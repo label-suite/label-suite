@@ -56,7 +56,7 @@
        bar above the three columns; margin-bottom is dropped because the bar's
        padding already sets the rhythm. */
     .breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-soft)}
-    .breadcrumb a{color:var(--color-primary)}
+    .breadcrumb a{color:var(--color-primary-strong)}
     .breadcrumb a:hover{text-decoration:underline}
     .breadcrumb-sep{color:var(--color-ink-muted);font-size:11px}
     .workspace-crumb-bar {
@@ -190,7 +190,7 @@
       border: 1px solid var(--color-border);
       border-radius: var(--radius-sm);
     }
-    .sample-group.has-active .sample-group-id { color: var(--color-primary); }
+    .sample-group.has-active .sample-group-id { color: var(--color-primary-strong); }
 
     /* Reviewer-only: names the review unit the entry stands for by its
        annotator alone -- the sample ID lives once in the group header
@@ -294,7 +294,7 @@
       font-weight: 600;
       cursor: pointer;
     }
-    .nav-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+    .nav-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary-strong); }
     .nav-btn:disabled { opacity: 0.45; cursor: not-allowed; }
     .sample-progress-summary { flex: 1; max-width: 260px; min-width: 180px; }
     .progress-text {
@@ -406,7 +406,7 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.04em;
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
       background: var(--color-primary-soft-bg);
       border: 1px solid var(--color-primary-border);
       border-radius: var(--radius-full);
@@ -435,7 +435,7 @@
     .rv-flow-trigger {
       font-size: 12px;
       font-weight: 600;
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
       background: var(--color-white);
       border: 1px solid var(--color-primary-border);
       border-radius: var(--radius-full);
@@ -455,7 +455,7 @@
     .review-track { display: grid; grid-template-columns: auto 28px auto auto 1fr 28px auto; grid-template-rows: 34px 34px; align-items: center; justify-items: start; }
     .review-track-node { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-full); background: var(--color-white); color: var(--color-ink-muted); font-size: 13px; font-weight: 500; white-space: nowrap; }
     .review-track-node.done { border-color: var(--color-cta); background: var(--color-success-bg); color: var(--color-cta); font-weight: 600; }
-    .review-track-node.current { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary); font-weight: 600; }
+    .review-track-node.current { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary-strong); font-weight: 600; }
     .review-track-marker { font-size: 11px; font-weight: 600; }
     /* The line is the ::before, so a caption sitting on the rail neither
        thickens it nor breaks the done/not-done thickness contrast. */
@@ -475,7 +475,7 @@
       white-space: nowrap;
     }
     .rv-unit-run {
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
       background: var(--color-primary-soft-bg);
       border-color: var(--color-primary-border);
       font-weight: 700;
@@ -606,7 +606,7 @@
        annotator rows (.annotator-result-tag + FR-014A deviation colors) so
        the workspace card and the list read identically. */
     .annotator-result-tag {
-      font-size: 13px; color: var(--color-primary); background: var(--color-primary-soft-bg);
+      font-size: 13px; color: var(--color-primary-strong); background: var(--color-primary-soft-bg);
       border: 1px solid var(--color-info-border); border-radius: var(--radius-md);
       padding: 3px 12px; font-family: monospace; min-width: 80px; text-align: center;
       display: inline-block;
@@ -800,7 +800,7 @@
     .history-action-badge.modified { background: var(--color-info-bg); color: var(--color-info); }
     .history-action-badge.accepted { background: var(--color-success-bg); color: var(--color-success); }
     .history-action-badge.rejected { background: var(--color-error-bg); color: var(--color-error); }
-    .history-action-badge.adjudicated { background: var(--color-primary-soft-bg); color: var(--color-primary); }
+    .history-action-badge.adjudicated { background: var(--color-primary-soft-bg); color: var(--color-primary-strong); }
     /* v3.0.0 reviewer run_type split (spec 015 FR-040): dry_run
        consensus-adjudication badge (ws-review-consensus-badge), reusing
        .history-action-badge's shape. */
@@ -858,7 +858,7 @@
     .guideline-summary-title {
       font-size: 13px;
       font-weight: 700;
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
       margin-bottom: var(--space-sm);
       display: flex;
       align-items: center;
@@ -878,7 +878,7 @@
     .review-blocked-note-title {
       font-size: 13px;
       font-weight: 700;
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
       margin-bottom: var(--space-sm);
       display: flex;
       align-items: center;
@@ -938,7 +938,7 @@
     .guideline-md-preview ul, .guideline-md-preview ol { margin: 0 0 var(--space-sm); padding-left: 20px; }
     .guideline-md-preview li { margin-bottom: 4px; }
     .guideline-md-preview code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; padding: 1px 4px; border-radius: 4px; background: var(--color-border-muted); }
-    .guideline-md-preview a { color: var(--color-primary); text-decoration: underline; }
+    .guideline-md-preview a { color: var(--color-primary-strong); text-decoration: underline; }
     .guideline-md-preview pre { margin: 0 0 var(--space-sm); padding: var(--space-sm) var(--space-md); border-radius: var(--radius-sm); background: var(--color-border-muted); overflow-x: auto; }
     .guideline-md-preview pre code { padding: 0; background: transparent; white-space: pre; }
     .guideline-md-preview table { border-collapse: collapse; margin: 0 0 var(--space-sm); width: 100%; }

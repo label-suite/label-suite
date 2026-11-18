@@ -34,7 +34,7 @@
 
 ## token
 
-`--space-sm`、`--space-lg`、`--color-border`、`--color-ink`、`--color-ink-muted`、`--color-white`、`--color-primary`、`--radius-md`、`--dur-fast`。
+`--space-sm`、`--space-lg`、`--color-border`、`--color-border-control`、`--color-ink`、`--color-ink-muted`、`--color-white`、`--color-primary`、`--radius-md`、`--dur-fast`。
 
 兩個寫死處：focus ring 的 `rgba(99,102,241,0.12)`（`:30`、`:39`，和 `shared/input.css:21` 的 `color-mix` 寫法不同），以及 `.filter-select` 下拉箭頭 data-URI SVG 裡的 `%2394A3B8`（`:34`）→ `../design-gaps.md` G-02、G-04。
 

@@ -116,7 +116,7 @@
 }
 
 .nav-link.active {
-  color: var(--color-primary);
+  color: var(--color-primary-strong);
   background: var(--nav-active-bg, var(--color-surface));
   font-weight: 600;
 }
@@ -178,7 +178,7 @@
 }
 
 .nav-sublink.current {
-  color: var(--color-primary);
+  color: var(--color-primary-strong);
   font-weight: 600;
 }
 
@@ -308,7 +308,7 @@
   align-items: center;
   justify-content: center;
   background: var(--color-white);
-  color: var(--color-primary);
+  color: var(--color-primary-strong);
   font-weight: 700;
   font-size: 14px;
   border: 2px solid rgba(99, 102, 241, 0.16);
@@ -440,7 +440,7 @@
 
 .shortcut-help-header p {
   margin: 0;
-  color: var(--color-text-soft, #64748B);
+  color: var(--color-text-soft, #5E6B7F);
   font-size: 13px;
   line-height: 1.5;
 }
@@ -716,7 +716,7 @@ html[data-theme="dark"] .shortcut-help-dialog {
 .notif-mark-all-btn {
   font-size: 12px;
   font-weight: 500;
-  color: var(--color-primary);
+  color: var(--color-primary-strong);
   background: none;
   border: none;
   cursor: pointer;
@@ -1044,7 +1044,7 @@ main:has(> .workspace-tab-bar):not(.workspace-root) {
 
 .workspace-tab-kind--primary {
   background: var(--color-primary-soft-bg);
-  color: var(--color-primary);
+  color: var(--color-primary-strong);
 }
 
 .workspace-tab-kind--review {

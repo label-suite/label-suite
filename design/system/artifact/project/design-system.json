@@ -63,8 +63,8 @@
   },
   "lastChange": {
     "by": "陳欣怡",
-    "at": "2026-11-18T06:27:22Z",
-    "via": "Claude Code · label-suite/label-suite docs/design-system-sync",
-    "note": "Sync strings and breakpoints with the prototype after #418 (#429)"
+    "at": "2026-11-18T07:04:29Z",
+    "via": "Claude Code · label-suite/label-suite fix/contrast-tokens",
+    "note": "Contrast fixes: muted text, primary-strong text, control borders (#427)"
   }
 }

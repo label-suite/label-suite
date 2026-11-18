@@ -26,8 +26,8 @@ CSS 檔開頭明寫：頁面只能連結這個檔，**不得自行重新定義�
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
 | 預設 | 有，`--color-text-soft`、透明底線 | `content-tabs.css:15`–`:31` |
-| hover | 有，文字換 `--color-primary` | `:32` |
-| active | 有，文字與底線都換 `--color-primary`，字重升 600 | `:33` |
+| hover | 有，文字換 `--color-primary-strong` | `:32` |
+| active | 有，文字換 `--color-primary-strong`、底線換 `--color-primary`，字重升 600 | `:33` |
 | focus | **未觀察到** | 以 `:focus` 掃全檔，0 命中 → `../design-gaps.md` G-05 |
 | disabled | **未觀察到** | 全檔無 `:disabled` |
 | 載入中／錯誤／空 | 不適用 | — |
@@ -35,7 +35,7 @@ CSS 檔開頭明寫：頁面只能連結這個檔，**不得自行重新定義�
 
 ## token
 
-`--color-border`、`--color-text-soft`、`--color-primary`、`--space-lg`、`--space-md`、`--dur-fast`。字級 14px 與內距 `10px 20px` 是字面值。
+`--color-border`、`--color-text-soft`、`--color-primary`、`--color-primary-strong`、`--space-lg`、`--space-md`、`--dur-fast`。字級 14px 與內距 `10px 20px` 是字面值。
 
 ## 鍵盤與焦點
 

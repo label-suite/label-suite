@@ -56,7 +56,7 @@
        heading block exactly as task-detail.html does: shared spec 008 FR-017
        pins every page's h1 to the Dashboard's y, so nothing may precede it. */
     .breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-soft);margin:-12px 0 16px}
-    .breadcrumb a{color:var(--color-primary)}
+    .breadcrumb a{color:var(--color-primary-strong)}
     .breadcrumb a:hover{text-decoration:underline}
     .breadcrumb-sep{color:var(--color-ink-muted);font-size:11px}
     .list {
@@ -248,7 +248,7 @@
       background: none;
       font-size: 12px;
       font-weight: 600;
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
       cursor: pointer;
     }
     .text-snippet-toggle:hover { text-decoration: underline; }
@@ -275,7 +275,7 @@
       cursor: pointer;
       transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast), opacity var(--dur-fast);
     }
-    .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+    .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary-strong); }
     .mini-btn:focus-visible {
       outline: none;
       box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
@@ -335,7 +335,7 @@
     .annotator-answer { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
     .annotator-username { font-size: 13px; font-weight: 600; color: var(--color-ink); }
     .annotator-result-tag {
-      font-size: 13px; color: var(--color-primary); background: var(--color-primary-soft-bg);
+      font-size: 13px; color: var(--color-primary-strong); background: var(--color-primary-soft-bg);
       border: 1px solid var(--color-info-border); border-radius: var(--radius-md);
       padding: 3px 12px; font-family: monospace; min-width: 80px; text-align: center;
     }

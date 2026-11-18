@@ -23,7 +23,7 @@
 
 | class | 表現 |
 | :--- | :--- |
-| `.is-today` | 以 `--color-primary-border` 畫框 |
+| `.is-today` | 以 `--color-primary` 畫框（`--color-primary-border` 不能是唯一的提示） |
 | `.is-in-range` | `--color-primary-soft-bg` 柔底，圓角拉平成連續色帶 |
 | `.is-range-start`／`.is-range-end` | 實心 `--color-primary`、`--color-on-cta` 字 |
 
@@ -31,7 +31,7 @@
 
 | 狀態 | 表現 |
 | :--- | :--- |
-| 收合（預設） | 彈出層 `[hidden]`；未選時觸發鈕顯示「選擇日期區間」 |
+| 收合（預設） | 彈出層 `[hidden]`；未選時觸發鈕顯示「選擇日期區間」；觸發鈕用 `--color-border-control` 外框 |
 | 展開 | 彈出層出現在觸發鈕下方 |
 | hover | 日期格與上下月鈕換 soft 底 |
 | focus | 觸發鈕與日期格都有 2px primary outline |

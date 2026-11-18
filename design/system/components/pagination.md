@@ -31,7 +31,7 @@
 
 ## token
 
-`--color-border`、`--color-white`、`--color-ink`、`--color-primary`、`--color-primary-soft-bg`、`--color-text-soft`、`--radius-md`、`--space-md`、`--space-lg`、`--space-xs`、`--dur-fast`。
+`--color-border`、`--color-border-control`、`--color-white`、`--color-ink`、`--color-primary`、`--color-primary-strong`、`--color-primary-soft-bg`、`--color-text-soft`、`--radius-md`、`--space-md`、`--space-lg`、`--space-xs`、`--dur-fast`。
 
 **一個色 token 兩份定義不一致**：`.page-btn.active` 的文字色，正典是 `--color-on-cta`（`components-showcase.html:617`，註解明寫「WCAG AA foreground token, issue singyichen/label-suite#1019」），shipped 的 `list-page.css:92` 是 `--color-white`。前者會隨主題換（深色下不是白），後者固定白 → `../design-gaps.md` G-12。
 

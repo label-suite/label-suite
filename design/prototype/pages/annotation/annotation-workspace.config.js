@@ -4527,7 +4527,7 @@
     reasonInput.setAttribute('aria-label', t('arbitrationReasonPlaceholder'));
     reasonInput.style.cssText =
       'width:100%;font:inherit;font-size:13px;padding:5px 8px;margin-bottom:6px;'
-      + 'border:1px solid var(--color-border);border-radius:var(--radius-sm);'
+      + 'border:1px solid var(--color-border-control);border-radius:var(--radius-sm);'
       + 'background:var(--color-surface);color:var(--color-ink);';
     reasonInput.addEventListener('input', function () {
       arbitrationReasons[itemId] = reasonInput.value;
@@ -5007,7 +5007,7 @@
     reasonInput.setAttribute('aria-label', t('exceptionPoolReasonPlaceholder'));
     reasonInput.style.cssText =
       'width:100%;font:inherit;font-size:13px;padding:5px 8px;margin:8px 0;'
-      + 'border:1px solid var(--color-border);border-radius:var(--radius-sm);'
+      + 'border:1px solid var(--color-border-control);border-radius:var(--radius-sm);'
       + 'background:var(--color-surface);color:var(--color-ink);';
 
     var summary = document.createElement('div');
@@ -5197,7 +5197,7 @@
     /* The page resets anchors to inherited color with no underline, so the
        link needs its own affordance; 44px keeps it a usable touch target. */
     link.style.cssText = 'display:inline-flex;align-items:center;min-height:44px;'
-      + 'color:var(--color-primary);text-decoration:underline;';
+      + 'color:var(--color-primary-strong);text-decoration:underline;';
     link.textContent = t('reviewFinalizedBackToList');
     box.appendChild(title);
     box.appendChild(message);

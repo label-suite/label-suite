@@ -34,7 +34,7 @@
 | 狀態 | 表現 |
 | :--- | :--- |
 | 預設 | `--color-border` 外框、`--radius-full` |
-| hover（選取 chip） | 邊框與文字換 `--color-primary`，底色 `--color-primary-soft-bg` |
+| hover（選取 chip） | 邊框換 `--color-primary`、文字換 `--color-primary-strong`，底色 `--color-primary-soft-bg` |
 | 選中 | 同 hover 的色，字重 600，勾選框填滿 |
 | focus | **原型沒有**焦點樣式（G-05） |
 | 停用 | 原型沒有定義 |

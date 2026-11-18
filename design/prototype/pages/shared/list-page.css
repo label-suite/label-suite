@@ -22,14 +22,14 @@
 }
 .search-input {
   width: 100%; padding: 9px 12px 9px 36px;
-  border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-control); border-radius: var(--radius-md);
   font-size: 14px; color: var(--color-ink); background: var(--color-white);
   transition: border-color var(--dur-fast); outline: none;
 }
 .search-input::placeholder { color: var(--color-ink-muted); }
 .search-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
 .filter-select {
-  padding: 9px 32px 9px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  padding: 9px 32px 9px 12px; border: 1px solid var(--color-border-control); border-radius: var(--radius-md);
   font-size: 14px; color: var(--color-ink);
   background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
   outline: none;
@@ -88,7 +88,7 @@
   display: inline-flex; align-items: center; justify-content: center;
   transition: all var(--dur-fast);
 }
-.page-btn:hover:not(:disabled):not(.active) { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary); }
+.page-btn:hover:not(:disabled):not(.active) { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary-strong); }
 .page-btn.active { background: var(--color-primary); color: var(--color-white); border-color: var(--color-primary); }
 .page-btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
 .page-ellipsis {
@@ -98,7 +98,7 @@
   user-select: none;
 }
 .page-size-select {
-  padding: 5px 28px 5px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  padding: 5px 28px 5px 10px; border: 1px solid var(--color-border-control); border-radius: var(--radius-md);
   font-size: 13px; color: var(--color-ink);
   background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center;
   outline: none; appearance: none; -webkit-appearance: none; cursor: pointer;

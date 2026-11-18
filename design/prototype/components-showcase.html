@@ -165,7 +165,7 @@
     /* Secondary Button */
     .btn-secondary {
       background: transparent;
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
       border: 1px solid var(--color-border);
       padding: 10px 20px;
       border-radius: var(--radius-md);
@@ -195,7 +195,7 @@
     /* Ghost / Text Button — low-emphasis actions (view all, cancel) */
     .btn-ghost {
       background: transparent;
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
       border: none;
       padding: 8px 12px;
       border-radius: var(--radius-md);
@@ -289,7 +289,7 @@
 
     .input {
       padding: 12px 16px;
-      border: 1px solid #E2E8F0;
+      border: 1px solid var(--color-border-control);
       border-radius: var(--radius-md);
       font-size: 16px;
       transition: border-color 200ms ease;
@@ -362,7 +362,7 @@
       gap: 4px;
       padding: 4px 10px;
       border-radius: var(--radius-full);
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
       background: var(--color-primary-soft-bg);
       border-color: var(--color-primary-border);
     }
@@ -494,12 +494,12 @@
     .task-type-chip:hover {
       border-color: var(--color-primary);
       background: var(--color-primary-soft-bg);
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
     }
     .task-type-chip.selected {
       border-color: var(--color-primary);
       background: var(--color-primary-soft-bg);
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
       font-weight: 600;
     }
     .task-type-chip-check {
@@ -578,7 +578,7 @@
       border-radius: var(--radius-full);
       background: var(--color-primary-soft-bg);
       border: 1px solid var(--color-primary-border);   /* #C7D2FE */
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
       font-size: 11px;
       font-weight: 600;
     }
@@ -610,7 +610,7 @@
     .page-btn:hover {
       background: var(--color-primary-soft-bg);
       border-color: var(--color-primary);
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
     }
     .page-btn.active {
       background: var(--color-primary);
@@ -624,7 +624,7 @@
     }
     .page-size-select {
       padding: 6px 28px 6px 10px;
-      border: 1px solid var(--color-border);
+      border: 1px solid var(--color-border-control);
       border-radius: var(--radius-md);
       font-size: 13px;
       background: var(--color-white);
@@ -641,7 +641,7 @@
       margin-bottom: 12px;
     }
     .breadcrumb a {
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
     }
     .breadcrumb a:hover {
       text-decoration: underline;
@@ -681,7 +681,7 @@
     .review-track-node.current {
       border-color: var(--color-primary);
       background: var(--color-primary-soft-bg);
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
       font-weight: 600;
     }
     .review-track-marker { font-size: 11px; font-weight: 600; }
@@ -893,7 +893,7 @@
       margin-top: 16px;
       font-size: 14px;                           /* text-sm */
       font-weight: 500;                          /* font-medium */
-      color: var(--color-primary);               /* text-primary */
+      color: var(--color-primary-strong);               /* text-primary */
       text-decoration: none;
     }
     .state-panel-action:hover { text-decoration: underline; }

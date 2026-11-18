@@ -33,7 +33,7 @@
 
 ## token
 
-`--radius-sm`、`--radius-full`、`--color-warning/info/success/error` 及其 `-bg`／`-border`、`--color-primary`、`--color-primary-soft-bg`、`--color-primary-border`。
+`--radius-sm`、`--radius-full`、`--color-warning/info/success/error` 及其 `-bg`／`-border`、`--color-primary`、`--color-primary-strong`、`--color-primary-soft-bg`、`--color-primary-border`。
 
 `task-type-badge.css` 的 **36 個色值全部寫死**（淺色 18、深色 18），`tokens.css` 沒有任何對應 token；`.badge-draft` 與 `.badge-dry-run-status` 另有 6 個 → `../design-gaps.md` G-02。
 

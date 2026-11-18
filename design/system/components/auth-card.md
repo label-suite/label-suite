@@ -37,7 +37,7 @@
 
 ## token
 
-`--radius-lg`、`--shadow-card`、`--color-border`，以及 **`--color-card`**。
+`--radius-lg`、`--shadow-card`、`--color-border`、`--color-border-control`（欄位外框；有輸入框的四個帳號頁各自鏡像 `tokens.css` 的值），以及 **`--color-card`**。
 
 `--color-card` **不在 `tokens.css` 裡**。它是五個帳號頁各自在自己的 `:root` 定義的頁面私有 token（淺色與深色各一個值，五頁一致，原值見 `../design-gaps.md` G-29），定義重複了十次（`login.html:19` 與 `:372`、`register.html:19`／`:348`、`forgot-password.html:19`／`:336`、`reset-password.html:19`／`:431`、`verify-email.html:24`／`:310`），全站共 22 處引用 → `../design-gaps.md` G-29。
 
