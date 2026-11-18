@@ -6622,8 +6622,8 @@
     target.setAttribute('data-guideline-anchor-target', 'true');
     target.setAttribute('aria-current', 'location');
     target.setAttribute('tabindex', '-1');
-    target.style.backgroundColor = 'var(--color-warning-soft-bg, #FEF3C7)';
-    target.style.outline = '2px solid var(--color-warning, #D97706)';
+    target.style.backgroundColor = 'var(--color-warning-soft-bg)';
+    target.style.outline = '2px solid var(--color-warning)';
     target.style.outlineOffset = '4px';
     target.style.borderRadius = 'var(--radius-sm, 4px)';
     target.style.scrollMarginTop = '24px';

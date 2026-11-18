@@ -93,14 +93,14 @@
       border-radius: var(--radius-sm); border: 1px solid transparent;
       font-size: 12px; font-weight: 500; line-height: 1.4; white-space: nowrap;
     }
-    .badge-draft           { color: #4B5563; background: #F9FAFB; border-color: #E5E7EB; }
-    .badge-dry-run-status  { color: #6B7280; background: #F3F4F6; border-color: #D1D5DB; }
+    .badge-draft           { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
+    .badge-dry-run-status  { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
     .badge-iaa             { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
     .badge-in-progress     { color: var(--color-info); background: var(--color-info-bg); border-color: var(--color-info-border); }
     .badge-completed       { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
-    .badge-dry-run         { color: #6B7280; background: #F3F4F6; border-color: #D1D5DB; }
-    .badge-official        { color: #5B21B6; background: #EDE9FE; border-color: #DDD6FE; }
-    .badge-run-unmaterialized { color: #64748B; background: #F8FAFC; border-color: #CBD5E1; }
+    .badge-dry-run         { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
+    .badge-official        { color: var(--color-accent); background: var(--color-accent-bg); border-color: var(--color-accent-border); }
+    .badge-run-unmaterialized { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
     .output-type-cell { width: 280px; max-width: 280px; white-space: normal; }
     .output-type-tags {
       display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
@@ -155,16 +155,9 @@
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; } }
 
     /* ── Dark mode overrides ──────────────────────────────────── */
-    /* Table chrome, empty-state desc, and pagination info flip automatically:
-       their light rules use theme-aware tokens (slate-50 / border-muted / text-soft) */
-    html[data-theme="dark"] {
-      /* Status / run-phase badges */
-      .badge-draft          { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
-      .badge-dry-run-status { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
-      .badge-dry-run        { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
-      .badge-official       { color: #A78BFA; background: #1E1B4B; border-color: #3730A3; }
-      .badge-run-unmaterialized { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
-    }
+    /* None needed: table chrome, empty-state desc, pagination info and the
+       status / run-phase badges (#420 Q1 neutral tokens, Q2 accent) all read
+       theme-aware tokens that flip in tokens.css. */
   </style>
   <link rel="stylesheet" href="../shared/task-type-badge.css" />
 </head>

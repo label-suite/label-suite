@@ -248,9 +248,8 @@
     .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
 
     /* ── Code editor ── */
-    /* Deliberately dark editor panel in light mode: bg = light --color-ink value;
-       the dark-mode section below overrides bg to #0D0D14 */
-    .code-editor { width: 100%; min-height: 320px; padding: var(--space-md); font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--color-border-control); border-radius: var(--radius-md); background: #1E1B4B; color: #E2E8F0; outline: none; resize: vertical; transition: border-color var(--dur-fast); cursor: text; }
+    /* Deliberately dark editor panel in both themes: --color-code-bg / --color-code-fg (#420) */
+    .code-editor { width: 100%; min-height: 320px; padding: var(--space-md); font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--color-border-control); border-radius: var(--radius-md); background: var(--color-code-bg); color: var(--color-code-fg); outline: none; resize: vertical; transition: border-color var(--dur-fast); cursor: text; }
     .code-editor:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
     #schemaFields { display: flex; flex-direction: column; gap: 14px; }
     #schemaFields .form-field { margin-bottom: 0; }
@@ -494,7 +493,7 @@
     html[data-theme="dark"] .preview-unified { background: var(--color-white); }
     html[data-theme="dark"] .absa-preview-text { background: var(--color-slate-50); }
     html[data-theme="dark"] .absa-relation-row { background: var(--color-white); }
-    html[data-theme="dark"] .absa-relation-badge { background: #1E1B4B; color: #818CF8; border-color: rgba(129,140,248,0.3); }
+    html[data-theme="dark"] .absa-relation-badge { border-color: rgba(129,140,248,0.3); }
     /* ── Inline dataset preview table (FR-002c) ── */
     .inline-dataset-preview { margin-top: 12px; }
     .inline-dataset-preview-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
@@ -564,6 +563,7 @@
     /* radio-style (single-select) chip */
     .task-type-chip[role="radio"] .task-type-chip-check { border-radius: 50%; }
     .task-type-chip[role="radio"].selected .task-type-chip-check::after { width: 6px; height: 6px; border: none; border-radius: 50%; background: white; transform: none; }
+
     /* ── 作答控制項 chip（G-50，#420）：引擎產生的標籤／實體類型／Bypass 按鈕。
        顏色只走 token；每個標籤自己的顏色是任務資料，由引擎寫進 --chip-color。
        勾選框與圓點用 currentColor，選中時跟著字色換成 --color-on-cta。 */
@@ -576,15 +576,13 @@
     .chip-mark--box { border-radius: 3px; font-size: 10px; }
     .chip.is-active .chip-mark--radio::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
-
     /* ── Dark-mode rules for engine-generated components (shared by task-new + task-detail) ── */
     html[data-theme="dark"] .regression-value-input { background: var(--color-surface); }
-    html[data-theme="dark"] .code-editor { background: #0D0D14; border-color: var(--color-border-control); }
     html[data-theme="dark"] .entity-color-dot,
     html[data-theme="dark"] .annotation-preview-color { border-color: rgba(226,232,240,0.18); }
-    html[data-theme="dark"] .tag-pill { background: #1E1B4B; color: #A5B4FC; border-color: #3730A3; }
-    html[data-theme="dark"] .schema-toggle-card.is-on { border-color: #3730A3; background: #1E1B4B; }
+    html[data-theme="dark"] .tag-pill { border-color: var(--color-primary-border); }
+    html[data-theme="dark"] .schema-toggle-card.is-on { border-color: var(--color-primary-border); }
     html[data-theme="dark"] .re-preview-entity-row { background: var(--color-white); }
     html[data-theme="dark"] .re-preview-triple-row { background: var(--color-white); }
     html[data-theme="dark"] .re-preview-select { background: var(--color-white); }
-    html[data-theme="dark"] .re-preview-relation-badge { background: #1E1B4B; color: #818CF8; border-color: rgba(129,140,248,0.3); }
+    html[data-theme="dark"] .re-preview-relation-badge { border-color: rgba(129,140,248,0.3); }

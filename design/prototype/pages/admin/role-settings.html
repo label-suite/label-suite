@@ -16,8 +16,6 @@
   <script src="../../assets/theme-fouc.js"></script>
   <style>
     :root {
-      --color-task-soft-bg:        #F0FDFA;
-      --color-task-header:         #0D9488;
       --navbar-mobile-height: 84px;
       --navbar-mobile-top-height: 64px;
     }
@@ -100,10 +98,10 @@
       border-bottom: 2px solid var(--color-primary); border-right: 1px solid var(--color-border);
     }
     .col-group-task {
-      background: var(--color-task-soft-bg); color: var(--color-task-header);
+      background: var(--color-task-bg); color: var(--color-task);
       font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
       text-align: center; padding: 8px var(--space-md);
-      border-bottom: 2px solid var(--color-task-header);
+      border-bottom: 2px solid var(--color-task);
     }
     .col-perm-header {
       background: var(--color-white); padding: 8px var(--space-md);
@@ -120,7 +118,7 @@
     }
     .col-role-header.sys-col  { background: var(--color-primary-soft-bg); color: var(--color-primary-strong); }
     .col-role-header.sa-col   { border-right: 2px solid var(--color-border); }
-    .col-role-header.task-col { background: var(--color-task-soft-bg); color: var(--color-task-header); }
+    .col-role-header.task-col { background: var(--color-task-bg); color: var(--color-task); }
     .col-role-header.last-col { border-right: none; }
 
     /* Module header rows */
@@ -166,7 +164,7 @@
       width: 16px; height: 16px; cursor: pointer;
       accent-color: var(--color-primary); border-radius: 3px;
     }
-    .matrix-checkbox.task-check { accent-color: var(--color-task-header); }
+    .matrix-checkbox.task-check { accent-color: var(--color-task); }
 
     /* Locked cells (super_admin base permissions) */
     .locked-cell { background: var(--color-slate-50) !important; cursor: not-allowed; }
@@ -262,11 +260,8 @@
     }
     .audit-badge-perm_update { background: var(--color-primary-soft-bg); color: var(--color-primary-strong); border-color: var(--color-primary-border); }
     /* ── Dark mode overrides ──────────────────────────────────── */
-    html[data-theme="dark"] {
-      /* Teal task column — replace light mint with dark teal */
-      --color-task-soft-bg:  #0C2A27;
-      --color-task-header:   #2DD4BF;
-    }
+    /* None needed: the teal task column reads --color-task / --color-task-bg,
+       which tokens.css declares for both themes (#420 Q5). */
   </style>
 </head>
 <body>
