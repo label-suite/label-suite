@@ -1189,8 +1189,13 @@
   if (mobileLangToggle) mobileLangToggle.addEventListener('click', function() { handleLangToggle('mobile'); });
   document.getElementById('deleteTaskCancelBtn').addEventListener('click', closeDeleteModal);
   document.getElementById('deleteTaskConfirmBtn').addEventListener('click', confirmDeleteModal);
-  document.getElementById('deleteTaskModal').addEventListener('click', function(e) {
-    if (e.target === this) closeDeleteModal();
+  /* UXC-10：破壞性確認點遮罩不關，只能按「取消」、Esc 或「刪除」離開。
+     維護者 2026-11-18 裁定刪除任務也適用（#423, design-gaps G-45）；
+     規格 01-task-list §刪除任務第 5 條仍寫「點視窗外面 → 關閉」，待維護者改。
+     點遮罩會讓焦點掉到 body，而 modal-focus.js 的 Esc 監聽掛在視窗上，
+     所以在遮罩上的 mousedown 取消預設動作，焦點留在視窗裡，Esc 仍然有效。 */
+  document.getElementById('deleteTaskModal').addEventListener('mousedown', function(e) {
+    if (e.target === this) e.preventDefault();
   });
   /* Escape-to-close is now handled by the LabelSuiteModalFocus trap
      (pages/shared/modal-focus.js), scoped to the modal itself. */

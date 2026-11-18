@@ -213,6 +213,8 @@
 | **依據** | `task-list.html:1197`–`:1199` 點遮罩即關 vs `user-management.html:1357`「`/* UXC-10: a destructive confirmation must not dismiss on overlay click */`」。規格站在 `task-list` 那邊：[`03-task-management/01-task-list.mdx`](../../docs/specs/03-task-management/01-task-list.mdx) §刪除任務 第 5 條「點視窗外面，或按 Esc → 視窗關閉」。 |
 | **待決問題** | **已裁定（2026-11-18）**：刪除任務也適用 UXC-10，點遮罩不關。規格那一條要改，屬維護者。原型修正於 #423。原題保留：UXC-10 的「點遮罩不關」要不要適用到刪除任務？若要，規格那一條要改（屬維護者）；若不要，UXC-10 要寫明例外。 |
 
+**狀態（#423）**：原型已修正，規格未改。`task-list.html` 刪除確認的遮罩點擊關閉整段刪除；另在遮罩的 `mousedown` 取消預設動作，因為 `modal-focus.js` 的 Esc 監聽掛在視窗上，焦點一掉到 `body` Esc 就失效。淺深色實測：點遮罩不關、焦點留在「取消」，Esc、「取消」、「刪除」都能關。規格 `01-task-list.mdx` §刪除任務 第 5 條與 A1 替代流程仍寫「點視窗外面 → 視窗關閉」，屬維護者改。上文的行號指的是修正前。
+
 ### G-46 指引閘門按 Esc 就能不確認直接開始
 
 > b3 新增。

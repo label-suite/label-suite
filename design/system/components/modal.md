@@ -79,7 +79,7 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | 無（b1） | — |
-| `task-management/task-list#sim-delete-error` | `#deleteTaskModal`（`task-list.html:307`–`:315`）；**有接** `modal-focus.js`（`:711`、`:721`） |
+| `task-management/task-list#sim-delete-error` | `#deleteTaskModal`（`task-list.html:307`–`:315`）；**有接** `modal-focus.js`（`:711`、`:721`）；點遮罩不關（UXC-10，#423 起）→ `../design-gaps.md` G-45 |
 | `task-management/task-new`（`#modal-dataset-preview`、`#modal-leave-confirm`） | `datasetPreviewModal`（`.modal-xl`，`task-new.html:541`）、`leaveModal`（`:517`）、`taxonomyDeleteModal`（`:529`）；**沒有接** `modal-focus.js` |
 | `task-management/task-detail`（`#tab-*`、`#param-status`、`#param-section-labeling`） | 八個 modal（`task-detail.html:1995`–`:2096`、`annotation-results.html:138`），只有四個接了 `modal-focus.js` → `../design-gaps.md` G-43 |
 | `admin/user-management`（`#modal-invite`、`#toast-action`） | `addModal`（`:569`）、`editModal`（`:622`）、`disableModal`（`:673`），帶 `role="dialog"`／`aria-modal`；**沒有接** `modal-focus.js` |
