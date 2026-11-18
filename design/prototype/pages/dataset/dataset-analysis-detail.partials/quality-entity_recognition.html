@@ -31,13 +31,15 @@
     <div class="iaa-score-grid iaa-score-grid-1">
       <div class="iaa-score-card">
         <div class="iaa-card-label" id="lblSeqPartialMetric">Pairwise Entity-level F1（partial overlap）</div>
-        <div class="iaa-card-value pass">0.78</div>
+        <!-- 部分重疊只能切換顯示、不判定達標（規格 05-02 §八種輸出類型各自的主指標與門檻 第 11 條；#423, design-gaps G-53）：
+             不叫「門檻」、不寫通過／未達，數值、長條與圓點都用中性色。 -->
+        <div class="iaa-card-value">0.78</div>
         <div class="iaa-card-calc">Pairwise 平均</div>
-        <div class="iaa-bar-wrap"><div class="iaa-bar-fill pass" style="width:78%"></div></div>
+        <div class="iaa-bar-wrap"><div class="iaa-bar-fill neutral" style="width:78%"></div></div>
         <div class="iaa-threshold-row">
           <span class="iaa-threshold-item">
-            <span class="t-dot t-dot-pass"></span>
-            <span id="lblSeqPartThr">Relaxed 門檻 0.70 — <strong class="t-pass">通過</strong></span>
+            <span class="t-dot t-dot-neutral"></span>
+            <span id="lblSeqPartThr">Relaxed 參考值 0.70</span>
           </span>
         </div>
       </div>
@@ -50,10 +52,10 @@
   <div class="alt-metrics-body" id="altBodySeq" aria-hidden="true">
     <div class="table-scroll">
       <table class="alt-table">
-        <thead><tr><th id="altHSeqMode">計算模式</th><th id="altHSeqVal">數值</th><th id="altHSeqThr">門檻</th><th id="altHSeqResult">結果</th></tr></thead>
+        <thead><tr><th id="altHSeqMode">計算模式</th><th id="altHSeqVal">數值</th><th id="altHSeqThr">門檻／參考值</th><th id="altHSeqResult">結果</th></tr></thead>
         <tbody>
           <tr><td>Strict match</td><td>0.72</td><td>0.80</td><td><span class="badge badge-fail" id="altSeqStrictResult">未達</span></td></tr>
-          <tr><td>Partial overlap</td><td>0.78</td><td>0.70</td><td><span class="badge badge-pass" id="altSeqPartialResult">通過</span></td></tr>
+          <tr><td>Partial overlap</td><td>0.78</td><td>0.70</td><td><span class="badge badge-neutral" id="altSeqPartialResult">不判定</span></td></tr>
         </tbody>
       </table>
     </div>

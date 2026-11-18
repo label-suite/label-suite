@@ -44,7 +44,7 @@
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:653`–`:717`。shipped 的那一份在 `pages/annotation/annotation-workspace.html:445`，註解寫明是「§Review Status Track -- CSS verbatim」。
+`design/prototype/components-showcase.html:653`–`:717`。shipped 的那一份在 `pages/annotation/annotation-workspace.html:441`，註解寫明是「§Review Status Track -- CSS verbatim」。
 
 ## 可重現樣本
 
@@ -63,6 +63,6 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 差異軌、停在爭議中 |
-| `annotation/annotation-workspace`（`#role-reviewer`、`#state-review-decision`） | `annotation-workspace.html:445`–`:466` 的 11 條規則與 `components-showcase.html:653`–`:717` **逐字相同**；`annotation-workspace.config.js:5506` 起算繪，節點帶 `aria-current="step"`（`:5516`） |
+| `annotation/annotation-workspace`（`#role-reviewer`、`#state-review-decision`） | `annotation-workspace.html:441`–`:462` 的 11 條規則與 `components-showcase.html:653`–`:717` **逐字相同**；`annotation-workspace.config.js:5547` 起算繪，節點帶 `aria-current="step"`（`:5557`） |
 
 b3 已補上並核對（見上表）：那份 verbatim 屬實。

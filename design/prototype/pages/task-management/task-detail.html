@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="../shared/modal.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <link rel="stylesheet" href="../shared/button.css" />
+  <link rel="stylesheet" href="../shared/card.css" />
   <link rel="stylesheet" href="../shared/date-range-picker.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
   <link rel="stylesheet" href="../shared/content-tabs.css" />
@@ -89,13 +90,8 @@
       100% { opacity: 0.95; }
     }
 
-    .panel {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      background: var(--color-white);
-      padding: var(--space-lg);
-      margin-bottom: var(--space-md);
-    }
+    /* .panel 外框在 pages/shared/card.css（#423, G-41） */
+    .panel { margin-bottom: var(--space-md); }
     .panel-title {
       font-size: 16px;
       font-weight: 700;
@@ -304,33 +300,7 @@
       font-size: 12px;
       color: var(--color-text-soft);
     }
-    .toggle-switch {
-      position: relative;
-      width: 42px;
-      height: 24px;
-      flex-shrink: 0;
-    }
-    .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
-    .toggle-slider {
-      position: absolute;
-      inset: 0;
-      border-radius: var(--radius-full);
-      background: var(--color-border);
-      transition: background var(--dur-fast);
-    }
-    .toggle-slider::before {
-      content: '';
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      width: 18px;
-      height: 18px;
-      border-radius: 999px;
-      background: var(--color-white);
-      transition: transform var(--dur-fast);
-    }
-    .toggle-switch input:checked + .toggle-slider { background: var(--color-cta); }
-    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+    /* .toggle-switch／.toggle-slider 用 task-config.css 的正典（40×22、開啟為主色；#423, G-42） */
 
     .risk-warning {
       margin-top: 10px;
@@ -596,7 +566,7 @@
        already scrolls horizontally (.table-scroll) on narrow viewports
        instead of wrapping the action button (issue singyichen/label-suite#1057). */
     #finalExceptionPoolSection .member-table td:last-child { white-space: nowrap; }
-    #finalExceptionPoolSection .mini-btn { display: inline-block; white-space: nowrap; }
+    #finalExceptionPoolSection .mini-btn { white-space: nowrap; }
     .pagination {
       display: flex;
       align-items: center;
@@ -776,49 +746,7 @@
       font-size: 13px;
       color: var(--color-ink);
     }
-    .mini-btn {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-white);
-      color: var(--color-ink);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 6px 10px;
-      transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast), opacity var(--dur-fast);
-    }
-    .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary-strong); }
-    .mini-btn:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
-    }
-    .mini-btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
-    .mini-btn-primary {
-      background: var(--color-primary);
-      border-color: var(--color-primary);
-      color: var(--color-white);
-    }
-    .mini-btn-primary:hover:not(:disabled) { opacity: 0.9; border-color: var(--color-primary); color: var(--color-white); }
-    .mini-btn-primary:focus-visible { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18); }
-    .mini-btn-success {
-      background: var(--color-success-bg);
-      border-color: var(--color-success-border);
-      color: var(--color-success);
-    }
-    .mini-btn-success:hover:not(:disabled) { border-color: var(--color-success); background: var(--color-success-bg); color: var(--color-success); }
-    .mini-btn-success:focus-visible { box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.18); }
-    .mini-btn-warning {
-      background: var(--color-warning-bg);
-      border-color: var(--color-warning-border);
-      color: var(--color-warning);
-    }
-    .mini-btn-warning:hover:not(:disabled) { border-color: var(--color-warning); background: var(--color-warning-bg); color: var(--color-warning); }
-    .mini-btn-warning:focus-visible { box-shadow: 0 0 0 3px rgba(161, 98, 7, 0.18); }
-    .mini-btn-danger {
-      background: var(--color-error-bg);
-      border-color: var(--color-error-border);
-      color: var(--color-error);
-    }
-    .mini-btn-danger:hover:not(:disabled) { border-color: var(--color-error-border); background: var(--color-error-bg); color: var(--color-error); }
+    /* .mini-btn 與其 variant 在 pages/shared/button.css（#423, G-37） */
     .preview-json-wrap { overflow: auto; flex: 1; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-slate-50); }
     .preview-json { margin: 0; padding: var(--space-md); font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; color: var(--color-ink); white-space: pre-wrap; word-break: break-word; }
     /* ── Dataset preview ── */
@@ -862,6 +790,13 @@
     }
     .toast.show { opacity: 1; transform: translateY(0); }
     .toast.error { background: var(--color-error); }
+    /* UXC-07（#423, G-39）：error 不自動消失，所以要有關閉鈕；隱藏時以 visibility
+       把關閉鈕移出 Tab 順序，延遲 0s 讓淡出照樣播完。 */
+    .toast { visibility: hidden; transition: opacity var(--dur-normal), transform var(--dur-normal), visibility 0s linear var(--dur-normal); }
+    .toast.show { visibility: visible; transition: opacity var(--dur-normal), transform var(--dur-normal); }
+    .toast-close { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; margin-left: auto; padding: 2px; border: none; border-radius: var(--radius-sm); background: none; color: currentColor; opacity: 0.75; cursor: pointer; }
+    .toast-close:hover { opacity: 1; }
+    .toast-close:focus-visible { outline: 2px solid currentColor; outline-offset: 1px; opacity: 1; }
 
     /* Annotation results panel */
     .ar-filter-grid {
@@ -1982,13 +1917,13 @@
       <div id="taskNotFound" class="panel hidden" role="alert" aria-live="polite">
         <p class="panel-title" id="taskNotFoundTitle"></p>
         <p class="status-hint" id="taskNotFoundMessage"></p>
-        <a class="mini-btn mini-btn-primary" id="taskNotFoundBackLink" href="./task-list.html" style="display:inline-block;margin-top:var(--space-md);text-decoration:none;"></a>
+        <a class="mini-btn mini-btn-primary" id="taskNotFoundBackLink" href="./task-list.html" style="margin-top:var(--space-md);text-decoration:none;"></a>
       </div>
 
       <div id="taskForbidden" class="panel hidden" role="alert" aria-live="polite" data-testid="task-forbidden-pane">
         <p class="panel-title" id="taskForbiddenTitle"></p>
         <p class="status-hint" id="taskForbiddenMessage"></p>
-        <a class="mini-btn mini-btn-primary" id="taskForbiddenBackLink" href="./task-list.html" style="display:inline-block;margin-top:var(--space-md);text-decoration:none;"></a>
+        <a class="mini-btn mini-btn-primary" id="taskForbiddenBackLink" href="./task-list.html" style="margin-top:var(--space-md);text-decoration:none;"></a>
       </div>
     </section>
   </div>
@@ -2109,6 +2044,7 @@
 <div class="toast-container" aria-live="polite" aria-atomic="true">
   <div class="toast" id="toast" role="alert">
     <span id="toastMsg"></span>
+    <button type="button" class="toast-close" id="toastClose" aria-label="關閉通知" onclick="hideToast()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
 </div>
 
@@ -2637,6 +2573,7 @@
       progressStageMetaTpl: '{completed}/{total}（{rate}%）',
       reviewerTabBlocked: 'reviewer 無權限檢視成員管理，已導回任務概覽。',
       toastMemberUpdated: '成員設定已更新',
+      toastClose: '關閉通知',
       toastMemberInvited: '邀請已寄出，等待對方接受後加入任務',
       memberActionModalTitle: '確認成員操作',
       memberActionModalBodyRemove: '是否移除 {name}（{role}）？已送出的標記與歷史統計會保留；未完成標記作業會改為未指派狀態，需由 project leader 重新指派或排除。',
@@ -3229,6 +3166,7 @@
       progressStageMetaTpl: '{completed}/{total} ({rate}%)',
       reviewerTabBlocked: 'Reviewer cannot access member management. Redirected to overview.',
       toastMemberUpdated: 'Member setting updated',
+      toastClose: 'Dismiss notification',
       toastMemberInvited: 'Invitation sent. The member will join after accepting it',
       memberActionModalTitle: 'Confirm member action',
       memberActionModalBodyRemove: 'Remove {name} ({role}) from this task? Completed submissions and history remain. Unfinished annotation work becomes unassigned and must be reassigned or excluded by the project leader.',
@@ -11278,19 +11216,25 @@ function getTaskTypeLabel() {
     syncUrlToViewState();
   }
 
-  function showToast(message, isError) {
+  /* UXC-07（#423, G-39）：單一實例、依類型分級存續，error 只能手動關。
+     第二個參數可傳 variant 字串；舊呼叫的 true 視為 error，省略或 false 視為 success。 */
+  var TOAST_DURATIONS = { success: 3000, info: 5000, warning: 8000, error: 0 };
+  function hideToast() {
+    document.getElementById('toast').classList.remove('show');
+    clearTimeout(toastTimer);
+    toastTimer = null;
+  }
+  function showToast(msg, variant) {
+    if (variant === true) variant = 'error';
+    if (!Object.prototype.hasOwnProperty.call(TOAST_DURATIONS, variant)) variant = 'success';
     var toast = document.getElementById('toast');
-    var msg = document.getElementById('toastMsg');
-    msg.textContent = message;
-    toast.classList.toggle('error', Boolean(isError));
+    document.getElementById('toastMsg').textContent = msg;
+    toast.classList.toggle('error', variant === 'error');
+    document.getElementById('toastClose').setAttribute('aria-label', t('toastClose'));
     toast.classList.add('show');
-
-    if (toastTimer) {
-      clearTimeout(toastTimer);
-    }
-    toastTimer = setTimeout(function() {
-      toast.classList.remove('show');
-    }, 2400);
+    clearTimeout(toastTimer);
+    toastTimer = null;
+    if (TOAST_DURATIONS[variant] > 0) toastTimer = setTimeout(hideToast, TOAST_DURATIONS[variant]);
   }
 
   function trackEvent(name, extra) {

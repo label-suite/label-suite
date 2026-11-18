@@ -19,7 +19,7 @@
 | 變體 | 差別 | 依據 |
 | :--- | :--- | :--- |
 | 欄位說明 | 觸發鈕放在欄位標籤同一行的 `.field-label-row` 裡 | `task-config.engine.js:1152`–`:1182`（`attachFieldHintTooltip`） |
-| 審核說明 | 觸發鈕放在審核單位脈絡橫幅裡，泡泡有固定 id `wsReviewNoteBubble` 供 `aria-describedby` 指向；同一組 class，沒有 `.field-label-row` | `annotation-workspace.config.js:3935`–`:3980`（`appendReviewNoteTooltip`，b3 核對） |
+| 審核說明 | 觸發鈕放在審核單位脈絡橫幅裡，泡泡有固定 id `wsReviewNoteBubble` 供 `aria-describedby` 指向；同一組 class，沒有 `.field-label-row` | `annotation-workspace.config.js:3976`–`:4021`（`appendReviewNoteTooltip`，b3 核對） |
 
 ## 適用狀態
 
@@ -27,12 +27,12 @@
 | :--- | :--- | :--- |
 | 隱藏（預設） | 有，`visibility: hidden`＋`opacity: 0` | `:296`–`:297` |
 | hover／focus 顯示 | 有 | `:325`–`:329` |
-| 觸發鈕 focus 樣式 | 有，但焦點環是寫死的 rgba | `:291`–`:293` → `../design-gaps.md` G-37 |
+| 觸發鈕 focus 樣式 | 有，`outline: 2px solid var(--color-primary)`（#423 起，原本是寫死的 rgba） | `:291`–`:293` → `../design-gaps.md` G-37 |
 | disabled／載入中／錯誤／空 | 不適用 | — |
 
 ## token
 
-`--color-ink-muted`、`--color-ink`、`--color-white`、`--dur-fast`。寫死：泡泡圓角 6px（`:305`）、`z-index: 500`（`:301`，`tokens.css` 有 `--z-*` 系列卻沒用）、焦點環 rgba（`:293`）→ G-02。
+`--color-ink-muted`、`--color-ink`、`--color-white`、`--dur-fast`。寫死：泡泡圓角 6px（`:305`）、`z-index: 500`（`:301`，`tokens.css` 有 `--z-*` 系列卻沒用） → G-02。
 
 ## 鍵盤與焦點
 
@@ -44,7 +44,7 @@
 
 ## 樣式出處
 
-`design/prototype/pages/task-management/task-config.css:259`–`:329`（`task-new` 與 `task-detail` 共用；`task-detail.html:1136` 的註解寫明搬過來共用）。
+`design/prototype/pages/task-management/task-config.css:259`–`:329`（`task-new` 與 `task-detail` 共用；`task-detail.html:1071` 的註解寫明搬過來共用）。
 
 ## 可重現樣本
 
@@ -64,4 +64,4 @@
 | :--- | :--- |
 | `task-management/task-new#state-step3` | 啟動設定的欄位說明 |
 | `task-management/task-detail#tab-settings`（及五個 `#param-section-*`） | 設定分頁的欄位說明 |
-| `annotation/annotation-workspace#role-reviewer` | 審核單位脈絡橫幅的審核說明（`appendReviewNoteTooltip`，`annotation-workspace.config.js:3935`–`:3980`），沿用 `task-config.css` 的同一組 class |
+| `annotation/annotation-workspace#role-reviewer` | 審核單位脈絡橫幅的審核說明（`appendReviewNoteTooltip`，`annotation-workspace.config.js:3976`–`:4021`），沿用 `task-config.css` 的同一組 class |

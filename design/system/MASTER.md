@@ -9,7 +9,7 @@
 本檔是依 [`design-system-setup`](../../.claude/skills/design-system-setup/SKILL.md) 的四種依據，**從 prototype 的實際程式碼反推重建**的。因此：
 
 - **章節名沿用**那些註解指名的名字（§Buttons、§Inputs、§Empty State、§Desktop Content Tabs、§Metric KPI Tile…），這樣既有註解才不會變成懸空引用。
-- **版本號與行號引用無法重現**：`tokens.css:3`（「updated 2026-04-18」）、`:32` 與 `:182`（「MASTER.md v1.7.1」）、`:70`（「MASTER.md Changelog」）、`annotation-workspace.config.js:3944`（「MASTER.md:1423-1482」）、`:3947`（「MASTER.md:1482」）指的都是原件的版本與行數。本檔從第 1 版重新起算，**那五處引用在本 repo 解析不到**，記在 [`design-gaps.md`](design-gaps.md) G-25。
+- **版本號與行號引用無法重現**：`tokens.css:3`（「updated 2026-04-18」）、`:32` 與 `:182`（「MASTER.md v1.7.1」）、`:70`（「MASTER.md Changelog」）、`annotation-workspace.config.js:3985`（「MASTER.md:1423-1482」）、`:3988`（「MASTER.md:1482」）指的都是原件的版本與行數。本檔從第 1 版重新起算，**那五處引用在本 repo 解析不到**，記在 [`design-gaps.md`](design-gaps.md) G-25。
 - 原始 repo 的 `design/system/` 依 `design-handoff` 鐵律是**參照，不是依據**，所以本檔沒有從它抄任何內容。
 
 ## 怎麼查
@@ -108,7 +108,7 @@ prototype 註解指名了章節，但 b1 沒有證據；b2 依它們的出貨實
 
 | 元件 | 正典章節（只見於註解） | b1 | b2 | b3 | b4 | 狀態 |
 | :--- | :--- | ---: | ---: | ---: | ---: | :--- |
-| [Card](components/card.md) | §Cards（`pages/dashboard/dashboard.layout.css:171`） | 0 | 3 | 1 | 1 | ✅ b2 完成（四份實作，G-41） |
+| [Card](components/card.md) | §Cards（`pages/dashboard/dashboard.layout.css:171`） | 0 | 3 | 1 | 1 | ✅ b2 完成（#423 抽成 `pages/shared/card.css`，G-41） |
 | [Tooltip](components/tooltip.md) | §Tooltip（`pages/task-management/task-config.css:259`） | 0 | 2 | 1 | 0 | ✅ b2 完成；b3 補上審核說明變體 |
 | [Step Indicator](components/step-indicator.md) | §Step Indicator（`assets/tokens.css:21`） | 0 | 1 | 0 | 0 | ✅ b2 完成（**單頁專屬**） |
 
@@ -157,7 +157,7 @@ prototype 的註解另外指名的章節裡，這一個不是元件（b1 原列�
 ### b3 接手時要先讀的
 
 1. G-01、G-03、G-28、G-33、G-34 已有裁定，不要重開；G-37～G-45 的待決問題等維護者。
-2. [`ux-conventions.md`](ux-conventions.md) 的 UXC-04、05 證據在 `annotation-workspace.config.js:657`、`:3058`；UXC-03、09 還有 b3 的引用要核對（`:1980`、`:2032`，`annotation-list.html:1949`）。
+2. [`ux-conventions.md`](ux-conventions.md) 的 UXC-04、05 證據在 `annotation-workspace.config.js:666`、`:3099`；UXC-03、09 還有 b3 的引用要核對（`:1989`、`:2041`，`annotation-list.html:1930`）。
 3. [Tooltip](components/tooltip.md) 的第二處（`annotation-workspace.config.js:3943`）、Toast 與 Skeleton 在 b3 的那幾份（G-10）、`annotation-workspace` 沒有定義側欄的兩個窄視窗 token（G-24）。
 4. **別批的使用關係要保留**（鐵律 5）。
 
@@ -167,7 +167,7 @@ prototype 的註解另外指名的章節裡，這一個不是元件（b1 原列�
 - 畫面規格 **2 份**，涵蓋交付包 b3 的全部 22 個視圖；其中 `annotation/annotation-list#state-loading` 與 `annotation/annotation-workspace#state-task-goal-and-instruction` 是交付包列為**無法重現**的視圖，畫面檔照實寫明，追蹤在 label-suite/label-suite#187。
 - 跨元件約定新寫 **2 條**（UXC-04／05），共 9 條寫完；UXC-03、07、09 加上 b3 的核對。
 - 差異新增 **6 筆**（G-46～G-51），共 48 筆：原型與規格差異 20、缺狀態證據 8、待重新設計 20。G-02、G-04、G-10、G-13、G-22、G-23、G-24、G-36、G-37、G-41、G-43 追加了 b3 的核對結果，過去的裁定不動。
-- `annotation-workspace` 的六個 overlay 都接了 `modal-focus.js`，但指引閘門按 Esc 就能略過（G-46）。
+- `annotation-workspace` 的六個 overlay 都接了 `modal-focus.js`，但指引閘門按 Esc 就能略過（G-46，#423 已修正）。
 
 ### b4 接手時要先讀的
 
@@ -194,7 +194,7 @@ prototype 的註解另外指名的章節裡，這一個不是元件（b1 原列�
 ### 之後要做的
 
 1. G-01、G-03、G-28、G-33、G-34 已有裁定，不要重開；G-37～G-56 的待決問題等維護者。
-2. 交付包要補的（G-31、G-40、G-51、G-52、G-54）與畫面要改的（例如 G-53）都不在本 skill 的範圍：前者重跑 `design-handoff`，後者是畫面修正，要走 Ready gate。
+2. 交付包要補的（G-31、G-40、G-51、G-52、G-54）與畫面要改的（例如 G-53，已由 #423 修正）都不在本 skill 的範圍：前者重跑 `design-handoff`，後者是畫面修正，要走 Ready gate。
 3. prototype 改過之後重跑交付包，再依它點名的批次重驗。
 
 ## 變更紀錄

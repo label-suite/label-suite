@@ -61,7 +61,7 @@ B：`--radius-md`、`--radius-full`；**漸層的三個色與 1.5s 都寫死**�
 | :--- | :--- |
 | `components-showcase#state-default` | 兩個 variant |
 | `account/profile`（`state-default`） | `profile.html` 共 49 處 |
-| `dashboard/dashboard#param-view-skeleton` | shimmer 變體（`dashboard.components.css:348`–`:386`），與正典逐字相同，暗色另寫一組漸層 |
-| `task-management/task-detail`（載入中，交付包未列） | pulse 變體（`task-detail.html:67`–`:83`），與正典（`components-showcase.html:436` 起）逐字相同 |
+| `dashboard/dashboard#param-view-skeleton` | shimmer 變體（`dashboard.components.css:318`–`:356`），與正典逐字相同，暗色另寫一組漸層 |
+| `task-management/task-detail`（載入中，交付包未列） | pulse 變體（`task-detail.html:68`–`:84`），與正典（`components-showcase.html:436` 起）逐字相同 |
 
 另有 b2 的 `dashboard`（含 `dashboard.components.css`、`dashboard.js`）與 `task-management/task-detail`，以及 `shared/sidebar.js`、`shared/modal.css` 各自提到 skeleton，b2 已核對（見上表）：`dashboard` 與 `task-detail` 都是正典的逐字複製，各有一份 → `../design-gaps.md` G-10。`shared/sidebar.js`、`shared/modal.css` 的部分待 b3 一併看。

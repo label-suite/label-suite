@@ -111,32 +111,7 @@
     .badge-admin    { background: var(--color-primary-soft-bg); color: var(--color-primary-strong); border-color: var(--color-primary-border); }
     .badge-user     { background: var(--color-success-soft-bg); color: var(--color-success); border-color: var(--color-success-border); }
 
-    /* ── Mini action buttons (aligned with task-list) ────────── */
-    .mini-btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      height: 30px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-white);
-      color: var(--color-ink);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 0 10px;
-      transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast), opacity var(--dur-fast);
-    }
-    .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary-strong); }
-    .mini-btn:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
-    }
-    .mini-btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
-    .mini-btn-primary { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-white); }
-    .mini-btn-primary:hover:not(:disabled) { opacity: 0.9; border-color: var(--color-primary); color: var(--color-white); }
-    .mini-btn-primary:focus-visible { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18); }
-    .mini-btn-danger { background: var(--color-error-soft-bg); border-color: var(--color-error-soft-border); color: var(--color-error); }
-    .mini-btn-danger:hover:not(:disabled) { border-color: var(--color-error-soft-border); background: var(--color-error-soft-bg); color: var(--color-error); }
-    .mini-btn-success { background: var(--color-success-soft-bg); border-color: var(--color-success-soft-border); color: var(--color-success); }
-    .mini-btn-success:hover:not(:disabled) { background: var(--color-success-soft-bg); border-color: var(--color-success-soft-border); }
+    /* .mini-btn 與其 variant 在 pages/shared/button.css（#423, G-37） */
 
     /* ── Pagination ─────────────────────────────────────────────── */
     .pagination {
@@ -255,14 +230,6 @@
       .td-actions { flex-wrap: wrap; }
     }
 
-    /* ── Audit Log icon button ──────────────────────────────────── */
-    .mini-btn-log {
-      background: var(--color-info-bg); border-color: var(--color-info-border); color: var(--color-info);
-    }
-    .mini-btn-log:hover:not(:disabled) {
-      border-color: var(--color-info); color: var(--color-info); background: var(--color-info-bg);
-    }
-    .mini-btn-icon { padding: 0 6px; }
 
     /* ── Audit Drawer: layout is shared/audit-drawer.css (#422) ── */
     .audit-badge-create     { background: var(--color-success-soft-bg); color: var(--color-success); border-color: var(--color-success-border); }

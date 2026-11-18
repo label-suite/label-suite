@@ -49,6 +49,7 @@
       wsHistoryDiffBoundary: '邊界變更',
       guidelineModalTitle: '請先閱讀任務說明',
       guidelineModalConfirm: '我已閱讀，開始標記',
+      guidelineModalBack: '返回標記清單',
       guidelineSummaryTitle: '任務說明',
       guidelineFileActionPreview: '預覽',
       mobileDrawerTitle: '說明與檔案',
@@ -56,6 +57,7 @@
       guidelinePdfModalCloseAria: '關閉 PDF 預覽',
       guidelineMdModalCloseAria: '關閉 Markdown 預覽',
       wsSubmitIncomplete: '請完成所有標記項目後再送出',
+      wsOutputIncomplete: '這一項還沒作答，完成後才能送出',
       wsSubmitSuccess: '標記已送出',
       reviewSubmitLabel: '送出審核',
       reviewApproveLabel: '通過',
@@ -218,6 +220,7 @@
       wsHistoryDiffBoundary: 'Boundary',
       guidelineModalTitle: 'Please read the task guideline first',
       guidelineModalConfirm: "I've read it, start annotating",
+      guidelineModalBack: 'Back to annotation list',
       guidelineSummaryTitle: 'Task Guideline',
       guidelineFileActionPreview: 'Preview',
       mobileDrawerTitle: 'Guidelines & Files',
@@ -225,6 +228,7 @@
       guidelinePdfModalCloseAria: 'Close PDF preview',
       guidelineMdModalCloseAria: 'Close Markdown preview',
       wsSubmitIncomplete: 'Please answer every output before submitting',
+      wsOutputIncomplete: 'Answer this item before submitting',
       wsSubmitSuccess: 'Submitted',
       reviewSubmitLabel: 'Submit review',
       reviewApproveLabel: 'Approve',
@@ -478,6 +482,11 @@
   var originalRenderOutputPreview = renderOutputPreview;
   function patchedRenderOutputPreview(container, outKey) {
     container.setAttribute('data-testid', 'ws-output-panel-' + outKey);
+    /* 重繪會清掉區塊內容（含送出被擋時加的錯誤文字），錯誤態一併清掉，
+       免得框線還在、aria-describedby 卻指向不存在的元素（UXC-05；#423, G-47）。 */
+    container.removeAttribute('data-error');
+    container.removeAttribute('aria-describedby');
+    container.removeAttribute('tabindex');
     originalRenderOutputPreview(container, outKey);
     patchOutputPanel(outKey, container);
     /* relation_identification's bypass chip lives inside the unified
@@ -2920,10 +2929,34 @@
     }
   }
 
+  /* 送出被擋時的區塊提示（#423, design-gaps G-47；規格 04-02 §作答完整性與提交阻擋 第 2、4 條）：
+     框線換錯誤色（CSS 選 [data-error="true"]）、區塊內一行錯誤文字並以 aria-describedby 綁定，
+     焦點捲到第一個未完成的區塊。作答時引擎會重繪區塊，錯誤標記隨之消失（UXC-05）。 */
+  function outputErrorId(outKey) {
+    return 'ws-output-error-' + outKey;
+  }
+
+  function markPanelError(panel, outKey) {
+    panel.setAttribute('data-error', 'true');
+    var error = document.createElement('p');
+    error.className = 'ws-output-error';
+    error.id = outputErrorId(outKey);
+    error.setAttribute('data-testid', 'ws-output-error-' + outKey);
+    error.textContent = t('wsOutputIncomplete');
+    panel.appendChild(error);
+    panel.setAttribute('aria-describedby', error.id);
+    panel.setAttribute('tabindex', '-1');
+  }
+
   function clearAllPanelErrors() {
     state.selectedOutputTypes.forEach(function (outKey) {
       var panel = document.querySelector('[data-testid="ws-output-panel-' + outKey + '"]');
-      if (panel) panel.removeAttribute('data-error');
+      if (!panel) return;
+      panel.removeAttribute('data-error');
+      panel.removeAttribute('aria-describedby');
+      panel.removeAttribute('tabindex');
+      var error = document.getElementById(outputErrorId(outKey));
+      if (error) error.remove();
     });
   }
 
@@ -3041,14 +3074,22 @@
 
     clearAllPanelErrors();
     var allAnswered = true;
+    var firstIncompletePanel = null;
     state.selectedOutputTypes.forEach(function (outKey) {
       if (!isOutputAnswered(outKey)) {
         allAnswered = false;
         var panel = document.querySelector('[data-testid="ws-output-panel-' + outKey + '"]');
-        if (panel) panel.setAttribute('data-error', 'true');
+        if (panel) {
+          markPanelError(panel, outKey);
+          if (!firstIncompletePanel) firstIncompletePanel = panel;
+        }
       }
     });
     if (!allAnswered) {
+      if (firstIncompletePanel) {
+        firstIncompletePanel.focus({ preventScroll: true });
+        firstIncompletePanel.scrollIntoView({ block: 'center' });
+      }
       showToast(t('wsSubmitIncomplete'), 'warning');
       state.submitBusy = false;
       if (submitBtnEl) submitBtnEl.disabled = false;
@@ -6796,6 +6837,7 @@
   function setupGuidelineModal() {
     var modal = document.getElementById('wsGuidelineModal');
     var confirmBtn = document.getElementById('wsGuidelineModalConfirm');
+    var backBtn = document.getElementById('wsGuidelineModalBack');
     var body = document.getElementById('wsGuidelineModalBody');
     if (!modal || !confirmBtn) return;
     if (!currentProfile || !currentProfile.forceShowGuideline) {
@@ -6848,10 +6890,16 @@
         /* No user click triggers this modal (shown automatically on first
            visit), so focus returns to the workspace root landmark on close
            rather than to a trigger element. */
+        /* 閘門忽略 Esc（#423, design-gaps G-46）：規格 §指引閘門 第 3 條「按確認按鈕才開始」，
+           所以 onClose 是空函式，modal-focus.js 收到 Esc 只取消預設動作、不關彈窗。
+           不想確認的人走「返回標記清單」離開。 */
         window.LabelSuiteModalFocus.open(modal, {
           trigger: document.getElementById('wsRoot'),
-          onClose: hideGuidelineModal
+          onClose: function () {}
         });
+        /* 初始焦點放在確認鈕（維護者裁定 2026-11-18，#423）：modal-focus.js 預設聚焦第一個
+           可聚焦元素，也就是左邊的返回鈕，這裡改回主要動作。 */
+        confirmBtn.focus();
       }
     } else {
       modal.classList.remove('show');
@@ -6869,6 +6917,12 @@
       }
       hideGuidelineModal();
     });
+    if (backBtn) {
+      /* 不寫確認紀錄：沒確認就離開，下次進來照樣顯示閘門。 */
+      backBtn.addEventListener('click', function () {
+        window.location.href = buildListReturnUrl();
+      });
+    }
   }
 
   /* ── Language toggle (spec 015 v2.2.0): the workspace no longer renders
@@ -6913,6 +6967,7 @@
     setText('wsTabHistoryLabel', t('wsTabHistory'));
     setText('wsGuidelineModalTitleText', t('guidelineModalTitle'));
     setText('wsGuidelineModalConfirm', t('guidelineModalConfirm'));
+    setText('wsGuidelineModalBack', t('guidelineModalBack'));
     setText('guidelineSummaryTitle', t('guidelineSummaryTitle'));
     setText('wsGuidelineImageModalTitleText', t('guidelineSummaryTitle'));
     setText('wsMobileDrawerTitle', t('mobileDrawerTitle'));

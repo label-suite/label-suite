@@ -264,28 +264,7 @@
     .status-submitted { color: var(--color-success); background: var(--color-success-soft-bg); }
     .status-saved { color: var(--color-warning); background: var(--color-warning-soft-bg); }
     .status-pending { color: var(--color-ink-muted); background: var(--color-border); }
-    .mini-btn {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-white);
-      color: var(--color-ink);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 6px 10px;
-      cursor: pointer;
-      transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast), opacity var(--dur-fast);
-    }
-    .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary-strong); }
-    .mini-btn:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
-    }
-    .mini-btn-primary {
-      background: var(--color-primary);
-      border-color: var(--color-primary);
-      color: var(--color-white);
-    }
-    .mini-btn-primary:hover:not(:disabled) { opacity: 0.9; border-color: var(--color-primary); color: var(--color-white); }
+    /* .mini-btn 與其 variant 在 pages/shared/button.css（#423, G-37） */
     /* === Reviewer list styles === */
     .reviewer-stats {
       font-size: 12px; color: var(--color-text-soft); font-family: monospace;
@@ -613,6 +592,7 @@
       trialListCountTpl: '本回合清單 {total} 筆',
       openSampleAriaTpl: '開啟樣本 {id}',
       notFoundTitle: '找不到這個任務',
+      noTaskTitle: '尚未選擇任務',
       notFoundMessage: '任務代碼 {taskId} 不存在，請確認網址或回到儀表板重新選擇任務。',
       notFoundNoTaskMessage: '未指定任務，請回到儀表板重新選擇任務。',
       notFoundBackBtn: '回儀表板',
@@ -686,6 +666,7 @@
       trialListCountTpl: 'This round: {total} items',
       openSampleAriaTpl: 'Open sample {id}',
       notFoundTitle: 'Task not found',
+      noTaskTitle: 'No task selected',
       notFoundMessage: 'Task {taskId} does not exist. Please check the URL or return to the dashboard to pick another task.',
       notFoundNoTaskMessage: 'No task specified. Please return to the dashboard to pick a task.',
       notFoundBackBtn: 'Back to dashboard',
@@ -2332,7 +2313,8 @@
     var title = document.createElement('strong');
     title.style.display = 'block';
     title.style.marginBottom = '4px';
-    title.textContent = t('notFoundTitle');
+    /* 沒帶 task_id 不是「找不到」，標題分開（#423, design-gaps G-48；規格 04-01 §路由上下文與回退 第 6、7 條）。 */
+    title.textContent = taskId ? t('notFoundTitle') : t('noTaskTitle');
     var message = document.createElement('span');
     message.textContent = taskId
       ? t('notFoundMessage', { taskId: taskId })
@@ -2342,7 +2324,7 @@
 
     var backLink = document.createElement('a');
     backLink.className = 'mini-btn mini-btn-primary';
-    backLink.style.display = 'inline-block';
+    backLink.style.display = 'inline-flex';
     backLink.style.marginTop = 'var(--space-md)';
     backLink.style.textDecoration = 'none';
     backLink.href = '../dashboard/dashboard.html';

@@ -17,7 +17,7 @@
 
 ## 變體
 
-正典只有一種。`annotation-list.html:54` 與 `annotation-workspace.html:53` 的註解都提到一個「compact form」，但正典沒有對應的 class。
+正典只有一種。`annotation-list.html:54` 與 `annotation-workspace.html:54` 的註解都提到一個「compact form」，但正典沒有對應的 class。
 
 ## 適用狀態
 
@@ -57,9 +57,9 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 兩層與三層各一 |
-| `task-management/task-detail`（全部 `#tab-*`） | 本頁一行式的 `.breadcrumb`（`task-detail.html:45`–`:47`，markup `:1947`–`:1950`），兩層 |
-| `annotation/annotation-list`（`#state-default`、`#role-*`） | `#entryBreadcrumb`（`annotation-list.html:465`），最後一層 `aria-current="page"`（`:2409`） |
-| `annotation/annotation-workspace`（全部視圖） | `nav#entryBreadcrumb`（`annotation-workspace.html:1212`），第三層是樣本，`aria-current="page"`（`annotation-workspace.config.js:1594`） |
-| `dataset/dataset-analysis-detail`（全部視圖） | 本頁 `nav.breadcrumb`（`dataset-analysis-detail.html:262`–`:266`，樣式 `:38`–`:41`）：兩層「資料集分析 › 任務名稱」，分隔符 `aria-hidden`，目前頁是純文字 `<span>`、沒有 `aria-current` |
+| `task-management/task-detail`（全部 `#tab-*`） | 本頁一行式的 `.breadcrumb`（`task-detail.html:46`–`:48`，markup `:1882`–`:1885`），兩層 |
+| `annotation/annotation-list`（`#state-default`、`#role-*`） | `#entryBreadcrumb`（`annotation-list.html:444`），最後一層 `aria-current="page"`（`:2391`） |
+| `annotation/annotation-workspace`（全部視圖） | `nav#entryBreadcrumb`（`annotation-workspace.html:1211`），第三層是樣本，`aria-current="page"`（`annotation-workspace.config.js:1603`） |
+| `dataset/dataset-analysis-detail`（全部視圖） | 本頁 `nav.breadcrumb`（`dataset-analysis-detail.html:248`–`:252`，樣式 `:37`–`:40`）：兩層「資料集分析 › 任務名稱」，分隔符 `aria-hidden`，目前頁是純文字 `<span>`、沒有 `aria-current` |
 
 b1 的帳號頁一個都沒用（它們是登出狀態的單層頁）。b2 已補上（見上表）。b3 已補上（見上表）。b4 已補上（見上表）。

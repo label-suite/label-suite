@@ -57,6 +57,6 @@
 | `components-showcase#state-default` | 樣本 |
 | `account/profile`（`state-default`、`toast-saved`） | 通知設定區塊，`profile.html` 共 36 處 |
 | `task-management/task-new#state-step2` | `task-config.css:242`–`:247`，與正典逐字相同（40×22、開啟 `--color-primary`） |
-| `task-management/task-detail#tab-settings` | `settings.html:274`、`:345`；**本頁又重新定義**（`task-detail.html:306`–`:332`：42×24、開啟 `--color-cta`），蓋過已載入的 `task-config.css` → `../design-gaps.md` G-42 |
+| `task-management/task-detail#tab-settings` | `settings.html:274`、`:345`；用同頁載入的 `task-config.css` 正典（40×22、開啟 `--color-primary`）。原本頁內重新定義的 42×24／`--color-cta` 版已於 #423 刪除 → `../design-gaps.md` G-42 |
 
 b2 已判斷（見上表）：`task-config.css` 那一份是同一個元件；`task-detail` 的重新定義不是。

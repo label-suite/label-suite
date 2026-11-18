@@ -20,9 +20,9 @@
 | `.avatar-sm` | 32×32 | navbar |
 | `.avatar-preview` | showcase demo 80×80；**出貨的 `account/profile` 是 72×72** | profile |
 
-showcase 的說明寫「profile 64/80px」（`:1356`），它自己的 CSS 是 80px（`:912`、`:919`，註解標 `md:w-20 — desktop demo size`），而實際出貨的 `profile.html:152` 是 **72px**——說明、正典、出貨三個數字都不一樣 → `../design-gaps.md` G-17。
+showcase 的說明寫「profile 64/80px」（`:1356`），它自己的 CSS 是 80px（`:912`、`:919`，註解標 `md:w-20 — desktop demo size`），而實際出貨的 `profile.html:148` 是 **72px**——說明、正典、出貨三個數字都不一樣 → `../design-gaps.md` G-17。
 
-好消息是出貨那一頁內部是一致的：`.skel-avatar` 也是 72×72（`profile.html:563`），符合 [UXC-08](../ux-conventions.md#uxc-08-skeleton-尺寸要貼合載入後的內容)。
+好消息是出貨那一頁內部是一致的：`.skel-avatar` 也是 72×72（`profile.html:559`），符合 [UXC-08](../ux-conventions.md#uxc-08-skeleton-尺寸要貼合載入後的內容)。
 
 ## 適用狀態
 
@@ -68,6 +68,6 @@ showcase 的說明寫「profile 64/80px」（`:1356`），它自己的 CSS 是 8
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 兩種模式，uploadable 可實操 |
-| `account/profile`（`state-default`、`state-avatar-preview`） | `profile.html` 的頭像區，含「移除頭像」（`profile.html:763`）——**正典沒有這個動作** → `../design-gaps.md` G-17 |
+| `account/profile`（`state-default`、`state-avatar-preview`） | `profile.html` 的頭像區，含「移除頭像」（`profile.html:759`）——**正典沒有這個動作** → `../design-gaps.md` G-17 |
 
 `shared/sidebar.js` 另以 `#userAvatar` 呈現使用者頭像（見 [app-shell](app-shell.md)），待確認是不是 display-only 模式的同一個。

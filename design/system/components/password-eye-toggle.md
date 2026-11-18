@@ -16,7 +16,7 @@
 
 `.eye-toggle` 在三頁的定義**完全相同**（login、register、reset-password）。`reset-password` 與 `register` 各有兩個實例（密碼、確認密碼），id 分別是 `eyeToggle1`／`eyeToggle2`（`register.html:504`、`:540`）與 `eyeToggleNew`／`eyeToggleConfirm`（`reset-password.html:534`、`:567`）。
 
-`account/profile` 另有一個（`profile.html:883`），外框 class 是 `.input-pw-wrap` 而非 `.input-wrapper` → `../design-gaps.md` G-28。
+`account/profile` 另有一個（`profile.html:879`），外框 class 是 `.input-pw-wrap` 而非 `.input-wrapper` → `../design-gaps.md` G-28。
 
 ## 適用狀態
 

@@ -70,26 +70,10 @@
     .page-subtitle { font-size: 14px; line-height: 1.8; color: var(--color-text-soft); margin: 0; }
     .page-actions { display: flex; align-items: center; gap: var(--space-sm); flex-shrink: 0; }
 
-    /* ── Mini buttons (matching user-management) ───────────────── */
-    .mini-btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      height: 30px; border: 1px solid var(--color-border);
-      border-radius: var(--radius-md); background: var(--color-white);
-      color: var(--color-ink); font-size: 12px; font-weight: 600; padding: 0 10px;
-      transition: background-color 150ms, border-color 150ms, color 150ms;
-    }
-    .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary-strong); }
-    .mini-btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+    /* .mini-btn 與其 variant 在 pages/shared/button.css（#423, G-37） */
     /* button.css 只替 .btn-primary／.btn-cta 定義 :disabled，所以 .btn-ghost 的「編輯」
        鎖住之後看起來仍然能按、hover 還會出現底線。補在頁內，不動共用檔。 */
     #editBtn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; text-decoration: none; }
-    .mini-btn-log {
-      background: var(--color-info-bg); border-color: var(--color-info-border); color: var(--color-info);
-    }
-    .mini-btn-log:hover:not(:disabled) {
-      border-color: var(--color-info); color: var(--color-info); background: var(--color-info-bg);
-    }
-    .mini-btn-icon { padding: 0 6px; }
 
     /* ── Buttons ─────────────────────────────────────────────────── */
     .page-actions .btn-ghost,
@@ -212,14 +196,14 @@
     .na-cell.last-col { border-right: none; }
 
 
-    /* ── Toast (top-center, UXC-07 / MASTER §Toast) ─────────────── */
+    /* ── Toast (bottom-right, UXC-07 / MASTER §Toast) ───────────────
+       規格 06-admin/02-role-settings 要右下角（#423, design-gaps G-39）。 */
     .toast-container {
       position: fixed;
-      top: 24px;
-      left: 50%;
-      transform: translateX(-50%);
+      bottom: 24px;
+      right: 24px;
       z-index: var(--z-toast);
-      width: min(384px, calc(100vw - 32px));
+      width: min(384px, calc(100vw - 48px));
       pointer-events: none;
     }
     .toast {

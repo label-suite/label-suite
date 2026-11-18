@@ -26,10 +26,10 @@
 
 | 元件 | 說明 |
 | :--- | :--- |
-| `.step-*`（`:38`–`:49`） | 步驟條，只此一頁 → [Step Indicator](../components/step-indicator.md) |
-| `.form-card`（`:48`） | 本頁的卡片 → [Card](../components/card.md)、G-41 |
+| `.step-*`（`:39`–`:50`） | 步驟條，只此一頁 → [Step Indicator](../components/step-indicator.md) |
+| `.form-card`（`:55`） | 容器在 `pages/shared/card.css`，本頁只加 `margin-bottom`（#423）→ [Card](../components/card.md)、G-41 |
 | `.input-text`（`:58`） | 本頁的輸入框，與正典 `.input` 不同一份 → G-04 |
-| `.toast*` | [Toast](../components/toast.md)：`showToast`（`:858`–`:865`）一律 3500 ms，不分類型 → G-39 |
+| `.toast*` | [Toast](../components/toast.md)：#423 起 `showToast` 依 `TOAST_DURATIONS`（`:877`）分級，error 只能手動關 → G-39 |
 
 ## 業務行為
 
