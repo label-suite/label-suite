@@ -264,28 +264,7 @@
     .status-submitted { color: var(--color-success); background: var(--color-success-soft-bg); }
     .status-saved { color: var(--color-warning); background: var(--color-warning-soft-bg); }
     .status-pending { color: var(--color-ink-muted); background: var(--color-border); }
-    .mini-btn {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-white);
-      color: var(--color-ink);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 6px 10px;
-      cursor: pointer;
-      transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast), opacity var(--dur-fast);
-    }
-    .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary-strong); }
-    .mini-btn:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
-    }
-    .mini-btn-primary {
-      background: var(--color-primary);
-      border-color: var(--color-primary);
-      color: var(--color-white);
-    }
-    .mini-btn-primary:hover:not(:disabled) { opacity: 0.9; border-color: var(--color-primary); color: var(--color-white); }
+    /* .mini-btn 與其 variant 在 pages/shared/button.css（#423, G-37） */
     /* === Reviewer list styles === */
     .reviewer-stats {
       font-size: 12px; color: var(--color-text-soft); font-family: monospace;
@@ -2342,7 +2321,7 @@
 
     var backLink = document.createElement('a');
     backLink.className = 'mini-btn mini-btn-primary';
-    backLink.style.display = 'inline-block';
+    backLink.style.display = 'inline-flex';
     backLink.style.marginTop = 'var(--space-md)';
     backLink.style.textDecoration = 'none';
     backLink.href = '../dashboard/dashboard.html';

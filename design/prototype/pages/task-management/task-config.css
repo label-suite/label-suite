@@ -289,8 +289,8 @@
       background: var(--color-ink);
     }
     .field-help-tooltip:focus {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+      outline: 2px solid var(--color-primary); /* token focus ring (#423, G-37) */
+      outline-offset: 1px;
     }
     .tooltip-bubble {
       visibility: hidden;

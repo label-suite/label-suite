@@ -233,8 +233,8 @@
     }
 
     .btn:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.18), 0 0 0 4px var(--color-white);
+      outline: 2px solid var(--color-primary); /* token focus ring (#423, G-37) */
+      outline-offset: 2px;
     }
 
     /* ── Status Badges ─────────────────────────────────────────– */

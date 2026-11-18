@@ -151,38 +151,8 @@
       gap: var(--space-xs);
     }
 
-    .btn-emerald {
-      color: #fff;
-      background: var(--color-cta);
-      border-color: var(--color-cta);
-    }
-
-    .btn-emerald:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
-    }
-
-    .btn-violet {
-      color: #fff;
-      background: #7C3AED;
-      border-color: #7C3AED;
-    }
-
-    .btn-violet:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
-    }
-
-    .btn-indigo {
-      color: #fff;
-      background: #4F46E5;
-      border-color: #4F46E5;
-    }
-
-    .btn-indigo:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
-    }
+    /* 三個角色卡的 CTA 用正典 .btn-cta（pages/shared/button.css），
+       不再各自一個彩色 variant（#423, G-37）。 */
 
     .task-item-header {
       display: flex;
@@ -386,23 +356,6 @@
       .skeleton {
         background: linear-gradient(90deg, #1F1F28 25%, #2A2A35 50%, #1F1F28 75%);
       }
-      /* CTA role buttons — dark text on bright bg for contrast */
-      .btn-emerald {
-        color: #064E3B;
-        background: #34D399;
-        border-color: #34D399;
-      }
-      .btn-violet {
-        color: #2E1065;
-        background: #A78BFA;
-        border-color: #A78BFA;
-      }
-      .btn-indigo {
-        color: #1E1B4B;
-        background: #818CF8;
-        border-color: #818CF8;
-      }
-
       /* Step icons — match brightness with lighter icon */
       .step-icon--emerald       { background: #059669; color: #D1FAE5; }
       .step-icon--violet        { background: #6D28D9; color: #EDE9FE; }

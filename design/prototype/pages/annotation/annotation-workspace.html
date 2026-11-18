@@ -577,28 +577,15 @@
     .rv-annotator-name { font-size: 12px; font-weight: 700; color: var(--color-ink); flex-shrink: 0; }
 
     .rv-choice-group { display: flex; gap: 6px; flex-shrink: 0; }
-    .mini-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      border: 1px solid var(--color-border);
-      background: var(--color-white);
-      color: var(--color-text-soft);
-      border-radius: var(--radius-md);
-      padding: 4px 10px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity var(--dur-fast);
-    }
-    .mini-btn:hover { opacity: 0.8; }
-    .mini-btn-active-approve { background: var(--color-success-bg); color: var(--color-success); border-color: var(--color-success-border); }
-    .mini-btn-active-modify { background: var(--color-warning-bg); color: var(--color-warning); border-color: var(--color-warning-border); }
-    .mini-btn-active-bypass { background: var(--color-error-bg); color: var(--color-error); border-color: var(--color-error-border); }
-    /* issue singyichen/label-suite#907: exclude_from_dataset drops the sample out of the dataset
-       instead of adopting an answer, so it carries the design system's danger
-       scale rather than reading as a fourth interchangeable adopt choice. */
-    .mini-btn-danger { color: var(--color-error); border-color: var(--color-error-border); }
+    /* .mini-btn 與其 variant（含 exclude_from_dataset 用的 .mini-btn-danger，issue
+       singyichen/label-suite#907）在 pages/shared/button.css（#423, G-37）。本頁只留審核
+       三向決策的選中狀態；hover 也要維持選中色，不被共用的 hover 蓋成主色。 */
+    .mini-btn-active-approve,
+    .mini-btn-active-approve:hover:not(:disabled) { background: var(--color-success-bg); color: var(--color-success); border-color: var(--color-success-border); }
+    .mini-btn-active-modify,
+    .mini-btn-active-modify:hover:not(:disabled) { background: var(--color-warning-bg); color: var(--color-warning); border-color: var(--color-warning-border); }
+    .mini-btn-active-bypass,
+    .mini-btn-active-bypass:hover:not(:disabled) { background: var(--color-error-bg); color: var(--color-error); border-color: var(--color-error-border); }
     .rv-btn-icon { display: inline-flex; line-height: 1; }
 
     .rv-answer-cell { flex: 1; min-width: 0; }

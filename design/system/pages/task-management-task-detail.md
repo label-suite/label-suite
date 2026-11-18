@@ -36,7 +36,7 @@
 
 | 元件 | 說明 |
 | :--- | :--- |
-| `.mini-btn` 系統（`:777`–`:799`，29 處） | 第二套按鈕，焦點環寫死 rgba（`:799`）→ G-37 |
+| `.mini-btn` | #423 起用正典 `pages/shared/button.css` 的小尺寸 variant，本頁不再重新定義 → G-37 |
 | `.panel`（`:91`） | 本頁的卡片，和 `dashboard` 的 `.panel` 同名不同一份 → [Card](../components/card.md)、G-41 |
 | `.toggle-switch`（`:306`–`:332`） | 本頁**重新定義**：42×24、開啟色 `--color-cta`；同頁也載了 `task-config.css` 的正典版（40×22、`--color-primary`）→ G-42 |
 | `.skeleton-*`（`:67`–`:83`） | [Skeleton](../components/skeleton.md)：與 showcase 的 pulse 變體逐字相同（`components-showcase.html:436` 起） |

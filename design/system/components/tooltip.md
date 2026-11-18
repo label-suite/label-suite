@@ -27,12 +27,12 @@
 | :--- | :--- | :--- |
 | 隱藏（預設） | 有，`visibility: hidden`＋`opacity: 0` | `:296`–`:297` |
 | hover／focus 顯示 | 有 | `:325`–`:329` |
-| 觸發鈕 focus 樣式 | 有，但焦點環是寫死的 rgba | `:291`–`:293` → `../design-gaps.md` G-37 |
+| 觸發鈕 focus 樣式 | 有，`outline: 2px solid var(--color-primary)`（#423 起，原本是寫死的 rgba） | `:291`–`:293` → `../design-gaps.md` G-37 |
 | disabled／載入中／錯誤／空 | 不適用 | — |
 
 ## token
 
-`--color-ink-muted`、`--color-ink`、`--color-white`、`--dur-fast`。寫死：泡泡圓角 6px（`:305`）、`z-index: 500`（`:301`，`tokens.css` 有 `--z-*` 系列卻沒用）、焦點環 rgba（`:293`）→ G-02。
+`--color-ink-muted`、`--color-ink`、`--color-white`、`--dur-fast`。寫死：泡泡圓角 6px（`:305`）、`z-index: 500`（`:301`，`tokens.css` 有 `--z-*` 系列卻沒用） → G-02。
 
 ## 鍵盤與焦點
 

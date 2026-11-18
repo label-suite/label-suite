@@ -15,7 +15,7 @@
 | 視圖 | 怎麼走到 | 用到的元件 |
 | :--- | :--- | :--- |
 | `#state-default` | 開 `pages/dashboard/dashboard.html`（落在 `view-user`） | [App Shell](../components/app-shell.md)、[Card](../components/card.md)（`.panel`）、[Metric](../components/metric.md)、[Button](../components/button.md) |
-| `#param-scenario-user` | `?scenario=user`（`:108`） | [Card](../components/card.md)、[Button](../components/button.md)（`.btn-emerald`／`.btn-violet`／`.btn-indigo`，`:156`、`:198`、`:240`） |
+| `#param-scenario-user` | `?scenario=user`（`:108`） | [Card](../components/card.md)、[Button](../components/button.md)（三個角色 CTA 都是 `.btn-cta`，`:157`、`:199`、`:241`；#423 起不再各自配色） |
 | `#param-scenario-super-admin-data` | `?scenario=super_admin_data`（`:250`） | [Card](../components/card.md)、[Metric](../components/metric.md)、[Badge](../components/badge.md)（`dashboard.js:127`）、[Button](../components/button.md)（`.btn-secondary slim`，`:337`） |
 | `#param-scenario-project-leader` | `?scenario=project_leader`（`:345`） | [Card](../components/card.md)、[Metric](../components/metric.md)、[Progress Bar](../components/progress-bar.md)（`dashboard.js:213`–`:224`）、[Button](../components/button.md)（`:380`） |
 | `#param-scenario-annotator` | `?scenario=annotator`（`:388`） | [Card](../components/card.md)、[Metric](../components/metric.md)、[Progress Bar](../components/progress-bar.md)、`.filter-select`（`:420`） |
@@ -27,7 +27,7 @@
 
 | 元件 | 說明 |
 | :--- | :--- |
-| `.btn` 與 `.btn-emerald`／`.btn-violet`／`.btn-indigo`／`.btn-secondary.slim`（`dashboard.layout.css:211`–`:240`） | 本頁自己的按鈕系統，`:where(.btn)` 零特異性；焦點環寫死 rgba（`:235`）→ G-37 |
+| `.btn` 與 `.btn-secondary.slim`（`dashboard.layout.css:211`–`:238`） | 本頁的 `.btn` 外框，`:where(.btn)` 零特異性，variant 用正典 `button.css`；焦點環 `outline: 2px solid var(--color-primary)`（`:235`–`:238`）。原本的 `.btn-emerald`／`.btn-violet`／`.btn-indigo` 已於 #423 刪除 → G-37 |
 | `.badge`／`.badge-error`／`.badge-draft`（`dashboard.layout.css:241`、`:272`、`:281`；`dashboard.components.css:425`） | 本頁的 badge，任務型別配色另從 `task-type-badge.css` 來 → G-02 |
 | `.progress`（`dashboard.components.css:235`–`:270`） | 與正典 [Progress Bar](../components/progress-bar.md) **同名同構**；`role="progressbar"` 只在審核覆蓋率那一條有（`dashboard.js:213`），一般進度條沒有（`:222`） |
 | `.skeleton`（`dashboard.components.css:348`–`:386`） | 正典的 shimmer 變體，逐字相同，暗色另寫死一組漸層 → G-02、G-10 |

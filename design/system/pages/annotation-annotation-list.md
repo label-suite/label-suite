@@ -35,7 +35,7 @@
 | `.badge`（`:140`–`:175`） | 本頁重寫的徽章；`.badge-dry-run`／`.badge-official` 寫死 hex（`:167`–`:174`）→ [Badge](../components/badge.md)、G-02 |
 | `.progress`（`:176`–`:188`） | 本頁的進度條，全用 token，但 markup 帶 `aria-hidden="true"`（`:485`），沒有 `role="progressbar"` → [Progress Bar](../components/progress-bar.md) |
 | `.status-badge`（`:254`–`:265`） | 與 showcase 的 Status Pill（`components-showcase.html:379`–`:381`）逐字相同，只換了 class 名 → [Status Pill](../components/status-pill.md) |
-| `.mini-btn`（`:266`–`:287`） | 第二套按鈕的又一份，焦點環寫死 rgba（`:280`）→ G-37 |
+| `.mini-btn` | #423 起用正典 `pages/shared/button.css` 的小尺寸 variant，本頁不再重新定義 → G-37 |
 | 結果標籤 hex（`:364`–`:366`）與暗色模式 hex（`:422`–`:428`） | 全頁 CSS 約 30 個寫死的 hex ＋ 1 個 rgba → G-02、G-10 |
 
 標記員的列是 `tr role="button" tabindex="0"`，Enter／Space 進工作區（`:1875`）。

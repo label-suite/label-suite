@@ -23,7 +23,7 @@
 | `#modal-guideline-pdf` | 右欄點 PDF 檔（`:1160`） | [Modal](../components/modal.md) |
 | `#modal-guideline-md` | 右欄點 Markdown 檔（`:1176`） | [Modal](../components/modal.md) |
 | `#modal-mobile-drawer` | 視窗窄到 767px 以下，點右欄抽屜的把手（`#wsMobileDrawer`，`:1312`；`setupMobileDrawer`，`:6750`–`:6760`） | 本頁的抽屜（`:955`–`:999`） |
-| `#state-review-decision` | 審核員選「通過／修正／無法裁決」（`.rv-choice-group`，`:3630`–`:3670`） | [Button](../components/button.md)（本頁 `.mini-btn mini-btn-active-*`，`aria-pressed`）、[Review Status Track](../components/review-status-track.md) |
+| `#state-review-decision` | 審核員選「通過／修正／無法裁決」（`.rv-choice-group`，`:3630`–`:3670`） | [Button](../components/button.md)（正典 `.mini-btn` ＋本頁的 `mini-btn-active-*` 選中狀態，`aria-pressed`）、[Review Status Track](../components/review-status-track.md) |
 | `#state-arbitration` | 審核單位處於爭議待裁決（`renderArbitrationCard`，`:4751`；呼叫點 `:5849`） | [Card](../components/card.md)、[Button](../components/button.md)（`.mini-btn`） |
 | `#state-exception-pool` | `?role=project_leader`：選處置後按「確認處置」（`renderExceptionPoolScreen`，`:5116`；`renderWorkspace` 的分支 `:1727`） | [Card](../components/card.md)、本頁 inline 樣式的理由輸入框（`:5001`–`:5009`）→ G-04 |
 | `#state-submitted-next` | 還有未完成的樣本時按「提交」：通知成功（`:3105`），留在本頁跳到下一筆（`:3116`）；沒有下一筆才回清單（`:3120`） | [Toast](../components/toast.md) |
@@ -38,7 +38,7 @@
 | :--- | :--- |
 | `.content-card`（`:248`–`:252`） | 與 Card 同樣四條規則的第五份 → [Card](../components/card.md)、G-41 |
 | `.review-track*`（`:445`–`:466`） | 自稱「CSS verbatim」，核對後 11 條規則與 `components-showcase.html:653`–`:717` 逐字相同 → [Review Status Track](../components/review-status-track.md) |
-| `.mini-btn`／`.rv-choice-group`（`:578`–`:600`） | 第二套按鈕的第四份（另有 `-active-approve`／`-modify`／`-bypass`、`-danger`），全用 token → G-37 |
+| `.mini-btn-active-approve`／`-modify`／`-bypass`、`.rv-choice-group` | 審核三向決策的選中狀態，疊在正典 `pages/shared/button.css` 的 `.mini-btn` 上；#423 起本頁不再重寫 `.mini-btn` 本體與 `-danger` → G-37 |
 | `.progress-track`／`.progress-fill`（`:307`–`:318`） | 與 Progress Bar 同尺寸同 token，只換了 class 名 |
 | `.toast*`（`:1030`–`:1073`） | [Toast](../components/toast.md)：分級存續時間照 UXC-07（`TOAST_DURATIONS`，`annotation-workspace.config.js:422`–`:439`） |
 | 作答控制項 | `task-config.engine.js` 的 `renderOutputPreview`（`:3671`）用 inline 樣式畫按鈕（例如 `renderSingleLabelPreview`，`:2871`），寫死三個色值（`:2816`–`:2828`、`:2888`，原文見 G-50），不屬任何元件 → G-50 |

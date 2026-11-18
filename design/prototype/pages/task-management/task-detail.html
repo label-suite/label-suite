@@ -596,7 +596,7 @@
        already scrolls horizontally (.table-scroll) on narrow viewports
        instead of wrapping the action button (issue singyichen/label-suite#1057). */
     #finalExceptionPoolSection .member-table td:last-child { white-space: nowrap; }
-    #finalExceptionPoolSection .mini-btn { display: inline-block; white-space: nowrap; }
+    #finalExceptionPoolSection .mini-btn { white-space: nowrap; }
     .pagination {
       display: flex;
       align-items: center;
@@ -776,49 +776,7 @@
       font-size: 13px;
       color: var(--color-ink);
     }
-    .mini-btn {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-white);
-      color: var(--color-ink);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 6px 10px;
-      transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast), opacity var(--dur-fast);
-    }
-    .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary-strong); }
-    .mini-btn:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
-    }
-    .mini-btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
-    .mini-btn-primary {
-      background: var(--color-primary);
-      border-color: var(--color-primary);
-      color: var(--color-white);
-    }
-    .mini-btn-primary:hover:not(:disabled) { opacity: 0.9; border-color: var(--color-primary); color: var(--color-white); }
-    .mini-btn-primary:focus-visible { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18); }
-    .mini-btn-success {
-      background: var(--color-success-bg);
-      border-color: var(--color-success-border);
-      color: var(--color-success);
-    }
-    .mini-btn-success:hover:not(:disabled) { border-color: var(--color-success); background: var(--color-success-bg); color: var(--color-success); }
-    .mini-btn-success:focus-visible { box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.18); }
-    .mini-btn-warning {
-      background: var(--color-warning-bg);
-      border-color: var(--color-warning-border);
-      color: var(--color-warning);
-    }
-    .mini-btn-warning:hover:not(:disabled) { border-color: var(--color-warning); background: var(--color-warning-bg); color: var(--color-warning); }
-    .mini-btn-warning:focus-visible { box-shadow: 0 0 0 3px rgba(161, 98, 7, 0.18); }
-    .mini-btn-danger {
-      background: var(--color-error-bg);
-      border-color: var(--color-error-border);
-      color: var(--color-error);
-    }
-    .mini-btn-danger:hover:not(:disabled) { border-color: var(--color-error-border); background: var(--color-error-bg); color: var(--color-error); }
+    /* .mini-btn 與其 variant 在 pages/shared/button.css（#423, G-37） */
     .preview-json-wrap { overflow: auto; flex: 1; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-slate-50); }
     .preview-json { margin: 0; padding: var(--space-md); font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; color: var(--color-ink); white-space: pre-wrap; word-break: break-word; }
     /* ── Dataset preview ── */
@@ -1982,13 +1940,13 @@
       <div id="taskNotFound" class="panel hidden" role="alert" aria-live="polite">
         <p class="panel-title" id="taskNotFoundTitle"></p>
         <p class="status-hint" id="taskNotFoundMessage"></p>
-        <a class="mini-btn mini-btn-primary" id="taskNotFoundBackLink" href="./task-list.html" style="display:inline-block;margin-top:var(--space-md);text-decoration:none;"></a>
+        <a class="mini-btn mini-btn-primary" id="taskNotFoundBackLink" href="./task-list.html" style="margin-top:var(--space-md);text-decoration:none;"></a>
       </div>
 
       <div id="taskForbidden" class="panel hidden" role="alert" aria-live="polite" data-testid="task-forbidden-pane">
         <p class="panel-title" id="taskForbiddenTitle"></p>
         <p class="status-hint" id="taskForbiddenMessage"></p>
-        <a class="mini-btn mini-btn-primary" id="taskForbiddenBackLink" href="./task-list.html" style="display:inline-block;margin-top:var(--space-md);text-decoration:none;"></a>
+        <a class="mini-btn mini-btn-primary" id="taskForbiddenBackLink" href="./task-list.html" style="margin-top:var(--space-md);text-decoration:none;"></a>
       </div>
     </section>
   </div>

@@ -85,35 +85,7 @@
     .updated-cell { color: var(--color-text-soft); font-size: 13px; white-space: nowrap; }
     .actions-cell { min-width: 150px; }
     .inline-actions { display: inline-flex; gap: 8px; align-items: center; }
-    .mini-btn {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-white);
-      color: var(--color-ink);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 6px 10px;
-      transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast), opacity var(--dur-fast);
-    }
-    .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary-strong); }
-    .mini-btn:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
-    }
-    .mini-btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
-    .mini-btn-primary {
-      background: var(--color-primary);
-      border-color: var(--color-primary);
-      color: var(--color-white);
-    }
-    .mini-btn-primary:hover:not(:disabled) { opacity: 0.9; border-color: var(--color-primary); color: var(--color-white); }
-    .mini-btn-primary:focus-visible { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18); }
-    .mini-btn-danger {
-      background: var(--color-error-soft-bg);
-      border-color: var(--color-error-soft-border);
-      color: var(--color-error);
-    }
-    .mini-btn-danger:hover:not(:disabled) { border-color: var(--color-error-soft-border); background: var(--color-error-soft-bg); color: var(--color-error); }
+    /* .mini-btn 與其 variant 在 pages/shared/button.css（#423, G-37） */
     /* ── Badges ──────────────────────────────────────────────── */
     .badge {
       display: inline-flex; align-items: center; padding: 2px 8px;

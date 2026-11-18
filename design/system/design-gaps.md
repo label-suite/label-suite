@@ -157,6 +157,8 @@
 
 **b4 核對**：`dataset-analysis-detail` 載入正典 `button.css` 後又在頁內重寫 `.btn`（`dataset-analysis-detail.html:166`–`:172`，零特異性）；`dataset-analysis-list` 沒有載入 `button.css`，按鈕是 `list-page.css` 的 `.clear-btn`／`.page-btn`。b4 沒有 `.mini-btn`。
 
+**狀態（#423）**：已修正裁定的部分。`.mini-btn` 收進 `pages/shared/button.css:62`–`:158`，含 `-primary`／`-success`／`-warning`／`-danger`／`-log`／`-icon`；`task-list`、`task-detail`、`user-management`、`role-settings`、`annotation-list`、`annotation-workspace` 六份頁內定義刪除，`annotation-workspace` 只留審核決策的 `-active-*` 選中狀態。焦點環改 `outline: 2px solid var(--color-primary)`（與 `date-range-picker.css` 同一寫法），`dashboard.layout.css` 的 `.btn:focus-visible` 與 `task-config.css` 的 tooltip 觸發鈕也一併改。dashboard 三顆角色 CTA 改用 `.btn-cta`，`.btn-emerald`／`.btn-violet`／`.btn-indigo` 與其深色覆寫刪除。**未處理**（裁定沒有涵蓋）：`role-settings`、`user-management` 重寫 `.btn-ghost`／`.btn-cta`／`.btn-primary` 與 modal 規則、`task-list` 重寫工具列、`dataset-analysis-detail` 重寫 `.btn`。上文的行號指的是修正前。
+
 ### G-39 三個任務管理頁的 toast 不照 UXC-07，`role-settings` 的位置與規格不同
 
 > b2 新增。
