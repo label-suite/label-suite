@@ -2,16 +2,16 @@
   "packageVersion": 1,
   "generatedAt": "2026-11-18",
   "source": {
-    "commit": "c77da22351dd298093fe63a0f1c9c22dc8952f86",
-    "prototypeTree": "86b43b19dca27ea3d250c7455f6463f39b224932",
-    "specsTree": "e8362d715d6b1a9ea1e5c2aff5b1b8fa4dfcff05",
-    "navigationBlob": "c64128a7e7a523ebd7a2897bc1a339535592a9a7",
+    "commit": "e69cc99254350c1dae4f0d9bbe1dc5dc0f6adf4c",
+    "prototypeTree": "6241519a5d37e1482aa427f06ffcf35a155805d7",
+    "specsTree": "58bee0ccf9d5003cdb0fd824fbed8436fc9ccbe3",
+    "navigationBlob": "fab9fabe0dabf5ffc171570bd06ae7d96790b531",
     "referenceDesignDocs": {
       "repo": "singyichen/label-suite",
       "commit": "faf8335"
     },
     "openWith": [
-      "git switch --detach c77da22351dd298093fe63a0f1c9c22dc8952f86",
+      "git switch --detach e69cc99254350c1dae4f0d9bbe1dc5dc0f6adf4c",
       "pnpm prototype"
     ]
   },
@@ -23,6 +23,7 @@
       "loads": [
         "design/prototype/assets/analytics.js",
         "design/prototype/assets/logo/icon-colored.svg",
+        "design/prototype/assets/tokens.css",
         "design/prototype/pages/shared/sidebar.js"
       ],
       "params": [
@@ -77,7 +78,9 @@
       "file": "design/prototype/pages/account/login.html",
       "loads": [
         "design/prototype/assets/analytics.js",
+        "design/prototype/assets/google-g.svg",
         "design/prototype/assets/logo/icon-colored.svg",
+        "design/prototype/assets/tokens.css",
         "design/prototype/pages/shared/sidebar.js"
       ],
       "params": [
@@ -126,7 +129,7 @@
         },
         {
           "id": "account/login#state-submitting",
-          "how": "送出登入後的送出中狀態：按鈕停用、文字換成 `aria-label=\"載入中\"` 的 spinner（`login.html:732`–`:739`）",
+          "how": "送出登入後的送出中狀態：按鈕停用、文字換成 `aria-label=\"載入中\"` 的 spinner（`login.html:677`–`:684`）",
           "spec": "docs/specs/01-account/01-login.mdx#規格",
           "evidence": [
             "design/prototype/pages/account/login.html"
@@ -145,6 +148,7 @@
         "design/prototype/assets/theme.js",
         "design/prototype/assets/tokens.css",
         "design/prototype/pages/shared/button.css",
+        "design/prototype/pages/shared/card.css",
         "design/prototype/pages/shared/empty-state.css",
         "design/prototype/pages/shared/sidebar.css",
         "design/prototype/pages/shared/sidebar.js"
@@ -203,6 +207,7 @@
       "loads": [
         "design/prototype/assets/analytics.js",
         "design/prototype/assets/logo/icon-colored.svg",
+        "design/prototype/assets/tokens.css",
         "design/prototype/pages/shared/sidebar.js"
       ],
       "params": [
@@ -267,6 +272,7 @@
       "loads": [
         "design/prototype/assets/analytics.js",
         "design/prototype/assets/logo/icon-colored.svg",
+        "design/prototype/assets/tokens.css",
         "design/prototype/pages/shared/sidebar.js"
       ],
       "params": [
@@ -324,7 +330,7 @@
         },
         {
           "id": "account/reset-password#state-success",
-          "how": "在 proto-valid 的表單裡填一致且合格的新密碼後送出：`#successPanel` 加上 `visible`（`reset-password.html:600`、`:889`），顯示重設成功、請重新登入",
+          "how": "在 proto-valid 的表單裡填一致且合格的新密碼後送出：`#successPanel` 加上 `visible`（`reset-password.html:548`、`:837`），顯示重設成功、請重新登入",
           "spec": "docs/specs/01-account/03-reset-password.mdx#規格",
           "evidence": [
             "design/prototype/pages/account/reset-password.html"
@@ -339,6 +345,7 @@
       "loads": [
         "design/prototype/assets/analytics.js",
         "design/prototype/assets/logo/icon-colored.svg",
+        "design/prototype/assets/tokens.css",
         "design/prototype/pages/shared/sidebar.js"
       ],
       "params": [
@@ -398,9 +405,12 @@
         "design/prototype/assets/theme-fouc.js",
         "design/prototype/assets/theme.js",
         "design/prototype/assets/tokens.css",
+        "design/prototype/pages/shared/audit-drawer.css",
+        "design/prototype/pages/shared/audit-drawer.js",
         "design/prototype/pages/shared/button.css",
         "design/prototype/pages/shared/content-tabs.css",
         "design/prototype/pages/shared/empty-state.css",
+        "design/prototype/pages/shared/modal-focus.js",
         "design/prototype/pages/shared/modal.css",
         "design/prototype/pages/shared/sidebar.css",
         "design/prototype/pages/shared/sidebar.js"
@@ -417,15 +427,16 @@
       "views": [
         {
           "id": "admin/role-settings#modal-audit-log",
-          "how": "點「操作紀錄」鈕（`#auditLogBtn`）：`openAuditDrawer()` 從右側滑出 `#auditDrawer`（`role-settings.html:936`）",
+          "how": "點「操作紀錄」鈕（`#auditLogBtn`）：`openAuditDrawer()` 從右側滑出 `#auditDrawer`（由 `shared/audit-drawer.js:36` 產生）",
           "spec": "docs/specs/06-admin/02-role-settings.mdx#操作紀錄抽屜",
           "evidence": [
-            "design/prototype/pages/admin/role-settings.html"
+            "design/prototype/pages/admin/role-settings.html",
+            "design/prototype/pages/shared/audit-drawer.js"
           ]
         },
         {
           "id": "admin/role-settings#modal-dirty",
-          "how": "按「編輯」進入編輯模式、改任一格後按「取消」：`showDirtyModal()` 開 `#dirtyModal`（`role-settings.html:959`）確認是否放棄變更。沒改任何格就按取消不會彈窗",
+          "how": "按「編輯」進入編輯模式、改任一格後按「取消」：`showDirtyModal()` 開 `#dirtyModal`（`role-settings.html:858`）確認是否放棄變更。沒改任何格就按取消不會彈窗",
           "spec": "docs/specs/06-admin/02-role-settings.mdx#取消要先確認",
           "evidence": [
             "design/prototype/pages/admin/role-settings.html",
@@ -460,7 +471,7 @@
         },
         {
           "id": "admin/role-settings#state-stored-invalid",
-          "how": "在 localStorage 把 `labelsuite.roleSettings.matrix` 設成不合法的值（例：`{\"bogus\":1}`）後重新整理：顯示 `#storedInvalidBanner`（`role-settings.html:384`）。看完要刪掉那個鍵，否則每次開都會出現",
+          "how": "在 localStorage 把 `labelsuite.roleSettings.matrix` 設成不合法的值（例：`{\"bogus\":1}`）後重新整理：顯示 `#storedInvalidBanner`（`role-settings.html:306`）。看完要刪掉那個鍵，否則每次開都會出現",
           "spec": "docs/specs/06-admin/02-role-settings.mdx#讀回的矩陣不合法時",
           "evidence": [
             "design/prototype/pages/admin/role-settings.html"
@@ -487,9 +498,12 @@
         "design/prototype/assets/theme-fouc.js",
         "design/prototype/assets/theme.js",
         "design/prototype/assets/tokens.css",
+        "design/prototype/pages/shared/audit-drawer.css",
+        "design/prototype/pages/shared/audit-drawer.js",
         "design/prototype/pages/shared/button.css",
         "design/prototype/pages/shared/content-tabs.css",
         "design/prototype/pages/shared/empty-state.css",
+        "design/prototype/pages/shared/modal-focus.js",
         "design/prototype/pages/shared/modal.css",
         "design/prototype/pages/shared/sidebar.css",
         "design/prototype/pages/shared/sidebar.js"
@@ -510,15 +524,16 @@
       "views": [
         {
           "id": "admin/user-management#modal-audit-log",
-          "how": "點某一列的「查看異動紀錄」：從右側滑出 `#auditDrawer`（`user-management.html:712`）與它的遮罩 `#auditDrawerOverlay`",
+          "how": "點某一列的「查看異動紀錄」：從右側滑出 `#auditDrawer`（由 `shared/audit-drawer.js:36` 產生）與它的遮罩 `#auditDrawerOverlay`",
           "spec": "docs/specs/06-admin/01-user-management.mdx#規格",
           "evidence": [
-            "design/prototype/pages/admin/user-management.html"
+            "design/prototype/pages/admin/user-management.html",
+            "design/prototype/pages/shared/audit-drawer.js"
           ]
         },
         {
           "id": "admin/user-management#modal-edit",
-          "how": "點某一列的「編輯」：`openEditModal()` 開 `#editModal`（`user-management.html:623`）",
+          "how": "點某一列的「編輯」：`openEditModal()` 開 `#editModal`（`user-management.html:525`）",
           "spec": "docs/specs/06-admin/01-user-management.mdx#規格",
           "evidence": [
             "design/prototype/pages/admin/user-management.html",
@@ -568,6 +583,7 @@
       "file": "design/prototype/pages/annotation/annotation-list.html",
       "loads": [
         "design/prototype/assets/analytics.js",
+        "design/prototype/assets/data-palette.css",
         "design/prototype/assets/guidelines/annotation-guideline-sample.pdf",
         "design/prototype/assets/images/task-management/generic-guideline-example.svg",
         "design/prototype/assets/logo/icon-colored.svg",
@@ -606,7 +622,7 @@
       "views": [
         {
           "id": "annotation/annotation-list#param-notice-no-actionable-review",
-          "how": "加 `?notice=no_actionable_review` **並且** `?role=reviewer`：才會顯示 `#noActionableNotice` 那一列。`annotation-list.html:2363` 的條件是兩個同時成立，光是「沒有可處理項目」不會顯示它",
+          "how": "加 `?notice=no_actionable_review` **並且** `?role=reviewer`：才會顯示 `#noActionableNotice` 那一列。`annotation-list.html:2336` 的條件是兩個同時成立，光是「沒有可處理項目」不會顯示它",
           "spec": "docs/specs/04-annotation/01-annotation-list.mdx#空的與找不到",
           "evidence": [
             "design/prototype/pages/annotation/annotation-list.html"
@@ -622,7 +638,7 @@
         },
         {
           "id": "annotation/annotation-list#role-project-leader",
-          "how": "加 `?role=project_leader`：**只改到側欄的項目名稱與角色標示**（`annotation-list.html:441`）。這一頁的 `role` 解析只認 `reviewer` 與 `annotator`（`:1054`），所以清單本體與標記員的預設完全相同",
+          "how": "加 `?role=project_leader`：**只改到側欄的項目名稱與角色標示**（`annotation-list.html:411`）。這一頁的 `role` 解析只認 `reviewer` 與 `annotator`（`:1026`），所以清單本體與標記員的預設完全相同",
           "spec": "docs/specs/04-annotation/01-annotation-list.mdx#規格",
           "evidence": [
             "design/prototype/pages/annotation/annotation-list.html"
@@ -692,6 +708,7 @@
       "file": "design/prototype/pages/annotation/annotation-workspace.html",
       "loads": [
         "design/prototype/assets/analytics.js",
+        "design/prototype/assets/data-palette.css",
         "design/prototype/assets/guidelines/annotation-guideline-sample.pdf",
         "design/prototype/assets/images/task-management/VA_emj.png",
         "design/prototype/assets/images/task-management/generic-guideline-example.svg",
@@ -703,6 +720,7 @@
         "design/prototype/pages/annotation/annotation-workspace.data.js",
         "design/prototype/pages/shared/annotation-history.js",
         "design/prototype/pages/shared/button.css",
+        "design/prototype/pages/shared/card.css",
         "design/prototype/pages/shared/content-tabs.css",
         "design/prototype/pages/shared/empty-state.css",
         "design/prototype/pages/shared/input.css",
@@ -780,7 +798,7 @@
         },
         {
           "id": "annotation/annotation-workspace#modal-review-flow",
-          "how": "先以標記員身分在某個任務送出一筆（例：`?task_id=T015`，選一個答案後按「送出標記」），再開同一筆加 `?role=reviewer`：審核單位橫幅出現「流程與目前狀態」，點它開 `#wsReviewFlowDrawer`。該筆沒有任何送出時 `unitStatus` 是 null，`annotation-workspace.config.js:5673` 不放這顆鈕",
+          "how": "先以標記員身分在某個任務送出一筆（例：`?task_id=T015`，選一個答案後按「送出標記」），再開同一筆加 `?role=reviewer`：審核單位橫幅出現「流程與目前狀態」，點它開 `#wsReviewFlowDrawer`。該筆沒有任何送出時 `unitStatus` 是 null，`annotation-workspace.config.js:5714` 不放這顆鈕",
           "spec": "docs/specs/04-annotation/02-annotation-workspace.mdx#審核狀態軌",
           "evidence": [
             "design/prototype/pages/annotation/annotation-workspace.config.js",
@@ -870,6 +888,7 @@
       "batch": "b1-shared-account",
       "file": "design/prototype/components-showcase.html",
       "loads": [
+        "design/prototype/assets/data-palette.css",
         "design/prototype/assets/google-g.svg",
         "design/prototype/assets/icons/chevron-down.svg",
         "design/prototype/assets/logo/icon-colored.svg",
@@ -898,6 +917,7 @@
       "file": "design/prototype/pages/dashboard/dashboard.html",
       "loads": [
         "design/prototype/assets/analytics.js",
+        "design/prototype/assets/data-palette.css",
         "design/prototype/assets/guidelines/annotation-guideline-sample.pdf",
         "design/prototype/assets/icons/arrow-right.svg",
         "design/prototype/assets/icons/check.svg",
@@ -921,6 +941,7 @@
         "design/prototype/pages/dashboard/dashboard.js",
         "design/prototype/pages/dashboard/dashboard.layout.css",
         "design/prototype/pages/shared/button.css",
+        "design/prototype/pages/shared/card.css",
         "design/prototype/pages/shared/empty-state.css",
         "design/prototype/pages/shared/metric.css",
         "design/prototype/pages/shared/sidebar.css",
@@ -1045,6 +1066,7 @@
         "design/prototype/pages/dataset/dataset-analysis-detail.partials/stats-single_dim.html",
         "design/prototype/pages/dataset/dataset-analysis-detail.partials/stats-single_label.html",
         "design/prototype/pages/shared/button.css",
+        "design/prototype/pages/shared/card.css",
         "design/prototype/pages/shared/content-tabs.css",
         "design/prototype/pages/shared/empty-state.css",
         "design/prototype/pages/shared/metric.css",
@@ -1057,6 +1079,7 @@
       "params": [
         "annotator_id",
         "ap_stage",
+        "error",
         "q_state",
         "reviewer_id",
         "role",
@@ -1069,6 +1092,14 @@
       "entry": "/dataset/dataset-analysis-list 點一列",
       "spec": "docs/specs/05-dataset/02-analysis-detail.mdx",
       "views": [
+        {
+          "id": "dataset/dataset-analysis-detail#param-error",
+          "how": "加 `?error=1`（例：`?task_id=T001&error=1`）：統計總覽與品質監控兩個面板都換成「資料載入失敗」與「重新載入」鈕（`renderPanelLoadError()`，`dataset-analysis-detail.html:1441`、`:2295`）。這個開關不寫回網址，按「重新載入」就恢復",
+          "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#載入失敗只換掉內容區",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-detail.html"
+          ]
+        },
         {
           "id": "dataset/dataset-analysis-detail#param-q-state-dry-run-in-progress",
           "how": "加 `?q_state=dry_run_in_progress`：品質監控以這個狀態算繪",
@@ -1192,7 +1223,7 @@
         },
         {
           "id": "dataset/dataset-analysis-detail#state-seq-match-strict",
-          "how": "帶一個輸出類型是 `entity_recognition` 的 `?task_id=` 並加 `?tab=quality`：品質監控最上面那張卡有 `Strict match`／`Partial overlap` 兩顆鈕（`quality-entity_recognition.html:11`–`:30`），預設停在 `#matchStrict`，`syncSequenceUi()`（`dataset-analysis-detail.html:1948`）顯示 `#seqStrictCard`。ID 的 `seq-` 是沿用舊名，這兩顆鈕不在序列標註的統計總覽",
+          "how": "帶一個輸出類型是 `entity_recognition` 的 `?task_id=` 並加 `?tab=quality`：品質監控最上面那張卡有 `Strict match`／`Partial overlap` 兩顆鈕（`quality-entity_recognition.html:11`–`:30`），預設停在 `#matchStrict`，`syncSequenceUi()`（`dataset-analysis-detail.html:1941`）顯示 `#seqStrictCard`。ID 的 `seq-` 是沿用舊名，這兩顆鈕不在序列標註的統計總覽",
           "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#序列標註的統計",
           "evidence": [
             "design/prototype/pages/dataset/dataset-analysis-detail.html",
@@ -1303,6 +1334,7 @@
       "file": "design/prototype/pages/dataset/dataset-analysis-list.html",
       "loads": [
         "design/prototype/assets/analytics.js",
+        "design/prototype/assets/data-palette.css",
         "design/prototype/assets/logo/icon-colored.svg",
         "design/prototype/assets/theme-fouc.js",
         "design/prototype/assets/theme.js",
@@ -1320,6 +1352,7 @@
       ],
       "params": [
         "ap_stage",
+        "error",
         "iaa_status",
         "invalid_task",
         "keyword",
@@ -1335,6 +1368,15 @@
       "entry": "側欄「資料集分析」",
       "spec": "docs/specs/05-dataset/01-analysis-list.mdx",
       "views": [
+        {
+          "id": "dataset/dataset-analysis-list#param-error",
+          "how": "加 `?error=1`：`state.loadFailed` 為真（`dataset-analysis-list.model.js:241`），表格只剩一列「資料集分析載入失敗」與「重試」鈕，分頁列隱藏。這個開關不寫回網址",
+          "spec": "docs/specs/05-dataset/01-analysis-list.mdx#四種互斥的頁面狀態",
+          "evidence": [
+            "design/prototype/pages/dataset/dataset-analysis-list.model.js",
+            "design/prototype/pages/dataset/dataset-analysis-list.view.js"
+          ]
+        },
         {
           "id": "dataset/dataset-analysis-list#param-invalid-task",
           "how": "加 `?invalid_task=1`：模擬指定的任務不合法",
@@ -1543,6 +1585,7 @@
       "file": "design/prototype/pages/task-management/task-detail.html",
       "loads": [
         "design/prototype/assets/analytics.js",
+        "design/prototype/assets/data-palette.css",
         "design/prototype/assets/guidelines/annotation-guideline-sample.pdf",
         "design/prototype/assets/icons/alert-circle.svg",
         "design/prototype/assets/icons/clock.svg",
@@ -1555,6 +1598,7 @@
         "design/prototype/assets/tokens.css",
         "design/prototype/pages/annotation/annotation-workspace.data.js",
         "design/prototype/pages/shared/button.css",
+        "design/prototype/pages/shared/card.css",
         "design/prototype/pages/shared/content-tabs.css",
         "design/prototype/pages/shared/date-range-picker.css",
         "design/prototype/pages/shared/date-range-picker.js",
@@ -1665,7 +1709,7 @@
         },
         {
           "id": "task-management/task-detail#role-annotator",
-          "how": "加 `?task_role=annotator`（或 `?role=`；不給、或給不認得的值都 fail closed 落到 annotator）。**這一頁不算繪給標記員看**——`task-detail.html:5178` 直接導到 `./task-list.html?unauthorized=annotator`",
+          "how": "加 `?task_role=annotator`（或 `?role=`；不給、或給不認得的值都 fail closed 落到 annotator）。**這一頁不算繪給標記員看**——`task-detail.html:5107` 直接導到 `./task-list.html?unauthorized=annotator`",
           "spec": "docs/specs/03-task-management/03-task-detail.mdx#誰進得來誰看得到哪些分頁",
           "evidence": [
             "design/prototype/pages/task-management/task-detail.html"
@@ -1697,7 +1741,7 @@
         },
         {
           "id": "task-management/task-detail#state-loading",
-          "how": "開任何一個找得到的任務：panel 載入後 `showOverviewWithSkeleton()` 先顯示 `#loadingSkeleton`（`task-detail.html:1966`）約 560ms 再換成內容。時間很短，要看清楚得在開發者工具把網路或 CPU 調慢",
+          "how": "開任何一個找得到的任務：panel 載入後 `showOverviewWithSkeleton()` 先顯示 `#loadingSkeleton`（`task-detail.html:1892`）約 560ms 再換成內容。時間很短，要看清楚得在開發者工具把網路或 CPU 調慢",
           "spec": "docs/specs/03-task-management/03-task-detail.mdx#載入中空的與載入失敗",
           "evidence": [
             "design/prototype/pages/task-management/task-detail.html"
@@ -1713,7 +1757,7 @@
         },
         {
           "id": "task-management/task-detail#state-task-not-found",
-          "how": "帶一個種子資料裡沒有的 `?task_id=`（例：`?task_id=NOPE&task_role=project_leader`）：`renderTaskNotFoundState()` 顯示 `#taskNotFound`（`task-detail.html:1982`）「找不到任務」。與 `#sim-403` 不同，那個是找得到但無權限",
+          "how": "帶一個種子資料裡沒有的 `?task_id=`（例：`?task_id=NOPE&task_role=project_leader`）：`renderTaskNotFoundState()` 顯示 `#taskNotFound`（`task-detail.html:1908`）「找不到任務」。與 `#sim-403` 不同，那個是找得到但無權限",
           "spec": "docs/specs/03-task-management/03-task-detail.mdx#載入中空的與載入失敗",
           "evidence": [
             "design/prototype/pages/task-management/task-detail.html"
@@ -1781,6 +1825,7 @@
       "file": "design/prototype/pages/task-management/task-list.html",
       "loads": [
         "design/prototype/assets/analytics.js",
+        "design/prototype/assets/data-palette.css",
         "design/prototype/assets/logo/icon-colored.svg",
         "design/prototype/assets/theme-fouc.js",
         "design/prototype/assets/theme.js",
@@ -1833,7 +1878,7 @@
         },
         {
           "id": "task-management/task-list#param-view-error",
-          "how": "加 `?view=error`：`state.loadFailed` 為真（`task-list.html:1226`），清單換成載入失敗、筆數歸零",
+          "how": "加 `?view=error`：`state.loadFailed` 為真（`task-list.html:1219`），清單換成載入失敗、筆數歸零",
           "spec": "docs/specs/03-task-management/01-task-list.mdx#邊界情況edge-case",
           "evidence": [
             "design/prototype/pages/task-management/task-list.html"
@@ -1879,6 +1924,7 @@
       "file": "design/prototype/pages/task-management/task-new.html",
       "loads": [
         "design/prototype/assets/analytics.js",
+        "design/prototype/assets/data-palette.css",
         "design/prototype/assets/images/task-management/VA_emj.png",
         "design/prototype/assets/logo/icon-colored.svg",
         "design/prototype/assets/theme-fouc.js",
@@ -1886,7 +1932,9 @@
         "design/prototype/assets/tokens.css",
         "design/prototype/pages/annotation/annotation-workspace.data.js",
         "design/prototype/pages/shared/button.css",
+        "design/prototype/pages/shared/card.css",
         "design/prototype/pages/shared/empty-state.css",
+        "design/prototype/pages/shared/modal-focus.js",
         "design/prototype/pages/shared/modal.css",
         "design/prototype/pages/shared/sidebar.css",
         "design/prototype/pages/shared/sidebar.js",
@@ -1928,7 +1976,7 @@
         },
         {
           "id": "task-management/task-new#modal-taxonomy-delete",
-          "how": "第一步選「分類」＋「多標籤」進第二步，在階層標籤樹刪除一個有子節點的標籤（例：預設樹的 `positive`）：`task-config.engine.js:1098` 只在要刪的節點數大於 1 時呼叫 `showTaxonomyDeleteModal()`，彈出 `#taxonomyDeleteModal`（`task-new.html:530`）「刪除標籤分支？」。刪沒有子節點的標籤直接刪掉，不彈窗",
+          "how": "第一步選「分類」＋「多標籤」進第二步，在階層標籤樹刪除一個有子節點的標籤（例：預設樹的 `positive`）：`task-config.engine.js:1098` 只在要刪的節點數大於 1 時呼叫 `showTaxonomyDeleteModal()`，彈出 `#taxonomyDeleteModal`（`task-new.html:542`）「刪除標籤分支？」。刪沒有子節點的標籤直接刪掉，不彈窗",
           "spec": "docs/specs/03-task-management/02-task-new.mdx#階層標籤的編輯與選取",
           "evidence": [
             "design/prototype/pages/task-management/task-config.engine.js",
@@ -1963,7 +2011,7 @@
         },
         {
           "id": "task-management/task-new#state-step4",
-          "how": "第一到第三步填妥後在第三步按「下一步」：`showStep(4)` 顯示 `#step4Panel`（`task-new.html:431`），即第四步「標記說明」，步驟條第四格亮起",
+          "how": "第一到第三步填妥後在第三步按「下一步」：`showStep(4)` 顯示 `#step4Panel`（`task-new.html:443`），即第四步「標記說明」，步驟條第四格亮起",
           "spec": "docs/specs/03-task-management/02-task-new.mdx#標記說明",
           "evidence": [
             "design/prototype/pages/task-management/task-new.html"
@@ -1987,7 +2035,7 @@
     },
     {
       "id": "task-management/task-new#state-banner-error",
-      "why": "頂端錯誤橫幅 `#bannerError`（`task-new.html:221`）只由「下一步」的 click handler 呼叫 `showBannerError()`（`:1605`–`:1640`），但第一步與第三步驗證不過時 `revalidateCurrentStep()`（`:1100`）已經把「下一步」設成 disabled，點不下去。實測清空任務名稱、把第三步抽樣筆數改成 0，鈕都是停用、橫幅不出現。",
+      "why": "頂端錯誤橫幅 `#bannerError`（`task-new.html:233`）只由「下一步」的 click handler 呼叫 `showBannerError()`（`:1650`–`:1685`），但第一步與第三步驗證不過時 `revalidateCurrentStep()`（`:1136`）已經把「下一步」設成 disabled，點不下去。實測清空任務名稱、把第三步抽樣筆數改成 0，鈕都是停用、橫幅不出現。",
       "spec": "docs/specs/03-task-management/02-task-new.mdx#卡控機制"
     }
   ],
