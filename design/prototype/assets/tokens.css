@@ -23,7 +23,7 @@
 
   /* ── Supporting ───────────────────────────────────────────── */
   --color-border:           #E2E8F0;   /* slate-200 — decorative only (cards, tables, dividers); control outlines use --color-border-control */
-  --color-border-control:   #8592A6;   /* form-control outline (input, select, textarea, search, checkbox) — WCAG 1.4.11: 3.15:1 on white (issue #427) */
+  --color-border-control:   #7C899D;   /* form-control outline (input, select, textarea, search, checkbox) — WCAG 1.4.11: 3.55:1 on white, 3.23:1 on surface (issue #427) */
   --color-border-muted:     #F1F5F9;   /* slate-100 */
   --color-text-muted:       #5E6B7F;   /* WCAG AA (issue #427): 4.93:1 on surface, 5.40:1 on white, 4.93:1 on border-muted; was #64748B, before that #94A3B8 (issue singyichen/label-suite#973); deprecated alias, use --color-ink-muted */
   --color-text-soft:        #5E6B7F;   /* same value and ratios as --color-ink-muted (issue #427); was #64748B */

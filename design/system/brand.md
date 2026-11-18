@@ -40,7 +40,7 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 10. **每個畫面同時支援繁中與英文、淺色與深色。**語言與外觀是共用介面的一部分（`00-prd.mdx:136`、`docs/specs/07-shared/01-sidebar.mdx`）；元件要用語意 token，深色主題靠 `html[data-theme="dark"]` 重新對映同名 token，頁面不寫兩份（`tokens.css` 深色區塊的檔頭說明）。
 11. **互動元件要有 `prefers-reduced-motion` 的退路。**共用 CSS 與 showcase 都有（`pages/shared/sidebar.css:185`、`components-showcase.html:971`）；`account/profile` 是唯一漏掉的帳號頁（G-30）。
 12. **圖示一律用 SVG，不用 emoji，也不用文字字元（`✕`、`←`、`→`、`✓` 等）充當圖示。**維護者裁定（2026-11-18）；repo 內早有同向的依據：ADR-030「Lucide 是唯一圖示來源」，`task-config.engine.js:869`、`:965` 的註解寫「no text-glyph icons」「no hand-drawn glyphs」。細節見 [§圖示](#圖示)。
-13. **控制項外框用 `--color-border-control`，`--color-border` 只做裝飾。**輸入框、下拉選單、文字區塊、搜尋框、勾選框的外框用前者（淺色 `#8592A6` 對白底 3.15:1；深色 `#6B6B78` 對卡片 3.42、對頁底 3.73:1），才過 WCAG 1.4.11 的 3:1；卡片、表格、分隔線用 `--color-border`（對白底只有 1.23:1）。焦點與錯誤狀態維持各自的 token。維護者裁定（2026-11-18，#427）；`tokens.css:26`、`:176`。
+13. **控制項外框用 `--color-border-control`，`--color-border` 只做裝飾。**輸入框、下拉選單、文字區塊、搜尋框、勾選框的外框用前者（淺色 `#7C899D` 對白底 3.55、對頁底 3.23:1；深色 `#6B6B78` 對卡片 3.42、對頁底 3.73:1），才過 WCAG 1.4.11 的 3:1；卡片、表格、分隔線用 `--color-border`（對白底只有 1.23:1）。焦點與錯誤狀態維持各自的 token。維護者裁定（2026-11-18，#427）；`tokens.css:26`、`:176`。
 14. **`--color-primary-border` 不能是唯一的提示。**它對白底只有 1.49:1；只靠邊框標示的狀態改用 `--color-primary`，例如日期選擇器的「今天」（`date-range-picker.css:34`）。維護者裁定（2026-11-18，#427）。
 
 ## 設計決策

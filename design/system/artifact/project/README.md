@@ -104,13 +104,11 @@ Label Suite 是研究團隊用的 NLP 標記平台：以設定驅動的流程走
 | `--color-on-cta` | `--color-primary` | 文字 | 4.5:1 | 4.47 未達（已接受） | 5.36 |
 | `--color-border` | `--color-white` | 邊框 | 3:1 | 1.23 未達 | 1.27 未達 |
 | `--color-border` | `--color-surface` | 邊框 | 3:1 | 1.12 未達 | 1.38 未達 |
-| `--color-border-control` | `--color-surface` | 邊框 | 3:1 | 2.88 未達 | 3.73 |
 | `--color-primary-border` | `--color-white` | 邊框 | 3:1 | 1.49 未達 | 1.81 未達 |
 | `--color-secondary` | `--color-white` | 圖示 | 3:1 | 2.98 未達 | 9.01 |
 
 - `--color-primary` 當文字的三列不再使用：主色文字一律換成 `--color-primary-strong`（白底 6.29、主色淺底 5.62:1）。
-- `--color-border` 在兩種主題都不到 3:1，只能當裝飾性分隔，不能單獨承擔「這裡有一個控制項」的辨識；控制項外框用 `--color-border-control`（淺色白底 3.15:1、深色卡片 3.42:1）。
-- `--color-border-control` 放在淺色 `--color-surface` 頁底時只有 2.88:1；控制項放在 `--color-white` 卡片上。
+- `--color-border` 在兩種主題都不到 3:1，只能當裝飾性分隔，不能單獨承擔「這裡有一個控制項」的辨識；控制項外框用 `--color-border-control`（淺色白底 3.55、頁底 3.23:1；深色卡片 3.42、頁底 3.73:1）。
 - `--color-secondary` 不當圖示色，圖示用 `--color-primary`。
 - 可見的焦點樣式目前大多缺席，「所有互動元件都有可見焦點」是目標，還不是現況。
 
