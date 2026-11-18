@@ -100,6 +100,12 @@ hc_flush() {
   : > "$HC_BUFFER_DIR/err"
 }
 
+# hc_mask — filters stdin to stdout through the same masking and truncation
+# the diagnostics go through. The evidence records (D14) are written to a file
+# rather than to a stream, and they must be masked identically; a second copy
+# of these patterns would drift from the first.
+hc_mask() { node -e "$HC_FILTER_JS"; }
+
 # hc_read_nul_list <array-name> — fills the named array from NUL-separated
 # records on stdin, so a path may contain spaces, quotes or newlines.
 hc_read_nul_list() {

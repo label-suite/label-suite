@@ -70,6 +70,22 @@ done
 # The rule still has to catch an actual run of base64, which has no separators.
 mask_case 'blob QUJDREVGR0hJSktMTU5PUFFSU1RVVld= end' 'QUJDREVGR0hJSktMTU5PUFFSU1RVVld' 'blob'
 
+# ── hc_mask: the same filter, for text that is not a diagnostic ──────
+#
+# The evidence records (D14) must be masked exactly like diagnostics, but they
+# go to a file rather than to stderr. Reusing the filter is the point: a second
+# copy would drift from the first.
+
+printf 'ran with token=abc123supersecret\n' > "$TMP/rec.in"
+bash -c "set -uo pipefail; source '$LIB'; hc_init; hc_mask < '$TMP/rec.in' > '$TMP/rec.out'" 2>"$E"
+grep -qF 'abc123supersecret' "$TMP/rec.out" && fail "hc_mask let a secret through"
+grep -qF 'token' "$TMP/rec.out" || fail "hc_mask ate the context around the secret"
+
+printf '/Users/someone/project/label-suite-oss/scripts/x.sh\n' > "$TMP/rec.in"
+bash -c "set -uo pipefail; source '$LIB'; hc_init; hc_mask < '$TMP/rec.in' > '$TMP/rec.out'" 2>"$E"
+grep -qF '/Users/someone/project/label-suite-oss/scripts/x.sh' "$TMP/rec.out" \
+  || fail "hc_mask mangled a file path"
+
 # ── The size limit ───────────────────────────────────────────────────
 
 [ "$(bash -c "source '$LIB'; printf %s \"\$HC_MAX_BYTES\"")" = "65536" ] \
