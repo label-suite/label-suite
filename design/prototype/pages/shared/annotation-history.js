@@ -78,7 +78,7 @@
      English identifier. */
   var ACTION_LABEL = {
     draft_saved: '已存草稿',
-    submitted: '已提交',
+    submitted: '已送出',
     modified: '審核修正',
     accepted: '審核通過',
     /* issue singyichen/label-suite#811: this is the reviewer's decision value, not the annotator's

@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="assets/logo/icon-colored.svg">
   <title>Label Suite — Components Showcase</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -426,7 +427,7 @@
     .toast-card.warning { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
     .toast-card.error   { color: var(--color-error);   background: var(--color-error-bg);   border-color: var(--color-error-border); }
     .toast-msg { flex: 1; font-weight: 500; }
-    .toast-close { color: inherit; opacity: 0.7; cursor: pointer; font-size: 14px; line-height: 1.4; padding: 0; }
+    .toast-close { display: inline-flex; align-items: center; color: inherit; opacity: 0.7; cursor: pointer; font-size: 14px; line-height: 1.4; padding: 0; }
     .toast-close:hover { opacity: 1; }
 
     /* §Skeleton — Variant A pulse (verbatim) */
@@ -1052,7 +1053,7 @@
             <input class="input error" type="text" value="＠＠" aria-label="任務名稱（error 示例）" />
             <p class="field-error" role="alert">名稱含有不允許的字元。</p>
           </div>
-          <input class="input" type="text" value="sso-user@example.com" readonly aria-label="Email（readonly 示例）" />
+          <input class="input" type="text" value="sso-user@example.com" readonly aria-label="電子郵件（readonly 示例）" />
         </div>
       </div>
 
@@ -1094,7 +1095,7 @@
           <span class="badge badge-role">Reviewer</span>
         </div>
         <div class="component-demo">
-          <span class="status-badge status-submitted">已提交</span>
+          <span class="status-badge status-submitted">已送出</span>
           <span class="status-badge status-saved">已儲存</span>
           <span class="status-badge status-pending">未開始</span>
         </div>
@@ -1329,7 +1330,7 @@
 
       <div class="component-card" id="comp-statepanel">
         <h3>State Panel</h3>
-        <p class="component-note">§State Panel — 表單層級狀態容器：提交成功或 token 驗證失敗後「取代」表單區塊（非堆疊於其上）；與 Alert Banner（表單仍在時的 inline 訊息）、Toast（浮動自動消失）區分。error 變體帶 role="alert"。</p>
+        <p class="component-note">§State Panel — 表單層級狀態容器：送出成功或 token 驗證失敗後「取代」表單區塊（非堆疊於其上）；與 Alert Banner（表單仍在時的 inline 訊息）、Toast（浮動自動消失）區分。error 變體帶 role="alert"。</p>
         <div class="component-demo component-demo--stack">
           <!-- MASTER samples use h2 titles; h4 here keeps the showcase heading order -->
           <section class="state-panel state-panel--success">
@@ -1522,7 +1523,19 @@
         close.type = 'button';
         close.className = 'toast-close';
         close.setAttribute('aria-label', '關閉通知');
-        close.textContent = '✕';
+        /* Lucide x (assets/icons/x.svg), built with DOM methods. */
+        var svgNs = 'http://www.w3.org/2000/svg';
+        var closeIcon = document.createElementNS(svgNs, 'svg');
+        [['width', '14'], ['height', '14'], ['viewBox', '0 0 24 24'], ['fill', 'none'], ['stroke', 'currentColor'],
+         ['stroke-width', '2'], ['stroke-linecap', 'round'], ['stroke-linejoin', 'round'], ['aria-hidden', 'true']]
+          .forEach(function (attr) { closeIcon.setAttribute(attr[0], attr[1]); });
+        [['18', '6', '6', '18'], ['6', '6', '18', '18']].forEach(function (c) {
+          var line = document.createElementNS(svgNs, 'line');
+          line.setAttribute('x1', c[0]); line.setAttribute('y1', c[1]);
+          line.setAttribute('x2', c[2]); line.setAttribute('y2', c[3]);
+          closeIcon.appendChild(line);
+        });
+        close.appendChild(closeIcon);
         close.addEventListener('click', hideToast);
         card.appendChild(msg);
         card.appendChild(close);

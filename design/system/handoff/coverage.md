@@ -1,16 +1,16 @@
 # 覆蓋核對
 
-交付包版本：commit `eb9a88434fc615082c8dcba9ecec6e9fce2f24af`，prototype tree `815b85344df678f7ae66f1a2ad9b64a32edca3c4`。
+交付包版本：commit `d06045939d968c406cc57ded64a08ae3ccb16aeb`，prototype tree `a71a5d61b57a291729da7d6de591ed01d80a222a`。
 產生依據：[`design-handoff` skill](../../../.claude/skills/design-handoff/SKILL.md) 的步驟 4。工作源頭是 [Issue #248](https://github.com/label-suite/label-suite/issues/248)。
 
-**本次是第四版**（第三次重跑）。差異見 §九。
+**本次是第五版**（第四次重跑）。差異見 §九。
 
 | 項目 | 數 |
 | :--- | ---: |
 | 條目 | 19（18 個畫面 ＋ 1 個共用外殼） |
-| 視圖 | 140 |
+| 視圖 | 152 |
 | 批次 | 5（`b0` 本 skill 做完，`b1`–`b4` 交給 `design-system-setup`） |
-| 無法重現的視圖 | 2 |
+| 無法重現的視圖 | 3 |
 | 沒有規格可連的視圖 | 2 |
 
 ---
@@ -36,7 +36,7 @@
 
 這是一個**刻意寬鬆**的斷言：「至少一個」不等於逐項涵蓋。逐列看，`task-detail` 的「設定、抽樣、guideline、run control、成員操作、匯出」整列對到六個分頁、五個設定區段（`#param-section-*`，第二次重跑才補上）與 `state-panel-load-failed`，但「run control、成員操作、匯出」三項仍然沒有各自的視圖——一個 12,501 行、6 個 panel、含日期區間選擇器與分類刪除彈窗的畫面只收 17 個視圖，`modal-`／`toast-` 一個都沒有。`design-system-setup` 在 `b2` 會吃到這個缺口。
 
-視圖數比 `Inline` 列多很多（140 vs 24），因為 `Inline` 把「搜尋／篩選／排序／分頁」這類寫成一列，而 URL 參數掃描把它們拆成可個別重現的狀態。
+視圖數比 `Inline` 列多很多（152 vs 24），因為 `Inline` 把「搜尋／篩選／排序／分頁」這類寫成一列，而 URL 參數掃描把它們拆成可個別重現的狀態。
 
 ### 另一道對照：網址參數契約 vs 掃出來的全集
 
@@ -48,10 +48,10 @@
 
 | 位置 | 名字從哪來 | 宣告新參數 |
 | :--- | :--- | ---: |
-| `task-detail.html:5117` | `URL_VIEW_STATE` | **16** |
+| `task-detail.html:5119` | `URL_VIEW_STATE` | **16** |
 | `annotation-workspace.config.js:1552` | `LIST_VIEW_STATE_KEYS` ＋ `LIST_IDENTITY_KEYS` | **6** |
-| `dataset-analysis-detail.html:2432` | `PROTOTYPE_ONLY_PARAMS` | 0（`s_state` 已在表上） |
-| `sidebar.js:731` | 列舉既有鍵 | 0 |
+| `dataset-analysis-detail.html:2433` | `PROTOTYPE_ONLY_PARAMS` | 0（`s_state` 已在表上） |
+| `sidebar.js:732` | 列舉既有鍵 | 0 |
 
 兩輪的修法：[PR #400](https://github.com/label-suite/label-suite/pull/400) 把那 22 個名字補進 `navigation.mdx` 的契約，本版把掃描法改成兩步，所以 `params` 欄現在才是真的全集——`task-management/task-detail` 從 11 個變 **25** 個、`annotation/annotation-workspace` 從 9 個變 **13** 個。
 
@@ -123,7 +123,7 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 ## 五、無法重現的視圖
 
-兩筆，**都是規格要求而畫面沒有**，而且兩筆都已經有單在追（[Issue #187](https://github.com/label-suite/label-suite/issues/187) 的第 1、2 項，維護者 2026-11-12 裁定先不做）。
+三筆。前兩筆**都是規格要求而畫面沒有**，而且都已經有單在追（[Issue #187](https://github.com/label-suite/label-suite/issues/187) 的第 1、2 項，維護者 2026-11-12 裁定先不做）。第三筆是 `design-gaps.md` G-40 要補的視圖，第四次重跑時實際叫不出來。
 
 ### 1. `annotation/annotation-list#state-loading`
 
@@ -137,6 +137,13 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 - **卡在哪一步**：右欄「任務說明」區只算繪**任務名稱**——`annotation-workspace.config.js` 的 `setText('guidelineSummaryText', taskName)`，而 `taskName` 取自 `currentProfile.nameZh`／`nameEn`。
 - **規格**：[04-02 §右欄：說明與檔案、操作紀錄](../../../docs/specs/04-annotation/02-annotation-workspace.mdx#右欄說明與檔案操作紀錄) 第 6 條要求這一區「**依序承載三件事**：名稱、任務目標、操作指引」。
 - **缺到什麼程度**：不只是沒有版位——那兩段的**內容在 prototype 裡不存在**，任務資料上也沒有對應欄位。所以這不是「叫不出來」，是「沒有東西可以叫」。
+
+### 3. `task-management/task-new#state-banner-error`
+
+- **卡在哪一步**：頂端錯誤橫幅 `#bannerError`（`task-new.html:221`）只有「下一步」的 click handler 會呼叫 `showBannerError()`（`:1605`–`:1640`）。但第一步與第三步每次輸入都跑 `revalidateCurrentStep()`（`:1100`），驗證不過就把「下一步」設成 disabled，所以那段 handler 永遠走不到。
+- **實測**：清空任務名稱、把第三步抽樣筆數改成 0，「下一步」都是停用，橫幅不出現。
+- **規格**：[03-02 §卡控機制](../../../docs/specs/03-task-management/02-task-new.mdx#卡控機制)。
+- **待決**：G-40 的裁定要把它補成視圖，但畫面目前叫不出來。是畫面要改成讓按鈕可按、還是這個視圖本來就不該列，要維護者決定，本 skill 不判斷。
 
 ---
 
@@ -173,19 +180,19 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 | 視圖 | 證據（摘要） |
 | :--- | :--- |
-| `#state-theme-dark` | 主題鈕 `:2080`／`:2054`；載入 `theme.js` 的 11 頁走它的 `setChoice()`（`:364`–`:367` 提前 return），其餘 5 個帳號頁走 `:370`／`:374` |
-| `#state-lang-en` | `#langToggle` `:2046`／`#mobileLangToggle` `:2050` → `applyGlobalLanguage()` `:427` |
-| `#state-sidebar-collapsed` | **桌機**（`:513` 的 `min-width: 769px`）收合 → `body.sidebar-collapsed` `:2524` |
-| `#state-mobile` | `sidebar.css` 的 `@media (max-width: 768px)`：另一套版面，另有 `#mobileLangToggle`／`#mobileThemeToggleBtn`／`#mobileLogoutBtn` |
-| `#state-user-chip` | `#userAvatar` `:2097`、`#userName`、`#roleIndicator` `:2100`；頭像取自 `label-suite-profile-avatar` `:55` |
-| `#state-logout` | `#logoutBtn` `:2103`／`#mobileLogoutBtn` `:2064`，一次清掉 7 個 storage 鍵 |
-| `#modal-notification` | `#notificationDropdown` `:2259`、`#notifMarkAllBtn` `:2274`、`#notificationBadge` |
-| `#modal-shortcut` | `#shortcutHelpModal` `:2108`，開關在 `:2208` |
-| `#role-super-admin` | `:536` 在不是 `super_admin` 時隱藏 `#navAdminItem` `:627` |
+| `#state-theme-dark` | 主題鈕 `:2081`／`:2055`；載入 `theme.js` 的 11 頁走它的 `setChoice()`（`:364`–`:367` 提前 return），其餘 5 個帳號頁走 `:370`／`:374` |
+| `#state-lang-en` | `#langToggle` `:2047`／`#mobileLangToggle` `:2051` → `applyGlobalLanguage()` `:427` |
+| `#state-sidebar-collapsed` | **桌機**（`:513` 的 `min-width: 768px`）收合 → `body.sidebar-collapsed` `:2525` |
+| `#state-mobile` | `sidebar.css` 的 `@media (max-width: 767px)`：另一套版面，另有 `#mobileLangToggle`／`#mobileThemeToggleBtn`／`#mobileLogoutBtn` |
+| `#state-user-chip` | `#userAvatar` `:2098`、`#userName`、`#roleIndicator` `:2101`；頭像取自 `label-suite-profile-avatar` `:55` |
+| `#state-logout` | `#logoutBtn` `:2104`／`#mobileLogoutBtn` `:2065`，一次清掉 7 個 storage 鍵 |
+| `#modal-notification` | `#notificationDropdown` `:2260`、`#notifMarkAllBtn` `:2275`、`#notificationBadge` |
+| `#modal-shortcut` | `#shortcutHelpModal` `:2109`，開關在 `:2209` |
+| `#role-super-admin` | `:536` 在不是 `super_admin` 時隱藏 `#navAdminItem` `:628` |
 | `#state-admin-submenu-open` | `:539`–`:541`：桌機且未收合才展開成兩個連結 |
 | `#state-active-task-type` | `labelsuite.activeTaskType` `:4` 決定標記作業那一項的標籤與 `#roleIndicator` |
-| `#state-workspace-tabs` | 頁籤列 `:1524`、總覽選單、重開、全部關閉與三種通知；6 個 sessionStorage 鍵 |
-| `#param-ap-stage` | **任務詳情**才讀（`:762`）：`:769`／`:772` 設 `stageBadge` → `data-stage-badge` `:1252` |
+| `#state-workspace-tabs` | 頁籤列 `:1525`、總覽選單、重開、全部關閉與三種通知；6 個 sessionStorage 鍵 |
+| `#param-ap-stage` | **任務詳情**才讀（`:763`）：`:770`／`:773` 設 `stageBadge` → `data-stage-badge` `:1253` |
 
 ### 為什麼它自成一個條目
 
@@ -212,7 +219,43 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 ## 九、重跑紀錄
 
-### 第三次（本版）
+### 第四次（本版）
+
+[Issue #418](https://github.com/label-suite/label-suite/issues/418) 依品牌書修正 prototype 的文案、圖示、logo 與斷點；同一段期間 main 也併進了規格的角色表改版（[PR #417](https://github.com/label-suite/label-suite/pull/417)、[PR #419](https://github.com/label-suite/label-suite/pull/419)）。兩者一起進這一版。
+
+| 欄位 | 第四版 | 本版 | |
+| :--- | :--- | :--- | :--- |
+| `commit` | `eb9a88434fc6` | `d06045939d96` | 必然變 |
+| `prototypeTree` | `815b85344df6` | `a71a5d61b57a` | **變了** |
+| `specsTree` | `63b7a51d2e3b` | `18e6cba23433` | **變了** |
+| `navigationBlob` | `c64128a7e7a5` | `c64128a7e7a5` | **沒變** |
+
+變動的檔共 71 個：prototype 54 個（#418），規格 17 個（main 上的角色表改版，本分支沒有改 `docs/specs/`）。
+
+| 類 | 數 | 內容 |
+| :--- | ---: | :--- |
+| 新增 | 12 | 依 `design-gaps.md` 2026-11-18 對 G-40、G-51 的裁定補上：`task-management/task-new#modal-taxonomy-delete`、`#state-step4`；`task-management/task-detail#state-loading`、`#state-task-not-found`；`admin/user-management#modal-audit-log`、`#modal-edit`；`admin/role-settings#modal-audit-log`、`#modal-dirty`、`#state-stored-invalid`；`annotation/annotation-workspace#modal-review-flow`、`#toast-saved`；`annotation/annotation-list#state-dry-run-feedback`。每一個都在 prototype 實際叫出來過 |
+| 無法重現 | 1 | `task-management/task-new#state-banner-error`，見 §五 第 3 筆 |
+| 移除 | 0 | |
+| 改寫 | 2 | G-52：`dataset/dataset-analysis-detail#state-seq-match-strict`／`-partial` 的重現步驟改指 `entity_recognition` 品質卡，`evidence` 加 `quality-entity_recognition.html`；**ID 不變** |
+| `loads` 欄 | 17 個條目 | #418 Q10 給每一頁加了 `<link rel="icon">`，那是 `<link href>`，所以 `assets/logo/icon-colored.svg` 進了 17 個 HTML 條目的 `loads`（`components-showcase` 原本就有）。`params` 沒變 |
+| 行號 | 62 行 | prototype 改動讓行號位移，`manifest.json` 36 行與本檔 26 行的行號引用依 `git diff` 的 hunk 逐一換算，抽查過 |
+| 受影響 | 140 | **既有的 140 個視圖全部受影響**：每一頁的 HTML 都因 favicon 改過，加上 17 個規格檔 |
+
+受影響視圖指到的規格錨點逐一重比過標題 slug，新舊 152 個**全部還在**。
+
+### 應重驗的批次（第四次）
+
+| 批次 | 依 `evidence`／`spec` 算出的 | 新增 | 該批的參數驅動視圖 |
+| :--- | ---: | ---: | ---: |
+| `b1-shared-account` | 43 | 0 | 0（`navigationBlob` 沒變） |
+| `b2-admin-dashboard-task` | 45 | 9 | 0（同上） |
+| `b3-annotation-review` | 22 | 3 | 0 |
+| `b4-dataset-sweep` | 30 | 0 | 0 |
+
+四批都要重驗。多數改動是文案、圖示與 favicon，不動版面；會動到版面判讀的是 `sidebar.css` 的斷點（768／767，`shared/app-shell` 13 個視圖）與 `b2`、`b3` 新增的 12 個視圖。
+
+### 第三次
 
 [Issue #403](https://github.com/label-suite/label-suite/issues/403) 撤掉儀表板的「三條最短成功路徑」區塊（畫面 `8eadc38`、規格 `35b7533`），這是交付包產生以來**畫面與規格第一次真的變了**。
 

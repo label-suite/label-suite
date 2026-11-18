@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="../../assets/logo/icon-colored.svg">
   <title>Label Suite — 任務詳情</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/modal.css" />
@@ -357,6 +358,7 @@
       background: var(--color-white);
       gap: 2px;
     }
+    .stage-btn-mark, .ar-history-arrow { display: inline-flex; vertical-align: -1px; margin: 0 4px; }
     .stage-btn {
       border: none;
       background: transparent;
@@ -999,7 +1001,7 @@
     .settings-section .kv-dl-row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; padding-bottom: 10px; border-bottom: 1px solid var(--color-border-muted); }
     .settings-section .kv-dl-key { padding: 0 16px 0 0; }
 
-    @media (max-width: 768px) {
+    @media (max-width: 767px) {
       .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
       .settings-layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-md); }
       .settings-section-nav { flex-direction: row; }
@@ -1696,7 +1698,7 @@
     .next-step-group-title { margin: 0 0 4px; font-weight: 600; color: var(--color-ink); }
     .next-step-group ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
     .next-step-cond { color: var(--color-text-soft); }
-    .next-step-cond-icon { font-weight: 700; }
+    .next-step-cond-icon { display: inline-flex; vertical-align: -2px; }
     .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
     .next-step-cond[data-status="met"] .next-step-cond-icon { color: var(--color-success); }
     .next-step-cond[data-status="unmet"] .next-step-cond-icon { color: var(--color-ink-muted); }
@@ -1866,7 +1868,7 @@
 
     .field-hint { font-size: 12px; color: var(--color-text-soft); margin-top: 4px; }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
       .overview-info-row { grid-template-columns: 1fr; }
       .overview-edit-grid { grid-template-columns: 1fr; }
       .settings-editor-layout { grid-template-columns: 1fr; }
@@ -2135,7 +2137,7 @@
       notFoundMessageTpl: '任務代碼 {taskId} 不存在，請確認網址或回到任務列表重新選擇任務。',
       notFoundBackBtn: '回任務列表',
       forbiddenTitle: '無權限檢視此任務',
-      forbiddenMessageTpl: '您目前無權限檢視任務代碼 {taskId}，請回到任務列表或聯絡管理員。',
+      forbiddenMessageTpl: '你目前無權限檢視任務代碼 {taskId}，請回到任務列表或聯絡管理員。',
       forbiddenBackBtn: '回任務列表',
       tabOverview: '概覽',
       tabSettings: '設定',
@@ -2306,7 +2308,7 @@
       nextStepCondIaaAdvisory: 'IAA 未達目標',
       nextStepIaaAdvisoryTpl: 'IAA {alpha}，低於目標 {target}；只是提醒，不阻擋任何動作',
       nextStepCondIaaUndetermined: 'IAA 無法判定',
-      nextStepCondSubmission: '標註全部提交',
+      nextStepCondSubmission: '標註全部送出',
       nextStepCondReview: '審核單位全部定稿',
       nextStepCondDispute: '爭議都已仲裁',
       nextStepCondExceptionPool: '最終例外池已處置',
@@ -2394,7 +2396,7 @@
       roundDecisionTitleRoundActiveTpl: 'R{round} 進行中，全員完成後進入待 IAA 確認',
       roundDecisionDescPassedTpl: '系統將以尚未進入試標的剩餘 {count} 筆樣本建立正式標記池，避免與前面回合混用。',
       roundDecisionDescFailedTpl: '目前僅使用了 {used} 筆試標樣本，IAA 未達標僅供參考：可直接開始正式標記，或新增下一個試標回合再抽新樣本。',
-      roundDecisionDescRoundActiveTpl: '本回合尚未全員提交，暫不提供新增下一回合；待全數提交並完成 IAA 後任務會自動進入待確認，再決定下一步。',
+      roundDecisionDescRoundActiveTpl: '本回合尚未全員送出，暫不提供新增下一回合；待全數送出並完成 IAA 後任務會自動進入待確認，再決定下一步。',
       roundDecisionTitleInProgressTpl: 'R{round} 尚無法判定是否達標',
       roundDecisionDescInProgressTpl: '目前沒有足夠的標記資料可計算一致性，待標記員完成後即可判定是否達標。',
       iaaComputationPendingTitle: 'IAA 計算中',
@@ -2427,15 +2429,15 @@
       memberListTitle: '目前成員清單',
       memberListSubtitle: '任務角色在加入時決定，既有成員不可中途改角色；如需變更請移除後重新加入。',
       memberAddTitle: '加入成員',
-      memberAddSubtitle: '可透過搜尋平台現有成員，或直接填寫 Email 寄送邀請加入任務。',
+      memberAddSubtitle: '可透過搜尋平台現有成員，或直接填寫電子郵件寄送邀請加入任務。',
       memberSearchTitle: '搜尋平台成員',
-      memberSearchSubtitle: '支援以帳號、姓名或 Email 搜尋目前平台成員。',
-      memberSearchPlaceholder: '輸入帳號、姓名或 Email',
-      memberInviteTitle: 'Email 邀請',
-      memberInviteSubtitle: '填寫對方 Email 並指定任務角色後，寄送邀請加入任務。',
-      memberInvitePlaceholder: '輸入邀請 Email',
+      memberSearchSubtitle: '支援以帳號、姓名或電子郵件搜尋目前平台成員。',
+      memberSearchPlaceholder: '輸入帳號、姓名或電子郵件',
+      memberInviteTitle: '電子郵件邀請',
+      memberInviteSubtitle: '填寫對方電子郵件並指定任務角色後，寄送邀請加入任務。',
+      memberInvitePlaceholder: '輸入邀請電子郵件',
       thMemberName: '姓名',
-      thMemberEmail: 'Email',
+      thMemberEmail: '電子郵件',
       thMemberTaskRole: '任務角色',
       thMemberReviewLoad: '審核負荷',
       thMemberStatus: '狀態',
@@ -2444,7 +2446,7 @@
       thMemberActions: '操作',
       thSearchAccount: '帳號',
       thSearchName: '姓名',
-      thSearchEmail: 'Email',
+      thSearchEmail: '電子郵件',
       thSearchTaskCount: '目前已在任務數量',
       thSearchActions: '操作',
       memberStatusActive: '啟用',
@@ -2457,15 +2459,15 @@
       actionEnable: '啟用',
       actionAdd: '加入任務',
       actionSendInvite: '寄送邀請',
-      memberSearchIdle: '請先輸入帳號、姓名或 Email 再開始搜尋',
+      memberSearchIdle: '請先輸入帳號、姓名或電子郵件再開始搜尋',
       memberSearchEmpty: '沒有符合條件、且尚未加入此任務的平台成員',
       memberPaginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
       memberPageSizeLabel: ' 筆/頁',
       memberPrevPageAria: '上一頁',
       memberNextPageAria: '下一頁',
-      errMemberInviteEmail: '請輸入有效的 Email',
+      errMemberInviteEmail: '請輸入有效的電子郵件',
       errMemberDuplicate: '此成員已在任務中或已寄出邀請',
-      errPermissionDenied: '您沒有執行此操作的權限',
+      errPermissionDenied: '你沒有執行此操作的權限',
       reviewLoadTpl: '{assigned} 筆 · {pending} 待審',
       reviewAssignmentTitle: '審核指派',
       reviewAssignmentHintReadonly: '審核指派一律由系統自動執行：試標以樣本為單位、正式標記平均分派給被勾選的審核員；此區塊僅呈現結果，不提供手動操作。',
@@ -2483,7 +2485,7 @@
       progressStageOfficial: '正式標記',
       progressMetricTotalLabel: '總樣本數',
       progressMetricCompletedLabel: '已完成數',
-      progressMetricRateLabel: '標記提交進度',
+      progressMetricRateLabel: '標記送出進度',
       progressMetricSpeedLabel: '平均速度',
       progressMetricEtaLabel: '剩餘估計時間',
       progressMetricIAALabel: 'IAA',
@@ -2529,13 +2531,13 @@
       leaderAdjudicationConfirm: '確認裁定',
       toastCompleteBlocked: '結案前置條件尚未滿足，無法標記完成：',
       completeBlockerExceptionPoolTpl: '最終例外池尚有 {count} 項待處置',
-      completeBlockerSubmission: '正式標記作業尚未全數提交',
+      completeBlockerSubmission: '正式標記作業尚未全數送出',
       completeBlockerReviewTpl: '尚有 {count} 個審核單位未定稿',
       completeBlockerReviewNoData: '尚無審核資料，所有審核單位須定稿後才能結案',
       completeBlockerDisputedTpl: '尚有 {count} 個審核單位處於爭議中',
       completeBlockerQualityPending: '品質指標仍在計算中，完成後才能標記完成',
       completeBlockerQualityFailed: '品質指標計算失敗，無法標記完成',
-      trialBlockerSubmission: '本回合的標註未全部提交',
+      trialBlockerSubmission: '本回合的標註未全部送出',
       trialBlockerReviewNoData: '尚無審核資料，所有審核單位須定稿後才能完成本回合',
       trialBlockerDisputedTpl: '尚有 {count} 個審核單位處於爭議中，須完成仲裁',
       unassignedAnnotationTitle: '未指派標記作業',
@@ -2560,7 +2562,7 @@
       progressSortLabel: '排序',
       progressSortCompleted: '依已完成數（高到低）',
       progressSortSpeed: '依平均速度（高到低）',
-      progressSortSubmitted: '依最後提交（新到舊）',
+      progressSortSubmitted: '依最後送出（新到舊）',
       thProgressMemberName: '成員姓名',
       thProgressRole: '角色',
       thProgressCompleted: '已完成數',
@@ -2568,14 +2570,14 @@
       thProgressTotal: '總數量',
       thProgressSpeed: '平均速度',
       thProgressBar: '個人進度條',
-      thProgressLastSubmitted: '最後提交時間',
+      thProgressLastSubmitted: '最後送出時間',
       thProgressQuality: '品質旗標',
       thProgressDetails: '操作',
       memberDetailViewBtn: '查看細項',
       thDetailSampleId: '樣本 ID',
       thDetailTextPreview: '文本摘要',
       thDetailLabelResult: '標記結果',
-      thDetailSubmittedAt: '提交時間',
+      thDetailSubmittedAt: '送出時間',
       thDetailReviewStatus: '審核狀態',
       memberDetailEmpty: '此成員尚無標記資料',
       stageDryTitle: '試標',
@@ -2637,8 +2639,8 @@
       toastMemberUpdated: '成員設定已更新',
       toastMemberInvited: '邀請已寄出，等待對方接受後加入任務',
       memberActionModalTitle: '確認成員操作',
-      memberActionModalBodyRemove: '是否移除 {name}（{role}）？已完成提交與歷史統計會保留；未完成標記作業會改為未指派狀態，需由 project leader 重新指派或排除。',
-      memberActionModalBodyDisable: '是否停用 {name}（{role}）？停用後不可再提交標記。',
+      memberActionModalBodyRemove: '是否移除 {name}（{role}）？已送出的標記與歷史統計會保留；未完成標記作業會改為未指派狀態，需由 project leader 重新指派或排除。',
+      memberActionModalBodyDisable: '是否停用 {name}（{role}）？停用後不可再送出標記。',
       memberActionModalBodyEnable: '是否啟用 {name}（{role}）？',
       memberActionCancelBtn: '取消',
       memberActionConfirmBtn: '確認',
@@ -2647,9 +2649,9 @@
       arStageAll: '全部',
       arStageDry: '試標',
       arStageOfficial: '正式標記',
-      arStatusFilterLabel: '提交狀態',
+      arStatusFilterLabel: '送出狀態',
       arStatusAll: '全部',
-      arStatusSubmitted: '已提交',
+      arStatusSubmitted: '已送出',
       arStatusDraft: '草稿',
       arStatusPending: '待處理',
       arAnnotatorFilterLabel: '標記員',
@@ -2663,7 +2665,7 @@
       thArStage: '標記階段',
       thArAnnotator: '標記員',
       thArValue: '標記值',
-      thArSubmittedAt: '提交時間',
+      thArSubmittedAt: '送出時間',
       thArReviewStatus: '審核狀態',
       arReviewPending: '待審',
       arReviewDisputed: '爭議中',
@@ -2675,7 +2677,7 @@
       arHistoryReviewerRole: '審核員',
       arHistoryArbiterRole: '仲裁',
       arHistoryAgree: '同意',
-      arHistoryModifiedPrefix: '修改 → ',
+      arHistoryModifiedPrefix: '修改',
       arHistoryBypass: window.LabelSuiteSharedSidebar.BYPASS_WORDING.zh.decision,
       arHistoryPickA: '採 A（維持標記員）',
       arHistoryPickB: '採 B（採用審核員修正）',
@@ -2692,7 +2694,7 @@
       wlPageSizeLabel: ' 筆/頁',
       wlPrevPageAria: '上一頁',
       wlNextPageAria: '下一頁',
-      arStatusBadgeSubmitted: '已提交',
+      arStatusBadgeSubmitted: '已送出',
       arStatusBadgeDraft: '草稿',
       arStatusBadgePending: '待處理',
       arExportHistoryTitle: '匯出記錄表',
@@ -2729,7 +2731,7 @@
       arExportSnapshotMissingTitle: '此筆紀錄缺少重新下載所需的匯出條件，無法重建原始檔案。',
       arSeqExportRedownloadBlockedTokenizer: '切詞引擎「{engine}」已不可用，無法重新下載此詞元單位的匯出結果，請改用字元單位重新匯出。',
       arEmptyTitle: '尚無標記結果',
-      arEmptyHint: '標記員提交後，結果將顯示於此。',
+      arEmptyHint: '標記員送出標記後，結果將顯示於此。',
     },
     en: {
       docTitle: 'Task Detail — Label Suite (Prototype)',
@@ -3267,7 +3269,7 @@
       arHistoryReviewerRole: 'Reviewer',
       arHistoryArbiterRole: 'Arbiter',
       arHistoryAgree: 'Agreed',
-      arHistoryModifiedPrefix: 'Modified → ',
+      arHistoryModifiedPrefix: 'Modified',
       arHistoryBypass: window.LabelSuiteSharedSidebar.BYPASS_WORDING.en.decision,
       arHistoryPickA: 'Adopted A (keep annotator)',
       arHistoryPickB: 'Adopted B (adopt reviewer edit)',
@@ -6452,7 +6454,12 @@ function interpolate(template, payload) {
   }
 
   function nextStepGroupsHtml(groups) {
-    var iconGlyphs = { met: '✓', unmet: '○', info: 'ⓘ' };
+    /* Lucide check / circle / info via task-config.engine.js taxonomyIcon (brand.md: no glyph icons). */
+    var iconGlyphs = {
+      met: taxonomyIcon(LUCIDE_CHECK, 14),
+      unmet: taxonomyIcon('<circle cx="12" cy="12" r="10"/>', 14),
+      info: taxonomyIcon('<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>', 14)
+    };
     var statusKeys = { met: 'nextStepStatusMet', unmet: 'nextStepStatusUnmet', info: 'nextStepStatusInfo' };
     return groups.map(function(group) {
       return '<div class="next-step-group" data-group="' + group.key + '"><p class="next-step-group-title">' + escapeHtml(group.title) + '</p><ul>' +
@@ -7310,7 +7317,7 @@ function getTaskTypeLabel() {
       removeBtn.className = 'guideline-item-remove';
       removeBtn.type = 'button';
       removeBtn.setAttribute('aria-label', state.lang === 'zh' ? '移除附件' : 'Remove file');
-      removeBtn.textContent = '×';
+      removeBtn.innerHTML = taxonomyIcon('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>', 14); /* static markup */
       removeBtn.addEventListener('click', function() {
         if (!state.guidelineDraft) return;
         state.guidelineDraft[filesKey].splice(index, 1);
@@ -8598,12 +8605,15 @@ function getTaskTypeLabel() {
       var label = 'R' + round.roundNum;
       if (round.status === 'active') {
         label += state.lang === 'zh' ? ' · 進行中' : ' · Active';
-      } else if (round.result === 'passed') {
-        label += ' ✓';
-      } else if (round.result === 'failed') {
-        label += ' ✗';
       }
       btn.textContent = label;
+      /* Pass / fail mark as a Lucide check or x, not a glyph (brand.md). */
+      if (round.status !== 'active' && (round.result === 'passed' || round.result === 'failed')) {
+        var mark = document.createElement('span');
+        mark.className = 'stage-btn-mark';
+        mark.innerHTML = round.result === 'passed' ? taxonomyIcon(LUCIDE_CHECK, 12) : taxonomyIcon('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>', 12); /* static markup */
+        btn.appendChild(mark);
+      }
       btn.addEventListener('click', function() {
         state.progressStage = round.id;
         renderAnnotationProgress();
@@ -10078,7 +10088,17 @@ function getTaskTypeLabel() {
     }
     var decision = document.createElement('span');
     decision.className = 'ar-history-decision';
-    decision.textContent = decisionText;
+    if (Array.isArray(decisionText)) {
+      /* [prefix, result]: a Lucide arrow-right sits between them instead of a glyph. */
+      decision.appendChild(document.createTextNode(decisionText[0]));
+      var decisionArrow = document.createElement('span');
+      decisionArrow.className = 'ar-history-arrow';
+      decisionArrow.innerHTML = taxonomyIcon(LUCIDE_ARROW_RIGHT, 12); /* static markup */
+      decision.appendChild(decisionArrow);
+      decision.appendChild(document.createTextNode(decisionText[1]));
+    } else {
+      decision.textContent = decisionText;
+    }
     var time = document.createElement('span');
     time.className = 'ar-history-time';
     time.textContent = timeText || '-';
@@ -10093,7 +10113,7 @@ function getTaskTypeLabel() {
   function appendArHistoryLines(container, annotation) {
     (annotation.reviews || []).forEach(function(review) {
       var decisionText = review.decision === 'modified'
-        ? t('arHistoryModifiedPrefix') + getAnnotationResultDisplay({ value: review.result }).tags[0]
+        ? [t('arHistoryModifiedPrefix'), getAnnotationResultDisplay({ value: review.result }).tags[0]]
         : review.decision === 'bypass'
           ? t('arHistoryBypass')
           : t('arHistoryAgree');
@@ -10153,7 +10173,7 @@ function getTaskTypeLabel() {
       chevronSvg.setAttribute('viewBox', '0 0 24 24');
       chevronSvg.setAttribute('fill', 'none');
       chevronSvg.setAttribute('stroke', 'currentColor');
-      chevronSvg.setAttribute('stroke-width', '2.5');
+      chevronSvg.setAttribute('stroke-width', '2');
       chevronSvg.setAttribute('stroke-linecap', 'round');
       chevronSvg.setAttribute('stroke-linejoin', 'round');
       chevronSvg.setAttribute('aria-hidden', 'true');

@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="../../assets/logo/icon-colored.svg">
   <title>Label Suite — 資料集分析</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
@@ -186,6 +187,8 @@
     .toast-close {
       background: none;
       border: none;
+      display: inline-flex;
+      align-items: center;
       color: inherit;
       opacity: 0.6;
       cursor: pointer;
@@ -309,7 +312,7 @@
 <div class="toast-container" aria-live="polite" aria-atomic="true">
   <div class="toast" id="toast">
     <span id="toastMsg" class="toast-msg"></span>
-    <button type="button" class="toast-close" id="toastClose" aria-label="關閉通知">✕</button>
+    <button type="button" class="toast-close" id="toastClose" aria-label="關閉通知"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
 </div>
 

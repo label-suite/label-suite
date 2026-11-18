@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="../../assets/logo/icon-colored.svg">
   <title>Label Suite — 新增任務</title>
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <script src="../../assets/theme-fouc.js"></script>
@@ -146,7 +147,7 @@
     .toast.toast-success { background: var(--color-success); }
 
         /* ── Responsive ── */
-    @media (max-width: 768px) {
+    @media (max-width: 767px) {
       .layout { padding: var(--space-md); }
       .s2-layout { grid-template-columns: 1fr; }
       .schema-field-grid { grid-template-columns: 1fr; }
@@ -638,7 +639,7 @@ var I18N = {
     errStartupMemberRequired: '至少需加入 1 位 annotator',
     errStartupMemberPickUser: '請先選擇一位平台使用者',
     errStartupMemberDuplicate: '此成員已在任務名單中',
-    errStartupInviteEmail: '請輸入有效的 Email',
+    errStartupInviteEmail: '請輸入有效的電子郵件',
     errStartupSampling: '請輸入有效抽樣筆數：需 >= 1 且 < 資料集總筆數',
     toastInviteSent: '邀請連結已寄出，成員已加入待啟用名單',
     errCodeUnsaved: '請先儲存 Code 內容',
@@ -896,7 +897,7 @@ function track(event, extra) {
 /* ── Step indicator ──────────────────────────────────────────── */
 function updateStepIndicator() {
   var s = state.step;
-  var checkSvg = '<svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
+  var checkSvg = '<svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
   [1, 2, 3, 4].forEach(function(n) {
     var circle = el('sc' + n);
     var label = el('sl' + n);

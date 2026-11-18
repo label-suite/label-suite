@@ -380,21 +380,21 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 
 ## 與 prototype 的落差
 
-本檔是規則，prototype 是現況。下表列出 prototype **目前違反**已定規則之處，供另開 UI issue 使用（改 `design/prototype/` 屬畫面修正，要先走 `AGENTS.md` 的 Ready gate；本檔與本次提交都沒有動它）。行號是撰寫當時（`main` 的 `eb9a884`）的位置。
+本檔是規則，prototype 是現況。下表列出 prototype **目前違反**已定規則之處，供另開 UI issue 使用（改 `design/prototype/` 屬畫面修正，要先走 `AGENTS.md` 的 Ready gate；本檔與本次提交都沒有動它）。行號是撰寫當時（`main` 的 `eb9a884`）的位置。表中的 Q 項已在 #418 修正，各小節保留原本的清單作為紀錄，行號仍是 `eb9a884` 的位置；修正時與清單不同之處記在 [§#418 修正紀錄](#418-修正紀錄)。
 
-| 類別 | 規則 | 行數 |
-| :--- | :--- | :--- |
-| Q1 「您」 | 全部中文文案用「你」 | 13 |
-| Q2 「提交」 | 統一「送出」＋受詞 | 93（26 個檔案） |
-| Q3 字元圖示 | 一律 SVG | 27 |
-| Q5 中文文案裡的「Email」 | 中文用「電子郵件」 | 33 |
-| Q7 線寬非 2 的圖示 | 線寬統一為 2 | 29（內嵌圖示）＋ 1（`banner.svg`） |
-| Q9 logo 素材 | 圓角 25%、線寬 2 | 見 §CIS 的不一致表（5 項） |
-| Q10 favicon | 每頁要有 `<link rel="icon">` | 40 個 HTML 全缺 |
-| Q6 斷點與寬度 | 767／768 分界、modal 400／520／720 | 見下，11 處 |
-| Q11 深色主題 logo | 線稿用 `--color-on-cta` | 帳號頁與側欄的內嵌 logo（見下） |
-| Q12 social preview 副標色 | 用 `--color-ink-muted` 的 slate 灰 | `social-preview.svg:19` 1 處 |
-| G-02 寫死色值 | 只用 token | 22 個檔案、658 個六位色碼（頁面與 showcase，不含 `tokens.css` 與 logo）；細節與分類見 [`design-gaps.md`](design-gaps.md) G-02，該檔另有人在編輯，這裡不重列 |
+| 類別 | 規則 | 行數 | 狀態 |
+| :--- | :--- | :--- | :--- |
+| Q1 「您」 | 全部中文文案用「你」 | 13 | 已修（#418） |
+| Q2 「提交」 | 統一「送出」＋受詞 | 93（26 個檔案） | 已修（#418） |
+| Q3 字元圖示 | 一律 SVG | 27 | 已修（#418） |
+| Q5 中文文案裡的「Email」 | 中文用「電子郵件」 | 33 | 已修（#418） |
+| Q7 線寬非 2 的圖示 | 線寬統一為 2 | 29（內嵌圖示）＋ 1（`banner.svg`） | 已修（#418），保留 1 處（見下） |
+| Q9 logo 素材 | 圓角 25%、線寬 2 | 見 §CIS 的不一致表（5 項） | 已修 4 項（#418），圖文間距待決 |
+| Q10 favicon | 每頁要有 `<link rel="icon">` | 40 個 HTML 全缺 | 已修（#418），18 頁 |
+| Q6 斷點與寬度 | 767／768 分界、modal 400／520／720 | 見下，11 處 | 已修（#418） |
+| Q11 深色主題 logo | 線稿用 `--color-on-cta` | 帳號頁與側欄的內嵌 logo（見下） | 已修（#418） |
+| Q12 social preview 副標色 | 用 `--color-ink-muted` 的 slate 灰 | `social-preview.svg:19` 1 處 | 已修（#418） |
+| G-02 寫死色值 | 只用 token | 22 個檔案、658 個六位色碼（頁面與 showcase，不含 `tokens.css` 與 logo）；細節與分類見 [`design-gaps.md`](design-gaps.md) G-02，該檔另有人在編輯，這裡不重列 | 未修，屬 #420 |
 
 ### Q1：「您」（13 行）
 
@@ -471,6 +471,16 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 ### Q11：深色主題 logo
 
 產品內 logo 是內嵌 SVG，標籤線稿固定 `white`：`login.html:403`–`:408`（帳號頁 navbar）、`sidebar.css:52`–`:58` 與 `sidebar.js:2039`（側欄品牌區）。深色主題下對比 2.98:1，需要另備深色版（見 §CIS）。
+
+### #418 修正紀錄
+
+- **Q1、Q2**：樣本資料一併改（維護者裁定）；「提交」依「送出」＋受詞改寫，狀態詞改「已送出」「送出時間」。
+- **Q3**：改為 Lucide SVG（線寬 2）。另補 3 處清單未列的字元圖示：`task-detail.html` 標記說明移除鈕的 `×`、相依提示的 `⤷`（`task-config.css` 的 `::before`）、`annotation-workspace.config.js` 略過決定的 `—`。`assets/icons/` 新增 `arrow-left`、`pencil`、`circle`、`minus`、`corner-down-right` 五個，照 Lucide 原樣。資料內容裡的箭頭與乘號、說明句中的流程箭頭依維護者裁定不改。
+- **Q7**：另補清單未列的 `task-config.engine.js` 的 `makeSvgIcon` 與 `task-detail.html` 的 chevron。**保留** `components-showcase.html:1225` 的 3：那是審核分岔的非色彩狀態提示（鐵律 4），showcase 的說明明寫「fork stroke-width 2→3」，是否改 2 由維護者決定。
+- **Q9**：`banner.svg` 圓角改 36、線寬 2、點改 `line`、圖形改占 50%（`scale(3)` 置中）。**圖文間距**（`banner.svg`、`social-preview.svg` 的 25%）照 §CIS 仍待維護者決定，沒有改。
+- **Q10**：18 個完整頁面加上指向 `assets/logo/icon-colored.svg` 的 `<link rel="icon">`；另 22 個是注入用的片段（`task-detail.panels/` 6 個、`dataset-analysis-detail.partials/` 16 個），沒有 `<head>`，不加。`index.html` 的標題沒有改。
+- **Q6**：`user-management.html` 的停用確認 modal 改 400，與 `role-settings.html` 的 `.modal-center` 相同。
+- **Q11**：帳號頁 5 頁與側欄共 11 個內嵌 logo 的線稿改 `currentColor`，顏色取 `--color-on-cta`；帳號頁不載入 `tokens.css`，所以在各頁的本地 token 補上 `--color-on-cta`（淺色 `#FFFFFF`、深色 `#1E1B4B`，與 `tokens.css` 相同）。
 
 ---
 

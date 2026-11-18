@@ -466,12 +466,12 @@
     .output-accordion-header:hover { background: var(--color-primary-soft-bg); }
     .output-accordion-header:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
     .output-accordion-title { font-size: 14px; font-weight: 600; color: var(--color-ink); display: flex; align-items: center; gap: 8px; }
-    .output-accordion-chevron { transition: transform 0.2s; font-size: 16px; color: var(--color-text-soft); }
+    .output-accordion-chevron { display: inline-flex; transition: transform 0.2s; color: var(--color-text-soft); }
     .output-accordion.collapsed .output-accordion-chevron { transform: rotate(-90deg); }
     .output-accordion.collapsed .output-accordion-body { display: none; }
     .output-accordion-body { padding: 16px; }
     .output-accordion-dep { font-size: 12px; color: var(--color-text-soft); margin-top: 2px; }
-    .output-accordion-dep::before { content: '⤷ '; }
+    .output-accordion-dep { display: flex; align-items: center; gap: 4px; }
     /* Item-pair display-name card: same shell as accordions but non-collapsible */
     .item-pair-labels-header { cursor: default; }
     .item-pair-labels-header:hover { background: var(--color-slate-50); }
@@ -486,7 +486,7 @@
     .absa-relation-list { display: flex; flex-direction: column; gap: 6px; }
     .absa-relation-row { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 8px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); }
     .absa-relation-badge { display: inline-flex; padding: 1px 7px; border-radius: 999px; font-size: var(--text-label); font-weight: 700; background: var(--color-primary-soft-bg); color: var(--color-primary); border: 1px solid rgba(99,102,241,0.3); }
-    .absa-arrow { color: var(--color-text-soft); font-size: 12px; }
+    .absa-arrow { display: inline-flex; align-items: center; margin: 0 4px; color: var(--color-text-soft); }
     .output-type-index-badge { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--color-primary); color: white; font-size: 11px; font-weight: 700; flex-shrink: 0; }
     html[data-theme="dark"] .output-accordion-header:hover { background: var(--color-primary-soft-bg); }
     html[data-theme="dark"] .item-pair-labels-header:hover { background: var(--color-slate-50); }

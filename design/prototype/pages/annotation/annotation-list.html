@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="../../assets/logo/icon-colored.svg">
   <title>Label Suite — 標記清單</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
@@ -356,7 +357,7 @@
       padding: 10px 0; border-top: 1px solid var(--color-border);
       font-size: 13px;
     }
-    .dry-run-feedback-arrow { color: var(--color-text-soft); }
+    .dry-run-feedback-arrow { display: inline-flex; align-items: center; color: var(--color-text-soft); }
     .dry-run-feedback-source { font-size: 12px; color: var(--color-text-soft); }
     .dry-run-feedback-reason {
       flex-basis: 100%; font-size: 12px; color: var(--color-text-soft);
@@ -364,7 +365,7 @@
     .result-tag-green { color: #15803D !important; background: #DCFCE7 !important; border-color: #86EFAC !important; }
     .result-tag-blue  { color: #1D4ED8 !important; background: #EFF6FF !important; border-color: #BFDBFE !important; }
     .result-tag-red   { color: #DC2626 !important; background: #FEE2E2 !important; border-color: #FCA5A5 !important; }
-    @media (max-width: 768px) {
+    @media (max-width: 767px) {
       .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
       .task-item-header {
         flex-direction: column;
@@ -586,7 +587,7 @@
       crumbWorkAreaReviewer: '審核作業',
       crumbWorkAreaAnnotator: '標記作業',
       crumbTaskTpl: '{name}（{run}）',
-      statusSubmitted: '已提交',
+      statusSubmitted: '已送出',
       statusSaved: '已儲存',
       statusPending: '待處理',
       taskStatusCompleted: '已完成',
@@ -634,7 +635,7 @@
       reviewNoAnswer: '（無）',
       textExpandLabel: '展開全文',
       textCollapseLabel: '收合',
-      notSubmittedNoteTpl: '其中 {count} 筆尚未提交，不計入審核清單：',
+      notSubmittedNoteTpl: '其中 {count} 筆尚未送出，不計入審核清單：',
       notSubmittedEntryLabel: '查看 {id}',
       reviewUnitInterimNote: '未定稿',
       reviewUnitFinalizedNote: '已鎖定',
@@ -2165,7 +2166,18 @@
       rowEl.appendChild(buildDryRunFeedbackAnswerTags(profile, row.myAnswer));
       var arrow = document.createElement('span');
       arrow.className = 'dry-run-feedback-arrow';
-      arrow.textContent = '→';
+      /* Lucide arrow-right (assets/icons/arrow-right.svg), built with DOM methods. */
+      var svgNs = 'http://www.w3.org/2000/svg';
+      var arrowIcon = document.createElementNS(svgNs, 'svg');
+      [['width', '12'], ['height', '12'], ['viewBox', '0 0 24 24'], ['fill', 'none'], ['stroke', 'currentColor'],
+       ['stroke-width', '2'], ['stroke-linecap', 'round'], ['stroke-linejoin', 'round'], ['aria-hidden', 'true']]
+        .forEach(function (attr) { arrowIcon.setAttribute(attr[0], attr[1]); });
+      ['M5 12h14', 'm12 5 7 7-7 7'].forEach(function (d) {
+        var path = document.createElementNS(svgNs, 'path');
+        path.setAttribute('d', d);
+        arrowIcon.appendChild(path);
+      });
+      arrow.appendChild(arrowIcon);
       rowEl.appendChild(arrow);
       rowEl.appendChild(buildDryRunFeedbackAnswerTags(profile, row.finalizedAnswer));
     }

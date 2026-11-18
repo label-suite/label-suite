@@ -272,7 +272,7 @@
     }
 
     /* ── Responsive ────────────────────────────────────────────– */
-    @media (max-width: 768px) {
+    @media (max-width: 767px) {
       .layout {
         padding: var(--space-md) var(--space-md) var(--space-xl);
       }

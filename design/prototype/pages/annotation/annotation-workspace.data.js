@@ -771,9 +771,9 @@
     var bucket = readSubmissionBucket(submissionBucketKey(taskId, role, runType, identity));
     var round = currentTrialRound(taskId);
     /* label-suite/label-suite#282：連輪次一起比。只比回合號的話，退回草稿之後
-       第 2 輪的 R1 會把第 1 輪 R1 的殘留提交算成自己的進度，新的一輪一開始就
+       第 2 輪的 R1 會把第 1 輪 R1 的殘留送出紀錄算成自己的進度，新的一輪一開始就
        看起來已經做完了——和 #850 當初要解的是同一種誤算，只是多了一個維度。
-       缺章的提交只可能是 #282 之前的工作，也就是第 1 輪（同上一行的裁定）。 */
+       缺章的送出紀錄只可能是 #282 之前的工作，也就是第 1 輪（同上一行的裁定）。 */
     var cycle = currentTrialCycle(taskId);
     return Object.keys(bucket).filter(function (sampleId) {
       var entry = bucket[sampleId];
@@ -2306,7 +2306,7 @@
     var inProgress = listEntry.status === 'dry_run_in_progress';
     var currentCycle = currentTrialCycle(taskId);
 
-    /* 輪次：沒蓋章的提交是 #282 之前寫的。維護者 2026-11-14 裁定：試標中時
+    /* 輪次：沒蓋章的送出紀錄是 #282 之前寫的。維護者 2026-11-14 裁定：試標中時
        不揭露（第 23 條的保守做法），其餘情況歸第 1 輪——#170 之前只存在過
        那一輪。 */
     var cycle = trialCycle >= 1 ? trialCycle : inProgress ? null : 1;
@@ -2595,7 +2595,7 @@
    * holding a submitted review on ONE official_run unit. Earliest
    * submittedAt wins, a missing timestamp sorts last, and the reviewer id
    * breaks a remaining tie. Without a total order here the sticky owner
-   * would follow listSubmissionBucketKeys()' scan order, and "恆為該提交者"
+   * would follow listSubmissionBucketKeys()' scan order, and "恆為該送出者"
    * would silently depend on storage iteration. */
   function stickyPrecedes(candidate, held) {
     if (candidate.submittedAt !== held.submittedAt) {
@@ -3745,7 +3745,7 @@
   var NO_ACTIONABLE_REVIEW_LABELS = {
     zh: {
       title: '這個任務沒有待你處理的審核',
-      message: '你在這個任務的審核工作都完成了。有新的提交或你取得仲裁資格時，這裡會再出現。',
+      message: '你在這個任務的審核工作都完成了。有新的標記送出或你取得仲裁資格時，這裡會再出現。',
     },
     en: {
       title: 'No reviews waiting for you in this task',

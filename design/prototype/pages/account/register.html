@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="../../assets/logo/icon-colored.svg">
   <title>Label Suite — 建立帳號</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -12,6 +13,7 @@
     /* ── Design Tokens ─────────────────────────────────────────── */
     :root {
       --color-primary:        #6366F1;
+      --color-on-cta:        #FFFFFF;   /* mirrors tokens.css; logo line art on --color-primary */
       --color-primary-soft-bg:  #EEF2FF;
       --color-cta:            #047857;
       --color-cta-hover:      #065F46;
@@ -352,6 +354,7 @@
       --color-ink-muted:    #9CA3AF;
       --color-link:          #818CF8;
       --color-primary:       #818CF8;
+      --color-on-cta:       #1E1B4B;   /* mirrors tokens.css dark theme */
       --color-primary-soft-bg: #1E1B4B;
       --color-error:         #F87171;
       --color-error-bg:      #2A1414;
@@ -376,11 +379,11 @@
   <header class="navbar" role="banner">
     <a class="navbar-brand" href="#" aria-label="Label Suite 首頁">
       <div class="navbar-logo" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: var(--color-on-cta)">
           <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"
-                stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           <line x1="7" y1="7" x2="7.01" y2="7"
-                stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
       <span class="navbar-wordmark">Label Suite</span>
@@ -402,15 +405,15 @@
       <!-- Card Header -->
       <div class="card-header">
         <div class="card-logo" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: var(--color-on-cta)">
             <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"
-                  stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <line x1="7" y1="7" x2="7.01" y2="7"
-                  stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
         <h1 class="card-title" id="cardTitle">建立帳號</h1>
-        <p class="card-subtitle" id="cardSubtitle">填寫以下資訊以建立您的帳號</p>
+        <p class="card-subtitle" id="cardSubtitle">填寫以下資訊以建立你的帳號</p>
       </div>
 
       <!-- Error Banner -->
@@ -587,7 +590,7 @@
         pageTitle:              'Label Suite — 建立帳號',
         langLabel:              'ZH',
         cardTitle:              '建立帳號',
-        cardSubtitle:           '填寫以下資訊以建立您的帳號',
+        cardSubtitle:           '填寫以下資訊以建立你的帳號',
         nameLabel:              '姓名',
         namePlaceholder:        '王小明',
         emailLabel:             '電子郵件',
