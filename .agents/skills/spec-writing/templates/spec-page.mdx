@@ -26,12 +26,20 @@ import PrototypeFrame from '@notes/components/prototype-frame';
 ## 使用角色
 
 :::tip{title="權限代號"}
-R：Read（可讀取）　C：Create（可新增）　E：Edit（可編輯）　D：Delete（可刪除）　(o)：只限自己的資料
+R：Read（可讀取）　C：Create（可新增）　E：Edit（可編輯）　D：Delete（可刪除）　(o)：只限自己的資料　—：無權限
 :::
 
-- :ref[{角色 A}]{id="term.xxx"}：R/C/E/D
-- :ref[{角色 B}]{id="term.yyy"}：R
-- {角色 C}：無權限
+{/* 第三欄逐列對 docs/specs/00-prd.mdx §權限矩陣；第二欄可以比它窄，不可以比它寬。
+    一頁同時涉及系統角色與任務角色時維持兩張表，各自加 **依系統角色**、**依任務角色** 小標。
+    寫法見 .claude/skills/spec-writing/references/writing-guide.md「使用角色」 */}
+
+| 角色 | 這一頁能做什麼 | PRD §權限矩陣的上限 |
+| :--- | :--- | :--- |
+| :ref[{角色 A}]{id="term.xxx"} | R／C／E | 「{NN 模組／功能}」給{角色 A} `R/C/E` |
+| :ref[{角色 B}]{id="term.yyy"} | R | 同一列給{角色 B} `R` |
+| {角色 C} | **進不來** | 同一列給{角色 C} `—` |
+
+- {放不進格子的條件、理由與跨頁連結寫在這裡，一條一行；格子只放角色、能做什麼、PRD 的上限}
 
 ## 業務流程
 
