@@ -16,7 +16,7 @@
 
 依據：`components-showcase.html:718`、`:727`、`:737`。
 
-**預設 8 色盤**在 `components-showcase.html:1240`–`:1248`。維護者裁定它們是**資料色**（指派給實體類型），不進 `tokens.css`（#420 Q4）：#420 起改取 `assets/data-palette.css` 的 `--data-entity-1`–`--data-entity-8`，與 `task-config.data.js` 的 `ENTITY_COLORS` 同值；這組只有一套值，深色模式沿用。原值見 `../design-gaps.md` G-02。
+**預設 8 色盤**在 `components-showcase.html:1240`–`:1248`。維護者裁定它們是**資料色**（指派給實體類型），不進 `tokens.css`（#420 Q4）：#420 起改取 `assets/data-palette.css` 的 `--data-entity-1`–`--data-entity-8`，淺色值與 `task-config.data.js` 的 `ENTITY_COLORS` 相同；深色主題另有一組同色相的 400 階（對深色卡片 6:1 以上）。任務設定存的是淺色 hex，引擎上色時經 `entityPaintColor()` 把預設色換成 `var(--data-entity-N)`，所以深色主題換得到；使用者自選、不在色盤裡的顏色照原值畫。原值見 `../design-gaps.md` G-02。
 
 `.t-dot` 的樣本反而用 token（`var(--color-success)`／`var(--color-error)`，`:1255`–`:1256`）——同一個元件的三個變體，兩種取色方式。
 

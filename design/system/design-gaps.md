@@ -33,9 +33,9 @@
 
 **b4 核對**：`dataset/dataset-analysis-list` 只有一個寫死值，焦點環的 `rgba(99, 102, 241, 0.18)`（`dataset-analysis-list.html:76`）；輸出類型徽章載入 `task-type-badge.css`，那 36 個 hex 已算在上面。`dataset/dataset-analysis-detail` 與十六個 partial 沒有 hex 或 rgba，SVG 與 inline `style` 全用 `var(--*)`；只有平均標記時間的 `<small style="font-size:18px">`（`dataset-analysis-detail.html:286`）寫死字級。
 
-**狀態（#420）**：已修正。`design/prototype/` 的 6 位 hex 從 22 個檔 662 處降到 8 個檔 162 處（不含 `tokens.css` 與 logo SVG）。剩下的分三種，都是刻意留下：
+**狀態（#420）**：已修正。`design/prototype/` 的 6 位 hex 從 22 個檔 662 處降到 8 個檔 171 處（不含 `tokens.css` 與 logo SVG）。剩下的分三種，都是刻意留下：
 
-- **資料色本身**：`assets/data-palette.css` 66 處（淺深兩組）；`task-config.data.js` 33 處與 `task-detail.data.js` 50 處是範例任務的標籤顏色，屬任務設定的資料，照 Color Dot 的規則可以是任意值，不換成變數。
+- **資料色本身**：`assets/data-palette.css` 75 處（淺深兩組；實體 8 色與「尚未切分」的深色值是維護者 2026-11-18 追加的）；`task-config.data.js` 33 處與 `task-detail.data.js` 50 處是範例任務的標籤顏色，屬任務設定的資料，照 Color Dot 的規則可以是任意值，不換成變數。
 - **註解**：`modal.css:78`–`:79`、`dashboard.components.css:367`、`components-showcase.html:578`、`:756`、`:766`、`:794` 共 7 處，寫的是色值說明。
 - **`var()` 的後備值**：`sidebar.css:115`、`:443`、`:741` 與 `account/profile.html:106`，後備值與 `tokens.css` 相同，只在 token 沒載入時生效。與 `tokens.css` 不一致的後備值已一併刪掉。
 
@@ -533,7 +533,7 @@ showcase 說明寫「profile 64/80px」（`:1356`），它的 CSS 是 80px（`:9
 
 **已裁定（2026-11-18）**：併入 #420：改套 `.chip` class，色值改用 token。
 
-**狀態（#420）**：已修正。`task-config.css` 新增 `.chip` 一族（`.chip`、`.is-active`、`.chip--lg`、`.chip--bypass`、`.chip-mark`），引擎改設這些 class，不再用 inline `cssText` 組外觀。每個標籤自己的顏色是任務資料，經 `--chip-color` 傳入；後備值改取 `ENTITY_COLORS`，選中時的白字改 `--color-on-cta`。引擎全檔已沒有 hex。這組 `.chip` 只在 `task-config.css`，[Chip](components/chip.md) 的正典 `.task-type-chip` 沒有改；兩者要不要合併仍待決。上文的行號指的是修正前。
+**狀態（#420）**：已修正。`task-config.css` 新增 `.chip` 一族（`.chip`、`.is-active`、`.chip--lg`、`.chip--bypass`、`.chip-mark`），引擎改設這些 class，不再用 inline `cssText` 組外觀。每個標籤自己的顏色是任務資料，經 `--chip-color` 傳入；後備值改取 `ENTITY_COLORS`，選中時的白字改 `--color-on-cta`。上色前一律經 `entityPaintColor()`（`task-config.data.js`）：預設色盤的顏色換成 `var(--data-entity-N)`，深色主題才換得到 `data-palette.css` 的深色組；標註底色原本是色碼接 `'33'`，改成 `entityWashColor()` 的 `color-mix(… 20%, transparent)`，透明度相同。引擎全檔已沒有 hex。這組 `.chip` 只在 `task-config.css`，[Chip](components/chip.md) 的正典 `.task-type-chip` 沒有改；兩者要不要合併仍待決。上文的行號指的是修正前。
 
 ### G-55 `dataset-analysis-detail` 的 toast 沒有任何程式會顯示它
 

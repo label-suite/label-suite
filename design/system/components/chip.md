@@ -41,7 +41,7 @@
 
 `--color-border`、`--color-primary`、`--color-primary-strong`、`--color-primary-soft-bg`、`--color-primary-border`、`--color-ink`、`--color-white`、`--color-text-soft`、`--radius-full`、`--dur-fast`、`--font-mono`。
 
-顯示 chip 原本寫死 9 個色值，#420 起全部改用 token（`components-showcase.html:538`–`:559`），原值見 `../design-gaps.md` G-02。作答區另有一組 `.chip`（`task-config.css`，#420 為 G-50 新增），每個標籤的顏色是任務資料，經 `--chip-color` 傳入；它和本元件的 `.task-type-chip` 還沒合併 → `../design-gaps.md` G-50。
+顯示 chip 原本寫死 9 個色值，#420 起全部改用 token（`components-showcase.html:538`–`:559`），原值見 `../design-gaps.md` G-02。作答區另有一組 `.chip`（`task-config.css`，#420 為 G-50 新增），每個標籤的顏色是任務資料，經 `--chip-color` 傳入（預設色盤裡的顏色由 `entityPaintColor()` 換成 `--data-entity-N`，深色主題跟著換）；它和本元件的 `.task-type-chip` 還沒合併 → `../design-gaps.md` G-50。
 另有三處圓角寫 `9999px`／`999px` 字面值而不是 `--radius-full`（`:542`、`:553`、`:566`），同一個章節內三種寫法並存。
 
 ## 鍵盤與焦點

@@ -403,7 +403,7 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 | Q6 斷點與寬度 | 767／768 分界、modal 400／520／720 | 見下，11 處 | 已修（#418） |
 | Q11 深色主題 logo | 線稿用 `--color-on-cta` | 帳號頁與側欄的內嵌 logo（見下） | 已修（#418） |
 | Q12 social preview 副標色 | 用 `--color-ink-muted` 的 slate 灰 | `social-preview.svg:19` 1 處 | 已修（#418） |
-| G-02 寫死色值 | 只用 token | 22 個檔案、658 個六位色碼（頁面與 showcase，不含 `tokens.css` 與 logo）；細節與分類見 [`design-gaps.md`](design-gaps.md) G-02 | 已修（#420）：開工時（`cf0109a`）重算為 22 個檔案 662 個，修完剩 8 個檔案 162 個，都是資料色、註解、`var()` 後備值與固定白字 |
+| G-02 寫死色值 | 只用 token | 22 個檔案、658 個六位色碼（頁面與 showcase，不含 `tokens.css` 與 logo）；細節與分類見 [`design-gaps.md`](design-gaps.md) G-02 | 已修（#420）：開工時（`cf0109a`）重算為 22 個檔案 662 個，修完剩 8 個檔案 171 個（含維護者追加的深色資料色 9 個），都是資料色、註解、`var()` 後備值與固定白字 |
 
 ### Q1：「您」（13 行）
 
