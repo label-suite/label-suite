@@ -1,0 +1,31 @@
+<!-- @dsCard group="Feedback" height=200 -->
+<!doctype html>
+<html lang="zh-TW" data-theme="light">
+<head>
+<meta charset="utf-8">
+<style>
+  /* preview layout only; the frame preloads tokens.css and bundle.css */
+  html body { margin: 0; padding: 24px; display: block; }
+  .ds-stage { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .ds-caption { font-size: 12px; color: var(--color-ink-muted); }
+  .ds-stack { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 360px; align-items: stretch; }
+  .ds-col { display: flex; flex-direction: column; gap: 6px; }
+</style>
+</head>
+<body>
+<div class="ds-stage ds-stack">
+    <div class="ds-col">
+      <span class="ds-caption">0%：只看得到軌道</span>
+      <div class="progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="任務完成度 0%"><span style="width: 0%"></span></div>
+    </div>
+    <div class="ds-col">
+      <span class="ds-caption">65%</span>
+      <div class="progress" role="progressbar" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100" aria-label="任務完成度 65%"><span style="width: 65%"></span></div>
+    </div>
+    <div class="ds-col">
+      <span class="ds-caption">100%：填充色不變，一律 --color-cta</span>
+      <div class="progress" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="任務完成度 100%"><span style="width: 100%"></span></div>
+    </div>
+  </div>
+</body>
+</html>

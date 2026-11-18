@@ -1,0 +1,65 @@
+<!-- @dsCard height=320 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Label Suite</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--color-surface); color: var(--color-ink); font-family: var(--font-sans); overflow: hidden; }
+  .cover { position: relative; height: 320px; overflow: hidden; }
+  /* the composition: a 480-wide box on the right half of the 960 layout, clear of the name */
+  .art { position: absolute; top: 0; left: 480px; width: 480px; height: 320px; overflow: hidden; }
+  .art svg { display: block; width: 480px; height: 320px; }
+  .brand { fill: var(--color-primary); }
+  .accent { fill: var(--color-cta); }
+  .deep { fill: var(--color-ink); }
+  .tint { fill: var(--color-secondary); }
+  .blk { rx: var(--radius-lg); }
+  .slot { rx: var(--radius-xl); }
+  /* annotated text lines: space-sm tall pills, rx = half the height = radius-sm */
+  .line { fill: var(--color-surface); rx: var(--radius-sm); }
+  .mark { fill: var(--color-secondary); rx: var(--radius-sm); }
+  .mark.cta { fill: var(--color-cta); }
+  .words { position: absolute; left: var(--space-xl); bottom: var(--space-xl); max-width: 440px; }
+  .name { margin: 0; font-family: var(--font-serif-display); font-size: 104px; line-height: .92; font-weight: 700; letter-spacing: -.01em; color: var(--color-ink); }
+  .tag { margin: var(--space-sm) 0 0 4px; font-size: 14px; line-height: 20px; color: var(--color-ink-muted); }
+</style>
+</head>
+<body>
+<div class="cover">
+<div class="art" aria-hidden="true">
+<svg viewBox="0 0 480 320" width="480" height="320">
+<!--
+  blocks      color-primary 160×312 bled off the top (the brand, largest) · color-ink 176×224 bleeding off the right edge · color-secondary 112×160 (the lighter indigo, as relief) · color-cta 112×32 once (the one confirm colour) — about a third of 960×320
+  arrangement one tall primary slab with satellites, bottoms on one line space-lg above the edge, space-md gutters
+  pattern     annotated text lines, from the signature "entity marks drawn straight onto the source text": space-sm pills at a space-lg pitch cut into the ink slab in color-surface, with a few spans marked in color-secondary and color-cta
+  scales      sides in space-md multiples; gutters space-md; pitch space-lg; corners radius-lg, the cta slot radius-xl (half of 32), pills radius-sm (half of space-sm)
+-->
+<rect class="brand blk" x="16" y="-16" width="160" height="312" rx="12"/>
+<rect class="accent slot" x="192" y="72" width="112" height="32" rx="16"/>
+<rect class="tint blk" x="192" y="136" width="112" height="160" rx="12"/>
+<rect class="deep blk" x="320" y="72" width="176" height="224" rx="12"/>
+<rect class="line" x="336" y="104" width="56" height="8" rx="4"/>
+<rect class="mark" x="400" y="104" width="40" height="8" rx="4"/>
+<rect class="line" x="448" y="104" width="48" height="8" rx="4"/>
+<rect class="line" x="336" y="128" width="96" height="8" rx="4"/>
+<rect class="line" x="440" y="128" width="56" height="8" rx="4"/>
+<rect class="line" x="336" y="152" width="24" height="8" rx="4"/>
+<rect class="mark cta" x="368" y="152" width="64" height="8" rx="4"/>
+<rect class="line" x="440" y="152" width="56" height="8" rx="4"/>
+<rect class="line" x="336" y="176" width="120" height="8" rx="4"/>
+<rect class="line" x="336" y="200" width="48" height="8" rx="4"/>
+<rect class="mark" x="392" y="200" width="32" height="8" rx="4"/>
+<rect class="line" x="432" y="200" width="64" height="8" rx="4"/>
+<rect class="line" x="336" y="224" width="80" height="8" rx="4"/>
+<rect class="line" x="336" y="248" width="40" height="8" rx="4"/>
+</svg>
+</div>
+<div class="words">
+<h1 class="name">Label<br>Suite</h1>
+<p class="tag">NLP Annotation Portal</p>
+</div>
+</div>
+</body>
+</html>

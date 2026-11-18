@@ -1,0 +1,52 @@
+<!-- @dsCard group="Data display" height=540 -->
+<!doctype html>
+<html lang="zh-TW" data-theme="light">
+<head>
+<meta charset="utf-8">
+<style>
+  /* preview layout only; the frame preloads tokens.css and bundle.css */
+  html body { margin: 0; padding: 24px; display: block; }
+  .ds-stage { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .ds-caption { font-size: 12px; color: var(--color-ink-muted); }
+  .ds-stage { flex-direction: column; align-items: stretch; gap: 8px; }
+  .ds-frame { border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-white); overflow: hidden; }
+</style>
+</head>
+<body>
+  <div class="ds-stage">
+    <span class="ds-caption">有資料：.task-table-wrap 負責水平捲動，欄位不換行</span>
+    <div class="ds-frame">
+      <div class="task-table-wrap">
+        <table class="task-table" aria-label="資料集分析任務列表">
+          <thead>
+            <tr><th scope="col">任務名稱</th><th scope="col">輸出類型</th><th scope="col">完成率</th><th scope="col">IAA 狀態</th><th scope="col">成員角色</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>情緒分類 v2</td><td>分類</td><td>82%</td><td>已計算</td><td>專案管理者</td></tr>
+            <tr><td>新聞實體標記</td><td>實體辨識</td><td>45%</td><td>未達門檻</td><td>標記員</td></tr>
+            <tr><td>客服對話意圖</td><td>分類</td><td>100%</td><td>已計算</td><td>審核員</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <span class="ds-caption">空狀態：整列 .empty-state-row，內容用 Empty State 的 cell 尺寸</span>
+    <div class="ds-frame">
+      <div class="task-table-wrap">
+        <table class="task-table" aria-label="資料集分析任務列表（空）">
+          <thead>
+            <tr><th scope="col">任務名稱</th><th scope="col">輸出類型</th><th scope="col">完成率</th><th scope="col">IAA 狀態</th><th scope="col">成員角色</th></tr>
+          </thead>
+          <tbody>
+            <tr class="empty-state-row"><td class="empty-state-td" colspan="5">
+              <div class="empty-state empty-state-cell">
+                <p class="empty-state-title">尚無資料集分析任務</p>
+                <p class="empty-state-desc">符合篩選條件的任務會列在這裡。</p>
+              </div>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

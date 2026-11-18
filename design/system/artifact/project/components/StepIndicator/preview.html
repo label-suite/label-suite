@@ -1,0 +1,38 @@
+<!-- @dsCard group="Navigation" height=290 -->
+<!doctype html>
+<html lang="zh-TW" data-theme="light">
+<head>
+<meta charset="utf-8">
+<style>
+  /* preview layout only; the frame preloads tokens.css and bundle.css */
+  html body { margin: 0; padding: 24px; display: block; }
+  .ds-stage { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .ds-caption { font-size: 12px; color: var(--color-ink-muted); }
+  .ds-stage { flex-direction: column; align-items: stretch; gap: 8px; max-width: 640px; }
+</style>
+</head>
+<body>
+  <div class="ds-stage">
+    <span class="ds-caption">第 1 步：目前步驟 .active，其餘未到</span>
+    <div class="step-indicator" aria-label="建立步驟">
+      <div class="step-item"><div class="step-circle active">1</div><div class="step-label active">基本資料</div></div>
+      <div class="step-connector"></div>
+      <div class="step-item"><div class="step-circle">2</div><div class="step-label">標記設定檔</div></div>
+      <div class="step-connector"></div>
+      <div class="step-item"><div class="step-circle">3</div><div class="step-label">啟動設定</div></div>
+      <div class="step-connector"></div>
+      <div class="step-item"><div class="step-circle">4</div><div class="step-label">標記說明</div></div>
+    </div>
+    <span class="ds-caption">第 3 步：前兩步 .done，連接線一併變色</span>
+    <div class="step-indicator" aria-label="建立步驟">
+      <div class="step-item"><div class="step-circle done">1</div><div class="step-label done">基本資料</div></div>
+      <div class="step-connector done"></div>
+      <div class="step-item"><div class="step-circle done">2</div><div class="step-label done">標記設定檔</div></div>
+      <div class="step-connector done"></div>
+      <div class="step-item"><div class="step-circle active">3</div><div class="step-label active">啟動設定</div></div>
+      <div class="step-connector"></div>
+      <div class="step-item"><div class="step-circle">4</div><div class="step-label">標記說明</div></div>
+    </div>
+  </div>
+</body>
+</html>

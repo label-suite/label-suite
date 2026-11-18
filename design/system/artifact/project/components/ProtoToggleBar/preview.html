@@ -1,0 +1,25 @@
+<!-- @dsCard group="Actions" height=100 -->
+<!doctype html>
+<html lang="zh-TW" data-theme="light">
+<head>
+<meta charset="utf-8">
+<style>
+  /* preview layout only; the frame preloads tokens.css and bundle.css */
+  html body { margin: 0; padding: 24px; display: block; }
+  .ds-stage { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .ds-caption { font-size: 12px; color: var(--color-ink-muted); }
+  /* the bar is fixed to the viewport bottom in the prototype; pin it into the card here */
+  .ds-stage .proto-toggle-bar { position: static; transform: none; }
+</style>
+</head>
+<body>
+  <div class="ds-stage">
+    <div class="proto-toggle-bar" role="group" aria-label="原型狀態切換">
+      <span>原型狀態：</span>
+      <button class="proto-btn active" type="button">連結可用</button>
+      <button class="proto-btn inactive" type="button">已過期</button>
+      <button class="proto-btn inactive" type="button">已使用</button>
+    </div>
+  </div>
+</body>
+</html>

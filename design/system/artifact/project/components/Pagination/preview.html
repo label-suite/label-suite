@@ -1,0 +1,67 @@
+<!-- @dsCard group="Navigation" height=260 -->
+<!doctype html>
+<html lang="zh-TW" data-theme="light">
+<head>
+<meta charset="utf-8">
+<style>
+  /* preview layout only; the frame preloads tokens.css and bundle.css */
+  html body { margin: 0; padding: 24px; display: block; }
+  .ds-stage { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .ds-caption { font-size: 12px; color: var(--color-ink-muted); }
+  .ds-stage { flex-direction: column; align-items: stretch; gap: 8px; }
+  .ds-frame { border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-white); }
+  .page-btn svg { width: 14px; height: 14px; }
+</style>
+</head>
+<body>
+  <div class="ds-stage">
+    <span class="ds-caption">第 1 頁：上一頁 disabled、目前頁 .active、省略號、每頁筆數</span>
+    <div class="ds-frame">
+      <nav class="pagination" aria-label="Pagination">
+        <div class="pagination-left">
+          <span class="pagination-info">共 128 筆 · 第 1 / 7 頁</span>
+          <select class="page-size-select" aria-label="每頁筆數">
+            <option value="20" selected>20 筆/頁</option>
+            <option value="50">50 筆/頁</option>
+            <option value="100">100 筆/頁</option>
+          </select>
+        </div>
+        <div class="pagination-controls">
+          <button class="page-btn" type="button" aria-label="上一頁" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="page-btn active" type="button" aria-current="page">1</button>
+          <button class="page-btn" type="button">2</button>
+          <button class="page-btn" type="button">3</button>
+          <span class="page-ellipsis">…</span>
+          <button class="page-btn" type="button">7</button>
+          <button class="page-btn" type="button" aria-label="下一頁">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </nav>
+    </div>
+    <span class="ds-caption">最後一頁：下一頁 disabled</span>
+    <div class="ds-frame">
+      <nav class="pagination" aria-label="Pagination">
+        <div class="pagination-left">
+          <span class="pagination-info">共 128 筆 · 第 7 / 7 頁</span>
+        </div>
+        <div class="pagination-controls">
+          <button class="page-btn" type="button" aria-label="上一頁">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="page-btn" type="button">1</button>
+          <span class="page-ellipsis">…</span>
+          <button class="page-btn" type="button">5</button>
+          <button class="page-btn" type="button">6</button>
+          <button class="page-btn active" type="button" aria-current="page">7</button>
+          <button class="page-btn" type="button" aria-label="下一頁" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </nav>
+    </div>
+  </div>
+</body>
+</html>
