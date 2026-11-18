@@ -18,25 +18,25 @@
   var I18N = {
     zh: {
       sampleListTitle: '標記清單',
-      submitLabel: '提交',
+      submitLabel: '送出標記',
       saveLabel: '儲存草稿',
       wsSaveSuccess: '已儲存',
       /* issue singyichen/label-suite#1082 (AC-2.29/FR-089 v10.0.0): the Bypass checkbox's own
          required reason field, replacing the retired skip control's. */
       bypassReasonRequired: '請填寫無法判定的理由',
-      bypassReasonHelper: '理由會隨提交寫入歷程，審核員可見',
+      bypassReasonHelper: '理由會隨標記送出寫入歷程，審核員可見',
       toastBypassReasonRequired: '請填寫以下輸出類型「無法判定」的理由：{list}',
       arbitrationReasonPlaceholder: '裁定理由（選填）',
       wsPrevBtnLabel: '上一筆',
       wsNextBtnLabel: '下一筆',
-      wsProgressText: '{done} / {total} 已提交',
-      wsProgressTextReview: '我的審核提交 {done} / {total} 個審核單位',
+      wsProgressText: '{done} / {total} 已送出',
+      wsProgressTextReview: '我已送出審核 {done} / {total} 個審核單位',
       wsAutosaveInitial: '尚未儲存',
       wsAutosaveDirty: '尚未儲存的變更',
       wsAutosaveSavedAt: '上次儲存於 {time}',
       wsTabGuideline: '說明與檔案',
       wsTabHistory: '操作紀錄',
-      wsStatusSubmitted: '已提交',
+      wsStatusSubmitted: '已送出',
       wsStatusSaved: '已儲存',
       wsStatusPending: '待標記',
       wsHistoryEmpty: '此筆樣本尚無歷程紀錄',
@@ -55,8 +55,8 @@
       guidelineImageModalCloseAria: '關閉圖片預覽',
       guidelinePdfModalCloseAria: '關閉 PDF 預覽',
       guidelineMdModalCloseAria: '關閉 Markdown 預覽',
-      wsSubmitIncomplete: '請完成所有標記項目後再提交',
-      wsSubmitSuccess: '已提交',
+      wsSubmitIncomplete: '請完成所有標記項目後再送出',
+      wsSubmitSuccess: '標記已送出',
       reviewSubmitLabel: '送出審核',
       reviewApproveLabel: '通過',
       reviewModifyLabel: '修正',
@@ -83,7 +83,7 @@
       arbitrationAgreedTitle: '標記內容（唯讀）',
       arbitrationSubmitLabel: '送出仲裁',
       toastArbitrationIncomplete: '請完成所有爭議項目的裁定',
-      wsArbitrationSubmitSuccess: '仲裁已提交',
+      wsArbitrationSubmitSuccess: '仲裁已送出',
       arbitrationChoiceA: 'A・標記員',
       arbitrationChoiceB: 'B・審核員',
       arbitrationChoiceReject: '兩者皆非',
@@ -107,19 +107,19 @@
       unitStatePending: '待審',
       unitStateDisputed: '爭議中',
       unitStateFinalized: '已定稿',
-      unitStateNone: '尚無標記提交',
-      reviewEmptyUnitNote: '此標記員尚未提交此樣本，暫無可審核的內容。',
-      reviewOffRosterNote: '你已不在本任務的審核員名冊中，可檢視自己審核過的內容與歷程，但無法再提交審核決策。',
-      reviewNotAssignedNote: '這個審核單位未指派給你，可檢視內容但無法提交審核決策。',
-      reviewOffRosterTitle: '無法提交審核決策',
-      reviewNotAssignedTitle: '無法提交審核決策',
+      unitStateNone: '尚無已送出的標記',
+      reviewEmptyUnitNote: '此標記員尚未送出此樣本，暫無可審核的內容。',
+      reviewOffRosterNote: '你已不在本任務的審核員名冊中，可檢視自己審核過的內容與歷程，但無法再送出審核決策。',
+      reviewNotAssignedNote: '這個審核單位未指派給你，可檢視內容但無法送出審核決策。',
+      reviewOffRosterTitle: '無法送出審核決策',
+      reviewNotAssignedTitle: '無法送出審核決策',
       reviewEmptyUnitTitle: '暫無可審核內容',
       reviewFinalizedTitle: '審核已定稿',
       reviewFinalizedNote: '此審核單位已定稿，結果為唯讀。',
       reviewFinalizedRemaining: '本任務你還有 {n} 個可處理的審核單位。',
       reviewFinalizedBackToList: '回到審核清單',
-      reviewSubmittedTitle: '你已提交此單位的審核決策',
-      reviewSubmittedNote: '此單位其後因與其他審核意見不一致而進入爭議中，以下為你當時提交的決策與修正內容，唯讀顯示。',
+      reviewSubmittedTitle: '你已送出此單位的審核決策',
+      reviewSubmittedNote: '此單位其後因與其他審核意見不一致而進入爭議中，以下為你當時送出的決策與修正內容，唯讀顯示。',
       reviewSubmittedDecisionLabel: '你的審核決策',
       reviewSubmittedValueLabel: '修正值',
       reviewEditMyDecisionBtn: '修改我的審核',
@@ -173,14 +173,14 @@
       reviewOriginalAnswerLabel: '標記員原答案：',
       reviewCorrectedAnswerLabel: '審核員修正後答案：',
       toastReviewDecisionResetOnEdit: '直接修正的值已變更，對應的審核決策已重置，請重新確認後再送出',
-      annotatorFinalizedNotice: '此標記結果已定稿，無法再修改或提交',
+      annotatorFinalizedNotice: '此標記結果已定稿，無法再修改或送出',
       annotatorFinalizedNoticeTitle: '此標記結果已定稿',
-      annotatorFinalizedNoticeDesc: '作答內容已鎖定，無法再修改或提交。如需異動請聯絡審核員。',
-      annotatorFinalizedToast: '此標記結果已定稿，無法再修改或提交',
+      annotatorFinalizedNoticeDesc: '作答內容已鎖定，無法再修改或送出。如需異動請聯絡審核員。',
+      annotatorFinalizedToast: '此標記結果已定稿，無法再修改或送出',
       wsAutosaveFinalized: '已定稿，不再自動儲存',
       annotatorUnderReviewNoticeTitle: '此標記已進入審核',
-      annotatorUnderReviewNoticeDesc: '審核員已開始處理這筆作答，內容已鎖定，無法再修改或提交。',
-      annotatorUnderReviewToast: '此標記已進入審核，無法再修改或提交',
+      annotatorUnderReviewNoticeDesc: '審核員已開始處理這筆作答，內容已鎖定，無法再修改或送出。',
+      annotatorUnderReviewToast: '此標記已進入審核，無法再修改或送出',
       wsAutosaveUnderReview: '審核中，不再自動儲存',
       wsExceptionSampleGroupAria: '樣本 {sample}，{n} 項待處置例外',
       wsExceptionSampleGroupCount: '{n} 項例外',
@@ -1917,7 +1917,7 @@
      unit list, matching what the prev/next buttons can actually reach. */
   function renderSampleNav() {
     /* FR-095 (issue singyichen/label-suite#907): a project leader never submits here, so the
-       annotator's "{done} / {total} 已提交" counts a write this role cannot
+       annotator's "{done} / {total} 已送出" counts a write this role cannot
        make. Its nav addresses the exception queue instead: the remaining
        item count, with no progress bar -- the disposed items are already
        gone from the queue, so no honest denominator exists to fill one. */
@@ -1930,7 +1930,7 @@
     var done = countSubmittedUnits(units);
     if (done > total) done = total;
     /* issue singyichen/label-suite#309: a reviewer's count is reviewed units, not their own
-       submissions -- the annotator's N 已提交 wording is wrong for them. */
+       submissions -- the annotator's N 已送出 wording is wrong for them. */
     setText(
       'wsProgressText',
       t(currentRole === 'reviewer' ? 'wsProgressTextReview' : 'wsProgressText')
@@ -2030,7 +2030,7 @@
   }
 
   /* UXC-03: browser-navigation guard while the work column holds edits
-     that 儲存草稿/提交 has not persisted (see renderAutosaveStatus for the
+     that 儲存草稿/送出標記 has not persisted (see renderAutosaveStatus for the
      honest, per-sample visible indicator this flag no longer doubles as).
      Any interaction inside .col-content counts as an edit signal; the
      three persistence paths clear it. */
@@ -2249,7 +2249,7 @@
        render flag -- a masked event must never reach this function at all. */
     /* issue singyichen/label-suite#601: the reviewer's envelope `submitted` event is folded away
        when their own next act was a decision, so the trail reads as one card
-       per thing that happened rather than a bare 提交 beside the decision
+       per thing that happened rather than a bare 送出 beside the decision
        that carries the result. Applied before the answer blocks are built:
        those are indexed by event, and the folded event carries no snapshot
        (the data layer omits it precisely because the decision events hold
@@ -3313,7 +3313,7 @@
      getReviewUnitStatus(), which stays null forever for an FR-044a orphan
      unit (a REVIEWER_MOCK_ROWS stand-in with no real stored submission) --
      but the two call sites disagreed on what null means there, showing 待審
-     beside 尚無標記提交 for the same unit. reviewUnitBlockReason()'s EMPTY
+     beside 尚無已送出的標記 for the same unit. reviewUnitBlockReason()'s EMPTY
      check already draws the correct line (null + no demo row = truly empty;
      null + a demo row = still awaiting review), so this mirrors that exact
      check as the single source of truth for both call sites instead of

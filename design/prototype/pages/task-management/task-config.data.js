@@ -655,7 +655,7 @@ var TASK_CONFIG_I18N = {
     aspectRuleSectionTitle: 'Aspect 編輯規則',
     aspectRuleSectionDesc: '控制標記員能否修正句子、增刪 aspect，以及系統驗證方式。',
     aspectLimitSectionTitle: '數量限制',
-    aspectLimitSectionDesc: '設定每筆資料需要提交的 Aspect List 長度範圍。',
+    aspectLimitSectionDesc: '設定每筆資料需要送出的 Aspect List 長度範圍。',
     templateBtnNer: '套用預設範本：NER 命名實體辨識',
     templateBtnAspectList: '套用預設範本：Aspect List 抽取／校正',
     previewSampleSentenceRelation: '阿司匹靈可緩解頭痛症狀，但可能造成胃部不適。',

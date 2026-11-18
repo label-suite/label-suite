@@ -1082,7 +1082,7 @@
       fieldRoleMap: { text: 'input', gold_label: 'output' },
       reviewerGuidelineText:
         REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH +
-        '（T014）本任務為試標（dry_run）：同一份樣本由多位標記員各標一次，每份提交各自形成一個審核單位，' +
+        '（T014）本任務為試標（dry_run）：同一份樣本由多位標記員各標一次，每份送出的標記各自形成一個審核單位，' +
         '並依 FR-093 以樣本為單位指派——同一份資料的所有標記交給同一位審核員，便於比對彼此差異。' +
         '審核決策為通過／修正／無法裁決三選一：通過即定稿；修正與無法裁決皆須填寫理由並轉入爭議池（如 ' +
         'dry-03-dispute-open、dry-04-dispute-resolved），改由具 can_arbitrate 權限且非當事人的仲裁員裁定，審核員不得自行收斂。',
@@ -1419,7 +1419,7 @@
     {
       name: '常見問題.md',
       type: 'markdown',
-      content: '# 常見問題\n\n- **Q: 如何開始標記？** 依左側清單逐筆完成標記，完成後點擊提交。\n- **Q: 不確定答案怎麼辦？** 可於備註欄說明特殊情況，交由 Reviewer 複核。'
+      content: '# 常見問題\n\n- **Q: 如何開始標記？** 依左側清單逐筆完成標記，完成後點擊「送出標記」。\n- **Q: 不確定答案怎麼辦？** 可於備註欄說明特殊情況，交由 Reviewer 複核。'
     },
     {
       name: '標記指引範例.pdf',
