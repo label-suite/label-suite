@@ -64,7 +64,7 @@ function makeSvgIcon(paths, size) {
   svg.setAttribute('width', size); svg.setAttribute('height', size);
   svg.setAttribute('viewBox', '0 0 24 24');
   svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor');
-  svg.setAttribute('stroke-width', '2.5');
+  svg.setAttribute('stroke-width', '2');
   svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('stroke-linejoin', 'round');
   svg.setAttribute('aria-hidden', 'true');
   paths.forEach(function(d) {
@@ -1324,7 +1324,7 @@ function renderOutputTypeFields(container, outKey) {
             rm.className = 'tag-pill-remove';
             rm.setAttribute('aria-label', '移除');
             rm.setAttribute('type', 'button');
-            rm.innerHTML = '<svg style="width:10px;height:10px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+            rm.innerHTML = '<svg style="width:10px;height:10px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
             (function(idx) {
               rm.addEventListener('click', function() {
                 tagsArr.splice(idx, 1);
@@ -2504,7 +2504,7 @@ function renderAbsaUnifiedPreview(previewContainer) {
   var hasSpanOut = state.selectedOutputTypes.indexOf('entity_recognition') >= 0;
   var hasRelOut = state.selectedOutputTypes.indexOf('relation_identification') >= 0;
   var allowEntityEditing = hasSpanOut;
-  var DEL_SVG = '<svg style="width:12px;height:12px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  var DEL_SVG = '<svg style="width:12px;height:12px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
 
   /* ── Working Area title ── */
   if (allowEntityEditing) {
@@ -4062,7 +4062,7 @@ function buildTagInput(field) {
       rm.setAttribute('aria-label', '移除');
       rm.setAttribute('type', 'button');
       /* static SVG, no user content */
-      rm.innerHTML = '<svg style="width:10px;height:10px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      rm.innerHTML = '<svg style="width:10px;height:10px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
       (function(idx) {
         rm.addEventListener('click', function() {
           tags.splice(idx, 1);
