@@ -29,7 +29,7 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 以下每一條都有明確的文字依據，不是撰寫者從畫面「覺得」出來的。
 
 1. **只用 token，不自創顏色。**`tokens.css` 的檔頭寫「Import this file instead of redefining tokens in each page」（`assets/tokens.css:3`）；skill 寫「不要自創 token 以外的顏色」（`label-suite-design/SKILL.md` §怎麼用）。**現況與這條不符**：prototype 有大量寫死色值（`design-gaps.md` G-02），本檔把它當作「要追的規範」，不是「已達成的事實」。
-2. **主色文字放淺底要用 `--color-primary-strong`，不用 `--color-primary`。**後者對比不足 4.5:1（`tokens.css:19` 註解、skill §無障礙）。次要文字最淺到 `--color-ink-muted`，`slate-400` 以下的顏色不可用於文字（skill §無障礙）。
+2. **主色當文字一律用 `--color-primary-strong`，不用 `--color-primary`；圖示用 `--color-primary`，`--color-secondary` 只做裝飾與大面積填色。**`--color-primary` 當文字在白底只有 4.47:1、在 `--color-primary-soft-bg` 上 3.99:1，`--color-primary-strong` 是白底 6.29、頁底 5.73、主色淺底 5.62:1（`tokens.css:19` 註解；維護者裁定 2026-11-18，#427）。`--color-primary` 留給按鈕填色、邊框、logo 與圖示（圖示只需 3:1）。次要文字最淺到 `--color-ink-muted`（淺色 `#5E6B7F`：頁底 4.93、白底 5.40、`--color-border-muted` 4.93:1），`slate-400` 以下的顏色不可用於文字（skill §無障礙）。
 3. **語意色各有專屬用途。**`--color-warning` 與 `--color-error` 保留給例外、待確認與錯誤，不當區分色；用顏色區分模組或角色時最多五種，超過就靠標籤文字（skill §區分多個模組或角色）。
 4. **狀態不能只靠顏色。**Review Status Track 以文字前綴「目前：」、字重與線寬輔助（`components-showcase.html:1214` 的說明、[`components/review-status-track.md`](components/review-status-track.md)）。Color Dot 目前只靠顏色，已登記為缺口（G-14）。
 5. **錯誤 toast 不自動消失，只能手動關。**整頁只有一則 toast；success 3000ms、info 5000ms、warning 8000ms、error 0（UXC-07，`components-showcase.html:1500`）。
@@ -40,6 +40,8 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 10. **每個畫面同時支援繁中與英文、淺色與深色。**語言與外觀是共用介面的一部分（`00-prd.mdx:136`、`docs/specs/07-shared/01-sidebar.mdx`）；元件要用語意 token，深色主題靠 `html[data-theme="dark"]` 重新對映同名 token，頁面不寫兩份（`tokens.css` 深色區塊的檔頭說明）。
 11. **互動元件要有 `prefers-reduced-motion` 的退路。**共用 CSS 與 showcase 都有（`pages/shared/sidebar.css:185`、`components-showcase.html:971`）；`account/profile` 是唯一漏掉的帳號頁（G-30）。
 12. **圖示一律用 SVG，不用 emoji，也不用文字字元（`✕`、`←`、`→`、`✓` 等）充當圖示。**維護者裁定（2026-11-18）；repo 內早有同向的依據：ADR-030「Lucide 是唯一圖示來源」，`task-config.engine.js:869`、`:965` 的註解寫「no text-glyph icons」「no hand-drawn glyphs」。細節見 [§圖示](#圖示)。
+13. **控制項外框用 `--color-border-control`，`--color-border` 只做裝飾。**輸入框、下拉選單、文字區塊、搜尋框、勾選框的外框用前者（淺色 `#8592A6` 對白底 3.15:1；深色 `#6B6B78` 對卡片 3.42、對頁底 3.73:1），才過 WCAG 1.4.11 的 3:1；卡片、表格、分隔線用 `--color-border`（對白底只有 1.23:1）。焦點與錯誤狀態維持各自的 token。維護者裁定（2026-11-18，#427）；`tokens.css:26`、`:176`。
+14. **`--color-primary-border` 不能是唯一的提示。**它對白底只有 1.49:1；只靠邊框標示的狀態改用 `--color-primary`，例如日期選擇器的「今天」（`date-range-picker.css:34`）。維護者裁定（2026-11-18，#427）。
 
 ## 設計決策
 
@@ -153,17 +155,18 @@ token 名與值以 `tokens.css` 為準；本節只寫**怎麼用**。
 
 | 角色 | token | 用在哪 | 依據 |
 | :--- | :--- | :--- | :--- |
-| 品牌主色 | `--color-primary`、`--color-secondary` | logo 底色、主要操作、選取、連結強調 | skill §色票；`navbar-logo`（`login.html:67`、`sidebar.css:52`） |
-| 主色上的文字 | `--color-primary-strong`、`--color-on-cta` | 放在主色淺底或填色上的文字 | `tokens.css:19`、`:21` |
+| 品牌主色 | `--color-primary`、`--color-secondary` | logo 底色、按鈕填色、邊框、選取、圖示；`--color-secondary` 只做裝飾與大面積填色（鐵律 2） | skill §色票；`navbar-logo`（`login.html:67`、`sidebar.css:52`） |
+| 主色文字 | `--color-primary-strong`、`--color-on-cta` | 前者是主色當文字（含連結、放在主色淺底上），後者是主色填色上的文字（鐵律 2） | `tokens.css:19`、`:21` |
 | 確認與完成 | `--color-cta`、`--color-cta-hover` | 確認、完成類主要鈕 | skill §色票 |
 | 頁面與卡片 | `--color-surface`（頁底）、`--color-white`（卡片）、`--color-slate-50`（交錯列） | 版面底色層次 | skill §色票；`tokens.css` 語意別名 `--bg-page`／`--bg-surface` |
 | 文字 | `--color-ink`（內文標題）、`--color-ink-muted`（次要）、`--color-on-ink` | | `tokens.css` §Semantic aliases |
-| 分隔 | `--color-border`、`--color-border-muted` | | skill §色票 |
+| 分隔 | `--color-border`、`--color-border-muted` | 卡片、表格、分隔線，只做裝飾（鐵律 13） | skill §色票 |
+| 控制項外框 | `--color-border-control` | 輸入框、下拉選單、文字區塊、搜尋框、勾選框（鐵律 13） | `tokens.css:26`、`:176` |
 | 四個語意 | `--color-success`／`warning`／`error`／`info`，各配 `-bg`、`-border` | 狀態、banner、toast、badge | `tokens.css` §Semantic State Colors |
 | 非語意強調 | `--color-file-markdown` | 只用來區分檔案類型圖示，不是狀態 | `tokens.css`（檔案類型圖示強調）註解 |
 | 工作頁籤 | `--color-tab-active-bg`、`--color-tab-hover-bg` | 側欄上方頁籤；兩者在深色主題刻意不同值 | `tokens.css` §Workspace Tabs |
 
-`--color-text-muted` 是 `--color-ink-muted` 的舊別名，新元件不用（`tokens.css:27`、`:32`、skill）。
+`--color-text-muted` 是 `--color-ink-muted` 的舊別名，新元件不用（`tokens.css:28`、`:33`、skill）。
 
 **淺色與深色是同一組 token 名、不同的值。**深色的 `--color-white` 其實是「抬高一階的卡片底」，不是白色（`tokens.css` 深色區塊 `--color-white` 註解）；所以**不要把 `--color-white` 當成字面上的白色用在文字**，需要固定白色字時用 `--color-on-cta`／`--color-on-ink`（G-12 正是這個問題）。
 
@@ -191,7 +194,7 @@ token 名與值以 `tokens.css` 為準；本節只寫**怎麼用**。
 
 ### 對比與無障礙
 
-- 對比修正是**有紀錄的**：`--color-cta` 與 `--color-ink-muted` 為過 WCAG AA 而換過值，註解保留舊值的對比數字（`tokens.css:13`、`:32`）；此後新的文字／底色組合以 AA 為下限。
+- 對比修正是**有紀錄的**：`--color-cta` 與 `--color-ink-muted` 為過 WCAG AA 而換過值，註解保留舊值（`tokens.css:13`、`:33`）；`--color-ink-muted` 換過兩次，最近一次在 #427 由 `#64748B` 調為 `#5E6B7F`。此後新的文字／底色組合以 AA 為下限，非文字的控制項外框以 3:1 為下限（鐵律 13）。
 - `--color-on-cta` 疊在淺色主題的 `--color-primary` 上是 4.47:1，**低於 AA，被列為已接受的取捨**（`tokens.css:21` 註解）。這是唯一有明文豁免的一處。
 - 焦點樣式現況幾乎缺席（G-05），所以「所有互動元件都有可見焦點」是**目標而非現況**。
 
@@ -343,11 +346,11 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 | `banner.svg:21` | 副標 | `--color-ink-muted` | 是 |
 | **`social-preview.svg:19`** | 副標 | **沒有對應 token**；最接近 `--color-ink-muted`，但色值不同（是 Tailwind gray 的值，不是 slate） | **否，這是不符的一處** |
 
-`social-preview.svg` 的副標 32px，屬大字（WCAG 大字門檻 3:1），所以不構成對比問題；它只是跟 `banner.svg` 副標用了兩種灰。**規則（維護者裁定 2026-11-18）：副標用 `--color-ink-muted` 的 slate 灰**；現況寫死的是 gray，列在落差表，SVG 本次不改。順帶一提：`--color-ink-muted` 疊在 `--color-surface` 上的對比是 4.34:1，略低於 4.5:1；`banner.svg` 疊在白底上是 4.76:1。
+`social-preview.svg` 的副標 32px，屬大字（WCAG 大字門檻 3:1），所以不構成對比問題；它只是跟 `banner.svg` 副標用了兩種灰。**規則（維護者裁定 2026-11-18）：副標用 `--color-ink-muted` 的 slate 灰**；現況寫死的是 gray，列在落差表，SVG 本次不改。順帶一提：`--color-ink-muted` 在 #427 調為 `#5E6B7F` 後，疊在 `--color-surface` 上是 4.93:1、白底上 5.40:1，兩個 SVG 的副標跟著改成同一值。
 
 ### 深色主題的 logo（量測）
 
-深色主題把 `--color-primary` 換成較亮的靛藍，而產品內 logo 的標籤線稿固定 `white`（`login.html:403`–`:408`）。以 WCAG 相對亮度公式、`tokens.css` 的值（深色 `--color-primary`：`tokens.css:160`；線稿：白色）量測：
+深色主題把 `--color-primary` 換成較亮的靛藍，而產品內 logo 的標籤線稿固定 `white`（`login.html:403`–`:408`）。以 WCAG 相對亮度公式、`tokens.css` 的值（深色 `--color-primary`：`tokens.css:161`；線稿：白色）量測：
 
 | 組合 | 對比 |
 | :--- | :--- |
@@ -355,7 +358,7 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 | 白色線稿 ／ 深色主題 `--color-primary` | **2.98 : 1**（未達 3:1） |
 | 深色主題 `--color-on-cta` ／ 深色主題 `--color-primary` | 5.36 : 1 |
 
-**規則（維護者裁定 2026-11-18）：白色線稿在深色主題上不到 3:1（差 0.02），不能深淺共用一版；深色主題的 logo 標籤線稿用 `--color-on-cta`（深色主題的值是深墨色，5.36:1），與按鈕在深色主題的處理（`tokens.css:170`）一致。**實作屬 UI 修正，列在落差表。
+**規則（維護者裁定 2026-11-18）：白色線稿在深色主題上不到 3:1（差 0.02），不能深淺共用一版；深色主題的 logo 標籤線稿用 `--color-on-cta`（深色主題的值是深墨色，5.36:1），與按鈕在深色主題的處理（`tokens.css:171`）一致。**實作屬 UI 修正，列在落差表。
 
 ### 在產品裡實際怎麼用
 
