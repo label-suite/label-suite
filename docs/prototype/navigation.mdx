@@ -486,8 +486,8 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 | `/annotation/annotation-list` | `role`（`reviewer` \| `project_leader` \| `annotator`：**清單本體只二分** `reviewer`／`annotator`（`:1030`），`project_leader` 只改側欄那一項的名稱與角色標示（`:409`–`:412`））、`run_type`、`status`、`q`、`notice`（`no_actionable_review`，而且要同時 `role=reviewer`）、`limit`、`offset` |
 | `/annotation/annotation-workspace` | **`task_id`（必填）**——解不到任務就導回清單（`annotation-workspace.config.js:7031`–`:7034`）、`role`（`reviewer` \| `project_leader` \| `annotator`）、`run_type`、`sample_id`；另外 **`status`、`q`、`limit`、`offset`、`annotator_id`、`reviewer_id` 六個會被原封不動讀出再轉手回清單**（`buildListReturnUrl()`，`:1554`–`:1565`），工作區自己不用它們，但「返回清單」要去哪裡由它們決定 |
 | `/dashboard/dashboard` | `view`（`skeleton` \| `error`）、`scenario`（`annotator` \| `reviewer` \| `project_leader` \| `super_admin_data` \| `user`，而且 `dashboard.html` 要有對應的 `id="view-<值>"`） |
-| `/dataset/dataset-analysis-list` | `keyword`、`iaa_status`、`output_type`、`view`（只認 `empty`）、`invalid_task`、`limit`、`offset` |
-| `/dataset/dataset-analysis-detail` | **`task_id`（必填）**——缺少、不認得或成員角色不在允許清單，一律導回列表並帶 `invalid_task=1`（`:2486`–`:2495`）、`tab`（**只認 `quality`**，其餘一律落到統計總覽，`:2521`）、`q_state`（`dry_run_in_progress` \| `report_pending` \| `report_generating` \| `report_failed` \| `ready`）、`s_state`（只認 `empty`） |
+| `/dataset/dataset-analysis-list` | `keyword`、`iaa_status`、`output_type`、`view`（只認 `empty`）、`error`（只認 `1`，載入失敗；`dataset-analysis-list.model.js:241`）、`invalid_task`、`limit`、`offset` |
+| `/dataset/dataset-analysis-detail` | **`task_id`（必填）**——缺少、不認得或成員角色不在允許清單，一律導回列表並帶 `invalid_task=1`（`:2486`–`:2495`）、`tab`（**只認 `quality`**，其餘一律落到統計總覽，`:2521`）、`q_state`（`dry_run_in_progress` \| `report_pending` \| `report_generating` \| `report_failed` \| `ready`）、`s_state`（只認 `empty`）、`error`（只認 `1`，兩個面板都載入失敗；`:1434`，網址同步時不保留） |
 
 ### `/task-management/task-detail` 的畫面狀態參數
 
