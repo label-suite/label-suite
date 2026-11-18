@@ -55,6 +55,21 @@ mask_case 'deadbeefdeadbeefdeadbeefdeadbeef' 'deadbeefdeadbeefdeadbeefdeadbeef' 
 bash -c "set -uo pipefail; source '$LIB'; hc_init; emit_err 'sha abc1234 ok'; hc_flush" >"$O" 2>"$E"
 grep -qF 'abc1234' "$E" || fail "a short hex string was masked; diagnostics become useless"
 
+# Neither is a file path, and the checkers' whole job is to name one. The
+# base64 rule used to span `/`, so any absolute path long enough became `***`
+# and the message that said which file was rejected stopped saying it.
+for path in \
+  '/Users/someone/project/label-suite-oss/scripts/check-command.sh' \
+  '/home/runner/work/label-suite/label-suite/scripts/check-env.sh' \
+  '/var/folders/79/0g96bw6d4bz_s2x1yqfh7kqr0000gn/T/tmp.AbCdEf/.env.local'
+do
+  bash -c "set -uo pipefail; source '$LIB'; hc_init; emit_err 'BLOCK: 受保護路徑：$path'; hc_flush" >"$O" 2>"$E"
+  grep -qF "$path" "$E" || fail "a file path was masked and the message no longer names it: $path"
+done
+
+# The rule still has to catch an actual run of base64, which has no separators.
+mask_case 'blob QUJDREVGR0hJSktMTU5PUFFSU1RVVld= end' 'QUJDREVGR0hJSktMTU5PUFFSU1RVVld' 'blob'
+
 # ── The size limit ───────────────────────────────────────────────────
 
 [ "$(bash -c "source '$LIB'; printf %s \"\$HC_MAX_BYTES\"")" = "65536" ] \

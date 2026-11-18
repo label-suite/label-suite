@@ -53,7 +53,12 @@ text = text.replace(
 text = text.replace(/\b(?:ghp_|github_pat_|sk-|xox[baprs]-)\S+/g, '***');
 // 3. A long unbroken run of base64 or hex. Twenty is the shortest length at
 //    which this stops matching ordinary words, short hashes and identifiers.
-text = text.replace(/\b[A-Za-z0-9+/]{20,}={0,2}\b/g, '***');
+//    The run deliberately stops at `/`: when it spanned separators, every
+//    absolute path long enough became `***`, and a checker whose whole job is
+//    to say which file it rejected stopped saying it. The cost is a base64
+//    blob whose every slash-separated run is under twenty characters, which is
+//    narrow next to naming no paths at all (maintainer's ruling, 2026-11-18).
+text = text.replace(/\b[A-Za-z0-9+]{20,}={0,2}\b/g, '***');
 
 let out = Buffer.from(text, 'utf8');
 if (out.length > max) {
