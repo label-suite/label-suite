@@ -187,6 +187,8 @@
 
 **b4 核對**：第六份是 `dataset-analysis-detail.html:49` 的 `.panel`，十六個 partial 全用它。
 
+**狀態（#423）**：已修正。容器四條規則抽成 `pages/shared/card.css`，以 `.panel` 為準，`.form-card`、`.section-card`、`.content-card` 列為同一條規則的別名，markup 不改。六頁都載入它，頁內只留各自的變體（`dashboard` 的直向 flex、`task-detail`／`task-new`／`dataset-analysis-detail` 的 `margin-bottom`、`profile` 的 `margin-bottom` 與手機版內距），`annotation-workspace` 的 `.content-card` 整段刪除。六頁淺深色的邊框、圓角、底色、內距與外距實測與修正前相同。上文的行號指的是修正前。
+
 ### G-42 `task-detail` 重新定義了 Toggle Switch，與同頁載入的正典不同
 
 > b2 新增。

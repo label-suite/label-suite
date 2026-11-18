@@ -24,7 +24,7 @@
 | 元件 | 說明 |
 | :--- | :--- |
 | `.btn-primary`／`.btn-secondary`／`.input`／`.toggle-switch`／`.toggle-slider`／`.skeleton`／`.skel-*`／`.avatar-*`／`.toast*` | **本頁重新定義了這些**，即使它已經 `<link>` 了 `button.css`。同一個 class 名兩份定義，頁面的 `<style>` 在後面所以贏 → `../design-gaps.md` G-33 |
-| `.section-card`／`.section-title`／`.section-desc` | 區塊容器。登出頁用 [Auth Card](../components/auth-card.md)，本頁用這一組——兩套卡片 |
+| `.section-card`／`.section-title`／`.section-desc` | 區塊容器。`.section-card` 自 #423 起是 [Card](../components/card.md) 共用檔的別名（G-41）。登出頁用 [Auth Card](../components/auth-card.md)，本頁用這一組——兩套卡片 |
 | `.notif-pref-table`／`.preference-row`／`.preference-label` | 通知設定表 |
 | `.email-masked`／`.email-change-btn`／`.email-row` | Email 遮蔽與變更 |
 | `.sent-card`／`.sent-title`／`.sent-desc`／`.sent-icon-wrap`／`.sent-email-highlight`／`.sent-hint`／`.sent-actions`／`.resend-link` | 變更 Email 的「已寄出」面板——**又一份 State Panel 的獨立實作** → G-03 |

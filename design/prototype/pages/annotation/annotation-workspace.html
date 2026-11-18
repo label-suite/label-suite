@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="../shared/modal.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <link rel="stylesheet" href="../shared/button.css" />
+  <link rel="stylesheet" href="../shared/card.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
   <link rel="stylesheet" href="../shared/content-tabs.css" />
   <link rel="stylesheet" href="../shared/input.css" />
@@ -246,12 +247,7 @@
     }
     .content-scroll { flex: 1; height: 0; min-height: 0; overflow-y: auto; padding: var(--space-lg); display: flex; flex-direction: column; gap: var(--space-md); }
     .content-scroll > * { flex-shrink: 0; }
-    .content-card {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      background: var(--color-white);
-      padding: var(--space-lg);
-    }
+    /* .content-card 是 pages/shared/card.css 的 .panel 別名（#423, G-41） */
     .content-card-title {
       font-size: 12px;
       font-weight: 700;

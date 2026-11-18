@@ -1,0 +1,16 @@
+/* Shared Card container (#423, design-gaps G-41) -- spec: design/system/components/card.md.
+ * `.panel` is the canonical class. `.form-card` (task-new), `.section-card` (account/profile)
+ * and `.content-card` (annotation-workspace) are kept as aliases of the same container so the
+ * existing markup does not change.
+ * Plain class selectors, not :where(): the pages' `* { padding: 0 }` reset would otherwise win.
+ * Load this before the page's own styles, so a page's variant rules (flex column,
+ * margin-bottom, a narrower mobile padding) override it at equal specificity. */
+.panel,
+.form-card,
+.section-card,
+.content-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-white);
+  padding: var(--space-lg);
+}

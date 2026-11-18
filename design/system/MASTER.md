@@ -108,7 +108,7 @@ prototype 註解指名了章節，但 b1 沒有證據；b2 依它們的出貨實
 
 | 元件 | 正典章節（只見於註解） | b1 | b2 | b3 | b4 | 狀態 |
 | :--- | :--- | ---: | ---: | ---: | ---: | :--- |
-| [Card](components/card.md) | §Cards（`pages/dashboard/dashboard.layout.css:171`） | 0 | 3 | 1 | 1 | ✅ b2 完成（四份實作，G-41） |
+| [Card](components/card.md) | §Cards（`pages/dashboard/dashboard.layout.css:171`） | 0 | 3 | 1 | 1 | ✅ b2 完成（#423 抽成 `pages/shared/card.css`，G-41） |
 | [Tooltip](components/tooltip.md) | §Tooltip（`pages/task-management/task-config.css:259`） | 0 | 2 | 1 | 0 | ✅ b2 完成；b3 補上審核說明變體 |
 | [Step Indicator](components/step-indicator.md) | §Step Indicator（`assets/tokens.css:21`） | 0 | 1 | 0 | 0 | ✅ b2 完成（**單頁專屬**） |
 

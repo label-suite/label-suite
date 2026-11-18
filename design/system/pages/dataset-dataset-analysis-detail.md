@@ -39,7 +39,7 @@
 
 | 元件 | 說明 |
 | :--- | :--- |
-| `.panel`（`:49`） | 卡片的第六份 → [Card](../components/card.md)、G-41 |
+| `.panel`（`:51`） | 容器在 `pages/shared/card.css`，本頁只加 `margin-bottom`（#423）→ [Card](../components/card.md)、G-41 |
 | `.btn` 覆寫（`:166`–`:172`） | 載入正典 `button.css` 後又在頁內用零特異性重寫 → G-37 |
 | `.badge*`（`:57`–`:62`）、`.risk-level-badge`（`:147`–`:151`） | 本頁重寫的徽章，全用 token → [Badge](../components/badge.md) |
 | `.iaa-score-card`（`:73`–`:76`）、`.iaa-bar-*`（`:83`–`:87`） | 達標分數卡與分數條；分數條沒有 `role="progressbar"`，數字在旁邊的文字 → [Progress Bar](../components/progress-bar.md) |

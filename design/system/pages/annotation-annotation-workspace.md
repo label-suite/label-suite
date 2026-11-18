@@ -36,7 +36,7 @@
 
 | 元件 | 說明 |
 | :--- | :--- |
-| `.content-card`（`:248`–`:252`） | 與 Card 同樣四條規則的第五份 → [Card](../components/card.md)、G-41 |
+| `.content-card` | `pages/shared/card.css` 的別名，本頁不再重寫（#423）→ [Card](../components/card.md)、G-41 |
 | `.review-track*`（`:445`–`:466`） | 自稱「CSS verbatim」，核對後 11 條規則與 `components-showcase.html:653`–`:717` 逐字相同 → [Review Status Track](../components/review-status-track.md) |
 | `.mini-btn-active-approve`／`-modify`／`-bypass`、`.rv-choice-group` | 審核三向決策的選中狀態，疊在正典 `pages/shared/button.css` 的 `.mini-btn` 上；#423 起本頁不再重寫 `.mini-btn` 本體與 `-danger` → G-37 |
 | `.progress-track`／`.progress-fill`（`:307`–`:318`） | 與 Progress Bar 同尺寸同 token，只換了 class 名 |

@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="../shared/modal.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <link rel="stylesheet" href="../shared/button.css" />
+  <link rel="stylesheet" href="../shared/card.css" />
   <link rel="stylesheet" href="../shared/date-range-picker.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
   <link rel="stylesheet" href="../shared/content-tabs.css" />
@@ -89,13 +90,8 @@
       100% { opacity: 0.95; }
     }
 
-    .panel {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      background: var(--color-white);
-      padding: var(--space-lg);
-      margin-bottom: var(--space-md);
-    }
+    /* .panel 外框在 pages/shared/card.css（#423, G-41） */
+    .panel { margin-bottom: var(--space-md); }
     .panel-title {
       font-size: 16px;
       font-weight: 700;

@@ -21,7 +21,7 @@ Card 是登入後頁面的基本內容容器：細框線、大圓角、白底，
 - `task-detail` 的 `.panel`：只有容器四條規則。
 - `task-new` 的 `.form-card`：多一個 `margin-bottom` 和帶分隔線的 `.form-card-title`。bundle 沒有收這個變體。
 
-同樣四條容器規則在原件寫了五、六份，class 名也不一致：`.panel`、`.form-card`、`.section-card`、`.content-card`，以及 `dataset-analysis-detail` 自己的 `.panel`。正典是 `.panel`（G-41）。
+同樣四條容器規則在原件曾寫了五、六份，class 名也不一致：`.panel`、`.form-card`、`.section-card`、`.content-card`，以及 `dataset-analysis-detail` 自己的 `.panel`。正典是 `.panel`（G-41）；#423 起原件收成 `pages/shared/card.css` 一份，其餘 class 名是別名。
 
 ## 狀態
 
