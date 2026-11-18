@@ -70,4 +70,4 @@
 
 **正典的兩個樣本畫的就是帳號頁，但帳號頁沒有用這組 class。**`account/forgot-password#state-submitted` 用 `.success-panel`（`forgot-password.html:444`），`account/reset-password#state-success` 用同名的 `.success-panel`（`reset-password.html:594`），`proto-expired`／`proto-used` 用 `.token-error-panel`（`reset-password.html:499`）。三者都在各自頁面的 `<style>` 裡另外定義 → `../design-gaps.md` G-03。
 
-shipped 使用頁面另在 b2（`task-detail` 的 3 個 panel）、b3（`annotation/annotation-list`）、b4（`dataset-analysis-detail` 及其 4 個 partial），待那幾批補。
+b2 核對後**沒有**：`task-detail` 那 3 個 panel 用的是 `empty-state-panel`（[Empty State](empty-state.md)），不是這個元件；`task-detail` 的 `taskForbidden`／`taskNotFound` 與 `dashboard` 的 `.dashboard-error-state` 也是各自的實作。b3（`annotation/annotation-list`）、b4（`dataset-analysis-detail` 及其 4 個 partial），待那幾批補。

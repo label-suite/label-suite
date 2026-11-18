@@ -85,5 +85,6 @@ ARIA：popover 是 `role="dialog"` ＋ `aria-modal="false"`（`:48`–`:49`）�
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 可實際操作的 demo |
+| `task-management/task-detail#tab-work-log` | `.date-range-trigger`（`work-log.html:7`，`aria-haspopup="dialog"`）；`task-detail.html:12` 載 CSS、`:1923` 載 JS |
 
-shipped 使用頁面只有 b2 的 `task-management/task-detail.panels/work-log`，待 b2 補。
+b2 已補上（見上表）。

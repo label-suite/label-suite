@@ -55,7 +55,7 @@ hover／focus／disabled 等元件層狀態**未逐項盤點**——外殼不是
 
 ## token
 
-`--nav-active-bg`、`--color-tab-active-bg`、`--color-tab-hover-bg`、`--workspace-tab-min-width`、`--workspace-tab-max-width`、`--z-sticky`、`--z-dropdown` 等；`tokens.css` 有一整組**只為側欄與頁籤存在**的 token。完整清單待逐條核對（`sidebar.css` 有 1233 行）→ `../design-gaps.md` G-24。
+`--nav-active-bg`、`--color-tab-active-bg`、`--color-tab-hover-bg`、`--workspace-tab-min-width`、`--workspace-tab-max-width`、`--z-sticky`、`--z-dropdown` 等；`tokens.css` 有一整組**只為側欄與頁籤存在**的 token。b2 已逐條核對：`sidebar.css` 用到 40 個 token，38 個在 `tokens.css`；`--navbar-mobile-height`、`--navbar-mobile-top-height` 兩個要宿主頁面自己定義（`sidebar.css:831`–`:837` 的窄視窗規則用它們）→ `../design-gaps.md` G-24。
 
 ## 鍵盤與焦點
 
@@ -89,5 +89,6 @@ hover／focus／disabled 等元件層狀態**未逐項盤點**——外殼不是
 | :--- | :--- |
 | `account/profile` | 唯一連結 `sidebar.css` 的 b1 畫面 |
 | `account/login`／`register`／`forgot-password`／`reset-password`／`verify-email` | **只載 `sidebar.js`**，用 `redirectIfLoggedIn()`；沒有外殼 |
+| `admin/user-management`、`admin/role-settings`、`dashboard/dashboard`、`task-management/task-list`、`task-new`、`task-detail`（b2 全部視圖） | 連結 `sidebar.css` ＋ `sidebar.js`；除 `dashboard` 外各自在 `<style>` 定義 `--navbar-mobile-height`／`--navbar-mobile-top-height`，`dashboard` 定義在 `dashboard.layout.css:6` → `../design-gaps.md` G-24 |
 
-b2–b4 的 10 個頁面全部連結 `sidebar.css`，待那幾批補。
+b2 的六頁已補上（見上表）；b3、b4 的四頁待那兩批補。

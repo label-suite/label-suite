@@ -56,5 +56,6 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 65% 樣本 |
+| `dashboard/dashboard`（`#param-scenario-project-leader`、`#param-scenario-annotator`） | `dashboard.components.css:235`–`:270` 的 `.progress`，與正典同名；審核覆蓋率那一條有 `role="progressbar"` 與 `aria-value*`（`dashboard.js:213`–`:218`），一般進度條沒有（`:222`） |
 
-b1 的帳號頁一個都沒用。shipped 使用頁面在 b2（`dashboard.js`、`task-detail.panels/annotation-progress`）與 b3（`annotation/annotation-list`、`annotation-workspace`），待那兩批補。
+b1 的帳號頁一個都沒用。b2 已補上（見上表）；`task-detail.panels/annotation-progress` 用的是 `.progress-metric-grid`（`annotation-progress.html:8`），不是進度條。b3（`annotation/annotation-list`、`annotation-workspace`），待那兩批補。

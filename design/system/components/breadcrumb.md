@@ -57,5 +57,6 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 兩層與三層各一 |
+| `task-management/task-detail`（全部 `#tab-*`） | 本頁一行式的 `.breadcrumb`（`task-detail.html:45`–`:47`，markup `:1947`–`:1950`），兩層 |
 
-b1 的帳號頁一個都沒用（它們是登出狀態的單層頁）。shipped 使用頁面在 b2（`task-management/task-detail`）、b3（`annotation/annotation-list`、`annotation-workspace`）、b4（`dataset/dataset-analysis-detail`），待那幾批補。
+b1 的帳號頁一個都沒用（它們是登出狀態的單層頁）。b2 已補上（見上表）。b3（`annotation/annotation-list`、`annotation-workspace`）、b4（`dataset/dataset-analysis-detail`），待那幾批補。

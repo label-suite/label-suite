@@ -64,5 +64,7 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 四塊樣本 |
+| `dashboard/dashboard`（五個 `#param-scenario-*`、`#param-view-skeleton`） | `.metric`（22 處），`dashboard.layout.css:1` `@import` 正典 `metric.css`；骨架期間 `.metric` 裡放 `.skel-metric` |
+| `task-management/task-detail`（`#tab-overview`、`#tab-annotation-progress`、`#tab-work-log`） | `overview.html` 4 處、`annotation-progress.html` 6 處、`work-log.html` 4 處；`task-detail.html:1134` 加了 `.metric strong.speed-by-kind` |
 
-b1 的帳號頁一個都沒用。shipped 使用頁面在 b2（`dashboard`、`task-detail` 的 3 個 panel）與 b4（`dataset-analysis-detail` 及其 3 個 stats partial），待那兩批補。
+b1 的帳號頁一個都沒用。b2 已補上（見上表）。b4（`dataset-analysis-detail` 及其 3 個 stats partial），待那兩批補。

@@ -1,6 +1,6 @@
 # Design Gaps
 
-> 批次 `b1-shared-account` 建立 ｜交付包 commit `b1fd43c`、prototype tree `4cb347d5e720`
+> 批次 `b1-shared-account` 建立、`b2-admin-dashboard-task` 補寫 ｜交付包 commit `b1fd43c` → `eb9a884`、prototype tree `4cb347d5e720`
 
 每一筆四欄齊全：**重現方式**（不截圖）、**受影響範圍**、**依據**（兩邊原文都引出來）、**待決問題**。
 分三類：原型與業務規格差異 ／ 缺少狀態證據 ／ 待重新設計。
@@ -134,6 +134,61 @@
 
 ---
 
+### G-37 b2 的頁面重新定義了已載入的共用按鈕，還有兩套第二按鈕系統
+
+> b2 新增。延伸 G-03／G-33 的同一類現象到 b2；G-33 的裁定不重開。
+
+| 欄 | 內容 |
+| :--- | :--- |
+| **重現方式** | 開 `pages/dashboard/dashboard.html`，Tab 到任一顆 `.btn`：焦點環是一圈寫死的半透明色，不是 `tokens.css` 的焦點 token。再開 `pages/task-management/task-detail.html?tab=member-management`，表格列上的小按鈕是 `.mini-btn`，與正典 `button.css` 的任何 variant 都不同尺寸。 |
+| **受影響範圍** | [Button](components/button.md)、[Tooltip](components/tooltip.md)、[List Toolbar](components/list-toolbar.md)、[Pagination](components/pagination.md)；`dashboard/dashboard`、`task-management/task-detail`、`task-list`、`admin/user-management`、`admin/role-settings` |
+| **依據** | `dashboard.layout.css:211`–`:240` 自建 `.btn` 系統（`.btn-emerald`／`.btn-violet`／`.btn-indigo` 正典沒有），`:235` 焦點環寫死 rgba；`task-detail.html:777`–`:799` 的 `.mini-btn`（29 處），`:799` 同樣寫死 rgba；`role-settings.html:93`–`:94`、`:257`–`:258` 重寫 `.btn-ghost`／`.btn-cta`；`user-management.html:54` 重寫 `.btn-primary`／`.btn-ghost`、`:166`–`:167` 重寫 modal 規則；`task-list.html:160`–`:166` 已載 `list-page.css` 又重寫工具列；`task-config.css:293` 的 tooltip 觸發鈕焦點環也是寫死 rgba。 |
+| **待決問題** | `.mini-btn` 與 dashboard 的彩色按鈕要收進正典成為 variant，還是改用既有 variant？（維護者決定；本 skill 不作答。） |
+
+### G-39 三個任務管理頁的 toast 不照 UXC-07，`role-settings` 的位置與規格不同
+
+> b2 新增。
+
+| 欄 | 內容 |
+| :--- | :--- |
+| **重現方式** | 開 `pages/task-management/task-list.html?unauthorized=1`：錯誤 toast 3 秒後自己消失。開 `pages/admin/role-settings.html`，改一格後儲存：成功 toast 出現在**畫面上方置中**。 |
+| **受影響範圍** | [Toast](components/toast.md)、[`ux-conventions.md`](ux-conventions.md) UXC-07；`task-management/task-list`、`task-new`、`task-detail`、`admin/role-settings` |
+| **依據** | 時長：`task-list.html:599`–`:606` 的 `showToast` 一律 3000 ms，`task-new.html:858`–`:865` 一律 3500 ms，`task-detail.html:11255` 一律 2400 ms——三者都不分類型，錯誤也會自動消失；UXC-07 要求 error 為 0（只能手動關，`components-showcase.html:1500`）。位置：`role-settings.html:213`「`/* ── Toast (top-center, UXC-07 / MASTER §Toast) */`」、`:216` `top: 24px` vs [`06-admin/02-role-settings.mdx`](../../docs/specs/06-admin/02-role-settings.mdx) 第 343 行「通知出現在頁面**右下角**，**依類型決定多久自動消失**」與驗收標準第 663–664 行「通知出現在右下角」。 |
+| **待決問題** | 一、三個任務管理頁的 toast 是否要改成 UXC-07 的分級時長？二、`role-settings` 的 toast 位置以規格的右下角為準，還是規格要改成上方置中？（規格屬維護者。） |
+
+### G-41 卡片有四份實作，沒有共用檔
+
+> b2 新增。
+
+| 欄 | 內容 |
+| :--- | :--- |
+| **重現方式** | 在 `dashboard/dashboard`、`task-management/task-detail`、`task-management/task-new` 與 b1 的 `account/profile` 各看一張卡片：外觀相同（邊框、圓角、白底、內距），但 class 分別是 `.panel`、`.panel`、`.form-card`、`.section-card`，各寫在自己的檔案裡。 |
+| **受影響範圍** | [Card](components/card.md)；上列四頁 |
+| **依據** | `dashboard.layout.css:171`–`:180`（註解自稱 MASTER §Cards）、`task-detail.html:91`–`:95`、`task-new.html:51`–`:52`、`account/profile.html` 的 `.section-card`。`pages/shared/` 底下沒有卡片的 CSS。 |
+| **待決問題** | 要不要抽成 `pages/shared/card.css`、以哪一份為準？ |
+
+### G-42 `task-detail` 重新定義了 Toggle Switch，與同頁載入的正典不同
+
+> b2 新增。
+
+| 欄 | 內容 |
+| :--- | :--- |
+| **重現方式** | 開 `pages/task-management/task-detail.html?tab=settings`，再開 `pages/task-management/task-new.html` 第二步：兩邊的開關一個 42×24、開啟時是 CTA 色，另一個 40×22、開啟時是主色。 |
+| **受影響範圍** | [Toggle Switch](components/toggle-switch.md)；`task-management/task-detail#tab-settings`、`task-new#state-step2` |
+| **依據** | `task-detail.html:306`–`:332` 定義 `.toggle-switch`（42×24，`--color-cta`）；同頁也載入 `task-config.css`，其 `:242`–`:247` 與 `components-showcase.html:331`–`:336` 逐字相同（40×22，`--color-primary`）。頁內 `<style>` 在後，蓋過正典。 |
+| **待決問題** | 設定分頁的開關以哪一份為準？ |
+
+### G-45 刪除任務的確認視窗可以點遮罩關閉，與 UXC-10 相反，但規格要它這樣
+
+> b2 新增。
+
+| 欄 | 內容 |
+| :--- | :--- |
+| **重現方式** | 開 `pages/task-management/task-list.html`，叫出刪除確認，點視窗外面：視窗關閉。再開 `pages/admin/user-management.html`，叫出停用確認，點視窗外面：視窗不關。 |
+| **受影響範圍** | [Modal](components/modal.md)、[`ux-conventions.md`](ux-conventions.md) UXC-10；`task-management/task-list#sim-delete-error` |
+| **依據** | `task-list.html:1197`–`:1199` 點遮罩即關 vs `user-management.html:1357`「`/* UXC-10: a destructive confirmation must not dismiss on overlay click */`」。規格站在 `task-list` 那邊：[`03-task-management/01-task-list.mdx`](../../docs/specs/03-task-management/01-task-list.mdx) §刪除任務 第 5 條「點視窗外面，或按 Esc → 視窗關閉」。 |
+| **待決問題** | UXC-10 的「點遮罩不關」要不要適用到刪除任務？若要，規格那一條要改（屬維護者）；若不要，UXC-10 要寫明例外。 |
+
 ## 二、缺少狀態證據
 
 ### G-05 焦點樣式幾乎全面缺席
@@ -172,6 +227,8 @@
 | **依據** | `components-showcase.html:140`–`:144` 列出正典區塊涵蓋的 15 個 `§`，這五個都不在內。`account/profile` 經由 `sidebar.css:1` 的 `@import url("./empty-state.css")` 拿到空狀態樣式，但 `profile.html` 全檔 `empty-state` 出現 **0 次**。 |
 | **待決問題** | 要不要把這五個補進 `components-showcase.html`？那會動到 `design/prototype/`，屬**畫面修正**，要走 Ready gate。在那之前，這五份元件規格的「可重現樣本」欄只能指向 b2–b4 的畫面。 |
 
+**b2 補上**：Empty State、Content Tabs、Modal、List Toolbar、Data Table 在 b2 都有了可重現的樣本，各元件檔的 §可重現樣本 已補。
+
 ### G-31 三頁的送出中狀態沒有被收為視圖
 
 | 欄 | 內容 |
@@ -181,6 +238,17 @@
 | **依據** | 交付包 `manifest.json` 裡這三頁的視圖只有 `state-default`／`state-field-error`／`state-submitted`／`proto-*`／`sim-*`；只有 `account/login` 有 `#state-submitting`。但四頁都定義了 `.spinner`（`login.html:328` 等）。 |
 | **待決問題** | 要不要在下一次重跑 `design-handoff` 時補上這三個視圖？（屬交付包的事，不是本 skill 能改的。） |
 
+### G-40 b2 有一個可重現的畫面與數個疊加層沒有被收為視圖
+
+> b2 新增。同 G-31 的性質：屬交付包，不是本 skill 能改的。
+
+| 欄 | 內容 |
+| :--- | :--- |
+| **重現方式** | 開 `pages/task-management/task-new.html`，第一到第三步填妥後按「下一步」：出現第四步「標記說明」。交付包只有 `#state-step1`～`#state-step3`。 |
+| **受影響範圍** | [Step Indicator](components/step-indicator.md)、[Modal](components/modal.md)、[Skeleton](components/skeleton.md)；`task-management/task-new`、`task-detail`、`admin/user-management`、`admin/role-settings` |
+| **依據** | `task-new.html:430` 的 `step4Panel`，步驟條畫了四格（`:226`–`:245`）。同樣找得到但沒有視圖 ID 的：`task-new` 的 `taxonomyDeleteModal`（`:529`）與頂端錯誤橫幅（`:220`）；`task-detail` 的載入骨架（`:1964`–`:1975`）與 `taskNotFound`（`:1979`）；`user-management` 的 `editModal`（`:622`）與異動紀錄抽屜（`:709`）；`role-settings` 的 `#dirtyModal`（`:958`）、異動紀錄抽屜（`:933`）與 `storedInvalidBanner`（`:383`）。 |
+| **待決問題** | 要不要在下一次重跑 `design-handoff` 時補上這些視圖？本 skill 不替它們取 ID。 |
+
 ### G-36 五條 UX 約定在本批次沒有證據
 
 | 欄 | 內容 |
@@ -189,6 +257,8 @@
 | **受影響範圍** | [`ux-conventions.md`](ux-conventions.md) |
 | **依據** | 引用位置全在別批：UXC-03 → `admin/role-settings.html:1398`、`:1416`，`annotation-workspace.config.js:1980`、`:2032`；UXC-04 → `annotation-workspace.config.js:657`、`:3058`；UXC-05 → 同 `:657`；UXC-09 → `annotation-list.html:1949`；UXC-10 → `task-config.engine.js:22`、`:6183`，`task-new.html:528`，`user-management.html:1357`。 |
 | **待決問題** | 無（由 b2／b3 補完即可）。登記在此是為了讓 `ux-conventions.md` 的空缺有下落。 |
+
+**b2 補上**：UXC-03、09、10 已寫進 [`ux-conventions.md`](ux-conventions.md)；UXC-04、05 待 b3。
 
 ---
 
@@ -203,6 +273,8 @@
 ### G-10 同一個元件在出貨頁面有多份獨立實作
 
 [Toast](components/toast.md)：`#toast` 在 8 個頁面各有一份（b2 五個、b3 一個、b4 兩個），加上 `account/profile` 自己的 `.toast*`。[Skeleton](components/skeleton.md)：`dashboard.components.css`、`dashboard.js`、`task-detail.html`、`shared/sidebar.js`、`shared/modal.css` 各自提到。待 b2–b4 逐一核對是否與正典相同。
+
+**b2 核對**：Skeleton 的 `dashboard.components.css:348`–`:386`（shimmer）與 `task-detail.html:67`–`:83`（pulse）都是正典的逐字複製；Toast 的 b2 五份裡兩份（`admin/*`）照 UXC-07、三份（`task-management/*`）不照 → G-39。另找到：Toggle Switch 在 `task-detail` 被重新定義（G-42）、卡片四份（G-41）、異動紀錄抽屜兩份（G-38）、Badge 在 b2 六頁都各自重寫（`user-management.html:101`、`role-settings.html:316`、`task-list.html:117`、`task-detail.html:117`、`dashboard.layout.css:241`）。b3、b4 的部分待那兩批。
 
 ### G-11 §Chip 其實是兩個元件
 
@@ -232,6 +304,8 @@ showcase 說明寫「profile 64/80px」（`:1356`），它的 CSS 是 80px（`:9
 
 `shared/content-tabs.css` 不提供 `role="tablist"`／`role="tab"`／`aria-selected`，也沒有方向鍵巡覽；且窄視窗下 `scrollbar-width: none`（`:40`）隱藏捲軸，滑鼠使用者沒有「還有更多分頁」的提示。
 
+**b2 核對**：三個使用頁面**自己補上了**語意——`admin/user-management`（`user-management.html:377`–`:379`）與 `admin/role-settings`（`role-settings.html:412`–`:414`）在 `<a>` 上加 `role="tablist"`／`role="tab"`／`aria-selected`；`task-detail` 另有方向鍵巡覽（`task-detail.html:11721`–`:11732`）。共用的 `content-tabs.css` 本身仍不提供，缺口不變。
+
 ### G-23 覆蓋層有兩套焦點處理
 
 [Modal](components/modal.md) 用共用的 `shared/modal-focus.js`（`:1`–`:88`）；[App Shell](components/app-shell.md) 的 `#shortcutHelpModal`（`sidebar.js:2108`）與 `#notificationDropdown`（`:2259`）整套自建，`sidebar.js` 全檔 `LabelSuiteModalFocus` 出現 **0 次**。另外 `modal.css`／`modal-focus.js` 都不保證 `role="dialog"`／`aria-modal`／`aria-labelledby`，也沒有點遮罩關閉。
@@ -239,6 +313,8 @@ showcase 說明寫「profile 64/80px」（`:1356`），它的 CSS 是 80px（`:9
 ### G-24 側欄的 token 清單未逐條核對
 
 `sidebar.css` 有 1233 行，`tokens.css` 為它與工作頁籤準備了 `--nav-active-bg`、`--color-tab-active-bg`、`--color-tab-hover-bg`、`--workspace-tab-min-width`、`--workspace-tab-max-width`（五個都確認存在）。完整對照留給 b2——那時 10 個使用頁面都會進來。
+
+**b2 已逐條核對**：`sidebar.css` 用到 40 個 `--*` token，38 個在 `tokens.css`。另外兩個 `--navbar-mobile-height`、`--navbar-mobile-top-height`（`sidebar.css:831`–`:837`，窄視窗規則）**不在 `tokens.css`**，由宿主頁面自己定義：b2 六頁裡五頁寫在頁內 `<style>`，`dashboard` 寫在 `dashboard.layout.css:6`；b1 的 `account/profile` 也有。`annotation-workspace` 沒有定義，待 b3 核對它的窄視窗版面。`sidebar.css` 另有 19 處寫死 hex、12 處寫死 rgba → G-02。`components/app-shell.md` 提到的 `--z-dropdown` 在 `sidebar.css` 沒有用到（只用 `--z-sticky`）。
 
 ### G-25 `MASTER.md` 的 terminology note 還不存在
 
@@ -259,6 +335,24 @@ showcase 說明寫「profile 64/80px」（`:1356`），它的 CSS 是 80px（`:9
 ### G-34 UXC-01 與 UXC-02 的內容未知
 
 全 prototype 42 處 UXC 引用只覆蓋 03–11。維護者 2026-11-17 裁定沿用編號、兩格留空。原始 MASTER.md 屬**參照不是依據**（`design-handoff` 鐵律），所以本 repo 無從補。
+
+### G-38 異動紀錄抽屜在兩個管理頁各寫一份，沒有焦點陷阱
+
+> b2 新增。
+
+`admin/user-management`（`user-management.html:273`、`:709`–`:727`）與 `admin/role-settings`（`role-settings.html:277`、`:933`–`:951`）各有一份 `.audit-drawer`，CSS 與 markup 幾乎相同，沒有共用檔。兩份都是 `role="complementary"`，開啟時焦點不被留在抽屜裡（兩頁 `modal-focus.js` 0 次），Esc 可關（`user-management.html:1366`、`role-settings.html:1410`）。
+
+### G-43 b2 的 modal 有一半沒有接 `modal-focus.js`
+
+> b2 新增。延伸 G-23。
+
+`admin/user-management`、`admin/role-settings`、`task-management/task-new` 三頁全檔 `modal-focus`／`ModalFocus` 0 次；`task-detail` 八個 modal 只有四個接上（`:6054`、`:7799`、`:10921`、`:11289`）。只有 `task-list` 全部接上（`:711`、`:721`）。沒接的那些開啟後焦點不進視窗、關閉後不回觸發鈕，Esc 由各頁自己的 `keydown` 處理。
+
+### G-44 Step Indicator 的目前步驟沒有非視覺標示
+
+> b2 新增。
+
+`task-new.html:226`–`:245` 每一步是 `<div class="step-item">`，目前步驟只靠 `.active` 換色，沒有 `aria-current="step"`；完成的步驟也只靠 `.done` 換色。螢幕閱讀器讀不出現在第幾步、哪幾步已完成。
 
 ---
 

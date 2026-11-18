@@ -53,4 +53,4 @@
 | :--- | :--- |
 | `components-showcase#state-default` | 三個樣本 |
 
-shipped 使用頁面在 b2（`task-management/task-detail`）與 b3（`annotation/annotation-list`），待那兩批補。
+b2 核對後**沒有**：`task-detail` 全檔與六個 partial 以 `status-pill` 搜尋都是 0 次，任務狀態用的是本頁的 `.badge`（[Badge](badge.md)）。b3（`annotation/annotation-list`），待那兩批補。

@@ -73,5 +73,7 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 兩類全部樣本 |
+| `task-management/task-new#state-step2` | `.task-type-chip`（`task-config.css:556`–`:559`），引擎依情境發 `role="checkbox"` 或 `"radio"` 與 `aria-checked`（`task-config.engine.js:6235`–`:6239`） |
+| `task-management/task-detail#tab-settings` | 同一份，`settings.html:74`、`:78` |
 
-b1 的帳號頁一個都沒用。shipped 使用頁面全在 b2（`task-management/task-new`、`task-detail.panels/settings`），待 b2 補。
+b1 的帳號頁一個都沒用。b2 已補上（見上表）。

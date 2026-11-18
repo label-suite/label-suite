@@ -62,5 +62,9 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 全部三群的樣本 |
+| `admin/user-management#state-default`、`admin/role-settings#state-default` | 各自在 `<style>` 重寫 `.badge`（`user-management.html:101`、`role-settings.html:316`） |
+| `dashboard/dashboard`（`#param-scenario-super-admin-data`、`#param-scenario-reviewer`） | `dashboard.layout.css:241`、`:272`、`:281` 的 `.badge` 與 `.badge-error`／`.badge-draft`；任務型別配色來自 `shared/task-type-badge.css` |
+| `task-management/task-list#state-default` | 本頁 `<style>` 重寫（`task-list.html:117`–`:126`），型別配色同上 |
+| `task-management/task-detail`（`#tab-overview`、`#param-status`） | 本頁 `<style>` 重寫（`task-detail.html:117`–`:132`） |
 
-b1 的帳號頁一個都沒用。shipped 使用頁面在 b2（`admin/user-management`、`task-management/task-detail.panels/overview`、`dashboard`）、b3（`annotation/annotation-list`）與 b4（`dataset/dataset-analysis-detail` 及其 7 個 partial），待那幾批補。
+b1 的帳號頁一個都沒用。b2 已補上（見上表），**五頁都是各自重寫，沒有一頁直接用正典**。b3（`annotation/annotation-list`）與 b4（`dataset/dataset-analysis-detail` 及其 7 個 partial），待那幾批補。

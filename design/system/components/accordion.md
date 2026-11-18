@@ -62,5 +62,7 @@ header 是 `<div role="button" tabindex="0">` 而不是 `<button>`，原生的 E
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 兩個靜態面板 |
+| `task-management/task-new#state-step2` | 輸出設定的 `.output-accordion`（`task-config.css:463`–`:470`）。標頭是原生 `<button>`，帶 `aria-expanded` 與 `aria-controls`（`task-config.engine.js:633`–`:676`），**比正典的 `div[role=button]` 完整** |
+| `task-management/task-detail#tab-settings`（及 `#param-section-labeling`） | 同一份 `task-config.css`／`task-config.engine.js` |
 
-b1 的帳號頁一個都沒用。shipped 使用頁面全在 b2（`task-management/task-config.css`、`task-config.engine.js`），待 b2 補——也待 b2 確認那一份的鍵盤行為與正典是否一致。
+b1 的帳號頁一個都沒用。b2 已補上（見上表）：出貨版的鍵盤靠原生 `<button>`，與正典不同一份。

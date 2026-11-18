@@ -71,6 +71,12 @@
 | :--- | :--- |
 | `components-showcase#state-default` | 全部七個加兩個狀態 |
 | `account/profile`（`state-default`） | `.btn-primary`（`profile.html:815`） |
+| `admin/role-settings`（`#state-default`、`#state-dirty`） | `.btn-ghost`／`.btn-cta` **本頁重新定義**（`role-settings.html:93`–`:94`、`:257`–`:258`）；`.btn-danger`（`:972`） |
+| `admin/user-management`（`#state-default`、`#toast-action`） | `.btn-primary`／`.btn-ghost` 本頁重新定義（`user-management.html:54`）；`.btn-danger`（`:696`） |
+| `dashboard/dashboard`（全部視圖） | 本頁的 `.btn` 系統（`dashboard.layout.css:211`–`:240`）：`.btn-primary`、`.btn-emerald`／`.btn-violet`／`.btn-indigo`、`.btn-secondary.slim` → `../design-gaps.md` G-37 |
+| `task-management/task-list#sim-delete-error` | 正典 `.btn-secondary` ＋ `.btn-danger`（`task-list.html:307`–`:315`） |
+| `task-management/task-new`（全部視圖） | 正典 `button.css` 的 variant |
+| `task-management/task-detail`（全部視圖） | 正典 variant ＋ 本頁的 `.mini-btn`（`task-detail.html:777`–`:799`，29 處）→ G-37 |
 
 五個登出狀態的帳號頁**一個正典 variant 都沒用**，它們自己寫 `.login-btn`／`.submit-btn`／`.sso-btn`／`.lang-toggle`／`.eye-toggle`／`.proto-btn` → `../design-gaps.md` G-03。
-b2–b4 的使用頁面待那幾批補。
+b2 已補上（見上表）；b3、b4 待那兩批補。

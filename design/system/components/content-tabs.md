@@ -51,6 +51,8 @@ Tab 可達（原生 `<a>`／`<button>`），但**沒有焦點樣式**，也沒�
 
 本批次**沒有可重現的視圖**：`components-showcase.html` 不含 content tabs，b1 的九個畫面也沒有一個用它。最近的樣本在 b2 的 `task-management/task-detail`（六個分頁）。→ `../design-gaps.md` G-21
 
+**b2 補上**：`task-management/task-detail#tab-overview`（按鈕版，含方向鍵）、`admin/user-management#state-default`（連結版）。
+
 ## shadcn 對照
 
 候選原語 `Tabs`（`TabsList`、`TabsTrigger`、`TabsContent`）。
@@ -64,5 +66,7 @@ Tab 可達（原生 `<a>`／`<button>`），但**沒有焦點樣式**，也沒�
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | 無（b1） | — |
+| `admin/user-management#state-default`、`admin/role-settings#state-default` | `.admin-tabs`（`user-management.html:377`–`:379`、`role-settings.html:412`–`:414`）；兩個分頁是 `<a>` 換頁，**頁面自己補了** `role="tablist"`／`role="tab"`／`aria-selected`，沒有方向鍵 |
+| `task-management/task-detail`（全部 `#tab-*`） | `.admin-tabs`（`task-detail.html:1955`–`:1962`），按鈕＋`role="tab"`，初始化前 `aria-disabled`；**方向鍵巡覽在本頁**（`:11721`–`:11732`）→ `../design-gaps.md` G-22 |
 
-shipped 使用頁面在 b2（`admin/user-management`、`admin/role-settings`、`task-management/task-detail`）、b3（`annotation/annotation-workspace`，用 `--panel`）、b4（`dataset/dataset-analysis-detail`），待那幾批補。`shared/sidebar.css` 也提到它，待 [app-shell](app-shell.md) 一併確認。
+b2 已補上（見上表）。b3（`annotation/annotation-workspace`，用 `--panel`）、b4（`dataset/dataset-analysis-detail`），待那幾批補。`shared/sidebar.css` 也提到它，待 [app-shell](app-shell.md) 一併確認。

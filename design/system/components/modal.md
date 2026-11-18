@@ -62,6 +62,8 @@
 
 本批次**沒有可重現的視圖**：showcase 不含 modal，b1 的九個畫面也沒有一個用它。最近的樣本在 b2 的 `task-management/task-new#modal-dataset-preview` 與 `admin/user-management#modal-invite`。→ `../design-gaps.md` G-21
 
+**b2 補上**：上面兩個加 `task-management/task-new#modal-leave-confirm`。三者都**沒有**接 `modal-focus.js`；要看完整的焦點行為，用 `task-management/task-list#sim-delete-error` 的刪除確認。
+
 `shared/app-shell` 的 `#modal-shortcut` 與 `#modal-notification` 兩個視圖**不是這個元件**，它們整套寫在 `sidebar.js` 裡，見 [app-shell](app-shell.md)。
 
 ## shadcn 對照
@@ -77,5 +79,10 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | 無（b1） | — |
+| `task-management/task-list#sim-delete-error` | `#deleteTaskModal`（`task-list.html:307`–`:315`）；**有接** `modal-focus.js`（`:711`、`:721`） |
+| `task-management/task-new`（`#modal-dataset-preview`、`#modal-leave-confirm`） | `datasetPreviewModal`（`.modal-xl`，`task-new.html:541`）、`leaveModal`（`:517`）、`taxonomyDeleteModal`（`:529`）；**沒有接** `modal-focus.js` |
+| `task-management/task-detail`（`#tab-*`、`#param-status`、`#param-section-labeling`） | 八個 modal（`task-detail.html:1995`–`:2096`、`annotation-results.html:138`），只有四個接了 `modal-focus.js` → `../design-gaps.md` G-43 |
+| `admin/user-management`（`#modal-invite`、`#toast-action`） | `addModal`（`:569`）、`editModal`（`:622`）、`disableModal`（`:673`），帶 `role="dialog"`／`aria-modal`；**沒有接** `modal-focus.js` |
+| `admin/role-settings`（離開確認，交付包未列） | `#dirtyModal`（`role-settings.html:958`）；**沒有接** `modal-focus.js` |
 
-shipped 使用頁面在 b2（`task-management/task-list`、`task-new`、`task-detail`、`admin/user-management`、`admin/role-settings`）與 b3（`annotation/annotation-workspace`），待那兩批補——也待那兩批核對它們是否真的呼叫了 `modal-focus.js`。
+b2 已補上並核對（見上表）：五頁裡只有 `task-list` 全部接上 → G-43。b3（`annotation/annotation-workspace`）待 b3 補。

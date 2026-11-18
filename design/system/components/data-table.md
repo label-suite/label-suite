@@ -50,6 +50,8 @@
 
 本批次**沒有可重現的視圖**：b1 的九個畫面都沒有表格。最近的樣本在 b2 的 `task-management/task-list#state-default`。→ `../design-gaps.md` G-21
 
+**b2 補上**：`task-management/task-list#state-default`、`admin/role-settings#state-default`（可鍵盤捲動的矩陣）、`task-management/task-detail#tab-member-management`。
+
 ## shadcn 對照
 
 候選原語 `Table`（`TableHeader`、`TableBody`、`TableRow`、`TableHead`、`TableCell`、`TableCaption`），通常搭 TanStack Table。
@@ -63,5 +65,9 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | 無（b1） | — |
+| `task-management/task-list`（`#state-default`、`#role-task-role`） | `.task-table`，本頁 `<style>` 又定義一次（`task-list.html:79`–`:81`） |
+| `admin/user-management#state-default` | 本頁的表格（`user-management.html:416`–`:418`） |
+| `admin/role-settings#state-default` | `.matrix-table`（`role-settings.html:104`），sticky 首欄與表頭（`:127`、`:156`），外層 `role="region" tabindex="0"`——**鍵盤可捲**，與 G-27 相反 |
+| `task-management/task-detail`（`#tab-member-management`、`#tab-annotation-progress`、`#tab-annotation-results`、`#tab-work-log`） | `.member-table`（`member-management.html:19`；`annotation-progress.html:32`；`annotation-results.html:48`；`work-log.html:38`） |
 
-shipped 使用頁面在 b2（`task-management/task-list`、`admin/user-management`、`task-detail` 的多個 panel）、b3（`annotation/annotation-list`）、b4（`dataset/dataset-analysis-list`），待那幾批補。
+b2 已補上（見上表）。b3（`annotation/annotation-list`）、b4（`dataset/dataset-analysis-list`），待那幾批補。

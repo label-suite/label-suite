@@ -72,6 +72,8 @@
 | `account/forgot-password`（`state-default`） | `.field-error` |
 | `account/reset-password`（`proto-valid`、`state-mismatch`） | `.field-error` |
 | `account/profile`（`state-default`） | `.field-hint`、`.field-error` |
+| `admin/user-management`（`#state-default`、`#modal-invite`） | `.input`（`user-management.html:1611`） |
+| `task-management/task-new`（`#state-step1`、`#state-step3`） | **本頁的 `.input-text`**（`task-new.html:58`），不是正典 → `../design-gaps.md` G-04 |
 
 帳號頁用的是各自 `<style>` 裡的 `.field-hint`／`.field-error`，不是載入 `input.css`（那五頁一個 `<link>` 都沒有）→ `../design-gaps.md` G-03。
 b2–b4 的使用頁面待那幾批補。
