@@ -115,6 +115,6 @@ Label Suite 是研究團隊用的 NLP 標記平台：以設定驅動的流程走
 ## 未同步
 
 - **token 沒有略過。** `tokens.css` 的每一個變數都收進了 `tokens.json`，值照抄，沒有重新調色。
-- **元件的頁面別名。** 帳號頁不載入 `tokens.css`，自己定義 `--color-card`、`--color-border-focus`、`--color-link`；`components/bundle.css` 把它們綁回 `--color-white`、`--color-primary`、`--color-primary`，兩種主題都一致。
+- **元件的頁面別名。** 帳號頁不載入 `tokens.css`，自己定義 `--color-card`、`--color-border-focus`、`--color-link`；`components/bundle.css` 把它們綁回 `--color-white`、`--color-primary`、`--color-primary-strong`（連結是文字，鐵律 2）。帳號頁的 `--color-link` 淺色值已是 `--color-primary-strong` 的 `#4F46E5`；深色值仍寫死 `#818CF8`（等於深色的 `--color-primary`），bundle 在深色主題給的是 `--color-primary-strong` 的 `#A5B4FC`，兩者都過 4.5:1。
 - **寫死的色值。** 原型裡仍有不走 token 的色值（設計落差 G-02），`bundle.css` 照抄，沒有改：任務型別 badge 的六組色、`.btn-language` 的 hover、原型狀態切換列（Proto Toggle Bar）、輸入框焦點環的 `color-mix()` 等。新元件不要沿用。
 - **logo 檔案。** SVG 無法引用 CSS 變數，所以 logo 檔保留寫死色值；`banner.svg` 與 `social-preview.svg` 的副標灰跟著 `--color-ink-muted` 改成 `#5E6B7F`。深色主題專用的 logo 還沒有做。

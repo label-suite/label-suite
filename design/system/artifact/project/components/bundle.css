@@ -13,7 +13,7 @@
 :root {
   --color-card: var(--color-white);
   --color-border-focus: var(--color-primary);
-  --color-link: var(--color-primary);
+  --color-link: var(--color-primary-strong);
 }
 
 /* ═══ Source: design/prototype/assets/tokens.css:235-279 — semantic type rules (element rules the compiled tokens.css does not emit) ═══ */
