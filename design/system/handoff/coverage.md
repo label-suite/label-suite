@@ -1,9 +1,9 @@
 # 覆蓋核對
 
-交付包版本：commit `b1fd43c84031f254b82e195e9659ba41dfa3a41a`，prototype tree `4cb347d5e720203418701a0a4a6b521cc117c64e`。
+交付包版本：commit `eb9a88434fc615082c8dcba9ecec6e9fce2f24af`，prototype tree `815b85344df678f7ae66f1a2ad9b64a32edca3c4`。
 產生依據：[`design-handoff` skill](../../../.claude/skills/design-handoff/SKILL.md) 的步驟 4。工作源頭是 [Issue #248](https://github.com/label-suite/label-suite/issues/248)。
 
-**本次是第三版**（第二次重跑）。差異見 §九。
+**本次是第四版**（第三次重跑）。差異見 §九。
 
 | 項目 | 數 |
 | :--- | ---: |
@@ -212,7 +212,40 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 ## 九、重跑紀錄
 
-### 第二次（本版）
+### 第三次（本版）
+
+[Issue #403](https://github.com/label-suite/label-suite/issues/403) 撤掉儀表板的「三條最短成功路徑」區塊（畫面 `8eadc38`、規格 `35b7533`），這是交付包產生以來**畫面與規格第一次真的變了**。
+
+| 欄位 | 第三版 | 本版 | |
+| :--- | :--- | :--- | :--- |
+| `commit` | `b1fd43c84031` | `eb9a88434fc6` | 必然變 |
+| `prototypeTree` | `4cb347d5e720` | `815b85344df6` | **變了** |
+| `specsTree` | `a4b0e889a5a3` | `63b7a51d2e3b` | **變了** |
+| `navigationBlob` | `c64128a7e7a5` | `c64128a7e7a5` | **沒變** |
+
+變動的檔共 7 個：`dashboard.html`、`dashboard.components.css`、`dashboard.i18n.js`，與規格 `02-dashboard/01-dashboard.mdx`、`02-dashboard/index.mdx`、`03-task-management/01-task-list.mdx`、`open-questions.mdx`。
+
+| 類 | 數 | 內容 |
+| :--- | ---: | :--- |
+| 新增 | 0 | 被撤掉的區塊**從來沒有自己的視圖**——它在 `state-default` 等五種版面裡一直顯示，不是一個要叫出來的狀態 |
+| 移除 | 0 | 同上 |
+| `params` 欄 | 0 | 七個檔的 diff 裡沒有任何 `.get(`、`<script>`、`<link>`、`src=`、`href=` 的增刪，`loads` 與 `params` 照舊 |
+| 受影響 | 14 | `dashboard/dashboard` 全部 8 個視圖（`evidence` 指到 `dashboard.html`，`spec` 指到 02-01），`task-management/task-list` 的 6 個視圖（`spec` 指到 03-01，那一頁只改了兩個行號引用與變更紀錄一列，**條文一字未改**） |
+
+受影響視圖指到的規格錨點逐一重比過標題 slug，**14 個全部還在**；被刪掉的標題 `### 三條最短成功路徑` 沒有任何視圖連到它。
+
+### 應重驗的批次（第三次）
+
+| 批次 | 依 `evidence`／`spec` 算出的 | 該批的參數驅動視圖 |
+| :--- | ---: | ---: |
+| `b1-shared-account` | 0 | 0（`navigationBlob` 沒變） |
+| `b2-admin-dashboard-task` | 14 | 0（同上） |
+| `b3-annotation-review` | 0 | 0 |
+| `b4-dataset-sweep` | 0 | 0 |
+
+`b2` 本來就還沒做，所以這 14 個視圖的重驗**併入 `b2` 的第一次執行**；`b1` 的成果不受影響。
+
+### 第二次
 
 [PR #400](https://github.com/label-suite/label-suite/pull/400) 把 `/task-management/task-detail` 的 16 個畫面狀態參數與工作區的 6 個補進 §網址參數，`navigationBlob` 再次改變。
 

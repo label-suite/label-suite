@@ -63,5 +63,6 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 差異軌、停在爭議中 |
+| `annotation/annotation-workspace`（`#role-reviewer`、`#state-review-decision`） | `annotation-workspace.html:445`–`:466` 的 11 條規則與 `components-showcase.html:653`–`:717` **逐字相同**；`annotation-workspace.config.js:5506` 起算繪，節點帶 `aria-current="step"`（`:5516`） |
 
-shipped 使用頁面在 b3（`annotation/annotation-workspace`，CSS 自稱 verbatim 複製；`annotation-workspace.config.js` 負責算狀態），待 b3 補並核對那份 verbatim 是否真的逐字相同。
+b3 已補上並核對（見上表）：那份 verbatim 屬實。

@@ -62,5 +62,8 @@ header 是 `<div role="button" tabindex="0">` 而不是 `<button>`，原生的 E
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 兩個靜態面板 |
+| `task-management/task-new#state-step2` | 輸出設定的 `.output-accordion`（`task-config.css:463`–`:470`）。標頭是原生 `<button>`，帶 `aria-expanded` 與 `aria-controls`（`task-config.engine.js:633`–`:676`），**比正典的 `div[role=button]` 完整** |
+| `task-management/task-detail#tab-settings`（及 `#param-section-labeling`） | 同一份 `task-config.css`／`task-config.engine.js` |
+| `dataset/dataset-analysis-detail`（`#state-quality-*`） | 替代指標的 `.alt-toggle-btn`／`.alt-metrics-body`（`dataset-analysis-detail.html:109`–`:114`）：原生 `<button>`，帶 `aria-expanded`／`aria-controls`（例如 `quality-single_label.html:24`），收合時 body 設 `aria-hidden`（`wireAltToggle`，`:1919`） |
 
-b1 的帳號頁一個都沒用。shipped 使用頁面全在 b2（`task-management/task-config.css`、`task-config.engine.js`），待 b2 補——也待 b2 確認那一份的鍵盤行為與正典是否一致。
+b1 的帳號頁一個都沒用。b2 已補上（見上表）：出貨版的鍵盤靠原生 `<button>`，與正典不同一份。b4 已補上（見上表），同樣是原生 `<button>`，又一份。

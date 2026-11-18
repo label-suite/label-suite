@@ -54,6 +54,8 @@
 
 本批次**沒有可重現的視圖**：showcase 不含工具列，b1 的九個畫面也沒有一個載入 `list-page.css`。最近的樣本在 b2 的 `task-management/task-list#state-filtered-empty`。→ `../design-gaps.md` G-21
 
+**b2 補上**：`task-management/task-list#state-default` 與 `#state-filtered-empty`（`list-page.css` 加本頁重寫）。
+
 ## shadcn 對照
 
 沒有單一對應原語；接近 `Input` ＋ `Select` ＋ `Button` 的組合，shadcn 的 data-table 範例裡有類似的工具列但不是發行的元件。
@@ -67,5 +69,9 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | 無（b1） | — |
+| `task-management/task-list`（`#state-default`、`#state-filtered-empty`） | 工具列 markup `task-list.html:224`–`:256`，已載 `list-page.css` 又在 `<style>` 重寫（`:160`–`:166`） |
+| `admin/user-management#state-default` | 本頁的搜尋與篩選（`user-management.html:61`–`:81`、`:252`），不是 `list-page.css` |
+| `annotation/annotation-list`（`#state-default`、`#state-filtered-empty`） | `.toolbar role="search"`（`annotation-list.html:502`）：`.filter-select`、`.search-input`、`.clear-btn`；篩選狀態放網址（`?q=`、`?status=`，UXC-11，`:1078`） |
+| `dataset/dataset-analysis-list`（`#state-default`、`#state-filtered-empty`） | `list-page.css` 的 `.toolbar role="search"`（`dataset-analysis-list.html:246`）：兩個 `.filter-select`（`:248`、`:251`）、`.clear-btn`（`:254`）、`.search-input`；篩選寫進網址（`syncUrl`，`dataset-analysis-list.js:71`） |
 
-shipped 使用頁面在 b2（`task-management/task-list`、`admin/user-management`）、b3（`annotation/annotation-list`）、b4（`dataset/dataset-analysis-list`），待那幾批補。表格與分頁的部分見 [Data Table](data-table.md) 與 [Pagination](pagination.md)。
+b2 已補上（見上表）。b3 已補上（見上表）。b4 已補上（見上表）。表格與分頁的部分見 [Data Table](data-table.md) 與 [Pagination](pagination.md)。

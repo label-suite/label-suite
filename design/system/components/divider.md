@@ -57,8 +57,9 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 三種形態 |
+| `dataset/dataset-analysis-detail`（`#state-stats-single-dim`、`#state-stats-multi-dim`） | **不是正典的 `.divider-hr`**：本頁 `hr.panel-divider`（`dataset-analysis-detail.html:54`），用在 `stats-single_dim.html:27`、`stats-multi_dim.html:61` → `../design-gaps.md` G-18 |
 
-**全 prototype 只有 showcase 用得到 `.divider-hr`。**
+**全 prototype 只有 showcase 用得到 `.divider-hr`。** b4 的 `.panel-divider` 是另一份做法（見上表）。
 
 正典把文字分隔的用途指名給登入頁，而 `account/login#state-default` 確實有那一條（`login.html:466`，文字是「或」／「or」，隨語言切換，`:570`／`:593`／`:627`）——但它用的是**完全不同的做法**：class 叫 `.divider`，線是 `::before` 與 `::after` 兩個偽元素（`login.html:205`、`:213`），不是正典的 `.divider-text` ＋ 兩個 `<hr>`。
 

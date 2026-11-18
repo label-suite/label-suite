@@ -72,6 +72,11 @@
 | `account/forgot-password`（`state-default`） | `.field-error` |
 | `account/reset-password`（`proto-valid`、`state-mismatch`） | `.field-error` |
 | `account/profile`（`state-default`） | `.field-hint`、`.field-error` |
+| `admin/user-management`（`#state-default`、`#modal-invite`） | `.input`（`user-management.html:1611`） |
+| `task-management/task-new`（`#state-step1`、`#state-step3`） | **本頁的 `.input-text`**（`task-new.html:58`），不是正典 → `../design-gaps.md` G-04 |
+| `annotation/annotation-workspace`（`#role-annotator`） | 「無法判定」理由用正典 `.input`（`annotation-workspace.config.js:640`–`:672`），送出才驗證、輸入就清錯 → UXC-04、UXC-05 |
+| `annotation/annotation-workspace`（`#role-reviewer`） | 審核理由用正典 `.input-textarea` |
+| `annotation/annotation-workspace#state-exception-pool` | **inline 樣式的理由輸入框**（`annotation-workspace.config.js:5001`–`:5009`），不是 `.input` → G-04 |
 
 帳號頁用的是各自 `<style>` 裡的 `.field-hint`／`.field-error`，不是載入 `input.css`（那五頁一個 `<link>` 都沒有）→ `../design-gaps.md` G-03。
-b2–b4 的使用頁面待那幾批補。
+b4 兩頁都沒有用到：`dataset-analysis-list` 的搜尋框與篩選是 [List Toolbar](list-toolbar.md) 的 `.search-input`／`.filter-select`，`dataset-analysis-detail` 沒有輸入框。

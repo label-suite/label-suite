@@ -1,6 +1,6 @@
 # UX Conventions
 
-> 批次 `b1-shared-account` 建立 ｜交付包 commit `b1fd43c`
+> 批次 `b1-shared-account` 建立、`b2-admin-dashboard-task`、`b3-annotation-review`、`b4-dataset-sweep` 補寫 ｜交付包 commit `b1fd43c` → `eb9a884`
 
 跨元件成立的約定。收錄條件（`design-system-setup` 步驟 5）：**至少兩個元件在遵守它**；只有一個元件這樣做的，寫在那個元件自己的檔裡。
 
@@ -10,18 +10,18 @@
 
 維護者 2026-11-17 裁定：**沿用 03–11，01／02 留空**。重編會把那 20 處註解全部打成懸空引用，而本 repo 的第八條鐵律正是「不要把別處的斷言打成假的」。UXC-01 與 UXC-02 的內容本 repo 無從得知，記在 [`design-gaps.md`](design-gaps.md) G-34。
 
-| 編號 | 標題 | 本批次能不能寫完 |
+| 編號 | 標題 | 哪一批寫完 |
 | :--- | :--- | :--- |
 | UXC-01 | **未知** | 否，prototype 無引用 |
 | UXC-02 | **未知** | 否，prototype 無引用 |
-| [UXC-03](#uxc-03-未儲存的變更要擋住離開) | 未儲存的變更要擋住離開 | 否，證據全在 b2／b3 |
-| [UXC-04](#uxc-04-送出才驗證不是檢查就驗證) | 送出才驗證，不是檢查就驗證 | 否，證據全在 b3 |
-| [UXC-05](#uxc-05-輸入就清掉上一次的錯誤) | 輸入就清掉上一次的錯誤 | 否，證據全在 b3 |
+| [UXC-03](#uxc-03-未儲存的變更要擋住離開) | 未儲存的變更要擋住離開 | **b2 寫完**，b3 核對 |
+| [UXC-04](#uxc-04-送出才驗證不是檢查就驗證) | 送出才驗證，不是檢查就驗證 | **b3 寫完** |
+| [UXC-05](#uxc-05-輸入就清掉上一次的錯誤) | 輸入就清掉上一次的錯誤 | **b3 寫完** |
 | [UXC-06](#uxc-06-送出中的載入態與重複送出防護) | 送出中的載入態與重複送出防護 | **可以** |
 | [UXC-07](#uxc-07-toast-單一實例與分級存續時間) | Toast 單一實例與分級存續時間 | **可以** |
 | [UXC-08](#uxc-08-skeleton-尺寸要貼合載入後的內容) | Skeleton 尺寸要貼合載入後的內容 | **可以** |
-| [UXC-09](#uxc-09-首次使用的空與篩不到的空是兩種) | 首次使用的「空」與篩不到的「空」是兩種 | 否，證據在 b2／b3 |
-| [UXC-10](#uxc-10-刪除分支要先確認) | 刪除分支要先確認 | 否，證據全在 b2 |
+| [UXC-09](#uxc-09-首次使用的空與篩不到的空是兩種) | 首次使用的「空」與篩不到的「空」是兩種 | **b2 寫完**，b3、b4 核對 |
+| [UXC-10](#uxc-10-刪除分支要先確認) | 刪除分支要先確認 | **b2 寫完** |
 | [UXC-11](#uxc-11-篩選搜尋與分頁的狀態放在網址上) | 篩選、搜尋與分頁的狀態放在網址上 | **部分** |
 
 ---
@@ -54,6 +54,12 @@
 
 遵守它的元件：[Toast](components/toast.md) 本身，以及 [App Shell](components/app-shell.md) 的通知（待 b2 核對是否同一套）。
 
+**b2 核對**：`admin/role-settings`（`role-settings.html:1504`）與 `admin/user-management`（`user-management.html:1579`）照抄 `TOAST_DURATIONS`，遵守；`task-management/task-list`（3000 ms）、`task-new`（3500 ms）、`task-detail`（2400 ms）一律固定秒數、錯誤也會自己消失，**不遵守** → [`design-gaps.md`](design-gaps.md) G-39。App Shell 的通知是 `sidebar.js` 的下拉選單，不是 toast，不適用。
+
+**b3 核對**：`annotation/annotation-workspace` 照抄 `TOAST_DURATIONS`（`annotation-workspace.config.js:422`–`:439`），遵守。`annotation-list` 沒有 toast。
+
+**b4 核對**：`dataset/dataset-analysis-list` 照抄 `TOAST_DURATIONS`（`design/prototype/pages/dataset/dataset-analysis-list.js:25`），遵守。`dataset/dataset-analysis-detail` 有 toast 的 markup 與關閉鈕（`dataset-analysis-detail.html:362`–`:363`、`:2463`），卻沒有任何程式顯示它，無從核對 → [`design-gaps.md`](design-gaps.md) G-55。
+
 這是 prototype 引用最多的一條：42 處裡獨佔 **20 處**，其中 4 處在 `components-showcase.html`（`:142`、`:397`、`:1116`、`:1499`），`:142` 甚至把它寫進正典 CSS 區塊的標頭。
 
 ## UXC-08：Skeleton 尺寸要貼合載入後的內容
@@ -77,32 +83,71 @@
 
 遵守它的元件：[Pagination](components/pagination.md)、[List Toolbar](components/list-toolbar.md)。兩者在 b1 都**沒有可重現的視圖**（showcase 只展示版面、不展示網址行為），所以這一條在本批次只記到契約層。
 
+**b2 補上可重現的樣本**：`admin/user-management#state-filtered-empty`（`?q=`／`?status=`／`?role=`）與 `task-management/task-list#state-filtered-empty`（`?keyword=`／`?status=`／`?output_type=`／`?run_stage=`，規格 [`01-task-list.mdx` §查詢條件保留在網址](../../docs/specs/03-task-management/01-task-list.mdx)）。
+
+**b4 補上**：`dataset/dataset-analysis-list#state-filtered-empty`（`?keyword=`／`?iaa_status=`／`?output_type=`，由 `syncUrl` 只從狀態組網址，`design/prototype/pages/dataset/dataset-analysis-list.js:71`）。`dataset/dataset-analysis-detail` 的 `syncUrlState`（`dataset-analysis-detail.html:2423`）同樣只從狀態組網址（#155 Q4，維護者 2026-11-08），但它保存的是 `task_id` 與 `tab`，不是清單狀態。
+
 這條和 `docs/prototype/navigation.mdx` §網址參數 是同一件事的兩面：那一節是**宣告有哪些參數**，這一條是**為什麼要有**。
 
 ---
 
-## 本批次沒有寫完的
+## UXC-03：未儲存的變更要擋住離開
 
-UXC-03、04、05、09、10 的證據全部落在 b2–b4 的畫面上；b1 的九個畫面一個都踩不到。各自的引用位置記在 [`design-gaps.md`](design-gaps.md) G-36，由那幾批補完。
+有未儲存的編輯時，**頁內的離開**（取消、切走）先跳確認視窗，**瀏覽器層的離開**（重新整理、關分頁）交給原生的 `beforeunload` 提示。兩層都要有。
 
-依 `design-system-setup` 鐵律 1，本批次只「引用」它們、不在這裡先寫；先寫等於用 b1 看不到的東西下結論。
+遵守它的元件：
 
-### UXC-03：未儲存的變更要擋住離開
+- [Modal](components/modal.md)：`admin/role-settings` 的 `#dirtyModal`（`design/prototype/pages/admin/role-settings.html:958`；`cancelEdit` 在 `isDirty` 時先開它，`:1416`–`:1422`）；`task-management/task-new` 的 `leaveModal`（`task-new.html:517`）；`task-management/task-detail` 的 `settingsLeave`（`task-detail.html:2035`）
+- [Alert Banner](components/alert-banner.md)：`admin/role-settings` 的 `.dirty-banner`（`:353`）在離開之前就先把「有未儲存的變更」說出來
 
-引用：`pages/admin/role-settings.html:1398`、`:1416`，`pages/annotation/annotation-workspace.config.js:1980`、`:2032`。待 **b2／b3**。
+瀏覽器層：`role-settings.html:1398`–`:1403`、`task-new.html:1662`。**`task-detail` 沒有 `beforeunload`**——它只擋頁內切換（`task-detail.html` 全檔 `beforeunload` 0 次）。
 
-### UXC-04：送出才驗證，不是檢查就驗證
+**b3 核對**：`annotation/annotation-workspace` 兩層都有，但頁內那一層**不是確認視窗**。瀏覽器層是 `beforeunload`（`design/prototype/pages/annotation/annotation-workspace.config.js:2055`–`:2059`）；頁內則是中欄任何 `input`／`change`／`click` 都把旗標設起來（`markUnsaved`，`:2038`；三個 capture 監聽，`:2051`–`:2053`），同時把自動儲存狀態改成「尚未儲存」（`:2043`）——用狀態列說出來，而不是擋住切換。`:1980` 那段註解說的就是這兩者分工。
 
-引用：`pages/annotation/annotation-workspace.config.js:657`、`:3058`。待 **b3**。
+## UXC-09：首次使用的「空」與篩不到的「空」是兩種
 
-### UXC-05：輸入就清掉上一次的錯誤
+「從來沒有資料」和「有資料但篩不到」要用**不同的話**，而且只有後者給「清除篩選」——前者沒有東西可清。兩種「空」換的是文案與動作，**不是換樣式**。
 
-引用：`pages/annotation/annotation-workspace.config.js:657`（與 UXC-04 同一段註解）。待 **b3**。
+遵守它的元件：
 
-### UXC-09：首次使用的「空」與篩不到的「空」是兩種
+- [Empty State](components/empty-state.md)：`admin/user-management` 篩到 0 列時是 `empty-state-page` ＋「清除篩選」（`design/prototype/pages/admin/user-management.html:547`–`:559`）
+- [Data Table](components/data-table.md)：`task-management/task-list` 把空狀態放成表格裡的一列，`createEmptyRow(isNoResults)`（`task-list.html:846`–`:870`）依參數換文案，只有 `isNoResults` 為真才加清除鈕；兩種情況都保留表頭
 
-引用：`pages/annotation/annotation-list.html:1949`。相關元件 [Empty State](components/empty-state.md) 在 b1 已經寫了，但它的 CSS **只有一套**——兩種「空」的分法是換文案，不是換樣式。待 **b2／b3**。
+依據的規格：[`03-task-management/01-task-list.mdx` §空狀態與載入失敗](../../docs/specs/03-task-management/01-task-list.mdx)（三種情況的文案表，且「不放第二顆新增任務」）。第三種「載入失敗」**絕對不能顯示成空資料**，`task-list` 用另一列錯誤列（`:881`–`:913`）處理。
 
-### UXC-10：刪除分支要先確認
+**b3 核對**：`annotation/annotation-list` 遵守。`renderEmptyState`（`design/prototype/pages/annotation/annotation-list.html:1951`–`:1966`）用同一個 `empty-state-page` 容器，只依「本來有沒有資料」換文案（「找不到符合條件的資料。」／「目前尚無資料。」），只有前者加清除篩選。對應規格 [`04-annotation/01-annotation-list.mdx` §空的與找不到](../../docs/specs/04-annotation/01-annotation-list.mdx) 第 4–6 條。
 
-引用：`pages/task-management/task-config.engine.js:22`、`:6183`，`pages/task-management/task-new.html:528`，`pages/admin/user-management.html:1357`。待 **b2**。
+**b4 核對**：`dataset/dataset-analysis-list` 遵守。`createEmptyRow(noResults)`（`design/prototype/pages/dataset/dataset-analysis-list.view.js:133`）沿用 `task-list` 的「表格裡的一列」做法，依參數換文案（`dataset-analysis-list.i18n.js:38`–`:41`）；篩不到時的文案叫人「清除篩選」，清除鈕在工具列（`.clear-btn`，`dataset-analysis-list.html:254`），空狀態裡不另放。載入失敗另有錯誤列（`createErrorRow`，`dataset-analysis-list.view.js:159`），不顯示成空資料。`dataset/dataset-analysis-detail` 的兩種空（統計 `#statsEmpty`、品質 `#qualityEmpty`）是「還沒有資料」的空，沒有篩選，這一條不適用。
+
+## UXC-10：刪除分支要先確認
+
+破壞性的動作（刪除分支、停用帳號、捨棄編輯）先跳確認視窗；確認視窗**點遮罩不關**，**Esc 取消、Enter 確認**。
+
+遵守它的元件：
+
+- [Modal](components/modal.md)：`admin/user-management` 只讓新增與編輯可以點遮罩關閉，停用確認不行（`design/prototype/pages/admin/user-management.html:1357`–`:1361`）；停用確認開著時 Enter 送出（`:1369`–`:1371`）。`admin/role-settings` 的 `#dirtyModal` 同樣 Esc 取消、Enter 確認（`role-settings.html:1405`–`:1414`）。刪除分類分支的確認（`task-config.engine.js:6183`–`:6194`，`task-new.html:528` 的 `role="alertdialog"`）把焦點放在「刪除」鈕上（`:6193`），文案寫明一併刪除的子節點數
+- [Button](components/button.md)：確認動作一律用 `.btn-danger`（`user-management.html:696`、`role-settings.html:972`、`task-list.html:307`–`:315`）
+
+**不一致**：`task-management/task-list` 的刪除任務確認**點遮罩會關**（`task-list.html:1197`–`:1199`）——而那是規格明寫的（[`01-task-list.mdx` §刪除任務](../../docs/specs/03-task-management/01-task-list.mdx) 第 5 條「點視窗外面，或按 Esc → 視窗關閉」）。約定與規格在這一處對不上 → [`design-gaps.md`](design-gaps.md) G-45。
+
+## UXC-04：送出才驗證，不是檢查就驗證
+
+勾選或切換一個選項時**不驗證**——使用者還沒說要送出，這時跳錯誤是在催他。驗證只在按「提交」時跑一次，擋下時**每個有問題的欄位各自顯示錯誤**，再用**一則**通知把它們一起點名。
+
+遵守它的元件：
+
+- [Input](components/input.md)：`annotation/annotation-workspace` 勾了「無法判定」之後出現的理由輸入框（`.input`，`design/prototype/pages/annotation/annotation-workspace.config.js:640`–`:672`），勾的當下錯誤訊息是隱藏的（`:647`，註解 `:656`–`:658`）；按提交才逐一判斷哪幾個輸出類型缺理由，各自打開錯誤（`:3056`–`:3068`）
+- [Toast](components/toast.md)：同一次提交只發**一則** warning 通知，把缺理由的輸出類型名稱用「、」串起來（`:3069`–`:3075`）
+
+依據的規格：[`04-annotation/02-annotation-workspace.mdx` §作答完整性與提交阻擋](../../docs/specs/04-annotation/02-annotation-workspace.mdx) 第 5 條。同一段第 2 條要「提示對應的那個區塊」，但區塊上的 `data-error` 標記沒有樣式 → [`design-gaps.md`](design-gaps.md) G-47。
+
+## UXC-05：輸入就清掉上一次的錯誤
+
+送出被擋之後，使用者**一開始改**那個欄位，那個欄位的錯誤就收掉，不等下一次送出。錯誤是在說「上一次送出的值不對」，值已經在改了，留著它只會誤導。
+
+遵守它的元件：
+
+- [Input](components/input.md)：`annotation/annotation-workspace` 的理由輸入框，`input` 事件一有非空白的值就隱藏錯誤（`syncOnInput`，`design/prototype/pages/annotation/annotation-workspace.config.js:659`–`:665`）；帳號頁的 `.field-error` 同樣在 `input` 事件清掉（`account/login.html:691`–`:696`、`account/register.html:780`–`:786`、`account/reset-password.html:831`–`:836`）
+- [Alert Banner](components/alert-banner.md)：`account/register` 一開始打字就把表單層級的錯誤橫幅收起來（`register.html:785`）
+
+只清**錯誤**，不清值，也不在輸入當下重新驗證——那會變成檢查就驗證，違反 UXC-04。

@@ -1,17 +1,17 @@
 {
   "packageVersion": 1,
-  "generatedAt": "2026-11-16",
+  "generatedAt": "2026-11-18",
   "source": {
-    "commit": "b1fd43c84031f254b82e195e9659ba41dfa3a41a",
-    "prototypeTree": "4cb347d5e720203418701a0a4a6b521cc117c64e",
-    "specsTree": "a4b0e889a5a39f3a02a3dd5db7fc81a3c877ff44",
+    "commit": "eb9a88434fc615082c8dcba9ecec6e9fce2f24af",
+    "prototypeTree": "815b85344df678f7ae66f1a2ad9b64a32edca3c4",
+    "specsTree": "63b7a51d2e3b734a9b0b1103d0b65c91a041a4e8",
     "navigationBlob": "c64128a7e7a523ebd7a2897bc1a339535592a9a7",
     "referenceDesignDocs": {
       "repo": "singyichen/label-suite",
       "commit": "faf8335"
     },
     "openWith": [
-      "git switch --detach b1fd43c84031f254b82e195e9659ba41dfa3a41a",
+      "git switch --detach eb9a88434fc615082c8dcba9ecec6e9fce2f24af",
       "pnpm prototype"
     ]
   },
