@@ -598,7 +598,7 @@
        instead of adopting an answer, so it carries the design system's danger
        scale rather than reading as a fourth interchangeable adopt choice. */
     .mini-btn-danger { color: var(--color-error); border-color: var(--color-error-border); }
-    .rv-btn-icon { line-height: 1; }
+    .rv-btn-icon { display: inline-flex; line-height: 1; }
 
     .rv-answer-cell { flex: 1; min-width: 0; }
     /* Dimension result tags: same rules as annotation-list's expanded
@@ -1063,6 +1063,8 @@
     .toast-close {
       background: none;
       border: none;
+      display: inline-flex;
+      align-items: center;
       color: inherit;
       opacity: 0.6;
       cursor: pointer;
@@ -1325,7 +1327,7 @@
 
 <!-- Toast -->
 <div class="toast-container" aria-live="polite" aria-atomic="true">
-  <div class="toast" id="toast"><span id="toastMsg" class="toast-msg"></span><button type="button" class="toast-close" id="toastClose" aria-label="關閉通知">✕</button></div>
+  <div class="toast" id="toast"><span id="toastMsg" class="toast-msg"></span><button type="button" class="toast-close" id="toastClose" aria-label="關閉通知"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
 </div>
 
 <!-- Hidden code-editor stub required by updateAnnotationPreview() -->

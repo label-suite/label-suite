@@ -183,7 +183,7 @@
     .toast-warning{color:var(--color-warning);background:var(--color-warning-bg);border-color:var(--color-warning-border)}
     .toast-error{color:var(--color-error);background:var(--color-error-bg);border-color:var(--color-error-border)}
     .toast-msg{flex:1}
-    .toast-close{background:none;border:none;color:inherit;opacity:.6;cursor:pointer;font-size:14px;line-height:1.4;padding:0}
+    .toast-close{background:none;border:none;display:inline-flex;align-items:center;color:inherit;opacity:.6;cursor:pointer;font-size:14px;line-height:1.4;padding:0}
     .toast-close:hover{opacity:1}
 
     /* Stats tab */
@@ -360,7 +360,7 @@
 
 <!-- ══ TOAST ═════════════════════════════════════════════════════════ -->
 <div class="toast-container" aria-live="polite" aria-atomic="true">
-  <div class="toast" id="toast"><span id="toastMsg" class="toast-msg"></span><button type="button" class="toast-close" id="toastClose" aria-label="關閉通知">✕</button></div>
+  <div class="toast" id="toast"><span id="toastMsg" class="toast-msg"></span><button type="button" class="toast-close" id="toastClose" aria-label="關閉通知"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
 </div>
 
 <script src="../../assets/theme.js"></script>

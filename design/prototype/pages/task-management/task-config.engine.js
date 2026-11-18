@@ -653,13 +653,14 @@ function buildOutputAccordion(outKey, outReg, isCollapsed) {
     var depName = depSourceReg ? (depSourceReg[state.lang] || depSourceReg.zh) : sourceKey;
     var depBadge = document.createElement('div');
     depBadge.className = 'output-accordion-dep';
-    depBadge.textContent = t('accordionDependsOn') + depName;
+    depBadge.innerHTML = taxonomyIcon(LUCIDE_CORNER_DOWN_RIGHT, 12); /* static markup */
+    depBadge.appendChild(document.createTextNode(t('accordionDependsOn') + depName));
     titleWrap.appendChild(depBadge);
   }
 
   var chevron = document.createElement('span');
   chevron.className = 'output-accordion-chevron';
-  chevron.textContent = '▾';
+  chevron.innerHTML = taxonomyIcon(LUCIDE_CHEVRON_DOWN, 16); /* static markup */
 
   header.appendChild(titleWrap);
   header.appendChild(chevron);
@@ -872,6 +873,17 @@ function taxonomyIcon(paths, size) {
 }
 var ICON_CHEVRON_DOWN = taxonomyIcon('<path d="m6 9 6 6 6-6"/>');
 var ICON_X = taxonomyIcon('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>');
+/* Lucide shapes for spots that used text glyphs (brand.md: no ▾ / ✓ / → characters). */
+var LUCIDE_CHEVRON_DOWN = '<path d="m6 9 6 6 6-6"/>';
+var LUCIDE_CHECK = '<path d="M20 6 9 17l-5-5"/>';
+var LUCIDE_ARROW_RIGHT = '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>';
+var LUCIDE_CORNER_DOWN_RIGHT = '<path d="m15 10 5 5-5 5"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/>';
+function lucideArrowSpan(className) {
+  var span = document.createElement('span');
+  span.className = className;
+  span.innerHTML = taxonomyIcon(LUCIDE_ARROW_RIGHT, 12); /* static markup */
+  return span;
+}
 
 function buildTaxonomyTreeEditor(config, field, outKey) {
   var nodes = normalizeTaxonomyNodes(config[field.key]);
@@ -2222,11 +2234,11 @@ function buildRelationTripleRow(triple, allRelTypes, opts) {
   var subjSpan = document.createElement('span');
   subjSpan.style.cssText = 'font-weight:600;font-size:11px;'; subjSpan.textContent = triple.subj;
   content.appendChild(subjSpan);
-  var arrow = document.createElement('span'); arrow.className = 'absa-arrow'; arrow.textContent = ' → ';
+  var arrow = lucideArrowSpan('absa-arrow');
   content.appendChild(arrow);
   var relBadge = document.createElement('span'); relBadge.className = 'absa-relation-badge'; relBadge.textContent = triple.rel;
   content.appendChild(relBadge);
-  var arrow2 = document.createElement('span'); arrow2.className = 'absa-arrow'; arrow2.textContent = ' → ';
+  var arrow2 = lucideArrowSpan('absa-arrow');
   content.appendChild(arrow2);
   var objSpan = document.createElement('span');
   objSpan.style.cssText = 'font-weight:600;font-size:11px;'; objSpan.textContent = triple.obj;
@@ -2254,8 +2266,8 @@ function buildRelationTripleRow(triple, allRelTypes, opts) {
       item.addEventListener('mouseenter', function() { item.style.background = 'var(--color-slate-50)'; });
       item.addEventListener('mouseleave', function() { item.style.background = 'transparent'; });
       var check = document.createElement('span');
-      check.style.cssText = 'width:14px;font-size:0.75rem;';
-      check.textContent = (triple.relType === rt) ? '✓' : '';
+      check.style.cssText = 'width:14px;display:inline-flex;align-items:center;';
+      if (triple.relType === rt) check.innerHTML = taxonomyIcon(LUCIDE_CHECK, 12); /* static markup */
       item.appendChild(check);
       item.appendChild(document.createTextNode(rt));
       item.addEventListener('click', function(ev) {
@@ -2822,7 +2834,7 @@ function makeBypassChip(outKey, refresh, labelText) {
   chip.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;font-size:0.8rem;font-weight:600;cursor:pointer;transition:all 0.15s;border:2px dashed ' + c + ';color:' + (active ? '#fff' : c) + ';background:' + (active ? c : 'transparent') + ';';
   var box = document.createElement('span');
   box.style.cssText = 'width:14px;height:14px;border-radius:3px;border:2px solid ' + (active ? '#fff' : c) + ';display:inline-flex;align-items:center;justify-content:center;font-size:10px;';
-  if (active) box.textContent = '✓';
+  if (active) box.innerHTML = taxonomyIcon(LUCIDE_CHECK, 10); /* static markup */
   chip.appendChild(box);
   chip.appendChild(document.createTextNode(labelText));
   chip.addEventListener('click', function() {
@@ -4629,7 +4641,7 @@ function renderRelationExtractionPreview(preview, config) {
   var tripleRow = document.createElement('div');
   tripleRow.className = 're-preview-triple-row';
   var sampleRel = relationTypes.length ? relationTypes[0] : 'treats';
-  [sampleEntities[0].text + '/' + sampleEntities[0].type, '→', sampleRel, '→', sampleEntities[1].text + '/' + sampleEntities[1].type].forEach(function(part, i) {
+  [sampleEntities[0].text + '/' + sampleEntities[0].type, null, sampleRel, null, sampleEntities[1].text + '/' + sampleEntities[1].type].forEach(function(part, i) {
     if (i === 2) {
       var rb = document.createElement('span');
       rb.className = 're-preview-relation-badge';
@@ -4642,9 +4654,8 @@ function renderRelationExtractionPreview(preview, config) {
       eb.textContent = part;
       tripleRow.appendChild(eb);
     } else {
-      var ar = document.createElement('span');
+      var ar = lucideArrowSpan('absa-arrow');
       ar.style.color = 'var(--color-text-soft)';
-      ar.textContent = part;
       tripleRow.appendChild(ar);
     }
   });

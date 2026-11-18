@@ -357,6 +357,7 @@
       background: var(--color-white);
       gap: 2px;
     }
+    .stage-btn-mark, .ar-history-arrow { display: inline-flex; vertical-align: -1px; margin: 0 4px; }
     .stage-btn {
       border: none;
       background: transparent;
@@ -1696,7 +1697,7 @@
     .next-step-group-title { margin: 0 0 4px; font-weight: 600; color: var(--color-ink); }
     .next-step-group ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
     .next-step-cond { color: var(--color-text-soft); }
-    .next-step-cond-icon { font-weight: 700; }
+    .next-step-cond-icon { display: inline-flex; vertical-align: -2px; }
     .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
     .next-step-cond[data-status="met"] .next-step-cond-icon { color: var(--color-success); }
     .next-step-cond[data-status="unmet"] .next-step-cond-icon { color: var(--color-ink-muted); }
@@ -2675,7 +2676,7 @@
       arHistoryReviewerRole: '審核員',
       arHistoryArbiterRole: '仲裁',
       arHistoryAgree: '同意',
-      arHistoryModifiedPrefix: '修改 → ',
+      arHistoryModifiedPrefix: '修改',
       arHistoryBypass: window.LabelSuiteSharedSidebar.BYPASS_WORDING.zh.decision,
       arHistoryPickA: '採 A（維持標記員）',
       arHistoryPickB: '採 B（採用審核員修正）',
@@ -3267,7 +3268,7 @@
       arHistoryReviewerRole: 'Reviewer',
       arHistoryArbiterRole: 'Arbiter',
       arHistoryAgree: 'Agreed',
-      arHistoryModifiedPrefix: 'Modified → ',
+      arHistoryModifiedPrefix: 'Modified',
       arHistoryBypass: window.LabelSuiteSharedSidebar.BYPASS_WORDING.en.decision,
       arHistoryPickA: 'Adopted A (keep annotator)',
       arHistoryPickB: 'Adopted B (adopt reviewer edit)',
@@ -6452,7 +6453,12 @@ function interpolate(template, payload) {
   }
 
   function nextStepGroupsHtml(groups) {
-    var iconGlyphs = { met: '✓', unmet: '○', info: 'ⓘ' };
+    /* Lucide check / circle / info via task-config.engine.js taxonomyIcon (brand.md: no glyph icons). */
+    var iconGlyphs = {
+      met: taxonomyIcon(LUCIDE_CHECK, 14),
+      unmet: taxonomyIcon('<circle cx="12" cy="12" r="10"/>', 14),
+      info: taxonomyIcon('<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>', 14)
+    };
     var statusKeys = { met: 'nextStepStatusMet', unmet: 'nextStepStatusUnmet', info: 'nextStepStatusInfo' };
     return groups.map(function(group) {
       return '<div class="next-step-group" data-group="' + group.key + '"><p class="next-step-group-title">' + escapeHtml(group.title) + '</p><ul>' +
@@ -7310,7 +7316,7 @@ function getTaskTypeLabel() {
       removeBtn.className = 'guideline-item-remove';
       removeBtn.type = 'button';
       removeBtn.setAttribute('aria-label', state.lang === 'zh' ? '移除附件' : 'Remove file');
-      removeBtn.textContent = '×';
+      removeBtn.innerHTML = taxonomyIcon('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>', 14); /* static markup */
       removeBtn.addEventListener('click', function() {
         if (!state.guidelineDraft) return;
         state.guidelineDraft[filesKey].splice(index, 1);
@@ -8598,12 +8604,15 @@ function getTaskTypeLabel() {
       var label = 'R' + round.roundNum;
       if (round.status === 'active') {
         label += state.lang === 'zh' ? ' · 進行中' : ' · Active';
-      } else if (round.result === 'passed') {
-        label += ' ✓';
-      } else if (round.result === 'failed') {
-        label += ' ✗';
       }
       btn.textContent = label;
+      /* Pass / fail mark as a Lucide check or x, not a glyph (brand.md). */
+      if (round.status !== 'active' && (round.result === 'passed' || round.result === 'failed')) {
+        var mark = document.createElement('span');
+        mark.className = 'stage-btn-mark';
+        mark.innerHTML = round.result === 'passed' ? taxonomyIcon(LUCIDE_CHECK, 12) : taxonomyIcon('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>', 12); /* static markup */
+        btn.appendChild(mark);
+      }
       btn.addEventListener('click', function() {
         state.progressStage = round.id;
         renderAnnotationProgress();
@@ -10078,7 +10087,17 @@ function getTaskTypeLabel() {
     }
     var decision = document.createElement('span');
     decision.className = 'ar-history-decision';
-    decision.textContent = decisionText;
+    if (Array.isArray(decisionText)) {
+      /* [prefix, result]: a Lucide arrow-right sits between them instead of a glyph. */
+      decision.appendChild(document.createTextNode(decisionText[0]));
+      var decisionArrow = document.createElement('span');
+      decisionArrow.className = 'ar-history-arrow';
+      decisionArrow.innerHTML = taxonomyIcon(LUCIDE_ARROW_RIGHT, 12); /* static markup */
+      decision.appendChild(decisionArrow);
+      decision.appendChild(document.createTextNode(decisionText[1]));
+    } else {
+      decision.textContent = decisionText;
+    }
     var time = document.createElement('span');
     time.className = 'ar-history-time';
     time.textContent = timeText || '-';
@@ -10093,7 +10112,7 @@ function getTaskTypeLabel() {
   function appendArHistoryLines(container, annotation) {
     (annotation.reviews || []).forEach(function(review) {
       var decisionText = review.decision === 'modified'
-        ? t('arHistoryModifiedPrefix') + getAnnotationResultDisplay({ value: review.result }).tags[0]
+        ? [t('arHistoryModifiedPrefix'), getAnnotationResultDisplay({ value: review.result }).tags[0]]
         : review.decision === 'bypass'
           ? t('arHistoryBypass')
           : t('arHistoryAgree');

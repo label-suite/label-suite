@@ -3530,12 +3530,13 @@
     }
   }
 
-  /* Builds a small icon-only span via safe DOM methods (no innerHTML) so
-     mini-buttons never parse untrusted markup. */
+  /* Builds a small icon-only span. `icon` is one of the static Lucide path
+     strings in REVIEW_DECISION_ICONS (never user data), so the markup handed
+     to taxonomyIcon is fixed at authoring time. */
   function buildIconSpan(icon) {
     var span = document.createElement('span');
     span.className = 'rv-btn-icon';
-    span.textContent = icon;
+    span.innerHTML = taxonomyIcon(icon, 14); /* static markup */
     return span;
   }
 
@@ -3624,10 +3625,11 @@
     modify: 'reviewModifyLabel',
     bypass: 'reviewBypassLabel',
   };
+  /* Lucide check / pencil / minus path data (brand.md: no glyph icons). */
   var REVIEW_DECISION_ICONS = {
-    approve: '✓',
-    modify: '✎',
-    bypass: '—',
+    approve: LUCIDE_CHECK,
+    modify: '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
+    bypass: '<path d="M5 12h14"/>',
   };
   function buildRowDecisionButtons(outKey, rowName, onChange) {
     var wrap = document.createElement('div');

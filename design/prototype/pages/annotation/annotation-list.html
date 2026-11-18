@@ -356,7 +356,7 @@
       padding: 10px 0; border-top: 1px solid var(--color-border);
       font-size: 13px;
     }
-    .dry-run-feedback-arrow { color: var(--color-text-soft); }
+    .dry-run-feedback-arrow { display: inline-flex; align-items: center; color: var(--color-text-soft); }
     .dry-run-feedback-source { font-size: 12px; color: var(--color-text-soft); }
     .dry-run-feedback-reason {
       flex-basis: 100%; font-size: 12px; color: var(--color-text-soft);
@@ -2165,7 +2165,18 @@
       rowEl.appendChild(buildDryRunFeedbackAnswerTags(profile, row.myAnswer));
       var arrow = document.createElement('span');
       arrow.className = 'dry-run-feedback-arrow';
-      arrow.textContent = '→';
+      /* Lucide arrow-right (assets/icons/arrow-right.svg), built with DOM methods. */
+      var svgNs = 'http://www.w3.org/2000/svg';
+      var arrowIcon = document.createElementNS(svgNs, 'svg');
+      [['width', '12'], ['height', '12'], ['viewBox', '0 0 24 24'], ['fill', 'none'], ['stroke', 'currentColor'],
+       ['stroke-width', '2'], ['stroke-linecap', 'round'], ['stroke-linejoin', 'round'], ['aria-hidden', 'true']]
+        .forEach(function (attr) { arrowIcon.setAttribute(attr[0], attr[1]); });
+      ['M5 12h14', 'm12 5 7 7-7 7'].forEach(function (d) {
+        var path = document.createElementNS(svgNs, 'path');
+        path.setAttribute('d', d);
+        arrowIcon.appendChild(path);
+      });
+      arrow.appendChild(arrowIcon);
       rowEl.appendChild(arrow);
       rowEl.appendChild(buildDryRunFeedbackAnswerTags(profile, row.finalizedAnswer));
     }
