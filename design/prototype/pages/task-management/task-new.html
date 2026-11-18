@@ -193,6 +193,7 @@
 <div id="sharedSidebarMount"></div>
 <script src="../../assets/theme.js"></script>
 <script src="../shared/sidebar.js"></script>
+<script src="../shared/modal-focus.js"></script>
 <script>
   window.LabelSuiteSharedSidebar.mountSidebar({
     mountId: 'sharedSidebarMount',
@@ -1352,8 +1353,16 @@ function applyDefaultGuidelineFiles(taskType) {
 function showLeaveModal(callback) {
   state.leaveCallback = callback;
   el('leaveModal').classList.add('show');
+  /* G-43: focus trap and focus return via shared/modal-focus.js */
+  if (window.LabelSuiteModalFocus) {
+    window.LabelSuiteModalFocus.open(el('leaveModal'), { trigger: document.activeElement, onClose: hideLeaveModal });
+  }
 }
-function hideLeaveModal() { el('leaveModal').classList.remove('show'); state.leaveCallback = null; }
+function hideLeaveModal() {
+  el('leaveModal').classList.remove('show');
+  state.leaveCallback = null;
+  if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(el('leaveModal'));
+}
 function maybeLeave(action) { if (!state.isDirty) { action(); return; } showLeaveModal(action); }
 
 function generateCreatedTaskId() {

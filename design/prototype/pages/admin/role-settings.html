@@ -1345,12 +1345,19 @@
       doExitCancel();
     }
 
+    /* G-43: focus trap and focus return via shared/modal-focus.js */
     function showDirtyModal() {
-      document.getElementById('dirtyModal').classList.add('show');
+      const modal = document.getElementById('dirtyModal');
+      modal.classList.add('show');
+      if (window.LabelSuiteModalFocus) {
+        window.LabelSuiteModalFocus.open(modal, { trigger: document.activeElement, onClose: hideDirtyModal });
+      }
     }
 
     function hideDirtyModal() {
-      document.getElementById('dirtyModal').classList.remove('show');
+      const modal = document.getElementById('dirtyModal');
+      modal.classList.remove('show');
+      if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
     }
 
     function confirmDiscardChanges() {

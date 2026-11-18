@@ -1255,13 +1255,21 @@
       openModal('disableModal');
     }
 
+    /* G-43: focus moves into the modal, Tab stays inside, Esc closes and
+       focus returns to the trigger (shared/modal-focus.js). */
     function openModal(id) {
-      document.getElementById(id).classList.add('show');
+      const modal = document.getElementById(id);
+      modal.classList.add('show');
       document.body.style.overflow = 'hidden';
+      if (window.LabelSuiteModalFocus) {
+        window.LabelSuiteModalFocus.open(modal, { trigger: document.activeElement, onClose: () => closeModal(id) });
+      }
     }
     function closeModal(id) {
-      document.getElementById(id).classList.remove('show');
+      const modal = document.getElementById(id);
+      modal.classList.remove('show');
       document.body.style.overflow = '';
+      if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
     }
 
     /* UXC-10: a destructive confirmation must not dismiss on overlay click */
