@@ -247,7 +247,7 @@
 | **重現方式** | 照交付包的 `dataset/dataset-analysis-detail#state-seq-match-strict` 開一個序列標註任務的統計總覽：找不到 `#matchStrict`。改開實體辨識任務並加 `?tab=quality`，品質監控最上面的卡片才有 `Strict match`／`Partial overlap` 兩顆鈕。 |
 | **受影響範圍** | `dataset/dataset-analysis-detail#state-seq-match-strict`、`#state-seq-match-partial` |
 | **依據** | 交付包 `handoff/manifest.json` 這兩個視圖的 `how`：「在序列標註任務的統計總覽點 `#matchStrict`」。原型：`#matchStrict`／`#matchPartial`／`#seqStrictCard`／`#seqPartialCard` 只在 `dataset-analysis-detail.partials/quality-entity_recognition.html:11`–`:30`，`quality-sequence_tagging.html` 與八個 `stats-*` 都沒有。規格 [`05-dataset/02-analysis-detail.mdx`](../../docs/specs/05-dataset/02-analysis-detail.mdx) §八種輸出類型各自的主指標與門檻：實體辨識列寫「部分重疊的 F1（只能切換顯示）」，第 5 條提到「同一張卡的切換鈕」。視圖 ID 也叫 `seq-`，與它實際所屬的型別對不上。 |
-| **待決問題** | **已裁定（2026-11-18）**：下次重跑 `design-handoff` 時改重現方式，視圖 ID 不改名。原題保留：下一次重跑 `design-handoff` 時，要不要把這兩個視圖的重現方式改成實體辨識的品質監控，ID 要不要改名？本 skill 不改交付包。 |
+| **待決問題** | **已裁定（2026-11-18）**：下次重跑 `design-handoff` 時改重現方式，視圖 ID 不改名。**已於 #418 處理**：交付包第四次重跑把兩個視圖的 `how` 改指實體辨識的品質監控，`evidence` 加上 `quality-entity_recognition.html`，ID 不變。`spec` 仍連 §序列標註的統計；較貼切的錨點是 §八種輸出類型各自的主指標與門檻，要不要改由維護者決定。原題保留：下一次重跑 `design-handoff` 時，要不要把這兩個視圖的重現方式改成實體辨識的品質監控，ID 要不要改名？本 skill 不改交付包。 |
 
 ### G-53 「部分重疊」與關係識別的第二個數值，畫面上仍叫「門檻」
 
@@ -318,7 +318,7 @@
 | **重現方式** | 開 `pages/task-management/task-new.html`，第一到第三步填妥後按「下一步」：出現第四步「標記說明」。交付包只有 `#state-step1`～`#state-step3`。 |
 | **受影響範圍** | [Step Indicator](components/step-indicator.md)、[Modal](components/modal.md)、[Skeleton](components/skeleton.md)；`task-management/task-new`、`task-detail`、`admin/user-management`、`admin/role-settings` |
 | **依據** | `task-new.html:430` 的 `step4Panel`，步驟條畫了四格（`:226`–`:245`）。同樣找得到但沒有視圖 ID 的：`task-new` 的 `taxonomyDeleteModal`（`:529`）與頂端錯誤橫幅（`:220`）；`task-detail` 的載入骨架（`:1964`–`:1975`）與 `taskNotFound`（`:1979`）；`user-management` 的 `editModal`（`:622`）與異動紀錄抽屜（`:709`）；`role-settings` 的 `#dirtyModal`（`:958`）、異動紀錄抽屜（`:933`）與 `storedInvalidBanner`（`:383`）。 |
-| **待決問題** | **已裁定（2026-11-18）**：下次重跑 `design-handoff` 時補上這些視圖。原題保留：要不要在下一次重跑 `design-handoff` 時補上這些視圖？本 skill 不替它們取 ID。 |
+| **待決問題** | **已裁定（2026-11-18）**：下次重跑 `design-handoff` 時補上這些視圖。**已於 #418 處理**：交付包第四次重跑補上九個視圖：`task-management/task-new#state-step4`、`#modal-taxonomy-delete`；`task-management/task-detail#state-loading`、`#state-task-not-found`；`admin/user-management#modal-edit`、`#modal-audit-log`；`admin/role-settings#modal-dirty`、`#modal-audit-log`、`#state-stored-invalid`。`task-new` 的頂端錯誤橫幅叫不出來（驗證不過時「下一步」已停用，`showBannerError()` 走不到），記進交付包的「無法重現」為 `task-management/task-new#state-banner-error`，畫面要不要改仍待決。原題保留：要不要在下一次重跑 `design-handoff` 時補上這些視圖？本 skill 不替它們取 ID。 |
 
 ### G-36 五條 UX 約定在本批次沒有證據
 
@@ -342,7 +342,7 @@
 | **重現方式** | 開 `pages/annotation/annotation-workspace.html?role=reviewer`，打開審核流程抽屜；作答後按「儲存草稿」看右上的通知。再開 `pages/annotation/annotation-list.html?task_id=<試標中的任務>`，以標記員身分看試標歷史回饋卡。三者都沒有視圖 ID。 |
 | **受影響範圍** | [Modal](components/modal.md)、[Toast](components/toast.md)；`annotation/annotation-workspace`、`annotation/annotation-list` |
 | **依據** | 審核流程抽屜 `wsReviewFlowDrawer`（`annotation-workspace.html:1197`，`annotation-workspace.config.js:5681` 起）；通知 `#toast`（`annotation-workspace.html:1328`，`showToast`，`annotation-workspace.config.js:422`）；試標歷史回饋卡 `#dryRunFeedbackCard`（`annotation-list.html:494`，`renderDryRunFeedback`，`:2215`–`:2220`）。交付包的 `annotation-list` 九個視圖、`annotation-workspace` 十三個視圖都不含它們。 |
-| **待決問題** | **已裁定（2026-11-18）**：下次重跑 `design-handoff` 時補上這些視圖。原題保留：要不要在下一次重跑 `design-handoff` 時補上這些視圖？本 skill 不替它們取 ID。 |
+| **待決問題** | **已裁定（2026-11-18）**：下次重跑 `design-handoff` 時補上這些視圖。**已於 #418 處理**：交付包第四次重跑補上三個視圖：`annotation/annotation-workspace#modal-review-flow`、`#toast-saved`，`annotation/annotation-list#state-dry-run-feedback`。審核流程抽屜要該筆先有一次送出才叫得出來，步驟寫在 `how`。原題保留：要不要在下一次重跑 `design-handoff` 時補上這些視圖？本 skill 不替它們取 ID。 |
 
 ### G-54 b4 有兩個錯誤狀態沒有被收為視圖
 
