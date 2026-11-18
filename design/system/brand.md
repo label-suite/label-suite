@@ -64,6 +64,8 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 | favicon | 來源是 `assets/logo/icon-colored.svg` | 維護者裁定 2026-11-18 |
 | 深淺主題的 logo | 量測後結論：白色標籤線稿疊在深色主題 `--color-primary` 上不到 3:1，深色主題需要另備一版（見 §CIS） | 維護者裁定 2026-11-18 要求依量測結果決定 |
 | banner 與 social preview | banner.svg 是 README 橫幅，social-preview.svg 是 GitHub social preview；兩個 SVG 保留寫死色值，對應 token 見 §CIS | 維護者裁定 2026-11-18 |
+| 響應式斷點與寬度 | 手機 `max-width: 767px`／桌面 `min-width: 768px`；小螢幕 420px；內容最大寬度 1280px；帳號頁單卡 480px；Modal 400／520／720，860 與 1280 為個案例外；480／640／1100 屬頁面自己的斷點 | 維護者裁定 2026-11-18 |
+| 品牌色與襯線的取捨 | 已定案；原件 `MASTER.md` 只記結果，沒有記理由（見下節） | 維護者裁定 2026-11-18 |
 | 本檔的地位 | 本檔是規則，prototype 是現況；兩者不符時，列在 [§與 prototype 的落差](#與-prototype-的落差)，改 prototype 走 Ready gate | 維護者裁定 2026-11-18 |
 
 ### 原件記載的品牌決策
@@ -77,7 +79,7 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 - **風格**：Flat Design，關鍵字含「tool-oriented」，適用「annotation tools」；無漸層、無裝飾陰影；hover 只允許 `translateY` 最多 `-2px` 的唯一例外（`:2879`–`:2897`）。
 - **圖示**：「Minimal, purposeful icons (Lucide — the project's single icon library)」（`:2893`）。
 
-**沒找到**：為什麼選 indigo 為主色、為什麼 emerald 當 CTA、為什麼大標用襯線——原件只有結果與氛圍關鍵字，沒有取捨紀錄。這部分留在 [§未決](#未決) Q13。
+**沒找到**：為什麼選 indigo 為主色、為什麼 emerald 當 CTA、為什麼大標用襯線——原件只有結果與氛圍關鍵字，沒有取捨紀錄。維護者已將這些決定視為定案（2026-11-18），**已定案、原件未記理由**；本檔不替它補寫理由。
 
 ---
 
@@ -214,7 +216,51 @@ token 名與值以 `tokens.css` 為準；本節只寫**怎麼用**。
 - **登入後的每一頁共用側欄**：品牌區（logo＋wordmark＋語言切換）在最上、分隔線、導覽列（`sidebar.js:2034`–`:2048`、`sidebar.css:37`–`:44`）。側欄可收合，狀態存在 `labelsuite.sidebarCollapsed`（`sidebar.js:5`）。
 - **工作頁籤**上限 8 個、重開堆疊上限 10（`sidebar.js` 的 `TAB_CAP`、`TAB_REOPEN_CAP`）。「工作頁籤」與頁內「Content Tabs」是兩個東西，命名見 [`MASTER.md`](MASTER.md) §命名約定。
 - **帳號頁**是置中的單卡版面，頂部 navbar 只有 logo 與語言切換（`login.html` 的 `.navbar`、`:396`–`:411`）。
-- 響應式斷點、內容最大寬度：**尚未定案，維護者要求先歸納**；盤點結果與建議值見 [§未決](#未決) Q6。網格欄數沒有任何共用規則。
+- **響應式規則（維護者裁定 2026-11-18）：**
+
+| 項目 | 值 |
+| :--- | :--- |
+| 手機／桌面分界 | 手機 `max-width: 767px`，桌面 `min-width: 768px`（JS 的 `matchMedia` 也用 `min-width: 768px`） |
+| 小螢幕 | `max-width: 420px` |
+| 登入後內容最大寬度 | 1280px |
+| 帳號頁單卡最大寬度 | 480px |
+| Modal 與抽屜寬度 | 小 400、中 520、大 720；860（`pdf-modal`）與 1280（`modal-xl`）是個案例外 |
+| 頁面自己的斷點 | 480（`task-new`）、640（`task-detail`）、1100（`task-new`）不列入共用規則 |
+
+  依據是現況盤點（見下，「盤點」小節）：767 有 16 條、768 有 8 條；1280 在 10／10 個登入後頁面一致；480 在 5／5 個帳號頁一致。網格欄數沒有任何共用規則。
+
+### 響應式盤點（依據）
+
+
+**媒體查詢（`design/prototype/`，CSS 共 31 條寬度查詢、JS 2 處；另有 `prefers-reduced-motion` 14 條、`hover` 1 條不計）：**
+
+| 斷點 | 條數 | 位置 |
+| :--- | :--- | :--- |
+| `max-width: 767px` | 16 | `dataset-analysis-detail.html:217`、`role-settings.html:253`、`:323`、`dataset-analysis-list.html:199`、`annotation-workspace.html:957`、`:1026`、`verify-email.html:292`、`sidebar.css:1086`、`:1124`、`login.html:354`、`user-management.html:248`、`:326`、`register.html:328`、`profile.html:641`、`forgot-password.html:319`、`reset-password.html:413` |
+| `max-width: 768px` | 8 | `task-list.html:156`、`task-new.html:149`、`task-detail.html:1002`、`:1869`、`dashboard.components.css:275`、`content-tabs.css:36`、`annotation-list.html:367`、`sidebar.css:828` |
+| `min-width: 768px` | 1 | `profile.html:50` |
+| `max-width: 420px` | 3 | `task-list.html:170`、`task-detail.html:1036`、`annotation-list.html:416` |
+| `max-width: 480px` | 1 | `task-new.html:170` |
+| `max-width: 640px` | 1 | `task-detail.html:1892` |
+| `max-width: 1100px` | 1 | `task-new.html:183` |
+| JS `matchMedia` | 2 | `sidebar.js:513`（`min-width: 769px`）、`:518`（`min-width: 768px`） |
+
+**內容最大寬度（`max-width`）：**
+
+| 值 | 用在 | 位置（節選） |
+| :--- | :--- | :--- |
+| 1280px | 登入後頁面的內容區（10 頁） | `task-list.html:38`、`task-new.html:31`、`task-detail.html:42`、`dataset-analysis-list.html:38`、`dataset-analysis-detail.html:35`、`user-management.html:36`、`annotation-list.html:35`、`profile.html:48`、`role-settings.html:40`、`dashboard.layout.css:58` |
+| 480px | 帳號頁的單卡（5 頁） | `login.html:126`、`register.html:129`、`forgot-password.html:128`、`reset-password.html:122`、`verify-email.html:127` |
+| 400／440／520／720／860／1280px | Modal 與抽屜寬度（各自寫） | `role-settings.html:262`（400）、`user-management.html:675`（440）、`task-detail.html:888`、`annotation-list.html:223`、`annotation-workspace.html:1012`（520）、`annotation-workspace.html:947`、`:949`（720）、`:952`（860）、`task-new.html:70`（1280） |
+| 520／420px | 空狀態（一般／緊湊） | `empty-state.css:11`、`:16` |
+| 960px | 元件展示頁 | `components-showcase.html:63` |
+
+**觀察：**
+
+1. 「手機／桌面」的分界已經高度一致，只差 1px：24 條在 767／768 附近（767 有 16 條、768 有 8 條），加上 `profile.html:50` 的 `min-width: 768px`；`sidebar.js` 的 `matchMedia` 一處用 769、一處用 768（`:513`、`:518`），與 CSS 的 768 差 1px，**同一頁會有 1px 區間 CSS 與 JS 不一致**。`sidebar.css` 自己就兩種寫法（`:828` 是 768，`:1086`、`:1124` 是 767）。
+2. 小螢幕的第二層分界只有 420px（3 條）。
+3. 480、640、1100 各只有 1 條，是個別頁面自己的版面需要（`task-new`、`task-detail`）。
+4. 內容最大寬度 1280px 非常一致（10／10 個登入後頁面）；帳號頁單卡 480px 也一致（5／5）。Modal 寬度各寫各的。
 
 ---
 
@@ -297,7 +343,7 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 | `banner.svg:21` | 副標 | `--color-ink-muted` | 是 |
 | **`social-preview.svg:19`** | 副標 | **沒有對應 token**；最接近 `--color-ink-muted`，但色值不同（是 Tailwind gray 的值，不是 slate） | **否，這是不符的一處** |
 
-`social-preview.svg` 的副標 32px，屬大字（WCAG 大字門檻 3:1），所以不符不構成對比問題；它只是跟 `banner.svg` 副標用了兩種灰。**建議把它改成與 `banner.svg` 相同的灰**（對應 `--color-ink-muted`）。順帶一提：`--color-ink-muted` 疊在 `--color-surface` 上的對比是 4.34:1，略低於 4.5:1；`banner.svg` 疊在白底上是 4.76:1。
+`social-preview.svg` 的副標 32px，屬大字（WCAG 大字門檻 3:1），所以不構成對比問題；它只是跟 `banner.svg` 副標用了兩種灰。**規則（維護者裁定 2026-11-18）：副標用 `--color-ink-muted` 的 slate 灰**；現況寫死的是 gray，列在落差表，SVG 本次不改。順帶一提：`--color-ink-muted` 疊在 `--color-surface` 上的對比是 4.34:1，略低於 4.5:1；`banner.svg` 疊在白底上是 4.76:1。
 
 ### 深色主題的 logo（量測）
 
@@ -309,7 +355,7 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 | 白色線稿 ／ 深色主題 `--color-primary` | **2.98 : 1**（未達 3:1） |
 | 深色主題 `--color-on-cta` ／ 深色主題 `--color-primary` | 5.36 : 1 |
 
-**結論：白色線稿在深色主題上不到 3:1（差 0.02），所以不能「深淺主題共用一版」；深色主題需要另備一版。**建議做法是深色版的線稿改用 `--color-on-cta`（深色主題的值是深墨色，量得 5.36:1），與按鈕在深色主題的處理（`tokens.css:170`）一致。這一版的實作屬 UI 修正，列在落差表。
+**規則（維護者裁定 2026-11-18）：白色線稿在深色主題上不到 3:1（差 0.02），不能深淺共用一版；深色主題的 logo 標籤線稿用 `--color-on-cta`（深色主題的值是深墨色，5.36:1），與按鈕在深色主題的處理（`tokens.css:170`）一致。**實作屬 UI 修正，列在落差表。
 
 ### 在產品裡實際怎麼用
 
@@ -345,8 +391,9 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 | Q7 線寬非 2 的圖示 | 線寬統一為 2 | 29（內嵌圖示）＋ 1（`banner.svg`） |
 | Q9 logo 素材 | 圓角 25%、線寬 2 | 見 §CIS 的不一致表（5 項） |
 | Q10 favicon | 每頁要有 `<link rel="icon">` | 40 個 HTML 全缺 |
-| Q11 深色主題 logo | 深色主題另備一版 | 帳號頁與側欄的內嵌 logo（見下） |
-| Q12 social preview 副標色 | 對應 token | `social-preview.svg:19` 1 處 |
+| Q6 斷點與寬度 | 767／768 分界、modal 400／520／720 | 見下，11 處 |
+| Q11 深色主題 logo | 線稿用 `--color-on-cta` | 帳號頁與側欄的內嵌 logo（見下） |
+| Q12 social preview 副標色 | 用 `--color-ink-muted` 的 slate 灰 | `social-preview.svg:19` 1 處 |
 | G-02 寫死色值 | 只用 token | 22 個檔案、658 個六位色碼（頁面與 showcase，不含 `tokens.css` 與 logo）；細節與分類見 [`design-gaps.md`](design-gaps.md) G-02，該檔另有人在編輯，這裡不重列 |
 
 ### Q1：「您」（13 行）
@@ -409,6 +456,14 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 - logo（1）：`assets/logo/banner.svg:13` 的 1.8。
 - 未列入：`dataset-analysis-detail.partials/stats-*.html` 裡寫 1、1.5、0.5 的線條是圖表的格線與軸線，不是圖示。
 
+### Q6：斷點與寬度（11 處）
+
+- `max-width: 768px` 應改 `767px`（8）：`task-list.html:156`、`task-new.html:149`、`task-detail.html:1002`、`:1869`、`dashboard.components.css:275`、`content-tabs.css:36`、`annotation-list.html:367`、`sidebar.css:828`。
+- `sidebar.js:513` 的 `matchMedia('(min-width: 769px)')` 應改 768（1）；`:518` 已是 768。
+- Modal 寬度 440px 不在 400／520／720 之內（1）：`user-management.html:675`。
+- 小螢幕之外沒有其他需改的共用斷點；480／640／1100 是頁面自己的，不算落差。
+- 另一處不計：`profile.html:50` 的 `min-width: 768px` 本來就符合。
+
 ### Q10：favicon
 
 全部 40 個 HTML 都沒有 `<link rel="icon">`；`assets/` 底下沒有 favicon 檔。`index.html:6` 的標題是「Label Suite Prototype」（與品牌頁面標題格式 `Label Suite — <頁名>` 也不同）。
@@ -421,55 +476,4 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 
 ## 未決
 
-只剩兩題。**撰寫者不自己回答。**
-
-| # | 問題 | 狀態 | 內容 |
-| :--- | :--- | :--- | :--- |
-| **Q6** | 響應式斷點與內容最大寬度的標準值 | **歸納中** | 維護者尚未裁定。盤點與建議值如下 |
-| **Q13** | 為什麼選 indigo 為主色、emerald 為 CTA、襯線為大標字體？ | 部分找到 | 原件 `MASTER.md` 只有結果與氛圍關鍵字，沒有取捨紀錄（見 §設計決策 §原件記載的品牌決策）。要不要補一段由維護者口述的理由，請維護者決定 |
-
-### Q6：盤點
-
-**媒體查詢（`design/prototype/`，CSS 共 31 條寬度查詢、JS 2 處；另有 `prefers-reduced-motion` 14 條、`hover` 1 條不計）：**
-
-| 斷點 | 條數 | 位置 |
-| :--- | :--- | :--- |
-| `max-width: 767px` | 16 | `dataset-analysis-detail.html:217`、`role-settings.html:253`、`:323`、`dataset-analysis-list.html:199`、`annotation-workspace.html:957`、`:1026`、`verify-email.html:292`、`sidebar.css:1086`、`:1124`、`login.html:354`、`user-management.html:248`、`:326`、`register.html:328`、`profile.html:641`、`forgot-password.html:319`、`reset-password.html:413` |
-| `max-width: 768px` | 8 | `task-list.html:156`、`task-new.html:149`、`task-detail.html:1002`、`:1869`、`dashboard.components.css:275`、`content-tabs.css:36`、`annotation-list.html:367`、`sidebar.css:828` |
-| `min-width: 768px` | 1 | `profile.html:50` |
-| `max-width: 420px` | 3 | `task-list.html:170`、`task-detail.html:1036`、`annotation-list.html:416` |
-| `max-width: 480px` | 1 | `task-new.html:170` |
-| `max-width: 640px` | 1 | `task-detail.html:1892` |
-| `max-width: 1100px` | 1 | `task-new.html:183` |
-| JS `matchMedia` | 2 | `sidebar.js:513`（`min-width: 769px`）、`:518`（`min-width: 768px`） |
-
-**內容最大寬度（`max-width`）：**
-
-| 值 | 用在 | 位置（節選） |
-| :--- | :--- | :--- |
-| 1280px | 登入後頁面的內容區（10 頁） | `task-list.html:38`、`task-new.html:31`、`task-detail.html:42`、`dataset-analysis-list.html:38`、`dataset-analysis-detail.html:35`、`user-management.html:36`、`annotation-list.html:35`、`profile.html:48`、`role-settings.html:40`、`dashboard.layout.css:58` |
-| 480px | 帳號頁的單卡（5 頁） | `login.html:126`、`register.html:129`、`forgot-password.html:128`、`reset-password.html:122`、`verify-email.html:127` |
-| 400／440／520／720／860／1280px | Modal 與抽屜寬度（各自寫） | `role-settings.html:262`（400）、`user-management.html:675`（440）、`task-detail.html:888`、`annotation-list.html:223`、`annotation-workspace.html:1012`（520）、`annotation-workspace.html:947`、`:949`（720）、`:952`（860）、`task-new.html:70`（1280） |
-| 520／420px | 空狀態（一般／緊湊） | `empty-state.css:11`、`:16` |
-| 960px | 元件展示頁 | `components-showcase.html:63` |
-
-**觀察：**
-
-1. 「手機／桌面」的分界已經高度一致，只差 1px：24 條在 767／768 附近（767 有 16 條、768 有 8 條），加上 `profile.html:50` 的 `min-width: 768px`；`sidebar.js` 的 `matchMedia` 一處用 769、一處用 768（`:513`、`:518`），與 CSS 的 768 差 1px，**同一頁會有 1px 區間 CSS 與 JS 不一致**。`sidebar.css` 自己就兩種寫法（`:828` 是 768，`:1086`、`:1124` 是 767）。
-2. 小螢幕的第二層分界只有 420px（3 條）。
-3. 480、640、1100 各只有 1 條，是個別頁面自己的版面需要（`task-new`、`task-detail`）。
-4. 內容最大寬度 1280px 非常一致（10／10 個登入後頁面）；帳號頁單卡 480px 也一致（5／5）。Modal 寬度各寫各的。
-
-**建議（待維護者裁定）：**
-
-| 項目 | 建議值 | 理由 |
-| :--- | :--- | :--- |
-| 手機／桌面分界 | **`max-width: 767px`（桌面 `min-width: 768px`）** | 條數最多（16 對 8），且 767／768 互補才不留 1px 縫；順便把 `sidebar.js:513` 的 769 改成 768 |
-| 小螢幕 | **`max-width: 420px`** | 3 頁已一致使用 |
-| 登入後內容最大寬度 | **1280px** | 10／10 頁一致 |
-| 帳號頁單卡最大寬度 | **480px** | 5／5 頁一致 |
-| Modal 寬度 | **小 400、中 520、大 720**；860 與 1280 視為個案例外（`pdf-modal`、`modal-xl`） | 520（4 處）與 720（2 處）最多；其餘 440 併入 400 或 520 要維護者看畫面決定 |
-| 480／640／1100 三條 | 保留為頁面自己的版面斷點，不列入共用斷點 | 各只有 1 頁用，不是共用規則 |
-
-這組值是歸納，不是裁定；要變成規則，需要維護者回覆採用與否。
-
+目前無。
