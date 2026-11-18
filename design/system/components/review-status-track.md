@@ -34,7 +34,7 @@
 
 ## token
 
-`--color-border`、`--color-white`、`--color-ink-muted`、`--color-cta`、`--color-success-bg`、`--color-primary`、`--color-primary-soft-bg`、`--radius-full`。**零寫死色值**；連 svg 的 `stroke` 都用 `var(--color-border)`／`var(--color-cta)`（樣本 `:1225`）。
+`--color-border`、`--color-white`、`--color-ink-muted`、`--color-cta`、`--color-success-bg`、`--color-primary`、`--color-primary-strong`、`--color-primary-soft-bg`、`--radius-full`。**零寫死色值**；連 svg 的 `stroke` 都用 `var(--color-border)`／`var(--color-cta)`（樣本 `:1225`）。
 
 ## 鍵盤與焦點
 

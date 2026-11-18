@@ -41,7 +41,7 @@
 
 ## token
 
-`--color-cta`、`--color-on-cta`、`--color-primary`、`--color-primary-soft-bg`、`--color-border`、`--color-error`、`--radius-md`、`--text-caption`。
+`--color-cta`、`--color-on-cta`、`--color-primary-strong`、`--color-primary-soft-bg`、`--color-border`、`--color-error`、`--radius-md`、`--text-caption`。
 
 `.btn-danger`（showcase 版）、`.btn-oauth`、`.btn-icon`、`.btn-language` 在 `components-showcase.html:177`–`:287` 共寫死 **18 處**色值（**9 個相異值**，無 `rgba()`），`tokens.css` 沒有對應的 token；原值見 `../design-gaps.md` G-02。
 

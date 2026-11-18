@@ -29,7 +29,7 @@
 
 ## token
 
-`--color-border`、`--color-white`、`--color-ink-muted`、`--color-primary`、`--color-cta`、`--color-on-cta`、`--space-lg`、`--dur-fast`。
+`--color-border`、`--color-white`、`--color-ink-muted`、`--color-primary`、`--color-primary-strong`、`--color-cta`、`--color-on-cta`、`--space-lg`、`--dur-fast`。
 
 ## 鍵盤與焦點
 

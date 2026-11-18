@@ -35,7 +35,7 @@
 
 ## token
 
-`--color-border`、`--color-primary`、`--color-surface`、`--color-ink`、`--radius-md`。
+`--color-border-control`、`--color-primary`、`--color-surface`、`--color-ink`、`--radius-md`。
 
 正典區塊另寫死 **6 個**色值（`components-showcase.html:291`–`:328`），`tokens.css` 沒有對應 token；原值見 `../design-gaps.md` G-02。
 `font-size: 16px` 是字面值，不是 `--text-*` 的任何一個（`input.css:13`）。

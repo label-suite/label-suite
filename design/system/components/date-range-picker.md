@@ -39,14 +39,14 @@ h.setLang('en'); h.setValue({ from: null, to: null }); h.destroy();
 | 展開 | 有 | 腳本切 `hidden` |
 | hover | 有，日期格與上下月鈕都換 `--color-primary-soft-bg` | `:22`、`:32` |
 | focus | **有**。trigger 與日期格都畫 2px primary outline、`outline-offset: 1px` | `:8`、`:33` — b1 第二個有焦點樣式的元件（另一個是 [Avatar](avatar.md)） |
-| 今天 | 有，`.is-today` 以 `--color-primary-border` 畫框 | `:34` |
+| 今天 | 有，`.is-today` 以 `--color-primary` 畫框（`--color-primary-border` 只有 1.49:1，不能是唯一的提示） | `:34` |
 | 區間內 | 有，`.is-in-range` 柔底、**圓角拉平**成連續色帶 | `:35` |
 | 區間端點 | 有，`.is-range-start`／`.is-range-end` 實心 primary | `:36` |
 | disabled／載入中／錯誤／空 | 未觀察到 | 全檔無 `:disabled` |
 
 ## token
 
-`--color-white`、`--color-border`、`--color-ink`、`--color-primary`、`--color-primary-soft-bg`、`--color-primary-border`、`--color-on-cta`、`--radius-md`、`--radius-sm`、`--shadow-lg`、`--z-dropdown`、`--space-sm`、`--space-xs`、`--font-sans`。
+`--color-white`、`--color-border`、`--color-ink`、`--color-primary`、`--color-primary-strong`、`--color-primary-soft-bg`、`--color-on-cta`、`--radius-md`、`--radius-sm`、`--shadow-lg`、`--z-dropdown`、`--space-sm`、`--space-xs`、`--font-sans`。
 
 檔頭註解明寫「Tokens from assets/tokens.css only」（`date-range-picker.css:1`），**全檔沒有任何寫死色值**——b1 唯一做到這件事的共用 CSS。
 

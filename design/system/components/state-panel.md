@@ -36,7 +36,7 @@
 
 ## token
 
-`--radius-md`、`--radius-full`、`--color-success`／`-bg`／`-border`、`--color-error`／`-bg`／`-border`、`--color-primary`。
+`--radius-md`、`--radius-full`、`--color-success`／`-bg`／`-border`、`--color-error`／`-bg`／`-border`、`--color-primary`、`--color-primary-strong`。
 
 圖示底色與標題色是**四個**寫死值，註解都標為「MASTER §State Panel literal」（`:871`、`:875`、`:882`、`:883`），原值見 `../design-gaps.md` G-02。
 

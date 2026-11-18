@@ -30,7 +30,7 @@
 
 ## token
 
-`--color-text-soft`、`--color-primary`、`--color-ink-muted`。字級 13px／11px 與 `margin-bottom: 12px` 是字面值。
+`--color-text-soft`、`--color-primary-strong`、`--color-ink-muted`。字級 13px／11px 與 `margin-bottom: 12px` 是字面值。
 
 ## 鍵盤與焦點
 
