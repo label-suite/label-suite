@@ -410,7 +410,7 @@ const deck: Deck = {
         { n: "02", title: "六個角色", sub: "系統角色與任務角色互不影響" },
         { n: "03", title: "系統架構", sub: "C4 第一層與第二層" },
         { n: "04", title: "任務生命週期", sub: "三個模組之間的六次交接" },
-        { n: "05", title: "實際操作畫面", sub: "建立任務、任務詳情、標記工作區" },
+        { n: "05", title: "實際操作畫面", sub: "建立任務、標記工作區、品質監控" },
         { n: "06", title: "目前進度", sub: "規格與原型完成，正在補齊開發規範" },
       ],
     },
@@ -420,6 +420,13 @@ const deck: Deck = {
       num: "01",
       eyebrow: "PART 01 · 專案概述",
       title: "三個卡住現有流程的問題，一篇論文要證明的事",
+      // 聽眾不一定知道資料標記是什麼。先給輸入與輸出，再給痛點，
+      // 順便定義「任務」—— 下一頁整頁都在講誰在任務裡扮演什麼角色。
+      callout: {
+        icon: "info",
+        text: "標記，就是讓好幾個人依同一套規則，為同一批文字標上答案；一個任務 = 一批資料 + 一套標記規則 + 一組人",
+        chip: "先講清楚",
+      },
       render: ProblemsPage,
     },
     {
@@ -461,13 +468,26 @@ const deck: Deck = {
       title: "任務從建立到匯出：三個模組之間的六次交接",
       viz: PrdTaskLifecycleFlow,
       vizHint: "選『逐步走查』依序看每個交接；A1／A2 是退回草稿或再開一輪試標的替代流程。",
+      // 這頁的節點標題直接用「試標」與「IAA」，而這是全場解釋流程的骨幹。
+      // 兩段定義逐字取自 docs/specs/glossary.mdx 的 term.dry-run 與 term.iaa。
+      footnotes: [
+        {
+          n: "1",
+          text: "試標：正式標記前的小規模標記，用來確認標記員對規則的理解是否一致；只產出一致性指標，不產出最終答案。",
+        },
+        {
+          n: "2",
+          text: "IAA：標記者間一致性（Inter-Annotator Agreement），衡量多位標記員對同一筆資料標得有多一致；只供專案負責人參考，不會自動擋下任務。",
+        },
+      ],
     },
     {
       layout: "custom",
       nav: "操作：建立任務",
       num: "05",
       eyebrow: "PART 05 · 實際操作畫面",
-      title: "建立任務：選任務類型、填設定，不用改程式",
+      // 點名 task-config.data.js 裡現成的三種設定，比抽象的「任務類型」好懂。
+      title: "建立任務：命名實體、面向情感、情緒分類——都只是填設定",
       render: prototypePage("task-management/task-new", "建立任務"),
     },
     {
@@ -488,6 +508,20 @@ const deck: Deck = {
         "annotation/annotation-workspace",
         "標記工作區",
         "task_id=T001&sample_id=sent-001&role=annotator&run_type=official_run",
+      ),
+    },
+    {
+      layout: "custom",
+      nav: "操作：品質監控",
+      num: "05",
+      eyebrow: "PART 05 · 實際操作畫面",
+      // 承接上一頁：標記員剛在 T001 標完，負責人在同一個任務看到一致性結果。
+      // 這是封面副標「資料品質分析」與 PART 01 痛點三唯一的畫面佐證。
+      title: "品質監控：試標一結束，負責人就看得到一致性",
+      render: prototypePage(
+        "dataset/dataset-analysis-detail",
+        "品質監控",
+        "task_id=T001&view=quality",
       ),
     },
     {
