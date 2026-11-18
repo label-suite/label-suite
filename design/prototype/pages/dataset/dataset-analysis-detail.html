@@ -87,12 +87,14 @@
     .iaa-bar-fill.pass{background:var(--color-success)}
     .iaa-bar-fill.warn{background:var(--color-warning)}
     .iaa-bar-fill.fail{background:var(--color-error)}
+    .iaa-bar-fill.neutral{background:var(--color-ink-muted)}
     .iaa-threshold-row{display:flex;flex-wrap:wrap;gap:8px;font-size:11px}
     .iaa-threshold-item{display:flex;align-items:center;gap:4px}
     .t-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
     .t-dot-pass{background:var(--color-success)}
     .t-dot-fail{background:var(--color-error)}
     .t-dot-warn{background:var(--color-warning)}
+    .t-dot-neutral{background:var(--color-ink-muted)}
     /* issue label-suite/label-suite#155 (Q18): the output-type cell and the per-item type
        tag in 異常偵測. Muted on purpose -- it identifies a row, it is not data. */
     .row-output-type{color:var(--color-text-soft);white-space:nowrap}
@@ -482,9 +484,9 @@ var I18N = {
     altLblRel:'輔助指標',
     altHVAMetric:'指標', altHVAV:'Valence（V）', altHVAA:'Arousal（A）',
     altHClsMetric:'指標', altHClsVal:'數值',
-    altHSeqMode:'計算模式', altHSeqVal:'數值', altHSeqThr:'門檻', altHSeqResult:'結果',
+    altHSeqMode:'計算模式', altHSeqVal:'數值', altHSeqThr:'門檻／參考值', altHSeqResult:'結果',
     altHRelMetric:'指標', altHRelVal:'數值',
-    altSeqStrictResult:'未達', altSeqPartialResult:'通過',
+    altSeqStrictResult:'未達', altSeqPartialResult:'不判定',
     lblV:'Valence（V）', lblA:'Arousal（A）', lblOverall:'Overall IAA', lblOverallCalc:'（V + A）/ 2',
     /* issue label-suite/label-suite#155 (Q13, maintainer 2026-11-08): multi-dimension
        scoring deliberately judges on the STRICT tier while single-dimension
@@ -496,8 +498,8 @@ var I18N = {
     lblOrec:'建議門檻 0.75 — ', lblOstr:'嚴格門檻 0.80（達標判定）— ',
     tPass:'通過', tFail:'未達',
     lblClsThr:'門檻 0.80 — ',
-    lblSeqStrThr:'Strict 門檻 0.80 — ', lblSeqPartThr:'Relaxed 參考值 0.70 — ',
-    lblRelThr1:'門檻 0.75 — ', lblRelThr2:'高品質參考值 0.80 — ',
+    lblSeqStrThr:'Strict 門檻 0.80 — ', lblSeqPartThr:'Relaxed 參考值 0.70',
+    lblRelThr1:'門檻 0.75 — ', lblRelThr2:'高品質參考值 0.80',
     thVAName:'標記員', thVASpeed:'平均速度', thVAIaaV:'IAA_V', thVAIaaA:'IAA_A', thVADeltaV:'Δ V vs 群體', thVADeltaA:'Δ A vs 群體', thVAStatus:'狀態',
     thClsName:'標記員', thClsSpeed:'平均速度', thClsIaa:'Alpha', thClsDelta:'Δ vs 群體', thClsStatus:'狀態',
     thSeqName:'標記員', thSeqSpeed:'平均速度', thSeqIaa:'F1（strict）', thSeqDelta:'Δ vs 群體', thSeqStatus:'狀態',
@@ -869,17 +871,17 @@ var I18N = {
     altLblRel:'Auxiliary metrics',
     altHVAMetric:'Metric', altHVAV:'Valence (V)', altHVAA:'Arousal (A)',
     altHClsMetric:'Metric', altHClsVal:'Value',
-    altHSeqMode:'Match mode', altHSeqVal:'Value', altHSeqThr:'Threshold', altHSeqResult:'Result',
+    altHSeqMode:'Match mode', altHSeqVal:'Value', altHSeqThr:'Threshold / reference', altHSeqResult:'Result',
     altHRelMetric:'Metric', altHRelVal:'Value',
-    altSeqStrictResult:'Fail', altSeqPartialResult:'Pass',
+    altSeqStrictResult:'Fail', altSeqPartialResult:'Not judged',
     lblV:'Valence (V)', lblA:'Arousal (A)', lblOverall:'Overall IAA', lblOverallCalc:'(V + A) / 2',
     lblVrec:'Recommended 0.75 — ', lblVstr:'Strict 0.80 (decides) — ',
     lblArec:'Recommended 0.75 — ', lblAstr:'Strict 0.80 (decides) — ',
     lblOrec:'Recommended 0.75 — ', lblOstr:'Strict 0.80 (decides) — ',
     tPass:'Pass', tFail:'Fail',
     lblClsThr:'Threshold 0.80 — ',
-    lblSeqStrThr:'Strict threshold 0.80 — ', lblSeqPartThr:'Relaxed reference 0.70 — ',
-    lblRelThr1:'Threshold 0.75 — ', lblRelThr2:'High-quality 0.80 — ',
+    lblSeqStrThr:'Strict threshold 0.80 — ', lblSeqPartThr:'Relaxed reference value 0.70',
+    lblRelThr1:'Threshold 0.75 — ', lblRelThr2:'High-quality reference value 0.80',
     thVAName:'Annotator', thVASpeed:'Avg Speed', thVAIaaV:'IAA_V', thVAIaaA:'IAA_A', thVADeltaV:'Δ V vs Group', thVADeltaA:'Δ A vs Group', thVAStatus:'Status',
     thClsName:'Annotator', thClsSpeed:'Avg Speed', thClsIaa:'Alpha', thClsDelta:'Δ vs Group', thClsStatus:'Status',
     thSeqName:'Annotator', thSeqSpeed:'Avg Speed', thSeqIaa:'F1 (strict)', thSeqDelta:'Δ vs Group', thSeqStatus:'Status',

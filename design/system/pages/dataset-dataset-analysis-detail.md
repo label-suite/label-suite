@@ -31,7 +31,7 @@
 
 **交付包的重現方式與畫面不符**：交付包寫「在序列標註任務的統計總覽點 `#matchStrict`」，但 `#matchStrict`／`#matchPartial`／`#seqStrictCard`／`#seqPartialCard` 只出現在 `quality-entity_recognition.html:11`–`:30`，也就是**實體辨識任務的品質監控**；序列標註與統計總覽都沒有這組切換。照規格 §八種輸出類型各自的主指標與門檻（表格的實體辨識列與第 5 條），切換本來就屬實體辨識。換成「帶實體辨識任務、`?tab=quality`」即可重現，所以不算無法重現 → `../design-gaps.md` G-52。
 
-**「部分重疊」的 0.70 在畫面上仍叫門檻**：`quality-entity_recognition.html:40` 是「Relaxed 門檻 0.70」，關係識別的 `quality-relation_identification.html:23` 是「高品質門檻 0.80」；規格 §八種輸出類型各自的主指標與門檻 第 11 條（Q15，維護者 2026-11-08）要求這兩個值不得叫「門檻」→ `../design-gaps.md` G-53。
+**「部分重疊」的 0.70 與關係識別的 0.80 改叫參考值**（#423）：實體辨識切到 `Partial overlap` 時卡片寫「Relaxed 參考值 0.70」（`quality-entity_recognition.html:42`），關係識別第二列寫「高品質參考值 0.80」（`quality-relation_identification.html:24`），兩者都不帶通過／未達，圓點用中性的 `.t-dot-neutral`；部分重疊卡的數值與長條也改中性色。「兩種計算模式比較」表頭改「門檻／參考值」，部分重疊那一列的結果是中性徽章「不判定」，Strict 那一列照舊判定。依據規格 §八種輸出類型各自的主指標與門檻 第 11 條（Q15，維護者 2026-11-08）→ `../design-gaps.md` G-53。
 
 另外找得到但交付包沒有列的：partial 讀取失敗的面板（`renderPanelLoadError(mount,'load')`，`:1508`），只有讓 partial 請求失敗才看得到 → `../design-gaps.md` G-54。
 
@@ -43,7 +43,7 @@
 | `.btn` 覆寫（`:166`–`:172`） | 載入正典 `button.css` 後又在頁內用零特異性重寫 → G-37 |
 | `.badge*`（`:57`–`:62`）、`.risk-level-badge`（`:147`–`:151`） | 本頁重寫的徽章，全用 token → [Badge](../components/badge.md) |
 | `.iaa-score-card`（`:73`–`:76`）、`.iaa-bar-*`（`:83`–`:87`） | 達標分數卡與分數條；分數條沒有 `role="progressbar"`，數字在旁邊的文字 → [Progress Bar](../components/progress-bar.md) |
-| `.t-dot`（`:90`–`:93`） | 與 Color Dot 同用途的圓點，只靠顏色 → [Color Dot](../components/color-dot.md)、G-14 |
+| `.t-dot`（`:93`–`:97`） | 與 Color Dot 同用途的圓點，只靠顏色；#423 加了不判定用的 `.t-dot-neutral`（`--color-ink-muted`）→ [Color Dot](../components/color-dot.md)、G-14 |
 | `.match-toggle`／`.match-btn`（`:103`–`:106`） | 分段切換鈕，只此一頁；用 `.active` 表示目前選項；已於 #422 補上 `aria-pressed` 並與 `.active` 同步 → G-56 |
 | `.alt-toggle-btn`／`.alt-metrics-body`（`:109`–`:114`） | 原生 `<button>`，帶 `aria-expanded`／`aria-controls`（例如 `quality-single_label.html:24`），收合時 body 設 `aria-hidden`（`wireAltToggle`，`:1919`）→ [Accordion](../components/accordion.md) |
 | `.anomaly-item`（`:126`） | 異常提示列，用 warning token |

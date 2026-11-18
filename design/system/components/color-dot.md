@@ -12,7 +12,7 @@
 | :--- | :--- | :--- | :--- |
 | `.entity-color-dot` | 20×20 | `--radius-sm` 圓角方 | 表單的實體類型列 |
 | `.annotation-preview-color` | 12×12 | `3px` 圓角（字面值，不是 token） | 標記預覽 |
-| `.t-dot` | 8×8 | `50%` 正圓 | 狀態圓點（IAA 門檻過或沒過） |
+| `.t-dot` | 8×8 | `50%` 正圓 | 狀態圓點（IAA 門檻過或沒過；`.t-dot-neutral` 標不判定的參考值，#423） |
 
 依據：`components-showcase.html:720`、`:729`、`:739`。
 
@@ -58,6 +58,6 @@
 | :--- | :--- |
 | `components-showcase#state-default` | 三個變體 |
 | `task-management/task-new#state-step2`、`task-management/task-detail#tab-settings` | **不是正典的 `.color-dot`**：`task-config.css` 的 `.entity-color-dot`（`:169`，20px 方形 `--radius-sm`）與 `.annotation-preview-color`（`:424`，12px），邊框寫死 rgba（`:169`、`:578`–`:579`）；`task-detail.html:1245` 又定義一次 `.entity-color-dot` → `../design-gaps.md` G-10 |
-| `dataset/dataset-analysis-detail`（`#state-quality-*`） | **不是正典的 `.color-dot`**：本頁 `.t-dot`（`dataset-analysis-detail.html:90`–`:93`），同樣只靠顏色 → `../design-gaps.md` G-14 |
+| `dataset/dataset-analysis-detail`（`#state-quality-*`） | **不是正典的 `.color-dot`**：本頁 `.t-dot`（`dataset-analysis-detail.html:93`–`:97`），同樣只靠顏色 → `../design-gaps.md` G-14 |
 
 b1 的帳號頁一個都沒用。b2 已補上（見上表）。b4 已補上（見上表）。
