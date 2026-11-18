@@ -564,6 +564,18 @@
     /* radio-style (single-select) chip */
     .task-type-chip[role="radio"] .task-type-chip-check { border-radius: 50%; }
     .task-type-chip[role="radio"].selected .task-type-chip-check::after { width: 6px; height: 6px; border: none; border-radius: 50%; background: white; transform: none; }
+    /* ── 作答控制項 chip（G-50，#420）：引擎產生的標籤／實體類型／Bypass 按鈕。
+       顏色只走 token；每個標籤自己的顏色是任務資料，由引擎寫進 --chip-color。
+       勾選框與圓點用 currentColor，選中時跟著字色換成 --color-on-cta。 */
+    .chip { --chip-color: var(--color-primary); display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; border: 2px solid var(--chip-color); color: var(--chip-color); background: transparent; transition: all 0.15s; }
+    .chip.is-active { color: var(--color-on-cta); background: var(--chip-color); }
+    .chip--lg { gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; }
+    .chip--bypass { --chip-color: var(--color-ink-muted); gap: 6px; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; border-style: dashed; }
+    .chip-mark { width: 14px; height: 14px; border: 2px solid currentColor; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .chip-mark--radio { border-radius: 50%; }
+    .chip-mark--box { border-radius: 3px; font-size: 10px; }
+    .chip.is-active .chip-mark--radio::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
 
     /* ── Dark-mode rules for engine-generated components (shared by task-new + task-detail) ── */
     html[data-theme="dark"] .regression-value-input { background: var(--color-surface); }
