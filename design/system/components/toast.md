@@ -69,7 +69,7 @@
 | `components-showcase#state-default` | 四個 variant 的真實行為 |
 | `account/profile#toast-saved` | 儲存個人資料或通知設定後顯示 |
 | `admin/role-settings#toast-saved` | 本頁的 `.toast*`（#423 起改右下角，與規格一致），`TOAST_DURATIONS` 依類型（`role-settings.html:1413`），符合 UXC-07 → `../design-gaps.md` G-39 |
-| `admin/user-management#toast-action` | 本頁的 `.toast*`（上方置中），`TOAST_DURATIONS` 依類型（`user-management.html:1579`），符合 UXC-07 |
+| `admin/user-management#toast-action` | 本頁的 `.toast*`（上方置中），`TOAST_DURATIONS` 依類型（`user-management.html:1456`），符合 UXC-07 |
 | `task-management/task-list`（`#param-unauthorized`、`#sim-delete-error`） | 本頁的 `.toast*`（右下角）；#423 起 `TOAST_DURATIONS`（`task-list.html:578`）依類型，error 不自動消失、有關閉鈕，符合 UXC-07 → `../design-gaps.md` G-39 |
 | `task-management/task-new`（交付包未列） | 同上，`TOAST_DURATIONS`（`task-new.html:878`）→ G-39 |
 | `task-management/task-detail`（交付包未列） | 同上，`TOAST_DURATIONS`（`task-detail.html:11243`）→ G-39 |

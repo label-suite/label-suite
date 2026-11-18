@@ -56,7 +56,7 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 唯一樣本 |
-| `admin/user-management#toast-action` | 停用確認視窗裡的 `.alert-banner.warning`（`user-management.html:170`、`:175`、`:684`） |
+| `admin/user-management#toast-action` | 停用確認視窗裡的 `.alert-banner.warning`（`user-management.html:170`、`:175`、`:587`） |
 | `admin/role-settings`（`#state-dirty`、`#state-conflict`） | **不是這個 class**：本頁自己的 `.banner`／`.dirty-banner`／`.conflict-banner`（`role-settings.html:42`–`:58`）→ `../design-gaps.md` G-07 |
 
 b2 已補上（見上表）。

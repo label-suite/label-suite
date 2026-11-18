@@ -31,7 +31,7 @@
 
 **b3 核對**：`annotation/annotation-list` 的 CSS 約 30 個寫死 hex ＋ 1 個 rgba，集中在階段徽章（`annotation-list.html:167`–`:174`）、結果標籤（`:343`–`:345`）與暗色模式覆寫（`:401`–`:407`）；`annotation-workspace` 把同一組結果標籤 hex 再寫一份（`annotation-workspace.html:596`–`:601`），另有 `rgba(99,102,241,0.2)`（`:834`、`:855`）與 `var(--color-surface, #…)` 的 hex 後備值（`:953`）。作答控制項的 hex 在引擎裡 → G-50。
 
-**b4 核對**：`dataset/dataset-analysis-list` 只有一個寫死值，焦點環的 `rgba(99, 102, 241, 0.18)`（`dataset-analysis-list.html:76`）；輸出類型徽章載入 `task-type-badge.css`，那 36 個 hex 已算在上面。`dataset/dataset-analysis-detail` 與十六個 partial 沒有 hex 或 rgba，SVG 與 inline `style` 全用 `var(--*)`；只有平均標記時間的 `<small style="font-size:18px">`（`dataset-analysis-detail.html:286`）寫死字級。
+**b4 核對**：`dataset/dataset-analysis-list` 只有一個寫死值，焦點環的 `rgba(99, 102, 241, 0.18)`（`dataset-analysis-list.html:76`）；輸出類型徽章載入 `task-type-badge.css`，那 36 個 hex 已算在上面。`dataset/dataset-analysis-detail` 與十六個 partial 沒有 hex 或 rgba，SVG 與 inline `style` 全用 `var(--*)`；只有平均標記時間的 `<small style="font-size:18px">`（`dataset-analysis-detail.html:273`）寫死字級。
 
 **狀態（#420）**：已修正。`design/prototype/` 的 6 位 hex 從 22 個檔 662 處降到 8 個檔 171 處（不含 `tokens.css` 與 logo SVG）。剩下的分三種，都是刻意留下：
 
@@ -347,7 +347,7 @@
 | :--- | :--- |
 | **重現方式** | 開 `pages/task-management/task-new.html`，第一到第三步填妥後按「下一步」：出現第四步「標記說明」。交付包只有 `#state-step1`～`#state-step3`。 |
 | **受影響範圍** | [Step Indicator](components/step-indicator.md)、[Modal](components/modal.md)、[Skeleton](components/skeleton.md)；`task-management/task-new`、`task-detail`、`admin/user-management`、`admin/role-settings` |
-| **依據** | `task-new.html:430` 的 `step4Panel`，步驟條畫了四格（`:226`–`:245`）。同樣找得到但沒有視圖 ID 的：`task-new` 的 `taxonomyDeleteModal`（`:529`）與頂端錯誤橫幅（`:220`）；`task-detail` 的載入骨架（`:1964`–`:1975`）與 `taskNotFound`（`:1979`）；`user-management` 的 `editModal`（`:622`）與異動紀錄抽屜（`:709`）；`role-settings` 的 `#dirtyModal`（`:958`）、異動紀錄抽屜（`:933`）與 `storedInvalidBanner`（`:383`）。 |
+| **依據** | `task-new.html:443` 的 `step4Panel`，步驟條畫了四格（`:239`–`:259`）。同樣找得到但沒有視圖 ID 的：`task-new` 的 `taxonomyDeleteModal`（`:542`）與頂端錯誤橫幅（`:233`）；`task-detail` 的載入骨架（`:1892`–`:1904`）與 `taskNotFound`（`:1908`）；`user-management` 的 `editModal`（`:525`）與異動紀錄抽屜（`:709`）；`role-settings` 的 `#dirtyModal`（`:858`）、異動紀錄抽屜（`:933`）與 `storedInvalidBanner`（`:306`）。 |
 | **待決問題** | **已裁定（2026-11-18）**：下次重跑 `design-handoff` 時補上這些視圖。**已於 #418 處理**：交付包第四次重跑補上九個視圖：`task-management/task-new#state-step4`、`#modal-taxonomy-delete`；`task-management/task-detail#state-loading`、`#state-task-not-found`；`admin/user-management#modal-edit`、`#modal-audit-log`；`admin/role-settings#modal-dirty`、`#modal-audit-log`、`#state-stored-invalid`。`task-new` 的頂端錯誤橫幅叫不出來（驗證不過時「下一步」已停用，`showBannerError()` 走不到），記進交付包的「無法重現」為 `task-management/task-new#state-banner-error`，畫面要不要改仍待決。原題保留：要不要在下一次重跑 `design-handoff` 時補上這些視圖？本 skill 不替它們取 ID。 |
 
 ### G-36 五條 UX 約定在本批次沒有證據
@@ -356,7 +356,7 @@
 | :--- | :--- |
 | **重現方式** | 在 b1 的九個畫面上找 UXC-03／04／05／09／10 的行為：找不到。 |
 | **受影響範圍** | [`ux-conventions.md`](ux-conventions.md) |
-| **依據** | 引用位置全在別批：UXC-03 → `admin/role-settings.html:1393`、`:1411`，`annotation-workspace.config.js:1989`、`:2041`；UXC-04 → `annotation-workspace.config.js:666`、`:3099`；UXC-05 → 同 `:666`；UXC-09 → `annotation-list.html:1921`；UXC-10 → `task-config.engine.js:22`、`:6185`，`task-new.html:529`，`user-management.html:1357`。 |
+| **依據** | 引用位置全在別批：UXC-03 → `admin/role-settings.html:1300`、`:1318`，`annotation-workspace.config.js:1989`、`:2041`；UXC-04 → `annotation-workspace.config.js:666`、`:3099`；UXC-05 → 同 `:666`；UXC-09 → `annotation-list.html:1921`；UXC-10 → `task-config.engine.js:22`、`:6185`，`task-new.html:541`，`user-management.html:1242`。 |
 | **待決問題** | 無（由 b2／b3 補完即可）。登記在此是為了讓 `ux-conventions.md` 的空缺有下落。 |
 
 **b2 補上**：UXC-03、09、10 已寫進 [`ux-conventions.md`](ux-conventions.md)；UXC-04、05 待 b3。
@@ -401,7 +401,7 @@
 
 [Toast](components/toast.md)：`#toast` 在 8 個頁面各有一份（b2 五個、b3 一個、b4 兩個），加上 `account/profile` 自己的 `.toast*`。[Skeleton](components/skeleton.md)：`dashboard.components.css`、`dashboard.js`、`task-detail.html`、`shared/sidebar.js`、`shared/modal.css` 各自提到。待 b2–b4 逐一核對是否與正典相同。
 
-**b2 核對**：Skeleton 的 `dashboard.components.css:319`–`:356`（shimmer）與 `task-detail.html:69`–`:85`（pulse）都是正典的逐字複製；Toast 的 b2 五份裡兩份（`admin/*`）照 UXC-07、三份（`task-management/*`）不照 → G-39。另找到：Toggle Switch 在 `task-detail` 被重新定義（G-42）、卡片四份（G-41）、異動紀錄抽屜兩份（G-38）、Badge 在 b2 六頁都各自重寫（`user-management.html:101`、`role-settings.html:311`、`task-list.html:90`、`task-detail.html:114`、`dashboard.layout.css:238`）。b3、b4 的部分待那兩批。
+**b2 核對**：Skeleton 的 `dashboard.components.css:319`–`:356`（shimmer）與 `task-detail.html:69`–`:85`（pulse）都是正典的逐字複製；Toast 的 b2 五份裡兩份（`admin/*`）照 UXC-07、三份（`task-management/*`）不照 → G-39。另找到：Toggle Switch 在 `task-detail` 被重新定義（G-42）、卡片四份（G-41）、異動紀錄抽屜兩份（G-38）、Badge 在 b2 六頁都各自重寫（`user-management.html:101`、`role-settings.html:255`、`task-list.html:90`、`task-detail.html:114`、`dashboard.layout.css:238`）。b3、b4 的部分待那兩批。
 
 **b3 核對**：Toast 的 b3 那一份（`annotation-workspace.html:1011`–`:1054`，`TOAST_DURATIONS` 在 `annotation-workspace.config.js:426`–`:443`）照 UXC-07。另找到：結果標籤的 hex 在 `annotation-list` 與 `annotation-workspace` 各寫一份（G-02）、卡片第五份（G-41）、`.mini-btn` 第三與第四份（G-37）、Progress Bar 兩頁各重寫一份（`annotation-list.html:178`–`:190` 的 `.progress`、`annotation-workspace.html:304`–`:315` 的 `.progress-track`）、Status Pill 換名複製（`annotation-list.html:256`–`:267`）。Skeleton 在 `shared/sidebar.js`、`shared/modal.css` 的那幾處只是字面上的「skeleton」，不是這個元件。b4 的部分待 b4。
 
@@ -441,7 +441,7 @@ showcase 說明寫「profile 64/80px」（`:1356`），它的 CSS 是 80px（`:9
 
 `shared/content-tabs.css` 不提供 `role="tablist"`／`role="tab"`／`aria-selected`，也沒有方向鍵巡覽；且窄視窗下 `scrollbar-width: none`（`:40`）隱藏捲軸，滑鼠使用者沒有「還有更多分頁」的提示。
 
-**b2 核對**：三個使用頁面**自己補上了**語意——`admin/user-management`（`user-management.html:377`–`:379`）與 `admin/role-settings`（`role-settings.html:407`–`:409`）在 `<a>` 上加 `role="tablist"`／`role="tab"`／`aria-selected`；`task-detail` 另有方向鍵巡覽（`task-detail.html:11713`–`:11724`）。共用的 `content-tabs.css` 本身仍不提供，缺口不變。
+**b2 核對**：三個使用頁面**自己補上了**語意——`admin/user-management`（`user-management.html:280`–`:282`）與 `admin/role-settings`（`role-settings.html:335`–`:337`）在 `<a>` 上加 `role="tablist"`／`role="tab"`／`aria-selected`；`task-detail` 另有方向鍵巡覽（`task-detail.html:11682`–`:11698`）。共用的 `content-tabs.css` 本身仍不提供，缺口不變。
 
 **b3 核對**：`annotation-workspace` 的 `.admin-tabs--panel`（`annotation-workspace.html:1288`–`:1289`）是兩顆 `<button>`，**沒有補上**語意，只能點（`annotation-workspace.config.js:6736`–`:6754`）。
 
@@ -509,7 +509,7 @@ showcase 說明寫「profile 64/80px」（`:1356`），它的 CSS 是 80px（`:9
 
 > b2 新增。
 
-`task-new.html:227`–`:246` 每一步是 `<div class="step-item">`，目前步驟只靠 `.active` 換色，沒有 `aria-current="step"`；完成的步驟也只靠 `.done` 換色。螢幕閱讀器讀不出現在第幾步、哪幾步已完成。
+`task-new.html:240`–`:258` 每一步是 `<div class="step-item">`，目前步驟只靠 `.active` 換色，沒有 `aria-current="step"`；完成的步驟也只靠 `.done` 換色。螢幕閱讀器讀不出現在第幾步、哪幾步已完成。
 
 **已裁定（2026-11-18）**：修正：目前步驟加 `aria-current="step"`。修正於 #422。
 

@@ -73,7 +73,7 @@
 | `account/reset-password`（`proto-valid`、`state-mismatch`） | `.field-error` |
 | `account/profile`（`state-default`） | `.field-hint`、`.field-error` |
 | `admin/user-management`（`#state-default`、`#modal-invite`） | `.input`（`user-management.html:1611`） |
-| `task-management/task-new`（`#state-step1`、`#state-step3`） | **本頁的 `.input-text`**（`task-new.html:59`），不是正典 → `../design-gaps.md` G-04 |
+| `task-management/task-new`（`#state-step1`、`#state-step3`） | **本頁的 `.input-text`**（`task-new.html:64`），不是正典 → `../design-gaps.md` G-04 |
 | `annotation/annotation-workspace`（`#role-annotator`） | 「無法判定」理由用正典 `.input`（`annotation-workspace.config.js:649`–`:681`），送出才驗證、輸入就清錯 → UXC-04、UXC-05 |
 | `annotation/annotation-workspace`（`#role-reviewer`） | 審核理由用正典 `.input-textarea` |
 | `annotation/annotation-workspace#state-exception-pool` | **inline 樣式的理由輸入框**（`annotation-workspace.config.js:5042`–`:5050`），不是 `.input` → G-04 |

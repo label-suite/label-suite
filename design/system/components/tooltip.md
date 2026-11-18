@@ -48,7 +48,7 @@
 
 ## 可重現樣本
 
-`task-management/task-new#state-step3`（`task-new.html:394`–`:399`）、`task-management/task-detail#tab-settings`（`settings.html:321`–`:323`）、`annotation/annotation-workspace#role-reviewer`（審核說明）。
+`task-management/task-new#state-step3`（`task-new.html:408`–`:411`）、`task-management/task-detail#tab-settings`（`settings.html:321`–`:323`）、`annotation/annotation-workspace#role-reviewer`（審核說明）。
 
 ## shadcn 對照
 

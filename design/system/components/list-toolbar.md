@@ -70,7 +70,7 @@
 | :--- | :--- |
 | 無（b1） | — |
 | `task-management/task-list`（`#state-default`、`#state-filtered-empty`） | 工具列 markup `task-list.html:197`–`:229`，已載 `list-page.css` 又在 `<style>` 重寫（`:139`–`:145`） |
-| `admin/user-management#state-default` | 本頁的搜尋與篩選（`user-management.html:61`–`:81`、`:252`），不是 `list-page.css` |
+| `admin/user-management#state-default` | 本頁的搜尋與篩選（`user-management.html:61`–`:81`、`:286`），不是 `list-page.css` |
 | `annotation/annotation-list`（`#state-default`、`#state-filtered-empty`） | `.toolbar role="search"`（`annotation-list.html:472`）：`.filter-select`、`.search-input`、`.clear-btn`；篩選狀態放網址（`?q=`、`?status=`，UXC-11，`:1050`） |
 | `dataset/dataset-analysis-list`（`#state-default`、`#state-filtered-empty`） | `list-page.css` 的 `.toolbar role="search"`（`dataset-analysis-list.html:247`）：兩個 `.filter-select`（`:249`、`:252`）、`.clear-btn`（`:255`）、`.search-input`；篩選寫進網址（`syncUrl`，`dataset-analysis-list.js:71`） |
 

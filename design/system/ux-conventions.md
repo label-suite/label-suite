@@ -54,7 +54,7 @@
 
 遵守它的元件：[Toast](components/toast.md) 本身，以及 [App Shell](components/app-shell.md) 的通知（待 b2 核對是否同一套）。
 
-**b2 核對**：`admin/role-settings`（`role-settings.html:1499`）與 `admin/user-management`（`user-management.html:1579`）照抄 `TOAST_DURATIONS`，遵守；`task-management/task-list`（3000 ms）、`task-new`（3500 ms）、`task-detail`（2400 ms）原本一律固定秒數、錯誤也會自己消失，**不遵守** → [`design-gaps.md`](design-gaps.md) G-39；#423 起三頁都改用 `TOAST_DURATIONS`，error 只能手動關，已遵守。App Shell 的通知是 `sidebar.js` 的下拉選單，不是 toast，不適用。
+**b2 核對**：`admin/role-settings`（`role-settings.html:1413`）與 `admin/user-management`（`user-management.html:1456`）照抄 `TOAST_DURATIONS`，遵守；`task-management/task-list`（3000 ms）、`task-new`（3500 ms）、`task-detail`（2400 ms）原本一律固定秒數、錯誤也會自己消失，**不遵守** → [`design-gaps.md`](design-gaps.md) G-39；#423 起三頁都改用 `TOAST_DURATIONS`，error 只能手動關，已遵守。App Shell 的通知是 `sidebar.js` 的下拉選單，不是 toast，不適用。
 
 **b3 核對**：`annotation/annotation-workspace` 照抄 `TOAST_DURATIONS`（`annotation-workspace.config.js:426`–`:443`），遵守。`annotation-list` 沒有 toast。
 
@@ -79,13 +79,13 @@
 
 清單頁的 `q`／`keyword`、`status`、`limit`／`offset` 這類狀態寫進網址，重新整理與分享連結都能回到同一個畫面。
 
-依據：`design/prototype/pages/admin/user-management.html:1075`（「URL state (UXC-11): q / role / status / limit / offset」）、`pages/annotation/annotation-list.html:1050`（「filter/search/pagination live in the URL (limit/offset…」）、`components-showcase.html:1172`（「行為契約見 UXC-11（limit/offset、URL 同步）」）。
+依據：`design/prototype/pages/admin/user-management.html:952`（「URL state (UXC-11): q / role / status / limit / offset」）、`pages/annotation/annotation-list.html:1050`（「filter/search/pagination live in the URL (limit/offset…」）、`components-showcase.html:1172`（「行為契約見 UXC-11（limit/offset、URL 同步）」）。
 
 遵守它的元件：[Pagination](components/pagination.md)、[List Toolbar](components/list-toolbar.md)。兩者在 b1 都**沒有可重現的視圖**（showcase 只展示版面、不展示網址行為），所以這一條在本批次只記到契約層。
 
 **b2 補上可重現的樣本**：`admin/user-management#state-filtered-empty`（`?q=`／`?status=`／`?role=`）與 `task-management/task-list#state-filtered-empty`（`?keyword=`／`?status=`／`?output_type=`／`?run_stage=`，規格 [`01-task-list.mdx` §查詢條件保留在網址](../../docs/specs/03-task-management/01-task-list.mdx)）。
 
-**b4 補上**：`dataset/dataset-analysis-list#state-filtered-empty`（`?keyword=`／`?iaa_status=`／`?output_type=`，由 `syncUrl` 只從狀態組網址，`design/prototype/pages/dataset/dataset-analysis-list.js:71`）。`dataset/dataset-analysis-detail` 的 `syncUrlState`（`dataset-analysis-detail.html:2423`）同樣只從狀態組網址（#155 Q4，維護者 2026-11-08），但它保存的是 `task_id` 與 `tab`，不是清單狀態。
+**b4 補上**：`dataset/dataset-analysis-list#state-filtered-empty`（`?keyword=`／`?iaa_status=`／`?output_type=`，由 `syncUrl` 只從狀態組網址，`design/prototype/pages/dataset/dataset-analysis-list.js:71`）。`dataset/dataset-analysis-detail` 的 `syncUrlState`（`dataset-analysis-detail.html:2424`）同樣只從狀態組網址（#155 Q4，維護者 2026-11-08），但它保存的是 `task_id` 與 `tab`，不是清單狀態。
 
 這條和 `docs/prototype/navigation.mdx` §網址參數 是同一件事的兩面：那一節是**宣告有哪些參數**，這一條是**為什麼要有**。
 
@@ -97,10 +97,10 @@
 
 遵守它的元件：
 
-- [Modal](components/modal.md)：`admin/role-settings` 的 `#dirtyModal`（`design/prototype/pages/admin/role-settings.html:953`；`cancelEdit` 在 `isDirty` 時先開它，`:1411`–`:1417`）；`task-management/task-new` 的 `leaveModal`（`task-new.html:518`）；`task-management/task-detail` 的 `settingsLeave`（`task-detail.html:1961`）
-- [Alert Banner](components/alert-banner.md)：`admin/role-settings` 的 `.dirty-banner`（`:353`）在離開之前就先把「有未儲存的變更」說出來
+- [Modal](components/modal.md)：`admin/role-settings` 的 `#dirtyModal`（`design/prototype/pages/admin/role-settings.html:858`；`cancelEdit` 在 `isDirty` 時先開它，`:1319`–`:1325`）；`task-management/task-new` 的 `leaveModal`（`task-new.html:530`）；`task-management/task-detail` 的 `settingsLeave`（`task-detail.html:1961`）
+- [Alert Banner](components/alert-banner.md)：`admin/role-settings` 的 `.dirty-banner`（`:276`）在離開之前就先把「有未儲存的變更」說出來
 
-瀏覽器層：`role-settings.html:1393`–`:1398`、`task-new.html:1663`。**`task-detail` 沒有 `beforeunload`**——它只擋頁內切換（`task-detail.html` 全檔 `beforeunload` 0 次）。
+瀏覽器層：`role-settings.html:1301`–`:1305`、`task-new.html:1708`。**`task-detail` 沒有 `beforeunload`**——它只擋頁內切換（`task-detail.html` 全檔 `beforeunload` 0 次）。
 
 **b3 核對**：`annotation/annotation-workspace` 兩層都有，但頁內那一層**不是確認視窗**。瀏覽器層是 `beforeunload`（`design/prototype/pages/annotation/annotation-workspace.config.js:2064`–`:2068`）；頁內則是中欄任何 `input`／`change`／`click` 都把旗標設起來（`markUnsaved`，`:2047`；三個 capture 監聽，`:2060`–`:2062`），同時把自動儲存狀態改成「尚未儲存」（`:2052`）——用狀態列說出來，而不是擋住切換。`:1989` 那段註解說的就是這兩者分工。
 
@@ -110,7 +110,7 @@
 
 遵守它的元件：
 
-- [Empty State](components/empty-state.md)：`admin/user-management` 篩到 0 列時是 `empty-state-page` ＋「清除篩選」（`design/prototype/pages/admin/user-management.html:547`–`:559`）
+- [Empty State](components/empty-state.md)：`admin/user-management` 篩到 0 列時是 `empty-state-page` ＋「清除篩選」（`design/prototype/pages/admin/user-management.html:450`–`:462`）
 - [Data Table](components/data-table.md)：`task-management/task-list` 把空狀態放成表格裡的一列，`createEmptyRow(isNoResults)`（`task-list.html:834`–`:858`）依參數換文案，只有 `isNoResults` 為真才加清除鈕；兩種情況都保留表頭
 
 依據的規格：[`03-task-management/01-task-list.mdx` §空狀態與載入失敗](../../docs/specs/03-task-management/01-task-list.mdx)（三種情況的文案表，且「不放第二顆新增任務」）。第三種「載入失敗」**絕對不能顯示成空資料**，`task-list` 用另一列錯誤列（`:875`–`:907`）處理。
@@ -125,8 +125,8 @@
 
 遵守它的元件：
 
-- [Modal](components/modal.md)：`admin/user-management` 只讓新增與編輯可以點遮罩關閉，停用確認不行（`design/prototype/pages/admin/user-management.html:1357`–`:1361`）；停用確認開著時 Enter 送出（`:1369`–`:1371`）。`admin/role-settings` 的 `#dirtyModal` 同樣 Esc 取消、Enter 確認（`role-settings.html:1400`–`:1409`）。刪除分類分支的確認（`task-config.engine.js:6185`–`:6196`，`task-new.html:529` 的 `role="alertdialog"`）把焦點放在「刪除」鈕上（`:6193`），文案寫明一併刪除的子節點數
-- [Button](components/button.md)：確認動作一律用 `.btn-danger`（`user-management.html:696`、`role-settings.html:967`、`task-list.html:280`–`:288`）
+- [Modal](components/modal.md)：`admin/user-management` 只讓新增與編輯可以點遮罩關閉，停用確認不行（`design/prototype/pages/admin/user-management.html:1242`–`:1247`）；停用確認開著時 Enter 送出（`:1254`–`:1257`）。`admin/role-settings` 的 `#dirtyModal` 同樣 Esc 取消、Enter 確認（`role-settings.html:1307`–`:1316`）。刪除分類分支的確認（`task-config.engine.js:6185`–`:6196`，`task-new.html:542` 的 `role="alertdialog"`）把焦點放在「刪除」鈕上（`:6193`），文案寫明一併刪除的子節點數
+- [Button](components/button.md)：確認動作一律用 `.btn-danger`（`user-management.html:599`、`role-settings.html:872`、`task-list.html:280`–`:288`）
 
 **與規格不一致**：`task-management/task-list` 的刪除任務確認原本點遮罩會關；維護者 2026-11-18 裁定刪除任務也適用本約定，#423 已改成點遮罩不關（`task-list.html:1186`–`:1193`）。規格還寫著舊行為（[`01-task-list.mdx` §刪除任務](../../docs/specs/03-task-management/01-task-list.mdx) 第 5 條「點視窗外面，或按 Esc → 視窗關閉」），那一條屬維護者改 → [`design-gaps.md`](design-gaps.md) G-45。
 

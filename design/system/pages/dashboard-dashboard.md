@@ -27,7 +27,7 @@
 
 | 元件 | 說明 |
 | :--- | :--- |
-| `.btn` 與 `.btn-secondary.slim`（`dashboard.layout.css:208`–`:238`） | 本頁的 `.btn` 外框，`:where(.btn)` 零特異性，variant 用正典 `button.css`；焦點環 `outline: 2px solid var(--color-primary)`（`:235`–`:238`）。原本的 `.btn-emerald`／`.btn-violet`／`.btn-indigo` 已於 #423 刪除 → G-37 |
+| `.btn` 與 `.btn-secondary.slim`（`dashboard.layout.css:208`–`:238`） | 本頁的 `.btn` 外框，`:where(.btn)` 零特異性，variant 用正典 `button.css`；焦點環 `outline: 2px solid var(--color-primary)`（`:232`–`:235`）。原本的 `.btn-emerald`／`.btn-violet`／`.btn-indigo` 已於 #423 刪除 → G-37 |
 | `.badge`／`.badge-error`／`.badge-draft`（`dashboard.layout.css:238`、`:269`、`:278`） | 本頁的 badge；#420 起中性徽章改用中性 token，任務型別配色另從 `task-type-badge.css`（取自 `data-palette.css`）來 → G-02 |
 | `.progress`（`dashboard.components.css:206`–`:241`） | 與正典 [Progress Bar](../components/progress-bar.md) **同名同構**；`role="progressbar"` 只在審核覆蓋率那一條有（`dashboard.js:213`），一般進度條沒有（`:222`） |
 | `.skeleton`（`dashboard.components.css:319`–`:329`） | 正典的 shimmer 變體，逐字相同；#420 起漸層改用 token，暗色那組寫死的漸層已刪 → G-02、G-10 |

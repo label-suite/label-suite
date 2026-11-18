@@ -62,7 +62,7 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 全部三群的樣本 |
-| `admin/user-management#state-default`、`admin/role-settings#state-default` | 各自在 `<style>` 重寫 `.badge`（`user-management.html:101`、`role-settings.html:311`） |
+| `admin/user-management#state-default`、`admin/role-settings#state-default` | 各自在 `<style>` 重寫 `.badge`（`user-management.html:101`、`role-settings.html:255`） |
 | `dashboard/dashboard`（`#param-scenario-super-admin-data`、`#param-scenario-reviewer`） | `dashboard.layout.css:238`、`:269`、`:278` 的 `.badge` 與 `.badge-error`／`.badge-draft`；任務型別配色來自 `shared/task-type-badge.css` |
 | `task-management/task-list#state-default` | 本頁 `<style>` 重寫（`task-list.html:90`–`:99`），型別配色同上 |
 | `task-management/task-detail`（`#tab-overview`、`#param-status`） | 本頁 `<style>` 重寫（`task-detail.html:115`–`:132`），中性與正式徽章同樣改用 #420 的 token |

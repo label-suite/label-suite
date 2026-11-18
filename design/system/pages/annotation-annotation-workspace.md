@@ -15,18 +15,18 @@
 | 視圖 | 怎麼走到 | 用到的元件 |
 | :--- | :--- | :--- |
 | `#role-annotator` | 不給 `role`，或給不認得的值（預設） | [App Shell](../components/app-shell.md)、[Breadcrumb](../components/breadcrumb.md)（`nav#entryBreadcrumb`，`:1211`）、[Progress Bar](../components/progress-bar.md)（本頁 `.progress-track`，`:303`–`:314`、markup `:1239`）、[Card](../components/card.md)（`.content-card`，外框在 `pages/shared/card.css:8`–`:16`，本頁 `:250` 只留 G-41 註解）、[Input](../components/input.md)（「無法判定」理由，`.input`，`annotation-workspace.config.js:649`–`:681`）、[Button](../components/button.md)、[Toast](../components/toast.md)（`:1326`–`:1327`） |
-| `#role-reviewer` | `?role=reviewer` | 同上，加 [Review Status Track](../components/review-status-track.md)（`.review-track`，CSS `:441`–`:462`，算繪 `annotation-workspace.config.js:5547`）、[Tooltip](../components/tooltip.md)（審核單位脈絡橫幅的審核說明，`:3935`–`:3980`）、[Input](../components/input.md)（`.input-textarea`，審核理由） |
+| `#role-reviewer` | `?role=reviewer` | 同上，加 [Review Status Track](../components/review-status-track.md)（`.review-track`，CSS `:441`–`:462`，算繪 `annotation-workspace.config.js:5547`）、[Tooltip](../components/tooltip.md)（審核單位脈絡橫幅的審核說明，`:4000`–`:4034`）、[Input](../components/input.md)（`.input-textarea`，審核理由） |
 | `#tab-guideline` | 右欄預設分頁「說明與檔案」 | [Content Tabs](../components/content-tabs.md)（`.admin-tabs.admin-tabs--panel`，`:1290`–`:1291`） |
 | `#tab-history` | 切到「操作紀錄」（`renderHistoryPanel`，`annotation-workspace.config.js:2253`） | [Content Tabs](../components/content-tabs.md)、[Empty State](../components/empty-state.md)（沒有紀錄時 `empty-state-compact`，`:2280`） |
 | `#modal-guideline-gate` | 任務要求先讀說明且這個帳號尚未確認（`setupGuidelineModal`，`:6837`；markup `wsGuidelineModal`，`annotation-workspace.html:1117`） | [Modal](../components/modal.md)、[Button](../components/button.md)（`.btn.btn-cta` 確認、`.btn.btn-secondary` 返回標記清單，#423） |
 | `#modal-guideline-image` | 右欄點圖片檔（`:1145`） | [Modal](../components/modal.md) |
 | `#modal-guideline-pdf` | 右欄點 PDF 檔（`:1160`） | [Modal](../components/modal.md) |
 | `#modal-guideline-md` | 右欄點 Markdown 檔（`:1176`） | [Modal](../components/modal.md) |
-| `#modal-mobile-drawer` | 視窗窄到 767px 以下，點右欄抽屜的把手（`#wsMobileDrawer`，`:1312`；`setupMobileDrawer`，`:6791`–`:6801`） | 本頁的抽屜（`:938`–`:982`） |
-| `#state-review-decision` | 審核員選「通過／修正／無法裁決」（`.rv-choice-group`，`:3630`–`:3670`） | [Button](../components/button.md)（正典 `.mini-btn` ＋本頁的 `mini-btn-active-*` 選中狀態，`aria-pressed`）、[Review Status Track](../components/review-status-track.md) |
+| `#modal-mobile-drawer` | 視窗窄到 767px 以下，點右欄抽屜的把手（`#wsMobileDrawer`，`:1315`；`setupMobileDrawer`，`:6791`–`:6801`） | 本頁的抽屜（`:938`–`:982`） |
+| `#state-review-decision` | 審核員選「通過／修正／無法裁決」（`.rv-choice-group`，`:3675`–`:3720`） | [Button](../components/button.md)（正典 `.mini-btn` ＋本頁的 `mini-btn-active-*` 選中狀態，`aria-pressed`）、[Review Status Track](../components/review-status-track.md) |
 | `#state-arbitration` | 審核單位處於爭議待裁決（`renderArbitrationCard`，`:4792`；呼叫點 `:5890`） | [Card](../components/card.md)、[Button](../components/button.md)（`.mini-btn`） |
-| `#state-exception-pool` | `?role=project_leader`：選處置後按「確認處置」（`renderExceptionPoolScreen`，`:5157`；`renderWorkspace` 的分支 `:1736`） | [Card](../components/card.md)、本頁 inline 樣式的理由輸入框（`:5001`–`:5009`）→ G-04 |
-| `#state-submitted-next` | 還有未完成的樣本時按「提交」：通知成功（`:3105`），留在本頁跳到下一筆（`:3116`）；沒有下一筆才回清單（`:3120`） | [Toast](../components/toast.md) |
+| `#state-exception-pool` | `?role=project_leader`：選處置後按「確認處置」（`renderExceptionPoolScreen`，`:5157`；`renderWorkspace` 的分支 `:1736`） | [Card](../components/card.md)、本頁 inline 樣式的理由輸入框（`:5044`–`:5052`）→ G-04 |
+| `#state-submitted-next` | 還有未完成的樣本時按「提交」：通知成功（`:3146`），留在本頁跳到下一筆（`:3157`）；沒有下一筆才回清單（`:3161`） | [Toast](../components/toast.md) |
 
 **`#state-task-goal-and-instruction` 無法重現**：中欄上方只顯示任務名稱，沒有任務目標與說明 → 交付包列為無法重現，追蹤在 label-suite/label-suite#187。
 

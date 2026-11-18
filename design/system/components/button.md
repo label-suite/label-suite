@@ -72,14 +72,14 @@
 | :--- | :--- |
 | `components-showcase#state-default` | 全部七個加兩個狀態 |
 | `account/profile`（`state-default`） | `.btn-primary`（`profile.html:802`） |
-| `admin/role-settings`（`#state-default`、`#state-dirty`） | `.btn-ghost`／`.btn-cta` **本頁重新定義**（`role-settings.html:75`–`:76`、`:239`–`:240`）；`.btn-danger`（`:967`） |
-| `admin/user-management`（`#state-default`、`#toast-action`） | `.btn-primary`／`.btn-ghost` 本頁重新定義（`user-management.html:54`）；`.btn-danger`（`:696`） |
+| `admin/role-settings`（`#state-default`、`#state-dirty`） | `.btn-ghost`／`.btn-cta` **本頁重新定義**（`role-settings.html:75`–`:76`、`:239`–`:240`）；`.btn-danger`（`:872`） |
+| `admin/user-management`（`#state-default`、`#toast-action`） | `.btn-primary`／`.btn-ghost` 本頁重新定義（`user-management.html:54`）；`.btn-danger`（`:599`） |
 | `dashboard/dashboard`（全部視圖） | 本頁的 `.btn` 外框（`dashboard.layout.css:208`–`:238`）加正典 variant：`.btn-primary`、三個角色 CTA 的 `.btn-cta`、`.btn-secondary.slim`；彩色鈕已於 #423 刪除 → `../design-gaps.md` G-37 |
 | `task-management/task-list#sim-delete-error` | 正典 `.btn-secondary` ＋ `.btn-danger`（`task-list.html:280`–`:288`） |
 | `task-management/task-new`（全部視圖） | 正典 `button.css` 的 variant |
 | `task-management/task-detail`（全部視圖） | 正典 variant ＋ `.mini-btn`（#423 起用正典，頁內不再重新定義）→ G-37 |
 | `annotation/annotation-list`（`#state-default`） | `.btn.btn-primary.slim` 快速繼續（`annotation-list.html:437`–`:458`）；回儀表板用正典 `.mini-btn`，清除篩選用 `.clear-btn` → `../design-gaps.md` G-37 |
-| `annotation/annotation-workspace`（`#modal-guideline-gate`、`#state-review-decision`、`#state-arbitration`） | 指引閘門的確認是 `.btn.btn-cta`（`annotation-workspace.html:1131` 起）；審核三向決策是正典 `.mini-btn` 加本頁的 `mini-btn-active-*` 選中狀態，帶 `aria-pressed`（`annotation-workspace.config.js:3671`–`:3711`）→ G-37 |
+| `annotation/annotation-workspace`（`#modal-guideline-gate`、`#state-review-decision`、`#state-arbitration`） | 指引閘門的確認是 `.btn.btn-cta`（`annotation-workspace.html:1138` 起）；審核三向決策是正典 `.mini-btn` 加本頁的 `mini-btn-active-*` 選中狀態，帶 `aria-pressed`（`annotation-workspace.config.js:3671`–`:3711`）→ G-37 |
 | `dataset/dataset-analysis-detail`（`#state-stats-empty`、`#param-q-state-*`、`#state-quality-*`） | 載入正典 `button.css`，用 `.btn.btn-secondary.btn-sm`（空狀態的連結、重試、`.risk-action-btn`）；頁內又在 `:167`–`:173` 重寫 `.btn` → `../design-gaps.md` G-37 |
 
 五個登出狀態的帳號頁**一個正典 variant 都沒用**，它們自己寫 `.login-btn`／`.submit-btn`／`.sso-btn`／`.lang-toggle`／`.eye-toggle`／`.proto-btn` → `../design-gaps.md` G-03。

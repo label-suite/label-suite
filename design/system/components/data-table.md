@@ -66,7 +66,7 @@
 | :--- | :--- |
 | 無（b1） | — |
 | `task-management/task-list`（`#state-default`、`#role-task-role`） | `.task-table`，本頁 `<style>` 又定義一次（`task-list.html:80`–`:82`） |
-| `admin/user-management#state-default` | 本頁的表格（`user-management.html:416`–`:418`） |
+| `admin/user-management#state-default` | 本頁的表格（`user-management.html:321`–`:424`） |
 | `admin/role-settings#state-default` | `.matrix-table`（`role-settings.html:86`），sticky 首欄與表頭（`:109`、`:138`），外層 `role="region" tabindex="0"`——**鍵盤可捲**，與 G-27 相反 |
 | `task-management/task-detail`（`#tab-member-management`、`#tab-annotation-progress`、`#tab-annotation-results`、`#tab-work-log`） | `.member-table`（`member-management.html:19`；`annotation-progress.html:32`；`annotation-results.html:48`；`work-log.html:38`） |
 | `annotation/annotation-list`（`#state-default`、`#role-*`） | `.task-table`（`annotation-list.html:494`）。標記員的列是 `tr role="button" tabindex="0"`，Enter／Space 進工作區（`:1847`）；空狀態**不放進表格**，另用 [Empty State](empty-state.md) |

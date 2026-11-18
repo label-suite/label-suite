@@ -12,7 +12,7 @@
 
 | 視圖 | 怎麼走到 | 用到的元件 |
 | :--- | :--- | :--- |
-| `#tab-overview` | `?tab=overview`（預設） | [App Shell](../components/app-shell.md)、[Breadcrumb](../components/breadcrumb.md)（`:1947`–`:1950`）、[Content Tabs](../components/content-tabs.md)（`.admin-tabs`，`:1890`–`:1962`）、[Card](../components/card.md)（本頁的 `.panel`，`:92`）、[Metric](../components/metric.md)（`overview.html`，4 處）、[Badge](../components/badge.md)（`:113`–`:128`） |
+| `#tab-overview` | `?tab=overview`（預設） | [App Shell](../components/app-shell.md)、[Breadcrumb](../components/breadcrumb.md)（`:1875`–`:1879`）、[Content Tabs](../components/content-tabs.md)（`.admin-tabs`，`:1883`–`:1890`）、[Card](../components/card.md)（本頁的 `.panel`，`:92`）、[Metric](../components/metric.md)（`overview.html`，4 處）、[Badge](../components/badge.md)（`:113`–`:128`） |
 | `#tab-member-management` | `?tab=member-management` | [Data Table](../components/data-table.md)（`.member-table`，`member-management.html:19`、`:57`、`:106`）、[Pagination](../components/pagination.md)、[Modal](../components/modal.md)（`memberAction`，`:2031`） |
 | `#tab-annotation-progress` | `?tab=annotation-progress` | [Metric](../components/metric.md)（6 處）、[Data Table](../components/data-table.md)（`annotation-progress.html:32`、`:61`、`:93`、`:121`）、[Pagination](../components/pagination.md)（`:134`）、[Empty State](../components/empty-state.md)（`empty-state-panel`，`:157`） |
 | `#tab-annotation-results` | `?tab=annotation-results` | [Data Table](../components/data-table.md)（`annotation-results.html:48`、`:95`）、[Pagination](../components/pagination.md)（`:63`、`:112`）、[Empty State](../components/empty-state.md)（`:164`）、[Modal](../components/modal.md)（`arSeqExportModal`，`:138`） |
@@ -27,10 +27,10 @@
 | `#role-project-leader` | `?task_role=project_leader` | 同 `#tab-overview`，操作最多 |
 | `#role-reviewer` | `?task_role=reviewer` | 同 `#tab-overview`，操作減少 |
 | `#role-annotator` | `?task_role=annotator`，或不給、給錯值（fail closed，`:5087`） | **不算繪**，直接導到 `task-list.html?unauthorized=1`（`:5114`），看到的是 `task-management/task-list#param-unauthorized` |
-| `#sim-403` | `?sim_403=1`（`:5101`） | `taskForbidden` 面板（`:1979`–`:1925`） |
+| `#sim-403` | `?sim_403=1`（`:5101`） | `taskForbidden` 面板（`:1914`–`:1918`） |
 | `#state-panel-load-failed` | 讓某一個 partial 請求失敗：只有那個分頁留佔位與重試，其他照常（`:4583`–`:4645`） | `.panel` ＋ [Button](../components/button.md)（`.mini-btn`） |
 
-載入中的骨架（`.skeleton-stack`／`.skeleton-card`／`.skeleton-line`，`:1899`–`:1910`）與「任務不存在」面板（`taskNotFound`，`:1914`）找得到，交付包沒有列成視圖 → [Skeleton](../components/skeleton.md)。操作結果的通知（`showToast`，`:11255`）也沒有對應視圖 → [Toast](../components/toast.md)。
+載入中的骨架（`.skeleton-stack`／`.skeleton-card`／`.skeleton-line`，`:1899`–`:1910`）與「任務不存在」面板（`taskNotFound`，`:1914`）找得到，交付包沒有列成視圖 → [Skeleton](../components/skeleton.md)。操作結果的通知（`showToast`，`:11219`）也沒有對應視圖 → [Toast](../components/toast.md)。
 
 ## 這一頁專屬的
 

@@ -4,7 +4,7 @@
 
 ## 入口
 
-`dashboard/dashboard` 的任務卡「繼續標記」或側欄「標記清單」；從 `annotation/annotation-workspace` 返回時帶回清單的檢視狀態（UXC-11，`:1078`）。
+`dashboard/dashboard` 的任務卡「繼續標記」或側欄「標記清單」；從 `annotation/annotation-workspace` 返回時帶回清單的檢視狀態（UXC-11，`:1051`）。
 
 載入：`assets/tokens.css`、`assets/data-palette.css`（#420）、`pages/shared/sidebar.css`、`button.css`、`empty-state.css`、`list-page.css`、`task-type-badge.css`；腳本 `sidebar.js`、`annotation-history.js`、`theme.js`、`analytics.js`。**沒有載入 `modal.css`、`modal-focus.js`**，本頁也沒有 toast。
 
@@ -20,7 +20,7 @@
 | `#role-reviewer` | `?role=reviewer`：一列是一個審核單位 | 同 `#state-default` |
 | `#role-project-leader` | `?role=project_leader`：角色解析只認標記員與審核員（`:1034`），這個值只改側欄的角色標籤（`:419`） | 同 `#state-default` |
 | `#param-run-type` | `?run_type=official_run`；缺值或不認得的值回退成試標 | [Badge](../components/badge.md)（`.badge-dry-run`／`.badge-official`，`:167`–`:174`） |
-| `#param-notice-no-actionable-review` | `?notice=no_actionable_review&role=reviewer`（條件在 `:2351`） | [Empty State](../components/empty-state.md)（`empty-state-panel`，`#noActionableNotice`，`role="status"`，`:479`） |
+| `#param-notice-no-actionable-review` | `?notice=no_actionable_review&role=reviewer`（條件在 `:2336`） | [Empty State](../components/empty-state.md)（`empty-state-panel`，`#noActionableNotice`，`role="status"`，`:479`） |
 
 **`#state-loading` 無法重現**：本頁沒有任何載入狀態，規格 §空的與找不到 第 1、2 條（Q8）要求的載入中畫面不存在 → 交付包列為無法重現，追蹤在 label-suite/label-suite#187。
 
