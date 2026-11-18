@@ -20,6 +20,7 @@
 | 這個畫面用到哪些元件 | [`pages/<頁面>.md`](pages/) |
 | 哪個元件被哪些畫面用（雙向對照） | [`screen-inventory.md`](screen-inventory.md)（**生成的，不要手改**） |
 | 跨元件的共同約定 | [`ux-conventions.md`](ux-conventions.md) |
+| 品牌層的規則：鐵律、內容與語氣、視覺語彙、圖示、logo 與 CIS 使用 | [`brand.md`](brand.md) |
 | 原型和規格對不上、或缺證據的地方 | [`design-gaps.md`](design-gaps.md) |
 | 某個視圖怎麼在 prototype 上叫出來 | [`handoff/manifest.json`](handoff/) 的視圖 ID 與 `how` |
 | token 的實際值 | `design/prototype/assets/tokens.css`，或 `label-suite-design` skill。**本目錄一律只寫 token 名，不抄 hex** |
