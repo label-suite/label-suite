@@ -25,6 +25,7 @@
   --color-border:           #E2E8F0;   /* slate-200 — decorative only (cards, tables, dividers); control outlines use --color-border-control */
   --color-border-control:   #7C899D;   /* form-control outline (input, select, textarea, search, checkbox) — WCAG 1.4.11: 3.55:1 on white, 3.23:1 on surface (issue #427) */
   --color-border-muted:     #F1F5F9;   /* slate-100 */
+  --color-border-hover:     #CBD5E1;   /* slate-300 — hover outline of secondary buttons (.btn-oauth, .btn-icon, .btn-language); decorative, not a 3:1 control outline (issue #420) */
   --color-text-muted:       #5E6B7F;   /* WCAG AA (issue #427): 4.93:1 on surface, 5.40:1 on white, 4.93:1 on border-muted; was #64748B, before that #94A3B8 (issue singyichen/label-suite#973); deprecated alias, use --color-ink-muted */
   --color-text-soft:        #5E6B7F;   /* same value and ratios as --color-ink-muted (issue #427); was #64748B */
   --color-slate-50:         #F8FAFC;
@@ -65,6 +66,26 @@
   --color-info:             #1D4ED8;
   --color-info-bg:          #EFF6FF;
   --color-info-border:      #BFDBFE;
+
+  /* ── Accent (non-state, issue #420) ──────────────────────────
+     Violet family for the 「官方」 badge and category chips. Not a
+     state colour: never use it for success/error/warning/info. */
+  --color-accent:           #5B21B6;   /* Violet 800 — text; 7.57:1 on --color-accent-bg, 8.98:1 on white */
+  --color-accent-bg:        #EDE9FE;   /* Violet 100 */
+  --color-accent-border:    #DDD6FE;   /* Violet 200 — decorative */
+
+  /* ── Role-settings task column (issue #420) ─────────────────── */
+  --color-task:             #0D9488;   /* Teal 600 — task column header text, underline, checkbox accent; 3.59:1 on --color-task-bg (below 4.5:1 text AA, ruled value) */
+  --color-task-bg:          #F0FDFA;   /* Teal 50 */
+
+  /* ── Notification badge (issue #420) ──────────────────────────
+     Fixed in both themes by design (arbitration #183): the red dot
+     must read the same on light and dark sidebars. */
+  --color-badge-notify:     #B91C1C;   /* 6.47:1 under white text */
+
+  /* ── Code block (issue #420) ───────────────────────────────── */
+  --color-code-bg:          #1E1B4B;   /* Indigo 950 — code editor ground */
+  --color-code-fg:          #E2E8F0;   /* slate-200 — 12.97:1 on --color-code-bg */
 
   /* ── File-type Icon Accent (non-semantic) ────────────────────
      Not a state/role token — see MASTER.md Changelog (issue singyichen/label-suite#935).
@@ -175,6 +196,7 @@ html[data-theme="dark"] {
   --color-border:           #2A2A35;
   --color-border-control:   #6B6B78;   /* form-control outline — WCAG 1.4.11: 3.42:1 on card #16161F, 3.73:1 on surface (issue #427) */
   --color-border-muted:     #1F1F28;
+  --color-border-hover:     #3A3A47;   /* one step above --color-border (#2A2A35) */
   --color-text-muted:       #9CA3AF;   /* deprecated alias, use --color-ink-muted */
   --color-text-soft:        #A1A1AA;   /* zinc-400 */
   --color-slate-50:         #1F1F28;   /* hover bg in dark */
@@ -214,6 +236,21 @@ html[data-theme="dark"] {
   --color-info:             #60A5FA;
   --color-info-bg:          #0F1F33;
   --color-info-border:      #1E3A66;
+
+  /* ── Accent (non-state) ───────────────────────────────────── */
+  --color-accent:           #A78BFA;   /* Violet 400 — 5.87:1 on dark --color-accent-bg */
+  --color-accent-bg:        #1E1B4B;   /* indigo-950 */
+  --color-accent-border:    #3730A3;   /* Indigo 800 */
+
+  /* ── Role-settings task column ────────────────────────────── */
+  --color-task:             #2DD4BF;   /* Teal 400 — 8.20:1 on dark --color-task-bg */
+  --color-task-bg:          #0C2A27;
+
+  /* --color-badge-notify is not re-declared: fixed in both themes. */
+
+  /* ── Code block ───────────────────────────────────────────── */
+  --color-code-bg:          #0D0D14;   /* darker than --color-surface so the editor still reads as inset */
+  /* --color-code-fg keeps #E2E8F0 in both themes. */
 
   /* ── File-type Icon Accent (non-semantic) ────────────────── */
   --color-file-markdown:    #A78BFA;   /* Violet 400, brighter on dark */
