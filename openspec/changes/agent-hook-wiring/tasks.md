@@ -33,7 +33,7 @@
 
 ## 2. 支援層與測試工具箱
 
-- [ ] 2.1 新增 `scripts/tests/lib/hook-harness.sh`：以 `mktemp -d` 加 `git init` 建隔離 repo、以 `PATH` 前置假的 `ruff`／`mypy`／`tsc`／`eslint`（固定輸出與固定退出碼）、產生各事件的假 payload、結束時 `trap` 清除。驗證：harness 自身的 smoke 測試能建立並拆除隔離 repo，且證明被呼叫到的是假工具而不是真工具（D21 第 1 點；#111 §驗收條件第 3 項）[@backend-developer]
+- [x] 2.1 新增 `scripts/tests/lib/hook-harness.sh`：以 `mktemp -d` 加 `git init` 建隔離 repo、以 `PATH` 前置假的 `ruff`／`mypy`／`tsc`／`eslint`（固定輸出與固定退出碼）、產生各事件的假 payload、結束時 `trap` 清除。驗證：harness 自身的 smoke 測試能建立並拆除隔離 repo，且證明被呼叫到的是假工具而不是真工具（D21 第 1 點；#111 §驗收條件第 3 項）[@backend-developer]
 - [x] 2.2 先寫 `scripts/tests/hook-payload.test.mjs` 再實作 `scripts/lib/hook-payload.mjs`：四類事件的必要欄位比對（H1／H2／H3／H6）、malformed JSON 與缺欄位回 `3`、`path.resolve` 加符號連結解析、標出 workspace 之外的路徑、以 NUL 分隔的 `名稱\x1F值` 輸出且名稱取自固定 allowlist。驗證：`pnpm test:scripts` 通過，且測試涵蓋「payload 字串永遠不進 argv」這條不變量（D2、D4；spec「事件輸入須先驗證且不經由 shell 拼接執行」、「事件觸發點以事件提供的工作目錄定位 repo」）[@backend-developer]
 - [ ] 2.3 先寫 `scripts/tests/hook-common-tests.sh` 再實作 `scripts/lib/hook-common.sh`：唯一輸出出口 `emit_out`／`emit_err`、D8 的三組遮蔽樣式、64 KiB 截斷與 `TRUNCATED:` 補行（截斷標記不計入預算）、NUL 分隔檔案清單讀取、`trap … EXIT` 只清自己建立的暫存目錄。**截斷必須不產生無效的位元組序列**：切到 65536 bytes 之後先丟棄尾端不完整的多位元組字元、再補 `TRUNCATED:` 行，`N` 以「原長度減去真正輸出的位元組數」計算（含被丟掉的那個不完整字元）；**不得單獨以 `head -c 65536` 收尾**（task 1.5 的 macOS 實測：那會產生無法解碼的輸出），也不得改成按字元數截斷來迴避。驗證：測試斷言「輸出被截斷時退出碼與未截斷時相同」「**截斷後的輸出一定是合法 UTF-8，包含上限剛好落在多位元組字元中間的輸入（以 3-byte 中文把邊界對齊到字元中間，斷言整段可解碼、結尾落在字元邊界、`TRUNCATED:` 行仍在、`N` 的帳對得上）**」「含 token／`ghp_`／長 hex 的字串不回顯原值」「含空白與中文的路徑完整傳遞」，並在 task 1.5 的 Linux 半邊完成後確認 macOS 與 Linux 行為一致（D6、D8；spec「執行時間與輸出大小有上限且由平台設定控制」含其「截斷邊界落在多位元組字元中間」scenario、「攔截原因與診斷不得回顯 secret 值」「本機診斷紀錄只保留脫敏 metadata」）[@backend-developer]
 
