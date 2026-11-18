@@ -4,7 +4,7 @@ description: '所有登入後的使用者在每一頁都用同一套側欄知道
 category: '規格書'
 tags: [規格書, 共用介面, 已定案]
 createdAt: '2026-11-04'
-updatedAt: '2026-11-16'
+updatedAt: '2026-11-18'
 ---
 
 # 07-01 側欄導覽
@@ -30,10 +30,12 @@ R：Read（可讀取）　C：Create（可新增）　E：Edit（可編輯）　
 
 側欄本身只有讀取與切換自己的偏好，沒有新增、編輯或刪除任何資料。
 
-- :ref[平台成員]{id="term.platform-member"}：R；對自己的語言、外觀、側欄收合狀態與通知已讀狀態為 E (o)
-- :ref[系統管理員]{id="term.system-admin"}：R／E (o)；同上，另外看得到「系統管理」導覽項
-- :ref[Seeder 管理員]{id="term.seeder-admin"}：R／E (o)；與系統管理員相同
-- 未登入的訪客：無權限；側欄只出現在登入後的頁面
+| 角色 | 這一頁能做什麼 | PRD §權限矩陣的上限 |
+| :--- | :--- | :--- |
+| :ref[平台成員]{id="term.platform-member"} | R；對自己的語言、外觀、側欄收合狀態與通知已讀狀態為 E (o) | 「07 共用介面」給平台成員 `R/E (o)` |
+| :ref[系統管理員]{id="term.system-admin"} | R／E (o)；同上，另外看得到「系統管理」導覽項 | 同一列給系統管理員 `R/E (o)` |
+| :ref[Seeder 管理員]{id="term.seeder-admin"} | R／E (o)；與系統管理員相同 | 矩陣**沒有這一欄**；PRD §使用者角色 寫明他「權限同系統管理員」 |
+| 未登入的訪客 | **無權限**；側欄只出現在登入後的頁面 | **對不到任何一列**：PRD §使用者角色 沒有「訪客」，§權限矩陣 的兩張表也沒有這一欄 |
 
 PRD §權限矩陣 給「07 共用介面」的上限是 `R／E (o)`（2026-11-16 依 Issue #85 放寬）。上面的 E (o) 只作用在使用者自己的偏好與已讀狀態，不碰任何業務資料；
 這就是 [§已確認決議](#已確認決議) Q1 要的那個上限，兩邊一致。
@@ -532,6 +534,7 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#415](https://github.com/label-suite/label-suite/issues/415) | 2026-11-18 | §使用角色 | 角色、權限與條件寫成條列 | 改成正典的三欄表格（角色／這一頁能做什麼／PRD §權限矩陣的上限），條件、理由與跨頁連結移到表格下方的條列。第三欄是**新增的資訊**：逐列指出 PRD §權限矩陣 的哪一列，對不到的寫出原因。形狀依 `spec-writing` 範本（[PR #417](https://github.com/label-suite/label-suite/pull/417)） | **無新決議，條文一字未改** |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §驗收標準 的 2 列 | 那兩列**只有** Scenario 名稱欄包著 `<mark>`＋`<sup>[#188]`，其餘三格沒有 | 名稱欄的標示拿掉、文字保留，改標 Given／When／Then（原本沒有標示的格一併補上）。依 `writing-guide.md` §變更標示 2026-11-16 新增的例外：`check-flows.mjs` 的 `readPage()` 逐字讀第一格、不剝標籤，名稱一包標示流程圖元件就永遠對不上那一列 | **無新決議**，Scenario 的文字與條文一字未改 |
 | [#85](https://github.com/label-suite/label-suite/issues/85) | 2026-11-16 | §使用角色、§已確認決議 Q1 與 Q3 的理由 | 四處寫「PRD 目前的上限還是 `R`／註明由 #85 處理」 | 改成 PRD 已於 2026-11-16 放寬成 `R／E (o)`、兩處註明也已落地 | **無新決議**，條文一字未改 |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §已確認決議 Q11 的兩段理由 | `:558`、`:559` 前面那個路徑沒帶行號，沿用不到；`user-management.html:358` 的引文與引用之間隔了「傳入」 | 第一筆補完整路徑、兩筆各自帶上 `roleNoTaskRole` 的中英值；第二筆改成緊接在後的「roleIndicator: '系統管理員'」。**條文一字未改** | **無新決議** |
