@@ -19,7 +19,7 @@
 | 變體 | 差別 | 依據 |
 | :--- | :--- | :--- |
 | 欄位說明 | 觸發鈕放在欄位標籤同一行的 `.field-label-row` 裡 | `task-config.engine.js:1152`–`:1182`（`attachFieldHintTooltip`） |
-| 審核說明 | 觸發鈕放在審核單位脈絡橫幅裡，泡泡有固定 id `wsReviewNoteBubble` 供 `aria-describedby` 指向；同一組 class，沒有 `.field-label-row` | `annotation-workspace.config.js:3935`–`:3980`（`appendReviewNoteTooltip`，b3 核對） |
+| 審核說明 | 觸發鈕放在審核單位脈絡橫幅裡，泡泡有固定 id `wsReviewNoteBubble` 供 `aria-describedby` 指向；同一組 class，沒有 `.field-label-row` | `annotation-workspace.config.js:3976`–`:4021`（`appendReviewNoteTooltip`，b3 核對） |
 
 ## 適用狀態
 
@@ -44,7 +44,7 @@
 
 ## 樣式出處
 
-`design/prototype/pages/task-management/task-config.css:259`–`:329`（`task-new` 與 `task-detail` 共用；`task-detail.html:1136` 的註解寫明搬過來共用）。
+`design/prototype/pages/task-management/task-config.css:259`–`:329`（`task-new` 與 `task-detail` 共用；`task-detail.html:1071` 的註解寫明搬過來共用）。
 
 ## 可重現樣本
 
@@ -64,4 +64,4 @@
 | :--- | :--- |
 | `task-management/task-new#state-step3` | 啟動設定的欄位說明 |
 | `task-management/task-detail#tab-settings`（及五個 `#param-section-*`） | 設定分頁的欄位說明 |
-| `annotation/annotation-workspace#role-reviewer` | 審核單位脈絡橫幅的審核說明（`appendReviewNoteTooltip`，`annotation-workspace.config.js:3935`–`:3980`），沿用 `task-config.css` 的同一組 class |
+| `annotation/annotation-workspace#role-reviewer` | 審核單位脈絡橫幅的審核說明（`appendReviewNoteTooltip`，`annotation-workspace.config.js:3976`–`:4021`），沿用 `task-config.css` 的同一組 class |

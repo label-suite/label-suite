@@ -12,8 +12,8 @@
 
 | 視圖 | 怎麼走到 | 用到的元件 |
 | :--- | :--- | :--- |
-| `#state-default` | 開 `pages/account/profile.html` | [App Shell](../components/app-shell.md)、[Button](../components/button.md)（`.btn-primary`，`:815`）、[Input](../components/input.md)（`.field-hint`／`.field-error`）、[Toggle Switch](../components/toggle-switch.md)（通知設定，共 36 處）、[Avatar](../components/avatar.md)、[Password Eye Toggle](../components/password-eye-toggle.md)（`:883`）、[Skeleton](../components/skeleton.md)（49 處） |
-| `#state-avatar-preview` | 選一張圖或點「移除頭像」：**只改預覽，要按儲存才生效** | [Avatar](../components/avatar.md) ＋ `.avatar-remove-btn`（`:763`） |
+| `#state-default` | 開 `pages/account/profile.html` | [App Shell](../components/app-shell.md)、[Button](../components/button.md)（`.btn-primary`，`:811`）、[Input](../components/input.md)（`.field-hint`／`.field-error`）、[Toggle Switch](../components/toggle-switch.md)（通知設定，共 36 處）、[Avatar](../components/avatar.md)、[Password Eye Toggle](../components/password-eye-toggle.md)（`:879`）、[Skeleton](../components/skeleton.md)（49 處） |
+| `#state-avatar-preview` | 選一張圖或點「移除頭像」：**只改預覽，要按儲存才生效** | [Avatar](../components/avatar.md) ＋ `.avatar-remove-btn`（`:759`） |
 | `#state-google-linked` | 點「連結 Google 帳號」：第五個區塊切成已連結狀態 | `.google-account`／`.google-linked-row`／`.google-linked-check`／`.google-no-unlink`／`.google-status` |
 | `#toast-saved` | 改個人資料或通知設定後儲存 | [Toast](../components/toast.md)（本頁自己的 `.toast*`，見下） |
 
@@ -29,11 +29,11 @@
 | `.email-masked`／`.email-change-btn`／`.email-row` | Email 遮蔽與變更 |
 | `.sent-card`／`.sent-title`／`.sent-desc`／`.sent-icon-wrap`／`.sent-email-highlight`／`.sent-hint`／`.sent-actions`／`.resend-link` | 變更 Email 的「已寄出」面板——**又一份 State Panel 的獨立實作** → G-03 |
 | `.appearance-toggle` | 外觀（主題）設定，和側欄的主題鈕是兩個入口 |
-| `.avatar-remove-btn`（`:763`） | 移除頭像。**正典的 [Avatar](../components/avatar.md) 沒有這個動作** → G-17 |
+| `.avatar-remove-btn`（`:759`） | 移除頭像。**正典的 [Avatar](../components/avatar.md) 沒有這個動作** → G-17 |
 | `.info-banner` | 又一份 banner 實作 → G-07 |
 
 `empty-state.css` 經由 `sidebar.css` 的 `@import` 載入，但本頁 `empty-state` 出現 **0 次**——載了沒用 → G-21。
 
 ## 業務行為
 
-連回規格 [`01-account/04-profile.mdx`](../../../docs/specs/01-account/04-profile.mdx)。UXC-06（送出中的載入態與重複送出防護）在本頁有三處註解標記（`:350`、`:1540`、`:1583`），是全 prototype 引用 UXC-06 的唯一一頁。
+連回規格 [`01-account/04-profile.mdx`](../../../docs/specs/01-account/04-profile.mdx)。UXC-06（送出中的載入態與重複送出防護）在本頁有三處註解標記（`:346`、`:1536`、`:1579`），是全 prototype 引用 UXC-06 的唯一一頁。

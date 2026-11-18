@@ -57,7 +57,7 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 三種形態 |
-| `dataset/dataset-analysis-detail`（`#state-stats-single-dim`、`#state-stats-multi-dim`） | **不是正典的 `.divider-hr`**：本頁 `hr.panel-divider`（`dataset-analysis-detail.html:54`），用在 `stats-single_dim.html:27`、`stats-multi_dim.html:61` → `../design-gaps.md` G-18 |
+| `dataset/dataset-analysis-detail`（`#state-stats-single-dim`、`#state-stats-multi-dim`） | **不是正典的 `.divider-hr`**：本頁 `hr.panel-divider`（`dataset-analysis-detail.html:53`），用在 `stats-single_dim.html:27`、`stats-multi_dim.html:61` → `../design-gaps.md` G-18 |
 
 **全 prototype 只有 showcase 用得到 `.divider-hr`。** b4 的 `.panel-divider` 是另一份做法（見上表）。
 

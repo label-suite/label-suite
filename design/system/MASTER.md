@@ -9,7 +9,7 @@
 本檔是依 [`design-system-setup`](../../.claude/skills/design-system-setup/SKILL.md) 的四種依據，**從 prototype 的實際程式碼反推重建**的。因此：
 
 - **章節名沿用**那些註解指名的名字（§Buttons、§Inputs、§Empty State、§Desktop Content Tabs、§Metric KPI Tile…），這樣既有註解才不會變成懸空引用。
-- **版本號與行號引用無法重現**：`tokens.css:3`（「updated 2026-04-18」）、`:32` 與 `:182`（「MASTER.md v1.7.1」）、`:70`（「MASTER.md Changelog」）、`annotation-workspace.config.js:3944`（「MASTER.md:1423-1482」）、`:3947`（「MASTER.md:1482」）指的都是原件的版本與行數。本檔從第 1 版重新起算，**那五處引用在本 repo 解析不到**，記在 [`design-gaps.md`](design-gaps.md) G-25。
+- **版本號與行號引用無法重現**：`tokens.css:3`（「updated 2026-04-18」）、`:32` 與 `:182`（「MASTER.md v1.7.1」）、`:70`（「MASTER.md Changelog」）、`annotation-workspace.config.js:3985`（「MASTER.md:1423-1482」）、`:3988`（「MASTER.md:1482」）指的都是原件的版本與行數。本檔從第 1 版重新起算，**那五處引用在本 repo 解析不到**，記在 [`design-gaps.md`](design-gaps.md) G-25。
 - 原始 repo 的 `design/system/` 依 `design-handoff` 鐵律是**參照，不是依據**，所以本檔沒有從它抄任何內容。
 
 ## 怎麼查
@@ -157,7 +157,7 @@ prototype 的註解另外指名的章節裡，這一個不是元件（b1 原列�
 ### b3 接手時要先讀的
 
 1. G-01、G-03、G-28、G-33、G-34 已有裁定，不要重開；G-37～G-45 的待決問題等維護者。
-2. [`ux-conventions.md`](ux-conventions.md) 的 UXC-04、05 證據在 `annotation-workspace.config.js:657`、`:3058`；UXC-03、09 還有 b3 的引用要核對（`:1980`、`:2032`，`annotation-list.html:1949`）。
+2. [`ux-conventions.md`](ux-conventions.md) 的 UXC-04、05 證據在 `annotation-workspace.config.js:666`、`:3099`；UXC-03、09 還有 b3 的引用要核對（`:1989`、`:2041`，`annotation-list.html:1930`）。
 3. [Tooltip](components/tooltip.md) 的第二處（`annotation-workspace.config.js:3943`）、Toast 與 Skeleton 在 b3 的那幾份（G-10）、`annotation-workspace` 沒有定義側欄的兩個窄視窗 token（G-24）。
 4. **別批的使用關係要保留**（鐵律 5）。
 

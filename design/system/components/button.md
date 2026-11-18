@@ -22,7 +22,7 @@
 | `.btn-ghost` | 低強度行動（查看全部、取消） | `button.css:46` |
 | `.btn-danger` | 破壞性確認 | `design/prototype/pages/shared/modal.css:80`（**實心**，維護者 2026-11-17 裁定為正典）；`components-showcase.html:177` 另有一份外框版，見 `../design-gaps.md` G-01 |
 | `.btn-oauth` | 第三方登入入口 | **只有** `components-showcase.html:226` |
-| `.btn-icon` | 純圖示觸發器 | `components-showcase.html:247`、另有 `pages/task-management/task-list.html:68` 與 `task-new.html:132` 各自一份 |
+| `.btn-icon` | 純圖示觸發器 | `components-showcase.html:247`、另有 `pages/task-management/task-list.html:68` 與 `task-new.html:133` 各自一份 |
 | `.btn-language` | 語言切換（zh-TW／EN） | **只有** `components-showcase.html:268`；細節見 [Language Toggle](lang-toggle.md)，依維護者 2026-11-17 裁定兩者是同一個元件 |
 | `.mini-btn`（小尺寸） | 表格列、卡片列上的小按鈕，高 30px、字級 `--text-label`；色彩 variant `-primary`／`-success`／`-warning`／`-danger`／`-log`，`-icon` 縮內距 | `pages/shared/button.css:62`–`:158`（#423 收進正典，維護者 2026-11-18 裁定，見 `../design-gaps.md` G-37） |
 
@@ -71,16 +71,16 @@
 | 畫面 | 用到的 variant |
 | :--- | :--- |
 | `components-showcase#state-default` | 全部七個加兩個狀態 |
-| `account/profile`（`state-default`） | `.btn-primary`（`profile.html:815`） |
-| `admin/role-settings`（`#state-default`、`#state-dirty`） | `.btn-ghost`／`.btn-cta` **本頁重新定義**（`role-settings.html:93`–`:94`、`:257`–`:258`）；`.btn-danger`（`:972`） |
+| `account/profile`（`state-default`） | `.btn-primary`（`profile.html:811`） |
+| `admin/role-settings`（`#state-default`、`#state-dirty`） | `.btn-ghost`／`.btn-cta` **本頁重新定義**（`role-settings.html:77`–`:78`、`:241`–`:242`）；`.btn-danger`（`:972`） |
 | `admin/user-management`（`#state-default`、`#toast-action`） | `.btn-primary`／`.btn-ghost` 本頁重新定義（`user-management.html:54`）；`.btn-danger`（`:696`） |
-| `dashboard/dashboard`（全部視圖） | 本頁的 `.btn` 外框（`dashboard.layout.css:211`–`:238`）加正典 variant：`.btn-primary`、三個角色 CTA 的 `.btn-cta`、`.btn-secondary.slim`；彩色鈕已於 #423 刪除 → `../design-gaps.md` G-37 |
-| `task-management/task-list#sim-delete-error` | 正典 `.btn-secondary` ＋ `.btn-danger`（`task-list.html:307`–`:315`） |
+| `dashboard/dashboard`（全部視圖） | 本頁的 `.btn` 外框（`dashboard.layout.css:208`–`:238`）加正典 variant：`.btn-primary`、三個角色 CTA 的 `.btn-cta`、`.btn-secondary.slim`；彩色鈕已於 #423 刪除 → `../design-gaps.md` G-37 |
+| `task-management/task-list#sim-delete-error` | 正典 `.btn-secondary` ＋ `.btn-danger`（`task-list.html:286`–`:294`） |
 | `task-management/task-new`（全部視圖） | 正典 `button.css` 的 variant |
 | `task-management/task-detail`（全部視圖） | 正典 variant ＋ `.mini-btn`（#423 起用正典，頁內不再重新定義）→ G-37 |
-| `annotation/annotation-list`（`#state-default`） | `.btn.btn-primary.slim` 快速繼續（`annotation-list.html:467`–`:488`）；回儀表板用正典 `.mini-btn`，清除篩選用 `.clear-btn` → `../design-gaps.md` G-37 |
-| `annotation/annotation-workspace`（`#modal-guideline-gate`、`#state-review-decision`、`#state-arbitration`） | 指引閘門的確認是 `.btn.btn-cta`（`annotation-workspace.html:1133` 起）；審核三向決策是正典 `.mini-btn` 加本頁的 `mini-btn-active-*` 選中狀態，帶 `aria-pressed`（`annotation-workspace.config.js:3630`–`:3670`）→ G-37 |
-| `dataset/dataset-analysis-detail`（`#state-stats-empty`、`#param-q-state-*`、`#state-quality-*`） | 載入正典 `button.css`，用 `.btn.btn-secondary.btn-sm`（空狀態的連結、重試、`.risk-action-btn`）；頁內又在 `:166`–`:172` 重寫 `.btn` → `../design-gaps.md` G-37 |
+| `annotation/annotation-list`（`#state-default`） | `.btn.btn-primary.slim` 快速繼續（`annotation-list.html:446`–`:467`）；回儀表板用正典 `.mini-btn`，清除篩選用 `.clear-btn` → `../design-gaps.md` G-37 |
+| `annotation/annotation-workspace`（`#modal-guideline-gate`、`#state-review-decision`、`#state-arbitration`） | 指引閘門的確認是 `.btn.btn-cta`（`annotation-workspace.html:1133` 起）；審核三向決策是正典 `.mini-btn` 加本頁的 `mini-btn-active-*` 選中狀態，帶 `aria-pressed`（`annotation-workspace.config.js:3671`–`:3711`）→ G-37 |
+| `dataset/dataset-analysis-detail`（`#state-stats-empty`、`#param-q-state-*`、`#state-quality-*`） | 載入正典 `button.css`，用 `.btn.btn-secondary.btn-sm`（空狀態的連結、重試、`.risk-action-btn`）；頁內又在 `:167`–`:173` 重寫 `.btn` → `../design-gaps.md` G-37 |
 
 五個登出狀態的帳號頁**一個正典 variant 都沒用**，它們自己寫 `.login-btn`／`.submit-btn`／`.sso-btn`／`.lang-toggle`／`.eye-toggle`／`.proto-btn` → `../design-gaps.md` G-03。
 b2、b3、b4 已補上（見上表）。`dataset-analysis-list` 沒有載入 `button.css`，它的按鈕是 [List Toolbar](list-toolbar.md) 的 `.clear-btn` 與 [Pagination](pagination.md) 的 `.page-btn`。

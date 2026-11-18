@@ -16,7 +16,7 @@
 
 依據：`components-showcase.html:384`–`:394`。
 
-全 prototype 只有**一個**修飾子，而且不在正典裡：`pages/admin/user-management.html:200` 自己寫了 `.alert-banner.warning`。也就是說出貨頁面確實需要第二種語意，但它是就地補的，正典不知道有這回事 → `../design-gaps.md` G-07。
+全 prototype 只有**一個**修飾子，而且不在正典裡：`pages/admin/user-management.html:175` 自己寫了 `.alert-banner.warning`。也就是說出貨頁面確實需要第二種語意，但它是就地補的，正典不知道有這回事 → `../design-gaps.md` G-07。
 
 ## 適用狀態
 
@@ -56,7 +56,7 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 唯一樣本 |
-| `admin/user-management#toast-action` | 停用確認視窗裡的 `.alert-banner.warning`（`user-management.html:195`、`:200`、`:684`） |
+| `admin/user-management#toast-action` | 停用確認視窗裡的 `.alert-banner.warning`（`user-management.html:170`、`:175`、`:684`） |
 | `admin/role-settings`（`#state-dirty`、`#state-conflict`） | **不是這個 class**：本頁自己的 `.banner`／`.dirty-banner`／`.conflict-banner`（`role-settings.html:44`–`:60`）→ `../design-gaps.md` G-07 |
 
 b2 已補上（見上表）。

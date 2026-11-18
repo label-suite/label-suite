@@ -63,11 +63,11 @@
 | :--- | :--- |
 | `components-showcase#state-default` | 全部三群的樣本 |
 | `admin/user-management#state-default`、`admin/role-settings#state-default` | 各自在 `<style>` 重寫 `.badge`（`user-management.html:101`、`role-settings.html:316`） |
-| `dashboard/dashboard`（`#param-scenario-super-admin-data`、`#param-scenario-reviewer`） | `dashboard.layout.css:241`、`:272`、`:281` 的 `.badge` 與 `.badge-error`／`.badge-draft`；任務型別配色來自 `shared/task-type-badge.css` |
-| `task-management/task-list#state-default` | 本頁 `<style>` 重寫（`task-list.html:117`–`:126`），型別配色同上 |
-| `task-management/task-detail`（`#tab-overview`、`#param-status`） | 本頁 `<style>` 重寫（`task-detail.html:117`–`:132`） |
+| `dashboard/dashboard`（`#param-scenario-super-admin-data`、`#param-scenario-reviewer`） | `dashboard.layout.css:238`、`:269`、`:278` 的 `.badge` 與 `.badge-error`／`.badge-draft`；任務型別配色來自 `shared/task-type-badge.css` |
+| `task-management/task-list#state-default` | 本頁 `<style>` 重寫（`task-list.html:89`–`:98`），型別配色同上 |
+| `task-management/task-detail`（`#tab-overview`、`#param-status`） | 本頁 `<style>` 重寫（`task-detail.html:113`–`:128`） |
 | `annotation/annotation-list`（`#state-default`、`#param-run-type`） | **本頁重寫的 `.badge`**（`annotation-list.html:140`–`:175`），階段徽章 `.badge-dry-run`／`.badge-official` 寫死 hex（`:167`–`:174`）→ `../design-gaps.md` G-02 |
 | `dataset/dataset-analysis-list`（`#state-default`） | 本頁 `.badge`（`dataset-analysis-list.html:120`）與 `.badge-iaa-*`（`:139`–`:143`）、`.badge-role-pl`／`-rev`（`:145`–`:146`），全用 token；輸出類型用 `task-type-badge.css`（`:210`） |
-| `dataset/dataset-analysis-detail`（`#tab-quality`、`#state-quality-*`、`#param-q-state-*`） | 本頁 `.badge-pass`／`-fail`／`-warn`／`-neutral`（`dataset-analysis-detail.html:57`–`:62`）與 `.risk-level-badge`（`:147`–`:151`），全用 token |
+| `dataset/dataset-analysis-detail`（`#tab-quality`、`#state-quality-*`、`#param-q-state-*`） | 本頁 `.badge-pass`／`-fail`／`-warn`／`-neutral`（`dataset-analysis-detail.html:56`–`:61`）與 `.risk-level-badge`（`:148`–`:152`），全用 token |
 
 b1 的帳號頁一個都沒用。b2 已補上（見上表），**五頁都是各自重寫，沒有一頁直接用正典**。b3 已補上（見上表），同樣是本頁重寫。b4 已補上（見上表），兩頁同樣是本頁重寫。

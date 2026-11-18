@@ -6,16 +6,16 @@
 
 側欄「使用者管理」。頁內分頁可切到 `admin/role-settings`。
 
-載入：`assets/tokens.css`、`pages/shared/modal.css`、`pages/shared/sidebar.css`、`pages/shared/button.css`、`pages/shared/empty-state.css`、`pages/shared/content-tabs.css`、`pages/shared/sidebar.js`。**沒有載入 `pages/shared/modal-focus.js`**，而且本頁又在 `<style>` 補寫了 modal 的規則（`:166`–`:167`）。交付包 `#modal-invite` 的說明寫「`shared/modal.css` 不在本頁」，與 `<link>` 不符——以檔案為準。
+載入：`assets/tokens.css`、`pages/shared/modal.css`、`pages/shared/sidebar.css`、`pages/shared/button.css`、`pages/shared/empty-state.css`、`pages/shared/content-tabs.css`、`pages/shared/sidebar.js`。**沒有載入 `pages/shared/modal-focus.js`**，而且本頁又在 `<style>` 補寫了 modal 的規則（`:141`–`:142`）。交付包 `#modal-invite` 的說明寫「`shared/modal.css` 不在本頁」，與 `<link>` 不符——以檔案為準。
 
 ## 視圖與元件
 
 | 視圖 | 怎麼走到 | 用到的元件 |
 | :--- | :--- | :--- |
-| `#state-default` | 開 `pages/admin/user-management.html` | [App Shell](../components/app-shell.md)、[Content Tabs](../components/content-tabs.md)（`:377`–`:379`）、[List Toolbar](../components/list-toolbar.md)（本頁的搜尋與篩選，`:61`–`:81`、`:252`）、[Data Table](../components/data-table.md)（`:416`–`:418`）、[Badge](../components/badge.md)（本頁的 `.badge`，`:101`）、[Pagination](../components/pagination.md)（本頁的 `.page-btn`，`:140`–`:158`）、[Input](../components/input.md)（`.input`，`:1611`） |
+| `#state-default` | 開 `pages/admin/user-management.html` | [App Shell](../components/app-shell.md)、[Content Tabs](../components/content-tabs.md)（`:377`–`:379`）、[List Toolbar](../components/list-toolbar.md)（本頁的搜尋與篩選，`:61`–`:81`、`:252`）、[Data Table](../components/data-table.md)（`:416`–`:418`）、[Badge](../components/badge.md)（本頁的 `.badge`，`:101`）、[Pagination](../components/pagination.md)（本頁的 `.page-btn`，`:115`–`:133`）、[Input](../components/input.md)（`.input`，`:1611`） |
 | `#state-filtered-empty` | 加 `?q=`／`?status=`／`?role=` 篩到 0 列 | [Empty State](../components/empty-state.md)（`empty-state-page`，`:547`–`:559`，含「清除篩選」） |
 | `#modal-invite` | 點「新增使用者」（交付包叫它 invite，畫面標題是「新增使用者」，`addModal`，`:569`） | [Modal](../components/modal.md)（本頁版，`role="dialog"`／`aria-modal`）、[Input](../components/input.md)、[Button](../components/button.md) |
-| `#toast-action` | 停用或啟用一個帳號：停用要先確認（`disableModal`，`:673`） | [Toast](../components/toast.md)（本頁的 `.toast*`，`:205`–`:245`）、[Modal](../components/modal.md)、[Alert Banner](../components/alert-banner.md)（`.alert-banner.warning`，`:684`）、[Button](../components/button.md)（`.btn-danger`，`:696`） |
+| `#toast-action` | 停用或啟用一個帳號：停用要先確認（`disableModal`，`:673`） | [Toast](../components/toast.md)（本頁的 `.toast*`，`:180`–`:220`）、[Modal](../components/modal.md)、[Alert Banner](../components/alert-banner.md)（`.alert-banner.warning`，`:684`）、[Button](../components/button.md)（`.btn-danger`，`:696`） |
 
 交付包沒有列、畫面上找得到的：編輯使用者 modal（`editModal`，`:622`）；稽核紀錄抽屜（`:709`，與 `admin/role-settings` 同一份，空的時候用 `empty-state-compact`，`:727`）。
 
@@ -23,8 +23,8 @@
 
 | 元件 | 說明 |
 | :--- | :--- |
-| `.btn-primary`／`.btn-ghost`（`:54`）、`.badge`（`:101`）、`.page-btn`（`:140`–`:158`）、modal（`:166`–`:167`）、`.toast*`（`:205`–`:245`） | 全部是共用元件在本頁的**重新定義** → G-03、G-10、G-37 |
-| `.alert-banner`（`:195`）＋ `.warning`（`:200`） | 全 prototype 唯一一個 Alert Banner 修飾子 → G-07 |
+| `.btn-primary`／`.btn-ghost`（`:54`）、`.badge`（`:101`）、`.page-btn`（`:115`–`:133`）、modal（`:166`–`:167`）、`.toast*`（`:180`–`:220`） | 全部是共用元件在本頁的**重新定義** → G-03、G-10、G-37 |
+| `.alert-banner`（`:170`）＋ `.warning`（`:175`） | 全 prototype 唯一一個 Alert Banner 修飾子 → G-07 |
 | `.audit-drawer` | 見 [`admin-role-settings.md`](admin-role-settings.md)；已於 #422 抽成共用檔，→ G-38 |
 
 ## 業務行為

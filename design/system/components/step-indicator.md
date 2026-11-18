@@ -6,7 +6,7 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.step-indicator` 容器（橫向 flex），帶 `aria-label` | 必填 | `task-new.html:39`、markup `:226` |
+| `.step-indicator` 容器（橫向 flex），帶 `aria-label` | 必填 | `task-new.html:40`、markup `:226` |
 | `.step-item`：`.step-circle`（32px 圓，數字）＋ `.step-label` | 必填 | `:40`–`:46`、`:227`–`:230` |
 | `.step-connector`（2px 連接線） | 必填 | `:47`–`:48` |
 
@@ -37,7 +37,7 @@
 
 ## 樣式出處
 
-`design/prototype/pages/task-management/task-new.html:39`–`:48`（頁內 `<style>`）。
+`design/prototype/pages/task-management/task-new.html:40`–`:49`（頁內 `<style>`）。
 
 ## 可重現樣本
 

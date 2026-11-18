@@ -75,6 +75,6 @@
 | `components-showcase#state-default` | 兩類全部樣本 |
 | `task-management/task-new#state-step2` | `.task-type-chip`（`task-config.css:556`–`:559`），引擎依情境發 `role="checkbox"` 或 `"radio"` 與 `aria-checked`（`task-config.engine.js:6235`–`:6239`） |
 | `task-management/task-detail#tab-settings` | 同一份，`settings.html:74`、`:78` |
-| `dataset/dataset-analysis-detail`（`#state-quality-*`） | 唯讀的原因標籤 `.cause-chip`（`dataset-analysis-detail.html:153`），屬「唯讀標籤」那一類 → `../design-gaps.md` G-11 |
+| `dataset/dataset-analysis-detail`（`#state-quality-*`） | 唯讀的原因標籤 `.cause-chip`（`dataset-analysis-detail.html:154`），屬「唯讀標籤」那一類 → `../design-gaps.md` G-11 |
 
 b1 的帳號頁一個都沒用。b2 已補上（見上表）。b4 已補上（見上表）。
