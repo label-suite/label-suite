@@ -64,7 +64,7 @@
       wsReviewSubmitSuccess: '審核已送出',
       reviewNoAnswer: '（無）',
       reviewOriginalAnswerBypass: window.LabelSuiteSharedSidebar.BYPASS_WORDING.zh.answer,
-      reviewNote: '通過：該項直接定稿，正式標記中即成為最終答案。修正：您的修正不會立即生效，該項進入爭議池待仲裁。無法裁決：同樣進入爭議池，仲裁者採用審核員側即定案為無法判定。試標與正式標記皆不會將樣本送回給標記員重做。',
+      reviewNote: '通過：該項直接定稿，正式標記中即成為最終答案。修正：你的修正不會立即生效，該項進入爭議池待仲裁。無法裁決：同樣進入爭議池，仲裁者採用審核員側即定案為無法判定。試標與正式標記皆不會將樣本送回給標記員重做。',
       reviewNoteDryRunExtra: '試標的定稿只彙總一致性與被修改率，不產生最終答案。',
       reviewNoteTriggerLabel: '審核決策說明',
       reviewSubmitConsequencePending: '尚未選擇決策',

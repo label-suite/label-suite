@@ -43,7 +43,7 @@
       errorLoadDesc: '無法載入任務資料，請稍後再試。',
       errorRetryLabel: '重試',
       toastNavigating: '前往分析詳情…',
-      toastInvalidTask: '找不到指定的任務，或您沒有該任務的存取權限。',
+      toastInvalidTask: '找不到指定的任務，或你沒有該任務的存取權限。',
       langToggleAria: '切換語言',
       iaaBadge: {
         pass: '通過',
