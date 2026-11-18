@@ -1267,7 +1267,7 @@ function renderOutputTypeFields(container, outKey) {
             row.className = 'entity-row';
             var dot = document.createElement('div');
             dot.className = 'entity-color-dot';
-            dot.style.background = ent.color || ENTITY_COLORS[i % ENTITY_COLORS.length];
+            dot.style.background = entityPaintColor(ent.color || ENTITY_COLORS[i % ENTITY_COLORS.length]);
             var nameInp = document.createElement('input');
             nameInp.type = 'text'; nameInp.className = 'entity-name-input';
             nameInp.value = ent.name;
@@ -2193,7 +2193,7 @@ function buildEntityListRow(ent, color, opts) {
   row.setAttribute('data-testid', (opts && opts.testid) || 'entity-list-row');
   row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 10px;margin-bottom:4px;background:var(--color-slate-50);border-radius:6px;font-size:0.85rem;';
   var badge = document.createElement('span');
-  badge.style.cssText = 'display:inline-block;padding:1px 6px;border-radius:4px;font-size:0.7rem;font-weight:700;color:var(--color-on-cta);background:' + (color || ENTITY_COLORS[0]) + ';flex-shrink:0;';
+  badge.style.cssText = 'display:inline-block;padding:1px 6px;border-radius:4px;font-size:0.7rem;font-weight:700;color:var(--color-on-cta);background:' + entityPaintColor(color || ENTITY_COLORS[0]) + ';flex-shrink:0;';
   badge.textContent = ent.type;
   row.appendChild(badge);
   var txt = document.createElement('span');
@@ -2370,7 +2370,7 @@ function fillDialogueUtterance(txEl, text, uttId) {
     span.className = 'absa-span-highlight';
     if (rs && rs.start <= ent.start && rs.end >= ent.end) span.classList.add('rel-sel-highlight');
     var c = colorMap[ent.type] || ENTITY_COLORS[0];
-    span.style.background = c + '33'; span.style.borderBottom = '2px solid ' + c; span.style.color = c;
+    span.style.background = entityWashColor(c); span.style.borderBottom = '2px solid ' + entityPaintColor(c); span.style.color = entityPaintColor(c);
     span.title = ent.type + ' (#' + ent.utt_id + ':' + ent.start + ',' + ent.end + ')';
     span.appendChild(document.createTextNode(text.substring(ent.start, ent.end)));
     txEl.appendChild(span);
@@ -2547,7 +2547,7 @@ function renderAbsaUnifiedPreview(previewContainer) {
         if (state.relSel.start <= ent.start && _rsEnd >= _entEnd) span.classList.add('rel-sel-highlight');
       }
       var c = typeColorMap[ent.type] || ENTITY_COLORS[0];
-      span.style.background = c + '33'; span.style.borderBottom = '2px solid ' + c; span.style.color = c;
+      span.style.background = entityWashColor(c); span.style.borderBottom = '2px solid ' + entityPaintColor(c); span.style.color = entityPaintColor(c);
       span.title = ent.type + ' (' + ent.start + ',' + ent.end + ')';
       span.appendChild(document.createTextNode(ent.text || realText.substring(ent.start, ent.end + 1)));
       textEl.appendChild(span);
@@ -2624,7 +2624,7 @@ function renderAbsaUnifiedPreview(previewContainer) {
       chip.type = 'button';
       var isActive = state.activeEntityType === typeName;
       chip.className = 'chip' + (isActive ? ' is-active' : '');
-      chip.style.setProperty('--chip-color', c);
+      chip.style.setProperty('--chip-color', entityPaintColor(c));
       chip.textContent = typeName;
       chip.addEventListener('click', function() {
         if (state.relSel) {
@@ -2899,7 +2899,7 @@ function renderSingleLabelPreview(container, outKey) {
     var isActive = ps.selected === label.name;
     var c = safeCssColor(label.color, ENTITY_COLORS[0]);
     chip.className = 'chip chip--lg' + (isActive ? ' is-active' : '');
-    chip.style.setProperty('--chip-color', c);
+    chip.style.setProperty('--chip-color', entityPaintColor(c));
     var radio = document.createElement('span');
     radio.className = 'chip-mark chip-mark--radio';
     chip.appendChild(radio);
@@ -3359,7 +3359,7 @@ function renderSpanTaggingPreview(container, outKey) {
       el.setAttribute('data-start', String(span.start));
       el.setAttribute('data-end', String(span.end));
       el.setAttribute('data-label', span.label);
-      el.style.cssText = 'background:' + color + '33;border-bottom:2px solid ' + color + ';color:' + color + ';';
+      el.style.cssText = 'background:' + entityWashColor(color) + ';border-bottom:2px solid ' + entityPaintColor(color) + ';color:' + entityPaintColor(color) + ';';
       el.title = span.label;
       if (blockingSpanIndexes[spanIndex]) {
         el.setAttribute('data-overlap-blocked', 'true');
@@ -3430,7 +3430,7 @@ function renderSpanTaggingPreview(container, outKey) {
     chip.type = 'button';
     chip.setAttribute('data-testid', 'sequence-label-option');
     chip.className = 'chip';
-    chip.style.setProperty('--chip-color', color);
+    chip.style.setProperty('--chip-color', entityPaintColor(color));
     chip.textContent = label.name;
     chip.addEventListener('click', function() {
       var selected = ps.pendingSelection;
@@ -3517,7 +3517,7 @@ function renderSpanOnlyPreview(container, outKey) {
         if (ps.pendingSelection.start <= ent.start && ps.pendingSelection.end >= entEnd) span.classList.add('rel-sel-highlight');
       }
       var c = typeColorMap[ent.type] || ENTITY_COLORS[0];
-      span.style.background = c + '33'; span.style.borderBottom = '2px solid ' + c; span.style.color = c; span.title = ent.type;
+      span.style.background = entityWashColor(c); span.style.borderBottom = '2px solid ' + entityPaintColor(c); span.style.color = entityPaintColor(c); span.title = ent.type;
       span.appendChild(document.createTextNode(ent.text || realText.substring(ent.start, ent.end + 1)));
       textEl.appendChild(span);
       charPos = (ent.end || ent.start) + 1;
@@ -3557,7 +3557,7 @@ function renderSpanOnlyPreview(container, outKey) {
     var chip = document.createElement('button'); chip.type = 'button';
     var isActive = state.activeEntityType === typeName;
     chip.className = 'chip' + (isActive ? ' is-active' : '');
-    chip.style.setProperty('--chip-color', c);
+    chip.style.setProperty('--chip-color', entityPaintColor(c));
     chip.textContent = typeName;
     chip.addEventListener('click', function() {
       if (ps.pendingSelection) {
@@ -4121,7 +4121,7 @@ function buildEntityList(field) {
 
       var dot = document.createElement('div');
       dot.className = 'entity-color-dot';
-      dot.style.background = ent.color || ENTITY_COLORS[i % ENTITY_COLORS.length];
+      dot.style.background = entityPaintColor(ent.color || ENTITY_COLORS[i % ENTITY_COLORS.length]);
 
       var nameInp = document.createElement('input');
       nameInp.type = 'text'; nameInp.className = 'entity-name-input';
@@ -4561,8 +4561,8 @@ function renderRelationExtractionPreview(preview, config) {
     var btn = document.createElement('span');
     btn.className = 're-preview-entity-btn';
     btn.textContent = et.name;
-    btn.style.borderColor = et.color || 'var(--color-border-control)';
-    btn.style.color = et.color || 'var(--color-ink-muted)';
+    btn.style.borderColor = et.color ? entityPaintColor(et.color) : 'var(--color-border-control)';
+    btn.style.color = et.color ? entityPaintColor(et.color) : 'var(--color-ink-muted)';
     btnsRow.appendChild(btn);
   });
   preview.appendChild(btnsRow);

@@ -632,10 +632,10 @@ button[disabled] {
 
 :root {
   /* ── 實體／標籤 8 色盤 ──────────────────────────────────────
-     JS 端的同一組值是 task-config.data.js 的 ENTITY_COLORS（唯一一份）：
-     引擎會在色碼後面接透明度（c + '33'）、餵給 <input type="color">，
-     所以 JS 那份必須維持六位 hex。兩邊要一起改。
-     標籤顏色是任務設定裡存的資料，兩個主題都畫同一色，深色不另宣告。 */
+     JS 端的同一組淺色值是 task-config.data.js 的 ENTITY_COLORS（唯一一份）：
+     任務設定存的是六位 hex（<input type="color"> 只吃這種），兩邊要一起改。
+     引擎上色時經 entityPaintColor() 把預設色換成這裡的變數，深色主題才換得到下面那組；
+     使用者自選、不在色盤裡的顏色照原值畫。 */
   --data-entity-1: #6366F1;
   --data-entity-2: #10B981;
   --data-entity-3: #F59E0B;
@@ -692,7 +692,21 @@ button[disabled] {
 }
 
 html[data-theme="dark"] {
-  /* 實體色盤、輪次、切分圖：兩個主題同值，不重宣告 */
+  /* 實體色盤：同色相的 400 階，比淺色那組亮，對深色卡片 --color-white 都在 6:1 以上
+     （當色塊、底線與標註文字用，至少要 3:1）；--color-on-cta 深色字疊上去也讀得到。
+     輪次與「正式標註保留量」是 var(--data-entity-N)，跟著換，不重宣告。 */
+  --data-entity-1: #818CF8;
+  --data-entity-2: #34D399;
+  --data-entity-3: #FBBF24;
+  --data-entity-4: #F472B6;
+  --data-entity-5: #A78BFA;
+  --data-entity-6: #38BDF8;
+  --data-entity-7: #FB923C;
+  --data-entity-8: #2DD4BF;
+  /* 尚未切分的總數：改用 Slate 500。Slate 400 在深色底上反而比各輪次的色塊亮，
+     會搶走焦點；Slate 500 對深色卡片 3.78:1，仍是看得見的色塊，但退在後面 */
+  --data-split-total: #64748B;
+
 
   --data-task-type-single-fg:       #A5F3FC;
   --data-task-type-single-bg:       #0C2230;
