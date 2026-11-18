@@ -825,7 +825,7 @@ html[data-theme="dark"] .shortcut-help-dialog {
 body.sidebar-collapsed #shortcutHelpBtn { display: none; }
 body.sidebar-collapsed .notif-dropdown { left: 88px; }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   body {
     flex-direction: column;
     padding-top: var(--navbar-mobile-top-height);

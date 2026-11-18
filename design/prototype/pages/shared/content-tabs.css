@@ -33,7 +33,7 @@
 .admin-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
 
 /* Narrow viewport: stay on one row and scroll horizontally (scrollbar hidden). */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .admin-tabs {
     flex-wrap: nowrap;
     overflow-x: auto;

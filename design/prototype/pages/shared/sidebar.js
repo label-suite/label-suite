@@ -510,7 +510,7 @@
 
   function shouldEnableDesktopSidebarCollapse() {
     if (!window || !window.matchMedia) return false;
-    return window.matchMedia('(min-width: 769px)').matches;
+    return window.matchMedia('(min-width: 768px)').matches;
   }
 
   function isDesktopViewport() {
@@ -606,10 +606,11 @@
   }
 
   function isAdminSubmenuAvailable() {
-    // Reuse the 769px desktop boundary (shouldEnableDesktopSidebarCollapse)
-    // instead of isDesktopViewport()'s 768px: sidebar.css's mobile media query
-    // is `max-width: 768px`, so at exactly 768px isDesktopViewport() would
-    // report desktop while the CSS still force-hides the submenu, leaving the
+    // Use the desktop boundary (shouldEnableDesktopSidebarCollapse) so the
+    // submenu only opens where sidebar.css shows it. brand.md puts mobile at
+    // max-width 767px and desktop at min-width 768px, so this and
+    // isDesktopViewport() now agree at exactly 768px; before that ruling the
+    // CSS mobile query was 768px and the two disagreed there, leaving the
     // trigger toggling an invisible menu instead of falling back to
     // data-admin-href (issue singyichen/label-suite#725 PR review).
     return shouldEnableDesktopSidebarCollapse() && !document.body.classList.contains('sidebar-collapsed');
