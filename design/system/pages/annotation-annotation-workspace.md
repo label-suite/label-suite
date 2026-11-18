@@ -14,7 +14,7 @@
 
 | 視圖 | 怎麼走到 | 用到的元件 |
 | :--- | :--- | :--- |
-| `#role-annotator` | 不給 `role`，或給不認得的值（預設） | [App Shell](../components/app-shell.md)、[Breadcrumb](../components/breadcrumb.md)（`nav#entryBreadcrumb`，`:1211`）、[Progress Bar](../components/progress-bar.md)（本頁 `.progress-track`，`:303`–`:314`、markup `:1239`）、[Card](../components/card.md)（`.content-card`，`:249`–`:252`）、[Input](../components/input.md)（「無法判定」理由，`.input`，`annotation-workspace.config.js:649`–`:681`）、[Button](../components/button.md)、[Toast](../components/toast.md)（`:1326`–`:1327`） |
+| `#role-annotator` | 不給 `role`，或給不認得的值（預設） | [App Shell](../components/app-shell.md)、[Breadcrumb](../components/breadcrumb.md)（`nav#entryBreadcrumb`，`:1211`）、[Progress Bar](../components/progress-bar.md)（本頁 `.progress-track`，`:303`–`:314`、markup `:1239`）、[Card](../components/card.md)（`.content-card`，外框在 `pages/shared/card.css:8`–`:16`，本頁 `:250` 只留 G-41 註解）、[Input](../components/input.md)（「無法判定」理由，`.input`，`annotation-workspace.config.js:649`–`:681`）、[Button](../components/button.md)、[Toast](../components/toast.md)（`:1326`–`:1327`） |
 | `#role-reviewer` | `?role=reviewer` | 同上，加 [Review Status Track](../components/review-status-track.md)（`.review-track`，CSS `:441`–`:462`，算繪 `annotation-workspace.config.js:5547`）、[Tooltip](../components/tooltip.md)（審核單位脈絡橫幅的審核說明，`:3935`–`:3980`）、[Input](../components/input.md)（`.input-textarea`，審核理由） |
 | `#tab-guideline` | 右欄預設分頁「說明與檔案」 | [Content Tabs](../components/content-tabs.md)（`.admin-tabs.admin-tabs--panel`，`:1290`–`:1291`） |
 | `#tab-history` | 切到「操作紀錄」（`renderHistoryPanel`，`annotation-workspace.config.js:2253`） | [Content Tabs](../components/content-tabs.md)、[Empty State](../components/empty-state.md)（沒有紀錄時 `empty-state-compact`，`:2280`） |

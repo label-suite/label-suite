@@ -43,7 +43,7 @@
 | `.toast*` | [Toast](../components/toast.md)：#423 起 `showToast` 依 `TOAST_DURATIONS`（`:11251`）分級，error 只能手動關 → G-39 |
 | `.breadcrumb`（`:46`–`:48`） | 本頁一行式的版本 |
 
-八個 modal 只有四個接了 `modal-focus.js`：`backToDraft`（`:5992`）、`settingsLeave`（`:7737`）、`arSeqExport`（`:10859`）、`risk`（`:11289`）→ G-43。
+八個 modal 都接了 `modal-focus.js`：`backToDraft`（`:5995`）、`settingsLeave`（`:7745`）、`memberAction`（`:8192`）、`arSeqExport`（`:10885`）、`risk`（`:11259`）、`trialRoundRevision`（`:11313`），`taxonomyDelete` 與 `datasetPreview` 由 `task-config.engine.js`（`:6214`、`:6141`）接上 → G-43。
 
 ## 業務行為
 

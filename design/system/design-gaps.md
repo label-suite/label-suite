@@ -485,7 +485,7 @@ showcase 說明寫「profile 64/80px」（`:1356`），它的 CSS 是 80px（`:9
 
 > b2 新增。延伸 G-23。
 
-`admin/user-management`、`admin/role-settings`、`task-management/task-new` 三頁全檔 `modal-focus`／`ModalFocus` 0 次；`task-detail` 八個 modal 只有四個接上（`:5992`、`:7799`、`:10921`、`:11289`）。只有 `task-list` 全部接上（`:705`、`:715`）。沒接的那些開啟後焦點不進視窗、關閉後不回觸發鈕，Esc 由各頁自己的 `keydown` 處理。
+`admin/user-management`、`admin/role-settings`、`task-management/task-new` 三頁全檔 `modal-focus`／`ModalFocus` 0 次；`task-detail` 八個 modal 在 b2 時只有四個接上；現在全部接上，`LabelSuiteModalFocus.open` 在 `task-detail.html:5995`、`:7745`、`:8192`、`:10885`、`:11259`、`:11313`，類別刪除與資料集預覽在 `task-config.engine.js:6214`、`:6141`。只有 `task-list` 全部接上（`:705`、`:715`）。沒接的那些開啟後焦點不進視窗、關閉後不回觸發鈕，Esc 由各頁自己的 `keydown` 處理。
 
 **b3 核對**：`annotation-workspace` 全部接上（見 G-23 的 b3 核對）。
 
