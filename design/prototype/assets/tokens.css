@@ -22,14 +22,15 @@
   --color-on-ink:           #FFFFFF;   /* text on --color-ink fills (e.g. .toast) — WCAG AA fix (issue singyichen/label-suite#1019); 15.99:1 on --color-ink */
 
   /* ── Supporting ───────────────────────────────────────────── */
-  --color-border:           #E2E8F0;   /* slate-200 */
+  --color-border:           #E2E8F0;   /* slate-200 — decorative only (cards, tables, dividers); control outlines use --color-border-control */
+  --color-border-control:   #8592A6;   /* form-control outline (input, select, textarea, search, checkbox) — WCAG 1.4.11: 3.15:1 on white (issue #427) */
   --color-border-muted:     #F1F5F9;   /* slate-100 */
-  --color-text-muted:       #64748B;   /* slate-500 — WCAG AA fix (issue singyichen/label-suite#973), was #94A3B8 (2.56:1); deprecated alias, use --color-ink-muted */
-  --color-text-soft:        #64748B;   /* slate-500 */
+  --color-text-muted:       #5E6B7F;   /* WCAG AA (issue #427): 4.93:1 on surface, 5.40:1 on white, 4.93:1 on border-muted; was #64748B, before that #94A3B8 (issue singyichen/label-suite#973); deprecated alias, use --color-ink-muted */
+  --color-text-soft:        #5E6B7F;   /* same value and ratios as --color-ink-muted (issue #427); was #64748B */
   --color-slate-50:         #F8FAFC;
 
   /* Canonical muted-text token (MASTER.md v1.7.1) */
-  --color-ink-muted:        #64748B;   /* slate-500 — WCAG AA fix (issue singyichen/label-suite#973), was #94A3B8 (2.56:1); canonical, --color-text-muted is the legacy alias. Now equals --color-text-soft's value — the palette's next compliant step coincides with that token. */
+  --color-ink-muted:        #5E6B7F;   /* WCAG AA (issue #427): 4.93:1 on surface, 5.40:1 on white, 4.93:1 on border-muted; was #64748B (4.34:1 on border-muted), before that #94A3B8 (issue singyichen/label-suite#973); canonical, --color-text-muted is the legacy alias and --color-text-soft shares the value */
 
   /* ── Workspace Tabs (issue singyichen/label-suite#1099 G1) ─────────────────────────
      --workspace-tab-min-width / --workspace-tab-max-width are non-color
@@ -172,6 +173,7 @@ html[data-theme="dark"] {
 
   /* ── Supporting ───────────────────────────────────────────── */
   --color-border:           #2A2A35;
+  --color-border-control:   #6B6B78;   /* form-control outline — WCAG 1.4.11: 3.42:1 on card #16161F, 3.73:1 on surface (issue #427) */
   --color-border-muted:     #1F1F28;
   --color-text-muted:       #9CA3AF;   /* deprecated alias, use --color-ink-muted */
   --color-text-soft:        #A1A1AA;   /* zinc-400 */
