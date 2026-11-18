@@ -5197,7 +5197,7 @@
     /* The page resets anchors to inherited color with no underline, so the
        link needs its own affordance; 44px keeps it a usable touch target. */
     link.style.cssText = 'display:inline-flex;align-items:center;min-height:44px;'
-      + 'color:var(--color-primary);text-decoration:underline;';
+      + 'color:var(--color-primary-strong);text-decoration:underline;';
     link.textContent = t('reviewFinalizedBackToList');
     box.appendChild(title);
     box.appendChild(message);

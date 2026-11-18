@@ -37,7 +37,7 @@
 
 .date-range-popover-footer { margin-top: var(--space-sm); display: flex; justify-content: flex-end; }
 .date-range-clear {
-  background: transparent; border: none; color: var(--color-primary); font-family: var(--font-sans);
+  background: transparent; border: none; color: var(--color-primary-strong); font-family: var(--font-sans);
   font-size: 13px; cursor: pointer; padding: var(--space-xs) var(--space-sm);
 }
 .date-range-clear:hover { text-decoration: underline; }
