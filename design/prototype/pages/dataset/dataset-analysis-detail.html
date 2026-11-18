@@ -1954,6 +1954,9 @@ function syncSequenceUi() {
   var isStrict = S.seqMode !== 'partial';
   strictBtn.classList.toggle('active', isStrict);
   partialBtn.classList.toggle('active', !isStrict);
+  /* G-56: the selected option is exposed to assistive tech, not only by .active */
+  strictBtn.setAttribute('aria-pressed', String(isStrict));
+  partialBtn.setAttribute('aria-pressed', String(!isStrict));
   strictCard.classList.toggle('hidden', !isStrict);
   partialCard.classList.toggle('hidden', isStrict);
 }
