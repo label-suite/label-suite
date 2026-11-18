@@ -27,8 +27,8 @@
 | 變體 | 觸發 | 依據 |
 | :--- | :--- | :--- |
 | 桌機展開 | 預設 | — |
-| 桌機收合 | 點收合鈕，`body` 加 `sidebar-collapsed` | `sidebar.js:513`（`matchMedia('(min-width: 769px)')`）、`:524` |
-| 行動版 | 視窗 ≤ 768px：側欄變**固定底部列**、品牌區變**固定頂部列** | `sidebar.css:611` 起的 `@media (max-width: 768px)` |
+| 桌機收合 | 點收合鈕，`body` 加 `sidebar-collapsed` | `sidebar.js:513`（`matchMedia('(min-width: 768px)')`）、`:524` |
+| 行動版 | 視窗 ≤ 767px：側欄變**固定底部列**、品牌區變**固定頂部列** | `sidebar.css:828` 起的 `@media (max-width: 767px)` |
 | 深色 | 點主題切換 | `sidebar.css:646` 起的 dark overrides |
 
 ## 適用狀態
@@ -40,7 +40,7 @@
 | `role-super-admin` | `localStorage` 的 `labelsuite.systemRole`（`sidebar.js:2`，讀在 `:175`）設成 `super_admin` |
 | `state-admin-submenu-open` | 系統管理員 ＋ 桌機 ＋ 未收合，點「系統管理」 |
 | `state-sidebar-collapsed` | 桌機點收合鈕 |
-| `state-mobile` | 視窗縮到 768px 以下 |
+| `state-mobile` | 視窗縮到 767px 以下 |
 | `state-theme-dark` | 點主題切換 |
 | `state-lang-en` | 點語言切換，走 `applyGlobalLanguage()`（`sidebar.js:126`） |
 | `state-user-chip` | 使用者區，隨 `labelsuite.systemRole` 變 |

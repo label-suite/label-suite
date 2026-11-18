@@ -21,7 +21,7 @@ App Shell 是登入後每一頁共用的外殼：左側導覽列、全域工具�
 
 - 桌機展開：預設，就是 preview 這一種。
 - 桌機收合：`body` 加 `sidebar-collapsed`，側欄縮成只剩圖示。因為要改 `body` 的 class，preview 無法靜態並列。
-- 行動版（≤ 768px）：側欄變固定底部列，品牌區變固定頂部列，工作頁籤列隱藏。兩個高度變數 `--navbar-mobile-height`、`--navbar-mobile-top-height` 不在 `tokens.css`，要宿主頁面自己定義；`annotation-workspace` 沒定義，窄螢幕會拿到空值（G-24）。
+- 行動版（≤ 767px）：側欄變固定底部列，品牌區變固定頂部列，工作頁籤列隱藏。兩個高度變數 `--navbar-mobile-height`、`--navbar-mobile-top-height` 不在 `tokens.css`，要宿主頁面自己定義；`annotation-workspace` 沒定義，窄螢幕會拿到空值（G-24）。
 - 深色：主題切換後走 `sidebar.css` 的深色覆寫。
 
 ## 狀態

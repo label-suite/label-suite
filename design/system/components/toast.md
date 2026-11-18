@@ -9,7 +9,7 @@
 | `#toast` 固定容器（**整頁唯一**，id 不是 class） | 必填 | CSS `components-showcase.html:398`；容器在 `:1376`，帶 `aria-live="polite" aria-atomic="true"` |
 | `.toast-card` ＋ 一個語意 class | 必填，由腳本建立 | `components-showcase.html:1516`–`:1517` |
 | `.toast-msg` 訊息 | 必填 | `components-showcase.html:1518`–`:1520` |
-| `.toast-close` 關閉鈕（`aria-label="關閉通知"`、字形 `✕`） | 必填，**四種 variant 都會建** | `components-showcase.html:1521`–`:1526` |
+| `.toast-close` 關閉鈕（`aria-label="關閉通知"`、Lucide `x` 圖示（`assets/icons/x.svg`）） | 必填，**四種 variant 都會建** | `components-showcase.html:1522`–`:1539` |
 
 `#toast` 的內容每次以 `replaceChildren()` 整個換掉（`:1529`），這就是「單一實例」的實作方式——不是佇列，是覆蓋。
 
