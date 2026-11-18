@@ -1,0 +1,35 @@
+<!-- @dsCard group="Data display" height=190 -->
+<!doctype html>
+<html lang="zh-TW" data-theme="light">
+<head>
+<meta charset="utf-8">
+<style>
+  /* preview layout only; the frame preloads tokens.css and bundle.css */
+  html body { margin: 0; padding: 24px; display: block; }
+  .ds-stage { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .ds-caption { font-size: 12px; color: var(--color-ink-muted); }
+</style>
+</head>
+<body>
+  <div class="ds-stage">
+    <div class="task-type-chip-grid" role="group" aria-label="任務類別（多選）">
+      <button class="task-type-chip selected" type="button" role="checkbox" aria-checked="true"><span class="task-type-chip-check" aria-hidden="true"></span>分類</button>
+      <button class="task-type-chip" type="button" role="checkbox" aria-checked="false"><span class="task-type-chip-check" aria-hidden="true"></span>實體辨識</button>
+      <button class="task-type-chip" type="button" role="checkbox" aria-checked="false"><span class="task-type-chip-check" aria-hidden="true"></span>自由文字</button>
+    </div>
+  </div>
+  <div class="ds-stage" style="margin-top: 16px;">
+    <div class="task-type-chip-grid" role="radiogroup" aria-label="輸出類型（單選）">
+      <button class="task-type-chip selected" type="button" role="radio" aria-checked="true"><span class="task-type-chip-check" aria-hidden="true"></span>單一標籤</button>
+      <button class="task-type-chip" type="button" role="radio" aria-checked="false"><span class="task-type-chip-check" aria-hidden="true"></span>多重標籤</button>
+    </div>
+  </div>
+  <div class="ds-stage" style="margin-top: 16px;">
+    <span class="ar-classif-chip">正面情緒</span>
+    <span class="ar-va-chip ar-va-chip-normal">V 6.2</span>
+    <span class="ar-va-chip ar-va-chip-outlier">A 1.4</span>
+    <span class="round-metric-chip">IAA 0.82</span>
+    <span class="cause-chip">標準不一致</span>
+  </div>
+</body>
+</html>

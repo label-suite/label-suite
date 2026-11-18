@@ -1,0 +1,34 @@
+<!-- @dsCard group="Navigation" height=190 -->
+<!doctype html>
+<html lang="zh-TW" data-theme="light">
+<head>
+<meta charset="utf-8">
+<style>
+  /* preview layout only; the frame preloads tokens.css and bundle.css */
+  html body { margin: 0; padding: 24px; display: block; }
+  .ds-stage { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .ds-caption { font-size: 12px; color: var(--color-ink-muted); }
+  .ds-stage { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .breadcrumb-sep { display: inline-flex; }
+  .breadcrumb-sep svg { width: 12px; height: 12px; }
+</style>
+</head>
+<body>
+  <div class="ds-stage">
+    <span class="ds-caption">兩層（正典）</span>
+    <nav class="breadcrumb" aria-label="breadcrumb">
+      <a href="#">任務管理</a>
+      <span class="breadcrumb-sep" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+      <span aria-current="page">任務詳情</span>
+    </nav>
+    <span class="ds-caption">三層（G-13：正典說最深兩層，實際已有三層）</span>
+    <nav class="breadcrumb" aria-label="breadcrumb">
+      <a href="#">標記作業</a>
+      <span class="breadcrumb-sep" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+      <a href="#">情緒分類 v2</a>
+      <span class="breadcrumb-sep" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+      <span aria-current="page">樣本 #1024</span>
+    </nav>
+  </div>
+</body>
+</html>

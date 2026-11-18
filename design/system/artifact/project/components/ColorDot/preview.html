@@ -1,0 +1,42 @@
+<!-- @dsCard group="Data display" height=170 -->
+<!doctype html>
+<html lang="zh-TW" data-theme="light">
+<head>
+<meta charset="utf-8">
+<style>
+  /* preview layout only; the frame preloads tokens.css and bundle.css */
+  html body { margin: 0; padding: 24px; display: block; }
+  .ds-stage { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .ds-caption { font-size: 12px; color: var(--color-ink-muted); }
+  .ds-group { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+  .ds-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+</style>
+</head>
+<body>
+<div class="ds-stage">
+    <div class="ds-group">
+      <span class="ds-caption">.entity-color-dot 20×20：預設 8 色盤（資料色，inline style）</span>
+      <div class="ds-row">
+        <span class="entity-color-dot" style="background: #6366F1" title="#6366F1"></span>
+        <span class="entity-color-dot" style="background: #10B981" title="#10B981"></span>
+        <span class="entity-color-dot" style="background: #F59E0B" title="#F59E0B"></span>
+        <span class="entity-color-dot" style="background: #EC4899" title="#EC4899"></span>
+        <span class="entity-color-dot" style="background: #8B5CF6" title="#8B5CF6"></span>
+        <span class="entity-color-dot" style="background: #0EA5E9" title="#0EA5E9"></span>
+        <span class="entity-color-dot" style="background: #F97316" title="#F97316"></span>
+        <span class="entity-color-dot" style="background: #14B8A6" title="#14B8A6"></span>
+      </div>
+    </div>
+    <div class="ds-group">
+      <span class="ds-caption">.annotation-preview-color 12×12 ／ .t-dot 8×8（IAA 達標／未達標）</span>
+      <div class="ds-row">
+        <span class="annotation-preview-color" style="background: #6366F1"></span>
+        <span class="annotation-preview-color" style="background: #10B981"></span>
+        <span class="annotation-preview-color" style="background: #F59E0B"></span>
+        <span class="t-dot" style="background: var(--color-success)" title="IAA 達標"></span>
+        <span class="t-dot" style="background: var(--color-error)" title="IAA 未達標"></span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!-- @dsCard group="Feedback" height=300 -->
+<!doctype html>
+<html lang="zh-TW" data-theme="light">
+<head>
+<meta charset="utf-8">
+<style>
+  /* preview layout only; the frame preloads tokens.css and bundle.css */
+  html body { margin: 0; padding: 24px; display: block; }
+  .ds-stage { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .ds-caption { font-size: 12px; color: var(--color-ink-muted); }
+  /* the overlay is fixed to the viewport in the prototype; contain it in the card here */
+  .modal-overlay.show { position: relative; inset: auto; min-height: 252px; padding: 24px; }
+</style>
+</head>
+<body>
+  <div class="modal-overlay show" role="dialog" aria-modal="true" aria-labelledby="demoModalTitle">
+    <div class="modal">
+      <h2 id="demoModalTitle">確認刪除任務</h2>
+      <p>移到封存？移到封存後不會再出現在任務列表。</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" type="button">取消</button>
+        <button class="btn btn-danger" type="button">刪除</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

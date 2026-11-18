@@ -1,0 +1,44 @@
+<!-- @dsCard group="Forms" height=220 -->
+<!doctype html>
+<html lang="zh-TW" data-theme="light">
+<head>
+<meta charset="utf-8">
+<style>
+  /* preview layout only; the frame preloads tokens.css and bundle.css */
+  html body { margin: 0; padding: 24px; display: block; }
+  .ds-stage { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .ds-caption { font-size: 12px; color: var(--color-ink-muted); }
+</style>
+</head>
+<body>
+  <div class="toolbar" role="search" aria-label="任務搜尋與篩選">
+    <div class="toolbar-left">
+      <select class="filter-select" aria-label="依狀態篩選">
+        <option value="">全部狀態</option>
+        <option value="draft">草稿</option>
+      </select>
+      <select class="filter-select" aria-label="依標記階段篩選">
+        <option value="">全部標記階段</option>
+      </select>
+      <button class="clear-btn" type="button" aria-label="清除篩選"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg><span>清除篩選</span></button>
+      <div class="search-wrap">
+        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="search" class="search-input" placeholder="搜尋" aria-label="搜尋" />
+      </div>
+    </div>
+  </div>
+  <div class="toolbar" role="search" aria-label="任務搜尋與篩選（無可清除的篩選）">
+    <div class="toolbar-left">
+      <select class="filter-select" aria-label="依狀態篩選">
+        <option value="">全部狀態</option>
+      </select>
+      <button class="clear-btn hide-clear" type="button" aria-label="清除篩選"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg><span>清除篩選</span></button>
+      <div class="search-wrap">
+        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="search" class="search-input" placeholder="搜尋" aria-label="搜尋" />
+      </div>
+    </div>
+  </div>
+  <span class="ds-caption">上：已套用篩選；下：沒有篩選時 <code>.clear-btn.hide-clear</code> 保留佔位</span>
+</body>
+</html>

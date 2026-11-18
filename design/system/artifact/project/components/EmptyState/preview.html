@@ -1,0 +1,46 @@
+<!-- @dsCard group="Feedback" height=660 -->
+<!doctype html>
+<html lang="zh-TW" data-theme="light">
+<head>
+<meta charset="utf-8">
+<style>
+  /* preview layout only; the frame preloads tokens.css and bundle.css */
+  html body { margin: 0; padding: 24px; display: block; }
+  .ds-stage { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .ds-caption { font-size: 12px; color: var(--color-ink-muted); }
+  .ds-stack { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 520px; align-items: stretch; }
+  .ds-col { display: flex; flex-direction: column; gap: 6px; }
+  .ds-frame { border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-white); }
+</style>
+</head>
+<body>
+<div class="ds-stage ds-stack">
+    <div class="ds-col">
+      <span class="ds-caption">.empty-state-page：篩不到（附清除篩選）</span>
+      <div class="ds-frame">
+        <div class="empty-state empty-state-page">
+          <div class="empty-state-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </div>
+          <p class="empty-state-title">找不到符合條件的使用者</p>
+          <p class="empty-state-desc">請嘗試清除篩選條件或使用不同的關鍵字</p>
+          <button class="btn-ghost empty-state-action" type="button">清除篩選</button>
+        </div>
+      </div>
+    </div>
+    <div class="ds-col">
+      <span class="ds-caption">.empty-state-panel：面板內，沒有資料</span>
+      <div class="empty-state empty-state-panel">
+        <p class="empty-state-title">尚無成員進度資料</p>
+        <button class="btn btn-secondary empty-state-action" type="button">回到任務概覽</button>
+      </div>
+    </div>
+    <div class="ds-col">
+      <span class="ds-caption">.empty-state-compact：只有一行說明</span>
+      <div class="empty-state empty-state-compact">
+        <p>尚無異動紀錄</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

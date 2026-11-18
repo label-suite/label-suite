@@ -1,0 +1,34 @@
+<!-- @dsCard group="Feedback" height=340 -->
+<!doctype html>
+<html lang="zh-TW" data-theme="light">
+<head>
+<meta charset="utf-8">
+<style>
+  /* preview layout only; the frame preloads tokens.css and bundle.css */
+  html body { margin: 0; padding: 24px; display: block; }
+  .ds-stage { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .ds-caption { font-size: 12px; color: var(--color-ink-muted); }
+  .ds-stack { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 384px; align-items: stretch; }
+  .ds-col { display: flex; flex-direction: column; gap: 6px; }
+  /* #toast is position: fixed and hidden until .visible; pinned in place for this card only */
+  #toast { position: static; transform: none; width: 100%; }
+  .toast-close svg { width: 14px; height: 14px; display: block; margin-top: 3px; }
+</style>
+</head>
+<body>
+<div class="ds-stage ds-stack">
+    <div class="ds-col">
+      <span class="ds-caption">#toast 容器內只有一則（error 常駐，只能手動關）</span>
+      <div id="toast" class="visible" aria-live="polite" aria-atomic="true">
+        <div class="toast-card error"><span class="toast-msg">儲存失敗，請稍後再試</span><button type="button" class="toast-close" aria-label="關閉通知"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+      </div>
+    </div>
+    <div class="ds-col">
+      <span class="ds-caption">其餘三種 variant（success 3s／info 5s／warning 8s）</span>
+      <div class="toast-card success"><span class="toast-msg">儲存成功</span><button type="button" class="toast-close" aria-label="關閉通知"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+    </div>
+    <div class="toast-card info"><span class="toast-msg">背景工作已開始</span><button type="button" class="toast-close" aria-label="關閉通知"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+    <div class="toast-card warning"><span class="toast-msg">部分結果尚未載入</span><button type="button" class="toast-close" aria-label="關閉通知"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+  </div>
+</body>
+</html>
