@@ -5,7 +5,7 @@ Label Suite 是研究團隊用的 NLP 標記平台：以設定驅動的流程走
 ## 鐵律
 
 1. **只用 token，不自創顏色。** 文字、底色、邊框、陰影一律引用 `--color-*`、`--shadow-*` 等 token；需要的顏色沒有 token，就先提出新增，不在元件裡寫死色值。
-2. **主色文字放淺底用 `--color-primary-strong`，不用 `--color-primary`。** 後者在淺色主題的白底、頁底、`--color-primary-soft-bg` 上都不到 4.5:1。次要文字最淺用到 `--color-ink-muted`。
+2. **主色當文字一律用 `--color-primary-strong`，不用 `--color-primary`；圖示用 `--color-primary`，`--color-secondary` 只做裝飾與大面積填色。** `--color-primary` 在淺色主題的白底、頁底、`--color-primary-soft-bg` 上都不到 4.5:1。次要文字最淺用到 `--color-ink-muted`。
 3. **語意色只表達語意。** `--color-success`、`--color-warning`、`--color-error`、`--color-info` 只用在狀態、banner、toast、badge；不拿來區分模組或角色。用顏色區分類別時最多五種，超過就靠文字標籤。
 4. **狀態不能只靠顏色。** 搭配文字前綴、字重或圖示；例如 Review Status Track 以「目前：」前綴與線寬標出當前節點。
 5. **錯誤 toast 不自動消失。** 整頁同時只有一則 toast；success 3000ms、info 5000ms、warning 8000ms、error 只能手動關（UXC-07）。
@@ -16,6 +16,8 @@ Label Suite 是研究團隊用的 NLP 標記平台：以設定驅動的流程走
 10. **互動元件要有 `prefers-reduced-motion` 的退路。**
 11. **圖示一律用 SVG。** 不用 emoji，也不用 `✕`、`←`、`→`、`✓`、`▾` 這類字元充當圖示。
 12. **破壞性動作先確認**（UXC-10）：確認視窗點遮罩不關，Esc 取消、Enter 確認，確認鈕用實心 `.btn-danger`。
+13. **控制項外框用 `--color-border-control`，`--color-border` 只做裝飾。** 輸入框、下拉選單、文字區塊、搜尋框、勾選框的外框要過 3:1；卡片、表格、分隔線用 `--color-border`。
+14. **`--color-primary-border` 不能是唯一的提示。** 只靠邊框標示的狀態（例如日期選擇器的今天）改用 `--color-primary`。
 
 ## 色彩
 
@@ -23,13 +25,14 @@ Label Suite 是研究團隊用的 NLP 標記平台：以設定驅動的流程走
 
 | 角色 | token | 怎麼用 |
 | :--- | :--- | :--- |
-| 品牌主色 | `--color-primary`、`--color-secondary` | logo 底色、主要操作、選取、強調。`--color-primary` 當文字只用在深色主題或大字 |
-| 主色上的文字 | `--color-primary-strong`、`--color-on-cta` | 淺底上的主色文字用前者；填色鈕上的文字用後者 |
-| 主色淺底 | `--color-primary-soft-bg`、`--color-primary-border` | 選取列、hover 底、主色外框 |
+| 品牌主色 | `--color-primary`、`--color-secondary` | logo 底色、按鈕填色、選取、圖示。`--color-primary` 不當文字；`--color-secondary` 只做裝飾與大面積填色 |
+| 主色文字 | `--color-primary-strong`、`--color-on-cta` | 主色當文字（含連結）用前者；填色鈕上的文字用後者 |
+| 主色淺底 | `--color-primary-soft-bg`、`--color-primary-border` | 選取列、hover 底、裝飾性的主色外框 |
 | 確認與完成 | `--color-cta`、`--color-cta-hover` | 確認、完成類主要鈕 |
 | 頁面層次 | `--color-surface`（頁底）、`--color-white`（卡片）、`--color-slate-50`（交錯列） | 語意別名是 `--bg-page`、`--bg-surface` |
 | 文字 | `--color-ink`、`--color-ink-muted`、`--color-on-ink` | 別名 `--fg-1`、`--fg-2`、`--fg-3`。`--color-text-muted` 是舊別名，新元件不用 |
 | 分隔 | `--color-border`、`--color-border-muted` | 分隔線與裝飾性外框 |
+| 控制項外框 | `--color-border-control` | 輸入框、下拉選單、文字區塊、搜尋框、勾選框 |
 | 四個語意 | `--color-{success,warning,error,info}`，各配 `-bg`、`-border`；前三者另有 `-soft-bg`、`-soft-border` | 狀態、banner、toast、badge |
 | 工作頁籤 | `--color-tab-active-bg`、`--color-tab-hover-bg`、`--nav-active-bg` | 側欄的工作頁籤與導覽選取 |
 | 非語意強調 | `--color-file-markdown` | 只用來區分檔案類型圖示 |
@@ -95,21 +98,20 @@ Label Suite 是研究團隊用的 NLP 標記平台：以設定驅動的流程走
 
 | 前景 | 底 | 用途 | 下限 | 淺色 | 深色 |
 | :--- | :--- | :--- | ---: | ---: | ---: |
-| `--color-ink-muted` | `--color-surface` | 文字 | 4.5:1 | 4.34 未達 | 7.72 |
-| `--color-ink-muted` | `--color-border-muted` | 文字 | 4.5:1 | 4.34 未達 | 6.44 |
-| `--color-text-muted`、`--fg-3` | `--color-surface` | 文字 | 4.5:1 | 4.34 未達 | 7.72 |
-| `--color-text-soft`、`--fg-2` | `--color-surface` | 文字 | 4.5:1 | 4.34 未達 | 7.65 |
 | `--color-primary` | `--color-white` | 文字 | 4.5:1 | 4.47 未達 | 6.02 |
 | `--color-primary` | `--color-surface` | 文字 | 4.5:1 | 4.07 未達 | 6.57 |
 | `--color-primary` | `--color-primary-soft-bg` | 文字 | 4.5:1 | 3.99 未達 | 5.36 |
 | `--color-on-cta` | `--color-primary` | 文字 | 4.5:1 | 4.47 未達（已接受） | 5.36 |
 | `--color-border` | `--color-white` | 邊框 | 3:1 | 1.23 未達 | 1.27 未達 |
 | `--color-border` | `--color-surface` | 邊框 | 3:1 | 1.12 未達 | 1.38 未達 |
+| `--color-border-control` | `--color-surface` | 邊框 | 3:1 | 2.88 未達 | 3.73 |
 | `--color-primary-border` | `--color-white` | 邊框 | 3:1 | 1.49 未達 | 1.81 未達 |
 | `--color-secondary` | `--color-white` | 圖示 | 3:1 | 2.98 未達 | 9.01 |
 
-- `--color-border` 在兩種主題都不到 3:1，只能當裝飾性分隔，不能單獨承擔「這裡有一個控制項」的辨識。
-- 次要文字放在 `--color-surface` 頁底時，淺色主題差一點過線；重要的次要資訊放在 `--color-white` 卡片上。
+- `--color-primary` 當文字的三列不再使用：主色文字一律換成 `--color-primary-strong`（白底 6.29、主色淺底 5.62:1）。
+- `--color-border` 在兩種主題都不到 3:1，只能當裝飾性分隔，不能單獨承擔「這裡有一個控制項」的辨識；控制項外框用 `--color-border-control`（淺色白底 3.15:1、深色卡片 3.42:1）。
+- `--color-border-control` 放在淺色 `--color-surface` 頁底時只有 2.88:1；控制項放在 `--color-white` 卡片上。
+- `--color-secondary` 不當圖示色，圖示用 `--color-primary`。
 - 可見的焦點樣式目前大多缺席，「所有互動元件都有可見焦點」是目標，還不是現況。
 
 ## 未同步
@@ -117,4 +119,4 @@ Label Suite 是研究團隊用的 NLP 標記平台：以設定驅動的流程走
 - **token 沒有略過。** `tokens.css` 的每一個變數都收進了 `tokens.json`，值照抄，沒有重新調色。
 - **元件的頁面別名。** 帳號頁不載入 `tokens.css`，自己定義 `--color-card`、`--color-border-focus`、`--color-link`；`components/bundle.css` 把它們綁回 `--color-white`、`--color-primary`、`--color-primary`，兩種主題都一致。
 - **寫死的色值。** 原型裡仍有不走 token 的色值（設計落差 G-02），`bundle.css` 照抄，沒有改：任務型別 badge 的六組色、`.btn-language` 的 hover、原型狀態切換列（Proto Toggle Bar）、輸入框焦點環的 `color-mix()` 等。新元件不要沿用。
-- **logo 檔案。** SVG 無法引用 CSS 變數，所以 logo 檔保留寫死色值；`social-preview.svg` 的副標灰與 `--color-ink-muted` 不同。深色主題專用的 logo 還沒有做。
+- **logo 檔案。** SVG 無法引用 CSS 變數，所以 logo 檔保留寫死色值；`banner.svg` 與 `social-preview.svg` 的副標灰跟著 `--color-ink-muted` 改成 `#5E6B7F`。深色主題專用的 logo 還沒有做。

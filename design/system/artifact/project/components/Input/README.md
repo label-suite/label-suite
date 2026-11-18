@@ -27,7 +27,7 @@
 
 | 狀態 | 表現 |
 | :--- | :--- |
-| 預設 | `--color-surface` 底、`--color-border` 外框、`--radius-md` 圓角、16px 字 |
+| 預設 | `--color-surface` 底、`--color-border-control` 外框、`--radius-md` 圓角、16px 字 |
 | 空 | 由 `placeholder` 表達，沒有專屬樣式 |
 | focus | 邊框換 `--color-primary`，外加 3px 的柔和焦點環 |
 | 錯誤 | `.input.error` ＋ `.field-error` |

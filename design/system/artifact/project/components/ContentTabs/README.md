@@ -9,7 +9,7 @@ Content Tabs 是頁面內容區裡的一排分頁，用底線標出目前分頁�
 ## 結構與使用方提供的內容
 
 - `.admin-tabs`：橫排容器，下緣 2px `--color-border`。
-- `.admin-tab`：可以是 `a`（換頁）或 `button`（同頁切換）。目前分頁加 `.active`，文字與底線變 `--color-primary`。
+- `.admin-tab`：可以是 `a`（換頁）或 `button`（同頁切換）。目前分頁加 `.active`，文字變 `--color-primary-strong`、底線變 `--color-primary`。
 - 使用方提供分頁文字，並自己決定 ARIA：CSS 不提供 `role="tablist"`、`role="tab"`、`aria-selected`，也不提供方向鍵巡覽（G-22）。
 - 已有的做法：`task-detail` 加了完整的 tablist ARIA 和方向鍵；`dataset-analysis-detail` 有 ARIA 但沒有方向鍵；`annotation-workspace` 的面板版兩者都沒有。
 

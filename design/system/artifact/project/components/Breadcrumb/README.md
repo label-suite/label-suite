@@ -9,11 +9,11 @@ Breadcrumb 是頁首上方的一行路徑，告訴使用者目前頁在哪一層
 ## 結構與使用方提供的內容
 
 - `nav.breadcrumb[aria-label="breadcrumb"]`：13px、`--color-text-soft`、下緣 12px 間距、項目間 6px。
-- 上層各是一個 `a`，顏色 `--color-primary`，hover 加底線。
+- 上層各是一個 `a`，顏色 `--color-primary-strong`，hover 加底線。
 - 層與層之間是 `span.breadcrumb-sep[aria-hidden="true"]`，顏色 `--color-ink-muted`。
 - 最後一層是目前頁：`span[aria-current="page"]`，不可點。
 - 使用方提供每一層的文字和連結。
-- token：`--color-text-soft`、`--color-primary`、`--color-ink-muted`。
+- token：`--color-text-soft`、`--color-primary-strong`、`--color-ink-muted`。
 
 ## 變體
 

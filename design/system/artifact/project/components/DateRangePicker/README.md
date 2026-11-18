@@ -23,7 +23,7 @@
 
 | class | 表現 |
 | :--- | :--- |
-| `.is-today` | 以 `--color-primary-border` 畫框 |
+| `.is-today` | 以 `--color-primary` 畫框（`--color-primary-border` 不能是唯一的提示） |
 | `.is-in-range` | `--color-primary-soft-bg` 柔底，圓角拉平成連續色帶 |
 | `.is-range-start`／`.is-range-end` | 實心 `--color-primary`、`--color-on-cta` 字 |
 
