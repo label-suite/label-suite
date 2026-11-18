@@ -139,7 +139,7 @@
 - [Input](components/input.md)：`annotation/annotation-workspace` 勾了「無法判定」之後出現的理由輸入框（`.input`，`design/prototype/pages/annotation/annotation-workspace.config.js:640`–`:672`），勾的當下錯誤訊息是隱藏的（`:647`，註解 `:656`–`:658`）；按提交才逐一判斷哪幾個輸出類型缺理由，各自打開錯誤（`:3056`–`:3068`）
 - [Toast](components/toast.md)：同一次提交只發**一則** warning 通知，把缺理由的輸出類型名稱用「、」串起來（`:3069`–`:3075`）
 
-依據的規格：[`04-annotation/02-annotation-workspace.mdx` §作答完整性與提交阻擋](../../docs/specs/04-annotation/02-annotation-workspace.mdx) 第 5 條。同一段第 2 條要「提示對應的那個區塊」，但區塊上的 `data-error` 標記沒有樣式 → [`design-gaps.md`](design-gaps.md) G-47。
+依據的規格：[`04-annotation/02-annotation-workspace.mdx` §作答完整性與提交阻擋](../../docs/specs/04-annotation/02-annotation-workspace.mdx) 第 5 條。同一段第 2 條要「提示對應的那個區塊」：#423 起未完成的區塊框線換 `--color-error`、區塊內一行錯誤文字以 `aria-describedby` 綁定，焦點捲到第一個未完成區塊（`annotation-workspace.config.js:2939`、`:3090`）；作答時引擎重繪區塊，錯誤隨之清掉，合本約定 → [`design-gaps.md`](design-gaps.md) G-47。
 
 ## UXC-05：輸入就清掉上一次的錯誤
 

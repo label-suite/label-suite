@@ -18,7 +18,7 @@
 | `#role-reviewer` | `?role=reviewer` | 同上，加 [Review Status Track](../components/review-status-track.md)（`.review-track`，CSS `:445`–`:466`，算繪 `annotation-workspace.config.js:5506`）、[Tooltip](../components/tooltip.md)（審核單位脈絡橫幅的審核說明，`:3935`–`:3980`）、[Input](../components/input.md)（`.input-textarea`，審核理由） |
 | `#tab-guideline` | 右欄預設分頁「說明與檔案」 | [Content Tabs](../components/content-tabs.md)（`.admin-tabs.admin-tabs--panel`，`:1291`–`:1292`） |
 | `#tab-history` | 切到「操作紀錄」（`renderHistoryPanel`，`annotation-workspace.config.js:2244`） | [Content Tabs](../components/content-tabs.md)、[Empty State](../components/empty-state.md)（沒有紀錄時 `empty-state-compact`，`:2271`） |
-| `#modal-guideline-gate` | 任務要求先讀說明且這個帳號尚未確認（`setupGuidelineModal`，`:6798`；markup `wsGuidelineModal`，`annotation-workspace.html:1119`） | [Modal](../components/modal.md)、[Button](../components/button.md)（`.btn.btn-cta` 確認、`.btn.btn-secondary` 返回標記清單，#423） |
+| `#modal-guideline-gate` | 任務要求先讀說明且這個帳號尚未確認（`setupGuidelineModal`，`:6837`；markup `wsGuidelineModal`，`annotation-workspace.html:1119`） | [Modal](../components/modal.md)、[Button](../components/button.md)（`.btn.btn-cta` 確認、`.btn.btn-secondary` 返回標記清單，#423） |
 | `#modal-guideline-image` | 右欄點圖片檔（`:1145`） | [Modal](../components/modal.md) |
 | `#modal-guideline-pdf` | 右欄點 PDF 檔（`:1160`） | [Modal](../components/modal.md) |
 | `#modal-guideline-md` | 右欄點 Markdown 檔（`:1176`） | [Modal](../components/modal.md) |
@@ -46,11 +46,11 @@
 
 六個 overlay 全部接了 `modal-focus.js`：圖片（`annotation-workspace.config.js:6343`）、PDF（`:6367`）、Markdown（`:6532`）、審核流程抽屜（`:5700`）、指引閘門（`:6845`），右欄抽屜由原生按鈕與 `aria-expanded` 控制 → G-23、G-43 在本頁不成立。但：
 
-- 指引閘門原本把 `onClose` 設成 `hideGuidelineModal`，按 Esc 就能不確認直接開始；#423 改成空函式（`:6859`），Esc 不關，另加「返回標記清單」鈕（`:6880`，走 `buildListReturnUrl`、不寫確認紀錄）→ G-46
+- 指引閘門原本把 `onClose` 設成 `hideGuidelineModal`，按 Esc 就能不確認直接開始；#423 改成空函式（`:6898`），Esc 不關，另加「返回標記清單」鈕（`:6919`，走 `buildListReturnUrl`、不寫確認紀錄）→ G-46
 - 審核流程抽屜的關閉鈕（`:1201`）靜態 markup 只有圖示；已於 #422 補上 `aria-label`（執行期本來就會設定）→ G-49
 - 分頁按鈕沒有 `tablist`／`tab`／`aria-selected`，只能點（`setupGuidelineTabs`，`:6695`–`:6713`）→ G-22
 
-送出被擋時各輸出類型的區塊會加上 `data-error="true"`（`:3048`），但全 prototype 沒有任何 CSS 選到它，畫面上看不出是哪一塊擋住 → G-47。
+送出被擋時，未完成的輸出區塊加上 `data-error="true"`、一行錯誤文字「這一項還沒作答，完成後才能送出／Answer this item before submitting」（`.ws-output-error`，以 `aria-describedby` 綁到區塊），焦點捲到第一個未完成區塊（`markPanelError`，`:2939`；`handleSubmit`，`:3090`）。框線是 `annotation-workspace.html:1089` 的 2px `--color-error` outline；區塊重繪時錯誤態一併清掉（`patchedRenderOutputPreview`）→ G-47（#423 修正）。
 
 ## 業務行為
 

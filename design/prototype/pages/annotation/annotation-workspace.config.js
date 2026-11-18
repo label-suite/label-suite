@@ -57,6 +57,7 @@
       guidelinePdfModalCloseAria: '關閉 PDF 預覽',
       guidelineMdModalCloseAria: '關閉 Markdown 預覽',
       wsSubmitIncomplete: '請完成所有標記項目後再送出',
+      wsOutputIncomplete: '這一項還沒作答，完成後才能送出',
       wsSubmitSuccess: '標記已送出',
       reviewSubmitLabel: '送出審核',
       reviewApproveLabel: '通過',
@@ -227,6 +228,7 @@
       guidelinePdfModalCloseAria: 'Close PDF preview',
       guidelineMdModalCloseAria: 'Close Markdown preview',
       wsSubmitIncomplete: 'Please answer every output before submitting',
+      wsOutputIncomplete: 'Answer this item before submitting',
       wsSubmitSuccess: 'Submitted',
       reviewSubmitLabel: 'Submit review',
       reviewApproveLabel: 'Approve',
@@ -480,6 +482,11 @@
   var originalRenderOutputPreview = renderOutputPreview;
   function patchedRenderOutputPreview(container, outKey) {
     container.setAttribute('data-testid', 'ws-output-panel-' + outKey);
+    /* 重繪會清掉區塊內容（含送出被擋時加的錯誤文字），錯誤態一併清掉，
+       免得框線還在、aria-describedby 卻指向不存在的元素（UXC-05；#423, G-47）。 */
+    container.removeAttribute('data-error');
+    container.removeAttribute('aria-describedby');
+    container.removeAttribute('tabindex');
     originalRenderOutputPreview(container, outKey);
     patchOutputPanel(outKey, container);
     /* relation_identification's bypass chip lives inside the unified
@@ -2922,10 +2929,34 @@
     }
   }
 
+  /* 送出被擋時的區塊提示（#423, design-gaps G-47；規格 04-02 §作答完整性與提交阻擋 第 2、4 條）：
+     框線換錯誤色（CSS 選 [data-error="true"]）、區塊內一行錯誤文字並以 aria-describedby 綁定，
+     焦點捲到第一個未完成的區塊。作答時引擎會重繪區塊，錯誤標記隨之消失（UXC-05）。 */
+  function outputErrorId(outKey) {
+    return 'ws-output-error-' + outKey;
+  }
+
+  function markPanelError(panel, outKey) {
+    panel.setAttribute('data-error', 'true');
+    var error = document.createElement('p');
+    error.className = 'ws-output-error';
+    error.id = outputErrorId(outKey);
+    error.setAttribute('data-testid', 'ws-output-error-' + outKey);
+    error.textContent = t('wsOutputIncomplete');
+    panel.appendChild(error);
+    panel.setAttribute('aria-describedby', error.id);
+    panel.setAttribute('tabindex', '-1');
+  }
+
   function clearAllPanelErrors() {
     state.selectedOutputTypes.forEach(function (outKey) {
       var panel = document.querySelector('[data-testid="ws-output-panel-' + outKey + '"]');
-      if (panel) panel.removeAttribute('data-error');
+      if (!panel) return;
+      panel.removeAttribute('data-error');
+      panel.removeAttribute('aria-describedby');
+      panel.removeAttribute('tabindex');
+      var error = document.getElementById(outputErrorId(outKey));
+      if (error) error.remove();
     });
   }
 
@@ -3043,14 +3074,22 @@
 
     clearAllPanelErrors();
     var allAnswered = true;
+    var firstIncompletePanel = null;
     state.selectedOutputTypes.forEach(function (outKey) {
       if (!isOutputAnswered(outKey)) {
         allAnswered = false;
         var panel = document.querySelector('[data-testid="ws-output-panel-' + outKey + '"]');
-        if (panel) panel.setAttribute('data-error', 'true');
+        if (panel) {
+          markPanelError(panel, outKey);
+          if (!firstIncompletePanel) firstIncompletePanel = panel;
+        }
       }
     });
     if (!allAnswered) {
+      if (firstIncompletePanel) {
+        firstIncompletePanel.focus({ preventScroll: true });
+        firstIncompletePanel.scrollIntoView({ block: 'center' });
+      }
       showToast(t('wsSubmitIncomplete'), 'warning');
       state.submitBusy = false;
       if (submitBtnEl) submitBtnEl.disabled = false;

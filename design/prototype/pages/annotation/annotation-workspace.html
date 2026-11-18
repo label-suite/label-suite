@@ -1084,6 +1084,21 @@
     .ws-bypass-reason-group { display: flex; flex-direction: column; gap: 2px; flex: 1 1 220px; min-width: 200px; }
     .ws-bypass-reason-error { font-size: 12px; color: var(--color-error); }
     .ws-bypass-reason-helper { font-size: 12px; color: var(--color-text-soft); }
+
+    /* ── 送出被擋時的未完成區塊（#423, design-gaps G-47）── */
+    [data-testid^="ws-output-panel-"][data-error="true"] {
+      /* 區塊本身沒有內距、彼此緊貼，所以錯誤態加內距與上下間距，框線才不會壓到鄰居或錯誤文字 */
+      outline: 2px solid var(--color-error);
+      outline-offset: 0;
+      border-radius: var(--radius-md);
+      padding: var(--space-sm);
+      margin-block: var(--space-sm);
+    }
+    .ws-output-error {
+      margin-top: var(--space-sm);
+      font-size: var(--text-label);
+      color: var(--color-error);
+    }
   </style>
 </head>
 <body>

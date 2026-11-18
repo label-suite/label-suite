@@ -239,6 +239,8 @@
 | **依據** | `annotation-workspace.config.js:3048` 對未完成的區塊設 `data-error="true"`（`:2926` 清掉），但全 prototype 沒有任何 CSS 選到 `[data-error]`。規格 [`04-annotation/02-annotation-workspace.mdx`](../../docs/specs/04-annotation/02-annotation-workspace.mdx) §作答完整性與提交阻擋 第 2 條「任一個還沒完成時：**阻擋提交並提示對應的那個區塊**」，第 4 條要「**可定位的**錯誤」。 |
 | **待決問題** | **已裁定（2026-11-18）**：未完成區塊框線換錯誤色，區塊內顯示錯誤文字（以 `aria-describedby` 綁定），焦點捲到第一個未完成區塊。修正於 #423。原題保留：「提示對應的那個區塊」要長什麼樣（框線換色、區塊內的錯誤文字、捲到第一個）？是否另需讓輔助科技讀得到？ |
 
+**狀態（#423）**：已修正。送出被擋時，每個未完成的輸出區塊：`data-error="true"` 有了樣式（2px `--color-error` outline，錯誤態另加 `--space-sm` 內距與上下間距，因為區塊本身沒有內距、彼此緊貼）；區塊末尾加一行 `.ws-output-error` 錯誤文字（`--text-label`、`--color-error`，中文「這一項還沒作答，完成後才能送出」、英文 "Answer this item before submitting"），以 `aria-describedby` 綁到區塊；第一個未完成區塊設 `tabindex="-1"`、取得焦點並捲到畫面中央。原本的 warning toast 保留。作答時引擎重繪該區塊，錯誤態跟著清掉（UXC-05）。淺深色、中英文以 `T013`（實體＋關係＋多維度三個區塊）實測。上文的行號指的是修正前。
+
 ### G-48 標記清單沒帶任務時，借用了「找不到這個任務」的標題
 
 > b3 新增。
