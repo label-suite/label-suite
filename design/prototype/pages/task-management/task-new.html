@@ -45,6 +45,8 @@
     .step-label { font-size: 12px; font-weight: 500; color: var(--color-ink-muted); white-space: nowrap; }
     .step-label.active { color: var(--color-primary-strong); font-weight: 600; }
     .step-label.done { color: var(--color-cta); }
+    /* G-44: non-visual cue for a completed step (read by screen readers only) */
+    .step-sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
     .step-connector { flex: 1; height: 2px; background: var(--color-border); margin: 0 8px; margin-bottom: 18px; transition: background var(--dur-fast); }
     .step-connector.done { background: var(--color-cta); }
 
@@ -226,22 +228,22 @@
 
     <!-- Step indicator -->
     <div class="step-indicator" aria-label="建立步驟">
-      <div class="step-item">
+      <div class="step-item" id="si1">
         <div class="step-circle" id="sc1">1</div>
         <div class="step-label" id="sl1">基本資料</div>
       </div>
       <div class="step-connector" id="conn12"></div>
-      <div class="step-item">
+      <div class="step-item" id="si2">
         <div class="step-circle" id="sc2">2</div>
         <div class="step-label" id="sl2">標記設定檔</div>
       </div>
       <div class="step-connector" id="conn23"></div>
-      <div class="step-item">
+      <div class="step-item" id="si3">
         <div class="step-circle" id="sc3">3</div>
         <div class="step-label" id="sl3">啟動設定</div>
       </div>
       <div class="step-connector" id="conn34"></div>
-      <div class="step-item">
+      <div class="step-item" id="si4">
         <div class="step-circle" id="sc4">4</div>
         <div class="step-label" id="sl4">標記說明</div>
       </div>
@@ -580,6 +582,7 @@ var I18N = {
     pageTitle: '新增任務',
     pageSubtitle: '依序完成四個步驟以建立標記任務',
     roleUser: '一般使用者',
+    stepDone: '已完成',
     s1Label: '基本資料',
     s2Label: '標記設定檔',
     s3Label: '啟動設定',
@@ -658,6 +661,7 @@ var I18N = {
     pageTitle: 'New task',
     pageSubtitle: 'Complete four steps to create an annotation task',
     roleUser: 'User',
+    stepDone: 'Completed',
     s1Label: 'Basic info',
     s2Label: 'Label config',
     s3Label: 'Startup settings',
@@ -906,9 +910,16 @@ function updateStepIndicator() {
     label.className = 'step-label' + (n < s ? ' done' : n === s ? ' active' : '');
     if (n < s) {
       circle.innerHTML = checkSvg; /* safe: static SVG, no user data */
+      var done = document.createElement('span');
+      done.className = 'step-sr-only';
+      done.textContent = t('stepDone');
+      circle.appendChild(done);
     } else {
       circle.textContent = String(n);
     }
+    /* G-44: the current step is exposed to assistive tech, not only by colour */
+    if (n === s) el('si' + n).setAttribute('aria-current', 'step');
+    else el('si' + n).removeAttribute('aria-current');
   });
   el('conn12').className = 'step-connector' + (s > 1 ? ' done' : '');
   el('conn23').className = 'step-connector' + (s > 2 ? ' done' : '');
@@ -1498,6 +1509,7 @@ function applyLang(l) {
   ];
   ids.forEach(function(id) { setText(id, t(id)); });
   setText('sl1', t('s1Label')); setText('sl2', t('s2Label')); setText('sl3', t('s3Label')); setText('sl4', t('s4Label'));
+  updateStepIndicator();
   setText('leaveModalStayBtn', t('leaveModalStay'));
   setText('leaveModalLeaveBtn', t('leaveModalLeave'));
   setText('datasetPreviewModalTitle', t('datasetPreviewTitle'));
