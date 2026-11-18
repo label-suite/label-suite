@@ -70,6 +70,8 @@
 - [ ] 7.2 在同一份契約回填 §能力缺口與承接：第 3 條（讀取）的「承接」從「靠 `.gitignore` 與硬性規則 8」改寫成指名權限層的宣告式機制（Codex 的 `filesystem = "deny"`、Claude 的 `permissions.deny`），並明寫**本 change 未設定權限層**；**新增同類的一條（寫入：Codex 的 `apply_patch`）**——它沒有路徑欄位（事實與來源見 task 7.1 的 §工具名稱 回填），所以 hook 層在該途徑沒有寫檔目標保護，承接者同為平台權限層、同樣**本 change 未設定**；該條要寫明兩個平台在這一項**不對等**（Claude 的 `Edit`／`Write`／`NotebookEdit` 有 hook 層保護）以及**維護者 2026-11-17 裁定**的出處；第 6 條從「本次沒做」改為兩側已於 2026-11-17 查完（附網址與查核日），並明記「查完 ≠ 設好」，且 Codex 的 permission profile 與舊 sandbox 設定**互斥、不得並列成四個鍵**。驗證：`pnpm check:specs` 通過；文中關於權限層的每一句都能指回一個有查核日的來源（D19；spec「平台權限層與 hook 攔截分開陳述」「平台權限層的能力以核對過的事實陳述」）[@technical-writer]
 - [ ] 7.3 更新 `AGENTS.md` §Agent Rules Index 末段（現行第 171 行）「No agent hook is wired yet: …」一句，改寫成本 change 落地後的實際狀態。**只改事實陳述**。驗證：該檔 `git diff` 僅限這一段，硬性規則條數、六份文件的表格內容與其餘段落零異動（D20；spec「文件中的 hook 現況敘述與實際狀態一致」）[@technical-writer]
 
+- [x] 7.4 把「hook 檢查器的診斷訊息用繁體中文」寫進 `AGENTS.md` §Language Rules（**維護者 2026-11-18 裁定**）：理由是那些訊息引用的條文本身是中文，翻譯會多一份要同步的措辭；前綴與識別字仍為英文，`scripts/check-commit-msg.sh` 列為既有例外。本項在 3.2 完成時一併落地，不等群組 7（#111）[@technical-writer]
+
 ## 8. 整合驗證與完成報告
 
 - [ ] 8.1 實際 runtime 事件 smoke test：在 Claude Code 與 Codex **各跑一次真的事件**，確認註冊生效、matcher 命中、payload 欄位與預期相同、回饋在對話中看得到、H2 的攔截真的擋下動作（受測命令用安全字串，不真的執行破壞性操作）。逐次記錄事件名稱、payload 摘要、輸出與退出碼到完成報告；任一平台跑不起來就照實記為未覆蓋，不以腳本測試頂替（D21 第 2 點；#111 §驗收條件第 4 項）[@backend-developer]
