@@ -2,7 +2,7 @@
 
 ## 何時使用
 
-- 使用者要輸入自由文字（任務名稱、說明、Email）時。
+- 使用者要輸入自由文字（任務名稱、說明、電子郵件）時。
 - 選項有限時改用下拉或 [Chip](../Chip/README.md)；開關型設定用 [ToggleSwitch](../ToggleSwitch/README.md)；日期區間用 [DateRangePicker](../DateRangePicker/README.md)；列表上方的搜尋框用 [ListToolbar](../ListToolbar/README.md) 的 `.search-input`。
 - 密碼欄位搭配 [PasswordEyeToggle](../PasswordEyeToggle/README.md)。
 
@@ -21,7 +21,7 @@
 | `.input` | 單行欄位 |
 | `.input-textarea` | 多行欄位 |
 | `.input.error` | 驗證失敗，邊框換錯誤色，下方配 `.field-error` |
-| `.input[readonly]`／`.input.readonly` | 系統管理、不可編輯的值（例如 SSO 帳號的 Email）；語意不同於停用 |
+| `.input[readonly]`／`.input.readonly` | 系統管理、不可編輯的值（例如 SSO 帳號的電子郵件）；語意不同於停用 |
 
 ## 狀態
 

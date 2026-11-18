@@ -63,8 +63,8 @@
   },
   "lastChange": {
     "by": "陳欣怡",
-    "at": "2026-11-18T05:50:22Z",
-    "via": "Claude Code · label-suite/label-suite feat/design-system-artifact",
-    "note": "First publish from design/system/artifact (#413)"
+    "at": "2026-11-18T06:27:22Z",
+    "via": "Claude Code · label-suite/label-suite docs/design-system-sync",
+    "note": "Sync strings and breakpoints with the prototype after #418 (#429)"
   }
 }
