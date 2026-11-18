@@ -9,7 +9,7 @@
 本檔是依 [`design-system-setup`](../../.claude/skills/design-system-setup/SKILL.md) 的四種依據，**從 prototype 的實際程式碼反推重建**的。因此：
 
 - **章節名沿用**那些註解指名的名字（§Buttons、§Inputs、§Empty State、§Desktop Content Tabs、§Metric KPI Tile…），這樣既有註解才不會變成懸空引用。
-- **版本號與行號引用無法重現**：`tokens.css:3`（「updated 2026-04-18」）、`:31` 與 `:180`（「MASTER.md v1.7.1」）、`:69`（「MASTER.md Changelog」）、`annotation-workspace.config.js:3944`（「MASTER.md:1423-1482」）、`:3947`（「MASTER.md:1482」）指的都是原件的版本與行數。本檔從第 1 版重新起算，**那五處引用在本 repo 解析不到**，記在 [`design-gaps.md`](design-gaps.md) G-25。
+- **版本號與行號引用無法重現**：`tokens.css:3`（「updated 2026-04-18」）、`:32` 與 `:182`（「MASTER.md v1.7.1」）、`:70`（「MASTER.md Changelog」）、`annotation-workspace.config.js:3944`（「MASTER.md:1423-1482」）、`:3947`（「MASTER.md:1482」）指的都是原件的版本與行數。本檔從第 1 版重新起算，**那五處引用在本 repo 解析不到**，記在 [`design-gaps.md`](design-gaps.md) G-25。
 - 原始 repo 的 `design/system/` 依 `design-handoff` 鐵律是**參照，不是依據**，所以本檔沒有從它抄任何內容。
 
 ## 怎麼查
@@ -118,7 +118,7 @@ prototype 的註解另外指名的章節裡，這一個不是元件（b1 原列�
 
 | 章節 | 引用處 | 待 |
 | :--- | :--- | :--- |
-| §Changelog | `assets/tokens.css:69` | 原件的版本紀錄，本檔從第 1 版起算 |
+| §Changelog | `assets/tokens.css:70` | 原件的版本紀錄，本檔從第 1 版起算 |
 
 ## 批次狀態
 
