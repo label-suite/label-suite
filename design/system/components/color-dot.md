@@ -18,7 +18,7 @@
 
 **預設 8 色盤**在 `components-showcase.html:1240`–`:1248`。維護者裁定它們是**資料色**（指派給實體類型），不進 `tokens.css`（#420 Q4）：#420 起改取 `assets/data-palette.css` 的 `--data-entity-1`–`--data-entity-8`，淺色值與 `task-config.data.js` 的 `ENTITY_COLORS` 相同；深色主題另有一組同色相的 400 階（對深色卡片 6:1 以上）。任務設定存的是淺色 hex，引擎上色時經 `entityPaintColor()` 把預設色換成 `var(--data-entity-N)`，所以深色主題換得到；使用者自選、不在色盤裡的顏色照原值畫。原值見 `../design-gaps.md` G-02。
 
-`.t-dot` 的樣本反而用 token（`var(--color-success)`／`var(--color-error)`，`:1255`–`:1256`）——同一個元件的三個變體，兩種取色方式。
+`.t-dot` 的樣本則用 `tokens.css` 的語意 token（`var(--color-success)`／`var(--color-error)`，`:1255`–`:1256`）——同一個元件的三個變體，兩種色源：色盤取資料色，狀態圓點取語意色。
 
 ## 適用狀態
 
@@ -30,11 +30,11 @@
 
 ## token
 
-`--radius-sm`（只有 `.entity-color-dot`）。邊框是 `rgba(0,0,0,0.1)`／`rgba(0,0,0,0.12)` 兩個寫死值，深色模式下不會變。
+`--radius-sm`（只有 `.entity-color-dot`）。邊框是兩個寫死的半透明黑；showcase 的正典在深色模式下不會變，`task-config.css` 的同名規則另有深色覆寫（`:581`–`:582`，同樣寫死）。
 
 ## 鍵盤與焦點
 
-不可聚焦。樣本用 `title` 屬性帶色碼或語意（`:1242`、`:1255`），**不是 `aria-label`**——`title` 在觸控裝置上看不到，而顏色是唯一的訊號 → `../design-gaps.md` G-14。
+不可聚焦。樣本用 `title` 屬性帶色票變數名或語意（`:1242`、`:1255`），**不是 `aria-label`**——`title` 在觸控裝置上看不到，而顏色是唯一的訊號 → `../design-gaps.md` G-14。
 
 ## 樣式出處
 

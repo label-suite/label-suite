@@ -26,7 +26,7 @@
 | 狀態 | class | 依據 |
 | :--- | :--- | :--- |
 | 未到 | 無修飾（`--color-ink-muted` 文字、`--color-white` 底） | `components-showcase.html:659` |
-| 已走過 | `.done`：邊框 `--color-cta`、底 `--color-success-bg`、字重 600 | `:674` |
+| 已走過 | `.done`：邊框與文字 `--color-cta`、底 `--color-success-bg`、字重 600 | `:674` |
 | 目前 | `.current`：primary 色系、字重 600，另加 `目前：` 文字前綴與 `aria-current="step"` | `:680`、樣本 `:1229` |
 | hover／focus／disabled／載入中／空 | 不適用，非互動元素 | `:653`–`:717` 無偽類 |
 

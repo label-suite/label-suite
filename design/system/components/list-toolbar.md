@@ -28,7 +28,7 @@
 | :--- | :--- | :--- |
 | 預設 | 有 | `list-page.css:10` |
 | focus | **有**。`.search-input` 與 `.filter-select` 都換 primary 邊框加 3px ring | `:30`、`:39` — 全 `list-page.css` 只有這兩條 `:focus` |
-| hover | 只有 `.clear-btn` 有（文字與邊框變深） | `:46` |
+| hover | 只有 `.clear-btn` 有（文字換 `--color-ink`、邊框換 `--color-primary`） | `:46` |
 | 沒有可清除的篩選 | 有。`.clear-btn.hide-clear` 用 `visibility: hidden` ＋ `pointer-events: none`——**保留佔位，不跳版** | `:47` |
 | disabled／載入中／錯誤／空 | 未觀察到 | 全檔無 `:disabled` |
 

@@ -27,7 +27,7 @@
 
 ## token
 
-`--color-border`、`--radius-md`、`--color-white`（#420 之前是頁面私有的 `--color-card`）、`--color-ink-muted`。內距 `6px 12px` 與 `gap: 6px` 是字面值。
+`--color-border`、`--radius-md`、`--color-white`（#420 之前是頁面私有的 `--color-card`）、`--color-ink`；hover 另用 `--color-primary`（邊框）與 `--color-primary-soft-bg`（底，`login.html:84`–`:87`）。內距 `6px 12px` 與 `gap: 6px` 是字面值。
 
 ## 鍵盤與焦點
 

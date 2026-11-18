@@ -32,7 +32,7 @@
 
 ## token
 
-`--color-ink-muted`、`--color-ink`、`--color-white`、`--dur-fast`。寫死：泡泡圓角 6px（`:305`）、`z-index: 500`（`:301`，`tokens.css` 有 `--z-*` 系列卻沒用） → G-02。
+`--color-ink-muted`、`--color-ink`、`--color-white`、`--color-primary`（觸發鈕 focus）、`--dur-fast`。寫死：泡泡圓角 6px（`:305`）、`z-index: 500`（`:301`，`tokens.css` 有 `--z-*` 系列卻沒用） → G-02。
 
 ## 鍵盤與焦點
 

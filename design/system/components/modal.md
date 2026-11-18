@@ -28,7 +28,7 @@
 | :--- | :--- | :--- |
 | 關閉（預設） | 有，`display: none` | `modal.css:11` |
 | 開啟 | 有，`.show` → `display: flex` | `:16` |
-| hover | 只有 `.modal-close` 有（底色換 `--color-slate-50`） | `:75` |
+| hover | 只有 `.modal-close` 有（底色換 `--color-slate-50`、圖示換 `--color-ink`） | `:75` |
 | focus | **未觀察到樣式**，但**行為完整**（見下） | 以 `:focus` 掃全檔，0 命中 → `../design-gaps.md` G-05 |
 | disabled／載入中／錯誤／空 | 不適用，由內容自理 | — |
 

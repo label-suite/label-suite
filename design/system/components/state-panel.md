@@ -36,9 +36,9 @@
 
 ## token
 
-`--radius-md`、`--radius-full`、`--color-success`／`-bg`／`-border`、`--color-error`／`-bg`／`-border`、`--color-primary`、`--color-primary-strong`。
+`--radius-md`、`--radius-full`、`--color-success`／`-bg`／`-border`、`--color-error`／`-bg`／`-border`、`--color-primary-strong`（action）。
 
-圖示底色與標題色是**四個**寫死值，註解都標為「MASTER §State Panel literal」（`:871`、`:875`、`:882`、`:883`），原值見 `../design-gaps.md` G-02。
+圖示底色與標題色原本是**四個**寫死值（註解標為「MASTER §State Panel literal」）；#420 起圖示底改用 `--color-success-border`／`--color-error-border`、標題改用 `--color-success`／`--color-error`（`:871`、`:875`、`:882`、`:883`），兩種主題都跟著換。原值見 `../design-gaps.md` G-02。
 
 整個章節在正典裡只有 Tailwind 樣本，showcase 的註解說明它是依 Divider 的先例對映成 token 的（`:843`–`:845`）。
 

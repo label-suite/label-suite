@@ -33,7 +33,7 @@
 
 ## token
 
-`--radius-sm`、`--radius-full`、`--color-warning/info/success/error` 及其 `-bg`／`-border`、`--color-primary`、`--color-primary-strong`、`--color-primary-soft-bg`、`--color-primary-border`。
+`--radius-sm`、`--radius-full`、`--color-warning/info/success/error` 及其 `-bg`／`-border`、`--color-ink-muted`、`--color-slate-50`、`--color-border`、`--data-task-type-*`、`--color-primary-strong`、`--color-primary-soft-bg`、`--color-primary-border`。
 
 #420 之前，`task-type-badge.css` 的 36 個色值（淺色 18、深色 18）與 `.badge-draft`、`.badge-dry-run-status` 的 6 個都寫死。#420 起任務型別改取 `assets/data-palette.css`，中性徽章改用 `--color-ink-muted`／`--color-slate-50`／`--color-border`，徽章裡已沒有 hex → `../design-gaps.md` G-02。
 

@@ -33,7 +33,7 @@
 
 `--color-border`、`--color-border-control`、`--color-white`、`--color-ink`、`--color-primary`、`--color-primary-strong`、`--color-primary-soft-bg`、`--color-text-soft`、`--radius-md`、`--space-md`、`--space-lg`、`--space-xs`、`--dur-fast`。
 
-**一個色 token 兩份定義不一致**：`.page-btn.active` 的文字色，正典是 `--color-on-cta`（`components-showcase.html:615`，註解明寫「WCAG AA foreground token, issue singyichen/label-suite#1019」），shipped 的 `list-page.css:92` 是 `--color-white`。前者會隨主題換（深色下不是白），後者固定白 → `../design-gaps.md` G-12。
+**一個色 token 兩份定義不一致**：`.page-btn.active` 的文字色，正典是 `--color-on-cta`（`components-showcase.html:615`，註解明寫「WCAG AA foreground token, issue singyichen/label-suite#1019」），shipped 的 `list-page.css:92` 是 `--color-white`。淺色下兩者都是白；深色下兩者都不是白，但值不同——前者是 `--color-on-cta` 的深色值（深靛色），後者是 `--color-white` 的深色值（深色卡片底色），疊在深色 `--color-primary` 上的對比不同（`dataset-analysis-list` 實測）。`task-list` 與 `user-management` 在頁內改回 `--color-on-cta` → `../design-gaps.md` G-12。
 
 `.page-size-select` 與 `.filter-select` 的下拉箭頭是 data-URI SVG，裡面寫死 `%2394A3B8`（`list-page.css:103`、`:34`）。
 

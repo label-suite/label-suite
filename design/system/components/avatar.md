@@ -39,7 +39,7 @@ showcase 的說明寫「profile 64/80px」（`:1356`），它自己的 CSS 是 8
 
 `--radius-full`、`--color-primary`、`--color-white`、`--color-error`、`--color-ink-muted`、`--dur-normal`。
 
-寫死三個：邊框 `rgba(99, 102, 241, 0.2)`（`:906`，註解標為 MASTER §Avatar literal）、遮罩 `rgba(0, 0, 0, 0.5)`（`:937`），以及 80px／32px／24px 等尺寸 → `../design-gaps.md` G-02。
+寫死三個：邊框是 20% 不透明的 primary 色（`:906`，註解標為 MASTER §Avatar literal）、遮罩是 50% 不透明的黑（`:937`），兩者深色模式下都不變，以及 80px／32px／24px 等尺寸 → `../design-gaps.md` G-02。
 
 ## 鍵盤與焦點
 

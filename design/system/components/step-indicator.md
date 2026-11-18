@@ -25,7 +25,7 @@
 | 完成（`.done`） | 有：`--color-cta` 底，連接線也變 `--color-cta` | `:43`、`:46`、`:48` |
 | hover／focus／disabled | 未觀察到（步驟不可點） | — |
 
-`--color-on-cta` 疊在 `--color-primary` 上的對比低於 AA，`tokens.css:21` 註明是「已裁定接受的取捨」，裁定記錄在原件 → `../design-gaps.md` G-25。
+淺色下 `--color-on-cta` 疊在 `--color-primary` 上的對比約 4.47:1，低於 AA，`tokens.css:21` 註明是「已裁定接受的取捨」，裁定記錄在原件 → `../design-gaps.md` G-25。深色下兩者都換成深色值，對比約 5.36:1，達 AA。
 
 ## token
 

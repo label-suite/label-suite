@@ -24,12 +24,13 @@
 | :--- | :--- | :--- |
 | 隱藏（預設） | 有 | `login.html:262` |
 | 顯示 | 有，圖示換成劃線的眼睛 | 逐頁的腳本 |
-| hover／focus | **未觀察到** | → `../design-gaps.md` G-05 |
+| hover | 有，圖示換 `--color-ink`（四頁都有，含 `profile`） | `login.html:277` |
+| focus | 有，`:focus-visible` 加 2px `--color-primary` 外框（login、register、reset-password；`profile` 沒有） | `login.html:278`–`:281` |
 | disabled／載入中／錯誤／空 | 不適用 | — |
 
 ## token
 
-`--color-ink-muted`。`right: 12px`、`padding: 2px` 是字面值。
+`--color-ink-muted`；hover 用 `--color-ink`，focus 外框用 `--color-primary`。`right: 12px`、`padding: 2px` 是字面值。
 
 ## 鍵盤與焦點
 

@@ -25,7 +25,7 @@
 
 ## token
 
-`--color-border`、`--color-ink-muted`。
+`--color-border`、`--color-border-muted`、`--color-ink-muted`。
 
 `.divider-list` 的分隔線原本是寫死值，#420 起改用 `--color-border-muted`（`:840`）；`.divider-hr` 用 `--color-border`（`:831`），兩條線都取自 token，只是深淺差一階。原值見 `../design-gaps.md` G-02。
 `margin: 24px 0`、`py-4` 的 `16px`、`gap: 12px` 都是字面值。
