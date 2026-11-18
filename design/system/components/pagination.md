@@ -65,5 +65,6 @@
 | `admin/user-management#state-default` | 本頁重寫的 `.page-btn`（`user-management.html:140`–`:158`） |
 | `task-management/task-list#state-default` | 本頁重寫的 `.page-btn`（`task-list.html:138`；markup `:283`–`:296`）；三種空／錯誤狀態整條隱藏 |
 | `task-management/task-detail`（`#tab-member-management`、`#tab-annotation-progress`、`#tab-annotation-results`、`#tab-work-log`） | 各 panel 的 `.page-btn`（`annotation-progress.html:134`、`annotation-results.html:63`、`:112` 等） |
+| `annotation/annotation-list#state-default` | `.pagination`（`annotation-list.html:538`），「共 N 筆 · 第 N / N 頁」 |
 
-b1 的帳號頁一個都沒用。b2 已補上（見上表）。b3（`annotation/annotation-list`）、b4（`dataset/dataset-analysis-list`），待那幾批補。
+b1 的帳號頁一個都沒用。b2 已補上（見上表）。b3 已補上（見上表）。b4（`dataset/dataset-analysis-list`），待 b4 補。

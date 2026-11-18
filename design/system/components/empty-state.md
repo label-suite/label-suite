@@ -86,5 +86,8 @@
 | `task-management/task-detail`（`#tab-annotation-progress`、`#tab-annotation-results`、`#tab-work-log`） | `empty-state-panel`（`annotation-progress.html:157`、`annotation-results.html:164`、`work-log.html:84`） |
 | `task-management/task-new#state-step2` | `empty-state-compact`（`task-config.engine.js:1878`） |
 | `dashboard/dashboard#param-scenario-reviewer` | `empty-state-compact`（`dashboard.js:431`） |
+| `annotation/annotation-list`（`#state-empty`、`#state-filtered-empty`） | `empty-state-page`（`annotation-list.html:537`）；兩種空換文案，只有篩不到才給清除篩選（`renderEmptyState`，`:1951`–`:1966`）→ UXC-09 |
+| `annotation/annotation-list`（`#state-no-task`、`#state-task-not-found`、`#param-notice-no-actionable-review`） | `empty-state-panel`（`#taskNotFound`，`:496`；`#noActionableNotice`，`role="status"`，`:500`）。沒帶任務時借用「找不到這個任務」的標題 → `../design-gaps.md` G-48 |
+| `annotation/annotation-workspace#tab-history` | 沒有操作紀錄時 `empty-state-compact`（`annotation-workspace.config.js:2271`） |
 
-b2 已補上（見上表），G-21 的「沒有樣本」對這個元件不再成立。b3（`annotation/annotation-list`、`annotation-workspace`）、b4（`dataset-analysis-list`、`dataset-analysis-detail` 及 4 個 partial），待那幾批補。
+b2 已補上（見上表），G-21 的「沒有樣本」對這個元件不再成立。b3 已補上（見上表）。b4（`dataset-analysis-list`、`dataset-analysis-detail` 及 4 個 partial），待 b4 補。

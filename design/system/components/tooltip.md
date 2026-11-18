@@ -1,6 +1,6 @@
 # Tooltip
 
-> 正典章節：原件 `MASTER.md` §Tooltip（只見於 `pages/task-management/task-config.css:259` 的註解，本 repo 無原文）｜批次 `b2-admin-dashboard-task` ｜交付包 commit `eb9a884`
+> 正典章節：原件 `MASTER.md` §Tooltip（只見於 `pages/task-management/task-config.css:259` 的註解，本 repo 無原文）｜批次 `b2-admin-dashboard-task`、`b3-annotation-review` 補寫 ｜交付包 commit `eb9a884`
 
 ## 結構
 
@@ -16,7 +16,10 @@
 
 ## 變體
 
-本批次只有一種（欄位說明）。b3 的 `annotation-workspace.config.js:3943` 也自稱 §Tooltip，待 b3 核對。
+| 變體 | 差別 | 依據 |
+| :--- | :--- | :--- |
+| 欄位說明 | 觸發鈕放在欄位標籤同一行的 `.field-label-row` 裡 | `task-config.engine.js:1152`–`:1182`（`attachFieldHintTooltip`） |
+| 審核說明 | 觸發鈕放在審核單位脈絡橫幅裡，泡泡有固定 id `wsReviewNoteBubble` 供 `aria-describedby` 指向；同一組 class，沒有 `.field-label-row` | `annotation-workspace.config.js:3935`–`:3980`（`appendReviewNoteTooltip`，b3 核對） |
 
 ## 適用狀態
 
@@ -45,7 +48,7 @@
 
 ## 可重現樣本
 
-`task-management/task-new#state-step3`（`task-new.html:393`–`:398`）、`task-management/task-detail#tab-settings`（`settings.html:321`–`:323`）。
+`task-management/task-new#state-step3`（`task-new.html:393`–`:398`）、`task-management/task-detail#tab-settings`（`settings.html:321`–`:323`）、`annotation/annotation-workspace#role-reviewer`（審核說明）。
 
 ## shadcn 對照
 
@@ -61,3 +64,4 @@
 | :--- | :--- |
 | `task-management/task-new#state-step3` | 啟動設定的欄位說明 |
 | `task-management/task-detail#tab-settings`（及五個 `#param-section-*`） | 設定分頁的欄位說明 |
+| `annotation/annotation-workspace#role-reviewer` | 審核單位脈絡橫幅的審核說明（`appendReviewNoteTooltip`，`annotation-workspace.config.js:3935`–`:3980`），沿用 `task-config.css` 的同一組 class |

@@ -71,5 +71,6 @@
 | 無（b1） | — |
 | `task-management/task-list`（`#state-default`、`#state-filtered-empty`） | 工具列 markup `task-list.html:224`–`:256`，已載 `list-page.css` 又在 `<style>` 重寫（`:160`–`:166`） |
 | `admin/user-management#state-default` | 本頁的搜尋與篩選（`user-management.html:61`–`:81`、`:252`），不是 `list-page.css` |
+| `annotation/annotation-list`（`#state-default`、`#state-filtered-empty`） | `.toolbar role="search"`（`annotation-list.html:502`）：`.filter-select`、`.search-input`、`.clear-btn`；篩選狀態放網址（`?q=`、`?status=`，UXC-11，`:1078`） |
 
-b2 已補上（見上表）。b3（`annotation/annotation-list`）、b4（`dataset/dataset-analysis-list`），待那幾批補。表格與分頁的部分見 [Data Table](data-table.md) 與 [Pagination](pagination.md)。
+b2 已補上（見上表）。b3 已補上（見上表）。b4（`dataset/dataset-analysis-list`），待 b4 補。表格與分頁的部分見 [Data Table](data-table.md) 與 [Pagination](pagination.md)。

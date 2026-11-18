@@ -69,5 +69,6 @@
 | `admin/user-management#state-default` | 本頁的表格（`user-management.html:416`–`:418`） |
 | `admin/role-settings#state-default` | `.matrix-table`（`role-settings.html:104`），sticky 首欄與表頭（`:127`、`:156`），外層 `role="region" tabindex="0"`——**鍵盤可捲**，與 G-27 相反 |
 | `task-management/task-detail`（`#tab-member-management`、`#tab-annotation-progress`、`#tab-annotation-results`、`#tab-work-log`） | `.member-table`（`member-management.html:19`；`annotation-progress.html:32`；`annotation-results.html:48`；`work-log.html:38`） |
+| `annotation/annotation-list`（`#state-default`、`#role-*`） | `.task-table`（`annotation-list.html:524`）。標記員的列是 `tr role="button" tabindex="0"`，Enter／Space 進工作區（`:1875`）；空狀態**不放進表格**，另用 [Empty State](empty-state.md) |
 
-b2 已補上（見上表）。b3（`annotation/annotation-list`）、b4（`dataset/dataset-analysis-list`），待那幾批補。
+b2 已補上（見上表）。b3 已補上（見上表）。b4（`dataset/dataset-analysis-list`），待 b4 補。

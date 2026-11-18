@@ -52,5 +52,6 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 三個樣本 |
+| `annotation/annotation-list`（`#state-default`、`#role-reviewer`） | 本頁 `.status-badge`／`.status-submitted`／`-saved`／`-pending`（`annotation-list.html:254`–`:265`），與 showcase 的 `:379`–`:381` 逐字相同，只換了 class 名 |
 
-b2 核對後**沒有**：`task-detail` 全檔與六個 partial 以 `status-pill` 搜尋都是 0 次，任務狀態用的是本頁的 `.badge`（[Badge](badge.md)）。b3（`annotation/annotation-list`），待那兩批補。
+b2 核對後**沒有**：`task-detail` 全檔與六個 partial 以 `status-pill` 搜尋都是 0 次，任務狀態用的是本頁的 `.badge`（[Badge](badge.md)）。b3 已補上（見上表）。

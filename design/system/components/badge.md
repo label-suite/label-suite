@@ -66,5 +66,6 @@
 | `dashboard/dashboard`（`#param-scenario-super-admin-data`、`#param-scenario-reviewer`） | `dashboard.layout.css:241`、`:272`、`:281` 的 `.badge` 與 `.badge-error`／`.badge-draft`；任務型別配色來自 `shared/task-type-badge.css` |
 | `task-management/task-list#state-default` | 本頁 `<style>` 重寫（`task-list.html:117`–`:126`），型別配色同上 |
 | `task-management/task-detail`（`#tab-overview`、`#param-status`） | 本頁 `<style>` 重寫（`task-detail.html:117`–`:132`） |
+| `annotation/annotation-list`（`#state-default`、`#param-run-type`） | **本頁重寫的 `.badge`**（`annotation-list.html:140`–`:175`），階段徽章 `.badge-dry-run`／`.badge-official` 寫死 hex（`:167`–`:174`）→ `../design-gaps.md` G-02 |
 
-b1 的帳號頁一個都沒用。b2 已補上（見上表），**五頁都是各自重寫，沒有一頁直接用正典**。b3（`annotation/annotation-list`）與 b4（`dataset/dataset-analysis-detail` 及其 7 個 partial），待那幾批補。
+b1 的帳號頁一個都沒用。b2 已補上（見上表），**五頁都是各自重寫，沒有一頁直接用正典**。b3 已補上（見上表），同樣是本頁重寫。b4（`dataset/dataset-analysis-detail` 及其 7 個 partial），待 b4 補。

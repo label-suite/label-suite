@@ -12,7 +12,7 @@
 | `.panel-subtitle`（`--color-ink-muted`、0.875rem） | 選用 | `:197` |
 | `.form-card-title`（16px／600，下緣一條 `--color-border` 分隔線） | 選用，只在 `.form-card` | `task-new.html:52` |
 
-**卡片沒有共用檔**：同一組四條規則在三個地方各寫一次，class 名有三種（`.panel` 兩份同名不同檔、`.form-card`），加上 b1 的 `account/profile` 的 `.section-card` 是第四份 → `../design-gaps.md` G-41。
+**卡片沒有共用檔**：同一組四條規則在三個地方各寫一次，class 名有三種（`.panel` 兩份同名不同檔、`.form-card`），加上 b1 的 `account/profile` 的 `.section-card` 是第四份、b3 的 `annotation-workspace` 的 `.content-card`（`annotation-workspace.html:248`–`:252`）是第五份 → `../design-gaps.md` G-41。
 
 ## 變體
 
@@ -63,3 +63,4 @@
 | `dashboard/dashboard`（全部八個視圖） | `.panel` 是整頁的版面單位 |
 | `task-management/task-detail`（`#tab-*`、`#sim-403`、`#state-panel-load-failed`） | 本頁 `.panel`，`taskForbidden`／`taskNotFound` 面板也是它 |
 | `task-management/task-new`（`#state-step1`～`#state-step3`） | `.form-card` |
+| `annotation/annotation-workspace`（`#role-*`、`#state-arbitration`、`#state-exception-pool`） | 本頁 `.content-card`（`annotation-workspace.html:248`–`:252`），同樣四條規則的第五份 → `../design-gaps.md` G-41 |
