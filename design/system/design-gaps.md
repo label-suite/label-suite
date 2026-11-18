@@ -529,6 +529,8 @@ showcase 說明寫「profile 64/80px」（`:1356`），它的 CSS 是 80px（`:9
 
 **已裁定（2026-11-18）**：刪掉死 markup 與樣式。修正於 #423。
 
+**狀態（#423）**：已修正。刪掉 `.toast*` 樣式、`.toast-container`／`#toast` markup 與 `toastClose` 的處理，以及檔頭註解裡「toast 疊在 `--z-toast`」那句。`shared/sidebar.js` 的三個工作頁籤通知會找 `#toast`，找不到就不做事（原註解即如此設計）；它們加的是 `show` class，本頁樣式只認 `visible`，所以刪除前本來就看不見，行為不變。淺深色實測統計與品質監控兩個分頁、切換分頁，沒有頁面錯誤。上文的行號指的是修正前。
+
 ### G-56 品質監控的「Strict／Partial」切換鈕讀不出目前選哪一個
 
 > b4 新增。

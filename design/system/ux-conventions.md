@@ -58,7 +58,7 @@
 
 **b3 核對**：`annotation/annotation-workspace` 照抄 `TOAST_DURATIONS`（`annotation-workspace.config.js:422`–`:439`），遵守。`annotation-list` 沒有 toast。
 
-**b4 核對**：`dataset/dataset-analysis-list` 照抄 `TOAST_DURATIONS`（`design/prototype/pages/dataset/dataset-analysis-list.js:25`），遵守。`dataset/dataset-analysis-detail` 有 toast 的 markup 與關閉鈕（`dataset-analysis-detail.html:362`–`:363`、`:2463`），卻沒有任何程式顯示它，無從核對 → [`design-gaps.md`](design-gaps.md) G-55。
+**b4 核對**：`dataset/dataset-analysis-list` 照抄 `TOAST_DURATIONS`（`design/prototype/pages/dataset/dataset-analysis-list.js:25`），遵守。`dataset/dataset-analysis-detail` 原本有 toast 的 markup 與關閉鈕，卻沒有任何程式顯示它；#423 已刪掉，本頁不用 toast，不適用 → [`design-gaps.md`](design-gaps.md) G-55。
 
 這是 prototype 引用最多的一條：42 處裡獨佔 **20 處**，其中 4 處在 `components-showcase.html`（`:142`、`:397`、`:1116`、`:1499`），`:142` 甚至把它寫進正典 CSS 區塊的標頭。
 

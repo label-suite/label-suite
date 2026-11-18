@@ -51,7 +51,7 @@
 | `.cause-chip`（`:153`） | 唯讀的原因標籤 → [Chip](../components/chip.md)、G-11 |
 | `.risk-action-btn[disabled]`（`:159`） | 非專案負責人時 `syncRoleUi`（`:1548`）停用 `[data-role-action]` 並顯示 `[data-role-note]`；按下由 `:1573`–`:1580` 導到任務詳情的成員管理，或以審核員身分帶 `dry_run` 進標記清單 |
 | `.stats-hbar-*`、`.stats-comatrix-*`（`:188`–`:215`） | 統計圖表，全用 token，只此一頁 |
-| `.toast*`（`:175`–`:187`，markup `:362`–`:363`） | **沒有任何程式會顯示它**：有關閉鈕的處理（`:2463`），卻沒有 `showToast` → [Toast](../components/toast.md)、G-55 |
+| ~~`.toast*`~~ | #423 已刪：原本有樣式、markup 與關閉鈕的處理，卻沒有任何程式會顯示它。本頁沒有需要通知的操作 → [Toast](../components/toast.md)、G-55 |
 
 十六個 partial 沒有寫死的 hex 或 rgba：SVG 的 `fill`／`stroke` 與 inline `style` 全部用 `var(--color-*)`、`var(--space-*)`。inline `style` 很多（`quality-entity_recognition.html` 26 處、`quality-sequence_tagging.html` 26 處、`stats-entity_recognition.html` 20 處），平均標記時間那一塊另有一個寫死的字級（`:286` 的 `<small>`）→ G-02。
 
