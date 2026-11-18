@@ -6,13 +6,13 @@
 
 側欄「資料集分析」。`dataset/dataset-analysis-detail` 遇到不合法的任務時也會導回本頁並帶 `?invalid_task=1`（`dataset-analysis-detail.html:2468`）。
 
-載入：`assets/tokens.css`、`pages/shared/sidebar.css`（`:9`）、`empty-state.css`（`:10`）、`list-page.css`（`:11`）、`task-type-badge.css`（`:210`）；腳本 `sidebar.js`（`:217`）、`theme.js`、`analytics.js` 與本頁五支腳本（`:318`–`:322`）。**沒有載入 `button.css`、`modal.css`、`modal-focus.js`**。本頁在 `<style>` 定義了 `--navbar-mobile-height`／`--navbar-mobile-top-height`（`:20`），G-24 在本頁不成立。
+載入：`assets/tokens.css`、`assets/data-palette.css`（#420）、`pages/shared/sidebar.css`（`:9`）、`empty-state.css`（`:10`）、`list-page.css`（`:11`）、`task-type-badge.css`（`:214`）；腳本 `sidebar.js`（`:217`）、`theme.js`、`analytics.js` 與本頁五支腳本（`:318`–`:322`）。**沒有載入 `button.css`、`modal.css`、`modal-focus.js`**。本頁在 `<style>` 定義了 `--navbar-mobile-height`／`--navbar-mobile-top-height`（`:20`），G-24 在本頁不成立。
 
 ## 視圖與元件
 
 | 視圖 | 怎麼走到 | 用到的元件 |
 | :--- | :--- | :--- |
-| `#state-default` | 開 `pages/dataset/dataset-analysis-list.html` | [App Shell](../components/app-shell.md)、[List Toolbar](../components/list-toolbar.md)（`.toolbar role="search"`，`:246`；兩個 `.filter-select`，`:248`、`:251`；`.clear-btn`，`:254`）、[Data Table](../components/data-table.md)（`.task-table`，`:271`）、[Badge](../components/badge.md)（輸出類型、IAA 狀態、角色，`dataset-analysis-list.view.js:46`、`:84`、`:98`）、[Progress Bar](../components/progress-bar.md)（本頁 `.progress-track`，`:97`–`:106`；`role="progressbar"`，`dataset-analysis-list.view.js:67`–`:79`）、[Pagination](../components/pagination.md)（`:284`–`:300`；`aria-current="page"`，`dataset-analysis-list.view.js:239`） |
+| `#state-default` | 開 `pages/dataset/dataset-analysis-list.html` | [App Shell](../components/app-shell.md)、[List Toolbar](../components/list-toolbar.md)（`.toolbar role="search"`，`:247`；兩個 `.filter-select`，`:249`、`:252`；`.clear-btn`，`:255`）、[Data Table](../components/data-table.md)（`.task-table`，`:272`）、[Badge](../components/badge.md)（輸出類型、IAA 狀態、角色，`dataset-analysis-list.view.js:46`、`:84`、`:98`）、[Progress Bar](../components/progress-bar.md)（本頁 `.progress-track`，`:97`–`:106`；`role="progressbar"`，`dataset-analysis-list.view.js:67`–`:79`）、[Pagination](../components/pagination.md)（`:284`–`:300`；`aria-current="page"`，`dataset-analysis-list.view.js:239`） |
 | `#state-filtered-empty` | 用 `?keyword=`／`?iaa_status=`／`?output_type=` 篩到 0 列 | [Empty State](../components/empty-state.md)（表格內的 `empty-state empty-state-cell`，`createEmptyRow(true)`，`dataset-analysis-list.view.js:133`；文案 `dataset-analysis-list.i18n.js:40`–`:41`）、[List Toolbar](../components/list-toolbar.md)（清除篩選由工具列的 `.clear-btn` 負責，空狀態裡沒有按鈕） |
 | `#param-view-empty` | `?view=empty`（`dataset-analysis-list.model.js:237` 清空任務） | [Empty State](../components/empty-state.md)（同一個 `createEmptyRow(false)`，文案「尚無可分析的任務」，`dataset-analysis-list.i18n.js:38`–`:39`） |
 | `#param-invalid-task` | `?invalid_task=1`（`dataset-analysis-list.js:293`、`:314`–`:316`） | [Toast](../components/toast.md)（error：「找不到指定的任務，或您沒有該任務的存取權限。」） |

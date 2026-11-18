@@ -4,11 +4,11 @@
 
 ## 結構
 
-表單層級的狀態容器：送出成功或 token 驗證失敗後**取代**表單區塊，不是疊在它上面（`components-showcase.html:1332`）。
+表單層級的狀態容器：送出成功或 token 驗證失敗後**取代**表單區塊，不是疊在它上面（`components-showcase.html:1330`）。
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.state-panel` ＋ `--success`／`--error`（`<section>`） | 必填 | `components-showcase.html:846`、樣本 `:1335`、`:1343` |
+| `.state-panel` ＋ `--success`／`--error`（`<section>`） | 必填 | `components-showcase.html:844`、樣本 `:1333`、`:1341` |
 | `.state-panel-icon`（40×40 圓形，內含 20×20 svg） | 必填 | `:860`–`:869`、樣本 `:1336` |
 | `.state-panel-title` | 必填 | `:878`、樣本 `:1339` |
 | `.state-panel-desc` | 必填 | `:884`、樣本 `:1340` |
@@ -27,7 +27,7 @@
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| success | 有 | `components-showcase.html:852` |
+| success | 有 | `components-showcase.html:850` |
 | error | 有 | `:856` |
 | hover | 只有 `.state-panel-action` 有（加底線） | `:898` |
 | focus | **未觀察到**（action 是 `<a>`，靠瀏覽器預設） | 以 `:focus` 掃 `:843`–`:898`，0 命中 → `../design-gaps.md` G-05 |
@@ -48,11 +48,11 @@
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:843`–`:898`。
+`design/prototype/components-showcase.html:841`–`:896`。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-statepanel`（`components-showcase.html:1330`）：兩個樣本就是帳號頁的兩個狀態——「Check your email」（`:1339`）與「Reset link is invalid」（`:1347`）。
+`components-showcase#state-default` → `#comp-statepanel`（`components-showcase.html:1328`）：兩個樣本就是帳號頁的兩個狀態——「Check your email」（`:1337`）與「Reset link is invalid」（`:1345`）。
 
 ## shadcn 對照
 
@@ -68,6 +68,6 @@
 | :--- | :--- |
 | `components-showcase#state-default` | success 與 error 各一 |
 
-**正典的兩個樣本畫的就是帳號頁，但帳號頁沒有用這組 class。**`account/forgot-password#state-submitted` 用 `.success-panel`（`forgot-password.html:444`），`account/reset-password#state-success` 用同名的 `.success-panel`（`reset-password.html:594`），`proto-expired`／`proto-used` 用 `.token-error-panel`（`reset-password.html:499`）。三者都在各自頁面的 `<style>` 裡另外定義 → `../design-gaps.md` G-03。
+**正典的兩個樣本畫的就是帳號頁，但帳號頁沒有用這組 class。**`account/forgot-password#state-submitted` 用 `.success-panel`（`forgot-password.html:399`），`account/reset-password#state-success` 用同名的 `.success-panel`（`reset-password.html:548`），`proto-expired`／`proto-used` 用 `.token-error-panel`（`reset-password.html:453`）。三者都在各自頁面的 `<style>` 裡另外定義 → `../design-gaps.md` G-03。
 
-b2 核對後**沒有**：`task-detail` 那 3 個 panel 用的是 `empty-state-panel`（[Empty State](empty-state.md)），不是這個元件；`task-detail` 的 `taskForbidden`／`taskNotFound` 與 `dashboard` 的 `.dashboard-error-state` 也是各自的實作。b3 核對後**也沒有**：`annotation-list` 的 `#taskNotFound`／`#noActionableNotice` 是 `empty-state-panel`（`annotation-list.html:475`、`:479`）。b4 核對後**也沒有**：`dataset-analysis-detail` 及其四個 partial 的狀態面板全是 `empty-state-panel`（`dataset-analysis-detail.html:279`、`:298`），讀取與計算失敗是 `.panel.panel-load-error`（`:1508`）。
+b2 核對後**沒有**：`task-detail` 那 3 個 panel 用的是 `empty-state-panel`（[Empty State](empty-state.md)），不是這個元件；`task-detail` 的 `taskForbidden`／`taskNotFound` 與 `dashboard` 的 `.dashboard-error-state` 也是各自的實作。b3 核對後**也沒有**：`annotation-list` 的 `#taskNotFound`／`#noActionableNotice` 是 `empty-state-panel`（`annotation-list.html:466`、`:470`）。b4 核對後**也沒有**：`dataset-analysis-detail` 及其四個 partial 的狀態面板全是 `empty-state-panel`（`dataset-analysis-detail.html:279`、`:298`），讀取與計算失敗是 `.panel.panel-load-error`（`:1508`）。

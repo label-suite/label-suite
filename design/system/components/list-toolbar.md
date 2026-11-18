@@ -69,9 +69,9 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | 無（b1） | — |
-| `task-management/task-list`（`#state-default`、`#state-filtered-empty`） | 工具列 markup `task-list.html:203`–`:235`，已載 `list-page.css` 又在 `<style>` 重寫（`:139`–`:145`） |
+| `task-management/task-list`（`#state-default`、`#state-filtered-empty`） | 工具列 markup `task-list.html:197`–`:229`，已載 `list-page.css` 又在 `<style>` 重寫（`:139`–`:145`） |
 | `admin/user-management#state-default` | 本頁的搜尋與篩選（`user-management.html:61`–`:81`、`:252`），不是 `list-page.css` |
-| `annotation/annotation-list`（`#state-default`、`#state-filtered-empty`） | `.toolbar role="search"`（`annotation-list.html:481`）：`.filter-select`、`.search-input`、`.clear-btn`；篩選狀態放網址（`?q=`、`?status=`，UXC-11，`:1059`） |
-| `dataset/dataset-analysis-list`（`#state-default`、`#state-filtered-empty`） | `list-page.css` 的 `.toolbar role="search"`（`dataset-analysis-list.html:246`）：兩個 `.filter-select`（`:248`、`:251`）、`.clear-btn`（`:254`）、`.search-input`；篩選寫進網址（`syncUrl`，`dataset-analysis-list.js:71`） |
+| `annotation/annotation-list`（`#state-default`、`#state-filtered-empty`） | `.toolbar role="search"`（`annotation-list.html:472`）：`.filter-select`、`.search-input`、`.clear-btn`；篩選狀態放網址（`?q=`、`?status=`，UXC-11，`:1050`） |
+| `dataset/dataset-analysis-list`（`#state-default`、`#state-filtered-empty`） | `list-page.css` 的 `.toolbar role="search"`（`dataset-analysis-list.html:247`）：兩個 `.filter-select`（`:249`、`:252`）、`.clear-btn`（`:255`）、`.search-input`；篩選寫進網址（`syncUrl`，`dataset-analysis-list.js:71`） |
 
 b2 已補上（見上表）。b3 已補上（見上表）。b4 已補上（見上表）。表格與分頁的部分見 [Data Table](data-table.md) 與 [Pagination](pagination.md)。

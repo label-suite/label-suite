@@ -70,7 +70,7 @@ ARIA：popover 是 `role="dialog"` ＋ `aria-modal="false"`（`:48`–`:49`）�
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-date-range-picker`（`components-showcase.html:1059`），trigger 在 `:1063`。**這是 showcase 唯一 `<link>` 進來的共用 CSS**（`components-showcase.html:11`），其餘元件都是把 CSS 抄進 `<style>`；demo 的掛載在 `:1380`–`:1389`。
+`components-showcase#state-default` → `#comp-date-range-picker`（`components-showcase.html:1057`），trigger 在 `:1061`。**這是 showcase 唯一 `<link>` 進來的共用 CSS**（`components-showcase.html:11`），其餘元件都是把 CSS 抄進 `<style>`；demo 的掛載在 `:1378`–`:1387`。
 
 ## shadcn 對照
 
@@ -85,6 +85,6 @@ ARIA：popover 是 `role="dialog"` ＋ `aria-modal="false"`（`:48`–`:49`）�
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 可實際操作的 demo |
-| `task-management/task-detail#tab-work-log` | `.date-range-trigger`（`work-log.html:7`，`aria-haspopup="dialog"`）；`task-detail.html:12` 載 CSS、`:1858` 載 JS |
+| `task-management/task-detail#tab-work-log` | `.date-range-trigger`（`work-log.html:7`，`aria-haspopup="dialog"`）；`task-detail.html:15` 載 CSS、`:1851` 載 JS |
 
 b2 已補上（見上表）。

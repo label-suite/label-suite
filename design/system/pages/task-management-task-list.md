@@ -6,13 +6,13 @@
 
 側欄「任務管理」。
 
-載入：`assets/tokens.css`、`pages/shared/sidebar.css`、`pages/shared/button.css`、`pages/shared/empty-state.css`、`pages/shared/list-page.css`、`pages/shared/modal.css`、`pages/shared/modal-focus.js`、`pages/shared/sidebar.js`、`pages/shared/task-type-badge.css`。
+載入：`assets/tokens.css`、`assets/data-palette.css`（#420）、`pages/shared/sidebar.css`、`pages/shared/button.css`、`pages/shared/empty-state.css`、`pages/shared/list-page.css`、`pages/shared/modal.css`、`pages/shared/modal-focus.js`、`pages/shared/sidebar.js`、`pages/shared/task-type-badge.css`。
 
 ## 視圖與元件
 
 | 視圖 | 怎麼走到 | 用到的元件 |
 | :--- | :--- | :--- |
-| `#state-default` | 開 `pages/task-management/task-list.html` | [App Shell](../components/app-shell.md)、[List Toolbar](../components/list-toolbar.md)（`:203`–`:235`）、[Data Table](../components/data-table.md)（`.task-table`，`:244`–`:246`）、[Badge](../components/badge.md)（`:89`–`:98`）、[Pagination](../components/pagination.md)（`:262`–`:275`）、[Button](../components/button.md) |
+| `#state-default` | 開 `pages/task-management/task-list.html` | [App Shell](../components/app-shell.md)、[List Toolbar](../components/list-toolbar.md)（`:197`–`:229`）、[Data Table](../components/data-table.md)（`.task-table`，`:238`–`:240`）、[Badge](../components/badge.md)（`:90`–`:99`）、[Pagination](../components/pagination.md)（`:256`–`:269`）、[Button](../components/button.md) |
 | `#state-filtered-empty` | `?keyword=`／`?status=`／`?output_type=`／`?run_stage=` 篩到 0 列 | [Empty State](../components/empty-state.md)（表格內一列，`createEmptyRow(true)`，`:840`–`:864`，含「清除所有篩選」） |
 | `#param-view-empty` | `?view=empty`：不載種子資料 | [Empty State](../components/empty-state.md)（`createEmptyRow(false)`，**沒有**第二顆「新增任務」） |
 | `#param-view-error` | `?view=error`（`:1224`） | 表格內的錯誤列（`:875`–`:907`），「重試」用 `.clear-btn` |

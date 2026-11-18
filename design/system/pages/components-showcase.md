@@ -8,7 +8,7 @@
 
 **這一頁是元件正典的來源。**`MASTER.md` 的正典 CSS 被逐字抄進它的 `<style>`（`:139`–`:145` 的註解：「copied verbatim from §Buttons, §Inputs, …；Do not edit here; change MASTER.md first, then re-sync this block」），所以 `design-system-setup` 的元件樣本主要看它。
 
-載入：`assets/tokens.css`、`pages/shared/date-range-picker.css`／`.js`、`assets/logo/icon-colored.svg`、`assets/google-g.svg`、`assets/icons/chevron-down.svg`。
+載入：`assets/tokens.css`、`assets/data-palette.css`（#420）、`pages/shared/date-range-picker.css`／`.js`、`assets/logo/icon-colored.svg`、`assets/google-g.svg`、`assets/icons/chevron-down.svg`。
 **`date-range-picker.css` 是它唯一 `<link>` 進來的共用 CSS**（`:11`）；其餘元件都是把 CSS 抄進 `<style>`。
 
 ## 視圖與元件

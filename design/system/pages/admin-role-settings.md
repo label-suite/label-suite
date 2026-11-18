@@ -12,7 +12,7 @@
 
 | 視圖 | 怎麼走到 | 用到的元件 |
 | :--- | :--- | :--- |
-| `#state-default` | 開 `pages/admin/role-settings.html` | [App Shell](../components/app-shell.md)、[Content Tabs](../components/content-tabs.md)（`.admin-tabs`，`:412`–`:414`，帶 `role="tablist"`／`aria-selected`）、[Data Table](../components/data-table.md)（權限矩陣 `.matrix-table`，`:455`）、[Button](../components/button.md)（「編輯」`:425`）、[Badge](../components/badge.md)（本頁自己的 `.badge`，`:316`） |
+| `#state-default` | 開 `pages/admin/role-settings.html` | [App Shell](../components/app-shell.md)、[Content Tabs](../components/content-tabs.md)（`.admin-tabs`，`:407`–`:409`，帶 `role="tablist"`／`aria-selected`）、[Data Table](../components/data-table.md)（權限矩陣 `.matrix-table`，`:450`）、[Button](../components/button.md)（「編輯」`:420`）、[Badge](../components/badge.md)（本頁自己的 `.badge`，`:311`） |
 | `#state-dirty` | 點「編輯」（`:425`）後改任一格、還沒儲存 | [Alert Banner](../components/alert-banner.md)（本頁的 `.dirty-banner`，`:353`）、[Button](../components/button.md)（「取消」`:440`、「儲存」`:443`） |
 | `#state-conflict` | 開兩個分頁，兩邊都進編輯；先在一邊儲存，再到另一邊儲存（`saveMatrix`，`:1451`，比對 `localStorage` 版本） | [Alert Banner](../components/alert-banner.md)（`.conflict-banner`，`:365`，含「重新載入」）、[Toast](../components/toast.md)（error）。儲存鈕停用 |
 | `#toast-saved` | 編輯後儲存成功 | [Toast](../components/toast.md)（本頁自己的 `.toast*`，`:213`；容器 `:979`） |

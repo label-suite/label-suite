@@ -6,7 +6,7 @@
 
 `task-management/task-list` 點任務名稱。
 
-載入：`assets/tokens.css`、`pages/shared/modal.css`、`sidebar.css`、`button.css`、`date-range-picker.css`、`empty-state.css`、`content-tabs.css`、`metric.css`、`task-config.css`；腳本 `sidebar.js`、`date-range-picker.js`、`modal-focus.js`、`span-tagging-export.js`、`task-config.engine.js`、`task-detail.config.js` 等。六個分頁的內容由 `fetchPanelPartial` 從 `task-detail.panels/*.html` 載入（`:4645`–`:4707`）。
+載入：`assets/tokens.css`、`assets/data-palette.css`（#420）、`pages/shared/modal.css`、`sidebar.css`、`button.css`、`date-range-picker.css`、`empty-state.css`、`content-tabs.css`、`metric.css`、`task-config.css`；腳本 `sidebar.js`、`date-range-picker.js`、`modal-focus.js`、`span-tagging-export.js`、`task-config.engine.js`、`task-detail.config.js` 等。六個分頁的內容由 `fetchPanelPartial` 從 `task-detail.panels/*.html` 載入（`:4645`–`:4707`）。
 
 ## 視圖與元件
 
@@ -39,11 +39,11 @@
 | `.mini-btn` | #423 起用正典 `pages/shared/button.css` 的小尺寸 variant，本頁不再重新定義 → G-37 |
 | `.panel`（`:94`） | 容器在 `pages/shared/card.css`，和 `dashboard` 共用；本頁只加 `margin-bottom`（#423）→ [Card](../components/card.md)、G-41 |
 | `.toggle-switch` | 用 `task-config.css` 的正典版（40×22、開啟色 `--color-primary`）；本頁的重新定義（42×24、`--color-cta`）已於 #423 刪除 → G-42 |
-| `.skeleton-*`（`:68`–`:84`） | [Skeleton](../components/skeleton.md)：與 showcase 的 pulse 變體逐字相同（`components-showcase.html:436` 起） |
+| `.skeleton-*`（`:68`–`:84`） | [Skeleton](../components/skeleton.md)：與 showcase 的 pulse 變體逐字相同（`components-showcase.html:437` 起） |
 | `.toast*` | [Toast](../components/toast.md)：#423 起 `showToast` 依 `TOAST_DURATIONS`（`:11251`）分級，error 只能手動關 → G-39 |
 | `.breadcrumb`（`:46`–`:48`） | 本頁一行式的版本 |
 
-八個 modal 都接了 `modal-focus.js`：`backToDraft`（`:5995`）、`settingsLeave`（`:7745`）、`memberAction`（`:8192`）、`arSeqExport`（`:10885`）、`risk`（`:11259`）、`trialRoundRevision`（`:11313`），`taxonomyDelete` 與 `datasetPreview` 由 `task-config.engine.js`（`:6214`、`:6141`）接上 → G-43。
+八個 modal 都接了 `modal-focus.js`：`backToDraft`（`:5995`）、`settingsLeave`（`:7745`）、`memberAction`（`:8192`）、`arSeqExport`（`:10885`）、`risk`（`:11259`）、`trialRoundRevision`（`:11313`），`taxonomyDelete` 與 `datasetPreview` 由 `task-config.engine.js`（`:6216`、`:6143`）接上 → G-43。
 
 ## 業務行為
 

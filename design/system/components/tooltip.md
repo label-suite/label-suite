@@ -44,11 +44,11 @@
 
 ## 樣式出處
 
-`design/prototype/pages/task-management/task-config.css:259`–`:329`（`task-new` 與 `task-detail` 共用；`task-detail.html:1071` 的註解寫明搬過來共用）。
+`design/prototype/pages/task-management/task-config.css:259`–`:329`（`task-new` 與 `task-detail` 共用；`task-detail.html:1072` 的註解寫明搬過來共用）。
 
 ## 可重現樣本
 
-`task-management/task-new#state-step3`（`task-new.html:393`–`:398`）、`task-management/task-detail#tab-settings`（`settings.html:321`–`:323`）、`annotation/annotation-workspace#role-reviewer`（審核說明）。
+`task-management/task-new#state-step3`（`task-new.html:394`–`:399`）、`task-management/task-detail#tab-settings`（`settings.html:321`–`:323`）、`annotation/annotation-workspace#role-reviewer`（審核說明）。
 
 ## shadcn 對照
 

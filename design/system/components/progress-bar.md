@@ -8,8 +8,8 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.progress`（樣本帶 `role="progressbar"` 與 `aria-valuenow`／`min`／`max`／`aria-label`） | 必填 | `components-showcase.html:792`、樣本 `:1312` |
-| `> span` 填充 | 必填 | `components-showcase.html:798`、樣本 `:1313` |
+| `.progress`（樣本帶 `role="progressbar"` 與 `aria-valuenow`／`min`／`max`／`aria-label`） | 必填 | `components-showcase.html:790`、樣本 `:1310` |
+| `> span` 填充 | 必填 | `components-showcase.html:796`、樣本 `:1311` |
 
 ## 變體
 
@@ -19,7 +19,7 @@
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| 預設 | 有 | `components-showcase.html:792` |
+| 預設 | 有 | `components-showcase.html:790` |
 | 寬度變化 | 有，`transition: width 300ms ease`（字面值，不是 `--dur-*`） | `:803` |
 | hover／focus／disabled | 不適用 | `:791`–`:804` 無偽類 |
 | 不確定進度 | **未觀察到**。沒有 indeterminate 樣式或動畫 | — |
@@ -37,11 +37,11 @@
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:791`–`:804`。`pages/shared/` 沒有 progress 的 CSS 檔。
+`design/prototype/components-showcase.html:789`–`:802`。`pages/shared/` 沒有 progress 的 CSS 檔。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-progress`（`components-showcase.html:1308`），65% 的樣本在 `:1312`。
+`components-showcase#state-default` → `#comp-progress`（`components-showcase.html:1306`），65% 的樣本在 `:1310`。
 
 ## shadcn 對照
 
@@ -56,10 +56,10 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 65% 樣本 |
-| `dashboard/dashboard`（`#param-scenario-project-leader`、`#param-scenario-annotator`） | `dashboard.components.css:205`–`:240` 的 `.progress`，與正典同名；審核覆蓋率那一條有 `role="progressbar"` 與 `aria-value*`（`dashboard.js:213`–`:218`），一般進度條沒有（`:222`） |
-| `annotation/annotation-list#state-default` | 任務資訊卡的本頁 `.progress`（`annotation-list.html:176`–`:188`），全用 token；markup 帶 `aria-hidden="true"`（`:464`），旁邊的文字才是給輔助科技的 |
-| `annotation/annotation-workspace`（`#role-*`） | 本頁 `.progress-track`／`.progress-fill`（`annotation-workspace.html:303`–`:314`），尺寸與 token 和正典相同、只換了 class 名；帶 `role="progressbar"` 與 `aria-value*`（`:1239`） |
-| `dataset/dataset-analysis-list#state-default` | 完成率欄的本頁 `.progress-track`／`.progress-fill`（`dataset-analysis-list.html:97`–`:106`），全用 token；帶 `role="progressbar"`、`aria-label` 與 `aria-value*`（`dataset-analysis-list.view.js:67`–`:79`） |
+| `dashboard/dashboard`（`#param-scenario-project-leader`、`#param-scenario-annotator`） | `dashboard.components.css:206`–`:241` 的 `.progress`，與正典同名；審核覆蓋率那一條有 `role="progressbar"` 與 `aria-value*`（`dashboard.js:213`–`:218`），一般進度條沒有（`:222`） |
+| `annotation/annotation-list#state-default` | 任務資訊卡的本頁 `.progress`（`annotation-list.html:178`–`:190`），全用 token；markup 帶 `aria-hidden="true"`（`:455`），旁邊的文字才是給輔助科技的 |
+| `annotation/annotation-workspace`（`#role-*`） | 本頁 `.progress-track`／`.progress-fill`（`annotation-workspace.html:304`–`:315`），尺寸與 token 和正典相同、只換了 class 名；帶 `role="progressbar"` 與 `aria-value*`（`:1237`） |
+| `dataset/dataset-analysis-list#state-default` | 完成率欄的本頁 `.progress-track`／`.progress-fill`（`dataset-analysis-list.html:98`–`:107`），全用 token；帶 `role="progressbar"`、`aria-label` 與 `aria-value*`（`dataset-analysis-list.view.js:67`–`:79`） |
 | `dataset/dataset-analysis-detail`（`#state-quality-*`） | 達標分數條 `.iaa-bar-wrap`／`.iaa-bar-fill`（`dataset-analysis-detail.html:82`–`:86`），寬度寫在 inline `style`；沒有 `role="progressbar"`，數值在旁邊的文字 |
 
 b1 的帳號頁一個都沒用。b2 已補上（見上表）；`task-detail.panels/annotation-progress` 用的是 `.progress-metric-grid`（`annotation-progress.html:8`），不是進度條。b3 已補上（見上表），兩頁各自重寫一份。b4 已補上（見上表），又是兩份。

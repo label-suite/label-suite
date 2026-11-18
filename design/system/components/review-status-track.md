@@ -8,7 +8,7 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.review-track`（`display: grid`、`grid-template-columns: auto 28px auto auto 1fr 28px auto`、兩列各 34px、`role="list"`） | 必填 | `components-showcase.html:654`–`:660`、樣本 `:1223` |
+| `.review-track`（`display: grid`、`grid-template-columns: auto 28px auto auto 1fr 28px auto`、兩列各 34px、`role="list"`） | 必填 | `components-showcase.html:652`–`:658`、樣本 `:1221` |
 | `.review-track-node`（`role="listitem"`） | 三個 | `:661`、樣本 `:1224`、`:1229`、`:1232` |
 | `.review-track-fork`（分岔的 svg，`aria-hidden`） | 兩個（頭尾） | `:717`、樣本 `:1225`、`:1231` |
 | `.review-track-branch[data-branch]` 軌道標籤 | 三個 | `:705`、樣本 `:1226`、`:1227`、`:1230` |
@@ -19,13 +19,13 @@
 
 節點只有三個：**待審 → 已定稿**（上軌，答案未修改）與**待審 → 爭議中 → 已定稿**（下軌，答案有修改）。
 
-正典把「為什麼只有三個」寫進了說明（`components-showcase.html:1214`）：自 issue `singyichen/label-suite#596` 起每個審核單位恰有一位審核員（annotation-015 FR-093），所以 `approved`／`modified` 這兩個「已作答但未達門檻」的中繼節點**結構上不可能發生**。同一段也寫明**不可改用線性 §Step Indicator**（annotation-015 FR-051），因為兩軌互斥。
+正典把「為什麼只有三個」寫進了說明（`components-showcase.html:1212`）：自 issue `singyichen/label-suite#596` 起每個審核單位恰有一位審核員（annotation-015 FR-093），所以 `approved`／`modified` 這兩個「已作答但未達門檻」的中繼節點**結構上不可能發生**。同一段也寫明**不可改用線性 §Step Indicator**（annotation-015 FR-051），因為兩軌互斥。
 
 ## 適用狀態
 
 | 狀態 | class | 依據 |
 | :--- | :--- | :--- |
-| 未到 | 無修飾（`--color-ink-muted` 文字、`--color-white` 底） | `components-showcase.html:661` |
+| 未到 | 無修飾（`--color-ink-muted` 文字、`--color-white` 底） | `components-showcase.html:659` |
 | 已走過 | `.done`：邊框 `--color-cta`、底 `--color-success-bg`、字重 600 | `:674` |
 | 目前 | `.current`：primary 色系、字重 600，另加 `目前：` 文字前綴與 `aria-current="step"` | `:680`、樣本 `:1229` |
 | hover／focus／disabled／載入中／空 | 不適用，非互動元素 | `:653`–`:717` 無偽類 |
@@ -44,11 +44,11 @@
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:653`–`:717`。shipped 的那一份在 `pages/annotation/annotation-workspace.html:441`，註解寫明是「§Review Status Track -- CSS verbatim」。
+`design/prototype/components-showcase.html:651`–`:715`。shipped 的那一份在 `pages/annotation/annotation-workspace.html:442`，註解寫明是「§Review Status Track -- CSS verbatim」。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-review-track`（`components-showcase.html:1212`）：一個走在差異軌、目前停在「爭議中」的單位。
+`components-showcase#state-default` → `#comp-review-track`（`components-showcase.html:1210`）：一個走在差異軌、目前停在「爭議中」的單位。
 
 ## shadcn 對照
 
@@ -63,6 +63,6 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 差異軌、停在爭議中 |
-| `annotation/annotation-workspace`（`#role-reviewer`、`#state-review-decision`） | `annotation-workspace.html:441`–`:462` 的 11 條規則與 `components-showcase.html:653`–`:717` **逐字相同**；`annotation-workspace.config.js:5547` 起算繪，節點帶 `aria-current="step"`（`:5557`） |
+| `annotation/annotation-workspace`（`#role-reviewer`、`#state-review-decision`） | `annotation-workspace.html:442`–`:463` 的 11 條規則與 `components-showcase.html:651`–`:715` **逐字相同**；`annotation-workspace.config.js:5547` 起算繪，節點帶 `aria-current="step"`（`:5557`） |
 
 b3 已補上並核對（見上表）：那份 verbatim 屬實。

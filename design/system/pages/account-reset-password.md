@@ -4,7 +4,7 @@
 
 ## 入口
 
-重設密碼信裡的連結。載入 `assets/analytics.js`、`pages/shared/sidebar.js`，**無共用 CSS**。
+重設密碼信裡的連結。載入 `assets/tokens.css`（#420 起）、`assets/analytics.js`、`pages/shared/sidebar.js`，**無其他共用 CSS**。
 
 這一頁是 b1 視圖最多的帳號頁（6 個），因為 token 的三種結果要靠 [Proto Toggle Bar](../components/proto-toggle-bar.md) 才叫得出來。
 
@@ -25,7 +25,7 @@
 
 | 元件 | 說明 |
 | :--- | :--- |
-| `.token-error-panel` ＋ `-icon`／`-msg`／`-action`（`:499`，`role="alert"`） | token 失效。正典 [State Panel](../components/state-panel.md) 的 error 樣本畫的就是這個（「Reset link is invalid」，`components-showcase.html:1347`），class 不同 → `../design-gaps.md` G-03 |
+| `.token-error-panel` ＋ `-icon`／`-msg`／`-action`（`:453`，`role="alert"`） | token 失效。正典 [State Panel](../components/state-panel.md) 的 error 樣本畫的就是這個（「Reset link is invalid」，`components-showcase.html:1345`），class 不同 → `../design-gaps.md` G-03 |
 | `.success-panel` ＋ 三件套（`:594`，`role="alert" aria-live="polite"`） | `.success-panel` 本身與 `forgot-password`、`verify-email` 三頁全同；`verify-email` 的家族多一個 `-hint` → G-28 |
 | `.proto-toggle-bar`／`.proto-btn`（`:378`、`:397`） | 原型鷹架，產品裡不會有 |
 | `.loading-status`、`.back-row` | 版面輔助 |

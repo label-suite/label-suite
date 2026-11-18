@@ -6,13 +6,13 @@
 
 `task-management/task-list` 點「新增任務」。
 
-載入：`assets/tokens.css`、`pages/shared/sidebar.css`、`pages/shared/modal.css`、`pages/shared/button.css`、`task-config.css`、`pages/shared/sidebar.js`、`task-config.data.js`、`task-config.yaml.js`、`task-config.dataset.js`、`annotation/annotation-workspace.data.js`、`task-config.engine.js`。**沒有載入 `pages/shared/modal-focus.js`**。`task-config.css` 與 `task-config.engine.js` 和 `task-detail` 的設定分頁共用。
+載入：`assets/tokens.css`、`assets/data-palette.css`（#420）、`pages/shared/sidebar.css`、`pages/shared/modal.css`、`pages/shared/button.css`、`task-config.css`、`pages/shared/sidebar.js`、`task-config.data.js`、`task-config.yaml.js`、`task-config.dataset.js`、`annotation/annotation-workspace.data.js`、`task-config.engine.js`。**沒有載入 `pages/shared/modal-focus.js`**。`task-config.css` 與 `task-config.engine.js` 和 `task-detail` 的設定分頁共用。
 
 ## 視圖與元件
 
 | 視圖 | 怎麼走到 | 用到的元件 |
 | :--- | :--- | :--- |
-| `#state-step1` | 開 `pages/task-management/task-new.html`（`step1Panel`，`:249`） | [App Shell](../components/app-shell.md)、[Step Indicator](../components/step-indicator.md)（`:226`–`:245`）、[Card](../components/card.md)（`.form-card`）、[Input](../components/input.md)（本頁的 `.input-text`，`:58`）、[Button](../components/button.md) |
+| `#state-step1` | 開 `pages/task-management/task-new.html`（`step1Panel`，`:250`） | [App Shell](../components/app-shell.md)、[Step Indicator](../components/step-indicator.md)（`:227`–`:246`）、[Card](../components/card.md)（`.form-card`）、[Input](../components/input.md)（本頁的 `.input-text`，`:59`）、[Button](../components/button.md) |
 | `#state-step2` | 第一步填妥按「下一步」（`step2Panel`，`:325`） | [Step Indicator](../components/step-indicator.md)、[Chip](../components/chip.md)（`.task-type-chip`）、[Accordion](../components/accordion.md)（`.output-accordion`）、[Color Dot](../components/color-dot.md)、[Toggle Switch](../components/toggle-switch.md)、[Empty State](../components/empty-state.md)（`empty-state-compact`，`task-config.engine.js:1878`） |
 | `#state-step3` | 進第三步（`step3Panel`，`:379`） | [Step Indicator](../components/step-indicator.md)、[Tooltip](../components/tooltip.md)（`:393`–`:398`）、[Input](../components/input.md) |
 | `#modal-dataset-preview` | 第一步點資料集預覽（`datasetPreviewModal`，`:541`，`.modal-xl`） | [Modal](../components/modal.md) |
@@ -33,4 +33,4 @@
 
 ## 業務行為
 
-連回規格 [`03-task-management/02-task-new.mdx`](../../../docs/specs/03-task-management/02-task-new.mdx)。UXC 落點：UXC-03（離開確認）、UXC-10（`:528`；`task-config.engine.js:22`、`:6183`）。
+連回規格 [`03-task-management/02-task-new.mdx`](../../../docs/specs/03-task-management/02-task-new.mdx)。UXC 落點：UXC-03（離開確認）、UXC-10（`:528`；`task-config.engine.js:22`、`:6185`）。
