@@ -1,0 +1,38 @@
+---
+title: 品牌規範
+description: Label Suite 品牌書涵蓋什麼、幾條最常用到的規則，以及規則與 token 各自的唯一來源。
+category: '設計系統'
+tags: [design-system, brand]
+---
+
+# 品牌規範
+
+品牌規則只有一份來源：[`design/system/brand.md`](../../design/system/brand.md)。本頁只說它涵蓋什麼，不重述規則；兩邊不一致時以 `brand.md` 為準。
+
+## 品牌書涵蓋什麼
+
+| 想知道 | 看 `brand.md` 的哪一節 |
+| :--- | :--- |
+| 這個產品是什麼、給誰用 | 產品是什麼 |
+| 不能違反的規則 | 鐵律 |
+| 已經拍板的決定與日期 | 設計決策 |
+| 語言、稱謂、按鈕用語、錯誤訊息、日期與數字格式 | 內容與語氣 |
+| 色彩角色、字體、間距、圓角、陰影、對比 | 視覺基礎 |
+| 版面、響應式斷點與寬度 | 版面 |
+| 圖示來源與用法 | 圖示 |
+| logo、favicon、banner 的結構與用途 | CIS |
+| prototype 尚未符合品牌書之處 | 與 prototype 的落差、未決 |
+
+## 幾條規則先知道
+
+品牌書是規則，prototype 是現況；兩者不符時，品牌書的「與 prototype 的落差」一節記下，改畫面走 `AGENTS.md` 的 Ready gate。
+
+- 只用 token，不自創顏色；主色文字放淺底用 `--color-primary-strong`。
+- 每個畫面同時支援繁中與英文、淺色與深色。
+- 圖示一律是 SVG，不用 emoji 或文字字元充當圖示。
+- 狀態不能只靠顏色；錯誤 toast 不自動消失。
+
+## Token 與 Artifact
+
+- token 的值只在 `design/prototype/assets/tokens.css`，查值與 Tailwind 對照用 [`label-suite-design`](../../.claude/skills/label-suite-design/SKILL.md) skill；品牌書與本目錄一律只寫 token 名，不抄色值。
+- Design System Artifact 是這份品牌書與 token 產生的呈現層，內容從 repo 濃縮而來，不是來源；它是私人的，沒有分享給你就開不了。產生方式見 [設計交接](../development/design-handoff.mdx)，元件部分見 [元件對照](./components.mdx)。

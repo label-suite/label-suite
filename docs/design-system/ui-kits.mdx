@@ -1,0 +1,28 @@
+---
+title: UI Kits
+description: Label Suite 沒有另外的整頁範本：prototype 的頁面就是整頁範例，交付包與頁面規格是它的清冊。
+category: '設計系統'
+tags: [design-system, ui-kits, prototype]
+---
+
+# UI Kits
+
+Label Suite 沒有獨立的 ui_kits 範本。整頁版面的範例就是 `design/prototype/` 的頁面，用 `pnpm prototype` 開啟；本頁只說明怎麼找，清單不在這裡重列。
+
+## 怎麼用 prototype 當整頁範例
+
+| 想知道 | 看哪裡 |
+| :--- | :--- |
+| 有哪些畫面、各自怎麼走到、各有哪些視圖 | [`handoff/manifest.json`](../../design/system/handoff/manifest.json) 與 [`handoff/coverage.md`](../../design/system/handoff/coverage.md) |
+| 一個畫面用了哪些元件、哪些視圖 | [`pages/`](../../design/system/pages/index.md)，一個畫面一份 |
+| 畫面與元件的雙向對照 | [`screen-inventory.md`](../../design/system/screen-inventory.md)（生成的，不手改） |
+| 畫面對應哪一條業務規格 | [`handoff/spec-index.md`](../../design/system/handoff/spec-index.md) |
+| 所有元件並排的樣本 | `design/prototype/components-showcase.html`，說明見 [`pages/components-showcase.md`](../../design/system/pages/components-showcase.md) |
+| 畫面之間怎麼跳轉 | [Prototype 導航地圖](../prototype/navigation.mdx) |
+
+## 使用方式
+
+- 設計版面時參考整頁的結構與元件用法；元件的長相與狀態以[元件規格](./components.mdx)為準，不從畫面反推。
+- prototype 是現況證據，不是可複製的程式碼；改畫面要先走 `AGENTS.md` 的 Ready gate。
+- 畫面的狀態大多由 URL 參數叫出來，視圖 ID 與叫法記在 `manifest.json`。
+- Design System Artifact 沒有整頁範例，只有元件樣本與品牌手冊；它是私人的生成呈現層，見 [設計交接](../development/design-handoff.mdx)。
