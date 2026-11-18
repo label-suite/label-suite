@@ -6897,6 +6897,9 @@
           trigger: document.getElementById('wsRoot'),
           onClose: function () {}
         });
+        /* 初始焦點放在確認鈕（維護者裁定 2026-11-18，#423）：modal-focus.js 預設聚焦第一個
+           可聚焦元素，也就是左邊的返回鈕，這裡改回主要動作。 */
+        confirmBtn.focus();
       }
     } else {
       modal.classList.remove('show');
