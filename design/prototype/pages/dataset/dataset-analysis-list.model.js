@@ -235,6 +235,10 @@
 
     state.keyword = params.get('keyword') || '';
     if (params.get('view') === 'empty') state.tasks = [];
+    /* PROTOTYPE-ONLY demo switch (G-54): shows the load-failed state, so the
+       design handoff can reproduce it. syncUrl() does not carry it over, so
+       the Retry button (a reload) recovers, as a real retry would. */
+    if (params.get('error') === '1') state.loadFailed = true;
     state.outputType = outputTypeMap[requestedOutputType]
       ? requestedOutputType
       : '';
