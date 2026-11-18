@@ -47,7 +47,7 @@
 六個 overlay 全部接了 `modal-focus.js`：圖片（`annotation-workspace.config.js:6343`）、PDF（`:6367`）、Markdown（`:6532`）、審核流程抽屜（`:5700`）、指引閘門（`:6845`），右欄抽屜由原生按鈕與 `aria-expanded` 控制 → G-23、G-43 在本頁不成立。但：
 
 - 指引閘門把 `onClose` 設成 `hideGuidelineModal`（`:6849`），而 `modal-focus.js:42`–`:44` 在 Esc 時呼叫它，所以**按 Esc 就能不確認直接開始** → G-46
-- 審核流程抽屜的關閉鈕（`:1201`）只有圖示，沒有 `aria-label` → G-49
+- 審核流程抽屜的關閉鈕（`:1201`）靜態 markup 只有圖示；已於 #422 補上 `aria-label`（執行期本來就會設定）→ G-49
 - 分頁按鈕沒有 `tablist`／`tab`／`aria-selected`，只能點（`setupGuidelineTabs`，`:6695`–`:6713`）→ G-22
 
 送出被擋時各輸出類型的區塊會加上 `data-error="true"`（`:3048`），但全 prototype 沒有任何 CSS 選到它，畫面上看不出是哪一塊擋住 → G-47。

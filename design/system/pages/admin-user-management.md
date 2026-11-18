@@ -25,7 +25,7 @@
 | :--- | :--- |
 | `.btn-primary`／`.btn-ghost`（`:54`）、`.badge`（`:101`）、`.page-btn`（`:140`–`:158`）、modal（`:166`–`:167`）、`.toast*`（`:205`–`:245`） | 全部是共用元件在本頁的**重新定義** → G-03、G-10、G-37 |
 | `.alert-banner`（`:195`）＋ `.warning`（`:200`） | 全 prototype 唯一一個 Alert Banner 修飾子 → G-07 |
-| `.audit-drawer` | 見 [`admin-role-settings.md`](admin-role-settings.md)，→ G-38 |
+| `.audit-drawer` | 見 [`admin-role-settings.md`](admin-role-settings.md)；已於 #422 抽成共用檔，→ G-38 |
 
 ## 業務行為
 
