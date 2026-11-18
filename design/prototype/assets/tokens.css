@@ -75,7 +75,7 @@
   --color-accent-border:    #DDD6FE;   /* Violet 200 — decorative */
 
   /* ── Role-settings task column (issue #420) ─────────────────── */
-  --color-task:             #0D9488;   /* Teal 600 — task column header text, underline, checkbox accent; 3.59:1 on --color-task-bg (below 4.5:1 text AA, ruled value) */
+  --color-task:             #0F766E;   /* Teal 700 — task column header text, underline, checkbox accent; 5.25:1 on --color-task-bg */
   --color-task-bg:          #F0FDFA;   /* Teal 50 */
 
   /* ── Notification badge (issue #420) ──────────────────────────

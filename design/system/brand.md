@@ -167,7 +167,7 @@ token 名與值以 `tokens.css` 為準；本節只寫**怎麼用**。
 | 工作頁籤 | `--color-tab-active-bg`、`--color-tab-hover-bg` | 側欄上方頁籤；兩者在深色主題刻意不同值 | `tokens.css` §Workspace Tabs |
 | 次要鈕 hover 外框 | `--color-border-hover` | `.btn-oauth`、`.btn-icon`、`.btn-language` hover 時的外框，只做裝飾（#420 Q6） | `tokens.css:28`、`:199` |
 | 非狀態的強調 | `--color-accent`、`-bg`、`-border` | 分類 chip、`.badge-official` 這類要跟主色分開、又不是狀態的標記（#420 Q2） | `tokens.css:73`–`:75`、`:241`–`:243` |
-| 任務欄 | `--color-task`、`--color-task-bg` | 任務欄的表頭文字、底線、勾選框（#420 Q5）。淺色 `--color-task` 疊在 `--color-task-bg` 上只有 3.59:1，維護者裁定的值 | `tokens.css:78`–`:79`、`:246`–`:247` |
+| 任務欄 | `--color-task`、`--color-task-bg` | 任務欄的表頭文字、底線、勾選框（#420 Q5）。淺色值為 Teal 700，疊在 `--color-task-bg` 上 5.25:1（維護者 2026-11-18 從 3.59:1 的 Teal 600 改定） | `tokens.css:78`–`:79`、`:246`–`:247` |
 | 通知徽章 | `--color-badge-notify` | 側欄通知數字的底，配白字（6.47:1）；深淺主題同值（#420 Q5） | `tokens.css:84`、`:249` |
 | 程式碼區 | `--color-code-bg`、`--color-code-fg` | 程式碼編輯區的底與字（#420） | `tokens.css:87`–`:88`、`:252`–`:253` |
 | 資料色 | `--data-entity-*`、`--data-task-type-*` 等，在 `assets/data-palette.css` | 實體類型、任務類型、角色卡這類**指派給資料**的顏色，不是語意色；不放進 `tokens.css`，有淺色與深色兩套（#420 Q4） | `assets/data-palette.css`；`task-config.data.js` 的 `ENTITY_COLORS` 與 `--data-entity-*` 同值 |

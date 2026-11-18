@@ -44,7 +44,7 @@
     "color-accent": "強調色（Violet），非狀態色：「官方」徽章與分類 chip 的文字。不拿來表示成功、錯誤、警告或資訊。",
     "color-accent-bg": "{color-accent} 的淡底。",
     "color-accent-border": "{color-accent} 的淡邊框，只作裝飾。",
-    "color-task": "角色設定權限矩陣「任務」欄的欄頭文字、底線與勾選框強調色。淺色主題對 {color-task-bg} 為 3.59:1，未達文字 4.5:1，值由維護者 2026-11-18 裁定。",
+    "color-task": "角色設定權限矩陣「任務」欄的欄頭文字、底線與勾選框強調色。淺色值為 Teal 700，對 {color-task-bg} 5.25:1，由維護者 2026-11-18 從 Teal 600（3.59:1）改定。",
     "color-task-bg": "角色設定權限矩陣「任務」欄的欄頭底色。",
     "color-badge-notify": "通知徽章的紅底，兩種主題固定同一個值（#183 仲裁），上面的字固定白色。",
     "color-code-bg": "程式碼編輯區（YAML 設定）的底色，兩種主題都是深底。",

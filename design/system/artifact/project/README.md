@@ -102,7 +102,6 @@ Label Suite 是研究團隊用的 NLP 標記平台：以設定驅動的流程走
 | `--color-primary` | `--color-surface` | 文字 | 4.5:1 | 4.07 未達 | 6.57 |
 | `--color-primary` | `--color-primary-soft-bg` | 文字 | 4.5:1 | 3.99 未達 | 5.36 |
 | `--color-on-cta` | `--color-primary` | 文字 | 4.5:1 | 4.47 未達（已接受） | 5.36 |
-| `--color-task` | `--color-task-bg` | 文字 | 4.5:1 | 3.59 未達 | 8.20 |
 | `--color-border` | `--color-white` | 邊框 | 3:1 | 1.23 未達 | 1.27 未達 |
 | `--color-border` | `--color-surface` | 邊框 | 3:1 | 1.12 未達 | 1.38 未達 |
 | `--color-primary-border` | `--color-white` | 邊框 | 3:1 | 1.49 未達 | 1.81 未達 |
@@ -111,7 +110,7 @@ Label Suite 是研究團隊用的 NLP 標記平台：以設定驅動的流程走
 - `--color-primary` 當文字的三列不再使用：主色文字一律換成 `--color-primary-strong`（白底 6.29、主色淺底 5.62:1）。
 - `--color-border` 在兩種主題都不到 3:1，只能當裝飾性分隔，不能單獨承擔「這裡有一個控制項」的辨識；控制項外框用 `--color-border-control`（淺色白底 3.55、頁底 3.23:1；深色卡片 3.42、頁底 3.73:1）。
 - `--color-secondary` 不當圖示色，圖示用 `--color-primary`。
-- `--color-task` 是 #420 Q5 裁定的值（沿用角色設定頁原本的 `#0D9488`）。它在淺色 `--color-task-bg` 上只有 3.59:1，而角色設定頁拿它當 11–12px 的欄位標頭字，這是已知的未達項，留給維護者決定要不要調色；新元件不要再拿它當文字。
+- `--color-task` 淺色原本沿用角色設定頁的 Teal 600，在 `--color-task-bg` 上只有 3.59:1；維護者 2026-11-18 同意改成 Teal 700 `#0F766E`，現為 5.25:1，已不在上表。
 - 可見的焦點樣式目前大多缺席，「所有互動元件都有可見焦點」是目標，還不是現況。
 
 ## 未同步
