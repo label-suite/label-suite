@@ -54,7 +54,7 @@
 
 遵守它的元件：[Toast](components/toast.md) 本身，以及 [App Shell](components/app-shell.md) 的通知（待 b2 核對是否同一套）。
 
-**b2 核對**：`admin/role-settings`（`role-settings.html:1504`）與 `admin/user-management`（`user-management.html:1579`）照抄 `TOAST_DURATIONS`，遵守；`task-management/task-list`（3000 ms）、`task-new`（3500 ms）、`task-detail`（2400 ms）一律固定秒數、錯誤也會自己消失，**不遵守** → [`design-gaps.md`](design-gaps.md) G-39。App Shell 的通知是 `sidebar.js` 的下拉選單，不是 toast，不適用。
+**b2 核對**：`admin/role-settings`（`role-settings.html:1504`）與 `admin/user-management`（`user-management.html:1579`）照抄 `TOAST_DURATIONS`，遵守；`task-management/task-list`（3000 ms）、`task-new`（3500 ms）、`task-detail`（2400 ms）原本一律固定秒數、錯誤也會自己消失，**不遵守** → [`design-gaps.md`](design-gaps.md) G-39；#423 起三頁都改用 `TOAST_DURATIONS`，error 只能手動關，已遵守。App Shell 的通知是 `sidebar.js` 的下拉選單，不是 toast，不適用。
 
 **b3 核對**：`annotation/annotation-workspace` 照抄 `TOAST_DURATIONS`（`annotation-workspace.config.js:422`–`:439`），遵守。`annotation-list` 沒有 toast。
 

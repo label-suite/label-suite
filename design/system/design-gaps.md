@@ -170,6 +170,8 @@
 | **依據** | 時長：`task-list.html:599`–`:606` 的 `showToast` 一律 3000 ms，`task-new.html:858`–`:865` 一律 3500 ms，`task-detail.html:11255` 一律 2400 ms——三者都不分類型，錯誤也會自動消失；UXC-07 要求 error 為 0（只能手動關，`components-showcase.html:1500`）。位置：`role-settings.html:213`「`/* ── Toast (top-center, UXC-07 / MASTER §Toast) */`」、`:216` `top: 24px` vs [`06-admin/02-role-settings.mdx`](../../docs/specs/06-admin/02-role-settings.mdx) 第 343 行「通知出現在頁面**右下角**，**依類型決定多久自動消失**」與驗收標準第 663–664 行「通知出現在右下角」。 |
 | **待決問題** | **已裁定（2026-11-18）**：三頁的 toast 對齊 UXC-07 分級時長；`role-settings` 的位置以規格的右下角為準，規格不改。修正於 #423。原題保留：一、三個任務管理頁的 toast 是否要改成 UXC-07 的分級時長？二、`role-settings` 的 toast 位置以規格的右下角為準，還是規格要改成上方置中？（規格屬維護者。） |
 
+**狀態（#423）**：已修正。`task-list`、`task-new`、`task-detail` 的 `showToast` 改用 `TOAST_DURATIONS = { success: 3000, info: 5000, warning: 8000, error: 0 }`，error 不設計時器；三頁的 toast 加上關閉鈕（`#toastClose`，雙語 `aria-label`），隱藏時以 `visibility: hidden` 移出 Tab 順序。舊呼叫第二個參數傳 `true` 的視為 error、省略的視為 success；`task-list` 的「前往任務詳情…」改為 info。`role-settings` 的 `.toast-container` 改成右下角（`bottom: 24px; right: 24px`）。上文的行號指的是修正前。
+
 ### G-41 卡片有四份實作，沒有共用檔
 
 > b2 新增。

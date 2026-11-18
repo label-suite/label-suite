@@ -40,7 +40,7 @@
 | `.panel`（`:91`） | 本頁的卡片，和 `dashboard` 的 `.panel` 同名不同一份 → [Card](../components/card.md)、G-41 |
 | `.toggle-switch`（`:306`–`:332`） | 本頁**重新定義**：42×24、開啟色 `--color-cta`；同頁也載了 `task-config.css` 的正典版（40×22、`--color-primary`）→ G-42 |
 | `.skeleton-*`（`:67`–`:83`） | [Skeleton](../components/skeleton.md)：與 showcase 的 pulse 變體逐字相同（`components-showcase.html:436` 起） |
-| `.toast*`（`:844`–`:862`） | [Toast](../components/toast.md)：`showToast`（`:11255`）一律 2400 ms → G-39 |
+| `.toast*` | [Toast](../components/toast.md)：#423 起 `showToast` 依 `TOAST_DURATIONS`（`:11251`）分級，error 只能手動關 → G-39 |
 | `.breadcrumb`（`:45`–`:47`） | 本頁一行式的版本 |
 
 八個 modal 只有四個接了 `modal-focus.js`：`backToDraft`（`:6054`）、`settingsLeave`（`:7799`）、`arSeqExport`（`:10921`）、`risk`（`:11289`）→ G-43。

@@ -196,14 +196,14 @@
     .na-cell.last-col { border-right: none; }
 
 
-    /* ── Toast (top-center, UXC-07 / MASTER §Toast) ─────────────── */
+    /* ── Toast (bottom-right, UXC-07 / MASTER §Toast) ───────────────
+       規格 06-admin/02-role-settings 要右下角（#423, design-gaps G-39）。 */
     .toast-container {
       position: fixed;
-      top: 24px;
-      left: 50%;
-      transform: translateX(-50%);
+      bottom: 24px;
+      right: 24px;
       z-index: var(--z-toast);
-      width: min(384px, calc(100vw - 32px));
+      width: min(384px, calc(100vw - 48px));
       pointer-events: none;
     }
     .toast {

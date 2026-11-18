@@ -820,6 +820,13 @@
     }
     .toast.show { opacity: 1; transform: translateY(0); }
     .toast.error { background: var(--color-error); }
+    /* UXC-07（#423, G-39）：error 不自動消失，所以要有關閉鈕；隱藏時以 visibility
+       把關閉鈕移出 Tab 順序，延遲 0s 讓淡出照樣播完。 */
+    .toast { visibility: hidden; transition: opacity var(--dur-normal), transform var(--dur-normal), visibility 0s linear var(--dur-normal); }
+    .toast.show { visibility: visible; transition: opacity var(--dur-normal), transform var(--dur-normal); }
+    .toast-close { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; margin-left: auto; padding: 2px; border: none; border-radius: var(--radius-sm); background: none; color: currentColor; opacity: 0.75; cursor: pointer; }
+    .toast-close:hover { opacity: 1; }
+    .toast-close:focus-visible { outline: 2px solid currentColor; outline-offset: 1px; opacity: 1; }
 
     /* Annotation results panel */
     .ar-filter-grid {
@@ -2067,6 +2074,7 @@
 <div class="toast-container" aria-live="polite" aria-atomic="true">
   <div class="toast" id="toast" role="alert">
     <span id="toastMsg"></span>
+    <button type="button" class="toast-close" id="toastClose" aria-label="關閉通知" onclick="hideToast()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
 </div>
 
@@ -2595,6 +2603,7 @@
       progressStageMetaTpl: '{completed}/{total}（{rate}%）',
       reviewerTabBlocked: 'reviewer 無權限檢視成員管理，已導回任務概覽。',
       toastMemberUpdated: '成員設定已更新',
+      toastClose: '關閉通知',
       toastMemberInvited: '邀請已寄出，等待對方接受後加入任務',
       memberActionModalTitle: '確認成員操作',
       memberActionModalBodyRemove: '是否移除 {name}（{role}）？已送出的標記與歷史統計會保留；未完成標記作業會改為未指派狀態，需由 project leader 重新指派或排除。',
@@ -3187,6 +3196,7 @@
       progressStageMetaTpl: '{completed}/{total} ({rate}%)',
       reviewerTabBlocked: 'Reviewer cannot access member management. Redirected to overview.',
       toastMemberUpdated: 'Member setting updated',
+      toastClose: 'Dismiss notification',
       toastMemberInvited: 'Invitation sent. The member will join after accepting it',
       memberActionModalTitle: 'Confirm member action',
       memberActionModalBodyRemove: 'Remove {name} ({role}) from this task? Completed submissions and history remain. Unfinished annotation work becomes unassigned and must be reassigned or excluded by the project leader.',
@@ -11236,19 +11246,25 @@ function getTaskTypeLabel() {
     syncUrlToViewState();
   }
 
-  function showToast(message, isError) {
+  /* UXC-07（#423, G-39）：單一實例、依類型分級存續，error 只能手動關。
+     第二個參數可傳 variant 字串；舊呼叫的 true 視為 error，省略或 false 視為 success。 */
+  var TOAST_DURATIONS = { success: 3000, info: 5000, warning: 8000, error: 0 };
+  function hideToast() {
+    document.getElementById('toast').classList.remove('show');
+    clearTimeout(toastTimer);
+    toastTimer = null;
+  }
+  function showToast(msg, variant) {
+    if (variant === true) variant = 'error';
+    if (!Object.prototype.hasOwnProperty.call(TOAST_DURATIONS, variant)) variant = 'success';
     var toast = document.getElementById('toast');
-    var msg = document.getElementById('toastMsg');
-    msg.textContent = message;
-    toast.classList.toggle('error', Boolean(isError));
+    document.getElementById('toastMsg').textContent = msg;
+    toast.classList.toggle('error', variant === 'error');
+    document.getElementById('toastClose').setAttribute('aria-label', t('toastClose'));
     toast.classList.add('show');
-
-    if (toastTimer) {
-      clearTimeout(toastTimer);
-    }
-    toastTimer = setTimeout(function() {
-      toast.classList.remove('show');
-    }, 2400);
+    clearTimeout(toastTimer);
+    toastTimer = null;
+    if (TOAST_DURATIONS[variant] > 0) toastTimer = setTimeout(hideToast, TOAST_DURATIONS[variant]);
   }
 
   function trackEvent(name, extra) {

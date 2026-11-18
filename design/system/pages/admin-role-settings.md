@@ -33,7 +33,7 @@
 | `.banner`／`.dirty-banner`／`.conflict-banner`（`:44`–`:60`） | Alert Banner 的又一份實作，用 `--color-warning-*`／`--color-error-soft-*` → G-07 |
 | `.matrix-table`（`:104`），第一欄與表頭 sticky（`:127`、`:156`） | 包在 `role="region" tabindex="0"` 的容器裡，**鍵盤可以捲**——和 [Data Table](../components/data-table.md) 的 G-27 正好相反 |
 | `.audit-drawer`／`.audit-drawer-overlay`（`:270`–`:296`；窄視窗改成由下往上，`:324`–`:330`） | 右側抽屜。**已於 #422 抽成共用檔** `pages/shared/audit-drawer.css`／`audit-drawer.js`，與 `admin/user-management` 共用，並接上焦點陷阱 → G-38（左欄的行號是抽出之前的） |
-| `.toast*`（`:213` 起） | 上方置中；`TOAST_DURATIONS`（`:1504`）與 UXC-07 一致 → G-39 |
+| `.toast*`（`:199` 起） | 右下角（#423 起，與規格一致）；`TOAST_DURATIONS`（`:1418`）與 UXC-07 一致 → G-39 |
 
 ## 業務行為
 

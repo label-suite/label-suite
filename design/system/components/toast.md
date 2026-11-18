@@ -68,10 +68,11 @@
 | :--- | :--- |
 | `components-showcase#state-default` | 四個 variant 的真實行為 |
 | `account/profile#toast-saved` | 儲存個人資料或通知設定後顯示 |
-| `admin/role-settings#toast-saved`、`admin/user-management#toast-action` | 本頁的 `.toast*`（上方置中），`TOAST_DURATIONS` 依類型（`role-settings.html:1504`、`user-management.html:1579`），符合 UXC-07 |
-| `task-management/task-list`（`#param-unauthorized`、`#sim-delete-error`） | 本頁的 `.toast*`；`showToast`（`task-list.html:599`–`:606`）一律 3000 ms → `../design-gaps.md` G-39 |
-| `task-management/task-new`（交付包未列） | `showToast`（`task-new.html:858`–`:865`）一律 3500 ms → G-39 |
-| `task-management/task-detail`（交付包未列） | `showToast`（`task-detail.html:11255`）一律 2400 ms → G-39 |
+| `admin/role-settings#toast-saved` | 本頁的 `.toast*`（#423 起改右下角，與規格一致），`TOAST_DURATIONS` 依類型（`role-settings.html:1418`），符合 UXC-07 → `../design-gaps.md` G-39 |
+| `admin/user-management#toast-action` | 本頁的 `.toast*`（上方置中），`TOAST_DURATIONS` 依類型（`user-management.html:1579`），符合 UXC-07 |
+| `task-management/task-list`（`#param-unauthorized`、`#sim-delete-error`） | 本頁的 `.toast*`（右下角）；#423 起 `TOAST_DURATIONS`（`task-list.html:584`）依類型，error 不自動消失、有關閉鈕，符合 UXC-07 → `../design-gaps.md` G-39 |
+| `task-management/task-new`（交付包未列） | 同上，`TOAST_DURATIONS`（`task-new.html:877`）→ G-39 |
+| `task-management/task-detail`（交付包未列） | 同上，`TOAST_DURATIONS`（`task-detail.html:11251`）→ G-39 |
 | `annotation/annotation-workspace`（`#state-submitted-next`；其他操作交付包未列） | 本頁的 `.toast*`（`annotation-workspace.html:1030`–`:1073`，`aria-live="polite"`，`:1327`）；`TOAST_DURATIONS`（`annotation-workspace.config.js:422`–`:439`）依類型 3000／5000／8000／不自動關，符合 UXC-07 |
 | `dataset/dataset-analysis-list#param-invalid-task`（另有點列時的 info，交付包未列） | 本頁的 `.toast*`（`dataset-analysis-list.html:154`–`:196`，`aria-live="polite"`，`:309`）；`TOAST_DURATIONS`（`dataset-analysis-list.js:25`）照 UXC-07 |
 
