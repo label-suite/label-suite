@@ -63,16 +63,16 @@
     .field-error-msg.show { display: block; }
     .input-text { width: 100%; padding: 9px 12px; border: 1px solid var(--color-border-control); border-radius: var(--radius-md); font-size: 14px; color: var(--color-ink); background: var(--color-white); outline: none; transition: border-color var(--dur-fast), box-shadow var(--dur-fast); }
     .input-text:read-only { background: var(--color-slate-50); color: var(--color-ink-muted); cursor: default; }
-    .input-text:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .input-text:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent); }
     .input-text.error { border-color: var(--color-error); }
     .input-select { width: 100%; padding: 9px 32px 9px 12px; border: 1px solid var(--color-border-control); border-radius: var(--radius-md); font-size: 14px; color: var(--color-ink); background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235E6B7F' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center; outline: none; appearance: none; -webkit-appearance: none; transition: border-color var(--dur-fast), box-shadow var(--dur-fast); }
-    .input-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .input-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent); }
     .input-select.error { border-color: var(--color-error); }
     /* Chevron stroke = --color-ink-muted in each theme. A data-URI SVG cannot read var(),
        and a <select> has no pseudo-element to mask, so dark gets its own URI (#438). */
     html[data-theme="dark"] .input-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); }
     .input-textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--color-border-control); border-radius: var(--radius-md); font-size: 14px; color: var(--color-ink); background: var(--color-white); outline: none; resize: vertical; min-height: 80px; transition: border-color var(--dur-fast), box-shadow var(--dur-fast); }
-    .input-textarea:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .input-textarea:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent); }
 
     /* ── Dataset Preview Modal ── */
     .modal.modal-xl { max-width: 1280px; width: 92vw; max-height: 88vh; display: flex; flex-direction: column; }

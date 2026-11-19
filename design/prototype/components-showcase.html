@@ -628,9 +628,12 @@
       border: 1px solid var(--color-border-control);
       border-radius: var(--radius-md);
       font-size: 13px;
-      background: var(--color-white);
+      color: var(--color-ink);
+      /* Chevron stroke = --color-ink-muted per theme, mirrors shared/list-page.css (#442) */
+      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%235E6B7F' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center;
       appearance: none;
     }
+    html[data-theme="dark"] .page-size-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); }
 
     /* §Breadcrumb (verbatim) */
     .breadcrumb {

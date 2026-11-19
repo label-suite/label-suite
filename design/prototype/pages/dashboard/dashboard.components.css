@@ -373,7 +373,7 @@
       appearance: none; -webkit-appearance: none;
       transition: border-color var(--dur-fast);
     }
-    .filter-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .filter-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent); }
     html[data-theme="dark"] .filter-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); }
 
     /* User view: only the inner .workflow-role-card keeps a frame (no card-in-card) */
