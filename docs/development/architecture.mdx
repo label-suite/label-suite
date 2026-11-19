@@ -8,7 +8,7 @@ tags: [architecture, fastapi, react, adr]
 
 `backend/`、`frontend/` 還不存在，本文寫的是「要照著做的架構」；第一個讀者是 OpenSpec 規劃階段的 `sd` 與 `ui-ux`，業務面以 `docs/specs/` 為準（見 [需求文件撰寫](spec-authoring.md)）。
 本文是個人 repo 38 份 ADR 在本 repo 的落地版，每份 ADR 照做、調整或被取代，見文末 [§ADR 效力總表](#adr-效力總表)。
-衝突時：本文與 `docs/specs/` 不一致以 `docs/specs/` 為準；本文與 ADR 不一致以 ADR 為準並回報維護者，**唯獨**效力總表標成「被覆寫」「部分被覆寫」「本期不做」「本期部分採用」的列以本文為準、不回退 ADR。
+衝突時依序以 `AGENTS.md`、本 repo 的 [ADR](adr/index.mdx)、本文為準，個人 repo 的 ADR 只當參考；業務面一律以 `docs/specs/` 為準。發現不一致就照這個順序做，並回報維護者。
 
 各節的收合區塊是給實作與規劃查的細節，預設收起。
 
@@ -435,3 +435,4 @@ ADR 引用的 FR-131、admin-007、spec 013 這類編號屬於個人 repo，本 
 | 2026-11-10 | design token 寫一層對照，`tokens.css` 仍是唯一色值來源（[§前端](#前端)） | — | [#109 留言](https://github.com/label-suite/label-suite/issues/109#issuecomment-6764207805) |
 | 2026-11-10 | 身分只認 httpOnly cookie（[§認證與授權](#認證與授權)） | 原文「不接受 `Authorization` header 以外的來源」是筆誤 | [#107](https://github.com/label-suite/label-suite/issues/107) |
 | 2026-11-10 | CSRF 加綁定 session 的 double-submit token（[§CSRF](#csrf)） | — | [#107](https://github.com/label-suite/label-suite/issues/107) |
+| 2026-11-19 | 衝突優先序改為 `AGENTS.md` > 本 repo ADR > 本文 > 個人 repo ADR（只當參考） | 原本「本文與 ADR 不一致以 ADR 為準」，只有效力總表標成被覆寫等的列例外 | [#444](https://github.com/label-suite/label-suite/issues/444) |
