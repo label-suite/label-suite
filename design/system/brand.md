@@ -100,7 +100,7 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 **規則：全部中文介面文案用「你」，不用「您」。**維護者裁定（2026-11-18）。
 
 - 動作與後果說明本來就用「你」（例：`profile.html:1227`「除非你回到『密碼設定』重新設一組」），區塊副標與成功通知也一律改「你」（例：`profile.html:1179`「修改你的姓名與聯絡方式」、`:1221`「你現在可使用電子郵件與密碼登入」、`register.html:541`「填寫以下資訊以建立你的帳號」）。
-- 現況有 13 行出現「您」，列在 [§與 prototype 的落差](#與-prototype-的落差)。規格書 `docs/specs/01-account/04-profile.mdx:131` 也用「您」，但 `docs/specs/` 是維護者擁有的頁面，這裡只記錄，不改。
+- prototype 原本有 13 行用「您」，已在 #418 改成「你」，列在 [§與 prototype 的落差](#與-prototype-的落差)。規格書 `docs/specs/01-account/04-profile.mdx:131` 的副標題也已在 #461 改成「你」。
 
 ### 按鈕用語
 
@@ -119,7 +119,7 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 - **登入失敗不指出是帳號還是密碼**：「帳號或密碼錯誤，請再試一次」（`login.html:526`）；英文 `Invalid email or password`（`:549`）。
 - **說出原因與下一步。**「瀏覽器的儲存空間放不下這張圖，請換一張小一點的；其他欄位已經存好了」（`profile.html:1217`）——先說發生什麼，再說怎麼辦，並交代沒壞的部分。
 - **一次性連結失效**：「連結無法使用，請重新申請」；英文 `This link can no longer be used. Please request a new one.`（`sidebar.js:228`–`:229`）。
-- **標記員被擋下時說明條件**：句型是「請完成所有標記項目後再送出」（現況寫「提交」，`annotation-workspace.config.js:59`）；審核員失去資格時說明還能做什麼：「…可檢視自己審核過的內容與歷程，但無法再送出審核決策。」（現況同樣寫「提交」，`:114`）。
+- **標記員被擋下時說明條件**：句型是「請完成所有標記項目後再送出」（`annotation-workspace.config.js:59`）；審核員失去資格時說明還能做什麼：「…可檢視自己審核過的內容與歷程，但無法再送出審核決策。」（`:114`）。
 - **無障礙名稱（aria-label）和可見文字一樣要兩種語言**（`ssoAriaLabel`、`navAriaLabel` 等，`login.html:529`–`:534`、`:552`–`:557`）。
 
 ### 標點與格式

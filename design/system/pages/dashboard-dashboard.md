@@ -6,7 +6,7 @@
 
 登入後的首頁，側欄「儀表板」。
 
-載入（`dashboard.html:11`–`:20`）：`assets/tokens.css`、`assets/data-palette.css`（#420）、`pages/shared/sidebar.css`、`pages/shared/button.css`、`dashboard.layout.css`（它 `@import` `pages/shared/metric.css`，`dashboard.layout.css:1`）、`dashboard.components.css`、`pages/shared/task-type-badge.css`。
+載入（`dashboard.html:11`–`:20`）：`assets/tokens.css`、`assets/data-palette.css`（#420）、`pages/shared/sidebar.css`、`pages/shared/button.css`、`pages/shared/card.css`（#423）、`dashboard.layout.css`（它 `@import` `pages/shared/metric.css`，`dashboard.layout.css:1`）、`dashboard.components.css`、`pages/shared/task-type-badge.css`。
 
 五種版面是同一頁的五個 `<section class="view">`（`:111`、`:253`、`:348`、`:391`、`:435`），`applyScenario`（`dashboard.js:555`）切換。
 
