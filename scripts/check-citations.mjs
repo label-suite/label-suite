@@ -294,12 +294,12 @@ export function contextMatches({ lines, from, to, tokens, doc = '', unitText = '
     const v = t.startsWith('--') ? values.get(t) : undefined;
     if (v && /^#[0-9a-f]{3,8}$/.test(v) && text.toLowerCase().includes(v)) return true;
   }
-  // A row of a component doc's usage table opens with the screen that uses the
-  // component (`task-management/task-list#state-default`,
+  // A usage entry of a component doc (a table row, list item or paragraph)
+  // opens with the screen that uses the component (`task-management/task-list#state-default`,
   // `components-showcase#comp-banner`); the component it cites is the doc's
   // own, so the doc's slug is what the cited line must name.
   const slug = doc.match(/^design\/system\/components\/([\w-]+)\.md$/)?.[1];
-  const firstCell = unitText.match(/^\s*\|\s*`([^`]+)`/)?.[1] ?? '';
+  const firstCell = unitText.match(/^\s*(?:\|\s*|[-*]\s+)?`([^`]+)`/)?.[1] ?? '';
   if (slug && /^(?:[\w-]+\/[\w-]+|components-showcase)(?:#[\w-]+)?$/.test(firstCell)) {
     if (text.toLowerCase().includes(slug)) return true;
   }

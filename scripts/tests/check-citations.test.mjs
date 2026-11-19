@@ -132,4 +132,8 @@ test('a usage row in a component doc is met by the component slug', () => {
   assert.equal(repo(row(2), extra, 'design/system/components/badge.md').warnings.length, 1);
   // Outside a component doc the slug means nothing.
   assert.equal(repo(row(1), extra, 'design/system/pages/x.md').warnings.length, 1);
+  // A usage entry written as a paragraph reads the same way.
+  const para = (n) => `\`components-showcase#state-default\` → 樣本在 \`pages/b.html:${n}\`。\n`;
+  assert.equal(repo(para(1), extra, 'design/system/components/badge.md').stats.verified, 1);
+  assert.equal(repo(para(2), extra, 'design/system/components/badge.md').warnings.length, 1);
 });
