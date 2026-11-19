@@ -1,12 +1,12 @@
 ---
 title: ADR-003 後端架構
-description: 後端與 API 契約的決定：前後端同一個 repo、FastAPI、模組內分層、狀態機放 service 層、路徑前綴與回應 envelope、Orval 產生前端 client、SQLite 加 PostgreSQL 雙層、Celery 加 Redis、Bruno 降成可選工具。
+description: 後端與 API 契約的決定：前後端同一個 repo、FastAPI、模組內分層、狀態機放 service 層、路徑前綴與回應 envelope、Orval 產生前端 client、SQLite 加 PostgreSQL 雙層、Celery 加 Redis、Bruno 降成可選工具、背景計算的結果寫入做成冪等。
 tags: [adr, backend, api, database, celery]
 ---
 
 # ADR-003 後端架構
 
-這份 ADR 管後端的骨架與它對外的契約：repo 怎麼分、用什麼框架、目錄怎麼分層、API 的前綴與回應外層、前端 client 怎麼產生、資料庫與背景工作用什麼。認證與授權、測試、部署與前端的目錄不在這裡，測試見 [ADR-007](007-testing-strategy.mdx)。
+這份 ADR 管後端的骨架與它對外的契約：repo 怎麼分、用什麼框架、目錄怎麼分層、API 的前綴與回應外層、前端 client 怎麼產生、資料庫與背景工作用什麼、背景計算的結果怎麼寫才不會重複。認證與授權、測試、部署與前端的目錄不在這裡，測試見 [ADR-007](007-testing-strategy.mdx)。
 規則本體在 [backend-agent-rules.mdx](../rules/backend-agent-rules.mdx) 與 [api-agent-rules.mdx](../rules/api-agent-rules.mdx)，落地的做法在 [architecture.mdx](../architecture.mdx)，本文只寫為什麼；衝突時的優先序見 [ADR 索引](index.mdx#衝突時以誰為準)。
 
 ## D1 前後端放在同一個 repo
@@ -414,9 +414,54 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 - `backend/` 的第一批 API change 合併之後，審查反覆需要手動打 API 才能確認行為
 - CI 重產比對建好之後，仍然出現 `openapi.json` 抓不到的契約 drift
 
+## D10 背景計算的結果寫入做成冪等
+
+### 背景
+
+要決定同一份輸入被背景計算不只一次時，結果怎麼寫。這不是例外情況：[D8](#d8-非同步任務用-celery-加-redis) 已經設定評分重試三次。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| [D8](#d8-非同步任務用-celery-加-redis) 設定重試三次（退避 60、180、540 秒，見 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務)） | 寫結果的那一步本來就會跑不只一次 |
+| 重試的觸發是暫時性錯誤（資料庫連線、檔案 I/O），可能發生在結果已經寫了一部分之後 | 不能假設重跑時資料庫是乾淨的 |
+| 排行榜與分析報告由計算結果算出來，讀多寫少而且會被快取 | 重複列或中間狀態會直接反映在畫面上 |
+| 資料庫分兩層（[D7](#d7-資料庫分兩層)），upsert 要依 dialect 分別實作 | 方案不能只在 PostgreSQL 上成立 |
+| [ADR-008 的 D10](008-deployment-and-operations.mdx#d10-worker-收到-sigterm-先做完手上的任務) 已決定 worker 重啟不掉任務 | 重跑的來源收斂成重試與人工重送，但不會消失 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 結果表對輸入的識別子建唯一鍵，寫入用各 dialect 的 `on_conflict` 做 upsert | 跑幾次結果都收斂到同一列，重試、重送、重跑都安全；沒有中間狀態 | 兩種 dialect 各寫一條路徑，[B7](../rules/backend-agent-rules.mdx#b7-雙資料庫的測試要求) 要求兩邊都測 | 採用 |
+| B 重跑前先刪掉該輸入的舊結果，同一交易再寫新的 | 不需要 dialect 專屬的 upsert 語法 | 刪完寫一半失敗會變成完全沒有結果，比重複更糟；讀到中間狀態的風險要靠交易隔離等級擋 | 不採用 |
+| C 由狀態欄擋住重複計算（[B4](../rules/backend-agent-rules.mdx#b4-交易的擁有層) 的派送狀態） | 不動資料表 | 狀態欄擋的是重複派送，擋不住同一個 task 自己的重試；暫時性錯誤重試時狀態已經是進行中 | 不採用 |
+| D 不處理，接受重複列，查詢時取最新一筆 | 寫入端最簡單 | 每個讀取點都要記得去重，漏一處報表就錯；資料表會持續長大 | 不採用 |
+
+### 決定
+
+背景計算的結果表要有「一份輸入最多一份結果」的唯一鍵，寫入一律用各 dialect 的 `on_conflict` 做 upsert，不先刪後寫。現有的 [`task_trial_iaa_result`](../../diagrams/architecture/data-table-dictionary.mdx) 已經把 `trial_round_id` 設成 PK 兼 FK，正好就是這個形狀；本節把它從單一張表的性質升成所有背景計算結果表的要求。具體欄位與約束仍由資料表字典管。
+
+### 後果
+
+**變容易**
+
+- 重試、人工重送與重跑都安全，正確性不依賴「只會跑一次」這個做不到的前提
+- 不必為了防重複另做分散式鎖或狀態欄的二次把關
+
+**變困難**
+
+- SQLite 與 PostgreSQL 的 `on_conflict` 寫法不同，要各寫一條路徑，而且兩邊都要有測試（[B7](../rules/backend-agent-rules.mdx#b7-雙資料庫的測試要求)）
+- 新增背景計算的結果表時都要先想清楚唯一鍵是什麼，沒有自然鍵的計算要先造一個
+- upsert 會覆寫既有結果，所以要保留歷次計算時不能直接用這個形狀，要另立版本或快照表
+
+### 什麼情況要重新討論
+
+- 出現必須保留歷次計算結果的需求（例如同一回合的多次重算要並存比較）
+- 結果的體積大到 upsert 的整列覆寫成本過高，需要改成分段寫入
+
 ## 附錄：來源對照
 
-比對的版本：個人 repo ADR-001、003、005、006、007、022、024、025 的現行內容。
+比對的版本：個人 repo ADR-001、003、005、006、007、022、024、025 的現行內容（`docs/adr/` 最後異動的 commit 是 `9a5da8e`，2026-10-12）。D10 不在其中，見下表。
 
 | 決定 | 來源 |
 | :--- | :--- |
@@ -429,12 +474,14 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 | D7 | 個人 repo ADR-005（Context、候選比較、Consequences）與 ADR-024（Context、Decision、Consequences、Dialect-Specific Paths、Out of Scope）；驅動與 volume 的細節見 [architecture.mdx 的 §資料庫雙層](../architecture.mdx#資料庫雙層) |
 | D8 | 個人 repo ADR-006（Context、Broker 與快取的候選比較、Eviction Policy Isolation、Consequences）與 ADR-007（Context、候選比較、FastAPI Async Integration、Consequences）；佇列、重試與逾時的數字見 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務) |
 | D9 | 個人 repo ADR-025（Context、Alternatives Considered、Enforcement、Consequences）；降級的裁定見 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 7 列，只記結果，沒有記取消關卡的理由 |
+| D10 | **本 repo 新裁定**（[#490](https://github.com/label-suite/label-suite/issues/490)），個人 repo 沒有對應的 ADR，ADR-007 只決定用 Celery、沒有處理重試造成的重複寫入。重試三次的設定出自 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務)；`trial_round_id` 當 PK 兼 FK 出自[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)的 `task_trial_iaa_result`；選項 A 至 D 全部是推論 |
 | — | 個人 repo ADR-024 後來的修訂（以資料庫 trigger 保護 append-only 與封存的資料表）、ADR-022 的轉移表與快照不變式，不在 [architecture.mdx](../architecture.mdx) 裡，本 ADR 不收；它們屬於資料庫與業務規格，由各自的 change 決定是否採用 |
 
 ## 待決
 
 | # | 問題 | 卡住什麼 | 誰決定 |
 | :--- | :--- | :--- | :--- |
+| 1 | [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務) 用 `submission`、`parse_submission`、`/submissions/{id}/status` 這組名字，[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)裡沒有對應的表，最接近的是 `task_run` 與 `task_trial_iaa_result` | [D10](#d10-背景計算的結果寫入做成冪等) 的唯一鍵實際落在哪張表 | 維護者，在做評分流程的 change 時 |
 
 ## 決策紀錄
 
@@ -448,4 +495,5 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 | 2026-11-19 | 前端 client 用 Orval，輸出到 `frontend/src/api/generated/`（[D6](#d6-前端-client-用-orval-產生)） | — | [#108 留言](https://github.com/label-suite/label-suite/issues/108#issuecomment-6763329139) |
 | 2026-11-19 | 資料庫分兩層：預設 SQLite，設 `DATABASE_URL` 走 PostgreSQL 16（[D7](#d7-資料庫分兩層)） | —（沿用個人 repo ADR-005 與 ADR-024） | [#449](https://github.com/label-suite/label-suite/issues/449) |
 | 2026-11-19 | 評分走 Celery，Redis 兼 broker、result backend 與快取（[D8](#d8-非同步任務用-celery-加-redis)） | —（沿用個人 repo ADR-006 與 ADR-007） | [#449](https://github.com/label-suite/label-suite/issues/449) |
+| 2026-11-19 | 背景計算的結果寫入做成冪等，用 `on_conflict` upsert（[D10](#d10-背景計算的結果寫入做成冪等)） | —（新裁定；D8 設了重試三次但沒有處理重複寫入） | [#490](https://github.com/label-suite/label-suite/issues/490) |
 | 2026-11-19 | Bruno 降成可選的手動工具，取消 pre-PR 硬關卡（[D9](#d9-bruno-只當可選工具)） | 個人 repo ADR-025 的 pre-PR 硬關卡 | [#105 留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393) |
