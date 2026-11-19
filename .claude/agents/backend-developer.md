@@ -13,6 +13,7 @@ model: opus
 2. **`AGENTS.md`**——本專案唯一的規則來源，**沒有** `.claude/rules/`。至少讀 Hard Rules 3（依賴用 `uv add`，禁止 `pip install`）、5（任務類型不得寫死）、6（測試集答案不外露）、7（CORS 不得 `allow_origins=["*"]`）、8（祕密只從環境變數來）
 3. `docs/development/architecture.mdx`：§後端分層（含請求流程圖與逐層職責表）、§認證與授權、§任務設定、§測試集答案不外露、§資料庫雙層、§測試分層
 4. 既有程式慣例：相鄰模組的寫法、共用的例外與依賴、認證與授權的掛點
+5. 領域規範：`docs/development/rules/backend-agent-rules.mdx` B1 分層與允許的 import、B3 session 的生命週期、B4 交易的擁有層、B5 資料存取一律走 SQLAlchemy；`docs/development/rules/api-agent-rules.mdx` A1 路由、HTTP status、operationId 與回應外層、A2 request 驗證與 response 建模；`docs/development/rules/security-agent-rules.mdx` S3 授權的四段順序、S4 遮蔽與 allowlist 在後端；`docs/development/rules/testing-agent-rules.mdx` T1 三層的範圍、位置、指令與生命週期、T2 TDD 與紅燈的原因；跨領域的 `docs/development/rules/agent-rules.mdx`
 
 ## 技術棧與結構
 

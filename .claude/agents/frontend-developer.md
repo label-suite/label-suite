@@ -23,8 +23,11 @@ model: opus
 1. 被派的 task，以及它所屬 change 的 `specs/**/spec.md`、`design.md`、`ui-design.md`、`api-contract.md`、`clarification.md`
 2. **`AGENTS.md`**——本專案唯一的規則來源，**沒有** `.claude/rules/`。至少讀 Hard Rules 3（依賴用 `pnpm add`，禁止 `npm install`）、6（測試集答案不外露）、7（**禁止 `any`**）
 3. `docs/development/architecture.mdx`：§前端、§認證與授權、§測試集答案不外露、§i18n 兩層、§測試分層、§待決
-4. `design/prototype/pages/` 的對應畫面與 `design/prototype/assets/tokens.css`、`label-suite-design` skill——**畫面長相以 prototype 為準，token 以那兩個為唯一來源**
-5. 既有程式慣例：相鄰的頁面與功能模組
+4. `design/system/components/` 的對應元件規格——**用哪些元件、哪些狀態以那裡為準**，不要只看 HTML 推回去
+5. `design/system/brand.md`——稱謂、按鈕用語、圖示與斷點的規則本體
+6. `design/prototype/pages/` 的對應畫面與 `design/prototype/assets/tokens.css`、`label-suite-design` skill——**版面與文案以 prototype 為準，token 以那兩個為唯一來源**
+7. 既有程式慣例：相鄰的頁面與功能模組
+8. 領域規範：`docs/development/rules/frontend-agent-rules.mdx` F1 分層與允許的 import、F2 型別安全、F3 Hooks 的呼叫順序、依賴與清理、F4 狀態的三個去處、F6 視覺基準與 design token 的映射、F8 四種畫面狀態與表單；`docs/development/rules/api-agent-rules.mdx` A6 單一 HTTP 邊界；`docs/development/rules/security-agent-rules.mdx` S2 token 不離開 cookie；CSRF 與 CORS 的統一位置、S5 答案隔離的覆蓋面（**覆蓋面明文包含瀏覽器 bundle 與 source map、公開 fixture 與 mock handler**）；`docs/development/rules/testing-agent-rules.mdx` T1 三層的範圍、位置、指令與生命週期、T8 E2E 的選擇器、設定與等待；跨領域的 `docs/development/rules/agent-rules.mdx`
 
 ## API 使用
 

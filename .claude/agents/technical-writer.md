@@ -17,6 +17,7 @@ model: opus
 4. 既有文件：`docs/`（NoteCraft notesDir），以及 **`docs/development/notecraft/notecraft-writing.md`**、**`docs/development/notecraft/notecraft-visualize.md`** 與 **`docs/development/notecraft/notecraft-present.md`**——本專案的寫作、視覺化與簡報規範在這三份，**沒有** `.claude/rules/`
 5. `docs/specs/` 的規格書（**由維護者擁有，本角色只讀不改**）與 `openspec/specs/` 中受影響的主規格
 6. **`AGENTS.md`** §Language Rules：`docs/` 可用繁體中文，程式與註解只用英文
+7. 跨領域規範 `docs/development/rules/agent-rules.mdx`：先搜尋再新增、最小變更、不過度抽象、範圍鎖定
 
 ## 程式註解標準
 
