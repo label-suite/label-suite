@@ -116,9 +116,10 @@ jobs:
       - name: Citation checker regression tests
         run: node --test scripts/tests/check-citations.test.mjs
 
-      # Fails only on errors: a cited file that is missing or ambiguous, a line
-      # outside the file, or a bare :N with no file. Whether the cited line
-      # names what its sentence names is a heuristic, so those print as WARN
-      # and do not fail the job (#455).
+      # Fails on errors (a cited file that is missing or ambiguous, a line
+      # outside the file, a bare :N with no file) and, with --strict, on WARN:
+      # a cited line that names nothing its sentence names. WARN reached zero
+      # in #459, so a line number that drifts onto an unrelated line now fails
+      # the job; fix the citation, or add an ALLOW entry with its reason.
       - name: Check the file:line citations in design/system and docs
-        run: node scripts/check-citations.mjs
+        run: node scripts/check-citations.mjs --strict
