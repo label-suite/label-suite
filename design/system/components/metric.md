@@ -66,6 +66,6 @@
 | `components-showcase#state-default` | 四塊樣本 |
 | `dashboard/dashboard`（五個 `#param-scenario-*`、`#param-view-skeleton`） | `.metric`（22 處），`dashboard.layout.css:1` `@import` 正典 `metric.css`；骨架期間 `.metric` 裡放 `.skel-metric` |
 | `task-management/task-detail`（`#tab-overview`、`#tab-annotation-progress`、`#tab-work-log`） | `overview.html` 4 處、`annotation-progress.html` 6 處、`work-log.html` 4 處；`task-detail.html:1076` 加了 `.metric strong.speed-by-kind` |
-| `dataset/dataset-analysis-detail`（`#tab-stats`、`#state-stats-empty`、`#state-stats-entity-recognition`、`#state-stats-sequence-tagging`、`#state-stats-relation-identification`） | 共用指標五塊 `.metric`（`dataset-analysis-detail.html:270`–`:274`），統計空狀態時三塊換成破折號（`applyStatsState`，`:1465`）；三個 stats partial 另有 `.metric`／`.metric-lg` |
+| `dataset/dataset-analysis-detail`（`#tab-stats`、`#state-stats-empty`、`#state-stats-entity-recognition`、`#state-stats-sequence-tagging`、`#state-stats-relation-identification`） | 共用指標五塊 `.metric`（`dataset-analysis-detail.html:270`–`:274`），統計空狀態時三塊換成破折號（`applyStatsState`，`:1539`）；三個 stats partial 另有 `.metric`／`.metric-lg` |
 
 b1 的帳號頁一個都沒用。b2 已補上（見上表）。b4 已補上（見上表）。

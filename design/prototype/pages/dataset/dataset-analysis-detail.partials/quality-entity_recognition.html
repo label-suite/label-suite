@@ -16,7 +16,7 @@
       <div class="iaa-score-card">
         <div class="iaa-card-label" id="lblSeqStrictMetric">Pairwise Entity-level F1（strict）</div>
         <div class="iaa-card-value fail">0.72</div>
-        <div class="iaa-card-calc">Pairwise 平均</div>
+        <div class="iaa-card-calc" data-i18n="entityRecognitionListRank.pairwiseAvg">Pairwise 平均</div>
         <div class="iaa-bar-wrap"><div class="iaa-bar-fill fail" style="width:72%"></div></div>
         <div class="iaa-threshold-row">
           <span class="iaa-threshold-item">
@@ -34,7 +34,7 @@
         <!-- 部分重疊只能切換顯示、不判定達標（規格 05-02 §八種輸出類型各自的主指標與門檻 第 11 條；#423, design-gaps G-53）：
              不叫「門檻」、不寫通過／未達，數值、長條與圓點都用中性色。 -->
         <div class="iaa-card-value">0.78</div>
-        <div class="iaa-card-calc">Pairwise 平均</div>
+        <div class="iaa-card-calc" data-i18n="entityRecognitionListRank.pairwiseAvg">Pairwise 平均</div>
         <div class="iaa-bar-wrap"><div class="iaa-bar-fill neutral" style="width:78%"></div></div>
         <div class="iaa-threshold-row">
           <span class="iaa-threshold-item">
@@ -70,7 +70,7 @@
   <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" data-i18n="qualityListRank.lowConsistencySubtitle">依分歧度由高到低排序，可作為 Reviewer 仲裁優先順序參考（與 dry_run 仲裁 divergent 概念同源）</p>
   <div class="table-wrap">
     <div class="table-scroll">
-      <table class="annotator-table" aria-label="一致性最低樣本清單（命名實體辨識）">
+      <table class="annotator-table" aria-label="一致性最低樣本清單（命名實體辨識）" data-i18n-aria-label="qualityListRank.ariaSampleNer">
         <thead>
           <tr>
             <th data-i18n="qualityListRank.headerSample">樣本</th>
@@ -100,7 +100,7 @@
   <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" data-i18n="qualityListRank.rankingSubtitle">依型別對應一致率計算方式排序；完成樣本數不足門檻者標示小樣本估計警示，但不剔除排名</p>
   <div class="table-wrap">
     <div class="table-scroll">
-      <table class="annotator-table" aria-label="標記員品質排名（命名實體辨識）">
+      <table class="annotator-table" aria-label="標記員品質排名（命名實體辨識）" data-i18n-aria-label="qualityListRank.ariaRankNer">
         <thead>
           <tr>
             <th data-i18n="qualityListRank.rankHeaderRank">名次</th>
@@ -193,8 +193,8 @@
   <div style="margin-top:var(--space-md)">
     <div class="table-wrap">
       <div class="table-scroll">
-        <table class="annotator-table" aria-label="標記一致性偏離分析（序列標記）">
-          <thead><tr><th>標記員</th><th id="consistencyUnitCol">可比較 span 數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
+        <table class="annotator-table" aria-label="標記一致性偏離分析（序列標記）" data-i18n-aria-label="qualityListRank.ariaDevSeq">
+          <thead><tr><th data-i18n="qualityRisk.headerAnnotator">標記員</th><th id="consistencyUnitCol">可比較 span 數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
           <tbody>
             <tr><td><span class="annotator-name">Iris Tsai</span></td><td>26</td><td>2</td><td>7.7%</td><td>0</td><td>0%</td></tr>
             <tr><td><span class="annotator-name">Avery Lin</span></td><td>23</td><td>4</td><td>17.4%</td><td>1</td><td>4.3%</td></tr>
