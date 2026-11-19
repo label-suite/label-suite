@@ -60,7 +60,7 @@
 
 **b4 核對**：`dataset/dataset-analysis-list` 照抄 `TOAST_DURATIONS`（`design/prototype/pages/dataset/dataset-analysis-list.js:25`），遵守。`dataset/dataset-analysis-detail` 原本有 toast 的 markup 與關閉鈕，卻沒有任何程式顯示它；#423 已刪掉，本頁不用 toast，不適用 → [`design-gaps.md`](design-gaps.md) G-55。
 
-這是 prototype 引用最多的一條：42 處裡獨佔 **20 處**，其中 4 處在 `components-showcase.html`（`:144`、`:402`、`:1124`、`:1507`），`:144` 甚至把它寫進正典 CSS 區塊的標頭。
+這是 prototype 引用最多的一條 `UXC-07`：42 處裡獨佔 **20 處**，其中 4 處在 `components-showcase.html`（`:144`、`:402`、`:1124`、`:1507`），`:144` 甚至把它寫進正典 CSS 區塊的標頭。
 
 ## UXC-08：Skeleton 尺寸要貼合載入後的內容
 
@@ -102,7 +102,7 @@
 
 瀏覽器層：`role-settings.html:1301`–`:1305`、`task-new.html:1711`。**`task-detail` 沒有 `beforeunload`**——它只擋頁內切換（`task-detail.html` 全檔 `beforeunload` 0 次）。
 
-**b3 核對**：`annotation/annotation-workspace` 兩層都有，但頁內那一層**不是確認視窗**。瀏覽器層是 `beforeunload`（`design/prototype/pages/annotation/annotation-workspace.config.js:2064`–`:2068`）；頁內則是中欄任何 `input`／`change`／`click` 都把旗標設起來（`markUnsaved`，`:2047`；三個 capture 監聽，`:2060`–`:2062`），同時把自動儲存狀態改成「尚未儲存」（`:2052`）——用狀態列說出來，而不是擋住切換。`:1989` 那段註解說的就是這兩者分工。
+**b3 核對**：`annotation/annotation-workspace` 兩層都有，但頁內那一層**不是確認視窗**。瀏覽器層是 `beforeunload`（`design/prototype/pages/annotation/annotation-workspace.config.js:2064`–`:2068`）；頁內則是中欄任何 `input`／`change`／`click` 都把旗標設起來（`markUnsaved`，`:2047`；三個 capture 監聽，`:2060`–`:2062`），同時把自動儲存狀態改成「尚未儲存」（`renderAutosaveStatus`，`:2052`）——用狀態列說出來，而不是擋住切換。`:1989` 那段註解說的就是這兩者分工。
 
 ## UXC-09：首次使用的「空」與篩不到的「空」是兩種
 
@@ -125,7 +125,7 @@
 
 遵守它的元件：
 
-- [Modal](components/modal.md)：`admin/user-management` 只讓新增與編輯可以點遮罩關閉，停用確認不行（`design/prototype/pages/admin/user-management.html:1247`–`:1252`）；停用確認開著時 Enter 送出（`:1259`–`:1262`）。`admin/role-settings` 的 `#dirtyModal` 同樣 Esc 取消、Enter 確認（`role-settings.html:1307`–`:1316`）。刪除分類分支的確認（`task-config.engine.js:6203`–`:6218`，`task-new.html:545` 的 `role="alertdialog"`）把焦點放在「刪除」鈕上（`task-config.engine.js:6218`），文案寫明一併刪除的子節點數
+- [Modal](components/modal.md)：`admin/user-management` 只讓新增與編輯可以點遮罩關閉，停用確認不行（`design/prototype/pages/admin/user-management.html:1247`–`:1252`）；停用確認開著時 Enter 送出（`:1259`–`:1262`）。`admin/role-settings` 的 `#dirtyModal` 同樣 Esc 取消、Enter 確認（`role-settings.html:1307`–`:1316`）。刪除分類分支的確認（`task-config.engine.js:6203`–`:6218`，`task-new.html:545` 的 `role="alertdialog"`）把焦點放在「刪除」鈕 `taxonomyDeleteConfirmBtn` 上（`task-config.engine.js:6218`），文案寫明一併刪除的子節點數
 - [Button](components/button.md)：確認動作一律用 `.btn-danger`（`user-management.html:604`、`role-settings.html:872`、`task-list.html:280`–`:288`）
 
 **與規格不一致**：`task-management/task-list` 的刪除任務確認原本點遮罩會關；維護者 2026-11-18 裁定刪除任務也適用本約定，#423 已改成點遮罩不關（`task-list.html:1186`–`:1193`）。規格還寫著舊行為（[`01-task-list.mdx` §刪除任務](../../docs/specs/03-task-management/01-task-list.mdx) 第 5 條「點視窗外面，或按 Esc → 視窗關閉」），那一條屬維護者改 → [`design-gaps.md`](design-gaps.md) G-45。
@@ -136,10 +136,10 @@
 
 遵守它的元件：
 
-- [Input](components/input.md)：`annotation/annotation-workspace` 勾了「無法判定」之後出現的理由輸入框（`.input`，`design/prototype/pages/annotation/annotation-workspace.config.js:649`–`:681`），勾的當下錯誤訊息是隱藏的（`:657`，註解 `:666`–`:668`）；按提交才逐一判斷哪幾個輸出類型缺理由，各自打開錯誤（`:3097`–`:3109`）
+- [Input](components/input.md)：`annotation/annotation-workspace` 勾了「無法判定」之後出現的理由輸入框（`.input`，`design/prototype/pages/annotation/annotation-workspace.config.js:649`–`:681`），勾的當下錯誤訊息 `ws-bypass-reason-error` 是隱藏的（`:657`，註解 `:666`–`:668` 引 `UXC-04`）；按提交才逐一判斷哪幾個輸出類型缺理由，各自打開錯誤（`:3097`–`:3109`）
 - [Toast](components/toast.md)：同一次提交只發**一則** warning 通知，把缺理由的輸出類型名稱用「、」串起來（`annotation-workspace.config.js:3111`–`:3116`）
 
-依據的規格：[`04-annotation/02-annotation-workspace.mdx` §作答完整性與提交阻擋](../../docs/specs/04-annotation/02-annotation-workspace.mdx) 第 5 條。同一段第 2 條要「提示對應的那個區塊」：#423 起未完成的區塊框線換 `--color-error`、區塊內一行錯誤文字以 `aria-describedby` 綁定，焦點捲到第一個未完成區塊（`annotation-workspace.config.js:2939`、`:3090`）；作答時引擎重繪區塊，錯誤隨之清掉，合本約定 → [`design-gaps.md`](design-gaps.md) G-47。
+依據的規格：[`04-annotation/02-annotation-workspace.mdx` §作答完整性與提交阻擋](../../docs/specs/04-annotation/02-annotation-workspace.mdx) 第 5 條。同一段第 2 條要「提示對應的那個區塊」：#423 起未完成的區塊框線換 `--color-error`、區塊內一行錯誤文字以 `aria-describedby` 綁定，焦點捲到第一個未完成區塊（`markPanelError`，`annotation-workspace.config.js:2939`；`firstIncompletePanel`，`:3090`）；作答時引擎重繪區塊，錯誤隨之清掉，合本約定 → [`design-gaps.md`](design-gaps.md) G-47。
 
 ## UXC-05：輸入就清掉上一次的錯誤
 
