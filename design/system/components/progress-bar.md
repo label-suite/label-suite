@@ -9,7 +9,7 @@
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
 | `.progress`（樣本帶 `role="progressbar"` 與 `aria-valuenow`／`min`／`max`／`aria-label`） | 必填 | `components-showcase.html:799`、樣本 `:1320` |
-| `> span` 填充 | 必填 | `components-showcase.html:806`、樣本 `:1320` |
+| `> span` 填充（樣本為 `<span>`） | 必填 | `components-showcase.html:806`、樣本 `:1321` |
 
 ## 變體
 
@@ -21,7 +21,7 @@
 | :--- | :--- | :--- |
 | 預設 | 有 | `components-showcase.html:799` |
 | 寬度變化 | 有，`transition: width 300ms ease`（字面值，不是 `--dur-*`） | `:811` |
-| hover／focus／disabled | 不適用 | `:800`–`:813` 無偽類 |
+| hover／focus／disabled | 不適用 | `.progress` 規則 `:800`–`:813` 無偽類 |
 | 不確定進度 | **未觀察到**。沒有 indeterminate 樣式或動畫 | — |
 | 0%／100% | 未觀察到專屬樣式；0% 時 `<span>` 寬度為 0，軌道仍看得見 | — |
 

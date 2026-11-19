@@ -39,7 +39,7 @@
 
 ## 樣式出處
 
-`design/prototype/pages/account/reset-password.html:358`、`:377`，以及 `verify-email.html` 的同一組。
+`.proto-toggle-bar` 與 `.proto-btn`：`design/prototype/pages/account/reset-password.html:358`、`:377`，以及 `verify-email.html` 的同一組。
 
 ## 可重現樣本
 

@@ -45,10 +45,10 @@
 | 行為 | 依據 |
 | :--- | :--- |
 | 開啟時把焦點移到第一個可聚焦元素，沒有就聚焦 modal 本身 | `modal-focus.js:34`–`:39` |
-| Tab／Shift+Tab 困在 modal 內（繞回首尾） | `:47`–`:64` |
-| Escape 呼叫 `options.onClose` | `:42`–`:45` |
-| 關閉時把焦點還給 `trigger`（預設是開啟當下的 `activeElement`） | `:32`、`:80`–`:84` |
-| 可聚焦判定排除 `offsetParent === null`（看不見的） | `:19`–`:21` |
+| Tab／Shift+Tab 困在 modal 內（繞回首尾） | `modal-focus.js:47`–`:64` |
+| Escape 呼叫 `options.onClose` | `modal-focus.js:42`–`:45` |
+| 關閉時把焦點還給 `trigger`（預設是開啟當下的 `activeElement`，存於 `_modalFocusReturnEl`） | `modal-focus.js:32`、`:80`–`:84` |
+| 可聚焦判定排除 `offsetParent === null`（看不見的） | `modal-focus.js:19`–`:21` |
 
 模組**不自己切換顯示**（`modal-focus.js:7`–`:8` 的註解明寫），開關仍是頁面的事；頁面要在自己的 open／close 裡顯式呼叫 `LabelSuiteModalFocus.open/close`。依據是 issue `singyichen/label-suite#195` / F-11 與 WCAG 2.1 AA 2.4.3（`:1`）。
 

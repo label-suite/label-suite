@@ -7,7 +7,7 @@
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
 | `.metric` 容器 | 必填 | `pages/shared/metric.css:2`、`components-showcase.html:814` |
-| `<span>` 標籤（11px 大寫、字距 0.04em） | 必填 | `metric.css:9`、`components-showcase.html:820` |
+| `<span>` 標籤（11px 大寫、字距 0.04em） | 必填 | `metric.css:9`、`components-showcase.html:821` |
 | `<strong>` 數值（1.35rem／700） | 必填 | `metric.css:19`、`components-showcase.html:829` |
 | `.metric-desc` 說明行 | 選用 | **只有** `metric.css:27`（issue `singyichen/label-suite#1453`）；正典區塊沒有 |
 
@@ -43,7 +43,7 @@
 
 ## 樣式出處
 
-`design/prototype/pages/shared/metric.css:1`–`:37`（shipped，含 `.metric-desc` 與 `.metric-lg`）、`design/prototype/components-showcase.html:813`–`:832`（正典，只有基礎三條）。
+`design/prototype/pages/shared/metric.css:1`–`:37`（shipped，含 `.metric-desc` 與 `.metric-lg`）、`design/prototype/components-showcase.html:814`–`:833`（正典 `.metric`，只有基礎三條）。
 
 **兩份不一致**：shipped 多了 `.metric-desc` 與 `.metric-lg`；正典少了 `display: block`，showcase 只好在非正典的 chrome 區塊補回來（`components-showcase.html:974`–`:977` 的註解明寫是為了讓正典區塊保持 verbatim）→ `../design-gaps.md` G-19。
 

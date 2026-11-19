@@ -21,7 +21,7 @@
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
 | 預設 | 有 | `components-showcase.html:374` |
-| hover／focus／disabled／載入中／錯誤／空 | **未觀察到**，非互動元素 | 正典區塊 `:374`–`:386` 沒有任何偽類 |
+| hover／focus／disabled／載入中／錯誤／空 | **未觀察到**，非互動元素 | 正典區塊 `.status-badge` `:374`–`:386` 沒有任何偽類 |
 
 ## token
 
@@ -37,7 +37,7 @@
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-badges`（`components-showcase.html:1092`），三個樣本在 `:1104`–`:1106`。
+`components-showcase#state-default` → `#comp-badges`（`components-showcase.html:1092`），三個 `.status-badge` 樣本在 `:1105`–`:1107`。
 
 ## shadcn 對照
 
@@ -52,6 +52,6 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 三個樣本 |
-| `annotation/annotation-list`（`#state-default`、`#role-reviewer`） | 本頁 `.status-badge`／`.status-submitted`／`-saved`／`-pending`（`annotation-list.html:257`–`:268`），與 showcase 的 `:384`–`:386` 逐字相同，只換了 class 名 |
+| `annotation/annotation-list`（`#state-default`、`#role-reviewer`） | 本頁 `.status-badge`／`.status-submitted`／`-saved`／`-pending`（`annotation-list.html:257`–`:268`），與 showcase 的 `components-showcase.html:384`–`:386` 逐字相同，只換了 class 名 |
 
 b2 核對後**沒有**：`task-detail` 全檔與六個 partial 以 `status-pill` 搜尋都是 0 次，任務狀態用的是本頁的 `.badge`（[Badge](badge.md)）。b3 已補上（見上表）。

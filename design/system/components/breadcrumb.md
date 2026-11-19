@@ -8,12 +8,12 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.breadcrumb` 容器 | 必填 | `components-showcase.html:638`、樣本 `:1210` |
-| `<a>` 上層連結 | 至少一個 | `components-showcase.html:646`、樣本 `:1212` |
+| `.breadcrumb` 容器 | 必填 | `components-showcase.html:639`、樣本 `:1212` |
+| `<a>` 上層連結 | 至少一個 | `components-showcase.html:647`、樣本 `:1213` |
 | `.breadcrumb-sep`（`›`，`aria-hidden="true"`） | 每兩節之間一個 | `components-showcase.html:653`、樣本 `:1214` |
 | 目前節點（`aria-current="page"`） | 必填 | 樣本 `components-showcase.html:1215` |
 
-**最深兩層**（`components-showcase.html:1209` 的說明）。但同一份 showcase 的 Review Status Track 樣本就用了三層（`:1223`–`:1228`），而 `pages/annotation/annotation-list.html:56` 的註解稱自己用的是「compact form」→ `../design-gaps.md` G-13。
+**最深兩層**（`components-showcase.html:1210` 的說明）。但同一份 showcase 的 Review Status Track 樣本就用了三層（`:1223`–`:1228`），而 `pages/annotation/annotation-list.html:56` 的註解稱自己用的是「compact form」→ `../design-gaps.md` G-13。
 
 ## 變體
 
@@ -23,9 +23,9 @@
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| 預設 | 有 | `components-showcase.html:638` |
+| 預設 | 有 | `components-showcase.html:639` |
 | hover | 有，連結加底線 | `components-showcase.html:650` |
-| focus | **未觀察到** | 以 `:focus` 掃 `:635`–`:654`，0 命中 → `../design-gaps.md` G-05 |
+| focus | **未觀察到** | 以 `:focus` 掃 `.breadcrumb` 的規則 `:638`–`:656`，0 命中 → `../design-gaps.md` G-05 |
 | disabled／載入中／錯誤／空 | 不適用 | — |
 
 ## token
@@ -38,7 +38,7 @@
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:637`–`:655`。`pages/shared/` 沒有 breadcrumb 的 CSS 檔；使用它的四個 shipped 頁面各自在 `<style>` 裡複製一份。
+`design/prototype/components-showcase.html:638`–`:656`。`pages/shared/` 沒有 breadcrumb 的 CSS 檔；使用它的四個 shipped 頁面各自在 `<style>` 裡複製一份。
 
 ## 可重現樣本
 

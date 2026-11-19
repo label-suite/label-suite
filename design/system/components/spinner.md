@@ -43,7 +43,7 @@
 
 ## 樣式出處
 
-`design/prototype/pages/account/login.html:306` 及另外三頁各自的 `<style>`。
+`.spinner`：`design/prototype/pages/account/login.html:308` 及另外三頁各自的 `<style>`。
 
 ## 可重現樣本
 

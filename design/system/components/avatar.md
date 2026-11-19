@@ -20,7 +20,7 @@
 | `.avatar-sm` | 32×32 | navbar |
 | `.avatar-preview` | showcase demo 80×80；**出貨的 `account/profile` 是 72×72** | profile |
 
-showcase 的說明寫「profile 64/80px」（`:1364`），它自己的 CSS 是 80px（`:920`、`:927`，註解標 `md:w-20 — desktop demo size`），而實際出貨的 `profile.html:149` 是 **72px**——說明、正典、出貨三個數字都不一樣 → `../design-gaps.md` G-17。
+showcase 的說明寫「profile 64/80px」（`:1364`），它自己的 CSS 是 80px（`:920`、`:927`，註解標 `md:w-20 — desktop demo size`），而實際出貨的 `profile.html:149` `.avatar-preview` 是 **72px**——說明、正典、出貨三個數字都不一樣 → `../design-gaps.md` G-17。
 
 好消息是出貨那一頁內部是一致的：`.skel-avatar` 也是 72×72（`profile.html:560`），符合 [UXC-08](../ux-conventions.md#uxc-08-skeleton-尺寸要貼合載入後的內容)。
 
@@ -39,7 +39,7 @@ showcase 的說明寫「profile 64/80px」（`:1364`），它自己的 CSS 是 8
 
 `--radius-full`、`--color-primary`、`--color-on-cta`、`--color-error`、`--color-ink-muted`、`--dur-normal`。首字疊在主色上，#438 起用 `--color-on-cta`（`:931`），之前的 `--color-white` 在深色主題是卡片底色，首字會變成深色字疊在亮靛藍上。
 
-寫死的有：遮罩是 50% 不透明的黑（`components-showcase.html:945`），遮罩上的相機圖示是 `#fff`（`:946`，#438 起；理由同 `account/profile.html:178`，遮罩在兩種主題都是黑，白色兩邊都對），以及 80px／32px／24px 等尺寸。邊框原本也寫死 20% 不透明的 primary 色，#438 起改 `color-mix(in srgb, var(--color-primary) 20%, transparent)`（`components-showcase.html:914`），淺色同值、深色跟著深色主色 → `../design-gaps.md` G-02。
+寫死的有：遮罩是 50% 不透明的黑 `rgba(0, 0, 0, 0.5)`（`components-showcase.html:945`），遮罩上的相機圖示是 `#fff`（`:946`，#438 起；理由同 `account/profile.html:178`，遮罩在兩種主題都是黑，白色兩邊都對），以及 80px／32px／24px 等尺寸。邊框原本也寫死 20% 不透明的 primary 色，#438 起改 `color-mix(in srgb, var(--color-primary) 20%, transparent)`（`components-showcase.html:914`），淺色同值、深色跟著深色主色 → `../design-gaps.md` G-02。
 
 ## 鍵盤與焦點
 

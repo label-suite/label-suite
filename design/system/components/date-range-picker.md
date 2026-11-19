@@ -18,7 +18,7 @@
 
 只有一種版式。日期格子有四個修飾狀態（見下）。
 
-掛載 API（`date-range-picker.js:6`–`:10`）：
+掛載 API `DateRangePicker.mount`（`date-range-picker.js:6`–`:10`）：
 
 ```js
 var h = window.DateRangePicker.mount(triggerEl, {
