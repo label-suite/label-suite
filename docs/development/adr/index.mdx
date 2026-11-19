@@ -1,0 +1,48 @@
+---
+title: 架構決策紀錄（ADR）
+description: 本 repo 的 ADR 索引：一個領域一份、持續更新；什麼該寫成 ADR、和 AGENTS.md 與 architecture.mdx 怎麼分工、衝突時以誰為準。
+tags: [adr, architecture, decision]
+---
+
+# 架構決策紀錄（ADR）
+
+ADR 記錄「為什麼這樣決定」：當時的限制、比較過的選項、要付的代價、什麼情況要重新討論。
+規則本體在 `AGENTS.md`，落地的做法在 [architecture.mdx](../architecture.mdx) 與各領域說明文件；ADR 不重述它們，只連過去。
+寫法依 `doc-writing` skill 的「ADR」一節，新寫一份從 [template.mdx](template.mdx) 複製。
+
+## 索引
+
+| 編號 | 領域 | 狀態 | 涵蓋的決定 |
+| :--- | :--- | :--- | :--- |
+| [001](001-agent-engineering.mdx) | Agent 工程 | 生效 | D1 先搜尋再新增；D2 範圍內直接修正錯誤實作 |
+
+狀態只有兩種：**草稿**（還在討論，正文的決定不生效）與**生效**。一份 ADR 不會被另一份取代，決定改了就改寫那一節，舊的寫法記在它的決策紀錄。
+
+## 什麼該寫成 ADR
+
+三個條件都成立才寫：
+
+| 條件 | 例子 |
+| :--- | :--- |
+| 回頭的成本高 | 換資料庫、換認證方式、改 agent 的分工 |
+| 當時真的有其他選項 | Google SSO 直接走 OIDC，還是接外部 IdP |
+| 影響不只一個模組或一種角色 | 所有 agent 開工前都要先搜尋 |
+
+只符合一兩個的，寫進該領域的一般文件就好。同一個領域已經有 ADR 時，在那一份加一個 D 節，不另開一份。
+
+## 衝突時以誰為準
+
+`AGENTS.md`（規則）> 本 repo 的 ADR（理由）> `architecture.mdx` 與各領域說明文件（做法）> 個人 repo 的 ADR（只當參考）。業務面一律以 `docs/specs/` 為準。
+發現兩邊說法不同，照這個順序做，並回報維護者把落後的那一邊改掉。
+
+## 個人 repo 的 ADR
+
+個人 repo（`singyichen/label-suite`）的 38 份 ADR 是本 repo 的來源，不是本 repo 的規則；引用時寫「個人 repo ADR-0xx」。
+它們在本 repo 照做、調整或被取代，見 [architecture.mdx 的 §ADR 效力總表](../architecture.mdx#adr-效力總表)。把它們按領域併進本目錄是另一項工作，還沒開始。
+
+## 決策紀錄
+
+| 日期 | 決策 | 取代了什麼 | 來源 |
+| :--- | :--- | :--- | :--- |
+| 2026-11-19 | 本 repo 建立自己的 ADR，放 `docs/development/adr/`，一個領域一份、持續更新，編號從 001 起 | 個人 repo ADR 的「一個決定一份、定案後不可改、改了就另開一份取代」 | [#444](https://github.com/label-suite/label-suite/issues/444) |
+| 2026-11-19 | 衝突時的優先序：`AGENTS.md` > 本 repo ADR > `architecture.mdx` > 個人 repo ADR（[§衝突時以誰為準](#衝突時以誰為準)） | `architecture.mdx` 原本「與 ADR 不一致以 ADR 為準」 | [#444 留言](https://github.com/label-suite/label-suite/issues/444) |

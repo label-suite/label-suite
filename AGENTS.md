@@ -138,6 +138,7 @@ Full rules: [docs/development/commit-and-release.md](docs/development/commit-and
 
 - After cloning, run `scripts/setup.sh` once. It enables the commit-msg hook, which checks every commit message against the rules in [Commits](#commits). The `commit-messages` CI job runs the same checker on every commit in a pull request.
 - Read the relevant files before changing them.
+- Fix a wrong existing implementation directly when this change calls, modifies, or replaces it: fix it in the same pull request and say in the PR what was wrong, instead of working around it or adding a rule to compensate. Anything outside that code path is only reported and gets its own issue. The reasoning is in [ADR-001 D2](docs/development/adr/001-agent-engineering.mdx).
 - Ask the maintainer about any decision that is theirs to make; do not proceed on an assumed default.
 - If a tool call fails twice, report the exact error before trying again.
 - Remove debug `print` / `console.log` before finishing.
@@ -167,6 +168,8 @@ Two rules are worth stating here because they are reversals of what the referenc
 Size is judged by purpose, not by counting. This repository sets no file-count or diff-line ceiling for a pull request — see [Pull Requests](#pull-requests).
 
 Technical baselines (stack choices, layering, ADR status) are in [docs/development/architecture.mdx](docs/development/architecture.mdx), and the pull-request categories are in [docs/development/spec-migration.mdx](docs/development/spec-migration.mdx).
+
+Why a rule or baseline was chosen — the constraints, the options compared, the cost, and when to revisit it — is recorded in this repository's ADRs, one per domain, indexed in [docs/development/adr/index.mdx](docs/development/adr/index.mdx). When they disagree, this file wins, then this repository's ADRs, then `architecture.mdx` and the area documents above; the personal repository's ADRs are reference only. `docs/specs/` still wins on business requirements.
 
 How a rule gets triggered — which agent or Git event fires it, which shared checker it calls, and whether it blocks or only warns — is in [docs/development/agent-hook-contract.mdx](docs/development/agent-hook-contract.mdx), together with an event-by-event comparison of what Claude Code and Codex each support. That document is a contract, not a second rule canon, and it adds no rules. No agent hook is wired yet: `.claude/settings.json` carries only the attribution setting, there is no `.codex/hooks.json`, and the only hook checker that runs today is `scripts/check-commit-msg.sh` through `scripts/git-hooks/commit-msg`. Claude's hook configuration, events and exit codes do not carry over to Codex; that document lists the gaps instead of claiming they do.
 
