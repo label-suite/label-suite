@@ -12,7 +12,7 @@ tags: [openspec, sdd, schema, fullstack-sdd]
 
 ## 決議
 
-採用 fullstack-sdd 的完整九份產物流程，不分階段導入。人工關卡只留兩個：
+採用 fullstack-sdd 的完整九份產物流程，不分階段導入（理由見 [ADR-002 的 D1](adr/002-development-workflow.mdx#d1-完整九份產物流程一次導入)）。人工關卡只留兩個（理由見 [D2](adr/002-development-workflow.mdx#d2-人工停點只留兩個)）：
 
 - **停點一**：clarify 關卡發現需要維護者決定的項目（Q），逐題問答。
 - **停點二**：apply 全部完成並產出驗收報告後，維護者親自驗收功能，確認無誤才執行 `/opsx:archive`。
@@ -128,8 +128,14 @@ propose 之後那一次要靠下面[三處要特別處理的地方](#三處要�
 
 ### 1. propose 到 apply 的停點，`config.yaml` 解不掉
 
-授權要放在 skill 管不到、位階又在 skill 之上的地方：專案自有的 slash command `.claude/commands/sdd.md`，加上 `AGENTS.md` 的說明。
+授權放在專案自有的 slash command `.claude/commands/sdd.md`，加上 `AGENTS.md` 的說明；為什麼不放 `config.yaml` 或 skill，見 [ADR-002 的 D3](adr/002-development-workflow.mdx#d3-授權放在專案自有的指令)。
 
+做法：
+
+- 新增專案自有的 slash command `.claude/commands/sdd.md`，由它同時授權規劃與實作，串接 propose 與 apply
+- 在 `AGENTS.md` 寫明 `/sdd` 的授權範圍與兩個停點
+
+:::note{title="查證：為什麼 config.yaml 與 skill 都解不掉" collapsible}
 `.claude/skills/openspec-propose/SKILL.md` 第 15 行有 Planning boundary：規劃產物完成後停止，等新的使用者請求才進入 apply。
 第 65 行把 `openspec/config.yaml` 明文排除在外：
 
@@ -137,35 +143,28 @@ propose 之後那一次要靠下面[三處要特別處理的地方](#三處要�
 > it cannot override user authorization, **the planning boundary**, tool restrictions, or artifact and output rules.
 
 所以 scaffold 那行「提交後停止，等使用者確認才進入 apply」是在順從這條規則，不是造成它。
-把相反的指示寫進 `context`，skill 會明文不理。
 
-改 skill 本身也不行。實測：在 `.claude/skills/openspec-propose/SKILL.md` 放一行 marker，
-跑 `openspec update` 之後整份被覆寫、marker 消失。那個目錄由 openspec 管理，每次 update 都會回到原狀。
-
-做法：
-
-- 新增專案自有的 slash command `.claude/commands/sdd.md`，由它同時授權規劃與實作，串接 propose 與 apply
-- 在 `AGENTS.md` 寫明 `/sdd` 的授權範圍與兩個停點
-
-`openspec update` 只動 `.claude/skills/openspec-*/`，不會碰 `.claude/commands/sdd.md`，所以這個做法在 update 後仍然有效。
+實測：在 `.claude/skills/openspec-propose/SKILL.md` 放一行 marker，跑 `openspec update` 之後整份被覆寫、marker 消失。
+`openspec update` 只動 `.claude/skills/openspec-*/`，不會碰 `.claude/commands/sdd.md`。
+:::
 
 ### 2. 驗收從 archive 移到 apply 的最後
 
-停點二要求維護者先親自驗完才下 `/opsx:archive`，所以驗收報告必須在那個指令之前就產好。
-scaffold 把 `acceptance-verifier` 放在 `operations.archive`，是歸檔前才驗。
+驗收報告必須在 `/opsx:archive` 之前就產好（理由見 [ADR-002 的 D2](adr/002-development-workflow.mdx#d2-人工停點只留兩個)）。
 
 - `operations.apply` 的最後一步加上：`code-reviewer` 審查通過後跑 `acceptance-verifier`，寫 `acceptance.md`
 - `operations.archive` 拿掉驗收判定，只留同步主規格與搬檔
 - `acceptance-verifier` 的輸出要多一段寫給人看的「人工驗收步驟」：啟動指令、各角色用什麼帳號登入、要點開哪幾個畫面、預期看到什麼
 
-最後一項是必要的。它現在的輸出只有機器證據（Scenario 結果、Decision Table、DoD），
-停點二如果只拿到這份報告，維護者不知道自己該驗什麼。
+人工驗收步驟是必要的：`acceptance-verifier` 原本只輸出機器證據（Scenario 結果、Decision Table、DoD），維護者不知道自己該驗什麼。
 
 ### 3. `sa` 的「停下回報」改成「記成 Q」
 
 `sa` 遇到找不到需求依據、需求依據互相矛盾、依賴的前置功能不存在，要記進 `system-analysis.md` 的待決問題，由 clarify 在停點一一次問完，不停下來回報。
 
-代價要講清楚：上游真的矛盾時，`sd`、`ui-ux`、`proposal` 會先基於帶問號的分析做一輪，
+理由見 [ADR-002 的 D2](adr/002-development-workflow.mdx#d2-人工停點只留兩個)。
+
+代價是：上游真的矛盾時，`sd`、`ui-ux`、`proposal` 會先基於帶問號的分析做一輪，
 停點一決議後由原撰寫角色回修。本專案的 `docs/specs/` 由維護者擁有、`06-01` 的「待釐清」是「目前沒有待釐清的問題」，
 所以這種情況應該少，但不是零。
 
@@ -368,3 +367,4 @@ schema 與 config 落地後補測：
 | 2026-11-10 | 後端模組內分層 `app/modules/<module>/`、成功回應包一層 envelope、路徑前綴 `/api/v1` | 評估階段「FastAPI 的分層、回應包裝格式尚未定案」 | 維護者裁定，見 [architecture.mdx](architecture.mdx) |
 | 2026-11-09 | operationId 由 `generate_unique_id_function` 固定成「動詞加資源」 | 評估階段「`generate_unique_id_function` 策略待決」 | [#51](https://github.com/label-suite/label-suite/issues/51) |
 | 2026-11-10 | 前端採 React 19、`pages/` 加 `features/`、shadcn/ui 放 `components/ui/`、前端型別與 client 用 Orval；`ui-design` 照常撰寫，不再寫「本次無 UI 變更」 | 評估階段「前端框架與元件庫待決」 | 維護者裁定，見 [architecture.mdx](architecture.mdx) §前端 |
+| 2026-11-19 | 九份產物、兩個停點與授權放在 `/sdd` 的理由改寫進 [ADR-002](adr/002-development-workflow.mdx)，本文只留做法（[§決議](#決議)、[§三處要特別處理的地方](#三處要特別處理的地方)） | —（理由原本寫在本文） | [#448](https://github.com/label-suite/label-suite/issues/448) |
