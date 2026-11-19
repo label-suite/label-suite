@@ -7,6 +7,8 @@ description: Label Suite 的設計 token（色票、字體、字級、間距、�
 
 唯一來源是 [`design/prototype/assets/tokens.css`](../../../design/prototype/assets/tokens.css)。本檔只整理「生成筆記元件時要用哪個值」；兩邊不一致時以 `tokens.css` 為準，並回頭更新本檔。
 
+**本檔只管 token 的值。** 一個畫面用哪些元件、每個元件有哪些狀態、跨元件的共同約定，在 `design/system/`（`MASTER.md`、`components/`、`pages/`、`ux-conventions.md`）；品牌的稱謂、用語、圖示與斷點在 `design/system/brand.md`。
+
 ## 怎麼用
 
 NoteCraft 的元件讀不到 prototype 的 CSS 變數，依用途分兩種寫法：

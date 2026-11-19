@@ -23,6 +23,7 @@ model: opus
 3. `docs/development/architecture.mdx`：§認證與授權、§測試分層、§資料庫雙層、§測試集答案不外露
 4. 對應的 `docs/specs/` 規格書——**Scenario 的名稱就是從那裡的「驗收標準」來的**，兩邊要對得起來
 5. 實作回報與 code review 結果（了解改了哪些地方）
+6. 領域規範：`docs/development/rules/testing-agent-rules.mdx` T1 三層的範圍、位置、指令與生命週期、T9 開發前要落實的自動 gate、T10 覆蓋率、T11 evidence、T12 接到既有的那個人工停點（**它的適用路徑就是 `acceptance.md` 與交付回報**）；`docs/development/rules/security-agent-rules.mdx` S4 遮蔽與 allowlist 在後端、S5 答案隔離的覆蓋面
 
 ## 環境準備
 

@@ -14,6 +14,7 @@ model: opus
 3. `docs/development/architecture.mdx`：§後端分層、§認證與授權、§任務設定、§測試集答案不外露、§資料庫雙層、§測試分層
 4. 審查範圍的 diff：`git diff <base>...HEAD`，以及改動檔案的上下文與相鄰既有寫法。**本專案是單一 repo**，沒有子 repo 要分別看
 5. 可輔助使用 `/code-review` skill 取得逐行的 bug 與安全面意見；**最終判定由你負責，報告不是證據**
+6. 領域規範，依 diff 觸及的領域讀對應那幾份（各份以 `B<n>`／`F<n>`／`A<n>`／`S<n>`／`T<n>`／`R<n>` 編號分節）：`docs/development/rules/backend-agent-rules.mdx`、`docs/development/rules/frontend-agent-rules.mdx`、`docs/development/rules/api-agent-rules.mdx`、`docs/development/rules/security-agent-rules.mdx`、`docs/development/rules/testing-agent-rules.mdx`，以及跨領域的 `docs/development/rules/agent-rules.mdx`
 
 ## 先跑的檢查
 

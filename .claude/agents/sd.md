@@ -23,6 +23,7 @@ model: opus
 6. 既有程式（**目前 `backend/` 還不存在**，第一個骨架 change 之後才有）：相關模組、共用的例外與依賴、認證與授權的掛點、匯出的 `openapi.json`
 7. 資料規劃三份（`docs/diagrams/architecture/`）：`data-field-inventory.mdx`（欄位盤點）、`data-table-dictionary.mdx`（候選表字典，**唯一可信的上游**）、`database-schema.er.json`（由字典產生的 ER 圖資料）。字典的 FK 欄與每張表的「被誰參照」是跨表影響的依據
 8. schema 範本：`openspec/schemas/label-suite-sdd/templates/system-design.md`、`api-contract.md`，以及 `pnpm exec openspec instructions <artifact> --change <name>`
+9. 領域規範：`docs/development/rules/api-agent-rules.mdx` 全部十條（A1 至 A10），它是契約的唯一規範；`docs/development/rules/backend-agent-rules.mdx` B1 分層與允許的 import、B4 交易的擁有層；`docs/development/rules/security-agent-rules.mdx` S1 身分只來自驗證完成的 session、S2 token 不離開 cookie；CSRF 與 CORS 的統一位置、S3 授權的四段順序
 
 ## 技術前提
 
