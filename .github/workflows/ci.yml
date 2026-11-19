@@ -112,3 +112,13 @@ jobs:
 
       - name: Check the candidate table dictionary against the ER diagram
         run: node scripts/check-er-data.mjs
+
+      - name: Citation checker regression tests
+        run: node --test scripts/tests/check-citations.test.mjs
+
+      # Fails only on errors: a cited file that is missing or ambiguous, a line
+      # outside the file, or a bare :N with no file. Whether the cited line
+      # names what its sentence names is a heuristic, so those print as WARN
+      # and do not fail the job (#455).
+      - name: Check the file:line citations in design/system and docs
+        run: node scripts/check-citations.mjs
