@@ -40,6 +40,6 @@ G-04：焦點環原本有兩份寫法，#438 已把 showcase 的 `rgba(99,102,24
 
 - **該做**：每個欄位都有可見的 label 或 `aria-label`，錯誤訊息說明怎麼修。
 - **該做**：用 token 版的焦點環（G-04）；並在高對比模式下保留 `outline`，因為原型寫了 `outline: none` 只靠 `box-shadow`，高對比下焦點會消失（G-05）。
-- **不該做**：寫死色值。`.input.error`、唯讀、hint、error 在原型裡共有 6 個寫死的顏色（G-02），其中唯讀的淺灰底在深色主題下會變成一塊亮白，預覽的深色版看得到；實作時改用 token。
+- **不該做**：寫死色值。`.input.error`、唯讀、hint、error 原本有 6 個寫死的顏色，#420 起都改用 token（`--color-error`、`--color-slate-50`、`--color-border-muted`、`--color-ink-muted`，G-02），唯讀底色在深色主題下也跟著換；實作時照這組 token，不要抄舊值。
 - **不該做**：在帳號頁另寫一份 `.field-hint`／`.field-error`（G-03），共用這一份。
 - **不該做**：用唯讀表示「暫時不能編輯」；那是停用。

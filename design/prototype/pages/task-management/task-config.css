@@ -481,8 +481,8 @@
     /* ABSA unified preview */
     .absa-preview-text { font-size: 14px; line-height: 2; color: var(--color-ink); padding: 10px 12px; background: var(--color-slate-50); border-radius: var(--radius-md); margin-bottom: 12px; }
     .absa-span-highlight { display: inline; padding: 1px 4px; border-radius: 3px; font-weight: 500; white-space: nowrap; }
-    .rel-sel-highlight { background: rgba(59, 130, 246, 0.3); border-radius: 2px; }
-    .absa-span-highlight.rel-sel-highlight { outline: 2px solid rgba(59, 130, 246, 0.6); outline-offset: 1px; }
+    .rel-sel-highlight { background: color-mix(in srgb, var(--color-primary) 30%, transparent); border-radius: 2px; }
+    .absa-span-highlight.rel-sel-highlight { outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent); outline-offset: 1px; }
     .absa-relation-list { display: flex; flex-direction: column; gap: 6px; }
     .absa-relation-row { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 8px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); }
     .absa-relation-badge { display: inline-flex; padding: 1px 7px; border-radius: 999px; font-size: var(--text-label); font-weight: 700; background: var(--color-primary-soft-bg); color: var(--color-primary-strong); border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent); }

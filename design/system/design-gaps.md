@@ -73,7 +73,18 @@
 
 沒有新增 token。考慮過直接用現成 token：關係徽章的 30% 框線改 `--color-primary-border`、`.sys-bg` 改 `--color-primary-soft-bg`，但兩者都會改變淺色的計算值，所以照原透明度用 `color-mix()`。Playwright 逐頁比對改前改後（showcase 與 `pages/` 下全部畫面，任務詳情以 `task_role=project_leader` 走過六個分頁，淺深各一次）：淺色除了 showcase 的 `.page-size-select`，元素計算值與聚焦狀態都和改前相同，像素差最多 1（`color-mix()` 與 `rgba()` 的透明度量化不同）；深色下焦點環、頭像框線、schema 卡與關係徽章框線、`.sys-bg` 改跟深色主色 `#818CF8`，錯誤環與錯誤底色改跟深色錯誤色 `#F87171`。
 
-還在、不在本單範圍的 `rgba()`：`task-config.css:484`–`:485` 關係選取的藍色（不是主色）、`role-settings.html:159` 任務權限格的 `rgba(13,148,136,0.025)`（與 `--color-task` 不同色）、`sidebar.css` 以 `--color-ink` 淺色值寫死的遮罩與陰影、原型狀態切換列（[Proto Toggle Bar](components/proto-toggle-bar.md)），以及黑、白半透明的陰影與遮罩。
+#442 當時還在、不在範圍的 `rgba()`：`task-config.css` 關係選取的藍色（不是主色）、`role-settings.html` 任務權限格的 `rgba(13,148,136,0.025)`（與 `--color-task` 不同色）、`sidebar.css` 以 `--color-ink` 淺色值寫死的遮罩與陰影、原型狀態切換列（[Proto Toggle Bar](components/proto-toggle-bar.md)），以及黑、白半透明的陰影與遮罩。前四項由 #458 處理，見下段。
+
+**狀態（#458）**：#442 留下的四項非主色 `rgba()` 逐項處理。本段列的是修正後的行號。
+
+- **關係與片段的選取色**（`task-config.css:484`–`:485`）改 `color-mix(in srgb, var(--color-primary) N%, transparent)`，底色 30%、外框 60%，透明度照舊。`.rel-sel-highlight` 是預覽裡「已選取、還沒指定標籤」的文字（關係抽取的待連結片段、序列標記的待標片段），語意是**選取狀態**；原型其餘的選取狀態（`.task-type-chip.selected`、`.settings-nav-item[aria-selected="true"]`、`.sample-item.active`、`.page-btn.active` 等）一律用主色，`--color-info` 是 banner 與 toast 的語意狀態色（`brand.md` 四個語意），不用在選取上，所以不新增 token。原本的藍色 `#3B82F6` 不在 `tokens.css` 裡，色相和主色 `#6366F1` 很接近，和實體色盤第 1 色（也是 `#6366F1`）一樣難分，改成主色不會讓區分變差。**這是淺色的可見改變**：藍 500 變靛藍 500，透明度相同；深色改跟深色主色 `#818CF8`。
+- **任務權限格底色**（`role-settings.html:159`）改 `color-mix(in srgb, var(--color-task) 2.5%, transparent)`，和同頁 `.sys-bg` 的寫法一致。淺色由 Teal 600 `#0D9488` 變 Teal 700 `#0F766E`（`--color-task` 的淺色值），2.5% 疊在白底上每個色版最多差 1；深色改跟 `#2DD4BF`。
+- **側欄的墨色陰影與遮罩**（`sidebar.css` 5 處）淺色不動，深色補齊。這幾處的 `rgba(30,27,75,…)` 是淺色的 Indigo 950 陰影色調，不能改 `--color-ink` 的 `color-mix()`：深色的 `--color-ink` 是淺色 `#E2E8F0`，遮罩與陰影會變成發亮的白霧。`tokens.css` 也沒有「淺色墨、深色黑」的陰影 token，`--shadow-*` 淺色是黑色、幾何也不同，換過去會改淺色。所以沿用同檔已有的做法：淺色保留墨色、深色用黑色覆寫。快捷鍵總覽的遮罩、對話框與鍵帽（`sidebar.css:405`、`:419`、`:552`）原本就有深色覆寫（`:647`–`:657`）；通知下拉（`:693`）與分頁總覽選單（`:1141`）原本沒有，#458 在檔尾補一條（`:1237`–`:1239`），同樣的 `0 8px 32px` 改用 `rgba(0, 0, 0, 0.55)`，透明度對齊快捷鍵總覽對話框的深色值。其他頁的遮罩（`modal.css:8` 的 `rgba(0, 0, 0, 0.5)`）本來就是黑色，不受影響。
+- **原型狀態切換列**（`reset-password.html:365`、`verify-email.html:241` 的 `rgba(30,27,75,0.92)`）不改：它是原型專用的鷹架，不會出貨，[Proto Toggle Bar](components/proto-toggle-bar.md) 已記為刻意的例外，兩種主題下長得一樣才對。
+
+沒有新增 token。Playwright 逐頁比對 `origin/main` 與本分支（showcase 與 `pages/` 下全部畫面，任務詳情加 `task_role=project_leader`，淺深各一次；先跑 main 對 main 當對照）：淺色只有關係選取色與任務權限格底色的計算值不同，任務權限格的像素差最多 1；聚焦狀態的計算值全部相同；深色另外是兩個選單的陰影。
+
+還在、刻意留下的 `rgba()`：`sidebar.css` 五處淺色墨色陰影與遮罩（深色已覆寫）、原型狀態切換列、`tokens.css` 的 `--shadow-*` 定義，以及黑、白半透明的陰影與遮罩。
 
 ### G-03 帳號頁一個正典 `.btn-*` 都沒用，各自重寫
 

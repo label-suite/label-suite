@@ -1231,3 +1231,10 @@ main:has(> .workspace-tab-bar):not(.workspace-root) {
 }
 
 .workspace-tab-overview-close-all:hover { background: var(--color-border-muted); }
+
+/* Dark mode: the two fixed menus keep the same shadow geometry with black instead of
+   the light theme's Indigo-950 tint, like .shortcut-help-dialog above (#458). */
+html[data-theme="dark"] .notif-dropdown,
+html[data-theme="dark"] .workspace-tab-overview-menu {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+}

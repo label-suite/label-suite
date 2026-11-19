@@ -63,8 +63,8 @@
   },
   "lastChange": {
     "by": "陳欣怡",
-    "at": "2026-11-19T03:27:40Z",
-    "via": "Claude Code · label-suite/label-suite docs/citation-sweep",
-    "note": "Source line headers realigned: Card block in bundle.css, ToggleSwitch and Tooltip preview comments (#455)"
+    "at": "2026-11-19T03:55:40Z",
+    "via": "Claude Code · label-suite/label-suite fix/prototype-other-rgba",
+    "note": "Relation selection highlight to color-mix of the primary token, task permission cell to the task token, black dark-mode shadows for the notification and tab overview menus (#458)"
   }
 }

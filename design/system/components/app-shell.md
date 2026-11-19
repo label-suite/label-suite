@@ -29,7 +29,7 @@
 | 桌機展開 | 預設 | — |
 | 桌機收合 | 點收合鈕，`body` 加 `sidebar-collapsed` | `sidebar.js:513`（`matchMedia('(min-width: 768px)')`）、`:524` |
 | 行動版 | 視窗 ≤ 767px：側欄變**固定底部列**、品牌區變**固定頂部列** | `sidebar.css:828` 起的 `@media (max-width: 767px)` |
-| 深色 | 點主題切換 | `sidebar.css:646` 起的 dark overrides |
+| 深色 | 點主題切換 | `sidebar.css:646` 起的 dark overrides，以及檔尾通知下拉與分頁總覽選單的深色陰影（`:1237`–`:1239`，#458） |
 
 ## 適用狀態
 
@@ -56,6 +56,8 @@ hover／focus／disabled 等元件層狀態**未逐項盤點**——外殼不是
 ## token
 
 `--nav-active-bg`、`--color-tab-active-bg`、`--color-tab-hover-bg`、`--workspace-tab-min-width`、`--workspace-tab-max-width`、`--z-sticky`、`--z-dropdown` 等；`tokens.css` 有一整組**只為側欄與頁籤存在**的 token。b2 已逐條核對：`sidebar.css` 用到 40 個 token，38 個在 `tokens.css`（加入 `--color-primary-strong` 後是 41 個、39 個，#420 再加 `--color-badge-notify` 後是 42 個、40 個）；`--navbar-mobile-height`、`--navbar-mobile-top-height` 兩個要宿主頁面自己定義（`sidebar.css:831`–`:837` 的窄視窗規則用它們）→ `../design-gaps.md` G-24。
+
+浮層的陰影與遮罩不是 token：淺色寫死 Indigo 950 色調的 `rgba(30,27,75,…)`（`sidebar.css:405`、`:419`、`:552`、`:693`、`:1141`），深色另寫黑色覆寫（`:647`–`:657`、`:1237`–`:1239`）。不改成 `--color-ink` 的 `color-mix()`，因為深色的 `--color-ink` 是淺色，陰影會發白 → `../design-gaps.md` G-02 的 #458 段。
 
 ## 鍵盤與焦點
 
