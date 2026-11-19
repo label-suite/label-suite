@@ -10,7 +10,7 @@
 
 - `.toggle-switch`：`<label>` 外框。
 - 內含 `<input type="checkbox">`，以 `opacity: 0; width: 0; height: 0` 視覺上隱藏。
-- `.toggle-slider`：軌道，`::before` 是 16×16 的白色圓鈕。
+- `.toggle-slider`：軌道，`::before` 是 16×16 的圓鈕：關閉時 `--color-toggle-thumb`（淺色白、深色 slate-200），開啟時 `--color-on-cta`（#437）。
 - 使用方提供設定名稱與說明。預覽中的 `.toggle-row`／`.toggle-info`／`.toggle-label-text`／`.toggle-desc` 是 showcase 的排版殼，不屬於元件本身，預覽在本地補了這段排版 CSS；實際頁面可以用自己的列版型。
 - 使用方要把設定名稱關聯到 checkbox（包在同一個 `<label>` 裡，或用 `aria-labelledby`）。
 

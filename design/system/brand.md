@@ -28,7 +28,7 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 
 以下每一條都有明確的文字依據，不是撰寫者從畫面「覺得」出來的。
 
-1. **只用 token，不自創顏色。**`tokens.css` 的檔頭寫「Import this file instead of redefining tokens in each page」（`assets/tokens.css:3`）；skill 寫「不要自創 token 以外的顏色」（`label-suite-design/SKILL.md` §怎麼用）。#420 之前現況與這條不符：prototype 有大量寫死色值（`design-gaps.md` G-02）。#420 起頁面與 showcase 的色值都改用 token；剩下的寫死色值是資料色（`assets/data-palette.css`、樣本資料）、註解、`var()` 的後備值與兩處固定白字，細節見 G-02。
+1. **只用 token，不自創顏色。**`tokens.css` 的檔頭寫「Import this file instead of redefining tokens in each page」（`assets/tokens.css:3`）；skill 寫「不要自創 token 以外的顏色」（`label-suite-design/SKILL.md` §怎麼用）。#420 之前現況與這條不符：prototype 有大量寫死色值（`design-gaps.md` G-02）。#420 起頁面與 showcase 的色值都改用 token；剩下的寫死色值是資料色（`assets/data-palette.css`、樣本資料）、註解、`var()` 的後備值與一處固定白字（頭像遮罩上的上傳圖示，疊在固定的黑色遮罩上）；側欄通知徽章的白字在 #437 改用 `--color-on-badge-notify`，細節見 G-02。
 2. **主色當文字一律用 `--color-primary-strong`，不用 `--color-primary`；圖示用 `--color-primary`，`--color-secondary` 只做裝飾與大面積填色。**`--color-primary` 當文字在白底只有 4.47:1、在 `--color-primary-soft-bg` 上 3.99:1，`--color-primary-strong` 是白底 6.29、頁底 5.73、主色淺底 5.62:1（`tokens.css:19` 註解；維護者裁定 2026-11-18，#427）。`--color-primary` 留給按鈕填色、邊框、logo 與圖示（圖示只需 3:1）。次要文字最淺到 `--color-ink-muted`（淺色 `#5E6B7F`：頁底 4.93、白底 5.40、`--color-border-muted` 4.93:1），`slate-400` 以下的顏色不可用於文字（skill §無障礙）。
 3. **語意色各有專屬用途。**`--color-warning` 與 `--color-error` 保留給例外、待確認與錯誤，不當區分色；用顏色區分模組或角色時最多五種，超過就靠標籤文字（skill §區分多個模組或角色）。
 4. **狀態不能只靠顏色。**Review Status Track 以文字前綴「目前：」、字重與線寬輔助（`components-showcase.html:1212` 的說明、[`components/review-status-track.md`](components/review-status-track.md)）。Color Dot 目前只靠顏色，已登記為缺口（G-14）。
@@ -40,7 +40,7 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 10. **每個畫面同時支援繁中與英文、淺色與深色。**語言與外觀是共用介面的一部分（`00-prd.mdx:136`、`docs/specs/07-shared/01-sidebar.mdx`）；元件要用語意 token，深色主題靠 `html[data-theme="dark"]` 重新對映同名 token，頁面不寫兩份（`tokens.css` 深色區塊的檔頭說明）。
 11. **互動元件要有 `prefers-reduced-motion` 的退路。**共用 CSS 與 showcase 都有（`pages/shared/sidebar.css:185`、`components-showcase.html:969`）；`account/profile` 是唯一漏掉的帳號頁（G-30）。
 12. **圖示一律用 SVG，不用 emoji，也不用文字字元（`✕`、`←`、`→`、`✓` 等）充當圖示。**維護者裁定（2026-11-18）；repo 內早有同向的依據：ADR-030「Lucide 是唯一圖示來源」，`task-config.engine.js:869`、`:965` 的註解寫「no text-glyph icons」「no hand-drawn glyphs」。細節見 [§圖示](#圖示)。
-13. **控制項外框用 `--color-border-control`，`--color-border` 只做裝飾。**輸入框、下拉選單、文字區塊、搜尋框、勾選框，以及長得像欄位的觸發鈕（日期區間、分類選擇）的外框用前者（淺色 `#7C899D` 對白底 3.55、對頁底 3.23:1；深色 `#6B6B78` 對卡片 3.42、對頁底 3.73:1），才過 WCAG 1.4.11 的 3:1；卡片、表格、分隔線用 `--color-border`（對白底只有 1.23:1）。焦點與錯誤狀態維持各自的 token。維護者裁定（2026-11-18，#427）；`tokens.css:26`、`:197`。
+13. **控制項外框用 `--color-border-control`，`--color-border` 只做裝飾。**輸入框、下拉選單、文字區塊、搜尋框、勾選框，以及長得像欄位的觸發鈕（日期區間、分類選擇）的外框用前者（淺色 `#7C899D` 對白底 3.55、對頁底 3.23:1；深色 `#6B6B78` 對卡片 3.42、對頁底 3.73:1），才過 WCAG 1.4.11 的 3:1；卡片、表格、分隔線用 `--color-border`（對白底只有 1.23:1）。焦點與錯誤狀態維持各自的 token。維護者裁定（2026-11-18，#427）；`tokens.css:26`、`:203`。
 14. **`--color-primary-border` 不能是唯一的提示。**它對白底只有 1.49:1；只靠邊框標示的狀態改用 `--color-primary`，例如日期選擇器的「今天」（`date-range-picker.css:34`）。維護者裁定（2026-11-18，#427）。
 
 ## 設計決策
@@ -161,15 +161,16 @@ token 名與值以 `tokens.css` 為準；本節只寫**怎麼用**。
 | 頁面與卡片 | `--color-surface`（頁底）、`--color-white`（卡片）、`--color-slate-50`（交錯列） | 版面底色層次 | skill §色票；`tokens.css` 語意別名 `--bg-page`／`--bg-surface` |
 | 文字 | `--color-ink`（內文標題）、`--color-ink-muted`（次要）、`--color-on-ink` | | `tokens.css` §Semantic aliases |
 | 分隔 | `--color-border`、`--color-border-muted` | 卡片、表格、分隔線，只做裝飾（鐵律 13） | skill §色票 |
-| 控制項外框 | `--color-border-control` | 輸入框、下拉選單、文字區塊、搜尋框、勾選框，以及長得像欄位的觸發鈕（日期區間、分類選擇）（鐵律 13） | `tokens.css:26`、`:197` |
+| 控制項外框 | `--color-border-control` | 輸入框、下拉選單、文字區塊、搜尋框、勾選框，以及長得像欄位的觸發鈕（日期區間、分類選擇）（鐵律 13） | `tokens.css:26`、`:203` |
 | 四個語意 | `--color-success`／`warning`／`error`／`info`，各配 `-bg`、`-border` | 狀態、banner、toast、badge | `tokens.css` §Semantic State Colors |
 | 非語意強調 | `--color-file-markdown` | 只用來區分檔案類型圖示，不是狀態 | `tokens.css`（檔案類型圖示強調）註解 |
 | 工作頁籤 | `--color-tab-active-bg`、`--color-tab-hover-bg` | 側欄上方頁籤；兩者在深色主題刻意不同值 | `tokens.css` §Workspace Tabs |
-| 次要鈕 hover 外框 | `--color-border-hover` | `.btn-oauth`、`.btn-icon`、`.btn-language` hover 時的外框，只做裝飾（#420 Q6） | `tokens.css:28`、`:199` |
-| 非狀態的強調 | `--color-accent`、`-bg`、`-border` | 分類 chip、`.badge-official` 這類要跟主色分開、又不是狀態的標記（#420 Q2） | `tokens.css:73`–`:75`、`:241`–`:243` |
-| 任務欄 | `--color-task`、`--color-task-bg` | 任務欄的表頭文字、底線、勾選框（#420 Q5）。淺色值為 Teal 700，疊在 `--color-task-bg` 上 5.25:1（維護者 2026-11-18 從 3.59:1 的 Teal 600 改定） | `tokens.css:78`–`:79`、`:246`–`:247` |
-| 通知徽章 | `--color-badge-notify` | 側欄通知數字的底，配白字（6.47:1）；深淺主題同值（#420 Q5） | `tokens.css:84`、`:249` |
-| 程式碼區 | `--color-code-bg`、`--color-code-fg` | 程式碼編輯區的底與字（#420） | `tokens.css:87`–`:88`、`:252`–`:253` |
+| 次要鈕 hover 外框 | `--color-border-hover` | `.btn-oauth`、`.btn-icon`、`.btn-language` hover 時的外框，只做裝飾（#420 Q6） | `tokens.css:28`、`:205` |
+| 非狀態的強調 | `--color-accent`、`-bg`、`-border` | 分類 chip、`.badge-official` 這類要跟主色分開、又不是狀態的標記（#420 Q2） | `tokens.css:73`–`:75`、`:247`–`:249` |
+| 任務欄 | `--color-task`、`--color-task-bg` | 任務欄的表頭文字、底線、勾選框（#420 Q5）。淺色值為 Teal 700，疊在 `--color-task-bg` 上 5.25:1（維護者 2026-11-18 從 3.59:1 的 Teal 600 改定） | `tokens.css:78`–`:79`、`:252`–`:253` |
+| 通知徽章 | `--color-badge-notify`、`--color-on-badge-notify` | 側欄通知數字的底與上面的字，白字 6.47:1；兩個都深淺主題同值（#420 Q5；字色 token 是 #437 補的） | `tokens.css:84`–`:85`、`:255` |
+| 開關圓鈕 | `--color-toggle-thumb` | Toggle Switch 關閉時的圓鈕（淺色白、深色 slate-200）；開啟時圓鈕在主色軌道上，改用 `--color-on-cta`（#437） | `tokens.css:90`、`:258` |
+| 程式碼區 | `--color-code-bg`、`--color-code-fg` | 程式碼編輯區的底與字（#420） | `tokens.css:93`–`:94`、`:261`–`:262` |
 | 資料色 | `--data-entity-*`、`--data-task-type-*` 等，在 `assets/data-palette.css` | 實體類型、任務類型、角色卡這類**指派給資料**的顏色，不是語意色；不放進 `tokens.css`，有淺色與深色兩套（#420 Q4） | `assets/data-palette.css`；`task-config.data.js` 的 `ENTITY_COLORS` 與 `--data-entity-*` 同值 |
 
 `--color-text-muted` 是 `--color-ink-muted` 的舊別名，新元件不用（`tokens.css:29`、`:34`、skill）。
@@ -356,7 +357,7 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 
 ### 深色主題的 logo（量測）
 
-深色主題把 `--color-primary` 換成較亮的靛藍，而產品內 logo 的標籤線稿固定 `white`（`login.html:353`–`:358`）。以 WCAG 相對亮度公式、`tokens.css` 的值（深色 `--color-primary`：`tokens.css:182`；線稿：白色）量測：
+深色主題把 `--color-primary` 換成較亮的靛藍，而產品內 logo 的標籤線稿在 #418 之前固定 `white`。以 WCAG 相對亮度公式、`tokens.css` 的值（深色 `--color-primary`：`tokens.css:188`；線稿：白色）量測：
 
 | 組合 | 對比 |
 | :--- | :--- |
@@ -364,19 +365,19 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 | 白色線稿 ／ 深色主題 `--color-primary` | **2.98 : 1**（未達 3:1） |
 | 深色主題 `--color-on-cta` ／ 深色主題 `--color-primary` | 5.36 : 1 |
 
-**規則（維護者裁定 2026-11-18）：白色線稿在深色主題上不到 3:1（差 0.02），不能深淺共用一版；深色主題的 logo 標籤線稿用 `--color-on-cta`（深色主題的值是深墨色，5.36:1），與按鈕在深色主題的處理（`tokens.css:192`）一致。**實作屬 UI 修正，列在落差表。
+**規則（維護者裁定 2026-11-18）：白色線稿在深色主題上不到 3:1（差 0.02），不能深淺共用一版；深色主題的 logo 標籤線稿用 `--color-on-cta`（深色主題的值是深墨色，5.36:1），與按鈕在深色主題的處理（`tokens.css:198`）一致。**實作屬 UI 修正，列在落差表；#418 已實作（落差表 Q11），線稿改 `currentColor`、色取 `--color-on-cta`。
 
 ### 在產品裡實際怎麼用
 
 | 場景 | 做法 | 依據 |
 | :--- | :--- | :--- |
-| 帳號頁頂部 navbar | 32×32 主色圓角方（圓角 8px）＋內嵌 20×20 的白色標籤；右側 wordmark 18px 襯線粗體；整塊是「回首頁」連結，`aria-label` 兩種語言 | `login.html:39`–`:68`、`:351`–`:361` |
+| 帳號頁頂部 navbar | 32×32 主色圓角方（圓角 8px）＋內嵌 20×20 的標籤線稿（`--color-on-cta`：淺色白、深色深墨）；右側 wordmark 18px 襯線粗體；整塊是「回首頁」連結，`aria-label` 兩種語言 | `login.html:39`–`:68`、`:351`–`:361` |
 | 登入後側欄品牌區 | 36×36（`--radius-md`）＋ wordmark 16px；放在最上、下方一條 `--color-border` 分隔線；整塊連回儀表板（`brandHref`） | `sidebar.css:37`–`:75`、`sidebar.js:2036`–`:2044` |
 | 元件展示的頭像樣本 | `icon-colored.svg` 當作使用者頭像的示範圖 | `components-showcase.html:1356` |
 
 觀察到的規則：
 
-- 產品內的 logo 是**內嵌 SVG ＋ CSS 的 `--color-primary` 底**，不載入 `logo/*.svg` 檔案；所以它會**跟著主題換底色**，而標籤線稿固定 `white`（`login.html:353`–`:358`）。
+- 產品內的 logo 是**內嵌 SVG ＋ CSS 的 `--color-primary` 底**，不載入 `logo/*.svg` 檔案；所以它會**跟著主題換底色**；標籤線稿是 `currentColor`、色取 `--color-on-cta`，也跟著主題換（`login.html:357`–`:362`，#418）。
 - logo 圖形本身 `aria-hidden`，辨識靠旁邊的 wordmark 與連結的 `aria-label`（`login.html:351`–`:352`）。
 - 圖形底色用 `--color-primary`，**不用** `--color-cta` 或其他語意色。
 
@@ -403,7 +404,7 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 | Q6 斷點與寬度 | 767／768 分界、modal 400／520／720 | 見下，11 處 | 已修（#418） |
 | Q11 深色主題 logo | 線稿用 `--color-on-cta` | 帳號頁與側欄的內嵌 logo（見下） | 已修（#418） |
 | Q12 social preview 副標色 | 用 `--color-ink-muted` 的 slate 灰 | `social-preview.svg:19` 1 處 | 已修（#418） |
-| G-02 寫死色值 | 只用 token | 22 個檔案、658 個六位色碼（頁面與 showcase，不含 `tokens.css` 與 logo）；細節與分類見 [`design-gaps.md`](design-gaps.md) G-02 | 已修（#420）：開工時（`cf0109a`）重算為 22 個檔案 662 個，修完剩 8 個檔案 171 個（含維護者追加的深色資料色 9 個），都是資料色、註解、`var()` 後備值與固定白字 |
+| G-02 寫死色值 | 只用 token | 22 個檔案、658 個六位色碼（頁面與 showcase，不含 `tokens.css` 與 logo）；細節與分類見 [`design-gaps.md`](design-gaps.md) G-02 | 已修（#420）：開工時（`cf0109a`）重算為 22 個檔案 662 個，修完剩 8 個檔案 171 個（含維護者追加的深色資料色 9 個），都是資料色、註解、`var()` 後備值與固定白字。#437 再把 `white` 關鍵字換成 token，通知徽章的白字改 `--color-on-badge-notify` |
 
 ### Q1：「您」（13 行）
 
@@ -479,7 +480,7 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 
 ### Q11：深色主題 logo
 
-產品內 logo 是內嵌 SVG，標籤線稿固定 `white`：`login.html:403`–`:408`（帳號頁 navbar）、`sidebar.css:52`–`:58` 與 `sidebar.js:2039`（側欄品牌區）。深色主題下對比 2.98:1，需要另備深色版（見 §CIS）。
+產品內 logo 是內嵌 SVG，標籤線稿固定 `white`：`login.html:403`–`:408`（帳號頁 navbar）、`sidebar.css:52`–`:58` 與 `sidebar.js:2039`（側欄品牌區）。深色主題下對比 2.98:1，需要另備深色版（見 §CIS）。#418 已修，見下方修正紀錄 Q11。
 
 ### #418 修正紀錄
 

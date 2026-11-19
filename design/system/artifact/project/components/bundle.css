@@ -12,7 +12,7 @@
  */
 @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap');
 
-/* ═══ Source: design/prototype/assets/tokens.css:272-316 — semantic type rules (element rules the compiled tokens.css does not emit) ═══ */
+/* ═══ Source: design/prototype/assets/tokens.css:281-325 — semantic type rules (element rules the compiled tokens.css does not emit) ═══ */
 /* ── Semantic type rules ──────────────────────────────────── */
 html[lang="zh-TW"] body,
 html[lang="zh"] body { line-height: var(--leading-body-zh); }
@@ -373,9 +373,9 @@ button[disabled] {
 .toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
 .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
 .toggle-slider { position: absolute; inset: 0; background: var(--color-border); border-radius: var(--radius-full); cursor: pointer; transition: background var(--dur-fast); }
-.toggle-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; border-radius: 50%; background: white; transition: transform var(--dur-fast); }
+.toggle-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; border-radius: 50%; background: var(--color-toggle-thumb); transition: transform var(--dur-fast); }
 .toggle-switch input:checked + .toggle-slider { background: var(--color-primary); }
-.toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+.toggle-switch input:checked + .toggle-slider::before { background: var(--color-on-cta); transform: translateX(18px); }
 
 /* ═══ Source: design/prototype/components-showcase.html:340-582 — Badge, Status Pill, Alert Banner, Toast, Skeleton, Chip ═══ */
 /* §Semantic State Colors — base badge CSS (verbatim) */
@@ -559,8 +559,8 @@ button[disabled] {
   content: "";
   width: 8px;
   height: 5px;
-  border-left: 2px solid white;
-  border-bottom: 2px solid white;
+  border-left: 2px solid var(--color-on-cta);
+  border-bottom: 2px solid var(--color-on-cta);
   transform: rotate(-45deg) translate(1px, -1px);
 }
 .task-type-chip[role="radio"] .task-type-chip-check {
@@ -571,7 +571,7 @@ button[disabled] {
   height: 6px;
   border: none;
   border-radius: 50%;
-  background: white;
+  background: var(--color-on-cta);
   transform: none;
 }
 
@@ -2022,7 +2022,7 @@ html[data-theme="dark"] .shortcut-help-dialog {
   padding: 0 4px;
   border-radius: 9999px;
   background: var(--color-badge-notify);   /* constant across themes (issue singyichen/label-suite#183 arbitration); the value and its 6.47:1 contrast live in tokens.css (#420 Q5) */
-  color: #fff;
+  color: var(--color-on-badge-notify);
   font-size: 10px;
   font-weight: 700;
   line-height: 16px;
@@ -2921,7 +2921,7 @@ main:has(> .workspace-tab-bar):not(.workspace-root) {
 .auth-page .spinner {
   width: 18px;
   height: 18px;
-  border: 2.5px solid rgba(255,255,255,0.4);
+  border: 2.5px solid color-mix(in srgb, var(--color-on-cta) 40%, transparent);
   border-top-color: var(--color-on-cta);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;

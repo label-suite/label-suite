@@ -31,7 +31,7 @@
 
 ## token
 
-**只有頂邊一個**：#420 起頂邊改用 `--color-on-cta`（`login.html:312`），跟著 CTA 上的文字色走，深色模式下會一起換。邊框仍是寫死的半透明白（`:311`；`rgba()` 不在 #420 範圍），深色模式下不會變。原值見 `../design-gaps.md` G-02。
+**只有 `--color-on-cta` 一個**：#420 起頂邊改用 `--color-on-cta`（`login.html:312`），跟著 CTA 上的文字色走，深色模式下會一起換。其餘三邊原本是寫死的半透明白 `rgba(255,255,255,0.4)`，#437 改成 `color-mix(in srgb, var(--color-on-cta) 40%, transparent)`（`:311`），淺色下算出來是同一個顏色，深色下變成 40% 的深墨色。`account/profile` 的按鈕內 spinner 同樣改成 35% 的 `--color-on-cta`。原值見 `../design-gaps.md` G-02。
 
 尺寸 18px、邊框 2.5px、0.7s 都是字面值。
 
@@ -58,8 +58,8 @@
 沒有發行的 Spinner 原語；慣例是在 `Button` 裡放 `Loader2` 圖示加 `animate-spin`。
 
 - **我們有而它沒有**：無。
-- **它有而我們沒有**：圖示化的實作（可繼承 `currentColor`，不必寫死半透明白）。
-- **語意對不上**：我們的 spinner 是 CSS 邊框技巧，顏色綁死在「實心 CTA 鈕」這個情境（頂邊跟 `--color-on-cta`，其餘三邊固定半透明白，深色模式下也是）；換到其他底色就不能用。
+- **它有而我們沒有**：圖示化的實作（可繼承 `currentColor`，不必另外調一份半透明色）。
+- **語意對不上**：我們的 spinner 是 CSS 邊框技巧，顏色綁死在「實心 CTA 鈕」這個情境（頂邊跟 `--color-on-cta`，其餘三邊是 40% 的 `--color-on-cta`）；換到其他底色就不能用。
 
 ## 用到它的畫面
 

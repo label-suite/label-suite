@@ -12,7 +12,7 @@ Auth Card 是登出狀態帳號頁正中央的卡片，上面是品牌標誌、�
   - `--color-card` 底、`--radius-lg`、`--shadow-card`；
   - `padding: 40px 40px 36px`、`max-width: 480px`。
 - `.card-header`：置中直排，裡面有：
-  - `.card-logo`：56px 主色方塊加白色標籤圖示；
+  - `.card-logo`：56px 主色方塊加標籤圖示，線稿 `currentColor` 取 `--color-on-cta`（淺色白、深色深墨）；
   - `.card-title`：Crimson Pro 22px；
   - `.card-subtitle`：選用。
 - 表單內容由各頁提供。以登入頁為例：

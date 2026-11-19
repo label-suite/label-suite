@@ -1,9 +1,9 @@
 {
   "packageVersion": 1,
-  "generatedAt": "2026-11-18",
+  "generatedAt": "2026-11-19",
   "source": {
-    "commit": "5b1cb921515bb5ef0237626b3f1a8d2c1ee883ad",
-    "prototypeTree": "d9c2ab67868bd56cb9015953e4b947f6fb472950",
+    "commit": "5566aec2decc13fffb3891218a357ccda334d039",
+    "prototypeTree": "ecdd14a24d90f1bbe431876f96813c18d73bc794",
     "specsTree": "58bee0ccf9d5003cdb0fd824fbed8436fc9ccbe3",
     "navigationBlob": "29e4eea42c99d0af2c34dc4a21edae0b6c8933c7",
     "referenceDesignDocs": {
@@ -11,7 +11,7 @@
       "commit": "faf8335"
     },
     "openWith": [
-      "git switch --detach 5b1cb921515bb5ef0237626b3f1a8d2c1ee883ad",
+      "git switch --detach 5566aec2decc13fffb3891218a357ccda334d039",
       "pnpm prototype"
     ]
   },

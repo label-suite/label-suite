@@ -673,7 +673,7 @@ html[data-theme="dark"] .shortcut-help-dialog {
   padding: 0 4px;
   border-radius: 9999px;
   background: var(--color-badge-notify);   /* constant across themes (issue singyichen/label-suite#183 arbitration); the value and its 6.47:1 contrast live in tokens.css (#420 Q5) */
-  color: #fff;
+  color: var(--color-on-badge-notify);
   font-size: 10px;
   font-weight: 700;
   line-height: 16px;

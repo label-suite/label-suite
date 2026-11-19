@@ -28,7 +28,7 @@
 
 ## token
 
-`--color-border`、`--color-primary`、`--radius-full`、`--dur-fast`。圓鈕底色是字面 `white`（`components-showcase.html:335`）。
+`--color-border`、`--color-primary`、`--color-toggle-thumb`、`--color-on-cta`、`--radius-full`、`--dur-fast`。圓鈕關閉時用 `--color-toggle-thumb`（淺色白、深色 slate-200 `#E2E8F0`，`components-showcase.html:336`），開啟時圓鈕疊在主色軌道上，改用 `--color-on-cta`（`:338`）。#437 之前圓鈕是字面 `white`，深色主題開啟時白鈕疊在亮靛藍上只有 2.98:1，現在是 5.36:1。關閉的淺色圓鈕對 `--color-border` 軌道只有 1.23:1，這是 #437 之前就有的現況，#437 沒有改淺色。
 
 ## 鍵盤與焦點
 
