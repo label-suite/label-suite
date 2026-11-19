@@ -375,7 +375,7 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做。
 | 014 | Prototype 層 Playwright 測試 | Accepted | 不適用：測試與 `package.json` 依 #16 留在個人 repo |
 | 015 | 角色導向漸進式 onboarding | Accepted | **本期部分採用**：空狀態與情境提示做，導覽與角色導向漸進揭露不做，見 [§前端](#前端) |
 | 016 | shadcn/ui 加 Storybook | Accepted | **部分被覆寫**：採 shadcn/ui，元件放 `components/ui/`；Storybook 未決，見 [§待決](#待決) 第 2 列 |
-| 017 | 三層 agent（Planner／Generator／Evaluator） | Accepted | 已被取代：以 #47 的 fullstack-sdd 角色分工與 `CLAUDE.md` 為準（含它與 017 相反的 compact 規則）；017 的「Evaluator 只用外部確定性工具、禁止自評」由 `code-reviewer` 與 `acceptance-verifier` 承接 |
+| 017 | 三層 agent（Planner／Generator／Evaluator） | Accepted | 已被取代：以 [ADR-002 的 D4](adr/002-development-workflow.mdx#d4-規劃實作審查與驗收由不同角色負責)與 `CLAUDE.md` 為準（含它與 017 相反的 compact 規則）；017 的「Evaluator 只用外部確定性工具、禁止自評」由 `code-reviewer` 與 `acceptance-verifier` 承接 |
 | 018 | Prometheus 加 Grafana | Accepted | **本期不做**，見 [§部署與維運](#部署與維運) |
 | 019 | AI 可追溯與稽核（`ai_runs`） | Accepted | 沿用，本期要做，見 [§稽核與可追溯](#稽核與可追溯) |
 | 020 | Sentry | Accepted | **本期不做**，見 [§部署與維運](#部署與維運) |
@@ -385,13 +385,13 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做。
 | 024 | 資料庫雙層（SQLite 加 PostgreSQL） | Accepted | 沿用，見 [§資料庫雙層](#資料庫雙層) |
 | 025 | Bruno API collection | Accepted | **部分被覆寫**：Bruno 降成可選的手動工具，pre-PR 硬關卡取消，見 [§API 契約](#api-契約) |
 | 026 | i18n 兩層 | Accepted | 沿用，見 [§i18n 兩層](#i18n-兩層) |
-| 027 | GitHub Projects | Accepted | 已被取代：以 `AGENTS.md` 的組織層專案為準，不用 label 追狀態，無 `STATUS.md` |
+| 027 | GitHub Projects | Accepted | 已被取代：以 [ADR-002 的 D5](adr/002-development-workflow.mdx#d5-狀態只記在組織層專案板)為準，不用 label 追狀態，無 `STATUS.md` |
 | 028 | CI 安全掃描（SCA 加延後 SAST） | Accepted | 沿用，等同 Hard Rule 7、8，見 [§部署與維運](#部署與維運) |
 | 029 | Output-Type Composition Model | Accepted | 沿用；`sequence_tagging` 那一列已過期，以 [§任務設定](#任務設定input_type-加-outputs) 為準（修訂見 [§待決](#待決) 第 1 列） |
 | 030 | Lucide 圖示 | Accepted | 沿用，見 [§前端](#前端) |
 | 031 | 序列標記 tokenization 契約 | Superseded | 已被取代：改成半開字元 offset span，見 [§任務設定](#任務設定input_type-加-outputs) |
 | 032 | 使用者行為稽核（`audit_events`） | Accepted | 沿用，見 [§稽核與可追溯](#稽核與可追溯) |
-| 033 | OpenSpec 當變更流程層 | Accepted | 已被取代：以 `openspec/config.yaml` 加 #47 決議為準（033 把 `openspec/specs/` 當衍生檢視，本 repo 當可測契約，方向相反）；檔案狀態與 `README.md` 索引不一致，見 [§待決](#待決) 第 1 列 |
+| 033 | OpenSpec 當變更流程層 | Accepted | 已被取代：以 `openspec/config.yaml` 加 [ADR-002 的 D1](adr/002-development-workflow.mdx#d1-完整九份產物流程一次導入)為準（033 把 `openspec/specs/` 當衍生檢視，本 repo 當可測契約，方向相反）；檔案狀態與 `README.md` 索引不一致，見 [§待決](#待決) 第 1 列 |
 | 034 | 正式 E2E 放根目錄 `e2e/[module]/` | Accepted | 沿用，見 [§測試分層](#測試分層)與 [ADR-007 的 D4](adr/007-testing-strategy.mdx#d4-正式-e2e-放根目錄) |
 | 035 | Google SSO 直接走 OIDC | Accepted | 沿用，見 [§Google SSO](#google-sso) |
 | 036 | 開源 repo 拆分 | Proposed | 需調整：規格 canon 已搬到本 repo 的 `docs/specs/`，ADR 仍寫在個人 repo，見 [§待決](#待決) 第 1 列 |
@@ -437,3 +437,4 @@ ADR 引用的 FR-131、admin-007、spec 013 這類編號屬於個人 repo，本 
 | 2026-11-10 | CSRF 加綁定 session 的 double-submit token（[§CSRF](#csrf)） | — | [#107](https://github.com/label-suite/label-suite/issues/107) |
 | 2026-11-19 | 衝突優先序改為 `AGENTS.md` > 本 repo ADR > 本文 > 個人 repo ADR（只當參考） | 原本「本文與 ADR 不一致以 ADR 為準」，只有效力總表標成被覆寫等的列例外 | [#444](https://github.com/label-suite/label-suite/issues/444) |
 | 2026-11-19 | 測試分層、覆蓋率、前端測試位置與正式 E2E 位置的理由寫進 [ADR-007](adr/007-testing-strategy.mdx)，本文只留做法（[§測試分層](#測試分層)） | —（理由原本只在個人 repo 的 ADR-009、012、034） | [#453](https://github.com/label-suite/label-suite/issues/453) |
+| 2026-11-19 | 個人 repo ADR-017、027、033 的效力改連到 [ADR-002](adr/002-development-workflow.mdx) 的 D4、D5、D1（[§ADR 效力總表](#adr-效力總表)） | —（三列原本連到 #47 與 `AGENTS.md`） | [#448](https://github.com/label-suite/label-suite/issues/448) |

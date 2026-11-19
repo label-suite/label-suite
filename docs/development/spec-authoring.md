@@ -274,7 +274,7 @@ PRD 不設待釐清專章，規格書的「待釐清」也只放這一頁自己�
 ### 規格書怎麼對到 OpenSpec 產出
 
 本專案的 OpenSpec schema 是 **`label-suite-sdd`**（`openspec/schemas/label-suite-sdd/`），change 產出**九份**。
-文件或工具類的小 change 可以帶 `--schema spec-driven` 走四份產物的舊流程（維護者 2026-11-04 裁定保留這個逃生門）。
+文件或工具類的小 change 可以帶 `--schema spec-driven` 走四份產物的舊流程（理由見 [ADR-002 的 D1](adr/002-development-workflow.mdx#d1-完整九份產物流程一次導入)）。
 
 | 規格書 | OpenSpec 產出 |
 | :--- | :--- |
