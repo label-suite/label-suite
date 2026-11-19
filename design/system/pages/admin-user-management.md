@@ -17,7 +17,7 @@
 | `#modal-invite` | 點「新增使用者」（交付包叫它 invite，畫面標題是「新增使用者」，`addModal`，`:477`） | [Modal](../components/modal.md)（本頁版，`role="dialog"`／`aria-modal`）、[Input](../components/input.md)、[Button](../components/button.md) |
 | `#toast-action` | 停用或啟用一個帳號：停用要先確認（`disableModal`，`:581`） | [Toast](../components/toast.md)（本頁的 `.toast*`，`:185`–`:225`）、[Modal](../components/modal.md)、[Alert Banner](../components/alert-banner.md)（`.alert-banner.warning`，`:592`）、[Button](../components/button.md)（`.btn-danger`，`:604`） |
 
-交付包沒有列、畫面上找得到的：編輯使用者 modal（`editModal`，`:530`）；稽核紀錄抽屜（`:714`，與 `admin/role-settings` 同一份，空的時候用 `empty-state-compact`，`:732`）。
+交付包沒有列、畫面上找得到的：編輯使用者 modal（`editModal`，`:530`）；稽核紀錄抽屜（`shared/audit-drawer.js:36`，與 `admin/role-settings` 同一份，空的時候用 `empty-state-compact`，`:51`）。
 
 ## 這一頁專屬的
 

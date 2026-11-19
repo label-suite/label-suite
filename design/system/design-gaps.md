@@ -371,7 +371,7 @@
 | :--- | :--- |
 | **重現方式** | 開 `pages/task-management/task-new.html`，第一到第三步填妥後按「下一步」：出現第四步「標記說明」。交付包只有 `#state-step1`～`#state-step3`。 |
 | **受影響範圍** | [Step Indicator](components/step-indicator.md)、[Modal](components/modal.md)、[Skeleton](components/skeleton.md)；`task-management/task-new`、`task-detail`、`admin/user-management`、`admin/role-settings` |
-| **依據** | `task-new.html:446` 的 `step4Panel`，步驟條畫了四格（`:242`–`:262`）。同樣找得到但沒有視圖 ID 的：`task-new` 的 `taxonomyDeleteModal`（`:545`）與頂端錯誤橫幅（`:236`）；`task-detail` 的載入骨架（`:1895`–`:1907`）與 `taskNotFound`（`:1911`）；`user-management` 的 `editModal`（`:528`）與異動紀錄抽屜（`:712`）；`role-settings` 的 `#dirtyModal`（`:861`）、異動紀錄抽屜（`:936`）與 `storedInvalidBanner`（`:309`）。 |
+| **依據** | `task-new.html:446` 的 `step4Panel`，步驟條畫了四格（`:242`–`:262`）。同樣找得到但沒有視圖 ID 的：`task-new` 的 `taxonomyDeleteModal`（`:545`）與頂端錯誤橫幅（`:236`）；`task-detail` 的載入骨架（`task-detail.html:1896`–`:1908`）與 `taskNotFound`（`:1912`）；`user-management` 的 `editModal`（`user-management.html:530`）；`role-settings` 的 `#dirtyModal`（`role-settings.html:858`）與 `storedInvalidBanner`（`:306`）；兩頁共用的異動紀錄抽屜（`shared/audit-drawer.js:36`）。 |
 | **待決問題** | **已裁定（2026-11-18）**：下次重跑 `design-handoff` 時補上這些視圖。**已於 #418 處理**：交付包第四次重跑補上九個視圖：`task-management/task-new#state-step4`、`#modal-taxonomy-delete`；`task-management/task-detail#state-loading`、`#state-task-not-found`；`admin/user-management#modal-edit`、`#modal-audit-log`；`admin/role-settings#modal-dirty`、`#modal-audit-log`、`#state-stored-invalid`。`task-new` 的頂端錯誤橫幅叫不出來（驗證不過時「下一步」已停用，`showBannerError()` 走不到），記進交付包的「無法重現」為 `task-management/task-new#state-banner-error`，畫面要不要改仍待決。原題保留：要不要在下一次重跑 `design-handoff` 時補上這些視圖？本 skill 不替它們取 ID。 |
 
 ### G-36 五條 UX 約定在本批次沒有證據
