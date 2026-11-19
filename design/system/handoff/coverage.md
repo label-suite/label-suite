@@ -54,7 +54,7 @@
 | :--- | :--- | ---: |
 | `task-detail.html:5048` | `URL_VIEW_STATE` | **16** |
 | `annotation-workspace.config.js:1560` | `LIST_VIEW_STATE_KEYS` ＋ `LIST_IDENTITY_KEYS` | **6** |
-| `dataset-analysis-detail.html:2454` | `PROTOTYPE_ONLY_PARAMS` | 0（`s_state` 已在表上） |
+| `dataset-analysis-detail.html:2468` | `PROTOTYPE_ONLY_PARAMS` | 0（`s_state` 已在表上） |
 | `sidebar.js:732` | 列舉既有鍵 | 0 |
 
 兩輪的修法：[PR #400](https://github.com/label-suite/label-suite/pull/400) 把那 22 個名字補進 `navigation.mdx` 的契約，本版把掃描法改成兩步，所以 `params` 欄現在才是真的全集——`task-management/task-detail` 從 11 個變 **25** 個、`annotation/annotation-workspace` 從 9 個變 **13** 個。

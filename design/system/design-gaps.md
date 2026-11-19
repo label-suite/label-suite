@@ -500,7 +500,7 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 
 **b3 核對**：`annotation-workspace` 的 `.admin-tabs--panel`（`annotation-workspace.html:1290`–`:1291`）是兩顆 `<button>`，**沒有補上**語意，只能點（`setupGuidelineTabs`，`annotation-workspace.config.js:6736`–`:6754`）。
 
-**b4 核對**：`dataset-analysis-detail` 的 `.admin-tabs`（`dataset-analysis-detail.html:256`–`:258`）**自己補上了** `role="tablist"`／`tab`／`tabpanel` 與 `aria-selected`、`aria-controls`，但沒有方向鍵，只能點（`:2458`–`:2463`）。
+**b4 核對**：`dataset-analysis-detail` 的 `.admin-tabs`（`dataset-analysis-detail.html:256`–`:258`）**自己補上了** `role="tablist"`／`tab`／`tabpanel` 與 `aria-selected`、`aria-controls`，但沒有方向鍵，只能點（`:2472`–`:2477`）。
 
 ### G-23 覆蓋層有兩套焦點處理
 
@@ -604,11 +604,11 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 
 > b4 新增。
 
-`.match-btn`（`dataset-analysis-detail.html:107`–`:109`，markup `quality-entity_recognition.html:11`–`:12`）是兩顆原生 `<button>`，修正前選項只靠 `.active` 的樣式表示（`syncSequenceUi`，`dataset-analysis-detail.html:1942`–`:1956`），沒有 `aria-pressed`，也不是 `role="radiogroup"`。對照組：`annotation-workspace` 的審核三向決策 `.mini-btn` 有 `aria-pressed`。這是全站唯一的分段切換鈕，不屬任何元件。
+`.match-btn`（`dataset-analysis-detail.html:107`–`:109`，markup `quality-entity_recognition.html:11`–`:12`）是兩顆原生 `<button>`，修正前選項只靠 `.active` 的樣式表示（`syncSequenceUi`，`dataset-analysis-detail.html:1956`–`:1970`），沒有 `aria-pressed`，也不是 `role="radiogroup"`。對照組：`annotation-workspace` 的審核三向決策 `.mini-btn` 有 `aria-pressed`。這是全站唯一的分段切換鈕，不屬任何元件。
 
 **已裁定（2026-11-18）**：修正：加 `aria-pressed`。修正於 #422。
 
-**狀態（#422）**：已修正。`quality-entity_recognition.html` 的 `#matchStrict`／`#matchPartial` 帶 `aria-pressed`，`syncSequenceUi` 每次切換都與 `.active` 同步更新（`dataset-analysis-detail.html:1956` 起）。`.match-btn` 樣式現在在 `:107`–`:109`。
+**狀態（#422）**：已修正。`quality-entity_recognition.html` 的 `#matchStrict`／`#matchPartial` 帶 `aria-pressed`，`syncSequenceUi` 每次切換都與 `.active` 同步更新（`dataset-analysis-detail.html:1970` 起）。`.match-btn` 樣式現在在 `:107`–`:109`。
 
 ---
 

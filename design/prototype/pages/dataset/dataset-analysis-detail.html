@@ -434,7 +434,7 @@ var I18N = {
     statsRelAnnotated5xLabel:'≥ 5 次標記 Triple',statsRelAnnotated5xDesc:'達到一致性比較門檻的 triple 數',
     statsRelAvgAnnotatorsLabel:'平均標記員數 / Triple',statsRelAvgAnnotatorsDesc:'每個唯一 triple 的平均覆蓋標記員數',
     statsRelMaxTripleLabel:'單句最多 Triple',statsRelMaxTripleDesc:'單一樣本出現最多 triple 的數量',
-    iaaTitle: 'IAA 報告', iaaMethodSuffix: '— 主要指標',
+    iaaTitle: 'IAA 報告', iaaMethodSuffix: '— 主要指標', iaaMethodSuffixRef: '— 參考顯示', iaaPrimaryAria: '主要指標',
     anomalyTitle: '異常偵測', anomalySubtitle: '自動標記標記速度異常與離群標記值',
     consistencyTitle: '標記一致性偏離分析',
     consistencySubtitle: '顯示每位標記員在可比較單位中的離群值筆數與比例，作為觀測訊號，不直接覆寫風險等級。',
@@ -821,7 +821,7 @@ var I18N = {
     statsRelAnnotated5xLabel:'≥ 5× annotated',statsRelAnnotated5xDesc:'Triples meeting comparison threshold',
     statsRelAvgAnnotatorsLabel:'Avg annotators / triple',statsRelAvgAnnotatorsDesc:'Avg annotator coverage per unique triple',
     statsRelMaxTripleLabel:'Max triples / sentence',statsRelMaxTripleDesc:'Max triples in a single sample',
-    iaaTitle: 'IAA Report', iaaMethodSuffix: '— Primary metric',
+    iaaTitle: 'IAA Report', iaaMethodSuffix: '— Primary metric', iaaMethodSuffixRef: '— Reference only', iaaPrimaryAria: 'Primary metric',
     anomalyTitle: 'Anomaly Detection', anomalySubtitle: 'Flag annotation speed anomalies and outlier values automatically',
     consistencyTitle: 'Annotation Consistency Deviation Analysis',
     consistencySubtitle: 'Show outlier counts and rates for each annotator across comparable units as an observation signal without overriding risk level directly.',
@@ -1922,6 +1922,20 @@ function updateMethodName() {
   if (typeof methodMap === 'object' && methodMap[key]) {
     methodTarget.textContent = methodMap[key];
   }
+  /* 實體辨識切到 Partial overlap 時，這一張只是參考顯示，不是判定用的主指標：
+     星號收起（連 aria-label 也拿掉），後綴改「— 參考顯示」；切回 Strict 還原。
+     依據 規格 05-02 §八種輸出類型各自的主指標與門檻 第 11 條、
+     維護者裁定 2026-11-19 (#435)。 */
+  if (S.type !== 'entity_recognition') return;
+  var isPartial = S.seqMode === 'partial';
+  var star = document.querySelector('section[aria-labelledby="iaaTitle"] .iaa-primary-star');
+  var suffix = document.getElementById('iaaMethodSuffix');
+  if (star) {
+    star.classList.toggle('hidden', isPartial);
+    if (isPartial) star.removeAttribute('aria-label');
+    else star.setAttribute('aria-label', t('iaaPrimaryAria'));
+  }
+  if (suffix) suffix.textContent = t(isPartial ? 'iaaMethodSuffixRef' : 'iaaMethodSuffix');
 }
 
 

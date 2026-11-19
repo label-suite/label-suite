@@ -487,7 +487,7 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 | `/annotation/annotation-workspace` | **`task_id`（必填）**——解不到任務就導回清單（`annotation-workspace.config.js:7033`–`:7036`）、`role`（`reviewer` \| `project_leader` \| `annotator`）、`run_type`、`sample_id`；另外 **`status`、`q`、`limit`、`offset`、`annotator_id`、`reviewer_id` 六個會被原封不動讀出再轉手回清單**（`buildListReturnUrl()`，`:1554`–`:1565`），工作區自己不用它們，但「返回清單」要去哪裡由它們決定 |
 | `/dashboard/dashboard` | `view`（`skeleton` \| `error`）、`scenario`（`annotator` \| `reviewer` \| `project_leader` \| `super_admin_data` \| `user`，而且 `dashboard.html` 要有對應的 `id="view-<值>"`） |
 | `/dataset/dataset-analysis-list` | `keyword`、`iaa_status`、`output_type`、`view`（只認 `empty`）、`error`（只認 `1`，載入失敗；`dataset-analysis-list.model.js:241`）、`invalid_task`、`limit`、`offset` |
-| `/dataset/dataset-analysis-detail` | **`task_id`（必填）**——缺少、不認得或成員角色不在允許清單，一律導回列表並帶 `invalid_task=1`（`dataset-analysis-detail.html:2482`–`:2489`）、`tab`（**只認 `quality`**，其餘一律落到統計總覽，`:2537`）、`q_state`（`dry_run_in_progress` \| `report_pending` \| `report_generating` \| `report_failed` \| `ready`）、`s_state`（只認 `empty`）、`error`（只認 `1`，兩個面板都載入失敗；`:1449`，網址同步時不保留） |
+| `/dataset/dataset-analysis-detail` | **`task_id`（必填）**——缺少、不認得或成員角色不在允許清單，一律導回列表並帶 `invalid_task=1`（`dataset-analysis-detail.html:2482`–`:2489`）、`tab`（**只認 `quality`**，其餘一律落到統計總覽，`:2551`）、`q_state`（`dry_run_in_progress` \| `report_pending` \| `report_generating` \| `report_failed` \| `ready`）、`s_state`（只認 `empty`）、`error`（只認 `1`，兩個面板都載入失敗；`:1449`，網址同步時不保留） |
 
 ### `/task-management/task-detail` 的畫面狀態參數
 
@@ -501,7 +501,7 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 > | :--- | :--- | :--- |
 > | `task-management/task-detail.html:5048` | `URL_VIEW_STATE`（16 個） | 是——就是下表 |
 > | `annotation/annotation-workspace.config.js:1560` | `LIST_VIEW_STATE_KEYS`（`:1544`）＋ `LIST_IDENTITY_KEYS`（`:1552`） | 是——見 §各頁專屬 的工作區那一列 |
-> | `dataset/dataset-analysis-detail.html:2454` | `PROTOTYPE_ONLY_PARAMS`（`:2444`，只有 `s_state`） | 否，那個名字已在表上 |
+> | `dataset/dataset-analysis-detail.html:2468` | `PROTOTYPE_ONLY_PARAMS`（`:2458`，只有 `s_state`） | 否，那個名字已在表上 |
 > | `shared/sidebar.js:732` | `oldParams.get(key)`，列舉既有鍵 | 否，只比對有沒有變 |
 >
 > 第一版只列了兩處並宣稱「所以這一節現在是完整的」——**那句話是錯的**，漏掉中間兩處（判例：[PR #400](https://github.com/label-suite/label-suite/pull/400) 的獨立審查）。要掃參數就得把這四處都走過。
