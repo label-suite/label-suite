@@ -165,7 +165,7 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 
 | 面向 | 做法 |
 | :--- | :--- |
-| 路徑前綴 | `/api/v1`。envelope 將來要改就是破壞性改動，版本前綴是那個逃生門 |
+| 路徑前綴 | `/api/v1`，資源名直接接在後面，理由見 [ADR-003 的 D5](adr/003-backend-architecture.mdx#d5-api-路徑前綴與成功回應外層) |
 | 成功回應 | 包一層 envelope，例 `{"data": {...}, ...}` |
 | envelope 的例外 | `204` 無 body、檔案下載與串流不套 envelope；每個例外都要逐一寫進該 change 的 `api-contract.md`，不逐案自由心證 |
 | operationId | 用 `generate_unique_id_function` 固定成「動詞加資源」（#51） |
@@ -359,13 +359,13 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做。
 
 | ADR | 標題 | 狀態 | 在本 repo 的效力 |
 | :--- | :--- | :--- | :--- |
-| 001 | Modular Monorepo Structure | Accepted | 需調整：`backend/` 加 `frontend/` 沿用，但 canon 規格在 `docs/specs/`，不是根目錄 `specs/` |
+| 001 | Modular Monorepo Structure | Accepted | 需調整：`backend/` 加 `frontend/` 沿用，但 canon 規格在 `docs/specs/`，不是根目錄 `specs/`；見 [ADR-003 的 D1](adr/003-backend-architecture.mdx#d1-前後端放在同一個-repo) |
 | 002 | uv（後端）加 pnpm（前端） | Accepted | 沿用，等同 `AGENTS.md` Hard Rule 3，見 [§技術選型](#技術選型) |
-| 003 | FastAPI | Accepted | 沿用，見 [§後端分層](#後端分層) |
+| 003 | FastAPI | Accepted | 沿用，見 [§後端分層](#後端分層)與 [ADR-003 的 D2](adr/003-backend-architecture.mdx#d2-後端框架用-fastapi) |
 | 004 | React 加 Vite SPA | Accepted | **部分被覆寫**：SPA 與 Vite 沿用，版本改 React 19，見 [§技術選型](#技術選型) |
-| 005 | PostgreSQL 16 | Accepted | 沿用，Lite 層由 024 補上，見 [§資料庫雙層](#資料庫雙層) |
-| 006 | Redis 7（cache 加 broker） | Accepted | 沿用，見 [§非同步任務](#非同步任務) |
-| 007 | Celery | Accepted | 沿用，見 [§非同步任務](#非同步任務) |
+| 005 | PostgreSQL 16 | Accepted | 沿用，Lite 層由 024 補上，見 [§資料庫雙層](#資料庫雙層)與 [ADR-003 的 D7](adr/003-backend-architecture.mdx#d7-資料庫分兩層) |
+| 006 | Redis 7（cache 加 broker） | Accepted | 沿用，見 [§非同步任務](#非同步任務)與 [ADR-003 的 D8](adr/003-backend-architecture.mdx#d8-非同步任務用-celery-加-redis) |
+| 007 | Celery | Accepted | 沿用，見 [§非同步任務](#非同步任務)與 [ADR-003 的 D8](adr/003-backend-architecture.mdx#d8-非同步任務用-celery-加-redis) |
 | 008 | Docker 加 Docker Compose | Accepted | 沿用，見 [§部署與維運](#部署與維運) |
 | 009 | pytest 加 Playwright 加 TDD | Accepted | 沿用，見 [§測試分層](#測試分層)；覆蓋率門檻改採 [ADR-007 的 D2](adr/007-testing-strategy.mdx#d2-覆蓋率只管不得下降與關鍵路徑) |
 | 010 | Config-Driven Task Architecture | Accepted | 沿用原則，等同 Hard Rule 5；config schema 已由 029 取代，見 [§任務設定](#任務設定input_type-加-outputs) |
@@ -380,10 +380,10 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做。
 | 019 | AI 可追溯與稽核（`ai_runs`） | Accepted | 沿用，本期要做，見 [§稽核與可追溯](#稽核與可追溯) |
 | 020 | Sentry | Accepted | **本期不做**，見 [§部署與維運](#部署與維運) |
 | 021 | JWT 加 refresh token（httpOnly cookie） | Accepted | 沿用，見 [§認證與授權](#認證與授權) |
-| 022 | 任務狀態機放 service 層 | Accepted | **部分被覆寫**：狀態機沿用，轉移條件以 `docs/specs/` 為準；它舉的扁平 `app/services/` 路徑改成模組內分層，見 [§後端分層](#後端分層)（建議在個人 repo 補一份 ADR） |
+| 022 | 任務狀態機放 service 層 | Accepted | **部分被覆寫**：狀態機沿用，轉移條件以 `docs/specs/` 為準；它舉的扁平 `app/services/` 路徑改成模組內分層，見 [§後端分層](#後端分層)、[ADR-003 的 D3](adr/003-backend-architecture.mdx#d3-後端採模組內分層)與 [D4](adr/003-backend-architecture.mdx#d4-任務狀態機只放在-service-層)（建議在個人 repo 補一份 ADR） |
 | 023 | Compose 加 Nginx 加 Cloudflare 部署 | Accepted | 需調整：要搭 `commit-and-release.md` 的三分支與 GHCR，見 [§部署與維運](#部署與維運) |
-| 024 | 資料庫雙層（SQLite 加 PostgreSQL） | Accepted | 沿用，見 [§資料庫雙層](#資料庫雙層) |
-| 025 | Bruno API collection | Accepted | **部分被覆寫**：Bruno 降成可選的手動工具，pre-PR 硬關卡取消，見 [§API 契約](#api-契約) |
+| 024 | 資料庫雙層（SQLite 加 PostgreSQL） | Accepted | 沿用，見 [§資料庫雙層](#資料庫雙層)與 [ADR-003 的 D7](adr/003-backend-architecture.mdx#d7-資料庫分兩層) |
+| 025 | Bruno API collection | Accepted | **部分被覆寫**：Bruno 降成可選的手動工具，pre-PR 硬關卡取消，見 [§API 契約](#api-契約)與 [ADR-003 的 D9](adr/003-backend-architecture.mdx#d9-bruno-只當可選工具) |
 | 026 | i18n 兩層 | Accepted | 沿用，見 [§i18n 兩層](#i18n-兩層) |
 | 027 | GitHub Projects | Accepted | 已被取代：以 [ADR-002 的 D5](adr/002-development-workflow.mdx#d5-狀態只記在組織層專案板)為準，不用 label 追狀態，無 `STATUS.md` |
 | 028 | CI 安全掃描（SCA 加延後 SAST） | Accepted | 沿用，等同 Hard Rule 7、8，見 [§部署與維運](#部署與維運) |
@@ -438,3 +438,4 @@ ADR 引用的 FR-131、admin-007、spec 013 這類編號屬於個人 repo，本 
 | 2026-11-19 | 衝突優先序改為 `AGENTS.md` > 本 repo ADR > 本文 > 個人 repo ADR（只當參考） | 原本「本文與 ADR 不一致以 ADR 為準」，只有效力總表標成被覆寫等的列例外 | [#444](https://github.com/label-suite/label-suite/issues/444) |
 | 2026-11-19 | 測試分層、覆蓋率、前端測試位置與正式 E2E 位置的理由寫進 [ADR-007](adr/007-testing-strategy.mdx)，本文只留做法（[§測試分層](#測試分層)） | —（理由原本只在個人 repo 的 ADR-009、012、034） | [#453](https://github.com/label-suite/label-suite/issues/453) |
 | 2026-11-19 | 個人 repo ADR-017、027、033 的效力改連到 [ADR-002](adr/002-development-workflow.mdx) 的 D4、D5、D1（[§ADR 效力總表](#adr-效力總表)） | —（三列原本連到 #47 與 `AGENTS.md`） | [#448](https://github.com/label-suite/label-suite/issues/448) |
+| 2026-11-19 | 後端與 API 契約的理由寫進 [ADR-003](adr/003-backend-architecture.mdx)，本文只留做法；個人 repo ADR-001、003、005、006、007、022、024、025 的效力改連到它的 D1 至 D9（[§ADR 效力總表](#adr-效力總表)） | —（理由原本只在個人 repo 的 ADR 與 [#105](https://github.com/label-suite/label-suite/issues/105) 的留言） | [#449](https://github.com/label-suite/label-suite/issues/449) |

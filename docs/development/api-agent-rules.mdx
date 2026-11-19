@@ -254,7 +254,7 @@ server state 只放 TanStack Query，query key 一律來自 Orval 產物匯出�
 :::note{title="A10 的反例、例外與檢查方式" collapsible}
 | | |
 | :--- | :--- |
-| **反例** | 把 `listTasks` 改名成 `getTaskList` 當成單純重構（前端 hook 名稱跟著變）；把回應從 envelope 改成裸物件而不走版本：envelope 的理由明寫**版本前綴就是那個逃生門** |
+| **反例** | 把 `listTasks` 改名成 `getTaskList` 當成單純重構（前端 hook 名稱跟著變）；把回應從 envelope 改成裸物件而不走版本（版本前綴的用意見 [ADR-003 的 D5](adr/003-backend-architecture.mdx#d5-api-路徑前綴與成功回應外層)） |
 | **例外** | Bruno 可以留著當手動工具，但它不是關卡 |
 | **檢查方式** | **待建置**。snapshot diff 與 compatibility test 都要等 CI 與 `backend/` 存在；前兩個落點的 agent 檢查項已經在 `.claude/agents/design-reviewer.md` 與 `code-reviewer.md` 裡 |
 :::
@@ -268,7 +268,7 @@ server state 只放 TanStack Query，query key 一律來自 Orval 產物匯出�
 | 逐條 route 顯式寫 `operation_id=` | 原始 repo foundation spec FR-120 | 與本專案「由 `generate_unique_id_function` 固定、**不逐個覆寫**」相反。它禁止的「從函式名自動生成」仍然照收，見 A1 |
 | 手寫 `shared/constants/query-keys.ts` 的 queryKey factory | FR-084 | 採 Orval 後 key 由產物產生，再手寫一份就是兩個真相；`shared/` 路徑也已被 `pages/` 加 `features/` 覆寫。用意保留在 A9 |
 | correlation id 送進 Sentry 的 redacted context | FR-123 | ADR-020（Sentry）本期不做 |
-| Bruno 的 pre-PR 硬關卡 | 原始 repo ADR-025 | 已取消；Bruno 降級成可選工具 |
+| Bruno 的 pre-PR 硬關卡 | 原始 repo ADR-025 | 已取消；Bruno 降級成可選工具，見 [ADR-003 的 D9](adr/003-backend-architecture.mdx#d9-bruno-只當可選工具) |
 | `ApiResponseDto { success, code, message, data, timestamp, traceId }` 這個具體 envelope 形狀 | scaffold `api-contract.md` | 本專案只決定「包一層 envelope」，沒有決定欄位，見 [§待決](#待決) 第 1 列；不要照抄 NestJS 專案的形狀，也不要由各模組各自決定 |
 | Bearer token 與 `@ApiBearerAuth()` | scaffold `api-contract.md`、`api-client.md` | 本專案是 httpOnly cookie 加 session，**不接受 cookie 以外的任何來源**（見 [security-agent-rules.mdx](security-agent-rules.mdx)） |
 | `@nestjs/swagger` 的 decorator 寫法、`@RegisterDto()`、`bigint id` 一律 `type: String` | scaffold `api-contract.md` | 棧不同（FastAPI 加 Pydantic v2）。「每個欄位都要寫出型別、nullable、enum、範例」的用意在 A2 |
@@ -372,3 +372,4 @@ server state 只放 TanStack Query，query key 一律來自 Orval 產物匯出�
 | 2026-11-10 | query key 一律來自 Orval 產物，不手寫 factory；任務成員身分變更只失效帶 `taskId` 的 key，不整個 `clear()`（A9） | FR-084 的手寫 `shared/constants/query-keys.ts` factory | 維護者裁定 Orval 與 `pages/` 加 `features/` 目錄；[#108](https://github.com/label-suite/label-suite/issues/108) |
 | 2026-11-10 | 破壞性變更的審核方式是三個落點（`design-reviewer`、`code-reviewer`、CI snapshot diff），不另立流程（A10） | — | [#108](https://github.com/label-suite/label-suite/issues/108) |
 | 2026-11-10 | starter-kit 沒有對應的 API 規則檔，不編造對照；實查範圍見附錄 | — | [#108](https://github.com/label-suite/label-suite/issues/108) |
+| 2026-11-19 | 路徑前綴與 envelope、Orval、Bruno 降級的理由寫進 [ADR-003](adr/003-backend-architecture.mdx) 的 D5、D6、D9，本文只留規則（A1、A4、A10） | —（理由原本只在 [#105](https://github.com/label-suite/label-suite/issues/105) 與 [#108](https://github.com/label-suite/label-suite/issues/108) 的留言） | [#449](https://github.com/label-suite/label-suite/issues/449) |
