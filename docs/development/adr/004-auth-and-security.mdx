@@ -80,7 +80,7 @@ Cookie 屬性、JWT 的欄位與任務角色不放進 JWT，見 [architecture.md
 ### 決定
 
 後端授權只看每次從資料庫讀到的當前角色、帳號狀態與 `credential_version`，JWT 的 `role` 只供前端顯示；`credential_version` 只管高風險的憑證變更，不取代對當前角色與狀態的讀取。
-停用帳號時一併撤銷該使用者所有的 token family，重新啟用不會讓它們復活。
+停用帳號時一併撤銷該使用者所有的 token family，重新啟用不會讓它們復活；`/auth/refresh` 在輪替之前另外再讀一次帳號狀態，見 [architecture.mdx 的 §認證與授權](../architecture.mdx#認證與授權)。
 規則本體見 [security-agent-rules.mdx 的 S3](../rules/security-agent-rules.mdx#s3-授權的四段順序) 與 [S4](../rules/security-agent-rules.mdx#s4-遮蔽與-allowlist-在後端)，做法見 [architecture.mdx 的 §授權四步](../architecture.mdx#授權四步)。
 
 ### 後果
@@ -288,7 +288,7 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 | D4 | 個人 repo ADR-035（Context 的限制表、Options Evaluated、Decision、Optional-integration guarantee、Reversal trigger、Consequences）；選項 A、B 的好處沒有記錄 |
 | D5 | 個人 repo ADR-035 的帳號綁定修訂（Account-linking strategy、Consequences）；選項 B、C 沒有記錄好處，C 也沒有記錄代價 |
 | D6 | 個人 repo ADR-037（Context、Decision、Consequences）；來源沒有列出選項，D6 的選項 A、B 是從 Context 的兩種失敗情形推出的；快取規則出自 [security-agent-rules.mdx 的 S3](../rules/security-agent-rules.mdx#s3-授權的四段順序)；本節的重新討論條件是推論，來源沒有記錄 |
-| — | 個人 repo ADR-021 後來的修訂（token family 的資料表結構、30 秒寬限重發、email 的 Unicode 正規化、session 保留與刪除）、ADR-037 後來的修訂（permission key 的登錄與種子列、拒絕稽核的範圍、仲裁沿用審核 key），不在 [architecture.mdx](../architecture.mdx) 裡，本 ADR 不收；它們屬於資料庫與業務規格，由各自的 change 決定是否採用；個人 repo ADR-021 的另一條規則，`/auth/refresh` 在輪替 refresh token 之前也要檢查 `is_active`，同樣不在 architecture.mdx 裡，追蹤在 [#474](https://github.com/label-suite/label-suite/issues/474) |
+| — | 個人 repo ADR-021 後來的修訂（token family 的資料表結構、30 秒寬限重發、email 的 Unicode 正規化、session 保留與刪除）、ADR-037 後來的修訂（permission key 的登錄與種子列、拒絕稽核的範圍、仲裁沿用審核 key），不在 [architecture.mdx](../architecture.mdx) 裡，本 ADR 不收；它們屬於資料庫與業務規格，由各自的 change 決定是否採用 |
 
 ## 待決
 
