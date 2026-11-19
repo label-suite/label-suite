@@ -18,7 +18,7 @@ updatedAt: '2026-11-16'
 
 ## 前提
 
-開工前的技術前提都已選定，下表是現行結果。
+開工前的技術前提都已選定，下表是現行結果；為什麼這樣選見 [ADR-005](adr/005-frontend-architecture.mdx)。
 
 | 前提 | 內容 |
 | :--- | :--- |
@@ -385,3 +385,4 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | 2026-11-10 | 補上 F4 的第四個去處（外觀偏好只記在這台瀏覽器）、F6 禁止列的「不得改寫 shadcn 元件」、F8 的逐頁更嚴規格、F1 分層表哪三層來自維護者的選定；修正章節名與計數（scaffold §無障礙 是五條、§狀態管理 是五條、`tokens.css` 是 92 個不重複變數名、原始 repo `frontend.md` 只有三個章節、§Icons 的 prototype 條文是延伸不是豁免） | 初版的來源誤述與計數錯誤 | [#109](https://github.com/label-suite/label-suite/issues/109) |
 | 2026-11-10 | starter-kit 的 `frontend/react-typescript.md` 實查零命中（查核日 2026-11-10：`trendlink` 組織與 `singyichen` 各 repo 的 git tree、本機 `find`），不做對照 | 該來源點名的檔名 | [#109](https://github.com/label-suite/label-suite/issues/109) |
 | 2026-11-10 | 初版：十一條前端規範、十條刻意不採用的來源條文、原始 repo（含 foundation spec）／scaffold 五份／duty-mate 四份的逐條對照 | — | [#109](https://github.com/label-suite/label-suite/issues/109) |
+| 2026-11-19 | 前端框架、目錄分層、元件庫、design token 對照與圖示的理由寫進 [ADR-005](adr/005-frontend-architecture.mdx)，本文只留做法（[前提](#前提)、[F1](#f1-分層與允許的-import)、[F6](#f6-視覺基準與-design-token-的映射)、[F7](#f7-圖示與-svg)） | —（理由原本只在個人 repo 的 ADR-004、011、016、030 與 [#109](https://github.com/label-suite/label-suite/issues/109) 的留言） | [#451](https://github.com/label-suite/label-suite/issues/451) |
