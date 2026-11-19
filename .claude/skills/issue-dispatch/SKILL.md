@@ -37,16 +37,10 @@ description: 掃描 Label Suite 看板上 Ready 的 issue，排出彼此不衝�
 ## 步驟 1 掃描
 
 ```bash
-gh api graphql --paginate -f query='
-query($endCursor:String){ organization(login:"label-suite"){ projectV2(number:1){
-  items(first:100, after:$endCursor){ pageInfo{hasNextPage endCursor} nodes{
-    status: fieldValueByName(name:"Status"){ ... on ProjectV2ItemFieldSingleSelectValue{ name } }
-    content{ ... on Issue{ number title state issueType{ name }
-      blockedBy(first:20){ nodes{ number state } } } } } } } } }' \
-  --jq '.data.organization.projectV2.items.nodes[]
-        | select(.status.name=="Ready" and .content.state=="OPEN" and .content.issueType.name!="Epic")
-        | [.content.number, ([.content.blockedBy.nodes[]|select(.state=="OPEN")|.number]|tostring), .content.title] | @tsv'
+scripts/dispatch-scan.sh
 ```
+
+輸出每張 Ready、還開著、不是 Epic 的 issue 一列：編號、還沒關的 blocked-by、標題。查詢寫死在腳本裡，所以 `.claude/settings.json` 只允許這支腳本，不允許任意的 `gh api graphql`（那樣連 mutation 都會放行）。
 
 第二欄不是 `[]` 的，代表還有沒關的 blocked-by，跳過。
 
@@ -230,7 +224,8 @@ gh project item-edit --project-id PVT_kwDOEWdNqs4BoCOI --id "$ITEM" \
 
 | 坑 | 防法 |
 | :--- | :--- |
-| `gh api graphql --paginate` 的游標變數不叫 `$endCursor` 時，每一頁都從頭查，形成無窮迴圈 | 查詢的變數一定命名為 `$endCursor` |
+| `gh api graphql --paginate` 的游標變數不叫 `$endCursor` 時，每一頁都從頭查，形成無窮迴圈 | 掃描一律用 `scripts/dispatch-scan.sh`；自己寫查詢時變數一定命名為 `$endCursor` |
+| 白名單寫 `gh api graphql` 或 `gh pr merge` 的前綴，會連 mutation 和 `--admin`（繞過分支保護）一起放行 | 掃描包成固定查詢的腳本；合併只允許 `--merge`，並在 `deny` 擋掉 `--admin` 與 `--auto` |
 | `gh project item-list --format json` 的輸出含控制字元，整份丟給 `jq` 會解析失敗 | 用 `gh` 自己的 `-q` 過濾，不要把輸出接給 `jq` |
 | 刪掉的 worktree 路徑殘留在 `~/.notecraft/app-*/.astro/data-store.json` 與 `node_modules/.astro/data-store.json`，之後的 build 會找不到模組 | lead 不跑本機 build；本機要 build 時若遇到，把這兩個快取移開再 build |
 | 裁定寫在後面的留言，不在內文 | 步驟 1 讀完整串留言 |

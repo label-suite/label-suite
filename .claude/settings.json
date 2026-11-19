@@ -12,14 +12,18 @@
       "Bash(gh pr view:*)",
       "Bash(gh pr list:*)",
       "Bash(gh pr checks:*)",
-      "Bash(gh pr merge:*)",
+      "Bash(gh pr merge * --merge)",
       "Bash(gh run list:*)",
       "Bash(gh project item-list:*)",
       "Bash(gh project item-edit:*)",
-      "Bash(gh api graphql:*)",
       "Bash(git worktree add:*)",
       "Bash(git worktree list:*)",
-      "Bash(git worktree remove:*)"
+      "Bash(git worktree remove:*)",
+      "Bash(scripts/dispatch-scan.sh)"
+    ],
+    "deny": [
+      "Bash(gh pr merge *--admin*)",
+      "Bash(gh pr merge *--auto*)"
     ]
   }
 }
