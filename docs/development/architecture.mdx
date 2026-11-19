@@ -122,6 +122,7 @@ import ArchitectureBackendLayers from '@notes/components/architecture-backend-la
 ## 認證與授權
 
 身分只認 httpOnly cookie 裡的 token，角色只從資料庫取；權限一律在後端擋，前端隱藏按鈕只是體驗。
+為什麼 token 放 cookie、角色每次讀資料庫，見 [ADR-004 的 D1](adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie) 與 [D2](adr/004-auth-and-security.mdx#d2-授權用的角色每次從資料庫讀)。
 `Authorization` header、查詢字串、自訂 header 都不用來推定身分。
 
 | Token | 效期 | Cookie flag | 輪替 |
@@ -136,18 +137,20 @@ JWT payload 只放 `sub`、`sid`、`credential_version`、`role`、`iat`、`exp`
 ### CSRF
 
 會改資料的請求都要帶綁定 session 的 double-submit token，由單一 middleware 驗 HMAC。
-`SameSite=Lax` 由瀏覽器擋掉跨網域表單，與伺服器的 CORS 設定無關；它擋不住同站子網域，這一層補的是後者。
+每個要素為什麼不能省，見 [ADR-004 的 D3](adr/004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token)。
 
-| 要素 | 做法 | 為什麼不能省 |
-| :--- | :--- | :--- |
-| token 的值 | `HMAC(server_secret, sid)`，驗 HMAC 而不只比對字串 | 只比對 cookie 與 header 相等的 naive 版本，子網域把兩邊設成同一個值就能通過 |
-| cookie 名稱 | `__Host-` 前綴 | 這個前綴禁止 `Domain` 屬性，子網域無法覆寫 |
-| 傳遞方式 | 前端把值複製到自訂 header | 自訂 header 會觸發 preflight，所以這一層的強度等於 CORS allowlist 的嚴格程度（Hard Rule 7） |
-| 責任位置 | 單一 middleware，端點不各自處理 | 散在各端點就會有人漏掉 |
+| 要素 | 做法 |
+| :--- | :--- |
+| token 的值 | `HMAC(server_secret, sid)`，驗 HMAC 而不只比對字串 |
+| cookie 名稱 | `__Host-` 前綴 |
+| 傳遞方式 | 前端把值複製到自訂 header；這一層的強度等於 CORS allowlist 的嚴格程度（Hard Rule 7） |
+| 責任位置 | 單一 middleware，端點不各自處理 |
 
 CSRF cookie 刻意讓 JS 讀得到，是系統裡唯一非 `httpOnly` 的 cookie。負向測試要涵蓋「缺 header」「header 與 cookie 不符」「HMAC 無效」三種。
 
 ### 授權四步
+
+為什麼矩陣是授權的輸入，見 [ADR-004 的 D6](adr/004-auth-and-security.mdx#d6-權限矩陣當授權輸入)。
 
 1. 驗目前登入者、帳號是否啟用、`credential_version`、token family 是否仍有效
 2. 讀系統角色；任務範圍的操作另讀該任務目前有效的成員身分。系統角色永遠不隱含任務成員身分
@@ -156,6 +159,7 @@ CSRF cookie 刻意讓 JS 讀得到，是系統裡唯一非 `httpOnly` 的 cookie
 
 ### Google SSO
 
+為什麼不引入外部 IdP、為什麼這樣綁定，見 [ADR-004 的 D4](adr/004-auth-and-security.mdx#d4-google-sso-直接走-oidc) 與 [D5](adr/004-auth-and-security.mdx#d5-google-登入綁定既有帳號的條件)。
 直接整合 OIDC（`authlib`），不引入外部 IdP；沒設 `GOOGLE_CLIENT_ID` 時按鈕退回 no-op，所以 SSO 是可選的。
 Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並在同一筆交易內把 `hashed_password` 設為 `null`、`credential_version` 加一、撤銷所有 session。
 
@@ -379,7 +383,7 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做。
 | 018 | Prometheus 加 Grafana | Accepted | **本期不做**，見 [§部署與維運](#部署與維運) |
 | 019 | AI 可追溯與稽核（`ai_runs`） | Accepted | 沿用，本期要做，見 [§稽核與可追溯](#稽核與可追溯) |
 | 020 | Sentry | Accepted | **本期不做**，見 [§部署與維運](#部署與維運) |
-| 021 | JWT 加 refresh token（httpOnly cookie） | Accepted | 沿用，見 [§認證與授權](#認證與授權) |
+| 021 | JWT 加 refresh token（httpOnly cookie） | Accepted | 沿用，見 [§認證與授權](#認證與授權)與 [ADR-004 的 D1](adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie)、[D2](adr/004-auth-and-security.mdx#d2-授權用的角色每次從資料庫讀) |
 | 022 | 任務狀態機放 service 層 | Accepted | **部分被覆寫**：狀態機沿用，轉移條件以 `docs/specs/` 為準；它舉的扁平 `app/services/` 路徑改成模組內分層，見 [§後端分層](#後端分層)、[ADR-003 的 D3](adr/003-backend-architecture.mdx#d3-後端採模組內分層)與 [D4](adr/003-backend-architecture.mdx#d4-任務狀態機只放在-service-層)（建議在個人 repo 補一份 ADR） |
 | 023 | Compose 加 Nginx 加 Cloudflare 部署 | Accepted | 需調整：要搭 `commit-and-release.md` 的三分支與 GHCR，見 [§部署與維運](#部署與維運) |
 | 024 | 資料庫雙層（SQLite 加 PostgreSQL） | Accepted | 沿用，見 [§資料庫雙層](#資料庫雙層)與 [ADR-003 的 D7](adr/003-backend-architecture.mdx#d7-資料庫分兩層) |
@@ -393,9 +397,9 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做。
 | 032 | 使用者行為稽核（`audit_events`） | Accepted | 沿用，見 [§稽核與可追溯](#稽核與可追溯) |
 | 033 | OpenSpec 當變更流程層 | Accepted | 已被取代：以 `openspec/config.yaml` 加 [ADR-002 的 D1](adr/002-development-workflow.mdx#d1-完整九份產物流程一次導入)為準（033 把 `openspec/specs/` 當衍生檢視，本 repo 當可測契約，方向相反）；檔案狀態與 `README.md` 索引不一致，見 [§待決](#待決) 第 1 列 |
 | 034 | 正式 E2E 放根目錄 `e2e/[module]/` | Accepted | 沿用，見 [§測試分層](#測試分層)與 [ADR-007 的 D4](adr/007-testing-strategy.mdx#d4-正式-e2e-放根目錄) |
-| 035 | Google SSO 直接走 OIDC | Accepted | 沿用，見 [§Google SSO](#google-sso) |
+| 035 | Google SSO 直接走 OIDC | Accepted | 沿用，見 [§Google SSO](#google-sso)與 [ADR-004 的 D4](adr/004-auth-and-security.mdx#d4-google-sso-直接走-oidc)、[D5](adr/004-auth-and-security.mdx#d5-google-登入綁定既有帳號的條件) |
 | 036 | 開源 repo 拆分 | Proposed | 需調整：規格 canon 已搬到本 repo 的 `docs/specs/`，ADR 仍寫在個人 repo，見 [§待決](#待決) 第 1 列 |
-| 037 | 權限矩陣當授權輸入 | Accepted | 沿用，見 [§授權四步](#授權四步) |
+| 037 | 權限矩陣當授權輸入 | Accepted | 沿用，見 [§授權四步](#授權四步)與 [ADR-004 的 D6](adr/004-auth-and-security.mdx#d6-權限矩陣當授權輸入) |
 | 038 | 資料保留、刪除與匿名化 | Accepted | 沿用，見 [§稽核與可追溯](#稽核與可追溯) |
 
 | 效力 | 份數 | 哪幾份 |
@@ -439,3 +443,4 @@ ADR 引用的 FR-131、admin-007、spec 013 這類編號屬於個人 repo，本 
 | 2026-11-19 | 測試分層、覆蓋率、前端測試位置與正式 E2E 位置的理由寫進 [ADR-007](adr/007-testing-strategy.mdx)，本文只留做法（[§測試分層](#測試分層)） | —（理由原本只在個人 repo 的 ADR-009、012、034） | [#453](https://github.com/label-suite/label-suite/issues/453) |
 | 2026-11-19 | 個人 repo ADR-017、027、033 的效力改連到 [ADR-002](adr/002-development-workflow.mdx) 的 D4、D5、D1（[§ADR 效力總表](#adr-效力總表)） | —（三列原本連到 #47 與 `AGENTS.md`） | [#448](https://github.com/label-suite/label-suite/issues/448) |
 | 2026-11-19 | 後端與 API 契約的理由寫進 [ADR-003](adr/003-backend-architecture.mdx)，本文只留做法；個人 repo ADR-001、003、005、006、007、022、024、025 的效力改連到它的 D1 至 D9（[§ADR 效力總表](#adr-效力總表)） | —（理由原本只在個人 repo 的 ADR 與 [#105](https://github.com/label-suite/label-suite/issues/105) 的留言） | [#449](https://github.com/label-suite/label-suite/issues/449) |
+| 2026-11-19 | 認證、CSRF、Google SSO、權限矩陣的理由寫進 [ADR-004](adr/004-auth-and-security.mdx)，本文只留做法（[§認證與授權](#認證與授權)） | —（理由原本只在個人 repo 的 ADR-021、035、037 與 #107 的留言） | [#450](https://github.com/label-suite/label-suite/issues/450) |

@@ -22,7 +22,7 @@ updatedAt: '2026-11-16'
 
 ### S1 身分只來自驗證完成的 session
 
-可接受的身分來源只有 httpOnly cookie；認證 dependency 驗 cookie 裡的 access JWT，其餘來源一概不看。
+可接受的身分來源只有 httpOnly cookie；認證 dependency 驗 cookie 裡的 access JWT，其餘來源一概不看。理由見 [ADR-004 的 D1](adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie)。
 
 | | |
 | :--- | :--- |
@@ -38,7 +38,7 @@ updatedAt: '2026-11-16'
 
 ### S2 token 不離開 cookie；CSRF 與 CORS 的統一位置
 
-前端不碰 token，CSRF 由單一 middleware 驗綁定 session 的 double-submit token，CORS 來源逐一列出。
+前端不碰 token，CSRF 由單一 middleware 驗綁定 session 的 double-submit token，CORS 來源逐一列出。CSRF 的理由見 [ADR-004 的 D3](adr/004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token)。
 
 | | |
 | :--- | :--- |
@@ -55,7 +55,7 @@ updatedAt: '2026-11-16'
 
 ### S3 授權的四段順序
 
-授權依序判定四件事，未知值或缺失一律拒絕，不走「預設允許」。
+授權依序判定四件事，未知值或缺失一律拒絕，不走「預設允許」。理由見 [ADR-004 的 D2](adr/004-auth-and-security.mdx#d2-授權用的角色每次從資料庫讀)與 [D6](adr/004-auth-and-security.mdx#d6-權限矩陣當授權輸入)。
 
 | | |
 | :--- | :--- |
@@ -271,3 +271,4 @@ updatedAt: '2026-11-16'
 | 2026-11-10 | scaffold §後端鐵律 2「角色只從 token 取」改列不採用 | 初版既未沿用也未排除，但它與 S3 正面衝突 | [#107](https://github.com/label-suite/label-suite/issues/107) |
 | 2026-11-10 | starter-kit 來源不存在或已不適用，不做對照；另實查 `trendlink` 組織 24 個 repo 的 tree、個人帳號與本機，找不到該檔（查核日 2026-11-10） | —（工作項點名的 starter-kit `backend/security.md`） | [#105](https://github.com/label-suite/label-suite/issues/105)、[#106](https://github.com/label-suite/label-suite/issues/106) |
 | 2026-11-10 | 初版：十條規範、六條刻意不採用的來源條文、原始 repo 與 scaffold 的逐條對照 | — | [#107](https://github.com/label-suite/label-suite/issues/107) |
+| 2026-11-19 | S1 至 S4 的認證與授權理由寫進 [ADR-004](adr/004-auth-and-security.mdx)，本文只留規範與檢查方式 | —（理由原本只在個人 repo 的 ADR-021、035、037 與 #107 的留言） | [#450](https://github.com/label-suite/label-suite/issues/450) |
