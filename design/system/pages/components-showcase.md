@@ -21,36 +21,36 @@
 
 | 區塊（`id`） | 行 | 元件 |
 | :--- | ---: | :--- |
-| `#comp-buttons` | 1029 | [Button](../components/button.md)（七個 variant ＋ loading ＋ disabled），含只在這裡存在的 `.btn-oauth`；其中 `.btn-language`（`:1039`）是 [Language Toggle](../components/lang-toggle.md) 的正典形式 |
-| `#comp-inputs` | 1048 | [Input](../components/input.md)（default／error／readonly ＋ `.field-hint`／`.field-error`） |
-| `#comp-date-range-picker` | 1064 | [Date Range Picker](../components/date-range-picker.md)，**可實際操作** |
-| `#comp-toggle` | 1074 | [Toggle Switch](../components/toggle-switch.md) |
-| `#comp-badges` | 1089 | [Badge](../components/badge.md) ＋ [Status Pill](../components/status-pill.md) |
-| `#comp-banner` | 1108 | [Alert Banner](../components/alert-banner.md) |
-| `#comp-toast` | 1119 | [Toast](../components/toast.md)，四顆鈕觸發**真實行為** |
-| `#comp-skeleton` | 1130 | [Skeleton](../components/skeleton.md)（A pulse ／ B shimmer） |
-| `#comp-chips` | 1152 | [Chip](../components/chip.md)（多選／單選／五種唯讀），**可實際點選** |
-| `#comp-pagination` | 1177 | [Pagination](../components/pagination.md) |
-| `#comp-breadcrumb` | 1205 | [Breadcrumb](../components/breadcrumb.md) |
-| `#comp-review-track` | 1217 | [Review Status Track](../components/review-status-track.md) ＋ 三層 Breadcrumb |
-| `#comp-colordot` | 1242 | [Color Dot](../components/color-dot.md)（三種尺寸 ＋ 8 色盤） |
-| `#comp-divider` | 1265 | [Divider](../components/divider.md)（三種形態） |
-| `#comp-accordion` | 1287 | [Accordion](../components/accordion.md)，**可實際展開** |
-| `#comp-progress` | 1313 | [Progress Bar](../components/progress-bar.md) |
-| `#comp-metric` | 1323 | [Metric KPI Tile](../components/metric.md) |
-| `#comp-statepanel` | 1335 | [State Panel](../components/state-panel.md)（success ／ error） |
-| `#comp-avatar` | 1359 | [Avatar](../components/avatar.md)，**可實際選檔** |
+| `#comp-buttons` | 1032 | [Button](../components/button.md)（七個 variant ＋ loading ＋ disabled），含只在這裡存在的 `.btn-oauth`；其中 `.btn-language`（`:1042`）是 [Language Toggle](../components/lang-toggle.md) 的正典形式 |
+| `#comp-inputs` | 1051 | [Input](../components/input.md)（default／error／readonly ＋ `.field-hint`／`.field-error`） |
+| `#comp-date-range-picker` | 1067 | [Date Range Picker](../components/date-range-picker.md)，**可實際操作** |
+| `#comp-toggle` | 1077 | [Toggle Switch](../components/toggle-switch.md) |
+| `#comp-badges` | 1092 | [Badge](../components/badge.md) ＋ [Status Pill](../components/status-pill.md) |
+| `#comp-banner` | 1111 | [Alert Banner](../components/alert-banner.md) |
+| `#comp-toast` | 1122 | [Toast](../components/toast.md)，四顆鈕觸發**真實行為** |
+| `#comp-skeleton` | 1133 | [Skeleton](../components/skeleton.md)（A pulse ／ B shimmer） |
+| `#comp-chips` | 1155 | [Chip](../components/chip.md)（多選／單選／五種唯讀），**可實際點選** |
+| `#comp-pagination` | 1180 | [Pagination](../components/pagination.md) |
+| `#comp-breadcrumb` | 1208 | [Breadcrumb](../components/breadcrumb.md) |
+| `#comp-review-track` | 1220 | [Review Status Track](../components/review-status-track.md) ＋ 三層 Breadcrumb |
+| `#comp-colordot` | 1245 | [Color Dot](../components/color-dot.md)（三種尺寸 ＋ 8 色盤） |
+| `#comp-divider` | 1268 | [Divider](../components/divider.md)（三種形態） |
+| `#comp-accordion` | 1290 | [Accordion](../components/accordion.md)，**可實際展開** |
+| `#comp-progress` | 1316 | [Progress Bar](../components/progress-bar.md) |
+| `#comp-metric` | 1326 | [Metric KPI Tile](../components/metric.md) |
+| `#comp-statepanel` | 1338 | [State Panel](../components/state-panel.md)（success ／ error） |
+| `#comp-avatar` | 1362 | [Avatar](../components/avatar.md)，**可實際選檔** |
 
-另有六個 token 區塊（`#palette` `:992` 起，依序是 Palette、State Colors、Typography、Spacing、Radius、Z-index，止於 `:1024`——`:1025` 已是 `#components`），**在執行期從 `assets/tokens.css` 即時列舉**（`:1396`–`:1501`），不是手寫清單——所以 token 一改，這一頁自動跟上。
+另有六個 token 區塊（`#palette` `:995` 起，依序是 Palette、State Colors、Typography、Spacing、Radius、Z-index，止於 `:1027`——`:1028` 已是 `#components`），**在執行期從 `assets/tokens.css` 即時列舉**（`:1399`–`:1504`），不是手寫清單——所以 token 一改，這一頁自動跟上。
 
 ## 這一頁專屬的
 
 | 元件 | 說明 |
 | :--- | :--- |
-| `.showcase-header`／`.showcase-title`／`.showcase-note`／`.theme-toggle`（`:983`–`:989`） | 頁面外框 |
+| `.showcase-header`／`.showcase-title`／`.showcase-note`／`.theme-toggle`（`:986`–`:992`） | 頁面外框 |
 | `.section-heading`／`.section-note`／`.component-card`／`.component-note`／`.component-demo`／`.component-demo--stack`／`.token-grid` | 展示用版面 |
 | `.toggle-row`／`.toggle-info`／`.toggle-label-text`／`.toggle-desc`（`:135`–`:138`） | **非正典**，註解明寫 |
-| `.demo-col`（`:961`）／`.metric-grid`（`:965`） | **非正典**，註解明寫是示範外框 |
+| `.demo-col`（`:964`）／`.metric-grid`（`:968`） | **非正典**，註解明寫是示範外框 |
 
 ## 業務行為
 

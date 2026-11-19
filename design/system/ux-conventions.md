@@ -50,7 +50,7 @@
 | warning | 8000ms |
 | error | **0 ＝ 只能手動關** |
 
-依據：`design/prototype/components-showcase.html:1504`（`TOAST_DURATIONS`），`:1536` 的 `if (duration)` 讓 `0` 落到「不設計時器」。單一實例靠 `:1533` 的 `replaceChildren()`——是覆蓋，不是佇列。
+依據：`design/prototype/components-showcase.html:1507`（`TOAST_DURATIONS`），`:1539` 的 `if (duration)` 讓 `0` 落到「不設計時器」。單一實例靠 `:1536` 的 `replaceChildren()`——是覆蓋，不是佇列。
 
 遵守它的元件：[Toast](components/toast.md) 本身，以及 [App Shell](components/app-shell.md) 的通知（待 b2 核對是否同一套）。
 
@@ -60,13 +60,13 @@
 
 **b4 核對**：`dataset/dataset-analysis-list` 照抄 `TOAST_DURATIONS`（`design/prototype/pages/dataset/dataset-analysis-list.js:25`），遵守。`dataset/dataset-analysis-detail` 原本有 toast 的 markup 與關閉鈕，卻沒有任何程式顯示它；#423 已刪掉，本頁不用 toast，不適用 → [`design-gaps.md`](design-gaps.md) G-55。
 
-這是 prototype 引用最多的一條：42 處裡獨佔 **20 處**，其中 4 處在 `components-showcase.html`（`:143`、`:401`、`:1120`、`:1503`），`:143` 甚至把它寫進正典 CSS 區塊的標頭。
+這是 prototype 引用最多的一條：42 處裡獨佔 **20 處**，其中 4 處在 `components-showcase.html`（`:143`、`:401`、`:1123`、`:1506`），`:143` 甚至把它寫進正典 CSS 區塊的標頭。
 
 ## UXC-08：Skeleton 尺寸要貼合載入後的內容
 
 骨架的尺寸要照著載入後真正會出現的東西量，**以防 layout shift**。
 
-依據：`design/prototype/components-showcase.html:1131`（「尺寸須貼合載入後內容以防 layout shift（UXC-08）」）。
+依據：`design/prototype/components-showcase.html:1134`（「尺寸須貼合載入後內容以防 layout shift（UXC-08）」）。
 
 遵守它的元件：
 
@@ -79,7 +79,7 @@
 
 清單頁的 `q`／`keyword`、`status`、`limit`／`offset` 這類狀態寫進網址，重新整理與分享連結都能回到同一個畫面。
 
-依據：`design/prototype/pages/admin/user-management.html:957`（「URL state (UXC-11): q / role / status / limit / offset」）、`pages/annotation/annotation-list.html:1050`（「filter/search/pagination live in the URL (limit/offset…」）、`components-showcase.html:1178`（「行為契約見 UXC-11（limit/offset、URL 同步）」）。
+依據：`design/prototype/pages/admin/user-management.html:957`（「URL state (UXC-11): q / role / status / limit / offset」）、`pages/annotation/annotation-list.html:1050`（「filter/search/pagination live in the URL (limit/offset…」）、`components-showcase.html:1181`（「行為契約見 UXC-11（limit/offset、URL 同步）」）。
 
 遵守它的元件：[Pagination](components/pagination.md)、[List Toolbar](components/list-toolbar.md)。兩者在 b1 都**沒有可重現的視圖**（showcase 只展示版面、不展示網址行為），所以這一條在本批次只記到契約層。
 

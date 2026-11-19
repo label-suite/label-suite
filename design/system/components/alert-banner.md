@@ -8,7 +8,7 @@
 | :--- | :--- | :--- |
 | `.alert-banner` 容器（`display: flex`、`align-items: flex-start`） | 必填 | `components-showcase.html:389` |
 | 前置 `<svg>` 圖示（`flex-shrink: 0`、`margin-top: 2px` 對齊首行） | 選用 | `components-showcase.html:399` |
-| 訊息文字 | 必填 | `components-showcase.html:1111` |
+| 訊息文字 | 必填 | `components-showcase.html:1114` |
 
 ## 變體
 
@@ -33,7 +33,7 @@
 
 ## 鍵盤與焦點
 
-不可聚焦。正典樣本帶 `role="alert"`（`components-showcase.html:1112`），和同一份 showcase 的 `.field-error`（`:1058`）一致，所以兩者都會被螢幕閱讀器自動朗讀。這個角色寫在**樣本的 markup** 上，不在 CSS 裡，所以是使用約定而不是元件本身保證的。
+不可聚焦。正典樣本帶 `role="alert"`（`components-showcase.html:1115`），和同一份 showcase 的 `.field-error`（`:1061`）一致，所以兩者都會被螢幕閱讀器自動朗讀。這個角色寫在**樣本的 markup** 上，不在 CSS 裡，所以是使用約定而不是元件本身保證的。
 
 ## 樣式出處
 
@@ -41,7 +41,7 @@
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-banner`（`components-showcase.html:1107`），樣本在 `:1111`。
+`components-showcase#state-default` → `#comp-banner`（`components-showcase.html:1110`），樣本在 `:1114`。
 
 ## shadcn 對照
 

@@ -8,29 +8,29 @@
 
 | 形態 | 結構 | 依據 |
 | :--- | :--- | :--- |
-| 水平線 | 單一 `<hr class="divider-hr">` | `components-showcase.html:834`、樣本 `:1270` |
-| 文字分隔 | `.divider-text` > `.divider-hr` ＋ `<span>` ＋ `.divider-hr` | `:842`–`:844`、樣本 `:1275`–`:1279` |
-| 清單分隔 | `.divider-list` > `<li>`，相鄰項之間加上邊框 | `:845`–`:847`、樣本 `:1280`–`:1284` |
+| 水平線 | 單一 `<hr class="divider-hr">` | `components-showcase.html:837`、樣本 `:1273` |
+| 文字分隔 | `.divider-text` > `.divider-hr` ＋ `<span>` ＋ `.divider-hr` | `:845`–`:847`、樣本 `:1278`–`:1282` |
+| 清單分隔 | `.divider-list` > `<li>`，相鄰項之間加上邊框 | `:848`–`:850`、樣本 `:1283`–`:1287` |
 
 ## 變體
 
-見上三種。文字分隔的用途被正典限定成「**僅登入頁 OAuth 與帳號登入之間**」（`:1268`）。
+見上三種。文字分隔的用途被正典限定成「**僅登入頁 OAuth 與帳號登入之間**」（`:1271`）。
 
 ## 適用狀態
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| 預設 | 有 | `components-showcase.html:834` |
-| hover／focus／disabled／載入中／錯誤／空 | 不適用，非互動元素 | `:833`–`:847` 無偽類 |
+| 預設 | 有 | `components-showcase.html:837` |
+| hover／focus／disabled／載入中／錯誤／空 | 不適用，非互動元素 | `:836`–`:850` 無偽類 |
 
 ## token
 
 `--color-border`、`--color-border-muted`、`--color-ink-muted`。
 
-`.divider-list` 的分隔線原本是寫死值，#420 起改用 `--color-border-muted`（`:846`）；`.divider-hr` 用 `--color-border`（`:837`），兩條線都取自 token，只是深淺差一階。原值見 `../design-gaps.md` G-02。
+`.divider-list` 的分隔線原本是寫死值，#420 起改用 `--color-border-muted`（`:849`）；`.divider-hr` 用 `--color-border`（`:840`），兩條線都取自 token，只是深淺差一階。原值見 `../design-gaps.md` G-02。
 `margin: 24px 0`、`py-4` 的 `16px`、`gap: 12px` 都是字面值。
 
-正典原文只有 Tailwind 樣本，沒有 CSS 區塊；showcase 的註解說明它是依 Banner／Toast 的先例對映成 token 的（`:833`–`:835`）。
+正典原文只有 Tailwind 樣本，沒有 CSS 區塊；showcase 的註解說明它是依 Banner／Toast 的先例對映成 token 的（`:836`–`:838`）。
 
 ## 鍵盤與焦點
 
@@ -38,11 +38,11 @@
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:831`–`:845`。
+`design/prototype/components-showcase.html:834`–`:848`。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-divider`（`components-showcase.html:1264`）：三種形態依序排列。
+`components-showcase#state-default` → `#comp-divider`（`components-showcase.html:1267`）：三種形態依序排列。
 
 ## shadcn 對照
 

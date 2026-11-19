@@ -6,29 +6,29 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.output-accordion` 外框（`overflow: hidden`） | 必填 | `components-showcase.html:747` |
-| `.output-accordion-header`（`role="button"`、`tabindex="0"`、`aria-expanded`、`aria-controls`） | 必填 | `:757`、樣本 `:1293` |
-| `.output-accordion-number` 序號 | 選用 | 樣本 `:1295`，**CSS 沒有這個 class 的規則** |
-| `.output-accordion-title` 標題 | 必填 | 樣本 `:1296`，同樣沒有 CSS 規則 |
-| `.output-accordion-chevron` 箭頭（`margin-left: auto` 推到右側） | 必填 | `:775`、樣本 `:1297` |
-| `.output-accordion-body`（`role="region"`、`aria-label`、`id` 對應 `aria-controls`） | 必填 | `:787`、樣本 `:1299` |
+| `.output-accordion` 外框（`overflow: hidden`） | 必填 | `components-showcase.html:750` |
+| `.output-accordion-header`（`role="button"`、`tabindex="0"`、`aria-expanded`、`aria-controls`） | 必填 | `:760`、樣本 `:1296` |
+| `.output-accordion-number` 序號 | 選用 | 樣本 `:1298`，**CSS 沒有這個 class 的規則** |
+| `.output-accordion-title` 標題 | 必填 | 樣本 `:1299`，同樣沒有 CSS 規則 |
+| `.output-accordion-chevron` 箭頭（`margin-left: auto` 推到右側） | 必填 | `:778`、樣本 `:1300` |
+| `.output-accordion-body`（`role="region"`、`aria-label`、`id` 對應 `aria-controls`） | 必填 | `:790`、樣本 `:1302` |
 
 兩個 `.output-accordion-*` 的 class 出現在樣本裡但**正典 CSS 沒有定義**（`-number`、`-title`），它們的樣式來自 header 的 `font-size: 14px; font-weight: 600` → `../design-gaps.md` G-15。
 
-箭頭 svg 的 path 是從 `assets/icons/chevron-down.svg` 內嵌的，註解寫明依據是 ADR-030 的 reuse-only（`:1291`）。
+箭頭 svg 的 path 是從 `assets/icons/chevron-down.svg` 內嵌的，註解寫明依據是 ADR-030 的 reuse-only（`:1294`）。
 
 ## 變體
 
-只有展開與收合兩種，由 `.collapsed` 切換；**多個面板可同時展開**（`:1290` 的說明），不是互斥的手風琴。
+只有展開與收合兩種，由 `.collapsed` 切換；**多個面板可同時展開**（`:1293` 的說明），不是互斥的手風琴。
 
 ## 適用狀態
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| 展開（預設） | 有 | `components-showcase.html:746` |
-| 收合 | 有。`.collapsed` 讓 body `display: none`、箭頭轉 −90° | `:783`、`:793` |
-| hover | 有，header 底色換 `--color-primary-soft-bg` | `:772` |
-| focus | **未觀察到**。header 有 `tabindex="0"`、聚焦得到也按得動，但沒有任何 `:focus` 樣式 | 以 `:focus` 掃 `:747`–`:795`，0 命中 → `../design-gaps.md` G-05 |
+| 展開（預設） | 有 | `components-showcase.html:749` |
+| 收合 | 有。`.collapsed` 讓 body `display: none`、箭頭轉 −90° | `:786`、`:796` |
+| hover | 有，header 底色換 `--color-primary-soft-bg` | `:775` |
+| focus | **未觀察到**。header 有 `tabindex="0"`、聚焦得到也按得動，但沒有任何 `:focus` 樣式 | 以 `:focus` 掃 `:750`–`:798`，0 命中 → `../design-gaps.md` G-05 |
 | disabled／載入中／錯誤／空 | 不適用 | — |
 
 ## token
@@ -37,17 +37,17 @@
 
 ## 鍵盤與焦點
 
-header 是 `<div role="button" tabindex="0">` 而不是 `<button>`，原生的 Enter／Space 不會觸發 `click`，所以行為由腳本補齊：`components-showcase.html:1579`–`:1591` 對每個 header 綁 `click`，另綁 `keydown` 攔 `Enter` 與 `Space`（`:1586`），切換 `.collapsed` 並同步 `aria-expanded`（`:1582`）。面板彼此獨立。
+header 是 `<div role="button" tabindex="0">` 而不是 `<button>`，原生的 Enter／Space 不會觸發 `click`，所以行為由腳本補齊：`components-showcase.html:1582`–`:1594` 對每個 header 綁 `click`，另綁 `keydown` 攔 `Enter` 與 `Space`（`:1589`），切換 `.collapsed` 並同步 `aria-expanded`（`:1585`）。面板彼此獨立。
 
 唯一缺的是**焦點樣式**（見上）：鍵盤使用者聚焦到 header 時沒有可見指示。
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:745`–`:793`。shipped 的那一份在 `pages/task-management/task-config.css`（b2）。
+`design/prototype/components-showcase.html:748`–`:796`。shipped 的那一份在 `pages/task-management/task-config.css`（b2）。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-accordion`（`components-showcase.html:1286`）：第一個展開（`aria-expanded="true"`），第二個收合。兩者都是**可操作的**——點或按 Enter／Space 會真的切換。
+`components-showcase#state-default` → `#comp-accordion`（`components-showcase.html:1289`）：第一個展開（`aria-expanded="true"`），第二個收合。兩者都是**可操作的**——點或按 Enter／Space 會真的切換。
 
 ## shadcn 對照
 

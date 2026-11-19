@@ -6,12 +6,12 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.pagination` 容器（`<nav aria-label="Pagination">`） | 必填 | `components-showcase.html:587`、樣本 `:1180` |
-| `.pagination-info` 總筆數與頁次 | 選用 | `pages/shared/list-page.css:82`、樣本 `components-showcase.html:1181` |
+| `.pagination` 容器（`<nav aria-label="Pagination">`） | 必填 | `components-showcase.html:587`、樣本 `:1183` |
+| `.pagination-info` 總筆數與頁次 | 選用 | `pages/shared/list-page.css:82`、樣本 `components-showcase.html:1184` |
 | `.pagination-controls` > `.page-btn` ×n ＋ `.page-ellipsis` | 必填 | `list-page.css:83`、`:94`、樣本 `:1182`–`:1190` |
 | `.page-size-select` 每頁筆數 | 選用 | `components-showcase.html:626`、`list-page.css:100` |
 
-**最多 5 顆可見頁碼加省略號**（`components-showcase.html:1178` 的說明）；樣本是 `1 2 3 … 7`。
+**最多 5 顆可見頁碼加省略號**（`components-showcase.html:1181` 的說明）；樣本是 `1 2 3 … 7`。
 
 ## 變體
 
@@ -23,9 +23,9 @@
 | :--- | :--- | :--- |
 | 預設 | 有 | `list-page.css:84` |
 | hover | 有。正典無條件套用；**shipped 版多了 `:not(:disabled):not(.active)` 兩個排除** | `components-showcase.html:610` vs `list-page.css:91` |
-| 目前頁 | 有。`.active` 實心 primary，樣本帶 `aria-current="page"` | `list-page.css:92`、樣本 `components-showcase.html:1184` |
+| 目前頁 | 有。`.active` 實心 primary，樣本帶 `aria-current="page"` | `list-page.css:92`、樣本 `components-showcase.html:1187` |
 | disabled | 有。`opacity .4`；**shipped 版多 `pointer-events: none`** | `components-showcase.html:621` vs `list-page.css:93` |
-| focus | **未觀察到**。`.page-btn` 與 `.page-size-select` 兩份都沒有 `:focus`／`:focus-visible` | 正典 `components-showcase.html:586`–`:632` 0 命中；`list-page.css` 全檔只有 2 個 `:focus`，都在工具列（`:30` 的 `.search-input`、`:39` 的 `.filter-select`），分頁一個都沒有 → `../design-gaps.md` G-05 |
+| focus | **未觀察到**。`.page-btn` 與 `.page-size-select` 兩份都沒有 `:focus`／`:focus-visible` | 正典 `components-showcase.html:586`–`:636` 0 命中；`list-page.css` 全檔只有 2 個 `:focus`，都在工具列（`:30` 的 `.search-input`、`:39` 的 `.filter-select`），分頁一個都沒有 → `../design-gaps.md` G-05 |
 | 載入中／錯誤 | 不適用 | — |
 | 空 | 未觀察到。沒有「0 筆時分頁長什麼樣」的樣式 | — |
 
@@ -35,19 +35,19 @@
 
 **一個色 token 兩份定義不一致**：`.page-btn.active` 的文字色，正典是 `--color-on-cta`（`components-showcase.html:619`，註解明寫「WCAG AA foreground token, issue singyichen/label-suite#1019」），shipped 的 `list-page.css:92` 原本是 `--color-white`，深色主題下會變成卡片底色 `#16161F`；#438 起改成 `--color-on-cta`，兩份一致 → `../design-gaps.md` G-12。淺色下兩者都是白；深色下兩者都不是白，但值不同——前者是 `--color-on-cta` 的深色值（深靛色），後者是 `--color-white` 的深色值（深色卡片底色），疊在深色 `--color-primary` 上的對比不同（`dataset-analysis-list` 實測）。`task-list` 與 `user-management` 在頁內改回 `--color-on-cta` → `../design-gaps.md` G-12。
 
-`.page-size-select` 與 `.filter-select` 的下拉箭頭是 data-URI SVG，筆畫色寫在 URI 裡（`list-page.css:100`、`:31`）。#438 起淺色 `%235E6B7F`、深色另寫一條 `%239CA3AF`（`:108`–`:109`），都對齊 `--color-ink-muted`；之前兩種主題都是 `%2394A3B8`。正典的 `.page-size-select`（`components-showcase.html:626`）沒有箭頭也沒有文字色，#438 沒有處理。
+`.page-size-select` 與 `.filter-select` 的下拉箭頭是 data-URI SVG，筆畫色寫在 URI 裡（`list-page.css:100`、`:31`）。#438 起淺色 `%235E6B7F`、深色另寫一條 `%239CA3AF`（`:108`–`:109`），都對齊 `--color-ink-muted`；之前兩種主題都是 `%2394A3B8`。正典的 `.page-size-select`（`components-showcase.html:626`）原本沒有箭頭也沒有文字色，#438 沒有處理；#442 補上文字色 `--color-ink` 與同樣兩種主題的箭頭（`:631`–`:633`，深色 `:636`），現在與 `list-page.css` 一致。
 
 ## 鍵盤與焦點
 
-原生 `<button>` 與 `<select>`，Tab 可達。樣本的 `aria-label="Previous page"`／`"Next page"`（`:1185`、`:1191`）與 `aria-current="page"`（`:1186`）都在**樣本的 markup** 上，不是元件保證的。沒有焦點樣式（見上）。
+原生 `<button>` 與 `<select>`，Tab 可達。樣本的 `aria-label="Previous page"`／`"Next page"`（`:1188`、`:1194`）與 `aria-current="page"`（`:1189`）都在**樣本的 markup** 上，不是元件保證的。沒有焦點樣式（見上）。
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:586`–`:632`（正典）、`design/prototype/pages/shared/list-page.css:74`–`:105`（shipped，7 個頁面載入它）。
+`design/prototype/components-showcase.html:586`–`:634`（正典）、`design/prototype/pages/shared/list-page.css:74`–`:105`（shipped，7 個頁面載入它）。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-pagination`（`components-showcase.html:1176`）。
+`components-showcase#state-default` → `#comp-pagination`（`components-showcase.html:1179`）。
 
 ## shadcn 對照
 

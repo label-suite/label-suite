@@ -9,8 +9,8 @@
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
 | variant class（`.btn-primary` 等七選一） | 必填 | `design/prototype/components-showcase.html:150`–`:290` |
-| 文字 | 選用（`.btn-icon` 只有圖示） | `components-showcase.html:1037`（`.btn-icon` 僅有 `aria-label` 與 svg） |
-| 前置圖示 `<svg>`／`<img>` | 選用 | `.btn-oauth` `components-showcase.html:1036`、`.btn-language` `:1038` |
+| 文字 | 選用（`.btn-icon` 只有圖示） | `components-showcase.html:1040`（`.btn-icon` 僅有 `aria-label` 與 svg） |
+| 前置圖示 `<svg>`／`<img>` | 選用 | `.btn-oauth` `components-showcase.html:1039`、`.btn-language` `:1041` |
 | 狀態 class（`.btn-loading`／`disabled`） | 選用 | `components-showcase.html:212`–`:225` |
 
 ## 變體
@@ -56,7 +56,7 @@
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-buttons`（`components-showcase.html:1028`）：第一列七個 variant，第二列 loading 與兩個 disabled。
+`components-showcase#state-default` → `#comp-buttons`（`components-showcase.html:1031`）：第一列七個 variant，第二列 loading 與兩個 disabled。
 
 ## shadcn 對照
 

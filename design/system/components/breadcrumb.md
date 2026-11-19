@@ -8,12 +8,12 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.breadcrumb` 容器 | 必填 | `components-showcase.html:635`、樣本 `:1208` |
-| `<a>` 上層連結 | 至少一個 | `components-showcase.html:643`、樣本 `:1209` |
-| `.breadcrumb-sep`（`›`，`aria-hidden="true"`） | 每兩節之間一個 | `components-showcase.html:650`、樣本 `:1211` |
-| 目前節點（`aria-current="page"`） | 必填 | 樣本 `components-showcase.html:1212` |
+| `.breadcrumb` 容器 | 必填 | `components-showcase.html:638`、樣本 `:1211` |
+| `<a>` 上層連結 | 至少一個 | `components-showcase.html:646`、樣本 `:1212` |
+| `.breadcrumb-sep`（`›`，`aria-hidden="true"`） | 每兩節之間一個 | `components-showcase.html:653`、樣本 `:1214` |
+| 目前節點（`aria-current="page"`） | 必填 | 樣本 `components-showcase.html:1215` |
 
-**最深兩層**（`components-showcase.html:1206` 的說明）。但同一份 showcase 的 Review Status Track 樣本就用了三層（`:1220`–`:1225`），而 `pages/annotation/annotation-list.html:55` 的註解稱自己用的是「compact form」→ `../design-gaps.md` G-13。
+**最深兩層**（`components-showcase.html:1209` 的說明）。但同一份 showcase 的 Review Status Track 樣本就用了三層（`:1223`–`:1228`），而 `pages/annotation/annotation-list.html:55` 的註解稱自己用的是「compact form」→ `../design-gaps.md` G-13。
 
 ## 變體
 
@@ -23,9 +23,9 @@
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| 預設 | 有 | `components-showcase.html:635` |
-| hover | 有，連結加底線 | `components-showcase.html:646` |
-| focus | **未觀察到** | 以 `:focus` 掃 `:633`–`:651`，0 命中 → `../design-gaps.md` G-05 |
+| 預設 | 有 | `components-showcase.html:638` |
+| hover | 有，連結加底線 | `components-showcase.html:649` |
+| focus | **未觀察到** | 以 `:focus` 掃 `:635`–`:654`，0 命中 → `../design-gaps.md` G-05 |
 | disabled／載入中／錯誤／空 | 不適用 | — |
 
 ## token
@@ -38,11 +38,11 @@
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:634`–`:652`。`pages/shared/` 沒有 breadcrumb 的 CSS 檔；使用它的四個 shipped 頁面各自在 `<style>` 裡複製一份。
+`design/prototype/components-showcase.html:637`–`:655`。`pages/shared/` 沒有 breadcrumb 的 CSS 檔；使用它的四個 shipped 頁面各自在 `<style>` 裡複製一份。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-breadcrumb`（`components-showcase.html:1204`）：兩層版。三層版在同頁的 `#comp-review-track`（`:1220`）。
+`components-showcase#state-default` → `#comp-breadcrumb`（`components-showcase.html:1207`）：兩層版。三層版在同頁的 `#comp-review-track`（`:1223`）。
 
 ## shadcn 對照
 

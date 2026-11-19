@@ -4,33 +4,33 @@
 
 ## 結構
 
-表單層級的狀態容器：送出成功或 token 驗證失敗後**取代**表單區塊，不是疊在它上面（`components-showcase.html:1336`）。
+表單層級的狀態容器：送出成功或 token 驗證失敗後**取代**表單區塊，不是疊在它上面（`components-showcase.html:1339`）。
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.state-panel` ＋ `--success`／`--error`（`<section>`） | 必填 | `components-showcase.html:851`、樣本 `:1340`、`:1348` |
-| `.state-panel-icon`（40×40 圓形，內含 20×20 svg） | 必填 | `:866`–`:875`、樣本 `:1342` |
-| `.state-panel-title` | 必填 | `:883`、樣本 `:1344` |
-| `.state-panel-desc` | 必填 | `:889`、樣本 `:1345` |
-| `.state-panel-action`（連結，hover 加底線） | 選用 | `:896`–`:904`、樣本 `:1347` |
+| `.state-panel` ＋ `--success`／`--error`（`<section>`） | 必填 | `components-showcase.html:854`、樣本 `:1343`、`:1351` |
+| `.state-panel-icon`（40×40 圓形，內含 20×20 svg） | 必填 | `:869`–`:878`、樣本 `:1345` |
+| `.state-panel-title` | 必填 | `:886`、樣本 `:1347` |
+| `.state-panel-desc` | 必填 | `:892`、樣本 `:1348` |
+| `.state-panel-action`（連結，hover 加底線） | 選用 | `:899`–`:907`、樣本 `:1350` |
 
-和鄰近兩個元件的分工，正典寫得很明確（`:1338`）：表單還在、訊息內嵌 → [Alert Banner](alert-banner.md)；浮動自動消失 → [Toast](toast.md)；表單被取代 → 本元件。
+和鄰近兩個元件的分工，正典寫得很明確（`:1341`）：表單還在、訊息內嵌 → [Alert Banner](alert-banner.md)；浮動自動消失 → [Toast](toast.md)；表單被取代 → 本元件。
 
 ## 變體
 
 | class | 用途 | role |
 | :--- | :--- | :--- |
 | `.state-panel--success` | 送出成功（例：驗證信已寄出） | 無 |
-| `.state-panel--error` | token 失效 | 樣本帶 `role="alert"`（`:1349`） |
+| `.state-panel--error` | token 失效 | 樣本帶 `role="alert"`（`:1352`） |
 
 ## 適用狀態
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| success | 有 | `components-showcase.html:856` |
-| error | 有 | `:862` |
-| hover | 只有 `.state-panel-action` 有（加底線） | `:903` |
-| focus | **未觀察到**（action 是 `<a>`，靠瀏覽器預設） | 以 `:focus` 掃 `:849`–`:904`，0 命中 → `../design-gaps.md` G-05 |
+| success | 有 | `components-showcase.html:859` |
+| error | 有 | `:865` |
+| hover | 只有 `.state-panel-action` 有（加底線） | `:906` |
+| focus | **未觀察到**（action 是 `<a>`，靠瀏覽器預設） | 以 `:focus` 掃 `:852`–`:907`，0 命中 → `../design-gaps.md` G-05 |
 | warning／info | **未觀察到**。只有成功與錯誤兩種 | — |
 | 載入中／空 | 不適用 | — |
 
@@ -38,9 +38,9 @@
 
 `--radius-md`、`--radius-full`、`--color-success`／`-bg`／`-border`、`--color-error`／`-bg`／`-border`、`--color-primary-strong`（action）。
 
-圖示底色與標題色原本是**四個**寫死值（註解標為「MASTER §State Panel literal」）；#420 起圖示底改用 `--color-success-border`／`--color-error-border`、標題改用 `--color-success`／`--color-error`（`:877`、`:881`、`:888`、`:889`），兩種主題都跟著換。原值見 `../design-gaps.md` G-02。
+圖示底色與標題色原本是**四個**寫死值（註解標為「MASTER §State Panel literal」）；#420 起圖示底改用 `--color-success-border`／`--color-error-border`、標題改用 `--color-success`／`--color-error`（`:880`、`:884`、`:891`、`:892`），兩種主題都跟著換。原值見 `../design-gaps.md` G-02。
 
-整個章節在正典裡只有 Tailwind 樣本，showcase 的註解說明它是依 Divider 的先例對映成 token 的（`:849`–`:851`）。
+整個章節在正典裡只有 Tailwind 樣本，showcase 的註解說明它是依 Divider 的先例對映成 token 的（`:852`–`:854`）。
 
 ## 鍵盤與焦點
 
@@ -48,11 +48,11 @@
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:847`–`:902`。
+`design/prototype/components-showcase.html:850`–`:905`。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-statepanel`（`components-showcase.html:1334`）：兩個樣本就是帳號頁的兩個狀態——「Check your email」（`:1343`）與「Reset link is invalid」（`:1351`）。
+`components-showcase#state-default` → `#comp-statepanel`（`components-showcase.html:1337`）：兩個樣本就是帳號頁的兩個狀態——「Check your email」（`:1346`）與「Reset link is invalid」（`:1354`）。
 
 ## shadcn 對照
 
