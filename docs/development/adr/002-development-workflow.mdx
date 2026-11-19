@@ -28,7 +28,7 @@ tags: [adr, workflow, sdd, openspec, project-board]
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
 | A 九份產物，一次導入 | 依賴由 CLI 強制；`system-design` 與 `ui-design` 可平行；骨架 change 不會空轉 | 十二個 agent、範本與 `openspec/config.yaml` 都要一次建好並改寫成 FastAPI；每個 change 比四份流程多五份產物要產出與審閱 | 採用 |
-| B 分三階段導入，或等 `backend/`、`frontend/` 都存在之後再一次做 | 評估階段列為選項，沒有記下具體好處 | 評估階段沒有記下具體代價 | 不採用：維護者決議一次導入 |
+| B 分三階段導入：現在先做 6 份；可執行的 `backend/` 骨架與 API 出現後 8 份；前端框架定案後 9 份 | 只有 `system-analysis` 與 `clarification` 不依賴 NestJS，`system-design`、`api-contract`、`ui-design` 都綁它，分階段可以等技術棧確定再做 | 新舊兩套流程並存，agent 與人要同時遵守兩套規則 | 不採用：為了避免兩套流程並存 |
 | C 維持 `spec-driven` 四份 | 已經在用，不必改 schema | 沒有 `system-analysis`、`system-design`、`ui-design`、`api-contract` 與 `clarification`，也就沒有停點一的關卡 | 不採用，但保留給文件、工具類的小 change |
 
 ### 決定
@@ -149,7 +149,6 @@ tags: [adr, workflow, sdd, openspec, project-board]
 | 限制 | 對選擇的影響 |
 | :--- | :--- |
 | 同一個 session 自己規劃、實作又評估，會出現範圍膨脹、長 session 品質下降、自己給自己打分而放過客觀的失敗 | 規劃、實作與評估要分開 |
-| 九份產物需要不同的專長：業務分析、後端設計、畫面設計、規劃、實作、審查、驗收 | 一個角色寫不完所有產物 |
 | `issue-dispatch` 的合併條件要求一位沒有寫這個變更的審查者通過 | 審查者不能是實作者 |
 
 ### 考慮過的選項
@@ -157,8 +156,8 @@ tags: [adr, workflow, sdd, openspec, project-board]
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
 | A 同一個 session 規劃、實作與評估 | 現狀，不必另外定義角色 | 會出現上面三種失敗 | 不採用 |
-| B 三層：Planner、Generator、Evaluator，Evaluator 只用外部的確定性工具、禁止自評 | 範圍在實作前鎖定；評估客觀、可重現 | Planner 的輸出要使用者審過才進 Generator，多一道關；Generator 重啟要重讀整份規格；失敗是二元的 | 不採用：被 C 的角色分工取代，「Evaluator 不自評」由 `code-reviewer` 與 `acceptance-verifier` 承接 |
-| C 依產物與階段分角色，主 agent 只派工 | 每份產物有固定的撰寫角色；審查者不是寫的人 | 十二個 agent 定義要維護，且要與 schema 和 `config.yaml` 一起改 | 採用 |
+| B 三層：Planner、Generator、Evaluator，Evaluator 只用外部的確定性工具、禁止自評 | 範圍在實作前鎖定；評估客觀、可重現 | Planner 的輸出要使用者審過才進 Generator，多一道關；Generator 重啟要重讀整份規格；失敗是二元的 | 不採用：本 repo 以 `AGENTS.md` 的角色表為準，取代的原因沒有記錄；「Evaluator 不自評」由 `code-reviewer` 與 `acceptance-verifier` 承接 |
+| C 每一層用獨立的 subagent 呼叫 | 每層的上下文互相隔離 | 增加編排的負擔；個人 repo ADR-017 當時以規模不需要為由延後 | 不採用；本 repo 的角色表（`AGENTS.md` SDD Workflow）另行定義，見決定 |
 
 ### 決定
 
@@ -175,6 +174,7 @@ tags: [adr, workflow, sdd, openspec, project-board]
 
 - 十二個 agent 定義要隨 schema 與 `config.yaml` 一起維護
 - 主 agent 不能順手改程式或規劃產物，小修正也要派給對應的角色
+- 個人 repo ADR-017 禁止在 Generator 階段使用 `/compact`，`CLAUDE.md` 允許，兩邊相反，本 repo 以 `CLAUDE.md` 為準
 
 ### 什麼情況要重新討論
 
@@ -198,7 +198,8 @@ tags: [adr, workflow, sdd, openspec, project-board]
 
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
-| A GitHub Projects | 免費；與 Issue、PR 在同一處，內建 workflow 自動同步 | 沒有離線模式、沒有富文字匯出；檢視（view）的設定目前只能在網頁介面做 | 採用 |
+| A GitHub Projects，組織層，五格 Status | 免費；與 Issue、PR 在同一處，內建 workflow 自動同步 | 沒有離線模式、沒有富文字匯出；檢視（view）的設定目前只能在網頁介面做 | 採用 |
+| A2 GitHub Projects，repo 層，十格 Status（個人 repo ADR-027） | 同上 | 一個 repo 一個看板，同一個組織下的其他 repo 看不到；格數多，分不清核准與否、完成與否 | 不採用 |
 | B Linear | 使用體驗最好 | 付費（免費版有限）；只靠 webhook 與整合同步，有延遲 | 不採用 |
 | C Jira | — | 付費；與 GitHub 只靠 app 同步 | 不採用 |
 | D Trello | 免費 | 手動同步，沒有 PR 連結 | 不採用 |
@@ -207,7 +208,7 @@ tags: [adr, workflow, sdd, openspec, project-board]
 
 ### 決定
 
-用選項 A，而且是組織層的專案 Label Suite：`Status` 欄（Todo、Ready、In Progress、In Review、Done）是 issue 狀態唯一的紀錄，不用標籤追蹤狀態，也不另設 `STATUS.md`；相依用 GitHub 的 blocked-by 記，不只寫在內文。卡片進 Ready 要維護者核准。規則本體見 `AGENTS.md` 的 Project Board and Dispatch。
+用選項 A，而且是組織層的專案 Label Suite，讓 `label-suite` 組織下的 repo 共用一個看板：`Status` 欄（Todo、Ready、In Progress、In Review、Done）是 issue 狀態唯一的紀錄；Ready 是維護者的核准關卡，格數再少就分不清核准與否、完成與否，In Review 涵蓋 PR 階段，不用標籤追蹤狀態，也不另設 `STATUS.md`；相依用 GitHub 的 blocked-by 記，不只寫在內文。卡片進 Ready 要維護者核准。規則本體見 `AGENTS.md` 的 Project Board and Dispatch。
 
 ### 後果
 
@@ -244,9 +245,7 @@ tags: [adr, workflow, sdd, openspec, project-board]
 
 | # | 問題 | 卡住什麼 | 誰決定 |
 | :--- | :--- | :--- | :--- |
-| 1 | 停點二要不要取消，驗收通過後自動歸檔並合併；取消的話 [D2](#d2-人工停點只留兩個) 要改寫 | 歸檔由誰、什麼時候執行，與人工驗收步驟是否保留，見 [#464](https://github.com/label-suite/label-suite/issues/464) | 維護者 |
-| 2 | [D1](#d1-完整九份產物流程一次導入)選項 B 當時為什麼不採用 | 決議紀錄只寫了結果，沒有寫為什麼不分階段 | 維護者 |
-| 3 | [D5](#d5-狀態只記在組織層專案板)為什麼是組織層、Status 為什麼收成五格 | 現有文件只寫了結果，沒有寫理由 | 維護者 |
+| 1 | 歸檔由誰、什麼時候執行；人工驗收步驟是否保留。維護者已裁定產品程式也自動合併、由 `acceptance-verifier` 取代人工驗收，[D2](#d2-人工停點只留兩個)在這兩題定案前維持現行的兩個停點 | 見 [#464](https://github.com/label-suite/label-suite/issues/464) | 維護者 |
 
 ## 決策紀錄
 
