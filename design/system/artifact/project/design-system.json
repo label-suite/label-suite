@@ -3,7 +3,7 @@
   "layout": "files",
   "createdOnFiles": {
     "v": 1,
-    "at": "2026-11-18T10:00:42Z"
+    "at": "2026-11-19T00:15:52Z"
   },
   "title": "Label Suite Design System",
   "namespace": "LabelSuite",
@@ -64,7 +64,7 @@
   "lastChange": {
     "by": "陳欣怡",
     "at": "2026-11-18T07:04:29Z",
-    "via": "Claude Code · label-suite/label-suite fix/prototype-hardcoded-colors",
-    "note": "Hard-coded colours to tokens: accent, task, notify, code, border-hover tokens; data palette (#420)"
+    "via": "Claude Code · label-suite/label-suite fix/prototype-white-keyword",
+    "note": "White keyword to tokens: toggle-thumb and on-badge-notify tokens; on-CTA glyphs follow the theme (#437)"
   }
 }
