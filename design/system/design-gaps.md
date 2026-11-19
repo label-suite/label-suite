@@ -41,6 +41,14 @@
 
 `white` 關鍵字、`rgba()` 與焦點環的 `color-mix()` 不在本單範圍（`white` 見 #437）。本段列的是修正後的行號；上文盤點的行號指的是修正前。深色主題順帶修正：主色填色上的 `#fff` 改 `--color-on-cta`、當文字用的 slate-400 改 `--color-ink-muted`、深色的關係徽章文字改 `--color-primary-strong`；正式徽章原本沒有深色覆寫，現在跟著 `--color-accent*` 換色。
 
+**狀態（#437）**：`white` 關鍵字已處理。`design/prototype/` 的 CSS、HTML、JS 原有 25 處獨立的 `white`（不算 `--color-white`、`white-space` 這類字串），其中 15 處是實際上色、10 處是註解與文案；上色的 15 處全部換掉。現在剩 11 處，都不是上色：`tokens.css` 的註解 7 處（含 #437 新增的一處）、`dashboard.components.css:358`、`:362` 的註解 3 處、`dataset-analysis-detail.html:784` 的畫面文案 1 處。寫死的 `#fff` 原有 2 處（不算 `modal.css:78` 的註解），換掉側欄通知徽章那處，剩 `account/profile.html:178`：頭像遮罩上的上傳圖示，遮罩固定是 48% 黑，白色在兩種主題都對。改法分三類：
+
+- **主色填色上的字與圖形**改 `--color-on-cta`：Toggle Switch 開啟時的圓鈕（`task-config.css:248`、`components-showcase.html:338`、`account/profile.html:634`）、分類預覽勾選框（`task-config.css:233`）、輸出類型序號徽章（`:490`）、選取 chip 的勾與圓點（`:562`–`:565`，showcase `:521`–`:533`）。帳號頁與個人資料頁 spinner 的其餘三邊由半透明白改成 `--color-on-cta` 的 `color-mix()`。
+- **版面底色**改 `--color-white`：關係抽取預覽列（`task-config.css:439`、`:445`）、統一預覽框（`:480`）、任務列表按鈕焦點環的外圈（`task-list.html:69`）。
+- **新增兩個 token**：`--color-toggle-thumb`（關閉時的圓鈕，淺色 `#FFFFFF`、深色 `#E2E8F0`；`task-config.css:246`、showcase `:336`、`account/profile.html:627`）與 `--color-on-badge-notify`（側欄通知數字，兩種主題都是 `#FFFFFF`，對 `--color-badge-notify` 6.47:1，`sidebar.css:676`）。
+
+淺色畫面逐頁比對與改前像素相同；深色下上述元件改成深墨或 slate-200，不再是白。`rgba()` 的半透明白（原型狀態切換列，見 [Proto Toggle Bar](components/proto-toggle-bar.md)；`task-detail.html:1783` 的內陰影）與 CSS 裡 data-URI SVG 的 `white`（#438）不在本單範圍。
+
 ### G-03 帳號頁一個正典 `.btn-*` 都沒用，各自重寫
 
 | 欄 | 內容 |

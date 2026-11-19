@@ -11,7 +11,7 @@
 | 選取 chip | `.task-type-chip-grid` > `<button class="task-type-chip">` > `.task-type-chip-check` ＋ 文字 | `components-showcase.html:471`–`:534` |
 | 顯示 chip（唯讀） | 單一 `<span>` | `components-showcase.html:536`–`:581` |
 
-`.task-type-chip-check` 的勾是 `::after` 的兩條 2px 白邊旋轉 −45°（`:518`–`:525`）；radio 模式下改成 6×6 實心圓（`:529`–`:536`）。
+`.task-type-chip-check` 的勾是 `::after` 的兩條 2px `--color-on-cta` 邊旋轉 −45°（`:518`–`:525`）；radio 模式下改成 6×6 的 `--color-on-cta` 實心圓（`:529`–`:536`）。
 
 ## 變體
 
