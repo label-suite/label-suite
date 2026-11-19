@@ -120,7 +120,7 @@
       text-align: left;
     }
     .sample-item:hover { background: var(--color-surface); }
-    .sample-item.active { background: var(--color-primary-soft-bg); border-color: rgba(99,102,241,0.2); }
+    .sample-item.active { background: var(--color-primary-soft-bg); border-color: color-mix(in srgb, var(--color-primary) 20%, transparent); }
     .sample-index {
       width: 22px;
       height: 22px;
@@ -830,7 +830,7 @@
       white-space: pre-line;
     }
     .guideline-summary {
-      border: 1px solid rgba(99,102,241,0.2);
+      border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
       border-radius: var(--radius-lg);
       padding: var(--space-md);
       background: var(--color-primary-soft-bg);
@@ -851,7 +851,7 @@
        as system copy, not as sample content sharing the .content-card's
        visual weight. */
     .review-blocked-note {
-      border: 1px solid rgba(99,102,241,0.2);
+      border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
       border-radius: var(--radius-lg);
       background: var(--color-primary-soft-bg);
       padding: var(--space-lg);
