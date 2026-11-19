@@ -46,11 +46,11 @@
 
 ## 鍵盤與焦點
 
-選取 chip 是原生 `<button>`，Tab 可達、Enter／Space 原生觸發 `click`，並帶 `role="checkbox"`／`role="radio"` 與 `aria-checked`（`components-showcase.html:1157`、`:1164`）。容器帶 `role="group"`／`role="radiogroup"` 與 `aria-label`（`:1156`、`:1163`）。
+選取 chip 是原生 `<button>`，Tab 可達、Enter／Space 原生觸發 `click`，並帶 `role="checkbox"`／`role="radio"` 與 `aria-checked`（`components-showcase.html:1160`、`:1167`）。容器帶 `role="group"`／`role="radiogroup"` 與 `aria-label`（`:1159`、`:1166`）。
 
-行為由腳本維持：`components-showcase.html:1545`–`:1562`，註解自稱「§Chip accessibility contract: aria-checked toggled on click」。checkbox 各自切換（`:1550`），radio 則把同組其他的設回 false（`:1559`）。
+行為由腳本維持：`components-showcase.html:1548`–`:1565`，註解自稱「§Chip accessibility contract: aria-checked toggled on click」。checkbox 各自切換（`:1553`），radio 則把同組其他的設回 false（`:1562`）。
 
-兩個缺口：**沒有焦點樣式**（見上）；`role="radiogroup"` 只綁 `click`（`:1560`），**沒有方向鍵巡覽**，而 radio group 的鍵盤契約是左右鍵切換、整組只佔一個 Tab 位。
+兩個缺口：**沒有焦點樣式**（見上）；`role="radiogroup"` 只綁 `click`（`:1563`），**沒有方向鍵巡覽**，而 radio group 的鍵盤契約是左右鍵切換、整組只佔一個 Tab 位。
 
 ## 樣式出處
 
@@ -58,7 +58,7 @@
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-chips`（`components-showcase.html:1151`）：三組 demo——多選（`:1155`）、單選（`:1162`）、五種唯讀顯示 chip（`:1168`–`:1172`）。
+`components-showcase#state-default` → `#comp-chips`（`components-showcase.html:1154`）：三組 demo——多選（`:1158`）、單選（`:1165`）、五種唯讀顯示 chip（`:1171`–`:1175`）。
 
 ## shadcn 對照
 
@@ -73,7 +73,7 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 兩類全部樣本 |
-| `task-management/task-new#state-step2` | `.task-type-chip`（`task-config.css:556`–`:559`），引擎依情境發 `role="checkbox"` 或 `"radio"` 與 `aria-checked`（`task-config.engine.js:6237`–`:6241`） |
+| `task-management/task-new#state-step2` | `.task-type-chip`（`task-config.css:555`–`:558`），引擎依情境發 `role="checkbox"` 或 `"radio"` 與 `aria-checked`（`task-config.engine.js:6237`–`:6241`） |
 | `task-management/task-detail#tab-settings` | 同一份，`settings.html:74`、`:78` |
 | `dataset/dataset-analysis-detail`（`#state-quality-*`） | 唯讀的原因標籤 `.cause-chip`（`dataset-analysis-detail.html:156`），屬「唯讀標籤」那一類 → `../design-gaps.md` G-11 |
 

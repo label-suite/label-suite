@@ -51,7 +51,7 @@
 
 ### 正典區塊定義的（20）
 
-來源是 `design/prototype/components-showcase.html:140`–`:977` 的「MASTER.md canonical component CSS」。
+來源是 `design/prototype/components-showcase.html:140`–`:980` 的「MASTER.md canonical component CSS」。
 
 | 元件 | 正典章節 | b1 | b2 | b3 | b4 | 狀態 |
 | :--- | :--- | ---: | ---: | ---: | ---: | :--- |

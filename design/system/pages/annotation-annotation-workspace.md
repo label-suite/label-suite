@@ -37,7 +37,7 @@
 | 元件 | 說明 |
 | :--- | :--- |
 | `.content-card` | `pages/shared/card.css` 的別名，本頁不再重寫（#423）→ [Card](../components/card.md)、G-41 |
-| `.review-track*`（`:443`–`:464`） | 自稱「CSS verbatim」，核對後 11 條規則與 `components-showcase.html:655`–`:719` 逐字相同 → [Review Status Track](../components/review-status-track.md) |
+| `.review-track*`（`:443`–`:464`） | 自稱「CSS verbatim」，核對後 11 條規則與 `components-showcase.html:658`–`:722` 逐字相同 → [Review Status Track](../components/review-status-track.md) |
 | `.mini-btn-active-approve`／`-modify`／`-bypass`、`.rv-choice-group` | 審核三向決策的選中狀態，疊在正典 `pages/shared/button.css` 的 `.mini-btn` 上；#423 起本頁不再重寫 `.mini-btn` 本體與 `-danger` → G-37 |
 | `.progress-track`／`.progress-fill`（`:303`–`:314`） | 與 Progress Bar 同尺寸同 token，只換了 class 名 |
 | `.toast*`（`:1013`–`:1057`） | [Toast](../components/toast.md)：分級存續時間照 UXC-07（`TOAST_DURATIONS`，`annotation-workspace.config.js:428`–`:443`） |

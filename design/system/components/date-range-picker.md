@@ -70,7 +70,7 @@ ARIA：popover 是 `role="dialog"` ＋ `aria-modal="false"`（`:48`–`:49`）�
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-date-range-picker`（`components-showcase.html:1063`），trigger 在 `:1067`。**這是 showcase 唯一 `<link>` 進來的共用 CSS**（`components-showcase.html:11`），其餘元件都是把 CSS 抄進 `<style>`；demo 的掛載在 `:1384`–`:1393`。
+`components-showcase#state-default` → `#comp-date-range-picker`（`components-showcase.html:1066`），trigger 在 `:1070`。**這是 showcase 唯一 `<link>` 進來的共用 CSS**（`components-showcase.html:11`），其餘元件都是把 CSS 抄進 `<style>`；demo 的掛載在 `:1387`–`:1396`。
 
 ## shadcn 對照
 

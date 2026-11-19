@@ -26,7 +26,7 @@
 | :--- | :--- | :--- |
 | 載入中 | 這就是它的唯一狀態 | `components-showcase.html:447`、`:461` |
 | 預設／hover／focus／disabled／錯誤／空 | 不適用 | — |
-| 減少動態 | **分頁面而定**。showcase 有全域的一條；但實際用到 Skeleton 最多的 `account/profile`（49 處）**沒有**任何 `prefers-reduced-motion` | `components-showcase.html:975`–`:977`（`* { animation: none !important }`）；`profile.html` 全檔 0 命中 → `../design-gaps.md` G-30 |
+| 減少動態 | **分頁面而定**。showcase 有全域的一條；但實際用到 Skeleton 最多的 `account/profile`（49 處）**沒有**任何 `prefers-reduced-motion` | `components-showcase.html:978`–`:980`（`* { animation: none !important }`）；`profile.html` 全檔 0 命中 → `../design-gaps.md` G-30 |
 
 ## token
 
@@ -37,7 +37,7 @@ B：`--radius-md`、`--radius-full`，漸層用 `--color-border` 與 `--color-bo
 
 ## 鍵盤與焦點
 
-不可聚焦。樣本把 `aria-live="polite"` 與 `aria-busy="true"` 放在**容器**上（`components-showcase.html:1135` 的 A、`:1143` 的 B），所以載入完成時改 `aria-busy` 就會被朗讀。
+不可聚焦。樣本把 `aria-live="polite"` 與 `aria-busy="true"` 放在**容器**上（`components-showcase.html:1138` 的 A、`:1146` 的 B），所以載入完成時改 `aria-busy` 就會被朗讀。
 
 ## 樣式出處
 
@@ -45,7 +45,7 @@ B：`--radius-md`、`--radius-full`，漸層用 `--color-border` 與 `--color-bo
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-skeleton`（`components-showcase.html:1129`）：左欄 A（一張卡三條線），右欄 B（頭像、單行、輸入框、按鈕）。
+`components-showcase#state-default` → `#comp-skeleton`（`components-showcase.html:1132`）：左欄 A（一張卡三條線），右欄 B（頭像、單行、輸入框、按鈕）。
 
 ## shadcn 對照
 

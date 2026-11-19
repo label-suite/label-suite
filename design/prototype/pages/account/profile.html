@@ -206,12 +206,12 @@
 
     .input:focus {
       border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
     }
 
     .input.error {
       border-color: var(--color-error);
-      box-shadow: 0 0 0 3px rgba(185,28,28,0.1);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 10%, transparent);
     }
 
     .field-error { margin-top: 5px; font-size: 12px; color: var(--color-error); }
@@ -632,7 +632,7 @@
 
     .toggle-switch input:checked + .toggle-slider { background: var(--color-primary); }
     .toggle-switch input:checked + .toggle-slider::before { background: var(--color-on-cta); transform: translateX(18px); }
-    .toggle-switch input:focus-visible + .toggle-slider { box-shadow: 0 0 0 3px rgba(99,102,241,0.25); }
+    .toggle-switch input:focus-visible + .toggle-slider { box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 25%, transparent); }
 
     /* ── Responsive ──────────────────────────────────────────────── */
     @media (max-width: 767px) {

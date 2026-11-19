@@ -6,12 +6,12 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `#toast` 固定容器（**整頁唯一**，id 不是 class） | 必填 | CSS `components-showcase.html:402`；容器在 `:1380`，帶 `aria-live="polite" aria-atomic="true"` |
-| `.toast-card` ＋ 一個語意 class | 必填，由腳本建立 | `components-showcase.html:1520`–`:1521` |
-| `.toast-msg` 訊息 | 必填 | `components-showcase.html:1522`–`:1524` |
-| `.toast-close` 關閉鈕（`aria-label="關閉通知"`、Lucide `x` 圖示（`assets/icons/x.svg`）） | 必填，**四種 variant 都會建** | `components-showcase.html:1526`–`:1543` |
+| `#toast` 固定容器（**整頁唯一**，id 不是 class） | 必填 | CSS `components-showcase.html:402`；容器在 `:1383`，帶 `aria-live="polite" aria-atomic="true"` |
+| `.toast-card` ＋ 一個語意 class | 必填，由腳本建立 | `components-showcase.html:1523`–`:1524` |
+| `.toast-msg` 訊息 | 必填 | `components-showcase.html:1525`–`:1527` |
+| `.toast-close` 關閉鈕（`aria-label="關閉通知"`、Lucide `x` 圖示（`assets/icons/x.svg`）） | 必填，**四種 variant 都會建** | `components-showcase.html:1529`–`:1546` |
 
-`#toast` 的內容每次以 `replaceChildren()` 整個換掉（`:1535`），這就是「單一實例」的實作方式——不是佇列，是覆蓋。
+`#toast` 的內容每次以 `replaceChildren()` 整個換掉（`:1538`），這就是「單一實例」的實作方式——不是佇列，是覆蓋。
 
 ## 變體
 
@@ -22,7 +22,7 @@
 | `.warning` | `--color-warning` 系列 | 8000ms |
 | `.error` | `--color-error` 系列 | **0 ＝ 不自動消失，只能手動關** |
 
-色：`components-showcase.html:428`–`:431`。秒數：`components-showcase.html:1504`（`TOAST_DURATIONS`）；`:1536` 的 `if (duration)` 讓 `0` 落到「不設計時器」。
+色：`components-showcase.html:428`–`:431`。秒數：`components-showcase.html:1507`（`TOAST_DURATIONS`）；`:1539` 的 `if (duration)` 讓 `0` 落到「不設計時器」。
 
 ## 適用狀態
 
@@ -30,8 +30,8 @@
 | :--- | :--- | :--- |
 | 隱藏（預設） | 有。`opacity: 0; visibility: hidden`，且 `visibility` 的 transition 延遲到淡出結束 | `components-showcase.html:409`–`:411` |
 | 顯示 | 有。`.visible` | `components-showcase.html:414` |
-| hover | **未觀察到**。滑鼠移上去**不會**暫停計時器 | `:1538` 只有 `setTimeout`，沒有 `mouseenter` → `../design-gaps.md` G-09 |
-| focus | 關閉鈕可聚焦；但 toast 出現時**焦點不會移過去** | `:1520`–`:1539` 沒有任何 `focus()` |
+| hover | **未觀察到**。滑鼠移上去**不會**暫停計時器 | `:1541` 只有 `setTimeout`，沒有 `mouseenter` → `../design-gaps.md` G-09 |
+| focus | 關閉鈕可聚焦；但 toast 出現時**焦點不會移過去** | `:1523`–`:1542` 沒有任何 `focus()` |
 | 載入中／空 | 不適用 | — |
 
 ## token
@@ -41,18 +41,18 @@
 ## 鍵盤與焦點
 
 - 關閉鈕在 Tab 順序裡，Enter／Space 可關。
-- 容器本身是 live region：`#toast` 帶 `aria-live="polite" aria-atomic="true"`（`:1382`），而內容是整塊 `replaceChildren()` 換掉的（`:1535`），所以 `aria-atomic` 會讓整則訊息被重讀一次。
+- 容器本身是 live region：`#toast` 帶 `aria-live="polite" aria-atomic="true"`（`:1385`），而內容是整塊 `replaceChildren()` 換掉的（`:1538`），所以 `aria-atomic` 會讓整則訊息被重讀一次。
 - Escape 不會關閉。
 - 焦點不會被移進 toast，也不會被困住。
-- **error 這一種有疑慮**：它不自動消失、又不搶焦點，鍵盤使用者要一路 Tab 到頁尾才碰得到關閉鈕（`#toast` 在 `:1382`，是 `<body>` 的最後一個元素）→ `../design-gaps.md` G-08。
+- **error 這一種有疑慮**：它不自動消失、又不搶焦點，鍵盤使用者要一路 Tab 到頁尾才碰得到關閉鈕（`#toast` 在 `:1385`，是 `<body>` 的最後一個元素）→ `../design-gaps.md` G-08。
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:401`–`:434`（CSS）、`:1503`–`:1543`（行為）。
+`design/prototype/components-showcase.html:401`–`:434`（CSS）、`:1506`–`:1546`（行為）。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-toast`（`components-showcase.html:1118`）。四顆按鈕各觸發一種 variant 的**真實行為**（`:1539`–`:1543`），不是靜態樣本：按 Error 那顆之後 toast 會一直留著，要自己按 ✕。
+`components-showcase#state-default` → `#comp-toast`（`components-showcase.html:1121`）。四顆按鈕各觸發一種 variant 的**真實行為**（`:1542`–`:1546`），不是靜態樣本：按 Error 那顆之後 toast 會一直留著，要自己按 ✕。
 
 ## shadcn 對照
 

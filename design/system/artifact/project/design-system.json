@@ -3,7 +3,7 @@
   "layout": "files",
   "createdOnFiles": {
     "v": 1,
-    "at": "2026-11-19T00:53:05Z"
+    "at": "2026-11-19T02:51:01Z"
   },
   "title": "Label Suite Design System",
   "namespace": "LabelSuite",
@@ -63,8 +63,8 @@
   },
   "lastChange": {
     "by": "陳欣怡",
-    "at": "2026-11-18T07:04:29Z",
-    "via": "Claude Code · label-suite/label-suite fix/prototype-dark-theme-gaps",
-    "note": "Dark theme gaps: primary rings via color-mix, themed select chevrons, toggle track on border-control, page-btn on on-CTA (#438)"
+    "at": "2026-11-19T02:51:01Z",
+    "via": "Claude Code · label-suite/label-suite fix/prototype-rgba-indigo",
+    "note": "Remaining hard-coded indigo and error rgba to color-mix of the primary, error and ink tokens; showcase page-size select chevron (#442)"
   }
 }

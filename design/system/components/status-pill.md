@@ -37,7 +37,7 @@
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-badges`（`components-showcase.html:1088`），三個樣本在 `:1101`–`:1103`。
+`components-showcase#state-default` → `#comp-badges`（`components-showcase.html:1091`），三個樣本在 `:1104`–`:1106`。
 
 ## shadcn 對照
 

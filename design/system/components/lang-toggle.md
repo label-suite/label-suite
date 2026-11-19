@@ -44,7 +44,7 @@
 
 | 視圖 | 怎麼走到 |
 | :--- | :--- |
-| `components-showcase#state-default` | `#comp-buttons` 的 `.btn-language`（`components-showcase.html:1038`），**正典版** |
+| `components-showcase#state-default` | `#comp-buttons` 的 `.btn-language`（`components-showcase.html:1041`），**正典版** |
 | `account/login#state-default` 等五個 | 右上角，**實際版**；點了會真的換語言 |
 
 ## shadcn 對照

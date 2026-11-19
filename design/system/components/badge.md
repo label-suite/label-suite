@@ -47,7 +47,7 @@
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-badges`（`components-showcase.html:1088`），`.badge-role` 樣本在 `:1098`。
+`components-showcase#state-default` → `#comp-badges`（`components-showcase.html:1091`），`.badge-role` 樣本在 `:1101`。
 
 ## shadcn 對照
 

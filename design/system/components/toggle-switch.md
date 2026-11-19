@@ -40,7 +40,7 @@
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-toggle`（`components-showcase.html:1074`），樣本在 `:1082`。
+`components-showcase#state-default` → `#comp-toggle`（`components-showcase.html:1077`），樣本在 `:1085`。
 
 ## shadcn 對照
 

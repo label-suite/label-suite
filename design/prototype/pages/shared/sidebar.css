@@ -231,7 +231,7 @@
 .mobile-theme-toggle-btn:focus-visible,
 .shortcut-help-close:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
 }
 
 .sidebar-utility-icon {
@@ -311,7 +311,7 @@
   color: var(--color-primary-strong);
   font-weight: 700;
   font-size: 14px;
-  border: 2px solid rgba(99, 102, 241, 0.16);
+  border: 2px solid color-mix(in srgb, var(--color-primary) 16%, transparent);
   flex-shrink: 0;
 }
 

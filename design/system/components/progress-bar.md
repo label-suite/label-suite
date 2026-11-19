@@ -8,20 +8,20 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.progress`（樣本帶 `role="progressbar"` 與 `aria-valuenow`／`min`／`max`／`aria-label`） | 必填 | `components-showcase.html:796`、樣本 `:1317` |
-| `> span` 填充 | 必填 | `components-showcase.html:802`、樣本 `:1317` |
+| `.progress`（樣本帶 `role="progressbar"` 與 `aria-valuenow`／`min`／`max`／`aria-label`） | 必填 | `components-showcase.html:799`、樣本 `:1320` |
+| `> span` 填充 | 必填 | `components-showcase.html:805`、樣本 `:1320` |
 
 ## 變體
 
-**只有一種。**填充色一律 `--color-cta`，說明明寫「無逐狀態色，狀態語意請搭配 Status Badge」（`:1317`）——也就是不要用綠／黃／紅表示健康度。
+**只有一種。**填充色一律 `--color-cta`，說明明寫「無逐狀態色，狀態語意請搭配 Status Badge」（`:1320`）——也就是不要用綠／黃／紅表示健康度。
 
 ## 適用狀態
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| 預設 | 有 | `components-showcase.html:796` |
-| 寬度變化 | 有，`transition: width 300ms ease`（字面值，不是 `--dur-*`） | `:809` |
-| hover／focus／disabled | 不適用 | `:797`–`:810` 無偽類 |
+| 預設 | 有 | `components-showcase.html:799` |
+| 寬度變化 | 有，`transition: width 300ms ease`（字面值，不是 `--dur-*`） | `:812` |
+| hover／focus／disabled | 不適用 | `:800`–`:813` 無偽類 |
 | 不確定進度 | **未觀察到**。沒有 indeterminate 樣式或動畫 | — |
 | 0%／100% | 未觀察到專屬樣式；0% 時 `<span>` 寬度為 0，軌道仍看得見 | — |
 
@@ -29,19 +29,19 @@
 
 `--radius-full`、`--color-border`（軌道）、`--color-cta`（填充）。
 
-軌道色有一條註解（`:801`）：出貨頁面寫的是字面值、和 `--color-border` 相同，待遷移到 token（issue `singyichen/label-suite#183`）。這條註解已過時：下表各頁的軌道現在都用 token，沒有字面值。
+軌道色有一條註解（`:804`）：出貨頁面寫的是字面值、和 `--color-border` 相同，待遷移到 token（issue `singyichen/label-suite#183`）。這條註解已過時：下表各頁的軌道現在都用 token，沒有字面值。
 
 ## 鍵盤與焦點
 
-不可聚焦。無障礙全靠樣本 markup 上的 `role="progressbar"` 與 `aria-value*`（`:1318`），**不是元件保證的**——`.progress` 這個 class 本身不帶任何語意。
+不可聚焦。無障礙全靠樣本 markup 上的 `role="progressbar"` 與 `aria-value*`（`:1321`），**不是元件保證的**——`.progress` 這個 class 本身不帶任何語意。
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:795`–`:808`。`pages/shared/` 沒有 progress 的 CSS 檔。
+`design/prototype/components-showcase.html:798`–`:811`。`pages/shared/` 沒有 progress 的 CSS 檔。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-progress`（`components-showcase.html:1313`），65% 的樣本在 `:1317`。
+`components-showcase#state-default` → `#comp-progress`（`components-showcase.html:1316`），65% 的樣本在 `:1320`。
 
 ## shadcn 對照
 

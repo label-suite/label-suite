@@ -7,10 +7,10 @@
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
 | `.input`（單行）或 `.input-textarea`（多行） | 必填 | `design/prototype/pages/shared/input.css:3` |
-| `.field-hint` 說明文字 | 選用，放欄位下方 | `components-showcase.html:322`（CSS）、`:1054`（樣本） |
-| `.field-error` 錯誤訊息 | 選用，`role="alert"` | `components-showcase.html:329`（CSS）、`:1058`（樣本） |
+| `.field-hint` 說明文字 | 選用，放欄位下方 | `components-showcase.html:322`（CSS）、`:1057`（樣本） |
+| `.field-error` 錯誤訊息 | 選用，`role="alert"` | `components-showcase.html:329`（CSS）、`:1061`（樣本） |
 
-`.input` 本身**不含 label**；樣本用 `aria-label` 代替（`components-showcase.html:1053`）。
+`.input` 本身**不含 label**；樣本用 `aria-label` 代替（`components-showcase.html:1056`）。
 
 ## 變體
 
@@ -31,7 +31,7 @@
 | disabled | **未觀察到**。沒有 `.input:disabled` 規則 | 以 `:disabled` 掃 `input.css` 與正典區塊，0 命中 |
 | 載入中 | 不適用 | — |
 | 錯誤 | 有（只在正典區塊） | `components-showcase.html:308` |
-| 空 | 由 `placeholder` 承擔，沒有專屬狀態 | `components-showcase.html:1053` |
+| 空 | 由 `placeholder` 承擔，沒有專屬狀態 | `components-showcase.html:1056` |
 
 ## token
 
@@ -52,7 +52,7 @@
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-inputs`（`components-showcase.html:1048`）：default（可點出 focus ring）／error／readonly 三種，搭配 field-hint 與 field-error。
+`components-showcase#state-default` → `#comp-inputs`（`components-showcase.html:1051`）：default（可點出 focus ring）／error／readonly 三種，搭配 field-hint 與 field-error。
 
 ## shadcn 對照
 
