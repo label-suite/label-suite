@@ -22,11 +22,11 @@
 | `#modal-guideline-image` | 右欄點圖片檔（`:1145`） | [Modal](../components/modal.md) |
 | `#modal-guideline-pdf` | 右欄點 PDF 檔（`:1160`） | [Modal](../components/modal.md) |
 | `#modal-guideline-md` | 右欄點 Markdown 檔（`:1176`） | [Modal](../components/modal.md) |
-| `#modal-mobile-drawer` | 視窗窄到 767px 以下，點右欄抽屜的把手（`#wsMobileDrawer`，`:1315`；`setupMobileDrawer`，`annotation-workspace.config.js:6793`–`:6803`） | 本頁的抽屜（`:938`–`:982`） |
+| `#modal-mobile-drawer` | 視窗窄到 767px 以下，點右欄抽屜的把手（`#wsMobileDrawer`，`:1315`；`setupMobileDrawer`，`annotation-workspace.config.js:6793`–`:6803`） | 本頁的抽屜 `.mobile-drawer`（`annotation-workspace.html:938`–`:982`） |
 | `#state-review-decision` | 審核員選「通過／修正／無法裁決」（`.rv-choice-group`，`annotation-workspace.config.js:3675`–`:3720`） | [Button](../components/button.md)（正典 `.mini-btn` ＋本頁的 `mini-btn-active-*` 選中狀態，`aria-pressed`）、[Review Status Track](../components/review-status-track.md) |
 | `#state-arbitration` | 審核單位處於爭議待裁決（`renderArbitrationCard`，`annotation-workspace.config.js:4794`；呼叫點 `:5892`） | [Card](../components/card.md)、[Button](../components/button.md)（`.mini-btn`） |
-| `#state-exception-pool` | `?role=project_leader`：選處置後按「確認處置」（`renderExceptionPoolScreen`，`annotation-workspace.config.js:5159`；`renderWorkspace` 的分支 `:1736`） | [Card](../components/card.md)、本頁 inline 樣式的理由輸入框（`:5044`–`:5052`）→ G-04 |
-| `#state-submitted-next` | 還有未完成的樣本時按「提交」：通知成功（`annotation-workspace.config.js:3146`），留在本頁跳到下一筆（`:3157`）；沒有下一筆才回清單（`:3161`） | [Toast](../components/toast.md) |
+| `#state-exception-pool` | `?role=project_leader`：選處置後按「確認處置」（`renderExceptionPoolScreen`，`annotation-workspace.config.js:5159`；`renderWorkspace` 的分支 `:1736`） | [Card](../components/card.md)、本頁 inline 樣式的理由輸入框 `reasonInput`（`:5044`–`:5052`）→ G-04 |
+| `#state-submitted-next` | 還有未完成的樣本時按「提交」：通知成功（`annotation-workspace.config.js:3146`），留在本頁跳到下一筆（`findNextPendingUnit`，`:3157`）；沒有下一筆才回清單（`buildListReturnUrl`，`:3161`） | [Toast](../components/toast.md) |
 
 **`#state-task-goal-and-instruction` 無法重現**：中欄上方只顯示任務名稱，沒有任務目標與說明 → 交付包列為無法重現，追蹤在 label-suite/label-suite#187。
 
@@ -46,7 +46,7 @@
 
 六個 overlay 全部接了 `modal-focus.js`：圖片（`annotation-workspace.config.js:6387`）、PDF（`:6411`）、Markdown（`:6576`）、審核流程抽屜（`:5744`）、指引閘門（`:6896`），右欄抽屜由原生按鈕與 `aria-expanded` 控制 → G-23、G-43 在本頁不成立。但：
 
-- 指引閘門原本把 `onClose` 設成 `hideGuidelineModal`，按 Esc 就能不確認直接開始；#423 改成空函式（`annotation-workspace.config.js:6898`），Esc 不關，另加「返回標記清單」鈕（`:6923`，走 `buildListReturnUrl`、不寫確認紀錄）；開啟時初始焦點在確認鈕（`:6902`）→ G-46
+- 指引閘門原本把 `onClose` 設成 `hideGuidelineModal`，按 Esc 就能不確認直接開始；#423 改成空函式（`annotation-workspace.config.js:6898`），Esc 不關，另加「返回標記清單」鈕（`:6923`，走 `buildListReturnUrl`、不寫確認紀錄）；開啟時初始焦點在確認鈕 `confirmBtn`（`:6902`）→ G-46
 - 審核流程抽屜的關閉鈕（`:1201`）靜態 markup 只有圖示；已於 #422 補上 `aria-label`（執行期本來就會設定）→ G-49
 - 分頁按鈕沒有 `tablist`／`tab`／`aria-selected`，只能點（`setupGuidelineTabs`，`annotation-workspace.config.js:6738`–`:6756`）→ G-22
 

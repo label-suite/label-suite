@@ -157,7 +157,7 @@ prototype 的註解另外指名的章節裡，這一個不是元件（b1 原列�
 ### b3 接手時要先讀的
 
 1. G-01、G-03、G-28、G-33、G-34 已有裁定，不要重開；G-37～G-45 的待決問題等維護者。
-2. [`ux-conventions.md`](ux-conventions.md) 的 UXC-04、05 證據在 `annotation-workspace.config.js:666`、`:3099`；UXC-03、09 還有 b3 的引用要核對（`:1989`、`:2041`，`annotation-list.html:1922`）。
+2. [`ux-conventions.md`](ux-conventions.md) 的 UXC-04、05 證據在 `annotation-workspace.config.js:666`、`:3099`；UXC-03、UXC-09 還有 b3 的引用要核對（`:1989`、`:2041`，`annotation-list.html:1922`）。
 3. [Tooltip](components/tooltip.md) 的第二處（`annotation-workspace.config.js:4000`）、Toast 與 Skeleton 在 b3 的那幾份（G-10）、`annotation-workspace` 沒有定義側欄的兩個窄視窗 token（G-24）。
 4. **別批的使用關係要保留**（鐵律 5）。
 

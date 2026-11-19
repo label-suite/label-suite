@@ -6,7 +6,7 @@
 
 `dataset/dataset-analysis-list` 點一列（帶 `task_id`）。
 
-載入：`assets/tokens.css`、`assets/data-palette.css`（`:10`，#438 補上，實體色點的 `--data-entity-N` 才有值）、`pages/shared/sidebar.css`、`button.css`（`:12`）、`card.css`（`:13`）、`empty-state.css`（`:14`）、`content-tabs.css`（`:15`）、`metric.css`（`:16`）；腳本 `sidebar.js`（`:222`）、`theme.js`、`analytics.js`，以及任務管理與標記的資料腳本（`:351`–`:354`）。**沒有任何 modal**。本頁在 `<style>` 定義了 `--navbar-mobile-height`／`--navbar-mobile-top-height`（`:25`），G-24 在本頁不成立。
+載入：`assets/tokens.css`、`assets/data-palette.css`（`:10`，#438 補上，實體色點的 `--data-entity-N` 才有值）、`pages/shared/sidebar.css`、`button.css`（`:12`）、`card.css`（`:13`）、`empty-state.css`（`:14`）、`content-tabs.css`（`:15`）、`metric.css`（`:16`）；腳本 `sidebar.js`（`:222`）、`theme.js`、`analytics.js`，以及任務管理與標記的資料腳本 `*.data.js`（`:351`–`:354`）。**沒有任何 modal**。本頁在 `<style>` 定義了 `--navbar-mobile-height`／`--navbar-mobile-top-height`（`:25`），G-24 在本頁不成立。
 
 兩個分頁的型別內容由 `loadStatsPanel`（`:1437`）與 `loadQualityPanel`（`:2288`）依任務的第一個輸出類型，從 `STATS_PANEL_PATHS`／`QUALITY_PANEL_PATHS`（`:1116`–`:1135`）載入。
 
@@ -53,10 +53,10 @@
 | `.stats-hbar-*`、`.stats-comatrix-*`（`:189`–`:202`） | 統計圖表，全用 token，只此一頁 |
 | ~~`.toast*`~~ | #423 已刪：原本有樣式、markup 與關閉鈕的處理，卻沒有任何程式會顯示它。本頁沒有需要通知的操作 → [Toast](../components/toast.md)、G-55 |
 
-十六個 partial 沒有寫死的 hex 或 rgba：SVG 的 `fill`／`stroke` 與 inline `style` 全部用 `var(--color-*)`、`var(--space-*)`。inline `style` 很多（`quality-entity_recognition.html` 26 處、`quality-sequence_tagging.html` 26 處、`stats-entity_recognition.html` 20 處），平均標記時間那一塊另有一個寫死的字級（`:286` 的 `<small>`）→ G-02。
+十六個 partial 沒有寫死的 hex 或 rgba：SVG 的 `fill`／`stroke` 與 inline `style` 全部用 `var(--color-*)`、`var(--space-*)`。inline `style` 很多（`quality-entity_recognition.html` 26 處、`quality-sequence_tagging.html` 26 處、`stats-entity_recognition.html` 20 處），平均標記時間那一塊另有一個寫死的字級（`:274` 的 `<small>`）→ G-02。
 
 分頁有 `role="tablist"`／`tab`／`tabpanel` 與 `aria-selected`、`aria-controls`，但只能點，沒有方向鍵（`:2437`–`:2442`）→ G-22。
 
 ## 業務行為
 
-連回規格 [`05-dataset/02-analysis-detail.mdx`](../../../docs/specs/05-dataset/02-analysis-detail.mdx)。UXC 落點：UXC-09（統計與品質兩種空狀態，`:281`、`:300`）、UXC-11（`syncUrlState` 只從狀態組網址，`:2425`；#155 Q4，維護者 2026-11-08）。
+連回規格 [`05-dataset/02-analysis-detail.mdx`](../../../docs/specs/05-dataset/02-analysis-detail.mdx)。UXC 落點：UXC-09（統計與品質兩種空狀態 `statsEmpty`／`qualityEmpty`，`:281`、`:300`）、UXC-11（`syncUrlState` 只從狀態組網址，`:2425`；#155 Q4，維護者 2026-11-08）。

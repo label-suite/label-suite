@@ -4,7 +4,7 @@
 
 ## 入口
 
-側欄「資料集分析」。`dataset/dataset-analysis-detail` 遇到不合法的任務時也會導回本頁並帶 `?invalid_task=1`（`dataset-analysis-detail.html:2469`）。
+側欄「資料集分析」。`dataset/dataset-analysis-detail` 遇到不合法的任務時也會導回本頁並帶 `?invalid_task=1`（`dataset-analysis-detail.html:2489`）。
 
 載入：`assets/tokens.css`、`assets/data-palette.css`（#420）、`pages/shared/sidebar.css`（`:9`）、`empty-state.css`（`:10`）、`list-page.css`（`:11`）、`task-type-badge.css`（`:214`）；腳本 `sidebar.js`（`:221`）、`theme.js`、`analytics.js` 與本頁五支腳本（`:318`–`:322`）。**沒有載入 `button.css`、`modal.css`、`modal-focus.js`**。本頁在 `<style>` 定義了 `--navbar-mobile-height`／`--navbar-mobile-top-height`（`:22`），G-24 在本頁不成立。
 
@@ -31,4 +31,4 @@
 
 ## 業務行為
 
-連回規格 [`05-dataset/01-analysis-list.mdx`](../../../docs/specs/05-dataset/01-analysis-list.mdx)。UXC 落點：UXC-07（`dataset-analysis-list.js:24`）、UXC-09（空狀態分兩種文案，`dataset-analysis-list.i18n.js:38`–`:41`）、UXC-11（清單狀態放網址，`syncUrl`）。
+連回規格 [`05-dataset/01-analysis-list.mdx`](../../../docs/specs/05-dataset/01-analysis-list.mdx)。UXC 落點：UXC-07（`dataset-analysis-list.js:24`）、UXC-09（空狀態分兩種文案 `emptyTitle`／`emptyNoResultsTitle`，`dataset-analysis-list.i18n.js:38`–`:41`）、UXC-11（清單狀態放網址，`syncUrl`）。

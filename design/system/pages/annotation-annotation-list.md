@@ -42,4 +42,4 @@
 
 ## 業務行為
 
-連回規格 [`04-annotation/01-annotation-list.mdx`](../../../docs/specs/04-annotation/01-annotation-list.mdx)。UXC 落點：UXC-09（`renderEmptyState`，`:1924`–`:1941`）、UXC-11（清單狀態放網址，`:1082`）。
+連回規格 [`04-annotation/01-annotation-list.mdx`](../../../docs/specs/04-annotation/01-annotation-list.mdx)。UXC 落點：UXC-09（`renderEmptyState`，`:1924`–`:1941`）、UXC-11（清單狀態放網址，`syncUrlToListState`，`:1082`）。

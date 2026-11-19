@@ -6,7 +6,7 @@
 
 登入後的首頁，側欄「儀表板」。
 
-載入（`dashboard.html:11`–`:20`）：`assets/tokens.css`、`assets/data-palette.css`（#420）、`pages/shared/sidebar.css`、`pages/shared/button.css`、`dashboard.layout.css`（它 `@import` `pages/shared/metric.css`，`:1`）、`dashboard.components.css`、`pages/shared/task-type-badge.css`。
+載入（`dashboard.html:11`–`:20`）：`assets/tokens.css`、`assets/data-palette.css`（#420）、`pages/shared/sidebar.css`、`pages/shared/button.css`、`dashboard.layout.css`（它 `@import` `pages/shared/metric.css`，`dashboard.layout.css:1`）、`dashboard.components.css`、`pages/shared/task-type-badge.css`。
 
 五種版面是同一頁的五個 `<section class="view">`（`:111`、`:253`、`:348`、`:391`、`:435`），`applyScenario`（`dashboard.js:555`）切換。
 
@@ -20,7 +20,7 @@
 | `#param-scenario-project-leader` | `?scenario=project_leader`（`:348`） | [Card](../components/card.md)、[Metric](../components/metric.md)、[Progress Bar](../components/progress-bar.md)（`dashboard.js:213`–`:224`）、[Button](../components/button.md)（`dashboard.html:383`） |
 | `#param-scenario-annotator` | `?scenario=annotator`（`:391`） | [Card](../components/card.md)、[Metric](../components/metric.md)、[Progress Bar](../components/progress-bar.md)、`.filter-select`（`:423`） |
 | `#param-scenario-reviewer` | `?scenario=reviewer`（`:435`） | [Card](../components/card.md)、[Metric](../components/metric.md)、[Badge](../components/badge.md)（`dashboard.js:243`、`:247`）、`.filter-select`（`dashboard.html:475`）、[Empty State](../components/empty-state.md)（`empty-state-compact`，`dashboard.js:431`） |
-| `#param-view-skeleton` | `?view=skeleton`：**永遠停在載入中**（`dashboard.js:627`） | [Skeleton](../components/skeleton.md)（`:66`–`:78`，`.skeleton`／`.skel-line`／`.skel-metric` 放在 `.metric` 裡） |
+| `#param-view-skeleton` | `?view=skeleton`：**永遠停在載入中**（`dashboard.js:627`） | [Skeleton](../components/skeleton.md)（`dashboard.html:67`–`:80`，`.skeleton`／`.skel-line`／`.skel-metric` 放在 `.metric` 裡） |
 | `#param-view-error` | `?view=error`（`:99`） | `.dashboard-error-state`（見下）、[Button](../components/button.md)（「重試」`.btn.btn-primary`，`:105`；`dashboard.js:637`–`:641`） |
 
 ## 這一頁專屬的
