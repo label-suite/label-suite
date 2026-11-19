@@ -82,6 +82,12 @@
      Fixed in both themes by design (arbitration #183): the red dot
      must read the same on light and dark sidebars. */
   --color-badge-notify:     #B91C1C;   /* 6.47:1 under white text */
+  --color-on-badge-notify:  #FFFFFF;   /* count text on --color-badge-notify; fixed in both themes like the badge, 6.47:1 (issue #437) */
+
+  /* ── Toggle switch thumb (issue #437) ─────────────────────────
+     Off-state knob on the --color-border track. The on-state knob
+     sits on --color-primary and uses --color-on-cta instead. */
+  --color-toggle-thumb:     #FFFFFF;
 
   /* ── Code block (issue #420) ───────────────────────────────── */
   --color-code-bg:          #1E1B4B;   /* Indigo 950 — code editor ground */
@@ -246,7 +252,10 @@ html[data-theme="dark"] {
   --color-task:             #2DD4BF;   /* Teal 400 — 8.20:1 on dark --color-task-bg */
   --color-task-bg:          #0C2A27;
 
-  /* --color-badge-notify is not re-declared: fixed in both themes. */
+  /* --color-badge-notify and --color-on-badge-notify are not re-declared: fixed in both themes. */
+
+  /* ── Toggle switch thumb ──────────────────────────────────── */
+  --color-toggle-thumb:     #E2E8F0;   /* slate-200 — off-state knob; 11.50:1 on the dark --color-border track (white would be 14.18:1) */
 
   /* ── Code block ───────────────────────────────────────────── */
   --color-code-bg:          #0D0D14;   /* darker than --color-surface so the editor still reads as inset */
