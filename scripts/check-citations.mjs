@@ -425,11 +425,18 @@ export function checkCitations({ root = ROOT, docs = docsToScan(root), allow = A
   return { errors, warnings, stats, docs: docs.length };
 }
 
+// Errors always fail. With --strict, an unverified citation (WARN) fails too,
+// so CI catches a line number that drifted onto an unrelated line.
+export function failed({ errors, warnings }, { strict = false } = {}) {
+  return errors.length > 0 || (strict && warnings.length > 0);
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const { errors, warnings, stats, docs } = checkCitations();
+  const result = checkCitations();
+  const { errors, warnings, stats, docs } = result;
   for (const w of warnings) console.warn(`WARN  ${w}`);
   for (const e of errors) console.error(`ERROR ${e}`);
   const summary = `${docs} documents, ${stats.citations} citations: ${stats.verified} verified, ${warnings.length} unverified (WARN), ${stats.unnamed} naming nothing to check, ${stats.allowed} allowlisted, ${stats.historical} historical, ${stats.external} external, ${errors.length} errors`;
-  if (errors.length > 0) { console.error(`check-citations: ${summary}`); process.exit(1); }
+  if (failed(result, { strict: process.argv.includes('--strict') })) { console.error(`check-citations: ${summary}`); process.exit(1); }
   console.log(`check-citations: ${summary}`);
 }

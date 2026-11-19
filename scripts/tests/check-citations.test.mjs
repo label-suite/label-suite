@@ -6,7 +6,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
-import { checkCitations, citationsIn, historicalLines } from '../check-citations.mjs';
+import { checkCitations, citationsIn, failed, historicalLines } from '../check-citations.mjs';
 
 // A throwaway repo: one prototype page and one design doc citing it, plus
 // any extra files a test needs ({ path: text }).
@@ -136,4 +136,12 @@ test('a usage row in a component doc is met by the component slug', () => {
   const para = (n) => `\`components-showcase#state-default\` → 樣本在 \`pages/b.html:${n}\`。\n`;
   assert.equal(repo(para(1), extra, 'design/system/components/badge.md').stats.verified, 1);
   assert.equal(repo(para(2), extra, 'design/system/components/badge.md').warnings.length, 1);
+});
+
+test('--strict fails on an unverified citation, the default does not', () => {
+  const r = repo('`.btn-primary`（`pages/a.html:3`）\n');
+  assert.deepEqual(r.errors, []);
+  assert.equal(r.warnings.length, 1);
+  assert.equal(failed(r), false);
+  assert.equal(failed(r, { strict: true }), true);
 });
