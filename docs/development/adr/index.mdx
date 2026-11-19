@@ -17,6 +17,7 @@ ADR 記錄「為什麼這樣決定」：當時的限制、比較過的選項、�
 | [001](001-agent-engineering.mdx) | Agent 工程 | 生效 | D1 先搜尋再新增；D2 範圍內直接修正錯誤實作 |
 | [002](002-development-workflow.mdx) | 開發流程 | 生效 | D1 完整九份產物流程一次導入；D2 人工停點只留兩個；D3 授權放在專案自有的指令；D4 規劃、實作、審查與驗收由不同角色負責；D5 狀態只記在組織層專案板 |
 | [003](003-backend-architecture.mdx) | 後端架構 | 生效 | D1 前後端放在同一個 repo；D2 後端框架用 FastAPI；D3 後端採模組內分層；D4 任務狀態機只放在 service 層；D5 API 路徑前綴與成功回應外層；D6 前端 client 用 Orval 產生；D7 資料庫分兩層；D8 非同步任務用 Celery 加 Redis；D9 Bruno 只當可選工具 |
+| [004](004-auth-and-security.mdx) | 認證與安全 | 生效 | D1 認證 token 放在 httpOnly cookie；D2 授權用的角色每次從資料庫讀；D3 CSRF 用綁定 session 的 double-submit token；D4 Google SSO 直接走 OIDC；D5 Google 登入綁定既有帳號的條件；D6 權限矩陣當授權輸入 |
 | [007](007-testing-strategy.mdx) | 測試策略 | 生效 | D1 三層測試的分工；D2 覆蓋率只管不得下降與關鍵路徑；D3 前端測試與原始碼放同一個目錄；D4 正式 E2E 放根目錄 |
 
 狀態只有兩種：**草稿**（還在討論，正文的決定不生效）與**生效**。一份 ADR 不會被另一份取代，決定改了就改寫那一節，舊的寫法記在它的決策紀錄。
