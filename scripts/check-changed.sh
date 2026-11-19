@@ -122,7 +122,8 @@ case "$MODE" in
 esac
 
 # ── Exclusions, applied before routing ───────────────────────────────
-EXCLUDED_RE='^(frontend/src/api/generated/|backend/.*/alembic/versions/|backend/alembic/versions/)|(^|/)(vendor|node_modules)/|^(pnpm-lock\.yaml|uv\.lock)$'
+. "$HERE/lib/hook-routes.sh"
+EXCLUDED_RE="$HOOK_EXCLUDED_RE"
 
 PY_FILES=(); TS_FILES=(); DOC_HITS=0; SKIPPED=0
 for cand in ${CANDIDATES+"${CANDIDATES[@]}"}; do
@@ -154,11 +155,11 @@ for cand in ${CANDIDATES+"${CANDIDATES[@]}"}; do
     emit_err "NA: $rel 在排除清單內（產物、migration、lockfile 或 vendor），略過"
     SKIPPED=$((SKIPPED + 1)); continue
   fi
-  case "$rel" in
-    *.py)          PY_FILES+=("$rel") ;;
-    *.ts|*.tsx)    TS_FILES+=("$rel") ;;
-    docs/*.mdx|docs/*.md|docs/*/*.mdx|docs/*/*.md|docs/*/*/*.mdx|docs/*/*/*.md) DOC_HITS=1 ;;
-    *)             emit_err "NA: $rel 沒有命中任何路由" ;;
+  case "$(hook_route_for "$rel")" in
+    py)   PY_FILES+=("$rel") ;;
+    ts)   TS_FILES+=("$rel") ;;
+    docs) DOC_HITS=1 ;;
+    *)    emit_err "NA: $rel 沒有命中任何路由" ;;
   esac
 done
 
@@ -221,21 +222,30 @@ if [ -n "$GIT_DIR" ]; then
   case "$GIT_DIR" in /*) EV="$GIT_DIR/label-suite/evidence" ;; *) EV="$REPO/$GIT_DIR/label-suite/evidence" ;; esac
   mkdir -p "$EV"
   covered=$(printf '%s ' ${PY_FILES+"${PY_FILES[@]}"} ${TS_FILES+"${TS_FILES[@]}"})
+  # The record has two halves. The first carries text that came from outside —
+  # tool names, paths — and goes through the same masking the diagnostics do.
+  # The second carries digests this checker computed itself from content that
+  # is already in the repository. Masking those would be pointless and
+  # destructive: a sha is exactly the shape the base64 rule matches, and the
+  # digests are the only reason the record is worth keeping (D14 freshness).
   {
     printf 'command: %s\n' "${RAN[*]:-（無）}"
-    printf 'commit: %s\n' "$(git -C "$REPO" rev-parse HEAD 2>/dev/null)"
     printf 'tools: node=%s\n' "$(node --version 2>/dev/null)"
     printf 'exit: %s\n' "$violations"
     printf 'covered: %s\n' "${covered:-（無）}"
     printf 'skipped: %s\n' "$SKIPPED"
+  } > "$HC_BUFFER_DIR/evidence"
+  rec_file="$EV/$(date -u +%Y%m%dT%H%M%SZ)-$$.rec"
+  hc_mask < "$HC_BUFFER_DIR/evidence" > "$rec_file"
+  # `cat` with no arguments reads stdin and waits forever, which is what a run
+  # that routed nothing would do. The redirect makes the empty case return an
+  # empty digest instead of hanging.
+  {
+    printf 'commit: %s\n' "$(git -C "$REPO" rev-parse HEAD 2>/dev/null)"
     printf 'head: %s\n' "$(git -C "$REPO" rev-parse HEAD 2>/dev/null)"
-    # `cat` with no arguments reads stdin and waits forever, which is exactly
-    # what happens on a run that routed nothing. The redirect makes the empty
-    # case return an empty digest instead of hanging.
     printf 'content: %s\n' "$(cd "$REPO" && cat ${PY_FILES+"${PY_FILES[@]}"} ${TS_FILES+"${TS_FILES[@]}"} </dev/null 2>/dev/null | shasum -a 256 | cut -d' ' -f1)"
     printf 'agents: %s\n' "$(shasum -a 256 "$REPO/AGENTS.md" 2>/dev/null | cut -d' ' -f1)"
-  } > "$HC_BUFFER_DIR/evidence"
-  hc_mask < "$HC_BUFFER_DIR/evidence" > "$EV/$(date -u +%Y%m%dT%H%M%SZ)-$$.rec"
+  } >> "$rec_file"
 
   # Retention: newest 200 records and under 1 MiB, oldest trimmed first.
   while [ "$(ls -1 "$EV" | wc -l | tr -d ' ')" -gt 200 ]; do
