@@ -27,7 +27,7 @@ tags: [adr, task-config, answer-isolation, security]
 | :--- | :--- | :--- | :--- |
 | A 寫死任務類型：每種任務各一條程式路徑（例如 `if task_type == "ner"`） | 來源沒有記錄好處 | 每新增一種任務就要改程式並重新部署；不改程式其他團隊不能重用；與最少設定的主張矛盾 | 不採用 |
 | B 設定驅動：行為完全由設定檔定義，平台在建立任務時讀取並調整 | 新任務不必改程式 | 見後果的變困難 | 採用 |
-| C 外掛系統：任務類型寫成執行時載入的 Python 外掛 | 彈性最大 | 需要穩定的外掛 API、版本與文件，對研究原型階段過重 | 不採用 |
+| C 外掛系統：任務類型寫成執行時載入的 Python 外掛 | 彈性最大 | 需要穩定的外掛 API、版本與文件，對研究原型階段過重（來源的前提，見附錄） | 不採用 |
 
 ### 決定
 
@@ -37,7 +37,7 @@ tags: [adr, task-config, answer-isolation, security]
 
 **變容易**
 
-- 研究團隊寫一份設定檔就能部署新的標記任務，不必寫程式
+- 研究團隊寫一份設定檔就能部署新的標記任務；以既有 output type 組合時不必寫程式
 - 設定在建立時驗證，標記員遇到之前就能擋下設定錯誤
 - 指標登記在 registry，同一個指標可以被不同任務重用
 
@@ -70,7 +70,7 @@ tags: [adr, task-config, answer-isolation, security]
 | :--- | :--- | :--- | :--- |
 | A 沿用 enum，為每種組合加一個值 | 來源沒有記錄好處 | 組合爆炸：八種 output type 兩兩組合要 36 個 enum 值，每個要自己的 schema；這是 `if task_type ==` 在 schema 層的翻版 | 不採用 |
 | B 組合模型：設定是 `input_type` 加 `outputs[]`，每個 output type 貢獻一段設定片段 | 組合不必新增程式或 enum 值；新增 output type 只需要片段 schema、標記元件與指標登記；符合研究社群「依標記員產出什麼」分類的方式 | 見後果的變困難 | 採用 |
-| C 外掛系統：每個 output type 是一個可載入的外掛，自帶渲染、驗證與評分 | 彈性最大 | 對論文階段過重 | 延後：來源記錄組合模型之後可以演進成外掛系統而不破壞 schema，沒有記錄觸發條件 |
+| C 外掛系統：每個 output type 是一個可載入的外掛，自帶渲染、驗證與評分 | 彈性最大 | 對論文階段過重（來源的前提，見附錄） | 延後：來源記錄組合模型之後可以演進成外掛系統而不破壞 schema，沒有記錄觸發條件 |
 
 ### 決定
 
@@ -114,7 +114,7 @@ tags: [adr, task-config, answer-isolation, security]
 | :--- | :--- | :--- | :--- |
 | A token 對齊的標籤，前端 `Intl.Segmenter` 當正式 tokenizer | 來源沒有記錄好處 | 結果不確定，違反決定性的要求 | 不採用 |
 | B token 對齊的標籤，後端在每個任務建立時算一次 token 並凍結引擎與詞典版本 | 資料集可重現；引擎升級不會悄悄破壞既有標記 | 後端要先提供分詞能力；舊任務保留舊的分詞行為；詞模式卡在引擎選型 | 不採用：被選項 C 取代 |
-| C 半開區間的字元 offset span `{ start, end, label }` | 沒有儲存的座標系需要凍結 | 來源原本拒絕它，理由是它改變任務語意（`sequence_tagging` 以 token 級標記與 token 級指標定義）；該理由被 span 級指標取代 | 採用 |
+| C 半開區間的字元 offset span `{ start, end, label }` | 沒有儲存的座標系需要凍結 | 來源原本拒絕它，理由是它改變任務語意（`sequence_tagging` 以 token 級標記與 token 級指標定義）；該理由被 span 級指標取代；第二個理由是以 span 做標記的 `entity_recognition` 已經存在，這個理由來源沒有說被取代，兩者的差別見[待決](#待決)第 1 列 | 採用 |
 
 ### 決定
 
@@ -154,7 +154,7 @@ tags: [adr, task-config, answer-isolation, security]
 
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
-| A 答案與一般標記資料放同一張表（推論） | 來源沒有記錄好處 | 來源只記錄它被列為禁止，理由沒有記錄 | 不採用 |
+| A 答案與一般標記資料放同一張表（推論） | 來源沒有記錄好處 | 來源記錄的依據是資料公平原則，沒有展開 | 不採用 |
 | B 在 API 行程裡讀答案（推論） | 來源沒有記錄好處 | 答案會經過 API 層；來源要求答案只在 worker 裡讀、不經過 API 層 | 不採用 |
 | C 瀏覽器下載答案再算分（推論） | 來源沒有記錄好處 | 答案一旦進 bundle 就等於公開 | 不採用 |
 | D 四道隔離：獨立答案表、worker 內讀取、授權第四步、保留政策；覆蓋面是標記員能到達的每個出口 | 計分與 IAA 在後端算完才回結果，答案不離開 worker | 見後果的變困難 | 採用 |
@@ -174,7 +174,7 @@ tags: [adr, task-config, answer-isolation, security]
 
 - 覆蓋面包括 bundle、source map、fixture、mock handler、錯誤訊息與 log，所以 mock 不能複製含答案的真實回應，錯誤訊息不能回「期望值是 X」
 - 帶答案的歷史不能匿名化或單獨刪除，只能隨所屬版本或 run 一起處理
-- 目前這些檢查都待建置，覆蓋面只靠審查與驗收清單守住
+- 目前這些檢查都待建置，覆蓋面目前只有 `acceptance-verifier` 的檢查清單，而它還沒建置
 
 ### 什麼情況要重新討論
 
@@ -189,7 +189,7 @@ tags: [adr, task-config, answer-isolation, security]
 | :--- | :--- |
 | D1 | 個人 repo ADR-010（Context 的三項缺點、Design Options Evaluated、Decision 的 Enforcement Rules、Consequences）。選項 A 的好處沒有記錄。選項 C 被拒絕的理由「對研究原型階段過重」依賴一個本 repo 沒有確認的前提，即本 repo 仍處在研究原型階段；本 repo 是否同樣認定，來源沒有記錄。來源另記錄設定由 YAML／JSON 檔案提供，本 repo 的建立任務流程沒有在這裡核對。ADR-010 的 Config Schema 範例（固定的 `task.type` 加 `annotation`）已被 D2 取代，本 repo 不採用；來源指向的 `docs/schema/config-schema.md` 是個人 repo 的歷史文件。本節的重新討論條件是推論，來源沒有記錄 |
 | D2 | 個人 repo ADR-029（Context 的問題與三份資料集、Design Options Evaluated、Decision、Resolved Design Decisions 的第 2 項、Consequences）。選項 A 的好處沒有記錄。選項 C 的結論「延後」與理由「對論文階段過重」依賴一個本 repo 沒有確認的前提，即論文階段；來源沒有記錄延後之後的觸發條件。本節的重新討論條件取自來源對 v1 限制的記錄（「論文之後，出現具體研究需求再檢討」），該句的「論文之後」本 repo 沒有確認。ADR-029 的其餘內容（階層式 `multi_label` 的規則與上限、Step 1 與 Step 2 的介面變更、依賴與獨立組合表、遷移路徑、其餘 Resolved Design Decisions）不是這份 ADR 的決定：output type 目錄與組合規則見 [architecture.mdx 的 §任務設定](../architecture.mdx#任務設定input_type-加-outputs)，畫面與設定細節屬 `docs/specs/`。階層式 `multi_label` 的消費端契約，來源記錄為延後處理，本 repo 的狀況沒有核對 |
-| D3 | 個人 repo ADR-031（Superseded 註記、Context、Decision 1 至 6、Consequences、Alternatives Rejected）與 ADR-029 的 `sequence_tagging` 修訂註記。ADR-031 的 Decision 1 至 6（tokenization 物件、後端單次計算、版本凍結、決定性、字元為預設單位、詞模式引擎選型）本 repo 不採用，由 [architecture.mdx 的 §任務設定](../architecture.mdx#任務設定input_type-加-outputs)與本節 D3 的決定覆寫，ADR-031 自己也標為 Superseded。選項 A 的好處沒有記錄。選項 C 的好處出自 Superseded 註記的「沒有座標系要凍結」；改採它的原因來源沒有記錄。來源說 span 標記已以 `entity_recognition` 存在，`sequence_tagging` 與 `entity_recognition` 在本 repo 如何區分，來源沒有記錄。來源另記錄了前端 `Intl.Segmenter` 在選取時當便利功能，本 repo 沒有核對。ADR-029 的 `sequence_tagging` 列已過期，修訂見 [architecture.mdx 的 §待決](../architecture.mdx#待決) 第 1 列。本節的重新討論條件是推論，來源沒有記錄 |
+| D3 | 個人 repo ADR-031（Superseded 註記、Context、Decision 1 至 6、Consequences、Alternatives Rejected）與 ADR-029 的 `sequence_tagging` 修訂註記。ADR-031 的 Decision 1 至 6（tokenization 物件、後端單次計算、版本凍結、決定性、字元為預設單位、詞模式引擎選型）本 repo 不採用，由 [architecture.mdx 的 §任務設定](../architecture.mdx#任務設定input_type-加-outputs)與本節 D3 的決定覆寫，ADR-031 自己也標為 Superseded。選項 A 的好處沒有記錄。選項 C 的好處出自 Superseded 註記的「沒有座標系要凍結」；改採它的原因來源沒有記錄。來源拒絕 span 的第二個理由是 `entity_recognition` 已經存在，兩者的差別在本 repo 沒有記錄，見本文的[待決](#待決)第 1 列。來源另記錄了前端 `Intl.Segmenter` 在選取時當便利功能，本 repo 沒有核對。ADR-029 的 `sequence_tagging` 列已過期，修訂見 [architecture.mdx 的 §待決](../architecture.mdx#待決) 第 1 列。本節的重新討論條件是推論，來源沒有記錄 |
 | D4 | 個人 repo ADR-005（答案存在獨立、受存取控制的表）、ADR-007（答案只在 worker 行程內讀，不經過 API 層）、ADR-037（授權第四步的附加條件）、ADR-038（帶答案的歷史 JSON 跟著版本或 run 存續）；覆蓋面與選項 A 至 C 的推論出自 [security-agent-rules.mdx 的 S5、S6](../security-agent-rules.mdx#s5-答案隔離的覆蓋面)；規格 05-03 的讀取者出自該頁。ADR-005 與 ADR-007 只寫「資料公平原則」，沒有展開理由，選項 A 至 C 的好處與代價也沒有記錄。ADR-038 記錄帶答案歷史的撤回流程與期限仍待決（個人 repo 的 TBD），本 repo 沒有核對，它不改變 D4 現在的規則，所以不列入待決。本節的重新討論條件是推論，來源沒有記錄 |
 | — | 個人 repo ADR-010 的 Diagram 與 Referenced by、ADR-029 的 Diagram 與 Referenced by 不是決定。S8 的設定驗證與禁止 `eval` 依 `AGENTS.md` 硬性規則 9，不另成一節，見 D1 連到的 [S8](../security-agent-rules.mdx#s8-設定的驗證與-span-的表示) |
 
@@ -197,6 +197,7 @@ tags: [adr, task-config, answer-isolation, security]
 
 | # | 問題 | 卡住什麼 | 誰決定 |
 | :--- | :--- | :--- | :--- |
+| 1 | `sequence_tagging` 與 `entity_recognition` 都以 `entities[]` 做字元 span 選取，兩者的差別（或是否合併）沒有記錄 | D3 與 [architecture.mdx 的任務類型表](../architecture.mdx#任務設定input_type-加-outputs)對兩者的描述 | 維護者，在做序列標記或實體辨識的 change 時 |
 
 ## 決策紀錄
 
