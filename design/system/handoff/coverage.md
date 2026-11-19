@@ -1,9 +1,9 @@
 # 覆蓋核對
 
-交付包版本：commit `5b1cb921515bb5ef0237626b3f1a8d2c1ee883ad`，prototype tree `d9c2ab67868bd56cb9015953e4b947f6fb472950`。
+交付包版本：commit `5566aec2decc13fffb3891218a357ccda334d039`，prototype tree `ecdd14a24d90f1bbe431876f96813c18d73bc794`。
 產生依據：[`design-handoff` skill](../../../.claude/skills/design-handoff/SKILL.md) 的步驟 4。工作源頭是 [Issue #248](https://github.com/label-suite/label-suite/issues/248)。
 
-**本次是第九版**（第八次重跑）。差異見 §九。
+**本次是第十版**（第九次重跑）。差異見 §九。
 
 | 項目 | 數 |
 | :--- | ---: |
@@ -223,7 +223,45 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 ## 九、重跑紀錄
 
-### 第八次（本版）
+### 第九次（本版）
+
+上一版釘在 `5b1cb92`。之後 [Issue #437](https://github.com/label-suite/label-suite/issues/437) 把 prototype 裡上色用的 `white` 關鍵字與通知徽章的 `#fff` 換成 token，改了十個 prototype 檔；`docs/specs/` 與 `navigation.mdx` 都沒動。
+
+| 欄位 | 第九版 | 本版 | |
+| :--- | :--- | :--- | :--- |
+| `commit` | `5b1cb921515b` | `5566aec2decc` | 必然變 |
+| `prototypeTree` | `d9c2ab67868b` | `ecdd14a24d90` | **變了** |
+| `specsTree` | `58bee0ccf9d5` | `58bee0ccf9d5` | 沒變 |
+| `navigationBlob` | `29e4eea42c99` | `29e4eea42c99` | 沒變 |
+
+變動的檔：
+- `tokens.css`：新增 `--color-on-badge-notify`（兩種主題都是白）與 `--color-toggle-thumb`（淺色白、深色 slate-200）。這是唯一行數有變的檔。
+- `shared/sidebar.css`：通知徽章的字改用 `--color-on-badge-notify`。
+- `task-config.css`、`components-showcase.html`、`account/profile.html`：開關圓鈕、chip 的勾、分類勾選框與輸出序號徽章改用 `--color-on-cta` 或 `--color-toggle-thumb`；預覽列的白底改用 `--color-white`。
+- `task-list.html`：焦點環外圈改用 `--color-white`。
+- 四個帳號頁（`login`、`register`、`forgot-password`、`reset-password`）與 `profile.html`：spinner 的三邊改用 `--color-on-cta` 的半透明混色。
+
+| 類 | 數 | 內容 |
+| :--- | ---: | :--- |
+| 新增 | 0 | |
+| 移除 | 0 | |
+| 改寫 | 0 | 交付包引用的行號（`login.html:677`、`reset-password.html:548`、`task-list.html:1219`）都在原地替換的檔裡，行數不變；行數有變的只有 `tokens.css`，交付包沒有引用它的行號 |
+| `loads` 欄 | 0 | 沒有新增或移除載入的檔 |
+| 參數 | 0 | 沒有改讀網址參數的程式 |
+| 受影響 | 153 | 154 個視圖中有 153 個的畫面載入了變動的檔（`tokens.css` 140 個、`sidebar.css` 128 個、`task-config.css` 41 個，其餘各 1–7 個） |
+
+### 應重驗的批次（第九次）
+
+| 批次 | 載入變動檔的視圖 | 新增 | 該批的參數驅動視圖 |
+| :--- | ---: | ---: | ---: |
+| `b1-shared-account` | 42／43 | 0 | 沒變 |
+| `b2-admin-dashboard-task` | 54／54 | 0 | 沒變 |
+| `b3-annotation-review` | 25／25 | 0 | 沒變 |
+| `b4-dataset-sweep` | 32／32 | 0 | 沒變 |
+
+這次只動到**顏色**，沒有改行為或版面，而且淺色主題的算出值不變：同一張單以 Playwright 對 20 個頁面與狀態比對 `origin/main` 與本分支，淺色下每個元素與偽元素的算出色都相同，深色下只有上面列的部件改變。四批不必重做結構；受影響的元件文件（Toggle Switch、Spinner、Chip、Proto Toggle Bar）與 `brand.md` 已在同一張單裡改好。
+
+### 第八次
 
 上一版釘在 `e69cc99`。之後同一張單（[Issue #420](https://github.com/label-suite/label-suite/issues/420)）依維護者的裁示再改了四個 prototype 檔，並改了 `navigation.mdx`。
 
