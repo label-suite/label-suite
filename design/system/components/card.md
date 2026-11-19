@@ -9,7 +9,7 @@
 | 容器：`1px solid --color-border`、`--radius-lg`、`--color-white` 底、`--space-lg` 內距 | 必填 | `pages/shared/card.css`（#423 起唯一一份）；`.panel` 是正典 class，`.form-card`、`.section-card`、`.content-card` 是同一個容器的別名 |
 | `.panel-header`（標題與動作分置兩端） | 選用，只在 `dashboard` | `dashboard.layout.css:180` |
 | `.panel-title`（1.05rem／600） | 選用，只在 `dashboard`；`task-detail` 另有一份 16px 的同名規則（`task-detail.html:96`） | `dashboard.layout.css:187` |
-| `.panel-subtitle`（`--color-ink-muted`、0.875rem） | 選用，只在 `dashboard` | `:194` |
+| `.panel-subtitle`（`--color-ink-muted`、0.875rem） | 選用，只在 `dashboard` | `dashboard.layout.css:194` |
 | `.form-card-title`（16px／600，下緣一條 `--color-border` 分隔線） | 選用，只在 `.form-card` | `task-new.html:57` |
 
 **共用檔**：容器四條規則原本在六個頁面各寫一份（`dashboard` 與 `task-detail` 的 `.panel`、`task-new` 的 `.form-card`、`account/profile` 的 `.section-card`、`annotation-workspace` 的 `.content-card`、`dataset-analysis-detail` 的 `.panel`）。#423 依維護者 2026-11-18 裁定抽成 `pages/shared/card.css`、以 `.panel` 為準；舊的 class 名保留為別名，頁面只留自己的變體規則 → `../design-gaps.md` G-41。
@@ -67,5 +67,5 @@
 | `task-management/task-detail`（`#tab-*`、`#sim-403`、`#state-panel-load-failed`） | 本頁 `.panel`，`taskForbidden`／`taskNotFound` 面板也是它 |
 | `task-management/task-new`（`#state-step1`～`#state-step3`） | `.form-card` |
 | `annotation/annotation-workspace`（`#role-*`、`#state-arbitration`、`#state-exception-pool`） | `.content-card`，共用檔的別名 → `../design-gaps.md` G-41 |
-| `dataset/dataset-analysis-detail`（全部視圖，含十六個 partial） | `.panel`，共用檔加本頁的 `margin-bottom`；`renderPanelLoadError` 的 `.panel.panel-load-error`（`:1509`）也是它 → `../design-gaps.md` G-41 |
+| `dataset/dataset-analysis-detail`（全部視圖，含十六個 partial） | `.panel`，共用檔加本頁的 `margin-bottom`；`renderPanelLoadError` 的 `.panel.panel-load-error`（`dataset-analysis-detail.html:1509`）也是它 → `../design-gaps.md` G-41 |
 | `account/profile`（全部視圖） | `.section-card`，共用檔的別名 → `../design-gaps.md` G-41 |

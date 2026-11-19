@@ -9,8 +9,8 @@
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
 | variant class（`.btn-primary` 等七選一） | 必填 | `design/prototype/components-showcase.html:150`–`:290` |
-| 文字 | 選用（`.btn-icon` 只有圖示） | `components-showcase.html:1040`（`.btn-icon` 僅有 `aria-label` 與 svg） |
-| 前置圖示 `<svg>`／`<img>` | 選用 | `.btn-oauth` `components-showcase.html:1039`、`.btn-language` `:1041` |
+| 文字 | 選用（`.btn-icon` 只有圖示） | `components-showcase.html:1041`（`.btn-icon` 僅有 `aria-label` 與 svg） |
+| 前置圖示 `<svg>`／`<img>` | 選用 | `.btn-oauth` `components-showcase.html:1040`、`.btn-language` `:1042` |
 | 狀態 class（`.btn-loading`／`disabled`） | 選用 | `components-showcase.html:212`–`:225` |
 
 ## 變體
@@ -56,7 +56,7 @@
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-buttons`（`components-showcase.html:1031`）：第一列七個 variant，第二列 loading 與兩個 disabled。
+`components-showcase#state-default` → `#comp-buttons`（`components-showcase.html:1032`）：第一列七個 variant，第二列 loading 與兩個 disabled。
 
 ## shadcn 對照
 
@@ -71,16 +71,16 @@
 | 畫面 | 用到的 variant |
 | :--- | :--- |
 | `components-showcase#state-default` | 全部七個加兩個狀態 |
-| `account/profile`（`state-default`） | `.btn-primary`（`profile.html:802`） |
-| `admin/role-settings`（`#state-default`、`#state-dirty`） | `.btn-ghost`／`.btn-cta` **本頁重新定義**（`role-settings.html:75`–`:76`、`:239`–`:240`）；`.btn-danger`（`:872`） |
-| `admin/user-management`（`#state-default`、`#toast-action`） | `.btn-primary`／`.btn-ghost` 本頁重新定義（`user-management.html:56`）；`.btn-danger`（`:604`） |
+| `account/profile`（`state-default`） | `.btn-primary`（`profile.html:803`） |
+| `admin/role-settings`（`#state-default`、`#state-dirty`） | `.btn-ghost`／`.btn-cta` **本頁重新定義**（`role-settings.html:77`–`:78`、`:241`–`:242`）；`.btn-danger`（`:872`） |
+| `admin/user-management`（`#state-default`、`#toast-action`） | `.btn-primary`／`.btn-ghost` 本頁只補版面規則（`user-management.html:56`），外觀來自 `button.css`；`.btn-danger`（`user-management.html:604`） |
 | `dashboard/dashboard`（全部視圖） | 本頁的 `.btn` 外框（`dashboard.layout.css:208`–`:238`）加正典 variant：`.btn-primary`、三個角色 CTA 的 `.btn-cta`、`.btn-secondary.slim`；彩色鈕已於 #423 刪除 → `../design-gaps.md` G-37 |
 | `task-management/task-list#sim-delete-error` | 正典 `.btn-secondary` ＋ `.btn-danger`（`task-list.html:280`–`:288`） |
 | `task-management/task-new`（全部視圖） | 正典 `button.css` 的 variant |
 | `task-management/task-detail`（全部視圖） | 正典 variant ＋ `.mini-btn`（#423 起用正典，頁內不再重新定義）→ G-37 |
 | `annotation/annotation-list`（`#state-default`） | `.btn.btn-primary.slim` 快速繼續（`annotation-list.html:437`–`:458`）；回儀表板用正典 `.mini-btn`，清除篩選用 `.clear-btn` → `../design-gaps.md` G-37 |
 | `annotation/annotation-workspace`（`#modal-guideline-gate`、`#state-review-decision`、`#state-arbitration`） | 指引閘門的確認是 `.btn.btn-cta`（`annotation-workspace.html:1138` 起）；審核三向決策是正典 `.mini-btn` 加本頁的 `mini-btn-active-*` 選中狀態，帶 `aria-pressed`（`annotation-workspace.config.js:3671`–`:3711`）→ G-37 |
-| `dataset/dataset-analysis-detail`（`#state-stats-empty`、`#param-q-state-*`、`#state-quality-*`） | 載入正典 `button.css`，用 `.btn.btn-secondary.btn-sm`（空狀態的連結、重試、`.risk-action-btn`）；頁內又在 `:167`–`:173` 重寫 `.btn` → `../design-gaps.md` G-37 |
+| `dataset/dataset-analysis-detail`（`#state-stats-empty`、`#param-q-state-*`、`#state-quality-*`） | 載入正典 `button.css`，用 `.btn.btn-secondary.btn-sm`（空狀態的連結、重試、`.risk-action-btn`）；頁內又在 `dataset-analysis-detail.html:169`–`:175` 重寫 `.btn` → `../design-gaps.md` G-37 |
 
 五個登出狀態的帳號頁**一個正典 variant 都沒用**，它們自己寫 `.login-btn`／`.submit-btn`／`.sso-btn`／`.lang-toggle`／`.eye-toggle`／`.proto-btn` → `../design-gaps.md` G-03。
 b2、b3、b4 已補上（見上表）。`dataset-analysis-list` 沒有載入 `button.css`，它的按鈕是 [List Toolbar](list-toolbar.md) 的 `.clear-btn` 與 [Pagination](pagination.md) 的 `.page-btn`。

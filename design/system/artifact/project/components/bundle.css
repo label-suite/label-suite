@@ -2588,7 +2588,7 @@ main:has(> .workspace-tab-bar):not(.workspace-root) {
 
 .workspace-tab-overview-close-all:hover { background: var(--color-border-muted); }
 
-/* ═══ Source: design/prototype/pages/dashboard/dashboard.layout.css:171-203 — Card (.panel is canonical per G-41) ═══ */
+/* ═══ Source: design/prototype/pages/dashboard/dashboard.layout.css:171-199 — Card (.panel is canonical per G-41) ═══ */
 /* ── Panels (MASTER.md §Cards) ──────────────────────────────– */
 .panel {
   border: 1px solid var(--color-border);

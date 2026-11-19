@@ -6,7 +6,7 @@
 
 單一 `<button class="lang-toggle">`，內含地球圖示與目前語言代碼。
 
-依據：`pages/account/login.html:66`（CSS）、`:363`（markup，帶 `data-testid="lang-toggle"` 與 `aria-label="切換語言"`）。
+依據：`pages/account/login.html:68`（CSS）、`:366`（markup，帶 `data-testid="lang-toggle"` 與 `aria-label="切換語言"`）。
 
 ## 變體
 
@@ -33,7 +33,7 @@
 
 原生 `<button>`，帶 `aria-label="切換語言"`（`login.html:366`）。沒有焦點樣式。
 
-切換後**不只換這顆鈕**：整頁文案由各頁自己的字串表換掉（例：`login.html:515`／`:538` 的 `dividerText`），所以它實際上是一個頁面層級的控制項。
+切換後**不只換這顆鈕**：整頁文案由各頁自己的字串表換掉（例：`login.html:518`／`:541` 的 `dividerText`），所以它實際上是一個頁面層級的控制項。
 
 ## 樣式出處
 
@@ -44,7 +44,7 @@
 
 | 視圖 | 怎麼走到 |
 | :--- | :--- |
-| `components-showcase#state-default` | `#comp-buttons` 的 `.btn-language`（`components-showcase.html:1041`），**正典版** |
+| `components-showcase#state-default` | `#comp-buttons` 的 `.btn-language`（`components-showcase.html:1042`），**正典版** |
 | `account/login#state-default` 等五個 | 右上角，**實際版**；點了會真的換語言 |
 
 ## shadcn 對照

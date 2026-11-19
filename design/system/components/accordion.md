@@ -1,6 +1,6 @@
 # Accordion
 
-> 正典章節：`MASTER.md` §Accordion ｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
+> 正典章節：`MASTER.md` §Accordion ｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c` ｜未標檔名的行號指 `design/prototype/components-showcase.html`
 
 ## 結構
 
@@ -8,25 +8,25 @@
 | :--- | :--- | :--- |
 | `.output-accordion` 外框（`overflow: hidden`） | 必填 | `components-showcase.html:750` |
 | `.output-accordion-header`（`role="button"`、`tabindex="0"`、`aria-expanded`、`aria-controls`） | 必填 | `:760`、樣本 `:1296` |
-| `.output-accordion-number` 序號 | 選用 | 樣本 `:1298`，**CSS 沒有這個 class 的規則** |
-| `.output-accordion-title` 標題 | 必填 | 樣本 `:1299`，同樣沒有 CSS 規則 |
+| `.output-accordion-number` 序號 | 選用 | 樣本 `:1297`，**CSS 沒有這個 class 的規則** |
+| `.output-accordion-title` 標題 | 必填 | 樣本 `:1298`，同樣沒有 CSS 規則 |
 | `.output-accordion-chevron` 箭頭（`margin-left: auto` 推到右側） | 必填 | `:778`、樣本 `:1300` |
 | `.output-accordion-body`（`role="region"`、`aria-label`、`id` 對應 `aria-controls`） | 必填 | `:790`、樣本 `:1302` |
 
 兩個 `.output-accordion-*` 的 class 出現在樣本裡但**正典 CSS 沒有定義**（`-number`、`-title`），它們的樣式來自 header 的 `font-size: 14px; font-weight: 600` → `../design-gaps.md` G-15。
 
-箭頭 svg 的 path 是從 `assets/icons/chevron-down.svg` 內嵌的，註解寫明依據是 ADR-030 的 reuse-only（`:1294`）。
+箭頭 svg 的 path 是從 `assets/icons/chevron-down.svg` 內嵌的，註解寫明依據是 ADR-030 的 reuse-only（`:1299`）。
 
 ## 變體
 
-只有展開與收合兩種，由 `.collapsed` 切換；**多個面板可同時展開**（`:1293` 的說明），不是互斥的手風琴。
+只有展開與收合兩種，由 `.collapsed` 切換；**多個面板可同時展開**（`:1292` 的說明），不是互斥的手風琴。
 
 ## 適用狀態
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
 | 展開（預設） | 有 | `components-showcase.html:749` |
-| 收合 | 有。`.collapsed` 讓 body `display: none`、箭頭轉 −90° | `:786`、`:796` |
+| 收合 | 有。`.collapsed` 讓 body `display: none`、箭頭轉 −90° | `:786`、`:795` |
 | hover | 有，header 底色換 `--color-primary-soft-bg` | `:775` |
 | focus | **未觀察到**。header 有 `tabindex="0"`、聚焦得到也按得動，但沒有任何 `:focus` 樣式 | 以 `:focus` 掃 `:750`–`:798`，0 命中 → `../design-gaps.md` G-05 |
 | disabled／載入中／錯誤／空 | 不適用 | — |
@@ -43,11 +43,11 @@ header 是 `<div role="button" tabindex="0">` 而不是 `<button>`，原生的 E
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:748`–`:796`。shipped 的那一份在 `pages/task-management/task-config.css`（b2）。
+`design/prototype/components-showcase.html:749`–`:797`。shipped 的那一份在 `pages/task-management/task-config.css`（b2）。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-accordion`（`components-showcase.html:1289`）：第一個展開（`aria-expanded="true"`），第二個收合。兩者都是**可操作的**——點或按 Enter／Space 會真的切換。
+`components-showcase#state-default` → `#comp-accordion`（`components-showcase.html:1290`）：第一個展開（`aria-expanded="true"`），第二個收合。兩者都是**可操作的**——點或按 Enter／Space 會真的切換。
 
 ## shadcn 對照
 
@@ -64,6 +64,6 @@ header 是 `<div role="button" tabindex="0">` 而不是 `<button>`，原生的 E
 | `components-showcase#state-default` | 兩個靜態面板 |
 | `task-management/task-new#state-step2` | 輸出設定的 `.output-accordion`（`task-config.css:463`–`:470`）。標頭是原生 `<button>`，帶 `aria-expanded` 與 `aria-controls`（`task-config.engine.js:633`–`:676`），**比正典的 `div[role=button]` 完整** |
 | `task-management/task-detail#tab-settings`（及 `#param-section-labeling`） | 同一份 `task-config.css`／`task-config.engine.js` |
-| `dataset/dataset-analysis-detail`（`#state-quality-*`） | 替代指標的 `.alt-toggle-btn`／`.alt-metrics-body`（`dataset-analysis-detail.html:111`–`:116`）：原生 `<button>`，帶 `aria-expanded`／`aria-controls`（例如 `quality-single_label.html:24`），收合時 body 設 `aria-hidden`（`wireAltToggle`，`:1919`） |
+| `dataset/dataset-analysis-detail`（`#state-quality-*`） | 替代指標的 `.alt-toggle-btn`／`.alt-metrics-body`（`dataset-analysis-detail.html:111`–`:116`）：原生 `<button>`，帶 `aria-expanded`／`aria-controls`（例如 `quality-single_label.html:24`），收合時 body 設 `aria-hidden`（`wireAltToggle`，`dataset-analysis-detail.html:1914`） |
 
 b1 的帳號頁一個都沒用。b2 已補上（見上表）：出貨版的鍵盤靠原生 `<button>`，與正典不同一份。b4 已補上（見上表），同樣是原生 `<button>`，又一份。

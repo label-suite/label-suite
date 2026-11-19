@@ -1,6 +1,6 @@
 # Tooltip
 
-> 正典章節：原件 `MASTER.md` §Tooltip（只見於 `pages/task-management/task-config.css:259` 的註解，本 repo 無原文）｜批次 `b2-admin-dashboard-task`、`b3-annotation-review` 補寫 ｜交付包 commit `eb9a884`
+> 正典章節：原件 `MASTER.md` §Tooltip（只見於 `pages/task-management/task-config.css:259` 的註解，本 repo 無原文）｜批次 `b2-admin-dashboard-task`、`b3-annotation-review` 補寫 ｜交付包 commit `eb9a884` ｜未標檔名的行號指 `design/prototype/pages/task-management/task-config.css`
 
 ## 結構
 
@@ -32,7 +32,7 @@
 
 ## token
 
-`--color-ink-muted`、`--color-ink`、`--color-white`、`--color-primary`（觸發鈕 focus）、`--dur-fast`。寫死：泡泡圓角 6px（`:305`）、`z-index: 500`（`:301`，`tokens.css` 有 `--z-*` 系列卻沒用） → G-02。
+`--color-ink-muted`、`--color-ink`、`--color-white`、`--color-primary`（觸發鈕 focus）、`--dur-fast`。寫死：泡泡圓角 6px（`:301`）、`z-index: 500`（`:301`，`tokens.css` 有 `--z-*` 系列卻沒用） → G-02。
 
 ## 鍵盤與焦點
 

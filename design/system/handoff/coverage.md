@@ -52,9 +52,9 @@
 
 | 位置 | 名字從哪來 | 宣告新參數 |
 | :--- | :--- | ---: |
-| `task-detail.html:5052` | `URL_VIEW_STATE` | **16** |
-| `annotation-workspace.config.js:1561` | `LIST_VIEW_STATE_KEYS` ＋ `LIST_IDENTITY_KEYS` | **6** |
-| `dataset-analysis-detail.html:2434` | `PROTOTYPE_ONLY_PARAMS` | 0（`s_state` 已在表上） |
+| `task-detail.html:5048` | `URL_VIEW_STATE` | **16** |
+| `annotation-workspace.config.js:1560` | `LIST_VIEW_STATE_KEYS` ＋ `LIST_IDENTITY_KEYS` | **6** |
+| `dataset-analysis-detail.html:2433` | `PROTOTYPE_ONLY_PARAMS` | 0（`s_state` 已在表上） |
 | `sidebar.js:732` | 列舉既有鍵 | 0 |
 
 兩輪的修法：[PR #400](https://github.com/label-suite/label-suite/pull/400) 把那 22 個名字補進 `navigation.mdx` 的契約，本版把掃描法改成兩步，所以 `params` 欄現在才是真的全集——`task-management/task-detail` 從 11 個變 **25** 個、`annotation/annotation-workspace` 從 9 個變 **13** 個。
@@ -184,19 +184,19 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 | 視圖 | 證據（摘要） |
 | :--- | :--- |
-| `#state-theme-dark` | 主題鈕 `:2081`／`:2055`；載入 `theme.js` 的 11 頁走它的 `setChoice()`（`:364`–`:367` 提前 return），其餘 5 個帳號頁走 `:370`／`:374` |
-| `#state-lang-en` | `#langToggle` `:2047`／`#mobileLangToggle` `:2051` → `applyGlobalLanguage()` `:427` |
-| `#state-sidebar-collapsed` | **桌機**（`:513` 的 `min-width: 768px`）收合 → `body.sidebar-collapsed` `:2525` |
+| `#state-theme-dark` | 主題鈕 `sidebar.js:2081`／`:2055`；載入 `theme.js` 的 11 頁走它的 `setChoice()`（`sidebar.js:364`–`:367` 提前 return），其餘 5 個帳號頁走 `:370`／`:374` |
+| `#state-lang-en` | `#langToggle` `sidebar.js:2047`／`#mobileLangToggle` `:2051` → `applyGlobalLanguage()` `:427` |
+| `#state-sidebar-collapsed` | **桌機**（`sidebar.js:513` 的 `min-width: 768px`）收合 → `body.sidebar-collapsed` `:2525` |
 | `#state-mobile` | `sidebar.css` 的 `@media (max-width: 767px)`：另一套版面，另有 `#mobileLangToggle`／`#mobileThemeToggleBtn`／`#mobileLogoutBtn` |
-| `#state-user-chip` | `#userAvatar` `:2098`、`#userName`、`#roleIndicator` `:2101`；頭像取自 `label-suite-profile-avatar` `:55` |
-| `#state-logout` | `#logoutBtn` `:2104`／`#mobileLogoutBtn` `:2065`，一次清掉 7 個 storage 鍵 |
-| `#modal-notification` | `#notificationDropdown` `:2260`、`#notifMarkAllBtn` `:2275`、`#notificationBadge` |
-| `#modal-shortcut` | `#shortcutHelpModal` `:2109`，開關在 `:2209` |
-| `#role-super-admin` | `:536` 在不是 `super_admin` 時隱藏 `#navAdminItem` `:628` |
-| `#state-admin-submenu-open` | `:539`–`:541`：桌機且未收合才展開成兩個連結 |
-| `#state-active-task-type` | `labelsuite.activeTaskType` `:4` 決定標記作業那一項的標籤與 `#roleIndicator` |
-| `#state-workspace-tabs` | 頁籤列 `:1525`、總覽選單、重開、全部關閉與三種通知；6 個 sessionStorage 鍵 |
-| `#param-ap-stage` | **任務詳情**才讀（`:763`）：`:770`／`:773` 設 `stageBadge` → `data-stage-badge` `:1253` |
+| `#state-user-chip` | `#userAvatar` `sidebar.js:2098`、`#userName`、`#roleIndicator` `:2101`；頭像取自 `label-suite-profile-avatar` `:55` |
+| `#state-logout` | `#logoutBtn` `sidebar.js:2104`／`#mobileLogoutBtn` `:2065`，一次清掉 7 個 storage 鍵 |
+| `#modal-notification` | `#notificationDropdown` `sidebar.js:2260`、`#notifMarkAllBtn` `:2275`、`#notificationBadge` |
+| `#modal-shortcut` | `#shortcutHelpModal` `sidebar.js:2109`，開關在 `:2209` |
+| `#role-super-admin` | `sidebar.js:536` 在不是 `super_admin` 時隱藏 `#navAdminItem` `:628` |
+| `#state-admin-submenu-open` | `sidebar.js:539`–`:541`：桌機且未收合才展開成兩個連結 |
+| `#state-active-task-type` | `labelsuite.activeTaskType` `sidebar.js:4` 決定標記作業那一項的標籤與 `#roleIndicator` |
+| `#state-workspace-tabs` | 頁籤列 `sidebar.js:1525`、總覽選單、重開、全部關閉與三種通知；6 個 sessionStorage 鍵 |
+| `#param-ap-stage` | **任務詳情**才讀（`sidebar.js:763`）：`:770`／`:773` 設 `stageBadge` → `data-stage-badge` `:1253` |
 
 ### 為什麼它自成一個條目
 
@@ -616,7 +616,7 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 | 移除 | 1 | `account/verify-email#sim-logged-out` |
 | 受影響 | **26** | `evidence` 指到 `docs/prototype/navigation.mdx` 的全部視圖 |
 
-新增與移除**不是**這次來源變動造成的，是**修掉上一版的一個錯**：`verify-email.html` 根本不呼叫 `redirectIfLoggedIn()`（它那三處都是註解），唯四呼叫的是 login、register、forgot-password 與 reset-password（`sidebar.js:89` 自己寫「四頁在載入時呼叫」）。那是 [PR #394](https://github.com/label-suite/label-suite/pull/394) 補 `sim_logged_out` 時挑錯了頁面，寫 §網址參數 時才查出來。
+新增與移除**不是**這次來源變動造成的，是**修掉上一版的一個錯**：`verify-email.html` 根本不呼叫 `redirectIfLoggedIn()`（它那三處都是註解），唯四呼叫的是 login、register、forgot-password 與 reset-password（`sidebar.js:95` 自己寫「四頁在載入時呼叫」）。那是 [PR #394](https://github.com/label-suite/label-suite/pull/394) 補 `sim_logged_out` 時挑錯了頁面，寫 §網址參數 時才查出來。
 
 ### 應重驗的批次
 

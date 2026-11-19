@@ -35,7 +35,7 @@
 - [Spinner](components/spinner.md)：取代送出鈕的文字，帶 `aria-label="載入中"`（`design/prototype/pages/account/login.html:681`）
 - [Button](components/button.md)：`.btn-loading` 以 `opacity: .7` ＋ `pointer-events: none` 表示送出中（`design/prototype/components-showcase.html:214`）
 
-引用處：`design/prototype/pages/account/profile.html:346`（「UXC-06 / MASTER Loading state: opacity-70 + spinner while pending」）、`:1527`（「loading state + double-submission guard while the (simulated) request runs」）、`:1570`。
+引用處：`design/prototype/pages/account/profile.html:347`（「UXC-06 / MASTER Loading state: opacity-70 + spinner while pending」）、`:1528`（「loading state + double-submission guard while the (simulated) request runs」）、`:1571`。
 
 **已知缺口**：`.btn-loading` 只關掉滑鼠（`pointer-events: none`），**沒有加 `disabled`**，所以鍵盤仍然按得動——防護只擋得住一半（[`design-gaps.md`](design-gaps.md) G-06）。
 
@@ -50,7 +50,7 @@
 | warning | 8000ms |
 | error | **0 ＝ 只能手動關** |
 
-依據：`design/prototype/components-showcase.html:1507`（`TOAST_DURATIONS`），`:1539` 的 `if (duration)` 讓 `0` 落到「不設計時器」。單一實例靠 `:1536` 的 `replaceChildren()`——是覆蓋，不是佇列。
+依據：`design/prototype/components-showcase.html:1508`（`TOAST_DURATIONS`），`:1552` 的 `if (duration)` 讓 `0` 落到「不設計時器」。單一實例靠 `:1549` 的 `replaceChildren()`——是覆蓋，不是佇列。
 
 遵守它的元件：[Toast](components/toast.md) 本身，以及 [App Shell](components/app-shell.md) 的通知（待 b2 核對是否同一套）。
 
@@ -60,13 +60,13 @@
 
 **b4 核對**：`dataset/dataset-analysis-list` 照抄 `TOAST_DURATIONS`（`design/prototype/pages/dataset/dataset-analysis-list.js:25`），遵守。`dataset/dataset-analysis-detail` 原本有 toast 的 markup 與關閉鈕，卻沒有任何程式顯示它；#423 已刪掉，本頁不用 toast，不適用 → [`design-gaps.md`](design-gaps.md) G-55。
 
-這是 prototype 引用最多的一條：42 處裡獨佔 **20 處**，其中 4 處在 `components-showcase.html`（`:143`、`:401`、`:1123`、`:1506`），`:143` 甚至把它寫進正典 CSS 區塊的標頭。
+這是 prototype 引用最多的一條：42 處裡獨佔 **20 處**，其中 4 處在 `components-showcase.html`（`:144`、`:402`、`:1124`、`:1507`），`:144` 甚至把它寫進正典 CSS 區塊的標頭。
 
 ## UXC-08：Skeleton 尺寸要貼合載入後的內容
 
 骨架的尺寸要照著載入後真正會出現的東西量，**以防 layout shift**。
 
-依據：`design/prototype/components-showcase.html:1134`（「尺寸須貼合載入後內容以防 layout shift（UXC-08）」）。
+依據：`design/prototype/components-showcase.html:1135`（「尺寸須貼合載入後內容以防 layout shift（UXC-08）」）。
 
 遵守它的元件：
 
@@ -79,7 +79,7 @@
 
 清單頁的 `q`／`keyword`、`status`、`limit`／`offset` 這類狀態寫進網址，重新整理與分享連結都能回到同一個畫面。
 
-依據：`design/prototype/pages/admin/user-management.html:957`（「URL state (UXC-11): q / role / status / limit / offset」）、`pages/annotation/annotation-list.html:1050`（「filter/search/pagination live in the URL (limit/offset…」）、`components-showcase.html:1181`（「行為契約見 UXC-11（limit/offset、URL 同步）」）。
+依據：`design/prototype/pages/admin/user-management.html:957`（「URL state (UXC-11): q / role / status / limit / offset」）、`pages/annotation/annotation-list.html:1051`（「filter/search/pagination live in the URL (limit/offset…」）、`components-showcase.html:1181`（「行為契約見 UXC-11（limit/offset、URL 同步）」）。
 
 遵守它的元件：[Pagination](components/pagination.md)、[List Toolbar](components/list-toolbar.md)。兩者在 b1 都**沒有可重現的視圖**（showcase 只展示版面、不展示網址行為），所以這一條在本批次只記到契約層。
 
@@ -98,7 +98,7 @@
 遵守它的元件：
 
 - [Modal](components/modal.md)：`admin/role-settings` 的 `#dirtyModal`（`design/prototype/pages/admin/role-settings.html:858`；`cancelEdit` 在 `isDirty` 時先開它，`:1319`–`:1325`）；`task-management/task-new` 的 `leaveModal`（`task-new.html:533`）；`task-management/task-detail` 的 `settingsLeave`（`task-detail.html:1967`）
-- [Alert Banner](components/alert-banner.md)：`admin/role-settings` 的 `.dirty-banner`（`:276`）在離開之前就先把「有未儲存的變更」說出來
+- [Alert Banner](components/alert-banner.md)：`admin/role-settings` 的 `.dirty-banner`（`role-settings.html:276`）在離開之前就先把「有未儲存的變更」說出來
 
 瀏覽器層：`role-settings.html:1301`–`:1305`、`task-new.html:1711`。**`task-detail` 沒有 `beforeunload`**——它只擋頁內切換（`task-detail.html` 全檔 `beforeunload` 0 次）。
 
@@ -113,11 +113,11 @@
 - [Empty State](components/empty-state.md)：`admin/user-management` 篩到 0 列時是 `empty-state-page` ＋「清除篩選」（`design/prototype/pages/admin/user-management.html:455`–`:467`）
 - [Data Table](components/data-table.md)：`task-management/task-list` 把空狀態放成表格裡的一列，`createEmptyRow(isNoResults)`（`task-list.html:834`–`:858`）依參數換文案，只有 `isNoResults` 為真才加清除鈕；兩種情況都保留表頭
 
-依據的規格：[`03-task-management/01-task-list.mdx` §空狀態與載入失敗](../../docs/specs/03-task-management/01-task-list.mdx)（三種情況的文案表，且「不放第二顆新增任務」）。第三種「載入失敗」**絕對不能顯示成空資料**，`task-list` 用另一列錯誤列（`:875`–`:907`）處理。
+依據的規格：[`03-task-management/01-task-list.mdx` §空狀態與載入失敗](../../docs/specs/03-task-management/01-task-list.mdx)（三種情況的文案表，且「不放第二顆新增任務」）。第三種「載入失敗」**絕對不能顯示成空資料**，`task-list` 用另一列錯誤列（`createErrorRow`，`task-list.html:868`–`:906`）處理。
 
 **b3 核對**：`annotation/annotation-list` 遵守。`renderEmptyState`（`design/prototype/pages/annotation/annotation-list.html:1923`–`:1938`）用同一個 `empty-state-page` 容器，只依「本來有沒有資料」換文案（「找不到符合條件的資料。」／「目前尚無資料。」），只有前者加清除篩選。對應規格 [`04-annotation/01-annotation-list.mdx` §空的與找不到](../../docs/specs/04-annotation/01-annotation-list.mdx) 第 4–6 條。
 
-**b4 核對**：`dataset/dataset-analysis-list` 遵守。`createEmptyRow(noResults)`（`design/prototype/pages/dataset/dataset-analysis-list.view.js:133`）沿用 `task-list` 的「表格裡的一列」做法，依參數換文案（`dataset-analysis-list.i18n.js:38`–`:41`）；篩不到時的文案叫人「清除篩選」，清除鈕在工具列（`.clear-btn`，`dataset-analysis-list.html:255`），空狀態裡不另放。載入失敗另有錯誤列（`createErrorRow`，`dataset-analysis-list.view.js:159`），不顯示成空資料。`dataset/dataset-analysis-detail` 的兩種空（統計 `#statsEmpty`、品質 `#qualityEmpty`）是「還沒有資料」的空，沒有篩選，這一條不適用。
+**b4 核對**：`dataset/dataset-analysis-list` 遵守。`createEmptyRow(noResults)`（`design/prototype/pages/dataset/dataset-analysis-list.view.js:133`）沿用 `task-list` 的「表格裡的一列」做法，依參數換文案（`dataset-analysis-list.i18n.js:38`–`:41`）；篩不到時的文案叫人「清除篩選」，清除鈕在工具列（`.clear-btn`，`dataset-analysis-list.html:258`），空狀態裡不另放。載入失敗另有錯誤列（`createErrorRow`，`dataset-analysis-list.view.js:159`），不顯示成空資料。`dataset/dataset-analysis-detail` 的兩種空（統計 `#statsEmpty`、品質 `#qualityEmpty`）是「還沒有資料」的空，沒有篩選，這一條不適用。
 
 ## UXC-10：刪除分支要先確認
 
@@ -136,8 +136,8 @@
 
 遵守它的元件：
 
-- [Input](components/input.md)：`annotation/annotation-workspace` 勾了「無法判定」之後出現的理由輸入框（`.input`，`design/prototype/pages/annotation/annotation-workspace.config.js:649`–`:681`），勾的當下錯誤訊息是隱藏的（`:656`，註解 `:665`–`:667`）；按提交才逐一判斷哪幾個輸出類型缺理由，各自打開錯誤（`:3097`–`:3109`）
-- [Toast](components/toast.md)：同一次提交只發**一則** warning 通知，把缺理由的輸出類型名稱用「、」串起來（`:3069`–`:3075`）
+- [Input](components/input.md)：`annotation/annotation-workspace` 勾了「無法判定」之後出現的理由輸入框（`.input`，`design/prototype/pages/annotation/annotation-workspace.config.js:649`–`:681`），勾的當下錯誤訊息是隱藏的（`:657`，註解 `:666`–`:668`）；按提交才逐一判斷哪幾個輸出類型缺理由，各自打開錯誤（`:3097`–`:3109`）
+- [Toast](components/toast.md)：同一次提交只發**一則** warning 通知，把缺理由的輸出類型名稱用「、」串起來（`annotation-workspace.config.js:3111`–`:3116`）
 
 依據的規格：[`04-annotation/02-annotation-workspace.mdx` §作答完整性與提交阻擋](../../docs/specs/04-annotation/02-annotation-workspace.mdx) 第 5 條。同一段第 2 條要「提示對應的那個區塊」：#423 起未完成的區塊框線換 `--color-error`、區塊內一行錯誤文字以 `aria-describedby` 綁定，焦點捲到第一個未完成區塊（`annotation-workspace.config.js:2939`、`:3090`）；作答時引擎重繪區塊，錯誤隨之清掉，合本約定 → [`design-gaps.md`](design-gaps.md) G-47。
 
@@ -147,7 +147,7 @@
 
 遵守它的元件：
 
-- [Input](components/input.md)：`annotation/annotation-workspace` 的理由輸入框，`input` 事件一有非空白的值就隱藏錯誤（`syncOnInput`，`design/prototype/pages/annotation/annotation-workspace.config.js:668`–`:674`）；帳號頁的 `.field-error` 同樣在 `input` 事件清掉（`account/login.html:636`–`:641`、`account/register.html:728`–`:734`、`account/reset-password.html:779`–`:784`）
-- [Alert Banner](components/alert-banner.md)：`account/register` 一開始打字就把表單層級的錯誤橫幅收起來（`register.html:733`）
+- [Input](components/input.md)：`annotation/annotation-workspace` 的理由輸入框，`input` 事件一有非空白的值就隱藏錯誤（`syncOnInput`，`design/prototype/pages/annotation/annotation-workspace.config.js:668`–`:674`）；帳號頁的 `.field-error` 同樣在 `input` 事件清掉（`account/login.html:636`–`:641`、`account/register.html:728`–`:734`、`account/reset-password.html:780`–`:785`）
+- [Alert Banner](components/alert-banner.md)：`account/register` 一開始打字就把表單層級的錯誤橫幅收起來（`register.html:736`）
 
 只清**錯誤**，不清值，也不在輸入當下重新驗證——那會變成檢查就驗證，違反 UXC-04。

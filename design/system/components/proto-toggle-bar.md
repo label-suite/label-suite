@@ -8,10 +8,10 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.proto-toggle-bar`（`position: fixed; bottom: 16px; left: 50%`、`rgba(30,27,75,0.92)` 底、`border-radius: 20px`） | 必填 | `pages/account/reset-password.html:353` |
-| `.proto-btn` ×3（28px 高、11px 字、`.active`／`.inactive`） | 必填 | `reset-password.html:372`；markup 見 `verify-email.html:364`–`:366` |
+| `.proto-toggle-bar`（`position: fixed; bottom: 16px; left: 50%`、`rgba(30,27,75,0.92)` 底、`border-radius: 20px`） | 必填 | `pages/account/reset-password.html:358` |
+| `.proto-btn` ×3（28px 高、11px 字、`.active`／`.inactive`） | 必填 | `reset-password.html:377`；markup 見 `verify-email.html:365`–`:367` |
 
-按鈕以 `onclick="showState('valid'｜'expired'｜'used')"` 直接呼叫頁面函式（`verify-email.html:364`–`:366`）。
+按鈕以 `onclick="showState('valid'｜'expired'｜'used')"` 直接呼叫頁面函式（`verify-email.html:365`–`:367`）。
 
 ## 變體
 
@@ -21,9 +21,9 @@
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| `.active` | 有 | `reset-password.html:372` 之後的規則 |
-| `.inactive` | 有 | 同上 |
-| hover | 有（`transition: background .15s, color .15s`，`:397`） | — |
+| `.active` | 有 | `reset-password.html:388` |
+| `.inactive` | 有 | `reset-password.html:389`–`:390` |
+| hover | 有（`transition: background .15s, color .15s`，`reset-password.html:385`） | — |
 | focus | **未觀察到** | → `../design-gaps.md` G-05 |
 | disabled／載入中／錯誤／空 | 不適用 | — |
 
@@ -39,7 +39,7 @@
 
 ## 樣式出處
 
-`design/prototype/pages/account/reset-password.html:353`、`:372`，以及 `verify-email.html` 的同一組。
+`design/prototype/pages/account/reset-password.html:358`、`:377`，以及 `verify-email.html` 的同一組。
 
 ## 可重現樣本
 

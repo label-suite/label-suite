@@ -1,6 +1,6 @@
 # Step Indicator
 
-> 正典章節：原件 `MASTER.md` §Step Indicator（只見於 `assets/tokens.css:21` 的註解，本 repo 無原文）｜批次 `b2-admin-dashboard-task` ｜交付包 commit `eb9a884` ｜**單頁專屬**
+> 正典章節：原件 `MASTER.md` §Step Indicator（只見於 `assets/tokens.css:21` 的註解，本 repo 無原文）｜批次 `b2-admin-dashboard-task` ｜交付包 commit `eb9a884` ｜**單頁專屬** ｜未標檔名的行號指 `design/prototype/pages/task-management/task-new.html`
 
 ## 結構
 
@@ -20,9 +20,9 @@
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| 未到 | 有：`--color-border` 框、`--color-white` 底、`--color-ink-muted` 字 | `:41` |
-| 目前（`.active`） | 有：`--color-primary` 底、`--color-on-cta` 字 | `:42`、`:45` |
-| 完成（`.done`） | 有：`--color-cta` 底，連接線也變 `--color-cta` | `:43`、`:46`、`:48` |
+| 未到 | 有：`--color-border` 框、`--color-white` 底、`--color-ink-muted` 字 | `:44` |
+| 目前（`.active`） | 有：`--color-primary` 底、`--color-on-cta` 字 | `:45`、`:45` |
+| 完成（`.done`） | 有：`--color-cta` 底，連接線也變 `--color-cta` | `:46`、`:46`、`:49` |
 | hover／focus／disabled | 未觀察到（步驟不可點） | — |
 
 淺色下 `--color-on-cta` 疊在 `--color-primary` 上的對比約 4.47:1，低於 AA，`tokens.css:21` 註明是「已裁定接受的取捨」，裁定記錄在原件 → `../design-gaps.md` G-25。深色下兩者都換成深色值，對比約 5.36:1，達 AA。

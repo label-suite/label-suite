@@ -1,6 +1,6 @@
 # Chip
 
-> 正典章節：`MASTER.md` §Chip ｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
+> 正典章節：`MASTER.md` §Chip ｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c` ｜未標檔名的行號指 `design/prototype/components-showcase.html`
 
 ## 結構
 
@@ -8,10 +8,10 @@
 
 | 類 | 結構 | 依據 |
 | :--- | :--- | :--- |
-| 選取 chip | `.task-type-chip-grid` > `<button class="task-type-chip">` > `.task-type-chip-check` ＋ 文字 | `components-showcase.html:474`–`:537` |
-| 顯示 chip（唯讀） | 單一 `<span>` | `components-showcase.html:539`–`:584` |
+| 選取 chip | `.task-type-chip-grid` > `<button class="task-type-chip">` > `.task-type-chip-check` ＋ 文字 | `components-showcase.html:475`–`:538` |
+| 顯示 chip（唯讀） | 單一 `<span>` | `components-showcase.html:540`–`:585` |
 
-`.task-type-chip-check` 的勾是 `::after` 的兩條 2px `--color-on-cta` 邊旋轉 −45°（`:521`–`:528`）；radio 模式下改成 6×6 的 `--color-on-cta` 實心圓（`:532`–`:539`）。
+`.task-type-chip-check` 的勾是 `::after` 的兩條 2px `--color-on-cta` 邊旋轉 −45°（`:520`–`:527`）；radio 模式下改成 6×6 的 `--color-on-cta` 實心圓（`:528`–`:538`）。
 
 ## 變體
 
@@ -24,16 +24,16 @@
 | `.round-metric-chip` | 顯示，指標 | token |
 | `.cause-chip` | 顯示，原因標籤 | token |
 
-依據：`components-showcase.html:479`、`:527`、`:540`、`:548`、`:562`、`:574`。
+依據：`components-showcase.html:480`、`:528`、`:541`、`:551`、`:563`、`:575`。
 
 ## 適用狀態
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| 預設 | 有 | `components-showcase.html:479` |
-| hover | 有（僅選取 chip）：邊框與文字換 primary、底色 `--color-primary-soft-bg` | `components-showcase.html:497` |
-| 選中 | 有：同 hover 的色，字重升到 600，勾選框填滿 | `components-showcase.html:499`、`:515` |
-| focus | **未觀察到**。`.task-type-chip` 是 `<button>`，但沒有 `:focus` 或 `:focus-visible` 規則 | 以 `:focus` 掃 `:476`–`:586`，0 命中 → `../design-gaps.md` G-05 |
+| 預設 | 有 | `components-showcase.html:480` |
+| hover | 有（僅選取 chip）：邊框與文字換 primary、底色 `--color-primary-soft-bg` | `components-showcase.html:495` |
+| 選中 | 有：同 hover 的色，字重升到 600，勾選框填滿 | `components-showcase.html:500`、`:516` |
+| focus | **未觀察到**。`.task-type-chip` 是 `<button>`，但沒有 `:focus` 或 `:focus-visible` 規則 | 以 `:focus` 掃 `:474`–`:585`，0 命中 → `../design-gaps.md` G-05 |
 | disabled | **未觀察到** | 同上，無 `:disabled` |
 | 載入中／錯誤／空 | 不適用 | — |
 
@@ -42,15 +42,15 @@
 `--color-border`、`--color-primary`、`--color-primary-strong`、`--color-primary-soft-bg`、`--color-primary-border`、`--color-ink`、`--color-white`、`--color-text-soft`、`--radius-full`、`--dur-fast`、`--font-mono`。
 
 顯示 chip 原本寫死 9 個色值，#420 起全部改用 token（`components-showcase.html:541`–`:562`），原值見 `../design-gaps.md` G-02。作答區另有一組 `.chip`（`task-config.css`，#420 為 G-50 新增），每個標籤的顏色是任務資料，經 `--chip-color` 傳入（預設色盤裡的顏色由 `entityPaintColor()` 換成 `--data-entity-N`，深色主題跟著換）；它和本元件的 `.task-type-chip` 還沒合併 → `../design-gaps.md` G-50。
-另有三處圓角寫 `9999px`／`999px` 字面值而不是 `--radius-full`（`:545`、`:556`、`:569`），同一個章節內三種寫法並存。
+另有三處圓角寫 `9999px`／`999px` 字面值而不是 `--radius-full`（`:544`、`:555`、`:568`），同一個章節內三種寫法並存。
 
 ## 鍵盤與焦點
 
 選取 chip 是原生 `<button>`，Tab 可達、Enter／Space 原生觸發 `click`，並帶 `role="checkbox"`／`role="radio"` 與 `aria-checked`（`components-showcase.html:1160`、`:1167`）。容器帶 `role="group"`／`role="radiogroup"` 與 `aria-label`（`:1159`、`:1166`）。
 
-行為由腳本維持：`components-showcase.html:1548`–`:1565`，註解自稱「§Chip accessibility contract: aria-checked toggled on click」。checkbox 各自切換（`:1553`），radio 則把同組其他的設回 false（`:1562`）。
+行為由腳本維持：`components-showcase.html:1561`–`:1578`，註解自稱「§Chip accessibility contract: aria-checked toggled on click」。checkbox 各自切換（`:1568`），radio 則把同組其他的設回 false（`:1575`）。
 
-兩個缺口：**沒有焦點樣式**（見上）；`role="radiogroup"` 只綁 `click`（`:1563`），**沒有方向鍵巡覽**，而 radio group 的鍵盤契約是左右鍵切換、整組只佔一個 Tab 位。
+兩個缺口：**沒有焦點樣式**（見上）；`role="radiogroup"` 只綁 `click`（`:1574`），**沒有方向鍵巡覽**，而 radio group 的鍵盤契約是左右鍵切換、整組只佔一個 Tab 位。
 
 ## 樣式出處
 
@@ -58,7 +58,7 @@
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-chips`（`components-showcase.html:1154`）：三組 demo——多選（`:1158`）、單選（`:1165`）、五種唯讀顯示 chip（`:1171`–`:1175`）。
+`components-showcase#state-default` → `#comp-chips`（`components-showcase.html:1155`）：三組 demo——多選（`:1159`）、單選（`:1166`）、五種唯讀顯示 chip（`:1172`–`:1176`）。
 
 ## shadcn 對照
 

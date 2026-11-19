@@ -3,7 +3,7 @@
   "layout": "files",
   "createdOnFiles": {
     "v": 1,
-    "at": "2026-11-19T02:51:01Z"
+    "at": "2026-11-19T03:27:40Z"
   },
   "title": "Label Suite Design System",
   "namespace": "LabelSuite",
@@ -63,8 +63,8 @@
   },
   "lastChange": {
     "by": "陳欣怡",
-    "at": "2026-11-19T02:51:01Z",
-    "via": "Claude Code · label-suite/label-suite fix/prototype-rgba-indigo",
-    "note": "Remaining hard-coded indigo and error rgba to color-mix of the primary, error and ink tokens; showcase page-size select chevron (#442)"
+    "at": "2026-11-19T03:27:40Z",
+    "via": "Claude Code · label-suite/label-suite docs/citation-sweep",
+    "note": "Source line headers realigned: Card block in bundle.css, ToggleSwitch and Tooltip preview comments (#455)"
   }
 }

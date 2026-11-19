@@ -17,7 +17,7 @@
 | :--- | :--- |
 | **重現方式** | 開 `design/prototype/components-showcase.html`，看 `#comp-buttons` 的「刪除任務」：**透明底、紅字、灰框**。再開 `pages/task-management/task-list.html`，叫出刪除確認：**紅底白字實心**。兩顆都是 `class="btn-danger"`。 |
 | **受影響範圍** | [Button](components/button.md)、[Modal](modal.md 的 `.btn.btn-danger`)；`components-showcase`、b2 的 `task-list`／`task-new`／`task-detail`／`user-management`／`role-settings`、b3 的 `annotation-workspace` |
-| **依據** | `components-showcase.html:179`「`/* Danger Button — destructive actions (logout, delete) */ .btn-danger { background: transparent; color: #B91C1C; border: 1px solid #E2E8F0; }`」 vs `pages/shared/modal.css:77`–`:80`「`/* Solid destructive confirm …, MASTER §Buttons "Danger (solid)". Single definition for all pages. */ .btn-danger { … background: var(--color-error); color: var(--color-on-cta); }`」。showcase **沒有**載入 `modal.css`（它只 `<link>` `tokens.css` 與 `date-range-picker.css`，`:10`–`:11`），六個使用頁面**全部**載入——所以 styleguide 上那個樣式沒有任何出貨頁面會渲出來。 |
+| **依據** | `components-showcase.html:179`「`/* Danger Button — destructive actions (logout, delete) */ .btn-danger { background: transparent; color: #B91C1C; border: 1px solid #E2E8F0; }`」 vs `pages/shared/modal.css:77`–`:80`「`/* Solid destructive confirm …, MASTER §Buttons "Danger (solid)". Single definition for all pages. */ .btn-danger { … background: var(--color-error); color: var(--color-on-cta); }`」。showcase **沒有**載入 `modal.css`（它只 `<link>` `tokens.css`、`data-palette.css` 與 `date-range-picker.css`，`:11`–`:13`），六個使用頁面**全部**載入——所以 styleguide 上那個樣式沒有任何出貨頁面會渲出來。 |
 | **待決問題** | **已裁定（2026-11-17）**：以 `modal.css` 的實心版為正典，showcase 那份記為 livingstyleguide 與出貨不符。原題保留：若原始 MASTER 本來就是外框版，則是 `modal.css` 改錯了方向，要不要回頭對原始版本？ |
 
 ### G-02 正典區塊大量寫死色值，`tokens.css` 沒有對應 token
@@ -43,7 +43,7 @@
 
 **狀態（#437）**：`white` 關鍵字已處理。`design/prototype/` 的 CSS、HTML、JS 原有 25 處獨立的 `white`（不算 `--color-white`、`white-space` 這類字串），其中 15 處是實際上色、10 處是註解與文案；上色的 15 處全部換掉。現在剩 11 處，都不是上色：`tokens.css` 的註解 7 處（含 #437 新增的一處）、`dashboard.components.css:358`、`:362` 的註解 3 處、`dataset-analysis-detail.html:785` 的畫面文案 1 處。寫死的 `#fff` 原有 2 處（不算 `modal.css:78` 的註解），換掉側欄通知徽章那處，剩 `account/profile.html:178`：頭像遮罩上的上傳圖示，遮罩固定是 48% 黑，白色在兩種主題都對。改法分三類：
 
-- **主色填色上的字與圖形**改 `--color-on-cta`：Toggle Switch 開啟時的圓鈕（`task-config.css:248`、`components-showcase.html:341`、`account/profile.html:634`）、分類預覽勾選框（`task-config.css:233`）、輸出類型序號徽章（`:490`）、選取 chip 的勾與圓點（`:561`–`:564`，showcase `:524`–`:536`）。帳號頁與個人資料頁 spinner 的其餘三邊由半透明白改成 `--color-on-cta` 的 `color-mix()`。
+- **主色填色上的字與圖形**改 `--color-on-cta`：Toggle Switch 開啟時的圓鈕（`task-config.css:248`、`components-showcase.html:341`、`account/profile.html:634`）、分類預覽勾選框（`task-config.css:233`）、輸出類型序號徽章（`:490`）、選取 chip 的勾與圓點（`:561`–`:564`，showcase `:525`–`:537`）。帳號頁與個人資料頁 spinner 的其餘三邊由半透明白改成 `--color-on-cta` 的 `color-mix()`。
 - **版面底色**改 `--color-white`：關係抽取預覽列（`task-config.css:439`、`:445`）、統一預覽框（`:480`）、任務列表按鈕焦點環的外圈（`task-list.html:69`）。
 - **新增兩個 token**：`--color-toggle-thumb`（關閉時的圓鈕，淺色 `#FFFFFF`、深色 `#E2E8F0`；`task-config.css:246`、showcase `:339`、`account/profile.html:627`）與 `--color-on-badge-notify`（側欄通知數字，兩種主題都是 `#FFFFFF`，對 `--color-badge-notify` 6.47:1，`sidebar.css:676`）。
 
@@ -95,7 +95,7 @@
 | **依據** | `pages/shared/input.css:21`「`box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);`」 vs `components-showcase.html:301`「`box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);`」。同樣寫死的還有 `pages/shared/list-page.css:30`、`:39`。另外正典多出 `.input.error`（`components-showcase.html:304`）、`.input[readonly]`（`components-showcase.html:309`）、`.field-hint`（`components-showcase.html:318`）、`.field-error`（`components-showcase.html:325`）四條，`input.css` 一條都沒有。 |
 | **待決問題** | 正典多出的四條要不要搬進 `input.css`？`color-mix` 與 `rgba` 哪一個是目標寫法？ |
 
-**狀態（#438）**：焦點環已統一。showcase 的 `.input:focus` 與 `list-page.css` 的兩條改成和 `input.css` 相同的 `color-mix(in srgb, var(--color-primary) 12%, transparent)`（`components-showcase.html:305`、`list-page.css:30`、`:39`）。showcase 的 `.input` 另補了底色與文字色（`:296`–`:297`），原本沒有，深色下是瀏覽器預設的白底黑字；底色用 `--color-white`，**不是** `input.css` 的 `--color-surface`，兩份的底色差異照舊，正典多出的四條也還沒搬，上面兩題的第一題仍待決。上文的行號指的是修正前。
+**狀態（#438）**：焦點環已統一。showcase 的 `.input:focus` 與 `list-page.css` 的兩條改成和 `input.css` 相同的 `color-mix(in srgb, var(--color-primary) 12%, transparent)`（`components-showcase.html:305`、`list-page.css:30`、`:39`）。showcase 的 `.input` 另補了底色與文字色（`components-showcase.html:296`–`:297`），原本沒有，深色下是瀏覽器預設的白底黑字；底色用 `--color-white`，**不是** `input.css` 的 `--color-surface`，兩份的底色差異照舊，正典多出的四條也還沒搬，上面兩題的第一題仍待決。上文的行號指的是修正前。
 
 **狀態（#442）**：出貨頁面自己重寫的輸入框焦點環也改成同一個 `color-mix(in srgb, var(--color-primary) 12%, transparent)`（帳號四頁、`account/profile.html`、`user-management.html`、`dashboard.components.css`、`task-config.css`、`task-detail.html`、`task-new.html`，行號見 G-02 的 #442 段）。原型裡已沒有寫死的主色焦點環；第二題實際上已統一成 `color-mix`。第一題（正典多出的四條要不要搬進 `input.css`）仍待決。
 
@@ -130,15 +130,15 @@
 | **依據** | 正典：`components-showcase.html:1270`「`§Divider — 水平線 / 文字分隔（僅登入頁 OAuth 與帳號登入之間）…`」，CSS 是 `.divider-text` ＋ 兩個 `<hr class="divider-hr">`（`:844`–`:846`）。實作：`pages/account/login.html:185` 的 `.divider` 用 `::before`／`::after`（`:193`），markup 是 `<div class="divider"><span id="dividerText">或</span></div>`（`:414`）。`.divider-hr` 全 prototype 只有 showcase 用。 |
 | **待決問題** | 正典要不要改成 `::before`／`::after` 的做法（少兩個 DOM 節點），還是 `login.html` 改用正典？ |
 
-**b4 核對**：`dataset-analysis-detail` 又有一份做法，`hr.panel-divider`（`dataset-analysis-detail.html:54`，用 `--color-border-muted`），用在 `stats-single_dim.html:27` 與 `stats-multi_dim.html:61`；也不是正典的 `.divider-hr`。
+**b4 核對**：`dataset-analysis-detail` 又有一份做法，`hr.panel-divider`（`dataset-analysis-detail.html:55`，用 `--color-border-muted`），用在 `stats-single_dim.html:27` 與 `stats-multi_dim.html:61`；也不是正典的 `.divider-hr`。
 
 ### G-19 `.metric` 的正典少了 `display: block`
 
 | 欄 | 內容 |
 | :--- | :--- |
-| **重現方式** | 把 `components-showcase.html:976` 那條 chrome 規則註解掉再開頁，`#comp-metric` 的標籤與數值會擠在同一行。 |
+| **重現方式** | 把 `components-showcase.html:975` 那條 chrome 規則註解掉再開頁，`#comp-metric` 的標籤與數值會擠在同一行。 |
 | **受影響範圍** | [Metric KPI Tile](components/metric.md)；`components-showcase`、b2 的 `dashboard`、`task-detail` 三個 panel、b4 的 `dataset-analysis-detail` |
-| **依據** | 出貨：`pages/shared/metric.css:9`「`.metric span { display: block; … }`」、`:19`「`.metric strong { display: block; … }`」，另有正典沒有的 `.metric-desc`（`:27`）與 `.metric-lg`（`:35`）。正典：`components-showcase.html:820`、`:828` 都沒有 `display: block`，showcase 只好在非正典區塊補：`:973`–`:976`「`/* Shipped dashboard.layout.css gives .metric span/strong display:block; MASTER §Metric KPI Tile omits it — mirrored here as chrome so the canonical block above stays verbatim. */`」。 |
+| **依據** | 出貨：`pages/shared/metric.css:9`「`.metric span { display: block; … }`」、`:19`「`.metric strong { display: block; … }`」，另有正典沒有的 `.metric-desc`（`:27`）與 `.metric-lg`（`:35`）。正典：`components-showcase.html:821`、`:829` 都沒有 `display: block`，showcase 只好在非正典區塊補：`:973`–`:976`「`/* Shipped dashboard.layout.css gives .metric span/strong display:block; MASTER §Metric KPI Tile omits it — mirrored here as chrome so the canonical block above stays verbatim. */`」。 |
 | **待決問題** | 正典要不要補上 `display: block` 與那兩個 shipped 的變體？ |
 
 ### G-26 `.task-table` 這個名字和它的用途對不上
@@ -169,7 +169,7 @@
 
 把家族推成 4 份與 2 份的其實是三個子元件：`.card-logo` 與 `.navbar-logo`（{login, register, forgot-password} vs {reset-password, verify-email}）、`.card-subtitle`（login vs 其餘四頁）。`verify-email` 的 `.success-panel` 家族多一個 `-hint`，但 `.success-panel` 本身三頁相同。
 
-代表位置：`login.html:98`（`.card`）、`:27`（`.navbar`）、`:306`（`.spinner`）、`:66`（`.lang-toggle`）。 |
+代表位置：`login.html:99`（`.card`）、`:28`（`.navbar`）、`:307`（`.spinner`）、`:68`（`.lang-toggle`）。 |
 | **待決問題** | 要抽成 `pages/shared/auth.css` 嗎？若要，四份 `.card` 以哪一份為準？（本批次不挑，挑了就是撰寫者自己的判斷。） |
 
 ### G-29 `--color-card` 是五個帳號頁的私有 token
@@ -338,7 +338,7 @@
 | :--- | :--- |
 | **重現方式** | 開 `components-showcase.html`，只用鍵盤 Tab 走一遍。多數控制項聚焦時沒有任何可見變化。 |
 | **受影響範圍** | 本批次 **32 個元件裡至少 11 個**：[Button](components/button.md)、[Toggle Switch](components/toggle-switch.md)、[Chip](components/chip.md)、[Pagination](components/pagination.md)、[Breadcrumb](components/breadcrumb.md)、[Accordion](components/accordion.md)、[State Panel](components/state-panel.md)、[Desktop Content Tabs](components/content-tabs.md)、[Modal](components/modal.md)、[Language Toggle](components/lang-toggle.md)、[Password Eye Toggle](components/password-eye-toggle.md)、[Proto Toggle Bar](components/proto-toggle-bar.md) |
-| **依據** | 以 `:focus` 逐段掃描：`shared/button.css` ＋ `components-showcase.html:149`–`:288`（Button）**0**；`:335`–`:340`（Toggle）**0**；`:473`–`:584`（Chip）**0**；`:586`–`:634`（Pagination 正典）**0**，`shared/list-page.css` 全檔只有 2 個 `:focus`，都在工具列（`:30`、`:39`），`.page-btn` **0**；`:637`–`:655`（Breadcrumb）**0**；`:745`–`:793`（Accordion）**0**；`:847`–`:902`（State Panel）**0**；`shared/content-tabs.css` 全檔 **0**；`shared/modal.css` 全檔 **0**。做對的只有三個：[Avatar](components/avatar.md)（`components-showcase.html:921` `.avatar-wrap:focus-visible`）、[Date Range Picker](components/date-range-picker.md)（`shared/date-range-picker.css:8`、`:33`）、[List Toolbar](components/list-toolbar.md)（`list-page.css:30`、`:39`，但用 `box-shadow` ＋ `outline: none`）。 |
+| **依據** | 以 `:focus` 逐段掃描：`shared/button.css` ＋ `components-showcase.html:150`–`:290`（Button）**0**；`:336`–`:341`（Toggle）**0**；`:474`–`:585`（Chip）**0**；`:587`–`:636`（Pagination 正典）**0**，`shared/list-page.css` 全檔只有 2 個 `:focus`，都在工具列（`:30`、`:39`），`.page-btn` **0**；`components-showcase.html:638`–`:656`（Breadcrumb）**0**；`:749`–`:797`（Accordion）**0**；`:851`–`:906`（State Panel）**0**；`shared/content-tabs.css` 全檔 **0**；`shared/modal.css` 全檔 **0**。做對的只有三個：[Avatar](components/avatar.md)（`components-showcase.html:922` `.avatar-wrap:focus-visible`）、[Date Range Picker](components/date-range-picker.md)（`shared/date-range-picker.css:8`、`:33`）、[List Toolbar](components/list-toolbar.md)（`list-page.css:30`、`:39`，但用 `box-shadow` ＋ `outline: none`）。 |
 | **待決問題** | 要不要在 `tokens.css` 加一組 focus ring token，讓所有元件共用一條規則？`outline` 與 `box-shadow` 哪一種當基準（前者在高對比模式下才看得見）？ |
 
 ### G-06 `.btn-loading`／`.btn-disabled` 只擋滑鼠，不擋鍵盤
@@ -347,7 +347,7 @@
 | :--- | :--- |
 | **重現方式** | 在 `components-showcase.html` 的 `#comp-buttons`，Tab 到「建立中…」那顆（`.btn-loading`），按 Enter。 |
 | **受影響範圍** | [Button](components/button.md)、[UXC-06](ux-conventions.md#uxc-06-送出中的載入態與重複送出防護) |
-| **依據** | `components-showcase.html:213`「`.btn-loading { opacity: 0.7; cursor: not-allowed; pointer-events: none; }`」、`:220`「`.btn-disabled, button[disabled] { opacity: 0.4; cursor: not-allowed; pointer-events: none; }`」。`pointer-events: none` 不影響鍵盤；只有 `button[disabled]` 那一半真的擋得住，`.btn-loading` 與 `.btn-disabled` 兩個 class 單獨用時擋不住。UXC-06 的引用（`account/profile.html:1527`）明寫「double-submission guard」。 |
+| **依據** | `components-showcase.html:213`「`.btn-loading { opacity: 0.7; cursor: not-allowed; pointer-events: none; }`」、`:220`「`.btn-disabled, button[disabled] { opacity: 0.4; cursor: not-allowed; pointer-events: none; }`」。`pointer-events: none` 不影響鍵盤；只有 `button[disabled]` 那一半真的擋得住，`.btn-loading` 與 `.btn-disabled` 兩個 class 單獨用時擋不住。UXC-06 的引用（`account/profile.html:1528`）明寫「double-submission guard」。 |
 | **待決問題** | 要改成加 `disabled` 屬性嗎？`.btn-loading` 的語意是「按鈕還在、只是忙」，加 `disabled` 會讓它退出 Tab 順序，可能不是想要的。 |
 
 ### G-08 Toast 的 error 不自動消失，又不搶焦點
@@ -356,7 +356,7 @@
 | :--- | :--- |
 | **重現方式** | 在 `components-showcase.html` 的 `#comp-toast` 按「Error（手動關閉）」。toast 會一直留著。用鍵盤 Tab 找它的關閉鈕，要一路走到頁尾。 |
 | **受影響範圍** | [Toast](components/toast.md)、[Empty State](components/empty-state.md) |
-| **依據** | `components-showcase.html:1507`「`var TOAST_DURATIONS = { success: 3000, info: 5000, warning: 8000, error: 0 };`」、`:1539`「`if (duration) toastTimer = setTimeout(hideToast, duration);`」。`#toast` 容器在 `:1383`，是 `<body>` 的最後一個元素，帶 `aria-live="polite" aria-atomic="true"`（朗讀沒問題，**焦點順序有問題**）。`showToast()`（`:1521`–`:1540`）沒有任何 `focus()`。另 [Empty State](components/empty-state.md) 完全沒有 live region，清單篩到空時不會被朗讀。 |
+| **依據** | `components-showcase.html:1508`「`var TOAST_DURATIONS = { success: 3000, info: 5000, warning: 8000, error: 0 };`」、`:1552`「`if (duration) toastTimer = setTimeout(hideToast, duration);`」。`#toast` 容器在 `:1384`，是 `<body>` 的最後一個元素，帶 `aria-live="polite" aria-atomic="true"`（朗讀沒問題，**焦點順序有問題**）。`showToast()`（`:1522`–`:1553`）沒有任何 `focus()`。另 [Empty State](components/empty-state.md) 完全沒有 live region，清單篩到空時不會被朗讀。 |
 | **待決問題** | error toast 要不要把焦點移進去（或至少做成 `role="alertdialog"`）？空狀態要不要加 `role="status"`？ |
 
 ### G-21 五個共用元件沒有任何可重現的樣本
@@ -435,7 +435,7 @@
 
 ### G-09 Toast 沒有 hover 暫停
 
-滑鼠停在 toast 上不會暫停計時器（`components-showcase.html:1539` 只有 `setTimeout`，沒有 `mouseenter`）。success 的 3 秒對長訊息可能不夠讀完。
+滑鼠停在 toast 上不會暫停計時器（`components-showcase.html:1552` 只有 `setTimeout`，沒有 `mouseenter`）。success 的 3 秒對長訊息可能不夠讀完。
 
 ### G-10 同一個元件在出貨頁面有多份獨立實作
 
@@ -445,7 +445,7 @@
 
 **b3 核對**：Toast 的 b3 那一份（`annotation-workspace.html:1011`–`:1054`，`TOAST_DURATIONS` 在 `annotation-workspace.config.js:426`–`:443`）照 UXC-07。另找到：結果標籤的 hex 在 `annotation-list` 與 `annotation-workspace` 各寫一份（G-02）、卡片第五份（G-41）、`.mini-btn` 第三與第四份（G-37）、Progress Bar 兩頁各重寫一份（`annotation-list.html:178`–`:190` 的 `.progress`、`annotation-workspace.html:304`–`:315` 的 `.progress-track`）、Status Pill 換名複製（`annotation-list.html:256`–`:267`）。Skeleton 在 `shared/sidebar.js`、`shared/modal.css` 的那幾處只是字面上的「skeleton」，不是這個元件。b4 的部分待 b4。
 
-**b4 核對**：Toast 的 b4 兩份——`dataset-analysis-list` 照 UXC-07（`TOAST_DURATIONS`，`dataset-analysis-list.js:25`）；`dataset-analysis-detail` 只有 markup 與關閉鈕，沒有任何程式顯示它 → G-55。另找到：卡片第六份（`dataset-analysis-detail.html:50` 的 `.panel`，G-41）、徽章再重寫兩份（`dataset-analysis-list.html:122`–`:148`、`dataset-analysis-detail.html:58`–`:62`）、表格樣式 `.annotator-table`（`:138`–`:142`）、分隔線 `.panel-divider`（`:55`，G-18）、進度條兩份（`dataset-analysis-list.html:99`–`:108` 的 `.progress-track`、`dataset-analysis-detail.html:84`–`:89` 的 `.iaa-bar-*`）、圓點 `.t-dot`（`:92`–`:96`，G-14）。
+**b4 核對**：Toast 的 b4 兩份——`dataset-analysis-list` 照 UXC-07（`TOAST_DURATIONS`，`dataset-analysis-list.js:25`）；`dataset-analysis-detail` 只有 markup 與關閉鈕，沒有任何程式顯示它 → G-55。另找到：卡片第六份（`dataset-analysis-detail.html:50` 的 `.panel`，G-41）、徽章再重寫兩份（`dataset-analysis-list.html:122`–`:148`、`dataset-analysis-detail.html:58`–`:63`）、表格樣式 `.annotator-table`（`:138`–`:142`）、分隔線 `.panel-divider`（`:55`，G-18）、進度條兩份（`dataset-analysis-list.html:99`–`:108` 的 `.progress-track`、`dataset-analysis-detail.html:84`–`:89` 的 `.iaa-bar-*`）、圓點 `.t-dot`（`:92`–`:96`，G-14）。
 
 **#438 補記**：下拉選單的箭頭樣式在 6 個檔各寫一份（9 條規則），#438 給每一條加了深色版，所以現在是 18 條；之後改箭頭要一起改。showcase 新增的 `.btn-secondary:hover`（`components-showcase.html:177`）照抄 `pages/shared/button.css`，正典與出貨的第二按鈕 hover 才一致。
 
@@ -453,25 +453,25 @@
 
 ### G-11 §Chip 其實是兩個元件
 
-正典把「可點的選取器」（`.task-type-chip`，`role="checkbox"`／`"radio"`）與「唯讀標籤」（`.ar-classif-chip` 等四種）收進同一章節。前者對應 shadcn 的 `ToggleGroup`，後者對應 `Badge`。依據：`components-showcase.html:1156` 的說明自己就寫「語意狀態請改用 Status Badge」。
+正典把「可點的選取器」（`.task-type-chip`，`role="checkbox"`／`"radio"`）與「唯讀標籤」（`.ar-classif-chip` 等四種）收進同一章節。前者對應 shadcn 的 `ToggleGroup`，後者對應 `Badge`。依據：`components-showcase.html:1157` 的說明自己就寫「語意狀態請改用 Status Badge」。
 
 **b4 核對**：`dataset-analysis-detail` 的 `.cause-chip`（`dataset-analysis-detail.html:156`）是唯讀標籤，又一個屬於「後者」的實作。
 
 ### G-13 Breadcrumb 的「最深兩層」與實際用法不符
 
-正典說明寫「最深兩層」（`components-showcase.html:1209`），但同一頁的 Review Status Track 樣本用了三層（`:1223`–`:1228`）。`annotation-list.html:55` 與 `annotation-workspace.html:55` 的註解另提到一個「compact form」，正典沒有對應的 class。
+正典說明寫「最深兩層」（`components-showcase.html:1209`），但同一頁的 Review Status Track 樣本用了三層（`:1223`–`:1228`）。`annotation-list.html:56` 與 `annotation-workspace.html:56` 的註解另提到一個「compact form」，正典沒有對應的 class。
 
 **b3 核對**：兩頁的 `#entryBreadcrumb` 都用三層（工作區的第三層是樣本，`annotation-workspace.config.js:1603`），沒有另一個 compact class，所謂 compact form 只存在於註解。
 
 ### G-14 Color Dot 的語意只靠顏色
 
-`title` 屬性在觸控裝置上看不到（`components-showcase.html:1251`、`:1264`），而顏色是唯一的訊號。對照組：[Review Status Track](components/review-status-track.md) 刻意做了文字前綴與線寬兩種非顏色訊號（`:1218`）。
+`title` 屬性在觸控裝置上看不到（`components-showcase.html:1251`、`:1264`），而顏色是唯一的訊號。對照組：[Review Status Track](components/review-status-track.md) 刻意做了文字前綴與線寬兩種非顏色訊號（`:1222`）。
 
 **b4 核對**：`dataset-analysis-detail` 的 `.t-dot`（`dataset-analysis-detail.html:91`–`:94`）不是正典 `.color-dot`，但同樣只靠顏色；旁邊有文字標籤時才不成問題，各 partial 的用法不一。
 
 ### G-15 Accordion 有兩個 class 只出現在 markup
 
-`.output-accordion-number`（`components-showcase.html:1296`）與 `.output-accordion-title`（`:1297`）在正典 CSS 區塊（`:748`–`:796`）裡沒有任何規則。
+`.output-accordion-number`（`components-showcase.html:1297`）與 `.output-accordion-title`（`:1298`）在正典 CSS 區塊（`:749`–`:797`）裡沒有任何規則。
 
 ### G-17 Avatar 的尺寸三個數字各不相同，而且少一個動作
 
@@ -479,7 +479,7 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 
 ### G-20 Review Status Track 的軌道標籤沒有 ARIA 關聯
 
-`.review-track-branch`（`components-showcase.html:1233`、`:1234`、`:1237`）沒有被任何 `aria-describedby`／`aria-labelledby` 接到節點上，螢幕閱讀器讀到三個節點加三段散落的文字。
+`.review-track-branch`（`components-showcase.html:1234`、`:1235`、`:1238`）沒有被任何 `aria-describedby`／`aria-labelledby` 接到節點上，螢幕閱讀器讀到三個節點加三段散落的文字。
 
 ### G-22 Content Tabs 沒有 tablist 語意
 
@@ -487,7 +487,7 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 
 **b2 核對**：三個使用頁面**自己補上了**語意——`admin/user-management`（`user-management.html:285`–`:287`）與 `admin/role-settings`（`role-settings.html:335`–`:337`）在 `<a>` 上加 `role="tablist"`／`role="tab"`／`aria-selected`；`task-detail` 另有方向鍵巡覽（`task-detail.html:11686`–`:11702`）。共用的 `content-tabs.css` 本身仍不提供，缺口不變。
 
-**b3 核對**：`annotation-workspace` 的 `.admin-tabs--panel`（`annotation-workspace.html:1288`–`:1289`）是兩顆 `<button>`，**沒有補上**語意，只能點（`annotation-workspace.config.js:6736`–`:6754`）。
+**b3 核對**：`annotation-workspace` 的 `.admin-tabs--panel`（`annotation-workspace.html:1290`–`:1291`）是兩顆 `<button>`，**沒有補上**語意，只能點（`annotation-workspace.config.js:6736`–`:6754`）。
 
 **b4 核對**：`dataset-analysis-detail` 的 `.admin-tabs`（`dataset-analysis-detail.html:256`–`:258`）**自己補上了** `role="tablist"`／`tab`／`tabpanel` 與 `aria-selected`、`aria-controls`，但沒有方向鍵，只能點（`:2437`–`:2442`）。
 
@@ -495,7 +495,7 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 
 [Modal](components/modal.md) 用共用的 `shared/modal-focus.js`（`:1`–`:88`）；[App Shell](components/app-shell.md) 的 `#shortcutHelpModal`（`sidebar.js:2109`）與 `#notificationDropdown`（`:2260`）整套自建，`sidebar.js` 全檔 `LabelSuiteModalFocus` 出現 **0 次**。另外 `modal.css`／`modal-focus.js` 都不保證 `role="dialog"`／`aria-modal`／`aria-labelledby`，也沒有點遮罩關閉。
 
-**b3 核對**：`annotation-workspace` 的五個 overlay 全部接 `modal-focus.js`（`annotation-workspace.config.js:6384`、`:6408`、`:6573`、`:5741`、`:6887`），也都帶 `role="dialog"`、`aria-modal`；這一頁不受本條影響。但共用模組把 Esc 一律接到 `onClose`，造成 G-46。
+**b3 核對**：`annotation-workspace` 的五個 overlay 全部接 `modal-focus.js`（`annotation-workspace.config.js:6387`、`:6411`、`:6576`、`:5744`、`:6896`），也都帶 `role="dialog"`、`aria-modal`；這一頁不受本條影響。但共用模組把 Esc 一律接到 `onClose`，造成 G-46。
 
 ### G-24 側欄的 token 清單未逐條核對
 
@@ -503,13 +503,13 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 
 **b2 已逐條核對**：`sidebar.css` 用到 40 個 `--*` token，38 個在 `tokens.css`。另外兩個 `--navbar-mobile-height`、`--navbar-mobile-top-height`（`sidebar.css:831`–`:837`，窄視窗規則）**不在 `tokens.css`**，由宿主頁面自己定義：b2 六頁裡五頁寫在頁內 `<style>`，`dashboard` 寫在 `dashboard.layout.css:6`；b1 的 `account/profile` 也有。`annotation-workspace` 沒有定義，待 b3 核對它的窄視窗版面。`sidebar.css` 另有 19 處寫死 hex、12 處寫死 rgba → G-02。`components/app-shell.md` 提到的 `--z-dropdown` 在 `sidebar.css` 沒有用到（只用 `--z-sticky`）。
 
-**b3 核對**：`annotation-list` 自己定義了那兩個變數（`annotation-list.html:16`–`:18`）；`annotation-workspace` **沒有**（全檔 0 次），而 `sidebar.css:828`–`:837` 的窄視窗規則用到它們且沒有後備值。另外 `sidebar.css` 的規則寫在 `max-width: 768px`，工作區的抽屜斷點是 767px 以下（`annotation-workspace.html:936` 起），差一個像素。
+**b3 核對**：`annotation-list` 自己定義了那兩個變數（`annotation-list.html:16`–`:18`）；`annotation-workspace` **沒有**（全檔 0 次），而 `sidebar.css:828`–`:837` 的窄視窗規則用到它們且沒有後備值。另外 `sidebar.css` 的規則寫在 `max-width: 768px`，工作區的抽屜斷點是 767px 以下（`annotation-workspace.html:939` 起），差一個像素。#418 起 `sidebar.css` 也改成 `max-width: 767px`，這一個像素的落差已經沒有了。
 
 **b4 核對**：b4 兩頁都自己定義了那兩個變數（`dataset-analysis-list.html:21`、`dataset-analysis-detail.html:24`）。全站只剩 `annotation-workspace` 沒有。
 
 ### G-25 `MASTER.md` 的 terminology note 還不存在
 
-`sidebar.css:963` 與 `sidebar.js:682` 都引用它來區分「工作頁籤」與「Content Tabs」。本批次建立 `MASTER.md` 時已在 §命名約定 寫入該節，但**內容是從這兩處註解反推的**，不是原件。
+`sidebar.css:963` 與 `sidebar.js:683` 都引用它來區分「工作頁籤」與「Content Tabs」。本批次建立 `MASTER.md` 時已在 §命名約定 寫入該節，但**內容是從這兩處註解反推的**，不是原件。
 
 ### G-27 Data Table 沒有排序指示，橫捲容器鍵盤到不了
 
@@ -517,7 +517,7 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 
 ### G-30 `account/profile` 是唯一沒有 `prefers-reduced-motion` 的帳號頁
 
-五個登出帳號頁**各自都有**（`login.html:342`、`register.html:313`、`forgot-password.html:305`、`reset-password.html:399`、`verify-email.html:278`），規則是 `*, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }`，`*` 蓋得住 [Spinner](components/spinner.md) 的 `animation: spin 0.7s linear infinite`（`login.html:334`）。
+五個登出帳號頁**各自都有**（`login.html:345`、`register.html:316`、`forgot-password.html:311`、`reset-password.html:405`、`verify-email.html:281`），規則是 `*, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }`，`*` 蓋得住 [Spinner](components/spinner.md) 的 `animation: spin 0.7s linear infinite`（`login.html:314`）。
 
 **`account/profile.html` 一條都沒有**，而它是 b1 動畫最多的一頁：`skeleton` 相關 class 出現 49 處。它的骨架動畫不受減少動態保護。`components-showcase.html:978`–`:980` 的那條只涵蓋 showcase 自己。
 
@@ -541,7 +541,7 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 
 > b2 新增。延伸 G-23。
 
-`admin/user-management`、`admin/role-settings`、`task-management/task-new` 三頁全檔 `modal-focus`／`ModalFocus` 0 次；`task-detail` 八個 modal 在 b2 時只有四個接上；現在全部接上，`LabelSuiteModalFocus.open` 在 `task-detail.html:5991`、`:7741`、`:8188`、`:10881`、`:11255`、`:11309`，類別刪除與資料集預覽在 `task-config.engine.js:6216`、`:6143`。只有 `task-list` 全部接上（`:705`、`:715`）。沒接的那些開啟後焦點不進視窗、關閉後不回觸發鈕，Esc 由各頁自己的 `keydown` 處理。
+`admin/user-management`、`admin/role-settings`、`task-management/task-new` 三頁全檔 `modal-focus`／`ModalFocus` 0 次；`task-detail` 八個 modal 在 b2 時只有四個接上；現在全部接上，`LabelSuiteModalFocus.open` 在 `task-detail.html:5991`、`:7741`、`:8188`、`:10881`、`:11255`、`:11309`，類別刪除與資料集預覽在 `task-config.engine.js:6216`、`:6143`。只有 `task-list` 全部接上（`task-list.html:701`）。沒接的那些開啟後焦點不進視窗、關閉後不回觸發鈕，Esc 由各頁自己的 `keydown` 處理。
 
 **b3 核對**：`annotation-workspace` 全部接上（見 G-23 的 b3 核對）。
 
@@ -563,7 +563,7 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 
 > b3 新增。
 
-`annotation-workspace.html:1198` 的 `#wsReviewFlowDrawerClose` 裡只有一個 `aria-hidden` 的 svg，沒有 `aria-label`，`annotation-workspace.config.js:5810` 取得它之後也沒有補上。同頁另外三個預覽的關閉鈕都有（`:1149`、`:1164`、`:1180`）。螢幕閱讀器只會讀出「按鈕」。
+`annotation-workspace.html:1197` 的 `#wsReviewFlowDrawerClose` 裡只有一個 `aria-hidden` 的 svg，沒有 `aria-label`，`annotation-workspace.config.js:5812` 取得它之後也沒有補上。同頁另外三個預覽的關閉鈕都有（`:1149`、`:1164`、`:1180`）。螢幕閱讀器只會讀出「按鈕」。
 
 **已裁定（2026-11-18）**：修正：補 `aria-label`。修正於 #422。
 
@@ -609,6 +609,6 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 | :--- | :--- | :--- |
 | G-16 | Accordion 的 header 是 `div[role=button]`，showcase 沒有腳本，所以 Enter／Space 按不動 | **有腳本**：`components-showcase.html:1582`–`:1594` 綁了 `click` 與 `keydown`，攔 `Enter` 與 `Space`（`:1589`）並同步 `aria-expanded`（`:1585`）。寫下時沒有去看 `<script>` 區塊。 |
 | G-32 | Password Eye Toggle 的 `aria-label` 不隨狀態更新 | **會更新**：`pages/account/login.html:606`–`:612` 切換 `input.type` 時一併改寫 `aria-label`，`:587` 在換語言時也依目前狀態重算。 |
-| G-35 | `account/profile` 的頭像骨架（72px）比實際頭像（80px）小，違反 UXC-08 | **兩者都是 72px**：`profile.html:148` 的 `.avatar-preview` 與 `:559` 的 `.skel-avatar` 相同。80px 只存在於 showcase 的 demo（`components-showcase.html:919`，註解標 `md:w-20 — desktop demo size`）。 |
+| G-35 | `account/profile` 的頭像骨架（72px）比實際頭像（80px）小，違反 UXC-08 | **兩者都是 72px**：`profile.html:149` 的 `.avatar-preview` 與 `:560` 的 `.skel-avatar` 相同。80px 只存在於 showcase 的 demo（`components-showcase.html:920`，註解標 `md:w-20 — desktop demo size`）。 |
 
 同一輪自審還修正了兩條**寫錯但仍成立**的：Alert Banner 原寫「樣本沒有 `role="alert"`」（實際有，`components-showcase.html:1115`）與「全 prototype 0 個修飾子」（實際有一個，`pages/admin/user-management.html:182` 的 `.alert-banner.warning`）——後者反而讓 G-07 更有力；Toast 原寫「沒有 `aria-live`」（實際容器有，`components-showcase.html:1384`），改成焦點順序的問題。

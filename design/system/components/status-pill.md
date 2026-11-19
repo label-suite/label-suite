@@ -1,6 +1,6 @@
 # Status Pill
 
-> 正典章節：`MASTER.md` §Status Pill ｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
+> 正典章節：`MASTER.md` §Status Pill ｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c` ｜未標檔名的行號指 `design/prototype/components-showcase.html`
 
 ## 結構
 
@@ -37,7 +37,7 @@
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-badges`（`components-showcase.html:1091`），三個樣本在 `:1104`–`:1106`。
+`components-showcase#state-default` → `#comp-badges`（`components-showcase.html:1092`），三個樣本在 `:1104`–`:1106`。
 
 ## shadcn 對照
 
