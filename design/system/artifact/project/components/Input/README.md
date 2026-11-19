@@ -34,7 +34,7 @@
 | 唯讀 | 淺灰底、淡字、`cursor: not-allowed` |
 | hover、停用 | 原型沒有定義 |
 
-G-04：焦點環有兩份寫法，`input.css` 用 `color-mix(in srgb, var(--color-primary) 12%, transparent)`，showcase 寫死 `rgba(99,102,241,0.12)`；以 token 版為準。
+G-04：焦點環原本有兩份寫法，#438 已把 showcase 的 `rgba(99,102,241,0.12)` 換成和 `input.css` 相同的 `color-mix(in srgb, var(--color-primary) 12%, transparent)`。兩份的底色仍不同：`input.css` 用 `--color-surface`，showcase 用 `--color-white`；以 `input.css` 為準。
 
 ## 該做／不該做
 

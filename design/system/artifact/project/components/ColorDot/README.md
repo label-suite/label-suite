@@ -16,7 +16,7 @@
 
 - 顏色由使用方以行內 `style="background: …"` 給，值來自資料。
 - 預設八色調色盤屬於資料色，不是設計 token（G-02）。
-- 外框的 rgba 在暗色主題下不變。
+- 外框淺色是黑色半透明；暗色主題改成 `--color-ink` 18% 的 `color-mix()`，否則黑邊在深色卡片上看不見（#438，對齊 `task-config.css`）。
 - 同一個類別在所有畫面用同一個顏色：設定頁的 `.entity-color-dot` 與預覽裡的 `.annotation-preview-color` 讀的是同一筆資料。
 
 ```html

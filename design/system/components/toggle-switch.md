@@ -6,9 +6,9 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.toggle-switch` 外框（40×22） | 必填 | `components-showcase.html:332` |
-| 內含 `<input type="checkbox">`，視覺上隱藏 | 必填 | `components-showcase.html:333`（`opacity: 0; width: 0; height: 0`） |
-| `.toggle-slider` 軌道，`::before` 是 16×16 的圓鈕 | 必填 | `components-showcase.html:334`、`:335` |
+| `.toggle-switch` 外框（40×22） | 必填 | `components-showcase.html:335` |
+| 內含 `<input type="checkbox">`，視覺上隱藏 | 必填 | `components-showcase.html:336`（`opacity: 0; width: 0; height: 0`） |
+| `.toggle-slider` 軌道，`::before` 是 16×16 的圓鈕 | 必填 | `components-showcase.html:337`、`:338` |
 | `.toggle-row` ＋ `.toggle-info`（標題＋說明） | 選用，是 showcase 自己的排版殼，不在正典區塊 | `components-showcase.html:134`–`:137`（註解標為非正典） |
 
 ## 變體
@@ -19,16 +19,16 @@
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| 預設（off） | 有，軌道 `--color-border` | `components-showcase.html:334` |
-| on | 有，軌道換 `--color-primary`、圓鈕右移 18px | `components-showcase.html:336`、`:337` |
+| 預設（off） | 有，軌道 `--color-border-control`（#438 前是 `--color-border`） | `components-showcase.html:337` |
+| on | 有，軌道換 `--color-primary`、圓鈕右移 18px | `components-showcase.html:339`、`:340` |
 | hover | **未觀察到** | 正典區塊沒有 `:hover` |
-| focus | **未觀察到**。`<input>` 被壓成 0×0 且 `opacity: 0`，原生 focus ring 無處可畫，而 `.toggle-slider` 沒有 `:focus-within` | `components-showcase.html:333` → `../design-gaps.md` G-05 |
+| focus | **未觀察到**。`<input>` 被壓成 0×0 且 `opacity: 0`，原生 focus ring 無處可畫，而 `.toggle-slider` 沒有 `:focus-within` | `components-showcase.html:336` → `../design-gaps.md` G-05 |
 | disabled | **未觀察到** | 正典區塊沒有 `:disabled` |
 | 載入中／錯誤／空 | 不適用 | — |
 
 ## token
 
-`--color-border`、`--color-primary`、`--color-toggle-thumb`、`--color-on-cta`、`--radius-full`、`--dur-fast`。圓鈕關閉時用 `--color-toggle-thumb`（淺色白、深色 slate-200 `#E2E8F0`，`components-showcase.html:336`），開啟時圓鈕疊在主色軌道上，改用 `--color-on-cta`（`:338`）。#437 之前圓鈕是字面 `white`，深色主題開啟時白鈕疊在亮靛藍上只有 2.98:1，現在是 5.36:1。關閉的淺色圓鈕對 `--color-border` 軌道只有 1.23:1，這是 #437 之前就有的現況，#437 沒有改淺色。
+`--color-border-control`、`--color-primary`、`--color-toggle-thumb`、`--color-on-cta`、`--radius-full`、`--dur-fast`。圓鈕關閉時用 `--color-toggle-thumb`（淺色白、深色 slate-200 `#E2E8F0`，`components-showcase.html:339`），開啟時圓鈕疊在主色軌道上，改用 `--color-on-cta`（`:341`）。#437 之前圓鈕是字面 `white`，深色主題開啟時白鈕疊在亮靛藍上只有 2.98:1，現在是 5.36:1。關閉的淺色圓鈕對 `--color-border` 軌道只有 1.23:1，這是 #437 之前就有的現況，#437 沒有改淺色。#438 把關閉時的軌道改成 `--color-border-control`（`components-showcase.html:338`、`task-config.css:245`、`account/profile.html:616` 三份一起改）：改軌道而不改圓鈕，因為軌道對頁面底色本身也要達 3:1。改後軌道對白底 3.55:1、對頁面底色 3.23:1，關閉的圓鈕對軌道淺色 3.55:1、深色 4.26:1。淺色軌道因此由 `#E2E8F0` 變成 `#7C899D`，是看得見的改變；這一組對比也寫進 `token-usage.json`，由 tokens 建置檢查。
 
 ## 鍵盤與焦點
 
@@ -36,11 +36,11 @@
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:332`–`:337`（正典六行）。`pages/shared/` **沒有** toggle 的 CSS 檔；`pages/task-management/task-config.css` 另有一份供 b2 的設定畫面用。
+`design/prototype/components-showcase.html:335`–`:340`（正典六行）。`pages/shared/` **沒有** toggle 的 CSS 檔；`pages/task-management/task-config.css` 另有一份供 b2 的設定畫面用。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-toggle`（`components-showcase.html:1067`），樣本在 `:1075`。
+`components-showcase#state-default` → `#comp-toggle`（`components-showcase.html:1073`），樣本在 `:1081`。
 
 ## shadcn 對照
 

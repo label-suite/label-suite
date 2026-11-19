@@ -8,10 +8,10 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| variant class（`.btn-primary` 等七選一） | 必填 | `design/prototype/components-showcase.html:150`–`:289` |
-| 文字 | 選用（`.btn-icon` 只有圖示） | `components-showcase.html:1031`（`.btn-icon` 僅有 `aria-label` 與 svg） |
-| 前置圖示 `<svg>`／`<img>` | 選用 | `.btn-oauth` `components-showcase.html:1030`、`.btn-language` `:1032` |
-| 狀態 class（`.btn-loading`／`disabled`） | 選用 | `components-showcase.html:211`–`:224` |
+| variant class（`.btn-primary` 等七選一） | 必填 | `design/prototype/components-showcase.html:150`–`:290` |
+| 文字 | 選用（`.btn-icon` 只有圖示） | `components-showcase.html:1037`（`.btn-icon` 僅有 `aria-label` 與 svg） |
+| 前置圖示 `<svg>`／`<img>` | 選用 | `.btn-oauth` `components-showcase.html:1036`、`.btn-language` `:1038` |
+| 狀態 class（`.btn-loading`／`disabled`） | 選用 | `components-showcase.html:212`–`:225` |
 
 ## 變體
 
@@ -20,10 +20,10 @@
 | `.btn-primary`（別名 `.btn-cta`） | 主要行動 | `design/prototype/pages/shared/button.css:4`；別名僅存在於 `button.css`，showcase 正典區塊沒有 `.btn-cta` |
 | `.btn-secondary` | 次要行動，外框 | `button.css:30` |
 | `.btn-ghost` | 低強度行動（查看全部、取消） | `button.css:46` |
-| `.btn-danger` | 破壞性確認 | `design/prototype/pages/shared/modal.css:80`（**實心**，維護者 2026-11-17 裁定為正典）；`components-showcase.html:178` 另有一份外框版，見 `../design-gaps.md` G-01 |
-| `.btn-oauth` | 第三方登入入口 | **只有** `components-showcase.html:227` |
-| `.btn-icon` | 純圖示觸發器 | `components-showcase.html:248`、另有 `pages/task-management/task-list.html:69` 與 `task-new.html:134` 各自一份 |
-| `.btn-language` | 語言切換（zh-TW／EN） | **只有** `components-showcase.html:269`；細節見 [Language Toggle](lang-toggle.md)，依維護者 2026-11-17 裁定兩者是同一個元件 |
+| `.btn-danger` | 破壞性確認 | `design/prototype/pages/shared/modal.css:80`（**實心**，維護者 2026-11-17 裁定為正典）；`components-showcase.html:179` 另有一份外框版，見 `../design-gaps.md` G-01 |
+| `.btn-oauth` | 第三方登入入口 | **只有** `components-showcase.html:228` |
+| `.btn-icon` | 純圖示觸發器 | `components-showcase.html:249`、另有 `pages/task-management/task-list.html:69` 與 `task-new.html:137` 各自一份 |
+| `.btn-language` | 語言切換（zh-TW／EN） | **只有** `components-showcase.html:270`；細節見 [Language Toggle](lang-toggle.md)，依維護者 2026-11-17 裁定兩者是同一個元件 |
 | `.mini-btn`（小尺寸） | 表格列、卡片列上的小按鈕，高 30px、字級 `--text-label`；色彩 variant `-primary`／`-success`／`-warning`／`-danger`／`-log`，`-icon` 縮內距 | `pages/shared/button.css:62`–`:158`（#423 收進正典，維護者 2026-11-18 裁定，見 `../design-gaps.md` G-37） |
 
 `.btn.btn-danger` 另有一條還原規則（`modal.css:99`）：`.btn-danger` 的 (0,1,0) 會蓋掉 `:where(.btn)` 的零特異性，所以要把 `10px 20px` 的內距與 1px 透明邊框補回來，讓確認鈕和旁邊的「取消」等高。
@@ -33,10 +33,10 @@
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
 | 預設 | 有 | `button.css:4`、`:30`、`:46` |
-| hover | 有。primary／cta 是 `opacity .9` 加上移 1px；secondary 換成 `--color-primary-soft-bg`；ghost 加底線 | `button.css:17`、`:42`、`:58` |
-| focus | 七個大尺寸 variant **未觀察到**，沒有任何 `:focus` 或 `:focus-visible` 規則，只靠瀏覽器預設；`.mini-btn` 有，`outline: 2px solid var(--color-primary)`（`button.css:89`） | 以 `:focus` 掃過 `button.css` 與 `components-showcase.html:150`–`:289`，0 命中 → `../design-gaps.md` G-05 |
-| disabled | 有。`opacity .4`、`cursor: not-allowed` | `button.css:23`（只針對 primary／cta）、`components-showcase.html:219`（`.btn-disabled, button[disabled]`，適用所有 variant，另加 `pointer-events: none`） |
-| 載入中 | 有。`.btn-loading`：`opacity .7` 加 `pointer-events: none` | `components-showcase.html:212` |
+| hover | 有。primary／cta 是 `opacity .9` 加上移 1px；secondary 換成 `--color-primary-soft-bg`；ghost 加底線 | `button.css:17`、`:42`、`:58`；showcase 的 `.btn-secondary:hover` 原本缺，#438 照 `button.css:42` 補上（`components-showcase.html:177`） |
+| focus | 七個大尺寸 variant **未觀察到**，沒有任何 `:focus` 或 `:focus-visible` 規則，只靠瀏覽器預設；`.mini-btn` 有，`outline: 2px solid var(--color-primary)`（`button.css:89`） | 以 `:focus` 掃過 `button.css` 與 `components-showcase.html:150`–`:290`，0 命中 → `../design-gaps.md` G-05 |
+| disabled | 有。`opacity .4`、`cursor: not-allowed` | `button.css:23`（只針對 primary／cta）、`components-showcase.html:220`（`.btn-disabled, button[disabled]`，適用所有 variant，另加 `pointer-events: none`） |
+| 載入中 | 有。`.btn-loading`：`opacity .7` 加 `pointer-events: none` | `components-showcase.html:213` |
 | 錯誤 | 不適用 | — |
 | 空 | 不適用 | — |
 
@@ -44,19 +44,19 @@
 
 `--color-cta`、`--color-on-cta`、`--color-primary-strong`、`--color-primary-soft-bg`、`--color-border`、`--color-error`、`--radius-md`、`--text-caption`。
 
-`.btn-danger`（showcase 版）、`.btn-oauth`、`.btn-icon`、`.btn-language` 在 #420 之前共寫死 18 處色值（9 個相異值）。#420 起全部改用 token：`.btn-danger` 用 `--color-error*` 與 `--color-border`；`.btn-oauth`、`.btn-icon`、`.btn-language` 底色 `--color-white`、文字 `--color-ink`（`.btn-icon` 為 `--color-ink-muted`，hover 轉 `--color-ink`）、框線 `--color-border-control`，hover 換 `--color-slate-50` 底與 `--color-border-hover` 框（`components-showcase.html:179`–`:289`）。Google 標誌改用 `assets/google-g.svg`。原值見 `../design-gaps.md` G-02。
+`.btn-danger`（showcase 版）、`.btn-oauth`、`.btn-icon`、`.btn-language` 在 #420 之前共寫死 18 處色值（9 個相異值）。#420 起全部改用 token：`.btn-danger` 用 `--color-error*` 與 `--color-border`；`.btn-oauth`、`.btn-icon`、`.btn-language` 底色 `--color-white`、文字 `--color-ink`（`.btn-icon` 為 `--color-ink-muted`，hover 轉 `--color-ink`）、框線 `--color-border-control`，hover 換 `--color-slate-50` 底與 `--color-border-hover` 框（`components-showcase.html:180`–`:290`）。Google 標誌改用 `assets/google-g.svg`。原值見 `../design-gaps.md` G-02。
 
 ## 鍵盤與焦點
 
-原生 `<button>` 的 Tab 與 Enter／Space 行為，沒有額外的腳本。`.btn-loading` 與 `.btn-disabled` 都用 `pointer-events: none`，**但沒有加 `disabled` 屬性**，所以鍵盤仍然聚焦得到、Enter 仍然觸發得了（`components-showcase.html:212`、`:219`）→ `../design-gaps.md` G-06。
+原生 `<button>` 的 Tab 與 Enter／Space 行為，沒有額外的腳本。`.btn-loading` 與 `.btn-disabled` 都用 `pointer-events: none`，**但沒有加 `disabled` 屬性**，所以鍵盤仍然聚焦得到、Enter 仍然觸發得了（`components-showcase.html:213`、`:220`）→ `../design-gaps.md` G-06。
 
 ## 樣式出處
 
-`design/prototype/pages/shared/button.css:1`–`:60`（四個 variant）、`:62`–`:158`（`.mini-btn` 小尺寸 variant）、`design/prototype/pages/shared/modal.css:77`–`:99`（`.btn-danger` 實心版）、`design/prototype/components-showcase.html:150`–`:289`（正典區塊，七個 variant 加兩個狀態）。
+`design/prototype/pages/shared/button.css:1`–`:60`（四個 variant）、`:62`–`:158`（`.mini-btn` 小尺寸 variant）、`design/prototype/pages/shared/modal.css:77`–`:99`（`.btn-danger` 實心版）、`design/prototype/components-showcase.html:150`–`:290`（正典區塊，七個 variant 加兩個狀態）。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-buttons`（`components-showcase.html:1022`）：第一列七個 variant，第二列 loading 與兩個 disabled。
+`components-showcase#state-default` → `#comp-buttons`（`components-showcase.html:1028`）：第一列七個 variant，第二列 loading 與兩個 disabled。
 
 ## shadcn 對照
 
@@ -73,7 +73,7 @@
 | `components-showcase#state-default` | 全部七個加兩個狀態 |
 | `account/profile`（`state-default`） | `.btn-primary`（`profile.html:802`） |
 | `admin/role-settings`（`#state-default`、`#state-dirty`） | `.btn-ghost`／`.btn-cta` **本頁重新定義**（`role-settings.html:75`–`:76`、`:239`–`:240`）；`.btn-danger`（`:872`） |
-| `admin/user-management`（`#state-default`、`#toast-action`） | `.btn-primary`／`.btn-ghost` 本頁重新定義（`user-management.html:54`）；`.btn-danger`（`:599`） |
+| `admin/user-management`（`#state-default`、`#toast-action`） | `.btn-primary`／`.btn-ghost` 本頁重新定義（`user-management.html:54`）；`.btn-danger`（`:604`） |
 | `dashboard/dashboard`（全部視圖） | 本頁的 `.btn` 外框（`dashboard.layout.css:208`–`:238`）加正典 variant：`.btn-primary`、三個角色 CTA 的 `.btn-cta`、`.btn-secondary.slim`；彩色鈕已於 #423 刪除 → `../design-gaps.md` G-37 |
 | `task-management/task-list#sim-delete-error` | 正典 `.btn-secondary` ＋ `.btn-danger`（`task-list.html:280`–`:288`） |
 | `task-management/task-new`（全部視圖） | 正典 `button.css` 的 variant |

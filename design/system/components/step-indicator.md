@@ -6,11 +6,11 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.step-indicator` 容器（橫向 flex），帶 `aria-label` | 必填 | `task-new.html:41`、markup `:239` |
-| `.step-item`：`.step-circle`（32px 圓，數字）＋ `.step-label` | 必填 | `:40`–`:46`、`:227`–`:230` |
+| `.step-indicator` 容器（橫向 flex），帶 `aria-label` | 必填 | `task-new.html:41`、markup `:242` |
+| `.step-item`：`.step-circle`（32px 圓，數字）＋ `.step-label` | 必填 | `:40`–`:46`、`:230`–`:233` |
 | `.step-connector`（2px 連接線） | 必填 | `:47`–`:48` |
 
-畫面上是**四步**：基本資料、標記設定檔、啟動設定、標記說明（`:226`–`:245`）。
+畫面上是**四步**：基本資料、標記設定檔、啟動設定、標記說明（`:229`–`:248`）。
 
 ## 變體
 

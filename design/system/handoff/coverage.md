@@ -1,9 +1,9 @@
 # 覆蓋核對
 
-交付包版本：commit `5566aec2decc13fffb3891218a357ccda334d039`，prototype tree `ecdd14a24d90f1bbe431876f96813c18d73bc794`。
+交付包版本：commit `fdcea09ac12b0dcd0221dbe37b819cd444332431`，prototype tree `76fc01d0b1216b41e654200d9e5e1f0d5d4d999e`。
 產生依據：[`design-handoff` skill](../../../.claude/skills/design-handoff/SKILL.md) 的步驟 4。工作源頭是 [Issue #248](https://github.com/label-suite/label-suite/issues/248)。
 
-**本次是第十版**（第九次重跑）。差異見 §九。
+**本次是第十一版**（第十次重跑）。差異見 §九。
 
 | 項目 | 數 |
 | :--- | ---: |
@@ -44,7 +44,7 @@
 
 本次結果（**第三版，兩步掃描**）：**兩個方向各 0 筆。**
 
-第七次重跑時（第八版）多了一筆：[Issue #422](https://github.com/label-suite/label-suite/issues/422) 在 `dataset-analysis-list.model.js:241` 與 `dataset-analysis-detail.html:1434` 新增 `error`（只認 `1`），**程式有、契約沒有**。建議把它補進 `navigation.mdx` §網址參數 的兩列資料集分析頁（本 skill 不改那份文件）。兩個視圖已收為 `#param-error`。
+第七次重跑時（第八版）多了一筆：[Issue #422](https://github.com/label-suite/label-suite/issues/422) 在 `dataset-analysis-list.model.js:241` 與 `dataset-analysis-detail.html:1435` 新增 `error`（只認 `1`），**程式有、契約沒有**。建議把它補進 `navigation.mdx` §網址參數 的兩列資料集分析頁（本 skill 不改那份文件）。兩個視圖已收為 `#param-error`。
 
 第八次重跑時（第九版）這一筆已關閉：`navigation.mdx` 的兩列資料集分析頁補上了 `error`，兩個方向又是各 0 筆。
 
@@ -52,9 +52,9 @@
 
 | 位置 | 名字從哪來 | 宣告新參數 |
 | :--- | :--- | ---: |
-| `task-detail.html:5048` | `URL_VIEW_STATE` | **16** |
+| `task-detail.html:5052` | `URL_VIEW_STATE` | **16** |
 | `annotation-workspace.config.js:1561` | `LIST_VIEW_STATE_KEYS` ＋ `LIST_IDENTITY_KEYS` | **6** |
-| `dataset-analysis-detail.html:2433` | `PROTOTYPE_ONLY_PARAMS` | 0（`s_state` 已在表上） |
+| `dataset-analysis-detail.html:2434` | `PROTOTYPE_ONLY_PARAMS` | 0（`s_state` 已在表上） |
 | `sidebar.js:732` | 列舉既有鍵 | 0 |
 
 兩輪的修法：[PR #400](https://github.com/label-suite/label-suite/pull/400) 把那 22 個名字補進 `navigation.mdx` 的契約，本版把掃描法改成兩步，所以 `params` 欄現在才是真的全集——`task-management/task-detail` 從 11 個變 **25** 個、`annotation/annotation-workspace` 從 9 個變 **13** 個。
@@ -144,7 +144,7 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 ### 3. `task-management/task-new#state-banner-error`
 
-- **卡在哪一步**：頂端錯誤橫幅 `#bannerError`（`task-new.html:233`）只有「下一步」的 click handler 會呼叫 `showBannerError()`（`:1650`–`:1685`）。但第一步與第三步每次輸入都跑 `revalidateCurrentStep()`（`:1136`），驗證不過就把「下一步」設成 disabled，所以那段 handler 永遠走不到。
+- **卡在哪一步**：頂端錯誤橫幅 `#bannerError`（`task-new.html:236`）只有「下一步」的 click handler 會呼叫 `showBannerError()`（`:1653`–`:1688`）。但第一步與第三步每次輸入都跑 `revalidateCurrentStep()`（`:1139`），驗證不過就把「下一步」設成 disabled，所以那段 handler 永遠走不到。
 - **實測**：清空任務名稱、把第三步抽樣筆數改成 0，「下一步」都是停用，橫幅不出現。
 - **規格**：[03-02 §卡控機制](../../../docs/specs/03-task-management/02-task-new.mdx#卡控機制)。
 - **待決**：G-40 的裁定要把它補成視圖，但畫面目前叫不出來。是畫面要改成讓按鈕可按、還是這個視圖本來就不該列，要維護者決定，本 skill 不判斷。
@@ -223,7 +223,47 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 ## 九、重跑紀錄
 
-### 第九次（本版）
+### 第十次（本版）
+
+上一版釘在 `5566aec`。之後 [Issue #438](https://github.com/label-suite/label-suite/issues/438) 補齊深色主題的配色缺口，改了十二個 prototype 檔；同一張單依 prototype 的新行號重新對齊 `navigation.mdx` 與 `docs/specs/07-shared/01-sidebar.mdx` 的行號引用（只改數字），所以三個 sha 都變了。
+
+| 欄位 | 第十版 | 本版 | |
+| :--- | :--- | :--- | :--- |
+| `commit` | `5566aec2decc` | `fdcea09ac12b` | 必然變 |
+| `prototypeTree` | `ecdd14a24d90` | `76fc01d0b121` | **變了** |
+| `specsTree` | `58bee0ccf9d5` | `cdf459578e4f` | **變了**（只有一個行號 261→266） |
+| `navigationBlob` | `29e4eea42c99` | `90137539fd2f` | **變了**（只改行號，沒有改參數） |
+
+變動的檔：
+- `tokens.css`：只改 `--color-toggle-thumb` 的註解（圓鈕改疊在 `--color-border-control` 軌道上的對比），值與行數都不變。
+- `shared/list-page.css`：focus ring 改 `color-mix`；`.page-btn.active` 的字改 `--color-on-cta`（G-12）；下拉箭頭依主題分兩條 data-URI。
+- `components-showcase.html`：`.input` 補底色與文字色、focus ring 改 `color-mix`、補 `.btn-secondary:hover`、色點的深色邊框、頭像邊框與遮罩圖示。
+- `task-config.css`、`account/profile.html`：關閉的開關軌道改 `--color-border-control`。
+- `task-detail.html`、`task-new.html`、`admin/user-management.html`、`dashboard.components.css`：下拉箭頭依主題分成兩條 data-URI；`task-detail.html` 另把寫死的內陰影白改走 `--color-white`。
+- `annotation-workspace.html`、`dataset-analysis-list.html`：寫死的 `rgba(99,102,241,…)` 邊框與內陰影改 `color-mix`。
+- `dataset-analysis-detail.html`：載入 `data-palette.css`（第 10 行）。
+
+| 類 | 數 | 內容 |
+| :--- | ---: | :--- |
+| 新增 | 0 | |
+| 移除 | 0 | |
+| 改寫 | 0 | 沒有視圖的重現步驟改變；8 個視圖的 `how` 與 1 筆無法重現的 `why` 只把行號換成新位置（`user-management.html`、`dataset-analysis-detail.html`、`task-detail.html`、`task-new.html`），本文 §二、§五 的行號也一起換 |
+| `loads` 欄 | 1 | `dataset/dataset-analysis-detail` 新增 `design/prototype/assets/data-palette.css` |
+| 參數 | 0 | 沒有改讀網址參數的程式 |
+| 受影響 | 140 | 154 個視圖中有 140 個的畫面載入了變動的檔（`tokens.css` 140 個、`task-config.css` 41 個、`dataset-analysis-detail.html` 27 個、`list-page.css` 22 個、`task-detail.html` 19 個，其餘各 1–15 個） |
+
+### 應重驗的批次（第十次）
+
+| 批次 | 載入變動檔的視圖 | 新增 | 該批的參數驅動視圖 |
+| :--- | ---: | ---: | ---: |
+| `b1-shared-account` | 29／43 | 0 | 沒變 |
+| `b2-admin-dashboard-task` | 54／54 | 0 | 沒變 |
+| `b3-annotation-review` | 25／25 | 0 | 沒變 |
+| `b4-dataset-sweep` | 32／32 | 0 | 沒變 |
+
+這次只動到**顏色**，沒有改行為或版面。淺色主題刻意改變的只有三處：下拉箭頭筆畫由 `#94A3B8` 改 `#5E6B7F`（對白底 2.56→5.40:1）、關閉的開關軌道由 `#E2E8F0` 改 `#7C899D`（3:1）、showcase 補上 `.btn-secondary:hover`；其餘淺色算出值與 `origin/main` 相同。四批不必重做結構；受影響的元件文件（Avatar、Button、Color Dot、Input、List Toolbar、Pagination、Toggle Switch）、showcase 頁面文件與 `design-gaps.md` G-02、G-04、G-10、G-12 已在同一張單裡改好。
+
+### 第九次
 
 上一版釘在 `5b1cb92`。之後 [Issue #437](https://github.com/label-suite/label-suite/issues/437) 把 prototype 裡上色用的 `white` 關鍵字與通知徽章的 `#fff` 換成 token，改了十個 prototype 檔；`docs/specs/` 與 `navigation.mdx` 都沒動。
 

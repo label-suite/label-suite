@@ -23,7 +23,7 @@
 
 | 狀態 | 表現 |
 | :--- | :--- |
-| 關（預設） | 軌道 `--color-border` |
+| 關（預設） | 軌道 `--color-border-control`（#438；原本的 `--color-border` 上，圓鈕只有 1.23:1） |
 | 開 | 軌道換 `--color-primary`，圓鈕右移 18px，以 `--dur-fast` 過場 |
 | focus | **原型沒有可見的焦點指示**（G-05）：checkbox 被壓成 0×0，原生焦點環無處可畫，`.toggle-slider` 也沒有 `:focus-within` |
 | hover、停用 | 原型沒有定義 |

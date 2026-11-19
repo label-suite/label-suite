@@ -224,10 +224,13 @@
     }
     .input-select {
       padding: 9px 32px 9px 12px;
-      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
+      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235E6B7F' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
       appearance: none;
       -webkit-appearance: none;
     }
+    /* Chevron stroke = --color-ink-muted in each theme. A data-URI SVG cannot read var(),
+       and a <select> has no pseudo-element to mask, so dark gets its own URI (#438). */
+    html[data-theme="dark"] .input-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); }
     .input-textarea {
       width: 100%;
       padding: 9px 12px;
@@ -617,12 +620,13 @@
       border-radius: var(--radius-md);
       font-size: 13px;
       color: var(--color-ink);
-      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center;
+      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%235E6B7F' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center;
       outline: none;
       appearance: none;
       -webkit-appearance: none;
       cursor: pointer;
     }
+    html[data-theme="dark"] .page-size-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); }
     .member-table tbody tr:last-child td { border-bottom: none; }
     .member-name { font-weight: 700; }
     .member-email { color: var(--color-text-soft); }
@@ -1780,7 +1784,7 @@
     .split-seg {
       min-width: 0;
       transition: width var(--dur-normal) var(--ease-standard);
-      box-shadow: inset -1px 0 0 rgba(255,255,255,0.92);
+      box-shadow: inset -1px 0 0 color-mix(in srgb, var(--color-white) 92%, transparent);
     }
     .split-seg:first-child { border-top-left-radius: var(--radius-md); border-bottom-left-radius: var(--radius-md); }
     .split-seg:last-child { border-top-right-radius: var(--radius-md); border-bottom-right-radius: var(--radius-md); }

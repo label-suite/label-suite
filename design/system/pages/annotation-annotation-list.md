@@ -34,7 +34,7 @@
 | :--- | :--- |
 | `.badge`（`:142`–`:178`） | 本頁重寫的徽章；`.badge-dry-run`／`.badge-official` 原本寫死 hex，#420 起改用中性 token 與 `--color-accent*`（`:169`–`:178`）→ [Badge](../components/badge.md)、G-02 |
 | `.progress`（`:176`–`:188`） | 本頁的進度條，全用 token，但 markup 帶 `aria-hidden="true"`（`:464`），沒有 `role="progressbar"` → [Progress Bar](../components/progress-bar.md) |
-| `.status-badge`（`:254`–`:265`） | 與 showcase 的 Status Pill（`components-showcase.html:380`–`:382`）逐字相同，只換了 class 名 → [Status Pill](../components/status-pill.md) |
+| `.status-badge`（`:254`–`:265`） | 與 showcase 的 Status Pill（`components-showcase.html:383`–`:385`）逐字相同，只換了 class 名 → [Status Pill](../components/status-pill.md) |
 | `.mini-btn` | #423 起用正典 `pages/shared/button.css` 的小尺寸 variant，本頁不再重新定義 → G-37 |
 | 結果標籤（`:346`–`:348`） | #420 之前全頁 CSS 約 30 個寫死的 hex，結果標籤另有一組暗色 hex；#420 起改用 success／info／error 族（Q3），跟著 token 翻轉，暗色那組已刪，全頁不剩 hex → G-02、G-10 |
 

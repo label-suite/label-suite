@@ -25,7 +25,7 @@
 
 | 元件 | 說明 |
 | :--- | :--- |
-| `.token-error-panel` ＋ `-icon`／`-msg`／`-action`（`:453`，`role="alert"`） | token 失效。正典 [State Panel](../components/state-panel.md) 的 error 樣本畫的就是這個（「Reset link is invalid」，`components-showcase.html:1345`），class 不同 → `../design-gaps.md` G-03 |
+| `.token-error-panel` ＋ `-icon`／`-msg`／`-action`（`:453`，`role="alert"`） | token 失效。正典 [State Panel](../components/state-panel.md) 的 error 樣本畫的就是這個（「Reset link is invalid」，`components-showcase.html:1351`），class 不同 → `../design-gaps.md` G-03 |
 | `.success-panel` ＋ 三件套（`:594`，`role="alert" aria-live="polite"`） | `.success-panel` 本身與 `forgot-password`、`verify-email` 三頁全同；`verify-email` 的家族多一個 `-hint` → G-28 |
 | `.proto-toggle-bar`／`.proto-btn`（`:378`、`:397`） | 原型鷹架，產品裡不會有 |
 | `.loading-status`、`.back-row` | 版面輔助 |

@@ -8,8 +8,8 @@
 
 | variant | 結構 | 依據 |
 | :--- | :--- | :--- |
-| A（pulse） | `.skeleton-stack` > `.skeleton-card` > `.skeleton-line` ×n，line 另帶 `.title`／`.body`／`.body.short` | `components-showcase.html:434`–`:452` |
-| B（shimmer） | `.skeleton` 加一個尺寸 class：`.skel-avatar`／`.skel-line`／`.skel-input`／`.skel-btn` | `components-showcase.html:455`–`:466` |
+| A（pulse） | `.skeleton-stack` > `.skeleton-card` > `.skeleton-line` ×n，line 另帶 `.title`／`.body`／`.body.short` | `components-showcase.html:437`–`:455` |
+| B（shimmer） | `.skeleton` 加一個尺寸 class：`.skel-avatar`／`.skel-line`／`.skel-input`／`.skel-btn` | `components-showcase.html:458`–`:469` |
 
 ## 變體
 
@@ -24,28 +24,28 @@
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| 載入中 | 這就是它的唯一狀態 | `components-showcase.html:444`、`:458` |
+| 載入中 | 這就是它的唯一狀態 | `components-showcase.html:447`、`:461` |
 | 預設／hover／focus／disabled／錯誤／空 | 不適用 | — |
-| 減少動態 | **分頁面而定**。showcase 有全域的一條；但實際用到 Skeleton 最多的 `account/profile`（49 處）**沒有**任何 `prefers-reduced-motion` | `components-showcase.html:969`–`:971`（`* { animation: none !important }`）；`profile.html` 全檔 0 命中 → `../design-gaps.md` G-30 |
+| 減少動態 | **分頁面而定**。showcase 有全域的一條；但實際用到 Skeleton 最多的 `account/profile`（49 處）**沒有**任何 `prefers-reduced-motion` | `components-showcase.html:975`–`:977`（`* { animation: none !important }`）；`profile.html` 全檔 0 命中 → `../design-gaps.md` G-30 |
 
 ## token
 
 A：`--color-border`、`--color-white`、`--radius-lg`、`--radius-sm`、`--space-md`、`--space-lg`、`--dur-normal`、`--ease-standard`。
-B：`--radius-md`、`--radius-full`，漸層用 `--color-border` 與 `--color-border-muted`（#420，`components-showcase.html:457`）；1.5s 是字面值（`:459`）。原值見 `../design-gaps.md` G-02。
+B：`--radius-md`、`--radius-full`，漸層用 `--color-border` 與 `--color-border-muted`（#420，`components-showcase.html:460`）；1.5s 是字面值（`:462`）。原值見 `../design-gaps.md` G-02。
 
 尺寸一律字面值（`.skeleton-line.title` 220×20、`.body` 12px、`.skel-avatar` 72×72、`.skel-input` 42px、`.skel-btn` 90×40）——UXC-08 要求尺寸貼合載入後的內容，所以這些值**本來就不該 token 化**，是逐處量出來的。
 
 ## 鍵盤與焦點
 
-不可聚焦。樣本把 `aria-live="polite"` 與 `aria-busy="true"` 放在**容器**上（`components-showcase.html:1128` 的 A、`:1136` 的 B），所以載入完成時改 `aria-busy` 就會被朗讀。
+不可聚焦。樣本把 `aria-live="polite"` 與 `aria-busy="true"` 放在**容器**上（`components-showcase.html:1134` 的 A、`:1142` 的 B），所以載入完成時改 `aria-busy` 就會被朗讀。
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:434`–`:466`。`pages/shared/` 沒有 skeleton 的 CSS 檔。
+`design/prototype/components-showcase.html:437`–`:469`。`pages/shared/` 沒有 skeleton 的 CSS 檔。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-skeleton`（`components-showcase.html:1123`）：左欄 A（一張卡三條線），右欄 B（頭像、單行、輸入框、按鈕）。
+`components-showcase#state-default` → `#comp-skeleton`（`components-showcase.html:1129`）：左欄 A（一張卡三條線），右欄 B（頭像、單行、輸入框、按鈕）。
 
 ## shadcn 對照
 
@@ -62,6 +62,6 @@ B：`--radius-md`、`--radius-full`，漸層用 `--color-border` 與 `--color-bo
 | `components-showcase#state-default` | 兩個 variant |
 | `account/profile`（`state-default`） | `profile.html` 共 49 處 |
 | `dashboard/dashboard#param-view-skeleton` | shimmer 變體（`dashboard.components.css:319`–`:329`），與正典逐字相同；#420 起兩份都改用 token，暗色那組漸層已刪 |
-| `task-management/task-detail`（載入中，交付包未列） | pulse 變體（`task-detail.html:69`–`:85`），與正典（`components-showcase.html:437` 起）逐字相同 |
+| `task-management/task-detail`（載入中，交付包未列） | pulse 變體（`task-detail.html:69`–`:85`），與正典（`components-showcase.html:440` 起）逐字相同 |
 
 另有 b2 的 `dashboard`（含 `dashboard.components.css`、`dashboard.js`）與 `task-management/task-detail`，以及 `shared/sidebar.js`、`shared/modal.css` 各自提到 skeleton，b2 已核對（見上表）：`dashboard` 與 `task-detail` 都是正典的逐字複製，各有一份 → `../design-gaps.md` G-10。`shared/sidebar.js`、`shared/modal.css` 的部分待 b3 一併看。

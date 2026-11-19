@@ -68,7 +68,7 @@ code, kbd, pre, .mono {
 button { font-family: inherit; font-size: 14px; border: none; background: transparent; }
 input { font-family: inherit; }
 
-/* ═══ Source: design/prototype/components-showcase.html:212-289 — Buttons: loading, disabled, oauth, icon, language (primary / secondary / ghost come from button.css; the outline .btn-danger at :178-194 is left out per G-01) ═══ */
+/* ═══ Source: design/prototype/components-showcase.html:213-290 — Buttons: loading, disabled, oauth, icon, language (primary / secondary / ghost come from button.css; the outline .btn-danger at :179-195 is left out per G-01) ═══ */
 /* Loading state — applies to any button variant */
 .btn-loading {
   opacity: 0.7;
@@ -340,7 +340,7 @@ button[disabled] {
   min-height: 100px;
 }
 
-/* ═══ Source: design/prototype/components-showcase.html:305-331 — Inputs: error, readonly, field-hint, field-error (the base .input comes from input.css) ═══ */
+/* ═══ Source: design/prototype/components-showcase.html:308-334 — Inputs: error, readonly, field-hint, field-error (the base .input comes from input.css) ═══ */
 .input.error {
   border-color: var(--color-error);
 }
@@ -369,15 +369,15 @@ button[disabled] {
   color: var(--color-error);
 }
 
-/* ═══ Source: design/prototype/components-showcase.html:333-338 — Toggle Switch ═══ */
+/* ═══ Source: design/prototype/components-showcase.html:336-341 — Toggle Switch ═══ */
 .toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
 .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
-.toggle-slider { position: absolute; inset: 0; background: var(--color-border); border-radius: var(--radius-full); cursor: pointer; transition: background var(--dur-fast); }
+.toggle-slider { position: absolute; inset: 0; background: var(--color-border-control); border-radius: var(--radius-full); cursor: pointer; transition: background var(--dur-fast); }
 .toggle-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; border-radius: 50%; background: var(--color-toggle-thumb); transition: transform var(--dur-fast); }
 .toggle-switch input:checked + .toggle-slider { background: var(--color-primary); }
 .toggle-switch input:checked + .toggle-slider::before { background: var(--color-on-cta); transform: translateX(18px); }
 
-/* ═══ Source: design/prototype/components-showcase.html:340-582 — Badge, Status Pill, Alert Banner, Toast, Skeleton, Chip ═══ */
+/* ═══ Source: design/prototype/components-showcase.html:343-585 — Badge, Status Pill, Alert Banner, Toast, Skeleton, Chip ═══ */
 /* §Semantic State Colors — base badge CSS (verbatim) */
 .badge {
   display: inline-flex;
@@ -758,7 +758,7 @@ html[data-theme="dark"] {
 .badge-task-type-scoring  { color: var(--data-task-type-scoring-fg); background: var(--data-task-type-scoring-bg); border-color: var(--data-task-type-scoring-border); }
 .badge-task-type-default  { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
 
-/* ═══ Source: design/prototype/components-showcase.html:632-803 — Breadcrumb, Review Status Track, Color Dot, Accordion, Progress Bar ═══ */
+/* ═══ Source: design/prototype/components-showcase.html:635-809 — Breadcrumb, Review Status Track, Color Dot, Accordion, Progress Bar ═══ */
 /* §Breadcrumb (verbatim) */
 .breadcrumb {
   display: flex;
@@ -862,6 +862,9 @@ html[data-theme="dark"] {
   border: 1px solid rgba(0, 0, 0, 0.12);
   flex-shrink: 0;
 }
+/* Dark: a black edge vanishes on the dark card; mirrors task-config.css (#438) */
+html[data-theme="dark"] .entity-color-dot,
+html[data-theme="dark"] .annotation-preview-color { border-color: color-mix(in srgb, var(--color-ink) 18%, transparent); }
 
 /* §Color Dot status-dot variant — 8×8 circle per the variants table;
    shipped CSS (dataset-analysis-detail.html) */
@@ -971,7 +974,7 @@ html[data-theme="dark"] {
   font-size: 2.5rem;
 }
 
-/* ═══ Source: design/prototype/components-showcase.html:826-952 — Divider, State Panel, Avatar ═══ */
+/* ═══ Source: design/prototype/components-showcase.html:832-958 — Divider, State Panel, Avatar ═══ */
 /* §Divider — token-rendered (no canonical CSS block in MASTER §Divider;
    its Tailwind-only samples are mapped to tokens here, per the
    Banner/Toast precedent) */
@@ -1051,7 +1054,7 @@ html[data-theme="dark"] {
   width: 32px;                               /* w-8 h-8 */
   height: 32px;
   border-radius: var(--radius-full);
-  border: 2px solid rgba(99, 102, 241, 0.2); /* border-primary/20 — MASTER §Avatar literal */
+  border: 2px solid color-mix(in srgb, var(--color-primary) 20%, transparent); /* border-primary/20 — MASTER §Avatar */
 }
 .avatar-wrap {
   position: relative;
@@ -1068,7 +1071,7 @@ html[data-theme="dark"] {
   height: 80px;
   border-radius: var(--radius-full);
   background: var(--color-primary);          /* bg-primary */
-  color: var(--color-white);
+  color: var(--color-on-cta);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1083,7 +1086,7 @@ html[data-theme="dark"] {
   inset: 0;
   border-radius: var(--radius-full);
   background: rgba(0, 0, 0, 0.5);            /* bg-black/50 */
-  color: var(--color-white);
+  color: #fff;                               /* fixed: the scrim is black in both themes, like account/profile (#438) */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1225,16 +1228,16 @@ html[data-theme="dark"] {
   transition: border-color var(--dur-fast); outline: none;
 }
 .search-input::placeholder { color: var(--color-ink-muted); }
-.search-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+.search-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent); }
 .filter-select {
   padding: 9px 32px 9px 12px; border: 1px solid var(--color-border-control); border-radius: var(--radius-md);
   font-size: 14px; color: var(--color-ink);
-  background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
+  background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235E6B7F' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
   outline: none;
   appearance: none; -webkit-appearance: none;
   transition: border-color var(--dur-fast);
 }
-.filter-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+.filter-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent); }
 .clear-btn {
   display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px;
   border: 1px solid var(--color-border); border-radius: var(--radius-md);
@@ -1287,7 +1290,7 @@ html[data-theme="dark"] {
   transition: all var(--dur-fast);
 }
 .page-btn:hover:not(:disabled):not(.active) { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary-strong); }
-.page-btn.active { background: var(--color-primary); color: var(--color-white); border-color: var(--color-primary); }
+.page-btn.active { background: var(--color-primary); color: var(--color-on-cta); border-color: var(--color-primary); }
 .page-btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
 .page-ellipsis {
   width: 32px; height: 32px;
@@ -1298,9 +1301,13 @@ html[data-theme="dark"] {
 .page-size-select {
   padding: 5px 28px 5px 10px; border: 1px solid var(--color-border-control); border-radius: var(--radius-md);
   font-size: 13px; color: var(--color-ink);
-  background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center;
+  background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%235E6B7F' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center;
   outline: none; appearance: none; -webkit-appearance: none; cursor: pointer;
 }
+/* Chevron stroke = --color-ink-muted in each theme. A data-URI SVG cannot read var(),
+   and a <select> has no pseudo-element to mask, so dark gets its own URI (#438). */
+html[data-theme="dark"] .filter-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); }
+html[data-theme="dark"] .page-size-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); }
 
 /* ═══ Source: design/prototype/pages/shared/date-range-picker.css ═══ */
 /* Shared DateRangePicker (issue singyichen/label-suite#1101). Tokens from assets/tokens.css only. */
@@ -2964,7 +2971,7 @@ main:has(> .workspace-tab-bar):not(.workspace-root) {
 .proto-btn.inactive { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); }
 .proto-btn.inactive:hover { background: rgba(255,255,255,0.2); }
 
-/* ═══ Source: design/prototype/components-showcase.html:970-972 — reduced motion ═══ */
+/* ═══ Source: design/prototype/components-showcase.html:976-978 — reduced motion ═══ */
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }

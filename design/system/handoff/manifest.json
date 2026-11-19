@@ -2,16 +2,16 @@
   "packageVersion": 1,
   "generatedAt": "2026-11-19",
   "source": {
-    "commit": "5566aec2decc13fffb3891218a357ccda334d039",
-    "prototypeTree": "ecdd14a24d90f1bbe431876f96813c18d73bc794",
-    "specsTree": "58bee0ccf9d5003cdb0fd824fbed8436fc9ccbe3",
-    "navigationBlob": "29e4eea42c99d0af2c34dc4a21edae0b6c8933c7",
+    "commit": "fdcea09ac12b0dcd0221dbe37b819cd444332431",
+    "prototypeTree": "76fc01d0b1216b41e654200d9e5e1f0d5d4d999e",
+    "specsTree": "cdf459578e4ff3abcac495e04f8c7292310f0caa",
+    "navigationBlob": "90137539fd2fd2ea541693ef95d45786a0570dc0",
     "referenceDesignDocs": {
       "repo": "singyichen/label-suite",
       "commit": "faf8335"
     },
     "openWith": [
-      "git switch --detach 5566aec2decc13fffb3891218a357ccda334d039",
+      "git switch --detach fdcea09ac12b0dcd0221dbe37b819cd444332431",
       "pnpm prototype"
     ]
   },
@@ -533,7 +533,7 @@
         },
         {
           "id": "admin/user-management#modal-edit",
-          "how": "點某一列的「編輯」：`openEditModal()` 開 `#editModal`（`user-management.html:525`）",
+          "how": "點某一列的「編輯」：`openEditModal()` 開 `#editModal`（`user-management.html:530`）",
           "spec": "docs/specs/06-admin/01-user-management.mdx#規格",
           "evidence": [
             "design/prototype/pages/admin/user-management.html",
@@ -1041,6 +1041,7 @@
       "file": "design/prototype/pages/dataset/dataset-analysis-detail.html",
       "loads": [
         "design/prototype/assets/analytics.js",
+        "design/prototype/assets/data-palette.css",
         "design/prototype/assets/guidelines/annotation-guideline-sample.pdf",
         "design/prototype/assets/images/task-management/VA_emj.png",
         "design/prototype/assets/images/task-management/generic-guideline-example.svg",
@@ -1094,7 +1095,7 @@
       "views": [
         {
           "id": "dataset/dataset-analysis-detail#param-error",
-          "how": "加 `?error=1`（例：`?task_id=T001&error=1`）：統計總覽與品質監控兩個面板都換成「資料載入失敗」與「重新載入」鈕（`renderPanelLoadError()`，`dataset-analysis-detail.html:1441`、`:2295`）。這個開關不寫回網址，按「重新載入」就恢復",
+          "how": "加 `?error=1`（例：`?task_id=T001&error=1`）：統計總覽與品質監控兩個面板都換成「資料載入失敗」與「重新載入」鈕（`renderPanelLoadError()`，`dataset-analysis-detail.html:1442`、`:2296`）。這個開關不寫回網址，按「重新載入」就恢復",
           "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#載入失敗只換掉內容區",
           "evidence": [
             "design/prototype/pages/dataset/dataset-analysis-detail.html"
@@ -1223,7 +1224,7 @@
         },
         {
           "id": "dataset/dataset-analysis-detail#state-seq-match-strict",
-          "how": "帶一個輸出類型是 `entity_recognition` 的 `?task_id=` 並加 `?tab=quality`：品質監控最上面那張卡有 `Strict match`／`Partial overlap` 兩顆鈕（`quality-entity_recognition.html:11`–`:30`），預設停在 `#matchStrict`，`syncSequenceUi()`（`dataset-analysis-detail.html:1941`）顯示 `#seqStrictCard`。ID 的 `seq-` 是沿用舊名，這兩顆鈕不在序列標註的統計總覽",
+          "how": "帶一個輸出類型是 `entity_recognition` 的 `?task_id=` 並加 `?tab=quality`：品質監控最上面那張卡有 `Strict match`／`Partial overlap` 兩顆鈕（`quality-entity_recognition.html:11`–`:30`），預設停在 `#matchStrict`，`syncSequenceUi()`（`dataset-analysis-detail.html:1942`）顯示 `#seqStrictCard`。ID 的 `seq-` 是沿用舊名，這兩顆鈕不在序列標註的統計總覽",
           "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#序列標註的統計",
           "evidence": [
             "design/prototype/pages/dataset/dataset-analysis-detail.html",
@@ -1709,7 +1710,7 @@
         },
         {
           "id": "task-management/task-detail#role-annotator",
-          "how": "加 `?task_role=annotator`（或 `?role=`；不給、或給不認得的值都 fail closed 落到 annotator）。**這一頁不算繪給標記員看**——`task-detail.html:5107` 直接導到 `./task-list.html?unauthorized=annotator`",
+          "how": "加 `?task_role=annotator`（或 `?role=`；不給、或給不認得的值都 fail closed 落到 annotator）。**這一頁不算繪給標記員看**——`task-detail.html:5111` 直接導到 `./task-list.html?unauthorized=annotator`",
           "spec": "docs/specs/03-task-management/03-task-detail.mdx#誰進得來誰看得到哪些分頁",
           "evidence": [
             "design/prototype/pages/task-management/task-detail.html"
@@ -1741,7 +1742,7 @@
         },
         {
           "id": "task-management/task-detail#state-loading",
-          "how": "開任何一個找得到的任務：panel 載入後 `showOverviewWithSkeleton()` 先顯示 `#loadingSkeleton`（`task-detail.html:1892`）約 560ms 再換成內容。時間很短，要看清楚得在開發者工具把網路或 CPU 調慢",
+          "how": "開任何一個找得到的任務：panel 載入後 `showOverviewWithSkeleton()` 先顯示 `#loadingSkeleton`（`task-detail.html:1896`）約 560ms 再換成內容。時間很短，要看清楚得在開發者工具把網路或 CPU 調慢",
           "spec": "docs/specs/03-task-management/03-task-detail.mdx#載入中空的與載入失敗",
           "evidence": [
             "design/prototype/pages/task-management/task-detail.html"
@@ -1757,7 +1758,7 @@
         },
         {
           "id": "task-management/task-detail#state-task-not-found",
-          "how": "帶一個種子資料裡沒有的 `?task_id=`（例：`?task_id=NOPE&task_role=project_leader`）：`renderTaskNotFoundState()` 顯示 `#taskNotFound`（`task-detail.html:1908`）「找不到任務」。與 `#sim-403` 不同，那個是找得到但無權限",
+          "how": "帶一個種子資料裡沒有的 `?task_id=`（例：`?task_id=NOPE&task_role=project_leader`）：`renderTaskNotFoundState()` 顯示 `#taskNotFound`（`task-detail.html:1912`）「找不到任務」。與 `#sim-403` 不同，那個是找得到但無權限",
           "spec": "docs/specs/03-task-management/03-task-detail.mdx#載入中空的與載入失敗",
           "evidence": [
             "design/prototype/pages/task-management/task-detail.html"
@@ -1976,7 +1977,7 @@
         },
         {
           "id": "task-management/task-new#modal-taxonomy-delete",
-          "how": "第一步選「分類」＋「多標籤」進第二步，在階層標籤樹刪除一個有子節點的標籤（例：預設樹的 `positive`）：`task-config.engine.js:1098` 只在要刪的節點數大於 1 時呼叫 `showTaxonomyDeleteModal()`，彈出 `#taxonomyDeleteModal`（`task-new.html:542`）「刪除標籤分支？」。刪沒有子節點的標籤直接刪掉，不彈窗",
+          "how": "第一步選「分類」＋「多標籤」進第二步，在階層標籤樹刪除一個有子節點的標籤（例：預設樹的 `positive`）：`task-config.engine.js:1098` 只在要刪的節點數大於 1 時呼叫 `showTaxonomyDeleteModal()`，彈出 `#taxonomyDeleteModal`（`task-new.html:545`）「刪除標籤分支？」。刪沒有子節點的標籤直接刪掉，不彈窗",
           "spec": "docs/specs/03-task-management/02-task-new.mdx#階層標籤的編輯與選取",
           "evidence": [
             "design/prototype/pages/task-management/task-config.engine.js",
@@ -2011,7 +2012,7 @@
         },
         {
           "id": "task-management/task-new#state-step4",
-          "how": "第一到第三步填妥後在第三步按「下一步」：`showStep(4)` 顯示 `#step4Panel`（`task-new.html:443`），即第四步「標記說明」，步驟條第四格亮起",
+          "how": "第一到第三步填妥後在第三步按「下一步」：`showStep(4)` 顯示 `#step4Panel`（`task-new.html:446`），即第四步「標記說明」，步驟條第四格亮起",
           "spec": "docs/specs/03-task-management/02-task-new.mdx#標記說明",
           "evidence": [
             "design/prototype/pages/task-management/task-new.html"
@@ -2035,7 +2036,7 @@
     },
     {
       "id": "task-management/task-new#state-banner-error",
-      "why": "頂端錯誤橫幅 `#bannerError`（`task-new.html:233`）只由「下一步」的 click handler 呼叫 `showBannerError()`（`:1650`–`:1685`），但第一步與第三步驗證不過時 `revalidateCurrentStep()`（`:1136`）已經把「下一步」設成 disabled，點不下去。實測清空任務名稱、把第三步抽樣筆數改成 0，鈕都是停用、橫幅不出現。",
+      "why": "頂端錯誤橫幅 `#bannerError`（`task-new.html:236`）只由「下一步」的 click handler 呼叫 `showBannerError()`（`:1653`–`:1688`），但第一步與第三步驗證不過時 `revalidateCurrentStep()`（`:1139`）已經把「下一步」設成 disabled，點不下去。實測清空任務名稱、把第三步抽樣筆數改成 0，鈕都是停用、橫幅不出現。",
       "spec": "docs/specs/03-task-management/02-task-new.mdx#卡控機制"
     }
   ],

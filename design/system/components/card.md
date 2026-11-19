@@ -23,7 +23,7 @@
 | `task-new` 的 `.form-card` | `margin-bottom: --space-md` 與帶分隔線的標題 | `task-new.html:56`–`:57` |
 | `account/profile` 的 `.section-card` | `margin-bottom: --space-lg`，手機版內距縮成 16px | `profile.html:68` |
 | `annotation-workspace` 的 `.content-card` | 只有容器四條 | `annotation-workspace.html:251`（只剩指向共用檔的註解） |
-| `dataset-analysis-detail` 的 `.panel` | `margin-bottom: --space-md` | `dataset-analysis-detail.html:50` |
+| `dataset-analysis-detail` 的 `.panel` | `margin-bottom: --space-md` | `dataset-analysis-detail.html:51` |
 
 ## 適用狀態
 
@@ -31,7 +31,7 @@
 | :--- | :--- | :--- |
 | 預設 | 有 | 同上 |
 | hover／focus | 未觀察到（卡片本身不可互動） | 三處定義都沒有 `:hover`／`:focus` |
-| 載入中 | 有，由 [Skeleton](skeleton.md) 放進卡片裡 | `dashboard.html:67`–`:79`；`task-detail.html:1890`–`:1901` 的 `.skeleton-card` 沿用同一組容器規則（`:73`–`:77`） |
+| 載入中 | 有，由 [Skeleton](skeleton.md) 放進卡片裡 | `dashboard.html:67`–`:79`；`task-detail.html:1894`–`:1905` 的 `.skeleton-card` 沿用同一組容器規則（`:73`–`:77`） |
 | 錯誤 | 頁面自理：`dashboard` 換成 `.dashboard-error-state`（同一組容器規則，`dashboard.components.css` 的 Error state 區塊） | `dashboard.html:98` |
 | 空 | 由 [Empty State](empty-state.md) 放進卡片裡 | `dashboard.js:431` |
 

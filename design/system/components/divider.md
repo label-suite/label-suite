@@ -8,29 +8,29 @@
 
 | 形態 | 結構 | 依據 |
 | :--- | :--- | :--- |
-| 水平線 | 單一 `<hr class="divider-hr">` | `components-showcase.html:828`、樣本 `:1264` |
-| 文字分隔 | `.divider-text` > `.divider-hr` ＋ `<span>` ＋ `.divider-hr` | `:836`–`:838`、樣本 `:1269`–`:1273` |
-| 清單分隔 | `.divider-list` > `<li>`，相鄰項之間加上邊框 | `:839`–`:841`、樣本 `:1274`–`:1278` |
+| 水平線 | 單一 `<hr class="divider-hr">` | `components-showcase.html:834`、樣本 `:1270` |
+| 文字分隔 | `.divider-text` > `.divider-hr` ＋ `<span>` ＋ `.divider-hr` | `:842`–`:844`、樣本 `:1275`–`:1279` |
+| 清單分隔 | `.divider-list` > `<li>`，相鄰項之間加上邊框 | `:845`–`:847`、樣本 `:1280`–`:1284` |
 
 ## 變體
 
-見上三種。文字分隔的用途被正典限定成「**僅登入頁 OAuth 與帳號登入之間**」（`:1262`）。
+見上三種。文字分隔的用途被正典限定成「**僅登入頁 OAuth 與帳號登入之間**」（`:1268`）。
 
 ## 適用狀態
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| 預設 | 有 | `components-showcase.html:828` |
-| hover／focus／disabled／載入中／錯誤／空 | 不適用，非互動元素 | `:827`–`:841` 無偽類 |
+| 預設 | 有 | `components-showcase.html:834` |
+| hover／focus／disabled／載入中／錯誤／空 | 不適用，非互動元素 | `:833`–`:847` 無偽類 |
 
 ## token
 
 `--color-border`、`--color-border-muted`、`--color-ink-muted`。
 
-`.divider-list` 的分隔線原本是寫死值，#420 起改用 `--color-border-muted`（`:840`）；`.divider-hr` 用 `--color-border`（`:831`），兩條線都取自 token，只是深淺差一階。原值見 `../design-gaps.md` G-02。
+`.divider-list` 的分隔線原本是寫死值，#420 起改用 `--color-border-muted`（`:846`）；`.divider-hr` 用 `--color-border`（`:837`），兩條線都取自 token，只是深淺差一階。原值見 `../design-gaps.md` G-02。
 `margin: 24px 0`、`py-4` 的 `16px`、`gap: 12px` 都是字面值。
 
-正典原文只有 Tailwind 樣本，沒有 CSS 區塊；showcase 的註解說明它是依 Banner／Toast 的先例對映成 token 的（`:827`–`:829`）。
+正典原文只有 Tailwind 樣本，沒有 CSS 區塊；showcase 的註解說明它是依 Banner／Toast 的先例對映成 token 的（`:833`–`:835`）。
 
 ## 鍵盤與焦點
 
@@ -38,11 +38,11 @@
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:825`–`:839`。
+`design/prototype/components-showcase.html:831`–`:845`。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-divider`（`components-showcase.html:1258`）：三種形態依序排列。
+`components-showcase#state-default` → `#comp-divider`（`components-showcase.html:1264`）：三種形態依序排列。
 
 ## shadcn 對照
 
@@ -57,7 +57,7 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 三種形態 |
-| `dataset/dataset-analysis-detail`（`#state-stats-single-dim`、`#state-stats-multi-dim`） | **不是正典的 `.divider-hr`**：本頁 `hr.panel-divider`（`dataset-analysis-detail.html:53`），用在 `stats-single_dim.html:27`、`stats-multi_dim.html:61` → `../design-gaps.md` G-18 |
+| `dataset/dataset-analysis-detail`（`#state-stats-single-dim`、`#state-stats-multi-dim`） | **不是正典的 `.divider-hr`**：本頁 `hr.panel-divider`（`dataset-analysis-detail.html:54`），用在 `stats-single_dim.html:27`、`stats-multi_dim.html:61` → `../design-gaps.md` G-18 |
 
 **全 prototype 只有 showcase 用得到 `.divider-hr`。** b4 的 `.panel-divider` 是另一份做法（見上表）。
 

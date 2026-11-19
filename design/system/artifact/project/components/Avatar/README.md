@@ -31,7 +31,7 @@
 ## 狀態
 
 - 預設：顯示首字或圖片。
-- hover：`.avatar-overlay` 浮出半透明遮罩與上傳圖示。暗色主題下圖示用 `--color-white`，會跟著變暗而幾乎看不見，是 token 對應的問題。
+- hover：`.avatar-overlay` 浮出半透明遮罩與上傳圖示。遮罩在兩種主題都是黑色半透明，所以圖示固定用白色 `#fff`，與個人資料頁一致（#438）；首字 `.avatar-preview` 疊在主色上，用 `--color-on-cta`。
 - focus：`:focus-visible` 時 2px 主色外框。
 - 錯誤：檔案不符時 `.avatar-error.visible` 顯示原因（「檔案超過 5 MB」）。
 - 有幾個寫死值（G-02）。
