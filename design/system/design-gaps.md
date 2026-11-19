@@ -41,11 +41,11 @@
 
 `white` 關鍵字、`rgba()` 與焦點環的 `color-mix()` 不在本單範圍（`white` 見 #437）。本段列的是修正後的行號；上文盤點的行號指的是修正前。深色主題順帶修正：主色填色上的 `#fff` 改 `--color-on-cta`、當文字用的 slate-400 改 `--color-ink-muted`、深色的關係徽章文字改 `--color-primary-strong`；正式徽章原本沒有深色覆寫，現在跟著 `--color-accent*` 換色。
 
-**狀態（#437）**：`white` 關鍵字已處理。`design/prototype/` 的 CSS、HTML、JS 原有 25 處獨立的 `white`（不算 `--color-white`、`white-space` 這類字串），其中 15 處是實際上色、10 處是註解與文案；上色的 15 處全部換掉。現在剩 11 處，都不是上色：`tokens.css` 的註解 7 處（含 #437 新增的一處）、`dashboard.components.css:358`、`:362` 的註解 3 處、`dataset-analysis-detail.html:785` 的畫面文案 1 處。寫死的 `#fff` 原有 2 處（不算 `modal.css:78` 的註解），換掉側欄通知徽章那處，剩 `account/profile.html:178`：頭像遮罩上的上傳圖示，遮罩固定是 48% 黑，白色在兩種主題都對。改法分三類：
+**狀態（#437）**：`white` 關鍵字已處理。`design/prototype/` 的 CSS、HTML、JS 原有 25 處獨立的 `white`（不算 `--color-white`、`white-space` 這類字串），其中 15 處是實際上色、10 處是註解與文案；上色的 15 處全部換掉。現在剩 11 處 `white`，都不是上色：`tokens.css` 的註解 7 處（含 #437 新增的一處）、`dashboard.components.css:358`、`:362` 的註解 3 處、`dataset-analysis-detail.html:785` 的畫面文案 1 處。寫死的 `#fff` 原有 2 處（不算 `modal.css:78` 的註解），換掉側欄通知徽章那處，剩 `account/profile.html:178`：頭像遮罩上的上傳圖示，遮罩固定是 48% 黑，白色在兩種主題都對。改法分三類：
 
 - **主色填色上的字與圖形**改 `--color-on-cta`：Toggle Switch 開啟時的圓鈕（`task-config.css:248`、`components-showcase.html:341`、`account/profile.html:634`）、分類預覽勾選框（`task-config.css:233`）、輸出類型序號徽章（`:490`）、選取 chip 的勾與圓點（`:561`–`:564`，showcase `:525`–`:537`）。帳號頁與個人資料頁 spinner 的其餘三邊由半透明白改成 `--color-on-cta` 的 `color-mix()`。
 - **版面底色**改 `--color-white`：關係抽取預覽列（`task-config.css:439`、`:445`）、統一預覽框（`:480`）、任務列表按鈕焦點環的外圈（`task-list.html:69`）。
-- **新增兩個 token**：`--color-toggle-thumb`（關閉時的圓鈕，淺色 `#FFFFFF`、深色 `#E2E8F0`；`task-config.css:246`、showcase `:339`、`account/profile.html:627`）與 `--color-on-badge-notify`（側欄通知數字，兩種主題都是 `#FFFFFF`，對 `--color-badge-notify` 6.47:1，`sidebar.css:676`）。
+- **新增兩個 token**：`--color-toggle-thumb`（關閉時的圓鈕，淺色 `#FFFFFF`、深色 `#E2E8F0`；`task-config.css:246`、showcase `components-showcase.html:339`、`account/profile.html:627`）與 `--color-on-badge-notify`（側欄通知數字，兩種主題都是 `#FFFFFF`，對 `--color-badge-notify` 6.47:1，`sidebar.css:676`）。
 
 淺色畫面逐頁比對與改前像素相同；深色下上述元件改成深墨或 slate-200，不再是白。`rgba()` 的半透明白（原型狀態切換列，見 [Proto Toggle Bar](components/proto-toggle-bar.md)；`task-detail.html:1787` 的內陰影）與 CSS 裡 data-URI SVG 的 `white`（#438）不在本單範圍。#438 盤點時原型的 data-URI 裡沒有 `white`，這句指的應是下拉箭頭寫死的筆畫色，處理見下段。
 
@@ -289,7 +289,7 @@
 | **依據** | `annotation-workspace.config.js:6845`–`:6850` 開閘門時傳 `onClose: hideGuidelineModal`，`hideGuidelineModal`（`:6818`–`:6822`）只關彈窗、不寫確認紀錄；`pages/shared/modal-focus.js:42`–`:44` 在 Esc 時呼叫 `onClose`。規格 [`04-annotation/02-annotation-workspace.mdx`](../../docs/specs/04-annotation/02-annotation-workspace.mdx) §指引閘門 第 3 條「開關開著時，進場顯示說明彈窗，**使用者按確認按鈕才開始**」。 |
 | **待決問題** | **已裁定（2026-11-18）**：閘門忽略 Esc，只能按確認，保留返回清單的出口。修正於 #423。原題保留：閘門要不要忽略 Esc（只能按確認）？若 Esc 可以關，關掉之後算不算「開始」——要不要擋住作答？ |
 
-**狀態（#423）**：已修正。閘門開啟時傳給 `modal-focus.js` 的 `onClose` 改成空函式，Esc 只被取消、不關彈窗；只有確認鈕會關閉並寫確認紀錄。原本閘門沒有確認以外的出口，所以在確認鈕左邊加了 `.btn-secondary`「返回標記清單／Back to annotation list」，走 `buildListReturnUrl()`，不寫確認紀錄，下次進來照樣顯示。淺深色實測：按 Esc（焦點在彈窗內、Tab 之後再按）彈窗都還在；返回鈕回到 `annotation-list.html?task_id=…&role=…&run_type=…`；確認鈕關閉彈窗。`modal-focus.js` 預設把焦點放在第一個可聚焦元素，也就是返回鈕；依維護者裁定（2026-11-18），開啟後再把焦點移到確認鈕（`annotation-workspace.config.js:6902`），初始焦點落在主要動作上。上文的行號指的是修正前。
+**狀態（#423）**：已修正。閘門開啟時傳給 `modal-focus.js` 的 `onClose` 改成空函式，Esc 只被取消、不關彈窗；只有確認鈕會關閉並寫確認紀錄。原本閘門沒有確認以外的出口，所以在確認鈕左邊加了 `.btn-secondary`「返回標記清單／Back to annotation list」，走 `buildListReturnUrl()`，不寫確認紀錄，下次進來照樣顯示。淺深色實測：按 Esc（焦點在彈窗內、Tab 之後再按）彈窗都還在；返回鈕回到 `annotation-list.html?task_id=…&role=…&run_type=…`；確認鈕關閉彈窗。`modal-focus.js` 預設把焦點放在第一個可聚焦元素，也就是返回鈕；依維護者裁定（2026-11-18），開啟後再把焦點移到確認鈕 `confirmBtn`（`annotation-workspace.config.js:6902`），初始焦點落在主要動作上。上文的行號指的是修正前。
 
 ### G-47 送出被擋時，畫面看不出是哪一個區塊擋住
 
@@ -376,7 +376,7 @@
 | :--- | :--- |
 | **重現方式** | 開 `components-showcase.html` 從頭看到尾：找不到空狀態、分頁列（內容分頁，非 Pagination）、modal、清單工具列、資料表格。再開 b1 的九個畫面：同樣找不到。 |
 | **受影響範圍** | [Empty State](components/empty-state.md)、[Desktop Content Tabs](components/content-tabs.md)、[Modal](components/modal.md)、[List Toolbar](components/list-toolbar.md)、[Data Table](components/data-table.md) |
-| **依據** | `components-showcase.html:141`–`:145` 列出正典區塊涵蓋的 15 個 `§`，這五個都不在內。`account/profile` 經由 `sidebar.css:1` 的 `@import url("./empty-state.css")` 拿到空狀態樣式，但 `profile.html` 全檔 `empty-state` 出現 **0 次**。 |
+| **依據** | `components-showcase.html:141`–`:145` 列出 `MASTER.md` 正典區塊涵蓋的 15 個 `§`，這五個都不在內。`account/profile` 經由 `sidebar.css:1` 的 `@import url("./empty-state.css")` 拿到空狀態樣式，但 `profile.html` 全檔 `empty-state` 出現 **0 次**。 |
 | **待決問題** | 要不要把這五個補進 `components-showcase.html`？那會動到 `design/prototype/`，屬**畫面修正**，要走 Ready gate。在那之前，這五份元件規格的「可重現樣本」欄只能指向 b2–b4 的畫面。 |
 
 **b2 補上**：Empty State、Content Tabs、Modal、List Toolbar、Data Table 在 b2 都有了可重現的樣本，各元件檔的 §可重現樣本 已補。
@@ -398,7 +398,7 @@
 | :--- | :--- |
 | **重現方式** | 開 `pages/task-management/task-new.html`，第一到第三步填妥後按「下一步」：出現第四步「標記說明」。交付包只有 `#state-step1`～`#state-step3`。 |
 | **受影響範圍** | [Step Indicator](components/step-indicator.md)、[Modal](components/modal.md)、[Skeleton](components/skeleton.md)；`task-management/task-new`、`task-detail`、`admin/user-management`、`admin/role-settings` |
-| **依據** | `task-new.html:446` 的 `step4Panel`，步驟條畫了四格（`:242`–`:262`）。同樣找得到但沒有視圖 ID 的：`task-new` 的 `taxonomyDeleteModal`（`:545`）與頂端錯誤橫幅（`:236`）；`task-detail` 的載入骨架（`task-detail.html:1896`–`:1908`）與 `taskNotFound`（`:1912`）；`user-management` 的 `editModal`（`user-management.html:530`）；`role-settings` 的 `#dirtyModal`（`role-settings.html:858`）與 `storedInvalidBanner`（`:306`）；兩頁共用的異動紀錄抽屜（`shared/audit-drawer.js:36`）。 |
+| **依據** | `task-new.html:446` 的 `step4Panel`，步驟條 `.step-indicator` 畫了四格（`:242`–`:262`）。同樣找得到但沒有視圖 ID 的：`task-new` 的 `taxonomyDeleteModal`（`:545`）與頂端錯誤橫幅 `bannerError`（`:236`）；`task-detail` 的載入骨架 `loadingSkeleton`（`task-detail.html:1896`–`:1908`）與 `taskNotFound`（`:1912`）；`user-management` 的 `editModal`（`user-management.html:530`）；`role-settings` 的 `#dirtyModal`（`role-settings.html:858`）與 `storedInvalidBanner`（`:306`）；兩頁共用的異動紀錄抽屜 `auditDrawer`（`shared/audit-drawer.js:36`）。 |
 | **待決問題** | **已裁定（2026-11-18）**：下次重跑 `design-handoff` 時補上這些視圖。**已於 #418 處理**：交付包第四次重跑補上九個視圖：`task-management/task-new#state-step4`、`#modal-taxonomy-delete`；`task-management/task-detail#state-loading`、`#state-task-not-found`；`admin/user-management#modal-edit`、`#modal-audit-log`；`admin/role-settings#modal-dirty`、`#modal-audit-log`、`#state-stored-invalid`。`task-new` 的頂端錯誤橫幅叫不出來（驗證不過時「下一步」已停用，`showBannerError()` 走不到），記進交付包的「無法重現」為 `task-management/task-new#state-banner-error`，畫面要不要改仍待決。原題保留：要不要在下一次重跑 `design-handoff` 時補上這些視圖？本 skill 不替它們取 ID。 |
 
 ### G-36 五條 UX 約定在本批次沒有證據
@@ -456,11 +456,11 @@
 
 **b3 核對**：Toast 的 b3 那一份（`annotation-workspace.html:1011`–`:1054`，`TOAST_DURATIONS` 在 `annotation-workspace.config.js:426`–`:443`）照 UXC-07。另找到：結果標籤的 hex 在 `annotation-list` 與 `annotation-workspace` 各寫一份（G-02）、卡片第五份（G-41）、`.mini-btn` 第三與第四份（G-37）、Progress Bar 兩頁各重寫一份（`annotation-list.html:178`–`:190` 的 `.progress`、`annotation-workspace.html:304`–`:315` 的 `.progress-track`）、Status Pill 換名複製（`annotation-list.html:256`–`:267`）。Skeleton 在 `shared/sidebar.js`、`shared/modal.css` 的那幾處只是字面上的「skeleton」，不是這個元件。b4 的部分待 b4。
 
-**b4 核對**：Toast 的 b4 兩份——`dataset-analysis-list` 照 UXC-07（`TOAST_DURATIONS`，`dataset-analysis-list.js:25`）；`dataset-analysis-detail` 只有 markup 與關閉鈕，沒有任何程式顯示它 → G-55。另找到：卡片第六份（`dataset-analysis-detail.html:50` 的 `.panel`，G-41）、徽章再重寫兩份（`dataset-analysis-list.html:122`–`:148`、`dataset-analysis-detail.html:58`–`:63`）、表格樣式 `.annotator-table`（`:138`–`:142`）、分隔線 `.panel-divider`（`:55`，G-18）、進度條兩份（`dataset-analysis-list.html:99`–`:108` 的 `.progress-track`、`dataset-analysis-detail.html:84`–`:89` 的 `.iaa-bar-*`）、圓點 `.t-dot`（`:92`–`:96`，G-14）。
+**b4 核對**：Toast 的 b4 兩份——`dataset-analysis-list` 照 UXC-07（`TOAST_DURATIONS`，`dataset-analysis-list.js:25`）；`dataset-analysis-detail` 只有 markup 與關閉鈕，沒有任何程式顯示它 → G-55。另找到：卡片第六份（`dataset-analysis-detail.html:50` 的 `.panel`，G-41）、徽章 `.badge` 再重寫兩份（`dataset-analysis-list.html:122`–`:148`、`dataset-analysis-detail.html:58`–`:63`）、表格樣式 `.annotator-table`（`:138`–`:142`）、分隔線 `.panel-divider`（`:55`，G-18）、進度條兩份（`dataset-analysis-list.html:99`–`:108` 的 `.progress-track`、`dataset-analysis-detail.html:84`–`:89` 的 `.iaa-bar-*`）、圓點 `.t-dot`（`:92`–`:96`，G-14）。
 
 **#438 補記**：下拉選單的箭頭樣式在 6 個檔各寫一份（9 條規則），#438 給每一條加了深色版，所以現在是 18 條；之後改箭頭要一起改。showcase 新增的 `.btn-secondary:hover`（`components-showcase.html:177`）照抄 `pages/shared/button.css`，正典與出貨的第二按鈕 hover 才一致。
 
-**#442 補記**：showcase 的 `.page-size-select` 補上了下拉箭頭（`components-showcase.html:633`，深色 `:636`），箭頭規則因此由 18 條變 20 條。同一個 3px 焦點環在 10 個出貨檔各寫一份（行號見 G-02 的 #442 段），#442 只把色值換成 token，沒有合併成共用規則。
+**#442 補記**：showcase 的 `.page-size-select` 補上了下拉箭頭，一張 `data:image/svg+xml` 背景圖（`components-showcase.html:633`，深色 `:636`），箭頭規則因此由 18 條變 20 條。同一個 3px 焦點環在 10 個出貨檔各寫一份（行號見 G-02 的 #442 段），#442 只把色值換成 token，沒有合併成共用規則。
 
 ### G-11 §Chip 其實是兩個元件
 
@@ -470,9 +470,9 @@
 
 ### G-13 Breadcrumb 的「最深兩層」與實際用法不符
 
-正典說明寫「最深兩層」（`components-showcase.html:1209`），但同一頁的 Review Status Track 樣本用了三層（`:1223`–`:1228`）。`annotation-list.html:56` 與 `annotation-workspace.html:56` 的註解另提到一個「compact form」，正典沒有對應的 class。
+正典說明寫「最深兩層」（`components-showcase.html:1210`），但同一頁的 Review Status Track 樣本用了三層（`:1223`–`:1228`）。`annotation-list.html:56` 與 `annotation-workspace.html:56` 的註解另提到一個「compact form」，正典沒有對應的 class。
 
-**b3 核對**：兩頁的 `#entryBreadcrumb` 都用三層（工作區的第三層是樣本，`annotation-workspace.config.js:1603`），沒有另一個 compact class，所謂 compact form 只存在於註解。
+**b3 核對**：兩頁的 `#entryBreadcrumb` 都用三層（工作區的第三層是樣本，帶 `aria-current`，`annotation-workspace.config.js:1603`），沒有另一個 compact class，所謂 compact form 只存在於註解。
 
 ### G-14 Color Dot 的語意只靠顏色
 
@@ -482,11 +482,11 @@
 
 ### G-15 Accordion 有兩個 class 只出現在 markup
 
-`.output-accordion-number`（`components-showcase.html:1297`）與 `.output-accordion-title`（`:1298`）在正典 CSS 區塊（`:749`–`:797`）裡沒有任何規則。
+`.output-accordion-number`（`components-showcase.html:1297`）與 `.output-accordion-title`（`:1298`）在正典 CSS 區塊 `.output-accordion`（`:749`–`:797`）裡沒有任何規則。
 
 ### G-17 Avatar 的尺寸三個數字各不相同，而且少一個動作
 
-showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），它的 CSS 是 80px（`:920`），出貨的 `profile.html:149` 是 72px。另外 `profile.html:751` 有「移除頭像」（`.avatar-remove-btn`），正典的上傳契約（`components-showcase.html:1596`–`:1632`）沒有這個動作。
+showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），它的 CSS 是 `width: 80px`（`:920`），出貨的 `profile.html:149` `.avatar-preview` 是 72px。另外 `profile.html:751` 有「移除頭像」（`.avatar-remove-btn`），正典的上傳契約 `§Avatar upload contract`（`components-showcase.html:1596`–`:1632`）沒有這個動作。
 
 ### G-20 Review Status Track 的軌道標籤沒有 ARIA 關聯
 
@@ -498,7 +498,7 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 
 **b2 核對**：三個使用頁面**自己補上了**語意——`admin/user-management`（`user-management.html:285`–`:287`）與 `admin/role-settings`（`role-settings.html:335`–`:337`）在 `<a>` 上加 `role="tablist"`／`role="tab"`／`aria-selected`；`task-detail` 另有方向鍵巡覽（`task-detail.html:11686`–`:11702`）。共用的 `content-tabs.css` 本身仍不提供，缺口不變。
 
-**b3 核對**：`annotation-workspace` 的 `.admin-tabs--panel`（`annotation-workspace.html:1290`–`:1291`）是兩顆 `<button>`，**沒有補上**語意，只能點（`annotation-workspace.config.js:6736`–`:6754`）。
+**b3 核對**：`annotation-workspace` 的 `.admin-tabs--panel`（`annotation-workspace.html:1290`–`:1291`）是兩顆 `<button>`，**沒有補上**語意，只能點（`setupGuidelineTabs`，`annotation-workspace.config.js:6736`–`:6754`）。
 
 **b4 核對**：`dataset-analysis-detail` 的 `.admin-tabs`（`dataset-analysis-detail.html:256`–`:258`）**自己補上了** `role="tablist"`／`tab`／`tabpanel` 與 `aria-selected`、`aria-controls`，但沒有方向鍵，只能點（`:2437`–`:2442`）。
 
@@ -514,17 +514,17 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 
 **b2 已逐條核對**：`sidebar.css` 用到 40 個 `--*` token，38 個在 `tokens.css`。另外兩個 `--navbar-mobile-height`、`--navbar-mobile-top-height`（`sidebar.css:831`–`:837`，窄視窗規則）**不在 `tokens.css`**，由宿主頁面自己定義：b2 六頁裡五頁寫在頁內 `<style>`，`dashboard` 寫在 `dashboard.layout.css:6`；b1 的 `account/profile` 也有。`annotation-workspace` 沒有定義，待 b3 核對它的窄視窗版面。`sidebar.css` 另有 19 處寫死 hex、12 處寫死 rgba → G-02。`components/app-shell.md` 提到的 `--z-dropdown` 在 `sidebar.css` 沒有用到（只用 `--z-sticky`）。
 
-**b3 核對**：`annotation-list` 自己定義了那兩個變數（`annotation-list.html:16`–`:18`）；`annotation-workspace` **沒有**（全檔 0 次），而 `sidebar.css:828`–`:837` 的窄視窗規則用到它們且沒有後備值。另外 `sidebar.css` 的規則寫在 `max-width: 768px`，工作區的抽屜斷點是 767px 以下（`annotation-workspace.html:939` 起），差一個像素。#418 起 `sidebar.css` 也改成 `max-width: 767px`，這一個像素的落差已經沒有了。
+**b3 核對**：`annotation-list` 自己定義了那兩個變數 `--navbar-mobile-height`／`--navbar-mobile-top-height`（`annotation-list.html:16`–`:18`）；`annotation-workspace` **沒有**（全檔 0 次），而 `sidebar.css:828`–`:837` 的窄視窗規則用到它們且沒有後備值。另外 `sidebar.css` 的規則寫在 `max-width: 768px`，工作區的抽屜斷點是 767px 以下（`annotation-workspace.html:939` 起），差一個像素。#418 起 `sidebar.css` 也改成 `max-width: 767px`，這一個像素的落差已經沒有了。
 
 **b4 核對**：b4 兩頁都自己定義了那兩個變數（`dataset-analysis-list.html:21`、`dataset-analysis-detail.html:24`）。全站只剩 `annotation-workspace` 沒有。
 
 ### G-25 `MASTER.md` 的 terminology note 還不存在
 
-`sidebar.css:963` 與 `sidebar.js:683` 都引用它來區分「工作頁籤」與「Content Tabs」。本批次建立 `MASTER.md` 時已在 §命名約定 寫入該節，但**內容是從這兩處註解反推的**，不是原件。
+`sidebar.css:963` 與 `sidebar.js:683` 都引用 `MASTER.md` 的 terminology note 來區分「工作頁籤」與「Content Tabs」。本批次建立 `MASTER.md` 時已在 §命名約定 寫入該節，但**內容是從這兩處註解反推的**，不是原件。
 
 ### G-27 Data Table 沒有排序指示，橫捲容器鍵盤到不了
 
-`shared/list-page.css:49`–`:72` 不提供 `aria-sort` 或排序樣式，但 `ap_sort` 這類排序參數確實存在（見 `docs/prototype/navigation.mdx` §網址參數）。`.task-table-wrap` 沒有 `tabindex="0"`，所以鍵盤無法捲動它。
+`shared/list-page.css:49`–`:72` 的 `.task-table` 不提供 `aria-sort` 或排序樣式，但 `ap_sort` 這類排序參數確實存在（見 `docs/prototype/navigation.mdx` §網址參數）。`.task-table-wrap` 沒有 `tabindex="0"`，所以鍵盤無法捲動它。
 
 ### G-30 `account/profile` 是唯一沒有 `prefers-reduced-motion` 的帳號頁
 
@@ -552,7 +552,7 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 
 > b2 新增。延伸 G-23。
 
-`admin/user-management`、`admin/role-settings`、`task-management/task-new` 三頁全檔 `modal-focus`／`ModalFocus` 0 次；`task-detail` 八個 modal 在 b2 時只有四個接上；現在全部接上，`LabelSuiteModalFocus.open` 在 `task-detail.html:5991`、`:7741`、`:8188`、`:10881`、`:11255`、`:11309`，類別刪除與資料集預覽在 `task-config.engine.js:6216`、`:6143`。只有 `task-list` 全部接上（`task-list.html:701`）。沒接的那些開啟後焦點不進視窗、關閉後不回觸發鈕，Esc 由各頁自己的 `keydown` 處理。
+`admin/user-management`、`admin/role-settings`、`task-management/task-new` 三頁全檔 `modal-focus`／`ModalFocus` 0 次；`task-detail` 八個 modal 在 b2 時只有四個接上；現在全部接上，`LabelSuiteModalFocus.open` 在 `task-detail.html:5991`、`:7741`、`:8188`、`:10881`、`:11255`、`:11309`，類別刪除與資料集預覽在 `task-config.engine.js:6216`、`:6143`。只有 `task-list` 全部接上 `modal-focus.js`（`task-list.html:701`）。沒接的那些開啟後焦點不進視窗、關閉後不回觸發鈕，Esc 由各頁自己的 `keydown` 處理。
 
 **b3 核對**：`annotation-workspace` 全部接上（見 G-23 的 b3 核對）。
 
