@@ -245,13 +245,13 @@ description: 釐清 OpenSpec change 規劃產物（system-analysis、system-desi
 
 **選項裡不要夾帶既定方向。** 依 `AGENTS.md` §Required Behaviors「Ask the maintainer about any decision that is theirs to make; do not proceed on an assumed default」與本 skill 的邊界「不擅自做技術決策」：維護者的技術選型題（`architecture.mdx` §待決 上的那些）要把現況、外部參考做法與差異的代價都寫出來，不要只給一個看起來唯一合理的選項。
 
-**決議要記下日期。** 維護者在這裡拍板的事，日後是規格書「已確認決議」的合格依據之一（`docs/development/workflow/spec-migration.mdx` 通則第 4 條第四種），而那一條要求**維護者與日期同時寫出來**，否則查不回來。
+**決議要記下日期。** 維護者在這裡拍板的事，日後是規格書「已確認決議」的合格依據之一（[§「已確認決議」的五種依據](../../../docs/development/workflow/spec-migration.mdx#已確認決議的五種依據) 的第四種），而那一條要求**維護者與日期同時寫出來**，否則查不回來。
 
 ### 步驟 7：回修
 
 **關卡模式**（propose 流程內，回答 Q 即視為同意回修，不再另外詢問）：
 
-1. 決議會改變需求 → **先用 `spec-writing` 改 `docs/specs/` 的規格書**，再回修 openspec 產出。寫進規格書「已確認決議」的依據只有 `docs/development/workflow/spec-migration.mdx` 通則第 4 條那**五種**
+1. 決議會改變需求 → **先用 `spec-writing` 改 `docs/specs/` 的規格書**，再回修 openspec 產出。寫進規格書「已確認決議」的依據只有 [§「已確認決議」的五種依據](../../../docs/development/workflow/spec-migration.mdx#已確認決議的五種依據) 那**五種**
 2. 依原撰寫角色的職責回修：system-analysis 照 `sa` 的範圍、system-design 與 api-contract 照 `sd`、ui-design 照 `ui-ux`、proposal 照 `planner`。
    那些角色定義在 `.claude/agents/`（Claude Code 才會派工給它們）；**Codex 沒有對應的 subagent 機制，所以自己做，但守同一條職責界線**：
    改 system-analysis 時不寫技術設計，改 system-design 時不寫畫面，依此類推。P 項目一併修正
