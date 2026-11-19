@@ -45,7 +45,7 @@ B：`--radius-md`、`--radius-full`，漸層用 `--color-border` 與 `--color-bo
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-skeleton`（`components-showcase.html:1132`）：左欄 A（一張卡三條線），右欄 B（頭像、單行、輸入框、按鈕）。
+`components-showcase#state-default` → `#comp-skeleton`（`components-showcase.html:1133`）：左欄 A（一張卡三條線），右欄 B（頭像、單行、輸入框、按鈕）。
 
 ## shadcn 對照
 
@@ -62,6 +62,6 @@ B：`--radius-md`、`--radius-full`，漸層用 `--color-border` 與 `--color-bo
 | `components-showcase#state-default` | 兩個 variant |
 | `account/profile`（`state-default`） | `profile.html` 共 49 處 |
 | `dashboard/dashboard#param-view-skeleton` | shimmer 變體（`dashboard.components.css:319`–`:329`），與正典逐字相同；#420 起兩份都改用 token，暗色那組漸層已刪 |
-| `task-management/task-detail`（載入中，交付包未列） | pulse 變體（`task-detail.html:69`–`:85`），與正典（`components-showcase.html:440` 起）逐字相同 |
+| `task-management/task-detail`（載入中，交付包未列） | pulse 變體（`task-detail.html:69`–`:85`），與正典（`components-showcase.html:437` 起）逐字相同 |
 
 另有 b2 的 `dashboard`（含 `dashboard.components.css`、`dashboard.js`）與 `task-management/task-detail`，以及 `shared/sidebar.js`、`shared/modal.css` 各自提到 skeleton，b2 已核對（見上表）：`dashboard` 與 `task-detail` 都是正典的逐字複製，各有一份 → `../design-gaps.md` G-10。`shared/sidebar.js`、`shared/modal.css` 的部分待 b3 一併看。

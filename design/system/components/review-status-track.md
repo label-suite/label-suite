@@ -1,6 +1,6 @@
 # Review Status Track
 
-> 正典章節：`MASTER.md` §Review Status Track ｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`（正典定義在 showcase）
+> 正典章節：`MASTER.md` §Review Status Track ｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`（正典定義在 showcase） ｜未標檔名的行號指 `design/prototype/components-showcase.html`
 
 ## 結構
 
@@ -11,34 +11,34 @@
 | `.review-track`（`display: grid`、`grid-template-columns: auto 28px auto auto 1fr 28px auto`、兩列各 34px、`role="list"`） | 必填 | `components-showcase.html:659`–`:665`、樣本 `:1231` |
 | `.review-track-node`（`role="listitem"`） | 三個 | `:666`、樣本 `:1232`、`:1237`、`:1240` |
 | `.review-track-fork`（分岔的 svg，`aria-hidden`） | 兩個（頭尾） | `:722`、樣本 `:1233`、`:1239` |
-| `.review-track-branch[data-branch]` 軌道標籤 | 三個 | `:711`、樣本 `:1235`、`:1236`、`:1239` |
-| `.review-track-rail`（軌道，`::before` 畫線） | 兩個 | `:693`–`:710`、樣本 `:1237`、`:1239` |
+| `.review-track-branch[data-branch]` 軌道標籤 | 三個 | `:710`、樣本 `:1235`、`:1235`、`:1238` |
+| `.review-track-rail`（軌道，`::before` 畫線） | 兩個 | `:693`–`:710`、樣本 `:1236`、`:1238` |
 | `.review-track-marker`（`目前：` 文字前綴） | 當前節點必填 | `:691`、樣本 `:1237` |
 
 ## 變體
 
 節點只有三個：**待審 → 已定稿**（上軌，答案未修改）與**待審 → 爭議中 → 已定稿**（下軌，答案有修改）。
 
-正典把「為什麼只有三個」寫進了說明（`components-showcase.html:1221`）：自 issue `singyichen/label-suite#596` 起每個審核單位恰有一位審核員（annotation-015 FR-093），所以 `approved`／`modified` 這兩個「已作答但未達門檻」的中繼節點**結構上不可能發生**。同一段也寫明**不可改用線性 §Step Indicator**（annotation-015 FR-051），因為兩軌互斥。
+正典把「為什麼只有三個」寫進了說明（`components-showcase.html:1222`）：自 issue `singyichen/label-suite#596` 起每個審核單位恰有一位審核員（annotation-015 FR-093），所以 `approved`／`modified` 這兩個「已作答但未達門檻」的中繼節點**結構上不可能發生**。同一段也寫明**不可改用線性 §Step Indicator**（annotation-015 FR-051），因為兩軌互斥。
 
 ## 適用狀態
 
 | 狀態 | class | 依據 |
 | :--- | :--- | :--- |
-| 未到 | 無修飾（`--color-ink-muted` 文字、`--color-white` 底） | `components-showcase.html:665` |
+| 未到 | 無修飾（`--color-ink-muted` 文字、`--color-white` 底） | `components-showcase.html:673`–`:674` |
 | 已走過 | `.done`：邊框與文字 `--color-cta`、底 `--color-success-bg`、字重 600 | `:680` |
 | 目前 | `.current`：primary 色系、字重 600，另加 `目前：` 文字前綴與 `aria-current="step"` | `:685`、樣本 `:1237` |
 | hover／focus／disabled／載入中／空 | 不適用，非互動元素 | `:659`–`:723` 無偽類 |
 
-**不只靠顏色**是這個元件寫進說明的設計約束（`:1223`）：當前節點有文字前綴，走過的節點／標籤／軌道另以 `font-weight: 600` 與線寬加粗區分（rail 2px→3px，`:710`；fork 的 `stroke-width` 2→3，樣本 `:1234`）。
+**不只靠顏色**是這個元件寫進說明的設計約束（`:1222`）：當前節點有文字前綴，走過的節點／標籤／軌道另以 `font-weight: 600` 與線寬加粗區分（rail 2px→3px，`:709`；fork 的 `stroke-width` 2→3，樣本 `:1233`）。
 
 ## token
 
-`--color-border`、`--color-white`、`--color-ink-muted`、`--color-cta`、`--color-success-bg`、`--color-primary`、`--color-primary-strong`、`--color-primary-soft-bg`、`--radius-full`。**零寫死色值**；連 svg 的 `stroke` 都用 `var(--color-border)`／`var(--color-cta)`（樣本 `:1234`）。
+`--color-border`、`--color-white`、`--color-ink-muted`、`--color-cta`、`--color-success-bg`、`--color-primary`、`--color-primary-strong`、`--color-primary-soft-bg`、`--radius-full`。**零寫死色值**；連 svg 的 `stroke` 都用 `var(--color-border)`／`var(--color-cta)`（樣本 `:1233`）。
 
 ## 鍵盤與焦點
 
-不可聚焦。語意靠 `role="list"` ＋ `role="listitem"`（樣本 `:1232`、`:1233`）與 `aria-current="step"`（`:1238`）。分岔的 svg 是 `aria-hidden`。
+不可聚焦。語意靠 `role="list"` ＋ `role="listitem"`（樣本 `:1232`、`:1232`）與 `aria-current="step"`（`:1237`）。分岔的 svg 是 `aria-hidden`。
 
 軌道標籤（`.review-track-branch`）**沒有被任何 ARIA 關聯到節點上**，所以螢幕閱讀器讀到的是三個節點加三段散落的文字 → `../design-gaps.md` G-20。
 
@@ -48,7 +48,7 @@
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-review-track`（`components-showcase.html:1219`）：一個走在差異軌、目前停在「爭議中」的單位。
+`components-showcase#state-default` → `#comp-review-track`（`components-showcase.html:1220`）：一個走在差異軌、目前停在「爭議中」的單位。
 
 ## shadcn 對照
 

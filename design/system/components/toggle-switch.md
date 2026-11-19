@@ -20,7 +20,7 @@
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
 | 預設（off） | 有，軌道 `--color-border-control`（#438 前是 `--color-border`） | `components-showcase.html:338` |
-| on | 有，軌道換 `--color-primary`、圓鈕右移 18px | `components-showcase.html:340`、`:341` |
+| on | 有，軌道換 `--color-primary`、圓鈕右移 18px | `components-showcase.html:340`、`:340` |
 | hover | **未觀察到** | 正典區塊沒有 `:hover` |
 | focus | **未觀察到**。`<input>` 被壓成 0×0 且 `opacity: 0`，原生 focus ring 無處可畫，而 `.toggle-slider` 沒有 `:focus-within` | `components-showcase.html:337` → `../design-gaps.md` G-05 |
 | disabled | **未觀察到** | 正典區塊沒有 `:disabled` |
@@ -40,7 +40,7 @@
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-toggle`（`components-showcase.html:1077`），樣本在 `:1085`。
+`components-showcase#state-default` → `#comp-toggle`（`components-showcase.html:1077`），樣本在 `:1077`。
 
 ## shadcn 對照
 

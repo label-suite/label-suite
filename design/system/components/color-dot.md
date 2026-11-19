@@ -1,10 +1,10 @@
 # Color Dot
 
-> 正典章節：`MASTER.md` §Color Dot ｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
+> 正典章節：`MASTER.md` §Color Dot ｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c` ｜未標檔名的行號指 `design/prototype/components-showcase.html`
 
 ## 結構
 
-單一空 `<span>`，**顏色一律以 inline `style="background: …"` 套用**（`components-showcase.html:1246` 的說明）。class 只決定尺寸與形狀。
+單一空 `<span>`，**顏色一律以 inline `style="background: …"` 套用**（`components-showcase.html:1247` 的說明）。class 只決定尺寸與形狀。
 
 ## 變體
 
@@ -18,7 +18,7 @@
 
 **預設 8 色盤**在 `components-showcase.html:1249`–`:1257`。維護者裁定它們是**資料色**（指派給實體類型），不進 `tokens.css`（#420 Q4）：#420 起改取 `assets/data-palette.css` 的 `--data-entity-1`–`--data-entity-8`，淺色值與 `task-config.data.js` 的 `ENTITY_COLORS` 相同；深色主題另有一組同色相的 400 階（對深色卡片 6:1 以上）。任務設定存的是淺色 hex，引擎上色時經 `entityPaintColor()` 把預設色換成 `var(--data-entity-N)`，所以深色主題換得到；使用者自選、不在色盤裡的顏色照原值畫。原值見 `../design-gaps.md` G-02。
 
-`.t-dot` 的樣本則用 `tokens.css` 的語意 token（`var(--color-success)`／`var(--color-error)`，`:1255`–`:1256`）——同一個元件的三個變體，兩種色源：色盤取資料色，狀態圓點取語意色。
+`.t-dot` 的樣本則用 `tokens.css` 的語意 token（`var(--color-success)`／`var(--color-error)`，`:1263`–`:1264`）——同一個元件的三個變體，兩種色源：色盤取資料色，狀態圓點取語意色。
 
 ## 適用狀態
 
@@ -38,11 +38,11 @@
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:723`–`:746`。`.t-dot` 的註解寫明它是從 `dataset-analysis-detail.html` 抄回來的 shipped CSS（`:738`–`:739`）。
+`design/prototype/components-showcase.html:724`–`:747`。`.t-dot` 的註解寫明它是從 `dataset-analysis-detail.html` 抄回來的 shipped CSS（`:745`–`:746`）。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-colordot`（`components-showcase.html:1244`）：第一列 8 色盤，第二列三個預覽加兩個狀態點。
+`components-showcase#state-default` → `#comp-colordot`（`components-showcase.html:1245`）：第一列 8 色盤，第二列三個預覽加兩個狀態點。
 
 ## shadcn 對照
 
@@ -57,7 +57,7 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 三個變體 |
-| `task-management/task-new#state-step2`、`task-management/task-detail#tab-settings` | **不是正典的 `.color-dot`**：`task-config.css` 的 `.entity-color-dot`（`:170`，20px 方形 `--radius-sm`）與 `.annotation-preview-color`（`:424`，12px），淺色邊框寫死 rgba（`:170`），深色覆寫 #442 起改 `--color-ink` 的 `color-mix()`（`:580`–`:581`）；`task-detail.html:1185` 又定義一次 `.entity-color-dot` → `../design-gaps.md` G-10 |
+| `task-management/task-new#state-step2`、`task-management/task-detail#tab-settings` | **不是正典的 `.color-dot`**：`task-config.css` 的 `.entity-color-dot`（`task-config.css:170`，20px 方形 `--radius-sm`）與 `.annotation-preview-color`（`:424`，12px），淺色邊框寫死 rgba（`:170`），深色覆寫 #442 起改 `--color-ink` 的 `color-mix()`（`:580`–`:581`）；`task-detail.html:1187` 又定義一次 `.entity-color-dot` → `../design-gaps.md` G-10 |
 | `dataset/dataset-analysis-detail`（`#state-quality-*`） | **不是正典的 `.color-dot`**：本頁 `.t-dot`（`dataset-analysis-detail.html:94`–`:98`），同樣只靠顏色 → `../design-gaps.md` G-14 |
 
 b1 的帳號頁一個都沒用。b2 已補上（見上表）。b4 已補上（見上表）。

@@ -1,6 +1,6 @@
 # Divider
 
-> 正典章節：`MASTER.md` §Divider ｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
+> 正典章節：`MASTER.md` §Divider ｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c` ｜未標檔名的行號指 `design/prototype/components-showcase.html`
 
 ## 結構
 
@@ -8,13 +8,13 @@
 
 | 形態 | 結構 | 依據 |
 | :--- | :--- | :--- |
-| 水平線 | 單一 `<hr class="divider-hr">` | `components-showcase.html:837`、樣本 `:1273` |
+| 水平線 | 單一 `<hr class="divider-hr">` | `components-showcase.html:838`、樣本 `:1274` |
 | 文字分隔 | `.divider-text` > `.divider-hr` ＋ `<span>` ＋ `.divider-hr` | `:845`–`:847`、樣本 `:1278`–`:1282` |
 | 清單分隔 | `.divider-list` > `<li>`，相鄰項之間加上邊框 | `:848`–`:850`、樣本 `:1283`–`:1287` |
 
 ## 變體
 
-見上三種。文字分隔的用途被正典限定成「**僅登入頁 OAuth 與帳號登入之間**」（`:1271`）。
+見上三種。文字分隔的用途被正典限定成「**僅登入頁 OAuth 與帳號登入之間**」（`:1270`）。
 
 ## 適用狀態
 
@@ -42,7 +42,7 @@
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-divider`（`components-showcase.html:1267`）：三種形態依序排列。
+`components-showcase#state-default` → `#comp-divider`（`components-showcase.html:1268`）：三種形態依序排列。
 
 ## shadcn 對照
 
@@ -57,7 +57,7 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 三種形態 |
-| `dataset/dataset-analysis-detail`（`#state-stats-single-dim`、`#state-stats-multi-dim`） | **不是正典的 `.divider-hr`**：本頁 `hr.panel-divider`（`dataset-analysis-detail.html:54`），用在 `stats-single_dim.html:27`、`stats-multi_dim.html:61` → `../design-gaps.md` G-18 |
+| `dataset/dataset-analysis-detail`（`#state-stats-single-dim`、`#state-stats-multi-dim`） | **不是正典的 `.divider-hr`**：本頁 `hr.panel-divider`（`dataset-analysis-detail.html:55`），用在 `stats-single_dim.html:27`、`stats-multi_dim.html:61` → `../design-gaps.md` G-18 |
 
 **全 prototype 只有 showcase 用得到 `.divider-hr`。** b4 的 `.panel-divider` 是另一份做法（見上表）。
 

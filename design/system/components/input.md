@@ -37,7 +37,7 @@
 
 `--color-border-control`、`--color-primary`、`--color-surface`、`--color-ink`、`--radius-md`。
 
-正典區塊原本另寫死 6 個色值，#420 起改用 `--color-border-control`、`--color-error`、`--color-slate-50`、`--color-border-muted`、`--color-ink-muted`（`components-showcase.html:292`–`:334`）；原值見 `../design-gaps.md` G-02。focus ring 的 `rgba()` 不在 #420 範圍，#438 改成和 `input.css` 相同的 `color-mix`。#438 另補上正典 `.input` 原本沒有的底色與文字色（`--color-white`、`--color-ink`，`:296`–`:297`）：之前深色主題下是瀏覽器預設的白底黑字。
+正典區塊原本另寫死 6 個色值，#420 起改用 `--color-border-control`、`--color-error`、`--color-slate-50`、`--color-border-muted`、`--color-ink-muted`（`components-showcase.html:292`–`:334`）；原值見 `../design-gaps.md` G-02。focus ring 的 `rgba()` 不在 #420 範圍，#438 改成和 `input.css` 相同的 `color-mix`。#438 另補上正典 `.input` 原本沒有的底色與文字色（`--color-white`、`--color-ink`，`components-showcase.html:296`–`:297`）：之前深色主題下是瀏覽器預設的白底黑字。
 `font-size: 16px` 是字面值，不是 `--text-*` 的任何一個（`input.css:13`）。
 
 ## 鍵盤與焦點

@@ -1,6 +1,6 @@
 # Date Range Picker
 
-> 正典章節：`MASTER.md` 無對應章節（`shared/date-range-picker.*` 自己是來源）｜契約 `openspec/changes/1101-work-log-date-range-picker/design.md` D1–D3 ｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
+> 正典章節：`MASTER.md` 無對應章節（`shared/date-range-picker.*` 自己是來源）｜契約 `openspec/changes/1101-work-log-date-range-picker/design.md` D1–D3 ｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c` ｜未標檔名的行號指 `design/prototype/pages/shared/date-range-picker.css`
 
 ## 結構
 
@@ -57,12 +57,12 @@ h.setLang('en'); h.setValue({ from: null, to: null }); h.destroy();
 | 行為 | 依據 |
 | :--- | :--- |
 | Escape 關閉並把焦點還回 trigger | `date-range-picker.js:190` |
-| ←／→ 移動一天，↑／↓ 移動一週 | `:191`–`:194` |
-| roving tabindex：只有聚焦中的那一天 `tabindex="0"`，其餘 `-1` | `:119` |
-| 移動後把焦點帶過去 | `focusCurrentDay()`，`:131` |
-| Enter 與 Space 都靠原生 `<button>` 的 click | `:196` 的註解 |
+| ←／→ 移動一天，↑／↓ 移動一週 | `date-range-picker.js:191`–`:194` |
+| roving tabindex：只有聚焦中的那一天 `tabindex="0"`，其餘 `-1` | `date-range-picker.js:119` |
+| 移動後把焦點帶過去 | `focusCurrentDay()`，`date-range-picker.js:131` |
+| Enter 與 Space 都靠原生 `<button>` 的 click | `date-range-picker.js:195`–`:197` 的註解 |
 
-ARIA：popover 是 `role="dialog"` ＋ `aria-modal="false"`（`:48`–`:49`），trigger 帶 `aria-haspopup="dialog"`、`aria-controls`、`aria-expanded`（`:59`–`:61`，開關時同步於 `:170`／`:178`），格子是 `role="row"`（`:108`）＋ `role="gridcell"`（`:120`），端點帶 `aria-selected="true"`（`:121`）。上下月鈕與對話框的 `aria-label` 隨語言換（`applyStrings()`，`:70`–`:74`）。
+ARIA：popover 是 `role="dialog"` ＋ `aria-modal="false"`（`date-range-picker.js:48`–`:49`），trigger 帶 `aria-haspopup="dialog"`、`aria-controls`、`aria-expanded`（`:59`–`:61`，開關時同步於 `:170`／`:178`），格子是 `role="row"`（`:108`）＋ `role="gridcell"`（`:120`），端點帶 `aria-selected="true"`（`:121`）。上下月鈕與對話框的 `aria-label` 隨語言換（`applyStrings()`，`:70`–`:74`）。
 
 ## 樣式出處
 
@@ -70,7 +70,7 @@ ARIA：popover 是 `role="dialog"` ＋ `aria-modal="false"`（`:48`–`:49`）�
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-date-range-picker`（`components-showcase.html:1066`），trigger 在 `:1070`。**這是 showcase 唯一 `<link>` 進來的共用 CSS**（`components-showcase.html:11`），其餘元件都是把 CSS 抄進 `<style>`；demo 的掛載在 `:1387`–`:1396`。
+`components-showcase#state-default` → `#comp-date-range-picker`（`components-showcase.html:1067`），trigger 在 `:1071`。**這是 showcase 唯一 `<link>` 進來的共用 CSS**（`components-showcase.html:11`），其餘元件都是把 CSS 抄進 `<style>`；demo 的掛載在 `:1387`–`:1396`。
 
 ## shadcn 對照
 

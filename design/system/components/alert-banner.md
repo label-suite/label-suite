@@ -7,7 +7,7 @@
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
 | `.alert-banner` 容器（`display: flex`、`align-items: flex-start`） | 必填 | `components-showcase.html:389` |
-| 前置 `<svg>` 圖示（`flex-shrink: 0`、`margin-top: 2px` 對齊首行） | 選用 | `components-showcase.html:399` |
+| 前置 `<svg>` 圖示（`flex-shrink: 0`、`margin-top: 2px` 對齊首行） | 選用 | `components-showcase.html:400` |
 | 訊息文字 | 必填 | `components-showcase.html:1114` |
 
 ## 變體
@@ -16,7 +16,7 @@
 
 依據：`components-showcase.html:388`–`:398`。
 
-全 prototype 只有**一個**修飾子，而且不在正典裡：`pages/admin/user-management.html:180` 自己寫了 `.alert-banner.warning`。也就是說出貨頁面確實需要第二種語意，但它是就地補的，正典不知道有這回事 → `../design-gaps.md` G-07。
+全 prototype 只有**一個**修飾子，而且不在正典裡：`pages/admin/user-management.html:182` 自己寫了 `.alert-banner.warning`。也就是說出貨頁面確實需要第二種語意，但它是就地補的，正典不知道有這回事 → `../design-gaps.md` G-07。
 
 ## 適用狀態
 
@@ -41,7 +41,7 @@
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-banner`（`components-showcase.html:1110`），樣本在 `:1114`。
+`components-showcase#state-default` → `#comp-banner`（`components-showcase.html:1111`），樣本在 `:1115`。
 
 ## shadcn 對照
 

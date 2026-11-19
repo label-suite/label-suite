@@ -1,6 +1,6 @@
 # App Shell（Sidebar）
 
-> 正典章節：`MASTER.md` — Sidebar（`pages/task-management/task-new.html:21` 這樣引用它）｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
+> 正典章節：`MASTER.md` — Sidebar（`pages/task-management/task-new.html:22` 這樣引用它）｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
 >
 > 這是交付包的 `shared/app-shell` 條目：**一個沒有自己 HTML 檔的畫面**。`pages/shared/` 一個 `.html` 都沒有，外殼整套由 `sidebar.js` 注入。
 
@@ -18,7 +18,7 @@
 | 使用者區：`#userAvatar`、`#userName`、`#roleIndicator` | 必填 | `sidebar.js:2098`、`:2100` |
 | 登出 `#logoutBtn`／`#mobileLogoutBtn` | 必填 | `sidebar.js:2104`／`:2065` |
 | `#shortcutHelpModal` 快捷鍵說明 | 選用 | `sidebar.js:2109`（開關在 `:2209`） |
-| `.workspace-tab-bar` 工作頁籤列 | 條件式，開過兩頁以上才出現 | `sidebar.css:959`、`sidebar.js:1525` |
+| `.workspace-tab-bar` 工作頁籤列 | 條件式，開過兩頁以上才出現 | `sidebar.css:953`、`sidebar.js:1525` |
 
 `#userAvatar` 標了 `aria-hidden="true"`（`sidebar.js:2098`），所以頭像不朗讀，身分靠 `#userName` 與 `#roleIndicator` 的文字。
 
@@ -47,7 +47,7 @@
 | `state-active-task-type` | 改 `labelsuite.activeTaskType`（`sidebar.js:4`） |
 | `state-workspace-tabs` | 開過兩個以上工作頁 |
 | `state-logout` | 點登出，handler 一次清掉 7 個 storage 鍵 |
-| `param-ap-stage` | 在任務詳情的網址加 `?ap_stage=r1`／`official`（`sidebar.js:762` 只在 `pageKind === 'task-detail'` 時生效） |
+| `param-ap-stage` | 在任務詳情的網址加 `?ap_stage=r1`／`official`（`sidebar.js:763` 只在 `pageKind === 'task-detail'` 時生效） |
 | `modal-notification` | 點通知鈴 |
 | `modal-shortcut` | 開快捷鍵說明 |
 
@@ -67,7 +67,7 @@ hover／focus／disabled 等元件層狀態**未逐項盤點**——外殼不是
 
 `design/prototype/pages/shared/sidebar.css:1`–`:1233`、`design/prototype/pages/shared/sidebar.js:1`–`:2630`。
 
-`sidebar.css:963` 與 `sidebar.js:682` 都引用「`MASTER.md` 的 terminology note」來解釋頁籤與 Content Tabs 的命名分工——**那一節在本 repo 還不存在**，見 [content-tabs](content-tabs.md) 與 `../design-gaps.md` G-25。
+`sidebar.css:963` 與 `sidebar.js:683` 都引用「`MASTER.md` 的 terminology note」來解釋頁籤與 Content Tabs 的命名分工——**那一節在本 repo 還不存在**，見 [content-tabs](content-tabs.md) 與 `../design-gaps.md` G-25。
 
 ## 可重現樣本
 
