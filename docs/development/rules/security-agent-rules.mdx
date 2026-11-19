@@ -4,7 +4,7 @@ description: '身分只來自 httpOnly cookie、token 不離開 cookie、CSRF �
 category: '開發說明'
 tags: [開發說明, Agent, 規範, 安全]
 createdAt: '2026-11-10'
-updatedAt: '2026-11-16'
+updatedAt: '2026-11-19'
 ---
 
 # 授權與答案隔離規範
@@ -183,7 +183,7 @@ updatedAt: '2026-11-16'
 | :--- | :--- |
 | **適用路徑** | `backend/tests/**`、E2E |
 | **禁止** | **用固定角色的假資料取代真實授權路徑**（例如測試裡直接塞一個 `role="super_admin"` 的假 user 繞過授權判定） |
-| **正例** | 每一個受保護端點的驗收涵蓋：**未登入、帳號停用、session 失效、非該任務成員、換成另一個任務、矩陣列缺失、矩陣 cell 為拒絕、以及每一個有效角色** |
+| **正例** | 每一個受保護端點的驗收涵蓋：**未登入、帳號停用、session 失效、非該任務成員、換成另一個任務、矩陣列缺失、矩陣 cell 為拒絕、以及每一個有效角色**。帳號停用那一格**包含 `/auth/refresh`**：停用之後拿舊的 refresh token 換新 token 必須被拒 |
 | **例外** | 無 |
 
 :::note{title="S10 的反例與檢查方式" collapsible}

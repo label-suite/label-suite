@@ -128,8 +128,10 @@ import ArchitectureBackendLayers from '@notes/components/architecture-backend-la
 | Token | 效期 | Cookie flag | 輪替 |
 | :--- | :--- | :--- | :--- |
 | Access token（JWT） | 15 分鐘 | `httpOnly`、`Secure`、`SameSite=Lax` | 每次 refresh 重發 |
-| Refresh token（不透明 UUID） | 7 天滑動 | `httpOnly`、`Secure`、`SameSite=Lax` | 每次使用輪替，一次性 |
+| Refresh token（不透明 UUID） | 7 天滑動 | `httpOnly`、`Secure`、`SameSite=Lax` | 每次使用輪替，一次性；**輪替之前先從資料庫讀 `is_active`，帳號已停用就拒絕、不發新 token** |
 | CSRF token（`HMAC(secret, sid)`） | 與 session 同壽 | `__Host-` 前綴、`Secure`、`SameSite=Lax`、**非 `httpOnly`** | 登入時發，refresh 時重發 |
+
+refresh 的停用檢查是第二道防線，第一道是 [security-agent-rules.mdx 的 S4](rules/security-agent-rules.mdx#s4-遮蔽與-allowlist-在後端) 的 session 與快取失效規則；這一道是為了萬一那一步漏了或失敗。
 
 JWT payload 只放 `sub`、`sid`、`credential_version`、`role`、`iat`、`exp`；`role` 只供顯示，授權不看它。
 任務角色不放進 JWT，前端進任務頁後另查成員身分。
@@ -447,3 +449,4 @@ ADR 引用的 FR-131、admin-007、spec 013 這類編號屬於個人 repo，本 
 | 2026-11-19 | 前端的框架、目錄分層、元件庫、design token 對照與圖示的理由寫進 [ADR-005](adr/005-frontend-architecture.mdx)，本文只留做法（[§前端](#前端)）；個人 repo ADR-004、011、016、030 的效力改連到它的 D1、D2、D3、D5（[§ADR 效力總表](#adr-效力總表)） | —（理由原本只在個人 repo 的 ADR 與 [#105](https://github.com/label-suite/label-suite/issues/105) 的留言） | [#451](https://github.com/label-suite/label-suite/issues/451) |
 | 2026-11-19 | 任務設定與答案隔離的理由寫進 [ADR-006](adr/006-task-config-and-answer-isolation.mdx)，本文只留做法（[§任務設定](#任務設定input_type-加-outputs)、[§測試集答案不外露](#測試集答案不外露)）；個人 repo ADR-010、029、031 的效力改連到它的 D1、D2、D3（[§ADR 效力總表](#adr-效力總表)） | —（理由原本只在個人 repo 的 ADR） | [#452](https://github.com/label-suite/label-suite/issues/452) |
 | 2026-11-19 | 部署、維運與稽核的理由寫進 [ADR-008](adr/008-deployment-and-operations.mdx)，本文只留做法（[§部署與維運](#部署與維運)、[§稽核與可追溯](#稽核與可追溯)）；個人 repo ADR-008、013、018、019、020、023、028、032、038 的效力改連到它的 D1 至 D8（[§ADR 效力總表](#adr-效力總表)） | —（理由原本只在個人 repo 的 ADR 與 [#105](https://github.com/label-suite/label-suite/issues/105) 的留言） | [#454](https://github.com/label-suite/label-suite/issues/454) |
+| 2026-11-19 | `/auth/refresh` 在輪替 refresh token 之前先檢查 `is_active`（[§認證與授權](#認證與授權)） | —（原本只靠停用當下撤銷 token family，refresh 端點本身不檢查） | [#474](https://github.com/label-suite/label-suite/issues/474) |
