@@ -34,11 +34,11 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 4. **狀態不能只靠顏色。**Review Status Track 以文字前綴「目前：」、字重與線寬輔助（`components-showcase.html:1221` 的說明、[`components/review-status-track.md`](components/review-status-track.md)）。Color Dot 目前只靠顏色，已登記為缺口（G-14）。
 5. **錯誤 toast 不自動消失，只能手動關。**整頁只有一則 toast；success 3000ms、info 5000ms、warning 8000ms、error 0（UXC-07，`components-showcase.html:1507`）。
 6. **Toast 與 banner 分工。**頁面層級的錯誤用 inline banner（`role="alert"`）；動作結果的回饋用 toast（`components-showcase.html:1112`）。
-7. **送出中要有載入態且不能重複送出。**UXC-06（`components-showcase.html:213`）。已知缺口：只擋滑鼠、沒擋鍵盤（G-06）。
+7. **送出中要有載入態且不能重複送出。**UXC-06（`.btn-loading`，`components-showcase.html:213`–`:214`）。已知缺口：只擋滑鼠、沒擋鍵盤（G-06）。
 8. **Skeleton 的尺寸要貼合載入後的內容**，以防 layout shift（UXC-08，`components-showcase.html:1134`）。所以 Skeleton 的尺寸不 token 化。
 9. **同一組一次性連結失效用同一句話。**`ONE_TIME_LINK_WORDING` 是單一來源（`pages/shared/sidebar.js:227`），重設密碼與驗證信兩頁都引用它（`reset-password.html:611`、`verify-email.html:390`）。
-10. **每個畫面同時支援繁中與英文、淺色與深色。**語言與外觀是共用介面的一部分（`00-prd.mdx:136`、`docs/specs/07-shared/01-sidebar.mdx`）；元件要用語意 token，深色主題靠 `html[data-theme="dark"]` 重新對映同名 token，頁面不寫兩份（`tokens.css` 深色區塊的檔頭說明）。
-11. **互動元件要有 `prefers-reduced-motion` 的退路。**共用 CSS 與 showcase 都有（`pages/shared/sidebar.css:185`、`components-showcase.html:979`）；`account/profile` 是唯一漏掉的帳號頁（G-30）。
+10. **每個畫面同時支援繁中與英文、淺色與深色。**語言與外觀是共用介面的一部分（PRD 的「外觀切換（淺色／深色）」，`00-prd.mdx:136`、`docs/specs/07-shared/01-sidebar.mdx`）；元件要用語意 token，深色主題靠 `html[data-theme="dark"]` 重新對映同名 token，頁面不寫兩份（`tokens.css` 深色區塊的檔頭說明）。
+11. **互動元件要有 `prefers-reduced-motion` 的退路。**共用 CSS 與 showcase 都有 `@media (prefers-reduced-motion: reduce)`（`pages/shared/sidebar.css:185`、`components-showcase.html:979`）；`account/profile` 是唯一漏掉的帳號頁（G-30）。
 12. **圖示一律用 SVG，不用 emoji，也不用文字字元（`✕`、`←`、`→`、`✓` 等）充當圖示。**維護者裁定（2026-11-18）；repo 內早有同向的依據：ADR-030「Lucide 是唯一圖示來源」，`task-config.engine.js:870`、`:977` 的註解寫「no text-glyph icons」「no hand-drawn glyphs」。細節見 [§圖示](#圖示)。
 13. **控制項外框用 `--color-border-control`，`--color-border` 只做裝飾。**輸入框、下拉選單、文字區塊、搜尋框、勾選框，以及長得像欄位的觸發鈕（日期區間、分類選擇）的外框用前者（淺色 `#7C899D` 對白底 3.55、對頁底 3.23:1；深色 `#6B6B78` 對卡片 3.42、對頁底 3.73:1），才過 WCAG 1.4.11 的 3:1；卡片、表格、分隔線用 `--color-border`（對白底只有 1.23:1）。焦點與錯誤狀態維持各自的 token。維護者裁定（2026-11-18，#427）；`tokens.css:26`、`:203`。
 14. **`--color-primary-border` 不能是唯一的提示。**它對白底只有 1.49:1；只靠邊框標示的狀態改用 `--color-primary`，例如日期選擇器的「今天」（`date-range-picker.css:34`）。維護者裁定（2026-11-18，#427）。
@@ -99,32 +99,32 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 
 **規則：全部中文介面文案用「你」，不用「您」。**維護者裁定（2026-11-18）。
 
-- 動作與後果說明本來就用「你」（例：`profile.html:1230`「除非你回到『密碼設定』重新設一組」），區塊副標與成功通知也一律改「你」（例：`profile.html:1182`、`:1224`、`register.html:538`）。
-- 現況有 13 行出現「您」，列在 [§與 prototype 的落差](#與-prototype-的落差)。規格書 `docs/specs/01-account/04-profile.mdx:131` 也用「您」，但 `docs/specs/` 是維護者擁有的頁面，這裡只記錄，不改。
+- 動作與後果說明本來就用「你」（例：`profile.html:1227`「除非你回到『密碼設定』重新設一組」），區塊副標與成功通知也一律改「你」（例：`profile.html:1179`「修改你的姓名與聯絡方式」、`:1221`「你現在可使用電子郵件與密碼登入」、`register.html:541`「填寫以下資訊以建立你的帳號」）。
+- prototype 原本有 13 行用「您」，已在 #418 改成「你」，列在 [§與 prototype 的落差](#與-prototype-的落差)。規格書 `docs/specs/01-account/04-profile.mdx:131` 的副標題也已在 #461 改成「你」。
 
 ### 按鈕用語
 
-- **「送出」＋受詞，不用「提交」。**維護者裁定（2026-11-18）：標記員「送出標記」、審核員「送出審核」（`annotation-workspace.config.js:60` 已是這個寫法）、仲裁「送出仲裁」（`:84`）；狀態詞「已提交」改「已送出」，「提交時間」改「送出時間」。現況與這條不符的行數列在 [§與 prototype 的落差](#與-prototype-的落差)。
-- **帳號流程用「動詞＋受詞」說出結果，不寫「確定」這種空動詞。**登入、建立帳號、寄送重設連結、更新密碼、重新寄送驗證信、前往登入（`register.html:548`、`forgot-password.html:435`、`reset-password.html:599`、`profile.html:1215`）。英文對應：Sign In、Create Account、Send Reset Link、Update Password（Title Case，無句點）。
-- **表單通用鈕是「儲存」與「取消」**（`user-management.html:798`–`:807`、`task-new.html:626`–`:627`）。標記員另有「儲存草稿」（`annotation-workspace.config.js:22`）。
-- **送出鈕旁說明後果。**審核送出旁會寫「送出後進入爭議池，待仲裁定案」或「送出後即定稿，成為最終答案」（`annotation-workspace.config.js:71`–`:72`、`annotation-workspace.html:1274`）。
+- **「送出」＋受詞，不用「提交」。**維護者裁定（2026-11-18）：標記員「送出標記」、審核員「送出審核」（`annotation-workspace.config.js:62` 已是這個寫法）、仲裁「送出仲裁」（`:86`）；狀態詞「已提交」改「已送出」，「提交時間」改「送出時間」。現況與這條不符的行數列在 [§與 prototype 的落差](#與-prototype-的落差)。
+- **帳號流程用「動詞＋受詞」說出結果，不寫「確定」這種空動詞。**登入、建立帳號、寄送重設連結、更新密碼、重新寄送驗證信、前往登入（`register.html:551`、`forgot-password.html:441`、`reset-password.html:605`、`profile.html:1213`）。英文對應：Sign In、Create Account、Send Reset Link、Update Password（Title Case，無句點）。
+- **表單通用鈕是「儲存」與「取消」**（`user-management.html:678`–`:687`、`task-new.html:640`–`:641`）。標記員另有「儲存草稿」（`annotation-workspace.config.js:22`）。
+- **送出鈕旁說明後果。**審核送出旁會寫「送出後進入爭議池，待仲裁定案」或「送出後即定稿，成為最終答案」（`annotation-workspace.config.js:73`–`:74`，顯示在 `#wsReviewSubmitConsequence`，`annotation-workspace.html:1276`）。
 - **載入中的按鈕文字**：進行式加刪節號，「建立中…」（`components-showcase.html:1045`）；登入頁的送出鈕改以 spinner 取代文字並帶 `aria-label="載入中"`（UXC-06）。
-- **破壞性動作要先確認，確認句型**：「確定要停用 …」（`user-management.html:923`）、未儲存離開：「你有尚未儲存的變更，離開將會遺失所有已填寫的內容。」（`task-new.html:633`）。UXC-10、UXC-03 在 b2／b3 才寫完。
-- **返回類連結**：「返回登入」「返回個人設定」「前往登入」（`register.html:510`、`profile.html:1215`、`reset-password.html:551`）；**不帶箭頭字元**（見鐵律 12）；現況的 `← 返回登入` 列在落差表。
+- **破壞性動作要先確認，確認句型**：「確定要停用 …」（`user-management.html:803`）、未儲存離開：「你有尚未儲存的變更，離開將會遺失所有已填寫的內容。」（`task-new.html:647`）。UXC-10、UXC-03 在 b2／b3 才寫完。
+- **返回類連結**：「返回登入」「返回個人設定」「前往登入」（`register.html:513`、`profile.html:1212`、`reset-password.html:557`）；**不帶箭頭字元**（見鐵律 12）；現況的 `← 返回登入` 列在落差表。
 
 ### 錯誤與驗證訊息
 
 - **欄位驗證：「請」開頭，說出要做什麼。**「請輸入電子郵件」「請輸入密碼」「請輸入有效的電子郵件格式」（`login.html:527`–`:528`、`register.html:557`）；英文對應「Email is required」「Password is required」。
 - **規則寫在訊息裡，不只說錯。**「密碼至少需 8 個字元，含大寫英文、小寫英文與數字」（`register.html:559`）；密碼規則另有常駐的 hint（`:548`）。
 - **登入失敗不指出是帳號還是密碼**：「帳號或密碼錯誤，請再試一次」（`login.html:526`）；英文 `Invalid email or password`（`:549`）。
-- **說出原因與下一步。**「瀏覽器的儲存空間放不下這張圖，請換一張小一點的；其他欄位已經存好了」（`profile.html:1220`）——先說發生什麼，再說怎麼辦，並交代沒壞的部分。
+- **說出原因與下一步。**「瀏覽器的儲存空間放不下這張圖，請換一張小一點的；其他欄位已經存好了」（`profile.html:1217`）——先說發生什麼，再說怎麼辦，並交代沒壞的部分。
 - **一次性連結失效**：「連結無法使用，請重新申請」；英文 `This link can no longer be used. Please request a new one.`（`sidebar.js:228`–`:229`）。
-- **標記員被擋下時說明條件**：句型是「請完成所有標記項目後再送出」（現況寫「提交」，`annotation-workspace.config.js:58`）；審核員失去資格時說明還能做什麼：「…可檢視自己審核過的內容與歷程，但無法再送出審核決策。」（現況同樣寫「提交」，`:112`）。
-- **無障礙名稱（aria-label）和可見文字一樣要兩種語言**（`login.html:529`–`:534`、`:552`–`:557`）。
+- **標記員被擋下時說明條件**：句型是「請完成所有標記項目後再送出」（`annotation-workspace.config.js:59`）；審核員失去資格時說明還能做什麼：「…可檢視自己審核過的內容與歷程，但無法再送出審核決策。」（`:114`）。
+- **無障礙名稱（aria-label）和可見文字一樣要兩種語言**（`ssoAriaLabel`、`navAriaLabel` 等，`login.html:529`–`:534`、`:552`–`:557`）。
 
 ### 標點與格式
 
-- 中文句末多數不加句號（欄位標籤、toast 標題、按鈕），完整句子才加（例：`task-new.html:627`）；toast 副文字是子句，不加句號（`profile.html:1223`）。
+- 中文句末多數不加句號（欄位標籤、toast 標題、按鈕），完整句子才加（例：`task-new.html:627` 的 `s3NoticeText`）；toast 副文字是子句，不加句號（`profile.html:1223`）。
 - 「？」用全形（「忘記密碼？」「還沒有帳號？」，`login.html:519`、`:521`）。
 - 破折號用全形雙線「——」（`profile.html:1230`）。
 - **日期、時間、數字（維護者裁定 2026-11-18）：**
@@ -223,7 +223,7 @@ token 名與值以 `tokens.css` 為準；本節只寫**怎麼用**。
 
 證據偏少，只收有明文的：
 
-- **登入後的每一頁共用側欄**：品牌區（logo＋wordmark＋語言切換）在最上、分隔線、導覽列（`sidebar.js:2037`–`:2051`、`sidebar.css:37`–`:44`）。側欄可收合，狀態存在 `labelsuite.sidebarCollapsed`（`sidebar.js:5`）。
+- **登入後的每一頁共用側欄**：品牌區 `.brand-section`（logo＋wordmark＋語言切換）在最上、分隔線、導覽列（`sidebar.js:2037`–`:2051`、`sidebar.css:37`–`:44`）。側欄可收合，狀態存在 `labelsuite.sidebarCollapsed`（`sidebar.js:5`）。
 - **工作頁籤**上限 8 個、重開堆疊上限 10（`sidebar.js` 的 `TAB_CAP`、`TAB_REOPEN_CAP`）。「工作頁籤」與頁內「Content Tabs」是兩個東西，命名見 [`MASTER.md`](MASTER.md) §命名約定。
 - **帳號頁**是置中的單卡版面，頂部 navbar 只有 logo 與語言切換（`login.html` 的 `.navbar`、`:353`–`:375`）。
 - **響應式規則（維護者裁定 2026-11-18）：**
@@ -288,7 +288,7 @@ token 名與值以 `tokens.css` 為準；本節只寫**怎麼用**。
 ### 用法
 
 - 線條圖示，單色，顏色由 `currentColor` 繼承；不另外上色。
-- 大多數頁面**不載入 `assets/icons/` 的檔案，而是把 `<svg>` 內嵌在 HTML／JS 裡**（`login.html:353`–`:358`、`sidebar.js:2039`；全 prototype 只有 `components-showcase.html` 以檔案引用 `chevron-down.svg`，見 [`pages/components-showcase.md`](pages/components-showcase.md)）。所以 `assets/icons/` 現況比較像**圖示資料庫**，不是頁面實際引用的來源。
+- 大多數頁面**不載入 `assets/icons/` 的檔案，而是把 `<svg>` 內嵌在 HTML／JS 裡**（`login.html:353`–`:358`、`sidebar.js:2040`；全 prototype 只有 `components-showcase.html` 以檔案引用 `chevron-down.svg`，見 [`pages/components-showcase.md`](pages/components-showcase.md)）。所以 `assets/icons/` 現況比較像**圖示資料庫**，不是頁面實際引用的來源。
 - 純裝飾圖示加 `aria-hidden="true"`；單獨成為控制項的圖示要有 `aria-label`（`login.html:366`–`:368` 的語言切換是圖示加文字，所以圖示本身 `aria-hidden`）。
 
 ---
@@ -311,7 +311,7 @@ token 名與值以 `tokens.css` 為準；本節只寫**怎麼用**。
 
 | 規則 | 值 | 怎麼量的 |
 | :--- | :--- | :--- |
-| 圓角比 | 邊長的 25% | `icon-colored.svg`：`rx` 12 ÷ 48。`logo-horizontal.svg`、`social-preview.svg`（40 ÷ 160）、`login.html:50`（8 ÷ 32）同為 25% |
+| 圓角比 | 邊長的 25% | `icon-colored.svg`：`rx` 12 ÷ 48。`logo-horizontal.svg`、`social-preview.svg`（40 ÷ 160）、`login.html:50`（`.navbar-logo` 的 `border-radius` 8 ÷ 32）同為 25% |
 | 最小尺寸 | 16px | 維護者裁定；原件 `assets/logo/README.md:49` 也寫 16 px（圖示）與 100 px（橫式 lockup） |
 | 安全留白 | 圖示高度的 25% | `icon-colored.svg` 48 → 12 單位。原件 `README.md:50` 寫「at least 12 units」，與此相同 |
 | 圖示與 wordmark 的間距 | 圖示高度的三分之一 | `logo-horizontal.svg`：圖示 0–48，文字起點 `x` 64，間距 16 ÷ 48 |
@@ -328,7 +328,7 @@ token 名與值以 `tokens.css` 為準；本節只寫**怎麼用**。
 | `banner.svg:8` | 圓角 32 ÷ 144 ≈ **22%** | 規則是 25%（應為 36） | 已修（#418），`rx` 36 |
 | `banner.svg:13`、`:14` | 標籤線稿線寬 1.8、點用 `circle` | 其餘素材線寬 2、點用 `line`；縮放後視覺線寬約 6.0（`1.8 × 3.33`），其餘約 6.7 | 已修（#418），線寬 2、點用 `line` |
 | `banner.svg:12` | 圖形占圓角方 55.6%（24 × 3.33 ÷ 144） | `icon-colored.svg` 與 `social-preview.svg` 都是 50% | 已修（#418），`scale(3)`，占 50% |
-| `banner.svg:8`、`:18` | 圖與 wordmark 的間距 36 ÷ 144 = 25% | `logo-horizontal.svg` 是三分之一；`social-preview.svg`（40 ÷ 160）也是 25%。**圖文間距有兩種比例**，規則採 `logo-horizontal.svg` 的三分之一，另兩個是否照改由維護者決定 | 待決（`banner.svg`、`social-preview.svg` 都還是 25%） |
+| `banner.svg:8`、`:18` | 圖（`rect` 寬 144）與 wordmark（`text`）的間距 36 ÷ 144 = 25% | `logo-horizontal.svg` 是三分之一；`social-preview.svg`（40 ÷ 160）也是 25%。**圖文間距有兩種比例**，規則採 `logo-horizontal.svg` 的三分之一，另兩個是否照改由維護者決定 | 待決（`banner.svg`、`social-preview.svg` 都還是 25%） |
 | `social-preview.svg:19` | 副標色與 token 不符 | 見下方色彩對應 | 已修（#418，Q12），改 `--color-ink-muted` 的值 |
 
 ### 素材用途

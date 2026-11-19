@@ -193,10 +193,10 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 | `#modal-notification` | `#notificationDropdown` `sidebar.js:2260`、`#notifMarkAllBtn` `:2275`、`#notificationBadge` |
 | `#modal-shortcut` | `#shortcutHelpModal` `sidebar.js:2109`，開關在 `:2209` |
 | `#role-super-admin` | `sidebar.js:536` 在不是 `super_admin` 時隱藏 `#navAdminItem` `:628` |
-| `#state-admin-submenu-open` | `sidebar.js:539`–`:541`：桌機且未收合才展開成兩個連結 |
+| `#state-admin-submenu-open` | `sidebar.js:539`–`:541` 的 `System Administration` 子選單：桌機且未收合才展開成兩個連結 |
 | `#state-active-task-type` | `labelsuite.activeTaskType` `sidebar.js:4` 決定標記作業那一項的標籤與 `#roleIndicator` |
-| `#state-workspace-tabs` | 頁籤列 `sidebar.js:1525`、總覽選單、重開、全部關閉與三種通知；6 個 sessionStorage 鍵 |
-| `#param-ap-stage` | **任務詳情**才讀（`sidebar.js:763`）：`:770`／`:773` 設 `stageBadge` → `data-stage-badge` `:1253` |
+| `#state-workspace-tabs` | 頁籤列 `workspace-tab-bar` `sidebar.js:1525`、總覽選單、重開、全部關閉與三種通知；6 個 sessionStorage 鍵 |
+| `#param-ap-stage` | **任務詳情**才讀（`pageKind`，`sidebar.js:763`）：`:770`／`:773` 設 `stageBadge` → `data-stage-badge` `:1253` |
 
 ### 為什麼它自成一個條目
 
@@ -359,7 +359,7 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 | :--- | ---: | :--- |
 | 新增 | 0 | |
 | 移除 | 0 | |
-| 改寫 | 0 | 交付包引用的行號（`login.html:677`、`reset-password.html:548`、`task-list.html:1219`）都在原地替換的檔裡，行數不變；行數有變的只有 `tokens.css`，交付包沒有引用它的行號 |
+| 改寫 | 0 | 交付包引用的行號（`login.html:677` 的 `#loginBtnText`、`reset-password.html:548` 的 `successPanel`、`task-list.html:1219` 的 `TASK_LIST_DATA_READY`）都在原地替換的檔裡，行數不變；行數有變的只有 `tokens.css`，交付包沒有引用它的行號 |
 | `loads` 欄 | 0 | 沒有新增或移除載入的檔 |
 | 參數 | 0 | 沒有改讀網址參數的程式 |
 | 受影響 | 153 | 154 個視圖中有 153 個的畫面載入了變動的檔（`tokens.css` 140 個、`sidebar.css` 128 個、`task-config.css` 41 個，其餘各 1–7 個） |

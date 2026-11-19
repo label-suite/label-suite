@@ -28,7 +28,7 @@
 | 未到 | 無修飾（`--color-ink-muted` 文字、`--color-white` 底） | `components-showcase.html:673`–`:674` |
 | 已走過 | `.done`：邊框與文字 `--color-cta`、底 `--color-success-bg`、字重 600 | `:680` |
 | 目前 | `.current`：primary 色系、字重 600，另加 `目前：` 文字前綴與 `aria-current="step"` | `:685`、樣本 `:1237` |
-| hover／focus／disabled／載入中／空 | 不適用，非互動元素 | `:659`–`:723` 無偽類 |
+| hover／focus／disabled／載入中／空 | 不適用，非互動元素 | `.review-track` 等規則 `:659`–`:723` 無偽類 |
 
 **不只靠顏色**是這個元件寫進說明的設計約束（`:1222`）：當前節點有文字前綴，走過的節點／標籤／軌道另以 `font-weight: 600` 與線寬加粗區分（rail 2px→3px，`:709`；fork 的 `stroke-width` 2→3，樣本 `:1233`）。
 
@@ -63,6 +63,6 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 差異軌、停在爭議中 |
-| `annotation/annotation-workspace`（`#role-reviewer`、`#state-review-decision`） | `annotation-workspace.html:443`–`:464` 的 11 條規則與 `components-showcase.html:658`–`:722` **逐字相同**；`annotation-workspace.config.js:5549` 起算繪，節點帶 `aria-current="step"`（`:5559`） |
+| `annotation/annotation-workspace`（`#role-reviewer`、`#state-review-decision`） | `annotation-workspace.html:443`–`:464` 的 11 條 `.review-track` 規則與 `components-showcase.html:658`–`:722` **逐字相同**；`annotation-workspace.config.js:5549` 起算繪，節點帶 `aria-current="step"`（`:5559`） |
 
 b3 已補上並核對（見上表）：那份 verbatim 屬實。

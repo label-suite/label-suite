@@ -17,18 +17,18 @@
 | 視圖 | 怎麼走到 |
 | :--- | :--- |
 | `#role-super-admin` | `localStorage` 的 `labelsuite.systemRole`（`sidebar.js:2`）設成 `super_admin` |
-| `#state-admin-submenu-open` | 系統管理員 ＋ 桌機 ＋ 側欄未收合，點「系統管理」（`sidebar.js:539`–`:541`） |
-| `#state-sidebar-collapsed` | 桌機（`sidebar.js:513`）點收合鈕（`:524`） |
-| `#state-mobile` | 視窗 ≤ 768px（`sidebar.css:611`） |
+| `#state-admin-submenu-open` | 系統管理員 ＋ 桌機 ＋ 側欄未收合，點「系統管理」（`System Administration` 子選單，`sidebar.js:539`–`:541`） |
+| `#state-sidebar-collapsed` | 桌機（`shouldEnableDesktopSidebarCollapse`，`sidebar.js:511`–`:513`）點收合鈕（`sidebar-collapsed`，`:524`） |
+| `#state-mobile` | 視窗 ≤ 767px（`max-width: 767px`，`sidebar.css:828`） |
 | `#state-theme-dark` | 點 `#sidebarThemeToggleBtn`（`sidebar.js:2081`）或 `#mobileThemeToggleBtn`（`:2055`） |
 | `#state-lang-en` | 點 `#langToggle`（`:2047`）或 `#mobileLangToggle`（`:2051`） |
 | `#state-user-chip` | `#userAvatar`（`:2098`）、`#userName`、`#roleIndicator`（`:2101`） |
 | `#state-active-task-type` | 改 `labelsuite.activeTaskType`（`:4`） |
-| `#state-workspace-tabs` | 開過兩個以上工作頁（`:1524`） |
+| `#state-workspace-tabs` | 開過兩個以上工作頁（`workspaceTabBar`，`:1524`） |
 | `#state-logout` | 點 `#logoutBtn`（`:2104`）或 `#mobileLogoutBtn`（`:2065`）：一次清掉 7 個 storage 鍵 |
 | `#param-ap-stage` | 任務詳情的網址加 `?ap_stage=r1`／`official`（`:763`，只在 `pageKind === 'task-detail'` 生效） |
-| `#modal-notification` | 點通知鈴（`:2259`、`:2274`） |
-| `#modal-shortcut` | 開快捷鍵說明（`:2108`、`:2208`） |
+| `#modal-notification` | 點通知鈴 `notificationBellBtn` 開 `notificationDropdown`（`:2264`、`:2289`） |
+| `#modal-shortcut` | 開快捷鍵說明 `shortcutHelpModal`（`:2109`、`:2209`） |
 
 ## 這一頁專屬的
 

@@ -42,7 +42,7 @@
 
 ## 樣式出處
 
-`design/prototype/pages/account/login.html:262`、`register.html`、`reset-password.html`、`profile.html` 各自的 `<style>`。
+`.eye-toggle`：`design/prototype/pages/account/login.html:264`、`register.html`、`reset-password.html`、`profile.html` 各自的 `<style>`。
 
 ## 可重現樣本
 

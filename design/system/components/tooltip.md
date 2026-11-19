@@ -44,7 +44,7 @@
 
 ## 樣式出處
 
-`design/prototype/pages/task-management/task-config.css:259`–`:329`（`task-new` 與 `task-detail` 共用；`task-detail.html:1078` 的註解寫明搬過來共用）。
+`design/prototype/pages/task-management/task-config.css:259`–`:329`（`.field-help-tooltip`，`task-new` 與 `task-detail` 共用；`task-detail.html:1078` 的註解寫明搬過來共用）。
 
 ## 可重現樣本
 

@@ -13,7 +13,7 @@
 | 視圖 | 怎麼走到 | 用到的元件 |
 | :--- | :--- | :--- |
 | `#state-step1` | 開 `pages/task-management/task-new.html`（`step1Panel`，`:265`） | [App Shell](../components/app-shell.md)、[Step Indicator](../components/step-indicator.md)（`:242`–`:262`）、[Card](../components/card.md)（`.form-card`）、[Input](../components/input.md)（本頁的 `.input-text`，`:64`）、[Button](../components/button.md) |
-| `#state-step2` | 第一步填妥按「下一步」（`step2Panel`，`:341`） | [Step Indicator](../components/step-indicator.md)、[Chip](../components/chip.md)（`.task-type-chip`）、[Accordion](../components/accordion.md)（`.output-accordion`）、[Color Dot](../components/color-dot.md)、[Toggle Switch](../components/toggle-switch.md)、[Empty State](../components/empty-state.md)（`empty-state-compact`，`task-config.engine.js:1878`） |
+| `#state-step2` | 第一步填妥按「下一步」（`step2Panel`，`:341`） | [Step Indicator](../components/step-indicator.md)、[Chip](../components/chip.md)（`.task-type-chip`）、[Accordion](../components/accordion.md)（`.output-accordion`）、[Color Dot](../components/color-dot.md)、[Toggle Switch](../components/toggle-switch.md)、[Empty State](../components/empty-state.md)（`empty-state-compact`，`task-config.engine.js:1890`） |
 | `#state-step3` | 進第三步（`step3Panel`，`:395`） | [Step Indicator](../components/step-indicator.md)、[Tooltip](../components/tooltip.md)（`:411`–`:414`）、[Input](../components/input.md) |
 | `#modal-dataset-preview` | 第一步點資料集預覽（`datasetPreviewModal`，`:557`，`.modal-xl`） | [Modal](../components/modal.md) |
 | `#modal-leave-confirm` | 填了一半點離開（`leaveModal`，`:533`） | [Modal](../components/modal.md)、[Button](../components/button.md) |
@@ -33,4 +33,4 @@
 
 ## 業務行為
 
-連回規格 [`03-task-management/02-task-new.mdx`](../../../docs/specs/03-task-management/02-task-new.mdx)。UXC 落點：UXC-03（離開確認）、UXC-10（`:544`；`task-config.engine.js:22`、`:6185`）。
+連回規格 [`03-task-management/02-task-new.mdx`](../../../docs/specs/03-task-management/02-task-new.mdx)。UXC 落點：UXC-03（離開確認）、UXC-10（`:544`；`task-config.engine.js:22`、`:6203`）。

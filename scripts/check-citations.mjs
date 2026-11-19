@@ -223,7 +223,9 @@ export function tokensOf(sentence) {
   const addQuote = (q) => {
     for (const part of q.replace(/`/g, '').split(/…+|\.\.\.|⋯/)) {
       const t = part.trim().replace(/^[{(\s]+|[})\s]+$/g, '');
-      if (t.length >= 2 && !/^[\W\d_]+$/.test(t)) tokens.add(t);
+      // Only punctuation, digits and spaces prove nothing; a Chinese label
+      // such as 「移除頭像」 does, so the test is Unicode-aware.
+      if (t.length >= 2 && !/^[\p{P}\p{S}\p{N}_\s]+$/u.test(t)) tokens.add(t);
     }
   };
   for (const m of strip.matchAll(/`([^`]+)`/g)) {
@@ -231,17 +233,77 @@ export function tokensOf(sentence) {
     if (!inner) continue;
     addQuote(inner);
     addIdents(inner);
+    // A script is named after what it exports: `modal-focus.js` is the file
+    // of window.LabelSuiteModalFocus, `date-range-picker.js` of
+    // window.DateRangePicker. The kebab stem without hyphens finds the
+    // camel-case name once both sides are lower-cased.
+    const script = inner.match(/(?:^|\/)([a-z][a-z0-9]*(?:-[a-z0-9]+)+)(?:\.[\w-]+)*\.m?js$/);
+    if (script) tokens.add(script[1].replace(/-/g, ''));
   }
   for (const m of strip.matchAll(/「([^」]+)」|『([^』]+)』|“([^”]+)”|"([^"\n]+)"/g)) addQuote(m[1] ?? m[2] ?? m[3] ?? m[4]);
   addIdents(strip.replace(/`[^`]*`/g, ' ').replace(/\]\([^)]*\)/g, ']'));
+  // A percentage is a value the cited line can be checked for (`12%` in a
+  // color-mix). 0% and 100% are too common to prove anything.
+  for (const m of strip.matchAll(/(?<![\w.])(\d{1,2}(?:\.\d+)?)%/g)) if (+m[1] !== 0) tokens.add(`${m[1]}%`);
   return [...tokens];
 }
 
-const norm = (s) => s.replace(/\s+/g, ' ').toLowerCase();
+// 『』 is how a quote inside 「…」 is written, so a label quoted in a doc as
+// 「…『密碼設定』…」 reads 「密碼設定」 in the cited line.
+const norm = (s) => s.replace(/\s+/g, ' ').replace(/『/g, '「').replace(/』/g, '」').toLowerCase();
 
 export function lineMatches(lines, from, to, tokens) {
   const text = norm(lines.slice(from - 1, to).join('\n'));
   return tokens.some((t) => text.includes(norm(t)));
+}
+
+// The light-theme value of each custom property in the first :root block of
+// tokens.css. An SVG cannot read a custom property, so a logo file carries
+// the value: `--color-ink` is satisfied by a line that reads #1E1B4B.
+export function tokenValues(css) {
+  const out = new Map();
+  const root = css.match(/:root\s*\{([^}]*)\}/);
+  if (!root) return out;
+  for (const m of root[1].matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) out.set(m[1], m[2].trim().toLowerCase());
+  return out;
+}
+
+// Is line n inside a <style> or <script> element of the file?
+function insideElement(lines, n, tag) {
+  for (let i = n - 1; i >= 0; i--) {
+    const l = lines[i].toLowerCase();
+    if (l.includes(`</${tag}>`) && i < n - 1) return false;
+    if (new RegExp(`<${tag}[\\s>]`).test(l)) return true;
+  }
+  return false;
+}
+
+// Matches the heuristic cannot see in the cited text alone. Each needs the
+// cited file, the token table or the citing doc.
+export function contextMatches({ lines, from, to, tokens, doc = '', unitText = '', values = new Map() }) {
+  const text = lines.slice(from - 1, to).join('\n');
+  for (const t of tokens) {
+    // `<style>` or `<script>`: the citation points into that element.
+    const el = t.match(/^<(style|script)>$/i);
+    if (el && [from, to].every((n) => insideElement(lines, n, el[1].toLowerCase()))) return true;
+    // `<span>` is also met by an opening tag with attributes (`<svg viewBox=…>`)
+    // and by the CSS selector that styles it (`.metric span {`).
+    const tag = t.match(/^<([a-z][a-z0-9]*)>$/i);
+    if (tag && new RegExp(`<${tag[1]}[\\s/>]|(^|[\\s>+~,(])${tag[1]}(?=\\s*[{,:>.[)]|\\s*$)`, 'im').test(text)) return true;
+    // A design token is met by its light-theme value.
+    const v = t.startsWith('--') ? values.get(t) : undefined;
+    if (v && /^#[0-9a-f]{3,8}$/.test(v) && text.toLowerCase().includes(v)) return true;
+  }
+  // A usage entry of a component doc (a table row, list item or paragraph)
+  // opens with the screen that uses the component (`task-management/task-list#state-default`,
+  // `components-showcase#comp-banner`); the component it cites is the doc's
+  // own, so the doc's slug is what the cited line must name.
+  const slug = doc.match(/^design\/system\/components\/([\w-]+)\.md$/)?.[1];
+  const firstCell = unitText.match(/^\s*(?:\|\s*|[-*]\s+)?`([^`]+)`/)?.[1] ?? '';
+  if (slug && /^(?:[\w-]+\/[\w-]+|components-showcase)(?:#[\w-]+)?$/.test(firstCell)) {
+    if (text.toLowerCase().includes(slug)) return true;
+  }
+  return false;
 }
 
 // Lines under a heading that names 原件 transcribe the original repository;
@@ -318,6 +380,8 @@ export function checkCitations({ root = ROOT, docs = docsToScan(root), allow = A
   const warnings = [];
   const stats = { citations: 0, historical: 0, external: 0, allowed: 0, verified: 0, unnamed: 0 };
   const usedAllow = new Set();
+  const tokensCss = index.get('design/prototype/assets/tokens.css');
+  const values = tokensCss ? tokenValues(readFileSync(tokensCss, 'utf8')) : new Map();
   for (const doc of docs) {
     const text = readFileSync(join(root, doc), 'utf8');
     const hist = historicalLines(text);
@@ -344,7 +408,8 @@ export function checkCitations({ root = ROOT, docs = docsToScan(root), allow = A
         // A sentence that names nothing (only Chinese prose and the citation)
         // gives the heuristic nothing to look for; it is counted, not warned.
         if (tokens.length === 0) { stats.unnamed++; continue; }
-        if (lineMatches(lines, c.from, c.to, tokens)) { stats.verified++; continue; }
+        if (lineMatches(lines, c.from, c.to, tokens)
+          || contextMatches({ lines, from: c.from, to: c.to, tokens, doc, unitText: u.text, values })) { stats.verified++; continue; }
         const lineText = u.text.split('\n')[lineNo - u.line];
         const a = allow.findIndex((x) => x.file === doc && lineText.includes(x.text) && (!x.cite || c.raw.includes(x.cite)));
         if (a >= 0) { stats.allowed++; usedAllow.add(a); continue; }
@@ -360,11 +425,18 @@ export function checkCitations({ root = ROOT, docs = docsToScan(root), allow = A
   return { errors, warnings, stats, docs: docs.length };
 }
 
+// Errors always fail. With --strict, an unverified citation (WARN) fails too,
+// so CI catches a line number that drifted onto an unrelated line.
+export function failed({ errors, warnings }, { strict = false } = {}) {
+  return errors.length > 0 || (strict && warnings.length > 0);
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const { errors, warnings, stats, docs } = checkCitations();
+  const result = checkCitations();
+  const { errors, warnings, stats, docs } = result;
   for (const w of warnings) console.warn(`WARN  ${w}`);
   for (const e of errors) console.error(`ERROR ${e}`);
   const summary = `${docs} documents, ${stats.citations} citations: ${stats.verified} verified, ${warnings.length} unverified (WARN), ${stats.unnamed} naming nothing to check, ${stats.allowed} allowlisted, ${stats.historical} historical, ${stats.external} external, ${errors.length} errors`;
-  if (errors.length > 0) { console.error(`check-citations: ${summary}`); process.exit(1); }
+  if (failed(result, { strict: process.argv.includes('--strict') })) { console.error(`check-citations: ${summary}`); process.exit(1); }
   console.log(`check-citations: ${summary}`);
 }

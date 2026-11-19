@@ -21,7 +21,7 @@
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
 | 預設 | 有 | `components-showcase.html:837` |
-| hover／focus／disabled／載入中／錯誤／空 | 不適用，非互動元素 | `:836`–`:850` 無偽類 |
+| hover／focus／disabled／載入中／錯誤／空 | 不適用，非互動元素 | `.divider-hr` 等規則 `:836`–`:850` 無偽類 |
 
 ## token
 

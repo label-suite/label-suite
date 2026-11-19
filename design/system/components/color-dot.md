@@ -25,7 +25,7 @@
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
 | 預設 | 有 | `components-showcase.html:724` |
-| hover／focus／disabled／載入中／錯誤 | 不適用，非互動元素 | `:725`–`:748` 無任何偽類 |
+| hover／focus／disabled／載入中／錯誤 | 不適用，非互動元素 | `.entity-color-dot` 等規則 `:725`–`:748` 無任何偽類 |
 | 空 | 未觀察到。沒有「沒有指派顏色」的樣式 | — |
 
 ## token

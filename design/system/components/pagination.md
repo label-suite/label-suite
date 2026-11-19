@@ -43,7 +43,7 @@
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:587`–`:636`（正典）、`design/prototype/pages/shared/list-page.css:74`–`:105`（shipped，7 個頁面載入它）。
+`design/prototype/components-showcase.html:587`–`:636`（正典 `.pagination`）、`design/prototype/pages/shared/list-page.css:74`–`:105`（shipped `.pagination`，7 個頁面載入它）。
 
 ## 可重現樣本
 
