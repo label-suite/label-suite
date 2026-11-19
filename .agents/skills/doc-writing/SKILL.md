@@ -7,7 +7,7 @@ description: 撰寫、精簡與檢查 docs/ 底下的非規格文件（docs/deve
 
 此 skill 管的是 `docs/` 底下**不是規格**的文件怎麼寫：架構、流程、agent 規則、工具說明。
 規格（`docs/specs/`）不在範圍內，PRD 用 `prd-writing`、單頁規格用 `spec-writing`。
-NoteCraft 的語法、連結與錨點規則見 `docs/development/notecraft-writing.md`；本 skill 只管「寫什麼、寫在哪、寫多少」。
+NoteCraft 的語法、連結與錨點規則見 `docs/development/notecraft/notecraft-writing.md`；本 skill 只管「寫什麼、寫在哪、寫多少」。
 
 ## 何時使用
 
@@ -127,7 +127,7 @@ NoteCraft 的語法、連結與錨點規則見 `docs/development/notecraft-writi
 
 ### 6. 流程與分層優先畫圖
 
-依序發生的步驟、分層、元件之間的呼叫，用圖取代 `text` code block 或長條列；圖依 `content-visualize` skill 生成，樣式依 `docs/development/notecraft-visualize.md`。
+依序發生的步驟、分層、元件之間的呼叫，用圖取代 `text` code block 或長條列；圖依 `content-visualize` skill 生成，樣式依 `docs/development/notecraft/notecraft-visualize.md`。
 查表式的內容（欄位、選項、對照）維持表格，不硬畫成圖。只有三五步、一眼看得完的流程，維持條列即可。
 
 ### 7. 實作細節收進摺疊區塊

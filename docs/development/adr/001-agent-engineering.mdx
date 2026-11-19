@@ -7,7 +7,7 @@ tags: [adr, agent, engineering]
 # ADR-001 Agent 工程
 
 這份 ADR 管 agent 寫程式時的工程紀律：開工前怎麼找既有實作、碰到錯誤的既有實作怎麼處理。agent 的角色分工與 SDD 流程不在這裡，見 `AGENTS.md` 的 SDD Workflow。
-規則本體在 `AGENTS.md` 與 [agent-rules.mdx](../agent-rules.mdx)，本文只寫為什麼；衝突時的優先序見 [ADR 索引](index.mdx#衝突時以誰為準)。
+規則本體在 `AGENTS.md` 與 [agent-rules.mdx](../rules/agent-rules.mdx)，本文只寫為什麼；衝突時的優先序見 [ADR 索引](index.mdx#衝突時以誰為準)。
 
 ## D1 先搜尋再新增
 
@@ -18,7 +18,7 @@ agent 常在已經有同樣功能的地方再寫一份 helper、型別或元件�
 | 限制 | 對選擇的影響 |
 | :--- | :--- |
 | `backend/`、`frontend/` 還不存在 | 索引既有程式的工具現在沒有東西可索引 |
-| 沒有任何 agent hook 接上線，見 [agent-hook-contract.mdx](../agent-hook-contract.mdx) | 用 hook 強制，要先把 hook 的基礎建起來 |
+| 沒有任何 agent hook 接上線，見 [agent-hook-contract.mdx](../rules/agent-hook-contract.mdx) | 用 hook 強制，要先把 hook 的基礎建起來 |
 | Session 開始的 hook（H1）只能提醒、不能阻擋 | 在開工那一刻「強制」搜尋，現有的事件做不到 |
 | Claude Code 和 Codex 的 hook 能力不一樣 | 只在一邊做得到的強制，另一邊會漏 |
 | 「grep 搜過什麼」事後無法從程式驗證 | 證據只能由 agent 自己寫下來，交給審查的人看 |
@@ -34,7 +34,7 @@ agent 常在已經有同樣功能的地方再寫一份 helper、型別或元件�
 
 ### 決定
 
-現在用選項 B：開工前先讀那一區既有的匯出、呼叫端與共用工具，新增 helper、型別、常數或相依套件時，在 commit body 或 PR 寫明搜過什麼。規則本體見 [agent-rules.mdx 的 R1](../agent-rules.mdx#r1-先搜尋再新增)。
+現在用選項 B：開工前先讀那一區既有的匯出、呼叫端與共用工具，新增 helper、型別、常數或相依套件時，在 commit body 或 PR 寫明搜過什麼。規則本體見 [agent-rules.mdx 的 R1](../rules/agent-rules.mdx#r1-先搜尋再新增)。
 
 ### 後果
 
@@ -62,10 +62,10 @@ agent 常在已經有同樣功能的地方再寫一份 helper、型別或元件�
 
 | 限制 | 對選擇的影響 |
 | :--- | :--- |
-| [R3 最小變更](../agent-rules.mdx#r3-最小變更)：每一行改動都要追得到請求 | 修既有實作要有清楚的界線，不能變成順手重構 |
+| [R3 最小變更](../rules/agent-rules.mdx#r3-最小變更)：每一行改動都要追得到請求 | 修既有實作要有清楚的界線，不能變成順手重構 |
 | 一張 PR 只有一個目的（`AGENTS.md` §Pull Requests） | 修正要和這次的目的同一件事，不能另起一件 |
 | 在錯誤實作上疊規則或繞道，規則和繞道只會越來越多 | 只提出來、不修，錯誤會被新程式依賴得更深 |
-| [R6 範圍鎖定](../agent-rules.mdx#r6-範圍鎖定後不得以-yagni-刪驗收條件)：已承諾的驗收條件不能縮 | 修正只能加，不能拿來當刪驗收條件的理由 |
+| [R6 範圍鎖定](../rules/agent-rules.mdx#r6-範圍鎖定後不得以-yagni-刪驗收條件)：已承諾的驗收條件不能縮 | 修正只能加，不能拿來當刪驗收條件的理由 |
 
 ### 考慮過的選項
 
@@ -78,7 +78,7 @@ agent 常在已經有同樣功能的地方再寫一份 helper、型別或元件�
 
 ### 決定
 
-這次要改的行為所呼叫、修改或取代的既有實作如果是錯的，就在同一張 PR 直接修，不加繞道、不另加規則補救，並在 PR 寫明修了什麼、為什麼是錯的；碰不到的地方照 R3，只提出來、另開 issue。規則本體見 `AGENTS.md` 的 Required Behaviors，落地說明見 [agent-rules.mdx 的 R3](../agent-rules.mdx#r3-最小變更)。
+這次要改的行為所呼叫、修改或取代的既有實作如果是錯的，就在同一張 PR 直接修，不加繞道、不另加規則補救，並在 PR 寫明修了什麼、為什麼是錯的；碰不到的地方照 R3，只提出來、另開 issue。規則本體見 `AGENTS.md` 的 Required Behaviors，落地說明見 [agent-rules.mdx 的 R3](../rules/agent-rules.mdx#r3-最小變更)。
 
 ### 後果
 
@@ -101,7 +101,7 @@ agent 常在已經有同樣功能的地方再寫一份 helper、型別或元件�
 
 | 決定 | 來源 |
 | :--- | :--- |
-| D1 | 規則本身沿用 [agent-rules.mdx 的 R1](../agent-rules.mdx#r1-先搜尋再新增)（來源見那份的附錄）；選項 C、D 來自一個參考專案的做法（元件索引加查詢工具、開分支時強制搜尋），該專案未公開 |
+| D1 | 規則本身沿用 [agent-rules.mdx 的 R1](../rules/agent-rules.mdx#r1-先搜尋再新增)（來源見那份的附錄）；選項 C、D 來自一個參考專案的做法（元件索引加查詢工具、開分支時強制搜尋），該專案未公開 |
 | D2 | 同一個參考專案「錯的實作直接修，不疊規則」的做法；本 repo 加上「限這次改動會碰到的程式路徑」的界線 |
 | — | 個人 repo ADR-017（三層 agent 架構）與 ADR-033（OpenSpec 流程）談的是角色分工與流程，不是這兩個決定；它們在本 repo 已被取代，見 [architecture.mdx 的 §ADR 效力總表](../architecture.mdx#adr-效力總表) |
 

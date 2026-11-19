@@ -7,7 +7,7 @@ tags: [adr, deployment, operations, audit, ci]
 # ADR-008 部署與維運
 
 這份 ADR 管系統怎麼部署與運作、出錯時看什麼、AI 與使用者行為怎麼留下紀錄、個資怎麼匿名化，以及 CI 怎麼掃安全問題。認證與授權不在這裡，見 [ADR-004](004-auth-and-security.mdx)；資料庫與背景工作的選型見 [ADR-003](003-backend-architecture.mdx)；測試分層見 [ADR-007](007-testing-strategy.mdx)。
-規則本體在 `AGENTS.md`、[security-agent-rules.mdx 的 S9](../security-agent-rules.mdx#s9-稽核脫敏與保留) 與 [backend-agent-rules.mdx 的 B8](../backend-agent-rules.mdx#b8-刪除軟刪除與匿名化)，落地的做法在 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)與 [§稽核與可追溯](../architecture.mdx#稽核與可追溯)，本文只寫為什麼；衝突時的優先序見 [ADR 索引](index.mdx#衝突時以誰為準)。
+規則本體在 `AGENTS.md`、[security-agent-rules.mdx 的 S9](../rules/security-agent-rules.mdx#s9-稽核脫敏與保留) 與 [backend-agent-rules.mdx 的 B8](../rules/backend-agent-rules.mdx#b8-刪除軟刪除與匿名化)，落地的做法在 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)與 [§稽核與可追溯](../architecture.mdx#稽核與可追溯)，本文只寫為什麼；衝突時的優先序見 [ADR 索引](index.mdx#衝突時以誰為準)。
 
 ## D1 Compose 加 Nginx 當 runtime，Cloudflare 可選
 
@@ -35,7 +35,7 @@ tags: [adr, deployment, operations, audit, ci]
 
 ### 決定
 
-Compose 是預設 runtime，Nginx 是唯一公開入口；有 Cloudflare 時用它當 DNS、CDN 與 TLS 邊緣，Nginx 仍要擋安全標頭、做路由並隔離內部服務。每個環境怎麼起、CI 怎麼起服務見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)，分支與映像推進見 [commit-and-release.md](../commit-and-release.md)。
+Compose 是預設 runtime，Nginx 是唯一公開入口；有 Cloudflare 時用它當 DNS、CDN 與 TLS 邊緣，Nginx 仍要擋安全標頭、做路由並隔離內部服務。每個環境怎麼起、CI 怎麼起服務見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)，分支與映像推進見 [commit-and-release.md](../workflow/commit-and-release.md)。
 
 ### 後果
 
@@ -238,7 +238,7 @@ AI 輔助流程記在只新增、不更新也不刪除的 `ai_runs` 與其生命
 
 ### 決定
 
-用單一只新增的 `audit_events` 表：一般 service 寫入只做 insert，update 與 delete 在兩層資料庫都拒絕；由 service 層與領域異動在同一個交易內寫入（見 [backend-agent-rules.mdx 的 B4](../backend-agent-rules.mdx#b4-交易的擁有層)）；`action` 與 `target_type` 由註冊表驗證；非人的行為 actor 為 null、角色為 `system`；`payload_summary` 只放去識別化的內容，脫敏規則見 [security-agent-rules.mdx 的 S9](../security-agent-rules.mdx#s9-稽核脫敏與保留)。表名 `audit_events` 是單數、模組前綴命名慣例的明確例外。欄位與保存見 [architecture.mdx 的 §稽核與可追溯](../architecture.mdx#稽核與可追溯)。
+用單一只新增的 `audit_events` 表：一般 service 寫入只做 insert，update 與 delete 在兩層資料庫都拒絕；由 service 層與領域異動在同一個交易內寫入（見 [backend-agent-rules.mdx 的 B4](../rules/backend-agent-rules.mdx#b4-交易的擁有層)）；`action` 與 `target_type` 由註冊表驗證；非人的行為 actor 為 null、角色為 `system`；`payload_summary` 只放去識別化的內容，脫敏規則見 [security-agent-rules.mdx 的 S9](../rules/security-agent-rules.mdx#s9-稽核脫敏與保留)。表名 `audit_events` 是單數、模組前綴命名慣例的明確例外。欄位與保存見 [architecture.mdx 的 §稽核與可追溯](../architecture.mdx#稽核與可追溯)。
 
 ### 後果
 
@@ -276,11 +276,11 @@ AI 輔助流程記在只新增、不更新也不刪除的 `ai_runs` 與其生命
 | A 就地匿名化同一列 | 來源記錄：稽核行為人、session、成員身分、歷史與 gold 追溯都保持完整 | 見後果的變困難 | 採用 |
 | B 把 FK 改指向共用墓碑帳號（推論） | 來源沒有記錄 | 來源的決定寫明不採用；理由沒有記錄 | 不採用 |
 | C 直接刪除使用者列（推論） | 來源沒有記錄 | 來源記錄：只新增與 RESTRICT 的表使一般刪除做不到，且 gold 追溯要保存 | 不採用 |
-| D 所有 entity 一律軟刪除 | 來源沒有記錄 | [backend-agent-rules.mdx 的 B8](../backend-agent-rules.mdx#b8-刪除軟刪除與匿名化)記錄不把它當預設 | 不採用 |
+| D 所有 entity 一律軟刪除 | 來源沒有記錄 | [backend-agent-rules.mdx 的 B8](../rules/backend-agent-rules.mdx#b8-刪除軟刪除與匿名化)記錄不把它當預設 | 不採用 |
 
 ### 決定
 
-使用者的刪除請求就地匿名化同一列，不把 FK 指向共用墓碑帳號；稽核事件至少保留一個曆年、不自動刪除，事件列永遠不刪，過了最短保留期後只能把 PII 欄位墓碑化；帶答案的歷史 JSON 跟著它所屬的資料集版本或 run 保存。規則見 [backend-agent-rules.mdx 的 B8](../backend-agent-rules.mdx#b8-刪除軟刪除與匿名化)與 [security-agent-rules.mdx 的 S9](../security-agent-rules.mdx#s9-稽核脫敏與保留)。
+使用者的刪除請求就地匿名化同一列，不把 FK 指向共用墓碑帳號；稽核事件至少保留一個曆年、不自動刪除，事件列永遠不刪，過了最短保留期後只能把 PII 欄位墓碑化；帶答案的歷史 JSON 跟著它所屬的資料集版本或 run 保存。規則見 [backend-agent-rules.mdx 的 B8](../rules/backend-agent-rules.mdx#b8-刪除軟刪除與匿名化)與 [security-agent-rules.mdx 的 S9](../rules/security-agent-rules.mdx#s9-稽核脫敏與保留)。
 
 ### 後果
 
@@ -321,7 +321,7 @@ AI 輔助流程記在只新增、不更新也不刪除的 `ai_runs` 與其生命
 
 ### 決定
 
-CI 先做相依套件掃描：後端 `uv run pip-audit --fail-on high`、前端 `pnpm audit --prod --audit-level high`，兩端門檻都是 high；Semgrep 等有程式再接，DAST 與 API fuzzing 先不做。做法與 Semgrep 的最低規則見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)，相依套件警示的升級邊界見 [dependency-policy.mdx](../dependency-policy.mdx)。
+CI 先做相依套件掃描：後端 `uv run pip-audit --fail-on high`、前端 `pnpm audit --prod --audit-level high`，兩端門檻都是 high；Semgrep 等有程式再接，DAST 與 API fuzzing 先不做。做法與 Semgrep 的最低規則見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)，相依套件警示的升級邊界見 [dependency-policy.mdx](../workflow/dependency-policy.mdx)。
 
 ### 後果
 
@@ -347,14 +347,14 @@ CI 先做相依套件掃描：後端 `uv run pip-audit --fail-on high`、前端 
 
 | 決定 | 來源 |
 | :--- | :--- |
-| D1 | 個人 repo ADR-008（Context、Candidates、Consequences）與 ADR-023（Candidates、Cloudflare 的角色、Consequences）。選項 A 的好處取自兩份的 Decision；選項 B 至 F 的好處沒有記錄的，已在表內標明。「單人研究系統的 MVP 階段」「Demo Paper 一個指令啟動」「單人開發、沒有 Kubernetes 經驗」都依賴本 repo 沒有確認的前提（研究原型、論文與 demo）；本 repo 是否同樣認定，來源沒有記錄。ADR-023 的其餘內容本 repo 不採用：Cloudflare 的 Full (strict) TLS 規則與禁用 Flexible（本 repo 沒有核對，見下方備註）、地端伺服器計畫與主機命名、staging 與 production 的政策（改由 [commit-and-release.md](../commit-and-release.md) 的三分支規劃管）、Nginx 路由契約、secrets 清單、以 image tag 回滾、延後的決定。本節的重新討論條件是推論，來源沒有記錄 |
+| D1 | 個人 repo ADR-008（Context、Candidates、Consequences）與 ADR-023（Candidates、Cloudflare 的角色、Consequences）。選項 A 的好處取自兩份的 Decision；選項 B 至 F 的好處沒有記錄的，已在表內標明。「單人研究系統的 MVP 階段」「Demo Paper 一個指令啟動」「單人開發、沒有 Kubernetes 經驗」都依賴本 repo 沒有確認的前提（研究原型、論文與 demo）；本 repo 是否同樣認定，來源沒有記錄。ADR-023 的其餘內容本 repo 不採用：Cloudflare 的 Full (strict) TLS 規則與禁用 Flexible（本 repo 沒有核對，見下方備註）、地端伺服器計畫與主機命名、staging 與 production 的政策（改由 [commit-and-release.md](../workflow/commit-and-release.md) 的三分支規劃管）、Nginx 路由契約、secrets 清單、以 image tag 回滾、延後的決定。本節的重新討論條件是推論，來源沒有記錄 |
 | D2 | 個人 repo ADR-008 的 Image Strategy。來源只記錄共用 image 的理由，沒有把另寫 Dockerfile 列為選項；選項 B 是推論。NLP 套件要宣告在同一份 `pyproject.toml` 出自 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務)。本節的重新討論條件是推論，來源沒有記錄 |
 | D3 | 個人 repo ADR-013（Candidates、Rejected、Consequences）。來源沒有降級路徑；降級路徑出自維護者裁定（#105 第 4 列，裁定記錄的理由是與 Google SSO 的可選整合形狀一致，並要求明寫 Lite 層 log 視為敏感，在規格與畫面讓管理員知道信沒有寄出），畫面條文出自規格 06-01 的 Q9 至 Q11。選項 B 的好處只記錄了「走 SMTP relay」。本節的重新討論條件中，免費額度取自來源，Lite 層 log 那一條是推論，來源沒有記錄 |
 | D4 | 個人 repo ADR-018（Candidates Evaluated 與各項的 rejected 理由）、ADR-020（Candidates Evaluated 與各項的 rejected 理由）、維護者裁定（#105 第 6 列：`ai_runs` 不是運維工具而是研究可追溯性；代價是出錯時只能看 log、沒有告警），PRD 的定位出自 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)。兩份來源本身是 Accepted，本 repo 本期不做它們。ADR-018 與 ADR-020 的儀表板、告警範圍、標籤隱私規則、Sentry 的脫敏與 source map 規則本 repo 不採用，因為本期不做。選項 F 的好處與維護者裁定的代價出自上述兩處。本節的重新討論條件中，第一條出自 PRD 的定位、第二條是推論，來源沒有記錄 |
 | D5 | 個人 repo ADR-019（Design Options Evaluated、Decision、Consequences）。分界出自 [architecture.mdx 的 §稽核與可追溯](../architecture.mdx#稽核與可追溯)。來源的資料模型把 `ai_runs` 列寫成有 `status` 與 `completed_at`，與本 repo 的「只新增」有出入，見[待決](#待決)第 2 列。來源的事件清單依賴 ADR-017 的 Planner、Generator、Evaluator 分層，ADR-017 在本 repo 的效力已改連到 [ADR-002 的 D4](002-development-workflow.mdx#d4-規劃實作審查與驗收由不同角色負責)，本 repo 不採用該事件清單；來源的角色存取表用的是個人 repo 的角色名稱，本 repo 不採用；快照的儲存後端在來源是延後的決定，本 repo 沒有核對。本節的重新討論條件是推論，來源沒有記錄 |
-| D6 | 個人 repo ADR-032（Options、Decision、Consequences）。同交易寫入對應 [backend-agent-rules.mdx 的 B4](../backend-agent-rules.mdx#b4-交易的擁有層)；至少保留 1 個曆年出自規格 06-02。選項 A、B 的好處沒有記錄；選項 C 的好處取自來源的選擇理由。來源的存取角色（個人 repo 的角色名稱）、事件目錄、索引、候選 FK、系統行為人的 CHECK 與原型豁免本 repo 不採用，由資料表字典與規格管。本節的重新討論條件是推論，來源沒有記錄 |
+| D6 | 個人 repo ADR-032（Options、Decision、Consequences）。同交易寫入對應 [backend-agent-rules.mdx 的 B4](../rules/backend-agent-rules.mdx#b4-交易的擁有層)；至少保留 1 個曆年出自規格 06-02。選項 A、B 的好處沒有記錄；選項 C 的好處取自來源的選擇理由。來源的存取角色（個人 repo 的角色名稱）、事件目錄、索引、候選 FK、系統行為人的 CHECK 與原型豁免本 repo 不採用，由資料表字典與規格管。本節的重新討論條件是推論，來源沒有記錄 |
 | D7 | 個人 repo ADR-038 的 Context 與 Decision，以及 ADR-032 的保留規則。來源沒有列出選項；選項 B、C 是從 Context 與 Decision 推論（B 的理由沒有記錄），選項 D 出自 B8。ADR-038 的下列內容本 repo 不採用，由規格與資料設計管：session 與 refresh token 的清除、30 天匯出檔（規格 03-task-detail）、原始檔的 RESTRICT（規格 05-03）、以特權 migration 角色做匿名化的緊急路徑（個人 repo ADR-024）。來源的四個 TBD（個人 repo 追蹤的 issue）見[待決](#待決)第 3 至 6 列。本節的重新討論條件是推論，來源沒有記錄 |
-| D8 | 個人 repo ADR-028（Alternatives、Decision、Consequences）。「論文 demo、不對網際網路開放」依賴本 repo 沒有確認的前提；來源記錄 DAST 在系統對網際網路開放時重新討論，API fuzzing 在 OpenAPI schema 穩定後重新討論。選項 F 的歸屬出自來源（由測試 ADR 負責）。Dependabot 的邊界在 [dependency-policy.mdx](../dependency-policy.mdx)。選項 A 的代價、選項 C 至 E 的好處沒有記錄 |
+| D8 | 個人 repo ADR-028（Alternatives、Decision、Consequences）。「論文 demo、不對網際網路開放」依賴本 repo 沒有確認的前提；來源記錄 DAST 在系統對網際網路開放時重新討論，API fuzzing 在 OpenAPI schema 穩定後重新討論。選項 F 的歸屬出自來源（由測試 ADR 負責）。Dependabot 的邊界在 [dependency-policy.mdx](../workflow/dependency-policy.mdx)。選項 A 的代價、選項 C 至 E 的好處沒有記錄 |
 | — | 個人 repo ADR-026（i18n 兩層）不收：它管前後端的字串邊界，不是部署、維運或稽核；效力總表的連結維持指向 [architecture.mdx 的 §i18n 兩層](../architecture.mdx#i18n-兩層) |
 
 備註：個人 repo ADR-023 要求 Cloudflare 用 Full (strict) TLS、禁用 Flexible，因為 Flexible 會破壞 secure cookie 與轉發協定。本 repo 的 cookie 設定見 [ADR-004 的 D3](004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token)，這條規則沒有被任何本 repo 文件採用，本文只記錄它沒被採用，不自行決定，見[待決](#待決)第 1 列。

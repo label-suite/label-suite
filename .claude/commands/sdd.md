@@ -57,7 +57,7 @@ apply（接續，不停）
 5. Q 全部有決議、P 全部修正之後才產 `specs`、`design`、`tasks`。
 6. 依 `config.yaml` 的 `rules.tasks` 末條：**`tasks` 定稿後先提交規劃產出物，再交 `design-reviewer` 審閱**；它的修訂由 `planner` **另開 commit**。然後**接著進 apply**，不另外問。
 7. apply 依 `operations.apply` 的 guidance 走，由 `acceptance-verifier` 產出 `acceptance.md`；驗收通過後由 `ops` 執行 `/opsx:archive`，**歸檔改動與程式進同一張 PR**，CI 每一個 job 都 completed 且 success、`code-reviewer` 沒有未解決的阻斷意見、PR 可合併 就合併，**不再停下來等人**。
-   判定下到 **job** 層級，不看 run 層級——理由見 [spec-migration.mdx 的合併閘第 3 條](../../docs/development/spec-migration.mdx#pr-的變更範圍)。
+   判定下到 **job** 層級，不看 run 層級——理由見 [spec-migration.mdx 的合併閘第 3 條](../../docs/development/workflow/spec-migration.mdx#pr-的變更範圍)。
 
 ## 什麼時候照樣停下來
 

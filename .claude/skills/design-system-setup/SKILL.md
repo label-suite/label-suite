@@ -184,7 +184,7 @@ design/system/
 - 不導入 shadcn 元件或前端主題；只做對照與差距
 - 不自己回答 `design-gaps.md` 的待決問題
 - 不截圖
-- 產出只進 `design/system/`，屬**設計系統 PR**（見 `docs/development/spec-migration.mdx` §PR 的變更範圍）
+- 產出只進 `design/system/`，屬**設計系統 PR**（見 `docs/development/workflow/spec-migration.mdx` §PR 的變更範圍）
 - 不關閉、不修改 GitHub Issue 本身；要留言先問
 
 ## 輸出風格

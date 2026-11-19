@@ -10,7 +10,7 @@ updatedAt: '2026-11-16'
 # 授權與答案隔離規範
 
 本文說明授權與答案隔離的十條開發規範，由 `AGENTS.md` 的 Agent Rules Index 指過來；`AGENTS.md` 是規則本體，兩邊說法不同時以 `AGENTS.md` 為準，並回報給維護者。
-跨領域的規範在 [agent-rules.mdx](agent-rules.mdx)，後端的在 [backend-agent-rules.mdx](backend-agent-rules.mdx)，技術選型在 [architecture.mdx](architecture.mdx)，這裡不重複。
+跨領域的規範在 [agent-rules.mdx](agent-rules.mdx)，後端的在 [backend-agent-rules.mdx](backend-agent-rules.mdx)，技術選型在 [architecture.mdx](../architecture.mdx)，這裡不重複。
 
 **這份管的是產品不變量，不是 UI 約定。** 每條的「禁止」被違反，影響的是誰能看到什麼資料，不是體驗好不好。
 
@@ -22,7 +22,7 @@ updatedAt: '2026-11-16'
 
 ### S1 身分只來自驗證完成的 session
 
-可接受的身分來源只有 httpOnly cookie；認證 dependency 驗 cookie 裡的 access JWT，其餘來源一概不看。理由見 [ADR-004 的 D1](adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie)。
+可接受的身分來源只有 httpOnly cookie；認證 dependency 驗 cookie 裡的 access JWT，其餘來源一概不看。理由見 [ADR-004 的 D1](../adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie)。
 
 | | |
 | :--- | :--- |
@@ -38,13 +38,13 @@ updatedAt: '2026-11-16'
 
 ### S2 token 不離開 cookie；CSRF 與 CORS 的統一位置
 
-前端不碰 token，CSRF 由單一 middleware 驗綁定 session 的 double-submit token，CORS 來源逐一列出。CSRF 的理由見 [ADR-004 的 D3](adr/004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token)。
+前端不碰 token，CSRF 由單一 middleware 驗綁定 session 的 double-submit token，CORS 來源逐一列出。CSRF 的理由見 [ADR-004 的 D3](../adr/004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token)。
 
 | | |
 | :--- | :--- |
 | **適用路徑** | `backend/app/**` 的 middleware；`frontend/src/**` 全部 |
 | **禁止** | 前端儲存或讀取 token（`localStorage`、`sessionStorage`、非 httpOnly cookie、記憶體 store 都算）；從可修改的 UI state 判斷權限；`allow_origins=["*"]`（`AGENTS.md` 硬性規則 7）；在端點各自處理 CSRF |
-| **正例** | **session cookie** 一律 `httpOnly`、`Secure`、`SameSite=Lax`（CSRF cookie 是唯一例外，見 [architecture.mdx](architecture.mdx) 的 token 表）；請求帶 `credentials: 'include'`；**CSRF 由單一 middleware 驗綁定 session 的 double-submit token**（值是 `HMAC(secret, sid)`、cookie 加 `__Host-` 前綴、前端複製到自訂 header）；CORS 來源逐一列出 |
+| **正例** | **session cookie** 一律 `httpOnly`、`Secure`、`SameSite=Lax`（CSRF cookie 是唯一例外，見 [architecture.mdx](../architecture.mdx) 的 token 表）；請求帶 `credentials: 'include'`；**CSRF 由單一 middleware 驗綁定 session 的 double-submit token**（值是 `HMAC(secret, sid)`、cookie 加 `__Host-` 前綴、前端複製到自訂 header）；CORS 來源逐一列出 |
 | **例外** | CSRF token 那個 cookie **刻意可被 JS 讀取**，那是 double-submit 的設計，不是漏洞；它靠 `__Host-` 前綴與 HMAC 綁定 session 來守住 |
 
 :::note{title="S2 的反例與檢查方式" collapsible}
@@ -55,7 +55,7 @@ updatedAt: '2026-11-16'
 
 ### S3 授權的四段順序
 
-授權依序判定四件事，未知值或缺失一律拒絕，不走「預設允許」。理由見 [ADR-004 的 D2](adr/004-auth-and-security.mdx#d2-授權用的角色每次從資料庫讀)與 [D6](adr/004-auth-and-security.mdx#d6-權限矩陣當授權輸入)。
+授權依序判定四件事，未知值或缺失一律拒絕，不走「預設允許」。理由見 [ADR-004 的 D2](../adr/004-auth-and-security.mdx#d2-授權用的角色每次從資料庫讀)與 [D6](../adr/004-auth-and-security.mdx#d6-權限矩陣當授權輸入)。
 
 | | |
 | :--- | :--- |
@@ -85,7 +85,7 @@ updatedAt: '2026-11-16'
 | **禁止** | 回傳裸 ORM model；前端自己依角色決定要不要藏值；用「前端藏按鈕」代替後端拒絕 |
 | **正例** | 回應 schema **明確 allowlist** 欄位；該遮蔽的由後端標記（例如欄位列在遮蔽清單裡），前端只負責把它渲染成「已遮蔽」 |
 | **例外** | 無 |
-| **session 與快取的失效規則** | PRD §權限矩陣 已定：「停用後該帳號登入狀態失效；角色變更從下一次操作起生效」。落地方式：**帳號停用、系統角色變更、任務成員身分變更時，`credential_version` 加一並撤銷該使用者的 refresh token family**——照 [architecture.mdx](architecture.mdx) 已有的 SSO 綁定做法（同一筆交易內加一並撤銷所有 session）。權限矩陣若要快取，失效鍵是矩陣版本列 |
+| **session 與快取的失效規則** | PRD §權限矩陣 已定：「停用後該帳號登入狀態失效；角色變更從下一次操作起生效」。落地方式：**帳號停用、系統角色變更、任務成員身分變更時，`credential_version` 加一並撤銷該使用者的 refresh token family**——照 [architecture.mdx](../architecture.mdx) 已有的 SSO 綁定做法（同一筆交易內加一並撤銷所有 session）。權限矩陣若要快取，失效鍵是矩陣版本列 |
 
 :::note{title="S4 的反例與檢查方式" collapsible}
 - **反例**：`return task`（ORM 物件直接序列化，將來加一個欄位就外洩）；或前端 `if (role !== 'project_leader') hideField()`——那是體驗，不是授權
@@ -94,7 +94,7 @@ updatedAt: '2026-11-16'
 
 ### S5 答案隔離的覆蓋面
 
-標記員能到達的每一個出口，都不得出現標準答案或測試集辨識資訊；這是 `AGENTS.md` 硬性規則 6。理由見 [ADR-006 的 D4](adr/006-task-config-and-answer-isolation.mdx#d4-答案隔離涵蓋標記員能到達的每個出口)。
+標記員能到達的每一個出口，都不得出現標準答案或測試集辨識資訊；這是 `AGENTS.md` 硬性規則 6。理由見 [ADR-006 的 D4](../adr/006-task-config-and-answer-isolation.mdx#d4-答案隔離涵蓋標記員能到達的每個出口)。
 
 | | |
 | :--- | :--- |
@@ -110,7 +110,7 @@ updatedAt: '2026-11-16'
 
 ### S6 受控答案表與 worker 的讀取邊界
 
-答案存在獨立、受存取控制的資料表，只在 worker 行程內讀取，不離開 worker。理由見 [ADR-006 的 D4](adr/006-task-config-and-answer-isolation.mdx#d4-答案隔離涵蓋標記員能到達的每個出口)。
+答案存在獨立、受存取控制的資料表，只在 worker 行程內讀取，不離開 worker。理由見 [ADR-006 的 D4](../adr/006-task-config-and-answer-isolation.mdx#d4-答案隔離涵蓋標記員能到達的每個出口)。
 
 | | |
 | :--- | :--- |
@@ -126,7 +126,7 @@ updatedAt: '2026-11-16'
 
 ### S7 設定驅動的界線
 
-新增一種研究任務只改設定、不改核心程式；任務類型不寫死在核心路徑。理由見 [ADR-006 的 D1](adr/006-task-config-and-answer-isolation.mdx#d1-任務類型由設定決定核心不寫任務專屬邏輯)與 [D2](adr/006-task-config-and-answer-isolation.mdx#d2-任務設定用-input_type-加-outputs-組合)。
+新增一種研究任務只改設定、不改核心程式；任務類型不寫死在核心路徑。理由見 [ADR-006 的 D1](../adr/006-task-config-and-answer-isolation.mdx#d1-任務類型由設定決定核心不寫任務專屬邏輯)與 [D2](../adr/006-task-config-and-answer-isolation.mdx#d2-任務設定用-input_type-加-outputs-組合)。
 
 | | |
 | :--- | :--- |
@@ -142,7 +142,7 @@ updatedAt: '2026-11-16'
 
 ### S8 設定的驗證與 span 的表示
 
-任務設定是使用者可控輸入，必須經 schema 驗證；span 一律用半開字元 offset，理由見 [ADR-006 的 D3](adr/006-task-config-and-answer-isolation.mdx#d3-序列標記用半開字元-offset-span)。
+任務設定是使用者可控輸入，必須經 schema 驗證；span 一律用半開字元 offset，理由見 [ADR-006 的 D3](../adr/006-task-config-and-answer-isolation.mdx#d3-序列標記用半開字元-offset-span)。
 
 | | |
 | :--- | :--- |
@@ -213,14 +213,14 @@ updatedAt: '2026-11-16'
 | 規範 | 來源 |
 | :--- | :--- |
 | S1 | ADR-021（JWT 加 refresh token，httpOnly cookie，沿用）；可接受來源只有 cookie 的決定見[決策紀錄](#決策紀錄)。Google SSO 見 ADR-035。dev-token 的禁止為本文明文要求，對應 scaffold `auth-oidc.md` 的 `/dev/auth/token`，**不採用** |
-| S2 | [architecture.mdx](architecture.mdx) 的 token 表與 CSRF 的決定（見[決策紀錄](#決策紀錄)）。原始 repo `frontend.md` 的「**Zustand for auth token**」**不採用**——與 httpOnly 根本不相容。scaffold `auth-oidc.md` 的「token 只存在記憶體、由 `custom-fetch` 附加 Bearer」同樣**不採用**（那是 Bearer 架構）。`allow_origins=["*"]` 已列在 ADR-028 的 Semgrep 禁令 |
-| S3 | ADR-037（沿用）與 [architecture.mdx](architecture.mdx) §認證與授權 的四段敘述；ADR-021 的「任務角色不放進 JWT」。scaffold `auth-oidc.md` 的「角色只決定 UI 顯示、不作為資料能否取得的依據」**沿用**——那正是 `frontend.md` 寫錯那一條的正確版本 |
+| S2 | [architecture.mdx](../architecture.mdx) 的 token 表與 CSRF 的決定（見[決策紀錄](#決策紀錄)）。原始 repo `frontend.md` 的「**Zustand for auth token**」**不採用**——與 httpOnly 根本不相容。scaffold `auth-oidc.md` 的「token 只存在記憶體、由 `custom-fetch` 附加 Bearer」同樣**不採用**（那是 Bearer 架構）。`allow_origins=["*"]` 已列在 ADR-028 的 Semgrep 禁令 |
+| S3 | ADR-037（沿用）與 [architecture.mdx](../architecture.mdx) §認證與授權 的四段敘述；ADR-021 的「任務角色不放進 JWT」。scaffold `auth-oidc.md` 的「角色只決定 UI 顯示、不作為資料能否取得的依據」**沿用**——那正是 `frontend.md` 寫錯那一條的正確版本 |
 | S4 | 原始 repo `api.md` 的「Response schemas must be explicit — never return raw ORM models」**沿用**；scaffold `auth-oidc.md` 的「欄位列在 `maskedFields` 時顯示『已遮蔽』，不自己依角色判斷」**沿用原則** |
-| S5 | `AGENTS.md` 硬性規則 6；[architecture.mdx §測試集答案不外露](architecture.mdx#測試集答案不外露) 的四道；規格 03-02 與 04-01 已把它寫成卡控與 Scenario。覆蓋面那一串為原始要求，照收 |
-| S6 | ADR-005／ADR-007；[architecture.mdx](architecture.mdx) 的隔離四道表（資料庫列與 Celery worker 列）。跨角色與跨任務的負向驗收為原始要求 |
-| S7 | `AGENTS.md` 硬性規則 5；ADR-010（沿用原則，config schema 已由 ADR-029 取代）；[architecture.mdx](architecture.mdx) §任務設定 |
+| S5 | `AGENTS.md` 硬性規則 6；[architecture.mdx §測試集答案不外露](../architecture.mdx#測試集答案不外露) 的四道；規格 03-02 與 04-01 已把它寫成卡控與 Scenario。覆蓋面那一串為原始要求，照收 |
+| S6 | ADR-005／ADR-007；[architecture.mdx](../architecture.mdx) 的隔離四道表（資料庫列與 Celery worker 列）。跨角色與跨任務的負向驗收為原始要求 |
+| S7 | `AGENTS.md` 硬性規則 5；ADR-010（沿用原則，config schema 已由 ADR-029 取代）；[architecture.mdx](../architecture.mdx) §任務設定 |
 | S8 | ADR-029（config schema）；ADR-031 已 Superseded，明寫「改成半開字元 offset span」，所以回退 token 對齊是回到被取代的模型；`AGENTS.md` 硬性規則 9（輸入驗證） |
-| S9 | ADR-038（沿用）；[architecture.mdx](architecture.mdx) 的保留政策與「事件列永遠不刪，過了最短保留期後只能把 PII 欄位墓碑化」。「輸入驗證不任意改寫研究原文以免破壞 span」為原始明文要求，與 S8 的半開 offset 相扣 |
+| S9 | ADR-038（沿用）；[architecture.mdx](../architecture.mdx) 的保留政策與「事件列永遠不刪，過了最短保留期後只能把 PII 欄位墓碑化」。「輸入驗證不任意改寫研究原文以免破壞 span」為原始明文要求，與 S8 的半開 offset 相扣 |
 | S10 | 八種情形為原始要求，照收。scaffold `auth-oidc.md` 的「每個端點涵蓋無 token、viewer、admin 三種」**沿用原則但不夠**——本專案的角色多一層（系統角色加任務成員身分），所以矩陣要寬得多 |
 
 ### 原始 repo（`singyichen/label-suite`）
@@ -230,7 +230,7 @@ updatedAt: '2026-11-16'
 | `api.md` §Auth & Permissions 的「受保護路由都要宣告 `current_user` dependency」 | **沿用** | 成為 S1 |
 | `api.md` 的「權限檢查放 route handler 或專屬 `permissions.py`，不放 CRUD helper」 | **沿用原則** | 與 S3／S4 同向（授權在後端、不在資料層）；具體檔案位置依模組內分層 |
 | `api.md` 的「任務範圍的操作要先驗 `task_membership`」 | **沿用** | 成為 S3 第 (2) 段 |
-| `api.md` 的「`403` vs `404`：對無權限者隱藏存在時偏好 `404`」 | **沿用** | 與 [architecture.mdx](architecture.mdx)「被隱藏的任務要在不洩漏它存在的前提下回應」同向 |
+| `api.md` 的「`403` vs `404`：對無權限者隱藏存在時偏好 `404`」 | **沿用** | 與 [architecture.mdx](../architecture.mdx)「被隱藏的任務要在不洩漏它存在的前提下回應」同向 |
 | `api.md` 的「Response schemas must be explicit，不回裸 ORM model」 | **沿用（與 api-agent-rules.mdx 分工）** | 同一條服務兩個目的：**本文取它的安全面**（allowlist 防欄位外洩）成為 S4；**合約面**（`response_model=` 每條路由必填、Pydantic 驗證）見 [api-agent-rules.mdx](api-agent-rules.mdx)，[backend-agent-rules.mdx](backend-agent-rules.mdx) 也是這樣標的 |
 | `frontend.md` §State management 的「Zustand 存 auth token」 | **不採用** | 見上方「刻意不採用的來源條文」 |
 | `frontend.md` §Role model 的「System role（JWT）」當授權依據 | **不採用** | 見上方「刻意不採用的來源條文」 |
@@ -245,7 +245,7 @@ updatedAt: '2026-11-16'
 | `auth-oidc.md` §後端鐵律 1 的「只信任驗證過的 token」 | **沿用** | 成為 S1 的核心 |
 | `auth-oidc.md` §後端鐵律 的「全域 guard 預設都要登入，不需登入的明確標註」 | **沿用原則** | default-deny。本專案的落點是認證 dependency 加 S3 的四段 |
 | `auth-oidc.md` §後端鐵律 3 的「權限一定在後端擋、guard 統一判斷、前端藏按鈕只是 UX」 | **沿用** | 成為 S4 |
-| `auth-oidc.md` §後端鐵律 4 的後端那一半（service 依角色組回應 DTO、被遮蔽欄位回 `null`、欄位保留） | **沿用原則，但位置不同** | 遮蔽的決定在後端這一點沿用；它把遮蔽放在 service，而 [architecture.mdx](architecture.mdx) 的分層表把回應組裝放在 Router——**本專案依分層表** |
+| `auth-oidc.md` §後端鐵律 4 的後端那一半（service 依角色組回應 DTO、被遮蔽欄位回 `null`、欄位保留） | **沿用原則，但位置不同** | 遮蔽的決定在後端這一點沿用；它把遮蔽放在 service，而 [architecture.mdx](../architecture.mdx) 的分層表把回應組裝放在 Router——**本專案依分層表** |
 | `auth-oidc.md` §前端鐵律 的「401 清 session 導回登入、403 顯示無權限且不重試」 | **沿用原則** | 落點在 [frontend-agent-rules.mdx](frontend-agent-rules.mdx)，本文只記對照 |
 | `auth-oidc.md` §測試要求 的「遮蔽欄位以 Decision Table 驗證」 | **沿用** | S4 的檢查方式用的就是它 |
 | `auth-oidc.md` 的「401 與 403 分清楚」 | **沿用** | 但 `403` vs `404` 的取捨依本 repo（見上） |
@@ -263,13 +263,13 @@ updatedAt: '2026-11-16'
 
 | 日期 | 決策 | 取代了什麼 | 來源 |
 | :--- | :--- | :--- | :--- |
-| 2026-11-10 | 可接受的身分來源只有 httpOnly cookie（S1），並已更新 [architecture.mdx](architecture.mdx) | 原文那句自相矛盾的敘述（筆誤） | [#107](https://github.com/label-suite/label-suite/issues/107) |
-| 2026-11-10 | CSRF 採綁定 session 的 double-submit token 加 `__Host-` 前綴，由單一 middleware 驗（S2），並已更新 [architecture.mdx](architecture.mdx) | 初版只比對 cookie 與 header 的 naive 版本（擋不住子網域覆寫 cookie）；初版「開 CORS 例外也失守」的說法對 SameSite 是錯的，SameSite 由瀏覽器強制、與伺服器 CORS 無關 | [#107](https://github.com/label-suite/label-suite/issues/107) |
+| 2026-11-10 | 可接受的身分來源只有 httpOnly cookie（S1），並已更新 [architecture.mdx](../architecture.mdx) | 原文那句自相矛盾的敘述（筆誤） | [#107](https://github.com/label-suite/label-suite/issues/107) |
+| 2026-11-10 | CSRF 採綁定 session 的 double-submit token 加 `__Host-` 前綴，由單一 middleware 驗（S2），並已更新 [architecture.mdx](../architecture.mdx) | 初版只比對 cookie 與 header 的 naive 版本（擋不住子網域覆寫 cookie）；初版「開 CORS 例外也失守」的說法對 SameSite 是錯的，SameSite 由瀏覽器強制、與伺服器 CORS 無關 | [#107](https://github.com/label-suite/label-suite/issues/107) |
 | 2026-11-10 | S4 補 session 與快取的失效規則（`credential_version` 加一並撤銷 refresh token family；矩陣快取以版本列為失效鍵） | 初版沒引用 PRD §權限矩陣 已有的「停用後登入狀態失效；角色變更從下一次操作起生效」 | [#107](https://github.com/label-suite/label-suite/issues/107) |
 | 2026-11-10 | S3 的快取規則收斂：只有系統角色與任務成員身分不得快取；矩陣列、cell 與版本列可快取；JWT 的 `role` 會 stale 最多 15 分鐘 | 初版把「沒有規則」寫成「不需要規則」，並漏了矩陣本身是快取對象與 `role` 的 stale | [#107](https://github.com/label-suite/label-suite/issues/107) |
 | 2026-11-10 | S9 補三個反例（append-only、脫敏、保留規則），連同原有的改寫原文共四個 | 初版只有一個反例 | [#107](https://github.com/label-suite/label-suite/issues/107) |
 | 2026-11-10 | scaffold §後端鐵律 2「角色只從 token 取」改列不採用 | 初版既未沿用也未排除，但它與 S3 正面衝突 | [#107](https://github.com/label-suite/label-suite/issues/107) |
 | 2026-11-10 | starter-kit 來源不存在或已不適用，不做對照；另實查 `trendlink` 組織 24 個 repo 的 tree、個人帳號與本機，找不到該檔（查核日 2026-11-10） | —（工作項點名的 starter-kit `backend/security.md`） | [#105](https://github.com/label-suite/label-suite/issues/105)、[#106](https://github.com/label-suite/label-suite/issues/106) |
 | 2026-11-10 | 初版：十條規範、六條刻意不採用的來源條文、原始 repo 與 scaffold 的逐條對照 | — | [#107](https://github.com/label-suite/label-suite/issues/107) |
-| 2026-11-19 | S1 至 S4 的認證與授權理由寫進 [ADR-004](adr/004-auth-and-security.mdx)，本文只留規範與檢查方式 | —（理由原本只在個人 repo 的 ADR-021、035、037 與 #107 的留言） | [#450](https://github.com/label-suite/label-suite/issues/450) |
-| 2026-11-19 | S5 至 S8 的答案隔離與任務設定理由寫進 [ADR-006](adr/006-task-config-and-answer-isolation.mdx)，本文只留規範與檢查方式 | —（理由原本只在個人 repo 的 ADR-005、007、010、029、031 與 architecture.mdx） | [#452](https://github.com/label-suite/label-suite/issues/452) |
+| 2026-11-19 | S1 至 S4 的認證與授權理由寫進 [ADR-004](../adr/004-auth-and-security.mdx)，本文只留規範與檢查方式 | —（理由原本只在個人 repo 的 ADR-021、035、037 與 #107 的留言） | [#450](https://github.com/label-suite/label-suite/issues/450) |
+| 2026-11-19 | S5 至 S8 的答案隔離與任務設定理由寫進 [ADR-006](../adr/006-task-config-and-answer-isolation.mdx)，本文只留規範與檢查方式 | —（理由原本只在個人 repo 的 ADR-005、007、010、029、031 與 architecture.mdx） | [#452](https://github.com/label-suite/label-suite/issues/452) |

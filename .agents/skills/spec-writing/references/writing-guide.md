@@ -419,7 +419,7 @@ Scenario 名稱要唯一，後續 OpenSpec 的 specs 會沿用。
 
 ### 標題吃不吃 markdown，兩種寫法不一樣
 
-`collapsible` 與 `open` 的語法見 [notecraft-writing.md](../../../../docs/development/notecraft-writing.md)。標題有兩種寫法，行為不同，**都已在本專案的 build 上驗過**（2026-11-11）：
+`collapsible` 與 `open` 的語法見 [notecraft-writing.md](../../../../docs/development/notecraft/notecraft-writing.md)。標題有兩種寫法，行為不同，**都已在本專案的 build 上驗過**（2026-11-11）：
 
 | 寫法 | markdown | 半形 `"` |
 | :--- | :--- | :--- |
@@ -432,7 +432,7 @@ Scenario 名稱要唯一，後續 OpenSpec 的 specs 會沿用。
 
 ## 引用與連結
 
-規格裡指到其他段落時，一律寫成可以點擊的連結，讀者不用自己捲動找。語法與錨點規則見 `docs/development/notecraft-writing.md`「內部連結與錨點」。
+規格裡指到其他段落時，一律寫成可以點擊的連結，讀者不用自己捲動找。語法與錨點規則見 `docs/development/notecraft/notecraft-writing.md`「內部連結與錨點」。
 
 | 引用對象 | 寫法 |
 | :--- | :--- |

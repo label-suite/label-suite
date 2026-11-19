@@ -9,7 +9,7 @@ tags: [notecraft, docs]
 專案文件由 NoteCraftApp 呈現：notesDir 是 `docs/`，生成元件放在專案根的 `.notecraft/components/`（不是 `docs/.notecraft/`）。
 NoteCraft 需要 Node 22 以上。預覽 `pnpm docs:serve`（http://127.0.0.1:4330/），驗證 `pnpm exec notecraftapp build docs`；
 只改了 `.notecraft/components/` 的元件時，快取不會察覺，要改跑 `pnpm exec notecraftapp build --rebuild docs`。
-**手動跑 build 之前先停掉 `docs:serve`**：它的 watcher 和手動 build 共用同一個 `.astro/`、沒有跨行程鎖，撞上時其中一個會失敗；判準與細節見 [spec-migration.mdx §建置閘門要重跑確認](./spec-migration.mdx#建置閘門要重跑確認)。
+**手動跑 build 之前先停掉 `docs:serve`**：它的 watcher 和手動 build 共用同一個 `.astro/`、沒有跨行程鎖，撞上時其中一個會失敗；判準與細節見 [spec-migration.mdx §建置閘門要重跑確認](../workflow/spec-migration.mdx#建置閘門要重跑確認)。
 規格檔另跑 `pnpm check:specs`。不在本專案跑 `tsc` 或 `astro build`。
 
 視覺化標記與生成元件的規範見 [notecraft-visualize.md](notecraft-visualize.md)，筆記轉簡報見 [notecraft-present.md](notecraft-present.md)。
@@ -31,7 +31,7 @@ NoteCraft 需要 Node 22 以上。預覽 `pnpm docs:serve`（http://127.0.0.1:43
   ---
   ```
 
-- 圖片與筆記互連都用**相對路徑**：`![說明](../assets/illustrations/x.svg)`、`[另一篇](../specs/00-prd.mdx)`
+- 圖片與筆記互連都用**相對路徑**：`![說明](../assets/illustrations/x.svg)`、`[另一篇](../../specs/00-prd.mdx)`
 - 指到其他段落時用內部連結，不要只寫「見某某章節」讓讀者自己找，寫法見「內部連結與錨點」
 - 不使用 emoji；語意標示用 badge、Admonition 或元件內的 lucide icon
 - 中文語境的冒號用全形「：」：半形冒號緊接文字（如 `風險:需求`）可能被 remark-directive 當成指令

@@ -7,7 +7,7 @@ tags: [adr, auth, security, csrf, oidc]
 # ADR-004 認證與安全
 
 這份 ADR 管使用者怎麼證明身分、身分怎麼在請求之間保持、請求怎麼被授權，以及 Google 登入怎麼接。測試集答案的隔離與任務設定不在這裡，Hard Rule 與落地的做法也不在這裡。
-規則本體在 `AGENTS.md` 與 [security-agent-rules.mdx](../security-agent-rules.mdx)，落地的做法在 [architecture.mdx 的 §認證與授權](../architecture.mdx#認證與授權)，本文只寫為什麼；衝突時的優先序見 [ADR 索引](index.mdx#衝突時以誰為準)。
+規則本體在 `AGENTS.md` 與 [security-agent-rules.mdx](../rules/security-agent-rules.mdx)，落地的做法在 [architecture.mdx 的 §認證與授權](../architecture.mdx#認證與授權)，本文只寫為什麼；衝突時的優先序見 [ADR 索引](index.mdx#衝突時以誰為準)。
 
 ## D1 認證 token 放在 httpOnly cookie
 
@@ -35,7 +35,7 @@ tags: [adr, auth, security, csrf, oidc]
 
 access token 與 refresh token 都放 httpOnly cookie，前端不碰 token；access token 是 15 分鐘的 JWT，refresh token 是 7 天滑動、每次使用輪替、只能用一次的不透明 UUID，可接受的身分來源只有這個 cookie。
 效期的理由是：短效 access token 限制暴露時間，長效 refresh token 維持工作連續，滑動效期在兩者之間取平衡。
-Cookie 屬性、JWT 的欄位與任務角色不放進 JWT，見 [architecture.mdx 的 §認證與授權](../architecture.mdx#認證與授權)；規則本體見 [security-agent-rules.mdx 的 S1](../security-agent-rules.mdx#s1-身分只來自驗證完成的-session) 與 [S2](../security-agent-rules.mdx#s2-token-不離開-cookiecsrf-與-cors-的統一位置)。
+Cookie 屬性、JWT 的欄位與任務角色不放進 JWT，見 [architecture.mdx 的 §認證與授權](../architecture.mdx#認證與授權)；規則本體見 [security-agent-rules.mdx 的 S1](../rules/security-agent-rules.mdx#s1-身分只來自驗證完成的-session) 與 [S2](../rules/security-agent-rules.mdx#s2-token-不離開-cookiecsrf-與-cors-的統一位置)。
 
 ### 後果
 
@@ -81,7 +81,7 @@ Cookie 屬性、JWT 的欄位與任務角色不放進 JWT，見 [architecture.md
 
 後端授權只看每次從資料庫讀到的當前角色、帳號狀態與 `credential_version`，JWT 的 `role` 只供前端顯示；`credential_version` 只管高風險的憑證變更，不取代對當前角色與狀態的讀取。
 停用帳號時一併撤銷該使用者所有的 token family，重新啟用不會讓它們復活。
-規則本體見 [security-agent-rules.mdx 的 S3](../security-agent-rules.mdx#s3-授權的四段順序) 與 [S4](../security-agent-rules.mdx#s4-遮蔽與-allowlist-在後端)，做法見 [architecture.mdx 的 §授權四步](../architecture.mdx#授權四步)。
+規則本體見 [security-agent-rules.mdx 的 S3](../rules/security-agent-rules.mdx#s3-授權的四段順序) 與 [S4](../rules/security-agent-rules.mdx#s4-遮蔽與-allowlist-在後端)，做法見 [architecture.mdx 的 §授權四步](../architecture.mdx#授權四步)。
 
 ### 後果
 
@@ -124,7 +124,7 @@ Cookie 屬性、JWT 的欄位與任務角色不放進 JWT，見 [architecture.md
 ### 決定
 
 每個會改資料的請求都要帶綁定 session 的 double-submit token，由單一 middleware 驗 HMAC，端點不各自處理。
-規則本體見 [security-agent-rules.mdx 的 S2](../security-agent-rules.mdx#s2-token-不離開-cookiecsrf-與-cors-的統一位置)，要素與負向測試見 [architecture.mdx 的 §CSRF](../architecture.mdx#csrf)。
+規則本體見 [security-agent-rules.mdx 的 S2](../rules/security-agent-rules.mdx#s2-token-不離開-cookiecsrf-與-cors-的統一位置)，要素與負向測試見 [architecture.mdx 的 §CSRF](../architecture.mdx#csrf)。
 
 ### 後果
 
@@ -255,7 +255,7 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 
 權限矩陣是有啟用 permission key 的操作的必要授權輸入：依序驗當前登入者、讀角色與成員身分、解析成 key 並要求對應 cell 為 `allowed=true`、最後檢查任務歸屬與狀態、指派與審核者身分、資料集可見性與測試集答案隔離。
 系統角色與任務成員身分每次請求都從資料庫取，不得快取；第一版不快取；若要快取，失效鍵是矩陣版本列，且須先驗證失效協定。
-規則本體見 [security-agent-rules.mdx 的 S3](../security-agent-rules.mdx#s3-授權的四段順序)，四步與被隱藏任務的回應見 [architecture.mdx 的 §授權四步](../architecture.mdx#授權四步)。
+規則本體見 [security-agent-rules.mdx 的 S3](../rules/security-agent-rules.mdx#s3-授權的四段順序)，四步與被隱藏任務的回應見 [architecture.mdx 的 §授權四步](../architecture.mdx#授權四步)。
 
 ### 後果
 
@@ -287,7 +287,7 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 | D3 | [#107 的留言](https://github.com/label-suite/label-suite/issues/107#issuecomment-6762365378)的 CSRF 裁定與四個要素；Origin 與 Referer 檢查出自個人 repo ADR-021 的 Consequences，它沒有記錄這個選項的好處與代價；`SameSite=Lax` 擋不住同站子網域出自 [architecture.mdx 的 §CSRF](../architecture.mdx#csrf)；本節的重新討論條件是推論，來源沒有記錄 |
 | D4 | 個人 repo ADR-035（Context 的限制表、Options Evaluated、Decision、Optional-integration guarantee、Reversal trigger、Consequences）；選項 A、B 的好處沒有記錄 |
 | D5 | 個人 repo ADR-035 的帳號綁定修訂（Account-linking strategy、Consequences）；選項 B、C 沒有記錄好處，C 也沒有記錄代價 |
-| D6 | 個人 repo ADR-037（Context、Decision、Consequences）；來源沒有列出選項，D6 的選項 A、B 是從 Context 的兩種失敗情形推出的；快取規則出自 [security-agent-rules.mdx 的 S3](../security-agent-rules.mdx#s3-授權的四段順序)；本節的重新討論條件是推論，來源沒有記錄 |
+| D6 | 個人 repo ADR-037（Context、Decision、Consequences）；來源沒有列出選項，D6 的選項 A、B 是從 Context 的兩種失敗情形推出的；快取規則出自 [security-agent-rules.mdx 的 S3](../rules/security-agent-rules.mdx#s3-授權的四段順序)；本節的重新討論條件是推論，來源沒有記錄 |
 | — | 個人 repo ADR-021 後來的修訂（token family 的資料表結構、30 秒寬限重發、email 的 Unicode 正規化、session 保留與刪除）、ADR-037 後來的修訂（permission key 的登錄與種子列、拒絕稽核的範圍、仲裁沿用審核 key），不在 [architecture.mdx](../architecture.mdx) 裡，本 ADR 不收；它們屬於資料庫與業務規格，由各自的 change 決定是否採用；個人 repo ADR-021 的另一條規則，`/auth/refresh` 在輪替 refresh token 之前也要檢查 `is_active`，同樣不在 architecture.mdx 裡，追蹤在 [#474](https://github.com/label-suite/label-suite/issues/474) |
 
 ## 待決

@@ -297,7 +297,7 @@ tags: [規格, 搬移, PR, CI]
   **這一條有程序掛勾**（比照下面規則文件那條）：**`plugins.json` 的每一處改動都要在 PR body 列出，並寫明它服務的是同一個目的**。原因是合併閘第 2 條只比對路徑——而這個檔會被工具改寫：`pnpm docs:serve` 在 `/plugins` 停用一個外掛，dev API 就會改寫它頂層的 `disabled` 陣列（`notecraftapp@1.15.0` 的 `src/dev-api/handlers.mjs` `PUT /api/plugins/:id`）。那種改動與 PR 的目的無關，但在機械閘上會無聲通過。
   **`.notecraft/plugins/<id>/`（裝進版控的外掛本體）不算文件 PR**，照本節開頭「相依套件」那個例外處理，**不屬六類**，照 `AGENTS.md` 自己的規則走——比照判例 #147（升級 notecraftapp）。另開一張相依套件 PR、先合併它，再合併用到它的文件 PR；順序反過來會讓 `plugins.json` 指向沒裝的外掛而 build 失敗。判例 #245（`ec1af4f`）就是那張相依套件 PR，比 #246 早 22 分鐘合併。它的範圍是 `.notecraft/plugins/`（外掛本體與 `_types.d.ts`）加上根目錄的 `NOTICE`——**散入版控的第三方程式要同時交代授權**，所以 `NOTICE` 跟著外掛走，不另開一張。
   除了上面這兩條，**不擴及 `.notecraft/` 的其他檔案**：真的碰到別的，照本節開頭那三種例外的方式重新判斷，不要類推。
-- **文件 PR 可以帶著它連帶修到的規則文件**，因為一份給 agent 讀的說明，它的入口本來就在 `AGENTS.md`：新增 `docs/development/` 的說明而同一張 PR 在 `AGENTS.md` 設索引，算文件 PR。判例 #224（#105：`docs/development/agent-rules.mdx` ＋ `AGENTS.md` 的 Agent Rules Index）。
+- **文件 PR 可以帶著它連帶修到的規則文件**，因為一份給 agent 讀的說明，它的入口本來就在 `AGENTS.md`：新增 `docs/development/` 的說明而同一張 PR 在 `AGENTS.md` 設索引，算文件 PR。判例 #224（#105：`docs/development/rules/agent-rules.mdx` ＋ `AGENTS.md` 的 Agent Rules Index）。
   索引與被索引的文件必須同一張 PR 落地，否則合併後索引會指向不存在的檔案。
   **連帶不等於夾帶**，而且這一條有程序掛勾（比照工具 PR 那條）：**規則文件的每一處改動都要在 PR body 逐一列出，並寫明它服務的是同一個目的**。合併閘第 2 條是純路徑比對，`AGENTS.md` 一進清單就機械上全部通過，所以這個限制只能靠 PR body 的逐項說明與獨立審查把關。
   只改規則文件的 PR 仍然不屬六類，判準見上面。
@@ -308,7 +308,7 @@ tags: [規格, 搬移, PR, CI]
   這一類也可以同時動 `docs/specs/`，**但只限兩種**：把這次改動打成假的既有斷言改掉，以及把決定記成那一頁的「已確認決議」。判例 #220（儀表板狀態徽章改用 PRD 的五個名稱：六個 `design/prototype/pages/dashboard/` 的檔案，加上規格 02-01 新增 Q18、03-01 一處跨頁斷言失效）。
   **不得夾帶與這次決定無關的條文改寫**——那是文件 PR。
 - **流程設定 PR** 管的是 agent 怎麼工作，不是產品要做什麼，所以它**不碰 `docs/specs/`**，只動 `openspec/`、`.claude/`（`agents/`、`skills/`、`commands/`）與 `.agents/skills/`，以及因此連帶要改的 `docs/development/` 設計文件與 `AGENTS.md`／`CLAUDE.md`。判例 #215（schema 與 `config.yaml`）、#216（十二個 agent 角色）、#217（clarify skill 的兩份副本）、#219（`/sdd` 指令與 `AGENTS.md` 的 SDD 一節）。
-  **同一次流程改動連帶的規則條文可以一起改**：#219 動了 `.claude/commands/sdd.md`、`AGENTS.md`（新增 §SDD Workflow 一節）與 `docs/development/spec-authoring.md`，三個檔都服務同一個目的，所以整張歸流程設定 PR，不必拆。
+  **同一次流程改動連帶的規則條文可以一起改**：#219 動了 `.claude/commands/sdd.md`、`AGENTS.md`（新增 §SDD Workflow 一節）與 `docs/development/workflow/spec-authoring.md`，三個檔都服務同一個目的，所以整張歸流程設定 PR，不必拆。
   **只改**規則文件的 PR 不屬於這六類，照本節開頭那一條走；判準也定義在那裡。
 - 文件 PR 與流程圖 PR **不得動 `scripts/`、`package.json`、`.github/`**。搬移途中發現檢查器有缺陷時，開一張 `[Bug]` issue 與它對應的工具 PR 處理，不要夾帶。
 - **設計系統 PR 的 `design-*` skill 是連帶，不是夾帶**，而且有程序掛勾（比照下面規則文件那條）：**那兩個 skill 的每一處改動都要在 PR body 逐一列出，並寫明它服務的是同一個目的**。原因同樣是合併閘第 2 條只比對路徑——`.claude/skills/design-*` 同時落在流程設定 PR 的 `.claude/` 清單裡，機械上分不出來。只寫 skill、還沒產出 `design/system/` 的那一段（判例：#248 的第一段）仍然是流程設定 PR。
@@ -389,7 +389,7 @@ run CI 43714379546: status=completed  conclusion=success        （該 sha 只�
 要手動跑 `--rebuild` 之前先停掉 `pnpm docs:serve`，或那一輪用 `--no-watch` 開它。
 ⚠️ 但 `--no-watch` 只解掉「撞在一起」，**不解「瀏覽器看到舊的」**：`--rebuild` 輪替過 `dist` 之後，那個一直開著的 serve 會繼續服務 `dist.prev`（見 [#172](https://github.com/label-suite/label-suite/issues/172) §線索）。要在瀏覽器驗收，手動 build 之後要重開 serve。
 
-**這不是叫人別用 `docs:serve`。** 它的 watcher 本身就是一條合法的驗證路徑——[`content-visualize`](../../.claude/skills/content-visualize/SKILL.md) 正是靠「觀察使用者開著的 `docs:serve`，存檔後 watcher 自己 rebuild、SSE 推 auto reload」來驗元件的。要避免的只有**兩條路徑同時走**：用 watcher 驗就別再手動 build，要手動 build 就先讓 watcher 停下來。
+**這不是叫人別用 `docs:serve`。** 它的 watcher 本身就是一條合法的驗證路徑——[`content-visualize`](../../../.claude/skills/content-visualize/SKILL.md) 正是靠「觀察使用者開著的 `docs:serve`，存檔後 watcher 自己 rebuild、SSE 推 auto reload」來驗元件的。要避免的只有**兩條路徑同時走**：用 watcher 驗就別再手動 build，要手動 build 就先讓 watcher 停下來。
 
 停 serve 只移掉目前已知的唯一併發來源，**不保證第一次一定過**，所以重跑規則留著當保險；「關掉 serve 之後連跑 N 次全綠」的驗證還沒做，見[§待決](#待決)第 1 列。
 
@@ -417,7 +417,7 @@ run CI 43714379546: status=completed  conclusion=success        （該 sha 只�
 - **worktree 要先有 `node_modules`。** `notecraftapp` 是 repo 的 devDependency，`pnpm exec` 靠 `node_modules/.bin/` 解析；剛 `git worktree add` 出來的 worktree 沒有它，命令會直接找不到。symlink 回主 checkout 就夠（build 用的是 app 的 `node_modules`，不是這一份）。
 - **SDD 角色不適用這條。** `AGENTS.md` §SDD Workflow 明寫「Do not give an SDD role its own worktree or its own issue」。那裡沒有衝突：會建置的 SDD 角色只有 `technical-writer`，而 SDD 的 apply 是逐群組**序列**派工的，不會有兩個 SDD build 同時跑。真正要避開的是**主流程與被派出去的角色同時建置**——那由派工的一方負責錯開。
 
-**這條規則另外有兩份副本**，本節是第三份，也是唯一寫了「怎麼分辨真失敗」的一份：[`.claude/agents/ops.md`](../../.claude/agents/ops.md) 與 [`.claude/agents/technical-writer.md`](../../.claude/agents/technical-writer.md) 的檢查清單。`openspec/config.yaml` 的 apply 階段也要求跑這道 build，但沒提重跑。
+**這條規則另外有兩份副本**，本節是第三份，也是唯一寫了「怎麼分辨真失敗」的一份：[`.claude/agents/ops.md`](../../../.claude/agents/ops.md) 與 [`.claude/agents/technical-writer.md`](../../../.claude/agents/technical-writer.md) 的檢查清單。`openspec/config.yaml` 的 apply 階段也要求跑這道 build，但沒提重跑。
 CI 的 `docs-site` job 不重跑：併發來自本機的 `serve` watcher，CI 從不跑 `serve`，所以 `|| ` 重跑只會遮住一個真的失敗兩次的 build，正好是上面表格第二列警告的那一種。
 
 ⚠️ **要確認 serve 停了沒，別用 `pgrep -f 'notecraftapp serve'`。** 實際的指令字串是 `node …/notecraftapp.mjs serve docs --port 4330`，中間隔著 `.mjs`，所以那個模式永遠比不到，會回報「沒有 serve 在跑」。用 `pgrep -lf 'notecraftapp.mjs serve docs --port 4330'`——**限定到這個 port**，否則別的專案的 `notecraftapp` 行程也會被列出來，讓人以為還有 serve 在跑。
@@ -579,7 +579,7 @@ ENOENT: no such file or directory, rename
 
 | # | 問題 | 卡住什麼 | 誰決定 |
 | :--- | :--- | :--- | :--- |
-| 1 | 建置閘門重跑規則何時拿掉：修法在 `notecraftapp` 上游（「以 `cacheDir` 為單位加跨行程鎖」或「把 build 的 staging 目錄與 `.astro/` 做成每行程唯一」），本倉庫沒有可做的；升級 `notecraftapp`（`package.json` 的 `devDependencies`）時要重測：關掉 `docs:serve`、編輯一個 `docs/` 檔、連跑三次 `--rebuild`，三次都綠就把**四處**的重跑規則一起拿掉——[§建置閘門要重跑確認](#建置閘門要重跑確認)、[`.claude/agents/ops.md`](../../.claude/agents/ops.md) 與 [`.claude/agents/technical-writer.md`](../../.claude/agents/technical-writer.md) 的檢查清單，以及本文件 §單頁搬移通則 第 12 步那一句（它自帶規則、不只是交叉引用）；還會壞就開一張新的 issue，不要重開 #172 | 上游沒修，且「關掉 serve 之後連跑 N 次全綠」的正面驗證還沒做；本節是現在唯一的追蹤點 | 維護者，在升級 `notecraftapp` 的 PR |
+| 1 | 建置閘門重跑規則何時拿掉：修法在 `notecraftapp` 上游（「以 `cacheDir` 為單位加跨行程鎖」或「把 build 的 staging 目錄與 `.astro/` 做成每行程唯一」），本倉庫沒有可做的；升級 `notecraftapp`（`package.json` 的 `devDependencies`）時要重測：關掉 `docs:serve`、編輯一個 `docs/` 檔、連跑三次 `--rebuild`，三次都綠就把**四處**的重跑規則一起拿掉——[§建置閘門要重跑確認](#建置閘門要重跑確認)、[`.claude/agents/ops.md`](../../../.claude/agents/ops.md) 與 [`.claude/agents/technical-writer.md`](../../../.claude/agents/technical-writer.md) 的檢查清單，以及本文件 §單頁搬移通則 第 12 步那一句（它自帶規則、不只是交叉引用）；還會壞就開一張新的 issue，不要重開 #172 | 上游沒修，且「關掉 serve 之後連跑 N 次全綠」的正面驗證還沒做；本節是現在唯一的追蹤點 | 維護者，在升級 `notecraftapp` 的 PR |
 
 ## 決策紀錄
 

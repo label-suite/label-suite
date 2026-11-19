@@ -8,7 +8,7 @@ tags: [design-system, design-handoff, design-system-setup, artifact]
 # 設計交接
 
 prototype 是畫面現況，經 `design-handoff`、`design-system-setup` 整理成 `design/system/`，再由它產生 Design System Artifact；每一步只往下游走，不回頭。
-本頁管這條流程與重跑時機；品牌規則見 [品牌規範](../design-system/brand.mdx)，元件對照見 [元件對照](../design-system/components.mdx)，整頁範例見 [UI Kits](../design-system/ui-kits.mdx)。
+本頁管這條流程與重跑時機；品牌規則見 [品牌規範](../../design-system/brand.mdx)，元件對照見 [元件對照](../../design-system/components.mdx)，整頁範例見 [UI Kits](../../design-system/ui-kits.mdx)。
 
 ## 流程
 
@@ -17,11 +17,11 @@ prototype 是畫面現況，經 `design-handoff`、`design-system-setup` 整理�
 | 步驟 | 工具 | 輸入 | 產出 |
 | :--- | :--- | :--- | :--- |
 | 1. 原型 | 人工（改畫面先過 `AGENTS.md` 的 Ready gate） | 規格與設計決定 | `design/prototype/` |
-| 2. 交付包 | [`design-handoff`](../../.claude/skills/design-handoff/SKILL.md) | 釘住版本的 prototype、規格與導覽文件 | `design/system/handoff/`：`manifest.json`、`coverage.md`、`spec-index.md` |
-| 3. 元件規格 | [`design-system-setup`](../../.claude/skills/design-system-setup/SKILL.md)，一次一批 | 交付包 | `design/system/` 的 `MASTER.md`、`components/`、`pages/`、`ux-conventions.md`、`design-gaps.md`，以及生成的 `screen-inventory.md` |
+| 2. 交付包 | [`design-handoff`](../../../.claude/skills/design-handoff/SKILL.md) | 釘住版本的 prototype、規格與導覽文件 | `design/system/handoff/`：`manifest.json`、`coverage.md`、`spec-index.md` |
+| 3. 元件規格 | [`design-system-setup`](../../../.claude/skills/design-system-setup/SKILL.md)，一次一批 | 交付包 | `design/system/` 的 `MASTER.md`、`components/`、`pages/`、`ux-conventions.md`、`design-gaps.md`，以及生成的 `screen-inventory.md` |
 | 4. Artifact | `scripts/build-design-artifact-tokens.mjs`，加上一次單向發布 | `tokens.css` 與 `design/system/` | `design/system/artifact/project/` 發布成 Design System Artifact |
 
-Artifact 是生成的呈現層，而且是私人的，沒有分享給你就開不了；它的檔案結構與 token 指令見 [`design/system/artifact/README.md`](../../design/system/artifact/README.md)。
+Artifact 是生成的呈現層，而且是私人的，沒有分享給你就開不了；它的檔案結構與 token 指令見 [`design/system/artifact/README.md`](../../../design/system/artifact/README.md)。
 
 ## 單向規則
 

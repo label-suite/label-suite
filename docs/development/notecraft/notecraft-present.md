@@ -16,7 +16,7 @@ tags: [notecraft, docs]
 
 ## 怎麼觸發
 
-- 在對話裡說「把 `docs/development/agent-rules.mdx` 轉成簡報」「重新生成 xxx 的簡報」
+- 在對話裡說「把 `docs/development/rules/agent-rules.mdx` 轉成簡報」「重新生成 xxx 的簡報」
 - 或在筆記頁按「生成簡報」，它會把提示詞複製到剪貼簿，貼進對話即可。**這顆按鈕只在 dev 模式出現**，也就是 `pnpm exec notecraftapp view docs`（astro dev）；`pnpm docs:serve` 服務的是 build 產物，不會顯示它
 - 已經有 deck 的筆記，頁首那顆按鈕會變成「簡報」，直接連到 `/present/<slug>`（這顆不分 dev 與正式）
 
@@ -24,11 +24,11 @@ tags: [notecraft, docs]
 
 一篇筆記至多一份 deck，一份 deck 一個檔。`docs/` 的筆記都在子資料夾裡，所以**檔名與 `slug` 要分開看**：
 
-| 項目 | 規則 | 例（`docs/development/agent-rules.mdx`） |
+| 項目 | 規則 | 例（`docs/development/rules/agent-rules.mdx`） |
 |---|---|---|
 | deck 檔名 | **攤平**放在專案根的 `.notecraft/components/` | `.notecraft/components/agent-rules.deck.tsx` |
-| `slug` 欄位 | **帶資料夾**，等於筆記頁網址的 slug | `development/agent-rules` |
-| `source` 欄位 | 筆記的專案相對路徑 | `docs/development/agent-rules.mdx` |
+| `slug` 欄位 | **帶資料夾**，等於筆記頁網址的 slug | `development/rules/agent-rules` |
+| `source` 欄位 | 筆記的專案相對路徑 | `docs/development/rules/agent-rules.mdx` |
 
 路由 `/present/<slug>` 與筆記頁、抽屜裡的「簡報」入口都只比對 `slug` 欄位，
 **檔名不參與比對**；檔名要攤平是因為 viewer 以 `@notes/components/*.deck.tsx` 這個 glob 掃 deck，不掃子資料夾。
@@ -56,7 +56,7 @@ tags: [notecraft, docs]
 第 1 層在本專案**不是** `tsc` 或 `astro build`（notesDir 只是筆記資料夾，這兩個指令必定失敗），而是：
 維護者開著 `pnpm docs:serve` 時看它的背景 rebuild；沒開才跑 `pnpm exec notecraftapp build docs --rebuild`。
 `.notecraft/components/` 下的檔案不在 build 的快取失效判斷內（它只掃 notesDir 的 md/mdx 與資料 json、`.notecraft/plugins/**`、`.notecraft/*.json` 與附件來源），所以手動 build **一定要帶 `--rebuild`**，commit 與否都一樣；**第一次失敗先重跑一次**，
-穩定失敗兩次才是真的錯誤（[#172](https://github.com/label-suite/label-suite/issues/172)，判準見 [spec-migration.mdx §建置閘門要重跑確認](./spec-migration.mdx#建置閘門要重跑確認)）。
+穩定失敗兩次才是真的錯誤（[#172](https://github.com/label-suite/label-suite/issues/172)，判準見 [spec-migration.mdx §建置閘門要重跑確認](../workflow/spec-migration.mdx#建置閘門要重跑確認)）。
 watcher 與手動 build **只能走一條**。
 
 第 2、3 層不能跳過：1600×900 是固定座標系、`overflow: hidden`，**build 綠燈永遠測不到被裁掉的內容**。

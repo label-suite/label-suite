@@ -7,7 +7,7 @@ The single rule source for every coding agent working in this repository (Claude
 1. **Issue first** — no implementation starts without an open issue that lists the work.
 2. **No commits to `main`** — branch first (`<type>/<short-description>`, lowercase, `-` separated, e.g. `docs/agent-rules`), then open a pull request.
 3. **No `pip install` / `npm install`** — use `uv add` for Python and `pnpm add` for JavaScript so lockfiles stay in sync.
-4. **No version bumps** — do not change the version in `CITATION.cff`, `backend/pyproject.toml`, or `frontend/package.json`. The only exception is the `chore(release)` commit described in [docs/development/commit-and-release.md](docs/development/commit-and-release.md).
+4. **No version bumps** — do not change the version in `CITATION.cff`, `backend/pyproject.toml`, or `frontend/package.json`. The only exception is the `chore(release)` commit described in [docs/development/workflow/commit-and-release.md](docs/development/workflow/commit-and-release.md).
 5. **No hardcoded task logic** — task types are config-driven; adding one must not require changing core code.
 6. **No test-set answer exposure** — anything an annotator can reach must never include ground-truth answers.
 7. **No `any` in TypeScript**, and **no `allow_origins=["*"]`** in CORS — list origins explicitly.
@@ -105,7 +105,7 @@ Running `/opsx:propose` on its own still authorizes planning only, as that skill
 
 ## Commits
 
-Full rules: [docs/development/commit-and-release.md](docs/development/commit-and-release.md). The essentials:
+Full rules: [docs/development/workflow/commit-and-release.md](docs/development/workflow/commit-and-release.md). The essentials:
 
 - English [Conventional Commits](https://www.conventionalcommits.org/): `<type>: <imperative subject, ≤ 72 chars> (#<issue>)`.
 - Types: `feat` · `fix` · `docs` · `refactor` · `test` · `chore` · `ci` · `perf` · `build`.
@@ -151,12 +151,12 @@ This repository has no `.claude/rules/` canon and will not get one (decided in #
 
 | Area | Document | Issue |
 |------|----------|-------|
-| Cross-cutting — search first, dependency direction, smallest change, no excessive abstraction, conflicts, locked scope, loud failure | [docs/development/agent-rules.mdx](docs/development/agent-rules.mdx) | #105 |
-| Backend layering, database, background work | [docs/development/backend-agent-rules.mdx](docs/development/backend-agent-rules.mdx) | #106 |
-| Authorization, answer isolation, config-driven boundaries | [docs/development/security-agent-rules.mdx](docs/development/security-agent-rules.mdx) | #107 |
-| API contract sync, single frontend client | [docs/development/api-agent-rules.mdx](docs/development/api-agent-rules.mdx) | #108 |
-| Frontend dependency direction, type safety, shared UI | [docs/development/frontend-agent-rules.mdx](docs/development/frontend-agent-rules.mdx) | #109 |
-| Test layers, dual-database verification, delivery evidence | [docs/development/testing-agent-rules.mdx](docs/development/testing-agent-rules.mdx) | #110 |
+| Cross-cutting — search first, dependency direction, smallest change, no excessive abstraction, conflicts, locked scope, loud failure | [docs/development/rules/agent-rules.mdx](docs/development/rules/agent-rules.mdx) | #105 |
+| Backend layering, database, background work | [docs/development/rules/backend-agent-rules.mdx](docs/development/rules/backend-agent-rules.mdx) | #106 |
+| Authorization, answer isolation, config-driven boundaries | [docs/development/rules/security-agent-rules.mdx](docs/development/rules/security-agent-rules.mdx) | #107 |
+| API contract sync, single frontend client | [docs/development/rules/api-agent-rules.mdx](docs/development/rules/api-agent-rules.mdx) | #108 |
+| Frontend dependency direction, type safety, shared UI | [docs/development/rules/frontend-agent-rules.mdx](docs/development/rules/frontend-agent-rules.mdx) | #109 |
+| Test layers, dual-database verification, delivery evidence | [docs/development/rules/testing-agent-rules.mdx](docs/development/rules/testing-agent-rules.mdx) | #110 |
 
 All six documents now exist, but most of their rules are not being checked: `backend/`, `frontend/` and `e2e/` do not exist yet, so most of the checks those documents describe are marked as not built. The rest are marked as manual review, which means a person or an independent reviewer does them, not a tool. Read "not built" as literal, and do not report a check as passing when the check has not been built.
 
@@ -167,11 +167,11 @@ Two rules are worth stating here because they are reversals of what the referenc
 
 Size is judged by purpose, not by counting. This repository sets no file-count or diff-line ceiling for a pull request — see [Pull Requests](#pull-requests).
 
-Technical baselines (stack choices, layering, ADR status) are in [docs/development/architecture.mdx](docs/development/architecture.mdx), and the pull-request categories are in [docs/development/spec-migration.mdx](docs/development/spec-migration.mdx).
+Technical baselines (stack choices, layering, ADR status) are in [docs/development/architecture.mdx](docs/development/architecture.mdx), and the pull-request categories are in [docs/development/workflow/spec-migration.mdx](docs/development/workflow/spec-migration.mdx).
 
 Why a rule or baseline was chosen — the constraints, the options compared, the cost, and when to revisit it — is recorded in this repository's ADRs, one per domain, indexed in [docs/development/adr/index.mdx](docs/development/adr/index.mdx). When they disagree, this file wins, then this repository's ADRs, then `architecture.mdx` and the area documents above; the personal repository's ADRs are reference only. `docs/specs/` still wins on business requirements.
 
-How a rule gets triggered — which agent or Git event fires it, which shared checker it calls, and whether it blocks or only warns — is in [docs/development/agent-hook-contract.mdx](docs/development/agent-hook-contract.mdx), together with an event-by-event comparison of what Claude Code and Codex each support. That document is a contract, not a second rule canon, and it adds no rules. No agent hook is wired yet: `.claude/settings.json` carries the attribution setting and the permission allowlist `issue-dispatch` needs, but no `hooks` key, there is no `.codex/hooks.json`, and the only hook checker that runs today is `scripts/check-commit-msg.sh` through `scripts/git-hooks/commit-msg`. Claude's hook configuration, events and exit codes do not carry over to Codex; that document lists the gaps instead of claiming they do.
+How a rule gets triggered — which agent or Git event fires it, which shared checker it calls, and whether it blocks or only warns — is in [docs/development/rules/agent-hook-contract.mdx](docs/development/rules/agent-hook-contract.mdx), together with an event-by-event comparison of what Claude Code and Codex each support. That document is a contract, not a second rule canon, and it adds no rules. No agent hook is wired yet: `.claude/settings.json` carries the attribution setting and the permission allowlist `issue-dispatch` needs, but no `hooks` key, there is no `.codex/hooks.json`, and the only hook checker that runs today is `scripts/check-commit-msg.sh` through `scripts/git-hooks/commit-msg`. Claude's hook configuration, events and exit codes do not carry over to Codex; that document lists the gaps instead of claiming they do.
 
 ## Review Guidelines
 

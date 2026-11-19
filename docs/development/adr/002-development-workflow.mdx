@@ -6,8 +6,8 @@ tags: [adr, workflow, sdd, openspec, project-board]
 
 # ADR-002 開發流程
 
-這份 ADR 管一個 change 的流程骨架：用哪一套產物、維護者在哪裡介入、授權放在哪裡、誰負責哪一步，以及 issue 的狀態記在哪裡。commit 與 PR 的格式、測試與審查的細則不在這裡，見 [commit-and-release.md](../commit-and-release.md) 與 [testing-agent-rules.mdx](../testing-agent-rules.mdx)。
-規則本體在 `AGENTS.md` 的 SDD Workflow 與 Project Board and Dispatch，落地的做法在 [openspec-fullstack-sdd.mdx](../openspec-fullstack-sdd.mdx)，本文只寫為什麼；衝突時的優先序見 [ADR 索引](index.mdx#衝突時以誰為準)。
+這份 ADR 管一個 change 的流程骨架：用哪一套產物、維護者在哪裡介入、授權放在哪裡、誰負責哪一步，以及 issue 的狀態記在哪裡。commit 與 PR 的格式、測試與審查的細則不在這裡，見 [commit-and-release.md](../workflow/commit-and-release.md) 與 [testing-agent-rules.mdx](../rules/testing-agent-rules.mdx)。
+規則本體在 `AGENTS.md` 的 SDD Workflow 與 Project Board and Dispatch，落地的做法在 [openspec-fullstack-sdd.mdx](../workflow/openspec-fullstack-sdd.mdx)，本文只寫為什麼；衝突時的優先序見 [ADR 索引](index.mdx#衝突時以誰為準)。
 
 ## D1 完整九份產物流程一次導入
 
@@ -33,7 +33,7 @@ tags: [adr, workflow, sdd, openspec, project-board]
 
 ### 決定
 
-採用九份產物的 `label-suite-sdd` schema，不分階段導入，並設為 `openspec/config.yaml` 的預設，忘記指定時走較嚴的流程；文件、工具類的小 change 可以帶 `--schema spec-driven` 走四份。規則本體見 `AGENTS.md` 的 SDD Workflow，產物與依賴見 [openspec-fullstack-sdd.mdx 的 §九份產物與依賴](../openspec-fullstack-sdd.mdx#九份產物與依賴)。
+採用九份產物的 `label-suite-sdd` schema，不分階段導入，並設為 `openspec/config.yaml` 的預設，忘記指定時走較嚴的流程；文件、工具類的小 change 可以帶 `--schema spec-driven` 走四份。規則本體見 `AGENTS.md` 的 SDD Workflow，產物與依賴見 [openspec-fullstack-sdd.mdx 的 §九份產物與依賴](../workflow/openspec-fullstack-sdd.mdx#九份產物與依賴)。
 
 ### 後果
 
@@ -80,7 +80,7 @@ tags: [adr, workflow, sdd, openspec, project-board]
 
 ### 決定
 
-只有一個例行的人工停點：在 `clarification.md` 之後，只問需要維護者決定的 Q，P 直接派原角色回修。驗收由 `acceptance-verifier` 判定，通過之後由 `ops` 在合併之前執行 `/opsx:archive`，歸檔改動與程式進同一張 PR，CI 每一個 job 都 completed 且 success、`code-reviewer` 沒有未解決的阻斷意見、PR 可合併 就合併。故障類的中斷不算停點，照停。規則本體見 `AGENTS.md` 的 SDD Workflow「The one checkpoint」，流程見 [openspec-fullstack-sdd.mdx 的 §決議](../openspec-fullstack-sdd.mdx#決議)與[§故障仍會停](../openspec-fullstack-sdd.mdx#故障仍會停)。
+只有一個例行的人工停點：在 `clarification.md` 之後，只問需要維護者決定的 Q，P 直接派原角色回修。驗收由 `acceptance-verifier` 判定，通過之後由 `ops` 在合併之前執行 `/opsx:archive`，歸檔改動與程式進同一張 PR，CI 每一個 job 都 completed 且 success、`code-reviewer` 沒有未解決的阻斷意見、PR 可合併 就合併。故障類的中斷不算停點，照停。規則本體見 `AGENTS.md` 的 SDD Workflow「The one checkpoint」，流程見 [openspec-fullstack-sdd.mdx 的 §決議](../workflow/openspec-fullstack-sdd.mdx#決議)與[§故障仍會停](../workflow/openspec-fullstack-sdd.mdx#故障仍會停)。
 
 ### 後果
 
@@ -125,7 +125,7 @@ tags: [adr, workflow, sdd, openspec, project-board]
 
 ### 決定
 
-用選項 C：`/sdd <需求>` 是維護者對單一 change 的授權，涵蓋規劃與實作，不延續到下一個 change；單獨跑 `/opsx:propose` 仍然只授權規劃。授權的範圍與界線見 `AGENTS.md` 的 SDD Workflow「What `/sdd` authorizes」，做法見 [openspec-fullstack-sdd.mdx 的 §三處要特別處理的地方](../openspec-fullstack-sdd.mdx#三處要特別處理的地方)。
+用選項 C：`/sdd <需求>` 是維護者對單一 change 的授權，涵蓋規劃與實作，不延續到下一個 change；單獨跑 `/opsx:propose` 仍然只授權規劃。授權的範圍與界線見 `AGENTS.md` 的 SDD Workflow「What `/sdd` authorizes」，做法見 [openspec-fullstack-sdd.mdx 的 §三處要特別處理的地方](../workflow/openspec-fullstack-sdd.mdx#三處要特別處理的地方)。
 
 ### 後果
 
@@ -234,14 +234,14 @@ tags: [adr, workflow, sdd, openspec, project-board]
 
 ## 附錄：來源對照
 
-比對的版本：個人 repo（`singyichen/label-suite`）`faf83356` 的 ADR-017、027、033；本 repo 的 `AGENTS.md`、`openspec/config.yaml`、[openspec-fullstack-sdd.mdx](../openspec-fullstack-sdd.mdx)、`.claude/commands/sdd.md`。
+比對的版本：個人 repo（`singyichen/label-suite`）`faf83356` 的 ADR-017、027、033；本 repo 的 `AGENTS.md`、`openspec/config.yaml`、[openspec-fullstack-sdd.mdx](../workflow/openspec-fullstack-sdd.mdx)、`.claude/commands/sdd.md`。
 
 | 決定 | 來源 |
 | :--- | :--- |
-| D1 | [openspec-fullstack-sdd.mdx 的 §決議](../openspec-fullstack-sdd.mdx#決議)、§導入評估「完整流程現在就能跑」與「和 NestJS 綁在一起的部分」；選項 B 是 [#47](https://github.com/label-suite/label-suite/issues/47) 評估報告「要不要分三階段，還是整套等 `backend/`、`frontend/` 都存在之後一次做」；預設 schema 的理由是同一份報告的建議，決議在 [#51](https://github.com/label-suite/label-suite/issues/51)；背景最後一列來自個人 repo ADR-033 的 Non-goals（「No standing per-change SA / SD / UI-UX analysis documents」） |
+| D1 | [openspec-fullstack-sdd.mdx 的 §決議](../workflow/openspec-fullstack-sdd.mdx#決議)、§導入評估「完整流程現在就能跑」與「和 NestJS 綁在一起的部分」；選項 B 是 [#47](https://github.com/label-suite/label-suite/issues/47) 評估報告「要不要分三階段，還是整套等 `backend/`、`frontend/` 都存在之後一次做」；預設 schema 的理由是同一份報告的建議，決議在 [#51](https://github.com/label-suite/label-suite/issues/51)；背景最後一列來自個人 repo ADR-033 的 Non-goals（「No standing per-change SA / SD / UI-UX analysis documents」） |
 | D2（2026-11-19 取消停點二） | [#464](https://github.com/label-suite/label-suite/issues/464) 的維護者裁定三項：歸檔由 `ops` 在合併之前執行、人工驗收步驟保留作紀錄、全局改為一個停點 |
-| D2 | [openspec-fullstack-sdd.mdx 的 §決議](../openspec-fullstack-sdd.mdx#決議)、§三處要特別處理的地方第 2、3 項與 §scaffold 的六道關卡；選項 C 的代價出自 [#47](https://github.com/label-suite/label-suite/issues/47) 的決議留言 |
-| D3 | [openspec-fullstack-sdd.mdx 的 §三處要特別處理的地方](../openspec-fullstack-sdd.mdx#三處要特別處理的地方)第 1 項、`.claude/commands/sdd.md` 的開頭說明、`AGENTS.md` 的 What `/sdd` authorizes |
+| D2 | [openspec-fullstack-sdd.mdx 的 §決議](../workflow/openspec-fullstack-sdd.mdx#決議)、§三處要特別處理的地方第 2、3 項與 §scaffold 的六道關卡；選項 C 的代價出自 [#47](https://github.com/label-suite/label-suite/issues/47) 的決議留言 |
+| D3 | [openspec-fullstack-sdd.mdx 的 §三處要特別處理的地方](../workflow/openspec-fullstack-sdd.mdx#三處要特別處理的地方)第 1 項、`.claude/commands/sdd.md` 的開頭說明、`AGENTS.md` 的 What `/sdd` authorizes |
 | D4 | 個人 repo ADR-017（Context 的三種失敗、Option A、B、C 與 Consequences）；它在本 repo 已被取代，見 [architecture.mdx 的 §ADR 效力總表](../architecture.mdx#adr-效力總表)；本 repo 的角色表在 `AGENTS.md` 的 SDD Workflow；「審查者不是寫的人」見 `AGENTS.md` 的 Dispatch 一條 |
 | D5 | 個人 repo ADR-027（Context 的散落來源、Alternatives Considered、Consequences）；它在本 repo 已被取代，見 [architecture.mdx 的 §ADR 效力總表](../architecture.mdx#adr-效力總表)；不用標籤追蹤狀態與 Ready、blocked-by 的規則在 `AGENTS.md` 的 Project Board and Dispatch；狀態不放本機檔案來自 `.claude/skills/issue-dispatch/SKILL.md`；token 缺 `project` scope 見 [#47](https://github.com/label-suite/label-suite/issues/47) 的留言 |
 | — | 個人 repo ADR-033 的其餘決定（`openspec/specs/` 當衍生檢視、寫回規格的硬關卡、Spec Kit 的分工）不採用，本 repo 的 `openspec/specs/` 是可測契約，方向相反，見 [architecture.mdx 的 §ADR 效力總表](../architecture.mdx#adr-效力總表) |

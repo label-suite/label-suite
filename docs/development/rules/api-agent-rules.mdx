@@ -21,7 +21,7 @@ updatedAt: '2026-11-16'
 
 | 前提 | 現行做法 | 規則在 |
 | :--- | :--- | :--- |
-| 路徑前綴 | **`/api/v1`**（見 [architecture.mdx §API 契約](architecture.mdx#api-契約)） | A1 |
+| 路徑前綴 | **`/api/v1`**（見 [architecture.mdx §API 契約](../architecture.mdx#api-契約)） | A1 |
 | operationId | 由 FastAPI 的 `generate_unique_id_function` 固定成「動詞加資源」，不手寫也不逐個覆寫 | A1 |
 | 成功回應格式 | 包一層 envelope；`204` 無 body、檔案與串流是明文例外 | A1 |
 | 前端型別與 client 生成 | **Orval**，由後端匯出的 `openapi.json` 產生到 `frontend/src/api/generated/` | A5 |
@@ -47,12 +47,12 @@ envelope 的欄位未決，見 [§待決](#待決) 第 1 列。
 | | |
 | :--- | :--- |
 | **反例** | `POST /api/v1/tasks/{id}/doPublish`（動詞式又沒記理由）；`@router.get(..., operation_id="get_task_by_id_v2")`（逐個覆寫）；「這個端點只回一個布林，所以不包 envelope」 |
-| **例外** | `204` 無 body、檔案下載與串流不套 envelope。**例外要逐一寫進該 change 的 `api-contract.md` 並寫出理由**，不逐案自由心證（見 [architecture.mdx §API 契約](architecture.mdx#api-契約)） |
+| **例外** | `204` 無 body、檔案下載與串流不套 envelope。**例外要逐一寫進該 change 的 `api-contract.md` 並寫出理由**，不逐案自由心證（見 [architecture.mdx §API 契約](../architecture.mdx#api-契約)） |
 | **檢查方式** | **待建置**。前綴與複數名詞可用自寫腳本掃匯出的 `openapi.json`；operationId 的穩定性靠 A10 的 snapshot diff。兩者都要等 `backend/` 與 CI 存在 |
 :::
 
 :::note{title="A1 的路徑不帶模組段" collapsible}
-原始 repo 的 route pattern 寫 `/api/v1/[module]/[resource]`，本 repo 沿用但去掉模組段，依據是本 repo 自己的例子：[architecture.mdx](architecture.mdx) §非同步任務 的流程圖寫的是 `GET /api/v1/submissions/{id}/status`，**資源直接接在 `/api/v1` 後面**；非 CRUD 的三個 pattern（`/tasks/{id}/assignments`、`/submissions/{id}/status-changes`、`/exports`）也都不帶；而 operationId 是「動詞加資源」，模組名不進那個名字。後端的模組邊界由目錄（`app/modules/<module>/`）表達，不由路徑表達。
+原始 repo 的 route pattern 寫 `/api/v1/[module]/[resource]`，本 repo 沿用但去掉模組段，依據是本 repo 自己的例子：[architecture.mdx](../architecture.mdx) §非同步任務 的流程圖寫的是 `GET /api/v1/submissions/{id}/status`，**資源直接接在 `/api/v1` 後面**；非 CRUD 的三個 pattern（`/tasks/{id}/assignments`、`/submissions/{id}/status-changes`、`/exports`）也都不帶；而 operationId 是「動詞加資源」，模組名不進那個名字。後端的模組邊界由目錄（`app/modules/<module>/`）表達，不由路徑表達。
 :::
 
 :::note{title="A1 的 operationId 撞名與函式名" collapsible}
@@ -188,7 +188,7 @@ envelope 的欄位未決，見 [§待決](#待決) 第 1 列。
 | | |
 | :--- | :--- |
 | **反例** | `if (String(err).includes('403'))`；讓 TanStack Query 的預設 retry 跟 refresh 搶，這樣**最多疊出六次冗餘請求**；把使用者看不到的任務回 `403`（洩漏它存在）；把 `detail` 的 `ErrorDetail[]` 直接 `JSON.stringify` 貼到畫面 |
-| **例外** | FastAPI 預設的 `422` `RequestValidationError` **不在 i18n 契約內**（[architecture.mdx](architecture.mdx) §i18n 兩層），要本地化得另註冊 handler；A6 提到的最後手段診斷字串（回應沒有 body 或不是 JSON 時由 client 自己合成）留英文 |
+| **例外** | FastAPI 預設的 `422` `RequestValidationError` **不在 i18n 契約內**（[architecture.mdx](../architecture.mdx) §i18n 兩層），要本地化得另註冊 handler；A6 提到的最後手段診斷字串（回應沒有 body 或不是 JSON 時由 client 自己合成）留英文 |
 | **檢查方式** | **待建置**。`retry` 對 auth error 回 `false` 可用前端單元測試鎖住；`403`／`404` 的隱藏行為屬 security-agent-rules.mdx 的 S10 驗收矩陣 |
 :::
 
@@ -230,7 +230,7 @@ server state 只放 TanStack Query，query key 一律來自 Orval 產物匯出�
 | | |
 | :--- | :--- |
 | **反例** | `useQuery(['tasks', id], ...)` 手寫 key（另一處寫成 `['task', id]`，失效就打不中）；把 `listTasks` 的結果再存一份進 Zustand；登出只清 cookie 不清 cache，下一個在同一台機器登入的人會先看到上一個人的列表 |
-| **例外** | 表單狀態與純 UI 狀態**不**進 TanStack Query（[architecture.mdx](architecture.mdx) §前端） |
+| **例外** | 表單狀態與純 UI 狀態**不**進 TanStack Query（[architecture.mdx](../architecture.mdx) §前端） |
 | **檢查方式** | **待建置**。inline key 可用 lint 規則擋；跨帳號不外洩要有前端測試：登出再登入另一個帳號後列表不得出現前一個帳號的資料 |
 :::
 
@@ -254,7 +254,7 @@ server state 只放 TanStack Query，query key 一律來自 Orval 產物匯出�
 :::note{title="A10 的反例、例外與檢查方式" collapsible}
 | | |
 | :--- | :--- |
-| **反例** | 把 `listTasks` 改名成 `getTaskList` 當成單純重構（前端 hook 名稱跟著變）；把回應從 envelope 改成裸物件而不走版本（版本前綴的用意見 [ADR-003 的 D5](adr/003-backend-architecture.mdx#d5-api-路徑前綴與成功回應外層)） |
+| **反例** | 把 `listTasks` 改名成 `getTaskList` 當成單純重構（前端 hook 名稱跟著變）；把回應從 envelope 改成裸物件而不走版本（版本前綴的用意見 [ADR-003 的 D5](../adr/003-backend-architecture.mdx#d5-api-路徑前綴與成功回應外層)） |
 | **例外** | Bruno 可以留著當手動工具，但它不是關卡 |
 | **檢查方式** | **待建置**。snapshot diff 與 compatibility test 都要等 CI 與 `backend/` 存在；前兩個落點的 agent 檢查項已經在 `.claude/agents/design-reviewer.md` 與 `code-reviewer.md` 裡 |
 :::
@@ -268,7 +268,7 @@ server state 只放 TanStack Query，query key 一律來自 Orval 產物匯出�
 | 逐條 route 顯式寫 `operation_id=` | 原始 repo foundation spec FR-120 | 與本專案「由 `generate_unique_id_function` 固定、**不逐個覆寫**」相反。它禁止的「從函式名自動生成」仍然照收，見 A1 |
 | 手寫 `shared/constants/query-keys.ts` 的 queryKey factory | FR-084 | 採 Orval 後 key 由產物產生，再手寫一份就是兩個真相；`shared/` 路徑也已被 `pages/` 加 `features/` 覆寫。用意保留在 A9 |
 | correlation id 送進 Sentry 的 redacted context | FR-123 | ADR-020（Sentry）本期不做 |
-| Bruno 的 pre-PR 硬關卡 | 原始 repo ADR-025 | 已取消；Bruno 降級成可選工具，見 [ADR-003 的 D9](adr/003-backend-architecture.mdx#d9-bruno-只當可選工具) |
+| Bruno 的 pre-PR 硬關卡 | 原始 repo ADR-025 | 已取消；Bruno 降級成可選工具，見 [ADR-003 的 D9](../adr/003-backend-architecture.mdx#d9-bruno-只當可選工具) |
 | `ApiResponseDto { success, code, message, data, timestamp, traceId }` 這個具體 envelope 形狀 | scaffold `api-contract.md` | 本專案只決定「包一層 envelope」，沒有決定欄位，見 [§待決](#待決) 第 1 列；不要照抄 NestJS 專案的形狀，也不要由各模組各自決定 |
 | Bearer token 與 `@ApiBearerAuth()` | scaffold `api-contract.md`、`api-client.md` | 本專案是 httpOnly cookie 加 session，**不接受 cookie 以外的任何來源**（見 [security-agent-rules.mdx](security-agent-rules.mdx)） |
 | `@nestjs/swagger` 的 decorator 寫法、`@RegisterDto()`、`bigint id` 一律 `type: String` | scaffold `api-contract.md` | 棧不同（FastAPI 加 Pydantic v2）。「每個欄位都要寫出型別、nullable、enum、範例」的用意在 A2 |
@@ -292,7 +292,7 @@ server state 只放 TanStack Query，query key 一律來自 Orval 產物匯出�
 | `backend.md` §i18n 的「訊息字串由後端擁有、不硬寫在 handler」 | **沿用** | 成為 A8。它的 `app/i18n/zh_TW/` 路徑已被模組內分層覆寫，解析長段屬實作規格 |
 | `backend.md` §i18n 的「`detail` 必須查 i18n key 後回**已解析的本地化文字**，不得是原始英文字面值或 key 本身」 | **沿用** | 成為 A8 的禁止。它與上一條合起來是 backend-agent-rules.mdx 殘餘風險交辦過來的「§i18n 的三條」的前兩條 |
 | `backend.md` §i18n 的「關鍵錯誤路徑的整合測試要斷言 `zh-TW` 與 `en` 兩種 `detail`」 | **沿用** | 成為 A8 的檢查方式（待建置）。這是那三條的第三條 |
-| ADR-026（i18n 兩層）與 [architecture.mdx](architecture.mdx) §i18n 兩層 | **沿用** | 成為 A8；後端解析 q-value、`*` 通配、`q=0` 拒絕、fallback 到 `zh-TW`、全部被拒回 `406` |
+| ADR-026（i18n 兩層）與 [architecture.mdx](../architecture.mdx) §i18n 兩層 | **沿用** | 成為 A8；後端解析 q-value、`*` 通配、`q=0` 拒絕、fallback 到 `zh-TW`、全部被拒回 `406` |
 | `frontend.md` §State management 的「TanStack Query 管所有 API／server state」 | **沿用** | 成為 A9（ADR-004）。同一節的「Zustand 存 auth token」已在 security-agent-rules.mdx 列為**不採用** |
 | `frontend.md` §Localization（命名空間、只管 UI 字串、**不要**放後端 `detail` 副本） | **沿用** | 成為 A8 |
 | 實作 `backend/app/schemas/common.py`（`AppBaseModel`、`ErrorResponse`／`ErrorDetail`、`PaginatedResponse[T]` 的七個欄位與衍生邏輯）；共用 base 的做法（FR-103） | **沿用原則** | 成為 A2、A3、A7。這份不是規則檔，是**真正跑過的程式**，比 `api.md` 的文字完整 |
@@ -357,19 +357,19 @@ server state 只放 TanStack Query，query key 一律來自 Orval 產物匯出�
 
 | 日期 | 決策 | 取代了什麼 | 來源 |
 | :--- | :--- | :--- | :--- |
-| 2026-11-10 | 路徑前綴 `/api/v1`（A1） | — | 維護者裁定，[architecture.mdx §API 契約](architecture.mdx#api-契約) |
-| 2026-11-10 | 成功回應包一層 envelope；`204` 無 body、檔案與串流是明文例外，且例外逐一寫進 `api-contract.md`（A1） | 「這個端點只回一個布林所以不包」這類逐案判斷 | 維護者裁定，[architecture.mdx §API 契約](architecture.mdx#api-契約) |
+| 2026-11-10 | 路徑前綴 `/api/v1`（A1） | — | 維護者裁定，[architecture.mdx §API 契約](../architecture.mdx#api-契約) |
+| 2026-11-10 | 成功回應包一層 envelope；`204` 無 body、檔案與串流是明文例外，且例外逐一寫進 `api-contract.md`（A1） | 「這個端點只回一個布林所以不包」這類逐案判斷 | 維護者裁定，[architecture.mdx §API 契約](../architecture.mdx#api-契約) |
 | 2026-11-10 | operationId 由 `generate_unique_id_function` 固定成「動詞加資源」，不手寫、不逐個覆寫（A1） | 原始 repo FR-120 的逐條顯式 `operation_id=`（機制不採用，「不依函式名自動生成」照收） | [#51](https://github.com/label-suite/label-suite/issues/51) |
 | 2026-11-10 | 路徑不帶模組段；operationId 撞名時在 `api-contract.md` 加上父資源並寫一行理由（A1） | 原始 repo `api.md` 的 `/api/v1/[module]/[resource]` | [#108](https://github.com/label-suite/label-suite/issues/108) 獨立審查 |
-| 2026-11-10 | 前端型別與 client 用 Orval，輸出到 `frontend/src/api/generated/`（A5） | — | 維護者裁定，[architecture.mdx §前端](architecture.mdx) |
-| 2026-11-10 | Bruno 降級成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真相是 `api-contract.md` 加 `openapi.json`（A4、A10） | 原始 repo ADR-025 的 pre-PR 硬關卡 | 維護者裁定，[architecture.mdx §API 契約](architecture.mdx#api-契約) |
+| 2026-11-10 | 前端型別與 client 用 Orval，輸出到 `frontend/src/api/generated/`（A5） | — | 維護者裁定，[architecture.mdx §前端](../architecture.mdx) |
+| 2026-11-10 | Bruno 降級成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真相是 `api-contract.md` 加 `openapi.json`（A4、A10） | 原始 repo ADR-025 的 pre-PR 硬關卡 | 維護者裁定，[architecture.mdx §API 契約](../architecture.mdx#api-契約) |
 | 2026-11-10 | 未知欄位政策維持 `extra="forbid"`，在共用 base 設定一次；代價是前端先部署時整個請求會被拒絕（A2） | 本文件初版把它標成撰寫者提議、可逆 | [#109](https://github.com/label-suite/label-suite/issues/109) |
 | 2026-11-10 | query 的未知參數靠 `api-contract.md` 的 Request 表收齊（A2） | — | [#108](https://github.com/label-suite/label-suite/issues/108) |
 | 2026-11-10 | 每個列表端點的契約要寫出 `limit` 上限、含尾鍵的預設排序、空頁行為；排序穩定性套用所有列表端點（A3） | 來源只在 cursor 分頁要求穩定排序鍵 | [#108](https://github.com/label-suite/label-suite/issues/108) |
 | 2026-11-10 | `401` 有「更新 session 並重放」與「清掉登入狀態」兩個分支，refresh 同時只允許一個在飛（A7） | 原本只寫了清掉那一支 | [#108](https://github.com/label-suite/label-suite/issues/108) 獨立審查 |
-| 2026-11-10 | correlation id 只進錯誤物件與 log，不送任何第三方（A7） | FR-123 送進 Sentry 的那一半 | 維護者裁定 Sentry 本期不做，[architecture.mdx](architecture.mdx) |
+| 2026-11-10 | correlation id 只進錯誤物件與 log，不送任何第三方（A7） | FR-123 送進 Sentry 的那一半 | 維護者裁定 Sentry 本期不做，[architecture.mdx](../architecture.mdx) |
 | 2026-11-10 | `detail` 不得回 i18n key 本身或原始英文字面值（A8） | 原本沒擋「回 key」這一種 | [#108](https://github.com/label-suite/label-suite/issues/108) 獨立審查 |
 | 2026-11-10 | query key 一律來自 Orval 產物，不手寫 factory；任務成員身分變更只失效帶 `taskId` 的 key，不整個 `clear()`（A9） | FR-084 的手寫 `shared/constants/query-keys.ts` factory | 維護者裁定 Orval 與 `pages/` 加 `features/` 目錄；[#108](https://github.com/label-suite/label-suite/issues/108) |
 | 2026-11-10 | 破壞性變更的審核方式是三個落點（`design-reviewer`、`code-reviewer`、CI snapshot diff），不另立流程（A10） | — | [#108](https://github.com/label-suite/label-suite/issues/108) |
 | 2026-11-10 | starter-kit 沒有對應的 API 規則檔，不編造對照；實查範圍見附錄 | — | [#108](https://github.com/label-suite/label-suite/issues/108) |
-| 2026-11-19 | 路徑前綴與 envelope、Orval、Bruno 降級的理由寫進 [ADR-003](adr/003-backend-architecture.mdx) 的 D5、D6、D9，本文只留規則（A1、A4、A10） | —（理由原本只在 [#105](https://github.com/label-suite/label-suite/issues/105) 與 [#108](https://github.com/label-suite/label-suite/issues/108) 的留言） | [#449](https://github.com/label-suite/label-suite/issues/449) |
+| 2026-11-19 | 路徑前綴與 envelope、Orval、Bruno 降級的理由寫進 [ADR-003](../adr/003-backend-architecture.mdx) 的 D5、D6、D9，本文只留規則（A1、A4、A10） | —（理由原本只在 [#105](https://github.com/label-suite/label-suite/issues/105) 與 [#108](https://github.com/label-suite/label-suite/issues/108) 的留言） | [#449](https://github.com/label-suite/label-suite/issues/449) |

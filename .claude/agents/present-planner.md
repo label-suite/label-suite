@@ -101,7 +101,7 @@ model: sonnet
 
 **Core line**: 一句話收斂——讀者看完該記住什麼
 **Treatment**: 對外提案 / 內部備忘（+ 一句理由）
-**Deck meta**: slug `development/agent-rules`（帶資料夾）/ title「…」/ eyebrow「…」/ 建議頁數 N
+**Deck meta**: slug `development/rules/agent-rules`（帶資料夾）/ title「…」/ eyebrow「…」/ 建議頁數 N
 **Reusable viz**（該筆記既有、可嵌入 full-visual 的元件 id）: rr-raci, rr-structure
 
 **Slides**:

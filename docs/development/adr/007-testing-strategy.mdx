@@ -6,8 +6,8 @@ tags: [adr, testing, coverage, e2e]
 
 # ADR-007 測試策略
 
-這份 ADR 管測試的分層、覆蓋率的要求，以及測試檔放在哪裡。TDD 的紅燈紀律、integration 的真實邊界、gate 與 evidence 不在這裡，見 [testing-agent-rules.mdx](../testing-agent-rules.mdx)。
-規則本體在 `AGENTS.md` 與 [testing-agent-rules.mdx](../testing-agent-rules.mdx)，落地的做法在 [architecture.mdx 的 §測試分層](../architecture.mdx#測試分層)，本文只寫為什麼；衝突時的優先序見 [ADR 索引](index.mdx#衝突時以誰為準)。
+這份 ADR 管測試的分層、覆蓋率的要求，以及測試檔放在哪裡。TDD 的紅燈紀律、integration 的真實邊界、gate 與 evidence 不在這裡，見 [testing-agent-rules.mdx](../rules/testing-agent-rules.mdx)。
+規則本體在 `AGENTS.md` 與 [testing-agent-rules.mdx](../rules/testing-agent-rules.mdx)，落地的做法在 [architecture.mdx 的 §測試分層](../architecture.mdx#測試分層)，本文只寫為什麼；衝突時的優先序見 [ADR 索引](index.mdx#衝突時以誰為準)。
 
 ## D1 三層測試的分工
 
@@ -26,12 +26,12 @@ tags: [adr, testing, coverage, e2e]
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
 | A 三層：unit、integration、e2e，各層的工具、範圍、位置、指令固定 | 「打 API 但不開瀏覽器」有自己的名字；每層成本與範圍清楚 | 三個名詞要靠審查維持，叫錯了不會自己報錯 | 採用 |
-| B 兩個名詞：unit 與 e2e，用 httpx 打 API 的測試也算 e2e | 少一個名詞 | httpx 測試沒有開真瀏覽器，不是 e2e；[T1](../testing-agent-rules.mdx#t1-三層的範圍位置指令與生命週期) 明文禁止這樣叫 | 不採用 |
+| B 兩個名詞：unit 與 e2e，用 httpx 打 API 的測試也算 e2e | 少一個名詞 | httpx 測試沒有開真瀏覽器，不是 e2e；[T1](../rules/testing-agent-rules.mdx#t1-三層的範圍位置指令與生命週期) 明文禁止這樣叫 | 不採用 |
 | C 後端用 unittest，e2e 用 Cypress 或 Selenium | 不必選 pytest 與 Playwright | unittest 沒有原生 async、fixture 較弱；Cypress 只支援 Chromium 且免費版沒有平行；Selenium 較慢、較不穩 | 不採用 |
 
 ### 決定
 
-測試只分 unit、integration、e2e 三層；後端用 pytest 加 httpx，前端用 Vitest 加 React Testing Library，e2e 用 Playwright，三層互補、不重疊：純 UI 邏輯不用 Playwright 測，跨頁旅程不用 Vitest 測，用 httpx 打 API 的叫 integration、不叫 e2e。範圍、位置與指令見 [testing-agent-rules.mdx 的 T1](../testing-agent-rules.mdx#t1-三層的範圍位置指令與生命週期)。
+測試只分 unit、integration、e2e 三層；後端用 pytest 加 httpx，前端用 Vitest 加 React Testing Library，e2e 用 Playwright，三層互補、不重疊：純 UI 邏輯不用 Playwright 測，跨頁旅程不用 Vitest 測，用 httpx 打 API 的叫 integration、不叫 e2e。範圍、位置與指令見 [testing-agent-rules.mdx 的 T1](../rules/testing-agent-rules.mdx#t1-三層的範圍位置指令與生命週期)。
 
 ### 後果
 
@@ -73,7 +73,7 @@ tags: [adr, testing, coverage, e2e]
 
 ### 決定
 
-覆蓋率只有兩條規則：每張 PR 不得低於它的基準，以及認證、授權與權限檢查、答案隔離、評分、IAA 計算這五項關鍵路徑要達 90% 分支覆蓋；分母排除 Orval 產物、Alembic migration 與設定檔，整體 80% 不當硬閘。規則本體見 [testing-agent-rules.mdx 的 T10](../testing-agent-rules.mdx#t10-覆蓋率)。
+覆蓋率只有兩條規則：每張 PR 不得低於它的基準，以及認證、授權與權限檢查、答案隔離、評分、IAA 計算這五項關鍵路徑要達 90% 分支覆蓋；分母排除 Orval 產物、Alembic migration 與設定檔，整體 80% 不當硬閘。規則本體見 [testing-agent-rules.mdx 的 T10](../rules/testing-agent-rules.mdx#t10-覆蓋率)。
 
 ### 後果
 
@@ -102,7 +102,7 @@ tags: [adr, testing, coverage, e2e]
 | 限制 | 對選擇的影響 |
 | :--- | :--- |
 | 前端依 `pages/` 加 `features/` 組織 | 測試放哪裡要和這個結構一致 |
-| [T1](../testing-agent-rules.mdx#t1-三層的範圍位置指令與生命週期) 把「測試檔放在與表格不同的位置」列為禁止 | 位置必須只有一種答案，CI 才能用路徑規則檢查 |
+| [T1](../rules/testing-agent-rules.mdx#t1-三層的範圍位置指令與生命週期) 把「測試檔放在與表格不同的位置」列為禁止 | 位置必須只有一種答案，CI 才能用路徑規則檢查 |
 | 來源對前端測試位置有兩種說法 | 兩邊只能選一個，不能並存 |
 
 ### 考慮過的選項
@@ -114,7 +114,7 @@ tags: [adr, testing, coverage, e2e]
 
 ### 決定
 
-前端的元件與 hook 測試與原始碼放在同一個目錄，檔名 `*.test.ts(x)`；位置本身見 [testing-agent-rules.mdx 的 T1](../testing-agent-rules.mdx#t1-三層的範圍位置指令與生命週期)，指令是 `pnpm test`。
+前端的元件與 hook 測試與原始碼放在同一個目錄，檔名 `*.test.ts(x)`；位置本身見 [testing-agent-rules.mdx 的 T1](../rules/testing-agent-rules.mdx#t1-三層的範圍位置指令與生命週期)，指令是 `pnpm test`。
 
 ### 後果
 
@@ -155,7 +155,7 @@ tags: [adr, testing, coverage, e2e]
 
 ### 決定
 
-正式全端 E2E 放在根目錄 `e2e/[module]/[page].spec.ts`，各角色的 `storageState` 與 seed helper 放 `e2e/shared/fixtures/`；Vitest 元件測試仍留在 `frontend/src/`（[D3](#d3-前端測試與原始碼放同一個目錄)）。位置與指令見 [testing-agent-rules.mdx 的 T1](../testing-agent-rules.mdx#t1-三層的範圍位置指令與生命週期)。
+正式全端 E2E 放在根目錄 `e2e/[module]/[page].spec.ts`，各角色的 `storageState` 與 seed helper 放 `e2e/shared/fixtures/`；Vitest 元件測試仍留在 `frontend/src/`（[D3](#d3-前端測試與原始碼放同一個目錄)）。位置與指令見 [testing-agent-rules.mdx 的 T1](../rules/testing-agent-rules.mdx#t1-三層的範圍位置指令與生命週期)。
 
 ### 後果
 
@@ -182,9 +182,9 @@ tags: [adr, testing, coverage, e2e]
 
 | 決定 | 來源 |
 | :--- | :--- |
-| D1 | 個人 repo ADR-009（pytest、Playwright、TDD、unittest／Cypress／Selenium 的比較）與 ADR-012（前端兩層）；本 repo 把前端的兩層擴成三層，名詞「用 httpx 打 API 叫 integration、不叫 e2e」來自 scaffold 的 `testing.md`，見 [testing-agent-rules.mdx 的附錄](../testing-agent-rules.mdx#各條規範的來源) |
-| D2 | 個人 repo ADR-009 的分層門檻（選項 B）；選項 A 是原始 repo foundation spec 的 `SC-001`；維護者採用的是原始 repo `testing-backend.md` 與 `testing-frontend.md` 的「新程式不得降低整體覆蓋率」與「關鍵路徑 90% 分支」，關鍵路徑由三項擴成五項，見 [testing-agent-rules.mdx 的 T10](../testing-agent-rules.mdx#t10-覆蓋率) |
-| D3 | 個人 repo ADR-012 的 Co-location Convention；選項 B 是原始 repo `testing-frontend.md` 的位置慣例，見 [testing-agent-rules.mdx 的 T1 來源](../testing-agent-rules.mdx#各條規範的來源) |
+| D1 | 個人 repo ADR-009（pytest、Playwright、TDD、unittest／Cypress／Selenium 的比較）與 ADR-012（前端兩層）；本 repo 把前端的兩層擴成三層，名詞「用 httpx 打 API 叫 integration、不叫 e2e」來自 scaffold 的 `testing.md`，見 [testing-agent-rules.mdx 的附錄](../rules/testing-agent-rules.mdx#各條規範的來源) |
+| D2 | 個人 repo ADR-009 的分層門檻（選項 B）；選項 A 是原始 repo foundation spec 的 `SC-001`；維護者採用的是原始 repo `testing-backend.md` 與 `testing-frontend.md` 的「新程式不得降低整體覆蓋率」與「關鍵路徑 90% 分支」，關鍵路徑由三項擴成五項，見 [testing-agent-rules.mdx 的 T10](../rules/testing-agent-rules.mdx#t10-覆蓋率) |
+| D3 | 個人 repo ADR-012 的 Co-location Convention；選項 B 是原始 repo `testing-frontend.md` 的位置慣例，見 [testing-agent-rules.mdx 的 T1 來源](../rules/testing-agent-rules.mdx#各條規範的來源) |
 | D4 | 個人 repo ADR-034（選項 A、B 的比較與限制）；它同時取代 ADR-009、011、012 的 E2E 位置 |
 | — | 個人 repo ADR-014（prototype 層 Playwright 測試）不適用本 repo，測試留在個人 repo，見 [architecture.mdx 的 §ADR 效力總表](../architecture.mdx#adr-效力總表) |
 

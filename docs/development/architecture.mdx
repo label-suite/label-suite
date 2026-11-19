@@ -6,7 +6,7 @@ tags: [architecture, fastapi, react, adr]
 
 # 技術架構
 
-`backend/`、`frontend/` 還不存在，本文寫的是「要照著做的架構」；第一個讀者是 OpenSpec 規劃階段的 `sd` 與 `ui-ux`，業務面以 `docs/specs/` 為準（見 [需求文件撰寫](spec-authoring.md)）。
+`backend/`、`frontend/` 還不存在，本文寫的是「要照著做的架構」；第一個讀者是 OpenSpec 規劃階段的 `sd` 與 `ui-ux`，業務面以 `docs/specs/` 為準（見 [需求文件撰寫](workflow/spec-authoring.md)）。
 本文是個人 repo 38 份 ADR 在本 repo 的落地版，每份 ADR 照做、調整或被取代，見文末 [§ADR 效力總表](#adr-效力總表)。
 衝突時依序以 `AGENTS.md`、本 repo 的 [ADR](adr/index.mdx)、本文為準，個人 repo 的 ADR 只當參考；業務面一律以 `docs/specs/` 為準。發現不一致就照這個順序做，並回報維護者。
 
@@ -211,7 +211,7 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 | 授權 | 測試集答案隔離是授權第四步的附加條件，權限矩陣 cell 為 true 也不能蓋過 |
 | 保留政策 | 帶答案的歷史 JSON 跟著它所屬的資料集版本或 run 存續，不做 PII 匿名化、不單獨刪除 |
 
-規劃階段由 clarify 關卡的第 10 個檢查面向把關（見 [OpenSpec 導入決議](openspec-fullstack-sdd.mdx)）。
+規劃階段由 clarify 關卡的第 10 個檢查面向把關（見 [OpenSpec 導入決議](workflow/openspec-fullstack-sdd.mdx)）。
 
 ## 資料庫雙層
 
@@ -348,7 +348,7 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做。�
 | 寄信 | Resend；沒設 key 時把設定密碼連結印在伺服器 log，由部署者轉給使用者。因此 Lite 層的 log 視為敏感，畫面要讓管理員知道信沒有寄出去（條文見[規格 06-01](../specs/06-admin/01-user-management.mdx#已確認決議) Q9–Q11） |
 | 監控 | Prometheus、Grafana、Sentry 本期不做，與 PRD「研究原型、不是生產規模服務」的定位一致；代價是出錯時只能看 log，沒有告警 |
 | CI 安全掃描 | 後端 `uv run pip-audit --fail-on high`、前端 `pnpm audit --prod --audit-level high`；SAST（Semgrep）等有程式再接 |
-| 相依套件 | dependabot 警示的升級邊界見 [相依套件政策](dependency-policy.mdx) |
+| 相依套件 | dependabot 警示的升級邊界見 [相依套件政策](workflow/dependency-policy.mdx) |
 | 發版 | 版號、CHANGELOG、tag、GitHub Release 與 Zenodo DOI 見 `commit-and-release.md` |
 
 :::note{title="安全掃描與分支推進" collapsible}

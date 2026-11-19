@@ -4,7 +4,7 @@
 它不是系統流程圖：不畫系統內部怎麼處理，只畫角色做了什麼、系統回應了什麼（使用者看得到的部分）。
 
 每份流程圖都從同一份骨架開始，**外殼、圖形與走查機制固定，只換流程資料**，不同規格的流程圖看起來是同一套。
-樣式另依 `docs/development/notecraft-visualize.md`。章節文字的寫法見 [writing-guide.md](writing-guide.md) 的「業務流程」。
+樣式另依 `docs/development/notecraft/notecraft-visualize.md`。章節文字的寫法見 [writing-guide.md](writing-guide.md) 的「業務流程」。
 
 ## 放在哪
 
