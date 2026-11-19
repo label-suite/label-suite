@@ -7,9 +7,10 @@
 #   * a git repository of its own, so a test may commit, stage and destroy
 #     freely without touching real work;
 #   * fake ruff / mypy / tsc / eslint ahead of the real ones on PATH, with an
-#     exit code and output the test chooses, and a log of which ones ran — a
-#     checker that silently skipped a tool and one that ran it both "pass"
-#     otherwise;
+#     exit code and output the test chooses, and a log of which ones ran and
+#     what each one saw — a checker that silently skipped a tool and one that
+#     ran it both "pass" otherwise, and so do one that handed over the right
+#     copy of a file and one that handed over a different copy;
 #   * a payload per event, so a test does not hand-write JSON and drift from
 #     what hook-payload.mjs actually requires.
 #
@@ -45,6 +46,13 @@ harness_setup() {
 # output and exit code the test asked for.
 self=$(basename "$0")
 printf '%s %s\n' "$self" "$*" >> "$HARNESS_BIN/.calls"
+# Also record the first line of each file argument. Logging only the argument
+# cannot tell a checker that handed over the right copy of a file from one
+# that handed over a stale or different copy, because the path is the same
+# either way; the contents are the only thing that differs.
+for arg in "$@"; do
+  [ -f "$arg" ] && printf '%s saw %s <<%s\n' "$self" "$arg" "$(head -1 "$arg" 2>/dev/null)" >> "$HARNESS_BIN/.calls"
+done
 out=$(cat "$HARNESS_BIN/.$self.out")
 [ -n "$out" ] && printf '%s\n' "$out"
 exit "$(cat "$HARNESS_BIN/.$self.code")"

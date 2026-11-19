@@ -148,9 +148,111 @@ for mode in "--files backend/app.py" "--range HEAD~1..HEAD" "--list-routes"; do
   [ "$rc" = "2" ] || fail "a blocking mode did not fail closed: $mode (got $rc)"
 done
 
-# --staged belongs to task 4.1; until then it must refuse, not pass.
-rc=$( ( cd "$REPO" && "$CHECKER" --staged >"$TMP/out" 2>"$TMP/err" ); echo $? )
-[ "$rc" = "2" ] || fail "--staged passed before its list acquisition exists (got $rc)"
+# ── --staged judges the index, not the working tree ──────────────────
+#
+# The whole point of the pre-commit trigger is that what gets committed is
+# what gets judged. A file fixed in the working tree but not staged must
+# still be refused, or the hook passes on content nobody is committing.
+
+staged() { ( cd "${2:-$REPO}" && "$CHECKER" --staged >"$TMP/out" 2>"$TMP/err" ); echo $?; }
+
+git -C "$REPO" add -A >/dev/null; git -C "$REPO" commit -qm "before staged cases"
+harness_set_tool ruff 0 ''
+harness_set_tool mypy 0 ''
+
+seed backend/staged.py 'print(1)'
+git -C "$REPO" add backend/staged.py >/dev/null
+harness_reset_calls
+rc=$(staged)
+[ "$rc" = "0" ] || fail "a clean staged change was refused (got $rc)"
+harness_calls | grep -q '^ruff ' || fail "--staged did not route the staged file to its tool"
+
+# The tool must see the staged bytes, not whatever the working tree holds.
+# The harness logs the first line of every file it is handed, so this asserts
+# on the content rather than on the path, which is identical either way.
+seed backend/staged.py 'print(2)   # fixed here but never staged'
+harness_set_tool ruff 1 'staged.py:1:1 E999 the staged version is broken'
+harness_reset_calls
+rc=$(staged)
+[ "$rc" = "1" ] || fail "a fix left unstaged was treated as if it counted (got $rc)"
+grep -q 'E999' "$TMP/err" || fail "--staged did not report the tool output"
+harness_calls | grep -q 'ruff saw .*<<print(1)' \
+  || fail "the tool was handed the working-tree copy, not the staged one"
+harness_calls | grep -q 'never staged' \
+  && fail "the working-tree copy reached the tool"
+harness_set_tool ruff 0 ''
+
+# The sharpest discriminator: stage a file, then delete it from the working
+# tree without staging the deletion. Only a checker reading the index can see
+# it at all; one reading the working tree finds nothing and skips it.
+seed backend/only-in-index.py 'print("lives in the index only")'
+git -C "$REPO" add backend/only-in-index.py >/dev/null
+rm -f "$REPO/backend/only-in-index.py"
+harness_reset_calls
+rc=$(staged)
+harness_calls | grep -q 'only-in-index.py' \
+  || fail "--staged skipped a file that exists only in the index; it is reading the working tree"
+[ "$rc" = "0" ] || fail "a file staged then removed from the working tree was not judged cleanly (got $rc)"
+git -C "$REPO" checkout -- backend/only-in-index.py 2>/dev/null || git -C "$REPO" reset -q backend/only-in-index.py
+
+# A staged deletion is not a file to check. Without the ACMR filter it would
+# arrive in the list and the attempt to read it out of the index would turn
+# the whole commit into an undecidable refusal.
+seed backend/doomed.py 'print("about to go")'
+git -C "$REPO" add -A >/dev/null; git -C "$REPO" commit -qm "add the file to delete"
+git -C "$REPO" rm -q backend/doomed.py
+harness_reset_calls
+rc=$(staged)
+[ "$rc" = "0" ] || fail "a staged deletion was not skipped (got $rc)"
+harness_calls | grep -q 'doomed.py' && fail "a staged deletion was handed to a tool"
+git -C "$REPO" reset -q --hard HEAD >/dev/null
+
+# Partially staged: only the staged hunk counts.
+seed backend/partial.py 'print("staged")'
+git -C "$REPO" add backend/partial.py >/dev/null
+seed backend/partial.py 'print("working tree only")'
+rc=$(staged)
+[ "$rc" = "0" ] || fail "a partially staged file judged the working tree copy (got $rc)"
+
+# Run from a subdirectory: the whole staged list is still covered.
+mkdir -p "$REPO/backend/deep"
+seed backend/deep/sub.py 'print(3)'
+git -C "$REPO" add -A >/dev/null
+harness_reset_calls
+rc=$(staged 0 "$REPO/backend/deep")
+[ "$rc" = "0" ] || fail "--staged from a subdirectory failed (got $rc)"
+harness_calls | grep -q 'sub.py' || fail "--staged from a subdirectory missed the staged file"
+
+# Paths with spaces and CJK survive the NUL-separated list.
+seed 'backend/有 空白 的檔名.py' 'print(4)'
+git -C "$REPO" add -A >/dev/null
+harness_reset_calls
+rc=$(staged)
+[ "$rc" = "0" ] || fail "a path with spaces and CJK broke --staged (got $rc)"
+harness_calls | grep -q '空白' || fail "the CJK path never reached the tool"
+
+# The mirror is a temporary directory per run; leaving it behind would litter
+# one per commit.
+mirrors_before=$(ls -1d "${TMPDIR:-/tmp}"/check-changed-index.* 2>/dev/null | wc -l | tr -d ' ')
+staged >/dev/null
+mirrors_after=$(ls -1d "${TMPDIR:-/tmp}"/check-changed-index.* 2>/dev/null | wc -l | tr -d ' ')
+[ "$mirrors_after" = "$mirrors_before" ] || fail "--staged left its index mirror behind"
+
+# Nothing it does may touch the working tree or the index.
+before=$(git -C "$REPO" status --porcelain)
+before_staged=$(git -C "$REPO" diff --cached --name-only)
+staged >/dev/null
+[ "$(git -C "$REPO" status --porcelain)" = "$before" ] || fail "--staged changed the working tree"
+[ "$(git -C "$REPO" diff --cached --name-only)" = "$before_staged" ] || fail "--staged changed the index"
+
+# git stash is forbidden: it would move the working tree out from under the user.
+grep -q 'git stash' "$ROOT/scripts/check-changed.sh" && fail "the checker reaches for git stash"
+
+# --staged fails closed, like the other blocking modes.
+rc=$( ( cd "$REPO" && PATH="$TMP/onlybash" "$CHECKER" --staged >"$TMP/out" 2>"$TMP/err" ); echo $? )
+[ "$rc" = "2" ] || fail "--staged did not fail closed when node was missing (got $rc)"
+
+git -C "$REPO" reset -q
 
 # ── --list-routes names the routes that are on ───────────────────────
 

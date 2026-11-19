@@ -30,6 +30,7 @@ FINISHED=0
 on_exit() {
   local rc=$?
   if [ "$FINISHED" != "1" ]; then
+    [ -n "${MIRROR:-}" ] && [ -d "$MIRROR" ] && rm -rf "$MIRROR"
     if blocking; then
       printf 'BLOCK: checker aborted unexpectedly\n' >&2
       hc_cleanup 2>/dev/null; exit 2
@@ -38,6 +39,7 @@ on_exit() {
     hc_cleanup 2>/dev/null; exit 0
   fi
   hc_cleanup 2>/dev/null
+  [ -n "${MIRROR:-}" ] && [ -d "$MIRROR" ] && rm -rf "$MIRROR"
   exit "$rc"
 }
 
@@ -114,10 +116,13 @@ case "$MODE" in
     hc_read_nul_list CANDIDATES < "$HC_BUFFER_DIR/list"
     ;;
   staged)
-    # Task 4.1 implements the staged list acquisition (D13). Until then this
-    # mode refuses: a blocking trigger that silently passes is worse than one
-    # that is not wired yet.
-    undecidable "--staged 的清單取得尚未實作（#111 task 4.1），本模式不判為通過"
+    # ACMR drops deletions, which matches "only files that still exist"; -z
+    # keeps paths with spaces and CJK intact.
+    if ! git -C "$REPO" diff --cached --name-only --diff-filter=ACMR -z \
+         > "$HC_BUFFER_DIR/list" 2>/dev/null; then
+      undecidable "無法取得 staged 清單，本次不判為通過"
+    fi
+    hc_read_nul_list CANDIDATES < "$HC_BUFFER_DIR/list"
     ;;
 esac
 
@@ -147,7 +152,10 @@ for cand in ${CANDIDATES+"${CANDIDATES[@]}"}; do
     emit_err "NA: $cand 在 workspace 之外，略過（不在本檢查的範圍內）"
     SKIPPED=$((SKIPPED + 1)); continue
   fi
-  if [ ! -f "$REPO/$rel" ]; then
+  # In --staged mode the working tree is not the authority: ACMR already
+  # dropped deletions from the list, and a file staged then removed from the
+  # working tree is still being committed.
+  if [ "$MODE" != "staged" ] && [ ! -f "$REPO/$rel" ]; then
     emit_err "NA: $rel 已不存在（被刪除或改名），略過"
     SKIPPED=$((SKIPPED + 1)); continue
   fi
@@ -162,6 +170,32 @@ for cand in ${CANDIDATES+"${CANDIDATES[@]}"}; do
     *)    emit_err "NA: $rel 沒有命中任何路由" ;;
   esac
 done
+
+# ── In --staged mode the tools must see the index, not the working tree ──
+#
+# A file fixed in the working tree but never staged is not what is being
+# committed, so judging the working tree would pass on content nobody is
+# about to commit. Stashing would do that by moving the working tree out
+# from under the user; materialising the index into a mirror does not touch
+# it at all (D13).
+CONTENT_ROOT="$REPO"
+if [ "$MODE" = "staged" ] && { [ "${#PY_FILES[@]}" -gt 0 ] || [ "${#TS_FILES[@]}" -gt 0 ] || [ "$DOC_HITS" = "1" ]; }; then
+  MIRROR=$(mktemp -d "${TMPDIR:-/tmp}/check-changed-index.XXXXXX") || \
+    undecidable "無法建立鏡像目錄，本次不判為通過"
+  # Whole-tree checks need the whole index; per-file checks need only their
+  # own files, which is much cheaper on a large repository.
+  if [ "$DOC_HITS" = "1" ] || [ "${#TS_FILES[@]}" -gt 0 ]; then
+    git -C "$REPO" checkout-index -a --prefix="$MIRROR/" 2>/dev/null || \
+      undecidable "無法把索引物化到鏡像目錄，本次不判為通過"
+  fi
+  for rel in ${PY_FILES+"${PY_FILES[@]}"} ${TS_FILES+"${TS_FILES[@]}"}; do
+    mkdir -p "$MIRROR/$(dirname "$rel")"
+    git -C "$REPO" show ":$rel" > "$MIRROR/$rel" 2>/dev/null || \
+      undecidable "無法取出 $rel 的 staged 內容，本次不判為通過"
+  done
+  CONTENT_ROOT="$MIRROR"
+fi
+cd "$CONTENT_ROOT" || undecidable "無法進入 $CONTENT_ROOT，本次不判為通過"
 
 # ── Run the routed checks ────────────────────────────────────────────
 violations=0
@@ -243,7 +277,7 @@ if [ -n "$GIT_DIR" ]; then
   {
     printf 'commit: %s\n' "$(git -C "$REPO" rev-parse HEAD 2>/dev/null)"
     printf 'head: %s\n' "$(git -C "$REPO" rev-parse HEAD 2>/dev/null)"
-    printf 'content: %s\n' "$(cd "$REPO" && cat ${PY_FILES+"${PY_FILES[@]}"} ${TS_FILES+"${TS_FILES[@]}"} </dev/null 2>/dev/null | shasum -a 256 | cut -d' ' -f1)"
+    printf 'content: %s\n' "$(cd "$CONTENT_ROOT" && cat ${PY_FILES+"${PY_FILES[@]}"} ${TS_FILES+"${TS_FILES[@]}"} </dev/null 2>/dev/null | shasum -a 256 | cut -d' ' -f1)"
     printf 'agents: %s\n' "$(shasum -a 256 "$REPO/AGENTS.md" 2>/dev/null | cut -d' ' -f1)"
   } >> "$rec_file"
 
