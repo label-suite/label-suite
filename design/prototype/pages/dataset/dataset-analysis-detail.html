@@ -519,6 +519,8 @@ var I18N = {
     anomSeqSpeedTitle:'標記速度異常', anomSeqOutlierTitle:'高分歧樣本',
     anomSeqSpd1Title:'Jordan Wu — 標記速度過快', anomSeqSpd1Detail:'平均 22s／句（門檻：≥ 30s），共 38 筆送出紀錄',
     anomSeqOut1Title:'樣本 #89 — 實體邊界 high_divergence 旗標', anomSeqOut1Detail:'Jordan Wu 的 span 邊界與群體中位跨度相差 3 個 token 以上；此旗標與個人風險等級分開處理。',
+    anomStSpd1Title:'Jordan Wu — 標記速度過快', anomStSpd1Detail:'平均 20s／句（門檻：≥ 30s），共 40 筆送出紀錄',
+    anomStOut1Title:'樣本 #312 — token 標記 high_divergence 旗標', anomStOut1Detail:'3 位標記員的 span 邊界差異超過 4 個 token；此旗標為 sample-level，與個人風險等級分開處理。',
     anomRelSpeedTitle:'標記速度異常', anomRelOutlierTitle:'高分歧樣本', anomRelOutlierEmpty:'暫無 high_divergence 樣本',
     anomRelSpd1Title:'Jordan Wu — 標記速度過快', anomRelSpd1Detail:'平均 25s／句（門檻：≥ 45s），關係抽取任務複雜度較高',
     /* issue label-suite/label-suite#155 (Q18, maintainer 2026-11-06/2026-11-10): the unit
@@ -568,6 +570,7 @@ var I18N = {
       seqSpeed1: '52s / 句',
       seqSpeed2: '60s / 句',
       seqSpeed3: '22s / 句',
+      seqSpeedWarn: '20s / 句',
       relSpeed1: '65s / 句',
       relSpeed2: '72s / 句',
       relSpeed3: '25s / 句',
@@ -588,6 +591,27 @@ var I18N = {
       leaderOnly: '僅 Project Leader 可執行',
     },
     qualityListRank: {
+      ariaAltMetrics: '輔助指標',
+      ariaDevCls: '標記一致性偏離分析（分類）',
+      ariaDevRel: '標記一致性偏離分析（關係抽取）',
+      ariaDevSeq: '標記一致性偏離分析（序列標記）',
+      ariaDevSingleDim: '標記一致性偏離分析（單維度評分）',
+      ariaDevSingleLabel: '標記一致性偏離分析（單選分類）',
+      ariaDevVa: '標記一致性偏離分析（VA 評分）',
+      ariaRankMultiLabel: '標記員品質排名（多標籤分類）',
+      ariaRankNer: '標記員品質排名（命名實體辨識）',
+      ariaRankRel: '標記員品質排名（關係抽取）',
+      ariaRankSeq: '標記員品質排名（序列標記）',
+      ariaRankSingleDim: '標記員品質排名（單維度評分）',
+      ariaRankSingleLabel: '標記員品質排名（單選分類）',
+      ariaRankVa: '標記員品質排名（VA 評分）',
+      ariaSampleMultiLabel: '一致性最低樣本清單（多標籤分類）',
+      ariaSampleNer: '一致性最低樣本清單（命名實體辨識）',
+      ariaSampleRel: '一致性最低樣本清單（關係抽取）',
+      ariaSampleSeq: '一致性最低樣本清單（序列標記）',
+      ariaSampleSingleDim: '一致性最低樣本清單（單維度評分）',
+      ariaSampleSingleLabel: '一致性最低樣本清單（單選分類）',
+      ariaSampleVa: '一致性最低樣本清單（VA 評分）',
       lowConsistencyTitle: '一致性最低樣本清單',
       lowConsistencySubtitle: '依分歧度由高到低排序，可作為 Reviewer 仲裁優先順序參考（與 dry_run 仲裁 divergent 概念同源）',
       lowConsistencyCountFmt: '{count} 筆',
@@ -626,6 +650,7 @@ var I18N = {
       boundaryExampleDetail: '參考值: 「散熱表現優異」｜Annotator: 「散熱表現優異，長時間高負載運作」（多標 6 tokens，span_too_long）',
     },
     entityRecognitionListRank: {
+      pairwiseAvg: 'Pairwise 平均',
       sample1Detail: '「台大醫院」實體邊界標記不一致（ORG vs LOC 類型分歧）',
       sample2Detail: '「神經內科」span 起訖位置在 2 位標記員間相差 2 個字元',
       rankMetricName: '與合併聚合參考值 F1',
@@ -901,6 +926,8 @@ var I18N = {
     anomSeqSpeedTitle:'Speed Anomalies', anomSeqOutlierTitle:'High-divergence Samples',
     anomSeqSpd1Title:'Jordan Wu — Annotation speed too fast', anomSeqSpd1Detail:'Avg 22s/sent (threshold: ≥ 30s), 38 submissions',
     anomSeqOut1Title:'Sample #89 — high-divergence entity boundary flag', anomSeqOut1Detail:"Jordan Wu's span boundary differs from the group median by > 3 tokens; the flag stays sample-level only.",
+    anomStSpd1Title:'Jordan Wu — Annotation speed too fast', anomStSpd1Detail:'Avg 20s/sent (threshold: ≥ 30s), 40 submissions',
+    anomStOut1Title:'Sample #312 — token high_divergence flag', anomStOut1Detail:"Span boundaries of 3 annotators differ by more than 4 tokens; the flag is sample-level and handled separately from individual risk levels.",
     anomRelSpeedTitle:'Speed Anomalies', anomRelOutlierTitle:'High-divergence Samples', anomRelOutlierEmpty:'No high-divergence samples',
     anomRelSpd1Title:'Jordan Wu — Annotation speed too fast', anomRelSpd1Detail:'Avg 25s/sent (threshold: ≥ 45s); relation extraction is inherently complex',
     outputTypeCol: 'Output Type',
@@ -936,6 +963,7 @@ var I18N = {
       seqSpeed1: '52s / sent',
       seqSpeed2: '60s / sent',
       seqSpeed3: '22s / sent',
+      seqSpeedWarn: '20s / sent',
       relSpeed1: '65s / sent',
       relSpeed2: '72s / sent',
       relSpeed3: '25s / sent',
@@ -956,6 +984,27 @@ var I18N = {
       leaderOnly: 'Project Leader only',
     },
     qualityListRank: {
+      ariaAltMetrics: 'Supporting metrics',
+      ariaDevCls: 'Annotation consistency deviation analysis (classification)',
+      ariaDevRel: 'Annotation consistency deviation analysis (relation extraction)',
+      ariaDevSeq: 'Annotation consistency deviation analysis (sequence tagging)',
+      ariaDevSingleDim: 'Annotation consistency deviation analysis (single-dimension rating)',
+      ariaDevSingleLabel: 'Annotation consistency deviation analysis (single-label)',
+      ariaDevVa: 'Annotation consistency deviation analysis (VA rating)',
+      ariaRankMultiLabel: 'Annotator quality ranking (multi-label)',
+      ariaRankNer: 'Annotator quality ranking (named entity recognition)',
+      ariaRankRel: 'Annotator quality ranking (relation extraction)',
+      ariaRankSeq: 'Annotator quality ranking (sequence tagging)',
+      ariaRankSingleDim: 'Annotator quality ranking (single-dimension rating)',
+      ariaRankSingleLabel: 'Annotator quality ranking (single-label)',
+      ariaRankVa: 'Annotator quality ranking (VA rating)',
+      ariaSampleMultiLabel: 'Lowest-agreement sample list (multi-label)',
+      ariaSampleNer: 'Lowest-agreement sample list (named entity recognition)',
+      ariaSampleRel: 'Lowest-agreement sample list (relation extraction)',
+      ariaSampleSeq: 'Lowest-agreement sample list (sequence tagging)',
+      ariaSampleSingleDim: 'Lowest-agreement sample list (single-dimension rating)',
+      ariaSampleSingleLabel: 'Lowest-agreement sample list (single-label)',
+      ariaSampleVa: 'Lowest-agreement sample list (VA rating)',
       lowConsistencyTitle: 'Low-consistency Sample List',
       lowConsistencySubtitle: 'Sorted by disagreement score, highest first; usable as a reviewer arbitration priority reference (same concept as dry_run "divergent" arbitration)',
       lowConsistencyCountFmt: '{count} items',
@@ -994,6 +1043,7 @@ var I18N = {
       boundaryExampleDetail: 'Reference: "thermal performance is excellent" | Annotator: "thermal performance is excellent and stays cool under sustained heavy load" (6 extra tokens, span_too_long)',
     },
     entityRecognitionListRank: {
+      pairwiseAvg: 'Pairwise average',
       sample1Detail: 'Inconsistent entity boundary for "NTU Hospital" (ORG vs LOC type disagreement)',
       sample2Detail: 'The "Neurology" span start/end offsets differ by 2 characters between 2 annotators',
       rankMetricName: 'F1 vs. merged aggregate reference',
@@ -1405,7 +1455,17 @@ function setElText(el, key) {
   var v = t(key);
   if (typeof v !== 'string') return;
   var verdict = el.querySelector('strong.t-pass, strong.t-fail');
-  if (!verdict) { el.textContent = v; return; }
+  if (!verdict) {
+    el.textContent = v;
+    /* The multi_dim threshold lines put the verdict in a SIBLING <strong>
+       after the labelled <span>, so localise that one too. */
+    var sib = el.nextElementSibling;
+    if (sib && sib.matches('strong.t-pass, strong.t-fail')) {
+      var sibLabel = t(sib.classList.contains('t-pass') ? 'tPass' : 'tFail');
+      if (typeof sibLabel === 'string') sib.textContent = sibLabel;
+    }
+    return;
+  }
   Array.prototype.slice.call(el.childNodes).forEach(function(node) {
     if (node !== verdict) el.removeChild(node);
   });
@@ -1638,7 +1698,7 @@ var SIMPLE_IDS = [
   'anomalySpeedTitleVA','anomalyOutlierTitleVA',
   'anomVASpd1Title','anomVASpd1Detail','anomVAOut1Title','anomVAOut1Detail','anomVAOut2Title','anomVAOut2Detail',
   'anomClsSpeedTitle','anomClsSpeedEmpty','anomClsOutlierTitle','anomClsOut1Title','anomClsOut1Detail','anomSdOutlierEmpty',
-  'anomSeqSpeedTitle','anomSeqOutlierTitle','anomSeqSpd1Title','anomSeqSpd1Detail','anomSeqOut1Title','anomSeqOut1Detail',
+  'anomSeqSpeedTitle','anomSeqOutlierTitle','anomSeqSpd1Title','anomSeqSpd1Detail','anomSeqOut1Title','anomSeqOut1Detail','anomStSpd1Title','anomStSpd1Detail','anomStOut1Title','anomStOut1Detail',
   'anomRelSpeedTitle','anomRelOutlierTitle','anomRelOutlierEmpty','anomRelSpd1Title','anomRelSpd1Detail',
   'lblVrec','lblVstr','lblArec','lblAstr','lblOrec','lblOstr','lblClsThr',
   'lblSeqStrThr','lblSeqPartThr','lblRelThr1','lblRelThr2',

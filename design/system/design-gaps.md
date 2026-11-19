@@ -41,7 +41,7 @@
 
 `white` 關鍵字、`rgba()` 與焦點環的 `color-mix()` 不在本單範圍（`white` 見 #437）。本段列的是修正後的行號；上文盤點的行號指的是修正前。深色主題順帶修正：主色填色上的 `#fff` 改 `--color-on-cta`、當文字用的 slate-400 改 `--color-ink-muted`、深色的關係徽章文字改 `--color-primary-strong`；正式徽章原本沒有深色覆寫，現在跟著 `--color-accent*` 換色。
 
-**狀態（#437）**：`white` 關鍵字已處理。`design/prototype/` 的 CSS、HTML、JS 原有 25 處獨立的 `white`（不算 `--color-white`、`white-space` 這類字串），其中 15 處是實際上色、10 處是註解與文案；上色的 15 處全部換掉。現在剩 11 處 `white`，都不是上色：`tokens.css` 的註解 7 處（含 #437 新增的一處）、`dashboard.components.css:358`、`:362` 的註解 3 處、`dataset-analysis-detail.html:785` 的畫面文案 1 處。寫死的 `#fff` 原有 2 處（不算 `modal.css:78` 的註解），換掉側欄通知徽章那處，剩 `account/profile.html:178`：頭像遮罩上的上傳圖示，遮罩固定是 48% 黑，白色在兩種主題都對。改法分三類：
+**狀態（#437）**：`white` 關鍵字已處理。`design/prototype/` 的 CSS、HTML、JS 原有 25 處獨立的 `white`（不算 `--color-white`、`white-space` 這類字串），其中 15 處是實際上色、10 處是註解與文案；上色的 15 處全部換掉。現在剩 11 處 `white`，都不是上色：`tokens.css` 的註解 7 處（含 #437 新增的一處）、`dashboard.components.css:358`、`:362` 的註解 3 處、`dataset-analysis-detail.html:810` 的畫面文案 1 處。寫死的 `#fff` 原有 2 處（不算 `modal.css:78` 的註解），換掉側欄通知徽章那處，剩 `account/profile.html:178`：頭像遮罩上的上傳圖示，遮罩固定是 48% 黑，白色在兩種主題都對。改法分三類：
 
 - **主色填色上的字與圖形**改 `--color-on-cta`：Toggle Switch 開啟時的圓鈕（`task-config.css:248`、`components-showcase.html:341`、`account/profile.html:634`）、分類預覽勾選框（`task-config.css:233`）、輸出類型序號徽章（`:490`）、選取 chip 的勾與圓點（`:561`–`:564`，showcase `:525`–`:537`）。帳號頁與個人資料頁 spinner 的其餘三邊由半透明白改成 `--color-on-cta` 的 `color-mix()`。
 - **版面底色**改 `--color-white`：關係抽取預覽列（`task-config.css:439`、`:445`）、統一預覽框（`:480`）、任務列表按鈕焦點環的外圈（`task-list.html:69`）。
@@ -433,7 +433,7 @@
 | :--- | :--- |
 | **重現方式** | `dataset-analysis-list`：讓資料腳本載入失敗（`state.loadFailed`），表格只剩一列錯誤與重試鈕。`dataset-analysis-detail`：讓任一個 partial 的請求失敗，那個分頁顯示「載入失敗」面板與重試鈕。兩者都沒有網址參數可以觸發，也沒有視圖 ID。 |
 | **受影響範圍** | [Data Table](components/data-table.md)、[Card](components/card.md)、[Button](components/button.md)；`dataset/dataset-analysis-list`、`dataset/dataset-analysis-detail` |
-| **依據** | 清單：`createErrorRow`（`dataset-analysis-list.view.js:159`），條件 `dataset-analysis-list.model.js:138`，樣式 `.error-title`（`dataset-analysis-list.html:151`）。詳情：`renderPanelLoadError(mountId, 'load')`（`dataset-analysis-detail.html:1517`），`aria-live="polite"`（`:1524`）。同一個函式以 `'calc'` 呼叫時就是交付包有列的 `#param-q-state-report-failed`，`'load'` 這一支沒有列。交付包 `dataset-analysis-list` 四個視圖、`dataset-analysis-detail` 二十六個視圖都不含它們。 |
+| **依據** | 清單：`createErrorRow`（`dataset-analysis-list.view.js:159`），條件 `dataset-analysis-list.model.js:138`，樣式 `.error-title`（`dataset-analysis-list.html:151`）。詳情：`renderPanelLoadError(mountId, 'load')`（`dataset-analysis-detail.html:1577`），`aria-live="polite"`（`:1584`）。同一個函式以 `'calc'` 呼叫時就是交付包有列的 `#param-q-state-report-failed`，`'load'` 這一支沒有列。交付包 `dataset-analysis-list` 四個視圖、`dataset-analysis-detail` 二十六個視圖都不含它們。 |
 | **待決問題** | **已裁定（2026-11-18）**：下次重跑 `design-handoff` 時補上這兩個視圖；原型先加 `?error=1` 示範開關，於 #422 處理。原題保留：要不要在下一次重跑 `design-handoff` 時補上這兩個視圖？沒有網址參數能觸發，要不要先在原型加一個示範開關（屬畫面修正，走 Ready gate）？ |
 
 **狀態（#422）**：原型已加 `?error=1` 示範開關。`dataset-analysis-list.html?error=1` 讓 `state.loadFailed` 為真（`dataset-analysis-list.model.js:241`），只剩錯誤列與重試鈕；`dataset-analysis-detail.html?task_id=<id>&error=1` 讓統計與品質兩個 partial 都顯示載入失敗面板。參數只在載入時讀取，`syncUrl` 不會帶著它，所以重試（重新載入）會恢復，和真實的重試一致。視圖 ID 要等下次重跑 `design-handoff` 才補，這裡不處理。
@@ -500,7 +500,7 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 
 **b3 核對**：`annotation-workspace` 的 `.admin-tabs--panel`（`annotation-workspace.html:1290`–`:1291`）是兩顆 `<button>`，**沒有補上**語意，只能點（`setupGuidelineTabs`，`annotation-workspace.config.js:6736`–`:6754`）。
 
-**b4 核對**：`dataset-analysis-detail` 的 `.admin-tabs`（`dataset-analysis-detail.html:256`–`:258`）**自己補上了** `role="tablist"`／`tab`／`tabpanel` 與 `aria-selected`、`aria-controls`，但沒有方向鍵，只能點（`:2472`–`:2477`）。
+**b4 核對**：`dataset-analysis-detail` 的 `.admin-tabs`（`dataset-analysis-detail.html:256`–`:258`）**自己補上了** `role="tablist"`／`tab`／`tabpanel` 與 `aria-selected`、`aria-controls`，但沒有方向鍵，只能點（`:2532`–`:2537`）。
 
 ### G-23 覆蓋層有兩套焦點處理
 
@@ -604,11 +604,11 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 
 > b4 新增。
 
-`.match-btn`（`dataset-analysis-detail.html:107`–`:109`，markup `quality-entity_recognition.html:11`–`:12`）是兩顆原生 `<button>`，修正前選項只靠 `.active` 的樣式表示（`syncSequenceUi`，`dataset-analysis-detail.html:1956`–`:1970`），沒有 `aria-pressed`，也不是 `role="radiogroup"`。對照組：`annotation-workspace` 的審核三向決策 `.mini-btn` 有 `aria-pressed`。這是全站唯一的分段切換鈕，不屬任何元件。
+`.match-btn`（`dataset-analysis-detail.html:107`–`:109`，markup `quality-entity_recognition.html:11`–`:12`）是兩顆原生 `<button>`，修正前選項只靠 `.active` 的樣式表示（`syncSequenceUi`，`dataset-analysis-detail.html:2016`–`:2030`），沒有 `aria-pressed`，也不是 `role="radiogroup"`。對照組：`annotation-workspace` 的審核三向決策 `.mini-btn` 有 `aria-pressed`。這是全站唯一的分段切換鈕，不屬任何元件。
 
 **已裁定（2026-11-18）**：修正：加 `aria-pressed`。修正於 #422。
 
-**狀態（#422）**：已修正。`quality-entity_recognition.html` 的 `#matchStrict`／`#matchPartial` 帶 `aria-pressed`，`syncSequenceUi` 每次切換都與 `.active` 同步更新（`dataset-analysis-detail.html:1970` 起）。`.match-btn` 樣式現在在 `:107`–`:109`。
+**狀態（#422）**：已修正。`quality-entity_recognition.html` 的 `#matchStrict`／`#matchPartial` 帶 `aria-pressed`，`syncSequenceUi` 每次切換都與 `.active` 同步更新（`dataset-analysis-detail.html:2030` 起）。`.match-btn` 樣式現在在 `:107`–`:109`。
 
 ---
 

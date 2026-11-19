@@ -3,7 +3,7 @@
     <h2 class="panel-title" id="iaaTitle">IAA 報告</h2>
   </div>
   <div class="iaa-method-row">
-    <span class="iaa-primary-star" aria-label="主要指標"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+    <span class="iaa-primary-star" aria-label="主要指標" data-i18n-aria-label="iaaPrimaryAria"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
     <span class="iaa-method-name" id="iaaMethodName">Pairwise Triple-level F1</span>
     <span id="iaaMethodSuffix">— 主要指標</span>
   </div>
@@ -51,7 +51,7 @@
   <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" data-i18n="qualityListRank.lowConsistencySubtitle">依分歧度由高到低排序，可作為 Reviewer 仲裁優先順序參考（與 dry_run 仲裁 divergent 概念同源）</p>
   <div class="table-wrap">
     <div class="table-scroll">
-      <table class="annotator-table" aria-label="一致性最低樣本清單（關係抽取）">
+      <table class="annotator-table" aria-label="一致性最低樣本清單（關係抽取）" data-i18n-aria-label="qualityListRank.ariaSampleRel">
         <thead>
           <tr>
             <th data-i18n="qualityListRank.headerSample">樣本</th>
@@ -81,7 +81,7 @@
   <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" data-i18n="qualityListRank.rankingSubtitle">依型別對應一致率計算方式排序；完成樣本數不足門檻者標示小樣本估計警示，但不剔除排名</p>
   <div class="table-wrap">
     <div class="table-scroll">
-      <table class="annotator-table" aria-label="標記員品質排名（關係抽取）">
+      <table class="annotator-table" aria-label="標記員品質排名（關係抽取）" data-i18n-aria-label="qualityListRank.ariaRankRel">
         <thead>
           <tr>
             <th data-i18n="qualityListRank.rankHeaderRank">名次</th>
@@ -143,8 +143,8 @@
   <div style="margin-top:var(--space-md)">
     <div class="table-wrap">
       <div class="table-scroll">
-        <table class="annotator-table" aria-label="標記一致性偏離分析（關係抽取）">
-          <thead><tr><th>標記員</th><th id="consistencyUnitCol">標記 5 次的三元組數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
+        <table class="annotator-table" aria-label="標記一致性偏離分析（關係抽取）" data-i18n-aria-label="qualityListRank.ariaDevRel">
+          <thead><tr><th data-i18n="qualityRisk.headerAnnotator">標記員</th><th id="consistencyUnitCol">標記 5 次的三元組數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
           <tbody>
             <tr><td><span class="annotator-name">Iris Tsai</span></td><td>20</td><td>10</td><td>50%</td><td>2</td><td>10%</td></tr>
             <tr><td><span class="annotator-name">Avery Lin</span></td><td>17</td><td>5</td><td>29.4%</td><td>1</td><td>5.9%</td></tr>

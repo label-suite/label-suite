@@ -44,7 +44,7 @@
 
 本次結果（**第三版，兩步掃描**）：**兩個方向各 0 筆。**
 
-第七次重跑時（第八版）多了一筆：[Issue #422](https://github.com/label-suite/label-suite/issues/422) 在 `dataset-analysis-list.model.js:241` 與 `dataset-analysis-detail.html:1449` 新增 `error`（只認 `1`），**程式有、契約沒有**。建議把它補進 `navigation.mdx` §網址參數 的兩列資料集分析頁（本 skill 不改那份文件）。兩個視圖已收為 `#param-error`。
+第七次重跑時（第八版）多了一筆：[Issue #422](https://github.com/label-suite/label-suite/issues/422) 在 `dataset-analysis-list.model.js:241` 與 `dataset-analysis-detail.html:1509` 新增 `error`（只認 `1`），**程式有、契約沒有**。建議把它補進 `navigation.mdx` §網址參數 的兩列資料集分析頁（本 skill 不改那份文件）。兩個視圖已收為 `#param-error`。
 
 第八次重跑時（第九版）這一筆已關閉：`navigation.mdx` 的兩列資料集分析頁補上了 `error`，兩個方向又是各 0 筆。
 
@@ -54,7 +54,7 @@
 | :--- | :--- | ---: |
 | `task-detail.html:5048` | `URL_VIEW_STATE` | **16** |
 | `annotation-workspace.config.js:1560` | `LIST_VIEW_STATE_KEYS` ＋ `LIST_IDENTITY_KEYS` | **6** |
-| `dataset-analysis-detail.html:2468` | `PROTOTYPE_ONLY_PARAMS` | 0（`s_state` 已在表上） |
+| `dataset-analysis-detail.html:2528` | `PROTOTYPE_ONLY_PARAMS` | 0（`s_state` 已在表上） |
 | `sidebar.js:732` | 列舉既有鍵 | 0 |
 
 兩輪的修法：[PR #400](https://github.com/label-suite/label-suite/pull/400) 把那 22 個名字補進 `navigation.mdx` 的契約，本版把掃描法改成兩步，所以 `params` 欄現在才是真的全集——`task-management/task-detail` 從 11 個變 **25** 個、`annotation/annotation-workspace` 從 9 個變 **13** 個。

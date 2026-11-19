@@ -85,7 +85,7 @@
 
 **b2 補上可重現的樣本**：`admin/user-management#state-filtered-empty`（`?q=`／`?status=`／`?role=`）與 `task-management/task-list#state-filtered-empty`（`?keyword=`／`?status=`／`?output_type=`／`?run_stage=`，規格 [`01-task-list.mdx` §查詢條件保留在網址](../../docs/specs/03-task-management/01-task-list.mdx)）。
 
-**b4 補上**：`dataset/dataset-analysis-list#state-filtered-empty`（`?keyword=`／`?iaa_status=`／`?output_type=`，由 `syncUrl` 只從狀態組網址，`design/prototype/pages/dataset/dataset-analysis-list.js:71`）。`dataset/dataset-analysis-detail` 的 `syncUrlState`（`dataset-analysis-detail.html:2446`）同樣只從狀態組網址（#155 Q4，維護者 2026-11-08），但它保存的是 `task_id` 與 `tab`，不是清單狀態。
+**b4 補上**：`dataset/dataset-analysis-list#state-filtered-empty`（`?keyword=`／`?iaa_status=`／`?output_type=`，由 `syncUrl` 只從狀態組網址，`design/prototype/pages/dataset/dataset-analysis-list.js:71`）。`dataset/dataset-analysis-detail` 的 `syncUrlState`（`dataset-analysis-detail.html:2506`）同樣只從狀態組網址（#155 Q4，維護者 2026-11-08），但它保存的是 `task_id` 與 `tab`，不是清單狀態。
 
 這條和 `docs/prototype/navigation.mdx` §網址參數 是同一件事的兩面：那一節是**宣告有哪些參數**，這一條是**為什麼要有**。
 
