@@ -1,0 +1,257 @@
+---
+title: ADR-005 前端架構
+description: 前端架構的決定：React 加 Vite 的單頁應用、pages 加 features 的目錄分層、shadcn/ui 當元件庫、design token 寫一層對照、圖示只用 Lucide。
+tags: [adr, frontend, react, shadcn, design-token]
+---
+
+# ADR-005 前端架構
+
+這份 ADR 管前端用什麼框架、原始碼怎麼分層、元件庫與視覺基準怎麼接、圖示從哪來。型別安全、Hooks、狀態、四種畫面狀態等寫程式的規範不在這裡，見 [frontend-agent-rules.mdx](../frontend-agent-rules.mdx)；API client 與測試位置分別在 [ADR-003 的 D6](003-backend-architecture.mdx#d6-前端-client-用-orval-產生) 與 [ADR-007](007-testing-strategy.mdx)。
+規則本體在 `AGENTS.md` 與 [frontend-agent-rules.mdx](../frontend-agent-rules.mdx)，落地的做法在 [architecture.mdx 的 §前端](../architecture.mdx#前端)，本文只寫為什麼；衝突時的優先序見 [ADR 索引](index.mdx#衝突時以誰為準)。
+
+## D1 前端是 React 加 Vite 的單頁應用
+
+### 背景
+
+要決定前端用什麼框架、要不要伺服器端渲染。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 來源記錄：標註工作區、排行榜與提交介面的內容都在登入之後 | SSR 與 App Router 的複雜度用不到 |
+| 來源記錄：任務類型由設定決定，要有分類、迴歸與區間標註等不同的元件 | 要選元件生態夠大的框架 |
+| 來源記錄：TypeScript strict | 契約不一致要在編譯時就被抓到 |
+| 來源記錄：後端是 FastAPI，對外是 REST API | 前端不需要 BFF |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A React 加 Vite 的單頁應用 | 建置最快（ESBuild）、生態最大、複雜度低 | 沒有 SSR，日後若加公開的行銷頁，SEO 較弱 | 採用 |
+| B Next.js（App Router） | 支援 SSR、SSG 與 CSR，生態很大 | Server Components 與 Server Actions 的複雜度用不到；production 要多跑一個 Node.js runtime；來源另以研究論文 demo 系統為前提，本 repo 是否同前提沒有記錄，見 [待決](#待決) 第 1 列 | 不採用 |
+| C Nuxt.js | 支援 SSR、SSG 與 CSR | Vue 生態裡標註與資料型 UI 元件庫的數量比 React 少 | 不採用 |
+| D SvelteKit | 建置快 | 複雜資料型 UI 元件的生態較小，TypeScript strict 的寫法資源較少 | 不採用 |
+
+### 決定
+
+前端用 React 19 加 Vite 加 TypeScript strict，做成單頁應用，由 Nginx 服務建置後的靜態檔；路由用 React Router v6、伺服器狀態用 TanStack Query。React 版本是維護者選定的 19，理由沒有記錄；React Router 與 TanStack Query 沿用，來源沒有記錄比較過的其他選項。技術選型見 [architecture.mdx 的 §技術選型](../architecture.mdx#技術選型)。
+
+### 後果
+
+**變容易**
+
+- Vite 的熱更新讓開發回饋最快
+- 單頁應用對得上「登入後的、像 app 的互動」
+- TanStack Query 處理 API 快取、重新取得與樂觀更新
+- TypeScript strict 讓前端與 FastAPI 的 Pydantic schema 不一致時早點報錯
+- production 不需要 Node.js runtime，Vite 建出靜態檔，由 Nginx 服務
+
+**變困難**
+
+- 沒有 SSR，日後若加公開的行銷頁，SEO 較弱
+- 開發時單頁應用與 API 在不同 origin，FastAPI 的 CORS 要明確列出 `allow_origins`
+- 路由只在客戶端，伺服器要設定成所有路徑都回 `index.html`
+
+### 什麼情況要重新討論
+
+- 出現需要被搜尋引擎索引的公開頁面
+- 本 repo 對 [待決](#待決) 第 1 列做了決定
+
+## D2 目錄分層採 pages 加 features
+
+### 背景
+
+要決定 `frontend/src/` 的第一層怎麼分；這個結構決定每個前端模組的檔案放哪裡，之後要搬，每個 import 路徑都得改。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 來源記錄：依資訊架構有多個模組、四種使用者角色各有專屬視圖、兩種語系、設定驅動的任務元件 | 目錄要能容納複雜的子系統而不污染共用層 |
+| `frontend/` 還不存在 | 現在決定的是結構，不是既有程式的搬遷 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 水平切片：`components/`、`hooks/`、`services/`、`stores/`、`pages/` 各放全部 | 依技術角色分 | 改一個功能要同時動好幾個頂層資料夾，每一層塞進不相干的檔案，「在各層之間找檔案」的成本隨功能增加 | 不採用 |
+| B 垂直功能切片：`features/<模組>/` 裝一個模組的全部，加一個只放「被兩個以上 feature 直接 import」的 `shared/` | 改功能只進一個資料夾；agent 各管一個 `features/<模組>/` 不會互相衝突；一份規格對一個模組；刪功能就刪一個資料夾；複雜子系統自己長大 | 要克制，不能還沒有第二個使用者就先把東西放進 `shared/` | 不採用，維護者選了另一個，理由沒有記錄 |
+| C 完整的 Feature Slice Design | 來源沒有記錄好處 | `widgets/` 與 `entities/` 兩層帶來的分類成本，來源記錄在當時的專案規模下不值得 | 不採用 |
+| D `pages/` 加 `features/`，再加 `components/ui/`、`lib/`、`api/`、`styles/` 與 `app/` | 理由沒有記錄 | 理由沒有記錄 | 採用 |
+
+### 決定
+
+`frontend/src/` 分 `app/`、`pages/`、`features/`、`components/ui/`、`api/`、`lib/`、`styles/` 七層，下層不得 import 上層，`features/` 之間不互相 import。層表、禁止與例外見 [frontend-agent-rules.mdx 的 F1](../frontend-agent-rules.mdx#f1-分層與允許的-import)。
+
+### 後果
+
+**變容易**
+
+- 分層表可以寫成機械的 lint 規則，擋住下層 import 上層與 feature 之間互相 import（檢查待建置）
+
+**變困難**
+
+- 選 B 時記錄的好處（改功能只進一個資料夾、agent 檔案所有權、刪功能刪一個資料夾）在這個結構裡是否保留，選定時沒有記錄
+- 分層邊界在 lint 建置之前只靠審查
+
+### 什麼情況要重新討論
+
+- `frontend/` 的第一個模組合併之後，審查反覆發現 feature 之間為了共用而互相 import
+- lint 設定建好之後，分層表寫不成機械規則
+
+## D3 元件庫用 shadcn/ui
+
+### 背景
+
+要決定前端的 UI 元件從哪來；元件庫一旦選了，每個畫面都建立在它上面。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 來源記錄：要可及性好、可用鍵盤操作的元件（對話框、表格、表單、分頁） | 底層要有成熟的可及性原語 |
+| 來源記錄：要設定驅動的標註元件，有許多視覺變體 | 元件要能直接改，不能只靠主題設定 |
+| 來源記錄：視覺基準是 `design/prototype/assets/tokens.css` | 元件庫的樣式要能接上它，見 [D4](#d4-design-token-寫一層對照) |
+| 來源記錄：已有 i18next 管語系 | 元件庫不能再帶一套 locale 設定 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A shadcn/ui：原始碼複製進專案，Radix 原語加 Tailwind | 完整客製（直接改原始碼）、不增加執行期 bundle | 一定要用 Tailwind CSS；上游修正要手動合併 | 採用 |
+| B MUI | 可及性好 | Emotion 的 CSS-in-JS 執行期與 Vite 的編譯期最佳化衝突；bundle 大；用 `sx` 主題與 Tailwind 的慣例不同；客製受限於主題 | 不採用 |
+| C Chakra UI | 可及性好 | 一樣有 CSS-in-JS 執行期；元件較少；客製靠主題 token | 不採用 |
+| D Ant Design | 可及性好 | 樣式有強烈的企業風格；bundle 重；自帶的 i18n 設定會和 i18next 變成兩套 locale | 不採用 |
+| E 單用 Radix UI headless | 可及性最好、客製完整 | 所有樣式要從零做，而 shadcn/ui 已經在同一批 Radix 原語上做好了 | 不採用 |
+
+### 決定
+
+元件庫用 shadcn/ui，元件以原始碼的形式放進 `frontend/src/components/ui/`，並依賴 Tailwind CSS；位置從來源的 `shared/ui/` 改成 `components/ui/`，理由沒有記錄。Storybook 還沒決定，見 [architecture.mdx 的 §待決](../architecture.mdx#待決) 第 2 列。做法見 [architecture.mdx 的 §前端](../architecture.mdx#前端)。
+
+### 後果
+
+**變容易**
+
+- 元件是原始碼，客製是改一個檔案，不必處理 CSS 特異性的覆蓋鏈
+- 所有樣式在編譯期變成 Tailwind class，沒有執行期 bundle 的負擔
+
+**變困難**
+
+- Tailwind CSS 成為必要相依，不是可選
+- 元件在安裝時就是一份快照，上游的修正要用 `add --diff` 挑著合併
+
+### 什麼情況要重新討論
+
+- `frontend/` 的第一個模組合併之後，上游的修正反覆需要手動合併
+- 元件需要的客製超出直接改 `components/ui/` 原始碼能處理的範圍
+
+## D4 design token 寫一層對照
+
+### 背景
+
+要決定 shadcn/ui 元件的顏色怎麼接到設計層的 `tokens.css`；兩邊的變數名不同，接法決定色值有幾個來源。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| shadcn 元件讀自己的語意變數（`--background`、`--foreground`、`--muted`、`--ring`、`--destructive`……），`tokens.css` 用 Label Suite 自己的名字（`--color-primary`、`--color-ink`、`--color-surface`……） | 兩套變數名對不上 |
+| prototype 的深色模式用 `html[data-theme="dark"]`，shadcn 預設用 `.dark` class | 觸發方式也對不上 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 寫一層對照，`tokens.css` 仍是唯一色值來源 | shadcn 元件一行都不改，色值只存在 `tokens.css` 一處 | 映射前要逐一確認三件事：shadcn 沒有對應語意的 token 落點；`--radius-*` 與 `--font-sans` 和 Tailwind v4 的 theme namespace 同名；映射數字 spacing key 會讓尺寸靜默放大 | 採用 |
+| B 元件直接用 Label Suite 的變數名，改寫 `components/ui/` 的 shadcn 元件 | 理由沒有記錄 | 要改寫 shadcn 元件；其餘理由沒有記錄 | 不採用 |
+| C 本期不決定，交給第一個前端 change | 理由沒有記錄 | 理由沒有記錄 | 不採用 |
+
+### 決定
+
+`frontend/src/styles/` 定義 shadcn 的語意變數，指向 `tokens.css` 的值（例如 `--background: var(--color-surface)`），shadcn 的 dark variant 設成吃 `html[data-theme="dark"]`，shadcn 元件不改寫，`tokens.css` 是唯一色值來源；設計交接的 Design System Artifact 也只從它產生，單向，見 [設計交接的 §單向規則](../design-handoff.mdx#單向規則)。規則本體見 [frontend-agent-rules.mdx 的 F6](../frontend-agent-rules.mdx#f6-視覺基準與-design-token-的映射)。
+
+### 後果
+
+**變容易**
+
+- 色值只有 `tokens.css` 一個來源，換色只改一處
+- 元件只用語意 class，不必知道 Label Suite 的變數名
+
+**變困難**
+
+- 對照層要有人維護：`tokens.css` 新增或改名的變數，要回頭補對照
+- shadcn 沒有對應語意的 token（例如 `--color-cta`、`--color-ink-muted`、`--workspace-tab-min-width`），要逐一決定新增 shadcn 風格的語意變數，或直接用 Label Suite 的名字，由第一個前端 change 的 `ui-design.md` 列出
+- 接進 Tailwind 的 `@theme` 時，`--radius-*` 與 `--font-sans` 會改掉既有 utility 的語意，要逐一確認並在 PR 寫出來
+- 具名的數字 spacing key 會讓 `w-10` 這類 utility 的尺寸靜默放大，來源記錄的案例是 `w-10` 從 40px 變成 80px
+
+### 什麼情況要重新討論
+
+- 對照層建好之後，shadcn 沒有對應語意的 token 多到對照層比直接用 Label Suite 的名字更難維護
+- shadcn 的 dark variant 改了觸發方式，不再能吃 `html[data-theme="dark"]`
+
+## D5 圖示只用 Lucide
+
+### 背景
+
+要決定前端的圖示從哪來；圖示庫混用，線條粗細與圓角不一致，畫面會不統一。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 來源記錄：設計系統要求一套一致的圖示 | 圖示來源只能有一個 |
+| 來源記錄：prototype 的圖示已是 Lucide 風格的 SVG（24×24、2px 線條、`currentColor`） | 正式程式碼要和 prototype 一致 |
+| 來源記錄：不同線條粗細與圓角的圖示庫混用，會破壞 Flat Design 的視覺文法 | 不能混用 |
+| shadcn/ui 的元件預設從 `lucide-react` 匯入圖示（[D3](#d3-元件庫用-shadcnui)） | 選別的庫要改寫元件裡的圖示匯入 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A Lucide（`lucide-react`） | 1,500 個以上的圖示，統一的 24×24、2px 線條文法；逐圖示的 ESM 匯出，可以 tree-shake；是 shadcn/ui 的預設圖示相依；ISC 授權 | Lucide 沒有的圖示不能從別的庫補 | 採用 |
+| B Heroicons | 品質好 | 圖示約 300 個，比較少；outline 與 solid 兩種視覺變體容易用得不一致；要改寫 shadcn/ui 元件內的圖示匯入 | 不採用 |
+| C react-icons | 一個套件裝很多圖示庫 | 明確讓人混用視覺文法，正是這個決定要消除的問題；tree-shaking 較弱 | 不採用 |
+| D Font Awesome 或 Material Symbols | 視覺辨識度高 | 填色、較粗的文法和 prototype 已經採用的 Feather 系扁平風格衝突；Font Awesome 完整版要付費 | 不採用 |
+
+### 決定
+
+圖示一律用 Lucide（`lucide-react`），不得加入其他圖示庫，不得用 emoji 或自己畫的 SVG 當圖示；Lucide 缺圖示時回報，不自己畫。品牌標記、prototype 內嵌的 SVG 等例外見 [architecture.mdx 的 §前端](../architecture.mdx#前端)，規則本體見 [frontend-agent-rules.mdx 的 F7](../frontend-agent-rules.mdx#f7-圖示與-svg)。
+
+### 後果
+
+**變容易**
+
+- 和 shadcn/ui 的元件沒有落差，它們本來就依賴 `lucide-react`
+- prototype 與正式的 React 程式碼用同一套視覺文法
+- 逐圖示匯入，只有用到的圖示會進 bundle
+- 審查可以機械地擋掉任何不是 `lucide-react` 的圖示匯入
+
+**變困難**
+
+- Lucide 沒有的圖示不能從別的庫補，缺口要回報、再決定（向上游提需求，或選最接近的 Lucide 圖示）
+- 品牌與 logo 標記不在 Lucide 的範圍內，例外見上面連到的 §前端；若出現例外之外的需求，要另外決定
+
+### 什麼情況要重新討論
+
+- 反覆出現 Lucide 沒有的圖示，缺口回報的成本超過它省下的一致性
+- shadcn/ui 的元件不再預設相依 `lucide-react`
+
+## 附錄：來源對照
+
+比對的版本：個人 repo（`singyichen/label-suite`）ADR-004、011、016、030 的現行內容。
+
+| 決定 | 來源 |
+| :--- | :--- |
+| D1 | 個人 repo ADR-004（Context 的需求、Candidates Evaluated 的比較表與三個框架的拒絕理由、Decision、Consequences）；React 19 與沿用 React Router、TanStack Query 的裁定見 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 8 列與 [frontend-agent-rules.mdx 的決策紀錄](../frontend-agent-rules.mdx#決策紀錄)，沒有記錄升版的理由；Nginx 服務 `/dist` 出自 [architecture.mdx 的 §技術選型](../architecture.mdx#技術選型)；Next.js 的拒絕理由的後半句以研究論文 demo 系統為前提，本 repo 沒有記錄，見待決；本節的重新討論條件是推論，來源沒有記錄 |
+| D2 | 個人 repo ADR-011（Context 的兩個策略、水平切片被拒絕的理由、Additional Factors、Alternatives Rejected 的 Feature Slice Design）；選項 D 與它取代選項 B 的裁定見 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 8 列，只記錄結果，選項 D 的好處與代價、放棄選項 B 的理由都沒有記錄；七層的來源見 [frontend-agent-rules.mdx 的附錄](../frontend-agent-rules.mdx#各條規範的來源)；選項 C 的好處沒有記錄；選項 B 的代價出自它的 Consequences；本節的重新討論條件是推論，來源沒有記錄 |
+| D3 | 個人 repo ADR-016（Context 的需求、UI Library Candidates 的比較表與四個拒絕理由、Decision、Consequences）；shadcn/ui 與 `components/ui/` 的裁定見 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 8 列，只記錄結果，位置從 `shared/ui/` 改掉的理由沒有記錄；來源另選了 Storybook，本 repo 未決，見 [architecture.mdx 的 §待決](../architecture.mdx#待決) 第 2 列；選項 E 的代價出自來源「重複 shadcn/ui 已經做好的工作」；本節的重新討論條件是推論，來源沒有記錄 |
+| D4 | [#109 的裁定紀錄](https://github.com/label-suite/label-suite/issues/109#issuecomment-6764207805)（問題、三個選項、裁定、映射前要確認的三件事）；選項 B、C 沒有記錄好處與代價（B 的代價只有「要改寫 shadcn 元件」，出自選項描述）；Artifact 單向出自 [設計交接的 §流程](../design-handoff.mdx#流程)；本節的重新討論條件是推論，來源沒有記錄 |
+| D5 | 個人 repo ADR-030（Context、Candidates Evaluated 的四個選項、Decision、Consequences、Alternatives Rejected）；例外的範圍見 [frontend-agent-rules.mdx 的 F7](../frontend-agent-rules.mdx#f7-圖示與-svg)；本節的重新討論條件是推論，來源沒有記錄 |
+| — | 個人 repo ADR-011 的其他內容（元件、hook 與服務的檔案樹、狀態管理三層與 Zustand、Dashboard 依角色分派、路由與程式碼分割、i18n 命名空間、barrel file 規則、任務類型元件的註冊表、Playwright 目錄），不是這份 ADR 的決定：狀態與 barrel 的做法見 [frontend-agent-rules.mdx](../frontend-agent-rules.mdx)，i18n 見 [architecture.mdx 的 §i18n 兩層](../architecture.mdx#i18n-兩層)，E2E 位置見 [ADR-007 的 D4](007-testing-strategy.mdx#d4-正式-e2e-放根目錄)；其餘本 repo 沒有採用或決定的部分，不在這裡收 |
+
+## 待決
+
+| # | 問題 | 卡住什麼 | 誰決定 |
+| :--- | :--- | :--- | :--- |
+| 1 | 來源排除 Next.js 時，另以「研究論文 demo 系統」為前提：production 多跑一個 Node.js runtime 不值得；本 repo 是否同前提，沒有記錄 | [D1](#d1-前端是-react-加-vite-的單頁應用) 選項 B 的這一項代價是否成立；不影響其他排除理由 | 維護者，在出現需要 SSR 的頁面時 |
+
+## 決策紀錄
+
+| 日期 | 決策 | 取代了什麼 | 來源 |
+| :--- | :--- | :--- | :--- |
+| 2026-11-19 | 前端用 React 19 加 Vite 加 TypeScript strict 的單頁應用（[D1](#d1-前端是-react-加-vite-的單頁應用)） | 個人 repo ADR-004 的 React 18；其餘沿用 | [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393) |
+| 2026-11-19 | 目錄分層採 `pages/` 加 `features/`（[D2](#d2-目錄分層採-pages-加-features)） | 個人 repo ADR-011 的垂直功能切片與 `shared/` 准入規則 | [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393) |
+| 2026-11-19 | 元件庫用 shadcn/ui，元件放 `components/ui/`（[D3](#d3-元件庫用-shadcnui)） | 個人 repo ADR-016 的 `shared/ui/`；Storybook 未決 | [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393) |
+| 2026-11-19 | design token 寫一層對照，`tokens.css` 仍是唯一色值來源（[D4](#d4-design-token-寫一層對照)） | —（被否決的另一個選項：改寫 shadcn 元件去讀別的變數名） | [#109 的留言](https://github.com/label-suite/label-suite/issues/109#issuecomment-6764207805) |
+| 2026-11-19 | 圖示只用 Lucide（[D5](#d5-圖示只用-lucide)） | —（沿用個人 repo ADR-030） | [#451](https://github.com/label-suite/label-suite/issues/451) |
