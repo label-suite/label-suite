@@ -359,7 +359,7 @@ CI 先做相依套件掃描：後端 `uv run pip-audit --fail-on high`、前端 
 
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
-| A 正式層用 `pg_dump` 定期備份到獨立的 backups volume，Lite 層不做 | 現在就做得出來，不需要新的 secret 或相依套件；範圍與 ADR-003 的 D7 兩層定位一致 | 主機整台損毀時備份一起沒；Lite 層的使用者要自己複製 `./data` | 採用 |
+| A 正式層用 `pg_dump` 定期備份到獨立的 backups volume，Lite 層不做 | 現在就做得出來，不需要新的 secret 或相依套件；範圍與 ADR-003 的 D7 兩層定位一致 | 主機整台損毀時備份一起沒；Lite 層的使用者要自己備份 `./data` | 採用 |
 | B 兩層都做：Lite 層也排一個 `VACUUM INTO` 的定期備份 | 兩層行為一致，文件不必分層解釋 | 多一個排程與一條 SQLite 專屬路徑，[B7](../rules/backend-agent-rules.mdx#b7-雙資料庫的測試要求) 要求兩種 dialect 都測；而 Lite 層本來就不建議多人使用，保護的資料價值低 | 不採用自動排程；`VACUUM INTO` 這個手法仍是 Lite 層手動備份的做法，見決定 |
 | C 備份上傳 S3 相容的物件儲存 | 真的做得到災難復原 | 多一組 secret 與一個相依套件，沒設定時還要再設計一條降級路徑（像 [D3](#d3-寄信用-resend沒設-key-時把連結印到-log) 的 Resend 那樣） | 不採用，列為重新討論的條件 |
 | D 直接複製 SQLite 檔或 PostgreSQL 的資料目錄 | 不需要額外工具 | 寫入進行中複製會得到壞檔；PostgreSQL 的資料目錄要先停機或改用 `pg_basebackup` 才一致 | 不採用 |
@@ -415,7 +415,7 @@ CI 先做相依套件掃描：後端 `uv run pip-audit --fail-on high`、前端 
 
 ### 決定
 
-Celery worker 維持 warm shutdown：收到 SIGTERM 後不再領新任務，把手上的跑完才退出；Compose 的 `stop_grace_period` 要設成大於單一評分上限 300 秒，不能留在預設的 10 秒。FastAPI 容器同樣要讓進行中的請求收尾後才退。數值見 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務)。本決定不改變 ADR-003 的 D8 對 Redis 單實例可靠度的接受。
+Celery worker 維持 warm shutdown：收到 SIGTERM 後不再領新任務，把手上的跑完才退出；Compose 的 `stop_grace_period` 要設成大於單一評分上限 300 秒，不能留在預設的 10 秒。FastAPI 容器同樣要讓進行中的請求收尾後才退。兩個容器各自的數值見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)，Celery 的參數見 [§非同步任務](../architecture.mdx#非同步任務)。本決定不改變 ADR-003 的 D8 對 Redis 單實例可靠度的接受。
 
 ### 後果
 

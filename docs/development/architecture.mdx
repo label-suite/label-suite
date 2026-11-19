@@ -253,7 +253,7 @@ Redis 7 同時當 broker、result backend 與應用快取，用 DB 編號隔開�
 | 重試 | 最多三次，退避 60、180、540 秒 |
 | 單一評分工作上限 | 300 秒 |
 | 結果保留 | result backend 留 24 小時 |
-| 收工寬限 | `stop_grace_period` 大於 300 秒；Celery 維持 warm shutdown，不設 `task_acks_late` |
+| 收工寬限 | `worker` 的 `stop_grace_period` 大於 300 秒（`backend` 不適用這個值，見 [§部署與維運](#部署與維運)）；Celery 維持 warm shutdown，不設 `task_acks_late` |
 
 `worker` 與 `backend` 共用同一個 image，所以 NLP 評估套件（`krippendorff`、`seqeval`、`scipy`）要宣告在 `pyproject.toml` 裡。
 
