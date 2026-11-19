@@ -49,7 +49,7 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；有 Cloudflare 時用�
 - 貢獻者要裝 Docker；來源記錄 macOS 的 volume I/O 較慢
 - 資料庫 migration 要在 backend 容器內執行；多容器的 log 要合併來看
 - 沒有 Kubernetes 的自我修復與自動擴展；來源記錄零停機部署的能力有限
-- 有 Cloudflare 時多一道代理邊界，要確認它和 Nginx 的行為一致
+- 有 Cloudflare 時多一道代理邊界，要確認它和 Nginx 的行為一致，包括 TLS 模式；Cloudflare 到 origin 這一段的 TLS 模式沒有決定，見[待決](#待決)第 1 列
 
 ### 什麼情況要重新討論
 
@@ -170,7 +170,7 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；有 Cloudflare 時用�
 **變困難**
 
 - 出錯時只能看 log，沒有告警
-- 沒有指標與儀表板，效能與資源問題要靠人去看 log 發現
+- 沒有指標與儀表板
 
 ### 什麼情況要重新討論
 
@@ -200,7 +200,7 @@ AI 輔助流程（產生、評估、工具呼叫）的紀錄要存成什麼形�
 
 ### 決定
 
-AI 輔助流程記在只新增、不更新也不刪除的 `ai_runs` 與其生命週期事件；使用者接受、編輯或拒絕一個 AI 產出記在 `ai_runs`，不另寫 `audit_events`。欄位見[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)，兩張表的分界見 [architecture.mdx 的 §稽核與可追溯](../architecture.mdx#稽核與可追溯)。
+AI 輔助流程記在只新增、不更新也不刪除的 `ai_runs` 與其生命週期事件；使用者接受、編輯或拒絕一個 AI 產出記在 `ai_runs`，不另寫 `audit_events`。`ai_runs` 的欄位還沒有寫進[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)，兩張表的分界見 [architecture.mdx 的 §稽核與可追溯](../architecture.mdx#稽核與可追溯)。
 
 ### 後果
 
@@ -210,7 +210,7 @@ AI 輔助流程記在只新增、不更新也不刪除的 `ai_runs` 與其生命
 
 **變困難**
 
-- 表只新增，更正要寫新事件，不能改舊列；一次 run 的狀態怎麼在不更新列的前提下表達，見[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)
+- 表只新增，更正要寫新事件，不能改舊列；一次 run 的狀態怎麼在不更新列的前提下表達，見[待決](#待決)第 2 列
 
 ### 什麼情況要重新討論
 
@@ -290,7 +290,7 @@ AI 輔助流程記在只新增、不更新也不刪除的 `ai_runs` 與其生命
 
 **變困難**
 
-- 匿名化後，稽核事件上的行為人顯示會失去身分；來源把這在最短保留期內是否可接受列為未決（見附錄）
+- 匿名化後，稽核事件上的行為人顯示會失去身分；來源把這在最短保留期內是否可接受列為未決，見[待決](#待決)第 3 列
 - 帶答案的歷史 JSON 要跟著版本或 run 存續，不能隨使用者被刪
 
 ### 什麼情況要重新討論
@@ -307,7 +307,6 @@ AI 輔助流程記在只新增、不更新也不刪除的 `ai_runs` 與其生命
 | :--- | :--- |
 | 來源記錄：系統是論文用的 demo，不是對網際網路開放的正式環境（來源的前提，見附錄） | DAST 與 fuzzing 現在的價值有限 |
 | `AGENTS.md` 硬性規則 7、8：禁止 `allow_origins=["*"]` 與寫死的 secret | SAST 要至少蓋這兩條 |
-| 後端與前端的程式還沒建立 | 依賴掃描與 SAST 都只能等有程式再跑 |
 
 ### 考慮過的選項
 
@@ -352,18 +351,24 @@ CI 先做相依套件掃描：後端 `uv run pip-audit --fail-on high`、前端 
 | D2 | 個人 repo ADR-008 的 Image Strategy。來源只記錄共用 image 的理由，沒有把另寫 Dockerfile 列為選項；選項 B 是推論。NLP 套件要宣告在同一份 `pyproject.toml` 出自 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務)。本節的重新討論條件是推論，來源沒有記錄 |
 | D3 | 個人 repo ADR-013（Candidates、Rejected、Consequences）。來源沒有降級路徑；降級路徑出自維護者裁定（#105 第 4 列，裁定記錄的理由是與 Google SSO 的可選整合形狀一致，並要求明寫 Lite 層 log 視為敏感，在規格與畫面讓管理員知道信沒有寄出），畫面條文出自規格 06-01 的 Q9 至 Q11。選項 B 的好處只記錄了「走 SMTP relay」。本節的重新討論條件中，免費額度取自來源，Lite 層 log 那一條是推論，來源沒有記錄 |
 | D4 | 個人 repo ADR-018（Candidates Evaluated 與各項的 rejected 理由）、ADR-020（Candidates Evaluated 與各項的 rejected 理由）、維護者裁定（#105 第 6 列：`ai_runs` 不是運維工具而是研究可追溯性；代價是出錯時只能看 log、沒有告警），PRD 的定位出自 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)。兩份來源本身是 Accepted，本 repo 本期不做它們。ADR-018 與 ADR-020 的儀表板、告警範圍、標籤隱私規則、Sentry 的脫敏與 source map 規則本 repo 不採用，因為本期不做。選項 F 的好處與維護者裁定的代價出自上述兩處。本節的重新討論條件中，第一條出自 PRD 的定位、第二條是推論，來源沒有記錄 |
-| D5 | 個人 repo ADR-019（Design Options Evaluated、Decision、Consequences）。分界出自 [architecture.mdx 的 §稽核與可追溯](../architecture.mdx#稽核與可追溯)。來源的資料模型把 `ai_runs` 列寫成有 `status` 與 `completed_at`，與本 repo 的「只新增」有出入，不更新列時如何表達一次 run 的狀態來源沒有記錄，屬資料表字典。來源的事件清單依賴 ADR-017 的 Planner、Generator、Evaluator 分層，ADR-017 在本 repo 的效力已改連到 [ADR-002 的 D4](002-development-workflow.mdx#d4-規劃實作審查與驗收由不同角色負責)，本 repo 不採用該事件清單；來源的角色存取表用的是個人 repo 的角色名稱，本 repo 不採用；快照的儲存後端在來源是延後的決定，本 repo 沒有核對。本節的重新討論條件是推論，來源沒有記錄 |
+| D5 | 個人 repo ADR-019（Design Options Evaluated、Decision、Consequences）。分界出自 [architecture.mdx 的 §稽核與可追溯](../architecture.mdx#稽核與可追溯)。來源的資料模型把 `ai_runs` 列寫成有 `status` 與 `completed_at`，與本 repo 的「只新增」有出入，見[待決](#待決)第 2 列。來源的事件清單依賴 ADR-017 的 Planner、Generator、Evaluator 分層，ADR-017 在本 repo 的效力已改連到 [ADR-002 的 D4](002-development-workflow.mdx#d4-規劃實作審查與驗收由不同角色負責)，本 repo 不採用該事件清單；來源的角色存取表用的是個人 repo 的角色名稱，本 repo 不採用；快照的儲存後端在來源是延後的決定，本 repo 沒有核對。本節的重新討論條件是推論，來源沒有記錄 |
 | D6 | 個人 repo ADR-032（Options、Decision、Consequences）。同交易寫入對應 [backend-agent-rules.mdx 的 B4](../backend-agent-rules.mdx#b4-交易的擁有層)；至少保留 1 個曆年出自規格 06-02。選項 A、B 的好處沒有記錄；選項 C 的好處取自來源的選擇理由。來源的存取角色（個人 repo 的角色名稱）、事件目錄、索引、候選 FK、系統行為人的 CHECK 與原型豁免本 repo 不採用，由資料表字典與規格管。本節的重新討論條件是推論，來源沒有記錄 |
-| D7 | 個人 repo ADR-038 的 Context 與 Decision，以及 ADR-032 的保留規則。來源沒有列出選項；選項 B、C 是從 Context 與 Decision 推論（B 的理由沒有記錄），選項 D 出自 B8。ADR-038 的下列內容本 repo 不採用，由規格與資料設計管：session 與 refresh token 的清除、30 天匯出檔（規格 03-task-detail）、原始檔的 RESTRICT（規格 05-03）、以特權 migration 角色做匿名化的緊急路徑（個人 repo ADR-024）。來源的 TBD（個人 repo 追蹤的 issue）也不採用，也不列入待決，因為它們不改變現在的規則：匿名化帳號狀態怎麼持久化、清除工作的頻率與最長保留期、版本撤回的流程、最短保留期內失去身分顯示（行為人姓名）是否可接受。本節的重新討論條件是推論，來源沒有記錄 |
+| D7 | 個人 repo ADR-038 的 Context 與 Decision，以及 ADR-032 的保留規則。來源沒有列出選項；選項 B、C 是從 Context 與 Decision 推論（B 的理由沒有記錄），選項 D 出自 B8。ADR-038 的下列內容本 repo 不採用，由規格與資料設計管：session 與 refresh token 的清除、30 天匯出檔（規格 03-task-detail）、原始檔的 RESTRICT（規格 05-03）、以特權 migration 角色做匿名化的緊急路徑（個人 repo ADR-024）。來源的四個 TBD（個人 repo 追蹤的 issue）見[待決](#待決)第 3 至 6 列。本節的重新討論條件是推論，來源沒有記錄 |
 | D8 | 個人 repo ADR-028（Alternatives、Decision、Consequences）。「論文 demo、不對網際網路開放」依賴本 repo 沒有確認的前提；來源記錄 DAST 在系統對網際網路開放時重新討論，API fuzzing 在 OpenAPI schema 穩定後重新討論。選項 F 的歸屬出自來源（由測試 ADR 負責）。Dependabot 的邊界在 [dependency-policy.mdx](../dependency-policy.mdx)。選項 A 的代價、選項 C 至 E 的好處沒有記錄 |
 | — | 個人 repo ADR-026（i18n 兩層）不收：它管前後端的字串邊界，不是部署、維運或稽核；效力總表的連結維持指向 [architecture.mdx 的 §i18n 兩層](../architecture.mdx#i18n-兩層) |
 
-備註：個人 repo ADR-023 要求 Cloudflare 用 Full (strict) TLS、禁用 Flexible，因為 Flexible 會破壞 secure cookie 與轉發協定。本 repo 的 cookie 設定見 [ADR-004 的 D1](004-auth-and-security.mdx)，這條規則沒有被任何本 repo 文件採用，本文只記錄它沒被採用，不自行決定。
+備註：個人 repo ADR-023 要求 Cloudflare 用 Full (strict) TLS、禁用 Flexible，因為 Flexible 會破壞 secure cookie 與轉發協定。本 repo 的 cookie 設定見 [ADR-004 的 D3](004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token)，這條規則沒有被任何本 repo 文件採用，本文只記錄它沒被採用，不自行決定，見[待決](#待決)第 1 列。
 
 ## 待決
 
 | # | 問題 | 卡住什麼 | 誰決定 |
 | :--- | :--- | :--- | :--- |
+| 1 | Cloudflare 到 origin 這一段的 TLS 模式沒有決定（來源要求 Full (strict)、禁用 Flexible，本 repo 沒有採用） | D1 與 [ADR-004 的 D3](004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token) 的 `__Host-` 前綴 cookie | 維護者，在做正式部署的 change 時 |
+| 2 | `ai_runs` 的 `status`、`completed_at` 在只新增下怎麼表達（來源有這兩欄） | D5 與資料表字典的 `ai_runs` 條目 | 維護者，在做 AI 輔助流程的 change 時 |
+| 3 | 稽核事件上的行為人顯示，在最短保留期內失去身分是否可接受 | D7 的匿名化範圍 | 維護者，在做資料保留與匿名化的 change 時 |
+| 4 | 匿名化帳號的狀態怎麼持久化 | D7 | 維護者，在做資料保留與匿名化的 change 時 |
+| 5 | 清除工作的頻率與最長保留期怎麼配合 | D7 的保留期 | 維護者，在做資料保留與匿名化的 change 時 |
+| 6 | 版本撤回的流程 | D7 帶答案歷史 JSON 的保存 | 維護者，在做資料保留與匿名化的 change 時 |
 
 ## 決策紀錄
 
