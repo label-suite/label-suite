@@ -108,7 +108,7 @@ Label Suite 是研究團隊用的 NLP 標記平台：以設定驅動的流程走
 | `--color-secondary` | `--color-white` | 圖示 | 3:1 | 2.98 未達 | 9.01 |
 
 - `--color-primary` 當文字的三列不再使用：主色文字一律換成 `--color-primary-strong`（白底 6.29、主色淺底 5.62:1）。
-- `--color-border` 在兩種主題都不到 3:1，只能當裝飾性分隔，不能單獨承擔「這裡有一個控制項」的辨識；控制項外框用 `--color-border-control`（淺色白底 3.55、頁底 3.23:1；深色卡片 3.42、頁底 3.73:1）。
+- `--color-border` 在兩種主題都不到 3:1，只能當裝飾性分隔，不能單獨承擔「這裡有一個控制項」的辨識；控制項外框用 `--color-border-control`（淺色白底 3.55、頁底 3.23:1；深色卡片 3.42、頁底 3.73:1）。Toggle Switch 關閉時的軌道也改用它（#438），圓鈕 `--color-toggle-thumb` 疊在上面淺色 3.55、深色 4.26:1。
 - `--color-secondary` 不當圖示色，圖示用 `--color-primary`。
 - `--color-task` 淺色原本沿用角色設定頁的 Teal 600，在 `--color-task-bg` 上只有 3.59:1；維護者 2026-11-18 同意改成 Teal 700 `#0F766E`，現為 5.25:1，已不在上表。
 - 可見的焦點樣式目前大多缺席，「所有互動元件都有可見焦點」是目標，還不是現況。
@@ -118,5 +118,5 @@ Label Suite 是研究團隊用的 NLP 標記平台：以設定驅動的流程走
 - **token 沒有略過。** `tokens.css` 的每一個變數都收進了 `tokens.json`，值照抄，沒有重新調色。
 - **帳號頁已改載 `tokens.css`。** #420（G-03）之後帳號頁不再自己定義 `--color-card` 等別名，`components/bundle.css` 也拿掉了那組綁定，直接用 `--color-white`、`--color-primary`、`--color-primary-strong`。
 - **資料色不在 `tokens.json`。** 任務型別 badge、實體色點用的 `--data-*` 變數來自 `design/prototype/assets/data-palette.css`（#420 Q4），它們是區分資料的色，不是語意 token；`bundle.css` 把整份檔案照抄進來，所以元件預覽在兩種主題都拿得到。
-- **還寫死的色值。** #420 收掉了原型裡語意色的 hex（G-02）。`bundle.css` 裡剩下的是：原型狀態切換列（Proto Toggle Bar）的 `rgba()` 底色、幾個 `var(--x, #hex)` 的後備值，以及焦點環的 `color-mix()` 與 `rgba()`（#420 只處理 hex）。側欄通知徽章的白字、Toggle Switch 圓鈕、選取 chip 的勾、帳號頁 spinner 的 `white` 在 #437 改成 token；`AuthCard` 與 `Button` 預覽裡的 Google 標誌保留它自己的品牌色。新元件不要沿用。
+- **還寫死的色值。** #420 收掉了原型裡語意色的 hex（G-02）。`bundle.css` 裡剩下的是：原型狀態切換列（Proto Toggle Bar）的 `rgba()` 底色、幾個 `var(--x, #hex)` 的後備值，以及焦點環的 `color-mix()` 與 `rgba()`（#420 只處理 hex；#438 把列表頁、showcase 輸入框與頭像框線的 `rgba(99,102,241,…)` 換成 `color-mix()`，其他元件的 `rgba()` 焦點環還在）。下拉選單箭頭是 data-URI SVG，讀不到 CSS 變數，#438 讓它在每個主題各寫一份，色值對齊 `--color-ink-muted`（淺色 `#5E6B7F`、深色 `#9CA3AF`）。側欄通知徽章的白字、Toggle Switch 圓鈕、選取 chip 的勾、帳號頁 spinner 的 `white` 在 #437 改成 token；`AuthCard` 與 `Button` 預覽裡的 Google 標誌保留它自己的品牌色。新元件不要沿用。
 - **logo 檔案。** SVG 無法引用 CSS 變數，所以 logo 檔保留寫死色值；`banner.svg` 與 `social-preview.svg` 的副標灰跟著 `--color-ink-muted` 改成 `#5E6B7F`。深色主題專用的 logo 還沒有做。

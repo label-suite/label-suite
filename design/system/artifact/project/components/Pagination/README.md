@@ -17,7 +17,7 @@ Pagination 是清單底部的分頁列：左邊總筆數與每頁筆數，右邊
   - `span.page-ellipsis`：頁碼中間省略的地方。
 - 頁碼最多同時顯示 5 個，其餘以省略號代替，首頁與末頁固定顯示。
 - 使用方提供總筆數、目前頁、每頁筆數，以及換頁時更新網址的處理。
-- token：`--color-primary`、`--color-primary-strong`、`--color-primary-soft-bg`、`--color-border`、`--color-border-control`（每頁筆數選單）、`--color-text-soft`，以及目前頁的文字色（見 G-12）。
+- token：`--color-primary`、`--color-primary-strong`、`--color-primary-soft-bg`、`--color-border`、`--color-border-control`（每頁筆數選單）、`--color-text-soft`，以及目前頁文字的 `--color-on-cta`（G-12）。
 
 ## 變體
 
@@ -27,7 +27,7 @@ Pagination 是清單底部的分頁列：左邊總筆數與每頁筆數，右邊
 
 - 預設：有。
 - hover（非目前頁、非 disabled）：主色框線、淡主色底、`--color-primary-strong` 字。
-- 目前頁 `.active`：主色底。文字色兩份定義不一致：正典用 `--color-on-cta`，會隨主題變；shipped 的 `list-page.css` 用 `--color-white`，固定白色。bundle 收的是後者（G-12）。
+- 目前頁 `.active`：主色底，文字 `--color-on-cta`。#438 讓 `list-page.css` 改用它，和正典一致（G-12）；原本的 `--color-white` 在深色主題取到的是卡片底色。
 - `:disabled`：透明度 0.4，不可點。
 - focus：`.page-btn` 與 `.page-size-select` 都沒有焦點樣式（G-05）。
 - 載入中／錯誤／空：由表格負責，分頁列不另做。
