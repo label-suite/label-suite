@@ -46,7 +46,6 @@ tags: [adr, backend, api, database, celery]
 
 - 貢獻者要分清楚指令屬於哪個子目錄
 - CI 時間隨兩層成熟而增加，來源以 `concurrency` 的 cancel-in-progress 緩解
-- 根目錄再多一個套件（例如 [ADR-007 的 D4](007-testing-strategy.mdx#d4-正式-e2e-放根目錄) 的 `e2e/`）時，不能靠 monorepo 工具管相依，要自己維護
 
 ### 什麼情況要重新討論
 
@@ -206,7 +205,7 @@ tags: [adr, backend, api, database, celery]
 
 ### 決定
 
-每個端點掛在 `/api/v1` 底下，資源名直接接在後面、不插模組名；`200` 的回應包一層 envelope，`204` 無 body、檔案下載與串流是例外，而且每個例外都要逐一寫進該 change 的 `api-contract.md`，不逐案自由心證。envelope 有哪些欄位未決，見 [§待決](#待決) 第 1 列；規則本體見 [api-agent-rules.mdx 的 A1](../api-agent-rules.mdx#a1-路由-http-status-operationid-與回應外層)，做法見 [architecture.mdx 的 §API 契約](../architecture.mdx#api-契約)。
+每個端點掛在 `/api/v1` 底下，資源名直接接在後面、不插模組名；`200` 的回應包一層 envelope，`204` 無 body、檔案下載與串流是例外，而且每個例外都要逐一寫進該 change 的 `api-contract.md`，不逐案自由心證。envelope 有哪些欄位未決，見 [api-agent-rules.mdx 的 §待決](../api-agent-rules.mdx#待決) 第 1 列；規則本體見 [api-agent-rules.mdx 的 A1](../api-agent-rules.mdx#a1-路由-http-status-operationid-與回應外層)，做法見 [architecture.mdx 的 §API 契約](../architecture.mdx#api-契約)。
 
 ### 後果
 
@@ -242,7 +241,7 @@ tags: [adr, backend, api, database, celery]
 
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
-| A Orval，輸出到 `frontend/src/api/generated/` | 從 `openapi.json` 產生 TanStack Query hooks、型別與 MSW mock；mutator 就是單一 HTTP 邊界；和 scaffold 同一套 | 產物不能手改；契約、`openapi.json` 與產物要放同一個 commit，CI 要重產比對 | 採用 |
+| A Orval，輸出到 `frontend/src/api/generated/` | 從 `openapi.json` 產生 TanStack Query hooks、型別與 MSW mock；mutator 就是單一 HTTP 邊界 | 產物不能手改；契約、`openapi.json` 與產物要放同一個 commit，CI 要重產比對 | 採用 |
 | B `openapi-typescript` 只產型別，請求自己寫 | 只產型別 | 請求與 query key 要自己寫；理由沒有記錄 | 不採用 |
 | C 先不選，型別來源是 `openapi.json`，取用方式由各 change 的 `design.md` 指定 | 不必現在決定 | 理由沒有記錄 | 不採用 |
 
@@ -430,13 +429,12 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 | D7 | 個人 repo ADR-005（Context、候選比較、Consequences）與 ADR-024（Context、Decision、Consequences、Dialect-Specific Paths、Out of Scope）；驅動與 volume 的細節見 [architecture.mdx 的 §資料庫雙層](../architecture.mdx#資料庫雙層) |
 | D8 | 個人 repo ADR-006（Context、Broker 與快取的候選比較、Eviction Policy Isolation、Consequences）與 ADR-007（Context、候選比較、FastAPI Async Integration、Consequences）；佇列、重試與逾時的數字見 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務) |
 | D9 | 個人 repo ADR-025（Context、Alternatives Considered、Enforcement、Consequences）；降級的裁定見 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 7 列，只記結果，沒有記取消關卡的理由 |
-| — | 個人 repo ADR-024 在 2026-10-08 的修訂（以資料庫 trigger 保護 append-only 與封存的資料表）、ADR-022 的轉移表與快照不變式，不在 [architecture.mdx](../architecture.mdx) 裡，本 ADR 不收；它們屬於資料庫與業務規格，由各自的 change 決定是否採用 |
+| — | 個人 repo ADR-024 後來的修訂（以資料庫 trigger 保護 append-only 與封存的資料表）、ADR-022 的轉移表與快照不變式，不在 [architecture.mdx](../architecture.mdx) 裡，本 ADR 不收；它們屬於資料庫與業務規格，由各自的 change 決定是否採用 |
 
 ## 待決
 
 | # | 問題 | 卡住什麼 | 誰決定 |
 | :--- | :--- | :--- | :--- |
-| 1 | `200` 回應的 envelope 要有哪些欄位（[D5](#d5-api-路徑前綴與成功回應外層)） | 只決定了「包一層 envelope」，沒有決定欄位；不照抄別的專案的形狀，也不由各模組各自決定 | 第一個 API change 的 `api-contract.md` 要把欄位定下來 |
 
 ## 決策紀錄
 
