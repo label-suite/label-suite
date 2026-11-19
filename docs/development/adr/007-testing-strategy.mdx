@@ -1,0 +1,203 @@
+---
+title: ADR-007 測試策略
+description: 測試怎麼分層、覆蓋率怎麼要求、前端測試與正式 E2E 放在哪裡：三層測試、覆蓋率只管不得下降加關鍵路徑、前端測試與原始碼同目錄、正式 E2E 放根目錄。
+tags: [adr, testing, coverage, e2e]
+---
+
+# ADR-007 測試策略
+
+這份 ADR 管測試的分層、覆蓋率的要求，以及測試檔放在哪裡。TDD 的紅燈紀律、integration 的真實邊界、gate 與 evidence 不在這裡，見 [testing-agent-rules.mdx](../testing-agent-rules.mdx)。
+規則本體在 `AGENTS.md` 與 [testing-agent-rules.mdx](../testing-agent-rules.mdx)，落地的做法在 [architecture.mdx 的 §測試分層](../architecture.mdx#測試分層)，本文只寫為什麼；衝突時的優先序見 [ADR 索引](index.mdx#衝突時以誰為準)。
+
+## D1 三層測試的分工
+
+### 背景
+
+要決定測試分成幾層、各層用什麼工具、誰管什麼範圍；名詞用得鬆，「用 httpx 打 API」就會被叫成 E2E。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 前端有元件邏輯、設定驅動的任務元件與跨頁旅程，粒度差很多 | 一種測試撐不起所有粒度 |
+| `backend/`、`frontend/` 與 `e2e/` 都還不存在 | 現在決定的是分工與名詞，不是既有測試的搬遷 |
+| 團隊已有 Playwright 經驗 | 瀏覽器自動化的選擇不必從零評估 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 三層：unit、integration、e2e，各層的工具、範圍、位置、指令固定 | 「打 API 但不開瀏覽器」有自己的名字；每層成本與範圍清楚 | 三個名詞要靠審查維持，叫錯了不會自己報錯 | 採用 |
+| B 兩個名詞：unit 與 e2e，用 httpx 打 API 的測試也算 e2e | 少一個名詞 | httpx 測試沒有開真瀏覽器，不是 e2e；[T1](../testing-agent-rules.mdx#t1-三層的範圍位置指令與生命週期) 明文禁止這樣叫 | 不採用 |
+| C 後端用 unittest，e2e 用 Cypress 或 Selenium | 不必選 pytest 與 Playwright | unittest 沒有原生 async、fixture 較弱；Cypress 只支援 Chromium 且免費版沒有平行；Selenium 較慢、較不穩 | 不採用 |
+
+### 決定
+
+測試只分 unit、integration、e2e 三層；後端用 pytest 加 httpx，前端用 Vitest 加 React Testing Library，e2e 用 Playwright，三層互補、不重疊：純 UI 邏輯不用 Playwright 測，跨頁旅程不用 Vitest 測，用 httpx 打 API 的叫 integration、不叫 e2e。範圍、位置與指令見 [testing-agent-rules.mdx 的 T1](../testing-agent-rules.mdx#t1-三層的範圍位置指令與生命週期)。
+
+### 後果
+
+**變容易**
+
+- `tasks.md`、PR 與 commit 用同樣三個名詞，審查的人知道一個測試該落在哪一層
+- 慢的 e2e 只留給跨頁、跨角色的旅程，快的兩層每次提交都能跑
+
+**變困難**
+
+- 後端與 e2e 是兩個 runner，CI 要兩個 job，本機要記兩個指令
+- 跨層的補充覆蓋要寫明哪一層是主責，多一個審查要看的點
+
+### 什麼情況要重新討論
+
+- `backend/` 與 `frontend/` 的第一批測試合併之後，審查反覆發現測試叫錯層
+- e2e 在 CI 的耗時讓 PR 回饋明顯變慢，需要改變它的執行時機
+
+## D2 覆蓋率只管不得下降與關鍵路徑
+
+### 背景
+
+要決定用什麼數字當覆蓋率的閘；數字訂得太寬，關鍵路徑可能沒人測，訂得太硬，會逼人為數字寫沒有意義的測試。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 評分、答案隔離、認證與授權錯了，後果是排行榜失真或測試集外洩 | 這幾塊要比一般程式要求更高 |
+| `backend/` 與 `frontend/` 剛建立時沒有足夠的程式 | 絕對門檻在骨架期沒有意義，只能以第一次測得的值當基準 |
+| 生成程式與 migration 不是人寫的邏輯 | 算進分母只會墊高數字 |
+| 來源的整體 80% 只管後端，而且自帶逃生條款 | 不能原樣變成前後端都適用的硬規定 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 整體 80% 當硬閘 | 一個數字，好懂 | 只管後端；尚未達標時有逃生條款，實際上擋不住；一般程式與關鍵程式用同一個數字 | 不採用 |
+| B 分層門檻：後端 80%、評分引擎 90%、答案外洩 100% | 把最重要的幾塊拉高 | 檔案路徑寫死在門檻裡，本 repo 的模組內分層用不上；只管後端 | 不採用 |
+| C 每張 PR 不得下降，加五項關鍵路徑的 90% 分支覆蓋 | 前後端都適用；骨架期有基準可用；最重要的幾塊要求最高 | 「不得下降」要 CI 記住基準；五項的範圍要維護 | 採用 |
+
+### 決定
+
+覆蓋率只有兩條規則：每張 PR 不得低於它的基準，以及認證、授權與權限檢查、答案隔離、評分、IAA 計算這五項關鍵路徑要達 90% 分支覆蓋；分母排除 Orval 產物、Alembic migration 與設定檔，整體 80% 不當硬閘。規則本體見 [testing-agent-rules.mdx 的 T10](../testing-agent-rules.mdx#t10-覆蓋率)。
+
+### 後果
+
+**變容易**
+
+- 一般程式不會為了湊數字而寫沒有意義的測試
+- 最容易出大事的五塊有明確而且最高的要求
+
+**變困難**
+
+- 「不得下降」需要 CI 記住基準，要和 gate 一起建置，建好之前這條只能靠審查
+- 關鍵路徑的範圍是人定的，新增一種關鍵邏輯時要記得回來補
+
+### 什麼情況要重新討論
+
+- `backend/` 與 `frontend/` 的覆蓋率報告出來之後，五項關鍵路徑之外出現反覆的缺陷
+- 關鍵路徑的 90% 分支覆蓋讓測試的維護成本明顯超過它抓到的缺陷
+- 出現第六種「錯了就是事故」的邏輯
+
+## D3 前端測試與原始碼放同一個目錄
+
+### 背景
+
+要決定前端的元件與 hook 測試放在哪裡；這個位置決定每個前端模組的檔案結構，之後要搬動，每個測試檔都得動。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 前端依 `pages/` 加 `features/` 組織 | 測試放哪裡要和這個結構一致 |
+| [T1](../testing-agent-rules.mdx#t1-三層的範圍位置指令與生命週期) 把「測試檔放在與表格不同的位置」列為禁止 | 位置必須只有一種答案，CI 才能用路徑規則檢查 |
+| 來源對前端測試位置有兩種說法 | 兩邊只能選一個，不能並存 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 與原始碼同目錄，`*.test.ts(x)` 緊貼被測檔 | 改一個功能只要進一個資料夾；改了原始碼就看得到它的測試 | 資料夾裡檔案變多；建置要排除測試檔 | 採用 |
+| B 放在 `src/[module]/__tests__/` | 原始碼與測試在目錄上分開 | 與 [architecture.mdx 的 §前端](../architecture.mdx#前端) 的 `features/` 結構不一致，被測檔與測試檔不在同一處 | 不採用 |
+
+### 決定
+
+前端的元件與 hook 測試與原始碼放在同一個目錄，檔名 `*.test.ts(x)`；位置本身見 [testing-agent-rules.mdx 的 T1](../testing-agent-rules.mdx#t1-三層的範圍位置指令與生命週期)，指令是 `pnpm test`。
+
+### 後果
+
+**變容易**
+
+- 找一個元件的測試不必另外找目錄
+- 位置只有一種，CI 的路徑規則可以檢查
+
+**變困難**
+
+- 打包與型別檢查要排除 `*.test.ts(x)`，建置設定多一個要維護的地方
+- 共用的測試輔助（例如包 provider 的 render 函式）沒有天然的家，要另外決定放哪裡
+
+### 什麼情況要重新討論
+
+- `frontend/` 的第一個模組合併之後，建置排除測試檔的設定反覆出問題
+- 前端的目錄結構（[§前端](../architecture.mdx#前端)）改了
+
+## D4 正式 E2E 放根目錄
+
+### 背景
+
+要決定跨前後端的正式 Playwright 測試放在哪裡；個人 repo 的 ADR 曾經一邊寫 `frontend/tests/`、一邊寫 `e2e/[module]/`，只改路徑字串不是解法，必須有一個決定。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| e2e 要同時起後端、資料庫、Redis、worker 與前端 | 它不屬於任何一層 |
+| e2e 慢，不能擋住快的前端檢查 | CI 要能把它單獨排程 |
+| 各角色用真的 session 登入，`storageState` 檔由真後端產生 | 檔案放在前端的目錄樹裡，位置不中性 |
+| `frontend/`、`backend/`、`e2e/` 都還不存在 | 兩個選項的搬遷成本都是零，比的是哪一個留下來 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A `frontend/tests/` | 一套 Node 工具鏈；`tsconfig` 別名與生成的 API 型別不必跨套件參照；少一個 `package.json` 與 lockfile | e2e 的相依、瀏覽器與 service 容器綁在前端的相依圖上；真後端產生的 `storageState` 落在前端目錄；啟動後端的設定由前端套件持有 | 不採用 |
+| B 根目錄 `e2e/[module]/[page].spec.ts` | 與 `frontend/`、`backend/` 同級，符合它測的範圍；CI job 有自己的相依與快取，可單獨排程；`e2e/shared/fixtures/` 對前後端中性；`e2e/[module]/` 與 `docs/specs/` 的模組對齊 | 多一個 `package.json` 與 lockfile；共用型別要跨套件參照 `frontend/` | 採用 |
+
+### 決定
+
+正式全端 E2E 放在根目錄 `e2e/[module]/[page].spec.ts`，各角色的 `storageState` 與 seed helper 放 `e2e/shared/fixtures/`；Vitest 元件測試仍留在 `frontend/src/`（[D3](#d3-前端測試與原始碼放同一個目錄)）。位置與指令見 [testing-agent-rules.mdx 的 T1](../testing-agent-rules.mdx#t1-三層的範圍位置指令與生命週期)。
+
+### 後果
+
+**變容易**
+
+- e2e 的 CI job 有自己的相依與快取，可以和快的前端檢查分開排程
+- 目錄的身分和它測的東西一致：起整套服務的測試不是前端的產物
+- 一份規格、它的線框與它的正式測試共用同一個模組名稱
+
+**變困難**
+
+- 多一個 Node 套件要安裝、升級與稽核
+- 共用型別要跨套件：`e2e/` 用 `tsconfig` 專案參照 `frontend/`，並保持相依精簡
+- 整套服務的啟動、seed 與清理是新的基礎設施，本 repo 還沒有先例
+
+### 什麼情況要重新討論
+
+- `e2e/` 建立之後，跨套件的型別參照反覆造成建置問題
+- e2e 要測的流程縮到只剩前端能獨立跑完的旅程，不再需要起後端
+
+## 附錄：來源對照
+
+比對的版本：個人 repo（`singyichen/label-suite`）ADR-009、012、034 的現行內容。
+
+| 決定 | 來源 |
+| :--- | :--- |
+| D1 | 個人 repo ADR-009（pytest、Playwright、TDD、unittest／Cypress／Selenium 的比較）與 ADR-012（前端兩層）；本 repo 把前端的兩層擴成三層，名詞「用 httpx 打 API 叫 integration、不叫 e2e」來自 scaffold 的 `testing.md`，見 [testing-agent-rules.mdx 的附錄](../testing-agent-rules.mdx#各條規範的來源) |
+| D2 | 個人 repo ADR-009 的分層門檻（選項 B）；選項 A 是原始 repo foundation spec 的 `SC-001`；維護者採用的是原始 repo `testing-backend.md` 與 `testing-frontend.md` 的「新程式不得降低整體覆蓋率」與「關鍵路徑 90% 分支」，關鍵路徑由三項擴成五項，見 [testing-agent-rules.mdx 的 T10](../testing-agent-rules.mdx#t10-覆蓋率) |
+| D3 | 個人 repo ADR-012 的 Co-location Convention；選項 B 是原始 repo `testing-frontend.md` 的位置慣例，見 [testing-agent-rules.mdx 的 T1 來源](../testing-agent-rules.mdx#各條規範的來源) |
+| D4 | 個人 repo ADR-034（選項 A、B 的比較與限制）；它同時取代 ADR-009、011、012 的 E2E 位置 |
+| — | 個人 repo ADR-014（prototype 層 Playwright 測試）不適用本 repo，測試留在個人 repo，見 [architecture.mdx 的 §ADR 效力總表](../architecture.mdx#adr-效力總表) |
+
+## 待決
+
+| # | 問題 | 卡住什麼 | 誰決定 |
+| :--- | :--- | :--- | :--- |
+
+## 決策紀錄
+
+| 日期 | 決策 | 取代了什麼 | 來源 |
+| :--- | :--- | :--- | :--- |
+| 2026-11-19 | 測試分 unit、integration、e2e 三層，工具與範圍固定（[D1](#d1-三層測試的分工)） | 個人 repo ADR-012 前端只有元件與 e2e 兩層的寫法 | [#453](https://github.com/label-suite/label-suite/issues/453) |
+| 2026-11-19 | 覆蓋率只管不得下降加五項關鍵路徑的 90% 分支覆蓋（[D2](#d2-覆蓋率只管不得下降與關鍵路徑)） | 個人 repo ADR-009 的分層門檻（80%、90%、100%）與整體 80% 硬閘 | [#453](https://github.com/label-suite/label-suite/issues/453) |
+| 2026-11-19 | 前端測試與原始碼放同一個目錄（[D3](#d3-前端測試與原始碼放同一個目錄)） | 原始 repo 的 `src/[module]/__tests__/` | [#453](https://github.com/label-suite/label-suite/issues/453) |
+| 2026-11-19 | 正式 E2E 放根目錄 `e2e/[module]/`（[D4](#d4-正式-e2e-放根目錄)） | 個人 repo ADR-009、011、012 的 `frontend/tests/` | [#453](https://github.com/label-suite/label-suite/issues/453) |
