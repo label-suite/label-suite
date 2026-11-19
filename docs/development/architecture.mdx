@@ -179,7 +179,7 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 ## 任務設定：`input_type` 加 `outputs[]`
 
 任務類型完全由設定決定，平台核心不得出現任何任務專屬邏輯（Hard Rule 5）。
-設定由 `input_type`（`single_item` 或 `item_pair`）加一個 `outputs[]` 陣列組成，不用固定的 `task.type` enum；每個 output type 自帶設定片段、標記 UI 與評分指標。
+設定由 `input_type`（`single_item` 或 `item_pair`）加一個 `outputs[]` 陣列組成，不用固定的 `task.type` enum；每個 output type 自帶設定片段、標記 UI 與評分指標。理由見 [ADR-006 的 D1](adr/006-task-config-and-answer-isolation.mdx#d1-任務類型由設定決定核心不寫任務專屬邏輯)與 [D2](adr/006-task-config-and-answer-isolation.mdx#d2-任務設定用-input_type-加-outputs-組合)。
 
 | Output type | 設定片段 | 標記 UI | 評分指標 |
 | :--- | :--- | :--- | :--- |
@@ -197,12 +197,12 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 - v1 限制：同一種 output type 每個任務最多一次，output 數量沒有上限
 - 多 output 的任務產生分數向量而不是單一分數，IAA 也逐 output type 獨立計算
 - `sequence_tagging` 的標記是半開區間的字元 offset span `{ start, end, label }`，不是對齊 token 的標籤；ADR-029 那一列的 `tagging_scheme`、`token_f1`、`token_accuracy` 不採用
-- `snap_unit` 只影響拖曳落點，不改變既有 span 的意義，所以不需要凍結 tokenizer 版本
+- `snap_unit` 只影響拖曳落點，不改變既有 span 的意義，所以不需要凍結 tokenizer 版本；改用 span 的理由見 [ADR-006 的 D3](adr/006-task-config-and-answer-isolation.mdx#d3-序列標記用半開字元-offset-span)
 :::
 
 ## 測試集答案不外露
 
-標記員能接觸到的任何地方都不得出現標準答案與測試集資訊（Hard Rule 6），架構上分四道：
+標記員能接觸到的任何地方都不得出現標準答案與測試集資訊（Hard Rule 6），架構上分四道，理由見 [ADR-006 的 D4](adr/006-task-config-and-answer-isolation.mdx#d4-答案隔離涵蓋標記員能到達的每個出口)：
 
 | 位置 | 做法 |
 | :--- | :--- |
@@ -372,7 +372,7 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做。
 | 007 | Celery | Accepted | 沿用，見 [§非同步任務](#非同步任務)與 [ADR-003 的 D8](adr/003-backend-architecture.mdx#d8-非同步任務用-celery-加-redis) |
 | 008 | Docker 加 Docker Compose | Accepted | 沿用，見 [§部署與維運](#部署與維運) |
 | 009 | pytest 加 Playwright 加 TDD | Accepted | 沿用，見 [§測試分層](#測試分層)；覆蓋率門檻改採 [ADR-007 的 D2](adr/007-testing-strategy.mdx#d2-覆蓋率只管不得下降與關鍵路徑) |
-| 010 | Config-Driven Task Architecture | Accepted | 沿用原則，等同 Hard Rule 5；config schema 已由 029 取代，見 [§任務設定](#任務設定input_type-加-outputs) |
+| 010 | Config-Driven Task Architecture | Accepted | 沿用原則，等同 Hard Rule 5；config schema 已由 029 取代，見 [§任務設定](#任務設定input_type-加-outputs)與 [ADR-006 的 D1](adr/006-task-config-and-answer-isolation.mdx#d1-任務類型由設定決定核心不寫任務專屬邏輯) |
 | 011 | 前端垂直功能切片 | Accepted | **被覆寫**：改用 `pages/` 加 `features/`，見 [§前端](#前端)與 [ADR-005 的 D2](adr/005-frontend-architecture.mdx#d2-目錄分層採-pages-加-features) |
 | 012 | Vitest 加 RTL 加 Playwright | Accepted | 沿用，E2E 位置已由 034 取代，見 [§測試分層](#測試分層)與 [ADR-007 的 D3](adr/007-testing-strategy.mdx#d3-前端測試與原始碼放同一個目錄) |
 | 013 | Resend 寄信 | Accepted | 需調整：補上未設定 key 時的降級路徑，見 [§部署與維運](#部署與維運) |
@@ -391,9 +391,9 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做。
 | 026 | i18n 兩層 | Accepted | 沿用，見 [§i18n 兩層](#i18n-兩層) |
 | 027 | GitHub Projects | Accepted | 已被取代：以 [ADR-002 的 D5](adr/002-development-workflow.mdx#d5-狀態只記在組織層專案板)為準，不用 label 追狀態，無 `STATUS.md` |
 | 028 | CI 安全掃描（SCA 加延後 SAST） | Accepted | 沿用，等同 Hard Rule 7、8，見 [§部署與維運](#部署與維運) |
-| 029 | Output-Type Composition Model | Accepted | 沿用；`sequence_tagging` 那一列已過期，以 [§任務設定](#任務設定input_type-加-outputs) 為準（修訂見 [§待決](#待決) 第 1 列） |
+| 029 | Output-Type Composition Model | Accepted | 沿用；`sequence_tagging` 那一列已過期，以 [§任務設定](#任務設定input_type-加-outputs) 為準（修訂見 [§待決](#待決) 第 1 列）；見 [ADR-006 的 D2](adr/006-task-config-and-answer-isolation.mdx#d2-任務設定用-input_type-加-outputs-組合) |
 | 030 | Lucide 圖示 | Accepted | 沿用，見 [§前端](#前端)與 [ADR-005 的 D5](adr/005-frontend-architecture.mdx#d5-圖示只用-lucide) |
-| 031 | 序列標記 tokenization 契約 | Superseded | 已被取代：改成半開字元 offset span，見 [§任務設定](#任務設定input_type-加-outputs) |
+| 031 | 序列標記 tokenization 契約 | Superseded | 已被取代：改成半開字元 offset span，見 [§任務設定](#任務設定input_type-加-outputs)與 [ADR-006 的 D3](adr/006-task-config-and-answer-isolation.mdx#d3-序列標記用半開字元-offset-span) |
 | 032 | 使用者行為稽核（`audit_events`） | Accepted | 沿用，見 [§稽核與可追溯](#稽核與可追溯) |
 | 033 | OpenSpec 當變更流程層 | Accepted | 已被取代：以 `openspec/config.yaml` 加 [ADR-002 的 D1](adr/002-development-workflow.mdx#d1-完整九份產物流程一次導入)為準（033 把 `openspec/specs/` 當衍生檢視，本 repo 當可測契約，方向相反）；檔案狀態與 `README.md` 索引不一致，見 [§待決](#待決) 第 1 列 |
 | 034 | 正式 E2E 放根目錄 `e2e/[module]/` | Accepted | 沿用，見 [§測試分層](#測試分層)與 [ADR-007 的 D4](adr/007-testing-strategy.mdx#d4-正式-e2e-放根目錄) |
@@ -445,3 +445,4 @@ ADR 引用的 FR-131、admin-007、spec 013 這類編號屬於個人 repo，本 
 | 2026-11-19 | 後端與 API 契約的理由寫進 [ADR-003](adr/003-backend-architecture.mdx)，本文只留做法；個人 repo ADR-001、003、005、006、007、022、024、025 的效力改連到它的 D1 至 D9（[§ADR 效力總表](#adr-效力總表)） | —（理由原本只在個人 repo 的 ADR 與 [#105](https://github.com/label-suite/label-suite/issues/105) 的留言） | [#449](https://github.com/label-suite/label-suite/issues/449) |
 | 2026-11-19 | 認證、CSRF、Google SSO、權限矩陣的理由寫進 [ADR-004](adr/004-auth-and-security.mdx)，本文只留做法（[§認證與授權](#認證與授權)） | —（理由原本只在個人 repo 的 ADR-021、035、037 與 #107 的留言） | [#450](https://github.com/label-suite/label-suite/issues/450) |
 | 2026-11-19 | 前端的框架、目錄分層、元件庫、design token 對照與圖示的理由寫進 [ADR-005](adr/005-frontend-architecture.mdx)，本文只留做法（[§前端](#前端)）；個人 repo ADR-004、011、016、030 的效力改連到它的 D1、D2、D3、D5（[§ADR 效力總表](#adr-效力總表)） | —（理由原本只在個人 repo 的 ADR 與 [#105](https://github.com/label-suite/label-suite/issues/105) 的留言） | [#451](https://github.com/label-suite/label-suite/issues/451) |
+| 2026-11-19 | 任務設定與答案隔離的理由寫進 [ADR-006](adr/006-task-config-and-answer-isolation.mdx)，本文只留做法（[§任務設定](#任務設定input_type-加-outputs)、[§測試集答案不外露](#測試集答案不外露)）；個人 repo ADR-010、029、031 的效力改連到它的 D1、D2、D3（[§ADR 效力總表](#adr-效力總表)） | —（理由原本只在個人 repo 的 ADR） | [#452](https://github.com/label-suite/label-suite/issues/452) |
