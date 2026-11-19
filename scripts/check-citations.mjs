@@ -286,9 +286,10 @@ export function contextMatches({ lines, from, to, tokens, doc = '', unitText = '
     // `<style>` or `<script>`: the citation points into that element.
     const el = t.match(/^<(style|script)>$/i);
     if (el && [from, to].every((n) => insideElement(lines, n, el[1].toLowerCase()))) return true;
-    // `<span>` is also met by the CSS selector that styles it (`.metric span {`).
+    // `<span>` is also met by an opening tag with attributes (`<svg viewBox=…>`)
+    // and by the CSS selector that styles it (`.metric span {`).
     const tag = t.match(/^<([a-z][a-z0-9]*)>$/i);
-    if (tag && new RegExp(`(^|[\\s>+~,(])${tag[1]}(?=\\s*[{,:>.[)]|\\s*$)`, 'im').test(text)) return true;
+    if (tag && new RegExp(`<${tag[1]}[\\s/>]|(^|[\\s>+~,(])${tag[1]}(?=\\s*[{,:>.[)]|\\s*$)`, 'im').test(text)) return true;
     // A design token is met by its light-theme value.
     const v = t.startsWith('--') ? values.get(t) : undefined;
     if (v && /^#[0-9a-f]{3,8}$/.test(v) && text.toLowerCase().includes(v)) return true;

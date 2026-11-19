@@ -110,6 +110,12 @@ test('`<span>` is met by the CSS selector that styles it', () => {
   assert.equal(repo('標籤用 `<span>`（`pages/b.css:2`）\n', extra).warnings.length, 1);
 });
 
+test('`<svg>` is met by an opening tag with attributes, not by a longer tag name', () => {
+  const extra = { 'design/prototype/pages/b.html': ['<svg viewBox="0 0 24 24">', '<svgx>', ''].join('\n') };
+  assert.equal(repo('內嵌 `<svg>`（`pages/b.html:1`）\n', extra).stats.verified, 1);
+  assert.equal(repo('內嵌 `<svg>`（`pages/b.html:2`）\n', extra).warnings.length, 1);
+});
+
 test('a design token is met by its light-theme value from tokens.css', () => {
   const extra = {
     'design/prototype/assets/tokens.css': [':root {', '  --color-ink: #1E1B4B;', '}', 'html[data-theme="dark"] { --color-ink: #E2E8F0; }', ''].join('\n'),
