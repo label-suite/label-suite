@@ -63,7 +63,7 @@ CLAUDE_CFG="$ROOT/.claude/settings.json"
 CODEX_CFG="$ROOT/.codex/hooks.json"
 
 # ── 1. Git entry point and the rule file ─────────────────────────────
-emit_out "── Git 與規則入口 ──"
+emit_out "  ── Git 與規則入口 ──"
 hooks_path=$(git -C "$ROOT" config --get core.hooksPath 2>/dev/null)
 if [ "$MODE" = "ci" ]; then
   emit_out "NA: Git hooksPath 在 CI 不適用；CI 的必要檢查不依賴本機 hook"
@@ -80,7 +80,7 @@ else
 fi
 
 # ── 2. Tool versions, with NA for layers that do not exist yet ───────
-emit_out "── 工具版本 ──"
+emit_out "  ── 工具版本 ──"
 for tool in node pnpm; do
   if command -v "$tool" >/dev/null 2>&1; then
     emit_out "PASS: $tool $("$tool" --version 2>/dev/null | head -1)"
@@ -102,7 +102,7 @@ fi
 # Placeholders are substituted literally — never expanded by a shell — and
 # anything else that looks like shell is reported as unverifiable rather than
 # guessed at, because a wrong guess here would be reported as agreement.
-emit_out "── 兩份 hook 註冊設定 ──"
+emit_out "  ── 兩份 hook 註冊設定 ──"
 read -r -d '' SCAN_JS <<'JS'
 const fs = require('node:fs');
 // `node -e` leaves no script name in argv, so the extra arguments start at 1.
@@ -152,7 +152,7 @@ done
 [ "$pair_ok" = "1" ] && emit_out "PASS: 兩份 hook 註冊設定指向的目標都存在且一致"
 
 # ── 4. Will these hooks actually run this time ───────────────────────
-emit_out "── 本次 hook 是否真的會執行 ──"
+emit_out "  ── 本次 hook 是否真的會執行 ──"
 read -r -d '' DISABLED_JS <<'JS'
 const fs = require('node:fs');
 for (const f of process.argv.slice(1)) {
@@ -217,7 +217,7 @@ else
 fi
 
 # ── The two gaps the permission layer has to carry (D19) ─────────────
-emit_out "── hook 層與權限層的分工 ──"
+emit_out "  ── hook 層與權限層的分工 ──"
 emit_out "NA: Codex 的 hook 層沒有讀取攔截點（沒有 Read／Grep／Glob 之類的工具名），該項由平台權限層承接，而權限層尚未設定"
 emit_out "NA: Codex 的 apply_patch 沒有路徑欄位，hook 層在該途徑沒有寫檔目標保護，同樣由平台權限層承接，而權限層尚未設定"
 

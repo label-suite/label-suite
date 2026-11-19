@@ -37,9 +37,9 @@ trap on_exit EXIT
 # The three sentences that must travel together wherever this checker speaks:
 # no one of them may stand in for the others (D11, D19).
 gaps() {
-  emit_err "說明：以 shell 改檔的途徑由命令那一組判定，本檢查不涵蓋它。"
-  emit_err "說明：Codex 沒有讀取類的工具名，hook 層在讀取上沒有攔截點。"
-  emit_err "說明：Codex 的 apply_patch 沒有路徑欄位，hook 層在那條途徑沒有寫檔目標保護。以上兩項由平台權限層承接，而平台權限層本次尚未設定。"
+  emit_err "  說明：以 shell 改檔的途徑由命令那一組判定，本檢查不涵蓋它。"
+  emit_err "  說明：Codex 沒有讀取類的工具名，hook 層在讀取上沒有攔截點。"
+  emit_err "  說明：Codex 的 apply_patch 沒有路徑欄位，hook 層在那條途徑沒有寫檔目標保護。以上兩項由平台權限層承接，而平台權限層本次尚未設定。"
 }
 
 payload=$(cat)

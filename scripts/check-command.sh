@@ -282,7 +282,7 @@ while IFS=$'\t' read -r kind rule detail; do
 done < <(node -e "$ANALYSE_JS" -- "$REPO" "$COMMAND")
 
 if [ "$verdict" = "1" ]; then
-  emit_err "說明：這是字串比對，涵蓋不了變數展開、編碼過的命令與動態組出來的命令。真正的邊界在平台權限層與遠端的 branch protection，本檢查只擋明顯的寫法。"
+  emit_err "  說明：這是字串比對，涵蓋不了變數展開、編碼過的命令與動態組出來的命令。真正的邊界在平台權限層與遠端的 branch protection，本檢查只擋明顯的寫法。"
   FINISHED=1; hc_flush
   exit "$EXIT_BLOCK"
 fi
