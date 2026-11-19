@@ -27,7 +27,7 @@ tags: [adr, testing, coverage, e2e]
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
 | A 三層：unit、integration、e2e，各層的工具、範圍、位置、指令固定 | 「打 API 但不開瀏覽器」有自己的名字；每層成本與範圍清楚 | 三個名詞要靠審查維持，叫錯了不會自己報錯 | 採用 |
-| B 兩層：元件與 unit、e2e（個人 repo ADR-012 對前端的寫法） | 名詞少 | 後端的 API 測試沒有地方歸類，容易被叫成 e2e，或被省略 | 不採用 |
+| B 兩層：元件與 unit、e2e（個人 repo 對前端的寫法） | 名詞少 | 後端的 API 測試沒有地方歸類，容易被叫成 e2e，或被省略 | 不採用 |
 | C 後端用 unittest，e2e 用 Cypress 或 Selenium | 不必選 pytest 與 Playwright | unittest 沒有原生 async、fixture 較弱；Cypress 只支援 Chromium 且免費版沒有平行；Selenium 較慢、較不穩 | 不採用 |
 
 ### 決定
@@ -68,8 +68,8 @@ tags: [adr, testing, coverage, e2e]
 
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
-| A 整體 80% 當硬閘（原始 repo foundation spec 的 `SC-001`） | 一個數字，好懂 | 只管後端；尚未達標時有逃生條款，實際上擋不住；一般程式與關鍵程式用同一個數字 | 不採用 |
-| B 分層門檻：後端 80%、評分引擎 90%、答案外洩 100%（個人 repo ADR-009） | 把最重要的幾塊拉高 | 檔案路徑寫死在門檻裡，本 repo 的模組內分層用不上；只管後端 | 不採用 |
+| A 整體 80% 當硬閘（原始 repo 的 foundation spec） | 一個數字，好懂 | 只管後端；尚未達標時有逃生條款，實際上擋不住；一般程式與關鍵程式用同一個數字 | 不採用 |
+| B 分層門檻：後端 80%、評分引擎 90%、答案外洩 100%（個人 repo 的做法） | 把最重要的幾塊拉高 | 檔案路徑寫死在門檻裡，本 repo 的模組內分層用不上；只管後端 | 不採用 |
 | C 每張 PR 不得下降，加五項關鍵路徑的 90% 分支覆蓋 | 前後端都適用；骨架期有基準可用；最重要的幾塊要求最高 | 「不得下降」要 CI 記住基準；五項的範圍要維護 | 採用 |
 
 ### 決定
@@ -104,13 +104,13 @@ tags: [adr, testing, coverage, e2e]
 | :--- | :--- |
 | 前端依 `pages/` 加 `features/` 組織，一個功能一個資料夾 | 測試放哪裡要和這個結構一致 |
 | [T1](../testing-agent-rules.mdx#t1-三層的範圍位置指令與生命週期) 把「測試檔放在與表格不同的位置」列為禁止 | 位置必須只有一種答案，CI 才能用路徑規則檢查 |
-| 原始 repo 的前端慣例與個人 repo ADR-012 說法不同 | 兩邊只能選一個，不能並存 |
+| 原始 repo 的前端慣例與個人 repo 的 ADR 說法不同 | 兩邊只能選一個，不能並存 |
 
 ### 考慮過的選項
 
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
-| A 與原始碼同目錄，`*.test.ts(x)` 緊貼被測檔（個人 repo ADR-012） | 改一個功能只要進一個資料夾；改了原始碼就看得到它的測試 | 資料夾裡檔案變多；建置要排除測試檔 | 採用 |
+| A 與原始碼同目錄，`*.test.ts(x)` 緊貼被測檔（個人 repo 的做法） | 改一個功能只要進一個資料夾；改了原始碼就看得到它的測試 | 資料夾裡檔案變多；建置要排除測試檔 | 採用 |
 | B 放在 `src/[module]/__tests__/`（原始 repo `testing-frontend.md` 的位置慣例） | 原始碼與測試在目錄上分開 | 與 [architecture.mdx 的 §前端](../architecture.mdx#前端) 的 `features/` 結構不一致，被測檔與測試檔不在同一處 | 不採用 |
 
 ### 決定
@@ -151,7 +151,7 @@ tags: [adr, testing, coverage, e2e]
 
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
-| A `frontend/tests/`（個人 repo ADR-009、011、012 的寫法） | 一套 Node 工具鏈；`tsconfig` 別名與生成的 API 型別不必跨套件參照；少一個 `package.json` 與 lockfile | e2e 的相依、瀏覽器與 service 容器綁在前端的相依圖上；真後端產生的 `storageState` 落在前端目錄；啟動後端的設定由前端套件持有 | 不採用 |
+| A `frontend/tests/`（個人 repo 先前的寫法） | 一套 Node 工具鏈；`tsconfig` 別名與生成的 API 型別不必跨套件參照；少一個 `package.json` 與 lockfile | e2e 的相依、瀏覽器與 service 容器綁在前端的相依圖上；真後端產生的 `storageState` 落在前端目錄；啟動後端的設定由前端套件持有 | 不採用 |
 | B 根目錄 `e2e/[module]/[page].spec.ts` | 與 `frontend/`、`backend/` 同級，符合它測的範圍；CI job 有自己的相依與快取，可單獨排程；`e2e/shared/fixtures/` 對前後端中性；`e2e/[module]/` 與 `docs/specs/` 的模組對齊 | 多一個 `package.json` 與 lockfile；共用型別要跨套件參照 `frontend/` | 採用 |
 
 ### 決定
