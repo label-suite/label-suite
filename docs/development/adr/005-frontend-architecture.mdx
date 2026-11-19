@@ -27,7 +27,7 @@ tags: [adr, frontend, react, shadcn, design-token]
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
 | A React 加 Vite 的單頁應用 | 建置最快（ESBuild）、生態最大、複雜度低 | 沒有 SSR，日後若加公開的行銷頁，SEO 較弱 | 採用 |
-| B Next.js（App Router） | 支援 SSR、SSG 與 CSR，生態很大 | Server Components 與 Server Actions 的複雜度用不到；production 要多跑一個 Node.js runtime；來源另以研究論文 demo 系統為前提，本 repo 是否同前提沒有記錄，見 [待決](#待決) 第 1 列 | 不採用 |
+| B Next.js（App Router） | 支援 SSR、SSG 與 CSR，生態很大 | Server Components 與 Server Actions 的複雜度用不到；production 要多跑一個 Node.js runtime | 不採用 |
 | C Nuxt.js | 支援 SSR、SSG 與 CSR | Vue 生態裡標註與資料型 UI 元件庫的數量比 React 少 | 不採用 |
 | D SvelteKit | 建置快 | 複雜資料型 UI 元件的生態較小，TypeScript strict 的寫法資源較少 | 不採用 |
 
@@ -54,7 +54,6 @@ tags: [adr, frontend, react, shadcn, design-token]
 ### 什麼情況要重新討論
 
 - 出現需要被搜尋引擎索引的公開頁面
-- 本 repo 對 [待決](#待決) 第 1 列做了決定
 
 ## D2 目錄分層採 pages 加 features
 
@@ -88,7 +87,6 @@ tags: [adr, frontend, react, shadcn, design-token]
 
 **變困難**
 
-- 選 B 時記錄的好處（改功能只進一個資料夾、agent 檔案所有權、刪功能刪一個資料夾）在這個結構裡是否保留，選定時沒有記錄
 - 分層邊界在 lint 建置之前只靠審查
 
 ### 什麼情況要重新討論
@@ -155,7 +153,7 @@ tags: [adr, frontend, react, shadcn, design-token]
 
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
-| A 寫一層對照，`tokens.css` 仍是唯一色值來源 | shadcn 元件一行都不改，色值只存在 `tokens.css` 一處 | 映射前要逐一確認三件事：shadcn 沒有對應語意的 token 落點；`--radius-*` 與 `--font-sans` 和 Tailwind v4 的 theme namespace 同名；映射數字 spacing key 會讓尺寸靜默放大 | 採用 |
+| A 寫一層對照，`tokens.css` 仍是唯一色值來源 | shadcn 元件一行都不改，色值只存在 `tokens.css` 一處 | 映射前要逐一確認三件事，見 F6 | 採用 |
 | B 元件直接用 Label Suite 的變數名，改寫 `components/ui/` 的 shadcn 元件 | 理由沒有記錄 | 要改寫 shadcn 元件；其餘理由沒有記錄 | 不採用 |
 | C 本期不決定，交給第一個前端 change | 理由沒有記錄 | 理由沒有記錄 | 不採用 |
 
@@ -172,10 +170,7 @@ tags: [adr, frontend, react, shadcn, design-token]
 
 **變困難**
 
-- 對照層要有人維護：`tokens.css` 新增或改名的變數，要回頭補對照
-- shadcn 沒有對應語意的 token（例如 `--color-cta`、`--color-ink-muted`、`--workspace-tab-min-width`），要逐一決定新增 shadcn 風格的語意變數，或直接用 Label Suite 的名字，由第一個前端 change 的 `ui-design.md` 列出
-- 接進 Tailwind 的 `@theme` 時，`--radius-*` 與 `--font-sans` 會改掉既有 utility 的語意，要逐一確認並在 PR 寫出來
-- 具名的數字 spacing key 會讓 `w-10` 這類 utility 的尺寸靜默放大，來源記錄的案例是 `w-10` 從 40px 變成 80px
+- 映射前要逐一確認的三件事（token 落點、Tailwind v4 theme namespace 同名、數字 spacing key）見 [frontend-agent-rules.mdx 的 F6](../frontend-agent-rules.mdx#f6-視覺基準與-design-token-的映射)
 
 ### 什麼情況要重新討論
 
@@ -233,18 +228,17 @@ tags: [adr, frontend, react, shadcn, design-token]
 
 | 決定 | 來源 |
 | :--- | :--- |
-| D1 | 個人 repo ADR-004（Context 的需求、Candidates Evaluated 的比較表與三個框架的拒絕理由、Decision、Consequences）；React 19 與沿用 React Router、TanStack Query 的裁定見 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 8 列與 [frontend-agent-rules.mdx 的決策紀錄](../frontend-agent-rules.mdx#決策紀錄)，沒有記錄升版的理由；Nginx 服務 `/dist` 出自 [architecture.mdx 的 §技術選型](../architecture.mdx#技術選型)；Next.js 的拒絕理由的後半句以研究論文 demo 系統為前提，本 repo 沒有記錄，見待決；本節的重新討論條件是推論，來源沒有記錄 |
-| D2 | 個人 repo ADR-011（Context 的兩個策略、水平切片被拒絕的理由、Additional Factors、Alternatives Rejected 的 Feature Slice Design）；選項 D 與它取代選項 B 的裁定見 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 8 列，只記錄結果，選項 D 的好處與代價、放棄選項 B 的理由都沒有記錄；七層的來源見 [frontend-agent-rules.mdx 的附錄](../frontend-agent-rules.mdx#各條規範的來源)；選項 C 的好處沒有記錄；選項 B 的代價出自它的 Consequences；本節的重新討論條件是推論，來源沒有記錄 |
+| D1 | 維護者裁定照 scaffold（[#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 8 列），沒有記錄更深的理由。個人 repo ADR-004（Context 的需求、Candidates Evaluated 的比較表與三個框架的拒絕理由、Decision、Consequences）；React 19 與沿用 React Router、TanStack Query 的裁定見 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 8 列與 [frontend-agent-rules.mdx 的決策紀錄](../frontend-agent-rules.mdx#決策紀錄)，沒有記錄升版的理由；Nginx 服務 `/dist` 出自 [architecture.mdx 的 §技術選型](../architecture.mdx#技術選型)；Next.js 的拒絕理由另依賴一個本 repo 沒有確認的前提，即它是研究論文的 demo 系統，所以 production 多跑一個 Node.js runtime 這一項不當作本 repo 的理由；本節的重新討論條件是推論，來源沒有記錄 |
+| D2 | 維護者裁定照 scaffold（[#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 8 列），沒有記錄更深的理由。個人 repo ADR-011（Context 的兩個策略、水平切片被拒絕的理由、Additional Factors、Alternatives Rejected 的 Feature Slice Design）；選項 D 與它取代選項 B 的裁定見 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 8 列，只記錄結果，選項 D 的好處與代價、放棄選項 B 的理由都沒有記錄；七層的來源見 [frontend-agent-rules.mdx 的附錄](../frontend-agent-rules.mdx#各條規範的來源)；選項 C 的好處沒有記錄；選項 B 的代價出自它的 Consequences；選 B 時記錄的好處（改功能只進一個資料夾、agent 檔案所有權、刪功能刪一個資料夾）在這個結構裡是否保留，選定時沒有記錄；本節的重新討論條件是推論，來源沒有記錄 |
 | D3 | 個人 repo ADR-016（Context 的需求、UI Library Candidates 的比較表與四個拒絕理由、Decision、Consequences）；shadcn/ui 與 `components/ui/` 的裁定見 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 8 列，只記錄結果，位置從 `shared/ui/` 改掉的理由沒有記錄；來源另選了 Storybook，本 repo 未決，見 [architecture.mdx 的 §待決](../architecture.mdx#待決) 第 2 列；選項 E 的代價出自來源「重複 shadcn/ui 已經做好的工作」；本節的重新討論條件是推論，來源沒有記錄 |
 | D4 | [#109 的裁定紀錄](https://github.com/label-suite/label-suite/issues/109#issuecomment-6764207805)（問題、三個選項、裁定、映射前要確認的三件事）；選項 B、C 沒有記錄好處與代價（B 的代價只有「要改寫 shadcn 元件」，出自選項描述）；Artifact 單向出自 [設計交接的 §流程](../design-handoff.mdx#流程)；本節的重新討論條件是推論，來源沒有記錄 |
 | D5 | 個人 repo ADR-030（Context、Candidates Evaluated 的四個選項、Decision、Consequences、Alternatives Rejected）；例外的範圍見 [frontend-agent-rules.mdx 的 F7](../frontend-agent-rules.mdx#f7-圖示與-svg)；本節的重新討論條件是推論，來源沒有記錄 |
-| — | 個人 repo ADR-011 的其他內容（元件、hook 與服務的檔案樹、狀態管理三層與 Zustand、Dashboard 依角色分派、路由與程式碼分割、i18n 命名空間、barrel file 規則、任務類型元件的註冊表、Playwright 目錄），不是這份 ADR 的決定：狀態與 barrel 的做法見 [frontend-agent-rules.mdx](../frontend-agent-rules.mdx)，i18n 見 [architecture.mdx 的 §i18n 兩層](../architecture.mdx#i18n-兩層)，E2E 位置見 [ADR-007 的 D4](007-testing-strategy.mdx#d4-正式-e2e-放根目錄)；其餘本 repo 沒有採用或決定的部分，不在這裡收 |
+| — | 個人 repo ADR-011 的其他內容（元件、hook 與服務的檔案樹、狀態管理三層與 Zustand、Dashboard 依角色分派、路由與程式碼分割、i18n 命名空間、barrel file 規則（見下）、任務類型元件的註冊表、Playwright 目錄），不是這份 ADR 的決定：狀態與 barrel 的做法見 [frontend-agent-rules.mdx](../frontend-agent-rules.mdx)，i18n 見 [architecture.mdx 的 §i18n 兩層](../architecture.mdx#i18n-兩層)，E2E 位置見 [ADR-007 的 D4](007-testing-strategy.mdx#d4-正式-e2e-放根目錄)；其餘本 repo 沒有採用或決定的部分，不在這裡收；其中 ADR-011（Barrel File Policy）禁止 feature 對外提供 barrel `index.ts`，本 repo 不採用這條，改由 F1 以 `features/<feature>/index.ts` 作為公開邊界，見 [frontend-agent-rules.mdx 的 F1](../frontend-agent-rules.mdx#f1-分層與允許的-import) |
 
 ## 待決
 
 | # | 問題 | 卡住什麼 | 誰決定 |
 | :--- | :--- | :--- | :--- |
-| 1 | 來源排除 Next.js 時，另以「研究論文 demo 系統」為前提：production 多跑一個 Node.js runtime 不值得；本 repo 是否同前提，沒有記錄 | [D1](#d1-前端是-react-加-vite-的單頁應用) 選項 B 的這一項代價是否成立；不影響其他排除理由 | 維護者，在出現需要 SSR 的頁面時 |
 
 ## 決策紀錄
 
