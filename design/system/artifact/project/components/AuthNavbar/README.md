@@ -10,7 +10,7 @@ Auth Navbar 是登出狀態帳號頁的頂部列：左邊品牌，右邊語言�
 
 - `header.navbar[role=banner]`：高 64px、`--color-card` 底、下框線、左右 32px 內距、兩端對齊、`position: sticky`。
 - `a.navbar-brand`（帶 `aria-label="Label Suite 首頁"`）裡放：
-  - `.navbar-logo`：主色方塊加白色標籤圖示，`aria-hidden`；
+  - `.navbar-logo`：主色方塊加標籤圖示，線稿 `currentColor` 取 `--color-on-cta`（淺色白、深色深墨），`aria-hidden`；
   - `.navbar-wordmark`：「Label Suite」。
 - `button.lang-toggle`：地球圖示加目前語言代碼（`ZH`／`EN`）。
 - 使用方只提供首頁連結和目前語言，其他內容固定。
