@@ -29,7 +29,7 @@ Router 只呼叫 service，service 才碰 repository 與 model；資料層不處
 | **正例** | `router → service → repository／model`；狀態轉移只在 service，違反時丟 `InvalidTransitionError` |
 | **例外** | 無。唯讀的健康檢查之類不碰業務資料的端點不在此列 |
 
-完整的轉移條件以 `docs/specs/` 與 PRD §共用狀態機 為準，不以 ADR-022 的表為準——那張表帶著個人 repo 的 FR 編號。
+完整的轉移條件以 `docs/specs/` 與 PRD §共用狀態機 為準，不以個人 repo ADR-022 的表為準——那張表帶著個人 repo 的 FR 編號；為什麼放 service 層見 [ADR-003 的 D4](adr/003-backend-architecture.mdx#d4-任務狀態機只放在-service-層)。
 
 :::note{title="B1 的反例與檢查方式" collapsible}
 - **反例**：Router 裡 `await repo.get(...)` 然後自己組回應；Repository 裡 `raise HTTPException(404)`
@@ -209,15 +209,15 @@ Celery task 只收可序列化的識別資訊，在自己的行程裡重新查�
 
 | 規範 | 來源 |
 | :--- | :--- |
-| B1 | 模組內分層來自維護者裁定，見 [architecture.mdx](architecture.mdx)。狀態機只在 service 來自 ADR-022（沿用；它舉的扁平 `app/services/` 路徑已被裁定覆寫）。原始 repo `api.md` 的 `app/schemas/` 集中寫法同樣被覆寫 |
+| B1 | 模組內分層來自維護者裁定，理由見 [ADR-003 的 D3](adr/003-backend-architecture.mdx#d3-後端採模組內分層)。狀態機只在 service 來自 ADR-022（沿用，理由見 [D4](adr/003-backend-architecture.mdx#d4-任務狀態機只放在-service-層)；它舉的扁平 `app/services/` 路徑已被裁定覆寫）。原始 repo `api.md` 的 `app/schemas/` 集中寫法同樣被覆寫 |
 | B2 | 原始 repo `backend.md` §Python Code Style（**沿用**：docstring 英文加完整型別、指令走 `uv run`）。`uv run` 這一條在 [agent-rules.mdx](agent-rules.mdx) 的來源對照裡標為待採用。相依一律 `uv add` 已在 `AGENTS.md` 硬性規則 3 |
 | B3 | [architecture.mdx](architecture.mdx) 的「同一層的 API 與 worker 用不同驅動，因為 Celery 跑在同步執行緒裡，不能用 async engine」。scaffold `database.md` §連線管理 的「透過 DI 取得、不用全域 connection」**沿用原則** |
 | B4 | scaffold `database.md` §連線管理 的「多步驟寫入用 `dataSource.transaction`，transaction 內只用 `manager`」**沿用原則**（轉成 SQLAlchemy 的 session 邊界）。**「寄完信再 commit」刻意不採用**，不照搬 |
 | B5 | scaffold `database.md` §ORM 唯一原則（**沿用**，含它的 DDL 例外）；[architecture.mdx](architecture.mdx) 的分層表已寫「不寫原生 SQL（migration DDL 例外）」。另外，資料遷移要個別說明，不把 migration 變成任意 SQL 逃生門 |
 | B6 | scaffold `database.md` §Migration（**沿用**：不用 synchronize、可 up 可 down、已部署凍結、讀過產物）；[architecture.mdx](architecture.mdx) §資料庫雙層 的「schema 一律走 Alembic migration」與同節的「不用 `synchronize` 類的自動同步」。「所有 migration 同時 transaction 加 CONCURRENTLY」不採用 |
-| B7 | ADR-024 資料庫雙層（**沿用**）；[architecture.mdx](architecture.mdx) 的兩層表與驅動推導。scaffold `integration-test-http.md` 的「真 Postgres test db」**沿用原則**，但它的 NestJS harness 不轉用（測試分層見 [testing-agent-rules.mdx](testing-agent-rules.mdx)） |
+| B7 | ADR-024 資料庫雙層（**沿用**，理由見 [ADR-003 的 D7](adr/003-backend-architecture.mdx#d7-資料庫分兩層)）；[architecture.mdx](architecture.mdx) 的兩層表與驅動推導。scaffold `integration-test-http.md` 的「真 Postgres test db」**沿用原則**，但它的 NestJS harness 不轉用（測試分層見 [testing-agent-rules.mdx](testing-agent-rules.mdx)） |
 | B8 | ADR-038 資料保留、刪除與匿名化（**沿用**）；[architecture.mdx](architecture.mdx) 的保留政策列與稽核 append-only。scaffold `database.md` §軟刪除（鐵律）刻意不採用，不套用「所有 entity 一律軟刪除」 |
-| B9 | ADR-007 Celery（**沿用**）；[architecture.mdx](architecture.mdx) 的 Celery 分層列（「不處理 HTTP、不回傳使用者可見訊息」）與評分流程圖。授權本身見 [security-agent-rules.mdx](security-agent-rules.mdx) |
+| B9 | ADR-007 Celery（**沿用**，理由見 [ADR-003 的 D8](adr/003-backend-architecture.mdx#d8-非同步任務用-celery-加-redis)）；[architecture.mdx](architecture.mdx) 的 Celery 分層列（「不處理 HTTP、不回傳使用者可見訊息」）與評分流程圖。授權本身見 [security-agent-rules.mdx](security-agent-rules.mdx) |
 | B10 | `AGENTS.md` 硬性規則 8（祕密只從環境變數）與硬性規則 9（輸入驗證）；ADR-035 Google SSO 可選；寄信降級的維護者裁定（見[決策紀錄](#決策紀錄)）。「自行印出密碼或重設連結」是要防的，降級的做法未決時不自己決定 |
 
 ### 原始 repo（`singyichen/label-suite`）
@@ -281,3 +281,4 @@ Celery task 只收可序列化的識別資訊，在自己的行程裡重新查�
 | 2026-11-10 | B3 不寫 `backend/worker/**`，Celery 進入點落在 `app/modules/<module>/` | 初版憑空寫的 `backend/worker/**` 路徑（全 `docs/` 只有本檔在用） | [#106](https://github.com/label-suite/label-suite/issues/106) |
 | 2026-11-10 | duty-mate §軟刪除唯一原則（含「新 entity 一律繼承 `SoftDeletableEntity`」）改標不採用（[B8](#b8-刪除軟刪除與匿名化)） | 初版把 duty-mate 整份標成「原則沿用」 | [#106](https://github.com/label-suite/label-suite/issues/106) |
 | 2026-11-10 | B9 的「重試有界」接上 `architecture.mdx` 的既定數字（三次、60／180／540 秒、300 秒、24 小時） | 初版沒有給數字 | [#106](https://github.com/label-suite/label-suite/issues/106) |
+| 2026-11-19 | 分層、狀態機、資料庫雙層與 Celery 的理由寫進 [ADR-003](adr/003-backend-architecture.mdx) 的 D3、D4、D7、D8，本文只留規則（B1、B7、B9） | —（理由原本只在個人 repo 的 ADR 與 [#105](https://github.com/label-suite/label-suite/issues/105) 的留言） | [#449](https://github.com/label-suite/label-suite/issues/449) |
