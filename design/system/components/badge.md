@@ -8,8 +8,8 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.badge` 基底 | 必填 | `components-showcase.html:340` |
-| 語意 class（狀態或角色或任務型別） | 必填 | `components-showcase.html:353`–`:368`、`pages/shared/task-type-badge.css:9`–`:14` |
+| `.badge` 基底 | 必填 | `components-showcase.html:343` |
+| 語意 class（狀態或角色或任務型別） | 必填 | `components-showcase.html:356`–`:371`、`pages/shared/task-type-badge.css:9`–`:14` |
 
 基底用 `border: 1px solid transparent` 的簡寫，所以**載入順序有意義**：`task-type-badge.css:2`–`:4` 的註解明寫它必須排在頁面自己的 `<style>` **之後**，否則同特異性下 `border-color` 會被重設掉。
 
@@ -17,17 +17,17 @@
 
 | 群 | class | 色來源 |
 | :--- | :--- | :--- |
-| 任務狀態 | `.badge-draft`、`.badge-dry-run-status`、`.badge-iaa`、`.badge-in-progress`、`.badge-completed`、`.badge-error` | `components-showcase.html:354`–`:359`。前兩個用中性 token `--color-ink-muted`／`--color-slate-50`／`--color-border`（#420 Q1），後四個用 `--color-warning/info/success/error` 系列 |
-| 角色 | `.badge-role`（`--radius-full` 藥丸、primary 色系） | `components-showcase.html:361` |
+| 任務狀態 | `.badge-draft`、`.badge-dry-run-status`、`.badge-iaa`、`.badge-in-progress`、`.badge-completed`、`.badge-error` | `components-showcase.html:357`–`:362`。前兩個用中性 token `--color-ink-muted`／`--color-slate-50`／`--color-border`（#420 Q1），後四個用 `--color-warning/info/success/error` 系列 |
+| 角色 | `.badge-role`（`--radius-full` 藥丸、primary 色系） | `components-showcase.html:364` |
 | 任務型別 | `.badge-task-type-single`／`-sequence`／`-relation`／`-pairs`／`-scoring`／`-default` | `pages/shared/task-type-badge.css:9`–`:14`。前五個的配色取自 `assets/data-palette.css` 的 `--data-task-type-*`（淺深兩組都在那裡），`-default` 用中性 token（#420 Q1、Q4） |
 
 ## 適用狀態
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| 預設 | 有 | `components-showcase.html:340` |
+| 預設 | 有 | `components-showcase.html:343` |
 | hover／focus／disabled／載入中 | **未觀察到**。Badge 不是互動元素 | 正典區塊與 `task-type-badge.css` 都沒有互動偽類 |
-| 錯誤 | 有，`.badge-error` 是一個語意變體而非元件狀態 | `components-showcase.html:358` |
+| 錯誤 | 有，`.badge-error` 是一個語意變體而非元件狀態 | `components-showcase.html:361` |
 | 空 | 未觀察到。沒有「沒有狀態」的樣式 | — |
 | 深色模式 | 全部跟著 token 翻轉：任務型別由 `data-palette.css` 的深色組負責，其餘由 `tokens.css` 的深色覆寫負責；徽章自己不寫深色規則 | `assets/data-palette.css`、`assets/tokens.css` |
 
@@ -43,11 +43,11 @@
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:340`–`:368`（基底、狀態、角色）、`design/prototype/pages/shared/task-type-badge.css:1`–`:14`（任務型別）。
+`design/prototype/components-showcase.html:343`–`:371`（基底、狀態、角色）、`design/prototype/pages/shared/task-type-badge.css:1`–`:14`（任務型別）。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-badges`（`components-showcase.html:1082`），`.badge-role` 樣本在 `:1092`。
+`components-showcase#state-default` → `#comp-badges`（`components-showcase.html:1088`），`.badge-role` 樣本在 `:1098`。
 
 ## shadcn 對照
 
@@ -68,6 +68,6 @@
 | `task-management/task-detail`（`#tab-overview`、`#param-status`） | 本頁 `<style>` 重寫（`task-detail.html:115`–`:132`），中性與正式徽章同樣改用 #420 的 token |
 | `annotation/annotation-list`（`#state-default`、`#param-run-type`） | **本頁重寫的 `.badge`**（`annotation-list.html:142`–`:178`），階段徽章 `.badge-dry-run`／`.badge-official` 原本寫死 hex，#420 起改用中性 token 與 `--color-accent*`（`:169`–`:178`）→ `../design-gaps.md` G-02 |
 | `dataset/dataset-analysis-list`（`#state-default`） | 本頁 `.badge`（`dataset-analysis-list.html:121`）與 `.badge-iaa-*`（`:140`–`:144`）、`.badge-role-pl`／`-rev`（`:146`–`:147`），全用 token；輸出類型用 `task-type-badge.css`（`dataset-analysis-list.html:214` 載入） |
-| `dataset/dataset-analysis-detail`（`#tab-quality`、`#state-quality-*`、`#param-q-state-*`） | 本頁 `.badge-pass`／`-fail`／`-warn`／`-neutral`（`dataset-analysis-detail.html:56`–`:61`）與 `.risk-level-badge`（`:148`–`:152`），全用 token |
+| `dataset/dataset-analysis-detail`（`#tab-quality`、`#state-quality-*`、`#param-q-state-*`） | 本頁 `.badge-pass`／`-fail`／`-warn`／`-neutral`（`dataset-analysis-detail.html:57`–`:62`）與 `.risk-level-badge`（`:149`–`:153`），全用 token |
 
 b1 的帳號頁一個都沒用。b2 已補上（見上表），**五頁都是各自重寫，沒有一頁直接用正典**。b3 已補上（見上表），同樣是本頁重寫。b4 已補上（見上表），兩頁同樣是本頁重寫。

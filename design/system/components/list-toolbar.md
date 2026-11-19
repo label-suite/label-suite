@@ -36,7 +36,7 @@
 
 `--space-sm`、`--space-lg`、`--color-border`、`--color-border-control`、`--color-ink`、`--color-ink-muted`、`--color-white`、`--color-primary`、`--radius-md`、`--dur-fast`。
 
-兩個寫死處：focus ring 的 `rgba(99,102,241,0.12)`（`:30`、`:39`，和 `shared/input.css:21` 的 `color-mix` 寫法不同），以及 `.filter-select` 下拉箭頭 data-URI SVG 裡的 `%2394A3B8`（`:34`）→ `../design-gaps.md` G-02、G-04。
+#438 之前有兩個寫死處：focus ring 的 `rgba(99,102,241,0.12)`（`:30`、`:39`），以及 `.filter-select` 下拉箭頭 data-URI SVG 裡的 `%2394A3B8`（`:34`）。#438 起 focus ring 改成和 `shared/input.css` 相同的 `color-mix(in srgb, var(--color-primary) 12%, transparent)`；箭頭的筆畫色仍寫在 data-URI 裡（SVG 讀不到 `var()`），但對齊 `--color-ink-muted`，淺色 `%235E6B7F`、深色另一條規則 `%239CA3AF`（`:108`）→ `../design-gaps.md` G-02、G-04。
 
 ## 鍵盤與焦點
 
@@ -69,8 +69,8 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | 無（b1） | — |
-| `task-management/task-list`（`#state-default`、`#state-filtered-empty`） | 工具列 markup `task-list.html:197`–`:229`，已載 `list-page.css` 又在 `<style>` 重寫（`:139`–`:145`） |
-| `admin/user-management#state-default` | 本頁的搜尋與篩選（`user-management.html:61`–`:81`、`:286`），不是 `list-page.css` |
+| `task-management/task-list`（`#state-default`、`#state-filtered-empty`） | 工具列 markup `task-list.html:197`–`:229`，已載 `list-page.css` 又在 `<style>` 重寫（`:143`–`:149`） |
+| `admin/user-management#state-default` | 本頁的搜尋與篩選（`user-management.html:61`–`:81`、`:291`），不是 `list-page.css` |
 | `annotation/annotation-list`（`#state-default`、`#state-filtered-empty`） | `.toolbar role="search"`（`annotation-list.html:472`）：`.filter-select`、`.search-input`、`.clear-btn`；篩選狀態放網址（`?q=`、`?status=`，UXC-11，`:1050`） |
 | `dataset/dataset-analysis-list`（`#state-default`、`#state-filtered-empty`） | `list-page.css` 的 `.toolbar role="search"`（`dataset-analysis-list.html:247`）：兩個 `.filter-select`（`:249`、`:252`）、`.clear-btn`（`:255`）、`.search-input`；篩選寫進網址（`syncUrl`，`dataset-analysis-list.js:71`） |
 

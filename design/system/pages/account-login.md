@@ -22,7 +22,7 @@
 
 | 元件 | 說明 |
 | :--- | :--- |
-| `.sso-btn`（`login.html:160`） | Google 登入鈕。正典的對應品是 `.btn-oauth`（`components-showcase.html:227`），**兩者沒有共用程式碼** → `../design-gaps.md` G-03 |
+| `.sso-btn`（`login.html:160`） | Google 登入鈕。正典的對應品是 `.btn-oauth`（`components-showcase.html:228`），**兩者沒有共用程式碼** → `../design-gaps.md` G-03 |
 | `.login-btn`（`login.html:282`） | 送出鈕。正典的對應品是 `.btn-primary`；本頁版本把 `font-family: 'Inter', sans-serif` 寫死；文字色 #420 起改用 `--color-on-cta` → G-03 |
 | `.divider`（`login.html:183`、`:411`） | OAuth 與帳號登入之間的「或」。正典的 `.divider-text` 用兩個 `<hr>`，本頁用 `::before`／`::after` → G-18 |
 | `.error-banner` | 表單層級錯誤。對應正典的 [Alert Banner](../components/alert-banner.md)，class 不同 → G-03 |

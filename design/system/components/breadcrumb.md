@@ -8,12 +8,12 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.breadcrumb` 容器 | 必填 | `components-showcase.html:632`、樣本 `:1202` |
-| `<a>` 上層連結 | 至少一個 | `components-showcase.html:640`、樣本 `:1203` |
-| `.breadcrumb-sep`（`›`，`aria-hidden="true"`） | 每兩節之間一個 | `components-showcase.html:646`、樣本 `:1204` |
-| 目前節點（`aria-current="page"`） | 必填 | 樣本 `components-showcase.html:1205` |
+| `.breadcrumb` 容器 | 必填 | `components-showcase.html:635`、樣本 `:1208` |
+| `<a>` 上層連結 | 至少一個 | `components-showcase.html:643`、樣本 `:1209` |
+| `.breadcrumb-sep`（`›`，`aria-hidden="true"`） | 每兩節之間一個 | `components-showcase.html:649`、樣本 `:1210` |
+| 目前節點（`aria-current="page"`） | 必填 | 樣本 `components-showcase.html:1211` |
 
-**最深兩層**（`components-showcase.html:1200` 的說明）。但同一份 showcase 的 Review Status Track 樣本就用了三層（`:1214`–`:1219`），而 `pages/annotation/annotation-list.html:55` 的註解稱自己用的是「compact form」→ `../design-gaps.md` G-13。
+**最深兩層**（`components-showcase.html:1206` 的說明）。但同一份 showcase 的 Review Status Track 樣本就用了三層（`:1220`–`:1225`），而 `pages/annotation/annotation-list.html:55` 的註解稱自己用的是「compact form」→ `../design-gaps.md` G-13。
 
 ## 變體
 
@@ -23,8 +23,8 @@
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| 預設 | 有 | `components-showcase.html:632` |
-| hover | 有，連結加底線 | `components-showcase.html:643` |
+| 預設 | 有 | `components-showcase.html:635` |
+| hover | 有，連結加底線 | `components-showcase.html:646` |
 | focus | **未觀察到** | 以 `:focus` 掃 `:633`–`:651`，0 命中 → `../design-gaps.md` G-05 |
 | disabled／載入中／錯誤／空 | 不適用 | — |
 
@@ -38,11 +38,11 @@
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:631`–`:649`。`pages/shared/` 沒有 breadcrumb 的 CSS 檔；使用它的四個 shipped 頁面各自在 `<style>` 裡複製一份。
+`design/prototype/components-showcase.html:634`–`:652`。`pages/shared/` 沒有 breadcrumb 的 CSS 檔；使用它的四個 shipped 頁面各自在 `<style>` 裡複製一份。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-breadcrumb`（`components-showcase.html:1198`）：兩層版。三層版在同頁的 `#comp-review-track`（`:1214`）。
+`components-showcase#state-default` → `#comp-breadcrumb`（`components-showcase.html:1204`）：兩層版。三層版在同頁的 `#comp-review-track`（`:1220`）。
 
 ## shadcn 對照
 
@@ -57,9 +57,9 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 兩層與三層各一 |
-| `task-management/task-detail`（全部 `#tab-*`） | 本頁一行式的 `.breadcrumb`（`task-detail.html:47`–`:49`，markup `:1873`–`:1876`），兩層 |
+| `task-management/task-detail`（全部 `#tab-*`） | 本頁一行式的 `.breadcrumb`（`task-detail.html:47`–`:49`，markup `:1877`–`:1880`），兩層 |
 | `annotation/annotation-list`（`#state-default`、`#role-*`） | `#entryBreadcrumb`（`annotation-list.html:435`），最後一層 `aria-current="page"`（`:2382`） |
 | `annotation/annotation-workspace`（全部視圖） | `nav#entryBreadcrumb`（`annotation-workspace.html:1209`），第三層是樣本，`aria-current="page"`（`annotation-workspace.config.js:1603`） |
-| `dataset/dataset-analysis-detail`（全部視圖） | 本頁 `nav.breadcrumb`（`dataset-analysis-detail.html:248`–`:252`，樣式 `:37`–`:40`）：兩層「資料集分析 › 任務名稱」，分隔符 `aria-hidden`，目前頁是純文字 `<span>`、沒有 `aria-current` |
+| `dataset/dataset-analysis-detail`（全部視圖） | 本頁 `nav.breadcrumb`（`dataset-analysis-detail.html:249`–`:253`，樣式 `:38`–`:41`）：兩層「資料集分析 › 任務名稱」，分隔符 `aria-hidden`，目前頁是純文字 `<span>`、沒有 `aria-current` |
 
 b1 的帳號頁一個都沒用（它們是登出狀態的單層頁）。b2 已補上（見上表）。b3 已補上（見上表）。b4 已補上（見上表）。

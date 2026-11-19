@@ -31,14 +31,14 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 1. **只用 token，不自創顏色。**`tokens.css` 的檔頭寫「Import this file instead of redefining tokens in each page」（`assets/tokens.css:3`）；skill 寫「不要自創 token 以外的顏色」（`label-suite-design/SKILL.md` §怎麼用）。#420 之前現況與這條不符：prototype 有大量寫死色值（`design-gaps.md` G-02）。#420 起頁面與 showcase 的色值都改用 token；剩下的寫死色值是資料色（`assets/data-palette.css`、樣本資料）、註解、`var()` 的後備值與一處固定白字（頭像遮罩上的上傳圖示，疊在固定的黑色遮罩上）；側欄通知徽章的白字在 #437 改用 `--color-on-badge-notify`，細節見 G-02。
 2. **主色當文字一律用 `--color-primary-strong`，不用 `--color-primary`；圖示用 `--color-primary`，`--color-secondary` 只做裝飾與大面積填色。**`--color-primary` 當文字在白底只有 4.47:1、在 `--color-primary-soft-bg` 上 3.99:1，`--color-primary-strong` 是白底 6.29、頁底 5.73、主色淺底 5.62:1（`tokens.css:19` 註解；維護者裁定 2026-11-18，#427）。`--color-primary` 留給按鈕填色、邊框、logo 與圖示（圖示只需 3:1）。次要文字最淺到 `--color-ink-muted`（淺色 `#5E6B7F`：頁底 4.93、白底 5.40、`--color-border-muted` 4.93:1），`slate-400` 以下的顏色不可用於文字（skill §無障礙）。
 3. **語意色各有專屬用途。**`--color-warning` 與 `--color-error` 保留給例外、待確認與錯誤，不當區分色；用顏色區分模組或角色時最多五種，超過就靠標籤文字（skill §區分多個模組或角色）。
-4. **狀態不能只靠顏色。**Review Status Track 以文字前綴「目前：」、字重與線寬輔助（`components-showcase.html:1212` 的說明、[`components/review-status-track.md`](components/review-status-track.md)）。Color Dot 目前只靠顏色，已登記為缺口（G-14）。
-5. **錯誤 toast 不自動消失，只能手動關。**整頁只有一則 toast；success 3000ms、info 5000ms、warning 8000ms、error 0（UXC-07，`components-showcase.html:1498`）。
-6. **Toast 與 banner 分工。**頁面層級的錯誤用 inline banner（`role="alert"`）；動作結果的回饋用 toast（`components-showcase.html:1103`）。
-7. **送出中要有載入態且不能重複送出。**UXC-06（`components-showcase.html:212`）。已知缺口：只擋滑鼠、沒擋鍵盤（G-06）。
-8. **Skeleton 的尺寸要貼合載入後的內容**，以防 layout shift（UXC-08，`components-showcase.html:1125`）。所以 Skeleton 的尺寸不 token 化。
+4. **狀態不能只靠顏色。**Review Status Track 以文字前綴「目前：」、字重與線寬輔助（`components-showcase.html:1218` 的說明、[`components/review-status-track.md`](components/review-status-track.md)）。Color Dot 目前只靠顏色，已登記為缺口（G-14）。
+5. **錯誤 toast 不自動消失，只能手動關。**整頁只有一則 toast；success 3000ms、info 5000ms、warning 8000ms、error 0（UXC-07，`components-showcase.html:1504`）。
+6. **Toast 與 banner 分工。**頁面層級的錯誤用 inline banner（`role="alert"`）；動作結果的回饋用 toast（`components-showcase.html:1109`）。
+7. **送出中要有載入態且不能重複送出。**UXC-06（`components-showcase.html:213`）。已知缺口：只擋滑鼠、沒擋鍵盤（G-06）。
+8. **Skeleton 的尺寸要貼合載入後的內容**，以防 layout shift（UXC-08，`components-showcase.html:1131`）。所以 Skeleton 的尺寸不 token 化。
 9. **同一組一次性連結失效用同一句話。**`ONE_TIME_LINK_WORDING` 是單一來源（`pages/shared/sidebar.js:227`），重設密碼與驗證信兩頁都引用它（`reset-password.html:605`、`verify-email.html:387`）。
 10. **每個畫面同時支援繁中與英文、淺色與深色。**語言與外觀是共用介面的一部分（`00-prd.mdx:136`、`docs/specs/07-shared/01-sidebar.mdx`）；元件要用語意 token，深色主題靠 `html[data-theme="dark"]` 重新對映同名 token，頁面不寫兩份（`tokens.css` 深色區塊的檔頭說明）。
-11. **互動元件要有 `prefers-reduced-motion` 的退路。**共用 CSS 與 showcase 都有（`pages/shared/sidebar.css:185`、`components-showcase.html:969`）；`account/profile` 是唯一漏掉的帳號頁（G-30）。
+11. **互動元件要有 `prefers-reduced-motion` 的退路。**共用 CSS 與 showcase 都有（`pages/shared/sidebar.css:185`、`components-showcase.html:975`）；`account/profile` 是唯一漏掉的帳號頁（G-30）。
 12. **圖示一律用 SVG，不用 emoji，也不用文字字元（`✕`、`←`、`→`、`✓` 等）充當圖示。**維護者裁定（2026-11-18）；repo 內早有同向的依據：ADR-030「Lucide 是唯一圖示來源」，`task-config.engine.js:869`、`:965` 的註解寫「no text-glyph icons」「no hand-drawn glyphs」。細節見 [§圖示](#圖示)。
 13. **控制項外框用 `--color-border-control`，`--color-border` 只做裝飾。**輸入框、下拉選單、文字區塊、搜尋框、勾選框，以及長得像欄位的觸發鈕（日期區間、分類選擇）的外框用前者（淺色 `#7C899D` 對白底 3.55、對頁底 3.23:1；深色 `#6B6B78` 對卡片 3.42、對頁底 3.73:1），才過 WCAG 1.4.11 的 3:1；卡片、表格、分隔線用 `--color-border`（對白底只有 1.23:1）。焦點與錯誤狀態維持各自的 token。維護者裁定（2026-11-18，#427）；`tokens.css:26`、`:203`。
 14. **`--color-primary-border` 不能是唯一的提示。**它對白底只有 1.49:1；只靠邊框標示的狀態改用 `--color-primary`，例如日期選擇器的「今天」（`date-range-picker.css:34`）。維護者裁定（2026-11-18，#427）。
@@ -106,10 +106,10 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 
 - **「送出」＋受詞，不用「提交」。**維護者裁定（2026-11-18）：標記員「送出標記」、審核員「送出審核」（`annotation-workspace.config.js:60` 已是這個寫法）、仲裁「送出仲裁」（`:84`）；狀態詞「已提交」改「已送出」，「提交時間」改「送出時間」。現況與這條不符的行數列在 [§與 prototype 的落差](#與-prototype-的落差)。
 - **帳號流程用「動詞＋受詞」說出結果，不寫「確定」這種空動詞。**登入、建立帳號、寄送重設連結、更新密碼、重新寄送驗證信、前往登入（`register.html:548`、`forgot-password.html:435`、`reset-password.html:599`、`profile.html:1215`）。英文對應：Sign In、Create Account、Send Reset Link、Update Password（Title Case，無句點）。
-- **表單通用鈕是「儲存」與「取消」**（`user-management.html:793`–`:802`、`task-new.html:623`–`:624`）。標記員另有「儲存草稿」（`annotation-workspace.config.js:22`）。
+- **表單通用鈕是「儲存」與「取消」**（`user-management.html:798`–`:807`、`task-new.html:626`–`:627`）。標記員另有「儲存草稿」（`annotation-workspace.config.js:22`）。
 - **送出鈕旁說明後果。**審核送出旁會寫「送出後進入爭議池，待仲裁定案」或「送出後即定稿，成為最終答案」（`annotation-workspace.config.js:71`–`:72`、`annotation-workspace.html:1274`）。
-- **載入中的按鈕文字**：進行式加刪節號，「建立中…」（`components-showcase.html:1035`）；登入頁的送出鈕改以 spinner 取代文字並帶 `aria-label="載入中"`（UXC-06）。
-- **破壞性動作要先確認，確認句型**：「確定要停用 …」（`user-management.html:918`）、未儲存離開：「你有尚未儲存的變更，離開將會遺失所有已填寫的內容。」（`task-new.html:630`）。UXC-10、UXC-03 在 b2／b3 才寫完。
+- **載入中的按鈕文字**：進行式加刪節號，「建立中…」（`components-showcase.html:1041`）；登入頁的送出鈕改以 spinner 取代文字並帶 `aria-label="載入中"`（UXC-06）。
+- **破壞性動作要先確認，確認句型**：「確定要停用 …」（`user-management.html:923`）、未儲存離開：「你有尚未儲存的變更，離開將會遺失所有已填寫的內容。」（`task-new.html:633`）。UXC-10、UXC-03 在 b2／b3 才寫完。
 - **返回類連結**：「返回登入」「返回個人設定」「前往登入」（`register.html:510`、`profile.html:1215`、`reset-password.html:551`）；**不帶箭頭字元**（見鐵律 12）；現況的 `← 返回登入` 列在落差表。
 
 ### 錯誤與驗證訊息
@@ -124,7 +124,7 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 
 ### 標點與格式
 
-- 中文句末多數不加句號（欄位標籤、toast 標題、按鈕），完整句子才加（例：`task-new.html:630`）；toast 副文字是子句，不加句號（`profile.html:1224`）。
+- 中文句末多數不加句號（欄位標籤、toast 標題、按鈕），完整句子才加（例：`task-new.html:633`）；toast 副文字是子句，不加句號（`profile.html:1224`）。
 - 「？」用全形（「忘記密碼？」「還沒有帳號？」，`login.html:519`、`:521`）。
 - 破折號用全形雙線「——」（`profile.html:1230`）。
 - **日期、時間、數字（維護者裁定 2026-11-18）：**
@@ -211,7 +211,7 @@ token 名與值以 `tokens.css` 為準；本節只寫**怎麼用**。
 
 1. **標記作業區的進度與存檔語言。**進度寫成「{done} / {total} 已提交」，存檔狀態用「尚未儲存」「尚未儲存的變更」「上次儲存於 {time}」三種字串，離開有未儲存變更要擋（`annotation-workspace.config.js:32`、`:34`–`:36`；UXC-03）。
 2. **實體標記以「每個實體類型一個顏色」直接畫在原文上。**原文中的標記是行內 highlight，顏色隨實體類型，以 inline style 帶入；旁邊配同色的類型小徽章（`annotation-workspace.html:642`–`:659` 的 `.rv-source-mark`、`.rv-source-badge`）。這些色是**資料色**，不是語意色（Color Dot 的 8 色盤同理，[`components/color-dot.md`](components/color-dot.md)、G-02）。
-3. **審核單位的雙軌狀態**：待審 → 已定稿（答案未修改）與待審 → 爭議中 → 已定稿（答案有修改），畫成分岔軌道而不是線性步驟條；明確不可改用 Step Indicator（`components-showcase.html:1212`）。
+3. **審核單位的雙軌狀態**：待審 → 已定稿（答案未修改）與待審 → 爭議中 → 已定稿（答案有修改），畫成分岔軌道而不是線性步驟條；明確不可改用 Step Indicator（`components-showcase.html:1218`）。
 4. **後果寫在按鈕旁**：送出前就讓審核員知道會進爭議池還是定稿（見 §按鈕用語）。
 5. **角色與任務型別用 badge 辨識**：角色 badge 是 `--radius-full` 藥丸、任務型別是各自一組色（[`components/badge.md`](components/badge.md)）。
 
@@ -246,22 +246,22 @@ token 名與值以 `tokens.css` 為準；本節只寫**怎麼用**。
 
 | 斷點 | 條數 | 位置 |
 | :--- | :--- | :--- |
-| `max-width: 767px` | 16 | `dataset-analysis-detail.html:217`、`role-settings.html:253`、`:323`、`dataset-analysis-list.html:199`、`annotation-workspace.html:957`、`:1026`、`verify-email.html:292`、`sidebar.css:1086`、`:1124`、`login.html:354`、`user-management.html:248`、`:326`、`register.html:328`、`profile.html:641`、`forgot-password.html:319`、`reset-password.html:413` |
-| `max-width: 768px` | 8 | `task-list.html:156`、`task-new.html:149`、`task-detail.html:1002`、`:1869`、`dashboard.components.css:275`、`content-tabs.css:36`、`annotation-list.html:367`、`sidebar.css:828` |
+| `max-width: 767px` | 16 | `dataset-analysis-detail.html:218`、`role-settings.html:253`、`:323`、`dataset-analysis-list.html:199`、`annotation-workspace.html:957`、`:1026`、`verify-email.html:292`、`sidebar.css:1086`、`:1124`、`login.html:354`、`user-management.html:253`、`:331`、`register.html:328`、`profile.html:641`、`forgot-password.html:319`、`reset-password.html:413` |
+| `max-width: 768px` | 8 | `task-list.html:156`、`task-new.html:152`、`task-detail.html:1006`、`:1873`、`dashboard.components.css:275`、`content-tabs.css:36`、`annotation-list.html:367`、`sidebar.css:828` |
 | `min-width: 768px` | 1 | `profile.html:50` |
-| `max-width: 420px` | 3 | `task-list.html:170`、`task-detail.html:1036`、`annotation-list.html:416` |
-| `max-width: 480px` | 1 | `task-new.html:170` |
-| `max-width: 640px` | 1 | `task-detail.html:1892` |
-| `max-width: 1100px` | 1 | `task-new.html:183` |
+| `max-width: 420px` | 3 | `task-list.html:170`、`task-detail.html:1040`、`annotation-list.html:416` |
+| `max-width: 480px` | 1 | `task-new.html:173` |
+| `max-width: 640px` | 1 | `task-detail.html:1896` |
+| `max-width: 1100px` | 1 | `task-new.html:186` |
 | JS `matchMedia` | 2 | `sidebar.js:513`（`min-width: 769px`）、`:518`（`min-width: 768px`） |
 
 **內容最大寬度（`max-width`）：**
 
 | 值 | 用在 | 位置（節選） |
 | :--- | :--- | :--- |
-| 1280px | 登入後頁面的內容區（10 頁） | `task-list.html:38`、`task-new.html:31`、`task-detail.html:42`、`dataset-analysis-list.html:38`、`dataset-analysis-detail.html:35`、`user-management.html:36`、`annotation-list.html:35`、`profile.html:48`、`role-settings.html:40`、`dashboard.layout.css:58` |
+| 1280px | 登入後頁面的內容區（10 頁） | `task-list.html:38`、`task-new.html:31`、`task-detail.html:42`、`dataset-analysis-list.html:38`、`dataset-analysis-detail.html:36`、`user-management.html:36`、`annotation-list.html:35`、`profile.html:48`、`role-settings.html:40`、`dashboard.layout.css:58` |
 | 480px | 帳號頁的單卡（5 頁） | `login.html:126`、`register.html:129`、`forgot-password.html:128`、`reset-password.html:122`、`verify-email.html:127` |
-| 400／440／520／720／860／1280px | Modal 與抽屜寬度（各自寫） | `role-settings.html:262`（400）、`user-management.html:675`（440）、`task-detail.html:888`、`annotation-list.html:223`、`annotation-workspace.html:1012`（520）、`annotation-workspace.html:947`、`:949`（720）、`:952`（860）、`task-new.html:70`（1280） |
+| 400／440／520／720／860／1280px | Modal 與抽屜寬度（各自寫） | `role-settings.html:262`（400）、`user-management.html:680`（440）、`task-detail.html:892`、`annotation-list.html:223`、`annotation-workspace.html:1012`（520）、`annotation-workspace.html:947`、`:949`（720）、`:952`（860）、`task-new.html:70`（1280） |
 | 520／420px | 空狀態（一般／緊湊） | `empty-state.css:11`、`:16` |
 | 960px | 元件展示頁 | `components-showcase.html:63` |
 
@@ -373,7 +373,7 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 | :--- | :--- | :--- |
 | 帳號頁頂部 navbar | 32×32 主色圓角方（圓角 8px）＋內嵌 20×20 的標籤線稿（`--color-on-cta`：淺色白、深色深墨）；右側 wordmark 18px 襯線粗體；整塊是「回首頁」連結，`aria-label` 兩種語言 | `login.html:39`–`:68`、`:351`–`:361` |
 | 登入後側欄品牌區 | 36×36（`--radius-md`）＋ wordmark 16px；放在最上、下方一條 `--color-border` 分隔線；整塊連回儀表板（`brandHref`） | `sidebar.css:37`–`:75`、`sidebar.js:2036`–`:2044` |
-| 元件展示的頭像樣本 | `icon-colored.svg` 當作使用者頭像的示範圖 | `components-showcase.html:1356` |
+| 元件展示的頭像樣本 | `icon-colored.svg` 當作使用者頭像的示範圖 | `components-showcase.html:1362` |
 
 觀察到的規則：
 
@@ -408,20 +408,20 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 
 ### Q1：「您」（13 行）
 
-- 介面文案 11 行：`task-detail.html:2138`、`:2468`；`dataset-analysis-list.i18n.js:46`；`annotation-workspace.config.js:67`；`profile.html:693`、`:740`、`:1181`、`:1191`、`:1233`；`register.html:413`、`:590`。
+- 介面文案 11 行：`task-detail.html:2142`、`:2472`；`dataset-analysis-list.i18n.js:46`；`annotation-workspace.config.js:67`；`profile.html:693`、`:740`、`:1181`、`:1191`、`:1233`；`register.html:413`、`:590`。
 - 樣本資料 2 行（標記範例裡的對話文字，是否同改由維護者決定）：`task-detail.data.js:909`、`:917`。
 
 ### Q2：「提交」（93 行）
 
-已排除 6 行（5 行註解：`annotation-workspace.config.js:1920`、`:1933`、`:2033`、`:2252`、`:3316`；1 行 showcase 的說明文字 `components-showcase.html:1332`）。含少量樣本資料（`task-detail.data.js`、`annotation-workspace.data.js`）。「已提交」「提交時間」等狀態詞與名詞同樣要改。
+已排除 6 行（5 行註解：`annotation-workspace.config.js:1920`、`:1933`、`:2033`、`:2252`、`:3316`；1 行 showcase 的說明文字 `components-showcase.html:1338`）。含少量樣本資料（`task-detail.data.js`、`annotation-workspace.data.js`）。「已提交」「提交時間」等狀態詞與名詞同樣要改。
 
-  - `components-showcase.html`（1）：:1097
+  - `components-showcase.html`（1）：:1103
   - `pages/annotation/annotation-list.html`（2）：:589, :637
   - `pages/annotation/annotation-workspace.config.js`（21）：:21, :27, :32, :33, :39, :58, :59, :86, :110, :111, :112, :113, :114, :115, :121, :122, :176, :178, :179, :182, :183
   - `pages/annotation/annotation-workspace.data.js`（3）：:774, :776, :3748
   - `pages/dashboard/dashboard.html`（3）：:167, :193, :194
   - `pages/dashboard/dashboard.i18n.js`（3）：:53, :66, :67
-  - `pages/dataset/dataset-analysis-detail.html`（19）：:285, :300, :338, :395, :398, :411, :424, :448, :514, :537, :562, :566, :567, :629, :672, :684, :730, :750, :755
+  - `pages/dataset/dataset-analysis-detail.html`（19）：:286, :301, :339, :396, :399, :412, :425, :449, :515, :538, :563, :567, :568, :630, :673, :685, :731, :751, :756
   - `…detail.partials/quality-entity_recognition.html`（1）：:152
   - `…detail.partials/quality-multi_dim.html`（1）：:149
   - `…detail.partials/quality-multi_label.html`（1）：:151
@@ -438,29 +438,29 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
   - `pages/shared/sidebar.js`（2）：:242, :2134
   - `pages/task-management/task-config.data.js`（1）：:658
   - `pages/task-management/task-detail.data.js`（2）：:1085, :1422
-  - `pages/task-management/task-detail.html`（15）：:2309, :2397, :2486, :2532, :2538, :2563, :2571, :2578, :2640, :2641, :2650, :2652, :2666, :2695, :2732
+  - `pages/task-management/task-detail.html`（15）：:2313, :2401, :2490, :2536, :2542, :2567, :2575, :2582, :2644, :2645, :2654, :2656, :2670, :2699, :2736
   - `…detail.panels/annotation-progress.html`（4）：:11, :56, :71, :127
   - `…detail.panels/annotation-results.html`（3）：:15, :18, :167
 
 ### Q3：字元圖示（27 行）
 
-- `✕`（4）：`components-showcase.html:1525`、`dataset-analysis-list.html:312`、`dataset-analysis-detail.html:363`、`annotation-workspace.html:1328`（toast 關閉鈕）。
+- `✕`（4）：`components-showcase.html:1531`、`dataset-analysis-list.html:312`、`dataset-analysis-detail.html:364`、`annotation-workspace.html:1328`（toast 關閉鈕）。
 - `←`（9）：`reset-password.html:588`、`:653`、`:679`；`forgot-password.html:438`、`:453`、`:488`、`:491`、`:506`、`:509`。
 - `▾`（1）：`task-config.engine.js:662`。
-- `✓`、`✗`、`✎`、`○`、`ⓘ`（7）：`task-config.engine.js:2258`、`:2825`；`task-detail.html:6455`、`:8602`、`:8604`；`annotation-workspace.config.js:3628`、`:3629`。
-- `→`（6）：`annotation-list.html:2168`；`task-config.engine.js:2225`、`:2229`、`:4632`；`task-detail.html:2678`、`:3270`。
+- `✓`、`✗`、`✎`、`○`、`ⓘ`（7）：`task-config.engine.js:2258`、`:2825`；`task-detail.html:6459`、`:8606`、`:8608`；`annotation-workspace.config.js:3628`、`:3629`。
+- `→`（6）：`annotation-list.html:2168`；`task-config.engine.js:2225`、`:2229`、`:4632`；`task-detail.html:2682`、`:3274`。
 - 沒有 emoji。唯一的 `⛔` 在註解（`role-settings.html:193`）。
-- **我的範圍判斷（請維護者確認）**：資料內容裡的箭頭與乘號（關係三元組 `(DRUG:…)→treats→(SYMP:…)`、`×2`，`task-detail.html:3854`–`:4134`）與說明句中的流程箭頭（`task-config.engine.js:2067`–`:2068`）視為資料或文句，不算字元圖示，沒有列入。
+- **我的範圍判斷（請維護者確認）**：資料內容裡的箭頭與乘號（關係三元組 `(DRUG:…)→treats→(SYMP:…)`、`×2`，`task-detail.html:3858`–`:4138`）與說明句中的流程箭頭（`task-config.engine.js:2067`–`:2068`）視為資料或文句，不算字元圖示，沒有列入。
 
 ### Q5：中文文案裡的「Email」（33 行）
 
-`components-showcase.html:1055`；`forgot-password.html:451`、`:490`；`profile.html:873`、`:963`、`:973`、`:983`、`:993`、`:1003`、`:1013`、`:1153`、`:1208`、`:1223`、`:1233`；`user-management.html:390`、`:772`、`:818`、`:819`；`task-detail.html:2430`、`:2432`、`:2433`、`:2434`、`:2435`、`:2436`、`:2460`、`:2466`；`task-detail.panels/member-management.html:4`、`:9`、`:11`、`:36`、`:37`、`:39`；`task-new.html:641`。
+`components-showcase.html:1061`；`forgot-password.html:451`、`:490`；`profile.html:873`、`:963`、`:973`、`:983`、`:993`、`:1003`、`:1013`、`:1153`、`:1208`、`:1223`、`:1233`；`user-management.html:395`、`:777`、`:823`、`:824`；`task-detail.html:2434`、`:2436`、`:2437`、`:2438`、`:2439`、`:2440`、`:2464`、`:2470`；`task-detail.panels/member-management.html:4`、`:9`、`:11`、`:36`、`:37`、`:39`；`task-new.html:644`。
 
 ### Q7：線寬不是 2 的內嵌圖示（29 處＋ logo 1 處）
 
 - 2.5（21）：`task-config.engine.js:1315`、`:2495`、`:4053`；`dataset-analysis-detail.partials/quality-multi_label.html:25`、`quality-single_dim.html:34`、`quality-entity_recognition.html:47`、`quality-multi_dim.html:66`、`quality-relation_identification.html:29`、`quality-single_label.html:25`；`annotation-workspace.html:1150`、`:1165`、`:1181`、`:1202`、`:1216`、`:1235`、`:1246`；`verify-email.html:376`、`:388`；`forgot-password.html:446`；`reset-password.html:501`、`:596`。
-- 1.5（3）：`dataset-analysis-detail.html:295`、`:314`；`user-management.html:550`。
-- 3（2）：`components-showcase.html:1225`、`task-new.html:899`。
+- 1.5（3）：`dataset-analysis-detail.html:296`、`:315`；`user-management.html:555`。
+- 3（2）：`components-showcase.html:1231`、`task-new.html:902`。
 - 2.2（2）：`verify-email.html:366`、`reset-password.html:491`。
 - 2.4（1）：`profile.html:1059`。
 - logo（1）：`assets/logo/banner.svg:13` 的 1.8。
@@ -468,9 +468,9 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 
 ### Q6：斷點與寬度（11 處）
 
-- `max-width: 768px` 應改 `767px`（8）：`task-list.html:156`、`task-new.html:149`、`task-detail.html:1002`、`:1869`、`dashboard.components.css:275`、`content-tabs.css:36`、`annotation-list.html:367`、`sidebar.css:828`。
+- `max-width: 768px` 應改 `767px`（8）：`task-list.html:156`、`task-new.html:152`、`task-detail.html:1006`、`:1873`、`dashboard.components.css:275`、`content-tabs.css:36`、`annotation-list.html:367`、`sidebar.css:828`。
 - `sidebar.js:513` 的 `matchMedia('(min-width: 769px)')` 應改 768（1）；`:518` 已是 768。
-- Modal 寬度 440px 不在 400／520／720 之內（1）：`user-management.html:675`。
+- Modal 寬度 440px 不在 400／520／720 之內（1）：`user-management.html:680`。
 - 小螢幕之外沒有其他需改的共用斷點；480／640／1100 是頁面自己的，不算落差。
 - 另一處不計：`profile.html:50` 的 `min-width: 768px` 本來就符合。
 
@@ -486,7 +486,7 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 
 - **Q1、Q2**：樣本資料一併改（維護者裁定）；「提交」依「送出」＋受詞改寫，狀態詞改「已送出」「送出時間」。
 - **Q3**：改為 Lucide SVG（線寬 2）。另補 3 處清單未列的字元圖示：`task-detail.html` 標記說明移除鈕的 `×`、相依提示的 `⤷`（`task-config.css` 的 `::before`）、`annotation-workspace.config.js` 略過決定的 `—`。`assets/icons/` 新增 `arrow-left`、`pencil`、`circle`、`minus`、`corner-down-right` 五個，照 Lucide 原樣。資料內容裡的箭頭與乘號、說明句中的流程箭頭依維護者裁定不改。
-- **Q7**：另補清單未列的 `task-config.engine.js` 的 `makeSvgIcon` 與 `task-detail.html` 的 chevron。**保留** `components-showcase.html:1225` 的 3：那是審核分岔的非色彩狀態提示（鐵律 4），showcase 的說明明寫「fork stroke-width 2→3」，是否改 2 由維護者決定。
+- **Q7**：另補清單未列的 `task-config.engine.js` 的 `makeSvgIcon` 與 `task-detail.html` 的 chevron。**保留** `components-showcase.html:1231` 的 3：那是審核分岔的非色彩狀態提示（鐵律 4），showcase 的說明明寫「fork stroke-width 2→3」，是否改 2 由維護者決定。
 - **Q9**：`banner.svg` 圓角改 36、線寬 2、點改 `line`、圖形改占 50%（`scale(3)` 置中）。**圖文間距**（`banner.svg`、`social-preview.svg` 的 25%）照 §CIS 仍待維護者決定，沒有改。
 - **Q10**：18 個完整頁面加上指向 `assets/logo/icon-colored.svg` 的 `<link rel="icon">`；另 22 個是注入用的片段（`task-detail.panels/` 6 個、`dataset-analysis-detail.partials/` 16 個），沒有 `<head>`，不加。`index.html` 的標題沒有改。
 - **Q6**：`user-management.html` 的停用確認 modal 改 400，與 `role-settings.html` 的 `.modal-center` 相同。

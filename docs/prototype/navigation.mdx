@@ -491,7 +491,7 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 
 ### `/task-management/task-detail` 的畫面狀態參數
 
-這一頁把 16 個參數**定義在一張表裡**（`task-detail.html:4973` 的 `URL_VIEW_STATE`），用 `params.get(entry.param)` 讀（`:5048`），載入時由 `applyViewStateFromUrl()` 套用（`:5125`）。
+這一頁把 16 個參數**定義在一張表裡**（`task-detail.html:4977` 的 `URL_VIEW_STATE`），用 `params.get(entry.param)` 讀（`:5052`），載入時由 `applyViewStateFromUrl()` 套用（`:5129`）。
 
 > ⚠️ **這種寫法逐字搜 `.get('<名稱>')` 搜不到。** 這一節第一版就因此漏掉其中 14 個（判例：[PR #399](https://github.com/label-suite/label-suite/pull/399) 的獨立審查）。要掃這一頁的參數，必須回去讀 `URL_VIEW_STATE` 本身。
 >
@@ -499,9 +499,9 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 >
 > | 位置 | 名字從哪來 | 宣告新參數？ |
 > | :--- | :--- | :--- |
-> | `task-management/task-detail.html:5048` | `URL_VIEW_STATE`（16 個） | 是——就是下表 |
+> | `task-management/task-detail.html:5052` | `URL_VIEW_STATE`（16 個） | 是——就是下表 |
 > | `annotation/annotation-workspace.config.js:1561` | `LIST_VIEW_STATE_KEYS`（`:1544`）＋ `LIST_IDENTITY_KEYS`（`:1552`） | 是——見 §各頁專屬 的工作區那一列 |
-> | `dataset/dataset-analysis-detail.html:2433` | `PROTOTYPE_ONLY_PARAMS`（`:2422`，只有 `s_state`） | 否，那個名字已在表上 |
+> | `dataset/dataset-analysis-detail.html:2434` | `PROTOTYPE_ONLY_PARAMS`（`:2423`，只有 `s_state`） | 否，那個名字已在表上 |
 > | `shared/sidebar.js:731` | `oldParams.get(key)`，列舉既有鍵 | 否，只比對有沒有變 |
 >
 > 第一版只列了兩處並宣稱「所以這一節現在是完整的」——**那句話是錯的**，漏掉中間兩處（判例：[PR #400](https://github.com/label-suite/label-suite/pull/400) 的獨立審查）。要掃參數就得把這四處都走過。

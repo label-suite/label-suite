@@ -44,7 +44,7 @@
 
 本次結果（**第三版，兩步掃描**）：**兩個方向各 0 筆。**
 
-第七次重跑時（第八版）多了一筆：[Issue #422](https://github.com/label-suite/label-suite/issues/422) 在 `dataset-analysis-list.model.js:241` 與 `dataset-analysis-detail.html:1434` 新增 `error`（只認 `1`），**程式有、契約沒有**。建議把它補進 `navigation.mdx` §網址參數 的兩列資料集分析頁（本 skill 不改那份文件）。兩個視圖已收為 `#param-error`。
+第七次重跑時（第八版）多了一筆：[Issue #422](https://github.com/label-suite/label-suite/issues/422) 在 `dataset-analysis-list.model.js:241` 與 `dataset-analysis-detail.html:1435` 新增 `error`（只認 `1`），**程式有、契約沒有**。建議把它補進 `navigation.mdx` §網址參數 的兩列資料集分析頁（本 skill 不改那份文件）。兩個視圖已收為 `#param-error`。
 
 第八次重跑時（第九版）這一筆已關閉：`navigation.mdx` 的兩列資料集分析頁補上了 `error`，兩個方向又是各 0 筆。
 
@@ -52,9 +52,9 @@
 
 | 位置 | 名字從哪來 | 宣告新參數 |
 | :--- | :--- | ---: |
-| `task-detail.html:5048` | `URL_VIEW_STATE` | **16** |
+| `task-detail.html:5052` | `URL_VIEW_STATE` | **16** |
 | `annotation-workspace.config.js:1561` | `LIST_VIEW_STATE_KEYS` ＋ `LIST_IDENTITY_KEYS` | **6** |
-| `dataset-analysis-detail.html:2433` | `PROTOTYPE_ONLY_PARAMS` | 0（`s_state` 已在表上） |
+| `dataset-analysis-detail.html:2434` | `PROTOTYPE_ONLY_PARAMS` | 0（`s_state` 已在表上） |
 | `sidebar.js:732` | 列舉既有鍵 | 0 |
 
 兩輪的修法：[PR #400](https://github.com/label-suite/label-suite/pull/400) 把那 22 個名字補進 `navigation.mdx` 的契約，本版把掃描法改成兩步，所以 `params` 欄現在才是真的全集——`task-management/task-detail` 從 11 個變 **25** 個、`annotation/annotation-workspace` 從 9 個變 **13** 個。
@@ -144,7 +144,7 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 ### 3. `task-management/task-new#state-banner-error`
 
-- **卡在哪一步**：頂端錯誤橫幅 `#bannerError`（`task-new.html:233`）只有「下一步」的 click handler 會呼叫 `showBannerError()`（`:1650`–`:1685`）。但第一步與第三步每次輸入都跑 `revalidateCurrentStep()`（`:1136`），驗證不過就把「下一步」設成 disabled，所以那段 handler 永遠走不到。
+- **卡在哪一步**：頂端錯誤橫幅 `#bannerError`（`task-new.html:236`）只有「下一步」的 click handler 會呼叫 `showBannerError()`（`:1653`–`:1688`）。但第一步與第三步每次輸入都跑 `revalidateCurrentStep()`（`:1139`），驗證不過就把「下一步」設成 disabled，所以那段 handler 永遠走不到。
 - **實測**：清空任務名稱、把第三步抽樣筆數改成 0，「下一步」都是停用，橫幅不出現。
 - **規格**：[03-02 §卡控機制](../../../docs/specs/03-task-management/02-task-new.mdx#卡控機制)。
 - **待決**：G-40 的裁定要把它補成視圖，但畫面目前叫不出來。是畫面要改成讓按鈕可按、還是這個視圖本來就不該列，要維護者決定，本 skill 不判斷。

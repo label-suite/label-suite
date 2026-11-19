@@ -14,14 +14,14 @@
 | `.status-saved` | 已暫存 | `--color-warning` ／ `--color-warning-soft-bg` |
 | `.status-pending` | 未處理 | `--color-ink-muted` ／ `--color-border` |
 
-依據：`components-showcase.html:380`–`:382`。
+依據：`components-showcase.html:383`–`:385`。
 
 ## 適用狀態
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| 預設 | 有 | `components-showcase.html:371` |
-| hover／focus／disabled／載入中／錯誤／空 | **未觀察到**，非互動元素 | 正典區塊 `:370`–`:381` 沒有任何偽類 |
+| 預設 | 有 | `components-showcase.html:374` |
+| hover／focus／disabled／載入中／錯誤／空 | **未觀察到**，非互動元素 | 正典區塊 `:373`–`:384` 沒有任何偽類 |
 
 ## token
 
@@ -33,11 +33,11 @@
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:370`–`:382`（註解標為「shipped CSS (verbatim)」）。
+`design/prototype/components-showcase.html:373`–`:385`（註解標為「shipped CSS (verbatim)」）。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-badges`（`components-showcase.html:1082`），三個樣本在 `:1095`–`:1097`。
+`components-showcase#state-default` → `#comp-badges`（`components-showcase.html:1088`），三個樣本在 `:1101`–`:1103`。
 
 ## shadcn 對照
 
@@ -52,6 +52,6 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 三個樣本 |
-| `annotation/annotation-list`（`#state-default`、`#role-reviewer`） | 本頁 `.status-badge`／`.status-submitted`／`-saved`／`-pending`（`annotation-list.html:256`–`:267`），與 showcase 的 `:381`–`:383` 逐字相同，只換了 class 名 |
+| `annotation/annotation-list`（`#state-default`、`#role-reviewer`） | 本頁 `.status-badge`／`.status-submitted`／`-saved`／`-pending`（`annotation-list.html:256`–`:267`），與 showcase 的 `:384`–`:386` 逐字相同，只換了 class 名 |
 
 b2 核對後**沒有**：`task-detail` 全檔與六個 partial 以 `status-pill` 搜尋都是 0 次，任務狀態用的是本頁的 `.badge`（[Badge](badge.md)）。b3 已補上（見上表）。
