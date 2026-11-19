@@ -266,7 +266,7 @@ ID 是 `design-system-setup` 重跑時比對「哪些東西受影響」的鍵，
 - 不改 `design/prototype/`、`docs/specs/`、`docs/prototype/`、`docs/specs/00-prd.mdx`
 - 不做設計判斷：不決定元件怎麼拆、不評價畫面好不好、不提重新設計
 - 不截圖
-- 產出只進 `design/system/handoff/`，屬**設計系統 PR**（見 `docs/development/spec-migration.mdx` §PR 的變更範圍）
+- 產出只進 `design/system/handoff/`，屬**設計系統 PR**（見 `docs/development/workflow/spec-migration.mdx` §PR 的變更範圍）
 - 不關閉、不修改 GitHub Issue 本身；要留言先問
 
 ## 輸出風格

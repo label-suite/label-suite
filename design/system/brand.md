@@ -280,7 +280,7 @@ token 名與值以 `tokens.css` 為準；本節只寫**怎麼用**。
 
 ### 來源與規則
 
-- **圖示來源是 [Lucide](https://lucide.dev/)，授權 ISC。**維護者裁定（2026-11-18）。repo 內的依據：`sidebar.js:666` 的註解引用 `https://lucide.dev/icons/chevron-down`；`docs/development/frontend-agent-rules.mdx:287` 寫「ADR-030（Lucide 是唯一圖示來源）」；原件 `MASTER.md:2893` 寫「the project's single icon library」。
+- **圖示來源是 [Lucide](https://lucide.dev/)，授權 ISC。**維護者裁定（2026-11-18）。repo 內的依據：`sidebar.js:666` 的註解引用 `https://lucide.dev/icons/chevron-down`；`docs/development/rules/frontend-agent-rules.mdx:287` 寫「ADR-030（Lucide 是唯一圖示來源）」；原件 `MASTER.md:2893` 寫「the project's single icon library」。
 - **版本：未知。**`assets/icons/` 的 28 個 SVG 與 `assets/logo/icon.svg` 都沒有版本註解，prototype 內也沒有 `lucide` 套件或版號；原件 `MASTER.md` 同樣沒寫。要寫入版本需要維護者提供當初取用的版本，或之後改以套件鎖版（那是 `frontend/` 的事，現在不存在）。
 - **線寬統一為 2。**`assets/icons/` 28 個全部是 `stroke-width="2"`，`24×24`、`fill="none"`、`stroke="currentColor"`、圓角端點與轉角、`aria-hidden="true"`（抽查 `check.svg`、`tag.svg`）。內嵌圖示不是 2 的行列在落差表。
 - **一律 SVG。不用 emoji，也不用 `✕`、`←`、`→`、`✓`、`▾` 等字元。**關閉用 Lucide 的 `x`，返回用 `arrow-left`／`chevron-left`，勾選用 `check`，下拉箭頭用 `chevron-down`。這是鐵律 12。

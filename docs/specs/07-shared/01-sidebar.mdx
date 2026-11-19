@@ -11,7 +11,7 @@ updatedAt: '2026-11-18'
 
 :badge[已定案]{variant="success"} :badge[變更 #188]{variant="warning" href="https://github.com/label-suite/label-suite/issues/188"} :badge[共用介面]{variant="neutral"}
 
-> 來源：舊 repo `specs/shared/008-sidebar-navbar-shared/spec.md`（100 條）、`specs/foundation/000-foundation/spec.md` 的 6 條業務規則（依 [搬移設計文件](../../development/spec-migration.mdx) 的 D4）
+> 來源：舊 repo `specs/shared/008-sidebar-navbar-shared/spec.md`（100 條）、`specs/foundation/000-foundation/spec.md` 的 6 條業務規則（依 [搬移設計文件](../../development/workflow/spec-migration.mdx) 的 D4）
 > 參考畫面：無獨立頁面，不嵌入 `PrototypeFrame`。側欄出現在每一個登入後頁面裡，畫面以 `design/prototype/pages/shared/sidebar.js` 與 `sidebar.css` 為準（[§已確認決議](#已確認決議) Q5）
 > 相關規格：[規格 07-02 工作頁籤](./02-workspace-tabs.mdx)、[規格 06-01 使用者管理](../06-admin/01-user-management.mdx)
 
@@ -399,7 +399,7 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 
 > 依據：**維護者 2026-11-04 裁定**「算，改 PRD 收進來」。出處有兩處可查：[#86](https://github.com/label-suite/label-suite/issues/86) 工作項第 1 列與它 2026-11-04 的留言「本次只折回維護者已拍板的兩題」，以及 [#85](https://github.com/label-suite/label-suite/issues/85) 開頭的「維護者已於 2026-11-04 拍板，要把兩處收進 PRD」。
 > 那次裁定要落地的內容記在 #85 的工作項：「§權限矩陣「07 共用介面」放寬到允許使用者改自己的偏好（語言、外觀、側欄收合狀態、通知已讀狀態），寫成 `R／E (o)`；上限仍不含任何業務資料」。所以[§使用角色](#使用角色)那一段講的放寬**也在這次裁定裡**，不是本頁自己決定的；**PRD 已於 2026-11-16 落地**，上限現在就是 `R／E (o)`。
-> 以下是**本頁的解讀**，不是依據：`design/prototype/pages/shared/sidebar.js` 與舊規格 `shared/008` 都確實有這四項，砍掉它們會讓規格與畫面分歧——[搬移設計文件](../../development/spec-migration.mdx)通則第 4 條明寫「和畫面一致不是依據」。
+> 以下是**本頁的解讀**，不是依據：`design/prototype/pages/shared/sidebar.js` 與舊規格 `shared/008` 都確實有這四項，砍掉它們會讓規格與畫面分歧——[搬移設計文件](../../development/workflow/spec-migration.mdx)通則第 4 條明寫「和畫面一致不是依據」。
 > 這一條原本只寫了 2026-11-04 這個日期、沒有寫「維護者」，所以機械檢查讀不到那次裁定；它是靠這個區塊裡出現的 `PRD` 與 `術語表` 通過的，而那些出現處都不是這一條的依據（[#203](https://github.com/label-suite/label-suite/issues/203)）。
 > 系統管理次選單不算在這一題裡：PRD §Site Map 已經把「角色設定」列在「從側欄進入」，多一個直達入口本來就在範圍內。
 > PRD 的改動由 #85 用 `prd-writing` 處理，**已於 2026-11-16 落地**；本頁的 §使用角色 的 `E (o)` 與術語表的 `term.appearance-mode`、`term.notification` 依這條保留（#67、#86）。
@@ -425,7 +425,7 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 - [ ] 不要，一律顯示「標記作業」
 
 > 依據：**維護者 2026-11-04 裁定**「要依角色改字」（[#86](https://github.com/label-suite/label-suite/issues/86) 工作項第 2 列），並於 **2026-11-09 再次確認**維持這個結論（[#203](https://github.com/label-suite/label-suite/issues/203)）。
-> 以下兩句是**本頁的解讀**，不是依據：原本寫的理由「prototype 與舊規格都已經這樣做」——[搬移設計文件](../../development/spec-migration.mdx)通則第 4 條把這一句逐字列為**不被接受的寫法**（「和畫面一致不是依據」）；導覽項名稱與標記工作區的入口麵包屑一致，而且語意上審核員在那一頁做的確實不是標記。
+> 以下兩句是**本頁的解讀**，不是依據：原本寫的理由「prototype 與舊規格都已經這樣做」——[搬移設計文件](../../development/workflow/spec-migration.mdx)通則第 4 條把這一句逐字列為**不被接受的寫法**（「和畫面一致不是依據」）；導覽項名稱與標記工作區的入口麵包屑一致，而且語意上審核員在那一頁做的確實不是標記。
 > 這一條原本同樣只寫了日期、沒有寫「維護者」，所以是靠區塊裡出現的 `PRD` 通過機械檢查的，而那兩處都不是依據（[#203](https://github.com/label-suite/label-suite/issues/203)）。
 > PRD §模組地圖與 §Site Map 的註明由 #85 處理，**已於 2026-11-16 落地**（兩處都列出標記作業／審核作業／例外處置三個名稱）；規格 04-02 標記工作區落地時，入口麵包屑要與本條一致（#67、#86）。
 
@@ -574,7 +574,7 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 ## 附錄：舊編號對照
 
 `shared/008-sidebar-navbar-shared` 的 100 條全部對照。`foundation/000-foundation` 共 177 條，依
-[搬移設計文件](../../development/spec-migration.mdx) 的 D4 整份不搬（分層架構、資料存取、型別、建置與 CI 的技術規範屬 OpenSpec 的範疇），
+[搬移設計文件](../../development/workflow/spec-migration.mdx) 的 D4 整份不搬（分層架構、資料存取、型別、建置與 CI 的技術規範屬 OpenSpec 的範疇），
 本頁只取其中 8 條使用者看得到的業務規則，列在表格最後；其餘 169 條不在搬移範圍，見 [§已確認決議](#已確認決議) Q12。
 
 兩份來源有 36 個字串完全相同的舊編號，所以兩邊都加來源前綴，見 [§已確認決議](#已確認決議) Q11。

@@ -43,11 +43,11 @@ description: 把一篇 NoteCraft MDX 筆記轉成一份 16:9 多頁簡報（deck
 
 **本專案的筆記都在 `docs/` 的子資料夾裡，所以檔名與 `slug` 要分開看：**
 
-| 項目 | 值 | 例（`docs/development/agent-rules.mdx`） |
+| 項目 | 值 | 例（`docs/development/rules/agent-rules.mdx`） |
 | --- | --- | --- |
 | deck 檔名 | **攤平**，放專案根的 `.notecraft/components/` | `.notecraft/components/agent-rules.deck.tsx` |
-| `slug` 欄位 | **帶資料夾**，等於筆記頁網址的 slug | `development/agent-rules` |
-| `source` 欄位 | 筆記的專案相對路徑 | `docs/development/agent-rules.mdx` |
+| `slug` 欄位 | **帶資料夾**，等於筆記頁網址的 slug | `development/rules/agent-rules` |
+| `source` 欄位 | 筆記的專案相對路徑 | `docs/development/rules/agent-rules.mdx` |
 
 路由 `/present/<slug>` 與筆記頁的「簡報」入口只比對 `slug` 欄位（`src/lib/decks.ts` 的 `deckOf`／`hasDeck`），**檔名不參與比對** —— 檔名攤平是為了讓 `@notes/components/*.deck.tsx` 這個 glob 掃得到。兩個不同資料夾有同名筆記時，檔名加上層資料夾（`development-agent-rules.deck.tsx`），`slug` 照舊。
 

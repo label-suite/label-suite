@@ -1,7 +1,7 @@
 # PRD 視覺化寫法
 
 PRD 有三張固定的互動圖，各自從一份骨架複製：**【骨架】一字不改，只換【資料】**，不同專案的 PRD 看起來是同一套。
-樣式另依 `docs/development/notecraft-visualize.md`，生成與寫回 MDX 的流程依 `content-visualize` skill。
+樣式另依 `docs/development/notecraft/notecraft-visualize.md`，生成與寫回 MDX 的流程依 `content-visualize` skill。
 
 | 圖         | 放在哪             | 元件 id                                           | 骨架                                                     | 不寫的情況       |
 | :--------- | :----------------- | :------------------------------------------------ | :------------------------------------------------------- | :--------------- |

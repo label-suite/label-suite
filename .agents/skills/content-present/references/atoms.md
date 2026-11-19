@@ -4,7 +4,7 @@
   norm). Nothing in it is localized. On a notecraftapp upgrade, re-copy it and
   re-apply those two things; the localization lives in SKILL.md only, and the
   version it came from is in .agents/skills/content-present/VERSION.
-  See docs/development/notecraft-present.md.
+  See docs/development/notecraft/notecraft-present.md.
 
   Path conventions in this file assume the "viewer" flavour:
     - Generated components live at <notesDir>/.notecraft/components/<id>.tsx

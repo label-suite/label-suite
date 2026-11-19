@@ -10,7 +10,7 @@ OpenSpec 的規劃產出是給 AI 和工程師看的技術文件。在那之前�
 把「為什麼做、誰能做什麼、系統擋什麼、怎樣算做完」講清楚。這份文件說明需求文件怎麼分層、放在哪裡、用哪個 skill 寫，以及寫完怎麼交給 OpenSpec。
 
 skill 本身的完整規則在 `.claude/skills/prd-writing/`、`.claude/skills/spec-writing/`（Codex 讀 `.agents/skills/` 的同名副本）；
-這份文件是給人看的入口，兩者說法不同時以 skill 為準，並回報給維護者修正這份文件。文件語法見 [notecraft-writing.md](notecraft-writing.md)。
+這份文件是給人看的入口，兩者說法不同時以 skill 為準，並回報給維護者修正這份文件。文件語法見 [notecraft-writing.md](../notecraft/notecraft-writing.md)。
 
 ## 三層文件
 
@@ -75,7 +75,7 @@ docs/specs/
 
 ## 用 prd-writing 寫 PRD
 
-PRD 是整個專案的全貌，一個專案一份，寫好之後隨需求維護。目前的 PRD 是 [00-prd.mdx](../specs/00-prd.mdx)，狀態為定稿。
+PRD 是整個專案的全貌，一個專案一份，寫好之後隨需求維護。目前的 PRD 是 [00-prd.mdx](../../specs/00-prd.mdx)，狀態為定稿。
 
 ### 提示詞範例
 
@@ -118,12 +118,12 @@ PRD 的三張圖都從 `prd-writing` 的骨架複製、只換資料：
 | 跨模組流程 | 以**模組**為泳道，逐步走查每次交接、例外與替代路徑 | 有兩個以上模組互相交接時 |
 | 共用狀態機 | 依模組篩選轉移、點狀態看進出條件；待確認的轉移畫黃色虛線 | 有實體被兩個以上模組推進狀態時 |
 
-骨架與檢查清單在 `.claude/skills/prd-writing/references/visualize.md`，視覺化規範見 [notecraft-visualize.md](notecraft-visualize.md)。
+骨架與檢查清單在 `.claude/skills/prd-writing/references/visualize.md`，視覺化規範見 [notecraft-visualize.md](../notecraft/notecraft-visualize.md)。
 
 ## 用 spec-writing 寫規格
 
 規格書一份只寫一個頁面或功能，是 `/sdd` 的預設需求依據。說「幫我寫規格：」後面接需求描述、文件路徑或網址；
-需求變更來自 GitHub Issue 時，直接給 Issue 編號。範例規格是 [06-01 使用者管理](../specs/06-admin/01-user-management.mdx)。
+需求變更來自 GitHub Issue 時，直接給 Issue 編號。範例規格是 [06-01 使用者管理](../../specs/06-admin/01-user-management.mdx)。
 
 ### 提示詞範例
 
@@ -172,7 +172,7 @@ import PrototypeFrame from '@notes/components/prototype-frame';
 <PrototypeFrame page="admin/user-management" caption="使用者管理" client:idle />
 ```
 
-找不到對應 prototype 頁面的大項不嵌入，改在「待釐清」新增一題說明缺哪個頁面；預覽方式見 [Prototype](../prototype/index.mdx)。
+找不到對應 prototype 頁面的大項不嵌入，改在「待釐清」新增一題說明缺哪個頁面；預覽方式見 [Prototype](../../prototype/index.mdx)。
 
 ### 規格書的章節
 
@@ -275,7 +275,7 @@ PRD 不設待釐清專章，規格書的「待釐清」也只放這一頁自己�
 ### 規格書怎麼對到 OpenSpec 產出
 
 本專案的 OpenSpec schema 是 **`label-suite-sdd`**（`openspec/schemas/label-suite-sdd/`），change 產出**九份**。
-文件或工具類的小 change 可以帶 `--schema spec-driven` 走四份產物的舊流程（理由見 [ADR-002 的 D1](adr/002-development-workflow.mdx#d1-完整九份產物流程一次導入)）。
+文件或工具類的小 change 可以帶 `--schema spec-driven` 走四份產物的舊流程（理由見 [ADR-002 的 D1](../adr/002-development-workflow.mdx#d1-完整九份產物流程一次導入)）。
 
 | 規格書 | OpenSpec 產出 |
 | :--- | :--- |
