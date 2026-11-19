@@ -7,10 +7,10 @@
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
 | `.input`（單行）或 `.input-textarea`（多行） | 必填 | `design/prototype/pages/shared/input.css:3` |
-| `.field-hint` 說明文字 | 選用，放欄位下方 | `components-showcase.html:321`（CSS）、`:1053`（樣本） |
-| `.field-error` 錯誤訊息 | 選用，`role="alert"` | `components-showcase.html:328`（CSS）、`:1057`（樣本） |
+| `.field-hint` 說明文字 | 選用，放欄位下方 | `components-showcase.html:322`（CSS）、`:1054`（樣本） |
+| `.field-error` 錯誤訊息 | 選用，`role="alert"` | `components-showcase.html:329`（CSS）、`:1058`（樣本） |
 
-`.input` 本身**不含 label**；樣本用 `aria-label` 代替（`components-showcase.html:1052`）。
+`.input` 本身**不含 label**；樣本用 `aria-label` 代替（`components-showcase.html:1053`）。
 
 ## 變體
 
@@ -18,8 +18,8 @@
 | :--- | :--- | :--- |
 | `.input` | 單行欄位 | `input.css:3` |
 | `.input-textarea` | 多行欄位，`resize: vertical`、`min-height: 100px` | `input.css:24` |
-| `.input.error` | 驗證失敗 | **只有** `components-showcase.html:307`；`input.css` 沒有這條 |
-| `.input[readonly]`／`.input.readonly` | 系統管理、不可編輯（例：SSO email） | **只有** `components-showcase.html:312`；全 prototype 沒有任何頁面在用 |
+| `.input.error` | 驗證失敗 | **只有** `components-showcase.html:308`；`input.css` 沒有這條 |
+| `.input[readonly]`／`.input.readonly` | 系統管理、不可編輯（例：SSO email） | **只有** `components-showcase.html:313`；全 prototype 沒有任何頁面在用 |
 
 ## 適用狀態
 
@@ -30,8 +30,8 @@
 | focus | 有。邊框換 `--color-primary`，外加 3px 的 focus ring | `input.css:17`（`color-mix(in srgb, var(--color-primary) 12%, transparent)`）／`components-showcase.html:305`（#438 起同為 `color-mix`）→ `../design-gaps.md` G-04 |
 | disabled | **未觀察到**。沒有 `.input:disabled` 規則 | 以 `:disabled` 掃 `input.css` 與正典區塊，0 命中 |
 | 載入中 | 不適用 | — |
-| 錯誤 | 有（只在正典區塊） | `components-showcase.html:307` |
-| 空 | 由 `placeholder` 承擔，沒有專屬狀態 | `components-showcase.html:1052` |
+| 錯誤 | 有（只在正典區塊） | `components-showcase.html:308` |
+| 空 | 由 `placeholder` 承擔，沒有專屬狀態 | `components-showcase.html:1053` |
 
 ## token
 
@@ -52,7 +52,7 @@
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-inputs`（`components-showcase.html:1047`）：default（可點出 focus ring）／error／readonly 三種，搭配 field-hint 與 field-error。
+`components-showcase#state-default` → `#comp-inputs`（`components-showcase.html:1048`）：default（可點出 focus ring）／error／readonly 三種，搭配 field-hint 與 field-error。
 
 ## shadcn 對照
 
@@ -72,11 +72,11 @@
 | `account/forgot-password`（`state-default`） | `.field-error` |
 | `account/reset-password`（`proto-valid`、`state-mismatch`） | `.field-error` |
 | `account/profile`（`state-default`） | `.field-hint`、`.field-error` |
-| `admin/user-management`（`#state-default`、`#modal-invite`） | `.input`（`user-management.html:1616`） |
+| `admin/user-management`（`#state-default`、`#modal-invite`） | 本頁的 `.form-input`（`user-management.html:153`），不是正典 `.input` |
 | `task-management/task-new`（`#state-step1`、`#state-step3`） | **本頁的 `.input-text`**（`task-new.html:64`），不是正典 → `../design-gaps.md` G-04 |
 | `annotation/annotation-workspace`（`#role-annotator`） | 「無法判定」理由用正典 `.input`（`annotation-workspace.config.js:649`–`:681`），送出才驗證、輸入就清錯 → UXC-04、UXC-05 |
 | `annotation/annotation-workspace`（`#role-reviewer`） | 審核理由用正典 `.input-textarea` |
-| `annotation/annotation-workspace#state-exception-pool` | **inline 樣式的理由輸入框**（`annotation-workspace.config.js:5042`–`:5050`），不是 `.input` → G-04 |
+| `annotation/annotation-workspace#state-exception-pool` | **inline 樣式的理由輸入框**（`annotation-workspace.config.js:5044`–`:5052`），不是 `.input` → G-04 |
 
 帳號頁用的是各自 `<style>` 裡的 `.field-hint`／`.field-error`，不是載入 `input.css`（那五頁一個 `<link>` 都沒有）→ `../design-gaps.md` G-03。
 b4 兩頁都沒有用到：`dataset-analysis-list` 的搜尋框與篩選是 [List Toolbar](list-toolbar.md) 的 `.search-input`／`.filter-select`，`dataset-analysis-detail` 沒有輸入框。

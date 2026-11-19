@@ -457,7 +457,7 @@
 
 ### G-17 Avatar 的尺寸三個數字各不相同，而且少一個動作
 
-showcase 說明寫「profile 64/80px」（`:1362`），它的 CSS 是 80px（`:918`），出貨的 `profile.html:148` 是 72px。另外 `profile.html:750` 有「移除頭像」（`.avatar-remove-btn`），正典的上傳契約（`:1567`–`:1603`）沒有這個動作。
+showcase 說明寫「profile 64/80px」（`components-showcase.html:1361`），它的 CSS 是 80px（`:917`），出貨的 `profile.html:149` 是 72px。另外 `profile.html:751` 有「移除頭像」（`.avatar-remove-btn`），正典的上傳契約（`components-showcase.html:1593`–`:1629`）沒有這個動作。
 
 ### G-20 Review Status Track 的軌道標籤沒有 ARIA 關聯
 
@@ -575,7 +575,7 @@ showcase 說明寫「profile 64/80px」（`:1362`），它的 CSS 是 80px（`:9
 
 > b4 新增。
 
-`.match-btn`（`dataset-analysis-detail.html:105`–`:108`，markup `quality-entity_recognition.html:11`–`:12`）是兩顆原生 `<button>`，目前選項只靠 `.active` 的樣式表示（`syncSequenceUi`，`:1947`–`:1957`），沒有 `aria-pressed`，也不是 `role="radiogroup"`。對照組：`annotation-workspace` 的審核三向決策 `.mini-btn` 有 `aria-pressed`。這是全站唯一的分段切換鈕，不屬任何元件。
+`.match-btn`（`dataset-analysis-detail.html:107`–`:109`，markup `quality-entity_recognition.html:11`–`:12`）是兩顆原生 `<button>`，修正前選項只靠 `.active` 的樣式表示（`syncSequenceUi`，`dataset-analysis-detail.html:1942`–`:1956`），沒有 `aria-pressed`，也不是 `role="radiogroup"`。對照組：`annotation-workspace` 的審核三向決策 `.mini-btn` 有 `aria-pressed`。這是全站唯一的分段切換鈕，不屬任何元件。
 
 **已裁定（2026-11-18）**：修正：加 `aria-pressed`。修正於 #422。
 
@@ -593,4 +593,4 @@ showcase 說明寫「profile 64/80px」（`:1362`），它的 CSS 是 80px（`:9
 | G-32 | Password Eye Toggle 的 `aria-label` 不隨狀態更新 | **會更新**：`pages/account/login.html:606`–`:612` 切換 `input.type` 時一併改寫 `aria-label`，`:587` 在換語言時也依目前狀態重算。 |
 | G-35 | `account/profile` 的頭像骨架（72px）比實際頭像（80px）小，違反 UXC-08 | **兩者都是 72px**：`profile.html:148` 的 `.avatar-preview` 與 `:559` 的 `.skel-avatar` 相同。80px 只存在於 showcase 的 demo（`components-showcase.html:916`，註解標 `md:w-20 — desktop demo size`）。 |
 
-同一輪自審還修正了兩條**寫錯但仍成立**的：Alert Banner 原寫「樣本沒有 `role="alert"`」（實際有，`components-showcase.html:1111`）與「全 prototype 0 個修飾子」（實際有一個，`pages/admin/user-management.html:180` 的 `.alert-banner.warning`）——後者反而讓 G-07 更有力；Toast 原寫「沒有 `aria-live`」（實際容器有，`:1381`），改成焦點順序的問題。
+同一輪自審還修正了兩條**寫錯但仍成立**的：Alert Banner 原寫「樣本沒有 `role="alert"`」（實際有，`components-showcase.html:1112`）與「全 prototype 0 個修飾子」（實際有一個，`pages/admin/user-management.html:182` 的 `.alert-banner.warning`）——後者反而讓 G-07 更有力；Toast 原寫「沒有 `aria-live`」（實際容器有，`components-showcase.html:1381`），改成焦點順序的問題。
