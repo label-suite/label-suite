@@ -433,7 +433,7 @@
 | :--- | :--- |
 | **重現方式** | `dataset-analysis-list`：讓資料腳本載入失敗（`state.loadFailed`），表格只剩一列錯誤與重試鈕。`dataset-analysis-detail`：讓任一個 partial 的請求失敗，那個分頁顯示「載入失敗」面板與重試鈕。兩者都沒有網址參數可以觸發，也沒有視圖 ID。 |
 | **受影響範圍** | [Data Table](components/data-table.md)、[Card](components/card.md)、[Button](components/button.md)；`dataset/dataset-analysis-list`、`dataset/dataset-analysis-detail` |
-| **依據** | 清單：`createErrorRow`（`dataset-analysis-list.view.js:159`），條件 `dataset-analysis-list.model.js:138`，樣式 `.error-title`（`dataset-analysis-list.html:151`）。詳情：`renderPanelLoadError(mountId, 'load')`（`dataset-analysis-detail.html:1503`），`aria-live="polite"`（`:1510`）。同一個函式以 `'calc'` 呼叫時就是交付包有列的 `#param-q-state-report-failed`，`'load'` 這一支沒有列。交付包 `dataset-analysis-list` 四個視圖、`dataset-analysis-detail` 二十六個視圖都不含它們。 |
+| **依據** | 清單：`createErrorRow`（`dataset-analysis-list.view.js:159`），條件 `dataset-analysis-list.model.js:138`，樣式 `.error-title`（`dataset-analysis-list.html:151`）。詳情：`renderPanelLoadError(mountId, 'load')`（`dataset-analysis-detail.html:1517`），`aria-live="polite"`（`:1524`）。同一個函式以 `'calc'` 呼叫時就是交付包有列的 `#param-q-state-report-failed`，`'load'` 這一支沒有列。交付包 `dataset-analysis-list` 四個視圖、`dataset-analysis-detail` 二十六個視圖都不含它們。 |
 | **待決問題** | **已裁定（2026-11-18）**：下次重跑 `design-handoff` 時補上這兩個視圖；原型先加 `?error=1` 示範開關，於 #422 處理。原題保留：要不要在下一次重跑 `design-handoff` 時補上這兩個視圖？沒有網址參數能觸發，要不要先在原型加一個示範開關（屬畫面修正，走 Ready gate）？ |
 
 **狀態（#422）**：原型已加 `?error=1` 示範開關。`dataset-analysis-list.html?error=1` 讓 `state.loadFailed` 為真（`dataset-analysis-list.model.js:241`），只剩錯誤列與重試鈕；`dataset-analysis-detail.html?task_id=<id>&error=1` 讓統計與品質兩個 partial 都顯示載入失敗面板。參數只在載入時讀取，`syncUrl` 不會帶著它，所以重試（重新載入）會恢復，和真實的重試一致。視圖 ID 要等下次重跑 `design-handoff` 才補，這裡不處理。
@@ -500,7 +500,7 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 
 **b3 核對**：`annotation-workspace` 的 `.admin-tabs--panel`（`annotation-workspace.html:1290`–`:1291`）是兩顆 `<button>`，**沒有補上**語意，只能點（`setupGuidelineTabs`，`annotation-workspace.config.js:6736`–`:6754`）。
 
-**b4 核對**：`dataset-analysis-detail` 的 `.admin-tabs`（`dataset-analysis-detail.html:256`–`:258`）**自己補上了** `role="tablist"`／`tab`／`tabpanel` 與 `aria-selected`、`aria-controls`，但沒有方向鍵，只能點（`:2437`–`:2442`）。
+**b4 核對**：`dataset-analysis-detail` 的 `.admin-tabs`（`dataset-analysis-detail.html:256`–`:258`）**自己補上了** `role="tablist"`／`tab`／`tabpanel` 與 `aria-selected`、`aria-controls`，但沒有方向鍵，只能點（`:2458`–`:2463`）。
 
 ### G-23 覆蓋層有兩套焦點處理
 
@@ -608,7 +608,7 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 
 **已裁定（2026-11-18）**：修正：加 `aria-pressed`。修正於 #422。
 
-**狀態（#422）**：已修正。`quality-entity_recognition.html` 的 `#matchStrict`／`#matchPartial` 帶 `aria-pressed`，`syncSequenceUi` 每次切換都與 `.active` 同步更新（`dataset-analysis-detail.html:1942` 起）。`.match-btn` 樣式現在在 `:107`–`:109`。
+**狀態（#422）**：已修正。`quality-entity_recognition.html` 的 `#matchStrict`／`#matchPartial` 帶 `aria-pressed`，`syncSequenceUi` 每次切換都與 `.active` 同步更新（`dataset-analysis-detail.html:1956` 起）。`.match-btn` 樣式現在在 `:107`–`:109`。
 
 ---
 

@@ -82,7 +82,7 @@
     .iaa-card-value.fail{color:var(--color-error)}
     .iaa-card-calc{font-size:11px;color:var(--color-ink-muted);margin-bottom:10px}
     .iaa-bar-wrap{height:8px;background:var(--color-border);border-radius:var(--radius-full);overflow:hidden;margin-bottom:8px}
-    .iaa-bar-fill{height:100%;border-radius:var(--radius-full);transition:width .5s var(--ease-standard)}
+    .iaa-bar-fill{height:100%;border-radius:var(--radius-full);background:var(--color-ink-muted);transition:width .5s var(--ease-standard)}
     .iaa-bar-fill.pass{background:var(--color-success)}
     .iaa-bar-fill.warn{background:var(--color-warning)}
     .iaa-bar-fill.fail{background:var(--color-error)}
@@ -1397,11 +1397,25 @@ function tPath(path) {
   var fallback = read(I18N.zh);
   return fallback !== undefined ? fallback : path;
 }
+/* Writes the i18n string into one element. A threshold line such as
+   "門檻 0.75 — <strong class="t-pass">通過</strong>" keeps its <strong> verdict
+   (spec 05-02 第 3 條: 通過／未達): only the text before it is replaced, and the
+   verdict itself is re-localised from tPass / tFail (issue #435). */
+function setElText(el, key) {
+  var v = t(key);
+  if (typeof v !== 'string') return;
+  var verdict = el.querySelector('strong.t-pass, strong.t-fail');
+  if (!verdict) { el.textContent = v; return; }
+  Array.prototype.slice.call(el.childNodes).forEach(function(node) {
+    if (node !== verdict) el.removeChild(node);
+  });
+  el.insertBefore(document.createTextNode(v), verdict);
+  var label = t(verdict.classList.contains('t-pass') ? 'tPass' : 'tFail');
+  if (typeof label === 'string') verdict.textContent = label;
+}
 function setText(id, key) {
   var el = document.getElementById(id);
-  if (!el) return;
-  var v = t(key);
-  if (typeof v === 'string') el.textContent = v;
+  if (el) setElText(el, key);
 }
 /* Scoped to one mount: a document-wide pass let whichever panel partial
    loaded last overwrite the other panel's data-i18n text (issue singyichen/label-suite#835). */
@@ -2273,6 +2287,13 @@ function buildSecondaryIaaBlock(html, type) {
   var body = section.querySelector('.iaa-score-grid') || section.querySelector('.iaa-not-applicable-note');
   if (!body) return null;
   var clone = body.cloneNode(true);
+  /* Localise BEFORE namespacing: setText / applySimpleIds look elements up by
+     their original id, so once the ids carry the `__type` suffix a secondary
+     card would stay in the partial's Chinese (issue #435). */
+  SIMPLE_IDS.forEach(function(id) {
+    var el = clone.querySelector('#' + id);
+    if (el) setElText(el, id);
+  });
   namespaceIds(clone, type);
   var wrap = document.createElement('section');
   wrap.className = 'panel';
