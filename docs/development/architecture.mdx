@@ -352,8 +352,8 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，�
 | image | 後端與 worker 共用一個多階段 Dockerfile；前端 build 完由 `nginx:alpine` 服務 `/dist` |
 | 寄信 | Resend；沒設 key 時把設定密碼連結印在伺服器 log，由部署者轉給使用者。因此 Lite 層的 log 視為敏感，畫面要讓管理員知道信沒有寄出去（條文見[規格 06-01](../specs/06-admin/01-user-management.mdx#已確認決議) Q9–Q11） |
 | 監控 | Prometheus、Grafana、Sentry 本期不做，與 PRD「研究原型、不是生產規模服務」的定位一致；代價是出錯時只能看 log，沒有告警 |
-| 備援 | 只做正式層：每日一次 `pg_dump -Fc`，寫到獨立的 backups volume，滾動保留 7 份。Lite 層不做自動備援，使用者自行複製 `./data`。**備份只放在主資料碟上不足以災難復原，異地複製是部署者的責任**；備份檔含測試集答案與個資，存取控制比照原資料庫。為什麼這樣選見 [ADR-008 的 D9](adr/008-deployment-and-operations.mdx#d9-資料備援只做正式層備份產出到獨立-volume) |
-| 停機 | `worker` 與 `backend` 的 `stop_grace_period` 都要大於單一評分上限 300 秒，不能留在 Compose 預設的 10 秒；worker 收到 SIGTERM 後不再領新任務，手上的跑完才退。見 [ADR-008 的 D10](adr/008-deployment-and-operations.mdx#d10-worker-收到-sigterm-先做完手上的任務) |
+| 備援 | 只做正式層：每日一次 `pg_dump -Fc`，寫到獨立的 backups volume，滾動保留 7 份。Lite 層不做自動備援：停掉服務再複製 `./data`，或在執行中用 `sqlite3 <db> "VACUUM INTO '<path>'"` 取一致副本 —— **不要在服務執行中直接複製檔案，會得到壞檔**。**備份只放在主資料碟上不足以災難復原，異地複製是部署者的責任**；備份檔含測試集答案與個資，存取控制比照原資料庫。為什麼這樣選見 [ADR-008 的 D9](adr/008-deployment-and-operations.mdx#d9-資料備援只做正式層備份產出到獨立-volume) |
+| 停機 | `worker` 的 `stop_grace_period` 要大於單一評分上限 300 秒，不能留在 Compose 預設的 10 秒；收到 SIGTERM 後不再領新任務，手上的跑完才退。`backend` 只要讓進行中的 HTTP 請求收尾，不是 300 秒等級的工作，`30s` 就夠。見 [ADR-008 的 D10](adr/008-deployment-and-operations.mdx#d10-worker-收到-sigterm-先做完手上的任務) |
 | CI 安全掃描 | 後端 `uv run pip-audit --fail-on high`、前端 `pnpm audit --prod --audit-level high`；SAST（Semgrep）等有程式再接 |
 | 相依套件 | dependabot 警示的升級邊界見 [相依套件政策](workflow/dependency-policy.mdx) |
 | 發版 | 版號、CHANGELOG、tag、GitHub Release 與 Zenodo DOI 見 `commit-and-release.md` |
@@ -393,7 +393,7 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，�
 | 021 | JWT 加 refresh token（httpOnly cookie） | Accepted | 沿用，見 [§認證與授權](#認證與授權)與 [ADR-004 的 D1](adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie)、[D2](adr/004-auth-and-security.mdx#d2-授權用的角色每次從資料庫讀) |
 | 022 | 任務狀態機放 service 層 | Accepted | **部分被覆寫**：狀態機沿用，轉移條件以 `docs/specs/` 為準；它舉的扁平 `app/services/` 路徑改成模組內分層，見 [§後端分層](#後端分層)、[ADR-003 的 D3](adr/003-backend-architecture.mdx#d3-後端採模組內分層)與 [D4](adr/003-backend-architecture.mdx#d4-任務狀態機只放在-service-層)（建議在個人 repo 補一份 ADR） |
 | 023 | Compose 加 Nginx 加 Cloudflare 部署 | Accepted | 需調整：要搭 `commit-and-release.md` 的三分支與 GHCR，見 [§部署與維運](#部署與維運)與 [ADR-008 的 D1](adr/008-deployment-and-operations.mdx#d1-compose-加-nginx-當-runtimecloudflare-可選) |
-| 024 | 資料庫雙層（SQLite 加 PostgreSQL） | Accepted | 沿用，見 [§資料庫雙層](#資料庫雙層)與 [ADR-003 的 D7](adr/003-backend-architecture.mdx#d7-資料庫分兩層) |
+| 024 | 資料庫雙層（SQLite 加 PostgreSQL） | Accepted | 沿用，見 [§資料庫雙層](#資料庫雙層)與 [ADR-003 的 D7](adr/003-backend-architecture.mdx#d7-資料庫分兩層)；它的 Atomic upsert 一條見 [ADR-003 的 D10](adr/003-backend-architecture.mdx#d10-背景計算的結果寫入做成冪等) |
 | 025 | Bruno API collection | Accepted | **部分被覆寫**：Bruno 降成可選的手動工具，pre-PR 硬關卡取消，見 [§API 契約](#api-契約)與 [ADR-003 的 D9](adr/003-backend-architecture.mdx#d9-bruno-只當可選工具) |
 | 026 | i18n 兩層 | Accepted | 沿用，見 [§i18n 兩層](#i18n-兩層) |
 | 027 | GitHub Projects | Accepted | 已被取代：以 [ADR-002 的 D5](adr/002-development-workflow.mdx#d5-狀態只記在組織層專案板)為準，不用 label 追狀態，無 `STATUS.md` |
@@ -455,5 +455,6 @@ ADR 引用的 FR-131、admin-007、spec 013 這類編號屬於個人 repo，本 
 | 2026-11-19 | 任務設定與答案隔離的理由寫進 [ADR-006](adr/006-task-config-and-answer-isolation.mdx)，本文只留做法（[§任務設定](#任務設定input_type-加-outputs)、[§測試集答案不外露](#測試集答案不外露)）；個人 repo ADR-010、029、031 的效力改連到它的 D1、D2、D3（[§ADR 效力總表](#adr-效力總表)） | —（理由原本只在個人 repo 的 ADR） | [#452](https://github.com/label-suite/label-suite/issues/452) |
 | 2026-11-19 | 部署、維運與稽核的理由寫進 [ADR-008](adr/008-deployment-and-operations.mdx)，本文只留做法（[§部署與維運](#部署與維運)、[§稽核與可追溯](#稽核與可追溯)）；個人 repo ADR-008、013、018、019、020、023、028、032、038 的效力改連到它的 D1 至 D8（[§ADR 效力總表](#adr-效力總表)） | —（理由原本只在個人 repo 的 ADR 與 [#105](https://github.com/label-suite/label-suite/issues/105) 的留言） | [#454](https://github.com/label-suite/label-suite/issues/454) |
 | 2026-11-19 | `/auth/refresh` 在輪替 refresh token 之前先檢查 `is_active`（[§認證與授權](#認證與授權)） | —（原本只靠停用當下撤銷 token family，refresh 端點本身不檢查） | [#474](https://github.com/label-suite/label-suite/issues/474) |
-| 2026-11-19 | 資料備援只做正式層，每日 `pg_dump` 留 7 份到獨立 volume，異地複製是部署者的責任（[§部署與維運](#部署與維運)） | —（兩個 repo 都沒有裁定過；個人 repo ADR-023 把備份目的地與保留政策列為未裁定） | [#490](https://github.com/label-suite/label-suite/issues/490) |
+| 2026-11-19 | 資料備援只做正式層，異地複製是部署者的責任（[§部署與維運](#部署與維運)） | —（兩個 repo 都沒有裁定過；個人 repo ADR-023 把備份目的地與保留政策列為未裁定） | [#490](https://github.com/label-suite/label-suite/issues/490) |
+| 2026-11-19 | 備份頻率每日一次、滾動保留 7 份（[§部署與維運](#部署與維運)） | —（#490 原本只裁定「定期備份」，沒有給數字） | [#490 的留言](https://github.com/label-suite/label-suite/issues/490#issuecomment-7010266013) |
 | 2026-11-19 | `stop_grace_period` 要大於評分上限 300 秒，worker 收到 SIGTERM 先做完手上的任務；背景計算的結果寫入做成冪等（[§部署與維運](#部署與維運)、[§非同步任務](#非同步任務)） | Compose 預設的 10 秒寬限會把超過 10 秒的評分直接 SIGKILL 且不重跑 | [#490](https://github.com/label-suite/label-suite/issues/490) |

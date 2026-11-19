@@ -336,7 +336,7 @@ tags: [adr, backend, api, database, celery]
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
 | A Celery，Redis 同時當 broker、result backend 與應用快取 | Celery 的重試、排程（celery-beat）與結果後端是原生的，成熟度非常高；Redis 一個服務兼三職，維運最簡單；Celery 加 Redis 是 Celery 生態最多文件的組合 | 要多一個 worker 容器；Redis 單實例沒有內建高可用；Celery 設定面大 | 採用 |
-| B Celery 加 RabbitMQ | 持久佇列的語意更好 | 維運複雜許多；研究系統偶爾在重啟時掉一個 task 可以接受，Redis 的可靠度已經夠 | 不採用 |
+| B Celery 加 RabbitMQ | 持久佇列的語意更好 | 維運複雜許多；研究系統偶爾在重啟時掉一個 task 可以接受，Redis 的可靠度已經夠（**限 broker 層**：worker 重啟不再掉任務，見 [ADR-008 的 D10](008-deployment-and-operations.mdx#d10-worker-收到-sigterm-先做完手上的任務)） | 不採用 |
 | C RQ | 比 Celery 簡單 | 沒有原生的重試策略、速率限制與 task 路由，社群較小、進展較慢 | 不採用 |
 | D FastAPI 的 `BackgroundTasks` | 最簡單 | 跑在 web server 的同一個行程，慢的評分會卡住 worker 執行緒；沒有重試、沒有持久化、沒有結果後端 | 不採用 |
 | E Dramatiq | 技術上沒問題 | 生態比 Celery 小；FastAPI 加 Redis 這個組合的文件較少 | 不採用 |
@@ -433,13 +433,13 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
 | A 結果表對輸入的識別子建唯一鍵，寫入用各 dialect 的 `on_conflict` 做 upsert | 跑幾次結果都收斂到同一列，重試、重送、重跑都安全；沒有中間狀態 | 兩種 dialect 各寫一條路徑，[B7](../rules/backend-agent-rules.mdx#b7-雙資料庫的測試要求) 要求兩邊都測 | 採用 |
-| B 重跑前先刪掉該輸入的舊結果，同一交易再寫新的 | 不需要 dialect 專屬的 upsert 語法 | 刪完寫一半失敗會變成完全沒有結果，比重複更糟；讀到中間狀態的風險要靠交易隔離等級擋 | 不採用 |
+| B 重跑前先刪掉該輸入的舊結果，同一交易再寫新的 | 不需要 dialect 專屬的 upsert 語法 | 沒有唯一鍵就擋不住兩個 worker 同時重跑寫出兩份結果，先刪只是縮小視窗；而且每次重跑都多一次全刪全寫 | 不採用 |
 | C 由狀態欄擋住重複計算（[B4](../rules/backend-agent-rules.mdx#b4-交易的擁有層) 的派送狀態） | 不動資料表 | 狀態欄擋的是重複派送，擋不住同一個 task 自己的重試；暫時性錯誤重試時狀態已經是進行中 | 不採用 |
 | D 不處理，接受重複列，查詢時取最新一筆 | 寫入端最簡單 | 每個讀取點都要記得去重，漏一處報表就錯；資料表會持續長大 | 不採用 |
 
 ### 決定
 
-背景計算的結果表要有「一份輸入最多一份結果」的唯一鍵，寫入一律用各 dialect 的 `on_conflict` 做 upsert，不先刪後寫。現有的 [`task_trial_iaa_result`](../../diagrams/architecture/data-table-dictionary.mdx) 已經把 `trial_round_id` 設成 PK 兼 FK，正好就是這個形狀；本節把它從單一張表的性質升成所有背景計算結果表的要求。具體欄位與約束仍由資料表字典管。
+背景計算的結果表要有「一份輸入最多一份結果」的唯一鍵，寫入一律用各 dialect 的 `on_conflict` 做 upsert，不先刪後寫。規則本體見 [backend-agent-rules.mdx 的 B9](../rules/backend-agent-rules.mdx#b9-celery-的界線)，它已要求「重跑同一個 task 不會產生第二筆結果」；本節補的是理由，以及冪等要落在結果表的唯一鍵上、不是只靠寫入端自律。現有的 [`task_trial_iaa_result`](../../diagrams/architecture/data-table-dictionary.mdx) 已經把 `trial_round_id` 設成 PK 兼 FK，正好就是這個形狀；本節把它從單一張表的性質升成所有背景計算結果表的要求。具體欄位與約束仍由資料表字典管。
 
 ### 後果
 
@@ -471,10 +471,10 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 | D4 | 個人 repo ADR-022（Context、Option A、B、C、Consequences）；它的轉移表、amendment 與快照不變式不在本 ADR，轉移條件以 `docs/specs/` 為準；派送失敗的補救見 [backend-agent-rules.mdx 的 B4](../rules/backend-agent-rules.mdx#b4-交易的擁有層) |
 | D5 | 維護者的裁定紀錄 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 2、3 列；「版本前綴是那個逃生門」出自 [architecture.mdx 的 §API 契約](../architecture.mdx#api-契約)；選項 B、C 的好處與代價沒有記錄；envelope 欄位未決見 [api-agent-rules.mdx 的 §待決](../rules/api-agent-rules.mdx#待決) |
 | D6 | [#108 的裁定紀錄](https://github.com/label-suite/label-suite/issues/108#issuecomment-6763329139)（三個選項、裁定與連帶）；選項 B、C 沒有記錄拒絕的理由；CI 重產比對未實作見 [api-agent-rules.mdx 的 A5](../rules/api-agent-rules.mdx#a5-重產與-drift-檢查) |
-| D7 | 個人 repo ADR-005（Context、候選比較、Consequences）與 ADR-024（Context、Decision、Consequences、Dialect-Specific Paths、Out of Scope）；驅動與 volume 的細節見 [architecture.mdx 的 §資料庫雙層](../architecture.mdx#資料庫雙層) |
+| D7 | 個人 repo ADR-005（Context、候選比較、Consequences）與 ADR-024（Context、Decision、Consequences、Dialect-Specific Paths、Out of Scope）；驅動與 volume 的細節見 [architecture.mdx 的 §資料庫雙層](../architecture.mdx#資料庫雙層)。ADR-024 的 Dialect-Specific Paths 有兩條：JSONB variant 那條落在 §資料庫雙層，Atomic upsert 那條當時沒有落點，現在收在 [D10](#d10-背景計算的結果寫入做成冪等) |
 | D8 | 個人 repo ADR-006（Context、Broker 與快取的候選比較、Eviction Policy Isolation、Consequences）與 ADR-007（Context、候選比較、FastAPI Async Integration、Consequences）；佇列、重試與逾時的數字見 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務) |
 | D9 | 個人 repo ADR-025（Context、Alternatives Considered、Enforcement、Consequences）；降級的裁定見 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 7 列，只記結果，沒有記取消關卡的理由 |
-| D10 | **本 repo 新裁定**（[#490](https://github.com/label-suite/label-suite/issues/490)），個人 repo 沒有對應的 ADR，ADR-007 只決定用 Celery、沒有處理重試造成的重複寫入。重試三次的設定出自 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務)；`trial_round_id` 當 PK 兼 FK 出自[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)的 `task_trial_iaa_result`；選項 A 至 D 全部是推論 |
+| D10 | 個人 repo ADR-024 的 §Dialect-Specific Paths 第一條「Atomic upsert (FR-083)」：Celery 背景工作的寫入在兩層都要原子，依 dialect 偵測選 PostgreSQL 或 SQLite 的 `on_conflict_do_update()`／`on_conflict_do_nothing()`，兩層都不得用 `session.merge()` 或 check-then-act。選項 A 與選項 C 的拒絕理由都出自這一條；選項 B、D 是推論。本 repo 既有的 [B9](../rules/backend-agent-rules.mdx#b9-celery-的界線) 已要求 task 冪等，本節是第一次把理由與「冪等要落在結果表的唯一鍵上」寫下來（[#490](https://github.com/label-suite/label-suite/issues/490)）。重試三次的設定出自 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務)；`trial_round_id` 當 PK 兼 FK 出自[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)的 `task_trial_iaa_result` |
 | — | 個人 repo ADR-024 後來的修訂（以資料庫 trigger 保護 append-only 與封存的資料表）、ADR-022 的轉移表與快照不變式，不在 [architecture.mdx](../architecture.mdx) 裡，本 ADR 不收；它們屬於資料庫與業務規格，由各自的 change 決定是否採用 |
 
 ## 待決
@@ -495,5 +495,6 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 | 2026-11-19 | 前端 client 用 Orval，輸出到 `frontend/src/api/generated/`（[D6](#d6-前端-client-用-orval-產生)） | — | [#108 留言](https://github.com/label-suite/label-suite/issues/108#issuecomment-6763329139) |
 | 2026-11-19 | 資料庫分兩層：預設 SQLite，設 `DATABASE_URL` 走 PostgreSQL 16（[D7](#d7-資料庫分兩層)） | —（沿用個人 repo ADR-005 與 ADR-024） | [#449](https://github.com/label-suite/label-suite/issues/449) |
 | 2026-11-19 | 評分走 Celery，Redis 兼 broker、result backend 與快取（[D8](#d8-非同步任務用-celery-加-redis)） | —（沿用個人 repo ADR-006 與 ADR-007） | [#449](https://github.com/label-suite/label-suite/issues/449) |
-| 2026-11-19 | 背景計算的結果寫入做成冪等，用 `on_conflict` upsert（[D10](#d10-背景計算的結果寫入做成冪等)） | —（新裁定；D8 設了重試三次但沒有處理重複寫入） | [#490](https://github.com/label-suite/label-suite/issues/490) |
+| 2026-11-19 | 背景計算的結果寫入做成冪等，用 `on_conflict` upsert（[D10](#d10-背景計算的結果寫入做成冪等)） | —（沿用個人 repo ADR-024 的 Atomic upsert 與本 repo 的 B9；補上理由與結果表的唯一鍵要求） | [#490](https://github.com/label-suite/label-suite/issues/490) |
+| 2026-11-19 | [D8](#d8-非同步任務用-celery-加-redis)「偶爾在重啟時掉一個 task 可以接受」的範圍縮到 broker 層（Redis 單實例），worker 重啟改由 [ADR-008 的 D10](008-deployment-and-operations.mdx#d10-worker-收到-sigterm-先做完手上的任務) 管 | D8 原本沒有區分這兩種掉法 | [#490](https://github.com/label-suite/label-suite/issues/490) |
 | 2026-11-19 | Bruno 降成可選的手動工具，取消 pre-PR 硬關卡（[D9](#d9-bruno-只當可選工具)） | 個人 repo ADR-025 的 pre-PR 硬關卡 | [#105 留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393) |
