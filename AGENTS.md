@@ -52,6 +52,7 @@ The organization project **Label Suite** (https://github.com/orgs/label-suite/pr
 - **Card moves.** The agent doing the work moves its card: In Progress when claiming, In Review when the PR is open, Done after the PR is merged and the issue is closed. An Epic moves to In Progress when its first child starts and to Done when its last child is done.
 - **Opening issues.** Pass everything in one command: `gh issue create --type <Type> --project "Label Suite"`, plus `--parent <N>` for a child issue.
 - **Merging.** Pull requests are merged with merge commits only. Squash and rebase merges are disabled, and merged branches are deleted automatically.
+- **Dispatch.** The `issue-dispatch` skill (`.claude/skills/issue-dispatch/SKILL.md`) works the Ready column without asking: it claims cards the same way as above, gives each issue its own worktree and lead, and merges. A card in Ready is the maintainer's standing authorization for that issue to be merged, provided that every CI check has passed and that a reviewer who did not write the change has passed it; the main session then merges it and moves the card to Done (maintainer's ruling, 2026-11-19). The skill currently dispatches only documentation and tooling issues. Screen changes, `docs/specs/` requirements and product code are outside its scope.
 
 ## SDD Workflow
 
@@ -98,7 +99,7 @@ The authorization is per change and does not carry over. It covers the artifacts
 
 - It does not authorize changing `docs/specs/` requirements. A decision that changes a requirement goes through `spec-writing` first, and the maintainer owns those pages.
 - It does not authorize `docs/specs/00-prd.mdx` or `design/prototype/`. An interface change has its own gate, and it sits before Ready, not inside a run: see the Ready gate above.
-- It does not authorize merging, releasing, or closing an issue.
+- It does not authorize merging, releasing, or closing an issue. Merging an issue dispatched from the Ready column is authorized by the card instead, under Dispatch in [Project Board and Dispatch](#project-board-and-dispatch).
 - It does not lift any Hard Rule. Issue first still applies: no `/sdd` run starts without an open issue listing the work.
 
 Running `/opsx:propose` on its own still authorizes planning only, as that skill requires.
@@ -171,7 +172,7 @@ Technical baselines (stack choices, layering, ADR status) are in [docs/developme
 
 Why a rule or baseline was chosen — the constraints, the options compared, the cost, and when to revisit it — is recorded in this repository's ADRs, one per domain, indexed in [docs/development/adr/index.mdx](docs/development/adr/index.mdx). When they disagree, this file wins, then this repository's ADRs, then `architecture.mdx` and the area documents above; the personal repository's ADRs are reference only. `docs/specs/` still wins on business requirements.
 
-How a rule gets triggered — which agent or Git event fires it, which shared checker it calls, and whether it blocks or only warns — is in [docs/development/agent-hook-contract.mdx](docs/development/agent-hook-contract.mdx), together with an event-by-event comparison of what Claude Code and Codex each support. That document is a contract, not a second rule canon, and it adds no rules. No agent hook is wired yet: `.claude/settings.json` carries only the attribution setting, there is no `.codex/hooks.json`, and the only hook checker that runs today is `scripts/check-commit-msg.sh` through `scripts/git-hooks/commit-msg`. Claude's hook configuration, events and exit codes do not carry over to Codex; that document lists the gaps instead of claiming they do.
+How a rule gets triggered — which agent or Git event fires it, which shared checker it calls, and whether it blocks or only warns — is in [docs/development/agent-hook-contract.mdx](docs/development/agent-hook-contract.mdx), together with an event-by-event comparison of what Claude Code and Codex each support. That document is a contract, not a second rule canon, and it adds no rules. No agent hook is wired yet: `.claude/settings.json` carries the attribution setting and the permission allowlist `issue-dispatch` needs, but no `hooks` key, there is no `.codex/hooks.json`, and the only hook checker that runs today is `scripts/check-commit-msg.sh` through `scripts/git-hooks/commit-msg`. Claude's hook configuration, events and exit codes do not carry over to Codex; that document lists the gaps instead of claiming they do.
 
 ## Review Guidelines
 

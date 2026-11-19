@@ -303,7 +303,7 @@ matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Wr
 | Codex 官方文件（`learn.chatgpt.com/docs/hooks`，runtime codex-cli 0.153.0） | 14 個事件、PascalCase 命名、`.codex/hooks.json` 與 `config.toml` 兩種寫法、handler 型別、timeout 預設與 `SessionEnd`／`Interrupt` 的 1 秒上限、信任模型、`[features] hooks = false`、工具名稱清單、matcher 語法（含 `SubagentStart`／`SubagentStop` 吃 subagent type、`Stop` 不吃 matcher）、`PostToolUse` 的「替換結果後繼續」語意、`PreToolUse` 不支援 `continue`／`stopReason` | 同上；**信任模型與工具名稱差異是本次最重要的兩個發現** |
 | 本機 runtime | `claude --version`、`codex --version`、`codex features list`、`command -v timeout` | 版本與「沒有 `timeout`」都以實測為準，不引用文件 |
 | `codex` binary 的 strings | 內部 enum 是 snake_case | **不採為依據**，並在查核方式裡寫明理由，避免後人重蹈 |
-| 本 repo | `scripts/setup.sh`（`core.hooksPath`）、`scripts/git-hooks/commit-msg`（`git rev-parse --show-toplevel` 加共用 checker）、`.github/workflows/ci.yml`（三個 job）、`.claude/settings.json`（目前只有 attribution） | **保留並擴充既有入口**，不另建重複的 commit checker |
+| 本 repo | `scripts/setup.sh`（`core.hooksPath`）、`scripts/git-hooks/commit-msg`（`git rev-parse --show-toplevel` 加共用 checker）、`.github/workflows/ci.yml`（三個 job）、`.claude/settings.json`（目前有 attribution 與 `issue-dispatch` 用的權限白名單，沒有 `hooks`） | **保留並擴充既有入口**，不另建重複的 commit checker |
 | 參考來源的 `.claude/settings.json`（原始本機 repo） | 七支腳本與 `SessionStart`／`PreToolUse`／`PostToolUse`／`PreCompact`／`Stop`／`UserPromptSubmit` 的接線、`permissions.deny` 清單、`command -v harness ... || true` 的選用外部呼叫 | 參考**事件分工**；移除個人絕對路徑與外部 harness 假設。其 matcher 含 `Read|Grep|Glob|NotebookEdit`，搬到 Codex 會空轉，已在§工具名稱寫明 |
 | [testing-agent-rules.mdx](testing-agent-rules.mdx) T9、T11、T12 | 七個 gate 的政策與歸屬、evidence 的五個欄位、兩個停點 | H6 與 H7 直接接到這三條，不另定政策 |
 
