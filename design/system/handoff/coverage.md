@@ -1,9 +1,9 @@
 # 覆蓋核對
 
-交付包版本：commit `8702db294f5d40c94257ad190e85336628c17495`，prototype tree `9f1aebb902729652d8503714a553fb959b720650`。
+交付包版本：commit `387482bb70756070d49416910844e0436c443b22`，prototype tree `a4336be42bc70922d3955479e6174c752e138476`。
 產生依據：[`design-handoff` skill](../../../.claude/skills/design-handoff/SKILL.md) 的步驟 4。工作源頭是 [Issue #248](https://github.com/label-suite/label-suite/issues/248)。
 
-**本次是第十二版**（第十一次重跑）。差異見 §九。
+**本次是第十三版**（第十二次重跑）。差異見 §九。
 
 | 項目 | 數 |
 | :--- | ---: |
@@ -223,7 +223,43 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 ## 九、重跑紀錄
 
-### 第十一次（本版）
+### 第十二次（本版）
+
+上一版釘在 `8702db2`。之後 [Issue #455](https://github.com/label-suite/label-suite/issues/455) 修正 `navigation.mdx` 超出範圍的引用（補檔名、改行號），[Issue #461](https://github.com/label-suite/label-suite/issues/461) 把兩頁規格的「您」改成「你」（`01-account/04-profile.mdx`、`05-dataset/02-analysis-detail.mdx`，只改用字），[Issue #458](https://github.com/label-suite/label-suite/issues/458) 把其餘不跟主題換色的寫死 `rgba()` 改掉，改了三個 prototype 檔。
+
+| 欄位 | 第十二版 | 本版 | |
+| :--- | :--- | :--- | :--- |
+| `commit` | `8702db294f5d` | `387482bb7075` | 必然變 |
+| `prototypeTree` | `9f1aebb90272` | `a4336be42bc7` | **變了** |
+| `specsTree` | `cdf459578e4f` | `41776418aee0` | **變了**（#461，只改用字，沒有改規則） |
+| `navigationBlob` | `fabea63469ca` | `7a60a4eeeeee` | **變了**（#455，只改引用，沒有改參數） |
+
+變動的檔：
+- `task-config.css`：關係與序列標記的待選取強調（`.rel-sel-highlight`）由寫死的藍色改成 `--color-primary` 的 `color-mix`，淺色看得出由藍變靛。
+- `admin/role-settings.html`：任務權限格底色改成 `--color-task` 的 `color-mix`，淺色差一個色階以內。
+- `shared/sidebar.css`：檔尾加一段深色覆寫（多七行），通知下拉與分頁總覽選單的陰影在深色改黑色；淺色不變。
+
+| 類 | 數 | 內容 |
+| :--- | ---: | :--- |
+| 新增 | 0 | |
+| 移除 | 0 | |
+| 改寫 | 0 | 沒有視圖的重現步驟改變；`sidebar.css` 只在檔尾加行，另兩檔行數不變，manifest 引用的行號都不必換 |
+| `loads` 欄 | 0 | |
+| 參數 | 0 | 沒有改讀網址參數的程式 |
+| 受影響 | 128 | 154 個視圖中有 128 個的畫面載入了變動的檔（`sidebar.css` 128 個，其中 `task-config.css` 41 個、`role-settings.html` 7 個） |
+
+### 應重驗的批次（第十二次）
+
+| 批次 | 載入變動檔的視圖 | 新增 | 該批的參數驅動視圖 |
+| :--- | ---: | ---: | ---: |
+| `b1-shared-account` | 17／43 | 0 | 沒變 |
+| `b2-admin-dashboard-task` | 54／54 | 0 | 沒變 |
+| `b3-annotation-review` | 25／25 | 0 | 沒變 |
+| `b4-dataset-sweep` | 32／32 | 0 | 沒變 |
+
+這次只動到**顏色**，沒有改行為或版面。淺色刻意改變的是關係選取強調（藍改靛）與任務權限格底色（色差 1）；深色下兩個選單陰影、選取強調與任務格底色改跟深色 token。四批不必重做結構；受影響的文件（`app-shell.md`、`proto-toggle-bar.md`、Input 與 artifact 的 README、`design-gaps.md` G-02）已在同一張單裡改好。
+
+### 第十一次
 
 上一版釘在 `fdcea09`。之後 [Issue #439](https://github.com/label-suite/label-suite/issues/439) 重新對齊 `navigation.mdx` 的 17 個行號（只改數字），[Issue #442](https://github.com/label-suite/label-suite/issues/442) 把其餘寫死的主色與錯誤色 `rgba()` 改成 token 的 `color-mix()`，改了十四個 prototype 檔。`docs/specs/` 沒動。
 
