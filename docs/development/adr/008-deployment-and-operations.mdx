@@ -1,0 +1,379 @@
+---
+title: ADR-008 部署與維運
+description: 部署、維運與稽核的決定：Compose 加 Nginx 當 runtime、後端與 worker 共用 image、寄信用 Resend 並可降級、觀測性只做 ai_runs、AI 與使用者行為各一張只新增的稽核表、就地匿名化、CI 安全掃描先做 SCA。
+tags: [adr, deployment, operations, audit, ci]
+---
+
+# ADR-008 部署與維運
+
+這份 ADR 管系統怎麼部署與運作、出錯時看什麼、AI 與使用者行為怎麼留下紀錄、個資怎麼匿名化，以及 CI 怎麼掃安全問題。認證與授權不在這裡，見 [ADR-004](004-auth-and-security.mdx)；資料庫與背景工作的選型見 [ADR-003](003-backend-architecture.mdx)；測試分層見 [ADR-007](007-testing-strategy.mdx)。
+規則本體在 `AGENTS.md`、[security-agent-rules.mdx 的 S9](../security-agent-rules.mdx#s9-稽核脫敏與保留) 與 [backend-agent-rules.mdx 的 B8](../backend-agent-rules.mdx#b8-刪除軟刪除與匿名化)，落地的做法在 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)與 [§稽核與可追溯](../architecture.mdx#稽核與可追溯)，本文只寫為什麼；衝突時的優先序見 [ADR 索引](index.mdx#衝突時以誰為準)。
+
+## D1 Compose 加 Nginx 當 runtime，Cloudflare 可選
+
+### 背景
+
+要決定系統在本機、CI 與正式環境用什麼方式跑起來。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 來源記錄：環境要可重現、彼此隔離，而且能在 CI 跑 | 每個服務要有容器化的定義 |
+| 來源記錄：所有服務（資料庫、Redis 等）都有狀態 | 容器化時要處理資料的持久儲存 |
+| 來源記錄：Demo Paper 要能用一個指令啟動（來源的前提，見附錄） | 啟動步驟不能比一個指令多 |
+| 來源記錄：開發者只有一人、沒有 Kubernetes 經驗（來源的前提，見附錄） | 運維負擔重的方案先排除 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A Docker 加 Compose，前面放 Nginx | 來源記錄：Docker 對 FastAPI 加 Celery 加 Redis 的文件最多；Nginx 較簡單，也有最多文件，適合服務靜態檔與明確的 API 轉發 | 見後果的變困難 | 採用 |
+| B Kubernetes（含 Ingress） | 來源記錄：映像檔之後仍可搬過去 | 來源記錄：運維負擔大，要管叢集、manifest、ingress 與 secrets，對「單人研究系統的 MVP 階段」過重（來源的前提，見附錄） | 不採用 |
+| C Podman | 來源記錄：沒有記錄好處 | 來源記錄：預設 rootless，增加 volume 權限的複雜度，文件也不如 Docker 多 | 不採用 |
+| D 裸機或單台 VM 加 systemd | 來源記錄：沒有記錄好處 | 來源記錄：PostgreSQL 與 Redis 要手動安裝、環境不可重現，失去隔離 | 不採用 |
+| E Compose 加 Traefik | 來源記錄：沒有記錄好處 | 來源記錄：用不到動態服務發現；服務靜態檔與明確的 API 轉發，Nginx 較簡單 | 不採用 |
+| F 只用 PaaS | 來源記錄：沒有記錄好處 | 來源記錄：降低可重現性，並綁定供應商的 buildpack 與網路 | 不採用 |
+
+### 決定
+
+Compose 是預設 runtime，Nginx 是唯一公開入口；有 Cloudflare 時用它當 DNS、CDN 與 TLS 邊緣，Nginx 仍要擋安全標頭、做路由並隔離內部服務。每個環境怎麼起、CI 怎麼起服務見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)，分支與映像推進見 [commit-and-release.md](../commit-and-release.md)。
+
+### 後果
+
+**變容易**
+
+- 本機、CI 與正式環境都用容器定義，環境可重現、彼此隔離
+- 映像檔仍可搬到別的編排工具
+
+**變困難**
+
+- 貢獻者要裝 Docker；來源記錄 macOS 的 volume I/O 較慢
+- 資料庫 migration 要在 backend 容器內執行；多容器的 log 要合併來看
+- 沒有 Kubernetes 的自我修復與自動擴展；來源記錄零停機部署的能力有限
+- 有 Cloudflare 時多一道代理邊界，要確認它和 Nginx 的行為一致
+
+### 什麼情況要重新討論
+
+- 要在多台主機上執行，或需要自我修復與自動擴展時
+- 單人維運的前提不再成立（例如有了專職維運）時
+
+## D2 後端與 worker 共用一個 image
+
+### 背景
+
+要決定 API 與 Celery worker 是各自建一個 image，還是共用。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 來源記錄：多出一份 image 就多一個要維護的建置產物 | 偏向共用 |
+| 來源記錄：API 與 worker 要跑相同的 Python 環境 | 偏向共用 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 共用一個多階段 Dockerfile，worker 用同一個 image | 來源記錄：少一份建置產物，API 與 worker 的 Python 環境相同 | 見後果的變困難 | 採用 |
+| B worker 另寫 Dockerfile（推論） | 來源沒有記錄 | 來源記錄：要多維護一份建置產物，兩邊的 Python 環境可能不同 | 不採用 |
+
+### 決定
+
+後端與 worker 共用同一個 image，不另寫 worker 的 Dockerfile；前端 build 完由 `nginx:alpine` 服務 `/dist` 的做法見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)。
+
+### 後果
+
+**變容易**
+
+- 只維護一份後端建置產物；API 與 worker 跑同一份 Python 環境
+
+**變困難**
+
+- worker 用到的套件（例如 NLP 評估的套件）要宣告在後端同一份 `pyproject.toml`，見 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務)
+
+### 什麼情況要重新討論
+
+- worker 需要與 API 不同的執行環境，同一份相依套件宣告放不下時
+
+## D3 寄信用 Resend，沒設 key 時把連結印到 log
+
+### 背景
+
+系統要寄設定密碼信，同時有些部署（例如 Lite 層）不會設定寄信服務。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 來源記錄：要有一個郵件服務，設定步驟越少越好 | 偏向只要一把 key 的服務 |
+| 來源記錄：個人帳號的 SMTP 受 2FA 與供應商政策牽制 | 不用個人帳號的 SMTP |
+| 規格 06-01 記錄：沒有設定寄信服務是 Lite 層的常態，不是故障 | 沒有 key 時不能讓新增帳號整個失敗，見[規格 06-01 的 Q9](../../specs/06-admin/01-user-management.mdx#已確認決議) |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A Resend | 來源記錄：有官方 SDK，免費額度每月 3,000 封、每日 100 封，設定只要一個 `RESEND_API_KEY` | 外部 SaaS 依賴；要設定 SPF 與 DKIM 才有送達率；要有 token 儲存 | 採用 |
+| B Brevo、SendGrid | 來源記錄：Brevo 走 SMTP relay | 來源記錄：設定更多，在這個規模沒有明顯優勢 | 不採用 |
+| C Gmail SMTP | 來源記錄：沒有記錄好處 | 來源記錄：綁個人帳號，要 2FA 加 App Password，Google 可能撤銷；有供應商政策風險 | 不採用 |
+| D 不寄信，由管理員重設 | 來源記錄：沒有記錄好處 | 來源記錄：運維負擔無法接受 | 不採用 |
+
+### 決定
+
+用 Resend 寄信，`RESEND_API_KEY` 是可選設定；沒設 key 時，把設定密碼連結印在伺服器 log，由部署者轉給使用者，所以 Lite 層的 log 視為敏感，畫面也要讓管理員知道信沒有寄出去。降級路徑的形狀與 Google SSO 的可選整合一致（[ADR-004 的 D4](004-auth-and-security.mdx#d4-google-sso-直接走-oidc)），畫面條文見[規格 06-01 的 Q9 至 Q11](../../specs/06-admin/01-user-management.mdx#已確認決議)。信由 API 還是 worker 寄出，見 [architecture.mdx 的 §容器視圖](../architecture.mdx#容器視圖c4-第二層)；沒有 key 時自行註冊走不通，見 [architecture.mdx 的 §待決](../architecture.mdx#待決)第 3 列。
+
+### 後果
+
+**變容易**
+
+- 沒有郵件服務的部署仍然能建立帳號
+
+**變困難**
+
+- 多一個外部 SaaS 依賴，以及 SPF、DKIM 的設定
+- 要有 token 儲存
+- Lite 層的 log 含可用的設定密碼連結，必須當敏感資料處理
+- 沒有 key 時，連結要由部署者手動轉給使用者
+
+### 什麼情況要重新討論
+
+- 免費額度（每月 3,000 封、每日 100 封）不夠用時
+- 部署形態改變，Lite 層的 log 不再能當敏感資料控管時（本節的重新討論條件是推論）
+
+## D4 觀測性只做 ai_runs，監控與錯誤追蹤本期不做
+
+### 背景
+
+要決定出錯時用什麼工具追查：架設指標與錯誤追蹤，還是只靠 log 與 AI 稽核表。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 維護者裁定：`ai_runs` 不是運維工具，而是研究可追溯性 | 它不能拿來當監控的替代品，所以要明說監控沒做 |
+| PRD 的定位是研究原型，不是生產規模服務 | 監控與告警的投入不在本期範圍 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A Prometheus 加 Grafana（自架） | 來源記錄：指標與儀表板表現佳，告警走 Alertmanager | 來源記錄：運維負擔中等 | 本期不做 |
+| B Sentry（錯誤追蹤） | 來源記錄：前端、後端與 Celery 的錯誤與 source map 表現佳，運維負擔低到中等 | 來源沒有記錄代價 | 本期不做 |
+| C 託管服務（Grafana Cloud、Datadog、New Relic） | 來源記錄：運維負擔低 | 來源記錄：Grafana Cloud 多一個外部帳號、網路依賴與成本保留考量；Datadog 與 New Relic 有成本與廠商鎖定 | 不採用 |
+| D ELK 或 OpenSearch | 來源記錄：集中 log 有用 | 來源記錄：不能取代以指標為基礎的告警，儲存與調校負擔大 | 不採用 |
+| E Sentry 的替代品（GlitchTip、Rollbar、只用 OpenTelemetry collector） | 來源記錄：GlitchTip 相容 Sentry 且可自架 | 來源記錄：Sentry 的 SDK 文件、release 工具與 source map 支援較廣；Rollbar 對現有技術棧的契合度不如 Sentry；OpenTelemetry collector 不能取代 issue 分組、release 回歸追蹤與前端 source map | 不採用 |
+| F 只看 log，加 `ai_runs` | 來源記錄：運維負擔低 | 來源記錄：沒有儀表板與告警；維護者裁定記錄的代價是出錯時只能看 log | 採用 |
+
+### 決定
+
+觀測性只做 `ai_runs`，Prometheus、Grafana 與 Sentry 本期不做；代價是出錯時只能看 log、沒有告警。落地的寫法見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)。
+
+### 後果
+
+**變容易**
+
+- 不必維運指標、儀表板或錯誤追蹤的服務
+
+**變困難**
+
+- 出錯時只能看 log，沒有告警
+- 沒有指標與儀表板，效能與資源問題要靠人去看 log 發現
+
+### 什麼情況要重新討論
+
+- 定位從研究原型變成要對外提供的服務時
+- 出錯但看 log 追不到原因，已經影響到使用者時（本節的重新討論條件是推論）
+
+## D5 AI 可追溯用只新增的 ai_runs 表
+
+### 背景
+
+AI 輔助流程（產生、評估、工具呼叫）的紀錄要存成什麼形狀，才能事後回溯某次結果。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 來源記錄：要依任務、使用者、模型、狀態與時間查詢 | 儲存要支援結構化查詢 |
+| 來源記錄：要保留 prompt 與版本沿革，並給審閱者看歷史 | 不能只存 log 或指標 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 結構化稽核表加物件快照 | 來源記錄：可依任務、使用者、模型、狀態與時間查詢 | 見後果的變困難 | 採用 |
+| B 只新增的 JSONL 檔 | 來源記錄：適合匯出與備份 | 來源記錄：難以依任務、使用者、模型、狀態與時間查詢，不當主儲存 | 不採用 |
+| C OpenTelemetry traces | 來源記錄：之後可以加上來關聯 | 來源記錄：不足以當持久的 AI 稽核紀錄、prompt 與版本沿革，或給審閱者看的歷史 | 不採用 |
+| D Prometheus labels | 來源記錄：沒有記錄好處 | 來源記錄：基數高、有隱私風險 | 不採用 |
+| E console log | 來源記錄：沒有記錄好處 | 來源記錄：容易遺失、脫敏不一致、沒有產品層的歷史 | 不採用 |
+
+### 決定
+
+AI 輔助流程記在只新增、不更新也不刪除的 `ai_runs` 與其生命週期事件；使用者接受、編輯或拒絕一個 AI 產出記在 `ai_runs`，不另寫 `audit_events`。欄位見[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)，兩張表的分界見 [architecture.mdx 的 §稽核與可追溯](../architecture.mdx#稽核與可追溯)。
+
+### 後果
+
+**變容易**
+
+- 回溯某次 AI 結果時，可以依任務、使用者、模型、狀態與時間查詢
+
+**變困難**
+
+- 表只新增，更正要寫新事件，不能改舊列；一次 run 的狀態怎麼在不更新列的前提下表達，見[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)
+
+### 什麼情況要重新討論
+
+- 要把追蹤傳到外部的觀測工具時（本節的重新討論條件是推論）
+
+## D6 使用者行為記在單一只新增的 audit_events 表
+
+### 背景
+
+人發起的領域行為（發布、提交、裁決、投票、成員變更、匯出）要記在哪、怎麼記，才能事後稽核。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 來源記錄：一次 AI run 是多個事件的生命週期，使用者的一個動作是單一的原子事實 | 兩者不宜混在同一張表 |
+| 來源記錄：稽核要能重建一個實體的生命週期 | 跨動作類型的查詢不能靠逐一合併的表 |
+| 規格 06-02 記錄：稽核紀錄至少保留 1 個曆年 | 要有保留政策 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 擴充 `ai_runs` | 來源記錄：沒有記錄好處 | 來源記錄：一次 run 是多事件生命週期、使用者動作是單一原子事實；插入變肥大，保留與存取政策混在一起 | 不採用 |
+| B 每個領域各一張稽核表 | 來源記錄：沒有記錄好處 | 來源記錄：重建生命週期要 N 路 union，每多一種動作就多一路，是寫死任務邏輯的反面例子 | 不採用 |
+| C 單一只新增的表，動作由設定驅動的註冊表驗證 | 來源記錄：一張表就能重建生命週期，不必逐一 union | 見後果的變困難 | 採用 |
+
+### 決定
+
+用單一只新增的 `audit_events` 表：一般 service 寫入只做 insert，update 與 delete 在兩層資料庫都拒絕；由 service 層與領域異動在同一個交易內寫入（見 [backend-agent-rules.mdx 的 B4](../backend-agent-rules.mdx#b4-交易的擁有層)）；`action` 與 `target_type` 由註冊表驗證；非人的行為 actor 為 null、角色為 `system`；`payload_summary` 只放去識別化的內容，脫敏規則見 [security-agent-rules.mdx 的 S9](../security-agent-rules.mdx#s9-稽核脫敏與保留)。表名 `audit_events` 是單數、模組前綴命名慣例的明確例外。欄位與保存見 [architecture.mdx 的 §稽核與可追溯](../architecture.mdx#稽核與可追溯)。
+
+### 後果
+
+**變容易**
+
+- 動作類型由註冊表驗證，不是每種動作各一張表
+- 重建一個實體的生命週期，只查一張表
+
+**變困難**
+
+- update 與 delete 要在兩層資料庫都拒絕
+- 每個寫入點都要登記動作並提供去識別化的 `payload_summary`
+- 更正錯誤的事件要寫新事件，不能改舊列
+
+### 什麼情況要重新討論
+
+- 稽核事件量大到單一表的查詢無法接受時（本節的重新討論條件是推論）
+
+## D7 稽核保留至少一個曆年，刪除請求就地匿名化同一列
+
+### 背景
+
+要決定使用者的刪除請求怎麼處理，而不破壞只新增的稽核與研究所需的 gold 追溯。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 來源記錄：多張表只新增或有 RESTRICT 保護，一般的刪除抹不掉它們 | 刪除請求不能靠一般 delete |
+| 來源記錄：研究可重現需要 gold 追溯保存 | 匿名化後追溯仍要連得起來 |
+| 規格 06-02 記錄：稽核紀錄至少保留 1 個曆年 | 保留期內不能刪事件 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 就地匿名化同一列 | 來源記錄：稽核行為人、session、成員身分、歷史與 gold 追溯都保持完整 | 見後果的變困難 | 採用 |
+| B 把 FK 改指向共用墓碑帳號（推論） | 來源沒有記錄 | 來源的決定寫明不採用；理由沒有記錄 | 不採用 |
+| C 直接刪除使用者列（推論） | 來源沒有記錄 | 來源記錄：只新增與 RESTRICT 的表使一般刪除做不到，且 gold 追溯要保存 | 不採用 |
+| D 所有 entity 一律軟刪除 | 來源沒有記錄 | [backend-agent-rules.mdx 的 B8](../backend-agent-rules.mdx#b8-刪除軟刪除與匿名化)記錄不把它當預設 | 不採用 |
+
+### 決定
+
+使用者的刪除請求就地匿名化同一列，不把 FK 指向共用墓碑帳號；稽核事件至少保留一個曆年、不自動刪除，事件列永遠不刪，過了最短保留期後只能把 PII 欄位墓碑化；帶答案的歷史 JSON 跟著它所屬的資料集版本或 run 保存。規則見 [backend-agent-rules.mdx 的 B8](../backend-agent-rules.mdx#b8-刪除軟刪除與匿名化)與 [security-agent-rules.mdx 的 S9](../security-agent-rules.mdx#s9-稽核脫敏與保留)。
+
+### 後果
+
+**變容易**
+
+- 匿名化之後，稽核行為人、session、成員身分、歷史與 gold 追溯仍然連得起來
+
+**變困難**
+
+- 匿名化後，稽核事件上的行為人顯示會失去身分；來源把這在最短保留期內是否可接受列為未決（見附錄）
+- 帶答案的歷史 JSON 要跟著版本或 run 存續，不能隨使用者被刪
+
+### 什麼情況要重新討論
+
+- 保留期或匿名化範圍被法規或機構要求改變時（本節的重新討論條件是推論）
+
+## D8 CI 安全掃描先做 SCA，SAST 延後
+
+### 背景
+
+要決定 CI 掃哪些安全問題、門檻多高，以及哪些先不做。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 來源記錄：系統是論文用的 demo，不是對網際網路開放的正式環境（來源的前提，見附錄） | DAST 與 fuzzing 現在的價值有限 |
+| `AGENTS.md` 硬性規則 7、8：禁止 `allow_origins=["*"]` 與寫死的 secret | SAST 要至少蓋這兩條 |
+| 後端與前端的程式還沒建立 | 依賴掃描與 SAST 都只能等有程式再跑 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A `pip-audit`（後端相依套件掃描） | 來源記錄：沿用既有做法 | 來源記錄：沒有記錄代價 | 採用 |
+| B `pnpm audit`（前端相依套件掃描） | 來源記錄：現在就接，前端出現前不會觸發 | 來源記錄：誤報較多，用 `--prod` 或逐筆 ignore 處理，不降低門檻 | 採用 |
+| C Semgrep SAST | 來源記錄：可蓋專案禁令（至少兩條）加上一份註冊表規則集 | 來源記錄：延後，等有後端程式才接；之前禁令只靠 agent 把關 | 延後：後端程式建立之後 |
+| D DAST | 來源記錄：沒有記錄好處 | 來源記錄：目前不做 | 不採用：系統對網際網路開放、不只本機或 demo 使用時重新討論 |
+| E API fuzzing（Schemathesis） | 來源記錄：沒有記錄好處 | 來源記錄：延後 | 延後：OpenAPI schema 穩定之後 |
+| F Playwright E2E | 來源記錄：不屬安全掃描 | 來源記錄：由測試策略負責 | 不在這裡決定，見 [ADR-007](007-testing-strategy.mdx) |
+
+### 決定
+
+CI 先做相依套件掃描：後端 `uv run pip-audit --fail-on high`、前端 `pnpm audit --prod --audit-level high`，兩端門檻都是 high；Semgrep 等有程式再接，DAST 與 API fuzzing 先不做。做法與 Semgrep 的最低規則見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)，相依套件警示的升級邊界見 [dependency-policy.mdx](../dependency-policy.mdx)。
+
+### 後果
+
+**變容易**
+
+- 相依套件的已知高風險弱點在 PR 就被擋下
+
+**變困難**
+
+- `pnpm audit` 誤報較多，只能用 `--prod` 或逐筆 ignore 處理，不能降低門檻
+- 沒有修補版本的 high CVE 會讓 CI 失敗；來源記錄的出口是逐筆 ignore 並開 issue 追蹤
+- Semgrep 延後期間，專案禁令只靠 agent 把關
+
+### 什麼情況要重新討論
+
+- 後端程式建立之後（接 Semgrep）
+- 系統對網際網路開放，不只本機或 demo 使用時（DAST）
+- OpenAPI schema 穩定之後（API fuzzing）
+
+## 附錄：來源對照
+
+比對的版本：個人 repo（`singyichen/label-suite`）ADR-008、013、018、019、020、023、026、028、032、038 的現行內容，加上維護者裁定（[#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 4、6 列）。
+
+| 決定 | 來源 |
+| :--- | :--- |
+| D1 | 個人 repo ADR-008（Context、Candidates、Consequences）與 ADR-023（Candidates、Cloudflare 的角色、Consequences）。選項 A 的好處取自兩份的 Decision；選項 B 至 F 的好處沒有記錄的，已在表內標明。「單人研究系統的 MVP 階段」「Demo Paper 一個指令啟動」「單人開發、沒有 Kubernetes 經驗」都依賴本 repo 沒有確認的前提（研究原型、論文與 demo）；本 repo 是否同樣認定，來源沒有記錄。ADR-023 的其餘內容本 repo 不採用：Cloudflare 的 Full (strict) TLS 規則與禁用 Flexible（本 repo 沒有核對，見下方備註）、地端伺服器計畫與主機命名、staging 與 production 的政策（改由 [commit-and-release.md](../commit-and-release.md) 的三分支規劃管）、Nginx 路由契約、secrets 清單、以 image tag 回滾、延後的決定。本節的重新討論條件是推論，來源沒有記錄 |
+| D2 | 個人 repo ADR-008 的 Image Strategy。來源只記錄共用 image 的理由，沒有把另寫 Dockerfile 列為選項；選項 B 是推論。NLP 套件要宣告在同一份 `pyproject.toml` 出自 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務)。本節的重新討論條件是推論，來源沒有記錄 |
+| D3 | 個人 repo ADR-013（Candidates、Rejected、Consequences）。來源沒有降級路徑；降級路徑出自維護者裁定（#105 第 4 列，裁定記錄的理由是與 Google SSO 的可選整合形狀一致，並要求明寫 Lite 層 log 視為敏感，在規格與畫面讓管理員知道信沒有寄出），畫面條文出自規格 06-01 的 Q9 至 Q11。選項 B 的好處只記錄了「走 SMTP relay」。本節的重新討論條件中，免費額度取自來源，Lite 層 log 那一條是推論，來源沒有記錄 |
+| D4 | 個人 repo ADR-018（Candidates Evaluated 與各項的 rejected 理由）、ADR-020（Candidates Evaluated 與各項的 rejected 理由）、維護者裁定（#105 第 6 列：`ai_runs` 不是運維工具而是研究可追溯性；代價是出錯時只能看 log、沒有告警），PRD 的定位出自 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)。兩份來源本身是 Accepted，本 repo 本期不做它們。ADR-018 與 ADR-020 的儀表板、告警範圍、標籤隱私規則、Sentry 的脫敏與 source map 規則本 repo 不採用，因為本期不做。選項 F 的好處與維護者裁定的代價出自上述兩處。本節的重新討論條件中，第一條出自 PRD 的定位、第二條是推論，來源沒有記錄 |
+| D5 | 個人 repo ADR-019（Design Options Evaluated、Decision、Consequences）。分界出自 [architecture.mdx 的 §稽核與可追溯](../architecture.mdx#稽核與可追溯)。來源的資料模型把 `ai_runs` 列寫成有 `status` 與 `completed_at`，與本 repo 的「只新增」有出入，不更新列時如何表達一次 run 的狀態來源沒有記錄，屬資料表字典。來源的事件清單依賴 ADR-017 的 Planner、Generator、Evaluator 分層，ADR-017 在本 repo 的效力已改連到 [ADR-002 的 D4](002-development-workflow.mdx#d4-規劃實作審查與驗收由不同角色負責)，本 repo 不採用該事件清單；來源的角色存取表用的是個人 repo 的角色名稱，本 repo 不採用；快照的儲存後端在來源是延後的決定，本 repo 沒有核對。本節的重新討論條件是推論，來源沒有記錄 |
+| D6 | 個人 repo ADR-032（Options、Decision、Consequences）。同交易寫入對應 [backend-agent-rules.mdx 的 B4](../backend-agent-rules.mdx#b4-交易的擁有層)；至少保留 1 個曆年出自規格 06-02。選項 A、B 的好處沒有記錄；選項 C 的好處取自來源的選擇理由。來源的存取角色（個人 repo 的角色名稱）、事件目錄、索引、候選 FK、系統行為人的 CHECK 與原型豁免本 repo 不採用，由資料表字典與規格管。本節的重新討論條件是推論，來源沒有記錄 |
+| D7 | 個人 repo ADR-038 的 Context 與 Decision，以及 ADR-032 的保留規則。來源沒有列出選項；選項 B、C 是從 Context 與 Decision 推論（B 的理由沒有記錄），選項 D 出自 B8。ADR-038 的下列內容本 repo 不採用，由規格與資料設計管：session 與 refresh token 的清除、30 天匯出檔（規格 03-task-detail）、原始檔的 RESTRICT（規格 05-03）、以特權 migration 角色做匿名化的緊急路徑（個人 repo ADR-024）。來源的 TBD（個人 repo 追蹤的 issue）也不採用，也不列入待決，因為它們不改變現在的規則：匿名化帳號狀態怎麼持久化、清除工作的頻率與最長保留期、版本撤回的流程、最短保留期內失去身分顯示（行為人姓名）是否可接受。本節的重新討論條件是推論，來源沒有記錄 |
+| D8 | 個人 repo ADR-028（Alternatives、Decision、Consequences）。「論文 demo、不對網際網路開放」依賴本 repo 沒有確認的前提；來源記錄 DAST 在系統對網際網路開放時重新討論，API fuzzing 在 OpenAPI schema 穩定後重新討論。選項 F 的歸屬出自來源（由測試 ADR 負責）。Dependabot 的邊界在 [dependency-policy.mdx](../dependency-policy.mdx)。選項 A 的代價、選項 C 至 E 的好處沒有記錄 |
+| — | 個人 repo ADR-026（i18n 兩層）不收：它管前後端的字串邊界，不是部署、維運或稽核；效力總表的連結維持指向 [architecture.mdx 的 §i18n 兩層](../architecture.mdx#i18n-兩層) |
+
+備註：個人 repo ADR-023 要求 Cloudflare 用 Full (strict) TLS、禁用 Flexible，因為 Flexible 會破壞 secure cookie 與轉發協定。本 repo 的 cookie 設定見 [ADR-004 的 D1](004-auth-and-security.mdx)，這條規則沒有被任何本 repo 文件採用，本文只記錄它沒被採用，不自行決定。
+
+## 待決
+
+| # | 問題 | 卡住什麼 | 誰決定 |
+| :--- | :--- | :--- | :--- |
+
+## 決策紀錄
+
+| 日期 | 決策 | 取代了什麼 | 來源 |
+| :--- | :--- | :--- | :--- |
+| 2026-11-19 | Compose 加 Nginx 當 runtime，Cloudflare 可選（[D1](#d1-compose-加-nginx-當-runtimecloudflare-可選)） | —（沿用個人 repo ADR-008、023 的原則；ADR-023 的 TLS 規則、地端計畫與環境政策未採用） | [#454](https://github.com/label-suite/label-suite/issues/454) |
+| 2026-11-19 | 後端與 worker 共用一個 image（[D2](#d2-後端與-worker-共用一個-image)） | —（沿用個人 repo ADR-008） | [#454](https://github.com/label-suite/label-suite/issues/454) |
+| 2026-11-19 | 寄信用 Resend，沒設 key 時把連結印到 log（[D3](#d3-寄信用-resend沒設-key-時把連結印到-log)） | 個人 repo ADR-013 沒有降級路徑 | [#454](https://github.com/label-suite/label-suite/issues/454) |
+| 2026-11-19 | 觀測性只做 `ai_runs`，監控與錯誤追蹤本期不做（[D4](#d4-觀測性只做-ai_runs監控與錯誤追蹤本期不做)） | 個人 repo ADR-018、020 的決定本期不做 | [#454](https://github.com/label-suite/label-suite/issues/454) |
+| 2026-11-19 | AI 可追溯用只新增的 `ai_runs` 表（[D5](#d5-ai-可追溯用只新增的-ai_runs-表)） | —（沿用個人 repo ADR-019；事件清單與角色存取表未採用） | [#454](https://github.com/label-suite/label-suite/issues/454) |
+| 2026-11-19 | 使用者行為記在單一只新增的 `audit_events` 表（[D6](#d6-使用者行為記在單一只新增的-audit_events-表)） | —（沿用個人 repo ADR-032；存取角色與事件目錄未採用） | [#454](https://github.com/label-suite/label-suite/issues/454) |
+| 2026-11-19 | 稽核保留至少一個曆年，刪除請求就地匿名化同一列（[D7](#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)） | —（沿用個人 repo ADR-038 與 ADR-032 的保留規則） | [#454](https://github.com/label-suite/label-suite/issues/454) |
+| 2026-11-19 | CI 安全掃描先做 SCA，SAST 延後（[D8](#d8-ci-安全掃描先做-scasast-延後)） | —（沿用個人 repo ADR-028） | [#454](https://github.com/label-suite/label-suite/issues/454) |
