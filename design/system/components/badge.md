@@ -18,7 +18,7 @@
 | 群 | class | 色來源 |
 | :--- | :--- | :--- |
 | 任務狀態 | `.badge-draft`、`.badge-dry-run-status`、`.badge-iaa`、`.badge-in-progress`、`.badge-completed`、`.badge-error` | `components-showcase.html:357`–`:362`。前兩個用中性 token `--color-ink-muted`／`--color-slate-50`／`--color-border`（#420 Q1），後四個用 `--color-warning/info/success/error` 系列 |
-| 角色 | `.badge-role`（`--radius-full` 藥丸、primary 色系） | `components-showcase.html:364` |
+| 角色 | `.badge-role`（`--radius-full` 藥丸、primary 色系） | `components-showcase.html:365` |
 | 任務型別 | `.badge-task-type-single`／`-sequence`／`-relation`／`-pairs`／`-scoring`／`-default` | `pages/shared/task-type-badge.css:9`–`:14`。前五個的配色取自 `assets/data-palette.css` 的 `--data-task-type-*`（淺深兩組都在那裡），`-default` 用中性 token（#420 Q1、Q4） |
 
 ## 適用狀態
@@ -27,7 +27,7 @@
 | :--- | :--- | :--- |
 | 預設 | 有 | `components-showcase.html:343` |
 | hover／focus／disabled／載入中 | **未觀察到**。Badge 不是互動元素 | 正典區塊與 `task-type-badge.css` 都沒有互動偽類 |
-| 錯誤 | 有，`.badge-error` 是一個語意變體而非元件狀態 | `components-showcase.html:361` |
+| 錯誤 | 有，`.badge-error` 是一個語意變體而非元件狀態 | `components-showcase.html:362` |
 | 空 | 未觀察到。沒有「沒有狀態」的樣式 | — |
 | 深色模式 | 全部跟著 token 翻轉：任務型別由 `data-palette.css` 的深色組負責，其餘由 `tokens.css` 的深色覆寫負責；徽章自己不寫深色規則 | `assets/data-palette.css`、`assets/tokens.css` |
 
@@ -62,7 +62,7 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 全部三群的樣本 |
-| `admin/user-management#state-default`、`admin/role-settings#state-default` | 各自在 `<style>` 重寫 `.badge`（`user-management.html:101`、`role-settings.html:255`） |
+| `admin/user-management#state-default`、`admin/role-settings#state-default` | 各自在 `<style>` 重寫 `.badge`（`user-management.html:103`、`role-settings.html:255`） |
 | `dashboard/dashboard`（`#param-scenario-super-admin-data`、`#param-scenario-reviewer`） | `dashboard.layout.css:238`、`:269`、`:278` 的 `.badge` 與 `.badge-error`／`.badge-draft`；任務型別配色來自 `shared/task-type-badge.css` |
 | `task-management/task-list#state-default` | 本頁 `<style>` 重寫（`task-list.html:90`–`:99`），型別配色同上 |
 | `task-management/task-detail`（`#tab-overview`、`#param-status`） | 本頁 `<style>` 重寫（`task-detail.html:115`–`:132`），中性與正式徽章同樣改用 #420 的 token |

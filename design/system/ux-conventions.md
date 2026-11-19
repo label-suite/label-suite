@@ -33,7 +33,7 @@
 遵守它的元件（兩個以上）：
 
 - [Spinner](components/spinner.md)：取代送出鈕的文字，帶 `aria-label="載入中"`（`design/prototype/pages/account/login.html:681`）
-- [Button](components/button.md)：`.btn-loading` 以 `opacity: .7` ＋ `pointer-events: none` 表示送出中（`design/prototype/components-showcase.html:213`）
+- [Button](components/button.md)：`.btn-loading` 以 `opacity: .7` ＋ `pointer-events: none` 表示送出中（`design/prototype/components-showcase.html:214`）
 
 引用處：`design/prototype/pages/account/profile.html:346`（「UXC-06 / MASTER Loading state: opacity-70 + spinner while pending」）、`:1527`（「loading state + double-submission guard while the (simulated) request runs」）、`:1570`。
 
@@ -71,7 +71,7 @@
 遵守它的元件：
 
 - [Skeleton](components/skeleton.md)：A variant 的 `.skeleton-line.title` 220×20、`.body` 12px、`.body.short` 65%；B variant 的 `.skel-avatar` 72×72、`.skel-input` 42px、`.skel-btn` 90×40（`components-showcase.html:449`–`:451`、`:464`–`:467`）
-- [Avatar](components/avatar.md)：`account/profile` 的 `.avatar-preview` 與 `.skel-avatar` **都是 72×72**（`profile.html:148`、`:559`），骨架和載入後的頭像一樣大——這是本批次找到最乾淨地遵守 UXC-08 的一處
+- [Avatar](components/avatar.md)：`account/profile` 的 `.avatar-preview` 與 `.skel-avatar` **都是 72×72**（`profile.html:149`、`:560`），骨架和載入後的頭像一樣大——這是本批次找到最乾淨地遵守 UXC-08 的一處
 
 **這條約定解釋了為什麼 Skeleton 的尺寸不該 token 化**：它們是逐處量出來的，不是設計刻度。
 
@@ -97,7 +97,7 @@
 
 遵守它的元件：
 
-- [Modal](components/modal.md)：`admin/role-settings` 的 `#dirtyModal`（`design/prototype/pages/admin/role-settings.html:858`；`cancelEdit` 在 `isDirty` 時先開它，`:1319`–`:1325`）；`task-management/task-new` 的 `leaveModal`（`task-new.html:533`）；`task-management/task-detail` 的 `settingsLeave`（`task-detail.html:1965`）
+- [Modal](components/modal.md)：`admin/role-settings` 的 `#dirtyModal`（`design/prototype/pages/admin/role-settings.html:858`；`cancelEdit` 在 `isDirty` 時先開它，`:1319`–`:1325`）；`task-management/task-new` 的 `leaveModal`（`task-new.html:533`）；`task-management/task-detail` 的 `settingsLeave`（`task-detail.html:1967`）
 - [Alert Banner](components/alert-banner.md)：`admin/role-settings` 的 `.dirty-banner`（`:276`）在離開之前就先把「有未儲存的變更」說出來
 
 瀏覽器層：`role-settings.html:1301`–`:1305`、`task-new.html:1711`。**`task-detail` 沒有 `beforeunload`**——它只擋頁內切換（`task-detail.html` 全檔 `beforeunload` 0 次）。

@@ -6,7 +6,7 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.alert-banner` 容器（`display: flex`、`align-items: flex-start`） | 必填 | `components-showcase.html:388` |
+| `.alert-banner` 容器（`display: flex`、`align-items: flex-start`） | 必填 | `components-showcase.html:389` |
 | 前置 `<svg>` 圖示（`flex-shrink: 0`、`margin-top: 2px` 對齊首行） | 選用 | `components-showcase.html:399` |
 | 訊息文字 | 必填 | `components-showcase.html:1111` |
 
@@ -33,7 +33,7 @@
 
 ## 鍵盤與焦點
 
-不可聚焦。正典樣本帶 `role="alert"`（`components-showcase.html:1111`），和同一份 showcase 的 `.field-error`（`:1057`）一致，所以兩者都會被螢幕閱讀器自動朗讀。這個角色寫在**樣本的 markup** 上，不在 CSS 裡，所以是使用約定而不是元件本身保證的。
+不可聚焦。正典樣本帶 `role="alert"`（`components-showcase.html:1112`），和同一份 showcase 的 `.field-error`（`:1058`）一致，所以兩者都會被螢幕閱讀器自動朗讀。這個角色寫在**樣本的 markup** 上，不在 CSS 裡，所以是使用約定而不是元件本身保證的。
 
 ## 樣式出處
 
@@ -56,7 +56,7 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 唯一樣本 |
-| `admin/user-management#toast-action` | 停用確認視窗裡的 `.alert-banner.warning`（`user-management.html:175`、`:180`、`:592`） |
+| `admin/user-management#toast-action` | 停用確認視窗裡的 `.alert-banner.warning`（`user-management.html:177`、`:182`、`:592`） |
 | `admin/role-settings`（`#state-dirty`、`#state-conflict`） | **不是這個 class**：本頁自己的 `.banner`／`.dirty-banner`／`.conflict-banner`（`role-settings.html:42`–`:58`）→ `../design-gaps.md` G-07 |
 
 b2 已補上（見上表）。

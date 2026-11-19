@@ -8,10 +8,10 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.state-panel` ＋ `--success`／`--error`（`<section>`） | 必填 | `components-showcase.html:850`、樣本 `:1339`、`:1347` |
+| `.state-panel` ＋ `--success`／`--error`（`<section>`） | 必填 | `components-showcase.html:851`、樣本 `:1340`、`:1348` |
 | `.state-panel-icon`（40×40 圓形，內含 20×20 svg） | 必填 | `:866`–`:875`、樣本 `:1342` |
-| `.state-panel-title` | 必填 | `:884`、樣本 `:1345` |
-| `.state-panel-desc` | 必填 | `:890`、樣本 `:1346` |
+| `.state-panel-title` | 必填 | `:883`、樣本 `:1344` |
+| `.state-panel-desc` | 必填 | `:889`、樣本 `:1345` |
 | `.state-panel-action`（連結，hover 加底線） | 選用 | `:896`–`:904`、樣本 `:1347` |
 
 和鄰近兩個元件的分工，正典寫得很明確（`:1338`）：表單還在、訊息內嵌 → [Alert Banner](alert-banner.md)；浮動自動消失 → [Toast](toast.md)；表單被取代 → 本元件。
@@ -29,7 +29,7 @@
 | :--- | :--- | :--- |
 | success | 有 | `components-showcase.html:856` |
 | error | 有 | `:862` |
-| hover | 只有 `.state-panel-action` 有（加底線） | `:904` |
+| hover | 只有 `.state-panel-action` 有（加底線） | `:903` |
 | focus | **未觀察到**（action 是 `<a>`，靠瀏覽器預設） | 以 `:focus` 掃 `:849`–`:904`，0 命中 → `../design-gaps.md` G-05 |
 | warning／info | **未觀察到**。只有成功與錯誤兩種 | — |
 | 載入中／空 | 不適用 | — |

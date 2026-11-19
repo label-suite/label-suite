@@ -10,8 +10,8 @@
 | :--- | :--- | :--- |
 | `.breadcrumb` 容器 | 必填 | `components-showcase.html:635`、樣本 `:1208` |
 | `<a>` 上層連結 | 至少一個 | `components-showcase.html:643`、樣本 `:1209` |
-| `.breadcrumb-sep`（`›`，`aria-hidden="true"`） | 每兩節之間一個 | `components-showcase.html:649`、樣本 `:1210` |
-| 目前節點（`aria-current="page"`） | 必填 | 樣本 `components-showcase.html:1211` |
+| `.breadcrumb-sep`（`›`，`aria-hidden="true"`） | 每兩節之間一個 | `components-showcase.html:650`、樣本 `:1211` |
+| 目前節點（`aria-current="page"`） | 必填 | 樣本 `components-showcase.html:1212` |
 
 **最深兩層**（`components-showcase.html:1206` 的說明）。但同一份 showcase 的 Review Status Track 樣本就用了三層（`:1220`–`:1225`），而 `pages/annotation/annotation-list.html:55` 的註解稱自己用的是「compact form」→ `../design-gaps.md` G-13。
 

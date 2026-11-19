@@ -9,12 +9,12 @@
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
 | `.input-wrapper`（`position: relative` 的外框） | 必填 | `pages/account/login.html` 的 `<style>`；`profile.html` 用 `.input-pw-wrap` |
-| `.eye-toggle`（`position: absolute; right: 12px`、無邊框、`--color-ink-muted`） | 必填 | `pages/account/login.html:262` |
+| `.eye-toggle`（`position: absolute; right: 12px`、無邊框、`--color-ink-muted`） | 必填 | `pages/account/login.html:264` |
 | 內含眼睛 svg | 必填 | `login.html:464`（`aria-label="顯示密碼"`） |
 
 ## 變體
 
-`.eye-toggle` 在三頁的定義**完全相同**（login、register、reset-password）。`reset-password` 與 `register` 各有兩個實例（密碼、確認密碼），id 分別是 `eyeToggle1`／`eyeToggle2`（`register.html:452`、`:488`）與 `eyeToggleNew`／`eyeToggleConfirm`（`reset-password.html:482`、`:515`）。
+`.eye-toggle` 在三頁的定義**完全相同**（login、register、reset-password）。`reset-password` 與 `register` 各有兩個實例（密碼、確認密碼），id 分別是 `eyeToggle1`／`eyeToggle2`（`register.html:455`、`:491`）與 `eyeToggleNew`／`eyeToggleConfirm`（`reset-password.html:488`、`:521`）。
 
 `account/profile` 另有一個（`profile.html:870`），外框 class 是 `.input-pw-wrap` 而非 `.input-wrapper` → `../design-gaps.md` G-28。
 

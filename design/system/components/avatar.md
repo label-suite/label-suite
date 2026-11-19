@@ -8,7 +8,7 @@
 
 | 模式 | 結構 | 依據 |
 | :--- | :--- | :--- |
-| display-only | 單一 `<img class="avatar-sm">`（32×32，2px primary/20 邊框） | `components-showcase.html:906`、樣本 `:1362` |
+| display-only | 單一 `<img class="avatar-sm">`（32×32，2px primary/20 邊框） | `components-showcase.html:907`、樣本 `:1363` |
 | uploadable | `.avatar-wrap`（`role="button"`、`tabindex="0"`、`aria-label`、`aria-describedby`）> `.avatar-preview` ＋ `.avatar-overlay`（`aria-hidden`）＋ 隱藏的 `<input type="file">`；外加 `.avatar-error`（`role="alert"`）與 `.avatar-hint` | `:914`–`:959`、樣本 `:1366`–`:1375` |
 
 `.avatar-preview` 的預設內容是**姓名首字**（樣本是「陳」，`:1368`）；選了檔案後換成 `<img>`。
@@ -20,19 +20,19 @@
 | `.avatar-sm` | 32×32 | navbar |
 | `.avatar-preview` | showcase demo 80×80；**出貨的 `account/profile` 是 72×72** | profile |
 
-showcase 的說明寫「profile 64/80px」（`:1362`），它自己的 CSS 是 80px（`:918`、`:925`，註解標 `md:w-20 — desktop demo size`），而實際出貨的 `profile.html:148` 是 **72px**——說明、正典、出貨三個數字都不一樣 → `../design-gaps.md` G-17。
+showcase 的說明寫「profile 64/80px」（`:1361`），它自己的 CSS 是 80px（`:917`、`:924`，註解標 `md:w-20 — desktop demo size`），而實際出貨的 `profile.html:149` 是 **72px**——說明、正典、出貨三個數字都不一樣 → `../design-gaps.md` G-17。
 
-好消息是出貨那一頁內部是一致的：`.skel-avatar` 也是 72×72（`profile.html:559`），符合 [UXC-08](../ux-conventions.md#uxc-08-skeleton-尺寸要貼合載入後的內容)。
+好消息是出貨那一頁內部是一致的：`.skel-avatar` 也是 72×72（`profile.html:560`），符合 [UXC-08](../ux-conventions.md#uxc-08-skeleton-尺寸要貼合載入後的內容)。
 
 ## 適用狀態
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
 | 預設（首字） | 有 | `components-showcase.html:922`、`:1366` |
-| 已上傳 | 有，`<img>` 蓋滿、`object-fit: cover` | `:938`、腳本 `:1611`–`:1616` |
+| 已上傳 | 有，`<img>` 蓋滿、`object-fit: cover` | `:937`、腳本 `:1622`–`:1627` |
 | hover | 有，遮罩 `opacity: 0 → 1`（唯一一條標為 verbatim 的正典 CSS，`:953`–`:954`） | `:954` |
 | focus | **有**。`.avatar-wrap:focus-visible` 畫 2px primary outline，`outline-offset: 2px` | `:920`–`:923` — 這是 b1 唯一一個有焦點樣式的元件 |
-| 錯誤 | 有。`.avatar-error.visible`，文字由腳本填 | `:957`–`:958`、腳本 `:1608`–`:1609` |
+| 錯誤 | 有。`.avatar-error.visible`，文字由腳本填 | `:956`–`:957`、腳本 `:1619`–`:1620` |
 | disabled／載入中／空 | 未觀察到 | — |
 
 ## token
@@ -68,6 +68,6 @@ showcase 的說明寫「profile 64/80px」（`:1362`），它自己的 CSS 是 8
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 兩種模式，uploadable 可實操 |
-| `account/profile`（`state-default`、`state-avatar-preview`） | `profile.html` 的頭像區，含「移除頭像」（`profile.html:750`）——**正典沒有這個動作** → `../design-gaps.md` G-17 |
+| `account/profile`（`state-default`、`state-avatar-preview`） | `profile.html` 的頭像區，含「移除頭像」（`profile.html:753`）——**正典沒有這個動作** → `../design-gaps.md` G-17 |
 
 `shared/sidebar.js` 另以 `#userAvatar` 呈現使用者頭像（見 [app-shell](app-shell.md)），待確認是不是 display-only 模式的同一個。

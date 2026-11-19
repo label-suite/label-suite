@@ -9,7 +9,7 @@
 | `.pagination` 容器（`<nav aria-label="Pagination">`） | 必填 | `components-showcase.html:587`、樣本 `:1180` |
 | `.pagination-info` 總筆數與頁次 | 選用 | `pages/shared/list-page.css:82`、樣本 `components-showcase.html:1181` |
 | `.pagination-controls` > `.page-btn` ×n ＋ `.page-ellipsis` | 必填 | `list-page.css:83`、`:94`、樣本 `:1182`–`:1190` |
-| `.page-size-select` 每頁筆數 | 選用 | `components-showcase.html:625`、`list-page.css:100` |
+| `.page-size-select` 每頁筆數 | 選用 | `components-showcase.html:626`、`list-page.css:100` |
 
 **最多 5 顆可見頁碼加省略號**（`components-showcase.html:1178` 的說明）；樣本是 `1 2 3 … 7`。
 
@@ -33,9 +33,9 @@
 
 `--color-border`、`--color-border-control`、`--color-white`、`--color-ink`、`--color-primary`、`--color-primary-strong`、`--color-primary-soft-bg`、`--color-text-soft`、`--radius-md`、`--space-md`、`--space-lg`、`--space-xs`、`--dur-fast`。
 
-**一個色 token 兩份定義不一致**：`.page-btn.active` 的文字色，正典是 `--color-on-cta`（`components-showcase.html:618`，註解明寫「WCAG AA foreground token, issue singyichen/label-suite#1019」），shipped 的 `list-page.css:92` 原本是 `--color-white`，深色主題下會變成卡片底色 `#16161F`；#438 起改成 `--color-on-cta`，兩份一致 → `../design-gaps.md` G-12。淺色下兩者都是白；深色下兩者都不是白，但值不同——前者是 `--color-on-cta` 的深色值（深靛色），後者是 `--color-white` 的深色值（深色卡片底色），疊在深色 `--color-primary` 上的對比不同（`dataset-analysis-list` 實測）。`task-list` 與 `user-management` 在頁內改回 `--color-on-cta` → `../design-gaps.md` G-12。
+**一個色 token 兩份定義不一致**：`.page-btn.active` 的文字色，正典是 `--color-on-cta`（`components-showcase.html:619`，註解明寫「WCAG AA foreground token, issue singyichen/label-suite#1019」），shipped 的 `list-page.css:92` 原本是 `--color-white`，深色主題下會變成卡片底色 `#16161F`；#438 起改成 `--color-on-cta`，兩份一致 → `../design-gaps.md` G-12。淺色下兩者都是白；深色下兩者都不是白，但值不同——前者是 `--color-on-cta` 的深色值（深靛色），後者是 `--color-white` 的深色值（深色卡片底色），疊在深色 `--color-primary` 上的對比不同（`dataset-analysis-list` 實測）。`task-list` 與 `user-management` 在頁內改回 `--color-on-cta` → `../design-gaps.md` G-12。
 
-`.page-size-select` 與 `.filter-select` 的下拉箭頭是 data-URI SVG，筆畫色寫在 URI 裡（`list-page.css:103`、`:34`）。#438 起淺色 `%235E6B7F`、深色另寫一條 `%239CA3AF`（`:108`–`:109`），都對齊 `--color-ink-muted`；之前兩種主題都是 `%2394A3B8`。正典的 `.page-size-select`（`components-showcase.html:625`）沒有箭頭也沒有文字色，#438 沒有處理。
+`.page-size-select` 與 `.filter-select` 的下拉箭頭是 data-URI SVG，筆畫色寫在 URI 裡（`list-page.css:100`、`:31`）。#438 起淺色 `%235E6B7F`、深色另寫一條 `%239CA3AF`（`:108`–`:109`），都對齊 `--color-ink-muted`；之前兩種主題都是 `%2394A3B8`。正典的 `.page-size-select`（`components-showcase.html:626`）沒有箭頭也沒有文字色，#438 沒有處理。
 
 ## 鍵盤與焦點
 
@@ -63,7 +63,7 @@
 | :--- | :--- |
 | `components-showcase#state-default` | 樣本 |
 | `admin/user-management#state-default` | 本頁重寫的 `.page-btn`（`user-management.html:115`–`:133`） |
-| `task-management/task-list#state-default` | 本頁重寫的 `.page-btn`（`task-list.html:111`；markup `:256`–`:269`）；三種空／錯誤狀態整條隱藏 |
+| `task-management/task-list#state-default` | 本頁重寫的 `.page-btn`（`task-list.html:112`；markup `:257`–`:274`）；三種空／錯誤狀態整條隱藏 |
 | `task-management/task-detail`（`#tab-member-management`、`#tab-annotation-progress`、`#tab-annotation-results`、`#tab-work-log`） | 各 panel 的 `.page-btn`（`annotation-progress.html:134`、`annotation-results.html:63`、`:112` 等） |
 | `annotation/annotation-list#state-default` | `.pagination`（`annotation-list.html:508`），「共 N 筆 · 第 N / N 頁」 |
 | `dataset/dataset-analysis-list`（`#state-default`） | `list-page.css` 的 `.pagination`（`dataset-analysis-list.html:285`–`:301`），`.page-size-select` 與 `.page-btn`；目前頁 `aria-current="page"`（`dataset-analysis-list.view.js:239`） |

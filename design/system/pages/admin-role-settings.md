@@ -13,7 +13,7 @@
 | 視圖 | 怎麼走到 | 用到的元件 |
 | :--- | :--- | :--- |
 | `#state-default` | 開 `pages/admin/role-settings.html` | [App Shell](../components/app-shell.md)、[Content Tabs](../components/content-tabs.md)（`.admin-tabs`，`:335`–`:337`，帶 `role="tablist"`／`aria-selected`）、[Data Table](../components/data-table.md)（權限矩陣 `.matrix-table`，`:378`）、[Button](../components/button.md)（「編輯」`:348`）、[Badge](../components/badge.md)（本頁自己的 `.badge`，`:255`） |
-| `#state-dirty` | 點「編輯」（`:348`）後改任一格、還沒儲存 | [Alert Banner](../components/alert-banner.md)（本頁的 `.dirty-banner`，`:276`）、[Button](../components/button.md)（「取消」`:363`、「儲存」`:366`） |
+| `#state-dirty` | 點「編輯」（`:348`）後改任一格、還沒儲存 | [Alert Banner](../components/alert-banner.md)（本頁的 `.dirty-banner`，`:275`）、[Button](../components/button.md)（「取消」`:363`、「儲存」`:366`） |
 | `#state-conflict` | 開兩個分頁，兩邊都進編輯；先在一邊儲存，再到另一邊儲存（`saveMatrix`，`:1360`，比對 `localStorage` 版本） | [Alert Banner](../components/alert-banner.md)（`.conflict-banner`，`:288`，含「重新載入」）、[Toast](../components/toast.md)（error）。儲存鈕停用 |
 | `#toast-saved` | 編輯後儲存成功 | [Toast](../components/toast.md)（本頁自己的 `.toast*`，`:199`；容器 `:880`） |
 
@@ -33,7 +33,7 @@
 | `.banner`／`.dirty-banner`／`.conflict-banner`（`:44`–`:60`） | Alert Banner 的又一份實作，用 `--color-warning-*`／`--color-error-soft-*` → G-07 |
 | `.matrix-table`（`:88`），第一欄與表頭 sticky（`:111`、`:140`） | 包在 `role="region" tabindex="0"` 的容器裡，**鍵盤可以捲**——和 [Data Table](../components/data-table.md) 的 G-27 正好相反 |
 | `.audit-drawer`／`.audit-drawer-overlay`（`shared/audit-drawer.css:4`–`:30`；窄視窗改成由下往上，`:57`–`:63`） | 右側抽屜。**已於 #422 抽成共用檔** `pages/shared/audit-drawer.css`／`audit-drawer.js`，與 `admin/user-management` 共用，並接上焦點陷阱 → G-38 |
-| `.toast*`（`:199` 起） | 右下角（#423 起，與規格一致）；`TOAST_DURATIONS`（`:1418`）與 UXC-07 一致 → G-39 |
+| `.toast*`（`:199` 起） | 右下角（#423 起，與規格一致）；`TOAST_DURATIONS`（`:1413`）與 UXC-07 一致 → G-39 |
 
 ## 業務行為
 

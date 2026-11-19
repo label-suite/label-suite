@@ -27,7 +27,7 @@
 | :--- | :--- | :--- |
 | 預設 | 有 | `input.css:3` |
 | hover | **未觀察到** | `input.css` 與正典區塊都沒有 `.input:hover` |
-| focus | 有。邊框換 `--color-primary`，外加 3px 的 focus ring | `input.css:17`（`color-mix(in srgb, var(--color-primary) 12%, transparent)`）／`components-showcase.html:305`（#438 起同為 `color-mix`）→ `../design-gaps.md` G-04 |
+| focus | 有。邊框換 `--color-primary`，外加 3px 的 focus ring | `input.css:19`（`color-mix(in srgb, var(--color-primary) 12%, transparent)`）／`components-showcase.html:305`（#438 起同為 `color-mix`）→ `../design-gaps.md` G-04 |
 | disabled | **未觀察到**。沒有 `.input:disabled` 規則 | 以 `:disabled` 掃 `input.css` 與正典區塊，0 命中 |
 | 載入中 | 不適用 | — |
 | 錯誤 | 有（只在正典區塊） | `components-showcase.html:308` |

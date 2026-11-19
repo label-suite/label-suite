@@ -8,12 +8,12 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.progress`（樣本帶 `role="progressbar"` 與 `aria-valuenow`／`min`／`max`／`aria-label`） | 必填 | `components-showcase.html:796`、樣本 `:1316` |
+| `.progress`（樣本帶 `role="progressbar"` 與 `aria-valuenow`／`min`／`max`／`aria-label`） | 必填 | `components-showcase.html:796`、樣本 `:1317` |
 | `> span` 填充 | 必填 | `components-showcase.html:802`、樣本 `:1317` |
 
 ## 變體
 
-**只有一種。**填充色一律 `--color-cta`，說明明寫「無逐狀態色，狀態語意請搭配 Status Badge」（`:1316`）——也就是不要用綠／黃／紅表示健康度。
+**只有一種。**填充色一律 `--color-cta`，說明明寫「無逐狀態色，狀態語意請搭配 Status Badge」（`:1317`）——也就是不要用綠／黃／紅表示健康度。
 
 ## 適用狀態
 
@@ -41,7 +41,7 @@
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-progress`（`components-showcase.html:1312`），65% 的樣本在 `:1316`。
+`components-showcase#state-default` → `#comp-progress`（`components-showcase.html:1313`），65% 的樣本在 `:1317`。
 
 ## shadcn 對照
 
@@ -57,8 +57,8 @@
 | :--- | :--- |
 | `components-showcase#state-default` | 65% 樣本 |
 | `dashboard/dashboard`（`#param-scenario-project-leader`、`#param-scenario-annotator`） | `dashboard.components.css:206`–`:241` 的 `.progress`，與正典同名；審核覆蓋率那一條有 `role="progressbar"` 與 `aria-value*`（`dashboard.js:213`–`:218`），一般進度條沒有（`:222`） |
-| `annotation/annotation-list#state-default` | 任務資訊卡的本頁 `.progress`（`annotation-list.html:178`–`:190`），全用 token；markup 帶 `aria-hidden="true"`（`:455`），旁邊的文字才是給輔助科技的 |
-| `annotation/annotation-workspace`（`#role-*`） | 本頁 `.progress-track`／`.progress-fill`（`annotation-workspace.html:304`–`:315`），尺寸與 token 和正典相同、只換了 class 名；帶 `role="progressbar"` 與 `aria-value*`（`:1237`） |
+| `annotation/annotation-list#state-default` | 任務資訊卡的本頁 `.progress`（`annotation-list.html:179`–`:191`），全用 token；markup 帶 `aria-hidden="true"`（`:456`），旁邊的文字才是給輔助科技的 |
+| `annotation/annotation-workspace`（`#role-*`） | 本頁 `.progress-track`／`.progress-fill`（`annotation-workspace.html:305`–`:316`），尺寸與 token 和正典相同、只換了 class 名；帶 `role="progressbar"` 與 `aria-value*`（`:1240`） |
 | `dataset/dataset-analysis-list#state-default` | 完成率欄的本頁 `.progress-track`／`.progress-fill`（`dataset-analysis-list.html:98`–`:107`），全用 token，但軌道是 `--color-border-muted`、填充是 `--color-primary`，與正典的 `--color-border`／`--color-cta` 不同；帶 `role="progressbar"`、`aria-label` 與 `aria-value*`（`dataset-analysis-list.view.js:67`–`:79`） |
 | `dataset/dataset-analysis-detail`（`#state-quality-*`） | 達標分數條 `.iaa-bar-wrap`／`.iaa-bar-fill`（`dataset-analysis-detail.html:83`–`:87`），寬度寫在 inline `style`；填充依達標與否換 `--color-success`／`--color-warning`（`.pass`／`.warn`），即正典說不要的逐狀態色；沒有 `role="progressbar"`，數值在旁邊的文字 |
 

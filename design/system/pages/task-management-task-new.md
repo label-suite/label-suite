@@ -26,8 +26,8 @@
 
 | 元件 | 說明 |
 | :--- | :--- |
-| `.step-*`（`:39`–`:50`） | 步驟條，只此一頁 → [Step Indicator](../components/step-indicator.md) |
-| `.form-card`（`:55`） | 容器在 `pages/shared/card.css`，本頁只加 `margin-bottom`（#423）→ [Card](../components/card.md)、G-41 |
+| `.step-*`（`:42`–`:53`） | 步驟條，只此一頁 → [Step Indicator](../components/step-indicator.md) |
+| `.form-card`（`:56`） | 容器在 `pages/shared/card.css`，本頁只加 `margin-bottom`（#423）→ [Card](../components/card.md)、G-41 |
 | `.input-text`（`:64`） | 本頁的輸入框，與正典 `.input` 不同一份 → G-04 |
 | `.toast*` | [Toast](../components/toast.md)：#423 起 `showToast` 依 `TOAST_DURATIONS`（`:880`）分級，error 只能手動關 → G-39 |
 

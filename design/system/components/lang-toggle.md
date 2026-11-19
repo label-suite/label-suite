@@ -14,7 +14,7 @@
 
 **這是帳號頁唯一沒有分裂的元件**：五頁的 `.lang-toggle` 規則集雜湊完全相同。其餘（`.card` 四份、`.navbar` 兩份、`.spinner` 兩份、`.submit-btn` 兩份、`.success-panel` 兩份）都已分歧 → `../design-gaps.md` G-28。
 
-登入後的版本是另一套：側欄的 `#langToggle`（`pages/shared/sidebar.js:2046`）與行動版 `#mobileLangToggle`（`:2050`），見 [App Shell](app-shell.md)。
+登入後的版本是另一套：側欄的 `#langToggle`（`pages/shared/sidebar.js:2047`）與行動版 `#mobileLangToggle`（`:2051`），見 [App Shell](app-shell.md)。
 
 ## 適用狀態
 
@@ -31,14 +31,14 @@
 
 ## 鍵盤與焦點
 
-原生 `<button>`，帶 `aria-label="切換語言"`（`login.html:363`）。沒有焦點樣式。
+原生 `<button>`，帶 `aria-label="切換語言"`（`login.html:366`）。沒有焦點樣式。
 
 切換後**不只換這顆鈕**：整頁文案由各頁自己的字串表換掉（例：`login.html:515`／`:538` 的 `dividerText`），所以它實際上是一個頁面層級的控制項。
 
 ## 樣式出處
 
 五頁各自的 `<style>`，內容相同。代表定義：`design/prototype/pages/account/login.html:66`。
-正典的對應品 `.btn-language` 在 `design/prototype/components-showcase.html:270`——**兩者沒有共用任何程式碼**。
+正典的對應品 `.btn-language` 在 `design/prototype/components-showcase.html:271`——**兩者沒有共用任何程式碼**。
 
 ## 可重現樣本
 
