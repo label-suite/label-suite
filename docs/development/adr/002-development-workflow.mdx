@@ -1,6 +1,6 @@
 ---
 title: ADR-002 開發流程
-description: 一個 change 怎麼從規劃走到驗收、維護者在哪裡介入、誰負責哪一步、狀態記在哪裡：完整九份產物、只留兩個人工停點、授權放在專案自有的指令、角色分工、組織層專案板。
+description: 一個 change 怎麼從規劃走到驗收、維護者在哪裡介入、誰負責哪一步、狀態記在哪裡：完整九份產物、只留一個人工停點、授權放在專案自有的指令、角色分工、組織層專案板。
 tags: [adr, workflow, sdd, openspec, project-board]
 ---
 
@@ -29,7 +29,7 @@ tags: [adr, workflow, sdd, openspec, project-board]
 | :--- | :--- | :--- | :--- |
 | A 九份產物，一次導入 | 依賴由 CLI 強制；`system-design` 與 `ui-design` 可平行；骨架 change 不會空轉 | 十二個 agent、範本與 `openspec/config.yaml` 都要一次建好並改寫成 FastAPI；每個 change 比四份流程多五份產物要產出與審閱 | 採用 |
 | B 分三階段導入：現在先做 6 份；可執行的 `backend/` 骨架與 API 出現後 8 份；前端框架定案後 9 份 | 只有 `system-analysis` 與 `clarification` 不依賴 NestJS，`system-design`、`api-contract`、`ui-design` 都綁它，分階段可以等技術棧確定再做 | 新舊兩套流程並存，agent 與人要同時遵守兩套規則 | 不採用：為了避免兩套流程並存 |
-| C 維持 `spec-driven` 四份 | 已經在用，不必改 schema | 沒有 `system-analysis`、`system-design`、`ui-design`、`api-contract` 與 `clarification`，也就沒有停點一的關卡 | 不採用，但保留給文件、工具類的小 change |
+| C 維持 `spec-driven` 四份 | 已經在用，不必改 schema | 沒有 `system-analysis`、`system-design`、`ui-design`、`api-contract` 與 `clarification`，也就沒有那個停點的關卡 | 不採用，但保留給文件、工具類的小 change |
 
 ### 決定
 
@@ -54,7 +54,7 @@ tags: [adr, workflow, sdd, openspec, project-board]
 - `backend/` 骨架 change 走完之後，九份產物裡有幾份反覆只寫「本次無……」或被略過
 - 文件、工具類以外的 change 也開始帶 `--schema spec-driven`
 
-## D2 人工停點只留兩個
+## D2 人工停點只留一個
 
 ### 背景
 
@@ -64,39 +64,43 @@ tags: [adr, workflow, sdd, openspec, project-board]
 | :--- | :--- |
 | 原流程在 propose、apply、archive 三個階段結束時各停一次等使用者確認 | 停點要逐個決定留或不留 |
 | 規劃階段的疑問有兩種：需要維護者決定的（Q）與明確的缺陷（P） | 只有 Q 值得叫維護者，P 可以直接回修 |
-| `sa` 原本遇到需求依據矛盾或缺漏就停下來回報 | 照做會多出第三個停點 |
-| 原流程在歸檔前才驗收 | 維護者要先親自驗完才下 `/opsx:archive`，驗收報告必須更早產好 |
+| `sa` 原本遇到需求依據矛盾或缺漏就停下來回報 | 照做會多出一個停點 |
+| 原流程在歸檔前才驗收 | 驗收報告必須在 `/opsx:archive` 之前就產好 |
+| 驗收要判的是「每個 Scenario 有沒有被證據覆蓋」 | 那是可機械重現的判定，交給 `acceptance-verifier` 就夠，不必再由人覆驗一次 |
 
 ### 考慮過的選項
 
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
 | A 三個階段各停一次：propose、apply、archive 結束時 | 每個階段結束都有人確認 | propose 之後那一停要另外想辦法解除（見 [D3](#d3-授權放在專案自有的指令)） | 不採用 |
-| B 兩個停點：clarification 之後逐題問 Q，apply 完成後由維護者親自驗收 | 維護者只在要決定、要驗證的時候被叫 | 上游真的矛盾時，`sd`、`ui-ux`、`proposal` 會先基於帶問號的分析做一輪，停點一決議後再回修 | 採用 |
-| C `sa` 遇到待決問題就停下回報 | 不會基於有疑問的分析往下做 | 多出第三個停點 | 不採用：改成記成待決問題，由 clarify 在停點一一次問完 |
-| D 驗收留在歸檔前 | 不必改驗收的位置 | 停點二要先驗完才下 `/opsx:archive`，驗收報告來不及 | 不採用：驗收移到 apply 的最後，`archive` 只留同步主規格與搬檔 |
+| B 兩個停點：clarification 之後逐題問 Q，apply 完成後由維護者親自驗收 | 每個 change 合併前都有人看過 | 維護者成為每一個 change 的瓶頸；而驗收判的是「Scenario 有沒有被證據覆蓋」，那一題人覆驗不會比 `acceptance-verifier` 更準 | 不採用 |
+| C `sa` 遇到待決問題就停下回報 | 不會基於有疑問的分析往下做 | 多出一個停點 | 不採用：改成記成待決問題，由 clarify 在那個那個停點次問完 |
+| D 驗收留在歸檔前 | 不必改驗收的位置 | 驗收報告來不及在 `/opsx:archive` 之前產好 | 不採用：驗收移到 apply 的最後，`archive` 只留同步主規格與搬檔 |
+| E 一個停點：只在 clarification 之後逐題問 Q，驗收通過就自動歸檔並合併 | 維護者只在真的要做決定時被叫；change 不會卡在等人 | 錯誤會直接進 main，靠的是 `acceptance-verifier`、`code-reviewer` 與 CI 三道都沒看漏 | 採用 |
 
 ### 決定
 
-只有兩個例行的人工停點：停點一在 `clarification.md` 之後，只問需要維護者決定的 Q，P 直接派原角色回修；停點二在 apply 完成、`acceptance-verifier` 寫好 `acceptance.md` 之後，由維護者親自驗收才執行 `/opsx:archive`。故障類的中斷不算停點，照停。規則本體見 `AGENTS.md` 的 SDD Workflow「The two checkpoints」，流程見 [openspec-fullstack-sdd.mdx 的 §決議](../openspec-fullstack-sdd.mdx#決議)與[§故障仍會停](../openspec-fullstack-sdd.mdx#故障仍會停)。
+只有一個例行的人工停點：在 `clarification.md` 之後，只問需要維護者決定的 Q，P 直接派原角色回修。驗收由 `acceptance-verifier` 判定，通過之後由 `ops` 在合併之前執行 `/opsx:archive`，歸檔改動與程式進同一張 PR，CI 每一個 job 都 completed 且 success、`code-reviewer` 沒有未解決的阻斷意見、PR 可合併 就合併。故障類的中斷不算停點，照停。規則本體見 `AGENTS.md` 的 SDD Workflow「The one checkpoint」，流程見 [openspec-fullstack-sdd.mdx 的 §決議](../openspec-fullstack-sdd.mdx#決議)與[§故障仍會停](../openspec-fullstack-sdd.mdx#故障仍會停)。
 
 ### 後果
 
 **變容易**
 
-- 維護者在一個 change 裡只被叫兩次，其餘的回修、審閱與提交自動進行
-- 停點二拿到的 `acceptance.md` 附有人工驗收步驟：啟動指令、用哪個角色登入、點哪幾頁、預期看到什麼
+- 維護者在一個 change 裡只被叫一次，其餘的回修、審閱、驗收、歸檔與合併自動進行
+- change 不會停在「等人有空驗」的狀態
 
 **變困難**
 
-- 上游矛盾要等到停點一才浮現，原撰寫角色要回修一輪
-- `acceptance-verifier` 的輸出要多一段寫給人看的操作步驟，不能只有機器證據
-- 「只有兩個停點」不等於全自動：task 描述有歧義、實作中發現規格有問題、工作超出 `tasks.md` 的範圍、指令出錯，仍然會停下來
+- 上游矛盾要等到那個停點才浮現，原撰寫角色要回修一輪
+- 驗收漏掉的東西會直接進 `main`，攔截全靠 `acceptance-verifier`、`code-reviewer` 與 CI 三道
+- `acceptance.md` 的人工驗收步驟仍然必寫，而且沒有人會在合併前替你補上；它改為事後抽查與出事追查的紀錄
+- 「只有一個停點」不等於全自動：task 描述有歧義、實作中發現規格有問題、工作超出 `tasks.md` 的範圍、指令出錯，仍然會停下來
 
 ### 什麼情況要重新討論
 
-- 停點二的人工驗收反覆沒有找到 `acceptance-verifier` 沒找到的問題
-- 同一類上游矛盾在停點一之後反覆讓 `sd`、`ui-ux` 或 `proposal` 回修超過一輪
+- 出現 `acceptance-verifier` 判為通過、而後續才被發現的缺陷
+- 同一類上游矛盾在那個停點之後反覆讓 `sd`、`ui-ux` 或 `proposal` 回修超過一輪
+- `backend/` 與 `frontend/` 建立之後：那時驗收要跑真的服務與瀏覽器，機械判定涵蓋得到多少要重新評估
 
 ## D3 授權放在專案自有的指令
 
@@ -235,24 +239,20 @@ tags: [adr, workflow, sdd, openspec, project-board]
 | 決定 | 來源 |
 | :--- | :--- |
 | D1 | [openspec-fullstack-sdd.mdx 的 §決議](../openspec-fullstack-sdd.mdx#決議)、§導入評估「完整流程現在就能跑」與「和 NestJS 綁在一起的部分」；選項 B 是 [#47](https://github.com/label-suite/label-suite/issues/47) 評估報告「要不要分三階段，還是整套等 `backend/`、`frontend/` 都存在之後一次做」；預設 schema 的理由是同一份報告的建議，決議在 [#51](https://github.com/label-suite/label-suite/issues/51)；背景最後一列來自個人 repo ADR-033 的 Non-goals（「No standing per-change SA / SD / UI-UX analysis documents」） |
+| D2（2026-11-19 取消停點二） | [#464](https://github.com/label-suite/label-suite/issues/464) 的維護者裁定三項：歸檔由 `ops` 在合併之前執行、人工驗收步驟保留作紀錄、全局改為一個停點 |
 | D2 | [openspec-fullstack-sdd.mdx 的 §決議](../openspec-fullstack-sdd.mdx#決議)、§三處要特別處理的地方第 2、3 項與 §scaffold 的六道關卡；選項 C 的代價出自 [#47](https://github.com/label-suite/label-suite/issues/47) 的決議留言 |
 | D3 | [openspec-fullstack-sdd.mdx 的 §三處要特別處理的地方](../openspec-fullstack-sdd.mdx#三處要特別處理的地方)第 1 項、`.claude/commands/sdd.md` 的開頭說明、`AGENTS.md` 的 What `/sdd` authorizes |
 | D4 | 個人 repo ADR-017（Context 的三種失敗、Option A、B、C 與 Consequences）；它在本 repo 已被取代，見 [architecture.mdx 的 §ADR 效力總表](../architecture.mdx#adr-效力總表)；本 repo 的角色表在 `AGENTS.md` 的 SDD Workflow；「審查者不是寫的人」見 `AGENTS.md` 的 Dispatch 一條 |
 | D5 | 個人 repo ADR-027（Context 的散落來源、Alternatives Considered、Consequences）；它在本 repo 已被取代，見 [architecture.mdx 的 §ADR 效力總表](../architecture.mdx#adr-效力總表)；不用標籤追蹤狀態與 Ready、blocked-by 的規則在 `AGENTS.md` 的 Project Board and Dispatch；狀態不放本機檔案來自 `.claude/skills/issue-dispatch/SKILL.md`；token 缺 `project` scope 見 [#47](https://github.com/label-suite/label-suite/issues/47) 的留言 |
 | — | 個人 repo ADR-033 的其餘決定（`openspec/specs/` 當衍生檢視、寫回規格的硬關卡、Spec Kit 的分工）不採用，本 repo 的 `openspec/specs/` 是可測契約，方向相反，見 [architecture.mdx 的 §ADR 效力總表](../architecture.mdx#adr-效力總表) |
 
-## 待決
-
-| # | 問題 | 卡住什麼 | 誰決定 |
-| :--- | :--- | :--- | :--- |
-| 1 | 歸檔由誰、什麼時候執行；人工驗收步驟是否保留。維護者已裁定產品程式也自動合併、由 `acceptance-verifier` 取代人工驗收，[D2](#d2-人工停點只留兩個)在這兩題定案前維持現行的兩個停點 | 見 [#464](https://github.com/label-suite/label-suite/issues/464) | 維護者 |
-
 ## 決策紀錄
+| 2026-11-19 | 人工停點只留一個，驗收由 `acceptance-verifier` 判定，`ops` 在合併之前歸檔（[D2](#d2-人工停點只留一個)） | 同日稍早的「人工停點只留兩個」：apply 完成後由維護者親自驗收才歸檔 | [#464](https://github.com/label-suite/label-suite/issues/464) |
 
 | 日期 | 決策 | 取代了什麼 | 來源 |
 | :--- | :--- | :--- | :--- |
 | 2026-11-19 | 採用九份產物的 `label-suite-sdd` schema，不分階段導入；文件、工具類的小 change 保留 `spec-driven` 逃生門（[D1](#d1-完整九份產物流程一次導入)） | 本專案原用的 `spec-driven`；個人 repo ADR-033 不做每個 change 的 SA、SD、UI-UX 文件 | [#448](https://github.com/label-suite/label-suite/issues/448) |
-| 2026-11-19 | 人工停點只留兩個，驗收移到 apply 的最後（[D2](#d2-人工停點只留兩個)） | 原流程在 propose、apply、archive 三個階段各停一次、歸檔前才驗收 | [#448](https://github.com/label-suite/label-suite/issues/448) |
+| 2026-11-19 | 人工停點只留兩個，驗收移到 apply 的最後（[D2](#d2-人工停點只留一個)） | 原流程在 propose、apply、archive 三個階段各停一次、歸檔前才驗收 | [#448](https://github.com/label-suite/label-suite/issues/448) |
 | 2026-11-19 | 授權放在專案自有的 `/sdd` 指令，不放 `config.yaml` 或 skill（[D3](#d3-授權放在專案自有的指令)） | — | [#448](https://github.com/label-suite/label-suite/issues/448) |
 | 2026-11-19 | 規劃、實作、審查與驗收由不同角色負責，主 agent 只派工（[D4](#d4-規劃實作審查與驗收由不同角色負責)） | 個人 repo ADR-017 的 Planner、Generator、Evaluator 三層 | [#448](https://github.com/label-suite/label-suite/issues/448) |
 | 2026-11-19 | issue 狀態只記在組織層專案板的 `Status` 欄（[D5](#d5-狀態只記在組織層專案板)） | 個人 repo ADR-027 的 repo 層專案與十格 Status，以及 `specs/STATUS.md` | [#448](https://github.com/label-suite/label-suite/issues/448) |

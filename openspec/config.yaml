@@ -16,7 +16,7 @@ context: |
   需求依據順序：維護者指定的需求文件與 docs/specs/ 的規格書 ＞ docs/specs/00-prd.mdx
   ＞ docs/ 其他需求文件 ＞ openspec/。openspec 只引用規格的編號與章節，不另抄一份；
   需求要改先用 spec-writing 改 docs/specs/。引用的規格標為「草稿」或「待釐清」仍有未決項時，
-  那一題記進 system-analysis 的待決問題，由 clarification 在停點一一次問完。
+  那一題記進 system-analysis 的待決問題，由 clarification 在那個停點一次問完。
 
   規劃階段的派工順序（整個 propose 由主 agent 依 schema 順序派工，除 clarification.md
   以外主 agent 不自己寫規劃產出）：
@@ -24,11 +24,11 @@ context: |
     → planner 寫 proposal → 主 agent 以 clarify skill 的關卡模式寫 clarification
     → planner 寫 specs 與 design → planner 寫 tasks → design-reviewer 審閱、planner 回修。
 
-  **只有兩個人工停點**：
-  - 停點一：clarification 的 Q（需要維護者決定的項目）逐題問答。P（明確問題）直接派原
-    撰寫角色回修，不問維護者。
-  - 停點二：apply 全部完成、acceptance-verifier 產出驗收報告之後，由維護者親自驗收。
-  其餘環節（明確問題的回修、規劃審閱、程式審查、階段之間的提交）全部自動，不詢問。
+  **只有一個人工停點**：clarification 的 Q（需要維護者決定的項目）逐題問答。P（明確
+  問題）直接派原撰寫角色回修，不問維護者。
+  其餘環節（明確問題的回修、規劃審閱、程式審查、驗收、歸檔、階段之間的提交、合併）
+  全部自動，不詢問。驗收不再停下來等維護者（維護者 2026-11-19 裁定）：acceptance.md
+  的人工驗收步驟照樣要寫，但它是事後抽查與出事時的紀錄，不是等人簽收的交付物。
   **故障類中斷不算關卡，照停**：task 描述有歧義、實作中發現規格有問題、工作超出 tasks.md
   的範圍、指令出錯——這些代表規劃錯了，不得硬推。
 
@@ -48,7 +48,7 @@ rules:
   system-analysis:
     - 只寫業務，不出現框架、資料表、端點名稱
     - 業務流程以規格書的「業務流程」章節為準，只引用規格編號與流程名稱，不重畫
-    - 每個待決問題都要寫出「影響」；**記下來並繼續，不要停下來問維護者**——所有需要維護者決定的事由 clarification 在停點一一次問完
+    - 每個待決問題都要寫出「影響」；**記下來並繼續，不要停下來問維護者**——所有需要維護者決定的事由 clarification 在那個停點一次問完
   system-design:
     - 分層是 Router → Service → Repository／Model；Router 不直接碰 Repository，資料層不處理 HTTP
     - Sequence Diagram 的標題要與 specs 的 Scenario 名稱相同
@@ -106,10 +106,11 @@ operations:
       - 後端 API 有變動時，同一個群組內重新產生 openapi.json 與前端型別，並確認與 api-contract 一致
       - 全部 task 完成且工作區乾淨後，交由 code-reviewer 審查；修正由實作角色另開 commit
       - 審查通過後交由 acceptance-verifier 對照每個 Scenario 驗收，報告寫在 change 目錄的 acceptance.md；未通過不進入下一步
-      - acceptance.md 要附**人工驗收步驟**：啟動指令、用哪個角色登入、點哪幾頁、每一步預期看到什麼
-      - '**停點二**：步驟結束時自動提交，然後停下來等維護者親自驗收；維護者確認無誤才執行 /opsx:archive'
+      - acceptance.md 要附**人工驗收步驟**：啟動指令、用哪個角色登入、點哪幾頁、每一步預期看到什麼。它留作紀錄，不是停下來等維護者簽收的交付物
+      - 驗收通過後步驟結束時自動提交，**不停**；接著由 ops 執行 /opsx:archive，歸檔改動進同一張 PR，再走合併條件（CI 每個 job 都 completed 且 success、審查無阻斷意見、PR 可合併）
   archive:
     guidance:
       - 歸檔前確認工作區乾淨；驗收已經在 apply 的最後做過，這裡不重做驗收判定
       - 同步主規格與搬移到 archive 由 ops 執行；新 capability 的 Purpose 不留 TBD
-      - 步驟結束時自動提交；提交後停止，不自動開 PR
+      - **在合併之前執行**：歸檔改動與程式進同一張 PR，main 上不會出現已合併但未歸檔的 change
+      - 步驟結束時自動提交；PR 在 apply 期間就已經開好，這裡不另開

@@ -31,7 +31,8 @@ model: sonnet
 
 ## 同步主規格
 
-- [ ] 歸檔前確認 `acceptance.md` 結論為通過，**而且維護者已經在停點二親自驗過**；沒有報告、結論不通過、或維護者還沒確認，就停下回報
+- [ ] 歸檔前確認 `acceptance.md` 結論為通過；沒有報告或結論不通過就停下回報。**驗收不再等維護者覆驗**，`acceptance-verifier` 的結論就是結論
+- [ ] **歸檔在合併之前執行**：歸檔改動與程式進同一張 PR，`main` 上不會出現已合併但未歸檔的 change
 - [ ] ADDED／MODIFIED／REMOVED／RENAMED 正確合併到 `openspec/specs/<capability>/spec.md`
 - [ ] MODIFIED 以整段 Requirement 取代，沒有殘留舊版或重複的 Requirement
 - [ ] 新 capability 的 Purpose 依 proposal 的 Why 寫成一到兩句，**不留 TBD**

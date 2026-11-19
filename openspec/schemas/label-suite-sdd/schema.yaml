@@ -14,7 +14,7 @@ artifacts:
       規格書沒有業務流程時，才用 Mermaid flowchart 畫完整流程（happy path + 主要例外）並列入待決問題。
       只寫業務，不寫技術：不出現框架、資料表、端點名稱。
       待決問題一律**記進「待決問題」並繼續**，不要停下來問使用者、也不要自行假設：
-      所有需要維護者決定的事由 clarification 在停點一一次問完（本專案改掉 scaffold 的關卡 1）。
+      所有需要維護者決定的事由 clarification 在那個那個停點次問完（本專案改掉 scaffold 的關卡 1）。
     requires: []
 
   - id: system-design
@@ -29,7 +29,7 @@ artifacts:
       資料模型有異動時，先改資料表字典、再同步 ER、跑 `pnpm check:er`，異動節寫出兩者路徑與摘要。
       schema 只由 Alembic 管理；SQLite（Lite）與 PostgreSQL 都要能升級，寫出兩者的差異處。
       分層與回應包裝都已定案（維護者 2026-11-10 裁定）：**模組內分層** `app/modules/<module>/`、成功回應**包一層 envelope**。
-      照這兩項寫，不要再列成待決問題；其他真正還沒定的細節才寫成提案，由 clarification 在停點一拍板。
+      照這兩項寫，不要再列成待決問題；其他真正還沒定的細節才寫成提案，由 clarification 在那個停點拍板。
     requires:
       - system-analysis
 

@@ -129,7 +129,7 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 | | |
 | :--- | :--- |
 | **適用路徑** | 全部 |
-| **例外** | **範圍還開著的時候**（規劃階段、`/sdd` 的停點一）可以主張某項不做，但要寫進該 change 的 `proposal.md` 或 issue，不是寫在程式裡 |
+| **例外** | **範圍還開著的時候**（規劃階段、`/sdd` 的那個停點）可以主張某項不做，但要寫進該 change 的 `proposal.md` 或 issue，不是寫在程式裡 |
 | **檢查方式** | **人工**。打勾的工作項與實際交付物的對照目前沒有自動檢查 |
 
 註解裡的待辦是第二個沒有人讀的 backlog。
@@ -166,7 +166,7 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 
 ## 與 SDD 工作流程的分界
 
-本文件提供規則來源與說明、跨領域規範、衝突處理與前置條件；不重複開發那十二個 agent 角色（`.claude/agents/`）、SDD schema 與 `openspec/config.yaml`、`/sdd` 指令與 clarify skill，也不新增人工關卡：`/sdd` 的兩個停點（clarify 與驗收）由 `AGENTS.md` 的 SDD Workflow 定義，本文件不加第三個。
+本文件提供規則來源與說明、跨領域規範、衝突處理與前置條件；不重複開發那十二個 agent 角色（`.claude/agents/`）、SDD schema 與 `openspec/config.yaml`、`/sdd` 指令與 clarify skill，也不新增人工關卡：`/sdd` 的那個停點（clarify）由 `AGENTS.md` 的 SDD Workflow 定義，本文件不另加。
 
 ---
 
@@ -257,7 +257,7 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 | `testing.md` 測試名詞 unit／integration／e2e、Decision Table、TDD | **待採用** | 見 [testing-agent-rules.mdx](testing-agent-rules.mdx) 的 T1、T2、T7 |
 | 其餘 12 份（`database`、`api-contract`、`auth-oidc`、`dto-boolean`、`integration-test-http`、`jest-mock-queue`、`frontend`、`api-client`、`design-tokens`、`notecraft-*`、`index`） | **不在本文件** | 分領域，見上列五份分領域文件；其中 `notecraft-*` 兩份本 repo 已有自己的版本（`docs/development/notecraft-writing.md`、`notecraft-visualize.md`） |
 | `index.md` 的「規則帶 `paths:` 自動載入、index 永遠載入」機制 | **不採用** | 本 repo **不建立** `.claude/rules/`（維護者的決議）。等價的目錄功能由 `AGENTS.md` 的 Agent Rules Index 承擔 |
-| SDD 流程骨架（九份產物、兩個停點、十二個角色） | **沿用** | 屬 `AGENTS.md` 的 SDD Workflow 範圍，已落地，本文件不重述 |
+| SDD 流程骨架（九份產物、那個人工停點、十二個角色） | **沿用** | 屬 `AGENTS.md` 的 SDD Workflow 範圍，已落地，本文件不重述 |
 | `--schema spec-driven` 的預設 | **改寫** | 改成本 repo 自己的 `label-suite-sdd` |
 
 ### duty-mate（`trendlink/duty-mate`，`develop` 分支）

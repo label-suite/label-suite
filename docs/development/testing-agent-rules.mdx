@@ -1,6 +1,6 @@
 ---
 title: '測試與交付證據規範'
-description: '三層測試的範圍與生命週期、TDD、行為測試與自證測試的界線、integration 的真實邊界、隔離與清理、外部替身、決策表、E2E 選擇器、開發前要落實的自動 gate、覆蓋率、evidence、兩個停點。'
+description: '三層測試的範圍與生命週期、TDD、行為測試與自證測試的界線、integration 的真實邊界、隔離與清理、外部替身、決策表、E2E 選擇器、開發前要落實的自動 gate、覆蓋率、evidence、那個人工停點。'
 category: '開發說明'
 tags: [開發說明, Agent, 規範, 測試]
 createdAt: '2026-11-10'
@@ -216,15 +216,15 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 - **檢查方式**：**待建置**。可用 lint 擋 `.only`／`.skip` 的提交；evidence 的欄位齊不齊由 `code-reviewer` 與 `acceptance-verifier` 檢查
 :::
 
-### T12 接到既有的兩個停點
+### T12 接到既有的那個人工停點
 
-交付只有 `AGENTS.md` 的兩個停點，不新增第三個關卡；停點二的技術驗證與人工驗收一起提供。
+交付只有 `AGENTS.md` 的那一個人工停點，不新增第二個關卡；驗收的技術驗證與人工驗收步驟一起提供。
 
 | | |
 | :--- | :--- |
 | **適用路徑** | `openspec/changes/*/acceptance.md` 與交付回報 |
-| **禁止** | 新增第三個需要維護者確認的關卡；把技術驗證與人工驗收拆成兩次交付；在 PR 合併前關閉 Issue；把「測試全綠」當成停點二的通過 |
-| **正例** | 依 `AGENTS.md` §SDD Workflow 的兩個停點：**停點一**在 `clarification.md` 之後（只問要維護者決定的 Q）、**停點二**在 apply 完成之後——`acceptance-verifier` 產出 `acceptance.md`，**技術驗證的 evidence 與人工驗收步驟一起提供**（啟動命令、網址、用哪個角色登入、開哪些畫面、預期看到什麼），維護者親自驗完才 `/opsx:archive` |
+| **禁止** | 新增第二個需要維護者確認的關卡；把技術驗證與人工驗收拆成兩次交付；在 PR 合併前關閉 Issue；把「測試全綠」當成驗收通過 |
+| **正例** | 依 `AGENTS.md` §SDD Workflow 的那個人工停點：在 `clarification.md` 之後只問要維護者決定的 Q。apply 完成之後 `acceptance-verifier` 產出 `acceptance.md`，**技術驗證的 evidence 與人工驗收步驟一起提供**（啟動命令、網址、用哪個角色登入、開哪些畫面、預期看到什麼），判為通過就由 `ops` 在合併之前 `/opsx:archive`，不等人覆驗 |
 | **例外** | **故障不是關卡但照樣停**：task 描述有歧義、實作中發現規格有問題、超出 `tasks.md` 範圍、命令失敗——這幾種要停下回報，與停點無關 |
 
 :::note{title="T12 的反例與檢查方式" collapsible}
@@ -262,7 +262,7 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 | T9 | 七項為起草工作項所列，本條照收；分工為本文件定義測試與 gate 的政策，如何觸發與傳遞結果歸 CI 與 hook 的建置工作 |
 | T10 | **90% 關鍵路徑分支**來自原始 repo `testing-backend.md` 與 `testing-frontend.md`（「Critical paths (auth, permission checks, score calculation) require ≥ 90% branch coverage」）**沿用**；來源寫的是三項（`auth`、`permission checks`、`score calculation`），本文件另外納入**答案隔離**（`AGENTS.md` 硬性規則 6 與 S5，違反就是測試集外洩）與 **IAA 計算**（個人 repo ADR-007 的 scoring 佇列算的就是它，屬 `score calculation` 的一部分），共五項。**整體 80%** 不採用，見 [ADR-007 的 D2](adr/007-testing-strategy.mdx#d2-覆蓋率只管不得下降與關鍵路徑) |
 | T11 | 起草工作項列的五個欄位與三條禁止，本條照收；`trendlink/trendlink-portal` `testing-architecture.md` 的**禁止 `.only`／`.skip`／`xit`（ESLint 與 pre-commit 都擋）沿用**，以及它的 **pre-commit 在「相關測試含 L2 而資料庫連不上」時擋下並提示、不默默略過**——那正是「skipped／blocked 要記錄」的具體做法；scaffold `testing.md` 的「不 commit `.only`、`.skip`」**沿用**；`integration-test-http.md` 的「輸出先落檔再讀，否則退出碼失真」與「間歇性問題要能重現才算結案」**沿用**（也落在 T5） |
-| T12 | `AGENTS.md` §SDD Workflow 的兩個停點與「故障仍會停」**沿用**；SDD 流程的驗收條件（「apply 結束時產出 `acceptance.md` 與人工驗收步驟，停在停點二」）；`AGENTS.md` §Development Workflow 第 4 步（「PR 合併後才關閉 Issue」）。「不額外新增維護者確認關卡」是起草工作項的明文 |
+| T12 | `AGENTS.md` §SDD Workflow 的那個人工停點與「故障仍會停」**沿用**；SDD 流程的驗收條件（「apply 結束時產出 `acceptance.md` 與人工驗收步驟」）；`AGENTS.md` §Development Workflow 第 4 步（「PR 合併後才關閉 Issue」）。「不額外新增維護者確認關卡」是起草工作項的明文 |
 
 ### 原始 repo（`singyichen/label-suite`）
 

@@ -15,7 +15,7 @@ model: opus
 
 ## 必讀
 
-1. `openspec/config.yaml` 的 `context`（兩層規格的分工、需求依據順序、派工順序與兩個停點）與 `rules.system-design`、`rules.api-contract`
+1. `openspec/config.yaml` 的 `context`（兩層規格的分工、需求依據順序、派工順序與那個人工停點）與 `rules.system-design`、`rules.api-contract`
 2. 本 change 的 `system-analysis.md`（脈絡基準，必讀）
 3. `docs/development/architecture.mdx`：§技術選型、§後端分層、§認證與授權、§測試集答案不外露、§資料庫雙層、§API 契約、§ADR 效力總表、§待決
 4. `AGENTS.md`（本專案唯一的規則來源，**沒有** `.claude/rules/`）：Hard Rules 5（任務設定驅動）、6（測試集答案不外露）、7（CORS 不得用 `allow_origins=["*"]`）、8（祕密只從環境變數來）

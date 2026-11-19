@@ -7,7 +7,7 @@ description: 釐清 OpenSpec change 規劃產物（system-analysis、system-desi
 
 此 skill 是 SDD 流程的**品質閘**，職責是**找出規格本身的問題**，不是擴張規格。
 
-它同時是本專案**兩個人工停點的第一個**：需要維護者決定的項目（Q）在這裡逐題問完，之後整條 propose 到 apply 不再停（故障除外）。見 `openspec/config.yaml` 的 `context`。
+它同時是本專案**唯一的人工停點**：需要維護者決定的項目（Q）在這裡逐題問完，之後整條 propose 到 apply、驗收、歸檔與合併都不再停（故障除外）。見 `openspec/config.yaml` 的 `context`。
 
 ## 兩種模式
 
@@ -65,7 +65,7 @@ description: 釐清 OpenSpec change 規劃產物（system-analysis、system-desi
 | `design.md` | 是 | |
 | `tasks.md` | 是 | |
 | `docs/diagrams/architecture/data-table-dictionary.mdx` | system-design 有資料模型異動時必要 | 候選表字典：每張表的 FK 欄與「被誰參照」，是判斷 schema 異動波及哪些表的依據（4.6）。ER（`database-schema.er.json`）由它產生，兩份不一致時以字典為準，並跑 `pnpm check:er` 確認 |
-| `clarification.md` | **完整模式必要** | 上一次在停點一拍板的決議。**完整模式一定要讀**——不讀就會把已經決議的 Q 再問一次（正是 4.1 自己禁止的事）。關卡模式下它就是本次的產出，不算輸入 |
+| `clarification.md` | **完整模式必要** | 上一次在那個停點拍板的決議。**完整模式一定要讀**——不讀就會把已經決議的 Q 再問一次（正是 4.1 自己禁止的事）。關卡模式下它就是本次的產出，不算輸入 |
 
 任一必要檔缺失 → 停止並回報缺哪一份（可用 `pnpm exec openspec status --change <name>` 確認 artifact 狀態）。
 
@@ -75,7 +75,7 @@ description: 釐清 OpenSpec change 規劃產物（system-analysis、system-desi
 
 ### 步驟 3：載入對照基準
 
-1. `openspec/config.yaml` 的 `context`：兩層規格的分工、需求依據順序、派工順序與兩個停點、語言規範
+1. `openspec/config.yaml` 的 `context`：兩層規格的分工、需求依據順序、派工順序與那個人工停點、語言規範
 2. **`AGENTS.md`**——本專案唯一的規則來源，**沒有** `.claude/rules/`。Hard Rules 全部適用，第 5（任務設定驅動）與第 6（測試集答案不外露）是下面第 4.9、4.10 個面向
 3. `context` 指到的需求文件中，本次 change 相關的章節：`docs/specs/00-prd.mdx`（PRD，**權限上限**）與 `docs/specs/NN-<module>/NN-<page>.mdx` 的規格書
 4. `docs/development/architecture.mdx` 的 §待決——**那上面還沒答的題目不要在這裡自己答**，但要確認規劃產物把它們留成待決而不是偷偷定掉
@@ -120,7 +120,7 @@ description: 釐清 OpenSpec change 規劃產物（system-analysis、system-desi
 - [ ] 是否與既有架構衝突？**`backend/` 與 `frontend/` 目前都還不存在**，所以「與既有慣例衝突」在骨架 change 之前多半不適用，改為檢查「有沒有假設一個還不存在的結構」
 - [ ] **待決與已裁定都要對過**：`architecture.mdx` §待決 只列還沒定的題目（目前四列：個人 repo 的 ADR 修訂、ADR-016 的 Storybook、`notecraftapp` 相依警示、規格補 Resend 降級路徑）；已裁定的集中在同檔 §決策紀錄。所以這一關要查兩個反方向的錯：
       （a）**還沒定的被偷偷定掉**——這次的 change 碰到 §待決 的任一列時，規劃產物要寫成提案或待決，不是寫成結論；
-      （b）**已裁定的被當成還沒定**——§決策紀錄 的各列（後端模組內分層、成功回應包 envelope、`/api/v1` 前綴、Lite 層無 Resend key 的降級、onboarding 的界線、只做 `ai_runs`、Bruno 降級成可選工具、前端 React 19 加 `pages/` 與 `features/` 加 shadcn/ui、Orval、token 對照層、cookie-only 身分與 CSRF）若又被列成待決問題，就是把拍過的板重新搬上停點一，照樣要指出來。
+      （b）**已裁定的被當成還沒定**——§決策紀錄 的各列（後端模組內分層、成功回應包 envelope、`/api/v1` 前綴、Lite 層無 Resend key 的降級、onboarding 的界線、只做 `ai_runs`、Bruno 降級成可選工具、前端 React 19 加 `pages/` 與 `features/` 加 shadcn/ui、Orval、token 對照層、cookie-only 身分與 CSRF）若又被列成待決問題，就是把拍過的板重新搬上那個停點，照樣要指出來。
       原本列在表外的「前端型別與 client 生成工具」也**已裁定：Orval**，輸出 `frontend/src/api/generated/`（見 `architecture.mdx` §前端），不再是待決
 - [ ] task 數量與粒度是否合理？
 
