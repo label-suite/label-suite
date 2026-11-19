@@ -1,9 +1,9 @@
 # 覆蓋核對
 
-交付包版本：commit `fdcea09ac12b0dcd0221dbe37b819cd444332431`，prototype tree `76fc01d0b1216b41e654200d9e5e1f0d5d4d999e`。
+交付包版本：commit `8702db294f5d40c94257ad190e85336628c17495`，prototype tree `9f1aebb902729652d8503714a553fb959b720650`。
 產生依據：[`design-handoff` skill](../../../.claude/skills/design-handoff/SKILL.md) 的步驟 4。工作源頭是 [Issue #248](https://github.com/label-suite/label-suite/issues/248)。
 
-**本次是第十一版**（第十次重跑）。差異見 §九。
+**本次是第十二版**（第十一次重跑）。差異見 §九。
 
 | 項目 | 數 |
 | :--- | ---: |
@@ -223,7 +223,45 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 ## 九、重跑紀錄
 
-### 第十次（本版）
+### 第十一次（本版）
+
+上一版釘在 `fdcea09`。之後 [Issue #439](https://github.com/label-suite/label-suite/issues/439) 重新對齊 `navigation.mdx` 的 17 個行號（只改數字），[Issue #442](https://github.com/label-suite/label-suite/issues/442) 把其餘寫死的主色與錯誤色 `rgba()` 改成 token 的 `color-mix()`，改了十四個 prototype 檔。`docs/specs/` 沒動。
+
+| 欄位 | 第十一版 | 本版 | |
+| :--- | :--- | :--- | :--- |
+| `commit` | `fdcea09ac12b` | `8702db294f5d` | 必然變 |
+| `prototypeTree` | `76fc01d0b121` | `9f1aebb90272` | **變了** |
+| `specsTree` | `cdf459578e4f` | `cdf459578e4f` | 沒變 |
+| `navigationBlob` | `90137539fd2f` | `fabea63469ca` | **變了**（#439，只改行號，沒有改參數） |
+
+變動的檔：
+- 帳號五頁（`login.html`、`register.html`、`forgot-password.html`、`reset-password.html`、`account/profile.html`）：輸入框的焦點環與錯誤環改 `color-mix`；`profile.html` 另有 Toggle Switch 的焦點環。
+- `admin/user-management.html`、`admin/role-settings.html`、`dashboard.components.css`、`task-list.html`、`task-new.html`、`shared/sidebar.css`：焦點環改 `color-mix`；`role-settings.html` 的系統權限格底色、`sidebar.css` 的頭像框線也一樣。
+- `task-config.css`：焦點環、schema 卡與關係徽章的框線改 `color-mix`；刪掉兩個關係徽章的深色覆寫（少兩行），色點的深色覆寫改 `--color-ink` 的 `color-mix`。
+- `task-detail.html`：焦點環、錯誤底色與框線改 `color-mix`。
+- `components-showcase.html`：`.page-size-select` 補文字色與兩種主題的下拉箭頭（多三行）。
+
+| 類 | 數 | 內容 |
+| :--- | ---: | :--- |
+| 新增 | 0 | |
+| 移除 | 0 | |
+| 改寫 | 0 | 沒有視圖的重現步驟改變；manifest 的 `how`／`why` 引用的行號都不在行數有變的兩個檔（`task-config.css`、`components-showcase.html`），不必換 |
+| `loads` 欄 | 0 | |
+| 參數 | 0 | 沒有改讀網址參數的程式 |
+| 受影響 | 149 | 154 個視圖中有 149 個的畫面載入了變動的檔（`sidebar.css` 128 個、`task-config.css` 41 個、`task-detail.html` 19 個，其餘各 1–8 個） |
+
+### 應重驗的批次（第十一次）
+
+| 批次 | 載入變動檔的視圖 | 新增 | 該批的參數驅動視圖 |
+| :--- | ---: | ---: | ---: |
+| `b1-shared-account` | 38／43 | 0 | 沒變 |
+| `b2-admin-dashboard-task` | 54／54 | 0 | 沒變 |
+| `b3-annotation-review` | 25／25 | 0 | 沒變 |
+| `b4-dataset-sweep` | 32／32 | 0 | 沒變 |
+
+這次只動到**顏色**，沒有改行為或版面。淺色主題刻意改變的只有 showcase 的 `.page-size-select`（補上箭頭與 `--color-ink` 文字色）；其餘淺色算出值與 `origin/main` 相同，深色下焦點環、框線與錯誤色改跟深色 token。四批不必重做結構；受影響的元件文件（Color Dot、Pagination）、各文件指向 `components-showcase.html` 與 `task-config.css` 的行號、`design-gaps.md` G-02、G-04、G-10 已在同一張單裡改好。
+
+### 第十次
 
 上一版釘在 `5566aec`。之後 [Issue #438](https://github.com/label-suite/label-suite/issues/438) 補齊深色主題的配色缺口，改了十二個 prototype 檔；同一張單依 prototype 的新行號重新對齊 `navigation.mdx` 與 `docs/specs/07-shared/01-sidebar.mdx` 的行號引用（只改數字），所以三個 sha 都變了。
 

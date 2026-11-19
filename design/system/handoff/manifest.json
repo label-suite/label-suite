@@ -2,16 +2,16 @@
   "packageVersion": 1,
   "generatedAt": "2026-11-19",
   "source": {
-    "commit": "fdcea09ac12b0dcd0221dbe37b819cd444332431",
-    "prototypeTree": "76fc01d0b1216b41e654200d9e5e1f0d5d4d999e",
+    "commit": "8702db294f5d40c94257ad190e85336628c17495",
+    "prototypeTree": "9f1aebb902729652d8503714a553fb959b720650",
     "specsTree": "cdf459578e4ff3abcac495e04f8c7292310f0caa",
-    "navigationBlob": "90137539fd2fd2ea541693ef95d45786a0570dc0",
+    "navigationBlob": "fabea63469ca3b4322b5208a1fe30fdabe62aeb4",
     "referenceDesignDocs": {
       "repo": "singyichen/label-suite",
       "commit": "faf8335"
     },
     "openWith": [
-      "git switch --detach fdcea09ac12b0dcd0221dbe37b819cd444332431",
+      "git switch --detach 8702db294f5d40c94257ad190e85336628c17495",
       "pnpm prototype"
     ]
   },
