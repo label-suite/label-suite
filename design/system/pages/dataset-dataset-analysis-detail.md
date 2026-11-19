@@ -10,7 +10,7 @@
 
 兩個分頁的型別內容由 `loadStatsPanel`（`:1437`）與 `loadQualityPanel`（`:2288`）依任務的第一個輸出類型，從 `STATS_PANEL_PATHS`／`QUALITY_PANEL_PATHS`（`:1116`–`:1135`）載入。
 
-**角色閘門**：`task_id` 缺值、不認得，或這個帳號在該任務是標記員（`TASK_ROLES_ALLOWED = ['project_leader','reviewer']`，`:1163`），一律導回 `dataset-analysis-list.html?invalid_task=1`（`:2478`–`:2471`），看到的是 `dataset/dataset-analysis-list#param-invalid-task`。
+**角色閘門**：`task_id` 缺值、不認得，或這個帳號在該任務是標記員（`TASK_ROLES_ALLOWED = ['project_leader','reviewer']`，`:1164`），一律導回 `dataset-analysis-list.html?invalid_task=1`（`:2484`–`:2489`），看到的是 `dataset/dataset-analysis-list#param-invalid-task`。
 
 ## 視圖與元件
 
@@ -31,7 +31,7 @@
 
 **交付包的重現方式與畫面不符**：交付包寫「在序列標註任務的統計總覽點 `#matchStrict`」，但 `#matchStrict`／`#matchPartial`／`#seqStrictCard`／`#seqPartialCard` 只出現在 `quality-entity_recognition.html:11`–`:30`，也就是**實體辨識任務的品質監控**；序列標註與統計總覽都沒有這組切換。照規格 §八種輸出類型各自的主指標與門檻（表格的實體辨識列與第 5 條），切換本來就屬實體辨識。換成「帶實體辨識任務、`?tab=quality`」即可重現，所以不算無法重現 → `../design-gaps.md` G-52。
 
-**「部分重疊」的 0.70 與關係識別的 0.80 改叫參考值**（#423）：實體辨識切到 `Partial overlap` 時卡片寫「Relaxed 參考值 0.70」（`quality-entity_recognition.html:42`），關係識別第二列寫「高品質參考值 0.80」（`quality-relation_identification.html:24`），兩者都不帶通過／未達，圓點用中性的 `.t-dot-neutral`；部分重疊卡的數值與長條也改中性色。「兩種計算模式比較」表頭改「門檻／參考值」，部分重疊那一列的結果是中性徽章「不判定」，Strict 那一列照舊判定。依據規格 §八種輸出類型各自的主指標與門檻 第 11 條（Q15，維護者 2026-11-08）→ `../design-gaps.md` G-53。
+**「部分重疊」的 0.70 與關係識別的 0.80 改叫參考值**（#423）：實體辨識切到 `Partial overlap` 時卡片寫「Relaxed 參考值 0.70」（`quality-entity_recognition.html:42`），關係識別第二列寫「高品質參考值 0.80」（`quality-relation_identification.html:23`），兩者都不帶通過／未達，圓點用中性的 `.t-dot-neutral`；部分重疊卡的數值與長條也改中性色。「兩種計算模式比較」表頭改「門檻／參考值」，部分重疊那一列的結果是中性徽章「不判定」，Strict 那一列照舊判定。依據規格 §八種輸出類型各自的主指標與門檻 第 11 條（Q15，維護者 2026-11-08）→ `../design-gaps.md` G-53。
 
 另外找得到但交付包沒有列的：partial 讀取失敗的面板（`renderPanelLoadError(mount,'load')`，`:1503`），只有讓 partial 請求失敗才看得到 → `../design-gaps.md` G-54。
 
@@ -45,7 +45,7 @@
 | `.iaa-score-card`（`:73`–`:76`）、`.iaa-bar-*`（`:83`–`:87`） | 達標分數卡與分數條；分數條沒有 `role="progressbar"`，數字在旁邊的文字 → [Progress Bar](../components/progress-bar.md) |
 | `.t-dot`（`:94`–`:98`） | 與 Color Dot 同用途的圓點，只靠顏色；#423 加了不判定用的 `.t-dot-neutral`（`--color-ink-muted`）→ [Color Dot](../components/color-dot.md)、G-14 |
 | `.match-toggle`／`.match-btn`（`:105`–`:108`） | 分段切換鈕，只此一頁；用 `.active` 表示目前選項；已於 #422 補上 `aria-pressed` 並與 `.active` 同步 → G-56 |
-| `.alt-toggle-btn`／`.alt-metrics-body`（`:111`–`:116`） | 原生 `<button>`，帶 `aria-expanded`／`aria-controls`（例如 `quality-single_label.html:24`），收合時 body 設 `aria-hidden`（`wireAltToggle`，`:1914`）→ [Accordion](../components/accordion.md) |
+| `.alt-toggle-btn`／`.alt-metrics-body`（`:111`–`:116`） | 原生 `<button>`，帶 `aria-expanded`／`aria-controls`（例如 `quality-single_label.html:24`），收合時 body 設 `aria-hidden`（`wireAltToggle`，`dataset-analysis-detail.html:1914`）→ [Accordion](../components/accordion.md) |
 | `.anomaly-item`（`:129`） | 異常提示列，用 warning token |
 | `.annotator-table`（`:137`–`:141`） | 第 N 份表格樣式 → [Data Table](../components/data-table.md)、G-10 |
 | `.cause-chip`（`:156`） | 唯讀的原因標籤 → [Chip](../components/chip.md)、G-11 |

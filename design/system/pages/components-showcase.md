@@ -41,7 +41,7 @@
 | `#comp-statepanel` | 1338 | [State Panel](../components/state-panel.md)（success ／ error） |
 | `#comp-avatar` | 1362 | [Avatar](../components/avatar.md)，**可實際選檔** |
 
-另有六個 token 區塊（`#palette` `:995` 起，依序是 Palette、State Colors、Typography、Spacing、Radius、Z-index，止於 `:1027`——`:1028` 已是 `#components`），**在執行期從 `assets/tokens.css` 即時列舉**（`:1399`–`:1504`），不是手寫清單——所以 token 一改，這一頁自動跟上。
+另有六個 token 區塊（`#palette` `:995` 起，依序是 Palette、State Colors、Typography、Spacing、Radius、Z-index，止於 `:1028`——`:1028` 已是 `#components`），**在執行期從 `assets/tokens.css` 即時列舉**（`:1399`–`:1504`），不是手寫清單——所以 token 一改，這一頁自動跟上。
 
 ## 這一頁專屬的
 

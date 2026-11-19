@@ -14,7 +14,7 @@
 
 | 視圖 | 怎麼走到 | 用到的元件 |
 | :--- | :--- | :--- |
-| `#role-annotator` | 不給 `role`，或給不認得的值（預設） | [App Shell](../components/app-shell.md)、[Breadcrumb](../components/breadcrumb.md)（`nav#entryBreadcrumb`，`:1212`）、[Progress Bar](../components/progress-bar.md)（本頁 `.progress-track`，`:305`–`:316`、markup `:1240`）、[Card](../components/card.md)（`.content-card`，外框在 `pages/shared/card.css:8`–`:16`，本頁 `:251` 只留 G-41 註解）、[Input](../components/input.md)（「無法判定」理由，`.input`，`annotation-workspace.config.js:650`–`:681`）、[Button](../components/button.md)、[Toast](../components/toast.md)（`:1326`–`:1327`） |
+| `#role-annotator` | 不給 `role`，或給不認得的值（預設） | [App Shell](../components/app-shell.md)、[Breadcrumb](../components/breadcrumb.md)（`nav#entryBreadcrumb`，`:1212`）、[Progress Bar](../components/progress-bar.md)（本頁 `.progress-track`，`:305`–`:316`、markup `:1240`）、[Card](../components/card.md)（`.content-card`，外框在 `pages/shared/card.css:8`–`:16`，本頁 `annotation-workspace.html:251` 只留 G-41 註解）、[Input](../components/input.md)（「無法判定」理由，`.input`，`annotation-workspace.config.js:650`–`:681`）、[Button](../components/button.md)、[Toast](../components/toast.md)（`#toast`，`annotation-workspace.html:1328`） |
 | `#role-reviewer` | `?role=reviewer` | 同上，加 [Review Status Track](../components/review-status-track.md)（`.review-track`，CSS `:443`–`:464`，算繪 `annotation-workspace.config.js:5549`）、[Tooltip](../components/tooltip.md)（審核單位脈絡橫幅的審核說明，`:4000`–`:4034`）、[Input](../components/input.md)（`.input-textarea`，審核理由） |
 | `#tab-guideline` | 右欄預設分頁「說明與檔案」 | [Content Tabs](../components/content-tabs.md)（`.admin-tabs.admin-tabs--panel`，`:1290`–`:1291`） |
 | `#tab-history` | 切到「操作紀錄」（`renderHistoryPanel`，`annotation-workspace.config.js:2253`） | [Content Tabs](../components/content-tabs.md)、[Empty State](../components/empty-state.md)（沒有紀錄時 `empty-state-compact`，`:2280`） |
@@ -41,17 +41,17 @@
 | `.mini-btn-active-approve`／`-modify`／`-bypass`、`.rv-choice-group` | 審核三向決策的選中狀態，疊在正典 `pages/shared/button.css` 的 `.mini-btn` 上；#423 起本頁不再重寫 `.mini-btn` 本體與 `-danger` → G-37 |
 | `.progress-track`／`.progress-fill`（`:303`–`:314`） | 與 Progress Bar 同尺寸同 token，只換了 class 名 |
 | `.toast*`（`:1013`–`:1057`） | [Toast](../components/toast.md)：分級存續時間照 UXC-07（`TOAST_DURATIONS`，`annotation-workspace.config.js:428`–`:443`） |
-| 作答控制項 | `task-config.engine.js` 的 `renderOutputPreview`（`:3685`）畫按鈕（例如 `renderSingleLabelPreview`）。#420 之前用 inline 樣式並寫死三個色值（原文見 G-50）；#420 起改套 `task-config.css` 的 `.chip` 一族，標籤自己的顏色經 `--chip-color` 傳入，引擎已沒有 hex。它仍不屬正典的 [Chip](../components/chip.md) → G-50 |
-| 結果標籤（`:598`–`:600`）、`.sample-item.active` 與一個寫死的 rgba（`:123`、`:833`、`:854`，原文見 G-10） | 結果標籤 #420 起改用 success／info／error 族（Q3），與 `annotation-list` 仍各寫一份；rgba 不在 #420 範圍 → G-02、G-10 |
+| 作答控制項 | `task-config.engine.js` 的 `renderOutputPreview`（`task-config.engine.js:3685`）畫按鈕（例如 `renderSingleLabelPreview`）。#420 之前用 inline 樣式並寫死三個色值（原文見 G-50）；#420 起改套 `task-config.css` 的 `.chip` 一族，標籤自己的顏色經 `--chip-color` 傳入，引擎已沒有 hex。它仍不屬正典的 [Chip](../components/chip.md) → G-50 |
+| 結果標籤（`:598`–`:600`）、`.sample-item.active` 與它的半透明主色框線（`:123`、`:833`、`:854`，原本寫死 rgba，原文見 G-10） | 結果標籤 #420 起改用 success／info／error 族（Q3），與 `annotation-list` 仍各寫一份；rgba 不在 #420 範圍，#442 起改成 `color-mix(in srgb, var(--color-primary) 20%, transparent)` → G-02、G-10 |
 
-六個 overlay 全部接了 `modal-focus.js`：圖片（`annotation-workspace.config.js:6384`）、PDF（`:6408`）、Markdown（`:6573`）、審核流程抽屜（`:5741`）、指引閘門（`:6887`），右欄抽屜由原生按鈕與 `aria-expanded` 控制 → G-23、G-43 在本頁不成立。但：
+六個 overlay 全部接了 `modal-focus.js`：圖片（`annotation-workspace.config.js:6387`）、PDF（`:6411`）、Markdown（`:6576`）、審核流程抽屜（`:5744`）、指引閘門（`:6896`），右欄抽屜由原生按鈕與 `aria-expanded` 控制 → G-23、G-43 在本頁不成立。但：
 
-- 指引閘門原本把 `onClose` 設成 `hideGuidelineModal`，按 Esc 就能不確認直接開始；#423 改成空函式（`annotation-workspace.config.js:6898`），Esc 不關，另加「返回標記清單」鈕（`:6922`，走 `buildListReturnUrl`、不寫確認紀錄）；開啟時初始焦點在確認鈕（`:6902`）→ G-46
+- 指引閘門原本把 `onClose` 設成 `hideGuidelineModal`，按 Esc 就能不確認直接開始；#423 改成空函式（`annotation-workspace.config.js:6898`），Esc 不關，另加「返回標記清單」鈕（`:6923`，走 `buildListReturnUrl`、不寫確認紀錄）；開啟時初始焦點在確認鈕（`:6902`）→ G-46
 - 審核流程抽屜的關閉鈕（`:1201`）靜態 markup 只有圖示；已於 #422 補上 `aria-label`（執行期本來就會設定）→ G-49
 - 分頁按鈕沒有 `tablist`／`tab`／`aria-selected`，只能點（`setupGuidelineTabs`，`annotation-workspace.config.js:6738`–`:6756`）→ G-22
 
-送出被擋時，未完成的輸出區塊加上 `data-error="true"`、一行錯誤文字「這一項還沒作答，完成後才能送出／Answer this item before submitting」（`.ws-output-error`，以 `aria-describedby` 綁到區塊），焦點捲到第一個未完成區塊（`markPanelError`，`annotation-workspace.config.js:2939`；`handleSubmit`，`:3090`）。框線是 `annotation-workspace.html:1087` 的 2px `--color-error` outline；區塊重繪時錯誤態一併清掉（`patchedRenderOutputPreview`）→ G-47（#423 修正）。
+送出被擋時，未完成的輸出區塊加上 `data-error="true"`、一行錯誤文字「這一項還沒作答，完成後才能送出／Answer this item before submitting」（`.ws-output-error`，以 `aria-describedby` 綁到區塊），焦點捲到第一個未完成區塊（`markPanelError`，`annotation-workspace.config.js:2939`；`handleSubmit`，`:3090`）。框線是 `annotation-workspace.html:1086` 的 2px `--color-error` outline；區塊重繪時錯誤態一併清掉（`patchedRenderOutputPreview`）→ G-47（#423 修正）。
 
 ## 業務行為
 
-連回規格 [`04-annotation/02-annotation-workspace.mdx`](../../../docs/specs/04-annotation/02-annotation-workspace.mdx)。UXC 落點：UXC-03（`annotation-workspace.config.js:2041`–`:2069`）、UXC-04 與 UXC-05（`:650`–`:681`、`:3098`–`:3120`）、UXC-06（提交的 `submitBusy`）、UXC-07（`:428`–`:443`）。鍵盤快捷鍵：審核鍵 a／b（`setupReviewShortcuts`，`:3766`）、Ctrl／Cmd＋S、Ctrl／Cmd＋Enter、Alt＋←／→（`setupActionShortcuts`，`:3784`）。
+連回規格 [`04-annotation/02-annotation-workspace.mdx`](../../../docs/specs/04-annotation/02-annotation-workspace.mdx)。UXC 落點：UXC-03（`annotation-workspace.config.js:2041`–`:2068`）、UXC-04 與 UXC-05（`:650`–`:681`、`:3098`–`:3120`）、UXC-06（提交的 `submitBusy`）、UXC-07（`:428`–`:443`）。鍵盤快捷鍵：審核鍵 a／b（`setupReviewShortcuts`，`:3766`）、Ctrl／Cmd＋S、Ctrl／Cmd＋Enter、Alt＋←／→（`setupActionShortcuts`，`:3788`）。

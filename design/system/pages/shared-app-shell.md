@@ -26,7 +26,7 @@
 | `#state-active-task-type` | 改 `labelsuite.activeTaskType`（`:4`） |
 | `#state-workspace-tabs` | 開過兩個以上工作頁（`:1524`） |
 | `#state-logout` | 點 `#logoutBtn`（`:2104`）或 `#mobileLogoutBtn`（`:2065`）：一次清掉 7 個 storage 鍵 |
-| `#param-ap-stage` | 任務詳情的網址加 `?ap_stage=r1`／`official`（`:762`，只在 `pageKind === 'task-detail'` 生效） |
+| `#param-ap-stage` | 任務詳情的網址加 `?ap_stage=r1`／`official`（`:763`，只在 `pageKind === 'task-detail'` 生效） |
 | `#modal-notification` | 點通知鈴（`:2259`、`:2274`） |
 | `#modal-shortcut` | 開快捷鍵說明（`:2108`、`:2208`） |
 
@@ -38,13 +38,13 @@
 | :--- | :--- |
 | `#shortcutHelpModal`、`#notificationDropdown` | 覆蓋層整套自建，**不用 `modal-focus.js`**（`sidebar.js` 全檔 `LabelSuiteModalFocus` 出現 0 次）→ `../design-gaps.md` G-23 |
 | `#langToggle`、`#mobileLangToggle` | 登入後的語言切換，和帳號頁的 [Language Toggle](../components/lang-toggle.md) 是兩套 |
-| `.workspace-tab-bar`（`sidebar.css:959`） | 工作頁籤列，有上限、重開堆疊、改鍵三種通知；`tokens.css` 為它留了 `--workspace-tab-min-width`／`-max-width` |
+| `.workspace-tab-bar`（`sidebar.css:966`） | 工作頁籤列，有上限、重開堆疊、改鍵三種通知；`tokens.css` 為它留了 `--workspace-tab-min-width`／`-max-width` |
 
 ## 業務行為
 
 連回規格 [`07-shared/01-sidebar.mdx`](../../../docs/specs/07-shared/01-sidebar.mdx)。
 
-`sidebar.css:963` 與 `sidebar.js:682` 都引用「`MASTER.md` 的 terminology note」來區分「工作頁籤」與「Content Tabs」的命名——**本批次建立 `MASTER.md` 時要寫進那一節**，否則這兩處註解指向不存在的東西（G-25）。
+`sidebar.css:963` 與 `sidebar.js:683` 都引用「`MASTER.md` 的 terminology note」來區分「工作頁籤」與「Content Tabs」的命名——**本批次建立 `MASTER.md` 時要寫進那一節**，否則這兩處註解指向不存在的東西（G-25）。
 
 ## 散佈範圍
 

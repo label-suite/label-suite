@@ -37,4 +37,4 @@
 
 ## 業務行為
 
-連回規格 [`06-admin/02-role-settings.mdx`](../../../docs/specs/06-admin/02-role-settings.mdx)。本頁的 UXC 落點：UXC-03（`beforeunload` `:1300`、取消守門 `:1318`）、UXC-07（`:1413`）、UXC-10（Esc／Enter，`:1307`）。
+連回規格 [`06-admin/02-role-settings.mdx`](../../../docs/specs/06-admin/02-role-settings.mdx)。本頁的 UXC 落點：UXC-03（`beforeunload` `:1300`、取消守門 `:1318`）、UXC-07（`:1412`）、UXC-10（Esc／Enter，`:1307`）。
