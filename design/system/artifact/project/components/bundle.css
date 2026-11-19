@@ -758,7 +758,7 @@ html[data-theme="dark"] {
 .badge-task-type-scoring  { color: var(--data-task-type-scoring-fg); background: var(--data-task-type-scoring-bg); border-color: var(--data-task-type-scoring-border); }
 .badge-task-type-default  { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
 
-/* ═══ Source: design/prototype/components-showcase.html:635-809 — Breadcrumb, Review Status Track, Color Dot, Accordion, Progress Bar ═══ */
+/* ═══ Source: design/prototype/components-showcase.html:638-812 — Breadcrumb, Review Status Track, Color Dot, Accordion, Progress Bar ═══ */
 /* §Breadcrumb (verbatim) */
 .breadcrumb {
   display: flex;
@@ -974,7 +974,7 @@ html[data-theme="dark"] .annotation-preview-color { border-color: color-mix(in s
   font-size: 2.5rem;
 }
 
-/* ═══ Source: design/prototype/components-showcase.html:832-958 — Divider, State Panel, Avatar ═══ */
+/* ═══ Source: design/prototype/components-showcase.html:835-961 — Divider, State Panel, Avatar ═══ */
 /* §Divider — token-rendered (no canonical CSS block in MASTER §Divider;
    its Tailwind-only samples are mapped to tokens here, per the
    Banner/Toast precedent) */
@@ -1587,7 +1587,7 @@ html[data-theme="dark"] .page-size-select { background-image: url("data:image/sv
 .mobile-theme-toggle-btn:focus-visible,
 .shortcut-help-close:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
 }
 
 .sidebar-utility-icon {
@@ -1667,7 +1667,7 @@ html[data-theme="dark"] .page-size-select { background-image: url("data:image/sv
   color: var(--color-primary-strong);
   font-weight: 700;
   font-size: 14px;
-  border: 2px solid rgba(99, 102, 241, 0.16);
+  border: 2px solid color-mix(in srgb, var(--color-primary) 16%, transparent);
   flex-shrink: 0;
 }
 
@@ -2657,8 +2657,8 @@ main:has(> .workspace-tab-bar):not(.workspace-root) {
   background: var(--color-ink);
 }
 .field-help-tooltip:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  outline: 2px solid var(--color-primary); /* token focus ring (#423, G-37) */
+  outline-offset: 1px;
 }
 .tooltip-bubble {
   visibility: hidden;
@@ -2889,11 +2889,11 @@ main:has(> .workspace-tab-bar):not(.workspace-root) {
 .auth-page .input-wrapper input::placeholder { color: var(--color-ink-muted); }
 .auth-page .input-wrapper input:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 .auth-page .input-wrapper input.error {
   border-color: var(--color-error);
-  box-shadow: 0 0 0 3px rgba(185,28,28,0.08);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 8%, transparent);
 }
 .auth-page .field-error {
   font-size: 12px;
@@ -2971,7 +2971,7 @@ main:has(> .workspace-tab-bar):not(.workspace-root) {
 .proto-btn.inactive { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); }
 .proto-btn.inactive:hover { background: rgba(255,255,255,0.2); }
 
-/* ═══ Source: design/prototype/components-showcase.html:976-978 — reduced motion ═══ */
+/* ═══ Source: design/prototype/components-showcase.html:979-981 — reduced motion ═══ */
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
