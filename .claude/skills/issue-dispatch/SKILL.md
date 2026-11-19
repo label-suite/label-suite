@@ -119,7 +119,7 @@ lead 回報後：
 
 1. 主 session 用 `git -C <worktree> diff origin/main...HEAD` 讀完整個 diff，對照 issue 的工作項。不用 `cd` 進 lead 的 worktree。
 2. 另開一個新的 general-purpose 審查者。prompt 只給 issue 編號、worktree 路徑和「依 `.claude/skills/doc-writing/SKILL.md` 步驟 5 的清單，以及 `AGENTS.md` §Review Guidelines 審查 `origin/main...HEAD`」，不給主 session 自己的看法。
-3. 主 session 逐條核對審查意見。Critical 或 High 就用 `SendMessage` 交回原本的 lead 修，修完再審一次；Medium 或 Low 寫進 PR 的「非阻擋」；真的有問題但在範圍外的，另開 issue，在 PR 裡寫出編號。
+3. 主 session 逐條核對審查意見。Critical 或 High 就用 `SendMessage` 交回原本的 lead 修，修完再審一次；Medium 或 Low 寫進 PR 的「非阻擋」，但違反 `doc-writing` 鐵律的（例如來源沒有的理由、正文寫出來源 repo）即使是 Medium 也在合併前交回 lead 修，主 session 讀修正的 diff 確認即可，不必重審；真的有問題但在範圍外的，另開 issue，在 PR 裡寫出編號。
 4. 開 PR。body 先寫進 scratchpad 的檔案，再用 `--body-file` 傳：
 
 ```bash
@@ -181,7 +181,7 @@ git worktree remove "${WT}"
 git branch -d "${BRANCH}"
 ```
 
-`-d` 失敗代表分支上有沒合併的 commit，停下來看，不要改用 `-D`（`AGENTS.md` Hard Rule 10）。
+主 checkout 在別的分支時，`-d` 會警告「not yet merged to HEAD」但仍會刪除，因為分支已併進對應的遠端分支；這不是錯誤。`.claude/worktrees/` 裡其他 session 的 `agent-*` worktree 不是本 skill 開的，不要動。`-d` 真的失敗才代表分支上有沒合併的 commit，停下來看，不要改用 `-D`（`AGENTS.md` Hard Rule 10）。
 
 再比對一次：PR 已合併、但 issue 還開著的，在 issue 上留言指出 PR 後關掉。
 
@@ -231,6 +231,9 @@ gh project item-edit --project-id PVT_kwDOEWdNqs4BoCOI --id "$ITEM" \
 | 裁定寫在後面的留言，不在內文 | 步驟 1 讀完整串留言 |
 | 合併了但 PR 缺少 `Closes`，issue 留著沒關 | 步驟 9 比對 issue 和 PR |
 | `gh pr checks --watch` 在 PR 一個檢查都沒有時也會回 0 | 步驟 7 以三個 job 的名稱與 run 數量為準 |
+| lead 的 commit 本文寫成 `**Add**:`（粗體動詞後多冒號），commit-msg hook 擋下（試跑 #453） | 派工 prompt 寫明粗體動詞後直接接說明，不加冒號 |
+| ADR 的 lead 會自己補理由與「考慮過的選項」，來源其實沒有（試跑 #453） | 獨立審查第一項就核對每個理由與選項的出處；派工 prompt 寫明「來源沒有的理由不寫」 |
+| ADR 編號與個人 repo 的 ADR 編號撞號（本 repo ADR-007 ≠ 個人 repo ADR-007），舊文件裡裸寫的「ADR-007」會變成歧義（試跑 #453） | 動到的文件裡，個人 repo 的 ADR 一律寫成「個人 repo ADR-0xx」 |
 
 ## 待決
 
