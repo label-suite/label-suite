@@ -33,6 +33,60 @@ jobs:
           done
           exit "$failed"
 
+  hooks:
+    # The hook checkers are shell, and shell is where a script passes on the
+    # machine it was written on and fails on the other one. Both platforms run
+    # the same suites against the same pinned constants, so a divergence is a
+    # red job rather than something a reader has to notice. macOS is in the
+    # matrix because this repository is public and its runner minutes are
+    # free; the cross-platform requirement is issue #111's, not a nicety.
+    name: hooks (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          # No dependencies are installed, so skip the pnpm cache that
+          # packageManager in package.json would otherwise turn on.
+          package-manager-cache: false
+
+      # A glob, not a list. A suite that is added and not wired up is the
+      # failure this job exists to prevent, and a list is the place that gets
+      # forgotten. check-commit-msg-tests.sh runs here as well as in
+      # commit-messages; that job checks the pull request's own commits and
+      # keeps its own regression step so it stands on its own.
+      - name: Checker and hook regression tests
+        run: |
+          failed=0
+          for suite in scripts/tests/*-tests.sh; do
+            echo "::group::$suite"
+            if bash "$suite"; then
+              echo "::endgroup::"
+            else
+              echo "::endgroup::"
+              echo "::error file=$suite::$suite failed (details in the group above)"
+              failed=1
+            fi
+          done
+          exit "$failed"
+
+      # Named rather than globbed: the other *.test.mjs files belong to the
+      # specs job, and running them twice would say nothing. ci-wiring-tests.sh
+      # is what keeps this line from being the one that gets forgotten.
+      - name: Payload reader tests
+        run: node --test scripts/tests/hook-payload.test.mjs
+
+      # Separate from the suites: this one reads the checker layer itself, so
+      # a failure here names a line of production shell rather than a test.
+      - name: Forbidden constructs in the checker layer
+        run: scripts/tests/forbidden-terms-lint.sh
+
   docs-site:
     name: docs-site
     runs-on: ubuntu-latest
