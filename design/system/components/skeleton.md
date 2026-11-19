@@ -31,13 +31,13 @@
 ## token
 
 A：`--color-border`、`--color-white`、`--radius-lg`、`--radius-sm`、`--space-md`、`--space-lg`、`--dur-normal`、`--ease-standard`。
-B：`--radius-md`、`--radius-full`，漸層用 `--color-border` 與 `--color-border-muted`（#420，`components-showcase.html:460`）；1.5s 是字面值（`:462`）。原值見 `../design-gaps.md` G-02。
+B：`--radius-md`、`--radius-full`，漸層用 `--color-border` 與 `--color-border-muted`（#420，`components-showcase.html:460`）；1.5s 是字面值（`:463`）。原值見 `../design-gaps.md` G-02。
 
 尺寸一律字面值（`.skeleton-line.title` 220×20、`.body` 12px、`.skel-avatar` 72×72、`.skel-input` 42px、`.skel-btn` 90×40）——UXC-08 要求尺寸貼合載入後的內容，所以這些值**本來就不該 token 化**，是逐處量出來的。
 
 ## 鍵盤與焦點
 
-不可聚焦。樣本把 `aria-live="polite"` 與 `aria-busy="true"` 放在**容器**上（`components-showcase.html:1134` 的 A、`:1142` 的 B），所以載入完成時改 `aria-busy` 就會被朗讀。
+不可聚焦。樣本把 `aria-live="polite"` 與 `aria-busy="true"` 放在**容器**上（`components-showcase.html:1135` 的 A、`:1143` 的 B），所以載入完成時改 `aria-busy` 就會被朗讀。
 
 ## 樣式出處
 

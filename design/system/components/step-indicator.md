@@ -6,9 +6,9 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.step-indicator` 容器（橫向 flex），帶 `aria-label` | 必填 | `task-new.html:41`、markup `:242` |
-| `.step-item`：`.step-circle`（32px 圓，數字）＋ `.step-label` | 必填 | `:40`–`:46`、`:230`–`:233` |
-| `.step-connector`（2px 連接線） | 必填 | `:47`–`:48` |
+| `.step-indicator` 容器（橫向 flex），帶 `aria-label` | 必填 | `task-new.html:42`、markup `:242` |
+| `.step-item`：`.step-circle`（32px 圓，數字）＋ `.step-label` | 必填 | `:43`–`:49`、`:243`–`:246` |
+| `.step-connector`（2px 連接線） | 必填 | `:52`–`:53` |
 
 畫面上是**四步**：基本資料、標記設定檔、啟動設定、標記說明（`:229`–`:248`）。
 

@@ -31,7 +31,7 @@
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
 | 預設 | 有 | `components-showcase.html:479` |
-| hover | 有（僅選取 chip）：邊框與文字換 primary、底色 `--color-primary-soft-bg` | `components-showcase.html:494` |
+| hover | 有（僅選取 chip）：邊框與文字換 primary、底色 `--color-primary-soft-bg` | `components-showcase.html:497` |
 | 選中 | 有：同 hover 的色，字重升到 600，勾選框填滿 | `components-showcase.html:499`、`:515` |
 | focus | **未觀察到**。`.task-type-chip` 是 `<button>`，但沒有 `:focus` 或 `:focus-visible` 規則 | 以 `:focus` 掃 `:476`–`:586`，0 命中 → `../design-gaps.md` G-05 |
 | disabled | **未觀察到** | 同上，無 `:disabled` |
@@ -46,7 +46,7 @@
 
 ## 鍵盤與焦點
 
-選取 chip 是原生 `<button>`，Tab 可達、Enter／Space 原生觸發 `click`，並帶 `role="checkbox"`／`role="radio"` 與 `aria-checked`（`components-showcase.html:1156`、`:1163`）。容器帶 `role="group"`／`role="radiogroup"` 與 `aria-label`（`:1155`、`:1162`）。
+選取 chip 是原生 `<button>`，Tab 可達、Enter／Space 原生觸發 `click`，並帶 `role="checkbox"`／`role="radio"` 與 `aria-checked`（`components-showcase.html:1157`、`:1164`）。容器帶 `role="group"`／`role="radiogroup"` 與 `aria-label`（`:1156`、`:1163`）。
 
 行為由腳本維持：`components-showcase.html:1545`–`:1562`，註解自稱「§Chip accessibility contract: aria-checked toggled on click」。checkbox 各自切換（`:1550`），radio 則把同組其他的設回 false（`:1559`）。
 
@@ -75,6 +75,6 @@
 | `components-showcase#state-default` | 兩類全部樣本 |
 | `task-management/task-new#state-step2` | `.task-type-chip`（`task-config.css:556`–`:559`），引擎依情境發 `role="checkbox"` 或 `"radio"` 與 `aria-checked`（`task-config.engine.js:6237`–`:6241`） |
 | `task-management/task-detail#tab-settings` | 同一份，`settings.html:74`、`:78` |
-| `dataset/dataset-analysis-detail`（`#state-quality-*`） | 唯讀的原因標籤 `.cause-chip`（`dataset-analysis-detail.html:155`），屬「唯讀標籤」那一類 → `../design-gaps.md` G-11 |
+| `dataset/dataset-analysis-detail`（`#state-quality-*`） | 唯讀的原因標籤 `.cause-chip`（`dataset-analysis-detail.html:156`），屬「唯讀標籤」那一類 → `../design-gaps.md` G-11 |
 
 b1 的帳號頁一個都沒用。b2 已補上（見上表）。b4 已補上（見上表）。

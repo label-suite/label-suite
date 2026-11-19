@@ -8,12 +8,12 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.review-track`（`display: grid`、`grid-template-columns: auto 28px auto auto 1fr 28px auto`、兩列各 34px、`role="list"`） | 必填 | `components-showcase.html:655`–`:661`、樣本 `:1227` |
-| `.review-track-node`（`role="listitem"`） | 三個 | `:664`、樣本 `:1230`、`:1235`、`:1238` |
-| `.review-track-fork`（分岔的 svg，`aria-hidden`） | 兩個（頭尾） | `:720`、樣本 `:1231`、`:1237` |
+| `.review-track`（`display: grid`、`grid-template-columns: auto 28px auto auto 1fr 28px auto`、兩列各 34px、`role="list"`） | 必填 | `components-showcase.html:656`–`:662`、樣本 `:1228` |
+| `.review-track-node`（`role="listitem"`） | 三個 | `:663`、樣本 `:1229`、`:1234`、`:1237` |
+| `.review-track-fork`（分岔的 svg，`aria-hidden`） | 兩個（頭尾） | `:719`、樣本 `:1230`、`:1236` |
 | `.review-track-branch[data-branch]` 軌道標籤 | 三個 | `:708`、樣本 `:1232`、`:1233`、`:1236` |
 | `.review-track-rail`（軌道，`::before` 畫線） | 兩個 | `:690`–`:707`、樣本 `:1234`、`:1236` |
-| `.review-track-marker`（`目前：` 文字前綴） | 當前節點必填 | `:689`、樣本 `:1235` |
+| `.review-track-marker`（`目前：` 文字前綴） | 當前節點必填 | `:688`、樣本 `:1234` |
 
 ## 變體
 
@@ -27,7 +27,7 @@
 | :--- | :--- | :--- |
 | 未到 | 無修飾（`--color-ink-muted` 文字、`--color-white` 底） | `components-showcase.html:662` |
 | 已走過 | `.done`：邊框與文字 `--color-cta`、底 `--color-success-bg`、字重 600 | `:677` |
-| 目前 | `.current`：primary 色系、字重 600，另加 `目前：` 文字前綴與 `aria-current="step"` | `:683`、樣本 `:1235` |
+| 目前 | `.current`：primary 色系、字重 600，另加 `目前：` 文字前綴與 `aria-current="step"` | `:682`、樣本 `:1234` |
 | hover／focus／disabled／載入中／空 | 不適用，非互動元素 | `:656`–`:720` 無偽類 |
 
 **不只靠顏色**是這個元件寫進說明的設計約束（`:1220`）：當前節點有文字前綴，走過的節點／標籤／軌道另以 `font-weight: 600` 與線寬加粗區分（rail 2px→3px，`:707`；fork 的 `stroke-width` 2→3，樣本 `:1231`）。
@@ -44,7 +44,7 @@
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:654`–`:718`。shipped 的那一份在 `pages/annotation/annotation-workspace.html:442`，註解寫明是「§Review Status Track -- CSS verbatim」。
+`design/prototype/components-showcase.html:655`–`:719`。shipped 的那一份在 `pages/annotation/annotation-workspace.html:443`，註解寫明是「§Review Status Track -- CSS verbatim」。
 
 ## 可重現樣本
 
@@ -63,6 +63,6 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 差異軌、停在爭議中 |
-| `annotation/annotation-workspace`（`#role-reviewer`、`#state-review-decision`） | `annotation-workspace.html:442`–`:463` 的 11 條規則與 `components-showcase.html:654`–`:718` **逐字相同**；`annotation-workspace.config.js:5547` 起算繪，節點帶 `aria-current="step"`（`:5557`） |
+| `annotation/annotation-workspace`（`#role-reviewer`、`#state-review-decision`） | `annotation-workspace.html:443`–`:464` 的 11 條規則與 `components-showcase.html:655`–`:719` **逐字相同**；`annotation-workspace.config.js:5549` 起算繪，節點帶 `aria-current="step"`（`:5559`） |
 
 b3 已補上並核對（見上表）：那份 verbatim 屬實。

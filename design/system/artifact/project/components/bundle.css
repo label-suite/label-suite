@@ -469,7 +469,7 @@ button[disabled] {
 .toast-card.warning { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
 .toast-card.error   { color: var(--color-error);   background: var(--color-error-bg);   border-color: var(--color-error-border); }
 .toast-msg { flex: 1; font-weight: 500; }
-.toast-close { color: inherit; opacity: 0.7; cursor: pointer; font-size: 14px; line-height: 1.4; padding: 0; }
+.toast-close { display: inline-flex; align-items: center; color: inherit; opacity: 0.7; cursor: pointer; font-size: 14px; line-height: 1.4; padding: 0; }
 .toast-close:hover { opacity: 1; }
 
 /* §Skeleton — Variant A pulse (verbatim) */
@@ -775,7 +775,7 @@ html[data-theme="dark"] {
   text-decoration: underline;
 }
 .breadcrumb-sep {
-  color: var(--color-ink-muted);             /* #94A3B8 */
+  color: var(--color-ink-muted);
   font-size: 11px;
 }
 

@@ -8,7 +8,7 @@
 
 | 部分 | 必填 | 依據（以 `login.html` 為代表） |
 | :--- | :--- | :--- |
-| `.card`（白底、`--radius-lg`、`--shadow-card`、`padding: 40px 40px 36px`、`max-width: 480px`） | 必填 | `pages/account/login.html:98` |
+| `.card`（白底、`--radius-lg`、`--shadow-card`、`padding: 40px 40px 36px`、`max-width: 480px`） | 必填 | `pages/account/login.html:100` |
 | `.card-header` | 必填 | 五頁皆有 |
 | `.card-logo` | 必填 | 同上 |
 | `.card-title` | 必填 | 同上 |

@@ -24,9 +24,9 @@
 | 元件 | 說明 |
 | :--- | :--- |
 | `.task-row`（`dataset-analysis-list.view.js:18`–`:19`） | 一列是 `tr role="button" tabindex="0"`，Enter／Space 進詳情（`:124`）；點擊先出 info toast「前往分析詳情…」，220 ms 後導頁（`:115`–`:116`） |
-| `.task-row:focus-visible`（`:74`–`:76`） | 焦點環是一個寫死的 rgba（原文見 G-02），沒有對應 token → G-02 |
-| `.progress-track`／`.progress-fill`（`:97`–`:106`） | 與 Progress Bar 同結構，全用 token；本頁有 `role="progressbar"` 與 `aria-value*`，比 `annotation-list` 完整 |
-| `.badge`（`:120`）與 `.badge-iaa-*`（`:139`–`:143`）、`.badge-role-pl`／`-rev`（`:145`–`:146`） | 本頁重寫的徽章，全用 token；輸出類型另由 `task-type-badge.css` 提供 → [Badge](../components/badge.md) |
+| `.task-row:focus-visible`（`:76`–`:79`） | 焦點環是一個寫死的 rgba（原文見 G-02），沒有對應 token → G-02 |
+| `.progress-track`／`.progress-fill`（`:99`–`:108`） | 與 Progress Bar 同結構，全用 token；本頁有 `role="progressbar"` 與 `aria-value*`，比 `annotation-list` 完整 |
+| `.badge`（`:122`）與 `.badge-iaa-*`（`:141`–`:145`）、`.badge-role-pl`／`-rev`（`:147`–`:148`） | 本頁重寫的徽章，全用 token；輸出類型另由 `task-type-badge.css` 提供 → [Badge](../components/badge.md) |
 | `.toast*`（`:154`–`:196`，markup `:309`–`:313`） | [Toast](../components/toast.md)：`TOAST_DURATIONS`（`dataset-analysis-list.js:25`）依類型 3000／5000／8000／不自動關，照 UXC-07 |
 
 ## 業務行為

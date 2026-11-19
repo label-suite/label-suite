@@ -20,12 +20,12 @@
 | `#state-admin-submenu-open` | 系統管理員 ＋ 桌機 ＋ 側欄未收合，點「系統管理」（`sidebar.js:539`–`:541`） |
 | `#state-sidebar-collapsed` | 桌機（`sidebar.js:513`）點收合鈕（`:524`） |
 | `#state-mobile` | 視窗 ≤ 768px（`sidebar.css:611`） |
-| `#state-theme-dark` | 點 `#sidebarThemeToggleBtn`（`sidebar.js:2080`）或 `#mobileThemeToggleBtn`（`:2054`） |
-| `#state-lang-en` | 點 `#langToggle`（`:2046`）或 `#mobileLangToggle`（`:2050`） |
-| `#state-user-chip` | `#userAvatar`（`:2097`）、`#userName`、`#roleIndicator`（`:2100`） |
+| `#state-theme-dark` | 點 `#sidebarThemeToggleBtn`（`sidebar.js:2081`）或 `#mobileThemeToggleBtn`（`:2055`） |
+| `#state-lang-en` | 點 `#langToggle`（`:2047`）或 `#mobileLangToggle`（`:2051`） |
+| `#state-user-chip` | `#userAvatar`（`:2098`）、`#userName`、`#roleIndicator`（`:2101`） |
 | `#state-active-task-type` | 改 `labelsuite.activeTaskType`（`:4`） |
 | `#state-workspace-tabs` | 開過兩個以上工作頁（`:1524`） |
-| `#state-logout` | 點 `#logoutBtn`（`:2103`）或 `#mobileLogoutBtn`（`:2064`）：一次清掉 7 個 storage 鍵 |
+| `#state-logout` | 點 `#logoutBtn`（`:2104`）或 `#mobileLogoutBtn`（`:2065`）：一次清掉 7 個 storage 鍵 |
 | `#param-ap-stage` | 任務詳情的網址加 `?ap_stage=r1`／`official`（`:762`，只在 `pageKind === 'task-detail'` 生效） |
 | `#modal-notification` | 點通知鈴（`:2259`、`:2274`） |
 | `#modal-shortcut` | 開快捷鍵說明（`:2108`、`:2208`） |

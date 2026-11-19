@@ -153,7 +153,7 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | **正例** | **對照層在 `src/styles/`**：shadcn 的語意變數指向 `tokens.css` 的值（`--background: var(--color-surface)`、`--foreground: var(--color-ink)`…），色值**只存在 `tokens.css` 一處**；元件只用語意 class（`bg-background`、`text-muted-foreground`）；深色模式由 `html[data-theme="dark"]` 驅動，shadcn 的 dark variant 設成吃那個屬性 |
 | **例外** | `tokens.css` 自己是色值的所在地，不受「不得寫色碼」限制。`design/prototype/` 的 HTML 另有自己的用法，不受本條約束（而且**本文件這一類工作不得改 `design/prototype/`**） |
 
-視覺基準是 `tokens.css`（92 個不重複的變數名）與 `label-suite-design` skill。映射前要逐一確認三件事，不是改個名字就好，見下方摺疊區塊。
+視覺基準是 `tokens.css`（103 個不重複的變數名）與 `label-suite-design` skill。映射前要逐一確認三件事，不是改個名字就好，見下方摺疊區塊。
 
 :::note{title="F6 映射前要確認的三件事" collapsible}
 這三件是本文件的要求，不是維護者選定的內容（選定的只有「寫一層對照」與「`tokens.css` 唯一色值來源」兩件）；都是落地時已知、已經有人踩過的坑。

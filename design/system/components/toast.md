@@ -29,7 +29,7 @@
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
 | 隱藏（預設） | 有。`opacity: 0; visibility: hidden`，且 `visibility` 的 transition 延遲到淡出結束 | `components-showcase.html:409`–`:411` |
-| 顯示 | 有。`.visible` | `components-showcase.html:413` |
+| 顯示 | 有。`.visible` | `components-showcase.html:414` |
 | hover | **未觀察到**。滑鼠移上去**不會**暫停計時器 | `:1538` 只有 `setTimeout`，沒有 `mouseenter` → `../design-gaps.md` G-09 |
 | focus | 關閉鈕可聚焦；但 toast 出現時**焦點不會移過去** | `:1520`–`:1539` 沒有任何 `focus()` |
 | 載入中／空 | 不適用 | — |
@@ -73,7 +73,7 @@
 | `task-management/task-list`（`#param-unauthorized`、`#sim-delete-error`） | 本頁的 `.toast*`（右下角）；#423 起 `TOAST_DURATIONS`（`task-list.html:578`）依類型，error 不自動消失、有關閉鈕，符合 UXC-07 → `../design-gaps.md` G-39 |
 | `task-management/task-new`（交付包未列） | 同上，`TOAST_DURATIONS`（`task-new.html:881`）→ G-39 |
 | `task-management/task-detail`（交付包未列） | 同上，`TOAST_DURATIONS`（`task-detail.html:11247`）→ G-39 |
-| `annotation/annotation-workspace`（`#state-submitted-next`；其他操作交付包未列） | 本頁的 `.toast*`（`annotation-workspace.html:1011`–`:1054`，`aria-live="polite"`，`:1324`）；`TOAST_DURATIONS`（`annotation-workspace.config.js:426`–`:443`）依類型 3000／5000／8000／不自動關，符合 UXC-07 |
-| `dataset/dataset-analysis-list#param-invalid-task`（另有點列時的 info，交付包未列） | 本頁的 `.toast*`（`dataset-analysis-list.html:155`–`:197`，`aria-live="polite"`，`:310`）；`TOAST_DURATIONS`（`dataset-analysis-list.js:25`）照 UXC-07 |
+| `annotation/annotation-workspace`（`#state-submitted-next`；其他操作交付包未列） | 本頁的 `.toast*`（`annotation-workspace.html:1013`–`:1057`，`aria-live="polite"`，`:1327`）；`TOAST_DURATIONS`（`annotation-workspace.config.js:428`–`:443`）依類型 3000／5000／8000／不自動關，符合 UXC-07 |
+| `dataset/dataset-analysis-list#param-invalid-task`（另有點列時的 info，交付包未列） | 本頁的 `.toast*`（`dataset-analysis-list.html:156`–`:200`，`aria-live="polite"`，`:313`）；`TOAST_DURATIONS`（`dataset-analysis-list.js:25`）照 UXC-07 |
 
 `profile.html` 用的是它自己 `<style>` 裡的 toast，不是載入正典——全 prototype 沒有 `shared/toast.css`。另有 7 個頁面各自有 `id="toast"`（b2 五個、b3 一個、b4 一個），七個都已核對（見上表）→ `../design-gaps.md` G-10。b4 的 `dataset-analysis-detail` 原本也有 `.toast*` 樣式與 `#toast`，但沒有任何程式顯示它；#423 已刪掉 → G-55。

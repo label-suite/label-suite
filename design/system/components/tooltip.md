@@ -39,12 +39,12 @@
 | 行為 | 依據 |
 | :--- | :--- |
 | Tab 到「?」鈕就顯示泡泡，離開就隱藏 | `:326`（`:focus + .tooltip-bubble`） |
-| 螢幕閱讀器經由 `aria-describedby` 讀出說明 | `task-config.engine.js:1152`–`:1182` |
+| 螢幕閱讀器經由 `aria-describedby` 讀出說明 | `task-config.engine.js:1164`–`:1194` |
 | Esc 收起泡泡 | **未觀察到**：引擎沒有 `keydown` 處理，泡泡只在失焦時消失 |
 
 ## 樣式出處
 
-`design/prototype/pages/task-management/task-config.css:259`–`:329`（`task-new` 與 `task-detail` 共用；`task-detail.html:1076` 的註解寫明搬過來共用）。
+`design/prototype/pages/task-management/task-config.css:259`–`:329`（`task-new` 與 `task-detail` 共用；`task-detail.html:1078` 的註解寫明搬過來共用）。
 
 ## 可重現樣本
 
