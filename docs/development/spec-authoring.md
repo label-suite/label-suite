@@ -190,7 +190,7 @@ import PrototypeFrame from '@notes/components/prototype-frame';
 | 附錄：舊編號對照 | 舊規格的每個 `FR`／`AC`／`SC` 搬到哪裡 | 搬移舊規格時必寫，`pnpm check:specs` 會檢查 |
 
 待釐清清空後，規格的狀態從「草稿」改成「已定案」，才能進 `/sdd`。
-還有未決的待釐清時**不要硬進**：`sa` 會把它記成 `system-analysis.md` 的待決問題帶到停點一，但那是給「規格本來就有缺口」用的逃生門，不是跳過定案的捷徑。
+還有未決的待釐清時**不要硬進**：`sa` 會把它記成 `system-analysis.md` 的待決問題帶到那個停點，但那是給「規格本來就有缺口」用的逃生門，不是跳過定案的捷徑。
 
 測試集保護（`AGENTS.md` Hard Rules 6）是「只寫業務」唯一的例外：涉及標準答案的頁面，規格用業務語言寫明「標記員能接觸到的任何地方都看不到標準答案」，
 並寫出對應的卡控與 Scenario；系統端怎麼做到不寫在規格，留給 OpenSpec change 的 design 與 spec delta。
@@ -260,12 +260,13 @@ PRD 不設待釐清專章，規格書的「待釐清」也只放這一頁自己�
 
 開 change 之前，`AGENTS.md` 的 Issue first 一樣適用：先有列出工作項目的 open Issue，再開分支與 change。
 
-**`/sdd` 一次授權規劃與實作，中間只停兩次**（授權範圍與邊界見 `AGENTS.md` §SDD Workflow）：
+**`/sdd` 一次授權規劃、實作、驗收、歸檔與合併，中間只停一次**（授權範圍與邊界見 `AGENTS.md` §SDD Workflow）：
 
 | 停點 | 在哪裡 | 停下來做什麼 |
 | :--- | :--- | :--- |
-| **一** | `clarification.md` 寫完（proposal 之後、specs 之前） | 需要維護者決定的項目（Q）逐題問完。明確問題（P）直接派原撰寫角色回修，**不問** |
-| **二** | apply 全部完成、`acceptance-verifier` 產出 `acceptance.md` 之後 | 維護者照報告裡的**人工驗收步驟**親自驗，確認無誤才下 `/opsx:archive` |
+| 唯一的人工停點 | `clarification.md` 寫完（proposal 之後、specs 之前） | 需要維護者決定的項目（Q）逐題問完。明確問題（P）直接派原撰寫角色回修，**不問** |
+
+驗收由 `acceptance-verifier` 判定，不再等維護者覆驗；通過之後由 `ops` 在合併之前執行 `/opsx:archive`，歸檔改動與程式進同一張 PR。
 
 其餘環節不問。但**故障不是關卡、故障照停**：task 描述有歧義、實作中發現規格有問題、工作超出 `tasks.md` 的範圍、指令出錯——那些代表規劃錯了，會停下來回報。
 
@@ -283,7 +284,7 @@ PRD 不設待釐清專章，規格書的「待釐清」也只放這一頁自己�
 | 規格（功能、欄位、`PrototypeFrame` 畫面） | `ui-design` 的頁面、路由與元件樹；`system-design` 的分層與資料模型異動；`api-contract` 的端點與欄位；`tasks` 的實作項目 |
 | 卡控機制、邊界情況 | spec delta 的 Requirement 與 Scenario；`api-contract` 的錯誤碼與觸發條件；**`ui-design` 的 loading／error／empty／無權限四種狀態**；`design` 的 Risks／Trade-offs |
 | 驗收標準 | spec delta 的 Scenario，**沿用規格書的 Scenario 名稱**；`system-design` 每個關鍵 Scenario 一張 Sequence Diagram；`acceptance-verifier` 逐條驗收 |
-| 待釐清 | 必須清空才開 change。真的有缺口時由 `system-analysis` 的待決問題帶到停點一 |
+| 待釐清 | 必須清空才開 change。真的有缺口時由 `system-analysis` 的待決問題帶到那個停點 |
 | 已確認決議 | 當成已定事項沿用，**不在 change 裡重新討論**（`clarify` 第 4.1 個面向會檢查這一點） |
 
 delta 裡的每條 requirement 都要追溯到規格書，註明規格編號與 Scenario 名稱，例如「來源：06-01 停用登入中的帳號」。

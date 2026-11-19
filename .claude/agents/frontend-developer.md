@@ -16,7 +16,7 @@ model: opus
 - **型別與 client 的生成工具已定：Orval**，由後端匯出的 `openapi.json` 產生到 `frontend/src/api/generated/`（TanStack Query hooks、型別、MSW mock）。**產物一律不手改**；Orval 的 mutator 就是那道單一 HTTP 邊界
 - **目錄分層已定：`pages/` 加 `features/`**（覆寫 ADR-011 的垂直功能切片）。照這個結構寫；該 change 的 `ui-design.md` 或 `design.md` 與它不一致時**停下回報**，不要自己另選一種
 
-上面每一項都是裁定，不是你能改的；真正還沒定的事（例如 Storybook）照樣**停下回報**，不要自己拍板——那是停點一要決定的事。
+上面每一項都是裁定，不是你能改的；真正還沒定的事（例如 Storybook）照樣**停下回報**，不要自己拍板——那是那個停點要決定的事。
 
 ## 必讀
 
@@ -97,5 +97,5 @@ model: opus
 - 改動檔案：{清單}
 - 測試：元件與 hook {n} 通過；lint、型別檢查、build 通過
 - 暫以語意描述自行實作、待補 shadcn/ui 元件：{清單，無則寫「無」}
-- 待確認：{contract 缺口、ui-design 未涵蓋的狀態、需要停點一決定的事，無則寫「無」}
+- 待確認：{contract 缺口、ui-design 未涵蓋的狀態、需要那個停點決定的事，無則寫「無」}
 ```
