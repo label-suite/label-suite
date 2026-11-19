@@ -99,6 +99,21 @@ rc=$(run false)
 [ "$rc" = "2" ] || fail "records survived a change to the rule file (got $rc)"
 seed AGENTS.md 'rules'
 
+# When the rule file cannot be digested at all, H6 refuses and says so. It
+# refused before this was written too, but for the wrong reason -- the digest
+# came back empty and merely failed to match the records' non-empty one, so
+# the refusal named the files rather than the real obstacle. The assertion
+# that carries weight here is the diagnosis, not the exit code.
+produce_evidence backend/app.py backend/other.py
+rc=$(run false)
+[ "$rc" = "0" ] || fail "setup for the undigestible-rules case did not pass (got $rc)"
+mv "$REPO/AGENTS.md" "$REPO/AGENTS.md.hidden"
+rc=$(run false)
+[ "$rc" = "2" ] || fail "H6 passed while it could not digest the rule file (got $rc)"
+grep -q 'AGENTS.md 的指紋' "$TMP/err" \
+  || fail "the refusal did not say the rule file could not be digested: $(cat "$TMP/err")"
+mv "$REPO/AGENTS.md.hidden" "$REPO/AGENTS.md"
+
 # Moving HEAD invalidates a record even when nothing it covered was touched:
 # the check ran against a different commit, so it is not about this state.
 rm -rf "$EV"

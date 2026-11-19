@@ -269,17 +269,35 @@ if [ -n "$GIT_DIR" ]; then
     printf 'covered: %s\n' "${covered:-（無）}"
     printf 'skipped: %s\n' "$SKIPPED"
   } > "$HC_BUFFER_DIR/evidence"
-  rec_file="$EV/$(date -u +%Y%m%dT%H%M%SZ)-$$.rec"
-  hc_mask < "$HC_BUFFER_DIR/evidence" > "$rec_file"
+  # Both digests are taken before the record exists, because a record that
+  # cannot carry them is worse than no record at all: H6 compares the stored
+  # value against a freshly computed one, so a pair of blanks would match and
+  # a stale record would read as current. No record simply makes H6 refuse,
+  # which is the safe direction.
+  #
   # `cat` with no arguments reads stdin and waits forever, which is what a run
-  # that routed nothing would do. The redirect makes the empty case return an
-  # empty digest instead of hanging.
-  {
-    printf 'commit: %s\n' "$(git -C "$REPO" rev-parse HEAD 2>/dev/null)"
-    printf 'head: %s\n' "$(git -C "$REPO" rev-parse HEAD 2>/dev/null)"
-    printf 'content: %s\n' "$(cd "$CONTENT_ROOT" && cat ${PY_FILES+"${PY_FILES[@]}"} ${TS_FILES+"${TS_FILES[@]}"} </dev/null 2>/dev/null | shasum -a 256 | cut -d' ' -f1)"
-    printf 'agents: %s\n' "$(shasum -a 256 "$REPO/AGENTS.md" 2>/dev/null | cut -d' ' -f1)"
-  } >> "$rec_file"
+  # that routed nothing would do. The redirect makes the empty case digest
+  # empty input instead of hanging.
+  if ! rec_content=$(cd "$CONTENT_ROOT" \
+       && cat ${PY_FILES+"${PY_FILES[@]}"} ${TS_FILES+"${TS_FILES[@]}"} </dev/null 2>/dev/null \
+       | hc_sha256 2>/dev/null); then
+    emit_err "NOTE: 無法計算涵蓋檔案的指紋，本次不留證據記錄"
+    rec_content=""
+  fi
+  if ! rec_agents=$(hc_sha256 "$REPO/AGENTS.md" 2>/dev/null); then
+    emit_err "NOTE: 無法計算 AGENTS.md 的指紋，本次不留證據記錄"
+    rec_agents=""
+  fi
+  if [ -n "$rec_content" ] && [ -n "$rec_agents" ]; then
+    rec_file="$EV/$(date -u +%Y%m%dT%H%M%SZ)-$$.rec"
+    hc_mask < "$HC_BUFFER_DIR/evidence" > "$rec_file"
+    {
+      printf 'commit: %s\n' "$(git -C "$REPO" rev-parse HEAD 2>/dev/null)"
+      printf 'head: %s\n' "$(git -C "$REPO" rev-parse HEAD 2>/dev/null)"
+      printf 'content: %s\n' "$rec_content"
+      printf 'agents: %s\n' "$rec_agents"
+    } >> "$rec_file"
+  fi
 
   # Retention: newest 200 records and under 1 MiB, oldest trimmed first.
   while [ "$(ls -1 "$EV" | wc -l | tr -d ' ')" -gt 200 ]; do

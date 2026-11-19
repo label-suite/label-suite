@@ -89,12 +89,27 @@ JS
 # Applies masking and the size limit, then writes each buffer to its stream.
 # Called once, after the verdict is settled, so the exit code never depends on
 # whether anything was trimmed.
+# A buffer is filtered to a file and only then copied to its stream. Two
+# reasons, and both are about what must never happen: a filter that dies
+# halfway must not leave half-masked text on the stream, and a filter that
+# cannot run at all must not leave the stream empty. Silence reads as "the
+# checker had nothing to say", which is the one thing it did not mean --
+# measured 2026-11-19: with node off PATH, check-env.sh printed none of its
+# nineteen verdicts and only a raw `node: command not found` from the shell.
 hc_flush() {
   if [ -s "$HC_BUFFER_DIR/out" ]; then
-    node -e "$HC_FILTER_JS" < "$HC_BUFFER_DIR/out"
+    if node -e "$HC_FILTER_JS" < "$HC_BUFFER_DIR/out" > "$HC_BUFFER_DIR/out.f" 2>/dev/null; then
+      cat "$HC_BUFFER_DIR/out.f"
+    else
+      printf 'UNKNOWN: 診斷過濾器無法執行，本次診斷內容未輸出\n'
+    fi
   fi
   if [ -s "$HC_BUFFER_DIR/err" ]; then
-    node -e "$HC_FILTER_JS" < "$HC_BUFFER_DIR/err" >&2
+    if node -e "$HC_FILTER_JS" < "$HC_BUFFER_DIR/err" > "$HC_BUFFER_DIR/err.f" 2>/dev/null; then
+      cat "$HC_BUFFER_DIR/err.f" >&2
+    else
+      printf 'UNKNOWN: 診斷過濾器無法執行，本次診斷內容未輸出\n' >&2
+    fi
   fi
   : > "$HC_BUFFER_DIR/out"
   : > "$HC_BUFFER_DIR/err"
@@ -105,6 +120,29 @@ hc_flush() {
 # rather than to a stream, and they must be masked identically; a second copy
 # of these patterns would drift from the first.
 hc_mask() { node -e "$HC_FILTER_JS"; }
+
+# hc_sha256 [file] — the SHA-256 of a file, or of stdin when no file is given.
+#
+# node, not shasum: node is already a hard requirement of every checker here
+# (D4), while `shasum` is a Perl script that ships with macOS and most Linux
+# images and is absent from a stripped container. That would be a portability
+# note and nothing more, except that the call sites discarded its stderr, so a
+# missing shasum produced the empty string -- and an empty digest compares
+# equal to the empty digest a record written on the same machine had stored.
+# H6 then accepted evidence for a file that had since been edited, which is
+# the one thing it exists to refuse. Measured on 2026-11-19: with shasum off
+# PATH, H6 returned 0 for a stale record where it returns 2 with shasum.
+#
+# So failure is never a value. On any error this prints nothing and returns
+# non-zero, and a caller that ignores the status gets an empty string that
+# cannot be mistaken for a digest of anything.
+hc_sha256() {
+  node -e '
+    const c = require("node:crypto"), f = require("node:fs");
+    const src = process.argv.length > 1 ? process.argv[1] : 0;
+    process.stdout.write(c.createHash("sha256").update(f.readFileSync(src)).digest("hex"));
+  ' ${1+"$1"}
+}
 
 # hc_read_nul_list <array-name> — fills the named array from NUL-separated
 # records on stdin, so a path may contain spaces, quotes or newlines.

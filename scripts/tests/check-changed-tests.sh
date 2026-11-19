@@ -279,6 +279,28 @@ files 'backend/token=abc123supersecret.py' >/dev/null
 rec="$EV/$(ls -1 "$EV" | tail -1)"
 grep -q 'abc123supersecret' "$rec" && fail "a secret-shaped string reached the evidence record"
 
+# A record that cannot carry its digests is not written at all. H6 compares
+# the stored value against a freshly computed one, so a record holding blanks
+# would match a blank and read as current however stale it was -- the exact
+# shape that let H6 accept evidence for a file that had since been edited
+# when the digest came from a `shasum` that was not installed.
+rm -rf "$EV"
+files backend/app.py >/dev/null
+baseline=$(ls -1 "$EV" | wc -l | tr -d ' ')
+[ "$baseline" -ge 1 ] || fail "setup for the undigestible-record case wrote no record"
+mv "$REPO/AGENTS.md" "$REPO/AGENTS.md.hidden"
+files backend/app.py >/dev/null
+after=$(ls -1 "$EV" | wc -l | tr -d ' ')
+[ "$after" = "$baseline" ] \
+  || fail "a record was written while the rule file could not be digested ($baseline -> $after)"
+grep -q 'AGENTS.md 的指紋' "$TMP/err" \
+  || fail "the run did not say why it kept no record: $(cat "$TMP/err")"
+mv "$REPO/AGENTS.md.hidden" "$REPO/AGENTS.md"
+# And it starts writing records again once the rule file is back.
+files backend/app.py >/dev/null
+[ "$(ls -1 "$EV" | wc -l | tr -d ' ')" -gt "$after" ] \
+  || fail "no record was written after the rule file came back"
+
 # Evidence lives under .git, so it can never appear as an untracked change.
 git -C "$REPO" status --porcelain | grep -q 'label-suite/evidence' \
   && fail "the evidence records showed up in git status"

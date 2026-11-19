@@ -30,6 +30,13 @@ hc_init
 had_fail=0
 note_fail() { had_fail=1; emit_out "FAIL: $1"; }
 
+# node is required, as it is in the other checkers: the payload reader, the
+# digest and the diagnostic filter all run on it. H1 reports rather than
+# blocks, so this is a verdict and not a refusal -- but it is a stated one.
+# Left unsaid, a missing node emptied every line this checker produces.
+command -v node >/dev/null 2>&1 \
+  || note_fail "node 不存在，本輪只能回報這一項；其餘檢查需要 node 才能執行"
+
 # Under --event nothing may change the exit code, including an unexpected error
 # in this script. The trap is the enforcement; the code below does not try.
 if [ "$MODE" = "event" ]; then
@@ -192,18 +199,39 @@ if [ -n "$git_dir" ]; then
   case "$git_dir" in /*) state_dir="$git_dir/label-suite" ;; *) state_dir="$ROOT/$git_dir/label-suite" ;; esac
   mkdir -p "$state_dir" 2>/dev/null
   digest_file="$state_dir/hook-defs.sha256"
-  now=$(cat "$CLAUDE_CFG" "$CODEX_CFG" 2>/dev/null | shasum -a 256 2>/dev/null | cut -d' ' -f1)
-  if [ -f "$digest_file" ]; then
+  # An undigestible pair of configs is reported as undigestible. The empty
+  # string this used to fall back to matched the empty string a previous run
+  # had stored, which reads as "the hook definitions are unchanged" -- the one
+  # conclusion that cannot be drawn without the digest.
+  # The two registrations are concatenated by hand rather than with
+  # `cat a b | hc_sha256`. Under `pipefail` that pipeline reports failure
+  # whenever either file is absent, and absent is the ordinary state today --
+  # there is no `.codex/hooks.json` yet. It made every run report a digest it
+  # had in fact computed as uncomputable, and blank the stored value with it.
+  # A missing registration contributes no bytes, which is a fact, not an error.
+  : > "$HC_BUFFER_DIR/hookdefs"
+  for cfg in "$CLAUDE_CFG" "$CODEX_CFG"; do
+    if [ -f "$cfg" ]; then cat "$cfg" >> "$HC_BUFFER_DIR/hookdefs"; fi
+  done
+  if ! now=$(hc_sha256 "$HC_BUFFER_DIR/hookdefs" 2>/dev/null); then
+    note_fail "無法計算 hook 定義的指紋，這一輪無從判斷它有沒有變更"
+    now=""
+  fi
+  if [ -z "$now" ]; then
+    : # already reported above; the stored value is left alone rather than
+      # overwritten with a blank that the next run would read as a digest.
+  elif [ -f "$digest_file" ]; then
     was=$(cat "$digest_file" 2>/dev/null)
     if [ "$was" != "$now" ]; then
       note_fail "hook 定義已變更，Codex 側在**重新信任**前會被跳過；在 Codex 以 /hooks 重新信任本 repo"
     else
       emit_out "PASS: hook 定義與上次執行時相同"
     fi
+    printf '%s\n' "$now" > "$digest_file" 2>/dev/null
   else
     emit_out "NA: 這是第一次記錄 hook 定義摘要，沒有可比對的前值"
+    printf '%s\n' "$now" > "$digest_file" 2>/dev/null
   fi
-  printf '%s\n' "$now" > "$digest_file" 2>/dev/null
 else
   emit_out "UNKNOWN: 找不到 git 目錄，無法記錄或比對 hook 定義摘要"
 fi

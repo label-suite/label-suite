@@ -31,6 +31,12 @@ harness_setup() {
   # configuration, or a test would measure the developer's setup.
   git -C "$HARNESS_REPO" config core.hooksPath /dev/null
   git -C "$HARNESS_REPO" config commit.gpgsign false
+  # The rule file, because every repository these checkers run in has one and
+  # the evidence records digest it: a record is only about this state while
+  # the rules it was taken under are still the rules. A harness repo without
+  # it would let a test pass against a shape production never sees. A test
+  # that cares what is in it overwrites it.
+  printf 'rules\n' > "$HARNESS_REPO/AGENTS.md"
 
   HARNESS_CALL_LOG="$HARNESS_BIN/.calls"
   export HARNESS_CALL_LOG

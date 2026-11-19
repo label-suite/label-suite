@@ -107,7 +107,10 @@ fi
 GIT_DIR=$(git -C "$REPO" rev-parse --git-dir 2>/dev/null)
 case "$GIT_DIR" in /*) EV="$GIT_DIR/label-suite/evidence" ;; *) EV="$REPO/$GIT_DIR/label-suite/evidence" ;; esac
 HEAD_SHA=$(git -C "$REPO" rev-parse HEAD 2>/dev/null)
-AGENTS_SHA=$(shasum -a 256 "$REPO/AGENTS.md" 2>/dev/null | cut -d' ' -f1)
+if ! AGENTS_SHA=$(hc_sha256 "$REPO/AGENTS.md" 2>/dev/null); then
+  emit_err "BLOCK: 無法計算 AGENTS.md 的指紋，無從判斷證據是在哪一版規則下取得的"
+  FINISHED=1; hc_flush; exit "$EXIT_BLOCK"
+fi
 
 COVERED=""
 if [ -d "$EV" ]; then
@@ -119,7 +122,10 @@ if [ -d "$EV" ]; then
     [ "$(field agents)" = "$AGENTS_SHA" ] || continue
     rec_covered=$(field covered)
     [ -n "$rec_covered" ] && [ "$rec_covered" != "（無）" ] || continue
-    now=$(cd "$REPO" && cat $rec_covered </dev/null 2>/dev/null | shasum -a 256 | cut -d' ' -f1)
+    # A record whose contents cannot be digested does not count. `|| continue`
+    # rather than a default: the failing direction here must drop the record,
+    # never supply a value that something could match.
+    now=$(cd "$REPO" && cat $rec_covered </dev/null 2>/dev/null | hc_sha256 2>/dev/null) || continue
     [ "$(field content)" = "$now" ] || continue
     COVERED="$COVERED $rec_covered"
   done

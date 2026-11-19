@@ -136,6 +136,55 @@ printf '{"hooks":{"SessionStart":[{"command":"/changed"}]}}' > "$d/.codex/hooks.
 run_h1 "$d" >/dev/null
 grep -q '重新信任' "$TMP/out" || fail "a changed hook definition did not mention re-trusting"
 
+# An unusable node must not quietly rewrite the stored digest. The value is
+# what "unchanged since last run" is judged against, so writing a blank over
+# it turns the next run's comparison into blank-against-blank -- the shape
+# that let a stale evidence record read as current in H6. The shim exits
+# non-zero rather than being absent, so `command -v node` still succeeds and
+# this exercises the digest path rather than the startup guard.
+d=$(make_repo brokennode); run_h1 "$d" >/dev/null
+digest="$(git -C "$d" rev-parse --git-dir)/label-suite/hook-defs.sha256"
+case "$digest" in /*) : ;; *) digest="$d/$digest" ;; esac
+before=$(cat "$digest" 2>/dev/null)
+[ -n "$before" ] || fail "setup for the broken-node case recorded no digest"
+
+SHIM="$TMP/shim-brokennode"; mkdir -p "$SHIM"
+printf '#!/usr/bin/env bash\nexit 127\n' > "$SHIM/node"; chmod +x "$SHIM/node"
+# Run from inside the fixture. Neither of the other two routes reaches it
+# when node is unusable: --ci resolves the root from the working directory,
+# and --event needs node to parse the cwd out of the payload, so both fall
+# back to whichever repository the test itself is running in. This assertion
+# passed twice without touching the fixture before that was noticed.
+( cd "$d" && PATH="$SHIM:$PATH" "$CHECKER" --ci ) >"$TMP/out" 2>"$TMP/err" </dev/null
+
+after=$(cat "$digest" 2>/dev/null)
+[ "$before" = "$after" ] || fail "an unusable node overwrote the stored digest: [$before] -> [$after]"
+# Silence is the other half: every verdict is buffered and flushed through
+# node, so a run that cannot flush must still say that it could not.
+[ -s "$TMP/out" ] || fail "a run with an unusable node produced no output at all"
+grep -q 'UNKNOWN' "$TMP/out" \
+  || fail "a run with an unusable node did not report that it could not: $(cat "$TMP/out")"
+
+# One registration present and the other absent is the ordinary state of this
+# repository today -- there is no `.codex/hooks.json` yet -- and it must still
+# produce a digest. Taken as `cat a b | hc_sha256` under `pipefail`, the
+# missing file made the pipeline report failure, so every normal run called a
+# digest it had actually computed uncomputable and blanked the stored value
+# with it.
+d=$(make_repo onecfg); rm -f "$d/.codex/hooks.json"
+( cd "$d" && "$CHECKER" --ci ) >"$TMP/out" 2>"$TMP/err" </dev/null
+grep -q '無法計算 hook 定義的指紋' "$TMP/out" \
+  && fail "an absent .codex/hooks.json was reported as an uncomputable digest"
+digest="$(git -C "$d" rev-parse --git-dir)/label-suite/hook-defs.sha256"
+case "$digest" in /*) : ;; *) digest="$d/$digest" ;; esac
+stored=$(cat "$digest" 2>/dev/null)
+[ "${#stored}" -eq 64 ] \
+  || fail "no digest was stored when one registration was absent: [$stored]"
+# And the value must be the digest of the file that is there, not of nothing.
+present=$(cd "$d" && bash -c '. "$1"; hc_init; hc_sha256 .claude/settings.json' _ "$ROOT/scripts/lib/hook-common.sh")
+[ "$stored" = "$present" ] \
+  || fail "the stored digest is not the digest of the present registration"
+
 # ── Secrets: existence is the question, never the contents ───────────
 
 # The payload deliberately matches none of hook-common's masking patterns. With

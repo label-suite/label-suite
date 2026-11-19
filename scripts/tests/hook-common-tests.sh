@@ -134,9 +134,69 @@ bash -c "set -uo pipefail; source '$LIB'; hc_init; emit_err 'short'; hc_flush" >
 grep -q 'TRUNCATED' "$E" && fail "a short output was marked as truncated"
 [ "$(cat "$E")" = "short" ] || fail "a short output was altered: [$(cat "$E")]"
 
+# Platform parity. Every assertion above is about the shape of the output --
+# a marker is present, a count adds up -- and shape is exactly what survives a
+# platform difference. This one pins the bytes. The fixture is built by node so
+# it is identical everywhere, it exercises all three masking rules, a path that
+# must survive them, and a cut that lands inside a three-byte character, and
+# the digest is taken by node rather than shasum or sha256sum, which are the
+# very BSD/GNU split this check exists to catch. The macOS and Linux runs
+# compare against the same constant, so a divergence is a failure on one of
+# them rather than something a reader has to notice.
+#
+# If this fails and the filter was changed on purpose, re-pin the digest in the
+# same commit as the change. If it fails and the filter was not touched, the
+# platform is the difference, and that is the bug.
+node -e '
+  const parts = [
+    "token = abc123supersecret trailing words\n",
+    "ghp_0123456789abcdefghijABCDEFGHIJ\n",
+    "blob QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVowMTIzNDU2Nzg5\n",
+    "/Users/someone/project/label-suite-oss/scripts/x.sh\n",
+    "Authorization: Bearer zzz\n",
+  ];
+  require("node:fs").writeFileSync(process.argv[1], Buffer.concat([
+    Buffer.from(parts.join(""), "utf8"),
+    Buffer.from("\u4e2d".repeat(23000), "utf8"),
+    Buffer.from("\n", "utf8"),
+  ]));
+' "$TMP/parity.in"
+bash -c "set -uo pipefail; source '$LIB'; hc_init; hc_mask < '$TMP/parity.in' > '$TMP/parity.out'" 2>"$E"
+PARITY_EXPECTED=d4fdae39433c293c7dbc8e80ee2defa90eebb4b60c33c576b56f9fd4df8ebb9e
+parity_actual=$(node -e '
+  const c = require("node:crypto"), f = require("node:fs");
+  process.stdout.write(c.createHash("sha256").update(f.readFileSync(process.argv[1])).digest("hex"));
+' "$TMP/parity.out")
+[ "$parity_actual" = "$PARITY_EXPECTED" ] \
+  || fail "filtered bytes differ from the pinned digest on $(uname -s): $parity_actual"
+
 # Truncation must not change the verdict.
 bash -c "set -uo pipefail; source '$LIB'; hc_init; emit_err \"\$(printf 'a%.0s' \$(seq 1 70000))\"; hc_flush; exit 2" >"$O" 2>"$E"
 [ "$?" -eq 2 ] || fail "truncation changed the exit code"
+
+# ── Digests ──────────────────────────────────────────────────────────
+
+# The whole point of this helper is that failure is never mistaken for a
+# value. An empty digest compares equal to the empty digest stored in a stale
+# record, which is how H6 came to accept evidence for a file that had since
+# been edited when `shasum` was not installed.
+d=$(bash -c "set -uo pipefail; source '$LIB'; hc_sha256 '$ROOT/AGENTS.md'") \
+  || fail "hc_sha256 failed on a readable file"
+[ "${#d}" -eq 64 ] || fail "hc_sha256 returned ${#d} characters, expected 64"
+
+# Same bytes, same digest, whichever way they arrive.
+d2=$(bash -c "set -uo pipefail; source '$LIB'; hc_sha256 < '$ROOT/AGENTS.md'")
+[ "$d" = "$d2" ] || fail "hc_sha256 disagrees between a file argument and stdin"
+
+# A known vector, so the test cannot pass by agreeing with itself.
+e=$(printf '' | bash -c "set -uo pipefail; source '$LIB'; hc_sha256")
+[ "$e" = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" ] \
+  || fail "hc_sha256 of empty input is not the known SHA-256 of the empty string: $e"
+
+out=$(bash -c "set -uo pipefail; source '$LIB'; hc_sha256 '$TMP/does-not-exist'" 2>/dev/null)
+rc=$?
+[ "$rc" -ne 0 ] || fail "hc_sha256 reported success on a file it could not read"
+[ -z "$out" ] || fail "hc_sha256 printed [$out] when it could not digest"
 
 # ── NUL-separated file lists ─────────────────────────────────────────
 
