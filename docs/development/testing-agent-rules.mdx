@@ -4,7 +4,7 @@ description: '三層測試的範圍與生命週期、TDD、行為測試與自證
 category: '開發說明'
 tags: [開發說明, Agent, 規範, 測試]
 createdAt: '2026-11-10'
-updatedAt: '2026-11-16'
+updatedAt: '2026-11-19'
 ---
 
 # 測試與交付證據規範
@@ -20,7 +20,7 @@ updatedAt: '2026-11-16'
 
 ### T1 三層的範圍、位置、指令與生命週期
 
-測試只分 unit、integration、e2e 三層，各層的工具、範圍、位置與指令固定（見 [architecture.mdx](architecture.mdx) §測試分層）。
+測試只分 unit、integration、e2e 三層，各層的工具、範圍、位置與指令固定（見 [architecture.mdx](architecture.mdx) §測試分層）；為什麼這樣分、前端測試為什麼與原始碼同目錄、正式 E2E 為什麼放根目錄，見 [ADR-007 的 D1](adr/007-testing-strategy.mdx#d1-三層測試的分工)、[D3](adr/007-testing-strategy.mdx#d3-前端測試與原始碼放同一個目錄)、[D4](adr/007-testing-strategy.mdx#d4-正式-e2e-放根目錄)。
 
 | | |
 | :--- | :--- |
@@ -186,7 +186,7 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 
 ### T10 覆蓋率
 
-覆蓋率只管兩件事：每張 PR 不得下降，以及五項關鍵路徑達 90% 分支覆蓋；不把整體 80% 當硬閘。
+覆蓋率只管兩件事：每張 PR 不得下降，以及五項關鍵路徑達 90% 分支覆蓋；不把整體 80% 當硬閘，理由見 [ADR-007 的 D2](adr/007-testing-strategy.mdx#d2-覆蓋率只管不得下降與關鍵路徑)。
 
 | | |
 | :--- | :--- |
@@ -236,7 +236,7 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 
 | 不採用 | 出處 | 為什麼 |
 | :--- | :--- | :--- |
-| 整體 80% 當硬閘 | 原始 repo foundation spec `SC-001` | 只管「不得下降」加關鍵路徑 90%（T10）。該條只管後端且自帶逃生條款，範圍與 90% 那條不同 |
+| 整體 80% 當硬閘 | 原始 repo foundation spec `SC-001` | 見 [ADR-007 的 D2](adr/007-testing-strategy.mdx#d2-覆蓋率只管不得下降與關鍵路徑) |
 | `AUTH_MODE=dev` 的測試 token | scaffold `integration-test-http.md` 鐵律四 | [security-agent-rules.mdx](security-agent-rules.mdx) S1 已明文禁止 dev-token 模式；測試要走真的登入或簽一個真的 session cookie |
 | `createTestApp()` 的 `listen(0)`／`closeTestApp()` 生命週期修法 | scaffold `integration-test-http.md` 鐵律一、二 | NestJS 與 supertest 的框架細節，pytest 沒有對應問題，起草工作項明文不得逐字搬 |
 | Jest mock 佇列的 `rounds` 寫法 | duty-mate `jest-mock-queue.md` | 同上。它的**紀律**（紅燈原因未確認前不改實作）沿用在 T2 |
@@ -343,3 +343,4 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 | 2026-11-10 | 七處標「沿用」的來源補進 T3、T5、T8 的禁止或正例格（一個邏輯行為一個斷言、factory 位置、禁止快照測試、一個 spec 一條旅程、行為式命名、假時鐘、E2E 帳密單一來源）；`act()` 那一項改標不在本文件，歸前端 F3 | 初版只在來源欄標「沿用／成為 T…」，十二條裡找不到落點 | [#110](https://github.com/label-suite/label-suite/issues/110) |
 | 2026-11-10 | duty-mate 的 `testing-architecture.md` 不在 `develop`（在未合併分支），改以 trendlink-portal 的改寫版為來源（查核日 2026-11-10） | 起草時點名的 duty-mate `develop` 來源 | [#110](https://github.com/label-suite/label-suite/issues/110) |
 | 2026-11-10 | starter-kit 是維護者本機目錄、不是 GitHub repo，結論從「不存在」改成「存在但這個 loop 讀不到」；`trendlink` 組織 24 個 repo、`singyichen` 與本機的搜尋查核日為 2026-11-10 | 五輪搜尋零命中後的「不存在」結論 | [#111](https://github.com/label-suite/label-suite/issues/111) |
+| 2026-11-19 | 三層分工、覆蓋率政策、前端測試位置與正式 E2E 位置的理由移到 [ADR-007](adr/007-testing-strategy.mdx)，T1 與 T10 只留做法並連過去 | —（理由原本散在 T10 的覆蓋率導言與附錄的不採用表） | [#453](https://github.com/label-suite/label-suite/issues/453) |
