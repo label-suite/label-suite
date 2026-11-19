@@ -94,7 +94,7 @@ updatedAt: '2026-11-16'
 
 ### S5 答案隔離的覆蓋面
 
-標記員能到達的每一個出口，都不得出現標準答案或測試集辨識資訊；這是 `AGENTS.md` 硬性規則 6。
+標記員能到達的每一個出口，都不得出現標準答案或測試集辨識資訊；這是 `AGENTS.md` 硬性規則 6。理由見 [ADR-006 的 D4](adr/006-task-config-and-answer-isolation.mdx#d4-答案隔離涵蓋標記員能到達的每個出口)。
 
 | | |
 | :--- | :--- |
@@ -110,7 +110,7 @@ updatedAt: '2026-11-16'
 
 ### S6 受控答案表與 worker 的讀取邊界
 
-答案存在獨立、受存取控制的資料表，只在 worker 行程內讀取，不離開 worker。
+答案存在獨立、受存取控制的資料表，只在 worker 行程內讀取，不離開 worker。理由見 [ADR-006 的 D4](adr/006-task-config-and-answer-isolation.mdx#d4-答案隔離涵蓋標記員能到達的每個出口)。
 
 | | |
 | :--- | :--- |
@@ -126,7 +126,7 @@ updatedAt: '2026-11-16'
 
 ### S7 設定驅動的界線
 
-新增一種研究任務只改設定、不改核心程式；任務類型不寫死在核心路徑。
+新增一種研究任務只改設定、不改核心程式；任務類型不寫死在核心路徑。理由見 [ADR-006 的 D1](adr/006-task-config-and-answer-isolation.mdx#d1-任務類型由設定決定核心不寫任務專屬邏輯)與 [D2](adr/006-task-config-and-answer-isolation.mdx#d2-任務設定用-input_type-加-outputs-組合)。
 
 | | |
 | :--- | :--- |
@@ -142,7 +142,7 @@ updatedAt: '2026-11-16'
 
 ### S8 設定的驗證與 span 的表示
 
-任務設定是使用者可控輸入，必須經 schema 驗證；span 一律用半開字元 offset。
+任務設定是使用者可控輸入，必須經 schema 驗證；span 一律用半開字元 offset，理由見 [ADR-006 的 D3](adr/006-task-config-and-answer-isolation.mdx#d3-序列標記用半開字元-offset-span)。
 
 | | |
 | :--- | :--- |
@@ -272,3 +272,4 @@ updatedAt: '2026-11-16'
 | 2026-11-10 | starter-kit 來源不存在或已不適用，不做對照；另實查 `trendlink` 組織 24 個 repo 的 tree、個人帳號與本機，找不到該檔（查核日 2026-11-10） | —（工作項點名的 starter-kit `backend/security.md`） | [#105](https://github.com/label-suite/label-suite/issues/105)、[#106](https://github.com/label-suite/label-suite/issues/106) |
 | 2026-11-10 | 初版：十條規範、六條刻意不採用的來源條文、原始 repo 與 scaffold 的逐條對照 | — | [#107](https://github.com/label-suite/label-suite/issues/107) |
 | 2026-11-19 | S1 至 S4 的認證與授權理由寫進 [ADR-004](adr/004-auth-and-security.mdx)，本文只留規範與檢查方式 | —（理由原本只在個人 repo 的 ADR-021、035、037 與 #107 的留言） | [#450](https://github.com/label-suite/label-suite/issues/450) |
+| 2026-11-19 | S5 至 S8 的答案隔離與任務設定理由寫進 [ADR-006](adr/006-task-config-and-answer-isolation.mdx)，本文只留規範與檢查方式 | —（理由原本只在個人 repo 的 ADR-005、007、010、029、031 與 architecture.mdx） | [#452](https://github.com/label-suite/label-suite/issues/452) |
