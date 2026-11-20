@@ -15,7 +15,7 @@ ADR 記錄「為什麼這樣決定」：當時的限制、比較過的選項、�
 | 編號 | 領域 | 狀態 | 涵蓋的決定 |
 | :--- | :--- | :--- | :--- |
 | [001](001-agent-engineering.mdx) | Agent 工程 | 生效 | D1 先搜尋再新增；D2 範圍內直接修正錯誤實作；D3 兩個平台的 hook 設定手寫兩份，不做生成器；D4 H3 只回報診斷，不自動修；D5 H2 失敗時由腳本自己 exit 2 |
-| [002](002-development-workflow.mdx) | 開發流程 | 生效 | D1 完整九份產物流程一次導入；D2 人工停點只留一個；D3 授權放在專案自有的指令；D4 規劃、實作、審查與驗收由不同角色負責；D5 狀態只記在組織層專案板 |
+| [002](002-development-workflow.mdx) | 開發流程 | 生效 | D1 完整九份產物流程一次導入；D2 人工停點只留一個；D3 授權放在專案自有的指令；D4 規劃、實作、審查與驗收由不同角色負責；D5 狀態只記在組織層專案板；D6 後端用 uv、前端用 pnpm；D7 開源開發放在組織的新倉庫 |
 | [003](003-backend-architecture.mdx) | 後端架構 | 生效 | D1 前後端放在同一個 repo；D2 後端框架用 FastAPI；D3 後端採模組內分層；D4 任務狀態機只放在 service 層；D5 API 路徑前綴與成功回應外層；D6 前端 client 用 Orval 產生；D7 資料庫分兩層；D8 非同步任務用 Celery 加 Redis；D9 Bruno 只當可選工具；D10 背景計算的結果寫入做成冪等 |
 | [004](004-auth-and-security.mdx) | 認證與安全 | 生效 | D1 認證 token 放在 httpOnly cookie；D2 授權用的角色每次從資料庫讀；D3 CSRF 用綁定 session 的 double-submit token；D4 Google SSO 直接走 OIDC；D5 Google 登入綁定既有帳號的條件；D6 權限矩陣當授權輸入 |
 | [005](005-frontend-architecture.mdx) | 前端架構 | 生效 | D1 前端是 React 加 Vite 的單頁應用；D2 目錄分層採 pages 加 features；D3 元件庫用 shadcn/ui；D4 design token 寫一層對照；D5 圖示只用 Lucide |

@@ -232,9 +232,112 @@ tags: [adr, workflow, sdd, openspec, project-board]
 - GitHub 提供檢視的 API 之後，檢視的設定可以腳本化
 - 看板上的卡片與 issue 的實際狀態反覆對不起來
 
+## D6 後端用 uv、前端用 pnpm
+
+### 背景
+
+兩個語言的執行環境各需要一個套件管理器，而這個選擇直接影響 CI 速度與可重現性。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| CI 要快 | 解析與安裝的速度是主要指標 |
+| 建置要可重現 | 必須有 lockfile，不能靠安裝當下的解析結果 |
+| `pyproject.toml` 走 PEP 621 | 後端的工具不能自帶另一種專案描述格式 |
+| 腳本與 CI 不想先啟用虛擬環境 | 後端的工具要能一行執行（`uv run`） |
+| 不要幽靈相依 | 前端的工具要有嚴格解析，npm 的寬鬆解析不符合 |
+
+### 考慮過的選項
+
+後端：
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A uv | Rust 寫的，四個候選裡最快；`uv.lock`；原生支援 PEP 621；有 `uv run` | 2024 才出現，相對新，有些 CI 供應商需要額外設定 | 採用 |
+| B pip 加 venv | 來源沒有記錄 | 慢；預設沒有 lockfile；PEP 621 要手動處理；沒有 `uv run` 式的一行執行 | 不採用 |
+| C Poetry | 有 `poetry.lock` | 速度中等；自有格式較重；PEP 621 只部分支援；沒有一行執行 | 不採用 |
+| D Pipenv | 有 `Pipfile.lock` | 慢；不支援 PEP 621；沒有一行執行；大致已被取代 | 不採用 |
+
+前端：
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A pnpm | 快；用符號連結與硬連結，磁碟占用最小；嚴格解析，沒有幽靈相依；支援 workspace | 需要 contributor 改用 `pnpm add` 而不是 `npm install` | 採用 |
+| B npm | 預設就有 | 速度中等；磁碟占用大；沒有嚴格解析 | 不採用 |
+| C yarn | 快 | 嚴格模式只部分支援；classic 與 berry 兩個大版本並存 | 不採用 |
+| D bun | 四個候選裡最快；磁碟占用最小 | 嚴格模式與 workspace 都只部分支援；仍在成熟中 | 不採用 |
+
+### 決定
+
+後端的 Python 套件用 **uv**，前端的 Node 套件用 **pnpm**。規則本體是 `AGENTS.md` 的 Hard Rule 3。
+
+### 後果
+
+**變容易**
+
+- uv 解析與安裝比 pip 或 poetry 快 10 到 100 倍，CI 快取用 `astral-sh/setup-uv@v5` 就夠
+- `uv run` 讓腳本與 CI 步驟不必先啟用虛擬環境
+- `uv.lock` 不靠額外工具就給出可重現的建置
+- pnpm 的嚴格解析會抓到 npm 會默默放過的幽靈相依
+- `pnpm-lock.yaml` 在 CI 快取（`pnpm/action-setup@v4`）上可靠
+
+**變困難**
+
+- contributor 要另外安裝 uv
+- 一個倉庫裡兩個套件管理器，contributor 得記得用 `uv add` 與 `pnpm add`
+- uv 相對新，有些 CI 供應商需要明確設定
+
+### 什麼情況要重新討論
+
+- `backend/` 或 `frontend/` 的安裝在 CI 上成為最慢的一步
+- 要發佈獨立的套件，而選定的工具的發佈流程擋路
+
+## D7 開源開發放在組織的新倉庫
+
+### 背景
+
+Label Suite 要以開源方式開發，而個人倉庫已經累積了論文、會議與 agent 治理的歷史；要決定新倉庫和它的關係。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 個人倉庫已經是公開的 | 「不公開」不是這次要解決的問題 |
+| 應用程式碼當時還只是骨架（`backend/` 48 個檔、`frontend/` 32 個檔） | 丟掉程式碼的成本很低，history 不是非留不可 |
+| 個人倉庫的 `specs/`、`docs/`、`openspec/` 有 3115 處裸 `#NNN` 參照 | 換倉庫之後裸編號會指錯地方 |
+| 四個同類開源專案（doccano、label-studio、argilla、superset）都把前後端放同一個倉庫，而它們的 `docs/` 是使用者文件、不是需求規格 | 新倉庫照收「前後端同一個倉庫」；來源據此主張規格不放 `docs/`，本倉庫沒有照收（見下方的決定） |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 把個人倉庫轉移到組織 | 保住 issue 編號與 history | 會把完整的文件、設計與 agent 工具歷史一起帶進開源倉庫，與乾淨開始相反 | 不採用 |
+| B fork 到組織 | 同上 | 同樣帶進歷史，而且 fork 關係會永久連著兩個倉庫 | 不採用 |
+| C 在組織開新倉庫 | 外部 contributor 只看到產品本身；幾乎沒有程式碼被丟掉 | 裸 issue 編號要重新限定；兩邊的規格與實作要靠引用對齊 | 採用 |
+
+### 決定
+
+開源開發在組織的新倉庫（本倉庫）進行：history 不匯入，issue 編號從 1 重新開始，版面照 `backend/` 加 `frontend/` 放在根層，授權用 Apache-2.0。
+
+**來源把規格正典留在個人倉庫，本倉庫沒有照收**：`docs/specs/` 就是正典，個人倉庫的 ADR 只當參考。效力記在 [architecture.mdx 的 §ADR 效力總表](../architecture.mdx#adr-效力總表)，分工記在 [index.mdx 的 §個人 repo 的 ADR](index.mdx#個人-repo-的-adr)。
+
+### 後果
+
+**變容易**
+
+- 開源倉庫沒有論文、會議與 agent 治理的歷史，外部 contributor 只看到產品
+- 幾乎沒有應用程式碼被丟掉
+
+**變困難**
+
+- 指向個人倉庫的 issue 要寫成 `singyichen/label-suite#NNN`，裸編號在本倉庫指的是本倉庫的 issue
+- 個人倉庫的規格與本倉庫的 `docs/specs/` 一旦都被改，沒有任何機械檢查會發現兩邊分歧
+
+### 什麼情況要重新討論
+
+- 有東西要獨立發佈，根層需要第三個套件目錄
+- 個人倉庫的規格又被修改，而本倉庫的 `docs/specs/` 已經是正典
+
 ## 附錄：來源對照
 
-比對的版本：個人 repo（`singyichen/label-suite`）`faf83356` 的 ADR-017、027、033；本 repo 的 `AGENTS.md`、`openspec/config.yaml`、[openspec-fullstack-sdd.mdx](../workflow/openspec-fullstack-sdd.mdx)、`.claude/commands/sdd.md`。
+比對的版本：個人 repo（`singyichen/label-suite`）`faf83356` 的 ADR-002、017、027、033、036；本 repo 的 `AGENTS.md`、`openspec/config.yaml`、[openspec-fullstack-sdd.mdx](../workflow/openspec-fullstack-sdd.mdx)、`.claude/commands/sdd.md`。
 
 | 決定 | 來源 |
 | :--- | :--- |
@@ -244,6 +347,8 @@ tags: [adr, workflow, sdd, openspec, project-board]
 | D3 | [openspec-fullstack-sdd.mdx 的 §三處要特別處理的地方](../workflow/openspec-fullstack-sdd.mdx#三處要特別處理的地方)第 1 項、`.claude/commands/sdd.md` 的開頭說明、`AGENTS.md` 的 What `/sdd` authorizes |
 | D4 | 個人 repo ADR-017（Context 的三種失敗、Option A、B、C 與 Consequences）；它在本 repo 已被取代，見 [architecture.mdx 的 §ADR 效力總表](../architecture.mdx#adr-效力總表)；本 repo 的角色表在 `AGENTS.md` 的 SDD Workflow；「審查者不是寫的人」見 `AGENTS.md` 的 Dispatch 一條 |
 | D5 | 個人 repo ADR-027（Context 的散落來源、Alternatives Considered、Consequences）；它在本 repo 已被取代，見 [architecture.mdx 的 §ADR 效力總表](../architecture.mdx#adr-效力總表)；不用標籤追蹤狀態與 Ready、blocked-by 的規則在 `AGENTS.md` 的 Project Board and Dispatch；狀態不放本機檔案來自 `.claude/skills/issue-dispatch/SKILL.md`；token 缺 `project` scope 見 [#47](https://github.com/label-suite/label-suite/issues/47) 的留言 |
+| D6 | 個人 repo ADR-002（Context 的兩組 Key requirements、兩張候選比較表、Decision、Consequences 的 Easier 與 Harder）。它在本 repo **沿用**，見 [architecture.mdx 的 §ADR 效力總表](../architecture.mdx#adr-效力總表)；規則本體在 `AGENTS.md` 的 Hard Rule 3。**來源沒有「什麼情況要重新討論」這一節**，該節的兩條是推論 |
+| D7 | 個人 repo ADR-036（Context 的五項實測事實與四個參考專案、Options Evaluated 的三個選項、Decision 的倉庫角色表與 day-one 檔案、Consequences）。它在本 repo **部分採用**：倉庫拆分照收，而「規格正典留在個人倉庫」那一半**沒有照收**，見 [architecture.mdx 的 §ADR 效力總表](../architecture.mdx#adr-效力總表)。§後果 「變困難」的第 2 條（兩邊規格分歧沒有機械檢查）**是推論**，來源最接近的那一條（`openspec/specs/` 變成第二份規格副本）已判為不適用。來源 Consequences 的另兩條（`openspec/specs/` 變成第二份規格副本、paired PR 的版本落差）**不適用**，因為那兩條的前提都是正典留在個人倉庫；來源的 `scripts/check-sdd.sh` 與 `scripts/ci-jobs.tsv` 不存在於本 repo。**來源沒有「什麼情況要重新討論」這一節**，該節第 1 條取自來源 Decision §2（根層只有在有東西要獨立發佈時才加套件目錄），**第 2 條是推論** |
 | — | 個人 repo ADR-033 的其餘決定（`openspec/specs/` 當衍生檢視、寫回規格的硬關卡、Spec Kit 的分工）不採用，本 repo 的 `openspec/specs/` 是可測契約，方向相反，見 [architecture.mdx 的 §ADR 效力總表](../architecture.mdx#adr-效力總表) |
 
 ## 決策紀錄
@@ -256,3 +361,5 @@ tags: [adr, workflow, sdd, openspec, project-board]
 | 2026-11-19 | 規劃、實作、審查與驗收由不同角色負責，主 agent 只派工（[D4](#d4-規劃實作審查與驗收由不同角色負責)） | 個人 repo ADR-017 的 Planner、Generator、Evaluator 三層 | [#448](https://github.com/label-suite/label-suite/issues/448) |
 | 2026-11-19 | issue 狀態只記在組織層專案板的 `Status` 欄（[D5](#d5-狀態只記在組織層專案板)） | 個人 repo ADR-027 的 repo 層專案與十格 Status，以及 `specs/STATUS.md` | [#448](https://github.com/label-suite/label-suite/issues/448) |
 | 2026-11-19 | 人工停點只留一個，驗收由 `acceptance-verifier` 判定，`ops` 在合併之前歸檔（[D2](#d2-人工停點只留一個)） | 同日稍早的「人工停點只留兩個」：apply 完成後由維護者親自驗收才歸檔 | [#464](https://github.com/label-suite/label-suite/issues/464) |
+| 2026-11-20 | 後端用 uv、前端用 pnpm 的理由寫進本 repo 的 ADR（[D6](#d6-後端用-uv前端用-pnpm)） | —（原本只有 `AGENTS.md` 的 Hard Rule 3 與 `architecture.mdx` 效力表的一句「沿用」，理由沒有落點） | [#512](https://github.com/label-suite/label-suite/issues/512) |
+| 2026-11-20 | 開源開發放在組織的新倉庫，規格正典留在本 repo（[D7](#d7-開源開發放在組織的新倉庫)） | 個人 repo ADR-036 的「規格正典留在個人倉庫」那一半 | [#512](https://github.com/label-suite/label-suite/issues/512) |
