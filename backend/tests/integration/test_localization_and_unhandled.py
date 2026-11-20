@@ -10,7 +10,13 @@ import httpx
 import pytest
 
 from tests.conftest import ALLOWED_ORIGIN
-from tests.probe import BAD_RESPONSE_PATH, CRASH_MESSAGE, CRASH_PATH, PROBE_PATH
+from tests.probe import (
+    BAD_RESPONSE_PATH,
+    CRASH_MESSAGE,
+    CRASH_PATH,
+    DB_ERROR_PATH,
+    PROBE_PATH,
+)
 
 ERROR_KEYS = {"success", "code", "message", "data", "timestamp", "traceId", "errors"}
 MISSING_PATH = "/api/v1/no-such-resource"
@@ -158,10 +164,27 @@ async def test_unhandled_exception_log_has_the_trace_id_and_no_request_content(
     logged = record.getMessage() + (caplog.text or "")
     assert trace_id in record.getMessage()
     assert CRASH_PATH in record.getMessage()
-    assert record.exc_info is not None
+    assert "RuntimeError" in record.getMessage()
+    assert "Traceback" in record.getMessage()
     assert "CANARY-cookie" not in logged
     assert "CANARY-query" not in logged
-    assert CRASH_MESSAGE in caplog.text
+    assert CRASH_MESSAGE not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("path", "exception_type"),
+    [(DB_ERROR_PATH, "DBAPIError"), (BAD_RESPONSE_PATH, "ResponseValidationError")],
+)
+async def test_unhandled_log_never_carries_data_from_the_exception_text(
+    client: httpx.AsyncClient, caplog: pytest.LogCaptureFixture, path: str, exception_type: str
+) -> None:
+    caplog.set_level(logging.DEBUG)
+
+    response = await client.get(path)
+
+    assert response.status_code == 500
+    assert exception_type in caplog.text
+    assert "CANARY" not in caplog.text
 
 
 @pytest.mark.parametrize(

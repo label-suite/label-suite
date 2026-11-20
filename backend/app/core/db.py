@@ -72,6 +72,8 @@ def create_engine(settings: DatabaseSettings) -> AsyncEngine:
     ``PRAGMA foreign_keys`` on every connection. Production tier: bounds the
     connection attempt with ``POSTGRES_CONNECT_TIMEOUT_SECONDS`` and pings pooled
     connections before use so a restarted database does not fail the first request.
+    Both tiers set ``hide_parameters`` so bound values never appear in a
+    ``DBAPIError`` message or in SQL echo logs.
 
     Args:
         settings: The validated database settings.
@@ -82,13 +84,14 @@ def create_engine(settings: DatabaseSettings) -> AsyncEngine:
     url = settings.async_database_url()
     if settings.is_lite():
         settings.sqlite_path.parent.mkdir(parents=True, exist_ok=True)
-        engine = create_async_engine(url)
+        engine = create_async_engine(url, hide_parameters=True)
         event.listen(engine.sync_engine, "connect", _enable_sqlite_foreign_keys)
         return engine
     return create_async_engine(
         url,
         connect_args={"timeout": POSTGRES_CONNECT_TIMEOUT_SECONDS},
         pool_pre_ping=True,
+        hide_parameters=True,
     )
 
 

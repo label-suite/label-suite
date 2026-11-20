@@ -6,6 +6,7 @@ context variables survive across tasks and streaming responses are not buffered.
 
 import logging
 import re
+import traceback
 import uuid
 
 from starlette.datastructures import Headers, MutableHeaders
@@ -82,6 +83,69 @@ class CorrelationIdMiddleware:
             correlation_id_var.reset(token)
 
 
+def escape_for_log(value: object) -> str:
+    """Return ``value`` as one log-safe line.
+
+    Backslashes, control characters (``\\n``, ``\\r``, ``\\t``, ...) and non-ASCII
+    characters are written as Python escape sequences, so a request-derived value
+    can never start a forged log line (log injection, Hard Rule 9).
+
+    Args:
+        value: Any value; ``None`` and non-strings are converted with ``str``.
+
+    Returns:
+        The escaped, ASCII-only text.
+    """
+    return str(value).encode("unicode_escape").decode("ascii")
+
+
+def format_exception_without_text(exc: BaseException) -> str:
+    """Format ``exc`` as a traceback that keeps types and frames but drops messages.
+
+    The message of an exception can carry request or database data (the input
+    echoed by a pydantic ``ValidationError``, the statement and parameters in a
+    ``DBAPIError``), so every exception in the chain, including ``__cause__``,
+    ``__context__`` and exception-group members, is shown by its qualified type
+    name only. Frame locals are never captured.
+
+    Args:
+        exc: The exception to format.
+
+    Returns:
+        A multi-line traceback ending without a trailing newline.
+    """
+    seen: set[int] = set()
+
+    def render(error: BaseException) -> list[str]:
+        if id(error) in seen:
+            return []
+        seen.add(id(error))
+        lines: list[str] = []
+        if error.__cause__ is not None:
+            lines += render(error.__cause__)
+            lines.append(
+                "\nThe above exception was the direct cause of the following exception:\n\n"
+            )
+        elif error.__context__ is not None and not error.__suppress_context__:
+            lines += render(error.__context__)
+            lines.append(
+                "\nDuring handling of the above exception, another exception occurred:\n\n"
+            )
+        lines.append("Traceback (most recent call last):\n")
+        lines += traceback.StackSummary.extract(
+            traceback.walk_tb(error.__traceback__), capture_locals=False
+        ).format()
+        error_type = type(error)
+        lines.append(f"{error_type.__module__}.{error_type.__qualname__}\n")
+        if isinstance(error, BaseExceptionGroup):
+            for index, member in enumerate(error.exceptions, start=1):
+                lines.append(f"+-- sub-exception {index} --\n")
+                lines += render(member)
+        return lines
+
+    return "".join(render(exc)).rstrip("\n")
+
+
 class UnhandledExceptionMiddleware:
     """Turn an unhandled exception into a ``500 INTERNAL_ERROR`` envelope.
 
@@ -89,7 +153,9 @@ class UnhandledExceptionMiddleware:
     ``Access-Control-Allow-Origin`` and ``X-Correlation-ID`` (Starlette's
     ``ServerErrorMiddleware`` sits outside both). The response body holds only
     the generic message; the exception goes to one ``ERROR`` log record with the
-    trace ID, method and path, and never the query, body, headers or cookies.
+    trace ID, method and path (escaped by ``escape_for_log``) and a traceback of
+    exception types and frames (``format_exception_without_text``), and never the
+    exception messages, query, body, headers or cookies.
 
     When the response has already started nothing can be rewritten, so the
     exception is logged and re-raised. Non-HTTP scopes pass through unchanged.
@@ -116,13 +182,15 @@ class UnhandledExceptionMiddleware:
 
         try:
             await self.app(scope, receive, send_tracking_start)
-        except Exception:
+        except Exception as exc:
+            # No exc_info: the standard formatter would print str(exc), which can
+            # hold request or database data. The traceback keeps types and frames.
             logger.error(
-                "Unhandled exception (traceId=%s) %s %s",
-                current_trace_id(),
-                scope.get("method"),
-                scope.get("path"),
-                exc_info=True,
+                "Unhandled exception (traceId=%s) %s %s\n%s",
+                escape_for_log(current_trace_id()),
+                escape_for_log(scope.get("method", "")),
+                escape_for_log(scope.get("path", "")),
+                format_exception_without_text(exc),
             )
             if response_started:
                 raise

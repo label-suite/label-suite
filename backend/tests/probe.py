@@ -8,6 +8,7 @@ on the app ``create_app`` builds. Nothing here is registered by production code.
 from typing import Any
 
 from fastapi import APIRouter, Request
+from sqlalchemy.exc import DBAPIError
 
 from app.core.envelope import ok
 from app.core.schemas import ApiResponse, RequestModel, ResponseModel
@@ -16,6 +17,8 @@ PROBE_PATH = "/api/v1/probe"
 CRASH_PATH = "/api/v1/probe-crash"
 BAD_RESPONSE_PATH = "/api/v1/probe-bad-response"
 CRASH_MESSAGE = "CANARY-boom /srv/secret.py"
+DB_ERROR_PATH = "/api/v1/probe-db-error"
+_DB_ERROR_PARTS = ("SELECT 'CANARY-sql'", {"secret": "CANARY-param"}, Exception("CANARY-driver"))
 
 
 class ProbeBody(RequestModel):
@@ -62,3 +65,11 @@ async def bad_response_probe(request: Request) -> Any:
     """Return content that lacks the declared ``name``, so response validation fails."""
     envelope = ok({"label": "CANARY-resp"}, request).model_dump(mode="json", by_alias=True)
     return envelope
+
+
+@probe_router.get("/probe-db-error", response_model=ApiResponse[ProbeData])
+async def db_error_probe() -> ApiResponse[ProbeData]:
+    """Raise a driver error whose statement, parameters and cause carry CANARY values."""
+    # The values live outside the raise line: traceback frames show source lines.
+    statement, params, cause = _DB_ERROR_PARTS
+    raise DBAPIError(statement, params, cause)
