@@ -1,6 +1,7 @@
 {
   "pageName": "系統健康檢查",
   "eyebrow": "DEV ONLY · /dev/health",
+  "description": "呼叫 <code>GET /api/v1/health</code>，證明前端經由 Orval 產生的 hook 與 mutator 打得到後端。",
   "panel": {
     "loading": "正在檢查後端狀態…",
     "okBadge": "正常",

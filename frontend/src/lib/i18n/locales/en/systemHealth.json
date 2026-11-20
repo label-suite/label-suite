@@ -1,6 +1,7 @@
 {
   "pageName": "System health check",
   "eyebrow": "DEV ONLY · /dev/health",
+  "description": "Calls <code>GET /api/v1/health</code> to prove that the frontend reaches the backend through the hook and mutator Orval generates.",
   "panel": {
     "loading": "Checking the backend…",
     "okBadge": "Healthy",
