@@ -4,12 +4,13 @@
  * goes through apiFetch end to end. Runtime names are checked after import;
  * type-only names are checked by `tsc -b` through `import type`.
  */
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { createElement, type ReactNode } from "react";
 import { afterEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 
+import { createQueryClient } from "@/app/query-client";
 import { i18n } from "@/lib/i18n";
 import {
   HEALTH_OK_TRACE_ID,
@@ -42,8 +43,7 @@ afterEach(() => {
 });
 
 function renderGeneratedHealthHook() {
-  // api may not import app (F1), so the test builds its own client with the same no-retry default.
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const client = createQueryClient();
   const wrapper = ({ children }: { children: ReactNode }) =>
     createElement(QueryClientProvider, { client }, children);
   return renderHook(() => useGetHealth(), { wrapper });
