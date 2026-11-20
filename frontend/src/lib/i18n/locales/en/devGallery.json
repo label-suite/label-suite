@@ -1,0 +1,63 @@
+{
+  "pageName": "Component gallery",
+  "eyebrow": "DEV ONLY · /dev/gallery",
+  "description": "Every variant of every <code>components/ui/</code> component appears once on this page. The completeness test compares the variants each component declares with what this page shows, and fails if one is missing.",
+  "nav": {
+    "label": "Component index"
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "sections": {
+    "button": "Button",
+    "input": "Input",
+    "badge": "Badge",
+    "alert": "Alert",
+    "card": "Card",
+    "states": "Skeleton · Empty",
+    "tokens": "Token mapping"
+  },
+  "count": {
+    "variants": "variant × {{n}}",
+    "states": "state × {{n}}"
+  },
+  "button": {
+    "count": "variant × {{variants}} · size × {{sizes}} · state × {{states}}"
+  },
+  "input": {
+    "states": {
+      "default": "Default",
+      "invalid": "Validation error",
+      "disabled": "Disabled"
+    },
+    "placeholder": "Enter text",
+    "error": "This field's format is not valid",
+    "disabledValue": "Cannot edit"
+  },
+  "alert": {
+    "sample": "{{variant}}: {{message}}",
+    "samples": {
+      "info": "Notice",
+      "success": "Done",
+      "warning": "Heads up",
+      "error": "Something went wrong"
+    }
+  },
+  "card": {
+    "title": "Card title",
+    "description": "Description",
+    "content": "Content area",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
+  "states": {
+    "meta": "Shared components for the four screen states",
+    "emptyTitle": "No data yet",
+    "emptyDescription": "Explain why it is empty, and the next step"
+  },
+  "tokens": {
+    "meta": "shadcn/ui variable ← prototype tokens.css"
+  }
+}
