@@ -8,10 +8,14 @@
     "check:er": "node scripts/check-er-data.mjs",
     "test:scripts": "node --test scripts/tests/*.test.mjs",
     "docs:serve": "notecraftapp serve docs --port 4330",
-    "prototype": "node scripts/serve-prototype.mjs"
+    "prototype": "node scripts/serve-prototype.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
     "@fission-ai/openspec": "1.14.1",
-    "notecraftapp": "1.15.0"
+    "lint-staged": "17.6.1",
+    "notecraftapp": "1.15.0",
+    "prettier": "3.10.1"
   }
 }

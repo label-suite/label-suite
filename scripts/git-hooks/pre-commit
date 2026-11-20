@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# pre-commit hook — formats the staged files with Prettier through lint-staged
+# (.lintstagedrc.mjs). Enabled by scripts/setup.sh. It can be skipped with
+# --no-verify, so the CI format job is the real gate.
+#
+# A worktree under .claude/worktrees/ has no node_modules of its own, so the
+# tools are looked up in this checkout first and then in the main checkout
+# (the directory that holds the shared .git). A missing tool fails the commit;
+# it is never skipped.
+set -euo pipefail
+
+TOP=$(git rev-parse --show-toplevel)
+COMMON_DIR=$(cd "$TOP" && cd "$(git rev-parse --git-common-dir)" && pwd)
+MAIN=$(dirname "$COMMON_DIR")
+cd "$TOP"
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "pre-commit: node is not on PATH; Node 22 is needed to run lint-staged." >&2
+  exit 1
+fi
+
+BIN=""
+for dir in "$TOP" "$MAIN"; do
+  if [ -x "$dir/node_modules/.bin/lint-staged" ] && [ -x "$dir/node_modules/.bin/prettier" ]; then
+    BIN="$dir/node_modules/.bin"
+    break
+  fi
+done
+
+if [ -z "$BIN" ]; then
+  echo "pre-commit: lint-staged or prettier not found in $TOP/node_modules or $MAIN/node_modules." >&2
+  echo "Run 'pnpm install' at the repository root, then commit again." >&2
+  exit 1
+fi
+
+# lint-staged runs prettier by name; put the same node_modules/.bin first so it
+# resolves to the pinned version even when the worktree has no node_modules.
+PATH="$BIN:$PATH" exec "$BIN/lint-staged"

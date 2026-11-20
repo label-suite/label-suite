@@ -79,6 +79,28 @@ jobs:
       - name: Build the docs site
         run: pnpm exec notecraftapp build docs --rebuild
 
+  format:
+    name: format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # The pre-commit hook formats staged files, but it only runs where
+      # scripts/setup.sh was run and can be skipped with --no-verify; this job
+      # is the gate. Paths in .prettierignore are not checked.
+      - name: Check formatting with Prettier
+        run: pnpm format:check
+
   specs:
     name: specs
     runs-on: ubuntu-latest
