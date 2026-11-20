@@ -109,13 +109,40 @@ grep -q 'check-changed.sh --staged' "$HOOK" || fail "the hook does not call the 
 grep -qE 'ruff|mypy|tsc|eslint|diff-filter|\.py|\.ts' "$HOOK" \
   && fail "the hook carries judgement of its own; that belongs in the checker"
 
-# H5's own files must be untouched by this task. The comparison is against
-# the merge base, not origin/main: main moves under this branch, and a change
-# someone else landed there is not a change this task made.
+# H5 must stay H5. The comparison is against the merge base, not origin/main:
+# main moves under this branch, and a change someone else landed there is not
+# a change this task made.
+#
+# The hook is held to byte identity. The checker is not, because task 5.2's
+# forbidden-term lint refuses `|| true` and `core.commentChar` was read
+# through one; that one line was rewritten and verified against both an unset
+# and a `;` commentChar. So the assertion is that the rewrite is *all* that
+# changed -- anything else in H5's checker is this task reaching where it
+# said it would not.
 BASE=$(git -C "$ROOT" merge-base HEAD origin/main 2>/dev/null)
 if [ -n "$BASE" ]; then
-  git -C "$ROOT" diff --quiet "$BASE" HEAD -- scripts/check-commit-msg.sh scripts/git-hooks/commit-msg \
-    || fail "this task changed the commit-message checker or its hook"
+  git -C "$ROOT" diff --quiet "$BASE" HEAD -- scripts/git-hooks/commit-msg \
+    || fail "this task changed the commit-message hook"
+  # The checker's judgement is the perl program it runs; that is what must be
+  # identical. A comment-only allowlist was tried first and was vacuous --
+  # appending any comment line to the file slipped straight through it.
+  perl_block() { # perl_block <git-ref> -> the program between the quotes
+    git -C "$ROOT" show "$1:scripts/check-commit-msg.sh" \
+      | sed -n "/^COMMENT_CHAR=.* perl -CSD -e '$/,/^' \"\$MSG_FILE\"$/p"
+  }
+  before_block=$(perl_block "$BASE")
+  after_block=$(perl_block HEAD)
+  [ -n "$after_block" ] || fail "could not read H5's perl program out of the checker"
+  [ "$before_block" = "$after_block" ] \
+    || fail "this task changed H5's message rules (the perl program)"
+  # And outside it, only the commentChar lookup moved.
+  outside() { # outside <git-ref> -> every line but the perl program
+    git -C "$ROOT" show "$1:scripts/check-commit-msg.sh" \
+      | sed "/^COMMENT_CHAR=.* perl -CSD -e '$/,/^' \"\$MSG_FILE\"$/d" \
+      | grep -vE '^#|^$' | grep -vE 'core\.commentChar|COMMENT_CHAR=""|^fi$'
+  }
+  [ "$(outside "$BASE")" = "$(outside HEAD)" ] \
+    || fail "this task changed H5's checker outside the commentChar lookup"
 else
   echo "NOTE: no merge base with origin/main; skipped the H5 zero-diff check"
 fi
