@@ -73,9 +73,15 @@ allowed 'docs/specs/00-prd.mdx' 'H2 interfered with the PRD'
 # The checker reports the resolved path, because symlinks decide where a write
 # actually lands. On macOS $TMPDIR sits under a symlinked /var, so comparing
 # against the unresolved path would fail for a reason that is not a defect.
-REAL_REPO=$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$REPO")
+# `pwd -P` rather than a helper process: it resolves symlinks in the shell, and
+# it cannot come back empty the way a captured command's output can.
+REAL_REPO=$(cd "$REPO" && pwd -P)
 write '.env.local' >/dev/null
-grep -q "$REAL_REPO/.env.local" "$TMP/err" || fail "the refusal did not name the path it refused"
+# The message names what it refused, and the failure says what it said instead:
+# a one-runner-of-two failure here is a platform difference, and guessing at it
+# from the assertion's name alone costs another round trip.
+grep -qF "$REAL_REPO/.env.local" "$TMP/err" \
+  || fail "the refusal did not name the path it refused; REPO=$REPO REAL_REPO=$REAL_REPO err=$(tr '\n' '|' < "$TMP/err" | cut -c1-300)"
 grep -q 'apply_patch' "$TMP/err" || fail "the refusal did not state the patch-tool gap"
 grep -q '讀取' "$TMP/err"        || fail "the refusal did not state the missing read interception"
 grep -q '權限層' "$TMP/err"      || fail "the refusal did not name the layer that carries those gaps"
