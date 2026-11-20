@@ -101,7 +101,7 @@ jobs:
         run: |
           expected=$(cat <<'ROUTES'
           routes:
-            py -> NA (backend/ 不存在)
+            py -> ruff check, mypy --strict (backend/ 存在)
             ts,tsx -> NA (frontend/ 不存在)
             docs/**/*.mdx, docs/**/*.md -> node scripts/check-specs.mjs docs (一律啟用)
           ROUTES

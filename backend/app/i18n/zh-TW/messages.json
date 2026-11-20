@@ -1,0 +1,9 @@
+{
+  "common.database_unavailable": "資料庫暫時無法連線，請稍後再試",
+  "common.internal_error": "系統發生錯誤，請稍後再試",
+  "common.method_not_allowed": "不支援這個操作",
+  "common.not_acceptable": "不支援所要求的語言",
+  "common.not_found": "找不到指定的資源",
+  "common.ok": "成功",
+  "common.validation_failed": "輸入資料有誤，請檢查標示的欄位"
+}

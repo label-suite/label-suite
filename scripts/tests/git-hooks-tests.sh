@@ -42,19 +42,18 @@ commit() { # commit <extra git args...> -> exit code
 
 # ── The hook runs at all, and a clean change commits ─────────────────
 
-harness_set_tool ruff 0 ''
-harness_set_tool mypy 0 ''
+harness_set_tool uv 0 ''
 printf 'print(1)\n' > "$REPO/backend/ok.py"
 git -C "$REPO" add backend/ok.py >/dev/null
 harness_reset_calls
 rc=$(commit)
 [ "$rc" = "0" ] || fail "a clean staged change was refused by the hook (got $rc)"
-harness_calls | grep -q '^ruff ' || fail "the pre-commit hook never reached the checker"
+harness_calls | grep -q 'uv run .* ruff check' || fail "the pre-commit hook never reached the checker"
 
 # ── A refusal actually stops the commit ──────────────────────────────
 
 before=$(git -C "$REPO" rev-parse HEAD)
-harness_set_tool ruff 1 'bad.py:1:1 E999 broken'
+harness_set_tool uv 1 'bad.py:1:1 E999 broken'
 printf 'print(2)\n' > "$REPO/backend/bad.py"
 git -C "$REPO" add backend/bad.py >/dev/null
 rc=$(commit)
@@ -65,7 +64,7 @@ grep -q 'E999' "$HARNESS_BIN/.commit-out" || fail "the tool's diagnostic never r
 # ── Fixing the working tree without staging does not help ────────────
 
 printf 'print(3)  # fixed but not staged\n' > "$REPO/backend/bad.py"
-harness_set_tool ruff 1 'bad.py:1:1 E999 the staged copy is still broken'
+harness_set_tool uv 1 'bad.py:1:1 E999 the staged copy is still broken'
 rc=$(commit)
 [ "$rc" = "0" ] && fail "an unstaged fix was enough to get past the hook"
 [ "$(git -C "$REPO" rev-parse HEAD)" = "$before" ] || fail "the commit happened despite the refusal"
@@ -75,7 +74,7 @@ rc=$(commit)
 rc=$(commit --no-verify)
 [ "$rc" = "0" ] || fail "--no-verify did not skip the hook (got $rc)"
 [ "$(git -C "$REPO" rev-parse HEAD)" = "$before" ] && fail "--no-verify did not produce a commit"
-harness_set_tool ruff 0 ''
+harness_set_tool uv 0 ''
 
 # ── The two hooks are independent (H5 unchanged) ─────────────────────
 #

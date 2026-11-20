@@ -17,7 +17,11 @@
 # Everything it creates is removed by harness_teardown, which also runs on EXIT
 # so an aborted test does not leave temporary repositories behind.
 
-HARNESS_TOOLS="ruff mypy tsc eslint"
+# `uv` is here because the Python tools are not on PATH in this repository:
+# check-changed falls back to running them through the project runner, and
+# that fallback is the branch production actually takes, so a test has to be
+# able to see what argv it builds.
+HARNESS_TOOLS="ruff mypy tsc eslint uv"
 
 # Creates the isolated repository and the fake tool directory, and puts the
 # fakes ahead of everything else on PATH.
@@ -52,6 +56,20 @@ harness_setup() {
 # output and exit code the test asked for.
 self=$(basename "$0")
 printf '%s %s\n' "$self" "$*" >> "$HARNESS_BIN/.calls"
+# The real `uv run --directory <dir>` runs the tool from <dir>, and the paths it
+# is handed are relative to it. A fake that ignored that would see no file at
+# all, and the assertion that the staged bytes -- not the working tree's --
+# reached the tool would pass by seeing nothing.
+if [ "$self" = "uv" ] && [ "${1:-}" = "run" ]; then
+  prev=""
+  for a in "$@"; do
+    if [ "$prev" = "--directory" ]; then
+      cd "$a" || { printf 'fake uv: cannot enter %s\n' "$a" >&2; exit 97; }
+      break
+    fi
+    prev="$a"
+  done
+fi
 # Also record the first line of each file argument. Logging only the argument
 # cannot tell a checker that handed over the right copy of a file from one
 # that handed over a stale or different copy, because the path is the same
@@ -59,6 +77,13 @@ printf '%s %s\n' "$self" "$*" >> "$HARNESS_BIN/.calls"
 for arg in "$@"; do
   [ -f "$arg" ] && printf '%s saw %s <<%s\n' "$self" "$arg" "$(head -1 "$arg" 2>/dev/null)" >> "$HARNESS_BIN/.calls"
 done
+# The working directory is part of what a checker hands a tool: ruff resolves
+# `per-file-ignores` against it, and under --staged it has to be the index
+# mirror's backend/, with the project's configuration and package tree present.
+# Without this line that part of the contract is invisible to these tests.
+printf '%s cwd %s pyproject=%s app=%s\n' "$self" "$PWD" \
+  "$([ -f pyproject.toml ] && printf yes || printf no)" \
+  "$([ -d app ] && printf yes || printf no)" >> "$HARNESS_BIN/.calls"
 out=$(cat "$HARNESS_BIN/.$self.out")
 [ -n "$out" ] && printf '%s\n' "$out"
 exit "$(cat "$HARNESS_BIN/.$self.code")"

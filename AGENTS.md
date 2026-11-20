@@ -127,10 +127,10 @@ Full rules: [docs/development/workflow/commit-and-release.md](docs/development/w
 
 | Artifact | Language |
 |----------|----------|
-| Code, comments, commit messages, API contracts, `AGENTS.md`, `CLAUDE.md` | English only (except as the `design/prototype/` row below allows) |
+| Code, comments, commit messages, API contracts (the machine contracts: `openapi.json`, schemas, and identifiers in code), `AGENTS.md`, `CLAUDE.md` | English only (except as the `design/prototype/` row below allows) |
 | `docs/` | Traditional Chinese allowed |
 | Comments in `design/prototype/` | **Exception to the first row.** Traditional Chinese allowed (maintainer's ruling, 2026-11-12). Those comments mostly say which spec clause or which ruling a line implements, and the clauses themselves are in Chinese, so translating them only adds a second translation to check back against. Code and identifiers in those files stay English, by the first row. The on-screen copy is the screen's own content, in whichever language the screen shows it, and this table does not govern it. |
-| `openspec/` artifacts (proposals, designs, tasks, spec deltas) | Traditional Chinese; OpenSpec structural headings (`## ADDED Requirements`, `### Requirement:`, `#### Scenario:`) and the `SHALL` / `MUST` keywords stay in English |
+| `openspec/` artifacts (proposals, designs, tasks, spec deltas) | Traditional Chinese; OpenSpec structural headings (`## ADDED Requirements`, `### Requirement:`, `#### Scenario:`) and the `SHALL` / `MUST` keywords stay in English. The narrative in `api-contract.md` is Traditional Chinese; its identifiers (field names, `operationId`, error codes, example JSON) stay in English |
 | Issues and PRs opened by an agent | Traditional Chinese for the body and the descriptive part of the title. The structural head (`[Bug]`, `feat:`), label names, code identifiers, file paths, commands, and verbatim error output stay in English |
 | Diagnostics a hook checker prints (`scripts/check-*.sh`) | **Exception to the first row.** Traditional Chinese (maintainer's ruling, 2026-11-18). These lines are read by a person, and they quote the clause they enforce — a hard rule here, a requirement in `docs/specs/` — which is itself in Chinese, so translating adds a second wording to keep in step. Code, identifiers, flags, file paths and the `PASS:`/`FAIL:`/`BLOCK:`/`NA:`/`UNKNOWN:` prefixes stay English, by the first row. `scripts/check-commit-msg.sh` predates this row and stays English; it quotes no Chinese clause. |
 | Replies to the maintainer | Traditional Chinese |

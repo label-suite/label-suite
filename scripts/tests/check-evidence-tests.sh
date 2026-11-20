@@ -60,8 +60,7 @@ grep -q '維護者' "$TMP/err" && fail "H6 asked for the maintainer, which would
 
 # ── A fresh passing record lets the stop through ─────────────────────
 
-harness_set_tool ruff 0 ''
-harness_set_tool mypy 0 ''
+harness_set_tool uv 0 ''
 produce_evidence backend/app.py
 rc=$(run false)
 [ "$rc" = "0" ] || fail "a fresh passing record did not satisfy H6 (got $rc)"
@@ -100,8 +99,7 @@ rc=$(run false)
 rm -f "$REPO/docs/a-page.mdx" "$REPO/scripts/check-specs.mjs"
 mv "$REPO/.backend-aside" "$REPO/backend"
 rm -rf "$EV"
-harness_set_tool ruff 0 ''
-harness_set_tool mypy 0 ''
+harness_set_tool uv 0 ''
 produce_evidence backend/app.py
 
 # ── A record that does not cover this change is not adopted ──────────
@@ -114,11 +112,11 @@ grep -q 'backend/other.py' "$TMP/err" || fail "the refusal did not name the unco
 
 # ── A failing record is not evidence ─────────────────────────────────
 
-harness_set_tool ruff 1 'E999'
+harness_set_tool uv 1 'E999'
 produce_evidence backend/app.py backend/other.py
 rc=$(run false)
 [ "$rc" = "2" ] || fail "a record of a failing check was accepted as evidence (got $rc)"
-harness_set_tool ruff 0 ''
+harness_set_tool uv 0 ''
 
 # ── Changing the rules invalidates every record ──────────────────────
 

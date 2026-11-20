@@ -95,7 +95,7 @@ FRONTEND=0; [ -d "$REPO/frontend" ] && FRONTEND=1
 
 if [ "$MODE" = "list-routes" ]; then
   emit_out "routes:"
-  [ "$BACKEND" = "1" ] && emit_out "  py -> ruff check, mypy (backend/ 存在)" || emit_out "  py -> NA (backend/ 不存在)"
+  [ "$BACKEND" = "1" ] && emit_out "  py -> ruff check, mypy --strict (backend/ 存在)" || emit_out "  py -> NA (backend/ 不存在)"
   [ "$FRONTEND" = "1" ] && emit_out "  ts,tsx -> tsc --noEmit, eslint (frontend/ 存在)" || emit_out "  ts,tsx -> NA (frontend/ 不存在)"
   emit_out "  docs/**/*.mdx, docs/**/*.md -> node scripts/check-specs.mjs docs (一律啟用)"
   FINISHED=1; hc_flush; exit 0
@@ -184,7 +184,12 @@ if [ "$MODE" = "staged" ] && { [ "${#PY_FILES[@]}" -gt 0 ] || [ "${#TS_FILES[@]}
     undecidable "無法建立鏡像目錄，本次不判為通過"
   # Whole-tree checks need the whole index; per-file checks need only their
   # own files, which is much cheaper on a large repository.
-  if [ "$DOC_HITS" = "1" ] || [ "${#TS_FILES[@]}" -gt 0 ]; then
+  # Python needs the whole index too, not only the changed files: the tools run
+  # with `backend/` as their working directory (see the Python route below), so
+  # `backend/pyproject.toml` has to be there for ruff's `per-file-ignores` to
+  # match, and the package tree has to be there or `mypy --strict` reports every
+  # `app.*` import in a staged test as unresolvable.
+  if [ "$DOC_HITS" = "1" ] || [ "${#TS_FILES[@]}" -gt 0 ] || [ "${#PY_FILES[@]}" -gt 0 ]; then
     git -C "$REPO" checkout-index -a --prefix="$MIRROR/" 2>/dev/null || \
       undecidable "無法把索引物化到鏡像目錄，本次不判為通過"
   fi
@@ -224,8 +229,43 @@ if [ "${#PY_FILES[@]}" -gt 0 ]; then
   else
     # Not a subshell: need_tool records a violation, and a subshell would
     # throw that away while still looking like it had run.
-    if need_tool ruff; then run_tool "ruff check" ruff check -- "${PY_FILES[@]}"; fi
-    if need_tool mypy; then run_tool "mypy" mypy -- "${PY_FILES[@]}"; fi
+    # `ruff` and `mypy` are not on PATH here -- `uv sync` installs them into
+    # `backend/.venv` -- so they are reached through the project's own runner,
+    # the spelling `openspec/config.yaml` and backend-agent-rules B2 both use.
+    # `--no-sync` keeps a hook from provisioning an environment behind the
+    # author's back; an unprovisioned one fails loudly instead.
+    #
+    # Working directory, not `--config`, is what decides how ruff resolves
+    # `per-file-ignores`: measured, `"tests/**" = ["S101"]` stops matching the
+    # moment ruff runs from anywhere but `backend/`, whatever `--config` says,
+    # and every `assert` in a staged test is then reported. So the tools run
+    # with `backend/` as their working directory -- the mirror's under
+    # `--staged`, the checkout's otherwise -- and are named the files relative
+    # to it, while `--project` keeps pointing at the real checkout, which is
+    # where the environment lives.
+    # The two tools do not cover the same files, and `openspec/config.yaml` is
+    # where that is settled: `ruff check .` is the whole of `backend/`, while
+    # `mypy --strict app` is the application package only. Running `--strict`
+    # over `backend/tests/` as well reports errors on code the repository has
+    # never type-checked -- measured: 12 of them on files this change never
+    # touched -- so the per-file form keeps each tool to its own scope.
+    PY_REL=(); PY_APP=()
+    for rel in "${PY_FILES[@]}"; do
+      case "$rel" in
+        backend/*) PY_REL+=("${rel#backend/}") ;;
+        *)         PY_REL+=("../$rel") ;;
+      esac
+      case "$rel" in backend/app/*) PY_APP+=("${rel#backend/}") ;; esac
+    done
+    if need_tool uv; then
+      PY_RUN=(uv run --directory "$CONTENT_ROOT/backend" --project "$REPO/backend" --no-sync)
+      run_tool "ruff check" "${PY_RUN[@]}" ruff check -- "${PY_REL[@]}"
+      if [ "${#PY_APP[@]}" -gt 0 ]; then
+        run_tool "mypy --strict" "${PY_RUN[@]}" mypy --strict -- "${PY_APP[@]}"
+      else
+        emit_err "NA: 本次沒有 backend/app/ 底下的檔案，而 mypy --strict 的範圍是 app（openspec/config.yaml）"
+      fi
+    fi
   fi
 fi
 

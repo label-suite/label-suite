@@ -1,0 +1,10 @@
+# Virtual environment and tool caches
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+
+# Lite-tier SQLite files (default SQLITE_PATH is ./data/label_suite.db)
+data/

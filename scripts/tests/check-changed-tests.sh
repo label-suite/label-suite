@@ -44,25 +44,77 @@ rc=$(files app.py)
 grep -q '^NA:' "$TMP/err" || fail "a .py change with no backend/ was not marked NA"
 [ -z "$(harness_calls)" ] || fail "a tool ran even though backend/ does not exist"
 
-mkdir -p "$REPO/backend"
+mkdir -p "$REPO/backend/app"
+# The project file, because the tools run from backend/ and ruff resolves
+# `per-file-ignores` against that directory: a fixture without it would let the
+# mirror assertion below pass on a repository that never had one.
+seed backend/pyproject.toml '[tool.ruff]
+line-length = 100
+'
+# Two fixtures: one inside the application package, because that is the only
+# scope `mypy --strict` covers, and one outside it, which the later cases use.
 seed backend/app.py 'print(1)'
+seed backend/app/x.py 'print(1)'
 harness_reset_calls
-rc=$(files backend/app.py)
-harness_calls | grep -q '^ruff ' || fail "ruff did not run once backend/ exists"
-harness_calls | grep -q '^mypy ' || fail "mypy did not run once backend/ exists"
-harness_calls | grep -q '^ruff check' || fail "ruff was not invoked with the check subcommand"
+rc=$(files backend/app/x.py)
+# Neither tool is on PATH in this repository -- `uv sync` installs them into
+# `backend/.venv` -- so both are reached through the project runner, and the
+# runner is what a test can watch.
+harness_calls | grep -q 'uv run .* ruff check' || fail "ruff did not run once backend/ exists"
+harness_calls | grep -q 'uv run .* mypy --strict' || fail "mypy did not run once backend/ exists"
 harness_calls | grep -q -- '--fix' && fail "a tool was invoked in a mode that rewrites files"
+harness_calls | grep -q -- '--no-sync' \
+  || fail "the runner was allowed to provision an environment during a hook"
 
-# An enabled layer whose tool is missing is an explicit failure, not NA.
+# ruff resolves `per-file-ignores` against its working directory, so the tools
+# must run from `backend/` and be named the files relative to it. An absolute
+# path, or a path carrying the `backend/` prefix, silently drops this project's
+# per-file exemptions.
+harness_calls | grep -q 'uv run --directory [^ ]*/backend --project [^ ]*/backend ' \
+  || fail "the tools were not run from backend/: $(harness_calls | head -1)"
+harness_calls | grep -q 'ruff check -- app/x.py' \
+  || fail "the file was not named relative to backend/: $(harness_calls | head -1)"
+
+# The two tools have different scopes, and `openspec/config.yaml` settles them:
+# `ruff check .` is all of backend/, `mypy --strict app` is the app package. A
+# change confined to backend/tests/ gets ruff and an explicit NA for mypy, not
+# `--strict` over code this repository has never type-checked.
+mkdir -p "$REPO/backend/tests"
+seed backend/tests/test_x.py 'print(1)'
 harness_reset_calls
-# node must stay reachable here, or this measures the node guard instead of
-# the missing-tool verdict. ruff and mypy are genuinely absent on this machine,
-# so dropping the harness directory from PATH is enough.
-NODE_DIR=$(dirname "$(command -v node)")
-rc=$( ( cd "$REPO" && PATH="$NODE_DIR:/usr/bin:/bin" "$CHECKER" --files backend/app.py >"$TMP/out" 2>"$TMP/err" ); echo $? )
-[ "$rc" = "0" ] && fail "a missing tool for an enabled layer reported as passing"
-grep -q 'ruff' "$TMP/err" || fail "the failure did not name the missing tool"
-grep -q '^NA:' "$TMP/err" && fail "a missing tool for an enabled layer was marked NA"
+rc=$(files backend/tests/test_x.py)
+[ "$rc" = "0" ] || fail "a tests-only Python change did not exit 0 (got $rc)"
+harness_calls | grep -q 'uv run .* ruff check' || fail "ruff did not run on a tests-only change"
+harness_calls | grep -q 'mypy' && fail "mypy --strict ran outside the app package"
+grep -q '^NA:.*mypy --strict' "$TMP/err" \
+  || fail "mypy being out of scope was not reported: $(grep -E '^(NA|FAIL)' "$TMP/err" | head -2)"
+
+# The discriminating case is a change that touches both: ruff must see both
+# files and mypy must see only the one inside the package. A tests-only change
+# cannot tell the scope split apart from the guard in front of it.
+harness_reset_calls
+rc=$( ( cd "$REPO" && "$CHECKER" --files backend/app/x.py backend/tests/test_x.py >"$TMP/out" 2>"$TMP/err" ); echo $? )
+[ "$rc" = "0" ] || fail "a mixed Python change did not exit 0 (got $rc)"
+harness_calls | grep -q 'ruff check -- app/x.py tests/test_x.py' \
+  || fail "ruff did not see both files: $(harness_calls | grep ruff | head -1)"
+harness_calls | grep -q 'mypy --strict -- app/x.py$' \
+  || fail "mypy saw something outside the app package: $(harness_calls | grep mypy | head -1)"
+
+# An enabled layer whose runner is missing is an explicit failure, not NA.
+harness_reset_calls
+# node must stay reachable here, or this measures the node guard instead of the
+# missing-runner verdict -- but keeping node's whole directory on PATH is not a
+# way to drop `uv`, because on this machine they are installed side by side and
+# that is exactly how an earlier version of this test passed while measuring
+# nothing. A directory holding node alone is what makes the runner absent.
+NODE_ONLY="$TMP/node-only"; mkdir -p "$NODE_ONLY"
+ln -sf "$(command -v node)" "$NODE_ONLY/node"
+command -v uv >/dev/null 2>&1 && PATH="$NODE_ONLY:/usr/bin:/bin" command -v uv >/dev/null 2>&1 \
+  && fail "the stripped PATH still reaches uv, so this case measures nothing"
+rc=$( ( cd "$REPO" && PATH="$NODE_ONLY:/usr/bin:/bin" "$CHECKER" --files backend/app/x.py >"$TMP/out" 2>"$TMP/err" ); echo $? )
+[ "$rc" = "0" ] && fail "a missing runner for an enabled layer reported as passing"
+grep -q 'uv' "$TMP/err" || fail "the failure did not name what was missing"
+grep -q '^NA:' "$TMP/err" && fail "a missing runner for an enabled layer was marked NA"
 
 # docs routes are always on, because their checker is already in the repo.
 seed docs/specs/x.mdx '# x'
@@ -119,7 +171,7 @@ files backend/dirty.py >/dev/null
 
 # H3 reports and never blocks, including when the check genuinely fails. This
 # is the requirement, not an edge case: the gate is H4, H5 and H7.
-harness_set_tool ruff 1 'app.py:1:1 E999 invalid syntax'
+harness_set_tool uv 1 'app.py:1:1 E999 invalid syntax'
 harness_reset_calls
 rc=$(printf '{"cwd":"%s","hook_event_name":"PostToolUse","tool_name":"Write","tool_input":{"file_path":"%s/backend/app.py"}}' "$REPO" "$REPO" \
      | ( cd "$REPO" && "$CHECKER" --event PostToolUse >"$TMP/out" 2>"$TMP/err" ); echo $?)
@@ -131,7 +183,7 @@ grep -q 'E999' "$TMP/err" || fail "H3 swallowed the tool's own diagnostic"
 # The same failure in a blocking mode is encoded as a non-zero exit.
 rc=$(files backend/app.py)
 [ "$rc" = "1" ] || fail "a blocking mode did not encode the violation as 1 (got $rc)"
-harness_set_tool ruff 0 ''
+harness_set_tool uv 0 ''
 
 mkdir -p "$TMP/onlybash" && ln -sf "$(command -v bash)" "$TMP/onlybash/bash"
 undecidable() { # undecidable <mode-args...> -> exit code
@@ -157,30 +209,37 @@ done
 staged() { ( cd "${2:-$REPO}" && "$CHECKER" --staged >"$TMP/out" 2>"$TMP/err" ); echo $?; }
 
 git -C "$REPO" add -A >/dev/null; git -C "$REPO" commit -qm "before staged cases"
-harness_set_tool ruff 0 ''
-harness_set_tool mypy 0 ''
+harness_set_tool uv 0 ''
 
 seed backend/staged.py 'print(1)'
 git -C "$REPO" add backend/staged.py >/dev/null
 harness_reset_calls
 rc=$(staged)
 [ "$rc" = "0" ] || fail "a clean staged change was refused (got $rc)"
-harness_calls | grep -q '^ruff ' || fail "--staged did not route the staged file to its tool"
+harness_calls | grep -q 'uv run .* ruff check' || fail "--staged did not route the staged file to its tool"
+# Under --staged the tools run from the mirror's backend/, and the mirror has to
+# carry the whole index, not only the changed files: ruff needs
+# `backend/pyproject.toml` beside it or `per-file-ignores` stops matching, and
+# `mypy --strict` needs the package tree or every `app.*` import in a staged
+# test reads as unresolvable. Measured against the real toolchain before this
+# assertion existed: 12 such errors on files the change never touched.
+harness_calls | grep -q 'uv cwd .*/backend pyproject=yes app=yes' \
+  || fail "the mirror did not carry the project beside the staged file: $(harness_calls | grep 'uv cwd' | head -1)"
 
 # The tool must see the staged bytes, not whatever the working tree holds.
 # The harness logs the first line of every file it is handed, so this asserts
 # on the content rather than on the path, which is identical either way.
 seed backend/staged.py 'print(2)   # fixed here but never staged'
-harness_set_tool ruff 1 'staged.py:1:1 E999 the staged version is broken'
+harness_set_tool uv 1 'staged.py:1:1 E999 the staged version is broken'
 harness_reset_calls
 rc=$(staged)
 [ "$rc" = "1" ] || fail "a fix left unstaged was treated as if it counted (got $rc)"
 grep -q 'E999' "$TMP/err" || fail "--staged did not report the tool output"
-harness_calls | grep -q 'ruff saw .*<<print(1)' \
+harness_calls | grep -q 'uv saw .*<<print(1)' \
   || fail "the tool was handed the working-tree copy, not the staged one"
 harness_calls | grep -q 'never staged' \
   && fail "the working-tree copy reached the tool"
-harness_set_tool ruff 0 ''
+harness_set_tool uv 0 ''
 
 # The sharpest discriminator: stage a file, then delete it from the working
 # tree without staging the deletion. Only a checker reading the index can see

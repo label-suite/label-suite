@@ -9,6 +9,18 @@
 # the position where they would actually run. Matching them anywhere turns a
 # sentence explaining the platform's own timeout field into a CI failure.
 #
+# Scope is the checker layer, deliberately: `scripts/check-*.sh`,
+# `scripts/lib/*.sh` and `scripts/git-hooks/*`. It does not scan
+# `scripts/tests/`, and extending it there would cost more than it buys --
+# measured, it reports three lines, and all three are legitimate: the comment
+# in this file that quotes the construct in order to explain it, a
+# `command -v ... || true` in a harness test where absent is the expected
+# answer, and a `git add` setting up a fixture repository. Covering them would
+# need an exemption mechanism, and having no exemption mechanism is this
+# gate's whole strength. What protects the test layer instead is mutating the
+# thing under test and watching the assertion go red; a test that stays green
+# is the only evidence that it was ever testing anything.
+#
 # Usage: forbidden-terms-lint.sh [path...]   (defaults to the checker layer)
 set -uo pipefail
 
