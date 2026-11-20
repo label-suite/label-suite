@@ -58,19 +58,19 @@
 
 對到 `ui-design.md` §資料來源 的表。「來源」寫的是畫面讀到的前端值，以及它來自回應的哪個欄位。
 
-| 狀態         | 畫面欄位     | 前端值                                                                             | 回應來源                                                                    |
-| :----------- | :----------- | :--------------------------------------------------------------------------------- | :-------------------------------------------------------------------------- |
-| 正常         | 服務         | `query.data.data.status`                                                           | 成功外層 `data.status`                                                      |
-| 正常         | 資料庫       | `query.data.data.database`                                                         | 成功外層 `data.database`                                                    |
-| 正常         | 檢查時間     | `query.data.meta.timestamp`，經 `formatDateTime`（`src/lib/date.ts`）              | 成功外層 `timestamp`；開發頁格式 `YYYY-MM-DD HH:mm:ss（UTC+8）`（Q18）      |
-| 正常         | traceId      | `query.data.meta.traceId`                                                          | 成功外層 `traceId`                                                          |
-| 後端回報錯誤 | 標題         | `code === "DATABASE_UNAVAILABLE"` 用資料庫無法連線標題，其餘用通用「後端回報錯誤」 | 錯誤外層 `code`（依 `code`，不依 `status`，A7）                             |
-| 後端回報錯誤 | 標題下的說明 | `ApiError.message`                                                                 | 錯誤外層 `message`（後端已依 `Accept-Language` 本地化，原樣顯示，A8）       |
-| 後端回報錯誤 | 錯誤碼       | `ApiError.code`                                                                    | 錯誤外層 `code`                                                             |
-| 後端回報錯誤 | traceId      | `ApiError.traceId`                                                                 | 錯誤外層 `traceId`                                                          |
-| 連不到後端   | 錯誤類型     | `ApiError.kind` 直接顯示 `network` 或 `timeout`（Q3）                              | 無回應；由 `apiFetch` 判定。非外層的回應（`invalidResponse`）顯示 `network` |
-| 連不到後端   | traceId      | `ApiError.traceId` 為 `null`，畫面顯示固定文字「無（請求沒有送達）」               | 無回應                                                                      |
-| 載入中       | —            | 首次載入或按「重新檢查」時的 `isFetching`；背景更新不顯示（UI-7）                  | —                                                                           |
+| 狀態         | 畫面欄位     | 前端值                                                                                                                                                                                                                           | 回應來源                                                                                                                               |
+| :----------- | :----------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------- |
+| 正常         | 服務         | `query.data.data.status`                                                                                                                                                                                                         | 成功外層 `data.status`                                                                                                                 |
+| 正常         | 資料庫       | `query.data.data.database`                                                                                                                                                                                                       | 成功外層 `data.database`                                                                                                               |
+| 正常         | 檢查時間     | `query.data.meta.timestamp`，經 `formatDevCheckTime`（`src/lib/date.ts`，不傳時區參數），換成瀏覽者裝置的時區（`Intl.DateTimeFormat().resolvedOptions().timeZone`）                                                              | 成功外層 `timestamp`（UTC）；開發頁格式 `YYYY-MM-DD HH:mm:ss（UTC±H）`，括號內是裝置的實際偏移，不固定換算 Asia/Taipei（Q18 補充決議） |
+| 正常         | traceId      | `query.data.meta.traceId`                                                                                                                                                                                                        | 成功外層 `traceId`                                                                                                                     |
+| 後端回報錯誤 | 標題         | `code === "DATABASE_UNAVAILABLE"` 用資料庫無法連線標題，其餘用通用「後端回報錯誤」                                                                                                                                               | 錯誤外層 `code`（依 `code`，不依 `status`，A7）                                                                                        |
+| 後端回報錯誤 | 標題下的說明 | `ApiError.message`                                                                                                                                                                                                               | 錯誤外層 `message`（後端已依 `Accept-Language` 本地化，原樣顯示，A8）                                                                  |
+| 後端回報錯誤 | 錯誤碼       | `ApiError.code`                                                                                                                                                                                                                  | 錯誤外層 `code`                                                                                                                        |
+| 後端回報錯誤 | traceId      | `ApiError.traceId`                                                                                                                                                                                                               | 錯誤外層 `traceId`                                                                                                                     |
+| 連不到後端   | 錯誤類型     | `ApiError.kind` 直接顯示 `network` 或 `timeout`（Q3）                                                                                                                                                                            | 無回應；由 `apiFetch` 判定。非外層的回應（`invalidResponse`）顯示 `network`                                                            |
+| 連不到後端   | traceId      | `ApiError.traceId` 為 `null`，畫面顯示固定文字「無（請求沒有送達）」                                                                                                                                                             | 無回應                                                                                                                                 |
+| 載入中       | —            | `isPending`，或由使用者按「重新檢查」觸發的 `isFetching`；背景更新的 `isFetching` 不顯示載入中（UI-7）。`isFetching` 期間「重新檢查」是 `aria-disabled` 且忽略點擊，所以 `refetch()` 預設的 `cancelRefetch` 不會取消進行中的請求 | —                                                                                                                                      |
 
 四種狀態的判定是 `toHealthViewState` 的事，判定的**輸入契約**是（Q3）：
 
@@ -172,7 +172,7 @@
 
 ## MSW 四種狀態的 fixture
 
-測試用 `msw/node` 的 `setupServer`（`src/test/msw-server.ts`），`onUnhandledRequest: "error"`。MSW、faker 與產生的 `*.msw.ts` **只給測試用**，lint 擋住產品碼 import（Q6）。四種狀態的回應**只用 `openapi.json` 裡有的 body 欄位**，不加任何欄位；值取自後端契約的範例與錯誤碼表。fixture 由 `src/test/envelope-fixtures.ts` **手組**，回傳型別是產物的 `HealthDataResponse`／`ErrorResponse`，欄位改名時測試在型別檢查就失敗（Q19 C3）。**前端測試一律以固定 fixture 覆寫 Orval 產生的 handler**，產生的預設 handler 只當「有攔到請求」的底線（Q19 C1，理由見下）。
+測試用 `msw/node` 的 `setupServer`（`src/test/msw-server.ts`），`onUnhandledRequest: "error"`。MSW、faker 與產生的 `*.msw.ts` **只給測試檔用**（測試檔指 `**/*.test.ts(x)`、`src/test/**`、`vitest.config.ts`，定義見 `system-design.md` §目錄結構），lint 擋住產品碼 import（Q6）。四種狀態的回應**只用 `openapi.json` 裡有的 body 欄位**，不加任何欄位；值取自後端契約的範例與錯誤碼表。fixture 由 `src/test/envelope-fixtures.ts` **手組**，回傳型別是產物的 `HealthDataResponse`／`ErrorResponse`，欄位改名時測試在型別檢查就失敗（Q19 C3）。**前端測試一律以固定 fixture 覆寫 Orval 產生的 handler**，產生的預設 handler 只當「有攔到請求」的底線（Q19 C1，理由見下）。
 
 | 狀態         | handler 行為                                                             | status | body                   |
 | :----------- | :----------------------------------------------------------------------- | :----- | :--------------------- |
@@ -236,15 +236,15 @@
 
 依 operationId `getHealth` 與元件名，Orval 預期產出（以 apply 時的實際版本為準；與下表不同時先回來改本文，A4）：
 
-| 種類          | 名稱                                                                               | 用在                                                        |
-| :------------ | :--------------------------------------------------------------------------------- | :---------------------------------------------------------- |
-| 查詢 hook     | `useGetHealth`                                                                     | `HealthStatusPanel`                                         |
-| 請求函式      | `getHealth`                                                                        | `useGetHealth` 的 `queryFn`；元件不直接呼叫                 |
-| query key     | `getGetHealthQueryKey`                                                             | 唯一的 key 來源（A9）；「重新檢查」用 `refetch()`、不換 key |
-| query options | `getGetHealthQueryOptions`                                                         | 之後需要 prefetch 時用                                      |
-| 錯誤型別別名  | `GetHealthQueryError`（＝`ErrorType<ErrorResponse>`＝`ApiError`）                  | 元件的 `error` 型別                                         |
-| MSW           | `getGetHealthMockHandler`、`getGetHealthResponseMock`                              | `src/test/` 與測試；產品碼不得 import                       |
-| 型別          | `HealthData`、`HealthDataResponse`、`HealthStatus`、`ErrorResponse`、`ErrorDetail` | fixture、`apiFetch` 的泛型、`ApiError.fieldErrors`          |
+| 種類          | 名稱                                                                               | 用在                                                                                  |
+| :------------ | :--------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------ |
+| 查詢 hook     | `useGetHealth`                                                                     | `HealthStatusPanel`                                                                   |
+| 請求函式      | `getHealth`                                                                        | `useGetHealth` 的 `queryFn`；元件不直接呼叫                                           |
+| query key     | `getGetHealthQueryKey`                                                             | 唯一的 key 來源（A9）；「重新檢查」用 `refetch()`、不換 key                           |
+| query options | `getGetHealthQueryOptions`                                                         | 之後需要 prefetch 時用                                                                |
+| 錯誤型別別名  | `GetHealthQueryError`（＝`ErrorType<ErrorResponse>`＝`ApiError`）                  | 元件的 `error` 型別                                                                   |
+| MSW           | `getGetHealthMockHandler`、`getGetHealthResponseMock`（位於產生的 `*.msw.ts`）     | 只給測試檔（`**/*.test.ts(x)`、`src/test/**`、`vitest.config.ts`）；產品碼不得 import |
+| 型別          | `HealthData`、`HealthDataResponse`、`HealthStatus`、`ErrorResponse`、`ErrorDetail` | fixture、`apiFetch` 的泛型、`ApiError.fieldErrors`                                    |
 
 - 沒有 `servers` 欄位，產物的 `url` 是 `/api/v1/health`，base URL 只由 `apiFetch` 加（A6）。
 - `openapi.json` 沒有宣告請求標頭參數，所以 `getHealth` 沒有 header 參數；`Accept-Language` 一律由 `apiFetch` 加，元件不組標頭（A6）。

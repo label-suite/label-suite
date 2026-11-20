@@ -9,7 +9,7 @@ schema 範本是為後端寫的（Router → Service → Repository／Model）�
 - 後端契約的三件裁定（維護者 2026-11-10）：路徑前綴 `/api/v1`、成功回應包一層 envelope、後端模組內分層。前端只消費它們。
 - envelope 六欄 `{ success, code, message, data, timestamp, traceId }`、錯誤套同一個外層、JSON 一律 camelCase、不用 Storybook 改用元件展示頁、日期套件用 day.js 只在 `src/lib/date.ts` 使用（#503 裁定 1–5，2026-11-20）。
 - 兩頁的畫面 artifact（`Main.dc.html`、`Gallery.dc.html`）已核可（維護者 2026-11-20），元件展示頁的「淺色／深色」切換在第 4 版確認。
-- **clarification 的 Q1–Q19 已由維護者於 2026-11-20 全部決議**，本文依決議改寫，不再保留選項；原本的待決 SA-1–SA-16、N1–N8、UI-1–UI-7、C1–C6 在 [§技術待決問題](#技術待決問題) 標為已決並指向對應的 Q。
+- **clarification 的 Q1–Q19 已由維護者於 2026-11-20 全部決議**（含規劃審閱後 Q18 的補充決議：時間一律依瀏覽者裝置時區顯示，不固定換算），本文依決議改寫，不再保留選項；原本的待決 SA-1–SA-16、N1–N8、UI-1–UI-7、C1–C6 在 [§技術待決問題](#技術待決問題) 標為已決並指向對應的 Q。
 
 ## 分層與類別
 
@@ -41,9 +41,9 @@ frontend/
    │  └─ router.tsx                createAppRouter；開發用路由只在 import.meta.env.DEV 註冊（Q1、Q14）
    ├─ pages/
    │  ├─ dev-health/               /dev/health：只組合 features/system-health
-   │  └─ dev-gallery/              /dev/gallery：元件展示頁、variant 目錄、主題切換、Token 對照（?raw）
+   │  └─ dev-gallery/              /dev/gallery：元件展示頁、variant 目錄、主題切換、Token 對照（?raw）；入口模組載入時註冊 devGallery
    ├─ features/
-   │  └─ system-health/            健康檢查的業務元件與四種狀態的對應；index.ts 是公開邊界
+   │  └─ system-health/            健康檢查的業務元件與四種狀態的對應；index.ts 是公開邊界，模組載入時註冊 systemHealth
    ├─ components/ui/               shadcn/ui 原語（Button、Input、Badge、Alert、Card、Skeleton、Empty）；每個有 variant 的原語匯出 as const 陣列（Q9）
    ├─ api/
    │  ├─ mutator.ts                apiFetch（唯一出口）、ErrorType、BodyType、ApiResponse
@@ -56,20 +56,27 @@ frontend/
    │  ├─ date.ts                   day.js 單一入口與可注入的時鐘
    │  ├─ abort.ts                  composeSignals：合成 AbortSignal（Q19 N6）
    │  └─ i18n/                     react-i18next 語系層（Q5）
-   │     ├─ index.ts               i18n 實例、initI18n、getCurrentLanguage
+   │     ├─ index.ts               i18n 實例、initI18n（只載 common）、registerNamespace、getCurrentLanguage
    │     ├─ resolve-language.ts    resolveLanguage(navigatorLanguage)：zh 開頭 → zh-TW，其餘 → en
-   │     └─ locales/               zh-TW、en 各一份，依模組分 namespace（common、systemHealth、devGallery）
+   │     └─ locales/               zh-TW、en 各一份，依模組分 namespace（common、systemHealth、devGallery）；index.ts 只 import common，systemHealth 由 features/system-health/index.ts、devGallery 由 pages/dev-gallery 入口 import
    ├─ styles/
    │  ├─ index.css                 Tailwind 入口、深色 variant、引入 theme.css（不引入 tokens.css 全檔，Q15）
    │  └─ theme.css                 shadcn 與語意變數 → tokens.css 變數的對照層，淺色與深色兩個區塊（Q9、Q13）
-   └─ test/                        測試支援，不是第八層：只被 *.test.ts(x) 與 vitest setup import
+   └─ test/                        測試支援，不是第八層：只被「測試檔」import（定義見下方說明）
       ├─ setup.ts                  jest-dom matcher、MSW server 的 listen／resetHandlers／close、預設語言設為 zh-TW
       ├─ msw-server.ts             setupServer(...產生的 handlers)
       └─ envelope-fixtures.ts      以產生的型別手組成功與錯誤外層（Q19 C1–C3）
 ```
 
 - **`src/main.tsx` 歸 app 層**：Vite 的慣例入口放在 `src/` 根，只做 `createRoot(...).render(<App />)`、初始化語系與 import 樣式，lint 把它當 app。
-- **`src/test/` 不是第八層**：F1 的七層表沒有它；它只放測試支援，lint 規則寫成「只有 `*.test.ts(x)` 與 `vitest.config.ts` 可以 import 它」，產品碼 import 它就失敗，因此不會讓 MSW 與 faker 進正式 bundle（Q6）。測試檔本身照 ADR-007 D3 與原始碼放同目錄。
+- **`src/test/` 不是第八層**：F1 的七層表沒有它；它只放測試支援，產品碼 import 它就失敗，因此不會讓 MSW 與 faker 進正式 bundle（Q6）。測試檔本身照 ADR-007 D3 與原始碼放同目錄。
+- **「測試檔」的定義（lint 邊界共用）**：本文與 ESLint 設定說的「測試檔」一律指這三類，lint 規則的 `files` 以同一組 glob 寫一次、各條規則共用：
+  - `**/*.test.ts`、`**/*.test.tsx`（與原始碼同目錄的測試）
+  - `src/test/**`（測試支援本身，例如 `setup.ts`、`msw-server.ts`、`envelope-fixtures.ts` 彼此 import 與 import `msw`）
+  - `vitest.config.ts`
+
+  只有測試檔可以 import `msw`、`@faker-js/faker`、`src/test/**` 與 Orval 產生的 MSW 檔。**Orval 產生的 MSW 檔一律稱 `*.msw.ts`**（在 `src/api/generated/` 底下），本文、lint 規則與 api-contract 都用這一個寫法。
+
 - **健康檢查做成一個 feature**：F1 允許 `pages/` 直接呼叫產物，但本頁是後續功能 change 照抄的範本（#505 §需求目標），所以走完整的「page → feature 的 `index.ts` → feature 元件 → 產生的 hook → 唯一出口」，給 #506 的分層檢查一個實際對象。這和後端把健康檢查做成完整四件模組（後端 clarification 結論 14）同一個理由。
 - 頁面目錄名用 `dev-` 前綴，讓「開發用」在檔案層級就看得出來；路徑仍是 `/dev/health`、`/dev/gallery`（#505 維護者留言）。
 - **語系層放 `lib/i18n/`**：`api/` 的 `apiFetch` 要讀目前語言，F1 允許 api 與 features 都 import lib，所以語系放 lib 讓依賴方向合法；lib 只靠第三方（i18next、react-i18next）。
@@ -97,7 +104,7 @@ frontend/
 | `react-hooks/rules-of-hooks`、`exhaustive-deps`                                                              | 條件式呼叫 hook、依賴缺漏                                                  | F3              |
 | `no-restricted-imports`：`dayjs`、`dayjs/*` 只准 `src/lib/date.ts`                                           | 日期套件散落各處                                                           | F10             |
 | `no-restricted-globals` `fetch` 與 `no-restricted-imports` `axios`：限 `pages/`、`features/`、`components/`  | 繞過唯一出口                                                               | A6              |
-| `no-restricted-imports`：`msw`、`@faker-js/faker`、`src/test/**`、`src/api/generated/**/*.msw` 只准測試檔    | 替身進正式 bundle（Q6）                                                    | T6；本文        |
+| `no-restricted-imports`：`msw`、`@faker-js/faker`、`src/test/**`、`src/api/generated/**/*.msw.ts` 只准測試檔 | 替身進正式 bundle（Q6）；「測試檔」見上方定義                              | T6；本文        |
 | F1 的 `pages/` 不得 import `styles/`，**只對 `pages/dev-gallery/` 的 `?raw` 讀 `styles/theme.css` 具名放行** | 展示頁 Token 對照的唯一資料來源（Q16）；規則檔內以註解寫明理由，不開其他口 | F1、F6；本文    |
 | `ignores: ['src/api/generated/**']`                                                                          | 產物不受 lint 約束                                                         | F2 例外 2、A4   |
 
@@ -119,7 +126,7 @@ classDiagram
   }
   class toHealthViewState {
     <<function>>
-    +toHealthViewState(query: HealthQueryResult) HealthViewState
+    +toHealthViewState(query: HealthQueryResult, userRefetching: boolean) HealthViewState
   }
   class HealthViewState {
     <<union>>
@@ -227,6 +234,7 @@ classDiagram
   class I18nModule {
     <<module>>
     +initI18n(navigatorLanguage: string) i18n
+    +registerNamespace(namespace: string, bundles: LocaleBundles) void
     +resolveLanguage(navigatorLanguage: string) AppLanguage
     +getCurrentLanguage() AppLanguage
   }
@@ -240,7 +248,8 @@ classDiagram
   }
   class DateEntry {
     <<module>>
-    +formatDateTime(value: DateInput) string
+    +formatDateTime(value: DateInput, timeZone?: string) string
+    +formatDevCheckTime(value: DateInput, timeZone?: string) string
     +now() number
     +setClock(clock: Clock) void
   }
@@ -251,7 +260,7 @@ classDiagram
   HealthStatusPanel ..> I18nModule : useTranslation
   toHealthViewState ..> HealthViewState
   toHealthViewState ..> ApiErrorGuards
-  toHealthViewState ..> DateEntry : 檢查時間
+  toHealthViewState ..> DateEntry : 檢查時間（裝置時區）
   HealthViewState ..> HealthViewKind
   useGetHealth ..> getHealth : queryFn
   useGetHealth ..> getGetHealthQueryKey : queryKey
@@ -378,37 +387,38 @@ classDiagram
 
 ### 元件清單
 
-| 元件                                   | 層         | 職責                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | 依據                                            |
-| :------------------------------------- | :--------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------- |
-| `apiFetch(config, options?)`           | api        | Orval 的 mutator，前端唯一的 HTTP 出口。集中 base URL、`credentials: 'include'`、`Accept-Language`（取自 `getCurrentLanguage()`）、`AbortSignal`、15 秒逾時、拆外層、把錯誤轉成 `ApiError`。成功回 `{ data, meta: { traceId, timestamp } }`（Q2）。CSRF 標頭與 `401` 換發屬 01-01，本次不留空殼                                                                                                                                                                                    | A6、A7、S2、ADR-003 D6；Q2、Q4、Q5              |
-| `ErrorType<E>`、`BodyType<B>`          | api        | 從 `mutator.ts` 匯出，Orval 會用它們當產生 hook 的錯誤與 body 型別：`ErrorType<E> = ApiError`，所以**每一個**產生的 hook 的 `error` 都是 `ApiError`，不是 `unknown` 或產物的 `ErrorResponse`                                                                                                                                                                                                                                                                                       | A7、F2                                          |
-| `ApiResponse<T>`、`ResponseMeta`       | api        | 型別層的拆外層：`T extends { data: infer D } ? { data: D; meta: ResponseMeta } : T`；`ResponseMeta = { traceId: string; timestamp: string }`。產生的函式寫成 `apiFetch<HealthDataResponse>(...)`，回傳型別變成 `{ data: HealthData; meta }`，產物不必改、也沒有型別說謊                                                                                                                                                                                                            | A6、F2；Q2；N3                                  |
-| `ApiError`                             | api        | 單一錯誤型別，`kind` 區分五種來源；`status`、`code`、`traceId`、`timestamp`、`fieldErrors` 在沒有值時是 `null`。`message` 在 `kind: 'http'` 時是後端已本地化的外層 `message`（A8 不透明字串），其他 kind 是英文診斷字串（A7 例外）                                                                                                                                                                                                                                                 | A7、A8；Q2                                      |
-| `isApiError`、`isAuthError`            | api        | type guard；`isAuthError` 只認 `kind: 'http'` 且 `status === 401`（`403` 是無權限不是未登入，留給 01-01）                                                                                                                                                                                                                                                                                                                                                                          | A7、F2；Q4                                      |
-| `isSuccessEnvelope`、`isErrorEnvelope` | api        | 把回應 body 當 `unknown` 收窄；不符合外層形狀就是 `invalidResponse`，不靠型別斷言。`isErrorEnvelope` 對 `errors` 缺鍵視同 `null`                                                                                                                                                                                                                                                                                                                                                   | F2、A7；Q19 C4                                  |
-| `readApiConfig(env)`                   | api        | 讀 `VITE_API_BASE_URL`（可空，空值代表同源相對路徑），驗證是 `http(s)` 絕對網址且不以 `/` 結尾，不合法就在啟動時丟錯；預設逾時常數 `15_000` ms。此變數會被打包進前端，**不是祕密**                                                                                                                                                                                                                                                                                                 | A6、Hard Rule 8、9；Q4                          |
-| `initI18n(navigatorLanguage)`          | lib        | 建立 i18next 實例（react-i18next），資源為 zh-TW 與 en 兩份、依模組分 namespace；初始語言由 `resolveLanguage` 決定；**沒有切換控制項**，執行期不改語言（測試以 `i18n.changeLanguage` 指定）                                                                                                                                                                                                                                                                                        | architecture.mdx §i18n 兩層、07-01；Q5          |
-| `resolveLanguage(navigatorLanguage)`   | lib        | 純函式：`zh` 開頭（`zh`、`zh-TW`、`zh-CN`…不分大小寫）→ `zh-TW`，其餘 → `en`；空字串或 `undefined` → `en`                                                                                                                                                                                                                                                                                                                                                                          | Q5                                              |
-| `getCurrentLanguage()`                 | lib        | 回傳 i18n 實例目前語言（`zh-TW` 或 `en`），`apiFetch` 用它當 `Accept-Language`，與介面語言一致。取代原先固定 `zh-TW` 或 `getRequestLocale` 接縫的想法                                                                                                                                                                                                                                                                                                                              | A6、A8；Q5                                      |
-| `composeSignals(caller, timeoutMs)`    | lib        | 自寫的小函式：合成呼叫端 signal 與逾時計時器，回傳 `{ signal, cleanup, reason() }`，以 reason 分辨取消與逾時；jsdom 與目標瀏覽器都支援 `AbortSignal.any` 時改用標準 API                                                                                                                                                                                                                                                                                                            | F3；Q19 N6                                      |
-| `createQueryClient(overrides?)`        | app        | 建 `QueryClient`；`queries.retry: false`、`mutations.retry: false`（不自動重試）；`overrides` 只給測試傳入。正式只建一次，放在 `providers.tsx` 的模組層級                                                                                                                                                                                                                                                                                                                          | A7、A9；Q4                                      |
-| `createAppRouter()`                    | app        | `createBrowserRouter`；兩條開發用路徑以 `lazy` 載入，**只在 `import.meta.env.DEV` 才加進 route 陣列**，正式建置由 Vite 剪除；DEV 時 `/` 與 `*` 都 `Navigate` 到 `/dev/health`，正式建置只有空殼（首頁與找不到頁面由 01-01 設計）                                                                                                                                                                                                                                                   | ADR-005 D1、#505；Q1、Q14                       |
-| `DevHealthPage`                        | pages      | 只渲染 `HealthStatusPanel`，不呼叫 hook                                                                                                                                                                                                                                                                                                                                                                                                                                            | F1                                              |
-| `HealthStatusPanel`                    | features   | 呼叫 `useGetHealth()`，把查詢結果交給 `toHealthViewState`，依結果選畫面；文字一律走 `useTranslation('systemHealth')`，不寫死字串；「重新檢查」呼叫 `refetch()`。畫面長相屬 `ui-design.md`                                                                                                                                                                                                                                                                                          | F3、F8、A9；Q5                                  |
-| `toHealthViewState(query)`             | features   | 純函式：查詢狀態 → 四種狀態之一。載入中（首次載入或使用者按「重新檢查」）→ `loading`，背景更新不切回載入中（UI-7）；成功 → `ok`，`checkedAt` 取自 `meta.timestamp`；`ApiError` 且 `kind: 'http'`（任何錯誤外層）→ `backendError`，`titleKey` 在 `code === 'DATABASE_UNAVAILABLE'` 時是資料庫無法連線，其餘是通用「後端回報錯誤」；`network`、`timeout`、`invalidResponse` → `unreachable`，`errorType` 直接是 `network` 或 `timeout`（`invalidResponse` 與其他非外層歸 `network`） | F8、A7「不得用錯誤字串猜 status」；Q3、Q19 UI-7 |
-| `formatDateTime`、`now`、`setClock`    | lib        | day.js 加 utc、timezone 外掛的唯一 import 處；開發頁格式 `YYYY-MM-DD HH:mm:ss（UTC+8）`（Q18，開發頁例外），業務頁依 `brand.md`；測試以 `setClock` 或 `vi.setSystemTime` 固定「現在」                                                                                                                                                                                                                                                                                              | F10、#503 裁定 5；Q18                           |
-| `cn()`                                 | lib        | `clsx` 加 `tailwind-merge`，shadcn 慣例                                                                                                                                                                                                                                                                                                                                                                                                                                            | ADR-005 D3                                      |
-| `components/ui/*`                      | components | shadcn/ui 原語；**允許修改原始碼加 variant**（Q9）。只用語意變數（`bg-cta`、`text-success`…），不綁 tokens.css 命名；Button 刪掉 `link`，只留 artifact 的六種（Q10）；有 variant 的原語匯出 `as const` 陣列（`buttonVariantValues` 等），`cva` 以它建                                                                                                                                                                                                                              | ADR-005 D3、F6；Q9、Q10                         |
-| `VariantCatalog`                       | pages      | 每個有 variant 的原語一份 `Record<variant, 展示>`，key 型別取自匯出陣列的元素型別（`satisfies Record<ButtonVariant, Demo>`），**不手抄 variant 清單**；沒有 cva 的原語（Input 的三種狀態、Card 的三個區塊、Skeleton、Empty）由目錄自己宣告                                                                                                                                                                                                                                         | ADR-005 D3；Q9                                  |
-| `GallerySection`                       | pages      | 一個原語一個區塊，每個展示項目帶 `data-gallery-item="<component>:<axis>:<value>"`，給完整性測試查                                                                                                                                                                                                                                                                                                                                                                                  | ADR-005 D3                                      |
-| `ThemeToggle`                          | pages      | 展示頁標題列右側的「淺色／深色」切換，只改 `<html data-theme>`，預設淺色、**不記住選擇**（重新整理回淺色）；健康檢查頁不加                                                                                                                                                                                                                                                                                                                                                         | Q13                                             |
-| `TokenMappingSection`                  | pages      | 以 `import raw from '@/styles/theme.css?raw'` 讀入並以 `parseThemeMappings` 解析 `--x: var(--y)` 的清單顯示；lint 對這一個檔案具名放行（Q16）                                                                                                                                                                                                                                                                                                                                      | F1、F6；Q16                                     |
-| `extractTokens()`                      | build      | Vite 外掛：建置與開發時讀 `design/prototype/assets/tokens.css`，只保留 `:root` 與 `html[data-theme="dark"]` 規則中的自訂屬性（`--*`），以虛擬模組 `virtual:design-tokens.css` 提供給 `main.tsx`；**不載入外部字型、不套元素規則、產物不提交**。圓角與字型仍以 tokens.css 的值為準                                                                                                                                                                                                  | F6、ADR-005 D4；Q15                             |
-| `styles/theme.css`                     | styles     | `:root` 區塊：shadcn 語意變數與 `--cta`、`--success`、`--warning`、`--info` 等指向 tokens.css 變數名；`html[data-theme="dark"]` 區塊：對照到深色時要換成另一個 tokens.css 變數的項目；再以 `@theme inline` 接到 Tailwind 的 `--color-*`；**沒有任何色碼**                                                                                                                                                                                                                          | F6、ADR-005 D4；Q9、Q13                         |
-| `styles/index.css`                     | styles     | `@import "tailwindcss"`、引入 theme.css、`@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *))`；變數來自 `extractTokens`，不 `@import` tokens.css 全檔                                                                                                                                                                                                                                                                                                      | F6、ADR-005 D4；Q15                             |
-| `orval.config.ts`                      | 設定       | 一份 config：`input` 指向 `../backend/openapi.json`；`output` 用 `client: 'react-query'`、`mock: true`（MSW）、`clean: true`、`override.mutator` 指向 `apiFetch`、`override.query.signal: true`；不做 Prettier 格式化（產物進 `.prettierignore`）                                                                                                                                                                                                                                  | A4、A5、ADR-003 D6；Q8                          |
-| `src/test/msw-server.ts`、`setup.ts`   | test 支援  | `setupServer` 載入 Orval 產生的 handlers；測試以 `server.use(...)` 覆寫成固定 fixture（`200`、`503`）或 `HttpResponse.error()`，**不改產物**；`onUnhandledRequest: 'error'`；`setup.ts` 預設把語言設為 `zh-TW`，需要英文的測試自己 `changeLanguage('en')`                                                                                                                                                                                                                          | T6、A4；Q5、Q6、Q19 C1                          |
-| `src/test/envelope-fixtures.ts`        | test 支援  | `successEnvelope`、`errorEnvelope({ status, code, message, traceId })` 手組，回傳型別是產物的 `HealthDataResponse`／`ErrorResponse`，欄位改名時測試會在型別檢查失敗；回應帶 `X-Correlation-ID` 與 `Content-Language` 標頭；不含任何答案或真實身分                                                                                                                                                                                                                                  | T6、Hard Rule 6；Q19 C1–C3                      |
+| 元件                                                      | 層         | 職責                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | 依據                                            |
+| :-------------------------------------------------------- | :--------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------- |
+| `apiFetch(config, options?)`                              | api        | Orval 的 mutator，前端唯一的 HTTP 出口。集中 base URL、`credentials: 'include'`、`Accept-Language`（取自 `getCurrentLanguage()`）、`AbortSignal`、15 秒逾時、拆外層、把錯誤轉成 `ApiError`。成功回 `{ data, meta: { traceId, timestamp } }`（Q2）。CSRF 標頭與 `401` 換發屬 01-01，本次不留空殼                                                                                                                                                                                                                                                                                                                                                                                                                                                       | A6、A7、S2、ADR-003 D6；Q2、Q4、Q5              |
+| `ErrorType<E>`、`BodyType<B>`                             | api        | 從 `mutator.ts` 匯出，Orval 會用它們當產生 hook 的錯誤與 body 型別：`ErrorType<E> = ApiError`，所以**每一個**產生的 hook 的 `error` 都是 `ApiError`，不是 `unknown` 或產物的 `ErrorResponse`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | A7、F2                                          |
+| `ApiResponse<T>`、`ResponseMeta`                          | api        | 型別層的拆外層：`T extends { data: infer D } ? { data: D; meta: ResponseMeta } : T`；`ResponseMeta = { traceId: string; timestamp: string }`。產生的函式寫成 `apiFetch<HealthDataResponse>(...)`，回傳型別變成 `{ data: HealthData; meta }`，產物不必改、也沒有型別說謊                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | A6、F2；Q2；N3                                  |
+| `ApiError`                                                | api        | 單一錯誤型別，`kind` 區分五種來源；`status`、`code`、`traceId`、`timestamp`、`fieldErrors` 在沒有值時是 `null`。`message` 在 `kind: 'http'` 時是後端已本地化的外層 `message`（A8 不透明字串），其他 kind 是英文診斷字串（A7 例外）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | A7、A8；Q2                                      |
+| `isApiError`、`isAuthError`                               | api        | type guard；`isAuthError` 只認 `kind: 'http'` 且 `status === 401`（`403` 是無權限不是未登入，留給 01-01）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | A7、F2；Q4                                      |
+| `isSuccessEnvelope`、`isErrorEnvelope`                    | api        | 把回應 body 當 `unknown` 收窄；不符合外層形狀就是 `invalidResponse`，不靠型別斷言。`isErrorEnvelope` 對 `errors` 缺鍵視同 `null`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | F2、A7；Q19 C4                                  |
+| `readApiConfig(env)`                                      | api        | 讀 `VITE_API_BASE_URL`（可空，空值代表同源相對路徑），驗證是 `http(s)` 絕對網址且不以 `/` 結尾，不合法就在啟動時丟錯；預設逾時常數 `15_000` ms。此變數會被打包進前端，**不是祕密**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | A6、Hard Rule 8、9；Q4                          |
+| `initI18n(navigatorLanguage)`                             | lib        | 建立 i18next 實例（react-i18next），**初始化時只載入 `common` namespace**（zh-TW 與 en 兩份）；初始語言由 `resolveLanguage` 決定；**沒有切換控制項**，執行期不改語言（測試以 `i18n.changeLanguage` 指定）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | architecture.mdx §i18n 兩層、07-01；Q5          |
+| `registerNamespace(namespace, bundles)`                   | lib        | 以 `i18n.addResourceBundle(lng, namespace, bundles[lng], true, true)` 為 zh-TW 與 en 註冊一個 namespace（`deep`、`overwrite` 皆為 `true`），重複註冊不報錯。呼叫點：`features/system-health/index.ts` 在模組載入時註冊 `systemHealth`，`pages/dev-gallery` 的入口註冊 `devGallery`，兩者只被開發模式的 lazy 路由 import，所以語言檔跟著開發路由的 chunk 走、正式建置一併剪除；`src/test/setup.ts` 註冊全部三個 namespace                                                                                                                                                                                                                                                                                                                              | Q1、Q5                                          |
+| `resolveLanguage(navigatorLanguage)`                      | lib        | 純函式：`zh` 開頭（`zh`、`zh-TW`、`zh-CN`…不分大小寫）→ `zh-TW`，其餘 → `en`；空字串或 `undefined` → `en`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Q5                                              |
+| `getCurrentLanguage()`                                    | lib        | 回傳 i18n 實例目前語言（`zh-TW` 或 `en`），`apiFetch` 用它當 `Accept-Language`，與介面語言一致。取代原先固定 `zh-TW` 或 `getRequestLocale` 接縫的想法                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | A6、A8；Q5                                      |
+| `composeSignals(caller, timeoutMs)`                       | lib        | 自寫的小函式：合成呼叫端 signal 與逾時計時器，回傳 `{ signal, cleanup, reason() }`，以 reason 分辨取消與逾時；jsdom 與目標瀏覽器都支援 `AbortSignal.any` 時改用標準 API                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | F3；Q19 N6                                      |
+| `createQueryClient(overrides?)`                           | app        | 建 `QueryClient`；`queries.retry: false`、`mutations.retry: false`（不自動重試）；`overrides` 只給測試傳入。正式只建一次，放在 `providers.tsx` 的模組層級                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | A7、A9；Q4                                      |
+| `createAppRouter()`                                       | app        | `createBrowserRouter`；兩條開發用路徑以 `lazy` 載入，**只在 `import.meta.env.DEV` 才加進 route 陣列**，正式建置由 Vite 剪除（兩頁的 `systemHealth`、`devGallery` 語言檔跟著 lazy chunk 一起剪除）；DEV 時 `/` 與 `*` 都 `Navigate` 到 `/dev/health`，正式建置只有空殼（首頁與找不到頁面由 01-01 設計）                                                                                                                                                                                                                                                                                                                                                                                                                                                | ADR-005 D1、#505；Q1、Q14                       |
+| `DevHealthPage`                                           | pages      | 只渲染 `HealthStatusPanel`，不呼叫 hook                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | F1                                              |
+| `HealthStatusPanel`                                       | features   | 呼叫 `useGetHealth()`，把查詢結果與「使用者按了重新檢查」的旗標交給 `toHealthViewState`，依結果選畫面；文字一律走 `useTranslation('systemHealth')`，不寫死字串。「重新檢查」按鈕在 `isFetching` 為真時設 `aria-disabled="true"` 並忽略點擊，不在飛行中呼叫 `refetch()`，因此 `refetch()` 預設的 `cancelRefetch` 永遠不會取消進行中的請求；按下時設旗標並呼叫 `refetch()`，該次請求結束（成功或失敗）後清掉旗標。畫面長相屬 `ui-design.md`                                                                                                                                                                                                                                                                                                             | F3、F8、A9；Q5、Q19 UI-7                        |
+| `toHealthViewState(query, userRefetching)`                | features   | 純函式：查詢狀態 → 四種狀態之一。`isPending`，或 `isFetching` 且 `userRefetching`（由使用者按「重新檢查」觸發）→ `loading`；背景更新（`isFetching` 但不是使用者觸發）不切回載入中（UI-7）；成功 → `ok`，`checkedAt` 取自 `meta.timestamp`；`ApiError` 且 `kind: 'http'`（任何錯誤外層）→ `backendError`，`titleKey` 在 `code === 'DATABASE_UNAVAILABLE'` 時是資料庫無法連線，其餘是通用「後端回報錯誤」；`network`、`timeout`、`invalidResponse` → `unreachable`，`errorType` 直接是 `network` 或 `timeout`（`invalidResponse` 與其他非外層歸 `network`）                                                                                                                                                                                             | F8、A7「不得用錯誤字串猜 status」；Q3、Q19 UI-7 |
+| `formatDateTime`、`formatDevCheckTime`、`now`、`setClock` | lib        | day.js（`utc`、`timezone` 外掛）的唯一 import 處。伺服器時間（UTC 字串）一律換成**瀏覽者裝置的時區**顯示，**不寫死任何時區、不做固定的 Asia/Taipei 換算**（F10；Q18 補充決議）。兩個格式函式都有**可選的時區參數**，未指定時取裝置時區 `Intl.DateTimeFormat().resolvedOptions().timeZone`。`formatDateTime` 是業務頁格式 `YYYY-MM-DD HH:mm`（`brand.md`）；`formatDevCheckTime` 是開發頁的檢查時間 `YYYY-MM-DD HH:mm:ss（UTC±H）`，括號內是該時間點在該時區的實際偏移（台灣裝置顯示「UTC+8」、紐約裝置顯示「UTC-5」；零偏移 `UTC+0`、非整點 `UTC+5:30`；日光節約時間前後依時間點計算）。測試以時區參數注入時區、以替換 `Intl.DateTimeFormat` 的回報值測「未指定時採用裝置時區」，不靠 `TZ` 環境變數；以 `setClock` 或 `vi.setSystemTime` 固定「現在」 | F10、#503 裁定 5；Q18、design.md D12            |
+| `cn()`                                                    | lib        | `clsx` 加 `tailwind-merge`，shadcn 慣例                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | ADR-005 D3                                      |
+| `components/ui/*`                                         | components | shadcn/ui 原語；**允許修改原始碼加 variant**（Q9）。只用語意變數（`bg-cta`、`text-success`…），不綁 tokens.css 命名；Button 刪掉 `link`，只留 artifact 的六種（Q10）；有 variant 的原語匯出 `as const` 陣列（`buttonVariantValues` 等），`cva` 以它建                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | ADR-005 D3、F6；Q9、Q10                         |
+| `VariantCatalog`                                          | pages      | 每個有 variant 的原語一份 `Record<variant, 展示>`，key 型別取自匯出陣列的元素型別（`satisfies Record<ButtonVariant, Demo>`），**不手抄 variant 清單**；沒有 cva 的原語（Input 的三種狀態、Card 的三個區塊、Skeleton、Empty）由目錄自己宣告                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | ADR-005 D3；Q9                                  |
+| `GallerySection`                                          | pages      | 一個原語一個區塊，每個展示項目帶 `data-gallery-item="<component>:<axis>:<value>"`，給完整性測試查                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | ADR-005 D3                                      |
+| `ThemeToggle`                                             | pages      | 展示頁標題列右側的「淺色／深色」切換，只改 `<html data-theme>`，預設淺色、**不記住選擇**（重新整理回淺色）；健康檢查頁不加                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Q13                                             |
+| `TokenMappingSection`                                     | pages      | 以 `import raw from '@/styles/theme.css?raw'` 讀入並以 `parseThemeMappings` 解析 `--x: var(--y)` 的清單顯示；lint 對這一個檔案具名放行（Q16）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | F1、F6；Q16                                     |
+| `extractTokens()`                                         | build      | Vite 外掛：建置與開發時讀 `design/prototype/assets/tokens.css`，只保留 `:root` 與 `html[data-theme="dark"]` 規則中的自訂屬性（`--*`），以虛擬模組 `virtual:design-tokens.css` 提供給 `main.tsx`；**不載入外部字型、不套元素規則、產物不提交**。圓角與字型仍以 tokens.css 的值為準                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | F6、ADR-005 D4；Q15                             |
+| `styles/theme.css`                                        | styles     | `:root` 區塊：shadcn 語意變數與 `--cta`、`--success`、`--warning`、`--info` 等指向 tokens.css 變數名；`html[data-theme="dark"]` 區塊：對照到深色時要換成另一個 tokens.css 變數的項目；再以 `@theme inline` 接到 Tailwind 的 `--color-*`（**必須用 `inline`**，理由見 §Token 對照層與 tokens.css 的引入）；**沒有任何色碼**                                                                                                                                                                                                                                                                                                                                                                                                                            | F6、ADR-005 D4；Q9、Q13                         |
+| `styles/index.css`                                        | styles     | `@import "tailwindcss"`、引入 theme.css、`@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *))`；變數來自 `extractTokens`，不 `@import` tokens.css 全檔                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | F6、ADR-005 D4；Q15                             |
+| `orval.config.ts`                                         | 設定       | 一份 config：`input` 指向 `../backend/openapi.json`；`output` 用 `client: 'react-query'`、`mock: true`（MSW）、`clean: true`、`override.mutator` 指向 `apiFetch`、`override.query.signal: true`；不做 Prettier 格式化（產物進 `.prettierignore`）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | A4、A5、ADR-003 D6；Q8                          |
+| `src/test/msw-server.ts`、`setup.ts`                      | test 支援  | `setupServer` 載入 Orval 產生的 handlers；測試以 `server.use(...)` 覆寫成固定 fixture（`200`、`503`）或 `HttpResponse.error()`，**不改產物**；`onUnhandledRequest: 'error'`；`setup.ts` 預設把語言設為 `zh-TW`，需要英文的測試自己 `changeLanguage('en')`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | T6、A4；Q5、Q6、Q19 C1                          |
+| `src/test/envelope-fixtures.ts`                           | test 支援  | `successEnvelope`、`errorEnvelope({ status, code, message, traceId })` 手組，回傳型別是產物的 `HealthDataResponse`／`ErrorResponse`，欄位改名時測試會在型別檢查失敗；回應帶 `X-Correlation-ID` 與 `Content-Language` 標頭；不含任何答案或真實身分                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | T6、Hard Rule 6；Q19 C1–C3                      |
 
 ### 關鍵設計細節
 
@@ -456,9 +466,11 @@ classDiagram
 #### 語系層（已決，Q5）
 
 - 本次就建 react-i18next：資源為 `zh-TW` 與 `en` 兩份，依模組分 namespace（`common`、`systemHealth`、`devGallery`）。兩頁的介面文字都走翻譯鍵，**不寫死中文字串**。
+- **載入方式**：`initI18n` 只載 `common`。`systemHealth` 由 `features/system-health/index.ts`、`devGallery` 由 `pages/dev-gallery` 的入口，在模組載入時以 `registerNamespace`（內部是 `i18n.addResourceBundle`）加入。兩者只被開發模式的 lazy 路由 import，正式建置剪除開發路由時兩份語言檔一併被 tree-shake，正式 bundle 不含開發頁的文字（Q1）。因為註冊發生在模組頂層、早於元件 render，`useTranslation('systemHealth')` 第一次 render 就拿得到資源，不需要 Suspense 等待語言檔。
+- 測試：`src/test/setup.ts` 以 `registerNamespace` 註冊全部三個 namespace，feature 與 page 的測試不必經路由就拿得到文字。
 - 語言由 `navigator.language` 決定：`resolveLanguage` 把 `zh` 開頭對到 `zh-TW`，其餘對到 `en`。**畫面不加切換控制項**，切換器留給之後的業務版面（07-01）。
 - `Accept-Language` 與介面語言一致：`apiFetch` 讀 `getCurrentLanguage()`。後端錯誤外層的 `message` 因此依同一語言本地化，前端仍原樣顯示（A8）。
-- 測試：`src/test/setup.ts` 預設 `zh-TW`；要驗英文的測試自己 `changeLanguage('en')`，並在 `afterEach` 還原。`resolveLanguage` 與兩份語言檔鍵集一致各有單元測試。
+- 測試：`src/test/setup.ts` 預設 `zh-TW`；要驗英文的測試自己 `changeLanguage('en')`，並在 `afterEach` 還原。`resolveLanguage` 與每個 namespace 兩份語言檔鍵集一致各有單元測試。
 
 #### Orval 管線（已決，Q8；N3 仍為 apply 第一步的驗證）
 
@@ -473,7 +485,7 @@ classDiagram
 
 #### 開發用路由（已決，Q1、Q14）
 
-`createAppRouter` 以 `if (import.meta.env.DEV)` 才把兩條路由與 `/`、`*` 的導向加進 route 陣列；Vite 在正式建置把整段與 `lazy` 的 chunk 剪掉。正式建置只有空殼。後果：
+`createAppRouter` 以 `if (import.meta.env.DEV)` 才把兩條路由與 `/`、`*` 的導向加進 route 陣列；Vite 在正式建置把整段與 `lazy` 的 chunk 剪掉，兩頁各自的語言檔（`systemHealth`、`devGallery`）只被 lazy 模組 import，也一起剪掉。正式建置只有空殼。後果：
 
 - #506 在容器裡不能打開健康檢查頁，改以後端 `/api/v1/health` 驗證，或把 E2E 跑在開發伺服器上（寫入 design.md 的跨 change 依賴）。
 - 以 `pnpm build` 的產出檢查 `dist/` 不含 `msw`、`@faker-js/faker` 與 `/dev/` 字串，作為 acceptance 的一步。
@@ -488,6 +500,7 @@ classDiagram
 
 - **引入方式（Q15）**：不 `@import` tokens.css 全檔（會帶進 Google Fonts 外部連線、`body` 與標題的襯線全域樣式，並以不在 cascade layer 的 `--radius-*`、`--font-sans` 蓋過 Tailwind 同名變數）。改由 `extractTokens` 外掛在建置時只抽出 `:root` 與 `html[data-theme="dark"]` 的自訂屬性，以虛擬模組 `virtual:design-tokens.css` 提供，產物不提交。圓角與字型仍以 tokens.css 的值為準（即 `rounded-*` 與 `font-sans` 會跟著 tokens.css 的變數）。代價是多一支外掛要測：測試涵蓋「只留自訂屬性」「丟棄元素規則與 `@import url(...)`」「同時保留淺色與深色兩個區塊」「tokens.css 缺少時建置失敗」。
 - **對照層（Q9、Q13）**：`theme.css` 只寫「語意變數 → tokens.css 變數名」，**不寫任何色值**（F6）。除 shadcn 的語意變數外，新增 `--cta`、`--success`、`--warning`、`--info` 等 artifact 需要而 shadcn 沒有的語意變數；原語只用語意變數，不直接引用 tokens.css 的名字。`:root` 區塊對應淺色，`html[data-theme="dark"]` 區塊對應深色：tokens.css 在深色下已重新定義同名變數，所以多數項目不必另寫；只有深色要指向**另一個** tokens.css 變數的項目才進深色區塊，逐一列在 `ui-design.md` 的 token 落點表（F6 摺疊區塊第 1 點）。再以 `@theme inline` 接到 Tailwind 的 `--color-*`，`dark:` utility 吃 `@custom-variant dark`。
+- **隱性依賴：Tailwind 的 `--color-*` 與 tokens.css 的 `--color-*` 同名空間（必須用 `@theme inline`）**：Tailwind v4 的 theme 變數以 `--color-<name>` 命名（例如 `@theme inline { --color-primary: var(--primary); }`），而 tokens.css 自己也以 `--color-*` 命名，兩邊會出現同名變數（以目前的 tokens.css 計，至少 `--color-primary`、`--color-secondary`、`--color-accent`、`--color-border`、`--color-cta`、`--color-success`、`--color-info` 重名）。`extractTokens` 產出的 tokens 變數**不在任何 cascade layer**，Tailwind 的 theme 變數在 `@layer theme`，依 cascade layer 規則**未分層的 tokens.css 一定贏**。所以若用一般的 `@theme`（utility 編成 `var(--color-primary)`），`bg-primary` 會讀到 tokens.css 的 `--color-primary`，對照層被繞過，深色區塊的改寫也失效。`@theme inline` 讓 utility 直接編成 `var(--primary)`，不經過同名的 `--color-*`，才不受衝突影響。這是本文的明確約束：`theme.css` 接 Tailwind 時**只能用 `@theme inline`**，拿掉 `inline` 會讓多數語意色悄悄變成 tokens.css 的原值；`theme.css` 內以註解寫明這個依賴。之後在 `@theme inline` 新增 `--color-*` 時，同名與否都不影響 utility，但**不得**在元件裡直接寫 `var(--color-*)`（那會讀到 tokens.css 的值）。
 - **展示頁的 Token 對照（Q16）**：`TokenMappingSection` 以 Vite `?raw` 讀 `styles/theme.css` 並解析變數清單，對照表永遠與檔案一致；lint 對這一個檔案具名放行並在規則檔註明理由，其他頁仍受 F1 約束。
 - **深色驗證（Q13）**：展示頁標題列右側的切換只改 `<html data-theme>`，預設淺色、不記住選擇，與 tokens.css 的預設一致。
 - 映射清單的內容屬 `ui-design.md`，本文不重寫。
@@ -497,7 +510,23 @@ classDiagram
 「宣告的 variant」的來源是**每個有 variant 的原語匯出的 `as const` 陣列**（`buttonVariantValues`、`buttonSizeValues`、`badgeVariantValues`、`alertVariantValues`），`cva` 的 `variants` 從它建出（例如 `Object.fromEntries`），陣列是單一宣告來源。完整性測試在**執行期**比對，兩層：
 
 1. **宣告 → 目錄（執行期）**：`expect(Object.keys(buttonVariantDemos).sort()).toEqual([...buttonVariantValues].sort())`，其餘軸同理。目錄的型別另以 `satisfies Record<ButtonVariant, Demo>` 讓 `tsc` 也提早報錯（`ButtonVariant = (typeof buttonVariantValues)[number]`）。
-2. **目錄 → 畫面（DOM）**：render `DevGalleryPage`，對目錄裡每一個 key 斷言 `[data-gallery-item="button:variant:<key>"]` 存在；另以 `import.meta.glob('/src/components/ui/*.tsx')` 列出原語檔案，斷言每一個都有對應的區塊，新增原語沒放進展示頁也會失敗。
+2. **目錄 → 畫面（DOM）**：render `DevGalleryPage`，對目錄裡每一個 key 斷言 `[data-gallery-item="button:variant:<key>"]` 存在；另以下面的檔案清單與對照表斷言每個原語檔案都有區塊，新增原語沒放進展示頁也會失敗。
+
+**原語檔案清單**：以 `import.meta.glob(['/src/components/ui/*.tsx', '!/src/components/ui/*.test.tsx'])` 列出，排除與原語同目錄的測試檔（ADR-007 D3），否則 `button.test.tsx` 會被當成一個沒有區塊的原語。
+
+**檔案 → 展示頁區塊 id 的對照表**：寫在測試檔內的一份明確常數（`Record<檔名, sectionId>`），不從檔名推導，因為有多對一。測試斷言三件事：glob 列出的每個檔名都在表裡（新增原語沒登記就失敗）；表裡的每個檔名都真的存在（刪掉原語沒清表也失敗）；每個 sectionId 在 render 後的 DOM 裡都有 `section#<id>`。區塊 id 與 `ui-design.md` §`/dev/gallery` 的錨點一致：
+
+| 原語檔案       | 展示頁區塊 id | 說明                                                       |
+| :------------- | :------------ | :--------------------------------------------------------- |
+| `button.tsx`   | `#button`     | 一對一                                                     |
+| `input.tsx`    | `#input`      | 一對一                                                     |
+| `badge.tsx`    | `#badge`      | 一對一                                                     |
+| `alert.tsx`    | `#alert`      | 一對一                                                     |
+| `card.tsx`     | `#card`       | 一對一                                                     |
+| `skeleton.tsx` | `#states`     | **多對一**：Skeleton 與 Empty 共用「Skeleton · Empty」區塊 |
+| `empty.tsx`    | `#states`     | **多對一**：同上                                           |
+
+`#tokens`（Token 對照）不對應任何原語檔案，不在表內。shadcn CLI 若隨原語帶進其他檔案，apply 時照同一規則登記到它實際展示的區塊，不得為了讓測試通過而把檔案移出 `components/ui/`。表外的檔名一律讓測試失敗。
 
 這是 render 出來的 DOM 與執行期陣列斷言，不是 grep 原始碼，T3 的「自證測試」不適用；「宣告→展示」真的被測到，不再只靠型別層。Button 的 `link` 刪掉（Q10），只宣告 artifact 的六種；之後需要時再加，展示頁一起補。`architecture.mdx` 寫「shadcn 元件不改寫」那句與 Q9 衝突，另開 `[Docs]` issue 改準，不在本 change 改。
 
@@ -507,19 +536,19 @@ classDiagram
 
 #### 測試
 
-| 測試                                                  | 層          | 驗什麼                                                                                                                                                                                                             | 依據                               |
-| :---------------------------------------------------- | :---------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------- |
-| `api/mutator.test.ts`                                 | unit        | 上表七種情況各一（含 `timestamp`）；成功回 `{ data, meta }`；請求帶 `credentials: 'include'` 與 `Accept-Language`（zh-TW 與 en 各一）；`GET` 沒有 `Content-Type`；base URL 組合；15 秒逾時以假時鐘推進；無自動重試 | A6、A7、S2；Q2、Q4、Q5             |
-| `api/api-error.test.ts`                               | unit        | `isAuthError` 只有 `401` 為真，`403` 為假                                                                                                                                                                          | A7；Q4                             |
-| `app/query-client.test.ts`                            | unit        | `retry` 為 `false`（失敗後只呼叫一次）                                                                                                                                                                             | A7；Q4                             |
-| `lib/abort.test.ts`                                   | unit        | 呼叫端取消、逾時、清理三種                                                                                                                                                                                         | F3；Q19 N6                         |
-| `lib/i18n/*.test.ts`                                  | unit        | `resolveLanguage` 對 `zh-TW`、`zh-CN`、`zh`、`en-US`、`ja`、空值；兩份語言檔鍵集一致                                                                                                                               | Q5                                 |
-| `build/extract-tokens.test.ts`                        | unit        | 外掛只留 `:root` 與深色區塊的自訂屬性，丟棄元素規則與外部 `@import`                                                                                                                                                | Q15                                |
-| `features/system-health/to-health-view-state.test.ts` | unit        | 查詢狀態到四種狀態的對應；任何錯誤外層歸 `backendError`、標題只有 `DATABASE_UNAVAILABLE` 用專屬標題；非外層回應歸 `unreachable`                                                                                    | F8；Q3                             |
-| `features/system-health/health-status-panel.test.tsx` | integration | 經 MSW、真的 `QueryClient` 與 `apiFetch`，四種狀態各一（zh-TW），並以英文跑一次；「重新檢查」回到載入中、背景更新不切回載入中                                                                                      | #505 驗收第 3 項、T6；Q5、Q19 UI-7 |
-| `pages/dev-gallery/*.test.tsx`                        | unit        | 完整性的兩層；主題切換改 `<html data-theme>` 且預設淺色；Token 對照與 `theme.css` 一致                                                                                                                             | #505 驗收第 4 項；Q9、Q13、Q16     |
-| `app/router.test.tsx`                                 | unit        | DEV 時 `/` 與未知路徑導向 `/dev/health`                                                                                                                                                                            | Q1、Q14                            |
-| `lib/date.test.ts`                                    | unit        | 同一個 UTC 時間點在不同時區下的顯示；開發頁格式；不依賴真實時間                                                                                                                                                    | F10；Q18                           |
+| 測試                                                  | 層          | 驗什麼                                                                                                                                                                                                                                                                         | 依據                               |
+| :---------------------------------------------------- | :---------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------- |
+| `api/mutator.test.ts`                                 | unit        | 上表七種情況各一（含 `timestamp`）；成功回 `{ data, meta }`；請求帶 `credentials: 'include'` 與 `Accept-Language`（zh-TW 與 en 各一）；`GET` 沒有 `Content-Type`；base URL 組合；15 秒逾時以假時鐘推進；無自動重試                                                             | A6、A7、S2；Q2、Q4、Q5             |
+| `api/api-error.test.ts`                               | unit        | `isAuthError` 只有 `401` 為真，`403` 為假                                                                                                                                                                                                                                      | A7；Q4                             |
+| `app/query-client.test.ts`                            | unit        | `retry` 為 `false`（失敗後只呼叫一次）                                                                                                                                                                                                                                         | A7；Q4                             |
+| `lib/abort.test.ts`                                   | unit        | 呼叫端取消、逾時、清理三種                                                                                                                                                                                                                                                     | F3；Q19 N6                         |
+| `lib/i18n/*.test.ts`                                  | unit        | `resolveLanguage` 對 `zh-TW`、`zh-CN`、`zh`、`en-US`、`ja`、空值；每個 namespace 兩份語言檔鍵集一致（`import.meta.glob` 直接讀語言檔，不經 i18next 實例）；`registerNamespace` 重複呼叫不出錯                                                                                  | Q5                                 |
+| `build/extract-tokens.test.ts`                        | unit        | 外掛只留 `:root` 與深色區塊的自訂屬性，丟棄元素規則與外部 `@import`                                                                                                                                                                                                            | Q15                                |
+| `features/system-health/to-health-view-state.test.ts` | unit        | 查詢狀態到四種狀態的對應；任何錯誤外層歸 `backendError`、標題只有 `DATABASE_UNAVAILABLE` 用專屬標題；非外層回應歸 `unreachable`                                                                                                                                                | F8；Q3                             |
+| `features/system-health/health-status-panel.test.tsx` | integration | 經 MSW、真的 `QueryClient` 與 `apiFetch`，四種狀態各一（zh-TW），並以英文跑一次；「重新檢查」回到載入中、背景更新（`invalidateQueries` 或視窗聚焦）不切回載入中；請求進行中按鈕是 `aria-disabled` 且點擊不送出第二個請求                                                       | #505 驗收第 3 項、T6；Q5、Q19 UI-7 |
+| `pages/dev-gallery/*.test.tsx`                        | unit        | 完整性的兩層（含檔案 → 區塊 id 對照表的三條斷言）；主題切換改 `<html data-theme>` 且預設淺色；Token 對照與 `theme.css` 一致                                                                                                                                                    | #505 驗收第 4 項；Q9、Q13、Q16     |
+| `app/router.test.tsx`                                 | unit        | DEV 時 `/` 與未知路徑導向 `/dev/health`                                                                                                                                                                                                                                        | Q1、Q14                            |
+| `lib/date.test.ts`                                    | unit        | 以時區參數注入 `Asia/Taipei`、`America/New_York`、`UTC`、`Asia/Kolkata`，同一個 UTC 時間點顯示各自的當地時間與偏移（`（UTC+8）`、`（UTC-5）`、`（UTC+0）`、`（UTC+5:30）`）；替換 `Intl.DateTimeFormat` 的回報值測「未指定時採用裝置時區」；不靠 `TZ` 環境變數、不依賴真實時間 | F10；Q18、D12                      |
 
 「真實後端下顯示對應狀態」（#505 驗收第 3 項的另一半）本次以 `acceptance.md` 的人工步驟驗：SQLite 啟動後端 → 正常；`DATABASE_URL` 指向不存在的 PostgreSQL → 資料庫無法連線；停掉後端 → 連不到後端。自動化的那一半屬 #506 的 e2e。**覆蓋率（Q12）**：`vitest --coverage`（`@vitest/coverage-v8`）產報告，`exclude` 產物 `src/api/generated/`、`src/test/`、設定檔；數字記進 `acceptance.md` 當第一次基準，**不設門檻、不擋 CI**。
 
@@ -563,7 +592,7 @@ sequenceDiagram
   Mut-->>QC: data 與 meta（traceId、timestamp）
   QC-->>Hook: status success
   Hook-->>Panel: data.data 與 data.meta
-  Panel->>Panel: toHealthViewState 得到 ok，checkedAt 由 meta.timestamp 經 formatDateTime
+  Panel->>Panel: toHealthViewState 得到 ok，checkedAt 由 meta.timestamp 經 formatDevCheckTime（未指定時區，取裝置時區，括號內為實際偏移）
   Note over Panel: 畫面呈現見 ui-design.md
 ```
 
@@ -647,17 +676,27 @@ sequenceDiagram
   participant QC as QueryClient
   participant Mut as apiFetch
   Panel->>Hook: useGetHealth()
-  Hook-->>Panel: isFetching true，尚無資料
-  Panel->>Panel: toHealthViewState 得到 loading
+  Hook-->>Panel: isPending true，尚無資料
+  Panel->>Panel: toHealthViewState(query, userRefetching false) 得到 loading
   Note over Panel,Mut: 回應抵達後依前幾張圖得到 ok、backendError 或 unreachable
-  Panel->>Hook: 使用者按重新檢查，呼叫 refetch()
-  Hook->>QC: refetch，取消仍在飛的同 key 請求
-  QC->>Mut: getHealth(新的 signal)
-  Hook-->>Panel: isFetching true
-  Panel->>Panel: toHealthViewState 得到 loading
-  opt 背景更新（視窗重新聚焦）
+  alt isFetching 為 true（首次載入或任何請求仍在飛）
+    Note over Panel: 重新檢查按鈕 aria-disabled true，點擊被忽略，不呼叫 refetch()
+  else 沒有請求在飛
+    Panel->>Panel: 使用者按重新檢查，設 userRefetching true
+    Panel->>Hook: refetch()（沒有在飛的請求，預設的 cancelRefetch 沒有對象可取消）
+    Hook->>QC: refetch
+    QC->>Mut: getHealth(新的 signal)
+    Hook-->>Panel: isFetching true
+    Panel->>Panel: toHealthViewState(query, userRefetching true) 得到 loading
+    Mut-->>QC: 回應或 ApiError
+    QC-->>Hook: isFetching false
+    Panel->>Panel: 清掉 userRefetching，依結果得到 ok、backendError 或 unreachable
+  end
+  opt 背景更新（視窗重新聚焦等，非使用者觸發）
     QC->>Mut: getHealth
-    Note over Panel: 已有結果時不切回載入中，回應到達後直接換結果
+    Hook-->>Panel: isFetching true，isPending false，userRefetching false
+    Panel->>Panel: toHealthViewState 維持原本的結果，不切回載入中；按鈕在這段期間同樣 aria-disabled
+    Note over Panel: 回應到達後直接換結果
   end
   opt 元件在回應前卸載
     QC->>Mut: signal abort
@@ -721,10 +760,11 @@ sequenceDiagram
     alt 路徑是 / 或未知路徑
       Router-->>Client: Navigate 到 /dev/health
     else 路徑是 /dev/health 或 /dev/gallery
-      Router->>Page: lazy 載入對應頁面
+      Router->>Page: lazy 載入對應頁面的 chunk
+      Page->>Page: 模組載入時 registerNamespace（systemHealth 由 features/system-health/index.ts，devGallery 由 dev-gallery 入口），再 render
     end
   else 正式建置
-    Note over Router: 開發路由整段已被剪除，只有空殼
+    Note over Router: 開發路由、兩頁的 chunk 與兩份 namespace 語言檔整段已被剪除，只有空殼
   end
 ```
 
@@ -744,7 +784,8 @@ sequenceDiagram
   else 其他
     Resolve-->>I18n: en
   end
-  I18n-->>Main: 實例就緒，介面文字依該語言的語言檔
+  I18n-->>Main: 實例就緒，只載入 common namespace
+  Note over I18n: systemHealth、devGallery 由開發頁 lazy chunk 內的模組在載入時以 registerNamespace 加入（見「兩頁只在開發模式註冊並導向健康檢查頁」）
   Mut->>I18n: getCurrentLanguage()
   Mut->>Net: Accept-Language 與介面語言一致
   Net-->>Mut: 錯誤外層的 message 依同一語言本地化
@@ -788,7 +829,7 @@ sequenceDiagram
   else 兩邊相同
     Test->>Gallery: render
     Test->>Test: 查每個 key 的 data-gallery-item 是否存在
-    Test->>Test: import.meta.glob 列出 components/ui 檔案，查每個都有區塊
+    Test->>Test: import.meta.glob 列出 components/ui 的 tsx（排除 *.test.tsx），依對照表查每個檔案的 section id 都存在
     alt 有任何一項不存在
       Test-->>Runner: 失敗，指出元件與 variant
     else 全部存在
@@ -871,7 +912,7 @@ sequenceDiagram
 
 - **快取生命週期**：`QueryClient` 一個應用一個，建在 `providers.tsx` 的模組層級；測試每一個測試建一個新的，避免測試之間共用快取。登出與換帳號的 `clear()` 屬 01-01（A9）。
 - **請求生命週期**：每個請求的計時器與 signal 監聽在 `apiFetch` 的 `finally` 釋放；元件卸載時 TanStack Query 會 abort，`apiFetch` 轉成 `aborted`。
-- **正式 bundle**：MSW、faker 與產生的 `*.msw.ts` 只被測試 import，lint 擋住產品碼引用；開發用頁面以 `lazy` 載入且只在 `import.meta.env.DEV` 註冊，正式建置整段被剪掉。以 `pnpm build` 後檢查 `dist/` 驗證。
+- **正式 bundle**：MSW、faker 與產生的 `*.msw.ts` 只被測試 import，lint 擋住產品碼引用；開發用頁面以 `lazy` 載入且只在 `import.meta.env.DEV` 註冊，正式建置整段被剪掉，`systemHealth`、`devGallery` 的語言檔只被這兩個 lazy 模組 import，一併剪掉。以 `pnpm build` 後檢查 `dist/` 驗證。
 - **健康檢查頁的最慢回應時間**：不重試，最慢是前端逾時 15 秒，大於後端 10 秒上限，資料庫無法連線不會被誤判成連不到後端（Q4）。
 - **建置與容器**：`extractTokens` 外掛讀 `frontend/` 之外的 `design/prototype/assets/tokens.css`，#506 的前端 Docker build context 必須包含 `design/prototype/assets/`，這件事要交給 #506。
 - **交給 #506 的另一件**：`.env.example` 要有 `CORS_ALLOWED_ORIGINS=http://localhost:5173` 與 `VITE_API_BASE_URL=http://localhost:8000`；容器內改以後端 `/api/v1/health` 驗證（Q1）。
