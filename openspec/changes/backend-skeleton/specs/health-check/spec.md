@@ -47,7 +47,7 @@
 
 #### Scenario: 資料庫連線逾時在時限內回應
 
-- **WHEN** 服務設定的 PostgreSQL 位址不回應任何封包，呼叫端送出 `GET /api/v1/health`
+- **WHEN** 服務設定的 PostgreSQL 位址在連線建立後不回應任何資料，呼叫端送出 `GET /api/v1/health`
 - **THEN** 系統在送出請求後 5 秒的連線時限屆滿時回覆 `503`、`code` 為 `"DATABASE_UNAVAILABLE"`，總耗時不超過 10 秒
 
 ### Requirement: 健康檢查刻意公開

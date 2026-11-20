@@ -35,7 +35,7 @@
 
 ### Requirement: 資料庫連線字串只接受 PostgreSQL
 
-系統 SHALL 在設定了 `DATABASE_URL` 時只接受 PostgreSQL 系列的連線字串，`postgresql://` 與 `postgresql+asyncpg://` 兩種寫法都接受並連到同一個資料庫；其他 scheme MUST 讓服務拒絕啟動，錯誤訊息 MUST 指出 `DATABASE_URL` 且 MUST NOT 印出連線字串（含帳號密碼）。
+系統 SHALL 在設定了 `DATABASE_URL` 時只接受 PostgreSQL 的連線字串，`postgresql://`、`postgresql+asyncpg://` 與 `postgres://` 三種寫法都接受，並連到同一個資料庫；其他 scheme，包括指定了其他驅動的 PostgreSQL 寫法（例 `postgresql+psycopg://`），MUST 讓服務拒絕啟動，錯誤訊息 MUST 指出 `DATABASE_URL` 且 MUST NOT 印出連線字串（含帳號密碼）。
 
 來源：ADR-003 D7、backend-agent-rules B10、security-agent-rules S9、clarification Q1。
 
@@ -43,6 +43,11 @@
 
 - **WHEN** 以合法的 `CORS_ALLOWED_ORIGINS` 加 `DATABASE_URL=mysql://user:CANARY-pw@db/app` 啟動服務
 - **THEN** 服務拒絕啟動，錯誤訊息含 `DATABASE_URL`，且不含 `CANARY-pw`
+
+#### Scenario: 指定其他驅動的 PostgreSQL 連線字串讓啟動失敗
+
+- **WHEN** 以合法的 `CORS_ALLOWED_ORIGINS` 加 `DATABASE_URL=postgresql+psycopg://user:CANARY-pw@db/app` 啟動服務
+- **THEN** 服務拒絕啟動，錯誤訊息含 `DATABASE_URL`，且不含 `CANARY-pw`、`db/app`
 
 ### Requirement: 其餘設定都有預設值
 
@@ -69,8 +74,8 @@
 
 #### Scenario: 設了 DATABASE_URL 時走正式層
 
-- **WHEN** 以指向可連線 PostgreSQL 的 `DATABASE_URL`（分別用 `postgresql://` 與 `postgresql+asyncpg://` 寫法）啟動服務並呼叫 `GET /api/v1/health`
-- **THEN** 兩次都回覆 `200`，且 `SQLITE_PATH` 指向的檔案沒有被建立
+- **WHEN** 以指向可連線 PostgreSQL 的 `DATABASE_URL`（分別用 `postgresql://`、`postgresql+asyncpg://` 與 `postgres://` 寫法）啟動服務並呼叫 `GET /api/v1/health`
+- **THEN** 三次都回覆 `200`，且 `SQLITE_PATH` 指向的檔案沒有被建立
 
 #### Scenario: 請求結束後連線歸還
 

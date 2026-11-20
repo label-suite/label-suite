@@ -56,7 +56,7 @@
 
 ### Requirement: 請求驗證失敗回 422 與逐欄位錯誤
 
-系統 SHALL 在 path、query、header 或 body 不符合端點宣告的形狀時回覆 `422`、`code` 為 `VALIDATION_FAILED`，`errors` 每一筆含 `location`、`field`、`code`、`message` 四個欄位。`field` MUST 使用呼叫端送出的小駝峰欄位名，以 `.` 串接、陣列索引寫數字；錯誤在整個 location 時為空字串。未宣告的 body 欄位與無法解析的 JSON 也 MUST 回 `422`。
+系統 SHALL 在 path、query、header 或 body 不符合端點宣告的形狀時回覆 `422`、`code` 為 `VALIDATION_FAILED`，`errors` 每一筆含 `location`、`field`、`code`、`message` 四個欄位。`field` MUST 使用呼叫端送出的小駝峰欄位名，以 `.` 串接、陣列索引寫數字；錯誤在整個 location 時為空字串。未宣告的 body 欄位與無法解析的 JSON 也 MUST 回 `422`；body 欄位 MUST 以小駝峰名稱送出，以底線命名送出的欄位名（例 `display_name`）視為未宣告欄位。
 
 來源：api-agent-rules A2、A7、#503 裁定 3。
 
@@ -70,6 +70,12 @@
 
 - **WHEN** 呼叫端對同一個端點送出 `{"displayName": "A", "nickName": "B"}`
 - **THEN** 系統回覆 `422`，`errors` 含一筆 `location` 為 `"body"`、`field` 為 `"nickName"`、`code` 為 `"extra_forbidden"` 的錯誤
+
+#### Scenario: 底線命名的 body 欄位被拒收
+
+- **WHEN** 呼叫端對同一個端點送出 `{"display_name": "A"}`
+- **THEN** 系統回覆 `422`，`code` 為 `"VALIDATION_FAILED"`
+- **AND** `errors` 含一筆 `location` 為 `"body"`、`field` 為 `"display_name"`、`code` 為 `"extra_forbidden"` 的錯誤，以及一筆 `field` 為 `"displayName"`、`code` 為 `"missing"` 的錯誤
 
 #### Scenario: 無法解析的 JSON 回 422
 
@@ -125,6 +131,13 @@
 - **THEN** 系統回覆 `500`，`code` 為 `"INTERNAL_ERROR"`、`data` 為 `null`、`errors` 為 `null`
 - **AND** 回應 body 不含 `CANARY-boom`、`/srv/secret.py`、`Traceback`、例外型別名稱
 - **AND** 回應帶 `X-Correlation-ID`，值與 `traceId` 相同，並帶 `Access-Control-Allow-Origin` 為該來源
+
+#### Scenario: 回應內容不符合宣告形狀時回 500 外層
+
+- **WHEN** 一個 `/api/v1` 端點宣告回應 `data` 含必填欄位 `name`，處理後產生的內容缺少 `name` 且含值 `CANARY-resp`
+- **THEN** 系統回覆 `500`，`code` 為 `"INTERNAL_ERROR"`、`data` 為 `null`、`errors` 為 `null`
+- **AND** 回應 body 不含 `CANARY-resp`、`name` 的驗證錯誤說明或例外型別名稱
+- **AND** 回應帶 `X-Correlation-ID`，值與 `traceId` 相同
 
 ### Requirement: 未處理例外留下可用追蹤編號對照的伺服器紀錄
 

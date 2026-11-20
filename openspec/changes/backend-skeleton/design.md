@@ -30,10 +30,11 @@
 ### D1. Python 版本與套件清單
 
 - `requires-python = ">=3.12"`。理由：3.12 是 FastAPI、SQLAlchemy 2.0、asyncpg、aiosqlite 都有正式支援的版本，且 `datetime.UTC`、PEP 695 泛型語法可用；上游沒有指定版本，這是本文的技術決策（替代方案：3.11，少了 `typing` 的新語法，沒有對應的好處；3.13，部分 C 擴充套件的 wheel 較晚釋出）。
-- 執行期依賴（一律 `uv add`，Hard Rule 3）：`fastapi`、`uvicorn[standard]`、`pydantic-settings`、`sqlalchemy[asyncio]`、`aiosqlite`、`asyncpg`、`alembic`。`pydantic` 隨 `fastapi` 安裝，不另列。
+- 執行期依賴（一律 `uv add`，Hard Rule 3）：`fastapi`、`uvicorn[standard]`、`pydantic>=2.11`、`pydantic-settings`、`sqlalchemy[asyncio]`、`aiosqlite`、`asyncpg`、`alembic`。`pydantic` 雖隨 `fastapi` 安裝，仍明列下限 `2.11`：D13 的 `validate_by_alias`／`validate_by_name` 從 2.11 起才有。
 - 開發依賴（`uv add --dev`）：`pytest`、`pytest-asyncio`、`pytest-cov`、`httpx`、`ruff`、`mypy`。
 - 不加 `asgi-lifespan`、`inflect`、`babel`：分別由 D7、D6、D5 的做法取代，少三個依賴。
 - `uv.lock` 提交進版控；`pyproject.toml` 的 `version = "0.0.0"`（clarification Q7）。
+- `backend/.gitignore` 排除 `.venv/`、`__pycache__/`、`.pytest_cache/`、`.mypy_cache/`、`.ruff_cache/`、`.coverage` 與 `data/`（`SQLITE_PATH` 預設的 `./data/label_suite.db` 所在目錄），讓 D10 要求的「驗證後 `git status` 乾淨」在跑過 `uv sync`、pytest、mypy、ruff 與服務之後仍成立。根目錄 `.gitignore` 不動。
 
 對應：`system-design.md` §目錄結構（`pyproject.toml` 列）、`architecture.mdx` §技術選型、§測試分層。
 
@@ -41,7 +42,7 @@
 
 做法與理由見 `system-design.md` §目錄結構 第三點與 §元件清單 `create_app(settings)`。本文補的決策：
 
-- `create_app(settings: Settings | None = None)`：`None` 時才建 `Settings()` 讀環境變數。正式執行用 `uv run uvicorn app.main:create_app --factory`；測試與匯出指令都傳入自己建的 `Settings`。
+- `create_app(settings: Settings | None = None)`：`None` 時才以 `load_settings(Settings)`（D7）讀環境變數。正式執行用 `uv run uvicorn app.main:create_app --factory`；測試與匯出指令都傳入自己建的 `Settings`。
 - 匯出指令建立佔位設定時以初始化參數明列**全部四個欄位**（初始化參數優先於環境變數），確保環境裡的 `DATABASE_URL` 等值不會被讀到；匯出不跑 lifespan，所以輸出與環境無關（spec `api-schema-export`「不設環境變數即可匯出」「重複匯出內容相同」）。
 - 替代方案：模組頂層 `app = create_app()`。不採用：import 就會讀環境變數，缺 `CORS_ALLOWED_ORIGINS` 時連匯出與 unit 測試都無法 import。
 
@@ -76,18 +77,34 @@
 
 產生規則、單複數轉換與撞名檢查見 `system-design.md` §關鍵設計細節「operationId」；元件命名見 api-contract §OpenAPI 元件命名與 `openapi.json`。本文補的決策：
 
-- 單複數轉換寫在 `app/core/openapi.py`：`y` 結尾轉 `ies`、`s`／`x`／`ch`／`sh` 結尾加 `es`、其餘加 `s`，外加一張不規則字表（本次只放 `health`→`health`）。替代方案 `inflect` 套件不採用：一條規則加一張表就夠，多一個依賴不值得。
+- 資源名取自去掉 `/api/v1` 後最後一個非參數路徑段，路徑段依 api-agent-rules 一律是複數（`tasks`、`task-items`）。先把 kebab-case 轉成 PascalCase（`task-items` → `TaskItems`），再依動詞決定單複數：
+  - `list` 直接用路徑段的複數形：`listTasks`、`listTaskItems`。
+  - `get`、`create`、`update`、`delete` 先把最後一個字單數化再接上：`getTask`、`createTaskItem`。
+- 單數化寫在 `app/core/openapi.py`，對最後一個字依序套用、命中即停：
+  1. 不規則字表（本次放 `health` → `health`，不可數、單複同形；`people` → `person`、`children` → `child`、`analyses` → `analysis` 這類字之後遇到再加進表）；
+  2. `ss` 結尾不變（`access`、`class`）；
+  3. `ies` 結尾換成 `y`（`categories` → `category`）；
+  4. `ses`、`xes`、`ches`、`shes` 結尾去掉 `es`（`statuses` → `status`、`boxes` → `box`、`batches` → `batch`）；
+  5. 其餘 `s` 結尾去掉 `s`（`tasks` → `task`）；
+  6. 不以 `s` 結尾的字不變。
+- unit 測試以對照表斷言 spec `api-schema-export`「操作識別名依方法與回應形狀決定動詞」的六條（`listTasks`、`getTask`、`createTask`、`updateTask`、`deleteTask`、`getHealth`），並逐條涵蓋上面六個步驟各一個字。替代方案 `inflect` 套件不採用：五條規則加一張表就夠，多一個依賴不值得；規則猜錯的字會在撞名檢查或 code review 時現形，修法是補一筆不規則字。
 - 覆寫 `app.openapi`：先呼叫 FastAPI 的 `get_openapi`，再做兩件後處理——把每個 `422` 回應的 schema 換成 `ErrorResponse` 的參照，刪除 `components.schemas` 的 `HTTPValidationError` 與 `ValidationError`。結果快取在 `app.openapi_schema`，執行期的 `/openapi.json` 與匯出指令取得同一份。
 - `404`、`405`、`406`、`500` 以 `/api/v1` 父 router 的 `responses=` 一次宣告；`getHealth` 的 `503` 宣告在端點上（api-contract §OpenAPI 元件命名與 `openapi.json`「錯誤回應在 OpenAPI 的宣告」）。
 - 泛型元件命名靠覆寫 `ApiResponse.model_parametrized_name` 與 `PaginatedResponse.model_parametrized_name`；unit 測試對 `ApiResponse[HealthData]`、`ApiResponse[PaginatedResponse[X]]`、`PaginatedResponse[X]` 三種斷言元件名（spec `api-schema-export`「分頁外層的元件名」）。
+- `backend/openapi.json` 的格式由匯出指令決定（`sort_keys`、縮排 2、結尾換行），不由 Prettier 決定：把它加進根目錄 `.prettierignore`，註解寫明「匯出指令產生的檔案，格式由匯出指令負責」。不加的話，lint-staged 的 `*.json` 規則與 CI 的 `format` job 會把它改寫成 Prettier 的格式（例如短陣列收成一行），D12 的漂移比對與格式檢查就不可能同時通過。替代方案「讓匯出指令輸出 Prettier 的格式」不採用：匯出指令得依賴 Node 工具鏈，`backend/` 的檢查就不能只靠 `uv`。
 
 ### D7. 設定的解析
 
 欄位、驗證與預設見 `system-design.md` §關鍵設計細節「設定與啟動失敗」。本文補的決策：
 
 - `cors_allowed_origins` 標 `NoDecode`，由 `field_validator(mode="before")` 以逗號切分、去空白、丟空字串後逐一驗證；不用 pydantic-settings 預設的 JSON 解析，部署者才能直接寫 `http://a,http://b`。
-- 驗證錯誤的訊息只放欄位名與原因，自訂驗證器拋出的 `ValueError` 不帶原值；Pydantic 的 `ValidationError` 字串預設會印 `input_value`，所以 `create_app` 捕捉 `ValidationError` 後改拋一個只含 `loc` 與 `msg` 的例外，並在拋出時 `from None`，避免原例外鏈被 uvicorn 印出（spec `runtime-config` 四個啟動失敗 Scenario 的「不含設定值」）。
-- `async_database_url()`：`postgresql://`、`postgres://`、`postgresql+asyncpg://` 都正規化成 `postgresql+asyncpg://`；沒設時回 `sqlite+aiosqlite:///<SQLITE_PATH 的絕對路徑>`。
+- 設定分兩層（理由見 D9）：`DatabaseSettings` 只有 `database_url`、`sqlite_path` 兩個欄位與 `async_database_url()`、`is_lite()` 兩個方法；`Settings(DatabaseSettings)` 再加 `cors_allowed_origins`、`cors_allow_credentials`。
+- 驗證錯誤的訊息只放設定名與原因，自訂驗證器拋出的 `ValueError` 不帶原值；Pydantic 的 `ValidationError` 字串預設會印 `input_value`，所以由 `app/core/config.py` 的 `load_settings(cls)` 統一建構設定：捕捉 `ValidationError`，對每一筆錯誤把 `loc[0]`（Python 欄位名，例 `cors_allowed_origins`）以 `.upper()` 轉成環境變數名（`CORS_ALLOWED_ORIGINS`），組成 `"<環境變數名>: <msg>"` 一行一筆的訊息，改拋 `ConfigError` 並 `from None`，避免原例外鏈被 uvicorn 印出。欄位與環境變數名一對一、沒有 `env_prefix`，所以 `.upper()` 就是 pydantic-settings 實際讀的名稱。`create_app(None)` 與 `alembic/env.py` 都經過 `load_settings`（前者傳 `Settings`、後者傳 `DatabaseSettings`）。這對應 spec `runtime-config` 四個啟動失敗 Scenario 的「錯誤訊息含 `CORS_ALLOWED_ORIGINS`」與「不含設定值」，以及兩個 `DATABASE_URL` 啟動失敗 Scenario 的「錯誤訊息含 `DATABASE_URL`」。
+- `DATABASE_URL` 的 scheme 由 `DatabaseSettings` 的 `field_validator` 檢查，只接受三種，全部正規化成 `postgresql+asyncpg://`，其餘部分原樣保留：
+  - `postgresql://` 與 `postgresql+asyncpg://`；
+  - `postgres://`（Heroku 等平台慣用的別名）。
+  - 其他一律拒絕並啟動失敗，包括 `postgresql+psycopg://`、`postgresql+psycopg2://` 這類指定了別的驅動的寫法（本專案只裝 `asyncpg`，接受它們等於在連線時才失敗），以及 `mysql://`、`sqlite://`。錯誤訊息為 `DATABASE_URL: <原因>`，原因只描述「只接受 postgresql、postgresql+asyncpg、postgres」，不含連線字串。
+- `async_database_url()`：設了 `DATABASE_URL` 時回正規化後的值；沒設時回 `sqlite+aiosqlite:///<SQLITE_PATH 的絕對路徑>`。
 
 ### D8. 資料庫 engine 與 lifespan
 
@@ -101,17 +118,21 @@
 
 設定項目與 SQLite／PostgreSQL 差異見 `system-design.md` §資料模型異動 的兩張表。本文補的決策：
 
-- `env.py` 透過 `Settings()` 取得 URL；若呼叫端（測試）以 `config.attributes["connection"]` 傳入連線就直接用，讓 pytest 能對 `tmp_path` 的 SQLite 與 `TEST_DATABASE_URL` 跑遷移，而不必改環境變數。
+- `env.py` 只讀 `DatabaseSettings`（經 D7 的 `load_settings(DatabaseSettings)`），取 `async_database_url()`，**不讀 `Settings`**。理由：`Settings` 要求 `CORS_ALLOWED_ORIGINS`，若 `env.py` 讀它，跑遷移也得設一個與資料庫無關的跨來源設定，spec `database-migration`「遷移連到與服務相同的資料庫」（只設 `SQLITE_PATH`）就無法成立。`Settings` 繼承 `DatabaseSettings`，所以兩邊對 `DATABASE_URL`、`SQLITE_PATH` 的驗證與 URL 推導是同一段程式，B10「唯一設定入口」仍成立。替代方案：(b) `env.py` 讀 `Settings` 並塞一個佔位的 `CORS_ALLOWED_ORIGINS`，不採用，佔位值會讓部署者誤以為遷移需要它；(c) `env.py` 自己讀 `os.environ`，不採用，違反 B10 並會與 app 的 URL 推導分岔。
+- 若呼叫端（測試）以 `config.attributes["connection"]` 傳入連線就直接用，讓 pytest 能對 `tmp_path` 的 SQLite 與 `TEST_DATABASE_URL` 跑遷移，而不必改環境變數；「遷移連到與服務相同的資料庫」那條測試則刻意不傳連線，以 `monkeypatch` 只設 `SQLITE_PATH`、刪掉 `CORS_ALLOWED_ORIGINS` 與 `DATABASE_URL` 後呼叫 `alembic upgrade head`，驗證走的是 `DatabaseSettings`。
 - 基準遷移以 `uv run alembic revision -m "baseline"` 產生，`upgrade()` 與 `downgrade()` 都只有 `pass`。
-- 約束命名的驗證（spec `database-migration`「約束名稱依固定規則產生」）用只存在於 `tests/` 的 `sample`／`owner` 兩張表，掛在一份套用同一個 `naming_convention` 的 `MetaData` 上，以 `create_all` 建在測試庫、用 inspector 讀回約束名；不寫進任何遷移，也不碰 `Base.metadata`。
+- 約束命名的驗證（spec `database-migration`「約束名稱依固定規則產生」）用只存在於 `tests/` 的 `sample`／`owner` 兩張表，掛在一份套用同一個 `naming_convention` 的 `MetaData` 上，以 `create_all` 建在測試庫、用 inspector 讀回約束名；不寫進任何遷移，也不碰 `Base.metadata`。測試結束時以 `drop_all` 刪掉這兩張表（放在 fixture 的 teardown，測試失敗也會執行），否則同一個 PostgreSQL 測試庫上後續的「基準遷移不建立業務資料表」會看到殘留的表而失敗。
+- 遷移測試在 PostgreSQL 上共用同一個庫，所以每條遷移測試以 `downgrade base` 開始、以 `upgrade head` 結束，不依賴前一條測試留下的狀態，也讓之後的測試拿到已升到最新的庫。
 
 ### D10. 測試 harness
 
 資料庫選擇、探測 router、unit／integration 範圍見 `system-design.md` §關鍵設計細節「測試」。本文補的決策：
 
 - 目錄：`tests/unit/`、`tests/integration/`；integration 測試以 `@pytest.mark.integration` 標記，`uv run pytest -m integration` 只跑這一層（testing-agent-rules T1）。
+- 測試資料庫 fixture 在 `tests/conftest.py`，隨第一個需要資料庫的測試（tasks 3.1）建立：有 `TEST_DATABASE_URL` 時用該 PostgreSQL，否則用 `tmp_path` 下的 SQLite 檔；它只提供 engine，不跑遷移。需要已遷移結構的測試另用建在它之上的 fixture 跑 `alembic upgrade head`（tasks 3.2 加入）。PostgreSQL 的隔離做法見 D9 最後兩點。
 - 只能在 PostgreSQL 上成立的測試（runtime-config「設了 DATABASE_URL 時走正式層」、health-check「健康檢查回應不含部署資訊」）以 `@pytest.mark.postgres` 加 `skipif(TEST_DATABASE_URL 未設)` 標記，跳過時 pytest 摘要會列出數量；這是 clarification Q5 明定的條件式跳過，不是 T11 禁止的無條件 `skip`。其餘 integration 測試依 `TEST_DATABASE_URL` 有無自動跑在對應資料庫上。
-- 健康檢查 `503` 的兩種情境不需要真的 PostgreSQL：「連不上」用 `postgresql://u:CANARY-pw@127.0.0.1:<一個關閉的埠>/x`；「逾時」用測試內起的本機 TCP 伺服器，接受連線但不回任何位元組，讓 asyncpg 在 5 秒連線時限屆滿。兩者在沒有 `TEST_DATABASE_URL` 時也會跑。
+- 健康檢查 `503` 的兩種情境不需要真的 PostgreSQL：「連不上」用 `postgresql://u:CANARY-pw@127.0.0.1:<一個關閉的埠>/x`；「逾時」用測試內起的本機 TCP 伺服器，接受連線（TCP 連線建立）後不回任何位元組，讓 asyncpg 在 5 秒連線時限屆滿。兩者在沒有 `TEST_DATABASE_URL` 時也會跑。
+- 「回應內容不符合宣告形狀回 500」（spec `api-envelope`）用 `tests/` 內探測 router 的一條 `GET`：`response_model` 宣告必填欄位，handler 回傳缺該欄位的 dict，FastAPI 拋 `ResponseValidationError`，依 D4 落到 `UnhandledExceptionMiddleware`。
 - 未處理例外的 log 以 pytest 的 `caplog` 斷言（spec `api-envelope`「未處理例外的紀錄含追蹤編號且不含請求內容」）。
 - 啟動失敗的 Scenario 以 unit 測試對 `create_app()` 斷言拋出的例外與訊息，另以一條 integration 測試用 `subprocess` 跑 `uvicorn --factory` 確認程序以非零狀態結束。
 - 覆蓋率：`uv run pytest --cov=app --cov-report=term-missing`，不設 `--cov-fail-under`（clarification Q8）。
@@ -123,12 +144,34 @@
 
 ### D12. `openspec/config.yaml` 的後端檢查指令
 
-把 `system-design.md` §技術待決問題「`openspec/config.yaml` 的 `operations.apply.guidance` 要補的後端指令」那五行寫進 `operations.apply.guidance`，並把第 4 條「後端與前端的檢查指令等骨架 change 建好再補進這一節」改成只剩前端（#505 補）。PostgreSQL 那一行寫明 `TEST_DATABASE_URL` 由本機 `docker run postgres:16` 提供（clarification Q5）。
+把 `system-design.md` §技術待決問題「`openspec/config.yaml` 的 `operations.apply.guidance` 要補的後端指令」那五行寫進 `operations.apply.guidance`，並把第 4 條「後端與前端的檢查指令等骨架 change 建好再補進這一節」改成只剩前端（#505 補）。本文補的決策：
+
+- PostgreSQL 那一行寫明 `TEST_DATABASE_URL` 由本機 `docker run postgres:16` 提供（clarification Q5）。
+- SQLite 那一行寫明：標 `postgres` 的測試在這次會被跳過，回報結果時要附上 pytest 摘要裡的 skipped 數量，不得只寫「通過」。
+- 漂移比對那一行的路徑以 `backend/` 為工作目錄（指令都以 `cd backend &&` 開頭），寫成：
+
+  ```bash
+  cd backend && uv run python -m app.scripts.export_openapi \
+    && git diff --exit-code -- openapi.json \
+    && test -z "$(git status --porcelain -- openapi.json)"
+  ```
+
+  `git diff` 的路徑是相對於目前目錄解析的，寫 `backend/openapi.json` 會變成 `backend/backend/openapi.json`、永遠沒有差異；`git diff` 也看不到未追蹤的檔案，所以第一次匯出還沒提交時要靠 `git status --porcelain` 那一段抓出來。tasks 6.3、7.2、8.1、9.1 都用這三段。
+
+### D13. 請求與回應用不同的 schema 基底
+
+基底類別的分工見 `system-design.md` §元件清單 `ApiModel`、`RequestModel`、`ResponseModel`。本文補的決策與理由：
+
+- `ApiModel` 只放共用設定：`alias_generator=to_camel`、`serialize_by_alias=True`、`extra="forbid"`。
+- `RequestModel(ApiModel)` 設 `validate_by_alias=True, validate_by_name=False`：請求 body 只認小駝峰，送 `display_name` 會被當成未宣告欄位，回 `422 extra_forbidden`（#503 裁定 3、api-agent-rules A2；spec `api-envelope`「底線命名的 body 欄位被拒收」）。`PaginationParams` 繼承它。
+- `ResponseModel(ApiModel)` 設 `validate_by_alias=True, validate_by_name=True, from_attributes=True`：Python 內部以欄位名（`trace_id=...`）或 ORM 物件建構回應，序列化仍走 alias。`HealthData`、`ApiResponse`、`ErrorDetail`、`PaginatedResponse` 繼承它。
+- 替代方案：單一 `ApiModel` 設 `populate_by_name=True`。不採用：請求 body 會同時接受小駝峰與底線命名，等於對外多開一種沒有寫進契約的寫法。另一個替代方案是單一基底設 `validate_by_name=False`，不採用：內部建構回應時得改寫 alias，`ErrorDetail`、`ApiResponse` 的建構點都要跟著改。
+- 之後的功能 change 規則：請求 body schema 繼承 `RequestModel`、回應 schema 繼承 `ResponseModel`，不直接繼承 `ApiModel`；`code-reviewer` 依此審查。
 
 ## Risks / Trade-offs
 
 - [PostgreSQL 測試在沒設 `TEST_DATABASE_URL` 時跳過，可能讓只在 PostgreSQL 出錯的改動通過本機檢查] → `acceptance.md` 必須附兩次 pytest 的完整摘要（含 PostgreSQL 那次 0 skipped）；CI 的 PostgreSQL 由 #506 建立後才算真正擋住。
-- [`ApiModel` 設 `populate_by_name=True`，請求 body 同時接受小駝峰與底線命名] → 這是 `system-design.md` §元件清單 定下的設定，為了讓 Python 內部能用欄位名建構 schema；對外文件與 `openapi.json` 只列小駝峰。若之後要嚴格拒絕底線命名，屬 A10 的行為變更，另開 issue。
+- [`PaginationParams` 繼承 `RequestModel` 而有 `extra="forbid"`，但 A2 要求未宣告的 query 參數被忽略] → 本次沒有端點使用它；第一個列表端點要把它接成一般的依賴（逐個 `Query` 參數組成），不要當成 FastAPI 的 Query model，否則未宣告的 query 參數會回 `422`。
 - [泛型元件名覆寫依賴 Pydantic 的 `model_parametrized_name` 行為，升級 Pydantic 時可能改變] → D6 的 unit 測試加上 `openapi.json` 的漂移比對（`git diff --exit-code`）會在升級時立刻失敗。
 - [`UnhandledExceptionMiddleware` 在回應已開始送出後無法改寫回應] → 只能靠 log 追查；本次沒有串流端點。已列入 `clarification.md` 結論 N5，供 `code-reviewer` 與 #505 知悉。
 - [健康檢查每次都打資料庫，高頻輪詢時占用連線池] → `system-design.md` §交易、session 與效能 已列；由 #506 決定輪詢頻率時再評估拆端點。

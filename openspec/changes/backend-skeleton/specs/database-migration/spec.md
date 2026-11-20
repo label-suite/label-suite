@@ -25,13 +25,13 @@
 
 ### Requirement: 遷移與服務使用同一份資料庫設定
 
-系統 SHALL 讓資料庫結構遷移依服務相同的設定決定連到哪個資料庫：沒設 `DATABASE_URL` 時遷移 `SQLITE_PATH` 指向的 SQLite 檔，設了時遷移該 PostgreSQL；遷移 MUST NOT 另外要求一組連線設定。
+系統 SHALL 讓資料庫結構遷移依服務相同的設定決定連到哪個資料庫：沒設 `DATABASE_URL` 時遷移 `SQLITE_PATH` 指向的 SQLite 檔，設了時遷移該 PostgreSQL；遷移 MUST NOT 另外要求一組連線設定，也 MUST NOT 要求與資料庫無關的設定（例 `CORS_ALLOWED_ORIGINS`）。
 
 來源：backend-agent-rules B10、ADR-003 D7。
 
 #### Scenario: 遷移連到與服務相同的資料庫
 
-- **WHEN** 只設定 `SQLITE_PATH=<暫存目錄>/m.db`、不設 `DATABASE_URL`，執行升到最新
+- **WHEN** 只設定 `SQLITE_PATH=<暫存目錄>/m.db`、不設 `DATABASE_URL`，也不設 `CORS_ALLOWED_ORIGINS`，執行升到最新
 - **THEN** `<暫存目錄>/m.db` 被建立，且含遷移版本紀錄表
 
 ### Requirement: 約束名稱在兩種資料庫一致
