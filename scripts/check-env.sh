@@ -131,14 +131,32 @@ const found = [];
 
 for (const [event, raw] of found) {
   // The two tokens the registrations are allowed to use, replaced as text.
+  // Each is accepted quoted as well as bare: Codex has no project-root
+  // placeholder, so its registrations spell the root as a command
+  // substitution, which has to be quoted or the shell that runs the hook
+  // splits a path containing a space apart. Those quotes are for that
+  // shell; this check does its own splitting below, and had to be fixed
+  // separately. The quoted spelling is replaced first -- replacing the
+  // bare token inside it would leave the quotes behind and turn a real
+  // path into one that does not exist.
   const resolved = raw
+    .replaceAll('"${CLAUDE_PROJECT_DIR}"', root)
     .replaceAll('${CLAUDE_PROJECT_DIR}', root)
+    .replaceAll('"$(git rev-parse --show-toplevel)"', root)
     .replaceAll('$(git rev-parse --show-toplevel)', root);
   if (/\$\(|\$\{?[A-Za-z_]/.test(resolved)) {
     process.stdout.write(`OPAQUE\t${label}\t${event}\t${raw}\n`);
     continue;
   }
-  const target = resolved.trim().split(/\s+/)[0];
+  // The target is the path, not the `--event <Event>` after it. Splitting
+  // on whitespace took the first word, which truncates any checkout whose
+  // path contains a space -- `/x/my repo/scripts/check-env.sh` was reported
+  // ABSENT as `/x/my`, and every handler in both registrations failed with
+  // it. Take the shortest prefix ending in `.sh`, and keep the old split as
+  // the fallback for a command that is not a script.
+  const trimmed = resolved.trim();
+  const script = trimmed.match(/^(.*?\.sh)(?:\s|$)/);
+  const target = script ? script[1] : trimmed.split(/\s+/)[0];
   process.stdout.write(`${fs.existsSync(target) ? 'OK' : 'ABSENT'}\t${label}\t${event}\t${target}\n`);
 }
 JS
@@ -205,10 +223,10 @@ if [ -n "$git_dir" ]; then
   # conclusion that cannot be drawn without the digest.
   # The two registrations are concatenated by hand rather than with
   # `cat a b | hc_sha256`. Under `pipefail` that pipeline reports failure
-  # whenever either file is absent, and absent is the ordinary state today --
-  # there is no `.codex/hooks.json` yet. It made every run report a digest it
-  # had in fact computed as uncomputable, and blank the stored value with it.
-  # A missing registration contributes no bytes, which is a fact, not an error.
+  # whenever either file is absent, so a checkout carrying only one of them
+  # made every run report a digest it had in fact computed as uncomputable,
+  # and blank the stored value with it. A missing registration contributes no
+  # bytes, which is a fact, not an error.
   : > "$HC_BUFFER_DIR/hookdefs"
   for cfg in "$CLAUDE_CFG" "$CODEX_CFG"; do
     if [ -f "$cfg" ]; then cat "$cfg" >> "$HC_BUFFER_DIR/hookdefs"; fi

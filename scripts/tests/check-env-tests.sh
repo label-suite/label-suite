@@ -36,8 +36,8 @@ make_repo() {
           "PreToolUse":[{"matcher":"Bash","hooks":[{"type":"command","command":"${CLAUDE_PROJECT_DIR}/scripts/check-command.sh"}]}]}}
 JSON
   cat > "$d/.codex/hooks.json" <<'JSON'
-{"hooks":{"SessionStart":[{"command":"$(git rev-parse --show-toplevel)/scripts/check-env.sh --event SessionStart"}],
-          "PreToolUse":[{"matcher":"Bash","command":"$(git rev-parse --show-toplevel)/scripts/check-command.sh"}]}}
+{"hooks":{"SessionStart":[{"command":"\"$(git rev-parse --show-toplevel)\"/scripts/check-env.sh --event SessionStart"}],
+          "PreToolUse":[{"matcher":"Bash","command":"\"$(git rev-parse --show-toplevel)\"/scripts/check-command.sh"}]}}
 JSON
   printf '%s' "$d"
 }
@@ -165,10 +165,9 @@ after=$(cat "$digest" 2>/dev/null)
 grep -q 'UNKNOWN' "$TMP/out" \
   || fail "a run with an unusable node did not report that it could not: $(cat "$TMP/out")"
 
-# One registration present and the other absent is the ordinary state of this
-# repository today -- there is no `.codex/hooks.json` yet -- and it must still
-# produce a digest. Taken as `cat a b | hc_sha256` under `pipefail`, the
-# missing file made the pipeline report failure, so every normal run called a
+# One registration present and the other absent must still produce a digest.
+# Taken as `cat a b | hc_sha256` under `pipefail`, the missing file made the
+# pipeline report failure, so a checkout carrying only one of them called a
 # digest it had actually computed uncomputable and blanked the stored value
 # with it.
 d=$(make_repo onecfg); rm -f "$d/.codex/hooks.json"
@@ -184,6 +183,44 @@ stored=$(cat "$digest" 2>/dev/null)
 present=$(cd "$d" && bash -c '. "$1"; hc_init; hc_sha256 .claude/settings.json' _ "$ROOT/scripts/lib/hook-common.sh")
 [ "$stored" = "$present" ] \
   || fail "the stored digest is not the digest of the present registration"
+
+# Codex has no project-root placeholder, so its registrations spell the root
+# as a command substitution, and that has to be quoted or the shell running
+# the hook splits a path with a space in it apart. The fixture above uses the quoted spelling on the Codex
+# side and the bare placeholder on the Claude side, which is exactly what this
+# repository ships. Resolving the quoted form by replacing only the bare token
+# inside it leaves the quotes in the path, so every target reads as missing --
+# measured on 2026-11-20, when the real configs landed and all six Codex
+# entries were reported absent.
+d=$(make_repo quoted); run_h1 "$d" >/dev/null
+grep -q '指向不存在的檢查目標' "$TMP/out" \
+  && fail "the quoted command substitution was not resolved: $(grep '指向不存在' "$TMP/out" | head -1)"
+grep -q '^PASS:.*兩份' "$TMP/out" \
+  || fail "the two registrations were not reported as agreeing: $(grep -E '兩份|FAIL' "$TMP/out" | head -2)"
+
+# Those quotes are for the shell that runs the hook. This checker does its own
+# splitting, and splitting on whitespace to drop the `--event <Event>` took the
+# first word -- so a checkout whose path contains a space had every handler in
+# both registrations reported absent at the first segment. Measured on
+# 2026-11-20 against `.../scratchpad/sp space v2`: twelve FAIL lines, all
+# naming `.../scratchpad/sp`.
+d=$(make_repo "has space"); run_h1 "$d" >/dev/null
+grep -q '指向不存在的檢查目標' "$TMP/out" \
+  && fail "a checkout path containing a space was truncated: $(grep '指向不存在' "$TMP/out" | head -1)"
+grep -q '^PASS:.*兩份' "$TMP/out" \
+  || fail "a checkout path containing a space did not agree: $(grep -E '兩份|FAIL' "$TMP/out" | head -2)"
+
+# The quoted spelling of the Claude token is accepted too. No configuration
+# this repository ships uses it, so nothing else exercises that replacement;
+# pinning it here keeps it from being dropped as dead on a later reading.
+d=$(make_repo quotedclaude)
+cat > "$d/.claude/settings.json" <<'JSON'
+{"hooks":{"SessionStart":[{"hooks":[{"type":"command","command":"\"${CLAUDE_PROJECT_DIR}\"/scripts/check-env.sh --event SessionStart"}]}],
+          "PreToolUse":[{"matcher":"Bash","hooks":[{"type":"command","command":"\"${CLAUDE_PROJECT_DIR}\"/scripts/check-command.sh"}]}]}}
+JSON
+run_h1 "$d" >/dev/null
+grep -q '指向不存在的檢查目標' "$TMP/out" \
+  && fail "the quoted Claude placeholder was not resolved: $(grep '指向不存在' "$TMP/out" | head -1)"
 
 # ── Secrets: existence is the question, never the contents ───────────
 

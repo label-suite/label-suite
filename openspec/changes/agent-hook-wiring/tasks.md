@@ -61,8 +61,8 @@
 
 ## 6. Hook 註冊設定
 
-- [ ] 6.1 在 `.claude/settings.json` 新增 `hooks` 鍵，註冊 D15 表列的五個 handler（`SessionStart` 10 秒、兩個 `PreToolUse` 各 5 秒、`PostToolUse` 30 秒、`Stop`／`SubagentStop` 60 秒），路徑用 `${CLAUDE_PROJECT_DIR}/scripts/<checker>.sh`；**不寫 `onFailure`**（除非 task 1.2 證明本機已達 2.1.295，屆時先回報）；**不寫 `MultiEdit`**；`$schema` 與 `attribution` 原封不動。驗證：`node -e 'JSON.parse(...)'` 通過、`git diff` 顯示 `attribution.sessionUrl` 未被改動、`scripts/check-env.sh --ci` 的 Claude 半邊全為 `PASS:`（D15；spec「Session 開始時核對兩份 hook 註冊設定」「執行時間與輸出大小有上限且由平台設定控制」）[@backend-developer]
-- [ ] 6.2 新建 `.codex/hooks.json`（`.codex/` 目錄本次新建，**只放這一個檔，不碰 `config.toml`**），依 D16 的對應表註冊同一批腳本，matcher 用 Codex 的工具名（`Bash`、`apply_patch`），`Stop` 從 payload 自行判斷，timeout 數值與 6.1 相同，路徑用 `"$(git rev-parse --show-toplevel)"/scripts/<checker>.sh`，`command` 欄位依 task 1.3 查到的 wire 形狀撰寫。驗證：`scripts/check-env.sh --ci` 兩份設定皆為 `PASS:`，且 `.codex/` 下只有 `hooks.json` 一個檔（D16；spec「Session 開始時核對兩份 hook 註冊設定」）[@backend-developer]
+- [x] 6.1 在 `.claude/settings.json` 新增 `hooks` 鍵，註冊 D15 表列的五個 handler（`SessionStart` 10 秒、兩個 `PreToolUse` 各 5 秒、`PostToolUse` 30 秒、`Stop`／`SubagentStop` 60 秒），路徑用 `${CLAUDE_PROJECT_DIR}/scripts/<checker>.sh`；**不寫 `onFailure`**（除非 task 1.2 證明本機已達 2.1.295，屆時先回報）；**不寫 `MultiEdit`**；`$schema` 與 `attribution` 原封不動。驗證：`node -e 'JSON.parse(...)'` 通過、`git diff` 顯示 `attribution.sessionUrl` 未被改動、`scripts/check-env.sh --ci` 的 Claude 半邊全為 `PASS:`（D15；spec「Session 開始時核對兩份 hook 註冊設定」「執行時間與輸出大小有上限且由平台設定控制」）[@backend-developer]
+- [x] 6.2 新建 `.codex/hooks.json`（`.codex/` 目錄本次新建，**只放這一個檔，不碰 `config.toml`**），依 D16 的對應表註冊同一批腳本，matcher 用 Codex 的工具名（`Bash`、`apply_patch`），`Stop` 從 payload 自行判斷，timeout 數值與 6.1 相同，路徑用 `"$(git rev-parse --show-toplevel)"/scripts/<checker>.sh`，`command` 欄位依 task 1.3 查到的 wire 形狀撰寫。驗證：`scripts/check-env.sh --ci` 兩份設定皆為 `PASS:`，且 `.codex/` 下只有 `hooks.json` 一個檔（D16；spec「Session 開始時核對兩份 hook 註冊設定」）[@backend-developer]
 
 ## 7. 文件回填
 
