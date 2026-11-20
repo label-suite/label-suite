@@ -23,6 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import { GallerySection } from "./gallery-section";
 import { ThemeToggle } from "./theme-toggle";
+import { TokenMappingSection } from "./token-mapping-section";
 import {
   buttonStateValues,
   cardPartValues,
@@ -248,9 +249,7 @@ export function DevGalleryPage() {
           </GallerySection>
         </div>
 
-        <GallerySection id="tokens" title={t("sections.tokens")} meta={t("tokens.meta")}>
-          {null}
-        </GallerySection>
+        <TokenMappingSection />
       </div>
     </main>
   );
