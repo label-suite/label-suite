@@ -51,11 +51,11 @@
 
 **決策。** 分三層：
 
-| 層 | 內容 | 可以做什麼 |
-| :--- | :--- | :--- |
-| 註冊層 | `.claude/settings.json`、`.codex/hooks.json`、`scripts/git-hooks/pre-commit`、`ci.yml` 的 job | 只宣告「什麼事件、什麼 matcher、呼叫哪一支、timeout 多少」 |
-| 檢查器層 | `scripts/check-env.sh`、`check-command.sh`、`check-write-target.sh`、`check-changed.sh`、`check-evidence.sh` | **唯一產生判定的地方** |
-| 支援層 | `scripts/lib/hook-payload.mjs`、`scripts/lib/hook-common.sh` | payload 解析、路徑正規化、遮蔽、輸出截斷 |
+| 層       | 內容                                                                                                         | 可以做什麼                                                 |
+| :------- | :----------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------- |
+| 註冊層   | `.claude/settings.json`、`.codex/hooks.json`、`scripts/git-hooks/pre-commit`、`ci.yml` 的 job                | 只宣告「什麼事件、什麼 matcher、呼叫哪一支、timeout 多少」 |
+| 檢查器層 | `scripts/check-env.sh`、`check-command.sh`、`check-write-target.sh`、`check-changed.sh`、`check-evidence.sh` | **唯一產生判定的地方**                                     |
+| 支援層   | `scripts/lib/hook-payload.mjs`、`scripts/lib/hook-common.sh`                                                 | payload 解析、路徑正規化、遮蔽、輸出截斷                   |
 
 **「觸發層 MUST NOT 自行判斷規則內容，也 MUST NOT 改寫檢查器的判定」**（spec「規則判定一律來自共用檢查器」）
 在本設計裡的精確含意：判定的**內容**（通過與否、診斷文字）由檢查器產生且原樣傳出；
@@ -77,13 +77,13 @@ H4 把同一個判定編碼成非零，**兩者的診斷文字完全相同**。�
 
 **輸入模式**（互斥，由旗標選擇）：
 
-| 模式 | 旗標 | 誰用 | 輸入從哪來 |
-| :--- | :--- | :--- | :--- |
-| 事件模式 | `--event <EventName>` | Claude hook、Codex hook | JSON payload 從 **stdin** 讀；argv 只有固定字面值 |
-| 索引模式 | `--staged` | `scripts/git-hooks/pre-commit` | `git diff --cached` 的 staged 快照 |
-| 範圍模式 | `--range <BASE>..<HEAD>` | CI | 兩個 sha 之間的變更 |
-| 直接模式 | `--files <path>…` / `--command <string>` | 人工、測試 | argv |
-| CI 核對模式 | `--ci` | CI（只有 `check-env.sh` 有） | repo 現況 |
+| 模式        | 旗標                                     | 誰用                           | 輸入從哪來                                        |
+| :---------- | :--------------------------------------- | :----------------------------- | :------------------------------------------------ |
+| 事件模式    | `--event <EventName>`                    | Claude hook、Codex hook        | JSON payload 從 **stdin** 讀；argv 只有固定字面值 |
+| 索引模式    | `--staged`                               | `scripts/git-hooks/pre-commit` | `git diff --cached` 的 staged 快照                |
+| 範圍模式    | `--range <BASE>..<HEAD>`                 | CI                             | 兩個 sha 之間的變更                               |
+| 直接模式    | `--files <path>…` / `--command <string>` | 人工、測試                     | argv                                              |
+| CI 核對模式 | `--ci`                                   | CI（只有 `check-env.sh` 有）   | repo 現況                                         |
 
 「事件 payload 一律走 stdin、argv 只放固定字面值」是**安全上的核心不變量**：
 不受信任的字串永遠不會出現在 argv，也就永遠不會經過任何一層 shell 重新解析
@@ -92,21 +92,21 @@ H4 把同一個判定編碼成非零，**兩者的診斷文字完全相同**。�
 
 **退出碼字彙**（全部五支共用）：
 
-| 碼 | 意義 | 哪幾支會用 |
-| :--- | :--- | :--- |
-| `0` | 通過，或判定為 not applicable | 全部 |
-| `1` | 有違規（非阻擋型語境的「不通過」） | `check-changed.sh` 在 `--staged`／`--range`／`--files` 下；`--event`（H3）下同一個違規改以 `exit 0` 加診斷表達（D1 的編碼差異，見 D12） |
-| `2` | 阻擋：違規，或**無法判斷** | `check-command.sh`、`check-write-target.sh`、`check-evidence.sh`；`check-changed.sh` 在 `--staged`／`--range`／`--files` 下的**無法判斷** |
+| 碼  | 意義                               | 哪幾支會用                                                                                                                                |
+| :-- | :--------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------- |
+| `0` | 通過，或判定為 not applicable      | 全部                                                                                                                                      |
+| `1` | 有違規（非阻擋型語境的「不通過」） | `check-changed.sh` 在 `--staged`／`--range`／`--files` 下；`--event`（H3）下同一個違規改以 `exit 0` 加診斷表達（D1 的編碼差異，見 D12）   |
+| `2` | 阻擋：違規，或**無法判斷**         | `check-command.sh`、`check-write-target.sh`、`check-evidence.sh`；`check-changed.sh` 在 `--staged`／`--range`／`--files` 下的**無法判斷** |
 
 **`check-changed.sh` 的「無法判斷」依模式而定。** 同一支檢查器同時服務提醒型（H3）與阻擋型（H4、H7），
 所以 spec「阻擋型觸發點（H2、H4、H6、H7）在無法判斷時 MUST 以阻擋的退出碼結束」在這一支上**不能只有一種編碼**：
 
-| 模式 | 觸發點 | 無法判斷時 |
-| :--- | :--- | :--- |
-| `--event` | H3，提醒型 | `exit 0`，並在 stderr 寫一行 `UNKNOWN:` 指名哪一項沒判成（契約 §H3「一律不以 exit `2` 阻擋」；spec「提醒型觸發點 MUST 在輸出中明寫哪一項沒有判定成功」） |
-| `--staged` | H4，阻擋型 | `exit 2` |
-| `--range`（含 CI 的 `--list-routes` 斷言） | H7，阻擋型 | `exit 2` |
-| `--files` | 人工、測試 | 比照阻擋型，`exit 2`（本 design 的判斷：直接模式沒有自己的觸發點，取較嚴的一邊） |
+| 模式                                       | 觸發點     | 無法判斷時                                                                                                                                               |
+| :----------------------------------------- | :--------- | :------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--event`                                  | H3，提醒型 | `exit 0`，並在 stderr 寫一行 `UNKNOWN:` 指名哪一項沒判成（契約 §H3「一律不以 exit `2` 阻擋」；spec「提醒型觸發點 MUST 在輸出中明寫哪一項沒有判定成功」） |
+| `--staged`                                 | H4，阻擋型 | `exit 2`                                                                                                                                                 |
+| `--range`（含 CI 的 `--list-routes` 斷言） | H7，阻擋型 | `exit 2`                                                                                                                                                 |
+| `--files`                                  | 人工、測試 | 比照阻擋型，`exit 2`（本 design 的判斷：直接模式沒有自己的觸發點，取較嚴的一邊）                                                                         |
 
 （`--ci` 不是 `check-changed.sh` 的模式，它只屬於 `check-env.sh`；`check-env.sh` 在 `--ci` 下同樣以非零表達無法判斷，見下方兩段與 D9。）
 
@@ -172,12 +172,12 @@ spec「執行時間與輸出大小有上限且由平台設定控制」。
 
 **決策。** 四個 agent 事件的上限**只寫在註冊設定的 `timeout` 欄位**，兩份設定都要寫，數值一致：
 
-| Hook | 事件 | timeout |
-| :--- | :--- | :--- |
-| H1 | `SessionStart` | 10 |
-| H2 | `PreToolUse` | 5 |
-| H3 | `PostToolUse` | 30 |
-| H6 | `Stop`／`SubagentStop` | 60 |
+| Hook | 事件                   | timeout |
+| :--- | :--------------------- | :------ |
+| H1   | `SessionStart`         | 10      |
+| H2   | `PreToolUse`           | 5       |
+| H3   | `PostToolUse`          | 30      |
+| H6   | `Stop`／`SubagentStop` | 60      |
 
 **檢查器內部不得出現 shell `timeout`／`gtimeout`**，也不得以 `command -v timeout || true` 之類的寫法繞過
 （契約 §查核方式第 1 點已指出那會把「工具不存在」偽裝成通過）。
@@ -336,19 +336,19 @@ spec「執行時間與輸出大小有上限且由平台設定控制」。
 
    來源欄標示每一列的依據：**源**＝`AGENTS.md` 硬性規則與 spec 條文的字面；**本 design 判斷**＝超出字面、由本設計納入的寫法。
 
-   | 規則 | 命中條件 | 依據 |
-   | :--- | :--- | :--- |
-   | HR10 | `rm -rf` | 源（HR10；spec「破壞性命令在執行前被拒絕」） |
-   | HR10 | 同一個 `rm` 的其他寫法：`-fr`、`-r` 與 `-f` 分開寫、`--recursive --force` | **本 design 判斷**（同一個動作的等價寫法） |
-   | HR10 | `git … reset --hard` | 源 |
-   | HR10 | `git … push --force` | 源 |
-   | HR10 | `git … push` 帶 `-f`／`--force-with-lease`，或 refspec 以 `+` 開頭 | **本 design 判斷**（`-f` 是 `--force` 的短旗標；`--force-with-lease` 與 `+` refspec 是**另外的命令寫法**，不是 `--force` 的別名，納入是為了涵蓋同樣會改寫遠端歷史的動作） |
-   | HR10 | `git … branch -D` | 源 |
-   | HR10 | `git … branch` 的 `-d` 加 `--force` | **本 design 判斷**（等價寫法） |
-   | HR2 | `git … commit` 且目標 checkout 的現行分支是 `main` | 源（HR2；spec「提交與推送到 main 的目標被拒絕」） |
-   | HR2 | `git … push` 的 refspec 目的端是 `main`／`refs/heads/main`；或無 refspec 而上游是 `main` | 源（spec 的三個 scenario） |
-   | HR3 | `pip install`、`npm install` | 源（HR3；spec「不符本 repo 套件管理方式的安裝命令被拒絕」） |
-   | HR3 | `pip3 install`、`npm i`、`npm add` | **本 design 判斷**（同一個動作的明顯寫法；`AGENTS.md` 與 spec 都只點名 `pip install`／`npm install`） |
+   | 規則 | 命中條件                                                                                 | 依據                                                                                                                                                                      |
+   | :--- | :--------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+   | HR10 | `rm -rf`                                                                                 | 源（HR10；spec「破壞性命令在執行前被拒絕」）                                                                                                                              |
+   | HR10 | 同一個 `rm` 的其他寫法：`-fr`、`-r` 與 `-f` 分開寫、`--recursive --force`                | **本 design 判斷**（同一個動作的等價寫法）                                                                                                                                |
+   | HR10 | `git … reset --hard`                                                                     | 源                                                                                                                                                                        |
+   | HR10 | `git … push --force`                                                                     | 源                                                                                                                                                                        |
+   | HR10 | `git … push` 帶 `-f`／`--force-with-lease`，或 refspec 以 `+` 開頭                       | **本 design 判斷**（`-f` 是 `--force` 的短旗標；`--force-with-lease` 與 `+` refspec 是**另外的命令寫法**，不是 `--force` 的別名，納入是為了涵蓋同樣會改寫遠端歷史的動作） |
+   | HR10 | `git … branch -D`                                                                        | 源                                                                                                                                                                        |
+   | HR10 | `git … branch` 的 `-d` 加 `--force`                                                      | **本 design 判斷**（等價寫法）                                                                                                                                            |
+   | HR2  | `git … commit` 且目標 checkout 的現行分支是 `main`                                       | 源（HR2；spec「提交與推送到 main 的目標被拒絕」）                                                                                                                         |
+   | HR2  | `git … push` 的 refspec 目的端是 `main`／`refs/heads/main`；或無 refspec 而上游是 `main` | 源（spec 的三個 scenario）                                                                                                                                                |
+   | HR3  | `pip install`、`npm install`                                                             | 源（HR3；spec「不符本 repo 套件管理方式的安裝命令被拒絕」）                                                                                                               |
+   | HR3  | `pip3 install`、`npm i`、`npm add`                                                       | **本 design 判斷**（同一個動作的明顯寫法；`AGENTS.md` 與 spec 都只點名 `pip install`／`npm install`）                                                                     |
 
    `uv add`、`pnpm add` 明確放行（spec「H2 放行 pnpm add」）。
    **標為「本 design 判斷」的列，`tasks.md` 的測試矩陣要指回 D10，不得當成 spec 條文的要求。**
@@ -392,17 +392,18 @@ spec「執行時間與輸出大小有上限且由平台設定控制」。
   所以「找不到路徑欄位」在 Codex 上是**文件已記載的常態**，照原規則會讓**每一次 `apply_patch` 都被擋**。
   規則因此改成：
 
-  | 事件的工具名 | `tool_input` 有路徑欄位 | 缺路徑欄位時 |
-  | :--- | :--- | :--- |
-  | Claude `Edit`／`Write`（`file_path`）、`NotebookEdit`（`notebook_path`） | 有（文件記載） | **`exit 2`（無法判斷）**——欄位本該在卻不在，是真的異常 |
-  | Codex `apply_patch` | **沒有**（文件記載只有 `tool_input.command`） | **不觸發 `exit 2`**：輸出一行 `NA:` 指出 hook 層在這條途徑沒有寫檔目標保護、承接者是平台權限層、而權限層本次未設定（D19），然後 `exit 0` |
-  | 其他未列出的工具名 | 未知 | **`exit 2`**——未知的工具名仍是異常，不比照 Codex 的已記載缺口 |
+  | 事件的工具名                                                             | `tool_input` 有路徑欄位                       | 缺路徑欄位時                                                                                                                             |
+  | :----------------------------------------------------------------------- | :-------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------- |
+  | Claude `Edit`／`Write`（`file_path`）、`NotebookEdit`（`notebook_path`） | 有（文件記載）                                | **`exit 2`（無法判斷）**——欄位本該在卻不在，是真的異常                                                                                   |
+  | Codex `apply_patch`                                                      | **沒有**（文件記載只有 `tool_input.command`） | **不觸發 `exit 2`**：輸出一行 `NA:` 指出 hook 層在這條途徑沒有寫檔目標保護、承接者是平台權限層、而權限層本次未設定（D19），然後 `exit 0` |
+  | 其他未列出的工具名                                                       | 未知                                          | **`exit 2`**——未知的工具名仍是異常，不比照 Codex 的已記載缺口                                                                            |
 
   **這是承認缺口，不是放寬規則**：比照契約 §能力缺口第 3 條對「讀取」的處理方式，
   hook 層接不住就明寫缺口並指名承接層（spec「寫檔攔截不得被宣稱已覆蓋所有寫入途徑」的兩個 scenario 驗這件事）。
   **三條出路中沒有選解析 `tool_input.command`**（`completion-report.md` §1.4 的出路 1）：
   那個封包格式官方未文件化，照它實作等於把保護建在一個隨時會變的未記載格式上，
   而猜錯的後果是「以為擋住了」——比明寫沒擋更糟。
+
 - **為什麼不乾脆把 `apply_patch` 從寫檔那組的 matcher 移掉**（本 design 的判斷，非裁定內容）：
   留著註冊，是因為「文件已記載的缺口」與「異常」要**在同一支檢查器裡以工具名分流**才驗得出來
   （上表第一列與第二列的斷言在 task 3.3 是一組對照）；移掉 matcher 之後，
@@ -431,12 +432,12 @@ spec「執行時間與輸出大小有上限且由平台設定控制」。
 
 **副檔名路由表**（spec 刻意沒寫，契約 §H3 有）：
 
-| 命中條件 | 執行的檢查 | 粒度 | 啟用條件 |
-| :--- | :--- | :--- | :--- |
-| `*.py` | `ruff check`、`mypy` | 逐檔 | `backend/` 存在 |
-| `*.ts`、`*.tsx` | `tsc --noEmit`、`eslint` | `tsc` 整專案；`eslint` 逐檔 | `frontend/` 存在 |
-| `docs/**/*.mdx`、`docs/**/*.md` | `node scripts/check-specs.mjs docs` | 整棵 `docs/` | 一律啟用（檢查器已存在） |
-| 其他 | 無 | — | 標 `NA:` |
+| 命中條件                        | 執行的檢查                          | 粒度                        | 啟用條件                 |
+| :------------------------------ | :---------------------------------- | :-------------------------- | :----------------------- |
+| `*.py`                          | `ruff check`、`mypy`                | 逐檔                        | `backend/` 存在          |
+| `*.ts`、`*.tsx`                 | `tsc --noEmit`、`eslint`            | `tsc` 整專案；`eslint` 逐檔 | `frontend/` 存在         |
+| `docs/**/*.mdx`、`docs/**/*.md` | `node scripts/check-specs.mjs docs` | 整棵 `docs/`                | 一律啟用（檢查器已存在） |
+| 其他                            | 無                                  | —                           | 標 `NA:`                 |
 
 `.md` 自 [PR #395](https://github.com/label-suite/label-suite/pull/395) 起才在 `check-specs.mjs` 範圍內（契約 §H3），所以兩種副檔名都要收。
 
@@ -536,13 +537,13 @@ spec「執行時間與輸出大小有上限且由平台設定控制」。
 
 註冊五個 handler：
 
-| 事件 | matcher | command | timeout |
-| :--- | :--- | :--- | :--- |
-| `SessionStart` | `startup\|resume\|clear\|compact\|fork` | `${CLAUDE_PROJECT_DIR}/scripts/check-env.sh --event SessionStart` | 10 |
-| `PreToolUse` | `Bash` | `…/check-command.sh --event PreToolUse` | 5 |
-| `PreToolUse` | `Edit\|Write\|NotebookEdit` | `…/check-write-target.sh --event PreToolUse` | 5 |
-| `PostToolUse` | `Edit\|Write\|NotebookEdit` | `…/check-changed.sh --event PostToolUse` | 30 |
-| `Stop`、`SubagentStop` | （無） | `…/check-evidence.sh --event Stop`／`--event SubagentStop` | 60 |
+| 事件                   | matcher                                 | command                                                           | timeout |
+| :--------------------- | :-------------------------------------- | :---------------------------------------------------------------- | :------ |
+| `SessionStart`         | `startup\|resume\|clear\|compact\|fork` | `${CLAUDE_PROJECT_DIR}/scripts/check-env.sh --event SessionStart` | 10      |
+| `PreToolUse`           | `Bash`                                  | `…/check-command.sh --event PreToolUse`                           | 5       |
+| `PreToolUse`           | `Edit\|Write\|NotebookEdit`             | `…/check-write-target.sh --event PreToolUse`                      | 5       |
+| `PostToolUse`          | `Edit\|Write\|NotebookEdit`             | `…/check-changed.sh --event PostToolUse`                          | 30      |
+| `Stop`、`SubagentStop` | （無）                                  | `…/check-evidence.sh --event Stop`／`--event SubagentStop`        | 60      |
 
 三件要照辦的事：
 
@@ -566,14 +567,14 @@ Q1 無論答什麼，`hooks.json` 都不用改。
 
 對應關係（事件名稱兩邊相同，matcher 與工具名不同——契約 §工具名稱）：
 
-| 事件 | Codex matcher | 與 Claude 的差別 |
-| :--- | :--- | :--- |
-| `SessionStart` | 同 Claude 的五種 | 無 |
-| `PreToolUse` | `Bash` | 無 |
-| `PreToolUse`（寫檔） | `apply_patch` | Claude 是 `Edit\|Write\|NotebookEdit` |
-| `PostToolUse` | `apply_patch` | 同上 |
-| `Stop` | **不吃 matcher**，要自己從 payload 判 | Claude 可用 matcher |
-| `SubagentStop` | 吃 subagent type | 同 |
+| 事件                 | Codex matcher                         | 與 Claude 的差別                      |
+| :------------------- | :------------------------------------ | :------------------------------------ |
+| `SessionStart`       | 同 Claude 的五種                      | 無                                    |
+| `PreToolUse`         | `Bash`                                | 無                                    |
+| `PreToolUse`（寫檔） | `apply_patch`                         | Claude 是 `Edit\|Write\|NotebookEdit` |
+| `PostToolUse`        | `apply_patch`                         | 同上                                  |
+| `Stop`               | **不吃 matcher**，要自己從 payload 判 | Claude 可用 matcher                   |
+| `SubagentStop`       | 吃 subagent type                      | 同                                    |
 
 兩邊 `command` 指向**同一批腳本**，timeout 數值與 D5 的表相同。
 
@@ -695,18 +696,18 @@ spec 刻意把四件事排除在系統行為之外（它們是交付方式，不
 
 ## Risks / Trade-offs
 
-| 風險 | 承接 |
-| :--- | :--- |
-| **H2 只有 5 秒，而 D4 每次要冷啟動 `node`。** 在慢機器或冷快取上可能逼近上限，逾時即 fail-open（契約 §阻擋能力表）。 | 實作時實測 H2 的 p95 耗時並寫進完成報告；超過約 1 秒就改用純 bash 解析 H2 需要的少數欄位（H2 的 payload 只要 `tool_name`、`tool_input`、`cwd`）。這是本 design 判斷的門檻值，無來源。 |
-| **Codex 的信任綁 hook 定義的 hash：每次改 hook，所有 Codex 開發者那邊都重新變未信任而被跳過，而版控裡的檔案看起來是好的**（契約 §能力缺口第 1 條）。 | 必要 gate 一律在 CI 再跑一次（D17）；H1 以摘要比對主動說出「定義變了，需重新信任」（D9 第四段）。 |
-| **兩份手寫設定漂移。** 改一邊忘另一邊不會有任何報錯。 | H1 核對（D9）加 CI 核對（D17 第 2 步）。兩道都是機器執行，不靠人記得。 |
-| **字串比對繞得過**（變數展開、編碼、動態組命令）。 | D10 第 5、6 點：窄範圍的無法判斷即擋，並在每則訊息寫明邊界。真正的保護在權限層與 branch protection，**而這兩者本 change 都沒有建置**（D19、D17），完成報告必須照實寫。 |
+| 風險                                                                                                                                                                                                                            | 承接                                                                                                                                                                                                                                                                                        |
+| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **H2 只有 5 秒，而 D4 每次要冷啟動 `node`。** 在慢機器或冷快取上可能逼近上限，逾時即 fail-open（契約 §阻擋能力表）。                                                                                                            | 實作時實測 H2 的 p95 耗時並寫進完成報告；超過約 1 秒就改用純 bash 解析 H2 需要的少數欄位（H2 的 payload 只要 `tool_name`、`tool_input`、`cwd`）。這是本 design 判斷的門檻值，無來源。                                                                                                       |
+| **Codex 的信任綁 hook 定義的 hash：每次改 hook，所有 Codex 開發者那邊都重新變未信任而被跳過，而版控裡的檔案看起來是好的**（契約 §能力缺口第 1 條）。                                                                            | 必要 gate 一律在 CI 再跑一次（D17）；H1 以摘要比對主動說出「定義變了，需重新信任」（D9 第四段）。                                                                                                                                                                                           |
+| **兩份手寫設定漂移。** 改一邊忘另一邊不會有任何報錯。                                                                                                                                                                           | H1 核對（D9）加 CI 核對（D17 第 2 步）。兩道都是機器執行，不靠人記得。                                                                                                                                                                                                                      |
+| **字串比對繞得過**（變數展開、編碼、動態組命令）。                                                                                                                                                                              | D10 第 5、6 點：窄範圍的無法判斷即擋，並在每則訊息寫明邊界。真正的保護在權限層與 branch protection，**而這兩者本 change 都沒有建置**（D19、D17），完成報告必須照實寫。                                                                                                                      |
 | **Codex 側沒有 hook 層的寫檔目標保護。** `apply_patch` 與 `Bash` 共用 `tool_input.command`、沒有路徑欄位（官方文件，2026-11-17 查核），所以受保護路徑的寫入在 Codex 上**擋不住**；Claude 側擋得住。兩個平台在這一項**不對等**。 | 維護者 2026-11-17 裁定承認缺口、交由平台權限層承接（D11、D19），**而權限層本 change 未設定**（Q2）。本 change 能做的三件：H1 的輸出明寫這個缺口、`apply_patch` 的 `NA:` 行就地說明、契約 §能力缺口 列成第二條（task 7.2）。完成報告（task 8.4）必須把它列為未覆蓋能力，不得宣稱兩平台等價。 |
-| **兩平台預設 fail-open，`onFailure: "block"` 要 2.1.295、本機 2.1.273。** | D7 的進場守衛加 D7 的 CI lint；升級後改用宣告式開關並記版本下限。 |
-| **H3 的 30 秒對大型 `tsc --noEmit` 可能不夠**，被平台中斷。 | H3 本來就是提醒（契約 §H3），真正的 gate 在 H4、H7。被中斷時 D2 的 `UNKNOWN:` 行會寫出哪一項沒判完，不會偽裝成通過。 |
-| **新增的 pre-commit 與 H2 會改變既有工作習慣**（proposal §破壞性變更）。 | D18 的 setup 輸出寫明停用與復原方式；誤擋屬「故障」，依 `AGENTS.md` §SDD Workflow 停下回報，不得靠放寬規則收場。 |
-| **`backend/`、`frontend/` 都不存在，`.py`／`.ts` 路由在本 change 裡無法對真工具驗證。** | D21 第 1 點的假 runner 驗「路由與啟用語意」；真工具的驗證要等那兩層 bootstrap，完成報告列為未覆蓋能力。 |
-| **D1 的支援層（`scripts/lib/`）是 design 階段才長出來的檔案。** | 2026-11-17 回修已補進 proposal §Impact 並列入 `tasks.md`（task 2.2、2.3）。若維護者不接受這兩個檔，退路是把那段邏輯內嵌進五支檢查器——代價是五份副本，與本 change 的目標相反。 |
+| **兩平台預設 fail-open，`onFailure: "block"` 要 2.1.295、本機 2.1.273。**                                                                                                                                                       | D7 的進場守衛加 D7 的 CI lint；升級後改用宣告式開關並記版本下限。                                                                                                                                                                                                                           |
+| **H3 的 30 秒對大型 `tsc --noEmit` 可能不夠**，被平台中斷。                                                                                                                                                                     | H3 本來就是提醒（契約 §H3），真正的 gate 在 H4、H7。被中斷時 D2 的 `UNKNOWN:` 行會寫出哪一項沒判完，不會偽裝成通過。                                                                                                                                                                        |
+| **新增的 pre-commit 與 H2 會改變既有工作習慣**（proposal §破壞性變更）。                                                                                                                                                        | D18 的 setup 輸出寫明停用與復原方式；誤擋屬「故障」，依 `AGENTS.md` §SDD Workflow 停下回報，不得靠放寬規則收場。                                                                                                                                                                            |
+| **`backend/`、`frontend/` 都不存在，`.py`／`.ts` 路由在本 change 裡無法對真工具驗證。**                                                                                                                                         | D21 第 1 點的假 runner 驗「路由與啟用語意」；真工具的驗證要等那兩層 bootstrap，完成報告列為未覆蓋能力。                                                                                                                                                                                     |
+| **D1 的支援層（`scripts/lib/`）是 design 階段才長出來的檔案。**                                                                                                                                                                 | 2026-11-17 回修已補進 proposal §Impact 並列入 `tasks.md`（task 2.2、2.3）。若維護者不接受這兩個檔，退路是把那段邏輯內嵌進五支檢查器——代價是五份副本，與本 change 的目標相反。                                                                                                               |
 
 ## Migration Plan
 
@@ -723,12 +724,12 @@ spec 刻意把四件事排除在系統行為之外（它們是交付方式，不
 
 **回滾**（四個互相獨立的開關）：
 
-| 要關掉什麼 | 做法 |
-| :--- | :--- |
-| H2、H3、H6（Claude） | 從 `.claude/settings.json` 移除 `hooks` 鍵；`attribution` 不受影響 |
-| H2、H3、H6（Codex） | 刪除 `.codex/hooks.json`（或 `[features] hooks = false`） |
-| H4 | 刪除 `scripts/git-hooks/pre-commit`。**不要 `git config --unset core.hooksPath`** ——那會連 H5 一起關掉 |
-| H7 | 以 revert PR 移除該 job |
+| 要關掉什麼           | 做法                                                                                                   |
+| :------------------- | :----------------------------------------------------------------------------------------------------- |
+| H2、H3、H6（Claude） | 從 `.claude/settings.json` 移除 `hooks` 鍵；`attribution` 不受影響                                     |
+| H2、H3、H6（Codex）  | 刪除 `.codex/hooks.json`（或 `[features] hooks = false`）                                              |
+| H4                   | 刪除 `scripts/git-hooks/pre-commit`。**不要 `git config --unset core.hooksPath`** ——那會連 H5 一起關掉 |
+| H7                   | 以 revert PR 移除該 job                                                                                |
 
 **個別開發者的緊急出口**：`git commit --no-verify`、Claude 的 `disableAllHooks`、
 Codex 的 `[features] hooks = false`。四條跳過途徑的存在正是 CI 必須是真正 gate 的理由（契約 §H7）。
@@ -740,17 +741,17 @@ Codex 的 `[features] hooks = false`。四條跳過途徑的存在正是 CI 必�
 **編號在 2026-11-17 重編過，舊號不再使用。** 維護者當日裁定了原 Q1、Q3、Q4、Q5 四題，它們已落回對應的決策，
 不再是待決問題；剩下的兩題重新編為 Q1、Q2，本節不留空號：
 
-| 現在的編號 | 原編號 | 題目 |
-| :--- | :--- | :--- |
-| Q1 | Q2 | 本 repo 的 Codex 設定採 permission profile 還是舊的 sandbox 設定 |
-| Q2 | Q6 | 平台權限層什麼時候設 |
+| 現在的編號 | 原編號 | 題目                                                             |
+| :--------- | :----- | :--------------------------------------------------------------- |
+| Q1         | Q2     | 本 repo 的 Codex 設定採 permission profile 還是舊的 sandbox 設定 |
+| Q2         | Q6     | 平台權限層什麼時候設                                             |
 
-| 已裁定（2026-11-17） | 原編號 | 結論落在哪裡 |
-| :--- | :--- | :--- |
-| Codex 信任指引要不要寫進 `scripts/setup.sh` | Q1 | 要寫。D18 第 4 點、spec「安裝流程…」的信任指引 scenario、task 4.4 |
-| 裸檔名 `.env` 要不要納入受保護樣式 | Q3 | 要。`**/.env` 成為第六個樣式：D11 拒絕清單、spec 受保護路徑 requirement 與其裸檔名 scenario、task 3.3 |
-| workspace 之外的路徑在阻擋型觸發點怎麼算 | Q4 | 維持 D11 的做法：H2 `exit 2`、H3 略過並註明。行為不變，理由寫進 D11 |
-| 「經維護者確認的破壞性命令」怎麼走 | Q5 | hook 一律拒絕，確認過的路徑走 hook 之外。D10 第 7 點、spec「破壞性命令…」及其第四個 scenario |
+| 已裁定（2026-11-17）                        | 原編號 | 結論落在哪裡                                                                                          |
+| :------------------------------------------ | :----- | :---------------------------------------------------------------------------------------------------- |
+| Codex 信任指引要不要寫進 `scripts/setup.sh` | Q1     | 要寫。D18 第 4 點、spec「安裝流程…」的信任指引 scenario、task 4.4                                     |
+| 裸檔名 `.env` 要不要納入受保護樣式          | Q3     | 要。`**/.env` 成為第六個樣式：D11 拒絕清單、spec 受保護路徑 requirement 與其裸檔名 scenario、task 3.3 |
+| workspace 之外的路徑在阻擋型觸發點怎麼算    | Q4     | 維持 D11 的做法：H2 `exit 2`、H3 略過並註明。行為不變，理由寫進 D11                                   |
+| 「經維護者確認的破壞性命令」怎麼走          | Q5     | hook 一律拒絕，確認過的路徑走 hook 之外。D10 第 7 點、spec「破壞性命令…」及其第四個 scenario          |
 
 **本 change 的 proposal 與 spec delta 只登記 Q1**（它是停點一仍在等的那一題）；**Q2 只登記在本文件**，
 因為它要決定的是後續 change 的排程，不改變本 change 的任何 requirement、決策或工作拆解。

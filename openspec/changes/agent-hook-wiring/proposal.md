@@ -27,6 +27,7 @@
   **又一次「欄位存在 ≠ 這個版本有」**（契約 §查核方式 第 4 點的同類陷阱，而且不只 `onFailure` 一個）：`permissions.blockReadsOutsideWorkingDirectories` 需 2.1.257（本機**可用**）、`permissions.blockWritesOutsideWorkingDirectories` 需 2.1.314（**不可用**）、`permissions.denyInsteadOfPrompting` 需 2.1.319（**不可用**）。連同 `onFailure` 需 2.1.295，四個鍵都要和本機 2.1.273 比對過才能依賴。
 
   **所以契約 §能力缺口 第 6 條可以結案**：兩側都查完了。剩下的 Q1（原 Q2）是選擇題，不是查核問題。
+
 - **重新核對實作當時版本的官方 hook 文件與 runtime**（#111 §1 第 2 項；契約 §查核方式要求實作前再核一次）。2026-11-17 已複查並與契約一致：Claude Code **2.1.273**（故 `onFailure: "block"` 仍不可用，它需 v2.1.295）、codex-cli **0.153.0**、`codex features list` 的 `hooks` 為 `stable`／`true`、本機**沒有** `timeout` 也沒有 `gtimeout`。
 
 ### 五支待建置的共用檢查器
@@ -96,25 +97,25 @@
 
 ## Impact
 
-| 類別 | 受影響對象 |
-| :--- | :--- |
-| 新增檔案 | `scripts/check-env.sh`、`scripts/check-command.sh`、`scripts/check-write-target.sh`、`scripts/check-changed.sh`、`scripts/check-evidence.sh`、`scripts/lib/hook-payload.mjs`、`scripts/lib/hook-common.sh`（五支檢查器共用的支援層，`design.md` D1）、`scripts/git-hooks/pre-commit`、`.codex/hooks.json`、`scripts/tests/` 下對應的測試 |
-| 修改檔案 | `.claude/settings.json`（新增 `hooks` 鍵）、`scripts/setup.sh`（安裝流程、衝突偵測與 Codex 的 hook 信任指引）、`.github/workflows/ci.yml`（接上同一組檢查器）、`docs/development/agent-hook-contract.mdx`（「待建置」標記回填）、`AGENTS.md` §Agent Rules Index 末段的現況敘述 |
-| 不動 | `scripts/check-commit-msg.sh`、`scripts/git-hooks/commit-msg`、`scripts/check-specs.mjs`／`check-flows.mjs`／`check-er-data.mjs` 的既有行為、`docs/specs/`、`design/prototype/` |
-| 相依工具 | Claude Code 2.1.273、codex-cli 0.153.0、Git、`node`／`pnpm`（`uv` 待 `backend/` 出現後才適用）。不新增任何套件相依 |
-| 對人的影響 | 全體開發者的提交流程；Codex 使用者每次 hook 變更後需重新信任，否則 hook 被跳過 |
-| 風險 | 兩份設定漂移（承接：H1 核對）；字串比對不是完整的命令安全邊界（承接：平台權限層與 branch protection）；兩平台預設 fail-open（承接：腳本自行 exit `2` 加 CI）；**Codex 的 `apply_patch` 沒有路徑欄位，hook 層在該途徑沒有寫檔目標保護，與 Claude 側不對等**（官方文件 2026-11-17 查核；承接：平台權限層，**本次未設定**——維護者 2026-11-17 裁定，見 `design.md` D11、D19） |
+| 類別       | 受影響對象                                                                                                                                                                                                                                                                                                                                                                |
+| :--------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 新增檔案   | `scripts/check-env.sh`、`scripts/check-command.sh`、`scripts/check-write-target.sh`、`scripts/check-changed.sh`、`scripts/check-evidence.sh`、`scripts/lib/hook-payload.mjs`、`scripts/lib/hook-common.sh`（五支檢查器共用的支援層，`design.md` D1）、`scripts/git-hooks/pre-commit`、`.codex/hooks.json`、`scripts/tests/` 下對應的測試                                  |
+| 修改檔案   | `.claude/settings.json`（新增 `hooks` 鍵）、`scripts/setup.sh`（安裝流程、衝突偵測與 Codex 的 hook 信任指引）、`.github/workflows/ci.yml`（接上同一組檢查器）、`docs/development/agent-hook-contract.mdx`（「待建置」標記回填）、`AGENTS.md` §Agent Rules Index 末段的現況敘述                                                                                            |
+| 不動       | `scripts/check-commit-msg.sh`、`scripts/git-hooks/commit-msg`、`scripts/check-specs.mjs`／`check-flows.mjs`／`check-er-data.mjs` 的既有行為、`docs/specs/`、`design/prototype/`                                                                                                                                                                                           |
+| 相依工具   | Claude Code 2.1.273、codex-cli 0.153.0、Git、`node`／`pnpm`（`uv` 待 `backend/` 出現後才適用）。不新增任何套件相依                                                                                                                                                                                                                                                        |
+| 對人的影響 | 全體開發者的提交流程；Codex 使用者每次 hook 變更後需重新信任，否則 hook 被跳過                                                                                                                                                                                                                                                                                            |
+| 風險       | 兩份設定漂移（承接：H1 核對）；字串比對不是完整的命令安全邊界（承接：平台權限層與 branch protection）；兩平台預設 fail-open（承接：腳本自行 exit `2` 加 CI）；**Codex 的 `apply_patch` 沒有路徑欄位，hook 層在該途徑沒有寫檔目標保護，與 Claude 側不對等**（官方文件 2026-11-17 查核；承接：平台權限層，**本次未設定**——維護者 2026-11-17 裁定，見 `design.md` D11、D19） |
 
 ## 來源與追溯
 
 **引用的來源**（`openspec/config.yaml` 的需求依據順序中，`docs/specs/` 的產品規格不涵蓋開發工具鏈，故本 change 的追溯對象是維護者核准的 #111 工作項、`AGENTS.md` 與契約章節；本 change 不新增任何規則）：
 
-| 來源 | 引用的章節 |
-| :--- | :--- |
-| `docs/development/agent-hook-contract.mdx` | §邊界、§本 repo 的 Hook 契約 H1–H7、§能力缺口與承接 1–7、§Repo 定位、§平台支援矩陣（事件／阻擋能力與退出碼／工具名稱／設定位置）、§查核方式、§待決、§決策紀錄 |
-| GitHub issue #111 | §需求目標、§1 第 2 項、§2 事件分工表與其兩項、§2b（第二項排除）、§3 六項（含 2026-11-16 補列的第 6 項；其中第 5 項已勾）、§4 全部四項、§5 第 1–5 項、§驗收條件第 1–4、6 項、§附註 |
-| `AGENTS.md`（唯一規則來源） | Hard Rules 2、3、8、9、10；§Commits；§Language Rules；§Agent Rules Index（末段的 hook 現況敘述） |
-| `docs/development/testing-agent-rules.mdx` | T9（本機 hook 通過不能代替 CI）、T11（evidence）、T12（只有兩個停點）——由契約 §H6、§H7 轉引，本 change 不另定政策 |
+| 來源                                       | 引用的章節                                                                                                                                                                        |
+| :----------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs/development/agent-hook-contract.mdx` | §邊界、§本 repo 的 Hook 契約 H1–H7、§能力缺口與承接 1–7、§Repo 定位、§平台支援矩陣（事件／阻擋能力與退出碼／工具名稱／設定位置）、§查核方式、§待決、§決策紀錄                     |
+| GitHub issue #111                          | §需求目標、§1 第 2 項、§2 事件分工表與其兩項、§2b（第二項排除）、§3 六項（含 2026-11-16 補列的第 6 項；其中第 5 項已勾）、§4 全部四項、§5 第 1–5 項、§驗收條件第 1–4、6 項、§附註 |
+| `AGENTS.md`（唯一規則來源）                | Hard Rules 2、3、8、9、10；§Commits；§Language Rules；§Agent Rules Index（末段的 hook 現況敘述）                                                                                  |
+| `docs/development/testing-agent-rules.mdx` | T9（本機 hook 通過不能代替 CI）、T11（evidence）、T12（只有兩個停點）——由契約 §H6、§H7 轉引，本 change 不另定政策                                                                 |
 
 **待決問題（本 change 不自行決定）**
 

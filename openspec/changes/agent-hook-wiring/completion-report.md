@@ -8,16 +8,16 @@
 
 ### 1.1 本機 runtime（已完成）
 
-| 項目 | 實測值 | 與 proposal §前置查核 所記 |
-| :--- | :--- | :--- |
-| Claude Code | `2.1.273` | 相同 |
-| codex-cli | `codex-cli 0.153.0` | 相同 |
-| `codex features list` 的 `hooks` | `stable` / `true` | 相同 |
-| `command -v timeout` | **不存在** | 相同 |
-| `command -v gtimeout` | **不存在** | 相同 |
-| node | `v22.23.3` | — |
-| pnpm | `10.18.3` | — |
-| uv | `0.12.18` | — |
+| 項目                             | 實測值              | 與 proposal §前置查核 所記 |
+| :------------------------------- | :------------------ | :------------------------- |
+| Claude Code                      | `2.1.273`           | 相同                       |
+| codex-cli                        | `codex-cli 0.153.0` | 相同                       |
+| `codex features list` 的 `hooks` | `stable` / `true`   | 相同                       |
+| `command -v timeout`             | **不存在**          | 相同                       |
+| `command -v gtimeout`            | **不存在**          | 相同                       |
+| node                             | `v22.23.3`          | —                          |
+| pnpm                             | `10.18.3`           | —                          |
+| uv                               | `0.12.18`           | —                          |
 
 五項與規劃階段所記**完全一致**，無須停下回報。
 
@@ -25,12 +25,12 @@
 
 本機 Claude Code **2.1.273**：
 
-| 鍵 | 版本下限 | 本機可用 |
-| :--- | :--- | :--- |
-| `permissions.blockReadsOutsideWorkingDirectories` | 2.1.257 | **可用** |
-| `onFailure: "block"` | 2.1.295 | 不可用 |
-| `permissions.blockWritesOutsideWorkingDirectories` | 2.1.314 | 不可用 |
-| `permissions.denyInsteadOfPrompting` | 2.1.319 | 不可用 |
+| 鍵                                                 | 版本下限 | 本機可用 |
+| :------------------------------------------------- | :------- | :------- |
+| `permissions.blockReadsOutsideWorkingDirectories`  | 2.1.257  | **可用** |
+| `onFailure: "block"`                               | 2.1.295  | 不可用   |
+| `permissions.blockWritesOutsideWorkingDirectories` | 2.1.314  | 不可用   |
+| `permissions.denyInsteadOfPrompting`               | 2.1.319  | 不可用   |
 
 三個不可用，所以 D7 的「腳本自行 fail-closed」仍是唯一可行路徑，不能改用 `onFailure`。
 本次**沒有**設定任何權限層（D19），所以 `blockReads…` 雖然可用也未啟用——**可用 ≠ 已設定**。
@@ -61,9 +61,9 @@
 
 macOS `/usr/bin/head`（BSD，無 `--version`）：
 
-| 輸入 | 輸出 | 結果 |
-| :--- | :--- | :--- |
-| 70000 bytes 純 ASCII | 65536 bytes | 正確截斷 |
+| 輸入                                      | 輸出        | 結果                 |
+| :---------------------------------------- | :---------- | :------------------- |
+| 70000 bytes 純 ASCII                      | 65536 bytes | 正確截斷             |
 | 69000 bytes 的 UTF-8 中文（每字 3 bytes） | 65536 bytes | **末端切在字元中間** |
 
 65536 = 3 × 21845 + 1，所以第 21846 個字被切掉只剩 1 個 byte，輸出尾端是 `b'\xe4'`，**整段無法以 UTF-8 解碼**（`unexpected end of data`）。
