@@ -64,4 +64,18 @@ describe("Input", () => {
     expect(input).toHaveClass("h-11", "px-3");
     expect(input).not.toHaveClass("h-9");
   });
+
+  it("uses the approved artifact's 14px caption text size", () => {
+    render(
+      <>
+        <label htmlFor="text-size">Text size</label>
+        <Input id="text-size" />
+      </>,
+    );
+    const input = screen.getByRole("textbox", { name: "Text size" });
+
+    // --text-caption is the 14px step of tokens.css.
+    expect(input).toHaveClass("text-(length:--text-caption)");
+    expect(input).not.toHaveClass("text-(length:--text-body)");
+  });
 });
