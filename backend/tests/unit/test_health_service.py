@@ -1,9 +1,11 @@
 """Unit tests for ``HealthService.check`` (design D4, spec health-check)."""
 
+import asyncio
 import logging
 
 import pytest
 from sqlalchemy.exc import DBAPIError, OperationalError
+from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 
 from app.core.errors import DatabaseUnavailableError
 from app.modules.health.schemas import HealthData, HealthStatus
@@ -42,8 +44,9 @@ async def test_check_reports_ok_when_the_ping_succeeds() -> None:
         ConnectionRefusedError(f"connect to {CANARY_URL} refused"),
         OSError(f"no route to {CANARY_URL}"),
         TimeoutError(f"timed out reaching {CANARY_URL}"),
+        PoolTimeoutError(f"QueuePool limit reached for {CANARY_URL}"),
     ],
-    ids=["operational", "dbapi", "connection-refused", "os", "timeout"],
+    ids=["operational", "dbapi", "connection-refused", "os", "timeout", "pool-timeout"],
 )
 async def test_check_turns_connection_failures_into_database_unavailable(
     error: BaseException, caplog: pytest.LogCaptureFixture
@@ -60,6 +63,37 @@ async def test_check_turns_connection_failures_into_database_unavailable(
     assert type(error).__name__ in warnings[0].getMessage()
     assert "traceId=" in warnings[0].getMessage()
     assert "CANARY" not in caplog.text
+
+
+class HangingRepository:
+    """A ``ping`` that never answers in time, like a hung pooled connection."""
+
+    def __init__(self) -> None:
+        self.cancelled = False
+
+    async def ping(self) -> None:
+        try:
+            await asyncio.sleep(10)
+        except asyncio.CancelledError:
+            self.cancelled = True
+            raise
+
+
+async def test_check_bounds_a_hanging_ping_and_reports_database_unavailable(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    monkeypatch.setattr("app.modules.health.service.POSTGRES_CONNECT_TIMEOUT_SECONDS", 0.01)
+    caplog.set_level(logging.WARNING)
+    repository = HangingRepository()
+
+    with pytest.raises(DatabaseUnavailableError) as caught:
+        await asyncio.wait_for(HealthService(repository).check(), timeout=2)
+
+    assert caught.value.__cause__ is None
+    assert repository.cancelled is True
+    warnings = [record for record in caplog.records if record.levelno == logging.WARNING]
+    assert len(warnings) == 1
+    assert "TimeoutError" in warnings[0].getMessage()
 
 
 async def test_check_lets_unrelated_errors_through() -> None:

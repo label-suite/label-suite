@@ -47,7 +47,10 @@ rebuilds a table (backend-agent-rules B6).
 """
 
 POSTGRES_CONNECT_TIMEOUT_SECONDS = 5
-"""Seconds asyncpg waits for a connection before failing, bounding health checks."""
+"""Seconds asyncpg waits for a connection before failing.
+
+The health check also bounds its whole query by it (``HealthService.check``).
+"""
 
 
 class Base(DeclarativeBase):
