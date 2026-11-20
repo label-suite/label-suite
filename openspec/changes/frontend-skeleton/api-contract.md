@@ -114,7 +114,7 @@
 
 ## 唯一出口的回傳形狀
 
-`apiFetch` 是 Orval 的 mutator（`override.mutator` 指向 `src/api/mutator.ts` 的 `apiFetch`），產生的函式寫成 `apiFetch<HealthDataResponse>(...)`。**已決（Q2）**：回傳 `{ data, meta: { traceId, timestamp } }`，`ApiError` 也帶 `timestamp`，成功與錯誤同形。
+`apiFetch` 是 Orval 的 mutator（`override.mutator` 指向 `src/api/mutator.ts` 的 `apiFetch`），`orval.config.ts` 設 `httpClient: "axios"`（Q20），產生的函式寫成 `apiFetch<HealthDataResponse>({ url, method, signal }, options)`，**沒有**回傳型別註記。**已決（Q2）**：回傳 `{ data, meta: { traceId, timestamp } }`，`ApiError` 也帶 `timestamp`，成功與錯誤同形。
 
 | 項目                   | 型別                                                                                 |
 | :--------------------- | :----------------------------------------------------------------------------------- |
@@ -126,7 +126,7 @@
 - 外層的 `success`、`code`、`message` 不交給呼叫端（成功時 `success` 恆為 `true`，失敗時已轉成 `ApiError`；成功時沒有畫面需要 `code`、`message`，之後加進 `meta` 是非破壞性變更）。
 - 呼叫端寫 `query.data.data`；需要攤平時在自己的 hook options 用 `select`。
 - `204` 沒有 body，回 `undefined`，不套用 `{ data, meta }`。
-- 型別能不能穿過產物依 N3：產物的請求函式不能有 Orval 加上的明確回傳型別註記，apply 第一組以實際版本確認，失敗時停下來回到 clarification。
+- 型別能不能穿過產物依 N3：產物的請求函式不能有 Orval 加上的明確回傳型別註記。apply 第一組以 Orval 8.48.0 實測（Q20）：不指定 `httpClient` 時，`react-query` client 產生 fetch 式呼叫 `apiFetch(url, RequestInit)`，並把 `getHealth` 註記成 `Promise<getHealthResponse>`（`{ data, status }` 加 `headers` 的聯集），蓋掉 `ApiResponse<T>`，產物也編不過；設 `httpClient: "axios"` 後呼叫形狀變成上述的設定物件加 `options`、沒有註記，`ApiResponse<T>` 一路傳到 `useGetHealth`。`httpClient: "axios"` **只決定產生的呼叫形狀**：產物不 `import axios`，`axios` 不是依賴，lint 禁用 `axios` 的規則不變。
 
 ## 錯誤正規化契約
 
@@ -172,7 +172,7 @@
 
 ## MSW 四種狀態的 fixture
 
-測試用 `msw/node` 的 `setupServer`（`src/test/msw-server.ts`），`onUnhandledRequest: "error"`。MSW、faker 與產生的 `*.msw.ts` **只給測試檔用**（測試檔指 `**/*.test.ts(x)`、`src/test/**`、`vitest.config.ts`，定義見 `system-design.md` §目錄結構），lint 擋住產品碼 import（Q6）。四種狀態的回應**只用 `openapi.json` 裡有的 body 欄位**，不加任何欄位；值取自後端契約的範例與錯誤碼表。fixture 由 `src/test/envelope-fixtures.ts` **手組**，回傳型別是產物的 `HealthDataResponse`／`ErrorResponse`，欄位改名時測試在型別檢查就失敗（Q19 C3）。**前端測試一律以固定 fixture 覆寫 Orval 產生的 handler**，產生的預設 handler 只當「有攔到請求」的底線（Q19 C1，理由見下）。
+測試用 `msw/node` 的 `setupServer`（`src/test/msw-server.ts`），`onUnhandledRequest: "error"`。MSW、faker 與產生的 mock 檔（`*.msw.ts` 與它 re-export 的 `*.faker.ts`）**只給測試檔用**（測試檔指 `**/*.test.ts(x)`、`src/test/**`、`vitest.config.ts`，定義見 `system-design.md` §目錄結構），lint 擋住產品碼 import（Q6）。四種狀態的回應**只用 `openapi.json` 裡有的 body 欄位**，不加任何欄位；值取自後端契約的範例與錯誤碼表。fixture 由 `src/test/envelope-fixtures.ts` **手組**，回傳型別是產物的 `HealthDataResponse`／`ErrorResponse`，欄位改名時測試在型別檢查就失敗（Q19 C3）。**前端測試一律以固定 fixture 覆寫 Orval 產生的 handler**，產生的預設 handler 只當「有攔到請求」的底線（Q19 C1，理由見下）。
 
 | 狀態         | handler 行為                                                             | status | body                   |
 | :----------- | :----------------------------------------------------------------------- | :----- | :--------------------- |
@@ -211,6 +211,7 @@
 - `errors` 必須帶、值為 `null`：`openapi.json` 把它列在 `ErrorResponse` 的 `required`，後端契約也說非 `422` 時為 `null`。少了它 `ErrorResponse` 型別不成立。
 - **回應標頭（Q19 C2）**：fixture 照後端契約帶 `X-Correlation-ID`（值與 body 的 `traceId` 相同）與 `Content-Language`（`zh-TW` 或 `en`，與請求的 `Accept-Language` 一致），視後端契約為標頭的依據；`openapi.json` 沒有宣告回應標頭，Orval 產物看不到它們。
 - **為什麼要覆寫產生的 handler（C1）**：`openapi.json` 對外層的 `success` 只宣告 `type: boolean`、`code` 只宣告 `type: string`，沒有 `const` 或 `enum`，也沒有 `example`，Orval 用 faker 產的「`200`」會隨機給 `success`（可能是 `false`）與隨機 `code`，`isSuccessEnvelope` 會判成 `invalidResponse`。測試用 `getGetHealthMockHandler(override)` 或 `server.use` 帶固定 fixture；若要後端在外層 schema 加 `const` 與 `examples`，屬後端 change，另開 issue，不在本次改 `backend/`。
+- **handler 怎麼對到網址**：產生的 handler 以 `http.get('*/api/v1/health', ...)` 比對，前面是萬用字元、不是絕對網址，任何來源都攔得到。手組 fixture 的 handler 則以 `server.use()` 加入、比對**絕對網址** `http://localhost:8000/api/v1/health`（`vitest.config.ts` 的 `test.env` 設 `VITE_API_BASE_URL=http://localhost:8000`，design.md D11）。`use()` 加入的 handler 優先，所以網址組對時一定命中 fixture；base URL 組錯的請求會落到產生的預設 handler、拿到 faker 資料，斷言 fixture 的 `traceId` 就會失敗，這正是要它失敗的地方。base URL 的組合另由 `mutator.test.ts` 對 `buildRequestUrl` 做單元測試（含基底為空時回相對路徑）。
 - 「連不到後端」的逾時路徑以假時鐘推進 15 秒驗證，不在 MSW 層模擬（`system-design.md` §測試 `mutator.test.ts`）。
 - `traceId` 是固定的 UUID4 字串、`timestamp` 是固定的 UTC 毫秒字串，不用 faker 產生，讓斷言與快照穩定。
 - 其他錯誤外層（`404`、`500` 等）的測試照同樣方式組，`code` 與 `message` 取自後端契約 §錯誤碼 的表，不自創。
@@ -220,15 +221,15 @@
 
 ### 輸入與輸出
 
-| 項目   | 值                                                                                                                                                        | 依據                                            |
-| :----- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------- |
-| 設定檔 | `frontend/orval.config.ts`，唯一的一份                                                                                                                    | A5、`system-design.md`                          |
-| 輸入   | `../backend/openapi.json`（相對 `frontend/`）；只讀已提交的檔案，前端不改它                                                                               | A4、後端契約 §OpenAPI 元件命名與 `openapi.json` |
-| 輸出   | `frontend/src/api/generated/`，整個資料夾由 Orval 擁有，`clean: true`                                                                                     | A4、ADR-003 D6                                  |
-| client | `react-query`；`override.mutator` → `src/api/mutator.ts` 的 `apiFetch`；`override.query.signal: true`                                                     | A6、A9                                          |
-| mock   | MSW handlers 與 response mock，只被測試 import（lint 擋產品碼）                                                                                           | T6                                              |
-| 格式化 | 不格式化：`frontend/src/api/generated/` 進根目錄 `.prettierignore`，產物維持 Orval 原樣（Q8）                                                             | A4、A5                                          |
-| 指令   | `pnpm --filter frontend api:generate`：**只讀 `backend/openapi.json` 跑 Orval**，不依賴 Python；從後端匯出到 Orval 的整條鏈由 #506 的根目錄指令串起（Q8） | A5                                              |
+| 項目   | 值                                                                                                                                                                               | 依據                                            |
+| :----- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------- |
+| 設定檔 | `frontend/orval.config.ts`，唯一的一份                                                                                                                                           | A5、`system-design.md`                          |
+| 輸入   | `../backend/openapi.json`（相對 `frontend/`）；只讀已提交的檔案，前端不改它                                                                                                      | A4、後端契約 §OpenAPI 元件命名與 `openapi.json` |
+| 輸出   | `frontend/src/api/generated/`，整個資料夾由 Orval 擁有，`clean: true`                                                                                                            | A4、ADR-003 D6                                  |
+| client | `react-query`；`httpClient: "axios"`（只決定呼叫形狀，不引入 axios，Q20）；`override.mutator` → `src/api/mutator.ts` 的 `apiFetch`；`override.query.signal: true`                | A6、A9                                          |
+| mock   | `mock: true`：MSW handlers（`*.msw.ts`）與 faker 產的 response mock（`*.faker.ts`，import `@faker-js/faker`；`*.msw.ts` 從它 re-export），兩者都只被測試 import（lint 擋產品碼） | T6                                              |
+| 格式化 | 不格式化：`frontend/src/api/generated/` 進根目錄 `.prettierignore`，產物維持 Orval 原樣（Q8）                                                                                    | A4、A5                                          |
+| 指令   | `pnpm --filter frontend api:generate`：**只讀 `backend/openapi.json` 跑 Orval**，不依賴 Python；從後端匯出到 Orval 的整條鏈由 #506 的根目錄指令串起（Q8）                        | A5                                              |
 
 產物檔案在資料夾內怎麼分（Orval 的 `mode`）是實作細節，不在契約內；契約只承諾下表的匯出名稱，從 `src/api/generated/` 底下 import。
 
@@ -236,17 +237,17 @@
 
 依 operationId `getHealth` 與元件名，Orval 預期產出（以 apply 時的實際版本為準；與下表不同時先回來改本文，A4）：
 
-| 種類          | 名稱                                                                               | 用在                                                                                  |
-| :------------ | :--------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------ |
-| 查詢 hook     | `useGetHealth`                                                                     | `HealthStatusPanel`                                                                   |
-| 請求函式      | `getHealth`                                                                        | `useGetHealth` 的 `queryFn`；元件不直接呼叫                                           |
-| query key     | `getGetHealthQueryKey`                                                             | 唯一的 key 來源（A9）；「重新檢查」用 `refetch()`、不換 key                           |
-| query options | `getGetHealthQueryOptions`                                                         | 之後需要 prefetch 時用                                                                |
-| 錯誤型別別名  | `GetHealthQueryError`（＝`ErrorType<ErrorResponse>`＝`ApiError`）                  | 元件的 `error` 型別                                                                   |
-| MSW           | `getGetHealthMockHandler`、`getGetHealthResponseMock`（位於產生的 `*.msw.ts`）     | 只給測試檔（`**/*.test.ts(x)`、`src/test/**`、`vitest.config.ts`）；產品碼不得 import |
-| 型別          | `HealthData`、`HealthDataResponse`、`HealthStatus`、`ErrorResponse`、`ErrorDetail` | fixture、`apiFetch` 的泛型、`ApiError.fieldErrors`                                    |
+| 種類          | 名稱                                                                                                                | 用在                                                                                  |
+| :------------ | :------------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------ |
+| 查詢 hook     | `useGetHealth`                                                                                                      | `HealthStatusPanel`                                                                   |
+| 請求函式      | `getHealth`                                                                                                         | `useGetHealth` 的 `queryFn`；元件不直接呼叫                                           |
+| query key     | `getGetHealthQueryKey`                                                                                              | 唯一的 key 來源（A9）；「重新檢查」用 `refetch()`、不換 key                           |
+| query options | `getGetHealthQueryOptions`                                                                                          | 之後需要 prefetch 時用                                                                |
+| 錯誤型別別名  | `GetHealthQueryError`（＝`ErrorType<ErrorResponse>`＝`ApiError`）                                                   | 元件的 `error` 型別                                                                   |
+| MSW           | `getGetHealthMockHandler`（`*.msw.ts`）、`getGetHealthResponseMock`（定義在 `*.faker.ts`，`*.msw.ts` 再 re-export） | 只給測試檔（`**/*.test.ts(x)`、`src/test/**`、`vitest.config.ts`）；產品碼不得 import |
+| 型別          | `HealthData`、`HealthDataResponse`、`HealthStatus`、`ErrorResponse`、`ErrorDetail`                                  | fixture、`apiFetch` 的泛型、`ApiError.fieldErrors`                                    |
 
-- 沒有 `servers` 欄位，產物的 `url` 是 `/api/v1/health`，base URL 只由 `apiFetch` 加（A6）。
+- 沒有 `servers` 欄位，產物請求函式的 `url` 是 `/api/v1/health`，base URL 只由 `apiFetch` 加（A6）；產生的 MSW handler 比對的是 `*/api/v1/health`（見 [§MSW 四種狀態的 fixture](#msw-四種狀態的-fixture)）。
 - `openapi.json` 沒有宣告請求標頭參數，所以 `getHealth` 沒有 header 參數；`Accept-Language` 一律由 `apiFetch` 加，元件不組標頭（A6）。
 
 ### 什麼算漂移
@@ -264,20 +265,20 @@
 
 本 change 沒有新增待決。上游待決與本文原本的 C1–C6 已由維護者於 2026-11-20 全部決議（clarification Q1–Q19），本文依決議改寫。
 
-| 編號        | 主題                                                    | 決議                                                                              | 依據                        | 狀態                |
-| :---------- | :------------------------------------------------------ | :-------------------------------------------------------------------------------- | :-------------------------- | :------------------ |
-| C1          | Orval 產生的預設 handler 不能代表「正常」               | 前端測試一律以固定 fixture 覆寫產生的 handler                                     | Q19                         | 已決                |
-| C2          | fixture 要不要帶 `X-Correlation-ID`、`Content-Language` | 照後端契約帶，值與 body `traceId`、請求語言一致                                   | Q19                         | 已決                |
-| C3          | `503` 的錯誤外層 mock 從哪來                            | 手組 fixture，型別取自產物                                                        | Q19                         | 已決                |
-| C4          | `isErrorEnvelope` 要不要要求 `errors` 鍵                | `errors` 缺鍵視同 `null`，其餘照 `required`                                       | Q19                         | 已決                |
-| C5          | 連不到後端時「錯誤類型」顯示什麼                        | 直接顯示 `network` 或 `timeout`；非外層的回應歸〔連不到後端〕                     | Q3                          | 已決                |
-| C6          | `ApiError` 要不要帶 `timestamp`                         | 帶：`timestamp: string \| null`；成功的 `meta` 也有 `timestamp`                   | Q2                          | 已決                |
-| SA-2        | 成功時交不交出 traceId 與時間                           | `apiFetch` 回 `{ data, meta: { traceId, timestamp } }`                            | Q2                          | 已決                |
-| SA-3        | 四種狀態以外的回應                                      | 所有錯誤外層走錯誤版面；非外層歸連不到後端                                        | Q3                          | 已決                |
-| SA-4、SA-5  | 重試、逾時、認證錯誤範圍                                | 不自動重試；逾時 15 秒；`isAuthError` 只認 401                                    | Q4                          | 已決                |
-| SA-6        | 語系層與語言偏好                                        | react-i18next，zh-TW 與 en，依 `navigator.language`，`Accept-Language` 與介面一致 | Q5                          | 已決                |
-| SA-7        | 網路替身                                                | 只給測試用                                                                        | Q6                          | 已決                |
-| SA-8        | 專案結構                                                | 根目錄 pnpm workspace，指令用 `pnpm --filter frontend`                            | Q7                          | 已決                |
-| SA-9、SA-10 | 產物格式化與一條命令的範圍                              | 進 `.prettierignore`；`api:generate` 只跑 Orval                                   | Q8                          | 已決                |
-| SA-12       | 開發頁顯示內部資料                                      | 兩頁是 07-01 的例外                                                               | Q11                         | 已決                |
-| N3          | `ApiResponse<T>` 能否穿過 Orval 產物                    | 技術風險：apply 第一組以實際版本確認，失敗時回到 clarification                    | clarification §交給後續產出 | 已決，待 apply 驗證 |
+| 編號        | 主題                                                    | 決議                                                                              | 依據 | 狀態 |
+| :---------- | :------------------------------------------------------ | :-------------------------------------------------------------------------------- | :--- | :--- |
+| C1          | Orval 產生的預設 handler 不能代表「正常」               | 前端測試一律以固定 fixture 覆寫產生的 handler                                     | Q19  | 已決 |
+| C2          | fixture 要不要帶 `X-Correlation-ID`、`Content-Language` | 照後端契約帶，值與 body `traceId`、請求語言一致                                   | Q19  | 已決 |
+| C3          | `503` 的錯誤外層 mock 從哪來                            | 手組 fixture，型別取自產物                                                        | Q19  | 已決 |
+| C4          | `isErrorEnvelope` 要不要要求 `errors` 鍵                | `errors` 缺鍵視同 `null`，其餘照 `required`                                       | Q19  | 已決 |
+| C5          | 連不到後端時「錯誤類型」顯示什麼                        | 直接顯示 `network` 或 `timeout`；非外層的回應歸〔連不到後端〕                     | Q3   | 已決 |
+| C6          | `ApiError` 要不要帶 `timestamp`                         | 帶：`timestamp: string \| null`；成功的 `meta` 也有 `timestamp`                   | Q2   | 已決 |
+| SA-2        | 成功時交不交出 traceId 與時間                           | `apiFetch` 回 `{ data, meta: { traceId, timestamp } }`                            | Q2   | 已決 |
+| SA-3        | 四種狀態以外的回應                                      | 所有錯誤外層走錯誤版面；非外層歸連不到後端                                        | Q3   | 已決 |
+| SA-4、SA-5  | 重試、逾時、認證錯誤範圍                                | 不自動重試；逾時 15 秒；`isAuthError` 只認 401                                    | Q4   | 已決 |
+| SA-6        | 語系層與語言偏好                                        | react-i18next，zh-TW 與 en，依 `navigator.language`，`Accept-Language` 與介面一致 | Q5   | 已決 |
+| SA-7        | 網路替身                                                | 只給測試用                                                                        | Q6   | 已決 |
+| SA-8        | 專案結構                                                | 根目錄 pnpm workspace，指令用 `pnpm --filter frontend`                            | Q7   | 已決 |
+| SA-9、SA-10 | 產物格式化與一條命令的範圍                              | 進 `.prettierignore`；`api:generate` 只跑 Orval                                   | Q8   | 已決 |
+| SA-12       | 開發頁顯示內部資料                                      | 兩頁是 07-01 的例外                                                               | Q11  | 已決 |
+| N3          | `ApiResponse<T>` 能否穿過 Orval 產物                    | apply 第一組實測不通過，改設 `httpClient: "axios"` 後通過                         | Q20  | 已決 |

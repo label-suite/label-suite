@@ -75,7 +75,7 @@ frontend/
   - `src/test/**`（測試支援本身，例如 `setup.ts`、`msw-server.ts`、`envelope-fixtures.ts` 彼此 import 與 import `msw`）
   - `vitest.config.ts`
 
-  只有測試檔可以 import `msw`、`@faker-js/faker`、`src/test/**` 與 Orval 產生的 MSW 檔。**Orval 產生的 MSW 檔一律稱 `*.msw.ts`**（在 `src/api/generated/` 底下），本文、lint 規則與 api-contract 都用這一個寫法。
+  只有測試檔可以 import `msw`、`@faker-js/faker`、`src/test/**` 與 Orval 產生的 mock 檔。**Orval 產生的 mock 檔有兩種，一律稱 `*.msw.ts` 與 `*.faker.ts`**（都在 `src/api/generated/` 底下）：`*.msw.ts` 放 handler，`*.faker.ts` 放 import `@faker-js/faker` 的 response mock，`*.msw.ts` 從它 re-export。本文、lint 規則與 api-contract 都用這兩個寫法。
 
 - **健康檢查做成一個 feature**：F1 允許 `pages/` 直接呼叫產物，但本頁是後續功能 change 照抄的範本（#505 §需求目標），所以走完整的「page → feature 的 `index.ts` → feature 元件 → 產生的 hook → 唯一出口」，給 #506 的分層檢查一個實際對象。這和後端把健康檢查做成完整四件模組（後端 clarification 結論 14）同一個理由。
 - 頁面目錄名用 `dev-` 前綴，讓「開發用」在檔案層級就看得出來；路徑仍是 `/dev/health`、`/dev/gallery`（#505 維護者留言）。
@@ -98,15 +98,15 @@ frontend/
 
 同一份 ESLint 設定另外放這幾條，都是把本次範圍內的條文變成機械檢查，不另立新規則：
 
-| 規則                                                                                                         | 擋什麼                                                                     | 依據            |
-| :----------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------- | :-------------- |
-| `@typescript-eslint/no-explicit-any`、`no-non-null-assertion`、`no-unsafe-*`（strictTypeChecked）            | `any`、`!`、未收窄的外部值                                                 | F2、Hard Rule 7 |
-| `react-hooks/rules-of-hooks`、`exhaustive-deps`                                                              | 條件式呼叫 hook、依賴缺漏                                                  | F3              |
-| `no-restricted-imports`：`dayjs`、`dayjs/*` 只准 `src/lib/date.ts`                                           | 日期套件散落各處                                                           | F10             |
-| `no-restricted-globals` `fetch` 與 `no-restricted-imports` `axios`：限 `pages/`、`features/`、`components/`  | 繞過唯一出口                                                               | A6              |
-| `no-restricted-imports`：`msw`、`@faker-js/faker`、`src/test/**`、`src/api/generated/**/*.msw.ts` 只准測試檔 | 替身進正式 bundle（Q6）；「測試檔」見上方定義                              | T6；本文        |
-| F1 的 `pages/` 不得 import `styles/`，**只對 `pages/dev-gallery/` 的 `?raw` 讀 `styles/theme.css` 具名放行** | 展示頁 Token 對照的唯一資料來源（Q16）；規則檔內以註解寫明理由，不開其他口 | F1、F6；本文    |
-| `ignores: ['src/api/generated/**']`                                                                          | 產物不受 lint 約束                                                         | F2 例外 2、A4   |
+| 規則                                                                                                                                            | 擋什麼                                                                     | 依據            |
+| :---------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------- | :-------------- |
+| `@typescript-eslint/no-explicit-any`、`no-non-null-assertion`、`no-unsafe-*`（strictTypeChecked）                                               | `any`、`!`、未收窄的外部值                                                 | F2、Hard Rule 7 |
+| `react-hooks/rules-of-hooks`、`exhaustive-deps`                                                                                                 | 條件式呼叫 hook、依賴缺漏                                                  | F3              |
+| `no-restricted-imports`：`dayjs`、`dayjs/*` 只准 `src/lib/date.ts`                                                                              | 日期套件散落各處                                                           | F10             |
+| `no-restricted-globals` `fetch` 與 `no-restricted-imports` `axios`：限 `pages/`、`features/`、`components/`                                     | 繞過唯一出口                                                               | A6              |
+| `no-restricted-imports`：`msw`、`@faker-js/faker`、`src/test/**`、`src/api/generated/**/*.msw.ts`、`src/api/generated/**/*.faker.ts` 只准測試檔 | 替身進正式 bundle（Q6）；「測試檔」見上方定義                              | T6；本文        |
+| F1 的 `pages/` 不得 import `styles/`，**只對 `pages/dev-gallery/` 的 `?raw` 讀 `styles/theme.css` 具名放行**                                    | 展示頁 Token 對照的唯一資料來源（Q16）；規則檔內以註解寫明理由，不開其他口 | F1、F6；本文    |
+| `ignores: ['src/api/generated/**']`                                                                                                             | 產物不受 lint 約束                                                         | F2 例外 2、A4   |
 
 ### Class Diagram：契約鏈（健康檢查一條請求走過的單元）
 
@@ -354,6 +354,7 @@ classDiagram
     +input: ../backend/openapi.json
     +output: src/api/generated
     +client: react-query
+    +httpClient: axios
     +mock: msw
     +mutator: src/api/mutator.ts apiFetch
   }
@@ -413,8 +414,8 @@ classDiagram
 | `extractTokens()`                          | build      | Vite 外掛：建置與開發時讀 `design/prototype/assets/tokens.css`，只保留 `:root` 與 `html[data-theme="dark"]` 規則中的自訂屬性（`--*`），以虛擬模組 `virtual:design-tokens.css` 提供給 `main.tsx`；**不載入外部字型、不套元素規則、產物不提交**。圓角與字型仍以 tokens.css 的值為準                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | F6、ADR-005 D4；Q15                                           |
 | `styles/theme.css`                         | styles     | `:root` 區塊：shadcn 語意變數與 `--cta`、`--success`、`--warning`、`--info` 等指向 tokens.css 變數名；`html[data-theme="dark"]` 區塊：對照到深色時要換成另一個 tokens.css 變數的項目；再以 `@theme inline` 接到 Tailwind 的 `--color-*`（**必須用 `inline`**，理由見 §Token 對照層與 tokens.css 的引入）；**沒有任何色碼**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | F6、ADR-005 D4；Q9、Q13                                       |
 | `styles/index.css`                         | styles     | `@import "tailwindcss"`、引入 theme.css、`@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *))`；變數來自 `extractTokens`，不 `@import` tokens.css 全檔                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | F6、ADR-005 D4；Q15                                           |
-| `orval.config.ts`                          | 設定       | 一份 config：`input` 指向 `../backend/openapi.json`；`output` 用 `client: 'react-query'`、`mock: true`（MSW）、`clean: true`、`override.mutator` 指向 `apiFetch`、`override.query.signal: true`；不做 Prettier 格式化（產物進 `.prettierignore`）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | A4、A5、ADR-003 D6；Q8                                        |
-| `src/test/msw-server.ts`、`setup.ts`       | test 支援  | `setupServer` 載入 Orval 產生的 handlers；測試以 `server.use(...)` 覆寫成固定 fixture（`200`、`503`）或 `HttpResponse.error()`，**不改產物**；`onUnhandledRequest: 'error'`；`setup.ts` 以 `initI18n` 只載 `common` 並預設 `zh-TW`（不註冊其他 namespace），需要英文的測試自己 `changeLanguage('en')`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | T6、A4；Q5、Q6、Q19 C1                                        |
+| `orval.config.ts`                          | 設定       | 一份 config：`input` 指向 `../backend/openapi.json`；`output` 用 `client: 'react-query'`、`httpClient: 'axios'`（只決定產生的呼叫形狀，不引入 axios，Q20）、`mock: true`（產生 `*.msw.ts` 與 `*.faker.ts`）、`clean: true`、`override.mutator` 指向 `apiFetch`、`override.query.signal: true`；不做 Prettier 格式化（產物進 `.prettierignore`）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | A4、A5、ADR-003 D6；Q8                                        |
+| `src/test/msw-server.ts`、`setup.ts`       | test 支援  | `setupServer` 載入 Orval 產生的 handlers（比對 `*/api/v1/health`，前面是萬用字元，不受 base URL 影響）；測試以 `server.use(...)` 加入比對絕對網址 `http://localhost:8000/api/v1/health` 的 handler（`vitest.config.ts` 的 `test.env` 設 `VITE_API_BASE_URL`，design D11），覆寫成固定 fixture（`200`、`503`）或 `HttpResponse.error()`，**不改產物**；`use()` 優先，base URL 組錯的請求會落到產生的 handler 拿到 faker 資料，fixture `traceId` 的斷言因而失敗；base URL 組合另由 `mutator.test.ts` 對 `buildRequestUrl` 單元測試；`onUnhandledRequest: 'error'`；`setup.ts` 以 `initI18n` 只載 `common` 並預設 `zh-TW`（不註冊其他 namespace），需要英文的測試自己 `changeLanguage('en')`                                                                                                                                                                                                                                                               | T6、A4；Q5、Q6、Q19 C1                                        |
 | `src/test/envelope-fixtures.ts`            | test 支援  | `successEnvelope`、`errorEnvelope({ status, code, message, traceId })` 手組，回傳型別是產物的 `HealthDataResponse`／`ErrorResponse`，欄位改名時測試會在型別檢查失敗；回應帶 `X-Correlation-ID` 與 `Content-Language` 標頭；不含任何答案或真實身分                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | T6、Hard Rule 6；Q19 C1–C3                                    |
 
 ### 關鍵設計細節
@@ -469,16 +470,16 @@ classDiagram
 - `Accept-Language` 與介面語言一致：`apiFetch` 讀 `getCurrentLanguage()`。後端錯誤外層的 `message` 因此依同一語言本地化，前端仍原樣顯示（A8）。
 - 測試：`src/test/setup.ts` 預設 `zh-TW`；要驗英文的測試自己 `changeLanguage('en')`，並在 `afterEach` 還原。`resolveLanguage` 與每個 namespace 兩份語言檔鍵集一致各有單元測試。
 
-#### Orval 管線（已決，Q8；N3 仍為 apply 第一步的驗證）
+#### Orval 管線（已決，Q8、Q20）
 
 - `orval.config.ts` 是唯一的產生設定；產物整個資料夾由 Orval 擁有（`clean: true`），不手改、不加檔（A4）。
-- 產生的 hook 型別依賴 `ApiResponse<T>` 能穿過 Orval 產生的程式。Orval 的 react-query 產物以 `Awaited<ReturnType<typeof getHealth>>` 推導 `data` 型別，所以只要產生的 `getHealth` **沒有**被 Orval 加上明確的回傳型別註記，`apiFetch` 的回傳型別就會一路傳到 hook；這要在實作第一步以實際版本確認（N3，技術風險）。備案是 Orval 的 `input.override.transformer` 把 200 回應的 schema 換成 `{ data, meta }` 形狀，但會讓產物與介面描述檔的形狀不一致；確認失敗是故障，停下來回到 clarification。
+- 產生的 hook 型別依賴 `ApiResponse<T>` 能穿過 Orval 產生的程式。Orval 的 react-query 產物以 `Awaited<ReturnType<typeof getHealth>>` 推導 `data` 型別，所以只要產生的 `getHealth` **沒有**被 Orval 加上明確的回傳型別註記，`apiFetch` 的回傳型別就會一路傳到 hook；N3 在 apply 第一組以 Orval 8.48.0 實測（Q20）：不指定 `httpClient` 時，`react-query` client 產生 fetch 式呼叫 `apiFetch(url, RequestInit)`，並把 `getHealth` 註記成 `Promise<getHealthResponse>`（`{ data, status }` 加 `headers` 的聯集），蓋掉 `ApiResponse<T>`，產物也編不過。因此 `orval.config.ts` 設 `httpClient: "axios"`：產生的呼叫變成 `apiFetch<HealthDataResponse>({ url, method, signal }, options)`、沒有回傳註記，正好是 `RequestConfig` 加 `ApiFetchOptions` 的形狀，`ApiResponse<T>` 一路傳到 `useGetHealth`。這個設定**只決定產生的呼叫形狀**：產物不 `import axios`，`axios` 不是依賴，lint 禁用 `axios` 的規則不變。`input.override.transformer` 仍排除（會讓產物與介面描述檔的形狀不一致）。
 - 格式化：`frontend/src/api/generated/` 進根目錄 `.prettierignore`，產物維持 Orval 原樣，漂移檢查才準；`.lintstagedrc.mjs` 加上 `ts,tsx`，手寫 `.ts` 在 commit 時就格式化，CI 的 `prettier --check` 不會意外擋下。
 - 一條指令的範圍：`pnpm api:generate`（`frontend/package.json` 的 script）**只讀已提交的 `backend/openapi.json` 跑 Orval**，不依賴 Python 工具鏈；從後端匯出到 Orval 的整條鏈由 #506 的根目錄指令串起。
 
 #### 網路替身（已決，Q6）
 
-測試一律用 `msw/node` 的 `setupServer`，在 `src/test/setup.ts` 啟停。MSW、faker 與 Orval 產生的 `*.msw.ts` **只給測試用**：lint 擋住產品碼 import，正式 bundle 不含，開發時不提供瀏覽器端的替身（沒有 `mockServiceWorker.js`、沒有切換開關）。要看錯誤狀態就關掉後端或資料庫。
+測試一律用 `msw/node` 的 `setupServer`，在 `src/test/setup.ts` 啟停。MSW、faker 與 Orval 產生的 `*.msw.ts`、`*.faker.ts` **只給測試用**：lint 擋住產品碼 import，正式 bundle 不含，開發時不提供瀏覽器端的替身（沒有 `mockServiceWorker.js`、沒有切換開關）。要看錯誤狀態就關掉後端或資料庫。
 
 #### 開發用路由（已決，Q1、Q14）
 
@@ -801,7 +802,7 @@ sequenceDiagram
   Dev->>Script: 執行（只讀 backend/openapi.json，不跑後端匯出）
   Script->>Orval: orval --config orval.config.ts
   Orval->>Orval: 讀 ../backend/openapi.json
-  Orval->>Gen: clean 後寫入型別、查詢 hooks、MSW handlers，呼叫端一律是 apiFetch，不格式化
+  Orval->>Gen: clean 後寫入型別、查詢 hooks、MSW handlers 與 faker mock，呼叫端一律是 apiFetch(config, options)，不格式化
   Dev->>Check: git diff --exit-code 與 git status --porcelain，路徑 src/api/generated
   alt 有差異或有未追蹤檔
     Check-->>Dev: 失敗，產物漂移或忘了提交
@@ -893,16 +894,16 @@ sequenceDiagram
 
 ### 本文新發現的待決問題
 
-| #   | 問題                                 | 決議                                                                                                          | 依據                        | 狀態                |
-| :-- | :----------------------------------- | :------------------------------------------------------------------------------------------------------------ | :-------------------------- | :------------------ |
-| N1  | 完整性測試的「宣告的 variant」來源   | 每個原語匯出 `as const` 陣列、`cva` 從它建，測試在執行期比對；允許改原語原始碼                                | Q9                          | 已決                |
-| N2  | tokens.css 的引入方式                | 小 Vite 外掛在建置時只抽 `:root` 與深色區塊的自訂屬性，不載入外部字型與元素規則；圓角與字型以 tokens.css 為準 | Q15                         | 已決                |
-| N3  | `ApiResponse<T>` 能否穿過 Orval 產物 | 技術風險：apply 第一組以實際版本確認；失敗時停下來回到 clarification                                          | clarification §交給後續產出 | 已決，待 apply 驗證 |
-| N4  | `exactOptionalPropertyTypes`         | 不開，其他嚴格旗標照開                                                                                        | Q19                         | 已決                |
-| N5  | Button 的 `link` variant             | 刪掉，只宣告 artifact 的六種                                                                                  | Q10                         | 已決                |
-| N6  | 合成 signal                          | 自寫 `composeSignals`；jsdom 與目標瀏覽器都支援 `AbortSignal.any` 時改用標準 API                              | Q19                         | 已決                |
-| N7  | lint-staged 要不要加 `ts,tsx`        | 加上                                                                                                          | Q8                          | 已決                |
-| N8  | 展示頁 Token 對照的資料來源          | `?raw` 讀 `styles/theme.css`，lint 具名放行這一個檔案                                                         | Q16                         | 已決                |
+| #   | 問題                                 | 決議                                                                                                          | 依據 | 狀態 |
+| :-- | :----------------------------------- | :------------------------------------------------------------------------------------------------------------ | :--- | :--- |
+| N1  | 完整性測試的「宣告的 variant」來源   | 每個原語匯出 `as const` 陣列、`cva` 從它建，測試在執行期比對；允許改原語原始碼                                | Q9   | 已決 |
+| N2  | tokens.css 的引入方式                | 小 Vite 外掛在建置時只抽 `:root` 與深色區塊的自訂屬性，不載入外部字型與元素規則；圓角與字型以 tokens.css 為準 | Q15  | 已決 |
+| N3  | `ApiResponse<T>` 能否穿過 Orval 產物 | apply 第一組實測不通過，改設 `httpClient: "axios"` 後通過                                                     | Q20  | 已決 |
+| N4  | `exactOptionalPropertyTypes`         | 不開，其他嚴格旗標照開                                                                                        | Q19  | 已決 |
+| N5  | Button 的 `link` variant             | 刪掉，只宣告 artifact 的六種                                                                                  | Q10  | 已決 |
+| N6  | 合成 signal                          | 自寫 `composeSignals`；jsdom 與目標瀏覽器都支援 `AbortSignal.any` 時改用標準 API                              | Q19  | 已決 |
+| N7  | lint-staged 要不要加 `ts,tsx`        | 加上                                                                                                          | Q8   | 已決 |
+| N8  | 展示頁 Token 對照的資料來源          | `?raw` 讀 `styles/theme.css`，lint 具名放行這一個檔案                                                         | Q16  | 已決 |
 
 ### 快取、生命週期與效能
 
@@ -910,7 +911,7 @@ sequenceDiagram
 
 - **快取生命週期**：`QueryClient` 一個應用一個，建在 `providers.tsx` 的模組層級；測試每一個測試建一個新的，避免測試之間共用快取。登出與換帳號的 `clear()` 屬 01-01（A9）。
 - **請求生命週期**：每個請求的計時器與 signal 監聽在 `apiFetch` 的 `finally` 釋放；元件卸載時 TanStack Query 會 abort，`apiFetch` 轉成 `aborted`。
-- **正式 bundle**：MSW、faker 與產生的 `*.msw.ts` 只被測試 import，lint 擋住產品碼引用；開發用頁面以 `lazy` 載入且只在 `import.meta.env.DEV` 註冊，正式建置整段被剪掉，`systemHealth`、`devGallery` 的語言檔只被這兩個 lazy 模組 import，一併剪掉。以 `pnpm build` 後檢查 `dist/` 驗證。
+- **正式 bundle**：MSW、faker 與產生的 `*.msw.ts`、`*.faker.ts` 只被測試 import，lint 擋住產品碼引用；開發用頁面以 `lazy` 載入且只在 `import.meta.env.DEV` 註冊，正式建置整段被剪掉，`systemHealth`、`devGallery` 的語言檔只被這兩個 lazy 模組 import，一併剪掉。以 `pnpm build` 後檢查 `dist/` 驗證。
 - **健康檢查頁的最慢回應時間**：不重試，最慢是前端逾時 15 秒，大於後端 10 秒上限，資料庫無法連線不會被誤判成連不到後端（Q4）。
 - **建置與容器**：`extractTokens` 外掛讀 `frontend/` 之外的 `design/prototype/assets/tokens.css`，#506 的前端 Docker build context 必須包含 `design/prototype/assets/`，這件事要交給 #506。
 - **交給 #506 的另一件**：`.env.example` 要有 `CORS_ALLOWED_ORIGINS=http://localhost:5173` 與 `VITE_API_BASE_URL=http://localhost:8000`；容器內改以後端 `/api/v1/health` 驗證（Q1）。

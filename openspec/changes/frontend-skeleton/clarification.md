@@ -212,6 +212,17 @@
 - **已回修**：ui-design、system-design、api-contract
 - **日期**：2026-11-20（維護者）
 
+### Q20. N3 未通過：Orval 產物蓋掉 `{ data, meta }`（apply 中回到停點）
+
+- **來源**：tasks.md 1.3 的 N3 關卡（apply 第一組，2026-11-20）
+- **問題**：Orval 8.48.0 的 `react-query` client 在未指定 `httpClient` 時產生 fetch 式呼叫 `apiFetch(url, RequestInit)`，並在 `getHealth` 加上明確回傳型別 `Promise<getHealthResponse>`（`{ data, status }` 加 `headers` 的聯集），`ApiResponse<T>` 傳不到 hook，產物本身也編譯失敗（TS2345、TS2322、TS2353）。
+- **選項**：（a）`orval.config.ts` 加 `httpClient: "axios"`；（b）改用 fetch 式介面並重寫 `{ data, meta }` 設計；（c）`input.override.transformer`（規劃已排除）。
+- **驗證**：在暫存區以（a）重新產生：`getHealth` 為 `apiFetch<HealthDataResponse>({ url, method, signal }, options)`、沒有回傳註記，`tsc -b` 0 錯，`generated-types.test.ts` 4 條通過；產物沒有 `import axios`，不新增 axios 依賴。型別測試原本以 `ReturnType<typeof useGetHealth>` 取型別，泛型 `TData` 會被代成 `unknown`，改為先寫 `const callHook = () => useGetHealth()` 再取 `ReturnType<typeof callHook>`（測試寫法錯誤，不是產物問題）。
+- **決議**：採（a）。`orval.config.ts` 加 `httpClient: "axios"`，只決定產生的呼叫形狀；`axios` 仍不是依賴，lint 禁用 `axios` 的規則不變。
+- **理由**：產物形狀與 api-contract 原本寫的完全一致，其他設計不必改。
+- **回修**：design.md D5、tasks.md 1.3（planner）；api-contract.md、system-design.md（sd）
+- **日期**：2026-11-20（維護者）
+
 ## 已修正（P）
 
 | 編號 | 位置                                                                        | 問題                                                                    | 修正                                                                                                                                   |
