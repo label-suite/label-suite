@@ -90,6 +90,9 @@
   6. 不以 `s` 結尾的字不變。
 - unit 測試以對照表斷言 spec `api-schema-export`「操作識別名依方法與回應形狀決定動詞」的六條（`listTasks`、`getTask`、`createTask`、`updateTask`、`deleteTask`、`getHealth`），並逐條涵蓋上面六個步驟各一個字。替代方案 `inflect` 套件不採用：五條規則加一張表就夠，多一個依賴不值得；規則猜錯的字會在撞名檢查或 code review 時現形，修法是補一筆不規則字。
 - 覆寫 `app.openapi`：`create_app` 呼叫 `app/core/openapi.py` 的 `install_openapi(app)`，把 `app.openapi` 換成包住 FastAPI 預設產生器（`get_openapi`）的函式，第一次產生時依序做三件後處理——把每個 `422` 回應的 schema 換成 `ErrorResponse` 的參照，刪除 `components.schemas` 的 `HTTPValidationError` 與 `ValidationError`，再依下一點把泛型元件改名。結果快取在 `app.openapi_schema`，執行期的 `/openapi.json` 與匯出指令取得同一份。
+- `info.version` 取自 `backend/pyproject.toml` 的 `[project].version`，不另寫第二份版本號（Hard Rule 4；clarification Q7 定為 `0.0.0`）：`app/core/openapi.py` 的 `get_app_version()` 以 `tomllib` 讀 `Path(__file__).resolve().parents[2] / "pyproject.toml"`，`create_app` 以 `FastAPI(title="Label Suite API", version=get_app_version())` 建立 app。不設的話 FastAPI 預設填 `0.1.0`，與 Q7 不符。
+  - 替代方案「`importlib.metadata.version("label-suite-backend")`」不採用：`pyproject.toml` 沒有 `[build-system]`，`uv run` 不會把專案安裝成 distribution，實測在 `backend/` 執行 `uv run python -c "import importlib.metadata as m; print(m.version('label-suite-backend'))"` 拋出 `PackageNotFoundError`。為了它補 `[build-system]` 會改變打包方式，超出本次範圍。
+  - 代價：執行環境必須帶著 `pyproject.toml`；檔案不存在或缺 `[project].version` 時 `get_app_version()` 直接拋例外，不退回預設值。
 - `404`、`405`、`406`、`500` 以 `/api/v1` 父 router 的 `responses=` 一次宣告；`getHealth` 的 `503` 宣告在端點上（api-contract §OpenAPI 元件命名與 `openapi.json`「錯誤回應在 OpenAPI 的宣告」）。
 - 泛型元件命名分兩段（維護者裁定，2026-11-20，apply 任務 2.2 發現原做法不成立後修訂）：
   1. `ApiResponse.model_parametrized_name` 與 `PaginatedResponse.model_parametrized_name` 仍覆寫，讓參數化類別的 `__name__` 與 JSON Schema 的 `title` 成為 `XResponse`／`XPageResponse`／`XPage`。unit 測試（tasks 2.2）對 `ApiResponse[HealthData]`、`ApiResponse[PaginatedResponse[X]]`、`PaginatedResponse[X]` 三種斷言 `__name__` 與 `model_json_schema()["title"]`。
