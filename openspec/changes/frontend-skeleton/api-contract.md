@@ -172,7 +172,7 @@
 
 ## MSW 四種狀態的 fixture
 
-測試用 `msw/node` 的 `setupServer`（`src/test/msw-server.ts`），`onUnhandledRequest: "error"`。MSW、faker 與產生的 mock 檔（`*.msw.ts` 與它 re-export 的 `*.faker.ts`）**只給測試檔用**（測試檔指 `**/*.test.ts(x)`、`src/test/**`、`vitest.config.ts`，定義見 `system-design.md` §目錄結構），lint 擋住產品碼 import（Q6）。四種狀態的回應**只用 `openapi.json` 裡有的 body 欄位**，不加任何欄位；值取自後端契約的範例與錯誤碼表。fixture 由 `src/test/envelope-fixtures.ts` **手組**，回傳型別是產物的 `HealthDataResponse`／`ErrorResponse`，欄位改名時測試在型別檢查就失敗（Q19 C3）。**前端測試一律以固定 fixture 覆寫 Orval 產生的 handler**，產生的預設 handler 只當「有攔到請求」的底線（Q19 C1，理由見下）。
+測試用 `msw/node` 的 `setupServer`（`src/test/msw-server.ts`），`onUnhandledRequest: "error"`（MSW 3 把這個選項改名為 `onUnhandledFrame`，程式寫 `onUnhandledFrame: "error"`，行為相同）。MSW、faker 與產生的 mock 檔（`*.msw.ts` 與它 re-export 的 `*.faker.ts`）**只給測試檔用**（測試檔指 `**/*.test.ts(x)`、`src/test/**`、`vitest.config.ts`，定義見 `system-design.md` §目錄結構），lint 擋住產品碼 import（Q6）。四種狀態的回應**只用 `openapi.json` 裡有的 body 欄位**，不加任何欄位；值取自後端契約的範例與錯誤碼表。fixture 由 `src/test/envelope-fixtures.ts` **手組**，回傳型別是產物的 `HealthDataResponse`／`ErrorResponse`，欄位改名時測試在型別檢查就失敗（Q19 C3）。**前端測試一律以固定 fixture 覆寫 Orval 產生的 handler**，產生的預設 handler 只當「有攔到請求」的底線（Q19 C1，理由見下）。
 
 | 狀態         | handler 行為                                                             | status | body                   |
 | :----------- | :----------------------------------------------------------------------- | :----- | :--------------------- |
