@@ -57,7 +57,7 @@ N3 是本群組的關卡：1.3 失敗即停止，回到 clarification，不做�
 
 ## 9. OpenSpec 設定（可平行）
 
-- [ ] 9.1 修改 `openspec/config.yaml` 的 `operations.apply.guidance`：把「前端的檢查指令等 frontend/ 骨架 change（#505）建好再補進這一節」那一行換成「動到 `frontend/` 時」要跑的五條指令：`pnpm --filter frontend lint`、`pnpm --filter frontend typecheck`、`pnpm --filter frontend test`（含覆蓋率報告時用 `test:coverage`）、`pnpm --filter frontend build`、`pnpm --filter frontend api:generate && git diff --exit-code -- frontend/src/api/generated && test -z "$(git status --porcelain -- frontend/src/api/generated)"`（design D13、system-design §專案結構與要補進 `openspec/config.yaml` 的指令）。驗證：五條指令照寫在 `config.yaml` 中逐條執行都以 0 結束；`pnpm exec openspec validate frontend-skeleton` 通過；`pnpm format:check` 以 0 結束 [@technical-writer]
+- [x] 9.1 修改 `openspec/config.yaml` 的 `operations.apply.guidance`：把「前端的檢查指令等 frontend/ 骨架 change（#505）建好再補進這一節」那一行換成「動到 `frontend/` 時」要跑的五條指令：`pnpm --filter frontend lint`、`pnpm --filter frontend typecheck`、`pnpm --filter frontend test`（含覆蓋率報告時用 `test:coverage`）、`pnpm --filter frontend build`、`pnpm --filter frontend api:generate && git diff --exit-code -- frontend/src/api/generated && test -z "$(git status --porcelain -- frontend/src/api/generated)"`（design D13、system-design §專案結構與要補進 `openspec/config.yaml` 的指令）。驗證：五條指令照寫在 `config.yaml` 中逐條執行都以 0 結束；`pnpm exec openspec validate frontend-skeleton` 通過；`pnpm format:check` 以 0 結束 [@technical-writer]
 - [ ] 9.2 修改 `openspec/config.yaml` 的 `rules.ui-design`：前端架構的引用由 ADR-004 改為 ADR-005（clarification P1、design D13）。驗證：`grep -n 'ADR-004' openspec/config.yaml` 不再出現在 `rules.ui-design` 中且其他段落的 ADR-004 引用未被改動；`pnpm exec openspec validate frontend-skeleton` 通過；`pnpm format:check` 以 0 結束 [@technical-writer]
 
 ## Workflow follow-up
