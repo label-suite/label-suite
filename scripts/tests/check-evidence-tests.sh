@@ -73,6 +73,37 @@ rc=$(run false)
 [ "$rc" = "2" ] || fail "a record whose covered file changed afterwards was still accepted (got $rc)"
 grep -q 'backend/app.py' "$TMP/err" || fail "the stale-record refusal did not name the file"
 
+# A docs-only change has to be satisfiable too. Every case above routes a
+# `.py` file, and that is why this went unnoticed: the evidence record listed
+# only the Python and TypeScript layers, while H6 asks for coverage of every
+# changed file whose route is enabled -- and the docs route always is. So a
+# documentation change could never produce a record that covered it, and the
+# Stop hook refused one on the day it was registered (2026-11-20).
+rm -rf "$EV"
+mkdir -p "$REPO/scripts" "$REPO/docs"
+printf 'process.exit(0)\n' > "$REPO/scripts/check-specs.mjs"
+# The .py files earlier cases left behind would make this case about them too.
+mv "$REPO/backend" "$REPO/.backend-aside"
+seed docs/a-page.mdx 'text'
+rc=$(run false)
+[ "$rc" = "2" ] || fail "a docs change with no evidence was not blocked (got $rc)"
+produce_evidence docs/a-page.mdx
+rc=$(run false)
+[ "$rc" = "0" ] || fail "a docs-only change could not be satisfied (got $rc): $(cat "$TMP/err")"
+# And the record must really name it, not pass by covering nothing.
+grep -q '^covered:.*docs/a-page.mdx' "$EV/$(ls -1t "$EV" | head -1)" \
+  || fail "the record does not name the docs file it covered"
+# Editing it afterwards still invalidates the record.
+seed docs/a-page.mdx 'text, changed'
+rc=$(run false)
+[ "$rc" = "2" ] || fail "a stale docs record was still accepted (got $rc)"
+rm -f "$REPO/docs/a-page.mdx" "$REPO/scripts/check-specs.mjs"
+mv "$REPO/.backend-aside" "$REPO/backend"
+rm -rf "$EV"
+harness_set_tool ruff 0 ''
+harness_set_tool mypy 0 ''
+produce_evidence backend/app.py
+
 # ── A record that does not cover this change is not adopted ──────────
 
 produce_evidence backend/app.py          # make it fresh again

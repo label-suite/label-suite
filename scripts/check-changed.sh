@@ -130,7 +130,7 @@ esac
 . "$HERE/lib/hook-routes.sh"
 EXCLUDED_RE="$HOOK_EXCLUDED_RE"
 
-PY_FILES=(); TS_FILES=(); DOC_HITS=0; SKIPPED=0
+PY_FILES=(); TS_FILES=(); DOC_FILES=(); DOC_HITS=0; SKIPPED=0
 for cand in ${CANDIDATES+"${CANDIDATES[@]}"}; do
   [ -n "$cand" ] || continue
   case "$cand" in /*) abs="$cand" ;; *) abs="$REPO/$cand" ;; esac
@@ -166,7 +166,7 @@ for cand in ${CANDIDATES+"${CANDIDATES[@]}"}; do
   case "$(hook_route_for "$rel")" in
     py)   PY_FILES+=("$rel") ;;
     ts)   TS_FILES+=("$rel") ;;
-    docs) DOC_HITS=1 ;;
+    docs) DOC_HITS=1; DOC_FILES+=("$rel") ;;
     *)    emit_err "NA: $rel 沒有命中任何路由" ;;
   esac
 done
@@ -255,7 +255,13 @@ GIT_DIR=$(git -C "$REPO" rev-parse --git-dir 2>/dev/null)
 if [ -n "$GIT_DIR" ]; then
   case "$GIT_DIR" in /*) EV="$GIT_DIR/label-suite/evidence" ;; *) EV="$REPO/$GIT_DIR/label-suite/evidence" ;; esac
   mkdir -p "$EV"
-  covered=$(printf '%s ' ${PY_FILES+"${PY_FILES[@]}"} ${TS_FILES+"${TS_FILES[@]}"})
+  # Every file this run actually routed, not just the two code layers. H6
+  # asks for evidence covering each changed file whose route is enabled, and
+  # the docs route is always enabled -- leaving its files out meant no
+  # docs-only change could ever satisfy H6, which is how the Stop hook came to
+  # block a documentation commit on the day it was registered.
+  covered=$(printf '%s ' ${PY_FILES+"${PY_FILES[@]}"} ${TS_FILES+"${TS_FILES[@]}"} \
+                         ${DOC_FILES+"${DOC_FILES[@]}"})
   # The record has two halves. The first carries text that came from outside —
   # tool names, paths — and goes through the same masking the diagnostics do.
   # The second carries digests this checker computed itself from content that
@@ -279,7 +285,8 @@ if [ -n "$GIT_DIR" ]; then
   # that routed nothing would do. The redirect makes the empty case digest
   # empty input instead of hanging.
   if ! rec_content=$(cd "$CONTENT_ROOT" \
-       && cat ${PY_FILES+"${PY_FILES[@]}"} ${TS_FILES+"${TS_FILES[@]}"} </dev/null 2>/dev/null \
+       && cat ${PY_FILES+"${PY_FILES[@]}"} ${TS_FILES+"${TS_FILES[@]}"} \
+              ${DOC_FILES+"${DOC_FILES[@]}"} </dev/null 2>/dev/null \
        | hc_sha256 2>/dev/null); then
     emit_err "NOTE: 無法計算涵蓋檔案的指紋，本次不留證據記錄"
     rec_content=""
