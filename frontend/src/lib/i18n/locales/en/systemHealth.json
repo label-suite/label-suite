@@ -1,1 +1,21 @@
-{}
+{
+  "pageName": "System health check",
+  "eyebrow": "DEV ONLY · /dev/health",
+  "panel": {
+    "loading": "Checking the backend…",
+    "okBadge": "Healthy",
+    "okSummary": "The backend and the database are both available",
+    "service": "Service",
+    "database": "Database",
+    "checkedAt": "Checked at",
+    "traceId": "traceId",
+    "databaseUnavailable": "Database unavailable",
+    "backendError": "The backend reported an error",
+    "errorCode": "Error code",
+    "unreachableTitle": "Cannot reach the backend",
+    "unreachableHint": "No response arrived. Check that the backend is running and that <code>VITE_API_BASE_URL</code> points to it.",
+    "errorType": "Error type",
+    "noTraceId": "None (the request never arrived)",
+    "recheck": "Check again"
+  }
+}

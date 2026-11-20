@@ -242,6 +242,14 @@ export default defineConfig(
               from: { file: { categories: "test-file" } },
               allow: { to: { element: { type: "test" } } },
             },
+            // Integration tests build their QueryClient with the app's own
+            // createQueryClient (tasks 6.2, 6.3), so a test runs with the same
+            // defaults as the app. Test files never reach the bundle, and only
+            // this one app file is opened to them.
+            {
+              from: { file: { categories: "test-file" } },
+              allow: { to: { element: { type: "app", fileInternalPath: "query-client.ts" } } },
+            },
           ],
         },
       ],
