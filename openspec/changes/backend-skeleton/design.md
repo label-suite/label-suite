@@ -71,6 +71,7 @@
 
 - 訊息檔是扁平的 key 對字串（例 `"common.ok": "成功"`），在 `create_app` 時載入一次；啟動時檢查兩個語言的 key 集合相同，不同就啟動失敗，避免某個語言漏字後回出 key。
 - 文案採 api-contract §錯誤碼 表列的字串（clarification Q2、N9），`NOT_ACCEPTABLE` 的訊息兩個檔都有 key，但回應一律取 zh-TW。
+- 外層組 `message` 時從 `scope["state"]` 讀 locale，讀不到就用 zh-TW。第 4 群組還沒掛 `LocaleMiddleware`（第 5 群組才掛），所以該群組的測試一律斷言 zh-TW 文案；`Accept-Language` 的效果從第 5 群組起才測。
 - 替代方案：Babel／gettext。不採用：只有兩個語言、十個以內的字串，`.po` 編譯流程的成本大於好處；之後字串變多再評估，換法不影響對外行為。
 
 ### D6. operationId 與 OpenAPI 後處理
@@ -81,11 +82,11 @@
   - `list` 直接用路徑段的複數形：`listTasks`、`listTaskItems`。
   - `get`、`create`、`update`、`delete` 先把最後一個字單數化再接上：`getTask`、`createTaskItem`。
 - 單數化寫在 `app/core/openapi.py`，對最後一個字依序套用、命中即停：
-  1. 不規則字表（本次放 `health` → `health`，不可數、單複同形；`people` → `person`、`children` → `child`、`analyses` → `analysis` 這類字之後遇到再加進表）；
+  1. 不規則字表（本次放 `health` → `health`，不可數、單複同形；`statuses` → `status`、`buses` → `bus`，`s` 結尾的單數字加 `es`，步驟 4 不收 `ses`；`people` → `person`、`children` → `child`、`analyses` → `analysis` 這類字之後遇到再加進表）；
   2. `ss` 結尾不變（`access`、`class`）；
   3. `ies` 結尾換成 `y`（`categories` → `category`）；
-  4. `ses`、`xes`、`ches`、`shes` 結尾去掉 `es`（`statuses` → `status`、`boxes` → `box`、`batches` → `batch`）；
-  5. 其餘 `s` 結尾去掉 `s`（`tasks` → `task`）；
+  4. `sses`、`xes`、`ches`、`shes` 結尾去掉 `es`（`classes` → `class`、`boxes` → `box`、`batches` → `batch`、`dishes` → `dish`）；
+  5. 其餘 `s` 結尾去掉 `s`（`tasks` → `task`；`responses` → `response`、`cases` → `case`、`databases` → `database`、`phases` → `phase` 也落在這一步）；
   6. 不以 `s` 結尾的字不變。
 - unit 測試以對照表斷言 spec `api-schema-export`「操作識別名依方法與回應形狀決定動詞」的六條（`listTasks`、`getTask`、`createTask`、`updateTask`、`deleteTask`、`getHealth`），並逐條涵蓋上面六個步驟各一個字。替代方案 `inflect` 套件不採用：五條規則加一張表就夠，多一個依賴不值得；規則猜錯的字會在撞名檢查或 code review 時現形，修法是補一筆不規則字。
 - 覆寫 `app.openapi`：先呼叫 FastAPI 的 `get_openapi`，再做兩件後處理——把每個 `422` 回應的 schema 換成 `ErrorResponse` 的參照，刪除 `components.schemas` 的 `HTTPValidationError` 與 `ValidationError`。結果快取在 `app.openapi_schema`，執行期的 `/openapi.json` 與匯出指令取得同一份。
