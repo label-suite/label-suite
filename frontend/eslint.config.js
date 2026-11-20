@@ -196,6 +196,13 @@ export default defineConfig(
                 },
               },
             },
+            // The src/main.tsx entry belongs to the app layer (system-design
+            // §目錄結構) but is classified as a file, not as the app element, so
+            // its imports of src/app/ (App, createAppRouter) are allowed here.
+            {
+              from: { file: { categories: "app-entry" } },
+              allow: { to: { element: { type: "app" } } },
+            },
             // pages use a feature only through its public index.ts.
             {
               from: { element: { type: "pages" } },
