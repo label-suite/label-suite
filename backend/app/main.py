@@ -30,6 +30,7 @@ from app.core.openapi import (
     install_openapi,
 )
 from app.core.schemas import ErrorResponse
+from app.modules.health.router import router as health_router
 
 __all__ = ["API_V1_ERROR_RESPONSES", "API_V1_PREFIX", "create_api_router", "create_app"]
 
@@ -75,7 +76,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     Returns:
         The app with the four middlewares, the exception handlers, the
-        ``/api/v1`` router and the post-processed ``app.openapi`` installed;
+        ``/api/v1`` router with the health module mounted, and the
+        post-processed ``app.openapi`` installed;
         ``info.version`` is ``[project].version`` of ``pyproject.toml``. The
         database engine is created by the lifespan, not here, so building the
         app opens no connection.
@@ -113,7 +115,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(CorrelationIdMiddleware)
 
     register_exception_handlers(app)
-    app.include_router(create_api_router())
+    api = create_api_router()
+    api.include_router(health_router)
+    app.include_router(api)
     assert_unique_operation_ids(app)
     install_openapi(app)
     return app
