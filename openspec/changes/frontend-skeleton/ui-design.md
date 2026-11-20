@@ -213,6 +213,7 @@ F8 的例外依據：這是 F8「四種畫面狀態」在本頁的明文例外�
 | 錯誤（淺底版）     | `--color-error`、`-bg`、`-border`                                               | 資料庫無法連線的提示、Badge error、Alert error、輸入框驗證錯誤的外框與訊息（shadcn 的 `--destructive` 只有實心一種） |
 | 資訊               | `--color-info`、`-bg`、`-border`                                                | Badge info、Alert info                                                                                               |
 | 中性徽章           | `--color-border-muted`（底）、`--color-border`（框）、`--color-ink-muted`（字） | Badge neutral                                                                                                        |
+| 空狀態面板底色     | `--color-slate-50`（語意變數 `--surface-subtle`）                               | Empty State 樣本的底色（Q17）                                                                                        |
 | 停用的控制項底色   | `--color-slate-50`                                                              | 停用的 outline 按鈕、停用的輸入框（取最接近的既有 token，Q17）                                                       |
 | 卡片陰影           | `--shadow-card`                                                                 | 健康檢查卡片、Card 樣本                                                                                              |
 
@@ -246,19 +247,20 @@ F8 的例外依據：這是 F8「四種畫面狀態」在本頁的明文例外�
 
 Q17：間距與字級取最近的刻度，顏色用語意最接近的既有 token；不寫死值、不加新 token。畫面與 artifact 差 1–2px，維護者已接受。
 
-| artifact 的值                | 實際用                                                                                 | 偏離                                                                    |
-| :--------------------------- | :------------------------------------------------------------------------------------- | :---------------------------------------------------------------------- |
-| 間距 6px                     | `--space-sm`（8px）                                                                    | +2px                                                                    |
-| 間距 10px                    | `--space-sm`（8px）                                                                    | -2px                                                                    |
-| 間距 12px                    | `--space-md`（16px）                                                                   | +4px；若該處是元件內部緊貼的間距則取 `--space-sm`，以不改變層級關係為準 |
-| 間距 14px                    | `--space-md`（16px）                                                                   | +2px                                                                    |
-| 間距 20px                    | `--space-lg`（24px）                                                                   | +4px                                                                    |
-| 字級 13px                    | `--text-label`（12px）                                                                 | -1px                                                                    |
-| 字級 15px                    | `--text-caption`（14px）                                                               | -1px                                                                    |
-| 停用按鈕與停用欄位的明確底色 | `--color-slate-50` 加停用文字色 `--color-ink-muted`（不採正典 Button 的 `opacity .4`） | 與正典 Button 不同；沿用 artifact 的做法，用既有 token                  |
-| 骨架條顏色                   | `--color-border`（正典 Skeleton）                                                      | 比 artifact 略深                                                        |
-| 空狀態虛線框                 | `--color-border`（正典空狀態面板），底 `--color-slate-50`                              | artifact 的值等於 `--color-border-hover`，語意是次要鈕 hover 外框，不採 |
-| 測試示意的淺紅色             | 不適用                                                                                 | 測試示意不上頁面（UI-4）                                                |
+| artifact 的值                | 實際用                                                                                                            | 偏離                                                                    |
+| :--------------------------- | :---------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------- |
+| 間距 6px                     | `--space-sm`（8px）                                                                                               | +2px                                                                    |
+| 間距 10px                    | `--space-sm`（8px）                                                                                               | -2px                                                                    |
+| 間距 12px                    | `--space-md`（16px）                                                                                              | +4px；若該處是元件內部緊貼的間距則取 `--space-sm`，以不改變層級關係為準 |
+| 間距 14px                    | `--space-md`（16px）                                                                                              | +2px                                                                    |
+| 間距 20px                    | `--space-lg`（24px）                                                                                              | +4px                                                                    |
+| 字級 13px                    | `--text-label`（12px）                                                                                            | -1px                                                                    |
+| 字級 15px                    | `--text-caption`（14px）                                                                                          | -1px                                                                    |
+| 停用按鈕與停用欄位的明確底色 | `--color-slate-50` 加停用文字色 `--color-ink-muted`（不採正典 Button 的 `opacity .4`）                            | 與正典 Button 不同；沿用 artifact 的做法，用既有 token                  |
+| 骨架條顏色                   | `--color-border`（正典 Skeleton）                                                                                 | 比 artifact 略深                                                        |
+| 空狀態虛線框                 | `--color-border`（正典空狀態面板），底 `--color-slate-50`（經 `--surface-subtle`）                                | artifact 的值等於 `--color-border-hover`，語意是次要鈕 hover 外框，不採 |
+| 輸入框尺寸                   | 高 44px（`h-11`）、左右 12px（`px-3`）、字級 `--text-caption`（14px），依核准 artifact `Gallery.dc.html` 的輸入框 | 依 artifact，不取 shadcn 預設的 `h-9`（36px）與 `--text-body`（16px）   |
+| 測試示意的淺紅色             | 不適用                                                                                                            | 測試示意不上頁面（UI-4）                                                |
 
 ### 圖示
 

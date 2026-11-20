@@ -56,6 +56,7 @@
 
 - 「測試檔」的定義在規則檔中只寫一次、各條規則共用：`**/*.test.ts`、`**/*.test.tsx`、`src/test/**`、`vitest.config.ts`。產品碼是這組 glob 以外的 `src/**` 與 `build/**`。
 - 測試檔對 `app` 層的唯一放行：測試檔（上面那組 glob）可以 import `src/app/query-client.ts`，讓整合測試以正式的 `createQueryClient()` 建 client、與正式執行同一組預設（6.2、6.3）；`app` 的其他檔案仍不開放，產品碼的 `features`、`pages` 仍不得 import `app`。測試檔不進 bundle，所以不影響 F1 對產品碼的約束（apply 第 6 組補上）。
+- `react-refresh/only-export-components` 以 `allowExportNames` 放行 D9 要求 `components/ui` 匯出的七個名稱（`alertVariants`、`alertVariantValues`、`badgeVariants`、`badgeVariantValues`、`buttonVariants`、`buttonVariantValues`、`buttonSizeValues`），lint 才能零警告；`build/eslint-config.test.ts` 斷言規則仍對 `components/ui` 開啟，且對 alert、badge、button 不報任何訊息。
 - 每條規則都附一個「故意違規」的驗證：在 apply 時以暫存檔確認 lint 會失敗再刪除，不留違規檔進版控。
 - 對應：system-design.md §分層與允許的 import、§額外的 ESLint 規則；frontend-agent-rules F1、F2、F3、F10；clarification Q6、Q16。
 
@@ -119,7 +120,8 @@
 
 apply 時落定的細節：
 
-- `theme.css` 除 ui-design.md 兩張對照表列的變數外，另有原語實際用到的語意變數：`--destructive-foreground`、`--cta-foreground`、`--cta-hover`、`--primary-border`、`--success`／`--warning`／`--error`／`--info` 各自的 `-bg` 與 `-border`、`--error`、`--control-disabled`、`--card-shadow`，一樣只指向 tokens.css 的變數名。
+- `theme.css` 除 ui-design.md 兩張對照表列的變數外，另有原語實際用到的語意變數：`--destructive-foreground`、`--cta-foreground`、`--cta-hover`、`--primary-border`、`--success`／`--warning`／`--error`／`--info` 各自的 `-bg` 與 `-border`、`--error`、`--control-disabled`、`--surface-subtle`（空狀態面板的底色，指向 `--color-slate-50`，`@theme inline` 接成 `--color-surface-subtle`，Empty 用 `bg-surface-subtle`）、`--card-shadow`，一樣只指向 tokens.css 的變數名。
+- `index.css` 在引入 `theme.css` 之前以 `@theme { --color-*: initial; }` 關掉 Tailwind 的預設色盤，`bg-white`、`bg-slate-50` 這類色盤 class 不再產生，只剩對照層的語意色（F6）。`theme.test.ts` 以 `tailwindcss` 的 `compile` 實際編譯 `index.css`，斷言色盤 class 與 `--color-white` 等預設變數沒有產生、語意 class 仍會產生。
 - `html[data-theme="dark"]` 區塊保留但為空：tokens.css 在深色下已重新定義同名 token，現有語意變數照原對照即跟著換；只有深色要指向「不同 token」的語意變數才寫進這裡，ui-design.md 目前沒有這種變數。
 - Skeleton 的骨架條用 `bg-border`（`--border`），不用 `bg-muted`。
 - Vitest 預設把所有 CSS import（含 `?raw`）清成空字串，所以 `vitest.config.ts` 設 `css: { include: [/\.css\?raw$/] }`，讓讀文字的測試（`theme.test.ts`、展示頁的 Token 對照）拿到真內容，一般 CSS import 仍為空。
@@ -154,7 +156,7 @@ apply 時落定的細節：
 
 對應是多對一：`skeleton.tsx` 與 `empty.tsx` 共用「Skeleton · Empty」區塊（ui-design.md §元件樹 `/dev/gallery` 的 `#states`）。`tokens` 區塊沒有對應的原語檔案，不在表內。這張表放在測試檔中，是新增原語時唯一要同步的地方。
 
-`data-gallery-item` 實際使用的維度：Button 為 `button:variant:<v>`、`button:size:<v>`、`button:state:<v>`；Input 為 `input:state:<v>`；Badge、Alert 為 `<component>:variant:<v>`；Card 為 `card:part:header|content|footer`；沒有 variant 的 Skeleton、Empty 各一個樣本 `skeleton:sample:lines`、`empty:sample:panel`。Button、Badge、Alert、Input 的樣本可見文字是值名稱；Card、Skeleton、Empty 的可見文字是樣本內容（標題、說明文字），不是值名稱。目錄的 `catalogEntries` 以 `Object.entries<Demo>(demos) as [Value, Demo][]` 收回鍵型別（`Object.entries` 的鍵一律是 `string`，目錄本身已由 `satisfies` 綁定）。
+`data-gallery-item` 實際使用的維度：Button 為 `button:variant:<v>`、`button:size:<v>`、`button:state:<v>`；Input 為 `input:state:<v>`；Badge、Alert 為 `<component>:variant:<v>`；Card 為 `card:part:header|content|footer`；沒有 variant 的 Skeleton、Empty 各一個樣本 `skeleton:sample:lines`、`empty:sample:panel`。Button、Badge、Alert、Input 的樣本可見文字是值名稱；Card、Skeleton、Empty 的可見文字是樣本內容（標題、說明文字），不是值名稱。Alert 樣本傳 `role="note"`：靜態樣本不是訊息，不該在載入時讓螢幕閱讀器逐一朗讀；Alert 原語本身的預設仍是 `role="alert"`。目錄的 `catalogEntries` 以 `Object.entries<Demo>(demos) as [Value, Demo][]` 收回鍵型別（`Object.entries` 的鍵一律是 `string`，目錄本身已由 `satisfies` 綁定）。
 
 Token 對照的色塊用靜態的語意 class（每列對照到固定的 `bg-*` class），不以字串組出 class 名稱，因為 Tailwind 只產生原始碼中完整出現的 class；解析 `theme.css` 的是 `pages/dev-gallery/theme-mapping.ts` 的 `parseApprovedMappings`。左側目錄連結在 `location.hash` 等於該錨點時設 `aria-current="location"`，網址沒有 hash 時沒有任何連結標示。
 
@@ -171,7 +173,7 @@ Vitest 用 jsdom；`vitest.config.ts` 的 `test.env` 設 `VITE_API_BASE_URL=http
 apply 時落定的測試細節：
 
 - `credentials: 'include'` 以 `vi.spyOn(globalThis, "fetch")` 讀 `fetch` 收到的 init 斷言：MSW 攔截後重建的 `Request` 不保留 credentials 模式，在 handler 內讀不到。
-- `api/generated-contract.test.ts` 自建 `new QueryClient({ defaultOptions: { queries: { retry: false } } })`，不 import `app/query-client.ts`（寫這個測試時 F1 還不允許 `api` → `app`；之後 D3 已放行測試檔 import `app/query-client.ts`）。
+- `api/generated-contract.test.ts` 與其他整合測試一樣以 `createQueryClient()` 建 client（D3 放行測試檔 import `app/query-client.ts`），與正式執行同一組預設。
 - 401、403 的測試用 `TEST_PLACEHOLDER_401`、`TEST_PLACEHOLDER_403` 當錯誤碼：`openapi.json` 目前沒有這兩個狀態的錯誤碼，佔位值保留到 01-01 定義錯誤碼為止，屆時換成正式值。
 
 `test:coverage` 以 `@vitest/coverage-v8` 產報告，排除 `src/api/generated/`、`src/test/`、設定檔，不設門檻；第一次數字記進 `acceptance.md`。
