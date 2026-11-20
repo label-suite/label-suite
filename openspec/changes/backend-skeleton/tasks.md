@@ -49,7 +49,7 @@
 
 ## 9. 雙資料庫整合驗證
 
-- [ ] 9.1 在 SQLite 執行 `uv run pytest --cov=app --cov-report=term-missing`，記下 skipped 數量；以 `docker run --rm -d --name label-suite-pg-504 -p 55432:5432 -e POSTGRES_PASSWORD=postgres postgres:16` 起暫時的 PostgreSQL，設定 `TEST_DATABASE_URL=postgresql+asyncpg://postgres:postgres@127.0.0.1:55432/postgres` 後再執行一次同一指令，確認兩次都通過、PostgreSQL 那次 0 skipped；跑完以 `docker stop label-suite-pg-504` 停掉容器（`--rm` 隨即刪除），測試失敗時也要停。再執行 `uv run ruff check .`、`uv run ruff format --check .`、`uv run mypy --strict app`，以及 `uv run python -m app.scripts.export_openapi && git diff --exit-code -- openapi.json && test -z "$(git status --porcelain -- openapi.json)"`。把每條指令、兩次 pytest 摘要（含 skipped 數量）與覆蓋率數字交給 `acceptance-verifier` 寫進 `acceptance.md`（不設覆蓋率門檻，clarification Q5、Q8）。驗證：上述指令全部以 0 結束，`docker ps -a --filter name=label-suite-pg-504` 沒有輸出，且 `git status` 乾淨 [@backend-developer]
+- [x] 9.1 在 SQLite 執行 `uv run pytest --cov=app --cov-report=term-missing`，記下 skipped 數量；以 `docker run --rm -d --name label-suite-pg-504 -p 55432:5432 -e POSTGRES_PASSWORD=postgres postgres:16` 起暫時的 PostgreSQL，設定 `TEST_DATABASE_URL=postgresql+asyncpg://postgres:postgres@127.0.0.1:55432/postgres` 後再執行一次同一指令，確認兩次都通過、PostgreSQL 那次 0 skipped；跑完以 `docker stop label-suite-pg-504` 停掉容器（`--rm` 隨即刪除），測試失敗時也要停。再執行 `uv run ruff check .`、`uv run ruff format --check .`、`uv run mypy --strict app`，以及 `uv run python -m app.scripts.export_openapi && git diff --exit-code -- openapi.json && test -z "$(git status --porcelain -- openapi.json)"`。把每條指令、兩次 pytest 摘要（含 skipped 數量）與覆蓋率數字交給 `acceptance-verifier` 寫進 `acceptance.md`（不設覆蓋率門檻，clarification Q5、Q8）。驗證：上述指令全部以 0 結束，`docker ps -a --filter name=label-suite-pg-504` 沒有輸出，且 `git status` 乾淨 [@backend-developer]
 
 ## Workflow follow-up
 
