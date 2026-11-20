@@ -185,6 +185,7 @@ Query（`PaginationParams`）：
 | `PaginatedResponse[X]`                                     | `XPage`                           | `TaskItemPage`              |
 | `ErrorResponse`                                            | `ErrorResponse`（全專案共用一個） | —                           |
 | `ErrorDetail`、其他 `ResponseModel`／`RequestModel` 子類別 | 類別名本身                        | `ErrorDetail`、`HealthData` |
+| 欄位型別用的 `StrEnum` 子類別                              | 類別名本身                        | `HealthStatus`              |
 
 - 在一處產生，不逐個 schema 指定（維護者 2026-11-20 裁定）：覆寫 `model_parametrized_name` 產生元件的 `title`；`app/core/openapi.py` 的 `app.openapi` 覆寫（與改寫 `422` 同一處）把每個泛型元件的鍵改成它的 `title`，並改寫所有指向它的 `$ref`。只覆寫 `model_parametrized_name` 不會改元件鍵（pydantic 2.14.4／fastapi 0.165.0 上仍是 `ApiResponse_HealthData_`）。
 - 改名後的鍵與既有元件撞名時，產生 OpenAPI 直接失敗，不覆蓋、不自動加後綴（`create_app` 不呼叫 `app.openapi()`，所以不會讓啟動失敗；失敗的是匯出指令（非零結束、不寫檔）與第一次請求 `/openapi.json`，CI 的 drift 檢查會攔下）。
@@ -225,14 +226,15 @@ Query（`PaginationParams`）：
 
 ### Response
 
-`200`，外層的 `code` 為 `"OK"`，`data` 為 `HealthData`（元件名 `HealthData`，外層 `HealthDataResponse`）：
+`200`，外層的 `code` 為 `"OK"`，`data` 為 `HealthData`（元件名 `HealthData`，外層 `HealthDataResponse`）。兩個欄位共用具名元件 `HealthStatus`（`type: string`、`enum: ["ok"]`），各自以 `$ref: #/components/schemas/HealthStatus` 參照，不是各自內嵌的字串 enum：
 
-| 欄位       | JSON 型別             | nullable | 說明                                                                                          |
-| :--------- | :-------------------- | :------- | :-------------------------------------------------------------------------------------------- |
-| `status`   | string，enum `["ok"]` | 否       | 服務本身可以處理請求                                                                          |
-| `database` | string，enum `["ok"]` | 否       | 資料庫可以連線（實際執行一次 `SELECT 1`，clarification Q3）；連不上時不會是 `200`，而是 `503` |
+| 欄位       | JSON 型別      | nullable | 說明                                                                                          |
+| :--------- | :------------- | :------- | :-------------------------------------------------------------------------------------------- |
+| `status`   | `HealthStatus` | 否       | 服務本身可以處理請求                                                                          |
+| `database` | `HealthStatus` | 否       | 資料庫可以連線（實際執行一次 `SELECT 1`，clarification Q3）；連不上時不會是 `200`，而是 `503` |
 
 - 兩個欄位目前只有一個值，是為了讓前端與之後的擴充有穩定的形狀；之後要加 `"degraded"` 之類的值屬 A10 的破壞性變更（enum 擴充會改變產生的 TypeScript 型別）。
+- `HealthStatus` 是後端 `app/modules/health/schemas.py` 的 `StrEnum`（唯一成員 `OK = "ok"`），兩個欄位共用；Orval 因此產生一個具名的 enum 型別 `HealthStatus`，前端以它判斷兩個欄位（維護者 2026-11-20 裁定）。不用 `Literal["ok"]`：pydantic 2.14 對它輸出 `const` 而不是 `enum`。`HealthStatus` 改名或加值都屬 A10 的破壞性變更。
 - **不回傳**資料庫的類型（SQLite 或 PostgreSQL）、版本、主機名、連線字串、應用版號：這是公開端點，這些資訊只對攻擊者有用。
 - 範例（`Accept-Language: en`）：
 

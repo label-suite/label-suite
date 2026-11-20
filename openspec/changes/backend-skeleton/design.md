@@ -109,6 +109,7 @@
   - 替代方案 (b)：每個端點手寫具名子類別（`class HealthDataResponse(ApiResponse[HealthData]): ...`）。不採用：每加一個端點都要多寫一個空殼類別，忘記寫就會漏出 `ApiResponse_X_` 鍵，靠人記得不如在產生端統一處理。
   - 撞名檢查與 operationId 的 `assert_unique_operation_ids` 同一原則：衝突時大聲失敗，不靠後寫入者覆蓋。
 - `backend/openapi.json` 的格式由匯出指令決定（`sort_keys`、縮排 2、結尾換行），不由 Prettier 決定：把它加進根目錄 `.prettierignore`，註解寫明「匯出指令產生的檔案，格式由匯出指令負責」。不加的話，lint-staged 的 `*.json` 規則與 CI 的 `format` job 會把它改寫成 Prettier 的格式（例如短陣列收成一行），D12 的漂移比對與格式檢查就不可能同時通過。替代方案「讓匯出指令輸出 Prettier 的格式」不採用：匯出指令得依賴 Node 工具鏈，`backend/` 的檢查就不能只靠 `uv`。
+- `backend/.venv/`、`backend/.pytest_cache/`、`backend/.mypy_cache/`、`backend/.ruff_cache/` 也加進根目錄 `.prettierignore`：它們只列在 `backend/.gitignore`，Prettier 只讀根目錄的 `.gitignore` 與 `.prettierignore`，不加的話 `uv sync` 後根目錄的 `prettier --check .` 會掃進虛擬環境與快取而失敗（維護者裁定 2026-11-20，tasks 6.4）。
 
 ### D7. 設定的解析
 
