@@ -70,6 +70,7 @@ const EXPECTED_LIGHT_MAPPING: Record<string, string> = {
   "--muted-foreground": "var(--color-ink-muted)",
   "--accent": "var(--color-primary-soft-bg)",
   "--accent-foreground": "var(--color-primary-strong)",
+  "--destructive-foreground": "var(--color-on-cta)",
   "--border": "var(--color-border)",
   "--ring": "var(--color-primary)",
   // Semantics shadcn has no variable for.

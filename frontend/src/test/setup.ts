@@ -6,6 +6,7 @@
  */
 import "@testing-library/jest-dom/vitest";
 
+import { cleanup } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll, beforeEach } from "vitest";
 
 import { i18n, initI18n } from "@/lib/i18n";
@@ -24,6 +25,9 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
+  // Vitest runs without globals, so Testing Library cannot register its own
+  // automatic cleanup; unmount every rendered tree here instead.
+  cleanup();
   server.resetHandlers();
 });
 
