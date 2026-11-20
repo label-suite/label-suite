@@ -56,7 +56,7 @@ gh project item-list 1 --owner label-suite --limit 400 --format json \
   -q '.items[]|select(.content.number==<N>)|.status'
 ```
 
-`state` 必須是 `OPEN`，Status 不能是 Done。新認領的還要是 Ready；In Progress 的照步驟 2 判斷是不是重入。任何一項不符，就停下來回報維護者，不動卡片、不留言。
+`state` 必須是 `OPEN`。新認領的 Status 必須是 Ready；In Progress 或 In Review 的，照步驟 2 依最後一則檢查點留言判斷是不是重入。Todo、Done、已關閉，或第二個指令沒有輸出（issue 不在看板上），都算不符，就停下來回報維護者，不動卡片、不留言。
 
 ## 步驟 2 撞車檢查
 
