@@ -157,6 +157,15 @@ class MessageCatalog:
         """Return the message keys, identical for every locale."""
         return frozenset(self._messages[DEFAULT_LOCALE])
 
+    def effective_locale(self, locale: object) -> str:
+        """Return ``locale`` when it is a supported locale, otherwise ``DEFAULT_LOCALE``.
+
+        Envelope builders pass whatever the request scope holds (possibly
+        nothing), so a request that never went through locale resolution still
+        gets a zh-TW message.
+        """
+        return locale if isinstance(locale, str) and locale in self._messages else DEFAULT_LOCALE
+
     def translate(self, key: str, locale: str, params: Mapping[str, str] | None = None) -> str:
         """Return the message for ``key`` in ``locale`` with ``params`` filled in.
 

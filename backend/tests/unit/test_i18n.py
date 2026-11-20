@@ -199,6 +199,21 @@ def test_translate_unknown_key_raises_key_error() -> None:
         MessageCatalog.load().translate("common.no_such_key", "en")
 
 
+@pytest.mark.parametrize(
+    ("locale", "expected"),
+    [
+        ("en", "en"),
+        ("zh-TW", "zh-TW"),
+        (None, "zh-TW"),
+        ("fr", "zh-TW"),
+        ("EN", "zh-TW"),
+        (1, "zh-TW"),
+    ],
+)
+def test_effective_locale_falls_back_to_the_default(locale: object, expected: str) -> None:
+    assert MessageCatalog.load().effective_locale(locale) == expected
+
+
 # --- AppError family ------------------------------------------------------------------
 
 
