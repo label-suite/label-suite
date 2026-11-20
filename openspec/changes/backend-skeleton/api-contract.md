@@ -110,15 +110,15 @@
 
 第一批通用錯誤碼：
 
-| HTTP  | `code`                 | 觸發條件                                                                                             | `message`（zh-TW／en，clarification Q2、N9）                                                     |
-| :---- | :--------------------- | :--------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------- |
-| `200` | `OK`                   | 成功（成功外層用）                                                                                   | 成功／Success                                                                                    |
-| `404` | `NOT_FOUND`            | `/api/v1` 底下的路徑不存在；之後也用於「資源不存在」與「刻意隱藏」，三者訊息相同，不洩漏存在與否     | 找不到指定的資源／The requested resource was not found.                                          |
-| `405` | `METHOD_NOT_ALLOWED`   | 路徑存在但 method 不支援；保留 `Allow` 標頭                                                          | 不支援這個操作／This operation is not supported.                                                 |
-| `406` | `NOT_ACCEPTABLE`       | `Accept-Language` 列出的語言全部不支援或都被 `q=0` 拒絕（clarification Q2）                          | 不支援所要求的語言（一律 zh-TW，因為沒有可接受的語言）                                           |
-| `422` | `VALIDATION_FAILED`    | path、query、header 或 body 的 schema 驗證失敗，含未知 body 欄位（`extra="forbid"`）與 JSON 格式錯誤 | 輸入資料有誤，請檢查標示的欄位／Some fields are invalid. Please check the highlighted fields.    |
-| `500` | `INTERNAL_ERROR`       | 未處理的例外，含回應 schema 驗證失敗                                                                 | 系統發生錯誤，請稍後再試／Something went wrong. Please try again later.                          |
-| `503` | `DATABASE_UNAVAILABLE` | 資料庫連不上或連線逾時（PostgreSQL 5 秒，clarification Q3）                                          | 資料庫暫時無法連線，請稍後再試／The database is temporarily unavailable. Please try again later. |
+| HTTP  | `code`                 | 觸發條件                                                                                                                                                                      | `message`（zh-TW／en，clarification Q2、N9）                                                                                                                                                    |
+| :---- | :--------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `200` | `OK`                   | 成功（成功外層用）                                                                                                                                                            | 成功／Success                                                                                                                                                                                   |
+| `404` | `NOT_FOUND`            | `/api/v1` 底下的路徑不存在；之後也用於「資源不存在」與「刻意隱藏」，三者訊息相同，不洩漏存在與否                                                                              | 找不到指定的資源／The requested resource was not found.                                                                                                                                         |
+| `405` | `METHOD_NOT_ALLOWED`   | 路徑存在但 method 不支援；保留 `Allow` 標頭                                                                                                                                   | 不支援這個操作／This operation is not supported.                                                                                                                                                |
+| `406` | `NOT_ACCEPTABLE`       | `Accept-Language` 列出的語言全部不支援或都被 `q=0` 拒絕（clarification Q2）                                                                                                   | 不支援所要求的語言／The requested language is not supported.（`406` 的 body 一律用 zh-TW，因為沒有可接受的語言；en 字串不會出現在任何回應 body，只為了兩份 `messages.json` 的鍵集合一致而存在） |
+| `422` | `VALIDATION_FAILED`    | path、query、header 或 body 的 schema 驗證失敗，含未知 body 欄位（`extra="forbid"`）、用 snake_case 欄位名送出的欄位（請求只認 camelCase alias，#503 裁定 3）與 JSON 格式錯誤 | 輸入資料有誤，請檢查標示的欄位／Some fields are invalid. Please check the highlighted fields.                                                                                                   |
+| `500` | `INTERNAL_ERROR`       | 未處理的例外，含回應 schema 驗證失敗                                                                                                                                          | 系統發生錯誤，請稍後再試／Something went wrong. Please try again later.                                                                                                                         |
+| `503` | `DATABASE_UNAVAILABLE` | 資料庫連不上或連線逾時（PostgreSQL 5 秒，clarification Q3）                                                                                                                   | 資料庫暫時無法連線，請稍後再試／The database is temporarily unavailable. Please try again later.                                                                                                |
 
 本次不定義、由之後的 change 加入的：`400`（語意或應用規則錯誤，與 `422` 分開，A7）、`401`、`403`、`409`。`401`、`403`、CSRF 失敗由規格 01-01 登入定義。
 
@@ -178,13 +178,13 @@ Query（`PaginationParams`）：
 
 元件命名（clarification Q8、N3）：
 
-| Python 型別                           | OpenAPI 元件名                    | 例                          |
-| :------------------------------------ | :-------------------------------- | :-------------------------- |
-| `ApiResponse[X]`                      | `XResponse`                       | `HealthDataResponse`        |
-| `ApiResponse[PaginatedResponse[X]]`   | `XPageResponse`                   | `TaskItemPageResponse`      |
-| `PaginatedResponse[X]`                | `XPage`                           | `TaskItemPage`              |
-| `ErrorResponse`                       | `ErrorResponse`（全專案共用一個） | —                           |
-| `ErrorDetail`、其他 `ApiModel` 子類別 | 類別名本身                        | `ErrorDetail`、`HealthData` |
+| Python 型別                                                | OpenAPI 元件名                    | 例                          |
+| :--------------------------------------------------------- | :-------------------------------- | :-------------------------- |
+| `ApiResponse[X]`                                           | `XResponse`                       | `HealthDataResponse`        |
+| `ApiResponse[PaginatedResponse[X]]`                        | `XPageResponse`                   | `TaskItemPageResponse`      |
+| `PaginatedResponse[X]`                                     | `XPage`                           | `TaskItemPage`              |
+| `ErrorResponse`                                            | `ErrorResponse`（全專案共用一個） | —                           |
+| `ErrorDetail`、其他 `ResponseModel`／`RequestModel` 子類別 | 類別名本身                        | `ErrorDetail`、`HealthData` |
 
 - 由覆寫 `model_parametrized_name` 在一處產生，不逐個 schema 指定。
 - 元件名決定 Orval 產生的 TypeScript 型別名，被前端使用之後改名屬 A10 的破壞性變更。
@@ -260,16 +260,16 @@ Query（`PaginationParams`）：
 
 ### 錯誤
 
-| HTTP  | `code`                 | 觸發條件                                                                                                               |
-| :---- | :--------------------- | :--------------------------------------------------------------------------------------------------------------------- |
-| `401` | —                      | 不適用：公開端點                                                                                                       |
-| `403` | —                      | 不適用：公開端點                                                                                                       |
-| `404` | —                      | 不適用：路徑固定、沒有資源識別碼                                                                                       |
-| `405` | `METHOD_NOT_ALLOWED`   | 用 `GET` 以外的 method 呼叫（`HEAD` 依 FastAPI 預設不自動支援，同樣回 `405`）                                          |
-| `406` | `NOT_ACCEPTABLE`       | `Accept-Language` 全部被拒（clarification Q2）                                                                         |
-| `422` | —                      | 不適用：沒有任何被驗證的輸入                                                                                           |
-| `500` | `INTERNAL_ERROR`       | 未處理的例外；`message` 為通用訊息，不含堆疊或例外內容                                                                 |
-| `503` | `DATABASE_UNAVAILABLE` | 資料庫連不上或逾時（PostgreSQL 連線逾時 5 秒）；`data` 為 `null`，`message` 不含驅動錯誤或連線字串（clarification Q3） |
+| HTTP  | `code`                 | 觸發條件                                                                                                                                                                      |
+| :---- | :--------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `401` | —                      | 不適用：公開端點                                                                                                                                                              |
+| `403` | —                      | 不適用：公開端點                                                                                                                                                              |
+| `404` | —                      | OpenAPI 裡會出現：由 `/api/v1` 父 router 的預設回應宣告（見 [§OpenAPI 元件命名與 `openapi.json`](#openapi-元件命名與-openapijson)）。實際上不會觸發：路徑固定、沒有資源識別碼 |
+| `405` | `METHOD_NOT_ALLOWED`   | 用 `GET` 以外的 method 呼叫（`HEAD` 依 FastAPI 預設不自動支援，同樣回 `405`）                                                                                                 |
+| `406` | `NOT_ACCEPTABLE`       | `Accept-Language` 全部被拒（clarification Q2）                                                                                                                                |
+| `422` | —                      | 不適用：沒有任何被驗證的輸入                                                                                                                                                  |
+| `500` | `INTERNAL_ERROR`       | 未處理的例外；`message` 為通用訊息，不含堆疊或例外內容                                                                                                                        |
+| `503` | `DATABASE_UNAVAILABLE` | 資料庫連不上或逾時（PostgreSQL 連線逾時 5 秒）；`data` 為 `null`，`message` 不含驅動錯誤或連線字串（clarification Q3）                                                        |
 
 ## 新發現的待決問題
 

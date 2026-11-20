@@ -15,16 +15,16 @@ backend/
 ├─ pyproject.toml               uv 專案；依賴一律 uv add（Hard Rule 3）
 ├─ alembic.ini                  script_location、檔名模板
 ├─ alembic/
-│  ├─ env.py                    async 執行；URL 與 app 共用同一個推導函式
+│  ├─ env.py                    async 執行；只讀 DatabaseSettings，URL 與 app 共用同一個推導函式
 │  ├─ script.py.mako
 │  └─ versions/                 空的基準遷移（clarification Q8）
 ├─ openapi.json                 匯出的介面描述檔，提交進 repo（clarification Q8、N2）
 ├─ app/
 │  ├─ main.py                   create_app(settings) 組裝入口；uvicorn 以 --factory 啟動
 │  ├─ core/                     全站共用，不屬任何業務模組
-│  │  ├─ config.py              Settings（B10 的唯一設定入口）
+│  │  ├─ config.py              DatabaseSettings、Settings、load_settings、ConfigError（B10 的唯一設定入口）
 │  │  ├─ db.py                  engine、sessionmaker、get_db、Base 與命名慣例
-│  │  ├─ schemas.py             ApiModel、ApiResponse、ErrorResponse、ErrorDetail、PaginatedResponse、PaginationParams
+│  │  ├─ schemas.py             ApiModel、RequestModel、ResponseModel、ApiResponse、ErrorResponse、ErrorDetail、PaginatedResponse、PaginationParams
 │  │  ├─ envelope.py            成功與錯誤外層的組裝函式
 │  │  ├─ errors.py              AppError 家族與 exception handler 註冊
 │  │  ├─ middleware.py          CorrelationIdMiddleware、LocaleMiddleware、UnhandledExceptionMiddleware
@@ -98,6 +98,14 @@ classDiagram
   }
 
   class ApiModel {
+    <<schema base>>
+    +model_config: ConfigDict
+  }
+  class RequestModel {
+    <<schema base>>
+    +model_config: ConfigDict
+  }
+  class ResponseModel {
     <<schema base>>
     +model_config: ConfigDict
   }
@@ -184,18 +192,29 @@ classDiagram
     +translate(key: str, locale: str, params: dict) str
   }
 
-  class Settings {
+  class DatabaseSettings {
     <<config>>
     +database_url: Optional~str~
     +sqlite_path: Path
-    +cors_allowed_origins: list~str~
-    +cors_allow_credentials: bool
     +async_database_url() str
     +is_lite() bool
   }
+  class Settings {
+    <<config>>
+    +cors_allowed_origins: list~str~
+    +cors_allow_credentials: bool
+  }
+  class ConfigLoader {
+    <<module>>
+    +load_settings(cls: type~S~) S
+  }
+  class ConfigError {
+    <<exception>>
+    +message: str
+  }
   class Database {
     <<module>>
-    +create_engine(settings: Settings) AsyncEngine
+    +create_engine(settings: DatabaseSettings) AsyncEngine
     +create_sessionmaker(engine: AsyncEngine) async_sessionmaker
     +get_db(request: Request) AsyncIterator~AsyncSession~
   }
@@ -225,12 +244,14 @@ classDiagram
 
   HealthRouter ..> Envelope : ok()
   HealthRouter ..> HealthData
-  HealthData --|> ApiModel
-  ApiResponse --|> ApiModel
+  RequestModel --|> ApiModel
+  ResponseModel --|> ApiModel
+  HealthData --|> ResponseModel
+  ApiResponse --|> ResponseModel
   ErrorResponse --|> ApiResponse
-  ErrorDetail --|> ApiModel
-  PaginatedResponse --|> ApiModel
-  PaginationParams --|> ApiModel
+  ErrorDetail --|> ResponseModel
+  PaginatedResponse --|> ResponseModel
+  PaginationParams --|> RequestModel
 
   NotFoundError --|> AppError
   NotAcceptableError --|> AppError
@@ -242,7 +263,9 @@ classDiagram
   LocaleMiddleware ..> NotAcceptableError
   Envelope ..> MessageCatalog
 
-  AppFactory ..> Settings
+  AppFactory ..> ConfigLoader : load_settings(Settings)
+  ConfigLoader ..> DatabaseSettings : cls()
+  ConfigLoader ..> ConfigError : raises
   AppFactory ..> Database
   AppFactory ..> ErrorHandlers
   AppFactory ..> CorrelationIdMiddleware
@@ -250,37 +273,44 @@ classDiagram
   AppFactory ..> UnhandledExceptionMiddleware
   AppFactory ..> OpenApiTools
   AppFactory ..> HealthRouter : include_router
-  Database ..> Settings
+  Settings --|> DatabaseSettings
+  Database ..> DatabaseSettings
 ```
 
 本次沒有業務 Model；`Base` 只畫屬性 `metadata`（帶約束命名慣例），表間關聯以 ER 為準，本次不新增。
 
 ### 元件清單
 
-| 元件                                                              | 層            | 職責                                                                                                                                                                                                       | 依據                                                                                       |
-| :---------------------------------------------------------------- | :------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------- |
-| `create_app(settings)`                                            | 組裝          | 建 `Settings`（沒傳入時從環境變數）、掛中介層與 handler、`include_router`、設 `generate_unique_id_function`、跑 operationId 唯一性檢查；lifespan 建立與釋放 engine。正式執行、測試 harness、匯出指令都走它 | T4「harness 與 production 共用同一個 app 組裝函式」、B10                                   |
-| `Settings`                                                        | 設定          | Pydantic Settings，集中驗證；缺必要設定或格式不合法就拋 `ValidationError`，啟動失敗。錯誤訊息只列欄位名與原因，不印值                                                                                      | B10、S9；clarification Q1                                                                  |
-| `Database`（`create_engine`、`get_db`）                           | 資料存取基礎  | 依 `Settings` 推導 async URL、建 engine 與 sessionmaker；`get_db` 一個請求一個 `AsyncSession`，例外時 rollback，結束關閉；**不 commit**                                                                    | ADR-003 D7、B3、B4                                                                         |
-| `Base`                                                            | Model 基底    | `DeclarativeBase`，`MetaData(naming_convention=...)` 讓約束名在兩種資料庫一致、batch 模式能找到約束                                                                                                        | B6、ADR-003 D7                                                                             |
-| `ApiModel`                                                        | schema 基底   | `ConfigDict(alias_generator=to_camel, populate_by_name=True, from_attributes=True, extra="forbid")`，全專案一處設定                                                                                        | A2、#503 裁定 3                                                                            |
-| `ApiResponse[T]`                                                  | schema        | 外層六欄 `success`、`code`、`message`、`data`、`timestamp`、`traceId`                                                                                                                                      | A1、ADR-003 D5、#503                                                                       |
-| `ErrorResponse`、`ErrorDetail`                                    | schema        | 錯誤外層；`422` 另帶 `errors`                                                                                                                                                                              | A7                                                                                         |
-| `PaginatedResponse[T]`、`PaginationParams`                        | schema        | 七個欄位，後三個用 `computed_field` 由前四個推導；`limit` 預設 20、`1..100`，`offset` 預設 0、`>= 0`                                                                                                       | A3                                                                                         |
-| `Envelope.ok`／`Envelope.error`                                   | 回應組裝      | 填入 `timestamp`、`traceId`、依 locale 翻好的 `message`；Router 與 handler 共用，Service 不碰                                                                                                              | A1、A7、A8；architecture.mdx §後端分層「Service 不組 HTTP 回應、不自己讀 Accept-Language」 |
-| `AppError` 家族                                                   | 例外          | Service 只丟領域例外（帶 `status_code`、`code`、`message_key`），不丟 `HTTPException`                                                                                                                      | B1「資料層不處理 HTTP」、A7                                                                |
-| `register_exception_handlers`                                     | 錯誤處理      | `AppError`、`RequestValidationError`、`HTTPException` 轉成錯誤外層                                                                                                                                         | A7                                                                                         |
-| 三個中介層                                                        | 橫切          | 見上一節的順序表                                                                                                                                                                                           | A6、A7、A8、S2                                                                             |
-| `MessageCatalog`                                                  | i18n          | 解析 `Accept-Language`（q-value、`*`、`q=0`），fallback `zh-TW`，從 `app/i18n/<lang>/messages.json` 取字                                                                                                   | A8、architecture.mdx §i18n 兩層；clarification Q2                                          |
-| `generate_operation_id`                                           | OpenAPI       | 從 method 與路徑算「動詞加資源」，不讀函式名                                                                                                                                                               | A1                                                                                         |
-| `export_openapi`                                                  | OpenAPI       | 用固定的佔位 `Settings` 呼叫 `create_app`，不跑 lifespan、不連資料庫，輸出排序過的 JSON                                                                                                                    | A4、A5                                                                                     |
-| `HealthRouter`／`HealthService`／`HealthRepository`／`HealthData` | 模組 `health` | 第一個模組，示範完整分層；`ping()` 用 `select(literal(1))`，不用 `text()`                                                                                                                                  | B1、B5；clarification Q3、Q8，結論（待決 10）                                              |
+| 元件                                                              | 層            | 職責                                                                                                                                                                                                                                                                                              | 依據                                                                                       |
+| :---------------------------------------------------------------- | :------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :----------------------------------------------------------------------------------------- |
+| `create_app(settings)`                                            | 組裝          | 沒傳入時以 `load_settings(Settings)` 從環境變數建立、掛中介層與 handler、`include_router`、設 `generate_unique_id_function`、跑 operationId 唯一性檢查；lifespan 建立與釋放 engine。正式執行、測試 harness、匯出指令都走它                                                                        | T4「harness 與 production 共用同一個 app 組裝函式」、B10                                   |
+| `DatabaseSettings`                                                | 設定          | 只含資料庫兩項 `database_url`、`sqlite_path` 與 URL 推導；Alembic `env.py` 只讀這個類別，所以跑遷移不需要 `CORS_ALLOWED_ORIGINS` 等 app 設定                                                                                                                                                      | B10；clarification Q1                                                                      |
+| `Settings`                                                        | 設定          | 繼承 `DatabaseSettings`，加上 CORS 設定；Pydantic Settings 集中驗證；缺必要設定或格式不合法時產生的 `ValidationError` 不直接往外拋，由 `load_settings` 轉成 `ConfigError`，啟動失敗                                                                                                               | B10、S9；clarification Q1                                                                  |
+| `load_settings(cls)`                                              | 設定          | 建 `cls()`，攔下 Pydantic `ValidationError`，把每筆錯誤的 `loc[0].upper()` 當環境變數名，拋 `ConfigError("<ENV_VAR>: <msg>")`，並用 `from None` 切掉原例外鏈（避免 traceback 帶出輸入值）。`create_app(None)` 用 `load_settings(Settings)`，Alembic `env.py` 用 `load_settings(DatabaseSettings)` | B10、S9；clarification Q1                                                                  |
+| `ConfigError`                                                     | 例外          | 設定錯誤的唯一例外型別，訊息只有大寫環境變數名與原因，不含值；不屬 `AppError` 家族，只在啟動與遷移時出現，不會變成 HTTP 回應                                                                                                                                                                      | B10、S9                                                                                    |
+| `Database`（`create_engine`、`get_db`）                           | 資料存取基礎  | 依 `DatabaseSettings` 推導 async URL、建 engine 與 sessionmaker；`get_db` 一個請求一個 `AsyncSession`，例外時 rollback，結束關閉；**不 commit**                                                                                                                                                   | ADR-003 D7、B3、B4                                                                         |
+| `Base`                                                            | Model 基底    | `DeclarativeBase`，`MetaData(naming_convention=...)` 讓約束名在兩種資料庫一致、batch 模式能找到約束                                                                                                                                                                                               | B6、ADR-003 D7                                                                             |
+| `ApiModel`                                                        | schema 基底   | 共用設定 `ConfigDict(alias_generator=to_camel, serialize_by_alias=True, extra="forbid")`，全專案一處設定；不直接繼承，只當下面兩個基底的父類別                                                                                                                                                    | A2、#503 裁定 3                                                                            |
+| `RequestModel`                                                    | schema 基底   | request body 與 query 的基底：`validate_by_alias=True, validate_by_name=False`，**只認 camelCase alias**；送 snake_case 欄位名（例 `display_name`）會被當成未知欄位，回 `422`、`extra_forbidden`                                                                                                  | A2、#503 裁定 3                                                                            |
+| `ResponseModel`                                                   | schema 基底   | 回應的基底：`validate_by_alias=True, validate_by_name=True, from_attributes=True`，讓後端程式能用 Python 欄位名或 ORM 物件建構；輸出一律用 alias（camelCase）                                                                                                                                     | A2、#503 裁定 3                                                                            |
+| `ApiResponse[T]`                                                  | schema        | 外層六欄 `success`、`code`、`message`、`data`、`timestamp`、`traceId`                                                                                                                                                                                                                             | A1、ADR-003 D5、#503                                                                       |
+| `ErrorResponse`、`ErrorDetail`                                    | schema        | 錯誤外層；`422` 另帶 `errors`                                                                                                                                                                                                                                                                     | A7                                                                                         |
+| `PaginatedResponse[T]`、`PaginationParams`                        | schema        | 七個欄位，後三個用 `computed_field` 由前四個推導；`limit` 預設 20、`1..100`，`offset` 預設 0、`>= 0`                                                                                                                                                                                              | A3                                                                                         |
+| `Envelope.ok`／`Envelope.error`                                   | 回應組裝      | 填入 `timestamp`、`traceId`、依 locale 翻好的 `message`；Router 與 handler 共用，Service 不碰                                                                                                                                                                                                     | A1、A7、A8；architecture.mdx §後端分層「Service 不組 HTTP 回應、不自己讀 Accept-Language」 |
+| `AppError` 家族                                                   | 例外          | Service 只丟領域例外（帶 `status_code`、`code`、`message_key`），不丟 `HTTPException`                                                                                                                                                                                                             | B1「資料層不處理 HTTP」、A7                                                                |
+| `register_exception_handlers`                                     | 錯誤處理      | `AppError`、`RequestValidationError`、`HTTPException` 轉成錯誤外層                                                                                                                                                                                                                                | A7                                                                                         |
+| 三個中介層                                                        | 橫切          | 見上一節的順序表                                                                                                                                                                                                                                                                                  | A6、A7、A8、S2                                                                             |
+| `MessageCatalog`                                                  | i18n          | 解析 `Accept-Language`（q-value、`*`、`q=0`），fallback `zh-TW`，從 `app/i18n/<lang>/messages.json` 取字                                                                                                                                                                                          | A8、architecture.mdx §i18n 兩層；clarification Q2                                          |
+| `generate_operation_id`                                           | OpenAPI       | 從 method 與路徑算「動詞加資源」，不讀函式名                                                                                                                                                                                                                                                      | A1                                                                                         |
+| `export_openapi`                                                  | OpenAPI       | 用固定的佔位 `Settings` 呼叫 `create_app`，不跑 lifespan、不連資料庫，輸出排序過的 JSON                                                                                                                                                                                                           | A4、A5                                                                                     |
+| `HealthRouter`／`HealthService`／`HealthRepository`／`HealthData` | 模組 `health` | 第一個模組，示範完整分層；`ping()` 用 `select(literal(1))`，不用 `text()`                                                                                                                                                                                                                         | B1、B5；clarification Q3、Q8，結論（待決 10）                                              |
 
 ### 關鍵設計細節
 
 **外層與 camelCase**（A1、A2、#503）
 
 - Python 欄位 snake_case，JSON 由 `ApiModel` 的 alias generator 轉成 camelCase；FastAPI 預設 `response_model_by_alias=True`，OpenAPI schema 也用 alias，所以 #504 驗收第 6 項可直接掃 `openapi.json`。
+- **請求只認 alias**（#503 裁定 3、A2）：request 與 query 的 schema 繼承 `RequestModel`（`validate_by_name=False`），送 snake_case 欄位名的 body 不會被默默接受，而是落進 `extra="forbid"`，回 `422`、`extra_forbidden`，同時缺 camelCase 欄位會再報 `missing`。回應繼承 `ResponseModel`，允許後端用欄位名建構（`Envelope` 組 `ApiResponse(trace_id=...)` 需要），輸出仍用 alias。兩個基底分開，是因為單一基底設 `validate_by_name=False` 會讓後端自己建構回應時也只能傳 alias。
 - 泛型外層在 OpenAPI 的元件名預設是 `ApiResponse_HealthData_`，Orval 產出的型別名會很難讀。覆寫 `ApiResponse.model_parametrized_name`，讓 `ApiResponse[HealthData]` 的元件名成為 `HealthDataResponse`，`ApiResponse[PaginatedResponse[TaskItem]]` 成為 `TaskItemPageResponse`；完整命名規則寫在 `api-contract` §OpenAPI 元件命名（clarification Q8、N3）。
 - `timestamp`：ISO 8601、UTC、毫秒、`Z` 結尾（例 `2026-11-20T08:15:30.123Z`），在 `Envelope` 組裝時取 `datetime.now(UTC)`（clarification Q8）。
 - `code`：成功固定 `OK`；錯誤碼 `UPPER_SNAKE_CASE`，通用碼不加前綴，模組專屬碼加模組前綴（例 `TASK_NAME_DUPLICATED`）。第一批通用碼：`VALIDATION_FAILED`（422）、`NOT_FOUND`（404）、`METHOD_NOT_ALLOWED`（405）、`NOT_ACCEPTABLE`（406）、`INTERNAL_ERROR`（500）、`DATABASE_UNAVAILABLE`（503）（clarification Q8）。
@@ -299,15 +329,17 @@ classDiagram
 
 **設定與啟動失敗**（clarification Q1；帶憑證依 clarification 結論，待決 3）
 
-| 環境變數                 | 型別                   | 必要 | 驗證                                                                                              | 預設                    |
-| :----------------------- | :--------------------- | :--- | :------------------------------------------------------------------------------------------------ | :---------------------- |
-| `CORS_ALLOWED_ORIGINS`   | 逗號分隔的 origin 清單 | 是   | 每一項都要是 `http(s)://host[:port]`、不帶路徑；拒絕 `*`、空清單                                  | 無                      |
-| `CORS_ALLOW_CREDENTIALS` | bool                   | 否   | —                                                                                                 | `true`                  |
-| `DATABASE_URL`           | PostgreSQL URL         | 否   | 只接受 `postgresql` 系列 scheme；`postgresql://` 與 `postgresql+asyncpg://` 都正規化成 `+asyncpg` | 無（沒設就走 Lite）     |
-| `SQLITE_PATH`            | 路徑                   | 否   | —                                                                                                 | `./data/label_suite.db` |
+| 環境變數                 | 型別                   | 必要 | 驗證                                                                                                                                                                                                                | 預設                    |
+| :----------------------- | :--------------------- | :--- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :---------------------- |
+| `CORS_ALLOWED_ORIGINS`   | 逗號分隔的 origin 清單 | 是   | 每一項都要是 `http(s)://host[:port]`、不帶路徑；拒絕 `*`、空清單                                                                                                                                                    | 無                      |
+| `CORS_ALLOW_CREDENTIALS` | bool                   | 否   | —                                                                                                                                                                                                                   | `true`                  |
+| `DATABASE_URL`           | PostgreSQL URL         | 否   | 只接受 `postgresql://`、`postgresql+asyncpg://`、`postgres://` 三種 scheme，一律正規化成 `postgresql+asyncpg://`；其他驅動（例 `postgresql+psycopg://`、`postgresql+psycopg2://`）與非 PostgreSQL scheme 都啟動失敗 | 無（沒設就走 Lite）     |
+| `SQLITE_PATH`            | 路徑                   | 否   | —                                                                                                                                                                                                                   | `./data/label_suite.db` |
 
 - `CORS_ALLOWED_ORIGINS` 是唯一的必要設定（clarification Q1）：缺少、空清單或含 `*` 都啟動失敗，這也讓 #504 驗收第 5 項有東西可驗；「clone 後不必設定就能跑」由 #506 的 `.env.example` 與 compose 預設值補上（需求矛盾 3）。
 - 沒有 env 前綴，與 `architecture.mdx` 既有的 `DATABASE_URL`、`GOOGLE_CLIENT_ID` 一致。
+- **類別拆兩層**：`DatabaseSettings` 只有 `DATABASE_URL`、`SQLITE_PATH` 兩項與 `async_database_url()`；`Settings` 繼承它，再加 CORS 兩項。app 讀 `Settings`，Alembic `env.py` 只讀 `DatabaseSettings`，所以跑遷移（含 #506 的部署與 CI）不必設定 `CORS_ALLOWED_ORIGINS`。
+- **啟動錯誤訊息**由 `load_settings` 統一產生：攔下 `ValidationError`，以 `loc[0].upper()` 對回環境變數名，拋 `ConfigError`（`from None`）。訊息用大寫的環境變數名指出是哪一項（例 `CORS_ALLOWED_ORIGINS: must not contain "*"`、`DATABASE_URL: unsupported scheme`），不用 Python 欄位名，也不印值（S9：`DATABASE_URL` 可能含密碼）。
 - `CORSMiddleware` 的 `allow_methods` 明列 `GET, POST, PUT, PATCH, DELETE, OPTIONS`，`allow_headers` 明列 `Content-Type, Accept-Language, X-Correlation-ID`（01-01 再加 CSRF header），不用 `*`。
 
 **資料庫與 session**（ADR-003 D7、B3、B4）
@@ -348,7 +380,7 @@ classDiagram
 - 測試庫的 schema 一律 `alembic upgrade head` 建立，不用 `create_all`（B6）。
 - integration 用 `httpx.AsyncClient(transport=ASGITransport(app))` 打 `create_app(test_settings)` 產生的 app，中介層與 handler 與正式環境相同（T4）。
 - 驗證失敗與未處理例外需要一條會觸發它們的路由，而本次唯一的端點沒有輸入、也不會丟例外。在測試 fixture 對 `create_app()` 產生的 app 額外 `include_router` 一個只存在於 `tests/` 的探測 router（一條帶 body 的 `POST`、一條會丟 `RuntimeError` 的 `GET`）。這是在同一個組裝之上多加路由，不少任何中介層，不算 T4 禁止的「harness 比 production 寬鬆」（clarification Q8、N4）。
-- unit：`ApiModel` 的 camelCase 與 `extra="forbid"`、`PaginatedResponse` 的推導（含 `total=0`、`offset >= total`）、`generate_operation_id` 的對照表與撞名檢查、`Settings` 的驗證（缺 `CORS_ALLOWED_ORIGINS`、含 `*`、`DATABASE_URL` scheme 錯誤）、`resolve_locale` 的 q-value 規則、追蹤編號的接受與丟棄。
+- unit：`RequestModel` 只認 camelCase alias（snake_case 欄位名回 `extra_forbidden`）與 `extra="forbid"`、`ResponseModel` 可用欄位名建構且輸出 camelCase、`PaginatedResponse` 的推導（含 `total=0`、`offset >= total`）、`generate_operation_id` 的對照表與撞名檢查、`Settings` 的驗證（缺 `CORS_ALLOWED_ORIGINS`、含 `*`、`DATABASE_URL` 三種接受的 scheme 都正規化成 `+asyncpg`、`+psycopg` 等其他驅動被拒、錯誤訊息用大寫環境變數名）、`DatabaseSettings` 在沒有 `CORS_ALLOWED_ORIGINS` 時可單獨建立、`resolve_locale` 的 q-value 規則、追蹤編號的接受與丟棄。
 - integration：每個 [§關鍵情境](#關鍵情境) 至少一條；遷移的 `upgrade → downgrade → upgrade`；請求結束後 pool 的 checked-out 連線回到 0（B3 檢查方式）。
 
 ## 關鍵情境
@@ -425,7 +457,7 @@ sequenceDiagram
   participant EH as ExceptionHandler
   Client->>MW: POST /api/v1/probe（缺必填欄位或多送未知欄位）
   MW->>FA: 轉交請求
-  FA->>FA: 以 ApiModel 子類別驗證 body（extra forbid、camelCase alias）
+  FA->>FA: 以 RequestModel 子類別驗證 body（extra forbid、只認 camelCase alias，snake_case 欄位名視為未知欄位）
   alt 驗證失敗
     FA-->>EH: RequestValidationError
     EH->>EH: 每筆錯誤轉 ErrorDetail（location、field、code、message），丟掉 input、ctx、url
@@ -517,17 +549,18 @@ sequenceDiagram
   participant Operator as 部署者
   participant Uvicorn as uvicorn --factory
   participant Factory as create_app
-  participant Settings
+  participant Loader as load_settings
   participant Engine as AsyncEngine
   Operator->>Uvicorn: uv run uvicorn app.main:create_app --factory
   Uvicorn->>Factory: create_app()
-  Factory->>Settings: Settings()（讀環境變數）
-  alt 缺 CORS_ALLOWED_ORIGINS、含星號、或 DATABASE_URL scheme 不合法
-    Settings-->>Factory: ValidationError（只列欄位名與原因，不印值）
+  Factory->>Loader: load_settings(Settings)（建 Settings()，讀環境變數）
+  alt 缺 CORS_ALLOWED_ORIGINS、含星號、或 DATABASE_URL scheme 不合法（含 +psycopg 等其他驅動）
+    Loader->>Loader: 攔下 ValidationError，loc[0].upper() 對回環境變數名
+    Loader-->>Factory: ConfigError("<ENV_VAR>: <msg>")，from None，不印值
     Factory-->>Uvicorn: 例外往上拋
     Uvicorn-->>Operator: 程序以非零狀態結束，服務未啟動
   else 設定合法
-    Settings-->>Factory: settings
+    Loader-->>Factory: settings
     Factory->>Factory: 掛中介層、handler、router，檢查 operationId 唯一
     Uvicorn->>Factory: 進入 lifespan
     Factory->>Engine: 依 DATABASE_URL 有無選正式層或 Lite 層建 engine
@@ -565,10 +598,16 @@ clarification Q8：建立一個不含任何操作的基準遷移。
 sequenceDiagram
   participant Test as pytest integration
   participant Alembic as alembic env.py
-  participant Settings
+  participant Loader as load_settings
   participant DB as 測試資料庫（SQLite 檔或 PostgreSQL）
   Test->>Alembic: upgrade head
-  Alembic->>Settings: 取得與 app 相同的 async URL
+  Alembic->>Loader: load_settings(DatabaseSettings)（不需 CORS 設定）
+  alt DATABASE_URL scheme 不合法
+    Loader-->>Alembic: ConfigError("DATABASE_URL: <msg>")，遷移不執行
+  else 合法
+    Loader-->>Alembic: db_settings
+  end
+  Alembic->>Alembic: db_settings.async_database_url()（與 app 同一個推導）
   Alembic->>DB: render_as_batch=True、命名慣例，套用基準遷移
   DB-->>Alembic: alembic_version 有一列
   Test->>Alembic: downgrade base
@@ -592,7 +631,7 @@ sequenceDiagram
 | 約束命名慣例      | `ix: ix_%(column_0_label)s`、`uq: uq_%(table_name)s_%(column_0_name)s`、`ck: ck_%(table_name)s_%(constraint_name)s`、`fk: fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s`、`pk: pk_%(table_name)s`，設在 `Base.metadata` | B6；SQLite 的 batch 模式重建表時要靠約束名找到約束 |
 | `render_as_batch` | `env.py` 一律設 `True`。在 PostgreSQL 上 batch 操作照常發出 `ALTER`，只有 SQLite 會重建表，所以兩種資料庫用同一份遷移檔                                                                                                               | ADR-003 D7                                         |
 | 檔名模板          | `file_template = %%(year)d%%(month).2d%%(day).2d_%%(hour).2d%%(minute).2d_%%(rev)s_%%(slug)s`，依時間排序                                                                                                                             | #504 §包含                                         |
-| `env.py` 的 URL   | 與 app 共用 `Settings.async_database_url()`，以 async engine 跑 `run_sync`；不另讀環境變數                                                                                                                                            | B10                                                |
+| `env.py` 的 URL   | 以 `load_settings(DatabaseSettings)` 建立，與 app 共用 `async_database_url()`，以 async engine 跑 `run_sync`；不另讀環境變數，也不需要 `CORS_ALLOWED_ORIGINS`                                                                         | B10                                                |
 | model 的收集      | `env.py` 用 `pkgutil` 掃 `app.modules.*.models` 自動 import，新模組不必改 `env.py`                                                                                                                                                    | B6                                                 |
 | `compare_type`    | `True`，autogenerate 時偵測型別變更；產物仍要人工讀過，確認沒有非預期的 `DROP`（B6 正例）                                                                                                                                             | B6                                                 |
 | 基準遷移          | 一個空的 revision，`upgrade` 與 `downgrade` 都不做事；**down 可完全還原**（只移除 `alembic_version` 那一列）（clarification Q8）                                                                                                      | B6、T4                                             |
@@ -601,7 +640,7 @@ SQLite 與 PostgreSQL 在本次碰得到的差異：
 
 | 面向     | SQLite（Lite）                     | PostgreSQL（正式） | 本次處理                                                                      |
 | :------- | :--------------------------------- | :----------------- | :---------------------------------------------------------------------------- |
-| 驅動     | `aiosqlite`                        | `asyncpg`          | `Settings.async_database_url()` 一處推導                                      |
+| 驅動     | `aiosqlite`                        | `asyncpg`          | `DatabaseSettings.async_database_url()` 一處推導                              |
 | 外鍵     | 預設不檢查                         | 預設檢查           | `connect` 事件設 `PRAGMA foreign_keys=ON`                                     |
 | DDL 交易 | 多數 `ALTER` 不支援，要重建表      | 支援交易內 DDL     | `render_as_batch=True`                                                        |
 | 連線失敗 | 幾乎不會（檔案），父目錄不存在才會 | 網路或服務停止     | 啟動時建父目錄；PostgreSQL 連線逾時 5 秒                                      |
@@ -661,7 +700,7 @@ SQLite 與 PostgreSQL 在本次碰得到的差異：
 - `cd backend && TEST_DATABASE_URL=postgresql+asyncpg://... uv run pytest`（PostgreSQL）
 - `cd backend && uv run ruff check . && uv run ruff format --check .`
 - `cd backend && uv run mypy --strict app`
-- `cd backend && uv run python -m app.scripts.export_openapi`（重產後 `git diff --exit-code backend/openapi.json`）
+- `cd backend && uv run python -m app.scripts.export_openapi && git diff --exit-code -- openapi.json && test -z "$(git status --porcelain -- openapi.json)"`（指令在 `backend/` 內執行，所以路徑寫 `openapi.json`；`git diff` 抓已追蹤檔的內容漂移，`git status --porcelain` 補抓檔案尚未追蹤的情況）
 
 ### 本文新發現的待決問題
 
