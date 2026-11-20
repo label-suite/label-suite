@@ -26,7 +26,7 @@ tags: [規格, 搬移, PR, CI]
 | **流程圖 PR** | `docs/` 與 `.notecraft/components/` | 生成或更新業務流程圖 |
 | **工具 PR** | `scripts/`、`package.json`、`pnpm-lock.yaml`、`.github/`，以及下面那一條限定的 `docs/specs/` | 修 `check-specs.mjs`、新增機械檢查、調 CI |
 | **畫面修正 PR** | `design/prototype/`、`docs/prototype/navigation.mdx`（限該檔 §維護說明 要求的同步），以及下面那一條限定的 `docs/specs/` | 依決定改畫面的文案、欄位或徽章——`[UI]` 與 `[Enhancement]` issue 的本體 |
-| **流程設定 PR** | `openspec/`、`.claude/`（`agents/`、`skills/`、`commands/`）、`.agents/skills/`，以及**連帶**修到的 `docs/development/` 與 `AGENTS.md`／`CLAUDE.md` | 建 schema 與 template、寫 agent 角色定義、加 skill 或指令 |
+| **流程設定 PR** | `openspec/`、`.claude/`（`agents/`、`skills/`、`commands/`，以及**限定**的 `settings.json`，見下）、`.codex/`（見下）、`.agents/skills/`，以及**連帶**修到的 `docs/development/` 與 `AGENTS.md`／`CLAUDE.md` | 建 schema 與 template、寫 agent 角色定義、加 skill 或指令、把 hook 接到 agent 上 |
 | **設計系統 PR** | `design/system/`，以及**連帶**修到的 `.claude/skills/design-*` 與 `.agents/skills/design-*` | 從 prototype 重建元件規格、記錄設計差異 |
 
 六類的差別是**目的**，不是檔案數：同樣動到 `.notecraft/components/` 的一個元件，目的是畫圖的算流程圖 PR，目的是改條文、順手讓圖跟上的算文件 PR（判例：後端分層圖拿掉各層的 ADR 出處時，元件那一半走 #378、`architecture.mdx` 裡那張圖的 prompt 那一半走 #380，兩張拆開合併，**都不是畫圖**）。
@@ -38,6 +38,8 @@ tags: [規格, 搬移, PR, CI]
   **這一條有程序掛勾**（比照下面規則文件那條）：**`plugins.json` 的每一處改動都要在 PR body 列出，並寫明它服務的是同一個目的**。原因是合併閘第 2 條只比對路徑——而這個檔會被工具改寫：`pnpm docs:serve` 在 `/plugins` 停用一個外掛，dev API 就會改寫它頂層的 `disabled` 陣列（`notecraftapp@1.15.0` 的 `src/dev-api/handlers.mjs` `PUT /api/plugins/:id`）。那種改動與 PR 的目的無關，但在機械閘上會無聲通過。
   **`.notecraft/plugins/<id>/`（裝進版控的外掛本體）不算文件 PR**，照本節開頭「相依套件」那個例外處理，**不屬六類**，照 `AGENTS.md` 自己的規則走——比照判例 #147（升級 notecraftapp）。另開一張相依套件 PR、先合併它，再合併用到它的文件 PR；順序反過來會讓 `plugins.json` 指向沒裝的外掛而 build 失敗。判例 #245（`ec1af4f`）就是那張相依套件 PR，比 #246 早 22 分鐘合併。它的範圍是 `.notecraft/plugins/`（外掛本體與 `_types.d.ts`）加上根目錄的 `NOTICE`——**散入版控的第三方程式要同時交代授權**，所以 `NOTICE` 跟著外掛走，不另開一張。
   除了上面這兩條，**不擴及 `.notecraft/` 的其他檔案**：真的碰到別的，照本節開頭那三種例外的方式重新判斷，不要類推。
+- **兩份 agent 註冊設定算流程設定 PR 的連帶路徑**：`.claude/settings.json` 與 `.codex/` 管的是 agent 在這個 repo 怎麼工作——哪個事件觸發哪支檢查器、哪些路徑不准寫——和 `.claude/agents/`、`skills/`、`commands/` 同一個目的，依「六類的差別是**目的**，不是檔案數」歸同一類。兩份得在同一張 PR 落地：`scripts/check-env.sh` 的 H1 交叉核對只有一份註冊時會輸出 `FAIL: .codex/hooks.json 不存在或不是合法 JSON` 並讓 `--ci` 非零，所以先合併其中一份會讓那張 PR 自己的 `hooks` job 變紅。判例 [#111](https://github.com/label-suite/label-suite/issues/111)。
+  **連帶不等於夾帶**，而且這一條有程序掛勾（比照下面規則文件與 `design/system/` 兩條）：**這兩個路徑的每一處改動都要在 PR body 逐一列出，並寫明它服務的是同一個目的**。合併閘第 2 條是純路徑比對，它們一進清單就機械上全部通過，所以這個限制只能靠 PR body 的逐項說明與獨立審查把關。`settings.json` 的 `permissions` 與 `attribution` 不是接線，改它們不屬這一條。
 - **文件 PR 可以帶著它連帶修到的規則文件**，因為一份給 agent 讀的說明，它的入口本來就在 `AGENTS.md`：新增 `docs/development/` 的說明而同一張 PR 在 `AGENTS.md` 設索引，算文件 PR。判例 #224（#105：`docs/development/rules/agent-rules.mdx` ＋ `AGENTS.md` 的 Agent Rules Index）。
   索引與被索引的文件必須同一張 PR 落地，否則合併後索引會指向不存在的檔案。
   **連帶不等於夾帶**，而且這一條有程序掛勾（比照工具 PR 那條）：**規則文件的每一處改動都要在 PR body 逐一列出，並寫明它服務的是同一個目的**。合併閘第 2 條是純路徑比對，`AGENTS.md` 一進清單就機械上全部通過，所以這個限制只能靠 PR body 的逐項說明與獨立審查把關。
@@ -632,3 +634,4 @@ ENOENT: no such file or directory, rename
 | 2026-11-15 | 閘 3 在三個條件同時成立時，`status` 卡住的 job 也算跑完（§合併閘第 3 條） | 只看 job 的 `status` 就判沒跑完 | [#188](https://github.com/label-suite/label-suite/issues/188)、[PR #312](https://github.com/label-suite/label-suite/pull/312) |
 | 2026-11-19 | 正文只留搬移結束後仍沿用的規則；搬移期間的 D1–D10、單頁搬移通則與來源對照收進附錄，「已確認決議」的五種依據升為正文一節（[§「已確認決議」的五種依據](#已確認決議的五種依據)） | 搬移規則與現行 PR／CI 規則混排在同一份、正文前半都是搬移時期的內容 | [#481](https://github.com/label-suite/label-suite/issues/481) |
 | 2026-11-20 | 文件 PR 可以同時動 `design/system/`，限兩種（修掉被打成假的斷言、把本次決議記成該頁的狀態註記），每一處都要在 PR body 列出並寫明是哪一種；反過來不成立（[§PR 的變更範圍](#pr-的變更範圍)） | 六類表只給 `AGENTS.md`／`CLAUDE.md` 連帶條款，`design/system/` 不在文件 PR 的清單裡，#472 一度掉在文件 PR 與設計系統 PR 之間 | 維護者口頭裁定（記錄於 [#496](https://github.com/label-suite/label-suite/issues/496)），判例 [#472](https://github.com/label-suite/label-suite/pull/472) |
+| 2026-11-20 | `.claude/settings.json` 的接線與 `.codex/` 算流程設定 PR 的連帶路徑，每一處都要在 PR body 列出並寫明服務的目的；兩份註冊必須同一張 PR 落地（[§PR 的變更範圍](#pr-的變更範圍)） | 六類表的 `.claude/` 只列 `agents/`、`skills/`、`commands/`，`.codex/` 在六類表出現 0 次，#111 的兩份 hook 註冊設定兩類都收不了 | 維護者裁定（記錄於 [#111](https://github.com/label-suite/label-suite/issues/111)） |
