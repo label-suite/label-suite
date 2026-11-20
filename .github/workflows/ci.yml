@@ -107,9 +107,8 @@ jobs:
           ROUTES
           )
           actual=$(scripts/check-changed.sh --list-routes)
-          if [ "$actual" != "$expected" ]; then
+          if ! diff <(printf '%s\n' "$expected") <(printf '%s\n' "$actual"); then
             echo "::error::the enabled route set changed; update this step in the same commit"
-            diff <(printf '%s\n' "$expected") <(printf '%s\n' "$actual") || true
             exit 1
           fi
           printf '%s\n' "$actual"
