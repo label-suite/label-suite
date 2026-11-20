@@ -4,7 +4,7 @@
 
 三件已裁定的事照裁定寫、不列待決（維護者 2026-11-10，`architecture.mdx` §決策紀錄）：**模組內分層** `app/modules/<module>/`、成功回應**包一層 envelope**、路徑前綴 **`/api/v1`**。envelope 的六個欄位與 camelCase 依 #503（2026-11-20）。
 
-system-analysis 的 16 條待決問題與 4 條需求矛盾**仍待 clarification 停點由維護者決定**。凡牽涉到的設計點，本文寫出建議的預設做法並標「待 clarification 待決 N」，不當成定案；對照表在 [§技術待決問題](#技術待決問題)。
+system-analysis 的 16 條待決問題與 4 條需求矛盾，以及本文新增的 N1–N6，都已在 clarification 停點處理（維護者 2026-11-20 決議 Q1–Q9，其餘依 `clarification.md` §不需維護者決定的結論）。本文的設計點照決議寫成定案，並標出對應的「clarification Q<n>」；對照表在 [§技術待決問題](#技術待決問題)。
 
 ## 分層與類別
 
@@ -17,8 +17,8 @@ backend/
 ├─ alembic/
 │  ├─ env.py                    async 執行；URL 與 app 共用同一個推導函式
 │  ├─ script.py.mako
-│  └─ versions/                 空的基準遷移（待 clarification 待決 13）
-├─ openapi.json                 匯出的介面描述檔（位置見 §技術待決問題 新增 N2）
+│  └─ versions/                 空的基準遷移（clarification Q8）
+├─ openapi.json                 匯出的介面描述檔，提交進 repo（clarification Q8、N2）
 ├─ app/
 │  ├─ main.py                   create_app(settings) 組裝入口；uvicorn 以 --factory 啟動
 │  ├─ core/                     全站共用，不屬任何業務模組
@@ -28,7 +28,7 @@ backend/
 │  │  ├─ envelope.py            成功與錯誤外層的組裝函式
 │  │  ├─ errors.py              AppError 家族與 exception handler 註冊
 │  │  ├─ middleware.py          CorrelationIdMiddleware、LocaleMiddleware、UnhandledExceptionMiddleware
-│  │  ├─ i18n.py                Accept-Language 解析與訊息目錄（待 clarification 待決 2）
+│  │  ├─ i18n.py                Accept-Language 解析與訊息目錄（clarification Q2）
 │  │  └─ openapi.py             generate_operation_id、唯一性檢查、匯出
 │  ├─ i18n/
 │  │  ├─ zh-TW/messages.json    外層 message 字串（architecture.mdx §i18n 兩層）
@@ -36,7 +36,7 @@ backend/
 │  ├─ scripts/
 │  │  └─ export_openapi.py      uv run python -m app.scripts.export_openapi
 │  └─ modules/
-│     └─ health/                第一個模組資料夾（待 clarification 待決 14）
+│     └─ health/                第一個模組資料夾（clarification Q8）
 │        ├─ router.py
 │        ├─ service.py          含 get_health_service 依賴工廠
 │        ├─ repository.py
@@ -55,15 +55,15 @@ backend/
 
 Starlette 的堆疊固定是 `ServerErrorMiddleware` → 使用者中介層 → `ExceptionMiddleware` → 路由。本次的使用者中介層依下列順序（第一個最外層）：
 
-| 順序 | 元件                                              | 職責                                                                                                                              | 依據                                          |
-| :--- | :------------------------------------------------ | :-------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------- |
-| 1    | `CorrelationIdMiddleware`（純 ASGI）              | 取得或產生追蹤編號，寫進 `scope["state"]` 與 contextvar，回應時加 `X-Correlation-ID` 標頭；放最外層，連 preflight 與 500 都帶得到 | A6、A7；待 clarification 待決 7               |
-| 2    | `CORSMiddleware`                                  | 來源逐一列出，`expose_headers` 含 `X-Correlation-ID` 讓瀏覽器讀得到                                                               | Hard Rule 7、S2；待 clarification 待決 3      |
-| —    | （01-01 登入插入：認證、CSRF）                    | 本次不實作，只留位置                                                                                                              | architecture.mdx §後端分層 九站               |
-| 3    | `UnhandledExceptionMiddleware`（純 ASGI）         | 攔下未處理例外，回 `500` 外層、不露堆疊，寫一筆含追蹤編號的 log                                                                   | A7、07-01 §卡控機制；待 clarification 待決 16 |
-| 4    | `LocaleMiddleware`（純 ASGI，只作用在 `/api/v1`） | 解析 `Accept-Language` 寫進 `scope["state"]`；全部被拒回 `406` 外層                                                               | A8；待 clarification 待決 2                   |
-| —    | Starlette `ExceptionMiddleware`                   | 執行註冊的 handler：`AppError`、`RequestValidationError`、`HTTPException`（404、405）                                             | A7                                            |
-| —    | 路由 → Router → Service → Repository              | 模組內分層                                                                                                                        | B1、ADR-003 D3                                |
+| 順序 | 元件                                              | 職責                                                                                                                              | 依據                                               |
+| :--- | :------------------------------------------------ | :-------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------- |
+| 1    | `CorrelationIdMiddleware`（純 ASGI）              | 取得或產生追蹤編號，寫進 `scope["state"]` 與 contextvar，回應時加 `X-Correlation-ID` 標頭；放最外層，連 preflight 與 500 都帶得到 | A6、A7；clarification Q8                           |
+| 2    | `CORSMiddleware`                                  | 來源逐一列出，`expose_headers` 含 `X-Correlation-ID` 讓瀏覽器讀得到                                                               | Hard Rule 7、S2；clarification 結論（待決 3）      |
+| —    | （01-01 登入插入：認證、CSRF）                    | 本次不實作，只留位置                                                                                                              | architecture.mdx §後端分層 九站                    |
+| 3    | `UnhandledExceptionMiddleware`（純 ASGI）         | 攔下未處理例外，回 `500` 外層、不露堆疊，寫一筆含追蹤編號的 log                                                                   | A7、07-01 §卡控機制；clarification 結論（待決 16） |
+| 4    | `LocaleMiddleware`（純 ASGI，只作用在 `/api/v1`） | 解析 `Accept-Language` 寫進 `scope["state"]`；全部被拒回 `406` 外層                                                               | A8；clarification Q2                               |
+| —    | Starlette `ExceptionMiddleware`                   | 執行註冊的 handler：`AppError`、`RequestValidationError`、`HTTPException`（404、405）                                             | A7                                                 |
+| —    | 路由 → Router → Service → Repository              | 模組內分層                                                                                                                        | B1、ADR-003 D3                                     |
 
 未處理例外**不**交給 Starlette 的 `ServerErrorMiddleware` 處理，理由是它位在所有使用者中介層外面：由它產生的 `500` 不會再經過 CORS 與追蹤編號中介層，瀏覽器會看到 CORS 錯誤而讀不到外層，回應也沒有 `X-Correlation-ID`。所以本次自己的 `UnhandledExceptionMiddleware` 放在 CORS 內側，`ServerErrorMiddleware` 只剩最後保險。中介層一律寫成純 ASGI，不用 `BaseHTTPMiddleware`，避免 contextvar 在 task 之間斷掉與串流回應被緩衝。
 
@@ -260,7 +260,7 @@ classDiagram
 | 元件                                                              | 層            | 職責                                                                                                                                                                                                       | 依據                                                                                       |
 | :---------------------------------------------------------------- | :------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------- |
 | `create_app(settings)`                                            | 組裝          | 建 `Settings`（沒傳入時從環境變數）、掛中介層與 handler、`include_router`、設 `generate_unique_id_function`、跑 operationId 唯一性檢查；lifespan 建立與釋放 engine。正式執行、測試 harness、匯出指令都走它 | T4「harness 與 production 共用同一個 app 組裝函式」、B10                                   |
-| `Settings`                                                        | 設定          | Pydantic Settings，集中驗證；缺必要設定或格式不合法就拋 `ValidationError`，啟動失敗。錯誤訊息只列欄位名與原因，不印值                                                                                      | B10、S9；待 clarification 待決 1                                                           |
+| `Settings`                                                        | 設定          | Pydantic Settings，集中驗證；缺必要設定或格式不合法就拋 `ValidationError`，啟動失敗。錯誤訊息只列欄位名與原因，不印值                                                                                      | B10、S9；clarification Q1                                                                  |
 | `Database`（`create_engine`、`get_db`）                           | 資料存取基礎  | 依 `Settings` 推導 async URL、建 engine 與 sessionmaker；`get_db` 一個請求一個 `AsyncSession`，例外時 rollback，結束關閉；**不 commit**                                                                    | ADR-003 D7、B3、B4                                                                         |
 | `Base`                                                            | Model 基底    | `DeclarativeBase`，`MetaData(naming_convention=...)` 讓約束名在兩種資料庫一致、batch 模式能找到約束                                                                                                        | B6、ADR-003 D7                                                                             |
 | `ApiModel`                                                        | schema 基底   | `ConfigDict(alias_generator=to_camel, populate_by_name=True, from_attributes=True, extra="forbid")`，全專案一處設定                                                                                        | A2、#503 裁定 3                                                                            |
@@ -271,19 +271,19 @@ classDiagram
 | `AppError` 家族                                                   | 例外          | Service 只丟領域例外（帶 `status_code`、`code`、`message_key`），不丟 `HTTPException`                                                                                                                      | B1「資料層不處理 HTTP」、A7                                                                |
 | `register_exception_handlers`                                     | 錯誤處理      | `AppError`、`RequestValidationError`、`HTTPException` 轉成錯誤外層                                                                                                                                         | A7                                                                                         |
 | 三個中介層                                                        | 橫切          | 見上一節的順序表                                                                                                                                                                                           | A6、A7、A8、S2                                                                             |
-| `MessageCatalog`                                                  | i18n          | 解析 `Accept-Language`（q-value、`*`、`q=0`），fallback `zh-TW`，從 `app/i18n/<lang>/messages.json` 取字                                                                                                   | A8、architecture.mdx §i18n 兩層；待 clarification 待決 2                                   |
+| `MessageCatalog`                                                  | i18n          | 解析 `Accept-Language`（q-value、`*`、`q=0`），fallback `zh-TW`，從 `app/i18n/<lang>/messages.json` 取字                                                                                                   | A8、architecture.mdx §i18n 兩層；clarification Q2                                          |
 | `generate_operation_id`                                           | OpenAPI       | 從 method 與路徑算「動詞加資源」，不讀函式名                                                                                                                                                               | A1                                                                                         |
 | `export_openapi`                                                  | OpenAPI       | 用固定的佔位 `Settings` 呼叫 `create_app`，不跑 lifespan、不連資料庫，輸出排序過的 JSON                                                                                                                    | A4、A5                                                                                     |
-| `HealthRouter`／`HealthService`／`HealthRepository`／`HealthData` | 模組 `health` | 第一個模組，示範完整分層；`ping()` 用 `select(literal(1))`，不用 `text()`                                                                                                                                  | B1、B5；待 clarification 待決 10、11、14                                                   |
+| `HealthRouter`／`HealthService`／`HealthRepository`／`HealthData` | 模組 `health` | 第一個模組，示範完整分層；`ping()` 用 `select(literal(1))`，不用 `text()`                                                                                                                                  | B1、B5；clarification Q3、Q8，結論（待決 10）                                              |
 
 ### 關鍵設計細節
 
 **外層與 camelCase**（A1、A2、#503）
 
 - Python 欄位 snake_case，JSON 由 `ApiModel` 的 alias generator 轉成 camelCase；FastAPI 預設 `response_model_by_alias=True`，OpenAPI schema 也用 alias，所以 #504 驗收第 6 項可直接掃 `openapi.json`。
-- 泛型外層在 OpenAPI 的元件名預設是 `ApiResponse_HealthData_`，Orval 產出的型別名會很難讀。建議覆寫 `ApiResponse.model_parametrized_name`，讓 `ApiResponse[HealthData]` 的元件名成為 `HealthDataResponse`，`ApiResponse[PaginatedResponse[TaskItem]]` 成為 `TaskItemPageResponse`。實際命名由 `api-contract` 定（§技術待決問題 新增 N3）。
-- `timestamp`：建議 ISO 8601、UTC、毫秒、`Z` 結尾（例 `2026-11-20T08:15:30.123Z`），在 `Envelope` 組裝時取 `datetime.now(UTC)`（待 clarification 待決 8）。
-- `code`：建議成功固定 `OK`；錯誤碼 `UPPER_SNAKE_CASE`，通用碼不加前綴，模組專屬碼加模組前綴（例 `TASK_NAME_DUPLICATED`）。第一批通用碼：`VALIDATION_FAILED`（422）、`NOT_FOUND`（404）、`METHOD_NOT_ALLOWED`（405）、`NOT_ACCEPTABLE`（406）、`INTERNAL_ERROR`（500）、`DATABASE_UNAVAILABLE`（503）（待 clarification 待決 6）。
+- 泛型外層在 OpenAPI 的元件名預設是 `ApiResponse_HealthData_`，Orval 產出的型別名會很難讀。覆寫 `ApiResponse.model_parametrized_name`，讓 `ApiResponse[HealthData]` 的元件名成為 `HealthDataResponse`，`ApiResponse[PaginatedResponse[TaskItem]]` 成為 `TaskItemPageResponse`；完整命名規則寫在 `api-contract` §OpenAPI 元件命名（clarification Q8、N3）。
+- `timestamp`：ISO 8601、UTC、毫秒、`Z` 結尾（例 `2026-11-20T08:15:30.123Z`），在 `Envelope` 組裝時取 `datetime.now(UTC)`（clarification Q8）。
+- `code`：成功固定 `OK`；錯誤碼 `UPPER_SNAKE_CASE`，通用碼不加前綴，模組專屬碼加模組前綴（例 `TASK_NAME_DUPLICATED`）。第一批通用碼：`VALIDATION_FAILED`（422）、`NOT_FOUND`（404）、`METHOD_NOT_ALLOWED`（405）、`NOT_ACCEPTABLE`（406）、`INTERNAL_ERROR`（500）、`DATABASE_UNAVAILABLE`（503）（clarification Q8）。
 
 **422 的逐欄位錯誤**（A7）
 
@@ -291,22 +291,22 @@ classDiagram
 - **不帶 Pydantic 的 `input`、`ctx`、`url`**：`input` 會把呼叫端送來的原值回顯，之後的端點可能含密碼或答案內容。
 - `errors` 內的 `message` 屬 A8 的明文例外，不本地化；外層的 `message` 仍依 locale 翻譯。
 
-**追蹤編號**（建議預設，待 clarification 待決 7）
+**追蹤編號**（clarification Q8）
 
 - 標頭 `X-Correlation-ID` 與外層 `traceId` 用同一個值。
 - 呼叫端自帶的值只在符合 `^[A-Za-z0-9-]{8,64}$` 時沿用，其餘一律丟棄並產生 UUID4，不回 `400`（Hard Rule 9：外部輸入先驗證才進 log 與回應）。
 - 值寫進 `scope["state"]["correlation_id"]` 與 contextvar，handler、log 都從這裡取。
 
-**設定與啟動失敗**（建議預設，待 clarification 待決 1、3）
+**設定與啟動失敗**（clarification Q1；帶憑證依 clarification 結論，待決 3）
 
 | 環境變數                 | 型別                   | 必要 | 驗證                                                                                              | 預設                    |
 | :----------------------- | :--------------------- | :--- | :------------------------------------------------------------------------------------------------ | :---------------------- |
 | `CORS_ALLOWED_ORIGINS`   | 逗號分隔的 origin 清單 | 是   | 每一項都要是 `http(s)://host[:port]`、不帶路徑；拒絕 `*`、空清單                                  | 無                      |
-| `CORS_ALLOW_CREDENTIALS` | bool                   | 否   | —                                                                                                 | `true`（建議，待決 3）  |
+| `CORS_ALLOW_CREDENTIALS` | bool                   | 否   | —                                                                                                 | `true`                  |
 | `DATABASE_URL`           | PostgreSQL URL         | 否   | 只接受 `postgresql` 系列 scheme；`postgresql://` 與 `postgresql+asyncpg://` 都正規化成 `+asyncpg` | 無（沒設就走 Lite）     |
 | `SQLITE_PATH`            | 路徑                   | 否   | —                                                                                                 | `./data/label_suite.db` |
 
-- `CORS_ALLOWED_ORIGINS` 是唯一的必要設定，這也讓 #504 驗收第 5 項有東西可驗；「clone 後不必設定就能跑」由 #506 的 `.env.example` 與 compose 預設值補上（需求矛盾 3）。
+- `CORS_ALLOWED_ORIGINS` 是唯一的必要設定（clarification Q1）：缺少、空清單或含 `*` 都啟動失敗，這也讓 #504 驗收第 5 項有東西可驗；「clone 後不必設定就能跑」由 #506 的 `.env.example` 與 compose 預設值補上（需求矛盾 3）。
 - 沒有 env 前綴，與 `architecture.mdx` 既有的 `DATABASE_URL`、`GOOGLE_CLIENT_ID` 一致。
 - `CORSMiddleware` 的 `allow_methods` 明列 `GET, POST, PUT, PATCH, DELETE, OPTIONS`，`allow_headers` 明列 `Content-Type, Accept-Language, X-Correlation-ID`（01-01 再加 CSRF header），不用 `*`。
 
@@ -326,16 +326,16 @@ classDiagram
   - `POST` → `create`；`PUT`／`PATCH` → `update`；`DELETE` → `delete`，皆加單數資源
 - 單複數轉換用 `app/core/openapi.py` 內的一條簡單規則加一張不規則字表，不另加套件。
 - 用回應形狀而不是路徑判斷 `list` 與 `get`，是因為 `/health` 這類單例資源沒有路徑參數，光看路徑會被誤判成集合。
-- `create_app` 在 `include_router` 之後跑 `assert_unique_operation_ids`，撞名就啟動失敗，unit 測試同時鎖住。撞名時要怎麼加父資源（A1 要求加在契約裡、但產生處仍只有這個函式）本次沒有實例，見 §技術待決問題 新增 N1。
+- `create_app` 在 `include_router` 之後跑 `assert_unique_operation_ids`，撞名就啟動失敗，unit 測試同時鎖住。撞名時要怎麼加父資源（A1 要求加在契約裡、但產生處仍只有這個函式）本次沒有實例，解法等第一次撞名的 change 再定（clarification 結論，N1）。
 - 本次唯一端點 `GET /api/v1/health` → `getHealth`。
 
 **介面描述檔匯出**（A4、A5 前半段）
 
-- `uv run python -m app.scripts.export_openapi [--output PATH]`，預設輸出 `backend/openapi.json`（待 clarification 新增 N2）。
+- `uv run python -m app.scripts.export_openapi [--output PATH]`，預設輸出 `backend/openapi.json`，並提交進 repo（clarification Q8、N2）。
 - 用固定的佔位 `Settings`（例 `cors_allowed_origins=["http://localhost"]`）呼叫 `create_app`，不跑 lifespan、不連資料庫，所以不需要任何環境變數。
 - 輸出 `sort_keys=True`、縮排 2、結尾換行，讓 #505 與 #506 的 drift 比對穩定。
 
-**未處理例外的 log**（建議預設，待 clarification 待決 16）
+**未處理例外的 log**（clarification 結論，待決 16）
 
 - 用標準函式庫 `logging` 寫一筆 `ERROR`：`traceId`、method、path、例外型別與堆疊。
 - 不記 request body、query、header、cookie（S9）；這不是可觀測性（ADR-008 D4 不做的是監控、指標與錯誤追蹤服務），只是讓部署者能用回應裡的 `traceId` 找到原因。
@@ -343,9 +343,11 @@ classDiagram
 **測試**（ADR-007 D1、T1、T4、B7）
 
 - 測試資料庫：有 `TEST_DATABASE_URL` 就用 PostgreSQL，沒有就用 `tmp_path` 下的 SQLite 檔（不用 `:memory:`，多連線會看到不同的庫）。兩種資料庫各跑一次 `uv run pytest`。
+- PostgreSQL 的來源（clarification Q5）：本次驗收用本機 `docker run postgres:16` 起暫時的資料庫，設定 `TEST_DATABASE_URL` 後跑 pytest，指令與結果寫進 `acceptance.md`。沒設 `TEST_DATABASE_URL` 時，只能在 PostgreSQL 上跑的測試自動跳過、不算失敗。CI 裡的 PostgreSQL 由 #506 建。
+- 覆蓋率（clarification Q8）：以 `pytest-cov` 產出報告，數字記在 `acceptance.md`；本次不設門檻，門檻由 #506 建。
 - 測試庫的 schema 一律 `alembic upgrade head` 建立，不用 `create_all`（B6）。
 - integration 用 `httpx.AsyncClient(transport=ASGITransport(app))` 打 `create_app(test_settings)` 產生的 app，中介層與 handler 與正式環境相同（T4）。
-- 驗證失敗與未處理例外需要一條會觸發它們的路由，而本次唯一的端點沒有輸入、也不會丟例外。建議在測試 fixture 對 `create_app()` 產生的 app 額外 `include_router` 一個只存在於 `tests/` 的探測 router（一條帶 body 的 `POST`、一條會丟 `RuntimeError` 的 `GET`）。這是在同一個組裝之上多加路由，不少任何中介層，不算 T4 禁止的「harness 比 production 寬鬆」。見 §技術待決問題 新增 N4。
+- 驗證失敗與未處理例外需要一條會觸發它們的路由，而本次唯一的端點沒有輸入、也不會丟例外。在測試 fixture 對 `create_app()` 產生的 app 額外 `include_router` 一個只存在於 `tests/` 的探測 router（一條帶 body 的 `POST`、一條會丟 `RuntimeError` 的 `GET`）。這是在同一個組裝之上多加路由，不少任何中介層，不算 T4 禁止的「harness 比 production 寬鬆」（clarification Q8、N4）。
 - unit：`ApiModel` 的 camelCase 與 `extra="forbid"`、`PaginatedResponse` 的推導（含 `total=0`、`offset >= total`）、`generate_operation_id` 的對照表與撞名檢查、`Settings` 的驗證（缺 `CORS_ALLOWED_ORIGINS`、含 `*`、`DATABASE_URL` scheme 錯誤）、`resolve_locale` 的 q-value 規則、追蹤編號的接受與丟棄。
 - integration：每個 [§關鍵情境](#關鍵情境) 至少一條；遷移的 `upgrade → downgrade → upgrade`；請求結束後 pool 的 checked-out 連線回到 0（B3 檢查方式）。
 
@@ -383,7 +385,7 @@ sequenceDiagram
 
 ### Scenario: 資料庫無法連線時健康檢查回 503 外層
 
-待 clarification 待決 11。建議預設：健康檢查實際 ping 資料庫，連不上回 `503`、`DATABASE_UNAVAILABLE`，不回 `200` 加降級欄位。
+clarification Q3：健康檢查實際對資料庫執行一次 `SELECT 1`，連不上回 `503`、`DATABASE_UNAVAILABLE`，不回 `200` 加降級欄位；PostgreSQL 連線最多等 5 秒。
 
 ```mermaid
 sequenceDiagram
@@ -412,7 +414,7 @@ sequenceDiagram
 
 ### Scenario: 請求驗證失敗回 422 外層與逐欄位錯誤
 
-本次唯一的端點沒有輸入，這張圖以測試探測路由為例（§技術待決問題 新增 N4）；之後每個帶 body 的端點走同一條路。
+本次唯一的端點沒有輸入，這張圖以只存在於 `tests/` 的探測路由為例（clarification Q8、N4）；之後每個帶 body 的端點走同一條路。
 
 ```mermaid
 sequenceDiagram
@@ -486,7 +488,7 @@ sequenceDiagram
 
 ### Scenario: 回應訊息依語言偏好本地化
 
-待 clarification 待決 2。建議預設：本次就實作 A8 的解析規則與兩種語系的訊息目錄。
+clarification Q2：本次就實作完整的 A8，含解析規則、zh-TW 與 en 兩份訊息目錄、`406` 與 `Content-Language` 回應標頭。
 
 ```mermaid
 sequenceDiagram
@@ -557,7 +559,7 @@ sequenceDiagram
 
 ### Scenario: 資料庫遷移在兩種資料庫上可升可降
 
-待 clarification 待決 13。建議預設：建立一個不含任何操作的基準遷移。
+clarification Q8：建立一個不含任何操作的基準遷移。
 
 ```mermaid
 sequenceDiagram
@@ -585,7 +587,7 @@ sequenceDiagram
 
 以下是遷移的基礎設定，不屬資料模型異動，列出來是因為之後每個模組的遷移都會建在它上面：
 
-| 項目              | 建議做法                                                                                                                                                                                                                              | 依據                                               |
+| 項目              | 做法                                                                                                                                                                                                                                  | 依據                                               |
 | :---------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :------------------------------------------------- |
 | 約束命名慣例      | `ix: ix_%(column_0_label)s`、`uq: uq_%(table_name)s_%(column_0_name)s`、`ck: ck_%(table_name)s_%(constraint_name)s`、`fk: fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s`、`pk: pk_%(table_name)s`，設在 `Base.metadata` | B6；SQLite 的 batch 模式重建表時要靠約束名找到約束 |
 | `render_as_batch` | `env.py` 一律設 `True`。在 PostgreSQL 上 batch 操作照常發出 `ALTER`，只有 SQLite 會重建表，所以兩種資料庫用同一份遷移檔                                                                                                               | ADR-003 D7                                         |
@@ -593,7 +595,7 @@ sequenceDiagram
 | `env.py` 的 URL   | 與 app 共用 `Settings.async_database_url()`，以 async engine 跑 `run_sync`；不另讀環境變數                                                                                                                                            | B10                                                |
 | model 的收集      | `env.py` 用 `pkgutil` 掃 `app.modules.*.models` 自動 import，新模組不必改 `env.py`                                                                                                                                                    | B6                                                 |
 | `compare_type`    | `True`，autogenerate 時偵測型別變更；產物仍要人工讀過，確認沒有非預期的 `DROP`（B6 正例）                                                                                                                                             | B6                                                 |
-| 基準遷移          | 一個空的 revision，`upgrade` 與 `downgrade` 都不做事；**down 可完全還原**（只移除 `alembic_version` 那一列）。待 clarification 待決 13                                                                                                | B6、T4                                             |
+| 基準遷移          | 一個空的 revision，`upgrade` 與 `downgrade` 都不做事；**down 可完全還原**（只移除 `alembic_version` 那一列）（clarification Q8）                                                                                                      | B6、T4                                             |
 
 SQLite 與 PostgreSQL 在本次碰得到的差異：
 
@@ -609,13 +611,13 @@ SQLite 與 PostgreSQL 在本次碰得到的差異：
 
 本次**沒有任何受保護的能力**：沒有登入、沒有角色、沒有欄位遮蔽，所有呼叫端拿到的內容相同（system-analysis §涉及的角色）。PRD §權限矩陣 不適用，也沒有超出它的地方。
 
-| 檢查點                                                | 本次                                                                                                         | 之後由誰接上                |
-| :---------------------------------------------------- | :----------------------------------------------------------------------------------------------------------- | :-------------------------- |
-| 認證 dependency（驗 httpOnly cookie 裡的 access JWT） | 不實作；中介層順序表留了位置                                                                                 | 規格 01-01 登入             |
-| CSRF middleware                                       | 不實作；`allow_headers` 之後補 CSRF header                                                                   | 規格 01-01 登入             |
-| 授權四步（architecture.mdx §授權四步）                | 不實作                                                                                                       | 第一個有受保護端點的 change |
-| 欄位遮蔽                                              | 無；所有回應 schema 都明列欄位，不回 ORM 物件（A2）                                                          | 各模組的 Router             |
-| `GET /api/v1/health`                                  | 公開，不需登入。認證上線後是否仍公開待 clarification 待決 12，建議維持公開並在 01-01 的 S10 矩陣標成刻意公開 | 規格 01-01 登入             |
+| 檢查點                                                | 本次                                                                                          | 之後由誰接上                |
+| :---------------------------------------------------- | :-------------------------------------------------------------------------------------------- | :-------------------------- |
+| 認證 dependency（驗 httpOnly cookie 裡的 access JWT） | 不實作；中介層順序表留了位置                                                                  | 規格 01-01 登入             |
+| CSRF middleware                                       | 不實作；`allow_headers` 之後補 CSRF header                                                    | 規格 01-01 登入             |
+| 授權四步（architecture.mdx §授權四步）                | 不實作                                                                                        | 第一個有受保護端點的 change |
+| 欄位遮蔽                                              | 無；所有回應 schema 都明列欄位，不回 ORM 物件（A2）                                           | 各模組的 Router             |
+| `GET /api/v1/health`                                  | 刻意公開，不需登入；認證上線後也維持公開，01-01 在 S10 矩陣標成刻意的例外（clarification Q4） | 規格 01-01 登入             |
 
 骨架為之後的權限檢查先定好兩件事：
 
@@ -632,28 +634,28 @@ SQLite 與 PostgreSQL 在本次碰得到的差異：
 
 ### system-analysis 待決問題與需求矛盾的處理
 
-全部延續到 clarification，由維護者在那個停點決定；本文只寫建議預設。
+全部已在 clarification 停點處理：需要維護者決定的由 Q1–Q9 決議（2026-11-20），其餘依 `clarification.md` §不需維護者決定的結論 定案。
 
-| 待決           | 主題                       | 本文的建議預設                                                                                                            | 寫在                                                                   |
-| :------------- | :------------------------- | :------------------------------------------------------------------------------------------------------------------------ | :--------------------------------------------------------------------- |
-| 1（含矛盾 3）  | 必要設定                   | 只有 `CORS_ALLOWED_ORIGINS` 必要；免設定即可啟動由 #506 的 `.env.example` 與 compose 預設值補                             | §關鍵設計細節「設定與啟動失敗」                                        |
-| 2（含矛盾 4）  | `message` 本地化           | 本次實作 A8：解析規則、`zh-TW` 與 `en` 兩份訊息目錄、`406`                                                                | `LocaleMiddleware`、`MessageCatalog`、情境「回應訊息依語言偏好本地化」 |
-| 3              | CORS 帶憑證                | `allow_credentials=True`，origins、methods、headers 都明列                                                                | §關鍵設計細節「設定與啟動失敗」                                        |
-| 4              | PostgreSQL 由誰提供        | 本次以本機 `docker run postgres:16` 加 `TEST_DATABASE_URL` 驗收，指令寫進 `acceptance.md`；#506 再換成 compose 與 CI 服務 | §關鍵設計細節「測試」                                                  |
-| 5              | `pyproject.toml` 初始版號  | 建議 `0.0.0`，表示尚未 release；第一次 `chore(release)` 再與 `CITATION.cff` 對齊                                          | —                                                                      |
-| 6              | `code` 規則                | 成功 `OK`；`UPPER_SNAKE_CASE`；通用碼無前綴、模組碼加模組前綴；第一批六個                                                 | §關鍵設計細節「外層與 camelCase」                                      |
-| 7              | 追蹤編號                   | 標頭與 `traceId` 同值；自帶值符合格式才沿用，否則重新產生                                                                 | §關鍵設計細節「追蹤編號」                                              |
-| 8              | `timestamp` 格式           | ISO 8601、UTC、毫秒、`Z`                                                                                                  | §關鍵設計細節「外層與 camelCase」                                      |
-| 9              | 覆蓋率基準                 | 本次加 `pytest-cov` 產出報告，數字記在 `acceptance.md`；門檻與不得下降由 #506 建                                          | —                                                                      |
-| 10（含矛盾 2） | 健康檢查的回應形狀         | 有明確的 `HealthData` 與 `response_model`，放進 `openapi.json`                                                            | `HealthData`、情境「健康檢查回傳完整外層與追蹤編號」                   |
-| 11             | 健康檢查碰資料庫           | 實際 ping；連不上回 `503`、`DATABASE_UNAVAILABLE`                                                                         | 情境「資料庫無法連線時健康檢查回 503 外層」                            |
-| 12             | 認證上線後健康檢查是否公開 | 維持公開，01-01 在 S10 矩陣標成刻意公開                                                                                   | §權限檢查點                                                            |
-| 13             | 空的基準遷移               | 建立；`up`、`down` 都不做事，可完全還原                                                                                   | §資料模型異動、情境「資料庫遷移在兩種資料庫上可升可降」                |
-| 14             | 健康檢查當第一個模組       | 放 `app/modules/health/`，走完整的 router、service、repository、schemas 四件，給 #506 的分層檢查當對象                    | §目錄結構                                                              |
-| 15（含矛盾 1） | `ruff`、`mypy --strict`    | 本次建立設定並列進 `openspec/config.yaml`；import 方向、drift、覆蓋率門檻與 Semgrep 歸 #506                               | 見下方「`openspec/config.yaml` 要補的指令」                            |
-| 16             | 未處理例外的 log           | 寫一筆含 `traceId` 的 `ERROR`，不記 body、header、cookie                                                                  | §關鍵設計細節「未處理例外的 log」                                      |
+| 待決           | 主題                       | 決議                                                                                                                                                                                     | 依據                          | 寫在                                                                   |
+| :------------- | :------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------- | :--------------------------------------------------------------------- |
+| 1（含矛盾 3）  | 必要設定                   | 只有 `CORS_ALLOWED_ORIGINS` 必要，缺少、空清單或含 `*` 都啟動失敗；其餘有預設。免設定即可啟動由 #506 的 `.env.example` 與 compose 預設值補                                               | clarification Q1              | §關鍵設計細節「設定與啟動失敗」                                        |
+| 2（含矛盾 4）  | `message` 本地化           | 本次實作完整 A8：q 值解析、`zh-TW` 與 `en` 兩份訊息目錄、預設 `zh-TW`、全部被拒回 `406`、`Content-Language` 標頭；`ErrorDetail.message` 維持英文                                         | clarification Q2              | `LocaleMiddleware`、`MessageCatalog`、情境「回應訊息依語言偏好本地化」 |
+| 3              | CORS 帶憑證                | `allow_credentials=True`，origins、methods、headers 都明列                                                                                                                               | clarification 結論（待決 3）  | §關鍵設計細節「設定與啟動失敗」                                        |
+| 4              | PostgreSQL 由誰提供        | 本機 `docker run postgres:16` 加 `TEST_DATABASE_URL` 驗收，指令與結果寫進 `acceptance.md`；沒設變數時 PostgreSQL 測試跳過；CI 的 PostgreSQL 由 #506 建                                   | clarification Q5              | §關鍵設計細節「測試」                                                  |
+| 5              | `pyproject.toml` 初始版號  | `0.0.0`，表示尚未 release；第一次 `chore(release)` 才改正式版號；#505 的 `frontend/package.json` 沿用                                                                                    | clarification Q7              | —                                                                      |
+| 6              | `code` 規則                | 成功 `OK`；`UPPER_SNAKE_CASE`；通用碼無前綴、模組碼加模組前綴；第一批六個                                                                                                                | clarification Q8              | §關鍵設計細節「外層與 camelCase」                                      |
+| 7              | 追蹤編號                   | 標頭與 `traceId` 同值；自帶值符合格式才沿用，否則重新產生、不回錯誤                                                                                                                      | clarification Q8              | §關鍵設計細節「追蹤編號」                                              |
+| 8              | `timestamp` 格式           | ISO 8601、UTC、毫秒、`Z`                                                                                                                                                                 | clarification Q8              | §關鍵設計細節「外層與 camelCase」                                      |
+| 9              | 覆蓋率基準                 | 本次以 `pytest-cov` 產出報告，數字記在 `acceptance.md`；不設門檻，門檻與不得下降由 #506 建                                                                                               | clarification Q8              | §關鍵設計細節「測試」                                                  |
+| 10（含矛盾 2） | 健康檢查的回應形狀         | 有明確的 `HealthData` 與 `response_model`，放進 `openapi.json`                                                                                                                           | clarification 結論（待決 10） | `HealthData`、情境「健康檢查回傳完整外層與追蹤編號」                   |
+| 11             | 健康檢查碰資料庫           | 實際執行 `SELECT 1`；連不上回 `503`、`DATABASE_UNAVAILABLE`；PostgreSQL 連線最多等 5 秒                                                                                                  | clarification Q3              | 情境「資料庫無法連線時健康檢查回 503 外層」                            |
+| 12             | 認證上線後健康檢查是否公開 | 刻意公開，認證上線後也維持；01-01 在 S10 矩陣列為刻意的例外                                                                                                                              | clarification Q4              | §權限檢查點                                                            |
+| 13             | 空的基準遷移               | 建立；`up`、`down` 都不做事，可完全還原，「上、下、再上」在兩種資料庫實際跑過                                                                                                            | clarification Q8              | §資料模型異動、情境「資料庫遷移在兩種資料庫上可升可降」                |
+| 14             | 健康檢查當第一個模組       | 放 `app/modules/health/`，走完整的 router、service、repository、schemas 四件，給 #506 的分層檢查當對象                                                                                   | clarification Q8              | §目錄結構                                                              |
+| 15（含矛盾 1） | `ruff`、`mypy --strict`    | 本次建立 `ruff check`、`ruff format --check`、`mypy --strict app`，寫進 `openspec/config.yaml`，只在本機與 apply 檢查時跑、不加 CI job；import 方向、drift、覆蓋率門檻與 Semgrep 歸 #506 | clarification Q6              | 見下方「`openspec/config.yaml` 要補的指令」                            |
+| 16             | 未處理例外的 log           | 寫一筆含 `traceId` 的 `ERROR`，不記 body、query、header、cookie                                                                                                                          | clarification 結論（待決 16） | §關鍵設計細節「未處理例外的 log」                                      |
 
-`openspec/config.yaml` 的 `operations.apply.guidance` 要補的後端指令（#504 驗收第 7 項；lint 與型別兩條取決於待決 15）：
+`openspec/config.yaml` 的 `operations.apply.guidance` 要補的後端指令（#504 驗收第 7 項；clarification Q6，不加 CI job）：
 
 - `cd backend && uv run pytest`（SQLite）
 - `cd backend && TEST_DATABASE_URL=postgresql+asyncpg://... uv run pytest`（PostgreSQL）
@@ -663,14 +665,16 @@ SQLite 與 PostgreSQL 在本次碰得到的差異：
 
 ### 本文新發現的待決問題
 
-| #   | 問題                                                                                                                                                                                                                   | 影響                                                                   | 建議                                                                                                                                                                                          |
-| :-- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| N1  | operationId 撞名時，A1 要求「在 `api-contract.md` 把名字加上父資源」，但同時要求產生處只有 `generate_unique_id_function`、不得逐個覆寫。函式只看得到單一路由，不知道別的路由是否同名，契約裡寫的父資源要怎麼回到函式？ | 第一個巢狀資源出現時的命名機制；本次沒有實例，不卡本次                 | 本次只做「撞名就啟動失敗」；撞名的解法等第一次撞名的 change 再定，屆時候選是「巢狀路徑一律加父資源」或「在 `openapi.py` 維護一張集中的撞名表」，兩者都只有一個產生處                          |
-| N2  | 匯出的 `openapi.json` 放哪裡、是否提交進 repo？                                                                                                                                                                        | #505 Orval 的輸入路徑；A5 要求契約、`openapi.json` 與產物同一個 commit | 放 `backend/openapi.json` 並提交；由 #505 確認 Orval 讀這個路徑                                                                                                                               |
-| N3  | 泛型外層在 OpenAPI 的元件名（`ApiResponse_HealthData_` 對 `HealthDataResponse`）                                                                                                                                       | Orval 產出的 TypeScript 型別名；之後改名是對前端的破壞性變更           | 覆寫 `model_parametrized_name`，命名規則由 `api-contract` 定下                                                                                                                                |
-| N4  | 驗證失敗與未處理例外的 integration 測試需要觸發它們的路由，本次唯一的端點兩者都觸發不了                                                                                                                                | #504 驗收第 3、4 項怎麼驗                                              | 只在 `tests/` 定義探測 router，掛在 `create_app()` 產生的同一個 app 上；不在正式程式留測試端點。這是在同一個組裝上多加路由、不少任何中介層，屬 T4 允許的方向，但仍請 clarification 確認可接受 |
-| N5  | `ServerErrorMiddleware` 位在 CORS 外面，由它產生的 `500` 沒有 CORS 標頭；跨來源的前端只會看到 CORS 錯誤                                                                                                                | 未處理例外時前端能否顯示通用錯誤並附 `traceId`（A7）                   | 已在設計中以 CORS 內側的 `UnhandledExceptionMiddleware` 處理；回應已開始送出時無法補救，只能由 log 追查。列出來供 `code-reviewer` 與 #505 知悉，不需維護者決定                                |
-| N6  | `/docs`、`/redoc`、`/openapi.json` 這三條 FastAPI 內建路由在正式部署是否關閉？它們不在 `/api/v1` 底下，也不套外層                                                                                                      | 正式環境是否公開 API 結構；不卡本次驗收                                | 本次維持 FastAPI 預設開啟；正式環境是否關閉交給 #506 的部署設定決定                                                                                                                           |
+全部已處理；處理方式寫在「結論」欄。
+
+| #   | 問題                                                                                                                                                                                                                   | 影響                                                                   | 結論                                                                                                                                                                                       |
+| :-- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| N1  | operationId 撞名時，A1 要求「在 `api-contract.md` 把名字加上父資源」，但同時要求產生處只有 `generate_unique_id_function`、不得逐個覆寫。函式只看得到單一路由，不知道別的路由是否同名，契約裡寫的父資源要怎麼回到函式？ | 第一個巢狀資源出現時的命名機制；本次沒有實例，不卡本次                 | 已定（clarification 結論）：本次只做「撞名就啟動失敗」；解法等第一次撞名的 change 再定，屆時候選是「巢狀路徑一律加父資源」或「在 `openapi.py` 維護一張集中的撞名表」，兩者都只有一個產生處 |
+| N2  | 匯出的 `openapi.json` 放哪裡、是否提交進 repo？                                                                                                                                                                        | #505 Orval 的輸入路徑；A5 要求契約、`openapi.json` 與產物同一個 commit | 已決（clarification Q8）：放 `backend/openapi.json` 並提交；#505 的 Orval 讀這個路徑                                                                                                       |
+| N3  | 泛型外層在 OpenAPI 的元件名（`ApiResponse_HealthData_` 對 `HealthDataResponse`）                                                                                                                                       | Orval 產出的 TypeScript 型別名；之後改名是對前端的破壞性變更           | 已決（clarification Q8）：覆寫 `model_parametrized_name`，元件名 `XResponse`／`XPageResponse`／`XPage`，規則寫在 `api-contract`                                                            |
+| N4  | 驗證失敗與未處理例外的 integration 測試需要觸發它們的路由，本次唯一的端點兩者都觸發不了                                                                                                                                | #504 驗收第 3、4 項怎麼驗                                              | 已決（clarification Q8）：只在 `tests/` 定義探測 router，掛在 `create_app()` 產生的同一個 app 上；不在正式程式留測試端點                                                                   |
+| N5  | `ServerErrorMiddleware` 位在 CORS 外面，由它產生的 `500` 沒有 CORS 標頭；跨來源的前端只會看到 CORS 錯誤                                                                                                                | 未處理例外時前端能否顯示通用錯誤並附 `traceId`（A7）                   | 已定（clarification 結論）：由 CORS 內側的 `UnhandledExceptionMiddleware` 處理；回應已開始送出時無法補救，只能由 log 追查。供 `code-reviewer` 與 #505 知悉                                 |
+| N6  | `/docs`、`/redoc`、`/openapi.json` 這三條 FastAPI 內建路由在正式部署是否關閉？它們不在 `/api/v1` 底下，也不套外層                                                                                                      | 正式環境是否公開 API 結構；不卡本次驗收                                | 已定（clarification 結論）：本次維持 FastAPI 預設開啟；正式環境是否關閉交給 #506 的部署設定                                                                                                |
 
 ### 交易、session 與效能
 
