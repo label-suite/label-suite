@@ -28,9 +28,9 @@
 
 ### Scenario 結果
 
-共 75 個 Scenario，全部 **PASS**。
+共 76 個 Scenario，全部 **PASS**（原 75 個，加上補驗新增的 1 個，見文末〈補驗〉）。
 
-#### api-envelope（20）
+#### api-envelope（21，新增的 1 個見〈補驗〉）
 
 | Scenario                                 | 對應的規格書驗收標準 | 證據                                                                                                                                                                                                                                                                                                                                                            | 結果 |
 | :--------------------------------------- | :------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--- |
@@ -195,7 +195,7 @@
 
 | 項目                                                     | 指令                                                                                                                                                                                                                                                                           | 結果                                                                                                                                                                                                                                        |
 | :------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| spec 每個 Scenario 驗證通過                              | 見上表                                                                                                                                                                                                                                                                         | 通過（75／75）                                                                                                                                                                                                                              |
+| spec 每個 Scenario 驗證通過                              | 見上表                                                                                                                                                                                                                                                                         | 通過（76／76，含〈補驗〉）                                                                                                                                                                                                                  |
 | Decision Table 每一列有驗證                              | 見上表                                                                                                                                                                                                                                                                         | 通過（26／26）                                                                                                                                                                                                                              |
 | 後端測試，SQLite                                         | `cd backend && uv run pytest --cov=app --cov-report=term-missing`                                                                                                                                                                                                              | 通過：**300 passed, 4 skipped**（4 個都是標 `postgres` 的測試：`test_health.py:168` 一個、`test_health.py:304` 三個參數化），覆蓋率 **97%**（728 statements，24 miss）                                                                      |
 | 後端測試，PostgreSQL                                     | `docker run --rm -d --name label-suite-pg-504 -p 55432:5432 -e POSTGRES_PASSWORD=postgres postgres:16`，等 `pg_isready` 後 `cd backend && TEST_DATABASE_URL=postgresql+asyncpg://postgres:postgres@127.0.0.1:55432/postgres uv run pytest --cov=app --cov-report=term-missing` | 通過：**304 passed, 0 skipped**，覆蓋率 **97%**；跑完 `docker stop label-suite-pg-504`                                                                                                                                                      |
@@ -285,7 +285,7 @@
 
 ### 缺陷
 
-結論為通過：沒有 Scenario、DoD 或 Hard Rule 項目未通過。以下兩項是 Requirement 條文與實作的落差，但沒有任何 Scenario 涵蓋，屬非阻斷；第 2 項是規格問題，待維護者回答。
+結論為通過：沒有 Scenario、DoD 或 Hard Rule 項目未通過。以下兩項在初次驗收時是非阻斷的落差，**兩項都已解決**（見〈補驗〉）。
 
 1. `[Medium][Non-blocking]` 無法解析的 JSON 的 `field` 是字元位置，不是空字串
    - 對應 Scenario：無法解析的 JSON 回 422（Scenario 只要求 `location` 為 `"body"`，已通過）；落差在 Requirement「請求驗證失敗回 422 與逐欄位錯誤」與 `api-contract.md` 第 73 行「錯誤在整個 location 時為空字串 `""`」。
@@ -303,3 +303,51 @@
 
 3. uvicorn 自己的 access log（`INFO`）會印出完整 query string，例如 `"GET /api/v1/probe-crash?q=CANARY-query HTTP/1.1" 500`。本 change 的 Requirement 只約束「未處理例外那一筆 `ERROR` 紀錄」，那一筆確實不含 query；但之後若有端點把 token 或答案放在 query，access log 會留下來。建議 01-01 或 #506 部署設定時決定 access log 的格式（S9）。
 4. 預檢的 `access-control-allow-headers` 除了設定的 `Content-Type, Accept-Language, X-Correlation-ID`，還多了 `Accept`、`Content-Language`：這是 Starlette 自動加上的 CORS safelisted 標頭，不是 `*`，符合 Scenario。
+
+## 補驗：驗收後修正（2026-11-20）
+
+結論：**通過**（76／76 Scenario PASS）
+
+初次驗收（`9dc46b5`）的兩項非阻斷缺陷，處理方式如下：
+
+| Commit    | 內容                                                                                                                                                                                                     |
+| :-------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `5d47dfa` | 維護者裁定（2026-11-20）：spec 改為 CORS 預檢不套錯誤外層，`api-envelope` 新增 Scenario「不允許來源的 CORS 預檢回應不是錯誤外層」；「無法解析的 JSON 回 422」增加一條斷言，要求 `field` 為 `""`          |
+| `300b143` | tasks 10.1：修正 `backend/app/core/errors.py` 的 `_error_detail`，讓 `json_invalid` 的 `field` 為 `""`；新增 `integration/test_app_assembly.py::test_unlisted_origin_preflight_is_not_an_error_envelope` |
+
+### 受影響 Scenario 重驗
+
+兩條都用真實 server 驗證：`L:probe` 方式，port 18505，正式 `create_app()` 加上 `tests/probe.py` 的探測 router，`CORS_ALLOWED_ORIGINS=http://localhost:5173`。
+
+| Scenario                                       | 證據                                                                                                                                                                                                                                                                                                                                                                                                                                                            | 結果 |
+| :--------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--- |
+| 不允許來源的 CORS 預檢回應不是錯誤外層（新增） | `integration/test_app_assembly.py::test_unlisted_origin_preflight_is_not_an_error_envelope`；`curl -i -X OPTIONS -H 'Origin: http://evil.example' -H 'Access-Control-Request-Method: GET' http://127.0.0.1:18505/api/v1/health` → `400`、`content-type: text/plain`、body `Disallowed CORS origin`（不是 JSON 外層），沒有 `access-control-allow-origin`。對照組：允許來源的同一請求回 `200`，並帶 `access-control-allow-origin: http://localhost:5173`         | PASS |
+| 無法解析的 JSON 回 422（加了 `field` 斷言）    | `integration/test_app_assembly.py::test_unparseable_json_returns_a_422_envelope`、`unit/test_envelope.py::test_validation_details_split_location_and_field`；`curl -X POST -H 'Content-Type: application/json' --data-raw '{"displayName":' http://127.0.0.1:18505/api/v1/probe` → `422`、`VALIDATION_FAILED`，`errors:[{"location":"body","field":"","code":"json_invalid","message":"JSON decode error"}]`。回歸檢查：送 `{}` 時 `field` 仍是 `"displayName"` | PASS |
+
+### 缺陷狀態
+
+| 原缺陷                                  | 狀態                                                                |
+| :-------------------------------------- | :------------------------------------------------------------------ |
+| 1. `json_invalid` 的 `field` 是字元位置 | **已解決**：`300b143`（實作）、`5d47dfa`（Scenario 斷言）           |
+| 2. CORS 預檢不是錯誤外層（規格問題）    | **已解決**：維護者裁定預檢除外，`5d47dfa` 改 spec；`300b143` 補測試 |
+
+### DoD 重跑
+
+| 項目                 | 指令                                                                                                                                                                                                                                                                                                            | 結果                                                                                                       |
+| :------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------- |
+| 後端測試，SQLite     | `cd backend && uv run pytest --cov=app --cov-report=term-missing -rs`                                                                                                                                                                                                                                           | 通過：**301 passed, 4 skipped**（4 個都是標 `postgres` 的測試），覆蓋率 **97%**（732 statements，24 miss） |
+| 後端測試，PostgreSQL | `docker run --rm -d --name label-suite-pg-504 -p 55432:5432 -e POSTGRES_PASSWORD=postgres postgres:16`，等 `pg_isready` 後執行 `TEST_DATABASE_URL=postgresql+asyncpg://postgres:postgres@127.0.0.1:55432/postgres uv run pytest --cov=app --cov-report=term-missing -rs`，跑完 `docker stop label-suite-pg-504` | 通過：**305 passed, 0 skipped**，覆蓋率 **97%**                                                            |
+| OpenSpec             | `./node_modules/.bin/openspec validate backend-skeleton --strict`                                                                                                                                                                                                                                               | 通過：`Change 'backend-skeleton' is valid`                                                                 |
+
+本次重跑取代上方 DoD 表的 pytest 數字，作為現行紀錄。兩套測試各比初次驗收多 1 個測試：`300b143` 新增了預檢測試。`json_invalid` 那條是在既有測試上加斷言，不增加測試數。
+
+### 人工驗收步驟補充
+
+在上方步驟 5「刻意要試的失敗路徑」中，不在清單內的來源送預檢：
+
+```bash
+curl -i -X OPTIONS -H 'Origin: http://evil.example' -H 'Access-Control-Request-Method: GET' \
+  http://127.0.0.1:8000/api/v1/health
+```
+
+預期得到 `400`、`text/plain` 的 `Disallowed CORS origin`，不是 JSON 錯誤外層，也沒有 `access-control-allow-origin`。這是裁定後的正確行為（`5d47dfa`），不是缺陷。`json_invalid` 只能經探測路由觸發，要重現就跑 `uv run pytest tests/integration/test_app_assembly.py -k unparseable`。
