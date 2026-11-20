@@ -32,15 +32,21 @@
 
 ### Requirement: 錯誤回應使用同一個錯誤外層
 
-系統 SHALL 讓 `/api/v1` 底下所有 `4xx` 與 `5xx` 回應的 body 都是錯誤外層：含成功外層的六個欄位再加 `errors`，`success` 為 `false`、`data` 為 `null`；只有 `422` 的 `errors` 為非空陣列，其他錯誤的 `errors` 為 `null`。
+系統 SHALL 讓 `/api/v1` 底下所有 `4xx` 與 `5xx` 回應的 body 都是錯誤外層：含成功外層的六個欄位再加 `errors`，`success` 為 `false`、`data` 為 `null`；只有 `422` 的 `errors` 為非空陣列，其他錯誤的 `errors` 為 `null`。唯一的例外是 CORS 中介層自己產生的預檢回應（帶 `Origin` 與 `Access-Control-Request-Method` 的 `OPTIONS` 請求）：不論來源是否允許，其 body 都不是錯誤外層。這些回應由瀏覽器處理，前端程式讀不到它們的 body（維護者裁定，2026-11-20）。
 
-來源：api-agent-rules A7、ADR-003 D5、#503 裁定 2。
+來源：api-agent-rules A7、ADR-003 D5、#503 裁定 2、維護者裁定（2026-11-20，CORS 預檢例外）。
 
 #### Scenario: 非驗證錯誤的 errors 為 null
 
 - **WHEN** 呼叫端送出 `GET /api/v1/no-such-resource`
 - **THEN** body 的頂層欄位恰好是 `success`、`code`、`message`、`data`、`timestamp`、`traceId`、`errors`
 - **AND** `success` 為 `false`、`data` 為 `null`、`errors` 為 `null`
+
+#### Scenario: 不允許來源的 CORS 預檢回應不是錯誤外層
+
+- **WHEN** 呼叫端送出 `OPTIONS /api/v1/health`，帶不在允許清單內的 `Origin: http://evil.example` 與 `Access-Control-Request-Method: GET`
+- **THEN** 系統回覆 `4xx`，body 不是錯誤外層（無法解析為含 `success`、`code`、`traceId` 的 JSON 物件）
+- **AND** 回應不帶 `Access-Control-Allow-Origin` 標頭
 
 ### Requirement: 錯誤碼為大寫底線格式並定義第一批通用碼
 
@@ -81,6 +87,7 @@
 
 - **WHEN** 呼叫端對同一個端點送出 `Content-Type: application/json`、body 為 `{"displayName":`
 - **THEN** 系統回覆 `422`、`code` 為 `"VALIDATION_FAILED"`，`errors` 至少一筆、`location` 為 `"body"`
+- **AND** 該筆的 `field` 為 `""`
 
 ### Requirement: 422 不回顯呼叫端送出的值
 

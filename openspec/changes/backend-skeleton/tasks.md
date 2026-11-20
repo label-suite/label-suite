@@ -51,6 +51,10 @@
 
 - [x] 9.1 在 SQLite 執行 `uv run pytest --cov=app --cov-report=term-missing`，記下 skipped 數量；以 `docker run --rm -d --name label-suite-pg-504 -p 55432:5432 -e POSTGRES_PASSWORD=postgres postgres:16` 起暫時的 PostgreSQL，設定 `TEST_DATABASE_URL=postgresql+asyncpg://postgres:postgres@127.0.0.1:55432/postgres` 後再執行一次同一指令，確認兩次都通過、PostgreSQL 那次 0 skipped；跑完以 `docker stop label-suite-pg-504` 停掉容器（`--rm` 隨即刪除），測試失敗時也要停。再執行 `uv run ruff check .`、`uv run ruff format --check .`、`uv run mypy --strict app`，以及 `uv run python -m app.scripts.export_openapi && git diff --exit-code -- openapi.json && test -z "$(git status --porcelain -- openapi.json)"`。把每條指令、兩次 pytest 摘要（含 skipped 數量）與覆蓋率數字交給 `acceptance-verifier` 寫進 `acceptance.md`（不設覆蓋率門檻，clarification Q5、Q8）。驗證：上述指令全部以 0 結束，`docker ps -a --filter name=label-suite-pg-504` 沒有輸出，且 `git status` 乾淨 [@backend-developer]
 
+## 10. 驗收後修正
+
+- [ ] 10.1 依驗收發現補兩處（維護者裁定 2026-11-20、design D3、D4）：（a）先寫 integration 測試涵蓋 spec `api-envelope`「不允許來源的 CORS 預檢回應不是錯誤外層」：送 `OPTIONS /api/v1/health` 帶不在允許清單內的 `Origin` 與 `Access-Control-Request-Method: GET`，斷言狀態為 `4xx`、body 不是錯誤外層、回應沒有 `Access-Control-Allow-Origin` 標頭；程式不改。（b）修正 `backend/app/core/errors.py` 的 `_error_detail`：`json_invalid` 錯誤的 `loc` 尾段不是字串（字元位置）時 `field` 為 `""`，不再輸出位置數字（api-contract §ErrorDetail「錯誤在整個 location 時為空字串」）；先寫測試，unit 以 `type` 為 `json_invalid`、`loc` 為 `("body", 15)` 的錯誤斷言 `field` 為 `""`，integration 於 spec `api-envelope`「無法解析的 JSON 回 422」再斷言該筆 `field` 為 `""`，再實作。驗證：`uv run pytest` 通過，設定 `TEST_DATABASE_URL` 後再跑一次通過且 0 skipped；`uv run ruff check .`、`uv run ruff format --check .`、`uv run mypy --strict app` 通過；`uv run python -m app.scripts.export_openapi && git diff --exit-code -- openapi.json` 以 0 結束 [@backend-developer]
+
 ## Workflow follow-up
 
 - 全部 task 完成且工作區乾淨後，交由 `code-reviewer` 審查；修正由實作角色另開 commit。

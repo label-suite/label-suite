@@ -53,6 +53,7 @@
 - `add_middleware` 是後加的在外層，所以 `create_app` 內的呼叫順序與表格相反：先加 `LocaleMiddleware`，再 `UnhandledExceptionMiddleware`、`CORSMiddleware`，最後 `CorrelationIdMiddleware`。unit 測試斷言 `app.user_middleware` 的順序，避免之後插入認證中介層時排錯。
 - `CorrelationIdMiddleware` 在 `send` 的 `http.response.start` 訊息上補 `X-Correlation-ID`，這樣 CORS 產生的預檢回應與 `UnhandledExceptionMiddleware` 產生的 `500` 都帶得到（spec `request-correlation`「CORS 預檢回應也帶追蹤編號」）。
 - `Content-Language`：`LocaleMiddleware` 在 `http.response.start` 依 `scope["state"]` 的 locale 補上，涵蓋成功外層與 handler 產生的錯誤外層；`LocaleMiddleware` 自己產生的 `406` 固定 `zh-TW`。位在它外側的 `UnhandledExceptionMiddleware` 產生 `500` 時，由 `Envelope.error` 讀同一個 `scope["state"]` 的 locale（沒有就 `zh-TW`）自己帶上。不從 body 反推語言。
+- CORS 預檢回應（允許來源回 `200`、不允許來源回 `400`）由 `CORSMiddleware` 直接產生、不經 handler，body 不是錯誤外層；spec `api-envelope` 依維護者裁定（2026-11-20）把它列為錯誤外層的例外，程式不變。
 - 替代方案：`BaseHTTPMiddleware`。不採用，理由見 `system-design.md` 同段末。
 
 ### D4. 錯誤處理的分工
@@ -60,7 +61,7 @@
 `AppError` 家族、handler 與 `Envelope` 的分工見 `system-design.md` §元件清單 與 §權限檢查點「Service 不丟 `HTTPException`」。本文補的決策：
 
 - `HTTPException` handler 註冊在 Starlette 的 `HTTPException`（不是 FastAPI 子類別），才接得到路由層產生的 `404`、`405`；`405` 時把原例外的 `headers`（含 `Allow`）帶進錯誤外層回應。
-- `RequestValidationError` handler 把 `loc` 拆成 `location` 與 `field`，**只取 `type` 與 `msg`**，丟掉 `input`、`ctx`、`url`；做法見 `system-design.md` §關鍵設計細節「422 的逐欄位錯誤」。JSON 解析失敗時 Pydantic 回的 `loc` 是 `("body", <位置>)`，`field` 轉成字串；只有 `("body",)` 時 `field` 為 `""`。
+- `RequestValidationError` handler 把 `loc` 拆成 `location` 與 `field`，**只取 `type` 與 `msg`**，丟掉 `input`、`ctx`、`url`；做法見 `system-design.md` §關鍵設計細節「422 的逐欄位錯誤」。JSON 解析失敗（`json_invalid`）時 Pydantic 回的 `loc` 是 `("body", <位置>)`，尾段是字元位置而不是欄位名，`field` 為 `""`（錯誤在整個 location，api-contract §ErrorDetail；驗收時發現原寫法輸出位置數字，由 tasks 10.1 修正）；只有 `("body",)` 時 `field` 也為 `""`。
 - `ResponseValidationError` 不註冊 handler，讓它落到 `UnhandledExceptionMiddleware` 變成 `500 INTERNAL_ERROR`（api-contract §錯誤碼「含回應 schema 驗證失敗」）。
 - 健康檢查的 `503`：`HealthRepository.ping()` 讓 SQLAlchemy 的 `OperationalError`、`DBAPIError`、`OSError`、`TimeoutError` 原樣往上拋，`HealthService.check()` 捕捉這幾種並轉成 `DatabaseUnavailableError`；log 記一筆 `WARNING`（含 `traceId` 與例外型別，不含連線字串）。這對應 `system-design.md` §關鍵情境「資料庫無法連線時健康檢查回 503 外層」。
 - 替代方案：在 Router 捕捉資料庫例外。不採用：Router 會依賴資料層的例外型別，違反 B1 的分層。
