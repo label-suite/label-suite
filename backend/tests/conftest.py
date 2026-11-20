@@ -1,8 +1,8 @@
-"""Shared fixtures: the test database.
+"""Shared fixtures: the test database and the migrated test database.
 
 The test database is PostgreSQL when ``TEST_DATABASE_URL`` is set and a SQLite
 file under ``tmp_path`` otherwise (design D10). ``db_engine`` only provides an
-engine; it does not run migrations.
+engine; ``migrated_engine`` builds on it and runs ``alembic upgrade head``.
 """
 
 import os
@@ -10,6 +10,9 @@ from collections.abc import AsyncIterator
 from pathlib import Path
 
 import pytest
+from alembic import command
+from alembic.config import Config
+from sqlalchemy import Connection
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.core.config import DatabaseSettings
@@ -35,3 +38,43 @@ async def db_engine(tmp_path: Path) -> AsyncIterator[AsyncEngine]:
         yield engine
     finally:
         await engine.dispose()
+
+
+BACKEND_DIR = Path(__file__).resolve().parent.parent
+ALEMBIC_INI = BACKEND_DIR / "alembic.ini"
+
+
+def alembic_config(connection: Connection | None = None) -> Config:
+    """Return an Alembic config for ``backend/alembic.ini``.
+
+    Args:
+        connection: When given, ``env.py`` migrates over this connection instead
+            of building its own engine from ``DatabaseSettings``.
+    """
+    config = Config(ALEMBIC_INI)
+    # Keep pytest's logging intact; env.py would otherwise apply alembic.ini's loggers.
+    config.attributes["configure_logging"] = False
+    if connection is not None:
+        config.attributes["connection"] = connection
+    return config
+
+
+def _run_alembic(connection: Connection, action: str, revision: str) -> None:
+    config = alembic_config(connection)
+    if action == "upgrade":
+        command.upgrade(config, revision)
+    else:
+        command.downgrade(config, revision)
+
+
+async def run_alembic(engine: AsyncEngine, action: str, revision: str) -> None:
+    """Run ``alembic upgrade`` or ``alembic downgrade`` on ``engine`` and commit."""
+    async with engine.begin() as conn:
+        await conn.run_sync(_run_alembic, action, revision)
+
+
+@pytest.fixture
+async def migrated_engine(db_engine: AsyncEngine) -> AsyncEngine:
+    """Return the test database engine after ``alembic upgrade head``."""
+    await run_alembic(db_engine, "upgrade", "head")
+    return db_engine
