@@ -196,9 +196,12 @@ export function DevGalleryPage() {
               className="gap-(--space-sm)"
             >
               {catalogEntries(catalog.alert.variant).map(([variant, demo]) => (
+                // Static samples, not messages: role="note" keeps them out of the
+                // live region, so a screen reader does not announce all four on load.
                 <Alert
                   key={variant}
                   variant={variant}
+                  role="note"
                   data-gallery-item={galleryItem("alert", "variant", variant)}
                 >
                   <AlertDescription>
