@@ -3,6 +3,13 @@ node_modules/
 .pnpm-store/
 pnpm-lock.yaml
 
+# Backend virtualenv and tool caches: listed only in backend/.gitignore, which
+# Prettier does not read (it reads the root .gitignore and this file)
+backend/.venv/
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/.ruff_cache/
+
 # Agent worktrees and Playwright MCP scratch output: not this checkout's files
 .claude/worktrees/
 .playwright-mcp/
