@@ -82,4 +82,4 @@ model: opus
 - [ ] 需要的 schema 變更已列出，交由 Alembic migration 處理，並寫出可逆性與雙資料庫差異
 - [ ] 有資料模型異動時：字典已先改、ER 已同步、`pnpm check:er` 通過；異動表的每一列都對得到字典裡的表與欄位
 - [ ] classDiagram 的 Model 只有屬性，沒有另畫一套表間關聯
-- [ ] 章節與 schema 範本一致；全文繁體中文
+- [ ] 章節與 schema 範本一致；敘述用繁體中文，識別字（欄位名、operationId、錯誤碼、範例 JSON）維持英文
