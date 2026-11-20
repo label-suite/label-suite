@@ -2,6 +2,11 @@
   "pageName": "元件展示",
   "eyebrow": "DEV ONLY · /dev/gallery",
   "description": "每個 <code>components/ui/</code> 元件的每個 variant 都在這頁出現一次。完整性測試比對元件宣告的 variant 與本頁的展示，少一個就失敗。",
+  "theme": {
+    "label": "主題",
+    "light": "淺色",
+    "dark": "深色"
+  },
   "sections": {
     "button": "Button",
     "input": "Input",

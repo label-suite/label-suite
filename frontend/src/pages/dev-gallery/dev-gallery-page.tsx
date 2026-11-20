@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { GallerySection } from "./gallery-section";
+import { ThemeToggle } from "./theme-toggle";
 import {
   buttonStateValues,
   cardPartValues,
@@ -87,7 +88,10 @@ export function DevGalleryPage() {
     <main className="min-h-screen bg-background p-(--space-2xl) text-foreground">
       <div className="mx-auto flex max-w-7xl flex-col gap-(--space-xl)">
         <header className="flex flex-col gap-(--space-sm)">
-          <h1 className="text-(length:--text-h1) font-bold">{t("pageName")}</h1>
+          <div className="flex flex-wrap items-center justify-between gap-(--space-md)">
+            <h1 className="text-(length:--text-h1) font-bold">{t("pageName")}</h1>
+            <ThemeToggle />
+          </div>
           <p className="text-(length:--text-body) text-muted-foreground">
             <Trans
               t={t}
