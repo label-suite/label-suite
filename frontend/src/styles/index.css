@@ -1,0 +1,17 @@
+/*
+ * Tailwind entry (design D8). Token values come from virtual:design-tokens.css,
+ * imported unlayered by src/main.tsx; tokens.css itself is never imported here
+ * (it would bring in external fonts and element rules, Q15).
+ */
+@import "tailwindcss";
+@import "./theme.css";
+
+/* dark: utilities follow <html data-theme="dark">, the attribute tokens.css uses (Q13). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Stop spinners for users who ask for less motion; the status text stays (F9). */
+@media (prefers-reduced-motion: reduce) {
+  .animate-spin {
+    animation: none;
+  }
+}

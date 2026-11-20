@@ -5,6 +5,7 @@ import { createRoot } from "react-dom/client";
 // (design D8). A plain import, never inside @layer, so the tokens win over
 // Tailwind's same-named theme variables.
 import "virtual:design-tokens.css";
+import "./styles/index.css";
 
 const container = document.getElementById("root");
 if (container === null) {
