@@ -16,6 +16,7 @@ from app.core.envelope import correlation_id_var, current_trace_id, error_respon
 from app.core.errors import NotAcceptableError
 from app.core.i18n import MessageCatalog, resolve_locale
 from app.core.log_safety import escape_for_log
+from app.core.paths import API_V1_PREFIX
 
 __all__ = [
     "CORRELATION_ID_HEADER",
@@ -189,11 +190,8 @@ class UnhandledExceptionMiddleware:
             await response(scope, receive, send)
 
 
-API_V1_PATH = "/api/v1"
-
-
 def _is_api_v1(path: str) -> bool:
-    return path == API_V1_PATH or path.startswith(f"{API_V1_PATH}/")
+    return path == API_V1_PREFIX or path.startswith(f"{API_V1_PREFIX}/")
 
 
 class LocaleMiddleware:

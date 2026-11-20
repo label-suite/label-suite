@@ -23,7 +23,7 @@ from typing import Any
 from fastapi import FastAPI
 from fastapi.routing import APIRoute, iter_route_contexts
 
-from app.core.middleware import API_V1_PATH
+from app.core.paths import API_V1_PREFIX
 from app.core.schemas import ApiResponse, PaginatedResponse
 
 __all__ = [
@@ -139,7 +139,7 @@ def _is_paginated(response_model: Any) -> bool:
 
 def _resource_words(path: str) -> list[str]:
     """Return the words of the last non-parameter segment after ``/api/v1``."""
-    relative = path.removeprefix(API_V1_PATH)
+    relative = path.removeprefix(API_V1_PREFIX)
     segments = [s for s in relative.split("/") if s and not s.startswith("{")]
     if not segments:
         raise ValueError(f"cannot derive a resource name from path {path!r}")

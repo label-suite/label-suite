@@ -29,13 +29,13 @@ from app.core.openapi import (
     get_app_version,
     install_openapi,
 )
+from app.core.paths import API_V1_PREFIX
 from app.core.schemas import ErrorResponse
 from app.modules.health.router import router as health_router
 
-__all__ = ["API_V1_ERROR_RESPONSES", "API_V1_PREFIX", "create_api_router", "create_app"]
+__all__ = ["API_V1_ERROR_RESPONSES", "create_api_router", "create_app"]
 
 API_TITLE = "Label Suite API"
-API_V1_PREFIX = "/api/v1"
 API_V1_ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
     status: {"model": ErrorResponse} for status in (404, 405, 406, 500)
 }

@@ -4,7 +4,8 @@ Routers build success envelopes with ``ok``; exception handlers and middlewares
 build error responses with ``error_response``. Both fill in ``timestamp`` (UTC,
 milliseconds, ``Z``), ``traceId`` from the correlation-ID context variable and
 the ``message`` localised to the locale in ``scope["state"]``, falling back to
-zh-TW when the scope has none. Services never call this module.
+zh-TW when the scope has none. Services may read ``current_trace_id`` for
+logging but never build envelopes.
 
 This module also owns the correlation-ID context variable:
 ``CorrelationIdMiddleware`` writes it and the envelope reads it for ``traceId``.
