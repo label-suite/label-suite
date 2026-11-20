@@ -120,7 +120,7 @@
 
 apply 時落定的細節：
 
-- `theme.css` 除 ui-design.md 兩張對照表列的變數外，另有原語實際用到的語意變數：`--destructive-foreground`、`--cta-foreground`、`--cta-hover`、`--primary-border`、`--success`／`--warning`／`--error`／`--info` 各自的 `-bg` 與 `-border`、`--error`、`--control-disabled`、`--surface-subtle`（空狀態面板的底色，指向 `--color-slate-50`，`@theme inline` 接成 `--color-surface-subtle`，Empty 用 `bg-surface-subtle`）、`--card-shadow`，一樣只指向 tokens.css 的變數名。
+- `theme.css` 除 ui-design.md 兩張對照表列的變數外，另有原語實際用到的語意變數：`--destructive-foreground`、`--cta-foreground`、`--cta-hover`、`--primary-border`、`--success`／`--warning`／`--error`／`--info` 各自的 `-bg` 與 `-border`、`--error`、`--control-disabled`、`--surface-subtle`（空狀態面板的底色，指向 `--color-slate-50`，`@theme inline` 接成 `--color-surface-subtle`，Empty 用 `bg-surface-subtle`）、`--icon-accent`（圖示的主色，指向 `--color-primary`，`@theme inline` 接成 `--color-icon-accent`，載入圖示用 `text-icon-accent`；依 `brand.md` 鐵律 2，圖示用 `--color-primary` 而非文字用的 `--color-primary-strong`，所以不借 `--primary`）、`--card-shadow`，一樣只指向 tokens.css 的變數名。
 - `index.css` 在引入 `theme.css` 之前以 `@theme { --color-*: initial; }` 關掉 Tailwind 的預設色盤，`bg-white`、`bg-slate-50` 這類色盤 class 不再產生，只剩對照層的語意色（F6）。`theme.test.ts` 以 `tailwindcss` 的 `compile` 實際編譯 `index.css`，斷言色盤 class 與 `--color-white` 等預設變數沒有產生、語意 class 仍會產生。
 - `html[data-theme="dark"]` 區塊保留但為空：tokens.css 在深色下已重新定義同名 token，現有語意變數照原對照即跟著換；只有深色要指向「不同 token」的語意變數才寫進這裡，ui-design.md 目前沒有這種變數。
 - Skeleton 的骨架條用 `bg-border`（`--border`），不用 `bg-muted`。

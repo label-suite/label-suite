@@ -204,18 +204,19 @@ F8 的例外依據：這是 F8「四種畫面狀態」在本頁的明文例外�
 
 下表每一列都有兩條路：**A** 在對照層新增 shadcn 風格的語意變數（例如 `--cta`、`--success`），元件與對照層都用它；**B** 元件直接引用 `tokens.css` 的變數名。**已決議走 A**（Q9）：允許修改 `components/ui/` 的 shadcn 原語加 variant；對照層新增 `--cta`、`--success` 等語意變數，原語只用語意變數、不直接引用 `tokens.css` 的變數名。architecture.mdx「shadcn 元件不改寫」那句另開 `[Docs]` issue 改準，不在本 change 改。
 
-| 語意               | `tokens.css` 來源                                                               | 用在（artifact）                                                                                                     |
-| :----------------- | :------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------- |
-| 確認與完成類主要鈕 | `--color-cta`、`--color-on-cta`（hover `--color-cta-hover`）                    | Button 的 `cta` variant                                                                                              |
-| outline 按鈕外框   | `--color-primary-border`                                                        | outline 按鈕（shadcn 的 outline 讀 `--input`，artifact 用主色細框）                                                  |
-| 成功               | `--color-success`、`-bg`、`-border`                                             | 正常徽章、Badge success、Alert success                                                                               |
-| 警告               | `--color-warning`、`-bg`、`-border`                                             | 連不到後端的提示、Badge warning、Alert warning                                                                       |
-| 錯誤（淺底版）     | `--color-error`、`-bg`、`-border`                                               | 資料庫無法連線的提示、Badge error、Alert error、輸入框驗證錯誤的外框與訊息（shadcn 的 `--destructive` 只有實心一種） |
-| 資訊               | `--color-info`、`-bg`、`-border`                                                | Badge info、Alert info                                                                                               |
-| 中性徽章           | `--color-border-muted`（底）、`--color-border`（框）、`--color-ink-muted`（字） | Badge neutral                                                                                                        |
-| 空狀態面板底色     | `--color-slate-50`（語意變數 `--surface-subtle`）                               | Empty State 樣本的底色（Q17）                                                                                        |
-| 停用的控制項底色   | `--color-slate-50`                                                              | 停用的 outline 按鈕、停用的輸入框（取最接近的既有 token，Q17）                                                       |
-| 卡片陰影           | `--shadow-card`                                                                 | 健康檢查卡片、Card 樣本                                                                                              |
+| 語意               | `tokens.css` 來源                                                               | 用在（artifact）                                                                                                                       |
+| :----------------- | :------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------- |
+| 確認與完成類主要鈕 | `--color-cta`、`--color-on-cta`（hover `--color-cta-hover`）                    | Button 的 `cta` variant                                                                                                                |
+| outline 按鈕外框   | `--color-primary-border`                                                        | outline 按鈕（shadcn 的 outline 讀 `--input`，artifact 用主色細框）                                                                    |
+| 成功               | `--color-success`、`-bg`、`-border`                                             | 正常徽章、Badge success、Alert success                                                                                                 |
+| 警告               | `--color-warning`、`-bg`、`-border`                                             | 連不到後端的提示、Badge warning、Alert warning                                                                                         |
+| 錯誤（淺底版）     | `--color-error`、`-bg`、`-border`                                               | 資料庫無法連線的提示、Badge error、Alert error、輸入框驗證錯誤的外框與訊息（shadcn 的 `--destructive` 只有實心一種）                   |
+| 資訊               | `--color-info`、`-bg`、`-border`                                                | Badge info、Alert info                                                                                                                 |
+| 中性徽章           | `--color-border-muted`（底）、`--color-border`（框）、`--color-ink-muted`（字） | Badge neutral                                                                                                                          |
+| 圖示主色           | `--color-primary`（語意變數 `--icon-accent`）                                   | 載入中的旋轉圖示（`brand.md` 鐵律 2：圖示用 `--color-primary`；shadcn 的 `--primary` 對到文字用的 `--color-primary-strong`，不能共用） |
+| 空狀態面板底色     | `--color-slate-50`（語意變數 `--surface-subtle`）                               | Empty State 樣本的底色（Q17）                                                                                                          |
+| 停用的控制項底色   | `--color-slate-50`                                                              | 停用的 outline 按鈕、停用的輸入框（取最接近的既有 token，Q17）                                                                         |
+| 卡片陰影           | `--shadow-card`                                                                 | 健康檢查卡片、Card 樣本                                                                                                                |
 
 `design-gaps.md` G-07（Alert Banner 只有 error 一種）是已登記的缺口；artifact 的 Alert 四種 variant 是在前端這一側補齊，prototype 的 G-07 不因此結案。
 
@@ -230,7 +231,7 @@ F8 的例外依據：這是 F8「四種畫面狀態」在本頁的明文例外�
 | 內文、標題                                         | `--color-ink`                                                                                                                                                                                                          |
 | 次要文字（眉標、說明、標籤、計數、停用文字）       | `--color-ink-muted`                                                                                                                                                                                                    |
 | 行內程式碼（健康檢查說明段落）                     | 底 `--color-primary-soft-bg`、字 `--color-primary-strong`、字型 `--font-mono`                                                                                                                                          |
-| 載入中的旋轉圖示                                   | `--color-primary`（`brand.md` 鐵律 2：圖示用 `--color-primary`）                                                                                                                                                       |
+| 載入中的旋轉圖示                                   | `--color-primary`（經 `--icon-accent`；`brand.md` 鐵律 2：圖示用 `--color-primary`）                                                                                                                                   |
 | 元件目錄的目前項目                                 | 底 `--color-primary-soft-bg`、字 `--color-primary-strong`                                                                                                                                                              |
 | 輸入框外框；驗證錯誤的外框與訊息                   | `--color-border-control`；`--color-error`                                                                                                                                                                              |
 | 空狀態樣本的虛線框                                 | `--color-border`（正典空狀態面板，Q17）                                                                                                                                                                                |
