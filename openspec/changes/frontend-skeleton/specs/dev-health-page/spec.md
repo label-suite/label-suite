@@ -8,14 +8,15 @@
 
 ### Requirement: 健康檢查頁呼叫健康檢查端點
 
-健康檢查頁 SHALL 在開啟時經產生的呼叫層對 `GET /api/v1/health` 發出一次請求，頁首顯示眉標「DEV ONLY · /dev/health」、標題「系統健康檢查」與說明段落。健康檢查是公開端點，對所有呼叫端回應相同，沒有遮蔽欄位；頁面 MUST NOT 呼叫其他端點。
+健康檢查頁 SHALL 在開啟時經產生的呼叫層對 `GET /api/v1/health` 完成一次請求（開發模式下 React StrictMode 的雙重掛載會中止第一次請求，被中止的請求不計，見 design.md D6），頁首顯示眉標「DEV ONLY · /dev/health」、標題「系統健康檢查」與說明段落。健康檢查是公開端點，對所有呼叫端回應相同，沒有遮蔽欄位；頁面 MUST NOT 呼叫其他端點。
 
 來源：ADR-003 D6；api-agent-rules A6；clarification Q1；畫面 artifact 第 4 版 Main.dc.html §頁首。
 
 #### Scenario: 開啟頁面只呼叫健康檢查端點
 
 - **WHEN** 開啟健康檢查頁，後端回應正常
-- **THEN** 整個過程只送出 1 個請求，目標為 `GET /api/v1/health`
+- **THEN** 整個過程完成的請求只有 1 個，目標為 `GET /api/v1/health`；開發模式下 StrictMode 雙重掛載而中止的那一次不計
+- **AND** 被中止的請求不改變畫面：不出現錯誤版面，畫面依完成的那個請求顯示正常
 - **AND** 頁首顯示「DEV ONLY · /dev/health」與 h1「系統健康檢查」
 
 #### Scenario: 未登入時看到與任何呼叫端相同的內容
