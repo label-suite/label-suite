@@ -154,7 +154,7 @@ gh pr view <pr> --json mergeable,mergeStateStatus,headRefOid,statusCheckRollup
 
 - `mergeable` 是 `MERGEABLE`，`mergeStateStatus` 是 `CLEAN`
 - 檢查數大於 0，而且全部通過
-- `commit-messages`、`docs-site`、`specs` 三個 job 都在，而且都是 `SUCCESS`（每個 PR 都會跑，缺一個就代表還沒註冊）
+- `commit-messages`、`docs-site`、`format`、`specs` 四個 job 都在，而且都是 `SUCCESS`（每個 PR 都會跑，缺一個就代表還沒註冊）
 - 這個 head SHA 沒有還在 `queued` 或 `in_progress` 的 run：
   `gh run list --branch <branch> --json status,headSha --jq '[.[]|select(.headSha=="<sha>" and .status!="completed")]|length'` 要是 `0`
 - 審查已經通過，issue 的工作項和 PR 的 Test Plan 全部勾完
@@ -242,7 +242,7 @@ gh project item-edit --project-id PVT_kwDOEWdNqs4BoCOI --id "$ITEM" \
 | 刪掉的 worktree 路徑殘留在 `~/.notecraft/app-*/.astro/data-store.json` 與 `node_modules/.astro/data-store.json`，之後的 build 會找不到模組 | lead 不跑本機 build；本機要 build 時若遇到，把這兩個快取移開再 build |
 | 裁定寫在後面的留言，不在內文 | 步驟 1 讀完整串留言 |
 | 合併了但 PR 缺少 `Closes`，issue 留著沒關 | 步驟 9 比對 issue 和 PR |
-| `gh pr checks --watch` 在 PR 一個檢查都沒有時也會回 0 | 步驟 7 以三個 job 的名稱與 run 數量為準 |
+| `gh pr checks --watch` 在 PR 一個檢查都沒有時也會回 0 | 步驟 7 以四個 job 的名稱與 run 數量為準 |
 | lead 的 commit 本文寫成 `**Add**:`（粗體動詞後多冒號），commit-msg hook 擋下（試跑 #453） | 派工 prompt 寫明粗體動詞後直接接說明，不加冒號 |
 | ADR 的 lead 會自己補理由與「考慮過的選項」，來源其實沒有（試跑 #453） | 獨立審查第一項就核對每個理由與選項的出處；派工 prompt 寫明「來源沒有的理由不寫」 |
 | ADR 編號與個人 repo 的 ADR 編號撞號（本 repo ADR-007 ≠ 個人 repo ADR-007），舊文件裡裸寫的「ADR-007」會變成歧義（試跑 #453） | 動到的文件裡，個人 repo 的 ADR 一律寫成「個人 repo ADR-0xx」 |
@@ -262,7 +262,7 @@ gh project item-edit --project-id PVT_kwDOEWdNqs4BoCOI --id "$ITEM" \
 | 進度只存在 issue 檢查點留言，加上 HTML 錨點 | 沿用 | 換 session、換電腦都讀得到 |
 | 用 issue 編號做撞車檢查 | 沿用 | 本 repo 也有多個 session 同時在做事 |
 | 一張 issue 一個 worktree、一個 lead；一波最多 3 張；整波一次派出 | 沿用 | 和 `CLAUDE.md` 的 Subagents 一致 |
-| 主 session 先讀 diff；審查者不是寫的人；合併前的四個條件加上 run 數量 | 沿用，job 名稱換成本 repo 的三個 | 都是事實面的檢查 |
+| 主 session 先讀 diff；審查者不是寫的人；合併前的四個條件加上 run 數量 | 沿用，job 名稱換成本 repo 的四個 | 都是事實面的檢查 |
 | 不用 `git stash`、不 `cd` 進 worktree、用 merge 不用 rebase、拿到 PR 編號當輪就啟動監看 | 沿用 | 原 skill 實際踩過的坑 |
 | `agent-ready`／`agent-running`／`blocked` 標籤 | 改成看板的 Ready / In Progress，以及 blocked-by 依賴 | `AGENTS.md`：不用標籤追蹤狀態 |
 | 標籤就代表預先授權合併 | 改成卡片在 Ready 就代表授權 | 授權寫在 `AGENTS.md` 的 Dispatch 一條 |

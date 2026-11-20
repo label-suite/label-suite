@@ -83,11 +83,11 @@ updatedAt: '2026-11-20'
 | **事件** | Git `pre-commit`（不是 agent 事件）。由 `core.hooksPath=scripts/git-hooks` 啟用 |
 | **適用路徑／角色** | `git diff --cached` 命中的檔案，分流規則同 H3 |
 | **payload 欄位** | 無（Git hook 沒有 JSON payload）。輸入是 staged snapshot |
-| **共用檢查器** | 現行只有排版：`scripts/git-hooks/pre-commit` 經 lint-staged（`.lintstagedrc.mjs`）對 staged 的 `*.{json,md,yml,yaml,css,js,mjs}` 跑 `prettier --write`，改完重新暫存；找不到 `lint-staged` 或 `prettier` 時 exit `1` 並提示 `pnpm install`，不略過。H3 分流的那支 `scripts/check-changed.sh` 仍**待建置**，建好後與 H3 共用，差別只在檔案清單怎麼來 |
+| **共用檢查器** | 現行只有排版：`scripts/git-hooks/pre-commit` 經 lint-staged（`.lintstagedrc.mjs`）對 staged 的 `*.{json,md,yml,yaml,css,js,mjs}` 跑 `prettier --write`，改完重新暫存。H3 分流的那支 `scripts/check-changed.sh` 仍**待建置**，建好後與 H3 共用，差別只在檔案清單怎麼來 |
 | **timeout** | 無平台 timeout。腳本自己設上限；**不得用 shell `timeout`**（本機沒有，見[§查核方式](#查核方式)） |
 | **輸出與退出碼** | 非零即擋下 commit，這是 Git 的既有語意 |
 | **阻擋或提醒** | **阻擋**。但 `--no-verify` 可跳過，所以它不是最終 gate：排版的 gate 是 CI 的 `format` job（`pnpm format:check`） |
-| **缺工具／無適用檔案** | 必須讀**staged 版本**（`git show :<path>`），不能拿工作區的檔案充數，否則「unstaged 的修正」會被誤當成「staged 已通過」。部分暫存與在子目錄執行都要正確——`git rev-parse --show-toplevel` 已是本 repo 既有作法 |
+| **缺工具／無適用檔案** | 必須讀**staged 版本**（`git show :<path>`），不能拿工作區的檔案充數，否則「unstaged 的修正」會被誤當成「staged 已通過」。部分暫存與在子目錄執行都要正確——`git rev-parse --show-toplevel` 已是本 repo 既有作法。找不到 `lint-staged` 或 `prettier` 時 exit `1` 並提示 `pnpm install`，不略過 |
 
 ### H5 Git commit-msg：檢查提交訊息
 
@@ -126,7 +126,7 @@ updatedAt: '2026-11-20'
 | | |
 | :--- | :--- |
 | **目的** | 本機 hook 有**四條**被跳過的途徑——Git 的 `--no-verify`、Claude 的 `disableAllHooks`、Codex 的 `[features] hooks = false`，以及 Codex 的 hook 未被信任而 skipped——所以合併前的真正 gate 在 CI |
-| **事件** | `pull_request`（`.github/workflows/ci.yml`，已存在三個 job：`commit-messages`、`docs-site`、`specs`） |
+| **事件** | `pull_request`（`.github/workflows/ci.yml`，已存在四個 job：`commit-messages`、`docs-site`、`format`、`specs`） |
 | **適用路徑／角色** | 整個 PR |
 | **payload 欄位** | GitHub 事件的 `base.sha` 與 `head.sha`（現行 `commit-messages` job 已經在用） |
 | **共用檢查器** | 與 H3、H4、H5 **同一組**。CI 與本機共用邏輯是防漂移的唯一辦法 |
