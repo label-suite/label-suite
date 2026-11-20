@@ -23,6 +23,12 @@ from app.core.middleware import (
     LocaleMiddleware,
     UnhandledExceptionMiddleware,
 )
+from app.core.openapi import (
+    assert_unique_operation_ids,
+    generate_operation_id,
+    get_app_version,
+    install_openapi,
+)
 from app.core.schemas import ErrorResponse
 
 __all__ = ["API_V1_ERROR_RESPONSES", "API_V1_PREFIX", "create_api_router", "create_app"]
@@ -68,18 +74,26 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         settings: The settings to use; ``None`` reads them from the environment.
 
     Returns:
-        The app with the four middlewares, the exception handlers and the
-        ``/api/v1`` router mounted. The database engine is created by the
-        lifespan, not here, so building the app opens no connection.
+        The app with the four middlewares, the exception handlers, the
+        ``/api/v1`` router and the post-processed ``app.openapi`` installed;
+        ``info.version`` is ``[project].version`` of ``pyproject.toml``. The
+        database engine is created by the lifespan, not here, so building the
+        app opens no connection.
 
     Raises:
         ConfigError: When ``settings`` is ``None`` and the environment is not a
             valid configuration; the message names the variable, never its value.
         MessageCatalogError: When the message files are missing or out of sync.
+        OperationIdCollisionError: When two operations share an operationId.
     """
     resolved = settings if settings is not None else load_settings(Settings)
 
-    app = FastAPI(title=API_TITLE, lifespan=_lifespan)
+    app = FastAPI(
+        title=API_TITLE,
+        version=get_app_version(),
+        lifespan=_lifespan,
+        generate_unique_id_function=generate_operation_id,
+    )
     app.state.settings = resolved
     catalog = MessageCatalog.load()
     app.state.message_catalog = catalog
@@ -100,4 +114,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     register_exception_handlers(app)
     app.include_router(create_api_router())
+    assert_unique_operation_ids(app)
+    install_openapi(app)
     return app

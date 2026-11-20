@@ -5,7 +5,7 @@ integration tests mount these routes under the same ``/api/v1`` parent router
 on the app ``create_app`` builds. Nothing here is registered by production code.
 """
 
-from typing import Any
+from typing import cast
 
 from fastapi import APIRouter, Request
 from sqlalchemy.exc import DBAPIError
@@ -42,32 +42,33 @@ class NamedData(ResponseModel):
 probe_router = APIRouter()
 
 
-@probe_router.post("/probe", response_model=ApiResponse[ProbeData])
+@probe_router.post("/probe")
 async def create_probe(body: ProbeBody, request: Request) -> ApiResponse[ProbeData]:
     """Echo the validated ``displayName`` in a success envelope."""
     return ok(ProbeData(display_name=body.display_name), request)
 
 
-@probe_router.get("/probe", response_model=ApiResponse[ProbeData])
+@probe_router.get("/probe")
 async def get_probe(request: Request) -> ApiResponse[ProbeData]:
     """Return a fixed success envelope; stands in for the health check until group 7."""
     return ok(ProbeData(display_name="probe"), request)
 
 
-@probe_router.get("/probe-crash", response_model=ApiResponse[ProbeData])
+@probe_router.get("/probe-crash")
 async def crash_probe() -> ApiResponse[ProbeData]:
     """Raise an unhandled exception whose message must never reach the client."""
     raise RuntimeError(CRASH_MESSAGE)
 
 
-@probe_router.get("/probe-bad-response", response_model=ApiResponse[NamedData])
-async def bad_response_probe(request: Request) -> Any:
+@probe_router.get("/probe-bad-response")
+async def bad_response_probe(request: Request) -> ApiResponse[NamedData]:
     """Return content that lacks the declared ``name``, so response validation fails."""
     envelope = ok({"label": "CANARY-resp"}, request).model_dump(mode="json", by_alias=True)
-    return envelope
+    # Deliberately wrong at runtime: FastAPI validates the dict against the annotation.
+    return cast(ApiResponse[NamedData], envelope)
 
 
-@probe_router.get("/probe-db-error", response_model=ApiResponse[ProbeData])
+@probe_router.get("/probe-db-error")
 async def db_error_probe() -> ApiResponse[ProbeData]:
     """Raise a driver error whose statement, parameters and cause carry CANARY values."""
     # The values live outside the raise line: traceback frames show source lines.
