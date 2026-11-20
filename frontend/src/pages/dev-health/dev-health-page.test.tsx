@@ -1,5 +1,6 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
+import { StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createQueryClient } from "@/app/query-client";
@@ -97,5 +98,38 @@ describe("DevHealthPage", () => {
     expect(document.title).toBe("Label Suite — System health check");
     expect(await screen.findByText("Healthy")).toBeInTheDocument();
     expect(seen.map((request) => request.acceptLanguage)).toEqual(["en"]);
+  });
+
+  // main.tsx renders under StrictMode, which mounts, unmounts and remounts in
+  // development (clarification Q21). A request aborted by that unmount does not
+  // count; exactly one must complete, and the screen must never show an error.
+  it("completes one health request under StrictMode, without an error layout on the way", async () => {
+    const completed: string[] = [];
+    server.events.on("response:mocked", ({ request }) => {
+      if (!request.signal.aborted) {
+        completed.push(`${request.method} ${request.url}`);
+      }
+    });
+    let sawErrorLayout = false;
+    const observer = new MutationObserver(() => {
+      if (screen.queryByRole("alert") !== null) {
+        sawErrorLayout = true;
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    render(
+      <StrictMode>
+        <QueryClientProvider client={createQueryClient()}>
+          <DevHealthPage />
+        </QueryClientProvider>
+      </StrictMode>,
+    );
+
+    expect(await screen.findByText("正常")).toBeInTheDocument();
+    observer.disconnect();
+    expect(completed).toEqual([`GET ${HEALTH_URL}`]);
+    expect(sawErrorLayout).toBe(false);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });
