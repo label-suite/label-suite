@@ -4,6 +4,17 @@
  * (it would bring in external fonts and element rules, Q15).
  */
 @import "tailwindcss";
+
+/*
+ * Drop Tailwind's default palette, so palette utilities such as bg-white or
+ * bg-slate-50 are never generated (F6). Only the semantic colours that
+ * theme.css hands over through @theme inline remain. tokens.css variables are
+ * unaffected: they come from virtual:design-tokens.css, not from @theme.
+ */
+@theme {
+  --color-*: initial;
+}
+
 @import "./theme.css";
 
 /* dark: utilities follow <html data-theme="dark">, the attribute tokens.css uses (Q13). */

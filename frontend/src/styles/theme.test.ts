@@ -1,3 +1,5 @@
+import { compile } from "tailwindcss";
+import tailwindCss from "tailwindcss/index.css?raw";
 import { describe, expect, it } from "vitest";
 
 import tokensCss from "../../../design/prototype/assets/tokens.css?raw";
@@ -176,7 +178,49 @@ describe("theme.css, the semantic mapping layer", () => {
   });
 });
 
+/**
+ * Compiles index.css with Tailwind and returns the CSS generated for
+ * `candidates`, so a test sees what the build would emit for those classes.
+ */
+async function buildUtilities(candidates: string[]): Promise<string> {
+  const stylesheets: Record<string, string> = {
+    tailwindcss: tailwindCss,
+    "./theme.css": themeCss,
+  };
+  const compiler = await compile(indexCss, {
+    base: "/",
+    loadStylesheet: (id, base) => {
+      const content = stylesheets[id];
+      if (content === undefined) {
+        return Promise.reject(new Error(`index.css imports an unexpected stylesheet: ${id}`));
+      }
+      return Promise.resolve({ path: id, base, content });
+    },
+  });
+  return compiler.build(candidates);
+}
+
 describe("index.css, the Tailwind entry", () => {
+  it("generates no utility from Tailwind's default palette (F6)", async () => {
+    const palette = ["bg-white", "text-black", "bg-slate-50", "hover:bg-slate-50", "ring-red-500"];
+
+    const css = await buildUtilities(palette);
+
+    for (const candidate of palette) {
+      expect(css, `${candidate} was generated`).not.toContain(`.${candidate.replace(":", "\\:")}`);
+    }
+    expect(css).not.toMatch(/--color-(?:white|black|slate-50|red-500)\s*:/);
+  });
+
+  it("still generates the semantic utilities of the mapping layer", async () => {
+    const css = await buildUtilities(["bg-primary", "text-muted-foreground", "border-input"]);
+
+    expect(css).toContain(".bg-primary");
+    expect(css).toContain("var(--primary)");
+    expect(css).toContain(".text-muted-foreground");
+    expect(css).toContain(".border-input");
+  });
+
   it("imports Tailwind and the mapping layer", () => {
     expect(indexCss).toMatch(/@import\s+["']tailwindcss["'];/);
     expect(indexCss).toMatch(/@import\s+["']\.\/theme\.css["'];/);
