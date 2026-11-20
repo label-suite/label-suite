@@ -43,3 +43,6 @@ for f in "$@"; do
 	prettier --write "$f"
 	sha1sum "$f"
 done
+
+# A bare variable running into a fullwidth bracket.
+printf '%s\n' "無法判斷（$detail），依規定不判為通過"

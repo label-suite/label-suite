@@ -135,6 +135,23 @@ block "$WORK" '$(pick-a-tool) --go'           'a command substitution in command
 allow "$WORK" 'echo "today is $(date)"'       'a command substitution in an operand was blocked'
 allow "$WORK" 'ls -la && echo "$HOME"'        'an ordinary variable in an operand was blocked'
 
+# …and it has to say which of those shapes it hit. Asserting only the exit code
+# let two defects through together: a bare `$detail` ran into the fullwidth
+# bracket after it, which in a UTF-8 locale bash reads as part of the name, so
+# the line became `detail\uFF09: unbound variable`; and under that, the fields
+# were tab-separated, which is IFS whitespace, so bash collapsed the empty
+# `rule` field and the reason landed in the wrong variable. The verdict was
+# right both times. The sentence that was supposed to say why was not there at
+# all, and no assertion noticed for as long as none of them read it.
+run "$WORK" 'echo "unterminated' >/dev/null
+grep -q '^BLOCK: 無法判斷（引號不成對，無法切詞）' "$TMP/err" \
+  || fail "the unbalanced-quote refusal did not give its reason: $(head -1 "$TMP/err")"
+run "$WORK" 'sh -c "$SOMETHING"' >/dev/null
+grep -q '^BLOCK: 無法判斷（sh 的參數不是字面字串，無法靜態分析）' "$TMP/err" \
+  || fail "the non-literal argument refusal did not give its reason: $(head -1 "$TMP/err")"
+grep -q '無法判斷（）' "$TMP/err" \
+  && fail "the reason came through empty, which is the field-separator defect"
+
 # ═══ Matrix two: spellings D10 adds on its own judgement ═════════════
 # These are not in the spec text. Each assertion cites D10 so a later reader
 # does not mistake them for spec requirements.

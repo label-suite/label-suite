@@ -268,16 +268,20 @@ function analyse(text, depthGuard) {
 }
 
 analyse(source, 2);
-for (const [kind, rule, detail] of findings) process.stdout.write(`${kind}\t${rule}\t${detail}\n`);
+// 0x1F between fields, not a tab. A tab is IFS whitespace, so bash collapses a
+// run of them into one delimiter and an empty field vanishes: an UNDECIDABLE
+// finding carries no rule, so its reason shifted into `rule` and `detail` read
+// empty, and the line came out as `無法判斷（），依規定不判為通過`.
+for (const [kind, rule, detail] of findings) process.stdout.write(`${kind}\x1f${rule}\x1f${detail}\n`);
 JS
 
 verdict=0
-while IFS=$'\t' read -r kind rule detail; do
+while IFS=$'\x1f' read -r kind rule detail; do
   [ -n "$kind" ] || continue
   verdict=1
   case "$kind" in
     BLOCK)       emit_err "BLOCK: 觸犯 $rule — $detail" ;;
-    UNDECIDABLE) emit_err "BLOCK: 無法判斷（$detail），依規定不判為通過" ;;
+    UNDECIDABLE) emit_err "BLOCK: 無法判斷（${detail}），依規定不判為通過" ;;
   esac
 done < <(node -e "$ANALYSE_JS" -- "$REPO" "$COMMAND")
 

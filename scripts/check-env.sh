@@ -117,7 +117,7 @@ const [file, label, root] = process.argv.slice(1);
 const EVENTS = new Set(['SessionStart', 'PreToolUse', 'PostToolUse', 'Stop', 'SubagentStop']);
 let data;
 try { data = JSON.parse(fs.readFileSync(file, 'utf8')); }
-catch { process.stdout.write(`MISSING\t${label}\t\t\n`); process.exit(0); }
+catch { process.stdout.write(`MISSING\x1f${label}\x1f\x1f\n`); process.exit(0); }
 
 const found = [];
 (function walk(node, event) {
@@ -145,7 +145,7 @@ for (const [event, raw] of found) {
     .replaceAll('"$(git rev-parse --show-toplevel)"', root)
     .replaceAll('$(git rev-parse --show-toplevel)', root);
   if (/\$\(|\$\{?[A-Za-z_]/.test(resolved)) {
-    process.stdout.write(`OPAQUE\t${label}\t${event}\t${raw}\n`);
+    process.stdout.write(`OPAQUE\x1f${label}\x1f${event}\x1f${raw}\n`);
     continue;
   }
   // The target is the path, not the `--event <Event>` after it. Splitting
@@ -157,14 +157,16 @@ for (const [event, raw] of found) {
   const trimmed = resolved.trim();
   const script = trimmed.match(/^(.*?\.sh)(?:\s|$)/);
   const target = script ? script[1] : trimmed.split(/\s+/)[0];
-  process.stdout.write(`${fs.existsSync(target) ? 'OK' : 'ABSENT'}\t${label}\t${event}\t${target}\n`);
+  // 0x1F, not a tab: a tab is IFS whitespace and bash collapses a run of them,
+  // so an empty field in the middle would silently shift every later field.
+  process.stdout.write(`${fs.existsSync(target) ? 'OK' : 'ABSENT'}\x1f${label}\x1f${event}\x1f${target}\n`);
 }
 JS
 
 pair_ok=1
 for pair in "$CLAUDE_CFG|.claude/settings.json" "$CODEX_CFG|.codex/hooks.json"; do
   cfg="${pair%%|*}"; label="${pair##*|}"
-  while IFS=$'\t' read -r verdict lbl event target; do
+  while IFS=$'\x1f' read -r verdict lbl event target; do
     [ -n "$verdict" ] || continue
     case "$verdict" in
       MISSING) pair_ok=0; note_fail "$lbl 不存在或不是合法 JSON" ;;

@@ -23,3 +23,8 @@ if [ -n "${TIMEOUT_NOTE:-}" ]; then
     echo "the contract says the runner applies the timeout, not us"
     echo "a repair step would run eslint --fix; this one reports instead"
 fi
+
+# Braces end the name, so this is the spelling the rule asks for -- and the
+# words "$detail" and 無法判斷 appearing in this comment must not trip it.
+printf '%s\n' "無法判斷（${detail}），依規定不判為通過"
+printf '%s\n' "路徑 ${p} 命中樣式"

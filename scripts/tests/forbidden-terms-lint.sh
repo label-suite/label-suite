@@ -97,7 +97,17 @@ for FILE in ${TARGETS+"${TARGETS[@]}"}; do
   # discarded stderr, so a missing tool yielded an empty digest, and an empty
   # digest matched the empty digest in a stale evidence record. See hc_sha256
   # in scripts/lib/hook-common.sh.
-  rule 'digests with a tool that may be absent' \
+  # Every checker prints its diagnostics in Traditional Chinese, so a bare `$var`
+# that runs straight into one of those characters is a parse hazard rather than
+# a style point: in a UTF-8 locale bash takes the character's bytes as part of
+# the identifier. `"無法判斷（$detail）"` became `detail\uFF09: unbound variable`,
+# which replaced the whole diagnostic with a bash error -- the verdict stayed
+# fail-closed, but the line that was supposed to say why said nothing. Braces
+# end the name explicitly.
+rule 'runs a variable name into a non-ASCII character' \
+  '\$[A-Za-z_][A-Za-z0-9_]*[^ -~]'
+
+rule 'digests with a tool that may be absent' \
     "$CMD(shasum|sha256sum|sha1sum|md5|md5sum|openssl[[:space:]]+dgst)[[:space:]]"
 done
 

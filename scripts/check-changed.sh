@@ -200,7 +200,7 @@ if [ "$MODE" = "staged" ] && { [ "${#PY_FILES[@]}" -gt 0 ] || [ "${#TS_FILES[@]}
   done
   CONTENT_ROOT="$MIRROR"
 fi
-cd "$CONTENT_ROOT" || undecidable "無法進入 $CONTENT_ROOT，本次不判為通過"
+cd "$CONTENT_ROOT" || undecidable "無法進入 ${CONTENT_ROOT}，本次不判為通過"
 
 # ── Run the routed checks ────────────────────────────────────────────
 violations=0

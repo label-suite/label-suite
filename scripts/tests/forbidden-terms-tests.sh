@@ -38,7 +38,8 @@ for label in \
   'runs a timeout of its own' \
   'repairs instead of reporting' \
   'stages files for the agent' \
-  'digests with a tool that may be absent'
+  'digests with a tool that may be absent' \
+  'runs a variable name into a non-ASCII character'
 do
   grep -qF "$label" "$TMP/err" || fail "no rule reported [$label] on the bad fixture"
 done
