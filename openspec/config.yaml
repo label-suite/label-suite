@@ -112,5 +112,5 @@ operations:
     guidance:
       - 歸檔前確認工作區乾淨；驗收已經在 apply 的最後做過，這裡不重做驗收判定
       - 同步主規格與搬移到 archive 由 ops 執行；新 capability 的 Purpose 不留 TBD
-      - '**在合併之前執行**：歸檔改動與程式進同一張 PR，main 上不會出現已合併但未歸檔的 change'
+      - "**在合併之前執行**：歸檔改動與程式進同一張 PR，main 上不會出現已合併但未歸檔的 change"
       - 步驟結束時自動提交；PR 在 apply 期間就已經開好，這裡不另開

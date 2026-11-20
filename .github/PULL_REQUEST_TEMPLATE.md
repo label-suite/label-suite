@@ -24,8 +24,8 @@
 
 ## Changed Files
 
-| File | Change |
-|------|--------|
+| File           | Change                |
+| -------------- | --------------------- |
 | `path/to/file` | <!-- 簡述變更內容 --> |
 
 ## Test Plan
@@ -53,6 +53,7 @@
 **After state**：<!-- migration 後的 schema／資料狀態 -->
 
 **Rollback procedure**：
+
 1. <!-- 執行 `uv run alembic downgrade -1` 或特定指令 -->
 2. <!-- 其他資料復原步驟 -->
 
@@ -78,14 +79,14 @@
 
 ## Type Reference
 
-| Type | Description |
-|------|-------------|
-| feat | 新功能 |
-| fix | 錯誤修正 |
-| docs | 僅文件變更 |
-| refactor | 重構，不改變行為 |
-| test | 僅新增或更新測試 |
-| chore | 工具、設定、相依套件更新 |
-| perf | 效能優化 |
-| ci | CI/CD pipeline 變更 |
-| build | 建置系統或打包設定變更 |
+| Type     | Description              |
+| -------- | ------------------------ |
+| feat     | 新功能                   |
+| fix      | 錯誤修正                 |
+| docs     | 僅文件變更               |
+| refactor | 重構，不改變行為         |
+| test     | 僅新增或更新測試         |
+| chore    | 工具、設定、相依套件更新 |
+| perf     | 效能優化                 |
+| ci       | CI/CD pipeline 變更      |
+| build    | 建置系統或打包設定變更   |

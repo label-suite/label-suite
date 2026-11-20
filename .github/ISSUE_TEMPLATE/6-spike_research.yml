@@ -11,7 +11,6 @@ body:
         ## 🔍  研究 / 試作 
         用於「先研究再決定做不做/怎麼做」。請填必要資訊即可。
 
-
   - type: textarea
     id: objective
     attributes:
@@ -55,7 +54,6 @@ body:
         - 完成標準：
     validations:
       required: true
-
 
   - type: textarea
     id: notes

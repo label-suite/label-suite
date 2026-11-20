@@ -23,12 +23,12 @@ model: opus
 
 ## 架構原則（`architecture.mdx` §後端分層 的逐層職責表）
 
-| 層 | 做 | 不做 |
-| :--- | :--- | :--- |
-| Router | 路由、request／response schema、取得呼叫者、**套用欄位遮蔽** | **不碰 Repository**、不寫商業邏輯 |
-| Service | 查詢條件、狀態機轉移、權限以外的業務卡控、寫稽核事件 | 不組 HTTP 回應、不自己讀 `Accept-Language` |
-| Repository 與 model | 資料存取 | **不寫原生 SQL**（Alembic 的 DDL 例外） |
-| Celery task | 評分、IAA 計算、匯出等長時間工作 | 不處理 HTTP、不回傳使用者可見訊息 |
+| 層                  | 做                                                           | 不做                                       |
+| :------------------ | :----------------------------------------------------------- | :----------------------------------------- |
+| Router              | 路由、request／response schema、取得呼叫者、**套用欄位遮蔽** | **不碰 Repository**、不寫商業邏輯          |
+| Service             | 查詢條件、狀態機轉移、權限以外的業務卡控、寫稽核事件         | 不組 HTTP 回應、不自己讀 `Accept-Language` |
+| Repository 與 model | 資料存取                                                     | **不寫原生 SQL**（Alembic 的 DDL 例外）    |
+| Celery task         | 評分、IAA 計算、匯出等長時間工作                             | 不處理 HTTP、不回傳使用者可見訊息          |
 
 - **任務狀態機只實作在 Service 層**（ADR-022）。反向轉移除了 `waiting_iaa_confirmation` 回 `draft` 與回 `dry_run_in_progress` 兩條以外都不允許。完整轉移條件**以 `docs/specs/` 的規格書與 PRD §共用狀態機為準**，不以 ADR-022 的表為準
 - 授權依序判定四件事（§認證與授權）：登入者與帳號狀態 → 系統角色與任務成員身分 → permission key 與矩陣的 cell → 操作本身的附加條件。**未知的 key、缺少的列、層級不符、成員身分失效一律拒絕**；JWT 的 `role` claim 只供顯示，**授權不看它**
@@ -47,8 +47,8 @@ model: opus
 
 ## 測試（`architecture.mdx` §測試分層）
 
-| 名稱 | 工具 | 位置 |
-| :--- | :--- | :--- |
+| 名稱                | 工具                                  | 位置             |
+| :------------------ | :------------------------------------ | :--------------- |
 | unit 與 integration | **pytest 加 pytest-asyncio 加 httpx** | `backend/tests/` |
 
 - **Supertest 式的 API 測試叫 integration，不叫 E2E**；E2E 專指根目錄 `e2e/` 的 Playwright
