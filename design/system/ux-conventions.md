@@ -128,7 +128,7 @@
 - [Modal](components/modal.md)：`admin/user-management` 只讓新增與編輯可以點遮罩關閉，停用確認不行（`design/prototype/pages/admin/user-management.html:1247`–`:1252`）；停用確認開著時 Enter 送出（`:1259`–`:1262`）。`admin/role-settings` 的 `#dirtyModal` 同樣 Esc 取消、Enter 確認（`role-settings.html:1307`–`:1316`）。刪除分類分支的確認（`task-config.engine.js:6203`–`:6218`，`task-new.html:545` 的 `role="alertdialog"`）把焦點放在「刪除」鈕 `taxonomyDeleteConfirmBtn` 上（`task-config.engine.js:6218`），文案寫明一併刪除的子節點數
 - [Button](components/button.md)：確認動作一律用 `.btn-danger`（`user-management.html:604`、`role-settings.html:872`、`task-list.html:280`–`:288`）
 
-**與規格不一致**：`task-management/task-list` 的刪除任務確認原本點遮罩會關；維護者 2026-11-18 裁定刪除任務也適用本約定，#423 已改成點遮罩不關（`task-list.html:1186`–`:1193`）。規格還寫著舊行為（[`01-task-list.mdx` §刪除任務](../../docs/specs/03-task-management/01-task-list.mdx) 第 5 條「點視窗外面，或按 Esc → 視窗關閉」），那一條屬維護者改 → [`design-gaps.md`](design-gaps.md) G-45。
+**與規格不一致**：`task-management/task-list` 的刪除任務確認原本點遮罩會關；維護者 2026-11-18 裁定刪除任務也適用本約定，#423 已改成點遮罩不關（`task-list.html:1186`–`:1193`）。規格已由 #434 對齊（[`01-task-list.mdx` §刪除任務](../../docs/specs/03-task-management/01-task-list.mdx) 第 5 條與 A1 替代流程：點視窗外不關閉，Q22）→ [`design-gaps.md`](design-gaps.md) G-45。
 
 ## UXC-04：送出才驗證，不是檢查就驗證
 

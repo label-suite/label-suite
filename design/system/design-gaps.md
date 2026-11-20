@@ -276,7 +276,7 @@
 | **依據** | `task-list.html:1197`–`:1199` 點遮罩即關 vs `user-management.html:1357`「`/* UXC-10: a destructive confirmation must not dismiss on overlay click */`」。規格站在 `task-list` 那邊：[`03-task-management/01-task-list.mdx`](../../docs/specs/03-task-management/01-task-list.mdx) §刪除任務 第 5 條「點視窗外面，或按 Esc → 視窗關閉」。 |
 | **待決問題** | **已裁定（2026-11-18）**：刪除任務也適用 UXC-10，點遮罩不關。規格那一條要改，屬維護者。原型修正於 #423。原題保留：UXC-10 的「點遮罩不關」要不要適用到刪除任務？若要，規格那一條要改（屬維護者）；若不要，UXC-10 要寫明例外。 |
 
-**狀態（#423）**：原型已修正，規格未改。`task-list.html` 刪除確認的遮罩點擊關閉整段刪除；另在遮罩的 `mousedown` 取消預設動作，因為 `modal-focus.js` 的 Esc 監聽掛在視窗上，焦點一掉到 `body` Esc 就失效。淺深色實測：點遮罩不關、焦點留在「取消」，Esc、「取消」、「刪除」都能關。規格 `01-task-list.mdx` §刪除任務 第 5 條與 A1 替代流程仍寫「點視窗外面 → 視窗關閉」，屬維護者改。上文的行號指的是修正前。
+**狀態（#423）**：原型已修正；規格由 #434 對齊（`01-task-list.mdx` Q22）。`task-list.html` 刪除確認的遮罩點擊關閉整段刪除；另在遮罩的 `mousedown` 取消預設動作，因為 `modal-focus.js` 的 Esc 監聽掛在視窗上，焦點一掉到 `body` Esc 就失效。淺深色實測：點遮罩不關、焦點留在「取消」，Esc、「取消」、「刪除」都能關。規格 `01-task-list.mdx` §刪除任務 第 5 條與 A1 替代流程原本寫「點視窗外面 → 視窗關閉」，#434 已改成點視窗外不關閉。上文的行號指的是修正前。
 
 ### G-46 指引閘門按 Esc 就能不確認直接開始
 
@@ -289,7 +289,7 @@
 | **依據** | `annotation-workspace.config.js:6845`–`:6850` 開閘門時傳 `onClose: hideGuidelineModal`，`hideGuidelineModal`（`:6818`–`:6822`）只關彈窗、不寫確認紀錄；`pages/shared/modal-focus.js:42`–`:44` 在 Esc 時呼叫 `onClose`。規格 [`04-annotation/02-annotation-workspace.mdx`](../../docs/specs/04-annotation/02-annotation-workspace.mdx) §指引閘門 第 3 條「開關開著時，進場顯示說明彈窗，**使用者按確認按鈕才開始**」。 |
 | **待決問題** | **已裁定（2026-11-18）**：閘門忽略 Esc，只能按確認，保留返回清單的出口。修正於 #423。原題保留：閘門要不要忽略 Esc（只能按確認）？若 Esc 可以關，關掉之後算不算「開始」——要不要擋住作答？ |
 
-**狀態（#423）**：已修正。閘門開啟時傳給 `modal-focus.js` 的 `onClose` 改成空函式，Esc 只被取消、不關彈窗；只有確認鈕會關閉並寫確認紀錄。原本閘門沒有確認以外的出口，所以在確認鈕左邊加了 `.btn-secondary`「返回標記清單／Back to annotation list」，走 `buildListReturnUrl()`，不寫確認紀錄，下次進來照樣顯示。淺深色實測：按 Esc（焦點在彈窗內、Tab 之後再按）彈窗都還在；返回鈕回到 `annotation-list.html?task_id=…&role=…&run_type=…`；確認鈕關閉彈窗。`modal-focus.js` 預設把焦點放在第一個可聚焦元素，也就是返回鈕；依維護者裁定（2026-11-18），開啟後再把焦點移到確認鈕 `confirmBtn`（`annotation-workspace.config.js:6902`），初始焦點落在主要動作上。上文的行號指的是修正前。
+**狀態（#423）**：已修正。閘門開啟時傳給 `modal-focus.js` 的 `onClose` 改成空函式，Esc 只被取消、不關彈窗；只有確認鈕會關閉並寫確認紀錄。原本閘門沒有確認以外的出口，所以在確認鈕左邊加了 `.btn-secondary`「返回標記清單／Back to annotation list」，走 `buildListReturnUrl()`，不寫確認紀錄，下次進來照樣顯示。淺深色實測：按 Esc（焦點在彈窗內、Tab 之後再按）彈窗都還在；返回鈕回到 `annotation-list.html?task_id=…&role=…&run_type=…`；確認鈕關閉彈窗。`modal-focus.js` 預設把焦點放在第一個可聚焦元素，也就是返回鈕；依維護者裁定（2026-11-18），開啟後再把焦點移到確認鈕 `confirmBtn`（`annotation-workspace.config.js:6902`），初始焦點落在主要動作上。上文的行號指的是修正前。規格由 #434 對齊（`02-annotation-workspace.mdx` §指引閘門 第 3 條、Q16）。
 
 ### G-47 送出被擋時，畫面看不出是哪一個區塊擋住
 
@@ -340,6 +340,8 @@
 | **待決問題** | **已裁定（2026-11-18）**：改成「參考值」，並拿掉「通過／未達」的判定語氣。修正於 #423。原題保留：規格已裁定要改；改原型屬**畫面修正**，要走 Ready gate。改成什麼字（規格只舉例「參考值」）、何時改，由維護者決定。 |
 
 **狀態（#423）**：已修正。實體辨識的部分重疊卡改成「Relaxed 參考值 0.70」／"Relaxed reference value 0.70"，關係識別第二列改成「高品質參考值 0.80」／"High-quality reference value 0.80"，兩者都拿掉「— 通過／未達」，圓點改中性的新 `.t-dot-neutral`（`--color-ink-muted`）。部分重疊卡的數值與長條原本是綠色（等於說它過了），也改中性：數值不帶狀態 class，長條用新的 `.iaa-bar-fill.neutral`。「兩種計算模式比較」表頭從「門檻」改「門檻／參考值」（"Threshold / reference"），因為 Strict 那一列的 0.80 仍是真門檻；部分重疊那一列的結果從綠色「通過」改成中性徽章「不判定」（"Not judged"），Strict 那一列的「未達」不動。中英文 i18n 一併改；`T007`、`T008` 與複合任務 `T010` 淺深色實測。上文的行號指的是修正前。
+
+**規格（#434）**：維護者 2026-11-19 裁定用詞改為「**參考線**」（`Relaxed 參考線 0.70`、`高品質參考線 0.80`），「不判定」加進達標狀態列舉當第六個值（`02-analysis-detail.mdx` Q26、Q27）。原型目前寫的「參考值」與表頭「門檻／參考值」要再改成「參考線」，另開 [UI] issue 處理，過 Ready gate 才動 `design/prototype/`。
 
 ## 二、缺少狀態證據
 
