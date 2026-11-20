@@ -104,7 +104,8 @@ def validation_error_details(exc: RequestValidationError) -> list[ErrorDetail]:
     """Convert a ``RequestValidationError`` into ``ErrorDetail`` items.
 
     ``location`` is ``loc[0]`` and ``field`` the rest of ``loc`` joined with
-    ``.`` (``""`` when the error covers the whole location). Only Pydantic's
+    ``.`` (``""`` when the error covers the whole location, including a
+    ``json_invalid`` error whose ``loc`` ends in a character offset). Only Pydantic's
     ``type`` and ``msg`` are kept: ``input``, ``ctx`` and ``url`` are dropped so
     submitted values are never echoed back (spec ``api-envelope``).
 
@@ -119,10 +120,16 @@ def validation_error_details(exc: RequestValidationError) -> list[ErrorDetail]:
 
 def _error_detail(error: Mapping[str, Any]) -> ErrorDetail:
     loc: Sequence[Any] = error.get("loc") or ()
+    error_type = str(error.get("type", ""))
+    path = loc[1:]
+    # An unparseable body ends ``loc`` with the character offset of the JSON
+    # error, not a field name: the error covers the whole location.
+    if error_type == "json_invalid" and path and not isinstance(path[-1], str):
+        path = ()
     return ErrorDetail(
         location=str(loc[0]) if loc else "",
-        field=".".join(str(part) for part in loc[1:]),
-        code=str(error.get("type", "")),
+        field=".".join(str(part) for part in path),
+        code=error_type,
         message=str(error.get("msg", "")),
     )
 

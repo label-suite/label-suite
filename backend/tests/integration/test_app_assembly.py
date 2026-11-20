@@ -109,6 +109,9 @@ async def test_unparseable_json_returns_a_422_envelope(client: httpx.AsyncClient
     body = _assert_error_envelope(response, 422, "VALIDATION_FAILED")
     assert body["errors"]
     assert all(e["location"] == "body" for e in body["errors"])
+    invalid = [e for e in body["errors"] if e["code"] == "json_invalid"]
+    assert invalid
+    assert all(e["field"] == "" for e in invalid)
 
 
 async def test_validation_errors_do_not_echo_submitted_values(client: httpx.AsyncClient) -> None:
@@ -243,6 +246,23 @@ async def test_unlisted_origin_gets_no_cross_origin_headers(client: httpx.AsyncC
 
     assert response.status_code == 200
     assert "Access-Control-Allow-Origin" not in response.headers
+
+
+async def test_unlisted_origin_preflight_is_not_an_error_envelope(
+    client: httpx.AsyncClient,
+) -> None:
+    response = await client.options(
+        "/api/v1/health",
+        headers={"Origin": "http://evil.example", "Access-Control-Request-Method": "GET"},
+    )
+
+    assert 400 <= response.status_code < 500
+    assert "Access-Control-Allow-Origin" not in response.headers
+    try:
+        body = response.json()
+    except ValueError:
+        body = None
+    assert not (isinstance(body, dict) and {"success", "code", "traceId"} <= set(body))
 
 
 # --- start-up --------------------------------------------------------------------------

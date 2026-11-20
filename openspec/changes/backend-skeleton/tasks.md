@@ -53,7 +53,7 @@
 
 ## 10. 驗收後修正
 
-- [ ] 10.1 依驗收發現補兩處（維護者裁定 2026-11-20、design D3、D4）：（a）先寫 integration 測試涵蓋 spec `api-envelope`「不允許來源的 CORS 預檢回應不是錯誤外層」：送 `OPTIONS /api/v1/health` 帶不在允許清單內的 `Origin` 與 `Access-Control-Request-Method: GET`，斷言狀態為 `4xx`、body 不是錯誤外層、回應沒有 `Access-Control-Allow-Origin` 標頭；程式不改。（b）修正 `backend/app/core/errors.py` 的 `_error_detail`：`json_invalid` 錯誤的 `loc` 尾段不是字串（字元位置）時 `field` 為 `""`，不再輸出位置數字（api-contract §ErrorDetail「錯誤在整個 location 時為空字串」）；先寫測試，unit 以 `type` 為 `json_invalid`、`loc` 為 `("body", 15)` 的錯誤斷言 `field` 為 `""`，integration 於 spec `api-envelope`「無法解析的 JSON 回 422」再斷言該筆 `field` 為 `""`，再實作。驗證：`uv run pytest` 通過，設定 `TEST_DATABASE_URL` 後再跑一次通過且 0 skipped；`uv run ruff check .`、`uv run ruff format --check .`、`uv run mypy --strict app` 通過；`uv run python -m app.scripts.export_openapi && git diff --exit-code -- openapi.json` 以 0 結束 [@backend-developer]
+- [x] 10.1 依驗收發現補兩處（維護者裁定 2026-11-20、design D3、D4）：（a）先寫 integration 測試涵蓋 spec `api-envelope`「不允許來源的 CORS 預檢回應不是錯誤外層」：送 `OPTIONS /api/v1/health` 帶不在允許清單內的 `Origin` 與 `Access-Control-Request-Method: GET`，斷言狀態為 `4xx`、body 不是錯誤外層、回應沒有 `Access-Control-Allow-Origin` 標頭；程式不改。（b）修正 `backend/app/core/errors.py` 的 `_error_detail`：`json_invalid` 錯誤的 `loc` 尾段不是字串（字元位置）時 `field` 為 `""`，不再輸出位置數字（api-contract §ErrorDetail「錯誤在整個 location 時為空字串」）；先寫測試，unit 以 `type` 為 `json_invalid`、`loc` 為 `("body", 15)` 的錯誤斷言 `field` 為 `""`，integration 於 spec `api-envelope`「無法解析的 JSON 回 422」再斷言該筆 `field` 為 `""`，再實作。驗證：`uv run pytest` 通過，設定 `TEST_DATABASE_URL` 後再跑一次通過且 0 skipped；`uv run ruff check .`、`uv run ruff format --check .`、`uv run mypy --strict app` 通過；`uv run python -m app.scripts.export_openapi && git diff --exit-code -- openapi.json` 以 0 結束 [@backend-developer]
 
 ## Workflow follow-up
 

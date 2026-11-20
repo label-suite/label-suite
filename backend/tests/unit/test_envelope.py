@@ -206,7 +206,7 @@ def test_validation_details_split_location_and_field() -> None:
 
     assert [(d.location, d.field, d.code, d.message) for d in details] == [
         ("body", "items.0.displayName", "missing", "Field required"),
-        ("body", "15", "json_invalid", "JSON decode error"),
+        ("body", "", "json_invalid", "JSON decode error"),
         ("body", "", "missing", "Field required"),
         ("query", "limit", "int_parsing", "bad"),
     ]
