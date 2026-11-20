@@ -24,6 +24,7 @@ import {
   healthPendingHandler,
 } from "@/test/envelope-fixtures";
 import { server } from "@/test/msw-server";
+import { attachUtilityCss } from "@/test/utility-css";
 
 import { HealthStatusPanel } from "./index";
 
@@ -304,6 +305,31 @@ describe("HealthStatusPanel recheck", () => {
 
     expect(await screen.findByText("正常")).toBeInTheDocument();
     expect(recheckButton()).toHaveFocus();
+  });
+
+  it("keeps focus on the busy recheck button when it is clicked with the mouse", async () => {
+    const user = userEvent.setup();
+    const gate = gatedHealth();
+    server.use(gate.handler);
+    renderPanel();
+    await waitFor(() => {
+      expect(gate.started()).toBe(1);
+    });
+    const button = recheckButton();
+    expect(button).toHaveAttribute("aria-disabled", "true");
+    const detach = await attachUtilityCss(button);
+
+    try {
+      await user.click(button);
+
+      expect(button).toHaveFocus();
+    } finally {
+      detach();
+    }
+    gate.release(okResponse);
+    expect(await screen.findByText("正常")).toBeInTheDocument();
+    expect(gate.started()).toBe(1);
+    expect(gate.aborted()).toBe(0);
   });
 
   it("sends one request when clicked again and Enter is pressed while it is in flight", async () => {

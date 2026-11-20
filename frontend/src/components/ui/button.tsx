@@ -55,9 +55,11 @@ function fromValues<Value extends string>(
 /*
  * Disabled and aria-disabled buttons get an explicit muted look instead of the
  * canonical `opacity .4` (ui-design.md §artifact 對不到刻度或 token 的值, Q17).
+ * aria-disabled buttons keep pointer events, so a mouse click still focuses
+ * them (ui-design.md §無障礙); handleClick ignores the click itself.
  */
 export const buttonVariants = cva(
-  "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md border border-transparent text-(length:--text-caption) font-medium whitespace-nowrap transition-all outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:border-border disabled:bg-control-disabled disabled:text-muted-foreground aria-disabled:pointer-events-none aria-disabled:border-border aria-disabled:bg-control-disabled aria-disabled:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md border border-transparent text-(length:--text-caption) font-medium whitespace-nowrap transition-all outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:border-border disabled:bg-control-disabled disabled:text-muted-foreground aria-disabled:cursor-not-allowed aria-disabled:border-border aria-disabled:bg-control-disabled aria-disabled:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: fromValues(buttonVariantValues, variantClasses),

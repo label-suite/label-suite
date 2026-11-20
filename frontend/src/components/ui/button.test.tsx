@@ -3,6 +3,8 @@ import userEvent from "@testing-library/user-event";
 import type { SyntheticEvent } from "react";
 import { describe, expect, it, vi } from "vitest";
 
+import { attachUtilityCss } from "@/test/utility-css";
+
 import { Button, buttonSizeValues, buttonVariantValues } from "./button";
 
 describe("Button declarations", () => {
@@ -147,4 +149,31 @@ describe("Button aria-disabled", () => {
     expect(onClick).not.toHaveBeenCalled();
     expect(button).toHaveFocus();
   });
+
+  it.each([
+    ["aria-disabled", { "aria-disabled": true }],
+    ["loading", { loading: true }],
+  ] as const)(
+    "takes focus from a mouse click while %s, with its real CSS, and still ignores it",
+    async (_label, inertProps) => {
+      const user = userEvent.setup();
+      const onClick = vi.fn();
+      render(
+        <Button {...inertProps} onClick={onClick}>
+          Re-check
+        </Button>,
+      );
+      const button = screen.getByRole("button", { name: "Re-check" });
+      const detach = await attachUtilityCss(button);
+
+      try {
+        await user.click(button);
+      } finally {
+        detach();
+      }
+
+      expect(button).toHaveFocus();
+      expect(onClick).not.toHaveBeenCalled();
+    },
+  );
 });
