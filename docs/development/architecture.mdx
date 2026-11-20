@@ -398,7 +398,7 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，�
 | 023 | Compose 加 Nginx 加 Cloudflare 部署 | Accepted | 需調整：要搭 `commit-and-release.md` 的三分支與 GHCR，見 [§部署與維運](#部署與維運)與 [ADR-008 的 D1](adr/008-deployment-and-operations.mdx#d1-compose-加-nginx-當-runtimecloudflare-可選) |
 | 024 | 資料庫雙層（SQLite 加 PostgreSQL） | Accepted | 沿用，見 [§資料庫雙層](#資料庫雙層)與 [ADR-003 的 D7](adr/003-backend-architecture.mdx#d7-資料庫分兩層)；它的 Atomic upsert 一條見 [ADR-003 的 D10](adr/003-backend-architecture.mdx#d10-背景計算的結果寫入做成冪等) |
 | 025 | Bruno API collection | Accepted | **部分被覆寫**：Bruno 降成可選的手動工具，pre-PR 硬關卡取消，見 [§API 契約](#api-契約)與 [ADR-003 的 D9](adr/003-backend-architecture.mdx#d9-bruno-只當可選工具) |
-| 026 | i18n 兩層 | Accepted | 沿用，見 [§i18n 兩層](#i18n-兩層) |
+| 026 | i18n 兩層 | Accepted | 沿用，見 [§i18n 兩層](#i18n-兩層)；理由見 [ADR-003 的 D11](adr/003-backend-architecture.mdx#d11-i18n-分前端與後端兩層) |
 | 027 | GitHub Projects | Accepted | 已被取代：以 [ADR-002 的 D5](adr/002-development-workflow.mdx#d5-狀態只記在組織層專案板)為準，不用 label 追狀態，無 `STATUS.md` |
 | 028 | CI 安全掃描（SCA 加延後 SAST） | Accepted | 沿用，等同 Hard Rule 7、8，見 [§部署與維運](#部署與維運)與 [ADR-008 的 D8](adr/008-deployment-and-operations.mdx#d8-ci-安全掃描先做-scasast-延後) |
 | 029 | Output-Type Composition Model | Accepted | 沿用；`sequence_tagging` 那一列已過期，以 [§任務設定](#任務設定input_type-加-outputs) 為準（修訂見 [§待決](#待決) 第 1 列）；見 [ADR-006 的 D2](adr/006-task-config-and-answer-isolation.mdx#d2-任務設定用-input_type-加-outputs-組合) |
@@ -463,3 +463,4 @@ ADR 引用的 FR-131、admin-007、spec 013 這類編號屬於個人 repo，本 
 | 2026-11-20 | 成功回應的 envelope 定為 `{ success, code, message, data, timestamp, traceId }`，錯誤套同一個外層，API JSON 欄位一律 camelCase（[§API 契約](#api-契約)） | 原本只寫「包一層 envelope，例 `{"data": ...}`」，欄位未決 | [#503](https://github.com/label-suite/label-suite/issues/503) |
 | 2026-11-20 | 人讀的錯誤訊息從 `detail` 改成外層的 `message`（[§i18n 兩層](#i18n-兩層)） | `ErrorResponse` 的 `detail` | [#503](https://github.com/label-suite/label-suite/issues/503) |
 | 2026-11-20 | 不用 Storybook，改用元件展示頁（[§前端](#前端)） | §待決 第 2 列「ADR-016 的 Storybook 要不要用」 | [#503](https://github.com/label-suite/label-suite/issues/503) |
+| 2026-11-20 | i18n 兩層的理由寫進 [ADR-003 的 D11](adr/003-backend-architecture.mdx#d11-i18n-分前端與後端兩層)，本文只留做法（[§i18n 兩層](#i18n-兩層)） | —（理由原本沒有落點，效力總表第 026 列只寫「沿用」） | [#513](https://github.com/label-suite/label-suite/issues/513) |

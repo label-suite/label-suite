@@ -1,12 +1,12 @@
 ---
 title: ADR-003 後端架構
-description: 後端與 API 契約的決定：前後端同一個 repo、FastAPI、模組內分層、狀態機放 service 層、路徑前綴與回應 envelope、Orval 產生前端 client、SQLite 加 PostgreSQL 雙層、Celery 加 Redis、Bruno 降成可選工具、背景計算的結果寫入做成冪等。
-tags: [adr, backend, api, database, celery]
+description: 後端與 API 契約的決定：前後端同一個 repo、FastAPI、模組內分層、狀態機放 service 層、路徑前綴與回應 envelope、Orval 產生前端 client、SQLite 加 PostgreSQL 雙層、Celery 加 Redis、Bruno 降成可選工具、背景計算的結果寫入做成冪等、i18n 分前端與後端兩層。
+tags: [adr, backend, api, database, celery, i18n]
 ---
 
 # ADR-003 後端架構
 
-這份 ADR 管後端的骨架與它對外的契約：repo 怎麼分、用什麼框架、目錄怎麼分層、API 的前綴與回應外層、前端 client 怎麼產生、資料庫與背景工作用什麼、背景計算的結果怎麼寫才不會重複。認證與授權、測試、部署與前端的目錄不在這裡，測試見 [ADR-007](007-testing-strategy.mdx)。
+這份 ADR 管後端的骨架與它對外的契約：repo 怎麼分、用什麼框架、目錄怎麼分層、API 的前綴與回應外層、前端 client 怎麼產生、資料庫與背景工作用什麼、背景計算的結果怎麼寫才不會重複、使用者看得到的字串由哪一層決定語言。認證與授權、測試、部署與前端的目錄不在這裡，測試見 [ADR-007](007-testing-strategy.mdx)。
 規則本體在 [backend-agent-rules.mdx](../rules/backend-agent-rules.mdx) 與 [api-agent-rules.mdx](../rules/api-agent-rules.mdx)，落地的做法在 [architecture.mdx](../architecture.mdx)，本文只寫為什麼；衝突時的優先序見 [ADR 索引](index.mdx#衝突時以誰為準)。
 
 ## D1 前後端放在同一個 repo
@@ -460,9 +460,54 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 - 出現必須保留歷次計算結果的需求（例如同一回合的多次重算要並存比較）
 - 結果的體積大到 upsert 的整列覆寫成本過高，需要改成分段寫入
 
+## D11 i18n 分前端與後端兩層
+
+### 背景
+
+使用者看得到的字串有兩類——React 元件自己渲染的 UI 文案，以及 API 回應裡回給使用者看的訊息——而兩類的語言由誰決定必須先畫清界線。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 支援 `zh-TW`（預設 fallback）與 `en` | 兩類字串都要能切語言，不能只做一邊 |
+| 後端的商業邏輯錯誤無法在建置時全部預知 | 前端沒辦法靠比對錯誤字串挑出對應的 key |
+| 後端不該知道 UI 文案 | 讓後端決定所有字串會把關注點放錯層 |
+| 後端只回英文會讓 `zh-TW` 的使用者體驗壞掉 | 後端那一層不能不做 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 兩層：前端管 UI 字串，後端依 `Accept-Language` 管回應訊息 | 界線乾淨，各層只管自己渲染的東西 | 兩邊的語系資料各自獨立更新 | 採用 |
+| B 只在前端做：後端一律回英文，前端再對照到語系 key | 字串集中在一處 | 前端得比對後端的錯誤字串，很脆弱；而後端的商業邏輯錯誤無法在建置時全部預知 | 不採用 |
+| C 只在後端做：連 UI 文案都由後端決定語言 | 字串集中在一處 | 後端必須知道 UI 文案，關注點分離錯誤 | 不採用 |
+
+### 決定
+
+前端用 `react-i18next` 管它自己渲染的字串，依模組分 namespace，語系檔在 `frontend/src/locales/<lang>/<module>.json`；後端讀 `Accept-Language` 決定回應訊息的語言，字串放 `app/i18n/<lang>/`。前端把後端回來的訊息當成**已經本地化的不透明字串**直接顯示，不再翻譯或對照 key。規則本體見 [api-agent-rules 的 A8](../rules/api-agent-rules.mdx#a8-i18n-的兩層分工)，做法見 [architecture.mdx 的 §i18n 兩層](../architecture.mdx#i18n-兩層)。
+
+### 後果
+
+**變容易**
+
+- 後端的商業邏輯錯誤文案集中在一處，前端語系檔與後端錯誤文字不互相耦合
+- 前端語系檔只有 UI 文案，不會混進後端訊息的副本
+- 加一個語言時，後端的 `app/i18n/<lang>/` 與前端的 `frontend/src/locales/<lang>/` 各自獨立更新
+- 產生後端錯誤訊息的 agent 不必動前端語系檔
+
+**變困難**
+
+- 後端開發者得記得把字串放進 `app/i18n/`，不能內嵌在商業邏輯裡
+- 前端的 HTTP 邊界要讀當前的 `react-i18next` 語言並逐次送 `Accept-Language`；靠瀏覽器自帶的 header 會讓 UI 語言與後端訊息的語言對不上
+- 後端 i18n 的整合測試要對關鍵錯誤路徑斷言兩種語言的訊息
+
+### 什麼情況要重新討論
+
+- 要支援第三個語言，而兩邊的語系資料開始出現同一句話的兩份翻譯
+- 前端需要依錯誤的種類改變版面，而不只是顯示一段文字
+
 ## 附錄：來源對照
 
-比對的版本：個人 repo ADR-001、003、005、006、007、022、024、025 的現行內容（`docs/adr/` 最後異動的 commit 是 `9a5da8e`，2026-10-12）。D10 的來源也在其中，是 ADR-024 的 Dialect-Specific Paths，見下表。
+比對的版本：個人 repo ADR-001、003、005、006、007、022、024、025、026 的現行內容（`docs/adr/` 最後異動的 commit 是 `9a5da8e`，2026-10-12）。D10 的來源也在其中，是 ADR-024 的 Dialect-Specific Paths，見下表。
 
 | 決定 | 來源 |
 | :--- | :--- |
@@ -477,6 +522,7 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 | D9 | 個人 repo ADR-025（Context、Alternatives Considered、Enforcement、Consequences）；降級的裁定見 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 7 列，只記結果，沒有記取消關卡的理由 |
 | D10 | 個人 repo ADR-024 的 §Dialect-Specific Paths 第一條「Atomic upsert (FR-083)」：Celery 背景工作的寫入在兩層都要原子，依 dialect 偵測選 PostgreSQL 或 SQLite 的 `on_conflict_do_update()`／`on_conflict_do_nothing()`，兩層都不得用 `session.merge()` 或 check-then-act。選項 A 與選項 C 的拒絕理由都出自這一條；選項 B、D 是推論。本 repo 既有的 [B9](../rules/backend-agent-rules.mdx#b9-celery-的界線) 已要求 task 冪等，本節是第一次把理由與「冪等要落在結果表的唯一鍵上」寫下來（[#490](https://github.com/label-suite/label-suite/issues/490)）。重試三次的設定出自 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務)；`trial_round_id` 當 PK 兼 FK 出自[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)的 `task_trial_iaa_result` |
 | — | 個人 repo ADR-024 後來的修訂（以資料庫 trigger 保護 append-only 與封存的資料表）、ADR-022 的轉移表與快照不變式，不在 [architecture.mdx](../architecture.mdx) 裡，本 ADR 不收；它們屬於資料庫與業務規格，由各自的 change 決定是否採用 |
+| D11 | 個人 repo ADR-026（Context 的兩類字串與兩種反模式、Alternatives Considered 的三個選項與拒絕理由、Decision 的兩層與前端渲染契約、Consequences 的 Easier 與 Harder）。**兩處與來源不同**：來源把後端那一層的欄位叫 `detail`，本 repo 的人讀訊息在回應外層的 `message`（見 [D5](#d5-api-路徑前綴與成功回應外層) 與 [api-agent-rules 的 A8](../rules/api-agent-rules.mdx#a8-i18n-的兩層分工)）；來源 Harder 第 1 條把「字串不得內嵌」的強制放在 `.claude/rules/backend.md`，本 repo 沒有那份 canon（決定於 [#53](https://github.com/label-suite/label-suite/issues/53)），該條由 A8 的禁止格承接。來源的 `Accept-Language` 解析細節（q-value、`*` 通配、`q=0` 拒絕、全部被拒回 `406`）已在 A8，本節不重述。**來源的 Alternatives Considered 只有選項、說明與拒絕理由三欄**，所以選項表的「好處」與「代價」兩欄是推論；**來源也沒有「什麼情況要重新討論」這一節**，該節的兩條同樣是推論 |
 
 ## 待決
 
@@ -500,3 +546,4 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 | 2026-11-19 | [D8](#d8-非同步任務用-celery-加-redis)「偶爾在重啟時掉一個 task 可以接受」的範圍縮到 broker 層（Redis 單實例），worker 重啟改由 [ADR-008 的 D10](008-deployment-and-operations.mdx#d10-worker-收到-sigterm-先做完手上的任務) 管 | D8 原本沒有區分這兩種掉法 | [#490](https://github.com/label-suite/label-suite/issues/490) |
 | 2026-11-19 | Bruno 降成可選的手動工具，取消 pre-PR 硬關卡（[D9](#d9-bruno-只當可選工具)） | 個人 repo ADR-025 的 pre-PR 硬關卡 | [#105 留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393) |
 | 2026-11-20 | envelope 的欄位定為 `{ success, code, message, data, timestamp, traceId }`，錯誤套同一個外層，JSON 欄位一律 camelCase（[D5](#d5-api-路徑前綴與成功回應外層)） | D5 原本寫「envelope 有哪些欄位未決」 | [#503](https://github.com/label-suite/label-suite/issues/503) |
+| 2026-11-20 | i18n 分前端與後端兩層，後端依 `Accept-Language` 決定回應訊息的語言（[D11](#d11-i18n-分前端與後端兩層)） | —（兩層的做法原本只記在 `architecture.mdx` 與 A8，理由沒有落點） | [#513](https://github.com/label-suite/label-suite/issues/513) |
