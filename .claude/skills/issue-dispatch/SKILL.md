@@ -1,6 +1,6 @@
 ---
 name: issue-dispatch
-description: 掃描 Label Suite 看板上 Ready 的 issue，排出彼此不衝突的波次，用各自獨立 worktree 的 lead 平行處理，經獨立審查、開 PR、CI 通過後由主 session 合併並把卡片移到 Done。第一版只派文件與工具類的 issue。當使用者說「派工」「跑 Ready 的 issue」「跑一波」「dispatch」，或只給一個 issue 編號要你接著做先前派出去的工作時使用。
+description: 掃描 Label Suite 看板上 Ready 的 issue，排出彼此不衝突的波次，用各自獨立 worktree 的 lead 平行處理，經獨立審查、開 PR、CI 通過後由主 session 合併並把卡片移到 Done。只派文件、工具與 `openspec/` 目錄下的 issue。當使用者說「派工」「跑 Ready 的 issue」「跑一波」「dispatch」，或只給一個 issue 編號要你接著做先前派出去的工作時使用。
 ---
 
 # Issue Dispatch
@@ -15,6 +15,7 @@ description: 掃描 Label Suite 看板上 Ready 的 issue，排出彼此不衝�
 - 不派範圍外的 issue（見步驟 3），不處理 Critical 或 High 的資安發現。
 - 不 commit、不 push 到 `main`，不用 squash 或 rebase 合併。
 - 不改 `docs/specs/` 的需求、`docs/specs/00-prd.mdx` 或 `design/prototype/`。
+- 對 `openspec/` 的 issue 只改該目錄底下的檔案，不跑 SDD 的角色流程；那個流程怎麼接進來，見待決。
 
 ## 角色
 
@@ -78,7 +79,7 @@ gh pr list --state all --search "${N}" --json number,title,state,headRefName
 
 | 類別 | 條件 | 處理 |
 | :--- | :--- | :--- |
-| 派工 | 只碰 `docs/development/`、`docs/` 其他非規格文件、`.claude/`、`.github/`、`scripts/`、`AGENTS.md`、`CLAUDE.md` | 進入步驟 4 |
+| 派工 | 只碰 `docs/development/`、`docs/` 其他非規格文件、`.claude/`、`.github/`、`scripts/`、`openspec/`、`AGENTS.md`、`CLAUDE.md` | 進入步驟 4 |
 | 範圍外 | 改畫面（`design/`、任何介面）、改 `docs/specs/` 的需求或 PRD、產品程式（`backend/`、`frontend/`、`e2e/`） | 不留言，寫進波次報告 |
 | 需要裁定 | 需求不清、內文和留言不一致、兩種讀法會做出不同的東西、工作項要維護者決定 | 留一則檢查點說明哪裡要決定，卡片移回 Todo，寫進波次報告 |
 
@@ -251,7 +252,7 @@ gh project item-edit --project-id PVT_kwDOEWdNqs4BoCOI --id "$ITEM" \
 
 | # | 問題 | 卡住什麼 | 誰決定 |
 | :--- | :--- | :--- | :--- |
-| 1 | 產品程式的 SDD change 要怎麼接進來：停點二取消之後，誰歸檔、什麼時候歸檔 | 程式類的派工（`backend/` 出現之後） | 維護者，見 [#464](https://github.com/label-suite/label-suite/issues/464) |
+| 1 | 產品程式的 SDD change 要怎麼接進來：停點二取消之後，誰歸檔、什麼時候歸檔 | 程式類的派工（`backend/` 出現之後），以及 `openspec/` 的 issue 要不要跑 SDD 角色流程 | 維護者，見 [#464](https://github.com/label-suite/label-suite/issues/464) |
 
 ## 附錄：與原 skill 的對照
 
@@ -271,7 +272,7 @@ gh project item-edit --project-id PVT_kwDOEWdNqs4BoCOI --id "$ITEM" \
 | Codex companion 的 Green 與審查 | 不搬 | 本 repo 沒有 `scripts/codex-companion.sh` |
 | Playwright port、每波最多兩個完整套件 | 不搬；改成 NoteCraft build 一次只跑一個 | `frontend/`、`e2e/` 還不存在；本 repo 會衝突的是全機共用的 NoteCraft 快取 |
 | `specs/STATUS.md`、規格版本號、FR/AC 編號的分配 | 不搬 | 本 repo 沒有這些 |
-| OpenSpec 路徑與 MAJOR 停點 | 不搬 | 程式類另外處理，見待決 |
+| OpenSpec 路徑與 MAJOR 停點 | 不搬；`openspec/` 目錄的 issue 可派，但只改該目錄的檔案，不跑 SDD 角色流程 | SDD 流程怎麼接進來，見待決 |
 | stacked PR、pre-tool-use hook、`claude-progress.md` 的例外 | 不搬 | 本 repo 都沒有 |
 | `pr-flow` 的視覺變更摘要 | 不搬 | 本 repo 沒有 `pr-flow`；改畫面的 issue 本來就不派 |
 | 與 `doc-writing` 步驟 6「本機 build 並在瀏覽器看過」的差異 | lead 不跑本機 build，以 CI `docs-site` 為準 | 無人值守時沒有人看瀏覽器，同時 build 也會互相干擾 |
