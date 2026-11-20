@@ -37,7 +37,7 @@ updatedAt: '2026-11-20'
 | **事件** | `SessionStart`（matcher `startup|resume|clear|compact|fork`，兩邊都支援這五種） |
 | **適用路徑／角色** | 整個 repo，不分角色 |
 | **payload 欄位** | `cwd`（定位 repo）、`hook_event_name`、`session_id`（只用於 log 關聯） |
-| **共用檢查器** | `scripts/check-env.sh`（**待建置**）：核對 `core.hooksPath` 是否指向 `scripts/git-hooks`、`AGENTS.md` 是否存在、`node`／`pnpm`／`uv` 版本，以及**本次的 hook 是不是真的會跑**——Claude 看 `disableAllHooks`，Codex 看 `[features] hooks` 是否被關掉、以及該 hook 有沒有被信任；另外**核對 `.claude/settings.json` 與 `.codex/hooks.json` 兩份設定指向的腳本是否都存在**——兩份設定不做生成器，這道檢查是兩份設定唯一的防漂移機制（[§能力缺口與承接](#能力缺口與承接)第 7 條的承接） |
+| **共用檢查器** | `scripts/check-env.sh`（**待建置**）：核對 `core.hooksPath` 是否指向 `scripts/git-hooks`、`AGENTS.md` 是否存在、`node`／`pnpm`／`uv` 版本，以及**本次的 hook 是不是真的會跑**——Claude 看 `disableAllHooks`，Codex 看 `[features] hooks` 是否被關掉、以及該 hook 有沒有被信任；另外**核對 `.claude/settings.json` 與 `.codex/hooks.json` 兩份設定指向的腳本是否都存在**——兩份設定手寫兩份、由這道檢查核對（[ADR-001 D3](../adr/001-agent-engineering.mdx#d3-兩個平台的-hook-設定手寫兩份不做生成器)） |
 | **timeout** | **10 秒**。環境檢查不該讓對話等 |
 | **輸出與退出碼** | 一律 exit `0`，訊息走 stdout。缺東西時列出「缺什麼、怎麼補」 |
 | **阻擋或提醒** | **提醒**。`SessionStart` 在兩邊都擋不住，所以也不假裝它能擋 |
@@ -53,9 +53,9 @@ updatedAt: '2026-11-20'
 | **payload 欄位** | `tool_name`、`tool_input`（Bash 取 `command`；寫檔取檔案路徑）、`tool_use_id`、`cwd` |
 | **共用檢查器** | `scripts/check-command.sh`、`scripts/check-write-target.sh`（**兩者待建置**） |
 | **timeout** | **5 秒**。這支擋在每個工具呼叫前面，不能慢 |
-| **輸出與退出碼** | 擋下時 **exit `2`，原因寫 stderr**；`permissionDecision: "deny"` 加 `permissionDecisionReason` 兩邊也都收。優先用 exit `2` 的理由不是欄位名不同（`PreToolUse` 的欄位名兩邊一致），而是**Codex 的 `PreToolUse` 不支援 `continue`／`stopReason`／`suppressOutput`，回傳它們會讓該次 hook 被標為失敗並繼續執行那個工具**——exit `2` 沒有這個風險 |
+| **輸出與退出碼** | 擋下時 **exit `2`，原因寫 stderr**；`permissionDecision: "deny"` 加 `permissionDecisionReason` 兩邊也都收。優先用 exit `2`，理由見 [ADR-001 D5](../adr/001-agent-engineering.mdx#d5-h2-失敗時由腳本自己-exit-2) |
 | **阻擋或提醒** | **阻擋**。必須在動作前拒絕；不能只在執行後提醒 |
-| **缺工具／無適用檔案** | 檢查器不存在或壞掉時，**兩個平台的預設都是讓動作照做**（fail-open）。Claude 的 `onFailure: "block"` 要 v2.1.295，本機 2.1.273 沒有，所以**現階段兩邊都只能靠腳本自己在無法判斷時 exit `2`**：包裝腳本一律先確認檢查器存在且可執行，不存在就 exit `2`。**不得用 `|| true` 把判斷不了變成通過**，也不得假設路徑打錯會被擋下 |
+| **缺工具／無適用檔案** | 檢查器不存在或壞掉時，**兩個平台的預設都是讓動作照做**（fail-open），所以**兩邊都靠腳本自己在無法判斷時 exit `2`**（理由見 [ADR-001 D5](../adr/001-agent-engineering.mdx#d5-h2-失敗時由腳本自己-exit-2)）：包裝腳本一律先確認檢查器存在且可執行，不存在就 exit `2`。**不得用 `|| true` 把判斷不了變成通過**，也不得假設路徑打錯會被擋下 |
 
 **這一條的保護範圍有明確上限，寫在[§能力缺口與承接](#能力缺口與承接)第 2 條，不得當成完整安全邊界。**
 
@@ -70,10 +70,10 @@ updatedAt: '2026-11-20'
 | **共用檢查器** | `scripts/check-changed.sh`（**待建置**）。`docs/` 那條沿用既有的 `scripts/check-specs.mjs` |
 | **timeout** | **30 秒** |
 | **輸出與退出碼** | 診斷走 stderr。**一律不以 exit `2` 阻擋**——見下 |
-| **阻擋或提醒** | **提醒**。`PostToolUse` 在兩邊都撤銷不了已發生的編輯，能做的只是替換 model 看到的結果；本契約**刻意不用**那個替換，因為把診斷藏進「替換後的結果」會讓失敗變得不明顯。真正的 gate 是 H4、H5 與 H7 |
+| **阻擋或提醒** | **提醒**。`PostToolUse` 在兩邊都撤銷不了已發生的編輯，能做的只是替換 model 看到的結果；本契約**刻意不用**那個替換（理由見 [ADR-001 D4](../adr/001-agent-engineering.mdx#d4-h3-只回報診斷不自動修)）。真正的 gate 是 H4、H5 與 H7 |
 | **缺工具／無適用檔案** | 本次沒有命中的檔案（例如只改了 `docs/` 以外的 `.md`）→ 標 not applicable 並 exit `0`；檔案被刪除或改名 → 不對不存在的檔案報錯；`ruff`／`mypy`／`tsc` 不存在且該層尚未 bootstrap → 標 not applicable。**已宣告啟用的檢查缺工具時要明確失敗**，不是靜默通過 |
 
-**check-only。** H3 **只回報診斷，不改檔、不自動 `git add`**，連 formatter 都不自動套用；要修由 agent 自己依診斷修。這樣 hook 不會動到工作區裡其他未暫存的修改，PR 的 diff 也不會混進不是 agent 本意的改動。
+**check-only。** H3 **只回報診斷，不改檔、不自動 `git add`**，連 formatter 都不自動套用；要修由 agent 自己依診斷修（理由見 [ADR-001 D4](../adr/001-agent-engineering.mdx#d4-h3-只回報診斷不自動修)）。
 
 ### H4 Git pre-commit：檢查 staged 快照
 
@@ -257,7 +257,7 @@ matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Wr
 | 停用單一個 | 從設定檔刪掉（無法保留設定又停用個別 hook） | `/hooks` 可停用個別非 managed hook |
 | 專案根佔位符 | `${CLAUDE_PROJECT_DIR}`（另有 `${CLAUDE_PLUGIN_ROOT}`、`${CLAUDE_PLUGIN_DATA}`） | **沒有專案根佔位符**。只有 `PLUGIN_ROOT`、`PLUGIN_DATA`（與 `CLAUDE_PLUGIN_ROOT`、`CLAUDE_PLUGIN_DATA` 相容別名）。官方給的作法是 `$(git rev-parse --show-toplevel)` |
 
-**兩份設定要分開維護。** 同一個 hook 在本 repo 會有兩個註冊點（`.claude/settings.json` 與 `.codex/hooks.json`），兩邊指向**同一支腳本**。這不是重複實作，而是兩個平台的設定格式與事件集合不同；腳本只有一份，差異收在設定裡。
+**兩份設定要分開維護。** 同一個 hook 在本 repo 會有兩個註冊點（`.claude/settings.json` 與 `.codex/hooks.json`），兩邊指向**同一支腳本**。腳本只有一份，差異收在設定裡；為什麼手寫兩份、不做生成器見 [ADR-001 D3](../adr/001-agent-engineering.mdx#d3-兩個平台的-hook-設定手寫兩份不做生成器)。
 
 **`SessionEnd` 不放任何實際工作。** Codex 給 1 秒、上限 3 秒，Claude 的共用預算是 1.5 秒。要做事的收尾放 `Stop`（H6），不放 `SessionEnd`。
 
