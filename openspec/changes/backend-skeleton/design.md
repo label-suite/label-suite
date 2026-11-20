@@ -89,9 +89,15 @@
   5. 其餘 `s` 結尾去掉 `s`（`tasks` → `task`；`responses` → `response`、`cases` → `case`、`databases` → `database`、`phases` → `phase` 也落在這一步）；
   6. 不以 `s` 結尾的字不變。
 - unit 測試以對照表斷言 spec `api-schema-export`「操作識別名依方法與回應形狀決定動詞」的六條（`listTasks`、`getTask`、`createTask`、`updateTask`、`deleteTask`、`getHealth`），並逐條涵蓋上面六個步驟各一個字。替代方案 `inflect` 套件不採用：五條規則加一張表就夠，多一個依賴不值得；規則猜錯的字會在撞名檢查或 code review 時現形，修法是補一筆不規則字。
-- 覆寫 `app.openapi`：先呼叫 FastAPI 的 `get_openapi`，再做兩件後處理——把每個 `422` 回應的 schema 換成 `ErrorResponse` 的參照，刪除 `components.schemas` 的 `HTTPValidationError` 與 `ValidationError`。結果快取在 `app.openapi_schema`，執行期的 `/openapi.json` 與匯出指令取得同一份。
+- 覆寫 `app.openapi`：`create_app` 呼叫 `app/core/openapi.py` 的 `install_openapi(app)`，把 `app.openapi` 換成包住 FastAPI 預設產生器（`get_openapi`）的函式，第一次產生時依序做三件後處理——把每個 `422` 回應的 schema 換成 `ErrorResponse` 的參照，刪除 `components.schemas` 的 `HTTPValidationError` 與 `ValidationError`，再依下一點把泛型元件改名。結果快取在 `app.openapi_schema`，執行期的 `/openapi.json` 與匯出指令取得同一份。
 - `404`、`405`、`406`、`500` 以 `/api/v1` 父 router 的 `responses=` 一次宣告；`getHealth` 的 `503` 宣告在端點上（api-contract §OpenAPI 元件命名與 `openapi.json`「錯誤回應在 OpenAPI 的宣告」）。
-- 泛型元件命名靠覆寫 `ApiResponse.model_parametrized_name` 與 `PaginatedResponse.model_parametrized_name`；unit 測試對 `ApiResponse[HealthData]`、`ApiResponse[PaginatedResponse[X]]`、`PaginatedResponse[X]` 三種斷言元件名（spec `api-schema-export`「分頁外層的元件名」）。
+- 泛型元件命名分兩段（維護者裁定，2026-11-20，apply 任務 2.2 發現原做法不成立後修訂）：
+  1. `ApiResponse.model_parametrized_name` 與 `PaginatedResponse.model_parametrized_name` 仍覆寫，讓參數化類別的 `__name__` 與 JSON Schema 的 `title` 成為 `XResponse`／`XPageResponse`／`XPage`。unit 測試（tasks 2.2）對 `ApiResponse[HealthData]`、`ApiResponse[PaginatedResponse[X]]`、`PaginatedResponse[X]` 三種斷言 `__name__` 與 `model_json_schema()["title"]`。
+  2. `components.schemas` 的鍵由上一點覆寫的第三步、`install_openapi` 內的私有函式 `rename_generic_components(schema)` 改名（`system-design.md` §關鍵設計細節「介面描述檔匯出」）：對每個泛型元件（鍵與 `title` 不同者），把鍵改成它的 `title`，並遞迴走過整份文件，把每個指向舊鍵的 `$ref`（`#/components/schemas/<舊鍵>`）改成新鍵。只用 FastAPI 的 `get_openapi` 回傳的 dict 與 Pydantic 公開的 `title`，不碰任何私有 API。改名後的鍵若與既有元件撞名（例：手寫的 `HealthDataResponse` 與泛型產生的同名），`app.openapi()` MUST 拋出例外並列出撞名的鍵與兩個來源，不得覆蓋或靜默跳過；匯出指令與 `/openapi.json` 都經過 `app.openapi()`，撞名會讓匯出指令以非零狀態結束。unit 測試（tasks 6.1）在 `app.openapi()` 產生的文件上斷言 spec `api-schema-export`「分頁外層的元件名」、沒有任何元件鍵以 `_` 結尾、每個 `$ref` 都指向存在的元件，以及撞名時拋出例外。
+  - 原做法為何不成立：原設計假設覆寫 `model_parametrized_name` 就會改變元件鍵。在 pydantic 2.14.4／fastapi 0.165.0 上實測，它只改 `__name__` 與 `title`；`components.schemas` 的鍵來自 Pydantic 產生 JSON Schema 時的型別參照（defs ref，由泛型原型名與參數組成，例 `ApiResponse_Item_`），不讀 `__name__`，所以鍵仍是 `ApiResponse_Item_`。
+  - 替代方案 (a)：在 `ApiResponse`／`PaginatedResponse` 覆寫 `__class_getitem__`，回傳以目標名稱宣告的具名子類別，讓型別參照本身就是 `XResponse`。不採用：要介入 Pydantic 泛型的參數化與快取機制，行為綁在私有實作上，升級時容易壞，且不保證不同參數化取得同一個類別。
+  - 替代方案 (b)：每個端點手寫具名子類別（`class HealthDataResponse(ApiResponse[HealthData]): ...`）。不採用：每加一個端點都要多寫一個空殼類別，忘記寫就會漏出 `ApiResponse_X_` 鍵，靠人記得不如在產生端統一處理。
+  - 撞名檢查與 operationId 的 `assert_unique_operation_ids` 同一原則：衝突時大聲失敗，不靠後寫入者覆蓋。
 - `backend/openapi.json` 的格式由匯出指令決定（`sort_keys`、縮排 2、結尾換行），不由 Prettier 決定：把它加進根目錄 `.prettierignore`，註解寫明「匯出指令產生的檔案，格式由匯出指令負責」。不加的話，lint-staged 的 `*.json` 規則與 CI 的 `format` job 會把它改寫成 Prettier 的格式（例如短陣列收成一行），D12 的漂移比對與格式檢查就不可能同時通過。替代方案「讓匯出指令輸出 Prettier 的格式」不採用：匯出指令得依賴 Node 工具鏈，`backend/` 的檢查就不能只靠 `uv`。
 
 ### D7. 設定的解析
@@ -173,7 +179,7 @@
 
 - [PostgreSQL 測試在沒設 `TEST_DATABASE_URL` 時跳過，可能讓只在 PostgreSQL 出錯的改動通過本機檢查] → `acceptance.md` 必須附兩次 pytest 的完整摘要（含 PostgreSQL 那次 0 skipped）；CI 的 PostgreSQL 由 #506 建立後才算真正擋住。
 - [`PaginationParams` 繼承 `RequestModel` 而有 `extra="forbid"`，但 A2 要求未宣告的 query 參數被忽略] → 本次沒有端點使用它；第一個列表端點要把它接成一般的依賴（逐個 `Query` 參數組成），不要當成 FastAPI 的 Query model，否則未宣告的 query 參數會回 `422`。
-- [泛型元件名覆寫依賴 Pydantic 的 `model_parametrized_name` 行為，升級 Pydantic 時可能改變] → D6 的 unit 測試加上 `openapi.json` 的漂移比對（`git diff --exit-code`）會在升級時立刻失敗。
+- [泛型元件名依賴 Pydantic 的 `model_parametrized_name` 產生 `title`，以及 FastAPI 產生的元件鍵格式；升級 Pydantic 或 FastAPI 時可能改變] → D6 的 `title` unit 測試、tasks 6.1 對 `app.openapi()` 的元件鍵與 `$ref` 斷言，加上 `openapi.json` 的漂移比對（`git diff --exit-code`），會在升級時立刻失敗。改名只讀寫 `get_openapi` 回傳的 dict，不依賴私有 API。
 - [`UnhandledExceptionMiddleware` 在回應已開始送出後無法改寫回應] → 只能靠 log 追查；本次沒有串流端點。已列入 `clarification.md` 結論 N5，供 `code-reviewer` 與 #505 知悉。
 - [健康檢查每次都打資料庫，高頻輪詢時占用連線池] → `system-design.md` §交易、session 與效能 已列；由 #506 決定輪詢頻率時再評估拆端點。
 - [逾時情境的測試至少耗時 5 秒] → 只有一條，標 `integration`；整體測試時間增加約 5 秒，可接受。

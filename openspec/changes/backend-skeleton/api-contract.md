@@ -186,7 +186,8 @@ Query（`PaginationParams`）：
 | `ErrorResponse`                                            | `ErrorResponse`（全專案共用一個） | —                           |
 | `ErrorDetail`、其他 `ResponseModel`／`RequestModel` 子類別 | 類別名本身                        | `ErrorDetail`、`HealthData` |
 
-- 由覆寫 `model_parametrized_name` 在一處產生，不逐個 schema 指定。
+- 在一處產生，不逐個 schema 指定（維護者 2026-11-20 裁定）：覆寫 `model_parametrized_name` 產生元件的 `title`；`app/core/openapi.py` 的 `app.openapi` 覆寫（與改寫 `422` 同一處）把每個泛型元件的鍵改成它的 `title`，並改寫所有指向它的 `$ref`。只覆寫 `model_parametrized_name` 不會改元件鍵（pydantic 2.14.4／fastapi 0.165.0 上仍是 `ApiResponse_HealthData_`）。
+- 改名後的鍵與既有元件撞名時，產生 OpenAPI 直接失敗，不覆蓋、不自動加後綴（`create_app` 不呼叫 `app.openapi()`，所以不會讓啟動失敗；失敗的是匯出指令（非零結束、不寫檔）與第一次請求 `/openapi.json`，CI 的 drift 檢查會攔下）。
 - 元件名決定 Orval 產生的 TypeScript 型別名，被前端使用之後改名屬 A10 的破壞性變更。
 - 撞名（兩個模組有同名的資料類別）時 FastAPI 會在元件名加模組路徑；之後的 change 應以資料類別命名避開，而不是接受加長的名字。
 
