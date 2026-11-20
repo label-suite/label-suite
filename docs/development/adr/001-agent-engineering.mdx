@@ -1,13 +1,13 @@
 ---
 title: ADR-001 Agent 工程
-description: Agent 怎麼避免重造既有程式、碰到錯誤的既有實作時怎麼處理：先搜尋再新增，以及範圍內直接修正。
+description: Agent 怎麼避免重造既有程式、碰到錯誤的既有實作時怎麼處理，以及 agent hook 的設定與阻擋策略：先搜尋再新增、範圍內直接修正、兩份設定手寫、H3 不自動修、H2 失敗時 exit 2。
 tags: [adr, agent, engineering]
 ---
 
 # ADR-001 Agent 工程
 
-這份 ADR 管 agent 寫程式時的工程紀律：開工前怎麼找既有實作、碰到錯誤的既有實作怎麼處理。agent 的角色分工與 SDD 流程不在這裡，見 `AGENTS.md` 的 SDD Workflow。
-規則本體在 `AGENTS.md` 與 [agent-rules.mdx](../rules/agent-rules.mdx)，本文只寫為什麼；衝突時的優先序見 [ADR 索引](index.mdx#衝突時以誰為準)。
+這份 ADR 管 agent 寫程式時的工程紀律：開工前怎麼找既有實作、碰到錯誤的既有實作怎麼處理，以及 agent hook 的設定與阻擋策略。agent 的角色分工與 SDD 流程不在這裡，見 `AGENTS.md` 的 SDD Workflow。
+規則本體在 `AGENTS.md`、[agent-rules.mdx](../rules/agent-rules.mdx) 與 [agent-hook-contract.mdx](../rules/agent-hook-contract.mdx)，本文只寫為什麼；衝突時的優先序見 [ADR 索引](index.mdx#衝突時以誰為準)。
 
 ## D1 先搜尋再新增
 
@@ -97,17 +97,152 @@ agent 常在已經有同樣功能的地方再寫一份 helper、型別或元件�
 - review 一再發現 PR 用這個例外把範圍外的改動帶進來
 - 某次路徑內的修正弄壞了其他呼叫端
 
+## D3 兩個平台的 hook 設定手寫兩份，不做生成器
+
+### 背景
+
+同一個 hook 在 Claude Code 與 Codex 各要一份設定；要決定的是，用什麼方式讓兩份設定不漂移。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 設定檔位置不同：`.claude/settings.json` 與 `.codex/hooks.json` | 同一個 hook 一定有兩個註冊點 |
+| 兩邊的事件集合與工具名不同，例如寫檔在 Claude 是 `Edit｜Write｜NotebookEdit`，在 Codex 是 `apply_patch` | 兩份設定不能逐字相同 |
+| 專案根佔位符只有 Claude 有（`${CLAUDE_PROJECT_DIR}`），Codex 要用 `git rev-parse --show-toplevel` | 腳本路徑的寫法在兩份設定裡不同 |
+| 改一邊忘了另一邊，不會有任何報錯 | 需要有東西抓得到漂移 |
+| 兩邊指向的是同一支腳本 | 差異只在設定，不在檢查邏輯 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 手寫兩份，由 H1 的環境檢查核對兩份設定指向的腳本是否都存在 | 兩份各自照自己平台的格式與事件寫，差異收在設定裡 | 一致性靠這道檢查，不靠結構保證 | 採用 |
+| B 單一來源，用生成器產出兩份設定 | 兩份由同一處產出，一致性由結構保證 | — | 不採用 |
+
+### 決定
+
+兩份設定手寫兩份、都指向同一支腳本，由 H1 核對兩份設定指向的腳本是否都存在、兩邊是否都實際生效，不做單一來源生成器。做法見 [agent-hook-contract.mdx 的 H1](../rules/agent-hook-contract.mdx#h1-session-開始環境自我檢查)。
+
+### 後果
+
+**變容易**
+
+- 每份設定直接照自己平台的事件、工具名與佔位符寫
+
+**變困難**
+
+- 改一個 hook 要改兩處
+- H1 核對的是腳本存不存在與 hook 有沒有生效，不是兩份設定的內容是否等價
+
+### 什麼情況要重新討論
+
+- 某次改一邊漏了另一邊，而 H1 的核對沒有抓到
+
+## D4 H3 只回報診斷，不自動修
+
+### 背景
+
+編輯後的快速檢查（H3）會產生診斷；要決定的是，檢查有結果之後，hook 要不要替 agent 把檔案修好。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| `PostToolUse` 在兩邊都撤銷不了已發生的編輯，能做的只是替換 model 看到的結果 | H3 不能當閘門，只能提醒；真正的閘門是 H4、H5 與 H7 |
+| 自動改檔或 `git add` 會動到工作區裡其他未暫存的修改 | 自動修與「只動 agent 本意改的檔」互相衝突 |
+| PR 的 diff 要只含 agent 本意的改動 | 自動套用的改動會混進 diff |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 只回報診斷（走 stderr），由 agent 依診斷自己修 | hook 不會動到工作區裡其他未暫存的修改，PR 的 diff 不會混進不是 agent 本意的改動 | agent 要自己修 | 採用 |
+| B 自動套用 formatter | agent 不必自己處理排版診斷 | 會動到未暫存的修改，diff 混進非本意的改動 | 不採用 |
+| C 自動修檔並自動 `git add` | agent 不必自己處理診斷 | 同上，而且動到暫存區 | 不採用 |
+| D 把診斷放進 `PostToolUse` 替換後的結果交給 model | 診斷直接出現在 model 看到的結果裡 | 診斷被藏在替換後的結果裡，失敗變得不明顯 | 不採用 |
+
+### 決定
+
+H3 只回報診斷，不改檔、不自動 `git add`、不自動套用 formatter，也不以 exit `2` 阻擋；要修由 agent 依診斷自己修。做法見 [agent-hook-contract.mdx 的 H3](../rules/agent-hook-contract.mdx#h3-編輯後按路徑跑快速檢查)；Git pre-commit 的排版（H4）是另一個 hook，不在這個決定內。
+
+### 後果
+
+**變容易**
+
+- 工作區與暫存區只被 agent 自己的動作改動，PR 的 diff 容易對得上意圖
+
+**變困難**
+
+- 每個診斷都要 agent 自己修，不會有 hook 替它收尾
+- H3 不擋任何事，漏掉診斷的編輯要等 H4、H5 或 CI 才會被擋下
+
+### 什麼情況要重新討論
+
+- 診斷反覆被 agent 略過，導致同一類問題一再留到 H4 或 CI 才被擋下
+
+## D5 H2 失敗時由腳本自己 exit 2
+
+### 背景
+
+H2 要在動作發生前擋下 `AGENTS.md` 硬性規則 2、3、10 禁止的命令；要決定的是，檢查器本身不存在或無法判斷時，動作要放行還是擋下。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 兩個平台的預設都是 fail-open：hook 失敗、timeout 或輸出不合法時，動作照做（Claude 文件寫路徑打錯或 crash 的 policy hook「lets everything through」） | 不寫任何處理，檢查器壞了就等於沒有 H2 |
+| Claude 的宣告式 fail-closed 開關 `onFailure: "block"` 需要 v2.1.295，本機是 2.1.273（見 [agent-hook-contract.mdx 的查核方式](../rules/agent-hook-contract.mdx#查核方式)） | 現在不能用它 |
+| Codex 沒有等價欄位（官方文件未見） | 就算 Claude 升級，Codex 那邊仍沒有 |
+| 選 exit `2` 的理由不是欄位名不同：`PreToolUse` 的欄位名兩邊一致 | 理由只剩下面這一列 |
+| Codex 的 `PreToolUse` 回傳不支援的欄位（`continue`、`stopReason`、`suppressOutput`）時，該次 hook 被標為失敗並繼續執行那個工具 | 用 JSON 欄位表達阻擋有被誤放行的風險 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 兩邊都由腳本自己在無法判斷時 exit `2`：包裝腳本先確認檢查器存在且可執行，不存在就 exit `2` | 兩個平台都能用；exit `2` 沒有 Codex 不支援欄位的風險 | 靠腳本自己負責；設定裡的路徑打錯或腳本本身 crash 時仍是 fail-open，不得假設會被擋下 | 採用 |
+| B Claude 用 `onFailure: "block"` | 宣告式的 fail-closed | 要 v2.1.295，本機沒有；Codex 沒有等價欄位，只有一邊 | 延後：Claude Code 升級之後，屆時要把版本下限記下來 |
+| C 不處理，靠預設 | 不用寫任何東西 | 預設是 fail-open，不得假設不寫就會擋 | 不採用 |
+| D 以 `permissionDecision: "deny"` 加 `permissionDecisionReason` 當主要的阻擋方式 | 兩邊都收 | 同一條路徑上若回傳 Codex 不支援的欄位，會讓該次 hook 失敗並繼續執行工具 | 不當主要做法，優先 exit `2` |
+
+### 決定
+
+H2 兩邊都由腳本自己在無法判斷時 exit `2`、原因寫 stderr；不用 `|| true` 把判斷不了變成通過，優先用 exit `2` 而不是 JSON 欄位。做法見 [agent-hook-contract.mdx 的 H2](../rules/agent-hook-contract.mdx#h2-工具執行前破壞性命令與受保護目標)。
+
+### 後果
+
+**變容易**
+
+- 檢查器不存在或無法判斷時，兩個平台都能擋下動作
+
+**變困難**
+
+- 每支 H2 的包裝腳本都要自己負責 fail-closed，沒有宣告式的開關可以靠
+- 腳本以外的失敗（設定路徑打錯、腳本 crash）仍然放行
+
+### 什麼情況要重新討論
+
+- 本機 Claude Code 升到 v2.1.295 以上之後：評估選項 B
+- Codex 出現等價的 fail-closed 欄位
+
 ## 附錄：來源對照
 
 | 決定 | 來源 |
 | :--- | :--- |
 | D1 | 規則本身沿用 [agent-rules.mdx 的 R1](../rules/agent-rules.mdx#r1-先搜尋再新增)（來源見那份的附錄）；選項 C、D 來自一個參考專案的做法（元件索引加查詢工具、開分支時強制搜尋），該專案未公開 |
 | D2 | 同一個參考專案「錯的實作直接修，不疊規則」的做法；本 repo 加上「限這次改動會碰到的程式路徑」的界線 |
-| — | 個人 repo ADR-017（三層 agent 架構）與 ADR-033（OpenSpec 流程）談的是角色分工與流程，不是這兩個決定；它們在本 repo 已被取代，見 [architecture.mdx 的 §ADR 效力總表](../architecture.mdx#adr-效力總表) |
+| D3、D4、D5 | [agent-hook-contract.mdx 的決策紀錄](../rules/agent-hook-contract.mdx#決策紀錄)裡 2026-11-11 的對應列，以及該契約的 H1、H2、H3 與平台支援矩陣；理由只取自那份文件，沒有對應的個人 repo ADR 可對照 |
+| — | 個人 repo ADR-017（三層 agent 架構）與 ADR-033（OpenSpec 流程）談的是角色分工與流程，不是 D1、D2；它們在本 repo 已被取代，見 [architecture.mdx 的 §ADR 效力總表](../architecture.mdx#adr-效力總表) |
+
+## 待決
+
+| # | 問題 | 卡住什麼 | 誰決定 |
+| :--- | :--- | :--- | :--- |
+| 1 | D3、D4、D5 的背景要不要補上「hook 目前有沒有接上線」的現況，以及 agent-hook-contract.mdx 的 §能力缺口與承接 的承接內容 | 那兩處之後還會改寫（見 [agent-hook-contract.mdx 的 §能力缺口與承接](../rules/agent-hook-contract.mdx#能力缺口與承接)），內容還會變；本節先不描述 | 維護者 |
 
 ## 決策紀錄
 
 | 日期 | 決策 | 取代了什麼 | 來源 |
 | :--- | :--- | :--- | :--- |
+| 2026-11-11 | 兩個平台的 hook 設定手寫兩份、由 H1 核對，不做單一來源生成器（[D3](#d3-兩個平台的-hook-設定手寫兩份不做生成器)） | 初版標為待裁定 | [#111](https://github.com/label-suite/label-suite/issues/111) |
+| 2026-11-11 | H3 只回報診斷，不改檔、不自動 `git add`、不自動套用 formatter（[D4](#d4-h3-只回報診斷不自動修)） | 初版標為待裁定 | [#111](https://github.com/label-suite/label-suite/issues/111) |
+| 2026-11-11 | H3 一律當提醒，不以 exit `2` 阻擋：`PostToolUse` 在兩邊都撤銷不了編輯（[D4](#d4-h3-只回報診斷不自動修)） | 初版「`PostToolUse` 的語意在兩邊相反」（Claude 純提醒、Codex 可擋後續），兩個方向都錯 | [#111](https://github.com/label-suite/label-suite/issues/111) |
+| 2026-11-11 | H2 優先用 exit `2`，不用 JSON 欄位當主要的阻擋方式（[D5](#d5-h2-失敗時由腳本自己-exit-2)） | 初版以欄位名不同為理由；H6 payload 無 `stop_hook_active`；矩陣漏 `PreCompact` 可阻擋；無合法例外 | [#111](https://github.com/label-suite/label-suite/issues/111) |
+| 2026-11-11 | H2 兩邊都由腳本自己 exit `2` 做 fail-closed，不等 `onFailure: "block"`（[D5](#d5-h2-失敗時由腳本自己-exit-2)） | 初版把 `onFailure: "block"` 當成 Claude 現成的 fail-closed 開關 | [#111](https://github.com/label-suite/label-suite/issues/111) |
 | 2026-11-19 | 先搜尋再新增維持人工檢查加 PR 紀錄；元件索引與 hook 強制延後（[D1](#d1-先搜尋再新增)） | — | [#444](https://github.com/label-suite/label-suite/issues/444) |
 | 2026-11-19 | 這次改動會碰到的程式路徑內，錯誤的既有實作直接修（[D2](#d2-範圍內直接修正錯誤實作)） | R3「只改本次請求要求的程式」不再擋路徑內的錯誤實作；死碼照舊只提出來 | [#444 留言](https://github.com/label-suite/label-suite/issues/444) |
