@@ -357,7 +357,6 @@ schema 與 config 落地後補測：
 | # | 問題 | 卡住什麼 | 誰決定 |
 | :--- | :--- | :--- | :--- |
 | 1 | auth 的實作層次（認證與授權 dependency 的掛點細節）。身分來源與 CSRF 已由 [#107](https://github.com/label-suite/label-suite/issues/107) 落地：只認 httpOnly cookie、綁 session 的 CSRF token | 掛點細節；由 `backend/` 骨架 change 的 `system-design` 在那個停點確認 | 維護者 |
-| 2 | Storybook（`architecture.mdx` §待決 第 2 列） | 第一個前端 change 之前決定 | 維護者 |
 
 ## 決策紀錄
 
@@ -371,3 +370,4 @@ schema 與 config 落地後補測：
 | 2026-11-10 | 前端採 React 19、`pages/` 加 `features/`、shadcn/ui 放 `components/ui/`、前端型別與 client 用 Orval；`ui-design` 照常撰寫，不再寫「本次無 UI 變更」 | 評估階段「前端框架與元件庫待決」 | 維護者裁定，見 [architecture.mdx](../architecture.mdx) §前端 |
 | 2026-11-19 | 九份產物、兩個停點與授權放在 `/sdd` 的理由改寫進 [ADR-002](../adr/002-development-workflow.mdx)，本文只留做法（[§決議](#決議)、[§三處要特別處理的地方](#三處要特別處理的地方)） | —（理由原本寫在本文） | [#448](https://github.com/label-suite/label-suite/issues/448) |
 | 2026-11-19 | 人工停點只留一個：驗收不再停下來等維護者，`ops` 在合併之前歸檔（[§決議](#決議)） | 同日稍早的兩個停點；停點二 | [#464](https://github.com/label-suite/label-suite/issues/464) |
+| 2026-11-20 | 元件庫的 Storybook 一題關掉：不用 Storybook，改用元件展示頁（現行做法見 [architecture.mdx 的 §前端](../architecture.mdx#前端)） | §待決 第 2 列 | [#503](https://github.com/label-suite/label-suite/issues/503) |

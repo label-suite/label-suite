@@ -172,7 +172,9 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 | 面向 | 做法 |
 | :--- | :--- |
 | 路徑前綴 | `/api/v1`，資源名直接接在後面，理由見 [ADR-003 的 D5](adr/003-backend-architecture.mdx#d5-api-路徑前綴與成功回應外層) |
-| 成功回應 | 包一層 envelope，例 `{"data": {...}, ...}` |
+| 成功回應 | 包一層 envelope `{ success, code, message, data, timestamp, traceId }`，理由見 [ADR-003 的 D5](adr/003-backend-architecture.mdx#d5-api-路徑前綴與成功回應外層) |
+| 錯誤回應 | 套同一個外層：`success: false`、`code` 放應用錯誤碼、`data: null`；`422` 另帶 `errors: ErrorDetail[]` |
+| JSON 欄位命名 | 一律 camelCase。Python 內部維持 snake_case，由共用 base 的 alias generator 在一處轉換 |
 | envelope 的例外 | `204` 無 body、檔案下載與串流不套 envelope；每個例外都要逐一寫進該 change 的 `api-contract.md`，不逐案自由心證 |
 | operationId | 用 `generate_unique_id_function` 固定成「動詞加資源」（#51） |
 | 前端 client | Orval 由 `openapi.json` 產生到 `frontend/src/api/generated/`（TanStack Query hooks、型別、MSW mock），不手改；Orval 的 mutator 就是單一 HTTP 邊界 |
@@ -266,11 +268,11 @@ Redis 7 同時當 broker、result backend 與應用快取，用 DB 編號隔開�
 
 | 層 | 範圍 | 實作 | 規則 |
 | :--- | :--- | :--- | :--- |
-| 前端 UI 字串 | React 元件直接渲染的文字、前端驗證訊息 | `react-i18next`，依模組分 namespace | 語系檔**不得**放後端 `detail` 字串的副本 |
-| 後端回應訊息 | `ErrorResponse` 的 `detail` 與任何回傳給使用者看的字串 | 後端讀 `Accept-Language`，字串放 `app/i18n/<lang>/` | 商業邏輯**不得**內嵌人看得懂的訊息字面值 |
+| 前端 UI 字串 | React 元件直接渲染的文字、前端驗證訊息 | `react-i18next`，依模組分 namespace | 語系檔**不得**放後端 `message` 字串的副本 |
+| 後端回應訊息 | 回應外層的 `message` 與任何回傳給使用者看的字串 | 後端讀 `Accept-Language`，字串放 `app/i18n/<lang>/` | 商業邏輯**不得**內嵌人看得懂的訊息字面值 |
 
 :::note{title="邊界情況" collapsible}
-- 前端把後端的 `detail` 當成已本地化的不透明字串直接顯示，不再翻譯或對照 key
+- 前端把後端的 `message` 當成已本地化的不透明字串直接顯示，不再翻譯或對照 key
 - FastAPI 預設的 422 `RequestValidationError` 不在這個契約內，需要本地化時另註冊 handler
 - `Accept-Language` 的解析規則（q-value、`*` 通配、`q=0` 拒絕、全部被拒時回 `406`）照抄 ADR-026
 :::
@@ -313,7 +315,8 @@ Redis 7 同時當 broker、result backend 與應用快取，用 DB 編號隔開�
 | 型別 | TypeScript strict，禁止 `any`（Hard Rule 7） |
 | 狀態 | 伺服器狀態用 TanStack Query；表單狀態與純 UI 狀態分開放 |
 | 目錄分層 | `pages/` 加 `features/` |
-| 元件庫 | shadcn/ui 當原語，元件以原始碼形式放進 `components/ui/`；Storybook 未決，見 [§待決](#待決) 第 2 列 |
+| 元件庫 | shadcn/ui 當原語，元件以原始碼形式放進 `components/ui/`；不用 Storybook，改用元件展示頁 |
+| 元件展示頁 | 一頁只在開發時開的頁面，列出 `components/ui/` 與標記 widget 的各個 variant，並配一支完整性測試；理由見 [ADR-005 的 D3](adr/005-frontend-architecture.mdx#d3-元件庫用-shadcnui) |
 | 圖示 | **只用** Lucide（`lucide-react`）。不得加入其他圖示庫，不得用 emoji 或自己畫的 SVG 當圖示 |
 | design token | 只用語意 token；`frontend/src/styles/` 寫一層對照，把 shadcn 的語意變數指向 `design/prototype/assets/tokens.css`，**`tokens.css` 仍是唯一色值來源**。shadcn 元件不改寫 |
 | 畫面狀態 | 每個資料區塊都要寫出 loading、error、empty、無權限（403）四種狀態與被遮蔽欄位的呈現，由 OpenSpec 的 `ui-design` 負責 |
@@ -385,7 +388,7 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，�
 | 013 | Resend 寄信 | Accepted | 需調整：補上未設定 key 時的降級路徑，見 [§部署與維運](#部署與維運)與 [ADR-008 的 D3](adr/008-deployment-and-operations.mdx#d3-寄信用-resend沒設-key-時把連結印到-log) |
 | 014 | Prototype 層 Playwright 測試 | Accepted | 不適用：測試與 `package.json` 依 #16 留在個人 repo |
 | 015 | 角色導向漸進式 onboarding | Accepted | **本期部分採用**：空狀態與情境提示做，導覽與角色導向漸進揭露不做，見 [§前端](#前端) |
-| 016 | shadcn/ui 加 Storybook | Accepted | **部分被覆寫**：採 shadcn/ui，元件放 `components/ui/`；Storybook 未決，見 [§待決](#待決) 第 2 列；shadcn/ui 見 [ADR-005 的 D3](adr/005-frontend-architecture.mdx#d3-元件庫用-shadcnui) |
+| 016 | shadcn/ui 加 Storybook | Accepted | **部分被覆寫**：採 shadcn/ui，元件放 `components/ui/`；Storybook 不採用，改用元件展示頁；shadcn/ui 見 [ADR-005 的 D3](adr/005-frontend-architecture.mdx#d3-元件庫用-shadcnui) |
 | 017 | 三層 agent（Planner／Generator／Evaluator） | Accepted | 已被取代：以 [ADR-002 的 D4](adr/002-development-workflow.mdx#d4-規劃實作審查與驗收由不同角色負責)與 `CLAUDE.md` 為準（含它與 017 相反的 compact 規則）；017 的「Evaluator 只用外部確定性工具、禁止自評」由 `code-reviewer` 與 `acceptance-verifier` 承接 |
 | 018 | Prometheus 加 Grafana | Accepted | **本期不做**，見 [§部署與維運](#部署與維運)與 [ADR-008 的 D4](adr/008-deployment-and-operations.mdx#d4-觀測性只做-ai_runs監控與錯誤追蹤本期不做) |
 | 019 | AI 可追溯與稽核（`ai_runs`） | Accepted | 沿用，本期要做，見 [§稽核與可追溯](#稽核與可追溯)與 [ADR-008 的 D5](adr/008-deployment-and-operations.mdx#d5-ai-可追溯用只新增的-ai_runs-表) |
@@ -427,8 +430,7 @@ ADR 引用的 FR-131、admin-007、spec 013 這類編號屬於個人 repo，本 
 | # | 問題 | 卡住什麼 | 誰決定 |
 | :--- | :--- | :--- | :--- |
 | 1 | 個人 repo 的 ADR 修訂：029 的 `sequence_tagging` 列、033 改 supersede 或標註只適用個人 repo、033 檔案與 `README.md` 索引的狀態不一致（Accepted 對 Proposed）、036 寫明規格 canon 已移到本 repo | 不卡本 repo 實作；兩個 repo 的說法不一致，追溯會指錯地方 | 維護者，在個人 repo 處理 |
-| 2 | ADR-016 的 Storybook 要不要用 | 第一個前端 change 之前要決定 | 維護者 |
-| 3 | 沒設 Resend key 時，[規格 01-02](../specs/01-account/02-register.mdx) 的自行註冊走不通：驗證信寄不出去，而帳號「在點連結這一刻才建立」 | 降級路徑只涵蓋設定密碼連結，沒有涵蓋註冊驗證信；Lite 部署目前只能由系統管理員邀請 | 維護者 |
+| 2 | 沒設 Resend key 時，[規格 01-02](../specs/01-account/02-register.mdx) 的自行註冊走不通：驗證信寄不出去，而帳號「在點連結這一刻才建立」 | 降級路徑只涵蓋設定密碼連結，沒有涵蓋註冊驗證信；Lite 部署目前只能由系統管理員邀請 | 維護者 |
 
 ## 決策紀錄
 
@@ -458,3 +460,6 @@ ADR 引用的 FR-131、admin-007、spec 013 這類編號屬於個人 repo，本 
 | 2026-11-19 | 資料備援只做正式層，異地複製是部署者的責任（[§部署與維運](#部署與維運)） | —（兩個 repo 都沒有裁定過；個人 repo ADR-023 把備份目的地與保留政策列為未裁定） | [#490](https://github.com/label-suite/label-suite/issues/490) |
 | 2026-11-19 | 備份頻率每日一次、滾動保留 7 份（[§部署與維運](#部署與維運)） | —（#490 原本只裁定「定期備份」，沒有給數字） | [#490 的留言](https://github.com/label-suite/label-suite/issues/490#issuecomment-7010266013) |
 | 2026-11-19 | `stop_grace_period` 要大於評分上限 300 秒，worker 收到 SIGTERM 先做完手上的任務；背景計算的結果寫入做成冪等（[§部署與維運](#部署與維運)、[§非同步任務](#非同步任務)） | Compose 預設的 10 秒寬限會把超過 10 秒的評分直接 SIGKILL 且不重跑 | [#490](https://github.com/label-suite/label-suite/issues/490) |
+| 2026-11-20 | 成功回應的 envelope 定為 `{ success, code, message, data, timestamp, traceId }`，錯誤套同一個外層，API JSON 欄位一律 camelCase（[§API 契約](#api-契約)） | 原本只寫「包一層 envelope，例 `{"data": ...}`」，欄位未決 | [#503](https://github.com/label-suite/label-suite/issues/503) |
+| 2026-11-20 | 人讀的錯誤訊息從 `detail` 改成外層的 `message`（[§i18n 兩層](#i18n-兩層)） | `ErrorResponse` 的 `detail` | [#503](https://github.com/label-suite/label-suite/issues/503) |
+| 2026-11-20 | 不用 Storybook，改用元件展示頁（[§前端](#前端)） | §待決 第 2 列「ADR-016 的 Storybook 要不要用」 | [#503](https://github.com/label-suite/label-suite/issues/503) |

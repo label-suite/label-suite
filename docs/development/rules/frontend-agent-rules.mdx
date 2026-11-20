@@ -24,7 +24,7 @@ updatedAt: '2026-11-16'
 | :--- | :--- |
 | 版本與框架 | **React 19** 加 Vite 加 TypeScript strict；路由 React Router v6、伺服器狀態 TanStack Query |
 | 目錄分層 | **`pages/` 加 `features/`**，見 [F1](#f1-分層與允許的-import) |
-| 元件庫 | **shadcn/ui**，元件以原始碼形式放進 `components/ui/`。**Storybook 仍待決**（[architecture.mdx](../architecture.mdx) §待決 第 2 列） |
+| 元件庫 | **shadcn/ui**，元件以原始碼形式放進 `components/ui/`。**不用 Storybook**，改用元件展示頁（[architecture.mdx](../architecture.mdx) §前端） |
 | API client 與型別 | **Orval**，產物在 `src/api/generated/`；規則在 [api-agent-rules.mdx](api-agent-rules.mdx) |
 | design token 的映射 | **寫一層對照，`design/prototype/assets/tokens.css` 仍是唯一色值來源**，見 [F6](#f6-視覺基準與-design-token-的映射) |
 | 深色模式 | **要做**：側欄一鍵切換、立即生效、跨頁保持（規格 07-01 §外觀切換）；「跟隨系統」**跟著作業系統的設定變**（規格 01-04 §偏好設定 第 4 條、規格 07-01 §已確認決議 Q14） |
@@ -231,7 +231,7 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 
 顯示時區依瀏覽者裝置在規格已定（規格 06-01 Q2，它的 Scenario 寫明東京時區的裝置看到的是當地時間；規格 03-01 §任務列的欄位 比照規格 06-01 §資料欄位）；報表固定台北時區見規格 03-03 §工時紀錄 第 10 條（跨日的部分在查詢時以當地午夜切開）。
 
-**日期套件未決**，見 [§待決](#待決) 第 1 列。本條只要求單一入口與上面四種概念的分界。
+日期套件用 day.js，搭配 utc 與 timezone 外掛，只在 `src/lib/date.ts` 裡 import。
 
 :::note{title="F10 的反例與檢查方式" collapsible}
 - **反例**：`new Date(task.createdAt).toLocaleString()` 散在十個元件裡（格式與時區各自分歧）；把 `YYYY-MM-DD` 的生效日當成午夜時間點再轉時區（日期會跳一天）；把顯示時區寫成 `Asia/Taipei`——**本 repo 的顯示時區是裝置時區**
@@ -363,12 +363,6 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 
 所以這一類沒有對照可做，也不編造。
 
-## 待決
-
-| # | 問題 | 卡住什麼 | 誰決定 |
-| :--- | :--- | :--- | :--- |
-| 1 | 日期套件選哪一個 | 兩份來源都用 day.js，但本 repo 沒有任何 ADR 或決定選過它；F10 只要求單一入口與四種概念的分界 | 第一個需要它的前端 change 在 `design.md` 提出，維護者決定 |
-
 ## 決策紀錄
 
 | 日期 | 決策 | 取代了什麼 | 來源 |
@@ -386,3 +380,4 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | 2026-11-10 | starter-kit 的 `frontend/react-typescript.md` 實查零命中（查核日 2026-11-10：`trendlink` 組織與 `singyichen` 各 repo 的 git tree、本機 `find`），不做對照 | 該來源點名的檔名 | [#109](https://github.com/label-suite/label-suite/issues/109) |
 | 2026-11-10 | 初版：十一條前端規範、十條刻意不採用的來源條文、原始 repo（含 foundation spec）／scaffold 五份／duty-mate 四份的逐條對照 | — | [#109](https://github.com/label-suite/label-suite/issues/109) |
 | 2026-11-19 | 前端框架、目錄分層、元件庫、design token 對照與圖示的理由寫進 [ADR-005](../adr/005-frontend-architecture.mdx)，本文只留做法（[前提](#前提)、[F1](#f1-分層與允許的-import)、[F6](#f6-視覺基準與-design-token-的映射)、[F7](#f7-圖示與-svg)） | —（理由原本只在個人 repo 的 ADR-004、011、016、030 與 [#109](https://github.com/label-suite/label-suite/issues/109) 的留言） | [#451](https://github.com/label-suite/label-suite/issues/451) |
+| 2026-11-20 | 日期套件用 day.js，搭配 utc 與 timezone 外掛，只在 `src/lib/date.ts` 裡 import（[F10](#f10-日期時區與可測的時鐘)） | §待決 第 1 列「日期套件選哪一個」 | [#503](https://github.com/label-suite/label-suite/issues/503) |

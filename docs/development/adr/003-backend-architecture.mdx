@@ -193,6 +193,7 @@ tags: [adr, backend, api, database, celery]
 | 唯一的契約真相是規劃階段的 `api-contract.md` 加匯出的 `openapi.json` | 前綴與外層都要能寫進契約 |
 | 前端的 client 由 Orval 產生，它的 mutator 負責 base URL、解開 envelope 與統一的錯誤（[D6](#d6-前端-client-用-orval-產生)） | 外層格式要能在 mutator 一處處理 |
 | operationId 已由 `generate_unique_id_function` 固定成「動詞加資源」 | 這次只決定前綴與外層，不重決 operationId |
+| Python 內部的欄位是 snake_case，前端的型別由 Orval 從 `openapi.json` 產生 | 欄位名要有一處統一轉換，不是每個 schema 各自宣告 alias |
 | 回應從 envelope 改成別的形狀，對所有前端呼叫都是破壞性改動 | 改格式的路要事先留好 |
 
 ### 考慮過的選項
@@ -205,7 +206,7 @@ tags: [adr, backend, api, database, celery]
 
 ### 決定
 
-每個端點掛在 `/api/v1` 底下，資源名直接接在後面、不插模組名；`200` 的回應包一層 envelope，`204` 無 body、檔案下載與串流是例外，而且每個例外都要逐一寫進該 change 的 `api-contract.md`，不逐案自由心證。envelope 有哪些欄位未決，見 [api-agent-rules.mdx 的 §待決](../rules/api-agent-rules.mdx#待決) 第 1 列；規則本體見 [api-agent-rules.mdx 的 A1](../rules/api-agent-rules.mdx#a1-路由http-statusoperationid-與回應外層)，做法見 [architecture.mdx 的 §API 契約](../architecture.mdx#api-契約)。
+每個端點掛在 `/api/v1` 底下，資源名直接接在後面、不插模組名；`200` 的回應包一層 envelope，`204` 無 body、檔案下載與串流是例外，而且每個例外都要逐一寫進該 change 的 `api-contract.md`，不逐案自由心證。envelope 是 `{ success, code, message, data, timestamp, traceId }`，錯誤套同一個外層（`success: false`、`code`、`data: null`，`422` 另帶 `errors`），JSON 欄位一律 camelCase；規則本體見 [api-agent-rules.mdx 的 A1](../rules/api-agent-rules.mdx#a1-路由http-statusoperationid-與回應外層)，做法見 [architecture.mdx 的 §API 契約](../architecture.mdx#api-契約)。
 
 ### 後果
 
@@ -217,12 +218,12 @@ tags: [adr, backend, api, database, celery]
 **變困難**
 
 - 例外清單要逐一維護，每個 `204`、檔案與串流端點都要在 `api-contract.md` 寫明
-- envelope 的欄位還沒定，第一個 API change 之前各模組不能各自決定
+- 外層固定六個欄位，業務資料一律包在 `data` 裡，連只回一個布林的端點也一樣
 - 改回應外層仍是破壞性變更，要依 [A10](../rules/api-agent-rules.mdx#a10-相容性與破壞性變更) 在 `design.md` 寫出影響範圍
 
 ### 什麼情況要重新討論
 
-- 第一個 API change 把 envelope 的欄位定下來之後，例外清單反覆增加
+- 例外清單反覆增加
 - 出現第二個要並存的 API 版本
 
 ## D6 前端 client 用 Orval 產生
@@ -469,7 +470,7 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 | D2 | 個人 repo ADR-003（Context 的需求、候選比較表與四段說明、Consequences） |
 | D3 | 維護者的裁定紀錄 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 1 列（只記結果，沒有記選項的好處與代價）；扁平寫法是個人 repo ADR-022 的範例路徑；`app/schemas/` 等集中寫法見 [backend-agent-rules.mdx 的附錄](../rules/backend-agent-rules.mdx#附錄來源對照)；路徑不帶模組名見 [api-agent-rules.mdx 的 A1](../rules/api-agent-rules.mdx#a1-路由http-statusoperationid-與回應外層)；Celery 進入點落在模組裡見 backend-agent-rules.mdx 的決策紀錄 |
 | D4 | 個人 repo ADR-022（Context、Option A、B、C、Consequences）；它的轉移表、amendment 與快照不變式不在本 ADR，轉移條件以 `docs/specs/` 為準；派送失敗的補救見 [backend-agent-rules.mdx 的 B4](../rules/backend-agent-rules.mdx#b4-交易的擁有層) |
-| D5 | 維護者的裁定紀錄 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 2、3 列；「版本前綴是那個逃生門」出自 [architecture.mdx 的 §API 契約](../architecture.mdx#api-契約)；選項 B、C 的好處與代價沒有記錄；envelope 欄位未決見 [api-agent-rules.mdx 的 §待決](../rules/api-agent-rules.mdx#待決) |
+| D5 | 維護者的裁定紀錄 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 2、3 列；「版本前綴是那個逃生門」出自 [architecture.mdx 的 §API 契約](../architecture.mdx#api-契約)；選項 B、C 的好處與代價沒有記錄；envelope 的欄位由維護者 2026-11-20 裁定，見 §決策紀錄 |
 | D6 | [#108 的裁定紀錄](https://github.com/label-suite/label-suite/issues/108#issuecomment-6763329139)（三個選項、裁定與連帶）；選項 B、C 沒有記錄拒絕的理由；CI 重產比對未實作見 [api-agent-rules.mdx 的 A5](../rules/api-agent-rules.mdx#a5-重產與-drift-檢查) |
 | D7 | 個人 repo ADR-005（Context、候選比較、Consequences）與 ADR-024（Context、Decision、Consequences、Dialect-Specific Paths、Out of Scope）；驅動與 volume 的細節見 [architecture.mdx 的 §資料庫雙層](../architecture.mdx#資料庫雙層)。ADR-024 的 Dialect-Specific Paths 有兩條：JSONB variant 那條落在 §資料庫雙層，Atomic upsert 那條當時沒有落點，現在收在 [D10](#d10-背景計算的結果寫入做成冪等) |
 | D8 | 個人 repo ADR-006（Context、Broker 與快取的候選比較、Eviction Policy Isolation、Consequences）與 ADR-007（Context、候選比較、FastAPI Async Integration、Consequences）；佇列、重試與逾時的數字見 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務) |
@@ -498,3 +499,4 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 | 2026-11-19 | 背景計算的結果寫入做成冪等，用 `on_conflict` upsert（[D10](#d10-背景計算的結果寫入做成冪等)） | —（沿用個人 repo ADR-024 的 Atomic upsert 與本 repo 的 B9；補上理由與結果表的唯一鍵要求） | [#490](https://github.com/label-suite/label-suite/issues/490) |
 | 2026-11-19 | [D8](#d8-非同步任務用-celery-加-redis)「偶爾在重啟時掉一個 task 可以接受」的範圍縮到 broker 層（Redis 單實例），worker 重啟改由 [ADR-008 的 D10](008-deployment-and-operations.mdx#d10-worker-收到-sigterm-先做完手上的任務) 管 | D8 原本沒有區分這兩種掉法 | [#490](https://github.com/label-suite/label-suite/issues/490) |
 | 2026-11-19 | Bruno 降成可選的手動工具，取消 pre-PR 硬關卡（[D9](#d9-bruno-只當可選工具)） | 個人 repo ADR-025 的 pre-PR 硬關卡 | [#105 留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393) |
+| 2026-11-20 | envelope 的欄位定為 `{ success, code, message, data, timestamp, traceId }`，錯誤套同一個外層，JSON 欄位一律 camelCase（[D5](#d5-api-路徑前綴與成功回應外層)） | D5 原本寫「envelope 有哪些欄位未決」 | [#503](https://github.com/label-suite/label-suite/issues/503) |
