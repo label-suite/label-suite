@@ -1,6 +1,7 @@
 # user-management Specification
 
 ## Purpose
+
 定義系統管理員管理全平台帳號的可測契約：誰可以讀取與異動帳號、帳號列表如何查詢、帳號的新增、編輯、停用與啟用規則、管理者保護，以及每次異動留下的稽核紀錄。產品需求的來源是 `docs/specs/06-admin/01-user-management.mdx`（規格 06-01），兩者不一致時以 docs 為準。
 
 ## Requirements

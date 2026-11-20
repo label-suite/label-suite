@@ -21,9 +21,6 @@
       "Bash(git worktree remove:*)",
       "Bash(scripts/dispatch-scan.sh)"
     ],
-    "deny": [
-      "Bash(gh pr merge *--admin*)",
-      "Bash(gh pr merge *--auto*)"
-    ]
+    "deny": ["Bash(gh pr merge *--admin*)", "Bash(gh pr merge *--auto*)"]
   }
 }

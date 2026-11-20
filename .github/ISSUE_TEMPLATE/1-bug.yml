@@ -46,7 +46,6 @@ body:
     validations:
       required: false
 
-
   - type: textarea
     id: logs
     attributes:
@@ -64,4 +63,3 @@ body:
       placeholder: "拖拉圖片上來或貼連結"
     validations:
       required: false
-

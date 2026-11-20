@@ -21,10 +21,10 @@ model: opus
 
 依 `DATABASE_URL` 是否設定決定走哪一層（ADR-024），**兩層都是支援範圍**：
 
-| 層 | 資料庫 | API 驅動 | worker 驅動 |
-| :--- | :--- | :--- | :--- |
-| Lite（預設） | SQLite | `sqlite+aiosqlite:///./data/label_suite.db` | 同一個 URL 去掉 `+aiosqlite` |
-| 正式 | PostgreSQL 16 | `postgresql+asyncpg://…` | `postgresql+psycopg2://…` |
+| 層           | 資料庫        | API 驅動                                    | worker 驅動                  |
+| :----------- | :------------ | :------------------------------------------ | :--------------------------- |
+| Lite（預設） | SQLite        | `sqlite+aiosqlite:///./data/label_suite.db` | 同一個 URL 去掉 `+aiosqlite` |
+| 正式         | PostgreSQL 16 | `postgresql+asyncpg://…`                    | `postgresql+psycopg2://…`    |
 
 - **schema 一律走 Alembic migration**，不用任何自動同步
 - 任務設定存成 JSONB（Lite 層是 SQLite JSON），**讓新增任務類型不必改 schema**（ADR-005、010）——這是 Hard Rule 5 在資料層的落點，不要為某一種任務類型加專用欄位

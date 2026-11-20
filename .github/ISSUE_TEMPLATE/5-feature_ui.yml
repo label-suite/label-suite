@@ -10,7 +10,6 @@ body:
         ## 🎨 Feature Request / 版型樣式調整
         用於提出 UI/版型/樣式調整需求，請填寫必要資訊即可。
 
-
   - type: textarea
     id: request_desc
     attributes:

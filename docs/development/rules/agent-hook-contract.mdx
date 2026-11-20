@@ -4,7 +4,7 @@ description: 'Claude Code 2.1.273 與 Codex 0.153.0 的 hook 事件、阻擋能�
 category: '開發說明'
 tags: [開發說明, Agent, 規範, hooks]
 createdAt: '2026-11-11'
-updatedAt: '2026-11-16'
+updatedAt: '2026-11-20'
 ---
 
 # Agent Hook 契約與平台支援矩陣
@@ -83,11 +83,11 @@ updatedAt: '2026-11-16'
 | **事件** | Git `pre-commit`（不是 agent 事件）。由 `core.hooksPath=scripts/git-hooks` 啟用 |
 | **適用路徑／角色** | `git diff --cached` 命中的檔案，分流規則同 H3 |
 | **payload 欄位** | 無（Git hook 沒有 JSON payload）。輸入是 staged snapshot |
-| **共用檢查器** | 與 H3 **同一支** `scripts/check-changed.sh`（**待建置**），差別只在檔案清單怎麼來 |
+| **共用檢查器** | 現行只有排版：`scripts/git-hooks/pre-commit` 經 lint-staged（`.lintstagedrc.mjs`）對 staged 的 `*.{json,md,yml,yaml,css,js,mjs}` 跑 `prettier --write`，改完重新暫存。H3 分流的那支 `scripts/check-changed.sh` 仍**待建置**，建好後與 H3 共用，差別只在檔案清單怎麼來 |
 | **timeout** | 無平台 timeout。腳本自己設上限；**不得用 shell `timeout`**（本機沒有，見[§查核方式](#查核方式)） |
 | **輸出與退出碼** | 非零即擋下 commit，這是 Git 的既有語意 |
-| **阻擋或提醒** | **阻擋**。但 `--no-verify` 可跳過，所以它不是最終 gate——`scripts/git-hooks/commit-msg` 的註解已經把這件事寫明了 |
-| **缺工具／無適用檔案** | 必須讀**staged 版本**（`git show :<path>`），不能拿工作區的檔案充數，否則「unstaged 的修正」會被誤當成「staged 已通過」。部分暫存與在子目錄執行都要正確——`git rev-parse --show-toplevel` 已是本 repo 既有作法 |
+| **阻擋或提醒** | **阻擋**。但 `--no-verify` 可跳過，所以它不是最終 gate：排版的 gate 是 CI 的 `format` job（`pnpm format:check`） |
+| **缺工具／無適用檔案** | 必須讀**staged 版本**（`git show :<path>`），不能拿工作區的檔案充數，否則「unstaged 的修正」會被誤當成「staged 已通過」。部分暫存與在子目錄執行都要正確——`git rev-parse --show-toplevel` 已是本 repo 既有作法。找不到 `lint-staged` 或 `prettier` 時 exit `1` 並提示 `pnpm install`，不略過 |
 
 ### H5 Git commit-msg：檢查提交訊息
 
@@ -97,7 +97,7 @@ updatedAt: '2026-11-16'
 | **事件** | Git `commit-msg` |
 | **適用路徑／角色** | 提交訊息本身 |
 | **payload 欄位** | 無。輸入是 `$1`（訊息檔路徑） |
-| **共用檢查器** | **`scripts/check-commit-msg.sh`（已存在）**。這是本 repo 唯一已經在跑的 hook 檢查器 |
+| **共用檢查器** | **`scripts/check-commit-msg.sh`（已存在）**。本 repo 已經在跑的 hook 只有它與 H4 的 Prettier 排版 |
 | **timeout** | 無 |
 | **輸出與退出碼** | 非零即擋下 commit |
 | **阻擋或提醒** | **阻擋**；同樣可被 `--no-verify` 跳過，所以 CI 的 `commit-messages` job 才是真正的 gate |
@@ -126,7 +126,7 @@ updatedAt: '2026-11-16'
 | | |
 | :--- | :--- |
 | **目的** | 本機 hook 有**四條**被跳過的途徑——Git 的 `--no-verify`、Claude 的 `disableAllHooks`、Codex 的 `[features] hooks = false`，以及 Codex 的 hook 未被信任而 skipped——所以合併前的真正 gate 在 CI |
-| **事件** | `pull_request`（`.github/workflows/ci.yml`，已存在三個 job：`commit-messages`、`docs-site`、`specs`） |
+| **事件** | `pull_request`（`.github/workflows/ci.yml`，已存在四個 job：`commit-messages`、`docs-site`、`format`、`specs`） |
 | **適用路徑／角色** | 整個 PR |
 | **payload 欄位** | GitHub 事件的 `base.sha` 與 `head.sha`（現行 `commit-messages` job 已經在用） |
 | **共用檢查器** | 與 H3、H4、H5 **同一組**。CI 與本機共用邏輯是防漂移的唯一辦法 |
@@ -287,7 +287,7 @@ matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Wr
 | Codex 官方 hook 文件 | `learn.chatgpt.com/docs/hooks` | 14 個事件 |
 | 確認 Codex 文件是官方的 | `developers.openai.com/codex/hooks` | **308 轉址**到 `learn.chatgpt.com/docs/hooks`，故採為官方來源 |
 | 本機有沒有 `timeout` | `command -v timeout` / `command -v gtimeout` | **兩個都沒有** |
-| 本 repo 既有的 Git hook 入口 | `scripts/setup.sh`、`scripts/git-hooks/commit-msg` | `core.hooksPath=scripts/git-hooks`；commit-msg 以 `git rev-parse --show-toplevel` 定位後呼叫 `scripts/check-commit-msg.sh` |
+| 本 repo 既有的 Git hook 入口 | `scripts/setup.sh`、`scripts/git-hooks/commit-msg`、`scripts/git-hooks/pre-commit` | `core.hooksPath=scripts/git-hooks`；commit-msg 以 `git rev-parse --show-toplevel` 定位後呼叫 `scripts/check-commit-msg.sh`；pre-commit 先找本 checkout、再找主 checkout（`git rev-parse --git-common-dir` 的上一層）的 `node_modules/.bin` 後執行 lint-staged |
 
 :::
 
@@ -303,7 +303,7 @@ matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Wr
 | Codex 官方文件（`learn.chatgpt.com/docs/hooks`，runtime codex-cli 0.153.0） | 14 個事件、PascalCase 命名、`.codex/hooks.json` 與 `config.toml` 兩種寫法、handler 型別、timeout 預設與 `SessionEnd`／`Interrupt` 的 1 秒上限、信任模型、`[features] hooks = false`、工具名稱清單、matcher 語法（含 `SubagentStart`／`SubagentStop` 吃 subagent type、`Stop` 不吃 matcher）、`PostToolUse` 的「替換結果後繼續」語意、`PreToolUse` 不支援 `continue`／`stopReason` | 同上；**信任模型與工具名稱差異是本次最重要的兩個發現** |
 | 本機 runtime | `claude --version`、`codex --version`、`codex features list`、`command -v timeout` | 版本與「沒有 `timeout`」都以實測為準，不引用文件 |
 | `codex` binary 的 strings | 內部 enum 是 snake_case | **不採為依據**，並在查核方式裡寫明理由，避免後人重蹈 |
-| 本 repo | `scripts/setup.sh`（`core.hooksPath`）、`scripts/git-hooks/commit-msg`（`git rev-parse --show-toplevel` 加共用 checker）、`.github/workflows/ci.yml`（三個 job）、`.claude/settings.json`（目前有 attribution 與 `issue-dispatch` 用的權限白名單，沒有 `hooks`） | **保留並擴充既有入口**，不另建重複的 commit checker |
+| 本 repo | `scripts/setup.sh`（`core.hooksPath`）、`scripts/git-hooks/commit-msg`（`git rev-parse --show-toplevel` 加共用 checker）、`.github/workflows/ci.yml`（四個 job）、`.claude/settings.json`（目前有 attribution 與 `issue-dispatch` 用的權限白名單，沒有 `hooks`） | **保留並擴充既有入口**，不另建重複的 commit checker |
 | 參考來源的 `.claude/settings.json`（原始本機 repo） | 七支腳本與 `SessionStart`／`PreToolUse`／`PostToolUse`／`PreCompact`／`Stop`／`UserPromptSubmit` 的接線、`permissions.deny` 清單、`command -v harness ... || true` 的選用外部呼叫 | 參考**事件分工**；移除個人絕對路徑與外部 harness 假設。其 matcher 含 `Read|Grep|Glob|NotebookEdit`，搬到 Codex 會空轉，已在§工具名稱寫明 |
 | [testing-agent-rules.mdx](testing-agent-rules.mdx) T9、T11、T12 | 七個 gate 的政策與歸屬、evidence 的五個欄位、那個人工停點 | H6 與 H7 直接接到這三條，不另定政策 |
 
@@ -329,3 +329,4 @@ matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Wr
 | 2026-11-11 | `onFailure: "block"` 需 v2.1.295、本機 2.1.273 沒有，所以 H2 兩邊都由腳本自己 exit `2` 做 fail-closed，矩陣新增「hook 失敗或 timeout 時」一列寫明 fail-open 預設 | 初版把 `onFailure: "block"` 當成 Claude 現成的 fail-closed 開關 | [#111](https://github.com/label-suite/label-suite/issues/111) |
 | 2026-11-11 | Codex 的 `SubagentStart`／`SubagentStop` 吃 subagent type matcher；Codex 有 `[features] hooks = false` 一行全關（H1 的檢查項與 H7 的四條跳過途徑同步補上） | 初版誤標 matcher「未確認」、漏了 `[features] hooks = false` | [#111](https://github.com/label-suite/label-suite/issues/111) |
 | 2026-11-11 | H2 優先用 exit `2`，理由是 Codex 的 `PreToolUse` 不支援 `continue`／`stopReason`／`suppressOutput`，回傳會讓該次 hook 失敗並繼續執行工具；H6 payload 補 `stop_hook_active`；矩陣補 Claude 的 `PreCompact` 可阻擋；`.env.example` 等列為受保護路徑的合法例外 | 初版以欄位名不同為理由；H6 payload 無 `stop_hook_active`；矩陣漏 `PreCompact` 可阻擋；無合法例外 | [#111](https://github.com/label-suite/label-suite/issues/111) |
+| 2026-11-20 | H4 先接上 Prettier 排版：pre-commit 經 lint-staged 只排 staged 的檔案，CI 新增 `format` job 當 gate；不用 husky，因為它會改寫 `core.hooksPath`（[§H4](#h4-git-pre-commit檢查-staged-快照)） | H5 的 commit-msg 是唯一在跑的 hook 檢查器 | [#498](https://github.com/label-suite/label-suite/issues/498) |
