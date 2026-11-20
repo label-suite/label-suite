@@ -93,6 +93,7 @@ const EXPECTED_LIGHT_MAPPING: Record<string, string> = {
   "--info-bg": "var(--color-info-bg)",
   "--info-border": "var(--color-info-border)",
   "--control-disabled": "var(--color-slate-50)",
+  "--surface-subtle": "var(--color-slate-50)",
   "--card-shadow": "var(--shadow-card)",
 };
 
@@ -213,12 +214,19 @@ describe("index.css, the Tailwind entry", () => {
   });
 
   it("still generates the semantic utilities of the mapping layer", async () => {
-    const css = await buildUtilities(["bg-primary", "text-muted-foreground", "border-input"]);
+    const css = await buildUtilities([
+      "bg-primary",
+      "text-muted-foreground",
+      "border-input",
+      "bg-surface-subtle",
+    ]);
 
     expect(css).toContain(".bg-primary");
     expect(css).toContain("var(--primary)");
     expect(css).toContain(".text-muted-foreground");
     expect(css).toContain(".border-input");
+    expect(css).toContain(".bg-surface-subtle");
+    expect(css).toContain("var(--surface-subtle)");
   });
 
   it("imports Tailwind and the mapping layer", () => {

@@ -26,7 +26,7 @@ export function Empty({ title, description, action, className, ...props }: Empty
     <div
       data-slot="empty"
       className={cn(
-        "flex flex-col items-center gap-(--space-sm) rounded-lg border border-dashed border-border bg-control-disabled p-(--space-lg) text-center",
+        "flex flex-col items-center gap-(--space-sm) rounded-lg border border-dashed border-border bg-surface-subtle p-(--space-lg) text-center",
         className,
       )}
       {...props}

@@ -31,4 +31,12 @@ describe("Empty", () => {
 
     expect(screen.getByRole("button", { name: "Create" })).toBeVisible();
   });
+
+  it("sits on the subtle surface, not on the disabled-control colour", () => {
+    const { container } = render(<Empty title="No data yet" description="Nothing here" />);
+    const panel = container.firstElementChild;
+
+    expect(panel).toHaveClass("bg-surface-subtle");
+    expect(panel).not.toHaveClass("bg-control-disabled");
+  });
 });
