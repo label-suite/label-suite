@@ -15,6 +15,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from app.core.envelope import correlation_id_var, current_trace_id, error_response
 from app.core.errors import NotAcceptableError
 from app.core.i18n import MessageCatalog, resolve_locale
+from app.core.log_safety import escape_for_log
 
 __all__ = [
     "CORRELATION_ID_HEADER",
@@ -81,22 +82,6 @@ class CorrelationIdMiddleware:
             await self.app(scope, receive, send_with_header)
         finally:
             correlation_id_var.reset(token)
-
-
-def escape_for_log(value: object) -> str:
-    """Return ``value`` as one log-safe line.
-
-    Backslashes, control characters (``\\n``, ``\\r``, ``\\t``, ...) and non-ASCII
-    characters are written as Python escape sequences, so a request-derived value
-    can never start a forged log line (log injection, Hard Rule 9).
-
-    Args:
-        value: Any value; ``None`` and non-strings are converted with ``str``.
-
-    Returns:
-        The escaped, ASCII-only text.
-    """
-    return str(value).encode("unicode_escape").decode("ascii")
 
 
 def format_exception_without_text(exc: BaseException) -> str:

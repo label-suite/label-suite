@@ -6,6 +6,7 @@ tests; here only the handler mapping is checked: ``AppError``, Starlette's
 ``RequestValidationError``.
 """
 
+import logging
 from collections.abc import AsyncIterator
 
 import httpx
@@ -42,6 +43,10 @@ def _build_app() -> FastAPI:
     @app.get("/teapot")
     async def teapot() -> None:
         raise HTTPException(status_code=418, detail="CANARY-detail")
+
+    @app.get("/teapot/{name}")
+    async def named_teapot(name: str) -> None:
+        raise HTTPException(status_code=418)
 
     @app.post("/body")
     async def body(payload: Body) -> None:
@@ -122,3 +127,18 @@ async def test_http_exception_without_a_defined_code_becomes_internal_error(
     assert response.json()["code"] == "INTERNAL_ERROR"
     assert response.json()["message"] == "系統發生錯誤，請稍後再試"
     assert "CANARY-detail" not in response.text
+
+
+async def test_unmapped_http_exception_log_escapes_the_request_path(
+    client: httpx.AsyncClient, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.ERROR)
+
+    response = await client.get("/teapot/%1B%5B31mFORGED")
+
+    assert response.status_code == 500
+    errors = [record for record in caplog.records if record.levelno == logging.ERROR]
+    assert len(errors) == 1
+    message = errors[0].getMessage()
+    assert "GET /teapot/\\x1b[31mFORGED" in message
+    assert "\x1b" not in message

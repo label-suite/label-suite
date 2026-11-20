@@ -21,6 +21,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 
 from app.core.envelope import error_response
+from app.core.log_safety import escape_for_log
 from app.core.schemas import ErrorDetail
 
 __all__ = [
@@ -171,9 +172,9 @@ async def handle_http_exception(request: Request, exc: Exception) -> JSONRespons
         logger.error(
             "HTTPException with unmapped status %s (traceId=%s) %s %s",
             exc.status_code,
-            (_state(request) or {}).get("correlation_id"),
-            request.method,
-            request.url.path,
+            escape_for_log((_state(request) or {}).get("correlation_id")),
+            escape_for_log(request.method),
+            escape_for_log(request.url.path),
         )
         status_code, code, message_key = 500, InternalError.code, InternalError.message_key
         headers = None
