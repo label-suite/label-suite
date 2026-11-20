@@ -4,5 +4,5 @@
  * --ignore-unknown skips anything Prettier has no parser for.
  */
 export default {
-  "*.{json,md,yml,yaml,css,js,mjs}": "prettier --write --ignore-unknown",
+  "*.{json,md,yml,yaml,css,js,mjs,ts,tsx}": "prettier --write --ignore-unknown",
 };

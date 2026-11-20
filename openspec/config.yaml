@@ -62,7 +62,7 @@ rules:
     - 每塊資料都要對應到 api-contract 的 operationId
     - loading／error／empty／無權限四種狀態都要寫；有遮蔽欄位時寫出呈現方式
     - 畫面長相以 design/prototype/pages/ 為準；token 只用 design/prototype/assets/tokens.css 與 label-suite-design skill 的語意名稱，不寫色碼
-    - 框架依 ADR-004 加 2026-11-10 裁定（React 19 加 Vite 加 TypeScript strict，路由 React Router v6、伺服器狀態 TanStack Query，元件庫 shadcn/ui 放 components/ui/，目錄分層 pages/ 加 features/，見 docs/development/architecture.mdx §前端）；**不用 Storybook，改用元件展示頁**。元件以語意描述為主，需要時可指名 shadcn/ui 的元件，不貼實作程式碼
+    - 框架依 ADR-005 加 2026-11-10 裁定（React 19 加 Vite 加 TypeScript strict，路由 React Router v6、伺服器狀態 TanStack Query，元件庫 shadcn/ui 放 components/ui/，目錄分層 pages/ 加 features/，見 docs/development/architecture.mdx §前端）；**不用 Storybook，改用元件展示頁**。元件以語意描述為主，需要時可指名 shadcn/ui 的元件，不貼實作程式碼
     - 沒有 UI 變更就只寫一行「本次無 UI 變更」
   api-contract:
     - operationId 全專案唯一，由 FastAPI 的 generate_unique_id_function **固定成「動詞加資源」**（例 listUsers、getUser），不手寫也不逐個覆寫
@@ -104,7 +104,11 @@ operations:
       - 每個 task 群組由主 agent 依標記派給對應角色，主 agent 不自己改程式
       - 每完成一個 task 群組就提交一次，不要累積到最後；打勾代表實作與測試都完成
       - 提交前該群組動到的部分要通過本專案現有的檢查：`pnpm check:specs`、`pnpm test:scripts`（動到 scripts/ 時）、`pnpm exec notecraftapp build docs --rebuild`（動到 docs/ 時）；不得以忽略規則略過
-      - "前端的檢查指令等 frontend/ 骨架 change（#505）建好再補進這一節；在那之前不要寫不存在的指令，寫了等於每次都要手動略過"
+      - "動到 frontend/ 時，lint：`pnpm --filter frontend lint`"
+      - "動到 frontend/ 時，型別檢查：`pnpm --filter frontend typecheck`"
+      - "動到 frontend/ 時，測試：`pnpm --filter frontend test`；要附覆蓋率報告時改用 `pnpm --filter frontend test:coverage`"
+      - "動到 frontend/ 時，建置：`pnpm --filter frontend build`"
+      - '動到 frontend/ 時，契約漂移：`pnpm --filter frontend api:generate && git diff --exit-code -- frontend/src/api/generated && test -z "$(git status --porcelain -- frontend/src/api/generated)"`；在 repo 根目錄執行，`git status` 那段抓第一次產生還沒提交的檔案'
       - "動到 backend/ 時，後端測試（SQLite）：`cd backend && uv run pytest`；標 `postgres` 的測試在這次會被跳過，回報結果時要附上 pytest 摘要裡的 skipped 數量，不得只寫「通過」"
       - "動到 backend/ 時，後端測試（PostgreSQL）：`cd backend && TEST_DATABASE_URL=postgresql+asyncpg://... uv run pytest`；`TEST_DATABASE_URL` 由本機 `docker run postgres:16` 提供，這次應為 0 skipped"
       - "動到 backend/ 時，lint 與格式：`cd backend && uv run ruff check . && uv run ruff format --check .`"

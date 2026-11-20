@@ -1,0 +1,22 @@
+{
+  "pageName": "系統健康檢查",
+  "eyebrow": "DEV ONLY · /dev/health",
+  "description": "呼叫 <code>GET /api/v1/health</code>，證明前端經由 Orval 產生的 hook 與 mutator 打得到後端。",
+  "panel": {
+    "loading": "正在檢查後端狀態…",
+    "okBadge": "正常",
+    "okSummary": "後端與資料庫都可以用",
+    "service": "服務",
+    "database": "資料庫",
+    "checkedAt": "檢查時間",
+    "traceId": "traceId",
+    "databaseUnavailable": "資料庫無法連線",
+    "backendError": "後端回報錯誤",
+    "errorCode": "錯誤碼",
+    "unreachableTitle": "連不到後端",
+    "unreachableHint": "沒有收到任何回應。請確認後端已啟動，且 <code>VITE_API_BASE_URL</code> 指向它。",
+    "errorType": "錯誤類型",
+    "noTraceId": "無（請求沒有送達）",
+    "recheck": "重新檢查"
+  }
+}
