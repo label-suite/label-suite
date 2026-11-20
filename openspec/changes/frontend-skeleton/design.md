@@ -58,7 +58,7 @@
 
 ### D4. `apiFetch` 是唯一出口，回傳 `{ data, meta }`；N3 是 apply 第一步
 
-`src/api/mutator.ts` 的 `apiFetch` 是 Orval 的 mutator，處理順序（七種情況）依 system-design.md §唯一出口的處理順序，回傳形狀與 `ApiError` 欄位依 api-contract.md §唯一出口的回傳形狀、§錯誤正規化契約、§外層的判定規則。逾時 15 秒以 `src/lib/abort.ts` 的 `composeSignals` 合成呼叫端 signal 與逾時 signal；jsdom 與目標瀏覽器都支援 `AbortSignal.any` 後再改用標準 API（Q19 N6）。`ErrorType<E> = ApiError` 讓產生的 hook 的錯誤型別是 `ApiError`。
+`src/api/mutator.ts` 的 `apiFetch` 是 Orval 的 mutator，處理順序（七種情況）依 system-design.md §唯一出口的處理順序，回傳形狀與 `ApiError` 欄位依 api-contract.md §唯一出口的回傳形狀、§錯誤正規化契約、§外層的判定規則。逾時 15 秒以 `src/lib/abort.ts` 的 `composeSignals` 合成呼叫端 signal 與逾時 signal；jsdom 與目標瀏覽器都支援 `AbortSignal.any` 後再改用標準 API（Q19 N6）。`ErrorType<_E> = ApiError` 讓產生的 hook 的錯誤型別是 `ApiError`。這一行是 `mutator.ts` 唯一的具名 lint 例外：Orval 的 mutator 介面要求這個型別參數，但結果不依賴它，所以參數名加底線並以一行 `eslint-disable-next-line @typescript-eslint/no-unused-vars` 附理由關掉；改名為 `E` 則改由 tsc 的 `noUnusedParameters`（TS6133）報錯，兩條規則只能擇一放行。
 
 組網址抽成 `src/api/mutator.ts` 匯出的純函式 `buildRequestUrl(baseUrl, url, params)`（system-design.md §唯一出口的處理順序 第 1 步）：`baseUrl` 為空時回傳相對路徑（例如 `/api/v1/health`），否則回傳 `baseUrl` 加 `url`。spec `frontend-api-client`「基底網址為空時以同源相對路徑送出」直接斷言這個函式的回傳值，不經 MSW：Node 的 `fetch` 不接受相對網址，jsdom 也不會替 `fetch` 補上來源，經 MSW 測相對網址只會測到測試環境。其餘經 `apiFetch` 的測試一律在 `VITE_API_BASE_URL=http://localhost:8000` 下以絕對網址進行（見 D11）。
 
@@ -66,7 +66,7 @@
 
 第一次驗證（Orval 8.48.0、未指定 `httpClient`）失敗：產物是 fetch 式呼叫並帶明確回傳型別，`ApiResponse<T>` 傳不到 hook。依 clarification Q20 改以 `httpClient: "axios"` 產生（見 D5），重產後 `getHealth` 為 `apiFetch<HealthDataResponse>({ url, method, signal }, options)`、沒有回傳註記。型別測試的兩個寫法要求：
 
-- hook 的回傳型別以 `const callHook = () => useGetHealth(); type R = ReturnType<typeof callHook>` 取得。直接寫 `ReturnType<typeof useGetHealth>` 時，hook 的泛型 `TData` 沒有呼叫端可推導，會被代成 `unknown`，斷言測到的是 TypeScript 的泛型代入而不是產物（Q20 記為測試寫法錯誤，不是產物問題）。
+- hook 經一層包裝 `const useHealthQuery = () => useGetHealth()` 取型別，讓泛型 `TData` 取預設值；斷言寫成 `expectTypeOf(useHealthQuery).returns.toHaveProperty("data").toEqualTypeOf<...>()`（`error` 同理），不另立型別別名。直接寫 `ReturnType<typeof useGetHealth>` 時，hook 的泛型 `TData` 沒有呼叫端可推導，會被代成 `unknown`，斷言測到的是 TypeScript 的泛型代入而不是產物（Q20 記為測試寫法錯誤，不是產物問題）。包裝函式以 `use` 開頭命名，否則 `react-hooks/rules-of-hooks` 會把其中的 hook 呼叫判為違規；它直接交給 `expectTypeOf`，不只當型別使用，否則 `no-unused-vars` 會報錯。它只被檢視型別、不會執行。
 - `expectTypeOf` 的斷言只在型別層成立：Vitest 執行期只跑過呼叫、不比對型別，型別不符時是 `typecheck`（`tsc -b`）報錯。所以 N3 的通過條件是 `test` 與 `typecheck` 兩條都以 0 結束，只跑其中一條不算驗證過。
 
 - 替代方案：攤平只回 `data`（丟掉畫面要的 traceId 與檢查時間，Q2 已否決）；回傳整個外層（呼叫端要自己判斷 `success`，違反 A7）。
@@ -81,6 +81,7 @@
 - 產生的 MSW handler 以 `'*/api/v1/health'` 比對（開頭萬用字元，任何來源都會命中），不是絕對網址；測試中的覆寫方式見 D11。產物進版控；`frontend/src/api/generated/` 加進根目錄 `.prettierignore`；`.lintstagedrc.mjs` 的副檔名加上 `ts,tsx`。漂移的定義與檢查指令照 api-contract.md §什麼算漂移，識別字照 §產生的識別字。
 
 - 替代方案：產物不進版控、建置時才產（審查看不到契約變化，A4 已否決）；讓 Prettier 格式化產物（每次重產都會出現格式差異，漂移檢查失準，Q8 已否決）。
+- `src/api/mutator.ts` 的 `ErrorType<_E>` 帶一行附理由的 `eslint-disable-next-line @typescript-eslint/no-unused-vars`，是 Orval 要求型別參數造成的具名例外，理由見 D4。
 - 對應：system-design.md §Orval 管線；api-contract.md §Orval 產生契約；clarification Q8、Q20。
 
 ### D6. TanStack Query 預設、路由與 providers
