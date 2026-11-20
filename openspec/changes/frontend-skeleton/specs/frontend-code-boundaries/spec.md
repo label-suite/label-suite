@@ -62,7 +62,7 @@
 
 ### Requirement: 測試替身不進產品碼
 
-模擬伺服器、假資料產生器、產生的模擬回應檔與測試支援目錄 SHALL 只能被測試檔 import；產品碼 import 它們時 lint MUST 失敗。
+模擬伺服器、假資料產生器、呼叫層產生器附帶的模擬回應檔與假資料檔、測試支援目錄 SHALL 只能被測試檔 import；產品碼 import 它們時 lint MUST 失敗。
 
 來源：ADR-007 D1；testing-agent-rules T6；clarification Q6。
 
@@ -71,9 +71,14 @@
 - **WHEN** 功能目錄下的非測試檔 import 模擬伺服器套件，執行 lint
 - **THEN** lint 以非 0 結束碼失敗
 
+#### Scenario: 產品碼匯入產生的假資料檔時 lint 失敗
+
+- **WHEN** 功能目錄下的非測試檔 import 呼叫層產生器附帶的假資料檔（健康檢查回應的假資料函式所在的檔案），執行 lint
+- **THEN** lint 以非 0 結束碼失敗，訊息指出測試替身只准測試檔使用
+
 #### Scenario: 測試檔可以匯入模擬伺服器
 
-- **WHEN** 功能目錄下的測試檔 import 模擬伺服器套件與測試支援目錄，執行 lint
+- **WHEN** 功能目錄下的測試檔 import 模擬伺服器套件、測試支援目錄與產生的假資料檔，執行 lint
 - **THEN** lint 不因此報錯
 
 ### Requirement: 型別嚴格且不使用 any
