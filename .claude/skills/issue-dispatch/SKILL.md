@@ -1,6 +1,6 @@
 ---
 name: issue-dispatch
-description: 掃描 Label Suite 看板上 Ready 的 issue，排出彼此不衝突的波次，用各自獨立 worktree 的 lead 平行處理，經獨立審查、開 PR、CI 通過後由主 session 合併並把卡片移到 Done。第一版只派文件與工具類的 issue。當使用者說「派工」「跑 Ready 的 issue」「跑一波」「dispatch」，或只給一個 issue 編號要你接著做先前派出去的工作時使用。
+description: 掃描 Label Suite 看板上 Ready 的 issue，排出彼此不衝突的波次，用各自獨立 worktree 的 lead 平行處理，經獨立審查、開 PR、CI 通過後由主 session 合併並把卡片移到 Done。只派文件、工具與 `openspec/` 目錄下的 issue。當使用者說「派工」「跑 Ready 的 issue」「跑一波」「dispatch」，或只給一個 issue 編號要你接著做先前派出去的工作時使用。
 ---
 
 # Issue Dispatch
@@ -15,6 +15,7 @@ description: 掃描 Label Suite 看板上 Ready 的 issue，排出彼此不衝�
 - 不派範圍外的 issue（見步驟 3），不處理 Critical 或 High 的資安發現。
 - 不 commit、不 push 到 `main`，不用 squash 或 rebase 合併。
 - 不改 `docs/specs/` 的需求、`docs/specs/00-prd.mdx` 或 `design/prototype/`。
+- 對 `openspec/` 的 issue 只改該目錄底下的檔案，不跑 SDD 的角色流程；那個流程怎麼接進來，見 [§待決](#待決) 第 1 列。
 
 ## 角色
 
@@ -30,7 +31,7 @@ description: 掃描 Label Suite 看板上 Ready 的 issue，排出彼此不衝�
      依 doc-writing 的自我檢查清單審 diff，只回報不修改
 ```
 
-- lead 和審查者都用 `general-purpose`。`.claude/agents/` 的角色都是 SDD 用的，文件類沒有對應的角色。
+- lead 和審查者都用 `general-purpose`。`.claude/agents/` 的角色都是 SDD 用的，文件與 `openspec/` 類沒有對應的角色。
 - 模型依 `CLAUDE.md` 的檔案數：會碰到 2–9 個檔案用 Sonnet，10 個以上用 Opus，拿不準就選大的。
 - lead 的回報不是證據。主 session 自己讀 diff、讀命令輸出，才判斷能不能往下走。
 
@@ -78,7 +79,7 @@ gh pr list --state all --search "${N}" --json number,title,state,headRefName
 
 | 類別 | 條件 | 處理 |
 | :--- | :--- | :--- |
-| 派工 | 只碰 `docs/development/`、`docs/` 其他非規格文件、`.claude/`、`.github/`、`scripts/`、`AGENTS.md`、`CLAUDE.md` | 進入步驟 4 |
+| 派工 | 只碰 `docs/development/`、`docs/` 其他非規格文件、`.claude/`、`.github/`、`scripts/`、`openspec/`、`AGENTS.md`、`CLAUDE.md` | 進入步驟 4 |
 | 範圍外 | 改畫面（`design/`、任何介面）、改 `docs/specs/` 的需求或 PRD、產品程式（`backend/`、`frontend/`、`e2e/`） | 不留言，寫進波次報告 |
 | 需要裁定 | 需求不清、內文和留言不一致、兩種讀法會做出不同的東西、工作項要維護者決定 | 留一則檢查點說明哪裡要決定，卡片移回 Todo，寫進波次報告 |
 
@@ -118,7 +119,7 @@ git worktree add -b "${BRANCH}" "${WT}" origin/main
 - issue 編號，以及「先讀 `gh issue view <N> --comments`」
 - worktree 的絕對路徑，以及「每個指令都以 `cd <絕對路徑> && ` 開頭，不要假設工作目錄會保留」
 - 分支名稱
-- 要載入的 skill（文件類是 `doc-writing`；ADR 另外照它的 ADR 一節）
+- 要載入的 skill（文件類是 `doc-writing`；ADR 另外照它的 ADR 一節）。`openspec/` 底下的檔案照 `openspec/config.yaml` 的規則寫，不載入 `doc-writing`；同時改 `docs/` 與 `openspec/` 的 issue，`docs/` 的部分載入 `doc-writing`
 - 驗證指令：本 repo 的 `scripts/check-*.mjs` 中跟改動有關的那幾支，以及 `bash scripts/check-commit-msg.sh` 對每個 commit 的檢查；**不跑** `notecraftapp build`
 - commit 格式：`AGENTS.md` §Commits，subject 結尾 `(#N)`，trailer 用 lead 自己的模型
 - 做完要：push、勾 issue 上完成的工作項、留一則「待審查」檢查點、回報 diff 範圍；**不開 PR**
@@ -130,7 +131,7 @@ git worktree add -b "${BRANCH}" "${WT}" origin/main
 lead 回報後：
 
 1. 主 session 用 `git -C <worktree> diff origin/main...HEAD` 讀完整個 diff，對照 issue 的工作項。不用 `cd` 進 lead 的 worktree。
-2. 另開一個新的 general-purpose 審查者。prompt 只給 issue 編號、worktree 路徑和「依 `.claude/skills/doc-writing/SKILL.md` 步驟 5 的清單，以及 `AGENTS.md` §Review Guidelines 審查 `origin/main...HEAD`」，不給主 session 自己的看法。
+2. 另開一個新的 general-purpose 審查者。prompt 只給 issue 編號、worktree 路徑和「依 `.claude/skills/doc-writing/SKILL.md` 步驟 5 的清單，以及 `AGENTS.md` §Review Guidelines 審查 `origin/main...HEAD`」，不給主 session 自己的看法。`openspec/` 的 diff 改依 `openspec/config.yaml` 的規則，加上 `AGENTS.md` §Review Guidelines 審查，不用 `doc-writing` 的清單；diff 裡 `docs/` 的部分仍用 `doc-writing` 步驟 5。
 3. 主 session 逐條核對審查意見。Critical 或 High 就用 `SendMessage` 交回原本的 lead 修，修完再審一次；Medium 或 Low 寫進 PR 的「非阻擋」，但違反 `doc-writing` 鐵律的（例如來源沒有的理由、正文寫出來源 repo）即使是 Medium 也在合併前交回 lead 修，主 session 讀修正的 diff 確認即可，不必重審；真的有問題但在範圍外的，另開 issue，在 PR 裡寫出編號。
 4. 開 PR。body 先寫進 scratchpad 的檔案，再用 `--body-file` 傳：
 
@@ -251,7 +252,7 @@ gh project item-edit --project-id PVT_kwDOEWdNqs4BoCOI --id "$ITEM" \
 
 | # | 問題 | 卡住什麼 | 誰決定 |
 | :--- | :--- | :--- | :--- |
-| 1 | 產品程式的 SDD change 要怎麼接進來：停點二取消之後，誰歸檔、什麼時候歸檔 | 程式類的派工（`backend/` 出現之後） | 維護者，見 [#464](https://github.com/label-suite/label-suite/issues/464) |
+| 1 | 產品程式的 SDD change 要怎麼接進來：停點二取消之後，誰歸檔、什麼時候歸檔 | 程式類的派工（`backend/` 出現之後），以及 `openspec/` 的 issue 要不要跑 SDD 角色流程 | 維護者，見 [#464](https://github.com/label-suite/label-suite/issues/464) |
 
 ## 附錄：與原 skill 的對照
 
@@ -266,12 +267,12 @@ gh project item-edit --project-id PVT_kwDOEWdNqs4BoCOI --id "$ITEM" \
 | 不用 `git stash`、不 `cd` 進 worktree、用 merge 不用 rebase、拿到 PR 編號當輪就啟動監看 | 沿用 | 原 skill 實際踩過的坑 |
 | `agent-ready`／`agent-running`／`blocked` 標籤 | 改成看板的 Ready / In Progress，以及 blocked-by 依賴 | `AGENTS.md`：不用標籤追蹤狀態 |
 | 標籤就代表預先授權合併 | 改成卡片在 Ready 就代表授權 | 授權寫在 `AGENTS.md` 的 Dispatch 一條 |
-| `senior-qa` 寫 Red、`senior-*` 寫 Green 的 TDD 流程 | 不搬 | 第一版只派文件類，沒有程式可以測 |
+| `senior-qa` 寫 Red、`senior-*` 寫 Green 的 TDD 流程 | 不搬 | 第一版只派文件與 `openspec/` 類，沒有程式可以測 |
 | 審查者 `senior-code-reviewer` 或 Codex | 改成新開的 general-purpose，依 `doc-writing` 的清單審查 | 本 repo 沒有審文件的角色；維護者選了 Claude |
 | Codex companion 的 Green 與審查 | 不搬 | 本 repo 沒有 `scripts/codex-companion.sh` |
 | Playwright port、每波最多兩個完整套件 | 不搬；改成 NoteCraft build 一次只跑一個 | `frontend/`、`e2e/` 還不存在；本 repo 會衝突的是全機共用的 NoteCraft 快取 |
 | `specs/STATUS.md`、規格版本號、FR/AC 編號的分配 | 不搬 | 本 repo 沒有這些 |
-| OpenSpec 路徑與 MAJOR 停點 | 不搬 | 程式類另外處理，見待決 |
+| OpenSpec 路徑與 MAJOR 停點 | 不搬；`openspec/` 目錄的 issue 可派，但只改該目錄的檔案，不跑 SDD 角色流程 | SDD 流程怎麼接進來，見待決 |
 | stacked PR、pre-tool-use hook、`claude-progress.md` 的例外 | 不搬 | 本 repo 都沒有 |
 | `pr-flow` 的視覺變更摘要 | 不搬 | 本 repo 沒有 `pr-flow`；改畫面的 issue 本來就不派 |
 | 與 `doc-writing` 步驟 6「本機 build 並在瀏覽器看過」的差異 | lead 不跑本機 build，以 CI `docs-site` 為準 | 無人值守時沒有人看瀏覽器，同時 build 也會互相干擾 |
