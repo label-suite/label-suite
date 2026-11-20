@@ -13,6 +13,8 @@ from app.core.schemas import ApiResponse, ResponseModel
 from app.main import create_api_router, create_app
 from app.scripts.export_openapi import DEFAULT_OUTPUT, PLACEHOLDER_SETTINGS, main
 
+pytestmark = pytest.mark.integration
+
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 
 

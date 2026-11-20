@@ -18,6 +18,8 @@ from tests.probe import (
     PROBE_PATH,
 )
 
+pytestmark = pytest.mark.integration
+
 ERROR_KEYS = {"success", "code", "message", "data", "timestamp", "traceId", "errors"}
 MISSING_PATH = "/api/v1/no-such-resource"
 

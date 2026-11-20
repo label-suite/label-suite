@@ -19,6 +19,8 @@ import pytest
 from tests.conftest import ALLOWED_ORIGIN
 from tests.probe import PROBE_PATH
 
+pytestmark = pytest.mark.integration
+
 TIMESTAMP = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$")
 UUID4 = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
 CODE = re.compile(r"^[A-Z][A-Z0-9_]*$")
