@@ -10,7 +10,9 @@ context: |
   - openspec/specs/ 是實作與測試依循的可測契約，只能透過 change 的 spec delta 修改。
     技術細節（API、資料模型、權限實作，以及測試集答案不外露的後端做法）寫在這一層。
   delta 中的每條 requirement 都須追溯到 docs/specs/ 的規格（註明規格編號 NN-NN 與
-  Scenario 名稱，例：「來源：01-02 停用使用者」）。delta 與 docs/specs/ 不一致時以
+  Scenario 名稱，例：「來源：01-02 停用使用者」）。技術 change 沒有 docs/specs/ 的
+  規格可追溯時（見 spec-migration 的 D4），改為追溯到 ADR 與規則文件的條號，
+  例：「來源：ADR-003 D5、api-agent-rules A7」（維護者 2026-11-20 裁定，#503）。delta 與 docs/specs/ 不一致時以
   docs/specs/ 為準：停下來，把衝突列為待維護者回答的問題，不得自行選邊。
 
   需求依據順序：維護者指定的需求文件與 docs/specs/ 的規格書 ＞ docs/specs/00-prd.mdx
@@ -60,7 +62,7 @@ rules:
     - 每塊資料都要對應到 api-contract 的 operationId
     - loading／error／empty／無權限四種狀態都要寫；有遮蔽欄位時寫出呈現方式
     - 畫面長相以 design/prototype/pages/ 為準；token 只用 design/prototype/assets/tokens.css 與 label-suite-design skill 的語意名稱，不寫色碼
-    - 框架依 ADR-004 加 2026-11-10 裁定（React 19 加 Vite 加 TypeScript strict，路由 React Router v6、伺服器狀態 TanStack Query，元件庫 shadcn/ui 放 components/ui/，目錄分層 pages/ 加 features/，見 docs/development/architecture.mdx §前端）；**只有 Storybook 仍待決**。元件以語意描述為主，需要時可指名 shadcn/ui 的元件，不貼實作程式碼
+    - 框架依 ADR-004 加 2026-11-10 裁定（React 19 加 Vite 加 TypeScript strict，路由 React Router v6、伺服器狀態 TanStack Query，元件庫 shadcn/ui 放 components/ui/，目錄分層 pages/ 加 features/，見 docs/development/architecture.mdx §前端）；**不用 Storybook，改用元件展示頁**。元件以語意描述為主，需要時可指名 shadcn/ui 的元件，不貼實作程式碼
     - 沒有 UI 變更就只寫一行「本次無 UI 變更」
   api-contract:
     - operationId 全專案唯一，由 FastAPI 的 generate_unique_id_function **固定成「動詞加資源」**（例 listUsers、getUser），不手寫也不逐個覆寫

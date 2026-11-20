@@ -119,7 +119,7 @@ tags: [adr, frontend, react, shadcn, design-token]
 
 ### 決定
 
-元件庫用 shadcn/ui，元件以原始碼的形式放進 `frontend/src/components/ui/`，並依賴 Tailwind CSS；位置從來源的 `shared/ui/` 改成 `components/ui/`，理由沒有記錄。Storybook 還沒決定，見 [architecture.mdx 的 §待決](../architecture.mdx#待決) 第 2 列。做法見 [architecture.mdx 的 §前端](../architecture.mdx#前端)。
+元件庫用 shadcn/ui，元件以原始碼的形式放進 `frontend/src/components/ui/`，並依賴 Tailwind CSS；位置從來源的 `shared/ui/` 改成 `components/ui/`，理由沒有記錄。不用 Storybook，改用元件展示頁：一頁只在開發時開的頁面，列出 `components/ui/` 與標記 widget 的各個 variant，並配一支完整性測試。做法見 [architecture.mdx 的 §前端](../architecture.mdx#前端)。
 
 ### 後果
 
@@ -137,6 +137,8 @@ tags: [adr, frontend, react, shadcn, design-token]
 
 - `frontend/` 的第一個模組合併之後，上游的修正反覆需要手動合併
 - 元件需要的客製超出直接改 `components/ui/` 原始碼能處理的範圍
+- 標記 widget 的狀態組合多到一頁放不下
+- 論文 Demo 需要靜態的元件站
 
 ## D4 design token 寫一層對照
 
@@ -230,7 +232,7 @@ tags: [adr, frontend, react, shadcn, design-token]
 | :--- | :--- |
 | D1 | 維護者裁定照 scaffold（[#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 8 列），沒有記錄更深的理由。個人 repo ADR-004（Context 的需求、Candidates Evaluated 的比較表與三個框架的拒絕理由、Decision、Consequences）；React 19 與沿用 React Router、TanStack Query 的裁定見 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 8 列與 [frontend-agent-rules.mdx 的決策紀錄](../rules/frontend-agent-rules.mdx#決策紀錄)，沒有記錄升版的理由；Nginx 服務 `/dist` 出自 [architecture.mdx 的 §技術選型](../architecture.mdx#技術選型)；Next.js 的拒絕理由另依賴一個本 repo 沒有確認的前提，即它是研究論文的 demo 系統，所以 production 多跑一個 Node.js runtime 這一項不當作本 repo 的理由；本節的重新討論條件是推論，來源沒有記錄 |
 | D2 | 維護者裁定照 scaffold（[#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 8 列），沒有記錄更深的理由。個人 repo ADR-011（Context 的兩個策略、水平切片被拒絕的理由、Additional Factors、Alternatives Rejected 的 Feature Slice Design）；選項 D 與它取代選項 B 的裁定見 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 8 列，只記錄結果，選項 D 的好處與代價、放棄選項 B 的理由都沒有記錄；七層的來源見 [frontend-agent-rules.mdx 的附錄](../rules/frontend-agent-rules.mdx#各條規範的來源)；選項 C 的好處沒有記錄；選項 B 的代價出自它的 Consequences；選 B 時記錄的好處（改功能只進一個資料夾、agent 檔案所有權、刪功能刪一個資料夾）在這個結構裡是否保留，選定時沒有記錄；本節的重新討論條件是推論，來源沒有記錄 |
-| D3 | 個人 repo ADR-016（Context 的需求、UI Library Candidates 的比較表與四個拒絕理由、Decision、Consequences）；shadcn/ui 與 `components/ui/` 的裁定見 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 8 列，只記錄結果，位置從 `shared/ui/` 改掉的理由沒有記錄；來源另選了 Storybook，本 repo 未決，見 [architecture.mdx 的 §待決](../architecture.mdx#待決) 第 2 列；選項 E 的代價出自來源「重複 shadcn/ui 已經做好的工作」；本節的重新討論條件是推論，來源沒有記錄 |
+| D3 | 個人 repo ADR-016（Context 的需求、UI Library Candidates 的比較表與四個拒絕理由、Decision、Consequences）；shadcn/ui 與 `components/ui/` 的裁定見 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 8 列，只記錄結果，位置從 `shared/ui/` 改掉的理由沒有記錄；來源另選了 Storybook，本 repo 不採用、改用元件展示頁（維護者 2026-11-20 裁定，見 §決策紀錄）；選項 E 的代價出自來源「重複 shadcn/ui 已經做好的工作」；本節的重新討論條件是推論，來源沒有記錄 |
 | D4 | [#109 的裁定紀錄](https://github.com/label-suite/label-suite/issues/109#issuecomment-6764207805)（問題、三個選項、裁定、映射前要確認的三件事）；選項 B、C 沒有記錄好處與代價（B 的代價只有「要改寫 shadcn 元件」，出自選項描述）；Artifact 單向出自 [設計交接的 §流程](../workflow/design-handoff.mdx#流程)；本節的重新討論條件是推論，來源沒有記錄 |
 | D5 | 個人 repo ADR-030（Context、Candidates Evaluated 的四個選項、Decision、Consequences、Alternatives Rejected）；例外的範圍見 [frontend-agent-rules.mdx 的 F7](../rules/frontend-agent-rules.mdx#f7-圖示與-svg)；本節的重新討論條件是推論，來源沒有記錄 |
 | — | 個人 repo ADR-011 的其他內容（元件、hook 與服務的檔案樹、狀態管理三層與 Zustand、Dashboard 依角色分派、路由與程式碼分割、i18n 命名空間、barrel file 規則（見下）、任務類型元件的註冊表、Playwright 目錄），不是這份 ADR 的決定：狀態與 barrel 的做法見 [frontend-agent-rules.mdx](../rules/frontend-agent-rules.mdx)，i18n 見 [architecture.mdx 的 §i18n 兩層](../architecture.mdx#i18n-兩層)，E2E 位置見 [ADR-007 的 D4](007-testing-strategy.mdx#d4-正式-e2e-放根目錄)；其餘本 repo 沒有採用或決定的部分，不在這裡收；其中 ADR-011（Barrel File Policy）禁止 feature 對外提供 barrel `index.ts`，本 repo 不採用這條，改由 F1 以 `features/<feature>/index.ts` 作為公開邊界，見 [frontend-agent-rules.mdx 的 F1](../rules/frontend-agent-rules.mdx#f1-分層與允許的-import) |
@@ -249,3 +251,4 @@ tags: [adr, frontend, react, shadcn, design-token]
 | 2026-11-19 | 元件庫用 shadcn/ui，元件放 `components/ui/`（[D3](#d3-元件庫用-shadcnui)） | 個人 repo ADR-016 的 `shared/ui/`；Storybook 未決 | [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393) |
 | 2026-11-19 | design token 寫一層對照，`tokens.css` 仍是唯一色值來源（[D4](#d4-design-token-寫一層對照)） | —（被否決的另一個選項：改寫 shadcn 元件去讀別的變數名） | [#109 的留言](https://github.com/label-suite/label-suite/issues/109#issuecomment-6764207805) |
 | 2026-11-19 | 圖示只用 Lucide（[D5](#d5-圖示只用-lucide)） | —（沿用個人 repo ADR-030） | [#451](https://github.com/label-suite/label-suite/issues/451) |
+| 2026-11-20 | 不用 Storybook，改用元件展示頁（[D3](#d3-元件庫用-shadcnui)） | D3 原本寫「Storybook 還沒決定」；個人 repo ADR-016 選的 Storybook | [#503](https://github.com/label-suite/label-suite/issues/503) |

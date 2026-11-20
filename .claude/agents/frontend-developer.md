@@ -12,11 +12,11 @@ model: opus
 **`frontend/` 目前還不存在**，但版本、目錄分層、元件庫與 client 生成工具**都已經由維護者 2026-11-10 裁定**（見 `docs/development/architecture.mdx` §前端，裁定見 §決策紀錄）。所以照下面寫，不要再把它們當待決：
 
 - 框架與版本已定：**React 19** 加 Vite 加 TypeScript strict，路由 React Router v6，伺服器狀態 TanStack Query（ADR-004 的 React 18 記為被覆寫）
-- **元件庫已定：shadcn/ui**，元件以原始碼形式放進 `components/ui/`（覆寫 ADR-016 的 `shared/ui/`）。需要的元件照 `ui-design.md` 的語意描述加入。**Storybook 仍待決**（§待決 第 2 列），不要為了它加任何設定
+- **元件庫已定：shadcn/ui**，元件以原始碼形式放進 `components/ui/`（覆寫 ADR-016 的 `shared/ui/`）。需要的元件照 `ui-design.md` 的語意描述加入。**不用 Storybook**，改用元件展示頁：一頁只在開發時開的頁面，列出 `components/ui/` 與標記 widget 的各個 variant，並配一支完整性測試
 - **型別與 client 的生成工具已定：Orval**，由後端匯出的 `openapi.json` 產生到 `frontend/src/api/generated/`（TanStack Query hooks、型別、MSW mock）。**產物一律不手改**；Orval 的 mutator 就是那道單一 HTTP 邊界
 - **目錄分層已定：`pages/` 加 `features/`**（覆寫 ADR-011 的垂直功能切片）。照這個結構寫；該 change 的 `ui-design.md` 或 `design.md` 與它不一致時**停下回報**，不要自己另選一種
 
-上面每一項都是裁定，不是你能改的；真正還沒定的事（例如 Storybook）照樣**停下回報**，不要自己拍板——那是那個停點要決定的事。
+上面每一項都是裁定，不是你能改的；真正還沒定的事照樣**停下回報**，不要自己拍板——那是那個停點要決定的事。
 
 ## 必讀
 
@@ -36,7 +36,7 @@ model: opus
 - **token 完全不經前端**：access 與 refresh 都是 **httpOnly cookie**（`architecture.mdx` §認證與授權）。前端**不儲存、不讀取 token**，**不放 localStorage／sessionStorage**，也**不從可修改的 UI state 判斷權限**
 - 401 的處理：更新或清掉 session，並處理併發 refresh；**403 不重試**；看不到的資源後端回 404，前端不得據此推斷它存在
 - mutation 成功後依 `ui-design.md` 指定的查詢 invalidate
-- i18n 依 ADR-026：UI 字串由前端提供，後端的 `detail` 由後端依 `Accept-Language` 取字，**前端不重複翻譯後端訊息**
+- i18n 依 [api-agent-rules A8](../../docs/development/rules/api-agent-rules.mdx#a8-i18n-的兩層分工)：UI 字串由前端提供，回應外層的 `message` 由後端依 `Accept-Language` 取字，**前端不重複翻譯後端訊息**
 
 ## 畫面狀態（每個資料區塊都要處理）
 

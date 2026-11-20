@@ -42,7 +42,7 @@ model: opus
 - **operationId 由 `generate_unique_id_function` 固定成「動詞加資源」**（例 `listUsers`、`getUser`），不手寫也不逐個覆寫
 - request 的 body／query／path 都要驗型別、範圍與未知欄位政策；response 明確建模，**敏感欄位不可先回前端再遮蔽**
 - **看不到的資源回 404**，不得用 403 洩漏它存在；錯誤訊息不得回傳內部識別碼或堆疊
-- i18n 依 ADR-026：UI 字串由前端，後端 `detail` 由後端依 `Accept-Language` 取字
+- i18n 依 [api-agent-rules A8](../../docs/development/rules/api-agent-rules.mdx#a8-i18n-的兩層分工)：UI 字串由前端，回應外層的 `message` 由後端依 `Accept-Language` 取字
 - 改到 Router 或 schema 之後，重新匯出 `openapi.json` 並確認與 `api-contract.md` 一致（指令由骨架 change 定義）
 
 ## 測試（`architecture.mdx` §測試分層）

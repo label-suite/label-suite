@@ -26,7 +26,7 @@ updatedAt: '2026-11-16'
 | 成功回應格式 | 包一層 envelope；`204` 無 body、檔案與串流是明文例外 | A1 |
 | 前端型別與 client 生成 | **Orval**，由後端匯出的 `openapi.json` 產生到 `frontend/src/api/generated/` | A5 |
 | Bruno | 可選的手動工具，沒有 pre-PR 關卡；唯一的契約真相是 `api-contract.md` 加 `openapi.json` | A4 |
-| i18n | 兩層；前端只負責 UI 字串，後端 `detail` 由後端依 `Accept-Language` 解析 | A8 |
+| i18n | 兩層；前端只負責 UI 字串，後端 `message` 由後端依 `Accept-Language` 解析 | A8 |
 
 ## 規範
 
@@ -35,13 +35,13 @@ updatedAt: '2026-11-16'
 ### A1 路由、HTTP status、operationId 與回應外層
 
 每個端點都掛在 `/api/v1` 底下、資源名直接接在後面，operationId 由 `generate_unique_id_function` 算成全專案唯一的「動詞加資源」，`200` 的回應包一層 envelope。
-envelope 的欄位未決，見 [§待決](#待決) 第 1 列。
+envelope 是 `{ success, code, message, data, timestamp, traceId }`，成功與錯誤套同一個外層。
 
 | | |
 | :--- | :--- |
 | **適用路徑** | `backend/app/modules/**` 的 router、`openspec/changes/*/api-contract.md` |
 | **禁止** | 端點不帶 `/api/v1` 前綴；路徑在 `/api/v1` 之後插一段模組名；operationId 與既有端點撞名卻不處理；手寫或逐個覆寫 operationId；讓 operationId 從 Python 函式名推導；自由心證地擴大 envelope 的例外；非 CRUD 動作用動詞式路徑而不在 api-contract 寫理由；建立成功回 `200`、刪除成功回 `200` 帶 body |
-| **正例** | `GET /api/v1/tasks` → `listTasks`；集合端點用複數名詞；**operationId 全專案唯一**；非 CRUD 動作寫成 subresource（`/tasks/{id}/assignments`）、狀態轉移資源（`/submissions/{id}/status-changes`）或命令資源（`/exports`）。成功 status：讀取與更新 `200`、**建立 `201` 並帶 `Location` header**、刪除 `204` 無 body。`200` 的回應包一層 envelope；`204`、檔案與串流在 api-contract 標成例外 |
+| **正例** | `GET /api/v1/tasks` → `listTasks`；集合端點用複數名詞；**operationId 全專案唯一**；非 CRUD 動作寫成 subresource（`/tasks/{id}/assignments`）、狀態轉移資源（`/submissions/{id}/status-changes`）或命令資源（`/exports`）。成功 status：讀取與更新 `200`、**建立 `201` 並帶 `Location` header**、刪除 `204` 無 body。`200` 的回應包一層 envelope `{ success, code, message, data, timestamp, traceId }`；`204`、檔案與串流在 api-contract 標成例外 |
 
 :::note{title="A1 的反例、例外與檢查方式" collapsible}
 | | |
@@ -63,13 +63,13 @@ envelope 的欄位未決，見 [§待決](#待決) 第 1 列。
 
 ### A2 request 驗證與 response 建模
 
-每個 request 的 body、query、path 都要宣告型別與範圍，每個 response 都要明確建模、不回裸 ORM model；未知欄位政策是 `extra="forbid"`，在共用 base 上設定一次。
+每個 request 的 body、query、path 都要宣告型別與範圍，每個 response 都要明確建模、不回裸 ORM model；未知欄位政策是 `extra="forbid"`，JSON 欄位一律 camelCase，兩者都在共用 base 上設定一次。
 
 | | |
 | :--- | :--- |
 | **適用路徑** | `backend/app/modules/**/schemas/**`、同模組的 router |
-| **禁止** | 回傳裸 ORM model；省略 `response_model=`；body、query、path 任一處少了型別或範圍驗證；未知欄位政策靠框架預設而沒寫出來；敏感欄位先回前端再由前端遮蔽；逐個端點把 `extra` 改成 `ignore` |
-| **正例** | 所有 schema 繼承共用 base（`from_attributes=True`、`extra="forbid"`，一處設定全專案生效）；`limit: int = Field(ge=1, le=100)`；query 參數宣告型別讓 FastAPI 轉型；回應明確建模，欄位與 nullable 都寫進 api-contract |
+| **禁止** | 回傳裸 ORM model；省略 `response_model=`；逐個 schema 自己宣告 alias 而不走共用 base；讓 JSON 直接吐 snake_case；body、query、path 任一處少了型別或範圍驗證；未知欄位政策靠框架預設而沒寫出來；敏感欄位先回前端再由前端遮蔽；逐個端點把 `extra` 改成 `ignore` |
+| **正例** | 所有 schema 繼承共用 base（`from_attributes=True`、`extra="forbid"`，加上把 snake_case 轉成 camelCase 的 alias generator，一處設定全專案生效）；Python 內部維持 snake_case，只有 JSON 的欄位名是 camelCase；`limit: int = Field(ge=1, le=100)`；query 參數宣告型別讓 FastAPI 轉型；回應明確建模，欄位與 nullable 都寫進 api-contract |
 
 理由：Pydantic v2 的預設 `ignore` 會把打錯的欄位名靜默丟掉，呼叫端以為設定生效、實際沒有；代價是前端先部署、後端還沒加那個欄位時整個請求會被拒絕，而不是忽略多餘欄位。
 
@@ -95,7 +95,7 @@ envelope 的欄位未決，見 [§待決](#待決) 第 1 列。
 | :--- | :--- |
 | **適用路徑** | 所有列表端點與它們的 `api-contract.md` |
 | **禁止** | 各模組自選 `page`／`page_size`／cursor；`limit` 沒有上限；`offset >= total` 時回 `404`；用非唯一的排序鍵做 offset 分頁；讓前端自己算下一頁的 offset |
-| **正例** | 回應七個欄位 `items`、`total`、`limit`、`offset`、`has_more`、`total_pages`、`next_offset`，後三者由前四者**推導**、不另外查資料庫；排序一律帶唯一的尾鍵（例 `updated_at DESC, id DESC`）；`offset >= total` 回空 `items` 與 `has_more: false` |
+| **正例** | 回應七個欄位 `items`、`total`、`limit`、`offset`、`hasMore`、`totalPages`、`nextOffset`，後三者由前四者**推導**、不另外查資料庫；排序一律帶唯一的尾鍵（例 `updated_at DESC, id DESC`）；`offset >= total` 回空 `items` 與 `hasMore: false` |
 | **逐端點寫進契約** | 每個列表端點的 `api-contract.md` 要寫出 **`limit` 上限**、**預設排序鍵（含用來打破同值的尾鍵）**與**空頁的行為** |
 
 理由：兩列同一個時間時，單鍵排序會讓翻頁重複或漏掉其中一列。
@@ -111,7 +111,7 @@ envelope 的欄位未決，見 [§待決](#待決) 第 1 列。
 :::note{title="A3 的數字依據與欄位為什麼是七個" collapsible}
 **20 與 100 這兩個數字有本 repo 自己的依據。** 原始 repo 的架構常數是 `PAGINATION_DEFAULT_LIMIT = 20`、`PAGINATION_MAX_LIMIT = 100`，而本 repo 兩份**已定案**規格寫的是同一組：規格 03-01 §排序與分頁「每頁預設 20 筆，可以改成 50 或 100」與規格 06-01「每頁預設 20 筆，可以切換為 50 或 100 筆」（`docs/specs/03-task-management/01-task-list.mdx`、`docs/specs/06-admin/01-user-management.mdx`）。兩邊一致，所以這組數字不是沿用來的猜測。
 
-**`total` 與 `total_pages` 是規格要的欄位，不是多餘的。** 規格 06-01 要顯示「共 24 筆 · 第 1 / 2 頁」；規格 03-01 §排序與分頁 更明確：分頁列要顯示「共幾筆、目前第幾頁、**總共幾頁**」，而且「中間還有幾個頁碼可以直接點（以目前頁為中心，最多五個）」。只有 `next_offset` 做不到這幾件事。所以原始 repo `api.md` 只提三個欄位是它的文字不完整，不是契約只有三個欄位。
+**`total` 與 `totalPages` 是規格要的欄位，不是多餘的。** 規格 06-01 要顯示「共 24 筆 · 第 1 / 2 頁」；規格 03-01 §排序與分頁 更明確：分頁列要顯示「共幾筆、目前第幾頁、**總共幾頁**」，而且「中間還有幾個頁碼可以直接點（以目前頁為中心，最多五個）」。只有 `nextOffset` 做不到這幾件事。所以原始 repo `api.md` 只提三個欄位是它的文字不完整，不是契約只有三個欄位。
 
 **排序穩定性那一條是本文件推出來的。** 原始 repo 只在 cursor 分頁那一句要求穩定排序鍵；但 offset 分頁同樣會因為非唯一的排序鍵而在翻頁時重複或漏列，而規格 03-01 的預設排序正是「依更新時間由新到舊」。所以這一條套用到所有列表端點。
 :::
@@ -176,18 +176,18 @@ envelope 的欄位未決，見 [§待決](#待決) 第 1 列。
 
 ### A7 錯誤處理與安全訊息
 
-錯誤只在 A6 那一層轉成單一 error 型別，畫面依 status 分流顯示；`401` 的 refresh 同時只允許一個在飛，`403` 不重試。
+錯誤回應套與成功相同的外層，`success: false`、`code` 放應用錯誤碼、`data: null`；錯誤只在 A6 那一層轉成單一 error 型別，畫面依 status 分流顯示；`401` 的 refresh 同時只允許一個在飛，`403` 不重試。
 
 | | |
 | :--- | :--- |
 | **適用路徑** | 後端的 exception handler、`frontend/src/api/**` 的錯誤轉換、TanStack Query 的 `QueryClient` 設定 |
-| **禁止** | 用錯誤字串猜 status；`403` 自動重試；把「看不到的資源」回 `403`；顯示原始堆疊、資料庫錯誤或未處理的 HTTP 物件；在元件各自 try/catch 吞錯；`401` 時讓多個 refresh 同時在飛 |
-| **正例** | 單一 error 型別帶 `status`、`detail` 與 correlation id。`401`：先試 refresh，**同時只允許一個在飛**（single-flight），其餘請求等它的結果。**refresh 成功就更新 session 並重放原請求**；**refresh 失敗就清掉前端的登入狀態並導向登入**，而且要往上傳明確的 auth failure 旗標，讓 `QueryClient` 的 `retry` 對 auth error 回 `false`。`403`：不重試，顯示無權限狀態。`404`：同時代表不存在與刻意隱藏。`409`：**在表單情境**顯示在表單上（refresh 併發也會回 `409`，那一種由 A6 那層處理、不進畫面）。`400`：與 `422` 分開，`400` 是語意或應用規則錯誤、`422` 是 schema 驗證失敗，兩者都回到觸發它的欄位或表單。`422`：`detail` 是 `ErrorDetail[]`，逐欄位顯示。`5xx`：顯示通用錯誤並附 correlation id |
+| **禁止** | 用錯誤字串猜 status；錯誤回應不套外層或自己換一組欄位名；`403` 自動重試；把「看不到的資源」回 `403`；顯示原始堆疊、資料庫錯誤或未處理的 HTTP 物件；在元件各自 try/catch 吞錯；`401` 時讓多個 refresh 同時在飛 |
+| **正例** | 錯誤 body 是 `{ success: false, code, message, data: null, timestamp, traceId }`，`422` 另帶 `errors: ErrorDetail[]`。單一 error 型別帶 `status`、`code`、`message` 與 correlation id。`401`：先試 refresh，**同時只允許一個在飛**（single-flight），其餘請求等它的結果。**refresh 成功就更新 session 並重放原請求**；**refresh 失敗就清掉前端的登入狀態並導向登入**，而且要往上傳明確的 auth failure 旗標，讓 `QueryClient` 的 `retry` 對 auth error 回 `false`。`403`：不重試，顯示無權限狀態。`404`：同時代表不存在與刻意隱藏。`409`：**在表單情境**顯示在表單上（refresh 併發也會回 `409`，那一種由 A6 那層處理、不進畫面）。`400`：與 `422` 分開，`400` 是語意或應用規則錯誤、`422` 是 schema 驗證失敗，兩者都回到觸發它的欄位或表單。`422`：逐欄位錯誤在 `errors`，逐欄位顯示。`5xx`：顯示通用錯誤並附 correlation id |
 
 :::note{title="A7 的反例、例外與檢查方式" collapsible}
 | | |
 | :--- | :--- |
-| **反例** | `if (String(err).includes('403'))`；讓 TanStack Query 的預設 retry 跟 refresh 搶，這樣**最多疊出六次冗餘請求**；把使用者看不到的任務回 `403`（洩漏它存在）；把 `detail` 的 `ErrorDetail[]` 直接 `JSON.stringify` 貼到畫面 |
+| **反例** | `if (String(err).includes('403'))`；讓 TanStack Query 的預設 retry 跟 refresh 搶，這樣**最多疊出六次冗餘請求**；把使用者看不到的任務回 `403`（洩漏它存在）；把 `errors` 的 `ErrorDetail[]` 直接 `JSON.stringify` 貼到畫面 |
 | **例外** | FastAPI 預設的 `422` `RequestValidationError` **不在 i18n 契約內**（[architecture.mdx](../architecture.mdx) §i18n 兩層），要本地化得另註冊 handler；A6 提到的最後手段診斷字串（回應沒有 body 或不是 JSON 時由 client 自己合成）留英文 |
 | **檢查方式** | **待建置**。`retry` 對 auth error 回 `false` 可用前端單元測試鎖住；`403`／`404` 的隱藏行為屬 security-agent-rules.mdx 的 S10 驗收矩陣 |
 :::
@@ -200,20 +200,20 @@ envelope 的欄位未決，見 [§待決](#待決) 第 1 列。
 
 ### A8 i18n 的兩層分工
 
-前端只負責 UI 字串，後端的 `detail` 由後端依 `Accept-Language` 解析成已本地化的字串，前端當不透明字串直接顯示。
+前端只負責 UI 字串，外層的 `message` 由後端依 `Accept-Language` 解析成已本地化的字串，前端當不透明字串直接顯示。
 
 | | |
 | :--- | :--- |
 | **適用路徑** | 後端的 i18n 字串與 exception handler、前端的語系檔與錯誤顯示 |
-| **禁止** | 前端把後端的 `detail` 再翻譯一次或對照 key；語系檔放後端 `detail` 的副本；後端在商業邏輯內嵌人看得懂的訊息字面值；**`detail` 回傳 i18n key 本身或原始英文字面值**；前端不送 `Accept-Language` 而自己決定語言 |
-| **正例** | 前端送 `Accept-Language`（由 A6 那一層統一加），把 `detail` 當成**已經本地化的不透明字串**直接顯示；後端解析 q-value、`*` 通配、`q=0` 拒絕，fallback 到 `zh-TW`，全部被拒時回 `406` |
+| **禁止** | 前端把後端的 `message` 再翻譯一次或對照 key；語系檔放後端 `message` 的副本；後端在商業邏輯內嵌人看得懂的訊息字面值；**`message` 回傳 i18n key 本身或原始英文字面值**；前端不送 `Accept-Language` 而自己決定語言 |
+| **正例** | 前端送 `Accept-Language`（由 A6 那一層統一加），把 `message` 當成**已經本地化的不透明字串**直接顯示；後端解析 q-value、`*` 通配、`q=0` 拒絕，fallback 到 `zh-TW`，全部被拒時回 `406` |
 
 :::note{title="A8 的反例、例外與檢查方式" collapsible}
 | | |
 | :--- | :--- |
-| **反例** | `t(error.detail)`；在 `zh-TW/common.json` 放一份後端訊息；`raise HTTPException(400, "任務名稱重複")`（字面值寫在商業邏輯裡）；`detail: "task.name.duplicate"`（回了 key，前端照「不透明字串直接顯示」會把 key 貼到畫面上） |
-| **例外** | `422` 的 `ErrorDetail[]`（見 A7）；client 在沒有後端 body 時合成的診斷字串 |
-| **檢查方式** | **待建置**。後端可用整合測試斷言同一條錯誤在 `zh-TW` 與 `en` 下的 `detail`；前端可 grep 語系檔裡有沒有後端訊息的副本 |
+| **反例** | `t(error.message)`；在 `zh-TW/common.json` 放一份後端訊息；`raise HTTPException(400, "任務名稱重複")`（字面值寫在商業邏輯裡）；`message: "task.name.duplicate"`（回了 key，前端照「不透明字串直接顯示」會把 key 貼到畫面上） |
+| **例外** | `422` 的 `errors`（見 A7）；client 在沒有後端 body 時合成的診斷字串 |
+| **檢查方式** | **待建置**。後端可用整合測試斷言同一條錯誤在 `zh-TW` 與 `en` 下的 `message`；前端可 grep 語系檔裡有沒有後端訊息的副本 |
 :::
 
 ### A9 server state 與快取
@@ -269,7 +269,6 @@ server state 只放 TanStack Query，query key 一律來自 Orval 產物匯出�
 | 手寫 `shared/constants/query-keys.ts` 的 queryKey factory | FR-084 | 採 Orval 後 key 由產物產生，再手寫一份就是兩個真相；`shared/` 路徑也已被 `pages/` 加 `features/` 覆寫。用意保留在 A9 |
 | correlation id 送進 Sentry 的 redacted context | FR-123 | ADR-020（Sentry）本期不做 |
 | Bruno 的 pre-PR 硬關卡 | 原始 repo ADR-025 | 已取消；Bruno 降級成可選工具，見 [ADR-003 的 D9](../adr/003-backend-architecture.mdx#d9-bruno-只當可選工具) |
-| `ApiResponseDto { success, code, message, data, timestamp, traceId }` 這個具體 envelope 形狀 | scaffold `api-contract.md` | 本專案只決定「包一層 envelope」，沒有決定欄位，見 [§待決](#待決) 第 1 列；不要照抄 NestJS 專案的形狀，也不要由各模組各自決定 |
 | Bearer token 與 `@ApiBearerAuth()` | scaffold `api-contract.md`、`api-client.md` | 本專案是 httpOnly cookie 加 session，**不接受 cookie 以外的任何來源**（見 [security-agent-rules.mdx](security-agent-rules.mdx)） |
 | `@nestjs/swagger` 的 decorator 寫法、`@RegisterDto()`、`bigint id` 一律 `type: String` | scaffold `api-contract.md` | 棧不同（FastAPI 加 Pydantic v2）。「每個欄位都要寫出型別、nullable、enum、範例」的用意在 A2 |
 
@@ -325,7 +324,8 @@ server state 只放 TanStack Query，query key 一律來自 Orval 產物匯出�
 | `api-client.md` 鐵律三（錯誤一律是單一 error 型別，禁止比對錯誤字串） | **沿用** | 成為 A7 |
 | `api-client.md` §Mutation 慣例（成功後用產物的 `get*QueryKey` 失效、送出期間 disabled、可預期錯誤顯示在表單） | **沿用** | 三項分別落在 A9（失效、送出期間 disabled）與 A7（`409`／`400` 顯示在表單） |
 | `api-client.md` §測試與 mock（MSW handler 優先取自 Orval 產生的 mock、測試內覆寫不改產物） | **不在本文件** | 測試分層歸 [testing-agent-rules.mdx](testing-agent-rules.mdx)；「不改產物」那一面在 A4 |
-| `ApiResponseDto` 的具體欄位、`@ApiBearerAuth()`、`bigint id` 轉字串 | **不採用** | 見 [附錄：刻意不採用的來源條文](#附錄刻意不採用的來源條文) |
+| `ApiResponseDto` 的具體欄位 `{ success, code, message, data, timestamp, traceId }` | **沿用** | 維護者 2026-11-20 裁定採用這個形狀，成為 A1；錯誤也套同一個外層，見 A7 |
+| `@ApiBearerAuth()`、`bigint id` 轉字串 | **不採用** | 見 [附錄：刻意不採用的來源條文](#附錄刻意不採用的來源條文) |
 
 ### duty-mate（`trendlink/duty-mate`）
 
@@ -347,12 +347,6 @@ server state 只放 TanStack Query，query key 一律來自 Orval 產物匯出�
 
 所以這一類沒有對照可做。
 
-## 待決
-
-| # | 問題 | 卡住什麼 | 誰決定 |
-| :--- | :--- | :--- | :--- |
-| 1 | `200` 回應的 envelope 要有哪些欄位 | 只決定了「包一層 envelope」，沒有決定欄位；不照抄 NestJS 專案的 `ApiResponseDto` 形狀，也不由各模組各自決定 | 第一個 API change 的 `api-contract.md` 要把欄位定下來 |
-
 ## 決策紀錄
 
 | 日期 | 決策 | 取代了什麼 | 來源 |
@@ -373,3 +367,6 @@ server state 只放 TanStack Query，query key 一律來自 Orval 產物匯出�
 | 2026-11-10 | 破壞性變更的審核方式是三個落點（`design-reviewer`、`code-reviewer`、CI snapshot diff），不另立流程（A10） | — | [#108](https://github.com/label-suite/label-suite/issues/108) |
 | 2026-11-10 | starter-kit 沒有對應的 API 規則檔，不編造對照；實查範圍見附錄 | — | [#108](https://github.com/label-suite/label-suite/issues/108) |
 | 2026-11-19 | 路徑前綴與 envelope、Orval、Bruno 降級的理由寫進 [ADR-003](../adr/003-backend-architecture.mdx) 的 D5、D6、D9，本文只留規則（A1、A4、A10） | —（理由原本只在 [#105](https://github.com/label-suite/label-suite/issues/105) 與 [#108](https://github.com/label-suite/label-suite/issues/108) 的留言） | [#449](https://github.com/label-suite/label-suite/issues/449) |
+| 2026-11-20 | envelope 的欄位定為 `{ success, code, message, data, timestamp, traceId }`（[A1](#a1-路由http-statusoperationid-與回應外層)） | §待決 第 1 列「欄位未決」，以及附錄「不要照抄 NestJS 的 `ApiResponseDto` 形狀」那一列 | [#503](https://github.com/label-suite/label-suite/issues/503) |
+| 2026-11-20 | 錯誤回應套同一個外層（`success: false`、`code`、`data: null`），`422` 的逐欄位錯誤放 `errors`；人讀訊息從 `detail` 改為外層的 `message`（[A7](#a7-錯誤處理與安全訊息)、[A8](#a8-i18n-的兩層分工)） | 錯誤 body 用 `{ detail }`、`422` 的 `detail` 是 `ErrorDetail[]` | [#503](https://github.com/label-suite/label-suite/issues/503) |
+| 2026-11-20 | API JSON 欄位一律 camelCase，Python 內部維持 snake_case，由共用 base 的 alias generator 在一處轉換（[A2](#a2-request-驗證與-response-建模)、[A3](#a3-分頁)） | A3 原本七個欄位寫成 `has_more`、`total_pages`、`next_offset` | [#503](https://github.com/label-suite/label-suite/issues/503) |
