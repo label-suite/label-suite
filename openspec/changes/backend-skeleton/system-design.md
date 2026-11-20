@@ -303,7 +303,7 @@ classDiagram
 | `register_exception_handlers`                                     | 錯誤處理      | `AppError`、`RequestValidationError`、`HTTPException` 轉成錯誤外層                                                                                                                                                                                                                                                                                                                         | A7                                                                                         |
 | 三個中介層                                                        | 橫切          | 見上一節的順序表                                                                                                                                                                                                                                                                                                                                                                           | A6、A7、A8、S2                                                                             |
 | `MessageCatalog`                                                  | i18n          | 解析 `Accept-Language`（q-value、`*`、`q=0`），fallback `zh-TW`，從 `app/i18n/<lang>/messages.json` 取字                                                                                                                                                                                                                                                                                   | A8、architecture.mdx §i18n 兩層；clarification Q2                                          |
-| `generate_operation_id`                                           | OpenAPI       | 從 method 與路徑算「動詞加資源」，不讀函式名                                                                                                                                                                                                                                                                                                                                               | A1                                                                                         |
+| `generate_operation_id`                                           | OpenAPI       | 從 method、路徑與 handler 回傳型別註記（`get_type_hints(route.endpoint)["return"]`）算「動詞加資源」，不讀函式名、不讀 `route.response_model`；沒有註記就丟例外                                                                                                                                                                                                                            | A1                                                                                         |
 | `install_openapi`                                                 | OpenAPI       | 覆寫 `app.openapi`，只在第一次產生時做兩件事並快取：把 `422` 改寫成 `ErrorResponse`、移除 `HTTPValidationError`／`ValidationError`；把每個泛型元件的鍵改成它的 `title`，並改寫所有指向它的 `$ref`。改名後的鍵若與既有元件撞名就丟例外（`create_app` 不呼叫 `app.openapi()`，所以不會讓啟動失敗；失敗的是匯出指令（非零結束、不寫檔）與第一次請求 `/openapi.json`，CI 的 drift 檢查會攔下） | A1、A4、clarification Q8、N3；維護者 2026-11-20 裁定                                       |
 | `export_openapi`                                                  | OpenAPI       | 用固定的佔位 `Settings` 呼叫 `create_app`，不跑 lifespan、不連資料庫，輸出排序過的 JSON                                                                                                                                                                                                                                                                                                    | A4、A5                                                                                     |
 | `HealthRouter`／`HealthService`／`HealthRepository`／`HealthData` | 模組 `health` | 第一個模組，示範完整分層；`ping()` 用 `select(literal(1))`，不用 `text()`                                                                                                                                                                                                                                                                                                                  | B1、B5；clarification Q3、Q8，結論（待決 10）                                              |
@@ -358,9 +358,12 @@ classDiagram
 **operationId**（A1）
 
 - `generate_operation_id(route)` 的規則：去掉 `/api/v1` 前綴，取最後一個非參數的路徑段當資源，轉成 PascalCase；動詞依 method 與回應形狀決定：
-  - `GET` 且 `response_model` 是 `ApiResponse[PaginatedResponse[...]]` → `list` 加複數資源（`listTasks`）
+  - `GET` 且回應形狀是 `ApiResponse[PaginatedResponse[...]]` → `list` 加複數資源（`listTasks`）
   - 其他 `GET` → `get` 加單數資源（`getTask`、`getHealth`）
   - `POST` → `create`；`PUT`／`PATCH` → `update`；`DELETE` → `delete`，皆加單數資源
+- **回應形狀從 handler 的回傳型別註記讀**（維護者 2026-11-20 裁定）：fastapi 0.165.0 呼叫 `generate_unique_id_function` 時 `route.response_model` 還沒設定（不存在或是 `None`），所以函式改用 `typing.get_type_hints(route.endpoint)["return"]` 取回應形狀，不讀 `route.response_model`。
+- 配套慣例：handler 一律把回傳型別註記寫成回應 schema（例 `-> ApiResponse[HealthData]`），**不傳 `response_model=`**；FastAPI 會從同一個註記推出回應模型，所以 OpenAPI 與 operationId 看的是同一個型別。
+- 路由沒有回傳型別註記時，產生 operationId 直接丟例外，訊息寫出 method 與路徑（例 `GET /api/v1/health`），不退回看路徑猜動詞；`create_app` 在 `include_router` 時就會觸發，所以是啟動失敗。
 - 單複數轉換用 `app/core/openapi.py` 內的一條簡單規則加一張不規則字表，不另加套件。
 - 用回應形狀而不是路徑判斷 `list` 與 `get`，是因為 `/health` 這類單例資源沒有路徑參數，光看路徑會被誤判成集合。
 - `create_app` 在 `include_router` 之後跑 `assert_unique_operation_ids`，撞名就啟動失敗，unit 測試同時鎖住。撞名時要怎麼加父資源（A1 要求加在契約裡、但產生處仍只有這個函式）本次沒有實例，解法等第一次撞名的 change 再定（clarification 結論，N1）。
@@ -588,6 +591,10 @@ sequenceDiagram
   Dev->>Script: uv run python -m app.scripts.export_openapi
   Script->>Factory: create_app(佔位 Settings)，不跑 lifespan
   Factory->>OA: generate_unique_id_function = generate_operation_id
+  alt 路由沒有回傳型別註記
+    OA-->>Script: 例外，寫出該路由的 method 與路徑
+    Script-->>Dev: 非零狀態結束，不寫檔
+  end
   Factory->>OA: assert_unique_operation_ids(app)
   alt operationId 撞名
     OA-->>Script: 例外，列出撞名的兩條路由
@@ -703,7 +710,7 @@ SQLite 與 PostgreSQL 在本次碰得到的差異：
 | 7              | 追蹤編號                   | 標頭與 `traceId` 同值；自帶值符合格式才沿用，否則重新產生、不回錯誤                                                                                                                      | clarification Q8              | §關鍵設計細節「追蹤編號」                                              |
 | 8              | `timestamp` 格式           | ISO 8601、UTC、毫秒、`Z`                                                                                                                                                                 | clarification Q8              | §關鍵設計細節「外層與 camelCase」                                      |
 | 9              | 覆蓋率基準                 | 本次以 `pytest-cov` 產出報告，數字記在 `acceptance.md`；不設門檻，門檻與不得下降由 #506 建                                                                                               | clarification Q8              | §關鍵設計細節「測試」                                                  |
-| 10（含矛盾 2） | 健康檢查的回應形狀         | 有明確的 `HealthData` 與 `response_model`，放進 `openapi.json`                                                                                                                           | clarification 結論（待決 10） | `HealthData`、情境「健康檢查回傳完整外層與追蹤編號」                   |
+| 10（含矛盾 2） | 健康檢查的回應形狀         | 有明確的 `HealthData`，以 handler 回傳型別註記宣告，放進 `openapi.json`                                                                                                                  | clarification 結論（待決 10） | `HealthData`、情境「健康檢查回傳完整外層與追蹤編號」                   |
 | 11             | 健康檢查碰資料庫           | 實際執行 `SELECT 1`；連不上回 `503`、`DATABASE_UNAVAILABLE`；PostgreSQL 連線最多等 5 秒                                                                                                  | clarification Q3              | 情境「資料庫無法連線時健康檢查回 503 外層」                            |
 | 12             | 認證上線後健康檢查是否公開 | 刻意公開，認證上線後也維持；01-01 在 S10 矩陣列為刻意的例外                                                                                                                              | clarification Q4              | §權限檢查點                                                            |
 | 13             | 空的基準遷移               | 建立；`up`、`down` 都不做事，可完全還原，「上、下、再上」在兩種資料庫實際跑過                                                                                                            | clarification Q8              | §資料模型異動、情境「資料庫遷移在兩種資料庫上可升可降」                |

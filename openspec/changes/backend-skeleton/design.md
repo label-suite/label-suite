@@ -89,6 +89,13 @@
   5. 其餘 `s` 結尾去掉 `s`（`tasks` → `task`；`responses` → `response`、`cases` → `case`、`databases` → `database`、`phases` → `phase` 也落在這一步）；
   6. 不以 `s` 結尾的字不變。
 - unit 測試以對照表斷言 spec `api-schema-export`「操作識別名依方法與回應形狀決定動詞」的六條（`listTasks`、`getTask`、`createTask`、`updateTask`、`deleteTask`、`getHealth`），並逐條涵蓋上面六個步驟各一個字。替代方案 `inflect` 套件不採用：五條規則加一張表就夠，多一個依賴不值得；規則猜錯的字會在撞名檢查或 code review 時現形，修法是補一筆不規則字。
+- 動詞的判定依據是 handler 的回傳型別標註（維護者裁定，2026-11-20，apply 任務 6.1 發現原做法不成立後修訂）：
+  - 機制（`system-design.md` §關鍵設計細節「operationId」）：`generate_operation_id(route)` 以 `typing.get_type_hints(route.endpoint)["return"]` 讀出回傳型別；`GET` 且該型別是 `ApiResponse[PaginatedResponse[...]]` → `list`，其餘 `GET` → `get`，`POST`／`PUT`／`PATCH`／`DELETE` 依方法對應 `create`／`update`／`update`／`delete`。`typing.get_type_hints` 是公開 API，FastAPI 本身也從回傳型別推導回應模型，兩者讀同一個來源。
+  - 專案慣例：handler 以回傳型別標註宣告回應 schema（例 `async def get_health(...) -> ApiResponse[HealthData]:`），不傳 `response_model=`。回應模型因此只有一個來源，operationId 的判定與 FastAPI 的回應驗證、OpenAPI 宣告不會分歧。
+  - 沒有回傳型別標註的路由（`get_type_hints` 結果不含 `"return"`），`generate_operation_id` MUST 拋出例外，訊息列出該路由的 method 與 path；不得靜默退回 `get`。拋出發生在路由註冊時，`create_app` 因而啟動失敗，與撞名檢查同一原則。
+  - 原做法為何不成立：原設計以 `route.response_model` 判定是否分頁。在 fastapi 0.165.0 上實測，`generate_unique_id_function` 在 `route.response_model` 設定之前就被呼叫：直接掛在 app 上的路由此時還沒有 `response_model` 屬性；經 `include_router` 掛入的路由則以私有的 `_EffectiveRouteContext` 傳入，`response_model` 為 `None`。依 `response_model` 判定時，分頁列表會被命名為 `getTask`，與單筆查詢撞名。
+  - 替代方案「讀私有的 `original_route` 屬性取回原路由的 `response_model`」不採用：綁在 FastAPI 私有實作上，升級時容易壞。
+  - 替代方案「在 `install_openapi` 內等路由建好後再改寫 `route.operation_id`」不採用：operationId 在路由註冊時已由 `generate_unique_id_function` 決定，事後改寫等於兩套產生邏輯，且撞名檢查與 OpenAPI 產生的時點分離。
 - 覆寫 `app.openapi`：`create_app` 呼叫 `app/core/openapi.py` 的 `install_openapi(app)`，把 `app.openapi` 換成包住 FastAPI 預設產生器（`get_openapi`）的函式，第一次產生時依序做三件後處理——把每個 `422` 回應的 schema 換成 `ErrorResponse` 的參照，刪除 `components.schemas` 的 `HTTPValidationError` 與 `ValidationError`，再依下一點把泛型元件改名。結果快取在 `app.openapi_schema`，執行期的 `/openapi.json` 與匯出指令取得同一份。
 - `info.version` 取自 `backend/pyproject.toml` 的 `[project].version`，不另寫第二份版本號（Hard Rule 4；clarification Q7 定為 `0.0.0`）：`app/core/openapi.py` 的 `get_app_version()` 以 `tomllib` 讀 `Path(__file__).resolve().parents[2] / "pyproject.toml"`，`create_app` 以 `FastAPI(title="Label Suite API", version=get_app_version())` 建立 app。不設的話 FastAPI 預設填 `0.1.0`，與 Q7 不符。
   - 替代方案「`importlib.metadata.version("label-suite-backend")`」不採用：`pyproject.toml` 沒有 `[build-system]`，`uv run` 不會把專案安裝成 distribution，實測在 `backend/` 執行 `uv run python -c "import importlib.metadata as m; print(m.version('label-suite-backend'))"` 拋出 `PackageNotFoundError`。為了它補 `[build-system]` 會改變打包方式，超出本次範圍。
@@ -142,7 +149,7 @@
 - 測試資料庫 fixture 在 `tests/conftest.py`，隨第一個需要資料庫的測試（tasks 3.1）建立：有 `TEST_DATABASE_URL` 時用該 PostgreSQL，否則用 `tmp_path` 下的 SQLite 檔；它只提供 engine，不跑遷移。需要已遷移結構的測試另用建在它之上的 fixture 跑 `alembic upgrade head`（tasks 3.2 加入）。PostgreSQL 的隔離做法見 D9 最後兩點。
 - 只能在 PostgreSQL 上成立的測試（runtime-config「設了 DATABASE_URL 時走正式層」、health-check「健康檢查回應不含部署資訊」）以 `@pytest.mark.postgres` 加 `skipif(TEST_DATABASE_URL 未設)` 標記，跳過時 pytest 摘要會列出數量；這是 clarification Q5 明定的條件式跳過，不是 T11 禁止的無條件 `skip`。其餘 integration 測試依 `TEST_DATABASE_URL` 有無自動跑在對應資料庫上。
 - 健康檢查 `503` 的兩種情境不需要真的 PostgreSQL：「連不上」用 `postgresql://u:CANARY-pw@127.0.0.1:<一個關閉的埠>/x`；「逾時」用測試內起的本機 TCP 伺服器，接受連線（TCP 連線建立）後不回任何位元組，讓 asyncpg 在 5 秒連線時限屆滿。兩者在沒有 `TEST_DATABASE_URL` 時也會跑。
-- 「回應內容不符合宣告形狀回 500」（spec `api-envelope`）用 `tests/` 內探測 router 的一條 `GET`：`response_model` 宣告必填欄位，handler 回傳缺該欄位的 dict，FastAPI 拋 `ResponseValidationError`，依 D4 落到 `UnhandledExceptionMiddleware`。
+- 「回應內容不符合宣告形狀回 500」（spec `api-envelope`）用 `tests/` 內探測 router 的一條 `GET`：回傳型別標註宣告必填欄位（依 D6 的慣例，不傳 `response_model=`），handler 回傳缺該欄位的 dict，FastAPI 拋 `ResponseValidationError`，依 D4 落到 `UnhandledExceptionMiddleware`。
 - 未處理例外的 log 以 pytest 的 `caplog` 斷言（spec `api-envelope`「未處理例外的紀錄含追蹤編號且不含請求內容」）。
 - 啟動失敗的 Scenario 以 unit 測試對 `create_app()` 斷言拋出的例外與訊息，另以一條 integration 測試用 `subprocess` 跑 `uvicorn --factory` 確認程序以非零狀態結束。
 - 覆蓋率：`uv run pytest --cov=app --cov-report=term-missing`，不設 `--cov-fail-under`（clarification Q8）。

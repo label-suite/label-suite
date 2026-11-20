@@ -209,7 +209,7 @@ Query（`PaginationParams`）：
 - **角色**：刻意公開，不需登入，不檢查系統角色或任務成員身分。認證上線後也維持公開，由 01-01 登入在 S10 矩陣列為刻意的例外（clarification Q4）。
 - **用途**：證明一條請求走完 `/api/v1` → 中介層 → router → service → repository → 資料庫 → 外層（Epic #502 §需求目標）；#505 的健康檢查頁依它的四種狀態顯示。
 - **envelope 例外**：否，包外層。
-- **回應形狀**：有明確的 `response_model`，放進 `openapi.json`，不採 A2「健康檢查不必建回應模型」的例外（clarification 結論，待決 10、需求矛盾 2）。
+- **回應形狀**：有明確的回應模型（handler 回傳型別註記 `ApiResponse[HealthData]`，不傳 `response_model=`；operationId 也從這個註記判斷動詞，見 `system-design.md` §關鍵設計細節「operationId」），放進 `openapi.json`，不採 A2「健康檢查不必建回應模型」的例外（clarification 結論，待決 10、需求矛盾 2）。
 
 ### Request
 
