@@ -39,7 +39,7 @@
 
 ### D2. 套件組合
 
-執行期：`react`、`react-dom`（19）、`react-router-dom`（v6）、`@tanstack/react-query`、`i18next`、`react-i18next`、`dayjs`、`lucide-react`、`class-variance-authority`、`clsx`、`tailwind-merge`，以及 shadcn 原語需要的 Radix 套件（以 shadcn CLI 實際加入的為準）。shadcn CLI 不加進依賴，一律以 `pnpm --filter frontend dlx shadcn@4.23.0 add <元件>` 執行，版本寫死為確切版本（2026-11-20 的最新穩定版），同一個 change 內不換版本，避免不同時間加入的原語出自不同版本的範本。開發期：`vite`、`@vitejs/plugin-react`、`typescript`、`tailwindcss` 與 `@tailwindcss/vite`（v4）、`orval`、`msw`、`@faker-js/faker`、`vitest`、`@vitest/coverage-v8`、`jsdom`、`@testing-library/react`、`@testing-library/user-event`、`@testing-library/jest-dom`、`eslint` 與 `typescript-eslint`、`eslint-plugin-boundaries`、`eslint-plugin-react-hooks`、`eslint-plugin-react-refresh`、`@types/node`。
+執行期：`react`、`react-dom`（19）、`react-router-dom`（v6）、`@tanstack/react-query`、`i18next`、`react-i18next`、`dayjs`、`lucide-react`、`class-variance-authority`、`clsx`、`tailwind-merge`，以及 shadcn 原語需要的 Radix 套件（以 shadcn CLI 實際加入的為準）。shadcn CLI 不加進依賴，一律以 `pnpm --dir frontend dlx shadcn@4.23.0 add <元件>` 執行（`--dir` 讓 CLI 以 `frontend/` 為工作目錄讀 `components.json`），版本寫死為確切版本（2026-11-20 的最新穩定版），同一個 change 內不換版本，避免不同時間加入的原語出自不同版本的範本。執行前以 `pnpm view shadcn@4.23.0 version` 確認該版本存在（輸出 `4.23.0`）；查不到就停下來回報，不改用其他版本。執行後 `git status --porcelain` 不得出現 `frontend/` 以外的新檔或修改。開發期：`vite`、`@vitejs/plugin-react`、`typescript`、`tailwindcss` 與 `@tailwindcss/vite`（v4）、`orval`、`msw`、`@faker-js/faker`、`vitest`、`@vitest/coverage-v8`、`jsdom`、`@testing-library/react`、`@testing-library/user-event`、`@testing-library/jest-dom`、`eslint` 與 `typescript-eslint`、`eslint-plugin-boundaries`、`eslint-plugin-react-hooks`、`eslint-plugin-react-refresh`、`@types/node`。
 
 - CLI 會改寫 `components.json` 指向的 CSS 檔（寫入色值與 `:root` 變數），與 D8「對照層不寫色值」衝突：每次執行 CLI 後檢查 `src/styles/index.css` 與 `theme.css` 沒有 CLI 寫入的色值或 `:root` 區塊，有就移除，並由 4.2 的 `theme.test.ts` 與 5.1、5.2 的驗證擋下。
 - 版本取 `pnpm add` 當下的最新穩定版並由 lockfile 鎖定；Node 版本與 CI 一致（22）。
@@ -74,7 +74,7 @@
 
 ### D6. TanStack Query 預設、路由與 providers
 
-`src/app/query-client.ts` 的 `createQueryClient()` 設 `queries.retry: false`、`mutations.retry: false`，其他維持預設；`providers.tsx` 在模組層級建一個，測試每個測試建新的。`src/app/router.tsx` 以 `if (import.meta.env.DEV)` 才加入 `/dev/health`、`/dev/gallery` 兩條 `lazy` 路由與 `/`、`*` 的 `<Navigate replace>`；正式建置只剩空殼。`/dev/health` 的載入中判定為「`isPending`」或「使用者按下『重新檢查』後 `isFetching` 為真」：元件以一個旗標記住這次取資料是使用者觸發的，`isFetching` 轉為假時清除；背景更新（`isFetching` 為真但旗標為假）不顯示載入中，畫面維持前一個結果（Q19 UI-7、api-contract.md §畫面狀態對照的「載入中」列）。只要 `isFetching` 為真（含背景更新），「重新檢查」就帶 `aria-disabled="true"` 並忽略點擊與 Enter／Space，所以不會在請求進行中呼叫 `refetch()`；TanStack Query 的 `refetch()` 預設 `cancelRefetch: true`，請求進行中再呼叫會中止進行中的請求再重送，這個擋法讓它永遠不會被觸發。
+`src/app/query-client.ts` 的 `createQueryClient()` 設 `queries.retry: false`、`mutations.retry: false`，其他維持預設；`providers.tsx` 在模組層級建一個，測試每個測試建新的。`src/app/router.tsx` 以 `if (import.meta.env.DEV)` 才加入 `/dev/health`、`/dev/gallery` 兩條 `lazy` 路由與 `/`、`*` 的 `<Navigate replace>`；正式建置只剩空殼。`/dev/health` 的載入中判定為「`isPending`」或「使用者按下『重新檢查』後 `isFetching` 為真」：元件以一個旗標記住這次取資料是使用者觸發的，`isFetching` 轉為假時清除；背景更新（`isFetching` 為真但旗標為假）不顯示載入中，畫面維持前一個結果（Q19 UI-7、api-contract.md §畫面狀態對照的「載入中」列）。只要 `isFetching` 為真（含背景更新），「重新檢查」就帶 `aria-disabled="true"` 並忽略點擊與 Enter／Space，所以不會在請求進行中呼叫 `refetch()`；TanStack Query 的 `refetch()` 預設 `cancelRefetch: true`，請求進行中再呼叫會中止進行中的請求再重送，這個擋法讓它永遠不會被觸發。`toHealthViewState` 遇到 `kind` 為 `aborted` 的錯誤回傳 `null`，面板收到 `null` 時維持前一次渲染的畫面狀態（首次載入就被取消時維持載入中）；取消只發生在元件卸載或查詢被取代時，不需要專屬畫面。
 
 - 替代方案：以環境變數旗標開關正式建置的開發頁（Q1 已否決）；Vite proxy（看不到 CORS 問題，system-design.md §本機開發的跨來源已否決）。
 - 對應：system-design.md §TanStack Query 的預設值、§開發用路由、§本機開發的跨來源、§快取、生命週期與效能；clarification Q1、Q4、Q14。
@@ -85,7 +85,7 @@
 
 - **載入時機**：`initI18n` 只載入 `common`。`systemHealth` 由 `src/features/system-health/index.ts` 在模組載入時以 `i18n.addResourceBundle` 為兩種語言註冊，`devGallery` 由 `src/pages/dev-gallery/` 的入口同樣註冊；兩者只被開發模式的 `lazy` 路由 import（D6），所以語言檔隨開發頁的 chunk 一起載入，正式建置以 `import.meta.env.DEV` 剪除路由時連同語言檔一起剪除。註冊包成 `src/lib/i18n/` 匯出的 `registerNamespace(namespace, resources)`，重複註冊不報錯（`deep` 與 `overwrite` 皆為 `true`）。
 - **`common` 的內容限制**：只放跨頁共用的文字（例如瀏覽器標題的格式「Label Suite — {{page}}」），不放眉標、頁名或任何含 `/dev/` 的字串；頁名與眉標放在各頁的 namespace，否則 8.2 在 `dist/` 搜尋 `/dev/health`、`/dev/gallery` 會找到。
-- **測試**：`src/test/setup.ts` 以 `zh-TW` 初始化並註冊三個 namespace，讓 feature 與 page 的測試不必經路由；英文測試以 `changeLanguage('en')` 指定。鍵集一致測試（`src/lib/i18n/locales.test.ts`）以 `import.meta.glob('./locales/*/*.json', { eager: true })` 直接讀語言檔比對，不經 i18next 實例，所以不受註冊時機影響。
+- **測試**：`src/test/setup.ts` 只以 `zh-TW` 呼叫 `initI18n`（只有 `common`），不註冊 `systemHealth`、`devGallery`；feature 與 page 的測試一律從對外入口 import（`features/system-health/index.ts`、`pages/dev-gallery` 的入口），入口在模組載入時註冊自己的 namespace，與正式執行的註冊路徑相同。這樣「`initI18n` 後查不到 `systemHealth`」（2.3）與「開啟 `/dev/health` 前查不到 `systemHealth`」（8.1）在測試中仍成立；英文測試以 `changeLanguage('en')` 指定。鍵集一致測試（`src/lib/i18n/locales.test.ts`）以 `import.meta.glob('./locales/*/*.json', { eager: true })` 直接讀語言檔比對，不經 i18next 實例，所以不受註冊時機影響。
 
 - 替代方案：語系放 `app/`（`api/` 不能 import `app/`，違反 F1）；`initI18n` 一次載入三個 namespace（開發頁的文字與 `/dev/` 字串會進正式 bundle，違反 Q1）；i18next 的 backend 外掛以 HTTP 載入語言檔（多一個請求與失敗狀態，健康檢查頁「只呼叫健康檢查端點」也不再成立）；`Accept-Language` 固定 `zh-TW`（與介面語言不一致，Q5 已否決）。
 - 對應：system-design.md §語系層、§目錄結構；clarification Q5。
@@ -135,9 +135,10 @@ Vitest 用 jsdom；`vitest.config.ts` 的 `test.env` 設 `VITE_API_BASE_URL=http
 
 ### D12. 日期依裝置時區顯示
 
-`src/lib/date.ts` 是 day.js 的唯一入口（`utc`、`timezone` 外掛），開發頁的檢查時間格式化為 `YYYY-MM-DD HH:mm:ss（UTC±H）`：時區參數可選，未指定時取裝置時區 `Intl.DateTimeFormat().resolvedOptions().timeZone`；括號內是該時間點在該時區的實際偏移（整點為 `UTC+8`、`UTC-5`、`UTC+0`，非整點為 `UTC+5:30`）。不寫死 `Asia/Taipei` 或任何時區，所以不需要 F10 的例外。
+`src/lib/date.ts` 是 day.js 的唯一入口（`utc`、`timezone` 外掛），只匯出 `formatDevCheckTime(value, timeZone?)` 一個函式，把 ISO 8601 UTC 時間點格式化為 `YYYY-MM-DD HH:mm:ss（UTC±H）`；業務頁的 `YYYY-MM-DD HH:mm` 不在本次範圍（spec `date-time-display`），所以不匯出業務格式、目前時間或可替換的時鐘。時區參數可選，未指定時取裝置時區 `Intl.DateTimeFormat().resolvedOptions().timeZone`；括號內是該時間點在該時區的實際偏移（整點為 `UTC+8`、`UTC-5`、`UTC+0`，非整點為 `UTC+5:30`）。不寫死 `Asia/Taipei` 或任何時區，所以不需要 F10 的例外。
 
-- 測試以時區參數注入 `Asia/Taipei`、`America/New_York`、`UTC`、`Asia/Kolkata`，並以替換 `Intl.DateTimeFormat` 的回報值測「未指定時採用裝置時區」；不靠改 `TZ` 環境變數，結果不受測試機時區影響。健康檢查頁的 integration 測試同樣注入 `Asia/Taipei`，讓「檢查時間」的期望值固定。
+- 測試以時區參數注入 `Asia/Taipei`、`America/New_York`、`UTC`、`Asia/Kolkata`；「未指定時採用裝置時區」以 `vi.spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions')` 包住原實作、只覆寫回傳的 `timeZone` 模擬裝置時區。不替換 `Intl.DateTimeFormat` 建構式（day.js 的 timezone 外掛靠它的 `formatToParts` 換算，替換會讓換算失效），也不靠改 `TZ` 環境變數，結果不受測試機時區影響。
+- 健康檢查頁的 integration 測試用同一個 spy 把裝置時區設為 `Asia/Taipei`，讓「檢查時間」的期望值固定；面板不提供時區 prop，與正式執行同樣走「未指定時取裝置時區」。需要固定「現在」的測試以 `vi.setSystemTime` 處理，`date.ts` 不提供時鐘注入。
 - 替代方案：一律換算 `Asia/Taipei`（違反 F10 與 07-01，Q18 補充決議已否決）；以 `Date.prototype.toLocaleString` 自行組字串（偏移字串要自己算，且格式依執行環境的 ICU 版本而異）。
 - 對應：ui-design.md §文案（檢查時間）；frontend-agent-rules F10；clarification Q18 與其補充決議。
 
@@ -158,7 +159,7 @@ Vitest 用 jsdom；`vitest.config.ts` 的 `test.env` 設 `VITE_API_BASE_URL=http
 - [開發頁顯示錯誤碼、traceId 與設定名] → Q11 已裁定為 07-01 的開發頁例外，且頁面只在開發模式存在（Q1）；建置後檢查 `dist/` 不含 `/dev/health`、`/dev/gallery` 與開發頁語言檔的文字（D7）。
 - [`@theme inline` 的 `--color-*` 與 tokens.css 同名，token 被改寫或形成循環參照] → token 以不在層內的樣式引入，測試守住「取出結果不含 `@layer`」與同名清單（D8）；瀏覽器中的計算值由人工驗收確認。
 - [shadcn CLI 把色值與 `:root` 變數寫進樣式檔] → 版本寫死，每次執行後檢查並移除，`theme.test.ts` 擋下色值（D2）。
-- [開發頁的 namespace 在模組載入時才註冊，feature 測試若不經 setup 會拿到翻譯鍵本身] → `src/test/setup.ts` 統一註冊三個 namespace；鍵集一致測試直接讀語言檔（D7）。
+- [開發頁的 namespace 在模組載入時才註冊，測試若直接 import 內部檔案而不經入口，會拿到翻譯鍵本身] → feature 與 page 的測試一律從對外入口 import，畫面上出現翻譯鍵時斷言失敗；鍵集一致測試直接讀語言檔（D7）。
 - [覆蓋率不設門檻，數字可能下降而無人察覺] → Q12 已接受；基準記在 `acceptance.md`，門檻由 #506 或之後決定。
 
 ## Migration Plan

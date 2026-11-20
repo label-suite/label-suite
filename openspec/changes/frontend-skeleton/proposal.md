@@ -48,7 +48,7 @@
 - `frontend-routing`：前端有哪些路徑、各在哪種建置出現。兩條開發用路徑只在開發模式註冊、正式建置剪除；開發模式下根路徑與不存在路徑導向 `/dev/health`；正式建置只有空殼。
 - `frontend-i18n`：react-i18next 語系層。zh-TW 與 en 兩份介面文字、依 `navigator.language` 判斷（`zh` 開頭用 zh-TW，其餘 en）、不提供切換控制項、`Accept-Language` 與介面語言一致、兩頁文字走翻譯鍵、測試可指定語言。
 - `design-token-mapping`：元件原語只用語意變數名、語意變數只對照到 `tokens.css` 的變數、對照層不含任何色值；新增 `--cta`、`--success` 等語意變數；同時對應深色（`html[data-theme="dark"]`），由 `data-theme` 屬性驅動；以建置時的 Vite 外掛只抽出 tokens.css 的自訂屬性，不載入外部字型與元素規則。
-- `date-time-display`：日期時間的單一入口。時間點以 UTC 傳輸與保存，顯示依瀏覽者裝置時區；同一個 UTC 時間點在不同時區的顯示結果；不依賴真實時間即可測試。
+- `date-time-display`：日期時間的單一入口。時間點以 UTC 傳輸與保存，顯示依瀏覽者裝置時區；同一個 UTC 時間點在不同時區的顯示結果；只匯出開發頁檢查時間的格式化，時區可由參數或裝置回報值指定，測試以指定的時間點與時區驗證，不依賴測試機的時區。
 - `component-gallery`：`/dev/gallery` 展示每個元件原語宣告的每一個 variant、狀態與 token 對照；完整性檢查以各原語匯出的 `as const` variant 陣列在執行期比對，漏展示 variant 或漏放原語時失敗；標題列有「淺色／深色」切換（預設淺色、不記住選擇）。
 - `dev-health-page`：`/dev/health` 依 `getHealth` 的結果顯示載入中、正常、資料庫無法連線、連不到後端四種狀態，各狀態顯示的欄位，重新檢查回到載入中，所有錯誤外層走〔503〕錯誤版面（通用標題「後端回報錯誤」），非外層的回應歸〔連不到後端〕並顯示 `network` 或 `timeout`；檢查時間依裝置時區顯示為 `YYYY-MM-DD HH:mm:ss（UTC±H）`，括號內為實際偏移（Q18 補充決議）。
 
