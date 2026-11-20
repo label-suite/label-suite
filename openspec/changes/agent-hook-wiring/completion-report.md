@@ -125,14 +125,16 @@ PR #526 的 `hooks` job 在 **ubuntu-latest 與 macos-latest 皆綠**（run 4472
 
 H2 另有一組跨七種輸入各 40 輪（共 280 次）的量測：median 268 ms、p95 284 ms、p99 313 ms、max 422 ms，**0 次超過 5 s**。
 
-**只有設定真的上線、或 CI 真的跑過才現形的六個缺陷**（全部不是讀碼或審查找到的）：
+**只有設定真的上線、或 CI 真的跑過才現形的七個缺陷**（全部不是讀碼或審查找到的）：
 
 1. **`ruff`／`mypy` 不在 `PATH` 上。** `uv sync` 把它們裝進 `backend/.venv`，所以「該層已存在但缺工具」成為每一次 Python 改動的判定，連只帶著 main 的 Python 的 merge commit 都被 pre-commit 擋下。改為經 `uv run --directory <backend> --project <backend> --no-sync` 呼叫。
 2. **ruff 的 `per-file-ignores` 是對工作目錄解析的，不是對 `--config` 指的檔案。** 工作目錄一離開 `backend/`，`"tests/**" = ["S101"]` 就不再匹配，staged 的測試檔裡每個 `assert` 都被報。`--staged` 的鏡像因此要物化整棵索引：ruff 要旁邊有 `pyproject.toml`，`mypy --strict` 要有套件樹，否則每個 `app.*` import 都判為解不開。
 3. **兩支工具的範圍不同**（`openspec/config.yaml`：`ruff check .` 是整個 `backend/`，`mypy --strict app` 只有套件）。把 `--strict` 也套到 `backend/tests/` 上會報出 12 個本次改動沒碰過的錯。
 4. **純 docs 的改動永遠無法滿足 H6。** docs 路由一律啟用，但證據記錄的 `covered` 與內容指紋都只由 `.py`／`.ts` 清單組成。隱形至今是因為 H6 的測試全部改 `.py`，而註冊之前沒有東西會觸發 `Stop`。
 5. **遮蔽規則吃掉路徑裡的一段。** 單一路徑片段本身就可能是 20 個字元，macOS 的暫存目錄一定是，於是 H2 印出 `/private/var/folders/q2/***/T/…`——指了一個不存在的路徑。2026-11-18 那條裁定的 fixture 漏掉這個情況，因為它的 macOS 路徑含底線，把 run 切到門檻以下。
-6. **H2 的「無法判斷」從來沒印出過它的理由。** 兩個缺陷疊在一起：裸 `$detail` 撞上後面的全形括號，在 UTF-8 locale 下 bash 把那個字元的位元組吃進變數名（退出碼仍是 2，判定沒錯，該說明原因的那一行什麼都沒說）；底下還有一層是欄位用 tab 分隔，而 tab 是 IFS 空白，bash 會把連續的 tab 併成一個，「無規則」的空欄位就消失，理由跑到別的變數去。改用 `0x1f` 分隔。
+6. **TypeScript 路由有一模一樣的三個問題。** `frontend/` 在同一天隨 #505 落地，`.ts`／`.tsx` 從 NA 轉成已啟用，於是：`tsc`／`eslint` 不在 `PATH` 上（在 `frontend/node_modules/.bin`）；eslint 的 flat config 也是對工作目錄解析的；`tsc -b` 不能帶檔案參數，否則單檔編譯看不到專案設定。改為經 `pnpm -C <frontend> exec` 呼叫，`--staged` 時把已安裝的工具鏈接進鏡像——這就是 Python 那邊 `--project` 做的事。**抓到它的是 CI 的路由集斷言**，那一步存在的理由正是「這個 repo 實際在強制什麼」不能無聲改變。
+
+7. **H2 的「無法判斷」從來沒印出過它的理由。** 兩個缺陷疊在一起：裸 `$detail` 撞上後面的全形括號，在 UTF-8 locale 下 bash 把那個字元的位元組吃進變數名（退出碼仍是 2，判定沒錯，該說明原因的那一行什麼都沒說）；底下還有一層是欄位用 tab 分隔，而 tab 是 IFS 空白，bash 會把連續的 tab 併成一個，「無規則」的空欄位就消失，理由跑到別的變數去。改用 `0x1f` 分隔。
 
 另外兩個是跨平台的測試缺陷，由兩個平台互相打出來：Linux 的單一環境變數上限 128 KiB 讓 220 KB 的 fixture 在 `bash -c` 就失敗（量到的是作業系統，不是被測的上限）；以及上面第 5 項。
 
@@ -144,18 +146,18 @@ H2 另有一組跨七種輸入各 40 輪（共 280 次）的量測：median 268 
 
 **這個 gate 不完整，本 change 不宣稱做完。**
 
-| #   | 未覆蓋                                 | 現況                                                                                                                                                    |
-| :-- | :------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | branch protection 未啟用               | CI job 會紅，但技術上還擋不住合併。H7 的真正 gate 在 branch protection，不在本 change                                                                   |
-| 2   | 平台權限層未設定                       | Codex 的 `filesystem = "deny"`、Claude 的 `permissions.deny` 都還沒設（維護者 2026-11-17 裁定不在本 change 做）                                         |
-| 3   | **Codex 側沒有 hook 層的寫檔目標保護** | `apply_patch` 沒有路徑欄位（官方文件 2026-11-17 查核），受保護路徑的寫入在 Codex 上擋不住，Claude 側擋得住，**兩平台不對等**；承接它的權限層就是第 2 項 |
-| 4   | Codex 的讀取攔截                       | Codex 沒有讀取類的工具名，hook 層在讀取上沒有攔截點，同樣由第 2 項承接                                                                                  |
-| 5   | Codex 側未經 runtime 實測              | 見 8.1；`SessionStart` 收不收 matcher 也還沒驗過，契約已記成未實測                                                                                      |
-| 6   | `frontend/` 不存在                     | `.ts`／`.tsx` 路由只以假 runner 驗過路由與啟用語意，未對真工具驗證。`.py` 已於本輪對真 `ruff`／`mypy` 驗過                                              |
-| 7   | Alembic migration 的排除樣式           | 仍是 `backend/**/alembic/versions/**` 這個佔位；`backend/` 已存在，實際路徑是 `backend/alembic/versions/`，樣式能匹配，但沒有專門的測試釘住             |
-| 8   | 組織層 managed policy                  | H1 明寫 `UNKNOWN:`，非互動環境查不到，不代表已通過                                                                                                      |
-| 9   | Codex 的信任狀態                       | H1 明寫 `UNKNOWN:`，沒有非互動的查詢方式，被 Claude 叫起時不替它作保                                                                                    |
-| 10  | `forbidden-terms-lint.sh` 只掃檢查器層 | 不掃 `scripts/tests/`。實測擴到那裡會報三行、三行都合法，需要豁免機制，而沒有豁免機制正是這道 gate 的強項。測試層靠變異測試保護                         |
+| #   | 未覆蓋                                 | 現況                                                                                                                                                                                                        |
+| :-- | :------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | branch protection 未啟用               | CI job 會紅，但技術上還擋不住合併。H7 的真正 gate 在 branch protection，不在本 change                                                                                                                       |
+| 2   | 平台權限層未設定                       | Codex 的 `filesystem = "deny"`、Claude 的 `permissions.deny` 都還沒設（維護者 2026-11-17 裁定不在本 change 做）                                                                                             |
+| 3   | **Codex 側沒有 hook 層的寫檔目標保護** | `apply_patch` 沒有路徑欄位（官方文件 2026-11-17 查核），受保護路徑的寫入在 Codex 上擋不住，Claude 側擋得住，**兩平台不對等**；承接它的權限層就是第 2 項                                                     |
+| 4   | Codex 的讀取攔截                       | Codex 沒有讀取類的工具名，hook 層在讀取上沒有攔截點，同樣由第 2 項承接                                                                                                                                      |
+| 5   | Codex 側未經 runtime 實測              | 見 8.1；`SessionStart` 收不收 matcher 也還沒驗過，契約已記成未實測                                                                                                                                          |
+| 6   | ~~`frontend/` 不存在~~                 | **已解除**：`frontend/` 於 2026-11-20 隨 #505 落地，`.ts`／`.tsx` 路由已對真 `tsc -b` 與 `eslint` 驗過，含 `--staged`——鏡像裡放壞檔會紅，工作區修好但沒 staged 仍然紅。`.py` 同樣已對真 `ruff`／`mypy` 驗過 |
+| 7   | Alembic migration 的排除樣式           | 仍是 `backend/**/alembic/versions/**` 這個佔位；`backend/` 已存在，實際路徑是 `backend/alembic/versions/`，樣式能匹配，但沒有專門的測試釘住                                                                 |
+| 8   | 組織層 managed policy                  | H1 明寫 `UNKNOWN:`，非互動環境查不到，不代表已通過                                                                                                                                                          |
+| 9   | Codex 的信任狀態                       | H1 明寫 `UNKNOWN:`，沒有非互動的查詢方式，被 Claude 叫起時不替它作保                                                                                                                                        |
+| 10  | `forbidden-terms-lint.sh` 只掃檢查器層 | 不掃 `scripts/tests/`。實測擴到那裡會報三行、三行都合法，需要豁免機制，而沒有豁免機制正是這道 gate 的強項。測試層靠變異測試保護                                                                             |
 
 ### 8.5 退出碼字彙與各模式的編碼
 

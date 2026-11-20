@@ -21,7 +21,7 @@
 # check-changed falls back to running them through the project runner, and
 # that fallback is the branch production actually takes, so a test has to be
 # able to see what argv it builds.
-HARNESS_TOOLS="ruff mypy tsc eslint uv"
+HARNESS_TOOLS="ruff mypy tsc eslint uv pnpm"
 
 # Creates the isolated repository and the fake tool directory, and puts the
 # fakes ahead of everything else on PATH.
@@ -60,6 +60,9 @@ printf '%s %s\n' "$self" "$*" >> "$HARNESS_BIN/.calls"
 # is handed are relative to it. A fake that ignored that would see no file at
 # all, and the assertion that the staged bytes -- not the working tree's --
 # reached the tool would pass by seeing nothing.
+if [ "$self" = "pnpm" ] && [ "${1:-}" = "-C" ]; then
+  cd "${2:-.}" || { printf 'fake pnpm: cannot enter %s\n' "${2:-}" >&2; exit 97; }
+fi
 if [ "$self" = "uv" ] && [ "${1:-}" = "run" ]; then
   prev=""
   for a in "$@"; do

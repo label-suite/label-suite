@@ -130,9 +130,36 @@ rc=$(files notes.txt)
 [ "$rc" = "0" ] || fail "an unrouted file did not exit 0 (got $rc)"
 grep -q '^NA:' "$TMP/err" || fail "an unrouted file was not marked NA"
 
+# ── The TypeScript route, which is the Python route's shape ──────────
+#
+# Same reasoning as above and the same two reasons a test has to watch the
+# runner: `tsc` and `eslint` are not on PATH either, and eslint resolves its
+# flat config from the working directory. `tsc -b` takes no file arguments on
+# purpose -- a file compiled on its own sees none of the project's settings --
+# while eslint takes the changed files, named relative to `frontend/`.
+mkdir -p "$REPO/frontend/src"
+seed frontend/package.json '{"name":"frontend"}'
+seed frontend/src/a.ts 'export const a = 1;'
+harness_reset_calls
+rc=$(files frontend/src/a.ts)
+[ "$rc" = "0" ] || fail "a .ts change with frontend/ present did not exit 0 (got $rc)"
+harness_calls | grep -q 'pnpm -C [^ ]*/frontend exec tsc -b' \
+  || fail "tsc was not reached through the project runner: $(harness_calls | head -1)"
+harness_calls | grep -q 'pnpm -C [^ ]*/frontend exec eslint -- src/a.ts' \
+  || fail "eslint did not get the file relative to frontend/: $(harness_calls | head -2)"
+harness_calls | grep -qE 'tsc -b [^ ]' \
+  && fail "tsc -b was given file arguments, which drops the project's settings"
+harness_calls | grep -q -- '--fix' && fail "eslint was invoked in a mode that rewrites files"
+
+# An enabled layer whose runner is missing is an explicit failure, not NA.
+harness_reset_calls
+rc=$( ( cd "$REPO" && PATH="$NODE_ONLY:/usr/bin:/bin" "$CHECKER" --files frontend/src/a.ts >"$TMP/out" 2>"$TMP/err" ); echo $? )
+[ "$rc" = "0" ] && fail "a missing frontend runner reported as passing"
+grep -q 'pnpm' "$TMP/err" || fail "the failure did not name what was missing"
+grep -q '^NA:' "$TMP/err" && fail "a missing frontend runner was marked NA"
+
 # ── The exclusions, applied before routing ───────────────────────────
 
-mkdir -p "$REPO/frontend"
 for excluded in \
   frontend/src/api/generated/client.ts \
   backend/alembic/versions/0001_init.py \

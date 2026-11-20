@@ -65,13 +65,13 @@ updatedAt: '2026-11-20'
 | :--- | :--- |
 | **目的** | 剛改過的檔案立刻拿到可修正的診斷，而不是等 CI |
 | **事件** | `PostToolUse`。Claude matcher `Edit|Write|NotebookEdit`；Codex matcher `apply_patch` |
-| **適用路徑／角色** | 只對**本次受影響且已存在**的檔案，依副檔名分流：`.py` → `ruff check`（整個 `backend/`）加 `mypy --strict`（只有 `app/`，範圍照 `openspec/config.yaml`），兩者都不在 `PATH` 上（`uv sync` 裝進 `backend/.venv`），所以經 `uv run --directory <backend> --project <backend> --no-sync` 以 `backend/` 為工作目錄呼叫，檔名給相對路徑——ruff 的 `per-file-ignores` 是對工作目錄解析的；`.ts`／`.tsx` → `tsc --noEmit` 加 `eslint`；`docs/` 底下的 `.mdx` **與 `.md`** → `node scripts/check-specs.mjs docs`（`.md` 自 [PR #395](https://github.com/label-suite/label-suite/pull/395) 起才在它的範圍內）。**排除** `frontend/src/api/generated/`、Alembic migration、`pnpm-lock.yaml`、`uv.lock` 與 vendor |
+| **適用路徑／角色** | 只對**本次受影響且已存在**的檔案，依副檔名分流：`.py` → `ruff check`（整個 `backend/`）加 `mypy --strict`（只有 `app/`，範圍照 `openspec/config.yaml`），兩者都不在 `PATH` 上（`uv sync` 裝進 `backend/.venv`），所以經 `uv run --directory <backend> --project <backend> --no-sync` 以 `backend/` 為工作目錄呼叫，檔名給相對路徑——ruff 的 `per-file-ignores` 是對工作目錄解析的；`.ts`／`.tsx` → `tsc -b`（整個專案，不帶檔案參數——單檔編譯看不到專案設定）加 `eslint`（逐檔），同樣不在 `PATH` 上（在 `frontend/node_modules/.bin`），所以經 `pnpm -C <frontend> exec` 以 `frontend/` 為工作目錄呼叫——eslint 的 flat config 也是對工作目錄解析的；`docs/` 底下的 `.mdx` **與 `.md`** → `node scripts/check-specs.mjs docs`（`.md` 自 [PR #395](https://github.com/label-suite/label-suite/pull/395) 起才在它的範圍內）。**排除** `frontend/src/api/generated/`、Alembic migration、`pnpm-lock.yaml`、`uv.lock` 與 vendor |
 | **payload 欄位** | `tool_name`、`tool_input` 的檔案路徑、`cwd` |
 | **共用檢查器** | `scripts/check-changed.sh`（**已存在並註冊到 `PostToolUse`**；同一支的 `--staged` 模式由 H4 的 Git hook 叫起，`--range` 由 H7 的 CI 叫起）。`docs/` 那條沿用既有的 `scripts/check-specs.mjs` |
 | **timeout** | **30 秒** |
 | **輸出與退出碼** | 診斷走 stderr。**一律不以 exit `2` 阻擋**——見下 |
 | **阻擋或提醒** | **提醒**。`PostToolUse` 在兩邊都撤銷不了已發生的編輯，能做的只是替換 model 看到的結果；本契約**刻意不用**那個替換（理由見 [ADR-001 D4](../adr/001-agent-engineering.mdx#d4-h3-只回報診斷不自動修)）。真正的 gate 是 H4、H5 與 H7 |
-| **缺工具／無適用檔案** | 本次沒有命中的檔案（例如只改了 `docs/` 以外的 `.md`）→ 標 not applicable 並 exit `0`；檔案被刪除或改名 → 不對不存在的檔案報錯；`ruff`／`mypy`／`tsc` 不存在且該層尚未 bootstrap → 標 not applicable。**已宣告啟用的檢查缺工具時要明確失敗**，不是靜默通過——`.py` 的「缺工具」指 `PATH` 上沒有、`backend/` 的 uv 環境也叫不動，單是不在 `PATH` 上是常態而非缺工具 |
+| **缺工具／無適用檔案** | 本次沒有命中的檔案（例如只改了 `docs/` 以外的 `.md`）→ 標 not applicable 並 exit `0`；檔案被刪除或改名 → 不對不存在的檔案報錯；`ruff`／`mypy`／`tsc`／`eslint` 不存在且該層尚未 bootstrap → 標 not applicable。**已宣告啟用的檢查缺工具時要明確失敗**，不是靜默通過——`.py` 的「缺工具」指 `PATH` 上沒有、`backend/` 的 uv 環境也叫不動，單是不在 `PATH` 上是常態而非缺工具 |
 
 **check-only。** H3 **只回報診斷，不改檔、不自動 `git add`**，連 formatter 都不自動套用；要修由 agent 自己依診斷修（理由見 [ADR-001 D4](../adr/001-agent-engineering.mdx#d4-h3-只回報診斷不自動修)）。
 
@@ -340,3 +340,4 @@ Codex 的 `command` 欄位是**字串，不是陣列**——官方文件的範�
 | 2026-11-20 | 六支共用檢查器與各自的回歸測試落地，契約的「待建置」標記改為「已存在但尚未註冊」；H4 的 pre-commit 補上 `scripts/check-changed.sh --staged`；CI 新增在 ubuntu 與 macOS 兩個平台跑的 `hooks` job | H1、H2、H3、H6 的檢查器標為**待建置**，H4 只做排版 | [#111](https://github.com/label-suite/label-suite/issues/111) |
 | 2026-11-20 | 兩份 hook 註冊設定落地：`.claude/settings.json` 新增 `hooks` key、新建 `.codex/hooks.json`，五個 handler 指向同一批檢查器；不寫 `onFailure`（本機 2.1.273 未達 2.1.295）也不寫 `MultiEdit`（工具名未確認） | 「agent 事件的註冊還沒落地，那四個不會被任何事件叫起」 | [#111](https://github.com/label-suite/label-suite/issues/111) |
 | 2026-11-20 | `.py` 路由經 `uv run` 以 `backend/` 為工作目錄逐檔呼叫 `ruff check`（整個 `backend/`）與 `mypy --strict`（只有 `app/`）（[§H3](#h3-編輯後按路徑跑快速檢查)） | 直接在 `PATH` 上找 `ruff`／`mypy`——`backend/` 落地後，那讓每一次 Python 改動都被判成「已啟用但缺工具」 | 維護者裁定（記錄於 [#111](https://github.com/label-suite/label-suite/issues/111)）；逐檔照本 change 的 design.md，`--strict` 與 `uv run` 照 [backend-agent-rules B2](backend-agent-rules.mdx#b2-docstring型別與指令) 與 `openspec/config.yaml` |
+| 2026-11-20 | `.ts`／`.tsx` 路由經 `pnpm -C <frontend> exec` 以 `frontend/` 為工作目錄呼叫 `tsc -b`（整個專案）與 `eslint`（逐檔）；`--staged` 時把已安裝的工具鏈接進鏡像（[§H3](#h3-編輯後按路徑跑快速檢查)） | 直接在 `PATH` 上找 `tsc`／`eslint`，以及 `tsc --noEmit`——`frontend/` 落地後，那讓每一次 TypeScript 改動都被判成「已啟用但缺工具」 | 比照同日 `.py` 路由的裁定；指令名照 `openspec/config.yaml` 的 `pnpm --filter frontend lint`／`typecheck` |

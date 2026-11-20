@@ -63,10 +63,19 @@ jobs:
       # `--ci` refused a checkout that was in fact healthy. uv is here for the
       # same reason -- `backend/` exists now, which makes it required rather
       # than NA, and it is what `check-changed.sh --range` runs the Python
-      # route through. Neither is used to install anything.
+      # route through. Both are also the runners the routes reach their tools
+      # through, and the two steps below provision what those runners run.
       - uses: pnpm/action-setup@v4
 
       - uses: astral-sh/setup-uv@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          # The pnpm cache is left off deliberately: this job installs the
+          # frontend toolchain from the lockfile below, and a warm cache
+          # would hide a lockfile that no longer resolves.
+          package-manager-cache: false
 
       # The Python route runs `uv run --no-sync`, because a hook must not
       # provision an environment behind the author's back. That makes
@@ -77,12 +86,11 @@ jobs:
         run: uv sync --frozen
         working-directory: backend
 
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 20
-          # No dependencies are installed, so skip the pnpm cache that
-          # packageManager in package.json would otherwise turn on.
-          package-manager-cache: false
+      # Same reason on the TypeScript side: `tsc` and `eslint` live in
+      # `frontend/node_modules/.bin`, and the route reaches them through
+      # `pnpm exec`, which installs nothing.
+      - name: Provision the frontend toolchain the TypeScript route runs in
+        run: pnpm install --frozen-lockfile
 
       # A glob, not a list. A suite that is added and not wired up is the
       # failure this job exists to prevent, and a list is the place that gets
@@ -122,7 +130,7 @@ jobs:
           expected=$(cat <<'ROUTES'
           routes:
             py -> ruff check, mypy --strict (backend/ 存在)
-            ts,tsx -> NA (frontend/ 不存在)
+            ts,tsx -> tsc -b, eslint (frontend/ 存在)
             docs/**/*.mdx, docs/**/*.md -> node scripts/check-specs.mjs docs (一律啟用)
           ROUTES
           )

@@ -96,7 +96,7 @@ FRONTEND=0; [ -d "$REPO/frontend" ] && FRONTEND=1
 if [ "$MODE" = "list-routes" ]; then
   emit_out "routes:"
   [ "$BACKEND" = "1" ] && emit_out "  py -> ruff check, mypy --strict (backend/ 存在)" || emit_out "  py -> NA (backend/ 不存在)"
-  [ "$FRONTEND" = "1" ] && emit_out "  ts,tsx -> tsc --noEmit, eslint (frontend/ 存在)" || emit_out "  ts,tsx -> NA (frontend/ 不存在)"
+  [ "$FRONTEND" = "1" ] && emit_out "  ts,tsx -> tsc -b, eslint (frontend/ 存在)" || emit_out "  ts,tsx -> NA (frontend/ 不存在)"
   emit_out "  docs/**/*.mdx, docs/**/*.md -> node scripts/check-specs.mjs docs (一律啟用)"
   FINISHED=1; hc_flush; exit 0
 fi
@@ -273,8 +273,37 @@ if [ "${#TS_FILES[@]}" -gt 0 ]; then
   if [ "$FRONTEND" = "0" ]; then
     emit_err "NA: frontend/ 不存在，TypeScript 檢查尚未啟用（${#TS_FILES[@]} 個檔案）"
   else
-    if need_tool tsc; then run_tool "tsc --noEmit" tsc --noEmit; fi
-    if need_tool eslint; then run_tool "eslint" eslint -- "${TS_FILES[@]}"; fi
+    # Same shape as the Python route above, for the same reason: `tsc` and
+    # `eslint` are not on PATH, they are in `frontend/node_modules/.bin`, so
+    # they are reached through the project's own runner -- the spelling
+    # `openspec/config.yaml` uses. `pnpm exec` installs nothing; a checkout
+    # whose dependencies are not installed fails loudly instead.
+    #
+    # The two tools differ in scope the way the Python pair does, and here it
+    # is not a choice: `eslint` takes files, while `tsc -b` type-checks the
+    # project, because a file compiled on its own sees none of the project's
+    # configuration. `tsconfig.json` sets `noEmit`, so `-b` writes only its
+    # build-info file, under `node_modules`.
+    TS_REL=()
+    for rel in "${TS_FILES[@]}"; do
+      case "$rel" in
+        frontend/*) TS_REL+=("${rel#frontend/}") ;;
+        *)          TS_REL+=("../$rel") ;;
+      esac
+    done
+    if need_tool pnpm; then
+      # Under --staged the content is the index mirror, which carries no
+      # `node_modules` -- it is not in the index. Linking the installed one in
+      # is what `--project` does for uv on the Python side: the files judged
+      # are the staged ones, the toolchain is the checkout's.
+      if [ "$CONTENT_ROOT" != "$REPO" ] && [ ! -e "$CONTENT_ROOT/frontend/node_modules" ]; then
+        ln -sfn "$REPO/frontend/node_modules" "$CONTENT_ROOT/frontend/node_modules" || \
+          undecidable "無法把已安裝的前端工具鏈接進鏡像，本次不判為通過"
+      fi
+      TS_RUN=(pnpm -C "$CONTENT_ROOT/frontend" exec)
+      run_tool "tsc -b" "${TS_RUN[@]}" tsc -b
+      run_tool "eslint" "${TS_RUN[@]}" eslint -- "${TS_REL[@]}"
+    fi
   fi
 fi
 
