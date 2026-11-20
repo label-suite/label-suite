@@ -56,9 +56,9 @@ export function apiFetch<T>(
 ): Promise<ApiResponse<T>> {
   const timeout = options?.timeoutMs === undefined ? "default" : `${String(options.timeoutMs)} ms`;
   return Promise.reject(
-    new ApiError(
-      "network",
-      `apiFetch is not implemented yet (${config.method} ${config.url}, timeout ${timeout})`,
-    ),
+    new ApiError({
+      kind: "network",
+      message: `apiFetch is not implemented yet (${config.method} ${config.url}, timeout ${timeout})`,
+    }),
   );
 }
