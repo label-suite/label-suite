@@ -31,7 +31,7 @@
 
 **交付包的重現方式與畫面不符**：交付包寫「在序列標註任務的統計總覽點 `#matchStrict`」，但 `#matchStrict`／`#matchPartial`／`#seqStrictCard`／`#seqPartialCard` 只出現在 `quality-entity_recognition.html:11`–`:30`，也就是**實體辨識任務的品質監控**；序列標註與統計總覽都沒有這組切換。照規格 §八種輸出類型各自的主指標與門檻（表格的實體辨識列與第 5 條），切換本來就屬實體辨識。換成「帶實體辨識任務、`?tab=quality`」即可重現，所以不算無法重現 → `../design-gaps.md` G-52。
 
-**「部分重疊」的 0.70 與關係識別的 0.80 改叫參考值**（#423）：實體辨識切到 `Partial overlap` 時卡片寫「Relaxed 參考值 0.70」（`quality-entity_recognition.html:42`），關係識別第二列寫「高品質參考值 0.80」（`quality-relation_identification.html:23`），兩者都不帶通過／未達，圓點用中性的 `.t-dot-neutral`；部分重疊卡的數值與長條也改中性色。「兩種計算模式比較」表頭改「門檻／參考值」，部分重疊那一列的結果是中性徽章「不判定」，Strict 那一列照舊判定。依據規格 §八種輸出類型各自的主指標與門檻 第 11 條（Q15，維護者 2026-11-08）→ `../design-gaps.md` G-53。
+**「部分重疊」的 0.70 與關係識別的 0.80 改叫參考線**（#423 定「參考值」，#473 改為「參考線」）：實體辨識切到 `Partial overlap` 時卡片寫「Relaxed 參考線 0.70」（`quality-entity_recognition.html:42`），關係識別第二列寫「高品質參考線 0.80」（`quality-relation_identification.html:24`），兩者都不帶通過／未達，圓點用中性的 `.t-dot-neutral`；部分重疊卡的數值與長條也改中性色。「兩種計算模式比較」表頭改「門檻／參考線」（`quality-entity_recognition.html:55`），部分重疊那一列的結果是中性徽章「不判定」，Strict 那一列照舊判定。依據規格 §八種輸出類型各自的主指標與門檻 第 11 條（Q15，維護者 2026-11-08）→ `../design-gaps.md` G-53。
 
 另外找得到但交付包沒有列的：partial 讀取失敗的面板（`renderPanelLoadError(mount,'load')`，`:1577`），只有讓 partial 請求失敗才看得到 → `../design-gaps.md` G-54。
 

@@ -12,7 +12,7 @@
 | :--- | :--- | :--- | :--- |
 | `.entity-color-dot` | 20×20 | `--radius-sm` 圓角方 | 表單的實體類型列 |
 | `.annotation-preview-color` | 12×12 | `3px` 圓角（字面值，不是 token） | 標記預覽 |
-| `.t-dot` | 8×8 | `50%` 正圓 | 狀態圓點（IAA 門檻過或沒過；`.t-dot-neutral` 標不判定的參考值，#423） |
+| `.t-dot` | 8×8 | `50%` 正圓 | 狀態圓點（IAA 門檻過或沒過；`.t-dot-neutral` 標不判定的參考線，#423、#473） |
 
 依據：`components-showcase.html:724`、`:733`、`:746`。
 
