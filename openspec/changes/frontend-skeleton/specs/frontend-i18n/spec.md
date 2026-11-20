@@ -36,7 +36,7 @@
 
 ### Requirement: 介面文字只取自語言檔
 
-兩個開發頁的所有介面文字 SHALL 取自語言檔的翻譯鍵，依模組分為 `common`、`systemHealth`、`devGallery` 三組；`zh-TW` 與 `en` 兩份語言檔的鍵集 MUST 完全相同，任何一份多出或缺少鍵時測試失敗。元件展示頁上元件 variant 的值名稱（例如 `cta`、`lg`）是程式識別值，原樣顯示、不翻譯。
+兩個開發頁的所有介面文字 SHALL 取自語言檔的翻譯鍵，依模組分為 `common`、`systemHealth`、`devGallery` 三組；`common` 只放跨頁共用的文字，啟動時載入；`systemHealth`、`devGallery` 只在對應的開發頁載入時才載入，正式建置輸出 MUST NOT 含這兩組的文字；`zh-TW` 與 `en` 兩份語言檔的鍵集 MUST 完全相同，任何一份多出或缺少鍵時測試失敗。元件展示頁上元件 variant 的值名稱（例如 `cta`、`lg`）是程式識別值，原樣顯示、不翻譯。
 
 來源：architecture.mdx §i18n 兩層；api-agent-rules A8；`brand.md` 鐵律 10；clarification Q5。
 
@@ -49,6 +49,17 @@
 
 - **WHEN** `en` 的 `systemHealth` 語言檔少了一個 `zh-TW` 有的鍵，執行鍵集一致測試
 - **THEN** 測試失敗，訊息列出缺少的鍵名
+
+#### Scenario: 開發頁的語言檔不進正式建置
+
+- **WHEN** 執行正式建置後搜尋建置輸出的所有 JavaScript 與 HTML 檔案
+- **THEN** 找不到 `systemHealth`、`devGallery` 兩組語言檔的文字，例如 `DEV ONLY`、「系統健康檢查」、「元件展示」
+
+#### Scenario: 開發頁載入後才有該頁的文字
+
+- **WHEN** 應用啟動後尚未開啟任何開發頁，查詢 `systemHealth` 的任一個翻譯鍵
+- **THEN** 查不到該鍵的翻譯
+- **AND** 開啟健康檢查頁後，頁面以 `systemHealth` 的文字顯示，h1 為「系統健康檢查」
 
 ### Requirement: 後端回的訊息原樣顯示
 

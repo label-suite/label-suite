@@ -30,7 +30,7 @@
 
 ### Requirement: 元件只用語意變數且對照層不寫色值
 
-`components/ui/` 的元件 SHALL 只引用對照層的語意變數（shadcn 的語意變數加上 `--cta`、`--success`、`--warning`、`--info` 等擴充語意），MUST NOT 直接引用 token 檔的變數名或寫死色值。對照層 SHALL 只把語意變數指向 token 檔的變數名，MUST NOT 含任何色值。已核可的對照為 `--primary` ← `--color-primary-strong`、`--destructive` ← `--color-error`、`--background` ← `--color-surface`、`--input` ← `--color-border-control`。
+`components/ui/` 的元件 SHALL 只引用對照層的語意變數（shadcn 的語意變數加上 `--cta`、`--success`、`--warning`、`--info` 等擴充語意），MUST NOT 直接引用 token 檔的變數名或寫死色值。對照層 SHALL 只把語意變數指向 token 檔的變數名，MUST NOT 含任何色值，也 MUST NOT 改變 token 檔任何變數的值。已核可的對照為 `--primary` ← `--color-primary-strong`、`--destructive` ← `--color-error`、`--background` ← `--color-surface`、`--input` ← `--color-border-control`。
 
 來源：ADR-005 D3、D4；frontend-agent-rules F6；clarification Q9、Q17；畫面 artifact 第 4 版 Gallery.dc.html §Token 對照。
 
@@ -43,6 +43,11 @@
 
 - **WHEN** 搜尋對照層樣式檔中所有宣告的值
 - **THEN** 沒有十六進位色碼、`rgb(`、`rgba(`、`hsl(`、`oklch(` 等色值寫法
+
+#### Scenario: token 檔的變數值不被對照層覆寫
+
+- **WHEN** 在瀏覽器開啟元件展示頁，讀取 `<html>` 上 `--color-primary`、`--color-border`、`--color-success` 的計算值
+- **THEN** 三者分別等於 token 檔 `:root` 區塊同名變數的色值，沒有變成空值或其他變數的值
 
 #### Scenario: 元件不直接引用 token 檔變數
 

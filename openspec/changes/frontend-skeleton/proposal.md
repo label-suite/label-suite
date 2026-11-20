@@ -21,7 +21,7 @@
 - Vitest 加 React Testing Library 的 unit 與 integration 測試，測試檔與原始碼同目錄（T1、T2、ADR-007 D1、D3）。`vitest --coverage` 產報告，分母排除 `src/api/generated/`，第一次數字記進 `acceptance.md`；**不設門檻、不擋 CI**（Q12）。
 - shadcn/ui 元件原語放進 `components/ui/`，加上對照 `design/prototype/assets/tokens.css` 的語意變數對照層：元件只用語意名稱，色值只來自色值來源，對照層不寫任何色值（ADR-005 D3、D4、F6）。**允許修改 shadcn 原語的原始碼加 variant**，對照層新增 `--cta`、`--success` 等語意變數；每個原語匯出 `as const` 的 variant 陣列；Button 不保留 `link` variant，只宣告 artifact 的六種（Q9、Q10）。對照層同時對應深色（`html[data-theme="dark"]`）（Q13）。
 - `tokens.css` 的引入：以一支小 Vite 外掛在建置時只抽出 `:root` 與 `html[data-theme="dark"]` 的自訂屬性，產物不提交；不載入外部字型、不套用元素規則；圓角與字型仍以 tokens.css 的值為準（Q15）。
-- `src/lib/date.ts`：day.js 的單一入口，時間點以 UTC 傳輸、顯示依瀏覽者裝置時區（F10、#503 裁定 5、規格 07-01 §規格 語言切換 第 5 條）；開發頁的檢查時間顯示 `YYYY-MM-DD HH:mm:ss（UTC+8）`，作為開發頁例外記錄，業務頁仍依 `brand.md` 的 `YYYY-MM-DD HH:mm`（Q18）。
+- `src/lib/date.ts`：day.js 的單一入口，時間點以 UTC 傳輸、顯示依瀏覽者裝置時區（F10、#503 裁定 5、規格 07-01 §規格 語言切換 第 5 條）；開發頁的檢查時間同樣依裝置時區顯示為 `YYYY-MM-DD HH:mm:ss（UTC±H）`，括號內為該時間點的實際偏移（台灣裝置為 `UTC+8`、紐約為 `UTC-5`，非整點為 `UTC+5:30` 形式），秒數與偏移標示是開發頁的格式例外，不寫死時區；業務頁仍依 `brand.md` 的 `YYYY-MM-DD HH:mm`（Q18 與其補充決議）。
 - `/dev/gallery` 元件展示頁與完整性測試：元件宣告的 variant 少展示一個、或新增的原語沒放進展示頁，測試就失敗；完整性測試在執行期比對各原語匯出的 variant 陣列與展示內容（ADR-005 D3、#503 裁定 4、#505 §驗收條件第 4 項；Q9）。標題列右側有「淺色／深色」切換，只改 `<html data-theme>`，預設淺色、不記住選擇（Q13）。
 - `/dev/health` 健康檢查頁，作為端到端的證明：經 `getHealth` 顯示載入中／正常／資料庫無法連線／連不到後端四種狀態，並可重新檢查；在網路替身與真實後端下都顯示對應狀態（Epic #502 §需求目標、#505 §驗收條件第 3 項）。所有錯誤外層走〔503〕的錯誤版面，標題用通用的「後端回報錯誤」並列錯誤碼與訊息；不是外層的回應歸〔連不到後端〕，「錯誤類型」列直接顯示 `network` 或 `timeout`（Q3）。兩頁是 07-01「不出現系統內部資料」的例外，照 artifact 顯示錯誤碼、traceId 與設定名；本次不做業務頁共用的錯誤元件（Q11）。
 - 工具設定：`.prettierignore` 加入 `frontend/src/api/generated/`；`.lintstagedrc.mjs` 加上 `ts,tsx`，手寫 ts 在 commit 時就格式化（Q8）。
@@ -50,7 +50,7 @@
 - `design-token-mapping`：元件原語只用語意變數名、語意變數只對照到 `tokens.css` 的變數、對照層不含任何色值；新增 `--cta`、`--success` 等語意變數；同時對應深色（`html[data-theme="dark"]`），由 `data-theme` 屬性驅動；以建置時的 Vite 外掛只抽出 tokens.css 的自訂屬性，不載入外部字型與元素規則。
 - `date-time-display`：日期時間的單一入口。時間點以 UTC 傳輸與保存，顯示依瀏覽者裝置時區；同一個 UTC 時間點在不同時區的顯示結果；不依賴真實時間即可測試。
 - `component-gallery`：`/dev/gallery` 展示每個元件原語宣告的每一個 variant、狀態與 token 對照；完整性檢查以各原語匯出的 `as const` variant 陣列在執行期比對，漏展示 variant 或漏放原語時失敗；標題列有「淺色／深色」切換（預設淺色、不記住選擇）。
-- `dev-health-page`：`/dev/health` 依 `getHealth` 的結果顯示載入中、正常、資料庫無法連線、連不到後端四種狀態，各狀態顯示的欄位，重新檢查回到載入中，所有錯誤外層走〔503〕錯誤版面（通用標題「後端回報錯誤」），非外層的回應歸〔連不到後端〕並顯示 `network` 或 `timeout`；檢查時間格式 `YYYY-MM-DD HH:mm:ss（UTC+8）`。
+- `dev-health-page`：`/dev/health` 依 `getHealth` 的結果顯示載入中、正常、資料庫無法連線、連不到後端四種狀態，各狀態顯示的欄位，重新檢查回到載入中，所有錯誤外層走〔503〕錯誤版面（通用標題「後端回報錯誤」），非外層的回應歸〔連不到後端〕並顯示 `network` 或 `timeout`；檢查時間依裝置時區顯示為 `YYYY-MM-DD HH:mm:ss（UTC±H）`，括號內為實際偏移（Q18 補充決議）。
 
 ### Modified Capabilities
 

@@ -44,6 +44,11 @@
 - **WHEN** `components/ui/` 新增一個原語檔案，展示頁沒有對應的區塊，執行完整性測試
 - **THEN** 測試失敗，失敗訊息指出缺少展示的原語檔名
 
+#### Scenario: 原語的測試檔不算原語
+
+- **WHEN** `components/ui/` 中除了原語檔案外還有原語的測試檔，執行完整性測試
+- **THEN** 測試只要求原語檔案有對應的區塊，不因測試檔沒有區塊而失敗
+
 #### Scenario: 展示頁不顯示測試示意
 
 - **WHEN** 渲染元件展示頁
@@ -51,7 +56,7 @@
 
 ### Requirement: 展示頁切換淺色與深色
 
-元件展示頁的標題列 SHALL 提供「淺色／深色」切換：兩顆按鈕位於 `role="group"`、名稱為「主題」的群組中，各以 `aria-pressed` 表示是否選中；選擇只設定 `<html>` 的 `data-theme`（`light` 或 `dark`），預設為淺色，MUST NOT 寫入任何瀏覽器儲存，重新整理後回到淺色。健康檢查頁不提供此切換。
+元件展示頁的標題列 SHALL 提供「淺色／深色」切換：兩顆按鈕位於 `role="group"`、名稱為「主題」的群組中，各以 `aria-pressed` 表示是否選中；選擇只設定 `<html>` 的 `data-theme`（`light` 或 `dark`），預設為淺色，MUST NOT 寫入任何瀏覽器儲存，重新整理後回到淺色；離開元件展示頁時 SHALL 把 `data-theme` 還原為 `light`，深色不帶到其他頁。健康檢查頁不提供此切換。
 
 來源：ADR-005 D4；frontend-agent-rules F4、F9；clarification Q13；畫面 artifact 第 4 版 Gallery.dc.html §頁首標題列。
 
@@ -65,6 +70,11 @@
 
 - **WHEN** 開啟元件展示頁、切到深色後重新整理頁面
 - **THEN** `<html>` 的 `data-theme` 為 `light`，「淺色」按鈕的 `aria-pressed` 為 `true`
+
+#### Scenario: 離開展示頁時回到淺色
+
+- **WHEN** 在元件展示頁切到深色後，於同一個分頁導向 `/dev/health`
+- **THEN** `<html>` 的 `data-theme` 為 `light`
 
 #### Scenario: 鍵盤可以切換主題
 

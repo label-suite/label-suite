@@ -25,7 +25,7 @@
 
 ### Requirement: 等待回應時顯示載入中
 
-首次載入與按下「重新檢查」後、回應抵達前，健康檢查頁 SHALL 顯示載入中：狀態文字「正在檢查後端狀態…」（`role="status"`）、三條對輔助科技隱藏的骨架、內容區 `aria-busy="true"`，「重新檢查」按鈕為停用外觀並以 `aria-disabled="true"` 表示停用。背景自動更新（例如切回分頁）時 MUST NOT 回到載入中，直接換成新結果。
+首次載入與按下「重新檢查」後、回應抵達前，健康檢查頁 SHALL 顯示載入中：狀態文字「正在檢查後端狀態…」（`role="status"`）、三條對輔助科技隱藏的骨架、內容區 `aria-busy="true"`，「重新檢查」按鈕為停用外觀並以 `aria-disabled="true"` 表示停用。背景自動更新（例如切回分頁）時 MUST NOT 回到載入中，畫面維持前一個結果直到新結果抵達；但只要有任何對健康檢查的請求進行中（含背景更新），「重新檢查」按鈕 SHALL 以 `aria-disabled="true"` 表示停用，按下 MUST NOT 送出新請求，也 MUST NOT 中斷進行中的請求。
 
 來源：frontend-agent-rules F8、F9；clarification Q19（UI-7）；畫面 artifact 第 4 版 Main.dc.html §1 載入中。
 
@@ -41,15 +41,21 @@
 - **WHEN** 頁面已顯示正常結果，查詢在背景重新取得資料且後端尚未回應
 - **THEN** 頁面仍顯示先前的正常結果，沒有「正在檢查後端狀態…」
 
+#### Scenario: 背景更新進行中按重新檢查不中斷也不重送
+
+- **WHEN** 頁面已顯示正常結果，查詢在背景重新取得資料且後端尚未回應，使用者按下「重新檢查」
+- **THEN** 「重新檢查」按鈕的 `aria-disabled` 為 `true`，這次按下沒有送出新的請求
+- **AND** 背景請求沒有被中止，回應抵達後頁面顯示該回應的結果，整個過程沒有「正在檢查後端狀態…」
+
 ### Requirement: 後端與資料庫正常時顯示正常
 
-後端回應成功外層時，健康檢查頁 SHALL 顯示 success 徽章「正常」與「後端與資料庫都可以用」，並以描述清單列出：服務（`data.status`）、資料庫（`data.database`）、檢查時間（回應的伺服器時間換算為 `YYYY-MM-DD HH:mm:ss（UTC+8）`）、traceId（回應的追蹤編號）。「重新檢查」為 outline 按鈕。
+後端回應成功外層時，健康檢查頁 SHALL 顯示 success 徽章「正常」與「後端與資料庫都可以用」，並以描述清單列出：服務（`data.status`）、資料庫（`data.database`）、檢查時間（回應的伺服器時間依裝置時區格式化為 `YYYY-MM-DD HH:mm:ss（UTC±H）`，括號內為實際偏移，見 `date-time-display`）、traceId（回應的追蹤編號）。「重新檢查」為 outline 按鈕。
 
-來源：ADR-003 D5；frontend-agent-rules F8、F10；clarification Q2、Q18；畫面 artifact 第 4 版 Main.dc.html §2 正常（200）。
+來源：ADR-003 D5；frontend-agent-rules F8、F10；clarification Q2、Q18（含補充決議）；畫面 artifact 第 4 版 Main.dc.html §2 正常（200）。
 
 #### Scenario: 後端與資料庫正常時健康檢查頁顯示正常
 
-- **WHEN** 介面語言為 `zh-TW`，後端以 `200` 回應 `data` 為 `{"status": "ok", "database": "ok"}`、`timestamp` 為 `2026-11-20T08:15:30.123Z`、`traceId` 為 `3f2b8c1e-6a4d-4f0e-9b7a-2c5d1e8f9a01` 的成功外層
+- **WHEN** 介面語言為 `zh-TW`、裝置時區為 `Asia/Taipei`，後端以 `200` 回應 `data` 為 `{"status": "ok", "database": "ok"}`、`timestamp` 為 `2026-11-20T08:15:30.123Z`、`traceId` 為 `3f2b8c1e-6a4d-4f0e-9b7a-2c5d1e8f9a01` 的成功外層
 - **THEN** 頁面顯示徽章「正常」與「後端與資料庫都可以用」
 - **AND** 描述清單為：服務 `ok`、資料庫 `ok`、檢查時間 `2026-11-20 16:15:30（UTC+8）`、traceId `3f2b8c1e-6a4d-4f0e-9b7a-2c5d1e8f9a01`
 - **AND** 「重新檢查」按鈕為 outline 樣式且可按
