@@ -22,7 +22,7 @@ tags: [規格, 搬移, PR, CI]
 
 | 類別 | 可以動 | 典型 |
 | :--- | :--- | :--- |
-| **文件 PR** | `docs/`；那一頁**已生成的視覺化元件**（`.notecraft/components/` 底下那一份，不限 `*-flow.tsx`）；**`.notecraft/plugins.json`**（見下）；以及**連帶**修到的 `AGENTS.md`／`CLAUDE.md` | 搬一頁規格、折回待釐清、改既有規格的條文、改 `docs/development/` 的設計文件 |
+| **文件 PR** | `docs/`；那一頁**已生成的視覺化元件**（`.notecraft/components/` 底下那一份，不限 `*-flow.tsx`）；**`.notecraft/plugins.json`**（見下）；以及**連帶**修到的 `AGENTS.md`／`CLAUDE.md` 與下面那一條**限定**的 `design/system/` | 搬一頁規格、折回待釐清、改既有規格的條文、改 `docs/development/` 的設計文件 |
 | **流程圖 PR** | `docs/` 與 `.notecraft/components/` | 生成或更新業務流程圖 |
 | **工具 PR** | `scripts/`、`package.json`、`pnpm-lock.yaml`、`.github/`，以及下面那一條限定的 `docs/specs/` | 修 `check-specs.mjs`、新增機械檢查、調 CI |
 | **畫面修正 PR** | `design/prototype/`、`docs/prototype/navigation.mdx`（限該檔 §維護說明 要求的同步），以及下面那一條限定的 `docs/specs/` | 依決定改畫面的文案、欄位或徽章——`[UI]` 與 `[Enhancement]` issue 的本體 |
@@ -43,11 +43,15 @@ tags: [規格, 搬移, PR, CI]
   **連帶不等於夾帶**，而且這一條有程序掛勾（比照工具 PR 那條）：**規則文件的每一處改動都要在 PR body 逐一列出，並寫明它服務的是同一個目的**。合併閘第 2 條是純路徑比對，`AGENTS.md` 一進清單就機械上全部通過，所以這個限制只能靠 PR body 的逐項說明與獨立審查把關。
   只改規則文件的 PR 仍然不屬六類，判準見上面。
 - **文件 PR 可以順手更新那一頁已生成的視覺化元件**（不限流程圖）：條文改了而圖還是舊的，比圖沒更新更糟。判例 #200——折回 03-01 的範圍硬化規則時，同一張 PR 改了 `spec-03-01-task-list-flow.tsx` 的三行；判例 #355——PRD 清掉 19 處「未撰寫」時，同一張 PR 把 `prd-site-map.tsx` 的 19 個 `specState` 一起改成 `written`，那個檔不是 `*-flow.tsx`。
+- **文件 PR 可以同時動 `design/system/`，但只限兩種**：把這次改動打成假的既有斷言改掉，以及把本次決議記成那一頁的狀態註記。`design/system/` 是依原型寫的畫面與元件規格，裡面有 `ux-conventions.md:131` 的「**與規格不一致**」、`design-gaps.md:277` 的「規格那一條要改」這類註記，條文一改它們就不再為真，而留著一句不實的敘述比沒有敘述更糟。判例 #472——規格對齊 #423 的那張 PR，把 `design-gaps.md` 的 G-45、G-46 與 `ux-conventions.md` 的 UXC-10 從「規格未改」改成指向本次決議（第一種），並在 G-53 新增一段「規格（#434）」記下這次的用詞決議（第二種）。
+  **連帶不等於夾帶**，而且這一條有程序掛勾（比照上面規則文件那條）：**`design/system/` 的每一處改動都要在 PR body 逐一列出，並寫明它屬於上面哪一種**。合併閘第 2 條是純路徑比對，`design/system/` 一進清單就機械上全部通過。**不得夾帶與這次條文改動無關的 `design/system/` 改寫**——那是設計系統 PR。
+  **反過來不成立**：設計系統 PR 不因此可以動 `docs/`。
 - **工具 PR 可以動 `docs/specs/`，但只限修掉新檢查在既有頁面上抓到的違規**，而且要在 PR body 逐一列出；**不得新增或改寫規格條文**，也不得為了讓檢查器有東西可驗而去改真正的規格頁（測試資料放 `scripts/tests/`）。
   原因在 CI：`specs` job 會在 **PR 分支上**跑 `node scripts/check-specs.mjs docs`，所以新檢查一加上去，既有頁面的違規就讓**那張工具 PR 自己**變紅；不在同一張修掉就過不了。判例 #149、#151、#152、#153 四張都是這個形狀。
 - **畫面修正 PR 可以動 `design/prototype/`，但那道關卡在 Ready 之前、不在 PR 階段**：規則本體寫在 `AGENTS.md` §Project Board and Dispatch 的 **Ready gate**，這裡不複述以免兩份漂移。要記住的是：**卡片沒有合法地走過那道關卡，就不會有這一類 PR**；畫 artifact 不等於改畫面的授權。
   這一類也可以同時動 `docs/specs/`，**但只限兩種**：把這次改動打成假的既有斷言改掉，以及把決定記成那一頁的「已確認決議」。判例 #220（儀表板狀態徽章改用 PRD 的五個名稱：六個 `design/prototype/pages/dashboard/` 的檔案，加上規格 02-01 新增 Q18、03-01 一處跨頁斷言失效）。
   **不得夾帶與這次決定無關的條文改寫**——那是文件 PR。
+  這一類**不動 `design/system/`**：改了畫面的用詞或控制項，依它寫成的畫面與元件規格就會過期，但那是下游工作，另開設計系統 PR——判例 #499（#473 把原型的「參考值」改成「參考線」之後，`design/system/` 三處敘述與一個行號引用的修正）。
 - **流程設定 PR** 管的是 agent 怎麼工作，不是產品要做什麼，所以它**不碰 `docs/specs/`**，只動 `openspec/`、`.claude/`（`agents/`、`skills/`、`commands/`）與 `.agents/skills/`，以及因此連帶要改的 `docs/development/` 設計文件與 `AGENTS.md`／`CLAUDE.md`。判例 #215（schema 與 `config.yaml`）、#216（十二個 agent 角色）、#217（clarify skill 的兩份副本）、#219（`/sdd` 指令與 `AGENTS.md` 的 SDD 一節）。
   **同一次流程改動連帶的規則條文可以一起改**：#219 動了 `.claude/commands/sdd.md`、`AGENTS.md`（新增 §SDD Workflow 一節）與 `docs/development/workflow/spec-authoring.md`，三個檔都服務同一個目的，所以整張歸流程設定 PR，不必拆。
   **只改**規則文件的 PR 不屬於這六類，照本節開頭那一條走；判準也定義在那裡。
@@ -627,3 +631,4 @@ ENOENT: no such file or directory, rename
 | 2026-11-12 | 機械編輯的三條驗證陷阱記進本文件（[§機械編輯的驗證陷阱](#機械編輯的驗證陷阱)） | — | [#292](https://github.com/label-suite/label-suite/issues/292) |
 | 2026-11-15 | 閘 3 在三個條件同時成立時，`status` 卡住的 job 也算跑完（§合併閘第 3 條） | 只看 job 的 `status` 就判沒跑完 | [#188](https://github.com/label-suite/label-suite/issues/188)、[PR #312](https://github.com/label-suite/label-suite/pull/312) |
 | 2026-11-19 | 正文只留搬移結束後仍沿用的規則；搬移期間的 D1–D10、單頁搬移通則與來源對照收進附錄，「已確認決議」的五種依據升為正文一節（[§「已確認決議」的五種依據](#已確認決議的五種依據)） | 搬移規則與現行 PR／CI 規則混排在同一份、正文前半都是搬移時期的內容 | [#481](https://github.com/label-suite/label-suite/issues/481) |
+| 2026-11-20 | 文件 PR 可以同時動 `design/system/`，限兩種（修掉被打成假的斷言、把本次決議記成該頁的狀態註記），每一處都要在 PR body 列出並寫明是哪一種；反過來不成立（[§PR 的變更範圍](#pr-的變更範圍)） | 六類表只給 `AGENTS.md`／`CLAUDE.md` 連帶條款，`design/system/` 不在文件 PR 的清單裡，#472 一度掉在文件 PR 與設計系統 PR 之間 | 維護者口頭裁定（記錄於 [#496](https://github.com/label-suite/label-suite/issues/496)），判例 [#472](https://github.com/label-suite/label-suite/pull/472) |
