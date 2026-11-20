@@ -46,6 +46,18 @@ scripts/dispatch-scan.sh
 
 每張候選都要讀完整串留言再判斷：`gh issue view <N> --comments`。裁定常寫在後面的留言裡；內文和最新留言講法不一致時，歸到「需要裁定」，不要猜。
 
+### 只給 issue 編號時
+
+這條路不經過掃描，所以認領或移動任何卡片之前，先確認 issue 的狀態：
+
+```bash
+gh issue view <N> --json state -q .state
+gh project item-list 1 --owner label-suite --limit 400 --format json \
+  -q '.items[]|select(.content.number==<N>)|.status'
+```
+
+`state` 必須是 `OPEN`。新認領的 Status 必須是 Ready；In Progress 或 In Review 的，照步驟 2 依最後一則檢查點留言判斷是不是重入。Todo、Done、已關閉，或第二個指令沒有輸出（issue 不在看板上），都算不符，就停下來回報維護者，不動卡片、不留言。
+
 ## 步驟 2 撞車檢查
 
 用 issue 編號比對，任何一項命中就是有人在做，跳過並寫進波次報告。
