@@ -50,4 +50,18 @@ describe("Input", () => {
     expect(input).toBeDisabled();
     expect(input).toHaveValue("read only");
   });
+
+  it("matches the approved artifact's 44px height and 12px side padding", () => {
+    render(
+      <>
+        <label htmlFor="size">Size</label>
+        <Input id="size" />
+      </>,
+    );
+    const input = screen.getByRole("textbox", { name: "Size" });
+
+    // h-11 is 44px and px-3 is 12px on Tailwind's 4px spacing scale.
+    expect(input).toHaveClass("h-11", "px-3");
+    expect(input).not.toHaveClass("h-9");
+  });
 });
