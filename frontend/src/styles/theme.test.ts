@@ -94,6 +94,7 @@ const EXPECTED_LIGHT_MAPPING: Record<string, string> = {
   "--info-border": "var(--color-info-border)",
   "--control-disabled": "var(--color-slate-50)",
   "--surface-subtle": "var(--color-slate-50)",
+  "--icon-accent": "var(--color-primary)",
   "--card-shadow": "var(--shadow-card)",
 };
 
@@ -219,6 +220,7 @@ describe("index.css, the Tailwind entry", () => {
       "text-muted-foreground",
       "border-input",
       "bg-surface-subtle",
+      "text-icon-accent",
     ]);
 
     expect(css).toContain(".bg-primary");
@@ -227,6 +229,8 @@ describe("index.css, the Tailwind entry", () => {
     expect(css).toContain(".border-input");
     expect(css).toContain(".bg-surface-subtle");
     expect(css).toContain("var(--surface-subtle)");
+    expect(css).toContain(".text-icon-accent");
+    expect(css).toContain("var(--icon-accent)");
   });
 
   it("imports Tailwind and the mapping layer", () => {

@@ -68,7 +68,7 @@ function LoadingView() {
         role="status"
         className="flex items-center gap-(--space-sm) text-(length:--text-body) text-foreground"
       >
-        <LoaderCircle aria-hidden="true" className="size-5 animate-spin text-primary" />
+        <LoaderCircle aria-hidden="true" className="size-5 animate-spin text-icon-accent" />
         {t("panel.loading")}
       </div>
       <div className="flex flex-col gap-(--space-sm)">

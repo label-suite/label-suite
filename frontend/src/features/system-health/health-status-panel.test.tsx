@@ -139,6 +139,22 @@ describe("HealthStatusPanel loading", () => {
     expect(screen.queryByText(LOADING_TEXT)).not.toBeInTheDocument();
   });
 
+  it("colours the loading icon with the primary icon token (brand.md rule 2)", async () => {
+    const gate = gatedHealth();
+    server.use(gate.handler);
+    renderPanel();
+
+    const icon = screen.getByRole("status").querySelector("svg");
+    expect(icon).toHaveClass("lucide-loader-circle", "text-icon-accent");
+    expect(icon).not.toHaveClass("text-primary");
+
+    await waitFor(() => {
+      expect(gate.started()).toBe(1);
+    });
+    gate.release(okResponse);
+    expect(await screen.findByText("正常")).toBeInTheDocument();
+  });
+
   it("stays loading without an error layout when the first request is cancelled", async () => {
     server.use(healthPendingHandler());
     const { client, container } = renderPanel();

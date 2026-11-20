@@ -51,6 +51,7 @@
   --info-border: var(--color-info-border);
   --control-disabled: var(--color-slate-50);
   --surface-subtle: var(--color-slate-50);
+  --icon-accent: var(--color-primary);
   --card-shadow: var(--shadow-card);
 }
 
@@ -108,5 +109,6 @@ html[data-theme="dark"] {
   --color-info-border: var(--info-border);
   --color-control-disabled: var(--control-disabled);
   --color-surface-subtle: var(--surface-subtle);
+  --color-icon-accent: var(--icon-accent);
   --shadow-card: var(--card-shadow);
 }
