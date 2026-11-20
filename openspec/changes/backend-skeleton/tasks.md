@@ -45,7 +45,7 @@
 
 ## 8. 寫入後端檢查指令
 
-- [ ] 8.1 在 `openspec/config.yaml` 的 `operations.apply.guidance` 寫入後端檢查指令：`cd backend && uv run pytest`（SQLite；同一行註明標 `postgres` 的測試在此會被跳過，回報時要附上 pytest 摘要的 skipped 數量）、`cd backend && TEST_DATABASE_URL=postgresql+asyncpg://... uv run pytest`（PostgreSQL，由本機 `docker run postgres:16` 提供）、`cd backend && uv run ruff check . && uv run ruff format --check .`、`cd backend && uv run mypy --strict app`、`cd backend && uv run python -m app.scripts.export_openapi && git diff --exit-code -- openapi.json && test -z "$(git status --porcelain -- openapi.json)"`；把第 4 條改為只剩前端的檢查指令待 #505 補上；不新增任何 CI job（design D12、clarification Q5、Q6）。驗證：`./node_modules/.bin/openspec validate backend-skeleton --strict` 通過、`corepack pnpm exec prettier --check openspec/config.yaml` 通過，且新寫入的每一行指令都在本機實際執行成功 [@technical-writer]
+- [x] 8.1 在 `openspec/config.yaml` 的 `operations.apply.guidance` 寫入後端檢查指令：`cd backend && uv run pytest`（SQLite；同一行註明標 `postgres` 的測試在此會被跳過，回報時要附上 pytest 摘要的 skipped 數量）、`cd backend && TEST_DATABASE_URL=postgresql+asyncpg://... uv run pytest`（PostgreSQL，由本機 `docker run postgres:16` 提供）、`cd backend && uv run ruff check . && uv run ruff format --check .`、`cd backend && uv run mypy --strict app`、`cd backend && uv run python -m app.scripts.export_openapi && git diff --exit-code -- openapi.json && test -z "$(git status --porcelain -- openapi.json)"`；把第 4 條改為只剩前端的檢查指令待 #505 補上；不新增任何 CI job（design D12、clarification Q5、Q6）。驗證：`./node_modules/.bin/openspec validate backend-skeleton --strict` 通過、`corepack pnpm exec prettier --check openspec/config.yaml` 通過，且新寫入的每一行指令都在本機實際執行成功 [@technical-writer]
 
 ## 9. 雙資料庫整合驗證
 
