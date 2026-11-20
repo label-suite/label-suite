@@ -58,7 +58,18 @@ text = text.replace(/\b(?:ghp_|github_pat_|sk-|xox[baprs]-)\S+/g, '***');
 //    to say which file it rejected stopped saying it. The cost is a base64
 //    blob whose every slash-separated run is under twenty characters, which is
 //    narrow next to naming no paths at all (maintainer's ruling, 2026-11-18).
-text = text.replace(/\b[A-Za-z0-9+]{20,}={0,2}\b/g, '***');
+//
+//    Not spanning `/` was not enough, because a single path segment can be
+//    twenty characters of its own. A macOS temporary directory always is:
+//    `/private/var/folders/q2/p1t6rgxj5fj32g1dc7dmd49r0000gn/T/...` came out of
+//    the CI runner as `/private/var/folders/q2/***/T/...`, so H2 named a path
+//    that does not exist. A run directly after `/` is therefore a path
+//    segment and is left alone -- the same ruling, applied to the case its
+//    fixture missed by containing an underscore, which split the run below the
+//    threshold and made the case pass for the wrong reason. The added cost is
+//    an unlabelled blob sitting immediately after a slash, which rules one and
+//    two still catch whenever it is labelled or carries a known prefix.
+text = text.replace(/(?<!\/)\b[A-Za-z0-9+]{20,}={0,2}\b/g, '***');
 
 let out = Buffer.from(text, 'utf8');
 if (out.length > max) {

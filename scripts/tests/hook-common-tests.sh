@@ -58,10 +58,19 @@ grep -qF 'abc1234' "$E" || fail "a short hex string was masked; diagnostics beco
 # Neither is a file path, and the checkers' whole job is to name one. The
 # base64 rule used to span `/`, so any absolute path long enough became `***`
 # and the message that said which file was rejected stopped saying it.
+#
+# The first macOS shape here is the one that fixture originally had, and it
+# passed for the wrong reason: the underscore in its segment split the run
+# below the twenty-character threshold. The second is the path the CI runner
+# actually produced, which has no underscore and came back as
+# `/private/var/folders/q2/***/T/...`; the third is the same shape without the
+# runner's random spelling, so the case does not depend on one draw.
 for path in \
   '/Users/someone/project/label-suite-oss/scripts/check-command.sh' \
   '/home/runner/work/label-suite/label-suite/scripts/check-env.sh' \
-  '/var/folders/79/0g96bw6d4bz_s2x1yqfh7kqr0000gn/T/tmp.AbCdEf/.env.local'
+  '/var/folders/79/0g96bw6d4bz_s2x1yqfh7kqr0000gn/T/tmp.AbCdEf/.env.local' \
+  '/private/var/folders/q2/p1t6rgxj5fj32g1dc7dmd49r0000gn/T/check-wt-tests.sEC6C6/repo/.env.local' \
+  '/private/var/folders/q2/abcdefghijklmnopqrstuvwxyz0123/T/x/.env'
 do
   bash -c "set -uo pipefail; source '$LIB'; hc_init; emit_err 'BLOCK: 受保護路徑：$path'; hc_flush" >"$O" 2>"$E"
   grep -qF "$path" "$E" || fail "a file path was masked and the message no longer names it: $path"
@@ -158,12 +167,19 @@ grep -q 'TRUNCATED' "$E" && fail "a short output was marked as truncated"
 # If this fails and the filter was changed on purpose, re-pin the digest in the
 # same commit as the change. If it fails and the filter was not touched, the
 # platform is the difference, and that is the bug.
+#
+# Re-pinned when rule three stopped masking a run that follows `/`, and the
+# macOS path that motivated that was added to the input above. The filtered
+# bytes were read before the digest was taken: the two paths come through
+# whole, and `token = ***`, `***` for the prefixed token, `blob ***` and
+# `Authorization: ***` are all still masked.
 node -e '
   const parts = [
     "token = abc123supersecret trailing words\n",
     "ghp_0123456789abcdefghijABCDEFGHIJ\n",
     "blob QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVowMTIzNDU2Nzg5\n",
     "/Users/someone/project/label-suite-oss/scripts/x.sh\n",
+    "/private/var/folders/q2/p1t6rgxj5fj32g1dc7dmd49r0000gn/T/x/.env.local\n",
     "Authorization: Bearer zzz\n",
   ];
   require("node:fs").writeFileSync(process.argv[1], Buffer.concat([
@@ -173,7 +189,7 @@ node -e '
   ]));
 ' "$TMP/parity.in"
 bash -c "set -uo pipefail; source '$LIB'; hc_init; hc_mask < '$TMP/parity.in' > '$TMP/parity.out'" 2>"$E"
-PARITY_EXPECTED=d4fdae39433c293c7dbc8e80ee2defa90eebb4b60c33c576b56f9fd4df8ebb9e
+PARITY_EXPECTED=fd7aba0d580dd0cff83fb468d6a4f14fcfeba1acea79d666ab8d7d01c3f816a2
 parity_actual=$(node -e '
   const c = require("node:crypto"), f = require("node:fs");
   process.stdout.write(c.createHash("sha256").update(f.readFileSync(process.argv[1])).digest("hex"));
