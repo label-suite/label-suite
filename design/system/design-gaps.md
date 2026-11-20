@@ -341,7 +341,7 @@
 
 **狀態（#423）**：已修正。實體辨識的部分重疊卡改成「Relaxed 參考值 0.70」／"Relaxed reference value 0.70"，關係識別第二列改成「高品質參考值 0.80」／"High-quality reference value 0.80"，兩者都拿掉「— 通過／未達」，圓點改中性的新 `.t-dot-neutral`（`--color-ink-muted`）。部分重疊卡的數值與長條原本是綠色（等於說它過了），也改中性：數值不帶狀態 class，長條用新的 `.iaa-bar-fill.neutral`。「兩種計算模式比較」表頭從「門檻」改「門檻／參考值」（"Threshold / reference"），因為 Strict 那一列的 0.80 仍是真門檻；部分重疊那一列的結果從綠色「通過」改成中性徽章「不判定」（"Not judged"），Strict 那一列的「未達」不動。中英文 i18n 一併改；`T007`、`T008` 與複合任務 `T010` 淺深色實測。上文的行號指的是修正前。
 
-**規格（#434）**：維護者 2026-11-19 裁定用詞改為「**參考線**」（`Relaxed 參考線 0.70`、`高品質參考線 0.80`），「不判定」加進達標狀態列舉當第六個值（`02-analysis-detail.mdx` Q26、Q27）。原型目前寫的「參考值」與表頭「門檻／參考值」要再改成「參考線」，另開 [UI] issue 處理，過 Ready gate 才動 `design/prototype/`。
+**規格（#434）**：維護者 2026-11-19 裁定用詞改為「**參考線**」（`Relaxed 參考線 0.70`、`高品質參考線 0.80`），「不判定」加進達標狀態列舉當第六個值（`02-analysis-detail.mdx` Q26、Q27）。原型**這兩處**的「參考值」與表頭「門檻／參考值」已由 #473 改成「參考線」（`quality-entity_recognition.html:42`、`:55`，`quality-relation_identification.html:24`；中文 i18n `dataset-analysis-detail.html:466`、`:480`、`:481`，英文 `reference line` 在同檔 `:878`、`:887`、`:888`）。同頁另有 16 處「參考值」是排行榜指標名與邊界範例的對照標註，與這條無關、不在改動範圍。
 
 ## 二、缺少狀態證據
 
