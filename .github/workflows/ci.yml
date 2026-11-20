@@ -57,6 +57,26 @@ jobs:
           # commits, so the shallow default is not enough.
           fetch-depth: 0
 
+      # H1 reports the toolchain and `--ci` turns a missing one into a non-zero
+      # exit, so this job has to carry the toolchain it is going to report on.
+      # The first real run of this job failed on exactly that: no pnpm, so
+      # `--ci` refused a checkout that was in fact healthy. uv is here for the
+      # same reason -- `backend/` exists now, which makes it required rather
+      # than NA, and it is what `check-changed.sh --range` runs the Python
+      # route through. Neither is used to install anything.
+      - uses: pnpm/action-setup@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      # The Python route runs `uv run --no-sync`, because a hook must not
+      # provision an environment behind the author's back. That makes
+      # provisioning this job's business: without it the route fails on every
+      # pull request that touches `backend/`, and a gate that cannot run the
+      # check it routes to is not reporting on the code.
+      - name: Provision the backend environment the Python route runs in
+        run: uv sync --frozen
+        working-directory: backend
+
       - uses: actions/setup-node@v5
         with:
           node-version: 20
