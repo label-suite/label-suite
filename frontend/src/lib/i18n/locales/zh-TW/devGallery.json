@@ -1,1 +1,55 @@
-{}
+{
+  "pageName": "元件展示",
+  "eyebrow": "DEV ONLY · /dev/gallery",
+  "description": "每個 <code>components/ui/</code> 元件的每個 variant 都在這頁出現一次。完整性測試比對元件宣告的 variant 與本頁的展示，少一個就失敗。",
+  "sections": {
+    "button": "Button",
+    "input": "Input",
+    "badge": "Badge",
+    "alert": "Alert",
+    "card": "Card",
+    "states": "Skeleton · Empty",
+    "tokens": "Token 對照"
+  },
+  "count": {
+    "variants": "variant × {{n}}",
+    "states": "狀態 × {{n}}"
+  },
+  "button": {
+    "count": "variant × {{variants}} · size × {{sizes}} · 狀態 × {{states}}"
+  },
+  "input": {
+    "states": {
+      "default": "預設",
+      "invalid": "驗證錯誤",
+      "disabled": "停用"
+    },
+    "placeholder": "輸入文字",
+    "error": "這一欄的格式不正確",
+    "disabledValue": "不能編輯"
+  },
+  "alert": {
+    "sample": "{{variant}}：{{message}}",
+    "samples": {
+      "info": "提示訊息",
+      "success": "已完成",
+      "warning": "請留意",
+      "error": "發生錯誤"
+    }
+  },
+  "card": {
+    "title": "卡片標題",
+    "description": "說明文字",
+    "content": "內容區",
+    "cancel": "取消",
+    "confirm": "確認"
+  },
+  "states": {
+    "meta": "四種畫面狀態的共用元件",
+    "emptyTitle": "還沒有資料",
+    "emptyDescription": "說明為什麼是空的，以及下一步"
+  },
+  "tokens": {
+    "meta": "shadcn/ui 變數 ← prototype tokens.css"
+  }
+}
