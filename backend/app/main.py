@@ -17,7 +17,12 @@ from app.core.config import Settings, load_settings
 from app.core.db import create_engine, create_sessionmaker
 from app.core.errors import register_exception_handlers
 from app.core.i18n import MessageCatalog
-from app.core.middleware import CORRELATION_ID_HEADER, CorrelationIdMiddleware
+from app.core.middleware import (
+    CORRELATION_ID_HEADER,
+    CorrelationIdMiddleware,
+    LocaleMiddleware,
+    UnhandledExceptionMiddleware,
+)
 from app.core.schemas import ErrorResponse
 
 __all__ = ["API_V1_ERROR_RESPONSES", "API_V1_PREFIX", "create_api_router", "create_app"]
@@ -63,7 +68,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         settings: The settings to use; ``None`` reads them from the environment.
 
     Returns:
-        The app with CORS, correlation IDs, the exception handlers and the
+        The app with the four middlewares, the exception handlers and the
         ``/api/v1`` router mounted. The database engine is created by the
         lifespan, not here, so building the app opens no connection.
 
@@ -76,9 +81,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app = FastAPI(title=API_TITLE, lifespan=_lifespan)
     app.state.settings = resolved
-    app.state.message_catalog = MessageCatalog.load()
+    catalog = MessageCatalog.load()
+    app.state.message_catalog = catalog
 
-    # add_middleware puts each new layer outside the previous ones (design D3).
+    # add_middleware puts each new layer outside the previous ones, so this runs
+    # innermost first: Locale, Unhandled, CORS, Correlation (design D3).
+    app.add_middleware(LocaleMiddleware, catalog=catalog)
+    app.add_middleware(UnhandledExceptionMiddleware, catalog=catalog)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=resolved.cors_allowed_origins,
