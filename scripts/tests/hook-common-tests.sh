@@ -93,8 +93,19 @@ grep -qF '/Users/someone/project/label-suite-oss/scripts/x.sh' "$TMP/rec.out" \
 
 # A long unbroken token is *correctly* collapsed by the masking rules, so the
 # size limit must be exercised with text that looks like real diagnostics.
-BIG=$(for i in $(seq 1 6000); do printf 'line %s: something went wrong here\n' "$i"; done)
-BIG="$BIG" bash -c "set -uo pipefail; source '$LIB'; hc_init; emit_err \"\$BIG\"; hc_flush" >"$O" 2>"$E"
+#
+# The fixture reaches the inner shell through a file, not the environment. At
+# roughly 220 KB it is larger than Linux's 128 KiB ceiling on a single
+# environment string, so passing it as `BIG=...` made `bash -c` fail before the
+# library ran at all -- the Linux runner reported 83 bytes and no marker, which
+# measured the operating system and not the limit under test. macOS allows far
+# more, which is why this passed locally and on one runner only.
+BIGF="$TMP/big.txt"
+for i in $(seq 1 6000); do printf 'line %s: something went wrong here\n' "$i"; done > "$BIGF"
+[ "$(wc -c < "$BIGF" | tr -d ' ')" -gt 65536 ] \
+  || fail "the size-limit fixture is not bigger than the budget, so it proves nothing"
+BIGF="$BIGF" bash -c 'set -uo pipefail; source "$1"; hc_init; emit_err "$(cat "$BIGF")"; hc_flush' \
+  _ "$LIB" >"$O" 2>"$E"
 bytes=$(wc -c < "$E" | tr -d ' ')
 [ "$bytes" -gt 65536 ] || fail "truncated output is smaller than the budget ($bytes)"
 grep -q '^TRUNCATED: output exceeded 65536 bytes ([0-9]* bytes dropped)$' "$E" \
