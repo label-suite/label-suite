@@ -6,9 +6,9 @@
 
 | 部分 | 必填 | 依據 |
 | :--- | :--- | :--- |
-| `.metric` 容器 | 必填 | `pages/shared/metric.css:2`、`components-showcase.html:807` |
-| `<span>` 標籤（11px 大寫、字距 0.04em） | 必填 | `metric.css:9`、`components-showcase.html:813` |
-| `<strong>` 數值（1.35rem／700） | 必填 | `metric.css:19`、`components-showcase.html:821` |
+| `.metric` 容器 | 必填 | `pages/shared/metric.css:2`、`components-showcase.html:814` |
+| `<span>` 標籤（11px 大寫、字距 0.04em） | 必填 | `metric.css:9`、`components-showcase.html:821` |
+| `<strong>` 數值（1.35rem／700） | 必填 | `metric.css:19`、`components-showcase.html:829` |
 | `.metric-desc` 說明行 | 選用 | **只有** `metric.css:27`（issue `singyichen/label-suite#1453`）；正典區塊沒有 |
 
 結構用的是**元素選擇器**（`.metric span`、`.metric strong`）而不是 class，所以磚裡不能再放別的 `span`。
@@ -20,7 +20,7 @@
 | `.metric` | 標準，數值 1.35rem | `metric.css:2` |
 | `.metric-lg` | 單獨站著的大 KPI，數值 2.5rem | `metric.css:35` |
 
-`.metric-grid`（`repeat(auto-fit, minmax(100px, 1fr))`）**不是正典**，是 showcase 自己的示範外框（`components-showcase.html:958`–`:965` 的註解明寫）。
+`.metric-grid`（`repeat(auto-fit, minmax(100px, 1fr))`）**不是正典**，是 showcase 自己的示範外框（`components-showcase.html:965`–`:972` 的註解明寫）。
 
 ## 適用狀態
 
@@ -43,13 +43,13 @@
 
 ## 樣式出處
 
-`design/prototype/pages/shared/metric.css:1`–`:37`（shipped，含 `.metric-desc` 與 `.metric-lg`）、`design/prototype/components-showcase.html:806`–`:825`（正典，只有基礎三條）。
+`design/prototype/pages/shared/metric.css:1`–`:37`（shipped，含 `.metric-desc` 與 `.metric-lg`）、`design/prototype/components-showcase.html:814`–`:833`（正典 `.metric`，只有基礎三條）。
 
-**兩份不一致**：shipped 多了 `.metric-desc` 與 `.metric-lg`；正典少了 `display: block`，showcase 只好在非正典的 chrome 區塊補回來（`:966`–`:969` 的註解明寫是為了讓正典區塊保持 verbatim）→ `../design-gaps.md` G-19。
+**兩份不一致**：shipped 多了 `.metric-desc` 與 `.metric-lg`；正典少了 `display: block`，showcase 只好在非正典的 chrome 區塊補回來（`components-showcase.html:974`–`:977` 的註解明寫是為了讓正典區塊保持 verbatim）→ `../design-gaps.md` G-19。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-metric`（`components-showcase.html:1318`），四塊磚在 `:1322`–`:1325`。
+`components-showcase#state-default` → `#comp-metric`（`components-showcase.html:1326`），三塊磚在 `:1331`–`:1333`。
 
 ## shadcn 對照
 
@@ -64,5 +64,8 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 四塊樣本 |
+| `dashboard/dashboard`（五個 `#param-scenario-*`、`#param-view-skeleton`） | `.metric`（22 處），`dashboard.layout.css:1` `@import` 正典 `metric.css`；骨架期間 `.metric` 裡放 `.skel-metric` |
+| `task-management/task-detail`（`#tab-overview`、`#tab-annotation-progress`、`#tab-work-log`） | `overview.html` 4 處、`annotation-progress.html` 6 處、`work-log.html` 4 處；`task-detail.html:1076` 加了 `.metric strong.speed-by-kind` |
+| `dataset/dataset-analysis-detail`（`#tab-stats`、`#state-stats-empty`、`#state-stats-entity-recognition`、`#state-stats-sequence-tagging`、`#state-stats-relation-identification`） | 共用指標五塊 `.metric`（`dataset-analysis-detail.html:270`–`:274`），統計空狀態時三塊換成破折號（`applyStatsState`，`:1539`）；三個 stats partial 另有 `.metric`／`.metric-lg` |
 
-b1 的帳號頁一個都沒用。shipped 使用頁面在 b2（`dashboard`、`task-detail` 的 3 個 panel）與 b4（`dataset-analysis-detail` 及其 3 個 stats partial），待那兩批補。
+b1 的帳號頁一個都沒用。b2 已補上（見上表）。b4 已補上（見上表）。

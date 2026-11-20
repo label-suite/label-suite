@@ -1,0 +1,37 @@
+<!-- @dsCard group="Layout" height=260 -->
+<!doctype html>
+<html lang="zh-TW" data-theme="light">
+<head>
+<meta charset="utf-8">
+<style>
+  /* preview layout only; the frame preloads tokens.css and bundle.css */
+  html body { margin: 0; padding: 24px; display: block; }
+  .ds-stage { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .ds-caption { font-size: 12px; color: var(--color-ink-muted); }
+  .ds-stage { flex-direction: column; align-items: stretch; gap: 8px; max-width: 420px; }
+</style>
+</head>
+<body>
+  <div class="ds-stage">
+    <span class="ds-caption">第一個展開、第二個 .collapsed；可同時展開多個</span>
+    <div>
+      <div class="output-accordion" id="ds-accordion-1">
+        <div class="output-accordion-header" role="button" tabindex="0" aria-expanded="true" aria-controls="ds-accordion-1-body">
+          <span class="output-accordion-number">1</span>
+          <span class="output-accordion-title">分類設定</span>
+          <svg class="output-accordion-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="output-accordion-body" id="ds-accordion-1-body" role="region" aria-label="分類設定">標籤集、單選／多選與 Bypass 選項設定。</div>
+      </div>
+      <div class="output-accordion collapsed" id="ds-accordion-2">
+        <div class="output-accordion-header" role="button" tabindex="0" aria-expanded="false" aria-controls="ds-accordion-2-body">
+          <span class="output-accordion-number">2</span>
+          <span class="output-accordion-title">實體辨識設定</span>
+          <svg class="output-accordion-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="output-accordion-body" id="ds-accordion-2-body" role="region" aria-label="實體辨識設定">實體類型與顏色指派。</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

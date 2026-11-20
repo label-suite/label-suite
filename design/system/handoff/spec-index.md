@@ -1,6 +1,6 @@
 # 規格章節索引
 
-交付包版本：commit `b1fd43c84031`，prototype tree `4cb347d5e720`。
+交付包版本：commit `387482bb7075`，prototype tree `a4336be42bc7`。
 
 由 `manifest.json` 反轉而成：規格頁 → 指向它的視圖。「規格有、畫面沒有」一眼看得出來——沒有出現在下表的規格頁，就是沒有任何視圖指向它。
 
@@ -84,11 +84,13 @@
 
 | 章節錨點 | 視圖 |
 | :--- | :--- |
+| `#標記說明` | `task-management/task-new#state-step4` |
 | `#規格` | `task-management/task-new#modal-dataset-preview` |
 | `#規格` | `task-management/task-new#state-step1` |
 | `#規格` | `task-management/task-new#state-step2` |
 | `#規格` | `task-management/task-new#state-step3` |
 | `#邊界情況edge-case` | `task-management/task-new#modal-leave-confirm` |
+| `#階層標籤的編輯與選取` | `task-management/task-new#modal-taxonomy-delete` |
 
 ## `docs/specs/03-task-management/03-task-detail.mdx`
 
@@ -109,7 +111,9 @@
 | `#誰進得來誰看得到哪些分頁` | `task-management/task-detail#role-annotator` |
 | `#誰進得來誰看得到哪些分頁` | `task-management/task-detail#role-project-leader` |
 | `#誰進得來誰看得到哪些分頁` | `task-management/task-detail#role-reviewer` |
+| `#載入中空的與載入失敗` | `task-management/task-detail#state-loading` |
 | `#載入中空的與載入失敗` | `task-management/task-detail#state-panel-load-failed` |
+| `#載入中空的與載入失敗` | `task-management/task-detail#state-task-not-found` |
 
 ## `docs/specs/04-annotation/01-annotation-list.mdx`
 
@@ -122,6 +126,7 @@
 | `#空的與找不到` | `annotation/annotation-list#state-task-not-found` |
 | `#規格` | `annotation/annotation-list#role-project-leader` |
 | `#規格` | `annotation/annotation-list#state-default` |
+| `#試標歷史回饋` | `annotation/annotation-list#state-dry-run-feedback` |
 | `#路由上下文與回退` | `annotation/annotation-list#param-run-type` |
 | `#路由上下文與回退` | `annotation/annotation-list#state-no-task` |
 
@@ -131,8 +136,10 @@
 | :--- | :--- |
 | `#三向決策` | `annotation/annotation-workspace#state-review-decision` |
 | `#仲裁版面仲裁者選邊不重新標記` | `annotation/annotation-workspace#state-arbitration` |
+| `#儲存草稿與提交` | `annotation/annotation-workspace#toast-saved` |
 | `#右欄說明與檔案操作紀錄` | `annotation/annotation-workspace#tab-guideline` |
 | `#審核卡兩個標記階段同一套版面` | `annotation/annotation-workspace#role-reviewer` |
+| `#審核狀態軌` | `annotation/annotation-workspace#modal-review-flow` |
 | `#工作區的外殼三欄與行動版` | `annotation/annotation-workspace#modal-mobile-drawer` |
 | `#指引閘門第一次進來先讀說明` | `annotation/annotation-workspace#modal-guideline-gate` |
 | `#操作紀錄裡的每一筆事件` | `annotation/annotation-workspace#tab-history` |
@@ -147,6 +154,7 @@
 
 | 章節錨點 | 視圖 |
 | :--- | :--- |
+| `#四種互斥的頁面狀態` | `dataset/dataset-analysis-list#param-error` |
 | `#規格` | `dataset/dataset-analysis-list#state-default` |
 | `#邊界情況edge-case` | `dataset/dataset-analysis-list#param-invalid-task` |
 | `#邊界情況edge-case` | `dataset/dataset-analysis-list#param-view-empty` |
@@ -180,6 +188,7 @@
 | `#序列標註的統計` | `dataset/dataset-analysis-detail#state-seq-match-strict` |
 | `#序列標註的統計` | `dataset/dataset-analysis-detail#state-stats-sequence-tagging` |
 | `#自由文字的統計` | `dataset/dataset-analysis-detail#state-stats-free-text` |
+| `#載入失敗只換掉內容區` | `dataset/dataset-analysis-detail#param-error` |
 | `#邊界情況edge-case` | `dataset/dataset-analysis-detail#state-stats-empty` |
 | `#關係識別的統計` | `dataset/dataset-analysis-detail#state-stats-relation-identification` |
 
@@ -191,6 +200,8 @@
 
 | 章節錨點 | 視圖 |
 | :--- | :--- |
+| `#規格` | `admin/user-management#modal-audit-log` |
+| `#規格` | `admin/user-management#modal-edit` |
 | `#規格` | `admin/user-management#modal-invite` |
 | `#規格` | `admin/user-management#state-default` |
 | `#規格` | `admin/user-management#toast-action` |
@@ -201,8 +212,11 @@
 | 章節錨點 | 視圖 |
 | :--- | :--- |
 | `#卡控機制` | `admin/role-settings#state-dirty` |
+| `#取消要先確認` | `admin/role-settings#modal-dirty` |
+| `#操作紀錄抽屜` | `admin/role-settings#modal-audit-log` |
 | `#規格` | `admin/role-settings#state-default` |
 | `#規格` | `admin/role-settings#toast-saved` |
+| `#讀回的矩陣不合法時` | `admin/role-settings#state-stored-invalid` |
 | `#邊界情況edge-case` | `admin/role-settings#state-conflict` |
 
 ## `docs/specs/07-shared/01-sidebar.mdx`

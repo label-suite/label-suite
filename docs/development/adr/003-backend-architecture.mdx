@@ -1,0 +1,502 @@
+---
+title: ADR-003 後端架構
+description: 後端與 API 契約的決定：前後端同一個 repo、FastAPI、模組內分層、狀態機放 service 層、路徑前綴與回應 envelope、Orval 產生前端 client、SQLite 加 PostgreSQL 雙層、Celery 加 Redis、Bruno 降成可選工具、背景計算的結果寫入做成冪等。
+tags: [adr, backend, api, database, celery]
+---
+
+# ADR-003 後端架構
+
+這份 ADR 管後端的骨架與它對外的契約：repo 怎麼分、用什麼框架、目錄怎麼分層、API 的前綴與回應外層、前端 client 怎麼產生、資料庫與背景工作用什麼、背景計算的結果怎麼寫才不會重複。認證與授權、測試、部署與前端的目錄不在這裡，測試見 [ADR-007](007-testing-strategy.mdx)。
+規則本體在 [backend-agent-rules.mdx](../rules/backend-agent-rules.mdx) 與 [api-agent-rules.mdx](../rules/api-agent-rules.mdx)，落地的做法在 [architecture.mdx](../architecture.mdx)，本文只寫為什麼；衝突時的優先序見 [ADR 索引](index.mdx#衝突時以誰為準)。
+
+## D1 前後端放在同一個 repo
+
+### 背景
+
+要決定前端（React 加 Vite）與後端（FastAPI）是兩個 repo，還是放在同一個 repo。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 所有服務（前端、後端、資料庫、Redis、Celery）由同一份 `docker-compose.yml` 啟動 | Compose 要能直接引用兩邊的程式 |
+| 功能規格常跨前後端，一張 PR 要能完整帶一個全端變更 | 跨 repo 的變更會被拆成兩張 PR |
+| 個人 repo ADR-001 記錄當時是單人開發 | 它對協調成本的判斷以那個規模為前提 |
+| 本 repo 的規格正典在 `docs/specs/`，不是根目錄的 `specs/` | 個人 repo ADR-001 的目錄圖要調整 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 同一個 repo，`frontend/` 與 `backend/` 分開兩個頂層目錄 | 一次 `git clone` 拿到整個系統；一張 PR 帶完整全端變更；`docker compose up` 一條指令重現環境；CI 用 `hashFiles()` 條件判斷，各層可逐步加入 | 同一個 repo 裡有 Python 與 TypeScript 兩套工具，指令要記得在哪個目錄下跑；CI 時間隨兩層成熟而增加 | 採用 |
+| B 兩個 repo，用 submodule 或分別 clone 協調 | 兩邊各自獨立 | Compose 要引用外部 repo；跨層變更要拆成兩個 repo 的 PR；個人 repo ADR-001 判斷在單人規模下沒有好處 | 不採用 |
+| C monorepo 工具（Nx、Turborepo） | 有專門的建置編排層 | 為大團隊與有共用套件、獨立發版的情境設計；個人 repo ADR-001 判斷兩層、沒有共用套件時過度設計 | 不採用 |
+
+### 決定
+
+前後端放在同一個 repo，分在 `frontend/` 與 `backend/` 兩個頂層目錄，不引入 Nx 或 Turborepo；目錄結構見 [architecture.mdx 的 §技術選型](../architecture.mdx#技術選型)。
+
+### 後果
+
+**變容易**
+
+- 一次 clone 與一條 `docker compose up` 就能重現整個系統
+- 一張 PR 與一個分支帶完整的全端變更，不必跨 repo 協調
+- 各層可以逐步加入，因為 CI 的 job 以檔案存在與否決定要不要跑
+
+**變困難**
+
+- 貢獻者要分清楚指令屬於哪個子目錄
+- CI 時間隨兩層成熟而增加，來源以 `concurrency` 的 cancel-in-progress 緩解
+
+### 什麼情況要重新討論
+
+- 出現前後端以外、要獨立發版或被多處共用的套件
+- CI 的耗時讓 PR 回饋明顯變慢，而條件式 job 與 cancel-in-progress 已用盡
+
+## D2 後端框架用 FastAPI
+
+### 背景
+
+要決定後端的 web 框架；它定義了驗證、文件、非同步與測試的方式，換掉就是重寫整個後端。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 評分與資料庫查詢是 I/O 密集，還要派送 Celery task | 需要原生 async/await |
+| 請求與回應的驗證要綁在型別標註上 | 驗證層要和型別系統整合 |
+| 前端的 client 與型別從 `openapi.json` 產生（[D6](#d6-前端-client-用-orval-產生)） | 框架要能自動匯出 OpenAPI |
+| 後端工具鏈要和其他部分一致，是純 Python | 排除需要另一套語言的方案 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A FastAPI | 原生 async；Pydantic v2 驗證；自動產生 OpenAPI；mypy strict 可用；成熟度高 | 沒有內建 admin 介面；SQLAlchemy、Alembic 與認證 middleware 要自己組；Pydantic v2 與 v1 有破壞性差異，文件與社群範例還在跟進 | 採用 |
+| B Django 加 DRF | 成熟度非常高 | 以同步為先，非同步負載會增加複雜度；沉重的 ORM 與 admin 對研究系統是多餘負擔；沒有原生的 Pydantic 整合 | 不採用 |
+| C Flask | 成熟度非常高 | 沒有原生 async、內建驗證與自動文件，要組裝很多外掛才有 FastAPI 內建的功能 | 不採用 |
+| D Litestar | 技術上與 FastAPI 相當：原生 async、Pydantic v2、OpenAPI | 社群與生態比 FastAPI 小；FastAPI 採用更廣、教學更多，而且 Pydantic 與 SQLAlchemy 的官方文件明確用它 | 不採用 |
+
+### 決定
+
+後端用 FastAPI，搭配 pydantic v2 與 uvicorn；資料層與背景工作的選擇見 [D7](#d7-資料庫分兩層) 與 [D8](#d8-非同步任務用-celery-加-redis)，選型總表在 [architecture.mdx 的 §技術選型](../architecture.mdx#技術選型)。
+
+### 後果
+
+**變容易**
+
+- `async def` 的路由處理函式直接接上非同步 SQLAlchemy 與 Celery 派送
+- Pydantic schema 同時是 API 契約與驗證層，請求與回應的形狀只有一個來源
+- 自動產生的 OpenAPI 是 [D6](#d6-前端-client-用-orval-產生) 的輸入
+- 內建的依賴注入（`Depends`）把資料庫 session、認證與設定從路由中分出去
+
+**變困難**
+
+- 沒有內建 admin，管理工作要直接操作資料庫或另找工具
+- ORM、migration 與認證 middleware 都要自己組裝
+- Pydantic v2 的範例與文件還在追上，查資料時要確認版本
+
+### 什麼情況要重新討論
+
+- 需要內建的 admin 介面，而自己組裝的成本明顯高於換框架
+- Pydantic 或 FastAPI 的重大改版讓 API 契約的匯出方式必須改變
+
+## D3 後端採模組內分層
+
+### 背景
+
+要決定後端程式的目錄怎麼分；個人 repo 的 ADR 與規則文件對這件事有扁平與集中兩種寫法，彼此不一致。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 個人 repo ADR-022 的範例寫扁平的 `app/services/`；其他文件寫 `app/schemas/`、`app/api/routes`、`app/i18n/zh_TW/` | 來源之間有三種不同的寫法，必須選一個 |
+| API 路徑直接把資源接在 `/api/v1` 後面，不帶模組名（[D5](#d5-api-路徑前綴與成功回應外層)） | 後端的模組邊界要由目錄表達，不由路徑表達 |
+| Celery task 的進入點要有地方放 | 它也落在模組裡，不另開 `backend/worker/` |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 按層集中：`app/services/`、`app/schemas/`、`app/api/routes` 等 | 理由沒有記錄 | 理由沒有記錄 | 不採用 |
+| B 模組內分層：`app/modules/<module>/` 底下放自己的 router、service、repository 與 schemas | 理由沒有記錄 | 理由沒有記錄 | 採用 |
+
+兩個選項的好處與代價，維護者的裁定紀錄都只記了結果，沒有記理由，這裡不補。
+
+### 決定
+
+一個業務模組一個資料夾 `app/modules/<module>/`，裡面放自己的 router、service、repository 與 schemas；Router 只呼叫 service，service 才碰 repository 與 model。規則本體見 [backend-agent-rules.mdx 的 B1](../rules/backend-agent-rules.mdx#b1-分層與允許的-import)，各層的職責見 [architecture.mdx 的 §後端分層](../architecture.mdx#後端分層)。
+
+### 後果
+
+**變容易**
+
+- 路徑不必帶模組名，模組邊界只有目錄這一個表達處
+- Celery task 的定義跟著它所屬的模組，不另外散落
+
+**變困難**
+
+- 個人 repo 的 ADR-022 與其他文件仍寫舊路徑，讀來源時要自己換算成模組內路徑
+- 層之間的 import 方向目前只靠審查，機械檢查要等 `backend/` 存在才寫得出來
+
+### 什麼情況要重新討論
+
+- `backend/` 的第一批模組合併之後，審查反覆發現跨模組共用的 service 或 schema 沒有合適的位置
+- 層之間的 import 檢查（B1 的檢查方式）建好之後，發現模組內分層擋不住反向 import
+
+## D4 任務狀態機只放在 service 層
+
+### 背景
+
+任務有五個狀態，每個轉移都有前置條件與副作用；要決定轉移的驗證與執行放在哪一層。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 轉移的副作用包括派送 Celery task 與寫一筆 `audit_events` | 放的位置要能接觸這些，又不把基礎設施綁進資料模型 |
+| 轉移要被路由處理函式、Celery 回呼與測試 fixture 共用 | 邏輯不能只能經由 HTTP 呼叫 |
+| 完整的轉移條件在 `docs/specs/` 與 PRD 的共用狀態機 | ADR 只決定放哪裡，不重述條件 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 放在 ORM 的 `Task` model 方法 | 轉移邏輯貼著資料 | SQLAlchemy model 是持久化模型，不是領域物件；Celery 派送、IAA 門檻與稽核寫入塞進去，會讓 model 暗中依賴基礎設施，沒有完整資料庫就無法單元測試 | 不採用 |
+| B 直接寫在路由處理函式 | 最短 | 路由是傳輸層；邏輯不啟動 HTTP client 就無法被 Celery 任務、管理指令或測試 fixture 重用 | 不採用 |
+| C 放在 service 層的函式 | 路由、Celery 回呼與測試 fixture 都能直接呼叫；驗證、前置條件檢查、記錄與副作用各是一個可獨立測試的函式；稽核事件與狀態更新在同一個資料庫交易裡寫入 | service 隨前置條件增加而變複雜 | 採用 |
+
+### 決定
+
+任務狀態機只實作在 service 層，轉移不合法時丟 `InvalidTransitionError`；轉移條件以 `docs/specs/` 與 PRD §共用狀態機為準，不以個人 repo ADR-022 的表為準。規則本體見 [backend-agent-rules.mdx 的 B1](../rules/backend-agent-rules.mdx#b1-分層與允許的-import)，反向轉移的限制見 [architecture.mdx 的 §後端分層](../architecture.mdx#後端分層)。
+
+### 後果
+
+**變容易**
+
+- 狀態機邏輯用假的資料庫 session 就能單元測試，不必有 HTTP client
+- 所有觸發轉移的路由呼叫同一個 service 函式，驗證邏輯不重複
+- 副作用（Celery 派送、通知）集中在一處，測試時可以換成替身
+
+**變困難**
+
+- 前置條件增加時 service 會越來越複雜，不能為了省事把檢查寫回路由處理函式
+- 資料庫 commit 成功但 task 派送失敗時，任務會停在進行中卻沒有 worker；個人 repo ADR-022 的補救是用 Celery beat 掃描停滯的轉移，本 repo 的 [B4](../rules/backend-agent-rules.mdx#b4-交易的擁有層) 要求派送失敗由狀態欄留在「待派送」、由排程補送或人工重送
+
+### 什麼情況要重新討論
+
+- 轉移的前置條件增加到 service 檔案難以審查，需要把前置條件另外拆成獨立單元
+- 出現不經 service 的第二種轉移入口
+
+## D5 API 路徑前綴與成功回應外層
+
+### 背景
+
+要決定 API 的路徑前綴與成功回應的格式；個人 repo 的 ADR 用了八次 `/api/v1`，但沒有決定它，也沒有定義成功回應格式。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 唯一的契約真相是規劃階段的 `api-contract.md` 加匯出的 `openapi.json` | 前綴與外層都要能寫進契約 |
+| 前端的 client 由 Orval 產生，它的 mutator 負責 base URL、解開 envelope 與統一的錯誤（[D6](#d6-前端-client-用-orval-產生)） | 外層格式要能在 mutator 一處處理 |
+| operationId 已由 `generate_unique_id_function` 固定成「動詞加資源」 | 這次只決定前綴與外層，不重決 operationId |
+| Python 內部的欄位是 snake_case，前端的型別由 Orval 從 `openapi.json` 產生 | 欄位名要有一處統一轉換，不是每個 schema 各自宣告 alias |
+| 回應從 envelope 改成別的形狀，對所有前端呼叫都是破壞性改動 | 改格式的路要事先留好 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A `/api/v1` 前綴，成功回應包一層 envelope | 版本前綴是將來改 envelope 的逃生門；前端 mutator 可以在一處解開外層 | 204 無 body、檔案下載與串流必須當例外，「哪些是例外」本身成為新的維護點 | 採用 |
+| B `/api/v1` 前綴，成功回應直接回資源物件 | 理由沒有記錄 | 理由沒有記錄 | 不採用 |
+| C 不帶版本前綴 | 理由沒有記錄 | 沒有那個逃生門，envelope 要改就得直接破壞既有路徑 | 不採用 |
+
+### 決定
+
+每個端點掛在 `/api/v1` 底下，資源名直接接在後面、不插模組名；`200` 的回應包一層 envelope，`204` 無 body、檔案下載與串流是例外，而且每個例外都要逐一寫進該 change 的 `api-contract.md`，不逐案自由心證。envelope 是 `{ success, code, message, data, timestamp, traceId }`，錯誤套同一個外層（`success: false`、`code`、`data: null`，`422` 另帶 `errors`），JSON 欄位一律 camelCase；規則本體見 [api-agent-rules.mdx 的 A1](../rules/api-agent-rules.mdx#a1-路由http-statusoperationid-與回應外層)，做法見 [architecture.mdx 的 §API 契約](../architecture.mdx#api-契約)。
+
+### 後果
+
+**變容易**
+
+- 前端的 mutator 在一處處理外層，業務元件拿到的是解開後的資料
+- 日後要改 envelope，有版本前綴可以走，不必在原路徑上直接改
+
+**變困難**
+
+- 例外清單要逐一維護，每個 `204`、檔案與串流端點都要在 `api-contract.md` 寫明
+- 外層固定六個欄位，業務資料一律包在 `data` 裡，連只回一個布林的端點也一樣
+- 改回應外層仍是破壞性變更，要依 [A10](../rules/api-agent-rules.mdx#a10-相容性與破壞性變更) 在 `design.md` 寫出影響範圍
+
+### 什麼情況要重新討論
+
+- 例外清單反覆增加
+- 出現第二個要並存的 API 版本
+
+## D6 前端 client 用 Orval 產生
+
+### 背景
+
+要決定前端的 API 型別與 client 用什麼工具、產到哪裡；這決定前端所有呼叫的入口形狀，之後換工具要重寫每個呼叫點。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 唯一的契約真相是 `api-contract.md` 加 `openapi.json`（[D9](#d9-bruno-只當可選工具)） | 前端產物只能從 `openapi.json` 來，不能手寫第二份 |
+| 前端需要單一 HTTP 邊界，base URL、cookie credentials、`Accept-Language`、CSRF header、取消與錯誤轉換都集中在一處 | 工具要有一個自訂請求函式的接口 |
+| 前端的資料取用用 TanStack Query | 工具能直接產出對應的 hooks 最省事 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A Orval，輸出到 `frontend/src/api/generated/` | 從 `openapi.json` 產生 TanStack Query hooks、型別與 MSW mock；mutator 就是單一 HTTP 邊界 | 產物不能手改；契約、`openapi.json` 與產物要放同一個 commit，CI 要重產比對 | 採用 |
+| B `openapi-typescript` 只產型別，請求自己寫 | 只產型別 | 請求與 query key 要自己寫；理由沒有記錄 | 不採用 |
+| C 先不選，型別來源是 `openapi.json`，取用方式由各 change 的 `design.md` 指定 | 不必現在決定 | 理由沒有記錄 | 不採用 |
+
+### 決定
+
+用 Orval 由 `openapi.json` 產生前端的型別與 client，輸出到 `frontend/src/api/generated/`；Orval 的 mutator 是前端唯一的 HTTP 邊界，query key 一律來自產物匯出的 `get*QueryKey`。規則本體見 [api-agent-rules.mdx 的 A4](../rules/api-agent-rules.mdx#a4-三份契約產物的分工)、[A5](../rules/api-agent-rules.mdx#a5-重產與-drift-檢查) 與 [A6](../rules/api-agent-rules.mdx#a6-單一-http-邊界)。
+
+### 後果
+
+**變容易**
+
+- 後端改契約之後，前端的型別與 hooks 由一條命令重產，不靠人工對照
+- 請求的橫切關注點只有 mutator 一個落點
+- query key 只有一個來源，不必另外手寫一份 factory
+
+**變困難**
+
+- 產物一律不手改；實作要偏離契約時，要先改 `api-contract.md` 再改程式
+- 「CI 重新產生並比對」目前沒有機制：個人 repo 要求過這道關卡，但它自己的紀錄寫明命令未實作，所以在 `backend/` 與 CI 存在之前，這一條只靠審查
+
+### 什麼情況要重新討論
+
+- `frontend/` 的第一個 API change 合併之後，產物與契約的 drift 檢查反覆失敗
+- Orval 的產物無法表達 [D5](#d5-api-路徑前綴與成功回應外層) 的 envelope 例外
+
+## D7 資料庫分兩層
+
+### 背景
+
+要決定資料庫用什麼；正式環境需要 PostgreSQL，但要求使用者先備好一個實例，會讓第一次試用的門檻變高。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 任務、提交、評分與排行榜之間是帶外鍵的關聯式資料 | 排除沒有關聯結構的資料庫 |
+| 評分要有 ACID 交易，部分寫入不能弄壞排行榜 | 資料庫要提供完整的交易保證 |
+| 任務設定要彈性儲存，新增任務類型不必改 schema | 需要 JSON 欄位的支援 |
+| 目標是 clone 之後一條 `docker compose up` 就能在三分鐘內跑起來，不必手動設定資料庫 | 預設不能要求外部的資料庫實例 |
+| 測試集答案要放在獨立、受存取控制的表 | 資料庫要能做表層的隔離（規則見 [security-agent-rules.mdx](../rules/security-agent-rules.mdx)） |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 只用 PostgreSQL | 完整 ACID；JSONB 原生；有 asyncpg；Docker 官方映像；團隊既有的正式環境經驗 | 所有環境（本機、CI、正式）都要有一個 PostgreSQL 實例，新使用者評估時有門檻 | 作為正式層採用 |
+| B MySQL 或 MariaDB | 成熟度非常高 | JSON 支援較弱，索引不如 JSONB；列鎖語意不同；和 SQLAlchemy 的 PostgreSQL 專屬功能較不契合 | 不採用 |
+| C MongoDB | 文件模型、原生 JSON | schema-less 的複雜度與任務、提交、評分的嚴格關聯結構衝突；跨 collection 的交易保證較弱 | 不採用 |
+| D 只用 SQLite | 零設定、單檔 | 不適合多位標註者並發寫入；沒有 server 模式，無法多容器部署；缺 JSONB 與進階索引 | 不採用作為唯一的資料庫 |
+| E 兩層：預設 SQLite，設了 `DATABASE_URL` 就走 PostgreSQL | clone 後不必設定資料庫就能跑；CI 的單元測試不必起 PostgreSQL 服務；貢獻者不必在本機架 PostgreSQL；最像的開源標註工具也這樣做 | 共用路徑不能用 PostgreSQL 專屬功能；兩份 compose 檔與兩種 dialect 的 migration 都要維護；SQLite 層不適合多人使用 | 採用 |
+
+### 決定
+
+`DATABASE_URL` 有設就走 PostgreSQL 16（正式層），沒設就走 SQLite（Lite 層）；schema 一律走 Alembic migration，任務設定存成 JSONB（Lite 層為 SQLite JSON）。規則本體見 [backend-agent-rules.mdx 的 B6 與 B7](../rules/backend-agent-rules.mdx#b6-schema-只由-alembic-管)，驅動、volume 與 compose 檔見 [architecture.mdx 的 §資料庫雙層](../architecture.mdx#資料庫雙層)。
+
+### 後果
+
+**變容易**
+
+- 新使用者一條指令就有可用的系統，不需要資料庫的準備工作
+- CI 的單元測試可以在 SQLite 上跑，不必每次起 PostgreSQL 服務
+- 任務設定存成 JSON 欄位，新增任務類型不必改 schema
+
+**變困難**
+
+- 共用的程式路徑不能用 PostgreSQL 專屬功能（JSONB 運算子、`array_agg` 等），要用 SQLAlchemy 的跨資料庫抽象，專屬查詢要放在能力檢查之後
+- 並發寫入的原子性要依 dialect 分別實作（例如 upsert 用各自 dialect 的 `on_conflict`），不能用 `session.merge()` 或先查再寫
+- Alembic 的 migration 要在兩種 dialect 上都測過，SQLite 要用 batch 操作並設 `render_as_batch=True`
+- 牽涉兩邊差異的行為要兩邊都有測試（[B7](../rules/backend-agent-rules.mdx#b7-雙資料庫的測試要求)）；整合測試仍要用真的 PostgreSQL
+- Lite 層不建議給多人使用，要在文件寫清楚，而且 `backend` 與 `worker` 要掛同一個 `./data` volume
+- JSON 欄位的彈性可能讓任務設定不一致，要靠應用層的 Pydantic schema 驗證
+
+### 什麼情況要重新討論
+
+- 出現只有 PostgreSQL 才有的功能需求（來源舉的例子是全文檢索，在 SQLite 只能退成 `LIKE`），而分兩層的維護成本已高於它帶來的好處
+- `backend/` 的第一批 migration 合併之後，兩種 dialect 的差異反覆造成測試或 migration 失敗
+
+## D8 非同步任務用 Celery 加 Redis
+
+### 背景
+
+評分是系統最吃運算的工作，要決定它怎麼在背景執行；快取與訊息佇列也都需要一個記憶體內的資料庫。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 評分從毫秒到數十秒不等；同步放在請求處理函式會讓所有並發的使用者變慢 | 提交 API 要立刻回 task ID，評分在背景跑 |
+| 暫時性的錯誤（資料庫連線、檔案 I/O）不該讓提交永久失敗 | 要有重試 |
+| task 狀態要能由 API 查詢 | 需要 result backend |
+| 排行榜與評分結果讀多寫少，算起來昂貴 | 需要快取 |
+| 個人 repo ADR-006 偏好一個元件同時當 broker 與快取，以降低單人開發的維運複雜度 | 倒推要找一個兩邊都能用的元件 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A Celery，Redis 同時當 broker、result backend 與應用快取 | Celery 的重試、排程（celery-beat）與結果後端是原生的，成熟度非常高；Redis 一個服務兼三職，維運最簡單；Celery 加 Redis 是 Celery 生態最多文件的組合 | 要多一個 worker 容器；Redis 單實例沒有內建高可用；Celery 設定面大 | 採用 |
+| B Celery 加 RabbitMQ | 持久佇列的語意更好 | 維運複雜許多；研究系統偶爾在重啟時掉一個 task 可以接受，Redis 的可靠度已經夠（**限 broker 層**：worker 重啟不再掉任務，見 [ADR-008 的 D10](008-deployment-and-operations.mdx#d10-worker-收到-sigterm-先做完手上的任務)） | 不採用 |
+| C RQ | 比 Celery 簡單 | 沒有原生的重試策略、速率限制與 task 路由，社群較小、進展較慢 | 不採用 |
+| D FastAPI 的 `BackgroundTasks` | 最簡單 | 跑在 web server 的同一個行程，慢的評分會卡住 worker 執行緒；沒有重試、沒有持久化、沒有結果後端 | 不採用 |
+| E Dramatiq | 技術上沒問題 | 生態比 Celery 小；FastAPI 加 Redis 這個組合的文件較少 | 不採用 |
+| F arq | 原生排程 | 重試要手動，成熟度低 | 不採用 |
+| G 快取用 Memcached 或行程內快取 | 無 | Memcached 沒有持久化，也不能兼當 Celery 的 broker；行程內快取不跨 worker 共享、重啟就沒了，排行榜資料必須在請求之間一致 | 不採用 |
+
+### 決定
+
+評分一律走 Celery：端點只收檔、送進佇列、回 `task_id`，結果另外查；Redis 7 同時當 broker、result backend 與應用快取，用 DB 編號隔開（broker `/0`、result `/1`、cache `/2`），共用實例不設 `maxmemory`。端點在 `async def` 路由裡直接呼叫 `.delay()`，不另包 executor。規則本體見 [backend-agent-rules.mdx 的 B9](../rules/backend-agent-rules.mdx#b9-celery-的界線)，佇列、重試與逾時的數字見 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務)。
+
+### 後果
+
+**變容易**
+
+- 提交 API 不阻塞，無論評分多複雜，HTTP 回應都在毫秒內回來
+- 內建重試與退避，暫時性失敗不會讓有效的提交被永久拒絕
+- 測試集答案只在 Celery worker 裡讀取，不經過 API 層（授權面見 [security-agent-rules.mdx](../rules/security-agent-rules.mdx)）
+- 加 worker 容器就能水平擴充；排程工作（排行榜快照、資料匯出）可以用 celery-beat 接續
+
+**變困難**
+
+- Compose 多一個 worker 容器，本機開發除了 uvicorn 還要跑 `celery worker`
+- Celery 跑在同步執行緒，不能用 async engine，所以 API 與 worker 用不同的資料庫驅動，worker 的連線字串要由 API 的推導出來（[D7](#d7-資料庫分兩層)）
+- 除錯失敗的 task 要同時看 Celery 的 log 與 Redis 的 result backend
+- Celery 的設定面大，序列化、並發與逾時設錯會造成難查的問題
+- task 的簽名改變時，部署後仍在佇列裡的舊版 task 可能失敗
+- 共用實例上若設 `maxmemory`，`allkeys-lru` 是實例層級的設定，會一併淘汰 broker 與 result backend 的資料而悄悄丟掉未處理的 task，所以快取的範圍只能靠每個 key 的 TTL 管；Redis 單實例也沒有內建高可用
+
+### 什麼情況要重新討論
+
+- 記憶體壓力讓快取與 broker 互相影響，需要把應用快取拆到獨立的 Redis 實例
+- broker 換成較慢的同步 I/O（例如 RabbitMQ），`.delay()` 不再是毫秒級，需要加 executor 橋接
+- 評分之外出現必須保證不掉的工作，Redis 的可靠度不夠
+
+## D9 Bruno 只當可選工具
+
+### 背景
+
+要決定 API collection 工具在 PR 流程裡的角色；個人 repo ADR-025 選了 Bruno 並把它變成 pre-PR 的硬關卡，本 repo 的契約真相已經有別的來源。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 唯一的契約真相是 `api-contract.md` 加 `openapi.json`（見 [api-agent-rules.mdx 的 A4](../rules/api-agent-rules.mdx#a4-三份契約產物的分工)） | collection 不能再當契約 |
+| 契約產物用 CI 重產比對來防 drift（[D6](#d6-前端-client-用-orval-產生)） | drift 的把關已有另一條路 |
+| API collection 要能放進 git，每個端點一個純文字檔，人與 agent 都讀得懂 | 排除把 collection 存成單一 JSON 的工具 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A Bruno，並把「改 route 就要附 `.bru`」當 pre-PR 硬關卡 | 端點行為可以從 PR 的 diff 看出，不必跑 server；CI 可以用 `@usebruno/cli` 跑 collection 抓契約 drift | 每次 route 改動都要同步 `.bru`，靠硬關卡與審查維持，AI 產生的 `.bru` 要嚴格守 DSL，格式錯了在 GUI 裡會靜默失敗；本 repo 為何取消這道關卡，理由沒有記錄 | 不採用 |
+| B Bruno，只當可選的手動工具，沒有 pre-PR 關卡 | 保留每個端點一個純文字檔、能放進 git、離線可用 | 不再是契約真相，也沒有任何關卡保證它跟得上 route | 採用 |
+| C Postman | 無 | 把 collection 存成不透明的 JSON，diff 讀不懂；綁雲端 | 不採用 |
+| D Insomnia | 開源的核心 | 只能匯出成單一檔案，不是以 commit 為原生 | 不採用 |
+| E HTTPie | 無 | 只有指令列旗標，沒有可持久化的 collection | 不採用 |
+
+### 決定
+
+Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真相是 `api-contract.md` 加 `openapi.json`。規則見 [api-agent-rules.mdx 的 A4](../rules/api-agent-rules.mdx#a4-三份契約產物的分工)，做法見 [architecture.mdx 的 §API 契約](../architecture.mdx#api-契約)。
+
+### 後果
+
+**變容易**
+
+- 改 route 的 PR 不必同步 `.bru` 檔，也不必在 commit 訊息加豁免標記
+- 契約的來源只有一個，不會同時有 collection 與 `openapi.json` 兩份要對齊
+
+**變困難**
+
+- 審查者不再能保證從 diff 看到端點的行為，要看 `api-contract.md` 與 `openapi.json`
+- 用 collection 在 CI 抓契約 drift 的做法不再成立，drift 的把關全靠 [D6](#d6-前端-client-用-orval-產生) 的重產比對，而那一條目前還沒有機制
+
+### 什麼情況要重新討論
+
+- `backend/` 的第一批 API change 合併之後，審查反覆需要手動打 API 才能確認行為
+- CI 重產比對建好之後，仍然出現 `openapi.json` 抓不到的契約 drift
+
+## D10 背景計算的結果寫入做成冪等
+
+### 背景
+
+要決定同一份輸入被背景計算不只一次時，結果怎麼寫。這不是例外情況：[D8](#d8-非同步任務用-celery-加-redis) 已經設定評分重試三次。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| [D8](#d8-非同步任務用-celery-加-redis) 設定重試三次（退避 60、180、540 秒，見 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務)） | 寫結果的那一步本來就會跑不只一次 |
+| 重試的觸發是暫時性錯誤（資料庫連線、檔案 I/O），可能發生在結果已經寫了一部分之後 | 不能假設重跑時資料庫是乾淨的 |
+| 排行榜與分析報告由計算結果算出來，讀多寫少而且會被快取 | 重複列或中間狀態會直接反映在畫面上 |
+| 資料庫分兩層（[D7](#d7-資料庫分兩層)），upsert 要依 dialect 分別實作 | 方案不能只在 PostgreSQL 上成立 |
+| [ADR-008 的 D10](008-deployment-and-operations.mdx#d10-worker-收到-sigterm-先做完手上的任務) 已決定 worker 重啟不掉任務 | 重跑的來源收斂成重試與人工重送，但不會消失 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 結果表對輸入的識別子建唯一鍵，寫入用各 dialect 的 `on_conflict` 做 upsert | 跑幾次結果都收斂到同一列，重試、重送、重跑都安全；沒有中間狀態 | 兩種 dialect 各寫一條路徑，[B7](../rules/backend-agent-rules.mdx#b7-雙資料庫的測試要求) 要求兩邊都測 | 採用 |
+| B 重跑前先刪掉該輸入的舊結果，同一交易再寫新的 | 不需要 dialect 專屬的 upsert 語法 | 沒有唯一鍵就擋不住兩個 worker 同時重跑寫出兩份結果，先刪只是縮小視窗；而且每次重跑都多一次全刪全寫 | 不採用 |
+| C 由狀態欄擋住重複計算（[B4](../rules/backend-agent-rules.mdx#b4-交易的擁有層) 的派送狀態） | 不動資料表 | 狀態欄擋的是重複派送，擋不住同一個 task 自己的重試；暫時性錯誤重試時狀態已經是進行中 | 不採用 |
+| D 不處理，接受重複列，查詢時取最新一筆 | 寫入端最簡單 | 每個讀取點都要記得去重，漏一處報表就錯；資料表會持續長大 | 不採用 |
+
+### 決定
+
+背景計算的結果表要有「一份輸入最多一份結果」的唯一鍵，寫入一律用各 dialect 的 `on_conflict` 做 upsert，不先刪後寫。規則本體見 [backend-agent-rules.mdx 的 B9](../rules/backend-agent-rules.mdx#b9-celery-的界線)，它已要求「重跑同一個 task 不會產生第二筆結果」；本節補的是理由，以及冪等要落在結果表的唯一鍵上、不是只靠寫入端自律。現有的 [`task_trial_iaa_result`](../../diagrams/architecture/data-table-dictionary.mdx) 已經把 `trial_round_id` 設成 PK 兼 FK，正好就是這個形狀；本節把它從單一張表的性質升成所有背景計算結果表的要求。具體欄位與約束仍由資料表字典管。
+
+### 後果
+
+**變容易**
+
+- 重試、人工重送與重跑都安全，正確性不依賴「只會跑一次」這個做不到的前提
+- 不必為了防重複另做分散式鎖或狀態欄的二次把關
+
+**變困難**
+
+- SQLite 與 PostgreSQL 的 `on_conflict` 寫法不同，要各寫一條路徑，而且兩邊都要有測試（[B7](../rules/backend-agent-rules.mdx#b7-雙資料庫的測試要求)）
+- 新增背景計算的結果表時都要先想清楚唯一鍵是什麼，沒有自然鍵的計算要先造一個
+- upsert 會覆寫既有結果，所以要保留歷次計算時不能直接用這個形狀，要另立版本或快照表
+
+### 什麼情況要重新討論
+
+- 出現必須保留歷次計算結果的需求（例如同一回合的多次重算要並存比較）
+- 結果的體積大到 upsert 的整列覆寫成本過高，需要改成分段寫入
+
+## 附錄：來源對照
+
+比對的版本：個人 repo ADR-001、003、005、006、007、022、024、025 的現行內容（`docs/adr/` 最後異動的 commit 是 `9a5da8e`，2026-10-12）。D10 的來源也在其中，是 ADR-024 的 Dialect-Specific Paths，見下表。
+
+| 決定 | 來源 |
+| :--- | :--- |
+| D1 | 個人 repo ADR-001（Context 的限制、Option A、B、C 與 Consequences、Alternatives Rejected）；它的目錄圖有根目錄 `specs/`，本 repo 的規格正典在 `docs/specs/`，見 [architecture.mdx 的 §ADR 效力總表](../architecture.mdx#adr-效力總表) |
+| D2 | 個人 repo ADR-003（Context 的需求、候選比較表與四段說明、Consequences） |
+| D3 | 維護者的裁定紀錄 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 1 列（只記結果，沒有記選項的好處與代價）；扁平寫法是個人 repo ADR-022 的範例路徑；`app/schemas/` 等集中寫法見 [backend-agent-rules.mdx 的附錄](../rules/backend-agent-rules.mdx#附錄來源對照)；路徑不帶模組名見 [api-agent-rules.mdx 的 A1](../rules/api-agent-rules.mdx#a1-路由http-statusoperationid-與回應外層)；Celery 進入點落在模組裡見 backend-agent-rules.mdx 的決策紀錄 |
+| D4 | 個人 repo ADR-022（Context、Option A、B、C、Consequences）；它的轉移表、amendment 與快照不變式不在本 ADR，轉移條件以 `docs/specs/` 為準；派送失敗的補救見 [backend-agent-rules.mdx 的 B4](../rules/backend-agent-rules.mdx#b4-交易的擁有層) |
+| D5 | 維護者的裁定紀錄 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 2、3 列；「版本前綴是那個逃生門」出自 [architecture.mdx 的 §API 契約](../architecture.mdx#api-契約)；選項 B、C 的好處與代價沒有記錄；envelope 的欄位由維護者 2026-11-20 裁定，見 §決策紀錄 |
+| D6 | [#108 的裁定紀錄](https://github.com/label-suite/label-suite/issues/108#issuecomment-6763329139)（三個選項、裁定與連帶）；選項 B、C 沒有記錄拒絕的理由；CI 重產比對未實作見 [api-agent-rules.mdx 的 A5](../rules/api-agent-rules.mdx#a5-重產與-drift-檢查) |
+| D7 | 個人 repo ADR-005（Context、候選比較、Consequences）與 ADR-024（Context、Decision、Consequences、Dialect-Specific Paths、Out of Scope）；驅動與 volume 的細節見 [architecture.mdx 的 §資料庫雙層](../architecture.mdx#資料庫雙層)。ADR-024 的 Dialect-Specific Paths 有兩條：JSONB variant 那條落在 §資料庫雙層，Atomic upsert 那條當時沒有落點，現在收在 [D10](#d10-背景計算的結果寫入做成冪等) |
+| D8 | 個人 repo ADR-006（Context、Broker 與快取的候選比較、Eviction Policy Isolation、Consequences）與 ADR-007（Context、候選比較、FastAPI Async Integration、Consequences）；佇列、重試與逾時的數字見 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務) |
+| D9 | 個人 repo ADR-025（Context、Alternatives Considered、Enforcement、Consequences）；降級的裁定見 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 7 列，只記結果，沒有記取消關卡的理由 |
+| D10 | 個人 repo ADR-024 的 §Dialect-Specific Paths 第一條「Atomic upsert (FR-083)」：Celery 背景工作的寫入在兩層都要原子，依 dialect 偵測選 PostgreSQL 或 SQLite 的 `on_conflict_do_update()`／`on_conflict_do_nothing()`，兩層都不得用 `session.merge()` 或 check-then-act。選項 A 與選項 C 的拒絕理由都出自這一條；選項 B、D 是推論。本 repo 既有的 [B9](../rules/backend-agent-rules.mdx#b9-celery-的界線) 已要求 task 冪等，本節是第一次把理由與「冪等要落在結果表的唯一鍵上」寫下來（[#490](https://github.com/label-suite/label-suite/issues/490)）。重試三次的設定出自 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務)；`trial_round_id` 當 PK 兼 FK 出自[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)的 `task_trial_iaa_result` |
+| — | 個人 repo ADR-024 後來的修訂（以資料庫 trigger 保護 append-only 與封存的資料表）、ADR-022 的轉移表與快照不變式，不在 [architecture.mdx](../architecture.mdx) 裡，本 ADR 不收；它們屬於資料庫與業務規格，由各自的 change 決定是否採用 |
+
+## 待決
+
+| # | 問題 | 卡住什麼 | 誰決定 |
+| :--- | :--- | :--- | :--- |
+| 1 | [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務) 用 `submission`、`parse_submission`、`/submissions/{id}/status` 這組名字，[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)裡沒有對應的表，最接近的是 `task_run` 與 `task_trial_iaa_result` | [D10](#d10-背景計算的結果寫入做成冪等) 的唯一鍵實際落在哪張表 | 維護者，在做評分流程的 change 時 |
+
+## 決策紀錄
+
+| 日期 | 決策 | 取代了什麼 | 來源 |
+| :--- | :--- | :--- | :--- |
+| 2026-11-19 | 前後端放在同一個 repo，不用 monorepo 工具（[D1](#d1-前後端放在同一個-repo)） | —（沿用個人 repo ADR-001；規格正典改在 `docs/specs/`） | [#449](https://github.com/label-suite/label-suite/issues/449) |
+| 2026-11-19 | 後端用 FastAPI（[D2](#d2-後端框架用-fastapi)） | —（沿用個人 repo ADR-003） | [#449](https://github.com/label-suite/label-suite/issues/449) |
+| 2026-11-19 | 後端採模組內分層 `app/modules/<module>/`（[D3](#d3-後端採模組內分層)） | 個人 repo ADR-022 的扁平 `app/services/`，以及 `app/schemas/` 等集中寫法 | [#105 留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393) |
+| 2026-11-19 | 任務狀態機只放在 service 層（[D4](#d4-任務狀態機只放在-service-層)） | —（沿用個人 repo ADR-022 的位置決定） | [#449](https://github.com/label-suite/label-suite/issues/449) |
+| 2026-11-19 | 路徑前綴 `/api/v1`，成功回應包一層 envelope，`204`、檔案與串流是例外（[D5](#d5-api-路徑前綴與成功回應外層)） | —（個人 repo 的 ADR 沒有決定前綴，也沒有定義成功回應格式） | [#105 留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393) |
+| 2026-11-19 | 前端 client 用 Orval，輸出到 `frontend/src/api/generated/`（[D6](#d6-前端-client-用-orval-產生)） | — | [#108 留言](https://github.com/label-suite/label-suite/issues/108#issuecomment-6763329139) |
+| 2026-11-19 | 資料庫分兩層：預設 SQLite，設 `DATABASE_URL` 走 PostgreSQL 16（[D7](#d7-資料庫分兩層)） | —（沿用個人 repo ADR-005 與 ADR-024） | [#449](https://github.com/label-suite/label-suite/issues/449) |
+| 2026-11-19 | 評分走 Celery，Redis 兼 broker、result backend 與快取（[D8](#d8-非同步任務用-celery-加-redis)） | —（沿用個人 repo ADR-006 與 ADR-007） | [#449](https://github.com/label-suite/label-suite/issues/449) |
+| 2026-11-19 | 背景計算的結果寫入做成冪等，用 `on_conflict` upsert（[D10](#d10-背景計算的結果寫入做成冪等)） | —（沿用個人 repo ADR-024 的 Atomic upsert 與本 repo 的 B9；補上理由與結果表的唯一鍵要求） | [#490](https://github.com/label-suite/label-suite/issues/490) |
+| 2026-11-19 | [D8](#d8-非同步任務用-celery-加-redis)「偶爾在重啟時掉一個 task 可以接受」的範圍縮到 broker 層（Redis 單實例），worker 重啟改由 [ADR-008 的 D10](008-deployment-and-operations.mdx#d10-worker-收到-sigterm-先做完手上的任務) 管 | D8 原本沒有區分這兩種掉法 | [#490](https://github.com/label-suite/label-suite/issues/490) |
+| 2026-11-19 | Bruno 降成可選的手動工具，取消 pre-PR 硬關卡（[D9](#d9-bruno-只當可選工具)） | 個人 repo ADR-025 的 pre-PR 硬關卡 | [#105 留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393) |
+| 2026-11-20 | envelope 的欄位定為 `{ success, code, message, data, timestamp, traceId }`，錯誤套同一個外層，JSON 欄位一律 camelCase（[D5](#d5-api-路徑前綴與成功回應外層)） | D5 原本寫「envelope 有哪些欄位未決」 | [#503](https://github.com/label-suite/label-suite/issues/503) |

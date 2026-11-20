@@ -4,14 +4,14 @@ description: '一個任務的分析詳情頁：同一個任務上下文底下，
 category: '規格書'
 tags: [規格書, 資料集, 已定案]
 createdAt: '2026-11-05'
-updatedAt: '2026-11-16'
+updatedAt: '2026-11-19'
 ---
 
 import PrototypeFrame from '@notes/components/prototype-frame';
 
 # 05-02 分析詳情
 
-:badge[已定案]{variant="success"} :badge[變更 #155]{variant="warning" href="https://github.com/label-suite/label-suite/issues/155"} :badge[資料集]{variant="neutral"} :badge[五階段已寫完]{variant="success"} :badge[141 條舊編號全數對應]{variant="success"}
+:badge[已定案]{variant="success"} :badge[變更 #434]{variant="warning" href="https://github.com/label-suite/label-suite/issues/434"} :badge[資料集]{variant="neutral"} :badge[五階段已寫完]{variant="success"} :badge[141 條舊編號全數對應]{variant="success"}
 
 > 來源：舊 repo `specs/dataset/017-dataset-analysis-detail/spec.md`（**141 條**），釘在 `singyichen/label-suite@faf83356`
 > 參考畫面：`design/prototype/pages/dataset/dataset-analysis-detail.html` 與同名的 `.partials/` 十六個面板
@@ -171,7 +171,7 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 
 1. 任務代號**不存在** → 導回[分析列表](./01-analysis-list.mdx)並顯示提示
 2. 使用者在那個任務**沒有專案負責人或審核員的成員資格** → 同樣導回分析列表並顯示提示
-3. 上面兩種情況是**同一個觸發**，使用者看到的是**同一句提示**：`找不到指定的任務，或您沒有該任務的存取權限。`（英文：`The requested task could not be found, or you do not have access to it.`）
+3. 上面兩種情況是**同一個觸發**，使用者看到的是**同一句提示**：`找不到指定的任務，或你沒有該任務的存取權限。`（英文：`The requested task could not be found, or you do not have access to it.`）
 4. 第 3 條刻意不分辨「任務不存在」與「沒有權限」——分辨了就等於告訴外人這個任務存在
 5. 提示由**分析列表那一頁顯示**（錯誤樣式的浮動提示），但**提示要不要出現是這一頁決定的**；這一頁導回去時要讓那一頁知道這是一次被擋下的進入
 6. 任務角色**缺少或認不得**時一律視為第 2 條，**失敗即關閉**；不得退回成任何預設角色
@@ -536,7 +536,7 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 | :ref[單維度]{id="term.single-dim"} | ICC(2,1)（two-way random absolute） | 一筆樣本 | **建議 0.75（判定用）**／嚴格 0.80（只顯示） | Alpha（interval）／Pearson／Spearman |
 | :ref[多維度]{id="term.multi-dim"} | 逐維度 ICC(2,1) → **巨集平均** | 一個維度 | 建議 0.75（只顯示）／**嚴格 0.80（判定用）** | — |
 | :ref[實體辨識]{id="term.entity-recognition"} | 成對比較的實體層級 F1（**嚴格**：起點、終點、型別全同） | 一個片段 | **0.80**；部分重疊的 F1 另有 0.70，**只顯示** | 部分重疊的 F1（只能切換顯示） |
-| :ref[關係識別]{id="term.relation-identification"} | 成對比較的三元組層級 F1（主體、關係、客體全同） | 一個三元組 | **0.75**；0.80 是「高品質」顯示帶，**不是第二道判定** | 實體層級 F1 |
+| :ref[關係識別]{id="term.relation-identification"} | 成對比較的三元組層級 F1（主體、關係、客體全同） | 一個三元組 | **0.75**；0.80 是「高品質」<mark>參考線</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup>，**不是第二道判定** | 實體層級 F1 |
 | :ref[序列標註]{id="term.sequence-tagging"} | Krippendorff 單位化 α（u-α） | 一個片段 | **刻意留空**，見[§序列標註：算得出來，但還沒有門檻](#序列標註算得出來但還沒有門檻) | — |
 | :ref[自由文字]{id="term.free-text"} | **不算自動 IAA** | — | — | 見[§自由文字：永久沒有自動指標](#自由文字永久沒有自動指標) |
 
@@ -548,8 +548,8 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 | 多標籤 | `Krippendorff's Alpha（nominal）` | `整體 alpha（多標籤 macro average）` | `門檻 0.80 — …` |
 | 單維度 | `ICC（2,1）（Intraclass Correlation Coefficient）` | `單一評分維度` | `建議門檻 0.75 — …` 與 `嚴格門檻 0.80 — …` 兩列 |
 | 多維度 | `ICC（Intraclass Correlation Coefficient）` | 逐維度的卡是 `ICC`，整體卡是巨集平均的算式（示例任務兩個維度時是 `（V + A）/ 2`） | 每一張卡都有 `建議門檻 0.75 — …` 與 `嚴格門檻 0.80 — …` |
-| 實體辨識 | `Pairwise Entity-level F1（strict）`／`Pairwise Entity-level F1（partial overlap）` | 兩張卡都是 `Pairwise 平均` | `Strict 門檻 0.80 — …`／`Relaxed 門檻 0.70 — …` |
-| 關係識別 | `Pairwise Triple-level F1` | `subject + relation + object 完全一致` | `門檻 0.75 — …` 與 `高品質門檻 0.80 — …` |
+| 實體辨識 | `Pairwise Entity-level F1（strict）`／`Pairwise Entity-level F1（partial overlap）` | 兩張卡都是 `Pairwise 平均` | `Strict 門檻 0.80 — …`／<mark>`Relaxed 參考線 0.70`（沒有判定字樣）</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup> |
+| 關係識別 | `Pairwise Triple-level F1` | `subject + relation + object 完全一致` | `門檻 0.75 — …` 與 <mark>`高品質參考線 0.80`（沒有判定字樣）</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup> |
 | 序列標註 | `Krippendorff 單位化 u-α`，後綴 `— 主要指標（span 為計算單位）` | `以 span 為比較單位；u-α 以連續體長度加權處理未標記區段` | **沒有門檻列** |
 | 自由文字 | — | — | — |
 
@@ -563,8 +563,9 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 8. 第 7 條那一階同時也是其他頁面唯讀引用時該取的值
 9. 另一階**只顯示、不參與判定**
 10. 畫面同時顯示兩階與兩個結果時，**必須標出哪一階是達標判定用的**（例如在那一階加「判定用」字樣）。畫面目前沒有做，**要加**（見[§已確認決議](#已確認決議) Q13）
-11. 實體辨識的「部分重疊」F1 **只能切換顯示**，**不得**當成第二道達標判定。所以它的 0.70 **不得叫「門檻」**——那個字正好邀請讀的人當第二道門檻用；畫面要改成不帶「門檻」的字（例如「參考值」），關係識別的 `高品質門檻 0.80` 同一個問題、一併改（見[§已確認決議](#已確認決議) Q15）
-12. 關係識別的 0.80 是**顯示帶**，同樣**不是**第二道判定
+11. 實體辨識的「部分重疊」F1 **只能切換顯示**，**不得**當成第二道達標判定。所以它的 0.70 **不得叫「門檻」**——那個字正好邀請讀的人當第二道門檻用；畫面要改成不帶「門檻」的字<mark>「參考線」：`Relaxed 參考線 0.70`</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup>，關係識別的 `高品質門檻 0.80` 同一個問題、一併改<mark>成 `高品質參考線 0.80`</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup>（見[§已確認決議](#已確認決議) Q15、<mark>Q27</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup>）。<mark>不用「參考值」，因為這一頁的「參考值」已經指[合併聚合參考值](#逐型標記員品質排名)</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup>
+   - <mark>切到部分重疊時，比較兩種計算模式的表上，部分重疊那一列的結果是 `不判定`（中性樣式），不是 `通過`／`未達`（見[§已確認決議](#已確認決議) Q26）</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup>
+12. 關係識別的 0.80 是<mark>**參考線**</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup>，同樣**不是**第二道判定
 13. 任務的**輸入類型是「項目對」**時，IAA 仍以它實際的輸出類型計算；配對欄位的顯示名稱由任務設定驅動，**不影響 IAA 的算法**
 
 ### 達標顏色只給真的有門檻的型別
@@ -844,8 +845,8 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 | 關係識別 | `標記 5 次的三元組數` |
 
    - 依 Q18 這張表整頁只有一張，所以單位名稱**不再是欄名**，而是**跟著那一列的 `輸出類型` 走**；欄名固定寫 `可比較單位數`
-   - 上表的分組<mark>依七個 `quality-*.html` 的**靜態標記**逐檔核對</mark><sup>[#137](https://github.com/label-suite/label-suite/issues/137)</sup>：單一標籤與多標籤同為 `可比較句數`、只有單維度是 `可比較樣本數`
-   - <mark>**那次核對讀的是靜態標記，不是渲染後的畫面。** `dataset-analysis-detail.html` 的 `updateConsistencyDeviationTexts()` 每次掛載面板都用 `consistencyUnitHeader[該型]` 覆蓋那個表頭，而該對應表曾把單一標籤配成 `可比較樣本數`——所以單一標籤的任務在畫面上一度顯示的是「樣本」，與本條不一致。**那個鍵現在已經到不了畫面**：緊接著跑的 `aggregateSharedBlocks()` 會把同一個表頭再換成固定的 `可比較單位數` 並移除它的 `id`。畫面已於 **2026-11-10** 依本條對齊（[Issue #155](https://github.com/label-suite/label-suite/issues/155)）——`consistencyUnitHeader` 與逐列渲染的單位名詞都與本條同組（單一標籤屬「句」、單維度屬「樣本」）</mark><sup>[#137](https://github.com/label-suite/label-suite/issues/137)</sup>
+   - 上表的分組依七個 `quality-*.html` 的**靜態標記**逐檔核對：單一標籤與多標籤同為 `可比較句數`、只有單維度是 `可比較樣本數`
+   - **那次核對讀的是靜態標記，不是渲染後的畫面。** `dataset-analysis-detail.html` 的 `updateConsistencyDeviationTexts()` 每次掛載面板都用 `consistencyUnitHeader[該型]` 覆蓋那個表頭，而該對應表曾把單一標籤配成 `可比較樣本數`——所以單一標籤的任務在畫面上一度顯示的是「樣本」，與本條不一致。**那個鍵現在已經到不了畫面**：緊接著跑的 `aggregateSharedBlocks()` 會把同一個表頭再換成固定的 `可比較單位數` 並移除它的 `id`。畫面已於 **2026-11-10** 依本條對齊（[Issue #155](https://github.com/label-suite/label-suite/issues/155)）——`consistencyUnitHeader` 與逐列渲染的單位名詞都與本條同組（單一標籤屬「句」、單維度屬「樣本」）
 
 4. 「可比較單位」的定義：同一個資料單位上**有足夠重疊標記次數**之後形成的比較母體
 5. 兩個偏離閾值是 **1.5 個標準差**（中度）與 **2 個標準差**（高度）
@@ -1057,7 +1058,7 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 | 主指標名稱 | 文字 | 是 | 依輸出類型，見[§八種輸出類型各自的主指標與門檻](#八種輸出類型各自的主指標與門檻) | 指標卡的標題 |
 | 主指標數值 | 小數 | 否 | 算不出來時是**「無法計算」狀態**，**不得回退成 `0.00`** | 指標卡的大數字 |
 | 門檻 | 小數 | 否 | 自由文字與序列標註**沒有門檻** | 門檻列 |
-| 達標狀態 | 單選：通過、未達、不適用、待實證校準、無法計算 | 是 | 有門檻的才套綠紅；另兩類用中性樣式、**文案不得共用** | 門檻列與色彩 |
+| 達標狀態 | 單選：通過、未達、不適用、待實證校準、無法計算、<mark>不判定</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup> | 是 | 有門檻的才套綠紅；另兩類用中性樣式、**文案不得共用**。<mark>`不判定` 只用在只供顯示的參考線（實體辨識的部分重疊、關係識別的 0.80），中性樣式，文案不得與 `不適用` 共用：`不適用` 是這一型沒有門檻，`不判定` 是有數值、但不拿來判定（Q26）</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup> | 門檻列與色彩 |
 | 輔助指標 | 清單 | 否 | **預設收合** | 可展開區塊 |
 | 計算方法說明 | 文字 | 是 | 每一份報告的必要元素之一 | 指標卡的小字 |
 | 小樣本旗標 | 布林 | 是 | 完成標記員數少於 5 時為真 | `小樣本估計` 徽章 |
@@ -1123,7 +1124,7 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 
 ## 卡控機制
 
-- 任務代號不存在 → 導回分析列表，顯示 `找不到指定的任務，或您沒有該任務的存取權限。`
+- 任務代號不存在 → 導回分析列表，顯示 `找不到指定的任務，或你沒有該任務的存取權限。`
 - 使用者在那個任務沒有專案負責人或審核員的成員資格 → 同上，與前一條是同一個觸發、同一句提示
 - 使用者在那個任務的任務角色缺少或認不得 → 視同沒有成員資格，**失敗即關閉**，導回分析列表
 - 使用者在那個任務**唯一的**成員身分是「受邀但還沒生效」 → 視同不存在，等於沒有生效身分，依前一條處理
@@ -1170,7 +1171,8 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 - 序列標註 → **不得**定任何門檻常數、預設值或建議值；實作**不得**用寫死的數字回退
 - 畫面任何位置 → **不得**出現 `Token-level Alpha` 字樣、不得出現已廢止的那個門檻、不得出現任何「遮掉全員都標成 `O` 的位置」這類遮罩說明
 - 實體辨識的部分重疊 F1 → **只能切換顯示**；當成第二道達標判定即違規
-- 關係識別的 0.80 → **顯示帶**；當成第二道判定即違規
+- 關係識別的 0.80 → <mark>**參考線**</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup>；當成第二道判定即違規
+- <mark>實體辨識的部分重疊 F1、關係識別的 0.80 → 畫面上**不得**叫「門檻」或「參考值」，也**不得**帶 `通過`／`未達`；比較表上的結果是 `不判定`</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup>
 - 單維度的達標判定 → 取**建議階**；多維度的達標判定 → 取**嚴格階**；取錯即違規
 - 多標籤 → 正例出現次數少於 5 的標籤**排除於巨集平均**，並**列出排除清單**（寫完整路徑）
 - 多標籤 → **不得**把子孫路徑的正例出現次數併進祖先路徑
@@ -1343,7 +1345,7 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 | 從儀表板提醒進來落在品質監控 | 某任務有「IAA 待確認」提醒 | 點那個提醒 | 落在品質監控，且該任務的上下文已載入 |
 | 沒帶分頁參數時落在統計總覽 | 使用者有該任務的成員資格 | 只帶任務代號進入 | 落在統計總覽 |
 | 分頁參數認不得時回退 | 使用者有該任務的成員資格 | 帶一個認不得的分頁參數進入 | 落在統計總覽 |
-| 任務代號不存在時導回列表 | 網址帶一個不存在的任務代號 | 進入分析詳情 | 導回分析列表，顯示 `找不到指定的任務，或您沒有該任務的存取權限。` |
+| 任務代號不存在時導回列表 | 網址帶一個不存在的任務代號 | 進入分析詳情 | 導回分析列表，顯示 `找不到指定的任務，或你沒有該任務的存取權限。` |
 | 沒有成員資格時導回列表 | 使用者在該任務沒有任何成員資格 | 進入分析詳情 | 導回分析列表，顯示同一句提示；提示不分辨任務是否存在 |
 | 任務角色認不得時失敗即關閉 | 使用者在該任務的任務角色缺少或認不得 | 進入分析詳情 | 導回分析列表；沒有退回成任何預設角色 |
 | 標記員進不來 | 使用者在該任務是標記員 | 進入分析詳情 | 導回分析列表 |
@@ -1420,7 +1422,8 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 | 單維度的達標取建議階 | 任務含單維度，指標值落在 0.75 與 0.80 之間 | 查看達標判定 | 這一型算**達標**（判定取建議階 0.75） |
 | 多維度的達標取嚴格階 | 任務含多維度，巨集平均落在 0.75 與 0.80 之間 | 查看達標判定 | 這一型算**未達標**（判定取嚴格階 0.80） |
 | 實體辨識的部分重疊只供顯示 | 任務含實體辨識，嚴格 F1 未達 0.80 而部分重疊 F1 高於 0.70 | 切到部分重疊顯示 | 達標判定不變，仍是未達標 |
-| 關係識別的高品質帶不是第二道判定 | 任務含關係識別，指標值在 0.75 與 0.80 之間 | 查看達標判定 | 算達標，0.80 那一列只是顯示帶 |
+| 部分重疊的結果是不判定 | <mark>任務含實體辨識</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup> | <mark>切到部分重疊顯示，查看兩種計算模式的比較表</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup> | <mark>部分重疊那一列寫 `Relaxed 參考線 0.70`，結果是中性樣式的 `不判定`，沒有 `通過`／`未達`，也沒有「門檻」或「參考值」字樣</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup> |
+| 關係識別的高品質帶不是第二道判定 | 任務含關係識別，指標值在 0.75 與 0.80 之間 | 查看達標判定 | 算達標，0.80 那一列只是<mark>參考線</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup> |
 | 有門檻的型別套綠紅 | 任務含單一標籤且達標 | 查看指標數值 | 數值以達標的視覺呈現 |
 | 自由文字顯示不適用狀態卡 | 任務含自由文字 | 進入品質監控 | 顯示 `不適用—由審核員評估`，沒有空白、沒有 `0`，沒有套綠紅 |
 | 序列標註顯示待實證校準 | 任務含序列標註，試標已完成且指標算得出來 | 查看那一型的報告 | 顯示點估計值與中性的待實證校準標示，畫面沒有門檻數值、沒有達標或未達標文案、沒有綠紅 |
@@ -1475,7 +1478,7 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 | 三個共用區塊整頁各一次 | 任務有八種輸出類型 | 進入品質監控 | 三個區塊各只出現一次，不是各七次 |
 | 複合任務依輸出類型分列 | 任務有單一標籤與序列標註兩型，某標記員兩型都標過 | 查看風險表 | 他有兩列，`輸出類型` 欄分別是單一標籤與序列標註 |
 | 自由文字不出現在三個區塊 | 任務含自由文字 | 查看這三個區塊 | 沒有任何一列的 `輸出類型` 是自由文字 |
-| 可比較單位的名稱跟著那一列的型別 | 任務有單維度與序列標註兩型 | 查看偏離分析 | <mark>欄名是 `可比較單位數`；單維度那一列的單位名詞是 `樣本`、序列標註那一列是 `span`</mark><sup>[#137](https://github.com/label-suite/label-suite/issues/137)</sup> |
+| 可比較單位的名稱跟著那一列的型別 | 任務有單維度與序列標註兩型 | 查看偏離分析 | 欄名是 `可比較單位數`；單維度那一列的單位名詞是 `樣本`、序列標註那一列是 `span` |
 | 異常偵測的兩類與空狀態 | 任務沒有速度異常也沒有高分歧樣本 | 查看異常偵測 | 兩類各顯示自己的空狀態：`無速度異常`、`無高分歧樣本旗標` |
 | 速度異常寫出支撐的數字 | 某標記員的平均速度明顯偏快 | 查看異常偵測 | 那一筆寫出是誰、哪一種異常，以及平均速度、比較基準與提交筆數 |
 | 風險等級恰好三個值 | 任務有多位標記員且樣本數都足夠 | 查看風險表 | 等級只出現 `正常`、`觀察`、`高風險` 三種 |
@@ -1527,11 +1530,11 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 
 ## 待釐清
 
-**目前沒有待釐清的項目。** 二十五題全部結案，見[§已確認決議](#已確認決議)。題號**只增不重排**，所以後續若有新題目從 Q26 起算。
+**目前沒有待釐清的項目。** <mark>二十七題</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup>全部結案，見[§已確認決議](#已確認決議)。題號**只增不重排**，所以後續若有新題目從<mark> Q28 </mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup>起算。
 
 ## 已確認決議
 
-階段一與階段二都沒有新的決議。階段三有一條（Q12，依本頁來源）。另有**二十四條**是維護者裁定的（Q1–Q11、Q13–Q25），依據是 `spec-migration.mdx` 通則步驟 4 的**第四個**依據，與 Q12 的第三個依據不同。
+階段一與階段二都沒有新的決議。階段三有一條（Q12，依本頁來源）。另有<mark>**二十六條**</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup>是維護者裁定的（<mark>Q1–Q11、Q13–Q27</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup>），依據是 `spec-migration.mdx` 通則步驟 4 的**第四個**依據，與 Q12 的第三個依據不同。
 
 ### Q2. 外殼裡的「任務基本資訊」到底要顯示什麼？（已定案，維護者裁定 2026-11-08）
 
@@ -1632,6 +1635,7 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 > 理由：來源明寫這個值**只供顯示切換、不得作為第二道達標判定**，而畫面把它叫「門檻」正好邀請讀的人當成第二道門檻用——他看到「未達門檻」會以為這一型沒過。
 > 依 `spec-migration.mdx` 通則步驟 4 的第四個依據（維護者明確拍板並記下日期）。**值與用途來源有明文**（只顯示、不入判定），所以規則已經寫死；**畫面的措辭**與那個用途相牴觸，而改畫面文案不是撰寫者能決定的。
 > **畫面要改兩處**：實體辨識的 `Relaxed 門檻 0.70` 與關係識別的 `高品質門檻 0.80`，併入 Issue #155。
+> <mark>**用詞已由 Q27 取代**：本題的例子「參考值」改成「參考線」；「不帶『門檻』」這個結論不變</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup>
 
 ### Q16. 巨集平均的對象缺席時怎麼辦？（已定案，維護者裁定 2026-11-08）
 
@@ -1667,6 +1671,23 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 
 > 理由：與[§已確認決議](#已確認決議) Q5（載入後被封存）**對稱**。兩種進入方式對同一個已封存任務給出不同結果，會讓使用者以為自己剛才是不是看錯了。
 > 依 `spec-migration.mdx` 通則步驟 4 的第四個依據（維護者明確拍板並記下日期）。Q5 只裁定了「進到這一頁**之後**被封存」那一半，問題本身也是那樣問的；**首次載入**沒有被裁定。來源整份**沒有提到封存**，已:ref[封存]{id="term.archived-task"}任務的可見性在[規格 03-03](../03-task-management/03-task-detail.mdx)有定義，但那是任務管理模組的頁面、不能外推。
+
+### Q26. 比較兩種計算模式時，部分重疊那一列的結果要寫什麼？達標狀態要不要多一個值？（已定案，維護者裁定 2026-11-19）
+
+- [x] **加進達標狀態當第六個值 `不判定`**：只用在只供顯示的參考線，中性樣式，文案不與 `不適用` 共用
+- [ ] 不加，另寫一條說明比較表上的 `不判定` 不是達標狀態的值
+- [ ] 改用既有的 `不適用`
+
+> 理由：`不適用` 是「這一型沒有門檻」，`不判定` 是「有數值、但不拿來判定」，兩種意思混用就會像 [Q12](#已確認決議) 那樣對使用者說錯話。畫面的比較表已經用 `不判定`（[Issue #423](https://github.com/label-suite/label-suite/issues/423)），規格補上它。
+
+### Q27. 部分重疊的 0.70 與關係識別的 0.80，畫面上要叫什麼？（已定案，維護者裁定 2026-11-19）
+
+- [x] **「參考線」**：`Relaxed 參考線 0.70`、`高品質參考線 0.80`
+- [ ] 「顯示帶」
+- [ ] 維持「參考值」，把[合併聚合參考值](#逐型標記員品質排名)改名
+
+> 理由：Q15 舉的例子「參考值」與本頁的「合併聚合參考值」撞名，同一頁一個詞有兩種意思。這兩個數字在畫面上就是一條線，字面也不帶「門檻」。合併聚合參考值不動。
+> **畫面要改**：目前寫 `Relaxed 參考值 0.70`、`高品質參考值 0.80`，比較表表頭寫 `門檻／參考值`，另開 [UI] issue，維護者看過畫面才移到 Ready。
 
 ### Q1. 切換分頁要不要留在瀏覽器的「上一頁」歷程裡？（已定案，維護者裁定 2026-11-08）
 
@@ -1757,7 +1778,7 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 - [x] **移除**——這份清單是獨立的觀測清單，不讀審核流程的狀態
 - [ ] 保留，並明確定義它讀的是什麼
 
-> 理由：來源明寫這份清單「**不得直接觸發或修改審核單位狀態機或爭議池的仲裁結果**」，兩者「資料來源與計算方式**互不相依**」；而畫面那一欄的值是 `待審核`／`已完成`（當時在 `dataset-analysis-detail.html` 的 `queuePending`／`queueCompleted` 兩個鍵）——那就是那個狀態機的值。<mark>那一欄與那兩個鍵已依本題於 2026-11-10 從七個 partial 與兩個語系一併移除</mark><sup>[#155](https://github.com/label-suite/label-suite/issues/155)</sup>。這份清單要回答的是「哪些樣本標得不一致」，與它審到哪裡是兩件事。
+> 理由：來源明寫這份清單「**不得直接觸發或修改審核單位狀態機或爭議池的仲裁結果**」，兩者「資料來源與計算方式**互不相依**」；而畫面那一欄的值是 `待審核`／`已完成`（當時在 `dataset-analysis-detail.html` 的 `queuePending`／`queueCompleted` 兩個鍵）——那就是那個狀態機的值。那一欄與那兩個鍵已依本題於 2026-11-10 從七個 partial 與兩個語系一併移除。這份清單要回答的是「哪些樣本標得不一致」，與它審到哪裡是兩件事。
 > 依 `spec-migration.mdx` 通則步驟 4 的**第四個**依據（維護者明確拍板並記下日期）。來源的必要元素只有三項（樣本識別、分歧度數值、文本摘要）加說明文字，**沒有這一欄**；畫面有而來源沒有的不得默默漏掉，但牴觸來源的也不能寫成規則，所以原本只能列為待釐清。
 > **畫面要跟著改**：七個 `quality-*.html` partial 各有一欄要移除，併入 Issue #155 處理。
 
@@ -1784,6 +1805,7 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#434](https://github.com/label-suite/label-suite/issues/434) | 2026-11-19 | §八種輸出類型各自的主指標與門檻、§資料欄位、§卡控機制、§驗收標準、§待釐清、§已確認決議 | 門檻列寫 `Relaxed 門檻 0.70`、`高品質門檻 0.80`；第 11 點以「參考值」為例，與合併聚合參考值撞名；達標狀態只有五個值，沒有畫面比較表用的 `不判定`；關係識別的 0.80 叫「顯示帶」 | 0.70 與 0.80 改叫「參考線」，不帶判定字樣；達標狀態加 `不判定`，只用於參考線；新增卡控一條與 Scenario「部分重疊的結果是不判定」；清掉 #137、#155 的舊標示 | **Q26**、**Q27**（維護者裁定 2026-11-19）；Q15 的用詞例子由 Q27 取代 |
 | [#372](https://github.com/label-suite/label-suite/issues/372) | 2026-11-16 | 頁首的警示框 | 寫「依 `docs/development/spec-migration.md` 的『大頁分階段』分五個階段寫」，而那份文件**從來沒有這一節**（`git log -S` 查過全 repo 歷史：那段文字是 2026-11-05 的 `cec7d96`，也就是本頁階段一自己寫進來的） | 刪掉那個引用，保留「這一頁分五個階段寫」這個事實——階段表與頁首徽章本來就在，不需要外部依據。**條文一字未改**；依 `writing-guide.md` 不改規則的改動不加變更標示 | **無新決議**（維護者 2026-11-16 裁定刪引用，[紀錄在這則留言](https://github.com/label-suite/label-suite/issues/372#issuecomment-6908325749)） |
 | [#188](https://github.com/label-suite/label-suite/issues/188) | 2026-11-16 | 頁首 | `變更 #155` 徽章是 `warning` 但沒有 `href` | 統一成 `variant="warning"` 加 `href`（維護者 2026-11-16 裁定，規則見 `writing-guide.md` §變更標示） | **無新決議**，條文一字未改 |
 | [#260](https://github.com/label-suite/label-suite/issues/260) | 2026-11-11 | §Q&A | 每題是 `### Q. …` 的 H3 標題，答案直接顯示 | 每題一個預設收合的 `tip`，題目是可點選的標題 | **無新決議**。§Q&A **15 題**全部從 `### Q. …` 標題改成預設收合的 `tip`，題目成為可點選的標題。題目的 H3 錨點因此消失（全站沒有任何連結指向它們，已逐題查過），也不再進右側目錄。**題目、答案與連結一字未改**，只有標題去掉「Q. 」前綴，以及一個標題去掉行內程式碼的反引號（`title` 只吃純文字，反引號會原字照印）。格式依維護者 2026-11-11 的四個裁定（紀錄在[這則留言](https://github.com/label-suite/label-suite/issues/260#issuecomment-6792064965)） |
@@ -1795,7 +1817,7 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 | [#137](https://github.com/label-suite/label-suite/issues/137) | 2026-11-08 | §業務流程（含 `@ai-visualize` prompt）、§頁首與麵包屑、§共用五指標、§多標籤共現、§自由文字的統計、§逐型 IAA 報告的版面、§八種輸出類型各自的主指標與門檻、§邊界情況、§資料欄位、§卡控機制、§驗收標準、§待釐清、§已確認決議 | 十四題待釐清 | 全部定案，整頁改已定案；大標改為 `任務分析詳情`／`Task Analysis Detail`，E1 多一個封存觸發 | **Q2**、**Q3**、**Q6**–**Q8**、**Q10**、**Q11**、**Q13**–**Q16**、**Q23**–**Q25**（維護者裁定 2026-11-08） |
 | [#137](https://github.com/label-suite/label-suite/issues/137) | 2026-11-08 | §業務流程（含 `@ai-visualize` prompt）、§分頁列與網址上的分頁參數、§品質監控要先有試標才有東西看、§邊界情況、§卡控機制、§驗收標準、§待釐清、§已確認決議 | Q1、Q4、Q5、Q17 待釐清；網址保留未知條件；沒有資格中途失效的例外流程 | 四題定案：分頁切換不推歷程、未知條件移除並正規化、資格失效在下一次讀取時導回列表（新增例外流程 E3）、IAA 計算失敗落在錯誤狀態；同時更新 `@ai-visualize` 的流程 prompt，並新增 Q24、Q25 兩題 | **Q1**、**Q4**、**Q5**、**Q17**（維護者裁定 2026-11-08） |
 | [#137](https://github.com/label-suite/label-suite/issues/137) | 2026-11-07 | §共用五指標、§逐型一致性最低樣本清單、§標記員被修改率、§邊界情況、§資料欄位、§卡控機制、§驗收標準、§待釐清、§已確認決議 | Q9、Q20、Q21 待釐清 | 三題定案：完成率同一份來源、移除佇列狀態欄、零分母顯示「尚無審核資料」 | **Q9**、**Q20**、**Q21**（維護者裁定 2026-11-07） |
-| [#137](https://github.com/label-suite/label-suite/issues/137) | 2026-11-07 | §共用品質監控區、§異常偵測、§標記員風險評估、§標記一致性偏離分析、§資料欄位、§卡控機制、§驗收標準、§待釐清、§已確認決議 | Q18、Q19、Q22 待釐清；偏離分析把單一標籤配成 `可比較樣本數` | 三題定案；新增 Q23；單一標籤<mark>依靜態標記</mark><sup>[#137](https://github.com/label-suite/label-suite/issues/137)</sup>改為 `可比較句數`（原寫「依畫面」，依據的描述已由 2026-11-10 那一列更正） | **Q18**、**Q19**（維護者裁定 2026-11-06）、**Q22**（維護者裁定 2026-11-07） |
+| [#137](https://github.com/label-suite/label-suite/issues/137) | 2026-11-07 | §共用品質監控區、§異常偵測、§標記員風險評估、§標記一致性偏離分析、§資料欄位、§卡控機制、§驗收標準、§待釐清、§已確認決議 | Q18、Q19、Q22 待釐清；偏離分析把單一標籤配成 `可比較樣本數` | 三題定案；新增 Q23；單一標籤依靜態標記改為 `可比較句數`（原寫「依畫面」，依據的描述已由 2026-11-10 那一列更正） | **Q18**、**Q19**（維護者裁定 2026-11-06）、**Q22**（維護者裁定 2026-11-07） |
 | [#131](https://github.com/label-suite/label-suite/issues/131) | 2026-11-06 | §統計總覽的分型規則第 6 條 | 輸出型別 | 輸出類型 | 規格 03-01 Q3 |
 | 階段五 | 2026-11-05 | §目標、§規格、§卡控機制、§邊界情況、§驗收標準、§Q&A、§附錄 | — | 新增匯出推導的 2 個大項與 `資料欄位`；補上 141 條舊編號對照 | — |
 | 階段四 | 2026-11-05 | §目標、§規格、§卡控機制、§邊界情況、§驗收標準、§待釐清、§Q&A | — | 新增標記員與樣本層分析的 12 個大項 | Q18–Q22 待釐清 |
@@ -1814,7 +1836,7 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 :::
 
 :::tip{title="為什麼任務代號不存在與沒有權限要顯示同一句話？" collapsible}
-分辨了就等於告訴外人「這個任務存在，只是你看不到」。這一頁的使用者是專案負責人與審核員，任務之間本來就有:ref[資料隔離]{id="term.data-isolation"}；把兩種情況合成一句 `找不到指定的任務，或您沒有該任務的存取權限。`，外人就無法用網址逐個試出哪些任務代號是真的。
+分辨了就等於告訴外人「這個任務存在，只是你看不到」。這一頁的使用者是專案負責人與審核員，任務之間本來就有:ref[資料隔離]{id="term.data-isolation"}；把兩種情況合成一句 `找不到指定的任務，或你沒有該任務的存取權限。`，外人就無法用網址逐個試出哪些任務代號是真的。
 :::
 
 :::tip{title="為什麼共用指標要寫死「恰好五項、完成率不得改名」，這不是多管閒事嗎？" collapsible}

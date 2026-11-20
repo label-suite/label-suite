@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="../../assets/logo/icon-colored.svg">
   <title>Label Suite — 個人設定</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -11,6 +12,7 @@
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <link rel="stylesheet" href="../shared/button.css" />
+  <link rel="stylesheet" href="../shared/card.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <style>
     /* ── Design Tokens ─────────────────────────────────────────── */
@@ -62,13 +64,8 @@
     .page-subheading { font-size: 14px; line-height: 1.8; color: var(--color-text-soft); margin: 0 0 24px; }
 
     /* ── Section Card ────────────────────────────────────────────── */
-    .section-card {
-      background: var(--color-white);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      padding: 24px;
-      margin-bottom: 24px;
-    }
+    /* 外框在 pages/shared/card.css（#423, G-41） */
+    .section-card { margin-bottom: var(--space-lg); }
 
     .section-title { font-size: 16px; font-weight: 600; color: var(--color-ink); margin-bottom: 4px; }
     .section-desc  { font-size: 13px; color: var(--color-text-soft); margin-bottom: 20px; }
@@ -106,7 +103,7 @@
       height: 32px;
       border: none;
       background: transparent;
-      color: var(--color-text-soft, #64748B);
+      color: var(--color-text-soft, #5E6B7F);
       border-radius: 6px;
       cursor: pointer;
       transition: background var(--dur-fast, 150ms), color var(--dur-fast, 150ms), opacity var(--dur-fast, 150ms);
@@ -157,7 +154,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #fff;
+      color: var(--color-on-cta);   /* 主色底上的字（#420 深色對比修正） */
       font-size: 24px;
       font-weight: 700;
       overflow: hidden;
@@ -197,7 +194,7 @@
     .input {
       width: 100%;
       padding: 10px 14px;
-      border: 1px solid var(--color-border);
+      border: 1px solid var(--color-border-control);
       border-radius: var(--radius-md);
       font-size: 15px;
       font-family: 'Inter', sans-serif;
@@ -209,12 +206,12 @@
 
     .input:focus {
       border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
     }
 
     .input.error {
       border-color: var(--color-error);
-      box-shadow: 0 0 0 3px rgba(185,28,28,0.1);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 10%, transparent);
     }
 
     .field-error { margin-top: 5px; font-size: 12px; color: var(--color-error); }
@@ -241,7 +238,7 @@
     .email-change-btn {
       font-size: 13px;
       font-weight: 600;
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
       background: none;
       border: none;
       cursor: pointer;
@@ -314,7 +311,7 @@
       height: 28px;
       border: none;
       background: transparent;
-      color: #64748B;
+      color: var(--color-ink-muted);
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -322,7 +319,7 @@
       transition: color 0.15s;
     }
 
-    .eye-toggle:hover { color: #334155; }
+    .eye-toggle:hover { color: var(--color-ink); }
     .eye-toggle svg { width: 16px; height: 16px; }
 
     /* ── Info Banner ─────────────────────────────────────────────── */
@@ -361,7 +358,7 @@
       height: 12px;
       margin-right: 8px;
       vertical-align: -1px;
-      border: 2px solid rgba(255,255,255,0.35);
+      border: 2px solid color-mix(in srgb, var(--color-on-cta) 35%, transparent);
       border-top-color: currentColor;
       border-radius: 50%;
       animation: btn-spin 0.6s linear infinite;
@@ -462,7 +459,7 @@
     .resend-link {
       font-size: 13px;
       font-weight: 500;
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
       background: none;
       border: none;
       cursor: pointer;
@@ -549,7 +546,7 @@
 
     /* ── Skeleton ────────────────────────────────────────────────── */
     .skeleton {
-      background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+      background: linear-gradient(90deg, var(--color-border) 25%, var(--color-border-muted) 50%, var(--color-border) 75%);
       background-size: 200% 100%;
       animation: shimmer 1.5s infinite;
       border-radius: var(--radius-md);
@@ -616,7 +613,7 @@
     .toggle-slider {
       position: absolute;
       inset: 0;
-      background: var(--color-border);
+      background: var(--color-border-control);
       border-radius: var(--radius-full);
       transition: background var(--dur-fast);
     }
@@ -627,15 +624,15 @@
       width: 16px;
       height: 16px;
       border-radius: 50%;
-      background: white;
+      background: var(--color-toggle-thumb);
       top: 3px;
       left: 3px;
       transition: transform var(--dur-fast);
     }
 
     .toggle-switch input:checked + .toggle-slider { background: var(--color-primary); }
-    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
-    .toggle-switch input:focus-visible + .toggle-slider { box-shadow: 0 0 0 3px rgba(99,102,241,0.25); }
+    .toggle-switch input:checked + .toggle-slider::before { background: var(--color-on-cta); transform: translateX(18px); }
+    .toggle-switch input:focus-visible + .toggle-slider { box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 25%, transparent); }
 
     /* ── Responsive ──────────────────────────────────────────────── */
     @media (max-width: 767px) {
@@ -650,17 +647,8 @@
     }
 
     /* ── Dark mode overrides ──────────────────────────────────── */
-    html[data-theme="dark"] {
-      /* Eye toggle — light values are MASTER-verbatim literals, so the
-         dark counterpart stays a manual override. */
-      .eye-toggle { color: var(--color-ink-muted); }
-      .eye-toggle:hover { color: var(--color-ink); }
-
-      /* Skeleton gradient */
-      .skeleton {
-        background: linear-gradient(90deg, #1F1F28 25%, #2A2A35 50%, #1F1F28 75%);
-      }
-    }
+    /* None needed: the eye toggle and the skeleton read tokens that flip in
+       tokens.css (#420). */
   </style>
 </head>
 <body>
@@ -690,7 +678,7 @@
     <div class="content-inner">
 
       <h1 class="page-heading" id="pageTitle">個人設定</h1>
-      <p class="page-subheading" id="pageSubtitle">管理您的個人資料與帳號安全</p>
+      <p class="page-subheading" id="pageSubtitle">管理你的個人資料與帳號安全</p>
 
       <!-- ──────────────────────────────────────────────────────── -->
       <!-- P-0: SKELETON STATE                                     -->
@@ -737,7 +725,7 @@
         <!-- Section 1: 個人資料 -->
         <section class="section-card" id="profile-section" aria-labelledby="profileSectionTitle">
           <h2 class="section-title" id="profileSectionTitle">個人資料</h2>
-          <p class="section-desc" id="profileSectionDesc">修改您的姓名與聯絡方式</p>
+          <p class="section-desc" id="profileSectionDesc">修改你的姓名與聯絡方式</p>
 
           <div class="avatar-area">
             <div class="avatar-wrap" role="button" tabindex="0"
@@ -870,7 +858,7 @@
               <line x1="12" y1="16" x2="12" y2="12"/>
               <line x1="12" y1="8" x2="12.01" y2="8"/>
             </svg>
-            <span id="ssoBannerText">設定密碼後即可同時使用 Email / Password 登入</span>
+            <span id="ssoBannerText">設定密碼後即可同時使用電子郵件與密碼登入</span>
           </div>
 
           <!-- Current password (hidden for SSO) -->
@@ -960,7 +948,7 @@
                   </div>
                 </td>
                 <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne1-inapp" checked aria-label="標記員完成標記作業 — 站內通知" /><span class="toggle-slider"></span></label></div></td>
-                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne1-email" checked aria-label="標記員完成標記作業 — Email" /><span class="toggle-slider"></span></label></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne1-email" checked aria-label="標記員完成標記作業 — 電子郵件" /><span class="toggle-slider"></span></label></div></td>
               </tr>
               <tr>
                 <td>
@@ -970,7 +958,7 @@
                   </div>
                 </td>
                 <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne2-inapp" checked aria-label="審核員完成審核 — 站內通知" /><span class="toggle-slider"></span></label></div></td>
-                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne2-email" checked aria-label="審核員完成審核 — Email" /><span class="toggle-slider"></span></label></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne2-email" checked aria-label="審核員完成審核 — 電子郵件" /><span class="toggle-slider"></span></label></div></td>
               </tr>
               <tr>
                 <td>
@@ -980,7 +968,7 @@
                   </div>
                 </td>
                 <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne3-inapp" checked aria-label="試標完成 — 站內通知" /><span class="toggle-slider"></span></label></div></td>
-                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne3-email" checked aria-label="試標完成 — Email" /><span class="toggle-slider"></span></label></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne3-email" checked aria-label="試標完成 — 電子郵件" /><span class="toggle-slider"></span></label></div></td>
               </tr>
               <tr>
                 <td>
@@ -990,7 +978,7 @@
                   </div>
                 </td>
                 <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne4-inapp" checked aria-label="正式標記全員完成 — 站內通知" /><span class="toggle-slider"></span></label></div></td>
-                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne4-email" checked aria-label="正式標記全員完成 — Email" /><span class="toggle-slider"></span></label></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne4-email" checked aria-label="正式標記全員完成 — 電子郵件" /><span class="toggle-slider"></span></label></div></td>
               </tr>
               <tr>
                 <td>
@@ -1000,7 +988,7 @@
                   </div>
                 </td>
                 <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne5-inapp" checked aria-label="你被分配標記清單 — 站內通知" /><span class="toggle-slider"></span></label></div></td>
-                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne5-email" checked aria-label="你被分配標記清單 — Email" /><span class="toggle-slider"></span></label></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne5-email" checked aria-label="你被分配標記清單 — 電子郵件" /><span class="toggle-slider"></span></label></div></td>
               </tr>
               <tr>
                 <td>
@@ -1010,7 +998,7 @@
                   </div>
                 </td>
                 <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne6-inapp" checked aria-label="你被分配審核清單 — 站內通知" /><span class="toggle-slider"></span></label></div></td>
-                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne6-email" checked aria-label="你被分配審核清單 — Email" /><span class="toggle-slider"></span></label></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne6-email" checked aria-label="你被分配審核清單 — 電子郵件" /><span class="toggle-slider"></span></label></div></td>
               </tr>
             </tbody>
           </table>
@@ -1056,7 +1044,7 @@
           <div id="googleLinkedState" style="display:none;">
             <div class="google-linked-row">
               <span class="google-linked-check" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                      stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
                   <path d="M20 6 9 17l-5-5"/>
                 </svg>
@@ -1150,7 +1138,7 @@
           <p class="sent-desc">
             <span class="sent-email-highlight" id="sentEmailDisplay">—</span>
           </p>
-          <p class="sent-hint" id="emailSentHint">請前往信箱點擊驗證連結，完成 Email 切換</p>
+          <p class="sent-hint" id="emailSentHint">請前往信箱點擊驗證連結，完成電子郵件切換</p>
 
           <div class="sent-actions">
             <button class="btn-secondary btn-secondary--back" type="button" onclick="setState('email')">
@@ -1178,7 +1166,7 @@
     const i18n = {
       zh: {
         pageTitle:               '個人設定',
-        pageSubtitle:            '管理您的個人資料與帳號安全',
+        pageSubtitle:            '管理你的個人資料與帳號安全',
         userName:                'Iris Tsai',
         roleIndicator:           '一般使用者',
         roleSuperAdmin:          '系統管理員',
@@ -1188,7 +1176,7 @@
         logoutAria:              '登出',
         logoutTitle:             '登出',
         profileSectionTitle:     '個人資料',
-        profileSectionDesc:      '修改您的姓名與聯絡方式',
+        profileSectionDesc:      '修改你的姓名與聯絡方式',
         prefSectionTitle:        '偏好設定',
         prefSectionDesc:         '調整介面外觀',
         prefAppearance:          '外觀',
@@ -1205,7 +1193,7 @@
         saveProfileLabel:        '儲存',
         pwSectionTitle:          '密碼設定',
         pwSectionDesc:           '定期更新密碼以維護帳號安全',
-        ssoBannerText:           '設定密碼後即可同時使用 Email / Password 登入',
+        ssoBannerText:           '設定密碼後即可同時使用電子郵件與密碼登入',
         labelCurrentPw:          '現有密碼',
         labelNewPw:              '新密碼',
         labelConfirmPw:          '確認新密碼',
@@ -1220,7 +1208,7 @@
         emailChangeNextLabel:    '下一步',
         emailSentTitle:          '驗證信已寄送',
         emailSentDescPre:        '已寄送驗證信至',
-        emailSentHint:           '請前往信箱點擊驗證連結，完成 Email 切換',
+        emailSentHint:           '請前往信箱點擊驗證連結，完成電子郵件切換',
         backToProfileBtn:        '返回個人設定',
         resendLabel:             '重新寄送驗證信',
         toastSaveSuccess:        '儲存成功',
@@ -1230,7 +1218,7 @@
         toastPwSuccess:          '密碼修改成功',
         toastPwSuccessDesc:      '其他裝置 session 已失效',
         toastPwSetSuccess:       '密碼設定成功',
-        toastPwSetSuccessDesc:   '您現在可使用 Email / Password 登入',
+        toastPwSetSuccessDesc:   '你現在可使用電子郵件與密碼登入',
         toastResendSuccess:      '驗證信已重新寄送',
         toastResendSuccessDesc:  '請前往信箱完成驗證',
         googleSectionTitle:      '連結 Google 帳號',

@@ -1,6 +1,6 @@
 # List Toolbar
 
-> 正典章節：`MASTER.md` 無對應章節（`shared/list-page.css` 自己是來源）｜行為契約 [UXC-11](../ux-conventions.md#uxc-11-篩選搜尋與分頁的狀態放在網址上)｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
+> 正典章節：`MASTER.md` 無對應章節（`shared/list-page.css` 自己是來源）｜行為契約 [UXC-11](../ux-conventions.md#uxc-11-篩選搜尋與分頁的狀態放在網址上)｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c` ｜未標檔名的行號指 `design/prototype/pages/shared/list-page.css`
 
 ## 結構
 
@@ -14,7 +14,7 @@
 | `.filter-select` ×n | 選用 | `:31`–`:39` |
 | `.clear-btn`（清除篩選） | 選用 | `:40`–`:47` |
 
-`.search-icon` 絕對定位在左側 12px 並 `pointer-events: none`（`:19`–`:22`），輸入框以 36px 左內距讓位（`:24`）。
+`.search-icon` 絕對定位在左側 12px 並 `pointer-events: none`（`:19`–`:22`），輸入框以 36px 左內距讓位（`:21`）。
 
 ## 變體
 
@@ -28,15 +28,15 @@
 | :--- | :--- | :--- |
 | 預設 | 有 | `list-page.css:10` |
 | focus | **有**。`.search-input` 與 `.filter-select` 都換 primary 邊框加 3px ring | `:30`、`:39` — 全 `list-page.css` 只有這兩條 `:focus` |
-| hover | 只有 `.clear-btn` 有（文字與邊框變深） | `:46` |
+| hover | 只有 `.clear-btn` 有（文字換 `--color-ink`、邊框換 `--color-primary`） | `:46` |
 | 沒有可清除的篩選 | 有。`.clear-btn.hide-clear` 用 `visibility: hidden` ＋ `pointer-events: none`——**保留佔位，不跳版** | `:47` |
 | disabled／載入中／錯誤／空 | 未觀察到 | 全檔無 `:disabled` |
 
 ## token
 
-`--space-sm`、`--space-lg`、`--color-border`、`--color-ink`、`--color-ink-muted`、`--color-white`、`--color-primary`、`--radius-md`、`--dur-fast`。
+`--space-sm`、`--space-lg`、`--color-border`、`--color-border-control`、`--color-ink`、`--color-ink-muted`、`--color-white`、`--color-primary`、`--radius-md`、`--dur-fast`。
 
-兩個寫死處：focus ring 的 `rgba(99,102,241,0.12)`（`:30`、`:39`，和 `shared/input.css:21` 的 `color-mix` 寫法不同），以及 `.filter-select` 下拉箭頭 data-URI SVG 裡的 `%2394A3B8`（`:34`）→ `../design-gaps.md` G-02、G-04。
+#438 之前有兩個寫死處：focus ring 的 `rgba(99,102,241,0.12)`（`:30`、`:39`），以及 `.filter-select` 下拉箭頭 data-URI SVG 裡的 `%2394A3B8`（`:31`）。#438 起 focus ring 改成和 `shared/input.css` 相同的 `color-mix(in srgb, var(--color-primary) 12%, transparent)`；箭頭的筆畫色仍寫在 data-URI 裡（SVG 讀不到 `var()`），但對齊 `--color-ink-muted`，淺色 `%235E6B7F`、深色另一條規則 `%239CA3AF`（`:108`）→ `../design-gaps.md` G-02、G-04。
 
 ## 鍵盤與焦點
 
@@ -54,6 +54,8 @@
 
 本批次**沒有可重現的視圖**：showcase 不含工具列，b1 的九個畫面也沒有一個載入 `list-page.css`。最近的樣本在 b2 的 `task-management/task-list#state-filtered-empty`。→ `../design-gaps.md` G-21
 
+**b2 補上**：`task-management/task-list#state-default` 與 `#state-filtered-empty`（`list-page.css` 加本頁重寫）。
+
 ## shadcn 對照
 
 沒有單一對應原語；接近 `Input` ＋ `Select` ＋ `Button` 的組合，shadcn 的 data-table 範例裡有類似的工具列但不是發行的元件。
@@ -67,5 +69,9 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | 無（b1） | — |
+| `task-management/task-list`（`#state-default`、`#state-filtered-empty`） | 工具列 markup `task-list.html:197`–`:229`，已載 `list-page.css` 又在 `<style>` 重寫（`:143`–`:149`） |
+| `admin/user-management#state-default` | 本頁的搜尋與篩選 `.filter-bar`（`user-management.html:59`–`:83`、`:291`），不是 `list-page.css` |
+| `annotation/annotation-list`（`#state-default`、`#state-filtered-empty`） | `.toolbar role="search"`（`annotation-list.html:473`）：`.filter-select`、`.search-input`、`.clear-btn`；篩選狀態放網址（`?q=`、`?status=`，UXC-11，`:1051`） |
+| `dataset/dataset-analysis-list`（`#state-default`、`#state-filtered-empty`） | `list-page.css` 的 `.toolbar role="search"`（`dataset-analysis-list.html:250`）：兩個 `.filter-select`（`:252`、`:255`）、`.clear-btn`（`:258`）、`.search-input`；篩選寫進網址（`syncUrl`，`dataset-analysis-list.js:71`） |
 
-shipped 使用頁面在 b2（`task-management/task-list`、`admin/user-management`）、b3（`annotation/annotation-list`）、b4（`dataset/dataset-analysis-list`），待那幾批補。表格與分頁的部分見 [Data Table](data-table.md) 與 [Pagination](pagination.md)。
+b2 已補上（見上表）。b3 已補上（見上表）。b4 已補上（見上表）。表格與分頁的部分見 [Data Table](data-table.md) 與 [Pagination](pagination.md)。

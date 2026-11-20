@@ -8,7 +8,7 @@
 
 | 部分 | 必填 | 依據（`login.html`） |
 | :--- | :--- | :--- |
-| `.navbar`（64px、`--color-card` 底、下框線、左右 32px、兩端對齊） | 必填 | `pages/account/login.html:49` |
+| `.navbar`（64px、`--color-white` 底、下框線、左右 32px、兩端對齊） | 必填 | `pages/account/login.html:29` |
 | `.navbar-brand` ＞ `.navbar-logo` ＋ `.navbar-wordmark` | 必填 | 五頁皆有 |
 | 右側 [Language Toggle](lang-toggle.md) | 必填 | 五頁皆有 |
 
@@ -23,7 +23,7 @@
 | A | `account/login`、`account/register`、`account/forgot-password` |
 | B | `account/reset-password`、`account/verify-email` |
 
-**`.navbar` 本身五頁完全相同**（`login.html:49`、`register.html:52`、`forgot-password.html:51`、`reset-password.html:52`、`verify-email.html:57`），`-brand` 與 `-wordmark` 也是。分歧只來自 `.navbar-logo` 一個。→ `../design-gaps.md` G-28
+**`.navbar` 本身五頁完全相同**（`login.html:29`、`register.html:29`、`forgot-password.html:29`、`reset-password.html:29`、`verify-email.html:34`），`-brand` 與 `-wordmark` 也是。分歧只來自 `.navbar-logo` 一個。→ `../design-gaps.md` G-28
 
 ## 適用狀態
 
@@ -35,7 +35,7 @@
 
 ## token
 
-`--color-card`（頁面私有，見 [Auth Card](auth-card.md)）、`--color-border`。高度 64px 與內距 32px 是字面值。
+`--color-white`（#420 之前是頁面私有的 `--color-card`，見 [Auth Card](auth-card.md)）、`--color-border`。高度 64px 與內距 32px 是字面值。
 
 ## 鍵盤與焦點
 
@@ -43,7 +43,7 @@
 
 ## 樣式出處
 
-五頁各自的 `<style>`。代表定義：`design/prototype/pages/account/login.html:49`。
+五頁各自的 `<style>`。代表定義：`design/prototype/pages/account/login.html:29`。
 
 ## 可重現樣本
 

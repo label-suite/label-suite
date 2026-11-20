@@ -7,7 +7,7 @@ The single rule source for every coding agent working in this repository (Claude
 1. **Issue first** — no implementation starts without an open issue that lists the work.
 2. **No commits to `main`** — branch first (`<type>/<short-description>`, lowercase, `-` separated, e.g. `docs/agent-rules`), then open a pull request.
 3. **No `pip install` / `npm install`** — use `uv add` for Python and `pnpm add` for JavaScript so lockfiles stay in sync.
-4. **No version bumps** — do not change the version in `CITATION.cff`, `backend/pyproject.toml`, or `frontend/package.json`. The only exception is the `chore(release)` commit described in [docs/development/commit-and-release.md](docs/development/commit-and-release.md).
+4. **No version bumps** — do not change the version in `CITATION.cff`, `backend/pyproject.toml`, or `frontend/package.json`. The only exception is the `chore(release)` commit described in [docs/development/workflow/commit-and-release.md](docs/development/workflow/commit-and-release.md).
 5. **No hardcoded task logic** — task types are config-driven; adding one must not require changing core code.
 6. **No test-set answer exposure** — anything an annotator can reach must never include ground-truth answers.
 7. **No `any` in TypeScript**, and **no `allow_origins=["*"]`** in CORS — list origins explicitly.
@@ -52,10 +52,11 @@ The organization project **Label Suite** (https://github.com/orgs/label-suite/pr
 - **Card moves.** The agent doing the work moves its card: In Progress when claiming, In Review when the PR is open, Done after the PR is merged and the issue is closed. An Epic moves to In Progress when its first child starts and to Done when its last child is done.
 - **Opening issues.** Pass everything in one command: `gh issue create --type <Type> --project "Label Suite"`, plus `--parent <N>` for a child issue.
 - **Merging.** Pull requests are merged with merge commits only. Squash and rebase merges are disabled, and merged branches are deleted automatically.
+- **Dispatch.** The `issue-dispatch` skill (`.claude/skills/issue-dispatch/SKILL.md`) works the Ready column without asking: it claims cards the same way as above, gives each issue its own worktree and lead, and merges. A card in Ready is the maintainer's standing authorization for that issue to be merged, provided that every CI check has passed and that a reviewer who did not write the change has passed it; the main session then merges it and moves the card to Done (maintainer's ruling, 2026-11-19). The skill currently dispatches only documentation, tooling and `openspec/` issues. Screen changes, `docs/specs/` requirements and product code are outside its scope.
 
 ## SDD Workflow
 
-Every change follows the `label-suite-sdd` schema: nine planning and implementation artifacts whose order the OpenSpec CLI enforces. A documentation or tooling change may instead pass `--schema spec-driven` and use the four-artifact flow, the escape hatch the maintainer kept on 2026-11-04. The schema lives in `openspec/schemas/label-suite-sdd/`; the dispatch order, the rules per artifact and the two checkpoints live in `openspec/config.yaml`.
+Every change follows the `label-suite-sdd` schema: nine planning and implementation artifacts whose order the OpenSpec CLI enforces. A documentation or tooling change may instead pass `--schema spec-driven` and use the four-artifact flow, the escape hatch the maintainer kept on 2026-11-04. The schema lives in `openspec/schemas/label-suite-sdd/`; the dispatch order, the rules per artifact and the one checkpoint live in `openspec/config.yaml`.
 
 ### Roles
 
@@ -77,20 +78,19 @@ Each role is defined in `.claude/agents/<role>.md`. The main agent dispatches; i
 
 **The SDD roles share one issue and one branch.** They all serve a single change and are dispatched in the order the schema enforces; only `system-design` and `ui-design` run at the same time, and they write different files. Do not give an SDD role its own worktree or its own issue. The separate-worktree, one-issue-each rule that `CLAUDE.md` states for parallel subagents is about splitting unrelated issues across agents, and does not apply here.
 
-### The two checkpoints
+### The one checkpoint
 
-Only two steps wait for the maintainer:
+Only one step waits for the maintainer: **after `clarification.md`**. Items that need the maintainer's decision (Q) are asked one at a time. Clear defects (P) go straight back to the agent that wrote the artifact; those are not asked.
 
-1. **After `clarification.md`.** Items that need the maintainer's decision (Q) are asked one at a time. Clear defects (P) go straight back to the agent that wrote the artifact; those are not asked.
-2. **After acceptance.** `acceptance-verifier` writes `acceptance.md`, including manual acceptance steps - the commands to start the app, the URLs, which role to sign in as, which screens to open and what to expect. The maintainer verifies by hand and only then runs `/opsx:archive`.
+Everything else - revising clear defects, the planning review, the code review, acceptance, archiving, the commits between stages, and the merge - runs without asking.
 
-Everything else - revising clear defects, the planning review, the code review, the commits between stages - runs without asking.
+**Acceptance no longer stops** (maintainer's ruling, 2026-11-19). `acceptance-verifier` still writes `acceptance.md` and still writes the manual acceptance steps in it - the commands to start the app, the URLs, which role to sign in as, which screens to open and what to expect. They are kept as the record to come back to when something has to be spot-checked or has gone wrong, not as a handover that waits for someone. When acceptance passes, `ops` runs `/opsx:archive` **before the merge**, so the archive move travels in the same pull request as the code and main never holds a change that is merged but not archived.
 
 **A fault is not a checkpoint, and a fault still stops.** An ambiguous task description, a spec problem found during implementation, work outside the scope of `tasks.md`, or a failing command all stop the run. They mean the plan was wrong, and pushing through writes the wrong code.
 
 ### What `/sdd` authorizes
 
-`.claude/commands/sdd.md` is this project's own command. Running `/sdd <request>` is a maintainer request that authorizes **both planning and implementation** for that one change: the agent runs the plan stage, stops at checkpoint one, continues into apply after the maintainer answers, and stops at checkpoint two.
+`.claude/commands/sdd.md` is this project's own command. Running `/sdd <request>` is a maintainer request that authorizes **both planning and implementation** for that one change: the agent runs the plan stage, stops at the one checkpoint, and continues into apply after the maintainer answers, through acceptance, archiving and the merge.
 
 The authorization lives in the command, not in `openspec/config.yaml`. `.claude/skills/openspec-propose/SKILL.md` states that project context cannot grant authorization or move the planning boundary, and `openspec update` overwrites that skill, so neither file is a place to put it. `openspec update` does not touch `.claude/commands/sdd.md`; it only rewrites or removes the `opsx/` command files it generates itself.
 
@@ -98,14 +98,14 @@ The authorization is per change and does not carry over. It covers the artifacts
 
 - It does not authorize changing `docs/specs/` requirements. A decision that changes a requirement goes through `spec-writing` first, and the maintainer owns those pages.
 - It does not authorize `docs/specs/00-prd.mdx` or `design/prototype/`. An interface change has its own gate, and it sits before Ready, not inside a run: see the Ready gate above.
-- It does not authorize merging, releasing, or closing an issue.
+- **It does authorize merging**, once acceptance has passed and every required check is green (maintainer's ruling, 2026-11-19). It still does not authorize releasing or closing an issue by hand; the issue closes through the `Closes #N` in the merged pull request.
 - It does not lift any Hard Rule. Issue first still applies: no `/sdd` run starts without an open issue listing the work.
 
 Running `/opsx:propose` on its own still authorizes planning only, as that skill requires.
 
 ## Commits
 
-Full rules: [docs/development/commit-and-release.md](docs/development/commit-and-release.md). The essentials:
+Full rules: [docs/development/workflow/commit-and-release.md](docs/development/workflow/commit-and-release.md). The essentials:
 
 - English [Conventional Commits](https://www.conventionalcommits.org/): `<type>: <imperative subject, ≤ 72 chars> (#<issue>)`.
 - Types: `feat` · `fix` · `docs` · `refactor` · `test` · `chore` · `ci` · `perf` · `build`.
@@ -137,8 +137,9 @@ Full rules: [docs/development/commit-and-release.md](docs/development/commit-and
 
 ## Required Behaviors
 
-- After cloning, run `scripts/setup.sh` once. It enables the commit-msg hook, which checks every commit message against the rules in [Commits](#commits). The `commit-messages` CI job runs the same checker on every commit in a pull request.
+- After cloning, run `scripts/setup.sh` once and `pnpm install`. `scripts/setup.sh` enables two Git hooks: commit-msg checks every commit message against the rules in [Commits](#commits), and pre-commit formats the staged files with Prettier through lint-staged (it fails the commit, rather than skipping, when `pnpm install` has not been run). The `commit-messages` and `format` CI jobs run the same checks on every pull request.
 - Read the relevant files before changing them.
+- Fix a wrong existing implementation directly when this change calls, modifies, or replaces it: fix it in the same pull request and say in the PR what was wrong, instead of working around it or adding a rule to compensate. Anything outside that code path is only reported and gets its own issue. The reasoning is in [ADR-001 D2](docs/development/adr/001-agent-engineering.mdx).
 - Ask the maintainer about any decision that is theirs to make; do not proceed on an assumed default.
 - If a tool call fails twice, report the exact error before trying again.
 - Remove debug `print` / `console.log` before finishing.
@@ -151,12 +152,12 @@ This repository has no `.claude/rules/` canon and will not get one (decided in #
 
 | Area | Document | Issue |
 |------|----------|-------|
-| Cross-cutting — search first, dependency direction, smallest change, no excessive abstraction, conflicts, locked scope, loud failure | [docs/development/agent-rules.mdx](docs/development/agent-rules.mdx) | #105 |
-| Backend layering, database, background work | [docs/development/backend-agent-rules.mdx](docs/development/backend-agent-rules.mdx) | #106 |
-| Authorization, answer isolation, config-driven boundaries | [docs/development/security-agent-rules.mdx](docs/development/security-agent-rules.mdx) | #107 |
-| API contract sync, single frontend client | [docs/development/api-agent-rules.mdx](docs/development/api-agent-rules.mdx) | #108 |
-| Frontend dependency direction, type safety, shared UI | [docs/development/frontend-agent-rules.mdx](docs/development/frontend-agent-rules.mdx) | #109 |
-| Test layers, dual-database verification, delivery evidence | [docs/development/testing-agent-rules.mdx](docs/development/testing-agent-rules.mdx) | #110 |
+| Cross-cutting — search first, dependency direction, smallest change, no excessive abstraction, conflicts, locked scope, loud failure | [docs/development/rules/agent-rules.mdx](docs/development/rules/agent-rules.mdx) | #105 |
+| Backend layering, database, background work | [docs/development/rules/backend-agent-rules.mdx](docs/development/rules/backend-agent-rules.mdx) | #106 |
+| Authorization, answer isolation, config-driven boundaries | [docs/development/rules/security-agent-rules.mdx](docs/development/rules/security-agent-rules.mdx) | #107 |
+| API contract sync, single frontend client | [docs/development/rules/api-agent-rules.mdx](docs/development/rules/api-agent-rules.mdx) | #108 |
+| Frontend dependency direction, type safety, shared UI | [docs/development/rules/frontend-agent-rules.mdx](docs/development/rules/frontend-agent-rules.mdx) | #109 |
+| Test layers, dual-database verification, delivery evidence | [docs/development/rules/testing-agent-rules.mdx](docs/development/rules/testing-agent-rules.mdx) | #110 |
 
 All six documents now exist, but most of their rules are not being checked: `backend/`, `frontend/` and `e2e/` do not exist yet, so most of the checks those documents describe are marked as not built. The rest are marked as manual review, which means a person or an independent reviewer does them, not a tool. Read "not built" as literal, and do not report a check as passing when the check has not been built.
 
@@ -167,9 +168,11 @@ Two rules are worth stating here because they are reversals of what the referenc
 
 Size is judged by purpose, not by counting. This repository sets no file-count or diff-line ceiling for a pull request — see [Pull Requests](#pull-requests).
 
-Technical baselines (stack choices, layering, ADR status) are in [docs/development/architecture.mdx](docs/development/architecture.mdx), and the pull-request categories are in [docs/development/spec-migration.mdx](docs/development/spec-migration.mdx).
+Technical baselines (stack choices, layering, ADR status) are in [docs/development/architecture.mdx](docs/development/architecture.mdx), and the pull-request categories are in [docs/development/workflow/spec-migration.mdx](docs/development/workflow/spec-migration.mdx).
 
-How a rule gets triggered — which agent or Git event fires it, which shared checker it calls, and whether it blocks or only warns — is in [docs/development/agent-hook-contract.mdx](docs/development/agent-hook-contract.mdx), together with an event-by-event comparison of what Claude Code and Codex each support. That document is a contract, not a second rule canon, and it adds no rules. No agent hook is wired yet: `.claude/settings.json` carries only the attribution setting, there is no `.codex/hooks.json`, and the only hook checker that runs today is `scripts/check-commit-msg.sh` through `scripts/git-hooks/commit-msg`. Claude's hook configuration, events and exit codes do not carry over to Codex; that document lists the gaps instead of claiming they do.
+Why a rule or baseline was chosen — the constraints, the options compared, the cost, and when to revisit it — is recorded in this repository's ADRs, one per domain, indexed in [docs/development/adr/index.mdx](docs/development/adr/index.mdx). When they disagree, this file wins, then this repository's ADRs, then `architecture.mdx` and the area documents above; the personal repository's ADRs are reference only. `docs/specs/` still wins on business requirements.
+
+How a rule gets triggered — which agent or Git event fires it, which shared checker it calls, and whether it blocks or only warns — is in [docs/development/rules/agent-hook-contract.mdx](docs/development/rules/agent-hook-contract.mdx), together with an event-by-event comparison of what Claude Code and Codex each support. That document is a contract, not a second rule canon, and it adds no rules. No agent hook is wired yet: `.claude/settings.json` carries the attribution setting and the permission allowlist `issue-dispatch` needs, but no `hooks` key, there is no `.codex/hooks.json`, and the only Git hooks that run today are `scripts/git-hooks/commit-msg` (calling `scripts/check-commit-msg.sh`) and `scripts/git-hooks/pre-commit` (running Prettier through lint-staged). Claude's hook configuration, events and exit codes do not carry over to Codex; that document lists the gaps instead of claiming they do.
 
 ## Review Guidelines
 

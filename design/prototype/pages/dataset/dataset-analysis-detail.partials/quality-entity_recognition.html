@@ -8,15 +8,15 @@
     <span id="iaaMethodSuffix">— 主要指標</span>
   </div>
   <div class="match-toggle" role="group" aria-label="Match mode">
-    <button class="match-btn active" id="matchStrict" type="button">Strict match</button>
-    <button class="match-btn" id="matchPartial" type="button">Partial overlap</button>
+    <button class="match-btn active" id="matchStrict" type="button" aria-pressed="true">Strict match</button>
+    <button class="match-btn" id="matchPartial" type="button" aria-pressed="false">Partial overlap</button>
   </div>
   <div id="seqStrictCard">
     <div class="iaa-score-grid iaa-score-grid-1">
       <div class="iaa-score-card">
         <div class="iaa-card-label" id="lblSeqStrictMetric">Pairwise Entity-level F1（strict）</div>
         <div class="iaa-card-value fail">0.72</div>
-        <div class="iaa-card-calc">Pairwise 平均</div>
+        <div class="iaa-card-calc" data-i18n="entityRecognitionListRank.pairwiseAvg">Pairwise 平均</div>
         <div class="iaa-bar-wrap"><div class="iaa-bar-fill fail" style="width:72%"></div></div>
         <div class="iaa-threshold-row">
           <span class="iaa-threshold-item">
@@ -31,29 +31,31 @@
     <div class="iaa-score-grid iaa-score-grid-1">
       <div class="iaa-score-card">
         <div class="iaa-card-label" id="lblSeqPartialMetric">Pairwise Entity-level F1（partial overlap）</div>
-        <div class="iaa-card-value pass">0.78</div>
-        <div class="iaa-card-calc">Pairwise 平均</div>
-        <div class="iaa-bar-wrap"><div class="iaa-bar-fill pass" style="width:78%"></div></div>
+        <!-- 部分重疊只能切換顯示、不判定達標（規格 05-02 §八種輸出類型各自的主指標與門檻 第 11 條；#423, design-gaps G-53）：
+             不叫「門檻」、不寫通過／未達，數值、長條與圓點都用中性色。 -->
+        <div class="iaa-card-value">0.78</div>
+        <div class="iaa-card-calc" data-i18n="entityRecognitionListRank.pairwiseAvg">Pairwise 平均</div>
+        <div class="iaa-bar-wrap"><div class="iaa-bar-fill neutral" style="width:78%"></div></div>
         <div class="iaa-threshold-row">
           <span class="iaa-threshold-item">
-            <span class="t-dot t-dot-pass"></span>
-            <span id="lblSeqPartThr">Relaxed 門檻 0.70 — <strong class="t-pass">通過</strong></span>
+            <span class="t-dot t-dot-neutral"></span>
+            <span id="lblSeqPartThr">Relaxed 參考線 0.70</span>
           </span>
         </div>
       </div>
     </div>
   </div>
   <button class="alt-toggle-btn" id="altBtnSeq" type="button" aria-expanded="false" aria-controls="altBodySeq">
-    <svg class="alt-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+    <svg class="alt-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
     <span id="altLblSeq">兩種計算模式比較</span>
   </button>
   <div class="alt-metrics-body" id="altBodySeq" aria-hidden="true">
     <div class="table-scroll">
       <table class="alt-table">
-        <thead><tr><th id="altHSeqMode">計算模式</th><th id="altHSeqVal">數值</th><th id="altHSeqThr">門檻</th><th id="altHSeqResult">結果</th></tr></thead>
+        <thead><tr><th id="altHSeqMode">計算模式</th><th id="altHSeqVal">數值</th><th id="altHSeqThr">門檻／參考線</th><th id="altHSeqResult">結果</th></tr></thead>
         <tbody>
           <tr><td>Strict match</td><td>0.72</td><td>0.80</td><td><span class="badge badge-fail" id="altSeqStrictResult">未達</span></td></tr>
-          <tr><td>Partial overlap</td><td>0.78</td><td>0.70</td><td><span class="badge badge-pass" id="altSeqPartialResult">通過</span></td></tr>
+          <tr><td>Partial overlap</td><td>0.78</td><td>0.70</td><td><span class="badge badge-neutral" id="altSeqPartialResult">不判定</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -68,7 +70,7 @@
   <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" data-i18n="qualityListRank.lowConsistencySubtitle">依分歧度由高到低排序，可作為 Reviewer 仲裁優先順序參考（與 dry_run 仲裁 divergent 概念同源）</p>
   <div class="table-wrap">
     <div class="table-scroll">
-      <table class="annotator-table" aria-label="一致性最低樣本清單（命名實體辨識）">
+      <table class="annotator-table" aria-label="一致性最低樣本清單（命名實體辨識）" data-i18n-aria-label="qualityListRank.ariaSampleNer">
         <thead>
           <tr>
             <th data-i18n="qualityListRank.headerSample">樣本</th>
@@ -78,12 +80,12 @@
         </thead>
         <tbody>
           <tr>
-            <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#204</span></td>
+            <td><span style="font-family:var(--font-mono);color:var(--color-primary-strong)">#204</span></td>
             <td><span class="badge badge-fail">0.65</span></td>
             <td style="white-space:normal;font-size:12px" data-i18n="entityRecognitionListRank.sample1Detail">「台大醫院」實體邊界標記不一致（ORG vs LOC 類型分歧）</td>
           </tr>
           <tr>
-            <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#156</span></td>
+            <td><span style="font-family:var(--font-mono);color:var(--color-primary-strong)">#156</span></td>
             <td><span class="badge badge-warn">0.49</span></td>
             <td style="white-space:normal;font-size:12px" data-i18n="entityRecognitionListRank.sample2Detail">「神經內科」span 起訖位置在 2 位標記員間相差 2 個字元</td>
           </tr>
@@ -98,7 +100,7 @@
   <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" data-i18n="qualityListRank.rankingSubtitle">依型別對應一致率計算方式排序；完成樣本數不足門檻者標示小樣本估計警示，但不剔除排名</p>
   <div class="table-wrap">
     <div class="table-scroll">
-      <table class="annotator-table" aria-label="標記員品質排名（命名實體辨識）">
+      <table class="annotator-table" aria-label="標記員品質排名（命名實體辨識）" data-i18n-aria-label="qualityListRank.ariaRankNer">
         <thead>
           <tr>
             <th data-i18n="qualityListRank.rankHeaderRank">名次</th>
@@ -149,7 +151,7 @@
       <svg class="anomaly-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       <div class="anomaly-body">
         <div class="anomaly-title" id="anomSeqSpd1Title">Jordan Wu — 標記速度過快</div>
-        <div class="anomaly-detail" id="anomSeqSpd1Detail">平均 22s／句（門檻：≥ 30s），共 38 筆提交紀錄</div>
+        <div class="anomaly-detail" id="anomSeqSpd1Detail">平均 22s／句（門檻：≥ 30s），共 38 筆送出紀錄</div>
       </div>
     </li>
   </ul>
@@ -191,8 +193,8 @@
   <div style="margin-top:var(--space-md)">
     <div class="table-wrap">
       <div class="table-scroll">
-        <table class="annotator-table" aria-label="標記一致性偏離分析（序列標記）">
-          <thead><tr><th>標記員</th><th id="consistencyUnitCol">可比較 span 數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
+        <table class="annotator-table" aria-label="標記一致性偏離分析（序列標記）" data-i18n-aria-label="qualityListRank.ariaDevSeq">
+          <thead><tr><th data-i18n="qualityRisk.headerAnnotator">標記員</th><th id="consistencyUnitCol">可比較 span 數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
           <tbody>
             <tr><td><span class="annotator-name">Iris Tsai</span></td><td>26</td><td>2</td><td>7.7%</td><td>0</td><td>0%</td></tr>
             <tr><td><span class="annotator-name">Avery Lin</span></td><td>23</td><td>4</td><td>17.4%</td><td>1</td><td>4.3%</td></tr>

@@ -1,0 +1,51 @@
+---
+title: 設計交接
+description: prototype 怎麼一路變成 design/system 的元件規格與 Design System Artifact，每一步用什麼工具、什麼時候要重跑，以及 repo 是唯一來源的單向規則。
+category: '開發說明'
+tags: [design-system, design-handoff, design-system-setup, artifact]
+---
+
+# 設計交接
+
+prototype 是畫面現況，經 `design-handoff`、`design-system-setup` 整理成 `design/system/`，再由它產生 Design System Artifact；每一步只往下游走，不回頭。
+本頁管這條流程與重跑時機；品牌規則見 [品牌規範](../../design-system/brand.mdx)，元件對照見 [元件對照](../../design-system/components.mdx)，整頁範例見 [UI Kits](../../design-system/ui-kits.mdx)。
+
+## 流程
+
+四步依序，上一步的產出是下一步的輸入。
+
+| 步驟 | 工具 | 輸入 | 產出 |
+| :--- | :--- | :--- | :--- |
+| 1. 原型 | 人工（改畫面先過 `AGENTS.md` 的 Ready gate） | 規格與設計決定 | `design/prototype/` |
+| 2. 交付包 | [`design-handoff`](../../../.claude/skills/design-handoff/SKILL.md) | 釘住版本的 prototype、規格與導覽文件 | `design/system/handoff/`：`manifest.json`、`coverage.md`、`spec-index.md` |
+| 3. 元件規格 | [`design-system-setup`](../../../.claude/skills/design-system-setup/SKILL.md)，一次一批 | 交付包 | `design/system/` 的 `MASTER.md`、`components/`、`pages/`、`ux-conventions.md`、`design-gaps.md`，以及生成的 `screen-inventory.md` |
+| 4. Artifact | `scripts/build-design-artifact-tokens.mjs`，加上一次單向發布 | `tokens.css` 與 `design/system/` | `design/system/artifact/project/` 發布成 Design System Artifact |
+
+Artifact 是生成的呈現層，而且是私人的，沒有分享給你就開不了；它的檔案結構與 token 指令見 [`design/system/artifact/README.md`](../../../design/system/artifact/README.md)。
+
+## 單向規則
+
+repo 是唯一來源，Artifact 上線後改的內容不算數。
+
+- 要改 Artifact 的內容，改 `design/system/artifact/project/`（或它的上游），再重新發布；不要在線上改了再抄回 repo。
+- `project/tokens.json` 是產生的，不手改；其餘由發布端產生的檔案不放在 repo。
+- 這條流程沒有 Artifact 回到 repo 的路徑。
+
+## 什麼時候重跑哪一步
+
+先找到改了什麼，再依表往下做，下游一律跟著重做。
+
+| 改了什麼 | 重跑 | 怎麼做 |
+| :--- | :--- | :--- |
+| 畫面或 `docs/specs/` 變了（例如修正 prototype 與品牌書的落差） | 步驟 2、3、4 | 重跑 `design-handoff`，它比對 `source` 的四個 sha，列出受影響的視圖並把所屬批次標成「應重驗」；`design-system-setup` 只處理應重驗批次；再同步受影響的 Artifact 元件資料夾並重新發布 |
+| 只有 `tokens.css` 變了 | 步驟 2（比對）、步驟 4 | `tokens.css` 在 prototype 的 tree 裡，所以 sha 會變，交付包只重新比對，只有它列為證據的視圖才算受影響；Artifact 先 `git fetch origin`，再跑 `node scripts/build-design-artifact-tokens.mjs`，用 `--check` 核對；新 token 沒有行內註解時，先在 `token-usage.json` 補用途說明；然後重新發布 |
+| 只改品牌書、`MASTER.md`、`ux-conventions.md` 或元件規格 | 步驟 4 | 同步 `artifact/project/` 裡濃縮的 `README.md` 與元件說明，然後重新發布 |
+| 只想確認沒漂移 | 步驟 2 | 四個 sha 都沒變時重新產生，除 `generatedAt` 外必須與舊檔相同 |
+| 只在 Artifact 線上改了內容 | 都不重跑 | 不算數；改 repo 的來源再重新發布 |
+
+:::note{title="重跑的指令與檢查" collapsible}
+- 開啟交付包釘住的版本：`git switch --detach <commit>` 後跑 `pnpm prototype`；`manifest.json` 的 `openWith` 記著這兩行。
+- 步驟 3 完成後跑 `pnpm check:specs`、`pnpm check:flows`、`pnpm check:er`，不跑 `notecraftapp build`；原因見 `design-system-setup` skill 的步驟 8。
+- Token 腳本三個模式：預設重寫 `project/tokens.json`、`--check` 核對每個 `--變數` 都收進或列為略過、`--contrast` 列出兩種主題的對比值。
+- `tokens.css` 新增不屬於既有前綴的變數時，要先在腳本的 `FAMILY_RULES` 指定它屬於哪一族。
+:::

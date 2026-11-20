@@ -12,7 +12,7 @@
 | :--- | :--- | :--- |
 | `#state-default` | 直接開 `design/prototype/index.html` | **無** |
 
-全檔 11 行：一個 `<meta http-equiv="refresh" content="0; url=pages/account/login.html">`，加一行給 refresh 失效時用的後備連結。沒有 `<style>`、沒有 `<script>`、沒有 `<link>`，也沒有引用任何 token。
+全檔 12 行：一個 `<meta http-equiv="refresh" content="0; url=pages/account/login.html">`，加一行給 refresh 失效時用的後備連結。唯一的 `<link>` 是 favicon（`:6`）。沒有 `<style>`、沒有 `<script>`，也沒有引用任何 token。
 
 ## 這一頁專屬的
 

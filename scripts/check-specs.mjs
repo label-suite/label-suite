@@ -9,31 +9,39 @@
 // The first form exits 1 when any ERROR is reported. The second prints the
 // IDs a legacy spec defines, one per line, to seed docs/specs/legacy/*.ids.
 
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { dirname, join, posix, relative, resolve, sep } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { dirname, join, posix, relative, resolve, sep } from "node:path";
+import { fileURLToPath } from "node:url";
 
-export const PRD_PATH = 'specs/00-prd.mdx';
-export const GLOSSARY_PATH = 'specs/glossary.mdx';
+export const PRD_PATH = "specs/00-prd.mdx";
+export const GLOSSARY_PATH = "specs/glossary.mdx";
 
-export const PRD_CHAPTERS = ['文件資訊', '專案概述', '使用者角色', '專案範圍', 'Site Map', '模組架構與串接', '術語'];
-
-export const SPEC_CHAPTERS = [
-  '目標',
-  '使用角色',
-  '業務流程',
-  '規格',
-  '卡控機制',
-  '邊界情況（Edge Case）',
-  '驗收標準',
-  '待釐清',
-  '已確認決議',
-  '變更紀錄',
-  'Q&A',
+export const PRD_CHAPTERS = [
+  "文件資訊",
+  "專案概述",
+  "使用者角色",
+  "專案範圍",
+  "Site Map",
+  "模組架構與串接",
+  "術語",
 ];
 
-export const MAPPING_CHAPTER = '附錄：舊編號對照';
-export const ACCEPTANCE_CHAPTER = '驗收標準';
+export const SPEC_CHAPTERS = [
+  "目標",
+  "使用角色",
+  "業務流程",
+  "規格",
+  "卡控機制",
+  "邊界情況（Edge Case）",
+  "驗收標準",
+  "待釐清",
+  "已確認決議",
+  "變更紀錄",
+  "Q&A",
+];
+
+export const MAPPING_CHAPTER = "附錄：舊編號對照";
+export const ACCEPTANCE_CHAPTER = "驗收標準";
 
 // docs/specs/NN-<module>/NN-<page>.mdx; index.mdx inside a module is not a spec.
 const MODULE_DIR_RE = /^\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -47,30 +55,33 @@ const ID_SOURCE = String.raw`(?:FR|SC)-\d{2,4}[A-Za-z]{0,3}\d*(?:-\d+)?|AC-\d+[A
 // ("shared:FR-001", "foundation:FR-001"), so same-named IDs stay distinct.
 const SOURCE_PREFIX = String.raw`(?:[a-z][a-z0-9-]*:)?`;
 const ID_RE = new RegExp(String.raw`^${SOURCE_PREFIX}(?:${ID_SOURCE})$`);
-const DELETED_MARK = '刪除';
+const DELETED_MARK = "刪除";
 const SCENARIO_PREFIX_RE = /^Scenario[：:]\s*/;
 
 // Blank out fenced code, MDX comments and inline code so examples inside them
 // are not checked, while keeping line numbers stable for the report. Headings
 // keep their inline code, since it is part of the rendered anchor.
 export function stripIgnored(text) {
-  const blank = (s) => s.replace(/[^\n]/g, '');
+  const blank = (s) => s.replace(/[^\n]/g, "");
   return text
     .replace(/^(```|~~~)[^\n]*\n[\s\S]*?^\1[ \t]*$/gm, blank)
     .replace(/\{\/\*[\s\S]*?\*\/\}/g, blank)
-    .replace(/^(?!#{1,6} ).*$/gm, (line) => line.replace(/(`+)[^`\n]+?\1/g, (s) => ' '.repeat(s.length)));
+    .replace(/^(?!#{1,6} ).*$/gm, (line) =>
+      line.replace(/(`+)[^`\n]+?\1/g, (s) => " ".repeat(s.length)),
+    );
 }
 
 function lineOf(text, index) {
-  return text.slice(0, index).split('\n').length;
+  return text.slice(0, index).split("\n").length;
 }
 
 // Headings of the given depth with their line numbers.
 function headings(text, depth) {
   const out = [];
-  const re = new RegExp(String.raw`^#{${depth}} +(.+?)\s*$`, 'gm');
+  const re = new RegExp(String.raw`^#{${depth}} +(.+?)\s*$`, "gm");
   let m;
-  while ((m = re.exec(text)) !== null) out.push({ title: m[1], line: lineOf(text, m.index), index: m.index });
+  while ((m = re.exec(text)) !== null)
+    out.push({ title: m[1], line: lineOf(text, m.index), index: m.index });
   return out;
 }
 
@@ -86,12 +97,13 @@ function checkChapterOrder(file, text, expected, allowedTail, report) {
     if (!body.includes(name)) report.error(file, 1, `missing chapter "## ${name}"`);
   }
   for (const c of found.slice(0, found.length - tail)) {
-    if (!expected.includes(c.title)) report.error(file, c.line, `unexpected chapter "## ${c.title}"`);
+    if (!expected.includes(c.title))
+      report.error(file, c.line, `unexpected chapter "## ${c.title}"`);
   }
   const present = body.filter((t) => expected.includes(t));
   const order = expected.filter((t) => present.includes(t));
-  if (present.join('\n') !== order.join('\n')) {
-    report.error(file, 1, `chapters out of order; expected: ${order.join(' > ')}`);
+  if (present.join("\n") !== order.join("\n")) {
+    report.error(file, 1, `chapters out of order; expected: ${order.join(" > ")}`);
   }
 }
 
@@ -116,25 +128,29 @@ export function slug(title) {
   const code = [];
   // Trim the written heading, not what is left after an image is dropped: a
   // heading that opens with an image really does start its anchor with "-".
-  return title
-    .trim()
-    .replace(/`[^`]*`/g, (m) => `\u0000${code.push(m) - 1}\u0000`)
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/\u0000(\d+)\u0000/g, (_, i) => code[Number(i)])
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\p{M} _-]/gu, '')
-    .replace(/ /g, '-')
-    // Astro drops one trailing dash after github-slugger runs
-    // (rehype-collect-headings.js: `if (slug.endsWith("-")) slug = slug.slice(0, -1)`),
-    // which is what a heading ending in an emoji leaves behind.
-    .replace(/-$/, '');
+  return (
+    title
+      .trim()
+      .replace(/`[^`]*`/g, (m) => `\u0000${code.push(m) - 1}\u0000`)
+      .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+      .replace(/\u0000(\d+)\u0000/g, (_, i) => code[Number(i)])
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\p{M} _-]/gu, "")
+      .replace(/ /g, "-")
+      // Astro drops one trailing dash after github-slugger runs
+      // (rehype-collect-headings.js: `if (slug.endsWith("-")) slug = slug.slice(0, -1)`),
+      // which is what a heading ending in an emoji leaves behind.
+      .replace(/-$/, "")
+  );
 }
 
 function anchors(text) {
   const seen = new Map();
   const out = new Set();
-  for (const h of [1, 2, 3, 4, 5, 6].flatMap((d) => headings(text, d)).sort((a, b) => a.index - b.index)) {
+  for (const h of [1, 2, 3, 4, 5, 6]
+    .flatMap((d) => headings(text, d))
+    .sort((a, b) => a.index - b.index)) {
     const base = slug(h.title);
     const n = seen.get(base) ?? 0;
     seen.set(base, n + 1);
@@ -161,8 +177,12 @@ function checkTerms(files, glossaryRel, report) {
   const defined = new Map();
   const checkFormat = (f, id, line) => {
     if (!ID_FORMAT_RE.test(id)) {
-      report.error(f.rel, line, `id "${id}" may only use letters, digits, _ and - in .-separated segments`);
-    } else if (id.startsWith('term.') && !TERM_ID_RE.test(id)) {
+      report.error(
+        f.rel,
+        line,
+        `id "${id}" may only use letters, digits, _ and - in .-separated segments`,
+      );
+    } else if (id.startsWith("term.") && !TERM_ID_RE.test(id)) {
       report.error(f.rel, line, `term id "${id}" must be term.<english-kebab-case>`);
     }
   };
@@ -170,7 +190,7 @@ function checkTerms(files, glossaryRel, report) {
     for (const m of f.text.matchAll(DEF_ID_RE)) {
       const line = lineOf(f.text, m.index);
       checkFormat(f, m[1], line);
-      if (!m[1].startsWith('term.')) continue;
+      if (!m[1].startsWith("term.")) continue;
       if (f.rel !== glossaryRel) {
         report.error(f.rel, line, `term "${m[1]}" must be defined in ${glossaryRel}`);
       }
@@ -188,10 +208,10 @@ function checkTerms(files, glossaryRel, report) {
   const labels = new Map();
   for (const f of files) {
     for (const m of f.text.matchAll(DEF_ATTRS_RE)) {
-      const id = attrOf(m[1], 'id');
-      const label = attrOf(m[1], 'label');
+      const id = attrOf(m[1], "id");
+      const label = attrOf(m[1], "label");
       if (id === undefined || label === undefined) continue;
-      if (id.startsWith('term.') && f.rel !== glossaryRel) continue;
+      if (id.startsWith("term.") && f.rel !== glossaryRel) continue;
       if (!labels.has(id)) labels.set(id, label);
     }
   }
@@ -200,7 +220,7 @@ function checkTerms(files, glossaryRel, report) {
       const [, display, id] = m;
       const line = lineOf(f.text, m.index);
       checkFormat(f, id, line);
-      if (id.startsWith('term.') && !defined.has(id)) {
+      if (id.startsWith("term.") && !defined.has(id)) {
         report.error(f.rel, line, `reference to undefined term "${id}"`);
         continue;
       }
@@ -211,25 +231,36 @@ function checkTerms(files, glossaryRel, report) {
       // renders differently, so it is a rename like any other.
       const label = labels.get(id);
       if (label !== undefined && display !== label) {
-        report.error(f.rel, line, `ref text "${display}" does not match the label "${label}" of ${id}`);
+        report.error(
+          f.rel,
+          line,
+          `ref text "${display}" does not match the label "${label}" of ${id}`,
+        );
       }
     }
   }
 }
 
-export const FRONTMATTER_FIELDS = ['title', 'description', 'category', 'tags', 'createdAt', 'updatedAt'];
-const DATE_FIELDS = ['createdAt', 'updatedAt'];
+export const FRONTMATTER_FIELDS = [
+  "title",
+  "description",
+  "category",
+  "tags",
+  "createdAt",
+  "updatedAt",
+];
+const DATE_FIELDS = ["createdAt", "updatedAt"];
 // NoteCraft drops a page whose dates YAML parses as Date objects, so they stay quoted strings.
 const QUOTED_DATE_RE = /^(["'])\d{4}-\d{2}-\d{2}\1$/;
 
 function checkFrontmatter(file, text, report) {
   const m = text.match(/^---\n([\s\S]*?)\n---[ \t]*$/m);
   if (!m || m.index !== 0) {
-    report.error(file, 1, 'frontmatter is missing');
+    report.error(file, 1, "frontmatter is missing");
     return;
   }
   const fields = new Map();
-  m[1].split('\n').forEach((raw, i) => {
+  m[1].split("\n").forEach((raw, i) => {
     const f = raw.match(/^([A-Za-z]\w*):[ \t]*(.*?)\s*$/);
     if (f) fields.set(f[1], { value: f[2], line: i + 2 });
   });
@@ -239,18 +270,26 @@ function checkFrontmatter(file, text, report) {
   for (const name of DATE_FIELDS) {
     const f = fields.get(name);
     if (f && !QUOTED_DATE_RE.test(f.value)) {
-      report.error(file, f.line, `${name} must be a quoted "YYYY-MM-DD" string, got ${f.value || 'nothing'}`);
+      report.error(
+        file,
+        f.line,
+        `${name} must be a quoted "YYYY-MM-DD" string, got ${f.value || "nothing"}`,
+      );
     }
   }
 }
 
 function tableRows(text, start, end) {
   const rows = [];
-  const lines = text.slice(start, end).split('\n');
+  const lines = text.slice(start, end).split("\n");
   const first = lineOf(text, start);
   lines.forEach((raw, i) => {
     if (!/^\s*\|/.test(raw) || /^\s*\|[\s:|-]+\|\s*$/.test(raw)) return;
-    const cells = raw.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim());
+    const cells = raw
+      .trim()
+      .replace(/^\||\|$/g, "")
+      .split("|")
+      .map((c) => c.trim());
     rows.push({ cells, line: first + i });
   });
   return rows;
@@ -262,17 +301,18 @@ export function scenarios(text) {
   if (!range) return [];
   return tableRows(text, range[0], range[1])
     .slice(1)
-    .map(({ cells, line }) => ({ name: cells[0] ?? '', line }));
+    .map(({ cells, line }) => ({ name: cells[0] ?? "", line }));
 }
 
 function checkScenarios(file, text, report) {
   const seen = new Map();
   for (const { name, line } of scenarios(text)) {
     if (!name) {
-      report.error(file, line, 'a Scenario row has no name');
+      report.error(file, line, "a Scenario row has no name");
       continue;
     }
-    if (seen.has(name)) report.error(file, line, `Scenario "${name}" is already used on line ${seen.get(name)}`);
+    if (seen.has(name))
+      report.error(file, line, `Scenario "${name}" is already used on line ${seen.get(name)}`);
     else seen.set(name, line);
   }
   return new Set(seen.keys());
@@ -285,7 +325,12 @@ const CROSS_PAGE_RE = /^見\s*§?規格\s*(\d{2}-\d{2})(?:\s+§.+)?$/;
 function checkMapping(file, text, legacyIds, scenarioNames, specNumbers, self, report) {
   const mapping = chapterRange(text, MAPPING_CHAPTER);
   if (!legacyIds) {
-    if (mapping) report.error(file, chapters(text).at(-1).line, `"## ${MAPPING_CHAPTER}" exists but there is no legacy ID list`);
+    if (mapping)
+      report.error(
+        file,
+        chapters(text).at(-1).line,
+        `"## ${MAPPING_CHAPTER}" exists but there is no legacy ID list`,
+      );
     return;
   }
   if (!mapping) {
@@ -296,13 +341,18 @@ function checkMapping(file, text, legacyIds, scenarioNames, specNumbers, self, r
   const known = anchors(text.slice(0, mapping[0]));
   const covered = new Map();
   for (const { cells, line } of tableRows(text, mapping[0], mapping[1]).slice(1)) {
-    const [old, target = '', note = ''] = cells;
+    const [old, target = "", note = ""] = cells;
     if (!ID_RE.test(old)) {
-      report.error(file, line, `"${old}" is not a legacy ID (FR-NNN, SC-NNN, AC-N.N, optionally "<source>:" prefixed)`);
+      report.error(
+        file,
+        line,
+        `"${old}" is not a legacy ID (FR-NNN, SC-NNN, AC-N.N, optionally "<source>:" prefixed)`,
+      );
       continue;
     }
     if (!legacyIds.has(old)) report.error(file, line, `${old} is not in the legacy ID list`);
-    if (covered.has(old)) report.error(file, line, `${old} is mapped twice (line ${covered.get(old)})`);
+    if (covered.has(old))
+      report.error(file, line, `${old} is mapped twice (line ${covered.get(old)})`);
     covered.set(old, line);
 
     if (target === DELETED_MARK) {
@@ -312,25 +362,42 @@ function checkMapping(file, text, legacyIds, scenarioNames, specNumbers, self, r
     const link = target.match(LINK_RE);
     if (link) {
       const anchor = decodeURIComponent(link[1]);
-      if (!known.has(anchor)) report.error(file, line, `${old} links to #${anchor}, which is not a heading in this spec`);
+      if (!known.has(anchor))
+        report.error(file, line, `${old} links to #${anchor}, which is not a heading in this spec`);
       continue;
     }
     if (SCENARIO_PREFIX_RE.test(target)) {
-      const name = target.replace(SCENARIO_PREFIX_RE, '');
-      if (!scenarioNames.has(name)) report.error(file, line, `${old} maps to Scenario "${name}", which "## ${ACCEPTANCE_CHAPTER}" does not list`);
+      const name = target.replace(SCENARIO_PREFIX_RE, "");
+      if (!scenarioNames.has(name))
+        report.error(
+          file,
+          line,
+          `${old} maps to Scenario "${name}", which "## ${ACCEPTANCE_CHAPTER}" does not list`,
+        );
       continue;
     }
     const cross = target.match(CROSS_PAGE_RE);
     if (cross) {
       const [, number] = cross;
-      if (number === self) report.error(file, line, `${old} maps to 規格 ${number}, which is this spec; point at a section instead`);
-      else if (!specNumbers.has(number)) report.error(file, line, `${old} maps to 規格 ${number}, which does not exist`);
+      if (number === self)
+        report.error(
+          file,
+          line,
+          `${old} maps to 規格 ${number}, which is this spec; point at a section instead`,
+        );
+      else if (!specNumbers.has(number))
+        report.error(file, line, `${old} maps to 規格 ${number}, which does not exist`);
       continue;
     }
-    report.error(file, line, `${old} maps to "${target}"; use a section link, "Scenario：<name>", "見 規格 NN-NN" or ${DELETED_MARK}`);
+    report.error(
+      file,
+      line,
+      `${old} maps to "${target}"; use a section link, "Scenario：<name>", "見 規格 NN-NN" or ${DELETED_MARK}`,
+    );
   }
   for (const id of legacyIds) {
-    if (!covered.has(id)) report.error(file, 1, `legacy ${id} is missing from "## ${MAPPING_CHAPTER}"`);
+    if (!covered.has(id))
+      report.error(file, 1, `legacy ${id} is missing from "## ${MAPPING_CHAPTER}"`);
   }
 }
 
@@ -342,7 +409,7 @@ function checkMapping(file, text, legacyIds, scenarioNames, specNumbers, self, r
 const DEF_NOTE = String.raw`[^*\n]*`;
 const LEGACY_DEF_RE = new RegExp(
   String.raw`^(?:\s*(?:[-*]|\d+\.) +\*\*(${ID_SOURCE})${DEF_NOTE}\*\*|\|\s*(${ID_SOURCE})\s*\|)`,
-  'gm',
+  "gm",
 );
 
 export function legacyIdsIn(text) {
@@ -353,9 +420,9 @@ export function legacyIdsIn(text) {
 
 export function readLegacyIds(path) {
   if (!existsSync(path)) return null;
-  const ids = readFileSync(path, 'utf8')
-    .split('\n')
-    .map((l) => l.replace(/#.*/, '').trim())
+  const ids = readFileSync(path, "utf8")
+    .split("\n")
+    .map((l) => l.replace(/#.*/, "").trim())
     .filter(Boolean);
   return new Set(ids);
 }
@@ -371,19 +438,22 @@ function listMdx(dir) {
   return readdirSync(dir).flatMap((name) => {
     const p = join(dir, name);
     if (statSync(p).isDirectory()) return listMdx(p);
-    return name.endsWith('.mdx') || name.endsWith('.md') ? [p] : [];
+    return name.endsWith(".mdx") || name.endsWith(".md") ? [p] : [];
   });
 }
 
 // "02-task-management/01-task-list.mdx" -> the reference number "02-01" and
 // the legacy list name "02-01-task-list"; null when the path is not a spec.
 function specParts(path) {
-  const parts = path.split('/');
-  if (parts.length !== 3 || parts[0] !== 'specs') return null;
+  const parts = path.split("/");
+  if (parts.length !== 3 || parts[0] !== "specs") return null;
   const [, dir, file] = parts;
   if (!MODULE_DIR_RE.test(dir) || !SPEC_FILE_RE.test(file)) return null;
   const module = dir.slice(0, 2);
-  return { number: `${module}-${file.slice(0, 2)}`, legacyName: `${module}-${file.replace(/\.mdx$/, '')}` };
+  return {
+    number: `${module}-${file.slice(0, 2)}`,
+    legacyName: `${module}-${file.replace(/\.mdx$/, "")}`,
+  };
 }
 
 // Links of the form "](path.mdx#anchor)" and "](#anchor)": the target file must
@@ -421,24 +491,29 @@ function checkAnchorLinks(files, report) {
   const known = new Set(files.map((f) => f.path));
   const anchorsOf = new Map(files.map((f) => [f.path, anchors(f.text)]));
   for (const f of files) {
-    const dir = f.path.includes('/') ? f.path.slice(0, f.path.lastIndexOf('/')) : '';
+    const dir = f.path.includes("/") ? f.path.slice(0, f.path.lastIndexOf("/")) : "";
     for (const m of f.text.matchAll(ANCHOR_LINK_RE)) {
       const [, target, anchor] = m;
-      if (target !== '' && !target.endsWith('.mdx')) continue;
+      if (target !== "" && !target.endsWith(".mdx")) continue;
       const line = lineOf(f.text, m.index);
-      const where = target === '' ? f.path : posix.normalize(posix.join(dir, target));
-      if (target !== '' && !known.has(where)) {
+      const where = target === "" ? f.path : posix.normalize(posix.join(dir, target));
+      if (target !== "" && !known.has(where)) {
         report.error(f.rel, line, `link target "${target}" does not exist`);
         continue;
       }
       if (!anchorsOf.get(where).has(decodeAnchor(anchor))) {
-        report.error(f.rel, line, `link anchor "${target}#${anchor}" has no matching heading in ${where}`);
+        report.error(
+          f.rel,
+          line,
+          `link anchor "${target}#${anchor}" has no matching heading in ${where}`,
+        );
       }
     }
     for (const m of f.text.matchAll(PLAIN_LINK_RE)) {
       const [, target] = m;
       const where = posix.normalize(posix.join(dir, target));
-      if (!known.has(where)) report.error(f.rel, lineOf(f.text, m.index), `link target "${target}" does not exist`);
+      if (!known.has(where))
+        report.error(f.rel, lineOf(f.text, m.index), `link target "${target}" does not exist`);
     }
   }
 }
@@ -461,7 +536,7 @@ const QUESTION_ROW_RE = /^\|\s*(\d{2}-\d{2}) +(Q\d+)\s*\|.*$/gm;
 // Still uncovered: a citation written without a link at all ("見該頁 §已確認決議
 // Q10"). There the page really cannot be read off the text, so resolving it
 // would mean guessing which page "該頁" is.
-const QUESTION_CHAPTERS = ['待釐清', '已確認決議'];
+const QUESTION_CHAPTERS = ["待釐清", "已確認決議"];
 
 function checkQuestions(files, report) {
   const known = new Set(files.map((f) => f.path));
@@ -488,25 +563,34 @@ function checkQuestions(files, report) {
       if (at.length < 2) continue;
       // Every occurrence is reported: a tool reading only the first one is the
       // failure this check exists to catch, so the report must not do the same.
-      const where = at.map((a) => `§${a.chapter}:${a.line}`).join(', ');
+      const where = at.map((a) => `§${a.chapter}:${a.line}`).join(", ");
       for (const a of at) {
-        report.error(f.rel, a.line, `question number "${q}" is used ${at.length} times in this page (${where})`);
+        report.error(
+          f.rel,
+          a.line,
+          `question number "${q}" is used ${at.length} times in this page (${where})`,
+        );
       }
     }
   }
   for (const f of files) {
-    const dir = f.path.includes('/') ? f.path.slice(0, f.path.lastIndexOf('/')) : '';
+    const dir = f.path.includes("/") ? f.path.slice(0, f.path.lastIndexOf("/")) : "";
     // Where a link in this file points, or null when nothing here should judge it.
     const resolve = (target, chapter) => {
       if (!QUESTION_CHAPTERS.includes(chapter)) return null;
-      if (target !== '' && !target.endsWith('.mdx')) return null;
-      const where = target === '' ? f.path : posix.normalize(posix.join(dir, target));
+      if (target !== "" && !target.endsWith(".mdx")) return null;
+      const where = target === "" ? f.path : posix.normalize(posix.join(dir, target));
       // A target or an anchor that does not exist is checkAnchorLinks' to report.
       if (!known.has(where) || !chaptersOf.get(where).has(chapter)) return null;
       return where;
     };
     const check = (where, chapter, q, line) => {
-      if (!questionsOf.get(where).get(q)?.some((a) => a.chapter === chapter)) {
+      if (
+        !questionsOf
+          .get(where)
+          .get(q)
+          ?.some((a) => a.chapter === chapter)
+      ) {
         report.error(f.rel, line, `"${q}" is not in §${chapter} of ${where}`);
       }
     };
@@ -523,7 +607,9 @@ function checkQuestions(files, report) {
       // The row names its own page in its last cell. An earlier cell may cite
       // another page's chapter — that citation is prose, caught by the loop
       // above — so the row's own link is the last one, not the first.
-      const link = [...row.matchAll(ANCHOR_LINK_RE)].filter((l) => QUESTION_CHAPTERS.includes(decodeAnchor(l[2]))).at(-1);
+      const link = [...row.matchAll(ANCHOR_LINK_RE)]
+        .filter((l) => QUESTION_CHAPTERS.includes(decodeAnchor(l[2])))
+        .at(-1);
       if (!link) continue;
       const chapter = decodeAnchor(link[2]);
       const where = resolve(link[1], chapter);
@@ -563,7 +649,7 @@ function checkStaleUnwritten(files, specPathByNumber, report) {
     if (f.path === PRD_PATH) continue;
     for (const m of f.text.matchAll(UNWRITTEN_RE)) {
       const at = m.index;
-      const lineStart = f.text.lastIndexOf('\n', at) + 1;
+      const lineStart = f.text.lastIndexOf("\n", at) + 1;
       const before = f.text.slice(Math.max(at - UNWRITTEN_LOOKBACK, lineStart), at);
       const seen = new Set();
       for (const n of before.matchAll(SPEC_NUMBER_NEAR_RE)) {
@@ -571,7 +657,12 @@ function checkStaleUnwritten(files, specPathByNumber, report) {
         if (seen.has(number)) continue;
         seen.add(number);
         const target = specPathByNumber.get(number);
-        if (target) report.error(f.rel, lineOf(f.text, at), `spec ${number} is called ${m[1]} but ${target} exists`);
+        if (target)
+          report.error(
+            f.rel,
+            lineOf(f.text, at),
+            `spec ${number} is called ${m[1]} but ${target} exists`,
+          );
       }
     }
   }
@@ -587,11 +678,12 @@ function checkStaleUnwritten(files, specPathByNumber, report) {
 // document's own table is updated by the same issue. This does not judge whether the stated basis holds —
 // that still needs a reader — it only fails a decision that names none at all,
 // which is how the same rule was broken three times in a row (#67, #68, #69).
-const SETTLED_CHAPTER = '已確認決議';
+const SETTLED_CHAPTER = "已確認決議";
 const DECISION_RE = /^#{3} +(Q\d+)\./gm;
 
 const SOURCE_WORD = /來源|舊規格/;
-const SOURCE_ARTEFACT = /Clarification|釐清紀錄|拍板|明寫|明訂|定成|定義|條文|規格常數|行為規則|使用者故事|舊編號|逐字/;
+const SOURCE_ARTEFACT =
+  /Clarification|釐清紀錄|拍板|明寫|明訂|定成|定義|條文|規格常數|行為規則|使用者故事|舊編號|逐字/;
 const LEGACY_ID = /(?:FR|SC|AC)-\d/;
 const METHOD_DOC = /spec-writing|搬移設計文件/;
 // 鐵律 covers technical vocabulary and 非目標 covers technical design, so
@@ -605,8 +697,9 @@ const DATE = String.raw`\d{4}-\d{2}-\d{2}`;
 // Naming a basis only to say it is absent is not a citation. 「舊規格沒有定義這
 // 一條，由我自己判斷」 mentions the source and what it would have defined, and
 // without this the co-occurrence below would read it as a source citation.
-const DENIAL = /(?:PRD|術語表|來源|舊規格|舊來源)[^。\n]{0,12}(?:沒有|沒寫|沒說|未寫|未定義|不存在|從來沒|並未)/g;
-const withoutDenials = (text) => text.replace(DENIAL, (s) => ' '.repeat(s.length));
+const DENIAL =
+  /(?:PRD|術語表|來源|舊規格|舊來源)[^。\n]{0,12}(?:沒有|沒寫|沒說|未寫|未定義|不存在|從來沒|並未)/g;
+const withoutDenials = (text) => text.replace(DENIAL, (s) => " ".repeat(s.length));
 
 const BASES = [
   // PRD or the glossary, both already settled elsewhere.
@@ -658,7 +751,14 @@ function checkDecisionBases(file, text, report) {
 // reference projects' rule files that the 附錄：來源對照 tables cite, so every
 // such row would resolve to the wrong file — and `openspec update` rewrites
 // those templates anyway.
-const CITED_ROOTS = ['docs', 'scripts', 'design/prototype', '.github', '.claude/skills', '.agents/skills'];
+const CITED_ROOTS = [
+  "docs",
+  "scripts",
+  "design/prototype",
+  ".github",
+  ".claude/skills",
+  ".agents/skills",
+];
 const CITED_EXT = /\.(mdx|md|mjs|cjs|js|ts|tsx|json|css|html|svg|sh|ya?ml)$/;
 
 // The document: a file name in inline code, or a link to a page. stripIgnored
@@ -670,19 +770,24 @@ const CITED_DOC = String.raw`(?:\`([^\`\n]*\.[A-Za-z][A-Za-z0-9]*)\`|\]\(([^)\s#
 const CITED_SECTION = String.raw`(?:[ \t]*§[ \t]*((?:[^\s\`「」『』，。、；：（）()|]|[ \t](?=[A-Za-z])){1,40}))?`;
 // The quoted name, with or without the 的 that usually introduces it.
 const CITED_QUOTE = String.raw`(?:(?:[ \t]*的)?[ \t]*(?:「([^」\n]{1,80})」|『([^』\n]{1,80})』))?`;
-const CITED_RE = new RegExp(CITED_DOC + CITED_SECTION + CITED_QUOTE, 'g');
+const CITED_RE = new RegExp(CITED_DOC + CITED_SECTION + CITED_QUOTE, "g");
 
-const CHANGELOG_CHAPTER = '變更紀錄';
+const CHANGELOG_CHAPTER = "變更紀錄";
 // Bold, inline code, the full-width bar and all whitespace are formatting, not
 // wording; an ellipsis marks text the citation left out, so each side of it is
 // matched on its own.
-const citeNorm = (s) => s.replace(/\*\*/g, '').replace(/`/g, '').replace(/｜/g, '|').replace(/\s+/g, '');
-const citeParts = (s) => s.split(/…+|\.{3,}/).map(citeNorm).filter((part) => part.length > 1);
+const citeNorm = (s) =>
+  s.replace(/\*\*/g, "").replace(/`/g, "").replace(/｜/g, "|").replace(/\s+/g, "");
+const citeParts = (s) =>
+  s
+    .split(/…+|\.{3,}/)
+    .map(citeNorm)
+    .filter((part) => part.length > 1);
 
 // Fenced code and MDX comments, blanked so line numbers stay put. Inline code
 // is kept: the file name being cited is written in it.
 function withoutBlocks(text) {
-  const blank = (s) => s.replace(/[^\n]/g, '');
+  const blank = (s) => s.replace(/[^\n]/g, "");
   return text
     .replace(/^(```|~~~)[^\n]*\n[\s\S]*?^\1[ \t]*$/gm, blank)
     .replace(/\{\/\*[\s\S]*?\*\/\}/g, blank);
@@ -691,10 +796,10 @@ function withoutBlocks(text) {
 export function citedFiles(root) {
   const paths = [];
   const walk = (rel) => {
-    const abs = join(root, ...rel.split('/'));
+    const abs = join(root, ...rel.split("/"));
     if (!existsSync(abs)) return;
     for (const e of readdirSync(abs, { withFileTypes: true })) {
-      if (e.name === 'node_modules') continue;
+      if (e.name === "node_modules") continue;
       const next = `${rel}/${e.name}`;
       if (e.isDirectory()) walk(next);
       else if (CITED_EXT.test(e.name)) paths.push(next);
@@ -711,7 +816,8 @@ export function citedFiles(root) {
     // Blanked the same way the citing page is: a heading or a sentence that
     // only exists inside a fenced example is not something to cite.
     read: (p) => {
-      if (!cache.has(p)) cache.set(p, withoutBlocks(readFileSync(join(root, ...p.split('/')), 'utf8')));
+      if (!cache.has(p))
+        cache.set(p, withoutBlocks(readFileSync(join(root, ...p.split("/")), "utf8")));
       return cache.get(p);
     },
   };
@@ -747,7 +853,7 @@ function checkCitedNames(files, docsRel, repoRoot, repo, report) {
   for (const f of files) {
     const raw = withoutBlocks(f.raw);
     const changelog = chapterRange(raw, CHANGELOG_CHAPTER);
-    const here = docsRel === '' ? f.path : `${docsRel}/${f.path}`;
+    const here = docsRel === "" ? f.path : `${docsRel}/${f.path}`;
     for (const m of raw.matchAll(CITED_RE)) {
       const [, inCode, inLink, section, outer, inner] = m;
       const quote = outer ?? inner;
@@ -758,7 +864,7 @@ function checkCitedNames(files, docsRel, repoRoot, repo, report) {
       const doc = inCode ?? inLink;
       const targets = inLink
         ? [posix.normalize(posix.join(posix.dirname(here), inLink))].filter((p) =>
-            existsSync(join(repoRoot, ...p.split('/'))),
+            existsSync(join(repoRoot, ...p.split("/"))),
           )
         : repo.resolve(doc);
       // A rule file of one of the reference projects: nothing here to read it
@@ -775,7 +881,11 @@ function checkCitedNames(files, docsRel, repoRoot, repo, report) {
       if (wanted !== null) {
         const found = targets.map((p) => sectionSlice(repo.read(p), wanted)).filter(Boolean);
         if (found.length === 0) {
-          report.error(f.rel, line, `cited section "${section}" has no matching heading in "${where}"`);
+          report.error(
+            f.rel,
+            line,
+            `cited section "${section}" has no matching heading in "${where}"`,
+          );
         } else {
           scopes = found;
         }
@@ -797,12 +907,11 @@ export function checkDocs(docsDir, repoRoot = dirname(resolve(docsDir))) {
   const errors = [];
   const report = { error: (file, line, msg) => errors.push(`${file}:${line}: ${msg}`) };
 
-  const files = listMdx(docsDir)
-    .map((p) => {
-      const raw = readFileSync(p, 'utf8');
-      const path = relative(docsDir, p).split(sep).join('/');
-      return { path, rel: relative(process.cwd(), p), raw, text: stripIgnored(raw) };
-    });
+  const files = listMdx(docsDir).map((p) => {
+    const raw = readFileSync(p, "utf8");
+    const path = relative(docsDir, p).split(sep).join("/");
+    return { path, rel: relative(process.cwd(), p), raw, text: stripIgnored(raw) };
+  });
 
   const specNumbers = new Set(files.map((f) => specParts(f.path)?.number).filter(Boolean));
   const specPathByNumber = new Map(
@@ -825,23 +934,29 @@ export function checkDocs(docsDir, repoRoot = dirname(resolve(docsDir))) {
       checkChapterOrder(f.rel, f.text, SPEC_CHAPTERS, MAPPING_CHAPTER, report);
       const names = checkScenarios(f.rel, f.text, report);
       checkDecisionBases(f.rel, f.raw, report);
-      const legacy = readLegacyIds(join(docsDir, 'specs', 'legacy', `${spec.legacyName}.ids`));
+      const legacy = readLegacyIds(join(docsDir, "specs", "legacy", `${spec.legacyName}.ids`));
       checkMapping(f.rel, f.text, legacy, names, specNumbers, spec.number, report);
     }
   }
   checkAnchorLinks(files, report);
-  checkCitedNames(files, relative(repoRoot, resolve(docsDir)).split(sep).join('/'), repoRoot, citedFiles(repoRoot), report);
+  checkCitedNames(
+    files,
+    relative(repoRoot, resolve(docsDir)).split(sep).join("/"),
+    repoRoot,
+    citedFiles(repoRoot),
+    report,
+  );
   checkStaleUnwritten(files, specPathByNumber, report);
   checkQuestions(files, report);
   checkTerms(files, relative(process.cwd(), join(docsDir, GLOSSARY_PATH)), report);
   return errors;
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url) && process.argv[2] === '--extract-legacy') {
-  const text = stripIgnored(readFileSync(process.argv[3], 'utf8'));
+if (process.argv[1] === fileURLToPath(import.meta.url) && process.argv[2] === "--extract-legacy") {
+  const text = stripIgnored(readFileSync(process.argv[3], "utf8"));
   for (const id of legacyIdsIn(text)) console.log(id);
 } else if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const dir = process.argv[2] ?? 'docs';
+  const dir = process.argv[2] ?? "docs";
   const errors = checkDocs(dir);
   for (const e of errors) console.error(`ERROR ${e}`);
   if (errors.length > 0) process.exit(1);

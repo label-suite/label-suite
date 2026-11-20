@@ -18,25 +18,25 @@
   var I18N = {
     zh: {
       sampleListTitle: '標記清單',
-      submitLabel: '提交',
+      submitLabel: '送出標記',
       saveLabel: '儲存草稿',
       wsSaveSuccess: '已儲存',
       /* issue singyichen/label-suite#1082 (AC-2.29/FR-089 v10.0.0): the Bypass checkbox's own
          required reason field, replacing the retired skip control's. */
       bypassReasonRequired: '請填寫無法判定的理由',
-      bypassReasonHelper: '理由會隨提交寫入歷程，審核員可見',
+      bypassReasonHelper: '理由會隨標記送出寫入歷程，審核員可見',
       toastBypassReasonRequired: '請填寫以下輸出類型「無法判定」的理由：{list}',
       arbitrationReasonPlaceholder: '裁定理由（選填）',
       wsPrevBtnLabel: '上一筆',
       wsNextBtnLabel: '下一筆',
-      wsProgressText: '{done} / {total} 已提交',
-      wsProgressTextReview: '我的審核提交 {done} / {total} 個審核單位',
+      wsProgressText: '{done} / {total} 已送出',
+      wsProgressTextReview: '我已送出審核 {done} / {total} 個審核單位',
       wsAutosaveInitial: '尚未儲存',
       wsAutosaveDirty: '尚未儲存的變更',
       wsAutosaveSavedAt: '上次儲存於 {time}',
       wsTabGuideline: '說明與檔案',
       wsTabHistory: '操作紀錄',
-      wsStatusSubmitted: '已提交',
+      wsStatusSubmitted: '已送出',
       wsStatusSaved: '已儲存',
       wsStatusPending: '待標記',
       wsHistoryEmpty: '此筆樣本尚無歷程紀錄',
@@ -49,14 +49,16 @@
       wsHistoryDiffBoundary: '邊界變更',
       guidelineModalTitle: '請先閱讀任務說明',
       guidelineModalConfirm: '我已閱讀，開始標記',
+      guidelineModalBack: '返回標記清單',
       guidelineSummaryTitle: '任務說明',
       guidelineFileActionPreview: '預覽',
       mobileDrawerTitle: '說明與檔案',
       guidelineImageModalCloseAria: '關閉圖片預覽',
       guidelinePdfModalCloseAria: '關閉 PDF 預覽',
       guidelineMdModalCloseAria: '關閉 Markdown 預覽',
-      wsSubmitIncomplete: '請完成所有標記項目後再提交',
-      wsSubmitSuccess: '已提交',
+      wsSubmitIncomplete: '請完成所有標記項目後再送出',
+      wsOutputIncomplete: '這一項還沒作答，完成後才能送出',
+      wsSubmitSuccess: '標記已送出',
       reviewSubmitLabel: '送出審核',
       reviewApproveLabel: '通過',
       reviewModifyLabel: '修正',
@@ -64,7 +66,7 @@
       wsReviewSubmitSuccess: '審核已送出',
       reviewNoAnswer: '（無）',
       reviewOriginalAnswerBypass: window.LabelSuiteSharedSidebar.BYPASS_WORDING.zh.answer,
-      reviewNote: '通過：該項直接定稿，正式標記中即成為最終答案。修正：您的修正不會立即生效，該項進入爭議池待仲裁。無法裁決：同樣進入爭議池，仲裁者採用審核員側即定案為無法判定。試標與正式標記皆不會將樣本送回給標記員重做。',
+      reviewNote: '通過：該項直接定稿，正式標記中即成為最終答案。修正：你的修正不會立即生效，該項進入爭議池待仲裁。無法裁決：同樣進入爭議池，仲裁者採用審核員側即定案為無法判定。試標與正式標記皆不會將樣本送回給標記員重做。',
       reviewNoteDryRunExtra: '試標的定稿只彙總一致性與被修改率，不產生最終答案。',
       reviewNoteTriggerLabel: '審核決策說明',
       reviewSubmitConsequencePending: '尚未選擇決策',
@@ -83,7 +85,7 @@
       arbitrationAgreedTitle: '標記內容（唯讀）',
       arbitrationSubmitLabel: '送出仲裁',
       toastArbitrationIncomplete: '請完成所有爭議項目的裁定',
-      wsArbitrationSubmitSuccess: '仲裁已提交',
+      wsArbitrationSubmitSuccess: '仲裁已送出',
       arbitrationChoiceA: 'A・標記員',
       arbitrationChoiceB: 'B・審核員',
       arbitrationChoiceReject: '兩者皆非',
@@ -107,19 +109,19 @@
       unitStatePending: '待審',
       unitStateDisputed: '爭議中',
       unitStateFinalized: '已定稿',
-      unitStateNone: '尚無標記提交',
-      reviewEmptyUnitNote: '此標記員尚未提交此樣本，暫無可審核的內容。',
-      reviewOffRosterNote: '你已不在本任務的審核員名冊中，可檢視自己審核過的內容與歷程，但無法再提交審核決策。',
-      reviewNotAssignedNote: '這個審核單位未指派給你，可檢視內容但無法提交審核決策。',
-      reviewOffRosterTitle: '無法提交審核決策',
-      reviewNotAssignedTitle: '無法提交審核決策',
+      unitStateNone: '尚無已送出的標記',
+      reviewEmptyUnitNote: '此標記員尚未送出此樣本，暫無可審核的內容。',
+      reviewOffRosterNote: '你已不在本任務的審核員名冊中，可檢視自己審核過的內容與歷程，但無法再送出審核決策。',
+      reviewNotAssignedNote: '這個審核單位未指派給你，可檢視內容但無法送出審核決策。',
+      reviewOffRosterTitle: '無法送出審核決策',
+      reviewNotAssignedTitle: '無法送出審核決策',
       reviewEmptyUnitTitle: '暫無可審核內容',
       reviewFinalizedTitle: '審核已定稿',
       reviewFinalizedNote: '此審核單位已定稿，結果為唯讀。',
       reviewFinalizedRemaining: '本任務你還有 {n} 個可處理的審核單位。',
       reviewFinalizedBackToList: '回到審核清單',
-      reviewSubmittedTitle: '你已提交此單位的審核決策',
-      reviewSubmittedNote: '此單位其後因與其他審核意見不一致而進入爭議中，以下為你當時提交的決策與修正內容，唯讀顯示。',
+      reviewSubmittedTitle: '你已送出此單位的審核決策',
+      reviewSubmittedNote: '此單位其後因與其他審核意見不一致而進入爭議中，以下為你當時送出的決策與修正內容，唯讀顯示。',
       reviewSubmittedDecisionLabel: '你的審核決策',
       reviewSubmittedValueLabel: '修正值',
       reviewEditMyDecisionBtn: '修改我的審核',
@@ -173,14 +175,14 @@
       reviewOriginalAnswerLabel: '標記員原答案：',
       reviewCorrectedAnswerLabel: '審核員修正後答案：',
       toastReviewDecisionResetOnEdit: '直接修正的值已變更，對應的審核決策已重置，請重新確認後再送出',
-      annotatorFinalizedNotice: '此標記結果已定稿，無法再修改或提交',
+      annotatorFinalizedNotice: '此標記結果已定稿，無法再修改或送出',
       annotatorFinalizedNoticeTitle: '此標記結果已定稿',
-      annotatorFinalizedNoticeDesc: '作答內容已鎖定，無法再修改或提交。如需異動請聯絡審核員。',
-      annotatorFinalizedToast: '此標記結果已定稿，無法再修改或提交',
+      annotatorFinalizedNoticeDesc: '作答內容已鎖定，無法再修改或送出。如需異動請聯絡審核員。',
+      annotatorFinalizedToast: '此標記結果已定稿，無法再修改或送出',
       wsAutosaveFinalized: '已定稿，不再自動儲存',
       annotatorUnderReviewNoticeTitle: '此標記已進入審核',
-      annotatorUnderReviewNoticeDesc: '審核員已開始處理這筆作答，內容已鎖定，無法再修改或提交。',
-      annotatorUnderReviewToast: '此標記已進入審核，無法再修改或提交',
+      annotatorUnderReviewNoticeDesc: '審核員已開始處理這筆作答，內容已鎖定，無法再修改或送出。',
+      annotatorUnderReviewToast: '此標記已進入審核，無法再修改或送出',
       wsAutosaveUnderReview: '審核中，不再自動儲存',
       wsExceptionSampleGroupAria: '樣本 {sample}，{n} 項待處置例外',
       wsExceptionSampleGroupCount: '{n} 項例外',
@@ -218,6 +220,7 @@
       wsHistoryDiffBoundary: 'Boundary',
       guidelineModalTitle: 'Please read the task guideline first',
       guidelineModalConfirm: "I've read it, start annotating",
+      guidelineModalBack: 'Back to annotation list',
       guidelineSummaryTitle: 'Task Guideline',
       guidelineFileActionPreview: 'Preview',
       mobileDrawerTitle: 'Guidelines & Files',
@@ -225,6 +228,7 @@
       guidelinePdfModalCloseAria: 'Close PDF preview',
       guidelineMdModalCloseAria: 'Close Markdown preview',
       wsSubmitIncomplete: 'Please answer every output before submitting',
+      wsOutputIncomplete: 'Answer this item before submitting',
       wsSubmitSuccess: 'Submitted',
       reviewSubmitLabel: 'Submit review',
       reviewApproveLabel: 'Approve',
@@ -478,6 +482,11 @@
   var originalRenderOutputPreview = renderOutputPreview;
   function patchedRenderOutputPreview(container, outKey) {
     container.setAttribute('data-testid', 'ws-output-panel-' + outKey);
+    /* 重繪會清掉區塊內容（含送出被擋時加的錯誤文字），錯誤態一併清掉，
+       免得框線還在、aria-describedby 卻指向不存在的元素（UXC-05；#423, G-47）。 */
+    container.removeAttribute('data-error');
+    container.removeAttribute('aria-describedby');
+    container.removeAttribute('tabindex');
     originalRenderOutputPreview(container, outKey);
     patchOutputPanel(outKey, container);
     /* relation_identification's bypass chip lives inside the unified
@@ -1917,7 +1926,7 @@
      unit list, matching what the prev/next buttons can actually reach. */
   function renderSampleNav() {
     /* FR-095 (issue singyichen/label-suite#907): a project leader never submits here, so the
-       annotator's "{done} / {total} 已提交" counts a write this role cannot
+       annotator's "{done} / {total} 已送出" counts a write this role cannot
        make. Its nav addresses the exception queue instead: the remaining
        item count, with no progress bar -- the disposed items are already
        gone from the queue, so no honest denominator exists to fill one. */
@@ -1930,7 +1939,7 @@
     var done = countSubmittedUnits(units);
     if (done > total) done = total;
     /* issue singyichen/label-suite#309: a reviewer's count is reviewed units, not their own
-       submissions -- the annotator's N 已提交 wording is wrong for them. */
+       submissions -- the annotator's N 已送出 wording is wrong for them. */
     setText(
       'wsProgressText',
       t(currentRole === 'reviewer' ? 'wsProgressTextReview' : 'wsProgressText')
@@ -2030,7 +2039,7 @@
   }
 
   /* UXC-03: browser-navigation guard while the work column holds edits
-     that 儲存草稿/提交 has not persisted (see renderAutosaveStatus for the
+     that 儲存草稿/送出標記 has not persisted (see renderAutosaveStatus for the
      honest, per-sample visible indicator this flag no longer doubles as).
      Any interaction inside .col-content counts as an edit signal; the
      three persistence paths clear it. */
@@ -2249,7 +2258,7 @@
        render flag -- a masked event must never reach this function at all. */
     /* issue singyichen/label-suite#601: the reviewer's envelope `submitted` event is folded away
        when their own next act was a decision, so the trail reads as one card
-       per thing that happened rather than a bare 提交 beside the decision
+       per thing that happened rather than a bare 送出 beside the decision
        that carries the result. Applied before the answer blocks are built:
        those are indexed by event, and the folded event carries no snapshot
        (the data layer omits it precisely because the decision events hold
@@ -2920,10 +2929,34 @@
     }
   }
 
+  /* 送出被擋時的區塊提示（#423, design-gaps G-47；規格 04-02 §作答完整性與提交阻擋 第 2、4 條）：
+     框線換錯誤色（CSS 選 [data-error="true"]）、區塊內一行錯誤文字並以 aria-describedby 綁定，
+     焦點捲到第一個未完成的區塊。作答時引擎會重繪區塊，錯誤標記隨之消失（UXC-05）。 */
+  function outputErrorId(outKey) {
+    return 'ws-output-error-' + outKey;
+  }
+
+  function markPanelError(panel, outKey) {
+    panel.setAttribute('data-error', 'true');
+    var error = document.createElement('p');
+    error.className = 'ws-output-error';
+    error.id = outputErrorId(outKey);
+    error.setAttribute('data-testid', 'ws-output-error-' + outKey);
+    error.textContent = t('wsOutputIncomplete');
+    panel.appendChild(error);
+    panel.setAttribute('aria-describedby', error.id);
+    panel.setAttribute('tabindex', '-1');
+  }
+
   function clearAllPanelErrors() {
     state.selectedOutputTypes.forEach(function (outKey) {
       var panel = document.querySelector('[data-testid="ws-output-panel-' + outKey + '"]');
-      if (panel) panel.removeAttribute('data-error');
+      if (!panel) return;
+      panel.removeAttribute('data-error');
+      panel.removeAttribute('aria-describedby');
+      panel.removeAttribute('tabindex');
+      var error = document.getElementById(outputErrorId(outKey));
+      if (error) error.remove();
     });
   }
 
@@ -3041,14 +3074,22 @@
 
     clearAllPanelErrors();
     var allAnswered = true;
+    var firstIncompletePanel = null;
     state.selectedOutputTypes.forEach(function (outKey) {
       if (!isOutputAnswered(outKey)) {
         allAnswered = false;
         var panel = document.querySelector('[data-testid="ws-output-panel-' + outKey + '"]');
-        if (panel) panel.setAttribute('data-error', 'true');
+        if (panel) {
+          markPanelError(panel, outKey);
+          if (!firstIncompletePanel) firstIncompletePanel = panel;
+        }
       }
     });
     if (!allAnswered) {
+      if (firstIncompletePanel) {
+        firstIncompletePanel.focus({ preventScroll: true });
+        firstIncompletePanel.scrollIntoView({ block: 'center' });
+      }
       showToast(t('wsSubmitIncomplete'), 'warning');
       state.submitBusy = false;
       if (submitBtnEl) submitBtnEl.disabled = false;
@@ -3313,7 +3354,7 @@
      getReviewUnitStatus(), which stays null forever for an FR-044a orphan
      unit (a REVIEWER_MOCK_ROWS stand-in with no real stored submission) --
      but the two call sites disagreed on what null means there, showing 待審
-     beside 尚無標記提交 for the same unit. reviewUnitBlockReason()'s EMPTY
+     beside 尚無已送出的標記 for the same unit. reviewUnitBlockReason()'s EMPTY
      check already draws the correct line (null + no demo row = truly empty;
      null + a demo row = still awaiting review), so this mirrors that exact
      check as the single source of truth for both call sites instead of
@@ -3530,12 +3571,13 @@
     }
   }
 
-  /* Builds a small icon-only span via safe DOM methods (no innerHTML) so
-     mini-buttons never parse untrusted markup. */
+  /* Builds a small icon-only span. `icon` is one of the static Lucide path
+     strings in REVIEW_DECISION_ICONS (never user data), so the markup handed
+     to taxonomyIcon is fixed at authoring time. */
   function buildIconSpan(icon) {
     var span = document.createElement('span');
     span.className = 'rv-btn-icon';
-    span.textContent = icon;
+    span.innerHTML = taxonomyIcon(icon, 14); /* static markup */
     return span;
   }
 
@@ -3624,10 +3666,11 @@
     modify: 'reviewModifyLabel',
     bypass: 'reviewBypassLabel',
   };
+  /* Lucide check / pencil / minus path data (brand.md: no glyph icons). */
   var REVIEW_DECISION_ICONS = {
-    approve: '✓',
-    modify: '✎',
-    bypass: '—',
+    approve: LUCIDE_CHECK,
+    modify: '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
+    bypass: '<path d="M5 12h14"/>',
   };
   function buildRowDecisionButtons(outKey, rowName, onChange) {
     var wrap = document.createElement('div');
@@ -4525,7 +4568,7 @@
     reasonInput.setAttribute('aria-label', t('arbitrationReasonPlaceholder'));
     reasonInput.style.cssText =
       'width:100%;font:inherit;font-size:13px;padding:5px 8px;margin-bottom:6px;'
-      + 'border:1px solid var(--color-border);border-radius:var(--radius-sm);'
+      + 'border:1px solid var(--color-border-control);border-radius:var(--radius-sm);'
       + 'background:var(--color-surface);color:var(--color-ink);';
     reasonInput.addEventListener('input', function () {
       arbitrationReasons[itemId] = reasonInput.value;
@@ -5005,7 +5048,7 @@
     reasonInput.setAttribute('aria-label', t('exceptionPoolReasonPlaceholder'));
     reasonInput.style.cssText =
       'width:100%;font:inherit;font-size:13px;padding:5px 8px;margin:8px 0;'
-      + 'border:1px solid var(--color-border);border-radius:var(--radius-sm);'
+      + 'border:1px solid var(--color-border-control);border-radius:var(--radius-sm);'
       + 'background:var(--color-surface);color:var(--color-ink);';
 
     var summary = document.createElement('div');
@@ -5195,7 +5238,7 @@
     /* The page resets anchors to inherited color with no underline, so the
        link needs its own affordance; 44px keeps it a usable touch target. */
     link.style.cssText = 'display:inline-flex;align-items:center;min-height:44px;'
-      + 'color:var(--color-primary);text-decoration:underline;';
+      + 'color:var(--color-primary-strong);text-decoration:underline;';
     link.textContent = t('reviewFinalizedBackToList');
     box.appendChild(title);
     box.appendChild(message);
@@ -6579,8 +6622,8 @@
     target.setAttribute('data-guideline-anchor-target', 'true');
     target.setAttribute('aria-current', 'location');
     target.setAttribute('tabindex', '-1');
-    target.style.backgroundColor = 'var(--color-warning-soft-bg, #FEF3C7)';
-    target.style.outline = '2px solid var(--color-warning, #D97706)';
+    target.style.backgroundColor = 'var(--color-warning-soft-bg)';
+    target.style.outline = '2px solid var(--color-warning)';
     target.style.outlineOffset = '4px';
     target.style.borderRadius = 'var(--radius-sm, 4px)';
     target.style.scrollMarginTop = '24px';
@@ -6794,6 +6837,7 @@
   function setupGuidelineModal() {
     var modal = document.getElementById('wsGuidelineModal');
     var confirmBtn = document.getElementById('wsGuidelineModalConfirm');
+    var backBtn = document.getElementById('wsGuidelineModalBack');
     var body = document.getElementById('wsGuidelineModalBody');
     if (!modal || !confirmBtn) return;
     if (!currentProfile || !currentProfile.forceShowGuideline) {
@@ -6846,10 +6890,16 @@
         /* No user click triggers this modal (shown automatically on first
            visit), so focus returns to the workspace root landmark on close
            rather than to a trigger element. */
+        /* 閘門忽略 Esc（#423, design-gaps G-46）：規格 §指引閘門 第 3 條「按確認按鈕才開始」，
+           所以 onClose 是空函式，modal-focus.js 收到 Esc 只取消預設動作、不關彈窗。
+           不想確認的人走「返回標記清單」離開。 */
         window.LabelSuiteModalFocus.open(modal, {
           trigger: document.getElementById('wsRoot'),
-          onClose: hideGuidelineModal
+          onClose: function () {}
         });
+        /* 初始焦點放在確認鈕（維護者裁定 2026-11-18，#423）：modal-focus.js 預設聚焦第一個
+           可聚焦元素，也就是左邊的返回鈕，這裡改回主要動作。 */
+        confirmBtn.focus();
       }
     } else {
       modal.classList.remove('show');
@@ -6867,6 +6917,12 @@
       }
       hideGuidelineModal();
     });
+    if (backBtn) {
+      /* 不寫確認紀錄：沒確認就離開，下次進來照樣顯示閘門。 */
+      backBtn.addEventListener('click', function () {
+        window.location.href = buildListReturnUrl();
+      });
+    }
   }
 
   /* ── Language toggle (spec 015 v2.2.0): the workspace no longer renders
@@ -6911,6 +6967,7 @@
     setText('wsTabHistoryLabel', t('wsTabHistory'));
     setText('wsGuidelineModalTitleText', t('guidelineModalTitle'));
     setText('wsGuidelineModalConfirm', t('guidelineModalConfirm'));
+    setText('wsGuidelineModalBack', t('guidelineModalBack'));
     setText('guidelineSummaryTitle', t('guidelineSummaryTitle'));
     setText('wsGuidelineImageModalTitleText', t('guidelineSummaryTitle'));
     setText('wsMobileDrawerTitle', t('mobileDrawerTitle'));

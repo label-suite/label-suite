@@ -1,8 +1,55 @@
 #!/usr/bin/env bash
-# pre-commit hook — runs the shared checker on the staged snapshot.
-# Enabled by scripts/setup.sh. It can be skipped with --no-verify, so the
-# CI checks are the real gate.
-set -uo pipefail
+# pre-commit hook — two duties, in this order:
+#
+#   1. Format the staged files with Prettier through lint-staged
+#      (.lintstagedrc.mjs), which re-stages whatever it rewrote.
+#   2. Hand the resulting staged snapshot to the shared checker
+#      (scripts/check-changed.sh --staged), which routes each changed file
+#      to the checks its layer requires.
+#
+# The order is the point. Formatting rewrites and re-stages files, so a
+# checker that ran first would be judging content that is no longer what the
+# commit contains. Running it second means it reads the index exactly as the
+# commit will record it.
+#
+# Enabled by scripts/setup.sh. Either duty can refuse the commit, and
+# --no-verify skips both, so the CI format and hooks jobs are the real gate.
+#
+# A worktree under .claude/worktrees/ has no node_modules of its own, so the
+# tools are looked up in this checkout first and then in the main checkout
+# (the directory that holds the shared .git). A missing tool fails the commit;
+# it is never skipped.
+set -euo pipefail
 
-cd "$(git rev-parse --show-toplevel)" || exit 2
-exec scripts/check-changed.sh --staged
+TOP=$(git rev-parse --show-toplevel)
+COMMON_DIR=$(cd "$TOP" && cd "$(git rev-parse --git-common-dir)" && pwd)
+MAIN=$(dirname "$COMMON_DIR")
+cd "$TOP"
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "pre-commit: node is not on PATH; Node 22.22.1 or later is needed to run lint-staged." >&2
+  exit 1
+fi
+
+BIN=""
+for dir in "$TOP" "$MAIN"; do
+  if [ -x "$dir/node_modules/.bin/lint-staged" ] && [ -x "$dir/node_modules/.bin/prettier" ]; then
+    BIN="$dir/node_modules/.bin"
+    break
+  fi
+done
+
+if [ -z "$BIN" ]; then
+  echo "pre-commit: lint-staged or prettier not found in $TOP/node_modules or $MAIN/node_modules." >&2
+  echo "Run 'pnpm install' at the repository root, then commit again." >&2
+  exit 1
+fi
+
+# lint-staged runs prettier by name; put the same node_modules/.bin first so it
+# resolves to the pinned version even when the worktree has no node_modules.
+PATH="$BIN:$PATH" "$BIN/lint-staged"
+
+# Not exec'd above, because the staged snapshot still has to be checked. The
+# checker lives in this checkout rather than node_modules, so it is found
+# whether or not the worktree has its own dependencies.
+exec "$TOP/scripts/check-changed.sh" --staged

@@ -17,18 +17,18 @@
 | 視圖 | 怎麼走到 |
 | :--- | :--- |
 | `#role-super-admin` | `localStorage` 的 `labelsuite.systemRole`（`sidebar.js:2`）設成 `super_admin` |
-| `#state-admin-submenu-open` | 系統管理員 ＋ 桌機 ＋ 側欄未收合，點「系統管理」（`sidebar.js:539`–`:541`） |
-| `#state-sidebar-collapsed` | 桌機（`sidebar.js:513`）點收合鈕（`:524`） |
-| `#state-mobile` | 視窗 ≤ 768px（`sidebar.css:611`） |
-| `#state-theme-dark` | 點 `#sidebarThemeToggleBtn`（`sidebar.js:2080`）或 `#mobileThemeToggleBtn`（`:2054`） |
-| `#state-lang-en` | 點 `#langToggle`（`:2046`）或 `#mobileLangToggle`（`:2050`） |
-| `#state-user-chip` | `#userAvatar`（`:2097`）、`#userName`、`#roleIndicator`（`:2100`） |
+| `#state-admin-submenu-open` | 系統管理員 ＋ 桌機 ＋ 側欄未收合，點「系統管理」（`System Administration` 子選單，`sidebar.js:539`–`:541`） |
+| `#state-sidebar-collapsed` | 桌機（`shouldEnableDesktopSidebarCollapse`，`sidebar.js:511`–`:513`）點收合鈕（`sidebar-collapsed`，`:524`） |
+| `#state-mobile` | 視窗 ≤ 767px（`max-width: 767px`，`sidebar.css:828`） |
+| `#state-theme-dark` | 點 `#sidebarThemeToggleBtn`（`sidebar.js:2081`）或 `#mobileThemeToggleBtn`（`:2055`） |
+| `#state-lang-en` | 點 `#langToggle`（`:2047`）或 `#mobileLangToggle`（`:2051`） |
+| `#state-user-chip` | `#userAvatar`（`:2098`）、`#userName`、`#roleIndicator`（`:2101`） |
 | `#state-active-task-type` | 改 `labelsuite.activeTaskType`（`:4`） |
-| `#state-workspace-tabs` | 開過兩個以上工作頁（`:1524`） |
-| `#state-logout` | 點 `#logoutBtn`（`:2103`）或 `#mobileLogoutBtn`（`:2064`）：一次清掉 7 個 storage 鍵 |
-| `#param-ap-stage` | 任務詳情的網址加 `?ap_stage=r1`／`official`（`:762`，只在 `pageKind === 'task-detail'` 生效） |
-| `#modal-notification` | 點通知鈴（`:2259`、`:2274`） |
-| `#modal-shortcut` | 開快捷鍵說明（`:2108`、`:2208`） |
+| `#state-workspace-tabs` | 開過兩個以上工作頁（`workspaceTabBar`，`:1524`） |
+| `#state-logout` | 點 `#logoutBtn`（`:2104`）或 `#mobileLogoutBtn`（`:2065`）：一次清掉 7 個 storage 鍵 |
+| `#param-ap-stage` | 任務詳情的網址加 `?ap_stage=r1`／`official`（`:763`，只在 `pageKind === 'task-detail'` 生效） |
+| `#modal-notification` | 點通知鈴 `notificationBellBtn` 開 `notificationDropdown`（`:2264`、`:2289`） |
+| `#modal-shortcut` | 開快捷鍵說明 `shortcutHelpModal`（`:2109`、`:2209`） |
 
 ## 這一頁專屬的
 
@@ -38,13 +38,13 @@
 | :--- | :--- |
 | `#shortcutHelpModal`、`#notificationDropdown` | 覆蓋層整套自建，**不用 `modal-focus.js`**（`sidebar.js` 全檔 `LabelSuiteModalFocus` 出現 0 次）→ `../design-gaps.md` G-23 |
 | `#langToggle`、`#mobileLangToggle` | 登入後的語言切換，和帳號頁的 [Language Toggle](../components/lang-toggle.md) 是兩套 |
-| `.workspace-tab-bar`（`sidebar.css:959`） | 工作頁籤列，有上限、重開堆疊、改鍵三種通知；`tokens.css` 為它留了 `--workspace-tab-min-width`／`-max-width` |
+| `.workspace-tab-bar`（`sidebar.css:966`） | 工作頁籤列，有上限、重開堆疊、改鍵三種通知；`tokens.css` 為它留了 `--workspace-tab-min-width`／`-max-width` |
 
 ## 業務行為
 
 連回規格 [`07-shared/01-sidebar.mdx`](../../../docs/specs/07-shared/01-sidebar.mdx)。
 
-`sidebar.css:963` 與 `sidebar.js:682` 都引用「`MASTER.md` 的 terminology note」來區分「工作頁籤」與「Content Tabs」的命名——**本批次建立 `MASTER.md` 時要寫進那一節**，否則這兩處註解指向不存在的東西（G-25）。
+`sidebar.css:963` 與 `sidebar.js:683` 都引用「`MASTER.md` 的 terminology note」來區分「工作頁籤」與「Content Tabs」的命名——**本批次建立 `MASTER.md` 時要寫進那一節**，否則這兩處註解指向不存在的東西（G-25）。
 
 ## 散佈範圍
 

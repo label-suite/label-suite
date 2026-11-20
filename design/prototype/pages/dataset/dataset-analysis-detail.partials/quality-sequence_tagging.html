@@ -3,7 +3,7 @@
     <h2 class="panel-title" id="iaaTitle">IAA 報告</h2>
   </div>
   <div class="iaa-method-row">
-    <span class="iaa-primary-star" aria-label="主要指標"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+    <span class="iaa-primary-star" aria-label="主要指標" data-i18n-aria-label="iaaPrimaryAria"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
     <span class="iaa-method-name" id="iaaMethodName" data-i18n="sequenceTaggingQuality.methodName">Krippendorff 單位化 u-α</span>
     <span id="iaaMethodSuffix" data-i18n="sequenceTaggingQuality.methodSuffix">— 主要指標（span 為計算單位）</span>
   </div>
@@ -26,7 +26,7 @@
   <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" data-i18n="qualityListRank.lowConsistencySubtitle">依分歧度由高到低排序，可作為 Reviewer 仲裁優先順序參考（與 dry_run 仲裁 divergent 概念同源）</p>
   <div class="table-wrap">
     <div class="table-scroll">
-      <table class="annotator-table" aria-label="一致性最低樣本清單（序列標記）">
+      <table class="annotator-table" aria-label="一致性最低樣本清單（序列標記）" data-i18n-aria-label="qualityListRank.ariaSampleSeq">
         <thead>
           <tr>
             <th data-i18n="qualityListRank.headerSample">樣本</th>
@@ -36,12 +36,12 @@
         </thead>
         <tbody>
           <tr>
-            <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#312</span></td>
+            <td><span style="font-family:var(--font-mono);color:var(--color-primary-strong)">#312</span></td>
             <td><span class="badge badge-fail">0.71</span></td>
             <td style="white-space:normal;font-size:12px" data-i18n="sequenceTaggingListRank.sample1Detail">「散熱表現優異」span 邊界標記在 3 位標記員間出現分歧，pairwise F1（strict）為 0.71</td>
           </tr>
           <tr>
-            <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#078</span></td>
+            <td><span style="font-family:var(--font-mono);color:var(--color-primary-strong)">#078</span></td>
             <td><span class="badge badge-warn">0.58</span></td>
             <td style="white-space:normal;font-size:12px" data-i18n="sequenceTaggingListRank.sample2Detail">「退換貨流程」與「繁瑣」是否合併為單一 span 意見分歧，pairwise F1（strict）為 0.58</td>
           </tr>
@@ -56,7 +56,7 @@
   <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" data-i18n="qualityListRank.rankingSubtitle">依型別對應一致率計算方式排序；完成樣本數不足門檻者標示小樣本估計警示，但不剔除排名</p>
   <div class="table-wrap">
     <div class="table-scroll">
-      <table class="annotator-table" aria-label="標記員品質排名（序列標記）">
+      <table class="annotator-table" aria-label="標記員品質排名（序列標記）" data-i18n-aria-label="qualityListRank.ariaRankSeq">
         <thead>
           <tr>
             <th data-i18n="qualityListRank.rankHeaderRank">名次</th>
@@ -101,23 +101,23 @@
 <section class="panel" aria-labelledby="anomalyTitle">
   <h2 class="panel-title" id="anomalyTitle">異常偵測</h2>
   <p class="panel-subtitle" id="anomalySubtitle">自動標記標記速度異常與離群標記值</p>
-  <div class="anomaly-group-title">標記速度異常</div>
+  <div class="anomaly-group-title" id="anomSeqSpeedTitle">標記速度異常</div>
   <ul class="anomaly-list">
     <li class="anomaly-item">
       <svg class="anomaly-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       <div class="anomaly-body">
-        <div class="anomaly-title">Jordan Wu — 標記速度過快</div>
-        <div class="anomaly-detail">平均 20s／句（門檻：≥ 30s），共 40 筆提交紀錄</div>
+        <div class="anomaly-title" id="anomStSpd1Title">Jordan Wu — 標記速度過快</div>
+        <div class="anomaly-detail" id="anomStSpd1Detail">平均 20s／句（門檻：≥ 30s），共 40 筆送出紀錄</div>
       </div>
     </li>
   </ul>
-  <div class="anomaly-group-title" style="margin-top:var(--space-md)">高分歧樣本</div>
+  <div class="anomaly-group-title" id="anomSeqOutlierTitle" style="margin-top:var(--space-md)">高分歧樣本</div>
   <ul class="anomaly-list">
     <li class="anomaly-item">
       <svg class="anomaly-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       <div class="anomaly-body">
-        <div class="anomaly-title">樣本 #312 — token 標記 high_divergence 旗標</div>
-        <div class="anomaly-detail">3 位標記員的 span 邊界差異超過 4 個 token；此旗標為 sample-level，與個人風險等級分開處理。</div>
+        <div class="anomaly-title" id="anomStOut1Title">樣本 #312 — token 標記 high_divergence 旗標</div>
+        <div class="anomaly-detail" id="anomStOut1Detail">3 位標記員的 span 邊界差異超過 4 個 token；此旗標為 sample-level，與個人風險等級分開處理。</div>
       </div>
     </li>
   </ul>
@@ -134,7 +134,7 @@
           <tbody>
             <tr><td><span class="annotator-name">Iris Tsai</span></td><td data-i18n="qualityRisk.seqSpeed1">52s / 句</td><td><span class="badge badge-pass">0.84</span></td><td><span class="risk-level-badge normal" data-risk-level="normal">正常</span></td><td><div class="cause-muted" data-i18n="qualityRisk.causeNone">無異常原因</div></td><td>28</td><td><div class="action-stack"><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button" data-i18n="qualityRisk.actionReview">審核標記</button><div class="risk-readonly-note hidden" data-role-note data-i18n="qualityRisk.leaderOnly">僅 Project Leader 可執行</div></div></td></tr>
             <tr><td><span class="annotator-name">Avery Lin</span></td><td data-i18n="qualityRisk.seqSpeed2">60s / 句</td><td><span class="badge badge-pass">0.79</span></td><td><span class="risk-level-badge normal" data-risk-level="normal">正常</span></td><td><div class="cause-muted" data-i18n="qualityRisk.causeNone">無異常原因</div></td><td>26</td><td><div class="action-stack"><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button" data-i18n="qualityRisk.actionReview">審核標記</button><div class="risk-readonly-note hidden" data-role-note data-i18n="qualityRisk.leaderOnly">僅 Project Leader 可執行</div></div></td></tr>
-            <tr><td><span class="annotator-name">Jordan Wu</span></td><td><span class="speed-warn">20s / 句</span><span class="speed-flag" aria-label="速度異常"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 20h16a2 2 0 0 0 1.73-2Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span></td><td><span class="badge badge-warn">0.66</span></td><td><span class="risk-level-badge watch" data-risk-level="watch">觀察</span></td><td><div class="cause-stack"><span class="cause-chip" data-i18n="qualityRisk.causeTooFast">標記過快</span></div></td><td>40</td><td><div class="action-stack"><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button" data-i18n="qualityRisk.actionReview">審核標記</button><div class="risk-readonly-note hidden" data-role-note data-i18n="qualityRisk.leaderOnly">僅 Project Leader 可執行</div></div></td></tr>
+            <tr><td><span class="annotator-name">Jordan Wu</span></td><td><span class="speed-warn" data-i18n="qualityRisk.seqSpeedWarn">20s / 句</span><span class="speed-flag" aria-label="速度異常" data-i18n-aria-label="qualityRisk.speedFlagLabel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 20h16a2 2 0 0 0 1.73-2Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span></td><td><span class="badge badge-warn">0.66</span></td><td><span class="risk-level-badge watch" data-risk-level="watch">觀察</span></td><td><div class="cause-stack"><span class="cause-chip" data-i18n="qualityRisk.causeTooFast">標記過快</span></div></td><td>40</td><td><div class="action-stack"><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button" data-i18n="qualityRisk.actionReview">審核標記</button><div class="risk-readonly-note hidden" data-role-note data-i18n="qualityRisk.leaderOnly">僅 Project Leader 可執行</div></div></td></tr>
           </tbody>
         </table>
       </div>
@@ -149,8 +149,8 @@
   <div style="margin-top:var(--space-md)">
     <div class="table-wrap">
       <div class="table-scroll">
-        <table class="annotator-table" aria-label="標記一致性偏離分析（序列標記）">
-          <thead><tr><th>標記員</th><th id="consistencyUnitCol">可比較 span 數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
+        <table class="annotator-table" aria-label="標記一致性偏離分析（序列標記）" data-i18n-aria-label="qualityListRank.ariaDevSeq">
+          <thead><tr><th data-i18n="qualityRisk.headerAnnotator">標記員</th><th id="consistencyUnitCol">可比較 span 數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
           <tbody>
             <tr><td><span class="annotator-name">Iris Tsai</span></td><td>28</td><td>2</td><td>7.1%</td><td>0</td><td>0%</td></tr>
             <tr><td><span class="annotator-name">Avery Lin</span></td><td>26</td><td>4</td><td>15.4%</td><td>1</td><td>3.8%</td></tr>

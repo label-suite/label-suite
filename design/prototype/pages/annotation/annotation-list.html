@@ -4,8 +4,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="../../assets/logo/icon-colored.svg">
   <title>Label Suite — 標記清單</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../../assets/data-palette.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <link rel="stylesheet" href="../shared/button.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
@@ -55,7 +57,7 @@
        heading block exactly as task-detail.html does: shared spec 008 FR-017
        pins every page's h1 to the Dashboard's y, so nothing may precede it. */
     .breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-soft);margin:-12px 0 16px}
-    .breadcrumb a{color:var(--color-primary)}
+    .breadcrumb a{color:var(--color-primary-strong)}
     .breadcrumb a:hover{text-decoration:underline}
     .breadcrumb-sep{color:var(--color-ink-muted);font-size:11px}
     .list {
@@ -163,15 +165,16 @@
       background: var(--color-success-soft-bg);
       border-color: var(--color-success-soft-border);
     }
+    /* #420 Q1 neutral tokens / Q2 accent family; both flip in tokens.css */
     .badge-dry-run {
-      color: #6B7280;
-      background: #F3F4F6;
-      border-color: #D1D5DB;
+      color: var(--color-ink-muted);
+      background: var(--color-slate-50);
+      border-color: var(--color-border);
     }
     .badge-official {
-      color: #5B21B6;
-      background: #EDE9FE;
-      border-color: #DDD6FE;
+      color: var(--color-accent);
+      background: var(--color-accent-bg);
+      border-color: var(--color-accent-border);
     }
     .progress {
       height: 6px;
@@ -247,7 +250,7 @@
       background: none;
       font-size: 12px;
       font-weight: 600;
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
       cursor: pointer;
     }
     .text-snippet-toggle:hover { text-decoration: underline; }
@@ -263,28 +266,7 @@
     .status-submitted { color: var(--color-success); background: var(--color-success-soft-bg); }
     .status-saved { color: var(--color-warning); background: var(--color-warning-soft-bg); }
     .status-pending { color: var(--color-ink-muted); background: var(--color-border); }
-    .mini-btn {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-white);
-      color: var(--color-ink);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 6px 10px;
-      cursor: pointer;
-      transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast), opacity var(--dur-fast);
-    }
-    .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
-    .mini-btn:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
-    }
-    .mini-btn-primary {
-      background: var(--color-primary);
-      border-color: var(--color-primary);
-      color: var(--color-white);
-    }
-    .mini-btn-primary:hover:not(:disabled) { opacity: 0.9; border-color: var(--color-primary); color: var(--color-white); }
+    /* .mini-btn 與其 variant 在 pages/shared/button.css（#423, G-37） */
     /* === Reviewer list styles === */
     .reviewer-stats {
       font-size: 12px; color: var(--color-text-soft); font-family: monospace;
@@ -334,7 +316,7 @@
     .annotator-answer { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
     .annotator-username { font-size: 13px; font-weight: 600; color: var(--color-ink); }
     .annotator-result-tag {
-      font-size: 13px; color: var(--color-primary); background: var(--color-primary-soft-bg);
+      font-size: 13px; color: var(--color-primary-strong); background: var(--color-primary-soft-bg);
       border: 1px solid var(--color-info-border); border-radius: var(--radius-md);
       padding: 3px 12px; font-family: monospace; min-width: 80px; text-align: center;
     }
@@ -356,15 +338,15 @@
       padding: 10px 0; border-top: 1px solid var(--color-border);
       font-size: 13px;
     }
-    .dry-run-feedback-arrow { color: var(--color-text-soft); }
+    .dry-run-feedback-arrow { display: inline-flex; align-items: center; color: var(--color-text-soft); }
     .dry-run-feedback-source { font-size: 12px; color: var(--color-text-soft); }
     .dry-run-feedback-reason {
       flex-basis: 100%; font-size: 12px; color: var(--color-text-soft);
     }
-    .result-tag-green { color: #15803D !important; background: #DCFCE7 !important; border-color: #86EFAC !important; }
-    .result-tag-blue  { color: #1D4ED8 !important; background: #EFF6FF !important; border-color: #BFDBFE !important; }
-    .result-tag-red   { color: #DC2626 !important; background: #FEE2E2 !important; border-color: #FCA5A5 !important; }
-    @media (max-width: 768px) {
+    .result-tag-green { color: var(--color-success) !important; background: var(--color-success-bg) !important; border-color: var(--color-success-border) !important; }
+    .result-tag-blue  { color: var(--color-info) !important; background: var(--color-info-bg) !important; border-color: var(--color-info-border) !important; }
+    .result-tag-red   { color: var(--color-error) !important; background: var(--color-error-bg) !important; border-color: var(--color-error-border) !important; }
+    @media (max-width: 767px) {
       .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
       .task-item-header {
         flex-direction: column;
@@ -415,17 +397,6 @@
     }
     @media (max-width: 420px) {
       .mobile-user-name { max-width: 56px; font-size: 11px; }
-    }
-    /* ── Dark mode overrides ──────────────────────────────────── */
-    html[data-theme="dark"] {
-      /* Run-phase badges */
-      .badge-dry-run  { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
-      .badge-official { color: #A78BFA; background: #1E1B4B; border-color: #3730A3; }
-
-      /* Result tags with !important — need matching specificity */
-      .result-tag-green { color: #4ADE80 !important; background: #0F2A18 !important; border-color: #1F5132 !important; }
-      .result-tag-blue  { color: #60A5FA !important; background: #0F1F33 !important; border-color: #1E3A66 !important; }
-      .result-tag-red   { color: #F87171 !important; background: #2A1414 !important; border-color: #5B2222 !important; }
     }
   </style>
   <link rel="stylesheet" href="../shared/task-type-badge.css" />
@@ -586,7 +557,7 @@
       crumbWorkAreaReviewer: '審核作業',
       crumbWorkAreaAnnotator: '標記作業',
       crumbTaskTpl: '{name}（{run}）',
-      statusSubmitted: '已提交',
+      statusSubmitted: '已送出',
       statusSaved: '已儲存',
       statusPending: '待處理',
       taskStatusCompleted: '已完成',
@@ -612,6 +583,7 @@
       trialListCountTpl: '本回合清單 {total} 筆',
       openSampleAriaTpl: '開啟樣本 {id}',
       notFoundTitle: '找不到這個任務',
+      noTaskTitle: '尚未選擇任務',
       notFoundMessage: '任務代碼 {taskId} 不存在，請確認網址或回到儀表板重新選擇任務。',
       notFoundNoTaskMessage: '未指定任務，請回到儀表板重新選擇任務。',
       notFoundBackBtn: '回儀表板',
@@ -634,7 +606,7 @@
       reviewNoAnswer: '（無）',
       textExpandLabel: '展開全文',
       textCollapseLabel: '收合',
-      notSubmittedNoteTpl: '其中 {count} 筆尚未提交，不計入審核清單：',
+      notSubmittedNoteTpl: '其中 {count} 筆尚未送出，不計入審核清單：',
       notSubmittedEntryLabel: '查看 {id}',
       reviewUnitInterimNote: '未定稿',
       reviewUnitFinalizedNote: '已鎖定',
@@ -685,6 +657,7 @@
       trialListCountTpl: 'This round: {total} items',
       openSampleAriaTpl: 'Open sample {id}',
       notFoundTitle: 'Task not found',
+      noTaskTitle: 'No task selected',
       notFoundMessage: 'Task {taskId} does not exist. Please check the URL or return to the dashboard to pick another task.',
       notFoundNoTaskMessage: 'No task specified. Please return to the dashboard to pick a task.',
       notFoundBackBtn: 'Back to dashboard',
@@ -2165,7 +2138,18 @@
       rowEl.appendChild(buildDryRunFeedbackAnswerTags(profile, row.myAnswer));
       var arrow = document.createElement('span');
       arrow.className = 'dry-run-feedback-arrow';
-      arrow.textContent = '→';
+      /* Lucide arrow-right (assets/icons/arrow-right.svg), built with DOM methods. */
+      var svgNs = 'http://www.w3.org/2000/svg';
+      var arrowIcon = document.createElementNS(svgNs, 'svg');
+      [['width', '12'], ['height', '12'], ['viewBox', '0 0 24 24'], ['fill', 'none'], ['stroke', 'currentColor'],
+       ['stroke-width', '2'], ['stroke-linecap', 'round'], ['stroke-linejoin', 'round'], ['aria-hidden', 'true']]
+        .forEach(function (attr) { arrowIcon.setAttribute(attr[0], attr[1]); });
+      ['M5 12h14', 'm12 5 7 7-7 7'].forEach(function (d) {
+        var path = document.createElementNS(svgNs, 'path');
+        path.setAttribute('d', d);
+        arrowIcon.appendChild(path);
+      });
+      arrow.appendChild(arrowIcon);
       rowEl.appendChild(arrow);
       rowEl.appendChild(buildDryRunFeedbackAnswerTags(profile, row.finalizedAnswer));
     }
@@ -2320,7 +2304,8 @@
     var title = document.createElement('strong');
     title.style.display = 'block';
     title.style.marginBottom = '4px';
-    title.textContent = t('notFoundTitle');
+    /* 沒帶 task_id 不是「找不到」，標題分開（#423, design-gaps G-48；規格 04-01 §路由上下文與回退 第 6、7 條）。 */
+    title.textContent = taskId ? t('notFoundTitle') : t('noTaskTitle');
     var message = document.createElement('span');
     message.textContent = taskId
       ? t('notFoundMessage', { taskId: taskId })
@@ -2330,7 +2315,7 @@
 
     var backLink = document.createElement('a');
     backLink.className = 'mini-btn mini-btn-primary';
-    backLink.style.display = 'inline-block';
+    backLink.style.display = 'inline-flex';
     backLink.style.marginTop = 'var(--space-md)';
     backLink.style.textDecoration = 'none';
     backLink.href = '../dashboard/dashboard.html';

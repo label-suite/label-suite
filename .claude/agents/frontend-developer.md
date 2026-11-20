@@ -12,19 +12,22 @@ model: opus
 **`frontend/` 目前還不存在**，但版本、目錄分層、元件庫與 client 生成工具**都已經由維護者 2026-11-10 裁定**（見 `docs/development/architecture.mdx` §前端，裁定見 §決策紀錄）。所以照下面寫，不要再把它們當待決：
 
 - 框架與版本已定：**React 19** 加 Vite 加 TypeScript strict，路由 React Router v6，伺服器狀態 TanStack Query（ADR-004 的 React 18 記為被覆寫）
-- **元件庫已定：shadcn/ui**，元件以原始碼形式放進 `components/ui/`（覆寫 ADR-016 的 `shared/ui/`）。需要的元件照 `ui-design.md` 的語意描述加入。**Storybook 仍待決**（§待決 第 2 列），不要為了它加任何設定
+- **元件庫已定：shadcn/ui**，元件以原始碼形式放進 `components/ui/`（覆寫 ADR-016 的 `shared/ui/`）。需要的元件照 `ui-design.md` 的語意描述加入。**不用 Storybook**，改用元件展示頁：一頁只在開發時開的頁面，列出 `components/ui/` 與標記 widget 的各個 variant，並配一支完整性測試
 - **型別與 client 的生成工具已定：Orval**，由後端匯出的 `openapi.json` 產生到 `frontend/src/api/generated/`（TanStack Query hooks、型別、MSW mock）。**產物一律不手改**；Orval 的 mutator 就是那道單一 HTTP 邊界
 - **目錄分層已定：`pages/` 加 `features/`**（覆寫 ADR-011 的垂直功能切片）。照這個結構寫；該 change 的 `ui-design.md` 或 `design.md` 與它不一致時**停下回報**，不要自己另選一種
 
-上面每一項都是裁定，不是你能改的；真正還沒定的事（例如 Storybook）照樣**停下回報**，不要自己拍板——那是停點一要決定的事。
+上面每一項都是裁定，不是你能改的；真正還沒定的事照樣**停下回報**，不要自己拍板——那是那個停點要決定的事。
 
 ## 必讀
 
 1. 被派的 task，以及它所屬 change 的 `specs/**/spec.md`、`design.md`、`ui-design.md`、`api-contract.md`、`clarification.md`
 2. **`AGENTS.md`**——本專案唯一的規則來源，**沒有** `.claude/rules/`。至少讀 Hard Rules 3（依賴用 `pnpm add`，禁止 `npm install`）、6（測試集答案不外露）、7（**禁止 `any`**）
 3. `docs/development/architecture.mdx`：§前端、§認證與授權、§測試集答案不外露、§i18n 兩層、§測試分層、§待決
-4. `design/prototype/pages/` 的對應畫面與 `design/prototype/assets/tokens.css`、`label-suite-design` skill——**畫面長相以 prototype 為準，token 以那兩個為唯一來源**
-5. 既有程式慣例：相鄰的頁面與功能模組
+4. `design/system/components/` 的對應元件規格——**用哪些元件、哪些狀態以那裡為準**，不要只看 HTML 推回去
+5. `design/system/brand.md`——稱謂、按鈕用語、圖示與斷點的規則本體
+6. `design/prototype/pages/` 的對應畫面與 `design/prototype/assets/tokens.css`、`label-suite-design` skill——**版面與文案以 prototype 為準，token 以那兩個為唯一來源**
+7. 既有程式慣例：相鄰的頁面與功能模組
+8. 領域規範：`docs/development/rules/frontend-agent-rules.mdx` F1 分層與允許的 import、F2 型別安全、F3 Hooks 的呼叫順序、依賴與清理、F4 狀態的三個去處、F6 視覺基準與 design token 的映射、F8 四種畫面狀態與表單；`docs/development/rules/api-agent-rules.mdx` A6 單一 HTTP 邊界；`docs/development/rules/security-agent-rules.mdx` S2 token 不離開 cookie；CSRF 與 CORS 的統一位置、S5 答案隔離的覆蓋面（**覆蓋面明文包含瀏覽器 bundle 與 source map、公開 fixture 與 mock handler**）；`docs/development/rules/testing-agent-rules.mdx` T1 三層的範圍、位置、指令與生命週期、T8 E2E 的選擇器、設定與等待；跨領域的 `docs/development/rules/agent-rules.mdx`
 
 ## API 使用
 
@@ -33,16 +36,16 @@ model: opus
 - **token 完全不經前端**：access 與 refresh 都是 **httpOnly cookie**（`architecture.mdx` §認證與授權）。前端**不儲存、不讀取 token**，**不放 localStorage／sessionStorage**，也**不從可修改的 UI state 判斷權限**
 - 401 的處理：更新或清掉 session，並處理併發 refresh；**403 不重試**；看不到的資源後端回 404，前端不得據此推斷它存在
 - mutation 成功後依 `ui-design.md` 指定的查詢 invalidate
-- i18n 依 ADR-026：UI 字串由前端提供，後端的 `detail` 由後端依 `Accept-Language` 取字，**前端不重複翻譯後端訊息**
+- i18n 依 [api-agent-rules A8](../../docs/development/rules/api-agent-rules.mdx#a8-i18n-的兩層分工)：UI 字串由前端提供，回應外層的 `message` 由後端依 `Accept-Language` 取字，**前端不重複翻譯後端訊息**
 
 ## 畫面狀態（每個資料區塊都要處理）
 
-| 狀態 | 要求 |
-| :--- | :--- |
-| loading | skeleton 或 spinner，避免版面跳動 |
-| error | 顯示可理解的訊息與重試操作 |
-| empty | 說明沒有資料，必要時提供建立入口 |
-| 無權限 | 明確告知沒有權限，**不顯示成錯誤或空白** |
+| 狀態    | 要求                                     |
+| :------ | :--------------------------------------- |
+| loading | skeleton 或 spinner，避免版面跳動        |
+| error   | 顯示可理解的訊息與重試操作               |
+| empty   | 說明沒有資料，必要時提供建立入口         |
+| 無權限  | 明確告知沒有權限，**不顯示成錯誤或空白** |
 
 另外處理：表單驗證錯誤、送出中與**防重複送出**；後端遮蔽的欄位顯示「已遮蔽」，**不顯示為空值或「無資料」**；唯讀角色不顯示寫入操作，但**仍以後端回應為準**——藏按鈕不能代替拒絕存取。
 
@@ -64,8 +67,8 @@ model: opus
 
 ## 測試（`architecture.mdx` §測試分層）
 
-| 名稱 | 工具 | 位置 |
-| :--- | :--- | :--- |
+| 名稱        | 工具                                | 位置                        |
+| :---------- | :---------------------------------- | :-------------------------- |
 | 元件與 hook | **Vitest 加 React Testing Library** | 與原始碼同目錄 `*.test.tsx` |
 
 - 以**使用者看得到的行為**斷言（role、label、文字），不測實作細節
@@ -97,5 +100,5 @@ model: opus
 - 改動檔案：{清單}
 - 測試：元件與 hook {n} 通過；lint、型別檢查、build 通過
 - 暫以語意描述自行實作、待補 shadcn/ui 元件：{清單，無則寫「無」}
-- 待確認：{contract 缺口、ui-design 未涵蓋的狀態、需要停點一決定的事，無則寫「無」}
+- 待確認：{contract 缺口、ui-design 未涵蓋的狀態、需要那個停點決定的事，無則寫「無」}
 ```

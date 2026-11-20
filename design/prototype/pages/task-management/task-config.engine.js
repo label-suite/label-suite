@@ -64,7 +64,7 @@ function makeSvgIcon(paths, size) {
   svg.setAttribute('width', size); svg.setAttribute('height', size);
   svg.setAttribute('viewBox', '0 0 24 24');
   svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor');
-  svg.setAttribute('stroke-width', '2.5');
+  svg.setAttribute('stroke-width', '2');
   svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('stroke-linejoin', 'round');
   svg.setAttribute('aria-hidden', 'true');
   paths.forEach(function(d) {
@@ -653,13 +653,14 @@ function buildOutputAccordion(outKey, outReg, isCollapsed) {
     var depName = depSourceReg ? (depSourceReg[state.lang] || depSourceReg.zh) : sourceKey;
     var depBadge = document.createElement('div');
     depBadge.className = 'output-accordion-dep';
-    depBadge.textContent = t('accordionDependsOn') + depName;
+    depBadge.innerHTML = taxonomyIcon(LUCIDE_CORNER_DOWN_RIGHT, 12); /* static markup */
+    depBadge.appendChild(document.createTextNode(t('accordionDependsOn') + depName));
     titleWrap.appendChild(depBadge);
   }
 
   var chevron = document.createElement('span');
   chevron.className = 'output-accordion-chevron';
-  chevron.textContent = '▾';
+  chevron.innerHTML = taxonomyIcon(LUCIDE_CHEVRON_DOWN, 16); /* static markup */
 
   header.appendChild(titleWrap);
   header.appendChild(chevron);
@@ -872,6 +873,17 @@ function taxonomyIcon(paths, size) {
 }
 var ICON_CHEVRON_DOWN = taxonomyIcon('<path d="m6 9 6 6 6-6"/>');
 var ICON_X = taxonomyIcon('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>');
+/* Lucide shapes for spots that used text glyphs (brand.md: no ▾ / ✓ / → characters). */
+var LUCIDE_CHEVRON_DOWN = '<path d="m6 9 6 6 6-6"/>';
+var LUCIDE_CHECK = '<path d="M20 6 9 17l-5-5"/>';
+var LUCIDE_ARROW_RIGHT = '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>';
+var LUCIDE_CORNER_DOWN_RIGHT = '<path d="m15 10 5 5-5 5"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/>';
+function lucideArrowSpan(className) {
+  var span = document.createElement('span');
+  span.className = className;
+  span.innerHTML = taxonomyIcon(LUCIDE_ARROW_RIGHT, 12); /* static markup */
+  return span;
+}
 
 function buildTaxonomyTreeEditor(config, field, outKey) {
   var nodes = normalizeTaxonomyNodes(config[field.key]);
@@ -1255,7 +1267,7 @@ function renderOutputTypeFields(container, outKey) {
             row.className = 'entity-row';
             var dot = document.createElement('div');
             dot.className = 'entity-color-dot';
-            dot.style.background = ent.color || ENTITY_COLORS[i % ENTITY_COLORS.length];
+            dot.style.background = entityPaintColor(ent.color || ENTITY_COLORS[i % ENTITY_COLORS.length]);
             var nameInp = document.createElement('input');
             nameInp.type = 'text'; nameInp.className = 'entity-name-input';
             nameInp.value = ent.name;
@@ -1312,7 +1324,7 @@ function renderOutputTypeFields(container, outKey) {
             rm.className = 'tag-pill-remove';
             rm.setAttribute('aria-label', '移除');
             rm.setAttribute('type', 'button');
-            rm.innerHTML = '<svg style="width:10px;height:10px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+            rm.innerHTML = '<svg style="width:10px;height:10px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
             (function(idx) {
               rm.addEventListener('click', function() {
                 tagsArr.splice(idx, 1);
@@ -1433,7 +1445,7 @@ function renderOutputTypeFields(container, outKey) {
     } else if (field.type === 'select') {
       var sel = document.createElement('select');
       sel.className = 'select-field';
-      sel.style.cssText = 'width:100%;padding:8px 12px;border:1.5px solid var(--color-border);border-radius:var(--radius-md);font-size:0.9rem;';
+      sel.style.cssText = 'width:100%;padding:8px 12px;border:1.5px solid var(--color-border-control);border-radius:var(--radius-md);font-size:0.9rem;';
       sel.setAttribute('data-testid', field.testId || (outKey.replace(/_/g, '-') + '-' + field.key.replace(/_/g, '-') + '-select'));
       var selectLabels = (field.optionLabels && field.optionLabels[state.lang]) || {};
       var selectedValue = getOutputConfigFieldValue(cfg, field);
@@ -2074,7 +2086,7 @@ function buildRelationStateMachine(container, relationTypes, refresh, allowEntit
   function chip(label, slot, active) {
     var c = document.createElement('span');
     var filled = !!slot;
-    c.style.cssText = 'display:inline-flex;gap:4px;padding:2px 8px;border-radius:999px;border:1.5px solid ' + (active ? 'var(--color-primary)' : 'var(--color-border)') + ';background:' + (filled ? 'var(--color-primary-soft-bg)' : 'transparent') + ';color:' + (filled ? 'var(--color-primary)' : 'var(--color-text-soft)') + ';font-weight:600;';
+    c.style.cssText = 'display:inline-flex;gap:4px;padding:2px 8px;border-radius:999px;border:1.5px solid ' + (active ? 'var(--color-primary)' : 'var(--color-border)') + ';background:' + (filled ? 'var(--color-primary-soft-bg)' : 'transparent') + ';color:' + (filled ? 'var(--color-primary-strong)' : 'var(--color-text-soft)') + ';font-weight:600;';
     c.textContent = label + '：' + (filled ? fmtRelSpan(slot) : '—');
     return c;
   }
@@ -2105,7 +2117,7 @@ function buildRelationStateMachine(container, relationTypes, refresh, allowEntit
     b.type = 'button';
     b.disabled = !enabled;
     var base = 'padding:4px 12px;border-radius:6px;font-size:0.8rem;font-weight:600;transition:all 0.15s;';
-    if (enabled) b.style.cssText = base + 'border:1.5px solid var(--color-primary);background:var(--color-primary);color:#fff;cursor:pointer;';
+    if (enabled) b.style.cssText = base + 'border:1.5px solid var(--color-primary);background:var(--color-primary);color:var(--color-on-cta);cursor:pointer;';
     else b.style.cssText = base + 'border:1.5px solid var(--color-border);background:transparent;color:var(--color-text-soft);cursor:not-allowed;opacity:0.6;';
     b.textContent = label;
     if (enabled) b.addEventListener('click', onClick);
@@ -2181,7 +2193,7 @@ function buildEntityListRow(ent, color, opts) {
   row.setAttribute('data-testid', (opts && opts.testid) || 'entity-list-row');
   row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 10px;margin-bottom:4px;background:var(--color-slate-50);border-radius:6px;font-size:0.85rem;';
   var badge = document.createElement('span');
-  badge.style.cssText = 'display:inline-block;padding:1px 6px;border-radius:4px;font-size:0.7rem;font-weight:700;color:#fff;background:' + (color || '#6366F1') + ';flex-shrink:0;';
+  badge.style.cssText = 'display:inline-block;padding:1px 6px;border-radius:4px;font-size:0.7rem;font-weight:700;color:var(--color-on-cta);background:' + entityPaintColor(color || ENTITY_COLORS[0]) + ';flex-shrink:0;';
   badge.textContent = ent.type;
   row.appendChild(badge);
   var txt = document.createElement('span');
@@ -2222,11 +2234,11 @@ function buildRelationTripleRow(triple, allRelTypes, opts) {
   var subjSpan = document.createElement('span');
   subjSpan.style.cssText = 'font-weight:600;font-size:11px;'; subjSpan.textContent = triple.subj;
   content.appendChild(subjSpan);
-  var arrow = document.createElement('span'); arrow.className = 'absa-arrow'; arrow.textContent = ' → ';
+  var arrow = lucideArrowSpan('absa-arrow');
   content.appendChild(arrow);
   var relBadge = document.createElement('span'); relBadge.className = 'absa-relation-badge'; relBadge.textContent = triple.rel;
   content.appendChild(relBadge);
-  var arrow2 = document.createElement('span'); arrow2.className = 'absa-arrow'; arrow2.textContent = ' → ';
+  var arrow2 = lucideArrowSpan('absa-arrow');
   content.appendChild(arrow2);
   var objSpan = document.createElement('span');
   objSpan.style.cssText = 'font-weight:600;font-size:11px;'; objSpan.textContent = triple.obj;
@@ -2244,7 +2256,7 @@ function buildRelationTripleRow(triple, allRelTypes, opts) {
     typeWrap.style.cssText = 'position:relative;flex-shrink:0;margin-left:8px;';
     var typeBtn = document.createElement('button');
     typeBtn.type = 'button';
-    typeBtn.style.cssText = 'border:1.5px solid var(--color-primary);background:transparent;color:var(--color-primary);border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;';
+    typeBtn.style.cssText = 'border:1.5px solid var(--color-primary);background:transparent;color:var(--color-primary-strong);border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;';
     typeBtn.textContent = lang === 'zh' ? '類型' : 'type';
     var typeMenu = document.createElement('div');
     typeMenu.style.cssText = 'display:none;position:absolute;right:0;bottom:calc(100% + 4px);background:var(--color-white);border:1px solid var(--color-border);border-radius:8px;padding:4px 0;min-width:180px;max-height:220px;overflow-y:auto;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,0.3);';
@@ -2254,8 +2266,8 @@ function buildRelationTripleRow(triple, allRelTypes, opts) {
       item.addEventListener('mouseenter', function() { item.style.background = 'var(--color-slate-50)'; });
       item.addEventListener('mouseleave', function() { item.style.background = 'transparent'; });
       var check = document.createElement('span');
-      check.style.cssText = 'width:14px;font-size:0.75rem;';
-      check.textContent = (triple.relType === rt) ? '✓' : '';
+      check.style.cssText = 'width:14px;display:inline-flex;align-items:center;';
+      if (triple.relType === rt) check.innerHTML = taxonomyIcon(LUCIDE_CHECK, 12); /* static markup */
       item.appendChild(check);
       item.appendChild(document.createTextNode(rt));
       item.addEventListener('click', function(ev) {
@@ -2357,8 +2369,8 @@ function fillDialogueUtterance(txEl, text, uttId) {
     var span = document.createElement('span');
     span.className = 'absa-span-highlight';
     if (rs && rs.start <= ent.start && rs.end >= ent.end) span.classList.add('rel-sel-highlight');
-    var c = colorMap[ent.type] || '#6366F1';
-    span.style.background = c + '33'; span.style.borderBottom = '2px solid ' + c; span.style.color = c;
+    var c = colorMap[ent.type] || ENTITY_COLORS[0];
+    span.style.background = entityWashColor(c); span.style.borderBottom = '2px solid ' + entityPaintColor(c); span.style.color = entityPaintColor(c);
     span.title = ent.type + ' (#' + ent.utt_id + ':' + ent.start + ',' + ent.end + ')';
     span.appendChild(document.createTextNode(text.substring(ent.start, ent.end)));
     txEl.appendChild(span);
@@ -2492,7 +2504,7 @@ function renderAbsaUnifiedPreview(previewContainer) {
   var hasSpanOut = state.selectedOutputTypes.indexOf('entity_recognition') >= 0;
   var hasRelOut = state.selectedOutputTypes.indexOf('relation_identification') >= 0;
   var allowEntityEditing = hasSpanOut;
-  var DEL_SVG = '<svg style="width:12px;height:12px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  var DEL_SVG = '<svg style="width:12px;height:12px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
 
   /* ── Working Area title ── */
   if (allowEntityEditing) {
@@ -2534,8 +2546,8 @@ function renderAbsaUnifiedPreview(previewContainer) {
         var _rsEnd = state.relSel.start + (state.relSel.text ? state.relSel.text.length : 0);
         if (state.relSel.start <= ent.start && _rsEnd >= _entEnd) span.classList.add('rel-sel-highlight');
       }
-      var c = typeColorMap[ent.type] || '#6366F1';
-      span.style.background = c + '33'; span.style.borderBottom = '2px solid ' + c; span.style.color = c;
+      var c = typeColorMap[ent.type] || ENTITY_COLORS[0];
+      span.style.background = entityWashColor(c); span.style.borderBottom = '2px solid ' + entityPaintColor(c); span.style.color = entityPaintColor(c);
       span.title = ent.type + ' (' + ent.start + ',' + ent.end + ')';
       span.appendChild(document.createTextNode(ent.text || realText.substring(ent.start, ent.end + 1)));
       textEl.appendChild(span);
@@ -2607,11 +2619,12 @@ function renderAbsaUnifiedPreview(previewContainer) {
     var legendRow = document.createElement('div');
     legendRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;';
     typeOrder.forEach(function(typeName) {
-      var c = typeColorMap[typeName] || '#6366F1';
+      var c = typeColorMap[typeName] || ENTITY_COLORS[0];
       var chip = document.createElement('button');
       chip.type = 'button';
       var isActive = state.activeEntityType === typeName;
-      chip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ' + c + ';color:' + (isActive ? '#fff' : c) + ';background:' + (isActive ? c : 'transparent') + ';transition:all 0.15s;';
+      chip.className = 'chip' + (isActive ? ' is-active' : '');
+      chip.style.setProperty('--chip-color', entityPaintColor(c));
       chip.textContent = typeName;
       chip.addEventListener('click', function() {
         if (state.relSel) {
@@ -2640,7 +2653,7 @@ function renderAbsaUnifiedPreview(previewContainer) {
       var elWrap = document.createElement('div');
       elWrap.style.cssText = 'margin-bottom:12px;max-height:200px;overflow-y:auto;';
       state.previewEntities.forEach(function(ent, i) {
-        elWrap.appendChild(buildEntityListRow(ent, typeColorMap[ent.type] || '#6366F1', {
+        elWrap.appendChild(buildEntityListRow(ent, typeColorMap[ent.type] || ENTITY_COLORS[0], {
           lang: state.lang,
           onDelete: function() { state.previewEntities.splice(i, 1); renderAbsaUnifiedPreview_refresh(previewContainer); }
         }));
@@ -2815,14 +2828,13 @@ function reconcileOutputConfigs() {
 
 function makeBypassChip(outKey, refresh, labelText) {
   var active = !!state.previewBypass[outKey];
-  var c = '#64748B';
   var chip = document.createElement('button');
   chip.type = 'button';
   chip.setAttribute('aria-pressed', active ? 'true' : 'false');
-  chip.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;font-size:0.8rem;font-weight:600;cursor:pointer;transition:all 0.15s;border:2px dashed ' + c + ';color:' + (active ? '#fff' : c) + ';background:' + (active ? c : 'transparent') + ';';
+  chip.className = 'chip chip--bypass' + (active ? ' is-active' : '');
   var box = document.createElement('span');
-  box.style.cssText = 'width:14px;height:14px;border-radius:3px;border:2px solid ' + (active ? '#fff' : c) + ';display:inline-flex;align-items:center;justify-content:center;font-size:10px;';
-  if (active) box.textContent = '✓';
+  box.className = 'chip-mark chip-mark--box';
+  if (active) box.innerHTML = taxonomyIcon(LUCIDE_CHECK, 10); /* static markup */
   chip.appendChild(box);
   chip.appendChild(document.createTextNode(labelText));
   chip.addEventListener('click', function() {
@@ -2885,11 +2897,11 @@ function renderSingleLabelPreview(container, outKey) {
     var chip = document.createElement('button');
     chip.type = 'button';
     var isActive = ps.selected === label.name;
-    var c = safeCssColor(label.color, '#6366F1');
-    chip.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;border:2px solid ' + c + ';color:' + (isActive ? '#fff' : c) + ';background:' + (isActive ? c : 'transparent') + ';transition:all 0.15s;';
+    var c = safeCssColor(label.color, ENTITY_COLORS[0]);
+    chip.className = 'chip chip--lg' + (isActive ? ' is-active' : '');
+    chip.style.setProperty('--chip-color', entityPaintColor(c));
     var radio = document.createElement('span');
-    radio.style.cssText = 'width:14px;height:14px;border-radius:50%;border:2px solid ' + (isActive ? '#fff' : c) + ';display:inline-flex;align-items:center;justify-content:center;';
-    if (isActive) { var dot = document.createElement('span'); dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:#fff;'; radio.appendChild(dot); }
+    radio.className = 'chip-mark chip-mark--radio';
     chip.appendChild(radio);
     chip.appendChild(document.createTextNode(label.name));
     chip.addEventListener('click', function() { ps.selected = ps.selected === label.name ? null : label.name; refreshOutputPreview(container, outKey); });
@@ -3341,13 +3353,13 @@ function renderSpanTaggingPreview(container, outKey) {
     var el = document.createElement('span');
     if (spanIndex !== undefined) {
       var span = ps.spans[spanIndex];
-      var color = labelColor[span.label] || '#6366F1';
+      var color = labelColor[span.label] || ENTITY_COLORS[0];
       el.className = 'absa-span-highlight';
       el.setAttribute('data-testid', 'sequence-span');
       el.setAttribute('data-start', String(span.start));
       el.setAttribute('data-end', String(span.end));
       el.setAttribute('data-label', span.label);
-      el.style.cssText = 'background:' + color + '33;border-bottom:2px solid ' + color + ';color:' + color + ';';
+      el.style.cssText = 'background:' + entityWashColor(color) + ';border-bottom:2px solid ' + entityPaintColor(color) + ';color:' + entityPaintColor(color) + ';';
       el.title = span.label;
       if (blockingSpanIndexes[spanIndex]) {
         el.setAttribute('data-overlap-blocked', 'true');
@@ -3413,11 +3425,12 @@ function renderSpanTaggingPreview(container, outKey) {
   var chipWrap = document.createElement('div');
   chipWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;';
   labels.forEach(function(label) {
-    var color = labelColor[label.name] || '#6366F1';
+    var color = labelColor[label.name] || ENTITY_COLORS[0];
     var chip = document.createElement('button');
     chip.type = 'button';
     chip.setAttribute('data-testid', 'sequence-label-option');
-    chip.style.cssText = 'padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ' + color + ';color:' + color + ';background:transparent;';
+    chip.className = 'chip';
+    chip.style.setProperty('--chip-color', entityPaintColor(color));
     chip.textContent = label.name;
     chip.addEventListener('click', function() {
       var selected = ps.pendingSelection;
@@ -3453,7 +3466,7 @@ function renderSpanTaggingPreview(container, outKey) {
     ps.spans.forEach(function(span, i) {
       var row = buildEntityListRow(
         { type: span.label, text: text.substring(span.start, span.end), start: span.start, end: span.end },
-        labelColor[span.label] || '#6366F1',
+        labelColor[span.label] || ENTITY_COLORS[0],
         {
           lang: state.lang,
           testid: 'sequence-span-item',
@@ -3503,8 +3516,8 @@ function renderSpanOnlyPreview(container, outKey) {
         var entEnd = ent.start + (ent.text || realText.substring(ent.start, (ent.end || ent.start) + 1)).length - 1;
         if (ps.pendingSelection.start <= ent.start && ps.pendingSelection.end >= entEnd) span.classList.add('rel-sel-highlight');
       }
-      var c = typeColorMap[ent.type] || '#6366F1';
-      span.style.background = c + '33'; span.style.borderBottom = '2px solid ' + c; span.style.color = c; span.title = ent.type;
+      var c = typeColorMap[ent.type] || ENTITY_COLORS[0];
+      span.style.background = entityWashColor(c); span.style.borderBottom = '2px solid ' + entityPaintColor(c); span.style.color = entityPaintColor(c); span.title = ent.type;
       span.appendChild(document.createTextNode(ent.text || realText.substring(ent.start, ent.end + 1)));
       textEl.appendChild(span);
       charPos = (ent.end || ent.start) + 1;
@@ -3540,10 +3553,11 @@ function renderSpanOnlyPreview(container, outKey) {
   var legendRow = document.createElement('div');
   legendRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;';
   typeOrder.forEach(function(typeName) {
-    var c = typeColorMap[typeName] || '#6366F1';
+    var c = typeColorMap[typeName] || ENTITY_COLORS[0];
     var chip = document.createElement('button'); chip.type = 'button';
     var isActive = state.activeEntityType === typeName;
-    chip.style.cssText = 'padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ' + c + ';color:' + (isActive ? '#fff' : c) + ';background:' + (isActive ? c : 'transparent') + ';';
+    chip.className = 'chip' + (isActive ? ' is-active' : '');
+    chip.style.setProperty('--chip-color', entityPaintColor(c));
     chip.textContent = typeName;
     chip.addEventListener('click', function() {
       if (ps.pendingSelection) {
@@ -3574,7 +3588,7 @@ function renderSpanOnlyPreview(container, outKey) {
     var elWrap = document.createElement('div');
     elWrap.style.cssText = 'max-height:160px;overflow-y:auto;';
     state.previewEntities.forEach(function(ent, i) {
-      elWrap.appendChild(buildEntityListRow(ent, typeColorMap[ent.type] || '#6366F1', {
+      elWrap.appendChild(buildEntityListRow(ent, typeColorMap[ent.type] || ENTITY_COLORS[0], {
         lang: state.lang,
         onDelete: function() { state.previewEntities.splice(i, 1); refreshOutputPreview(container, outKey); }
       }));
@@ -3645,7 +3659,7 @@ function renderFreeTextPreview(container, outKey) {
   responseArea.appendChild(ansTitle);
 
   var textarea = document.createElement('textarea');
-  textarea.style.cssText = 'width:100%;min-height:100px;padding:10px 12px;border:1.5px solid var(--color-border);border-radius:var(--radius-md);font-size:0.9rem;resize:vertical;font-family:inherit;';
+  textarea.style.cssText = 'width:100%;min-height:100px;padding:10px 12px;border:1.5px solid var(--color-border-control);border-radius:var(--radius-md);font-size:0.9rem;resize:vertical;font-family:inherit;';
   textarea.placeholder = state.lang === 'zh' ? '在此輸入回答…' : 'Type your answer here…';
   textarea.setAttribute('aria-label', outputInstruction);
   textarea.setAttribute('data-testid', 'generation-answer-input');
@@ -4050,7 +4064,7 @@ function buildTagInput(field) {
       rm.setAttribute('aria-label', '移除');
       rm.setAttribute('type', 'button');
       /* static SVG, no user content */
-      rm.innerHTML = '<svg style="width:10px;height:10px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      rm.innerHTML = '<svg style="width:10px;height:10px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
       (function(idx) {
         rm.addEventListener('click', function() {
           tags.splice(idx, 1);
@@ -4107,7 +4121,7 @@ function buildEntityList(field) {
 
       var dot = document.createElement('div');
       dot.className = 'entity-color-dot';
-      dot.style.background = ent.color || ENTITY_COLORS[i % ENTITY_COLORS.length];
+      dot.style.background = entityPaintColor(ent.color || ENTITY_COLORS[i % ENTITY_COLORS.length]);
 
       var nameInp = document.createElement('input');
       nameInp.type = 'text'; nameInp.className = 'entity-name-input';
@@ -4405,7 +4419,7 @@ function renderSentencePairsPreview(preview, config) {
     var noteTextarea = document.createElement('textarea');
     noteTextarea.disabled = true;
     noteTextarea.placeholder = state.lang === 'en' ? 'Add a note (optional)' : '新增備註（選填）';
-    noteTextarea.style.cssText = 'width:100%;border:1px solid var(--color-border);border-radius:6px;padding:6px 10px;font-size:0.8rem;resize:vertical;min-height:48px;background:var(--color-slate-50);color:var(--color-ink-muted);';
+    noteTextarea.style.cssText = 'width:100%;border:1px solid var(--color-border-control);border-radius:6px;padding:6px 10px;font-size:0.8rem;resize:vertical;min-height:48px;background:var(--color-slate-50);color:var(--color-ink-muted);';
     noteWrap.appendChild(noteTextarea);
     preview.appendChild(noteWrap);
   }
@@ -4543,12 +4557,12 @@ function renderRelationExtractionPreview(preview, config) {
 
   var btnsRow = document.createElement('div');
   btnsRow.className = 're-preview-entity-btns';
-  (entityTypes.length ? entityTypes : [{ name: 'BODY', color: '#6366F1' }, { name: 'SYMP', color: '#F59E0B' }]).forEach(function(et) {
+  (entityTypes.length ? entityTypes : [{ name: 'BODY', color: ENTITY_COLORS[0] }, { name: 'SYMP', color: ENTITY_COLORS[2] }]).forEach(function(et) {
     var btn = document.createElement('span');
     btn.className = 're-preview-entity-btn';
     btn.textContent = et.name;
-    btn.style.borderColor = et.color || '#94A3B8';
-    btn.style.color = et.color || '#94A3B8';
+    btn.style.borderColor = et.color ? entityPaintColor(et.color) : 'var(--color-border-control)';
+    btn.style.color = et.color ? entityPaintColor(et.color) : 'var(--color-ink-muted)';
     btnsRow.appendChild(btn);
   });
   preview.appendChild(btnsRow);
@@ -4560,8 +4574,8 @@ function renderRelationExtractionPreview(preview, config) {
   preview.appendChild(elLabel);
 
   var sampleEntities = state.lang === 'zh'
-    ? [{ text: '阿司匹靈', type: 'DRUG', color: '#10B981' }, { text: '頭痛', type: 'SYMP', color: '#F59E0B' }]
-    : [{ text: 'Aspirin', type: 'DRUG', color: '#10B981' }, { text: 'headache', type: 'SYMP', color: '#F59E0B' }];
+    ? [{ text: '阿司匹靈', type: 'DRUG', color: ENTITY_COLORS[1] }, { text: '頭痛', type: 'SYMP', color: ENTITY_COLORS[2] }]
+    : [{ text: 'Aspirin', type: 'DRUG', color: ENTITY_COLORS[1] }, { text: 'headache', type: 'SYMP', color: ENTITY_COLORS[2] }];
   var entityListEl = document.createElement('div');
   entityListEl.className = 're-preview-entity-list';
   sampleEntities.forEach(function(e) {
@@ -4629,7 +4643,7 @@ function renderRelationExtractionPreview(preview, config) {
   var tripleRow = document.createElement('div');
   tripleRow.className = 're-preview-triple-row';
   var sampleRel = relationTypes.length ? relationTypes[0] : 'treats';
-  [sampleEntities[0].text + '/' + sampleEntities[0].type, '→', sampleRel, '→', sampleEntities[1].text + '/' + sampleEntities[1].type].forEach(function(part, i) {
+  [sampleEntities[0].text + '/' + sampleEntities[0].type, null, sampleRel, null, sampleEntities[1].text + '/' + sampleEntities[1].type].forEach(function(part, i) {
     if (i === 2) {
       var rb = document.createElement('span');
       rb.className = 're-preview-relation-badge';
@@ -4642,9 +4656,8 @@ function renderRelationExtractionPreview(preview, config) {
       eb.textContent = part;
       tripleRow.appendChild(eb);
     } else {
-      var ar = document.createElement('span');
+      var ar = lucideArrowSpan('absa-arrow');
       ar.style.color = 'var(--color-text-soft)';
-      ar.textContent = part;
       tripleRow.appendChild(ar);
     }
   });
@@ -6125,8 +6138,15 @@ function showDatasetPreviewModal(idx) {
   var record = (recs && recs.length) ? recs[0] : root;
   el('datasetPreviewJson').textContent = JSON.stringify(record, null, 2);
   el('datasetPreviewModal').classList.add('show');
+  /* G-43: focus trap and focus return via shared/modal-focus.js */
+  if (window.LabelSuiteModalFocus) {
+    window.LabelSuiteModalFocus.open(el('datasetPreviewModal'), { trigger: document.activeElement, onClose: hideDatasetPreviewModal });
+  }
 }
-function hideDatasetPreviewModal() { el('datasetPreviewModal').classList.remove('show'); }
+function hideDatasetPreviewModal() {
+  el('datasetPreviewModal').classList.remove('show');
+  if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(el('datasetPreviewModal'));
+}
 function makeFileSvg() {
   var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('class', 'guideline-item-icon');
@@ -6190,9 +6210,18 @@ function showTaxonomyDeleteModal(descendantCount, onConfirm) {
   el('taxonomyDeleteCancelBtn').textContent = state.lang === 'en' ? 'Cancel' : '取消';
   el('taxonomyDeleteConfirmBtn').textContent = state.lang === 'en' ? 'Delete' : '刪除';
   el('taxonomyDeleteModal').classList.add('show');
+  /* G-43: focus trap and focus return via shared/modal-focus.js; the
+     confirm button keeps its existing initial focus. */
+  if (window.LabelSuiteModalFocus) {
+    window.LabelSuiteModalFocus.open(el('taxonomyDeleteModal'), { trigger: document.activeElement, onClose: hideTaxonomyDeleteModal });
+  }
   el('taxonomyDeleteConfirmBtn').focus();
 }
-function hideTaxonomyDeleteModal() { el('taxonomyDeleteModal').classList.remove('show'); state.taxonomyDeleteCallback = null; }
+function hideTaxonomyDeleteModal() {
+  el('taxonomyDeleteModal').classList.remove('show');
+  state.taxonomyDeleteCallback = null;
+  if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(el('taxonomyDeleteModal'));
+}
 /* ── Flat chip: extract items from TASK_TAXONOMY ────────────── */
 function extractTaxonomyItems() {
   var categories = [];

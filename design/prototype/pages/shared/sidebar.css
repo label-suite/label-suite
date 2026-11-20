@@ -116,7 +116,7 @@
 }
 
 .nav-link.active {
-  color: var(--color-primary);
+  color: var(--color-primary-strong);
   background: var(--nav-active-bg, var(--color-surface));
   font-weight: 600;
 }
@@ -178,7 +178,7 @@
 }
 
 .nav-sublink.current {
-  color: var(--color-primary);
+  color: var(--color-primary-strong);
   font-weight: 600;
 }
 
@@ -231,7 +231,7 @@
 .mobile-theme-toggle-btn:focus-visible,
 .shortcut-help-close:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
 }
 
 .sidebar-utility-icon {
@@ -308,10 +308,10 @@
   align-items: center;
   justify-content: center;
   background: var(--color-white);
-  color: var(--color-primary);
+  color: var(--color-primary-strong);
   font-weight: 700;
   font-size: 14px;
-  border: 2px solid rgba(99, 102, 241, 0.16);
+  border: 2px solid color-mix(in srgb, var(--color-primary) 16%, transparent);
   flex-shrink: 0;
 }
 
@@ -440,7 +440,7 @@
 
 .shortcut-help-header p {
   margin: 0;
-  color: var(--color-text-soft, #64748B);
+  color: var(--color-text-soft, #5E6B7F);
   font-size: 13px;
   line-height: 1.5;
 }
@@ -488,7 +488,7 @@
 
 .shortcut-help-section h3 {
   margin: 0;
-  color: var(--color-ink-muted, #94A3B8);
+  color: var(--color-ink-muted);
   font-size: 12px;
   font-weight: 600;
   line-height: 1.25;
@@ -672,8 +672,8 @@ html[data-theme="dark"] .shortcut-help-dialog {
   height: 16px;
   padding: 0 4px;
   border-radius: 9999px;
-  background: #B91C1C;   /* red-700 — WCAG AA fix (issue singyichen/label-suite#973), was #EF4444 (3.76:1). Reuses --color-error's light-mode value; still hardcoded (not var(--color-error)) and constant across themes per the issue singyichen/label-suite#183 arbitration — only the constant's value changed. */
-  color: #fff;
+  background: var(--color-badge-notify);   /* constant across themes (issue singyichen/label-suite#183 arbitration); the value and its 6.47:1 contrast live in tokens.css (#420 Q5) */
+  color: var(--color-on-badge-notify);
   font-size: 10px;
   font-weight: 700;
   line-height: 16px;
@@ -716,7 +716,7 @@ html[data-theme="dark"] .shortcut-help-dialog {
 .notif-mark-all-btn {
   font-size: 12px;
   font-weight: 500;
-  color: var(--color-primary);
+  color: var(--color-primary-strong);
   background: none;
   border: none;
   cursor: pointer;
@@ -784,11 +784,11 @@ html[data-theme="dark"] .shortcut-help-dialog {
   word-break: break-word;
 }
 
-.notif-item.is-read .notif-item-text { color: var(--color-ink-muted, #94A3B8); }
+.notif-item.is-read .notif-item-text { color: var(--color-ink-muted); }
 
 .notif-item-time {
   font-size: 11px;
-  color: var(--color-ink-muted, #94A3B8);
+  color: var(--color-ink-muted);
 }
 
 .notif-item-dot {
@@ -825,7 +825,7 @@ html[data-theme="dark"] .shortcut-help-dialog {
 body.sidebar-collapsed #shortcutHelpBtn { display: none; }
 body.sidebar-collapsed .notif-dropdown { left: 88px; }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   body {
     flex-direction: column;
     padding-top: var(--navbar-mobile-top-height);
@@ -1044,7 +1044,7 @@ main:has(> .workspace-tab-bar):not(.workspace-root) {
 
 .workspace-tab-kind--primary {
   background: var(--color-primary-soft-bg);
-  color: var(--color-primary);
+  color: var(--color-primary-strong);
 }
 
 .workspace-tab-kind--review {
@@ -1231,3 +1231,10 @@ main:has(> .workspace-tab-bar):not(.workspace-root) {
 }
 
 .workspace-tab-overview-close-all:hover { background: var(--color-border-muted); }
+
+/* Dark mode: the two fixed menus keep the same shadow geometry with black instead of
+   the light theme's Indigo-950 tint, like .shortcut-help-dialog above (#458). */
+html[data-theme="dark"] .notif-dropdown,
+html[data-theme="dark"] .workspace-tab-overview-menu {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+}

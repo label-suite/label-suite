@@ -8,7 +8,7 @@
     <h2 class="panel-title" id="iaaTitle">IAA 報告</h2>
   </div>
   <div class="iaa-method-row">
-    <span class="iaa-primary-star" aria-label="主要指標"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+    <span class="iaa-primary-star" aria-label="主要指標" data-i18n-aria-label="iaaPrimaryAria"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
     <span class="iaa-method-name" id="iaaMethodName" data-i18n="singleDimQuality.methodName">ICC（2,1）（Intraclass Correlation Coefficient）</span>
     <span id="iaaMethodSuffix" data-i18n="singleDimQuality.methodSuffix">— 主要指標</span>
   </div>
@@ -31,7 +31,7 @@
     </div>
   </div>
   <button class="alt-toggle-btn" id="altBtnSingleDim" type="button" aria-expanded="false" aria-controls="altBodySingleDim">
-    <svg class="alt-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+    <svg class="alt-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
     <span id="altLblSingleDim" data-i18n="singleDimQuality.altToggle">輔助指標</span>
   </button>
   <div class="alt-metrics-body" id="altBodySingleDim" aria-hidden="true">
@@ -55,7 +55,7 @@
   <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" data-i18n="qualityListRank.lowConsistencySubtitle">依分歧度由高到低排序，可作為 Reviewer 仲裁優先順序參考（與 dry_run 仲裁 divergent 概念同源）</p>
   <div class="table-wrap">
     <div class="table-scroll">
-      <table class="annotator-table" aria-label="一致性最低樣本清單（單維度評分）">
+      <table class="annotator-table" aria-label="一致性最低樣本清單（單維度評分）" data-i18n-aria-label="qualityListRank.ariaSampleSingleDim">
         <thead>
           <tr>
             <th data-i18n="qualityListRank.headerSample">樣本</th>
@@ -65,12 +65,12 @@
         </thead>
         <tbody>
           <tr>
-            <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#05</span></td>
+            <td><span style="font-family:var(--font-mono);color:var(--color-primary-strong)">#05</span></td>
             <td><span class="badge badge-fail">0.58</span></td>
             <td style="white-space:normal;font-size:12px" data-i18n="singleDimListRank.sample1Detail">樣本 #05：3 位標記員對品質評分為 2、3、5，分歧達 3 分</td>
           </tr>
           <tr>
-            <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#02</span></td>
+            <td><span style="font-family:var(--font-mono);color:var(--color-primary-strong)">#02</span></td>
             <td><span class="badge badge-warn">0.41</span></td>
             <td style="white-space:normal;font-size:12px" data-i18n="singleDimListRank.sample2Detail">樣本 #02：對是否達到「可接受品質」門檻（3 分）意見不一致</td>
           </tr>
@@ -85,7 +85,7 @@
   <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" data-i18n="qualityListRank.rankingSubtitle">依型別對應一致率計算方式排序；完成樣本數不足門檻者標示小樣本估計警示，但不剔除排名</p>
   <div class="table-wrap">
     <div class="table-scroll">
-      <table class="annotator-table" aria-label="標記員品質排名（單維度評分）">
+      <table class="annotator-table" aria-label="標記員品質排名（單維度評分）" data-i18n-aria-label="qualityListRank.ariaRankSingleDim">
         <thead>
           <tr>
             <th data-i18n="qualityListRank.rankHeaderRank">名次</th>
@@ -140,7 +140,7 @@
   <div style="margin-top:var(--space-md)">
     <div class="table-wrap">
       <div class="table-scroll">
-        <table class="annotator-table" aria-label="標記一致性偏離分析（單維度評分）">
+        <table class="annotator-table" aria-label="標記一致性偏離分析（單維度評分）" data-i18n-aria-label="qualityListRank.ariaDevSingleDim">
           <thead><tr><th data-i18n="classificationRiskHeaderAnnotator">標記員</th><th id="consistencyUnitCol">可比較樣本數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
           <tbody>
             <tr><td><span class="annotator-name">Iris Tsai</span></td><td>36</td><td>2</td><td>5.6%</td><td>0</td><td>0%</td></tr>
@@ -150,6 +150,6 @@
         </table>
       </div>
     </div>
-    <p class="group-avg-note" id="consistencyNote">單維度評分任務以每筆提交評分作為可比較單位；此區塊描述偏離現象，不直接代表標記正確性。</p>
+    <p class="group-avg-note" id="consistencyNote">單維度評分任務以每筆送出評分作為可比較單位；此區塊描述偏離現象，不直接代表標記正確性。</p>
   </div>
 </section>

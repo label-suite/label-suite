@@ -4,14 +4,14 @@ description: '所有登入後的使用者在每一頁都用同一套側欄知道
 category: '規格書'
 tags: [規格書, 共用介面, 已定案]
 createdAt: '2026-11-04'
-updatedAt: '2026-11-16'
+updatedAt: '2026-11-18'
 ---
 
 # 07-01 側欄導覽
 
 :badge[已定案]{variant="success"} :badge[變更 #188]{variant="warning" href="https://github.com/label-suite/label-suite/issues/188"} :badge[共用介面]{variant="neutral"}
 
-> 來源：舊 repo `specs/shared/008-sidebar-navbar-shared/spec.md`（100 條）、`specs/foundation/000-foundation/spec.md` 的 6 條業務規則（依 [搬移設計文件](../../development/spec-migration.mdx) 的 D4）
+> 來源：舊 repo `specs/shared/008-sidebar-navbar-shared/spec.md`（100 條）、`specs/foundation/000-foundation/spec.md` 的 6 條業務規則（依 [搬移設計文件](../../development/workflow/spec-migration.mdx) 的 D4）
 > 參考畫面：無獨立頁面，不嵌入 `PrototypeFrame`。側欄出現在每一個登入後頁面裡，畫面以 `design/prototype/pages/shared/sidebar.js` 與 `sidebar.css` 為準（[§已確認決議](#已確認決議) Q5）
 > 相關規格：[規格 07-02 工作頁籤](./02-workspace-tabs.mdx)、[規格 06-01 使用者管理](../06-admin/01-user-management.mdx)
 
@@ -30,10 +30,12 @@ R：Read（可讀取）　C：Create（可新增）　E：Edit（可編輯）　
 
 側欄本身只有讀取與切換自己的偏好，沒有新增、編輯或刪除任何資料。
 
-- :ref[平台成員]{id="term.platform-member"}：R；對自己的語言、外觀、側欄收合狀態與通知已讀狀態為 E (o)
-- :ref[系統管理員]{id="term.system-admin"}：R／E (o)；同上，另外看得到「系統管理」導覽項
-- :ref[Seeder 管理員]{id="term.seeder-admin"}：R／E (o)；與系統管理員相同
-- 未登入的訪客：無權限；側欄只出現在登入後的頁面
+| 角色 | 這一頁能做什麼 | PRD §權限矩陣的上限 |
+| :--- | :--- | :--- |
+| :ref[平台成員]{id="term.platform-member"} | R；對自己的語言、外觀、側欄收合狀態與通知已讀狀態為 E (o) | 「07 共用介面」給平台成員 `R/E (o)` |
+| :ref[系統管理員]{id="term.system-admin"} | R／E (o)；同上，另外看得到「系統管理」導覽項 | 同一列給系統管理員 `R/E (o)` |
+| :ref[Seeder 管理員]{id="term.seeder-admin"} | R／E (o)；與系統管理員相同 | 矩陣**沒有這一欄**；PRD §使用者角色 寫明他「權限同系統管理員」 |
+| 未登入的訪客 | **無權限**；側欄只出現在登入後的頁面 | **對不到任何一列**：PRD §使用者角色 沒有「訪客」，§權限矩陣 的兩張表也沒有這一欄 |
 
 PRD §權限矩陣 給「07 共用介面」的上限是 `R／E (o)`（2026-11-16 依 Issue #85 放寬）。上面的 E (o) 只作用在使用者自己的偏好與已讀狀態，不碰任何業務資料；
 這就是 [§已確認決議](#已確認決議) Q1 要的那個上限，兩邊一致。
@@ -397,7 +399,7 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 
 > 依據：**維護者 2026-11-04 裁定**「算，改 PRD 收進來」。出處有兩處可查：[#86](https://github.com/label-suite/label-suite/issues/86) 工作項第 1 列與它 2026-11-04 的留言「本次只折回維護者已拍板的兩題」，以及 [#85](https://github.com/label-suite/label-suite/issues/85) 開頭的「維護者已於 2026-11-04 拍板，要把兩處收進 PRD」。
 > 那次裁定要落地的內容記在 #85 的工作項：「§權限矩陣「07 共用介面」放寬到允許使用者改自己的偏好（語言、外觀、側欄收合狀態、通知已讀狀態），寫成 `R／E (o)`；上限仍不含任何業務資料」。所以[§使用角色](#使用角色)那一段講的放寬**也在這次裁定裡**，不是本頁自己決定的；**PRD 已於 2026-11-16 落地**，上限現在就是 `R／E (o)`。
-> 以下是**本頁的解讀**，不是依據：`design/prototype/pages/shared/sidebar.js` 與舊規格 `shared/008` 都確實有這四項，砍掉它們會讓規格與畫面分歧——[搬移設計文件](../../development/spec-migration.mdx)通則第 4 條明寫「和畫面一致不是依據」。
+> 以下是**本頁的解讀**，不是依據：`design/prototype/pages/shared/sidebar.js` 與舊規格 `shared/008` 都確實有這四項，砍掉它們會讓規格與畫面分歧——[搬移設計文件](../../development/workflow/spec-migration.mdx)通則第 4 條明寫「和畫面一致不是依據」。
 > 這一條原本只寫了 2026-11-04 這個日期、沒有寫「維護者」，所以機械檢查讀不到那次裁定；它是靠這個區塊裡出現的 `PRD` 與 `術語表` 通過的，而那些出現處都不是這一條的依據（[#203](https://github.com/label-suite/label-suite/issues/203)）。
 > 系統管理次選單不算在這一題裡：PRD §Site Map 已經把「角色設定」列在「從側欄進入」，多一個直達入口本來就在範圍內。
 > PRD 的改動由 #85 用 `prd-writing` 處理，**已於 2026-11-16 落地**；本頁的 §使用角色 的 `E (o)` 與術語表的 `term.appearance-mode`、`term.notification` 依這條保留（#67、#86）。
@@ -413,8 +415,8 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 > 「一般使用者」這個字保留給它真正適用的那種人——還沒有任何任務角色的使用者。
 > **這一條不涵蓋[規格 02-01](../02-dashboard/01-dashboard.mdx) 的儀表板版面**：02-01 的 [§已確認決議](../02-dashboard/01-dashboard.mdx#已確認決議) Q8 在隔天（維護者裁定 2026-11-09）**否決了「跟著本條讀作『一般使用者』」這個選項**，裁定那種版面**不定名**、一律用描述性的「還沒有任務角色」。
 > 以下是**本頁的解讀**，不是依據：本條管的是側欄的角色標示，Q8 管的是儀表板版面的稱呼，兩個是不同的位置；Q8 只是拒絕把本條的用字搬過去，沒有推翻本條。
-> **本條不碰顯式覆寫**：`shared:FR-020A` 在「依任務角色解析」之前先寫了一個例外——呼叫端已明確傳入固定字串時（例如系統管理的頁面固定顯示「系統管理員」）不受該條影響，並在結尾重申「既有顯式覆寫入口之優先序與行為不變」。畫面確實在用這個入口（`design/prototype/pages/admin/user-management.html:358` 的「roleIndicator: '系統管理員'」，就是那個傳入值）。所以系統管理員停在系統管理頁時讀作「系統管理員」，**不是**「一般使用者」，即使他在目前任務沒有任務角色。
-> **英文是一處覆寫**：**裁決當時**畫面對「一般使用者」用的英文是 `User`，裁決定的是 `General user`——這一處**明確覆寫畫面現況**，不是漏看。prototype 那一側已於 2026-11-11 依 [Issue #165](https://github.com/label-suite/label-suite/issues/165) 改完（`design/prototype/pages/account/profile.html:1279` 的 `roleIndicator: 'General user'`）。
+> **本條不碰顯式覆寫**：`shared:FR-020A` 在「依任務角色解析」之前先寫了一個例外——呼叫端已明確傳入固定字串時（例如系統管理的頁面固定顯示「系統管理員」）不受該條影響，並在結尾重申「既有顯式覆寫入口之優先序與行為不變」。畫面確實在用這個入口（`design/prototype/pages/admin/user-management.html:266` 的「roleIndicator: '系統管理員'」，就是那個傳入值）。所以系統管理員停在系統管理頁時讀作「系統管理員」，**不是**「一般使用者」，即使他在目前任務沒有任務角色。
+> **英文是一處覆寫**：**裁決當時**畫面對「一般使用者」用的英文是 `User`，裁決定的是 `General user`——這一處**明確覆寫畫面現況**，不是漏看。prototype 那一側已於 2026-11-11 依 [Issue #165](https://github.com/label-suite/label-suite/issues/165) 改完（`design/prototype/pages/account/profile.html:1267` 的 `roleIndicator: 'General user'`）。
 > prototype 的文字、字典補英文與這一處英文覆寫由 **[#165](https://github.com/label-suite/label-suite/issues/165)** 處理，**已於 2026-11-11 關閉、三項都已落地**；本 skill 不改 `design/prototype/`（#86）。
 
 ### Q3. 「標記作業」這個導覽項的名稱要依任務角色變化嗎？（已定案，維護者裁定 2026-11-04，2026-11-09 再次確認）
@@ -423,7 +425,7 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 - [ ] 不要，一律顯示「標記作業」
 
 > 依據：**維護者 2026-11-04 裁定**「要依角色改字」（[#86](https://github.com/label-suite/label-suite/issues/86) 工作項第 2 列），並於 **2026-11-09 再次確認**維持這個結論（[#203](https://github.com/label-suite/label-suite/issues/203)）。
-> 以下兩句是**本頁的解讀**，不是依據：原本寫的理由「prototype 與舊規格都已經這樣做」——[搬移設計文件](../../development/spec-migration.mdx)通則第 4 條把這一句逐字列為**不被接受的寫法**（「和畫面一致不是依據」）；導覽項名稱與標記工作區的入口麵包屑一致，而且語意上審核員在那一頁做的確實不是標記。
+> 以下兩句是**本頁的解讀**，不是依據：原本寫的理由「prototype 與舊規格都已經這樣做」——[搬移設計文件](../../development/workflow/spec-migration.mdx)通則第 4 條把這一句逐字列為**不被接受的寫法**（「和畫面一致不是依據」）；導覽項名稱與標記工作區的入口麵包屑一致，而且語意上審核員在那一頁做的確實不是標記。
 > 這一條原本同樣只寫了日期、沒有寫「維護者」，所以是靠區塊裡出現的 `PRD` 通過機械檢查的，而那兩處都不是依據（[#203](https://github.com/label-suite/label-suite/issues/203)）。
 > PRD §模組地圖與 §Site Map 的註明由 #85 處理，**已於 2026-11-16 落地**（兩處都列出標記作業／審核作業／例外處置三個名稱）；規格 04-02 標記工作區落地時，入口麵包屑要與本條一致（#67、#86）。
 
@@ -532,6 +534,7 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#415](https://github.com/label-suite/label-suite/issues/415) | 2026-11-18 | §使用角色 | 角色、權限與條件寫成條列 | 改成正典的三欄表格（角色／這一頁能做什麼／PRD §權限矩陣的上限），條件、理由與跨頁連結移到表格下方的條列。第三欄是**新增的資訊**：逐列指出 PRD §權限矩陣 的哪一列，對不到的寫出原因。形狀依 `spec-writing` 範本（[PR #417](https://github.com/label-suite/label-suite/pull/417)） | **無新決議，條文一字未改** |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §驗收標準 的 2 列 | 那兩列**只有** Scenario 名稱欄包著 `<mark>`＋`<sup>[#188]`，其餘三格沒有 | 名稱欄的標示拿掉、文字保留，改標 Given／When／Then（原本沒有標示的格一併補上）。依 `writing-guide.md` §變更標示 2026-11-16 新增的例外：`check-flows.mjs` 的 `readPage()` 逐字讀第一格、不剝標籤，名稱一包標示流程圖元件就永遠對不上那一列 | **無新決議**，Scenario 的文字與條文一字未改 |
 | [#85](https://github.com/label-suite/label-suite/issues/85) | 2026-11-16 | §使用角色、§已確認決議 Q1 與 Q3 的理由 | 四處寫「PRD 目前的上限還是 `R`／註明由 #85 處理」 | 改成 PRD 已於 2026-11-16 放寬成 `R／E (o)`、兩處註明也已落地 | **無新決議**，條文一字未改 |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §已確認決議 Q11 的兩段理由 | `:558`、`:559` 前面那個路徑沒帶行號，沿用不到；`user-management.html:358` 的引文與引用之間隔了「傳入」 | 第一筆補完整路徑、兩筆各自帶上 `roleNoTaskRole` 的中英值；第二筆改成緊接在後的「roleIndicator: '系統管理員'」。**條文一字未改** | **無新決議** |
@@ -571,7 +574,7 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 ## 附錄：舊編號對照
 
 `shared/008-sidebar-navbar-shared` 的 100 條全部對照。`foundation/000-foundation` 共 177 條，依
-[搬移設計文件](../../development/spec-migration.mdx) 的 D4 整份不搬（分層架構、資料存取、型別、建置與 CI 的技術規範屬 OpenSpec 的範疇），
+[搬移設計文件](../../development/workflow/spec-migration.mdx) 的 D4 整份不搬（分層架構、資料存取、型別、建置與 CI 的技術規範屬 OpenSpec 的範疇），
 本頁只取其中 8 條使用者看得到的業務規則，列在表格最後；其餘 169 條不在搬移範圍，見 [§已確認決議](#已確認決議) Q12。
 
 兩份來源有 36 個字串完全相同的舊編號，所以兩邊都加來源前綴，見 [§已確認決議](#已確認決議) Q11。

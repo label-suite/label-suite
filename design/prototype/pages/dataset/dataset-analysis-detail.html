@@ -4,10 +4,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="../../assets/logo/icon-colored.svg">
   <title>Label Suite — 資料集分析詳情</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../../assets/data-palette.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <link rel="stylesheet" href="../shared/button.css" />
+  <link rel="stylesheet" href="../shared/card.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
   <link rel="stylesheet" href="../shared/content-tabs.css" />
   <link rel="stylesheet" href="../shared/metric.css" />
@@ -17,9 +20,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     /* Color/font/radius/shadow/spacing/motion/z-index tokens come from
-       ../../assets/tokens.css; only page-local layout variables live here.
-       (The removed local --z-toast: 300 collided with the canonical
-       --z-modal — toasts now stack at the canonical --z-toast: 400.) */
+       ../../assets/tokens.css; only page-local layout variables live here. */
     :root {
       --navbar-mobile-height: 84px; --navbar-mobile-top-height: 64px;
     }
@@ -36,7 +37,7 @@
 
     /* Breadcrumb */
     .breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-soft);margin-bottom:12px}
-    .breadcrumb a{color:var(--color-primary)}
+    .breadcrumb a{color:var(--color-primary-strong)}
     .breadcrumb a:hover{text-decoration:underline}
     .breadcrumb-sep{color:var(--color-ink-muted);font-size:11px}
 
@@ -46,7 +47,7 @@
     .page-main-subtitle{font-size:14px;line-height:1.8;color:var(--color-text-soft);margin:0}
 
     /* Panel */
-    .panel{border:1px solid var(--color-border);border-radius:var(--radius-lg);background:var(--color-white);padding:var(--space-lg);margin-bottom:var(--space-md)}
+    .panel{margin-bottom:var(--space-md)} /* 外框在 pages/shared/card.css（#423, G-41） */
     .panel-head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-sm);margin-bottom:var(--space-md);flex-wrap:wrap}
     .panel-title{font-size:16px;font-weight:700;color:var(--color-ink)}
     .panel-load-error{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
@@ -81,16 +82,18 @@
     .iaa-card-value.fail{color:var(--color-error)}
     .iaa-card-calc{font-size:11px;color:var(--color-ink-muted);margin-bottom:10px}
     .iaa-bar-wrap{height:8px;background:var(--color-border);border-radius:var(--radius-full);overflow:hidden;margin-bottom:8px}
-    .iaa-bar-fill{height:100%;border-radius:var(--radius-full);transition:width .5s var(--ease-standard)}
+    .iaa-bar-fill{height:100%;border-radius:var(--radius-full);background:var(--color-ink-muted);transition:width .5s var(--ease-standard)}
     .iaa-bar-fill.pass{background:var(--color-success)}
     .iaa-bar-fill.warn{background:var(--color-warning)}
     .iaa-bar-fill.fail{background:var(--color-error)}
+    .iaa-bar-fill.neutral{background:var(--color-ink-muted)}
     .iaa-threshold-row{display:flex;flex-wrap:wrap;gap:8px;font-size:11px}
     .iaa-threshold-item{display:flex;align-items:center;gap:4px}
     .t-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
     .t-dot-pass{background:var(--color-success)}
     .t-dot-fail{background:var(--color-error)}
     .t-dot-warn{background:var(--color-warning)}
+    .t-dot-neutral{background:var(--color-ink-muted)}
     /* issue label-suite/label-suite#155 (Q18): the output-type cell and the per-item type
        tag in 異常偵測. Muted on purpose -- it identifies a row, it is not data. */
     .row-output-type{color:var(--color-text-soft);white-space:nowrap}
@@ -102,11 +105,11 @@
     /* Match toggle (sequence labeling) */
     .match-toggle{display:inline-flex;border:1px solid var(--color-border);border-radius:var(--radius-md);padding:2px;background:var(--color-slate-50);gap:2px;margin-bottom:var(--space-sm)}
     .match-btn{border:1px solid transparent;border-radius:6px;background:transparent;color:var(--color-text-soft);font-size:12px;font-weight:600;padding:5px 10px}
-    .match-btn.active{background:var(--color-white);color:var(--color-primary);border-color:var(--color-primary-border)}
-    .match-btn:hover{color:var(--color-primary)}
+    .match-btn.active{background:var(--color-white);color:var(--color-primary-strong);border-color:var(--color-primary-border)}
+    .match-btn:hover{color:var(--color-primary-strong)}
 
     /* Collapsible alt metrics */
-    .alt-toggle-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--color-primary);background:transparent;border:none;padding:6px 0;margin-top:4px}
+    .alt-toggle-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--color-primary-strong);background:transparent;border:none;padding:6px 0;margin-top:4px}
     .alt-toggle-btn:hover{text-decoration:underline}
     .alt-toggle-icon{transition:transform var(--dur-fast)}
     .alt-toggle-btn.open .alt-toggle-icon{transform:rotate(180deg)}
@@ -150,7 +153,7 @@
     .risk-level-badge.high{color:var(--color-error);background:var(--color-error-bg);border-color:var(--color-error-border)}
     .risk-level-badge.insufficient{color:var(--color-text-soft);background:var(--color-slate-50);border-color:var(--color-border)}
     .cause-stack{display:flex;flex-wrap:wrap;gap:6px;min-width:180px}
-    .cause-chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:var(--radius-full);background:var(--color-primary-soft-bg);border:1px solid var(--color-primary-border);color:var(--color-primary);font-size:11px;font-weight:600}
+    .cause-chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:var(--radius-full);background:var(--color-primary-soft-bg);border:1px solid var(--color-primary-border);color:var(--color-primary-strong);font-size:11px;font-weight:600}
     .cause-text-block{display:grid;gap:4px;min-width:180px}
     .cause-line{font-size:12px;color:var(--color-ink)}
     .cause-line strong{color:var(--color-ink-muted);font-weight:700}
@@ -170,21 +173,6 @@
     /* issue singyichen/label-suite#1252: hover-only rectangle (border box + 2px below) keeps the hit area stable under the -1px lift, incl. the rounded corners */
     .btn:hover::after{content:"";position:absolute;inset:-1px -1px -2px}
     .btn-sm{padding:6px 12px;font-size:13px}
-
-    /* Toast (top-center, UXC-07 / MASTER §Toast) */
-    .toast-container{position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:var(--z-toast);width:min(384px,calc(100vw - 32px));pointer-events:none}
-    /* shadow-md: Toast is an approved exception to the no-shadow rule.
-       visibility keeps the hidden close button out of the tab order;
-       its 0s transition is delayed so the fade-out still plays. */
-    .toast{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border:1px solid transparent;border-radius:var(--radius-md);font-size:14px;font-weight:500;box-shadow:var(--shadow-md);opacity:0;visibility:hidden;transition:opacity var(--dur-fast),visibility 0s var(--dur-fast)}
-    .toast.visible{opacity:1;visibility:visible;pointer-events:auto;transition:opacity var(--dur-fast)}
-    .toast-success{color:var(--color-success);background:var(--color-success-bg);border-color:var(--color-success-border)}
-    .toast-info{color:var(--color-info);background:var(--color-info-bg);border-color:var(--color-info-border)}
-    .toast-warning{color:var(--color-warning);background:var(--color-warning-bg);border-color:var(--color-warning-border)}
-    .toast-error{color:var(--color-error);background:var(--color-error-bg);border-color:var(--color-error-border)}
-    .toast-msg{flex:1}
-    .toast-close{background:none;border:none;color:inherit;opacity:.6;cursor:pointer;font-size:14px;line-height:1.4;padding:0}
-    .toast-close:hover{opacity:1}
 
     /* Stats tab */
     .stats-metric-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
@@ -208,7 +196,7 @@
     .stats-comatrix-table{border-collapse:collapse;font-size:12px;white-space:nowrap}
     .stats-comatrix-table th{background:var(--color-slate-50);border:1px solid var(--color-border);padding:7px 12px;font-weight:600;color:var(--color-ink-muted)}
     .stats-comatrix-table td{border:1px solid var(--color-border);padding:7px 12px;text-align:center;font-family:var(--font-mono);font-size:12px}
-    .stats-comatrix-diag{background:var(--color-primary-soft-bg);color:var(--color-primary);font-weight:700}
+    .stats-comatrix-diag{background:var(--color-primary-soft-bg);color:var(--color-primary-strong);font-weight:700}
     .stats-comatrix-hi{background:var(--color-primary-soft-bg);color:var(--color-ink)}
     .stats-comatrix-mid{background:var(--color-slate-50);color:var(--color-text-soft)}
     .stats-comatrix-low{color:var(--color-ink-muted)}
@@ -282,7 +270,7 @@
           <div class="metric"><span id="statsLblSentence">句子數量</span><strong>1,248</strong><div class="metric-desc" id="statsDescSentence">分析母體</div></div>
           <div class="metric"><span id="statsLblToken">Token 數量</span><strong>42,816</strong><div class="metric-desc" id="statsDescToken">空格分詞</div></div>
           <div class="metric" data-stats-needs-submissions><span id="statsLblCompletion">完成率</span><strong style="color:var(--color-success)">87.5%</strong><div class="metric-desc" id="statsDescCompletion">1,092 / 1,248 已完成</div></div>
-          <div class="metric" data-stats-needs-submissions><span id="statsLblSubmitted">已提交樣本</span><strong>1,092</strong><div class="metric-desc" id="statsDescSubmitted">至少 1 位已提交</div></div>
+          <div class="metric" data-stats-needs-submissions><span id="statsLblSubmitted">已送出樣本</span><strong>1,092</strong><div class="metric-desc" id="statsDescSubmitted">至少 1 位已送出</div></div>
           <div class="metric" data-stats-needs-submissions><span id="statsLblAvgTime">平均標記時間</span><strong>48<small style="font-size:18px;font-weight:500">s</small></strong><div class="metric-desc" id="statsDescAvgTime">每句平均用時</div></div>
         </div>
       </section>
@@ -292,12 +280,12 @@
            anyone submits -- hiding them read as "no dataset yet". -->
       <div id="statsEmpty" class="hidden empty-state empty-state-panel">
         <div class="empty-state-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M3 3v18h18"/><path d="m7 16 4-4 4 4 4-4"/>
           </svg>
         </div>
         <p class="empty-state-title" id="statsEmptyTitle">尚無標記資料</p>
-        <p class="empty-state-desc" id="statsEmptyDesc">標記員提交後，系統將自動計算統計資料。請先完成 Dry Run 並等待標記員提交。</p>
+        <p class="empty-state-desc" id="statsEmptyDesc">標記員送出標記後，系統將自動計算統計資料。請先完成 Dry Run 並等待標記員送出標記。</p>
         <a href="../task-management/task-detail.html?task_role=project_leader" class="btn btn-secondary btn-sm" id="statsEmptyBtn">前往任務詳情</a>
       </div>
       <!-- Task-type specific stats (FR-009) -->
@@ -311,7 +299,7 @@
     <!-- Empty state (shown when qualityState != ready) -->
     <div id="qualityEmpty" class="hidden empty-state empty-state-panel">
       <div class="empty-state-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h4"/>
         </svg>
       </div>
@@ -335,7 +323,7 @@
            applyAnnotatorModificationRates(). -->
       <section class="panel" id="annotatorModRateSection" aria-labelledby="annotatorModRateTitle">
         <h2 class="panel-title" id="annotatorModRateTitle" data-i18n="annotatorModRate.title">標記員被修改率</h2>
-        <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" id="annotatorModRateSubtitle" data-i18n="annotatorModRate.subtitle">依標記員彙總 Reviewer 實際變更答案的比例；分母為至少一位 Reviewer 已提交決定的審核單位（不含待審）</p>
+        <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" id="annotatorModRateSubtitle" data-i18n="annotatorModRate.subtitle">依標記員彙總 Reviewer 實際變更答案的比例；分母為至少一位 Reviewer 已送出審核決定的審核單位（不含待審）</p>
         <div class="table-wrap">
           <div class="table-scroll">
             <table class="annotator-table" id="annotatorModRateTable" aria-label="標記員被修改率" data-i18n-aria-label="annotatorModRate.title">
@@ -357,11 +345,6 @@
 
 </div><!-- /layout -->
 </main>
-
-<!-- ══ TOAST ═════════════════════════════════════════════════════════ -->
-<div class="toast-container" aria-live="polite" aria-atomic="true">
-  <div class="toast" id="toast"><span id="toastMsg" class="toast-msg"></span><button type="button" class="toast-close" id="toastClose" aria-label="關閉通知">✕</button></div>
-</div>
 
 <script src="../../assets/theme.js"></script>
 <script src="../../assets/analytics.js"></script>
@@ -392,10 +375,10 @@ var I18N = {
     statsLblSentence:'句子數量',statsDescSentence:'分析母體',
     statsLblToken:'Token 數量',statsDescToken:'空格分詞',
     statsLblCompletion:'完成率',statsDescCompletion:'1,092 / 1,248 已完成',
-    statsLblSubmitted:'已提交樣本',statsDescSubmitted:'至少 1 位已提交',
+    statsLblSubmitted:'已送出樣本',statsDescSubmitted:'至少 1 位已送出',
     statsLblAvgTime:'平均標記時間',statsDescAvgTime:'每句平均用時',
     statsEmptyTitle:'尚無標記資料',
-    statsEmptyDesc:'標記員提交後，系統將自動計算統計資料。請先完成 Dry Run 並等待標記員提交。',
+    statsEmptyDesc:'標記員送出標記後，系統將自動計算統計資料。請先完成 Dry Run 並等待標記員送出標記。',
     statsEmptyBtn:'前往任務詳情',
     statsVAHistTitle:'Valence / Arousal 分佈直方圖',
     statsVAHistDesc:'標記員在 1–7 評分量表上的分佈情形（共 412 筆有效標記）',
@@ -408,7 +391,7 @@ var I18N = {
     statsVAScatterAria:'V-A 二維分佈 scatter plot',
     statsVALegendMain:'主要標記群',statsVALegendOutlier:'高分歧旗標',statsVALegendLow:'低頻分佈',
     statsClsDistTitle:'標籤分佈',
-    statsClsDistDesc:'各標籤在提交標記中的次數與比例（共 1,248 筆標記，多標籤任務）',
+    statsClsDistDesc:'各標籤在已送出標記中的次數與比例（共 1,248 筆標記，多標籤任務）',
     statsClsDistNote:'平均每筆標記包含 1.96 個標籤（多標籤任務）',
     statsClsCooccTitle:'多標籤共現矩陣',
     statsClsCooccDesc:'兩個標籤同時出現的次數。對角線為各標籤出現的總次數。',
@@ -421,7 +404,7 @@ var I18N = {
       entertainment: '娛樂',
     },
     statsSeqEntityDistTitle:'實體類型分佈',
-    statsSeqEntityDistDesc:'各實體類型在所有提交標記中的出現次數（共 3,994 個已標記實體）',
+    statsSeqEntityDistDesc:'各實體類型在所有已送出標記中的出現次數（共 3,994 個已標記實體）',
     sequenceEntityLabels: {
       per: 'PER（人名）',
       org: 'ORG（組織）',
@@ -445,13 +428,13 @@ var I18N = {
     },
     statsRelTripleTitle:'Triple 統計摘要',
     statsRelTripleDesc:'三元組（Subject, Relation, Object）層級的聚合統計',
-    statsRelTotalTripleLabel:'Triple 總數',statsRelTotalTripleDesc:'所有標記員提交的 triple 總計',
+    statsRelTotalTripleLabel:'Triple 總數',statsRelTotalTripleDesc:'所有標記員送出的 triple 總計',
     statsRelUniqueTripleLabel:'唯一 Triple 數',statsRelUniqueTripleDesc:'去重後的 triple 集合大小',
     statsRelAvgTripleLabel:'平均 / 句',statsRelAvgTripleDesc:'每個樣本平均標記的 triple 數',
     statsRelAnnotated5xLabel:'≥ 5 次標記 Triple',statsRelAnnotated5xDesc:'達到一致性比較門檻的 triple 數',
     statsRelAvgAnnotatorsLabel:'平均標記員數 / Triple',statsRelAvgAnnotatorsDesc:'每個唯一 triple 的平均覆蓋標記員數',
     statsRelMaxTripleLabel:'單句最多 Triple',statsRelMaxTripleDesc:'單一樣本出現最多 triple 的數量',
-    iaaTitle: 'IAA 報告', iaaMethodSuffix: '— 主要指標',
+    iaaTitle: 'IAA 報告', iaaMethodSuffix: '— 主要指標', iaaMethodSuffixRef: '— 參考顯示', iaaPrimaryAria: '主要指標',
     anomalyTitle: '異常偵測', anomalySubtitle: '自動標記標記速度異常與離群標記值',
     consistencyTitle: '標記一致性偏離分析',
     consistencySubtitle: '顯示每位標記員在可比較單位中的離群值筆數與比例，作為觀測訊號，不直接覆寫風險等級。',
@@ -480,9 +463,9 @@ var I18N = {
     altLblRel:'輔助指標',
     altHVAMetric:'指標', altHVAV:'Valence（V）', altHVAA:'Arousal（A）',
     altHClsMetric:'指標', altHClsVal:'數值',
-    altHSeqMode:'計算模式', altHSeqVal:'數值', altHSeqThr:'門檻', altHSeqResult:'結果',
+    altHSeqMode:'計算模式', altHSeqVal:'數值', altHSeqThr:'門檻／參考線', altHSeqResult:'結果',
     altHRelMetric:'指標', altHRelVal:'數值',
-    altSeqStrictResult:'未達', altSeqPartialResult:'通過',
+    altSeqStrictResult:'未達', altSeqPartialResult:'不判定',
     lblV:'Valence（V）', lblA:'Arousal（A）', lblOverall:'Overall IAA', lblOverallCalc:'（V + A）/ 2',
     /* issue label-suite/label-suite#155 (Q13, maintainer 2026-11-08): multi-dimension
        scoring deliberately judges on the STRICT tier while single-dimension
@@ -494,8 +477,8 @@ var I18N = {
     lblOrec:'建議門檻 0.75 — ', lblOstr:'嚴格門檻 0.80（達標判定）— ',
     tPass:'通過', tFail:'未達',
     lblClsThr:'門檻 0.80 — ',
-    lblSeqStrThr:'Strict 門檻 0.80 — ', lblSeqPartThr:'Relaxed 參考值 0.70 — ',
-    lblRelThr1:'門檻 0.75 — ', lblRelThr2:'高品質參考值 0.80 — ',
+    lblSeqStrThr:'Strict 門檻 0.80 — ', lblSeqPartThr:'Relaxed 參考線 0.70',
+    lblRelThr1:'門檻 0.75 — ', lblRelThr2:'高品質參考線 0.80',
     thVAName:'標記員', thVASpeed:'平均速度', thVAIaaV:'IAA_V', thVAIaaA:'IAA_A', thVADeltaV:'Δ V vs 群體', thVADeltaA:'Δ A vs 群體', thVAStatus:'狀態',
     thClsName:'標記員', thClsSpeed:'平均速度', thClsIaa:'Alpha', thClsDelta:'Δ vs 群體', thClsStatus:'狀態',
     thSeqName:'標記員', thSeqSpeed:'平均速度', thSeqIaa:'F1（strict）', thSeqDelta:'Δ vs 群體', thSeqStatus:'狀態',
@@ -511,7 +494,7 @@ var I18N = {
     relStatus1:'正常', relStatus2:'正常', relStatus3:'異常',
     spStatus1:'正常', spStatus2:'正常', spStatus3:'正常',
     anomalySpeedTitleVA:'標記速度異常', anomalyOutlierTitleVA:'高分歧樣本',
-    anomVASpd1Title:'Jordan Wu — 標記速度過快', anomVASpd1Detail:'平均 18s／句（門檻：≥ 20s），共 42 筆提交紀錄',
+    anomVASpd1Title:'Jordan Wu — 標記速度過快', anomVASpd1Detail:'平均 18s／句（門檻：≥ 20s），共 42 筆送出紀錄',
     anomVAOut1Title:'樣本 #47 — high_divergence 評分旗標', anomVAOut1Detail:'Iris Tsai 在此樣本的 V / A 與群體中位數距離超過 2σ，且其餘標記員 pairwise ICC > 0.75。',
     anomVAOut2Title:'樣本 #112 — high_divergence 評分旗標', anomVAOut2Detail:'Jordan Wu 在此樣本的 A 分數偏離顯著；此旗標不直接拉高其 annotator risk。',
     anomClsSpeedTitle:'標記速度異常', anomClsSpeedEmpty:'無速度異常',
@@ -534,8 +517,10 @@ var I18N = {
     classificationActionReview: '審核標記',
     classificationLeaderOnly: '僅 Project Leader 可執行',
     anomSeqSpeedTitle:'標記速度異常', anomSeqOutlierTitle:'高分歧樣本',
-    anomSeqSpd1Title:'Jordan Wu — 標記速度過快', anomSeqSpd1Detail:'平均 22s／句（門檻：≥ 30s），共 38 筆提交紀錄',
+    anomSeqSpd1Title:'Jordan Wu — 標記速度過快', anomSeqSpd1Detail:'平均 22s／句（門檻：≥ 30s），共 38 筆送出紀錄',
     anomSeqOut1Title:'樣本 #89 — 實體邊界 high_divergence 旗標', anomSeqOut1Detail:'Jordan Wu 的 span 邊界與群體中位跨度相差 3 個 token 以上；此旗標與個人風險等級分開處理。',
+    anomStSpd1Title:'Jordan Wu — 標記速度過快', anomStSpd1Detail:'平均 20s／句（門檻：≥ 30s），共 40 筆送出紀錄',
+    anomStOut1Title:'樣本 #312 — token 標記 high_divergence 旗標', anomStOut1Detail:'3 位標記員的 span 邊界差異超過 4 個 token；此旗標為 sample-level，與個人風險等級分開處理。',
     anomRelSpeedTitle:'標記速度異常', anomRelOutlierTitle:'高分歧樣本', anomRelOutlierEmpty:'暫無 high_divergence 樣本',
     anomRelSpd1Title:'Jordan Wu — 標記速度過快', anomRelSpd1Detail:'平均 25s／句（門檻：≥ 45s），關係抽取任務複雜度較高',
     /* issue label-suite/label-suite#155 (Q18, maintainer 2026-11-06/2026-11-10): the unit
@@ -559,12 +544,12 @@ var I18N = {
     consistencyUnitHeader: { multi_dim:'可比較句數', multi_label:'可比較句數', entity_recognition:'可比較 span 數', sequence_tagging:'可比較 span 數', relation_identification:'標記 5 次的三元組數', single_label:'可比較句數', single_dim:'可比較樣本數' },
     consistencyNotes: {
       multi_dim:'以同一樣本之群體中位數為基準彙總；1.5xSTD 為觀測閾值，2xSTD 為較高偏離訊號。',
-      multi_label:'分類任務以每句提交結果作為可比較單位；此區塊描述偏離現象，不直接代表標記正確性。',
+      multi_label:'分類任務以每句送出結果作為可比較單位；此區塊描述偏離現象，不直接代表標記正確性。',
       entity_recognition:'序列標記以可對齊的 span 作為比較母體；邊界 high_divergence 樣本仍維持獨立旗標呈現。',
       sequence_tagging:'序列標記以可對齊的 span 作為比較母體；邊界 high_divergence 樣本仍維持獨立旗標呈現。',
       relation_identification:'關係抽取以重複標記達比較門檻的三元組為母體；此區塊呈現群體偏離程度，不直接等於風險決策。',
-      single_label:'單選標籤任務以每筆提交結果作為可比較單位；此區塊描述偏離現象，不直接代表標記正確性。',
-      single_dim:'單維度評分任務以每筆提交評分作為可比較單位；此區塊描述偏離現象，不直接代表標記正確性。',
+      single_label:'單選標籤任務以每筆送出結果作為可比較單位；此區塊描述偏離現象，不直接代表標記正確性。',
+      single_dim:'單維度評分任務以每筆送出評分作為可比較單位；此區塊描述偏離現象，不直接代表標記正確性。',
     },
     qualityRisk: {
       vaTableLabel: '標記員分析（VA 評分）',
@@ -585,6 +570,7 @@ var I18N = {
       seqSpeed1: '52s / 句',
       seqSpeed2: '60s / 句',
       seqSpeed3: '22s / 句',
+      seqSpeedWarn: '20s / 句',
       relSpeed1: '65s / 句',
       relSpeed2: '72s / 句',
       relSpeed3: '25s / 句',
@@ -605,6 +591,27 @@ var I18N = {
       leaderOnly: '僅 Project Leader 可執行',
     },
     qualityListRank: {
+      ariaAltMetrics: '輔助指標',
+      ariaDevCls: '標記一致性偏離分析（分類）',
+      ariaDevRel: '標記一致性偏離分析（關係抽取）',
+      ariaDevSeq: '標記一致性偏離分析（序列標記）',
+      ariaDevSingleDim: '標記一致性偏離分析（單維度評分）',
+      ariaDevSingleLabel: '標記一致性偏離分析（單選分類）',
+      ariaDevVa: '標記一致性偏離分析（VA 評分）',
+      ariaRankMultiLabel: '標記員品質排名（多標籤分類）',
+      ariaRankNer: '標記員品質排名（命名實體辨識）',
+      ariaRankRel: '標記員品質排名（關係抽取）',
+      ariaRankSeq: '標記員品質排名（序列標記）',
+      ariaRankSingleDim: '標記員品質排名（單維度評分）',
+      ariaRankSingleLabel: '標記員品質排名（單選分類）',
+      ariaRankVa: '標記員品質排名（VA 評分）',
+      ariaSampleMultiLabel: '一致性最低樣本清單（多標籤分類）',
+      ariaSampleNer: '一致性最低樣本清單（命名實體辨識）',
+      ariaSampleRel: '一致性最低樣本清單（關係抽取）',
+      ariaSampleSeq: '一致性最低樣本清單（序列標記）',
+      ariaSampleSingleDim: '一致性最低樣本清單（單維度評分）',
+      ariaSampleSingleLabel: '一致性最低樣本清單（單選分類）',
+      ariaSampleVa: '一致性最低樣本清單（VA 評分）',
       lowConsistencyTitle: '一致性最低樣本清單',
       lowConsistencySubtitle: '依分歧度由高到低排序，可作為 Reviewer 仲裁優先順序參考（與 dry_run 仲裁 divergent 概念同源）',
       lowConsistencyCountFmt: '{count} 筆',
@@ -626,7 +633,7 @@ var I18N = {
     },
     annotatorModRate: {
       title: '標記員被修改率',
-      subtitle: '依標記員彙總 Reviewer 實際變更答案的比例；分母為至少一位 Reviewer 已提交決定的審核單位（不含待審）',
+      subtitle: '依標記員彙總 Reviewer 實際變更答案的比例；分母為至少一位 Reviewer 已送出審核決定的審核單位（不含待審）',
       headerAnnotator: '標記員',
       headerTotal: '總計',
       smallSampleBadge: '小樣本估計',
@@ -643,6 +650,7 @@ var I18N = {
       boundaryExampleDetail: '參考值: 「散熱表現優異」｜Annotator: 「散熱表現優異，長時間高負載運作」（多標 6 tokens，span_too_long）',
     },
     entityRecognitionListRank: {
+      pairwiseAvg: 'Pairwise 平均',
       sample1Detail: '「台大醫院」實體邊界標記不一致（ORG vs LOC 類型分歧）',
       sample2Detail: '「神經內科」span 起訖位置在 2 位標記員間相差 2 個字元',
       rankMetricName: '與合併聚合參考值 F1',
@@ -669,7 +677,7 @@ var I18N = {
       rankMetricName: '與合併聚合參考值 Triple F1',
     },
     emptyStateMsgs: {
-      dry_run_in_progress: ['Dry Run 進行中', 'Dry Run 仍在執行中，等待所有標記員完成提交。'],
+      dry_run_in_progress: ['Dry Run 進行中', 'Dry Run 仍在執行中，等待所有標記員完成送出。'],
       report_pending:      ['報告待產生',     'Dry Run 已完成，IAA 報告已排入計算佇列。'],
       report_generating:   ['報告產生中',     'IAA 正在計算中，請稍候。這可能需要幾分鐘。'],
     },
@@ -681,7 +689,7 @@ var I18N = {
     lblRelMetric:'Pairwise Triple-level F1',
     singleLabelStats: {
       distTitle: '標籤分佈',
-      distDesc: '各標籤在提交標記中的次數與比例（每筆樣本僅能選擇一個標籤）',
+      distDesc: '各標籤在已送出標記中的次數與比例（每筆樣本僅能選擇一個標籤）',
       labels: { positive: '正向', neutral: '中立', negative: '負向', mixed: '混合' },
       distNote: '單標籤任務：每筆標記恰包含 1 個標籤，比例合計 100%',
     },
@@ -727,7 +735,7 @@ var I18N = {
     },
     sequenceTaggingStats: {
       distTitle: '標籤類型分佈',
-      distDesc: '各標籤類型在已提交標記片段中的筆數與比例',
+      distDesc: '各標籤類型在已送出標記片段中的筆數與比例',
       distNote: '一段連續字元的標記片段計為 1 筆，不因字元數放大計算',
       avgSpanTitle: '每句平均標記片段數',
       avgSpanLabel: '平均標記片段數／句',
@@ -747,12 +755,12 @@ var I18N = {
     },
     freeTextStats: {
       lenTitle: '回覆長度分佈',
-      lenDesc: '標記員提交的自由文字回覆字數分佈（共 214 筆有效回覆）',
+      lenDesc: '標記員送出的自由文字回覆字數分佈（共 214 筆有效回覆）',
       /* issue label-suite/label-suite#155 (Q10, maintainer 2026-11-08): the source asks for the
          submitted-answer count, which INCLUDES blanks, while lenDesc's 214 is
          the valid count, which excludes them. Both have to be on screen, and
          217 - 214 = 3 blanks reconciles with the 1.4% blank rate below. */
-      submittedLabel: '已提交回答數',
+      submittedLabel: '已送出回答數',
       meanLabel: '平均字數',
       medianLabel: '中位數字數',
       emptyLabel: '空白回覆比例',
@@ -838,7 +846,7 @@ var I18N = {
     statsRelAnnotated5xLabel:'≥ 5× annotated',statsRelAnnotated5xDesc:'Triples meeting comparison threshold',
     statsRelAvgAnnotatorsLabel:'Avg annotators / triple',statsRelAvgAnnotatorsDesc:'Avg annotator coverage per unique triple',
     statsRelMaxTripleLabel:'Max triples / sentence',statsRelMaxTripleDesc:'Max triples in a single sample',
-    iaaTitle: 'IAA Report', iaaMethodSuffix: '— Primary metric',
+    iaaTitle: 'IAA Report', iaaMethodSuffix: '— Primary metric', iaaMethodSuffixRef: '— Reference only', iaaPrimaryAria: 'Primary metric',
     anomalyTitle: 'Anomaly Detection', anomalySubtitle: 'Flag annotation speed anomalies and outlier values automatically',
     consistencyTitle: 'Annotation Consistency Deviation Analysis',
     consistencySubtitle: 'Show outlier counts and rates for each annotator across comparable units as an observation signal without overriding risk level directly.',
@@ -867,17 +875,17 @@ var I18N = {
     altLblRel:'Auxiliary metrics',
     altHVAMetric:'Metric', altHVAV:'Valence (V)', altHVAA:'Arousal (A)',
     altHClsMetric:'Metric', altHClsVal:'Value',
-    altHSeqMode:'Match mode', altHSeqVal:'Value', altHSeqThr:'Threshold', altHSeqResult:'Result',
+    altHSeqMode:'Match mode', altHSeqVal:'Value', altHSeqThr:'Threshold / reference line', altHSeqResult:'Result',
     altHRelMetric:'Metric', altHRelVal:'Value',
-    altSeqStrictResult:'Fail', altSeqPartialResult:'Pass',
+    altSeqStrictResult:'Fail', altSeqPartialResult:'Not judged',
     lblV:'Valence (V)', lblA:'Arousal (A)', lblOverall:'Overall IAA', lblOverallCalc:'(V + A) / 2',
     lblVrec:'Recommended 0.75 — ', lblVstr:'Strict 0.80 (decides) — ',
     lblArec:'Recommended 0.75 — ', lblAstr:'Strict 0.80 (decides) — ',
     lblOrec:'Recommended 0.75 — ', lblOstr:'Strict 0.80 (decides) — ',
     tPass:'Pass', tFail:'Fail',
     lblClsThr:'Threshold 0.80 — ',
-    lblSeqStrThr:'Strict threshold 0.80 — ', lblSeqPartThr:'Relaxed reference 0.70 — ',
-    lblRelThr1:'Threshold 0.75 — ', lblRelThr2:'High-quality 0.80 — ',
+    lblSeqStrThr:'Strict threshold 0.80 — ', lblSeqPartThr:'Relaxed reference line 0.70',
+    lblRelThr1:'Threshold 0.75 — ', lblRelThr2:'High-quality reference line 0.80',
     thVAName:'Annotator', thVASpeed:'Avg Speed', thVAIaaV:'IAA_V', thVAIaaA:'IAA_A', thVADeltaV:'Δ V vs Group', thVADeltaA:'Δ A vs Group', thVAStatus:'Status',
     thClsName:'Annotator', thClsSpeed:'Avg Speed', thClsIaa:'Alpha', thClsDelta:'Δ vs Group', thClsStatus:'Status',
     thSeqName:'Annotator', thSeqSpeed:'Avg Speed', thSeqIaa:'F1 (strict)', thSeqDelta:'Δ vs Group', thSeqStatus:'Status',
@@ -918,6 +926,8 @@ var I18N = {
     anomSeqSpeedTitle:'Speed Anomalies', anomSeqOutlierTitle:'High-divergence Samples',
     anomSeqSpd1Title:'Jordan Wu — Annotation speed too fast', anomSeqSpd1Detail:'Avg 22s/sent (threshold: ≥ 30s), 38 submissions',
     anomSeqOut1Title:'Sample #89 — high-divergence entity boundary flag', anomSeqOut1Detail:"Jordan Wu's span boundary differs from the group median by > 3 tokens; the flag stays sample-level only.",
+    anomStSpd1Title:'Jordan Wu — Annotation speed too fast', anomStSpd1Detail:'Avg 20s/sent (threshold: ≥ 30s), 40 submissions',
+    anomStOut1Title:'Sample #312 — token high_divergence flag', anomStOut1Detail:"Span boundaries of 3 annotators differ by more than 4 tokens; the flag is sample-level and handled separately from individual risk levels.",
     anomRelSpeedTitle:'Speed Anomalies', anomRelOutlierTitle:'High-divergence Samples', anomRelOutlierEmpty:'No high-divergence samples',
     anomRelSpd1Title:'Jordan Wu — Annotation speed too fast', anomRelSpd1Detail:'Avg 25s/sent (threshold: ≥ 45s); relation extraction is inherently complex',
     outputTypeCol: 'Output Type',
@@ -953,6 +963,7 @@ var I18N = {
       seqSpeed1: '52s / sent',
       seqSpeed2: '60s / sent',
       seqSpeed3: '22s / sent',
+      seqSpeedWarn: '20s / sent',
       relSpeed1: '65s / sent',
       relSpeed2: '72s / sent',
       relSpeed3: '25s / sent',
@@ -973,6 +984,27 @@ var I18N = {
       leaderOnly: 'Project Leader only',
     },
     qualityListRank: {
+      ariaAltMetrics: 'Supporting metrics',
+      ariaDevCls: 'Annotation consistency deviation analysis (classification)',
+      ariaDevRel: 'Annotation consistency deviation analysis (relation extraction)',
+      ariaDevSeq: 'Annotation consistency deviation analysis (sequence tagging)',
+      ariaDevSingleDim: 'Annotation consistency deviation analysis (single-dimension rating)',
+      ariaDevSingleLabel: 'Annotation consistency deviation analysis (single-label)',
+      ariaDevVa: 'Annotation consistency deviation analysis (VA rating)',
+      ariaRankMultiLabel: 'Annotator quality ranking (multi-label)',
+      ariaRankNer: 'Annotator quality ranking (named entity recognition)',
+      ariaRankRel: 'Annotator quality ranking (relation extraction)',
+      ariaRankSeq: 'Annotator quality ranking (sequence tagging)',
+      ariaRankSingleDim: 'Annotator quality ranking (single-dimension rating)',
+      ariaRankSingleLabel: 'Annotator quality ranking (single-label)',
+      ariaRankVa: 'Annotator quality ranking (VA rating)',
+      ariaSampleMultiLabel: 'Lowest-agreement sample list (multi-label)',
+      ariaSampleNer: 'Lowest-agreement sample list (named entity recognition)',
+      ariaSampleRel: 'Lowest-agreement sample list (relation extraction)',
+      ariaSampleSeq: 'Lowest-agreement sample list (sequence tagging)',
+      ariaSampleSingleDim: 'Lowest-agreement sample list (single-dimension rating)',
+      ariaSampleSingleLabel: 'Lowest-agreement sample list (single-label)',
+      ariaSampleVa: 'Lowest-agreement sample list (VA rating)',
       lowConsistencyTitle: 'Low-consistency Sample List',
       lowConsistencySubtitle: 'Sorted by disagreement score, highest first; usable as a reviewer arbitration priority reference (same concept as dry_run "divergent" arbitration)',
       lowConsistencyCountFmt: '{count} items',
@@ -1011,6 +1043,7 @@ var I18N = {
       boundaryExampleDetail: 'Reference: "thermal performance is excellent" | Annotator: "thermal performance is excellent and stays cool under sustained heavy load" (6 extra tokens, span_too_long)',
     },
     entityRecognitionListRank: {
+      pairwiseAvg: 'Pairwise average',
       sample1Detail: 'Inconsistent entity boundary for "NTU Hospital" (ORG vs LOC type disagreement)',
       sample2Detail: 'The "Neurology" span start/end offsets differ by 2 characters between 2 annotators',
       rankMetricName: 'F1 vs. merged aggregate reference',
@@ -1414,11 +1447,35 @@ function tPath(path) {
   var fallback = read(I18N.zh);
   return fallback !== undefined ? fallback : path;
 }
+/* Writes the i18n string into one element. A threshold line such as
+   "門檻 0.75 — <strong class="t-pass">通過</strong>" keeps its <strong> verdict
+   (spec 05-02 第 3 條: 通過／未達): only the text before it is replaced, and the
+   verdict itself is re-localised from tPass / tFail (issue #435). */
+function setElText(el, key) {
+  var v = t(key);
+  if (typeof v !== 'string') return;
+  var verdict = el.querySelector('strong.t-pass, strong.t-fail');
+  if (!verdict) {
+    el.textContent = v;
+    /* The multi_dim threshold lines put the verdict in a SIBLING <strong>
+       after the labelled <span>, so localise that one too. */
+    var sib = el.nextElementSibling;
+    if (sib && sib.matches('strong.t-pass, strong.t-fail')) {
+      var sibLabel = t(sib.classList.contains('t-pass') ? 'tPass' : 'tFail');
+      if (typeof sibLabel === 'string') sib.textContent = sibLabel;
+    }
+    return;
+  }
+  Array.prototype.slice.call(el.childNodes).forEach(function(node) {
+    if (node !== verdict) el.removeChild(node);
+  });
+  el.insertBefore(document.createTextNode(v), verdict);
+  var label = t(verdict.classList.contains('t-pass') ? 'tPass' : 'tFail');
+  if (typeof label === 'string') verdict.textContent = label;
+}
 function setText(id, key) {
   var el = document.getElementById(id);
-  if (!el) return;
-  var v = t(key);
-  if (typeof v === 'string') el.textContent = v;
+  if (el) setElText(el, key);
 }
 /* Scoped to one mount: a document-wide pass let whichever panel partial
    loaded last overwrite the other panel's data-i18n text (issue singyichen/label-suite#835). */
@@ -1443,11 +1500,23 @@ function applyDataI18n(root) {
   });
 }
 
+/* PROTOTYPE-ONLY demo switch (G-54): ?error=1 makes every panel partial "fail"
+ * so the load-failed panel can be reproduced. Captured once at script load,
+ * because syncUrlState() rewrites the query string and does not carry it over;
+ * that also makes the panel's Retry button (a reload) recover, like a real
+ * retry. A real product has no such parameter. */
+var DEMO_LOAD_ERROR = false;
+try { DEMO_LOAD_ERROR = new URLSearchParams(window.location.search).get('error') === '1'; } catch (e) { DEMO_LOAD_ERROR = false; }
+
 function loadStatsPanel() {
   var mount = document.getElementById('statsPanelMount');
   var path = STATS_PANEL_PATHS[S.type] || STATS_PANEL_PATHS.multi_dim;
   if (!mount || !path) return Promise.resolve();
   mount.innerHTML = '';
+  if (DEMO_LOAD_ERROR) {
+    renderPanelLoadError('statsPanelMount');
+    return Promise.resolve();
+  }
   return fetch(path, { cache: 'no-store' })
     .then(function(r) {
       if (!r.ok) throw new Error('stats panel load failed: ' + path);
@@ -1629,7 +1698,7 @@ var SIMPLE_IDS = [
   'anomalySpeedTitleVA','anomalyOutlierTitleVA',
   'anomVASpd1Title','anomVASpd1Detail','anomVAOut1Title','anomVAOut1Detail','anomVAOut2Title','anomVAOut2Detail',
   'anomClsSpeedTitle','anomClsSpeedEmpty','anomClsOutlierTitle','anomClsOut1Title','anomClsOut1Detail','anomSdOutlierEmpty',
-  'anomSeqSpeedTitle','anomSeqOutlierTitle','anomSeqSpd1Title','anomSeqSpd1Detail','anomSeqOut1Title','anomSeqOut1Detail',
+  'anomSeqSpeedTitle','anomSeqOutlierTitle','anomSeqSpd1Title','anomSeqSpd1Detail','anomSeqOut1Title','anomSeqOut1Detail','anomStSpd1Title','anomStSpd1Detail','anomStOut1Title','anomStOut1Detail',
   'anomRelSpeedTitle','anomRelOutlierTitle','anomRelOutlierEmpty','anomRelSpd1Title','anomRelSpd1Detail',
   'lblVrec','lblVstr','lblArec','lblAstr','lblOrec','lblOstr','lblClsThr',
   'lblSeqStrThr','lblSeqPartThr','lblRelThr1','lblRelThr2',
@@ -1913,6 +1982,20 @@ function updateMethodName() {
   if (typeof methodMap === 'object' && methodMap[key]) {
     methodTarget.textContent = methodMap[key];
   }
+  /* 實體辨識切到 Partial overlap 時，這一張只是參考顯示，不是判定用的主指標：
+     星號收起（連 aria-label 也拿掉），後綴改「— 參考顯示」；切回 Strict 還原。
+     依據 規格 05-02 §八種輸出類型各自的主指標與門檻 第 11 條、
+     維護者裁定 2026-11-19 (#435)。 */
+  if (S.type !== 'entity_recognition') return;
+  var isPartial = S.seqMode === 'partial';
+  var star = document.querySelector('section[aria-labelledby="iaaTitle"] .iaa-primary-star');
+  var suffix = document.getElementById('iaaMethodSuffix');
+  if (star) {
+    star.classList.toggle('hidden', isPartial);
+    if (isPartial) star.removeAttribute('aria-label');
+    else star.setAttribute('aria-label', t('iaaPrimaryAria'));
+  }
+  if (suffix) suffix.textContent = t(isPartial ? 'iaaMethodSuffixRef' : 'iaaMethodSuffix');
 }
 
 
@@ -1953,6 +2036,9 @@ function syncSequenceUi() {
   var isStrict = S.seqMode !== 'partial';
   strictBtn.classList.toggle('active', isStrict);
   partialBtn.classList.toggle('active', !isStrict);
+  /* G-56: the selected option is exposed to assistive tech, not only by .active */
+  strictBtn.setAttribute('aria-pressed', String(isStrict));
+  partialBtn.setAttribute('aria-pressed', String(!isStrict));
   strictCard.classList.toggle('hidden', !isStrict);
   partialCard.classList.toggle('hidden', isStrict);
 }
@@ -2275,6 +2361,13 @@ function buildSecondaryIaaBlock(html, type) {
   var body = section.querySelector('.iaa-score-grid') || section.querySelector('.iaa-not-applicable-note');
   if (!body) return null;
   var clone = body.cloneNode(true);
+  /* Localise BEFORE namespacing: setText / applySimpleIds look elements up by
+     their original id, so once the ids carry the `__type` suffix a secondary
+     card would stay in the partial's Chinese (issue #435). */
+  SIMPLE_IDS.forEach(function(id) {
+    var el = clone.querySelector('#' + id);
+    if (el) setElText(el, id);
+  });
   namespaceIds(clone, type);
   var wrap = document.createElement('section');
   wrap.className = 'panel';
@@ -2293,6 +2386,10 @@ function loadQualityPanel() {
      partial is fetched, because the failure is not a loading failure. */
   if (S.qState === 'report_failed') {
     renderPanelLoadError('qualityPanelMount', 'calc');
+    return Promise.resolve();
+  }
+  if (DEMO_LOAD_ERROR) {
+    renderPanelLoadError('qualityPanelMount');
     return Promise.resolve();
   }
   var taskMeta = TASK_META[S_ROUTE.taskId] || TASK_META[DEFAULT_TASK_ID];
@@ -2458,12 +2555,6 @@ document.getElementById('tabStats').addEventListener('click', function() {
 });
 document.getElementById('tabQuality').addEventListener('click', function() {
   switchTab('quality');
-});
-
-var toastCloseBtn = document.getElementById('toastClose');
-if (toastCloseBtn) toastCloseBtn.addEventListener('click', function() {
-  var toastNode = document.getElementById('toast');
-  if (toastNode) toastNode.classList.remove('visible');
 });
 
 function resetSequenceAndAltViews() {

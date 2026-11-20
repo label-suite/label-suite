@@ -1,0 +1,67 @@
+---
+title: 元件對照
+description: Design System Artifact 的元件資料夾、design/system/components 的元件規格，以及規格所依據的 prototype 原始檔，三者的一對一對照。
+category: '設計系統'
+tags: [design-system, components]
+---
+
+# 元件對照
+
+每個元件有三處：元件規格是依據，Artifact 的元件資料夾是從規格濃縮出的呈現，prototype 原始檔是規格依據的現況。三者不一致時以 prototype 現況與 `design/system/` 的規格為準，Artifact 重新產生。
+
+| 位置 | 角色 | 能不能直接改 |
+| :--- | :--- | :--- |
+| `design/prototype/` | 畫面現況，規格的證據 | 改畫面走 `AGENTS.md` 的 Ready gate |
+| [`design/system/components/<元件>.md`](../../design/system/components/) | 元件規格：結構、變體、狀態、token、鍵盤與焦點、樣式出處 | 由 `design-system-setup` 維護 |
+| [`design/system/artifact/project/components/<元件>/`](../../design/system/artifact/project/components/) | Artifact 的元件說明（`README.md`）與樣本（`preview.html`） | 改這裡，再重新發布；線上改的不算（見 [設計交接](../development/workflow/design-handoff.mdx#單向規則)） |
+
+## 對照表
+
+資料夾名是規格檔名轉成 PascalCase（`auth-card.md` 對 `AuthCard/`）。「prototype 出處」只列規格「樣式出處」節的主要來源，行號與其餘來源以規格為準；路徑相對於 `design/prototype/`。
+
+| 元件 | Artifact 資料夾 | 規格 | prototype 出處 |
+| :--- | :--- | :--- | :--- |
+| Accordion | `Accordion/` | [`accordion.md`](../../design/system/components/accordion.md) | `components-showcase.html`、`pages/task-management/task-config.css` |
+| Alert Banner | `AlertBanner/` | [`alert-banner.md`](../../design/system/components/alert-banner.md) | `components-showcase.html`、`pages/admin/user-management.html` |
+| App Shell（Sidebar） | `AppShell/` | [`app-shell.md`](../../design/system/components/app-shell.md) | `pages/shared/sidebar.js`、`pages/shared/sidebar.css` |
+| Auth Card | `AuthCard/` | [`auth-card.md`](../../design/system/components/auth-card.md) | `pages/account/login.html` |
+| Auth Navbar | `AuthNavbar/` | [`auth-navbar.md`](../../design/system/components/auth-navbar.md) | `pages/account/login.html` |
+| Avatar | `Avatar/` | [`avatar.md`](../../design/system/components/avatar.md) | `components-showcase.html`、`pages/account/profile.html` |
+| Badge | `Badge/` | [`badge.md`](../../design/system/components/badge.md) | `components-showcase.html`、`pages/shared/task-type-badge.css` |
+| Breadcrumb | `Breadcrumb/` | [`breadcrumb.md`](../../design/system/components/breadcrumb.md) | `components-showcase.html`、`pages/annotation/annotation-list.html` |
+| Button | `Button/` | [`button.md`](../../design/system/components/button.md) | `components-showcase.html`、`pages/shared/button.css` |
+| Card | `Card/` | [`card.md`](../../design/system/components/card.md) | `components-showcase.html`、`pages/dashboard/dashboard.layout.css` |
+| Chip | `Chip/` | [`chip.md`](../../design/system/components/chip.md) | `components-showcase.html`、`pages/task-management/task-config.css` |
+| Color Dot | `ColorDot/` | [`color-dot.md`](../../design/system/components/color-dot.md) | `components-showcase.html` |
+| Desktop Content Tabs | `ContentTabs/` | [`content-tabs.md`](../../design/system/components/content-tabs.md) | `pages/shared/content-tabs.css` |
+| Data Table | `DataTable/` | [`data-table.md`](../../design/system/components/data-table.md) | `pages/shared/list-page.css`、`pages/shared/empty-state.css` |
+| Date Range Picker | `DateRangePicker/` | [`date-range-picker.md`](../../design/system/components/date-range-picker.md) | `pages/shared/date-range-picker.js`、`pages/shared/date-range-picker.css` |
+| Divider | `Divider/` | [`divider.md`](../../design/system/components/divider.md) | `components-showcase.html` |
+| Empty State | `EmptyState/` | [`empty-state.md`](../../design/system/components/empty-state.md) | `pages/shared/empty-state.css` |
+| Input | `Input/` | [`input.md`](../../design/system/components/input.md) | `components-showcase.html`、`pages/shared/input.css` |
+| Language Toggle | `LangToggle/` | [`lang-toggle.md`](../../design/system/components/lang-toggle.md) | `pages/account/login.html`、`pages/shared/sidebar.js` |
+| List Toolbar | `ListToolbar/` | [`list-toolbar.md`](../../design/system/components/list-toolbar.md) | `pages/shared/list-page.css` |
+| Metric KPI Tile | `Metric/` | [`metric.md`](../../design/system/components/metric.md) | `components-showcase.html`、`pages/shared/metric.css` |
+| Modal | `Modal/` | [`modal.md`](../../design/system/components/modal.md) | `pages/shared/modal.css`、`pages/shared/modal-focus.js` |
+| Pagination | `Pagination/` | [`pagination.md`](../../design/system/components/pagination.md) | `components-showcase.html`、`pages/shared/list-page.css` |
+| Password Eye Toggle | `PasswordEyeToggle/` | [`password-eye-toggle.md`](../../design/system/components/password-eye-toggle.md) | `pages/account/login.html` |
+| Progress Bar | `ProgressBar/` | [`progress-bar.md`](../../design/system/components/progress-bar.md) | `components-showcase.html`、`pages/dashboard/dashboard.components.css` |
+| Proto Toggle Bar | `ProtoToggleBar/` | [`proto-toggle-bar.md`](../../design/system/components/proto-toggle-bar.md) | `pages/account/reset-password.html`、`pages/account/verify-email.html` |
+| Review Status Track | `ReviewStatusTrack/` | [`review-status-track.md`](../../design/system/components/review-status-track.md) | `components-showcase.html`、`pages/annotation/annotation-workspace.html` |
+| Skeleton | `Skeleton/` | [`skeleton.md`](../../design/system/components/skeleton.md) | `components-showcase.html`、`pages/dashboard/dashboard.components.css` |
+| Spinner | `Spinner/` | [`spinner.md`](../../design/system/components/spinner.md) | `pages/account/login.html` |
+| State Panel | `StatePanel/` | [`state-panel.md`](../../design/system/components/state-panel.md) | `components-showcase.html` |
+| Status Pill | `StatusPill/` | [`status-pill.md`](../../design/system/components/status-pill.md) | `components-showcase.html` |
+| Step Indicator | `StepIndicator/` | [`step-indicator.md`](../../design/system/components/step-indicator.md) | `pages/task-management/task-new.html` |
+| Toast | `Toast/` | [`toast.md`](../../design/system/components/toast.md) | `components-showcase.html` |
+| Toggle Switch | `ToggleSwitch/` | [`toggle-switch.md`](../../design/system/components/toggle-switch.md) | `components-showcase.html`、`pages/task-management/task-config.css` |
+| Tooltip | `Tooltip/` | [`tooltip.md`](../../design/system/components/tooltip.md) | `pages/task-management/task-config.css` |
+
+## 只在 Artifact 的檔案
+
+| 檔案 | 是什麼 |
+| :--- | :--- |
+| `Cover/` | Artifact 的封面，沒有對應的元件規格 |
+| `bundle.css` | 全部元件樣式的合併檔，樣式抄自 `design/prototype/pages/shared/*.css` 與 `components-showcase.html` 的正典區塊，不重新調色 |
+
+新增或改名一個元件時，規格檔、Artifact 資料夾與 `bundle.css` 一起改，再更新這張表；順序與重新發布的時機見 [設計交接](../development/workflow/design-handoff.mdx#什麼時候重跑哪一步)。

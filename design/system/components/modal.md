@@ -1,6 +1,6 @@
 # Modal
 
-> 正典章節：`MASTER.md` 無對應章節（`shared/modal.css` 自己是來源）｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
+> 正典章節：`MASTER.md` 無對應章節（`shared/modal.css` 自己是來源）｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c` ｜未標檔名的行號指 `design/prototype/pages/shared/modal.css`
 
 ## 結構
 
@@ -28,7 +28,7 @@
 | :--- | :--- | :--- |
 | 關閉（預設） | 有，`display: none` | `modal.css:11` |
 | 開啟 | 有，`.show` → `display: flex` | `:16` |
-| hover | 只有 `.modal-close` 有（底色換 `--color-slate-50`） | `:75` |
+| hover | 只有 `.modal-close` 有（底色換 `--color-slate-50`、圖示換 `--color-ink`） | `:75` |
 | focus | **未觀察到樣式**，但**行為完整**（見下） | 以 `:focus` 掃全檔，0 命中 → `../design-gaps.md` G-05 |
 | disabled／載入中／錯誤／空 | 不適用，由內容自理 | — |
 
@@ -45,10 +45,10 @@
 | 行為 | 依據 |
 | :--- | :--- |
 | 開啟時把焦點移到第一個可聚焦元素，沒有就聚焦 modal 本身 | `modal-focus.js:34`–`:39` |
-| Tab／Shift+Tab 困在 modal 內（繞回首尾） | `:47`–`:64` |
-| Escape 呼叫 `options.onClose` | `:42`–`:45` |
-| 關閉時把焦點還給 `trigger`（預設是開啟當下的 `activeElement`） | `:32`、`:80`–`:84` |
-| 可聚焦判定排除 `offsetParent === null`（看不見的） | `:19`–`:21` |
+| Tab／Shift+Tab 困在 modal 內（繞回首尾） | `modal-focus.js:47`–`:64` |
+| Escape 呼叫 `options.onClose` | `modal-focus.js:42`–`:45` |
+| 關閉時把焦點還給 `trigger`（預設是開啟當下的 `activeElement`，存於 `_modalFocusReturnEl`） | `modal-focus.js:32`、`:80`–`:84` |
+| 可聚焦判定排除 `offsetParent === null`（看不見的） | `modal-focus.js:19`–`:21` |
 
 模組**不自己切換顯示**（`modal-focus.js:7`–`:8` 的註解明寫），開關仍是頁面的事；頁面要在自己的 open／close 裡顯式呼叫 `LabelSuiteModalFocus.open/close`。依據是 issue `singyichen/label-suite#195` / F-11 與 WCAG 2.1 AA 2.4.3（`:1`）。
 
@@ -61,6 +61,8 @@
 ## 可重現樣本
 
 本批次**沒有可重現的視圖**：showcase 不含 modal，b1 的九個畫面也沒有一個用它。最近的樣本在 b2 的 `task-management/task-new#modal-dataset-preview` 與 `admin/user-management#modal-invite`。→ `../design-gaps.md` G-21
+
+**b2 補上**：上面兩個加 `task-management/task-new#modal-leave-confirm`。三者都**沒有**接 `modal-focus.js`；要看完整的焦點行為，用 `task-management/task-list#sim-delete-error` 的刪除確認。
 
 `shared/app-shell` 的 `#modal-shortcut` 與 `#modal-notification` 兩個視圖**不是這個元件**，它們整套寫在 `sidebar.js` 裡，見 [app-shell](app-shell.md)。
 
@@ -77,5 +79,11 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | 無（b1） | — |
+| `task-management/task-list#sim-delete-error` | `#deleteTaskModal`（`task-list.html:280`–`:288`）；**有接** `modal-focus.js`（`:701`、`:710`）；點遮罩不關（UXC-10，#423 起）→ `../design-gaps.md` G-45 |
+| `task-management/task-new`（`#modal-dataset-preview`、`#modal-leave-confirm`） | `datasetPreviewModal`（`.modal-xl`，`task-new.html:557`）、`leaveModal`（`:533`）、`taxonomyDeleteModal`（`:545`）；**沒有接** `modal-focus.js` |
+| `task-management/task-detail`（`#tab-*`、`#param-status`、`#param-section-labeling`） | 八個 modal（`task-detail.html:1925`–`:2026`、`annotation-results.html:138`），只有四個接了 `modal-focus.js` → `../design-gaps.md` G-43 |
+| `admin/user-management`（`#modal-invite`、`#toast-action`） | `addModal`（`user-management.html:477`）、`editModal`（`:530`）、`disableModal`（`:581`），帶 `role="dialog"`／`aria-modal`；**沒有接** `modal-focus.js` |
+| `admin/role-settings`（離開確認，交付包未列） | `#dirtyModal`（`role-settings.html:858`）；**沒有接** `modal-focus.js` |
+| `annotation/annotation-workspace`（`#modal-guideline-gate`、`#modal-guideline-image`、`#modal-guideline-pdf`、`#modal-guideline-md`） | 五個 overlay 全部接 `modal-focus.js`（`annotation-workspace.config.js:6389`、`:6413`、`:6578`、`:5746`、`:6896`–`:6898`）。指引閘門自 #423 起把 `onClose` 設成空函式（`:6898`），**Esc 不關**，只能按確認或「返回標記清單」離開 → `../design-gaps.md` G-46；審核流程抽屜（`wsReviewFlowDrawer`，`annotation-workspace.html:1197`）的關閉鈕沒有名稱 → G-49 |
 
-shipped 使用頁面在 b2（`task-management/task-list`、`task-new`、`task-detail`、`admin/user-management`、`admin/role-settings`）與 b3（`annotation/annotation-workspace`），待那兩批補——也待那兩批核對它們是否真的呼叫了 `modal-focus.js`。
+b2 已補上並核對（見上表）：五頁裡只有 `task-list` 全部接上 → G-43。b3 已補上（見上表）：`annotation-workspace` 全部接上。

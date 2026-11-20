@@ -60,9 +60,9 @@
       height: 32px;
     }
 
-    .role-avatar--emerald { background: #D1FAE5; color: var(--color-cta-hover); }
-    .role-avatar--violet  { background: #EDE9FE; color: #7C3AED; }
-    .role-avatar--indigo  { background: #E0E7FF; color: #4F46E5; }
+    .role-avatar--emerald { background: var(--data-role-emerald-bg); color: var(--data-role-emerald-fg); }
+    .role-avatar--violet  { background: var(--data-role-violet-bg); color: var(--data-role-violet-fg); }
+    .role-avatar--indigo  { background: var(--data-role-indigo-bg); color: var(--data-role-indigo-fg); }
 
     .role-name {
       font-size: 1.0625rem;
@@ -111,10 +111,11 @@
       height: 20px;
     }
 
-    .step-icon--emerald       { background: #D1FAE5; color: var(--color-cta-hover); }
-    .step-icon--violet        { background: #EDE9FE; color: #7C3AED; }
-    .step-icon--indigo        { background: #E0E7FF; color: #4F46E5; }
-    .step-icon--ink           { color: var(--color-ink); }
+    .step-icon--emerald       { background: var(--data-role-emerald-bg); color: var(--data-role-emerald-fg); }
+    .step-icon--violet        { background: var(--data-role-violet-bg); color: var(--data-role-violet-fg); }
+    .step-icon--indigo        { background: var(--data-role-indigo-bg); color: var(--data-role-indigo-fg); }
+    /* --ink 只在淺色主題壓過角色前景色；深色主題沿用 data-palette 的角色前景色（#420 前由深色區塊的高權重規則達成） */
+    html:not([data-theme="dark"]) .step-icon--ink { color: var(--color-ink); }
 
     .step-title {
       display: block;
@@ -151,38 +152,8 @@
       gap: var(--space-xs);
     }
 
-    .btn-emerald {
-      color: #fff;
-      background: var(--color-cta);
-      border-color: var(--color-cta);
-    }
-
-    .btn-emerald:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
-    }
-
-    .btn-violet {
-      color: #fff;
-      background: #7C3AED;
-      border-color: #7C3AED;
-    }
-
-    .btn-violet:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
-    }
-
-    .btn-indigo {
-      color: #fff;
-      background: #4F46E5;
-      border-color: #4F46E5;
-    }
-
-    .btn-indigo:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
-    }
+    /* 三個角色卡的 CTA 用正典 .btn-cta（pages/shared/button.css），
+       不再各自一個彩色 variant（#423, G-37）。 */
 
     .task-item-header {
       display: flex;
@@ -272,7 +243,7 @@
     }
 
     /* ── Responsive ────────────────────────────────────────────– */
-    @media (max-width: 768px) {
+    @media (max-width: 767px) {
       .layout {
         padding: var(--space-md) var(--space-md) var(--space-xl);
       }
@@ -346,7 +317,7 @@
     }
 
     .skeleton {
-      background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+      background: linear-gradient(90deg, var(--color-border) 25%, var(--color-border-muted) 50%, var(--color-border) 75%);
       background-size: 200% 100%;
       animation: dashboard-skeleton-shimmer 1.5s infinite;
       border-radius: var(--radius-md);
@@ -380,83 +351,30 @@
 
     /* ── Dark mode overrides ──────────────────────────────────── */
     html[data-theme="dark"] {
-      /* .dashboard-error-state uses --color-white/--color-border, which
-         tokens.css already redefines for dark mode; only the skeleton
-         shimmer's hardcoded gradient stops need an explicit override. */
-      .skeleton {
-        background: linear-gradient(90deg, #1F1F28 25%, #2A2A35 50%, #1F1F28 75%);
-      }
-      /* CTA role buttons — dark text on bright bg for contrast */
-      .btn-emerald {
-        color: #064E3B;
-        background: #34D399;
-        border-color: #34D399;
-      }
-      .btn-violet {
-        color: #2E1065;
-        background: #A78BFA;
-        border-color: #A78BFA;
-      }
-      .btn-indigo {
-        color: #1E1B4B;
-        background: #818CF8;
-        border-color: #818CF8;
-      }
-
-      /* Step icons — match brightness with lighter icon */
-      .step-icon--emerald       { background: #059669; color: #D1FAE5; }
-      .step-icon--violet        { background: #6D28D9; color: #EDE9FE; }
-      .step-icon--indigo        { background: #4338CA; color: #E0E7FF; }
-
-      /* Role avatars — same vibrant treatment */
-      .role-avatar--emerald { background: #059669; color: #D1FAE5; }
-      .role-avatar--violet  { background: #6D28D9; color: #EDE9FE; }
-      .role-avatar--indigo  { background: #4338CA; color: #E0E7FF; }
+      /* .dashboard-error-state, the skeleton, the role cards (data-palette.css)
+         and the task-state badges all read tokens that flip on their own
+         (#420); only the <img> icons below need a dark rule. */
 
       /* Workflow connector — invert to white; opacity pulled back since white reads heavier */
       .workflow-step-connector { opacity: 0.45; }
       .workflow-step-connector img { filter: brightness(0) invert(1); }
 
-      /* Badges — replace hardcoded light-bg with dark equivalents
-         (info/success/warning need no override: light rules use semantic
-         tokens that flip in tokens.css) */
-      /* issue label-suite/label-suite#179: dark equivalents for the two new
-         task-state badges, copied verbatim from task-list.html. */
-      .badge-draft {
-        color: #9CA3AF;
-        background: #1F1F28;
-        border-color: #2A2A35;
-      }
-      .badge-dry-run-status {
-        color: #9CA3AF;
-        background: #1F1F28;
-        border-color: #2A2A35;
-      }
-      .badge-dry-run {
-        color: #9CA3AF;
-        background: #1F1F28;
-        border-color: #2A2A35;
-      }
-      .badge-official {
-        color: #A78BFA;
-        background: #1E1B4B;
-        border-color: #3730A3;
-      }
       /* <img> SVG icons — invert to white (currentColor not inherited by <img>) */
       .step-icon img, .role-avatar img { filter: brightness(0) invert(1); }
     }
 
     /* Sort select — mirrors task-list.html .filter-select until singyichen/label-suite#1448 extracts a shared rule.
-       Chevron stroke #94A3B8 is mid-tone so it stays visible on light and dark backgrounds. */
+       Chevron stroke = --color-ink-muted per theme; the dark URI follows the rule (#438). */
     .filter-select {
-      padding: 9px 32px 9px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      padding: 9px 32px 9px 12px; border: 1px solid var(--color-border-control); border-radius: var(--radius-md);
       font-size: 14px; color: var(--color-ink);
-      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
+      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235E6B7F' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
       outline: none; min-width: 140px;
       appearance: none; -webkit-appearance: none;
       transition: border-color var(--dur-fast);
     }
-    .filter-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .filter-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent); }
+    html[data-theme="dark"] .filter-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); }
 
     /* User view: only the inner .workflow-role-card keeps a frame (no card-in-card) */
     #view-user > .panel {

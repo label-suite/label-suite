@@ -4,7 +4,7 @@ description: '所有登入後的使用者用頁籤同時保留多個頁面的檢
 category: '規格書'
 tags: [規格書, 共用介面, 已定案]
 createdAt: '2026-11-04'
-updatedAt: '2026-11-16'
+updatedAt: '2026-11-18'
 ---
 
 # 07-02 工作頁籤
@@ -32,10 +32,13 @@ R：Read（可讀取）　C：Create（可新增）　E：Edit（可編輯）　
 PRD §權限矩陣 給「07 共用介面」的上限是 `R／E (o)`（2026-11-16 依 Issue #85 放寬）；下列的 E (o) 只作用在使用者自己的頁籤狀態，不碰任何業務資料。
 這就是 [規格 07-01 §已確認決議](./01-sidebar.mdx#已確認決議) Q1 要的那個上限，兩邊一致。
 
-- :ref[平台成員]{id="term.platform-member"}：R／E (o)
-- :ref[系統管理員]{id="term.system-admin"}：R／E (o)；系統管理的頁面同樣可以開成頁籤
-- :ref[Seeder 管理員]{id="term.seeder-admin"}：R／E (o)；與系統管理員相同
-- 未登入的訪客：無權限；頁籤列只出現在登入後的頁面
+| 角色 | 這一頁能做什麼 | PRD §權限矩陣的上限 |
+| :--- | :--- | :--- |
+| :ref[平台成員]{id="term.platform-member"} | R／E (o) | 「07 共用介面」給平台成員 `R/E (o)` |
+| :ref[系統管理員]{id="term.system-admin"} | R／E (o)；系統管理的頁面同樣可以開成頁籤 | 同一列給系統管理員 `R/E (o)` |
+| :ref[Seeder 管理員]{id="term.seeder-admin"} | R／E (o)；與系統管理員相同 | 矩陣**沒有這一欄**；PRD §使用者角色 寫明他「權限同系統管理員」 |
+| 未登入的訪客 | **無權限**；頁籤列只出現在登入後的頁面 | **對不到任何一列**：PRD §使用者角色 沒有「訪客」，§權限矩陣 的兩張表也沒有這一欄 |
+
 :ref[任務角色]{id="term.task-role"} 不影響能不能用頁籤，只影響頁籤裡那一頁進不進得去（見 [規格 07-01 §進入模組的條件](./01-sidebar.mdx#進入模組的條件)）。
 
 ## 業務流程
@@ -527,6 +530,7 @@ import Spec0702WorkspaceTabsFlow from '@notes/components/spec-07-02-workspace-ta
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#415](https://github.com/label-suite/label-suite/issues/415) | 2026-11-18 | §使用角色 | 角色、權限與條件寫成條列 | 改成正典的三欄表格（角色／這一頁能做什麼／PRD §權限矩陣的上限），條件、理由與跨頁連結移到表格下方的條列。第三欄是**新增的資訊**：逐列指出 PRD §權限矩陣 的哪一列，對不到的寫出原因。形狀依 `spec-writing` 範本（[PR #417](https://github.com/label-suite/label-suite/pull/417)） | **無新決議，條文一字未改** |
 | [#85](https://github.com/label-suite/label-suite/issues/85) | 2026-11-16 | §使用角色、§已確認決議 Q5 的理由 | 三處寫「PRD 目前的上限是 R／Site Map 那一列仍交給 #85」 | 改成 PRD 已於 2026-11-16 放寬成 `R／E (o)`、Site Map 兩列也已補上 | **無新決議**，條文一字未改 |
 | [#166](https://github.com/label-suite/label-suite/issues/166) | 2026-11-15 | §規格 › 權限或資料失效、§已確認決議 Q5 的理由 | 兩處都說那一頁「還沒寫、編號與落位在撰寫時決定」 | 改成指向[規格 07-03](./03-denied-and-not-found.mdx) | **無新決議**，本頁條文一字未改；依 `spec-writing` 步驟 5 第 6 點，只加導覽、修正被後續改動打成假的敘述不加變更標示 |
 | [#260](https://github.com/label-suite/label-suite/issues/260) | 2026-11-11 | §Q&A | 每題是 `### Q. …` 的 H3 標題，答案直接顯示 | 每題一個預設收合的 `tip`，題目是可點選的標題 | **無新決議**。§Q&A **4 題**全部從 `### Q. …` 標題改成預設收合的 `tip`，題目成為可點選的標題。題目的 H3 錨點因此消失（全站沒有任何連結指向它們，已逐題查過），也不再進右側目錄。**題目、答案與連結一字未改**，只有標題去掉「Q. 」前綴。格式依維護者 2026-11-11 的四個裁定（紀錄在[這則留言](https://github.com/label-suite/label-suite/issues/260#issuecomment-6792064965)） |
@@ -554,7 +558,7 @@ import Spec0702WorkspaceTabsFlow from '@notes/components/spec-07-02-workspace-ta
 
 ## 附錄：舊編號對照
 
-`shared/019-workspace-tabs` 的 112 條全部對照，來源釘在 `singyichen/label-suite@faf83356`（見 `docs/specs/legacy/07-02-workspace-tabs.ids` 的首行）。釘樁的理由記在 `docs/development/spec-migration.mdx` 的「本文件作者自行決定的事」，**不是本頁的已確認決議**——那一條曾被寫成決議，但依據是撰寫者自己的判斷，已由獨立審查移除。
+`shared/019-workspace-tabs` 的 112 條全部對照，來源釘在 `singyichen/label-suite@faf83356`（見 `docs/specs/legacy/07-02-workspace-tabs.ids` 的首行）。釘樁的理由記在 `docs/development/workflow/spec-migration.mdx` 的「本文件作者自行決定的事」，**不是本頁的已確認決議**——那一條曾被寫成決議，但依據是撰寫者自己的判斷，已由獨立審查移除。
 
 「見 規格 07-01 §快捷鍵總覽」的三列，是快捷鍵總覽的顯示內容由規格 07-01 擁有、本頁只宣告該快捷鍵要列進去；舊來源也是這樣分工的。
 

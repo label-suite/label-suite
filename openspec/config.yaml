@@ -10,13 +10,15 @@ context: |
   - openspec/specs/ 是實作與測試依循的可測契約，只能透過 change 的 spec delta 修改。
     技術細節（API、資料模型、權限實作，以及測試集答案不外露的後端做法）寫在這一層。
   delta 中的每條 requirement 都須追溯到 docs/specs/ 的規格（註明規格編號 NN-NN 與
-  Scenario 名稱，例：「來源：01-02 停用使用者」）。delta 與 docs/specs/ 不一致時以
+  Scenario 名稱，例：「來源：01-02 停用使用者」）。技術 change 沒有 docs/specs/ 的
+  規格可追溯時（見 spec-migration 的 D4），改為追溯到 ADR 與規則文件的條號，
+  例：「來源：ADR-003 D5、api-agent-rules A7」（維護者 2026-11-20 裁定，#503）。delta 與 docs/specs/ 不一致時以
   docs/specs/ 為準：停下來，把衝突列為待維護者回答的問題，不得自行選邊。
 
   需求依據順序：維護者指定的需求文件與 docs/specs/ 的規格書 ＞ docs/specs/00-prd.mdx
   ＞ docs/ 其他需求文件 ＞ openspec/。openspec 只引用規格的編號與章節，不另抄一份；
   需求要改先用 spec-writing 改 docs/specs/。引用的規格標為「草稿」或「待釐清」仍有未決項時，
-  那一題記進 system-analysis 的待決問題，由 clarification 在停點一一次問完。
+  那一題記進 system-analysis 的待決問題，由 clarification 在那個停點一次問完。
 
   規劃階段的派工順序（整個 propose 由主 agent 依 schema 順序派工，除 clarification.md
   以外主 agent 不自己寫規劃產出）：
@@ -24,11 +26,11 @@ context: |
     → planner 寫 proposal → 主 agent 以 clarify skill 的關卡模式寫 clarification
     → planner 寫 specs 與 design → planner 寫 tasks → design-reviewer 審閱、planner 回修。
 
-  **只有兩個人工停點**：
-  - 停點一：clarification 的 Q（需要維護者決定的項目）逐題問答。P（明確問題）直接派原
-    撰寫角色回修，不問維護者。
-  - 停點二：apply 全部完成、acceptance-verifier 產出驗收報告之後，由維護者親自驗收。
-  其餘環節（明確問題的回修、規劃審閱、程式審查、階段之間的提交）全部自動，不詢問。
+  **只有一個人工停點**：clarification 的 Q（需要維護者決定的項目）逐題問答。P（明確
+  問題）直接派原撰寫角色回修，不問維護者。
+  其餘環節（明確問題的回修、規劃審閱、程式審查、驗收、歸檔、階段之間的提交、合併）
+  全部自動，不詢問。驗收不再停下來等維護者（維護者 2026-11-19 裁定）：acceptance.md
+  的人工驗收步驟照樣要寫，但它是事後抽查與出事時的紀錄，不是等人簽收的交付物。
   **故障類中斷不算關卡，照停**：task 描述有歧義、實作中發現規格有問題、工作超出 tasks.md
   的範圍、指令出錯——這些代表規劃錯了，不得硬推。
 
@@ -36,7 +38,7 @@ context: |
   - Issue first：沒有列出工作項目的 open issue 就不開始 change
     （AGENTS.md "Hard Rules" 與 "Development Workflow"）。
   - 分支與 commit：不得直接 commit 到 main；commit message 依 AGENTS.md "Commits"，
-    完整規則見 docs/development/commit-and-release.md。
+    完整規則見 docs/development/workflow/commit-and-release.md。
   - 語言：artifact 以繁體中文撰寫；OpenSpec 結構標題與 SHALL／MUST 關鍵字維持英文
     （AGENTS.md "Language Rules"）。
   - 任務設定驅動（Hard Rule 5）與測試集答案不外露（Hard Rule 6）是 clarification
@@ -48,7 +50,7 @@ rules:
   system-analysis:
     - 只寫業務，不出現框架、資料表、端點名稱
     - 業務流程以規格書的「業務流程」章節為準，只引用規格編號與流程名稱，不重畫
-    - 每個待決問題都要寫出「影響」；**記下來並繼續，不要停下來問維護者**——所有需要維護者決定的事由 clarification 在停點一一次問完
+    - 每個待決問題都要寫出「影響」；**記下來並繼續，不要停下來問維護者**——所有需要維護者決定的事由 clarification 在那個停點一次問完
   system-design:
     - 分層是 Router → Service → Repository／Model；Router 不直接碰 Repository，資料層不處理 HTTP
     - Sequence Diagram 的標題要與 specs 的 Scenario 名稱相同
@@ -60,7 +62,7 @@ rules:
     - 每塊資料都要對應到 api-contract 的 operationId
     - loading／error／empty／無權限四種狀態都要寫；有遮蔽欄位時寫出呈現方式
     - 畫面長相以 design/prototype/pages/ 為準；token 只用 design/prototype/assets/tokens.css 與 label-suite-design skill 的語意名稱，不寫色碼
-    - 框架依 ADR-004 加 2026-11-10 裁定（React 19 加 Vite 加 TypeScript strict，路由 React Router v6、伺服器狀態 TanStack Query，元件庫 shadcn/ui 放 components/ui/，目錄分層 pages/ 加 features/，見 docs/development/architecture.mdx §前端）；**只有 Storybook 仍待決**。元件以語意描述為主，需要時可指名 shadcn/ui 的元件，不貼實作程式碼
+    - 框架依 ADR-004 加 2026-11-10 裁定（React 19 加 Vite 加 TypeScript strict，路由 React Router v6、伺服器狀態 TanStack Query，元件庫 shadcn/ui 放 components/ui/，目錄分層 pages/ 加 features/，見 docs/development/architecture.mdx §前端）；**不用 Storybook，改用元件展示頁**。元件以語意描述為主，需要時可指名 shadcn/ui 的元件，不貼實作程式碼
     - 沒有 UI 變更就只寫一行「本次無 UI 變更」
   api-contract:
     - operationId 全專案唯一，由 FastAPI 的 generate_unique_id_function **固定成「動詞加資源」**（例 listUsers、getUser），不手寫也不逐個覆寫
@@ -76,7 +78,7 @@ rules:
     - 第 9 面向「任務設定驅動」：這次的行為有沒有寫死某一種任務類型？新增任務類型要不要改核心程式？（Hard Rule 5）
     - 第 10 面向「測試集答案不外露」：標記員能到達的端點與畫面，payload 裡有沒有標準答案或測試集標記？（Hard Rule 6）
     - 每個決議寫出理由、日期與回修位置；改變需求的決議先用 spec-writing 回寫 docs/specs/ 的規格書
-    - 寫進規格書「已確認決議」的依據只有 docs/development/spec-migration.mdx 通則第 4 條那五種
+    - 寫進規格書「已確認決議」的依據只有 docs/development/workflow/spec-migration.mdx §「已確認決議」的五種依據 那五種
     - 不新增 proposal 沒有的功能，只釐清既有範圍
   specs:
     - 只寫 What，不寫 How；技術細節放 design 或 tasks
@@ -106,10 +108,11 @@ operations:
       - 後端 API 有變動時，同一個群組內重新產生 openapi.json 與前端型別，並確認與 api-contract 一致
       - 全部 task 完成且工作區乾淨後，交由 code-reviewer 審查；修正由實作角色另開 commit
       - 審查通過後交由 acceptance-verifier 對照每個 Scenario 驗收，報告寫在 change 目錄的 acceptance.md；未通過不進入下一步
-      - acceptance.md 要附**人工驗收步驟**：啟動指令、用哪個角色登入、點哪幾頁、每一步預期看到什麼
-      - '**停點二**：步驟結束時自動提交，然後停下來等維護者親自驗收；維護者確認無誤才執行 /opsx:archive'
+      - acceptance.md 要附**人工驗收步驟**：啟動指令、用哪個角色登入、點哪幾頁、每一步預期看到什麼。它留作紀錄，不是停下來等維護者簽收的交付物
+      - 驗收通過後步驟結束時自動提交，**不停**；接著由 ops 執行 /opsx:archive，歸檔改動進同一張 PR，再走合併條件（CI 每個 job 都 completed 且 success、審查無阻斷意見、PR 可合併）
   archive:
     guidance:
       - 歸檔前確認工作區乾淨；驗收已經在 apply 的最後做過，這裡不重做驗收判定
       - 同步主規格與搬移到 archive 由 ops 執行；新 capability 的 Purpose 不留 TBD
-      - 步驟結束時自動提交；提交後停止，不自動開 PR
+      - "**在合併之前執行**：歸檔改動與程式進同一張 PR，main 上不會出現已合併但未歸檔的 change"
+      - 步驟結束時自動提交；PR 在 apply 期間就已經開好，這裡不另開

@@ -11,25 +11,46 @@
 //
 // Run: node scripts/check-er-data.mjs
 
-import { readFileSync, existsSync, readdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { readFileSync, existsSync, readdirSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-export const DICT_PATH = join(HERE, '..', 'docs', 'diagrams', 'architecture', 'data-table-dictionary.mdx');
-export const ER_PATH = join(HERE, '..', 'docs', 'diagrams', 'architecture', 'database-schema.er.json');
-export const INVENTORY_PATH = join(HERE, '..', 'docs', 'diagrams', 'architecture', 'data-field-inventory.mdx');
-const SPECS_DIR = join(HERE, '..', 'docs', 'specs');
-const ROOT = join(HERE, '..');
-const VERSIONS_DIR = join(ROOT, 'backend', 'alembic', 'versions');
+export const DICT_PATH = join(
+  HERE,
+  "..",
+  "docs",
+  "diagrams",
+  "architecture",
+  "data-table-dictionary.mdx",
+);
+export const ER_PATH = join(
+  HERE,
+  "..",
+  "docs",
+  "diagrams",
+  "architecture",
+  "database-schema.er.json",
+);
+export const INVENTORY_PATH = join(
+  HERE,
+  "..",
+  "docs",
+  "diagrams",
+  "architecture",
+  "data-field-inventory.mdx",
+);
+const SPECS_DIR = join(HERE, "..", "docs", "specs");
+const ROOT = join(HERE, "..");
+const VERSIONS_DIR = join(ROOT, "backend", "alembic", "versions");
 // The roots a spec page is allowed to cite by line: the screens it describes,
 // the documents beside it, and the rules it quotes. Anything else is a path
 // `checkPathCitations` will report as missing, which is the right answer.
-const CITABLE = ['design/prototype', 'docs', 'scripts', '.claude/skills', '.agents/skills'];
+const CITABLE = ["design/prototype", "docs", "scripts", ".claude/skills", ".agents/skills"];
 const CITABLE_EXT = /\.(html|js|mjs|cjs|json|mdx|md|css|ts|tsx|svg)$/;
 
 // One shape for a spec page code, so the two readers of it cannot drift apart.
-const SPEC_CODE = '(0[1-7]-0[0-9])';
+const SPEC_CODE = "(0[1-7]-0[0-9])";
 
 const NAME = /`([a-z][a-z0-9_]*)`/;
 const SEP = /^\|[\s:\-|]+\|$/;
@@ -41,18 +62,18 @@ const LANDED_COUNT = /已落地業務表：\*\*(\d+)\*\*/;
 
 function strip(cell) {
   return cell
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-    .replace(/\*\*/g, '')
-    .replace(/`/g, '')
-    .replace(/\s+/g, ' ')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/\*\*/g, "")
+    .replace(/`/g, "")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
 function nullability(cell) {
-  const c = cell.replace(/\*/g, '');
-  if (c.includes('系統寫入')) return 'system';
-  if (c.includes('可空')) return 'nullable';
-  return 'required';
+  const c = cell.replace(/\*/g, "");
+  if (c.includes("系統寫入")) return "system";
+  if (c.includes("可空")) return "nullable";
+  return "required";
 }
 
 // Only a column list with a comma makes a unique composite; the renderer draws
@@ -60,13 +81,13 @@ function nullability(cell) {
 // would assert constraints that do not exist. "不加唯一" is the dictionary
 // denying one outright, and a substring search for 唯一 is bitten by it.
 function singleUnique(key) {
-  const k = key.replace(/\*/g, '');
-  if (!k.includes('唯一')) return false;
+  const k = key.replace(/\*/g, "");
+  if (!k.includes("唯一")) return false;
   // The dictionary denies a unique key in more than one wording, and a
   // whitelist of two literals is how a future 不設唯一 would be read as
   // granting one -- the mistake this check exists to catch.
   if (/(不[加設建立]|無|毋須|不需)[^。；]{0,6}唯一/.test(k)) return false;
-  if (k.includes('部分唯一')) return false;
+  if (k.includes("部分唯一")) return false;
   // A column list is written in backticks. Prose in parentheses after 唯一
   // is a gloss, not a list.
   if (/`\s*[（(][^）)]*[,，][^）)]*[）)]\s*`/.test(k)) return false;
@@ -76,11 +97,14 @@ function singleUnique(key) {
 /** The dictionary, read as data: its groups with their declared counts, and a
  *  table per `### \`name\` — label` heading with one entry per column row. */
 export function parseDictionary(text) {
-  const lines = text.split('\n');
+  const lines = text.split("\n");
   const groups = [];
   let inGroupTable = false;
   for (const line of lines) {
-    if (/^### 九個領域分組/.test(line)) { inGroupTable = true; continue; }
+    if (/^### 九個領域分組/.test(line)) {
+      inGroupTable = true;
+      continue;
+    }
     if (inGroupTable && /^#{2,3} /.test(line)) inGroupTable = false;
     if (!inGroupTable) continue;
     const m = /^\| `([a-z_]+)` \| +(\d+) \|/.exec(line);
@@ -93,7 +117,12 @@ export function parseDictionary(text) {
   let inColumns = false;
   for (const line of lines) {
     const g = /^## [一二三四五六七八九十]+、`([a-z_]+)`/.exec(line);
-    if (g) { group = g[1]; table = null; inColumns = false; continue; }
+    if (g) {
+      group = g[1];
+      table = null;
+      inColumns = false;
+      continue;
+    }
     const t = /^### `([a-z][a-z0-9_]*)` — (.+?)\s*$/.exec(line);
     if (t && group) {
       // `group` is deliberately not carried: chapter seven covers two groups
@@ -104,25 +133,34 @@ export function parseDictionary(text) {
       inColumns = false;
       continue;
     }
-    const landed = table && !inColumns && line.startsWith('**已落地**') ? LANDED.exec(line) : null;
-    if (landed) { table.landed = landed[1]; continue; }
-    if (line.startsWith('| 識別碼 | 中文意義 |')) { inColumns = true; continue; }
+    const landed = table && !inColumns && line.startsWith("**已落地**") ? LANDED.exec(line) : null;
+    if (landed) {
+      table.landed = landed[1];
+      continue;
+    }
+    if (line.startsWith("| 識別碼 | 中文意義 |")) {
+      inColumns = true;
+      continue;
+    }
     if (!inColumns || !table) continue;
-    if (!line.startsWith('|')) { inColumns = false; continue; }
+    if (!line.startsWith("|")) {
+      inColumns = false;
+      continue;
+    }
     if (SEP.test(line.trim())) continue;
-    const cells = line.split('|').map((c) => c.trim());
+    const cells = line.split("|").map((c) => c.trim());
     if (cells.length < 7) continue;
-    const names = [...cells[1].matchAll(new RegExp(NAME, 'g'))].map((m) => m[1]);
+    const names = [...cells[1].matchAll(new RegExp(NAME, "g"))].map((m) => m[1]);
     if (names.length === 0) continue;
     const key = cells[5];
     const fk = /→\s*`?([a-z_]+)\./.exec(key);
-    const type = strip(cells[3]).replace(/\s*[×x]\s*\d+$/, '');
+    const type = strip(cells[3]).replace(/\s*[×x]\s*\d+$/, "");
     for (const name of names) {
       table.columns.push({
         name,
         type,
         required: nullability(cells[4]),
-        pk: key.includes('PK'),
+        pk: key.includes("PK"),
         unique: singleUnique(key),
         fk: fk ? fk[1] : null,
       });
@@ -136,13 +174,17 @@ export function parseDictionary(text) {
 function specSources(description) {
   // Every such line, not the first: a description may carry more than one,
   // and missing one makes a correct spec entry look like it over-lists.
-  const lines = [...(description || '').matchAll(/\*\*規格來源\*\*：(.*)/g)];
+  const lines = [...(description || "").matchAll(/\*\*規格來源\*\*：(.*)/g)];
   return lines.flatMap((line) =>
-    [...line[1].matchAll(new RegExp(`\\[${SPEC_CODE}\\]\\(([^)]+)\\)`, 'g'))].map((m) => ({ code: m[1], href: m[2] })));
+    [...line[1].matchAll(new RegExp(`\\[${SPEC_CODE}\\]\\(([^)]+)\\)`, "g"))].map((m) => ({
+      code: m[1],
+      href: m[2],
+    })),
+  );
 }
 
 function numbersIn(description) {
-  const m = /\*\*(\d+)\s*張候選表、(\d+)\s*欄、(\d+)\s*個單欄 FK\*\*/.exec(description || '');
+  const m = /\*\*(\d+)\s*張候選表、(\d+)\s*欄、(\d+)\s*個單欄 FK\*\*/.exec(description || "");
   return m ? { tables: Number(m[1]), columns: Number(m[2]), fks: Number(m[3]) } : null;
 }
 
@@ -171,59 +213,99 @@ export function checkErData(dictText, er, { specsDir = SPECS_DIR } = {}) {
   const dictByName = new Map(dict.tables.map((t) => [t.name, t]));
   const erByName = new Map(erTables.map((t) => [t.name, t]));
   for (const name of erByName.keys()) {
-    if (!dictByName.has(name)) out.push(`table "${name}" is in the diagram but not in the dictionary`);
+    if (!dictByName.has(name))
+      out.push(`table "${name}" is in the diagram but not in the dictionary`);
   }
   for (const name of dictByName.keys()) {
-    if (!erByName.has(name)) out.push(`table "${name}" is in the dictionary but not in the diagram`);
+    if (!erByName.has(name))
+      out.push(`table "${name}" is in the dictionary but not in the diagram`);
   }
 
   const groupKeys = new Set((er.groups || []).map((g) => g.key));
   for (const t of erTables) {
-    if (!groupKeys.has(t.group)) out.push(`table "${t.name}" points at group "${t.group}", which the diagram does not define`);
+    if (!groupKeys.has(t.group))
+      out.push(`table "${t.name}" points at group "${t.group}", which the diagram does not define`);
   }
   for (const col of er.layout?.columns || []) {
     for (const g of col.groups || []) {
-      if (!groupKeys.has(g)) out.push(`layout column "${col.key}" points at group "${g}", which the diagram does not define`);
+      if (!groupKeys.has(g))
+        out.push(
+          `layout column "${col.key}" points at group "${g}", which the diagram does not define`,
+        );
     }
   }
-  if (dict.groups.length === 0) out.push('§一 has no group table this checker can read counts from');
+  if (dict.groups.length === 0)
+    out.push("§一 has no group table this checker can read counts from");
   for (const g of dict.groups) {
     const actual = erTables.filter((t) => t.group === g.key).length;
-    if (actual !== g.count) out.push(`group "${g.key}" holds ${actual} tables in the diagram but the dictionary says ${g.count}`);
+    if (actual !== g.count)
+      out.push(
+        `group "${g.key}" holds ${actual} tables in the diagram but the dictionary says ${g.count}`,
+      );
   }
 
   for (const [name, dt] of dictByName) {
     const et = erByName.get(name);
     if (!et) continue;
-    if ((et.label || '') !== dt.label) out.push(`table "${name}": label is "${et.label}" in the diagram but "${dt.label}" in the dictionary`);
-    const dCols = dt.columns.map((c) => c.name).join(',');
-    const eCols = (et.columns || []).map((c) => c.name).join(',');
+    if ((et.label || "") !== dt.label)
+      out.push(
+        `table "${name}": label is "${et.label}" in the diagram but "${dt.label}" in the dictionary`,
+      );
+    const dCols = dt.columns.map((c) => c.name).join(",");
+    const eCols = (et.columns || []).map((c) => c.name).join(",");
     if (dCols !== eCols) {
-      out.push(`table "${name}" has columns [${eCols}] in the diagram but [${dCols}] in the dictionary`);
+      out.push(
+        `table "${name}" has columns [${eCols}] in the diagram but [${dCols}] in the dictionary`,
+      );
       continue;
     }
     for (const [i, dc] of dt.columns.entries()) {
       const ec = et.columns[i];
       const where = `${name}.${dc.name}`;
-      if ((ec.type || '') !== dc.type) out.push(`${where}: type is "${ec.type}" in the diagram but "${dc.type}" in the dictionary`);
-      if ((ec.required || '') !== dc.required) out.push(`${where}: nullability is "${ec.required}" in the diagram but "${dc.required}" in the dictionary`);
-      if (!!ec.pk !== dc.pk) out.push(`${where}: primary key is ${!!ec.pk} in the diagram but ${dc.pk} in the dictionary`);
-      if (!!ec.unique !== dc.unique) out.push(`${where}: single-column unique is ${!!ec.unique} in the diagram but ${dc.unique} in the dictionary`);
+      if ((ec.type || "") !== dc.type)
+        out.push(
+          `${where}: type is "${ec.type}" in the diagram but "${dc.type}" in the dictionary`,
+        );
+      if ((ec.required || "") !== dc.required)
+        out.push(
+          `${where}: nullability is "${ec.required}" in the diagram but "${dc.required}" in the dictionary`,
+        );
+      if (!!ec.pk !== dc.pk)
+        out.push(
+          `${where}: primary key is ${!!ec.pk} in the diagram but ${dc.pk} in the dictionary`,
+        );
+      if (!!ec.unique !== dc.unique)
+        out.push(
+          `${where}: single-column unique is ${!!ec.unique} in the diagram but ${dc.unique} in the dictionary`,
+        );
       const efk = ec.fk || null;
-      if (efk !== dc.fk) out.push(`${where}: foreign key points at "${efk}" in the diagram but "${dc.fk}" in the dictionary`);
-      if (efk && !erByName.has(efk)) out.push(`${where}: foreign key points at "${efk}", which is not a table`);
+      if (efk !== dc.fk)
+        out.push(
+          `${where}: foreign key points at "${efk}" in the diagram but "${dc.fk}" in the dictionary`,
+        );
+      if (efk && !erByName.has(efk))
+        out.push(`${where}: foreign key points at "${efk}", which is not a table`);
     }
   }
 
   const claimed = numbersIn(er.meta?.description);
   if (!claimed) {
-    out.push('the summary in meta.description no longer matches the checkable form "**N 張候選表、N 欄、N 個單欄 FK**"');
+    out.push(
+      'the summary in meta.description no longer matches the checkable form "**N 張候選表、N 欄、N 個單欄 FK**"',
+    );
   } else {
     const columns = erTables.reduce((n, t) => n + (t.columns || []).length, 0);
     const fks = erTables.reduce((n, t) => n + (t.columns || []).filter((c) => c.fk).length, 0);
-    if (claimed.tables !== erTables.length) out.push(`the summary says ${claimed.tables} tables but the diagram holds ${erTables.length}`);
-    if (claimed.columns !== columns) out.push(`the summary says ${claimed.columns} columns but the diagram holds ${columns}`);
-    if (claimed.fks !== fks) out.push(`the summary says ${claimed.fks} single-column foreign keys but the diagram holds ${fks}`);
+    if (claimed.tables !== erTables.length)
+      out.push(
+        `the summary says ${claimed.tables} tables but the diagram holds ${erTables.length}`,
+      );
+    if (claimed.columns !== columns)
+      out.push(`the summary says ${claimed.columns} columns but the diagram holds ${columns}`);
+    if (claimed.fks !== fks)
+      out.push(
+        `the summary says ${claimed.fks} single-column foreign keys but the diagram holds ${fks}`,
+      );
   }
 
   // Landed status: the dictionary is upstream, so a revision the diagram
@@ -231,23 +313,34 @@ export function checkErData(dictText, er, { specsDir = SPECS_DIR } = {}) {
   for (const [name, dt] of dictByName) {
     const et = erByName.get(name);
     if (!et) continue;
-    const erLanded = LANDED.exec(et.description || '')?.[1] ?? null;
+    const erLanded = LANDED.exec(et.description || "")?.[1] ?? null;
     if (erLanded !== dt.landed) {
-      out.push(`table "${name}": landed revision is ${erLanded ? `"${erLanded}"` : 'none'} in the diagram but ${dt.landed ? `"${dt.landed}"` : 'none'} in the dictionary`);
+      out.push(
+        `table "${name}": landed revision is ${erLanded ? `"${erLanded}"` : "none"} in the diagram but ${dt.landed ? `"${dt.landed}"` : "none"} in the dictionary`,
+      );
     }
   }
-  const landedClaim = LANDED_COUNT.exec(er.meta?.description || '');
+  const landedClaim = LANDED_COUNT.exec(er.meta?.description || "");
   const landedCount = dict.tables.filter((t) => t.landed).length;
   if (!landedClaim) {
-    out.push('meta.description no longer states the landed count in the checkable form "已落地業務表：**N**"');
+    out.push(
+      'meta.description no longer states the landed count in the checkable form "已落地業務表：**N**"',
+    );
   } else if (Number(landedClaim[1]) !== landedCount) {
-    out.push(`meta.description says ${landedClaim[1]} landed tables but the dictionary marks ${landedCount}`);
+    out.push(
+      `meta.description says ${landedClaim[1]} landed tables but the dictionary marks ${landedCount}`,
+    );
   }
 
   for (const t of erTables) {
     for (const { code, href } of specSources(t.description)) {
       const rel = /^\/notes\/specs\/(.+?)(#.*)?$/.exec(href);
-      if (!rel) { out.push(`table "${t.name}" cites ${code} with a link this checker cannot resolve: ${href}`); continue; }
+      if (!rel) {
+        out.push(
+          `table "${t.name}" cites ${code} with a link this checker cannot resolve: ${href}`,
+        );
+        continue;
+      }
       if (!existsSync(join(specsDir, `${rel[1]}.mdx`))) {
         out.push(`table "${t.name}" cites ${code} at ${href}, but that spec page does not exist`);
       }
@@ -273,22 +366,24 @@ const CITATION = /`:(\d+)`\s*(?:的\s*)?「([^」]{2,})」/g;
 // A link, not a bare mention: `specSources()` refuses prose links for the same
 // reason — a page named in passing is usually a contrast, not a declaration —
 // and attribution has to be at least as strict, or a contrast steals the quote.
-const citedPage = () => new RegExp(`\\[${SPEC_CODE}\\]\\(`, 'g');
+const citedPage = () => new RegExp(`\\[${SPEC_CODE}\\]\\(`, "g");
 
 // The dictionary quotes a table row as 欄名｜值 while the page writes it as
 // | 欄名 | 值 |, and bold moves around, so compare without either.
-const flatten = (text) => text.replace(/\*\*/g, '').replace(/｜/g, '|').replace(/\s+/g, '');
+const flatten = (text) => text.replace(/\*\*/g, "").replace(/｜/g, "|").replace(/\s+/g, "");
 
 export function checkLineCitations(sources, pages) {
   const out = [];
-  const byCode = new Map(pages.map((p) => [p.code, p.text.split('\n')]));
+  const byCode = new Map(pages.map((p) => [p.code, p.text.split("\n")]));
   for (const { rel, text } of sources) {
-    for (const [i, line] of text.split('\n').entries()) {
+    for (const [i, line] of text.split("\n").entries()) {
       for (const m of line.matchAll(CITATION)) {
         const where = `${rel}:${i + 1}`;
         const codes = [...line.slice(0, m.index).matchAll(citedPage())];
         if (codes.length === 0) {
-          out.push(`${where} quotes :${m[1]} but names no spec page before it, so nothing can check that line`);
+          out.push(
+            `${where} quotes :${m[1]} but names no spec page before it, so nothing can check that line`,
+          );
           continue;
         }
         const code = codes[codes.length - 1][1];
@@ -308,7 +403,9 @@ export function checkLineCitations(sources, pages) {
           const want = flatten(fragment);
           if (want.length < 2) continue;
           if (!actual.includes(want)) {
-            out.push(`${where} cites ${code} at :${n} for 「${fragment.trim()}」, but that line reads 「${lines[n - 1].trim().slice(0, 60)}」`);
+            out.push(
+              `${where} cites ${code} at :${n} for 「${fragment.trim()}」, but that line reads 「${lines[n - 1].trim().slice(0, 60)}」`,
+            );
           }
         }
       }
@@ -340,21 +437,24 @@ export function checkPathCitations(sources, files) {
   const out = [];
   const paths = [...files.keys()];
   for (const { rel, text } of sources) {
-    let section = '';
+    let section = "";
     let fenced = false;
     let lastPath = null;
-    for (const [i, line] of text.split('\n').entries()) {
+    for (const [i, line] of text.split("\n").entries()) {
       // A fence hides both kinds of line: a `foo.js:12` inside an example is
       // not a citation, and a `## 變更紀錄` inside one must not silence the
       // rest of the page.
-      if (/^\s*(```|~~~)/.test(line)) { fenced = !fenced; continue; }
+      if (/^\s*(```|~~~)/.test(line)) {
+        fenced = !fenced;
+        continue;
+      }
       if (fenced) continue;
-      if (line.startsWith('## ')) section = line.slice(3).trim();
-      if (section === '變更紀錄') continue;
+      if (line.startsWith("## ")) section = line.slice(3).trim();
+      if (section === "變更紀錄") continue;
       lastPath = null;
       for (const m of line.matchAll(PATH_CITE)) {
         const where = `${rel}:${i + 1}`;
-        const cite = `${m[1] || ''}:${m[2]}${m[3] ? `-${m[3]}` : ''}`;
+        const cite = `${m[1] || ""}:${m[2]}${m[3] ? `-${m[3]}` : ""}`;
         let path = m[1] || lastPath;
         if (!path) {
           out.push(`${where} cites :${m[2]} but names no file before it on that line`);
@@ -367,10 +467,10 @@ export function checkPathCitations(sources, files) {
           continue;
         }
         if (hits.length > 1) {
-          out.push(`${where} cites ${cite}, but ${path} is ambiguous: ${hits.join(', ')}`);
+          out.push(`${where} cites ${cite}, but ${path} is ambiguous: ${hits.join(", ")}`);
           continue;
         }
-        const lines = files.get(hits[0]).split('\n');
+        const lines = files.get(hits[0]).split("\n");
         const from = Number(m[2]);
         const to = m[3] ? Number(m[3]) : from;
         if (from < 1 || to > lines.length) {
@@ -392,11 +492,15 @@ export function checkPathCitations(sources, files) {
         for (const fragment of quote.split(/[…⋯]+|\.{3,}/)) {
           const want = flatten(fragment);
           if (want.length < 2) {
-            out.push(`${where} cites ${cite} for 「${fragment.trim()}」, which is too short to anchor anything`);
+            out.push(
+              `${where} cites ${cite} for 「${fragment.trim()}」, which is too short to anchor anything`,
+            );
             continue;
           }
           if (!span.some((l) => l.includes(want))) {
-            out.push(`${where} cites ${cite} for 「${fragment.trim()}」, but ${hits[0]} reads 「${lines[from - 1].trim().slice(0, 60)}」 there`);
+            out.push(
+              `${where} cites ${cite} for 「${fragment.trim()}」, but ${hits[0]} reads 「${lines[from - 1].trim().slice(0, 60)}」 there`,
+            );
           }
         }
       }
@@ -413,12 +517,16 @@ export function checkLandedRevisions(dictText, files) {
   for (const t of parseDictionary(dictText).tables) {
     if (!t.landed) continue;
     if (files === null) {
-      out.push(`table "${t.name}" is marked landed at revision "${t.landed}", but backend/alembic/versions/ does not exist`);
+      out.push(
+        `table "${t.name}" is marked landed at revision "${t.landed}", but backend/alembic/versions/ does not exist`,
+      );
       continue;
     }
-    const decl = new RegExp(`^revision(?::\\s*str)?\\s*=\\s*['"]${t.landed}['"]`, 'm');
+    const decl = new RegExp(`^revision(?::\\s*str)?\\s*=\\s*['"]${t.landed}['"]`, "m");
     if (!files.some((f) => decl.test(f))) {
-      out.push(`table "${t.name}" is marked landed at revision "${t.landed}", which no migration in backend/alembic/versions/ declares`);
+      out.push(
+        `table "${t.name}" is marked landed at revision "${t.landed}", which no migration in backend/alembic/versions/ declares`,
+      );
     }
   }
   return out;
@@ -426,7 +534,9 @@ export function checkLandedRevisions(dictText, files) {
 
 function migrationFiles(dir = VERSIONS_DIR) {
   if (!existsSync(dir)) return null;
-  return readdirSync(dir).filter((f) => f.endsWith('.py')).map((f) => readFileSync(join(dir, f), 'utf8'));
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".py"))
+    .map((f) => readFileSync(join(dir, f), "utf8"));
 }
 
 /** The table list each spec page's planning entry names must be exactly the
@@ -445,18 +555,25 @@ export function checkSpecEntries(er, pages) {
   }
   for (const { code, text, rel } of pages) {
     const note = /:::note\{title="資料規劃入口"\}([\s\S]*?)\n:::/.exec(text);
-    if (!note) { out.push(`${rel}: has no 資料規劃入口 entry`); continue; }
+    if (!note) {
+      out.push(`${rel}: has no 資料規劃入口 entry`);
+      continue;
+    }
     const listed = [...note[1].matchAll(/`([a-z][a-z0-9_]*)`/g)].map((m) => m[1]);
     const want = [...(expected.get(code) || [])].sort();
     const got = [...new Set(listed)].sort();
-    if (want.join(',') !== got.join(',')) {
-      out.push(`${rel}: the entry lists [${got.join(', ')}] but the dictionary's spec sources give [${want.join(', ')}]`);
+    if (want.join(",") !== got.join(",")) {
+      out.push(
+        `${rel}: the entry lists [${got.join(", ")}] but the dictionary's spec sources give [${want.join(", ")}]`,
+      );
     }
     const claimed = /\*\*(\d+) 張\*\*/.exec(note[1]);
     if (claimed && Number(claimed[1]) !== want.length) {
       out.push(`${rel}: the entry says ${claimed[1]} tables but names ${want.length}`);
     } else if (!claimed && want.length > 0) {
-      out.push(`${rel}: the entry names ${want.length} tables but states no count in the checkable form "**N 張**"`);
+      out.push(
+        `${rel}: the entry names ${want.length} tables but states no count in the checkable form "**N 張**"`,
+      );
     }
   }
   return out;
@@ -470,7 +587,11 @@ function specPages(specsDir = SPECS_DIR) {
       const m = /^(\d\d)-.*\.mdx$/.exec(f);
       if (!m) continue;
       const rel = `specs/${mod.name}/${f}`;
-      pages.push({ code: `${mod.name.slice(0, 2)}-${m[1]}`, rel, text: readFileSync(join(specsDir, mod.name, f), 'utf8') });
+      pages.push({
+        code: `${mod.name.slice(0, 2)}-${m[1]}`,
+        rel,
+        text: readFileSync(join(specsDir, mod.name, f), "utf8"),
+      });
     }
   }
   return pages.sort((a, b) => a.code.localeCompare(b.code));
@@ -484,8 +605,8 @@ export function citableFiles(root = ROOT, roots = CITABLE) {
     if (!existsSync(abs)) return;
     for (const e of readdirSync(abs, { withFileTypes: true })) {
       // The roots above already name the dot directories that count.
-      if (e.name.startsWith('.')) continue;
-      if (e.name === 'node_modules') continue;
+      if (e.name.startsWith(".")) continue;
+      if (e.name === "node_modules") continue;
       const next = `${rel}/${e.name}`;
       if (e.isDirectory()) walk(next);
       else if (CITABLE_EXT.test(e.name)) paths.push(next);
@@ -496,30 +617,42 @@ export function citableFiles(root = ROOT, roots = CITABLE) {
   return {
     keys: () => paths,
     get: (p) => {
-      if (!cache.has(p)) cache.set(p, readFileSync(join(root, p), 'utf8'));
+      if (!cache.has(p)) cache.set(p, readFileSync(join(root, p), "utf8"));
       return cache.get(p);
     },
   };
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const dictText = readFileSync(DICT_PATH, 'utf8');
-  const erText = readFileSync(ER_PATH, 'utf8');
+  const dictText = readFileSync(DICT_PATH, "utf8");
+  const erText = readFileSync(ER_PATH, "utf8");
   const er = JSON.parse(erText);
   const pages = specPages();
   const errors = checkErData(dictText, er)
     .concat(checkSpecEntries(er, pages))
     .concat(checkLandedRevisions(dictText, migrationFiles()))
-    .concat(checkLineCitations([
-      { rel: 'diagrams/architecture/data-table-dictionary.mdx', text: dictText },
-      { rel: 'diagrams/architecture/database-schema.er.json', text: erText },
-      { rel: 'diagrams/architecture/data-field-inventory.mdx', text: readFileSync(INVENTORY_PATH, 'utf8') },
-    ], pages))
-    .concat(checkPathCitations(
-      pages.map((p) => ({ rel: p.rel, text: p.text })),
-      citableFiles(),
-    ));
+    .concat(
+      checkLineCitations(
+        [
+          { rel: "diagrams/architecture/data-table-dictionary.mdx", text: dictText },
+          { rel: "diagrams/architecture/database-schema.er.json", text: erText },
+          {
+            rel: "diagrams/architecture/data-field-inventory.mdx",
+            text: readFileSync(INVENTORY_PATH, "utf8"),
+          },
+        ],
+        pages,
+      ),
+    )
+    .concat(
+      checkPathCitations(
+        pages.map((p) => ({ rel: p.rel, text: p.text })),
+        citableFiles(),
+      ),
+    );
   for (const e of errors) console.error(`ERROR ${e}`);
   if (errors.length > 0) process.exit(1);
-  console.log('check-er-data: dictionary, diagram, landed revisions, spec entries and both kinds of line citation agree');
+  console.log(
+    "check-er-data: dictionary, diagram, landed revisions, spec entries and both kinds of line citation agree",
+  );
 }

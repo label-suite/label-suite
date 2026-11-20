@@ -13,6 +13,7 @@ model: opus
 2. **`AGENTS.md`**——本專案唯一的規則來源，**沒有** `.claude/rules/`。至少讀 Hard Rules 3（依賴用 `uv add`，禁止 `pip install`）、5（任務類型不得寫死）、6（測試集答案不外露）、7（CORS 不得 `allow_origins=["*"]`）、8（祕密只從環境變數來）
 3. `docs/development/architecture.mdx`：§後端分層（含請求流程圖與逐層職責表）、§認證與授權、§任務設定、§測試集答案不外露、§資料庫雙層、§測試分層
 4. 既有程式慣例：相鄰模組的寫法、共用的例外與依賴、認證與授權的掛點
+5. 領域規範：`docs/development/rules/backend-agent-rules.mdx` B1 分層與允許的 import、B3 session 的生命週期、B4 交易的擁有層、B5 資料存取一律走 SQLAlchemy；`docs/development/rules/api-agent-rules.mdx` A1 路由、HTTP status、operationId 與回應外層、A2 request 驗證與 response 建模；`docs/development/rules/security-agent-rules.mdx` S3 授權的四段順序、S4 遮蔽與 allowlist 在後端；`docs/development/rules/testing-agent-rules.mdx` T1 三層的範圍、位置、指令與生命週期、T2 TDD 與紅燈的原因；跨領域的 `docs/development/rules/agent-rules.mdx`
 
 ## 技術棧與結構
 
@@ -22,12 +23,12 @@ model: opus
 
 ## 架構原則（`architecture.mdx` §後端分層 的逐層職責表）
 
-| 層 | 做 | 不做 |
-| :--- | :--- | :--- |
-| Router | 路由、request／response schema、取得呼叫者、**套用欄位遮蔽** | **不碰 Repository**、不寫商業邏輯 |
-| Service | 查詢條件、狀態機轉移、權限以外的業務卡控、寫稽核事件 | 不組 HTTP 回應、不自己讀 `Accept-Language` |
-| Repository 與 model | 資料存取 | **不寫原生 SQL**（Alembic 的 DDL 例外） |
-| Celery task | 評分、IAA 計算、匯出等長時間工作 | 不處理 HTTP、不回傳使用者可見訊息 |
+| 層                  | 做                                                           | 不做                                       |
+| :------------------ | :----------------------------------------------------------- | :----------------------------------------- |
+| Router              | 路由、request／response schema、取得呼叫者、**套用欄位遮蔽** | **不碰 Repository**、不寫商業邏輯          |
+| Service             | 查詢條件、狀態機轉移、權限以外的業務卡控、寫稽核事件         | 不組 HTTP 回應、不自己讀 `Accept-Language` |
+| Repository 與 model | 資料存取                                                     | **不寫原生 SQL**（Alembic 的 DDL 例外）    |
+| Celery task         | 評分、IAA 計算、匯出等長時間工作                             | 不處理 HTTP、不回傳使用者可見訊息          |
 
 - **任務狀態機只實作在 Service 層**（ADR-022）。反向轉移除了 `waiting_iaa_confirmation` 回 `draft` 與回 `dry_run_in_progress` 兩條以外都不允許。完整轉移條件**以 `docs/specs/` 的規格書與 PRD §共用狀態機為準**，不以 ADR-022 的表為準
 - 授權依序判定四件事（§認證與授權）：登入者與帳號狀態 → 系統角色與任務成員身分 → permission key 與矩陣的 cell → 操作本身的附加條件。**未知的 key、缺少的列、層級不符、成員身分失效一律拒絕**；JWT 的 `role` claim 只供顯示，**授權不看它**
@@ -41,13 +42,13 @@ model: opus
 - **operationId 由 `generate_unique_id_function` 固定成「動詞加資源」**（例 `listUsers`、`getUser`），不手寫也不逐個覆寫
 - request 的 body／query／path 都要驗型別、範圍與未知欄位政策；response 明確建模，**敏感欄位不可先回前端再遮蔽**
 - **看不到的資源回 404**，不得用 403 洩漏它存在；錯誤訊息不得回傳內部識別碼或堆疊
-- i18n 依 ADR-026：UI 字串由前端，後端 `detail` 由後端依 `Accept-Language` 取字
+- i18n 依 [api-agent-rules A8](../../docs/development/rules/api-agent-rules.mdx#a8-i18n-的兩層分工)：UI 字串由前端，回應外層的 `message` 由後端依 `Accept-Language` 取字
 - 改到 Router 或 schema 之後，重新匯出 `openapi.json` 並確認與 `api-contract.md` 一致（指令由骨架 change 定義）
 
 ## 測試（`architecture.mdx` §測試分層）
 
-| 名稱 | 工具 | 位置 |
-| :--- | :--- | :--- |
+| 名稱                | 工具                                  | 位置             |
+| :------------------ | :------------------------------------ | :--------------- |
 | unit 與 integration | **pytest 加 pytest-asyncio 加 httpx** | `backend/tests/` |
 
 - **Supertest 式的 API 測試叫 integration，不叫 E2E**；E2E 專指根目錄 `e2e/` 的 Playwright

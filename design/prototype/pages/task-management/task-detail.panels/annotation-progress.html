@@ -8,7 +8,7 @@
     <div class="progress-metric-grid">
       <article class="metric"><span id="progressMetricTotalLabel">總樣本數</span><strong id="progressMetricTotalValue">-</strong></article>
       <article class="metric"><span id="progressMetricCompletedLabel">已完成數</span><strong id="progressMetricCompletedValue">-</strong></article>
-      <article class="metric" data-testid="annotation-submission-progress"><span id="progressMetricRateLabel">標記提交進度</span><strong id="progressMetricRateValue">-</strong></article>
+      <article class="metric" data-testid="annotation-submission-progress"><span id="progressMetricRateLabel">標記送出進度</span><strong id="progressMetricRateValue">-</strong></article>
       <article class="metric"><span id="progressMetricSpeedLabel">平均速度</span><strong id="progressMetricSpeedValue">-</strong></article>
       <article class="metric"><span id="progressMetricEtaLabel">剩餘估計時間</span><strong id="progressMetricEtaValue">-</strong></article>
       <article class="metric"><span id="progressMetricIAALabel">IAA</span><strong id="progressMetricIAAValue">-</strong></article>
@@ -53,7 +53,7 @@
       <select class="sort-select" id="memberProgressSort" aria-label="Sort member progress">
         <option value="completed_desc" id="progressSortCompleted">依已完成數（高到低）</option>
         <option value="speed_desc" id="progressSortSpeed">依平均速度（高到低）</option>
-        <option value="submitted_desc" id="progressSortSubmitted">依最後提交（新到舊）</option>
+        <option value="submitted_desc" id="progressSortSubmitted">依最後送出（新到舊）</option>
       </select>
     </div>
     <div class="table-wrap">
@@ -68,7 +68,7 @@
               <th id="thProgressTotal">總數量</th>
               <th id="thProgressSpeed">平均速度</th>
               <th id="thProgressBar">個人進度條</th>
-              <th id="thProgressLastSubmitted">最後提交時間</th>
+              <th id="thProgressLastSubmitted">最後送出時間</th>
               <th id="thProgressQuality">品質旗標</th>
               <th id="thProgressDetails">操作</th>
             </tr>
@@ -124,7 +124,7 @@
               <th id="thDetailSampleId">樣本 ID</th>
               <th id="thDetailTextPreview">文本摘要</th>
               <th id="thDetailLabelResult">標記結果</th>
-              <th id="thDetailSubmittedAt">提交時間</th>
+              <th id="thDetailSubmittedAt">送出時間</th>
               <th id="thDetailReviewStatus">審核狀態</th>
             </tr>
           </thead>

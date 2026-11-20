@@ -1,6 +1,6 @@
 # Empty State
 
-> 正典章節：`MASTER.md` §Empty State ｜行為契約 [UXC-09](../ux-conventions.md#uxc-09-首次使用的空與篩不到的空是兩種)｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
+> 正典章節：`MASTER.md` §Empty State ｜行為契約 [UXC-09](../ux-conventions.md#uxc-09-首次使用的空與篩不到的空是兩種)｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c` ｜未標檔名的行號指 `design/prototype/pages/shared/empty-state.css`
 
 ## 結構
 
@@ -65,6 +65,8 @@
 
 本批次**沒有可重現的視圖**：`components-showcase.html` 不含 empty state，而 b1 的九個畫面一個都沒用到它。最近的樣本在 b2 的 `task-management/task-list#state-filtered-empty`。→ `../design-gaps.md` G-21
 
+**b2 補上**：載入共用 `empty-state.css` 的可重現樣本是 `admin/user-management#state-filtered-empty`（`empty-state-page`）與 `task-management/task-detail#tab-annotation-progress`（`empty-state-panel`，資料為空時）。`task-list#state-filtered-empty` 是表格內的一列，不用這個 class。
+
 ## shadcn 對照
 
 沒有對應原語。
@@ -77,6 +79,17 @@
 
 | 畫面 | 怎麼用 |
 | :--- | :--- |
-| `account/profile` | **載了沒用**。它連 `sidebar.css`（`profile.html:12`），因此透過上述 `@import` 拿到 `empty-state.css`；但 `profile.html` 全檔 `empty-state` 出現 **0 次** → `../design-gaps.md` G-21 |
+| `account/profile` | **載了沒用**。它連 `sidebar.css`（`profile.html:13`），因此透過上述 `@import` 拿到 `empty-state.css`；但 `profile.html` 全檔 `empty-state` 出現 **0 次** → `../design-gaps.md` G-21 |
+| `admin/user-management#state-filtered-empty` | `empty-state-page`（`user-management.html:456`–`:468`），含「清除篩選」；稽核抽屜用 `empty-state-compact`（`shared/audit-drawer.js:51`） |
+| `admin/role-settings`（稽核抽屜，交付包未列） | `empty-state-compact`（`shared/audit-drawer.js:51`） |
+| `task-management/task-list`（`#state-filtered-empty`、`#param-view-empty`） | **表格內一列**（`createEmptyRow`，`task-list.html:834`–`:858`），不是 `.empty-state` class；兩種文案、只有篩選無結果才有清除鈕 → `../ux-conventions.md` UXC-09 |
+| `task-management/task-detail`（`#tab-annotation-progress`、`#tab-annotation-results`、`#tab-work-log`） | `empty-state-panel`（`annotation-progress.html:157`、`annotation-results.html:164`、`work-log.html:84`） |
+| `task-management/task-new#state-step2` | `empty-state-compact`（`task-config.engine.js:1890`） |
+| `dashboard/dashboard#param-scenario-reviewer` | `empty-state-compact`（`dashboard.js:431`） |
+| `annotation/annotation-list`（`#state-empty`、`#state-filtered-empty`） | `empty-state-page`（`annotation-list.html:508`）；兩種空換文案，只有篩不到才給清除篩選（`renderEmptyState`，`:1923`–`:1938`）→ UXC-09 |
+| `annotation/annotation-list`（`#state-no-task`、`#state-task-not-found`、`#param-notice-no-actionable-review`） | `empty-state-panel`（`#taskNotFound`，`annotation-list.html:467`；`#noActionableNotice`，`role="status"`，`:471`）。沒帶任務時標題是「尚未選擇任務」，與「找不到這個任務」分開（#423）→ `../design-gaps.md` G-48 |
+| `annotation/annotation-workspace#tab-history` | 沒有操作紀錄時 `empty-state-compact`（`annotation-workspace.config.js:2280`） |
+| `dataset/dataset-analysis-list`（`#state-filtered-empty`、`#param-view-empty`） | 表格內一列的 `empty-state empty-state-cell`（`createEmptyRow`，`dataset-analysis-list.view.js:133`），依參數換文案；清除鈕在工具列 |
+| `dataset/dataset-analysis-detail`（`#state-stats-empty`、`#param-q-state-dry-run-in-progress`、`#param-q-state-report-pending`、`#param-q-state-report-generating`、`#state-quality-single-label`、`#state-quality-multi-label`、`#state-quality-single-dim`、`#state-quality-relation-identification`） | `empty-state-panel`：統計 `#statsEmpty`（`dataset-analysis-detail.html:280`）、品質 `#qualityEmpty`（`:299`）；四個 quality partial 另有 `empty-state-panel empty-state-compact` |
 
-shipped 使用頁面在 b2（`admin/user-management`、`admin/role-settings`、`task-management/task-list`、`task-detail` 的 3 個 panel、`dashboard.js`）、b3（`annotation/annotation-list`、`annotation-workspace`）、b4（`dataset-analysis-list`、`dataset-analysis-detail` 及 4 個 partial），待那幾批補。
+b2 已補上（見上表），G-21 的「沒有樣本」對這個元件不再成立。b3 已補上（見上表）。b4 已補上（見上表）。

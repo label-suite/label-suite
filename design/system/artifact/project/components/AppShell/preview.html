@@ -1,0 +1,117 @@
+<!-- @dsCard group="Navigation" height=860 width=1040 -->
+<!doctype html>
+<html lang="zh-TW" data-theme="light">
+<head>
+<meta charset="utf-8">
+<style>
+  /* preview layout only; the frame preloads tokens.css and bundle.css */
+  html body { margin: 0; padding: 24px; display: block; }
+  .ds-stage { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .ds-caption { font-size: 12px; color: var(--color-ink-muted); }
+  .ds-stage { flex-direction: column; align-items: stretch; gap: 8px; }
+  /* sidebar.css gives .navbar height:100vh + position:sticky; pin it to the preview box instead */
+  .ds-shell { display: flex; height: 780px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; background: var(--bg-page); }
+  .ds-shell .navbar { height: 100%; position: static; }
+  .ds-shell main { flex: 1; min-width: 0; }
+  .ds-content { padding: var(--space-lg); }
+  .ds-content h1 { margin: 0 0 var(--space-md); font-size: 22px; }
+  .ds-block { height: 120px; border: 1px dashed var(--color-border); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+  <div class="ds-stage">
+    <span class="ds-caption">桌面版展開狀態：側欄由 sidebar.js 注入；系統管理子選單展開（僅超級管理員、桌面、展開時）；工作頁籤列掛在 &lt;main&gt; 第一個子元素</span>
+    <div class="ds-shell">
+      <header class="navbar" role="banner">
+        <div class="brand-section">
+          <a class="navbar-brand" href="#" aria-label="Label Suite 首頁">
+            <div class="navbar-logo" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: var(--color-on-cta)"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="7" y1="7" x2="7.01" y2="7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <span class="navbar-wordmark">Label Suite</span>
+          </a>
+          <button class="lang-toggle" type="button" aria-label="切換語言">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+            <span>ZH</span>
+          </button>
+        </div>
+
+        <nav class="navbar-center" aria-label="Main navigation">
+          <a class="nav-link" href="#" title="儀表板" aria-label="儀表板"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg><span>儀表板</span></a>
+          <a class="nav-link active" href="#" title="任務管理" aria-label="任務管理" aria-current="page"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg><span>任務管理</span></a>
+          <a class="nav-link" href="#" title="標記作業" aria-label="標記作業"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><span>標記作業</span></a>
+          <a class="nav-link" href="#" title="資料集分析" aria-label="資料集分析"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h18v18H3z"/><path d="M9 9h6v6H9z"/><path d="M3 9h6"/><path d="M15 9h6"/></svg><span>資料集分析</span></a>
+          <div class="nav-link-group">
+            <button type="button" class="nav-link" aria-haspopup="true" aria-expanded="true" title="系統管理" aria-label="系統管理">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <span>系統管理</span>
+              <svg class="nav-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="nav-submenu open" role="menu">
+              <a class="nav-sublink current" role="menuitem" href="#" aria-current="page"><span>使用者管理</span></a>
+              <a class="nav-sublink" role="menuitem" href="#"><span>角色設定</span></a>
+            </div>
+          </div>
+          <a class="nav-link" href="#" title="個人設定" aria-label="個人設定"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>個人設定</span></a>
+        </nav>
+
+        <div class="nav-actions">
+          <div class="sidebar-utility-row" aria-label="全域工具">
+            <button class="sidebar-utility-btn" type="button" aria-label="快捷鍵" title="快捷鍵">
+              <svg class="sidebar-utility-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01"/><path d="M10 9h.01"/><path d="M14 9h.01"/><path d="M18 9h.01"/><path d="M8 13h8"/></svg>
+            </button>
+            <button class="sidebar-utility-btn sidebar-theme-toggle-btn" type="button" aria-label="切換為深色模式" title="切換為深色模式">
+              <svg class="sidebar-utility-icon" data-theme-toggle-icon="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+              <svg class="sidebar-utility-icon" data-theme-toggle-icon="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+            </button>
+            <button class="sidebar-utility-btn" type="button" aria-label="通知" title="通知" aria-haspopup="true" aria-expanded="false">
+              <span class="notif-bell-wrap">
+                <svg class="sidebar-utility-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                <span class="notif-badge" aria-hidden="true"></span>
+              </span>
+            </button>
+          </div>
+          <div class="user-chip">
+            <a class="user-chip-profile" href="#" aria-label="前往個人設定">
+              <div class="avatar" aria-hidden="true">林</div>
+              <div class="user-info">
+                <span class="user-name">林雅婷</span>
+                <span class="user-role">一般使用者</span>
+              </div>
+            </a>
+            <button class="logout-btn" type="button" aria-label="登出" title="登出">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <div class="workspace-tab-bar" role="tablist" aria-label="工作頁籤">
+          <div class="workspace-tab" role="tab" aria-selected="false" tabindex="0" title="任務管理">
+            <svg class="workspace-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+            <span class="workspace-tab-label">任務管理</span>
+            <button type="button" class="workspace-tab-close" aria-label="關閉 任務管理"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+          </div>
+          <div class="workspace-tab active" role="tab" aria-selected="true" tabindex="0" title="任務詳情 情緒分類 v2">
+            <svg class="workspace-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+            <span class="workspace-tab-kind workspace-tab-kind--neutral">任務詳情</span>
+            <span class="workspace-tab-label">情緒分類 v2</span>
+            <button type="button" class="workspace-tab-close" aria-label="關閉 任務詳情 情緒分類 v2"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+          </div>
+          <div class="workspace-tab" role="tab" aria-selected="false" tabindex="0" title="審核 新聞實體標記">
+            <svg class="workspace-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            <span class="workspace-tab-kind workspace-tab-kind--review">審核</span>
+            <span class="workspace-tab-label">新聞實體標記</span>
+            <button type="button" class="workspace-tab-close" aria-label="關閉 審核 新聞實體標記"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+          </div>
+        </div>
+        <div class="ds-content">
+          <h1>情緒分類 v2</h1>
+          <div class="ds-block"><span class="ds-caption">頁面內容區</span></div>
+        </div>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

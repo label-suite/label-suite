@@ -4,11 +4,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="../../assets/logo/icon-colored.svg">
   <title>Label Suite — 任務詳情</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../../assets/data-palette.css" />
   <link rel="stylesheet" href="../shared/modal.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <link rel="stylesheet" href="../shared/button.css" />
+  <link rel="stylesheet" href="../shared/card.css" />
   <link rel="stylesheet" href="../shared/date-range-picker.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
   <link rel="stylesheet" href="../shared/content-tabs.css" />
@@ -43,7 +46,7 @@
 
     /* Breadcrumb */
     .breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-soft);margin-bottom:12px}
-    .breadcrumb a{color:var(--color-primary)}
+    .breadcrumb a{color:var(--color-primary-strong)}
     .breadcrumb a:hover{text-decoration:underline}
     .breadcrumb-sep{color:var(--color-ink-muted);font-size:11px}
 
@@ -88,13 +91,8 @@
       100% { opacity: 0.95; }
     }
 
-    .panel {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      background: var(--color-white);
-      padding: var(--space-lg);
-      margin-bottom: var(--space-md);
-    }
+    /* .panel 外框在 pages/shared/card.css（#423, G-41） */
+    .panel { margin-bottom: var(--space-md); }
     .panel-title {
       font-size: 16px;
       font-weight: 700;
@@ -128,14 +126,14 @@
     .badge-draft { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
     .badge-dry-run { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
     .badge-iaa { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
-    .badge-official { color: #5B21B6; background: #EDE9FE; border-color: #DDD6FE; }
+    .badge-official { color: var(--color-accent); background: var(--color-accent-bg); border-color: var(--color-accent-border); }
     .badge-completed { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
     .badge-isolated { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
     .badge-non-isolated { color: var(--color-error); background: var(--color-error-bg); border-color: var(--color-error-border); }
-    .badge-member-active { color: var(--color-primary); background: var(--color-primary-soft-bg); border-color: var(--color-info-border); }
+    .badge-member-active { color: var(--color-primary-strong); background: var(--color-primary-soft-bg); border-color: var(--color-info-border); }
     .badge-member-disabled { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
     .badge-run-dry { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
-    .badge-run-official { color: var(--color-primary); background: var(--color-primary-soft-bg); border-color: var(--color-info-border); }
+    .badge-run-official { color: var(--color-primary-strong); background: var(--color-primary-soft-bg); border-color: var(--color-info-border); }
 
     .status-row {
       display: flex;
@@ -180,7 +178,7 @@
     .btn:hover::after { content: ""; position: absolute; inset: -1px -1px -2px; }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; pointer-events: none; }
     .btn-disabled-tip { display: inline-block; }
-    .btn-link { border: 0; background: transparent; color: var(--color-primary); padding: 0 var(--space-xs); box-shadow: none; }
+    .btn-link { border: 0; background: transparent; color: var(--color-primary-strong); padding: 0 var(--space-xs); box-shadow: none; }
     .btn-link:hover:not(:disabled) { background: transparent; text-decoration: underline; }
 
     .sampling-panel {
@@ -215,7 +213,7 @@
     .input-select,
     .input-number {
       width: 100%;
-      border: 1px solid var(--color-border);
+      border: 1px solid var(--color-border-control);
       border-radius: var(--radius-md);
       background: var(--color-white);
       color: var(--color-ink);
@@ -226,14 +224,17 @@
     }
     .input-select {
       padding: 9px 32px 9px 12px;
-      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
+      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235E6B7F' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
       appearance: none;
       -webkit-appearance: none;
     }
+    /* Chevron stroke = --color-ink-muted in each theme. A data-URI SVG cannot read var(),
+       and a <select> has no pseudo-element to mask, so dark gets its own URI (#438). */
+    html[data-theme="dark"] .input-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); }
     .input-textarea {
       width: 100%;
       padding: 9px 12px;
-      border: 1px solid var(--color-border);
+      border: 1px solid var(--color-border-control);
       border-radius: var(--radius-md);
       font-size: 14px;
       color: var(--color-ink);
@@ -248,7 +249,7 @@
     .input-select:focus,
     .input-number:focus {
       border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
     }
     .input-text.error,
     .input-number.error,
@@ -303,33 +304,7 @@
       font-size: 12px;
       color: var(--color-text-soft);
     }
-    .toggle-switch {
-      position: relative;
-      width: 42px;
-      height: 24px;
-      flex-shrink: 0;
-    }
-    .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
-    .toggle-slider {
-      position: absolute;
-      inset: 0;
-      border-radius: var(--radius-full);
-      background: var(--color-border);
-      transition: background var(--dur-fast);
-    }
-    .toggle-slider::before {
-      content: '';
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      width: 18px;
-      height: 18px;
-      border-radius: 999px;
-      background: var(--color-white);
-      transition: transform var(--dur-fast);
-    }
-    .toggle-switch input:checked + .toggle-slider { background: var(--color-cta); }
-    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+    /* .toggle-switch／.toggle-slider 用 task-config.css 的正典（40×22、開啟為主色；#423, G-42） */
 
     .risk-warning {
       margin-top: 10px;
@@ -357,6 +332,7 @@
       background: var(--color-white);
       gap: 2px;
     }
+    .stage-btn-mark, .ar-history-arrow { display: inline-flex; vertical-align: -1px; margin: 0 4px; }
     .stage-btn {
       border: none;
       background: transparent;
@@ -367,10 +343,10 @@
       font-weight: 600;
       transition: background var(--dur-fast), color var(--dur-fast);
     }
-    .stage-btn:hover { color: var(--color-primary); }
+    .stage-btn:hover { color: var(--color-primary-strong); }
     .stage-btn.active {
       background: var(--color-primary-soft-bg);
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
     }
     .progress-metric-grid {
       display: grid;
@@ -413,7 +389,7 @@
     }
     .sort-select {
       width: 200px;
-      border: 1px solid var(--color-border);
+      border: 1px solid var(--color-border-control);
       border-radius: var(--radius-md);
       padding: 7px 10px;
       background: var(--color-white);
@@ -517,7 +493,7 @@
     .phase-item-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
     .phase-round-label { font-size: 14px; font-weight: 700; color: var(--color-ink); }
     .phase-status-tag { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: var(--radius-sm); border: 1px solid transparent; }
-    .phase-status-tag--active { color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .phase-status-tag--active { color: var(--color-primary-strong); background: var(--color-primary-soft-bg); }
     .phase-status-tag--passed { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
     .phase-status-tag--failed { color: var(--color-error); background: var(--color-error-bg); border-color: var(--color-error-border); }
     .phase-status-tag--pending { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
@@ -594,7 +570,7 @@
        already scrolls horizontally (.table-scroll) on narrow viewports
        instead of wrapping the action button (issue singyichen/label-suite#1057). */
     #finalExceptionPoolSection .member-table td:last-child { white-space: nowrap; }
-    #finalExceptionPoolSection .mini-btn { display: inline-block; white-space: nowrap; }
+    #finalExceptionPoolSection .mini-btn { white-space: nowrap; }
     .pagination {
       display: flex;
       align-items: center;
@@ -626,7 +602,7 @@
     .page-btn:hover:not(:disabled):not(.active) {
       border-color: var(--color-primary);
       background: var(--color-primary-soft-bg);
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
     }
     .page-btn.active {
       background: var(--color-primary);
@@ -640,16 +616,17 @@
     }
     .page-size-select {
       padding: 5px 28px 5px 10px;
-      border: 1px solid var(--color-border);
+      border: 1px solid var(--color-border-control);
       border-radius: var(--radius-md);
       font-size: 13px;
       color: var(--color-ink);
-      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center;
+      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%235E6B7F' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center;
       outline: none;
       appearance: none;
       -webkit-appearance: none;
       cursor: pointer;
     }
+    html[data-theme="dark"] .page-size-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); }
     .member-table tbody tr:last-child td { border-bottom: none; }
     .member-name { font-weight: 700; }
     .member-email { color: var(--color-text-soft); }
@@ -690,7 +667,7 @@
     }
     .role-select-inline {
       width: 130px;
-      border: 1px solid var(--color-border);
+      border: 1px solid var(--color-border-control);
       border-radius: var(--radius-md);
       padding: 7px 10px;
       background: var(--color-white);
@@ -713,7 +690,7 @@
       white-space: nowrap;
     }
     .role-badge-reviewer {
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
       background: var(--color-primary-soft-bg);
       border-color: var(--color-primary-border);
     }
@@ -749,7 +726,7 @@
       border-radius: var(--radius-sm);
       border: 1px solid var(--color-primary-border);
       background: var(--color-primary-soft-bg);
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
       font-size: 11px;
       font-weight: 500;
       white-space: nowrap;
@@ -774,54 +751,12 @@
       font-size: 13px;
       color: var(--color-ink);
     }
-    .mini-btn {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-white);
-      color: var(--color-ink);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 6px 10px;
-      transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast), opacity var(--dur-fast);
-    }
-    .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
-    .mini-btn:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
-    }
-    .mini-btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
-    .mini-btn-primary {
-      background: var(--color-primary);
-      border-color: var(--color-primary);
-      color: var(--color-white);
-    }
-    .mini-btn-primary:hover:not(:disabled) { opacity: 0.9; border-color: var(--color-primary); color: var(--color-white); }
-    .mini-btn-primary:focus-visible { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18); }
-    .mini-btn-success {
-      background: var(--color-success-bg);
-      border-color: var(--color-success-border);
-      color: var(--color-success);
-    }
-    .mini-btn-success:hover:not(:disabled) { border-color: var(--color-success); background: var(--color-success-bg); color: var(--color-success); }
-    .mini-btn-success:focus-visible { box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.18); }
-    .mini-btn-warning {
-      background: var(--color-warning-bg);
-      border-color: var(--color-warning-border);
-      color: var(--color-warning);
-    }
-    .mini-btn-warning:hover:not(:disabled) { border-color: var(--color-warning); background: var(--color-warning-bg); color: var(--color-warning); }
-    .mini-btn-warning:focus-visible { box-shadow: 0 0 0 3px rgba(161, 98, 7, 0.18); }
-    .mini-btn-danger {
-      background: var(--color-error-bg);
-      border-color: var(--color-error-border);
-      color: var(--color-error);
-    }
-    .mini-btn-danger:hover:not(:disabled) { border-color: var(--color-error-border); background: var(--color-error-bg); color: var(--color-error); }
+    /* .mini-btn 與其 variant 在 pages/shared/button.css（#423, G-37） */
     .preview-json-wrap { overflow: auto; flex: 1; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-slate-50); }
     .preview-json { margin: 0; padding: var(--space-md); font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; color: var(--color-ink); white-space: pre-wrap; word-break: break-word; }
     /* ── Dataset preview ── */
     .dataset-preview-trigger { display: inline-flex; align-items: center; gap: 5px; background: none; border: none; padding: 0; cursor: pointer; color: inherit; font: inherit; }
-    .dataset-preview-trigger:hover { color: var(--color-primary); }
+    .dataset-preview-trigger:hover { color: var(--color-primary-strong); }
     .dataset-preview-eye { width: 13px; height: 13px; flex-shrink: 0; }
     .modal-xl { width: min(720px, 100%); max-height: 80vh; display: flex; flex-direction: column; }
     .modal-xl-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-md, 16px); }
@@ -860,6 +795,13 @@
     }
     .toast.show { opacity: 1; transform: translateY(0); }
     .toast.error { background: var(--color-error); }
+    /* UXC-07（#423, G-39）：error 不自動消失，所以要有關閉鈕；隱藏時以 visibility
+       把關閉鈕移出 Tab 順序，延遲 0s 讓淡出照樣播完。 */
+    .toast { visibility: hidden; transition: opacity var(--dur-normal), transform var(--dur-normal), visibility 0s linear var(--dur-normal); }
+    .toast.show { visibility: visible; transition: opacity var(--dur-normal), transform var(--dur-normal); }
+    .toast-close { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; margin-left: auto; padding: 2px; border: none; border-radius: var(--radius-sm); background: none; color: currentColor; opacity: 0.75; cursor: pointer; }
+    .toast-close:hover { opacity: 1; }
+    .toast-close:focus-visible { outline: 2px solid currentColor; outline-offset: 1px; opacity: 1; }
 
     /* Annotation results panel */
     .ar-filter-grid {
@@ -921,13 +863,13 @@
     .annotator-row:last-child { border-bottom: none; }
     .annotator-username { font-size: 13px; font-weight: 600; min-width: 110px; color: var(--color-ink); }
     .annotator-result-tag {
-      font-size: 13px; color: var(--color-primary); background: var(--color-primary-soft-bg);
+      font-size: 13px; color: var(--color-primary-strong); background: var(--color-primary-soft-bg);
       border: 1px solid var(--color-info-border); border-radius: var(--radius-md);
       padding: 3px 12px; font-family: monospace; min-width: 80px; text-align: center;
     }
-    .result-tag-green { color: #15803D !important; background: #DCFCE7 !important; border-color: #86EFAC !important; }
-    .result-tag-blue  { color: #1D4ED8 !important; background: #EFF6FF !important; border-color: #BFDBFE !important; }
-    .result-tag-red   { color: #DC2626 !important; background: #FEE2E2 !important; border-color: #FCA5A5 !important; }
+    .result-tag-green { color: var(--color-success) !important; background: var(--color-success-bg) !important; border-color: var(--color-success-border) !important; }
+    .result-tag-blue  { color: var(--color-info) !important; background: var(--color-info-bg) !important; border-color: var(--color-info-border) !important; }
+    .result-tag-red   { color: var(--color-error) !important; background: var(--color-error-bg) !important; border-color: var(--color-error-border) !important; }
     .annotator-meta {
       display: flex;
       align-items: center;
@@ -952,7 +894,7 @@
       flex-shrink: 0;
     }
     .badge-ar-disputed { color: var(--color-error); background: var(--color-error-bg); border-color: var(--color-error-border); }
-    .badge-ar-finalized { color: var(--color-primary); background: var(--color-primary-soft-bg); border-color: var(--color-primary-border); }
+    .badge-ar-finalized { color: var(--color-primary-strong); background: var(--color-primary-soft-bg); border-color: var(--color-primary-border); }
     .badge-ar-pending-review { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
     .ar-history-line {
       display: flex; align-items: center; gap: 8px;
@@ -972,18 +914,18 @@
     .ar-dist-text { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
     .ar-dist-dot { color: var(--color-ink-muted); }
     .ar-va-chip { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 9999px; font-size: 13px; font-family: var(--font-mono); border: 1px solid; white-space: nowrap; }
-    .ar-va-chip-normal { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
-    .ar-va-chip-outlier { background: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }
+    .ar-va-chip-normal { background: var(--color-success-bg); color: var(--color-success); border-color: var(--color-success-border); }
+    .ar-va-chip-outlier { background: var(--color-error-bg); color: var(--color-error); border-color: var(--color-error-border); }
     .ar-va-chip-default { background: var(--color-surface); color: var(--color-ink); border-color: var(--color-border); }
     .ar-classif-chips { display: flex; flex-wrap: wrap; gap: 4px; }
-    .ar-classif-chip { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 12px; background: #EDE9FE; color: #5B21B6; border: 1px solid #DDD6FE; white-space: nowrap; }
+    .ar-classif-chip { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 12px; background: var(--color-accent-bg); color: var(--color-accent); border: 1px solid var(--color-accent-border); white-space: nowrap; }
     .member-detail-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-sm); }
     .md-id-cell { font-family: var(--font-mono); font-size: 12px; font-weight: 700; white-space: nowrap; }
     .md-text-cell { font-size: 13px; max-width: 280px; }
     .md-chips { display: flex; flex-wrap: wrap; gap: 4px; }
-    .md-chip { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 12px; background: #EDE9FE; color: #5B21B6; border: 1px solid #DDD6FE; white-space: nowrap; }
+    .md-chip { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 12px; background: var(--color-accent-bg); color: var(--color-accent); border: 1px solid var(--color-accent-border); white-space: nowrap; }
     .md-time-cell { font-size: 12px; color: var(--color-text-soft); white-space: nowrap; font-family: var(--font-mono); }
-    .btn-view-detail { padding: 2px 10px; font-size: 12px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); color: var(--color-primary); cursor: pointer; white-space: nowrap; }
+    .btn-view-detail { padding: 2px 10px; font-size: 12px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); color: var(--color-primary-strong); cursor: pointer; white-space: nowrap; }
     .btn-view-detail:hover { background: var(--color-primary-soft-bg); }
 
     /* FR-026 (1): settings tab = left section nav + one visible section. */
@@ -999,7 +941,7 @@
     .settings-section .kv-dl-row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; padding-bottom: 10px; border-bottom: 1px solid var(--color-border-muted); }
     .settings-section .kv-dl-key { padding: 0 16px 0 0; }
 
-    @media (max-width: 768px) {
+    @media (max-width: 767px) {
       .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
       .settings-layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-md); }
       .settings-section-nav { flex-direction: row; }
@@ -1226,7 +1168,7 @@
     }
     .template-btn:hover {
       border-color: var(--color-primary);
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
       background: var(--color-primary-soft-bg);
     }
     /* .tag-input-wrap / .tag-pill / .tag-pill-remove / .tag-new-input come from
@@ -1252,7 +1194,7 @@
     .entity-name-input {
       flex: 1;
       padding: 6px 10px;
-      border: 1px solid var(--color-border);
+      border: 1px solid var(--color-border-control);
       border-radius: var(--radius-md);
       font-size: 13px;
       color: var(--color-ink);
@@ -1260,7 +1202,7 @@
     }
     .entity-name-input:focus {
       border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
     }
     .entity-remove-btn {
       width: 24px;
@@ -1275,7 +1217,7 @@
     }
     .entity-remove-btn:hover {
       color: var(--color-error);
-      background: rgba(185, 28, 28, 0.08);
+      background: color-mix(in srgb, var(--color-error) 8%, transparent);
     }
     .add-row-btn {
       display: inline-flex;
@@ -1290,13 +1232,13 @@
     }
     .add-row-btn:hover {
       border-color: var(--color-primary);
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
       background: var(--color-primary-soft-bg);
     }
     .input-textarea {
       width: 100%;
       min-height: 88px;
-      border: 1px solid var(--color-border);
+      border: 1px solid var(--color-border-control);
       border-radius: var(--radius-md);
       padding: 8px 10px;
       font-size: 14px;
@@ -1307,7 +1249,7 @@
     }
     .input-textarea:focus {
       border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
     }
     .upload-multi-zone {
       border: 2px dashed var(--color-border);
@@ -1462,7 +1404,7 @@
     .aspect-list-preview-rows { display: flex; flex-direction: column; gap: 8px; }
     .aspect-list-preview-row { display: flex; align-items: center; gap: 8px; }
     .aspect-list-preview-row-label { font-size: 12px; font-weight: 600; color: var(--color-text-soft); min-width: 48px; }
-    .aspect-list-preview-input { flex: 1; min-width: 0; padding: 6px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 13px; color: var(--color-ink); background: var(--color-white); outline: none; transition: border-color var(--dur-fast); }
+    .aspect-list-preview-input { flex: 1; min-width: 0; padding: 6px 10px; border: 1px solid var(--color-border-control); border-radius: var(--radius-md); font-size: 13px; color: var(--color-ink); background: var(--color-white); outline: none; transition: border-color var(--dur-fast); }
     .aspect-list-preview-input:focus { border-color: var(--color-primary); }
     .aspect-list-preview-delete { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 1px solid var(--color-error-soft-border); border-radius: var(--radius-md); background: var(--color-error-soft-bg); color: var(--color-error); cursor: pointer; flex-shrink: 0; transition: opacity var(--dur-fast); }
     .aspect-list-preview-delete:hover { opacity: 0.75; }
@@ -1470,7 +1412,7 @@
     .aspect-list-preview-add:hover { opacity: 0.75; }
     .aspect-list-preview-hint { font-size: 12px; color: var(--color-text-soft); background: var(--color-warning-bg); border: 1px solid var(--color-warning-border); border-radius: var(--radius-md); padding: 8px 10px; line-height: 1.5; }
     .aspect-list-preview-sentence { display: flex; flex-direction: column; gap: 6px; }
-    .aspect-list-preview-sentence-input { padding: 10px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 13px; color: var(--color-ink); background: var(--color-white); line-height: 1.6; resize: vertical; min-height: 56px; outline: none; transition: border-color var(--dur-fast); }
+    .aspect-list-preview-sentence-input { padding: 10px 12px; border: 1px solid var(--color-border-control); border-radius: var(--radius-md); font-size: 13px; color: var(--color-ink); background: var(--color-white); line-height: 1.6; resize: vertical; min-height: 56px; outline: none; transition: border-color var(--dur-fast); }
     .aspect-list-preview-sentence-input:focus { border-color: var(--color-primary); }
     .aspect-list-preview-sentence-readonly { padding: 10px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 13px; color: var(--color-ink); background: var(--color-slate-50); line-height: 1.6; }
     .s2-code-panel {
@@ -1496,7 +1438,7 @@
     }
     .settings-code-format .btn.active {
       border-color: var(--color-primary);
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
       background: var(--color-primary-soft-bg);
     }
     /* .code-editor styles come from task-config.css (shared engine stylesheet) */
@@ -1505,10 +1447,10 @@
       align-items: center;
       gap: 6px;
       padding: 8px 12px;
-      border: 1px solid rgba(185, 28, 28, 0.26);
+      border: 1px solid color-mix(in srgb, var(--color-error) 26%, transparent);
       border-radius: var(--radius-md);
       color: var(--color-error);
-      background: rgba(185, 28, 28, 0.06);
+      background: color-mix(in srgb, var(--color-error) 6%, transparent);
       font-size: 12px;
       margin-top: 8px;
     }
@@ -1604,7 +1546,7 @@
     }
     .step.step-done .step-node { border-color: var(--color-primary); background: var(--color-primary); }
     .step.step-done .step-node::after { background: var(--color-white); }
-    .step.step-done .step-label-wrap { color: var(--color-primary); }
+    .step.step-done .step-label-wrap { color: var(--color-primary-strong); }
     .step-connector.connector-done { background: var(--color-primary); }
     .step.step-current .step-node {
       border-color: var(--color-primary);
@@ -1612,7 +1554,7 @@
       box-shadow: 0 0 0 4px var(--color-primary-soft-bg);
     }
     .step.step-current .step-node::after { background: var(--color-primary); }
-    .step.step-current .step-label-wrap { color: var(--color-primary); font-weight: 700; }
+    .step.step-current .step-label-wrap { color: var(--color-primary-strong); font-weight: 700; }
 
     .exec-control-row {
       display: flex;
@@ -1646,11 +1588,11 @@
     }
     .run-control-tab.active {
       background: var(--color-white);
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
       border-color: var(--color-primary-border);
     }
     .run-control-tab:hover {
-      color: var(--color-primary);
+      color: var(--color-primary-strong);
     }
     /* FR-027: the overview keeps the original card look (2026-10-08 ruling); colours come from tokens only. */
     .exec-stage-banner {
@@ -1696,7 +1638,7 @@
     .next-step-group-title { margin: 0 0 4px; font-weight: 600; color: var(--color-ink); }
     .next-step-group ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
     .next-step-cond { color: var(--color-text-soft); }
-    .next-step-cond-icon { font-weight: 700; }
+    .next-step-cond-icon { display: inline-flex; vertical-align: -2px; }
     .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
     .next-step-cond[data-status="met"] .next-step-cond-icon { color: var(--color-success); }
     .next-step-cond[data-status="unmet"] .next-step-cond-icon { color: var(--color-ink-muted); }
@@ -1741,7 +1683,7 @@
     .round-status-badge { font-weight: 700; white-space: nowrap; }
     .round-status-badge.failed { color: var(--color-error); }
     .round-status-badge.passed { color: var(--color-success); }
-    .round-status-badge.in-progress { color: var(--color-primary); }
+    .round-status-badge.in-progress { color: var(--color-primary-strong); }
     .panel-divider {
       border: none;
       border-top: 1px solid var(--color-border-muted);
@@ -1842,7 +1784,7 @@
     .split-seg {
       min-width: 0;
       transition: width var(--dur-normal) var(--ease-standard);
-      box-shadow: inset -1px 0 0 rgba(255,255,255,0.92);
+      box-shadow: inset -1px 0 0 color-mix(in srgb, var(--color-white) 92%, transparent);
     }
     .split-seg:first-child { border-top-left-radius: var(--radius-md); border-bottom-left-radius: var(--radius-md); }
     .split-seg:last-child { border-top-right-radius: var(--radius-md); border-bottom-right-radius: var(--radius-md); }
@@ -1866,7 +1808,7 @@
 
     .field-hint { font-size: 12px; color: var(--color-text-soft); margin-top: 4px; }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
       .overview-info-row { grid-template-columns: 1fr; }
       .overview-edit-grid { grid-template-columns: 1fr; }
       .settings-editor-layout { grid-template-columns: 1fr; }
@@ -1899,19 +1841,9 @@
 
     /* ── Dark mode overrides ──────────────────────────────────── */
     html[data-theme="dark"] {
-      /* Result tags (with !important in base CSS) */
-      .result-tag-green { color: #4ADE80 !important; background: #0F2A18 !important; border-color: #1F5132 !important; }
-      .result-tag-blue  { color: #60A5FA !important; background: #0F1F33 !important; border-color: #1E3A66 !important; }
-      .result-tag-red   { color: #F87171 !important; background: #2A1414 !important; border-color: #5B2222 !important; }
-
-      /* VA scoring chips */
-      .ar-va-chip-normal  { background: #0F2A18; color: #4ADE80; border-color: #1F5132; }
-      .ar-va-chip-outlier { background: #2A1414; color: #F87171; border-color: #5B2222; }
-
-      /* Classification chip */
-      .ar-classif-chip { background: #1E1B4B; color: #A78BFA; border-color: #3730A3; }
-      .md-chip { background: #1E1B4B; color: #A78BFA; border-color: #3730A3; }
-
+      /* Result tags, VA chips, classification chips and .badge-official read
+         the success / info / error / accent token families (#420 Q2, Q3),
+         which flip in tokens.css; no dark copy needed. */
       /* Round status badges flip automatically: the light rules use the
          semantic error/success/primary token families */
     }
@@ -1980,13 +1912,13 @@
       <div id="taskNotFound" class="panel hidden" role="alert" aria-live="polite">
         <p class="panel-title" id="taskNotFoundTitle"></p>
         <p class="status-hint" id="taskNotFoundMessage"></p>
-        <a class="mini-btn mini-btn-primary" id="taskNotFoundBackLink" href="./task-list.html" style="display:inline-block;margin-top:var(--space-md);text-decoration:none;"></a>
+        <a class="mini-btn mini-btn-primary" id="taskNotFoundBackLink" href="./task-list.html" style="margin-top:var(--space-md);text-decoration:none;"></a>
       </div>
 
       <div id="taskForbidden" class="panel hidden" role="alert" aria-live="polite" data-testid="task-forbidden-pane">
         <p class="panel-title" id="taskForbiddenTitle"></p>
         <p class="status-hint" id="taskForbiddenMessage"></p>
-        <a class="mini-btn mini-btn-primary" id="taskForbiddenBackLink" href="./task-list.html" style="display:inline-block;margin-top:var(--space-md);text-decoration:none;"></a>
+        <a class="mini-btn mini-btn-primary" id="taskForbiddenBackLink" href="./task-list.html" style="margin-top:var(--space-md);text-decoration:none;"></a>
       </div>
     </section>
   </div>
@@ -2107,6 +2039,7 @@
 <div class="toast-container" aria-live="polite" aria-atomic="true">
   <div class="toast" id="toast" role="alert">
     <span id="toastMsg"></span>
+    <button type="button" class="toast-close" id="toastClose" aria-label="關閉通知" onclick="hideToast()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
 </div>
 
@@ -2135,7 +2068,7 @@
       notFoundMessageTpl: '任務代碼 {taskId} 不存在，請確認網址或回到任務列表重新選擇任務。',
       notFoundBackBtn: '回任務列表',
       forbiddenTitle: '無權限檢視此任務',
-      forbiddenMessageTpl: '您目前無權限檢視任務代碼 {taskId}，請回到任務列表或聯絡管理員。',
+      forbiddenMessageTpl: '你目前無權限檢視任務代碼 {taskId}，請回到任務列表或聯絡管理員。',
       forbiddenBackBtn: '回任務列表',
       tabOverview: '概覽',
       tabSettings: '設定',
@@ -2306,7 +2239,7 @@
       nextStepCondIaaAdvisory: 'IAA 未達目標',
       nextStepIaaAdvisoryTpl: 'IAA {alpha}，低於目標 {target}；只是提醒，不阻擋任何動作',
       nextStepCondIaaUndetermined: 'IAA 無法判定',
-      nextStepCondSubmission: '標註全部提交',
+      nextStepCondSubmission: '標註全部送出',
       nextStepCondReview: '審核單位全部定稿',
       nextStepCondDispute: '爭議都已仲裁',
       nextStepCondExceptionPool: '最終例外池已處置',
@@ -2394,7 +2327,7 @@
       roundDecisionTitleRoundActiveTpl: 'R{round} 進行中，全員完成後進入待 IAA 確認',
       roundDecisionDescPassedTpl: '系統將以尚未進入試標的剩餘 {count} 筆樣本建立正式標記池，避免與前面回合混用。',
       roundDecisionDescFailedTpl: '目前僅使用了 {used} 筆試標樣本，IAA 未達標僅供參考：可直接開始正式標記，或新增下一個試標回合再抽新樣本。',
-      roundDecisionDescRoundActiveTpl: '本回合尚未全員提交，暫不提供新增下一回合；待全數提交並完成 IAA 後任務會自動進入待確認，再決定下一步。',
+      roundDecisionDescRoundActiveTpl: '本回合尚未全員送出，暫不提供新增下一回合；待全數送出並完成 IAA 後任務會自動進入待確認，再決定下一步。',
       roundDecisionTitleInProgressTpl: 'R{round} 尚無法判定是否達標',
       roundDecisionDescInProgressTpl: '目前沒有足夠的標記資料可計算一致性，待標記員完成後即可判定是否達標。',
       iaaComputationPendingTitle: 'IAA 計算中',
@@ -2427,15 +2360,15 @@
       memberListTitle: '目前成員清單',
       memberListSubtitle: '任務角色在加入時決定，既有成員不可中途改角色；如需變更請移除後重新加入。',
       memberAddTitle: '加入成員',
-      memberAddSubtitle: '可透過搜尋平台現有成員，或直接填寫 Email 寄送邀請加入任務。',
+      memberAddSubtitle: '可透過搜尋平台現有成員，或直接填寫電子郵件寄送邀請加入任務。',
       memberSearchTitle: '搜尋平台成員',
-      memberSearchSubtitle: '支援以帳號、姓名或 Email 搜尋目前平台成員。',
-      memberSearchPlaceholder: '輸入帳號、姓名或 Email',
-      memberInviteTitle: 'Email 邀請',
-      memberInviteSubtitle: '填寫對方 Email 並指定任務角色後，寄送邀請加入任務。',
-      memberInvitePlaceholder: '輸入邀請 Email',
+      memberSearchSubtitle: '支援以帳號、姓名或電子郵件搜尋目前平台成員。',
+      memberSearchPlaceholder: '輸入帳號、姓名或電子郵件',
+      memberInviteTitle: '電子郵件邀請',
+      memberInviteSubtitle: '填寫對方電子郵件並指定任務角色後，寄送邀請加入任務。',
+      memberInvitePlaceholder: '輸入邀請電子郵件',
       thMemberName: '姓名',
-      thMemberEmail: 'Email',
+      thMemberEmail: '電子郵件',
       thMemberTaskRole: '任務角色',
       thMemberReviewLoad: '審核負荷',
       thMemberStatus: '狀態',
@@ -2444,7 +2377,7 @@
       thMemberActions: '操作',
       thSearchAccount: '帳號',
       thSearchName: '姓名',
-      thSearchEmail: 'Email',
+      thSearchEmail: '電子郵件',
       thSearchTaskCount: '目前已在任務數量',
       thSearchActions: '操作',
       memberStatusActive: '啟用',
@@ -2457,15 +2390,15 @@
       actionEnable: '啟用',
       actionAdd: '加入任務',
       actionSendInvite: '寄送邀請',
-      memberSearchIdle: '請先輸入帳號、姓名或 Email 再開始搜尋',
+      memberSearchIdle: '請先輸入帳號、姓名或電子郵件再開始搜尋',
       memberSearchEmpty: '沒有符合條件、且尚未加入此任務的平台成員',
       memberPaginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
       memberPageSizeLabel: ' 筆/頁',
       memberPrevPageAria: '上一頁',
       memberNextPageAria: '下一頁',
-      errMemberInviteEmail: '請輸入有效的 Email',
+      errMemberInviteEmail: '請輸入有效的電子郵件',
       errMemberDuplicate: '此成員已在任務中或已寄出邀請',
-      errPermissionDenied: '您沒有執行此操作的權限',
+      errPermissionDenied: '你沒有執行此操作的權限',
       reviewLoadTpl: '{assigned} 筆 · {pending} 待審',
       reviewAssignmentTitle: '審核指派',
       reviewAssignmentHintReadonly: '審核指派一律由系統自動執行：試標以樣本為單位、正式標記平均分派給被勾選的審核員；此區塊僅呈現結果，不提供手動操作。',
@@ -2483,7 +2416,7 @@
       progressStageOfficial: '正式標記',
       progressMetricTotalLabel: '總樣本數',
       progressMetricCompletedLabel: '已完成數',
-      progressMetricRateLabel: '標記提交進度',
+      progressMetricRateLabel: '標記送出進度',
       progressMetricSpeedLabel: '平均速度',
       progressMetricEtaLabel: '剩餘估計時間',
       progressMetricIAALabel: 'IAA',
@@ -2529,13 +2462,13 @@
       leaderAdjudicationConfirm: '確認裁定',
       toastCompleteBlocked: '結案前置條件尚未滿足，無法標記完成：',
       completeBlockerExceptionPoolTpl: '最終例外池尚有 {count} 項待處置',
-      completeBlockerSubmission: '正式標記作業尚未全數提交',
+      completeBlockerSubmission: '正式標記作業尚未全數送出',
       completeBlockerReviewTpl: '尚有 {count} 個審核單位未定稿',
       completeBlockerReviewNoData: '尚無審核資料，所有審核單位須定稿後才能結案',
       completeBlockerDisputedTpl: '尚有 {count} 個審核單位處於爭議中',
       completeBlockerQualityPending: '品質指標仍在計算中，完成後才能標記完成',
       completeBlockerQualityFailed: '品質指標計算失敗，無法標記完成',
-      trialBlockerSubmission: '本回合的標註未全部提交',
+      trialBlockerSubmission: '本回合的標註未全部送出',
       trialBlockerReviewNoData: '尚無審核資料，所有審核單位須定稿後才能完成本回合',
       trialBlockerDisputedTpl: '尚有 {count} 個審核單位處於爭議中，須完成仲裁',
       unassignedAnnotationTitle: '未指派標記作業',
@@ -2560,7 +2493,7 @@
       progressSortLabel: '排序',
       progressSortCompleted: '依已完成數（高到低）',
       progressSortSpeed: '依平均速度（高到低）',
-      progressSortSubmitted: '依最後提交（新到舊）',
+      progressSortSubmitted: '依最後送出（新到舊）',
       thProgressMemberName: '成員姓名',
       thProgressRole: '角色',
       thProgressCompleted: '已完成數',
@@ -2568,14 +2501,14 @@
       thProgressTotal: '總數量',
       thProgressSpeed: '平均速度',
       thProgressBar: '個人進度條',
-      thProgressLastSubmitted: '最後提交時間',
+      thProgressLastSubmitted: '最後送出時間',
       thProgressQuality: '品質旗標',
       thProgressDetails: '操作',
       memberDetailViewBtn: '查看細項',
       thDetailSampleId: '樣本 ID',
       thDetailTextPreview: '文本摘要',
       thDetailLabelResult: '標記結果',
-      thDetailSubmittedAt: '提交時間',
+      thDetailSubmittedAt: '送出時間',
       thDetailReviewStatus: '審核狀態',
       memberDetailEmpty: '此成員尚無標記資料',
       stageDryTitle: '試標',
@@ -2635,10 +2568,11 @@
       progressStageMetaTpl: '{completed}/{total}（{rate}%）',
       reviewerTabBlocked: 'reviewer 無權限檢視成員管理，已導回任務概覽。',
       toastMemberUpdated: '成員設定已更新',
+      toastClose: '關閉通知',
       toastMemberInvited: '邀請已寄出，等待對方接受後加入任務',
       memberActionModalTitle: '確認成員操作',
-      memberActionModalBodyRemove: '是否移除 {name}（{role}）？已完成提交與歷史統計會保留；未完成標記作業會改為未指派狀態，需由 project leader 重新指派或排除。',
-      memberActionModalBodyDisable: '是否停用 {name}（{role}）？停用後不可再提交標記。',
+      memberActionModalBodyRemove: '是否移除 {name}（{role}）？已送出的標記與歷史統計會保留；未完成標記作業會改為未指派狀態，需由 project leader 重新指派或排除。',
+      memberActionModalBodyDisable: '是否停用 {name}（{role}）？停用後不可再送出標記。',
       memberActionModalBodyEnable: '是否啟用 {name}（{role}）？',
       memberActionCancelBtn: '取消',
       memberActionConfirmBtn: '確認',
@@ -2647,9 +2581,9 @@
       arStageAll: '全部',
       arStageDry: '試標',
       arStageOfficial: '正式標記',
-      arStatusFilterLabel: '提交狀態',
+      arStatusFilterLabel: '送出狀態',
       arStatusAll: '全部',
-      arStatusSubmitted: '已提交',
+      arStatusSubmitted: '已送出',
       arStatusDraft: '草稿',
       arStatusPending: '待處理',
       arAnnotatorFilterLabel: '標記員',
@@ -2663,7 +2597,7 @@
       thArStage: '標記階段',
       thArAnnotator: '標記員',
       thArValue: '標記值',
-      thArSubmittedAt: '提交時間',
+      thArSubmittedAt: '送出時間',
       thArReviewStatus: '審核狀態',
       arReviewPending: '待審',
       arReviewDisputed: '爭議中',
@@ -2675,7 +2609,7 @@
       arHistoryReviewerRole: '審核員',
       arHistoryArbiterRole: '仲裁',
       arHistoryAgree: '同意',
-      arHistoryModifiedPrefix: '修改 → ',
+      arHistoryModifiedPrefix: '修改',
       arHistoryBypass: window.LabelSuiteSharedSidebar.BYPASS_WORDING.zh.decision,
       arHistoryPickA: '採 A（維持標記員）',
       arHistoryPickB: '採 B（採用審核員修正）',
@@ -2692,7 +2626,7 @@
       wlPageSizeLabel: ' 筆/頁',
       wlPrevPageAria: '上一頁',
       wlNextPageAria: '下一頁',
-      arStatusBadgeSubmitted: '已提交',
+      arStatusBadgeSubmitted: '已送出',
       arStatusBadgeDraft: '草稿',
       arStatusBadgePending: '待處理',
       arExportHistoryTitle: '匯出記錄表',
@@ -2729,7 +2663,7 @@
       arExportSnapshotMissingTitle: '此筆紀錄缺少重新下載所需的匯出條件，無法重建原始檔案。',
       arSeqExportRedownloadBlockedTokenizer: '切詞引擎「{engine}」已不可用，無法重新下載此詞元單位的匯出結果，請改用字元單位重新匯出。',
       arEmptyTitle: '尚無標記結果',
-      arEmptyHint: '標記員提交後，結果將顯示於此。',
+      arEmptyHint: '標記員送出標記後，結果將顯示於此。',
     },
     en: {
       docTitle: 'Task Detail — Label Suite (Prototype)',
@@ -3227,6 +3161,7 @@
       progressStageMetaTpl: '{completed}/{total} ({rate}%)',
       reviewerTabBlocked: 'Reviewer cannot access member management. Redirected to overview.',
       toastMemberUpdated: 'Member setting updated',
+      toastClose: 'Dismiss notification',
       toastMemberInvited: 'Invitation sent. The member will join after accepting it',
       memberActionModalTitle: 'Confirm member action',
       memberActionModalBodyRemove: 'Remove {name} ({role}) from this task? Completed submissions and history remain. Unfinished annotation work becomes unassigned and must be reassigned or excluded by the project leader.',
@@ -3267,7 +3202,7 @@
       arHistoryReviewerRole: 'Reviewer',
       arHistoryArbiterRole: 'Arbiter',
       arHistoryAgree: 'Agreed',
-      arHistoryModifiedPrefix: 'Modified → ',
+      arHistoryModifiedPrefix: 'Modified',
       arHistoryBypass: window.LabelSuiteSharedSidebar.BYPASS_WORDING.en.decision,
       arHistoryPickA: 'Adopted A (keep annotator)',
       arHistoryPickB: 'Adopted B (adopt reviewer edit)',
@@ -5886,7 +5821,8 @@ function interpolate(template, payload) {
   }
 
   function getRoundColor(roundNumber) {
-    var palette = ['#6366F1', '#F59E0B', '#EC4899', '#8B5CF6', '#0EA5E9'];
+    /* 輪次色在 assets/data-palette.css（#420 Q4）；值只當 style.background 用 */
+    var palette = ['var(--data-round-1)', 'var(--data-round-2)', 'var(--data-round-3)', 'var(--data-round-4)', 'var(--data-round-5)'];
     return palette[(Math.max(roundNumber, 1) - 1) % palette.length];
   }
 
@@ -6278,7 +6214,7 @@ function interpolate(template, payload) {
             label: t(isMaterializedOfficialPool ? 'officialReserveLabel' : 'totalSamplesLabel'),
             valueText: TASK_DATA.datasetTotal + unitText,
             count: Number(TASK_DATA.datasetTotal) || 0,
-            color: isMaterializedOfficialPool ? '#14B8A6' : '#94A3B8'
+            color: isMaterializedOfficialPool ? 'var(--data-split-official)' : 'var(--data-split-total)'
           }];
         }
         /* issue singyichen/label-suite#1120 (acceptance 12): once the official run is the stage
@@ -6289,7 +6225,7 @@ function interpolate(template, payload) {
             label: t('officialReserveLabel'),
             valueText: String(reserveCount) + unitText,
             count: reserveCount,
-            color: '#14B8A6'
+            color: 'var(--data-split-official)'
           }];
         }
         var segments = rounds.map(function(round) {
@@ -6305,7 +6241,7 @@ function interpolate(template, payload) {
             label: t('officialReserveLabel'),
             valueText: String(reserveCount) + unitText,
             count: reserveCount,
-            color: '#14B8A6'
+            color: 'var(--data-split-official)'
           });
         }
         return segments;
@@ -6334,7 +6270,7 @@ function interpolate(template, payload) {
           label: t('officialReserveLabel'),
           valueText: reserveCount + (state.lang === 'zh' ? ' 筆' : ' items'),
           count: reserveCount,
-          color: '#14B8A6'
+          color: 'var(--data-split-official)'
         }
       ], TASK_DATA.datasetTotal);
     }
@@ -6452,7 +6388,12 @@ function interpolate(template, payload) {
   }
 
   function nextStepGroupsHtml(groups) {
-    var iconGlyphs = { met: '✓', unmet: '○', info: 'ⓘ' };
+    /* Lucide check / circle / info via task-config.engine.js taxonomyIcon (brand.md: no glyph icons). */
+    var iconGlyphs = {
+      met: taxonomyIcon(LUCIDE_CHECK, 14),
+      unmet: taxonomyIcon('<circle cx="12" cy="12" r="10"/>', 14),
+      info: taxonomyIcon('<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>', 14)
+    };
     var statusKeys = { met: 'nextStepStatusMet', unmet: 'nextStepStatusUnmet', info: 'nextStepStatusInfo' };
     return groups.map(function(group) {
       return '<div class="next-step-group" data-group="' + group.key + '"><p class="next-step-group-title">' + escapeHtml(group.title) + '</p><ul>' +
@@ -7310,7 +7251,7 @@ function getTaskTypeLabel() {
       removeBtn.className = 'guideline-item-remove';
       removeBtn.type = 'button';
       removeBtn.setAttribute('aria-label', state.lang === 'zh' ? '移除附件' : 'Remove file');
-      removeBtn.textContent = '×';
+      removeBtn.innerHTML = taxonomyIcon('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>', 14); /* static markup */
       removeBtn.addEventListener('click', function() {
         if (!state.guidelineDraft) return;
         state.guidelineDraft[filesKey].splice(index, 1);
@@ -8242,6 +8183,10 @@ function getTaskTypeLabel() {
     var modal = document.getElementById('memberActionModal');
     modal.classList.add('show');
     modal.setAttribute('aria-hidden', 'false');
+    /* G-43: focus trap and focus return via shared/modal-focus.js */
+    if (window.LabelSuiteModalFocus) {
+      window.LabelSuiteModalFocus.open(modal, { trigger: document.activeElement, onClose: closeMemberActionModal });
+    }
   }
 
   function closeMemberActionModal() {
@@ -8249,6 +8194,7 @@ function getTaskTypeLabel() {
     var modal = document.getElementById('memberActionModal');
     modal.classList.remove('show');
     modal.setAttribute('aria-hidden', 'true');
+    if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
   }
 
   function executeMemberAction() {
@@ -8598,12 +8544,15 @@ function getTaskTypeLabel() {
       var label = 'R' + round.roundNum;
       if (round.status === 'active') {
         label += state.lang === 'zh' ? ' · 進行中' : ' · Active';
-      } else if (round.result === 'passed') {
-        label += ' ✓';
-      } else if (round.result === 'failed') {
-        label += ' ✗';
       }
       btn.textContent = label;
+      /* Pass / fail mark as a Lucide check or x, not a glyph (brand.md). */
+      if (round.status !== 'active' && (round.result === 'passed' || round.result === 'failed')) {
+        var mark = document.createElement('span');
+        mark.className = 'stage-btn-mark';
+        mark.innerHTML = round.result === 'passed' ? taxonomyIcon(LUCIDE_CHECK, 12) : taxonomyIcon('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>', 12); /* static markup */
+        btn.appendChild(mark);
+      }
       btn.addEventListener('click', function() {
         state.progressStage = round.id;
         renderAnnotationProgress();
@@ -10078,7 +10027,17 @@ function getTaskTypeLabel() {
     }
     var decision = document.createElement('span');
     decision.className = 'ar-history-decision';
-    decision.textContent = decisionText;
+    if (Array.isArray(decisionText)) {
+      /* [prefix, result]: a Lucide arrow-right sits between them instead of a glyph. */
+      decision.appendChild(document.createTextNode(decisionText[0]));
+      var decisionArrow = document.createElement('span');
+      decisionArrow.className = 'ar-history-arrow';
+      decisionArrow.innerHTML = taxonomyIcon(LUCIDE_ARROW_RIGHT, 12); /* static markup */
+      decision.appendChild(decisionArrow);
+      decision.appendChild(document.createTextNode(decisionText[1]));
+    } else {
+      decision.textContent = decisionText;
+    }
     var time = document.createElement('span');
     time.className = 'ar-history-time';
     time.textContent = timeText || '-';
@@ -10093,7 +10052,7 @@ function getTaskTypeLabel() {
   function appendArHistoryLines(container, annotation) {
     (annotation.reviews || []).forEach(function(review) {
       var decisionText = review.decision === 'modified'
-        ? t('arHistoryModifiedPrefix') + getAnnotationResultDisplay({ value: review.result }).tags[0]
+        ? [t('arHistoryModifiedPrefix'), getAnnotationResultDisplay({ value: review.result }).tags[0]]
         : review.decision === 'bypass'
           ? t('arHistoryBypass')
           : t('arHistoryAgree');
@@ -10153,7 +10112,7 @@ function getTaskTypeLabel() {
       chevronSvg.setAttribute('viewBox', '0 0 24 24');
       chevronSvg.setAttribute('fill', 'none');
       chevronSvg.setAttribute('stroke', 'currentColor');
-      chevronSvg.setAttribute('stroke-width', '2.5');
+      chevronSvg.setAttribute('stroke-width', '2');
       chevronSvg.setAttribute('stroke-linecap', 'round');
       chevronSvg.setAttribute('stroke-linejoin', 'round');
       chevronSvg.setAttribute('aria-hidden', 'true');
@@ -11253,19 +11212,25 @@ function getTaskTypeLabel() {
     syncUrlToViewState();
   }
 
-  function showToast(message, isError) {
+  /* UXC-07（#423, G-39）：單一實例、依類型分級存續，error 只能手動關。
+     第二個參數可傳 variant 字串；舊呼叫的 true 視為 error，省略或 false 視為 success。 */
+  var TOAST_DURATIONS = { success: 3000, info: 5000, warning: 8000, error: 0 };
+  function hideToast() {
+    document.getElementById('toast').classList.remove('show');
+    clearTimeout(toastTimer);
+    toastTimer = null;
+  }
+  function showToast(msg, variant) {
+    if (variant === true) variant = 'error';
+    if (!Object.prototype.hasOwnProperty.call(TOAST_DURATIONS, variant)) variant = 'success';
     var toast = document.getElementById('toast');
-    var msg = document.getElementById('toastMsg');
-    msg.textContent = message;
-    toast.classList.toggle('error', Boolean(isError));
+    document.getElementById('toastMsg').textContent = msg;
+    toast.classList.toggle('error', variant === 'error');
+    document.getElementById('toastClose').setAttribute('aria-label', t('toastClose'));
     toast.classList.add('show');
-
-    if (toastTimer) {
-      clearTimeout(toastTimer);
-    }
-    toastTimer = setTimeout(function() {
-      toast.classList.remove('show');
-    }, 2400);
+    clearTimeout(toastTimer);
+    toastTimer = null;
+    if (TOAST_DURATIONS[variant] > 0) toastTimer = setTimeout(hideToast, TOAST_DURATIONS[variant]);
   }
 
   function trackEvent(name, extra) {

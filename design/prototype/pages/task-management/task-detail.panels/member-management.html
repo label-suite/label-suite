@@ -1,14 +1,14 @@
 <div id="memberManagementPanel" class="hidden">
   <section class="panel" aria-labelledby="memberAddTitle">
     <h2 class="panel-title" id="memberAddTitle">加入成員</h2>
-    <p class="panel-subtitle" id="memberAddSubtitle">可透過搜尋平台現有成員，或直接填寫 Email 寄送邀請加入任務。</p>
+    <p class="panel-subtitle" id="memberAddSubtitle">可透過搜尋平台現有成員，或直接填寫電子郵件寄送邀請加入任務。</p>
 
     <div class="member-entry-grid">
       <section class="member-entry-card" aria-labelledby="memberSearchTitle">
         <h3 class="member-entry-title" id="memberSearchTitle">搜尋平台成員</h3>
-        <p class="member-entry-hint" id="memberSearchSubtitle">支援以帳號、姓名或 Email 搜尋目前平台成員。</p>
+        <p class="member-entry-hint" id="memberSearchSubtitle">支援以帳號、姓名或電子郵件搜尋目前平台成員。</p>
         <div class="member-entry-row">
-          <input class="input-text" id="memberSearchInput" type="text" placeholder="輸入帳號、姓名或 Email" />
+          <input class="input-text" id="memberSearchInput" type="text" placeholder="輸入帳號、姓名或電子郵件" />
           <select class="role-select-inline" id="memberSearchRoleSelect">
             <option value="annotator">標記員</option>
             <option value="reviewer">審核員</option>
@@ -21,7 +21,7 @@
                 <tr>
                   <th id="thSearchAccount">帳號</th>
                   <th id="thSearchName">姓名</th>
-                  <th id="thSearchEmail">Email</th>
+                  <th id="thSearchEmail">電子郵件</th>
                   <th id="thSearchTaskCount">目前已在任務數量</th>
                   <th id="thSearchActions">操作</th>
                 </tr>
@@ -33,10 +33,10 @@
       </section>
 
       <section class="member-entry-card" aria-labelledby="memberInviteTitle">
-        <h3 class="member-entry-title" id="memberInviteTitle">Email 邀請</h3>
-        <p class="member-entry-hint" id="memberInviteSubtitle">填寫對方 Email 並指定任務角色後，寄送邀請加入任務。</p>
+        <h3 class="member-entry-title" id="memberInviteTitle">電子郵件邀請</h3>
+        <p class="member-entry-hint" id="memberInviteSubtitle">填寫對方電子郵件並指定任務角色後，寄送邀請加入任務。</p>
         <div class="member-entry-stack">
-          <input class="input-text" id="memberInviteEmailInput" type="email" placeholder="輸入邀請 Email" />
+          <input class="input-text" id="memberInviteEmailInput" type="email" placeholder="輸入邀請電子郵件" />
           <div class="member-entry-row">
             <select class="role-select-inline" id="memberInviteRoleSelect">
               <option value="annotator">標記員</option>
@@ -58,7 +58,7 @@
           <thead>
             <tr>
               <th id="thMemberName">姓名</th>
-              <th id="thMemberEmail">Email</th>
+              <th id="thMemberEmail">電子郵件</th>
               <th id="thMemberTaskRole">任務角色</th>
               <th id="thMemberReviewLoad">審核負荷</th>
               <th id="thMemberStatus">狀態</th>

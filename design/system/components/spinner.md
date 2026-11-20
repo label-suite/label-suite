@@ -6,7 +6,7 @@
 
 單一 `<span class="spinner">`：18×18、2.5px 邊框、頂邊換色、`border-radius: 50%`，以 `@keyframes spin` 持續旋轉（0.7s linear infinite）。
 
-依據：`pages/account/login.html:328`。
+依據：`pages/account/login.html:306`。
 
 放在送出鈕內，取代按鈕文字。
 
@@ -25,25 +25,25 @@
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| 旋轉中 | 這是它唯一的狀態 | `login.html:328` |
-| 減少動態 | **有**。五個登出帳號頁各自都寫了 `@media (prefers-reduced-motion: reduce)`，以 `*, *::before, *::after { animation-duration: 0.01ms !important; }` 蓋掉旋轉 | `login.html:364`–`:366`，另四頁同理（`register.html:338`、`forgot-password.html:329`、`reset-password.html:424`、`verify-email.html:303`） |
+| 旋轉中 | 這是它唯一的狀態 | `login.html:306` |
+| 減少動態 | **有**。五個登出帳號頁各自都寫了 `@media (prefers-reduced-motion: reduce)`，以 `*, *::before, *::after { animation-duration: 0.01ms !important; }` 蓋掉旋轉 | `login.html:342`–`:344`，另四頁同理（`register.html:315`、`forgot-password.html:310`、`reset-password.html:404`、`verify-email.html:280`） |
 | 其他 | 不適用 | — |
 
 ## token
 
-**一個都沒有**。邊框與頂邊是兩個寫死的白色系值（`login.html:328`，原值見 `../design-gaps.md` G-02）——因為它只出現在實心 CTA 鈕上，預設白色。深色模式下 CTA 底色會變，但 spinner 仍然是白的。
+**只有 `--color-on-cta` 一個**：#420 起頂邊改用 `--color-on-cta`（`login.html:312`），跟著 CTA 上的文字色走，深色模式下會一起換。其餘三邊原本是寫死的半透明白 `rgba(255,255,255,0.4)`，#437 改成 `color-mix(in srgb, var(--color-on-cta) 40%, transparent)`（`:311`），淺色下算出來是同一個顏色，深色下變成 40% 的深墨色。`account/profile` 的按鈕內 spinner 同樣改成 35% 的 `--color-on-cta`。原值見 `../design-gaps.md` G-02。
 
 尺寸 18px、邊框 2.5px、0.7s 都是字面值。
 
 ## 鍵盤與焦點
 
-不可聚焦。`account/login#state-submitting` 的重現步驟寫明：送出後按鈕停用、文字換成帶 `aria-label="載入中"` 的 spinner（`login.html:729`–`:736`），所以有無障礙名稱。
+不可聚焦。`account/login#state-submitting` 的重現步驟寫明：送出後按鈕停用、文字換成帶 `aria-label="載入中"` 的 spinner（`login.html:674`–`:681`），所以有無障礙名稱。
 
 `forgot-password` 與 `reset-password` 另有 `.loading-status` 這個 class，待逐頁確認是不是同一套的 live region。
 
 ## 樣式出處
 
-`design/prototype/pages/account/login.html:328` 及另外三頁各自的 `<style>`。
+`.spinner`：`design/prototype/pages/account/login.html:308` 及另外三頁各自的 `<style>`。
 
 ## 可重現樣本
 
@@ -58,8 +58,8 @@
 沒有發行的 Spinner 原語；慣例是在 `Button` 裡放 `Loader2` 圖示加 `animate-spin`。
 
 - **我們有而它沒有**：無。
-- **它有而我們沒有**：圖示化的實作（可繼承 `currentColor`，不必寫死白色）。
-- **語意對不上**：我們的 spinner 是 CSS 邊框技巧，顏色綁死在「白色文字的實心鈕」這個情境；換到其他底色就不能用。
+- **它有而我們沒有**：圖示化的實作（可繼承 `currentColor`，不必另外調一份半透明色）。
+- **語意對不上**：我們的 spinner 是 CSS 邊框技巧，顏色綁死在「實心 CTA 鈕」這個情境（頂邊跟 `--color-on-cta`，其餘三邊是 40% 的 `--color-on-cta`）；換到其他底色就不能用。
 
 ## 用到它的畫面
 

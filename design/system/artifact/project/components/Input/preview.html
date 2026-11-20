@@ -1,0 +1,27 @@
+<!-- @dsCard group="Forms" height=420 -->
+<!doctype html>
+<html lang="zh-TW" data-theme="light">
+<head>
+<meta charset="utf-8">
+<style>
+  /* preview layout only; the frame preloads tokens.css and bundle.css */
+  html body { margin: 0; padding: 24px; display: block; }
+  .ds-stage { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .ds-caption { font-size: 12px; color: var(--color-ink-muted); }
+</style>
+</head>
+<body>
+  <div style="display: grid; gap: 16px; max-width: 360px;">
+    <div>
+      <input class="input" type="text" placeholder="任務名稱" aria-label="任務名稱（預設）" />
+      <p class="field-hint">3–40 字元，建立後可修改。</p>
+    </div>
+    <div>
+      <input class="input error" type="text" value="＠＠" aria-label="任務名稱（錯誤）" />
+      <p class="field-error" role="alert">名稱含有不允許的字元。</p>
+    </div>
+    <input class="input" type="text" value="sso-user@example.com" readonly aria-label="電子郵件（唯讀）" />
+    <textarea class="input-textarea" aria-label="說明（多行）" placeholder="標記指引摘要"></textarea>
+  </div>
+</body>
+</html>

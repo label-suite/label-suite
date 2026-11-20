@@ -4,7 +4,7 @@ description: '已登入的使用者在這一頁維護自己的個人資料、換
 category: '規格書'
 tags: [規格書, 帳號, 已定案]
 createdAt: '2026-11-05'
-updatedAt: '2026-11-16'
+updatedAt: '2026-11-18'
 ---
 
 import PrototypeFrame from '@notes/components/prototype-frame';
@@ -32,10 +32,14 @@ R：Read（可讀取）　C：Create（可新增）　E：Edit（可編輯）　
 
 這一頁只動自己的帳號，而且每個角色都一樣。
 
-- :ref[平台成員]{id="term.platform-member"}：R／E (o)；改自己的姓名、聯絡方式、頭像、Email、密碼與偏好
-- :ref[系統管理員]{id="term.system-admin"}、:ref[Seeder 管理員]{id="term.seeder-admin"}：R／E (o)；與平台成員相同。他們在這一頁也只能動自己的帳號，動別人的要走 [規格 06-01 使用者管理](../06-admin/01-user-management.mdx)
-- 未登入的訪客：無權限；直接開這一頁會被帶到登入頁
+| 角色 | 這一頁能做什麼 | PRD §權限矩陣的上限 |
+| :--- | :--- | :--- |
+| :ref[平台成員]{id="term.platform-member"} | R／E (o)——改自己的姓名、聯絡方式、頭像、Email、密碼與偏好 | 「01 帳號（自己的帳號與個人設定）」給平台成員 `R/E (o)` |
+| :ref[系統管理員]{id="term.system-admin"} | R／E (o)，與平台成員相同 | 同一列給系統管理員 `R/E (o)` |
+| :ref[Seeder 管理員]{id="term.seeder-admin"} | R／E (o)，與平台成員相同 | 矩陣**沒有這一欄**；PRD §使用者角色 寫明他「權限同系統管理員」 |
+| 未登入的訪客 | **無權限**；直接開這一頁會被帶到登入頁 | **對不到任何一列**：PRD §使用者角色 沒有「訪客」，§權限矩陣 的兩張表也沒有這一欄——矩陣管的是登入之後的功能 |
 
+- 系統管理員與 Seeder 管理員在這一頁也**只能動自己的帳號**，動別人的要走 [規格 06-01 使用者管理](../06-admin/01-user-management.mdx)
 - 這一頁不能改自己的系統角色，也不能停用自己的帳號；那兩件事只在 [規格 06-01](../06-admin/01-user-management.mdx)
 
 ## 業務流程
@@ -124,7 +128,7 @@ import Spec0104ProfileFlow from '@notes/components/spec-01-04-profile-flow'
 
 <PrototypeFrame page="account/profile" caption="個人設定" client:idle />
 
-1. 使用者開啟這一頁 → 頁首顯示主標題「個人設定」與副標題「管理您的個人資料與帳號安全」
+1. 使用者開啟這一頁 → 頁首顯示主標題「個人設定」與副標題「管理你的個人資料與帳號安全」
 2. 頁面依序有**五個區塊**：個人資料、偏好設定、密碼設定、通知設定、**連結 Google 帳號**
 3. 第 5 個區塊是依[規格 01-05 §已確認決議](./05-login-state.mdx#已確認決議) Q7 收進來的——那一題的裁決是「連結 Google 帳號由這一頁擁有」。畫面已於 2026-11-12 補上這個區塊（[PR #290](https://github.com/label-suite/label-suite/pull/290)）。
 4. 未登入的人直接開這一頁 → 被帶到登入頁
@@ -570,6 +574,7 @@ Email 是登入用的識別，所以**要先證明新信箱收得到信，才會
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#415](https://github.com/label-suite/label-suite/issues/415) | 2026-11-18 | §使用角色 | 角色、權限與條件寫成條列 | 改成正典的三欄表格（角色／這一頁能做什麼／PRD §權限矩陣的上限），條件、理由與跨頁連結移到表格下方的條列。第三欄是**新增的資訊**：逐列指出 PRD §權限矩陣 的哪一列，對不到的寫出原因。形狀依 `spec-writing` 範本（[PR #417](https://github.com/label-suite/label-suite/pull/417)） | **無新決議，條文一字未改** |
 | [#85](https://github.com/label-suite/label-suite/issues/85) | 2026-11-16 | §規格 › 頁面的內容 的兩條註、§規格 › 密碼設定 的註、§已確認決議 Q1 的理由 | 四處寫「這一頁不改 PRD，改動由 #85 處理」 | 改成 PRD 已於 2026-11-16 依 #85 落地 | **無新決議**，條文一字未改 |
 | [#188](https://github.com/label-suite/label-suite/issues/188) | 2026-11-16 | §已確認決議 Q17 的理由 | 「所以平台層的通知事件清單目前仍然沒有歸屬（#72）」——那句話在 2026-11-15 清單落到規格 07-04 時就已成假 | 改成指向[規格 07-04 通知事件](../07-shared/04-notification-events.mdx)，寫明這六列就是它的第 1 到 6 列、該頁八題已於 2026-11-15 與 2026-11-16 兩批全部裁定 | **無新決議**，Q17 的結論與本頁條文一字未改；依 `writing-guide.md:322`，修正被後續改動打成假的敘述不加變更標示 |
 | [#188](https://github.com/label-suite/label-suite/issues/188) | 2026-11-15 | §規格 › 通知設定 的註 | 註裡寫「這六列是它的候選前六項」，並說那一頁另問這六列以外的事件能不能關 | 改成「這六列就是那份清單的前六項」，並寫明第 7、8 列不加進這張表、一律送達（07-04 Q4 已裁定）。**本頁那六列與條文一字未改**，依 `spec-writing` 步驟 5 第 6 點不加變更標示 | **無新決議**（對應 07-04 Q4 的裁定） |

@@ -1,0 +1,36 @@
+<!-- @dsCard group="Layout" height=510 -->
+<!doctype html>
+<html lang="zh-TW" data-theme="light">
+<head>
+<meta charset="utf-8">
+<style>
+  /* preview layout only; the frame preloads tokens.css and bundle.css */
+  html body { margin: 0; padding: 24px; display: block; }
+  .ds-stage { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .ds-caption { font-size: 12px; color: var(--color-ink-muted); }
+  .ds-stage { flex-direction: column; align-items: stretch; gap: 8px; max-width: 360px; }
+</style>
+</head>
+<body>
+  <div class="ds-stage">
+    <span class="ds-caption">水平線 .divider-hr</span>
+    <div>
+      <div>區塊 A</div>
+      <hr class="divider-hr" />
+      <div>區塊 B</div>
+    </div>
+    <span class="ds-caption">文字分隔 .divider-text（僅登入頁 OAuth 與帳號登入之間）</span>
+    <div class="divider-text">
+      <hr class="divider-hr" />
+      <span>或</span>
+      <hr class="divider-hr" />
+    </div>
+    <span class="ds-caption">清單分隔 .divider-list</span>
+    <ul class="divider-list">
+      <li>建立任務「情緒分類 v2」</li>
+      <li>上傳資料集 reviews.csv</li>
+      <li>邀請 3 位標記員</li>
+    </ul>
+  </div>
+</body>
+</html>

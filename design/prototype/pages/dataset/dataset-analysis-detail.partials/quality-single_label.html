@@ -3,7 +3,7 @@
     <h2 class="panel-title" id="iaaTitle">IAA 報告</h2>
   </div>
   <div class="iaa-method-row">
-    <span class="iaa-primary-star" aria-label="主要指標"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+    <span class="iaa-primary-star" aria-label="主要指標" data-i18n-aria-label="iaaPrimaryAria"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
     <span class="iaa-method-name" id="iaaMethodName" data-i18n="singleLabelQuality.methodName">Krippendorff's Alpha（nominal）</span>
     <span id="iaaMethodSuffix" data-i18n="singleLabelQuality.methodSuffix">— 主要指標</span>
   </div>
@@ -22,7 +22,7 @@
     </div>
   </div>
   <button class="alt-toggle-btn" id="altBtnSingleLabel" type="button" aria-expanded="false" aria-controls="altBodySingleLabel">
-    <svg class="alt-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+    <svg class="alt-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
     <span id="altLblSingleLabel" data-i18n="singleLabelQuality.altToggle">替代指標</span>
   </button>
   <div class="alt-metrics-body" id="altBodySingleLabel" aria-hidden="true">
@@ -46,7 +46,7 @@
   <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" data-i18n="qualityListRank.lowConsistencySubtitle">依分歧度由高到低排序，可作為 Reviewer 仲裁優先順序參考（與 dry_run 仲裁 divergent 概念同源）</p>
   <div class="table-wrap">
     <div class="table-scroll">
-      <table class="annotator-table" aria-label="一致性最低樣本清單（單選分類）">
+      <table class="annotator-table" aria-label="一致性最低樣本清單（單選分類）" data-i18n-aria-label="qualityListRank.ariaSampleSingleLabel">
         <thead>
           <tr>
             <th data-i18n="qualityListRank.headerSample">樣本</th>
@@ -56,12 +56,12 @@
         </thead>
         <tbody>
           <tr>
-            <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#212</span></td>
+            <td><span style="font-family:var(--font-mono);color:var(--color-primary-strong)">#212</span></td>
             <td><span class="badge badge-fail">0.61</span></td>
             <td style="white-space:normal;font-size:12px" data-i18n="singleLabelListRank.sample1Detail">樣本 #212：3 位標記員對「服務態度不佳但問題已解決」句子分別標為「負向」「中立」「正向」，情緒判斷分歧</td>
           </tr>
           <tr>
-            <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#178</span></td>
+            <td><span style="font-family:var(--font-mono);color:var(--color-primary-strong)">#178</span></td>
             <td><span class="badge badge-warn">0.47</span></td>
             <td style="white-space:normal;font-size:12px" data-i18n="singleLabelListRank.sample2Detail">樣本 #178：對「退款流程」描述句是否屬於「負向」意見不一致</td>
           </tr>
@@ -76,7 +76,7 @@
   <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" data-i18n="qualityListRank.rankingSubtitle">依型別對應一致率計算方式排序；完成樣本數不足門檻者標示小樣本估計警示，但不剔除排名</p>
   <div class="table-wrap">
     <div class="table-scroll">
-      <table class="annotator-table" aria-label="標記員品質排名（單選分類）">
+      <table class="annotator-table" aria-label="標記員品質排名（單選分類）" data-i18n-aria-label="qualityListRank.ariaRankSingleLabel">
         <thead>
           <tr>
             <th data-i18n="qualityListRank.rankHeaderRank">名次</th>
@@ -98,10 +98,10 @@
 <section class="panel" aria-labelledby="anomalyTitle">
   <h2 class="panel-title" id="anomalyTitle">異常偵測</h2>
   <p class="panel-subtitle" id="anomalySubtitle">自動標記標記速度異常與離群標記值</p>
-  <div class="anomaly-group-title">標記速度異常</div>
-  <div class="empty-state empty-state-panel empty-state-compact">無速度異常</div>
-  <div class="anomaly-group-title" style="margin-top:var(--space-md)">高分歧樣本</div>
-  <div class="empty-state empty-state-panel empty-state-compact">無高分歧樣本旗標</div>
+  <div class="anomaly-group-title" id="anomClsSpeedTitle">標記速度異常</div>
+  <div class="empty-state empty-state-panel empty-state-compact" id="anomClsSpeedEmpty">無速度異常</div>
+  <div class="anomaly-group-title" id="anomClsOutlierTitle" style="margin-top:var(--space-md)">高分歧樣本</div>
+  <div class="empty-state empty-state-panel empty-state-compact" id="anomSdOutlierEmpty">無高分歧樣本旗標</div>
 </section>
 
 <section class="panel" aria-labelledby="annotatorTitle">
@@ -130,8 +130,8 @@
   <div style="margin-top:var(--space-md)">
     <div class="table-wrap">
       <div class="table-scroll">
-        <table class="annotator-table" aria-label="標記一致性偏離分析（單選分類）">
-          <thead><tr><th>標記員</th><th id="consistencyUnitCol">可比較句數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
+        <table class="annotator-table" aria-label="標記一致性偏離分析（單選分類）" data-i18n-aria-label="qualityListRank.ariaDevSingleLabel">
+          <thead><tr><th data-i18n="qualityRisk.headerAnnotator">標記員</th><th id="consistencyUnitCol">可比較句數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
           <tbody>
             <tr><td><span class="annotator-name">Iris Tsai</span></td><td>40</td><td>2</td><td>5.0%</td><td>0</td><td>0%</td></tr>
             <tr><td><span class="annotator-name">Avery Lin</span></td><td>38</td><td>3</td><td>7.9%</td><td>0</td><td>0%</td></tr>
@@ -140,6 +140,6 @@
         </table>
       </div>
     </div>
-    <p class="group-avg-note" id="consistencyNote">單選分類任務以每句提交結果作為可比較單位；此區塊描述偏離現象，不直接代表標記正確性。</p>
+    <p class="group-avg-note" id="consistencyNote">單選分類任務以每句送出結果作為可比較單位；此區塊描述偏離現象，不直接代表標記正確性。</p>
   </div>
 </section>

@@ -1,16 +1,16 @@
 # 覆蓋核對
 
-交付包版本：commit `b1fd43c84031f254b82e195e9659ba41dfa3a41a`，prototype tree `4cb347d5e720203418701a0a4a6b521cc117c64e`。
+交付包版本：commit `387482bb70756070d49416910844e0436c443b22`，prototype tree `a4336be42bc70922d3955479e6174c752e138476`。
 產生依據：[`design-handoff` skill](../../../.claude/skills/design-handoff/SKILL.md) 的步驟 4。工作源頭是 [Issue #248](https://github.com/label-suite/label-suite/issues/248)。
 
-**本次是第三版**（第二次重跑）。差異見 §九。
+**本次是第十三版**（第十二次重跑）。差異見 §九。
 
 | 項目 | 數 |
 | :--- | ---: |
 | 條目 | 19（18 個畫面 ＋ 1 個共用外殼） |
-| 視圖 | 140 |
+| 視圖 | 154 |
 | 批次 | 5（`b0` 本 skill 做完，`b1`–`b4` 交給 `design-system-setup`） |
-| 無法重現的視圖 | 2 |
+| 無法重現的視圖 | 3 |
 | 沒有規格可連的視圖 | 2 |
 
 ---
@@ -36,7 +36,7 @@
 
 這是一個**刻意寬鬆**的斷言：「至少一個」不等於逐項涵蓋。逐列看，`task-detail` 的「設定、抽樣、guideline、run control、成員操作、匯出」整列對到六個分頁、五個設定區段（`#param-section-*`，第二次重跑才補上）與 `state-panel-load-failed`，但「run control、成員操作、匯出」三項仍然沒有各自的視圖——一個 12,501 行、6 個 panel、含日期區間選擇器與分類刪除彈窗的畫面只收 17 個視圖，`modal-`／`toast-` 一個都沒有。`design-system-setup` 在 `b2` 會吃到這個缺口。
 
-視圖數比 `Inline` 列多很多（140 vs 24），因為 `Inline` 把「搜尋／篩選／排序／分頁」這類寫成一列，而 URL 參數掃描把它們拆成可個別重現的狀態。
+視圖數比 `Inline` 列多很多（154 vs 24），因為 `Inline` 把「搜尋／篩選／排序／分頁」這類寫成一列，而 URL 參數掃描把它們拆成可個別重現的狀態。
 
 ### 另一道對照：網址參數契約 vs 掃出來的全集
 
@@ -44,14 +44,18 @@
 
 本次結果（**第三版，兩步掃描**）：**兩個方向各 0 筆。**
 
+第七次重跑時（第八版）多了一筆：[Issue #422](https://github.com/label-suite/label-suite/issues/422) 在 `dataset-analysis-list.model.js:241` 與 `dataset-analysis-detail.html:1509` 新增 `error`（只認 `1`），**程式有、契約沒有**。建議把它補進 `navigation.mdx` §網址參數 的兩列資料集分析頁（本 skill 不改那份文件）。兩個視圖已收為 `#param-error`。
+
+第八次重跑時（第九版）這一筆已關閉：`navigation.mdx` 的兩列資料集分析頁補上了 `error`，兩個方向又是各 0 筆。
+
 第二版寫「兩個方向各 0 筆」而**那是錯的**，因為掃描法只找字面量 `.get('<名稱>')`，看不見把參數名放在表裡、以變數讀的寫法。獨立審查連續兩輪抓到四處這種寫法：
 
 | 位置 | 名字從哪來 | 宣告新參數 |
 | :--- | :--- | ---: |
-| `task-detail.html:5117` | `URL_VIEW_STATE` | **16** |
-| `annotation-workspace.config.js:1552` | `LIST_VIEW_STATE_KEYS` ＋ `LIST_IDENTITY_KEYS` | **6** |
-| `dataset-analysis-detail.html:2432` | `PROTOTYPE_ONLY_PARAMS` | 0（`s_state` 已在表上） |
-| `sidebar.js:731` | 列舉既有鍵 | 0 |
+| `task-detail.html:5048` | `URL_VIEW_STATE` | **16** |
+| `annotation-workspace.config.js:1560` | `LIST_VIEW_STATE_KEYS` ＋ `LIST_IDENTITY_KEYS` | **6** |
+| `dataset-analysis-detail.html:2528` | `PROTOTYPE_ONLY_PARAMS` | 0（`s_state` 已在表上） |
+| `sidebar.js:732` | 列舉既有鍵 | 0 |
 
 兩輪的修法：[PR #400](https://github.com/label-suite/label-suite/pull/400) 把那 22 個名字補進 `navigation.mdx` 的契約，本版把掃描法改成兩步，所以 `params` 欄現在才是真的全集——`task-management/task-detail` 從 11 個變 **25** 個、`annotation/annotation-workspace` 從 9 個變 **13** 個。
 
@@ -123,7 +127,7 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 ## 五、無法重現的視圖
 
-兩筆，**都是規格要求而畫面沒有**，而且兩筆都已經有單在追（[Issue #187](https://github.com/label-suite/label-suite/issues/187) 的第 1、2 項，維護者 2026-11-12 裁定先不做）。
+三筆。前兩筆**都是規格要求而畫面沒有**，而且都已經有單在追（[Issue #187](https://github.com/label-suite/label-suite/issues/187) 的第 1、2 項，維護者 2026-11-12 裁定先不做）。第三筆是 `design-gaps.md` G-40 要補的視圖，第四次重跑時實際叫不出來。
 
 ### 1. `annotation/annotation-list#state-loading`
 
@@ -137,6 +141,13 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 - **卡在哪一步**：右欄「任務說明」區只算繪**任務名稱**——`annotation-workspace.config.js` 的 `setText('guidelineSummaryText', taskName)`，而 `taskName` 取自 `currentProfile.nameZh`／`nameEn`。
 - **規格**：[04-02 §右欄：說明與檔案、操作紀錄](../../../docs/specs/04-annotation/02-annotation-workspace.mdx#右欄說明與檔案操作紀錄) 第 6 條要求這一區「**依序承載三件事**：名稱、任務目標、操作指引」。
 - **缺到什麼程度**：不只是沒有版位——那兩段的**內容在 prototype 裡不存在**，任務資料上也沒有對應欄位。所以這不是「叫不出來」，是「沒有東西可以叫」。
+
+### 3. `task-management/task-new#state-banner-error`
+
+- **卡在哪一步**：頂端錯誤橫幅 `#bannerError`（`task-new.html:236`）只有「下一步」的 click handler 會呼叫 `showBannerError()`（`:1653`–`:1688`）。但第一步與第三步每次輸入都跑 `revalidateCurrentStep()`（`:1139`），驗證不過就把「下一步」設成 disabled，所以那段 handler 永遠走不到。
+- **實測**：清空任務名稱、把第三步抽樣筆數改成 0，「下一步」都是停用，橫幅不出現。
+- **規格**：[03-02 §卡控機制](../../../docs/specs/03-task-management/02-task-new.mdx#卡控機制)。
+- **待決**：G-40 的裁定要把它補成視圖，但畫面目前叫不出來。是畫面要改成讓按鈕可按、還是這個視圖本來就不該列，要維護者決定，本 skill 不判斷。
 
 ---
 
@@ -173,19 +184,19 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 | 視圖 | 證據（摘要） |
 | :--- | :--- |
-| `#state-theme-dark` | 主題鈕 `:2080`／`:2054`；載入 `theme.js` 的 11 頁走它的 `setChoice()`（`:364`–`:367` 提前 return），其餘 5 個帳號頁走 `:370`／`:374` |
-| `#state-lang-en` | `#langToggle` `:2046`／`#mobileLangToggle` `:2050` → `applyGlobalLanguage()` `:427` |
-| `#state-sidebar-collapsed` | **桌機**（`:513` 的 `min-width: 769px`）收合 → `body.sidebar-collapsed` `:2524` |
-| `#state-mobile` | `sidebar.css` 的 `@media (max-width: 768px)`：另一套版面，另有 `#mobileLangToggle`／`#mobileThemeToggleBtn`／`#mobileLogoutBtn` |
-| `#state-user-chip` | `#userAvatar` `:2097`、`#userName`、`#roleIndicator` `:2100`；頭像取自 `label-suite-profile-avatar` `:55` |
-| `#state-logout` | `#logoutBtn` `:2103`／`#mobileLogoutBtn` `:2064`，一次清掉 7 個 storage 鍵 |
-| `#modal-notification` | `#notificationDropdown` `:2259`、`#notifMarkAllBtn` `:2274`、`#notificationBadge` |
-| `#modal-shortcut` | `#shortcutHelpModal` `:2108`，開關在 `:2208` |
-| `#role-super-admin` | `:536` 在不是 `super_admin` 時隱藏 `#navAdminItem` `:627` |
-| `#state-admin-submenu-open` | `:539`–`:541`：桌機且未收合才展開成兩個連結 |
-| `#state-active-task-type` | `labelsuite.activeTaskType` `:4` 決定標記作業那一項的標籤與 `#roleIndicator` |
-| `#state-workspace-tabs` | 頁籤列 `:1524`、總覽選單、重開、全部關閉與三種通知；6 個 sessionStorage 鍵 |
-| `#param-ap-stage` | **任務詳情**才讀（`:762`）：`:769`／`:772` 設 `stageBadge` → `data-stage-badge` `:1252` |
+| `#state-theme-dark` | 主題鈕 `sidebar.js:2081`／`:2055`；載入 `theme.js` 的 11 頁走它的 `setChoice()`（`sidebar.js:364`–`:367` 提前 return），其餘 5 個帳號頁走 `:370`／`:374` |
+| `#state-lang-en` | `#langToggle` `sidebar.js:2047`／`#mobileLangToggle` `:2051` → `applyGlobalLanguage()` `:427` |
+| `#state-sidebar-collapsed` | **桌機**（`sidebar.js:513` 的 `min-width: 768px`）收合 → `body.sidebar-collapsed` `:2525` |
+| `#state-mobile` | `sidebar.css` 的 `@media (max-width: 767px)`：另一套版面，另有 `#mobileLangToggle`／`#mobileThemeToggleBtn`／`#mobileLogoutBtn` |
+| `#state-user-chip` | `#userAvatar` `sidebar.js:2098`、`#userName`、`#roleIndicator` `:2101`；頭像取自 `label-suite-profile-avatar` `:55` |
+| `#state-logout` | `#logoutBtn` `sidebar.js:2104`／`#mobileLogoutBtn` `:2065`，一次清掉 7 個 storage 鍵 |
+| `#modal-notification` | `#notificationDropdown` `sidebar.js:2260`、`#notifMarkAllBtn` `:2275`、`#notificationBadge` |
+| `#modal-shortcut` | `#shortcutHelpModal` `sidebar.js:2109`，開關在 `:2209` |
+| `#role-super-admin` | `sidebar.js:536` 在不是 `super_admin` 時隱藏 `#navAdminItem` `:628` |
+| `#state-admin-submenu-open` | `sidebar.js:539`–`:541` 的 `System Administration` 子選單：桌機且未收合才展開成兩個連結 |
+| `#state-active-task-type` | `labelsuite.activeTaskType` `sidebar.js:4` 決定標記作業那一項的標籤與 `#roleIndicator` |
+| `#state-workspace-tabs` | 頁籤列 `workspace-tab-bar` `sidebar.js:1525`、總覽選單、重開、全部關閉與三種通知；6 個 sessionStorage 鍵 |
+| `#param-ap-stage` | **任務詳情**才讀（`pageKind`，`sidebar.js:763`）：`:770`／`:773` 設 `stageBadge` → `data-stage-badge` `:1253` |
 
 ### 為什麼它自成一個條目
 
@@ -212,7 +223,375 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 ## 九、重跑紀錄
 
-### 第二次（本版）
+### 第十二次（本版）
+
+上一版釘在 `8702db2`。之後 [Issue #455](https://github.com/label-suite/label-suite/issues/455) 修正 `navigation.mdx` 超出範圍的引用（補檔名、改行號），[Issue #461](https://github.com/label-suite/label-suite/issues/461) 把兩頁規格的「您」改成「你」（`01-account/04-profile.mdx`、`05-dataset/02-analysis-detail.mdx`，只改用字），[Issue #458](https://github.com/label-suite/label-suite/issues/458) 把其餘不跟主題換色的寫死 `rgba()` 改掉，改了三個 prototype 檔。
+
+| 欄位 | 第十二版 | 本版 | |
+| :--- | :--- | :--- | :--- |
+| `commit` | `8702db294f5d` | `387482bb7075` | 必然變 |
+| `prototypeTree` | `9f1aebb90272` | `a4336be42bc7` | **變了** |
+| `specsTree` | `cdf459578e4f` | `41776418aee0` | **變了**（#461，只改用字，沒有改規則） |
+| `navigationBlob` | `fabea63469ca` | `7a60a4eeeeee` | **變了**（#455，只改引用，沒有改參數） |
+
+變動的檔：
+- `task-config.css`：關係與序列標記的待選取強調（`.rel-sel-highlight`）由寫死的藍色改成 `--color-primary` 的 `color-mix`，淺色看得出由藍變靛。
+- `admin/role-settings.html`：任務權限格底色改成 `--color-task` 的 `color-mix`，淺色差一個色階以內。
+- `shared/sidebar.css`：檔尾加一段深色覆寫（多七行），通知下拉與分頁總覽選單的陰影在深色改黑色；淺色不變。
+
+| 類 | 數 | 內容 |
+| :--- | ---: | :--- |
+| 新增 | 0 | |
+| 移除 | 0 | |
+| 改寫 | 0 | 沒有視圖的重現步驟改變；`sidebar.css` 只在檔尾加行，另兩檔行數不變，manifest 引用的行號都不必換 |
+| `loads` 欄 | 0 | |
+| 參數 | 0 | 沒有改讀網址參數的程式 |
+| 受影響 | 128 | 154 個視圖中有 128 個的畫面載入了變動的檔（`sidebar.css` 128 個，其中 `task-config.css` 41 個、`role-settings.html` 7 個） |
+
+### 應重驗的批次（第十二次）
+
+| 批次 | 載入變動檔的視圖 | 新增 | 該批的參數驅動視圖 |
+| :--- | ---: | ---: | ---: |
+| `b1-shared-account` | 17／43 | 0 | 沒變 |
+| `b2-admin-dashboard-task` | 54／54 | 0 | 沒變 |
+| `b3-annotation-review` | 25／25 | 0 | 沒變 |
+| `b4-dataset-sweep` | 32／32 | 0 | 沒變 |
+
+這次只動到**顏色**，沒有改行為或版面。淺色刻意改變的是關係選取強調（藍改靛）與任務權限格底色（色差 1）；深色下兩個選單陰影、選取強調與任務格底色改跟深色 token。四批不必重做結構；受影響的文件（`app-shell.md`、`proto-toggle-bar.md`、Input 與 artifact 的 README、`design-gaps.md` G-02）已在同一張單裡改好。
+
+### 第十一次
+
+上一版釘在 `fdcea09`。之後 [Issue #439](https://github.com/label-suite/label-suite/issues/439) 重新對齊 `navigation.mdx` 的 17 個行號（只改數字），[Issue #442](https://github.com/label-suite/label-suite/issues/442) 把其餘寫死的主色與錯誤色 `rgba()` 改成 token 的 `color-mix()`，改了十四個 prototype 檔。`docs/specs/` 沒動。
+
+| 欄位 | 第十一版 | 本版 | |
+| :--- | :--- | :--- | :--- |
+| `commit` | `fdcea09ac12b` | `8702db294f5d` | 必然變 |
+| `prototypeTree` | `76fc01d0b121` | `9f1aebb90272` | **變了** |
+| `specsTree` | `cdf459578e4f` | `cdf459578e4f` | 沒變 |
+| `navigationBlob` | `90137539fd2f` | `fabea63469ca` | **變了**（#439，只改行號，沒有改參數） |
+
+變動的檔：
+- 帳號五頁（`login.html`、`register.html`、`forgot-password.html`、`reset-password.html`、`account/profile.html`）：輸入框的焦點環與錯誤環改 `color-mix`；`profile.html` 另有 Toggle Switch 的焦點環。
+- `admin/user-management.html`、`admin/role-settings.html`、`dashboard.components.css`、`task-list.html`、`task-new.html`、`shared/sidebar.css`：焦點環改 `color-mix`；`role-settings.html` 的系統權限格底色、`sidebar.css` 的頭像框線也一樣。
+- `task-config.css`：焦點環、schema 卡與關係徽章的框線改 `color-mix`；刪掉兩個關係徽章的深色覆寫（少兩行），色點的深色覆寫改 `--color-ink` 的 `color-mix`。
+- `task-detail.html`：焦點環、錯誤底色與框線改 `color-mix`。
+- `components-showcase.html`：`.page-size-select` 補文字色與兩種主題的下拉箭頭（多三行）。
+
+| 類 | 數 | 內容 |
+| :--- | ---: | :--- |
+| 新增 | 0 | |
+| 移除 | 0 | |
+| 改寫 | 0 | 沒有視圖的重現步驟改變；manifest 的 `how`／`why` 引用的行號都不在行數有變的兩個檔（`task-config.css`、`components-showcase.html`），不必換 |
+| `loads` 欄 | 0 | |
+| 參數 | 0 | 沒有改讀網址參數的程式 |
+| 受影響 | 149 | 154 個視圖中有 149 個的畫面載入了變動的檔（`sidebar.css` 128 個、`task-config.css` 41 個、`task-detail.html` 19 個，其餘各 1–8 個） |
+
+### 應重驗的批次（第十一次）
+
+| 批次 | 載入變動檔的視圖 | 新增 | 該批的參數驅動視圖 |
+| :--- | ---: | ---: | ---: |
+| `b1-shared-account` | 38／43 | 0 | 沒變 |
+| `b2-admin-dashboard-task` | 54／54 | 0 | 沒變 |
+| `b3-annotation-review` | 25／25 | 0 | 沒變 |
+| `b4-dataset-sweep` | 32／32 | 0 | 沒變 |
+
+這次只動到**顏色**，沒有改行為或版面。淺色主題刻意改變的只有 showcase 的 `.page-size-select`（補上箭頭與 `--color-ink` 文字色）；其餘淺色算出值與 `origin/main` 相同，深色下焦點環、框線與錯誤色改跟深色 token。四批不必重做結構；受影響的元件文件（Color Dot、Pagination）、各文件指向 `components-showcase.html` 與 `task-config.css` 的行號、`design-gaps.md` G-02、G-04、G-10 已在同一張單裡改好。
+
+### 第十次
+
+上一版釘在 `5566aec`。之後 [Issue #438](https://github.com/label-suite/label-suite/issues/438) 補齊深色主題的配色缺口，改了十二個 prototype 檔；同一張單依 prototype 的新行號重新對齊 `navigation.mdx` 與 `docs/specs/07-shared/01-sidebar.mdx` 的行號引用（只改數字），所以三個 sha 都變了。
+
+| 欄位 | 第十版 | 本版 | |
+| :--- | :--- | :--- | :--- |
+| `commit` | `5566aec2decc` | `fdcea09ac12b` | 必然變 |
+| `prototypeTree` | `ecdd14a24d90` | `76fc01d0b121` | **變了** |
+| `specsTree` | `58bee0ccf9d5` | `cdf459578e4f` | **變了**（只有一個行號 261→266） |
+| `navigationBlob` | `29e4eea42c99` | `90137539fd2f` | **變了**（只改行號，沒有改參數） |
+
+變動的檔：
+- `tokens.css`：只改 `--color-toggle-thumb` 的註解（圓鈕改疊在 `--color-border-control` 軌道上的對比），值與行數都不變。
+- `shared/list-page.css`：focus ring 改 `color-mix`；`.page-btn.active` 的字改 `--color-on-cta`（G-12）；下拉箭頭依主題分兩條 data-URI。
+- `components-showcase.html`：`.input` 補底色與文字色、focus ring 改 `color-mix`、補 `.btn-secondary:hover`、色點的深色邊框、頭像邊框與遮罩圖示。
+- `task-config.css`、`account/profile.html`：關閉的開關軌道改 `--color-border-control`。
+- `task-detail.html`、`task-new.html`、`admin/user-management.html`、`dashboard.components.css`：下拉箭頭依主題分成兩條 data-URI；`task-detail.html` 另把寫死的內陰影白改走 `--color-white`。
+- `annotation-workspace.html`、`dataset-analysis-list.html`：寫死的 `rgba(99,102,241,…)` 邊框與內陰影改 `color-mix`。
+- `dataset-analysis-detail.html`：載入 `data-palette.css`（第 10 行）。
+
+| 類 | 數 | 內容 |
+| :--- | ---: | :--- |
+| 新增 | 0 | |
+| 移除 | 0 | |
+| 改寫 | 0 | 沒有視圖的重現步驟改變；8 個視圖的 `how` 與 1 筆無法重現的 `why` 只把行號換成新位置（`user-management.html`、`dataset-analysis-detail.html`、`task-detail.html`、`task-new.html`），本文 §二、§五 的行號也一起換 |
+| `loads` 欄 | 1 | `dataset/dataset-analysis-detail` 新增 `design/prototype/assets/data-palette.css` |
+| 參數 | 0 | 沒有改讀網址參數的程式 |
+| 受影響 | 140 | 154 個視圖中有 140 個的畫面載入了變動的檔（`tokens.css` 140 個、`task-config.css` 41 個、`dataset-analysis-detail.html` 27 個、`list-page.css` 22 個、`task-detail.html` 19 個，其餘各 1–15 個） |
+
+### 應重驗的批次（第十次）
+
+| 批次 | 載入變動檔的視圖 | 新增 | 該批的參數驅動視圖 |
+| :--- | ---: | ---: | ---: |
+| `b1-shared-account` | 29／43 | 0 | 沒變 |
+| `b2-admin-dashboard-task` | 54／54 | 0 | 沒變 |
+| `b3-annotation-review` | 25／25 | 0 | 沒變 |
+| `b4-dataset-sweep` | 32／32 | 0 | 沒變 |
+
+這次只動到**顏色**，沒有改行為或版面。淺色主題刻意改變的只有三處：下拉箭頭筆畫由 `#94A3B8` 改 `#5E6B7F`（對白底 2.56→5.40:1）、關閉的開關軌道由 `#E2E8F0` 改 `#7C899D`（3:1）、showcase 補上 `.btn-secondary:hover`；其餘淺色算出值與 `origin/main` 相同。四批不必重做結構；受影響的元件文件（Avatar、Button、Color Dot、Input、List Toolbar、Pagination、Toggle Switch）、showcase 頁面文件與 `design-gaps.md` G-02、G-04、G-10、G-12 已在同一張單裡改好。
+
+### 第九次
+
+上一版釘在 `5b1cb92`。之後 [Issue #437](https://github.com/label-suite/label-suite/issues/437) 把 prototype 裡上色用的 `white` 關鍵字與通知徽章的 `#fff` 換成 token，改了十個 prototype 檔；`docs/specs/` 與 `navigation.mdx` 都沒動。
+
+| 欄位 | 第九版 | 本版 | |
+| :--- | :--- | :--- | :--- |
+| `commit` | `5b1cb921515b` | `5566aec2decc` | 必然變 |
+| `prototypeTree` | `d9c2ab67868b` | `ecdd14a24d90` | **變了** |
+| `specsTree` | `58bee0ccf9d5` | `58bee0ccf9d5` | 沒變 |
+| `navigationBlob` | `29e4eea42c99` | `29e4eea42c99` | 沒變 |
+
+變動的檔：
+- `tokens.css`：新增 `--color-on-badge-notify`（兩種主題都是白）與 `--color-toggle-thumb`（淺色白、深色 slate-200）。這是唯一行數有變的檔。
+- `shared/sidebar.css`：通知徽章的字改用 `--color-on-badge-notify`。
+- `task-config.css`、`components-showcase.html`、`account/profile.html`：開關圓鈕、chip 的勾、分類勾選框與輸出序號徽章改用 `--color-on-cta` 或 `--color-toggle-thumb`；預覽列的白底改用 `--color-white`。
+- `task-list.html`：焦點環外圈改用 `--color-white`。
+- 四個帳號頁（`login`、`register`、`forgot-password`、`reset-password`）與 `profile.html`：spinner 的三邊改用 `--color-on-cta` 的半透明混色。
+
+| 類 | 數 | 內容 |
+| :--- | ---: | :--- |
+| 新增 | 0 | |
+| 移除 | 0 | |
+| 改寫 | 0 | 交付包引用的行號（`login.html:677` 的 `#loginBtnText`、`reset-password.html:548` 的 `successPanel`、`task-list.html:1219` 的 `TASK_LIST_DATA_READY`）都在原地替換的檔裡，行數不變；行數有變的只有 `tokens.css`，交付包沒有引用它的行號 |
+| `loads` 欄 | 0 | 沒有新增或移除載入的檔 |
+| 參數 | 0 | 沒有改讀網址參數的程式 |
+| 受影響 | 153 | 154 個視圖中有 153 個的畫面載入了變動的檔（`tokens.css` 140 個、`sidebar.css` 128 個、`task-config.css` 41 個，其餘各 1–7 個） |
+
+### 應重驗的批次（第九次）
+
+| 批次 | 載入變動檔的視圖 | 新增 | 該批的參數驅動視圖 |
+| :--- | ---: | ---: | ---: |
+| `b1-shared-account` | 42／43 | 0 | 沒變 |
+| `b2-admin-dashboard-task` | 54／54 | 0 | 沒變 |
+| `b3-annotation-review` | 25／25 | 0 | 沒變 |
+| `b4-dataset-sweep` | 32／32 | 0 | 沒變 |
+
+這次只動到**顏色**，沒有改行為或版面，而且淺色主題的算出值不變：同一張單以 Playwright 對 20 個頁面與狀態比對 `origin/main` 與本分支，淺色下每個元素與偽元素的算出色都相同，深色下只有上面列的部件改變。四批不必重做結構；受影響的元件文件（Toggle Switch、Spinner、Chip、Proto Toggle Bar）與 `brand.md` 已在同一張單裡改好。
+
+### 第八次
+
+上一版釘在 `e69cc99`。之後同一張單（[Issue #420](https://github.com/label-suite/label-suite/issues/420)）依維護者的裁示再改了四個 prototype 檔，並改了 `navigation.mdx`。
+
+| 欄位 | 第八版 | 本版 | |
+| :--- | :--- | :--- | :--- |
+| `commit` | `e69cc9925435` | `5b1cb921515b` | 必然變 |
+| `prototypeTree` | `6241519a5d37` | `d9c2ab67868b` | **變了** |
+| `specsTree` | `58bee0ccf9d5` | `58bee0ccf9d5` | 沒變 |
+| `navigationBlob` | `fab9fabe0dab` | `29e4eea42c99` | **變了** |
+
+變動的檔：
+- `tokens.css`：淺色 `--color-task` 改成 Teal 700，讓它在 `--color-task-bg` 上的文字對比到 4.5:1。
+- `data-palette.css`：實體色、輪次色與切分色加上深色那一組（原本兩種主題共用一組）。
+- `task-config.data.js`：在 `ENTITY_COLORS` 後面加 `entityPaintColor()`／`entityWashColor()`。
+- `task-config.engine.js`：上色處改走這兩個函式，每處只換一行，所以行號沒動。
+- `navigation.mdx`：重新對齊行號，並在兩列資料集分析頁補上 `error`。
+
+| 類 | 數 | 內容 |
+| :--- | ---: | :--- |
+| 新增 | 0 | |
+| 移除 | 0 | |
+| 改寫 | 0 | 重現步驟引用的行號都不在變動的範圍內 |
+| `loads` 欄 | 0 | 沒有新增或移除載入的檔 |
+| 參數 | 0 | 掃出來的全集不變；`error` 這次補進了契約，§二 的缺口關閉 |
+| 受影響 | 140 | 154 個視圖中有 140 個的畫面載入了變動的檔（`tokens.css` 140 個、`data-palette.css` 72 個、`task-config.*` 68 個） |
+
+### 應重驗的批次（第八次）
+
+| 批次 | 載入變動檔的視圖 | 新增 | 該批的參數驅動視圖 |
+| :--- | ---: | ---: | ---: |
+| `b1-shared-account` | 29／43 | 0 | 沒變 |
+| `b2-admin-dashboard-task` | 54／54 | 0 | 沒變 |
+| `b3-annotation-review` | 25／25 | 0 | 沒變 |
+| `b4-dataset-sweep` | 32／32 | 0 | 沒變；`error` 已在契約裡 |
+
+這次只動到**顏色**，沒有改行為或版面。四批不必重做結構，只要重看顏色。這次已在同一張單裡把 `components/`（35 份）、`pages/`（19 份）與 `MASTER.md` 的每一句顏色描述，逐句對照 HEAD 上淺色與深色兩種主題的實際算出值：17 份元件文件改了 25 處，頁面文件與 `MASTER.md` 0 處。畫不出來的狀態（例如錯誤列、`.pass`／`.warn` 進度條、偽元素的開關鈕）只以 CSS 核對。
+
+### 第七次
+
+上一版釘在 `c77da22`。之後 main 合併了 [Issue #422](https://github.com/label-suite/label-suite/issues/422)（無障礙修正）與 [Issue #423](https://github.com/label-suite/label-suite/issues/423)（元件一致性），兩者都改了 prototype 卻沒有重跑交付包；本分支再加上 [Issue #420](https://github.com/label-suite/label-suite/issues/420) 的寫死色值改 token。這一版把三張單一起算。
+
+| 欄位 | 第七版 | 本版 | |
+| :--- | :--- | :--- | :--- |
+| `commit` | `c77da22351dd` | `e69cc9925435` | 必然變 |
+| `prototypeTree` | `86b43b19dca2` | `6241519a5d37` | **變了** |
+| `specsTree` | `e8362d715d6b` | `58bee0ccf9d5` | **變了** |
+| `navigationBlob` | `c64128a7e7a5` | `fab9fabe0dab` | **變了** |
+
+變動的檔：prototype 34 個（#422／#423 改 22 個，#420 改 25 個，有重疊）；規格 2 個（`03-task-management/01-task-list.mdx`、`07-shared/01-sidebar.mdx`，兩次都只改引用 prototype 的行號，標題沒變）；`navigation.mdx` 只改引用行號。
+
+| 類 | 數 | 內容 |
+| :--- | ---: | :--- |
+| 新增 | 2 | `dataset/dataset-analysis-list#param-error`、`dataset/dataset-analysis-detail#param-error`（#422 的 `?error=1`）。兩個都在執行中的 prototype 開過才記：清單只剩一列「資料集分析載入失敗」與「重試」、分頁列隱藏；詳情頁兩個面板都換成「資料載入失敗」與「重新載入」 |
+| 移除 | 0 | #423 移除的分析詳情 toast 原本就沒有收成視圖 |
+| 改寫 | 17 | 重現步驟裡的行號依修正後的檔重新對齊（只搬動內容沒變的行）；兩個 `#modal-audit-log` 的抽屜由 #422 抽到 `shared/audit-drawer.js`，改引用那個檔，並把它加進 `evidence` |
+| `loads` 欄 | 17 | #420：五個帳號頁加 `tokens.css`、登入頁加 `google-g.svg`、八個條目加 `data-palette.css`；#422／#423：兩個管理頁加 `audit-drawer.css`／`audit-drawer.js`、三個條目加 `modal-focus.js`、六個條目加 `card.css` |
+| 參數 | 2 | 兩個資料集分析條目的 `params` 加 `error`；契約缺口見 §二 |
+| 受影響 | 141 | 依 `evidence`／`spec` 算出的；見下表 |
+
+規格錨點逐一對過：新增兩個視圖指到的 `#四種互斥的頁面狀態`、`#載入失敗只換掉內容區` 都是現有標題。
+
+**只看證據仍會低估**：`tokens.css`、`data-palette.css`、`card.css`、`audit-drawer.css` 與 `shared/` 的多個樣式檔沒有被任何視圖列為 `evidence`，而 #420 把 22 個檔的寫死色值換成 token，幾乎每個視圖的顏色來源都變了。
+
+### 應重驗的批次（第七次）
+
+| 批次 | 依 `evidence`／`spec` 算出的 | 新增 | 該批的參數驅動視圖 |
+| :--- | ---: | ---: | ---: |
+| `b1-shared-account` | 33／43 | 0 | `navigationBlob` 有變，但只改行號，沒有改參數 |
+| `b2-admin-dashboard-task` | 52／54 | 0 | 同上 |
+| `b3-annotation-review` | 25／25 | 0 | 同上 |
+| `b4-dataset-sweep` | 31／32 | 2 | 同上；`error` 是程式新增、契約還沒有的參數 |
+
+四批都要重驗。#420 的部分只需要重看**顏色**（`design-system-setup` 已做 b1～b4 的色值複查，見 `MASTER.md` 變更紀錄第 5 列）；#422／#423 的部分改了行為（彈窗焦點、Esc 與遮罩、提交受阻時的指引、參考值、卡片與按鈕抽成共用樣式），那幾批的元件與畫面規格要依各自的單重驗，本次重跑只記錄它們動到哪些視圖。
+
+### 第六次
+
+[Issue #427](https://github.com/label-suite/label-suite/issues/427) 第五次重跑之後，維護者 2026-11-18 的兩輪裁定又改了 prototype：淺色 `--color-border-control` 從 `#8592A6` 加深為 `#7C899D`（在 surface 上也過 3:1）；日期區間與分類選擇這兩個長得像欄位的觸發鈕改用 `--color-border-control`；五個帳號頁的 `--color-link` 在兩種主題都對齊 `--color-primary-strong`（淺色 `#4F46E5`、深色 `#A5B4FC`）。規格沒有變動。
+
+| 欄位 | 第六版 | 本版 | |
+| :--- | :--- | :--- | :--- |
+| `commit` | `296af36cfe64` | `c77da22351dd` | 必然變 |
+| `prototypeTree` | `a93ce77ce72f` | `86b43b19dca2` | **變了** |
+| `specsTree` | `e8362d715d6b` | `e8362d715d6b` | **沒變** |
+| `navigationBlob` | `c64128a7e7a5` | `c64128a7e7a5` | **沒變** |
+
+變動的檔共 8 個，全在 prototype：`assets/tokens.css`、五個帳號頁、`shared/date-range-picker.css`、`task-management/task-config.css`。
+
+| 類 | 數 | 內容 |
+| :--- | ---: | :--- |
+| 新增 | 0 | 只改顏色，沒有新的狀態 |
+| 移除 | 0 | |
+| 改寫 | 0 | 重現步驟都沒變 |
+| `loads` 欄 | 0 | 沒有新增或移除 `<script src>`、`<link href>` |
+| 行號 | 0 | 8 個檔都是原地替換，行數不變 |
+| 受影響 | 17 | 依 `evidence`／`spec` 算出的，全在 `b1-shared-account`（五個帳號頁）；見下表 |
+
+**只看證據會低估**：`tokens.css`、`date-range-picker.css`、`task-config.css` 三個檔沒有被任何視圖列為 `evidence`。`tokens.css` 被 19 個條目裡的 12 個載入，四批都有；`date-range-picker.css` 由 `components-showcase`（b1）與 `task-management/task-detail`（b2）載入；`task-config.css` 由 `task-management/task-detail`、`task-management/task-new`（b2）與 `annotation/annotation-workspace`（b3）載入。所以淺色主題的控制項外框幾乎在每個有表單控制項的視圖都變了。
+
+### 應重驗的批次（第六次）
+
+| 批次 | 依 `evidence`／`spec` 算出的 | 新增 | 該批的參數驅動視圖 |
+| :--- | ---: | ---: | ---: |
+| `b1-shared-account` | 17／43 | 0 | 0（`navigationBlob` 沒變） |
+| `b2-admin-dashboard-task` | 0／54 | 0 | 0（同上） |
+| `b3-annotation-review` | 0／25 | 0 | 0 |
+| `b4-dataset-sweep` | 0／30 | 0 | 0 |
+
+四批都要重驗，但只需要重看**顏色**：淺色主題的表單控制項外框（四批），日期區間與分類選擇觸發鈕的外框（b1 的 `components-showcase`、b2 的任務頁、b3 的標註工作區），以及帳號頁兩種主題的連結色（b1）。版面、文案、狀態都沒變。
+
+### 第五次
+
+[Issue #427](https://github.com/label-suite/label-suite/issues/427) 依對比裁定改了 token 與控制項外框：`tokens.css` 的次要文字色改值、新增 `--color-border-control`，主色當文字的宣告改用 `--color-primary-strong`，控制項外框改用 `--color-border-control`，日期選擇器的「今天」改用 `--color-primary` 邊框。同一段期間 main 改了兩份規格引用 prototype 的行號（只動行號，標題沒變）。
+
+| 欄位 | 第五版 | 本版 | |
+| :--- | :--- | :--- | :--- |
+| `commit` | `d06045939d96` | `296af36cfe64` | 必然變 |
+| `prototypeTree` | `a71a5d61b57a` | `a93ce77ce72f` | **變了** |
+| `specsTree` | `18e6cba23433` | `e8362d715d6b` | **變了** |
+| `navigationBlob` | `c64128a7e7a5` | `c64128a7e7a5` | **沒變** |
+
+變動的檔共 39 個：prototype 37 個（#427），規格 2 個（`03-task-management/01-task-list.mdx`、`07-shared/01-sidebar.mdx`，main 上改行號，本分支沒有改 `docs/specs/`）。
+
+| 類 | 數 | 內容 |
+| :--- | ---: | :--- |
+| 新增 | 0 | 只改顏色，沒有新的狀態 |
+| 移除 | 0 | |
+| 改寫 | 0 | 重現步驟都沒變 |
+| `loads` 欄 | 0 | 沒有新增或移除 `<script src>`、`<link href>` |
+| 行號 | 0 | prototype 只有 `tokens.css` 的行號位移，交付包沒有引用它的行號；其他 36 個檔都是原地替換，行數不變 |
+| 受影響 | 131 | 依 `evidence`／`spec` 算出的；見下表 |
+
+兩份規格的 diff 只改了引用 prototype 的行號，沒有動到任何標題，所以視圖指到的錨點不受影響。
+
+**只看證據會低估**：有 11 個改動的檔（`tokens.css`、`shared/` 的 `input.css`、`list-page.css`、`button.css`、`content-tabs.css`、`date-range-picker.css`，`dashboard.components.css`、`dashboard.layout.css`、`task-config.css`，以及兩個 logo SVG）沒有被任何視圖列為 `evidence`。`tokens.css` 被 19 個條目裡的 12 個載入，五個帳號頁不載入它、各有一份自己的 token 區塊，也一起改了；`shared/app-shell` 的 `sidebar.css` 也在改動之列。所以實際上幾乎每個視圖的顏色都變了。
+
+### 應重驗的批次（第五次）
+
+| 批次 | 依 `evidence`／`spec` 算出的 | 新增 | 該批的參數驅動視圖 |
+| :--- | ---: | ---: | ---: |
+| `b1-shared-account` | 33／43 | 0 | 0（`navigationBlob` 沒變） |
+| `b2-admin-dashboard-task` | 46／54 | 0 | 0（同上） |
+| `b3-annotation-review` | 25／25 | 0 | 0 |
+| `b4-dataset-sweep` | 27／30 | 0 | 0 |
+
+四批都要重驗，但只需要重看**顏色**：次要文字、主色文字、表單控制項外框與日期選擇器的「今天」。版面、文案、狀態都沒變。
+
+### 第四次
+
+[Issue #418](https://github.com/label-suite/label-suite/issues/418) 依品牌書修正 prototype 的文案、圖示、logo 與斷點；同一段期間 main 也併進了規格的角色表改版（[PR #417](https://github.com/label-suite/label-suite/pull/417)、[PR #419](https://github.com/label-suite/label-suite/pull/419)）。兩者一起進這一版。
+
+| 欄位 | 第四版 | 本版 | |
+| :--- | :--- | :--- | :--- |
+| `commit` | `eb9a88434fc6` | `d06045939d96` | 必然變 |
+| `prototypeTree` | `815b85344df6` | `a71a5d61b57a` | **變了** |
+| `specsTree` | `63b7a51d2e3b` | `18e6cba23433` | **變了** |
+| `navigationBlob` | `c64128a7e7a5` | `c64128a7e7a5` | **沒變** |
+
+變動的檔共 71 個：prototype 54 個（#418），規格 17 個（main 上的角色表改版，本分支沒有改 `docs/specs/`）。
+
+| 類 | 數 | 內容 |
+| :--- | ---: | :--- |
+| 新增 | 12 | 依 `design-gaps.md` 2026-11-18 對 G-40、G-51 的裁定補上：`task-management/task-new#modal-taxonomy-delete`、`#state-step4`；`task-management/task-detail#state-loading`、`#state-task-not-found`；`admin/user-management#modal-audit-log`、`#modal-edit`；`admin/role-settings#modal-audit-log`、`#modal-dirty`、`#state-stored-invalid`；`annotation/annotation-workspace#modal-review-flow`、`#toast-saved`；`annotation/annotation-list#state-dry-run-feedback`。每一個都在 prototype 實際叫出來過 |
+| 無法重現 | 1 | `task-management/task-new#state-banner-error`，見 §五 第 3 筆 |
+| 移除 | 0 | |
+| 改寫 | 2 | G-52：`dataset/dataset-analysis-detail#state-seq-match-strict`／`-partial` 的重現步驟改指 `entity_recognition` 品質卡，`evidence` 加 `quality-entity_recognition.html`；**ID 不變** |
+| `loads` 欄 | 17 個條目 | #418 Q10 給每一頁加了 `<link rel="icon">`，那是 `<link href>`，所以 `assets/logo/icon-colored.svg` 進了 17 個 HTML 條目的 `loads`（`components-showcase` 原本就有）。`params` 沒變 |
+| 行號 | 62 行 | prototype 改動讓行號位移，`manifest.json` 36 行與本檔 26 行的行號引用依 `git diff` 的 hunk 逐一換算，抽查過 |
+| 受影響 | 140 | **既有的 140 個視圖全部受影響**：每一頁的 HTML 都因 favicon 改過，加上 17 個規格檔 |
+
+受影響視圖指到的規格錨點逐一重比過標題 slug，新舊 152 個**全部還在**。
+
+### 應重驗的批次（第四次）
+
+| 批次 | 依 `evidence`／`spec` 算出的 | 新增 | 該批的參數驅動視圖 |
+| :--- | ---: | ---: | ---: |
+| `b1-shared-account` | 43 | 0 | 0（`navigationBlob` 沒變） |
+| `b2-admin-dashboard-task` | 45 | 9 | 0（同上） |
+| `b3-annotation-review` | 22 | 3 | 0 |
+| `b4-dataset-sweep` | 30 | 0 | 0 |
+
+四批都要重驗。多數改動是文案、圖示與 favicon，不動版面；會動到版面判讀的是 `sidebar.css` 的斷點（768／767，`shared/app-shell` 13 個視圖）與 `b2`、`b3` 新增的 12 個視圖。
+
+### 第三次
+
+[Issue #403](https://github.com/label-suite/label-suite/issues/403) 撤掉儀表板的「三條最短成功路徑」區塊（畫面 `8eadc38`、規格 `35b7533`），這是交付包產生以來**畫面與規格第一次真的變了**。
+
+| 欄位 | 第三版 | 本版 | |
+| :--- | :--- | :--- | :--- |
+| `commit` | `b1fd43c84031` | `eb9a88434fc6` | 必然變 |
+| `prototypeTree` | `4cb347d5e720` | `815b85344df6` | **變了** |
+| `specsTree` | `a4b0e889a5a3` | `63b7a51d2e3b` | **變了** |
+| `navigationBlob` | `c64128a7e7a5` | `c64128a7e7a5` | **沒變** |
+
+變動的檔共 7 個：`dashboard.html`、`dashboard.components.css`、`dashboard.i18n.js`，與規格 `02-dashboard/01-dashboard.mdx`、`02-dashboard/index.mdx`、`03-task-management/01-task-list.mdx`、`open-questions.mdx`。
+
+| 類 | 數 | 內容 |
+| :--- | ---: | :--- |
+| 新增 | 0 | 被撤掉的區塊**從來沒有自己的視圖**——它在 `state-default` 等五種版面裡一直顯示，不是一個要叫出來的狀態 |
+| 移除 | 0 | 同上 |
+| `params` 欄 | 0 | 七個檔的 diff 裡沒有任何 `.get(`、`<script>`、`<link>`、`src=`、`href=` 的增刪，`loads` 與 `params` 照舊 |
+| 受影響 | 14 | `dashboard/dashboard` 全部 8 個視圖（`evidence` 指到 `dashboard.html`，`spec` 指到 02-01），`task-management/task-list` 的 6 個視圖（`spec` 指到 03-01，那一頁只改了兩個行號引用與變更紀錄一列，**條文一字未改**） |
+
+受影響視圖指到的規格錨點逐一重比過標題 slug，**14 個全部還在**；被刪掉的標題 `### 三條最短成功路徑` 沒有任何視圖連到它。
+
+### 應重驗的批次（第三次）
+
+| 批次 | 依 `evidence`／`spec` 算出的 | 該批的參數驅動視圖 |
+| :--- | ---: | ---: |
+| `b1-shared-account` | 0 | 0（`navigationBlob` 沒變） |
+| `b2-admin-dashboard-task` | 14 | 0（同上） |
+| `b3-annotation-review` | 0 | 0 |
+| `b4-dataset-sweep` | 0 | 0 |
+
+`b2` 本來就還沒做，所以這 14 個視圖的重驗**併入 `b2` 的第一次執行**；`b1` 的成果不受影響。
+
+### 第二次
 
 [PR #400](https://github.com/label-suite/label-suite/pull/400) 把 `/task-management/task-detail` 的 16 個畫面狀態參數與工作區的 6 個補進 §網址參數，`navigationBlob` 再次改變。
 
@@ -273,7 +652,7 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 | 移除 | 1 | `account/verify-email#sim-logged-out` |
 | 受影響 | **26** | `evidence` 指到 `docs/prototype/navigation.mdx` 的全部視圖 |
 
-新增與移除**不是**這次來源變動造成的，是**修掉上一版的一個錯**：`verify-email.html` 根本不呼叫 `redirectIfLoggedIn()`（它那三處都是註解），唯四呼叫的是 login、register、forgot-password 與 reset-password（`sidebar.js:89` 自己寫「四頁在載入時呼叫」）。那是 [PR #394](https://github.com/label-suite/label-suite/pull/394) 補 `sim_logged_out` 時挑錯了頁面，寫 §網址參數 時才查出來。
+新增與移除**不是**這次來源變動造成的，是**修掉上一版的一個錯**：`verify-email.html` 根本不呼叫 `redirectIfLoggedIn()`（它那三處都是註解），唯四呼叫的是 login、register、forgot-password 與 reset-password（`sidebar.js:95` 自己寫「四頁在載入時呼叫」）。那是 [PR #394](https://github.com/label-suite/label-suite/pull/394) 補 `sim_logged_out` 時挑錯了頁面，寫 §網址參數 時才查出來。
 
 ### 應重驗的批次
 

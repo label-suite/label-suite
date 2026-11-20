@@ -608,7 +608,25 @@ var DEFAULT_GUIDELINE_FILES_BY_TASK_TYPE = {
     { name: 'VA_emj.png', type: 'Image', size: 584508, assetPath: '../../assets/images/task-management/VA_emj.png' },
   ],
 };
+// Entity / label palette. CSS mirror: assets/data-palette.css --data-entity-1..8 (#420 Q4).
+// Kept as 6-digit hex here because a label's colour is task data and <input type=color> needs hex;
+// change both together.
 var ENTITY_COLORS = ['#6366F1','#10B981','#F59E0B','#EC4899','#8B5CF6','#0EA5E9','#F97316','#14B8A6'];
+
+// Paint-time mapping: a stored colour that is one of the default palette entries is painted
+// through its --data-entity-N variable, so the dark theme's lighter set applies. Any other
+// colour (one the task owner picked) is painted as stored. Never write the result back into
+// task data: it is a CSS value, not a hex.
+function entityPaintColor(color) {
+  var hex = typeof color === 'string' ? color.toUpperCase() : '';
+  var index = ENTITY_COLORS.indexOf(hex);
+  return index === -1 ? color : 'var(--data-entity-' + (index + 1) + ')';
+}
+
+// Translucent wash behind a highlighted span: the paint colour at 20% (the old hex + '33').
+function entityWashColor(color) {
+  return 'color-mix(in srgb, ' + entityPaintColor(color) + ' 20%, transparent)';
+}
 var USER_DIRECTORY = [
   { name: 'Alex Wang', email: 'alex.wang@labelsuite.io', systemRole: 'user' },
   { name: 'Olivia Lin', email: 'olivia.lin@labelsuite.io', systemRole: 'user' },
@@ -655,7 +673,7 @@ var TASK_CONFIG_I18N = {
     aspectRuleSectionTitle: 'Aspect 編輯規則',
     aspectRuleSectionDesc: '控制標記員能否修正句子、增刪 aspect，以及系統驗證方式。',
     aspectLimitSectionTitle: '數量限制',
-    aspectLimitSectionDesc: '設定每筆資料需要提交的 Aspect List 長度範圍。',
+    aspectLimitSectionDesc: '設定每筆資料需要送出的 Aspect List 長度範圍。',
     templateBtnNer: '套用預設範本：NER 命名實體辨識',
     templateBtnAspectList: '套用預設範本：Aspect List 抽取／校正',
     previewSampleSentenceRelation: '阿司匹靈可緩解頭痛症狀，但可能造成胃部不適。',

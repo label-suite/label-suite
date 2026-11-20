@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="../../assets/logo/icon-colored.svg">
   <title>Label Suite — 新增任務</title>
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <script src="../../assets/theme-fouc.js"></script>
@@ -11,8 +12,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../../assets/data-palette.css" />
   <link rel="stylesheet" href="../shared/modal.css" />
   <link rel="stylesheet" href="../shared/button.css" />
+  <link rel="stylesheet" href="../shared/card.css" />
   <link rel="stylesheet" href="task-config.css">
   <style>
     :root {
@@ -42,13 +45,15 @@
     .step-circle.active { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-cta); }
     .step-circle.done { border-color: var(--color-cta); background: var(--color-cta); color: var(--color-on-cta); }
     .step-label { font-size: 12px; font-weight: 500; color: var(--color-ink-muted); white-space: nowrap; }
-    .step-label.active { color: var(--color-primary); font-weight: 600; }
+    .step-label.active { color: var(--color-primary-strong); font-weight: 600; }
     .step-label.done { color: var(--color-cta); }
+    /* G-44: non-visual cue for a completed step (read by screen readers only) */
+    .step-sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
     .step-connector { flex: 1; height: 2px; background: var(--color-border); margin: 0 8px; margin-bottom: 18px; transition: background var(--dur-fast); }
     .step-connector.done { background: var(--color-cta); }
 
     /* ── Form card ── */
-    .form-card { background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-lg); margin-bottom: var(--space-md); }
+    .form-card { margin-bottom: var(--space-md); } /* 外框在 pages/shared/card.css（#423, G-41） */
     .form-card-title { font-size: 16px; font-weight: 600; color: var(--color-ink); margin-bottom: var(--space-lg); padding-bottom: var(--space-md); border-bottom: 1px solid var(--color-border); }
     .form-field { margin-bottom: var(--space-md); }
     .field-label { display: block; font-size: 13px; font-weight: 600; color: var(--color-ink); margin-bottom: 6px; }
@@ -56,15 +61,18 @@
     .field-hint { font-size: 12px; color: var(--color-text-soft); margin-top: 4px; }
     .field-error-msg { font-size: 12px; color: var(--color-error); margin-top: 4px; display: none; }
     .field-error-msg.show { display: block; }
-    .input-text { width: 100%; padding: 9px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 14px; color: var(--color-ink); background: var(--color-white); outline: none; transition: border-color var(--dur-fast), box-shadow var(--dur-fast); }
+    .input-text { width: 100%; padding: 9px 12px; border: 1px solid var(--color-border-control); border-radius: var(--radius-md); font-size: 14px; color: var(--color-ink); background: var(--color-white); outline: none; transition: border-color var(--dur-fast), box-shadow var(--dur-fast); }
     .input-text:read-only { background: var(--color-slate-50); color: var(--color-ink-muted); cursor: default; }
-    .input-text:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .input-text:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent); }
     .input-text.error { border-color: var(--color-error); }
-    .input-select { width: 100%; padding: 9px 32px 9px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 14px; color: var(--color-ink); background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center; outline: none; appearance: none; -webkit-appearance: none; transition: border-color var(--dur-fast), box-shadow var(--dur-fast); }
-    .input-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .input-select { width: 100%; padding: 9px 32px 9px 12px; border: 1px solid var(--color-border-control); border-radius: var(--radius-md); font-size: 14px; color: var(--color-ink); background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235E6B7F' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center; outline: none; appearance: none; -webkit-appearance: none; transition: border-color var(--dur-fast), box-shadow var(--dur-fast); }
+    .input-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent); }
     .input-select.error { border-color: var(--color-error); }
-    .input-textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 14px; color: var(--color-ink); background: var(--color-white); outline: none; resize: vertical; min-height: 80px; transition: border-color var(--dur-fast), box-shadow var(--dur-fast); }
-    .input-textarea:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    /* Chevron stroke = --color-ink-muted in each theme. A data-URI SVG cannot read var(),
+       and a <select> has no pseudo-element to mask, so dark gets its own URI (#438). */
+    html[data-theme="dark"] .input-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); }
+    .input-textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--color-border-control); border-radius: var(--radius-md); font-size: 14px; color: var(--color-ink); background: var(--color-white); outline: none; resize: vertical; min-height: 80px; transition: border-color var(--dur-fast), box-shadow var(--dur-fast); }
+    .input-textarea:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent); }
 
     /* ── Dataset Preview Modal ── */
     .modal.modal-xl { max-width: 1280px; width: 92vw; max-height: 88vh; display: flex; flex-direction: column; }
@@ -85,8 +93,8 @@
       cursor: pointer; transition: color var(--dur-fast), border-color var(--dur-fast);
       background: transparent; border-left: none; border-right: none; border-top: none;
     }
-    .member-source-tab:hover { color: var(--color-primary); }
-    .member-source-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
+    .member-source-tab:hover { color: var(--color-primary-strong); }
+    .member-source-tab.active { color: var(--color-primary-strong); border-bottom-color: var(--color-primary); font-weight: 600; }
     .member-add-row { display: flex; gap: 8px; align-items: center; margin-bottom: var(--space-sm); }
     .member-list { display: flex; flex-direction: column; gap: 8px; }
     .member-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); }
@@ -144,9 +152,16 @@
     .toast.show { opacity: 1; transform: translateY(0); }
     .toast.toast-error { background: var(--color-error); }
     .toast.toast-success { background: var(--color-success); }
+    /* UXC-07（#423, G-39）：error 不自動消失，所以要有關閉鈕；隱藏時以 visibility
+       把關閉鈕移出 Tab 順序，延遲 0s 讓淡出照樣播完。 */
+    .toast { visibility: hidden; transition: opacity var(--dur-normal), transform var(--dur-normal), visibility 0s linear var(--dur-normal); }
+    .toast.show { visibility: visible; transition: opacity var(--dur-normal), transform var(--dur-normal); }
+    .toast-close { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; margin-left: auto; padding: 2px; border: none; border-radius: var(--radius-sm); background: none; color: currentColor; opacity: 0.75; cursor: pointer; }
+    .toast-close:hover { opacity: 1; }
+    .toast-close:focus-visible { outline: 2px solid currentColor; outline-offset: 1px; opacity: 1; }
 
         /* ── Responsive ── */
-    @media (max-width: 768px) {
+    @media (max-width: 767px) {
       .layout { padding: var(--space-md); }
       .s2-layout { grid-template-columns: 1fr; }
       .schema-field-grid { grid-template-columns: 1fr; }
@@ -192,6 +207,7 @@
 <div id="sharedSidebarMount"></div>
 <script src="../../assets/theme.js"></script>
 <script src="../shared/sidebar.js"></script>
+<script src="../shared/modal-focus.js"></script>
 <script>
   window.LabelSuiteSharedSidebar.mountSidebar({
     mountId: 'sharedSidebarMount',
@@ -224,22 +240,22 @@
 
     <!-- Step indicator -->
     <div class="step-indicator" aria-label="建立步驟">
-      <div class="step-item">
+      <div class="step-item" id="si1">
         <div class="step-circle" id="sc1">1</div>
         <div class="step-label" id="sl1">基本資料</div>
       </div>
       <div class="step-connector" id="conn12"></div>
-      <div class="step-item">
+      <div class="step-item" id="si2">
         <div class="step-circle" id="sc2">2</div>
         <div class="step-label" id="sl2">標記設定檔</div>
       </div>
       <div class="step-connector" id="conn23"></div>
-      <div class="step-item">
+      <div class="step-item" id="si3">
         <div class="step-circle" id="sc3">3</div>
         <div class="step-label" id="sl3">啟動設定</div>
       </div>
       <div class="step-connector" id="conn34"></div>
-      <div class="step-item">
+      <div class="step-item" id="si4">
         <div class="step-circle" id="sc4">4</div>
         <div class="step-label" id="sl4">標記說明</div>
       </div>
@@ -560,6 +576,7 @@
   <div class="toast" id="toast" role="alert">
     <svg style="width:18px;height:18px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
     <span id="toastMsg"></span>
+    <button type="button" class="toast-close" id="toastClose" aria-label="關閉通知" onclick="hideToast()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
 </div>
 
@@ -578,6 +595,7 @@ var I18N = {
     pageTitle: '新增任務',
     pageSubtitle: '依序完成四個步驟以建立標記任務',
     roleUser: '一般使用者',
+    stepDone: '已完成',
     s1Label: '基本資料',
     s2Label: '標記設定檔',
     s3Label: '啟動設定',
@@ -638,9 +656,10 @@ var I18N = {
     errStartupMemberRequired: '至少需加入 1 位 annotator',
     errStartupMemberPickUser: '請先選擇一位平台使用者',
     errStartupMemberDuplicate: '此成員已在任務名單中',
-    errStartupInviteEmail: '請輸入有效的 Email',
+    errStartupInviteEmail: '請輸入有效的電子郵件',
     errStartupSampling: '請輸入有效抽樣筆數：需 >= 1 且 < 資料集總筆數',
     toastInviteSent: '邀請連結已寄出，成員已加入待啟用名單',
+    toastClose: '關閉通知',
     errCodeUnsaved: '請先儲存 Code 內容',
     inlinePreviewColError: '至少須為一個欄位指定角色。',
     errSingleItemInputCount: '輸入類型為「單一項目」時，欄位預覽中必須恰好選擇 1 個 Input 欄位',
@@ -656,6 +675,7 @@ var I18N = {
     pageTitle: 'New task',
     pageSubtitle: 'Complete four steps to create an annotation task',
     roleUser: 'User',
+    stepDone: 'Completed',
     s1Label: 'Basic info',
     s2Label: 'Label config',
     s3Label: 'Startup settings',
@@ -719,6 +739,7 @@ var I18N = {
     errStartupInviteEmail: 'Please enter a valid email',
     errStartupSampling: 'Invalid trial count: must be >= 1 and < total dataset rows',
     toastInviteSent: 'Invite link sent. Member added to pending list',
+    toastClose: 'Dismiss notification',
     errCodeUnsaved: 'Please save code changes before continuing',
     inlinePreviewColError: 'At least one field must have a role assigned.',
     errSingleItemInputCount: 'Input type "Single item" requires exactly 1 Input field in field preview',
@@ -856,13 +877,25 @@ function clearWizardState() {
 }
 
 /* ── Toast ───────────────────────────────────────────────────── */
-function showToast(msg, type) {
+/* UXC-07（#423, G-39）：單一實例、依類型分級存續，error 只能手動關。
+   第二個參數可傳 variant 字串；舊呼叫的 true 視為 error，省略或 false 視為 success。 */
+var TOAST_DURATIONS = { success: 3000, info: 5000, warning: 8000, error: 0 };
+function hideToast() {
+  el('toast').classList.remove('show');
+  clearTimeout(toastTimer);
+  toastTimer = null;
+}
+function showToast(msg, variant) {
+  if (variant === true) variant = 'error';
+  if (!Object.prototype.hasOwnProperty.call(TOAST_DURATIONS, variant)) variant = 'success';
   var toast = el('toast');
   setText('toastMsg', msg);
-  toast.className = 'toast' + (type === 'error' ? ' toast-error' : type === 'success' ? ' toast-success' : '');
+  toast.className = 'toast' + (variant === 'error' ? ' toast-error' : variant === 'success' ? ' toast-success' : '');
+  document.getElementById('toastClose').setAttribute('aria-label', t('toastClose'));
   toast.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 3500);
+  toastTimer = null;
+  if (TOAST_DURATIONS[variant] > 0) toastTimer = setTimeout(hideToast, TOAST_DURATIONS[variant]);
 }
 
 /* ── Banner error ────────────────────────────────────────────── */
@@ -896,7 +929,7 @@ function track(event, extra) {
 /* ── Step indicator ──────────────────────────────────────────── */
 function updateStepIndicator() {
   var s = state.step;
-  var checkSvg = '<svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
+  var checkSvg = '<svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
   [1, 2, 3, 4].forEach(function(n) {
     var circle = el('sc' + n);
     var label = el('sl' + n);
@@ -904,9 +937,16 @@ function updateStepIndicator() {
     label.className = 'step-label' + (n < s ? ' done' : n === s ? ' active' : '');
     if (n < s) {
       circle.innerHTML = checkSvg; /* safe: static SVG, no user data */
+      var done = document.createElement('span');
+      done.className = 'step-sr-only';
+      done.textContent = t('stepDone');
+      circle.appendChild(done);
     } else {
       circle.textContent = String(n);
     }
+    /* G-44: the current step is exposed to assistive tech, not only by colour */
+    if (n === s) el('si' + n).setAttribute('aria-current', 'step');
+    else el('si' + n).removeAttribute('aria-current');
   });
   el('conn12').className = 'step-connector' + (s > 1 ? ' done' : '');
   el('conn23').className = 'step-connector' + (s > 2 ? ' done' : '');
@@ -1351,8 +1391,16 @@ function applyDefaultGuidelineFiles(taskType) {
 function showLeaveModal(callback) {
   state.leaveCallback = callback;
   el('leaveModal').classList.add('show');
+  /* G-43: focus trap and focus return via shared/modal-focus.js */
+  if (window.LabelSuiteModalFocus) {
+    window.LabelSuiteModalFocus.open(el('leaveModal'), { trigger: document.activeElement, onClose: hideLeaveModal });
+  }
 }
-function hideLeaveModal() { el('leaveModal').classList.remove('show'); state.leaveCallback = null; }
+function hideLeaveModal() {
+  el('leaveModal').classList.remove('show');
+  state.leaveCallback = null;
+  if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(el('leaveModal'));
+}
 function maybeLeave(action) { if (!state.isDirty) { action(); return; } showLeaveModal(action); }
 
 function generateCreatedTaskId() {
@@ -1488,6 +1536,7 @@ function applyLang(l) {
   ];
   ids.forEach(function(id) { setText(id, t(id)); });
   setText('sl1', t('s1Label')); setText('sl2', t('s2Label')); setText('sl3', t('s3Label')); setText('sl4', t('s4Label'));
+  updateStepIndicator();
   setText('leaveModalStayBtn', t('leaveModalStay'));
   setText('leaveModalLeaveBtn', t('leaveModalLeave'));
   setText('datasetPreviewModalTitle', t('datasetPreviewTitle'));

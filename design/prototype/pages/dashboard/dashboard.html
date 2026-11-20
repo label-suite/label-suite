@@ -4,13 +4,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="../../assets/logo/icon-colored.svg">
   <title>Label Suite — Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../../assets/data-palette.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <link rel="stylesheet" href="../shared/button.css" />
+  <link rel="stylesheet" href="../shared/card.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <link rel="stylesheet" href="./dashboard.layout.css" />
   <link rel="stylesheet" href="./dashboard.components.css" />
@@ -153,7 +156,7 @@
                   </div>
                 </div>
                 <div class="workflow-role-cta">
-                  <button class="btn btn-emerald btn-full" type="button" id="ctaLeaderBtn">
+                  <button class="btn btn-cta btn-full" type="button" id="ctaLeaderBtn">
                     <span id="ctaLeaderBtnLabel">開始建立任務</span>
                   </button>
                 </div>
@@ -164,7 +167,7 @@
                   <img src="../../assets/icons/tag.svg" alt="" aria-hidden="true" />
                 </div>
                 <strong id="roleAnnotatorTitle" class="role-name">進行資料標記</strong>
-                <span id="roleAnnotatorSubtitle" class="role-subtitle">查看待辦任務，完成資料標記並提交結果。</span>
+                <span id="roleAnnotatorSubtitle" class="role-subtitle">查看待辦任務，完成資料標記並送出結果。</span>
                 <div class="workflow-steps-row">
                   <div class="workflow-step">
                     <div class="step-icon step-icon--violet">
@@ -190,12 +193,12 @@
                     <div class="step-icon step-icon--violet step-icon--ink">
                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                     </div>
-                    <strong id="stepAnnotator3Title" class="step-title">提交標記</strong>
-                    <span id="stepAnnotator3Desc" class="step-desc">自我檢查標記一致性，提交標記結果</span>
+                    <strong id="stepAnnotator3Title" class="step-title">送出標記</strong>
+                    <span id="stepAnnotator3Desc" class="step-desc">自我檢查標記一致性，送出標記結果</span>
                   </div>
                 </div>
                 <div class="workflow-role-cta">
-                  <button class="btn btn-violet btn-full" type="button" id="ctaAnnotatorBtn">
+                  <button class="btn btn-cta btn-full" type="button" id="ctaAnnotatorBtn">
                     <span id="ctaAnnotatorBtnLabel">開始標記</span>
                   </button>
                 </div>
@@ -237,7 +240,7 @@
                   </div>
                 </div>
                 <div class="workflow-role-cta">
-                  <button class="btn btn-indigo btn-full" type="button" id="ctaReviewerBtn">
+                  <button class="btn btn-cta btn-full" type="button" id="ctaReviewerBtn">
                     <span id="ctaReviewerBtnLabel">開始審核</span>
                   </button>
                 </div>

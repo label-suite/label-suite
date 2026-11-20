@@ -1,0 +1,34 @@
+<!-- @dsCard group="Navigation" height=240 -->
+<!doctype html>
+<html lang="zh-TW" data-theme="light">
+<head>
+<meta charset="utf-8">
+<style>
+  /* preview layout only; the frame preloads tokens.css and bundle.css */
+  html body { margin: 0; padding: 24px; display: block; }
+  .ds-stage { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .ds-caption { font-size: 12px; color: var(--color-ink-muted); }
+  .ds-stage { flex-direction: column; align-items: stretch; gap: 8px; }
+  .ds-panel { border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-white); max-width: 360px; }
+</style>
+</head>
+<body>
+  <div class="ds-stage">
+    <span class="ds-caption">.admin-tabs（按鈕版，第一個 .active）</span>
+    <div class="admin-tabs" role="tablist" aria-label="Task detail tabs">
+      <button class="admin-tab active" type="button" role="tab" aria-selected="true" tabindex="0">概覽</button>
+      <button class="admin-tab" type="button" role="tab" aria-selected="false" tabindex="-1">設定</button>
+      <button class="admin-tab" type="button" role="tab" aria-selected="false" tabindex="-1">成員管理</button>
+      <button class="admin-tab" type="button" role="tab" aria-selected="false" tabindex="-1">標記進度</button>
+      <button class="admin-tab" type="button" role="tab" aria-selected="false" tabindex="-1">標記結果</button>
+    </div>
+    <span class="ds-caption">.admin-tabs--panel（貼齊側面板頂端）</span>
+    <div class="ds-panel">
+      <div class="admin-tabs admin-tabs--panel">
+        <button class="admin-tab active" type="button">標記說明</button>
+        <button class="admin-tab" type="button">歷程</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

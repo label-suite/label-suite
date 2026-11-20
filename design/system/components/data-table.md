@@ -1,6 +1,6 @@
 # Data Table
 
-> 正典章節：`MASTER.md` 無對應章節（`shared/list-page.css` 自己是來源）｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
+> 正典章節：`MASTER.md` 無對應章節（`shared/list-page.css` 自己是來源）｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c` ｜未標檔名的行號指 `design/prototype/pages/shared/list-page.css`
 
 ## 結構
 
@@ -50,6 +50,8 @@
 
 本批次**沒有可重現的視圖**：b1 的九個畫面都沒有表格。最近的樣本在 b2 的 `task-management/task-list#state-default`。→ `../design-gaps.md` G-21
 
+**b2 補上**：`task-management/task-list#state-default`、`admin/role-settings#state-default`（可鍵盤捲動的矩陣）、`task-management/task-detail#tab-member-management`。
+
 ## shadcn 對照
 
 候選原語 `Table`（`TableHeader`、`TableBody`、`TableRow`、`TableHead`、`TableCell`、`TableCaption`），通常搭 TanStack Table。
@@ -63,5 +65,12 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | 無（b1） | — |
+| `task-management/task-list`（`#state-default`、`#role-task-role`） | `.task-table`，本頁 `<style>` 又定義一次（`task-list.html:80`–`:82`） |
+| `admin/user-management#state-default` | 本頁的表格（`user-management.html:326`–`:429`） |
+| `admin/role-settings#state-default` | `.matrix-table`（`role-settings.html:88`），sticky 首欄與表頭（`:111`、`:140`），外層 `role="region" tabindex="0"`——**鍵盤可捲**，與 G-27 相反 |
+| `task-management/task-detail`（`#tab-member-management`、`#tab-annotation-progress`、`#tab-annotation-results`、`#tab-work-log`） | `.member-table`（`member-management.html:19`；`annotation-progress.html:32`；`annotation-results.html:48`；`work-log.html:38`） |
+| `annotation/annotation-list`（`#state-default`、`#role-*`） | `.task-table`（`annotation-list.html:494`）。標記員的列是 `tr role="button" tabindex="0"`，Enter／Space 進工作區（`:1847`）；空狀態**不放進表格**，另用 [Empty State](empty-state.md) |
+| `dataset/dataset-analysis-list`（`#state-default`、`#state-filtered-empty`、`#param-view-empty`） | `.task-table`（`dataset-analysis-list.html:274`），一列 `tr role="button" tabindex="0"`（`dataset-analysis-list.view.js:18`–`:19`）；焦點環原本寫死 rgba，#438 起改 `color-mix`（`dataset-analysis-list.html:76`–`:78`）→ `../design-gaps.md` G-02 |
+| `dataset/dataset-analysis-detail`（`#tab-quality`、`#state-quality-*`） | 本頁 `.annotator-table`（`dataset-analysis-detail.html:137`–`:141`、markup `:321`–`:340`）→ G-10 |
 
-shipped 使用頁面在 b2（`task-management/task-list`、`admin/user-management`、`task-detail` 的多個 panel）、b3（`annotation/annotation-list`）、b4（`dataset/dataset-analysis-list`），待那幾批補。
+b2 已補上（見上表）。b3 已補上（見上表）。b4 已補上（見上表）。

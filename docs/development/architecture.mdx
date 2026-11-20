@@ -6,9 +6,9 @@ tags: [architecture, fastapi, react, adr]
 
 # 技術架構
 
-`backend/`、`frontend/` 還不存在，本文寫的是「要照著做的架構」；第一個讀者是 OpenSpec 規劃階段的 `sd` 與 `ui-ux`，業務面以 `docs/specs/` 為準（見 [需求文件撰寫](spec-authoring.md)）。
+`backend/`、`frontend/` 還不存在，本文寫的是「要照著做的架構」；第一個讀者是 OpenSpec 規劃階段的 `sd` 與 `ui-ux`，業務面以 `docs/specs/` 為準（見 [需求文件撰寫](workflow/spec-authoring.md)）。
 本文是個人 repo 38 份 ADR 在本 repo 的落地版，每份 ADR 照做、調整或被取代，見文末 [§ADR 效力總表](#adr-效力總表)。
-衝突時：本文與 `docs/specs/` 不一致以 `docs/specs/` 為準；本文與 ADR 不一致以 ADR 為準並回報維護者，**唯獨**效力總表標成「被覆寫」「部分被覆寫」「本期不做」「本期部分採用」的列以本文為準、不回退 ADR。
+衝突時依序以 `AGENTS.md`、本 repo 的 [ADR](adr/index.mdx)、本文為準，個人 repo 的 ADR 只當參考；業務面一律以 `docs/specs/` 為準。發現不一致就照這個順序做，並回報維護者。
 
 各節的收合區塊是給實作與規劃查的細節，預設收起。
 
@@ -122,13 +122,16 @@ import ArchitectureBackendLayers from '@notes/components/architecture-backend-la
 ## 認證與授權
 
 身分只認 httpOnly cookie 裡的 token，角色只從資料庫取；權限一律在後端擋，前端隱藏按鈕只是體驗。
+為什麼 token 放 cookie、角色每次讀資料庫，見 [ADR-004 的 D1](adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie) 與 [D2](adr/004-auth-and-security.mdx#d2-授權用的角色每次從資料庫讀)。
 `Authorization` header、查詢字串、自訂 header 都不用來推定身分。
 
 | Token | 效期 | Cookie flag | 輪替 |
 | :--- | :--- | :--- | :--- |
 | Access token（JWT） | 15 分鐘 | `httpOnly`、`Secure`、`SameSite=Lax` | 每次 refresh 重發 |
-| Refresh token（不透明 UUID） | 7 天滑動 | `httpOnly`、`Secure`、`SameSite=Lax` | 每次使用輪替，一次性 |
+| Refresh token（不透明 UUID） | 7 天滑動 | `httpOnly`、`Secure`、`SameSite=Lax` | 每次使用輪替，一次性；**輪替之前先從資料庫讀 `is_active`，帳號已停用就拒絕、不發新 token** |
 | CSRF token（`HMAC(secret, sid)`） | 與 session 同壽 | `__Host-` 前綴、`Secure`、`SameSite=Lax`、**非 `httpOnly`** | 登入時發，refresh 時重發 |
+
+refresh 的停用檢查是第二道防線，第一道是 [security-agent-rules.mdx 的 S4](rules/security-agent-rules.mdx#s4-遮蔽與-allowlist-在後端) 的 session 與快取失效規則；這一道是為了萬一那一步漏了或失敗。
 
 JWT payload 只放 `sub`、`sid`、`credential_version`、`role`、`iat`、`exp`；`role` 只供顯示，授權不看它。
 任務角色不放進 JWT，前端進任務頁後另查成員身分。
@@ -136,18 +139,20 @@ JWT payload 只放 `sub`、`sid`、`credential_version`、`role`、`iat`、`exp`
 ### CSRF
 
 會改資料的請求都要帶綁定 session 的 double-submit token，由單一 middleware 驗 HMAC。
-`SameSite=Lax` 由瀏覽器擋掉跨網域表單，與伺服器的 CORS 設定無關；它擋不住同站子網域，這一層補的是後者。
+每個要素為什麼不能省，見 [ADR-004 的 D3](adr/004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token)。
 
-| 要素 | 做法 | 為什麼不能省 |
-| :--- | :--- | :--- |
-| token 的值 | `HMAC(server_secret, sid)`，驗 HMAC 而不只比對字串 | 只比對 cookie 與 header 相等的 naive 版本，子網域把兩邊設成同一個值就能通過 |
-| cookie 名稱 | `__Host-` 前綴 | 這個前綴禁止 `Domain` 屬性，子網域無法覆寫 |
-| 傳遞方式 | 前端把值複製到自訂 header | 自訂 header 會觸發 preflight，所以這一層的強度等於 CORS allowlist 的嚴格程度（Hard Rule 7） |
-| 責任位置 | 單一 middleware，端點不各自處理 | 散在各端點就會有人漏掉 |
+| 要素 | 做法 |
+| :--- | :--- |
+| token 的值 | `HMAC(server_secret, sid)`，驗 HMAC 而不只比對字串 |
+| cookie 名稱 | `__Host-` 前綴 |
+| 傳遞方式 | 前端把值複製到自訂 header；這一層的強度等於 CORS allowlist 的嚴格程度（Hard Rule 7） |
+| 責任位置 | 單一 middleware，端點不各自處理 |
 
 CSRF cookie 刻意讓 JS 讀得到，是系統裡唯一非 `httpOnly` 的 cookie。負向測試要涵蓋「缺 header」「header 與 cookie 不符」「HMAC 無效」三種。
 
 ### 授權四步
+
+為什麼矩陣是授權的輸入，見 [ADR-004 的 D6](adr/004-auth-and-security.mdx#d6-權限矩陣當授權輸入)。
 
 1. 驗目前登入者、帳號是否啟用、`credential_version`、token family 是否仍有效
 2. 讀系統角色；任務範圍的操作另讀該任務目前有效的成員身分。系統角色永遠不隱含任務成員身分
@@ -156,6 +161,7 @@ CSRF cookie 刻意讓 JS 讀得到，是系統裡唯一非 `httpOnly` 的 cookie
 
 ### Google SSO
 
+為什麼不引入外部 IdP、為什麼這樣綁定，見 [ADR-004 的 D4](adr/004-auth-and-security.mdx#d4-google-sso-直接走-oidc) 與 [D5](adr/004-auth-and-security.mdx#d5-google-登入綁定既有帳號的條件)。
 直接整合 OIDC（`authlib`），不引入外部 IdP；沒設 `GOOGLE_CLIENT_ID` 時按鈕退回 no-op，所以 SSO 是可選的。
 Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並在同一筆交易內把 `hashed_password` 設為 `null`、`credential_version` 加一、撤銷所有 session。
 
@@ -165,8 +171,10 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 
 | 面向 | 做法 |
 | :--- | :--- |
-| 路徑前綴 | `/api/v1`。envelope 將來要改就是破壞性改動，版本前綴是那個逃生門 |
-| 成功回應 | 包一層 envelope，例 `{"data": {...}, ...}` |
+| 路徑前綴 | `/api/v1`，資源名直接接在後面，理由見 [ADR-003 的 D5](adr/003-backend-architecture.mdx#d5-api-路徑前綴與成功回應外層) |
+| 成功回應 | 包一層 envelope `{ success, code, message, data, timestamp, traceId }`，理由見 [ADR-003 的 D5](adr/003-backend-architecture.mdx#d5-api-路徑前綴與成功回應外層) |
+| 錯誤回應 | 套同一個外層：`success: false`、`code` 放應用錯誤碼、`data: null`；`422` 另帶 `errors: ErrorDetail[]` |
+| JSON 欄位命名 | 一律 camelCase。Python 內部維持 snake_case，由共用 base 的 alias generator 在一處轉換 |
 | envelope 的例外 | `204` 無 body、檔案下載與串流不套 envelope；每個例外都要逐一寫進該 change 的 `api-contract.md`，不逐案自由心證 |
 | operationId | 用 `generate_unique_id_function` 固定成「動詞加資源」（#51） |
 | 前端 client | Orval 由 `openapi.json` 產生到 `frontend/src/api/generated/`（TanStack Query hooks、型別、MSW mock），不手改；Orval 的 mutator 就是單一 HTTP 邊界 |
@@ -175,7 +183,7 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 ## 任務設定：`input_type` 加 `outputs[]`
 
 任務類型完全由設定決定，平台核心不得出現任何任務專屬邏輯（Hard Rule 5）。
-設定由 `input_type`（`single_item` 或 `item_pair`）加一個 `outputs[]` 陣列組成，不用固定的 `task.type` enum；每個 output type 自帶設定片段、標記 UI 與評分指標。
+設定由 `input_type`（`single_item` 或 `item_pair`）加一個 `outputs[]` 陣列組成，不用固定的 `task.type` enum；每個 output type 自帶設定片段、標記 UI 與評分指標。理由見 [ADR-006 的 D1](adr/006-task-config-and-answer-isolation.mdx#d1-任務類型由設定決定核心不寫任務專屬邏輯)與 [D2](adr/006-task-config-and-answer-isolation.mdx#d2-任務設定用-input_type-加-outputs-組合)。
 
 | Output type | 設定片段 | 標記 UI | 評分指標 |
 | :--- | :--- | :--- | :--- |
@@ -193,12 +201,12 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 - v1 限制：同一種 output type 每個任務最多一次，output 數量沒有上限
 - 多 output 的任務產生分數向量而不是單一分數，IAA 也逐 output type 獨立計算
 - `sequence_tagging` 的標記是半開區間的字元 offset span `{ start, end, label }`，不是對齊 token 的標籤；ADR-029 那一列的 `tagging_scheme`、`token_f1`、`token_accuracy` 不採用
-- `snap_unit` 只影響拖曳落點，不改變既有 span 的意義，所以不需要凍結 tokenizer 版本
+- `snap_unit` 只影響拖曳落點，不改變既有 span 的意義，所以不需要凍結 tokenizer 版本；改用 span 的理由見 [ADR-006 的 D3](adr/006-task-config-and-answer-isolation.mdx#d3-序列標記用半開字元-offset-span)
 :::
 
 ## 測試集答案不外露
 
-標記員能接觸到的任何地方都不得出現標準答案與測試集資訊（Hard Rule 6），架構上分四道：
+標記員能接觸到的任何地方都不得出現標準答案與測試集資訊（Hard Rule 6），架構上分四道，理由見 [ADR-006 的 D4](adr/006-task-config-and-answer-isolation.mdx#d4-答案隔離涵蓋標記員能到達的每個出口)：
 
 | 位置 | 做法 |
 | :--- | :--- |
@@ -207,7 +215,7 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 | 授權 | 測試集答案隔離是授權第四步的附加條件，權限矩陣 cell 為 true 也不能蓋過 |
 | 保留政策 | 帶答案的歷史 JSON 跟著它所屬的資料集版本或 run 存續，不做 PII 匿名化、不單獨刪除 |
 
-規劃階段由 clarify 關卡的第 10 個檢查面向把關（見 [OpenSpec 導入決議](openspec-fullstack-sdd.mdx)）。
+規劃階段由 clarify 關卡的第 10 個檢查面向把關（見 [OpenSpec 導入決議](workflow/openspec-fullstack-sdd.mdx)）。
 
 ## 資料庫雙層
 
@@ -247,8 +255,11 @@ Redis 7 同時當 broker、result backend 與應用快取，用 DB 編號隔開�
 | 重試 | 最多三次，退避 60、180、540 秒 |
 | 單一評分工作上限 | 300 秒 |
 | 結果保留 | result backend 留 24 小時 |
+| 收工寬限 | `worker` 的 `stop_grace_period` 大於 300 秒（`backend` 不適用這個值，見 [§部署與維運](#部署與維運)）；Celery 維持 warm shutdown，不設 `task_acks_late` |
 
 `worker` 與 `backend` 共用同一個 image，所以 NLP 評估套件（`krippendorff`、`seqeval`、`scipy`）要宣告在 `pyproject.toml` 裡。
+
+重試三次代表寫結果那一步會跑不只一次：背景計算的結果表要有「一份輸入最多一份結果」的唯一鍵，寫入用各 dialect 的 `on_conflict` 做 upsert，不先刪後寫（[ADR-003 的 D10](adr/003-backend-architecture.mdx#d10-背景計算的結果寫入做成冪等)）。
 :::
 
 ## i18n 兩層
@@ -257,18 +268,18 @@ Redis 7 同時當 broker、result backend 與應用快取，用 DB 編號隔開�
 
 | 層 | 範圍 | 實作 | 規則 |
 | :--- | :--- | :--- | :--- |
-| 前端 UI 字串 | React 元件直接渲染的文字、前端驗證訊息 | `react-i18next`，依模組分 namespace | 語系檔**不得**放後端 `detail` 字串的副本 |
-| 後端回應訊息 | `ErrorResponse` 的 `detail` 與任何回傳給使用者看的字串 | 後端讀 `Accept-Language`，字串放 `app/i18n/<lang>/` | 商業邏輯**不得**內嵌人看得懂的訊息字面值 |
+| 前端 UI 字串 | React 元件直接渲染的文字、前端驗證訊息 | `react-i18next`，依模組分 namespace | 語系檔**不得**放後端 `message` 字串的副本 |
+| 後端回應訊息 | 回應外層的 `message` 與任何回傳給使用者看的字串 | 後端讀 `Accept-Language`，字串放 `app/i18n/<lang>/` | 商業邏輯**不得**內嵌人看得懂的訊息字面值 |
 
 :::note{title="邊界情況" collapsible}
-- 前端把後端的 `detail` 當成已本地化的不透明字串直接顯示，不再翻譯或對照 key
+- 前端把後端的 `message` 當成已本地化的不透明字串直接顯示，不再翻譯或對照 key
 - FastAPI 預設的 422 `RequestValidationError` 不在這個契約內，需要本地化時另註冊 handler
 - `Accept-Language` 的解析規則（q-value、`*` 通配、`q=0` 拒絕、全部被拒時回 `406`）照抄 ADR-026
 :::
 
 ## 稽核與可追溯
 
-兩張只新增、不更新也不刪除的表：AI 輔助流程記 `ai_runs`，人發起的領域行為記 `audit_events`。
+兩張只新增、不更新也不刪除的表：AI 輔助流程記 `ai_runs`，人發起的領域行為記 `audit_events`；為什麼這樣分見 [ADR-008 的 D5](adr/008-deployment-and-operations.mdx#d5-ai-可追溯用只新增的-ai_runs-表)、[D6](adr/008-deployment-and-operations.mdx#d6-使用者行為記在單一只新增的-audit_events-表)與 [D7](adr/008-deployment-and-operations.mdx#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)。
 
 | 表 | 記什麼 |
 | :--- | :--- |
@@ -297,14 +308,15 @@ Redis 7 同時當 broker、result backend 與應用快取，用 DB 編號隔開�
 
 ## 前端
 
-目錄分 `pages/` 加 `features/`，元件用 shadcn/ui，色值只來自 `tokens.css`；權限一律由後端擋。
+目錄分 `pages/` 加 `features/`，元件用 shadcn/ui，色值只來自 `tokens.css`；權限一律由後端擋。為什麼是單頁應用、為什麼這樣分層、為什麼用 shadcn/ui、為什麼 token 寫一層對照、為什麼只用 Lucide，見 [ADR-005](adr/005-frontend-architecture.mdx)。
 
 | 面向 | 做法 |
 | :--- | :--- |
 | 型別 | TypeScript strict，禁止 `any`（Hard Rule 7） |
 | 狀態 | 伺服器狀態用 TanStack Query；表單狀態與純 UI 狀態分開放 |
 | 目錄分層 | `pages/` 加 `features/` |
-| 元件庫 | shadcn/ui 當原語，元件以原始碼形式放進 `components/ui/`；Storybook 未決，見 [§待決](#待決) 第 2 列 |
+| 元件庫 | shadcn/ui 當原語，元件以原始碼形式放進 `components/ui/`；不用 Storybook，改用元件展示頁 |
+| 元件展示頁 | 一頁只在開發時開的頁面，列出 `components/ui/` 與標記 widget 的各個 variant，並配一支完整性測試；理由見 [ADR-005 的 D3](adr/005-frontend-architecture.mdx#d3-元件庫用-shadcnui) |
 | 圖示 | **只用** Lucide（`lucide-react`）。不得加入其他圖示庫，不得用 emoji 或自己畫的 SVG 當圖示 |
 | design token | 只用語意 token；`frontend/src/styles/` 寫一層對照，把 shadcn 的語意變數指向 `design/prototype/assets/tokens.css`，**`tokens.css` 仍是唯一色值來源**。shadcn 元件不改寫 |
 | 畫面狀態 | 每個資料區塊都要寫出 loading、error、empty、無權限（403）四種狀態與被遮蔽欄位的呈現，由 OpenSpec 的 `ui-design` 負責 |
@@ -317,7 +329,7 @@ Redis 7 同時當 broker、result backend 與應用快取，用 DB 編號隔開�
 
 ## 測試分層
 
-三層互補、不重疊：純 UI 邏輯不用 Playwright 測，跨頁旅程不用 Vitest 測；開發一律 TDD。
+三層互補、不重疊：純 UI 邏輯不用 Playwright 測，跨頁旅程不用 Vitest 測；開發一律 TDD。為什麼分三層、前端測試放同目錄、正式 E2E 放根目錄，見 [ADR-007](adr/007-testing-strategy.mdx)。
 
 | 層 | 工具 | 範圍 | 位置 |
 | :--- | :--- | :--- | :--- |
@@ -334,7 +346,7 @@ Redis 7 同時當 broker、result backend 與應用快取，用 DB 編號隔開�
 
 ## 部署與維運
 
-Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做。
+Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，備援只做正式層。為什麼這樣選見 [ADR-008](adr/008-deployment-and-operations.mdx)。
 
 | 面向 | 做法 |
 | :--- | :--- |
@@ -343,13 +355,15 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做。
 | image | 後端與 worker 共用一個多階段 Dockerfile；前端 build 完由 `nginx:alpine` 服務 `/dist` |
 | 寄信 | Resend；沒設 key 時把設定密碼連結印在伺服器 log，由部署者轉給使用者。因此 Lite 層的 log 視為敏感，畫面要讓管理員知道信沒有寄出去（條文見[規格 06-01](../specs/06-admin/01-user-management.mdx#已確認決議) Q9–Q11） |
 | 監控 | Prometheus、Grafana、Sentry 本期不做，與 PRD「研究原型、不是生產規模服務」的定位一致；代價是出錯時只能看 log，沒有告警 |
+| 備援 | 只做正式層：每日一次 `pg_dump -Fc`，寫到獨立的 backups volume，滾動保留 7 份。Lite 層不做自動備援：停掉服務再複製 `./data`，或在執行中用 `sqlite3 <db> "VACUUM INTO '<path>'"` 取一致副本 —— **不要在服務執行中直接複製檔案，會得到壞檔**。**備份只放在主資料碟上不足以災難復原，異地複製是部署者的責任**；備份檔含測試集答案與個資，存取控制比照原資料庫。為什麼這樣選見 [ADR-008 的 D9](adr/008-deployment-and-operations.mdx#d9-資料備援只做正式層備份產出到獨立-volume) |
+| 停機 | `worker` 的 `stop_grace_period` 要大於單一評分上限 300 秒，不能留在 Compose 預設的 10 秒；收到 SIGTERM 後不再領新任務，手上的跑完才退。`backend` 只要讓進行中的 HTTP 請求收尾，不是 300 秒等級的工作，`30s` 就夠。見 [ADR-008 的 D10](adr/008-deployment-and-operations.mdx#d10-worker-收到-sigterm-先做完手上的任務) |
 | CI 安全掃描 | 後端 `uv run pip-audit --fail-on high`、前端 `pnpm audit --prod --audit-level high`；SAST（Semgrep）等有程式再接 |
-| 相依套件 | dependabot 警示的升級邊界見 [相依套件政策](dependency-policy.mdx) |
+| 相依套件 | dependabot 警示的升級邊界見 [相依套件政策](workflow/dependency-policy.mdx) |
 | 發版 | 版號、CHANGELOG、tag、GitHub Release 與 Zenodo DOI 見 `commit-and-release.md` |
 
 :::note{title="安全掃描與分支推進" collapsible}
 - Semgrep 上線時至少要蓋兩條專案禁令：CORS 的 `allow_origins=["*"]`，以及寫死的 API key 與 secret（Hard Rule 7、8）
-- DAST 與 API fuzzing 先不做，條件寫在 ADR-028
+- DAST 與 API fuzzing 先不做，重新討論的條件見 [ADR-008 的 D8](adr/008-deployment-and-operations.mdx#d8-ci-安全掃描先做-scasast-延後)
 - 分支與映像推進以 `commit-and-release.md` 為準：目前只有 `main`；staging 與 production 環境存在後改成 `dev` → `release` → `main` 三分支，image 在 `release` 建一次、不重建，`main` 合併後打 `vX.Y.Z` 並在 GHCR 加同 digest 的別名 tag
 :::
 
@@ -359,44 +373,44 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做。
 
 | ADR | 標題 | 狀態 | 在本 repo 的效力 |
 | :--- | :--- | :--- | :--- |
-| 001 | Modular Monorepo Structure | Accepted | 需調整：`backend/` 加 `frontend/` 沿用，但 canon 規格在 `docs/specs/`，不是根目錄 `specs/` |
+| 001 | Modular Monorepo Structure | Accepted | 需調整：`backend/` 加 `frontend/` 沿用，但 canon 規格在 `docs/specs/`，不是根目錄 `specs/`；見 [ADR-003 的 D1](adr/003-backend-architecture.mdx#d1-前後端放在同一個-repo) |
 | 002 | uv（後端）加 pnpm（前端） | Accepted | 沿用，等同 `AGENTS.md` Hard Rule 3，見 [§技術選型](#技術選型) |
-| 003 | FastAPI | Accepted | 沿用，見 [§後端分層](#後端分層) |
-| 004 | React 加 Vite SPA | Accepted | **部分被覆寫**：SPA 與 Vite 沿用，版本改 React 19，見 [§技術選型](#技術選型) |
-| 005 | PostgreSQL 16 | Accepted | 沿用，Lite 層由 024 補上，見 [§資料庫雙層](#資料庫雙層) |
-| 006 | Redis 7（cache 加 broker） | Accepted | 沿用，見 [§非同步任務](#非同步任務) |
-| 007 | Celery | Accepted | 沿用，見 [§非同步任務](#非同步任務) |
-| 008 | Docker 加 Docker Compose | Accepted | 沿用，見 [§部署與維運](#部署與維運) |
-| 009 | pytest 加 Playwright 加 TDD | Accepted | 沿用，見 [§測試分層](#測試分層) |
-| 010 | Config-Driven Task Architecture | Accepted | 沿用原則，等同 Hard Rule 5；config schema 已由 029 取代，見 [§任務設定](#任務設定input_type-加-outputs) |
-| 011 | 前端垂直功能切片 | Accepted | **被覆寫**：改用 `pages/` 加 `features/`，見 [§前端](#前端) |
-| 012 | Vitest 加 RTL 加 Playwright | Accepted | 沿用，E2E 位置已由 034 取代，見 [§測試分層](#測試分層) |
-| 013 | Resend 寄信 | Accepted | 需調整：補上未設定 key 時的降級路徑，見 [§部署與維運](#部署與維運) |
+| 003 | FastAPI | Accepted | 沿用，見 [§後端分層](#後端分層)與 [ADR-003 的 D2](adr/003-backend-architecture.mdx#d2-後端框架用-fastapi) |
+| 004 | React 加 Vite SPA | Accepted | **部分被覆寫**：SPA 與 Vite 沿用，版本改 React 19，見 [§技術選型](#技術選型)與 [ADR-005 的 D1](adr/005-frontend-architecture.mdx#d1-前端是-react-加-vite-的單頁應用) |
+| 005 | PostgreSQL 16 | Accepted | 沿用，Lite 層由 024 補上，見 [§資料庫雙層](#資料庫雙層)與 [ADR-003 的 D7](adr/003-backend-architecture.mdx#d7-資料庫分兩層) |
+| 006 | Redis 7（cache 加 broker） | Accepted | 沿用，見 [§非同步任務](#非同步任務)與 [ADR-003 的 D8](adr/003-backend-architecture.mdx#d8-非同步任務用-celery-加-redis) |
+| 007 | Celery | Accepted | 沿用，見 [§非同步任務](#非同步任務)與 [ADR-003 的 D8](adr/003-backend-architecture.mdx#d8-非同步任務用-celery-加-redis) |
+| 008 | Docker 加 Docker Compose | Accepted | 沿用，見 [§部署與維運](#部署與維運)與 [ADR-008 的 D1](adr/008-deployment-and-operations.mdx#d1-compose-加-nginx-當-runtimecloudflare-可選)、[ADR-008 的 D2](adr/008-deployment-and-operations.mdx#d2-後端與-worker-共用一個-image) |
+| 009 | pytest 加 Playwright 加 TDD | Accepted | 沿用，見 [§測試分層](#測試分層)；覆蓋率門檻改採 [ADR-007 的 D2](adr/007-testing-strategy.mdx#d2-覆蓋率只管不得下降與關鍵路徑) |
+| 010 | Config-Driven Task Architecture | Accepted | 沿用原則，等同 Hard Rule 5；config schema 已由 029 取代，見 [§任務設定](#任務設定input_type-加-outputs)與 [ADR-006 的 D1](adr/006-task-config-and-answer-isolation.mdx#d1-任務類型由設定決定核心不寫任務專屬邏輯) |
+| 011 | 前端垂直功能切片 | Accepted | **被覆寫**：改用 `pages/` 加 `features/`，見 [§前端](#前端)與 [ADR-005 的 D2](adr/005-frontend-architecture.mdx#d2-目錄分層採-pages-加-features) |
+| 012 | Vitest 加 RTL 加 Playwright | Accepted | 沿用，E2E 位置已由 034 取代，見 [§測試分層](#測試分層)與 [ADR-007 的 D3](adr/007-testing-strategy.mdx#d3-前端測試與原始碼放同一個目錄) |
+| 013 | Resend 寄信 | Accepted | 需調整：補上未設定 key 時的降級路徑，見 [§部署與維運](#部署與維運)與 [ADR-008 的 D3](adr/008-deployment-and-operations.mdx#d3-寄信用-resend沒設-key-時把連結印到-log) |
 | 014 | Prototype 層 Playwright 測試 | Accepted | 不適用：測試與 `package.json` 依 #16 留在個人 repo |
 | 015 | 角色導向漸進式 onboarding | Accepted | **本期部分採用**：空狀態與情境提示做，導覽與角色導向漸進揭露不做，見 [§前端](#前端) |
-| 016 | shadcn/ui 加 Storybook | Accepted | **部分被覆寫**：採 shadcn/ui，元件放 `components/ui/`；Storybook 未決，見 [§待決](#待決) 第 2 列 |
-| 017 | 三層 agent（Planner／Generator／Evaluator） | Accepted | 已被取代：以 #47 的 fullstack-sdd 角色分工與 `CLAUDE.md` 為準（含它與 017 相反的 compact 規則）；017 的「Evaluator 只用外部確定性工具、禁止自評」由 `code-reviewer` 與 `acceptance-verifier` 承接 |
-| 018 | Prometheus 加 Grafana | Accepted | **本期不做**，見 [§部署與維運](#部署與維運) |
-| 019 | AI 可追溯與稽核（`ai_runs`） | Accepted | 沿用，本期要做，見 [§稽核與可追溯](#稽核與可追溯) |
-| 020 | Sentry | Accepted | **本期不做**，見 [§部署與維運](#部署與維運) |
-| 021 | JWT 加 refresh token（httpOnly cookie） | Accepted | 沿用，見 [§認證與授權](#認證與授權) |
-| 022 | 任務狀態機放 service 層 | Accepted | **部分被覆寫**：狀態機沿用，轉移條件以 `docs/specs/` 為準；它舉的扁平 `app/services/` 路徑改成模組內分層，見 [§後端分層](#後端分層)（建議在個人 repo 補一份 ADR） |
-| 023 | Compose 加 Nginx 加 Cloudflare 部署 | Accepted | 需調整：要搭 `commit-and-release.md` 的三分支與 GHCR，見 [§部署與維運](#部署與維運) |
-| 024 | 資料庫雙層（SQLite 加 PostgreSQL） | Accepted | 沿用，見 [§資料庫雙層](#資料庫雙層) |
-| 025 | Bruno API collection | Accepted | **部分被覆寫**：Bruno 降成可選的手動工具，pre-PR 硬關卡取消，見 [§API 契約](#api-契約) |
+| 016 | shadcn/ui 加 Storybook | Accepted | **部分被覆寫**：採 shadcn/ui，元件放 `components/ui/`；Storybook 不採用，改用元件展示頁；shadcn/ui 見 [ADR-005 的 D3](adr/005-frontend-architecture.mdx#d3-元件庫用-shadcnui) |
+| 017 | 三層 agent（Planner／Generator／Evaluator） | Accepted | 已被取代：以 [ADR-002 的 D4](adr/002-development-workflow.mdx#d4-規劃實作審查與驗收由不同角色負責)與 `CLAUDE.md` 為準（含它與 017 相反的 compact 規則）；017 的「Evaluator 只用外部確定性工具、禁止自評」由 `code-reviewer` 與 `acceptance-verifier` 承接 |
+| 018 | Prometheus 加 Grafana | Accepted | **本期不做**，見 [§部署與維運](#部署與維運)與 [ADR-008 的 D4](adr/008-deployment-and-operations.mdx#d4-觀測性只做-ai_runs監控與錯誤追蹤本期不做) |
+| 019 | AI 可追溯與稽核（`ai_runs`） | Accepted | 沿用，本期要做，見 [§稽核與可追溯](#稽核與可追溯)與 [ADR-008 的 D5](adr/008-deployment-and-operations.mdx#d5-ai-可追溯用只新增的-ai_runs-表) |
+| 020 | Sentry | Accepted | **本期不做**，見 [§部署與維運](#部署與維運)與 [ADR-008 的 D4](adr/008-deployment-and-operations.mdx#d4-觀測性只做-ai_runs監控與錯誤追蹤本期不做) |
+| 021 | JWT 加 refresh token（httpOnly cookie） | Accepted | 沿用，見 [§認證與授權](#認證與授權)與 [ADR-004 的 D1](adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie)、[D2](adr/004-auth-and-security.mdx#d2-授權用的角色每次從資料庫讀) |
+| 022 | 任務狀態機放 service 層 | Accepted | **部分被覆寫**：狀態機沿用，轉移條件以 `docs/specs/` 為準；它舉的扁平 `app/services/` 路徑改成模組內分層，見 [§後端分層](#後端分層)、[ADR-003 的 D3](adr/003-backend-architecture.mdx#d3-後端採模組內分層)與 [D4](adr/003-backend-architecture.mdx#d4-任務狀態機只放在-service-層)（建議在個人 repo 補一份 ADR） |
+| 023 | Compose 加 Nginx 加 Cloudflare 部署 | Accepted | 需調整：要搭 `commit-and-release.md` 的三分支與 GHCR，見 [§部署與維運](#部署與維運)與 [ADR-008 的 D1](adr/008-deployment-and-operations.mdx#d1-compose-加-nginx-當-runtimecloudflare-可選) |
+| 024 | 資料庫雙層（SQLite 加 PostgreSQL） | Accepted | 沿用，見 [§資料庫雙層](#資料庫雙層)與 [ADR-003 的 D7](adr/003-backend-architecture.mdx#d7-資料庫分兩層)；它的 Atomic upsert 一條見 [ADR-003 的 D10](adr/003-backend-architecture.mdx#d10-背景計算的結果寫入做成冪等) |
+| 025 | Bruno API collection | Accepted | **部分被覆寫**：Bruno 降成可選的手動工具，pre-PR 硬關卡取消，見 [§API 契約](#api-契約)與 [ADR-003 的 D9](adr/003-backend-architecture.mdx#d9-bruno-只當可選工具) |
 | 026 | i18n 兩層 | Accepted | 沿用，見 [§i18n 兩層](#i18n-兩層) |
-| 027 | GitHub Projects | Accepted | 已被取代：以 `AGENTS.md` 的組織層專案為準，不用 label 追狀態，無 `STATUS.md` |
-| 028 | CI 安全掃描（SCA 加延後 SAST） | Accepted | 沿用，等同 Hard Rule 7、8，見 [§部署與維運](#部署與維運) |
-| 029 | Output-Type Composition Model | Accepted | 沿用；`sequence_tagging` 那一列已過期，以 [§任務設定](#任務設定input_type-加-outputs) 為準（修訂見 [§待決](#待決) 第 1 列） |
-| 030 | Lucide 圖示 | Accepted | 沿用，見 [§前端](#前端) |
-| 031 | 序列標記 tokenization 契約 | Superseded | 已被取代：改成半開字元 offset span，見 [§任務設定](#任務設定input_type-加-outputs) |
-| 032 | 使用者行為稽核（`audit_events`） | Accepted | 沿用，見 [§稽核與可追溯](#稽核與可追溯) |
-| 033 | OpenSpec 當變更流程層 | Accepted | 已被取代：以 `openspec/config.yaml` 加 #47 決議為準（033 把 `openspec/specs/` 當衍生檢視，本 repo 當可測契約，方向相反）；檔案狀態與 `README.md` 索引不一致，見 [§待決](#待決) 第 1 列 |
-| 034 | 正式 E2E 放根目錄 `e2e/[module]/` | Accepted | 沿用，見 [§測試分層](#測試分層) |
-| 035 | Google SSO 直接走 OIDC | Accepted | 沿用，見 [§Google SSO](#google-sso) |
+| 027 | GitHub Projects | Accepted | 已被取代：以 [ADR-002 的 D5](adr/002-development-workflow.mdx#d5-狀態只記在組織層專案板)為準，不用 label 追狀態，無 `STATUS.md` |
+| 028 | CI 安全掃描（SCA 加延後 SAST） | Accepted | 沿用，等同 Hard Rule 7、8，見 [§部署與維運](#部署與維運)與 [ADR-008 的 D8](adr/008-deployment-and-operations.mdx#d8-ci-安全掃描先做-scasast-延後) |
+| 029 | Output-Type Composition Model | Accepted | 沿用；`sequence_tagging` 那一列已過期，以 [§任務設定](#任務設定input_type-加-outputs) 為準（修訂見 [§待決](#待決) 第 1 列）；見 [ADR-006 的 D2](adr/006-task-config-and-answer-isolation.mdx#d2-任務設定用-input_type-加-outputs-組合) |
+| 030 | Lucide 圖示 | Accepted | 沿用，見 [§前端](#前端)與 [ADR-005 的 D5](adr/005-frontend-architecture.mdx#d5-圖示只用-lucide) |
+| 031 | 序列標記 tokenization 契約 | Superseded | 已被取代：改成半開字元 offset span，見 [§任務設定](#任務設定input_type-加-outputs)與 [ADR-006 的 D3](adr/006-task-config-and-answer-isolation.mdx#d3-序列標記用半開字元-offset-span) |
+| 032 | 使用者行為稽核（`audit_events`） | Accepted | 沿用，見 [§稽核與可追溯](#稽核與可追溯)與 [ADR-008 的 D6](adr/008-deployment-and-operations.mdx#d6-使用者行為記在單一只新增的-audit_events-表) |
+| 033 | OpenSpec 當變更流程層 | Accepted | 已被取代：以 `openspec/config.yaml` 加 [ADR-002 的 D1](adr/002-development-workflow.mdx#d1-完整九份產物流程一次導入)為準（033 把 `openspec/specs/` 當衍生檢視，本 repo 當可測契約，方向相反）；檔案狀態與 `README.md` 索引不一致，見 [§待決](#待決) 第 1 列 |
+| 034 | 正式 E2E 放根目錄 `e2e/[module]/` | Accepted | 沿用，見 [§測試分層](#測試分層)與 [ADR-007 的 D4](adr/007-testing-strategy.mdx#d4-正式-e2e-放根目錄) |
+| 035 | Google SSO 直接走 OIDC | Accepted | 沿用，見 [§Google SSO](#google-sso)與 [ADR-004 的 D4](adr/004-auth-and-security.mdx#d4-google-sso-直接走-oidc)、[D5](adr/004-auth-and-security.mdx#d5-google-登入綁定既有帳號的條件) |
 | 036 | 開源 repo 拆分 | Proposed | 需調整：規格 canon 已搬到本 repo 的 `docs/specs/`，ADR 仍寫在個人 repo，見 [§待決](#待決) 第 1 列 |
-| 037 | 權限矩陣當授權輸入 | Accepted | 沿用，見 [§授權四步](#授權四步) |
-| 038 | 資料保留、刪除與匿名化 | Accepted | 沿用，見 [§稽核與可追溯](#稽核與可追溯) |
+| 037 | 權限矩陣當授權輸入 | Accepted | 沿用，見 [§授權四步](#授權四步)與 [ADR-004 的 D6](adr/004-auth-and-security.mdx#d6-權限矩陣當授權輸入) |
+| 038 | 資料保留、刪除與匿名化 | Accepted | 沿用，見 [§稽核與可追溯](#稽核與可追溯)與 [ADR-008 的 D7](adr/008-deployment-and-operations.mdx#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列) |
 
 | 效力 | 份數 | 哪幾份 |
 | :--- | :--- | :--- |
@@ -416,8 +430,7 @@ ADR 引用的 FR-131、admin-007、spec 013 這類編號屬於個人 repo，本 
 | # | 問題 | 卡住什麼 | 誰決定 |
 | :--- | :--- | :--- | :--- |
 | 1 | 個人 repo 的 ADR 修訂：029 的 `sequence_tagging` 列、033 改 supersede 或標註只適用個人 repo、033 檔案與 `README.md` 索引的狀態不一致（Accepted 對 Proposed）、036 寫明規格 canon 已移到本 repo | 不卡本 repo 實作；兩個 repo 的說法不一致，追溯會指錯地方 | 維護者，在個人 repo 處理 |
-| 2 | ADR-016 的 Storybook 要不要用 | 第一個前端 change 之前要決定 | 維護者 |
-| 3 | 沒設 Resend key 時，[規格 01-02](../specs/01-account/02-register.mdx) 的自行註冊走不通：驗證信寄不出去，而帳號「在點連結這一刻才建立」 | 降級路徑只涵蓋設定密碼連結，沒有涵蓋註冊驗證信；Lite 部署目前只能由系統管理員邀請 | 維護者 |
+| 2 | 沒設 Resend key 時，[規格 01-02](../specs/01-account/02-register.mdx) 的自行註冊走不通：驗證信寄不出去，而帳號「在點連結這一刻才建立」 | 降級路徑只涵蓋設定密碼連結，沒有涵蓋註冊驗證信；Lite 部署目前只能由系統管理員邀請 | 維護者 |
 
 ## 決策紀錄
 
@@ -435,3 +448,18 @@ ADR 引用的 FR-131、admin-007、spec 013 這類編號屬於個人 repo，本 
 | 2026-11-10 | design token 寫一層對照，`tokens.css` 仍是唯一色值來源（[§前端](#前端)） | — | [#109 留言](https://github.com/label-suite/label-suite/issues/109#issuecomment-6764207805) |
 | 2026-11-10 | 身分只認 httpOnly cookie（[§認證與授權](#認證與授權)） | 原文「不接受 `Authorization` header 以外的來源」是筆誤 | [#107](https://github.com/label-suite/label-suite/issues/107) |
 | 2026-11-10 | CSRF 加綁定 session 的 double-submit token（[§CSRF](#csrf)） | — | [#107](https://github.com/label-suite/label-suite/issues/107) |
+| 2026-11-19 | 衝突優先序改為 `AGENTS.md` > 本 repo ADR > 本文 > 個人 repo ADR（只當參考） | 原本「本文與 ADR 不一致以 ADR 為準」，只有效力總表標成被覆寫等的列例外 | [#444](https://github.com/label-suite/label-suite/issues/444) |
+| 2026-11-19 | 測試分層、覆蓋率、前端測試位置與正式 E2E 位置的理由寫進 [ADR-007](adr/007-testing-strategy.mdx)，本文只留做法（[§測試分層](#測試分層)） | —（理由原本只在個人 repo 的 ADR-009、012、034） | [#453](https://github.com/label-suite/label-suite/issues/453) |
+| 2026-11-19 | 個人 repo ADR-017、027、033 的效力改連到 [ADR-002](adr/002-development-workflow.mdx) 的 D4、D5、D1（[§ADR 效力總表](#adr-效力總表)） | —（三列原本連到 #47 與 `AGENTS.md`） | [#448](https://github.com/label-suite/label-suite/issues/448) |
+| 2026-11-19 | 後端與 API 契約的理由寫進 [ADR-003](adr/003-backend-architecture.mdx)，本文只留做法；個人 repo ADR-001、003、005、006、007、022、024、025 的效力改連到它的 D1 至 D9（[§ADR 效力總表](#adr-效力總表)） | —（理由原本只在個人 repo 的 ADR 與 [#105](https://github.com/label-suite/label-suite/issues/105) 的留言） | [#449](https://github.com/label-suite/label-suite/issues/449) |
+| 2026-11-19 | 認證、CSRF、Google SSO、權限矩陣的理由寫進 [ADR-004](adr/004-auth-and-security.mdx)，本文只留做法（[§認證與授權](#認證與授權)） | —（理由原本只在個人 repo 的 ADR-021、035、037 與 #107 的留言） | [#450](https://github.com/label-suite/label-suite/issues/450) |
+| 2026-11-19 | 前端的框架、目錄分層、元件庫、design token 對照與圖示的理由寫進 [ADR-005](adr/005-frontend-architecture.mdx)，本文只留做法（[§前端](#前端)）；個人 repo ADR-004、011、016、030 的效力改連到它的 D1、D2、D3、D5（[§ADR 效力總表](#adr-效力總表)） | —（理由原本只在個人 repo 的 ADR 與 [#105](https://github.com/label-suite/label-suite/issues/105) 的留言） | [#451](https://github.com/label-suite/label-suite/issues/451) |
+| 2026-11-19 | 任務設定與答案隔離的理由寫進 [ADR-006](adr/006-task-config-and-answer-isolation.mdx)，本文只留做法（[§任務設定](#任務設定input_type-加-outputs)、[§測試集答案不外露](#測試集答案不外露)）；個人 repo ADR-010、029、031 的效力改連到它的 D1、D2、D3（[§ADR 效力總表](#adr-效力總表)） | —（理由原本只在個人 repo 的 ADR） | [#452](https://github.com/label-suite/label-suite/issues/452) |
+| 2026-11-19 | 部署、維運與稽核的理由寫進 [ADR-008](adr/008-deployment-and-operations.mdx)，本文只留做法（[§部署與維運](#部署與維運)、[§稽核與可追溯](#稽核與可追溯)）；個人 repo ADR-008、013、018、019、020、023、028、032、038 的效力改連到它的 D1 至 D8（[§ADR 效力總表](#adr-效力總表)） | —（理由原本只在個人 repo 的 ADR 與 [#105](https://github.com/label-suite/label-suite/issues/105) 的留言） | [#454](https://github.com/label-suite/label-suite/issues/454) |
+| 2026-11-19 | `/auth/refresh` 在輪替 refresh token 之前先檢查 `is_active`（[§認證與授權](#認證與授權)） | —（原本只靠停用當下撤銷 token family，refresh 端點本身不檢查） | [#474](https://github.com/label-suite/label-suite/issues/474) |
+| 2026-11-19 | 資料備援只做正式層，異地複製是部署者的責任（[§部署與維運](#部署與維運)） | —（兩個 repo 都沒有裁定過；個人 repo ADR-023 把備份目的地與保留政策列為未裁定） | [#490](https://github.com/label-suite/label-suite/issues/490) |
+| 2026-11-19 | 備份頻率每日一次、滾動保留 7 份（[§部署與維運](#部署與維運)） | —（#490 原本只裁定「定期備份」，沒有給數字） | [#490 的留言](https://github.com/label-suite/label-suite/issues/490#issuecomment-7010266013) |
+| 2026-11-19 | `stop_grace_period` 要大於評分上限 300 秒，worker 收到 SIGTERM 先做完手上的任務；背景計算的結果寫入做成冪等（[§部署與維運](#部署與維運)、[§非同步任務](#非同步任務)） | Compose 預設的 10 秒寬限會把超過 10 秒的評分直接 SIGKILL 且不重跑 | [#490](https://github.com/label-suite/label-suite/issues/490) |
+| 2026-11-20 | 成功回應的 envelope 定為 `{ success, code, message, data, timestamp, traceId }`，錯誤套同一個外層，API JSON 欄位一律 camelCase（[§API 契約](#api-契約)） | 原本只寫「包一層 envelope，例 `{"data": ...}`」，欄位未決 | [#503](https://github.com/label-suite/label-suite/issues/503) |
+| 2026-11-20 | 人讀的錯誤訊息從 `detail` 改成外層的 `message`（[§i18n 兩層](#i18n-兩層)） | `ErrorResponse` 的 `detail` | [#503](https://github.com/label-suite/label-suite/issues/503) |
+| 2026-11-20 | 不用 Storybook，改用元件展示頁（[§前端](#前端)） | §待決 第 2 列「ADR-016 的 Storybook 要不要用」 | [#503](https://github.com/label-suite/label-suite/issues/503) |

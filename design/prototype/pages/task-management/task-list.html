@@ -4,8 +4,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="../../assets/logo/icon-colored.svg">
   <title>Label Suite — 任務列表</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../../assets/data-palette.css" />
   <link rel="stylesheet" href="../shared/modal.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <link rel="stylesheet" href="../shared/button.css" />
@@ -64,7 +66,7 @@
       transition: opacity var(--dur-fast), transform var(--dur-fast),
                   border-color var(--dur-fast), background var(--dur-fast);
     }
-    .btn:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(99,102,241,0.18), 0 0 0 4px white; }
+    .btn:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 18%, transparent), 0 0 0 4px var(--color-white); }
     .btn-icon { width: 16px; height: 16px; flex-shrink: 0; }
 
     /* ── Panel ───────────────────────────────────────────────── */
@@ -84,49 +86,21 @@
     .updated-cell { color: var(--color-text-soft); font-size: 13px; white-space: nowrap; }
     .actions-cell { min-width: 150px; }
     .inline-actions { display: inline-flex; gap: 8px; align-items: center; }
-    .mini-btn {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-white);
-      color: var(--color-ink);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 6px 10px;
-      transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast), opacity var(--dur-fast);
-    }
-    .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
-    .mini-btn:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
-    }
-    .mini-btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
-    .mini-btn-primary {
-      background: var(--color-primary);
-      border-color: var(--color-primary);
-      color: var(--color-white);
-    }
-    .mini-btn-primary:hover:not(:disabled) { opacity: 0.9; border-color: var(--color-primary); color: var(--color-white); }
-    .mini-btn-primary:focus-visible { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18); }
-    .mini-btn-danger {
-      background: var(--color-error-soft-bg);
-      border-color: var(--color-error-soft-border);
-      color: var(--color-error);
-    }
-    .mini-btn-danger:hover:not(:disabled) { border-color: var(--color-error-soft-border); background: var(--color-error-soft-bg); color: var(--color-error); }
+    /* .mini-btn 與其 variant 在 pages/shared/button.css（#423, G-37） */
     /* ── Badges ──────────────────────────────────────────────── */
     .badge {
       display: inline-flex; align-items: center; padding: 2px 8px;
       border-radius: var(--radius-sm); border: 1px solid transparent;
       font-size: 12px; font-weight: 500; line-height: 1.4; white-space: nowrap;
     }
-    .badge-draft           { color: #4B5563; background: #F9FAFB; border-color: #E5E7EB; }
-    .badge-dry-run-status  { color: #6B7280; background: #F3F4F6; border-color: #D1D5DB; }
+    .badge-draft           { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
+    .badge-dry-run-status  { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
     .badge-iaa             { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
     .badge-in-progress     { color: var(--color-info); background: var(--color-info-bg); border-color: var(--color-info-border); }
     .badge-completed       { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
-    .badge-dry-run         { color: #6B7280; background: #F3F4F6; border-color: #D1D5DB; }
-    .badge-official        { color: #5B21B6; background: #EDE9FE; border-color: #DDD6FE; }
-    .badge-run-unmaterialized { color: #64748B; background: #F8FAFC; border-color: #CBD5E1; }
+    .badge-dry-run         { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
+    .badge-official        { color: var(--color-accent); background: var(--color-accent-bg); border-color: var(--color-accent-border); }
+    .badge-run-unmaterialized { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
     .output-type-cell { width: 280px; max-width: 280px; white-space: normal; }
     .output-type-tags {
       display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
@@ -150,10 +124,17 @@
     }
     .toast.show { opacity: 1; transform: translateY(0); }
     .toast.toast-error { background: var(--color-error); }
+    /* UXC-07（#423, G-39）：error 不自動消失，所以要有關閉鈕；隱藏時以 visibility
+       把關閉鈕移出 Tab 順序，延遲 0s 讓淡出照樣播完。 */
+    .toast { visibility: hidden; transition: opacity var(--dur-normal), transform var(--dur-normal), visibility 0s linear var(--dur-normal); }
+    .toast.show { visibility: visible; transition: opacity var(--dur-normal), transform var(--dur-normal); }
+    .toast-close { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; margin-left: auto; padding: 2px; border: none; border-radius: var(--radius-sm); background: none; color: currentColor; opacity: 0.75; cursor: pointer; }
+    .toast-close:hover { opacity: 1; }
+    .toast-close:focus-visible { outline: 2px solid currentColor; outline-offset: 1px; opacity: 1; }
     .toast-icon { width: 18px; height: 18px; flex-shrink: 0; }
 
     /* ── Responsive ──────────────────────────────────────────── */
-    @media (max-width: 768px) {
+    @media (max-width: 767px) {
       .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
       .page-header { flex-direction: column; align-items: flex-start; }
       .page-header-actions { width: 100%; }
@@ -174,16 +155,9 @@
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; } }
 
     /* ── Dark mode overrides ──────────────────────────────────── */
-    /* Table chrome, empty-state desc, and pagination info flip automatically:
-       their light rules use theme-aware tokens (slate-50 / border-muted / text-soft) */
-    html[data-theme="dark"] {
-      /* Status / run-phase badges */
-      .badge-draft          { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
-      .badge-dry-run-status { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
-      .badge-dry-run        { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
-      .badge-official       { color: #A78BFA; background: #1E1B4B; border-color: #3730A3; }
-      .badge-run-unmaterialized { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
-    }
+    /* None needed: table chrome, empty-state desc, pagination info and the
+       status / run-phase badges (#420 Q1 neutral tokens, Q2 accent) all read
+       theme-aware tokens that flip in tokens.css. */
   </style>
   <link rel="stylesheet" href="../shared/task-type-badge.css" />
 </head>
@@ -323,6 +297,7 @@
       <line x1="12" y1="16" x2="12.01" y2="16"/>
     </svg>
     <span id="toastMsg"></span>
+    <button type="button" class="toast-close" id="toastClose" aria-label="關閉通知" onclick="hideToast()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
 </div>
 
@@ -372,6 +347,7 @@
       paginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
       toastNoPermission: '無權限檢視任務詳情',
       toastNavigating: '前往任務詳情…',
+      toastClose: '關閉通知',
       toastTaskSoftDeleted: '任務已移至封存（軟刪除）',
       toastDeleteNotAllowed: '此任務狀態不允許刪除',
       toastDeleteForbidden: '無權限刪除任務',
@@ -431,6 +407,7 @@
       paginationTpl: 'Total {total} · Page {page} / {totalPages}',
       toastNoPermission: 'No permission to view task detail',
       toastNavigating: 'Navigating to task detail…',
+      toastClose: 'Dismiss notification',
       toastTaskSoftDeleted: 'Task moved to archive (soft deleted)',
       toastDeleteNotAllowed: 'This task status cannot be deleted',
       toastDeleteForbidden: 'No permission to delete task',
@@ -596,13 +573,25 @@
     });
   }
 
-  function showToast(msg, isError) {
+  /* UXC-07（#423, G-39）：單一實例、依類型分級存續，error 只能手動關。
+     第二個參數可傳 variant 字串；舊呼叫的 true 視為 error，省略或 false 視為 success。 */
+  var TOAST_DURATIONS = { success: 3000, info: 5000, warning: 8000, error: 0 };
+  function hideToast() {
+    document.getElementById('toast').classList.remove('show');
+    clearTimeout(toastTimer);
+    toastTimer = null;
+  }
+  function showToast(msg, variant) {
+    if (variant === true) variant = 'error';
+    if (!Object.prototype.hasOwnProperty.call(TOAST_DURATIONS, variant)) variant = 'success';
     var toast = document.getElementById('toast');
     setTextContent('toastMsg', msg);
-    toast.classList.toggle('toast-error', !!isError);
+    toast.classList.toggle('toast-error', variant === 'error');
+    document.getElementById('toastClose').setAttribute('aria-label', t('toastClose'));
     toast.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 3000);
+    toastTimer = null;
+    if (TOAST_DURATIONS[variant] > 0) toastTimer = setTimeout(hideToast, TOAST_DURATIONS[variant]);
   }
 
   function getTrackingContext() {
@@ -646,7 +635,7 @@
   function navigateToTaskDetail(task, source) {
     if (task.canViewDetail) {
       trackAnalytics('prototype_task_row_clicked', { allowed: true, task_id: task.id, source: source || 'row' });
-      showToast(t('toastNavigating'), false);
+      showToast(t('toastNavigating'), 'info');
       window.setTimeout(function () {
         /* issue singyichen/label-suite#1266: only a project leader / super admin viewer carries
            project_leader on; anyone else sends no role and task-detail fails
@@ -1194,8 +1183,13 @@
   if (mobileLangToggle) mobileLangToggle.addEventListener('click', function() { handleLangToggle('mobile'); });
   document.getElementById('deleteTaskCancelBtn').addEventListener('click', closeDeleteModal);
   document.getElementById('deleteTaskConfirmBtn').addEventListener('click', confirmDeleteModal);
-  document.getElementById('deleteTaskModal').addEventListener('click', function(e) {
-    if (e.target === this) closeDeleteModal();
+  /* UXC-10：破壞性確認點遮罩不關，只能按「取消」、Esc 或「刪除」離開。
+     維護者 2026-11-18 裁定刪除任務也適用（#423, design-gaps G-45）；
+     規格 01-task-list §刪除任務第 5 條仍寫「點視窗外面 → 關閉」，待維護者改。
+     點遮罩會讓焦點掉到 body，而 modal-focus.js 的 Esc 監聽掛在視窗上，
+     所以在遮罩上的 mousedown 取消預設動作，焦點留在視窗裡，Esc 仍然有效。 */
+  document.getElementById('deleteTaskModal').addEventListener('mousedown', function(e) {
+    if (e.target === this) e.preventDefault();
   });
   /* Escape-to-close is now handled by the LabelSuiteModalFocus trap
      (pages/shared/modal-focus.js), scoped to the modal itself. */

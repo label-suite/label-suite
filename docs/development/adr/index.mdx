@@ -1,0 +1,55 @@
+---
+title: 架構決策紀錄（ADR）
+description: 本 repo 的 ADR 索引：一個領域一份、持續更新；什麼該寫成 ADR、和 AGENTS.md 與 architecture.mdx 怎麼分工、衝突時以誰為準。
+tags: [adr, architecture, decision]
+---
+
+# 架構決策紀錄（ADR）
+
+ADR 記錄「為什麼這樣決定」：當時的限制、比較過的選項、要付的代價、什麼情況要重新討論。
+規則本體在 `AGENTS.md`，落地的做法在 [architecture.mdx](../architecture.mdx) 與各領域說明文件；ADR 不重述它們，只連過去。
+寫法依 `doc-writing` skill 的「ADR」一節，新寫一份從 [template.mdx](template.mdx) 複製。
+
+## 索引
+
+| 編號 | 領域 | 狀態 | 涵蓋的決定 |
+| :--- | :--- | :--- | :--- |
+| [001](001-agent-engineering.mdx) | Agent 工程 | 生效 | D1 先搜尋再新增；D2 範圍內直接修正錯誤實作 |
+| [002](002-development-workflow.mdx) | 開發流程 | 生效 | D1 完整九份產物流程一次導入；D2 人工停點只留一個；D3 授權放在專案自有的指令；D4 規劃、實作、審查與驗收由不同角色負責；D5 狀態只記在組織層專案板 |
+| [003](003-backend-architecture.mdx) | 後端架構 | 生效 | D1 前後端放在同一個 repo；D2 後端框架用 FastAPI；D3 後端採模組內分層；D4 任務狀態機只放在 service 層；D5 API 路徑前綴與成功回應外層；D6 前端 client 用 Orval 產生；D7 資料庫分兩層；D8 非同步任務用 Celery 加 Redis；D9 Bruno 只當可選工具；D10 背景計算的結果寫入做成冪等 |
+| [004](004-auth-and-security.mdx) | 認證與安全 | 生效 | D1 認證 token 放在 httpOnly cookie；D2 授權用的角色每次從資料庫讀；D3 CSRF 用綁定 session 的 double-submit token；D4 Google SSO 直接走 OIDC；D5 Google 登入綁定既有帳號的條件；D6 權限矩陣當授權輸入 |
+| [005](005-frontend-architecture.mdx) | 前端架構 | 生效 | D1 前端是 React 加 Vite 的單頁應用；D2 目錄分層採 pages 加 features；D3 元件庫用 shadcn/ui；D4 design token 寫一層對照；D5 圖示只用 Lucide |
+| [006](006-task-config-and-answer-isolation.mdx) | 任務設定與答案隔離 | 生效 | D1 任務類型由設定決定，核心不寫任務專屬邏輯；D2 任務設定用 input_type 加 outputs 組合；D3 序列標記用半開字元 offset span；D4 答案隔離涵蓋標記員能到達的每個出口 |
+| [007](007-testing-strategy.mdx) | 測試策略 | 生效 | D1 三層測試的分工；D2 覆蓋率只管不得下降與關鍵路徑；D3 前端測試與原始碼放同一個目錄；D4 正式 E2E 放根目錄 |
+| [008](008-deployment-and-operations.mdx) | 部署與維運 | 生效 | D1 Compose 加 Nginx 當 runtime，Cloudflare 可選；D2 後端與 worker 共用一個 image；D3 寄信用 Resend，沒設 key 時把連結印到 log；D4 觀測性只做 ai_runs，監控與錯誤追蹤本期不做；D5 AI 可追溯用只新增的 ai_runs 表；D6 使用者行為記在單一只新增的 audit_events 表；D7 稽核保留至少一個曆年，刪除請求就地匿名化同一列；D8 CI 安全掃描先做 SCA，SAST 延後；D9 資料備援只做正式層，備份產出到獨立 volume；D10 worker 收到 SIGTERM 先做完手上的任務 |
+
+狀態只有兩種：**草稿**（還在討論，正文的決定不生效）與**生效**。一份 ADR 不會被另一份取代，決定改了就改寫那一節，舊的寫法記在它的決策紀錄。
+
+## 什麼該寫成 ADR
+
+三個條件都成立才寫：
+
+| 條件 | 例子 |
+| :--- | :--- |
+| 回頭的成本高 | 換資料庫、換認證方式、改 agent 的分工 |
+| 當時真的有其他選項 | Google SSO 直接走 OIDC，還是接外部 IdP |
+| 影響不只一個模組或一種角色 | 所有 agent 開工前都要先搜尋 |
+
+只符合一兩個的，寫進該領域的一般文件就好。同一個領域已經有 ADR 時，在那一份加一個 D 節，不另開一份。
+
+## 衝突時以誰為準
+
+`AGENTS.md`（規則）> 本 repo 的 ADR（理由）> `architecture.mdx` 與各領域說明文件（做法）> 個人 repo 的 ADR（只當參考）。業務面一律以 `docs/specs/` 為準。
+發現兩邊說法不同，照這個順序做，並回報維護者把落後的那一邊改掉。
+
+## 個人 repo 的 ADR
+
+個人 repo（`singyichen/label-suite`）的 38 份 ADR 是本 repo 的來源，不是本 repo 的規則；引用時寫「個人 repo ADR-0xx」。
+它們在本 repo 照做、調整或被取代，見 [architecture.mdx 的 §ADR 效力總表](../architecture.mdx#adr-效力總表)。把它們按領域併進本目錄是另一項工作，還沒開始。
+
+## 決策紀錄
+
+| 日期 | 決策 | 取代了什麼 | 來源 |
+| :--- | :--- | :--- | :--- |
+| 2026-11-19 | 本 repo 建立自己的 ADR，放 `docs/development/adr/`，一個領域一份、持續更新，編號從 001 起 | 個人 repo ADR 的「一個決定一份、定案後不可改、改了就另開一份取代」 | [#444](https://github.com/label-suite/label-suite/issues/444) |
+| 2026-11-19 | 衝突時的優先序：`AGENTS.md` > 本 repo ADR > `architecture.mdx` > 個人 repo ADR（[§衝突時以誰為準](#衝突時以誰為準)） | `architecture.mdx` 原本「與 ADR 不一致以 ADR 為準」 | [#444 留言](https://github.com/label-suite/label-suite/issues/444) |

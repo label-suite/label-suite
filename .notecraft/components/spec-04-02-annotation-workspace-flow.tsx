@@ -615,6 +615,7 @@ const FLOWS: Flow[] = [
       { id: "n5", lane: 1, col: 4, kind: "system", end: true, label: ["網址改寫", "成那一筆"] },
       { id: "n6", lane: 1, col: 3, kind: "system", exception: true, label: ["右欄說明", "常駐"] },
       { id: "n7", lane: 1, col: 5, kind: "system", exception: true, label: ["說明改走", "底部抽屜"] },
+      { id: "n8", lane: 1, col: 0, kind: "system", exception: true, end: true, label: ["回到", "標記清單"] },
     ],
     edges: [
       { id: "a0", from: "s", to: "n1" },
@@ -626,6 +627,7 @@ const FLOWS: Flow[] = [
       { id: "e2", from: "n6", to: "n4", exception: true },
       { id: "e3", from: "n4", to: "n7", exception: true, exit: "top", enter: "top", via: laneTop(0) + 12 },
       { id: "e4", from: "n7", to: "n5", exception: true, exit: "bottom", enter: "bottom", via: laneBottom(1) - 8 },
+      { id: "e5", from: "n2", to: "n8", exception: true, exit: "bottom", enter: "bottom", via: laneBottom(1) - 3 },
     ],
     steps: [
       {
@@ -637,10 +639,17 @@ const FLOWS: Flow[] = [
       },
       {
         title: "使用者按確認才開始",
-        body: "確認是綁帳號的，所以同一台共用電腦的第二個人照樣要自己讀一次；確認過之後不再彈。指引換了版本要重新確認，而舊版本的確認紀錄不會因此失效。彈窗的內容與右欄的說明同一個來源。",
-        scenarios: ["確認過不再彈", "指引確認綁帳號", "共用電腦的第二個人照樣要讀", "換指引版本要重新確認", "舊版本的確認不失效", "彈窗與右欄同源"],
+        body: "彈窗打開時焦點在確認，按 Esc 不會關掉它。確認是綁帳號的，所以同一台共用電腦的第二個人照樣要自己讀一次；確認過之後不再彈。指引換了版本要重新確認，而舊版本的確認紀錄不會因此失效。彈窗的內容與右欄的說明同一個來源。",
+        scenarios: ["確認過不再彈", "指引確認綁帳號", "共用電腦的第二個人照樣要讀", "換指引版本要重新確認", "舊版本的確認不失效", "彈窗與右欄同源", "閘門按 Esc 不關閉", "閘門的初始焦點在確認"],
         ref: "主流程 2",
         highlight: ["a2", "n3"],
+      },
+      {
+        title: "替代：在說明彈窗按「返回標記清單」",
+        body: "彈窗只有兩個出口：確認，或返回標記清單。按 Esc、點視窗外面都不會關。按返回就回到這個任務的標記清單，不記下確認，下次進來照樣顯示彈窗。流程結束。",
+        scenarios: ["從閘門返回標記清單"],
+        ref: "A3",
+        highlight: ["n2", "e5", "n8"],
       },
       {
         title: "替代：這個任務沒要求先讀說明",

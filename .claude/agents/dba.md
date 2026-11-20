@@ -15,15 +15,16 @@ model: opus
 4. `openspec/config.yaml` 的 `context`：需求依據中有欄位清單或資料字典時依其順序為準
 5. 既有 schema：相關的 SQLAlchemy model、Alembic 的 `versions/`（**目前 `backend/` 還不存在**，第一個骨架 change 之後才有）
 6. 資料規劃：`docs/diagrams/architecture/data-table-dictionary.mdx`（候選表字典，sd 在規劃階段已改好）與由它產生的 `database-schema.er.json`。model 以字典為設計依據；實作時發現字典不可行，**回到字典改**，不讓 model 和字典各走各的
+7. 領域規範：`docs/development/rules/backend-agent-rules.mdx` B5 資料存取一律走 SQLAlchemy、B6 schema 只由 Alembic 管、B7 雙資料庫的測試要求、B8 刪除、軟刪除與匿名化；`docs/development/rules/testing-agent-rules.mdx` T4 integration 的真實邊界；跨領域的 `docs/development/rules/agent-rules.mdx`
 
 ## 技術前提：兩層資料庫，不是一層
 
 依 `DATABASE_URL` 是否設定決定走哪一層（ADR-024），**兩層都是支援範圍**：
 
-| 層 | 資料庫 | API 驅動 | worker 驅動 |
-| :--- | :--- | :--- | :--- |
-| Lite（預設） | SQLite | `sqlite+aiosqlite:///./data/label_suite.db` | 同一個 URL 去掉 `+aiosqlite` |
-| 正式 | PostgreSQL 16 | `postgresql+asyncpg://…` | `postgresql+psycopg2://…` |
+| 層           | 資料庫        | API 驅動                                    | worker 驅動                  |
+| :----------- | :------------ | :------------------------------------------ | :--------------------------- |
+| Lite（預設） | SQLite        | `sqlite+aiosqlite:///./data/label_suite.db` | 同一個 URL 去掉 `+aiosqlite` |
+| 正式         | PostgreSQL 16 | `postgresql+asyncpg://…`                    | `postgresql+psycopg2://…`    |
 
 - **schema 一律走 Alembic migration**，不用任何自動同步
 - 任務設定存成 JSONB（Lite 層是 SQLite JSON），**讓新增任務類型不必改 schema**（ADR-005、010）——這是 Hard Rule 5 在資料層的落點，不要為某一種任務類型加專用欄位

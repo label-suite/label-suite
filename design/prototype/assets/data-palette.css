@@ -1,0 +1,118 @@
+/* ═══════════════════════════════════════════════════════════════
+   Label Suite — Data Palette
+   資料色：用來區分「哪一筆資料」，不帶語意（成功／錯誤等語意色在 tokens.css）。
+   維護者 2026-11-18 裁定（#420 Q4、Q5）：資料色集中在本檔，淺深兩組。
+   載入順序：放在 tokens.css 之後；本檔只宣告變數，不寫任何元件規則。
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── 實體／標籤 8 色盤 ──────────────────────────────────────
+     JS 端的同一組淺色值是 task-config.data.js 的 ENTITY_COLORS（唯一一份）：
+     任務設定存的是六位 hex（<input type="color"> 只吃這種），兩邊要一起改。
+     引擎上色時經 entityPaintColor() 把預設色換成這裡的變數，深色主題才換得到下面那組；
+     使用者自選、不在色盤裡的顏色照原值畫。 */
+  --data-entity-1: #6366F1;
+  --data-entity-2: #10B981;
+  --data-entity-3: #F59E0B;
+  --data-entity-4: #EC4899;
+  --data-entity-5: #8B5CF6;
+  --data-entity-6: #0EA5E9;
+  --data-entity-7: #F97316;
+  --data-entity-8: #14B8A6;
+
+  /* ── 試標輪次與資料切分圖（task-detail） ──────────────────── */
+  --data-round-1: var(--data-entity-1);
+  --data-round-2: var(--data-entity-3);
+  --data-round-3: var(--data-entity-4);
+  --data-round-4: var(--data-entity-5);
+  --data-round-5: var(--data-entity-6);
+  --data-split-official: var(--data-entity-8);   /* 正式標註保留量 */
+  --data-split-total:    #94A3B8;                /* 尚未切分的總數；只當色塊，不當文字 */
+
+  /* ── 任務類型徽章（pages/shared/task-type-badge.css） ──────── */
+  --data-task-type-single-fg:       #0E7490;
+  --data-task-type-single-bg:       #ECFEFF;
+  --data-task-type-single-border:   #A5F3FC;
+  --data-task-type-sequence-fg:     #7C2D12;
+  --data-task-type-sequence-bg:     #FFF7ED;
+  --data-task-type-sequence-border: #FDBA74;
+  --data-task-type-relation-fg:     #155E75;
+  --data-task-type-relation-bg:     #ECFEFF;
+  --data-task-type-relation-border: #67E8F9;
+  --data-task-type-pairs-fg:        #065F46;
+  --data-task-type-pairs-bg:        #ECFDF5;
+  --data-task-type-pairs-border:    #A7F3D0;
+  --data-task-type-scoring-fg:      #7E22CE;
+  --data-task-type-scoring-bg:      #FAF5FF;
+  --data-task-type-scoring-border:  #E9D5FF;
+  /* default 那組是中性灰，依 Q1 直接用 tokens.css 的 ink-muted／slate-50／border，不在本檔 */
+
+  /* ── 回歸評分維度（task-config.css 的 .regression-dimension-color-N） ── */
+  --data-regression-0: #4F46E5;
+  --data-regression-1: #0369A1;
+  --data-regression-2: #047857;
+  --data-regression-3: #B45309;
+  --data-regression-4: #BE185D;
+  --data-regression-5: #7E22CE;
+  --data-regression-6: #C2410C;
+  --data-regression-7: #0F766E;
+
+  /* ── 儀表板角色卡（dashboard.components.css，#420 Q5 併入資料色） ── */
+  --data-role-emerald-bg: #D1FAE5;
+  --data-role-emerald-fg: var(--color-cta-hover);
+  --data-role-violet-bg:  #EDE9FE;
+  --data-role-violet-fg:  #7C3AED;
+  --data-role-indigo-bg:  #E0E7FF;
+  --data-role-indigo-fg:  #4F46E5;
+}
+
+html[data-theme="dark"] {
+  /* 實體色盤：同色相的 400 階，比淺色那組亮，對深色卡片 --color-white 都在 6:1 以上
+     （當色塊、底線與標註文字用，至少要 3:1）；--color-on-cta 深色字疊上去也讀得到。
+     輪次與「正式標註保留量」是 var(--data-entity-N)，跟著換，不重宣告。 */
+  --data-entity-1: #818CF8;
+  --data-entity-2: #34D399;
+  --data-entity-3: #FBBF24;
+  --data-entity-4: #F472B6;
+  --data-entity-5: #A78BFA;
+  --data-entity-6: #38BDF8;
+  --data-entity-7: #FB923C;
+  --data-entity-8: #2DD4BF;
+  /* 尚未切分的總數：改用 Slate 500。Slate 400 在深色底上反而比各輪次的色塊亮，
+     會搶走焦點；Slate 500 對深色卡片 3.78:1，仍是看得見的色塊，但退在後面 */
+  --data-split-total: #64748B;
+
+
+  --data-task-type-single-fg:       #A5F3FC;
+  --data-task-type-single-bg:       #0C2230;
+  --data-task-type-single-border:   #155E75;
+  --data-task-type-sequence-fg:     #FB923C;
+  --data-task-type-sequence-bg:     #2A1805;
+  --data-task-type-sequence-border: #7C3A16;
+  --data-task-type-relation-fg:     #A5F3FC;
+  --data-task-type-relation-bg:     #0C2230;
+  --data-task-type-relation-border: #155E75;
+  --data-task-type-pairs-fg:        #4ADE80;
+  --data-task-type-pairs-bg:        #0F2A18;
+  --data-task-type-pairs-border:    #1F5132;
+  --data-task-type-scoring-fg:      #C084FC;
+  --data-task-type-scoring-bg:      #1A0A2E;
+  --data-task-type-scoring-border:  #4C1D95;
+
+  --data-regression-0: #A5B4FC;
+  --data-regression-1: #7DD3FC;
+  --data-regression-2: #6EE7B7;
+  --data-regression-3: #FCD34D;
+  --data-regression-4: #F9A8D4;
+  --data-regression-5: #D8B4FE;
+  --data-regression-6: #FDBA74;
+  --data-regression-7: #5EEAD4;
+
+  /* 深色角色卡反轉：實心底、淺字 */
+  --data-role-emerald-bg: #059669;
+  --data-role-emerald-fg: #D1FAE5;
+  --data-role-violet-bg:  #6D28D9;
+  --data-role-violet-fg:  #EDE9FE;
+  --data-role-indigo-bg:  #4338CA;
+  --data-role-indigo-fg:  #E0E7FF;
+}

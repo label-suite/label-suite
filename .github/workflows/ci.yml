@@ -133,6 +133,28 @@ jobs:
       - name: Build the docs site
         run: pnpm exec notecraftapp build docs --rebuild
 
+  format:
+    name: format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # The pre-commit hook formats staged files, but it only runs where
+      # scripts/setup.sh was run and can be skipped with --no-verify; this job
+      # is the gate. Paths in .prettierignore are not checked.
+      - name: Check formatting with Prettier
+        run: pnpm format:check
+
   specs:
     name: specs
     runs-on: ubuntu-latest
@@ -166,3 +188,14 @@ jobs:
 
       - name: Check the candidate table dictionary against the ER diagram
         run: node scripts/check-er-data.mjs
+
+      - name: Citation checker regression tests
+        run: node --test scripts/tests/check-citations.test.mjs
+
+      # Fails on errors (a cited file that is missing or ambiguous, a line
+      # outside the file, a bare :N with no file) and, with --strict, on WARN:
+      # a cited line that names nothing its sentence names. WARN reached zero
+      # in #459, so a line number that drifts onto an unrelated line now fails
+      # the job; fix the citation, or add an ALLOW entry with its reason.
+      - name: Check the file:line citations in design/system and docs
+        run: node scripts/check-citations.mjs --strict

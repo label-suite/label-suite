@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="../../assets/logo/icon-colored.svg">
   <title>Label Suite — 使用者管理</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/modal.css" />
@@ -11,6 +12,7 @@
   <link rel="stylesheet" href="../shared/button.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
   <link rel="stylesheet" href="../shared/content-tabs.css" />
+  <link rel="stylesheet" href="../shared/audit-drawer.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <style>
     :root {
@@ -65,20 +67,20 @@
     }
     .search-input {
       width: 100%; padding: 9px 12px 9px 36px;
-      border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      border: 1px solid var(--color-border-control); border-radius: var(--radius-md);
       font-size: 14px; color: var(--color-ink); background: var(--color-white);
       transition: border-color 150ms; outline: none;
     }
     .search-input::placeholder { color: var(--color-ink-muted); }
-    .search-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .search-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent); }
     .filter-select {
-      padding: 9px 32px 9px 12px; border: 1px solid var(--color-border);
+      padding: 9px 32px 9px 12px; border: 1px solid var(--color-border-control);
       border-radius: var(--radius-md); font-size: 14px; color: var(--color-ink);
-      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
+      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235E6B7F' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
       appearance: none; -webkit-appearance: none; outline: none;
       transition: border-color 150ms; cursor: pointer;
     }
-    .filter-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .filter-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent); }
 
     /* ── Table ──────────────────────────────────────────────────── */
     .table-container {
@@ -106,35 +108,10 @@
     }
     .badge-active   { background: var(--color-success-soft-bg); color: var(--color-success); border-color: var(--color-success-border); }
     .badge-disabled { background: var(--color-slate-50); color: var(--color-text-soft); border-color: var(--color-border); }
-    .badge-admin    { background: var(--color-primary-soft-bg); color: var(--color-primary); border-color: var(--color-primary-border); }
+    .badge-admin    { background: var(--color-primary-soft-bg); color: var(--color-primary-strong); border-color: var(--color-primary-border); }
     .badge-user     { background: var(--color-success-soft-bg); color: var(--color-success); border-color: var(--color-success-border); }
 
-    /* ── Mini action buttons (aligned with task-list) ────────── */
-    .mini-btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      height: 30px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-white);
-      color: var(--color-ink);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 0 10px;
-      transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast), opacity var(--dur-fast);
-    }
-    .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
-    .mini-btn:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
-    }
-    .mini-btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
-    .mini-btn-primary { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-white); }
-    .mini-btn-primary:hover:not(:disabled) { opacity: 0.9; border-color: var(--color-primary); color: var(--color-white); }
-    .mini-btn-primary:focus-visible { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18); }
-    .mini-btn-danger { background: var(--color-error-soft-bg); border-color: var(--color-error-soft-border); color: var(--color-error); }
-    .mini-btn-danger:hover:not(:disabled) { border-color: var(--color-error-soft-border); background: var(--color-error-soft-bg); color: var(--color-error); }
-    .mini-btn-success { background: var(--color-success-soft-bg); border-color: var(--color-success-soft-border); color: var(--color-success); }
-    .mini-btn-success:hover:not(:disabled) { background: var(--color-success-soft-bg); border-color: var(--color-success-soft-border); }
+    /* .mini-btn 與其 variant 在 pages/shared/button.css（#423, G-37） */
 
     /* ── Pagination ─────────────────────────────────────────────── */
     .pagination {
@@ -152,13 +129,13 @@
       font-size: 13px; color: var(--color-ink);
       transition: all 150ms; cursor: pointer;
     }
-    .page-btn:hover { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .page-btn:hover { border-color: var(--color-primary); color: var(--color-primary-strong); background: var(--color-primary-soft-bg); }
     .page-btn.active { background: var(--color-primary); color: var(--color-on-cta); border-color: var(--color-primary); }
     .page-btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
     .page-size-select {
-      padding: 5px 28px 5px 10px; border: 1px solid var(--color-border);
+      padding: 5px 28px 5px 10px; border: 1px solid var(--color-border-control);
       border-radius: var(--radius-md); font-size: 13px; color: var(--color-ink);
-      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center;
+      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%235E6B7F' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center;
       appearance: none; -webkit-appearance: none; cursor: pointer;
     }
 
@@ -175,20 +152,25 @@
     .required-indicator { color: var(--color-error); margin-left: 3px; }
     .form-input {
       width: 100%; padding: 10px 14px;
-      border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      border: 1px solid var(--color-border-control); border-radius: var(--radius-md);
       font-size: 14px; color: var(--color-ink); background: var(--color-white);
       transition: border-color 150ms; outline: none;
     }
-    .form-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .form-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent); }
     .form-select {
       width: 100%; padding: 10px 36px 10px 14px;
-      border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      border: 1px solid var(--color-border-control); border-radius: var(--radius-md);
       font-size: 14px; color: var(--color-ink);
-      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 12px center;
+      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235E6B7F' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 12px center;
       appearance: none; -webkit-appearance: none; outline: none;
       transition: border-color 150ms; cursor: pointer;
     }
-    .form-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .form-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent); }
+    /* Chevron stroke = --color-ink-muted in each theme. A data-URI SVG cannot read var(),
+       and a <select> has no pseudo-element to mask, so dark gets its own URI (#438). */
+    html[data-theme="dark"] .filter-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); }
+    html[data-theme="dark"] .page-size-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); }
+    html[data-theme="dark"] .form-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); }
     .form-hint { margin-top: 5px; font-size: 12px; color: var(--color-text-soft); }
 
     /* ── Alert Banner ──────────────────────────────────────────── */
@@ -253,88 +235,14 @@
       .td-actions { flex-wrap: wrap; }
     }
 
-    /* ── Audit Log icon button ──────────────────────────────────── */
-    .mini-btn-log {
-      background: var(--color-info-bg); border-color: var(--color-info-border); color: var(--color-info);
-    }
-    .mini-btn-log:hover:not(:disabled) {
-      border-color: var(--color-info); color: var(--color-info); background: var(--color-info-bg);
-    }
-    .mini-btn-icon { padding: 0 6px; }
 
-    /* ── Audit Drawer ───────────────────────────────────────────── */
-    .audit-drawer-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: var(--z-modal);
-      opacity: 0; pointer-events: none;
-      transition: opacity var(--dur-normal) var(--ease-standard);
-    }
-    .audit-drawer-overlay.open { opacity: 1; pointer-events: auto; }
-
-    .audit-drawer {
-      position: fixed; top: 0; right: 0; bottom: 0; width: 480px;
-      background: var(--color-white); z-index: calc(var(--z-modal) + 10);
-      display: flex; flex-direction: column;
-      transform: translateX(100%);
-      transition: transform var(--dur-normal) var(--ease-standard);
-      border-left: 1px solid var(--color-border);
-      box-shadow: var(--shadow-xl);
-    }
-    .audit-drawer.open { transform: translateX(0); }
-
-    .audit-drawer-header {
-      display: flex; align-items: flex-start; justify-content: space-between;
-      gap: var(--space-md); padding: var(--space-lg);
-      border-bottom: 1px solid var(--color-border); flex-shrink: 0;
-    }
-    .audit-drawer-title {
-      font-family: var(--font-serif-display);
-      font-size: 20px; font-weight: 700; color: var(--color-ink); margin: 0 0 2px;
-    }
-    .audit-drawer-subtitle { font-size: 13px; color: var(--color-text-soft); margin: 0; }
-
-    .audit-drawer-body { flex: 1; overflow-y: auto; padding: var(--space-lg); }
-    .audit-log-list { display: flex; flex-direction: column; gap: 12px; }
-
-    .audit-log-entry {
-      background: var(--color-white); border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg); padding: var(--space-md);
-    }
-    .audit-log-entry-top {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: var(--space-sm); margin-bottom: 8px;
-    }
-    .audit-log-time {
-      font-size: 12px; color: var(--color-text-soft);
-      font-family: var(--font-mono); flex-shrink: 0;
-    }
-    .audit-log-actor { font-size: 13px; color: var(--color-text-soft); margin-bottom: 6px; }
-    .audit-log-actor strong { color: var(--color-ink); }
-    .audit-log-diff {
-      font-family: var(--font-mono); font-size: 12px;
-      background: var(--color-slate-50); border: 1px solid var(--color-border-muted);
-      border-radius: var(--radius-sm); padding: 6px 10px;
-      color: var(--color-ink); word-break: break-all; margin: 0; white-space: pre-wrap;
-    }
-
+    /* ── Audit Drawer: layout is shared/audit-drawer.css (#422) ── */
     .audit-badge-create     { background: var(--color-success-soft-bg); color: var(--color-success); border-color: var(--color-success-border); }
     .audit-badge-edit       { background: var(--color-info-bg); color: var(--color-info); border-color: var(--color-info-border); }
     .audit-badge-disable    { background: var(--color-error-soft-bg); color: var(--color-error); border-color: var(--color-error-soft-border); }
     .audit-badge-enable     { background: var(--color-success-soft-bg); color: var(--color-success); border-color: var(--color-success-border); }
-    .audit-badge-role_change { background: var(--color-primary-soft-bg); color: var(--color-primary); border-color: var(--color-primary-border); }
+    .audit-badge-role_change { background: var(--color-primary-soft-bg); color: var(--color-primary-strong); border-color: var(--color-primary-border); }
     .audit-badge-resend_invite { background: var(--color-info-bg); color: var(--color-info); border-color: var(--color-info-border); }
-
-    @media (max-width: 767px) {
-      .audit-drawer {
-        top: auto; right: 0; left: 0; bottom: 0; width: 100%; height: 72vh;
-        border-left: none; border-top: 1px solid var(--color-border);
-        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-        transform: translateY(100%);
-      }
-      .audit-drawer.open { transform: translateY(0); }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .audit-drawer, .audit-drawer-overlay { transition-duration: 0.01ms; }
-    }
   </style>
 </head>
 <body>
@@ -387,7 +295,7 @@
           </svg>
           <input
             type="search" id="searchInput" class="search-input"
-            placeholder="搜尋姓名或 Email…"
+            placeholder="搜尋姓名或電子郵件…"
             aria-label="搜尋使用者"
           />
         </div>
@@ -419,7 +327,7 @@
             <thead>
               <tr>
                 <th scope="col" id="colName">姓名</th>
-                <th scope="col" id="colEmail">Email</th>
+                <th scope="col" id="colEmail">電子郵件</th>
                 <th scope="col" id="colRole">系統角色</th>
                 <th scope="col" id="colStatus">狀態</th>
                 <th scope="col" id="colCreatedAt">建立時間</th>
@@ -547,7 +455,7 @@
       <div class="table-container hidden" id="emptyState">
         <div class="empty-state empty-state-page">
           <div class="empty-state-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
               <circle cx="9" cy="7" r="4"/>
               <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
@@ -586,7 +494,7 @@
         </div>
         <div class="form-group">
           <label class="form-label" for="addEmail">
-            <span id="addEmailLabel">Email</span><span class="required-indicator" aria-hidden="true">*</span>
+            <span id="addEmailLabel">電子郵件</span><span class="required-indicator" aria-hidden="true">*</span>
           </label>
           <input type="email" id="addEmail" class="form-input" required autocomplete="email" placeholder="e.g. jane@company.com" />
           <p class="form-hint" id="addEmailHint">建立帳號後將寄送設定密碼信至此信箱</p>
@@ -639,7 +547,7 @@
         </div>
         <div class="form-group">
           <label class="form-label" for="editEmail">
-            <span id="editEmailLabel">Email</span><span class="required-indicator" aria-hidden="true">*</span>
+            <span id="editEmailLabel">電子郵件</span><span class="required-indicator" aria-hidden="true">*</span>
           </label>
           <input type="email" id="editEmail" class="form-input" required />
         </div>
@@ -672,7 +580,7 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <div class="modal-overlay" id="disableModal"
        role="alertdialog" aria-modal="true" aria-labelledby="disableModalTitle">
-    <div class="modal" style="max-width:440px">
+    <div class="modal" style="max-width:400px">
       <div class="modal-header">
         <h2 id="disableModalTitle" class="modal-title" style="color:var(--color-error)">停用帳號</h2>
         <button class="modal-close" onclick="closeModal('disableModal')" aria-label="關閉">
@@ -703,32 +611,7 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════════ -->
-  <!-- AUDIT LOG DRAWER                                           -->
-  <!-- ═══════════════════════════════════════════════════════════ -->
-  <div class="audit-drawer-overlay" id="auditDrawerOverlay"
-       aria-hidden="true" onclick="closeAuditDrawer()"></div>
-  <aside class="audit-drawer" id="auditDrawer"
-         role="complementary" aria-label="異動紀錄" aria-hidden="true">
-    <div class="audit-drawer-header">
-      <div>
-        <h2 id="auditDrawerTitle" class="audit-drawer-title">異動紀錄</h2>
-        <p id="auditDrawerSubtitle" class="audit-drawer-subtitle"></p>
-      </div>
-      <button class="modal-close" onclick="closeAuditDrawer()"
-              id="auditDrawerCloseBtn" aria-label="關閉">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-    </div>
-    <div class="audit-drawer-body">
-      <div id="auditLogList" class="audit-log-list" role="list"></div>
-      <div id="auditDrawerEmpty" class="empty-state empty-state-compact hidden">
-        <p id="auditDrawerEmptyText">尚無異動紀錄</p>
-      </div>
-    </div>
-  </aside>
+  <!-- Audit log drawer: markup and focus trap live in shared/audit-drawer.js (#422) -->
 
   <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- TOAST                                                      -->
@@ -760,6 +643,8 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <script src="../../assets/theme.js"></script>
   <script src="../../assets/analytics.js"></script>
+  <script src="../shared/modal-focus.js"></script>
+  <script src="../shared/audit-drawer.js" data-title="異動紀錄" data-empty-text="尚無異動紀錄" data-close-label="關閉"></script>
   <script>
     /* ── i18n ──────────────────────────────────────────────────── */
     const i18n = {
@@ -769,13 +654,13 @@
         tabUsers:              '使用者管理',
         tabRoles:              '角色設定',
         addUserBtnLabel:       '新增使用者',
-        searchPlaceholder:     '搜尋姓名或 Email…',
+        searchPlaceholder:     '搜尋姓名或電子郵件…',
         roleFilterAll:         '全部角色',
         statusFilterAll:       '全部狀態',
         statusFilterActive:    '啟用',
         statusFilterDisabled:  '停用',
         colName:               '姓名',
-        colEmail:              'Email',
+        colEmail:              '電子郵件',
         colRole:               '系統角色',
         colStatus:             '狀態',
         colCreatedAt:          '建立時間',
@@ -786,7 +671,7 @@
         clearFiltersBtn:       '清除篩選',
         addModalTitle:         '新增使用者',
         addNameLabel:          '姓名',
-        addEmailLabel:         'Email',
+        addEmailLabel:         '電子郵件',
         addEmailHint:          '建立帳號後將寄送設定密碼信至此信箱',
         addRoleLabel:          '系統角色',
         addRoleHint:           '任務角色（標記員、審核員等）在任務詳情頁個別指派',
@@ -794,7 +679,7 @@
         addSaveBtnLabel:       '儲存',
         editModalTitle:        '編輯使用者',
         editNameLabel:         '姓名',
-        editEmailLabel:        'Email',
+        editEmailLabel:        '電子郵件',
         editRoleLabel:         '系統角色',
         editCancelBtn:         '取消',
         editSaveBtnLabel:      '儲存',
@@ -815,8 +700,8 @@
         toastDisabled:         '帳號已停用',
         toastSessionRevoked:   '所有活躍 session 已立即撤銷',
         toastReEnabled:        '帳號已重新啟用',
-        toastDuplicateEmail:   'Email 已存在',
-        toastMissingRequired:  '請填寫姓名與有效 Email',
+        toastDuplicateEmail:   '電子郵件已存在',
+        toastMissingRequired:  '請填寫姓名與有效電子郵件',
         resendBtnText:         '重發設定密碼信',
         toastResent:           '設定密碼信已重新寄出，舊連結已作廢',
         toastMailFailed:       '設定密碼信寄送失敗',
@@ -924,7 +809,6 @@
       roleFilterAria: '角色篩選',
       statusFilterAria: '狀態篩選',
       usersTableAria: '使用者列表',
-      auditDrawerAria: '異動紀錄',
       pageSizeOption: (n) => n + ' 筆/頁',
     });
     Object.assign(i18n.en, {
@@ -938,7 +822,6 @@
       roleFilterAria: 'Filter by role',
       statusFilterAria: 'Filter by status',
       usersTableAria: 'Users',
-      auditDrawerAria: 'Change History',
       pageSizeOption: (n) => n + ' / page',
     });
 
@@ -985,7 +868,6 @@
       document.getElementById('roleFilter').setAttribute('aria-label', t.roleFilterAria);
       document.getElementById('statusFilter').setAttribute('aria-label', t.statusFilterAria);
       document.querySelector('table[role="table"]').setAttribute('aria-label', t.usersTableAria);
-      document.getElementById('auditDrawer').setAttribute('aria-label', t.auditDrawerAria);
       Array.from(pageSizeSelectEl.options).forEach(o => { o.textContent = t.pageSizeOption(o.value); });
 
       const adminTabs = document.getElementById('adminTabs');
@@ -1190,7 +1072,7 @@
         logBtn.type = 'button';
         logBtn.setAttribute('aria-label', t.auditBtnLabel);
         logBtn.title = t.auditBtnLabel;
-        logBtn.addEventListener('click', () => openAuditDrawer(user.id));
+        logBtn.addEventListener('click', () => openAuditDrawer(user.id, logBtn));
         // Lucide 'history' icon — static SVG, no user data
         const logSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         logSvg.setAttribute('width', '16'); logSvg.setAttribute('height', '16');
@@ -1345,13 +1227,21 @@
       openModal('disableModal');
     }
 
+    /* G-43: focus moves into the modal, Tab stays inside, Esc closes and
+       focus returns to the trigger (shared/modal-focus.js). */
     function openModal(id) {
-      document.getElementById(id).classList.add('show');
+      const modal = document.getElementById(id);
+      modal.classList.add('show');
       document.body.style.overflow = 'hidden';
+      if (window.LabelSuiteModalFocus) {
+        window.LabelSuiteModalFocus.open(modal, { trigger: document.activeElement, onClose: () => closeModal(id) });
+      }
     }
     function closeModal(id) {
-      document.getElementById(id).classList.remove('show');
+      const modal = document.getElementById(id);
+      modal.classList.remove('show');
       document.body.style.overflow = '';
+      if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
     }
 
     /* UXC-10: a destructive confirmation must not dismiss on overlay click */
@@ -1484,7 +1374,7 @@
     }
 
     /* ── Audit Drawer ──────────────────────────────────────────── */
-    function openAuditDrawer(userId) {
+    function openAuditDrawer(userId, triggerEl) {
       const t = i18n[lang];
       auditUserId = userId;
       const user = sampleUsers.find(u => u.id === userId);
@@ -1493,20 +1383,12 @@
         t.auditDrawerSubtitlePrefix + (user ? user.name : '');
       document.getElementById('auditDrawerCloseBtn').setAttribute('aria-label', t.auditDrawerCloseBtn);
       renderAuditLog(userId);
-      document.getElementById('auditDrawer').classList.add('open');
-      document.getElementById('auditDrawer').setAttribute('aria-hidden', 'false');
-      document.getElementById('auditDrawerOverlay').classList.add('open');
-      document.getElementById('auditDrawerOverlay').setAttribute('aria-hidden', 'false');
-      document.body.style.overflow = 'hidden';
+      window.LabelSuiteAuditDrawer.open({ trigger: triggerEl });
       window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_audit_drawer_opened', { userId, lang });
     }
 
     function closeAuditDrawer() {
-      document.getElementById('auditDrawer').classList.remove('open');
-      document.getElementById('auditDrawer').setAttribute('aria-hidden', 'true');
-      document.getElementById('auditDrawerOverlay').classList.remove('open');
-      document.getElementById('auditDrawerOverlay').setAttribute('aria-hidden', 'true');
-      document.body.style.overflow = '';
+      window.LabelSuiteAuditDrawer.close();
       auditUserId = null;
     }
 

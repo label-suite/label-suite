@@ -1,6 +1,6 @@
 # Status Pill
 
-> 正典章節：`MASTER.md` §Status Pill ｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
+> 正典章節：`MASTER.md` §Status Pill ｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c` ｜未標檔名的行號指 `design/prototype/components-showcase.html`
 
 ## 結構
 
@@ -14,14 +14,14 @@
 | `.status-saved` | 已暫存 | `--color-warning` ／ `--color-warning-soft-bg` |
 | `.status-pending` | 未處理 | `--color-ink-muted` ／ `--color-border` |
 
-依據：`components-showcase.html:379`–`:381`。
+依據：`components-showcase.html:384`–`:386`。
 
 ## 適用狀態
 
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
-| 預設 | 有 | `components-showcase.html:370` |
-| hover／focus／disabled／載入中／錯誤／空 | **未觀察到**，非互動元素 | 正典區塊 `:370`–`:381` 沒有任何偽類 |
+| 預設 | 有 | `components-showcase.html:374` |
+| hover／focus／disabled／載入中／錯誤／空 | **未觀察到**，非互動元素 | 正典區塊 `.status-badge` `:374`–`:386` 沒有任何偽類 |
 
 ## token
 
@@ -33,11 +33,11 @@
 
 ## 樣式出處
 
-`design/prototype/components-showcase.html:369`–`:381`（註解標為「shipped CSS (verbatim)」）。
+`design/prototype/components-showcase.html:374`–`:386`（註解標為「shipped CSS (verbatim)」）。
 
 ## 可重現樣本
 
-`components-showcase#state-default` → `#comp-badges`（`components-showcase.html:1084`），三個樣本在 `:1097`–`:1099`。
+`components-showcase#state-default` → `#comp-badges`（`components-showcase.html:1092`），三個 `.status-badge` 樣本在 `:1105`–`:1107`。
 
 ## shadcn 對照
 
@@ -52,5 +52,6 @@
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | `components-showcase#state-default` | 三個樣本 |
+| `annotation/annotation-list`（`#state-default`、`#role-reviewer`） | 本頁 `.status-badge`／`.status-submitted`／`-saved`／`-pending`（`annotation-list.html:257`–`:268`），與 showcase 的 `components-showcase.html:384`–`:386` 逐字相同，只換了 class 名 |
 
-shipped 使用頁面在 b2（`task-management/task-detail`）與 b3（`annotation/annotation-list`），待那兩批補。
+b2 核對後**沒有**：`task-detail` 全檔與六個 partial 以 `status-pill` 搜尋都是 0 次，任務狀態用的是本頁的 `.badge`（[Badge](badge.md)）。b3 已補上（見上表）。

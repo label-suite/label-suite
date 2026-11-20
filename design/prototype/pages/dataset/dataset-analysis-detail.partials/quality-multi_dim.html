@@ -8,7 +8,7 @@
     <h2 class="panel-title" id="iaaTitle">IAA 報告</h2>
   </div>
   <div class="iaa-method-row">
-    <span class="iaa-primary-star" aria-label="主要指標"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+    <span class="iaa-primary-star" aria-label="主要指標" data-i18n-aria-label="iaaPrimaryAria"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
     <span class="iaa-method-name" id="iaaMethodName">ICC（Intraclass Correlation Coefficient）</span>
     <span id="iaaMethodSuffix">— 主要指標</span>
   </div>
@@ -63,12 +63,12 @@
     </div>
   </div>
   <button class="alt-toggle-btn" id="altBtnVA" type="button" aria-expanded="false" aria-controls="altBodyVA">
-    <svg class="alt-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+    <svg class="alt-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
     <span id="altLblVA">輔助指標</span>
   </button>
   <div class="alt-metrics-body" id="altBodyVA" aria-hidden="true">
     <div class="table-scroll">
-      <table class="alt-table" aria-label="輔助指標">
+      <table class="alt-table" aria-label="輔助指標" data-i18n-aria-label="qualityListRank.ariaAltMetrics">
         <thead><tr><th id="altHVAMetric">指標</th><th id="altHVAV">Valence（V）</th><th id="altHVAA">Arousal（A）</th></tr></thead>
         <tbody>
           <tr><td><span class="alt-metric-name">Krippendorff's Alpha</span> <span class="alt-metric-note">（interval）</span></td><td>0.74</td><td>0.81</td></tr>
@@ -88,7 +88,7 @@
   <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" data-i18n="qualityListRank.lowConsistencySubtitle">依分歧度由高到低排序，可作為 Reviewer 仲裁優先順序參考（與 dry_run 仲裁 divergent 概念同源）</p>
   <div class="table-wrap">
     <div class="table-scroll">
-      <table class="annotator-table" aria-label="一致性最低樣本清單（VA 評分）">
+      <table class="annotator-table" aria-label="一致性最低樣本清單（VA 評分）" data-i18n-aria-label="qualityListRank.ariaSampleVa">
         <thead>
           <tr>
             <th data-i18n="qualityListRank.headerSample">樣本</th>
@@ -98,12 +98,12 @@
         </thead>
         <tbody>
           <tr>
-            <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#47</span></td>
+            <td><span style="font-family:var(--font-mono);color:var(--color-primary-strong)">#47</span></td>
             <td><span class="badge badge-fail">0.66</span></td>
             <td style="white-space:normal;font-size:12px" data-i18n="multiDimListRank.sample1Detail">樣本 #47：Valence 評分在標記員間相差達 2.1 分（V: 1.2 vs 3.3）</td>
           </tr>
           <tr>
-            <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#112</span></td>
+            <td><span style="font-family:var(--font-mono);color:var(--color-primary-strong)">#112</span></td>
             <td><span class="badge badge-warn">0.50</span></td>
             <td style="white-space:normal;font-size:12px" data-i18n="multiDimListRank.sample2Detail">樣本 #112：Arousal 評分呈兩極化分布，標準差偏高</td>
           </tr>
@@ -118,7 +118,7 @@
   <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" data-i18n="qualityListRank.rankingSubtitle">依型別對應一致率計算方式排序；完成樣本數不足門檻者標示小樣本估計警示，但不剔除排名</p>
   <div class="table-wrap">
     <div class="table-scroll">
-      <table class="annotator-table" aria-label="標記員品質排名（VA 評分）">
+      <table class="annotator-table" aria-label="標記員品質排名（VA 評分）" data-i18n-aria-label="qualityListRank.ariaRankVa">
         <thead>
           <tr>
             <th data-i18n="qualityListRank.rankHeaderRank">名次</th>
@@ -146,7 +146,7 @@
       <svg class="anomaly-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       <div class="anomaly-body">
         <div class="anomaly-title" id="anomVASpd1Title">Jordan Wu — 標記速度過快</div>
-        <div class="anomaly-detail" id="anomVASpd1Detail">平均 18s／句（門檻：≥ 20s），共 42 筆提交紀錄</div>
+        <div class="anomaly-detail" id="anomVASpd1Detail">平均 18s／句（門檻：≥ 20s），共 42 筆送出紀錄</div>
       </div>
     </li>
   </ul>
@@ -248,8 +248,8 @@
   <div style="margin-top:var(--space-md)">
     <div class="table-wrap">
       <div class="table-scroll">
-        <table class="annotator-table" aria-label="標記一致性偏離分析（VA 評分）">
-          <thead><tr><th>標記員</th><th id="consistencyUnitCol">可比較句數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
+        <table class="annotator-table" aria-label="標記一致性偏離分析（VA 評分）" data-i18n-aria-label="qualityListRank.ariaDevVa">
+          <thead><tr><th data-i18n="qualityRisk.headerAnnotator">標記員</th><th id="consistencyUnitCol">可比較句數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
           <tbody>
             <tr><td><span class="annotator-name">Iris Tsai</span></td><td>42</td><td>6</td><td>14.3%</td><td>1</td><td>2.4%</td></tr>
             <tr><td><span class="annotator-name">Avery Lin</span></td><td>18</td><td>4</td><td>22.2%</td><td>1</td><td>5.6%</td></tr>

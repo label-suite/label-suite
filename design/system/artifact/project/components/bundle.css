@@ -1,0 +1,2984 @@
+/* Label Suite — component styles for the Design System Artifact.
+ * Generated from the repo; do not edit here. Every block below is copied verbatim from the
+ * source file named in its header comment, except that :root token declarations are left out
+ * (tokens come from the artifact's compiled tokens.css) and account-page blocks are scoped
+ * under .auth-page. Where the showcase and a shared file disagree, the shared file wins and
+ * the ruled side of each design gap is kept (G-01: the solid .btn-danger from modal.css).
+ * The account pages load tokens.css since #420 (G-03), so they no longer carry a :root mirror
+ * or a dark block; their .login-btn / .sso-btn rules belong to buttons G-03 maps onto the
+ * canonical variants and are not copied. Data colours (task-type badges, entity dots) come from
+ * design/prototype/assets/data-palette.css, copied below because the compiled tokens.css does
+ * not hold them.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+/* ═══ Source: design/prototype/assets/tokens.css:281-325 — semantic type rules (element rules the compiled tokens.css does not emit) ═══ */
+/* ── Semantic type rules ──────────────────────────────────── */
+html[lang="zh-TW"] body,
+html[lang="zh"] body { line-height: var(--leading-body-zh); }
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  color: var(--fg-1);
+  background: var(--bg-page);
+  line-height: var(--leading-body);
+}
+
+h1, .h1 {
+  font-family: var(--font-serif-display);
+  font-size: var(--text-h1);
+  font-weight: 700;
+  line-height: var(--leading-snug);
+  color: var(--fg-1);
+}
+
+h2, .h2 {
+  font-family: var(--font-serif-display);
+  font-size: var(--text-h2);
+  font-weight: 600;
+  line-height: var(--leading-normal);
+}
+
+.display {
+  font-family: var(--font-serif-display);
+  font-size: var(--text-display);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+}
+
+h3, .h3 {
+  font-family: var(--font-sans);
+  font-size: var(--text-h3);
+  font-weight: 600;
+  line-height: var(--leading-relaxed);
+}
+
+code, kbd, pre, .mono {
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+}
+
+/* ═══ Source: design/prototype/components-showcase.html:17 — box-sizing / margin reset ═══ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ═══ Source: design/prototype/components-showcase.html:131-134 — element-level button / input resets ═══ */
+/* Element-level resets: lower specificity than the canonical .btn-* /
+   .input class rules below, so every canonical declaration wins. */
+button { font-family: inherit; font-size: 14px; border: none; background: transparent; }
+input { font-family: inherit; }
+
+/* ═══ Source: design/prototype/components-showcase.html:213-290 — Buttons: loading, disabled, oauth, icon, language (primary / secondary / ghost come from button.css; the outline .btn-danger at :179-195 is left out per G-01) ═══ */
+/* Loading state — applies to any button variant */
+.btn-loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Disabled state — applies to any button variant */
+.btn-disabled,
+button[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* OAuth Button — third-party auth entry (Google, GitHub) */
+.btn-oauth {
+  background: var(--color-white);
+  color: var(--color-ink);
+  border: 1px solid var(--color-border-control);
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color 200ms ease, border-color 200ms ease;
+  cursor: pointer;
+}
+
+.btn-oauth:hover {
+  background: var(--color-slate-50);
+  border-color: var(--color-border-hover);
+}
+
+/* Icon-only Button — compact trigger (mobile menu, utility controls) */
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-border-control);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  color: var(--color-ink-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease;
+  cursor: pointer;
+}
+
+.btn-icon:hover {
+  background: var(--color-slate-50);
+  border-color: var(--color-border-hover);
+  color: var(--color-ink);
+}
+
+/* Language Toggle Button — locale switcher (zh-TW / EN) */
+.btn-language {
+  background: var(--color-white);
+  color: var(--color-ink);
+  border: 1px solid var(--color-border-control);
+  padding: 8px 12px;
+  min-height: 36px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 200ms ease, border-color 200ms ease;
+  cursor: pointer;
+}
+
+.btn-language:hover {
+  background: var(--color-slate-50);
+  border-color: var(--color-border-hover);
+}
+
+/* ═══ Source: design/prototype/pages/shared/button.css ═══ */
+/* Shared buttons (issue singyichen/label-suite#1465) -- spec: design/system/MASTER.md "Buttons".
+ * .btn-primary / .btn-cta (filled CTA), .btn-secondary (outlined), .btn-ghost (borderless text).
+ * .btn-danger stays in modal.css. */
+.btn-primary,
+.btn-cta {
+  background: var(--color-cta);
+  color: var(--color-on-cta);
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.btn-primary:hover,
+.btn-cta:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled,
+.btn-cta:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--color-primary-strong);
+  border: 1px solid var(--color-border);
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.btn-secondary:hover {
+  background: var(--color-primary-soft-bg);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-primary-strong);
+  border: none;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-caption);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.btn-ghost:hover {
+  text-decoration: underline;
+}
+
+/* ═══ Source: design/prototype/pages/shared/modal.css — includes the solid .btn-danger, canonical per G-01 ═══ */
+/* Shared modal skeleton (issue singyichen/label-suite#1390) — single definition for overlay / dialog /
+   header / title / description / close button / footer. Page-specific sizing
+   (.modal-xl), previews and forms stay in each page. Visibility contract:
+   .modal-overlay is hidden by default and shown by toggling `.show`. */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: var(--z-modal, 300);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md, 16px);
+}
+.modal-overlay.show { display: flex; }
+
+.modal {
+  width: min(520px, 100%);
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  padding: var(--space-xl);
+}
+
+:where(.modal) h2,
+.modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 var(--space-sm);
+  color: var(--color-ink);
+  line-height: 1.3;
+}
+.modal-title { font-family: var(--font-serif-display, inherit); }
+
+:where(.modal) p,
+.modal-desc {
+  font-size: 14px;
+  color: var(--color-text-soft);
+  margin: 0 0 var(--space-md);
+  line-height: 1.7;
+}
+
+.modal-footer,
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-ink-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 150ms;
+}
+.modal-close:hover { background: var(--color-slate-50); color: var(--color-ink); }
+
+/* Solid destructive confirm (data deletion / discard), MASTER §Buttons "Danger (solid)".
+   Single definition for all pages. Text uses --color-on-cta: light #FFFFFF on #B91C1C = 6.47:1,
+   dark #1E1B4B on #F87171 = 5.78:1 (both pass AA 4.5:1). */
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  border-radius: var(--radius-md);
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--color-error);
+  color: var(--color-on-cta);
+  transition: opacity 150ms;
+}
+.btn-danger:hover { opacity: .9; }
+/* Pages that combine `.btn` with `.btn-danger` (confirm buttons beside Cancel): `.btn-danger`
+   (0,1,0) outranks the zero-specificity `:where(.btn)` and would drop `.btn`'s 10px 20px padding
+   and 1px border; restore them so the confirm button keeps the same geometry as Cancel (singyichen/label-suite#1448).
+   A standalone `.btn-danger` (admin pages) is unaffected. */
+.btn.btn-danger { padding: 10px 20px; border: 1px solid transparent; }
+
+/* ═══ Source: design/prototype/pages/shared/input.css ═══ */
+/* Shared text input (issue singyichen/label-suite#1447) -- spec: design/system/MASTER.md "Inputs".
+ * .input for single-line fields, .input-textarea for multi-line fields. */
+.input,
+.input-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 16px;
+  border: 1px solid var(--color-border-control);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 16px;
+  transition: border-color 200ms ease;
+}
+
+.input:focus,
+.input-textarea:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.input-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* ═══ Source: design/prototype/components-showcase.html:308-334 — Inputs: error, readonly, field-hint, field-error (the base .input comes from input.css) ═══ */
+.input.error {
+  border-color: var(--color-error);
+}
+
+/* Readonly — managed by system, not user-editable (e.g. SSO email) */
+.input[readonly],
+.input.readonly {
+  background: var(--color-slate-50);
+  border-color: var(--color-border-muted);
+  color: var(--color-ink-muted);
+  cursor: not-allowed;
+}
+
+/* Supporting text under field */
+.field-hint {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--color-ink-muted);
+}
+
+.field-error {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--color-error);
+}
+
+/* ═══ Source: design/prototype/components-showcase.html:336-341 — Toggle Switch ═══ */
+.toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-slider { position: absolute; inset: 0; background: var(--color-border-control); border-radius: var(--radius-full); cursor: pointer; transition: background var(--dur-fast); }
+.toggle-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; border-radius: 50%; background: var(--color-toggle-thumb); transition: transform var(--dur-fast); }
+.toggle-switch input:checked + .toggle-slider { background: var(--color-primary); }
+.toggle-switch input:checked + .toggle-slider::before { background: var(--color-on-cta); transform: translateX(18px); }
+
+/* ═══ Source: design/prototype/components-showcase.html:343-585 — Badge, Status Pill, Alert Banner, Toast, Skeleton, Chip ═══ */
+/* §Semantic State Colors — base badge CSS (verbatim) */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* §Semantic State Colors — Task Status Badge Mapping (values from table) */
+.badge-draft          { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
+.badge-dry-run-status { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
+.badge-iaa            { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
+.badge-in-progress    { color: var(--color-info); background: var(--color-info-bg); border-color: var(--color-info-border); }
+.badge-completed      { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
+.badge-error          { color: var(--color-error); background: var(--color-error-bg); border-color: var(--color-error-border); }
+
+/* §Status Badges — role badge: rounded-full pill, primary family */
+.badge-role {
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  color: var(--color-primary-strong);
+  background: var(--color-primary-soft-bg);
+  border-color: var(--color-primary-border);
+}
+
+/* §Status Pill (borderless, soft) — shipped CSS (verbatim) */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.status-submitted { color: var(--color-success);   background: var(--color-success-soft-bg); }
+.status-saved     { color: var(--color-warning);   background: var(--color-warning-soft-bg); }
+.status-pending   { color: var(--color-ink-muted); background: var(--color-border); }
+
+/* §Error / Alert Banner — canonical sample in semantic tokens */
+.alert-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 14px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-error-border);
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+.alert-banner svg { flex-shrink: 0; margin-top: 2px; }
+
+/* §Toast — UXC-07 canonical behavior (top-center, z-toast, 384px, single instance) */
+#toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-toast);
+  width: min(384px, calc(100vw - 32px));
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--dur-fast), visibility 0s linear var(--dur-fast);
+}
+#toast.visible {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--dur-fast);
+}
+.toast-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid;
+  box-shadow: var(--shadow-md); /* approved flat-design exception */
+}
+.toast-card.success { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
+.toast-card.info    { color: var(--color-info);    background: var(--color-info-bg);    border-color: var(--color-info-border); }
+.toast-card.warning { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
+.toast-card.error   { color: var(--color-error);   background: var(--color-error-bg);   border-color: var(--color-error-border); }
+.toast-msg { flex: 1; font-weight: 500; }
+.toast-close { display: inline-flex; align-items: center; color: inherit; opacity: 0.7; cursor: pointer; font-size: 14px; line-height: 1.4; padding: 0; }
+.toast-close:hover { opacity: 1; }
+
+/* §Skeleton — Variant A pulse (verbatim) */
+.skeleton-stack { display: grid; gap: var(--space-md); }
+.skeleton-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-white);
+  padding: var(--space-lg);
+}
+.skeleton-line {
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+  animation: skeleton-pulse var(--dur-normal) var(--ease-standard) infinite alternate;
+}
+.skeleton-line.title { width: 220px; height: 20px; margin-bottom: 14px; }
+.skeleton-line.body  { width: 100%;  height: 12px; margin-bottom: 10px; }
+.skeleton-line.body.short { width: 65%; }
+@keyframes skeleton-pulse {
+  0%   { opacity: 0.55; }
+  100% { opacity: 0.95; }
+}
+
+/* §Skeleton — Variant B shimmer (verbatim) */
+.skeleton {
+  background: linear-gradient(90deg, var(--color-border) 25%, var(--color-border-muted) 50%, var(--color-border) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+  border-radius: var(--radius-md);
+}
+.skel-avatar { width: 72px; height: 72px; border-radius: var(--radius-full); }
+.skel-line   { height: 14px; }
+.skel-input  { height: 42px; width: 100%; margin-top: 6px; }
+.skel-btn    { height: 40px; width: 90px; }
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* §Chip — interactive select chip (verbatim) */
+.task-type-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.task-type-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-full);         /* 9999px — pill */
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-ink);
+  background: var(--color-white);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color var(--dur-fast), background var(--dur-fast), color var(--dur-fast);
+}
+.task-type-chip:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+  color: var(--color-primary-strong);
+}
+.task-type-chip.selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+  color: var(--color-primary-strong);
+  font-weight: 600;
+}
+.task-type-chip-check {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.task-type-chip.selected .task-type-chip-check {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.task-type-chip.selected .task-type-chip-check::after {
+  content: "";
+  width: 8px;
+  height: 5px;
+  border-left: 2px solid var(--color-on-cta);
+  border-bottom: 2px solid var(--color-on-cta);
+  transform: rotate(-45deg) translate(1px, -1px);
+}
+.task-type-chip[role="radio"] .task-type-chip-check {
+  border-radius: 50%;
+}
+.task-type-chip[role="radio"].selected .task-type-chip-check::after {
+  width: 6px;
+  height: 6px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-on-cta);
+  transform: none;
+}
+
+/* §Chip — display chips (verbatim) */
+.ar-classif-chip {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  white-space: nowrap;
+  background: var(--color-accent-bg);
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent-border);
+}
+.ar-va-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  border: 1px solid;
+  white-space: nowrap;
+}
+.ar-va-chip-normal  { background: var(--color-success-bg); color: var(--color-success); border-color: var(--color-success-border); }
+.ar-va-chip-outlier { background: var(--color-error-bg); color: var(--color-error); border-color: var(--color-error-border); }
+.round-metric-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-soft);
+  font-size: 12px;
+  font-weight: 600;
+}
+.cause-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-soft-bg);
+  border: 1px solid var(--color-primary-border);   /* #C7D2FE */
+  color: var(--color-primary-strong);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ═══ Source: design/prototype/assets/data-palette.css — data colours (#420 Q4); the compiled tokens.css does not hold them ═══ */
+/* ═══════════════════════════════════════════════════════════════
+   Label Suite — Data Palette
+   資料色：用來區分「哪一筆資料」，不帶語意（成功／錯誤等語意色在 tokens.css）。
+   維護者 2026-11-18 裁定（#420 Q4、Q5）：資料色集中在本檔，淺深兩組。
+   載入順序：放在 tokens.css 之後；本檔只宣告變數，不寫任何元件規則。
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── 實體／標籤 8 色盤 ──────────────────────────────────────
+     JS 端的同一組淺色值是 task-config.data.js 的 ENTITY_COLORS（唯一一份）：
+     任務設定存的是六位 hex（<input type="color"> 只吃這種），兩邊要一起改。
+     引擎上色時經 entityPaintColor() 把預設色換成這裡的變數，深色主題才換得到下面那組；
+     使用者自選、不在色盤裡的顏色照原值畫。 */
+  --data-entity-1: #6366F1;
+  --data-entity-2: #10B981;
+  --data-entity-3: #F59E0B;
+  --data-entity-4: #EC4899;
+  --data-entity-5: #8B5CF6;
+  --data-entity-6: #0EA5E9;
+  --data-entity-7: #F97316;
+  --data-entity-8: #14B8A6;
+
+  /* ── 試標輪次與資料切分圖（task-detail） ──────────────────── */
+  --data-round-1: var(--data-entity-1);
+  --data-round-2: var(--data-entity-3);
+  --data-round-3: var(--data-entity-4);
+  --data-round-4: var(--data-entity-5);
+  --data-round-5: var(--data-entity-6);
+  --data-split-official: var(--data-entity-8);   /* 正式標註保留量 */
+  --data-split-total:    #94A3B8;                /* 尚未切分的總數；只當色塊，不當文字 */
+
+  /* ── 任務類型徽章（pages/shared/task-type-badge.css） ──────── */
+  --data-task-type-single-fg:       #0E7490;
+  --data-task-type-single-bg:       #ECFEFF;
+  --data-task-type-single-border:   #A5F3FC;
+  --data-task-type-sequence-fg:     #7C2D12;
+  --data-task-type-sequence-bg:     #FFF7ED;
+  --data-task-type-sequence-border: #FDBA74;
+  --data-task-type-relation-fg:     #155E75;
+  --data-task-type-relation-bg:     #ECFEFF;
+  --data-task-type-relation-border: #67E8F9;
+  --data-task-type-pairs-fg:        #065F46;
+  --data-task-type-pairs-bg:        #ECFDF5;
+  --data-task-type-pairs-border:    #A7F3D0;
+  --data-task-type-scoring-fg:      #7E22CE;
+  --data-task-type-scoring-bg:      #FAF5FF;
+  --data-task-type-scoring-border:  #E9D5FF;
+  /* default 那組是中性灰，依 Q1 直接用 tokens.css 的 ink-muted／slate-50／border，不在本檔 */
+
+  /* ── 回歸評分維度（task-config.css 的 .regression-dimension-color-N） ── */
+  --data-regression-0: #4F46E5;
+  --data-regression-1: #0369A1;
+  --data-regression-2: #047857;
+  --data-regression-3: #B45309;
+  --data-regression-4: #BE185D;
+  --data-regression-5: #7E22CE;
+  --data-regression-6: #C2410C;
+  --data-regression-7: #0F766E;
+
+  /* ── 儀表板角色卡（dashboard.components.css，#420 Q5 併入資料色） ── */
+  --data-role-emerald-bg: #D1FAE5;
+  --data-role-emerald-fg: var(--color-cta-hover);
+  --data-role-violet-bg:  #EDE9FE;
+  --data-role-violet-fg:  #7C3AED;
+  --data-role-indigo-bg:  #E0E7FF;
+  --data-role-indigo-fg:  #4F46E5;
+}
+
+html[data-theme="dark"] {
+  /* 實體色盤：同色相的 400 階，比淺色那組亮，對深色卡片 --color-white 都在 6:1 以上
+     （當色塊、底線與標註文字用，至少要 3:1）；--color-on-cta 深色字疊上去也讀得到。
+     輪次與「正式標註保留量」是 var(--data-entity-N)，跟著換，不重宣告。 */
+  --data-entity-1: #818CF8;
+  --data-entity-2: #34D399;
+  --data-entity-3: #FBBF24;
+  --data-entity-4: #F472B6;
+  --data-entity-5: #A78BFA;
+  --data-entity-6: #38BDF8;
+  --data-entity-7: #FB923C;
+  --data-entity-8: #2DD4BF;
+  /* 尚未切分的總數：改用 Slate 500。Slate 400 在深色底上反而比各輪次的色塊亮，
+     會搶走焦點；Slate 500 對深色卡片 3.78:1，仍是看得見的色塊，但退在後面 */
+  --data-split-total: #64748B;
+
+
+  --data-task-type-single-fg:       #A5F3FC;
+  --data-task-type-single-bg:       #0C2230;
+  --data-task-type-single-border:   #155E75;
+  --data-task-type-sequence-fg:     #FB923C;
+  --data-task-type-sequence-bg:     #2A1805;
+  --data-task-type-sequence-border: #7C3A16;
+  --data-task-type-relation-fg:     #A5F3FC;
+  --data-task-type-relation-bg:     #0C2230;
+  --data-task-type-relation-border: #155E75;
+  --data-task-type-pairs-fg:        #4ADE80;
+  --data-task-type-pairs-bg:        #0F2A18;
+  --data-task-type-pairs-border:    #1F5132;
+  --data-task-type-scoring-fg:      #C084FC;
+  --data-task-type-scoring-bg:      #1A0A2E;
+  --data-task-type-scoring-border:  #4C1D95;
+
+  --data-regression-0: #A5B4FC;
+  --data-regression-1: #7DD3FC;
+  --data-regression-2: #6EE7B7;
+  --data-regression-3: #FCD34D;
+  --data-regression-4: #F9A8D4;
+  --data-regression-5: #D8B4FE;
+  --data-regression-6: #FDBA74;
+  --data-regression-7: #5EEAD4;
+
+  /* 深色角色卡反轉：實心底、淺字 */
+  --data-role-emerald-bg: #059669;
+  --data-role-emerald-fg: #D1FAE5;
+  --data-role-violet-bg:  #6D28D9;
+  --data-role-violet-fg:  #EDE9FE;
+  --data-role-indigo-bg:  #4338CA;
+  --data-role-indigo-fg:  #E0E7FF;
+}
+
+/* ═══ Source: design/prototype/pages/shared/task-type-badge.css — after the .badge base, as its header asks ═══ */
+/* Task-type badge palette — single source (issue singyichen/label-suite#1448 PR-C).
+   Link AFTER the page's inline <style>: the page `.badge` base rule uses the
+   `border: 1px solid transparent` shorthand, which would reset border-color
+   at equal specificity if this file loaded first.
+   Colours come from assets/data-palette.css (#420 Q4), which owns the light
+   and dark sets, so this file needs no dark rules; every page that links this
+   file links data-palette.css too. The default (neutral) badge uses the Q1
+   neutral tokens from tokens.css. */
+.badge-task-type-single   { color: var(--data-task-type-single-fg); background: var(--data-task-type-single-bg); border-color: var(--data-task-type-single-border); }
+.badge-task-type-sequence { color: var(--data-task-type-sequence-fg); background: var(--data-task-type-sequence-bg); border-color: var(--data-task-type-sequence-border); }
+.badge-task-type-relation { color: var(--data-task-type-relation-fg); background: var(--data-task-type-relation-bg); border-color: var(--data-task-type-relation-border); }
+.badge-task-type-pairs    { color: var(--data-task-type-pairs-fg); background: var(--data-task-type-pairs-bg); border-color: var(--data-task-type-pairs-border); }
+.badge-task-type-scoring  { color: var(--data-task-type-scoring-fg); background: var(--data-task-type-scoring-bg); border-color: var(--data-task-type-scoring-border); }
+.badge-task-type-default  { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
+
+/* ═══ Source: design/prototype/components-showcase.html:638-812 — Breadcrumb, Review Status Track, Color Dot, Accordion, Progress Bar ═══ */
+/* §Breadcrumb (verbatim) */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-text-soft);
+  margin-bottom: 12px;
+}
+.breadcrumb a {
+  color: var(--color-primary-strong);
+}
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+.breadcrumb-sep {
+  color: var(--color-ink-muted);
+  font-size: 11px;
+}
+
+/* §Review Status Track (verbatim) */
+.review-track {
+  display: grid;
+  grid-template-columns: auto 28px auto auto 1fr 28px auto;
+  grid-template-rows: 34px 34px;
+  align-items: center;
+  justify-items: start;
+}
+.review-track-node {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-white);
+  color: var(--color-ink-muted);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.review-track-node.done {
+  border-color: var(--color-cta);
+  background: var(--color-success-bg);
+  color: var(--color-cta);
+  font-weight: 600;
+}
+.review-track-node.current {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+  color: var(--color-primary-strong);
+  font-weight: 600;
+}
+.review-track-marker { font-size: 11px; font-weight: 600; }
+.review-track-rail {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.review-track-rail::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 2px;
+  background: var(--color-border);
+}
+.review-track-rail.done::before { height: 3px; background: var(--color-cta); }
+.review-track-branch {
+  position: relative;
+  justify-self: stretch;
+  text-align: center;
+  padding: 0 4px;
+  background: var(--color-white);
+  color: var(--color-ink-muted);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.review-track-branch.done { color: var(--color-cta); font-weight: 600; }
+.review-track-fork { display: block; line-height: 0; }
+
+/* §Color Dot (verbatim) */
+.entity-color-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);           /* 4px — rounded square */
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+/* Smaller variant for annotation previews */
+.annotation-preview-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+}
+/* Dark: a black edge vanishes on the dark card; mirrors task-config.css (#438) */
+html[data-theme="dark"] .entity-color-dot,
+html[data-theme="dark"] .annotation-preview-color { border-color: color-mix(in srgb, var(--color-ink) 18%, transparent); }
+
+/* §Color Dot status-dot variant — 8×8 circle per the variants table;
+   shipped CSS (dataset-analysis-detail.html) */
+.t-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* §Accordion (verbatim) */
+.output-accordion {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);           /* 8px */
+  overflow: hidden;
+}
+
+.output-accordion + .output-accordion {
+  margin-top: var(--space-sm);               /* 8px */
+}
+
+.output-accordion-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 12px var(--space-md);             /* 12px 16px */
+  background: var(--color-slate-50);         /* #F8FAFC */
+  cursor: pointer;
+  user-select: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-ink);
+  transition: background var(--dur-fast);
+}
+
+.output-accordion-header:hover {
+  background: var(--color-primary-soft-bg);  /* #EEF2FF */
+}
+
+.output-accordion-chevron {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  color: var(--color-text-soft);
+  transition: transform var(--dur-fast);
+}
+
+.output-accordion.collapsed .output-accordion-chevron {
+  transform: rotate(-90deg);
+}
+
+.output-accordion-body {
+  padding: var(--space-md);                  /* 16px */
+  border-top: 1px solid var(--color-border);
+}
+
+.output-accordion.collapsed .output-accordion-body {
+  display: none;
+}
+
+/* §Progress Bar (verbatim) */
+.progress {
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-border);   /* shipped page uses literal #E2E8F0 — same value; migrate to the var (issue singyichen/label-suite#183) */
+  overflow: hidden;
+}
+.progress > span {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--color-cta);
+  display: block;
+  transition: width 300ms ease;
+}
+
+/* ═══ Source: design/prototype/pages/shared/metric.css ═══ */
+/* Shared MASTER "Metric KPI Tile" (design/system/MASTER.md). */
+.metric {
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+}
+
+.metric span {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.metric strong {
+  display: block;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* Optional description line under the value (issue singyichen/label-suite#1453); defaults only, no new tokens. */
+.metric .metric-desc {
+  display: block;
+  font-size: 12px;
+  color: var(--color-text-soft);
+  margin-top: 2px;
+}
+
+/* Hero size for a single standalone KPI (issue singyichen/label-suite#1453). */
+.metric-lg strong {
+  font-size: 2.5rem;
+}
+
+/* ═══ Source: design/prototype/components-showcase.html:835-961 — Divider, State Panel, Avatar ═══ */
+/* §Divider — token-rendered (no canonical CSS block in MASTER §Divider;
+   its Tailwind-only samples are mapped to tokens here, per the
+   Banner/Toast precedent) */
+.divider-hr {
+  height: 1px;                             /* h-px */
+  background: var(--color-border);         /* bg-slate-200 */
+  border: 0;
+  margin: 24px 0;                          /* my-6 */
+}
+.divider-text { display: flex; align-items: center; gap: 12px; margin: 24px 0; }
+.divider-text .divider-hr { flex: 1; margin: 0; }
+.divider-text span { font-size: 14px; color: var(--color-ink-muted); }  /* text-sm text-slate-400 */
+.divider-list { list-style: none; }
+.divider-list li { padding: 16px 0; font-size: 14px; }    /* py-4 */
+.divider-list li + li { border-top: 1px solid var(--color-border-muted); }  /* divide-slate-100 */
+
+/* §State Panel — token-rendered (MASTER §State Panel ships Tailwind-only
+   samples; mapped to tokens here per the Divider precedent; rounded-md →
+   var(--radius-md), matching the shipped account state panels) */
+.state-panel {
+  border-radius: var(--radius-md);
+  border: 1px solid;
+  padding: 20px;                             /* p-5 */
+  text-align: center;
+}
+.state-panel--success {
+  background: var(--color-success-bg);       /* bg-green-50 */
+  border-color: var(--color-success-border); /* border-green-200 */
+}
+.state-panel--error {
+  background: var(--color-error-bg);         /* bg-red-50 */
+  border-color: var(--color-error-border);   /* border-red-200 */
+}
+.state-panel-icon {
+  width: 40px;                               /* w-10 h-10 */
+  height: 40px;
+  border-radius: var(--radius-full);
+  margin: 0 auto 12px;                       /* mx-auto mb-3 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.state-panel-icon svg { width: 20px; height: 20px; }
+.state-panel--success .state-panel-icon {
+  background: var(--color-success-border);   /* bg-green-100；圖示圓在 success-bg 面板上，用 -border 一階才分得出來（#420） */
+  color: var(--color-success);               /* text-green-700 */
+}
+.state-panel--error .state-panel-icon {
+  background: var(--color-error-border);     /* bg-red-100；同上 */
+  color: var(--color-error);                 /* text-red-700 */
+}
+.state-panel-title {
+  font-size: 16px;                           /* text-base */
+  font-weight: 600;                          /* font-semibold */
+}
+.state-panel--success .state-panel-title { color: var(--color-success); }  /* text-green-800 → success 族（#420 Q3） */
+.state-panel--error .state-panel-title { color: var(--color-error); }      /* text-red-800 → error 族（#420 Q3） */
+.state-panel-desc {
+  margin-top: 4px;                           /* mt-1 */
+  font-size: 14px;                           /* text-sm */
+}
+.state-panel--success .state-panel-desc { color: var(--color-success); }  /* text-green-700 */
+.state-panel--error .state-panel-desc { color: var(--color-error); }      /* text-red-700 */
+.state-panel-action {
+  display: inline-flex;                      /* mt-4 inline-flex */
+  margin-top: 16px;
+  font-size: 14px;                           /* text-sm */
+  font-weight: 500;                          /* font-medium */
+  color: var(--color-primary-strong);               /* text-primary */
+  text-decoration: none;
+}
+.state-panel-action:hover { text-decoration: underline; }
+
+/* §Avatar — token-rendered (Tailwind-only samples mapped to tokens; the
+   one canonical CSS line — the hover-overlay rule — is kept verbatim) */
+.avatar-sm {
+  width: 32px;                               /* w-8 h-8 */
+  height: 32px;
+  border-radius: var(--radius-full);
+  border: 2px solid color-mix(in srgb, var(--color-primary) 20%, transparent); /* border-primary/20 — MASTER §Avatar */
+}
+.avatar-wrap {
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  width: 80px;                               /* md:w-20 — desktop demo size */
+}
+.avatar-wrap:focus-visible {                 /* focus:ring-2 focus:ring-primary */
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.avatar-preview {
+  width: 80px;                               /* md:w-20 md:h-20 */
+  height: 80px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);          /* bg-primary */
+  color: var(--color-on-cta);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;                           /* md:text-2xl */
+  font-weight: 700;
+  overflow: hidden;
+  user-select: none;
+}
+.avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-full);
+  background: rgba(0, 0, 0, 0.5);            /* bg-black/50 */
+  color: #fff;                               /* fixed: the scrim is black in both themes, like account/profile (#438) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--dur-normal);     /* duration-200 */
+}
+.avatar-overlay svg { width: 20px; height: 20px; }  /* w-5 h-5 */
+
+/* §Avatar canonical hover-overlay rule (verbatim) */
+.avatar-wrap:hover .avatar-overlay { opacity: 1; }
+
+.avatar-wrap input[type="file"] { display: none; }  /* class="hidden" in the sample */
+.avatar-error { display: none; font-size: 12px; color: var(--color-error); margin-top: 4px; }  /* text-xs text-red-500 → error token */
+.avatar-error.visible { display: block; }
+.avatar-hint { font-size: 12px; color: var(--color-ink-muted); margin-top: 4px; }  /* text-xs text-slate-500 */
+
+/* ═══ Source: design/prototype/pages/shared/content-tabs.css ═══ */
+/* Desktop Content Tabs (.admin-tabs / .admin-tab) — single definition (issue singyichen/label-suite#1393).
+   Spec: design/system/MASTER.md "Desktop Content Tabs". Pages link this file and
+   must not redefine these selectors. */
+.admin-tabs {
+  display: flex;
+  border-bottom: 2px solid var(--color-border);
+  margin-bottom: var(--space-lg);
+}
+/* Panel modifier: tabs flush atop a flex-column side panel (annotation-workspace guideline panel, issue singyichen/label-suite#1445). */
+.admin-tabs--panel {
+  margin-bottom: 0;
+  padding: 0 var(--space-md);
+  flex-shrink: 0;
+}
+.admin-tab {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-soft);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color var(--dur-fast), border-color var(--dur-fast);
+  text-decoration: none;
+  display: inline-block;
+  background: transparent;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  white-space: nowrap;
+}
+.admin-tab:hover { color: var(--color-primary-strong); }
+.admin-tab.active { color: var(--color-primary-strong); border-bottom-color: var(--color-primary); font-weight: 600; }
+
+/* Narrow viewport: stay on one row and scroll horizontally (scrollbar hidden). */
+@media (max-width: 767px) {
+  .admin-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .admin-tabs::-webkit-scrollbar { display: none; }
+  .admin-tab { flex: 0 0 auto; }
+}
+
+/* ═══ Source: design/prototype/pages/shared/empty-state.css ═══ */
+/* Shared Empty State component (issue singyichen/label-suite#1189) -- spec: design/system/MASTER.md "Empty State".
+ * Anatomy: .empty-state > .empty-state-icon? + .empty-state-title + .empty-state-desc + .empty-state-action?
+ * Size modifiers: -cell (inside a td), -panel, -page. Table helpers: -td, -dense, -row. */
+.empty-state { text-align: center; }
+.empty-state-title { margin: 0 0 8px; }
+.empty-state-desc { margin: 0 0 16px; }
+/* Spacing under the description comes from .empty-state-desc margin-bottom. */
+.empty-state-action { align-self: center; }
+
+/* Table-cell size */
+.empty-state-cell { max-width: 520px; margin: 0 auto; }
+.empty-state-cell .empty-state-title { font-size: 20px; font-weight: 700; color: var(--color-ink); }
+.empty-state-cell .empty-state-desc { font-size: 14px; color: var(--color-text-soft); }
+.empty-state-td { padding: 40px 20px !important; }
+.empty-state-dense { padding: 48px 20px !important; }
+.empty-state-dense .empty-state-cell { max-width: 420px; }
+.empty-state-row,
+.error-row { cursor: default !important; }
+.empty-state-row:hover,
+.error-row:hover { background: transparent !important; }
+.error-row .empty-state-title { color: var(--color-error); }
+
+/* Panel size */
+.empty-state-panel {
+  padding: 20px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-slate-50);
+}
+.empty-state-panel .empty-state-icon { width: 40px; height: 40px; margin: 0 auto 14px; color: var(--color-ink-muted); }
+.empty-state-panel .empty-state-title { font-size: 15px; font-weight: 700; color: var(--color-ink); }
+.empty-state-panel .empty-state-desc { font-size: 13px; color: var(--color-text-soft); max-width: 400px; margin: 0 auto 18px; line-height: 1.7; }
+/* Compact panel: description-only inline notice (e.g. anomaly lists). */
+.empty-state-compact {
+  padding: 14px; border: 1px dashed var(--color-border); border-radius: var(--radius-md);
+  background: var(--color-slate-50); font-size: 13px; color: var(--color-text-soft); text-align: center;
+}
+
+/* Full-page size */
+.empty-state-page { padding: var(--space-2xl) var(--space-lg); }
+.empty-state-page .empty-state-icon {
+  width: 48px; height: 48px; border-radius: 50%; background: var(--color-border-muted);
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-bottom: var(--space-md); color: var(--color-ink-muted);
+}
+.empty-state-page .empty-state-title { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+.empty-state-page .empty-state-desc { font-size: 13px; color: var(--color-text-soft); margin-bottom: var(--space-lg); }
+
+/* ═══ Source: design/prototype/pages/shared/list-page.css — List Toolbar, Data Table, Pagination ═══ */
+/* Shared list-page chrome (issue singyichen/label-suite#1448): toolbar, search / filter / clear controls,
+   data table and pagination, moved verbatim from dataset-analysis-list. Pages link this
+   file BEFORE their own <style> so same-specificity page rules still win. Values are the
+   dataset-analysis-list ones; the page-owned `min-width` of `.filter-select` and `.task-table`
+   stay page-local. dataset-analysis-list, task-list and annotation-list adopt it (singyichen/label-suite#1448).
+   The element reset is wrapped in :where() so it stays at zero specificity (see singyichen/label-suite#1465). */
+:where(button, input, select) { font: inherit; cursor: pointer; }
+
+/* ── Toolbar ─────────────────────────────────────────────── */
+.toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+.toolbar-left { display: flex; align-items: center; gap: var(--space-sm); flex: 1; flex-wrap: wrap; }
+.search-wrap {
+  position: relative; display: flex; align-items: center;
+  min-width: 220px; width: 280px; flex: 0 1 auto; max-width: 280px;
+}
+.search-icon {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  width: 15px; height: 15px; color: var(--color-ink-muted); pointer-events: none;
+}
+.search-input {
+  width: 100%; padding: 9px 12px 9px 36px;
+  border: 1px solid var(--color-border-control); border-radius: var(--radius-md);
+  font-size: 14px; color: var(--color-ink); background: var(--color-white);
+  transition: border-color var(--dur-fast); outline: none;
+}
+.search-input::placeholder { color: var(--color-ink-muted); }
+.search-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent); }
+.filter-select {
+  padding: 9px 32px 9px 12px; border: 1px solid var(--color-border-control); border-radius: var(--radius-md);
+  font-size: 14px; color: var(--color-ink);
+  background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235E6B7F' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
+  outline: none;
+  appearance: none; -webkit-appearance: none;
+  transition: border-color var(--dur-fast);
+}
+.filter-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent); }
+.clear-btn {
+  display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px;
+  border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  background: var(--color-white); color: var(--color-ink-muted);
+  font-size: 13px; font-weight: 500; transition: color var(--dur-fast), border-color var(--dur-fast);
+}
+.clear-btn:hover { color: var(--color-ink); border-color: var(--color-primary); }
+.clear-btn.hide-clear { visibility: hidden; pointer-events: none; }
+
+.task-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.task-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  white-space: nowrap;
+  text-align: left;
+}
+.task-table th {
+  text-align: left;
+  padding: 12px 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-ink-muted);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-slate-50);
+}
+.task-table td {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--color-border-muted);
+  vertical-align: middle;
+}
+
+/* ── Pagination ──────────────────────────────────────────── */
+.pagination {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-md); flex-wrap: wrap;
+  padding: var(--space-md) var(--space-lg);
+  border-top: 1px solid var(--color-border);
+}
+.pagination-left { display: flex; align-items: center; gap: var(--space-md); }
+.pagination-info { font-size: 13px; color: var(--color-text-soft); }
+.pagination-controls { display: flex; align-items: center; gap: var(--space-xs); }
+.page-btn {
+  width: 32px; height: 32px; padding: 0 8px;
+  border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  font-size: 13px; font-weight: 500; color: var(--color-ink); background: var(--color-white);
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: all var(--dur-fast);
+}
+.page-btn:hover:not(:disabled):not(.active) { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary-strong); }
+.page-btn.active { background: var(--color-primary); color: var(--color-on-cta); border-color: var(--color-primary); }
+.page-btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+.page-ellipsis {
+  width: 32px; height: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 13px; color: var(--color-text-soft);
+  user-select: none;
+}
+.page-size-select {
+  padding: 5px 28px 5px 10px; border: 1px solid var(--color-border-control); border-radius: var(--radius-md);
+  font-size: 13px; color: var(--color-ink);
+  background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%235E6B7F' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center;
+  outline: none; appearance: none; -webkit-appearance: none; cursor: pointer;
+}
+/* Chevron stroke = --color-ink-muted in each theme. A data-URI SVG cannot read var(),
+   and a <select> has no pseudo-element to mask, so dark gets its own URI (#438). */
+html[data-theme="dark"] .filter-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); }
+html[data-theme="dark"] .page-size-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); }
+
+/* ═══ Source: design/prototype/pages/shared/date-range-picker.css ═══ */
+/* Shared DateRangePicker (issue singyichen/label-suite#1101). Tokens from assets/tokens.css only. */
+.date-range-trigger {
+  display: inline-flex; align-items: center; min-width: 220px;
+  padding: 9px var(--space-sm); background: var(--color-white); border: 1px solid var(--color-border-control);
+  border-radius: var(--radius-md); color: var(--color-ink); font-family: var(--font-sans);
+  font-size: 14px; cursor: pointer; text-align: left;
+}
+.date-range-trigger:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 1px; }
+.date-range-trigger-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.date-range-popover {
+  width: 280px; max-width: min(320px, calc(100vw - 32px));
+  background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg); z-index: var(--z-dropdown); padding: var(--space-sm);
+}
+.date-range-popover[hidden] { display: none; }
+.date-range-popover-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-sm); }
+.date-range-nav-prev, .date-range-nav-next {
+  width: 28px; height: 28px; background: transparent; border: 1px solid transparent;
+  border-radius: var(--radius-sm); color: var(--color-ink); cursor: pointer; font-size: 16px; line-height: 1;
+}
+.date-range-nav-prev:hover, .date-range-nav-next:hover { background: var(--color-primary-soft-bg); }
+.date-range-month-label { font-weight: 600; font-size: 14px; }
+
+.date-range-grid { width: 100%; border-collapse: collapse; }
+.date-range-grid td { text-align: center; padding: 1px; }
+.date-range-day {
+  width: 32px; height: 32px; background: transparent; border: 1px solid transparent;
+  border-radius: var(--radius-sm); color: var(--color-ink); font-family: var(--font-sans);
+  font-size: 13px; cursor: pointer;
+}
+.date-range-day:hover { background: var(--color-primary-soft-bg); }
+.date-range-day:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 1px; }
+.date-range-day.is-today { border-color: var(--color-primary); }
+.date-range-day.is-in-range { background: var(--color-primary-soft-bg); border-radius: 0; }
+.date-range-day.is-range-start, .date-range-day.is-range-end { background: var(--color-primary); color: var(--color-on-cta); }
+
+.date-range-popover-footer { margin-top: var(--space-sm); display: flex; justify-content: flex-end; }
+.date-range-clear {
+  background: transparent; border: none; color: var(--color-primary-strong); font-family: var(--font-sans);
+  font-size: 13px; cursor: pointer; padding: var(--space-xs) var(--space-sm);
+}
+.date-range-clear:hover { text-decoration: underline; }
+
+/* ═══ Source: design/prototype/pages/shared/sidebar.css:2-end — App Shell; line 1 @import of empty-state.css dropped, that file is included above ═══ */
+/* Shared sidebar styles for prototype pages */
+.navbar {
+  width: 240px;
+  height: 100vh;
+  background: var(--color-white);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-lg) var(--space-md);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  overflow-y: auto;
+  flex-shrink: 0;
+  transition: width var(--dur-normal, 200ms), padding var(--dur-normal, 200ms);
+}
+
+.navbar a,
+.navbar a:hover,
+.navbar a:focus,
+.navbar a:active {
+  text-decoration: none;
+}
+
+/* The fragment ships its own affordance instead of relying on host-page button resets. */
+.sidebar-utility-btn,
+.lang-toggle,
+.mobile-lang-toggle,
+.logout-btn,
+.mobile-top-logout,
+.mobile-theme-toggle-btn,
+.shortcut-help-close {
+  cursor: pointer;
+}
+
+.brand-section {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xl);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.navbar-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar-logo svg {
+  width: 20px;
+  height: 20px;
+}
+
+.navbar-wordmark {
+  font-family: var(--font-serif-display, 'Crimson Pro', 'Noto Serif TC', serif);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--color-ink);
+  line-height: 1;
+}
+
+.brand-section .lang-toggle {
+  margin-left: auto;
+}
+
+.navbar-center {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-xl);
+  flex: 1;
+  min-width: 0;
+}
+
+.nav-link {
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+  transition: color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+}
+
+.nav-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+.nav-link:hover {
+  color: var(--color-ink);
+  background: var(--color-slate-50, #f8fafc);
+}
+
+.nav-link.active {
+  color: var(--color-primary-strong);
+  background: var(--nav-active-bg, var(--color-surface));
+  font-weight: 600;
+}
+
+.nav-link.active .nav-icon {
+  color: var(--color-primary);
+}
+
+/* Admin submenu (issue singyichen/label-suite#725) */
+.nav-link-group {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Lucide "chevron-down" (https://lucide.dev/icons/chevron-down), reused
+   as-is from the existing filter-select caret markup in this codebase. */
+.nav-caret {
+  width: 12px;
+  height: 12px;
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--color-ink-muted);
+  transition: color var(--dur-fast) var(--ease-standard);
+}
+
+/* Expanded state is communicated by color only -- rotation is not an
+   approved animated transform in this design system. */
+.nav-link[aria-expanded="true"] .nav-caret {
+  color: var(--color-primary);
+}
+
+.nav-submenu {
+  display: none;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding-left: var(--space-xl);
+  margin-top: var(--space-xs);
+}
+
+.nav-submenu.open {
+  display: flex;
+}
+
+.nav-sublink {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-md);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+  transition: color var(--dur-fast) var(--ease-standard), background var(--dur-fast) var(--ease-standard);
+}
+
+.nav-sublink:hover {
+  color: var(--color-ink);
+  background: var(--color-slate-50);
+}
+
+.nav-sublink.current {
+  color: var(--color-primary-strong);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-caret,
+  .nav-sublink {
+    transition-duration: 0.01ms;
+  }
+}
+
+.nav-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-lg);
+  margin-top: auto;
+}
+
+.sidebar-utility-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.sidebar-utility-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 42px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  color: var(--color-ink-muted);
+  font-size: 13px;
+  font-weight: 600;
+  transition: color var(--dur-fast, 150ms), border-color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+}
+
+.sidebar-utility-btn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+}
+
+.sidebar-utility-btn:focus-visible,
+.mobile-theme-toggle-btn:focus-visible,
+.shortcut-help-close:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+.sidebar-utility-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.sidebar-theme-toggle-btn [data-theme-toggle-icon="sun"],
+.mobile-theme-toggle-btn [data-theme-toggle-icon="sun"] {
+  display: none;
+}
+
+.sidebar-theme-toggle-btn.is-dark [data-theme-toggle-icon="moon"],
+.mobile-theme-toggle-btn.is-dark [data-theme-toggle-icon="moon"] {
+  display: none;
+}
+
+.sidebar-theme-toggle-btn.is-dark [data-theme-toggle-icon="sun"],
+.mobile-theme-toggle-btn.is-dark [data-theme-toggle-icon="sun"] {
+  display: block;
+}
+
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 6px 12px;
+  background: var(--color-white);
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 500;
+  transition: border-color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+  white-space: nowrap;
+}
+
+.lang-toggle:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.user-chip-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+  transition: opacity var(--dur-fast, 150ms);
+}
+
+.user-chip-profile:hover {
+  opacity: 0.75;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-white);
+  color: var(--color-primary-strong);
+  font-weight: 700;
+  font-size: 14px;
+  border: 2px solid color-mix(in srgb, var(--color-primary) 16%, transparent);
+  flex-shrink: 0;
+}
+
+.user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name {
+  display: block;
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role {
+  display: block;
+  font-size: 11px;
+  color: var(--color-ink-muted);
+  line-height: 1.3;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--color-ink-muted);
+  flex-shrink: 0;
+  transition: color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+}
+
+.logout-btn:hover {
+  color: var(--color-error);
+  background: var(--color-error-soft-bg);
+}
+
+.mobile-top-logout {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-ink-muted);
+  transition: color var(--dur-fast, 150ms), border-color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+}
+
+.mobile-top-logout:hover {
+  color: var(--color-error);
+  border-color: var(--color-error-soft-border);
+  background: var(--color-error-soft-bg);
+}
+
+.mobile-theme-toggle-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-ink-muted);
+  transition: color var(--dur-fast, 150ms), border-color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+}
+
+.mobile-theme-toggle-btn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+}
+
+.shortcut-help-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(30, 27, 75, 0.36);
+}
+
+.shortcut-help-backdrop.hidden {
+  display: none;
+}
+
+.shortcut-help-dialog {
+  width: min(760px, 100%);
+  max-height: min(720px, calc(100vh - 48px));
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-white);
+  box-shadow: 0 24px 48px rgba(30, 27, 75, 0.18);
+  padding: 20px;
+}
+
+.shortcut-help-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 12px;
+}
+
+.shortcut-help-header h2 {
+  margin: 0 0 2px;
+  color: var(--color-ink);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.shortcut-help-header p {
+  margin: 0;
+  color: var(--color-text-soft, #5E6B7F);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.shortcut-help-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  color: var(--color-ink-muted);
+  transition: color var(--dur-fast, 150ms), border-color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+}
+
+.shortcut-help-close:hover {
+  color: var(--color-ink);
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+}
+
+.shortcut-help-close svg {
+  width: 16px;
+  height: 16px;
+}
+
+.shortcut-help-section {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-white);
+  overflow: hidden;
+}
+
+.shortcut-help-section + .shortcut-help-section {
+  margin-top: 10px;
+}
+
+.shortcut-help-section-header {
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-white);
+}
+
+.shortcut-help-section h3 {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.shortcut-help-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0 16px;
+}
+
+.shortcut-help-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px;
+  padding: 8px 0;
+}
+
+.shortcut-help-row + .shortcut-help-row {
+  border-top: none;
+}
+
+.shortcut-help-list dt {
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.shortcut-help-list dt strong {
+  display: block;
+  font-weight: 500;
+}
+
+.shortcut-key-group {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin: 0;
+  min-width: 140px;
+  flex-wrap: wrap;
+}
+
+.shortcut-keycap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 7px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  color: var(--color-ink);
+  box-shadow: 0 1px 0 rgba(30, 27, 75, 0.12), 0 1px 3px rgba(30, 27, 75, 0.06);
+  font-family: var(--font-sans, -apple-system, sans-serif);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.mobile-lang-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+  background: var(--color-white);
+  color: var(--color-ink);
+  font-size: 12px;
+  font-weight: 600;
+  transition: border-color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+}
+
+.mobile-lang-toggle:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+}
+
+body.sidebar-collapsed .navbar {
+  width: 88px;
+  padding: var(--space-lg) 10px;
+}
+
+body.sidebar-collapsed .brand-section {
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+body.sidebar-collapsed .navbar-brand {
+  justify-content: center;
+}
+
+body.sidebar-collapsed .navbar-wordmark,
+body.sidebar-collapsed .nav-link span,
+body.sidebar-collapsed .user-info,
+body.sidebar-collapsed .lang-toggle {
+  display: none;
+}
+
+body.sidebar-collapsed .nav-link {
+  justify-content: center;
+  padding: 10px;
+}
+
+body.sidebar-collapsed .nav-actions {
+  padding-top: var(--space-md);
+}
+
+/* Admin submenu unavailable while collapsed (spec 008 FR-019D); defense-in-depth
+   alongside the JS isAdminSubmenuAvailable() guard. */
+body.sidebar-collapsed .nav-submenu,
+body.sidebar-collapsed .nav-caret {
+  display: none !important;
+}
+
+body.sidebar-collapsed .sidebar-utility-row {
+  justify-content: center;
+}
+
+body.sidebar-collapsed .sidebar-utility-btn {
+  width: 40px;
+}
+
+body.sidebar-collapsed .user-chip {
+  justify-content: center;
+  padding: 8px 0;
+  gap: 0;
+}
+
+body.sidebar-collapsed .user-chip-profile {
+  display: none;
+}
+
+body.sidebar-collapsed .logout-btn {
+  display: flex;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+}
+
+/* ── Dark mode overrides ──────────────────────────────────── */
+html[data-theme="dark"] .shortcut-keycap {
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.45), 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+html[data-theme="dark"] .shortcut-help-backdrop {
+  background: rgba(0, 0, 0, 0.60);
+}
+
+html[data-theme="dark"] .shortcut-help-dialog {
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.55);
+}
+
+/* ── Notification bell ──────────────────────────────────────── */
+.notif-bell-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notif-badge {
+  position: absolute;
+  top: -7px;
+  right: -9px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 9999px;
+  background: var(--color-badge-notify);   /* constant across themes (issue singyichen/label-suite#183 arbitration); the value and its 6.47:1 contrast live in tokens.css (#420 Q5) */
+  color: var(--color-on-badge-notify);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* ── Notification dropdown ──────────────────────────────────── */
+.notif-dropdown {
+  position: fixed;
+  left: 248px;
+  bottom: 24px;
+  width: 320px;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(30, 27, 75, 0.14);
+  z-index: 600;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.notif-dropdown.hidden { display: none; }
+
+.notif-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.notif-dropdown-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.notif-mark-all-btn {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-primary-strong);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity var(--dur-fast, 150ms);
+}
+
+.notif-mark-all-btn:hover { opacity: 0.7; }
+
+.notif-list {
+  max-height: 320px;
+  overflow-y: auto;
+}
+.notif-list > .empty-state-compact { margin: 12px; }
+
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-primary-soft-bg, #EEF2FF);
+  transition: background var(--dur-fast, 150ms);
+}
+
+.notif-item:last-child { border-bottom: none; }
+.notif-item.is-read { background: var(--color-white); }
+
+.notif-item-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.notif-item-icon svg {
+  width: 12px;
+  height: 12px;
+}
+
+.notif-icon-check {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.notif-icon-assign {
+  background: var(--color-primary-soft-bg);
+  color: var(--color-primary);
+}
+
+.notif-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-item-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-ink);
+  margin: 0 0 3px;
+  word-break: break-word;
+}
+
+.notif-item.is-read .notif-item-text { color: var(--color-ink-muted); }
+
+.notif-item-time {
+  font-size: 11px;
+  color: var(--color-ink-muted);
+}
+
+.notif-item-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  margin-top: 5px;
+}
+
+.mobile-notification-bell-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-ink-muted);
+  flex-shrink: 0;
+  cursor: pointer;
+  padding: 0;
+  transition: color var(--dur-fast, 150ms), border-color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+}
+
+.mobile-notification-bell-btn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+}
+
+body.sidebar-collapsed #shortcutHelpBtn { display: none; }
+body.sidebar-collapsed .notif-dropdown { left: 88px; }
+
+@media (max-width: 767px) {
+  body {
+    flex-direction: column;
+    padding-top: var(--navbar-mobile-top-height);
+    padding-bottom: var(--navbar-mobile-height);
+  }
+
+  .navbar {
+    width: 100%;
+    height: var(--navbar-mobile-height);
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    border-right: none;
+    border-top: 1px solid var(--color-border);
+    flex-direction: row;
+    padding: 0;
+    overflow: visible;
+    background: var(--color-white);
+    z-index: 300;
+  }
+
+  .brand-section {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--navbar-mobile-top-height);
+    margin: 0;
+    padding: 0 var(--space-md);
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-white);
+    display: flex;
+    align-items: center;
+    z-index: 320;
+  }
+
+  .navbar-brand {
+    width: auto;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .navbar-wordmark {
+    font-size: 13px;
+  }
+
+  .brand-section .lang-toggle {
+    display: none;
+  }
+
+  .mobile-lang-toggle {
+    display: inline-flex;
+    flex-shrink: 0;
+    padding: 6px 8px;
+  }
+
+  .mobile-notification-bell-btn {
+    display: inline-flex;
+  }
+
+  .notif-dropdown {
+    left: auto;
+    right: 8px;
+    top: var(--navbar-mobile-top-height, 64px);
+    bottom: auto;
+  }
+
+  .mobile-theme-toggle-btn {
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+
+  .mobile-top-logout {
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+
+  .navbar-center {
+    flex: 1;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: space-around;
+    gap: 0;
+    margin: 0;
+  }
+
+  .navbar-center .nav-link {
+    min-height: var(--navbar-mobile-top-height);
+    flex: 1;
+    padding: 8px 2px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+    font-size: 11px;
+    line-height: 1.2;
+  }
+
+  .navbar-center .nav-link span {
+    white-space: nowrap;
+  }
+
+  /* Admin submenu unavailable on Mobile bottom nav (spec 008 FR-019D);
+     defense-in-depth alongside the JS isAdminSubmenuAvailable() guard. */
+  .nav-submenu,
+  .nav-caret {
+    display: none !important;
+  }
+
+  .nav-actions {
+    display: none;
+  }
+}
+
+/* issue singyichen/label-suite#1121: pages style `main { overflow-y: auto }`, which makes <main> the
+   sticky bar's scroll container; since <main> grows to content height the
+   window scrolls instead and the bar scrolls away. Keep <main> a non-scroller
+   so `position: sticky` resolves against the viewport. `overflow-x: clip`
+   (not hidden/auto, which would turn <main> back into a scroller) plus
+   `min-width: 0` keep the wide tab strip from stretching the page sideways.
+   annotation-workspace (`.workspace-root`, 100vh + overflow:hidden) is excluded. */
+main:has(> .workspace-tab-bar):not(.workspace-root) {
+  overflow-x: clip;
+  overflow-y: visible;
+  min-width: 0;
+}
+
+/* ── Workspace Tabs (issue singyichen/label-suite#1075, specs/shared/019-workspace-tabs) ───────
+   Shell-level tab strip mounted as the first child of each page's <main>
+   by sidebar.js mountWorkspaceTabBar(). Distinct from a page's own in-page
+   "Desktop Content Tabs" (.admin-tabs on task-detail.html /
+   user-management.html) -- see design/system/MASTER.md's terminology note.
+   Mobile (<=MOBILE_BP, 767px) dropdown replacement is a later sub-group
+   (G2f, spec 019 FR-002/US6); hidden here instead of left broken. */
+.workspace-tab-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-white);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.workspace-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-right-color: var(--color-border);
+  border-bottom: none;
+  cursor: pointer;
+  white-space: nowrap;
+  flex: 1 1 0;
+  min-width: var(--workspace-tab-min-width);
+  max-width: var(--workspace-tab-max-width);
+}
+
+.workspace-tab.active {
+  color: var(--color-ink);
+  background: var(--color-tab-active-bg);
+}
+
+/* issue singyichen/label-suite#1099 G1: hover uses a neutral bg distinguishable from both the
+   default (transparent) and the active tab's --color-tab-active-bg; never
+   applied to the active tab itself. */
+.workspace-tab:not(.active):hover {
+  background: var(--color-tab-hover-bg);
+}
+
+.workspace-tab-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.workspace-tab-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* issue singyichen/label-suite#1280 / FR-010: the stage/mode colour lives on the kind chip, never
+   on the whole tab -- tab body text stays --color-ink-muted / --color-ink. */
+.workspace-tab-kind {
+  flex-shrink: 0;
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  background: var(--color-border-muted);
+  color: var(--color-text-soft);
+}
+
+.workspace-tab-kind--warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.workspace-tab-kind--primary {
+  background: var(--color-primary-soft-bg);
+  color: var(--color-primary-strong);
+}
+
+.workspace-tab-kind--review {
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+
+.workspace-tab-kind--neutral {
+  background: var(--color-border-muted);
+  color: var(--color-text-soft);
+}
+
+.workspace-tab-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  /* issue singyichen/label-suite#1280: visibility (not display) keeps the tab width stable. */
+  visibility: hidden;
+}
+
+.workspace-tab.active .workspace-tab-close,
+.workspace-tab:hover .workspace-tab-close,
+.workspace-tab:focus-within .workspace-tab-close {
+  visibility: visible;
+}
+
+.workspace-tab-close:hover {
+  background: var(--color-border-muted);
+}
+
+@media (max-width: 767px) {
+  .workspace-tab-bar {
+    display: none;
+  }
+}
+
+/* Shared overview-menu component (issue singyichen/label-suite#1099 G2a/G2b, FR-023/FR-023A/
+   FR-023 MODIFIED) -- see the `--desktop`/`--mobile` modifiers below.
+   Trigger mirrors `.mobile-notification-bell-btn`'s look; menu panel
+   mirrors `.notif-dropdown`'s fixed-position/box-shadow pattern. */
+.workspace-tab-overview-trigger {
+  flex-shrink: 0;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 34px;
+  padding: 0 var(--space-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-ink-muted);
+  cursor: pointer;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.workspace-tab-overview-trigger--desktop {
+  position: sticky;
+  right: 0;
+  margin-left: auto;
+  z-index: 1;
+}
+
+.workspace-tab-overview-trigger--mobile {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .workspace-tab-overview-trigger--mobile {
+    display: inline-flex;
+  }
+}
+
+.workspace-tab-overview-menu {
+  position: fixed;
+  right: var(--space-md);
+  top: 72px;
+  width: 320px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(30, 27, 75, 0.14);
+  z-index: 600;
+  overflow: hidden;
+}
+
+.workspace-tab-overview-menu.hidden { display: none; }
+
+/* AC-023.3/.4 (issue singyichen/label-suite#1099 G2b): filter box above the row list. */
+.workspace-tab-overview-filter {
+  box-sizing: border-box;
+  margin: var(--space-sm) var(--space-sm) 0;
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+
+.workspace-tab-overview-list {
+  overflow-y: auto;
+  padding: var(--space-xs) 0;
+}
+
+.workspace-tab-overview-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 10px var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+}
+
+.workspace-tab-overview-item:last-child { border-bottom: none; }
+.workspace-tab-overview-item.active { background: var(--color-primary-soft-bg); }
+.workspace-tab-overview-item.hidden { display: none; }
+
+.workspace-tab-overview-item-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.workspace-tab-overview-item-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--color-ink);
+}
+
+.workspace-tab-overview-item-close {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-ink-muted);
+  cursor: pointer;
+}
+
+.workspace-tab-overview-item-close:hover { background: var(--color-border); }
+
+.workspace-tab-overview-actions {
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-top: 1px solid var(--color-border);
+}
+
+.workspace-tab-overview-reopen,
+.workspace-tab-overview-close-all {
+  flex: 1;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  color: var(--color-ink);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.workspace-tab-overview-reopen:disabled {
+  color: var(--color-ink-muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.workspace-tab-overview-close-all:hover { background: var(--color-border-muted); }
+
+/* Dark mode: the two fixed menus keep the same shadow geometry with black instead of
+   the light theme's Indigo-950 tint, like .shortcut-help-dialog above (#458). */
+html[data-theme="dark"] .notif-dropdown,
+html[data-theme="dark"] .workspace-tab-overview-menu {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+}
+
+/* ═══ Source: design/prototype/pages/dashboard/dashboard.layout.css:171-199 — Card (.panel is canonical per G-41) ═══ */
+/* ── Panels (MASTER.md §Cards) ──────────────────────────────– */
+.panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-white);
+  padding: var(--space-lg);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.panel-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.panel-subtitle {
+  display: block;
+  margin-top: 4px;
+  color: var(--color-ink-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* ═══ Source: design/prototype/pages/task-management/task-config.css:259-329 — Tooltip ═══ */
+/* ── Field help tooltip (label row + "?" trigger + bubble above, per MASTER.md §Tooltip) ── */
+.field-label-row {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  margin-bottom: 6px;
+}
+.field-label-row .field-label { margin-bottom: 0; }
+.tooltip-wrap { position: relative; display: inline-flex; }
+.field-help-tooltip {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-ink-muted);
+  color: var(--color-white);
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 700;
+  cursor: help;
+  padding: 0;
+  transition: background var(--dur-fast), box-shadow var(--dur-fast);
+}
+.field-help-tooltip:hover,
+.field-help-tooltip:focus {
+  background: var(--color-ink);
+}
+.field-help-tooltip:focus {
+  outline: 2px solid var(--color-primary); /* token focus ring (#423, G-37) */
+  outline-offset: 1px;
+}
+.tooltip-bubble {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: -10px;
+  z-index: 500;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 48px));
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--color-ink);
+  color: var(--color-white);
+  font-size: 12px;
+  line-height: 1.6;
+  font-weight: 400;
+  margin: 0;
+  white-space: normal;
+  text-align: left;
+  pointer-events: none;
+  transition: opacity var(--dur-fast) ease;
+}
+.tooltip-bubble::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 14px;
+  border: 4px solid transparent;
+  border-top-color: var(--color-ink);
+}
+.field-help-tooltip:hover + .tooltip-bubble,
+.field-help-tooltip:focus + .tooltip-bubble {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* ═══ Source: design/prototype/pages/task-management/task-new.html:41-53 — Step Indicator ═══ */
+/* ── Step indicator ── */
+.step-indicator { display: flex; align-items: center; margin-bottom: var(--space-lg); }
+.step-item { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
+.step-circle { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; border: 2px solid var(--color-border); background: var(--color-white); color: var(--color-ink-muted); transition: all var(--dur-fast); }
+.step-circle.active { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-cta); }
+.step-circle.done { border-color: var(--color-cta); background: var(--color-cta); color: var(--color-on-cta); }
+.step-label { font-size: 12px; font-weight: 500; color: var(--color-ink-muted); white-space: nowrap; }
+.step-label.active { color: var(--color-primary-strong); font-weight: 600; }
+.step-label.done { color: var(--color-cta); }
+.step-connector { flex: 1; height: 2px; background: var(--color-border); margin: 0 8px; margin-bottom: 18px; transition: background var(--dur-fast); }
+.step-connector.done { background: var(--color-cta); }
+
+/* ═══ Source: design/prototype/pages/account/login.html:28-88 — Auth Navbar, Lang Toggle; scoped under .auth-page because .navbar, .lang-toggle, .card, .divider and label collide with shared rules; the login / SSO buttons are left out because G-03 maps them to the canonical button variants ═══ */
+/* ── Navbar ─────────────────────────────────────────────────── */
+.auth-page .navbar {
+  height: 64px;
+  background: var(--color-white);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+}
+.auth-page .navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.auth-page .navbar-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.auth-page .navbar-logo svg {
+  width: 20px;
+  height: 20px;
+}
+.auth-page .navbar-wordmark {
+  font-family: 'Crimson Pro', serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--color-ink);
+  line-height: 1;
+}
+.auth-page .lang-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 6px 12px;
+  background: var(--color-white);
+  color: var(--color-ink);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+.auth-page .lang-toggle:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+}
+.auth-page .lang-toggle svg { flex-shrink: 0; }
+/* artifact adapter, not in the prototype: undo the App Shell's sidebar .navbar geometry inside .auth-page */
+.auth-page .navbar { width: auto; flex-direction: row; border-right: none; overflow: visible; }
+
+/* ═══ Source: design/prototype/pages/account/login.html:99-142 — Auth Card (scoped under .auth-page) ═══ */
+/* ── Card ───────────────────────────────────────────────────── */
+.auth-page .card {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 40px 40px 36px;
+  width: 100%;
+  max-width: 480px;
+}
+
+/* ── Card Header ────────────────────────────────────────────── */
+.auth-page .card-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.auth-page .card-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  flex-shrink: 0;
+  background: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.auth-page .card-logo svg {
+  width: 30px;
+  height: 30px;
+}
+.auth-page .card-title {
+  font-family: 'Crimson Pro', serif;
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--color-ink);
+  line-height: 1.2;
+}
+.auth-page .card-subtitle {
+  font-size: 15px;
+  color: var(--color-ink-muted);
+  line-height: 1.5;
+}
+
+/* ═══ Source: design/prototype/pages/account/login.html:184-198 — Auth Card divider (scoped under .auth-page) ═══ */
+/* ── Divider ────────────────────────────────────────────────── */
+.auth-page .divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: var(--color-ink-muted);
+  font-size: 13px;
+}
+.auth-page .divider::before, .auth-page .divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+/* ═══ Source: design/prototype/pages/account/login.html:200-281 — Auth Card form fields, Password Eye Toggle (scoped under .auth-page) ═══ */
+/* ── Form ───────────────────────────────────────────────────── */
+.auth-page .form { display: flex; flex-direction: column; gap: 16px; }
+
+.auth-page .field { display: flex; flex-direction: column; gap: 6px; }
+
+.auth-page .field-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.auth-page label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-ink);
+}
+.auth-page .forgot-link {
+  font-size: 13px;
+  color: var(--color-primary-strong);
+  text-decoration: none;
+  font-weight: 500;
+}
+.auth-page .forgot-link:hover { text-decoration: underline; }
+
+.auth-page .input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.auth-page .input-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--color-ink-muted);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+.auth-page .input-wrapper input {
+  width: 100%;
+  border: 1px solid var(--color-border-control);
+  border-radius: var(--radius-md);
+  padding: 9px 40px 9px 40px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: var(--color-ink);
+  background: var(--color-white);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+}
+.auth-page .input-wrapper input::placeholder { color: var(--color-ink-muted); }
+.auth-page .input-wrapper input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+.auth-page .input-wrapper input.error {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 8%, transparent);
+}
+.auth-page .field-error {
+  font-size: 12px;
+  color: var(--color-error);
+  display: none;
+}
+.auth-page .field-error.visible { display: block; }
+
+.auth-page .eye-toggle {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-ink-muted);
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s;
+}
+.auth-page .eye-toggle:hover { color: var(--color-ink); }
+.auth-page .eye-toggle:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+/* artifact adapter, not in the prototype: undo the Tooltip label row's fit-content width so the forgot-password link sits right */
+.auth-page .field-label-row { width: auto; }
+
+/* ═══ Source: design/prototype/pages/account/login.html:307-316 — Spinner (scoped under .auth-page) ═══ */
+/* Spinner */
+.auth-page .spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid color-mix(in srgb, var(--color-on-cta) 40%, transparent);
+  border-top-color: var(--color-on-cta);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═══ Source: design/prototype/pages/account/reset-password.html:357-390 — Proto Toggle Bar (prototype scaffolding, not a product component) ═══ */
+/* ── Prototype State Toggle ─────────────────────────────────── */
+.proto-toggle-bar {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  background: rgba(30,27,75,0.92);
+  border-radius: 20px;
+  padding: 8px 16px;
+  z-index: 999;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+.proto-toggle-bar span {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  line-height: 28px;
+  white-space: nowrap;
+}
+.proto-btn {
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: none;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.proto-btn.active  { background: var(--color-primary); color: var(--color-on-cta); }
+.proto-btn.inactive { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); }
+.proto-btn.inactive:hover { background: rgba(255,255,255,0.2); }
+
+/* ═══ Source: design/prototype/components-showcase.html:979-981 — reduced motion ═══ */
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

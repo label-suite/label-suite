@@ -239,7 +239,7 @@
       globalClose: '關閉視窗或取消選取',
       workspaceTitle: '標記作業',
       workspaceSave: '儲存草稿',
-      workspaceSubmit: '提交目前標記',
+      workspaceSubmit: '送出目前標記',
       workspacePrevious: '上一筆',
       workspaceNext: '下一筆',
       tabsTitle: '頁籤',
@@ -510,7 +510,7 @@
 
   function shouldEnableDesktopSidebarCollapse() {
     if (!window || !window.matchMedia) return false;
-    return window.matchMedia('(min-width: 769px)').matches;
+    return window.matchMedia('(min-width: 768px)').matches;
   }
 
   function isDesktopViewport() {
@@ -606,10 +606,11 @@
   }
 
   function isAdminSubmenuAvailable() {
-    // Reuse the 769px desktop boundary (shouldEnableDesktopSidebarCollapse)
-    // instead of isDesktopViewport()'s 768px: sidebar.css's mobile media query
-    // is `max-width: 768px`, so at exactly 768px isDesktopViewport() would
-    // report desktop while the CSS still force-hides the submenu, leaving the
+    // Use the desktop boundary (shouldEnableDesktopSidebarCollapse) so the
+    // submenu only opens where sidebar.css shows it. brand.md puts mobile at
+    // max-width 767px and desktop at min-width 768px, so this and
+    // isDesktopViewport() now agree at exactly 768px; before that ruling the
+    // CSS mobile query was 768px and the two disagreed there, leaving the
     // trigger toggling an invisible menu instead of falling back to
     // data-admin-href (issue singyichen/label-suite#725 PR review).
     return shouldEnableDesktopSidebarCollapse() && !document.body.classList.contains('sidebar-collapsed');
@@ -2036,9 +2037,9 @@
         '<div class="brand-section">' +
           '<a class="navbar-brand" href="' + brandHref + '" aria-label="Label Suite 首頁">' +
             '<div class="navbar-logo" aria-hidden="true">' +
-              '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
-                '<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
-                '<line x1="7" y1="7" x2="7.01" y2="7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+              '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: var(--color-on-cta)">' +
+                '<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+                '<line x1="7" y1="7" x2="7.01" y2="7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
               '</svg>' +
             '</div>' +
             '<span class="navbar-wordmark">Label Suite</span>' +
@@ -2131,7 +2132,7 @@
               '</div>' +
               '<dl class="shortcut-help-list">' +
                 '<div class="shortcut-help-row"><dt><strong id="shortcutWorkspaceSave">儲存草稿</strong></dt>' + keyGroup(['CTRL', 'CMD', 'S']) + '</div>' +
-                '<div class="shortcut-help-row"><dt><strong id="shortcutWorkspaceSubmit">提交目前標記</strong></dt>' + keyGroup(['CTRL', 'CMD', 'ENTER']) + '</div>' +
+                '<div class="shortcut-help-row"><dt><strong id="shortcutWorkspaceSubmit">送出目前標記</strong></dt>' + keyGroup(['CTRL', 'CMD', 'ENTER']) + '</div>' +
                 '<div class="shortcut-help-row"><dt><strong id="shortcutWorkspacePrevious">上一筆</strong></dt>' + keyGroup(['ALT', 'LEFT']) + '</div>' +
                 '<div class="shortcut-help-row"><dt><strong id="shortcutWorkspaceNext">下一筆</strong></dt>' + keyGroup(['ALT', 'RIGHT']) + '</div>' +
               '</dl>' +

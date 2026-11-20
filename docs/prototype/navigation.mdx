@@ -449,18 +449,18 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 
 | 參數 | 值 | 作用 |
 |------|-----|------|
-| `role` | `reviewer` \| 其他 | 工作頁籤記的是標記還是審核模式（`:749`）。**各頁另有自己的 `role` 解讀與值域，見下** |
-| `task_id` | 任務代號 | 工作頁籤的去重鍵與標題（`:748`、`:760`、`:763`）。**兩個頁面把它當成必填的路由閘，見下** |
-| `ap_stage` | `r<N>` \| `official` | **只有任務詳情讀**（`:762`）：頁籤上的試標／正式階段徽章（`:769`、`:772`） |
-| `sim_logged_in` | `1` | 不論登入旗標如何都**導走**（`:108`）。只有呼叫 `redirectIfLoggedIn()` 的**四個帳號頁**有作用（`:89`） |
-| `sim_logged_out` | `1` | 不論登入旗標如何都**留在本頁**（`:107`）。登入旗標（`labelsuite.loggedIn`，`:48`）一寫下去，那四個帳號頁都會把你導開，而它們沒有側欄可以登出，所以這是唯一的回頭路（`:92`–`:93`） |
+| `role` | `reviewer` \| 其他 | 工作頁籤記的是標記還是審核模式（`sidebar.js:750`）。**各頁另有自己的 `role` 解讀與值域，見下** |
+| `task_id` | 任務代號 | 工作頁籤的去重鍵與標題（`sidebar.js:749`、`:761`、`:764`）。**兩個頁面把它當成必填的路由閘，見下** |
+| `ap_stage` | `r<N>` \| `official` | **只有任務詳情讀**（`sidebar.js:767`）：頁籤上的試標／正式階段徽章（`:767`、`:772`） |
+| `sim_logged_in` | `1` | 不論登入旗標如何都**導走**（`sidebar.js:108`）。只有呼叫 `redirectIfLoggedIn()` 的**四個帳號頁**有作用（`:94`） |
+| `sim_logged_out` | `1` | 不論登入旗標如何都**留在本頁**（`sidebar.js:107`）。登入旗標（`labelsuite.loggedIn`，`:48`）一寫下去，那四個帳號頁都會把你導開，而它們沒有側欄可以登出，所以這是唯一的回頭路（`:92`–`:93`） |
 
 `pages/annotation/annotation-workspace.data.js`（標記清單、工作區、儀表板、任務詳情、新增任務、資料集分析詳情都載入它）：
 
 | 參數 | 值 | 作用 |
 |------|-----|------|
-| `annotator_id` | 成員代號 | 以哪一位標記員的身分產生種子資料（`:330`） |
-| `reviewer_id` | 成員代號 | 同上，審核員（`:331`） |
+| `annotator_id` | 成員代號 | 以哪一位標記員的身分產生種子資料（`annotation-workspace.data.js:330`） |
+| `reviewer_id` | 成員代號 | 同上，審核員（`annotation-workspace.data.js:331`） |
 
 ### 模擬旗標 `sim_*`
 
@@ -480,18 +480,18 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 | 頁面 | 參數 |
 |------|------|
 | `/account/verify-email` | `sim_hold` |
-| `/admin/user-management` | `role`（`user` \| `super_admin`，`:1076` 的 `VALID_URL_ROLES`；不在清單內的值忽略）、`q`、`status`、`limit`、`offset` |
+| `/admin/user-management` | `role`（`user` \| `super_admin`，`user-management.html:958` 的 `VALID_URL_ROLES`；不在清單內的值忽略）、`q`、`status`、`limit`、`offset` |
 | `/task-management/task-list` | `keyword`、`status`、`output_type`、`run_stage`、`task_role`、`limit`、`offset`、`view`（只認 `empty` 與 `error`）、`unauthorized`、`sim_delete_error` |
-| `/task-management/task-detail` | `task_role`（`project_leader` \| `reviewer` \| `annotator`，不給或不認得一律落到 `annotator`）；**`role` 是它的別名，`task_role` 優先**（`:5145`）、`status`、`sim_403`，以及 `URL_VIEW_STATE` 那 **16 個**畫面狀態參數（見下表） |
-| `/annotation/annotation-list` | `role`（`reviewer` \| `project_leader` \| `annotator`：**清單本體只二分** `reviewer`／`annotator`（`:1057`），`project_leader` 只改側欄那一項的名稱與角色標示（`:438`–`:441`））、`run_type`、`status`、`q`、`notice`（`no_actionable_review`，而且要同時 `role=reviewer`）、`limit`、`offset` |
-| `/annotation/annotation-workspace` | **`task_id`（必填）**——解不到任務就導回清單（`annotation-workspace.config.js:6976`–`:6979`）、`role`（`reviewer` \| `project_leader` \| `annotator`）、`run_type`、`sample_id`；另外 **`status`、`q`、`limit`、`offset`、`annotator_id`、`reviewer_id` 六個會被原封不動讀出再轉手回清單**（`buildListReturnUrl()`，`:1545`–`:1556`），工作區自己不用它們，但「返回清單」要去哪裡由它們決定 |
+| `/task-management/task-detail` | `task_role`（`project_leader` \| `reviewer` \| `annotator`，不給或不認得一律落到 `annotator`）；**`role` 是它的別名，`task_role` 優先**（`task-detail.html:5080`）、`status`、`sim_403`，以及 `URL_VIEW_STATE` 那 **16 個**畫面狀態參數（見下表） |
+| `/annotation/annotation-list` | `role`（`reviewer` \| `project_leader` \| `annotator`：**清單本體只二分** `reviewer`／`annotator`（`annotation-list.html:1030`），`project_leader` 只改側欄那一項的名稱與角色標示（`:409`–`:412`））、`run_type`、`status`、`q`、`notice`（`no_actionable_review`，而且要同時 `role=reviewer`）、`limit`、`offset` |
+| `/annotation/annotation-workspace` | **`task_id`（必填）**——解不到任務就導回清單（`annotation-workspace.config.js:7033`–`:7036`）、`role`（`reviewer` \| `project_leader` \| `annotator`）、`run_type`、`sample_id`；另外 **`status`、`q`、`limit`、`offset`、`annotator_id`、`reviewer_id` 六個會被原封不動讀出再轉手回清單**（`buildListReturnUrl()`，`:1554`–`:1565`），工作區自己不用它們，但「返回清單」要去哪裡由它們決定 |
 | `/dashboard/dashboard` | `view`（`skeleton` \| `error`）、`scenario`（`annotator` \| `reviewer` \| `project_leader` \| `super_admin_data` \| `user`，而且 `dashboard.html` 要有對應的 `id="view-<值>"`） |
-| `/dataset/dataset-analysis-list` | `keyword`、`iaa_status`、`output_type`、`view`（只認 `empty`）、`invalid_task`、`limit`、`offset` |
-| `/dataset/dataset-analysis-detail` | **`task_id`（必填）**——缺少、不認得或成員角色不在允許清單，一律導回列表並帶 `invalid_task=1`（`:2486`–`:2495`）、`tab`（**只認 `quality`**，其餘一律落到統計總覽，`:2521`）、`q_state`（`dry_run_in_progress` \| `report_pending` \| `report_generating` \| `report_failed` \| `ready`）、`s_state`（只認 `empty`） |
+| `/dataset/dataset-analysis-list` | `keyword`、`iaa_status`、`output_type`、`view`（只認 `empty`）、`error`（只認 `1`，載入失敗；`dataset-analysis-list.model.js:241`）、`invalid_task`、`limit`、`offset` |
+| `/dataset/dataset-analysis-detail` | **`task_id`（必填）**——缺少、不認得或成員角色不在允許清單，一律導回列表並帶 `invalid_task=1`（`dataset-analysis-detail.html:2482`–`:2489`）、`tab`（**只認 `quality`**，其餘一律落到統計總覽，`:2611`）、`q_state`（`dry_run_in_progress` \| `report_pending` \| `report_generating` \| `report_failed` \| `ready`）、`s_state`（只認 `empty`）、`error`（只認 `1`，兩個面板都載入失敗；`:1509`，網址同步時不保留） |
 
 ### `/task-management/task-detail` 的畫面狀態參數
 
-這一頁把 16 個參數**定義在一張表裡**（`task-detail.html:5042` 的 `URL_VIEW_STATE`），用 `params.get(entry.param)` 讀（`:5117`），載入時由 `applyViewStateFromUrl()` 套用（`:5194`）。
+這一頁把 16 個參數**定義在一張表裡**（`task-detail.html:4977` 的 `URL_VIEW_STATE`），用 `params.get(entry.param)` 讀（`:5052`），載入時由 `applyViewStateFromUrl()` 套用（`:5129`）。
 
 > ⚠️ **這種寫法逐字搜 `.get('<名稱>')` 搜不到。** 這一節第一版就因此漏掉其中 14 個（判例：[PR #399](https://github.com/label-suite/label-suite/pull/399) 的獨立審查）。要掃這一頁的參數，必須回去讀 `URL_VIEW_STATE` 本身。
 >
@@ -499,10 +499,10 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 >
 > | 位置 | 名字從哪來 | 宣告新參數？ |
 > | :--- | :--- | :--- |
-> | `task-management/task-detail.html:5117` | `URL_VIEW_STATE`（16 個） | 是——就是下表 |
-> | `annotation/annotation-workspace.config.js:1552` | `LIST_VIEW_STATE_KEYS`（`:1535`）＋ `LIST_IDENTITY_KEYS`（`:1543`） | 是——見 §各頁專屬 的工作區那一列 |
-> | `dataset/dataset-analysis-detail.html:2432` | `PROTOTYPE_ONLY_PARAMS`（`:2421`，只有 `s_state`） | 否，那個名字已在表上 |
-> | `shared/sidebar.js:731` | `oldParams.get(key)`，列舉既有鍵 | 否，只比對有沒有變 |
+> | `task-management/task-detail.html:5048` | `URL_VIEW_STATE`（16 個） | 是——就是下表 |
+> | `annotation/annotation-workspace.config.js:1560` | `LIST_VIEW_STATE_KEYS`（`:1544`）＋ `LIST_IDENTITY_KEYS`（`:1552`） | 是——見 §各頁專屬 的工作區那一列 |
+> | `dataset/dataset-analysis-detail.html:2528` | `PROTOTYPE_ONLY_PARAMS`（`:2518`，只有 `s_state`） | 否，那個名字已在表上 |
+> | `shared/sidebar.js:732` | `oldParams.get(key)`，列舉既有鍵 | 否，只比對有沒有變 |
 >
 > 第一版只列了兩處並宣稱「所以這一節現在是完整的」——**那句話是錯的**，漏掉中間兩處（判例：[PR #400](https://github.com/label-suite/label-suite/pull/400) 的獨立審查）。要掃參數就得把這四處都走過。
 
@@ -510,7 +510,7 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 
 | 參數 | 管什麼 | 值 | 預設 |
 | :--- | :--- | :--- | :--- |
-| `tab` | 哪一個分頁 | 六個 panel 名 | `overview`。`restore: false` 的意思是**不由 `applyViewStateFromUrl()` 從網址還原**（`:5114`）——它由 `parseRole()`（`:5146`）自行讀並過角色閘；**照樣會被 `syncUrlToViewState()` 寫回網址**（`:5132` 不看 `restore`） |
+| `tab` | 哪一個分頁 | 六個 panel 名 | `overview`。`restore: false` 的意思是**不由 `applyViewStateFromUrl()` 從網址還原**（`task-detail.html:5049`）——它由 `parseRole()`（`:5078`）自行讀並過角色閘；**照樣會被 `syncUrlToViewState()` 寫回網址**（`:5065` 不看 `restore`） |
 | `section` | 設定分頁的區段 | `SETTINGS_SECTIONS` 的 slug | `basic`（**只在 `tab=settings` 時生效**） |
 | `ap_stage` | 標記進度的階段 | `getProgressStageValues()` | 依任務算 |
 | `ap_sort` | 標記進度的排序 | `PROGRESS_SORT_COMPARATORS` 的鍵 | `DEFAULT_PROGRESS_SORT` |

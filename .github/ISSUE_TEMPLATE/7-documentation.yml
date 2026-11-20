@@ -10,7 +10,6 @@ body:
         ## 📚 Documentation
         用於文件新增/修正，避免口耳相傳到最後變都市傳說。
 
-
   - type: textarea
     id: location
     attributes:

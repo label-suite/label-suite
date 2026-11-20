@@ -1,0 +1,32 @@
+<!-- @dsCard group="Feedback" height=230 -->
+<!doctype html>
+<html lang="zh-TW" data-theme="light">
+<head>
+<meta charset="utf-8">
+<style>
+  /* preview layout only; the frame preloads tokens.css and bundle.css */
+  html body { margin: 0; padding: 24px; display: block; }
+  .ds-stage { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .ds-caption { font-size: 12px; color: var(--color-ink-muted); }
+  .ds-stack { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 420px; align-items: stretch; }
+  .ds-col { display: flex; flex-direction: column; gap: 6px; }
+</style>
+</head>
+<body>
+<div class="ds-stage ds-stack">
+    <div class="ds-col">
+      <span class="ds-caption">預設：前置圖示＋訊息</span>
+      <div class="alert-banner" role="alert">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <span>帳號或密碼錯誤，請重新輸入。</span>
+      </div>
+    </div>
+    <div class="ds-col">
+      <span class="ds-caption">圖示可省略；長訊息換行</span>
+      <div class="alert-banner" role="alert">
+        <span>這個連結已失效或已被使用。請回到登入頁重新申請重設密碼，新的連結會寄到你註冊時的電子郵件。</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

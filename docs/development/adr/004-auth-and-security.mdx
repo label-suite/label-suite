@@ -1,0 +1,308 @@
+---
+title: ADR-004 認證與安全
+description: 認證與授權的決定：token 放在 httpOnly cookie、角色每次從資料庫讀、CSRF 用綁定 session 的 double-submit token、Google SSO 直接走 OIDC、綁定既有帳號的條件、權限矩陣當授權輸入。
+tags: [adr, auth, security, csrf, oidc]
+---
+
+# ADR-004 認證與安全
+
+這份 ADR 管使用者怎麼證明身分、身分怎麼在請求之間保持、請求怎麼被授權，以及 Google 登入怎麼接。測試集答案的隔離與任務設定不在這裡，Hard Rule 與落地的做法也不在這裡。
+規則本體在 `AGENTS.md` 與 [security-agent-rules.mdx](../rules/security-agent-rules.mdx)，落地的做法在 [architecture.mdx 的 §認證與授權](../architecture.mdx#認證與授權)，本文只寫為什麼；衝突時的優先序見 [ADR 索引](index.mdx#衝突時以誰為準)。
+
+## D1 認證 token 放在 httpOnly cookie
+
+### 背景
+
+要決定登入之後，access token 與 refresh token 放在瀏覽器的哪裡、效期多長。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 標註的連續作業可以長達 30 到 90 分鐘 | token 不能在作業中途過期 |
+| 標註工作區可能載入第三方 script，有 XSS 風險 | token 不能讓 JavaScript 讀到 |
+| 系統是研究用的入口，不是對公眾開放 | 頻繁重新登入的使用體驗成本很高 |
+| 後端不能依賴行程內的 session 狀態 | 要有持久化的 token family 與撤銷紀錄，才能立即登出 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A access token 放 `localStorage` | 複雜度低；登出立即生效 | 任何注入的 script 都能讀走 token，XSS 風險高 | 不採用 |
+| B 只有 access token 放 httpOnly cookie | 沒有 XSS 風險；登出立即生效 | CSRF 風險中等；複雜度中等；來源的比較表給它的複雜度是中等、D 是低，沒有記錄其他理由 | 不採用 |
+| C refresh token 放 httpOnly cookie，access token 放記憶體 | 沒有 XSS 風險；CSRF 風險只在 refresh | 重新整理頁面就遺失 access token，每次載入都要靜默 refresh，標註員看得到延遲；複雜度中高；登出接近立即 | 不採用 |
+| D 兩個 token 都放 httpOnly cookie | 沒有 XSS 風險；複雜度低；登出立即生效 | CSRF 風險中等 | 採用 |
+
+### 決定
+
+access token 與 refresh token 都放 httpOnly cookie，前端不碰 token；access token 是 15 分鐘的 JWT，refresh token 是 7 天滑動、每次使用輪替、只能用一次的不透明 UUID，可接受的身分來源只有這個 cookie。
+效期的理由是：短效 access token 限制暴露時間，長效 refresh token 維持工作連續，滑動效期在兩者之間取平衡。
+Cookie 屬性、JWT 的欄位與任務角色不放進 JWT，見 [architecture.mdx 的 §認證與授權](../architecture.mdx#認證與授權)；規則本體見 [security-agent-rules.mdx 的 S1](../rules/security-agent-rules.mdx#s1-身分只來自驗證完成的-session) 與 [S2](../rules/security-agent-rules.mdx#s2-token-不離開-cookiecsrf-與-cors-的統一位置)。
+
+### 後果
+
+**變容易**
+
+- XSS 偷不走 token，因為 httpOnly cookie 讀不到
+- 標註員在長時間作業中不會被要求重新登入
+- 持久化的 token family 撤銷讓登出對 refresh 與已發出的 access token 立即生效
+- refresh token 輪替縮小被攔截時的損害範圍
+
+**變困難**
+
+- 伺服器要維護 refresh token 的資料表，多了一個有狀態的元件
+- CORS 要設 `credentials: true`，前端請求要帶 `credentials: 'include'`
+- 本機開發時前後端在不同埠，需要 Vite proxy 轉成同源
+- refresh token 的重用偵測要小心處理並發請求
+
+### 什麼情況要重新討論
+
+- 標註工作區不再載入第三方 script，且 XSS 不再是需要防的風險
+- 前後端必須部署在不同的網域，cookie 無法在同站下送出
+
+## D2 授權用的角色每次從資料庫讀
+
+### 背景
+
+要決定後端授權時，系統角色與帳號狀態信任 JWT 裡的 `role`，還是每次從資料庫讀。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| `role` 在登入時寫進 access token，在 15 分鐘的效期內一直有效 | 被降級的管理員或被停用的帳號，會用已發出的 token 繼續存取最多 15 分鐘 |
+| 來源記錄的原則：移除角色後，存取必須立即撤銷 | 15 分鐘的落差違反這條原則 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 信任 JWT 的 `role` | 不必每次讀資料庫 | 角色與帳號狀態的變更最多 15 分鐘後才生效 | 不採用 |
+| B 角色與狀態各加版本號，改了就遞增，放進 token 比對 | — | 沒有省掉資料庫讀取；漏遞增一次就出錯 | 不採用 |
+| C 每個已驗證的請求都從資料庫重讀角色、帳號狀態與 `credential_version`，並檢查 session 的 token family | 登出、停用、角色變更與憑證變更在下一個請求就生效，和 15 分鐘的效期無關 | 每個已驗證的請求多一次以主鍵查詢的資料庫讀取 | 採用 |
+
+### 決定
+
+後端授權只看每次從資料庫讀到的當前角色、帳號狀態與 `credential_version`，JWT 的 `role` 只供前端顯示；`credential_version` 只管高風險的憑證變更，不取代對當前角色與狀態的讀取。
+停用帳號時一併撤銷該使用者所有的 token family，重新啟用不會讓它們復活；`/auth/refresh` 在輪替之前另外再讀一次帳號狀態，見 [architecture.mdx 的 §認證與授權](../architecture.mdx#認證與授權)。
+規則本體見 [security-agent-rules.mdx 的 S3](../rules/security-agent-rules.mdx#s3-授權的四段順序) 與 [S4](../rules/security-agent-rules.mdx#s4-遮蔽與-allowlist-在後端)，做法見 [architecture.mdx 的 §授權四步](../architecture.mdx#授權四步)。
+
+### 後果
+
+**變容易**
+
+- 角色降級、帳號停用、登出與憑證變更在下一個請求就生效，不受 access token 效期影響
+
+**變困難**
+
+- 每個已驗證的請求多一次主鍵讀取；來源沒有預先加快取，因為還沒有端點能量測這次讀取的成本
+- 若日後加快取，必須維持立即撤銷：留著過期角色的快取，會重新打開這條決定要關掉的洞
+- 授權不能只看 JWT 的 `role`，有特權的路由要搭配 [D6](#d6-權限矩陣當授權輸入) 的矩陣與資源檢查
+
+### 什麼情況要重新討論
+
+- 後端有認證端點、可以做負載測試之後，這次讀取讓核心標記與標註 API 超過 P95 500 毫秒的目標
+
+## D3 CSRF 用綁定 session 的 double-submit token
+
+### 背景
+
+要決定會改資料的請求怎麼防 CSRF；原本整個 repo 沒有任何一處處理它。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| `SameSite=Lax` 由瀏覽器擋掉跨網域的表單，與伺服器的 CORS 設定無關 | 它擋不住同站的子網域 |
+| 子網域與主網域屬於同一個 eTLD+1，可以用 `Domain=` 設定涵蓋主網域的 cookie | 只比對 cookie 與 header 是否相等的做法，子網域把兩邊設成同一個值就能通過 |
+| 來源記錄：不安全的方法仍需要 Origin 或 Referer 檢查，或 CSRF token | 這是兩條候選路徑 |
+| 兩個 token 都在 cookie 裡（[D1](#d1-認證-token-放在-httponly-cookie)） | 瀏覽器會自動帶上它們，所以要有顯式的防護 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 只靠 `SameSite=Lax` | 不必另外實作 | 擋不住同站子網域 | 不採用 |
+| B Origin 與 Referer 檢查 | — | 來源沒有記錄它的好處與代價；為何不選它，理由沒有記錄 | 不採用，理由沒有記錄 |
+| C 只比對 cookie 與 header 是否相等的 double-submit | 實作簡單 | 子網域把兩邊設成同一個值，比對一定通過；對它自己要防的子網域無效 | 不採用 |
+| D 綁定 session 的 double-submit token：值是 `HMAC(server_secret, sid)`、cookie 加 `__Host-` 前綴、前端複製到自訂 header、由單一 middleware 驗 HMAC | `__Host-` 前綴禁止 `Domain` 屬性，子網域無法覆寫；自訂 header 會觸發 preflight；單一 middleware 不會有端點漏掉 | 這個 cookie 刻意讓 JS 讀得到，是系統裡唯一非 `httpOnly` 的 cookie；自訂 header 那一層的強度等於 CORS allowlist 的嚴格程度 | 採用 |
+
+### 決定
+
+每個會改資料的請求都要帶綁定 session 的 double-submit token，由單一 middleware 驗 HMAC，端點不各自處理。
+規則本體見 [security-agent-rules.mdx 的 S2](../rules/security-agent-rules.mdx#s2-token-不離開-cookiecsrf-與-cors-的統一位置)，要素與負向測試見 [architecture.mdx 的 §CSRF](../architecture.mdx#csrf)。
+
+### 後果
+
+**變容易**
+
+- 子網域無法靠覆寫 cookie 通過驗證
+- 驗證只在一處，新增寫入端點時不必各自記得處理
+
+**變困難**
+
+- 系統裡多了一個 JS 讀得到的 cookie，「cookie 一律 `httpOnly`」這句話要附例外
+- CSRF 防護的強度綁在 CORS allowlist 上，`allow_origins` 不能放寬（Hard Rule 7）
+- 負向測試要涵蓋「缺 header」「header 與 cookie 不符」「HMAC 無效」三種
+
+### 什麼情況要重新討論
+
+- CORS allowlist 因為新增的來源而需要放寬
+- 前後端必須部署在不同的網域，`SameSite=Lax` 與 `__Host-` 前綴的前提不再成立
+
+## D4 Google SSO 直接走 OIDC
+
+### 背景
+
+要決定 Google 登入是透過外部身分平台轉接，還是直接整合 Google 的 OIDC 端點。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 來源記錄的使用規模是 5 到 10 人的研究原型 | 身分平台解決的是多個應用、多個提供者的集中身分，規模不成比例 |
+| clone 之後 `docker compose up` 要零前置條件就能跑，預設用 SQLite（[ADR-003 的 D7](003-backend-architecture.mdx#d7-資料庫分兩層)） | 外部身分平台多一個要先啟動與設定的服務，登入才會動 |
+| 身分樞紐是自己發的 JWT 加自有的 refresh token 資料表（[D1](#d1-認證-token-放在-httponly-cookie)） | 換成外部身分平台等於重做 D1，還要有遷移方案 |
+| 角色模型是系統角色加任務角色兩層（[D6](#d6-權限矩陣當授權輸入)） | 外部身分平台的 RBAC 用不上，只會多一個沒在用的授權來源 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 自架身分平台（如 Keycloak） | — | 各自要一個可部署的服務、自己的管理員初始化與資料庫，與零前置條件的 Quick Start 直接衝突，對 5 到 10 人的原型也不成比例 | 不採用 |
+| B SaaS 身分平台（如 Auth0、Okta） | — | 規模不成比例；標註員與參與者的身分資料經過第三方 SaaS，會有資料落地的疑慮，自己發的 JWT 沒有這個問題 | 不採用 |
+| C 直接整合 Google OIDC，用 `authlib` | Google 只當身分斷言的來源，回傳驗證過的 `sub`、`email`、`email_verified`，不會有其他東西進入信任邊界；不必新增服務、管理介面或資料庫；身分樞紐只有一個；沒有 RBAC 重複；沒設定時可以退回 | `authlib` 與 Google 的回調（token 驗證、nonce 與 state 處理）變成專案自己擁有的安全敏感程式；之後要第二個 OAuth 提供者，要再寫一個 `authlib` client | 採用 |
+
+### 決定
+
+不引入外部身分平台，Google SSO 直接用 `authlib` 整合 OIDC，回調驗過 `id_token` 後，由系統自己發 httpOnly cookie；沒設 `GOOGLE_CLIENT_ID` 時按鈕退回 no-op，所以 SSO 只是可選的附加功能，不是必要的基礎設施。
+做法見 [architecture.mdx 的 §Google SSO](../architecture.mdx#google-sso)。
+
+### 後果
+
+**變容易**
+
+- 不必新增服務、管理介面或資料庫來維運與保護
+- 零前置條件的 Quick Start 不受影響，沒設定時 Google SSO 安靜退回
+- 身分樞紐只有一個，授權決定只在一處
+
+**變困難**
+
+- `authlib` 與 Google 的回調表面變成專案自己擁有的安全敏感程式，沒有交給經過強化的第三方實作
+- 日後需要第二個 OAuth 提供者時，不會像轉接式的身分平台那樣順便得到，每個提供者各寫一個 `authlib` client
+
+### 什麼情況要重新討論
+
+- 要求以機構帳號登入（SAML 或 Shibboleth）；就算如此，來源的看法是直接整合該機構既有的身分提供者，而不是引入通用的自架身分平台
+- 需要第二個 OAuth 提供者
+
+## D5 Google 登入綁定既有帳號的條件
+
+### 背景
+
+要決定 Google 登入的 email 與既有的 Email 加密碼帳號相同時，要不要綁定、怎麼綁。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| Google 的驗證證明的是信箱的控制權 | 只有 Google 回報 `email_verified: true`，這個證明才成立 |
+| 來源的前提：當時的註冊不驗證 email 所有權，既有本地帳號什麼都沒證明 | 綁定時把 Google 當擁有者，丟掉本地帳號持有的所有憑證 |
+| 本 repo 的註冊與邀請都先驗證信箱 | 上一列的前提在本 repo 可能不成立，見 [§待決](#待決) |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 只在 Google 回報 `email_verified: true` 時自動綁定，其餘拒絕登入；綁定時在同一筆交易內丟掉本地密碼、撤銷全部 session | 避免靠未驗證的 email 接管帳號；常見情形不需要手動綁定流程 | 本地密碼被丟掉，擁有者之後要另外重設；綁定的任何一步失敗，整筆交易回滾 | 採用 |
+| B 不看 `email_verified`，一律綁定 | — | 可以用未驗證的 email 接管帳號 | 不採用 |
+| C 一律走手動綁定流程 | — | 來源只寫常見情形不需要手動流程，沒有記錄其他代價 | 不採用，理由沒有記錄 |
+
+### 決定
+
+Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並在同一筆交易內把 `hashed_password` 設為 `null`、`credential_version` 加一、撤銷所有 session；否則拒絕登入。
+做法見 [architecture.mdx 的 §Google SSO](../architecture.mdx#google-sso)。
+
+### 後果
+
+**變容易**
+
+- 不能靠未驗證的 email 接管帳號
+- 綁定的常見情形不需要手動流程
+- 綁定之前發出的 refresh token 與 access token，在下一個請求就失效
+
+**變困難**
+
+- 綁定之後帳號成為 Google SSO 帳號，本地密碼消失，擁有者要再設一個新密碼才能用密碼登入
+
+### 什麼情況要重新討論
+
+- [§待決](#待決) 的那一列有了結論之後，依結論重看「丟掉本地憑證」這一步
+
+## D6 權限矩陣當授權輸入
+
+### 背景
+
+要決定系統管理員可編輯的角色權限矩陣，和 [D2](#d2-授權用的角色每次從資料庫讀) 的角色檢查怎麼組成一個授權決定。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 矩陣存起來之後會成為授權的基準 | 沒有明確的組合規則，矩陣可能存了卻什麼都管不到 |
+| 任務的規格也用固定的角色名稱決定頁面與動作 | 矩陣可能被拿來繞過任務成員身分與答案隔離 |
+| 系統角色與任務成員身分是兩層 | 系統角色不能隱含任務成員身分 |
+
+### 考慮過的選項
+
+來源沒有逐項比較選項，下面兩個被否決的選項是從背景裡的兩種失敗情形推出來的。
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 矩陣只存起來，授權仍用固定的系統角色集合 | — | 矩陣存了卻什麼都管不到 | 不採用 |
+| B 矩陣單獨決定授權 | — | 可能繞過任務成員身分與答案隔離 | 不採用 |
+| C 矩陣是授權的必要輸入，依序驗身分、讀角色、查矩陣的 cell、再檢查附加條件 | cell 為 true 也蓋不過附加條件；未知的 key、缺少的列、層級不符、成員身分失效、矩陣版本列不存在，一律拒絕 | 第一版的實作每個決定都要讀當前角色、成員身分與矩陣列；新的 permission key 在經過審查的變更啟用它之前，一律視為未知而被拒絕 | 採用 |
+
+### 決定
+
+權限矩陣是有啟用 permission key 的操作的必要授權輸入：依序驗當前登入者、讀角色與成員身分、解析成 key 並要求對應 cell 為 `allowed=true`、最後檢查任務歸屬與狀態、指派與審核者身分、資料集可見性與測試集答案隔離。
+系統角色與任務成員身分每次請求都從資料庫取，不得快取；第一版不快取；若要快取，失效鍵是矩陣版本列，且須先驗證失效協定。
+規則本體見 [security-agent-rules.mdx 的 S3](../rules/security-agent-rules.mdx#s3-授權的四段順序)，四步與被隱藏任務的回應見 [architecture.mdx 的 §授權四步](../architecture.mdx#授權四步)。
+
+### 後果
+
+**變容易**
+
+- 系統管理員改矩陣就真的影響授權，不是存了卻沒有作用
+- cell 為 true 也不會繞過任務歸屬、指派與答案隔離
+- 被隱藏的任務在回應時不洩漏它存在
+
+**變困難**
+
+- 第一版的實作每個授權決定都要讀當前角色、成員身分與矩陣列
+- 日後加快取，需要另外驗證過的失效協定，讓角色移除、成員移除與矩陣編輯在下一個請求就生效
+- 新增 permission key 要經過審查，才會被啟用
+
+### 什麼情況要重新討論
+
+- `backend/` 的授權實作建立之後，每次讀矩陣列的成本讓請求明顯變慢，需要加快取
+- 有操作需要的授權條件，無法用 cell 加附加條件這兩層表達
+
+## 附錄：來源對照
+
+比對的版本：個人 repo ADR-021、035、037 的現行內容。
+
+| 決定 | 來源 |
+| :--- | :--- |
+| D1 | 個人 repo ADR-021（Context 的限制與儲存選項比較表、Token Expiry Tradeoffs、Decision、Consequences）；可接受的身分來源只有 cookie 的裁定見 [#107 的留言](https://github.com/label-suite/label-suite/issues/107#issuecomment-6762365378)；選項 B 的比較表只記複雜度中等對 D 的低，沒有其他理由；本節的重新討論條件是推論，來源沒有記錄 |
+| D2 | 個人 repo ADR-021 的角色欄位修訂（Context 的落差說明、Decision、被否決的版本號方案、Cost、Consequences）；`credential_version` 只管高風險憑證變更，也出自同一份修訂 |
+| D3 | [#107 的留言](https://github.com/label-suite/label-suite/issues/107#issuecomment-6762365378)的 CSRF 裁定與四個要素；Origin 與 Referer 檢查出自個人 repo ADR-021 的 Consequences，它沒有記錄這個選項的好處與代價；`SameSite=Lax` 擋不住同站子網域出自 [architecture.mdx 的 §CSRF](../architecture.mdx#csrf)；本節的重新討論條件是推論，來源沒有記錄 |
+| D4 | 個人 repo ADR-035（Context 的限制表、Options Evaluated、Decision、Optional-integration guarantee、Reversal trigger、Consequences）；選項 A、B 的好處沒有記錄 |
+| D5 | 個人 repo ADR-035 的帳號綁定修訂（Account-linking strategy、Consequences）；選項 B、C 沒有記錄好處，C 也沒有記錄代價 |
+| D6 | 個人 repo ADR-037（Context、Decision、Consequences）；來源沒有列出選項，D6 的選項 A、B 是從 Context 的兩種失敗情形推出的；快取規則出自 [security-agent-rules.mdx 的 S3](../rules/security-agent-rules.mdx#s3-授權的四段順序)；本節的重新討論條件是推論，來源沒有記錄 |
+| — | 個人 repo ADR-021 後來的修訂（token family 的資料表結構、30 秒寬限重發、email 的 Unicode 正規化、session 保留與刪除）、ADR-037 後來的修訂（permission key 的登錄與種子列、拒絕稽核的範圍、仲裁沿用審核 key），不在 [architecture.mdx](../architecture.mdx) 裡，本 ADR 不收；它們屬於資料庫與業務規格，由各自的 change 決定是否採用 |
+
+## 待決
+
+| # | 問題 | 卡住什麼 | 誰決定 |
+| :--- | :--- | :--- | :--- |
+| 1 | 本 repo 的註冊與邀請都先驗證信箱，個人 repo ADR-035「綁定時丟掉本地憑證」的前提是否仍成立 | [D5](#d5-google-登入綁定既有帳號的條件) 綁定時丟掉本地密碼那一步要不要保留 | 維護者，在做註冊或 Google SSO 的 change 時 |
+
+## 決策紀錄
+
+| 日期 | 決策 | 取代了什麼 | 來源 |
+| :--- | :--- | :--- | :--- |
+| 2026-11-19 | access token 與 refresh token 都放 httpOnly cookie，身分只認這個 cookie（[D1](#d1-認證-token-放在-httponly-cookie)） | 原文「不接受 `Authorization` header 以外的來源」是筆誤；其餘沿用個人 repo ADR-021 | [#107 留言](https://github.com/label-suite/label-suite/issues/107#issuecomment-6762365378) |
+| 2026-11-19 | 授權用的角色與帳號狀態每次從資料庫讀，JWT 的 `role` 只供顯示（[D2](#d2-授權用的角色每次從資料庫讀)） | —（沿用個人 repo ADR-021 的角色欄位修訂） | [#450](https://github.com/label-suite/label-suite/issues/450) |
+| 2026-11-19 | CSRF 用綁定 session 的 double-submit token，加 `__Host-` 前綴，由單一 middleware 驗（[D3](#d3-csrf-用綁定-session-的-double-submit-token)） | 初版只比對 cookie 與 header 是否相等的 naive 版本 | [#107 留言](https://github.com/label-suite/label-suite/issues/107#issuecomment-6762365378) |
+| 2026-11-19 | Google SSO 直接用 `authlib` 整合 OIDC，不引入外部身分平台（[D4](#d4-google-sso-直接走-oidc)） | —（沿用個人 repo ADR-035） | [#450](https://github.com/label-suite/label-suite/issues/450) |
+| 2026-11-19 | 只在 `email_verified: true` 時自動綁定既有帳號，並丟掉本地密碼、撤銷所有 session（[D5](#d5-google-登入綁定既有帳號的條件)） | —（沿用個人 repo ADR-035 的帳號綁定修訂） | [#450](https://github.com/label-suite/label-suite/issues/450) |
+| 2026-11-19 | 權限矩陣是授權的必要輸入，依四步判定（[D6](#d6-權限矩陣當授權輸入)） | —（沿用個人 repo ADR-037） | [#450](https://github.com/label-suite/label-suite/issues/450) |

@@ -1,6 +1,6 @@
 # Desktop Content Tabs
 
-> 正典章節：`MASTER.md` §Desktop Content Tabs ｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
+> 正典章節：`MASTER.md` §Desktop Content Tabs ｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c` ｜未標檔名的行號指 `design/prototype/pages/shared/content-tabs.css`
 
 ## 結構
 
@@ -26,8 +26,8 @@ CSS 檔開頭明寫：頁面只能連結這個檔，**不得自行重新定義�
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
 | 預設 | 有，`--color-text-soft`、透明底線 | `content-tabs.css:15`–`:31` |
-| hover | 有，文字換 `--color-primary` | `:32` |
-| active | 有，文字與底線都換 `--color-primary`，字重升 600 | `:33` |
+| hover | 有，文字換 `--color-primary-strong` | `:32` |
+| active | 有，文字換 `--color-primary-strong`、底線換 `--color-primary`，字重升 600 | `:33` |
 | focus | **未觀察到** | 以 `:focus` 掃全檔，0 命中 → `../design-gaps.md` G-05 |
 | disabled | **未觀察到** | 全檔無 `:disabled` |
 | 載入中／錯誤／空 | 不適用 | — |
@@ -35,7 +35,7 @@ CSS 檔開頭明寫：頁面只能連結這個檔，**不得自行重新定義�
 
 ## token
 
-`--color-border`、`--color-text-soft`、`--color-primary`、`--space-lg`、`--space-md`、`--dur-fast`。字級 14px 與內距 `10px 20px` 是字面值。
+`--color-border`、`--color-text-soft`、`--color-primary`、`--color-primary-strong`、`--space-lg`、`--space-md`、`--dur-fast`。字級 14px 與內距 `10px 20px` 是字面值。
 
 ## 鍵盤與焦點
 
@@ -51,6 +51,8 @@ Tab 可達（原生 `<a>`／`<button>`），但**沒有焦點樣式**，也沒�
 
 本批次**沒有可重現的視圖**：`components-showcase.html` 不含 content tabs，b1 的九個畫面也沒有一個用它。最近的樣本在 b2 的 `task-management/task-detail`（六個分頁）。→ `../design-gaps.md` G-21
 
+**b2 補上**：`task-management/task-detail#tab-overview`（按鈕版，含方向鍵）、`admin/user-management#state-default`（連結版）。
+
 ## shadcn 對照
 
 候選原語 `Tabs`（`TabsList`、`TabsTrigger`、`TabsContent`）。
@@ -64,5 +66,9 @@ Tab 可達（原生 `<a>`／`<button>`），但**沒有焦點樣式**，也沒�
 | 畫面 | 怎麼用 |
 | :--- | :--- |
 | 無（b1） | — |
+| `admin/user-management#state-default`、`admin/role-settings#state-default` | `.admin-tabs`（`user-management.html:285`–`:287`、`role-settings.html:335`–`:337`）；兩個分頁是 `<a>` 換頁，**頁面自己補了** `role="tablist"`／`role="tab"`／`aria-selected`，沒有方向鍵 |
+| `task-management/task-detail`（全部 `#tab-*`） | `.admin-tabs`（`task-detail.html:1885`–`:1892`），按鈕＋`role="tab"`，初始化前 `aria-disabled`；**方向鍵巡覽在本頁**（`:11686`–`:11702`）→ `../design-gaps.md` G-22 |
+| `annotation/annotation-workspace`（`#tab-guideline`、`#tab-history`） | `.admin-tabs.admin-tabs--panel`（`annotation-workspace.html:1288`–`:1289`）。按鈕沒有 `tablist`／`tab`／`aria-selected`，只能點（`setupGuidelineTabs`，`annotation-workspace.config.js:6736`–`:6754`）→ `../design-gaps.md` G-22 |
+| `dataset/dataset-analysis-detail`（`#tab-stats`、`#tab-quality`） | `.admin-tabs role="tablist"`（`dataset-analysis-detail.html:256`–`:258`），兩顆 `<button role="tab">` 帶 `aria-selected`／`aria-controls`，面板 `role="tabpanel"`；只能點，沒有方向鍵（`:2532`–`:2537`）→ `../design-gaps.md` G-22 |
 
-shipped 使用頁面在 b2（`admin/user-management`、`admin/role-settings`、`task-management/task-detail`）、b3（`annotation/annotation-workspace`，用 `--panel`）、b4（`dataset/dataset-analysis-detail`），待那幾批補。`shared/sidebar.css` 也提到它，待 [app-shell](app-shell.md) 一併確認。
+b2 已補上（見上表）。b3 已補上（見上表）。b4 已補上（見上表）。`shared/sidebar.css` 也提到它，見 [app-shell](app-shell.md) 與 `../design-gaps.md` G-25。

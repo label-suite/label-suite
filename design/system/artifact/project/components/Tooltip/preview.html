@@ -1,0 +1,39 @@
+<!-- @dsCard group="Forms" height=160 -->
+<!doctype html>
+<html lang="zh-TW" data-theme="light">
+<head>
+<meta charset="utf-8">
+<style>
+  /* preview layout only; the frame preloads tokens.css and bundle.css */
+  html body { margin: 0; padding: 24px; display: block; }
+  .ds-stage { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .ds-caption { font-size: 12px; color: var(--color-ink-muted); }
+  /* preview-only: force the hover/focus reveal (task-config.css:325-329) on one sample */
+  .ds-force-open + .tooltip-bubble { visibility: visible; opacity: 1; }
+</style>
+</head>
+<body>
+  <div class="ds-stage" style="align-items: flex-end; gap: 48px; padding-top: 70px;">
+    <div class="form-field">
+      <div class="field-label-row">
+        <label class="field-label" for="samplingA">每回合抽樣筆數</label>
+        <span class="tooltip-wrap">
+          <button class="field-help-tooltip ds-force-open" type="button" aria-label="抽樣筆數規則" aria-describedby="hintA">?</button>
+          <p class="tooltip-bubble" id="hintA" role="tooltip">筆數需 &gt;= 1 且 &lt; 資料集總筆數</p>
+        </span>
+      </div>
+      <span class="ds-caption">顯示（hover／focus）</span>
+    </div>
+    <div class="form-field">
+      <div class="field-label-row">
+        <label class="field-label" for="samplingB">IAA 門檻</label>
+        <span class="tooltip-wrap">
+          <button class="field-help-tooltip" type="button" aria-label="IAA 門檻說明" aria-describedby="hintB">?</button>
+          <p class="tooltip-bubble" id="hintB" role="tooltip">低於門檻時回到試標。</p>
+        </span>
+      </div>
+      <span class="ds-caption">隱藏（預設）</span>
+    </div>
+  </div>
+</body>
+</html>
