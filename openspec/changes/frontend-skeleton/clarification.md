@@ -190,7 +190,7 @@
 - **日期**：2026-11-20（維護者）
 - **補充決議（規劃審閱後）**：時區不寫死。開發頁的檢查時間依瀏覽者裝置時區顯示，括號內標出實際偏移（在台灣為「（UTC+8）」、在紐約為「（UTC-5）」）；業務頁同樣依裝置時區。範例中的「UTC+8」只是台灣裝置的顯示結果，不是固定換算。
 - **補充理由**：frontend-agent-rules F10 禁止寫死顯示時區，07-01 與 06-01 Q2 也規定時區依裝置；這樣不需要另記 F10 例外。
-- **補充回修**：specs/date-time-display、design.md、tasks.md 2.1（planner）
+- **補充回修**：specs/date-time-display、design.md D12、tasks.md 2.1、proposal.md（planner）；system-design.md、api-contract.md（sd）；ui-design.md（ui-ux）
 - **補充日期**：2026-11-20（維護者）
 
 ### Q19. 細節與技術預設（一次收下或逐條改）

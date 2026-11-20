@@ -77,7 +77,7 @@
 - 任何 `kind: "http"` 的 `ApiError`（任何錯誤外層：`404`、`405`、`406`、`422`、`500`、`503`…）→ 後端回報錯誤的版面；標題依 `code` 是否為 `DATABASE_UNAVAILABLE` 決定。
 - `kind` 是 `network`、`timeout` 的 `ApiError` → 連不到後端，「錯誤類型」列顯示該值。
 - `kind: "invalidResponse"`（回應不是外層）→ 連不到後端，「錯誤類型」列顯示 `network`。
-- `kind: "aborted"` 不會到達畫面（TanStack Query 自己處理取消）。
+- `kind: "aborted"` 不會到達畫面（TanStack Query 自己處理取消）；若仍交到 `toHealthViewState`，它回 `null`（回傳型別 `HealthViewState | null`），`HealthStatusPanel` 保留前一次畫出的狀態。
 
 ### 欄位遮蔽
 
