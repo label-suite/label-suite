@@ -146,7 +146,23 @@ export default defineConfig(
     rules: {
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "error",
-      "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+      // components/ui exports its variant tables next to each component, as the
+      // plan requires (design D9); list them so lint stays at zero warnings.
+      "react-refresh/only-export-components": [
+        "warn",
+        {
+          allowConstantExport: true,
+          allowExportNames: [
+            "alertVariants",
+            "alertVariantValues",
+            "badgeVariants",
+            "badgeVariantValues",
+            "buttonVariants",
+            "buttonVariantValues",
+            "buttonSizeValues",
+          ],
+        },
+      ],
     },
   },
 
