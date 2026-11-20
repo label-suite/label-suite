@@ -37,7 +37,7 @@ updatedAt: '2026-11-20'
 | **事件** | `SessionStart`（matcher `startup|resume|clear|compact|fork`，兩邊都支援這五種） |
 | **適用路徑／角色** | 整個 repo，不分角色 |
 | **payload 欄位** | `cwd`（定位 repo）、`hook_event_name`、`session_id`（只用於 log 關聯） |
-| **共用檢查器** | `scripts/check-env.sh`（**待建置**）：核對 `core.hooksPath` 是否指向 `scripts/git-hooks`、`AGENTS.md` 是否存在、`node`／`pnpm`／`uv` 版本，以及**本次的 hook 是不是真的會跑**——Claude 看 `disableAllHooks`，Codex 看 `[features] hooks` 是否被關掉、以及該 hook 有沒有被信任；另外**核對 `.claude/settings.json` 與 `.codex/hooks.json` 兩份設定指向的腳本是否都存在**——兩份設定手寫兩份、由這道檢查核對（[ADR-001 D3](../adr/001-agent-engineering.mdx#d3-兩個平台的-hook-設定手寫兩份不做生成器)） |
+| **共用檢查器** | `scripts/check-env.sh`（**待建置**）：核對 `core.hooksPath` 是否指向 `scripts/git-hooks`、`AGENTS.md` 是否存在、`node`／`pnpm`／`uv` 版本，以及**本次的 hook 是不是真的會跑**——Claude 看 `disableAllHooks`，Codex 看 `[features] hooks` 是否被關掉、以及該 hook 有沒有被信任；另外**核對 `.claude/settings.json` 與 `.codex/hooks.json` 兩份設定指向的腳本是否都存在**——兩份設定手寫兩份、由這道檢查核對（[§能力缺口與承接](#能力缺口與承接)第 7 條、[ADR-001 D3](../adr/001-agent-engineering.mdx#d3-兩個平台的-hook-設定手寫兩份不做生成器)） |
 | **timeout** | **10 秒**。環境檢查不該讓對話等 |
 | **輸出與退出碼** | 一律 exit `0`，訊息走 stdout。缺東西時列出「缺什麼、怎麼補」 |
 | **阻擋或提醒** | **提醒**。`SessionStart` 在兩邊都擋不住，所以也不假裝它能擋 |
