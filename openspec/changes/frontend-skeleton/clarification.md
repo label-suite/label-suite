@@ -223,6 +223,16 @@
 - **回修**：design.md D5、tasks.md 1.3（planner）；api-contract.md、system-design.md（sd）
 - **日期**：2026-11-20（維護者）
 
+### Q21. StrictMode 雙重掛載讓開發模式多送一個被中止的請求（驗收中回到停點）
+
+- **來源**：acceptance.md 缺陷 1（驗收，2026-11-20）
+- **問題**：`dev-health-page`「開啟頁面只呼叫健康檢查端點」寫「整個過程只送出 1 個請求」。`main.tsx` 以 `<StrictMode>` 包住應用，開發模式會掛載、卸載、再掛載；查詢讀了取消訊號（`query.signal: true`），第 1 個 `GET /api/v1/health` 被中止（`net::ERR_ABORTED`），第 2 個完成。單元測試沒包 `StrictMode`，所以沒抓到；畫面不受影響。
+- **選項**：（a）保留 StrictMode，Scenario 改以完成的請求計數，並補包 StrictMode 的測試；（b）拿掉 `main.tsx` 的 StrictMode；（c）保留 StrictMode，改取消訊號的設定或在開發頁特例處理。
+- **決議**：採（a）。Scenario 改為「完成的請求只有 1 個；StrictMode 中止的那一次不計，也不改變畫面」，「伺服器錯誤後不自動重試」同步改以完成的請求計數；tasks.md 6.4 補以 `<StrictMode>` 包住 `DevHealthPage` 的測試。
+- **理由**：保留 React 開發期的雙重掛載檢查，之後各頁的 effect 錯誤能早點被抓到；正式建置沒有雙重掛載，不受影響。
+- **回修**：specs/dev-health-page、specs/frontend-api-client、design.md D6、tasks.md 6.4（planner，`9929ddc`）
+- **日期**：2026-11-20（維護者）
+
 ## 已修正（P）
 
 | 編號 | 位置                                                                        | 問題                                                                    | 修正                                                                                                                                   |
