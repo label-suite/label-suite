@@ -46,8 +46,16 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
+    # The checkers set no limit of their own -- they are forbidden to shell out
+    # to `timeout`, which this machine does not have -- so the ceiling for the
+    # CI side is expressed here.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
+        with:
+          # `check-changed.sh --range` walks between the two pull-request
+          # commits, so the shallow default is not enough.
+          fetch-depth: 0
 
       - uses: actions/setup-node@v5
         with:
@@ -86,6 +94,63 @@ jobs:
       # a failure here names a line of production shell rather than a test.
       - name: Forbidden constructs in the checker layer
         run: scripts/tests/forbidden-terms-lint.sh
+
+      # The route table decides which checks a changed file gets, so a silent
+      # change to it silently changes what this repository enforces.
+      - name: The route set is unchanged
+        run: |
+          expected=$(cat <<'ROUTES'
+          routes:
+            py -> NA (backend/ 不存在)
+            ts,tsx -> NA (frontend/ 不存在)
+            docs/**/*.mdx, docs/**/*.md -> node scripts/check-specs.mjs docs (一律啟用)
+          ROUTES
+          )
+          actual=$(scripts/check-changed.sh --list-routes)
+          if [ "$actual" != "$expected" ]; then
+            echo "::error::the enabled route set changed; update this step in the same commit"
+            diff <(printf '%s\n' "$expected") <(printf '%s\n' "$actual") || true
+            exit 1
+          fi
+          printf '%s\n' "$actual"
+
+      - name: Route the files this pull request changed
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: scripts/check-changed.sh --range "$BASE..$HEAD"
+
+      # Issue #111 task 5.3. macOS was measured by hand on 2026-11-17 (BSD
+      # `head` leaves a partial 3-byte character at the 65536-byte boundary and
+      # the output stops decoding); this is the Linux half of the same input,
+      # and it is the only place in this process that runs on Linux. The
+      # library must not depend on either behaviour: it truncates in node and
+      # the assertion is that its output decodes on both platforms.
+      - name: Truncation does not depend on this platform's head
+        run: |
+          node -e 'process.stdout.write("\u4e2d".repeat(23000))' > /tmp/wide.txt
+          printf 'platform: %s, head: ' "$(uname -s)"
+          head -c 65536 /tmp/wide.txt | tail -c 4 | od -An -tx1 | tr -d ' \n'
+          printf '\n'
+          node -e '
+            const b = require("node:child_process").execSync(
+              "head -c 65536 /tmp/wide.txt", { maxBuffer: 1 << 24 });
+            try {
+              new TextDecoder("utf-8", { fatal: true }).decode(b);
+              console.log("raw head -c output decodes on this platform");
+            } catch {
+              console.log("raw head -c output does NOT decode on this platform");
+            }
+          '
+          bash scripts/tests/hook-common-tests.sh
+
+      # Last on purpose. Until the registration configs land (issue #111 group
+      # 6) this step necessarily reports the missing `.codex/hooks.json`, and
+      # that is the known cost of putting CI before registration recorded in
+      # the change's migration plan. Ordering it last keeps every step above it
+      # reporting, instead of being skipped behind a red one.
+      - name: Both hook registration configs agree with the checkers
+        run: scripts/check-env.sh --ci
 
   docs-site:
     name: docs-site
