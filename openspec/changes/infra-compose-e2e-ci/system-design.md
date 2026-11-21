@@ -145,22 +145,22 @@ flowchart LR
 
 ### 元件清單
 
-| 元件                                   | 種類     | 職責                                                                                                                                                                                                                                                                                               | 依據                                                                    |
-| :------------------------------------- | :------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------- |
-| `backend/Dockerfile`                   | 映像     | builder 階段用 uv 依 `uv.lock` 安裝（`uv sync --locked --no-dev`），runtime 階段 `python:3.12-slim`、非 root 使用者、`WORKDIR /app`；預設 CMD 是 uvicorn。同一個映像也跑 migrate，之後也跑 worker                                                                                                  | ADR-008 D2；Hard Rule 3（不用 pip install）                             |
-| `frontend/Dockerfile`                  | 映像     | build context 是 repo 根（要讀 `pnpm-lock.yaml`、`pnpm-workspace.yaml`、`design/prototype/assets/tokens.css`）；node 階段 `pnpm install --frozen-lockfile --filter frontend...` 再 `pnpm --filter frontend build`，`VITE_API_BASE_URL` 以 build arg 傳入；runtime 階段 `nginx:alpine` 服務 `/dist` | `architecture.mdx` §部署與維運 表「image」；frontend-skeleton design D8 |
-| `frontend/nginx.conf`                  | 設定     | `try_files $uri /index.html`；選項 B 時另加 `location /api/v1/` 反向代理到 `backend:8000` 與安全標頭                                                                                                                                                                                               | ADR-008 D1；依待決 #2                                                   |
-| `.dockerignore`（根）                  | 設定     | 讓前端 build context 只含 `frontend/`、`design/prototype/assets/`、`package.json`、`pnpm-lock.yaml`、`pnpm-workspace.yaml`；其餘（`.git`、`docs/`、`backend/`、`node_modules`、`.claude/`、`.env`）排除                                                                                            | 縮小 context、避免 `.env` 進映像（Hard Rule 8）                         |
-| `docker-compose.yml`                   | 編排     | Lite：`migrate`、`backend`、`frontend` 三個服務，一個具名 volume                                                                                                                                                                                                                                   | ADR-003 D7；`architecture.mdx` §資料庫雙層                              |
-| `docker-compose.prod.yml`              | 編排     | 正式：再加 `db`（`postgres:16`）與 `pg-data` volume；`backend`、`migrate` 帶 `DATABASE_URL`                                                                                                                                                                                                        | ADR-008 D1；B7                                                          |
-| `.env.example`                         | 設定範例 | 見 [§設定範例檔](#設定範例檔)                                                                                                                                                                                                                                                                      | Hard Rule 8；B10；#504 Q1；#505 交接的兩個值                            |
-| `scripts/dev.mjs`                      | 根指令   | 讀根目錄 `.env`（Node 內建 `process.loadEnvFile`，不加依賴），補上本機預設值，起 `uv run uvicorn … --reload` 與 `pnpm --filter frontend dev`；任一子程序結束或收到 SIGINT／SIGTERM 就結束另一個並以其退出碼結束                                                                                    | 依待決 #11 的 dev 語意（本文預設「本機開發伺服器」）                    |
-| `scripts/check.mjs`                    | 根指令   | 依 [§本機自查的步驟](#本機自查的步驟) 順序執行，印出每步名稱、耗時、結果；需要 PostgreSQL 的那一步在沒有 `TEST_DATABASE_URL` 時**明確印出「已跳過」**，不默默略過（T11）                                                                                                                           | 依待決 #11                                                              |
-| `scripts/check-coverage.mjs`           | 檢查器   | 讀 `backend/coverage.json` 的 `totals.percent_covered` 與 `frontend/coverage/coverage-summary.json` 的 statements／branches，和基準比，低於基準加容許誤差就失敗並印出層、指標、基準、實測                                                                                                          | ADR-007 D2；T10；依待決 #7、#8                                          |
-| `scripts/check-junit-skips.mjs`        | 檢查器   | 讀 pytest `--junitxml` 輸出，加總 `skipped`，不為 0 就失敗並列出被跳過的測試名                                                                                                                                                                                                                     | T11；`openspec/config.yaml` 第 113 行「這次應為 0 skipped」             |
-| `.semgrep/label-suite.yml`             | 規則     | `label-suite-cors-wildcard-origin`：`CORSMiddleware(..., allow_origins=[..., "*", ...])` 與等價寫法；`label-suite-hardcoded-secret`：Python 與 TypeScript 中名稱符合 `(?i)(api_?key                                                                                                                | secret                                                                  | token | password)` 的變數或參數被指派非空字串常值 | `architecture.mdx` §部署與維運 摺疊區；Hard Rule 7、8；S2 |
-| `e2e/playwright.config.ts`             | 測試設定 | `baseURL` 取 `E2E_BASE_URL`，未設時用 Vite 開發伺服器的位址——**全專案只有這一處寫位址**；`webServer` 起後端（SQLite 暫存檔）與前端開發伺服器，`reuseExistingServer` 本機為真、CI 為假；`retries` CI 1 次、本機 0                                                                                   | T8；ADR-007 D4                                                          |
-| `e2e/system-health/dev-health.spec.ts` | e2e      | `page.goto` 前端 `HEALTH_PATH` 那條開發路由（相對 baseURL）→ 用 `getByRole`／`getByText` 斷言正常狀態可見；條件式等待，不用 `waitForTimeout`                                                                                                                                                       | T8；frontend-routing 兩條 requirement                                   |
+| 元件                                   | 種類     | 職責                                                                                                                                                                                                                                                                                                                                                    | 依據                                                                    |
+| :------------------------------------- | :------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :---------------------------------------------------------------------- |
+| `backend/Dockerfile`                   | 映像     | builder 階段用 uv 依 `uv.lock` 安裝（`uv sync --locked --no-dev`），runtime 階段 `python:3.12-slim`、非 root 使用者、`WORKDIR /app`；預設 CMD 是 uvicorn。同一個映像也跑 migrate，之後也跑 worker                                                                                                                                                       | ADR-008 D2；Hard Rule 3（不用 pip install）                             |
+| `frontend/Dockerfile`                  | 映像     | build context 是 repo 根（要讀 `pnpm-lock.yaml`、`pnpm-workspace.yaml`、`design/prototype/assets/tokens.css`）；node 階段 `pnpm install --frozen-lockfile --filter frontend...` 再 `pnpm --filter frontend build`，`VITE_API_BASE_URL` 以 build arg 傳入；runtime 階段 `nginx:alpine` 服務 `/dist`                                                      | `architecture.mdx` §部署與維運 表「image」；frontend-skeleton design D8 |
+| `frontend/nginx.conf`                  | 設定     | `try_files $uri /index.html`；選項 B 時另加 `location /api/v1/` 反向代理到 `backend:8000` 與安全標頭                                                                                                                                                                                                                                                    | ADR-008 D1；依待決 #2                                                   |
+| `.dockerignore`（根）                  | 設定     | 讓前端 build context 只含 `frontend/`、`design/prototype/assets/`、`package.json`、`pnpm-lock.yaml`、`pnpm-workspace.yaml`；其餘（`.git`、`docs/`、`backend/`、`node_modules`、`.claude/`、`.env`）排除                                                                                                                                                 | 縮小 context、避免 `.env` 進映像（Hard Rule 8）                         |
+| `docker-compose.yml`                   | 編排     | Lite：`migrate`、`backend`、`frontend` 三個服務，一個具名 volume                                                                                                                                                                                                                                                                                        | ADR-003 D7；`architecture.mdx` §資料庫雙層                              |
+| `docker-compose.prod.yml`              | 編排     | 正式：再加 `db`（`postgres:16`）與 `pg-data` volume；`backend`、`migrate` 帶 `DATABASE_URL`                                                                                                                                                                                                                                                             | ADR-008 D1；B7                                                          |
+| `.env.example`                         | 設定範例 | 見 [§設定範例檔](#設定範例檔)                                                                                                                                                                                                                                                                                                                           | Hard Rule 8；B10；#504 Q1；#505 交接的兩個值                            |
+| `scripts/dev.mjs`                      | 根指令   | 讀根目錄 `.env`（Node 內建 `process.loadEnvFile`，不加依賴），補上本機預設值，起 `uv run uvicorn … --reload` 與 `pnpm --filter frontend dev`；任一子程序結束或收到 SIGINT／SIGTERM 就結束另一個並以其退出碼結束                                                                                                                                         | 依待決 #11 的 dev 語意（本文預設「本機開發伺服器」）                    |
+| `scripts/check.mjs`                    | 根指令   | 依 [§本機自查的步驟](#本機自查的步驟) 順序執行，印出每步名稱、耗時、結果；需要 PostgreSQL 的那一步在沒有 `TEST_DATABASE_URL` 時**明確印出「已跳過」**，不默默略過（T11）                                                                                                                                                                                | 依待決 #11                                                              |
+| `scripts/check-coverage.mjs`           | 檢查器   | 讀 `backend/coverage.json` 的 `totals.percent_covered` 與 `frontend/coverage/coverage-summary.json` 的 statements／branches，和基準比，低於基準加容許誤差就失敗並印出層、指標、基準、實測                                                                                                                                                               | ADR-007 D2；T10；依待決 #7、#8                                          |
+| `scripts/check-junit-skips.mjs`        | 檢查器   | 讀 pytest `--junitxml` 輸出，加總 `skipped`，不為 0 就失敗並列出被跳過的測試名                                                                                                                                                                                                                                                                          | T11；`openspec/config.yaml` 第 113 行「這次應為 0 skipped」             |
+| `.semgrep/label-suite.yml`             | 規則     | `label-suite-cors-wildcard-origin`：`CORSMiddleware(..., allow_origins=[..., "*", ...])` 與等價寫法；`label-suite-hardcoded-secret`：Python 與 TypeScript 中名稱符合 `(?i)(api_?key                                                                                                                                                                     | secret                                                                  | token | password)` 的變數或參數被指派非空字串常值 | `architecture.mdx` §部署與維運 摺疊區；Hard Rule 7、8；S2 |
+| `e2e/playwright.config.ts`             | 測試設定 | `baseURL` 取 `E2E_BASE_URL`、後端位址取 `E2E_API_URL`，未設時的本機預設值**全專案只寫在這一處**；`use.locale` 固定 `zh-TW`；`webServer` 起後端（SQLite 暫存檔）與前端開發伺服器，兩者的埠、`CORS_ALLOWED_ORIGINS`、`VITE_API_BASE_URL` 都由這兩個 URL 推導（D8a）；`reuseExistingServer` 本機為真、CI 為假；`retries` CI 1 次、本機 0；失敗時保留 trace | T8；ADR-007 D4                                                          |
+| `e2e/system-health/dev-health.spec.ts` | e2e      | `page.goto` 前端 `HEALTH_PATH` 那條開發路由（相對 baseURL）→ 依 D8b 的觀察契約斷言；條件式等待，不用 `waitForTimeout`，不新增 `data-testid`                                                                                                                                                                                                             | T8；frontend-routing 兩條 requirement                                   |
 
 ### 關鍵設計細節
 
@@ -188,6 +188,26 @@ flowchart LR
 **D7 CI 用 `docker compose up --wait` 把驗收條件 1 變成機械檢查。** `--wait` 會等每個有健康檢查的服務變成 healthy，失敗或逾時就以非 0 結束。job 依序：`docker compose config --quiet` 驗兩份檔 → Lite `up --build --wait` → 對健康檢查發一次請求並斷言 envelope 的 `data.status` 與 `data.database` 都是 `ok` → `down -v` → 正式層同樣跑一次（`POSTGRES_PASSWORD` 用 job 內產生的隨機值）。這只驗「後端健康檢查回報正常」，即待決 #1 的做法 (a)；做法 (b)「健康檢查頁顯示成功」由 e2e 驗（D8）。兩者都做或擇一由待決 #1 決定，本 job 設計不受影響。這個 job 是否每張 PR 跑、是否列為必過，依待決 #9、#10（技術待決 N4）。
 
 **D8 e2e 跑在開發伺服器上，不跑在容器裡。** 健康檢查頁只在 `import.meta.env.DEV` 時註冊、正式建置剪除（`frontend-routing`），而目前前端沒有任何非開發頁（`frontend/src/app/router.tsx` 的正式路由只有一條 `path: "*"`、什麼都不渲染），所以容器裡的正式建置**沒有可以走的旅程**。`playwright.config.ts` 的 `webServer` 起兩個程序：後端 `uv run uvicorn app.main:create_app --factory`（環境帶 `SQLITE_PATH` 指向 Playwright 輸出目錄下的暫存檔、`CORS_ALLOWED_ORIGINS` 為前端開發伺服器的來源，先跑一次 `alembic upgrade head`）與 `pnpm --filter frontend dev`；就緒判定分別用後端健康檢查的 URL 與前端首頁。e2e 是否進 CI 依待決 #3；進的話 job 用 Lite（SQLite），瀏覽器只裝 chromium。e2e fixtures 不含任何答案資料（Hard Rule 6），本次也沒有 `storageState`（無認證），`e2e/shared/fixtures/index.ts` 只匯出共用的 `test`／`expect`，讓第一條角色旅程（01-01 登入）有固定的擴充點。
+
+**D8a e2e 設定的三個限制：都集中在 `playwright.config.ts`，spec 裡不出現。** 這三條是從既有主規格推出來的（ui-ux 在 `d16004c` 的觀察紀錄，見 `frontend-i18n`、`dev-health-page`、`frontend-skeleton/design.md` §跨 change 依賴），不是新的需求，也不替待決問題選答案。
+
+1. **固定介面語言為 `zh-TW`。** 介面語言依 `navigator.language` 決定（`frontend-i18n`「介面語言依瀏覽器語言決定」；`resolveLanguage` 以 `zh` 開頭就用 `zh-TW`，其餘一律 `en`）。文字選擇器跟著語言變，沒固定的話，同一份 spec 換一台機器就找不到文字。設定方式是 `use.locale: "zh-TW"`：Playwright 會同時設定 `navigator.language` 和 `Accept-Language` 標頭，所以前端介面文字和後端 envelope 的 `message` 會是同一種語言。選 `zh-TW` 是因為它是本專案的主要介面語言，也是 ui-ux 紀錄文案時用的語言。`en` 那一側已由前端的單元測試涵蓋（`frontend/src/lib/i18n/*.test.ts`），e2e 不必兩種語言各走一次。
+2. **`baseURL` 集中設定，不寫死埠號。** 設定檔只讀兩個環境變數：`E2E_BASE_URL`（前端來源）與 `E2E_API_URL`（後端來源）。未設時的預設值（Vite 開發伺服器與 uvicorn 的本機位址）只寫在這一個檔案裡（T8 正例「`baseURL` 集中在 `playwright.config.ts`」）。spec 一律用相對路徑 `page.goto(HEALTH_PATH 的值)`，不寫任何 `localhost`、也不寫埠號。`webServer` 的埠從這兩個 URL 解析出來後傳給子程序：後端用 `--port`，前端用 `pnpm --filter frontend dev --port`。`vite.config.ts` 的 `strictPort` 照舊，埠被佔用時直接失敗，不會悄悄換埠讓 baseURL 指錯地方。
+3. **前端的呼叫位址與後端的允許來源由同一處推導，兩者一定對得上。** 這兩個值一旦不一致，瀏覽器會擋下跨來源請求，呼叫層只看到連線失敗，頁面就停在「連不到後端」、錯誤類型 `network`（`dev-health-page`）。所以 `playwright.config.ts` 用 `E2E_BASE_URL` 的 origin 當後端 `webServer` 的 `CORS_ALLOWED_ORIGINS`，用 `E2E_API_URL` 當前端 `webServer` 的 `VITE_API_BASE_URL`，兩個值都不從根目錄 `.env` 讀，以免本機設定讓 e2e 的結果因機器而異。同一個限制在容器裡也成立：D6 表格裡 `VITE_API_BASE_URL` 與 `CORS_ALLOWED_ORIGINS` 那兩列，在選項 A、B 下各自要對得上，這是 `compose` job 與人工驗收要確認的地方。
+
+**D8b 健康檢查旅程的觀察契約。** `dev-health.spec.ts` 只走「開啟 → 看到正常」這一條旅程（T8 規定一個 spec 只走一條旅程）。載入中、後端回報錯誤、連不到後端，以及「重新檢查」的防重複送出，都已由 #505 的元件與頁面測試涵蓋（`frontend/src/features/system-health/*.test.tsx`、`frontend/src/pages/dev-health/dev-health-page.test.tsx`），#506 沒有要求另寫失敗旅程。
+
+| 步驟               | 選擇器（語意優先，T8）                                                                                             | 斷言                                                                                                        |
+| :----------------- | :----------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------- |
+| 頁面已載入         | `getByRole("heading", { level: 1, name: "系統健康檢查" })`                                                         | 可見                                                                                                        |
+| 等結果             | `getByText("後端與資料庫都可以用")`                                                                                | 用 `expect(...).toBeVisible()` 做條件式等待；**不斷言載入中的狀態**，它出現的時間太短，斷言它只會讓測試不穩 |
+| 兩個值             | 描述清單中「服務」「資料庫」兩項的值，用 `getByRole("term")`／`getByRole("definition")` 或描述清單的可存取名稱定位 | 兩個值都是 `ok`                                                                                             |
+| 沒有錯誤           | `getByRole("alert")`                                                                                               | 數量為 0                                                                                                    |
+| 檢查時間與 traceId | 描述清單中的對應項                                                                                                 | **只斷言存在**，不斷言值，因為每次執行都不一樣                                                              |
+
+- **不新增 `data-testid`**：這一頁沒有 prototype 的 `data-testid` 契約可沿用（T8 例外的來源不存在），語意選擇器已經夠用，前端程式本次不改。
+- **失敗時的診斷**：spec 不斷言失敗狀態，但失敗時 Playwright 保留的 trace 與截圖可以直接讀 `role="alert"` 的標題。「資料庫無法連線」表示後端起來了、但資料庫不可用，例如 SQLite 暫存檔的路徑不對。「連不到後端」表示後端沒起來，或 D8a 第 3 點的兩個值沒對上。這兩條寫進 `acceptance.md` 的人工驗收步驟，供出事時對照。
+- **不需要角色**：健康檢查頁是公開頁，對任何呼叫端的內容都一樣，旅程不使用 `e2e/shared/fixtures/` 的任何 `storageState`。
 
 **D9 前端 lint 在來源處改成零警告。** `frontend/package.json` 的 `lint` 改成 `eslint . --max-warnings 0`，本機、`check` 指令、CI 都呼叫同一個 script，不在 CI 另寫一份參數（2026-11-21 留言第 1 點的「零警告」選項）。前端目前零警告（`fix-pages-root-layer-classification` tasks 3.1），這個改動不會讓既有程式變紅。`openspec/config.yaml` 第 108 行的指令字串不必改。
 
@@ -348,18 +368,27 @@ sequenceDiagram
   participant Vite as Vite 開發伺服器
   participant Browser as chromium
   Runner->>PW: pnpm --filter e2e test
-  PW->>BE: webServer：alembic upgrade head 後啟動
+  PW->>PW: 由 E2E_BASE_URL、E2E_API_URL 推導兩個埠與兩個設定值（D8a）
+  PW->>BE: webServer：alembic upgrade head 後啟動（CORS_ALLOWED_ORIGINS = 前端 origin）
   PW->>BE: 輪詢 /api/v1/health 直到 200
-  PW->>Vite: webServer：pnpm --filter frontend dev
+  PW->>Vite: webServer：pnpm --filter frontend dev --port（VITE_API_BASE_URL = 後端 origin）
   PW->>Vite: 輪詢首頁直到 200
+  PW->>Browser: 新 context，locale zh-TW
   PW->>Browser: page.goto(健康檢查頁，相對 baseURL)
   Browser->>Vite: 取得開發模式的 SPA
-  Browser->>BE: GET /api/v1/health（跨來源，CORS 允許 Vite 的來源）
-  BE-->>Browser: 200 envelope
-  PW->>Browser: expect(getByText(正常狀態)).toBeVisible()（條件式等待）
+  Browser->>BE: GET /api/v1/health（跨來源，Accept-Language zh-TW）
+  alt 前端 origin 不在 CORS_ALLOWED_ORIGINS
+    BE-->>Browser: 沒有 CORS 標頭，瀏覽器擋下
+    Browser-->>PW: 頁面顯示「連不到後端」（network）
+  else 允許
+    BE-->>Browser: 200 envelope
+  end
+  PW->>Browser: expect(heading 系統健康檢查).toBeVisible()
+  PW->>Browser: expect(getByText(後端與資料庫都可以用)).toBeVisible()（條件式等待）
   alt 逾時仍看不到
-    PW-->>Runner: 失敗，保留 trace 與 report
+    PW-->>Runner: 失敗，保留 trace、截圖與 report（role=alert 的標題即診斷）
   else 看得到
+    PW->>Browser: 服務、資料庫皆為 ok；role=alert 數量 0；檢查時間與 traceId 存在
     PW-->>Runner: 1 passed，關閉兩個 webServer
   end
 ```
