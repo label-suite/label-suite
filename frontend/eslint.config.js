@@ -194,6 +194,14 @@ export default defineConfig(
       ],
     },
     rules: {
+      // A file that matches no element is reported, rather than silently
+      // escaping every rule below. `boundaries/dependencies` only judges files
+      // it could classify, so a file placed directly in `src/pages/` -- which
+      // `src/pages/*` does not match, that pattern being the page folder --
+      // used to import a feature's internals with no complaint. Verified on a
+      // deliberate violation: the same bad import is reported inside a page
+      // folder and was not reported at the root (design D3's rule).
+      "boundaries/no-unknown-files": "error",
       "boundaries/dependencies": [
         "error",
         {
