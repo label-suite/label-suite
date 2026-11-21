@@ -248,7 +248,18 @@ flowchart LR
 | `e2e`              | pnpm install、uv sync → `playwright install --with-deps chromium` → `pnpm --filter e2e test` → 失敗時上傳 report                                                     | 任一旅程失敗                                                  | **#3：整個 job 是否存在**                                            |
 | `dependency-audit` | `uv run pip-audit --fail-on high`、`pnpm audit --prod --audit-level high`                                                                                            | 有 high 以上弱點                                              | **#5：整個 job 是否存在**；要的話 `pip-audit` 以 `uv add --dev` 加入 |
 
-`api-contract` 不起任何服務：匯出不需環境變數與資料庫（`api-schema-export`）。`semgrep` 不需要安裝專案依賴。新 job 不會自動變成 `main` 的必過檢查；改 ruleset 是維護者的動作（待決 #10）。
+`api-contract` job 是 A5 漂移檢查進 CI 的地方，比對內容如下；本機的 `pnpm run api:sync` 與 `check` 指令跑同一組指令。這個 job 不起服務，因為匯出不需要環境變數，也不需要資料庫（`api-schema-export`）。
+
+| 順序 | 產生                                                                                       | 比對對象                                        | 判定失敗的條件                                                                                            |
+| :--- | :----------------------------------------------------------------------------------------- | :---------------------------------------------- | :-------------------------------------------------------------------------------------------------------- |
+| 1    | `cd backend && uv run python -m app.scripts.export_openapi`：從 FastAPI app 匯出介面描述檔 | 已提交的 `backend/openapi.json`                 | `git diff --exit-code -- backend/openapi.json` 有差異，或 `git status --porcelain` 顯示它是還沒提交的新檔 |
+| 2    | `pnpm --filter frontend api:generate`：Orval 讀 `backend/openapi.json`，清空後重寫產物     | 已提交的 `frontend/src/api/generated/` 整個目錄 | 同上兩個條件；有任何檔案被改、刪除或新增都算                                                              |
+
+- 第 1 步抓的是「改了後端路由或 schema，卻沒重新匯出」；第 2 步抓的是「介面描述檔已更新，卻沒重產前端呼叫層」，或有人手改了產物。
+- operationId 的唯一性與「動詞加資源」命名，在第 1 步匯出時由既有的 `assert_unique_operation_ids` 與 `generate_operation_id` 把關，重複就讓匯出以非 0 結束；這次不改這套策略。
+- 失敗時 job 要列出不同步的檔名，修正方式是在本機跑 `pnpm run api:sync` 後提交。
+
+`semgrep` 不需要安裝專案依賴。新 job 不會自動變成 `main` 的必過檢查；改 ruleset 是維護者的動作（待決 #10）。
 
 ### 本機自查的步驟
 
