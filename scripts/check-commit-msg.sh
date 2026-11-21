@@ -19,7 +19,12 @@ set -uo pipefail
 
 MSG_FILE="$1"
 
-COMMENT_CHAR=$(git config core.commentChar 2>/dev/null || true)
+# An unset core.commentChar is the normal case and `git config` reports it
+# with exit 1, so this is a default rather than a swallowed failure. Written
+# out rather than `|| true`, which would hide a genuinely broken git as well.
+if ! COMMENT_CHAR=$(git config core.commentChar 2>/dev/null); then
+  COMMENT_CHAR=""
+fi
 case "$COMMENT_CHAR" in
   ""|auto) COMMENT_CHAR='#' ;;
 esac

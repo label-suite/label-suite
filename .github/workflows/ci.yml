@@ -33,6 +33,152 @@ jobs:
           done
           exit "$failed"
 
+  hooks:
+    # The hook checkers are shell, and shell is where a script passes on the
+    # machine it was written on and fails on the other one. Both platforms run
+    # the same suites against the same pinned constants, so a divergence is a
+    # red job rather than something a reader has to notice. macOS is in the
+    # matrix because this repository is public and its runner minutes are
+    # free; the cross-platform requirement is issue #111's, not a nicety.
+    name: hooks (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    # The checkers set no limit of their own -- they are forbidden to shell out
+    # to `timeout`, which this machine does not have -- so the ceiling for the
+    # CI side is expressed here.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # `check-changed.sh --range` walks between the two pull-request
+          # commits, so the shallow default is not enough.
+          fetch-depth: 0
+
+      # H1 reports the toolchain and `--ci` turns a missing one into a non-zero
+      # exit, so this job has to carry the toolchain it is going to report on.
+      # The first real run of this job failed on exactly that: no pnpm, so
+      # `--ci` refused a checkout that was in fact healthy. uv is here for the
+      # same reason -- `backend/` exists now, which makes it required rather
+      # than NA, and it is what `check-changed.sh --range` runs the Python
+      # route through. Both are also the runners the routes reach their tools
+      # through, and the two steps below provision what those runners run.
+      - uses: pnpm/action-setup@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          # The pnpm cache is left off deliberately: this job installs the
+          # frontend toolchain from the lockfile below, and a warm cache
+          # would hide a lockfile that no longer resolves.
+          package-manager-cache: false
+
+      # The Python route runs `uv run --no-sync`, because a hook must not
+      # provision an environment behind the author's back. That makes
+      # provisioning this job's business: without it the route fails on every
+      # pull request that touches `backend/`, and a gate that cannot run the
+      # check it routes to is not reporting on the code.
+      - name: Provision the backend environment the Python route runs in
+        run: uv sync --frozen
+        working-directory: backend
+
+      # Same reason on the TypeScript side: `tsc` and `eslint` live in
+      # `frontend/node_modules/.bin`, and the route reaches them through
+      # `pnpm exec`, which installs nothing.
+      - name: Provision the frontend toolchain the TypeScript route runs in
+        run: pnpm install --frozen-lockfile
+
+      # A glob, not a list. A suite that is added and not wired up is the
+      # failure this job exists to prevent, and a list is the place that gets
+      # forgotten. check-commit-msg-tests.sh runs here as well as in
+      # commit-messages; that job checks the pull request's own commits and
+      # keeps its own regression step so it stands on its own.
+      - name: Checker and hook regression tests
+        run: |
+          failed=0
+          for suite in scripts/tests/*-tests.sh; do
+            echo "::group::$suite"
+            if bash "$suite"; then
+              echo "::endgroup::"
+            else
+              echo "::endgroup::"
+              echo "::error file=$suite::$suite failed (details in the group above)"
+              failed=1
+            fi
+          done
+          exit "$failed"
+
+      # Named rather than globbed: the other *.test.mjs files belong to the
+      # specs job, and running them twice would say nothing. ci-wiring-tests.sh
+      # is what keeps this line from being the one that gets forgotten.
+      - name: Payload reader tests
+        run: node --test scripts/tests/hook-payload.test.mjs
+
+      # Separate from the suites: this one reads the checker layer itself, so
+      # a failure here names a line of production shell rather than a test.
+      - name: Forbidden constructs in the checker layer
+        run: scripts/tests/forbidden-terms-lint.sh
+
+      # The route table decides which checks a changed file gets, so a silent
+      # change to it silently changes what this repository enforces.
+      - name: The route set is unchanged
+        run: |
+          expected=$(cat <<'ROUTES'
+          routes:
+            py -> ruff check, mypy --strict (backend/ 存在)
+            ts,tsx -> tsc -b, eslint (frontend/ 存在)
+            docs/**/*.mdx, docs/**/*.md -> node scripts/check-specs.mjs docs (一律啟用)
+          ROUTES
+          )
+          actual=$(scripts/check-changed.sh --list-routes)
+          if ! diff <(printf '%s\n' "$expected") <(printf '%s\n' "$actual"); then
+            echo "::error::the enabled route set changed; update this step in the same commit"
+            exit 1
+          fi
+          printf '%s\n' "$actual"
+
+      - name: Route the files this pull request changed
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: scripts/check-changed.sh --range "$BASE..$HEAD"
+
+      # Issue #111 task 5.3. macOS was measured by hand on 2026-11-17 (BSD
+      # `head` leaves a partial 3-byte character at the 65536-byte boundary and
+      # the output stops decoding); this is the Linux half of the same input,
+      # and it is the only place in this process that runs on Linux. The
+      # library must not depend on either behaviour: it truncates in node and
+      # the assertion is that its output decodes on both platforms.
+      - name: Truncation does not depend on this platform's head
+        run: |
+          node -e 'process.stdout.write("\u4e2d".repeat(23000))' > /tmp/wide.txt
+          printf 'platform: %s, head: ' "$(uname -s)"
+          head -c 65536 /tmp/wide.txt | tail -c 4 | od -An -tx1 | tr -d ' \n'
+          printf '\n'
+          node -e '
+            const b = require("node:child_process").execSync(
+              "head -c 65536 /tmp/wide.txt", { maxBuffer: 1 << 24 });
+            try {
+              new TextDecoder("utf-8", { fatal: true }).decode(b);
+              console.log("raw head -c output decodes on this platform");
+            } catch {
+              console.log("raw head -c output does NOT decode on this platform");
+            }
+          '
+          bash scripts/tests/hook-common-tests.sh
+
+      # Last on purpose. Until the registration configs land (issue #111 group
+      # 6) this step necessarily reports the missing `.codex/hooks.json`, and
+      # that is the known cost of putting CI before registration recorded in
+      # the change's migration plan. Ordering it last keeps every step above it
+      # reporting, instead of being skipped behind a red one.
+      - name: Both hook registration configs agree with the checkers
+        run: scripts/check-env.sh --ci
+
   docs-site:
     name: docs-site
     runs-on: ubuntu-latest
