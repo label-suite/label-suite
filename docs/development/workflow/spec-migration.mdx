@@ -1,24 +1,24 @@
 ---
 title: 規格搬移設計與 PR／CI 閘門規則
-description: 搬移結束後仍沿用的 PR 變更範圍六類表、「已確認決議」的五種依據、合併閘第 3 條、建置閘門重跑規則與機械編輯的驗證陷阱；附錄收舊 repo 18 頁規格搬進 docs/specs/ 時的跨頁決議（D1–D10）、單頁搬移通則與來源對照。
+description: 搬移結束後仍沿用的 PR 變更範圍七類表、「已確認決議」的五種依據、合併閘第 3 條、建置閘門重跑規則與機械編輯的驗證陷阱；附錄收舊 repo 18 頁規格搬進 docs/specs/ 時的跨頁決議（D1–D10）、單頁搬移通則與來源對照。
 tags: [規格, 搬移, PR, CI]
 ---
 
 # 規格搬移設計與 PR／CI 閘門規則
 
-本文管搬移結束後仍沿用的規則：PR 變更範圍的六類表、「已確認決議」的五種依據、合併閘第 3 條的判定、建置閘門的重跑規則，以及機械編輯的驗證陷阱。
+本文管搬移結束後仍沿用的規則：PR 變更範圍的七類表、「已確認決議」的五種依據、合併閘第 3 條的判定、建置閘門的重跑規則，以及機械編輯的驗證陷阱。
 舊 repo 18 頁規格已全部搬完；搬移期間的跨頁決議 D1–D10、單頁搬移通則與來源對照收在[附錄](#附錄搬移期間的決議與規則)，`docs/specs/` 的「已確認決議」引用它們作為過去決定的依據。與 `AGENTS.md` 說法衝突時以 `AGENTS.md` 為準。
 
 ## PR 的變更範圍
 
-**一張 PR 只能是下面六類中的一類**（`AGENTS.md` 的「One purpose per PR」）。合併前逐一看過 `gh pr view <N> --json files`，每個檔案都要落在那一類的允許清單裡；越界就拆成兩張。
-**release、相依套件升級，以及只改規則文件（`AGENTS.md`、`CLAUDE.md`）的 PR 不屬於這六類**，照 `AGENTS.md` 自己的規則走——判例 #147（升級 notecraftapp，動了 `package.json`、`pnpm-lock.yaml` 與一個共用元件）。
+**一張 PR 只能是下面七類中的一類**（`AGENTS.md` 的「One purpose per PR」）。合併前逐一看過 `gh pr view <N> --json files`，每個檔案都要落在那一類的允許清單裡；越界就拆成兩張。
+**release、相依套件升級，以及只改規則文件（`AGENTS.md`、`CLAUDE.md`）的 PR 不屬於這七類**，照 `AGENTS.md` 自己的規則走——判例 #147（升級 notecraftapp，動了 `package.json`、`pnpm-lock.yaml` 與一個共用元件）。
 
 **「只改規則文件」的判準**（整節只定義在這裡，下面兩處引用它）：**把 `AGENTS.md`／`CLAUDE.md` 本身排除之後，沒有動到文件 PR 或流程設定 PR 允許的其他路徑。**
 判準刻意只看那兩類——它們是唯一有「連帶規則文件」條款的。所以一張 `AGENTS.md` ＋ `pnpm-lock.yaml` 的升版 PR 仍然算「只改規則文件」，照這一條走，不會因為 `pnpm-lock.yaml` 落在工具 PR 的清單裡就兩邊落空。
-**判準不能寫成「沒有動到六類任一類允許的路徑」**：`AGENTS.md` 本身現在就在其中兩類的清單裡，那樣寫會讓這個例外永遠不成立。
+**判準不能寫成「沒有動到七類任一類允許的路徑」**：`AGENTS.md` 本身現在就在其中兩類的清單裡，那樣寫會讓這個例外永遠不成立。
 
-前三類是搬移作業期間的分類，後三類在搬移結束後才用得到——**搬移已全部完成（18 頁），所以現在新開的 PR 多半落在畫面修正 PR 與流程設定 PR**。
+前三類是搬移作業期間的分類，後四類在搬移結束後才用得到——**搬移已全部完成（18 頁），所以現在新開的 PR 多半落在畫面修正 PR 與流程設定 PR**。
 
 | 類別 | 可以動 | 典型 |
 | :--- | :--- | :--- |
@@ -28,26 +28,29 @@ tags: [規格, 搬移, PR, CI]
 | **畫面修正 PR** | `design/prototype/`、`docs/prototype/navigation.mdx`（限該檔 §維護說明 要求的同步），以及下面那一條限定的 `docs/specs/` | 依決定改畫面的文案、欄位或徽章——`[UI]` 與 `[Enhancement]` issue 的本體 |
 | **流程設定 PR** | `openspec/`、`.claude/`（`agents/`、`skills/`、`commands/`，以及**限定**的 `settings.json`，見下）、`.codex/`（見下）、`.agents/skills/`，以及**連帶**修到的 `docs/development/` 與 `AGENTS.md`／`CLAUDE.md` | 建 schema 與 template、寫 agent 角色定義、加 skill 或指令、把 hook 接到 agent 上 |
 | **設計系統 PR** | `design/system/`，以及**連帶**修到的 `.claude/skills/design-*` 與 `.agents/skills/design-*` | 從 prototype 重建元件規格、記錄設計差異 |
+| **程式 PR** | `backend/`、`frontend/`、`e2e/`，以及**連帶**的 `openspec/changes/<change>/`（歸檔改動與程式進同一張 PR）與 `openspec/specs/`（該 change 的 spec delta 同步） | 實作一個 change 的 `tasks.md`——`label-suite-sdd` 全流程的產出 |
 
-六類的差別是**目的**，不是檔案數：同樣動到 `.notecraft/components/` 的一個元件，目的是畫圖的算流程圖 PR，目的是改條文、順手讓圖跟上的算文件 PR（判例：後端分層圖拿掉各層的 ADR 出處時，元件那一半走 #378、`architecture.mdx` 裡那張圖的 prompt 那一半走 #380，兩張拆開合併，**都不是畫圖**）。
+七類的差別是**目的**，不是檔案數：同樣動到 `.notecraft/components/` 的一個元件，目的是畫圖的算流程圖 PR，目的是改條文、順手讓圖跟上的算文件 PR（判例：後端分層圖拿掉各層的 ADR 出處時，元件那一半走 #378、`architecture.mdx` 裡那張圖的 prompt 那一半走 #380，兩張拆開合併，**都不是畫圖**）。
 同理，同樣動到 `docs/development/` 的一份設計文件：**只動它與連帶的 `AGENTS.md`／`CLAUDE.md`、不動 `openspec/`、`.claude/` 或 `.agents/skills/` 的算文件 PR**（判例：#221 那張補五類表的，以及 #224）；因為改了 schema、agent 或 skill 而連帶要更新那份文件的，算流程設定 PR。
 
 - **流程圖元件不住在 `docs/` 底下**：規格頁用 `GeneratedFrame` 從 `@notes/components/` 取元件，所以流程圖 PR 通常會同時動到 `docs/specs/` 的頁面與 `.notecraft/components/`。這是允許的，不必每次在留言裡解釋。判例 #175、#176、#177、#193、#198、#199。只修元件、完全不動 `docs/` 也算這一類（判例 #167）。
-- **`.notecraft/plugins.json` 算文件 PR。** 它把 NoteCraft 的外掛對應到 `docs/` 底下的資料檔（例如 `er-diagram-renderer` 對 `**/*.er.json`），它的作用就是決定 `docs/` 底下的那份資料交給哪個 renderer（頂層 `disabled` 的站台級啟停、每條映射的 `options` 也在這裡），依「六類的差別是**目的**，不是檔案數」，和它要呈現的那份資料同一類。
+- **`.notecraft/plugins.json` 算文件 PR。** 它把 NoteCraft 的外掛對應到 `docs/` 底下的資料檔（例如 `er-diagram-renderer` 對 `**/*.er.json`），它的作用就是決定 `docs/` 底下的那份資料交給哪個 renderer（頂層 `disabled` 的站台級啟停、每條映射的 `options` 也在這裡），依「七類的差別是**目的**，不是檔案數」，和它要呈現的那份資料同一類。
   判例 #246（issue #236 的交付 PR，`93a8b4f`）：它把 `.notecraft/plugins.json` 與 `docs/diagrams/architecture/` 的三個檔（`database-schema.er.json`、`data-table-dictionary.mdx`、`data-field-inventory.mdx`）一起當文件 PR 合併，四個檔服務同一個目的——決定那份 ER 資料交給哪個 renderer，以及它從哪份盤點來。
   **這一條有程序掛勾**（比照下面規則文件那條）：**`plugins.json` 的每一處改動都要在 PR body 列出，並寫明它服務的是同一個目的**。原因是合併閘第 2 條只比對路徑——而這個檔會被工具改寫：`pnpm docs:serve` 在 `/plugins` 停用一個外掛，dev API 就會改寫它頂層的 `disabled` 陣列（`notecraftapp@1.15.0` 的 `src/dev-api/handlers.mjs` `PUT /api/plugins/:id`）。那種改動與 PR 的目的無關，但在機械閘上會無聲通過。
-  **`.notecraft/plugins/<id>/`（裝進版控的外掛本體）不算文件 PR**，照本節開頭「相依套件」那個例外處理，**不屬六類**，照 `AGENTS.md` 自己的規則走——比照判例 #147（升級 notecraftapp）。另開一張相依套件 PR、先合併它，再合併用到它的文件 PR；順序反過來會讓 `plugins.json` 指向沒裝的外掛而 build 失敗。判例 #245（`ec1af4f`）就是那張相依套件 PR，比 #246 早 22 分鐘合併。它的範圍是 `.notecraft/plugins/`（外掛本體與 `_types.d.ts`）加上根目錄的 `NOTICE`——**散入版控的第三方程式要同時交代授權**，所以 `NOTICE` 跟著外掛走，不另開一張。
+  **`.notecraft/plugins/<id>/`（裝進版控的外掛本體）不算文件 PR**，照本節開頭「相依套件」那個例外處理，**不屬七類**，照 `AGENTS.md` 自己的規則走——比照判例 #147（升級 notecraftapp）。另開一張相依套件 PR、先合併它，再合併用到它的文件 PR；順序反過來會讓 `plugins.json` 指向沒裝的外掛而 build 失敗。判例 #245（`ec1af4f`）就是那張相依套件 PR，比 #246 早 22 分鐘合併。它的範圍是 `.notecraft/plugins/`（外掛本體與 `_types.d.ts`）加上根目錄的 `NOTICE`——**散入版控的第三方程式要同時交代授權**，所以 `NOTICE` 跟著外掛走，不另開一張。
   除了上面這兩條，**不擴及 `.notecraft/` 的其他檔案**：真的碰到別的，照本節開頭那三種例外的方式重新判斷，不要類推。
-- **兩份 agent 註冊設定算流程設定 PR 的連帶路徑**：`.claude/settings.json` 與 `.codex/` 管的是 agent 在這個 repo 怎麼工作——哪個事件觸發哪支檢查器、哪些路徑不准寫——和 `.claude/agents/`、`skills/`、`commands/` 同一個目的，依「六類的差別是**目的**，不是檔案數」歸同一類。兩份得在同一張 PR 落地：`scripts/check-env.sh` 的 H1 交叉核對只有一份註冊時會輸出 `FAIL: .codex/hooks.json 不存在或不是合法 JSON` 並讓 `--ci` 非零，所以先合併其中一份會讓那張 PR 自己的 `hooks` job 變紅。判例 [#111](https://github.com/label-suite/label-suite/issues/111)。
+- **兩份 agent 註冊設定算流程設定 PR 的連帶路徑**：`.claude/settings.json` 與 `.codex/` 管的是 agent 在這個 repo 怎麼工作——哪個事件觸發哪支檢查器、哪些路徑不准寫——和 `.claude/agents/`、`skills/`、`commands/` 同一個目的，依「七類的差別是**目的**，不是檔案數」歸同一類。兩份得在同一張 PR 落地：`scripts/check-env.sh` 的 H1 交叉核對只有一份註冊時會輸出 `FAIL: .codex/hooks.json 不存在或不是合法 JSON` 並讓 `--ci` 非零，所以先合併其中一份會讓那張 PR 自己的 `hooks` job 變紅。判例 [#111](https://github.com/label-suite/label-suite/issues/111)。
   **連帶不等於夾帶**，而且這一條有程序掛勾（比照下面規則文件與 `design/system/` 兩條）：**這兩個路徑的每一處改動都要在 PR body 逐一列出，並寫明它服務的是同一個目的**。合併閘第 2 條是純路徑比對，它們一進清單就機械上全部通過，所以這個限制只能靠 PR body 的逐項說明與獨立審查把關。`settings.json` 的 `permissions` 與 `attribution` 不是接線，改它們不屬這一條。
 - **文件 PR 可以帶著它連帶修到的規則文件**，因為一份給 agent 讀的說明，它的入口本來就在 `AGENTS.md`：新增 `docs/development/` 的說明而同一張 PR 在 `AGENTS.md` 設索引，算文件 PR。判例 #224（#105：`docs/development/rules/agent-rules.mdx` ＋ `AGENTS.md` 的 Agent Rules Index）。
   索引與被索引的文件必須同一張 PR 落地，否則合併後索引會指向不存在的檔案。
   **連帶不等於夾帶**，而且這一條有程序掛勾（比照工具 PR 那條）：**規則文件的每一處改動都要在 PR body 逐一列出，並寫明它服務的是同一個目的**。合併閘第 2 條是純路徑比對，`AGENTS.md` 一進清單就機械上全部通過，所以這個限制只能靠 PR body 的逐項說明與獨立審查把關。
-  只改規則文件的 PR 仍然不屬六類，判準見上面。
+  只改規則文件的 PR 仍然不屬七類，判準見上面。
 - **文件 PR 可以順手更新那一頁已生成的視覺化元件**（不限流程圖）：條文改了而圖還是舊的，比圖沒更新更糟。判例 #200——折回 03-01 的範圍硬化規則時，同一張 PR 改了 `spec-03-01-task-list-flow.tsx` 的三行；判例 #355——PRD 清掉 19 處「未撰寫」時，同一張 PR 把 `prd-site-map.tsx` 的 19 個 `specState` 一起改成 `written`，那個檔不是 `*-flow.tsx`。
 - **文件 PR 可以同時動 `design/system/`，但只限兩種**：把這次改動打成假的既有斷言改掉，以及把本次決議記成那一頁的狀態註記。`design/system/` 是依原型寫的畫面與元件規格，裡面有 `ux-conventions.md:131` 的「**與規格不一致**」、`design-gaps.md:277` 的「規格那一條要改」這類註記，條文一改它們就不再為真，而留著一句不實的敘述比沒有敘述更糟。判例 #472——規格對齊 #423 的那張 PR，把 `design-gaps.md` 的 G-45、G-46 與 `ux-conventions.md` 的 UXC-10 從「規格未改」改成指向本次決議（第一種），並在 G-53 新增一段「規格（#434）」記下這次的用詞決議（第二種）。
   **連帶不等於夾帶**，而且這一條有程序掛勾（比照上面規則文件那條）：**`design/system/` 的每一處改動都要在 PR body 逐一列出，並寫明它屬於上面哪一種**。合併閘第 2 條是純路徑比對，`design/system/` 一進清單就機械上全部通過。**不得夾帶與這次條文改動無關的 `design/system/` 改寫**——那是設計系統 PR。
   **反過來不成立**：設計系統 PR 不因此可以動 `docs/`。
+- **程式 PR 的範圍就是那一個 change 的 `tasks.md`。** 它由 `label-suite-sdd` 的全流程產出，所以同一張 PR 裡會有程式、該 change 的 spec delta，以及 `ops` 的歸檔改動——`openspec/config.yaml` 要求歸檔與程式進同一張 PR，`AGENTS.md` §SDD Workflow 也寫明 main 不留「合併了但沒歸檔」的 change，所以那三樣是同一個目的，不是夾帶。
+  **不得夾帶 `tasks.md` 沒列的改動**——`AGENTS.md` §SDD Workflow 把 "work outside the scope of `tasks.md`" 列為要停下來的故障之一。畫面改動另有關卡：動到 `design/prototype/` 或介面的 issue，要維護者看過 artifact 才移 Ready（§Ready gate），那道關卡在 Ready 之前，不在 PR 階段。
 - **工具 PR 可以動 `docs/specs/`，但只限修掉新檢查在既有頁面上抓到的違規**，而且要在 PR body 逐一列出；**不得新增或改寫規格條文**，也不得為了讓檢查器有東西可驗而去改真正的規格頁（測試資料放 `scripts/tests/`）。
   原因在 CI：`specs` job 會在 **PR 分支上**跑 `node scripts/check-specs.mjs docs`，所以新檢查一加上去，既有頁面的違規就讓**那張工具 PR 自己**變紅；不在同一張修掉就過不了。判例 #149、#151、#152、#153 四張都是這個形狀。
 - **畫面修正 PR 可以動 `design/prototype/`，但那道關卡在 Ready 之前、不在 PR 階段**：規則本體寫在 `AGENTS.md` §Project Board and Dispatch 的 **Ready gate**，這裡不複述以免兩份漂移。要記住的是：**卡片沒有合法地走過那道關卡，就不會有這一類 PR**；畫 artifact 不等於改畫面的授權。
@@ -56,7 +59,7 @@ tags: [規格, 搬移, PR, CI]
   這一類**不動 `design/system/`**：改了畫面的用詞或控制項，依它寫成的畫面與元件規格就會過期，但那是下游工作，另開設計系統 PR——判例 #499（#473 把原型的「參考值」改成「參考線」之後，`design/system/` 三處敘述與一個行號引用的修正）。
 - **流程設定 PR** 管的是 agent 怎麼工作，不是產品要做什麼，所以它**不碰 `docs/specs/`**，只動 `openspec/`、`.claude/`（`agents/`、`skills/`、`commands/`）與 `.agents/skills/`，以及因此連帶要改的 `docs/development/` 設計文件與 `AGENTS.md`／`CLAUDE.md`。判例 #215（schema 與 `config.yaml`）、#216（十二個 agent 角色）、#217（clarify skill 的兩份副本）、#219（`/sdd` 指令與 `AGENTS.md` 的 SDD 一節）。
   **同一次流程改動連帶的規則條文可以一起改**：#219 動了 `.claude/commands/sdd.md`、`AGENTS.md`（新增 §SDD Workflow 一節）與 `docs/development/workflow/spec-authoring.md`，三個檔都服務同一個目的，所以整張歸流程設定 PR，不必拆。
-  **只改**規則文件的 PR 不屬於這六類，照本節開頭那一條走；判準也定義在那裡。
+  **只改**規則文件的 PR 不屬於這七類，照本節開頭那一條走；判準也定義在那裡。
 - 文件 PR 與流程圖 PR **不得動 `scripts/`、`package.json`、`.github/`**。搬移途中發現檢查器有缺陷時，開一張 `[Bug]` issue 與它對應的工具 PR 處理，不要夾帶。
 - **設計系統 PR 的 `design-*` skill 是連帶，不是夾帶**，而且有程序掛勾（比照下面規則文件那條）：**那兩個 skill 的每一處改動都要在 PR body 逐一列出，並寫明它服務的是同一個目的**。原因同樣是合併閘第 2 條只比對路徑——`.claude/skills/design-*` 同時落在流程設定 PR 的 `.claude/` 清單裡，機械上分不出來。只寫 skill、還沒產出 `design/system/` 的那一段（判例：#248 的第一段）仍然是流程設定 PR。
 - **任何一類都不准動的**：`docs/specs/00-prd.mdx`。要動 PRD 時回報並建議用 `prd-writing`（見[附錄 §非目標](#非目標)）。
@@ -635,3 +638,4 @@ ENOENT: no such file or directory, rename
 | 2026-11-19 | 正文只留搬移結束後仍沿用的規則；搬移期間的 D1–D10、單頁搬移通則與來源對照收進附錄，「已確認決議」的五種依據升為正文一節（[§「已確認決議」的五種依據](#已確認決議的五種依據)） | 搬移規則與現行 PR／CI 規則混排在同一份、正文前半都是搬移時期的內容 | [#481](https://github.com/label-suite/label-suite/issues/481) |
 | 2026-11-20 | 文件 PR 可以同時動 `design/system/`，限兩種（修掉被打成假的斷言、把本次決議記成該頁的狀態註記），每一處都要在 PR body 列出並寫明是哪一種；反過來不成立（[§PR 的變更範圍](#pr-的變更範圍)） | 六類表只給 `AGENTS.md`／`CLAUDE.md` 連帶條款，`design/system/` 不在文件 PR 的清單裡，#472 一度掉在文件 PR 與設計系統 PR 之間 | 維護者口頭裁定（記錄於 [#496](https://github.com/label-suite/label-suite/issues/496)），判例 [#472](https://github.com/label-suite/label-suite/pull/472) |
 | 2026-11-20 | `.claude/settings.json` 的接線與 `.codex/` 算流程設定 PR 的連帶路徑，每一處都要在 PR body 列出並寫明服務的目的；兩份註冊必須同一張 PR 落地（[§PR 的變更範圍](#pr-的變更範圍)） | 六類表的 `.claude/` 只列 `agents/`、`skills/`、`commands/`，`.codex/` 在六類表出現 0 次，#111 的兩份 hook 註冊設定兩類都收不了 | 維護者裁定（記錄於 [#111](https://github.com/label-suite/label-suite/issues/111)） |
+| 2026-11-20 | 六類表新增**程式 PR**：`backend/`、`frontend/`、`e2e/`，連帶 `openspec/changes/<change>/` 與 `openspec/specs/`（[§PR 的變更範圍](#pr-的變更範圍)） | 六類表裡 `backend/`、`frontend/`、`e2e/` 出現 0 次，所以 `issue-dispatch` 收產品程式碼之後，合併閘的逐檔比對沒有可比的清單 | 維護者裁定，記錄於 [#525](https://github.com/label-suite/label-suite/issues/525) |

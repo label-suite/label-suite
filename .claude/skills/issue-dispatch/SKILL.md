@@ -1,6 +1,6 @@
 ---
 name: issue-dispatch
-description: 掃描 Label Suite 看板上 Ready 的 issue，排出彼此不衝突的波次，用各自獨立 worktree 的 lead 平行處理，經獨立審查、開 PR、CI 通過後由主 session 合併並把卡片移到 Done。只派文件、工具與 `openspec/` 目錄下的 issue。當使用者說「派工」「跑 Ready 的 issue」「跑一波」「dispatch」，或只給一個 issue 編號要你接著做先前派出去的工作時使用。
+description: 掃描 Label Suite 看板上 Ready 的 issue，排出彼此不衝突的波次，用各自獨立 worktree 的 lead 平行處理，經獨立審查、開 PR、CI 通過後由主 session 合併並把卡片移到 Done。派文件、工具、`openspec/` 與產品程式碼的 issue；產品程式碼走 `label-suite-sdd` 的全流程。當使用者說「派工」「跑 Ready 的 issue」「跑一波」「dispatch」，或只給一個 issue 編號要你接著做先前派出去的工作時使用。
 ---
 
 # Issue Dispatch
@@ -15,23 +15,26 @@ description: 掃描 Label Suite 看板上 Ready 的 issue，排出彼此不衝�
 - 不派範圍外的 issue（見步驟 3），不處理 Critical 或 High 的資安發現。
 - 不 commit、不 push 到 `main`，不用 squash 或 rebase 合併。
 - 不改 `docs/specs/` 的需求、`docs/specs/00-prd.mdx` 或 `design/prototype/`。
-- 對 `openspec/` 的 issue 只改該目錄底下的檔案，不跑 SDD 的角色流程；那個流程怎麼接進來，見 [§待決](#待決) 第 1 列。
+- 對 `openspec/` 的 issue 只改該目錄底下的檔案，不跑 SDD 的角色流程。SDD 的角色流程是給產品程式的 issue 走的，見[步驟 5](#步驟-5-派工) 的 §SDD 類。
 
 ## 角色
 
 ```
 主 session（唯一的排程者、唯一移動卡片到 Done 的人、唯一合併的人）
-│  掃描 → 撞車檢查 → 分類 → 排波次（一波最多 3 張）
+│  掃描 → 撞車檢查 → 分類 → 排波次（一般派工最多 3 張，SDD 派工一張）
 │  一則訊息派出整波的 lead
 │
-├─ lead（general-purpose，一張 issue 一個，自己的 worktree 與分支）
+├─ 一般派工：lead（general-purpose，一張 issue 一個，自己的 worktree 與分支）
 │    寫文件、跑檢查、commit、push、留檢查點、勾 issue 的工作項
+│  └─ 審查者（general-purpose，新開的，沒寫過這份 diff）
+│       依 doc-writing 的自我檢查清單審 diff，只回報不修改
 │
-└─ 審查者（general-purpose，新開的，沒寫過這份 diff）
-     依 doc-writing 的自我檢查清單審 diff，只回報不修改
+└─ SDD 派工：沒有 lead。主 session 自己依序派 `.claude/agents/` 的各個角色
+     （`sa`→`sd`∥`ui-ux`→…→`code-reviewer`→`acceptance-verifier`→`ops`），
+     全部共用一個 issue、一個分支、一個 worktree，見步驟 5 的 §SDD 類
 ```
 
-- lead 和審查者都用 `general-purpose`。`.claude/agents/` 的角色都是 SDD 用的，文件與 `openspec/` 類沒有對應的角色。
+- 一般派工的 lead 與審查者都用 `general-purpose`：文件與 `openspec/` 類在 `.claude/agents/` 沒有對應的角色。SDD 派工相反，角色全部來自 `.claude/agents/`，而且審查用 `code-reviewer` 不用 general-purpose。
 - 模型依 `CLAUDE.md` 的檔案數：會碰到 2–9 個檔案用 Sonnet，10 個以上用 Opus，拿不準就選大的。
 - lead 的回報不是證據。主 session 自己讀 diff、讀命令輸出，才判斷能不能往下走。
 
@@ -79,11 +82,14 @@ gh pr list --state all --search "${N}" --json number,title,state,headRefName
 
 | 類別 | 條件 | 處理 |
 | :--- | :--- | :--- |
-| 派工 | 只碰 `docs/development/`、`docs/` 其他非規格文件、`.claude/`、`.github/`、`scripts/`、`openspec/`、`AGENTS.md`、`CLAUDE.md` | 進入步驟 4 |
-| 範圍外 | 改畫面（`design/`、任何介面）、改 `docs/specs/` 的需求或 PRD、產品程式（`backend/`、`frontend/`、`e2e/`） | 不留言，寫進波次報告 |
+| 一般派工 | 只碰 `docs/development/`、`docs/` 其他非規格文件、`.claude/`、`.github/`、`scripts/`、`openspec/`、`AGENTS.md`、`CLAUDE.md` | 進入步驟 4 |
+| SDD 派工 | 碰產品程式（`backend/`、`frontend/`、`e2e/`） | 走 `label-suite-sdd` 的全流程，見[步驟 5](#步驟-5-派工) 的 §SDD 類；一波只排一張 |
+| 範圍外 | 改 `design/` 底下的檔案（含 `design/prototype/`）、改 `docs/specs/` 的需求或 `00-prd.mdx` | 不留言，寫進波次報告 |
 | 需要裁定 | 需求不清、內文和留言不一致、兩種讀法會做出不同的東西、工作項要維護者決定 | 留一則檢查點說明哪裡要決定，卡片移回 Todo，寫進波次報告 |
 
-拿不準屬於哪一類，就當作範圍外。
+拿不準屬於哪一類，就當作範圍外——**但碰 `backend/`、`frontend/`、`e2e/` 的一律歸 SDD 派工**，不因為它會改到畫面就改判範圍外。
+
+**實作畫面的 `frontend/` issue 歸 SDD 派工，不是範圍外。** 「範圍外」擋的是改 `design/` 底下那份設計來源，不是擋實作它的程式。畫面改動的那道關卡在 `AGENTS.md` 的 Ready gate——維護者看過 artifact 才移 Ready——卡片已經在 Ready，那道關卡就已經過了；這個 skill 不重判，也不替它畫 artifact。
 
 ## 步驟 4 排波次
 
@@ -91,13 +97,15 @@ gh pr list --state all --search "${N}" --json number,title,state,headRefName
 
 一波是衝突圖裡最大的獨立集合，最多 3 張。
 
+**SDD 派工一波只排一張**（維護者 2026-11-20 裁定）；一般派工仍照衝突圖，一波最多 3 張。裁定限制的是 SDD 那一類的張數，沒有禁止同一波同時帶一般派工。
+
 同一波可以同時寫，但 **NoteCraft 的本機 build 不能同時跑**：快取在全機共用的 `~/.notecraft/`。lead 不跑本機 build，以 CI 的 `docs-site` job 為準；主 session 要在本機看頁面時，一次只 build 一個分支。
 
 派工前，先在對話裡寫出波次報告：候選清單、跳過的和原因、衝突圖、各波的成員。
 
 ## 步驟 5 派工
 
-一張 issue 一個 worktree、一個分支、一個 lead。
+一張 issue 一個 worktree、一個分支、一個 lead。**SDD 派工沒有 lead**，由主 session 自己依序派角色，見下面的 §SDD 類。
 
 ```bash
 N=453
@@ -126,12 +134,72 @@ git worktree add -b "${BRANCH}" "${WT}" origin/main
 - 不要用 `git stash`（stash 是全 repo 共用的）；要暫存就做 WIP commit
 - 遇到範圍外的錯誤只回報，不擴大範圍；遇到要維護者決定的事就停下來回報，不自己挑
 
+### SDD 類：由主 session 依序派各個角色
+
+產品程式的 issue 走 `label-suite-sdd` 的全流程，和一般派工有三個地方不同。
+
+1. **不交給單一 lead。** subagent 不能再派 subagent，所以 SDD 的各個角色必須由**主 session** 自己依序派出去。
+2. **所有角色共用同一個 issue、同一個分支、同一個 worktree。** 不要給 SDD 角色各自的 worktree 或各自的 issue——那條「一張 issue 一個 worktree」是用來拆開不相干的 issue 的，見 `AGENTS.md` §SDD Workflow 的 "The SDD roles share one issue and one branch"。
+3. **順序照 `openspec/config.yaml`**，不自己排：
+
+| 階段 | 順序 |
+| :--- | :--- |
+| 規劃 | `sa` 寫 system-analysis → `sd` 寫 system-design ∥ `ui-ux` 寫 ui-design → `sd` 寫 api-contract → `planner` 寫 proposal → **主 session** 以 `clarify` skill 的關卡模式寫 clarification → `planner` 寫 specs 與 design → `planner` 寫 tasks → `design-reviewer` 審閱、`planner` 回修 |
+| 實作 | 依 `tasks.md` 的標記一組一組派給 `backend-developer`／`frontend-developer`／`dba`／`technical-writer`；每完成一組就提交一次，不累積到最後 |
+| 收尾 | `code-reviewer` 審查、實作角色修 → `acceptance-verifier` 寫 `acceptance.md` → `ops` 跑 `/opsx:archive`，歸檔 commit push 進**同一張已開的 PR**，然後才走步驟 7 |
+
+PR 的開法照步驟 6，但時機不同：**實作期間就先開**，不等歸檔。`openspec/config.yaml` 要求歸檔改動與程式進同一張 PR，所以 PR 必須在 `ops` 動手之前就存在；開完就把卡片移到 In Review，之後 `code-reviewer`、`acceptance-verifier` 與 `ops` 的 commit 都 push 進它。
+
+驗證指令照 `openspec/config.yaml` 的 `operations.apply.guidance`：動到 `backend/` 或 `frontend/` 時各有自己的 lint、型別、測試與契約漂移檢查，照那裡寫的指令跑。
+
+**後端還沒有 CI job**（屬 [#506](https://github.com/label-suite/label-suite/issues/506)）。在它合併之前，CI 不跑 `pytest`，所以**實作角色的本機測試輸出是唯一證據**：把輸出貼進 PR 的 Test Plan，不要只寫「通過」。步驟 7 的 job 清單不因此放寬——它要求的是**每一個**既有 job 都綠，不是某個數字。
+
+### clarification 有 Q 項時怎麼停
+
+`clarification.md` 沒有 Q 項就一路做到合併，不問（維護者 2026-11-20 裁定）。有 Q 項就停，而且停的方式和「需要裁定」那一類不同：
+
+1. 把每一題以檢查點留言貼在 issue 上，格式見下。
+2. 卡片**留在 In Progress**，不要移回 Todo——規劃已經做了一半，移回去下一輪會從頭重做。
+3. 派工改做別張，不要等在這裡。
+4. 維護者在 issue 回覆後，下一輪循環從該檢查點接著做。
+
+每一題三個欄位，題目、選項、建議答案：
+
+```markdown
+<!-- issue-dispatch checkpoint -->
+### 🤖 issue-dispatch 檢查點：clarification 的 Q 項
+
+- **Q1 <題目>**
+  - 選項：A …／B …／C …
+  - 建議答案：A，一句理由
+- **Q2 <題目>**
+  - 選項：…
+  - 建議答案：…
+- **接續點**：回覆後從 `clarification.md` 的 Q 項回修開始，規劃不重跑
+- **分支 · worktree**：`feat/…` · `.claude/worktrees/issue-N-…`
+```
+
+**重入時怎麼判斷維護者已經回覆**：找到最後一則 `issue-dispatch` 檢查點，往後讀，三個條件都成立才算已回覆：
+
+1. 留言**不帶**檢查點的 HTML 錨點（那是這個 skill 自己留的）。
+2. 留言的 `authorAssociation` 是 `OWNER`、`MEMBER` 或 `COLLABORATOR`。**這個 repo 是公開的**，任何帳號都能在 issue 留言，少了這道門檻，一則外部留言就會被當成裁定帶著跑完實作到合併。
+3. 留言逐題回答了，而且對得上題號。
+
+```bash
+gh issue view <N> --json comments \
+  -q '.comments[] | select(.authorAssociation == "OWNER" or .authorAssociation == "MEMBER" or .authorAssociation == "COLLABORATOR") | "\(.createdAt) \(.author.login): \(.body)"'
+```
+
+**身分門檻擋得住外部帳號，擋不住 agent。** agent 是用維護者的帳號留言的（`authorAssociation` 同樣是 `MEMBER`），所以第 2 條只排除外人，不能證明是本人回的。**拿不準就當成還沒回覆**，卡片留在 In Progress，不要往下走。
+
+只有部分題目有答案時，先做答案涵蓋得到的部分，剩下的留一則新檢查點再問；**不要替沒答到的題目挑一個答案**——那是 `AGENTS.md`「Conflicts are not yours to settle」擋的事。
+
 ## 步驟 6 審查與開 PR
 
 lead 回報後：
 
 1. 主 session 用 `git -C <worktree> diff origin/main...HEAD` 讀完整個 diff，對照 issue 的工作項。不用 `cd` 進 lead 的 worktree。
-2. 另開一個新的 general-purpose 審查者。prompt 只給 issue 編號、worktree 路徑和「依 `.claude/skills/doc-writing/SKILL.md` 步驟 5 的清單，以及 `AGENTS.md` §Review Guidelines 審查 `origin/main...HEAD`」，不給主 session 自己的看法。`openspec/` 的 diff 改依 `openspec/config.yaml` 的規則，加上 `AGENTS.md` §Review Guidelines 審查，不用 `doc-writing` 的清單；diff 裡 `docs/` 的部分仍用 `doc-writing` 步驟 5。
+2. 另開一個新的審查者。**程式類改派 `code-reviewer`，不用 `doc-writing` 的清單**——它要看的是分層、型別與契約同步，見 `.claude/agents/code-reviewer.md`。文件與 `openspec/` 類用新開的 general-purpose 審查者。prompt 只給 issue 編號、worktree 路徑和「依 `.claude/skills/doc-writing/SKILL.md` 步驟 5 的清單，以及 `AGENTS.md` §Review Guidelines 審查 `origin/main...HEAD`」，不給主 session 自己的看法。`openspec/` 的 diff 改依 `openspec/config.yaml` 的規則，加上 `AGENTS.md` §Review Guidelines 審查，不用 `doc-writing` 的清單；diff 裡 `docs/` 的部分仍用 `doc-writing` 步驟 5。
 3. 主 session 逐條核對審查意見。Critical 或 High 就用 `SendMessage` 交回原本的 lead 修，修完再審一次；Medium 或 Low 寫進 PR 的「非阻擋」，但違反 `doc-writing` 鐵律的（例如來源沒有的理由、正文寫出來源 repo）即使是 Medium 也在合併前交回 lead 修，主 session 讀修正的 diff 確認即可，不必重審；真的有問題但在範圍外的，另開 issue，在 PR 裡寫出編號。
 4. 開 PR。body 先寫進 scratchpad 的檔案，再用 `--body-file` 傳：
 
@@ -160,6 +228,14 @@ gh pr view <pr> --json mergeable,mergeStateStatus,headRefOid,statusCheckRollup
   `gh run list --branch <branch> --json status,headSha --jq '[.[]|select(.headSha=="<sha>" and .status!="completed")]|length'` 要是 `0`
 - 審查已經通過，issue 的工作項和 PR 的 Test Plan 全部勾完
 
+程式類（SDD 派工）另外要全部成立：
+
+- `code-reviewer` 審查通過，阻斷意見都已修
+- `acceptance-verifier` 的 `acceptance.md` 判定通過
+- `ops` 已經跑完 `/opsx:archive`，而且歸檔改動就在**這一張 PR** 裡——`AGENTS.md` §SDD Workflow 要求 main 不留「合併了但還沒歸檔」的 change
+
+程式類 PR 屬 **程式 PR** 這一類，範圍見 [spec-migration.mdx 的 §PR 的變更範圍](../../../docs/development/workflow/spec-migration.mdx)：`backend/`、`frontend/`、`e2e/`，連帶該 change 的 `openspec/changes/<change>/` 與 `openspec/specs/`。逐檔比對照那張表走。
+
 ```bash
 gh pr merge <pr> --merge
 ```
@@ -170,7 +246,7 @@ CI 紅了就修、再 push，最多兩次。第三次還紅，就留一則附上
 
 ## 步驟 8 檢查點留言
 
-每到一個階段就留一則：派工、待審查、審查結果、PR 已開、已合併、卡住。
+每到一個階段就留一則：派工、待審查、審查結果、PR 已開、已合併、卡住，以及 SDD 類的「clarification 的 Q 項」（格式見[步驟 5](#步驟-5-派工)）。
 
 ```markdown
 <!-- issue-dispatch checkpoint -->
@@ -248,11 +324,12 @@ gh project item-edit --project-id PVT_kwDOEWdNqs4BoCOI --id "$ITEM" \
 | ADR 的 lead 會自己補理由與「考慮過的選項」，來源其實沒有（試跑 #453） | 獨立審查第一項就核對每個理由與選項的出處；派工 prompt 寫明「來源沒有的理由不寫」 |
 | ADR 編號與個人 repo 的 ADR 編號撞號（本 repo ADR-007 ≠ 個人 repo ADR-007），舊文件裡裸寫的「ADR-007」會變成歧義（試跑 #453） | 動到的文件裡，個人 repo 的 ADR 一律寫成「個人 repo ADR-0xx」 |
 
-## 待決
+## 決策紀錄
 
-| # | 問題 | 卡住什麼 | 誰決定 |
+| 日期 | 決策 | 取代了什麼 | 來源 |
 | :--- | :--- | :--- | :--- |
-| 1 | 產品程式的 SDD change 要怎麼接進來：停點二取消之後，誰歸檔、什麼時候歸檔 | 程式類的派工（`backend/` 出現之後），以及 `openspec/` 的 issue 要不要跑 SDD 角色流程 | 維護者，見 [#464](https://github.com/label-suite/label-suite/issues/464) |
+| 2026-11-19 | 驗收不再停下來等維護者；`ops` 在合併前跑 `/opsx:archive`，歸檔改動與程式進同一張 PR（[步驟 5](#步驟-5-派工) 的 §SDD 類、[步驟 7](#步驟-7-合併)） | §待決 原本第 1 列：「產品程式的 SDD change 要怎麼接進來：誰歸檔、什麼時候歸檔」 | [#464](https://github.com/label-suite/label-suite/issues/464) |
+| 2026-11-20 | 六類 PR 新增**程式 PR**（`backend/`、`frontend/`、`e2e/`，連帶該 change 的 `openspec/` 產出），見 `spec-migration.mdx`；派工範圍加入產品程式碼，走 `label-suite-sdd` 全流程；clarification 有 Q 項就以檢查點留言停在 In Progress，派工改做別張；程式類一波只排一張（[步驟 3](#步驟-3-分類)、[步驟 4](#步驟-4-排波次)、[步驟 5](#步驟-5-派工)） | 「只派文件、工具與 `openspec/` 目錄下的 issue」，以及把產品程式算成範圍外 | [#525](https://github.com/label-suite/label-suite/issues/525) |
 
 ## 附錄：與原 skill 的對照
 
@@ -267,12 +344,12 @@ gh project item-edit --project-id PVT_kwDOEWdNqs4BoCOI --id "$ITEM" \
 | 不用 `git stash`、不 `cd` 進 worktree、用 merge 不用 rebase、拿到 PR 編號當輪就啟動監看 | 沿用 | 原 skill 實際踩過的坑 |
 | `agent-ready`／`agent-running`／`blocked` 標籤 | 改成看板的 Ready / In Progress，以及 blocked-by 依賴 | `AGENTS.md`：不用標籤追蹤狀態 |
 | 標籤就代表預先授權合併 | 改成卡片在 Ready 就代表授權 | 授權寫在 `AGENTS.md` 的 Dispatch 一條 |
-| `senior-qa` 寫 Red、`senior-*` 寫 Green 的 TDD 流程 | 不搬 | 第一版只派文件與 `openspec/` 類，沒有程式可以測 |
+| `senior-qa` 寫 Red、`senior-*` 寫 Green 的 TDD 流程 | 不搬 | 本 repo 的程式類走 `label-suite-sdd` 的角色，TDD 寫在 `backend-developer`、`frontend-developer` 各自的角色定義裡，不另設 Red／Green 的分工 |
 | 審查者 `senior-code-reviewer` 或 Codex | 改成新開的 general-purpose，依 `doc-writing` 的清單審查 | 本 repo 沒有審文件的角色；維護者選了 Claude |
 | Codex companion 的 Green 與審查 | 不搬 | 本 repo 沒有 `scripts/codex-companion.sh` |
-| Playwright port、每波最多兩個完整套件 | 不搬；改成 NoteCraft build 一次只跑一個 | `frontend/`、`e2e/` 還不存在；本 repo 會衝突的是全機共用的 NoteCraft 快取 |
+| Playwright port、每波最多兩個完整套件 | 不搬；改成 NoteCraft build 一次只跑一個，程式類一波只排一張 | `e2e/` 還不存在（`frontend/` 已落地）；本 repo 會衝突的是全機共用的 NoteCraft 快取 |
 | `specs/STATUS.md`、規格版本號、FR/AC 編號的分配 | 不搬 | 本 repo 沒有這些 |
-| OpenSpec 路徑與 MAJOR 停點 | 不搬；`openspec/` 目錄的 issue 可派，但只改該目錄的檔案，不跑 SDD 角色流程 | SDD 流程怎麼接進來，見待決 |
+| OpenSpec 路徑與 MAJOR 停點 | 不搬 MAJOR 停點；`openspec/` 目錄的 issue 可派但只改該目錄的檔案、不跑角色流程，產品程式的 issue 才走全流程 | 唯一的人工停點是 clarification 的 Q 項，見[步驟 5](#步驟-5-派工) |
 | stacked PR、pre-tool-use hook、`claude-progress.md` 的例外 | 不搬 | 本 repo 都沒有 |
 | `pr-flow` 的視覺變更摘要 | 不搬 | 本 repo 沒有 `pr-flow`；改畫面的 issue 本來就不派 |
 | 與 `doc-writing` 步驟 6「本機 build 並在瀏覽器看過」的差異 | lead 不跑本機 build，以 CI `docs-site` 為準 | 無人值守時沒有人看瀏覽器，同時 build 也會互相干擾 |
