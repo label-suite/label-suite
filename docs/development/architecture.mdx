@@ -318,7 +318,7 @@ Redis 7 同時當 broker、result backend 與應用快取，用 DB 編號隔開�
 | 元件庫 | shadcn/ui 當原語，元件以原始碼形式放進 `components/ui/`；不用 Storybook，改用元件展示頁 |
 | 元件展示頁 | 一頁只在開發時開的頁面，列出 `components/ui/` 與標記 widget 的各個 variant，並配一支完整性測試；理由見 [ADR-005 的 D3](adr/005-frontend-architecture.mdx#d3-元件庫用-shadcnui) |
 | 圖示 | **只用** Lucide（`lucide-react`）。不得加入其他圖示庫，不得用 emoji 或自己畫的 SVG 當圖示 |
-| design token | 只用語意 token；`frontend/src/styles/` 寫一層對照，把 shadcn 的語意變數指向 `design/prototype/assets/tokens.css`，**`tokens.css` 仍是唯一色值來源**。shadcn 元件不改寫 |
+| design token | 只用語意 token；`frontend/src/styles/` 寫一層對照，把 shadcn 的語意變數指向 `design/prototype/assets/tokens.css`，**`tokens.css` 仍是唯一色值來源**。為了加 variant 可以改原語，但原語只用語意變數；shadcn 沒有的語意（`--cta`、`--success` 這類）在對照層新增 |
 | 畫面狀態 | 每個資料區塊都要寫出 loading、error、empty、無權限（403）四種狀態與被遮蔽欄位的呈現，由 OpenSpec 的 `ui-design` 負責 |
 | onboarding | 做空狀態與情境提示；不做導覽與角色導向漸進揭露 |
 
@@ -464,3 +464,4 @@ ADR 引用的 FR-131、admin-007、spec 013 這類編號屬於個人 repo，本 
 | 2026-11-20 | 人讀的錯誤訊息從 `detail` 改成外層的 `message`（[§i18n 兩層](#i18n-兩層)） | `ErrorResponse` 的 `detail` | [#503](https://github.com/label-suite/label-suite/issues/503) |
 | 2026-11-20 | 不用 Storybook，改用元件展示頁（[§前端](#前端)） | §待決 第 2 列「ADR-016 的 Storybook 要不要用」 | [#503](https://github.com/label-suite/label-suite/issues/503) |
 | 2026-11-20 | i18n 兩層的理由寫進 [ADR-003 的 D11](adr/003-backend-architecture.mdx#d11-i18n-分前端與後端兩層)，本文只留做法（[§i18n 兩層](#i18n-兩層)） | —（理由原本沒有落點，效力總表第 026 列只寫「沿用」） | [#513](https://github.com/label-suite/label-suite/issues/513) |
+| 2026-11-20 | 允許改 `components/ui/` 的 shadcn 原語加 variant，原語只用語意變數，shadcn 沒有的語意在對照層新增（[§前端](#前端)） | 原本寫「shadcn 元件不改寫」 | [#505](https://github.com/label-suite/label-suite/issues/505) 的 Q9 裁定，記錄於 [#527](https://github.com/label-suite/label-suite/issues/527) |
