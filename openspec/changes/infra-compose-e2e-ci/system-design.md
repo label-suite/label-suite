@@ -18,7 +18,7 @@
 ├─ .dockerignore                 新增：前端映像以 repo 根為 build context，排除 node_modules、.git、docs/ 等，只放進 frontend/、design/prototype/assets/、e2e/package.json 與 workspace 檔
 ├─ .semgrep/
 │  ├─ label-suite.yml            新增：專案禁令規則（CORS 萬用來源、寫死的 secret）
-│  └─ tests/                     新增：Semgrep 規則的回歸樣本（ruleid／ok 標註）
+│  └─ tests/                     新增：Semgrep 規則的回歸樣本（ruleid／ok 標註）；其中 label-suite.yml 是指向 ../label-suite.yml 的符號連結（semgrep --test 以同目錄同檔名配對樣本與規則）；因此掃描一律指定 --config .semgrep/label-suite.yml，不載入整個目錄，否則規則會被載入兩次
 ├─ coverage-baseline.json        新增：覆蓋率基準，前後端各一段（見 D12）
 ├─ package.json                  修改：加根目錄指令 bootstrap、dev、api:sync、check（Q11；不用 setup，避免撞 pnpm 內建指令）
 ├─ pnpm-workspace.yaml           修改：packages 加入 e2e
@@ -266,7 +266,7 @@ job 依序：`cp .env.example .env` → `docker compose config --quiet` 驗兩�
 | `frontend`         | pnpm install → `pnpm --filter frontend lint`（零警告，含 F1 分層與 `no-unknown-files`）→ `typecheck` → `test:coverage` → build → 上傳 coverage summary（`if-no-files-found: error`）                                                                                                                                                                                                                   | lint 有任何 error 或 warning、型別錯誤、測試失敗、建置失敗                                 | Q4、Q8、Q9  |
 | `api-contract`     | uv sync、pnpm install → 後端匯出 → `git diff --exit-code` 與 `git status --porcelain` 檢查 `backend/openapi.json` → 前端重產 → 同樣檢查 `frontend/src/api/generated`                                                                                                                                                                                                                                   | 任何一處有差異或新檔，並列出檔名                                                           | —           |
 | `coverage`         | `needs: [backend-sqlite, backend-postgres, frontend]` → checkout（`fetch-depth: 0`）→ `git show origin/<base_ref>:coverage-baseline.json` → 下載 artifact 到同一目錄 → `coverage combine .coverage.sqlite .coverage.postgres` → `coverage json` → `check-coverage.mjs`（PR 基準、base 基準、有 `coverage-baseline-lower` 標籤時加 `--allow-lower`）→ 上升時上傳 artifact `coverage-baseline-suggested` | PR 基準比 base 低且沒有標籤；任一指標低於 PR 基準減容許誤差；PR 基準檔缺失                 | Q7、Q8、R-A |
-| `semgrep`          | Semgrep 官方容器映像（版本鎖定）→ `semgrep --test .semgrep/`（規則自己的回歸）→ `semgrep scan --error --config .semgrep/ backend/ frontend/ e2e/`                                                                                                                                                                                                                                                      | 規則回歸失敗；任何發現即失敗（`--error`）；只有兩條專案禁令                                | Q6          |
+| `semgrep`          | Semgrep 官方容器映像（版本鎖定）→ `semgrep --test .semgrep/`（規則自己的回歸）→ `semgrep scan --error --config .semgrep/label-suite.yml backend/ frontend/ e2e/`                                                                                                                                                                                                                                       | 規則回歸失敗；任何發現即失敗（`--error`）；只有兩條專案禁令                                | Q6          |
 | `changes`          | checkout（`fetch-depth: 0`）→ `node scripts/ci-changed-paths.mjs --base <sha> --head <sha>` → 輸出 compose 相關檔案是否變動（D13）                                                                                                                                                                                                                                                                     | 腳本本身出錯；base 取不到時輸出「有變動」而不是失敗                                        | Q9          |
 | `compose`          | `needs: changes`，有變動才跑；印 Compose 版本 → 反向檢查 → `up --build --wait --wait-timeout 300`；見 D7                                                                                                                                                                                                                                                                                               | Compose 低於下限；反向檢查沒有失敗；任一服務不健康或逾時；經 nginx 的健康檢查回應不是 `ok` | Q1、Q2、Q9  |
 | `scripts-tests`    | 不設 `needs` → `node --test` 跑五支新腳本的測試（D13）                                                                                                                                                                                                                                                                                                                                                 | 任一腳本測試失敗                                                                           | —           |
@@ -625,7 +625,7 @@ sequenceDiagram
     SG-->>Job: 非 0
     Job-->>PR: 失敗（規則壞了）
   else 規則正常
-    Job->>SG: scan --error --config .semgrep/ backend/ frontend/ e2e/
+    Job->>SG: scan --error --config .semgrep/label-suite.yml backend/ frontend/ e2e/
     alt 有發現
       SG-->>Job: 非 0，列出檔案、行號、規則 id
       Job-->>PR: 失敗
