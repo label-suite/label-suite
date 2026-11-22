@@ -1,5 +1,9 @@
 node_modules/
 
+# Leftovers of the frontend layer-boundary probe tests (probes in pages/ and components/) if interrupted
+frontend/src/pages/**/boundary-probe.tsx
+frontend/src/components/boundary-probe.tsx
+
 # Agent worktrees (issue-dispatch creates one per issue)
 .claude/worktrees/
 

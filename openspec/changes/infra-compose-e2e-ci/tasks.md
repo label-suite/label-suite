@@ -8,9 +8,9 @@
 
 ## 2. 前端 lint 零警告與覆蓋率範圍
 
-- [ ] 2.1 依 system-design D9 與 design D8，把 `frontend/package.json` 的 `lint` 改成 `eslint . --max-warnings 0`，並在既有的邊界探針測試加一個案例：以覆寫設定把分層規則設為 `warn`、讓 `components/` 匯入 `pages/`，斷言在零警告門檻下判定為失敗。`.gitignore` 加 `frontend/src/pages/**/boundary-probe.tsx`。完成判定：`pnpm --filter frontend lint` 以 0 結束且輸出無警告；`pnpm --filter frontend test` 通過；對應 spec `frontend-code-boundaries`「lint 不容許警告」三個 Scenario [@frontend-developer]
-- [ ] 2.2 依 system-design D12 與 Q8 修改 `frontend/vitest.config.ts`：coverage 加 `json-summary` reporter，`include` 改成 `src/**`，排除 `src/api/generated/**`、`src/test/**`、`**/*.test.{ts,tsx}`、`**/*.d.ts`、`*.config.*`、`dist/**`。完成判定：`pnpm --filter frontend test:coverage` 產生 `coverage/coverage-summary.json`，報告不含 `src/api/generated/` 與 `src/test/` 的檔案；暫時新增一個沒有測試的 `src/lib/` 檔時 statements 下降（驗證後移除該檔）[@frontend-developer]
-- [ ] 2.3 依 design R6 以 TDD 加一支單元測試：`VITE_API_BASE_URL` 為空字串時，健康檢查呼叫的網址是同源的 `/api/v1/health`。若現有程式組出的網址不對，停下回報，不改產品程式（design R5）。完成判定：`pnpm --filter frontend test` 通過、`pnpm --filter frontend typecheck` 通過 [@frontend-developer]
+- [x] 2.1 依 system-design D9 與 design D8，把 `frontend/package.json` 的 `lint` 改成 `eslint . --max-warnings 0`，並在既有的邊界探針測試加一個案例：以覆寫設定把分層規則設為 `warn`、讓 `components/` 匯入 `pages/`，斷言在零警告門檻下判定為失敗。`.gitignore` 加 `frontend/src/pages/**/boundary-probe.tsx`。完成判定：`pnpm --filter frontend lint` 以 0 結束且輸出無警告；`pnpm --filter frontend test` 通過；對應 spec `frontend-code-boundaries`「lint 不容許警告」三個 Scenario [@frontend-developer]
+- [x] 2.2 依 system-design D12 與 Q8 修改 `frontend/vitest.config.ts`：coverage 加 `json-summary` reporter，`include` 改成 `src/**`，排除 `src/api/generated/**`、`src/test/**`、`**/*.test.{ts,tsx}`、`**/*.d.ts`、`*.config.*`、`dist/**`。完成判定：`pnpm --filter frontend test:coverage` 產生 `coverage/coverage-summary.json`，報告不含 `src/api/generated/` 與 `src/test/` 的檔案；暫時新增一個沒有測試的 `src/lib/` 檔時 statements 下降（驗證後移除該檔）[@frontend-developer]
+- [x] 2.3 依 design R6 以 TDD 加一支單元測試：`VITE_API_BASE_URL` 為空字串時，健康檢查呼叫的網址是同源的 `/api/v1/health`。若現有程式組出的網址不對，停下回報，不改產品程式（design R5）。完成判定：`pnpm --filter frontend test` 通過、`pnpm --filter frontend typecheck` 通過 [@frontend-developer]
 
 ## 3. 安全掃描規則與相依套件掃描（可平行）
 
