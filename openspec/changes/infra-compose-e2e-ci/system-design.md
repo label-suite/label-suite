@@ -4,7 +4,7 @@
 
 三件已裁定的事照裁定寫、不列待決（維護者 2026-11-10，`architecture.mdx` §決策紀錄）：**模組內分層** `app/modules/<module>/`、成功回應**包一層 envelope**、路徑前綴 **`/api/v1`**。本 change 不改這三件的任何行為，只拿它們當檢查與健康檢查的目標。
 
-**設計與待決問題的關係**：system-analysis 的 16 條待決問題與本文新發現的 N1–N4，已由維護者於 2026-11-22 在 `clarification.md` 逐題裁定（Q1–Q15，全數採建議答案）；本文已依裁定回修，不再有「依待決 #n，未定」的切換點。對照表在 [§技術待決問題](#技術待決問題)。唯一還開著的是 N5，那是技術風險，交給 apply 第一個後端群組驗證。
+**設計與待決問題的關係**：system-analysis 的 16 條待決問題與本文新發現的 N1–N4，已由維護者於 2026-11-22 在 `clarification.md` 逐題裁定（Q1–Q15，全數採建議答案）；規劃審查時維護者再於 2026-11-22 裁定 R-A（覆蓋率基準只能持平或上升）與 R-B（驗收條件 6 的 `AGENTS.md` 部分移給 #523）。本文已依裁定回修，不再有「依待決 #n，未定」的切換點。對照表在 [§技術待決問題](#技術待決問題)。還開著的是 N5、N6，都是技術風險，交給 apply 驗證。
 
 ## 分層與類別
 
@@ -15,20 +15,21 @@
 ├─ docker-compose.yml            新增：Lite 層，預設 SQLite；只有 frontend 對外（architecture.mdx §技術選型 目錄結構）
 ├─ docker-compose.prod.yml       新增：正式層，PostgreSQL；獨立檔，不疊加在 Lite 上（見 §關鍵設計細節 D2）
 ├─ .env.example                  新增：每個設定一行、Lite 可直接用的預設值、不含 secret（Hard Rule 8、B10）
-├─ .dockerignore                 新增：前端映像以 repo 根為 build context，排除 node_modules、.git、docs/ 等，只放進 frontend/、design/prototype/assets/ 與 workspace 檔
+├─ .dockerignore                 新增：前端映像以 repo 根為 build context，排除 node_modules、.git、docs/ 等，只放進 frontend/、design/prototype/assets/、e2e/package.json 與 workspace 檔
 ├─ .semgrep/
 │  ├─ label-suite.yml            新增：專案禁令規則（CORS 萬用來源、寫死的 secret）
 │  └─ tests/                     新增：Semgrep 規則的回歸樣本（ruleid／ok 標註）
 ├─ coverage-baseline.json        新增：覆蓋率基準，前後端各一段（見 D12）
 ├─ package.json                  修改：加根目錄指令 bootstrap、dev、api:sync、check（Q11；不用 setup，避免撞 pnpm 內建指令）
 ├─ pnpm-workspace.yaml           修改：packages 加入 e2e
-├─ .gitignore                    修改：加 frontend/src/pages/**/boundary-probe.tsx、e2e 的報告與結果目錄、.env
+├─ .gitignore                    修改：加 frontend/src/pages/**/boundary-probe.tsx、e2e 的報告與結果目錄、backend/test-results/、.env
 ├─ scripts/
 │  ├─ dev.mjs                    新增：同時起後端 uvicorn 與前端 Vite，轉送訊號，任一方結束就全部結束
 │  ├─ check.mjs                  新增：依固定順序跑本機自查；每一步印出名稱與結果，第一個失敗就以非 0 結束
 │  ├─ check-coverage.mjs         新增：讀前後端覆蓋率摘要，與根目錄 coverage-baseline.json 比較（Q7）
 │  ├─ check-junit-skips.mjs      新增：讀 pytest 的 JUnit XML，skipped 不為 0 就失敗（PostgreSQL 那一輪用）
-│  └─ tests/                     新增上面三支腳本的 node --test 回歸測試（沿用 scripts/tests/ 的慣例）
+│  ├─ ci-changed-paths.mjs       新增：changes job 的路徑過濾判斷，輸出 compose 要不要跑（D13）
+│  └─ tests/                     新增上面五支腳本的 node --test 回歸測試（沿用 scripts/tests/ 的慣例）
 ├─ .github/workflows/ci.yml      修改：既有四個 job 不動，新增 job（見 §CI job 設計）
 ├─ backend/
 │  ├─ Dockerfile                 新增：多階段，uv 安裝鎖定依賴，非 root 執行；之後 worker 共用（ADR-008 D2）
@@ -144,22 +145,23 @@ flowchart LR
 
 ### 元件清單
 
-| 元件                                   | 種類     | 職責                                                                                                                                                                                                                                                                                                                                                    | 依據                                                                    |
-| :------------------------------------- | :------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :---------------------------------------------------------------------- |
-| `backend/Dockerfile`                   | 映像     | builder 階段用 uv 依 `uv.lock` 安裝（`uv sync --locked --no-dev`），runtime 階段 `python:3.12-slim`、非 root 使用者、`WORKDIR /app`；預設 CMD 是 uvicorn。同一個映像也跑 migrate，之後也跑 worker                                                                                                                                                       | ADR-008 D2；Hard Rule 3（不用 pip install）                             |
-| `frontend/Dockerfile`                  | 映像     | build context 是 repo 根（要讀 `pnpm-lock.yaml`、`pnpm-workspace.yaml`、`design/prototype/assets/tokens.css`）；node 階段 `pnpm install --frozen-lockfile --filter frontend...` 再 `pnpm --filter frontend build`，`VITE_API_BASE_URL` 以 build arg 傳入；runtime 階段 `nginx:alpine` 服務 `/dist`                                                      | `architecture.mdx` §部署與維運 表「image」；frontend-skeleton design D8 |
-| `frontend/nginx.conf`                  | 設定     | `try_files $uri /index.html`；`location /api/v1/` 反向代理到 `backend:8000`（`proxy_set_header Host`、`X-Forwarded-*`）與安全標頭。前端是唯一公開入口                                                                                                                                                                                                   | ADR-008 D1；Q2                                                          |
-| `.dockerignore`（根）                  | 設定     | 讓前端 build context 只含 `frontend/`、`design/prototype/assets/`、`package.json`、`pnpm-lock.yaml`、`pnpm-workspace.yaml`；其餘（`.git`、`docs/`、`backend/`、`node_modules`、`.claude/`、`.env`）排除                                                                                                                                                 | 縮小 context、避免 `.env` 進映像（Hard Rule 8）                         |
-| `docker-compose.yml`                   | 編排     | Lite：`migrate`、`backend`、`frontend` 三個服務，一個具名 volume                                                                                                                                                                                                                                                                                        | ADR-003 D7；`architecture.mdx` §資料庫雙層                              |
-| `docker-compose.prod.yml`              | 編排     | 正式：再加 `db`（`postgres:16`）與 `pg-data` volume；`backend`、`migrate` 帶 `DATABASE_URL`；與 Lite 一樣不含 Redis 與 worker，只有 frontend 發布埠                                                                                                                                                                                                     | ADR-008 D1；B7                                                          |
-| `.env.example`                         | 設定範例 | 見 [§設定範例檔](#設定範例檔)                                                                                                                                                                                                                                                                                                                           | Hard Rule 8；B10；#504 Q1；#505 交接的兩個值                            |
-| `scripts/dev.mjs`                      | 根指令   | 讀根目錄 `.env`（Node 內建 `process.loadEnvFile`，不加依賴），補上本機預設值，起 `uv run uvicorn … --reload` 與 `pnpm --filter frontend dev`；任一子程序結束或收到 SIGINT／SIGTERM 就結束另一個並以其退出碼結束                                                                                                                                         | Q11（`dev` 起本機開發伺服器）                                           |
-| `scripts/check.mjs`                    | 根指令   | 依 [§本機自查的步驟](#本機自查的步驟) 順序執行，印出每步名稱、耗時、結果；需要 PostgreSQL 的那一步在沒有 `TEST_DATABASE_URL` 時**明確印出「已跳過」**，不默默略過（T11）                                                                                                                                                                                | Q11                                                                     |
-| `scripts/check-coverage.mjs`           | 檢查器   | 讀 `backend/coverage.json` 的 `totals.percent_covered` 與 `frontend/coverage/coverage-summary.json` 的 statements／branches，和根目錄 `coverage-baseline.json` 比（前後端各一段），低於基準減 0.1 個百分點就失敗並印出層、指標、基準、實測；高於基準超過容許誤差時印出「可更新基準」提示，不失敗                                                        | ADR-007 D2；T10；Q7、Q8                                                 |
-| `scripts/check-junit-skips.mjs`        | 檢查器   | 讀 pytest `--junitxml` 輸出，加總 `skipped`，不為 0 就失敗並列出被跳過的測試名                                                                                                                                                                                                                                                                          | T11；`openspec/config.yaml` 第 113 行「這次應為 0 skipped」             |
-| `.semgrep/label-suite.yml`             | 規則     | `label-suite-cors-wildcard-origin`：`CORSMiddleware(..., allow_origins=[..., "*", ...])` 與等價寫法；`label-suite-hardcoded-secret`：Python 與 TypeScript 中名稱符合 `(?i)(api_?key\|secret\|token\|password)` 的變數或參數被指派非空字串常值                                                                                                           | `architecture.mdx` §部署與維運 摺疊區；Hard Rule 7、8；S2               |
-| `e2e/playwright.config.ts`             | 測試設定 | `baseURL` 取 `E2E_BASE_URL`、後端位址取 `E2E_API_URL`，未設時的本機預設值**全專案只寫在這一處**；`use.locale` 固定 `zh-TW`；`webServer` 起後端（SQLite 暫存檔）與前端開發伺服器，兩者的埠、`CORS_ALLOWED_ORIGINS`、`VITE_API_BASE_URL` 都由這兩個 URL 推導（D8a）；`reuseExistingServer` 本機為真、CI 為假；`retries` CI 1 次、本機 0；失敗時保留 trace | T8；ADR-007 D4                                                          |
-| `e2e/system-health/dev-health.spec.ts` | e2e      | `page.goto` 前端 `HEALTH_PATH` 那條開發路由（相對 baseURL）→ 依 D8b 的觀察契約斷言；條件式等待，不用 `waitForTimeout`，不新增 `data-testid`                                                                                                                                                                                                             | T8；frontend-routing 兩條 requirement                                   |
+| 元件                                   | 種類     | 職責                                                                                                                                                                                                                                                                                                                                                                                                                                           | 依據                                                                    |
+| :------------------------------------- | :------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------- |
+| `backend/Dockerfile`                   | 映像     | builder 階段用 uv 依 `uv.lock` 安裝（`uv sync --locked --no-dev`），runtime 階段 `python:3.12-slim`、非 root 使用者、`WORKDIR /app`；預設 CMD 是 uvicorn。同一個映像也跑 migrate，之後也跑 worker                                                                                                                                                                                                                                              | ADR-008 D2；Hard Rule 3（不用 pip install）                             |
+| `frontend/Dockerfile`                  | 映像     | build context 是 repo 根（要讀 `pnpm-lock.yaml`、`pnpm-workspace.yaml`、`design/prototype/assets/tokens.css`）；node 階段先複製 workspace 內**每個**套件的 `package.json`（含 `e2e/package.json`，否則 lockfile 的 importer 對不上、`--frozen-lockfile` 會失敗）再 `pnpm install --frozen-lockfile --filter frontend...`，接著 `pnpm --filter frontend build`，`VITE_API_BASE_URL` 以 build arg 傳入；runtime 階段 `nginx:alpine` 服務 `/dist` | `architecture.mdx` §部署與維運 表「image」；frontend-skeleton design D8 |
+| `frontend/nginx.conf`                  | 設定     | `try_files $uri /index.html`；`location /api/v1/` 反向代理到 `backend:8000`（`proxy_set_header Host`、`X-Forwarded-*`）與安全標頭。前端是唯一公開入口                                                                                                                                                                                                                                                                                          | ADR-008 D1；Q2                                                          |
+| `.dockerignore`（根）                  | 設定     | 讓前端 build context 只含 `frontend/`、`design/prototype/assets/`、`e2e/package.json`、`package.json`、`pnpm-lock.yaml`、`pnpm-workspace.yaml`；其餘（`.git`、`docs/`、`backend/`、`node_modules`、`.claude/`、`.env`）排除                                                                                                                                                                                                                    | 縮小 context、避免 `.env` 進映像（Hard Rule 8）                         |
+| `docker-compose.yml`                   | 編排     | Lite：`migrate`、`backend`、`frontend` 三個服務，一個具名 volume                                                                                                                                                                                                                                                                                                                                                                               | ADR-003 D7；`architecture.mdx` §資料庫雙層                              |
+| `docker-compose.prod.yml`              | 編排     | 正式：再加 `db`（`postgres:16`）與 `pg-data` volume；`backend`、`migrate` 帶 `DATABASE_URL`；與 Lite 一樣不含 Redis 與 worker，只有 frontend 發布埠                                                                                                                                                                                                                                                                                            | ADR-008 D1；B7                                                          |
+| `.env.example`                         | 設定範例 | 見 [§設定範例檔](#設定範例檔)                                                                                                                                                                                                                                                                                                                                                                                                                  | Hard Rule 8；B10；#504 Q1；#505 交接的兩個值                            |
+| `scripts/dev.mjs`                      | 根指令   | 讀根目錄 `.env`（Node 內建 `process.loadEnvFile`，不加依賴），補上本機預設值，起 `uv run uvicorn … --reload` 與 `pnpm --filter frontend dev`；任一子程序結束或收到 SIGINT／SIGTERM 就結束另一個並以其退出碼結束                                                                                                                                                                                                                                | Q11（`dev` 起本機開發伺服器）                                           |
+| `scripts/check.mjs`                    | 根指令   | 依 [§本機自查的步驟](#本機自查的步驟) 順序執行，印出每步名稱、耗時、結果；需要 PostgreSQL 的那一步在沒有 `TEST_DATABASE_URL` 時**明確印出「已跳過」**，不默默略過（T11）                                                                                                                                                                                                                                                                       | Q11                                                                     |
+| `scripts/check-coverage.mjs`           | 檢查器   | 讀 `backend/coverage.json` 的 `totals.percent_covered` 與 `frontend/coverage/coverage-summary.json` 的 statements／branches，和 PR 的 `coverage-baseline.json` 比，低於基準減容許誤差就失敗；另讀 base 分支的基準檔，PR 的基準有任一值比 base 低時失敗，除非帶 `--allow-lower`（PR 有 `coverage-baseline-lower` 標籤）；實測上升時印出並寫出完整的建議基準檔，不失敗。沒有 `--update`，不寫回 repo（D12）                                      | ADR-007 D2；T10；Q7、Q8；R-A                                            |
+| `scripts/ci-changed-paths.mjs`         | 檢查器   | 收 base、head 兩個 commit，取 `git diff --name-only` 的檔名清單，交給純函式判斷 compose 相關檔案是否變動，寫進 `$GITHUB_OUTPUT`；base 取不到時一律回答「有變動」（D13）                                                                                                                                                                                                                                                                        | Q9                                                                      |
+| `scripts/check-junit-skips.mjs`        | 檢查器   | 讀 pytest `--junitxml` 輸出，加總 `skipped`，不為 0 就失敗並列出被跳過的測試名                                                                                                                                                                                                                                                                                                                                                                 | T11；`openspec/config.yaml` 第 113 行「這次應為 0 skipped」             |
+| `.semgrep/label-suite.yml`             | 規則     | `label-suite-cors-wildcard-origin`：`CORSMiddleware(..., allow_origins=[..., "*", ...])` 與等價寫法；`label-suite-hardcoded-secret`：Python 與 TypeScript 中名稱符合 `(?i)(api_?key\|secret\|token\|password)` 的變數或參數被指派非空字串常值                                                                                                                                                                                                  | `architecture.mdx` §部署與維運 摺疊區；Hard Rule 7、8；S2               |
+| `e2e/playwright.config.ts`             | 測試設定 | `baseURL` 取 `E2E_BASE_URL`、後端位址取 `E2E_API_URL`，未設時的本機預設值**全專案只寫在這一處**；`use.locale` 固定 `zh-TW`；`webServer` 起後端（SQLite 暫存檔）與前端開發伺服器，兩者的埠、`CORS_ALLOWED_ORIGINS`、`VITE_API_BASE_URL` 都由這兩個 URL 推導（D8a）；`reuseExistingServer` 本機為真、CI 為假；`retries` CI 1 次、本機 0；失敗時保留 trace                                                                                        | T8；ADR-007 D4                                                          |
+| `e2e/system-health/dev-health.spec.ts` | e2e      | `page.goto` 前端 `HEALTH_PATH` 那條開發路由（相對 baseURL）→ 依 D8b 的觀察契約斷言；條件式等待，不用 `waitForTimeout`，不新增 `data-testid`                                                                                                                                                                                                                                                                                                    | T8；frontend-routing 兩條 requirement                                   |
 
 ### 關鍵設計細節
 
@@ -171,20 +173,24 @@ flowchart LR
 
 **D4 正式層缺資料庫密碼時讓 Compose 本身拒絕啟動。** `POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}`；`DATABASE_URL` 在編排檔裡由 `POSTGRES_USER`、`POSTGRES_PASSWORD`、`POSTGRES_DB` 組成 `postgresql+asyncpg://…@db:5432/…`。密碼含 URL 保留字元時要先編碼，`.env.example` 的註解寫出這一點。`.env.example` 的密碼欄留空，不放範例值（Hard Rule 8）。
 
-**D5 健康檢查：兩份編排檔的 backend 都有容器健康檢查，輪詢 30 秒、不拆存活端點（Q14）。** `depends_on: condition: service_healthy` 與 `docker compose up --wait` 都需要它。指令用映像內已有的 Python 打 `http://127.0.0.1:8000/api/v1/health`（slim 映像沒有 curl），非 2xx 即不健康。`interval: 30s`、`timeout: 10s`（大於健康檢查查詢的 5 秒連線上限、等於前端記下的 10 秒合約上限）、`start_period: 20s`、`retries: 3`；每分鐘查兩次資料庫，對 SQLite 與 PostgreSQL 都可忽略，所以**不新增不碰資料庫的存活端點**，`api-contract.md` 維持一行、沒有新端點，也沒有新的 spec delta。`frontend` 服務另設輕量健康檢查（`wget -q -O /dev/null http://127.0.0.1/`），讓 `up --wait` 也等到唯一公開入口就緒；`db` 服務用 `pg_isready`。`stop_grace_period: 30s` 給 backend（ADR-008 D10；worker 的 300 秒本次不適用）。
+**D5 健康檢查：兩份編排檔的 backend 都有容器健康檢查，輪詢 30 秒、不拆存活端點（Q14）。** `depends_on: condition: service_healthy` 與 `docker compose up --wait` 都需要它。指令用映像內已有的 Python 打 `http://127.0.0.1:8000/api/v1/health`（slim 映像沒有 curl），非 2xx 即不健康。`interval: 30s`、`timeout: 10s`（大於健康檢查查詢的 5 秒連線上限、等於前端記下的 10 秒合約上限）、`start_period: 20s`、`retries: 3`；每分鐘查兩次資料庫，對 SQLite 與 PostgreSQL 都可忽略，所以**不新增不碰資料庫的存活端點**，`api-contract.md` 維持一行、沒有新端點，也沒有新的 spec delta。`frontend` 服務另設輕量健康檢查（`wget -q -O /dev/null http://127.0.0.1/`），讓 `up --wait` 也等到唯一公開入口就緒；**兩份編排檔的 `frontend` 都寫 `depends_on: backend: condition: service_healthy`**，nginx 在 backend 健康之後才啟動，不會一開門就把 `/api/v1` 代理到還沒起來的上游、回 502；`db` 服務用 `pg_isready`。`stop_grace_period: 30s` 給 backend（ADR-008 D10；worker 的 300 秒本次不適用）。
 
 **D6 唯一公開入口是前端 nginx（Q2 選項 B，ADR-008 D1）。** 前端映像是 `nginx:alpine` 服務 `/dist`，同一個 nginx 反向代理 `/api/v1/` 到 `backend:8000`；兩層編排都**只發布 `FRONTEND_PORT`**，backend 與 `db` 只在 Compose 網路內。正式層與 Lite 一樣不含 Redis 與 worker。四個相關設定值：
 
-| 項目                             | 值                                                                                                    |
-| :------------------------------- | :---------------------------------------------------------------------------------------------------- |
-| `frontend/nginx.conf`            | SPA fallback、`location /api/v1/` 反向代理到 `backend:8000`、安全標頭                                 |
-| backend 對外埠                   | 不發布，只在 Compose 網路內                                                                           |
-| `VITE_API_BASE_URL`（build arg） | 空字串（同源相對路徑，`readApiConfig` 已支援）                                                        |
-| `CORS_ALLOWED_ORIGINS`           | 前端的公開來源 `http://localhost:${FRONTEND_PORT}`（同源請求不觸發 CORS，但設定仍是必要值，不能留空） |
+| 項目                             | 值                                                                                                                                                                                                                                                              |
+| :------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `frontend/nginx.conf`            | SPA fallback、`location /api/v1/` 反向代理到 `backend:8000`、安全標頭                                                                                                                                                                                           |
+| backend 對外埠                   | 不發布，只在 Compose 網路內                                                                                                                                                                                                                                     |
+| `VITE_API_BASE_URL`（build arg） | 空字串（同源相對路徑，`readApiConfig` 已支援）                                                                                                                                                                                                                  |
+| `CORS_ALLOWED_ORIGINS`           | 編排檔寫 `${CORS_ALLOWED_ORIGINS:?set CORS_ALLOWED_ORIGINS in .env}`，**不給預設值**，值從 `.env` 來（`.env.example` 已含前端公開來源 `http://localhost:8080`）；未設或空字串時 Compose 插值失敗、任何容器都不建立（D7）。同源請求不觸發 CORS，但設定仍是必要值 |
 
-`.env.example` 的本機開發值（`http://localhost:5173`、`http://localhost:8000`，#505 交接）照樣保留給 `pnpm run dev` 用；`CORS_ALLOWED_ORIGINS` 的預設值同時列 5173 與前端容器的來源，同源值因此一次定對。`BACKEND_PORT` 只給 `scripts/dev.mjs` 的本機 uvicorn 用，編排檔不讀它。
+`.env.example` 的本機開發值（`http://localhost:5173`、`http://localhost:8000`，#505 交接）照樣保留給 `pnpm run dev` 用；`.env.example` 的 `CORS_ALLOWED_ORIGINS` 同時列 5173 與前端容器的來源，複製成 `.env` 後兩種用法一次定對；改了 `FRONTEND_PORT` 的人要同步改這個值，`.env.example` 的註解寫出這一點。`BACKEND_PORT` 只給 `scripts/dev.mjs` 的本機 uvicorn 用，編排檔不讀它。
 
-**D7 CI 用 `docker compose up --wait` 把驗收條件 1 的容器那一半變成機械檢查（Q1）。** 驗收條件 1 兩條都要驗：(a) 容器以 `up --wait` 加後端健康檢查回應；(b) 健康檢查頁由 e2e 在前端開發伺服器驗（D8）。`--wait` 會等每個有健康檢查的服務變成 healthy，失敗或逾時就以非 0 結束。job 依序：`docker compose config --quiet` 驗兩份檔 → Lite `up --build --wait` → **經 nginx** 對 `http://localhost:${FRONTEND_PORT}/api/v1/health` 發一次請求（backend 不發布埠，這一步同時驗反向代理）並斷言 envelope 的 `data.status` 與 `data.database` 都是 `ok` → `down -v` → 正式層同樣跑一次（`POSTGRES_PASSWORD` 用 job 內產生的隨機值）。job 只在動到編排檔、Dockerfile、`backend/`、`frontend/` 時跑（Q9，見 D13），因此不列為必過（Q10）。
+**D7 CI 用 `docker compose up --wait --wait-timeout 300` 把驗收條件 1 的容器那一半變成機械檢查（Q1）。** 驗收條件 1 兩條都要驗：(a) 容器以 `up --wait` 加後端健康檢查回應；(b) 健康檢查頁由 e2e 在前端開發伺服器驗（D8）。`--wait` 會等每個有健康檢查的服務變成 healthy，失敗或逾時就以非 0 結束；逾時定為 **300 秒**：backend 的 `start_period` 20 秒加三次 30 秒輪詢約 110 秒，再加 nginx 與正式層 `pg_isready` 的等待，留一倍餘裕，job 本身另設 `timeout-minutes: 20` 涵蓋映像建置。
+
+`--wait` 搭配一次性的 `migrate`（以 `service_completed_successfully` 被依賴、跑完以 0 結束）要求 **Docker Compose v2.20.0 以上**（保守下限；較舊版本會把「已結束的一次性容器」當成 `--wait` 失敗）。compose job 第一步印出 `docker compose version`，低於下限就失敗並說明；`.env.example` 與 `architecture.mdx` §部署與維運 寫出同一個下限。這個下限的準確值留給 apply 實測（技術待決 N6）。
+
+job 依序：`cp .env.example .env` → `docker compose config --quiet` 驗兩份檔 → **兩個反向檢查**：`CORS_ALLOWED_ORIGINS= docker compose config --quiet` 與 `POSTGRES_PASSWORD= docker compose -f docker-compose.prod.yml config --quiet` 都必須以非 0 結束（shell 環境變數優先於 `.env`，空字串會觸發 `:?`），讓「缺必要設定拒絕啟動」成為機械檢查 → Lite `up --build --wait --wait-timeout 300` → **經 nginx** 對 `http://localhost:${FRONTEND_PORT}/api/v1/health` 發一次請求（backend 不發布埠，這一步同時驗反向代理）並斷言 envelope 的 `data.status` 與 `data.database` 都是 `ok` → `down -v` → 正式層同樣跑一次（`POSTGRES_PASSWORD` 用 job 內產生的隨機值）。job 只在動到編排檔、Dockerfile、`backend/`、`frontend/` 時跑（Q9，見 D13），因此不列為必過（Q10）。
 
 **D8 e2e 跑在開發伺服器上，不跑在容器裡。** 健康檢查頁只在 `import.meta.env.DEV` 時註冊、正式建置剪除（`frontend-routing`），而目前前端沒有任何非開發頁（`frontend/src/app/router.tsx` 的正式路由只有一條 `path: "*"`、什麼都不渲染），所以容器裡的正式建置**沒有可以走的旅程**。`playwright.config.ts` 的 `webServer` 起兩個程序：後端 `uv run uvicorn app.main:create_app --factory`（環境帶 `SQLITE_PATH` 指向 Playwright 輸出目錄下的暫存檔、`CORS_ALLOWED_ORIGINS` 為前端開發伺服器的來源，先跑一次 `alembic upgrade head`）與 `pnpm --filter frontend dev`；就緒判定分別用後端健康檢查的 URL 與前端首頁。e2e **每張 PR 都在 CI 跑**（Q3）：job 用 SQLite 與開發伺服器，瀏覽器只裝 chromium；先不列為必過檢查，觀察穩定度後再議（Q10）。這是驗收條件 1 的另一半（Q1）：容器那一半由 D7 驗，健康檢查頁由這一條旅程驗。e2e fixtures 不含任何答案資料（Hard Rule 6），本次也沒有 `storageState`（無認證），`e2e/shared/fixtures/index.ts` 只匯出共用的 `test`／`expect`，讓第一條角色旅程（01-01 登入）有固定的擴充點。
 
@@ -222,31 +228,49 @@ flowchart LR
 
 **D12 覆蓋率：和 repo 內的 `coverage-baseline.json` 比（Q7）。** 後端：兩個後端 job 都用 `pytest --cov=app --cov-branch`，各自上傳 `.coverage.*` 為 artifact，`coverage` job 下載後 `coverage combine` 再輸出 `coverage.json`——只量一輪會漏掉另一種資料庫才走得到的分支。分母本來就只有 `app/`，migration（`backend/alembic/`）不在內。前端：`vitest run --coverage` 加 `json-summary` reporter，**`coverage.include` 改成 `src/**`**（Q8），排除 `src/api/generated/**`、`src/test/**`、`**/*.test.{ts,tsx}`、`**/*.d.ts`、`*.config.*` 與建置產物（`dist/**`）；這樣新增一個完全沒測的檔案會讓覆蓋率下降。
 
-基準檔是根目錄 `coverage-baseline.json`：前後端各一段、各指標一個數字（後端 `percentCovered`；前端 `statements`、`branches`），加一個容許誤差 `0.1`（百分點）。`scripts/check-coverage.mjs` 只接受「實測值、基準值、容許誤差」三個輸入：
+基準檔是根目錄 `coverage-baseline.json`：前後端各一段、各指標一個數字（後端 `percentCovered`；前端 `statements`、`branches`），加一個容許誤差 `tolerance: 0.1`（百分點）。**覆蓋率只能持平或上升**（維護者 2026-11-22 裁定 R-A）：比較的對象不只是 PR 自己帶的基準檔，還有 **base 分支**上的那一份，否則 PR 只要把基準改低就能讓覆蓋率下降而照樣通過。
 
-- **失敗條件**：任一指標低於「基準減 0.1」。
-- **上升時更新**：實測高於基準超過容許誤差時，腳本印出「可更新基準」提示並以 `--update` 寫回檔案；CI 不自動寫回，由 PR 作者在同一張 PR 提交，改低的基準審查看得到。
-- **初始值**：取**本 PR 在 CI 上第一次量到的值**（含 Q8 擴大分母後的前端數字、兩輪合併後的後端數字），不沿用 acceptance 記的 97%；第一次 CI run 的數字由 job 印出，再提交基準檔。
+`coverage` job 的比較分三步，`scripts/check-coverage.mjs` 的輸入是「實測值、PR 的基準檔、base 分支的基準檔（可缺）、是否允許調低」：
+
+1. **取 base 的基準**：checkout 用 `fetch-depth: 0`，以 `git show origin/${{ github.base_ref }}:coverage-baseline.json` 寫到暫存檔。base 分支上沒有這個檔（只會發生在建立它的本 PR）時印出 notice、略過第 2 步；PR 自己的基準檔缺失或缺欄位則照樣失敗（loud failure）。
+2. **基準不得調低**：PR 的基準有任一指標低於 base 的對應值，或 `tolerance` 比 base 大（等於放寬），job 失敗並列出被調低的欄位；**唯一例外**是 PR 帶有 `coverage-baseline-lower` 標籤，由 workflow 讀 `github.event.pull_request.labels` 後傳 `--allow-lower` 給腳本。這個標籤由維護者加上；workflow 的 `pull_request` 觸發因此要含 `labeled`、`unlabeled`（連同預設的 `opened`、`synchronize`、`reopened`），加上或拿掉標籤時整個 workflow 重跑，`coverage` 的結果才會跟著標籤變。重跑其他 job 的成本可接受，不為此拆 workflow。
+3. **實測不得下降**：任一指標低於「PR 基準減 `tolerance`」就失敗，印出層、指標、基準、實測。沒有標籤時第 2 步已保證 PR 基準不低於 base，所以這一步等於「不低於 base」。
+
+**CI 是覆蓋率數字的唯一來源，更新基準是選擇性的，不擋 PR。** 實測任一指標高於基準超過 `tolerance` 時，腳本不失敗，而是在 log 印出**完整的建議基準檔 JSON**（上升的指標換成實測值，其餘沿用 PR 基準，`tolerance` 不變），同時寫成檔案、由 job 以 artifact `coverage-baseline-suggested` 上傳。作者想把基準往上收時，下載那個檔、原樣提交成 `coverage-baseline.json`；不收也照樣通過。CI 不自動寫回 repo（`permissions: contents: read`），基準檔的每次變動都在 PR 的 diff 裡。
+
+**本機數字不等於 CI，以 CI 為準。** 本機 `check` 只跑 SQLite 一輪（PostgreSQL 那一輪要有 `TEST_DATABASE_URL` 才跑），也不做兩輪的 `coverage combine`，只有 PostgreSQL 才走得到的分支在本機會算成未覆蓋，後端數字因此偏低；前端數字本機與 CI 理論上相同，但 Node 版本與快取不同仍可能有小差異。因此**原本的本機 `--update` 取消**：本機不寫基準檔，`check` 也不跑覆蓋率比較，只把兩邊測試指令印出的覆蓋率摘要留在畫面上作參考；要不要過、基準該填多少，一律看 CI 的 `coverage` job。
+
+- **初始值**：取**本 PR 在 CI 上第一次量到的值**（含 Q8 擴大分母後的前端數字、兩輪合併後的後端數字），不沿用 acceptance 記的 97%。基準檔還不存在時第 3 步失敗，但腳本仍印出並上傳建議基準檔；提交該檔後下一次 run 轉綠。
 - 五項關鍵路徑 90% 分支覆蓋：那五項程式都不存在，本次**不留位置**。
 
-**D13 前後端 job 每張 PR 全跑；只有 `compose` 依路徑過濾（Q9）。** 兩層都存在後，ADR-003 D1 的 `hashFiles()` 條件恆真，所以新 job 不再寫該條件，`pull_request` 觸發就跑。理由：被 `if` 跳過的 job 對必過檢查的語意不清。`compose` 最慢，改用一個 `changes` job：以 `git diff --name-only base...head` 判斷是否動到 `docker-compose.yml`、`docker-compose.prod.yml`、任一 `Dockerfile`、`backend/`、`frontend/`，輸出布林；`compose` 以 `needs: changes` 加 `if` 讀它。`compose` 不在建議必過清單內（Q10），被跳過不影響合併語意。
+**D13 前後端 job 每張 PR 全跑；只有 `compose` 依路徑過濾（Q9）。** 兩層都存在後，ADR-003 D1 的 `hashFiles()` 條件恆真，所以新 job 不再寫該條件，`pull_request` 觸發就跑。理由：被 `if` 跳過的 job 對必過檢查的語意不清。`compose` 最慢，改用一個 `changes` job 判斷要不要跑，`compose` 以 `needs: changes` 加 `if` 讀它的輸出。`compose` 不在建議必過清單內（Q10），被跳過不影響合併語意。
+
+判斷不寫在 workflow 的 shell 裡，而是抽成 `scripts/ci-changed-paths.mjs`，讓它能被測試：
+
+- **純函式**：輸入檔名清單，回傳布林。命中任一條即為真：`docker-compose.yml`、`docker-compose.prod.yml`、任一路徑的 `Dockerfile`、`.dockerignore`、`frontend/nginx.conf`、`backend/` 或 `frontend/` 底下的任何檔。
+- **取清單**：腳本收 `--base`、`--head` 兩個 commit，跑 `git diff --name-only <base>...<head>`。`pull_request` 事件傳 `github.event.pull_request.base.sha` 與 `head.sha`；之後若加 `push` 觸發，傳 `github.event.before` 與 `github.sha`。base 為空、全為 0（新分支的第一次 push）或 `git` 找不到該 commit 時，**一律回答「有變動」**並印出原因，寧可多跑一次 `compose` 也不漏跑。
+- **checkout 用 `fetch-depth: 0`**，否則淺層 clone 裡沒有 base commit，三點 diff 取不到 merge base。
+- **node 測試**（`scripts/tests/ci-changed-paths.test.mjs`）至少涵蓋：只改 `docs/` 時為假；改 `docker-compose.yml`（或 `docker-compose.prod.yml`）時為真；改 `backend/` 底下的檔時為真；base 取不到時為真。
+
+**新腳本的 node 測試跑在獨立 job `scripts-tests`**：`node --test` 跑 `check-coverage`、`check-junit-skips`、`ci-changed-paths`、`check`、`dev` 五支腳本的測試，**不設 `needs`**，與其他 job 平行。不放進 `coverage` job：`coverage` 要等三個測試 job 都完成才開始，腳本壞了要很晚才知道，而且前面任一 job 失敗時 `coverage` 根本不跑，腳本的回歸就被遮住了。既有 `specs` job 跑的舊腳本測試不動。
 
 ### CI job 設計
 
-既有 `commit-messages`、`docs-site`、`format`、`specs` 四個 job 一字不動。新 job 一律 `runs-on: ubuntu-latest`、`permissions: contents: read`（沿用檔頭），Node 22、Python 3.12，依賴安裝用 `pnpm install --frozen-lockfile` 與 `uv sync --locked`。
+既有 `commit-messages`、`docs-site`、`format`、`specs` 四個 job 一字不動。workflow 的 `on.pull_request` 加上 `types: [opened, synchronize, reopened, labeled, unlabeled]`（R-A，見 D12）；這只改觸發，不改既有 job 的內容。新 job 一律 `runs-on: ubuntu-latest`、`permissions: contents: read`（沿用檔頭），Node 22、Python 3.12，依賴安裝用 `pnpm install --frozen-lockfile` 與 `uv sync --locked`。
 
-| job                | 步驟（依序）                                                                                                                                                                    | 失敗條件                                                    | 依據       |
-| :----------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :---------------------------------------------------------- | :--------- |
-| `backend-sqlite`   | uv sync → `ruff check`、`ruff format --check` → `mypy --strict app` → `lint-imports`（B1 契約）→ `pytest --cov --junitxml` → 上傳 coverage artifact；skipped 數寫進 job summary | 任何 lint、型別、import 契約違反或測試失敗                  | Q4、Q9     |
-| `backend-postgres` | service container `postgres:16` → uv sync → `pytest --cov --junitxml`（`TEST_DATABASE_URL`）→ `check-junit-skips.mjs` → 上傳 coverage artifact                                  | 測試失敗、skipped 不為 0                                    | Q9         |
-| `frontend`         | pnpm install → `pnpm --filter frontend lint`（零警告，含 F1 分層與 `no-unknown-files`）→ `typecheck` → `test:coverage` → build → 上傳 coverage summary                          | lint 有任何 error 或 warning、型別錯誤、測試失敗、建置失敗  | Q4、Q8、Q9 |
-| `api-contract`     | uv sync、pnpm install → 後端匯出 → `git diff --exit-code` 與 `git status --porcelain` 檢查 `backend/openapi.json` → 前端重產 → 同樣檢查 `frontend/src/api/generated`            | 任何一處有差異或新檔，並列出檔名                            | —          |
-| `coverage`         | `needs: [backend-sqlite, backend-postgres, frontend]` → 下載 artifact → `coverage combine` → `check-coverage.mjs`（對 `coverage-baseline.json`）                                | 任一層任一指標低於基準減 0.1 個百分點                       | Q7、Q8     |
-| `semgrep`          | Semgrep 官方容器映像（版本鎖定）→ `semgrep --test .semgrep/`（規則自己的回歸）→ `semgrep scan --error --config .semgrep/ backend/ frontend/ e2e/`                               | 規則回歸失敗；任何發現即失敗（`--error`）；只有兩條專案禁令 | Q6         |
-| `changes`          | `git diff --name-only base...head` → 輸出 compose 相關檔案是否變動                                                                                                              | 不會失敗                                                    | Q9         |
-| `compose`          | `needs: changes`，有變動才跑；見 D7                                                                                                                                             | 任一服務不健康、經 nginx 的健康檢查回應不是 `ok`            | Q1、Q2、Q9 |
-| `e2e`              | pnpm install、uv sync → `playwright install --with-deps chromium` → `pnpm --filter e2e test`（SQLite、開發伺服器）→ 失敗時上傳 report；每張 PR 跑，先不列必過                   | 任一旅程失敗                                                | Q1、Q3     |
-| `dependency-audit` | `uv run pip-audit --fail-on high`、`pnpm audit --prod --audit-level high`；`pip-audit` 以 `uv add --dev` 加入                                                                   | 有 high 以上弱點                                            | Q5         |
+| job                | 步驟（依序）                                                                                                                                                                                                                                                                                                                          | 失敗條件                                                                                   | 依據        |
+| :----------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :----------------------------------------------------------------------------------------- | :---------- |
+| `backend-sqlite`   | uv sync → `ruff check`、`ruff format --check` → `mypy --strict app` → `lint-imports`（B1 契約）→ `pytest --cov=app --cov-branch --junitxml=test-results/junit-sqlite.xml`（與本機第 11 步同一串）→ 上傳 coverage artifact；skipped 數寫進 job summary                                                                                 | 任何 lint、型別、import 契約違反或測試失敗                                                 | Q4、Q9      |
+| `backend-postgres` | service container `postgres:16` → uv sync → `pytest --cov=app --cov-branch --junitxml=test-results/junit-postgres.xml`（`TEST_DATABASE_URL`，與本機第 12 步同一串）→ `check-junit-skips.mjs` → 上傳 coverage artifact                                                                                                                 | 測試失敗、skipped 不為 0                                                                   | Q9          |
+| `frontend`         | pnpm install → `pnpm --filter frontend lint`（零警告，含 F1 分層與 `no-unknown-files`）→ `typecheck` → `test:coverage` → build → 上傳 coverage summary                                                                                                                                                                                | lint 有任何 error 或 warning、型別錯誤、測試失敗、建置失敗                                 | Q4、Q8、Q9  |
+| `api-contract`     | uv sync、pnpm install → 後端匯出 → `git diff --exit-code` 與 `git status --porcelain` 檢查 `backend/openapi.json` → 前端重產 → 同樣檢查 `frontend/src/api/generated`                                                                                                                                                                  | 任何一處有差異或新檔，並列出檔名                                                           | —           |
+| `coverage`         | `needs: [backend-sqlite, backend-postgres, frontend]` → checkout（`fetch-depth: 0`）→ `git show origin/<base_ref>:coverage-baseline.json` → 下載 artifact → `coverage combine` → `check-coverage.mjs`（PR 基準、base 基準、有 `coverage-baseline-lower` 標籤時加 `--allow-lower`）→ 上升時上傳 artifact `coverage-baseline-suggested` | PR 基準比 base 低且沒有標籤；任一指標低於 PR 基準減容許誤差；PR 基準檔缺失                 | Q7、Q8、R-A |
+| `semgrep`          | Semgrep 官方容器映像（版本鎖定）→ `semgrep --test .semgrep/`（規則自己的回歸）→ `semgrep scan --error --config .semgrep/ backend/ frontend/ e2e/`                                                                                                                                                                                     | 規則回歸失敗；任何發現即失敗（`--error`）；只有兩條專案禁令                                | Q6          |
+| `changes`          | checkout（`fetch-depth: 0`）→ `node scripts/ci-changed-paths.mjs --base <sha> --head <sha>` → 輸出 compose 相關檔案是否變動（D13）                                                                                                                                                                                                    | 腳本本身出錯；base 取不到時輸出「有變動」而不是失敗                                        | Q9          |
+| `compose`          | `needs: changes`，有變動才跑；印 Compose 版本 → 反向檢查 → `up --build --wait --wait-timeout 300`；見 D7                                                                                                                                                                                                                              | Compose 低於下限；反向檢查沒有失敗；任一服務不健康或逾時；經 nginx 的健康檢查回應不是 `ok` | Q1、Q2、Q9  |
+| `scripts-tests`    | 不設 `needs` → `node --test` 跑五支新腳本的測試（D13）                                                                                                                                                                                                                                                                                | 任一腳本測試失敗                                                                           | —           |
+| `e2e`              | pnpm install、uv sync → `playwright install --with-deps chromium` → `pnpm --filter e2e test`（SQLite、開發伺服器）→ 失敗時上傳 report；每張 PR 跑，先不列必過                                                                                                                                                                         | 任一旅程失敗                                                                               | Q1、Q3      |
+| `dependency-audit` | `uv run pip-audit --fail-on high`、`pnpm audit --prod --audit-level high`；`pip-audit` 以 `uv add --dev` 加入                                                                                                                                                                                                                         | 有 high 以上弱點                                                                           | Q5          |
 
 `api-contract` job 是 A5 漂移檢查進 CI 的地方，比對內容如下；本機的 `pnpm run api:sync` 與 `check` 指令跑同一組指令。這個 job 不起服務，因為匯出不需要環境變數，也不需要資料庫（`api-schema-export`）。
 
@@ -259,7 +283,7 @@ flowchart LR
 - operationId 的唯一性與「動詞加資源」命名，在第 1 步匯出時由既有的 `assert_unique_operation_ids` 與 `generate_operation_id` 把關，重複就讓匯出以非 0 結束；這次不改這套策略。
 - 失敗時 job 要列出不同步的檔名，修正方式是在本機跑 `pnpm run api:sync` 後提交。
 
-`semgrep` 不需要安裝專案依賴。新 job 不會自動變成 `main` 的必過檢查；本 PR 合併後另開 issue，由維護者改 ruleset，建議必過：`backend-sqlite`、`backend-postgres`、`frontend`、`api-contract`、`coverage`、`semgrep`（Q10）。`compose` 與 `e2e` 先不列。
+`semgrep` 不需要安裝專案依賴。新 job 不會自動變成 `main` 的必過檢查；本 PR 合併後另開 issue，由維護者改 ruleset，建議必過：`backend-sqlite`、`backend-postgres`、`frontend`、`api-contract`、`coverage`、`semgrep`（Q10）。`compose` 與 `e2e` 先不列。`scripts-tests` 是規劃審查後新增的 job，不在 Q10 的建議清單裡，要不要列入由維護者在那張 issue 決定，本文不替它選。
 
 ### 本機自查的步驟
 
@@ -271,12 +295,14 @@ flowchart LR
 4. `pnpm --filter frontend lint`
 5. `pnpm --filter frontend typecheck`
 6. `pnpm --filter frontend test:coverage`
-7. 契約同步後比對（同 `api-contract` job）
+7. 契約同步後比對：先把目前工作區的 `backend/openapi.json` 與 `frontend/src/api/generated/` 複製到暫存目錄，再跑 `pnpm run api:sync`，比對**重產結果與執行前的工作區內容**，不是與 HEAD 比。這樣剛跑過 `api:sync`、還沒提交的正確產物不會被誤判；有差異時保留重產結果在工作區、列出檔名並失敗。CI 的 `api-contract` job 拿 checkout 出來的 commit 比，兩者的判定對象都是「提交或準備提交的內容是否等於重產結果」，產生指令相同
 8. `cd backend && uv run ruff check . && uv run ruff format --check .`
 9. `cd backend && uv run mypy --strict app`
 10. `cd backend && uv run lint-imports`
-11. `cd backend && uv run pytest`（SQLite），印出 skipped 數
-12. 有 `TEST_DATABASE_URL` 時跑 PostgreSQL 那一輪並斷言 0 skipped；沒有時印出「PostgreSQL 那一輪已跳過：未設 TEST_DATABASE_URL」
+11. `cd backend && uv run pytest --cov=app --cov-branch --junitxml=test-results/junit-sqlite.xml`（SQLite），再以 `check-junit-skips.mjs --summary` 印出 skipped 數
+12. 有 `TEST_DATABASE_URL` 時以同一串參數跑 PostgreSQL 那一輪（`--junitxml=test-results/junit-postgres.xml`），再以 `check-junit-skips.mjs` 斷言 0 skipped；沒有時印出「PostgreSQL 那一輪已跳過：未設 TEST_DATABASE_URL」
+
+第 11、12 步的 pytest 參數與 CI 的 `backend-sqlite`、`backend-postgres` **完全相同**（`--cov=app --cov-branch --junitxml=…`，JUnit 檔放 `backend/test-results/`，加進 `.gitignore`），所以「0 skipped」那一步本機也能跑，「本機與 CI 同一個指令」成立。**覆蓋率比較不在本機步驟內**：本機只有一輪、不做合併，數字和 CI 對不上，以 CI 的 `coverage` job 為準（D12）；第 6、11 步印出的覆蓋率摘要只供參考。
 
 e2e 與 Semgrep 不在預設步驟內（前者要起服務、後者要另裝工具），以 `--with-e2e`、`--with-semgrep` 開啟。第 5、8、9 步本機與 CI 都跑（Q4）。第 12 步沒有 `TEST_DATABASE_URL` 時必須印出明確的跳過訊息（Q11），不默默略過。
 
@@ -313,7 +339,10 @@ sequenceDiagram
   participant BE as backend
   participant Vol as label-suite-data
   participant FE as frontend
-  Dev->>Compose: up --build --wait（只用 .env.example 複製來的 .env）
+  Dev->>Compose: up --build --wait --wait-timeout 300（只用 .env.example 複製來的 .env）
+  alt CORS_ALLOWED_ORIGINS 未設或為空字串
+    Compose-->>Dev: 插值錯誤「set CORS_ALLOWED_ORIGINS in .env」，任何容器都不建立（D6、D7）
+  end
   Compose->>MG: 啟動（只帶資料庫設定）
   MG->>Vol: alembic upgrade head（建立或升級 label_suite.db）
   alt 遷移失敗
@@ -322,7 +351,7 @@ sequenceDiagram
   else 遷移成功
     MG-->>Compose: 0 結束（service_completed_successfully）
     Compose->>BE: 啟動 uvicorn
-    alt 缺 CORS_ALLOWED_ORIGINS 或含 *
+    alt CORS_ALLOWED_ORIGINS 含 *
       BE-->>Compose: ConfigError，指出變數名、不印值（B10、S9）
       Compose-->>Dev: up --wait 失敗
     else 設定有效
@@ -331,7 +360,7 @@ sequenceDiagram
         BE->>Vol: SELECT 1
         BE-->>Compose: 200 envelope，data.status = ok、data.database = ok
       end
-      Compose->>FE: 啟動 nginx（反向代理 /api/v1 到 backend，Q2）
+      Compose->>FE: backend healthy 後才啟動 nginx（depends_on service_healthy；反向代理 /api/v1 到 backend，Q2）
       Compose-->>Dev: 所有服務 healthy，up 以 0 結束
       Dev->>FE: GET /api/v1/health（FRONTEND_PORT，經 nginx；backend 不發布埠）
       FE->>BE: 反向代理
@@ -350,7 +379,7 @@ sequenceDiagram
   participant MG as migrate
   participant BE as backend
   participant FE as frontend（nginx）
-  Dev->>Compose: -f docker-compose.prod.yml up --wait
+  Dev->>Compose: -f docker-compose.prod.yml up --wait --wait-timeout 300
   alt .env 沒有 POSTGRES_PASSWORD
     Compose-->>Dev: 插值錯誤「set POSTGRES_PASSWORD in .env」，任何容器都不建立（D4）
   else 有密碼
@@ -366,7 +395,7 @@ sequenceDiagram
       Compose-->>Dev: backend unhealthy，up --wait 失敗
     else 可用
       BE-->>Compose: 200 envelope，data.database = ok
-      Compose->>FE: 啟動 nginx（只有它發布埠；正式層不含 Redis 與 worker）
+      Compose->>FE: backend healthy 後才啟動 nginx（只有它發布埠；正式層不含 Redis 與 worker）
       Compose-->>Dev: 所有服務 healthy
       Dev->>FE: GET /api/v1/health（經 nginx 反向代理）
       FE-->>Dev: 200 envelope，data.database = ok
@@ -487,24 +516,40 @@ sequenceDiagram
 
 ### Scenario: 覆蓋率低於基準時 CI 失敗
 
+base 分支的基準檔也參與比較（R-A，D12）；上升時的建議基準檔由 CI 產生，CI 是數字的唯一來源。
+
 ```mermaid
 sequenceDiagram
   participant PR as Pull request
   participant Job as coverage job
+  participant Git as git（fetch-depth 0）
   participant Art as artifacts
   participant Cmp as check-coverage.mjs
-  participant Base as coverage-baseline.json（Q7）
-  PR->>Job: backend-sqlite、backend-postgres、frontend 都完成後觸發
+  PR->>Job: backend-sqlite、backend-postgres、frontend 都完成後觸發（含 labeled／unlabeled 重跑）
+  Job->>Git: git show origin/<base_ref>:coverage-baseline.json
+  alt base 分支沒有基準檔
+    Git-->>Job: 不存在，印 notice，略過「不得調低」
+  else 有
+    Git-->>Job: base 基準
+  end
   Job->>Art: 下載兩份 .coverage.* 與前端 coverage-summary.json
   Job->>Job: coverage combine，輸出 coverage.json
-  Job->>Cmp: 實測值
-  Cmp->>Base: 讀基準與容許誤差 0.1
-  Base-->>Cmp: 後端 percent_covered、前端 statements 與 branches
-  alt 任一指標低於基準減 0.1 個百分點
+  Job->>Cmp: 實測值、PR 基準、base 基準、有 coverage-baseline-lower 標籤時 --allow-lower
+  alt PR 基準檔缺失或缺欄位
+    Cmp-->>Job: 非 0，說明缺什麼；仍印出並寫出建議基準檔
+    Job-->>PR: 失敗，上傳 coverage-baseline-suggested
+  else PR 基準有值低於 base，或 tolerance 被放寬，且沒有標籤
+    Cmp-->>Job: 非 0，列出被調低的欄位
+    Job-->>PR: 失敗（要調低須由維護者加 coverage-baseline-lower）
+  else 任一指標低於 PR 基準減 tolerance
     Cmp-->>Job: 非 0，印出層、指標、基準、實測
     Job-->>PR: 失敗
   else 全部不低於
-    Cmp-->>Job: 0（高於基準超過容許誤差時提示可用 --update 更新基準）
+    opt 有指標高於基準超過 tolerance
+      Cmp-->>Job: 在 log 印出完整建議基準 JSON 並寫成檔案
+      Job->>Art: 上傳 coverage-baseline-suggested（作者可選擇提交，不擋 PR）
+    end
+    Cmp-->>Job: 0
     Job-->>PR: 通過
   end
 ```
@@ -642,37 +687,46 @@ sequenceDiagram
 
 維護者 2026-11-22 全數裁定（`clarification.md` Q1–Q15，採建議答案）；下表的「設計中的位置」是回修後的落點。
 
-| #   | 主題                             | 裁定                                                                                                                                     | 設計中的位置              |
-| :-- | :------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------- | :------------------------ |
-| 1   | 容器裡驗什麼                     | 兩個都要：容器以 `up --wait` 加後端健康檢查回應（Q1）；健康檢查頁由 e2e 在開發伺服器驗                                                   | D5、D7、D8                |
-| 2   | 唯一公開入口                     | 選項 B：前端 nginx 反向代理 `/api/v1`，只有它對外；正式層也不含 Redis 與 worker（Q2）                                                    | D6；部署拓撲圖            |
-| 3   | e2e 進不進 CI                    | 每張 PR 跑（SQLite、開發伺服器），先不列必過（Q3）                                                                                       | D8；CI job 表             |
-| 4   | 型別檢查與後端 lint 進不進 CI    | 前端 typecheck、後端 ruff、`mypy --strict` 加進 CI，取代 #504 Q6「不加 CI job」（Q4）                                                    | CI job 表；本機自查的步驟 |
-| 5   | 相依套件掃描                     | 本次一起接：`dependency-audit` job（Q5）                                                                                                 | CI job 表；對應序列圖     |
-| 6   | Semgrep 失敗或回報、規則集、範圍 | 違規即失敗（`--error`），只用兩條專案禁令，掃前端、後端與 e2e（Q6）                                                                      | `semgrep` 序列圖          |
-| 7   | 覆蓋率基準的定義                 | repo 內 `coverage-baseline.json`、上升時更新、容許誤差 0.1 個百分點、前後端各一個、初始值取本 PR 第一次 CI 量到的值、不留 90% 位置（Q7） | D12                       |
-| 8   | 前端覆蓋率分母                   | `include: src/**`，排除產物、測試輔助、設定（Q8）                                                                                        | D12                       |
-| 9   | `hashFiles()` 語意               | 前後端 job 每張 PR 全跑；`compose` 只在動到編排檔、Dockerfile、`backend/`、`frontend/` 時跑（Q9）                                        | D13                       |
-| 10  | 必過檢查清單                     | 合併後另開 issue 由維護者改 ruleset；ruleset 變更不在本 change 內執行（Q10）                                                             | CI job 表                 |
-| 11  | 四條根目錄指令的語意             | `bootstrap`（原 setup）、`dev` 起本機開發伺服器、`check` 印出 PostgreSQL 跳過訊息（Q11）                                                 | 目錄結構；本機自查的步驟  |
-| 12  | 文件改寫範圍                     | 改 (a)(b)(d)(e)(f)，(c) 留給 #523（Q12）；(d) 含 ADR-008 D8 與 `architecture.mdx` 的 Semgrep 延後列                                      | N3                        |
-| 13  | T9 與 #111 的歸屬                | 併入 Q12 (e)                                                                                                                             | —                         |
-| 14  | 正式層關閉 `/docs`               | 本次不關，另開 issue（Q13）                                                                                                              | 設定範例檔                |
-| 15  | 健康檢查輪詢頻率、存活端點       | 30 秒、不拆端點，`api-contract.md` 維持一行（Q14）                                                                                       | D5                        |
-| 16  | access log 格式                  | 留給 01-01（Q15）                                                                                                                        | 設定範例檔                |
+| #   | 主題                             | 裁定                                                                                                                                                                                                                                                                    | 設計中的位置              |
+| :-- | :------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------ |
+| 1   | 容器裡驗什麼                     | 兩個都要：容器以 `up --wait` 加後端健康檢查回應（Q1）；健康檢查頁由 e2e 在開發伺服器驗                                                                                                                                                                                  | D5、D7、D8                |
+| 2   | 唯一公開入口                     | 選項 B：前端 nginx 反向代理 `/api/v1`，只有它對外；正式層也不含 Redis 與 worker（Q2）                                                                                                                                                                                   | D6；部署拓撲圖            |
+| 3   | e2e 進不進 CI                    | 每張 PR 跑（SQLite、開發伺服器），先不列必過（Q3）                                                                                                                                                                                                                      | D8；CI job 表             |
+| 4   | 型別檢查與後端 lint 進不進 CI    | 前端 typecheck、後端 ruff、`mypy --strict` 加進 CI，取代 #504 Q6「不加 CI job」（Q4）                                                                                                                                                                                   | CI job 表；本機自查的步驟 |
+| 5   | 相依套件掃描                     | 本次一起接：`dependency-audit` job（Q5）                                                                                                                                                                                                                                | CI job 表；對應序列圖     |
+| 6   | Semgrep 失敗或回報、規則集、範圍 | 違規即失敗（`--error`），只用兩條專案禁令，掃前端、後端與 e2e（Q6）                                                                                                                                                                                                     | `semgrep` 序列圖          |
+| 7   | 覆蓋率基準的定義                 | repo 內 `coverage-baseline.json`、容許誤差 0.1 個百分點、前後端各一個、初始值取本 PR 第一次 CI 量到的值、不留 90% 位置（Q7）；另與 base 分支的基準比、只能持平或上升，調低須維護者加 `coverage-baseline-lower` 標籤；上升時更新為選擇性，CI 印出並上傳建議基準檔（R-A） | D12；CI job 表            |
+| 8   | 前端覆蓋率分母                   | `include: src/**`，排除產物、測試輔助、設定（Q8）                                                                                                                                                                                                                       | D12                       |
+| 9   | `hashFiles()` 語意               | 前後端 job 每張 PR 全跑；`compose` 只在動到編排檔、Dockerfile、`backend/`、`frontend/` 時跑（Q9）                                                                                                                                                                       | D13                       |
+| 10  | 必過檢查清單                     | 合併後另開 issue 由維護者改 ruleset；ruleset 變更不在本 change 內執行（Q10）                                                                                                                                                                                            | CI job 表                 |
+| 11  | 四條根目錄指令的語意             | `bootstrap`（原 setup）、`dev` 起本機開發伺服器、`check` 印出 PostgreSQL 跳過訊息（Q11）                                                                                                                                                                                | 目錄結構；本機自查的步驟  |
+| 12  | 文件改寫範圍                     | 改 (a)(b)(d)(e)(f)，(c) 留給 #523（Q12）；(d) 含 ADR-008 D8 與 `architecture.mdx` 的 Semgrep 延後列                                                                                                                                                                     | N3                        |
+| 13  | T9 與 #111 的歸屬                | 併入 Q12 (e)                                                                                                                                                                                                                                                            | —                         |
+| 14  | 正式層關閉 `/docs`               | 本次不關，另開 issue（Q13）                                                                                                                                                                                                                                             | 設定範例檔                |
+| 15  | 健康檢查輪詢頻率、存活端點       | 30 秒、不拆端點，`api-contract.md` 維持一行（Q14）                                                                                                                                                                                                                      | D5                        |
+| 16  | access log 格式                  | 留給 01-01（Q15）                                                                                                                                                                                                                                                       | 設定範例檔                |
+
+### 規劃審查時的裁定（維護者 2026-11-22）
+
+| #   | 裁定                                                                                                                                                                                                                                                                 | 設計中的位置                 |
+| :-- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------- |
+| R-A | 覆蓋率比較 base 分支的 `coverage-baseline.json`（`git show origin/<base_ref>:coverage-baseline.json`），不只看 PR 自己那份；PR 把任一值調低到 base 以下時 job 失敗，除非 PR 帶維護者加的 `coverage-baseline-lower` 標籤；workflow 要在 `labeled`／`unlabeled` 時重跑 | D12；CI job 表；覆蓋率序列圖 |
+| R-B | #506 驗收條件 6 裡改 `AGENTS.md` 的部分移給 #523，依 Q12 (c)（issue 內文已載明）；本 change 不改 `AGENTS.md`                                                                                                                                                         | 上表第 12 列；N3             |
 
 ### 本文新發現的待決問題
 
-| #   | 問題                                                                                                                                                                                                        | 狀態                                                                                           |
-| :-- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------- |
-| N1  | `pnpm setup` 是 pnpm 的內建指令，根目錄 script 叫 `setup` 要打 `pnpm run setup`                                                                                                                             | **已裁定（Q11）**：改名 `bootstrap`，先跑 `scripts/setup.sh` 再裝前後端依賴                    |
-| N2  | 覆蓋率基準的數字從哪一次量測來                                                                                                                                                                              | **已裁定（Q7）**：取本 PR 在 CI 上第一次量到的值（兩輪合併的後端、擴大分母後的前端）           |
-| N3  | Lite 改用具名 volume（D3）後，`architecture.mdx` §部署與維運備援列「停掉服務再複製 `./data`」不成立；另外 ADR-008 D8 與 `architecture.mdx` 的「Semgrep 延後」也與本次矛盾                                   | **已裁定（Q12 d）**：備援列、ADR-008 D8、`architecture.mdx` 的「Semgrep 延後」列都在改寫範圍內 |
-| N4  | `compose` job 每次建兩個映像、耗時數分鐘，要不要每張 PR 跑                                                                                                                                                  | **已裁定（Q9）**：只在動到編排檔、Dockerfile、`backend/`、`frontend/` 時跑，不列必過（Q10）    |
-| N5  | 技術風險，不需維護者決定：`import-linter` 的 `forbidden` 契約是否支援 `app.modules.*.router` 這類萬用字元依版本而定。apply 第一個後端群組先驗證，不支援時改由「列出所有模組」的 unit 測試逐模組產生契約檢查 | **仍開著**：影響 `backend/pyproject.toml` 的契約寫法與那支 unit 測試的範圍                     |
+| #   | 問題                                                                                                                                                                                                                                                                                                               | 狀態                                                                                           |
+| :-- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------- |
+| N1  | `pnpm setup` 是 pnpm 的內建指令，根目錄 script 叫 `setup` 要打 `pnpm run setup`                                                                                                                                                                                                                                    | **已裁定（Q11）**：改名 `bootstrap`，先跑 `scripts/setup.sh` 再裝前後端依賴                    |
+| N2  | 覆蓋率基準的數字從哪一次量測來                                                                                                                                                                                                                                                                                     | **已裁定（Q7）**：取本 PR 在 CI 上第一次量到的值（兩輪合併的後端、擴大分母後的前端）           |
+| N3  | Lite 改用具名 volume（D3）後，`architecture.mdx` §部署與維運備援列「停掉服務再複製 `./data`」不成立；另外 ADR-008 D8 與 `architecture.mdx` 的「Semgrep 延後」也與本次矛盾                                                                                                                                          | **已裁定（Q12 d）**：備援列、ADR-008 D8、`architecture.mdx` 的「Semgrep 延後」列都在改寫範圍內 |
+| N4  | `compose` job 每次建兩個映像、耗時數分鐘，要不要每張 PR 跑                                                                                                                                                                                                                                                         | **已裁定（Q9）**：只在動到編排檔、Dockerfile、`backend/`、`frontend/` 時跑，不列必過（Q10）    |
+| N5  | 技術風險，不需維護者決定：`import-linter` 的 `forbidden` 契約是否支援 `app.modules.*.router` 這類萬用字元依版本而定。apply 第一個後端群組先驗證，不支援時改由「列出所有模組」的 unit 測試逐模組產生契約檢查                                                                                                        | **仍開著**：影響 `backend/pyproject.toml` 的契約寫法與那支 unit 測試的範圍                     |
+| N6  | 技術風險，不需維護者決定：`docker compose up --wait` 遇到以 `service_completed_successfully` 被依賴的一次性 `migrate` 時，各版 Compose 的行為不同；本文以 v2.20.0 為保守下限（D7）。apply 在 CI runner 上實測 `migrate` 以 0 結束後 `--wait` 不會判失敗，並把確認過的下限寫進 `.env.example` 與 `architecture.mdx` | **仍開著**：影響 compose job 的版本檢查與文件寫的下限                                          |
 
 ### 效能與資源
 
 - **健康檢查輪詢**（Q14）：30 秒一次、每次一個 `SELECT 1`，backend-skeleton system-design §交易、session 與效能 留下的疑慮在這個頻率下可忽略；多實例或改用外部監控時再評估。
+- **標籤觸發的重跑**（R-A）：加上或拿掉 `coverage-baseline-lower` 會讓整個 workflow 重跑一次。標籤只在少數 PR 上出現，成本可接受；不另拆一個只含 `coverage` 的 workflow，因為那樣 `coverage` 要重新取得三個測試 job 的 artifact，反而更複雜。
 - **CI 時間**：新 job 彼此平行，最長的會是 `compose`（映像建置，已用路徑過濾，Q9）與 `e2e`（瀏覽器安裝，每張 PR 跑，Q3）。pnpm 用 `actions/setup-node` 的 cache、uv 用 `astral-sh/setup-uv` 的 cache；Docker 建置是否加 layer cache（`docker/build-push-action` 的 gha cache）等實測耗時後再定，本次不預先加。
 - **session 生命週期**：本次不碰。API 的 async session 由既有的 `get_db` 管；worker 的 sync session 屬第一個背景工作的 change。
