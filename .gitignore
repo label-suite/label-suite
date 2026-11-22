@@ -12,3 +12,8 @@ design/prototype/assets/analytics.config.local.json
 
 # Playwright MCP scratch folder (console logs and page snapshots, written on every run)
 .playwright-mcp/
+
+# e2e (Playwright) report and per-run output, including the backend SQLite file
+e2e/playwright-report/
+e2e/test-results/
+e2e/blob-report/
