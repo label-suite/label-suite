@@ -271,7 +271,7 @@ job 依序：`cp .env.example .env` → `docker compose config --quiet` 驗兩�
 | `compose`          | `needs: changes`，有變動才跑；印 Compose 版本 → 反向檢查 → `up --build --wait --wait-timeout 300`；見 D7                                                                                                                                                                                                                                                                                               | Compose 低於下限；反向檢查沒有失敗；任一服務不健康或逾時；經 nginx 的健康檢查回應不是 `ok` | Q1、Q2、Q9  |
 | `scripts-tests`    | 不設 `needs` → `node --test` 跑五支新腳本的測試（D13）                                                                                                                                                                                                                                                                                                                                                 | 任一腳本測試失敗                                                                           | —           |
 | `e2e`              | pnpm install、uv sync → `playwright install --with-deps chromium` → `pnpm --filter e2e test`（SQLite、開發伺服器）→ 失敗時上傳 report；每張 PR 跑，先不列必過                                                                                                                                                                                                                                          | 任一旅程失敗                                                                               | Q1、Q3      |
-| `dependency-audit` | `uv run pip-audit --fail-on high`、`pnpm audit --prod --audit-level high`；`pip-audit` 以 `uv add --dev` 加入                                                                                                                                                                                                                                                                                          | 有 high 以上弱點                                                                           | Q5          |
+| `dependency-audit` | 後端 `uv run pip-audit`（pip-audit 2.10.1 無嚴重度旗標，任何已知弱點即失敗）、前端 `pnpm audit --prod --audit-level high`；`pip-audit` 以 `uv add --dev` 加入                                                                                                                                                                                                                                          | 後端有任何已知弱點，或前端正式依賴有 high 以上弱點                                         | Q5          |
 
 `api-contract` job 是 A5 漂移檢查進 CI 的地方，比對內容如下；本機的 `pnpm run api:sync` 與 `check` 指令跑同一組指令。這個 job 不起服務，因為匯出不需要環境變數，也不需要資料庫（`api-schema-export`）。
 
@@ -636,7 +636,7 @@ sequenceDiagram
   end
 ```
 
-### Scenario: 相依套件有 high 以上弱點時 CI 失敗
+### Scenario: 相依套件有弱點時 CI 失敗（後端任何已知弱點、前端正式依賴 high 以上）
 
 ```mermaid
 sequenceDiagram
@@ -645,8 +645,8 @@ sequenceDiagram
   participant Pip as uv run pip-audit
   participant Pnpm as pnpm audit
   PR->>Job: 觸發
-  Job->>Pip: --fail-on high
-  alt 後端依賴有 high 以上弱點
+  Job->>Pip: 執行 pip-audit（無嚴重度旗標）
+  alt 後端依賴有任何已知弱點
     Pip-->>Job: 非 0，列出套件與弱點編號
     Job-->>PR: 失敗
   else 乾淨
@@ -694,7 +694,7 @@ sequenceDiagram
 | 2   | 唯一公開入口                     | 選項 B：前端 nginx 反向代理 `/api/v1`，只有它對外；正式層也不含 Redis 與 worker（Q2）                                                                                                                                                                                   | D6；部署拓撲圖            |
 | 3   | e2e 進不進 CI                    | 每張 PR 跑（SQLite、開發伺服器），先不列必過（Q3）                                                                                                                                                                                                                      | D8；CI job 表             |
 | 4   | 型別檢查與後端 lint 進不進 CI    | 前端 typecheck、後端 ruff、`mypy --strict` 加進 CI，取代 #504 Q6「不加 CI job」（Q4）                                                                                                                                                                                   | CI job 表；本機自查的步驟 |
-| 5   | 相依套件掃描                     | 本次一起接：`dependency-audit` job（Q5）                                                                                                                                                                                                                                | CI job 表；對應序列圖     |
+| 5   | 相依套件掃描                     | 本次一起接：`dependency-audit` job（Q5）；後端 `pip-audit` 任何已知弱點即失敗、前端 `--audit-level high`（維護者 2026-11-22 裁定）                                                                                                                                      | CI job 表；對應序列圖     |
 | 6   | Semgrep 失敗或回報、規則集、範圍 | 違規即失敗（`--error`），只用兩條專案禁令，掃前端、後端與 e2e（Q6）                                                                                                                                                                                                     | `semgrep` 序列圖          |
 | 7   | 覆蓋率基準的定義                 | repo 內 `coverage-baseline.json`、容許誤差 0.1 個百分點、前後端各一個、初始值取本 PR 第一次 CI 量到的值、不留 90% 位置（Q7）；另與 base 分支的基準比、只能持平或上升，調低須維護者加 `coverage-baseline-lower` 標籤；上升時更新為選擇性，CI 印出並上傳建議基準檔（R-A） | D12；CI job 表            |
 | 8   | 前端覆蓋率分母                   | `include: src/**`，排除產物、測試輔助、設定（Q8）                                                                                                                                                                                                                       | D12                       |

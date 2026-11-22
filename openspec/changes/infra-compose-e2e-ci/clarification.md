@@ -69,6 +69,7 @@
 - **理由**：ADR-008 D8 決定先做相依套件掃描，目前依賴少，ignore 流程成本最低。
 - **已回修**：`system-design.md` CI job 表 `dependency-audit`、`proposal.md`
 - **日期**：2026-11-22（維護者於 session 中逐題回覆，全數採建議答案）
+- **apply 修正（design R2 觸發）**：tasks 3.1 驗證 `pip-audit` 2.10.1 沒有 `--fail-on` 或任何嚴重度旗標，`--format json` 的弱點項目也沒有嚴重度欄位。維護者於 2026-11-22 裁定：後端改為**任何已知弱點都失敗**，指令是 `uv run pip-audit`，不寫嚴重度腳本；前端維持 `pnpm audit --prod --audit-level high`。後端門檻因此比 ADR-008 D8 字面的 high 嚴格，ADR-008 D8 與 `architecture.mdx` 的指令寫法一併修正（tasks 群組 10）。回修位置：`system-design.md` CI job 表與序列圖、`proposal.md`、`design.md` D12、`specs/security-scanning/spec.md`、`tasks.md`。
 
 ### Q6. Semgrep 違規時失敗還是只回報；規則集與範圍
 

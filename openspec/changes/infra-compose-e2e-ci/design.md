@@ -165,7 +165,7 @@ PostgreSQL 那一輪以 JUnit XML 加 `scripts/check-junit-skips.mjs` 斷言 0 s
 
 ### D12 相依套件掃描照 Q5，嚴重度過濾的可行性見 R2
 
-`pip-audit` 以 `uv add --dev` 加入；前端用 pnpm 內建的 `audit`。`pnpm audit --prod --audit-level high` 的旗標確定存在；`pip-audit` 依嚴重度過濾的方式待 apply 驗證（R2）。
+`pip-audit` 以 `uv add --dev` 加入；前端用 pnpm 內建的 `audit`。後端指令是 `uv run pip-audit`，**任何已知弱點都失敗**，不加 `--fail-on`、不寫嚴重度腳本（`pip-audit` 2.10.1 沒有嚴重度旗標，R2）；前端是 `pnpm audit --prod --audit-level high`，只在正式依賴有 high 以上弱點時失敗。後端門檻因此比 ADR-008 D8 字面的 high 嚴格。
 
 ### D13 文件改寫照 Q12 (a)(b)(d)(e)(f)，`AGENTS.md` 依 R-B 不改
 
@@ -195,7 +195,7 @@ PostgreSQL 那一輪以 JUnit XML 加 `scripts/check-junit-skips.mjs` 斷言 0 s
 ## Risks / Trade-offs
 
 - **R1 import-linter 的 `forbidden` 契約可能不支援萬用字元（N5）** → tasks 1.1 先在所裝版本上驗證：寫一條 `app.modules.*.router` 的 forbidden 契約，對刻意違規的暫存模組跑 `lint-imports`，看是否非 0。支援就照 system-design 的四條契約寫；不支援時，後端 unit 測試以 `pkgutil.iter_modules` 列出所有模組、逐模組產生 forbidden 契約內容，並斷言 `pyproject.toml` 的契約與產生結果一致（clarification §交給後續產出）。兩條路的外部行為相同，spec 不受影響；驗證結果寫進該群組的提交訊息。
-- **R2 `pip-audit` 可能沒有依嚴重度過濾的旗標** → ADR-008 D8 與 Q5 寫的是 `pip-audit --fail-on high`。tasks 3.1 先以 `uv run pip-audit --help` 與官方文件確認旗標是否存在。存在就照寫。不存在時：(1) fallback 是以 `pip-audit --format json` 輸出、交給一支小腳本依弱點資料庫的嚴重度判定 high 以上才失敗；若 JSON 沒有嚴重度欄位，再退一步改為「任何已知弱點都失敗」，那比 ADR 嚴格；(2) 不論採哪一個 fallback，都**不得自行改寫 ADR-008 D8 或 Q5 的字句**，由執行的 agent 停下，把實際旗標、選用的 fallback 與它和 D8 字面的差異回報給主 agent，由主 agent 轉維護者決定是否接受或修 ADR。這條同時適用 `pnpm audit` 旗標與 Q5 不符的情況。
+- **R2 `pip-audit` 沒有依嚴重度過濾的旗標（已於 apply 驗證，2026-11-22 維護者裁定）** → ADR-008 D8 與 Q5 寫的是 `pip-audit --fail-on high`。tasks 3.1 驗證 `pip-audit` 2.10.1 沒有 `--fail-on` 或任何嚴重度旗標，`--format json` 也沒有嚴重度欄位。規則維持：不得自行改寫 ADR-008 D8 或 Q5 的字句，由執行的 agent 停下回報，由主 agent 轉維護者決定。結果：採「任何已知弱點都失敗」的 fallback（`uv run pip-audit`，無嚴重度腳本），維護者已接受；後端門檻因此比 high 嚴格，ADR-008 D8 與 `architecture.mdx` 的指令寫法於 tasks 10.4 修正。前端 `pnpm audit --prod --audit-level high` 旗標存在，維持 high。這條規則同樣適用 `pnpm audit` 旗標與 Q5 不符的情況。
 - **R3 覆蓋率基準的初始值要等 CI 量出來** → 基準檔不存在時 `check-coverage.mjs` 失敗（D6），所以本 PR 第一次 CI run 的 `coverage` job 會是紅的，但 job 仍會印出並上傳建議基準檔 `coverage-baseline-suggested`。tasks 的整合群組下載那個檔、原樣提交成 `coverage-baseline.json`，之後的 run 應該轉綠。base 分支（`main`）上還沒有基準檔，這次 run 依 system-design D12 第 1 步印出 notice、略過「不得調低」；本 PR 合併後，之後的 PR 才開始與 base 比較。不以 0 或 acceptance 記的 97%、98.98% 當占位值（Q7）。
 - **R3a 標籤由維護者管理** → `coverage-baseline-lower` 只有維護者會加（R-A）。repo 裡還沒有這個標籤時，加不上去，調低基準的 PR 只會一直紅，不會誤放行；建立標籤屬 repo 設定，不在本 change 內執行，列在 tasks §Workflow follow-up 由主 session 回報維護者。workflow 只讀標籤名稱，不檢查是誰加的；「只有維護者加」靠 repo 權限與審查，不是 CI 的機械檢查。
 - **R4 既有依賴可能已有 high 弱點，或既有程式命中 Semgrep 規則** → 新 job 一上就紅。apply 時若發生，停下回報，不加忽略清單、不降門檻（AGENTS.md §Review Guidelines；loud failure）。升級依賴屬另一張 issue 的決定。Semgrep 規則寫好後、接上 CI 之前，先對目前的 `backend/`、`frontend/` 跑一次：必須 0 個發現；有發現時不論是真違規還是規則誤判（例如把從環境變數讀取的設定當成寫死的 secret），都停下回報，不自行放寬規則或加例外（tasks 3.2）。

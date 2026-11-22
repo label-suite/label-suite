@@ -25,7 +25,7 @@
   - 介面描述檔與前端產物的漂移比對（A5；system-design §CI job 設計 `api-contract`）。
   - 覆蓋率「不得下降」：基準存 repo 根 `coverage-baseline.json`，前後端各一段，容許誤差 0.1 個百分點。依 R-A，PR 的基準與 base 分支的基準比較，只能持平或上升；調低基準（含放寬容許誤差）時 CI 失敗，除非 PR 帶有由維護者加上的 `coverage-baseline-lower` 標籤。覆蓋率上升時 CI 通過，並在 log 與 artifact `coverage-baseline-suggested` 輸出建議基準，是否更新基準由 PR 作者選擇。數字一律以 CI 量到的為準，本機不比較也不寫入基準；初始值取本 PR 在 CI 上第一次輸出的建議基準；前端分母改為涵蓋 `src/**`（排除產物、測試輔助、設定）；五項關鍵路徑 90% 本次不留位置（ADR-007 D2、T10、Q7、Q8；system-design D12）。
   - Semgrep：違規即失敗，只用兩條專案禁令（CORS 萬用來源、寫死的 secret），掃 `backend/`、`frontend/`、`e2e/`（ADR-008 D8；`architecture.mdx` §部署與維運；Hard Rule 7、8；S2；Q6）。
-  - 相依套件掃描：後端 `pip-audit --fail-on high`、前端 `pnpm audit --prod --audit-level high`（ADR-008 D8、Q5）。
+  - 相依套件掃描：後端 `uv run pip-audit`（任何已知弱點都失敗，比 ADR-008 D8 字面的 high 嚴格，Q5 apply 修正）、前端 `pnpm audit --prod --audit-level high`（ADR-008 D8、Q5）。
   - 容器編排驗證：只在動到編排檔、Dockerfile、`.dockerignore`、`frontend/nginx.conf`、`backend/`、`frontend/` 時跑；先確認編排工具版本、再以兩個反向檢查確認缺必要設定時編排檔無法解析，最後兩層各起一次（Q1、Q9；system-design D7）。
   - CI 輔助腳本的測試獨立成一個 job，不等其他 job，並以靜態測試鎖住 CI 設定本身的結構（system-design D13；design D11、D14）。
   - e2e：每張 PR 跑（SQLite、開發伺服器），先不列必過（Q3）。
@@ -79,5 +79,5 @@
 
 - system-analysis 待決 #1–#16 與 system-design N1–N4：已於 2026-11-22 由 `clarification.md` Q1–Q15 裁定，對照見 system-design §技術待決問題。
 - N5（技術風險，不需維護者決定）：分層檢查工具的 `forbidden` 契約是否支援萬用字元。apply 第一個後端群組先驗證，不支援時改由「列出所有模組」的 unit 測試逐模組產生契約（clarification §交給後續產出；design R1）。
-- 可行性風險（apply 驗證、不在規劃中自行解決）：`pip-audit` 可能沒有依嚴重度過濾的旗標，無法照 ADR-008 D8 的字面 `--fail-on high` 執行；處理方式與回報方式見 design R2。
+- 可行性風險（已解決）：`pip-audit` 2.10.1 沒有嚴重度旗標，JSON 也沒有嚴重度欄位，無法照 ADR-008 D8 的字面 `--fail-on high` 執行；維護者於 2026-11-22 裁定後端改為任何已知弱點都失敗（`uv run pip-audit`），前端維持 high，見 design R2 與 clarification Q5。
 - N6（技術風險，不需維護者決定）：容器編排工具的最低版本。system-design D7 暫定 v2.20.0，apply 在本機（tasks 7.1）與 CI runner（tasks 8.3）實測確認後寫進 `.env.example`、`compose` job 與 `architecture.mdx`；不成立時停下回報（design R9）。
