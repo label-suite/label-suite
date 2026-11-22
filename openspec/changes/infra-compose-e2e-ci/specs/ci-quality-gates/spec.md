@@ -109,7 +109,7 @@ CI SHALL 重新匯出後端介面描述檔並重產前端呼叫層，與已提�
 
 ### Requirement: 覆蓋率不得低於基準
 
-CI SHALL 把前後端的覆蓋率與 PR 所帶的 repo 根 `coverage-baseline.json` 比較；基準檔前後端各一段（後端一個整體百分比，前端 statements 與 branches 各一個），加一個容許誤差 0.1 個百分點。任一指標低於「基準減容許誤差」MUST 失敗並印出層、指標、基準與實測值。PR 的基準檔不存在或缺欄位時 MUST 失敗並說明缺什麼，MUST NOT 以 0 或任何預設值代替。覆蓋率是否通過與基準該填多少，一律以 CI 量到的數字為準（本機自查的對應行為見 `workspace-commands`）。
+CI SHALL 把前後端的覆蓋率與 PR 所帶的 repo 根 `coverage-baseline.json` 比較；基準檔前後端各一段（後端一個整體百分比，前端 statements 與 branches 各一個），加一個容許誤差 0.1 個百分點。任一指標低於「基準減容許誤差」MUST 失敗並印出層、指標、基準與實測值。訊息中的百分比數字一律固定為小數點後一位（90 印成「90.0」、89.8 印成「89.8」）；寫進建議基準檔的數字則是 JSON 數值（90.0 寫成 `90`，不補零）。PR 的基準檔不存在或缺欄位時 MUST 失敗並說明缺什麼，MUST NOT 以 0 或任何預設值代替。覆蓋率是否通過與基準該填多少，一律以 CI 量到的數字為準（本機自查的對應行為見 `workspace-commands`）。
 
 來源：ADR-007 D2；testing-agent-rules T10；clarification Q7；維護者規劃審查裁定 R-A（2026-11-22）；#506 §驗收條件 3。
 
@@ -169,7 +169,7 @@ CI SHALL 另取 PR base 分支上的 `coverage-baseline.json`，與 PR 所帶的
 
 - **WHEN** PR 與 base 的基準前端 branches 都是 85.0，PR 的實測值為 86.0，其餘指標不變
 - **THEN** CI 的覆蓋率 job 成功
-- **AND** 輸出含完整的建議基準檔內容，其中前端 branches 為 86.0、其餘值與 PR 基準相同、容許誤差為 0.1
+- **AND** 輸出含完整的建議基準檔內容，其中前端 branches 為 `86`（JSON 數值）、其餘值與 PR 基準相同、容許誤差為 0.1
 - **AND** 該次執行有名為 `coverage-baseline-suggested` 的 artifact，內容與輸出的建議基準相同
 - **AND** `coverage-baseline.json` 在該次執行中沒有被修改，CI 沒有推送任何 commit
 

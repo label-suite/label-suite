@@ -109,8 +109,8 @@ job 名稱、步驟與失敗條件照 system-design §CI job 設計 的表。每
 
 - **C1**：`backend-sqlite`、`backend-postgres`、`frontend`、`api-contract`、`coverage`、`semgrep`、`dependency-audit`、`scripts-tests`、`e2e` 都沒有 job 層級的 `if:`、沒有 `continue-on-error`；`on.pull_request` 沒有 `paths`、`paths-ignore`。
 - **C2**：`on.pull_request.types` 含 `opened`、`synchronize`、`reopened`、`labeled`、`unlabeled`。
-- **C3**：`coverage` 的 `needs` 正好是 `backend-sqlite`、`backend-postgres`、`frontend`；checkout 用 `fetch-depth: 0`；`--allow-lower` 只出現在以 `coverage-baseline-lower` 標籤為條件的地方；有上傳 `coverage-baseline-suggested` 的步驟。
-- **C4**：`backend-sqlite` 的步驟順序為 `ruff check` → `ruff format --check` → `mypy --strict app` → `lint-imports` → pytest → `check-junit-skips.mjs --summary`（寫入 `$GITHUB_STEP_SUMMARY`）；`backend-postgres` 為 pytest → `check-junit-skips.mjs`（不帶 `--summary`）。
+- **C3**：`coverage` 的 `needs` 正好是 `backend-sqlite`、`backend-postgres`、`frontend`；checkout 用 `fetch-depth: 0`；合併步驟為 `coverage combine .coverage.sqlite .coverage.postgres` 之後才 `coverage json`；`--allow-lower` 只出現在以 `coverage-baseline-lower` 標籤為條件的地方；有上傳 `coverage-baseline-suggested` 的步驟。
+- **C4**：`backend-sqlite` 的步驟順序為 `ruff check` → `ruff format --check` → `mypy --strict app` → `lint-imports` → pytest → `check-junit-skips.mjs --summary`（寫入 `$GITHUB_STEP_SUMMARY`）；`backend-postgres` 為 pytest → `check-junit-skips.mjs`（不帶 `--summary`）；兩個 job 的 pytest 步驟各設環境變數 `COVERAGE_FILE`（`.coverage.sqlite`、`.coverage.postgres`），兩個值必須不同，上傳的 coverage artifact 名稱也必須不同（system-design D12：pytest-cov 結束時自行合併資料，不留 `.coverage.*`，同名會互相覆蓋）。
 - **C5**：`frontend` 設 `timeout-minutes`；檢查步驟順序為 lint → typecheck → `test:coverage` → build；沒有任何步驟帶 `if: always()` 或 `continue-on-error`；checkout 沒有 `clean: false`。
 - **C6**：`api-contract` 的順序為後端匯出 → 比對 `backend/openapi.json` → 前端重產 → 比對 `frontend/src/api/generated`。
 - **C7**：`compose` 的 `needs` 含 `changes`、`if` 讀 `changes` 的輸出；`changes` 的 checkout 用 `fetch-depth: 0`；`compose` 設 `timeout-minutes: 20`；執行步驟順序為版本檢查 → `config --quiet` → 兩個反向檢查 → Lite `up` → 正式層 `up`，`up` 都帶 `--wait-timeout 300`。
@@ -129,7 +129,7 @@ PostgreSQL 那一輪以 JUnit XML 加 `scripts/check-junit-skips.mjs` 斷言 0 s
 
 ### D6 覆蓋率照 system-design D12，CI 是唯一來源
 
-`scripts/check-coverage.mjs` 的輸入是「實測值、PR 的基準檔、base 分支的基準檔（可缺）、是否允許調低（`--allow-lower`）」，讀後端 `coverage.json` 的 `totals.percent_covered` 與前端 `coverage-summary.json` 的 `total.statements.pct`、`total.branches.pct`。比較分三步照 system-design D12：取 base 基準 → 基準不得調低（含 `tolerance` 放寬；有 `--allow-lower` 才略過）→ 實測不得低於「PR 基準減 `tolerance`」。實測上升超過 `tolerance` 時不失敗，在 log 印出完整的建議基準 JSON，並寫到一個由參數指定的檔案路徑，由 `coverage` job 以 artifact `coverage-baseline-suggested` 上傳。
+`scripts/check-coverage.mjs` 的輸入是「實測值、PR 的基準檔、base 分支的基準檔（可缺）、是否允許調低（`--allow-lower`）」，讀後端 `coverage.json` 的 `totals.percent_covered` 與前端 `coverage-summary.json` 的 `total.statements.pct`、`total.branches.pct`。比較分三步照 system-design D12：取 base 基準 → 基準不得調低（含 `tolerance` 放寬；有 `--allow-lower` 才略過）→ 實測不得低於「PR 基準減 `tolerance`」。數字格式：訊息中的百分比固定為小數點後一位（`toFixed(1)`，90 印成 `90.0`）；建議基準檔以 `JSON.stringify(obj, null, 2) + "\n"` 寫出，數字是 JSON 數值（90.0 寫成 `90`），且須通過 `prettier --check`，讓原樣提交時不被 lint-staged 與 `format` job 改動。實測上升超過 `tolerance` 時不失敗，在 log 印出完整的建議基準 JSON，並寫到一個由參數指定的檔案路徑，由 `coverage` job 以 artifact `coverage-baseline-suggested` 上傳。
 
 **腳本沒有 `--update`，也不寫回 `coverage-baseline.json`**（R-A）。本機 `check` 不跑這支腳本：本機只有 SQLite 一輪、不做兩輪合併，數字和 CI 對不上（system-design D12「本機數字不等於 CI」）。作者想把基準往上收時，下載 CI 的建議基準檔原樣提交；不收也照樣通過。
 
