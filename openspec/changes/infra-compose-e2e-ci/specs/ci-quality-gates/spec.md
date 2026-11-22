@@ -8,14 +8,14 @@
 
 ### Requirement: 前後端檢查每張 PR 都執行
 
-CI 的前端、後端、契約漂移、覆蓋率、原始碼安全掃描、相依套件掃描與 e2e 檢查 SHALL 在每一張 pull request 上執行，MUST NOT 依變更路徑或目錄是否存在而跳過。既有的 `commit-messages`、`docs-site`、`format`、`specs` 四個 job MUST 維持不變。
+CI 的前端、後端、契約漂移、覆蓋率、原始碼安全掃描、相依套件掃描、CI 輔助腳本測試與 e2e 檢查 SHALL 在每一張 pull request 上執行，MUST NOT 依變更路徑或目錄是否存在而跳過。既有的 `commit-messages`、`docs-site`、`format`、`specs` 四個 job MUST 維持不變。
 
 來源：ADR-003 D1；testing-agent-rules T9；clarification Q9。
 
 #### Scenario: 只改文件的 PR 也跑前後端檢查
 
 - **WHEN** 開一張只修改 `docs/` 下檔案的 pull request
-- **THEN** 前端、後端（兩種資料庫）、契約漂移、覆蓋率、原始碼安全掃描、相依套件掃描與 e2e 的 job 都執行，沒有被標為 skipped
+- **THEN** 前端、後端（兩種資料庫）、契約漂移、覆蓋率、原始碼安全掃描、相依套件掃描、CI 輔助腳本測試與 e2e 的 job 都執行，沒有被標為 skipped
 
 #### Scenario: 既有四個 job 不變
 
@@ -109,9 +109,9 @@ CI SHALL 重新匯出後端介面描述檔並重產前端呼叫層，與已提�
 
 ### Requirement: 覆蓋率不得低於基準
 
-CI SHALL 把前後端的覆蓋率與 repo 根 `coverage-baseline.json` 比較；基準檔前後端各一段（後端一個整體百分比，前端 statements 與 branches 各一個），加一個容許誤差 0.1 個百分點。任一指標低於「基準減容許誤差」MUST 失敗並印出層、指標、基準與實測值；高於基準超過容許誤差時 SHALL 提示可更新基準，但不失敗，CI MUST NOT 自動寫回基準檔。
+CI SHALL 把前後端的覆蓋率與 PR 所帶的 repo 根 `coverage-baseline.json` 比較；基準檔前後端各一段（後端一個整體百分比，前端 statements 與 branches 各一個），加一個容許誤差 0.1 個百分點。任一指標低於「基準減容許誤差」MUST 失敗並印出層、指標、基準與實測值。PR 的基準檔不存在或缺欄位時 MUST 失敗並說明缺什麼，MUST NOT 以 0 或任何預設值代替。覆蓋率是否通過與基準該填多少，一律以 CI 量到的數字為準（本機自查的對應行為見 `workspace-commands`）。
 
-來源：ADR-007 D2；testing-agent-rules T10；clarification Q7；#506 §驗收條件 3。
+來源：ADR-007 D2；testing-agent-rules T10；clarification Q7；維護者規劃審查裁定 R-A（2026-11-22）；#506 §驗收條件 3。
 
 #### Scenario: 覆蓋率低於基準時 CI 失敗
 
@@ -123,10 +123,60 @@ CI SHALL 把前後端的覆蓋率與 repo 根 `coverage-baseline.json` 比較；
 - **WHEN** 基準的後端百分比為 95.0，PR 的實測值為 94.95
 - **THEN** CI 的覆蓋率 job 成功
 
-#### Scenario: 高於基準時提示更新但不失敗
+#### Scenario: 基準檔缺失時 CI 失敗
 
-- **WHEN** 基準的前端 branches 為 85.0，PR 的實測值為 86.0
-- **THEN** CI 的覆蓋率 job 成功，輸出提示可更新基準，`coverage-baseline.json` 在該次執行中沒有被修改
+- **WHEN** PR 的 repo 根沒有 `coverage-baseline.json`，或其中缺少前端 branches 欄位
+- **THEN** CI 的覆蓋率 job 失敗，輸出指出缺少的檔案或欄位名
+
+### Requirement: 覆蓋率基準只能持平或上升
+
+CI SHALL 另取 PR base 分支上的 `coverage-baseline.json`，與 PR 所帶的基準檔逐項比較：PR 基準的任一指標低於 base 的對應值，或容許誤差大於 base 的值時，覆蓋率 job MUST 失敗並列出被調低的欄位與兩邊的值；唯一例外是 PR 帶有 `coverage-baseline-lower` 標籤（由維護者加上），此時不做這項比較。加上或拿掉該標籤 SHALL 讓 CI 重新執行，覆蓋率 job 的結果跟著標籤更新。base 分支上沒有基準檔時 SHALL 略過這項比較並在輸出註明，其餘比較照常。
+
+來源：ADR-007 D2；testing-agent-rules T10；clarification Q7；維護者規劃審查裁定 R-A（2026-11-22）；#506 §驗收條件 3。
+
+#### Scenario: 沒有標籤時調低基準讓 CI 失敗
+
+- **WHEN** base 分支的基準前端 statements 為 90.0，PR 把 `coverage-baseline.json` 的該值改成 88.0、實測值為 88.5，PR 沒有 `coverage-baseline-lower` 標籤
+- **THEN** CI 的覆蓋率 job 失敗，輸出含「frontend」「statements」「90.0」「88.0」，並說明調低基準須由維護者加上 `coverage-baseline-lower` 標籤
+
+#### Scenario: 放寬容許誤差視同調低
+
+- **WHEN** base 分支的基準容許誤差為 0.1，PR 把它改成 0.5，PR 沒有 `coverage-baseline-lower` 標籤
+- **THEN** CI 的覆蓋率 job 失敗，輸出指出容許誤差被放寬
+
+#### Scenario: 有標籤時調低基準可以通過
+
+- **WHEN** 同一張調低前端 statements 到 88.0、實測值為 88.5 的 PR，由維護者加上 `coverage-baseline-lower` 標籤
+- **THEN** CI 重新執行，覆蓋率 job 成功
+
+#### Scenario: 拿掉標籤後恢復失敗
+
+- **WHEN** 上一個 Scenario 的 PR 被拿掉 `coverage-baseline-lower` 標籤
+- **THEN** CI 重新執行，覆蓋率 job 失敗
+
+#### Scenario: base 分支沒有基準檔時略過調低比較
+
+- **WHEN** base 分支上不存在 `coverage-baseline.json`，PR 帶有完整的基準檔且實測值不低於它
+- **THEN** CI 的覆蓋率 job 成功，輸出註明 base 分支沒有基準檔、已略過調低比較
+
+### Requirement: 覆蓋率上升時產生建議基準
+
+更新基準是選擇性的。實測值高於 PR 基準超過容許誤差時，覆蓋率 job MUST NOT 失敗，SHALL 在輸出印出完整的建議基準檔內容（上升的指標換成實測值，其餘沿用 PR 基準，容許誤差不變），並以名為 `coverage-baseline-suggested` 的 artifact 供下載。PR 不更新基準照樣通過。CI MUST NOT 自動寫回基準檔或提交任何變更。
+
+來源：ADR-007 D2；testing-agent-rules T10；clarification Q7；維護者規劃審查裁定 R-A（2026-11-22）；#506 §驗收條件 3。
+
+#### Scenario: 覆蓋率上升時通過並產生建議基準
+
+- **WHEN** PR 與 base 的基準前端 branches 都是 85.0，PR 的實測值為 86.0，其餘指標不變
+- **THEN** CI 的覆蓋率 job 成功
+- **AND** 輸出含完整的建議基準檔內容，其中前端 branches 為 86.0、其餘值與 PR 基準相同、容許誤差為 0.1
+- **AND** 該次執行有名為 `coverage-baseline-suggested` 的 artifact，內容與輸出的建議基準相同
+- **AND** `coverage-baseline.json` 在該次執行中沒有被修改，CI 沒有推送任何 commit
+
+#### Scenario: 不更新基準照樣通過
+
+- **WHEN** PR 的實測值高於基準超過容許誤差，作者沒有提交建議基準
+- **THEN** CI 的覆蓋率 job 成功
 
 ### Requirement: 覆蓋率的量測範圍
 
@@ -151,19 +201,50 @@ CI SHALL 把前後端的覆蓋率與 repo 根 `coverage-baseline.json` 比較；
 
 ### Requirement: 容器編排在相關變更時驗證
 
-CI SHALL 在 pull request 動到 `docker-compose.yml`、`docker-compose.prod.yml`、任一 Dockerfile、`backend/` 或 `frontend/` 時，驗證兩份編排檔的語法，並依序以 Lite 與正式層起服務、經公開入口取得健康檢查回應；任一服務不健康或回應不是 `ok` MUST 失敗。沒有動到上述路徑時這個驗證 SHALL 跳過。
+CI SHALL 在 pull request 動到 `docker-compose.yml`、`docker-compose.prod.yml`、任一 Dockerfile、任一 `.dockerignore`、`frontend/nginx.conf`、`backend/` 或 `frontend/` 時執行容器編排驗證；沒有動到上述路徑時這個驗證 SHALL 跳過。無法取得用來比較的 base commit 時 MUST 當作有動到而執行，不得跳過。
 
-來源：clarification Q1、Q9；ADR-008 D1；#506 §驗收條件 1；system-design D7。
+來源：clarification Q1、Q9；ADR-008 D1；#506 §驗收條件 1；system-design D7、D13。
 
 #### Scenario: 動到編排檔時執行容器驗證
 
-- **WHEN** PR 修改 `docker-compose.yml`
+- **WHEN** PR 修改 `docker-compose.yml`（或 `docker-compose.prod.yml`）
 - **THEN** CI 執行容器編排驗證；兩層都健康且經公開入口的健康檢查 `data.status` 與 `data.database` 都是 `ok` 時才成功
+
+#### Scenario: 動到後端程式時執行容器驗證
+
+- **WHEN** PR 只修改 `backend/` 底下的一個檔案
+- **THEN** CI 執行容器編排驗證
 
 #### Scenario: 只改文件時跳過容器驗證
 
 - **WHEN** PR 只修改 `docs/` 下的檔案
 - **THEN** 容器編排驗證被跳過，其餘檢查照常執行
+
+#### Scenario: 取不到 base commit 時執行容器驗證
+
+- **WHEN** 用來比較的 base commit 為空、全為 0 或在 repo 中找不到
+- **THEN** CI 執行容器編排驗證，輸出說明因取不到 base 而一律執行
+
+### Requirement: 容器編排驗證的步驟與失敗條件
+
+容器編排驗證 SHALL 依序：確認容器編排工具的版本不低於專案寫明的最低版本，低於時 MUST 失敗並說明；驗證兩份編排檔的語法；確認缺少允許來源或正式層缺資料庫密碼時編排工具拒絕解析（這兩項沒有被拒絕時 MUST 失敗）；以 Lite 與正式層依序起服務、經公開入口取得健康檢查回應。任一服務在 300 秒內沒有變成健康、或健康檢查回應的 `data.status`、`data.database` 不是 `ok` 時 MUST 失敗。
+
+來源：clarification Q1、Q9；ADR-008 D1；#506 §驗收條件 1；system-design D7、D13。
+
+#### Scenario: 缺必要設定卻沒有被拒絕時 CI 失敗
+
+- **WHEN** PR 把 Lite 編排檔的允許來源改成帶預設值，使 `.env` 缺少該設定時編排工具仍能解析
+- **THEN** CI 的容器編排驗證失敗，輸出指出「缺少允許來源時應拒絕」的檢查沒有成立
+
+#### Scenario: 服務逾時未健康時 CI 失敗
+
+- **WHEN** PR 讓後端在 300 秒內都無法通過容器健康檢查
+- **THEN** CI 的容器編排驗證失敗，輸出指出未健康的服務
+
+#### Scenario: 編排工具版本過舊時 CI 失敗
+
+- **WHEN** 執行容器編排驗證的環境中，編排工具的版本低於專案寫明的最低版本
+- **THEN** 容器編排驗證在起任何服務之前失敗，輸出含實際版本與要求的最低版本
 
 ### Requirement: e2e 每張 PR 執行
 
@@ -175,6 +256,22 @@ CI SHALL 在每張 pull request 以 SQLite 與前端開發伺服器執行 e2e；
 
 - **WHEN** PR 讓健康檢查頁的標題文字改變，使旅程找不到標題
 - **THEN** CI 的 e2e job 失敗，該次執行有可下載的 e2e 報告
+
+### Requirement: CI 輔助腳本的測試獨立執行
+
+本 change 新增的 CI 輔助腳本（覆蓋率比較、跳過數檢查、變更路徑判斷、本機自查與本機開發指令）與 CI 設定本身的回歸測試 SHALL 在每張 pull request 執行，MUST NOT 等待其他 CI 檢查完成才開始，也 MUST NOT 因其他檢查失敗而不執行；任一測試失敗 MUST 讓該檢查失敗。
+
+來源：testing-agent-rules T9、T11；agent-rules（loud failure）；system-design D13。
+
+#### Scenario: 後端測試失敗時腳本測試照樣執行
+
+- **WHEN** PR 讓後端測試失敗，同時讓覆蓋率比較腳本的一個測試失敗
+- **THEN** CI 的腳本測試檢查照樣執行並失敗，輸出指出失敗的腳本測試；它的結果不必等覆蓋率檢查
+
+#### Scenario: CI 設定的回歸測試抓到被跳過的檢查
+
+- **WHEN** PR 在 CI 設定中給後端 SQLite 那一輪的檢查加上依路徑或條件跳過的設定
+- **THEN** CI 的腳本測試檢查失敗，輸出指出該檢查不得被條件跳過
 
 ### Requirement: CI 檢查只有讀取權限且不使用 secret
 

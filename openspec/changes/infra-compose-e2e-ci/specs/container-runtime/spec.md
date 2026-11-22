@@ -8,15 +8,36 @@
 
 ### Requirement: Lite 層以預設值起服務
 
-根目錄的 Lite 編排檔 SHALL 在只以設定範例檔複製出 `.env`、不修改任何值的情況下，起前端、後端與一次性遷移服務，資料庫為檔案型資料庫。`docker compose up --wait` MUST 在所有具健康檢查的服務都健康後才以結束碼 0 結束；之後經公開入口取得的健康檢查回應 MUST 是成功 envelope，服務與資料庫兩項都為 `ok`。
+根目錄的 Lite 編排檔 SHALL 在只以設定範例檔複製出 `.env`、不修改任何值的情況下，起前端、後端與一次性遷移服務，資料庫為檔案型資料庫。`docker compose up --wait --wait-timeout 300` MUST 在所有具健康檢查的服務都於 300 秒內健康後才以結束碼 0 結束，逾時 MUST 以非 0 結束；之後經公開入口取得的健康檢查回應 MUST 是成功 envelope，服務與資料庫兩項都為 `ok`。編排所需的容器編排工具最低版本 SHALL 寫在設定範例檔的註解與 `architecture.mdx` §部署與維運。
 
-來源：ADR-003 D1、D7；ADR-008 D1；`architecture.mdx` §資料庫雙層；clarification Q1、Q2。
+來源：ADR-003 D1、D7；ADR-008 D1；`architecture.mdx` §資料庫雙層；clarification Q1、Q2；system-design D7。
 
 #### Scenario: Lite 編排以預設值起服務並通過健康檢查
 
-- **WHEN** 在乾淨的 clone 以 `.env.example` 複製出 `.env`，執行 `docker compose up --build --wait`
+- **WHEN** 在乾淨的 clone 以 `.env.example` 複製出 `.env`，執行 `docker compose up --build --wait --wait-timeout 300`
 - **THEN** 指令以結束碼 0 結束，`docker compose ps` 中前端與後端都是 healthy、遷移服務以 0 結束
 - **AND** 對 `http://localhost:${FRONTEND_PORT}/api/v1/health` 發出請求，回應 200，body 為 `{"data": {"status": "ok", "database": "ok"}, ...}` 形式的成功 envelope
+
+#### Scenario: 範例檔寫出容器編排工具的最低版本
+
+- **WHEN** 讀取 `.env.example` 的註解與 `architecture.mdx` §部署與維運
+- **THEN** 兩處寫出同一個容器編排工具最低版本號
+
+### Requirement: 前端在後端健康後才啟動
+
+兩層編排的前端服務 SHALL 等後端服務通過容器健康檢查後才啟動；後端沒有變成健康時，前端服務 MUST NOT 啟動，`docker compose up --wait` MUST 以非 0 結束。
+
+來源：ADR-008 D1、D10；clarification Q2、Q14；system-design D5。
+
+#### Scenario: 兩份編排檔的前端都以後端健康為啟動條件
+
+- **WHEN** 對 `docker-compose.yml` 與 `docker-compose.prod.yml` 各執行 `docker compose config --format json`
+- **THEN** 兩份輸出中前端服務對後端服務的相依條件都是 `service_healthy`
+
+#### Scenario: 後端不健康時前端不啟動
+
+- **WHEN** 以會讓後端健康檢查一直失敗的設定執行 `docker compose up --wait --wait-timeout 300`
+- **THEN** 指令以非 0 結束，`docker compose ps -a` 中前端容器不是 running
 
 ### Requirement: 前端服務是唯一公開入口
 
@@ -48,24 +69,30 @@
 
 #### Scenario: 遷移失敗時後端不啟動
 
-- **WHEN** 遷移服務因資料庫連線字串錯誤而以非 0 結束，執行 `docker compose up --wait`
+- **WHEN** 以讓遷移無法完成的資料庫設定執行 `docker compose up --wait --wait-timeout 300`，遷移服務以非 0 結束
 - **THEN** 指令以非 0 結束，後端容器沒有進入 running 狀態，遷移服務的 log 含遷移失敗的訊息
 
 ### Requirement: 後端缺必要設定時編排啟動失敗
 
-後端缺少允許來源設定或設定含萬用字元時，`docker compose up --wait` MUST 以非 0 結束；後端 log MUST 指出缺少或無效的變數名，MUST NOT 印出設定值。
+兩份編排檔 MUST NOT 為允許來源設定預設值。允許來源未設或為空字串時，編排工具 MUST 在建立任何容器前就以非 0 結束，訊息 MUST 指出要設定的變數名 `CORS_ALLOWED_ORIGINS`。允許來源含萬用字元時，`docker compose up --wait` MUST 以非 0 結束；後端 log MUST 指出無效的變數名，MUST NOT 印出設定值。
 
-來源：backend-agent-rules B10；security-agent-rules S2、S9；`AGENTS.md` Hard Rule 7；主規格 `runtime-config`。
+來源：backend-agent-rules B10；security-agent-rules S2、S9；`AGENTS.md` Hard Rule 7；主規格 `runtime-config`；system-design D6、D7。
 
 #### Scenario: 允許來源為空時起不來
 
-- **WHEN** `.env` 的 `CORS_ALLOWED_ORIGINS` 設為空字串，執行 `docker compose up --wait`
-- **THEN** 指令以非 0 結束，後端 log 含 `CORS_ALLOWED_ORIGINS` 字樣，不含任何設定值
+- **WHEN** `.env` 的 `CORS_ALLOWED_ORIGINS` 設為空字串，執行 `docker compose up --wait --wait-timeout 300`
+- **THEN** 指令以非 0 結束，輸出含 `CORS_ALLOWED_ORIGINS`
+- **AND** `docker compose ps -a` 不列出任何容器
+
+#### Scenario: 缺允許來源時編排檔無法解析
+
+- **WHEN** 以 `.env.example` 複製出 `.env` 後，以空字串的 `CORS_ALLOWED_ORIGINS` 環境變數執行 `docker compose config --quiet`
+- **THEN** 指令以非 0 結束，輸出含 `CORS_ALLOWED_ORIGINS`
 
 #### Scenario: 允許來源含萬用字元時起不來
 
-- **WHEN** `.env` 的 `CORS_ALLOWED_ORIGINS` 設為 `*`，執行 `docker compose up --wait`
-- **THEN** 指令以非 0 結束，後端 log 指出 `CORS_ALLOWED_ORIGINS` 不得含萬用字元
+- **WHEN** `.env` 的 `CORS_ALLOWED_ORIGINS` 設為 `http://localhost:5173,*`，執行 `docker compose up --wait --wait-timeout 300`
+- **THEN** 指令以非 0 結束，後端 log 指出 `CORS_ALLOWED_ORIGINS` 不得含萬用字元，log 中沒有出現 `http://localhost:5173,*` 這串值
 
 ### Requirement: 正式層以 PostgreSQL 起服務
 
@@ -75,7 +102,7 @@
 
 #### Scenario: 正式層編排以 PostgreSQL 起服務並通過健康檢查
 
-- **WHEN** `.env` 填入 `POSTGRES_PASSWORD`，執行 `docker compose -f docker-compose.prod.yml up --build --wait`
+- **WHEN** `.env` 填入 `POSTGRES_PASSWORD`，執行 `docker compose -f docker-compose.prod.yml up --build --wait --wait-timeout 300`
 - **THEN** 指令以結束碼 0 結束，資料庫、後端與前端都是 healthy
 - **AND** 對 `http://localhost:${FRONTEND_PORT}/api/v1/health` 的回應為 200，`data.database` 為 `ok`
 
@@ -87,9 +114,14 @@
 
 #### Scenario: 正式層編排缺資料庫密碼時拒絕啟動
 
-- **WHEN** `.env` 的 `POSTGRES_PASSWORD` 為空或不存在，執行 `docker compose -f docker-compose.prod.yml up --wait`
+- **WHEN** `.env` 的 `POSTGRES_PASSWORD` 為空或不存在，執行 `docker compose -f docker-compose.prod.yml up --wait --wait-timeout 300`
 - **THEN** 指令以非 0 結束，輸出含 `POSTGRES_PASSWORD`
 - **AND** `docker compose -f docker-compose.prod.yml ps -a` 不列出任何容器
+
+#### Scenario: 缺資料庫密碼時正式層編排檔無法解析
+
+- **WHEN** 以 `.env.example` 複製出 `.env` 後，以空字串的 `POSTGRES_PASSWORD` 環境變數執行 `docker compose -f docker-compose.prod.yml config --quiet`
+- **THEN** 指令以非 0 結束，輸出含 `POSTGRES_PASSWORD`
 
 ### Requirement: 容器健康檢查
 
@@ -115,12 +147,12 @@ Lite 層的資料庫檔 SHALL 存放在具名 volume；以不移除 volume 的�
 
 #### Scenario: 重啟後資料仍在
 
-- **WHEN** Lite 編排已起，在資料庫寫入一筆測試列後執行 `docker compose down`（不帶 `-v`），再執行 `docker compose up --wait`
+- **WHEN** Lite 編排已起，在資料庫寫入一筆測試列後執行 `docker compose down`（不帶 `-v`），再執行 `docker compose up --wait --wait-timeout 300`
 - **THEN** 該測試列仍存在，遷移服務沒有重建資料庫
 
 #### Scenario: 帶 -v 停止時資料一併移除
 
-- **WHEN** 執行 `docker compose down -v` 後再 `docker compose up --wait`
+- **WHEN** 執行 `docker compose down -v` 後再 `docker compose up --wait --wait-timeout 300`
 - **THEN** 資料庫是由遷移服務新建的空資料庫
 
 ### Requirement: 設定範例檔列出所有設定且不含 secret

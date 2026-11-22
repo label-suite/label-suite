@@ -67,9 +67,9 @@
 
 ### Requirement: check 依固定順序執行與 CI 相同的自查
 
-根目錄 SHALL 提供 `pnpm run check`，依固定順序執行格式、規格、前端 lint、型別檢查與測試、契約漂移、後端 lint、格式、型別檢查、分層檢查與測試；每一步呼叫的 MUST 是 CI 使用的同一個 package script 或指令。每一步 SHALL 印出名稱與結果；第一個失敗的步驟 MUST 讓指令以非 0 結束，後續步驟不再執行。
+根目錄 SHALL 提供 `pnpm run check`，依固定順序執行格式、規格、前端 lint、型別檢查與測試、契約漂移、後端 lint、格式、型別檢查、分層檢查與測試；每一步呼叫的 MUST 是 CI 使用的同一個 package script 或指令，參數也相同，後端測試同樣輸出覆蓋率資料與 JUnit 結果檔。每一步 SHALL 印出名稱與結果；第一個失敗的步驟 MUST 讓指令以非 0 結束，後續步驟不再執行。
 
-來源：testing-agent-rules T9、T11；agent-hook-contract H7；clarification Q4、Q11。
+來源：testing-agent-rules T9、T10、T11；agent-hook-contract H7；api-agent-rules A5；clarification Q4、Q7、Q11；維護者規劃審查裁定 R-A（2026-11-22）；system-design §本機自查的步驟。
 
 #### Scenario: 全部通過
 
@@ -85,6 +85,38 @@
 
 - **WHEN** 執行 `pnpm run check`，接著執行 `pnpm run check --with-e2e --with-semgrep`
 - **THEN** 第一次不執行 e2e 與原始碼安全掃描；第二次兩者都執行並各自印出結果
+
+#### Scenario: 後端測試步驟與 CI 參數相同
+
+- **WHEN** 比對 `check` 的 SQLite、PostgreSQL 兩輪後端測試指令與 CI 兩個後端測試 job 的對應指令
+- **THEN** 兩邊的指令與參數相同，都輸出覆蓋率資料與 JUnit 結果檔
+
+### Requirement: check 的契約漂移比對執行前的工作區
+
+契約漂移那一步 SHALL 比對「重新匯出與重產的結果」和「執行前工作區裡的 `backend/openapi.json` 與 `frontend/src/api/generated/`」，MUST NOT 與最近一次 commit 比較；有差異時 MUST 以非 0 結束並列出檔名，重產結果留在工作區。
+
+來源：api-agent-rules A5；testing-agent-rules T11；clarification Q11；system-design §本機自查的步驟。
+
+#### Scenario: 剛同步、尚未提交的契約產物不被誤判
+
+- **WHEN** 修改一個後端回應 schema 的欄位說明，執行 `pnpm run api:sync`，不提交，接著執行 `pnpm run check`
+- **THEN** 契約漂移那一步通過
+
+#### Scenario: 工作區的契約產物與重產結果不同時失敗
+
+- **WHEN** 手動修改 `frontend/src/api/generated/` 下的一個檔案（不論是否已提交），執行 `pnpm run check`
+- **THEN** 契約漂移那一步失敗並列出該檔名，指令以非 0 結束，該檔在工作區中是重產後的內容
+
+### Requirement: check 不比較也不寫入覆蓋率基準
+
+`check` MUST NOT 比較覆蓋率基準，也 MUST NOT 建立或修改 `coverage-baseline.json`；覆蓋率是否通過以 CI 為準（`ci-quality-gates`），本機只印出測試指令本身的覆蓋率摘要供參考。
+
+來源：testing-agent-rules T10；clarification Q7；維護者規劃審查裁定 R-A（2026-11-22）；system-design D12、§本機自查的步驟。
+
+#### Scenario: 本機不比較也不寫入覆蓋率基準
+
+- **WHEN** `coverage-baseline.json` 的值高於本機量到的覆蓋率，執行 `pnpm run check`
+- **THEN** 指令不因覆蓋率而失敗，`coverage-baseline.json` 沒有被修改（不存在時也沒有被建立）
 
 ### Requirement: check 明確回報 PostgreSQL 那一輪
 
