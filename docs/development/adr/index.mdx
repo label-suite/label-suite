@@ -20,7 +20,7 @@ ADR 記錄「為什麼這樣決定」：當時的限制、比較過的選項、�
 | [004](004-auth-and-security.mdx) | 認證與安全 | 生效 | D1 認證 token 放在 httpOnly cookie；D2 授權用的角色每次從資料庫讀；D3 CSRF 用綁定 session 的 double-submit token；D4 Google SSO 直接走 OIDC；D5 Google 登入綁定既有帳號的條件；D6 權限矩陣當授權輸入；D7 不做全域速率限制，登入失敗鎖定用 Redis 計數 |
 | [005](005-frontend-architecture.mdx) | 前端架構 | 生效 | D1 前端是 React 加 Vite 的單頁應用；D2 目錄分層採 pages 加 features；D3 元件庫用 shadcn/ui；D4 design token 寫一層對照；D5 圖示只用 Lucide；D6 onboarding 只做空狀態與情境提示 |
 | [006](006-task-config-and-answer-isolation.mdx) | 任務設定與答案隔離 | 生效 | D1 任務類型由設定決定，核心不寫任務專屬邏輯；D2 任務設定用 input_type 加 outputs 組合；D3 序列標記用半開字元 offset span；D4 答案隔離涵蓋標記員能到達的每個出口 |
-| [007](007-testing-strategy.mdx) | 測試策略 | 生效 | D1 三層測試的分工；D2 覆蓋率只管不得下降與關鍵路徑；D3 前端測試與原始碼放同一個目錄；D4 正式 E2E 放根目錄 |
+| [007](007-testing-strategy.mdx) | 測試策略 | 生效 | D1 三層測試的分工；D2 覆蓋率只管不得下降與關鍵路徑；D3 前端測試與原始碼放同一個目錄；D4 正式 E2E 放根目錄；D5 測試報告只用內建報告，放 CI artifact |
 | [008](008-deployment-and-operations.mdx) | 部署與維運 | 生效 | D1 Compose 加 Nginx 當 runtime，Cloudflare 可選；D2 後端與 worker 共用一個 image；D3 寄信用 Resend，沒設 key 時把連結印到 log；D4 觀測性只做 ai_runs，監控與錯誤追蹤本期不做；D5 AI 可追溯用只新增的 ai_runs 表；D6 使用者行為記在單一只新增的 audit_events 表；D7 稽核保留至少一個曆年，刪除請求就地匿名化同一列；D8 CI 安全掃描先做 SCA，SAST 延後；D9 資料備援只做正式層，備份產出到獨立 volume；D10 worker 收到 SIGTERM 先做完手上的任務 |
 
 狀態只有兩種：**草稿**（還在討論，正文的決定不生效）與**生效**。一份 ADR 不會被另一份取代，決定改了就改寫那一節，舊的寫法記在它的決策紀錄。
