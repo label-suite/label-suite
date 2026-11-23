@@ -1,0 +1,80 @@
+---
+title: '錯誤碼'
+description: 'main 上後端會回的每一個錯誤碼：HTTP 狀態、i18n 訊息鍵、在哪裡產生、哪些端點會回，以及誰在什麼時候改這份清單。'
+category: '架構'
+tags: [架構, 後端, API, 錯誤碼]
+createdAt: '2026-11-23'
+updatedAt: '2026-11-23'
+---
+
+# 錯誤碼
+
+這份記 `main` 上的後端現在會回的每一個錯誤碼：HTTP 狀態、訊息鍵、在哪一層產生、哪些端點會回；**只寫已合併的程式有的東西**。
+錯誤碼的格式與通用碼的定義在 [`api-envelope` spec](https://github.com/label-suite/label-suite/blob/main/openspec/specs/api-envelope/spec.md)，本文不重抄；端點的路徑、request 與 response 以 `backend/openapi.json` 為準，本文只用 `operationId` 對過去。
+本文與程式不一致時，是本文錯了：以程式為準，並回頭改本文。
+
+各節的收合區塊是實作或規劃時才要查的細節，預設收起。
+
+## 誰改、什麼時候改
+
+規劃時先改本文，change 的 `api-contract.md` 只寫本文的路徑與異動摘要，不重抄本文的內容。
+
+| 時機 | 誰 | 做什麼 |
+| :--- | :--- | :--- |
+| 規劃（寫 `api-contract.md`） | `sd` | 新的錯誤碼加進 [§模組專屬碼](#模組專屬碼)；既有的碼多了會回它的端點，改那一列的端點欄。`api-contract.md` 的「常駐文件異動」節寫出本文路徑與異動摘要 |
+| 規劃審閱 | `design-reviewer` | 核對本文與這次的 `api-contract.md` 一致 |
+| 實作後 | `backend-developer` | 實作出來的錯誤碼、HTTP 狀態、訊息鍵或會回它的端點和設計不同時，依程式校正本文 |
+| 程式審查 | `code-reviewer` | 再核對一次本文與實作一致；不一致時列為審查意見 |
+
+四份文件各管一件事：
+
+| 文件 | 管什麼 |
+| :--- | :--- |
+| `api-envelope` spec | 錯誤外層的形狀、錯誤碼的格式、通用碼與 HTTP 狀態的對應 |
+| 本文 | 合併之後全系統的錯誤碼：每個碼的狀態、訊息鍵、產生的位置與會回它的端點 |
+| change 的 `api-contract.md` | 這次每個端點在什麼條件下回哪個碼 |
+| `backend/openapi.json` | 每個操作在 API 文件裡宣告哪些 HTTP 狀態，以及回應的形狀 |
+
+## 通用碼
+
+通用碼不加前綴，全站共用；下表六個是目前全部的通用碼，格式與定義見 `api-envelope` spec 的「錯誤碼為大寫底線格式並定義第一批通用碼」。
+
+| `code` | HTTP | 訊息鍵 | 在哪裡產生 | 會回這個碼的端點 |
+| :--- | :--- | :--- | :--- | :--- |
+| `NOT_FOUND` | `404` | `common.not_found` | `app/core/errors.py` 的 `handle_http_exception`（路由找不到） | 沒有端點自己回；`/api/v1` 底下不存在的路徑由路由層回 |
+| `METHOD_NOT_ALLOWED` | `405` | `common.method_not_allowed` | `app/core/errors.py` 的 `handle_http_exception`（方法不允許） | `getHealth`：用 `GET` 以外的 method 呼叫 |
+| `NOT_ACCEPTABLE` | `406` | `common.not_acceptable` | `app/core/middleware.py` 的 `LocaleMiddleware`，接住 `NotAcceptableError` | 每個 `/api/v1` 請求，含 `getHealth` |
+| `VALIDATION_FAILED` | `422` | `common.validation_failed` | `app/core/errors.py` 的 `handle_validation_error` | 目前沒有：`getHealth` 沒有被驗證的輸入 |
+| `INTERNAL_ERROR` | `500` | `common.internal_error` | `app/core/middleware.py` 的 `UnhandledExceptionMiddleware`；`app/core/errors.py` 的 `handle_http_exception`（沒有對應碼的 `HTTPException`） | 每個 `/api/v1` 請求，含 `getHealth` |
+| `DATABASE_UNAVAILABLE` | `503` | `common.database_unavailable` | `app/modules/health/service.py` 的 `HealthService.check()` 丟 `DatabaseUnavailableError`，由 `handle_app_error` 轉成外層 | `getHealth`：資料庫連不上或逾時 |
+
+訊息鍵的字串在 `app/i18n/zh-TW/messages.json` 與 `app/i18n/en/messages.json`；每一層怎麼把例外變成外層，見 [後端模組與基礎建設的「錯誤怎麼對到 envelope」](./backend-modules.mdx#錯誤怎麼對到-envelope)。
+
+:::note{title="API 文件的宣告、測試用路由與成功碼" collapsible}
+- 上表的「會回這個碼的端點」寫的是實際會回的情況，不是 API 文件的宣告。`app/main.py` 的 `API_V1_ERROR_RESPONSES` 讓每個 `/api/v1` 操作都宣告 `404`、`405`、`406`、`500`；`getHealth` 另在 `app/modules/health/router.py` 宣告 `503`。所以 `getHealth` 在 `openapi.json` 裡有 `404`，實際不會回
+- `getHealth` 沒有宣告 `422`，`openapi.json` 裡也沒有
+- `422` 與 `500` 的整合測試靠 `backend/tests/probe.py` 的測試用路由觸發；它們只由 `tests/conftest.py` 掛上，不在正式的 app 與 `openapi.json` 裡，見 [端點授權的「不在本表的路徑」](./endpoint-authorization.mdx#不在本表的路徑)
+- `NotFoundError` 在 `app/core/errors.py` 已定義，目前沒有模組丟它；`404` 都來自路由找不到
+- `406` 的 body 一律是 zh-TW；`messages.json` 的 en 字串只為了兩個語系的鍵一致而存在
+- 成功外層的 `code` 是 `OK`（訊息鍵 `common.ok`），不是錯誤碼，不列在上表；定義見 `api-envelope` spec 的「成功回應包一層六欄位外層」
+:::
+
+## 模組專屬碼
+
+目前沒有模組專屬碼。
+
+第一個業務模組加錯誤碼時，在這裡開一張表，欄位與 [§通用碼](#通用碼) 相同；碼要加模組前綴。程式端要做的事見 [後端模組與基礎建設的「新增業務模組的檢查清單」](./backend-modules.mdx#新增業務模組的檢查清單)。
+
+## 已知限制
+
+| 還沒有 | 風險 | 追蹤 |
+| :--- | :--- | :--- |
+| `400`、`401`、`403`、`409` 的錯誤碼 | 第一個需要登入或有狀態轉換的端點要先定義；`401`、`403` 與 CSRF 失敗由規格 01-01 登入定義 | 已歸檔的 [backend-skeleton `api-contract.md`](https://github.com/label-suite/label-suite/blob/main/openspec/changes/archive/2026-11-20-backend-skeleton/api-contract.md) §錯誤碼 |
+| 本文與 `openapi.json`、程式的自動一致性檢查 | 只靠審查時人工對照，漏改不會讓任何檢查失敗 | [#547](https://github.com/label-suite/label-suite/issues/547) §不在範圍 |
+
+## 決策紀錄
+
+| 日期 | 決策 | 取代了什麼 | 來源 |
+| :--- | :--- | :--- | :--- |
+| 2026-11-23 | 全系統的錯誤碼落地成本文；規劃時由 `sd` 先改本文，change 只寫異動摘要與路徑（[§誰改、什麼時候改](#誰改什麼時候改)） | 模組專屬碼只散在各 change 的 `api-contract.md` | [#547](https://github.com/label-suite/label-suite/issues/547) |
+| 2026-11-23 | 實作後由 `backend-developer` 依程式校正本文，`code-reviewer` 再核對（[§誰改、什麼時候改](#誰改什麼時候改)） | — | [#546 的裁定](https://github.com/label-suite/label-suite/issues/546#issuecomment-7100137950)，[#547](https://github.com/label-suite/label-suite/issues/547) 比照 |

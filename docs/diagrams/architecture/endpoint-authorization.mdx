@@ -1,0 +1,81 @@
+---
+title: '端點授權'
+description: 'main 上每個 /api/v1 端點開給誰：系統角色、任務成員身分、對應的 PRD 權限矩陣格、要遮蔽的答案欄位，以及誰在什麼時候改這張表。'
+category: '架構'
+tags: [架構, 後端, API, 授權]
+createdAt: '2026-11-23'
+updatedAt: '2026-11-23'
+---
+
+# 端點授權
+
+這份記 `main` 上每個 `/api/v1` 端點開給哪些系統角色與任務成員身分、對到 PRD 權限矩陣的哪一格、哪些答案欄位要遮蔽；**只寫已合併的程式有的東西**。
+權限的上限是 [PRD 的權限矩陣](../../specs/00-prd.mdx#權限矩陣)，本文只引用、不改它；授權怎麼判定、遮蔽在哪一層做，規則在 [security-agent-rules 的 S3](../../development/rules/security-agent-rules.mdx#s3-授權的四段順序) 與 [S4](../../development/rules/security-agent-rules.mdx#s4-遮蔽與-allowlist-在後端)；端點的路徑、request 與 response 以 `backend/openapi.json` 為準，本文只用 `operationId` 對過去。
+本文與程式不一致時，是本文錯了：以程式為準，並回頭改本文。
+
+各節的收合區塊是實作或規劃時才要查的細節，預設收起。
+
+## 誰改、什麼時候改
+
+規劃時先改本文，change 的 `api-contract.md` 只寫本文的路徑與異動摘要，不重抄本文的內容。
+
+| 時機 | 誰 | 做什麼 |
+| :--- | :--- | :--- |
+| 規劃（寫 `api-contract.md`） | `sd` | 新端點加進 [§端點](#端點)；既有端點的角色、矩陣格或遮蔽欄位改了，改那一列。`api-contract.md` 的「常駐文件異動」節寫出本文路徑與異動摘要 |
+| 規劃審閱 | `design-reviewer` | 核對本文與這次的 `api-contract.md` 一致，每一列都沒有超出 PRD 權限矩陣 |
+| 實作後 | `backend-developer` | 實作出來的授權依賴或遮蔽和設計不同時，依程式校正本文 |
+| 程式審查 | `code-reviewer` | 再核對一次本文與實作一致；不一致時列為審查意見 |
+| 驗收 | `acceptance-verifier` | 以本文對照每個受保護端點的 [S10 驗收矩陣](../../development/rules/security-agent-rules.mdx#s10-驗收矩陣)；實際放行的角色與遮蔽和本文不同時記為缺陷 |
+
+四份文件各管一件事：
+
+| 文件 | 管什麼 |
+| :--- | :--- |
+| PRD 的權限矩陣 | 業務層的上限：每種角色對每個功能能做什麼 |
+| 本文 | 合併之後全系統的端點：每個端點放行誰、對到矩陣哪一格、遮蔽哪些答案欄位 |
+| change 的 `api-contract.md` | 這次每個端點的角色、欄位遮蔽與測試集答案隔離的完整說明 |
+| `backend/openapi.json` | 每個端點的路徑、request 與 response 的形狀 |
+
+## 端點
+
+目前 `/api/v1` 只有一個端點，刻意公開。
+
+| `operationId` | Method 與路徑 | 系統角色 | 任務成員身分 | PRD 權限矩陣 | 遮蔽的答案欄位 | 出處 |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `getHealth` | `GET /api/v1/health` | 不檢查；未登入也可呼叫 | 不檢查 | 無對應的格：矩陣外刻意公開的端點 | 無；回應只有 `status` 與 `database`，不讀任務、資料集或答案 | `app/modules/health/router.py` 的 `get_health` 沒有任何認證或授權依賴；`openspec/specs/health-check/` 的「健康檢查刻意公開」 |
+
+:::note{title="各欄怎麼填" collapsible}
+- 「系統角色」與「任務成員身分」只列放行的角色，用 PRD 的角色名稱：系統角色是平台成員、系統管理員，任務成員身分是專案負責人、審核員、標記員；不檢查時寫「不檢查」
+- 這兩欄列出的角色，就是 S10 驗收矩陣裡「每一個有效角色」那幾格要測的角色
+- 「PRD 權限矩陣」寫對到的那一格：哪一張表（依系統角色或依任務角色）、哪一列、哪一欄與代號，例「依任務角色：05 資料集分析，審核員 R」；矩陣裡沒有對應的格時寫出原因
+- 「遮蔽的答案欄位」寫欄位名、對誰遮蔽、遮蔽後的值；沒有就寫「無」與理由
+- 「出處」寫掛授權依賴或做遮蔽的程式位置，以及描述這個行為的 `openspec/specs/` capability
+:::
+
+## 不在本表的路徑
+
+下表的路徑由 `main` 上的程式提供或掛載，但不是 `/api/v1` 的業務端點，不進 [§端點](#端點)。
+
+| 路徑 | 誰拿得到 | 為什麼不在本表 | 出處 |
+| :--- | :--- | :--- | :--- |
+| `/docs`、`/redoc`、`/openapi.json` | 任何人，不需登入 | FastAPI 內建的 API 文件頁，不在 `/api/v1` 底下、不套外層，也不在 `openapi.json` 的 `paths` 裡 | `app/main.py` 的 `create_app` 沒有關掉 FastAPI 的預設值；已歸檔的 [backend-skeleton `api-contract.md`](https://github.com/label-suite/label-suite/blob/main/openspec/changes/archive/2026-11-20-backend-skeleton/api-contract.md) §端點總覽 |
+| `/api/v1/probe`（`GET`、`POST`）、`/api/v1/probe-crash`、`/api/v1/probe-bad-response`、`/api/v1/probe-db-error` | 只有後端的測試 | 只在測試掛載：`backend/tests/probe.py` 定義，`backend/tests/conftest.py` 的 `app` fixture 掛進 `/api/v1`；正式的 `create_app` 不掛，`openapi.json` 裡也沒有 | `backend/tests/probe.py`、`backend/tests/conftest.py` |
+| 任何 `/api/v1` 路徑的 CORS 預檢（帶 `Origin` 與 `Access-Control-Request-Method` 的 `OPTIONS`） | 任何來源都可以送；只有允許清單內的來源拿到 CORS 標頭 | 由 `CORSMiddleware` 自己回，不到任何端點 | `app/main.py` 的 `CORSMiddleware` 設定；`api-envelope` spec 的「錯誤回應使用同一個錯誤外層」 |
+
+前端的 `/dev/health`、`/dev/gallery` 是前端路由，不是 API 端點，見 [前端路由與骨架](./frontend-routes.mdx#路由)。
+
+## 已知限制
+
+| 還沒有 | 風險 | 追蹤 |
+| :--- | :--- | :--- |
+| 認證、授權與 CSRF | 目前唯一的端點刻意公開；第一個需要登入的端點要先把這幾層補上 | [ADR-004 的 D1](../../development/adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie)、[D3](../../development/adr/004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token) |
+| `getHealth` 的公開例外還沒寫進任何 S10 驗收矩陣 | 刻意公開目前只記在 `health-check` spec；它要求認證上線後由規格 01-01 列為刻意的例外 | `openspec/specs/health-check/` 的「健康檢查刻意公開」 |
+| 正式環境要不要關閉 `/docs`、`/redoc`、`/openapi.json` | 不關的話，任何人都讀得到完整的 API 文件 | [#506](https://github.com/label-suite/label-suite/issues/506) |
+| 本文與程式的自動一致性檢查 | 只靠審查與驗收時人工對照，漏改不會讓任何檢查失敗 | [#547](https://github.com/label-suite/label-suite/issues/547) §不在範圍 |
+
+## 決策紀錄
+
+| 日期 | 決策 | 取代了什麼 | 來源 |
+| :--- | :--- | :--- | :--- |
+| 2026-11-23 | 全系統的端點授權落地成本文；規劃時由 `sd` 先改本文，change 只寫異動摘要與路徑（[§誰改、什麼時候改](#誰改什麼時候改)） | 只散在各 change 的 `api-contract.md` | [#547](https://github.com/label-suite/label-suite/issues/547) |
+| 2026-11-23 | 實作後由 `backend-developer` 依程式校正本文，`code-reviewer` 再核對（[§誰改、什麼時候改](#誰改什麼時候改)） | — | [#546 的裁定](https://github.com/label-suite/label-suite/issues/546#issuecomment-7100137950)，[#547](https://github.com/label-suite/label-suite/issues/547) 比照 |
