@@ -3,12 +3,22 @@ import { motion, useReducedMotion } from "motion/react";
 import { MousePointerClick, RotateCcw } from "lucide-react";
 
 /**
- * 04 標記作業 Logic Flow：跨頁的操作邏輯流程（docs/specs/04-annotation/index.mdx §Logic Flow）。
+ * spec-writing 模組 Logic Flow 骨架（參考實作）。寫法見 .claude/skills/spec-writing/templates/module-index.mdx 的「## Logic Flow」一節。
  *
- * 四種標準流程圖符號：起訖（圓角膠囊）、頁面（矩形）、判斷（菱形）、其他流程或外部系統（雙邊框矩形）。
- * 節點編號、分段與出處都和 index.mdx 的文字版逐項一致；文字版沒有的連線不畫，缺口只以灰色註記標示。
- * 寫法照 .notecraft/components/spec-01-account-logic-flow.tsx，只換節點與連線的資料。
+ * 使用方式：整份複製到 .notecraft/components/spec-<模組編號>-<模組>-logic-flow.tsx，
+ * 【骨架】一字不改：色票、型別、節點輔助、樣式、圖形、主元件（只改函式名）；
+ * 【節點與連線】整段換成這個模組的資料（MODULE_LABEL、NOTE、SECTIONS），default export 改名。
+ * 節點編號、分段與出處都要和該模組 index.mdx 的文字版逐項一致；文字版沒有的連線不畫，缺口只以灰色註記標示。
+ *
+ * 【節點與連線】目前填的是模組 01 帳號的 Logic Flow，當作範例（文字版見 docs/specs/01-account/index.mdx §Logic Flow）：
+ * - MODULE_LABEL：這個模組在無障礙敘述（aria-label）裡顯示的名稱，讓螢幕閱讀器分得出是哪個模組的圖
+ * - NOTE：每個節點編號對應的出處說明，點選節點時顯示
+ * - SECTIONS：每個分段（對應圖上一個 tab）的節點與連線；連線的 text 欄位是文字版的條目，含規格出處
+ * 這份範例是 01 帳號當時的快照，不隨 docs/specs/01-account/index.mdx 更新；要看現行版本直接看
+ * .notecraft/components/spec-01-account-logic-flow.tsx。
  */
+
+/* ================================================================ 【骨架】不可修改 ================================================================ */
 
 /* ---------------------------------------------------------------- 色票（label-suite-design，來源 design/prototype/assets/tokens.css） */
 
@@ -31,7 +41,7 @@ const EASE: [number, number, number, number] = [0.4, 0, 0.2, 1];
 
 /* ---------------------------------------------------------------- 型別 */
 
-/** terminal 起訖、page 頁面、decision 判斷、module 其他模組的流程、external 外部系統或收信 */
+/** terminal 起訖、page 本模組的頁面、decision 判斷、module 其他模組的流程、external 外部系統或收信 */
 type NodeKind = "terminal" | "page" | "decision" | "module" | "external";
 
 /** plain 一般、yes 判斷的「是」、no 判斷的「否」或失敗 */
@@ -59,7 +69,7 @@ interface FlowEdge {
   pts: [number, number][];
   label?: string;
   lp?: [number, number];
-  /** 文字版的條目，含出處 */
+  /** 文字版的條目，含出處；起訖連線沒有規格出處 */
   text: string;
 }
 
@@ -79,8 +89,19 @@ interface Section {
   gaps: Gap[];
 }
 
-/* ---------------------------------------------------------------- 共用節點（同一個編號在不同分段重複出現） */
+/* ---------------------------------------------------------------- 共用節點輔助：依下方 NOTE 查出處說明 */
 
+function n(id: string, kind: NodeKind, lines: string[], x: number, y: number, w: number, h: number): FlowNode {
+  return { id, kind, lines, x, y, w, h, note: NOTE[id] ?? id };
+}
+
+/* ================================================================ 【節點與連線】依模組填寫（以下為模組 01 帳號範例） ================================================================ */
+
+/* ---------------------------------------------------------------- 模組名稱（顯示於 aria-label） */
+
+const MODULE_LABEL = "04 標記作業";
+
+/* ---------------------------------------------------------------- 共用節點（同一個編號在不同分段重複出現） */
 const NOTE: Record<string, string> = {
   S: "起訖：使用者直接貼一個深連結進入工作區",
   P1: "04-01 標記清單（規格 04-01 §業務流程）",
@@ -98,11 +119,7 @@ const NOTE: Record<string, string> = {
   X3: "其他流程：03-03 任務詳情 §最終例外池",
 };
 
-function n(id: string, kind: NodeKind, lines: string[], x: number, y: number, w: number, h: number): FlowNode {
-  return { id, kind, lines, x, y, w, h, note: NOTE[id] ?? id };
-}
-
-/* ---------------------------------------------------------------- 資料：五個分段，與文字版的分段一～五逐項一致 */
+/* ---------------------------------------------------------------- 資料：每個分段，與該模組 index.mdx 文字版的分段逐項一致 */
 
 const SECTIONS: Section[] = [
   {
@@ -224,6 +241,8 @@ const SECTIONS: Section[] = [
     ],
   },
 ];
+
+/* ================================================================ 【骨架】不可修改 ================================================================ */
 
 /* ---------------------------------------------------------------- 樣式 */
 
@@ -420,7 +439,7 @@ export default function SpecAnnotationLogicFlow(): ReactElement {
           <svg
             viewBox={`0 0 ${section.w} ${section.h}`}
             role="group"
-            aria-label={`04 標記作業 Logic Flow：${section.label}；用 Tab 移到節點或連線，按 Enter 看出處`}
+            aria-label={`${MODULE_LABEL} Logic Flow：${section.label}；用 Tab 移到節點或連線，按 Enter 看出處`}
             style={{ display: "block", width: "100%", minWidth: Math.round(section.w * 0.78) }}
             onClick={() => setSel(null)}
           >
