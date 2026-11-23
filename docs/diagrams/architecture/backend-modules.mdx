@@ -449,7 +449,7 @@ cd backend && uv run python -m app.scripts.export_openapi
 | :--- | :--- | :--- |
 | 一般請求的存取 log；業務程式的 log 不會自動帶 `traceId` | 拿到使用者回報的 `traceId`，只找得到未處理例外那一筆 | [#567](https://github.com/label-suite/label-suite/issues/567) |
 | 登入失敗鎖定 | 登入失敗次數的限制還沒實作 | [規格 01-05 §已確認決議](../../specs/01-account/05-login-state.mdx#已確認決議) Q3（失敗 10 次擋 30 分鐘） |
-| 全域速率限制 | 端點沒有呼叫上限 | [#565 的裁定](https://github.com/label-suite/label-suite/issues/565#issuecomment-7100090994)：後端不做，全域上限日後交給反向代理層 |
+| 全域速率限制 | 端點沒有呼叫上限 | [ADR-004 的 D7](../../development/adr/004-auth-and-security.mdx#d7-不做全域速率限制登入失敗鎖定用-redis-計數)：後端不做，全域上限日後交給反向代理層 |
 | 認證、授權與 CSRF | 目前唯一的端點刻意公開；第一個需要登入的端點要先把這幾層補上 | [ADR-004 的 D1](../../development/adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie)、[D3](../../development/adr/004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token) |
 | 信任反向代理的來源 IP | 放在 Nginx 後面時，後端看到的 client IP 都是 Nginx | [#566](https://github.com/label-suite/label-suite/issues/566) |
 | Nginx 與安全標頭 | 回應不帶 CSP 等安全標頭 | [#568](https://github.com/label-suite/label-suite/issues/568) |
