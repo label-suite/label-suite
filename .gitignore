@@ -1,5 +1,9 @@
 node_modules/
 
+# Local settings, copied from .env.example: it holds the database password and
+# is read by the orchestration files and the root commands (Hard Rule 8)
+.env
+
 # Leftovers of the frontend layer-boundary probe tests (probes in pages/ and components/) if interrupted
 frontend/src/pages/**/boundary-probe.tsx
 frontend/src/components/boundary-probe.tsx
