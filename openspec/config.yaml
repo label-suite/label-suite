@@ -69,7 +69,7 @@ rules:
   api-contract:
     - operationId 全專案唯一，由 FastAPI 的 generate_unique_id_function **固定成「動詞加資源」**（例 listUsers、getUser），不手寫也不逐個覆寫
     - 每個端點都要列出角色、錯誤碼與遮蔽欄位（沒有就寫「無」）
-    - 錯誤碼或端點授權有異動時，先改 docs/diagrams/architecture/error-codes.mdx（新的錯誤碼、會回既有錯誤碼的新端點）與 endpoint-authorization.mdx（新端點、角色、PRD 權限矩陣的格、遮蔽的答案欄位）；「常駐文件異動」節寫出這兩個路徑與異動摘要，不重抄常駐文件的內容
+    - 錯誤碼或端點授權有異動時，先改 docs/diagrams/architecture/error-codes.mdx（新的錯誤碼、會回既有錯誤碼的新端點）與 endpoint-authorization.mdx（新端點、角色、PRD 權限矩陣的格、遮蔽的欄位（含答案））；「常駐文件異動」節寫出這兩個路徑與異動摘要，不重抄常駐文件的內容
     - 看不到的資源回 404，不得用 403 洩漏它存在；錯誤訊息不得回傳內部識別碼或堆疊
     - 成功回應**包一層 envelope**（維護者 2026-11-10 裁定）；**204 無 body、檔案與串流是明文例外**，端點屬於例外時要寫出理由
     - 路徑前綴一律 `/api/v1`（維護者 2026-11-10 裁定）

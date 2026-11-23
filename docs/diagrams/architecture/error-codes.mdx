@@ -43,7 +43,7 @@ updatedAt: '2026-11-23'
 | :--- | :--- | :--- | :--- | :--- |
 | `NOT_FOUND` | `404` | `common.not_found` | `app/core/errors.py` 的 `handle_http_exception`（路由找不到） | 沒有端點自己回；`/api/v1` 底下不存在的路徑由路由層回 |
 | `METHOD_NOT_ALLOWED` | `405` | `common.method_not_allowed` | `app/core/errors.py` 的 `handle_http_exception`（方法不允許） | `getHealth`：用 `GET` 以外的 method 呼叫 |
-| `NOT_ACCEPTABLE` | `406` | `common.not_acceptable` | `app/core/middleware.py` 的 `LocaleMiddleware`，接住 `NotAcceptableError` | 每個 `/api/v1` 請求，含 `getHealth` |
+| `NOT_ACCEPTABLE` | `406` | `common.not_acceptable` | `app/core/middleware.py` 的 `LocaleMiddleware`，接住 `NotAcceptableError` | 每個 `/api/v1` 請求（CORS 預檢除外：它在 `LocaleMiddleware` 外層就回應），含 `getHealth` |
 | `VALIDATION_FAILED` | `422` | `common.validation_failed` | `app/core/errors.py` 的 `handle_validation_error` | 目前沒有：`getHealth` 沒有被驗證的輸入 |
 | `INTERNAL_ERROR` | `500` | `common.internal_error` | `app/core/middleware.py` 的 `UnhandledExceptionMiddleware`；`app/core/errors.py` 的 `handle_http_exception`（沒有對應碼的 `HTTPException`） | 每個 `/api/v1` 請求，含 `getHealth` |
 | `DATABASE_UNAVAILABLE` | `503` | `common.database_unavailable` | `app/modules/health/service.py` 的 `HealthService.check()` 丟 `DatabaseUnavailableError`，由 `handle_app_error` 轉成外層 | `getHealth`：資料庫連不上或逾時 |
@@ -53,7 +53,7 @@ updatedAt: '2026-11-23'
 :::note{title="API 文件的宣告、測試用路由與成功碼" collapsible}
 - 上表的「會回這個碼的端點」寫的是實際會回的情況，不是 API 文件的宣告。`app/main.py` 的 `API_V1_ERROR_RESPONSES` 讓每個 `/api/v1` 操作都宣告 `404`、`405`、`406`、`500`；`getHealth` 另在 `app/modules/health/router.py` 宣告 `503`。所以 `getHealth` 在 `openapi.json` 裡有 `404`，實際不會回
 - `getHealth` 沒有宣告 `422`，`openapi.json` 裡也沒有
-- `422` 與 `500` 的整合測試靠 `backend/tests/probe.py` 的測試用路由觸發；它們只由 `tests/conftest.py` 掛上，不在正式的 app 與 `openapi.json` 裡，見 [端點授權的「不在本表的路徑」](./endpoint-authorization.mdx#不在本表的路徑)
+- `422` 與 `500` 的整合測試靠 `backend/tests/probe.py` 的測試用路由觸發；它們只由 `backend/tests/conftest.py` 掛上，不在正式的 app 與 `openapi.json` 裡，見 [端點授權的「不在本表的路徑」](./endpoint-authorization.mdx#不在本表的路徑)
 - `NotFoundError` 在 `app/core/errors.py` 已定義，目前沒有模組丟它；`404` 都來自路由找不到
 - `406` 的 body 一律是 zh-TW；`messages.json` 的 en 字串只為了兩個語系的鍵一致而存在
 - 成功外層的 `code` 是 `OK`（訊息鍵 `common.ok`），不是錯誤碼，不列在上表；定義見 `api-envelope` spec 的「成功回應包一層六欄位外層」
@@ -77,4 +77,4 @@ updatedAt: '2026-11-23'
 | 日期 | 決策 | 取代了什麼 | 來源 |
 | :--- | :--- | :--- | :--- |
 | 2026-11-23 | 全系統的錯誤碼落地成本文；規劃時由 `sd` 先改本文，change 只寫異動摘要與路徑（[§誰改、什麼時候改](#誰改什麼時候改)） | 模組專屬碼只散在各 change 的 `api-contract.md` | [#547](https://github.com/label-suite/label-suite/issues/547) |
-| 2026-11-23 | 實作後由 `backend-developer` 依程式校正本文，`code-reviewer` 再核對（[§誰改、什麼時候改](#誰改什麼時候改)） | — | [#546 的裁定](https://github.com/label-suite/label-suite/issues/546#issuecomment-7100137950)，[#547](https://github.com/label-suite/label-suite/issues/547) 比照 |
+| 2026-11-23 | 實作後由 `backend-developer` 依程式校正本文，`code-reviewer` 再核對（[§誰改、什麼時候改](#誰改什麼時候改)） | — | [#547 的裁定](https://github.com/label-suite/label-suite/issues/547#issuecomment-7102478776) |

@@ -23,7 +23,7 @@ model: opus
 3. `docs/development/architecture.mdx`：§認證與授權、§測試分層、§資料庫雙層、§測試集答案不外露
 4. 對應的 `docs/specs/` 規格書——**Scenario 的名稱就是從那裡的「驗收標準」來的**，兩邊要對得起來
 5. 實作回報與 code review 結果（了解改了哪些地方）
-6. 常駐文件 `docs/diagrams/architecture/endpoint-authorization.mdx`：`main` 上每個端點放行的系統角色與任務成員身分、對到的 PRD 權限矩陣格、遮蔽的答案欄位；對照 S10 驗收矩陣「每一個有效角色」那幾格時用它
+6. 常駐文件 `docs/diagrams/architecture/endpoint-authorization.mdx`：`main` 上每個端點放行的系統角色與任務成員身分、對到的 PRD 權限矩陣格、遮蔽的欄位（含答案）；對照 S10 驗收矩陣「每一個有效角色」那幾格時用它
 7. 領域規範：`docs/development/rules/testing-agent-rules.mdx` T1 三層的範圍、位置、指令與生命週期、T9 開發前要落實的自動 gate、T10 覆蓋率、T11 evidence、T12 接到既有的那個人工停點（**它的適用路徑就是 `acceptance.md` 與交付回報**）；`docs/development/rules/security-agent-rules.mdx` S4 遮蔽與 allowlist 在後端、S5 答案隔離的覆蓋面
 
 ## 環境準備
@@ -54,7 +54,7 @@ model: opus
 - [ ] 每個端點以**各個相關角色、未登入、登入狀態已失效**各呼叫一次，確認 status 與回應符合 contract
 - [ ] **遮蔽欄位**：受限角色的回應中欄位符合 contract 規定的形狀與值，**列表與單筆端點都要檢查**；有權限的角色看到完整值
 - [ ] 寫入端點：無權限的角色回 403；有權限的寫入後再 GET 一次，**逐欄位**核對寫入值，不只確認「有成功」
-- [ ] **端點授權與常駐文件一致**：實際放行的系統角色與任務成員身分、遮蔽的答案欄位和 `endpoint-authorization.mdx` 那一列相同；不一致時記為缺陷
+- [ ] **端點授權與常駐文件一致**：實際放行的系統角色與任務成員身分、遮蔽的欄位（含答案）和 `endpoint-authorization.mdx` 那一列相同；不一致時記為缺陷
 - [ ] **看不到的資源回 404**，不是 403——確認沒有從 status 洩漏它存在
 - [ ] 驗證失敗、404、狀態不允許（409）的行為符合 Scenario
 - [ ] **測試集答案隔離（Hard Rule 6）**：以標記員身分打他能到達的**每一個**端點（含列表、詳情、輪詢結果、匯出、錯誤回應），斷言 payload 裡**沒有**標準答案或測試集辨識資訊。這一條是必驗項，不是加分項
