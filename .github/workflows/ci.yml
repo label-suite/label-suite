@@ -144,7 +144,10 @@ jobs:
       # a cited line that names nothing its sentence names. WARN reached zero
       # in #459, so a line number that drifts onto an unrelated line now fails
       # the job; fix the citation, or add an ALLOW entry with its reason.
-      - name: Check the file:line citations in design/system and docs
+      # It also fails on a wrong spec reference in a module's §Logic Flow
+      # (`03-01 §節名 第 N 條`, 主流程第 N 步, EN/AN, QN, a quote that is not
+      # verbatim); fix the reference, or add a SPEC_ALLOW entry with its reason.
+      - name: Check the file:line citations and the Logic Flow spec references
         run: node scripts/check-citations.mjs --strict
 
   # The two backend jobs run on every pull request, with no path filter and no
