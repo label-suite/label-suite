@@ -447,7 +447,7 @@ cd backend && uv run python -m app.scripts.export_openapi
 | 還沒有 | 風險 | 追蹤 |
 | :--- | :--- | :--- |
 | 一般請求的存取 log；業務程式的 log 不會自動帶 `traceId` | 拿到使用者回報的 `traceId`，只找得到未處理例外那一筆 | [#567](https://github.com/label-suite/label-suite/issues/567) |
-| API 速率限制 | 端點可以被無上限地呼叫；登入失敗次數的限制也還沒實作 | [#565](https://github.com/label-suite/label-suite/issues/565)（要不要做還待決定） |
+| 登入失敗鎖定 | 登入失敗次數的限制還沒實作 | [#565](https://github.com/label-suite/label-suite/issues/565) |
 | 認證、授權與 CSRF | 目前唯一的端點刻意公開；第一個需要登入的端點要先把這幾層補上 | [ADR-004 的 D1](../../development/adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie)、[D3](../../development/adr/004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token) |
 | 信任反向代理的來源 IP | 放在 Nginx 後面時，後端看到的 client IP 都是 Nginx | [#566](https://github.com/label-suite/label-suite/issues/566) |
 | Nginx 與安全標頭 | 回應不帶 CSP 等安全標頭 | [#568](https://github.com/label-suite/label-suite/issues/568) |
