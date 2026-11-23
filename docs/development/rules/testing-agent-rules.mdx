@@ -161,7 +161,7 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 
 ### T9 開發前要落實的自動 gate
 
-正式開發前要落實下列七個自動 gate，本文件只定政策、不實作任何 gate。CI 上的實作由 [#506](https://github.com/label-suite/label-suite/issues/506) 建成六項，下表右欄寫 job 名稱；第 6 項（授權與答案隔離的回歸）還沒有建，仍屬 [#111](https://github.com/label-suite/label-suite/issues/111)，本機 hook 與 T10 的關鍵路徑 90% 分支覆蓋也仍屬 #111。
+正式開發前要落實下列七個自動 gate，本文件只定政策、不實作任何 gate。CI 上已建成六項，下表右欄寫 job 名稱；第 6 項（授權與答案隔離的回歸）還沒有建，本機 hook 與 T10 的關鍵路徑 90% 分支覆蓋也還沒有建。
 
 | | |
 | :--- | :--- |
@@ -177,7 +177,7 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 | import 邊界（前端分層、後端分層） | F1 與 B1 | `backend-sqlite`：`uv run lint-imports`；`frontend`：同上的 lint |
 | OpenAPI 與前端 client 的 drift | [api-agent-rules.mdx](api-agent-rules.mdx) A5 | `api-contract` |
 | migration 在 SQLite 與 PostgreSQL 兩層都能跑 | B6、B7 與本文 T4 | `backend-sqlite`、`backend-postgres`（後者任何測試 skipped 即失敗） |
-| 授權與答案隔離的回歸 | [security-agent-rules.mdx](security-agent-rules.mdx) S5、S10 與本文 T7 | 未建成，仍屬 #111 |
+| 授權與答案隔離的回歸 | [security-agent-rules.mdx](security-agent-rules.mdx) S5、S10 與本文 T7 | 未建成 |
 | 依賴、secret 與 CORS 掃描 | `AGENTS.md` 硬性規則 7、8 與 ADR-028（SCA 加延後 SAST、Semgrep 擋 `allow_origins=["*"]`；ADR-028 已定方向） | `dependency-audit`（`uv run pip-audit`、`pnpm audit --prod --audit-level high`）與 `semgrep`（CORS 萬用來源、寫死的 secret） |
 
 :::note{title="T9 的反例與檢查方式" collapsible}
@@ -201,7 +201,7 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 - **檢查方式**：CI 的 `coverage` job 在 `backend-sqlite`、`backend-postgres`、`frontend` 都完成後執行：合併 SQLite 與 PostgreSQL 兩輪的後端覆蓋率，連同前端的 `coverage-summary.json`，交給 `node scripts/check-coverage.mjs`，和 repo 根目錄的 `coverage-baseline.json`（後端 `percentCovered`，前端 `statements` 與 `branches`，容許誤差 0.1 個百分點）比。依序檢查：（1）PR 的基準不得低於 base 分支的基準（任何一項較低或容許誤差變大即失敗）；（2）實測值不得低於「PR 的基準減容許誤差」。只能持平或上升。要調低基準，須由維護者在 PR 加 `coverage-baseline-lower` 標籤，第（1）步才放行
 - **更新基準是選擇性的**：實測上升時不失敗，`coverage` job 印出完整的建議基準檔並上傳為 artifact `coverage-baseline-suggested`；想把基準往上收，就把這個 artifact 原樣提交成 `coverage-baseline.json`，不收也照樣通過。數字只以 CI 的為準：腳本沒有 `--update`、不寫回 repo，本機的 `check` 指令不跑它（本機只有 SQLite 一輪，數字對不上）
 - **分母**：後端只量 `app/`（Alembic 不在其中）；前端量 `src/**`，排除 `src/api/generated/`、測試與設定檔
-- **尚未檢查**：五項關鍵路徑的 90% 分支覆蓋沒有建（五項的程式還不存在），仍屬 #111
+- **尚未檢查**：五項關鍵路徑的 90% 分支覆蓋沒有建（五項的程式還不存在）
 :::
 
 ### T11 evidence
@@ -348,3 +348,4 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 | 2026-11-10 | duty-mate 的 `testing-architecture.md` 不在 `develop`（在未合併分支），改以 trendlink-portal 的改寫版為來源（查核日 2026-11-10） | 起草時點名的 duty-mate `develop` 來源 | [#110](https://github.com/label-suite/label-suite/issues/110) |
 | 2026-11-10 | starter-kit 是維護者本機目錄、不是 GitHub repo，結論從「不存在」改成「存在但這個 loop 讀不到」；`trendlink` 組織 24 個 repo、`singyichen` 與本機的搜尋查核日為 2026-11-10 | 五輪搜尋零命中後的「不存在」結論 | [#111](https://github.com/label-suite/label-suite/issues/111) |
 | 2026-11-19 | 三層分工、覆蓋率政策、前端測試位置與正式 E2E 位置的理由移到 [ADR-007](../adr/007-testing-strategy.mdx)，T1 與 T10 只留做法並連過去 | —（理由原本散在 T10 的覆蓋率導言與附錄的不採用表） | [#453](https://github.com/label-suite/label-suite/issues/453) |
+| 2026-11-22 | T9 七項 gate 中六項由 CI 建成；授權與答案隔離回歸、本機 hook 與 T10 的關鍵路徑 90% 分支覆蓋尚未建，歸屬仍在 #111 | 「七項的實作全歸 #111」 | [#506](https://github.com/label-suite/label-suite/issues/506)、[#111](https://github.com/label-suite/label-suite/issues/111) |
