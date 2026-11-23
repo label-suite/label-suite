@@ -882,22 +882,35 @@ test("checkLogicFlowsIn reports a component whose arrow was moved off its target
   const file = logicFlowComponents().find((f) =>
     f.endsWith("spec-03-task-management-logic-flow.tsx"),
   );
+  const src = readFileSync(file, "utf8");
+  // pull the first edge's tip 10px back along its last segment, wherever the
+  // layout currently puts it
+  const [section] = parseLogicFlow(src);
+  const edge = section.edges[0];
+  const [a, b] = edge.pts.slice(-2);
+  const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const moved = [
+    ...edge.pts.slice(0, -1),
+    [b[0] - ((b[0] - a[0]) * 10) / len, b[1] - ((b[1] - a[1]) * 10) / len],
+  ];
+  const fmt = (pts) => `[${pts.map(([x, y]) => `[${x}, ${y}]`).join(", ")}]`;
+  assert.ok(src.includes(`pts: ${fmt(edge.pts)}`), "the edge's pts were not found verbatim");
   const dir = mkdtempSync(join(tmpdir(), "check-logic-flows-"));
   const copy = join(dir, "spec-03-task-management-logic-flow.tsx");
-  // 1-1 ends on D1's left vertex (215, 150); pull it 10px back
-  const src = readFileSync(file, "utf8").replace(
-    "[[155, 150], [215, 150]]",
-    "[[155, 150], [205, 150]]",
-  );
-  writeFileSync(copy, src);
+  writeFileSync(copy, src.replace(`pts: ${fmt(edge.pts)}`, `pts: ${fmt(moved)}`));
   const { errors } = checkLogicFlowsIn({ files: [copy] });
   assert.match(
     errors.join("\n"),
-    /spec-03-task-management-logic-flow: enter\/1-1: .*10\.0px off the outline of D1/,
+    new RegExp(`${section.id}/${edge.id}: .*10\\.0px off the outline of ${edge.to}`),
   );
 });
 
 test("checkLogicFlowsIn refuses to pass by checking nothing", () => {
   const { errors } = checkLogicFlowsIn({ files: [] });
   assert.match(errors.join("\n"), /pass by doing nothing/);
+});
+
+test("every Logic Flow component in the repository passes the layout check", () => {
+  const { errors } = checkLogicFlowsIn();
+  assert.deepEqual(errors, []);
 });
