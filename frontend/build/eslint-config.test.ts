@@ -4,7 +4,7 @@
  * variant tables the plan requires components/ui to export next to their
  * components (design D9), so `pnpm lint` ends with zero warnings.
  */
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { fileURLToPath, URL } from "node:url";
 
@@ -98,5 +98,61 @@ describe("eslint.config.js layer classification", () => {
     expect(errors).toEqual([
       expect.stringContaining("pages may only import a feature through its index.ts"),
     ]);
+  }, 30_000);
+});
+
+/**
+ * `pnpm lint` must treat any warning as a failure (spec frontend-code-
+ * boundaries, "lint 不容許警告"). `eslint --max-warnings 0` is the CLI's
+ * rule: it exits non-zero when the warning count exceeds the limit. The Node
+ * API has no such option, so the verdict is derived the same way here, and
+ * the package script is checked for the flag itself.
+ */
+describe("lint zero-warning gate", () => {
+  const PROBE = "src/components/boundary-probe.tsx";
+
+  it("runs eslint with --max-warnings 0 in the lint script", async () => {
+    const raw = await readFile(new URL("../package.json", import.meta.url), "utf8");
+    const parsed: unknown = JSON.parse(raw);
+    const scripts =
+      typeof parsed === "object" && parsed !== null && "scripts" in parsed ? parsed.scripts : null;
+    const lint =
+      typeof scripts === "object" && scripts !== null && "lint" in scripts ? scripts.lint : null;
+
+    expect(lint).toBe("eslint . --max-warnings 0");
+  });
+
+  it("fails the zero-warning gate when the layer rule is downgraded to warn", async () => {
+    const absolute = fileURLToPath(new URL(`../${PROBE}`, import.meta.url));
+    await mkdir(dirname(absolute), { recursive: true });
+    // components may not import pages (F1 layer table).
+    await writeFile(
+      absolute,
+      'import { DevHealthPage } from "../pages/dev-health";\nexport const probe = DevHealthPage;\n',
+      "utf8",
+    );
+    try {
+      const eslint = new ESLint({
+        cwd: FRONTEND_ROOT,
+        overrideConfig: { rules: { "boundaries/dependencies": "warn" } },
+      });
+      const results = await eslint.lintFiles([absolute]);
+
+      const errorCount = results.reduce((sum, result) => sum + result.errorCount, 0);
+      const warningCount = results.reduce((sum, result) => sum + result.warningCount, 0);
+      const warned = results.flatMap(({ messages }) =>
+        messages.filter(
+          ({ ruleId, severity }) => ruleId === "boundaries/dependencies" && severity === 1,
+        ),
+      );
+      const maxWarnings = 0;
+
+      // Only a warning, so a plain `eslint .` would exit 0; the gate fails it.
+      expect(errorCount).toBe(0);
+      expect(warned).not.toEqual([]);
+      expect(warningCount > maxWarnings).toBe(true);
+    } finally {
+      await rm(absolute, { force: true });
+    }
   }, 30_000);
 });

@@ -1,0 +1,40 @@
+# Build context for frontend/Dockerfile, whose context is the repository root
+# (system-design component list, the `.dockerignore` (root) row). The list is an
+# allowlist: everything is excluded first, then only what the frontend build
+# actually reads is let back in. Anything new at the top level therefore stays
+# out until someone adds it here on purpose.
+#
+# backend/ has its own backend/.dockerignore; its build context is backend/, so
+# this file does not apply to it.
+
+*
+
+# The frontend package itself, including nginx.conf and the Vite build inputs
+!frontend
+
+# tokens.css is the single source of colour, type and spacing; the
+# extract-tokens plugin fails the build when it is missing (frontend-skeleton
+# design D8)
+!design/prototype/assets
+
+# Workspace manifests. e2e/package.json is needed even though Playwright is not
+# installed: with an importer missing, --frozen-lockfile fails
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!e2e/package.json
+
+# Local artifacts inside the allowed frontend/ tree. node_modules in particular
+# must not travel into the context: the image installs from the lockfile, and a
+# host build of a native binary would be for the wrong platform.
+frontend/node_modules
+frontend/dist
+frontend/coverage
+frontend/test-results
+frontend/playwright-report
+
+# Secrets come from the environment, never from a file in the context or the
+# image (Hard Rule 8). Already covered by the `*` above; stated so that it stays
+# excluded if the allowlist ever widens.
+**/.env
+**/.env.*

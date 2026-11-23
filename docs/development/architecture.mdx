@@ -355,15 +355,16 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，�
 | image | 後端與 worker 共用一個多階段 Dockerfile；前端 build 完由 `nginx:alpine` 服務 `/dist` |
 | 寄信 | Resend；沒設 key 時把設定密碼連結印在伺服器 log，由部署者轉給使用者。因此 Lite 層的 log 視為敏感，畫面要讓管理員知道信沒有寄出去（條文見[規格 06-01](../specs/06-admin/01-user-management.mdx#已確認決議) Q9–Q11） |
 | 監控 | Prometheus、Grafana、Sentry 本期不做，與 PRD「研究原型、不是生產規模服務」的定位一致；代價是出錯時只能看 log，沒有告警 |
-| 備援 | 只做正式層：每日一次 `pg_dump -Fc`，寫到獨立的 backups volume，滾動保留 7 份。Lite 層不做自動備援：停掉服務再複製 `./data`，或在執行中用 `sqlite3 <db> "VACUUM INTO '<path>'"` 取一致副本 —— **不要在服務執行中直接複製檔案，會得到壞檔**。**備份只放在主資料碟上不足以災難復原，異地複製是部署者的責任**；備份檔含測試集答案與個資，存取控制比照原資料庫。為什麼這樣選見 [ADR-008 的 D9](adr/008-deployment-and-operations.mdx#d9-資料備援只做正式層備份產出到獨立-volume) |
+| 備援 | 只做正式層：每日一次 `pg_dump -Fc`，寫到獨立的 backups volume，滾動保留 7 份。Lite 層不做自動備援：資料在具名 volume `label-suite-data`（掛在 `/app/data`），停掉服務再用 `docker compose cp` 把 `backend` 服務的 `/app/data` 複製出來，或在執行中用 `sqlite3 <db> "VACUUM INTO '<path>'"` 取一致副本 —— **不要在服務執行中直接複製檔案，會得到壞檔**。**備份只放在主資料碟上不足以災難復原，異地複製是部署者的責任**；備份檔含測試集答案與個資，存取控制比照原資料庫。為什麼這樣選見 [ADR-008 的 D9](adr/008-deployment-and-operations.mdx#d9-資料備援只做正式層備份產出到獨立-volume) |
 | 停機 | `worker` 的 `stop_grace_period` 要大於單一評分上限 300 秒，不能留在 Compose 預設的 10 秒；收到 SIGTERM 後不再領新任務，手上的跑完才退。`backend` 只要讓進行中的 HTTP 請求收尾，不是 300 秒等級的工作，`30s` 就夠。見 [ADR-008 的 D10](adr/008-deployment-and-operations.mdx#d10-worker-收到-sigterm-先做完手上的任務) |
-| CI 安全掃描 | 後端 `uv run pip-audit --fail-on high`、前端 `pnpm audit --prod --audit-level high`；SAST（Semgrep）等有程式再接 |
+| CI 安全掃描 | job `dependency-audit`：後端 `uv run pip-audit`（任何已知弱點都失敗）、前端 `pnpm audit --prod --audit-level high`。**後端比 high 嚴格**，因為 `pip-audit` 2.10.1 沒有嚴重度旗標。job `semgrep`：官方映像 `semgrep/semgrep:1.186.0`，`semgrep --test .semgrep/` 後跑 `semgrep scan --error --config .semgrep/label-suite.yml backend/ frontend/ e2e/` |
+| Compose 最低版本 | **v2.20.0**。`docker compose up --wait` 搭配一次性的 `migrate`（以 `service_completed_successfully` 被依賴）需要；較舊版本會把已結束的一次性容器當成 `--wait` 失敗。`.env.example`、兩份編排檔與 CI `compose` job 的版本檢查用同一個值；下限是保守值，實測在 v5.1.0（本機）與 v5.1.3（CI runner）通過 |
 | 相依套件 | dependabot 警示的升級邊界見 [相依套件政策](workflow/dependency-policy.mdx) |
 | 發版 | 版號、CHANGELOG、tag、GitHub Release 與 Zenodo DOI 見 `commit-and-release.md` |
 
 :::note{title="安全掃描與分支推進" collapsible}
-- Semgrep 上線時至少要蓋兩條專案禁令：CORS 的 `allow_origins=["*"]`，以及寫死的 API key 與 secret（Hard Rule 7、8）
-- DAST 與 API fuzzing 先不做，重新討論的條件見 [ADR-008 的 D8](adr/008-deployment-and-operations.mdx#d8-ci-安全掃描先做-scasast-延後)
+- Semgrep 已蓋兩條專案禁令：CORS 的 `allow_origins=["*"]`，以及寫死的 API key 與 secret（Hard Rule 7、8）；規則與回歸樣本在 `.semgrep/`
+- DAST 與 API fuzzing 先不做，重新討論的條件見 [ADR-008 的 D8](adr/008-deployment-and-operations.mdx#d8-ci-安全掃描做相依套件掃描與-semgrep)
 - 分支與映像推進以 `commit-and-release.md` 為準：目前只有 `main`；staging 與 production 環境存在後改成 `dev` → `release` → `main` 三分支，image 在 `release` 建一次、不重建，`main` 合併後打 `vX.Y.Z` 並在 GHCR 加同 digest 的別名 tag
 :::
 
@@ -415,7 +416,7 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，�
 | 個人 repo ADR-025 | Bruno API collection | Accepted | **部分被覆寫**：Bruno 降成可選的手動工具，pre-PR 硬關卡取消，見 [§API 契約](#api-契約)與 [本 repo ADR-003 的 D9](adr/003-backend-architecture.mdx#d9-bruno-只當可選工具) |
 | 個人 repo ADR-026 | i18n 兩層 | Accepted | 沿用，見 [§i18n 兩層](#i18n-兩層)；理由見 [本 repo ADR-003 的 D11](adr/003-backend-architecture.mdx#d11-i18n-分前端與後端兩層) |
 | 個人 repo ADR-027 | GitHub Projects | Accepted | 已被取代：以 [本 repo ADR-002 的 D5](adr/002-development-workflow.mdx#d5-狀態只記在組織層專案板)為準，不用 label 追狀態，無 `STATUS.md` |
-| 個人 repo ADR-028 | CI 安全掃描（SCA 加延後 SAST） | Accepted | 沿用，等同 Hard Rule 7、8，見 [§部署與維運](#部署與維運)與 [本 repo ADR-008 的 D8](adr/008-deployment-and-operations.mdx#d8-ci-安全掃描先做-scasast-延後) |
+| 個人 repo ADR-028 | CI 安全掃描（SCA 加延後 SAST） | Accepted | 沿用；Semgrep 已建成、後端門檻比 high 嚴格，等同 Hard Rule 7、8，見 [§部署與維運](#部署與維運)與 [本 repo ADR-008 的 D8](adr/008-deployment-and-operations.mdx#d8-ci-安全掃描做相依套件掃描與-semgrep) |
 | 個人 repo ADR-029 | Output-Type Composition Model | Accepted | 沿用；`sequence_tagging` 那一列已過期，以 [§任務設定](#任務設定input_type-加-outputs) 為準（修訂見 [§待決](#待決) 第 1 列）；見 [本 repo ADR-006 的 D2](adr/006-task-config-and-answer-isolation.mdx#d2-任務設定用-input_type-加-outputs-組合) |
 | 個人 repo ADR-030 | Lucide 圖示 | Accepted | 沿用，見 [§前端](#前端)與 [本 repo ADR-005 的 D5](adr/005-frontend-architecture.mdx#d5-圖示只用-lucide) |
 | 個人 repo ADR-031 | 序列標記 tokenization 契約 | Superseded | 已被取代：改成半開字元 offset span，見 [§任務設定](#任務設定input_type-加-outputs)與 [本 repo ADR-006 的 D3](adr/006-task-config-and-answer-isolation.mdx#d3-序列標記用半開字元-offset-span) |

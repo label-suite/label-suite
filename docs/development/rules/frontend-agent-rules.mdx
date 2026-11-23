@@ -4,7 +4,7 @@ description: '分層與允許 import、型別安全、Hooks、狀態的三個去
 category: '開發說明'
 tags: [開發說明, Agent, 規範, 前端]
 createdAt: '2026-11-10'
-updatedAt: '2026-11-16'
+updatedAt: '2026-11-23'
 ---
 
 # 前端開發規範
@@ -71,7 +71,8 @@ src/
 
 :::note{title="F1 的反例與檢查方式" collapsible}
 - **反例**：`features/annotation/` import `features/task-management/hooks/useTaskRole`（改成把它搬到 `lib/` 或由 `pages/` 傳進去）；`components/ui/data-table.tsx` 裡 `useListTasks()`；`src/shared/index.ts` 一次 re-export 四十個東西
-- **檢查方式**：**待建置**。可用 `eslint-plugin-boundaries` 或 `eslint-plugin-import` 的 `no-restricted-paths` 把上面的分層表寫成機械規則，並用 `import/no-cycle` 擋循環；兩者都要等 `frontend/` 與它的 lint 設定
+- **檢查方式**：CI 的 `frontend` job 跑 `pnpm --filter frontend lint`（`eslint . --max-warnings 0`，有任何警告即失敗）。`frontend/eslint.config.js` 以 `eslint-plugin-boundaries` 把上面的分層表寫成 `boundaries/dependencies` 規則（預設禁止、逐層允許，`pages/` 只能經 `features/<feature>/index.ts` 使用 feature），`boundaries/no-unknown-files` 讓不屬於任何一層的檔案也被回報；`no-restricted-imports` 另擋 `axios`、日期套件、測試替身等
+- **尚未檢查**：循環 import（沒有設定 `import/no-cycle`）、多層 `index.ts` barrel 與 `shared/` 桶沒有機械檢查，靠審查
 :::
 
 ### F2 型別安全
@@ -89,7 +90,8 @@ TypeScript 不用 `any`，不用 `as` 或 `!` 掩蓋缺值，外部資料先當 
 
 :::note{title="F2 的反例與檢查方式" collapsible}
 - **反例**：`const task = list.find(t => t.id === id)!`（找不到就是 `undefined`，`!` 只是把問題延後到執行期）；`JSON.parse(raw) as TaskDraft`（`raw` 來自 `localStorage`，沒有任何驗證）；`function onChange(e)`（隱含 `any`）
-- **檢查方式**：**待建置**。`tsc --noEmit` 加 `@typescript-eslint` 的 `no-explicit-any`、`no-non-null-assertion`、`no-unsafe-*` 系列可以把前三項變成機械檢查；「外部資料要先驗證」只能靠審查
+- **檢查方式**：CI 的 `frontend` job 跑 `pnpm --filter frontend typecheck`（`tsc -b`；`tsconfig.json` 開 `strict` 與 `noUncheckedIndexedAccess`）與 `pnpm --filter frontend lint`。lint 套用 `typescript-eslint` 的 `strictTypeChecked`（含 `no-unsafe-*` 系列），並明列 `@typescript-eslint/no-explicit-any` 與 `@typescript-eslint/no-non-null-assertion` 為 `error`
+- **尚未檢查**：「外部資料要先驗證」只能靠審查
 :::
 
 ### F3 Hooks 的呼叫順序、依賴與清理
@@ -105,7 +107,8 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 
 :::note{title="F3 的反例與檢查方式" collapsible}
 - **反例**：`if (!taskId) return null;` 之後才 `useQuery(...)`；`const [rows, setRows] = useState([]); useEffect(() => { fetch('/api/v1/tasks').then(r => setRows(r.items)); }, [])`（兩個錯：自己 fetch 繞過單一 HTTP 邊界，又把 server 狀態複製一份）；`useEffect(() => setFullName(first + ' ' + last), [first, last])`（直接算就好）
-- **檢查方式**：**待建置**。`eslint-plugin-react-hooks` 的 `rules-of-hooks` 與 `exhaustive-deps` 可以擋前兩項；「不要用 effect 重建資料層」要靠審查
+- **檢查方式**：CI 的 `frontend` job 跑 `pnpm --filter frontend lint`，`eslint-plugin-react-hooks` 的 `rules-of-hooks` 與 `exhaustive-deps` 都設為 `error`，擋前兩項；`no-restricted-globals` 與 `no-restricted-properties` 擋直接用 `fetch`（server 資料要走 Orval 產生的 client）
+- **尚未檢查**：「不要用 effect 重建資料層」、cleanup 是否齊全要靠審查
 :::
 
 ### F4 狀態的三個去處

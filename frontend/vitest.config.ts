@@ -18,7 +18,19 @@ export default mergeConfig(
       css: { include: [/\.css\?raw$/] },
       coverage: {
         provider: "v8",
-        exclude: ["src/api/generated/**", "src/test/**", "*.config.ts", "*.config.js"],
+        // json-summary feeds scripts/check-coverage.mjs. Measuring all of src/**
+        // (not only the files a test imports) makes an untested new file lower
+        // the percentage instead of being invisible.
+        reporter: ["text", "html", "json-summary"],
+        include: ["src/**"],
+        exclude: [
+          "src/api/generated/**",
+          "src/test/**",
+          "**/*.test.{ts,tsx}",
+          "**/*.d.ts",
+          "*.config.*",
+          "dist/**",
+        ],
       },
     },
   }),

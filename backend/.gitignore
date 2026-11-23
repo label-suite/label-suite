@@ -8,3 +8,5 @@ __pycache__/
 
 # Lite-tier SQLite files (default SQLITE_PATH is ./data/label_suite.db)
 data/
+.coverage*
+coverage.json

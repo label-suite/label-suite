@@ -17,7 +17,9 @@ dependencies = [
 [dependency-groups]
 dev = [
     "httpx>=0.28.1",
+    "import-linter>=2.17",
     "mypy>=2.4.1",
+    "pip-audit>=2.10.1",
     "pytest>=9.2.0",
     "pytest-asyncio>=1.5.0",
     "pytest-cov>=7.1.0",
@@ -54,3 +56,40 @@ markers = [
     "integration: API-level tests through the real app assembly and a test database",
     "postgres: tests that only hold on PostgreSQL; skipped when TEST_DATABASE_URL is unset",
 ]
+
+[tool.importlinter]
+root_package = "app"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Module layers"
+type = "layers"
+containers = ["app.modules.*"]
+# Top to bottom. schemas sits lowest so every layer may use it; models is optional
+# because a module only gets one when it has tables.
+layers = ["router", "service", "repository", "(models)", "schemas"]
+
+[[tool.importlinter.contracts]]
+name = "Routers do not use the data layer"
+type = "forbidden"
+source_modules = ["app.modules.*.router"]
+forbidden_modules = ["app.modules.*.repository", "app.modules.*.models"]
+# Only a direct import is a violation: router -> service -> repository is the intended path.
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "Core does not depend on modules"
+type = "forbidden"
+source_modules = ["app.core"]
+forbidden_modules = ["app.modules"]
+
+[[tool.importlinter.contracts]]
+name = "Data layer does not import HTTP"
+type = "forbidden"
+source_modules = ["app.modules.*.repository", "app.modules.*.models"]
+forbidden_modules = ["fastapi", "starlette"]
+allow_indirect_imports = true
+
+[tool.coverage.run]
+source = ["app"]
+branch = true
