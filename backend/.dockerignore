@@ -1,0 +1,31 @@
+# Build context for backend/Dockerfile. The Dockerfile copies pyproject.toml,
+# uv.lock, alembic.ini, app/ and alembic/; everything listed here is a secret, a
+# local artifact, or unused inside the image.
+
+# Secrets come from the environment, never from a file in the image (Hard Rule 8)
+.env
+.env.*
+
+# Local virtualenv and tool caches
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Test suite and its artifacts: tests run on the runner with uv, not in the image
+tests/
+test-results/
+.coverage
+.coverage.*
+coverage.json
+htmlcov/
+
+# Lite-tier database files (the default SQLITE_PATH is ./data/label_suite.db)
+data/
+
+# Not used at runtime: the exported contract and the local Python pin
+openapi.json
+.python-version
+.gitignore
