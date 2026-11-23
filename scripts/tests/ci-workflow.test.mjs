@@ -4,7 +4,7 @@
 // which conditions they carry, and the order of their steps (design D14, D4 C1-C11).
 // Steps are found by the command they run, never by their display name, so renaming
 // a step does not break the test (design R10). Each task that adds a job adds its
-// assertions here; this file currently covers C1, C4, C5, C6, C7, C8, C10 and C11.
+// assertions here; this file currently covers C1, C2, C3, C4, C5, C6, C7, C8, C10 and C11.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { describe, test } from "node:test";
@@ -27,6 +27,7 @@ const ALWAYS_RUN_JOBS = [
   "semgrep",
   "dependency-audit",
   "e2e",
+  "coverage",
 ];
 
 function job(name) {
@@ -512,5 +513,132 @@ describe("C10: new jobs use no secrets and no extra permissions", () => {
     for (const name of newJobs()) {
       assert.doesNotMatch(JSON.stringify(workflow.jobs[name]), /hashFiles\(/, name);
     }
+  });
+});
+
+describe("C2: the workflow reruns when a label is added or removed", () => {
+  test("on.pull_request.types has the default types plus labeled and unlabeled", () => {
+    const types = workflow.on.pull_request?.types;
+    assert.ok(Array.isArray(types), "on.pull_request.types is missing");
+    for (const type of ["opened", "synchronize", "reopened", "labeled", "unlabeled"]) {
+      assert.ok(types.includes(type), `on.pull_request.types lacks ${type}`);
+    }
+  });
+});
+
+describe("C3: coverage", () => {
+  const combine = /\bcoverage combine \.coverage\.sqlite \.coverage\.postgres\b/;
+
+  test("needs exactly the three test jobs", () => {
+    assert.deepEqual([...job("coverage").needs].sort(), [
+      "backend-postgres",
+      "backend-sqlite",
+      "frontend",
+    ]);
+  });
+
+  test("checkout fetches the full history so the base branch can be read", () => {
+    const checkout = job("coverage").steps.find(
+      (step) => typeof step.uses === "string" && step.uses.startsWith("actions/checkout@"),
+    );
+    assert.ok(checkout, "coverage has no checkout step");
+    assert.equal(checkout.with?.["fetch-depth"], 0);
+  });
+
+  test("the base baseline is read with git show from origin/<base_ref>", () => {
+    const run =
+      job("coverage").steps[
+        requireStep("coverage", /git show "?origin\/\$\{?BASE_REF\}?"?:coverage-baseline\.json/)
+      ];
+    assert.match(JSON.stringify(run), /github\.base_ref/);
+  });
+
+  test("the three artifacts are downloaded before the data is combined", () => {
+    const steps = job("coverage").steps;
+    const downloaded = steps
+      .filter(
+        (step) =>
+          typeof step.uses === "string" && step.uses.startsWith("actions/download-artifact@"),
+      )
+      .map((step) => step.with?.name);
+    for (const name of [
+      "coverage-backend-sqlite",
+      "coverage-backend-postgres",
+      "coverage-frontend",
+    ]) {
+      assert.ok(downloaded.includes(name), `coverage does not download ${name}`);
+    }
+    const lastDownload = Math.max(
+      ...steps.map((step, i) =>
+        String(step.uses).startsWith("actions/download-artifact@") ? i : -1,
+      ),
+    );
+    assert.ok(requireStep("coverage", combine) > lastDownload);
+  });
+
+  test("the data is combined, and only then exported to JSON", () => {
+    const combineIndex = requireStep("coverage", combine);
+    const jsonIndex = requireStep("coverage", /\bcoverage json\b/);
+    assert.ok(combineIndex < jsonIndex);
+    assert.ok(jsonIndex < requireStep("coverage", /check-coverage\.mjs\b/));
+  });
+
+  test("combine and json run in backend/ where the recorded paths resolve", () => {
+    const steps = job("coverage").steps;
+    for (const pattern of [combine, /\bcoverage json\b/]) {
+      const step = steps[requireStep("coverage", pattern)];
+      const where =
+        step["working-directory"] ?? job("coverage").defaults?.run?.["working-directory"];
+      assert.equal(where, "backend", `${pattern} must run in backend/`);
+    }
+  });
+
+  test("check-coverage gets both baselines and a suggested-out path", () => {
+    const run = job("coverage").steps[requireStep("coverage", /check-coverage\.mjs\b/)].run;
+    for (const option of [
+      "--backend",
+      "--frontend",
+      "--baseline",
+      "--base-baseline",
+      "--suggested-out",
+    ]) {
+      assert.match(run, new RegExp(option), `check-coverage.mjs is called without ${option}`);
+    }
+  });
+
+  test("--allow-lower appears only in a step conditioned on the coverage-baseline-lower label", () => {
+    const offenders = [];
+    let found = 0;
+    for (const step of job("coverage").steps) {
+      if (typeof step.run !== "string" || !step.run.includes("--allow-lower")) continue;
+      found += 1;
+      if (!/coverage-baseline-lower/.test(JSON.stringify({ if: step.if, env: step.env }))) {
+        offenders.push(step.run);
+      }
+    }
+    assert.ok(found > 0, "no step passes --allow-lower");
+    assert.deepEqual(offenders, []);
+  });
+
+  test("--allow-lower appears in no other job", () => {
+    for (const [name, other] of Object.entries(workflow.jobs)) {
+      if (name === "coverage") continue;
+      assert.doesNotMatch(JSON.stringify(other), /--allow-lower/, name);
+    }
+  });
+
+  test("the suggested baseline is uploaded even when the comparison fails", () => {
+    const upload = uploadSteps("coverage").find(
+      (step) => step.with?.name === "coverage-baseline-suggested",
+    );
+    assert.ok(upload, "coverage does not upload coverage-baseline-suggested");
+    assert.match(String(upload.if), /always\(\)/);
+    const steps = job("coverage").steps;
+    assert.ok(steps.indexOf(upload) > requireStep("coverage", /check-coverage\.mjs\b/));
+  });
+
+  test("the job asks for no permission beyond the workflow's contents: read", () => {
+    assert.equal("permissions" in job("coverage"), false);
+    assert.deepEqual(workflow.permissions, { contents: "read" });
   });
 });

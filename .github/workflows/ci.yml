@@ -2,6 +2,7 @@ name: CI
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
 
 permissions:
   contents: read
@@ -587,3 +588,98 @@ jobs:
         run: |
           docker compose logs --no-color || true
           POSTGRES_PASSWORD="$GENERATED_POSTGRES_PASSWORD" docker compose -f docker-compose.prod.yml logs --no-color || true
+
+  # Combines the two backend rounds (a path only PostgreSQL reaches would count
+  # as uncovered in one round) and compares the result with the baseline file.
+  # It also compares the PR's baseline with the base branch's, so a PR cannot
+  # lower coverage by editing the baseline; a maintainer's coverage-baseline-lower
+  # label is the one exception. Adding or removing the label reruns the workflow
+  # (on.pull_request.types). The job only reads the repository: the suggested
+  # baseline is uploaded, never committed.
+  coverage:
+    name: coverage
+    runs-on: ubuntu-latest
+    needs: [backend-sqlite, backend-postgres, frontend]
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Install the locked backend dependencies
+        run: cd backend && uv sync --locked
+
+      # The base branch has no baseline file only in the pull request that creates
+      # it; the script then prints a notice and skips the "not lowered" check.
+      - name: Read the base branch baseline
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if git show "origin/${BASE_REF}:coverage-baseline.json" > "$RUNNER_TEMP/base-coverage-baseline.json"; then
+            echo "Read coverage-baseline.json from origin/${BASE_REF}"
+          else
+            rm -f "$RUNNER_TEMP/base-coverage-baseline.json"
+            echo "::notice::origin/${BASE_REF} has no coverage-baseline.json"
+          fi
+
+      - name: Download the SQLite coverage data
+        uses: actions/download-artifact@v5
+        with:
+          name: coverage-backend-sqlite
+          path: backend
+
+      - name: Download the PostgreSQL coverage data
+        uses: actions/download-artifact@v5
+        with:
+          name: coverage-backend-postgres
+          path: backend
+
+      - name: Download the frontend coverage summary
+        uses: actions/download-artifact@v5
+        with:
+          name: coverage-frontend
+          path: frontend/coverage
+
+      # Both data files record paths under backend/ of the runner's checkout, which
+      # is where this job checks out too, so the sources resolve.
+      - name: Combine the backend coverage data
+        working-directory: backend
+        run: uv run coverage combine .coverage.sqlite .coverage.postgres
+
+      - name: Export the backend coverage as JSON
+        working-directory: backend
+        run: uv run coverage json -o coverage.json
+
+      - name: Compare with the coverage baseline
+        env:
+          ALLOW_LOWER: ${{ contains(github.event.pull_request.labels.*.name, 'coverage-baseline-lower') }}
+        run: |
+          args=(
+            --backend backend/coverage.json
+            --frontend frontend/coverage/coverage-summary.json
+            --baseline coverage-baseline.json
+            --suggested-out coverage-baseline-suggested.json
+          )
+          if [ -f "$RUNNER_TEMP/base-coverage-baseline.json" ]; then
+            args+=(--base-baseline "$RUNNER_TEMP/base-coverage-baseline.json")
+          fi
+          if [ "$ALLOW_LOWER" = "true" ]; then
+            args+=(--allow-lower)
+          fi
+          node scripts/check-coverage.mjs "${args[@]}"
+
+      # Uploaded after a failure too: a missing baseline fails the comparison but
+      # still writes the suggested file, which is how the first baseline is made.
+      - name: Upload the suggested baseline
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-baseline-suggested
+          path: coverage-baseline-suggested.json
+          if-no-files-found: ignore
