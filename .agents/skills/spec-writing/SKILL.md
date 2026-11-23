@@ -206,7 +206,7 @@ docs/specs/
 - [ ] 邊界情況涵蓋空狀態、極值、跨期、並發、載入失敗；每條都寫出使用者看到的結果
 - [ ] 每條卡控、邊界情況、替代與例外流程都有對應的 Scenario；每個 Scenario 只有一個 When、Then 可驗證
 - [ ] 術語表的 `id` 全站唯一，`:ref` 的 `id` 都存在
-- [ ] 指到其他章節或規格的「§…」「規格 NN-NN」都是連結；錨點用 `rg` 對過標題確實存在，沒有連到單一 Q 題或沒有錨點的分組
+- [ ] 指到其他章節或規格的「§…」「規格 NN-NN」都是連結；錨點用 `rg` 對過標題確實存在，沒有連到單一 Q 題或沒有錨點的分組；**§Logic Flow 的分段清單除外——它的出處一律純文字，連結只放在節點清單，因為分段條目要與元件的 `edges[].text` 逐字對齊（維護者 2026-11-23 裁定）**
 - [ ] 全文繁體中文、全形標點，冒號用「：」
 - [ ] 涉及標準答案或測試集的頁面：卡控與 Scenario 寫明標註員看不到答案，沒有寫系統端的做法
 - [ ] 有對應 prototype 頁面的規格大項都以 `PrototypeFrame` 開頭；prototype 上的每個區塊都能在規格、卡控、驗收標準或待釐清其中一處找到
@@ -242,17 +242,19 @@ import PrototypeFrame from '@notes/components/prototype-frame';
 **修改既有規格時**：已生成（`status: generated`）的流程圖，若這次的變更影響到流程步驟、文案或對應的 Scenario，先更新標記的 prompt，再把「重新生成」列入下方提問（選項同下）；元件依骨架只改【流程】，不加變更標示。沒影響就不動，並在回報中說明。
 prototype 頁面有變動時，檢查嵌入的 `page` 路徑仍存在。
 
+**模組 Logic Flow（首次建立模組 `index.mdx`，或這次的變更改了模組內頁面之間的走法時）**：依模組索引範本（[templates/module-index.mdx](templates/module-index.mdx)）的「## Logic Flow」一節寫入 `@ai-visualize` 標記（`status: pending`），骨架見 [references/logic-flow-skeleton.tsx](references/logic-flow-skeleton.tsx)，待遇與業務流程圖骨架相同：複製後只改【節點與連線】；要不要現在生成，同下方三個選項。
+
 寫完後依「提問格式」問：
 
-- **現在生成（建議）**：依 `content-visualize` skill 的流程寫回 MDX；元件依 flow.md 從骨架複製後只改【流程】，
-  並在預覽中走過每個流程 tab、完成 flow.md 的「自我檢查」（無法操作瀏覽器時，請使用者開 `pnpm docs:serve` 走過後回報）
+- **現在生成（建議）**：依 `content-visualize` skill 的流程寫回 MDX；業務流程圖依 flow.md 從骨架複製後只改【流程】，並在預覽中走過每個流程 tab、完成 flow.md 的「自我檢查」（無法操作瀏覽器時，請使用者開 `pnpm docs:serve` 走過後回報）；
+  模組 Logic Flow 依 logic-flow-skeleton.tsx 複製後只改【節點與連線】，並在預覽中切過每個分段 tab、點過每個節點與連線確認出處（無法操作瀏覽器時，同樣請使用者開 `pnpm docs:serve` 走過後回報）
 - **之後再生成**：保留 `status: pending`，之後說「處理 `docs/specs/xx/yy.mdx` 的視覺化標記」即可
 - **不需要**：移除標記
 
 ### 步驟 8：更新索引與驗證
 
 1. 更新模組 `index.mdx` 的頁面一覽，以及 `docs/specs/index.mdx` 裡 `specs.module-map` 定義區塊的模組地圖（首次使用時依範本建立）：
-   新頁面加一列；PRD 預留的頁面補上連結、拿掉「（未撰寫）」；地圖不放撰寫狀態
+   新頁面加一列；PRD 預留的頁面補上連結、拿掉「（未撰寫）」；地圖不放撰寫狀態。新頁面若改變了模組內頁面之間的走法，同步更新該模組 `index.mdx` 的 §Logic Flow
 2. 在 repo 根目錄跑 `pnpm check:specs` 與 `pnpm exec notecraftapp build docs`（NoteCraft 需要 Node 22 以上），失敗就修正（常見原因：`:ref` 找不到 `id`、`define` 重複、冒號被當成指令、舊編號對照缺漏）
 3. build 通過後先跑 `git status`，再依「提問格式」問是否提交（工作區另有無關變更時，在問題中註明「另有 N 個無關檔案，這次不會帶入」）：
    - **現在 commit（建議）**：只 `git add` 這次產生或修改的檔案（步驟 9 回報表的規格檔、更新過的索引與 `glossary.mdx`、`docs/specs/legacy/` 的 `.ids`、有生成流程圖時的 `.notecraft/components/<id>.tsx`），不用 `git add -A`；
