@@ -1,0 +1,169 @@
+---
+title: '前端路由與骨架'
+description: 'main 上前端現在的樣子：每條路由的頁面元件、對應的規格編號與 Logic Flow 節點，以及前端骨架（單一 HTTP 邊界、生成的 hooks 與 MSW mock、元件展示頁）與已知限制。'
+category: '架構'
+tags: [架構, 前端, 路由, 骨架]
+createdAt: '2026-11-23'
+updatedAt: '2026-11-23'
+---
+
+# 前端路由與骨架
+
+這份記 `main` 上的 `frontend/` 現在長怎樣：每條路由用哪個頁面元件、對到哪一份規格與哪個 Logic Flow 節點，加上前端骨架；**只寫已合併的程式有的東西**。
+要照著做的規則在 [技術架構的前端](../../development/architecture.mdx#前端)，為什麼這樣決定在 [ADR-005](../../development/adr/005-frontend-architecture.mdx)；畫面長相以 `design/prototype/pages/` 為準，頁面怎麼被進入與離開以各模組 `index.mdx` 的 Logic Flow 為準。
+本文與程式不一致時，是本文錯了：以程式為準，並回頭改本文。
+
+各節的收合區塊是實作或規劃時才要查的細節，預設收起。
+
+## 誰改、什麼時候改
+
+規劃時先改本文，change 的 `ui-design.md` 只寫本文的路徑與異動摘要，不重抄本文的內容。
+
+| 時機 | 誰 | 做什麼 |
+| :--- | :--- | :--- |
+| 規劃（寫 `ui-design.md`） | `ui-ux` | 新頁面加進 [§路由](#路由) 與 [§頁面與功能元件](#頁面與功能元件)；動到骨架時改 [§前端骨架](#前端骨架)。`ui-design.md` 的「常駐文件異動」節寫出本文路徑與異動摘要 |
+| 規劃審閱 | `design-reviewer` | 核對本文與這次的 `ui-design.md` 一致 |
+| 程式審查 | `code-reviewer` | 核對本文與實作一致；不一致時列為審查意見 |
+
+change 的 `ui-design.md` 仍然寫這次頁面的元件樹、資料來源、畫面狀態與 design token；本文留下的是合併之後全系統的路由與頁面。
+
+## 路由
+
+目前只有兩個開發用頁面，只在開發模式註冊；正式建置是空殼，任何路徑都不顯示內容。
+
+| 路由 | 頁面元件 | 註冊於 | 對應的規格 | Logic Flow 節點 |
+| :--- | :--- | :--- | :--- | :--- |
+| `/dev/health` | `DevHealthPage`（`pages/dev-health/`） | 開發模式 | 無 `docs/specs/` 規格；行為見 `openspec/specs/dev-health-page/` | 無 |
+| `/dev/gallery` | `DevGalleryPage`（`pages/dev-gallery/`） | 開發模式 | 無 `docs/specs/` 規格；行為見 `openspec/specs/component-gallery/` | 無 |
+| `/` 與其他路徑 | 以取代歷史紀錄的方式導向 `/dev/health` | 開發模式 | `openspec/specs/frontend-routing/` | 無 |
+| 任何路徑 | 不顯示內容 | 正式建置 | `openspec/specs/frontend-routing/` | 無 |
+
+路由表在 `src/app/router.tsx` 的 `createAppRouter()`：以 `import.meta.env.DEV` 分支，正式建置時這個分支連同兩頁的程式與文案一起被移除。首頁與找不到頁面屬於[規格 01-01](../../specs/01-account/01-login.mdx)，還沒有實作。
+
+## 頁面與功能元件
+
+頁面組合功能元件與 `components/ui/` 的原語；目前送請求的只有功能元件，經生成的 hook。頁面只能經功能的 `index.ts` 使用它。
+
+| 頁面 | 功能元件 | 生成的 hook（operationId） | 文案的 namespace |
+| :--- | :--- | :--- | :--- |
+| `DevHealthPage` | `HealthStatusPanel`（`features/system-health/`） | `useGetHealth`（`getHealth`） | `systemHealth` |
+| `DevGalleryPage` | 無；直接列出 `components/ui/` 的原語 | 無，不送任何請求 | `devGallery` |
+
+:::note{title="健康檢查頁的四種狀態" collapsible}
+- `HealthStatusPanel` 用 `toHealthViewState` 把查詢結果轉成四種狀態之一：載入中、正常、後端錯誤（任何錯誤外層）、連不上
+- 後端回的 `message`、`code`、`traceId` 與錯誤種類原樣顯示，不再翻譯
+- 兩頁都在進入時設定 `document.title`
+:::
+
+## 前端骨架
+
+一條請求由頁面走到後端只有一條路：功能元件 → Orval 生成的 hook → `apiFetch` → `fetch`。分層與允許的 import 由 `frontend/eslint.config.js` 檢查，規則本體見 `docs/development/rules/frontend-agent-rules.mdx` 的 F1。
+
+### 目錄
+
+```text
+frontend/
+├─ orval.config.ts          唯一的 Orval 設定：讀 ../backend/openapi.json
+├─ vite.config.ts           開發伺服器固定 5173 port，不設 proxy
+├─ build/extract-tokens.ts  Vite 外掛：從 tokens.css 取出 CSS 變數
+└─ src/
+   ├─ main.tsx              啟動：檢查 API 設定、決定語言、render
+   ├─ app/                  router、providers、QueryClient
+   ├─ pages/<page>/         頁面：組合功能元件與原語
+   ├─ features/<feature>/   功能元件與它的狀態轉換
+   ├─ components/ui/        shadcn/ui 原語，匯出 variant 陣列
+   ├─ api/                  mutator.ts（唯一出口）、ApiError、外層判定、config
+   │  └─ generated/         Orval 產物，禁止手改
+   ├─ lib/                  i18n、date（day.js 唯一入口）、abort、utils
+   ├─ styles/               theme.css：shadcn 變數對到 tokens.css 的變數名
+   └─ test/                 Vitest setup、MSW server、外層 fixture
+```
+
+| 目錄 | 放什麼 | 判斷方式 |
+| :--- | :--- | :--- |
+| `pages/` | 一條路由一個資料夾 | 被 `router.tsx` 掛上去 |
+| `features/` | 一個功能一個資料夾，對外只從 `index.ts` 匯出 | 會送請求，或有自己的狀態轉換 |
+| `components/ui/` | 沒有業務的原語 | 換一個頁面也照樣能用 |
+| `api/`、`lib/` | 全站共用的基礎建設 | 不 import `pages/`、`features/` |
+
+### 單一 HTTP 邊界
+
+`src/api/mutator.ts` 的 `apiFetch` 是前端唯一的 HTTP 出口，也是 Orval 的 mutator：base URL、cookie、`Accept-Language`、逾時、取消，以及把每一種失敗轉成 `ApiError`，都只在這裡。理由見 `docs/development/rules/api-agent-rules.mdx` 的 A6。
+
+| 結果 | `apiFetch` 回傳或丟出 |
+| :--- | :--- |
+| 成功外層 | `{ data, meta }`，`meta` 是外層的 `traceId` 與 `timestamp` |
+| `204` | `undefined` |
+| 錯誤外層 | `ApiError`，`kind: "http"`，帶 `status`、`code`、`message`、`traceId`；`422` 另帶 `fieldErrors` |
+| 回應不是外層 | `ApiError`，`kind: "invalidResponse"`，`traceId` 取自 `X-Correlation-ID` 標頭 |
+| 連不上 | `ApiError`，`kind: "network"` |
+| 逾時 | `ApiError`，`kind: "timeout"` |
+| 呼叫端取消 | `ApiError`，`kind: "aborted"` |
+
+失敗一律不自動重試：`apiFetch` 不重試，`createQueryClient()` 把查詢與寫入的 `retry` 都關掉。元件與 hook 只會看到 `ApiError`，不會看到原生的 `TypeError`、`DOMException` 或 `Response`。
+
+:::note{title="apiFetch 的細節" collapsible}
+- `VITE_API_BASE_URL`：空字串代表同源相對路徑；否則必須是結尾沒有 `/` 的絕對 `http(s)` URL。`main.tsx` 啟動時先呼叫 `readApiConfig()`，不合格就不 render
+- 每個請求都 `credentials: "include"`，`Accept-Language` 取目前的介面語言；有 body 時設 `Content-Type: application/json`
+- 預設逾時 15 秒，可用 `ApiFetchOptions.timeoutMs` 逐次覆寫；TanStack Query 傳進來的 signal 與逾時合成一個
+- query 參數用 `URLSearchParams` 組，`null` 與 `undefined` 略過，陣列重複同一個 key
+- 外層只驗外層本身的欄位，`data` 裡面的形狀交給生成的型別
+- 非 `http` 的 `ApiError.message` 是英文診斷字串，不含回應內容或原生錯誤的訊息
+- `isAuthError()` 只認錯誤外層的 `401`；`403` 不算
+- 語言：`main.tsx` 依 `navigator.language` 決定一次，沒有語言切換；只預載 `common` namespace，頁面的 namespace 由各自的入口註冊
+:::
+
+### 生成的 hooks 與 MSW mock
+
+`pnpm --filter frontend api:generate` 讀已提交的 `backend/openapi.json`，把 TanStack Query 的 hooks、型別與 MSW mock 產生到 `src/api/generated/`；每次產生前會先清空這個資料夾，所以裡面不能手改或手加檔案。為什麼用 Orval 見 [ADR-003 的 D6](../../development/adr/003-backend-architecture.mdx#d6-前端-client-用-orval-產生)。
+
+| 檔案 | 內容 | 誰可以 import |
+| :--- | :--- | :--- |
+| `label-suite.ts` | 每個 operationId 一個請求函式與 hook，例 `getHealth`、`useGetHealth`、`getGetHealthQueryKey` | 功能元件 |
+| `label-suite.schemas.ts` | API 文件裡的型別，例 `HealthDataResponse`、`ErrorResponse`、`ErrorDetail` | 任何層 |
+| `label-suite.msw.ts` | 每個 operationId 一個 MSW handler，回 faker 產生的資料 | 只有測試 |
+| `label-suite.faker.ts` | faker 產生的回應 | 只有測試 |
+
+測試共用一個 MSW server（`src/test/msw-server.ts`），預設掛生成的 handler，只用來證明請求有被攔到；要固定內容的測試用 `server.use()` 疊上 `src/test/envelope-fixtures.ts` 的 fixture。沒被攔到的請求直接讓測試失敗。
+
+:::note{title="漂移檢查與測試替身的邊界" collapsible}
+- 漂移檢查的指令見 `openspec/config.yaml` 的 `operations.apply`（前端契約漂移那一條）：重新產生後 `src/api/generated/` 不能有任何差異或新檔
+- `msw`、`@faker-js/faker`、`src/test/` 與生成的 `*.msw.ts`、`*.faker.ts` 只有測試檔能 import，ESLint 擋住其他地方，測試替身不會進到正式 bundle
+- UI 層（`pages/`、`features/`、`components/`）不能直接用 `fetch` 或 `axios`
+:::
+
+### 元件展示頁
+
+`/dev/gallery` 把 `src/components/ui/` 每個原語宣告的 variant、尺寸與狀態各列一次，取代 Storybook；理由見 [ADR-005 的 D3](../../development/adr/005-frontend-architecture.mdx#d3-元件庫用-shadcnui)。
+
+| 組成 | 做什麼 |
+| :--- | :--- |
+| `variant-catalog.ts` | 每個原語的展示清單；有匯出 variant 陣列的原語用 `satisfies` 綁住，原語加了 variant 這裡不跟著加就型別錯誤 |
+| `completeness.test.tsx` | 兩層：清單的 key 等於原語匯出的陣列；畫面上每個宣告的值各有一個 `[data-gallery-item]`，而且 `components/ui/` 的每個原語檔都有一節 |
+| `ThemeToggle` | 切換 `<html data-theme>` 的淺色與深色；只存在元件狀態，離開展示頁恢復淺色 |
+| `TokenMappingSection` | 列出 `styles/theme.css` 的對照；只有這一頁可以把 `theme.css` 讀成原始文字 |
+
+目前的原語：`alert`、`badge`、`button`、`card`、`empty`、`input`、`skeleton`。新增原語時，展示頁要有它的一節，否則完整性測試失敗。
+
+:::note{title="design token 怎麼進到元件" collapsible}
+- `build/extract-tokens.ts` 在開發與建置時讀 `design/prototype/assets/tokens.css`，只取 `:root` 與 `html[data-theme="dark"]` 的 `--*` 宣告，以虛擬模組 `virtual:design-tokens.css` 提供，不寫檔
+- `main.tsx` 直接 import 它、不放在 `@layer` 裡，所以 `tokens.css` 的值會蓋過 Tailwind 同名的主題變數
+- `styles/theme.css` 只寫變數名，把 shadcn 的語意變數指向 `tokens.css` 的變數，沒有任何色值；理由見 [ADR-005 的 D4](../../development/adr/005-frontend-architecture.mdx#d4-design-token-寫一層對照)
+:::
+
+## 已知限制
+
+下表是已落地的程式還沒做的事；每一列連到追蹤它的 issue 或做出決定的 ADR。
+
+| 還沒有 | 風險 | 追蹤 |
+| :--- | :--- | :--- |
+| 登入與登入狀態的處理；`401` 只能用 `isAuthError()` 認出來，沒有導向登入頁 | 第一個需要登入的頁面要先補上 | [ADR-004 的 D1](../../development/adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie) |
+| CI 的前端檢查：lint、型別、測試、建置、契約漂移，以及跑過前後端的 e2e | 這些檢查目前只在本機跑，PR 不會因為違反而失敗 | [#506](https://github.com/label-suite/label-suite/issues/506) |
+| 前端的錯誤追蹤與監控 | 使用者端的錯誤只有使用者回報的 `traceId` 可查 | [ADR-008 的 D4](../../development/adr/008-deployment-and-operations.mdx#d4-觀測性只做-ai_runs監控與錯誤追蹤本期不做) |
+
+## 決策紀錄
+
+| 日期 | 決策 | 取代了什麼 | 來源 |
+| :--- | :--- | :--- | :--- |
+| 2026-11-23 | 前端的路由、頁面元件、對應的規格編號與 Logic Flow 節點落地成本文；規劃時由 `ui-ux` 先改本文，change 只寫異動摘要與路徑（[§誰改、什麼時候改](#誰改什麼時候改)） | 只散在各 change 的 `ui-design.md` | [#546](https://github.com/label-suite/label-suite/issues/546) |
+| 2026-11-23 | 本文加一節前端骨架與已知限制，不另開文件（[§前端骨架](#前端骨架)） | — | [#546](https://github.com/label-suite/label-suite/issues/546) |
