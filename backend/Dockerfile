@@ -2,7 +2,7 @@
 
 # Backend image. One image serves the API, the one-off migration service and,
 # later, the Celery worker (ADR-008 D2). Two stages, so the runtime layer carries
-# neither uv nor any build cache (system-design §元件清單, row backend/Dockerfile).
+# neither uv nor any build cache (system-design component list, this file's row).
 
 # --- builder: turn the locked dependencies into a standalone virtualenv --------
 FROM python:3.12-slim AS builder
