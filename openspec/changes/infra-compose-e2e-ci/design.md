@@ -113,13 +113,13 @@ job 名稱、步驟與失敗條件照 system-design §CI job 設計 的表。每
 - **C4**：`backend-sqlite` 的步驟順序為 `ruff check` → `ruff format --check` → `mypy --strict app` → `lint-imports` → pytest → `check-junit-skips.mjs --summary`（寫入 `$GITHUB_STEP_SUMMARY`）；`backend-postgres` 為 pytest → `check-junit-skips.mjs`（不帶 `--summary`）；兩個 job 的 pytest 步驟各設環境變數 `COVERAGE_FILE`（`.coverage.sqlite`、`.coverage.postgres`），兩個值必須不同，上傳的 coverage artifact 名稱也必須不同；兩個後端上傳步驟都要有 `include-hidden-files: true`（upload-artifact ≥ v4.4.0 預設略過隱藏檔，`.coverage.*` 會靜默沒上傳）與 `if-no-files-found: error`（system-design D12：pytest-cov 結束時自行合併資料，不留 `.coverage.*`，同名會互相覆蓋）。
 - **C5**：`frontend` 設 `timeout-minutes`；上傳 coverage summary 的步驟設 `if-no-files-found: error`；檢查步驟順序為 lint → typecheck → `test:coverage` → build；沒有任何步驟帶 `if: always()` 或 `continue-on-error`；checkout 沒有 `clean: false`。
 - **C6**：`api-contract` 的順序為後端匯出 → 比對 `backend/openapi.json` → 前端重產 → 比對 `frontend/src/api/generated`。
-- **C7**：`compose` 的 `needs` 含 `changes`、`if` 讀 `changes` 的輸出；`changes` 的 checkout 用 `fetch-depth: 0`；`compose` 設 `timeout-minutes: 20`；執行步驟順序為版本檢查 → `config --quiet` → 兩個反向檢查 → Lite `up` → 正式層 `up`，`up` 都帶 `--wait-timeout 300`。
+- **C7**：`compose` 的 `needs` 含 `changes`、`if` 讀 `changes` 的輸出；`changes` 的 checkout 用 `fetch-depth: 0`；`compose` 設 `timeout-minutes: 20`；執行步驟順序為版本檢查 → `config --quiet`（Lite 層與正式層各一步，正式層帶 job 內產生的隨機密碼）→ 兩個反向檢查 → Lite `up` → 正式層 `up`，`up` 都帶 `--wait-timeout 300`。
 - **C8**：`e2e` 先跑 `test:static` 再跑 `test`；上傳 report 的步驟帶 `if: failure()`。
 - **C9**：`scripts-tests` 沒有 `needs`。
 - **C10**：新 job 都沒有 `secrets.` 引用；workflow 層級權限為 `contents: read`，新 job 沒有放寬權限。
 - **C11**：`semgrep` 使用的映像標籤不是 `latest`；`semgrep --test .semgrep/` 在 `semgrep scan --error` 之前。
 
-compose 靜態斷言在 `compose` job 內、不起容器，以 `docker compose config --format json` 讀兩份編排檔：(1) 只有 `frontend` 服務有 `ports`，沒有 Redis 或 worker 服務；(2) `frontend.depends_on.backend.condition` 為 `service_healthy`；(3) backend 健康檢查的 interval 為 30 秒、指令打 `/api/v1/health`。缺密碼與缺允許來源由 system-design D7 的兩個反向檢查判定，不再另設靜態步驟。
+compose 靜態斷言在 `compose` job 內、不起容器，以 `docker compose config --format json` 讀兩份編排檔（讀正式層時帶 job 內產生的隨機密碼，理由見 system-design D7）：(1) 只有 `frontend` 服務有 `ports`，沒有 Redis 或 worker 服務；(2) `frontend.depends_on.backend.condition` 為 `service_healthy`；(3) backend 健康檢查的 interval 為 30 秒、指令打 `/api/v1/health`。缺密碼與缺允許來源由 system-design D7 的兩個反向檢查判定，不再另設靜態步驟。
 
 只有在路徑過濾下才跑的 `compose` 與每張 PR 都跑的 `e2e`，依 Q9、Q3 不列必過（system-design D13）。
 
