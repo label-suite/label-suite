@@ -27,8 +27,9 @@ model: opus
 8. token：`design/prototype/assets/tokens.css` 與 `label-suite-design` skill，**所有 token 值只認這兩個**（色值、字體、字級、間距、圓角、陰影、動態、層級），不從畫面取樣、不自創 token 名
 9. 若 `api-contract.md` 已存在，讀它對齊資料來源；不存在時以「預期需要的資料」描述，並列為待對齊
 10. `docs/development/architecture.mdx` §前端 與 §待決
-11. 領域規範 `docs/development/rules/frontend-agent-rules.mdx` F6 視覺基準與 design token 的映射、F8 四種畫面狀態與表單、F9 無障礙的最低要求；`docs/development/rules/security-agent-rules.mdx` S5 答案隔離的覆蓋面
-12. schema 範本：`openspec/schemas/label-suite-sdd/templates/ui-design.md`，以及 `pnpm exec openspec instructions ui-design --change <name>`
+11. 前端的常駐文件 `docs/diagrams/architecture/frontend-routes.mdx`：`main` 上每條路由的頁面元件、對應的規格編號與 Logic Flow 節點，以及「前端骨架」節（單一 HTTP 邊界、生成的 hooks 與 MSW mock、元件展示頁）。**規劃時先改它**，再寫 ui-design
+12. 領域規範 `docs/development/rules/frontend-agent-rules.mdx` F6 視覺基準與 design token 的映射、F8 四種畫面狀態與表單、F9 無障礙的最低要求；`docs/development/rules/security-agent-rules.mdx` S5 答案隔離的覆蓋面
+13. schema 範本：`openspec/schemas/label-suite-sdd/templates/ui-design.md`，以及 `pnpm exec openspec instructions ui-design --change <name>`
 
 ## 設計前提
 
@@ -46,6 +47,7 @@ model: opus
 
 - prototype 對照：每個頁面對應的 `design/prototype/pages/…` 來源與**對應的規格編號**
 - 頁面與路由：path、需要的系統角色與任務成員身分、進入方式、離開與返回
+- 常駐文件異動：路由、頁面元件、對應的規格編號或 Logic Flow 節點有異動時，**先改 `frontend-routes.mdx`**（動到前端骨架時改「前端骨架」節），這一節只寫路徑與異動摘要，不重抄常駐文件的內容
 - 元件樹：頁面 → 區塊 → 元件，元件用語意名稱
 - 資料來源：每個區塊用哪個 operationId、查詢參數與 URL 狀態（**可分享的篩選與分頁放 query string**，不放 local state）
 - 狀態管理：伺服器狀態（Query）、URL 狀態、純 UI 狀態分別放哪裡；mutation 成功後要 invalidate 哪些查詢。**要不要全域 store 由設計證明**，不預設需要
@@ -60,6 +62,7 @@ model: opus
 - [ ] 元件與狀態已對過 `design/system/components/` 與 `pages/`；畫面上找不到的狀態已查 `design-gaps.md`，沒有當成新發現
 - [ ] 畫面上的名稱、文案、欄位與控制項都對過 prototype；**畫面沒有的控制項沒有被寫成規則**（列成待決問題）
 - [ ] 每個資料區塊都標出 operationId 或待對齊的資料需求
+- [ ] 路由或頁面有異動時：`frontend-routes.mdx` 已先改好，與 ui-design 一致；「常駐文件異動」節寫了路徑與摘要，沒有重抄常駐文件。沒有異動時寫「本次無常駐文件異動」
 - [ ] 每個資料區塊都有 loading／error／empty／無權限四種狀態設計
 - [ ] 遮蔽欄位與唯讀角色的畫面差異已寫明，而且遮蔽不是顯示成空白
 - [ ] 只用語意 token，沒有色碼、沒有自訂間距、沒有依賴某一套主題

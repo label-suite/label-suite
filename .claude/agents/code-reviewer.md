@@ -12,9 +12,10 @@ model: opus
 1. 本 change 的 `design.md`、`system-design.md`、`ui-design.md`、`api-contract.md`、`tasks.md`、`clarification.md`
 2. **`AGENTS.md`**——本專案唯一的規則來源與審查基準，**沒有** `.claude/rules/`。§Hard Rules 與 §Review Guidelines（嚴重度分級、最多 5 項、每項指明檔案與行號）都適用
 3. `docs/development/architecture.mdx`：§後端分層、§認證與授權、§任務設定、§測試集答案不外露、§資料庫雙層、§測試分層
-4. 審查範圍的 diff：`git diff <base>...HEAD`，以及改動檔案的上下文與相鄰既有寫法。**本專案是單一 repo**，沒有子 repo 要分別看
-5. 可輔助使用 `/code-review` skill 取得逐行的 bug 與安全面意見；**最終判定由你負責，報告不是證據**
-6. 領域規範，依 diff 觸及的領域讀對應那幾份（各份以 `B<n>`／`F<n>`／`A<n>`／`S<n>`／`T<n>`／`R<n>` 編號分節）：`docs/development/rules/backend-agent-rules.mdx`、`docs/development/rules/frontend-agent-rules.mdx`、`docs/development/rules/api-agent-rules.mdx`、`docs/development/rules/security-agent-rules.mdx`、`docs/development/rules/testing-agent-rules.mdx`，以及跨領域的 `docs/development/rules/agent-rules.mdx`
+4. 常駐文件：`docs/diagrams/architecture/backend-modules.mdx`（後端模組與基礎建設）、`frontend-routes.mdx`（前端路由與骨架）
+5. 審查範圍的 diff：`git diff <base>...HEAD`，以及改動檔案的上下文與相鄰既有寫法。**本專案是單一 repo**，沒有子 repo 要分別看
+6. 可輔助使用 `/code-review` skill 取得逐行的 bug 與安全面意見；**最終判定由你負責，報告不是證據**
+7. 領域規範，依 diff 觸及的領域讀對應那幾份（各份以 `B<n>`／`F<n>`／`A<n>`／`S<n>`／`T<n>`／`R<n>` 編號分節）：`docs/development/rules/backend-agent-rules.mdx`、`docs/development/rules/frontend-agent-rules.mdx`、`docs/development/rules/api-agent-rules.mdx`、`docs/development/rules/security-agent-rules.mdx`、`docs/development/rules/testing-agent-rules.mdx`，以及跨領域的 `docs/development/rules/agent-rules.mdx`
 
 ## 先跑的檢查
 
@@ -63,6 +64,7 @@ model: opus
 
 - [ ] 符合 `design.md` 的決策與 `api-contract.md` 的端點、欄位、錯誤碼；**偏離處有說明**
 - [ ] 符合 `clarification.md` 的決議
+- [ ] **常駐文件與 change 一致**：實作後的模組分層、類別與主要流程和 `backend-modules.mdx` 相同，路由與頁面元件和 `frontend-routes.mdx` 相同；不一致時列為審查意見
 - [ ] 命名清楚一致，與 contract 和既有程式的術語相同；**業務名詞與 `docs/specs/glossary.mdx` 一致**
 - [ ] 公開介面有型別與**英文** docstring，內容與實際行為一致，會丟出的例外沒有漏寫（`AGENTS.md` §Language Rules）
 - [ ] **測試與實作在同一個 task**（TDD）；**名詞正確**——httpx 的 API 測試叫 integration，E2E 專指 Playwright
