@@ -48,7 +48,7 @@ change 的 `system-design.md` 仍然畫這次新增或修改的類別，以及�
 
 ### 分層與類別
 
-import 方向是 `router → service → repository`：依賴工廠放在 `service.py`，所以 `router.py` 不必 import repository。
+模組內的 import 方向是 `router → service → repository`：依賴工廠放在 `service.py`，所以 `router.py` 不必 import repository。
 
 ```mermaid
 classDiagram
@@ -241,6 +241,7 @@ prompt: |
 caption: 切換情境逐步走，看哪一層產生回應、traceId 一路都是同一個值
 status: generated
 */}
+
 import GeneratedFrame from '@/components/GeneratedFrame.astro'
 import BackendRequestPipeline from '@notes/components/backend-request-pipeline'
 
