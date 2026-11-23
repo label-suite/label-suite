@@ -1,6 +1,6 @@
 ---
 title: ADR-005 前端架構
-description: 前端架構的決定：React 加 Vite 的單頁應用、pages 加 features 的目錄分層、shadcn/ui 當元件庫、design token 寫一層對照、圖示只用 Lucide。
+description: 前端架構的決定：React 加 Vite 的單頁應用、pages 加 features 的目錄分層、shadcn/ui 當元件庫、design token 寫一層對照、圖示只用 Lucide、onboarding 只做空狀態與情境提示。
 tags: [adr, frontend, react, shadcn, design-token]
 ---
 
@@ -224,6 +224,51 @@ tags: [adr, frontend, react, shadcn, design-token]
 - 反覆出現 Lucide 沒有的圖示，缺口回報的成本超過它省下的一致性
 - shadcn/ui 的元件不再預設相依 `lucide-react`
 
+## D6 onboarding 只做空狀態與情境提示
+
+### 背景
+
+要決定前端要不要做 onboarding、做到多深；導覽與漸進揭露一旦做了，每個角色、每條流程（可能每頁）都要維護引導狀態。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 來源記錄：研究者（建任務、設標籤、匯入資料）與標註員（讀說明、標註、提交）的目標、用語與關鍵路徑不同 | 單一的通用流程會對其中一邊太吵 |
+| 來源記錄：要的是讓使用者盡快完成第一次成功，不是解說所有功能 | 引導要綁在下一步該做的事上 |
+| 來源記錄：系統由設定驅動，研究者的設定路徑彈性大也複雜 | 第一次使用體驗差會提高流失風險 |
+| 裁定當時 18 頁裡有 11 頁已經寫了空狀態文案 | 空狀態的文案多半已在規格階段寫好 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 角色導向、漸進式的完整策略（歡迎面板、空狀態、情境提示、清單、可跳過與可重開、狀態保存、事件追蹤） | 引導綁在下一步該做的事上；範圍可由輕量 UI 元件控制；空狀態變成可行動的畫面 | 要為每個角色、每條流程維護引導狀態；一定要有事件追蹤才知道有沒有用；提示會隨 UI 改版而過時 | 部分採用：只做空狀態與情境提示，見決定一節 |
+| B 所有使用者共用一套 onboarding | 來源沒有記錄 | 研究者與標註員的目標不同，通用流程又吵又沒效率 | 不採用 |
+| C 使用前強制的完整產品導覽 | 來源沒有記錄 | 增加阻力，延後第一個任務的完成 | 不採用 |
+| D 第一次造訪就解說每個功能 | 來源沒有記錄 | 資訊量大，和即時學習不合 | 不採用 |
+| E 先做進階的互動教學 | 來源沒有記錄 | 在關鍵路徑的 onboarding 模型驗證之前，實作成本太高 | 不採用 |
+
+### 決定
+
+本期 onboarding 只做空狀態與情境提示，不做導覽與角色導向漸進揭露。範圍的界線見 [architecture.mdx 的 §前端](../architecture.mdx#前端)；選項 A 的其餘元件是否在範圍內，見 [§待決](#待決)。
+
+### 後果
+
+**變容易**
+
+- 空狀態從死路變成告訴使用者下一步的畫面，規格已經寫了多數頁面的空狀態文案
+- 不必維護來源所說的每個角色、每條流程的引導狀態
+
+**變困難**
+
+- 不做導覽與漸進揭露，第一次使用的研究者只能靠空狀態與情境提示；來源記錄第一次使用體驗差會直接提高流失風險
+- 情境提示要克制，來源記錄提示會隨 UI 改版變得過時或重複
+- 來源把事件追蹤（曝光、略過、完成、首次成功）列為完整策略判斷成效的條件
+
+### 什麼情況要重新討論
+
+- 要把導覽、步驟式指引或依角色分段的漸進揭露納入範圍
+- `frontend/` 的第一個模組合併之後，使用者在空狀態與情境提示之外反覆需要引導
+
 ## 附錄：來源對照
 
 比對的版本：個人 repo（`singyichen/label-suite`）ADR-004、011、016、030 的現行內容。
@@ -235,12 +280,14 @@ tags: [adr, frontend, react, shadcn, design-token]
 | D3 | 個人 repo ADR-016（Context 的需求、UI Library Candidates 的比較表與四個拒絕理由、Decision、Consequences）；shadcn/ui 與 `components/ui/` 的裁定見 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 8 列，只記錄結果，位置從 `shared/ui/` 改掉的理由沒有記錄；來源另選了 Storybook，本 repo 不採用、改用元件展示頁（維護者 2026-11-20 裁定，見 §決策紀錄）；選項 E 的代價出自來源「重複 shadcn/ui 已經做好的工作」；本節的重新討論條件是推論，來源沒有記錄 |
 | D4 | [#109 的裁定紀錄](https://github.com/label-suite/label-suite/issues/109#issuecomment-6764207805)（問題、三個選項、裁定、映射前要確認的三件事）；選項 B、C 沒有記錄好處與代價（B 的代價只有「要改寫 shadcn 元件」，出自選項描述）；Artifact 單向出自 [設計交接的 §流程](../workflow/design-handoff.mdx#流程)；本節的重新討論條件是推論，來源沒有記錄；**選項 A 的好處原文是「shadcn 元件一行都不改」，已改寫成相對選項 B 才成立的說法**，見 [§決策紀錄](#決策紀錄) |
 | D5 | 個人 repo ADR-030（Context、Candidates Evaluated 的四個選項、Decision、Consequences、Alternatives Rejected）；例外的範圍見 [frontend-agent-rules.mdx 的 F7](../rules/frontend-agent-rules.mdx#f7-圖示與-svg)；本節的重新討論條件是推論，來源沒有記錄 |
+| D6 | 個人 repo ADR-015（Context 的角色對照與關鍵路徑、Decision 的核心規則與 Initial UX Pattern Set、Consequences、Alternatives Rejected 的四個選項）；範圍的裁定見 [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393)第 5 列：空狀態與情境提示算在範圍內，導覽、步驟式指引與角色導向漸進揭露不做，只記錄結果，沒有記錄理由；「空狀態文案已寫在 18 頁裡的 11 頁」出自同一列；選項 A 是來源的完整策略，好處與代價出自來源的 Consequences；選項 B 至 E 只有被拒絕的理由，好處來源沒有記錄；來源的 Initial UX Pattern Set 的歡迎面板、清單，以及可重開的說明入口、狀態保存、事件追蹤，裁定沒有說算不算在範圍內，見 §待決；本節的重新討論條件是推論，來源沒有記錄 |
 | — | 個人 repo ADR-011 的其他內容（元件、hook 與服務的檔案樹、狀態管理三層與 Zustand、Dashboard 依角色分派、路由與程式碼分割、i18n 命名空間、barrel file 規則（見下）、任務類型元件的註冊表、Playwright 目錄），不是這份 ADR 的決定：狀態與 barrel 的做法見 [frontend-agent-rules.mdx](../rules/frontend-agent-rules.mdx)，i18n 見 [ADR-003 的 D11](003-backend-architecture.mdx#d11-i18n-分前端與後端兩層)，E2E 位置見 [ADR-007 的 D4](007-testing-strategy.mdx#d4-正式-e2e-放根目錄)；其餘本 repo 沒有採用或決定的部分，不在這裡收；其中 ADR-011（Barrel File Policy）禁止 feature 對外提供 barrel `index.ts`，本 repo 不採用這條，改由 F1 以 `features/<feature>/index.ts` 作為公開邊界，見 [frontend-agent-rules.mdx 的 F1](../rules/frontend-agent-rules.mdx#f1-分層與允許的-import) |
 
 ## 待決
 
 | # | 問題 | 卡住什麼 | 誰決定 |
 | :--- | :--- | :--- | :--- |
+| 1 | 來源 Initial UX Pattern Set 的歡迎面板與 onboarding 清單，以及可跳過與可重開的說明入口、引導狀態保存、事件追蹤，算「情境提示」還是「導覽、漸進揭露」 | 裁定只點名空狀態、情境提示（做）與導覽、步驟式指引、角色導向漸進揭露（不做），沒有逐項對到來源的元件；PRD 已區分「說明按鈕」與「情境提示」 | 維護者 |
 
 ## 決策紀錄
 
@@ -253,3 +300,4 @@ tags: [adr, frontend, react, shadcn, design-token]
 | 2026-11-19 | 圖示只用 Lucide（[D5](#d5-圖示只用-lucide)） | —（沿用個人 repo ADR-030） | [#451](https://github.com/label-suite/label-suite/issues/451) |
 | 2026-11-20 | 不用 Storybook，改用元件展示頁（[D3](#d3-元件庫用-shadcnui)） | D3 原本寫「Storybook 還沒決定」；個人 repo ADR-016 選的 Storybook | [#503](https://github.com/label-suite/label-suite/issues/503) |
 | 2026-11-20 | 原語只用語意變數、不讀 `tokens.css` 的變數名；為了加 variant 而改 `components/ui/` 是允許的（[D4](#d4-design-token-寫一層對照)） | D4 原本的「shadcn 元件不改寫」與選項 A 的好處「shadcn 元件一行都不改」 | [#505](https://github.com/label-suite/label-suite/issues/505) 的 Q9 裁定，記錄於 [#527](https://github.com/label-suite/label-suite/issues/527) |
+| 2026-11-10 | onboarding 只做空狀態與情境提示，不做導覽與角色導向漸進揭露（[D6](#d6-onboarding-只做空狀態與情境提示)） | 個人 repo ADR-015 的完整策略，改為部分採用 | [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393) |
