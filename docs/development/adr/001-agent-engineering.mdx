@@ -186,7 +186,7 @@ H2 要在動作發生前擋下 `AGENTS.md` 硬性規則 2、3、10 禁止的命�
 | 限制 | 對選擇的影響 |
 | :--- | :--- |
 | 兩個平台的預設都是 fail-open：hook 失敗、timeout 或輸出不合法時，動作照做（Claude 文件寫路徑打錯或 crash 的 policy hook「lets everything through」） | 不寫任何處理，檢查器壞了就等於沒有 H2 |
-| Claude 的宣告式 fail-closed 開關 `onFailure: "block"` 需要 v2.1.295，本機是 2.1.273（見 [agent-hook-contract.mdx 的查核方式](../rules/agent-hook-contract.mdx#查核方式)） | 現在不能用它 |
+| Claude 的宣告式 fail-closed 開關 `onFailure: "block"` 需要 v2.1.295，本機是 2.1.330（見 [agent-hook-contract.mdx 的查核方式](../rules/agent-hook-contract.mdx#查核方式)） | Claude 這一邊可以用，但還沒有在本機實測，採不採用見該文件的[待決](../rules/agent-hook-contract.mdx#待決) |
 | Codex 沒有等價欄位（官方文件未見） | 就算 Claude 升級，Codex 那邊仍沒有 |
 | 選 exit `2` 的理由不是欄位名不同：`PreToolUse` 的欄位名兩邊一致 | 理由只剩下面這一列 |
 | Codex 的 `PreToolUse` 回傳不支援的欄位（`continue`、`stopReason`、`suppressOutput`）時，該次 hook 被標為失敗並繼續執行那個工具 | 用 JSON 欄位表達阻擋有被誤放行的風險 |
@@ -196,7 +196,7 @@ H2 要在動作發生前擋下 `AGENTS.md` 硬性規則 2、3、10 禁止的命�
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
 | A 兩邊都由腳本自己在無法判斷時 exit `2`：包裝腳本先確認檢查器存在且可執行，不存在就 exit `2` | 兩個平台都能用；exit `2` 沒有 Codex 不支援欄位的風險 | 靠腳本自己負責；設定裡的路徑打錯或腳本本身 crash 時仍是 fail-open，不得假設會被擋下 | 採用 |
-| B Claude 用 `onFailure: "block"` | 宣告式的 fail-closed | 要 v2.1.295，本機沒有；Codex 沒有等價欄位，只有一邊 | 延後：Claude Code 升級之後，屆時要把版本下限記下來 |
+| B Claude 用 `onFailure: "block"` | 宣告式的 fail-closed | 要 v2.1.295 以上（本機 2.1.330 已滿足）；Codex 沒有等價欄位，只有一邊；尚未在本機實測 | 延後：是否採用見 [agent-hook-contract.mdx 的待決](../rules/agent-hook-contract.mdx#待決) |
 | C 不處理，靠預設 | 不用寫任何東西 | 預設是 fail-open，不得假設不寫就會擋 | 不採用 |
 | D 以 `permissionDecision: "deny"` 加 `permissionDecisionReason` 當主要的阻擋方式 | 兩邊都收 | 同一條路徑上若回傳 Codex 不支援的欄位，會讓該次 hook 失敗並繼續執行工具 | 不當主要做法，優先 exit `2` |
 
@@ -217,7 +217,7 @@ H2 兩邊都由腳本自己在無法判斷時 exit `2`、原因寫 stderr；不�
 
 ### 什麼情況要重新討論
 
-- 本機 Claude Code 升到 v2.1.295 以上之後：評估選項 B
+- 在本機實測 `onFailure: "block"` 確實擋下缺檔的 hook 之後：評估選項 B
 - Codex 出現等價的 fail-closed 欄位
 
 ## 附錄：來源對照
