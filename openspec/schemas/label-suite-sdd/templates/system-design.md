@@ -35,6 +35,17 @@ sequenceDiagram
   Router-->>Client: 回應
 ```
 
+## 常駐文件異動
+
+<!-- 後端模組的分層、Class Diagram 或主要 Sequence Diagram 有異動時，先改常駐文件，這一節只寫路徑與異動摘要，不重抄常駐文件的內容。
+     動到 app/core/ 的基礎建設時，改它的「後端基礎建設」節。上面兩節仍畫這次新增或修改的類別與這次的 Scenario。
+     沒有異動時，刪掉路徑與表格，只寫一行「本次無常駐文件異動」。 -->
+
+- 常駐文件：`docs/diagrams/architecture/backend-modules.mdx`
+
+| 節 | 異動 | 摘要 |
+| :--- | :--- | :--- |
+
 ## 資料模型異動
 
 <!-- schema 只由 Alembic 管理（含 dev 與 test）。已部署的 migration 不再修改。
