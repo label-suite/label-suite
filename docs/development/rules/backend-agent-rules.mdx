@@ -4,7 +4,7 @@ description: '後端的分層與允許 import、docstring 與指令、session �
 category: '開發說明'
 tags: [開發說明, Agent, 規範, 後端]
 createdAt: '2026-11-10'
-updatedAt: '2026-11-16'
+updatedAt: '2026-11-23'
 ---
 
 # 後端開發規範
@@ -27,13 +27,14 @@ Router 只呼叫 service，service 才碰 repository 與 model；資料層不處
 | **適用路徑** | `backend/app/modules/**` |
 | **禁止** | Router 直接呼叫 Repository；資料層處理 HTTP（讀 request、回 status code、丟 `HTTPException`）；狀態機的轉移判斷寫在 Router 或 Repository |
 | **正例** | `router → service → repository／model`；狀態轉移只在 service，違反時丟 `InvalidTransitionError` |
-| **例外** | 無。唯讀的健康檢查之類不碰業務資料的端點不在此列 |
+| **例外** | 無。唯讀的健康檢查之類不碰業務資料的端點沒有資料層可碰，但健康檢查模組（`app/modules/health/`）仍是分層檢查對象，檢查照跑 |
 
 完整的轉移條件以 `docs/specs/` 與 PRD §共用狀態機 為準，不以個人 repo ADR-022 的表為準——那張表帶著個人 repo 的 FR 編號；為什麼放 service 層見 [ADR-003 的 D4](../adr/003-backend-architecture.mdx#d4-任務狀態機只放在-service-層)。
 
 :::note{title="B1 的反例與檢查方式" collapsible}
 - **反例**：Router 裡 `await repo.get(...)` 然後自己組回應；Repository 裡 `raise HTTPException(404)`
-- **檢查方式**：**待建置**。可用 import linter（例如 `import-linter` 的 layered contract）機械擋住反向 import，但要等 `backend/` 存在
+- **檢查方式**：CI 的 `backend-sqlite` job 跑 `uv run lint-imports`，契約寫在 `backend/pyproject.toml`：`app.modules.*` 內依 router、service、repository、models、schemas 的 layers 契約；router 不得直接 import 同模組的 repository 或 models；`app.core` 不得 import `app.modules`；repository 與 models 不得 import `fastapi`、`starlette`。`backend/tests/unit/test_layer_boundaries.py` 另以違規範例驗證契約真的會失敗
+- **尚未檢查**：「狀態機的轉移判斷只在 service」沒有機械檢查，靠審查
 :::
 
 ### B2 docstring、型別與指令
@@ -51,7 +52,8 @@ Router 只呼叫 service，service 才碰 repository 與 model；資料層不處
 
 :::note{title="B2 的反例與檢查方式" collapsible}
 - **反例**：`python -m pytest`；為了讓一個測試過而把參數型別從 `TaskId` 放寬成 `str`
-- **檢查方式**：**待建置**。型別可用 `mypy --strict`、docstring 可用 `ruff` 的 `D` 規則；兩者都要等 `backend/` 與它的設定檔
+- **檢查方式**：CI 的 `backend-sqlite` job 跑 `uv run mypy --strict app` 檢查型別標註；`uv run ruff check .` 與 `uv run ruff format --check .` 檢查 lint 與格式（`backend/pyproject.toml` 選用 `E`、`F`、`I`、`UP`、`B`、`S`、`ASYNC`），指令一律以 `uv run` 執行
+- **尚未檢查**：docstring 的有無與內容沒有機械檢查（`ruff` 沒有選 `D` 規則），靠審查
 :::
 
 ### B3 session 的生命週期
@@ -120,7 +122,8 @@ API 一個請求一個 session、worker 一個 task 一個同步 session，用�
 
 :::note{title="B6 的反例與檢查方式" collapsible}
 - **反例**：測試 fixture 裡 `Base.metadata.create_all(engine)`；直接編輯上一版已部署的 migration 檔
-- **檢查方式**：**待建置**。CI 可跑 `upgrade → downgrade → upgrade`；`create_all` 可靜態擋
+- **檢查方式**：`backend/tests/integration/test_migrations.py` 在所選的測試資料庫上跑 `upgrade → downgrade → upgrade`，由 CI 的 `backend-sqlite` 與 `backend-postgres` 兩個 job 各跑一次
+- **尚未檢查**：禁用 `create_all`、禁改已部署 migration 都沒有機械檢查，靠審查
 :::
 
 ### B7 雙資料庫的測試要求
@@ -136,7 +139,7 @@ API 一個請求一個 session、worker 一個 task 一個同步 session，用�
 
 :::note{title="B7 的反例與檢查方式" collapsible}
 - **反例**：整個測試套件只跑 SQLite，PR 寫「資料層測試通過」
-- **檢查方式**：**待建置**。CI 要有兩條 job（SQLite 與真 PostgreSQL），而這要等 `backend/` 與 CI 設定
+- **檢查方式**：CI 有兩個後端 job：`backend-sqlite` 不設 `TEST_DATABASE_URL`，標 `postgres` 的測試在這一輪 skipped；`backend-postgres` 以 `postgres:16` 服務容器與 `TEST_DATABASE_URL` 跑 `uv run pytest`，之後 `node ../scripts/check-junit-skips.mjs` 在任何測試被 skipped 時失敗，所以標 `postgres` 的測試不會悄悄停跑。哪些行為「牽涉兩層差異」仍由撰寫測試的人判斷，靠審查
 :::
 
 ### B8 刪除、軟刪除與匿名化
