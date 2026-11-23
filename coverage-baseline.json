@@ -1,0 +1,10 @@
+{
+  "backend": {
+    "percentCovered": 95.372460496614
+  },
+  "frontend": {
+    "statements": 96.98,
+    "branches": 93.04
+  },
+  "tolerance": 0.1
+}
