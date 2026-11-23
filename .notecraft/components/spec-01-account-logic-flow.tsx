@@ -1,4 +1,4 @@
-import { useId, useState, type CSSProperties, type ReactElement } from "react";
+import { useId, useState, type CSSProperties, type KeyboardEvent, type ReactElement } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { MousePointerClick, RotateCcw } from "lucide-react";
 
@@ -133,9 +133,9 @@ const SECTIONS: Section[] = [
       n("D3", "decision", ["驗證通過？"], 640, 270, 104, 60),
     ],
     edges: [
-      { id: "1-1", from: "S", to: "D1", kind: "plain", pts: [[88, 150], [110, 150]], text: "S → D1" },
+      { id: "1-1", from: "S", to: "D1", kind: "plain", pts: [[88, 150], [110, 150]], text: "S → D1（起訖連線，無規格條文）" },
       { id: "1-2", from: "D1", to: "X5", kind: "yes", pts: [[160, 120], [160, 22], [640, 22], [640, 128]], label: "是", lp: [176, 40], text: "D1 是 → X5 儀表板（01-01 §導向其他頁面 4、Q3；01-02 §使用角色；01-03 §使用角色）" },
-      { id: "1-3", from: "D1", to: "P1", kind: "no", pts: [[210, 150], [255, 150]], label: "否", lp: [232, 140], text: "D1 否 → P1 登入頁（01-01 §導向其他頁面 4；直接打開註冊頁或申請頁的人停在那一頁）" },
+      { id: "1-3", from: "D1", to: "P1", kind: "no", pts: [[210, 150], [255, 150]], label: "否", lp: [232, 140], text: "D1 否 → P1 登入頁（01-01 業務流程「用 Email 與密碼登入」觸發：未登入的訪客要進入平台；§登入頁的內容）" },
       { id: "1-4", from: "P1", to: "D2", kind: "plain", pts: [[365, 150], [418, 150]], label: "登入", lp: [391, 140], text: "P1 點「登入」→ D2（01-01「用 Email 與密碼登入」主流程）" },
       { id: "1-5", from: "D2", to: "X5", kind: "yes", pts: [[522, 150], [580, 150]], label: "是", lp: [551, 140], text: "D2 是 → X5 儀表板（01-01 主流程、§導向其他頁面 3）" },
       { id: "1-6", from: "D2", to: "P1", kind: "no", pts: [[470, 120], [470, 100], [350, 100], [350, 128]], label: "否", lp: [486, 110], text: "D2 否 → 停在 P1（01-01 E1、E2；§登入失敗）" },
@@ -145,7 +145,7 @@ const SECTIONS: Section[] = [
       { id: "1-10", from: "D3", to: "P1", kind: "no", pts: [[640, 300], [640, 335], [310, 335], [310, 172]], label: "否", lp: [656, 320], text: "D3 否 → P1 登入頁（01-01「用 Google 帳號登入」E1；01-05 §帳號被停用或重新啟用 3）" },
       { id: "1-11", from: "P1", to: "P2", kind: "plain", pts: [[310, 128], [310, 86]], label: "前往註冊", lp: [258, 112], text: "P1 點「前往註冊」→ P2 註冊頁（01-01 §導向其他頁面 2）" },
       { id: "1-12", from: "P1", to: "P4", kind: "plain", pts: [[275, 172], [275, 250]], label: "忘記密碼？", lp: [226, 214], text: "P1 點「忘記密碼？」→ P4 申請頁（01-01 §導向其他頁面 1）" },
-      { id: "1-13", from: "X5", to: "E", kind: "plain", pts: [[700, 150], [728, 150]], text: "X5 儀表板 → E" },
+      { id: "1-13", from: "X5", to: "E", kind: "plain", pts: [[700, 150], [728, 150]], text: "X5 儀表板 → E（起訖連線，無規格條文）" },
     ],
     gaps: [],
   },
@@ -229,7 +229,7 @@ const SECTIONS: Section[] = [
       { id: "4-4", from: "D9", to: "X7", kind: "yes", pts: [[650, 110], [650, 178]], label: "是", lp: [662, 146], text: "D9 是 → Email 換成新的 → X7 登入狀態結束（01-04「用驗證連結換掉 Email」主流程、§換 Email 8；01-05「安全事件撤銷」A1）" },
       { id: "4-6a", from: "P6", to: "X1", kind: "plain", pts: [[290, 102], [290, 180]], label: "連結 Google", lp: [244, 144], text: "P6 連結 Google 帳號 → X1 Google 驗證 → 連結成功 → X7 登入狀態結束（01-04 §連結 Google 帳號 2～3；01-05「安全事件撤銷」A1）" },
       { id: "4-6b", from: "X1", to: "X7", kind: "plain", pts: [[350, 192], [580, 192]], label: "連結成功", lp: [465, 184], text: "P6 連結 Google 帳號 → X1 Google 驗證 → 連結成功 → X7 登入狀態結束（01-04 §連結 Google 帳號 2～3；01-05「安全事件撤銷」A1）" },
-      { id: "4-7", from: "X5", to: "X7", kind: "plain", pts: [[90, 102], [90, 266], [560, 266], [560, 212], [580, 212]], label: "登出／時間到", lp: [420, 282], text: "登入後任何一頁點登出，或時間到了 → X7 登入狀態結束（07-01 §登出 1；01-05「自己登出這一台」「時間到了自然結束」）" },
+      { id: "4-7", from: "X5", to: "X7", kind: "plain", pts: [[90, 102], [90, 266], [560, 266], [560, 212], [580, 212]], label: "登入後任一頁：登出／時間到", lp: [380, 282], text: "登入後任何一頁點登出，或時間到了 → X7 登入狀態結束（07-01 §登出 1；01-05「自己登出這一台」「時間到了自然結束」）" },
       { id: "4-8", from: "X8", to: "X7", kind: "plain", pts: [[760, 200], [720, 200]], text: "X8 系統管理員停用帳號 → X7 登入狀態結束（01-05 §帳號被停用或重新啟用 1～2；01-05「時間到了自然結束」A2）" },
       { id: "4-9", from: "X7", to: "P1", kind: "plain", pts: [[650, 222], [650, 280]], text: "X7 → P1 登入頁（01-05「自己登出這一台」主流程與 A1、「安全事件撤銷」A1、「時間到了自然結束」主流程）" },
     ],
@@ -320,6 +320,14 @@ export default function SpecAccountLogicFlow(): ReactElement {
   const [tab, setTab] = useState<string>(SECTIONS[0].id);
   const [switched, setSwitched] = useState<boolean>(false);
   const [sel, setSel] = useState<Selection>(null);
+  const [focusKey, setFocusKey] = useState<string | null>(null);
+
+  const activate = (ev: KeyboardEvent<SVGGElement>, next: Selection): void => {
+    if (ev.key === "Enter" || ev.key === " ") {
+      ev.preventDefault();
+      setSel(next);
+    }
+  };
 
   const section = SECTIONS.find((s) => s.id === tab) ?? SECTIONS[0];
   const nodeById = new Map(section.nodes.map((nd) => [nd.id, nd]));
@@ -373,13 +381,26 @@ export default function SpecAccountLogicFlow(): ReactElement {
 
   return (
     <div className="not-prose mx-auto w-full max-w-5xl" style={{ fontFamily: FONT, color: INK }}>
-      <div role="tablist" aria-label="Logic Flow 分段" className="mb-3 flex flex-wrap items-center gap-2">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+      <div role="tablist" aria-label="Logic Flow 分段" className="flex flex-wrap items-center gap-2">
         {SECTIONS.map((s, i) => (
           <button
             key={s.id}
+            id={`${uid}-tab-${s.id}`}
             type="button"
             role="tab"
             aria-selected={s.id === tab}
+            aria-controls={`${uid}-panel`}
+            tabIndex={s.id === tab ? 0 : -1}
+            onKeyDown={(ev) => {
+              if (ev.key !== "ArrowRight" && ev.key !== "ArrowLeft") return;
+              ev.preventDefault();
+              const next = SECTIONS[(i + (ev.key === "ArrowRight" ? 1 : SECTIONS.length - 1)) % SECTIONS.length];
+              setTab(next.id);
+              setSel(null);
+              setSwitched(true);
+              document.getElementById(`${uid}-tab-${next.id}`)?.focus();
+            }}
             style={tabStyle(s.id === tab)}
             onClick={() => {
               setTab(s.id);
@@ -390,6 +411,7 @@ export default function SpecAccountLogicFlow(): ReactElement {
             {`分段${["一", "二", "三", "四"][i]}：${s.label}`}
           </button>
         ))}
+      </div>
         {active && (
           <button type="button" onClick={() => setSel(null)} style={{ ...tabStyle(false), display: "inline-flex", alignItems: "center", gap: 4 }}>
             <RotateCcw size={14} aria-hidden="true" />
@@ -398,7 +420,12 @@ export default function SpecAccountLogicFlow(): ReactElement {
         )}
       </div>
 
-      <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, overflowX: "auto", background: WHITE }}>
+      <div
+        id={`${uid}-panel`}
+        role="tabpanel"
+        aria-labelledby={`${uid}-tab-${section.id}`}
+        style={{ border: `1px solid ${BORDER}`, borderRadius: 8, overflowX: "auto", background: WHITE }}
+      >
         <motion.div
           key={section.id}
           initial={switched && !reduce ? { opacity: 0, y: 4 } : false}
@@ -407,8 +434,8 @@ export default function SpecAccountLogicFlow(): ReactElement {
         >
           <svg
             viewBox={`0 0 ${section.w} ${section.h}`}
-            role="img"
-            aria-label={`01 帳號 Logic Flow：${section.label}`}
+            role="group"
+            aria-label={`01 帳號 Logic Flow：${section.label}；用 Tab 移到節點或連線，按 Enter 看出處`}
             style={{ display: "block", width: "100%", minWidth: Math.round(section.w * 0.78) }}
             onClick={() => setSel(null)}
           >
@@ -429,13 +456,20 @@ export default function SpecAccountLogicFlow(): ReactElement {
                   key={e.id}
                   animate={{ opacity: op }}
                   transition={transition}
-                  style={{ cursor: "pointer" }}
+                  style={{ cursor: "pointer", outline: "none" }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`連線 ${e.from} 到 ${e.to}${e.label ? `，${e.label}` : ""}`}
+                  aria-pressed={sel?.type === "edge" && sel.id === e.id}
+                  onFocus={() => setFocusKey(`e-${e.id}`)}
+                  onBlur={() => setFocusKey(null)}
+                  onKeyDown={(ev) => activate(ev, { type: "edge", id: e.id })}
                   onClick={(ev) => {
                     ev.stopPropagation();
                     setSel({ type: "edge", id: e.id });
                   }}
                 >
-                  <path d={d} fill="none" stroke="transparent" strokeWidth={12} />
+                  <path d={d} fill="none" stroke={focusKey === `e-${e.id}` ? PRIMARY_BORDER : "transparent"} strokeWidth={focusKey === `e-${e.id}` ? 8 : 12} strokeLinejoin="round" />
                   <path
                     d={d}
                     fill="none"
@@ -460,12 +494,22 @@ export default function SpecAccountLogicFlow(): ReactElement {
                   key={nd.id}
                   animate={{ opacity: op }}
                   transition={transition}
-                  style={{ cursor: "pointer" }}
+                  style={{ cursor: "pointer", outline: "none" }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={nd.note}
+                  aria-pressed={sel?.type === "node" && sel.id === nd.id}
+                  onFocus={() => setFocusKey(`n-${nd.id}`)}
+                  onBlur={() => setFocusKey(null)}
+                  onKeyDown={(ev) => activate(ev, { type: "node", id: nd.id })}
                   onClick={(ev) => {
                     ev.stopPropagation();
                     setSel({ type: "node", id: nd.id });
                   }}
                 >
+                  {focusKey === `n-${nd.id}` && (
+                    <rect x={nd.x - nd.w / 2 - 5} y={nd.y - nd.h / 2 - 5} width={nd.w + 10} height={nd.h + 10} rx={8} fill="none" stroke={PRIMARY_STRONG} strokeWidth={2} />
+                  )}
                   <Shape node={nd} />
                   <NodeText node={nd} />
                   <text x={nd.x - nd.w / 2} y={nd.y - nd.h / 2 - 4} fontFamily={FONT} fontSize={12} fontWeight={600} fill={MUTED} textAnchor="start">
