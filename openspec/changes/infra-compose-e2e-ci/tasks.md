@@ -50,7 +50,7 @@
 
 ## 9. 覆蓋率基準初始化
 
-- [ ] 9.1 依 Q7 與 design R3，下載 8.4 那次 CI run 的 artifact `coverage-baseline-suggested`，原樣提交成 repo 根 `coverage-baseline.json`（後端 `percentCovered`、前端 `statements`、`branches`、`tolerance: 0.1`），不手改數字、不使用 acceptance 記的 97%、98.98% 或其他占位值，也不從本機量測產生。完成判定：提交的檔案與 artifact 內容逐位元組相同；下一次 CI run 的 `coverage` job 轉綠；本 PR 所有新 job（`compose` 依路徑條件）都綠 [@backend-developer]
+- [x] 9.1 依 Q7 與 design R3，下載 8.4 那次 CI run 的 artifact `coverage-baseline-suggested`，原樣提交成 repo 根 `coverage-baseline.json`（後端 `percentCovered`、前端 `statements`、`branches`、`tolerance: 0.1`），不手改數字、不使用 acceptance 記的 97%、98.98% 或其他占位值，也不從本機量測產生。完成判定：提交的檔案與 artifact 內容逐位元組相同；下一次 CI run 的 `coverage` job 轉綠；本 PR 所有新 job（`compose` 依路徑條件）都綠 [@backend-developer]
 
 ## 10. 文件改寫（可平行）
 
