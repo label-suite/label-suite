@@ -821,10 +821,303 @@ export function checkFlowsIn({
   return { errors, warnings };
 }
 
+// ------------------------------------------------------ Logic Flow layout ---
+//
+// The module-level Logic Flow components (spec-<NN>-<module>-logic-flow.tsx,
+// copied from logic-flow-skeleton.tsx) carry hand-placed coordinates instead
+// of the lane/col grid above, so none of checkGeometry applies to them. Two
+// layout defects slipped through review there (#558): arrowheads that stop
+// short of a slanted diamond side, and edge labels pushed off the canvas. The
+// checks below catch exactly those two.
+
+export const LOGIC_SECTIONS_DECL = "const SECTIONS: Section[] = [";
+
+export function logicFlowComponents(dir = COMPONENTS_DIR) {
+  return readdirSync(dir)
+    .filter((f) => /^spec-\d\d-.+-logic-flow\.tsx$/.test(f))
+    .sort()
+    .map((f) => join(dir, f));
+}
+
+const NUM = String.raw`-?\d+(?:\.\d+)?`;
+// n(id, kind, lines, x, y, w, h) from the skeleton's node helper
+const NODE_CALL = new RegExp(
+  String.raw`\bn\(\s*"([^"]+)",\s*"([^"]+)",\s*\[(?:\s*"(?:[^"\\]|\\.)*"\s*,?)*\s*\],\s*(${NUM}),\s*(${NUM}),\s*(${NUM}),\s*(${NUM})\s*\)`,
+  "g",
+);
+
+export function parseLogicFlow(tsx) {
+  const at = tsx.indexOf(LOGIC_SECTIONS_DECL);
+  if (at < 0) throw new Error(`component has no \`${LOGIC_SECTIONS_DECL}\``);
+  const list = balanced(tsx, tsx.indexOf("=", at));
+  if (!list) throw new Error("the SECTIONS array is not balanced");
+  const chunks = objects(list.body);
+  // an empty SECTIONS would check nothing and pass; refuse it
+  if (chunks.length === 0) throw new Error("the SECTIONS array has no sections");
+  return chunks.map((chunk) => {
+    const sub = (name) => {
+      const at = chunk.search(new RegExp(`\\b${name}:`));
+      return at < 0 ? null : balanced(chunk, at);
+    };
+    const nodesArr = sub("nodes");
+    const edgesArr = sub("edges");
+    const gapsArr = sub("gaps");
+    // the section's own w/h sit outside its nodes/edges/gaps arrays
+    let own = chunk;
+    for (const name of ["nodes", "edges", "gaps"]) {
+      const arr = sub(name);
+      if (arr) own = own.replace(arr.body, "");
+    }
+    const id = field(own, "id");
+    const where = `section ${id ?? "(unnamed)"}`;
+    const w = Number(own.match(/\bw:\s*(\d+(?:\.\d+)?)/)?.[1]);
+    const h = Number(own.match(/\bh:\s*(\d+(?:\.\d+)?)/)?.[1]);
+    if (!id || !Number.isFinite(w) || !Number.isFinite(h))
+      throw new Error(`${where}: id, w or h did not parse`);
+    if (!nodesArr || !edgesArr) throw new Error(`${where}: nodes or edges did not parse`);
+    const nodes = [...nodesArr.body.matchAll(NODE_CALL)].map((m) => ({
+      id: m[1],
+      kind: m[2],
+      x: Number(m[3]),
+      y: Number(m[4]),
+      w: Number(m[5]),
+      h: Number(m[6]),
+    }));
+    // a node call this regex cannot read would silently go unchecked; refuse
+    const written = [...nodesArr.body.matchAll(/\bn\(/g)].length;
+    if (written !== nodes.length)
+      throw new Error(`${where}: ${written} n(...) calls written but ${nodes.length} understood`);
+    const edges = objects(edgesArr.body).map((e) => {
+      const eid = field(e, "id");
+      const ptsAt = e.search(/\bpts:/);
+      const pts = ptsAt < 0 ? null : balanced(e, ptsAt);
+      const lp = e.match(new RegExp(String.raw`\blp:\s*\[\s*(${NUM}),\s*(${NUM})\s*\]`));
+      const edge = {
+        id: eid,
+        from: field(e, "from"),
+        to: field(e, "to"),
+        label: field(e, "label"),
+        pts: pts ? JSON.parse(`[${pts.body}]`) : null,
+        lp: lp ? [Number(lp[1]), Number(lp[2])] : null,
+      };
+      if (!edge.id || !edge.to || !edge.pts || edge.pts.length < 2)
+        throw new Error(`${where}/${eid ?? "(unnamed)"}: id, to or pts did not parse`);
+      if (/\blp:/.test(e) && !edge.lp)
+        throw new Error(`${where}/${eid}: lp is written but did not parse`);
+      if (!nodes.some((nd) => nd.id === edge.to))
+        throw new Error(`${where}/${eid}: to="${edge.to}" is not a node in this section`);
+      return edge;
+    });
+    const gaps = (gapsArr ? objects(gapsArr.body) : []).map((g) => {
+      const x = g.match(new RegExp(String.raw`\bx:\s*(${NUM})`));
+      const y = g.match(new RegExp(String.raw`\by:\s*(${NUM})`));
+      const linesAt = g.search(/\blines:/);
+      const lines = linesAt < 0 ? null : balanced(g, linesAt);
+      if (!x || !y || !lines) throw new Error(`${where}: a gap's x, y or lines did not parse`);
+      return { x: Number(x[1]), y: Number(y[1]), lines: strList(lines.body) };
+    });
+    return { id, w, h, nodes, edges, gaps };
+  });
+}
+
+// The outline the skeleton's <Shape> draws: a diamond for a decision, a box
+// for everything else. x and y are the centre.
+export function outlineOf(node) {
+  const { x, y } = node;
+  const [hw, hh] = [node.w / 2, node.h / 2];
+  return node.kind === "decision"
+    ? [
+        [x, y - hh],
+        [x + hw, y],
+        [x, y + hh],
+        [x - hw, y],
+      ]
+    : [
+        [x - hw, y - hh],
+        [x + hw, y - hh],
+        [x + hw, y + hh],
+        [x - hw, y + hh],
+      ];
+}
+
+function distPointSeg([px, py], [ax, ay], [bx, by]) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const len2 = dx * dx + dy * dy;
+  const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2));
+  return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+}
+
+function insidePolygon([px, py], poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i, i += 1) {
+    const [xi, yi] = poly[i];
+    const [xj, yj] = poly[j];
+    if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+// Signed distance from a point to the node's outline, in px: positive outside
+// the shape, negative inside it, zero on it.
+export function distToOutline(point, node) {
+  const poly = outlineOf(node);
+  const d = Math.min(...poly.map((a, i) => distPointSeg(point, a, poly[(i + 1) % poly.length])));
+  return d > 0 && insidePolygon(point, poly) ? -d : d;
+}
+
+// How far an arrow tip may sit from the outline, on each side. The arrowhead
+// marker is 7 x strokeWidth 1.5 = 10.5px long and its tip overshoots the end
+// point by about 1px (refX 9 of a 10-unit box); the node outline is 1.5px
+// wide. Outside, a tip within 3px still visibly touches the outline, while at
+// 4px a gap opens. Inside, the node is drawn over the edge, so the overshoot
+// alone already puts the tip under the outline; 1px more is all that still
+// shows the point, and 2px hides it under the fill. Integer coordinates on a
+// slanted diamond side round by at most about 0.7px, which both absorb.
+export const ENDPOINT_TOLERANCE = 3;
+export const ENDPOINT_TOLERANCE_INSIDE = 1;
+
+// Edge labels, gap notes and node ids are all drawn by the skeleton at
+// fontSize 12 with the given y as the baseline. A CJK or full-width glyph is
+// about one em wide. A Latin capital is given 0.75 em, which covers the wide
+// ones (M, W, Q, O) in the system sans fonts. Every other glyph -- lower case,
+// digits, spaces, ASCII punctuation -- is given 0.6 em: that covers digits and
+// most lower case, but m and w run to about 0.8 em, so a label made mostly of
+// those can be underestimated. Above the baseline the box takes 11px (the
+// ascent of the CJK system fonts, about 0.88 em, rounded up); below it, 3px
+// for descenders. The white halo is not counted: it is invisible on the white
+// canvas.
+export const LABEL_FONT = 12;
+export const LATIN_CAPITAL_EM = 0.75;
+export const OTHER_EM = 0.6;
+export const LABEL_ASCENT = 11;
+export const LABEL_DESCENT = 3;
+
+export function textWidth(text) {
+  return (
+    [...text].reduce(
+      (sum, c) =>
+        sum +
+        (/[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef\u3000-\u303f]/.test(c)
+          ? 1
+          : /[A-Z]/.test(c)
+            ? LATIN_CAPITAL_EM
+            : OTHER_EM),
+      0,
+    ) * LABEL_FONT
+  );
+}
+
+export function labelExtent(text, [x, y]) {
+  const w = textWidth(text) / LABEL_FONT;
+  const half = (w * LABEL_FONT) / 2;
+  return [x - half, y - LABEL_ASCENT, x + half, y + LABEL_DESCENT];
+}
+
+// The box of one line of a gap note. The skeleton anchors a note at its start
+// when it sits in the right half of the canvas and at its middle otherwise, and
+// puts each further line 15px lower.
+export function gapLineExtent(gap, i, canvasW) {
+  const y = gap.y + 15 * i;
+  if (gap.x > canvasW / 2) {
+    return [gap.x, y - LABEL_ASCENT, gap.x + textWidth(gap.lines[i]), y + LABEL_DESCENT];
+  }
+  return labelExtent(gap.lines[i], [gap.x, y]);
+}
+
+// The skeleton writes a node's id above its top-left corner (baseline 4px over
+// the top edge); a decision's id goes inside its top-right corner instead
+// (baseline 8px under the top vertex). Either may be pushed off the top.
+export function nodeIdBaseline(node) {
+  const top = node.y - node.h / 2;
+  return node.kind === "decision" ? top + 8 : top - 4;
+}
+
+function outside([x0, y0, x1, y1], w, h) {
+  const out = [];
+  if (x0 < 0) out.push(`left by ${(-x0).toFixed(1)}px`);
+  if (y0 < 0) out.push(`top by ${(-y0).toFixed(1)}px`);
+  if (x1 > w) out.push(`right by ${(x1 - w).toFixed(1)}px`);
+  if (y1 > h) out.push(`bottom by ${(y1 - h).toFixed(1)}px`);
+  return out;
+}
+
+export function checkLogicLayout(section, report) {
+  const { id: sid, w, h, nodes, edges, gaps = [] } = section;
+  for (const e of edges) {
+    const to = nodes.find((nd) => nd.id === e.to);
+    const tip = e.pts.at(-1);
+    const d = distToOutline(tip, to);
+    if (d > ENDPOINT_TOLERANCE || d < -ENDPOINT_TOLERANCE_INSIDE) {
+      const where = d > 0 ? "outside" : "inside";
+      report.error(
+        `${sid}/${e.id}: the arrow ends at (${tip.join(", ")}), ${Math.abs(d).toFixed(1)}px ${where} the outline of ${e.to}${to.kind === "decision" ? " (a diamond)" : ""}`,
+      );
+    }
+    if (e.label && e.lp) {
+      const out = outside(labelExtent(e.label, e.lp), w, h);
+      if (out.length > 0) {
+        report.error(
+          `${sid}/${e.id}: label "${e.label}" at (${e.lp.join(", ")}) leaves the ${w}x${h} canvas (${out.join(", ")})`,
+        );
+      }
+    }
+  }
+  gaps.forEach((g, gi) => {
+    g.lines.forEach((line, i) => {
+      const out = outside(gapLineExtent(g, i, w), w, h);
+      if (out.length > 0) {
+        report.error(
+          `${sid}: gap note ${gi + 1} line ${i + 1} "${line}" at (${g.x}, ${g.y + 15 * i}) leaves the ${w}x${h} canvas (${out.join(", ")})`,
+        );
+      }
+    });
+  });
+  for (const nd of nodes) {
+    const top = nodeIdBaseline(nd) - LABEL_ASCENT;
+    if (top < 0) {
+      report.error(
+        `${sid}/${nd.id}: the node id is cut off by the top of the canvas (top by ${(-top).toFixed(1)}px)`,
+      );
+    }
+  }
+}
+
+export function checkLogicFlowsIn({ files = logicFlowComponents() } = {}) {
+  const errors = [];
+  if (files.length === 0) {
+    errors.push(
+      "no Logic Flow components were found; the layout check would pass by doing nothing",
+    );
+    return { errors };
+  }
+  for (const file of files) {
+    const base = file
+      .split("/")
+      .at(-1)
+      .replace(/\.tsx$/, "");
+    const report = { error: (m) => errors.push(`${base}: ${m}`) };
+    let sections;
+    try {
+      sections = parseLogicFlow(readFileSync(file, "utf8"));
+    } catch (err) {
+      report.error(err.message);
+      continue;
+    }
+    for (const s of sections) checkLogicLayout(s, report);
+  }
+  return { errors };
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const { errors, warnings } = checkFlowsIn();
+  const flows = checkFlowsIn();
+  const logic = checkLogicFlowsIn();
+  const warnings = flows.warnings;
+  const errors = [...flows.errors, ...logic.errors];
   for (const w of warnings) console.warn(`WARN  ${w}`);
   for (const e of errors) console.error(`ERROR ${e}`);
   if (errors.length > 0) process.exit(1);
-  console.log(`check-flows: ${skeletonDerived().length} components OK`);
+  console.log(
+    `check-flows: ${skeletonDerived().length} components OK, ${logicFlowComponents().length} Logic Flow layouts OK`,
+  );
 }

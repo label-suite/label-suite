@@ -1,12 +1,12 @@
 ---
 title: ADR-007 測試策略
-description: 測試怎麼分層、覆蓋率怎麼要求、前端測試與正式 E2E 放在哪裡：三層測試、覆蓋率只管不得下降加關鍵路徑、前端測試與原始碼同目錄、正式 E2E 放根目錄。
+description: 測試怎麼分層、覆蓋率怎麼要求、前端測試與正式 E2E 放在哪裡：三層測試、覆蓋率只管不得下降加關鍵路徑、前端測試與原始碼同目錄、正式 E2E 放根目錄、測試報告只用內建報告並放 CI artifact。
 tags: [adr, testing, coverage, e2e]
 ---
 
 # ADR-007 測試策略
 
-這份 ADR 管測試的分層、覆蓋率的要求，以及測試檔放在哪裡。TDD 的紅燈紀律、integration 的真實邊界、gate 與 evidence 不在這裡，見 [testing-agent-rules.mdx](../rules/testing-agent-rules.mdx)。
+這份 ADR 管測試的分層、覆蓋率的要求、測試檔放在哪裡，以及測試報告用什麼產出、放在哪裡。TDD 的紅燈紀律、integration 的真實邊界、gate 與 evidence 不在這裡，見 [testing-agent-rules.mdx](../rules/testing-agent-rules.mdx)。
 規則本體在 `AGENTS.md` 與 [testing-agent-rules.mdx](../rules/testing-agent-rules.mdx)，落地的做法在 [architecture.mdx 的 §測試分層](../architecture.mdx#測試分層)，本文只寫為什麼；衝突時的優先序見 [ADR 索引](index.mdx#衝突時以誰為準)。
 
 ## D1 三層測試的分工
@@ -176,6 +176,52 @@ tags: [adr, testing, coverage, e2e]
 - `e2e/` 建立之後，跨套件的型別參照反覆造成建置問題
 - e2e 要測的流程縮到只剩前端能獨立跑完的旅程，不再需要起後端
 
+## D5 測試報告只用內建報告，放 CI artifact
+
+### 背景
+
+要決定要不要產出可瀏覽的測試報告、用哪個工具，以及報告放在哪裡。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 參考的 NestJS 腳手架用 Allure 產出測試報告 | 要決定照做還是不做 |
+| [D2](#d2-覆蓋率只管不得下降與關鍵路徑) 只決定覆蓋率基準與不得下降，沒有決定測試報告 | 測試報告是另外要決定的事 |
+| 後端用 pytest、前端用 Vitest、e2e 用 Playwright（[D1](#d1-三層測試的分工)） | 報告的來源是這三個 runner |
+
+### 考慮過的選項
+
+來源只比較了兩組選項：用哪個工具，以及報告放哪裡。
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A Allure | — | 要引入新依賴 | 不採用 |
+| B pytest-html | — | — | 不採用，理由沒有記錄 |
+| C 內建報告：Playwright 的 HTML report（失敗時附 trace），pytest 與 Vitest 輸出 JUnit XML 給 CI 摘要 | 不引入新依賴 | — | 採用 |
+| D 不產出報告 | — | — | 不採用，理由沒有記錄 |
+| E 報告放 CI artifact | — | — | 採用，理由沒有記錄 |
+| F 報告放 GitHub Pages | — | — | 不採用，理由沒有記錄 |
+| G 報告只在本機 | — | — | 不採用，理由沒有記錄 |
+
+### 決定
+
+只用各工具的內建報告：Playwright 產出內建 HTML report，失敗時附 trace；pytest 與 Vitest 輸出 JUnit XML 給 CI 摘要；不引入 Allure 等新依賴。報告放在 CI artifact，不開 GitHub Pages。
+接進 CI 的實作屬 CI 的 change。
+
+### 後果
+
+**變容易**
+
+- 不必為測試報告新增依賴
+
+**變困難**
+
+- 這個決定本身不產生任何報告，要等 CI 的 change 把它接進 CI
+
+### 什麼情況要重新討論
+
+- 要引入內建報告以外的報告工具
+- 要把報告放到 CI artifact 以外的地方
+
 ## 附錄：來源對照
 
 比對的版本：個人 repo（`singyichen/label-suite`）ADR-009、012、034 的現行內容。
@@ -186,7 +232,8 @@ tags: [adr, testing, coverage, e2e]
 | D2 | 個人 repo ADR-009 的分層門檻（選項 B）；選項 A 是原始 repo foundation spec 的 `SC-001`；維護者採用的是原始 repo `testing-backend.md` 與 `testing-frontend.md` 的「新程式不得降低整體覆蓋率」與「關鍵路徑 90% 分支」，關鍵路徑由三項擴成五項，見 [testing-agent-rules.mdx 的 T10](../rules/testing-agent-rules.mdx#t10-覆蓋率) |
 | D3 | 個人 repo ADR-012 的 Co-location Convention；選項 B 是原始 repo `testing-frontend.md` 的位置慣例，見 [testing-agent-rules.mdx 的 T1 來源](../rules/testing-agent-rules.mdx#各條規範的來源) |
 | D4 | 個人 repo ADR-034（選項 A、B 的比較與限制）；它同時取代 ADR-009、011、012 的 E2E 位置 |
-| — | 個人 repo ADR-014（prototype 層 Playwright 測試）不適用本 repo，測試留在個人 repo，見 [architecture.mdx 的 §ADR 效力總表](../architecture.mdx#adr-效力總表) |
+| D5 | [#569 的本文](https://github.com/label-suite/label-suite/issues/569)與[裁定留言](https://github.com/label-suite/label-suite/issues/569#issuecomment-7100091514)；[D1](#d1-三層測試的分工)、[D2](#d2-覆蓋率只管不得下降與關鍵路徑)；選項 A 的代價來自裁定的「不引入新依賴」，選項 C 的好處同出一處；其餘選項的好處與代價、選項 B、D、E、F、G 的不採用或採用理由來源沒有記錄；本節的重新討論條件是推論，來源沒有記錄 |
+| — | 個人 repo ADR-014（prototype 層 Playwright 測試）不適用本 repo，測試留在個人 repo，見 [architecture.mdx 的 §附錄：個人 repo ADR 的對照](../architecture.mdx#附錄個人-repo-adr-的對照) |
 
 ## 待決
 
@@ -201,3 +248,4 @@ tags: [adr, testing, coverage, e2e]
 | 2026-11-19 | 覆蓋率只管不得下降加五項關鍵路徑的 90% 分支覆蓋（[D2](#d2-覆蓋率只管不得下降與關鍵路徑)） | 個人 repo ADR-009 的分層門檻（80%、90%、100%）與整體 80% 硬閘 | [#453](https://github.com/label-suite/label-suite/issues/453) |
 | 2026-11-19 | 前端測試與原始碼放同一個目錄（[D3](#d3-前端測試與原始碼放同一個目錄)） | 原始 repo 的 `src/[module]/__tests__/` | [#453](https://github.com/label-suite/label-suite/issues/453) |
 | 2026-11-19 | 正式 E2E 放根目錄 `e2e/[module]/`（[D4](#d4-正式-e2e-放根目錄)） | 個人 repo ADR-009、011、012 的 `frontend/tests/` | [#453](https://github.com/label-suite/label-suite/issues/453) |
+| 2026-11-23 | 測試報告只用各工具的內建報告，放 CI artifact（[D5](#d5-測試報告只用內建報告放-ci-artifact)） | —（原本沒有 ADR 討論過） | [#569 留言](https://github.com/label-suite/label-suite/issues/569#issuecomment-7100091514) |
