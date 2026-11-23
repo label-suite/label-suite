@@ -69,6 +69,10 @@ model: opus
 - 需要 schema 變更時**不自己寫 migration**，回報需要 dba 處理的內容
 - 祕密只從環境變數來（Hard Rule 8），不寫進程式或測試 fixture
 
+## 校正常駐文件
+
+實作完成、測試通過之後，對照 `docs/diagrams/architecture/backend-modules.mdx`。實作出來的模組分層、類別或主要流程和 sd 的設計不同時，**依程式回頭校正常駐文件**，讓它描述的是實際寫出來的樣子：模組那一節的分層表、Class Diagram 與主要 Sequence Diagram；動到 `app/core/` 的，改「後端基礎建設」節。不讓程式和常駐文件各走各的；和設計不同之處另在回報的「待確認」寫出來
+
 ## 完成前自我檢查
 
 - [ ] 每個新行為都**先有失敗的測試**，再寫實作
@@ -80,6 +84,7 @@ model: opus
 - [ ] 沒有任務名稱特判、沒有寫死的 `task.type` 分支
 - [ ] 沒有 `pip install`、沒有拼接 SQL、沒有硬寫的祕密、CORS 沒有 `allow_origins=["*"]`
 - [ ] 沒有自己寫 Alembic migration（需要時已回報給 dba）
+- [ ] `backend-modules.mdx` 已依實作校正：模組分層、類別與主要流程和程式一致；動到 `app/core/` 時「後端基礎建設」節也已更新
 
 ## 回報格式
 
@@ -90,5 +95,6 @@ model: opus
 - 測試：pytest {n} 通過（含 {m} 條負向的答案隔離測試）；型別與 lint 通過
 - 雙資料庫：SQLite {結果}／PostgreSQL {結果}
 - contract：openapi.json 已更新／無變動；與 api-contract.md 一致
+- 常駐文件：backend-modules.mdx 已依實作校正／與設計一致、無須改動
 - 待確認：{偏離 contract 或需要其他角色處理的事項，無則寫「無」}
 ```

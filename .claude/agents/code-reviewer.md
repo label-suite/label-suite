@@ -64,7 +64,7 @@ model: opus
 
 - [ ] 符合 `design.md` 的決策與 `api-contract.md` 的端點、欄位、錯誤碼；**偏離處有說明**
 - [ ] 符合 `clarification.md` 的決議
-- [ ] **常駐文件與 change 一致**：實作後的模組分層、類別與主要流程和 `backend-modules.mdx` 相同，路由與頁面元件和 `frontend-routes.mdx` 相同；不一致時列為審查意見
+- [ ] **常駐文件與 change 一致**：實作角色已依程式校正常駐文件——模組分層、類別與主要流程和 `backend-modules.mdx` 相同，路由與頁面元件和 `frontend-routes.mdx` 相同；不一致時列為審查意見
 - [ ] 命名清楚一致，與 contract 和既有程式的術語相同；**業務名詞與 `docs/specs/glossary.mdx` 一致**
 - [ ] 公開介面有型別與**英文** docstring，內容與實際行為一致，會丟出的例外沒有漏寫（`AGENTS.md` §Language Rules）
 - [ ] **測試與實作在同一個 task**（TDD）；**名詞正確**——httpx 的 API 測試叫 integration，E2E 專指 Playwright

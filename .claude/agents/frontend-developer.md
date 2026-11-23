@@ -80,6 +80,10 @@ model: opus
 - **全端 E2E（Playwright，根目錄 `e2e/`）不在本角色的 TDD 範圍**
 - **測試集答案不外露**（Hard Rule 6）：瀏覽器 bundle、source map、公開 fixture 與 mock handler 裡都不得有標準答案或測試集辨識資訊；**瀏覽器不下載答案再算分**
 
+## 校正常駐文件
+
+實作完成、測試通過之後，對照 `docs/diagrams/architecture/frontend-routes.mdx`。實作出來的路由、頁面元件、對應的規格編號或 Logic Flow 節點和 ui-ux 的設計不同時，**依程式回頭校正常駐文件**，讓它描述的是實際寫出來的樣子；動到前端骨架（單一 HTTP 邊界、生成的 hooks 與 MSW mock、元件展示頁）的，改「前端骨架」節。不讓程式和常駐文件各走各的；和設計不同之處另在回報的「待確認」寫出來
+
 ## 完成前自我檢查
 
 - [ ] 每個新行為都**先有失敗的測試**，再寫實作
@@ -93,6 +97,7 @@ model: opus
 - [ ] bundle、source map 與 mock 裡沒有標準答案或測試集辨識資訊
 - [ ] 沒有 `npm install`（依賴用 `pnpm add`）
 - [ ] 元件庫只用 shadcn/ui（元件在 `components/ui/`）、型別與 client 只來自 Orval 產物（`frontend/src/api/generated/`，未手改）；沒有引入其他元件庫或生成工具
+- [ ] `frontend-routes.mdx` 已依實作校正：路由與頁面元件和程式一致；動到前端骨架時「前端骨架」節也已更新
 
 ## 回報格式
 
@@ -101,6 +106,7 @@ model: opus
 
 - 改動檔案：{清單}
 - 測試：元件與 hook {n} 通過；lint、型別檢查、build 通過
+- 常駐文件：frontend-routes.mdx 已依實作校正／與設計一致、無須改動
 - 暫以語意描述自行實作、待補 shadcn/ui 元件：{清單，無則寫「無」}
 - 待確認：{contract 缺口、ui-design 未涵蓋的狀態、需要那個停點決定的事，無則寫「無」}
 ```
