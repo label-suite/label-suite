@@ -1,6 +1,6 @@
 # Label Suite
 
-Label Suite is a configurable, general-purpose NLP data labeling and automated evaluation portal. Research teams define labeling tasks through configuration, then run trial labeling, formal labeling, review and data-quality analysis on one platform. See the [product requirements document](docs/specs/00-prd.mdx) for scope, roles and modules.
+Label Suite is a data labeling and quality evaluation platform for academic NLP research teams. Researchers assemble labeling tasks through configuration, and the team then runs trial labeling, formal labeling, review and data-quality analysis on the same platform. See the [product requirements document](docs/specs/00-prd.mdx) for scope, roles and modules.
 
 ## Documentation
 
