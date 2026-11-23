@@ -1,0 +1,150 @@
+---
+title: '產品路線圖'
+description: 'Label Suite 從基礎建設到論文驗證的策略順序：每個 Epic 服務哪個目標、排在哪個時段、為什麼排在那裡。'
+category: '產品'
+tags: [路線圖, Epic]
+---
+
+# 產品路線圖
+
+這份文件說明 Label Suite 的工作**依什麼順序做、為什麼**：每個 Epic 用一句話說它要交付什麼、服務 PRD 的哪個目標、排在哪個時段。它是策略地圖，不是排程承諾，不寫日期與工時；需求內容以 [PRD](../specs/00-prd.mdx) 與 `docs/specs/` 的規格為準，兩者說法不同時以規格為準。
+
+## 怎麼讀
+
+時間越遠拆得越粗：下個月拆到 Feature 與 Sub-feature，接下來兩個月只到 Epic，之後只寫要達成的目標。
+
+| 時段 | 拆到哪一層 | 用途 |
+| :--- | :--- | :--- |
+| 下個月 | Feature、Sub-feature | 直接開 issue 動工 |
+| 接下來兩個月 | Epic | 確認先後與依賴，動工前再拆 |
+| 之後 | Goal | 說明方向，條件成熟再排 |
+
+## 目標
+
+路線圖的目標就是 PRD 的六個目標，不另訂；完整說法與衡量方式見 [PRD 目標](../specs/00-prd.mdx#目標)，這裡只用代號 G1～G6 指稱。
+
+## Epic 一覽
+
+每個 Epic 只有一句話，定義在 `.notecraft/components/roadmap-data.ts`，這張表與下面三張圖都讀同一份資料；「複製一句話清單」可以把整份清單貼進 issue 或簡報。
+
+{/* @ai-visualize
+id: roadmap-epic-list
+type: table
+prompt: |
+  核心洞察：每個 Epic 都能用一句話說清楚要交付什麼，這句話只定義一次，到處重用。
+  互動：依時段篩選（全部／下個月／接下來兩個月／之後）；「複製一句話清單」把目前篩選到的 Epic 複製成「E1 帳號：……」一行一個。
+  圖形：Tailwind 表格，欄位為 Epic、一句話、目標（第一個是主要目標）、範圍、時段。
+  資料：讀 roadmap-data.ts 的 EPICS、GOALS、HORIZONS，不在元件內另寫一份。
+caption: 依時段篩選；複製出的一句話清單可以直接貼進 Epic issue
+status: generated
+*/}
+
+import GeneratedFrame from '@/components/GeneratedFrame.astro'
+import RoadmapEpicList from '@notes/components/roadmap-epic-list'
+
+<GeneratedFrame id="roadmap-epic-list" type="table" prompt={"核心洞察：每個 Epic 都能用一句話說清楚要交付什麼，這句話只定義一次，到處重用。\n互動：依時段篩選（全部／下個月／接下來兩個月／之後）；「複製一句話清單」把目前篩選到的 Epic 複製成「E1 帳號：……」一行一個。\n圖形：Tailwind 表格，欄位為 Epic、一句話、目標（第一個是主要目標）、範圍、時段。\n資料：讀 roadmap-data.ts 的 EPICS、GOALS、HORIZONS，不在元件內另寫一份。\n"} caption="依時段篩選；複製出的一句話清單可以直接貼進 Epic issue">
+  <RoadmapEpicList client:visible />
+</GeneratedFrame>
+
+## 三層目標階層
+
+每個 Epic 都掛在一個主要目標底下；越近的時段拆得越細，之後的時段只剩目標。
+
+{/* @ai-visualize
+id: roadmap-goal-hierarchy
+type: diagram
+prompt: |
+  核心洞察：越近拆得越細。下個月拆到 Feature 與 Sub-feature，接下來兩個月只到 Epic，之後只到 Goal。
+  互動：點 Goal 亮起三欄裡服務同一個目標的 Epic（其餘壓暗）；點下個月的 Epic 收合或展開它的 Feature。
+  圖形：三欄（下個月、接下來兩個月、之後），每欄依主要目標分組，Goal → Epic → Feature → Sub-feature 以縮排與左邊線表示層級。
+  資料：讀 roadmap-data.ts 的 GOALS、HORIZONS、EPICS（含 features）。
+caption: 點 Goal 看哪些 Epic 服務它；點下個月的 Epic 收合 Feature
+status: generated
+*/}
+
+import RoadmapGoalHierarchy from '@notes/components/roadmap-goal-hierarchy'
+
+<GeneratedFrame id="roadmap-goal-hierarchy" type="diagram" prompt={"核心洞察：越近拆得越細。下個月拆到 Feature 與 Sub-feature，接下來兩個月只到 Epic，之後只到 Goal。\n互動：點 Goal 亮起三欄裡服務同一個目標的 Epic（其餘壓暗）；點下個月的 Epic 收合或展開它的 Feature。\n圖形：三欄（下個月、接下來兩個月、之後），每欄依主要目標分組，Goal → Epic → Feature → Sub-feature 以縮排與左邊線表示層級。\n資料：讀 roadmap-data.ts 的 GOALS、HORIZONS、EPICS（含 features）。\n"} caption="點 Goal 看哪些 Epic 服務它；點下個月的 Epic 收合 Feature">
+  <RoadmapGoalHierarchy client:visible />
+</GeneratedFrame>
+
+## 泳道時程
+
+產品模組依 PRD 的模組依賴接力：帳號與共用外殼先做，任務管理、標記作業、資料集在接下來兩個月串成第一次完整流程，論文驗證在流程跑通後接手。
+
+{/* @ai-visualize
+id: roadmap-swimlane
+type: timeline
+prompt: |
+  核心洞察：產品模組依依賴接力，第一次完整流程示範是產品工作與論文驗證的交棒點。
+  互動：點任一條 bar，下方面板顯示它所屬 Epic 的一句話。
+  圖形：手寫 SVG 泳道甘特圖。橫軸是三個時段（之後一段壓縮繪製）；泳道由上而下為交付、里程碑、產品模組、基礎建設、UX 與設計、論文驗證；交付用菱形、里程碑用星形標記。
+  資料：讀 roadmap-data.ts 的 HORIZONS、LANES、BARS、MARKERS。交付名稱用 R1～R3，不寫版本號。
+caption: 點 bar 看它屬於哪個 Epic；「之後」一段是壓縮畫的
+status: generated
+*/}
+
+import RoadmapSwimlane from '@notes/components/roadmap-swimlane'
+
+<GeneratedFrame id="roadmap-swimlane" type="timeline" prompt={"核心洞察：產品模組依依賴接力，第一次完整流程示範是產品工作與論文驗證的交棒點。\n互動：點任一條 bar，下方面板顯示它所屬 Epic 的一句話。\n圖形：手寫 SVG 泳道甘特圖。橫軸是三個時段（之後一段壓縮繪製）；泳道由上而下為交付、里程碑、產品模組、基礎建設、UX 與設計、論文驗證；交付用菱形、里程碑用星形標記。\n資料：讀 roadmap-data.ts 的 HORIZONS、LANES、BARS、MARKERS。交付名稱用 R1～R3，不寫版本號。\n"} caption="點 bar 看它屬於哪個 Epic；「之後」一段是壓縮畫的">
+  <RoadmapSwimlane client:visible />
+</GeneratedFrame>
+
+| 交付 | 使用者能做到什麼 |
+| :--- | :--- |
+| R1 可以登入 | 註冊、登入、設定密碼，在共用外殼裡移動 |
+| R2 完整流程 | 建立任務、試標、看 IAA、正式標記、審核、匯出，走完 G1 的一次完整流程 |
+| R3 論文版 | 論文使用的版本，附 CHANGELOG、tag 與 DOI |
+
+## 排序依據
+
+順序只看依賴：一個 Epic 要等它依賴的模組能用才開始，不打分數。依賴關係以 [PRD 的跨模組流程與模組依賴](../specs/00-prd.mdx) 為準。
+
+1. **基礎建設先收尾**：前後端、契約與 CI 共用同一套檢查，之後每個模組才不必各自補。
+2. **帳號與共用外殼接著做**：每個角色都要先登入，每一頁都掛在同一個外殼上。
+3. **系統管理排在任務管理前**：任務管理的權限要在系統管理收窄過的角色上檢查。
+4. **任務管理 → 標記作業 → 資料集**：照跨模組流程的交接順序；資料集放在這一段而不是之後，因為試標要靠 IAA 才能推進到正式標記。
+5. **儀表板與通知放到之後**：它只彙整前面模組已有的資料。
+6. **論文驗證在第一次完整流程之後**：五種研究示例、步驟數比較與 SUS 都要平台能跑完一次流程；SUS 依 PRD 在正式標記完成後才招募。
+
+效益與複雜度只分高低，用來說明每個 Epic 的投入與回報，不決定順序；所以低效益的前置工作仍然排在前面。
+
+{/* @ai-visualize
+id: roadmap-benefit-complexity
+type: chart
+prompt: |
+  核心洞察：象限說明投入與回報，但順序依依賴；低效益的前置工作照樣排在最前面。
+  互動：點 Epic 看它落在這格的一句理由與它排在哪個時段。
+  圖形：2×2 四象限，縱軸效益、橫軸複雜度，只分高低、不打分數；高效益兩格用 primary-soft-bg 底。
+  資料：讀 roadmap-data.ts 的 EPICS（benefit、complexity、why、horizon）。
+caption: 點 Epic 看理由；象限不決定順序
+status: generated
+*/}
+
+import RoadmapBenefitComplexity from '@notes/components/roadmap-benefit-complexity'
+
+<GeneratedFrame id="roadmap-benefit-complexity" type="chart" prompt={"核心洞察：象限說明投入與回報，但順序依依賴；低效益的前置工作照樣排在最前面。\n互動：點 Epic 看它落在這格的一句理由與它排在哪個時段。\n圖形：2×2 四象限，縱軸效益、橫軸複雜度，只分高低、不打分數；高效益兩格用 primary-soft-bg 底。\n資料：讀 roadmap-data.ts 的 EPICS（benefit、complexity、why、horizon）。\n"} caption="點 Epic 看理由；象限不決定順序">
+  <RoadmapBenefitComplexity client:visible />
+</GeneratedFrame>
+
+## 更新方式
+
+路線圖跟著實際進度改，不是寫完就定：
+
+| 時機 | 要改什麼 |
+| :--- | :--- |
+| 一個 Epic 完成 | 從 `roadmap-data.ts` 把下一段的 Epic 往前移，並把新進「下個月」的 Epic 拆到 Feature |
+| 規格或 PRD 改了模組範圍或依賴 | 改對應 Epic 的範圍、一句話與排序依據 |
+| SUS 或試用回饋指出新的需求 | 先走規格流程，再決定排進哪個時段 |
+
+一句話、時段、象限都只改 `roadmap-data.ts`；元件與本文不另寫一份。
+
+## 決策紀錄
+
+| 日期 | 決策 | 取代了什麼 | 來源 |
+| :--- | :--- | :--- | :--- |
+| 2026-11-23 | 路線圖放在 `docs/product/roadmap.mdx`，不改 PRD | — | [#534](https://github.com/label-suite/label-suite/issues/534) |
+| 2026-11-23 | 目標直接用 PRD 的 G1～G6，不綁日期；分下個月、接下來兩個月、之後三段（[§怎麼讀](#怎麼讀)） | — | [#534](https://github.com/label-suite/label-suite/issues/534) |
+| 2026-11-23 | 順序依模組依賴，不打分數（[§排序依據](#排序依據)） | — | [#534](https://github.com/label-suite/label-suite/issues/534) |
+| 2026-11-23 | 效益與複雜度只分高低四象限，不給分數，每個 Epic 一句理由 | — | [#534](https://github.com/label-suite/label-suite/issues/534) |
+| 2026-11-23 | 每個 Epic 一句話，只定義在 `roadmap-data.ts`（[§Epic 一覽](#epic-一覽)） | — | [#534](https://github.com/label-suite/label-suite/issues/534) |
