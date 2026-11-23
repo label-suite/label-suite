@@ -4,7 +4,7 @@ description: '身分只來自 httpOnly cookie、token 不離開 cookie、CSRF �
 category: '開發說明'
 tags: [開發說明, Agent, 規範, 安全]
 createdAt: '2026-11-10'
-updatedAt: '2026-11-19'
+updatedAt: '2026-11-23'
 ---
 
 # 授權與答案隔離規範
@@ -49,7 +49,7 @@ updatedAt: '2026-11-19'
 
 :::note{title="S2 的反例與檢查方式" collapsible}
 - **反例**：把 token 放進 Zustand 或任何前端 store——`httpOnly` 的意義就是 JS 讀不到它，會這樣寫表示架構被誤解了；每個寫入端點各自檢查 CSRF；**或把 CSRF 做成只比對 cookie 與 header 是否相等**——那種擋不住子網域覆寫 cookie
-- **檢查方式**：**待建置**。負向測試要涵蓋「缺 CSRF header」「header 與 cookie 不符」「HMAC 無效」三種；CORS 的 `allow_origins=["*"]` 已列在 Semgrep 禁令
+- **檢查方式**：CORS 的 `allow_origins=["*"]` 由 CI 的 `semgrep` job 擋：它先跑 `semgrep --test .semgrep/` 驗規則對得上回歸樣本，再跑 `semgrep scan --error --config .semgrep/label-suite.yml backend/ frontend/ e2e/`，規則 `label-suite-cors-wildcard-origin` 命中即失敗（使用官方映像 `semgrep/semgrep:1.186.0`）。CSRF 的負向測試（「缺 CSRF header」「header 與 cookie 不符」「HMAC 無效」三種）**待建置**，要等有 CSRF middleware 與 session 才寫得出來；前端不碰 token 也沒有機械檢查
 - **統一責任位置**：`credentials` 在 [api-agent-rules.mdx](api-agent-rules.mdx) 的單一前端 HTTP client，cookie flags 在後端單一發 cookie 的 helper；兩者各要一條測試（斷言沒有第二處設 cookie、斷言元件不自己帶 credentials）
 :::
 
