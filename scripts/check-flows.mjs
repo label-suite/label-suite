@@ -821,10 +821,215 @@ export function checkFlowsIn({
   return { errors, warnings };
 }
 
+// ------------------------------------------------------ Logic Flow layout ---
+//
+// The module-level Logic Flow components (spec-<NN>-<module>-logic-flow.tsx,
+// copied from logic-flow-skeleton.tsx) carry hand-placed coordinates instead
+// of the lane/col grid above, so none of checkGeometry applies to them. Two
+// layout defects slipped through review there (#558): arrowheads that stop
+// short of a slanted diamond side, and edge labels pushed off the canvas. The
+// checks below catch exactly those two.
+
+export const LOGIC_SECTIONS_DECL = "const SECTIONS: Section[] = [";
+
+export function logicFlowComponents(dir = COMPONENTS_DIR) {
+  return readdirSync(dir)
+    .filter((f) => /^spec-\d\d-.+-logic-flow\.tsx$/.test(f))
+    .sort()
+    .map((f) => join(dir, f));
+}
+
+const NUM = String.raw`-?\d+(?:\.\d+)?`;
+// n(id, kind, lines, x, y, w, h) from the skeleton's node helper
+const NODE_CALL = new RegExp(
+  String.raw`\bn\(\s*"([^"]+)",\s*"([^"]+)",\s*\[(?:\s*"(?:[^"\\]|\\.)*"\s*,?)*\s*\],\s*(${NUM}),\s*(${NUM}),\s*(${NUM}),\s*(${NUM})\s*\)`,
+  "g",
+);
+
+export function parseLogicFlow(tsx) {
+  const at = tsx.indexOf(LOGIC_SECTIONS_DECL);
+  if (at < 0) throw new Error(`component has no \`${LOGIC_SECTIONS_DECL}\``);
+  const list = balanced(tsx, tsx.indexOf("=", at));
+  if (!list) throw new Error("the SECTIONS array is not balanced");
+  return objects(list.body).map((chunk) => {
+    const sub = (name) => {
+      const at = chunk.search(new RegExp(`\\b${name}:`));
+      return at < 0 ? null : balanced(chunk, at);
+    };
+    const nodesArr = sub("nodes");
+    const edgesArr = sub("edges");
+    // the section's own w/h sit outside its nodes/edges/gaps arrays
+    let own = chunk;
+    for (const name of ["nodes", "edges", "gaps"]) {
+      const arr = sub(name);
+      if (arr) own = own.replace(arr.body, "");
+    }
+    const id = field(own, "id");
+    const where = `section ${id ?? "(unnamed)"}`;
+    const w = Number(own.match(/\bw:\s*(\d+(?:\.\d+)?)/)?.[1]);
+    const h = Number(own.match(/\bh:\s*(\d+(?:\.\d+)?)/)?.[1]);
+    if (!id || !Number.isFinite(w) || !Number.isFinite(h))
+      throw new Error(`${where}: id, w or h did not parse`);
+    if (!nodesArr || !edgesArr) throw new Error(`${where}: nodes or edges did not parse`);
+    const nodes = [...nodesArr.body.matchAll(NODE_CALL)].map((m) => ({
+      id: m[1],
+      kind: m[2],
+      x: Number(m[3]),
+      y: Number(m[4]),
+      w: Number(m[5]),
+      h: Number(m[6]),
+    }));
+    // a node call this regex cannot read would silently go unchecked; refuse
+    const written = [...nodesArr.body.matchAll(/\bn\(/g)].length;
+    if (written !== nodes.length)
+      throw new Error(`${where}: ${written} n(...) calls written but ${nodes.length} understood`);
+    const edges = objects(edgesArr.body).map((e) => {
+      const eid = field(e, "id");
+      const ptsAt = e.search(/\bpts:/);
+      const pts = ptsAt < 0 ? null : balanced(e, ptsAt);
+      const lp = e.match(new RegExp(String.raw`\blp:\s*\[\s*(${NUM}),\s*(${NUM})\s*\]`));
+      const edge = {
+        id: eid,
+        from: field(e, "from"),
+        to: field(e, "to"),
+        label: field(e, "label"),
+        pts: pts ? JSON.parse(`[${pts.body}]`) : null,
+        lp: lp ? [Number(lp[1]), Number(lp[2])] : null,
+      };
+      if (!edge.id || !edge.to || !edge.pts || edge.pts.length < 2)
+        throw new Error(`${where}/${eid ?? "(unnamed)"}: id, to or pts did not parse`);
+      if (/\blp:/.test(e) && !edge.lp)
+        throw new Error(`${where}/${eid}: lp is written but did not parse`);
+      if (!nodes.some((nd) => nd.id === edge.to))
+        throw new Error(`${where}/${eid}: to="${edge.to}" is not a node in this section`);
+      return edge;
+    });
+    return { id, w, h, nodes, edges };
+  });
+}
+
+// The outline the skeleton's <Shape> draws: a diamond for a decision, a box
+// for everything else. x and y are the centre.
+export function outlineOf(node) {
+  const { x, y } = node;
+  const [hw, hh] = [node.w / 2, node.h / 2];
+  return node.kind === "decision"
+    ? [
+        [x, y - hh],
+        [x + hw, y],
+        [x, y + hh],
+        [x - hw, y],
+      ]
+    : [
+        [x - hw, y - hh],
+        [x + hw, y - hh],
+        [x + hw, y + hh],
+        [x - hw, y + hh],
+      ];
+}
+
+function distPointSeg([px, py], [ax, ay], [bx, by]) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const len2 = dx * dx + dy * dy;
+  const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2));
+  return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+}
+
+// Distance from a point to the node's outline, in px, whichever side it is on.
+export function distToOutline(point, node) {
+  const poly = outlineOf(node);
+  return Math.min(...poly.map((a, i) => distPointSeg(point, a, poly[(i + 1) % poly.length])));
+}
+
+// How far an arrow tip may sit from the outline. The arrowhead marker is
+// 7 x strokeWidth 1.5 = 10.5px long and its tip overshoots the end point by
+// about 1px (refX 9 of a 10-unit box); the node outline is 1.5px wide. A tip
+// within 3px therefore still visibly touches the outline, while at 4px or more
+// a gap opens on the outside, or the tip disappears under the node's fill on
+// the inside. Integer coordinates on a slanted diamond side round by at most
+// about 0.7px, which this also absorbs.
+export const ENDPOINT_TOLERANCE = 3;
+
+// Edge labels are drawn by the skeleton at fontSize 12, textAnchor middle,
+// with lp as the baseline. A CJK or full-width glyph is about one em wide; a
+// Latin glyph is given 0.6 em, the width of the widest common letters, so the
+// estimate errs on the large side. Above the baseline the box takes 11px (the
+// ascent of the CJK system fonts, about 0.88 em, rounded up); below it, 3px
+// for descenders. The white halo is not counted: it is invisible on the white
+// canvas.
+export const LABEL_FONT = 12;
+export const LABEL_ASCENT = 11;
+export const LABEL_DESCENT = 3;
+
+export function labelExtent(text, [x, y]) {
+  const w = [...text].reduce((sum, c) => sum + (/[⺀-鿿豈-﫿＀-￯　-〿]/.test(c) ? 1 : 0.6), 0);
+  const half = (w * LABEL_FONT) / 2;
+  return [x - half, y - LABEL_ASCENT, x + half, y + LABEL_DESCENT];
+}
+
+export function checkLogicLayout(section, report) {
+  const { id: sid, w, h, nodes, edges } = section;
+  for (const e of edges) {
+    const to = nodes.find((nd) => nd.id === e.to);
+    const tip = e.pts.at(-1);
+    const d = distToOutline(tip, to);
+    if (d > ENDPOINT_TOLERANCE) {
+      report.error(
+        `${sid}/${e.id}: the arrow ends at (${tip.join(", ")}), ${d.toFixed(1)}px off the outline of ${e.to}${to.kind === "decision" ? " (a diamond)" : ""}`,
+      );
+    }
+    if (e.label && e.lp) {
+      const [x0, y0, x1, y1] = labelExtent(e.label, e.lp);
+      const out = [];
+      if (x0 < 0) out.push(`left by ${(-x0).toFixed(1)}px`);
+      if (y0 < 0) out.push(`top by ${(-y0).toFixed(1)}px`);
+      if (x1 > w) out.push(`right by ${(x1 - w).toFixed(1)}px`);
+      if (y1 > h) out.push(`bottom by ${(y1 - h).toFixed(1)}px`);
+      if (out.length > 0) {
+        report.error(
+          `${sid}/${e.id}: label "${e.label}" at (${e.lp.join(", ")}) leaves the ${w}x${h} canvas (${out.join(", ")})`,
+        );
+      }
+    }
+  }
+}
+
+export function checkLogicFlowsIn({ files = logicFlowComponents() } = {}) {
+  const errors = [];
+  if (files.length === 0) {
+    errors.push(
+      "no Logic Flow components were found; the layout check would pass by doing nothing",
+    );
+    return { errors };
+  }
+  for (const file of files) {
+    const base = file
+      .split("/")
+      .at(-1)
+      .replace(/\.tsx$/, "");
+    const report = { error: (m) => errors.push(`${base}: ${m}`) };
+    let sections;
+    try {
+      sections = parseLogicFlow(readFileSync(file, "utf8"));
+    } catch (err) {
+      report.error(err.message);
+      continue;
+    }
+    for (const s of sections) checkLogicLayout(s, report);
+  }
+  return { errors };
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const { errors, warnings } = checkFlowsIn();
+  const flows = checkFlowsIn();
+  const logic = checkLogicFlowsIn();
+  const warnings = flows.warnings;
+  const errors = [...flows.errors, ...logic.errors];
   for (const w of warnings) console.warn(`WARN  ${w}`);
   for (const e of errors) console.error(`ERROR ${e}`);
   if (errors.length > 0) process.exit(1);
-  console.log(`check-flows: ${skeletonDerived().length} components OK`);
+  console.log(
+    `check-flows: ${skeletonDerived().length} components OK, ${logicFlowComponents().length} Logic Flow layouts OK`,
+  );
 }
