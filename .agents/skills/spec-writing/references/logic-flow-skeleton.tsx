@@ -6,7 +6,7 @@ import { MousePointerClick, RotateCcw } from "lucide-react";
  * spec-writing 模組 Logic Flow 骨架（參考實作）。寫法見 .claude/skills/spec-writing/templates/module-index.mdx 的「## Logic Flow」一節。
  *
  * 使用方式：整份複製到 .notecraft/components/spec-<模組編號>-<模組>-logic-flow.tsx，
- * 【骨架】一字不改：色票、型別、節點輔助、樣式、圖形、主元件；
+ * 【骨架】一字不改：色票、型別、節點輔助、樣式、圖形、主元件（只改函式名）；
  * 【節點與連線】整段換成這個模組的資料（MODULE_LABEL、NOTE、SECTIONS），default export 改名。
  * 節點編號、分段與出處都要和該模組 index.mdx 的文字版逐項一致；文字版沒有的連線不畫，缺口只以灰色註記標示。
  *
@@ -429,7 +429,7 @@ export default function SpecAccountLogicFlow(): ReactElement {
               setSwitched(true);
             }}
           >
-            {`分段${["一", "二", "三", "四"][i]}：${s.label}`}
+            {`分段${["一", "二", "三", "四", "五", "六", "七", "八", "九", "十"][i] ?? i + 1}：${s.label}`}
           </button>
         ))}
       </div>

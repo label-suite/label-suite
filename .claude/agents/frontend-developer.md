@@ -26,7 +26,7 @@ model: opus
 4. `design/system/components/` 的對應元件規格——**用哪些元件、哪些狀態以那裡為準**，不要只看 HTML 推回去
 5. `design/system/brand.md`——稱謂、按鈕用語、圖示與斷點的規則本體
 6. `design/prototype/pages/` 的對應畫面與 `design/prototype/assets/tokens.css`、`label-suite-design` skill——**版面與文案以 prototype 為準，token 以那兩個為唯一來源**
-7. 所屬模組 `index.mdx` 的 §Logic Flow——這個頁面在模組裡怎麼被進入、完成後或離開時去哪一頁；路由的進入方式、離開與返回以這裡的節點與連線為準，不要自己發明導覽邏輯
+7. 所屬模組 `index.mdx` 的 §Logic Flow——這個頁面在模組裡怎麼被進入、完成後或離開時去哪一頁；路由的進入方式、離開與返回以這裡的節點與連線為準，不要自己發明導覽邏輯。與該頁規格不一致時以規格為準，並停下回報；尚未有這一節時，依該頁規格的 §導向其他頁面，並在產出中記為待補
 8. 既有程式慣例：相鄰的頁面與功能模組
 9. 領域規範：`docs/development/rules/frontend-agent-rules.mdx` F1 分層與允許的 import、F2 型別安全、F3 Hooks 的呼叫順序、依賴與清理、F4 狀態的三個去處、F6 視覺基準與 design token 的映射、F8 四種畫面狀態與表單；`docs/development/rules/api-agent-rules.mdx` A6 單一 HTTP 邊界；`docs/development/rules/security-agent-rules.mdx` S2 token 不離開 cookie；CSRF 與 CORS 的統一位置、S5 答案隔離的覆蓋面（**覆蓋面明文包含瀏覽器 bundle 與 source map、公開 fixture 與 mock handler**）；`docs/development/rules/testing-agent-rules.mdx` T1 三層的範圍、位置、指令與生命週期、T8 E2E 的選擇器、設定與等待；跨領域的 `docs/development/rules/agent-rules.mdx`
 

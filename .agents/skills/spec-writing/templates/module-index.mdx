@@ -34,6 +34,7 @@ id: spec-{模組編號}-{模組}-logic-flow
 type: interactive
 caption: 切換分段看不同的走法；點節點或連線看它的出處
 prompt: |
+  骨架：.claude/skills/spec-writing/references/logic-flow-skeleton.tsx（複製後只改【節點與連線】）。
   核心洞察：{這個模組最重要的一條走法，例：所有成功的路都匯到哪一頁，所有結束登入狀態的事都匯回哪一頁}
   圖形：標準流程圖，四種符號——起訖用圓角膠囊、頁面用矩形、判斷用菱形（出口標「是」「否」）、其他流程或外部系統用雙邊框矩形（左右各一條內框線）。
   色彩依 label-suite-design：頁面用 primary，其他模組用 info，外部系統與收信用 ink-muted，判斷用 surface 底；「否」與失敗的出口用 warning 虛線。
