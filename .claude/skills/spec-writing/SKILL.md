@@ -222,7 +222,7 @@ import PrototypeFrame from '@notes/components/prototype-frame';
 **修改既有規格時**：已生成（`status: generated`）的流程圖，若這次的變更影響到流程步驟、文案或對應的 Scenario，先更新標記的 prompt，再把「重新生成」列入下方提問（選項同下）；元件依骨架只改【流程】，不加變更標示。沒影響就不動，並在回報中說明。
 prototype 頁面有變動時，檢查嵌入的 `page` 路徑仍存在。
 
-**模組 Logic Flow（首次建立模組 `index.mdx`，或這次的變更改了模組內頁面之間的走法時）**：依模組索引範本（[templates/module-index.mdx](templates/module-index.mdx)）的「## Logic Flow」一節寫入 `@ai-visualize` 標記（`status: pending`），骨架見 [references/logic-flow-skeleton.tsx](references/logic-flow-skeleton.tsx)，待遇與業務流程圖骨架相同：複製後只改【節點與連線】；要不要現在生成，同下方三個選項。
+**模組 Logic Flow（首次建立模組 `index.mdx`，或這次的變更改了模組內頁面之間的走法時）**：依模組索引範本（[templates/module-index.mdx](templates/module-index.mdx)）的「## Logic Flow」一節寫入 `@ai-visualize` 標記（`status: pending`），骨架見 [references/logic-flow-skeleton.tsx](references/logic-flow-skeleton.tsx)，待遇與業務流程圖骨架相同：複製後只改【節點與連線】，另有骨架檔頭寫明的兩處例外必須換掉——檔頭換成本模組一句話說明、中段橫幅去掉「（以下為模組 01 帳號範例）」括號；要不要現在生成，同下方三個選項。
 
 寫完後用 AskUserQuestion 問：
 

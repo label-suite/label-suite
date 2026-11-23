@@ -8,6 +8,11 @@ import { MousePointerClick, RotateCcw } from "lucide-react";
  * 使用方式：整份複製到 .notecraft/components/spec-<模組編號>-<模組>-logic-flow.tsx，
  * 【骨架】一字不改：色票、型別、節點輔助、樣式、圖形、主元件（只改函式名）；
  * 【節點與連線】整段換成這個模組的資料（MODULE_LABEL、NOTE、SECTIONS），default export 改名。
+ * 此外只有兩處例外，複製後必須換掉——它們寫的是骨架自己，留在複本裡就是關於自己的不實敘述：
+ * (1) 這段檔頭說明整段換掉，改以本模組一句話說明開頭，例：
+ *     「02 儀表板 Logic Flow：跨頁的操作邏輯流程（docs/specs/02-dashboard/index.mdx §Logic Flow）。」；
+ * (2) 中段橫幅「【節點與連線】依模組填寫（以下為模組 01 帳號範例）」去掉括號，只留「【節點與連線】依模組填寫」。
+ * 除了這兩處、【節點與連線】與函式名，其餘一字不改，兩條「【骨架】不可修改」橫幅也照留。
  * 節點編號、分段與出處都要和該模組 index.mdx 的文字版逐項一致；文字版沒有的連線不畫，缺口只以灰色註記標示。
  *
  * 【節點與連線】目前填的是模組 01 帳號的 Logic Flow，當作範例（文字版見 docs/specs/01-account/index.mdx §Logic Flow）：
