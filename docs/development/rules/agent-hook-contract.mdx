@@ -237,7 +237,7 @@ matcher 比對的是工具名，而**兩邊的工具名不一樣**。這是本�
 
 matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Write` 是替代列舉；含其他字元時當 regex（Claude 的文件明寫是**未定錨**的 JavaScript regex，所以 `^Bash$` 與 `Bash` 不同義）。
 
-**既有設定的空轉警告。** 參考來源那份 `.claude/settings.json`（原始本機 repo）用 `Read|Edit|Write|Grep|Glob|NotebookEdit` 當 matcher 來擋敏感檔。搬到 Codex 時，`Read`、`Grep`、`Glob`、`NotebookEdit` **永遠不會命中**，只剩 `Edit|Write`（作為 `apply_patch` 的別名）有效——也就是「**攔截讀取**」這件事在 Codex 上整個落空。那份設定裡的 `MultiEdit` 是否仍是 Claude 的有效工具名，**本次沒有確認**（官方文件的 matcher 範例沒有列它），實作時要用 `/hooks` 與實際事件對過，不要照抄。
+**既有設定的空轉警告。** 參考來源那份 `.claude/settings.json`（原始本機 repo）用 `Read|Edit|Write|Grep|Glob|NotebookEdit` 當 matcher 來擋敏感檔。搬到 Codex 時，`Read`、`Grep`、`Glob`、`NotebookEdit` **永遠不會命中**，只剩 `Edit|Write`（作為 `apply_patch` 的別名）有效——也就是「**攔截讀取**」這件事在 Codex 上整個落空。那份設定另一個 `PostToolUse` matcher（`Edit|Write|MultiEdit|NotebookEdit|Bash`，呼叫選用的外部 harness）含有 `MultiEdit`，但 Claude 官方[工具清單](https://code.claude.com/docs/en/tools-reference)沒有這個工具，matcher 寫它不會命中任何東西；編輯類改用 `Edit` 或 `Edit|Write`。其餘 matcher 搬進本 repo 前，仍要用 `/hooks` 與實際事件對過，不要照抄。
 
 ### 設定位置、handler、timeout、信任
 
@@ -334,3 +334,4 @@ matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Wr
 | 2026-11-11 | H2 優先用 exit `2`，理由是 Codex 的 `PreToolUse` 不支援 `continue`／`stopReason`／`suppressOutput`，回傳會讓該次 hook 失敗並繼續執行工具；H6 payload 補 `stop_hook_active`；矩陣補 Claude 的 `PreCompact` 可阻擋；`.env.example` 等列為受保護路徑的合法例外 | 初版以欄位名不同為理由；H6 payload 無 `stop_hook_active`；矩陣漏 `PreCompact` 可阻擋；無合法例外 | [#111](https://github.com/label-suite/label-suite/issues/111) |
 | 2026-11-20 | H4 先接上 Prettier 排版：pre-commit 經 lint-staged 只排 staged 的檔案，CI 新增 `format` job 當 gate；不用 husky，因為它會改寫 `core.hooksPath`（[§H4](#h4-git-pre-commit檢查-staged-快照)） | H5 的 commit-msg 是唯一在跑的 hook 檢查器 | [#498](https://github.com/label-suite/label-suite/issues/498) |
 | 2026-11-23 | 重新對照 Claude Code 2.1.330 與 codex-cli 0.156.0 的官方 hook 文件：Claude 的 `onFailure: "block"` 現行版本已可用（`command`／`http` v2.1.295 起、`mcp_tool` v2.1.328 起），H2 契約維持「兩邊都由腳本自己 exit `2`」，是否在 Claude 註冊再加 `onFailure` 列[待決](#待決)第 2 列；Claude 事件數更新為 33、`Bash` matcher 也涵蓋 Monitor 命令；Codex 的事件、工具名稱與信任模型沒有改變結論 | 2026-11-11 列的前提「`onFailure: "block"` 需 v2.1.295、本機 2.1.273 沒有」已不成立；該列「H2 由腳本自己 exit `2`」的做法本身不變 | [#536](https://github.com/label-suite/label-suite/issues/536) |
+| 2026-11-23 | 參考設定 matcher 裡的 `MultiEdit` 不在 Claude 官方工具清單上，編輯類 matcher 用 `Edit` 或 `Edit\|Write`（[§工具名稱](#工具名稱)） | 原文「`MultiEdit` 是否仍有效，本次沒有確認」 | [#542](https://github.com/label-suite/label-suite/issues/542) |
