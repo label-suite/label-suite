@@ -229,10 +229,12 @@ prototype 頁面有變動時，檢查嵌入的 `page` 路徑仍存在。
 - **之後再生成**：保留 `status: pending`，之後說「處理 `docs/specs/xx/yy.mdx` 的視覺化標記」即可
 - **不需要**：移除標記
 
+**模組 Logic Flow（首次建立模組 `index.mdx`，或這次的變更改了模組內頁面之間的走法時）**：寫法與骨架見模組索引範本（[templates/module-index.mdx](templates/module-index.mdx)）的「## Logic Flow」一節、[references/logic-flow-skeleton.tsx](references/logic-flow-skeleton.tsx)，待遇與業務流程圖骨架相同：複製後只改【節點與連線】。
+
 ### 步驟 8：更新索引與驗證
 
 1. 更新模組 `index.mdx` 的頁面一覽，以及 `docs/specs/index.mdx` 裡 `specs.module-map` 定義區塊的模組地圖（首次使用時依範本建立）：
-   新頁面加一列；PRD 預留的頁面補上連結、拿掉「（未撰寫）」；地圖不放撰寫狀態
+   新頁面加一列；PRD 預留的頁面補上連結、拿掉「（未撰寫）」；地圖不放撰寫狀態。新頁面若改變了模組內頁面之間的走法，同步更新該模組 `index.mdx` 的 §Logic Flow
 2. 在 repo 根目錄跑 `pnpm check:specs` 與 `pnpm exec notecraftapp build docs`（NoteCraft 需要 Node 22 以上），失敗就修正（常見原因：`:ref` 找不到 `id`、`define` 重複、冒號被當成指令、舊編號對照缺漏）
 3. build 通過後先跑 `git status`，再用 AskUserQuestion 問是否提交（工作區另有無關變更時，在問題中註明「另有 N 個無關檔案，這次不會帶入」）：
    - **現在 commit (Recommended)**：只 `git add` 這次產生或修改的檔案（步驟 9 回報表的規格檔、更新過的索引與 `glossary.mdx`、`docs/specs/legacy/` 的 `.ids`、有生成流程圖時的 `.notecraft/components/<id>.tsx`），不用 `git add -A`；

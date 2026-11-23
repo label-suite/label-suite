@@ -13,6 +13,8 @@ import { MousePointerClick, RotateCcw } from "lucide-react";
  * 【節點與連線】目前填的是模組 01 帳號的 Logic Flow，當作範例（文字版見 docs/specs/01-account/index.mdx §Logic Flow）：
  * - NOTE：每個節點編號對應的出處說明，點選節點時顯示
  * - SECTIONS：每個分段（對應圖上一個 tab）的節點與連線；連線的 text 欄位是文字版的條目，含規格出處
+ * 這份範例是 01 帳號當時的快照，不隨 docs/specs/01-account/index.mdx 更新；要看現行版本直接看
+ * .notecraft/components/spec-01-account-logic-flow.tsx。
  */
 
 /* ================================================================ 【骨架】不可修改 ================================================================ */
@@ -86,6 +88,12 @@ interface Section {
   gaps: Gap[];
 }
 
+/* ---------------------------------------------------------------- 共用節點輔助：依下方 NOTE 查出處說明 */
+
+function n(id: string, kind: NodeKind, lines: string[], x: number, y: number, w: number, h: number): FlowNode {
+  return { id, kind, lines, x, y, w, h, note: NOTE[id] ?? id };
+}
+
 /* ================================================================ 【節點與連線】依模組填寫（以下為模組 01 帳號範例） ================================================================ */
 
 /* ---------------------------------------------------------------- 共用節點（同一個編號在不同分段重複出現） */
@@ -117,10 +125,6 @@ const NOTE: Record<string, string> = {
   X7: "其他流程：01-05 登入狀態結束",
   X8: "其他流程：06-01 系統管理員停用帳號",
 };
-
-function n(id: string, kind: NodeKind, lines: string[], x: number, y: number, w: number, h: number): FlowNode {
-  return { id, kind, lines, x, y, w, h, note: NOTE[id] ?? id };
-}
 
 /* ---------------------------------------------------------------- 資料：每個分段，與該模組 index.mdx 文字版的分段逐項一致 */
 
