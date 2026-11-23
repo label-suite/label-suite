@@ -432,9 +432,13 @@ export function historicalLines(text) {
 // A page id followed by 、，。 or 的連結 only names the page and leaves the
 // context alone; so does `分段一第 3 條`, an item of this Logic Flow itself.
 // In a module with one spec page (02), a § with no page reads against it.
+// A code span holding only `E1`, `A2` or `Q3` is read as that id; other
+// code spans are skipped.
 //
 // Verified: the page `NN-NN` exists; `§節名` is a heading on it (the full
-// heading, the heading without a trailing （…）, or the part before its ：);
+// heading, the heading without a trailing （…）, or the part before its ：),
+// followed by punctuation or one of a few phrases (的「, 第 N, 與 §, 也只寫,
+// 都沒有寫), so `§導向其他頁面說明` is not taken for `§導向其他頁面`;
 // 第 N 條 is an item of that section (its numbered items, else its
 // top-level bullets, else its table rows), 第 N 列 a table row, 前N條 a
 // count; 主流程第 N 步, EN and AN exist in the named flow; QN is a heading on
@@ -444,10 +448,16 @@ export function historicalLines(text) {
 // (ignoring whitespace and Markdown; … elides) in the narrowest scope it is
 // attributed to: the clauses it sits next to (`第 6 條「…」`, `第 6 條寫「…」`,
 // `「…」（第 6 條）`), else the flow, else the section (or any section joined
-// to it by 與／和／、), else the page. A quote after 沒有寫, 不改寫成 or 少了
-// is what the spec does not say and is not checked.
+// to it by 與／和／、), else the page. A quote written before its citation
+// (`：「…」；05-02 §X`, or `「…」（05-02 §X）` when it is not in the scope
+// already named) must be in one of the scopes the references after it name,
+// up to the end of their （…） or the sentence. A quote after 沒有寫,
+// 不改寫成 or 少了 is what the spec does not say and is not checked. Any
+// other quote with no spec reference around it is the item's own wording
+// (a button label on the edge) and is not a reference.
 // Unverifiable (counted, listed with --verbose): a clause, step, EN/AN or QN
-// with no page, section or flow to read it against, `§X同節`, and
+// with no page, section or flow to read it against, `§X同節`, a quote that
+// follows a § with no page or waits for a citation that never comes, and
 // structural pointers such as 開頭, 末段 or 那張表 not followed by a quote.
 
 const LOGIC_FLOW_HEADING = /^## Logic Flow\s*$/;
@@ -456,20 +466,7 @@ const LOGIC_FLOW_HEADING = /^## Logic Flow\s*$/;
 // is the citing document, `text` a substring of the error, `reason` why the
 // reference is right. Prose that cites one page's sentence about another
 // page is the usual case. Keep it short; prefer rewording.
-export const SPEC_ALLOW = [
-  {
-    file: "docs/specs/03-task-management/index.mdx",
-    text: "「共用標頭第 8 條就明定留著標頭",
-    reason:
-      "07-03 §畫面的組成 names 03-03 §規格 in this sentence; the quote is 07-03's own words (docs/specs/07-shared/03-denied-and-not-found.mdx, 畫面的組成)",
-  },
-  {
-    file: "docs/specs/06-admin/index.mdx",
-    text: "「重新載入」 is not in 06-02 §怎麼進來、誰進得來",
-    reason:
-      "a button label in a list of what stays on the page, after the clause reference; it is the version-conflict banner's button in 06-02 §儲存用樂觀鎖，版本衝突要重新載入",
-  },
-];
+export const SPEC_ALLOW = [];
 
 const CN_DIGITS = { 一: 1, 二: 2, 兩: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10 };
 
@@ -721,10 +718,12 @@ function quoted(hay, needle) {
 }
 
 // Turns a unit into the text the scanner reads: code spans and emphasis
-// dropped, a link to a spec page replaced by ⟦NN-NN⟧ and its label.
+// dropped, a link to a spec page replaced by ⟦NN-NN⟧ and its label. A code
+// span that holds only a flow id or a decision id (`E1`, `A2`, `Q3`) stays,
+// unwrapped, so it is checked like the bare id.
 function prepUnit(text, fromDir, byPath) {
   return text
-    .replace(/`[^`\n]*`/g, " ")
+    .replace(/`([^`\n]*)`/g, (_, inner) => (/^(?:[AE]|Q)\d+$/.test(inner) ? ` ${inner} ` : " "))
     .replace(/<sup>.*?<\/sup>/g, "")
     .replace(/<\/?mark>/g, "")
     .replace(/\*\*/g, "")
@@ -763,8 +762,11 @@ const TOKEN = new RegExp(
 const BARE_NUMS =
   /^\s*(\d+(?:\s*[、～~–-]\s*\d+)*)(?![\d\w%.:])(?!\s*(?:條|列|步|個|種|筆|字|人|次|頁|天|週|小時|分鐘|秒|%))/;
 // What may follow a heading name: punctuation, the end of a link label (⟫),
-// or a connective written straight after it (`§卡控機制第 3 條`, `§X與 §Y`).
-const HEADING_END = /^(?:$|[\s的「『（(；;，,。、）)⟦⟫：:第與和及也還說那都只同])/;
+// or one of the few phrases written straight after it in the specs
+// (`§X的「…」`, `§X第 3 條`, `§X與 §Y`, `§X也只寫`, `§X都沒有寫`). Anything
+// else means the cited name is longer than the heading, e.g. `§導向其他頁面說明`.
+const HEADING_END =
+  /^(?:$|[\s「『（(；;，,。、）)⟦⟫：:]|的「|第\s*\d|(?:與|和|及)\s*(?:⟦|§|\d\d-\d\d)|也只?寫|還明?寫|都沒有?寫|只寫|說「|同節)/;
 
 // Checks the spec references of one unit. `report(kind, message, at)` gets
 // "verified", "unverifiable" or "error"; `at` is the offset in the unit.
@@ -782,6 +784,31 @@ export function checkSpecRefsIn(
   let joint = [];
   let secEnd = -1;
   let lastPageId = null; // for 同頁 after a 。
+  // A quote written before its citation, `：「…」；05-02 §X` or
+  // `「…」（05-02 §X；§Y）`, waits for the references that follow it and must
+  // be found in one of the scopes they name.
+  let pending = [];
+  const seen = () => {
+    if (st.sec || st.flow)
+      for (const p of pending) if (p.armed) p.scopes.push([where(), scopeText()]);
+  };
+  const settle = () => {
+    seen();
+    for (const p of pending) {
+      // a page cited with no section after it is the scope then
+      if (!p.scopes.length && p.armed && st.page) p.scopes.push([where(), scopeText()]);
+      if (!p.scopes.length)
+        report("unverifiable", `「${p.q}」 with no spec reference after it`, p.at);
+      else if (p.scopes.some(([, x]) => quoted(x, p.q))) report("verified", null, p.at);
+      else
+        report(
+          "error",
+          `「${p.q}」 is not in ${[...new Set(p.scopes.map(([w]) => w))].join(" or ")}`,
+          p.at,
+        );
+    }
+    pending = [];
+  };
   const reset = () => {
     if (st.pageId) lastPageId = st.pageId;
     st.page = st.pageId = st.sec = st.scope = st.flow = null;
@@ -890,10 +917,13 @@ export function checkSpecRefsIn(
       // `歸給規格 07-01、` or `（02-01）` names a page without citing anything
       // in it; it leaves the context alone.
       if (!g.link && /^\s*(?:$|[、，,。；;）)]|的連結)/.test(t.slice(end))) continue;
+      seen();
       setPage(g.link ?? g.page ?? g.prd, at);
+      for (const p of pending) p.armed = true;
       continue;
     }
     if (g.stop) {
+      settle();
       reset();
       continue;
     }
@@ -903,10 +933,16 @@ export function checkSpecRefsIn(
     }
     if (g.close) {
       depth = Math.max(0, depth - 1);
-      if ((st.pageId || st.bad) && depth < openedAt) reset();
+      // the group that followed the quote, or the one the quote sat in, closed
+      if ((st.pageId || st.bad) && depth < openedAt) {
+        if (pending.some((p) => p.armed)) settle();
+        reset();
+      }
+      if (pending.some((p) => depth < p.depth)) settle();
       continue;
     }
     if (g.semi) {
+      seen();
       clauses = null;
       continue;
     }
@@ -914,6 +950,7 @@ export function checkSpecRefsIn(
       const rest = t.slice(end).replace(/^\s+/, "");
       const token = rest.match(/^[^\s「（；，。）]*/)[0];
       if (rest.startsWith("Logic Flow")) continue; // this section itself
+      seen();
       // `同頁 §刪除任務` after a 。 reads against the page named before it
       if (!st.page && lastPageId && /同一?頁\s*$/.test(t.slice(0, at))) setPage(lastPageId, at);
       if (!ensurePage(at)) {
@@ -975,6 +1012,23 @@ export function checkSpecRefsIn(
       const bq = balancedQuote(t, at);
       if (!bq) continue;
       TOKEN.lastIndex = bq.end;
+      // a quote followed straight by its citation waits for it
+      const followed = /^\s*（\s*(?:⟦|\d\d-\d\d|PRD)/.test(t.slice(bq.end));
+      const orphan =
+        !st.page && /^\s*(?:[；;，,：:]\s*|（\s*)?(?:⟦|\d\d-\d\d|PRD|§)/.test(t.slice(bq.end));
+      // after a § that had no page to read against (`§驗收標準 的 Scenario「…」`,
+      // `§驗收標準「a」「b」`): it belongs to that §
+      if (
+        !st.page &&
+        /§[^「」；;。（）\s]+(?:[^「；;。（）]|「[^「」]*」){0,16}$/.test(t.slice(0, at))
+      ) {
+        report("unverifiable", `「${bq.q}」 after a § with no spec page`, at);
+        continue;
+      }
+      if (orphan) {
+        pending.push({ q: bq.q, at, depth, armed: false, scopes: [] });
+        continue;
+      }
       if (!st.page) continue;
       const q = bq.q;
       // `沒有寫「…」`, `不改寫成「…」`: what the spec does not say.
@@ -1040,6 +1094,7 @@ export function checkSpecRefsIn(
         continue;
       }
       if (quoted(scopeText(), q) || joint.some((x) => quoted(x, q))) report("verified", null, at);
+      else if (followed) pending.push({ q, at, depth, armed: false, scopes: [] });
       else {
         const page = quoted(st.page.lines.join("\n"), q);
         report(
@@ -1124,10 +1179,12 @@ export function checkSpecRefsIn(
     }
     if (g.vague) {
       if (!st.page || !st.sec) continue;
-      if (/^[^「。；]{0,3}「/.test(t.slice(end))) continue; // the quote that follows is checked
+      // `末段的補充條明說「…」`: the quote that follows is checked
+      if (/^[^「。；]{0,8}「/.test(t.slice(end))) continue;
       report("unverifiable", `${where()} ${g.vague}`, at);
     }
   }
+  settle();
 }
 
 // The §Logic Flow section of a module index, as units with their lines.
