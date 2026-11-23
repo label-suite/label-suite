@@ -14,6 +14,7 @@ import {
   geometryFingerprint,
   checkAgainstSpec,
   ENDPOINT_TOLERANCE,
+  ENDPOINT_TOLERANCE_INSIDE,
   LABEL_ASCENT,
   LABEL_FONT,
   checkFlowsIn,
@@ -24,6 +25,7 @@ import {
   labelExtent,
   logicFlowComponents,
   parseLogicFlow,
+  textWidth,
   checkGraph,
   checkRefs,
   checkShape,
@@ -772,7 +774,7 @@ test("checkLogicLayout reports an arrow that stops short of a diamond's slanted 
         [190, 85],
       ]),
     }),
-    /1-1.*off the outline of D1/,
+    /1-1.*outside the outline of D1/,
   );
   // ended on the slanted side instead: accepted
   assert.equal(
@@ -809,9 +811,21 @@ test("checkLogicLayout accepts a tip within the tolerance and rejects one just p
     },
   ];
   assert.equal(logicErrors({ edges: edge(110 + ENDPOINT_TOLERANCE) }), "");
-  assert.match(logicErrors({ edges: edge(110 + ENDPOINT_TOLERANCE + 1) }), /off the outline of P1/);
-  // overshooting into the node hides the tip under its fill: also rejected
-  assert.match(logicErrors({ edges: edge(110 - ENDPOINT_TOLERANCE - 1) }), /off the outline of P1/);
+  assert.match(
+    logicErrors({ edges: edge(110 + ENDPOINT_TOLERANCE + 1) }),
+    /4\.0px outside the outline of P1/,
+  );
+  // inside, the node's fill covers the tip, so the allowance is tighter
+  assert.equal(logicErrors({ edges: edge(110 - ENDPOINT_TOLERANCE_INSIDE) }), "");
+  assert.match(logicErrors({ edges: edge(110 - 2) }), /2\.0px inside the outline of P1/);
+});
+
+test("distToOutline is negative inside a node and positive outside it", () => {
+  const p = logicNode("P1", "page", 60, 100, 100, 40);
+  assert.equal(distToOutline([108, 100], p), -2);
+  assert.equal(distToOutline([112, 100], p), 2);
+  const d = logicNode("D1", "decision", 250, 100, 120, 60);
+  assert.ok(distToOutline([250, 100], d) < -20, "the centre of a diamond is inside it");
 });
 
 test("checkLogicLayout reports a label clipped by the top of the canvas", () => {
@@ -857,11 +871,47 @@ test("checkLogicLayout reports a label past the left, right or bottom edge", () 
   assert.equal(logicErrors({ edges: edge([18, 100]) }), "");
 });
 
-test("labelExtent gives Latin glyphs less room than CJK but still errs wide", () => {
-  const [a0, , a1] = labelExtent("IAA", [100, 50]);
+test("labelExtent gives Latin capitals at least 0.7 em and CJK a full em", () => {
+  // wide capitals: the estimate must not fall below what the font draws
+  for (const caps of ["IAA", "WMQ", "OMW"]) {
+    const [a0, , a1] = labelExtent(caps, [100, 50]);
+    assert.ok(
+      a1 - a0 >= 0.7 * LABEL_FONT * caps.length,
+      `"${caps}" is estimated at ${a1 - a0}px, under 0.7 em per glyph`,
+    );
+  }
   const [b0, , b1] = labelExtent("確認中", [100, 50]);
-  assert.ok(a1 - a0 < b1 - b0);
-  assert.ok(a1 - a0 >= 3 * 0.55 * LABEL_FONT, "Latin estimate is narrower than the font draws it");
+  assert.equal(b1 - b0, 3 * LABEL_FONT);
+  assert.equal(textWidth("ab 1"), 4 * 0.6 * LABEL_FONT);
+});
+
+test("checkLogicLayout reports a gap note that leaves the canvas, using the skeleton's anchor", () => {
+  const gap = (x, y, lines) => ({ gaps: [{ x, y, lines }] });
+  // in the right half the note starts at x: four CJK glyphs need 48px
+  assert.match(
+    logicErrors(gap(360, 100, ["規格沒寫"])),
+    /gap note 1 line 1 "規格沒寫" at \(360, 100\) leaves the 400x200 canvas \(right by 8\.0px\)/,
+  );
+  assert.equal(logicErrors(gap(350, 100, ["規格沒寫"])), "");
+  // in the left half it is centred on x
+  assert.match(logicErrors(gap(20, 100, ["規格沒寫"])), /left by 4\.0px/);
+  assert.equal(logicErrors(gap(24, 100, ["規格沒寫"])), "");
+  // each further line is 15px lower
+  assert.match(
+    logicErrors(gap(100, 185, ["一", "二"])),
+    /gap note 1 line 2 "二" at \(100, 200\) .*bottom by 3\.0px/,
+  );
+  assert.equal(logicErrors(gap(100, 182, ["一", "二"])), "");
+});
+
+test("checkLogicLayout reports a node id pushed off the top of the canvas", () => {
+  const nodes = (y, h, kind = "page") => ({ nodes: [logicNode("P1", kind, 60, y, 100, h)] });
+  // a page's id sits 4px above its top edge, glyphs rising 11px over that
+  assert.match(logicErrors(nodes(34, 40)), /P1: the node id is cut off .*top by 1\.0px/);
+  assert.equal(logicErrors(nodes(35, 40)), "");
+  // a decision's id sits 8px below its top vertex
+  assert.match(logicErrors(nodes(32, 60, "decision")), /top by 1\.0px/);
+  assert.equal(logicErrors(nodes(33, 60, "decision")), "");
 });
 
 test("parseLogicFlow refuses a node or label it cannot read, instead of skipping it", () => {
@@ -875,6 +925,16 @@ test("parseLogicFlow refuses a node or label it cannot read, instead of skipping
   assert.throws(
     () => parseLogicFlow(src(`"A", "page", ["a"], 10, 20, 30, 40`, `, label: "a", lp: [X, 2]`)),
     /lp is written but did not parse/,
+  );
+  assert.throws(() => parseLogicFlow("const SECTIONS: Section[] = [];"), /has no sections/);
+  const withGap = src(`"A", "page", ["a"], 10, 20, 30, 40`).replace(
+    "gaps: []",
+    `gaps: [{ x: 5, y: 6, lines: ["甲", "乙"] }]`,
+  );
+  assert.deepEqual(parseLogicFlow(withGap)[0].gaps, [{ x: 5, y: 6, lines: ["甲", "乙"] }]);
+  assert.throws(
+    () => parseLogicFlow(withGap.replace("x: 5", "x: X")),
+    /a gap's x, y or lines did not parse/,
   );
 });
 
@@ -901,7 +961,7 @@ test("checkLogicFlowsIn reports a component whose arrow was moved off its target
   const { errors } = checkLogicFlowsIn({ files: [copy] });
   assert.match(
     errors.join("\n"),
-    new RegExp(`${section.id}/${edge.id}: .*10\\.0px off the outline of ${edge.to}`),
+    new RegExp(`${section.id}/${edge.id}: .*10\\.0px outside the outline of ${edge.to}`),
   );
 });
 

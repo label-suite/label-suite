@@ -851,13 +851,17 @@ export function parseLogicFlow(tsx) {
   if (at < 0) throw new Error(`component has no \`${LOGIC_SECTIONS_DECL}\``);
   const list = balanced(tsx, tsx.indexOf("=", at));
   if (!list) throw new Error("the SECTIONS array is not balanced");
-  return objects(list.body).map((chunk) => {
+  const chunks = objects(list.body);
+  // an empty SECTIONS would check nothing and pass; refuse it
+  if (chunks.length === 0) throw new Error("the SECTIONS array has no sections");
+  return chunks.map((chunk) => {
     const sub = (name) => {
       const at = chunk.search(new RegExp(`\\b${name}:`));
       return at < 0 ? null : balanced(chunk, at);
     };
     const nodesArr = sub("nodes");
     const edgesArr = sub("edges");
+    const gapsArr = sub("gaps");
     // the section's own w/h sit outside its nodes/edges/gaps arrays
     let own = chunk;
     for (const name of ["nodes", "edges", "gaps"]) {
@@ -904,7 +908,15 @@ export function parseLogicFlow(tsx) {
         throw new Error(`${where}/${eid}: to="${edge.to}" is not a node in this section`);
       return edge;
     });
-    return { id, w, h, nodes, edges };
+    const gaps = (gapsArr ? objects(gapsArr.body) : []).map((g) => {
+      const x = g.match(new RegExp(String.raw`\bx:\s*(${NUM})`));
+      const y = g.match(new RegExp(String.raw`\by:\s*(${NUM})`));
+      const linesAt = g.search(/\blines:/);
+      const lines = linesAt < 0 ? null : balanced(g, linesAt);
+      if (!x || !y || !lines) throw new Error(`${where}: a gap's x, y or lines did not parse`);
+      return { x: Number(x[1]), y: Number(y[1]), lines: strList(lines.body) };
+    });
+    return { id, w, h, nodes, edges, gaps };
   });
 }
 
@@ -936,61 +948,137 @@ function distPointSeg([px, py], [ax, ay], [bx, by]) {
   return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
 }
 
-// Distance from a point to the node's outline, in px, whichever side it is on.
-export function distToOutline(point, node) {
-  const poly = outlineOf(node);
-  return Math.min(...poly.map((a, i) => distPointSeg(point, a, poly[(i + 1) % poly.length])));
+function insidePolygon([px, py], poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i, i += 1) {
+    const [xi, yi] = poly[i];
+    const [xj, yj] = poly[j];
+    if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
 }
 
-// How far an arrow tip may sit from the outline. The arrowhead marker is
-// 7 x strokeWidth 1.5 = 10.5px long and its tip overshoots the end point by
-// about 1px (refX 9 of a 10-unit box); the node outline is 1.5px wide. A tip
-// within 3px therefore still visibly touches the outline, while at 4px or more
-// a gap opens on the outside, or the tip disappears under the node's fill on
-// the inside. Integer coordinates on a slanted diamond side round by at most
-// about 0.7px, which this also absorbs.
-export const ENDPOINT_TOLERANCE = 3;
+// Signed distance from a point to the node's outline, in px: positive outside
+// the shape, negative inside it, zero on it.
+export function distToOutline(point, node) {
+  const poly = outlineOf(node);
+  const d = Math.min(...poly.map((a, i) => distPointSeg(point, a, poly[(i + 1) % poly.length])));
+  return d > 0 && insidePolygon(point, poly) ? -d : d;
+}
 
-// Edge labels are drawn by the skeleton at fontSize 12, textAnchor middle,
-// with lp as the baseline. A CJK or full-width glyph is about one em wide; a
-// Latin glyph is given 0.6 em, the width of the widest common letters, so the
-// estimate errs on the large side. Above the baseline the box takes 11px (the
+// How far an arrow tip may sit from the outline, on each side. The arrowhead
+// marker is 7 x strokeWidth 1.5 = 10.5px long and its tip overshoots the end
+// point by about 1px (refX 9 of a 10-unit box); the node outline is 1.5px
+// wide. Outside, a tip within 3px still visibly touches the outline, while at
+// 4px a gap opens. Inside, the node is drawn over the edge, so the overshoot
+// alone already puts the tip under the outline; 1px more is all that still
+// shows the point, and 2px hides it under the fill. Integer coordinates on a
+// slanted diamond side round by at most about 0.7px, which both absorb.
+export const ENDPOINT_TOLERANCE = 3;
+export const ENDPOINT_TOLERANCE_INSIDE = 1;
+
+// Edge labels, gap notes and node ids are all drawn by the skeleton at
+// fontSize 12 with the given y as the baseline. A CJK or full-width glyph is
+// about one em wide. A Latin capital is given 0.75 em, which covers the wide
+// ones (M, W, Q, O) in the system sans fonts. Every other glyph -- lower case,
+// digits, spaces, ASCII punctuation -- is given 0.6 em: that covers digits and
+// most lower case, but m and w run to about 0.8 em, so a label made mostly of
+// those can be underestimated. Above the baseline the box takes 11px (the
 // ascent of the CJK system fonts, about 0.88 em, rounded up); below it, 3px
 // for descenders. The white halo is not counted: it is invisible on the white
 // canvas.
 export const LABEL_FONT = 12;
+export const LATIN_CAPITAL_EM = 0.75;
+export const OTHER_EM = 0.6;
 export const LABEL_ASCENT = 11;
 export const LABEL_DESCENT = 3;
 
+export function textWidth(text) {
+  return (
+    [...text].reduce(
+      (sum, c) =>
+        sum +
+        (/[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef\u3000-\u303f]/.test(c)
+          ? 1
+          : /[A-Z]/.test(c)
+            ? LATIN_CAPITAL_EM
+            : OTHER_EM),
+      0,
+    ) * LABEL_FONT
+  );
+}
+
 export function labelExtent(text, [x, y]) {
-  const w = [...text].reduce((sum, c) => sum + (/[⺀-鿿豈-﫿＀-￯　-〿]/.test(c) ? 1 : 0.6), 0);
+  const w = textWidth(text) / LABEL_FONT;
   const half = (w * LABEL_FONT) / 2;
   return [x - half, y - LABEL_ASCENT, x + half, y + LABEL_DESCENT];
 }
 
+// The box of one line of a gap note. The skeleton anchors a note at its start
+// when it sits in the right half of the canvas and at its middle otherwise, and
+// puts each further line 15px lower.
+export function gapLineExtent(gap, i, canvasW) {
+  const y = gap.y + 15 * i;
+  if (gap.x > canvasW / 2) {
+    return [gap.x, y - LABEL_ASCENT, gap.x + textWidth(gap.lines[i]), y + LABEL_DESCENT];
+  }
+  return labelExtent(gap.lines[i], [gap.x, y]);
+}
+
+// The skeleton writes a node's id above its top-left corner (baseline 4px over
+// the top edge); a decision's id goes inside its top-right corner instead
+// (baseline 8px under the top vertex). Either may be pushed off the top.
+export function nodeIdBaseline(node) {
+  const top = node.y - node.h / 2;
+  return node.kind === "decision" ? top + 8 : top - 4;
+}
+
+function outside([x0, y0, x1, y1], w, h) {
+  const out = [];
+  if (x0 < 0) out.push(`left by ${(-x0).toFixed(1)}px`);
+  if (y0 < 0) out.push(`top by ${(-y0).toFixed(1)}px`);
+  if (x1 > w) out.push(`right by ${(x1 - w).toFixed(1)}px`);
+  if (y1 > h) out.push(`bottom by ${(y1 - h).toFixed(1)}px`);
+  return out;
+}
+
 export function checkLogicLayout(section, report) {
-  const { id: sid, w, h, nodes, edges } = section;
+  const { id: sid, w, h, nodes, edges, gaps = [] } = section;
   for (const e of edges) {
     const to = nodes.find((nd) => nd.id === e.to);
     const tip = e.pts.at(-1);
     const d = distToOutline(tip, to);
-    if (d > ENDPOINT_TOLERANCE) {
+    if (d > ENDPOINT_TOLERANCE || d < -ENDPOINT_TOLERANCE_INSIDE) {
+      const where = d > 0 ? "outside" : "inside";
       report.error(
-        `${sid}/${e.id}: the arrow ends at (${tip.join(", ")}), ${d.toFixed(1)}px off the outline of ${e.to}${to.kind === "decision" ? " (a diamond)" : ""}`,
+        `${sid}/${e.id}: the arrow ends at (${tip.join(", ")}), ${Math.abs(d).toFixed(1)}px ${where} the outline of ${e.to}${to.kind === "decision" ? " (a diamond)" : ""}`,
       );
     }
     if (e.label && e.lp) {
-      const [x0, y0, x1, y1] = labelExtent(e.label, e.lp);
-      const out = [];
-      if (x0 < 0) out.push(`left by ${(-x0).toFixed(1)}px`);
-      if (y0 < 0) out.push(`top by ${(-y0).toFixed(1)}px`);
-      if (x1 > w) out.push(`right by ${(x1 - w).toFixed(1)}px`);
-      if (y1 > h) out.push(`bottom by ${(y1 - h).toFixed(1)}px`);
+      const out = outside(labelExtent(e.label, e.lp), w, h);
       if (out.length > 0) {
         report.error(
           `${sid}/${e.id}: label "${e.label}" at (${e.lp.join(", ")}) leaves the ${w}x${h} canvas (${out.join(", ")})`,
         );
       }
+    }
+  }
+  gaps.forEach((g, gi) => {
+    g.lines.forEach((line, i) => {
+      const out = outside(gapLineExtent(g, i, w), w, h);
+      if (out.length > 0) {
+        report.error(
+          `${sid}: gap note ${gi + 1} line ${i + 1} "${line}" at (${g.x}, ${g.y + 15 * i}) leaves the ${w}x${h} canvas (${out.join(", ")})`,
+        );
+      }
+    });
+  });
+  for (const nd of nodes) {
+    const top = nodeIdBaseline(nd) - LABEL_ASCENT;
+    if (top < 0) {
+      report.error(
+        `${sid}/${nd.id}: the node id is cut off by the top of the canvas (top by ${(-top).toFixed(1)}px)`,
+      );
     }
   }
 }
