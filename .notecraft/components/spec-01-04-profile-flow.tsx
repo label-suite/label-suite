@@ -652,7 +652,7 @@ const FLOWS: Flow[] = [
       { id: "n2", lane: 1, col: 1, kind: "decision", label: ["連結", "有效？"] },
       { id: "n3", lane: 1, col: 2, kind: "system", label: ["換成新", "Email"] },
       { id: "n4", lane: 1, col: 3, kind: "system", end: true, label: ["所有裝置", "重新登入"] },
-      { id: "n5", lane: 1, col: 4, kind: "system", exception: true, end: true, label: ["顯示失敗", "可重寄"] },
+      { id: "n5", lane: 1, col: 4, kind: "system", exception: true, end: true, label: ["顯示連結", "無法使用"] },
       { id: "n6", lane: 0, col: 2, kind: "action", exception: true, label: ["冷卻內點", "重新寄送"] },
     ],
     edges: [
@@ -681,7 +681,7 @@ const FLOWS: Flow[] = [
       },
       {
         title: "例外：連結過期或已經失效",
-        body: "顯示失敗，使用者可以重新寄送。流程結束。",
+        body: "顯示連結無法使用的面板，按鈕依登入狀態回個人設定或前往登入。流程結束。",
         scenarios: ["驗證連結過期"],
         ref: "E1",
         highlight: ["n2", "e1", "n5"],
