@@ -185,7 +185,7 @@ tags: [adr, testing, coverage, e2e]
 | 限制 | 對選擇的影響 |
 | :--- | :--- |
 | 參考的 NestJS 腳手架用 Allure 產出測試報告 | 要決定照做還是不做 |
-| 覆蓋率基準與「不得下降」已由 [D2](#d2-覆蓋率只管不得下降與關鍵路徑) 決定，沒有可瀏覽的測試報告 | 測試報告是另外要決定的事 |
+| [D2](#d2-覆蓋率只管不得下降與關鍵路徑) 只決定覆蓋率基準與不得下降，沒有決定測試報告 | 測試報告是另外要決定的事 |
 | 後端用 pytest、前端用 Vitest、e2e 用 Playwright（[D1](#d1-三層測試的分工)） | 報告的來源是這三個 runner |
 
 ### 考慮過的選項
@@ -205,7 +205,7 @@ tags: [adr, testing, coverage, e2e]
 ### 決定
 
 只用各工具的內建報告：Playwright 產出內建 HTML report，失敗時附 trace；pytest 與 Vitest 輸出 JUnit XML 給 CI 摘要；不引入 Allure 等新依賴。報告放在 CI artifact，不開 GitHub Pages。
-接進 CI 的實作屬 [CI 的 change](https://github.com/label-suite/label-suite/issues/506)，不另開實作單。
+接進 CI 的實作屬 CI 的 change。
 
 ### 後果
 
