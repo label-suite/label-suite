@@ -39,7 +39,7 @@ change 的 `ui-design.md` 仍然寫這次頁面的元件樹、資料來源、畫
 | `/` 與其他路徑 | 以取代歷史紀錄的方式導向 `/dev/health` | 開發模式 | `openspec/specs/frontend-routing/` | 無 |
 | 任何路徑 | 不顯示內容 | 正式建置 | `openspec/specs/frontend-routing/` | 無 |
 
-路由表在 `src/app/router.tsx` 的 `createAppRouter()`：以 `import.meta.env.DEV` 分支，正式建置時這個分支連同兩頁的程式與文案一起被移除。首頁與找不到頁面屬於[規格 01-01](../../specs/01-account/01-login.mdx)，還沒有實作。
+路由表在 `src/app/router.tsx` 的 `createAppRouter()`：以 `import.meta.env.DEV` 分支，正式建置時這個分支連同兩頁的程式與文案一起被移除。首頁與找不到頁面由規格 01-01 的 change 一起設計，還沒有實作（見已歸檔的 [frontend-skeleton `proposal.md`](https://github.com/label-suite/label-suite/blob/main/openspec/changes/archive/2026-11-20-frontend-skeleton/proposal.md)）。
 
 ## 頁面與功能元件
 
@@ -154,7 +154,7 @@ frontend/
 
 ## 已知限制
 
-下表是已落地的程式還沒做的事；每一列連到追蹤它的 issue 或做出決定的 ADR。
+已落地的前端只有開發用頁面；下表是它還沒有的東西與風險。
 
 | 還沒有 | 風險 | 追蹤 |
 | :--- | :--- | :--- |

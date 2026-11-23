@@ -95,6 +95,7 @@ const SCENARIOS: Scenario[] = [
   "code": "OK",
   "message": "成功",
   "data": { "status": "ok", "database": "ok" },
+  "timestamp": "2026-11-20T08:15:30.123Z",
   "traceId": "${TRACE}"
 }`,
   },
@@ -130,6 +131,7 @@ const SCENARIOS: Scenario[] = [
     { "location": "body", "field": "displayName",
       "code": "missing", "message": "Field required" }
   ],
+  "timestamp": "2026-11-20T08:15:30.123Z",
   "traceId": "${TRACE}"
 }`,
   },
@@ -160,6 +162,7 @@ const SCENARIOS: Scenario[] = [
   "message": "系統發生錯誤，請稍後再試",
   "data": null,
   "errors": null,
+  "timestamp": "2026-11-20T08:15:30.123Z",
   "traceId": "${TRACE}"
 }`,
   },
@@ -198,6 +201,7 @@ const SCENARIOS: Scenario[] = [
   "message": "資料庫暫時無法連線，請稍後再試",
   "data": null,
   "errors": null,
+  "timestamp": "2026-11-20T08:15:30.123Z",
   "traceId": "${TRACE}"
 }`,
   },

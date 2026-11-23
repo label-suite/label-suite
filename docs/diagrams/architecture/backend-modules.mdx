@@ -260,7 +260,7 @@ import BackendRequestPipeline from '@notes/components/backend-request-pipeline'
 | 5 | Starlette `ExceptionMiddleware` | 執行註冊的 exception handler | `404`、`405`、`422` 與各 `AppError` |
 | 6 | Router → Service → Repository | 模組內分層 | 成功外層，由 Router 的 `ok()` 組 |
 
-`500` 自己攔、不交給 `ServerErrorMiddleware`：它在所有中介層外面，由它產生的 `500` 不會帶 `Access-Control-Allow-Origin` 與 `X-Correlation-ID`。三個自寫的中介層都是純 ASGI、不用 `BaseHTTPMiddleware`，contextvar 才不會在 task 之間斷掉、串流回應也不會被緩衝。認證與 CSRF 還沒有，見 [§已知限制](#已知限制)。
+`500` 自己攔、不交給 `ServerErrorMiddleware`：它在所有中介層外面，由它產生的 `500` 不會帶 `Access-Control-Allow-Origin` 與 `X-Correlation-ID`。三個自寫的中介層都是純 ASGI、不用 `BaseHTTPMiddleware`，contextvar 才不會在 task 之間斷掉、串流回應也不會被緩衝。兩個理由的出處見已歸檔的 [backend-skeleton `system-design.md`](https://github.com/label-suite/label-suite/blob/main/openspec/changes/archive/2026-11-20-backend-skeleton/system-design.md) §請求穿過的層。認證與 CSRF 還沒有，見 [§已知限制](#已知限制)。
 
 :::note{title="CORS 的實際設定" collapsible}
 - 來源：`CORS_ALLOWED_ORIGINS`，見 [§設定](#設定)
@@ -366,7 +366,7 @@ log 只記型別、位置與 `traceId`，不記任何可能帶著請求或資料
 
 :::note{title="兩層 engine 的差異" collapsible}
 - Lite（SQLite）：URL 是 `sqlite+aiosqlite:///<絕對路徑>`；建 engine 時先建好上層目錄，每條新連線都執行 `PRAGMA foreign_keys=ON`
-- 正式（PostgreSQL）：連線逾時 `POSTGRES_CONNECT_TIMEOUT_SECONDS`（5 秒）、`pool_pre_ping=True`，資料庫重啟後第一個請求不會失敗
+- 正式（PostgreSQL）：連線逾時 `POSTGRES_CONNECT_TIMEOUT_SECONDS`（5 秒）、`pool_pre_ping=True`，資料庫重啟後第一個請求不會拿到失效連線（出處見已歸檔的 [backend-skeleton `design.md`](https://github.com/label-suite/label-suite/blob/main/openspec/changes/archive/2026-11-20-backend-skeleton/design.md) D8）
 - 兩層都 `hide_parameters=True`
 - sessionmaker 設 `expire_on_commit=False`：service commit 之後，組回應時物件還讀得到
 - 測試：有設 `TEST_DATABASE_URL` 就用 PostgreSQL，否則每個測試用暫存的 SQLite 檔；兩者都先對測試庫跑 `alembic upgrade head`
@@ -443,12 +443,13 @@ cd backend && uv run python -m app.scripts.export_openapi
 
 ## 已知限制
 
-下表是已落地的程式還沒做的事；每一列連到追蹤它的 issue 或做出決定的 ADR。
+已落地的後端讓一條請求走得通、出錯時回得了外層；下表是它還沒有的東西與風險。
 
 | 還沒有 | 風險 | 追蹤 |
 | :--- | :--- | :--- |
 | 一般請求的存取 log；業務程式的 log 不會自動帶 `traceId` | 拿到使用者回報的 `traceId`，只找得到未處理例外那一筆 | [#567](https://github.com/label-suite/label-suite/issues/567) |
-| 登入失敗鎖定 | 登入失敗次數的限制還沒實作 | [#565](https://github.com/label-suite/label-suite/issues/565) |
+| 登入失敗鎖定 | 登入失敗次數的限制還沒實作 | [規格 01-05 §已確認決議](../../specs/01-account/05-login-state.mdx#已確認決議) Q3（失敗 10 次擋 30 分鐘） |
+| 全域速率限制 | 端點沒有呼叫上限 | [#565 的裁定](https://github.com/label-suite/label-suite/issues/565#issuecomment-7100090994)：後端不做，全域上限日後交給反向代理層 |
 | 認證、授權與 CSRF | 目前唯一的端點刻意公開；第一個需要登入的端點要先把這幾層補上 | [ADR-004 的 D1](../../development/adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie)、[D3](../../development/adr/004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token) |
 | 信任反向代理的來源 IP | 放在 Nginx 後面時，後端看到的 client IP 都是 Nginx | [#566](https://github.com/label-suite/label-suite/issues/566) |
 | Nginx 與安全標頭 | 回應不帶 CSP 等安全標頭 | [#568](https://github.com/label-suite/label-suite/issues/568) |
