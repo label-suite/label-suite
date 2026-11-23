@@ -283,6 +283,7 @@ matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Wr
 | Claude Code runtime | `claude --version` | **2.1.330**（Claude Code） |
 | Codex runtime | `codex --version` | **codex-cli 0.156.0** |
 | Codex 是否支援 hook | `codex features list` | `hooks` → **`stable` 且 `true`**（預設開啟，不是實驗功能；`plugin_hooks` 為 `removed`） |
+| Claude 官方權限文件 | `code.claude.com/docs/en/permissions` §What runs before you trust a folder | 表中「settings files 裡的 hooks」在「只信任父資料夾」與「`claude -p`／SDK、資料夾從未信任」兩欄都是 Used；專案 subagent frontmatter 的 hook 兩欄都是 Not used |
 | Claude 官方 hook 文件 | `code.claude.com/docs/en/hooks`（`docs.claude.com/en/docs/claude-code/hooks` 301 轉到這裡） | 33 個事件 |
 | Codex 官方 hook 文件 | `learn.chatgpt.com/docs/hooks` | 14 個事件 |
 | 確認 Codex 文件是官方的 | `developers.openai.com/codex/hooks` | **308 轉址**到 `learn.chatgpt.com/docs/hooks`，故採為官方來源 |
@@ -301,6 +302,7 @@ matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Wr
 | :--- | :--- | :--- |
 | Claude Code 官方文件（`code.claude.com/docs/en/hooks`，runtime 2.1.330） | 33 個事件、每個事件的阻擋機制、exit code 語意與 **fail-open 預設**、matcher 比對對象與語法、payload 欄位（含 `stop_hook_active`）、`hookSpecificOutput`、`updatedToolOutput`、通用 `continue: false`、timeout 預設、`onFailure` 的 **v2.1.295 版本下限**（`mcp_tool` 為 v2.1.328）與計為失敗的情形、設定位置與 `${CLAUDE_PROJECT_DIR}` | 事件與阻擋能力照收進矩陣；**只用與 Codex 的共通子集** |
 | Codex 官方文件（`learn.chatgpt.com/docs/hooks`，runtime codex-cli 0.156.0） | 14 個事件、PascalCase 命名、`.codex/hooks.json` 與 `config.toml` 兩種寫法、handler 型別、timeout 預設與 `SessionEnd`／`Interrupt` 的 1 秒上限、信任模型、`[features] hooks = false`、工具名稱清單、matcher 語法（含 `SubagentStart`／`SubagentStop` 吃 subagent type、`Stop` 不吃 matcher）、`PostToolUse` 的「替換結果後繼續」語意、`PreToolUse` 不支援 `continue`／`stopReason` | 同上；**信任模型與工具名稱差異是本次最重要的兩個發現** |
+| Claude Code 官方權限文件（`code.claude.com/docs/en/permissions`） | 設定檔 hook 在未信任資料夾也照用、專案 subagent frontmatter hook 不用 | 信任模型一列「沒有逐一審核」的依據 |
 | 本機 runtime | `claude --version`、`codex --version`、`codex features list`、`command -v timeout` | 版本與「沒有 `timeout`」都以實測為準，不引用文件 |
 | `codex` binary 的 strings | 內部 enum 是 snake_case | **不採為依據**，並在查核方式裡寫明理由，避免後人重蹈 |
 | 本 repo | `scripts/setup.sh`（`core.hooksPath`）、`scripts/git-hooks/commit-msg`（`git rev-parse --show-toplevel` 加共用 checker）、`.github/workflows/ci.yml`（四個 job）、`.claude/settings.json`（目前有 attribution 與 `issue-dispatch` 用的權限白名單，沒有 `hooks`） | **保留並擴充既有入口**，不另建重複的 commit checker |
