@@ -10,6 +10,17 @@
 | Method | Path | operationId | 角色 | 異動 |
 | :--- | :--- | :--- | :--- | :--- |
 
+## 常駐文件異動
+
+<!-- 錯誤碼或端點授權有異動時，先改常駐文件，這一節只寫路徑與異動摘要，不重抄常駐文件的內容。
+     error-codes.mdx：新的錯誤碼，或會回既有錯誤碼的新端點。endpoint-authorization.mdx：新端點，或端點的角色、PRD 權限矩陣的格、遮蔽的答案欄位。
+     下面各端點的段落仍寫這次的角色、錯誤與欄位遮蔽。只動到其中一份時，刪掉另一份的路徑；兩份都沒有異動時，刪掉路徑與表格，只寫一行「本次無常駐文件異動」。 -->
+
+- 常駐文件：`docs/diagrams/architecture/error-codes.mdx`、`docs/diagrams/architecture/endpoint-authorization.mdx`
+
+| 文件 | 節 | 異動 | 摘要 |
+| :--- | :--- | :--- | :--- |
+
 ## <operationId>
 
 - **Method / Path**：

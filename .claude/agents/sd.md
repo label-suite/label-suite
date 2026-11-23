@@ -23,8 +23,9 @@ model: opus
 6. 既有程式（`backend/`）：相關模組、共用的例外與依賴、認證與授權的掛點、匯出的 `openapi.json`
 7. 資料規劃三份（`docs/diagrams/architecture/`）：`data-field-inventory.mdx`（欄位盤點）、`data-table-dictionary.mdx`（候選表字典，**唯一可信的上游**）、`database-schema.er.json`（由字典產生的 ER 圖資料）。字典的 FK 欄與每張表的「被誰參照」是跨表影響的依據
 8. 後端的常駐文件 `docs/diagrams/architecture/backend-modules.mdx`：`main` 上每個後端模組的分層、Class Diagram 與主要 Sequence Diagram，以及「後端基礎建設」節（請求管線、錯誤外層、設定、資料庫、OpenAPI 匯出、新增業務模組的檢查清單）。**規劃時先改它**，再寫 system-design
-9. schema 範本：`openspec/schemas/label-suite-sdd/templates/system-design.md`、`api-contract.md`，以及 `pnpm exec openspec instructions <artifact> --change <name>`
-10. 領域規範：`docs/development/rules/api-agent-rules.mdx` 全部十條（A1 至 A10），它是契約的唯一規範；`docs/development/rules/backend-agent-rules.mdx` B1 分層與允許的 import、B4 交易的擁有層；`docs/development/rules/security-agent-rules.mdx` S1 身分只來自驗證完成的 session、S2 token 不離開 cookie；CSRF 與 CORS 的統一位置、S3 授權的四段順序
+9. API 的常駐文件 `docs/diagrams/architecture/error-codes.mdx`（`main` 上每個錯誤碼的 HTTP 狀態、訊息鍵、產生的位置與會回它的端點）與 `endpoint-authorization.mdx`（`main` 上每個端點放行的系統角色與任務成員身分、對到的 PRD 權限矩陣格、遮蔽的答案欄位）。**寫 api-contract 前先改它們**
+10. schema 範本：`openspec/schemas/label-suite-sdd/templates/system-design.md`、`api-contract.md`，以及 `pnpm exec openspec instructions <artifact> --change <name>`
+11. 領域規範：`docs/development/rules/api-agent-rules.mdx` 全部十條（A1 至 A10），它是契約的唯一規範；`docs/development/rules/backend-agent-rules.mdx` B1 分層與允許的 import、B4 交易的擁有層；`docs/development/rules/security-agent-rules.mdx` S1 身分只來自驗證完成的 session、S2 token 不離開 cookie；CSRF 與 CORS 的統一位置、S3 授權的四段順序
 
 ## 技術前提
 
@@ -71,6 +72,7 @@ model: opus
 - 需要的系統角色與任務成員身分，以及**各角色下會被遮蔽的欄位與遮蔽後的值**
 - **測試集答案隔離**：標記員能到達的端點，回應裡不得有標準答案或測試集辨識資訊——逐個端點寫出這一欄，沒有風險就寫「無」
 - 破壞性變更標 **BREAKING**，並說明前端受影響處
+- 錯誤碼或端點授權有異動時，**先改常駐文件**：新的錯誤碼或會回既有錯誤碼的新端點改 `error-codes.mdx`；新端點，或端點的角色、PRD 權限矩陣的格、遮蔽的答案欄位改 `endpoint-authorization.mdx`。api-contract 的「常駐文件異動」節寫出路徑與異動摘要，不重抄常駐文件的內容；各端點的段落仍寫這次的角色、錯誤與欄位遮蔽
 
 ## 自我檢查
 
@@ -85,4 +87,5 @@ model: opus
 - [ ] 有資料模型異動時：字典已先改、ER 已同步、`pnpm check:er` 通過；異動表的每一列都對得到字典裡的表與欄位
 - [ ] classDiagram 的 Model 只有屬性，沒有另畫一套表間關聯
 - [ ] 後端模組或基礎建設有異動時：`backend-modules.mdx` 已先改好，與 system-design 一致；「常駐文件異動」節寫了路徑與摘要，沒有重抄常駐文件。沒有異動時寫「本次無常駐文件異動」
+- [ ] 錯誤碼或端點授權有異動時：`error-codes.mdx` 與 `endpoint-authorization.mdx` 已先改好，與 api-contract 一致，`endpoint-authorization.mdx` 的每一列都沒有超出 PRD §權限矩陣；「常駐文件異動」節寫了路徑與摘要，沒有重抄常駐文件。沒有異動時寫「本次無常駐文件異動」
 - [ ] 章節與 schema 範本一致；敘述用繁體中文，識別字（欄位名、operationId、錯誤碼、範例 JSON）維持英文
