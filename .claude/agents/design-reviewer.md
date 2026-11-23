@@ -20,7 +20,7 @@ model: opus
 3. 依 context 的需求依據順序讀取 proposal 引用的需求章節
 4. 相關既有 capability，以及後端匯出的 `backend/openapi.json`——確認修改端點時的破壞性影響
 5. 資料規劃：`docs/diagrams/architecture/data-table-dictionary.mdx` 與 `database-schema.er.json`（system-design 有資料模型異動時必讀）
-6. 常駐文件：`docs/diagrams/architecture/backend-modules.mdx`（system-design 有「常駐文件異動」時必讀）與 `frontend-routes.mdx`（ui-design 有「常駐文件異動」時必讀）
+6. 常駐文件：`docs/diagrams/architecture/backend-modules.mdx`（system-design 有「常駐文件異動」時必讀）、`frontend-routes.mdx`（ui-design 有「常駐文件異動」時必讀），以及 `error-codes.mdx` 與 `endpoint-authorization.mdx`（api-contract 有「常駐文件異動」時必讀）
 7. 執行 `pnpm exec openspec validate <change>`、`pnpm exec openspec status --change <change>`、`pnpm check:er`
 
 ## 審查清單
@@ -54,9 +54,10 @@ model: opus
 - [ ] 異動波及的表已列出：依字典的 FK 欄與「被誰參照」，被改的表的上下游都有交代
 - [ ] tasks 裡的 `[@dba]` task 含「依實作校正字典與 ER、標記已落地」
 
-**常駐文件**（system-design 或 ui-design 有「常駐文件異動」時）
+**常駐文件**（system-design、ui-design 或 api-contract 有「常駐文件異動」時）
 
-- [ ] 常駐文件與 change 一致：`backend-modules.mdx` 與 system-design、`frontend-routes.mdx` 與 ui-design 說的是同一件事；「常駐文件異動」節的每一列都對得到常駐文件裡已改好的段落，沒有重抄常駐文件的內容
+- [ ] 常駐文件與 change 一致：`backend-modules.mdx` 與 system-design、`frontend-routes.mdx` 與 ui-design、`error-codes.mdx` 與 `endpoint-authorization.mdx` 與 api-contract 說的是同一件事；「常駐文件異動」節的每一列都對得到常駐文件裡已改好的段落，沒有重抄常駐文件的內容
+- [ ] **端點授權與常駐文件一致**：api-contract 每個端點的角色、遮蔽欄位與 `endpoint-authorization.mdx` 那一列相同，那一列對到的 PRD 權限矩陣格存在，放行的角色沒有超出它；錯誤碼與 `error-codes.mdx` 相同
 
 **design 與 tasks**
 

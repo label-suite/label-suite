@@ -14,7 +14,8 @@ model: opus
 3. `docs/development/architecture.mdx`：§後端分層（含請求流程圖與逐層職責表）、§認證與授權、§任務設定、§測試集答案不外露、§資料庫雙層、§測試分層
 4. 既有程式慣例：相鄰模組的寫法、共用的例外與依賴、認證與授權的掛點
 5. 後端的常駐文件 `docs/diagrams/architecture/backend-modules.mdx`：各模組現在的分層與類別，以及「後端基礎建設」節（請求管線、錯誤怎麼對到外層、設定、資料庫、OpenAPI 匯出、新增業務模組的檢查清單）
-6. 領域規範：`docs/development/rules/backend-agent-rules.mdx` B1 分層與允許的 import、B3 session 的生命週期、B4 交易的擁有層、B5 資料存取一律走 SQLAlchemy；`docs/development/rules/api-agent-rules.mdx` A1 路由、HTTP status、operationId 與回應外層、A2 request 驗證與 response 建模；`docs/development/rules/security-agent-rules.mdx` S3 授權的四段順序、S4 遮蔽與 allowlist 在後端；`docs/development/rules/testing-agent-rules.mdx` T1 三層的範圍、位置、指令與生命週期、T2 TDD 與紅燈的原因；跨領域的 `docs/development/rules/agent-rules.mdx`
+6. API 的常駐文件 `docs/diagrams/architecture/error-codes.mdx`（現有的錯誤碼、訊息鍵與產生的位置）與 `endpoint-authorization.mdx`（每個端點放行的角色、對到的 PRD 權限矩陣格、遮蔽的欄位（含答案））
+7. 領域規範：`docs/development/rules/backend-agent-rules.mdx` B1 分層與允許的 import、B3 session 的生命週期、B4 交易的擁有層、B5 資料存取一律走 SQLAlchemy；`docs/development/rules/api-agent-rules.mdx` A1 路由、HTTP status、operationId 與回應外層、A2 request 驗證與 response 建模；`docs/development/rules/security-agent-rules.mdx` S3 授權的四段順序、S4 遮蔽與 allowlist 在後端；`docs/development/rules/testing-agent-rules.mdx` T1 三層的範圍、位置、指令與生命週期、T2 TDD 與紅燈的原因；跨領域的 `docs/development/rules/agent-rules.mdx`
 
 ## 技術棧與結構
 
@@ -71,7 +72,7 @@ model: opus
 
 ## 校正常駐文件
 
-實作完成、測試通過之後，對照 `docs/diagrams/architecture/backend-modules.mdx`。實作出來的模組分層、類別或主要流程和 sd 的設計不同時，**依程式回頭校正常駐文件**，讓它描述的是實際寫出來的樣子：模組那一節的分層表、Class Diagram 與主要 Sequence Diagram；動到 `app/core/` 的，改「後端基礎建設」節。不讓程式和常駐文件各走各的；和設計不同之處另在回報的「待確認」寫出來
+實作完成、測試通過之後，對照 `docs/diagrams/architecture/backend-modules.mdx`。實作出來的模組分層、類別或主要流程和 sd 的設計不同時，**依程式回頭校正常駐文件**，讓它描述的是實際寫出來的樣子：模組那一節的分層表、Class Diagram 與主要 Sequence Diagram；動到 `app/core/` 的，改「後端基礎建設」節。錯誤碼也一樣：實作出來的錯誤碼、HTTP 狀態、訊息鍵或會回它的端點和設計不同時，校正 `error-codes.mdx`；實際掛的授權依賴或遮蔽的欄位（含答案）和設計不同時，校正 `endpoint-authorization.mdx`。不讓程式和常駐文件各走各的；和設計不同之處另在回報的「待確認」寫出來
 
 ## 完成前自我檢查
 
@@ -85,6 +86,7 @@ model: opus
 - [ ] 沒有 `pip install`、沒有拼接 SQL、沒有硬寫的祕密、CORS 沒有 `allow_origins=["*"]`
 - [ ] 沒有自己寫 Alembic migration（需要時已回報給 dba）
 - [ ] `backend-modules.mdx` 已依實作校正：模組分層、類別與主要流程和程式一致；動到 `app/core/` 時「後端基礎建設」節也已更新
+- [ ] `error-codes.mdx` 與 `endpoint-authorization.mdx` 已依實作校正：錯誤碼、授權依賴與遮蔽的欄位（含答案）和程式一致
 
 ## 回報格式
 
@@ -95,6 +97,6 @@ model: opus
 - 測試：pytest {n} 通過（含 {m} 條負向的答案隔離測試）；型別與 lint 通過
 - 雙資料庫：SQLite {結果}／PostgreSQL {結果}
 - contract：openapi.json 已更新／無變動；與 api-contract.md 一致
-- 常駐文件：backend-modules.mdx 已依實作校正／與設計一致、無須改動
+- 常駐文件：backend-modules.mdx、error-codes.mdx、endpoint-authorization.mdx 已依實作校正／與設計一致、無須改動
 - 待確認：{偏離 contract 或需要其他角色處理的事項，無則寫「無」}
 ```
