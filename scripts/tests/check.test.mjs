@@ -4,7 +4,7 @@
 // the stop-at-first-failure rule and the steps that check.mjs implements itself
 // (the probe check and the contract comparison) without running the real tools
 // (spec workspace-commands, system-design §本機自查的步驟, design D10).
-// The assertion that steps 11 and 12 match ci.yml is added by task 8.1.
+// The last describe block asserts that steps 11 and 12 run the same pytest and skip-check commands as ci.yml.
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -12,6 +12,8 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, test } from "node:test";
+
+import { parse } from "yaml";
 
 import { OPTIONAL_STEPS, parseArgs, runCheck, STEPS } from "../check.mjs";
 
@@ -395,5 +397,51 @@ describe("root package.json commands", () => {
       cwd: ROOT,
     });
     assert.equal(r.status, 0);
+  });
+});
+
+describe("steps 11 and 12 match ci.yml", () => {
+  const workflow = parse(readFileSync(join(ROOT, ".github/workflows/ci.yml"), "utf8"));
+
+  /** The run commands and env of one CI job, with the `uv run ` prefix check.mjs adds stripped later. */
+  function ciSteps(jobName) {
+    const steps = workflow.jobs[jobName]?.steps ?? [];
+    return steps.filter((step) => typeof step.run === "string");
+  }
+
+  /** One check.mjs step against the CI job that runs the same round. */
+  function assertSameAsCi(stepId, jobName) {
+    const local = STEPS.find((step) => step.id === stepId);
+    assert.ok(local, `check.mjs has no step ${stepId}`);
+    const ci = ciSteps(jobName);
+    const [pytestCommand, skipCommand] = local.commands;
+
+    // CI runs the pytest command in the same form, with `uv run` in front.
+    assert.equal(pytestCommand.startsWith("uv run pytest "), true);
+    const ciPytest = ci.find((step) => step.run.trim() === pytestCommand);
+    assert.ok(ciPytest, `${jobName} has no step running exactly: ${pytestCommand}`);
+    assert.equal(ciPytest.env?.COVERAGE_FILE, local.env.COVERAGE_FILE);
+
+    // The skip check names the same script and the same report; CI may append
+    // shell redirection (the job summary), so compare the leading command.
+    const ciSkip = ci.find((step) => step.run.trim().startsWith(skipCommand));
+    assert.ok(ciSkip, `${jobName} has no step running: ${skipCommand}`);
+  }
+
+  test("step 11 (SQLite) runs the same pytest and skip summary commands as backend-sqlite", () => {
+    assertSameAsCi("backend-sqlite", "backend-sqlite");
+  });
+
+  test("step 12 (PostgreSQL) runs the same pytest and skip check commands as backend-postgres", () => {
+    assertSameAsCi("backend-postgres", "backend-postgres");
+  });
+
+  test("the local pytest arguments for both rounds are identical apart from the report name", () => {
+    const normalize = (id) =>
+      STEPS.find((step) => step.id === id).commands[0].replace(
+        /junit-(sqlite|postgres)/,
+        "junit-X",
+      );
+    assert.equal(normalize("backend-sqlite"), normalize("backend-postgres"));
   });
 });

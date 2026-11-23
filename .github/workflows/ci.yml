@@ -145,3 +145,116 @@ jobs:
       # the job; fix the citation, or add an ALLOW entry with its reason.
       - name: Check the file:line citations in design/system and docs
         run: node scripts/check-citations.mjs --strict
+
+  # The two backend jobs run on every pull request, with no path filter and no
+  # job-level condition, so a docs-only pull request still runs them. Each job
+  # writes its own coverage data file; the coverage job (a later task) combines
+  # them. upload-artifact v4.4.0 and later skip hidden files by default, and
+  # .coverage.* is hidden, so the uploads set include-hidden-files and fail when
+  # the file is missing instead of silently uploading nothing.
+  backend-sqlite:
+    name: backend-sqlite
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v5
+
+      # check-junit-skips.mjs has no dependencies, so Node alone is enough; skip
+      # the pnpm cache that packageManager in package.json would turn on.
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Install the locked dependencies
+        run: uv sync --locked
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Check formatting
+        run: uv run ruff format --check .
+
+      - name: Check types
+        run: uv run mypy --strict app
+
+      - name: Check the import contracts
+        run: uv run lint-imports
+
+      # TEST_DATABASE_URL is deliberately not set: this is the SQLite round, and
+      # tests marked postgres skip here.
+      - name: Test on SQLite
+        env:
+          COVERAGE_FILE: .coverage.sqlite
+        run: uv run pytest --cov=app --cov-branch --junitxml=test-results/junit-sqlite.xml
+
+      # Reports how many tests skipped; it never fails on a skip, because the
+      # postgres-marked tests are meant to skip in this round.
+      - name: Report the skipped count
+        run: node ../scripts/check-junit-skips.mjs --summary test-results/junit-sqlite.xml >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the coverage data
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-backend-sqlite
+          path: backend/.coverage.sqlite
+          include-hidden-files: true
+          if-no-files-found: error
+
+  backend-postgres:
+    name: backend-postgres
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          # The server is reachable only from this job's runner. The password is
+          # derived from the run, not written here: a test builds on the URL's
+          # password, so it cannot be empty, and the service starts before any
+          # step could generate one.
+          POSTGRES_PASSWORD: pg-${{ github.run_id }}-${{ github.run_attempt }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Install the locked dependencies
+        run: uv sync --locked
+
+      - name: Test on PostgreSQL
+        env:
+          COVERAGE_FILE: .coverage.postgres
+          TEST_DATABASE_URL: postgresql+asyncpg://postgres:pg-${{ github.run_id }}-${{ github.run_attempt }}@localhost:5432/postgres
+        run: uv run pytest --cov=app --cov-branch --junitxml=test-results/junit-postgres.xml
+
+      # Fails when any test skipped, so a postgres-marked test cannot silently
+      # stop running in this round.
+      - name: Fail on skipped tests
+        run: node ../scripts/check-junit-skips.mjs test-results/junit-postgres.xml
+
+      - name: Upload the coverage data
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-backend-postgres
+          path: backend/.coverage.postgres
+          include-hidden-files: true
+          if-no-files-found: error
