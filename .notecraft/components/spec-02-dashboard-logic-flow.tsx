@@ -6,9 +6,10 @@ import { MousePointerClick, RotateCcw } from "lucide-react";
  * 02 儀表板 Logic Flow：跨頁的操作邏輯流程（docs/specs/02-dashboard/index.mdx §Logic Flow）。
  *
  * 四種標準流程圖符號：起訖（圓角膠囊）、頁面（矩形）、判斷（菱形）、其他流程或外部系統（雙邊框矩形）。
- * 節點編號、分段與出處都和 index.mdx 的文字版逐項一致；文字版沒有的連線不畫。
- * 符號、配色、互動與鍵盤操作照 01 帳號的元件（spec-01-account-logic-flow.tsx），只換節點與連線的資料。
+ * 節點編號、分段與出處都和 index.mdx 的文字版逐項一致；文字版沒有的連線不畫，缺口只以灰色註記標示。
  */
+
+/* ================================================================ 【骨架】不可修改 ================================================================ */
 
 /* ---------------------------------------------------------------- 色票（label-suite-design，來源 design/prototype/assets/tokens.css） */
 
@@ -31,7 +32,7 @@ const EASE: [number, number, number, number] = [0.4, 0, 0.2, 1];
 
 /* ---------------------------------------------------------------- 型別 */
 
-/** terminal 起訖、page 頁面、decision 判斷、module 其他模組的流程、external 外部系統或收信 */
+/** terminal 起訖、page 本模組的頁面、decision 判斷、module 其他模組的流程、external 外部系統或收信 */
 type NodeKind = "terminal" | "page" | "decision" | "module" | "external";
 
 /** plain 一般、yes 判斷的「是」、no 判斷的「否」或失敗 */
@@ -59,7 +60,7 @@ interface FlowEdge {
   pts: [number, number][];
   label?: string;
   lp?: [number, number];
-  /** 文字版的條目，含出處 */
+  /** 文字版的條目，含出處；起訖連線沒有規格出處 */
   text: string;
 }
 
@@ -79,6 +80,18 @@ interface Section {
   gaps: Gap[];
 }
 
+/* ---------------------------------------------------------------- 共用節點輔助：依下方 NOTE 查出處說明 */
+
+function n(id: string, kind: NodeKind, lines: string[], x: number, y: number, w: number, h: number): FlowNode {
+  return { id, kind, lines, x, y, w, h, note: NOTE[id] ?? id };
+}
+
+/* ================================================================ 【節點與連線】依模組填寫（以下為模組 01 帳號範例） ================================================================ */
+
+/* ---------------------------------------------------------------- 模組名稱（顯示於 aria-label） */
+
+const MODULE_LABEL = "02 儀表板";
+
 /* ---------------------------------------------------------------- 共用節點（同一個編號在不同分段重複出現） */
 
 const NOTE: Record<string, string> = {
@@ -94,11 +107,7 @@ const NOTE: Record<string, string> = {
   X5: "其他模組：01-04 個人設定頁",
 };
 
-function n(id: string, kind: NodeKind, lines: string[], x: number, y: number, w: number, h: number): FlowNode {
-  return { id, kind, lines, x, y, w, h, note: NOTE[id] ?? id };
-}
-
-/* ---------------------------------------------------------------- 資料：五個分段，與文字版的分段一～五逐項一致 */
+/* ---------------------------------------------------------------- 資料：每個分段，與該模組 index.mdx 文字版的分段逐項一致 */
 
 const SECTIONS: Section[] = [
   {
@@ -174,7 +183,7 @@ const SECTIONS: Section[] = [
       { id: "4-2", from: "D3", to: "X4", kind: "yes", pts: [[385, 90], [495, 90], [495, 75]], label: "是：推導得出", lp: [430, 78], text: "D3 推導得出 → X4 標記工作區，帶任務、樣本、標記員身分、審核員身分與標記階段五項（主流程 3；§規格同節第 5 條；§驗收標準「快速審核開可處理的審核單位」）" },
       { id: "4-3", from: "D3", to: "X3", kind: "no", pts: [[310, 122], [310, 230], [495, 230]], label: "否：是空的", lp: [350, 215], text: "D3 是空的 → X3 標記清單，該任務、不指定某一筆，顯示明確的空狀態說明；不開任務的第一筆，也不開任何已定稿的唯讀單位（A1；§規格同節第 7、8 條；§驗收標準「沒有可處理單位時到清單並說明」「沒有可處理單位時不開已定稿的」）" },
       { id: "4-4", from: "P1", to: "X3", kind: "plain", pts: [[90, 162], [90, 252], [495, 252]], label: "點其他地方", lp: [150, 268], text: "P1 點某列「快速審核」以外的地方 → X3 標記清單，該任務（A2；§驗收標準「點審核員任務列其他地方到清單」）" },
-      { id: "4-5", from: "X4", to: "P1", kind: "plain", pts: [[560, 48], [560, 20], [90, 20], [90, 118]], label: "改狀態後回來", lp: [320, 10], text: "X4 → P1 儀表板，審核員在工作區改了某個審核單位的狀態後回來，摘要與進度條立刻反映新狀態，重新整理後也一致（02-01 §審核員任務列的摘要數字從哪裡來 第 12 條；§驗收標準「改過狀態後回來立刻反映」）" },
+      { id: "4-5", from: "X4", to: "P1", kind: "plain", pts: [[560, 48], [560, 20], [90, 20], [90, 118]], label: "改狀態後回來", lp: [320, 54], text: "X4 → P1 儀表板，審核員在工作區改了某個審核單位的狀態後回來，摘要與進度條立刻反映新狀態，重新整理後也一致（02-01 §審核員任務列的摘要數字從哪裡來 第 12 條；§驗收標準「改過狀態後回來立刻反映」）" },
     ],
     gaps: [],
   },
@@ -197,6 +206,8 @@ const SECTIONS: Section[] = [
     gaps: [],
   },
 ];
+
+/* ================================================================ 【骨架】不可修改 ================================================================ */
 
 /* ---------------------------------------------------------------- 樣式 */
 
@@ -393,7 +404,7 @@ export default function Spec02DashboardLogicFlow(): ReactElement {
           <svg
             viewBox={`0 0 ${section.w} ${section.h}`}
             role="group"
-            aria-label={`02 儀表板 Logic Flow：${section.label}；用 Tab 移到節點或連線，按 Enter 看出處`}
+            aria-label={`${MODULE_LABEL} Logic Flow：${section.label}；用 Tab 移到節點或連線，按 Enter 看出處`}
             style={{ display: "block", width: "100%", minWidth: Math.round(section.w * 0.78) }}
             onClick={() => setSel(null)}
           >
