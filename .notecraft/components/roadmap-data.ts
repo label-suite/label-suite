@@ -21,7 +21,7 @@ export interface Goal {
 export interface Horizon {
   id: HorizonId;
   label: string;
-  /** How detailed this horizon is drawn. */
+  /** What the breakdown in this horizon is for. */
   detail: string;
   /** Timeline span, in the shared 0..6 scale used by the swimlane chart. */
   span: [number, number];
@@ -46,8 +46,8 @@ export interface Epic {
   complexity: Level;
   /** One sentence explaining the quadrant. */
   why: string;
-  /** Only the next-month epics are broken down to features. */
-  features?: Feature[];
+  /** Spec pages (or PRD measures) the epic breaks down into, like E1. */
+  features: Feature[];
 }
 
 export interface Bar {
@@ -76,9 +76,9 @@ export const GOALS: Goal[] = [
 ];
 
 export const HORIZONS: Horizon[] = [
-  { id: "month", label: "下個月", detail: "拆到 Feature 與 Sub-feature", span: [0, 1] },
-  { id: "quarter", label: "接下來兩個月", detail: "只到 Epic", span: [1, 3] },
-  { id: "later", label: "之後", detail: "只到 Goal", span: [3, 6] },
+  { id: "month", label: "下個月", detail: "直接開 issue 動工", span: [0, 1] },
+  { id: "quarter", label: "接下來兩個月", detail: "動工前再對一次規格", span: [1, 3] },
+  { id: "later", label: "之後", detail: "條件成熟再排", span: [3, 6] },
 ];
 
 export const EPICS: Epic[] = [
@@ -138,6 +138,10 @@ export const EPICS: Epic[] = [
     benefit: "low",
     complexity: "low",
     why: "只有系統管理員用得到，但權限設定會影響後面每個模組。",
+    features: [
+      { label: "06-01 使用者管理", subs: ["新增與編輯帳號", "重發設定密碼信", "異動紀錄"] },
+      { label: "06-02 角色設定", subs: ["兩層授權模型", "權限鍵對應 PRD 格", "修改紀錄"] },
+    ],
   },
   {
     id: "E4",
@@ -149,6 +153,11 @@ export const EPICS: Epic[] = [
     benefit: "high",
     complexity: "high",
     why: "設定驅動是論文的核心主張，而任務設定的契約要撐住所有任務類型。",
+    features: [
+      { label: "03-01 任務列表", subs: ["搜尋與篩選", "新增與刪除任務"] },
+      { label: "03-02 新增任務", subs: ["上傳資料集", "欄位用途", "八種輸出類型的預覽"] },
+      { label: "03-03 任務詳情", subs: ["設定分頁", "成員管理", "五個狀態與試標回合"] },
+    ],
   },
   {
     id: "E5",
@@ -160,6 +169,10 @@ export const EPICS: Epic[] = [
     benefit: "high",
     complexity: "high",
     why: "標記員每天停留的畫面，同時要依設定換作答方式、隔離標準答案。",
+    features: [
+      { label: "04-01 標記清單", subs: ["標記員視圖", "審核員視圖", "試標歷史回饋"] },
+      { label: "04-02 標記工作區", subs: ["三欄外殼", "題目卡與標記卡", "指引閘門", "鍵盤快捷鍵"] },
+    ],
   },
   {
     id: "E6",
@@ -171,6 +184,11 @@ export const EPICS: Epic[] = [
     benefit: "high",
     complexity: "high",
     why: "試標要靠 IAA 才能推進，統計必須和人工計算完全一致。",
+    features: [
+      { label: "05-01 分析列表", subs: ["搜尋與篩選", "IAA 狀態徽章"] },
+      { label: "05-02 分析詳情", subs: ["兩個分頁與各自的權限"] },
+      { label: "05-03 資料匯入與版本", subs: ["版本快照與來源追溯", "答案欄位隔離"] },
+    ],
   },
   {
     id: "E7",
@@ -182,6 +200,10 @@ export const EPICS: Epic[] = [
     benefit: "low",
     complexity: "low",
     why: "彙整前面模組已有的資料，模組齊了才有東西可以彙整。",
+    features: [
+      { label: "02-01 儀表板", subs: ["依角色的版面", "快速繼續與快速審核"] },
+      { label: "07-04 通知事件", subs: ["事件清單", "兩個消費端"] },
+    ],
   },
   {
     id: "E8",
@@ -193,6 +215,13 @@ export const EPICS: Epic[] = [
     benefit: "high",
     complexity: "low",
     why: "幾乎不寫新功能，卻直接決定論文能不能交出成果。",
+    features: [
+      { label: "五種研究示例", subs: ["只靠任務設定建立"] },
+      { label: "建立步驟數比較", subs: ["對照 Label Studio"] },
+      { label: "統計核對", subs: ["句數、詞數、標籤數"] },
+      { label: "SUS 問卷", subs: ["5～10 位實驗室成員"] },
+      { label: "示範影片", subs: ["2～3 個使用情境"] },
+    ],
   },
   {
     id: "E9",
@@ -204,6 +233,10 @@ export const EPICS: Epic[] = [
     benefit: "low",
     complexity: "low",
     why: "流程已規劃好，只在論文定版時執行一次。",
+    features: [
+      { label: "#6 發版流程定案", subs: ["CHANGELOG", "release commit 與 tag"] },
+      { label: "#7 發版自動化", subs: ["版號一致性檢查", "Zenodo DOI"] },
+    ],
   },
 ];
 

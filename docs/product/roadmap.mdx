@@ -11,13 +11,13 @@ tags: [路線圖, Epic]
 
 ## 怎麼讀
 
-時間越遠拆得越粗：下個月拆到 Feature 與 Sub-feature，接下來兩個月只到 Epic，之後只寫要達成的目標。
+三個時段都拆到 Feature 與 Sub-feature，Feature 是規格頁（論文驗證與發版沒有規格頁，取自 PRD 的衡量方式與發版 issue）；時段只決定這份拆法離動工多近。
 
-| 時段 | 拆到哪一層 | 用途 |
-| :--- | :--- | :--- |
-| 下個月 | Feature、Sub-feature | 直接開 issue 動工 |
-| 接下來兩個月 | Epic | 確認先後與依賴，動工前再拆 |
-| 之後 | Goal | 說明方向，條件成熟再排 |
+| 時段 | 用途 |
+| :--- | :--- |
+| 下個月 | 直接開 issue 動工 |
+| 接下來兩個月 | 確認先後與依賴，動工前再對一次規格 |
+| 之後 | 說明方向，條件成熟再排 |
 
 ## 目標
 
@@ -48,23 +48,23 @@ import RoadmapEpicList from '@notes/components/roadmap-epic-list'
 
 ## 三層目標階層
 
-每個 Epic 都掛在一個主要目標底下；越近的時段拆得越細：下個月展開到 Feature，後兩段展開只看一句話。
+每個 Epic 都掛在一個主要目標底下，三欄都用同一種卡片，展開看它的 Feature 與 Sub-feature。
 
 {/* @ai-visualize
 id: roadmap-goal-hierarchy
 type: diagram
 prompt: |
-  核心洞察：越近拆得越細。下個月拆到 Feature 與 Sub-feature，接下來兩個月只到 Epic，之後只到 Goal。
-  互動：點 Goal 亮起三欄裡服務同一個目標的 Epic（其餘壓暗）；三欄的 Epic 都是同一種卡片、都能展開，展開的內容依時段變粗：下個月看 Feature 與 Sub-feature（預設展開），接下來兩個月看一句話與規格範圍，之後只看一句話（後兩欄預設收合）。
+  核心洞察：每個 Epic 都服務一個主要目標，並拆成規格頁層級的 Feature 與 Sub-feature；三個時段寫法相同。
+  互動：點 Goal 亮起三欄裡服務同一個目標的 Epic（其餘壓暗）；三欄的 Epic 都是同一種卡片、都能展開看 Feature 與 Sub-feature（下個月預設展開，後兩欄預設收合）。
   圖形：三欄（下個月、接下來兩個月、之後），每欄依主要目標分組，Goal → Epic → Feature → Sub-feature 以縮排與左邊線表示層級。
   資料：讀 roadmap-data.ts 的 GOALS、HORIZONS、EPICS（含 features）。
-caption: 點 Goal 看哪些 Epic 服務它；點 Epic 展開，越遠的時段展開得越少
+caption: 點 Goal 看哪些 Epic 服務它；點 Epic 展開它的 Feature
 status: generated
 */}
 
 import RoadmapGoalHierarchy from '@notes/components/roadmap-goal-hierarchy'
 
-<GeneratedFrame id="roadmap-goal-hierarchy" type="diagram" prompt={"核心洞察：越近拆得越細。下個月拆到 Feature 與 Sub-feature，接下來兩個月只到 Epic，之後只到 Goal。\n互動：點 Goal 亮起三欄裡服務同一個目標的 Epic（其餘壓暗）；三欄的 Epic 都是同一種卡片、都能展開，展開的內容依時段變粗：下個月看 Feature 與 Sub-feature（預設展開），接下來兩個月看一句話與規格範圍，之後只看一句話（後兩欄預設收合）。\n圖形：三欄（下個月、接下來兩個月、之後），每欄依主要目標分組，Goal → Epic → Feature → Sub-feature 以縮排與左邊線表示層級。\n資料：讀 roadmap-data.ts 的 GOALS、HORIZONS、EPICS（含 features）。\n"} caption="點 Goal 看哪些 Epic 服務它；點 Epic 展開，越遠的時段展開得越少">
+<GeneratedFrame id="roadmap-goal-hierarchy" type="diagram" prompt={"核心洞察：每個 Epic 都服務一個主要目標，並拆成規格頁層級的 Feature 與 Sub-feature；三個時段寫法相同。\n互動：點 Goal 亮起三欄裡服務同一個目標的 Epic（其餘壓暗）；三欄的 Epic 都是同一種卡片、都能展開看 Feature 與 Sub-feature（下個月預設展開，後兩欄預設收合）。\n圖形：三欄（下個月、接下來兩個月、之後），每欄依主要目標分組，Goal → Epic → Feature → Sub-feature 以縮排與左邊線表示層級。\n資料：讀 roadmap-data.ts 的 GOALS、HORIZONS、EPICS（含 features）。\n"} caption="點 Goal 看哪些 Epic 服務它；點 Epic 展開它的 Feature">
   <RoadmapGoalHierarchy client:visible />
 </GeneratedFrame>
 
@@ -133,7 +133,7 @@ import RoadmapBenefitComplexity from '@notes/components/roadmap-benefit-complexi
 
 | 時機 | 要改什麼 |
 | :--- | :--- |
-| 一個 Epic 完成 | 從 `roadmap-data.ts` 把下一段的 Epic 往前移，並把新進「下個月」的 Epic 拆到 Feature |
+| 一個 Epic 完成 | 從 `roadmap-data.ts` 把下一段的 Epic 往前移，並對照規格確認它的 Feature 還是最新的 |
 | 規格或 PRD 改了模組範圍或依賴 | 改對應 Epic 的範圍、一句話與排序依據 |
 | SUS 或試用回饋指出新的需求 | 先走規格流程，再決定排進哪個時段 |
 
@@ -148,3 +148,4 @@ import RoadmapBenefitComplexity from '@notes/components/roadmap-benefit-complexi
 | 2026-11-23 | 順序依模組依賴，不打分數（[§排序依據](#排序依據)） | — | [#534](https://github.com/label-suite/label-suite/issues/534) |
 | 2026-11-23 | 效益與複雜度只分高低四象限，不給分數，每個 Epic 一句理由 | — | [#534](https://github.com/label-suite/label-suite/issues/534) |
 | 2026-11-23 | 每個 Epic 一句話，只定義在 `roadmap-data.ts`（[§Epic 一覽](#epic-一覽)） | — | [#534](https://github.com/label-suite/label-suite/issues/534) |
+| 2026-11-23 | 三個時段的 Epic 都拆到 Feature 與 Sub-feature，寫法與帳號相同（[§怎麼讀](#怎麼讀)） | 越遠越粗：接下來兩個月只到 Epic、之後只到 Goal | [#534](https://github.com/label-suite/label-suite/issues/534) |

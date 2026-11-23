@@ -4,10 +4,9 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { EPICS, GOALS, HORIZONS, type Epic, type GoalId, type HorizonId } from "./roadmap-data";
 
 /**
- * 三層目標階層：越近拆得越細。
- * 下個月拆到 Feature 與 Sub-feature；接下來兩個月只到 Epic；之後只到 Goal。
- * 點 Goal 會在三欄裡亮起服務同一個目標的 Epic；每個 Epic 都能展開，
- * 展開的內容依時段變粗：Feature → 一句話與規格範圍 → 一句話。
+ * 三層目標階層：Goal → Epic → Feature → Sub-feature，三個時段寫法相同。
+ * 點 Goal 會在三欄裡亮起服務同一個目標的 Epic；每個 Epic 都能展開看它的 Feature。
+ * 下個月預設展開，後兩段預設收合，避免頁面過長。
  */
 
 const goalShort = (id: GoalId): string => GOALS.find((g) => g.id === id)?.short ?? id;
@@ -24,11 +23,11 @@ function groups(h: HorizonId): { goal: GoalId; epics: Epic[] }[] {
   }));
 }
 
-/** 下個月：Feature 與 Sub-feature。 */
+/** Feature 與 Sub-feature，三個時段寫法相同。 */
 function FeatureList({ epic }: { epic: Epic }): ReactElement {
   return (
     <ul className="list-none">
-      {epic.features?.map((f) => (
+      {epic.features.map((f) => (
         <li key={f.label} className="list-none pt-1.5">
           <span className="block rounded bg-slate-50 px-2 py-1 text-xs">{f.label}</span>
           {f.subs && (
@@ -43,16 +42,6 @@ function FeatureList({ epic }: { epic: Epic }): ReactElement {
         </li>
       ))}
     </ul>
-  );
-}
-
-/** 接下來兩個月與之後：只到 Epic，展開看一句話；接下來兩個月再附規格範圍。 */
-function EpicSummary({ epic, withScope }: { epic: Epic; withScope: boolean }): ReactElement {
-  return (
-    <div className="space-y-1 pt-1.5 text-xs leading-relaxed">
-      <p>{epic.oneLiner}</p>
-      {withScope && <p className="text-slate-500">{epic.scope}</p>}
-    </div>
   );
 }
 
@@ -125,7 +114,7 @@ export default function RoadmapGoalHierarchy(): ReactElement {
                                 transition={t}
                                 className="ml-3 overflow-hidden border-l border-indigo-200 pl-3"
                               >
-                                {h.id === "month" ? <FeatureList epic={e} /> : <EpicSummary epic={e} withScope={h.id === "quarter"} />}
+                                <FeatureList epic={e} />
                               </motion.div>
                             )}
                           </AnimatePresence>
@@ -142,7 +131,7 @@ export default function RoadmapGoalHierarchy(): ReactElement {
       <p aria-live="polite" className="text-xs text-slate-500">
         {focus
           ? `已亮起服務「${goalShort(focus)}」的 Epic；再點一次取消。`
-          : "點 Goal 亮起服務同一個目標的 Epic；點 Epic 展開：下個月看 Feature，之後兩段只看一句話。"}
+          : "點 Goal 亮起服務同一個目標的 Epic；點 Epic 展開或收合它的 Feature 與 Sub-feature。"}
       </p>
     </div>
   );
