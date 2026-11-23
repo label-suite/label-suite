@@ -6,11 +6,12 @@ import { MousePointerClick, RotateCcw } from "lucide-react";
  * spec-writing 模組 Logic Flow 骨架（參考實作）。寫法見 .claude/skills/spec-writing/templates/module-index.mdx 的「## Logic Flow」一節。
  *
  * 使用方式：整份複製到 .notecraft/components/spec-<模組編號>-<模組>-logic-flow.tsx，
- * 【骨架】一字不改：色票、型別、樣式、圖形、主元件；
- * 【節點與連線】整段換成這個模組的資料（NOTE、SECTIONS），default export 改名。
+ * 【骨架】一字不改：色票、型別、節點輔助、樣式、圖形、主元件；
+ * 【節點與連線】整段換成這個模組的資料（MODULE_LABEL、NOTE、SECTIONS），default export 改名。
  * 節點編號、分段與出處都要和該模組 index.mdx 的文字版逐項一致；文字版沒有的連線不畫，缺口只以灰色註記標示。
  *
  * 【節點與連線】目前填的是模組 01 帳號的 Logic Flow，當作範例（文字版見 docs/specs/01-account/index.mdx §Logic Flow）：
+ * - MODULE_LABEL：這個模組在無障礙敘述（aria-label）裡顯示的名稱，讓螢幕閱讀器分得出是哪個模組的圖
  * - NOTE：每個節點編號對應的出處說明，點選節點時顯示
  * - SECTIONS：每個分段（對應圖上一個 tab）的節點與連線；連線的 text 欄位是文字版的條目，含規格出處
  * 這份範例是 01 帳號當時的快照，不隨 docs/specs/01-account/index.mdx 更新；要看現行版本直接看
@@ -95,6 +96,10 @@ function n(id: string, kind: NodeKind, lines: string[], x: number, y: number, w:
 }
 
 /* ================================================================ 【節點與連線】依模組填寫（以下為模組 01 帳號範例） ================================================================ */
+
+/* ---------------------------------------------------------------- 模組名稱（顯示於 aria-label） */
+
+const MODULE_LABEL = "01 帳號";
 
 /* ---------------------------------------------------------------- 共用節點（同一個編號在不同分段重複出現） */
 
@@ -451,7 +456,7 @@ export default function SpecAccountLogicFlow(): ReactElement {
           <svg
             viewBox={`0 0 ${section.w} ${section.h}`}
             role="group"
-            aria-label={`Logic Flow：${section.label}；用 Tab 移到節點或連線，按 Enter 看出處`}
+            aria-label={`${MODULE_LABEL} Logic Flow：${section.label}；用 Tab 移到節點或連線，按 Enter 看出處`}
             style={{ display: "block", width: "100%", minWidth: Math.round(section.w * 0.78) }}
             onClick={() => setSel(null)}
           >
