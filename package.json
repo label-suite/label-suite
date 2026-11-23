@@ -20,6 +20,7 @@
     "@fission-ai/openspec": "1.14.1",
     "lint-staged": "17.6.1",
     "notecraftapp": "1.15.0",
-    "prettier": "3.10.1"
+    "prettier": "3.10.1",
+    "yaml": "2.9.1"
   }
 }
