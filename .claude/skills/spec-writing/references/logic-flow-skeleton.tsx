@@ -17,8 +17,9 @@ import { MousePointerClick, RotateCcw } from "lucide-react";
  * 這份範例是 01 帳號當時的快照，不隨 docs/specs/01-account/index.mdx 更新；要看現行版本直接看
  * .notecraft/components/spec-01-account-logic-flow.tsx。
  *
- * 注意：這份範例資料是 01 帳號的連線，而 01 帳號寫在「離開／進入／返回」三類判準定案之前，
- * 它畫了一些照現行判準不該畫的入向連線（例：X5 儀表板 → P6 個人設定，出處只有 07-01），
+ * 注意：這份範例資料是 01 帳號在「離開／進入／返回」三類判準定案之前的快照，
+ * 畫了一些照現行判準不該畫的入向連線（例：X5 儀表板 → P6 個人設定，出處只有 07-01）；
+ * 現行的 docs/specs/01-account/index.mdx §Logic Flow 已依三類判準改過，是有 E 的模組的參考（見範本的同一句）。
  * 另外 01 帳號是漏斗型，終點是「進入平台」，所以範例有 E 結束節點；02–06 是樞紐型，使用者在模組裡繞、
  * 沒有自然終點，不畫 E。要畫哪些連線一律照
  * .claude/skills/spec-writing/templates/module-index.mdx 的「## Logic Flow」註解裡那三類判準，
