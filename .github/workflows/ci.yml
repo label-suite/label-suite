@@ -683,3 +683,32 @@ jobs:
           name: coverage-baseline-suggested
           path: coverage-baseline-suggested.json
           if-no-files-found: ignore
+
+  # No needs and no if: it starts with the other jobs, so a broken script or a
+  # skipped CI check is reported even when a backend job fails (design D11).
+  scripts-tests:
+    name: scripts-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Script and workflow tests
+        run: |
+          node --test \
+            scripts/tests/check-coverage.test.mjs \
+            scripts/tests/check-junit-skips.test.mjs \
+            scripts/tests/ci-changed-paths.test.mjs \
+            scripts/tests/check.test.mjs \
+            scripts/tests/dev.test.mjs \
+            scripts/tests/ci-workflow.test.mjs

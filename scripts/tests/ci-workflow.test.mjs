@@ -4,7 +4,7 @@
 // which conditions they carry, and the order of their steps (design D14, D4 C1-C11).
 // Steps are found by the command they run, never by their display name, so renaming
 // a step does not break the test (design R10). Each task that adds a job adds its
-// assertions here; this file currently covers C1, C2, C3, C4, C5, C6, C7, C8, C10 and C11.
+// assertions here; this file currently covers C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 and C11.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { describe, test } from "node:test";
@@ -28,6 +28,7 @@ const ALWAYS_RUN_JOBS = [
   "dependency-audit",
   "e2e",
   "coverage",
+  "scripts-tests",
 ];
 
 function job(name) {
@@ -640,5 +641,31 @@ describe("C3: coverage", () => {
   test("the job asks for no permission beyond the workflow's contents: read", () => {
     assert.equal("permissions" in job("coverage"), false);
     assert.deepEqual(workflow.permissions, { contents: "read" });
+  });
+});
+
+describe("C9: scripts-tests", () => {
+  const SCRIPT_TESTS = [
+    "check-coverage",
+    "check-junit-skips",
+    "ci-changed-paths",
+    "check",
+    "dev",
+    "ci-workflow",
+  ];
+
+  test("has no needs, so it starts with the other jobs and a failed job cannot hide it", () => {
+    assert.equal("needs" in job("scripts-tests"), false);
+    assert.equal("if" in job("scripts-tests"), false);
+  });
+
+  test("installs dependencies, then runs every script test and the workflow test with node --test", () => {
+    const install = requireStep("scripts-tests", /\bpnpm install --frozen-lockfile\b/);
+    const run = requireStep("scripts-tests", /\bnode --test\b/);
+    assert.ok(install < run);
+    const text = job("scripts-tests").steps[run].run;
+    for (const name of SCRIPT_TESTS) {
+      assert.match(text, new RegExp(`scripts/tests/${name}\\.test\\.mjs`), `${name} is not run`);
+    }
   });
 });
