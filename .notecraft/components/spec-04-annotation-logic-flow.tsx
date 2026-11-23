@@ -3,19 +3,10 @@ import { motion, useReducedMotion } from "motion/react";
 import { MousePointerClick, RotateCcw } from "lucide-react";
 
 /**
- * spec-writing 模組 Logic Flow 骨架（參考實作）。寫法見 .claude/skills/spec-writing/templates/module-index.mdx 的「## Logic Flow」一節。
+ * 04 標記作業 Logic Flow：跨頁的操作邏輯流程（docs/specs/04-annotation/index.mdx §Logic Flow）。
  *
- * 使用方式：整份複製到 .notecraft/components/spec-<模組編號>-<模組>-logic-flow.tsx，
- * 【骨架】一字不改：色票、型別、節點輔助、樣式、圖形、主元件（只改函式名）；
- * 【節點與連線】整段換成這個模組的資料（MODULE_LABEL、NOTE、SECTIONS），default export 改名。
- * 節點編號、分段與出處都要和該模組 index.mdx 的文字版逐項一致；文字版沒有的連線不畫，缺口只以灰色註記標示。
- *
- * 【節點與連線】目前填的是模組 01 帳號的 Logic Flow，當作範例（文字版見 docs/specs/01-account/index.mdx §Logic Flow）：
- * - MODULE_LABEL：這個模組在無障礙敘述（aria-label）裡顯示的名稱，讓螢幕閱讀器分得出是哪個模組的圖
- * - NOTE：每個節點編號對應的出處說明，點選節點時顯示
- * - SECTIONS：每個分段（對應圖上一個 tab）的節點與連線；連線的 text 欄位是文字版的條目，含規格出處
- * 這份範例是 01 帳號當時的快照，不隨 docs/specs/01-account/index.mdx 更新；要看現行版本直接看
- * .notecraft/components/spec-01-account-logic-flow.tsx。
+ * 四種標準流程圖符號：起訖（圓角膠囊）、頁面（矩形）、判斷（菱形）、其他流程或外部系統（雙邊框矩形）。
+ * 節點編號、分段與出處都和 index.mdx 的文字版逐項一致；文字版沒有的連線不畫，缺口只以灰色註記標示。
  */
 
 /* ================================================================ 【骨架】不可修改 ================================================================ */
@@ -95,7 +86,7 @@ function n(id: string, kind: NodeKind, lines: string[], x: number, y: number, w:
   return { id, kind, lines, x, y, w, h, note: NOTE[id] ?? id };
 }
 
-/* ================================================================ 【節點與連線】依模組填寫（以下為模組 01 帳號範例） ================================================================ */
+/* ================================================================ 【節點與連線】依模組填寫 ================================================================ */
 
 /* ---------------------------------------------------------------- 模組名稱（顯示於 aria-label） */
 
