@@ -4,7 +4,7 @@
 // which conditions they carry, and the order of their steps (design D14, D4 C1-C11).
 // Steps are found by the command they run, never by their display name, so renaming
 // a step does not break the test (design R10). Each task that adds a job adds its
-// assertions here; this file currently covers C1, C4, C5, C8 and C10.
+// assertions here; this file currently covers C1, C4, C5, C6, C7, C8, C10 and C11.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { describe, test } from "node:test";
@@ -19,7 +19,15 @@ const workflow = parse(readFileSync(WORKFLOW_PATH, "utf8"));
 const EXISTING_JOBS = ["commit-messages", "docs-site", "format", "specs"];
 
 /** Jobs that every pull request must run (C1). Grows with each task that adds a job. */
-const ALWAYS_RUN_JOBS = ["backend-sqlite", "backend-postgres", "frontend", "e2e"];
+const ALWAYS_RUN_JOBS = [
+  "backend-sqlite",
+  "backend-postgres",
+  "frontend",
+  "api-contract",
+  "semgrep",
+  "dependency-audit",
+  "e2e",
+];
 
 function job(name) {
   const found = workflow.jobs?.[name];
@@ -274,6 +282,214 @@ describe("C8: e2e", () => {
       assert.equal("if" in step, false, JSON.stringify(step));
       assert.equal("continue-on-error" in step, false, JSON.stringify(step));
     }
+  });
+});
+
+describe("C6: api-contract", () => {
+  const exportCmd = /\buv run python -m app\.scripts\.export_openapi\b/;
+  const generateCmd = /\bpnpm --filter frontend api:generate\b/;
+  const checkOpenapi = /git (?:diff|status)[^\n]*backend\/openapi\.json/;
+  const checkGenerated = /git (?:diff|status)[^\n]*frontend\/src\/api\/generated/;
+
+  test("runs export, compares openapi.json, regenerates, then compares the generated client", () => {
+    const order = [
+      requireStep("api-contract", /\buv sync --locked\b/),
+      requireStep("api-contract", exportCmd),
+      requireStep("api-contract", checkOpenapi),
+      requireStep("api-contract", generateCmd),
+      requireStep("api-contract", checkGenerated),
+    ];
+    assert.deepEqual(
+      order,
+      [...order].sort((a, b) => a - b),
+    );
+    assert.equal(new Set(order).size, order.length, "each command is its own step");
+    const install = requireStep("api-contract", /\bpnpm install --frozen-lockfile\b/);
+    assert.ok(install < order[3], "dependencies are installed before the client is regenerated");
+  });
+
+  test("each comparison fails on a diff and on an untracked file, and lists the file names", () => {
+    for (const pattern of [checkOpenapi, checkGenerated]) {
+      const steps = job("api-contract").steps;
+      const run = steps[requireStep("api-contract", pattern)].run;
+      assert.match(run, /git diff --exit-code/);
+      assert.match(run, /git status --porcelain/);
+      assert.match(run, /--name-only|--porcelain/);
+      assert.match(run, /exit 1/);
+    }
+  });
+
+  test("the export step is not run from the repository root", () => {
+    const step = job("api-contract").steps[requireStep("api-contract", exportCmd)];
+    assert.ok(
+      /\bcd backend\b/.test(step.run) || step["working-directory"] === "backend",
+      "the export must run in backend/",
+    );
+  });
+});
+
+describe("C7: changes and compose", () => {
+  const COMPOSE_VERSION = /docker compose version/;
+  const LITE_CONFIG = /^docker compose config --quiet\s*$/m;
+  const PROD_CONFIG =
+    /POSTGRES_PASSWORD="?\$\{?[A-Z_]+\}?"? docker compose -f docker-compose\.prod\.yml config --quiet/;
+  const CORS_REJECTED = /if [^\n]*CORS_ALLOWED_ORIGINS= docker compose config --quiet/;
+  const PASSWORD_REJECTED =
+    /if [^\n]*POSTGRES_PASSWORD= docker compose -f docker-compose\.prod\.yml config --quiet/;
+  const STATIC = /config --format json/;
+  const LITE_UP = /^docker compose up --build --wait --wait-timeout 300\s*$/m;
+  const PROD_UP =
+    /POSTGRES_PASSWORD="?\$\{?[A-Z_]+\}?"? docker compose -f docker-compose\.prod\.yml up --build --wait --wait-timeout 300/;
+  const HEALTH = /localhost:8080\/api\/v1\/health/;
+  const LITE_DOWN = /^docker compose down -v\s*$/m;
+  const PROD_DOWN = /docker compose -f docker-compose\.prod\.yml down -v/;
+
+  const stepsOf = () => job("compose").steps;
+  const indexes = (pattern) =>
+    stepsOf().flatMap((step, i) =>
+      typeof step.run === "string" && pattern.test(step.run) ? [i] : [],
+    );
+
+  test("changes checks out the full history and calls ci-changed-paths.mjs, exposing compose", () => {
+    const steps = job("changes").steps;
+    const checkout = steps.find((s) => s.uses?.startsWith("actions/checkout@"));
+    assert.equal(checkout.with["fetch-depth"], 0);
+    const run = steps[requireStep("changes", /node scripts\/ci-changed-paths\.mjs\b/)].run;
+    assert.match(run, /--base\b/);
+    assert.match(run, /--head\b/);
+    assert.match(String(job("changes").outputs?.compose ?? ""), /steps\.[\w-]+\.outputs\.compose/);
+    assert.equal("if" in job("changes"), false);
+    assert.equal("needs" in job("changes"), false);
+  });
+
+  test("compose needs changes, reads its output, and has a 20 minute timeout", () => {
+    const found = job("compose");
+    const needs = [].concat(found.needs ?? []);
+    assert.ok(needs.includes("changes"));
+    assert.match(String(found.if), /needs\.changes\.outputs\.compose/);
+    assert.equal(found["timeout-minutes"], 20);
+    assert.equal("continue-on-error" in found, false);
+  });
+
+  test("the version check is the first run step and compares against 2.20.0", () => {
+    const first = stepsOf().findIndex((step) => typeof step.run === "string");
+    assert.equal(first, requireStep("compose", COMPOSE_VERSION));
+    const run = stepsOf()[first].run;
+    assert.match(run, /2\.20\.0/);
+    assert.match(run, /exit 1/);
+  });
+
+  test("steps run in order: config checks, rejections, static assertions, Lite, then production", () => {
+    const at = (pattern) => {
+      const found = indexes(pattern);
+      assert.ok(found.length > 0, `compose has no step running ${pattern}`);
+      return found[0];
+    };
+    const order = [
+      at(COMPOSE_VERSION),
+      at(/\bcp \.env\.example \.env\b/),
+      at(LITE_CONFIG),
+      at(PROD_CONFIG),
+      at(CORS_REJECTED),
+      at(PASSWORD_REJECTED),
+      at(STATIC),
+      at(LITE_UP),
+      at(HEALTH),
+      at(LITE_DOWN),
+      at(PROD_UP),
+      at(PROD_DOWN),
+    ];
+    assert.deepEqual(
+      order,
+      [...order].sort((a, b) => a - b),
+      "compose steps are out of order",
+    );
+    // Each health check sits between its own up and down; two of them in all.
+    const health = indexes(HEALTH);
+    assert.equal(health.length, 2, "one health check per tier");
+    assert.ok(at(LITE_UP) < health[0] && health[0] < at(LITE_DOWN));
+    assert.ok(at(PROD_UP) < health[1] && health[1] < at(PROD_DOWN));
+  });
+
+  test("both rejection checks require a non-zero exit and name the variable in the output", () => {
+    const run = (pattern) => stepsOf()[indexes(pattern)[0]].run;
+    assert.match(run(CORS_REJECTED), /grep -q "?CORS_ALLOWED_ORIGINS/);
+    assert.match(run(PASSWORD_REJECTED), /grep -q "?POSTGRES_PASSWORD/);
+  });
+
+  test("the production tier reads its password from a value generated inside the job", () => {
+    const steps = stepsOf();
+    const generate = steps.findIndex((s) => /openssl rand/.test(s.run ?? ""));
+    assert.notEqual(generate, -1, "compose has no step generating a password");
+    const run = steps[generate].run;
+    assert.ok(run.indexOf("::add-mask::") !== -1, "the value is masked");
+    assert.ok(run.indexOf("::add-mask::") < run.indexOf("GITHUB_ENV"), "mask before export");
+    assert.ok(generate < indexes(PROD_CONFIG)[0], "generated before it is first used");
+    for (const pattern of [PROD_CONFIG, PROD_UP]) {
+      assert.doesNotMatch(
+        steps[indexes(pattern)[0]].run,
+        /POSTGRES_PASSWORD="?[A-Za-z0-9]{6,}"? /,
+        "no literal password",
+      );
+    }
+    assert.doesNotMatch(JSON.stringify(job("compose")), /secrets\./);
+  });
+
+  test("the static assertions read both files and check ports, depends_on and the health check", () => {
+    const run = stepsOf()[indexes(STATIC)[0]].run;
+    assert.match(run, /docker compose config --format json/);
+    assert.match(
+      run,
+      /POSTGRES_PASSWORD="?\$\{?[A-Z_]+\}?"? docker compose -f docker-compose\.prod\.yml config --format json/,
+    );
+    assert.match(run, /\bports\b/);
+    assert.match(run, /service_healthy/);
+    assert.match(run, /interval/);
+    assert.match(run, /\/api\/v1\/health/);
+    assert.match(run, /redis\|worker/);
+  });
+
+  test("every up waits with a timeout, and nothing in compose is allowed to fail silently", () => {
+    for (const pattern of [LITE_UP, PROD_UP]) assert.equal(indexes(pattern).length, 1);
+    for (const step of stepsOf()) {
+      assert.equal("continue-on-error" in step, false, JSON.stringify(step));
+    }
+  });
+});
+
+describe("C11: semgrep", () => {
+  const image = () => job("semgrep").container?.image ?? job("semgrep").container;
+
+  test("uses the official image at a pinned tag, not latest", () => {
+    assert.match(String(image()), /^semgrep\/semgrep:\d+\.\d+\.\d+$/);
+  });
+
+  test("runs the rule tests before the scan, and the scan uses the single rule file", () => {
+    const test = requireStep("semgrep", /^semgrep --test \.semgrep\/\s*$/m);
+    const scan = requireStep("semgrep", /semgrep scan --error\b/);
+    assert.ok(test < scan);
+    const run = job("semgrep").steps[scan].run;
+    assert.match(run, /--config \.semgrep\/label-suite\.yml\b/);
+    assert.doesNotMatch(run, /--config \.semgrep\/(\s|$)/);
+    assert.match(run, /backend\/ frontend\/ e2e\//);
+  });
+});
+
+describe("dependency-audit", () => {
+  test("runs pip-audit without --fail-on and pnpm audit for production dependencies at high", () => {
+    const steps = job("dependency-audit").steps;
+    const pip = steps[requireStep("dependency-audit", /\buv run pip-audit\b/)].run;
+    assert.doesNotMatch(pip, /--fail-on/);
+    const pnpm = steps[requireStep("dependency-audit", /\bpnpm audit\b/)].run;
+    assert.match(pnpm, /--prod\b/);
+    assert.match(pnpm, /--audit-level high\b/);
+  });
+
+  test("installs the backend environment before auditing it", () => {
+    assert.ok(
+      requireStep("dependency-audit", /\buv sync --locked\b/) <
+        requireStep("dependency-audit", /\buv run pip-audit\b/),
+    );
   });
 });
 

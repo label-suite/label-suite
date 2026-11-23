@@ -340,3 +340,250 @@ jobs:
           name: playwright-report
           path: e2e/playwright-report
           if-no-files-found: error
+
+  # Catches an API change that was not exported, and an exported change that was
+  # not regenerated into the frontend client (or a hand-edited generated file).
+  # Nothing is started: the export needs no environment variable and no database.
+  # `git diff` catches a changed file and `git status --porcelain` catches a new
+  # untracked one; each failure lists the file names. The fix is `pnpm run
+  # api:sync` locally, then commit.
+  api-contract:
+    name: api-contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install the backend dependencies
+        run: cd backend && uv sync --locked
+
+      - name: Export the OpenAPI document
+        run: cd backend && uv run python -m app.scripts.export_openapi
+
+      - name: Check backend/openapi.json is up to date
+        run: |
+          drift=0
+          git diff --exit-code --name-only -- backend/openapi.json || drift=1
+          untracked=$(git status --porcelain -- backend/openapi.json)
+          if [ -n "$untracked" ]; then
+            echo "$untracked"
+            drift=1
+          fi
+          if [ "$drift" -ne 0 ]; then
+            echo "::error::backend/openapi.json is out of date; run 'pnpm run api:sync' and commit the result"
+            exit 1
+          fi
+
+      - name: Regenerate the frontend API client
+        run: pnpm --filter frontend api:generate
+
+      - name: Check frontend/src/api/generated is up to date
+        run: |
+          drift=0
+          git diff --exit-code --name-only -- frontend/src/api/generated || drift=1
+          untracked=$(git status --porcelain -- frontend/src/api/generated)
+          if [ -n "$untracked" ]; then
+            echo "$untracked"
+            drift=1
+          fi
+          if [ "$drift" -ne 0 ]; then
+            echo "::error::frontend/src/api/generated is out of date; run 'pnpm run api:sync' and commit the result"
+            exit 1
+          fi
+
+  # The official image at a pinned version, so a new Semgrep release cannot
+  # change what a pull request is judged by. The scan names the one rule file:
+  # .semgrep/tests/label-suite.yml is a symlink that `semgrep --test` needs, and
+  # `--config .semgrep/` would load every rule twice.
+  semgrep:
+    name: semgrep
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep:1.186.0
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Test the rules against their samples
+        run: semgrep --test .semgrep/
+
+      - name: Scan for the project rules
+        run: semgrep scan --error --config .semgrep/label-suite.yml backend/ frontend/ e2e/
+
+  # pip-audit 2.10.1 has no severity flag, so any known vulnerability in the
+  # backend environment fails the job. pnpm audit fails on high or above in the
+  # production dependencies only.
+  dependency-audit:
+    name: dependency-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Install the backend dependencies
+        run: cd backend && uv sync --locked
+
+      - name: Audit the backend dependencies
+        run: cd backend && uv run pip-audit
+
+      - name: Audit the frontend production dependencies
+        run: pnpm audit --prod --audit-level high
+
+  # Decides whether the compose job has to run. It needs the full history for
+  # the merge base; a base it cannot diff answers "run compose" rather than
+  # failing (scripts/ci-changed-paths.mjs).
+  changes:
+    name: changes
+    runs-on: ubuntu-latest
+    outputs:
+      compose: ${{ steps.paths.outputs.compose }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - name: Decide whether compose runs
+        id: paths
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: node scripts/ci-changed-paths.mjs --base "$BASE" --head "$HEAD"
+
+  # Builds and starts both tiers for real. Only pull requests that touch the
+  # orchestration, an image or the code it runs get here (see `changes`), so it
+  # is not a required check. The production password is generated inside the job
+  # and masked: the example file leaves it empty on purpose, and `${VAR:?}` rejects
+  # an empty value as well as an unset one.
+  compose:
+    name: compose
+    needs: changes
+    if: needs.changes.outputs.compose == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      # `up --wait` with a one-off migrate service needs Compose v2.20.0 or newer
+      # (older versions count the exited migrate container as a failure).
+      - name: Check the Compose version
+        run: |
+          docker compose version
+          version=$(docker compose version --short)
+          version=${version#v}
+          minimum=2.20.0
+          lowest=$(printf '%s\n%s\n' "$version" "$minimum" | sort -V | head -n 1)
+          if [ "$lowest" != "$minimum" ]; then
+            echo "::error::Docker Compose $version is older than the required $minimum"
+            exit 1
+          fi
+
+      - name: Copy the example environment file
+        run: cp .env.example .env
+
+      - name: Generate a one-off database password
+        run: |
+          password=$(openssl rand -hex 16)
+          echo "::add-mask::$password"
+          echo "GENERATED_POSTGRES_PASSWORD=$password" >> "$GITHUB_ENV"
+
+      - name: Resolve the Lite tier
+        run: docker compose config --quiet
+
+      - name: Resolve the production tier
+        run: POSTGRES_PASSWORD="$GENERATED_POSTGRES_PASSWORD" docker compose -f docker-compose.prod.yml config --quiet
+
+      # Shell variables beat .env, and an empty one trips `${VAR:?}`. If either
+      # command succeeds, a required setting is no longer required.
+      - name: Check that a missing allowed origin is rejected
+        run: |
+          if out=$(CORS_ALLOWED_ORIGINS= docker compose config --quiet 2>&1); then
+            echo "::error::an empty CORS_ALLOWED_ORIGINS was accepted"
+            exit 1
+          fi
+          echo "$out"
+          grep -q CORS_ALLOWED_ORIGINS <<< "$out" || {
+            echo "::error::the rejection did not name CORS_ALLOWED_ORIGINS"
+            exit 1
+          }
+
+      - name: Check that a missing database password is rejected
+        run: |
+          if out=$(POSTGRES_PASSWORD= docker compose -f docker-compose.prod.yml config --quiet 2>&1); then
+            echo "::error::an empty POSTGRES_PASSWORD was accepted"
+            exit 1
+          fi
+          echo "$out"
+          grep -q POSTGRES_PASSWORD <<< "$out" || {
+            echo "::error::the rejection did not name POSTGRES_PASSWORD"
+            exit 1
+          }
+
+      # Reads the resolved configuration; nothing is started. In both tiers only
+      # the frontend publishes a port and no Redis or worker service exists, the
+      # frontend waits for a healthy backend, and the backend health check polls
+      # /api/v1/health every 30 seconds.
+      - name: Assert the structure of both orchestration files
+        run: |
+          docker compose config --format json > "$RUNNER_TEMP/lite.json"
+          POSTGRES_PASSWORD="$GENERATED_POSTGRES_PASSWORD" docker compose -f docker-compose.prod.yml config --format json > "$RUNNER_TEMP/prod.json"
+          for file in lite prod; do
+            echo "checking the $file tier"
+            jq -e '[.services | to_entries[] | select((.value.ports // []) | length > 0) | .key] == ["frontend"]' "$RUNNER_TEMP/$file.json" > /dev/null || { echo "::error::$file: only frontend may publish ports"; exit 1; }
+            jq -e '[.services | keys[] | select(test("redis|worker"))] | length == 0' "$RUNNER_TEMP/$file.json" > /dev/null || { echo "::error::$file: no redis or worker service is expected"; exit 1; }
+            jq -e '.services.frontend.depends_on.backend.condition == "service_healthy"' "$RUNNER_TEMP/$file.json" > /dev/null || { echo "::error::$file: frontend must wait for a healthy backend"; exit 1; }
+            jq -e '.services.backend.healthcheck.interval == "30s" and (.services.backend.healthcheck.test | join(" ") | contains("/api/v1/health"))' "$RUNNER_TEMP/$file.json" > /dev/null || { echo "::error::$file: backend health check must poll /api/v1/health every 30s"; exit 1; }
+          done
+
+      - name: Start the Lite tier
+        run: docker compose up --build --wait --wait-timeout 300
+
+      # The backend publishes no port, so this request also proves the reverse proxy.
+      - name: Check the Lite health through nginx
+        run: |
+          body=$(curl -fsS http://localhost:8080/api/v1/health)
+          echo "$body"
+          jq -e '.data.status == "ok" and .data.database == "ok"' <<< "$body"
+
+      - name: Stop the Lite tier
+        run: docker compose down -v
+
+      - name: Start the production tier
+        run: POSTGRES_PASSWORD="$GENERATED_POSTGRES_PASSWORD" docker compose -f docker-compose.prod.yml up --build --wait --wait-timeout 300
+
+      - name: Check the production health through nginx
+        run: |
+          body=$(curl -fsS http://localhost:8080/api/v1/health)
+          echo "$body"
+          jq -e '.data.status == "ok" and .data.database == "ok"' <<< "$body"
+
+      - name: Stop the production tier
+        run: POSTGRES_PASSWORD="$GENERATED_POSTGRES_PASSWORD" docker compose -f docker-compose.prod.yml down -v
+
+      - name: Show the container logs
+        if: failure()
+        run: |
+          docker compose logs --no-color || true
+          POSTGRES_PASSWORD="$GENERATED_POSTGRES_PASSWORD" docker compose -f docker-compose.prod.yml logs --no-color || true
