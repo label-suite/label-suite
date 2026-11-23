@@ -9,7 +9,7 @@ model: opus
 
 ## 先看清楚這一份的狀態
 
-**`frontend/` 目前還不存在**，但版本、目錄分層、元件庫與 client 生成工具**都已經由維護者 2026-11-10 裁定**（見 `docs/development/architecture.mdx` §前端，裁定見 §決策紀錄）。所以照下面寫，不要再把它們當待決：
+版本、目錄分層、元件庫與 client 生成工具**都已經由維護者 2026-11-10 裁定**（見 `docs/development/architecture.mdx` §前端，裁定見 §決策紀錄）。所以照下面寫，不要再把它們當待決：
 
 - 框架與版本已定：**React 19** 加 Vite 加 TypeScript strict，路由 React Router v6，伺服器狀態 TanStack Query（ADR-004 的 React 18 記為被覆寫）
 - **元件庫已定：shadcn/ui**，元件以原始碼形式放進 `components/ui/`（覆寫 ADR-016 的 `shared/ui/`）。需要的元件照 `ui-design.md` 的語意描述加入。**不用 Storybook**，改用元件展示頁：一頁只在開發時開的頁面，列出 `components/ui/` 與標記 widget 的各個 variant，並配一支完整性測試

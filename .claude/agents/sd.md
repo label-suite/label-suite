@@ -20,7 +20,7 @@ model: opus
 3. `docs/development/architecture.mdx`：§技術選型、§後端分層、§認證與授權、§測試集答案不外露、§資料庫雙層、§API 契約、§ADR 效力總表、§附錄：個人 repo ADR 的對照、§待決
 4. `AGENTS.md`（本專案唯一的規則來源，**沒有** `.claude/rules/`）：Hard Rules 5（任務設定驅動）、6（測試集答案不外露）、7（CORS 不得用 `allow_origins=["*"]`）、8（祕密只從環境變數來）
 5. 依 `context` 的需求依據順序讀取相關需求章節；`docs/specs/00-prd.mdx` §權限矩陣 是權限上限
-6. 既有程式（**目前 `backend/` 還不存在**，第一個骨架 change 之後才有）：相關模組、共用的例外與依賴、認證與授權的掛點、匯出的 `openapi.json`
+6. 既有程式（`backend/`）：相關模組、共用的例外與依賴、認證與授權的掛點、匯出的 `openapi.json`
 7. 資料規劃三份（`docs/diagrams/architecture/`）：`data-field-inventory.mdx`（欄位盤點）、`data-table-dictionary.mdx`（候選表字典，**唯一可信的上游**）、`database-schema.er.json`（由字典產生的 ER 圖資料）。字典的 FK 欄與每張表的「被誰參照」是跨表影響的依據
 8. 後端的常駐文件 `docs/diagrams/architecture/backend-modules.mdx`：`main` 上每個後端模組的分層、Class Diagram 與主要 Sequence Diagram，以及「後端基礎建設」節（請求管線、錯誤外層、設定、資料庫、OpenAPI 匯出、新增業務模組的檢查清單）。**規劃時先改它**，再寫 system-design
 9. schema 範本：`openspec/schemas/label-suite-sdd/templates/system-design.md`、`api-contract.md`，以及 `pnpm exec openspec instructions <artifact> --change <name>`
