@@ -4,7 +4,7 @@
 // which conditions they carry, and the order of their steps (design D14, D4 C1-C11).
 // Steps are found by the command they run, never by their display name, so renaming
 // a step does not break the test (design R10). Each task that adds a job adds its
-// assertions here; this file currently covers C1, C4 and C10 for the two backend jobs.
+// assertions here; this file currently covers C1, C4, C5, C8 and C10.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { describe, test } from "node:test";
@@ -19,7 +19,7 @@ const workflow = parse(readFileSync(WORKFLOW_PATH, "utf8"));
 const EXISTING_JOBS = ["commit-messages", "docs-site", "format", "specs"];
 
 /** Jobs that every pull request must run (C1). Grows with each task that adds a job. */
-const ALWAYS_RUN_JOBS = ["backend-sqlite", "backend-postgres"];
+const ALWAYS_RUN_JOBS = ["backend-sqlite", "backend-postgres", "frontend", "e2e"];
 
 function job(name) {
   const found = workflow.jobs?.[name];
@@ -178,6 +178,102 @@ describe("C4: the two backend jobs do not collide", () => {
       uploadSteps("backend-sqlite")[0].with.name,
       uploadSteps("backend-postgres")[0].with.name,
     );
+  });
+});
+
+describe("C5: frontend", () => {
+  const stepsOf = () => job("frontend").steps;
+
+  test("sets a job timeout", () => {
+    assert.equal(typeof job("frontend")["timeout-minutes"], "number");
+  });
+
+  test("checks run in the order install, lint, typecheck, test:coverage, build", () => {
+    const order = [
+      requireStep("frontend", /\bpnpm install --frozen-lockfile\b/),
+      requireStep("frontend", /\bfrontend lint\b/),
+      requireStep("frontend", /\bfrontend typecheck\b/),
+      requireStep("frontend", /\bfrontend test:coverage\b/),
+      requireStep("frontend", /\bfrontend build\b/),
+    ];
+    assert.deepEqual(
+      order,
+      [...order].sort((a, b) => a - b),
+    );
+    assert.equal(new Set(order).size, order.length, "each command is its own step");
+  });
+
+  test("lint is the first check step, so nothing runs before it but setup", () => {
+    const lint = requireStep("frontend", /\bfrontend lint\b/);
+    const install = requireStep("frontend", /\bpnpm install --frozen-lockfile\b/);
+    const earlierRuns = stepsOf()
+      .slice(0, lint)
+      .map((step, index) => ({ step, index }))
+      .filter(({ step }) => typeof step.run === "string" && step.run !== undefined);
+    assert.deepEqual(
+      earlierRuns.map(({ index }) => index),
+      [install],
+    );
+  });
+
+  test("no step runs always() or is allowed to fail, and checkout is clean", () => {
+    for (const step of stepsOf()) {
+      assert.equal("continue-on-error" in step, false, JSON.stringify(step));
+      assert.doesNotMatch(String(step.if ?? ""), /always\(\)/, JSON.stringify(step));
+      if (typeof step.uses === "string" && step.uses.startsWith("actions/checkout@")) {
+        assert.notEqual(step.with?.clean, false);
+      }
+    }
+  });
+
+  test("the coverage summary upload fails when the file is missing", () => {
+    const uploads = uploadSteps("frontend");
+    assert.equal(uploads.length, 1);
+    assert.match(uploads[0].with.path, /coverage-summary\.json$/);
+    assert.equal(uploads[0].with["if-no-files-found"], "error");
+    const build = requireStep("frontend", /\bfrontend build\b/);
+    assert.ok(stepsOf().indexOf(uploads[0]) > build, "upload comes after build");
+  });
+});
+
+describe("C8: e2e", () => {
+  test("runs test:static before the Playwright run", () => {
+    const order = [
+      requireStep("e2e", /\bpnpm install --frozen-lockfile\b/),
+      requireStep("e2e", /\buv sync --locked\b/),
+      requireStep("e2e", /\be2e test:static\b/),
+      requireStep("e2e", /\bplaywright install --with-deps chromium\b/),
+      requireStep("e2e", /\bpnpm --filter e2e test\s*$/m),
+    ];
+    assert.deepEqual(
+      order,
+      [...order].sort((a, b) => a - b),
+    );
+    assert.equal(new Set(order).size, order.length, "each command is its own step");
+  });
+
+  test("installs the backend from the backend directory", () => {
+    const step = job("e2e").steps[requireStep("e2e", /\buv sync --locked\b/)];
+    assert.ok(
+      /\bcd backend\b/.test(step.run) || step["working-directory"] === "backend",
+      "uv sync --locked must run in backend/",
+    );
+  });
+
+  test("the report upload runs only on failure and fails when the report is missing", () => {
+    const uploads = uploadSteps("e2e");
+    assert.equal(uploads.length, 1);
+    assert.equal(uploads[0].if, "failure()");
+    assert.match(uploads[0].with.path, /e2e\/playwright-report/);
+    assert.equal(uploads[0].with["if-no-files-found"], "error");
+  });
+
+  test("no other step is conditional or allowed to fail", () => {
+    for (const step of job("e2e").steps) {
+      if (step.uses?.startsWith("actions/upload-artifact@")) continue;
+      assert.equal("if" in step, false, JSON.stringify(step));
+      assert.equal("continue-on-error" in step, false, JSON.stringify(step));
+    }
   });
 });
 

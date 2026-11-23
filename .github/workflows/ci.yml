@@ -258,3 +258,85 @@ jobs:
           path: backend/.coverage.postgres
           include-hidden-files: true
           if-no-files-found: error
+
+  # Checks run in the same order as the local `check` command, and lint comes
+  # first so a layering violation or a warning fails the job before the slower
+  # steps. Every step stops the job on failure; none runs under always().
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm --filter frontend lint
+
+      - name: Check types
+        run: pnpm --filter frontend typecheck
+
+      - name: Test with coverage
+        run: pnpm --filter frontend test:coverage
+
+      - name: Build
+        run: pnpm --filter frontend build
+
+      # json-summary is the input of the coverage job (a later task).
+      - name: Upload the coverage summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-frontend
+          path: frontend/coverage/coverage-summary.json
+          if-no-files-found: error
+
+  # Runs on every pull request against the development servers and a SQLite
+  # file; CI=true (set by Actions) makes Playwright start fresh servers and
+  # retry once. The report is uploaded only when a journey fails.
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install the backend dependencies
+        run: cd backend && uv sync --locked
+
+      - name: Check the static e2e constraints
+        run: pnpm --filter e2e test:static
+
+      - name: Install Chromium
+        run: pnpm --filter e2e exec playwright install --with-deps chromium
+
+      - name: Run the e2e journeys
+        run: pnpm --filter e2e test
+
+      - name: Upload the Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/playwright-report
+          if-no-files-found: error
