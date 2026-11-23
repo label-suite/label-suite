@@ -48,23 +48,23 @@ import RoadmapEpicList from '@notes/components/roadmap-epic-list'
 
 ## 三層目標階層
 
-每個 Epic 都掛在一個主要目標底下；越近的時段拆得越細，之後的時段只剩目標。
+每個 Epic 都掛在一個主要目標底下；越近的時段拆得越細：下個月展開到 Feature，後兩段展開只看一句話。
 
 {/* @ai-visualize
 id: roadmap-goal-hierarchy
 type: diagram
 prompt: |
   核心洞察：越近拆得越細。下個月拆到 Feature 與 Sub-feature，接下來兩個月只到 Epic，之後只到 Goal。
-  互動：點 Goal 亮起三欄裡服務同一個目標的 Epic（其餘壓暗）；點下個月的 Epic 收合或展開它的 Feature。
+  互動：點 Goal 亮起三欄裡服務同一個目標的 Epic（其餘壓暗）；三欄的 Epic 都是同一種卡片、都能展開，展開的內容依時段變粗：下個月看 Feature 與 Sub-feature（預設展開），接下來兩個月看一句話與規格範圍，之後只看一句話（後兩欄預設收合）。
   圖形：三欄（下個月、接下來兩個月、之後），每欄依主要目標分組，Goal → Epic → Feature → Sub-feature 以縮排與左邊線表示層級。
   資料：讀 roadmap-data.ts 的 GOALS、HORIZONS、EPICS（含 features）。
-caption: 點 Goal 看哪些 Epic 服務它；點下個月的 Epic 收合 Feature
+caption: 點 Goal 看哪些 Epic 服務它；點 Epic 展開，越遠的時段展開得越少
 status: generated
 */}
 
 import RoadmapGoalHierarchy from '@notes/components/roadmap-goal-hierarchy'
 
-<GeneratedFrame id="roadmap-goal-hierarchy" type="diagram" prompt={"核心洞察：越近拆得越細。下個月拆到 Feature 與 Sub-feature，接下來兩個月只到 Epic，之後只到 Goal。\n互動：點 Goal 亮起三欄裡服務同一個目標的 Epic（其餘壓暗）；點下個月的 Epic 收合或展開它的 Feature。\n圖形：三欄（下個月、接下來兩個月、之後），每欄依主要目標分組，Goal → Epic → Feature → Sub-feature 以縮排與左邊線表示層級。\n資料：讀 roadmap-data.ts 的 GOALS、HORIZONS、EPICS（含 features）。\n"} caption="點 Goal 看哪些 Epic 服務它；點下個月的 Epic 收合 Feature">
+<GeneratedFrame id="roadmap-goal-hierarchy" type="diagram" prompt={"核心洞察：越近拆得越細。下個月拆到 Feature 與 Sub-feature，接下來兩個月只到 Epic，之後只到 Goal。\n互動：點 Goal 亮起三欄裡服務同一個目標的 Epic（其餘壓暗）；三欄的 Epic 都是同一種卡片、都能展開，展開的內容依時段變粗：下個月看 Feature 與 Sub-feature（預設展開），接下來兩個月看一句話與規格範圍，之後只看一句話（後兩欄預設收合）。\n圖形：三欄（下個月、接下來兩個月、之後），每欄依主要目標分組，Goal → Epic → Feature → Sub-feature 以縮排與左邊線表示層級。\n資料：讀 roadmap-data.ts 的 GOALS、HORIZONS、EPICS（含 features）。\n"} caption="點 Goal 看哪些 Epic 服務它；點 Epic 展開，越遠的時段展開得越少">
   <RoadmapGoalHierarchy client:visible />
 </GeneratedFrame>
 
