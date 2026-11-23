@@ -9,7 +9,7 @@ model: opus
 
 ## 先看清楚這一份的狀態
 
-**`frontend/` 目前還不存在**，但版本、目錄分層、元件庫與 client 生成工具**都已經由維護者 2026-11-10 裁定**（見 `docs/development/architecture.mdx` §前端，裁定見 §決策紀錄）。所以照下面寫，不要再把它們當待決：
+版本、目錄分層、元件庫與 client 生成工具**都已經由維護者 2026-11-10 裁定**（見 `docs/development/architecture.mdx` §前端，裁定見 §決策紀錄）。所以照下面寫，不要再把它們當待決：
 
 - 框架與版本已定：**React 19** 加 Vite 加 TypeScript strict，路由 React Router v6，伺服器狀態 TanStack Query（ADR-004 的 React 18 記為被覆寫）
 - **元件庫已定：shadcn/ui**，元件以原始碼形式放進 `components/ui/`（覆寫 ADR-016 的 `shared/ui/`）。需要的元件照 `ui-design.md` 的語意描述加入。**不用 Storybook**，改用元件展示頁：一頁只在開發時開的頁面，列出 `components/ui/` 與標記 widget 的各個 variant，並配一支完整性測試
@@ -28,7 +28,8 @@ model: opus
 6. `design/prototype/pages/` 的對應畫面與 `design/prototype/assets/tokens.css`、`label-suite-design` skill——**版面與文案以 prototype 為準，token 以那兩個為唯一來源**
 7. 所屬模組 `index.mdx` 的 §Logic Flow——這個頁面在模組裡怎麼被進入、完成後或離開時去哪一頁；路由的進入方式、離開與返回以這裡的節點與連線為準，不要自己發明導覽邏輯。與該頁規格不一致時以規格為準，並停下回報；尚未有這一節時，依該頁規格的 §導向其他頁面，並在產出中記為待補
 8. 既有程式慣例：相鄰的頁面與功能模組
-9. 領域規範：`docs/development/rules/frontend-agent-rules.mdx` F1 分層與允許的 import、F2 型別安全、F3 Hooks 的呼叫順序、依賴與清理、F4 狀態的三個去處、F6 視覺基準與 design token 的映射、F8 四種畫面狀態與表單；`docs/development/rules/api-agent-rules.mdx` A6 單一 HTTP 邊界；`docs/development/rules/security-agent-rules.mdx` S2 token 不離開 cookie；CSRF 與 CORS 的統一位置、S5 答案隔離的覆蓋面（**覆蓋面明文包含瀏覽器 bundle 與 source map、公開 fixture 與 mock handler**）；`docs/development/rules/testing-agent-rules.mdx` T1 三層的範圍、位置、指令與生命週期、T8 E2E 的選擇器、設定與等待；跨領域的 `docs/development/rules/agent-rules.mdx`
+9. 前端的常駐文件 `docs/diagrams/architecture/frontend-routes.mdx`：現有的路由與頁面元件，以及「前端骨架」節（單一 HTTP 邊界、生成的 hooks 與 MSW mock、元件展示頁）
+10. 領域規範：`docs/development/rules/frontend-agent-rules.mdx` F1 分層與允許的 import、F2 型別安全、F3 Hooks 的呼叫順序、依賴與清理、F4 狀態的三個去處、F6 視覺基準與 design token 的映射、F8 四種畫面狀態與表單；`docs/development/rules/api-agent-rules.mdx` A6 單一 HTTP 邊界；`docs/development/rules/security-agent-rules.mdx` S2 token 不離開 cookie；CSRF 與 CORS 的統一位置、S5 答案隔離的覆蓋面（**覆蓋面明文包含瀏覽器 bundle 與 source map、公開 fixture 與 mock handler**）；`docs/development/rules/testing-agent-rules.mdx` T1 三層的範圍、位置、指令與生命週期、T8 E2E 的選擇器、設定與等待；跨領域的 `docs/development/rules/agent-rules.mdx`
 
 ## API 使用
 
@@ -79,6 +80,10 @@ model: opus
 - **全端 E2E（Playwright，根目錄 `e2e/`）不在本角色的 TDD 範圍**
 - **測試集答案不外露**（Hard Rule 6）：瀏覽器 bundle、source map、公開 fixture 與 mock handler 裡都不得有標準答案或測試集辨識資訊；**瀏覽器不下載答案再算分**
 
+## 校正常駐文件
+
+實作完成、測試通過之後，對照 `docs/diagrams/architecture/frontend-routes.mdx`。實作出來的路由、頁面元件、對應的規格編號或 Logic Flow 節點和 ui-ux 的設計不同時，**依程式回頭校正常駐文件**，讓它描述的是實際寫出來的樣子；動到前端骨架（單一 HTTP 邊界、生成的 hooks 與 MSW mock、元件展示頁）的，改「前端骨架」節。不讓程式和常駐文件各走各的；和設計不同之處另在回報的「待確認」寫出來
+
 ## 完成前自我檢查
 
 - [ ] 每個新行為都**先有失敗的測試**，再寫實作
@@ -92,6 +97,7 @@ model: opus
 - [ ] bundle、source map 與 mock 裡沒有標準答案或測試集辨識資訊
 - [ ] 沒有 `npm install`（依賴用 `pnpm add`）
 - [ ] 元件庫只用 shadcn/ui（元件在 `components/ui/`）、型別與 client 只來自 Orval 產物（`frontend/src/api/generated/`，未手改）；沒有引入其他元件庫或生成工具
+- [ ] `frontend-routes.mdx` 已依實作校正：路由與頁面元件和程式一致；動到前端骨架時「前端骨架」節也已更新
 
 ## 回報格式
 
@@ -100,6 +106,7 @@ model: opus
 
 - 改動檔案：{清單}
 - 測試：元件與 hook {n} 通過；lint、型別檢查、build 通過
+- 常駐文件：frontend-routes.mdx 已依實作校正／與設計一致、無須改動
 - 暫以語意描述自行實作、待補 shadcn/ui 元件：{清單，無則寫「無」}
 - 待確認：{contract 缺口、ui-design 未涵蓋的狀態、需要那個停點決定的事，無則寫「無」}
 ```

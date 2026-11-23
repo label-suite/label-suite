@@ -20,10 +20,11 @@ model: opus
 3. `docs/development/architecture.mdx`：§技術選型、§後端分層、§認證與授權、§測試集答案不外露、§資料庫雙層、§API 契約、§ADR 效力總表、§附錄：個人 repo ADR 的對照、§待決
 4. `AGENTS.md`（本專案唯一的規則來源，**沒有** `.claude/rules/`）：Hard Rules 5（任務設定驅動）、6（測試集答案不外露）、7（CORS 不得用 `allow_origins=["*"]`）、8（祕密只從環境變數來）
 5. 依 `context` 的需求依據順序讀取相關需求章節；`docs/specs/00-prd.mdx` §權限矩陣 是權限上限
-6. 既有程式（**目前 `backend/` 還不存在**，第一個骨架 change 之後才有）：相關模組、共用的例外與依賴、認證與授權的掛點、匯出的 `openapi.json`
+6. 既有程式（`backend/`）：相關模組、共用的例外與依賴、認證與授權的掛點、匯出的 `openapi.json`
 7. 資料規劃三份（`docs/diagrams/architecture/`）：`data-field-inventory.mdx`（欄位盤點）、`data-table-dictionary.mdx`（候選表字典，**唯一可信的上游**）、`database-schema.er.json`（由字典產生的 ER 圖資料）。字典的 FK 欄與每張表的「被誰參照」是跨表影響的依據
-8. schema 範本：`openspec/schemas/label-suite-sdd/templates/system-design.md`、`api-contract.md`，以及 `pnpm exec openspec instructions <artifact> --change <name>`
-9. 領域規範：`docs/development/rules/api-agent-rules.mdx` 全部十條（A1 至 A10），它是契約的唯一規範；`docs/development/rules/backend-agent-rules.mdx` B1 分層與允許的 import、B4 交易的擁有層；`docs/development/rules/security-agent-rules.mdx` S1 身分只來自驗證完成的 session、S2 token 不離開 cookie；CSRF 與 CORS 的統一位置、S3 授權的四段順序
+8. 後端的常駐文件 `docs/diagrams/architecture/backend-modules.mdx`：`main` 上每個後端模組的分層、Class Diagram 與主要 Sequence Diagram，以及「後端基礎建設」節（請求管線、錯誤外層、設定、資料庫、OpenAPI 匯出、新增業務模組的檢查清單）。**規劃時先改它**，再寫 system-design
+9. schema 範本：`openspec/schemas/label-suite-sdd/templates/system-design.md`、`api-contract.md`，以及 `pnpm exec openspec instructions <artifact> --change <name>`
+10. 領域規範：`docs/development/rules/api-agent-rules.mdx` 全部十條（A1 至 A10），它是契約的唯一規範；`docs/development/rules/backend-agent-rules.mdx` B1 分層與允許的 import、B4 交易的擁有層；`docs/development/rules/security-agent-rules.mdx` S1 身分只來自驗證完成的 session、S2 token 不離開 cookie；CSRF 與 CORS 的統一位置、S3 授權的四段順序
 
 ## 技術前提
 
@@ -56,6 +57,7 @@ model: opus
 - 用 `alt`／`opt` 標出欄位驗證失敗、401、403、404、狀態不允許等例外，以及遮蔽欄位的處理點
 - 有狀態轉換時補 `stateDiagram-v2`；交易邊界、session 生命週期（API 的 async session 與 worker 的 sync session **分離**）、效能疑慮寫在技術待決問題
 - 資料模型異動：表、欄位、索引、**Alembic migration 的 down 能不能還原**，以及 **SQLite 與 PostgreSQL 的差異**（JSON／JSONB、約束、日期、並發）
+- 後端模組的分層、Class Diagram 或主要 Sequence Diagram 有異動時，**先改常駐文件 `backend-modules.mdx`**：新模組加一節，既有模組改它的分層表與圖；動到 `app/core/` 的基礎建設時改「後端基礎建設」節。system-design 的「常駐文件異動」節寫出路徑與異動摘要，不重抄常駐文件的內容；「分層與類別」與「關鍵情境」仍畫這次新增或修改的類別與這次的 Scenario
 - 資料模型有異動時，**先改字典、再同步 ER、最後跑 `pnpm check:er`**，三步都在規劃階段做完。順序不能倒：ER 是從字典產生的，只改 ER 的修改會被 `check:er` 判成漂移。system-design 的「資料模型異動」節寫出字典與 ER 的路徑，再用異動表摘要改了什麼；不在 system-design 重抄整張表的欄位
 
 ## 產出二：api-contract.md
@@ -82,4 +84,5 @@ model: opus
 - [ ] 需要的 schema 變更已列出，交由 Alembic migration 處理，並寫出可逆性與雙資料庫差異
 - [ ] 有資料模型異動時：字典已先改、ER 已同步、`pnpm check:er` 通過；異動表的每一列都對得到字典裡的表與欄位
 - [ ] classDiagram 的 Model 只有屬性，沒有另畫一套表間關聯
+- [ ] 後端模組或基礎建設有異動時：`backend-modules.mdx` 已先改好，與 system-design 一致；「常駐文件異動」節寫了路徑與摘要，沒有重抄常駐文件。沒有異動時寫「本次無常駐文件異動」
 - [ ] 章節與 schema 範本一致；敘述用繁體中文，識別字（欄位名、operationId、錯誤碼、範例 JSON）維持英文

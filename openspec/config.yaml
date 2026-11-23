@@ -57,9 +57,11 @@ rules:
     - 有 migration 時寫明 Alembic 的 down 能不能還原，以及 SQLite 與 PostgreSQL 的差異
     - 資料模型有異動時，先改 docs/diagrams/architecture/data-table-dictionary.mdx、再同步 database-schema.er.json、跑 `pnpm check:er`；「資料模型異動」節寫出這兩個路徑與異動摘要，不重抄整張表
     - classDiagram 的 Model 只畫屬性；表間關聯與多重性以 ER 為準
+    - 後端模組的分層、Class Diagram 或主要 Sequence Diagram 有異動時，先改 docs/diagrams/architecture/backend-modules.mdx（動到 app/core/ 的基礎建設時改它的「後端基礎建設」節）；「常駐文件異動」節寫出這個路徑與異動摘要，不重抄常駐文件的內容
     - 權限檢查與欄位遮蔽都在後端完成；權限不得超出 PRD §權限矩陣，需要超出時列進待決問題
   ui-design:
     - 每塊資料都要對應到 api-contract 的 operationId
+    - 路由、頁面元件、對應的規格編號或 Logic Flow 節點有異動時，先改 docs/diagrams/architecture/frontend-routes.mdx（動到前端骨架時改它的「前端骨架」節）；「常駐文件異動」節寫出這個路徑與異動摘要，不重抄常駐文件的內容
     - loading／error／empty／無權限四種狀態都要寫；有遮蔽欄位時寫出呈現方式
     - 畫面長相以 design/prototype/pages/ 為準；token 只用 design/prototype/assets/tokens.css 與 label-suite-design skill 的語意名稱，不寫色碼
     - 框架依 ADR-005 加 2026-11-10 裁定（React 19 加 Vite 加 TypeScript strict，路由 React Router v6、伺服器狀態 TanStack Query，元件庫 shadcn/ui 放 components/ui/，目錄分層 pages/ 加 features/，見 docs/development/architecture.mdx §前端）；**不用 Storybook，改用元件展示頁**。元件以語意描述為主，需要時可指名 shadcn/ui 的元件，不貼實作程式碼

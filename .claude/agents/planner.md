@@ -18,9 +18,10 @@ model: opus
 1. `openspec/config.yaml`：`context`（需求依據順序、追溯格式）與 `rules.proposal`、`rules.specs`、`rules.design`、`rules.tasks`
 2. 本 change 已完成的上游產出：`system-analysis.md`、`system-design.md`、`ui-design.md`、`api-contract.md`；寫 specs、design、tasks 前另讀 `clarification.md`（決議與「交給後續產出」必須遵守）
 3. 依 context 的需求依據順序讀取相關需求章節（proposal 要能寫出引用來源）
-4. 相關既有 capability：`pnpm exec openspec list --specs`、`pnpm exec openspec show <id> --type spec`（沿用既有 capability 路徑，不造近似名稱）
-5. 每份產出開寫前跑 `pnpm exec openspec instructions <artifact> --change <name>`，依 schema 範本與指示撰寫
-6. 回修時：design-reviewer 的審閱意見或 clarify 的問題清單
+4. 常駐文件：`docs/diagrams/architecture/backend-modules.mdx`（後端模組與基礎建設）、`frontend-routes.mdx`（前端路由與骨架），`main` 上模組與路由現在的樣子
+5. 相關既有 capability：`pnpm exec openspec list --specs`、`pnpm exec openspec show <id> --type spec`（沿用既有 capability 路徑，不造近似名稱）
+6. 每份產出開寫前跑 `pnpm exec openspec instructions <artifact> --change <name>`，依 schema 範本與指示撰寫
+7. 回修時：design-reviewer 的審閱意見或 clarify 的問題清單
 
 ## 各產出的重點
 
