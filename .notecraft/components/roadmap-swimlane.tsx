@@ -2,8 +2,8 @@ import { useState, type KeyboardEvent, type ReactElement } from "react";
 import { BARS, HORIZONS, LANES, MARKERS, epicById, type Bar, type LaneId } from "./roadmap-data";
 
 /**
- * 泳道時程：交付、里程碑、產品模組、基礎建設、UX、論文驗證六條泳道，
- * 橫軸是三層時段（下個月／接下來兩個月／之後）。「之後」壓縮繪製，長度不代表實際月數。
+ * 泳道時程：交付、里程碑、產品模組、基礎建設、UX 五條泳道，
+ * 橫軸是兩個時段（下個月／接下來兩個月）。
  * 點任一條 bar，下方面板顯示它所屬 Epic 的一句話。
  */
 
@@ -21,7 +21,6 @@ const LANE_COLOR: Record<LaneId, string> = {
   product: "#1D4ED8", // --color-info
   infra: "#8B5CF6", // --color-file-markdown
   ux: "#818CF8", // --color-secondary
-  thesis: "#64748B", // --color-ink-muted
 };
 
 const W = 640;
@@ -30,7 +29,8 @@ const HEAD_H = 34;
 const ROW_H = 26;
 const LANE_PAD = 6;
 const LANE_GAP = 6;
-const UNIT = (W - LABEL_W - 8) / 6;
+const END = HORIZONS[HORIZONS.length - 1].span[1];
+const UNIT = (W - LABEL_W - 8) / END;
 const x = (t: number): number => LABEL_W + t * UNIT;
 
 /** Rough label width: CJK glyphs ~12px, others ~6.6px at font-size 12. */
@@ -80,7 +80,7 @@ export default function RoadmapSwimlane(): ReactElement {
   const lanes = LANES.map((l) => {
     const markerLane = l.id === "release" || l.id === "milestone";
     const p = pack(BARS.filter((b) => b.lane === l.id));
-    const rows = markerLane ? Math.max(2, p.rows) : p.rows;
+    const rows = markerLane ? 1 + Math.max(0, ...MARKERS.filter((m) => m.lane === l.id).map((m) => m.row)) : p.rows;
     const h = rows * ROW_H + LANE_PAD * 2;
     const top = y;
     y += h + LANE_GAP;
@@ -104,7 +104,7 @@ export default function RoadmapSwimlane(): ReactElement {
           width="100%"
           style={{ minWidth: 600, fontFamily: FONT }}
           role="img"
-          aria-label="泳道時程：橫軸分下個月、接下來兩個月、之後三段；六條泳道依序是交付、里程碑、產品模組、基礎建設、UX 與設計、論文驗證。"
+          aria-label="泳道時程：橫軸分下個月、接下來兩個月兩段；五條泳道依序是交付、里程碑、產品模組、基礎建設、UX 與設計。"
         >
           {HORIZONS.map((h) => (
             <g key={h.id}>
@@ -184,12 +184,10 @@ export default function RoadmapSwimlane(): ReactElement {
               <span className="text-slate-500">（{sel.label}）</span>：{epic.oneLiner}
             </>
           ) : (
-            <>
-              <span className="font-semibold">{sel.label}</span>：依 SUS 問卷是否反映需要說明入口，再決定下一期要不要做。
-            </>
+            <span className="font-semibold">{sel.label}</span>
           )
         ) : (
-          <span className="text-slate-500">點任一條 bar 看它屬於哪個 Epic、要做什麼。「之後」一段是壓縮畫的，長度不代表實際月數。</span>
+          <span className="text-slate-500">點任一條 bar 看它屬於哪個 Epic、要做什麼。</span>
         )}
       </div>
     </div>

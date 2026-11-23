@@ -45,6 +45,7 @@ export default function RoadmapBenefitComplexity(): ReactElement {
                 <h4 className="text-sm font-semibold">{q.title}</h4>
                 <p className="mb-2 text-xs text-slate-600">{q.hint}</p>
                 <div className="flex flex-wrap gap-1.5">
+                  {epics.length === 0 && <p className="text-xs text-slate-500">目前沒有 Epic</p>}
                   {epics.map((e) => {
                     const active = sel?.id === e.id;
                     return (

@@ -8,9 +8,9 @@
  */
 
 export type GoalId = "G1" | "G2" | "G3" | "G4" | "G5" | "G6";
-export type HorizonId = "month" | "quarter" | "later";
+export type HorizonId = "month" | "quarter";
 export type Level = "high" | "low";
-export type LaneId = "release" | "milestone" | "product" | "infra" | "ux" | "thesis";
+export type LaneId = "release" | "milestone" | "product" | "infra" | "ux";
 
 export interface Goal {
   id: GoalId;
@@ -23,7 +23,7 @@ export interface Horizon {
   label: string;
   /** What the breakdown in this horizon is for. */
   detail: string;
-  /** Timeline span, in the shared 0..6 scale used by the swimlane chart. */
+  /** Timeline span, in the shared 0..3 scale used by the swimlane chart. */
   span: [number, number];
 }
 
@@ -46,7 +46,7 @@ export interface Epic {
   complexity: Level;
   /** One sentence explaining the quadrant. */
   why: string;
-  /** Spec pages (or PRD measures) the epic breaks down into, like E1. */
+  /** Spec pages the epic breaks down into, like E1. */
   features: Feature[];
 }
 
@@ -78,7 +78,6 @@ export const GOALS: Goal[] = [
 export const HORIZONS: Horizon[] = [
   { id: "month", label: "下個月", detail: "直接開 issue 動工", span: [0, 1] },
   { id: "quarter", label: "接下來兩個月", detail: "動工前再對一次規格", span: [1, 3] },
-  { id: "later", label: "之後", detail: "條件成熟再排", span: [3, 6] },
 ];
 
 export const EPICS: Epic[] = [
@@ -195,7 +194,7 @@ export const EPICS: Epic[] = [
     name: "儀表板與通知",
     oneLiner: "讓使用者登入後一眼看到自己的任務與待辦，並在關鍵事件時收到通知。",
     goals: ["G5"],
-    horizon: "later",
+    horizon: "quarter",
     scope: "規格 02-01、07-04",
     benefit: "low",
     complexity: "low",
@@ -203,39 +202,6 @@ export const EPICS: Epic[] = [
     features: [
       { label: "02-01 儀表板", subs: ["依角色的版面", "快速繼續與快速審核"] },
       { label: "07-04 通知事件", subs: ["事件清單", "兩個消費端"] },
-    ],
-  },
-  {
-    id: "E8",
-    name: "論文驗證",
-    oneLiner: "用五種研究示例、建立步驟數比較、統計核對、SUS 問卷與示範影片，逐一證明 PRD 的六個目標。",
-    goals: ["G2", "G3", "G4", "G5", "G6"],
-    horizon: "later",
-    scope: "PRD 目標表的衡量方式",
-    benefit: "high",
-    complexity: "low",
-    why: "幾乎不寫新功能，卻直接決定論文能不能交出成果。",
-    features: [
-      { label: "五種研究示例", subs: ["只靠任務設定建立"] },
-      { label: "建立步驟數比較", subs: ["對照 Label Studio"] },
-      { label: "統計核對", subs: ["句數、詞數、標籤數"] },
-      { label: "SUS 問卷", subs: ["5～10 位實驗室成員"] },
-      { label: "示範影片", subs: ["2～3 個使用情境"] },
-    ],
-  },
-  {
-    id: "E9",
-    name: "發版與 DOI",
-    oneLiner: "把論文使用的版本發成有 CHANGELOG、tag 與 Zenodo DOI 的可引用 release。",
-    goals: ["G6"],
-    horizon: "later",
-    scope: "Epic #3",
-    benefit: "low",
-    complexity: "low",
-    why: "流程已規劃好，只在論文定版時執行一次。",
-    features: [
-      { label: "#6 發版流程定案", subs: ["CHANGELOG", "release commit 與 tag"] },
-      { label: "#7 發版自動化", subs: ["版號一致性檢查", "Zenodo DOI"] },
     ],
   },
 ];
@@ -246,38 +212,27 @@ export const LANES: { id: LaneId; label: string }[] = [
   { id: "product", label: "產品模組" },
   { id: "infra", label: "基礎建設" },
   { id: "ux", label: "UX 與設計" },
-  { id: "thesis", label: "論文驗證" },
 ];
 
-/** Timeline scale: 0..1 next month, 1..3 the two months after, 3..6 the rest. */
+/** Timeline scale: 0..1 next month, 1..3 the two months after. */
 export const BARS: Bar[] = [
   { lane: "product", label: "帳號", start: 0.1, end: 1, epic: "E1" },
   { lane: "product", label: "共用介面外殼", start: 0.3, end: 1, epic: "E2" },
   { lane: "product", label: "系統管理", start: 1, end: 1.5, epic: "E3" },
   { lane: "product", label: "任務管理", start: 1.2, end: 2.2, epic: "E4" },
   { lane: "product", label: "標記作業", start: 1.8, end: 2.9, epic: "E5" },
-  { lane: "product", label: "資料集", start: 2.2, end: 3, epic: "E6" },
-  { lane: "product", label: "儀表板與通知", start: 3, end: 3.8, epic: "E7" },
+  { lane: "product", label: "資料集", start: 2.1, end: 2.8, epic: "E6" },
+  { lane: "product", label: "儀表板與通知", start: 2.4, end: 3, epic: "E7" },
   { lane: "infra", label: "基礎建設收尾", start: 0, end: 0.3, epic: "E0" },
   { lane: "infra", label: "認證與權限 guard", start: 0.1, end: 0.5, epic: "E1" },
   { lane: "ux", label: "標記作業畫面修正", start: 1.5, end: 1.9, epic: "E5" },
-  { lane: "ux", label: "說明入口評估", start: 4.6, end: 5.1 },
-  { lane: "thesis", label: "五種研究示例", start: 2.2, end: 3.2, epic: "E8" },
-  { lane: "thesis", label: "步驟數比較與統計核對", start: 3, end: 3.7, epic: "E8" },
-  { lane: "thesis", label: "SUS 招募與填答", start: 3.3, end: 4.3, epic: "E8" },
-  { lane: "thesis", label: "SUS 分析", start: 4.3, end: 4.8, epic: "E8" },
-  { lane: "thesis", label: "示範影片", start: 4.8, end: 5.6, epic: "E8" },
-  { lane: "release", label: "發版與 DOI", start: 5.5, end: 6, epic: "E9" },
 ];
 
 export const MARKERS: Marker[] = [
   { lane: "release", label: "R1 可以登入", at: 1, row: 0 },
   { lane: "release", label: "R2 完整流程", at: 3, row: 0 },
-  { lane: "release", label: "R3 論文版", at: 5.8, row: 1 },
   { lane: "milestone", label: "基礎建設完成", at: 0.3, row: 0 },
-  { lane: "milestone", label: "SUS 開始招募", at: 3.3, row: 1 },
   { lane: "milestone", label: "第一次完整流程示範", at: 3, row: 0 },
-  { lane: "milestone", label: "示範影片完成", at: 5.6, row: 0 },
 ];
 
 export const epicById = (id: string): Epic | undefined => EPICS.find((e) => e.id === id);

@@ -4,26 +4,21 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { EPICS, GOALS, HORIZONS, type Epic, type GoalId, type HorizonId } from "./roadmap-data";
 
 /**
- * 三層目標階層：Goal → Epic → Feature → Sub-feature，三個時段寫法相同。
- * 點 Goal 會在三欄裡亮起服務同一個目標的 Epic；每個 Epic 都能展開看它的 Feature。
- * 下個月預設展開，後兩段預設收合，避免頁面過長。
+ * 三層目標階層：Goal → Epic → Feature → Sub-feature，兩個時段寫法相同。
+ * 點 Goal 會在兩欄裡亮起服務同一個目標的 Epic；每個 Epic 都能展開看它的 Feature。
+ * 下個月預設展開，接下來兩個月預設收合，避免頁面過長。
  */
 
 const goalShort = (id: GoalId): string => GOALS.find((g) => g.id === id)?.short ?? id;
 
-/** 依主要目標分組；「之後」改列出後期 Epic 服務的所有目標。 */
+/** 依主要目標分組。 */
 function groups(h: HorizonId): { goal: GoalId; epics: Epic[] }[] {
   const inH = EPICS.filter((e) => e.horizon === h);
-  const ids: GoalId[] = [];
-  inH.forEach((e) => (h === "later" ? e.goals : [e.goals[0]]).forEach((g) => !ids.includes(g) && ids.push(g)));
-  ids.sort();
-  return ids.map((goal) => ({
-    goal,
-    epics: inH.filter((e) => (h === "later" ? e.goals.includes(goal) : e.goals[0] === goal)),
-  }));
+  const ids = [...new Set(inH.map((e) => e.goals[0]))].sort();
+  return ids.map((goal) => ({ goal, epics: inH.filter((e) => e.goals[0] === goal) }));
 }
 
-/** Feature 與 Sub-feature，三個時段寫法相同。 */
+/** Feature 與 Sub-feature，兩個時段寫法相同。 */
 function FeatureList({ epic }: { epic: Epic }): ReactElement {
   return (
     <ul className="list-none">
@@ -48,7 +43,7 @@ function FeatureList({ epic }: { epic: Epic }): ReactElement {
 export default function RoadmapGoalHierarchy(): ReactElement {
   const reduce = useReducedMotion();
   const [focus, setFocus] = useState<GoalId | null>(null);
-  // Next month starts expanded; the coarser horizons start collapsed.
+  // Next month starts expanded; the later horizon starts collapsed.
   const [toggled, setToggled] = useState<string[]>([]);
   const toggle = (key: string): void => setToggled((c) => (c.includes(key) ? c.filter((x) => x !== key) : [...c, key]));
   const isOpen = (h: HorizonId, key: string): boolean => (h === "month") !== toggled.includes(key);
@@ -73,7 +68,7 @@ export default function RoadmapGoalHierarchy(): ReactElement {
 
   return (
     <div className="not-prose space-y-3 text-indigo-950">
-      <div className="grid gap-6 md:grid-cols-[1.35fr_1fr_0.9fr]">
+      <div className="grid gap-6 md:grid-cols-2">
         {HORIZONS.map((h) => (
           <section key={h.id} aria-label={h.label} className="min-w-0">
             <header className="mb-3 border-b border-slate-200 pb-2">
