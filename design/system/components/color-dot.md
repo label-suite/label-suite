@@ -58,6 +58,6 @@
 | :--- | :--- |
 | `components-showcase#state-default` | 三個變體 |
 | `task-management/task-new#state-step2`、`task-management/task-detail#tab-settings` | **不是正典的 `.color-dot`**：`task-config.css` 的 `.entity-color-dot`（`task-config.css:170`，20px 方形 `--radius-sm`）與 `.annotation-preview-color`（`:424`，12px），淺色邊框寫死 rgba（`:170`），深色覆寫 #442 起改 `--color-ink` 的 `color-mix()`（`:580`–`:581`）；`task-detail.html:1187` 又定義一次 `.entity-color-dot` → `../design-gaps.md` G-10 |
-| `dataset/dataset-analysis-detail`（`#state-quality-*`） | **不是正典的 `.color-dot`**：本頁 `.t-dot`（`dataset-analysis-detail.html:94`–`:98`），同樣只靠顏色 → `../design-gaps.md` G-14 |
+| `dataset/dataset-analysis-detail`（`#state-quality-*`） | **不是正典的 `.color-dot`**：本頁 `.t-dot`（`dataset-analysis-detail.html:92`–`:96`），同樣只靠顏色 → `../design-gaps.md` G-14 |
 
 b1 的帳號頁一個都沒用。b2 已補上（見上表）。b4 已補上（見上表）。

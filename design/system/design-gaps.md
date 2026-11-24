@@ -343,6 +343,17 @@
 
 **規格（#434）**：維護者 2026-11-19 裁定用詞改為「**參考線**」（`Relaxed 參考線 0.70`、`高品質參考線 0.80`），「不判定」加進達標狀態列舉當第六個值（`02-analysis-detail.mdx` Q26、Q27）。原型**這兩處**的「參考值」與表頭「門檻／參考值」已由 #473 改成「參考線」（`quality-entity_recognition.html:42`、`:55`，`quality-relation_identification.html:24`；中文 i18n `dataset-analysis-detail.html:466`、`:480`、`:481`，英文 `reference line` 在同檔 `:878`、`:887`、`:888`）。同頁另有 16 處「參考值」是排行榜指標名與邊界範例的對照標註，與這條無關、不在改動範圍。
 
+### G-57 實體辨識切到部分重疊時，標題列的星號收起、後綴改「參考顯示」，規格沒有寫
+
+> b4 重驗新增（交付包 `b16b294`，#608）。
+
+| 欄 | 內容 |
+| :--- | :--- |
+| **重現方式** | 開實體辨識任務的品質監控（例如 `pages/dataset/dataset-analysis-detail.html?task_id=T007&tab=quality`），標題列是星號、「Pairwise Entity-level F1（strict）」與「— 主要指標」。點 `Partial overlap`：星號消失，後綴變成「— 參考顯示」（英文模式「— Reference only」）。點回 `Strict match`：星號與「— 主要指標」回來。 |
+| **受影響範圍** | `dataset/dataset-analysis-detail#state-seq-match-partial`、`#state-seq-match-strict`、`#state-quality-entity-recognition`；本頁專屬的 `.iaa-primary-star` |
+| **依據** | 原型：`updateMethodName`（`dataset-analysis-detail.html:1976`–`:1999`）在 `S.seqMode === 'partial'` 時對星號加 `.hidden` 並移除 `aria-label`、把 `#iaaMethodSuffix` 換成 `iaaMethodSuffixRef`（「— 參考顯示」，`:437`；英文 `:849`），註解寫「依據 規格 05-02 §八種輸出類型各自的主指標與門檻 第 11 條、維護者裁定 2026-11-19 (#435)」。規格 [`05-dataset/02-analysis-detail.mdx`](../../docs/specs/05-dataset/02-analysis-detail.mdx) §逐型 IAA 報告的版面 第 3 條：「主指標旁有一個**星號標記**，標題後綴是 `— 主要指標`；星號的作用是標出『這一個才是用來判定達標的』」，沒有寫切到部分重疊時的例外；同頁 §八種輸出類型各自的主指標與門檻 第 11 條只說部分重疊「**只能切換顯示**，**不得**當成第二道達標判定」，也沒有出現「參考顯示」這個字。[Issue #435](https://github.com/label-suite/label-suite/issues/435) 的工作項寫「選 Partial overlap 時方法後綴仍是『— 主要指標』，與規格第 11 點不符」，但 issue 上沒有記下「參考顯示」這個用詞的裁定。 |
+| **待決問題** | 規格 §逐型 IAA 報告的版面 第 3 條要不要補上「實體辨識切到部分重疊時星號收起、後綴改『— 參考顯示』」這條例外（屬維護者，走 `spec-writing`）？原型註解引的「維護者裁定 2026-11-19」要記在哪裡才查得到？ |
+
 ## 二、缺少狀態證據
 
 ### G-05 焦點樣式幾乎全面缺席
@@ -439,6 +450,8 @@
 | **待決問題** | **已裁定（2026-11-18）**：下次重跑 `design-handoff` 時補上這兩個視圖；原型先加 `?error=1` 示範開關，於 #422 處理。原題保留：要不要在下一次重跑 `design-handoff` 時補上這兩個視圖？沒有網址參數能觸發，要不要先在原型加一個示範開關（屬畫面修正，走 Ready gate）？ |
 
 **狀態（#422）**：原型已加 `?error=1` 示範開關。`dataset-analysis-list.html?error=1` 讓 `state.loadFailed` 為真（`dataset-analysis-list.model.js:241`），只剩錯誤列與重試鈕；`dataset-analysis-detail.html?task_id=<id>&error=1` 讓統計與品質兩個 partial 都顯示載入失敗面板。參數只在載入時讀取，`syncUrl` 不會帶著它，所以重試（重新載入）會恢復，和真實的重試一致。視圖 ID 要等下次重跑 `design-handoff` 才補，這裡不處理。
+
+**交付包（#608 複核，`b16b294`）**：兩個視圖都已收為 `#param-error`（`dataset/dataset-analysis-list#param-error`、`dataset/dataset-analysis-detail#param-error`），畫面檔已補上。
 
 ---
 

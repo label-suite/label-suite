@@ -60,6 +60,6 @@
 | `task-management/task-detail`（全部 `#tab-*`） | 本頁一行式的 `.breadcrumb`（`task-detail.html:47`–`:49`，markup `:1877`–`:1880`），兩層 |
 | `annotation/annotation-list`（`#state-default`、`#role-*`） | `#entryBreadcrumb`（`annotation-list.html:435`），最後一層 `aria-current="page"`（`:2394`） |
 | `annotation/annotation-workspace`（全部視圖） | `nav#entryBreadcrumb`（`annotation-workspace.html:1212`），第三層是樣本，`aria-current="page"`（`annotation-workspace.config.js:1603`） |
-| `dataset/dataset-analysis-detail`（全部視圖） | 本頁 `nav.breadcrumb`（`dataset-analysis-detail.html:249`–`:253`，樣式 `:38`–`:41`）：兩層「資料集分析 › 任務名稱」，分隔符 `aria-hidden`，目前頁是純文字 `<span>`、沒有 `aria-current` |
+| `dataset/dataset-analysis-detail`（全部視圖） | 本頁 `nav.breadcrumb`（`dataset-analysis-detail.html:250`–`:254`，樣式 `:39`–`:41`）：兩層「資料集分析 › 任務名稱」，分隔符 `aria-hidden`，目前頁是純文字 `<span>`、沒有 `aria-current` |
 
 b1 的帳號頁一個都沒用（它們是登出狀態的單層頁）。b2 已補上（見上表）。b3 已補上（見上表）。b4 已補上（見上表）。
