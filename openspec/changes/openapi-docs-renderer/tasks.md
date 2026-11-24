@@ -27,4 +27,4 @@
 
 ## 5. 驗證
 
-- [ ] 5.1 執行 `uv run pytest`、`ruff`、`mypy`、`pnpm test:scripts`、`pnpm run api:sync` 後 `git status` 無未提交變更、`pnpm check:specs`；驗證：全部通過，CI 四個 job 在 PR 上通過 [@backend-developer]
+- [x] 5.1 執行 `uv run pytest`、`ruff`、`mypy`、`pnpm test:scripts`、`pnpm run api:sync` 後 `git status` 無未提交變更、`pnpm check:specs`；驗證：全部通過，CI 四個 job 在 PR 上通過 [@backend-developer]
