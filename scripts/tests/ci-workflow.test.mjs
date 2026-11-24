@@ -496,6 +496,14 @@ describe("dependency-audit", () => {
     assert.match(pnpm, /--audit-level high\b/);
   });
 
+  test("does not cache pnpm, because the job never runs pnpm install and has no store to save", () => {
+    const steps = job("dependency-audit").steps;
+    assert.equal(stepIndex(steps, /\bpnpm install\b/), -1);
+    for (const step of steps.filter((s) => String(s.uses).startsWith("actions/setup-node@"))) {
+      assert.equal(step.with?.cache, undefined);
+    }
+  });
+
   test("installs the backend environment before auditing it", () => {
     assert.ok(
       requireStep("dependency-audit", /\buv sync --locked\b/) <

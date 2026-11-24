@@ -438,7 +438,6 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-          cache: pnpm
 
       - uses: astral-sh/setup-uv@v6
 
