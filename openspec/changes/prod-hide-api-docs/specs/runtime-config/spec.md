@@ -64,6 +64,6 @@
 
 #### Scenario: 正式層部署明確關閉內建文件
 
-- **WHEN** 檢視 `docker-compose.prod.yml` 後端服務傳入的環境設定
-- **THEN** `API_DOCS_ENABLED` 的值為 `false`
-- **AND** `.env.example` 含 `API_DOCS_ENABLED` 的說明
+- **WHEN** 展開 `docker-compose.prod.yml` 的有效設定（以 `.env` 或環境提供必要變數）
+- **THEN** 後端服務的 `API_DOCS_ENABLED` 為 `false`，且不受 `.env` 中同名設定影響
+- **AND** `.env.example` 含 `API_DOCS_ENABLED` 的說明，並指出正式層 compose 固定該值為 false

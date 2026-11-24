@@ -12,7 +12,7 @@
 - 路由不提供時，請求落入既有的 404 處理，回共通 envelope 的 `NOT_FOUND`；不新增錯誤碼、不另寫處理器。
 - `docker-compose.prod.yml` 的後端明確設 `API_DOCS_ENABLED=false`；`.env.example` 加說明。Lite 層、本機開發與現有測試不需改設定。
 - 調整主規格 `runtime-config`：MODIFIED「其餘設定都有預設值」，把新設定列入；新增 Requirement 規範四條路由依設定提供與否。設定值非布林時依既有設定驗證拒絕啟動。
-- 契約匯出（`app.scripts.export_openapi`）與 CI `api-contract` job 不受影響：匯出以占位設定直接產生文件，不經 `/openapi.json` 路由；新設定有預設值，占位設定不必補欄位。實作以測試證明 `backend/openapi.json` 與文件站副本位元組不變。
+- 契約匯出（`app.scripts.export_openapi`）與 CI `api-contract` job 不受影響：匯出以占位設定直接產生文件，不經 `/openapi.json` 路由；占位設定明確設 `api_docs_enabled=True`（`BaseSettings` 未設的欄位仍會讀環境變數）。實作以注入兩種設定的測試證明 `backend/openapi.json` 與文件站副本位元組不變。
 - 常駐文件在本 change 一併修正：`backend-modules.mdx` 的「維持預設開啟」、`endpoint-authorization.mdx` §不在本表的路徑與「尚未開 issue」那列（規劃階段已先改，見 system-design、api-contract §常駐文件異動）。
 - 無業務端點異動、無新增 operationId、無 **BREAKING**（預設值維持提供，現有部署不改設定行為不變；正式層 compose 是明確改為不提供）。前端無 UI 變更。
 

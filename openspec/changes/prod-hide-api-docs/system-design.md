@@ -28,7 +28,7 @@ classDiagram
     openapi_url: str | None
   }
   class ExportOpenapi {
-    +PLACEHOLDER_SETTINGS: Settings
+    +PLACEHOLDER_SETTINGS: Settings  «新增 api_docs_enabled=True»
     +render_openapi(app: FastAPI) str
   }
   DatabaseSettings <|-- Settings
@@ -43,7 +43,7 @@ classDiagram
 - `create_app` 內只做一個判斷：設定為「不提供」時，`docs_url`、`redoc_url`、`openapi_url` 傳 `None`。`/docs/oauth2-redirect` 由 FastAPI 在 `docs_url` 有值時一併註冊（`swagger_ui_oauth2_redirect_url` 依附於 `docs_url`），因此 `docs_url=None` 就連它一起不註冊；`openapi_url=None` 一併關掉 `/openapi.json`，所以四條都不註冊。
 - `install_openapi(app)` 取代的是 `app.openapi()` 方法本身，不依賴 `/openapi.json` 路由，所以關閉路由不影響 `export_openapi.render_openapi(app)` 直接呼叫 `app.openapi()`。這是依程式結構的推論；實作要以測試證明匯出的 `backend/openapi.json` 與文件站副本位元組不變。
 - 驗證規則：布林解析沿用 pydantic-settings 與既有 `CORS_ALLOW_CREDENTIALS` 的行為；解析失敗走 `load_settings` 的 `ConfigError`，只寫變數名與原因、不印值（B10、S9），不需新規則。
-- 新欄位有預設值，所以 `conftest.py` 與 `test_main.py` 等直接 `Settings(...)` 的測試不必改，`PLACEHOLDER_SETTINGS` 也不必補欄位；Lite 層、本機開發與現有測試不用改設定。
+- 新欄位有預設值，所以 `conftest.py` 與 `test_main.py` 等直接 `Settings(...)` 的測試不必改；`PLACEHOLDER_SETTINGS` 則要明確加上 `api_docs_enabled=True`（它是 `BaseSettings`，沒設的欄位會去讀環境變數，環境若設了 `API_DOCS_ENABLED` 就會影響匯出；其文件字串也寫明每個欄位都顯式設定）；Lite 層、本機開發與現有測試不用改設定。
 - 不依 `is_lite()` 推導：開關獨立於資料庫層，`runtime-config` 的「層只決定資料庫」不變。
 
 ## 關鍵情境
@@ -103,7 +103,7 @@ sequenceDiagram
   Export-->>CI: 寫 backend/openapi.json 與文件站副本；內容位元組與提交版相同
 ```
 
-備註：新欄位有預設值，`PLACEHOLDER_SETTINGS` 不必補欄位，匯出命令不改。
+備註：`PLACEHOLDER_SETTINGS` 明確設 `api_docs_enabled=True`，匯出不受環境變數影響；這是對匯出命令常數的一行異動，位元組不變仍要以測試證明。
 
 ## 常駐文件異動
 

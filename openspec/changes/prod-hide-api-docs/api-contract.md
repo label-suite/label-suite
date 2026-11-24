@@ -34,7 +34,7 @@
 
 ## 不受影響的契約產物
 
-- `backend/openapi.json` 與 `docs/diagrams/architecture/api.openapi.json`（#572 文件站副本，`openapi-renderer` 讀取）：內建路由本就不在 `paths`；匯出命令直接呼叫 `app.openapi()` 且用固定的 `PLACEHOLDER_SETTINGS`，不依賴 `/openapi.json` 路由（system-design「契約匯出不受設定影響」）。預期重新匯出後位元組不變，CI `api-contract` job 不受影響；新欄位有預設值，`PLACEHOLDER_SETTINGS` 不必補欄位，匯出命令不改；實作要以測試證明位元組不變。
+- `backend/openapi.json` 與 `docs/diagrams/architecture/api.openapi.json`（#572 文件站副本，`openapi-renderer` 讀取）：內建路由本就不在 `paths`；匯出命令直接呼叫 `app.openapi()` 且用固定的 `PLACEHOLDER_SETTINGS`，不依賴 `/openapi.json` 路由（system-design「契約匯出不受設定影響」）。預期重新匯出後位元組不變，CI `api-contract` job 不受影響；`PLACEHOLDER_SETTINGS` 要明確加上 `api_docs_enabled=True`（避免環境變數影響匯出）；實作要以測試證明位元組不變。
 - 前端：client 由提交進 repo 的 `openapi.json` 產生，不讀執行中服務的文件路由，無 BREAKING 變更、前端不受影響。
 
 ## 常駐文件異動
