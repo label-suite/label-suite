@@ -1,17 +1,17 @@
 {
   "packageVersion": 1,
-  "generatedAt": "2026-11-19",
+  "generatedAt": "2026-11-24",
   "source": {
-    "commit": "387482bb70756070d49416910844e0436c443b22",
-    "prototypeTree": "a4336be42bc70922d3955479e6174c752e138476",
-    "specsTree": "41776418aee0a8cdde9750a8e661e671a8e692f6",
-    "navigationBlob": "7a60a4eeeeee9a791dd71ac5a78890e5232160a1",
+    "commit": "b16b294b1ea604d0231c5ef6e3dff16bf825f6b9",
+    "prototypeTree": "ee820973ad42dba66377a64291495a6452d68dd9",
+    "specsTree": "efa1a6e2360ee80343f30e18bc51af9ee854490d",
+    "navigationBlob": "a05f8013a1e7bfef6154c79542049ed2ee8bb7d2",
     "referenceDesignDocs": {
       "repo": "singyichen/label-suite",
       "commit": "faf8335"
     },
     "openWith": [
-      "git switch --detach 387482bb70756070d49416910844e0436c443b22",
+      "git switch --detach b16b294b1ea604d0231c5ef6e3dff16bf825f6b9",
       "pnpm prototype"
     ]
   },
@@ -1095,7 +1095,7 @@
       "views": [
         {
           "id": "dataset/dataset-analysis-detail#param-error",
-          "how": "加 `?error=1`（例：`?task_id=T001&error=1`）：統計總覽與品質監控兩個面板都換成「資料載入失敗」與「重新載入」鈕（`renderPanelLoadError()`，`dataset-analysis-detail.html:1442`、`:2296`）。這個開關不寫回網址，按「重新載入」就恢復",
+          "how": "加 `?error=1`（例：`?task_id=T001&error=1`）：統計總覽與品質監控兩個面板都換成「資料載入失敗」與「重新載入」鈕（`renderPanelLoadError()`，`dataset-analysis-detail.html:1516`、`:2391`）。這個開關不寫回網址，按「重新載入」就恢復",
           "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#載入失敗只換掉內容區",
           "evidence": [
             "design/prototype/pages/dataset/dataset-analysis-detail.html"
@@ -1215,7 +1215,7 @@
         },
         {
           "id": "dataset/dataset-analysis-detail#state-seq-match-partial",
-          "how": "同上點 `#matchPartial`：改顯示 `#seqPartialCard`",
+          "how": "同上點 `#matchPartial`：改顯示 `#seqPartialCard`；IAA 報告標題的主要指標星號收起、後綴由「— 主要指標」改成「— 參考顯示」（`updateMethodName()`，`dataset-analysis-detail.html:1976`），比較表上部分重疊那一列的結果是「不判定」。點回 `#matchStrict` 還原",
           "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#序列標註的統計",
           "evidence": [
             "design/prototype/pages/dataset/dataset-analysis-detail.html",
@@ -1224,7 +1224,7 @@
         },
         {
           "id": "dataset/dataset-analysis-detail#state-seq-match-strict",
-          "how": "帶一個輸出類型是 `entity_recognition` 的 `?task_id=` 並加 `?tab=quality`：品質監控最上面那張卡有 `Strict match`／`Partial overlap` 兩顆鈕（`quality-entity_recognition.html:11`–`:30`），預設停在 `#matchStrict`，`syncSequenceUi()`（`dataset-analysis-detail.html:1942`）顯示 `#seqStrictCard`。ID 的 `seq-` 是沿用舊名，這兩顆鈕不在序列標註的統計總覽",
+          "how": "帶一個輸出類型是 `entity_recognition` 的 `?task_id=` 並加 `?tab=quality`：品質監控最上面那張卡有 `Strict match`／`Partial overlap` 兩顆鈕（`quality-entity_recognition.html:11`–`:30`），預設停在 `#matchStrict`，`syncSequenceUi()`（`dataset-analysis-detail.html:2030`）顯示 `#seqStrictCard`。ID 的 `seq-` 是沿用舊名，這兩顆鈕不在序列標註的統計總覽",
           "spec": "docs/specs/05-dataset/02-analysis-detail.mdx#序列標註的統計",
           "evidence": [
             "design/prototype/pages/dataset/dataset-analysis-detail.html",
