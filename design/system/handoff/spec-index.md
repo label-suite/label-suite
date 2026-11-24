@@ -1,6 +1,6 @@
 # 規格章節索引
 
-交付包版本：commit `387482bb7075`，prototype tree `a4336be42bc7`。
+交付包版本：commit `b16b294b1ea6`，prototype tree `ee820973ad42`。
 
 由 `manifest.json` 反轉而成：規格頁 → 指向它的視圖。「規格有、畫面沒有」一眼看得出來——沒有出現在下表的規格頁，就是沒有任何視圖指向它。
 
