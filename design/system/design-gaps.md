@@ -1,6 +1,6 @@
 # Design Gaps
 
-> 批次 `b1-shared-account` 建立、`b2-admin-dashboard-task`、`b3-annotation-review`、`b4-dataset-sweep` 補寫 ｜交付包 commit `b1fd43c` → `eb9a884`、prototype tree `815b853`
+> 批次 `b1-shared-account` 建立、`b2-admin-dashboard-task`、`b3-annotation-review`、`b4-dataset-sweep` 補寫 ｜交付包 commit `b1fd43c` → `eb9a884`、prototype tree `815b853`；G-57～G-60 依交付包 `b16b294`（#608）
 
 每一筆四欄齊全：**重現方式**（不截圖）、**受影響範圍**、**依據**（兩邊原文都引出來）、**待決問題**。
 分三類：原型與業務規格差異 ／ 缺少狀態證據 ／ 待重新設計。
@@ -278,6 +278,8 @@
 
 **狀態（#423）**：原型已修正；規格由 #434 對齊（`01-task-list.mdx` Q22）。`task-list.html` 刪除確認的遮罩點擊關閉整段刪除；另在遮罩的 `mousedown` 取消預設動作，因為 `modal-focus.js` 的 Esc 監聽掛在視窗上，焦點一掉到 `body` Esc 就失效。淺深色實測：點遮罩不關、焦點留在「取消」，Esc、「取消」、「刪除」都能關。規格 `01-task-list.mdx` §刪除任務 第 5 條與 A1 替代流程原本寫「點視窗外面 → 視窗關閉」，#434 已改成點視窗外不關閉。上文的行號指的是修正前。
 
+**複核（#608，交付包 `b16b294`）**：規格 `01-task-list.mdx` §刪除任務 第 5 條與業務流程 A1 已寫「點視窗外面**不關閉**視窗」（Q22）；原型 `task-list.html:1186`–`:1191` 的遮罩 `mousedown` 處理仍在，兩邊一致，沒有新落差。
+
 ### G-46 指引閘門按 Esc 就能不確認直接開始
 
 > b3 新增。
@@ -290,6 +292,8 @@
 | **待決問題** | **已裁定（2026-11-18）**：閘門忽略 Esc，只能按確認，保留返回清單的出口。修正於 #423。原題保留：閘門要不要忽略 Esc（只能按確認）？若 Esc 可以關，關掉之後算不算「開始」——要不要擋住作答？ |
 
 **狀態（#423）**：已修正。閘門開啟時傳給 `modal-focus.js` 的 `onClose` 改成空函式，Esc 只被取消、不關彈窗；只有確認鈕會關閉並寫確認紀錄。原本閘門沒有確認以外的出口，所以在確認鈕左邊加了 `.btn-secondary`「返回標記清單／Back to annotation list」，走 `buildListReturnUrl()`，不寫確認紀錄，下次進來照樣顯示。淺深色實測：按 Esc（焦點在彈窗內、Tab 之後再按）彈窗都還在；返回鈕回到 `annotation-list.html?task_id=…&role=…&run_type=…`；確認鈕關閉彈窗。`modal-focus.js` 預設把焦點放在第一個可聚焦元素，也就是返回鈕；依維護者裁定（2026-11-18），開啟後再把焦點移到確認鈕 `confirmBtn`（`annotation-workspace.config.js:6902`），初始焦點落在主要動作上。上文的行號指的是修正前。規格由 #434 對齊（`02-annotation-workspace.mdx` §指引閘門 第 3 條、Q16）。
+
+**複核（#608，交付包 `b16b294`）**：規格 §指引閘門 第 3 條寫「彈窗只有兩個出口：『確認』……『返回標記清單』……按 Esc、點視窗外面都**不關閉**彈窗。彈窗打開時焦點在『確認』」，業務流程另加 A3。原型：`onClose` 是空函式（`annotation-workspace.config.js:6896`–`:6899`），開啟後以 `confirmBtn.focus()` 聚焦確認鈕（`:6902`），返回鈕走 `buildListReturnUrl()` 且不寫確認紀錄（`:6919`–`:6925`），`#wsGuidelineModal` 沒有點遮罩關閉的處理（同檔其他三個說明預覽彈窗才有：`closeGuidelineImageModal`、`closeGuidelinePdfModal`、`closeGuidelineMdModal`，`:6696`、`:6708`、`:6720`）。兩邊一致，沒有新落差。
 
 ### G-47 送出被擋時，畫面看不出是哪一個區塊擋住
 
@@ -342,6 +346,17 @@
 **狀態（#423）**：已修正。實體辨識的部分重疊卡改成「Relaxed 參考值 0.70」／"Relaxed reference value 0.70"，關係識別第二列改成「高品質參考值 0.80」／"High-quality reference value 0.80"，兩者都拿掉「— 通過／未達」，圓點改中性的新 `.t-dot-neutral`（`--color-ink-muted`）。部分重疊卡的數值與長條原本是綠色（等於說它過了），也改中性：數值不帶狀態 class，長條用新的 `.iaa-bar-fill.neutral`。「兩種計算模式比較」表頭從「門檻」改「門檻／參考值」（"Threshold / reference"），因為 Strict 那一列的 0.80 仍是真門檻；部分重疊那一列的結果從綠色「通過」改成中性徽章「不判定」（"Not judged"），Strict 那一列的「未達」不動。中英文 i18n 一併改；`T007`、`T008` 與複合任務 `T010` 淺深色實測。上文的行號指的是修正前。
 
 **規格（#434）**：維護者 2026-11-19 裁定用詞改為「**參考線**」（`Relaxed 參考線 0.70`、`高品質參考線 0.80`），「不判定」加進達標狀態列舉當第六個值（`02-analysis-detail.mdx` Q26、Q27）。原型**這兩處**的「參考值」與表頭「門檻／參考值」已由 #473 改成「參考線」（`quality-entity_recognition.html:42`、`:55`，`quality-relation_identification.html:24`；中文 i18n `dataset-analysis-detail.html:466`、`:480`、`:481`，英文 `reference line` 在同檔 `:878`、`:887`、`:888`）。同頁另有 16 處「參考值」是排行榜指標名與邊界範例的對照標註，與這條無關、不在改動範圍。
+
+### G-57 實體辨識切到部分重疊時，標題列的星號收起、後綴改「參考顯示」，規格沒有寫
+
+> b4 重驗新增（交付包 `b16b294`，#608）。
+
+| 欄 | 內容 |
+| :--- | :--- |
+| **重現方式** | 開實體辨識任務的品質監控（例如 `pages/dataset/dataset-analysis-detail.html?task_id=T007&tab=quality`），標題列是星號、「Pairwise Entity-level F1（strict）」與「— 主要指標」。點 `Partial overlap`：星號消失，後綴變成「— 參考顯示」（英文模式「— Reference only」）。點回 `Strict match`：星號與「— 主要指標」回來。 |
+| **受影響範圍** | `dataset/dataset-analysis-detail#state-seq-match-partial`、`#state-seq-match-strict`、`#state-quality-entity-recognition`；本頁專屬的 `.iaa-primary-star` |
+| **依據** | 原型：`updateMethodName`（`dataset-analysis-detail.html:1976`–`:1999`）在 `S.seqMode === 'partial'` 時對星號加 `.hidden` 並移除 `aria-label`、把 `#iaaMethodSuffix` 換成 `iaaMethodSuffixRef`（「— 參考顯示」，`:437`；英文 `:849`），註解寫「依據 規格 05-02 §八種輸出類型各自的主指標與門檻 第 11 條、維護者裁定 2026-11-19 (#435)」。規格 [`05-dataset/02-analysis-detail.mdx`](../../docs/specs/05-dataset/02-analysis-detail.mdx) §逐型 IAA 報告的版面 第 3 條：「主指標旁有一個**星號標記**，標題後綴是 `— 主要指標`；星號的作用是標出『這一個才是用來判定達標的』」，沒有寫切到部分重疊時的例外；同頁 §八種輸出類型各自的主指標與門檻 第 11 條只說部分重疊「**只能切換顯示**，**不得**當成第二道達標判定」，也沒有出現「參考顯示」這個字。[Issue #435](https://github.com/label-suite/label-suite/issues/435) 的工作項寫「選 Partial overlap 時方法後綴仍是『— 主要指標』，與規格第 11 點不符」，但 issue 上沒有記下「參考顯示」這個用詞的裁定。 |
+| **待決問題** | 原型與規格要對齊到哪一邊（屬維護者）：(a) 照原型，用 `spec-writing` 在 05-02 §逐型 IAA 報告的版面 第 3 條補上「實體辨識切到部分重疊時星號收起、後綴改『— 參考顯示』」這條例外；(b) 照規格，維持第 3 條不變，改原型讓標題列不隨模式切換（屬**畫面修正**，開 UI issue 走 Ready gate）。不論選哪一邊，這次裁定要記在哪裡才查得到（例如 05-02 §已確認決議，或 #435 上的留言）？ |
 
 ## 二、缺少狀態證據
 
@@ -440,7 +455,42 @@
 
 **狀態（#422）**：原型已加 `?error=1` 示範開關。`dataset-analysis-list.html?error=1` 讓 `state.loadFailed` 為真（`dataset-analysis-list.model.js:241`），只剩錯誤列與重試鈕；`dataset-analysis-detail.html?task_id=<id>&error=1` 讓統計與品質兩個 partial 都顯示載入失敗面板。參數只在載入時讀取，`syncUrl` 不會帶著它，所以重試（重新載入）會恢復，和真實的重試一致。視圖 ID 要等下次重跑 `design-handoff` 才補，這裡不處理。
 
+**交付包（#608 複核，`b16b294`）**：兩個視圖都已收為 `#param-error`（`dataset/dataset-analysis-list#param-error`、`dataset/dataset-analysis-detail#param-error`），畫面檔已補上。
+
 ---
+
+### G-58 換 Email 的驗證連結失效時，原型沒有那個面板
+
+> b1 規格側新增（交付包 `b16b294` 第十三次重跑點名，#608）。原型沒有動，是規格 #558 補上的落點。
+
+| 欄 | 內容 |
+| :--- | :--- |
+| **重現方式** | 開 `pages/account/profile.html`，點 Email 旁的「變更」、輸入新信箱按「下一步」：停在「驗證信已寄送」。之後沒有任何畫面能模擬「點了信裡已過期或已失效的連結」。再開 `pages/account/verify-email.html`，按原型狀態列的「已過期」：面板寫「連結無法使用，請重新申請」，但按鈕是「重新註冊」，那是註冊流程的面板，沒有「回個人設定」或「前往登入」。 |
+| **受影響範圍** | `account/profile#state-default`（換 Email 流程沒有失效落點的視圖）、`account/verify-email`；[State Panel](components/state-panel.md)；規格 01-04 §換 Email 第 9 條、§業務流程「用驗證連結換掉 Email」的 E1、§邊界情況、§驗收標準 |
+| **依據** | 原型：`profile.html` 的 `setState`（`:1437`–`:1448`）只有 `skeleton`、`emailChange`、`emailSent` 與一般狀態，換 Email 走到 `emailSent`（`:1615`）就結束；`verify-email.html:341`–`:350` 的 `#tokenErrorPanel` 只有一個連到 `register.html` 的「重新註冊」。規格 [`01-account/04-profile.mdx`](../../docs/specs/01-account/04-profile.mdx) §換 Email 第 9 條：「連結過期、已經失效，或被新請求蓋掉 → 不換 Email，顯示與規格 01-03 §連結無法使用、規格 01-02 §註冊成功**同一套**的一次性連結失效面板，訊息不分原因，一律是『連結無法使用，請重新申請』」；同條子項：「面板上的按鈕看使用者**當時有沒有登入**：已登入顯示『回個人設定』→ 前往這一頁；未登入顯示『前往登入』→ 前往登入頁」（Q19，維護者 2026-11-23）。 |
+| **待決問題** | 這個失效面板要不要在原型畫出來（屬**畫面修正**，走 Ready gate）？要畫的話放在哪一頁、用什麼示範開關分出「已登入」與「未登入」兩種按鈕？交付包要不要替它收一個視圖？ |
+
+### G-59 連結 Google 帳號時在 Google 那一側取消或不通過，原型沒有那個狀態
+
+> b1 規格側新增（交付包 `b16b294` 第十三次重跑點名，#608）。同樣來自 #558，交付包點名時只寫了換 Email 的面板，核對 `account/profile` 的規格改動時一併找到。
+
+| 欄 | 內容 |
+| :--- | :--- |
+| **重現方式** | 開 `pages/account/profile.html`，在「連結 Google 帳號」區塊點「連結 Google 帳號」：出現「正在前往 Google 驗證…」的 toast，0.6 秒後區塊一律切成「已連結」。沒有任何方式走到「取消」或「驗證不通過」，也看不到「沒有連結 Google 帳號，請再試一次」這句。 |
+| **受影響範圍** | `account/profile#state-google-linked`、`#state-default`；[Toast](components/toast.md)；規格 01-04 §連結 Google 帳號 第 7 條、§邊界情況、§驗收標準 |
+| **依據** | 原型：`handleGoogleLink`（`profile.html:1761`–`:1765`）只有一條路：`showToast('info', t('toastGoogleLinking'), '')` 後 `setState('sso')`。規格 [`01-account/04-profile.mdx`](../../docs/specs/01-account/04-profile.mdx) §連結 Google 帳號 第 7 條：「使用者在 Google 那一側取消，或驗證不通過 → 回到這一頁，Google 區塊維持**未連結**並顯示一句說明『沒有連結 Google 帳號，請再試一次』；登入狀態不變，不必重新登入」；說明不分原因，英文是「Your Google account was not linked. Please try again.」（Q20，維護者 2026-11-23）。 |
+| **待決問題** | 這個失敗狀態要不要在原型畫出來（屬**畫面修正**，走 Ready gate）？那句說明放在區塊裡的哪裡、用什麼樣式（區塊內文字或 toast）？交付包要不要替它收一個視圖？ |
+
+### G-60 使用者管理沒有「這個部署沒有設定寄信服務」的狀態，也沒有「信未寄出」標記
+
+> b2 規格側新增（交付包 `b16b294` 第十三次重跑點名，#608）。規則本身來自 #339（Q9–Q11，維護者 2026-11-16），#551 改寫 06-01 時這幾段被重新整理；先前各批都沒有記這一條。
+
+| 欄 | 內容 |
+| :--- | :--- |
+| **重現方式** | 開 `pages/admin/user-management.html`，按「新增使用者」填一個一般信箱並儲存：toast「使用者已建立」＋「設定密碼信已寄出」。改填 `@mail-fail.test` 結尾的信箱：toast「設定密碼信寄送失敗」＋「帳號未建立，請稍後再試」。列表裡尚未設定密碼的帳號（Rachel Su、Kevin Chen）只多一顆「重發設定密碼信」，沒有任何「信未寄出」標記。全頁沒有能模擬「沒有設定寄信服務」的開關。 |
+| **受影響範圍** | `admin/user-management#state-default`、`#modal-invite`、`#toast-action`；[Data Table](components/data-table.md)、[Toast](components/toast.md)、[Badge](components/badge.md)；規格 06-01 §規格 的「帳號列表」「新增帳號」「重發設定密碼信」、§卡控機制、§邊界情況、§驗收標準 |
+| **依據** | 原型：只有「已設定寄信服務但寄不出去」這一種故障，`MAIL_FAILURE_DOMAIN = '@mail-fail.test'`（`user-management.html:948`–`:951`），經 `simulateMailFailure`，新增時 `:1280`–`:1281` 擋下不建立、重發時 `:1343`–`:1345` 不生效；列上依 `passwordSet` 只決定要不要出「重發」（`:1090`）。規格 [`06-admin/01-user-management.mdx`](../../docs/specs/06-admin/01-user-management.mdx) §規格 › 帳號列表：「**尚未設定密碼、而且這個部署沒有設定寄信服務**的帳號，那一列多一個『信未寄出』的標記」；› 新增帳號：「**這個部署沒有設定寄信服務時**：帳號**照樣建立**……畫面在『使用者已建立』之外再告知系統管理員**信沒有寄出、這個部署沒有設定寄信服務、請從紀錄取出連結轉給對方**」；› 重發設定密碼信：「**這個部署沒有設定寄信服務時**：重發**仍然生效**……**不顯示『設定密碼信寄送失敗』**」；驗收標準三列「沒有設定寄信服務時新增帳號」「沒有設定寄信服務時重發」「信未寄出的標記只出現在尚未設定密碼的列」。 |
+| **待決問題** | 這個狀態與「信未寄出」標記要不要在原型畫出來（屬**畫面修正**，走 Ready gate）？要畫的話用什麼示範開關切換「沒有設定寄信服務」？標記長什麼樣（沿用哪一種徽章）？交付包要不要替它收視圖？ |
 
 ## 三、待重新設計
 

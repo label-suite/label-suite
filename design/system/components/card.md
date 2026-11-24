@@ -23,7 +23,7 @@
 | `task-new` 的 `.form-card` | `margin-bottom: --space-md` 與帶分隔線的標題 | `task-new.html:56`–`:57` |
 | `account/profile` 的 `.section-card` | `margin-bottom: --space-lg`，手機版內距縮成 16px | `profile.html:68` |
 | `annotation-workspace` 的 `.content-card` | 只有容器四條 | `annotation-workspace.html:251`（只剩指向共用檔的註解） |
-| `dataset-analysis-detail` 的 `.panel` | `margin-bottom: --space-md` | `dataset-analysis-detail.html:51` |
+| `dataset-analysis-detail` 的 `.panel` | `margin-bottom: --space-md` | `dataset-analysis-detail.html:50` |
 
 ## 適用狀態
 
@@ -67,5 +67,5 @@
 | `task-management/task-detail`（`#tab-*`、`#sim-403`、`#state-panel-load-failed`） | 本頁 `.panel`，`taskForbidden`／`taskNotFound` 面板也是它 |
 | `task-management/task-new`（`#state-step1`～`#state-step3`） | `.form-card` |
 | `annotation/annotation-workspace`（`#role-*`、`#state-arbitration`、`#state-exception-pool`） | `.content-card`，共用檔的別名 → `../design-gaps.md` G-41 |
-| `dataset/dataset-analysis-detail`（全部視圖，含十六個 partial） | `.panel`，共用檔加本頁的 `margin-bottom`；`renderPanelLoadError` 的 `.panel.panel-load-error`（`dataset-analysis-detail.html:1531`）也是它 → `../design-gaps.md` G-41 |
+| `dataset/dataset-analysis-detail`（全部視圖，含十六個 partial） | `.panel`，共用檔加本頁的 `margin-bottom`；`renderPanelLoadError` 的 `.panel.panel-load-error`（`dataset-analysis-detail.html:1583`）也是它；`#param-error` 的載入失敗面板同一個函式 → `../design-gaps.md` G-41 |
 | `account/profile`（全部視圖） | `.section-card`，共用檔的別名 → `../design-gaps.md` G-41 |

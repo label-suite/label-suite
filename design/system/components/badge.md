@@ -68,6 +68,6 @@
 | `task-management/task-detail`（`#tab-overview`、`#param-status`） | 本頁 `<style>` 重寫（`task-detail.html:115`–`:132`），中性與正式徽章同樣改用 #420 的 token |
 | `annotation/annotation-list`（`#state-default`、`#param-run-type`） | **本頁重寫的 `.badge`**（`annotation-list.html:142`–`:178`），階段徽章 `.badge-dry-run`／`.badge-official` 原本寫死 hex，#420 起改用中性 token 與 `--color-accent*`（`:169`–`:178`）→ `../design-gaps.md` G-02 |
 | `dataset/dataset-analysis-list`（`#state-default`） | 本頁 `.badge`（`dataset-analysis-list.html:121`）與 `.badge-iaa-*`（`:140`–`:144`）、`.badge-role-pl`／`-rev`（`:146`–`:147`），全用 token；輸出類型用 `task-type-badge.css`（`dataset-analysis-list.html:214` 載入） |
-| `dataset/dataset-analysis-detail`（`#tab-quality`、`#state-quality-*`、`#param-q-state-*`） | 本頁 `.badge-pass`／`-fail`／`-warn`／`-neutral`（`dataset-analysis-detail.html:57`–`:62`）與 `.risk-level-badge`（`:149`–`:153`），全用 token |
+| `dataset/dataset-analysis-detail`（`#tab-quality`、`#state-quality-*`、`#param-q-state-*`） | 本頁 `.badge-pass`／`-fail`／`-warn`／`-neutral`（`dataset-analysis-detail.html:58`–`:62`）與 `.risk-level-badge`（`:150`–`:154`），全用 token |
 
 b1 的帳號頁一個都沒用。b2 已補上（見上表），**五頁都是各自重寫，沒有一頁直接用正典**。b3 已補上（見上表），同樣是本頁重寫。b4 已補上（見上表），兩頁同樣是本頁重寫。

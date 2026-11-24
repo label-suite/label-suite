@@ -128,7 +128,7 @@ prototype 的註解另外指名的章節裡，這一個不是元件（b1 原列�
 | `b1-shared-account` | `pages/shared/`、`pages/account/`、`index.html`、`components-showcase.html` | 9 | 43 | ✅ 已完成（交付包 `b1fd43c`） |
 | `b2-admin-dashboard-task` | `pages/admin/`、`pages/dashboard/`、`pages/task-management/` | 6 | 45 | ✅ 已完成（交付包 `eb9a884`） |
 | `b3-annotation-review` | `pages/annotation/` | 2 | 22 | ✅ 已完成（交付包 `eb9a884`） |
-| **`b4-dataset-sweep`** | `pages/dataset/`，以及全站覆蓋複查 | **2** | **30** | ✅ **本批次**（交付包 `eb9a884`） |
+| **`b4-dataset-sweep`** | `pages/dataset/`，以及全站覆蓋複查 | **2** | **32** | ✅ 已完成（交付包 `eb9a884`）；🔁 **重驗**（交付包 `b16b294`，#608） |
 
 ### b1 的成果
 
@@ -183,6 +183,25 @@ prototype 的註解另外指名的章節裡，這一個不是元件（b1 原列�
 - 跨元件約定沒有新增；UXC-07、09、11 加上 b4 的核對。
 - 差異新增 **5 筆**（G-52～G-56），共 53 筆：原型與規格差異 22、缺狀態證據 9、待重新設計 22。G-02、G-10、G-11、G-14、G-18、G-22、G-24、G-37、G-41 追加了 b4 的核對結果，過去的裁定不動。
 
+### b4 重驗（交付包 `b16b294`，#608）
+
+交付包第十三次重跑（`handoff/coverage.md` §九）點名 b4：`dataset-analysis-detail.html` 與七個 `quality-*` partial 因 #435 改了行為。
+
+- 畫面規格更新 **2 份**：[`dataset-analysis-detail`](pages/dataset-dataset-analysis-detail.md) 補上 Partial overlap 時星號收起與「— 參考顯示」後綴、換語言保留「通過／未達」、英文模式與 `qualityListRank.aria*` 鍵，`.iaa-bar-fill` 的預設色，以及交付包已有、畫面檔還沒列的 `#param-error`；行號依 2632 行的新檔重新對齊。[`dataset-analysis-list`](pages/dataset-dataset-analysis-list.md) 只補 `#param-error`。b4 的 32 個視圖現在都在畫面檔裡。
+- 元件規格更新 **11 份**的 b4 列（行號；[Progress Bar](components/progress-bar.md) 補 `.fail`／`.neutral` 與預設色，[Data Table](components/data-table.md) 補表格 `aria-label` 的翻譯鍵，[App Shell](components/app-shell.md) 兩頁視圖數改為 5 與 27，[Card](components/card.md)、[Button](components/button.md)、[Empty State](components/empty-state.md) 補上 `#param-error`）；[`ux-conventions.md`](ux-conventions.md) UXC-11 的行號。沒有新增元件，結構不變。
+- 差異新增 **1 筆**：G-57（星號與「參考顯示」規格沒有寫，待維護者）。G-54 加上交付包已收 `#param-error` 的狀態。需複核的既有裁定：無。
+
+### b1～b3 規格側複核（交付包 `b16b294`，#608）
+
+同一次重跑點名 b1～b3 的 prototype 沒有動、但視圖指向的規格頁改過。逐條核對後只記差異，不改畫面：
+
+- **b1**（#558，`01-account/04-profile.mdx`）：新增 **2 筆**——G-58 換 Email 的驗證連結失效面板、G-59 連結 Google 帳號時取消或不通過的狀態，原型都沒有。
+- **b2**：新增 **1 筆**——G-60 沒有設定寄信服務的狀態與「信未寄出」標記（`06-admin/01-user-management.mdx`）。#551 的另外兩項與原型一致：側欄「系統管理」次選單已有「角色設定」（`pages/shared/sidebar.js:673`–`:674`），「只能查看的系統管理員」這種被刪掉的狀態原型本來就沒有。#434 的刪除確認點遮罩不關閉與原型一致，記在 G-45 的複核。
+- **b3**（#434，`04-annotation/02-annotation-workspace.mdx`）：指引閘門的兩個出口、Esc 與點遮罩不關、初始焦點在確認，與原型一致，記在 G-46 的複核；沒有新差異。
+- `07-shared/*` 只改來源說明與一條不洩漏存在的規則，沒有改畫面該有的東西（`handoff/coverage.md` §九 第十三次），不另記。
+
+差異共 **57 筆**（G-57～G-60 新增）；待決問題都等維護者。
+
 ### 全站覆蓋複查
 
 依 [`screen-inventory.md`](screen-inventory.md) 的雙向一致性：
@@ -206,3 +225,5 @@ prototype 的註解另外指名的章節裡，這一個不是元件（b1 原列�
 | 3 | 2026-11-18 | `b3-annotation-review`：兩份畫面規格；UXC-04／05；Tooltip 補審核說明變體；G-46～G-51；元件一覽加 b3 欄。 |
 | 4 | 2026-11-18 | `b4-dataset-sweep`：兩份畫面規格；全站覆蓋複查；G-52～G-56；元件一覽加 b4 欄。 |
 | 5 | 2026-11-18 | #420 色值複查（b1～b4，只看顏色）：寫死色值換成 token 與 `data-palette.css` 後，同步元件與畫面規格的取色說明；G-02、G-03、G-29、G-50 加修正狀態；行號依修正後的 prototype 重新對齊。 |
+| 6 | 2026-11-24 | #608 `b4-dataset-sweep` 依交付包 `b16b294` 重驗：#435 的行為改動寫進畫面規格、補 `#param-error`、行號對齊；G-57。 |
+| 7 | 2026-11-24 | #608 b1～b3 規格側複核：G-58～G-60；G-45、G-46 加複核紀錄。 |

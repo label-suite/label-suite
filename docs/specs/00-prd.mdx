@@ -9,7 +9,7 @@ updatedAt: '2026-11-24'
 
 # Label Suite PRD
 
-:badge[定稿]{variant="success"} :badge[變更 #85]{variant="warning" href="https://github.com/label-suite/label-suite/issues/85"}
+:badge[定稿]{variant="success"} :badge[變更 #551]{variant="warning" href="https://github.com/label-suite/label-suite/issues/551"}
 
 Label Suite 是給學術 NLP 研究團隊用的資料標記與品質評估平台：研究人員用設定組出標記任務，再由團隊在同一個平台完成試標、正式標記、審核與資料品質分析。
 
@@ -22,7 +22,7 @@ Label Suite 是給學術 NLP 研究團隊用的資料標記與品質評估平台
 | 專案 | Label Suite（`label-suite`） |
 | 文件狀態 | 定稿 |
 | 負責人 | 論文作者（專案維護者） |
-| 最後更新 | 2026-11-16 |
+| 最後更新 | 2026-11-24 |
 
 ### 章節完成度
 
@@ -46,6 +46,8 @@ Label Suite 是給學術 NLP 研究團隊用的資料標記與品質評估平台
 - 現有的標記工具對非工程背景的研究人員門檻太高：換一種任務，就要重新學一套設定方式，或者請工程師改程式。
 - 資料品質要等標記全部做完才看得到。如果標記員對規則的理解不一致，往往到最後才發現，只能整批重標。
 - Label Suite 是碩士論文 Demo Paper 的核心成果，要在論文中展示「用設定驅動的標記流程」與「標記過程中就能看到資料品質」。
+
+專案負責人用現有工具走完一次標記的經驗，另見 [使用者旅程](../product/user-journey.mdx)。
 
 ### 目標
 
@@ -91,7 +93,7 @@ R：Read（可讀取）　C：Create（可新增）　E：Edit（可編輯）　
 | 03 新增任務 | C | C |
 | 06 使用者管理 | — | R/C/E |
 | 06 角色設定 | — | R/E |
-| 07 共用介面 | <mark>R/E (o)</mark><sup>[#85](https://github.com/label-suite/label-suite/issues/85)</sup> | <mark>R/E (o)</mark><sup>[#85](https://github.com/label-suite/label-suite/issues/85)</sup> |
+| 07 共用介面 | R/E (o) | R/E (o) |
 
 **依任務角色**（只限自己參與的任務）
 
@@ -99,41 +101,41 @@ R：Read（可讀取）　C：Create（可新增）　E：Edit（可編輯）　
 | :--- | :--- | :--- | :--- |
 | 03 任務詳情（設定、成員、試標與正式標記的推進） | R/E | R | — |
 | 03 匯出標記結果 | C | — | — |
-| <mark>03 刪除草稿任務</mark><sup>[#85](https://github.com/label-suite/label-suite/issues/85)</sup> | <mark>D（限草稿）</mark><sup>[#85](https://github.com/label-suite/label-suite/issues/85)</sup> | — | — |
+| 03 刪除草稿任務 | D（限草稿） | — | — |
 | 04 標記清單與標記工作區（產出標記） | — | — | R/C/E (o) |
-| 04 標記清單與標記工作區（審核與仲裁） | <mark>R/E</mark><sup>[#85](https://github.com/label-suite/label-suite/issues/85)</sup> | R/E | — |
+| 04 標記清單與標記工作區（審核與仲裁） | R/E | R/E | — |
 | 05 資料集分析 | R | R | — |
 | 05 資料匯入與版本 | R/C | R | — |
 
 - 這兩張表是預設值，也是上限：系統管理員在角色設定（[規格 06-02](./06-admin/02-role-settings.mdx)）只能在表內收窄權限，不能放寬；「06 系統管理」兩列固定，系統管理員可用、平台成員不可用
 - 平台成員在任務列表與儀表板只看得到自己參與的任務；系統管理員看得到所有任務的列表，但沒有任務角色時，進不了該任務的詳情、標記與分析
-- 帳號沒有刪除，只有停用與啟用（見 [規格 06-01](./06-admin/01-user-management.mdx)）。<mark>那說的是**帳號**；任務的刪除是上表的「03 刪除草稿任務」，兩者不衝突</mark><sup>[#85](https://github.com/label-suite/label-suite/issues/85)</sup>
+- 帳號沒有刪除，只有停用與啟用（見 [規格 06-01](./06-admin/01-user-management.mdx)）。那說的是**帳號**；任務的刪除是上表的「03 刪除草稿任務」，兩者不衝突
 - 標記員只看得到被指派給自己的資料；標記員能接觸到的任何地方，都看不到標準答案與測試集資訊
-- 專案負責人在標記工作區只處理審核員無法收斂的例外，不產出標記；<mark>他的 `E` 只用在[最終例外池](./04-annotation/02-annotation-workspace.mdx#最終例外池是最後一道出口)的逐筆收尾</mark><sup>[#85](https://github.com/label-suite/label-suite/issues/85)</sup>
-- <mark>「07 共用介面」的 `E (o)` **只作用在使用者自己的偏好與狀態**：語言、外觀、側欄收合狀態、通知已讀狀態。**上限不含任何業務資料**——共用介面本身不持有業務資料，也不得用這一格去編輯別處的資料</mark><sup>[#85](https://github.com/label-suite/label-suite/issues/85)</sup>
+- 專案負責人在標記工作區只處理審核員無法收斂的例外，不產出標記；他的 `E` 只用在[最終例外池](./04-annotation/02-annotation-workspace.mdx#最終例外池是最後一道出口)的逐筆收尾
+- 「07 共用介面」的 `E (o)` **只作用在使用者自己的偏好與狀態**：語言、外觀、側欄收合狀態、通知已讀狀態。**上限不含任何業務資料**——共用介面本身不持有業務資料，也不得用這一格去編輯別處的資料
 - 匯出只在任務「已完成」後開放
 
-<mark>**矩陣之外的平台硬邊界**：系統管理員可以刪除任何一個草稿任務，**不經任務層格**——他在那個任務有沒有任務角色都一樣。這是資料治理動作，不是任務內的工作，所以會出現「看不了內容卻能刪掉」。它不寫成上面任何一格，因為兩張表一張依系統角色、一張只限自己參與的任務，而這條權限兩邊都不屬。</mark><sup>[#85](https://github.com/label-suite/label-suite/issues/85)</sup>
+**矩陣之外的平台硬邊界**：系統管理員可以刪除任何一個草稿任務，**不經任務層格**——他在那個任務有沒有任務角色都一樣。這是資料治理動作，不是任務內的工作，所以會出現「看不了內容卻能刪掉」。它不寫成上面任何一格，因為兩張表一張依系統角色、一張只限自己參與的任務，而這條權限兩邊都不屬。
 
 規格書的「使用角色」只能比這張表更嚴，不能更寬。
 
 ### 不是角色的讀取對象
 
-<mark>:ref[標準答案]{id="term.ground-truth"}的讀取**不屬於任何使用者角色**。儲存之後只有**經授權的計分程序**讀得到它——那是一個自動程序，不是人，也不是上面任何一列，所以權限矩陣裡沒有、也不會有它的格子。它**只讀答案**，不寫、不讀其他業務資料。</mark><sup>[#85](https://github.com/label-suite/label-suite/issues/85)</sup>
+:ref[標準答案]{id="term.ground-truth"}的讀取**不屬於任何使用者角色**。儲存之後只有**經授權的計分程序**讀得到它——那是一個自動程序，不是人，也不是上面任何一列，所以權限矩陣裡沒有、也不會有它的格子。它**只讀答案**，不寫、不讀其他業務資料。
 
-<mark>寫在這裡是因為它是整個平台唯一讀得到標準答案的對象：不寫下來，讀者會以為某個角色可以讀。**不得為了讀答案新增任何可讀的角色**（見[規格 05-03 §已確認決議](./05-dataset/03-ingestion-lineage.mdx#已確認決議) Q3）。</mark><sup>[#85](https://github.com/label-suite/label-suite/issues/85)</sup>
+寫在這裡是因為它是整個平台唯一讀得到標準答案的對象：不寫下來，讀者會以為某個角色可以讀。**不得為了讀答案新增任何可讀的角色**（見[規格 05-03 §已確認決議](./05-dataset/03-ingestion-lineage.mdx#已確認決議) Q3）。
 
 ## 專案範圍
 
 ### 範圍內
 
-- 帳號：Email 與密碼登入、註冊、<mark>用一次性連結設定密碼</mark><sup>[#85](https://github.com/label-suite/label-suite/issues/85)</sup>、個人設定（<mark>含頭像、外觀偏好、通知設定與連結 Google 帳號</mark><sup>[#85](https://github.com/label-suite/label-suite/issues/85)</sup>）、登入狀態與安全；<mark>登入頁的 Google SSO 本期接上</mark><sup>[#85](https://github.com/label-suite/label-suite/issues/85)</sup>
+- 帳號：Email 與密碼登入、註冊、用一次性連結設定密碼、個人設定（含頭像、外觀偏好、通知設定與連結 Google 帳號）、登入狀態與安全；登入頁的 Google SSO 本期接上
 - 儀表板：登入後依使用者在各任務的角色，彙整自己的任務並快速回到標記或審核
-- 任務管理：用任務設定建立任務（上傳 JSON 資料集），管理成員，推進 :ref[試標]{id="term.dry-run"} 與 :ref[正式標記]{id="term.official-run"}，<mark>刪除還是草稿的任務</mark><sup>[#85](https://github.com/label-suite/label-suite/issues/85)</sup>，任務完成後匯出 JSON／JSON-MIN
+- 任務管理：用任務設定建立任務（上傳 JSON 資料集），管理成員，推進 :ref[試標]{id="term.dry-run"} 與 :ref[正式標記]{id="term.official-run"}，刪除還是草稿的任務，任務完成後匯出 JSON／JSON-MIN
 - 標記作業：標記員依任務設定作答，審核員審核、處理爭議與仲裁
 - 資料集：資料統計、品質監控（含 :ref[IAA]{id="term.iaa"}）、資料匯入的來源與版本追溯
 - 系統管理：使用者管理、角色權限設定
-- 共用介面：側欄導覽、工作頁籤、繁體中文與英文切換、<mark>外觀切換（淺色／深色）、通知、快捷鍵總覽、側欄收合</mark><sup>[#85](https://github.com/label-suite/label-suite/issues/85)</sup>
+- 共用介面：側欄導覽、工作頁籤、繁體中文與英文切換、外觀切換（淺色／深色）、通知、快捷鍵總覽、側欄收合
 
 ### 範圍外
 
@@ -204,13 +206,13 @@ import PrdSiteMap from '@notes/components/prd-site-map'
 - 未登入時
   - 登入，含 Google SSO 入口（所有人）：見 [規格 01-01](./01-account/01-login.mdx)
   - 註冊（所有人）：見 [規格 01-02](./01-account/02-register.mdx)
-  - <mark>用一次性連結設定密碼</mark><sup>[#85](https://github.com/label-suite/label-suite/issues/85)</sup>（所有人）：見 [規格 01-03](./01-account/03-reset-password.mdx)
+  - 用一次性連結設定密碼（所有人）：見 [規格 01-03](./01-account/03-reset-password.mdx)
 - 登入後，從側欄進入
   - 儀表板（平台成員 (o)、系統管理員）：見 [規格 02-01](./02-dashboard/01-dashboard.mdx)
   - 任務列表（平台成員 (o)、系統管理員）：見 [規格 03-01](./03-task-management/01-task-list.mdx)
     - 新增任務（平台成員、系統管理員；建立者成為專案負責人）：見 [規格 03-02](./03-task-management/02-task-new.mdx)
     - 任務詳情（專案負責人、審核員）：見 [規格 03-03](./03-task-management/03-task-detail.mdx)
-  - 標記清單（標記員、審核員；從儀表板或任務列表進入）：見 [規格 04-01](./04-annotation/01-annotation-list.mdx)。<mark>側欄這一項的顯示名稱依任務角色變化：標記員讀「標記作業」、審核員讀「審核作業」、專案負責人讀「例外處置」，與標記工作區的入口麵包屑一致（見[規格 07-01 §已確認決議](./07-shared/01-sidebar.mdx#已確認決議) Q3）</mark><sup>[#85](https://github.com/label-suite/label-suite/issues/85)</sup>
+  - 標記清單（標記員、審核員；從儀表板或任務列表進入）：見 [規格 04-01](./04-annotation/01-annotation-list.mdx)。側欄這一項的顯示名稱依任務角色變化：標記員讀「標記作業」、審核員讀「審核作業」、專案負責人讀「例外處置」，與標記工作區的入口麵包屑一致（見[規格 07-01 §已確認決議](./07-shared/01-sidebar.mdx#已確認決議) Q3）
     - 標記工作區（標記員、審核員；專案負責人處理例外）：見 [規格 04-02](./04-annotation/02-annotation-workspace.mdx)
   - 資料集分析列表（專案負責人、審核員）：見 [規格 05-01](./05-dataset/01-analysis-list.mdx)
     - 資料集分析詳情（專案負責人、審核員）：見 [規格 05-02](./05-dataset/02-analysis-detail.mdx)
@@ -222,8 +224,8 @@ import PrdSiteMap from '@notes/components/prd-site-map'
   - 登入狀態與安全（所有登入的使用者）：見 [規格 01-05](./01-account/05-login-state.mdx)
   - 側欄導覽（所有登入的使用者）：見 [規格 07-01](./07-shared/01-sidebar.mdx)
   - 工作頁籤（所有登入的使用者）：見 [規格 07-02](./07-shared/02-workspace-tabs.mdx)
-  - <mark>無權限與找不到（所有登入的使用者）：見 [規格 07-03](./07-shared/03-denied-and-not-found.mdx)</mark><sup>[#85](https://github.com/label-suite/label-suite/issues/85)</sup>
-  - <mark>通知事件（所有登入的使用者）：見 [規格 07-04](./07-shared/04-notification-events.mdx)。這一項連畫面都沒有，是一份跨模組的事件清單</mark><sup>[#85](https://github.com/label-suite/label-suite/issues/85)</sup>
+  - 無權限與找不到（所有登入的使用者）：見 [規格 07-03](./07-shared/03-denied-and-not-found.mdx)
+  - 通知事件（所有登入的使用者）：見 [規格 07-04](./07-shared/04-notification-events.mdx)。這一項連畫面都沒有，是一份跨模組的事件清單
 
 ## 模組架構與串接
 
@@ -255,7 +257,7 @@ import PrdSystemContext from '@notes/components/prd-system-context'
 | :ref[系統管理員]{id="term.system-admin"} | 人 | 管理平台帳號、系統角色與角色權限；包含部署時建立的 :ref[Seeder 管理員]{id="term.seeder-admin"} |
 | 部署者 | 人，不是系統角色 | 部署平台、建立 Seeder 管理員、直接匯入批次資料；Resend 未設定時，從伺服器 log 取得設定密碼連結轉給使用者 |
 | Google（OIDC） | 外部系統，可選 | 登入頁的 Google SSO；`GOOGLE_CLIENT_ID` 沒設定時按鈕退回 no-op，Email 與密碼登入照常可用 |
-| Resend | 外部系統，可選 | 寄出註冊驗證信、忘記密碼信與設定密碼信；沒有設定 key 時，設定密碼連結改印在伺服器 log，由部署者轉給使用者 |
+| Resend | 外部系統，可選 | 寄出註冊驗證信、忘記密碼信、設定密碼信<mark>與任務邀請信（專案負責人在任務的成員管理以 Email 邀請成員，見[規格 03-03](./03-task-management/03-task-detail.mdx#成員管理)）</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup>；沒有設定 key 時，設定密碼連結改印在伺服器 log，由部署者轉給使用者 |
 
 - 範圍外的「開放其他系統串接與第三方整合」不在圖上：這期除了上面兩個可選整合，沒有其他外部系統
 - 平台內部的元件（前端、API、背景工作、資料庫）屬於 C4 第二層，見 [技術架構](../development/architecture.mdx)
