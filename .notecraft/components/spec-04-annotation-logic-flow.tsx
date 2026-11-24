@@ -39,7 +39,7 @@ type NodeKind = "terminal" | "page" | "decision" | "module" | "external";
 type EdgeKind = "plain" | "yes" | "no";
 
 interface FlowNode {
-  /** 與文字版相同的編號：S、P1～P2、D1～D8、X1～X3 */
+  /** 與文字版相同的編號：S、E（有明確終點的模組才有）、P1…、D1…、X1… */
   id: string;
   kind: NodeKind;
   lines: string[];

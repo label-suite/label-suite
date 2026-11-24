@@ -9,6 +9,8 @@ import { MousePointerClick, RotateCcw } from "lucide-react";
  * 節點編號、分段與出處都和 index.mdx 的文字版逐項一致；文字版沒有的連線不畫，缺口只以灰色註記標示。
  */
 
+/* ================================================================ 【骨架】不可修改 ================================================================ */
+
 /* ---------------------------------------------------------------- 色票（label-suite-design，來源 design/prototype/assets/tokens.css） */
 
 const PRIMARY = "#6366F1"; // --color-primary
@@ -30,14 +32,14 @@ const EASE: [number, number, number, number] = [0.4, 0, 0.2, 1];
 
 /* ---------------------------------------------------------------- 型別 */
 
-/** terminal 起訖、page 頁面、decision 判斷、module 其他模組的流程、external 外部系統或收信 */
+/** terminal 起訖、page 本模組的頁面、decision 判斷、module 其他模組的流程、external 外部系統或收信 */
 type NodeKind = "terminal" | "page" | "decision" | "module" | "external";
 
 /** plain 一般、yes 判斷的「是」、no 判斷的「否」或失敗 */
 type EdgeKind = "plain" | "yes" | "no";
 
 interface FlowNode {
-  /** 與文字版相同的編號：S、E、P1～P6、D1～D9、X1～X8 */
+  /** 與文字版相同的編號：S、E（有明確終點的模組才有）、P1…、D1…、X1… */
   id: string;
   kind: NodeKind;
   lines: string[];
@@ -58,7 +60,7 @@ interface FlowEdge {
   pts: [number, number][];
   label?: string;
   lp?: [number, number];
-  /** 文字版的條目，含出處 */
+  /** 文字版的條目，含出處；起訖連線沒有規格出處 */
   text: string;
 }
 
@@ -77,6 +79,18 @@ interface Section {
   edges: FlowEdge[];
   gaps: Gap[];
 }
+
+/* ---------------------------------------------------------------- 共用節點輔助：依下方 NOTE 查出處說明 */
+
+function n(id: string, kind: NodeKind, lines: string[], x: number, y: number, w: number, h: number): FlowNode {
+  return { id, kind, lines, x, y, w, h, note: NOTE[id] ?? id };
+}
+
+/* ================================================================ 【節點與連線】依模組填寫 ================================================================ */
+
+/* ---------------------------------------------------------------- 模組名稱（顯示於 aria-label） */
+
+const MODULE_LABEL = "01 帳號";
 
 /* ---------------------------------------------------------------- 共用節點（同一個編號在不同分段重複出現） */
 
@@ -108,11 +122,7 @@ const NOTE: Record<string, string> = {
   X8: "其他流程：06-01 系統管理員停用帳號",
 };
 
-function n(id: string, kind: NodeKind, lines: string[], x: number, y: number, w: number, h: number): FlowNode {
-  return { id, kind, lines, x, y, w, h, note: NOTE[id] ?? id };
-}
-
-/* ---------------------------------------------------------------- 資料：四個分段，與文字版的分段一～四逐項一致 */
+/* ---------------------------------------------------------------- 資料：每個分段，與該模組 index.mdx 文字版的分段逐項一致 */
 
 const SECTIONS: Section[] = [
   {
@@ -238,6 +248,8 @@ const SECTIONS: Section[] = [
     gaps: [],
   },
 ];
+
+/* ================================================================ 【骨架】不可修改 ================================================================ */
 
 /* ---------------------------------------------------------------- 樣式 */
 
@@ -407,7 +419,7 @@ export default function SpecAccountLogicFlow(): ReactElement {
               setSwitched(true);
             }}
           >
-            {`分段${["一", "二", "三", "四"][i]}：${s.label}`}
+            {`分段${["一", "二", "三", "四", "五", "六", "七", "八", "九", "十"][i] ?? i + 1}：${s.label}`}
           </button>
         ))}
       </div>
@@ -434,7 +446,7 @@ export default function SpecAccountLogicFlow(): ReactElement {
           <svg
             viewBox={`0 0 ${section.w} ${section.h}`}
             role="group"
-            aria-label={`01 帳號 Logic Flow：${section.label}；用 Tab 移到節點或連線，按 Enter 看出處`}
+            aria-label={`${MODULE_LABEL} Logic Flow：${section.label}；用 Tab 移到節點或連線，按 Enter 看出處`}
             style={{ display: "block", width: "100%", minWidth: Math.round(section.w * 0.78) }}
             onClick={() => setSel(null)}
           >
