@@ -169,7 +169,7 @@ backend/
 │  ├─ main.py                create_app()：組裝入口
 │  ├─ core/                  全站共用的基礎建設，見下表
 │  ├─ i18n/<locale>/messages.json   外層 message 的字串
-│  ├─ scripts/export_openapi.py     匯出 openapi.json
+│  ├─ scripts/export_openapi.py     匯出 openapi.json（不帶 --output 時同時寫文件站副本）
 │  └─ modules/<module>/      業務模組：router、service、repository、schemas（有表時加 models）
 └─ tests/
    ├─ unit/
@@ -404,6 +404,7 @@ cd backend && uv run python -m app.scripts.export_openapi
 | 後處理 | 每個 `422` 改指向 `ErrorResponse`、刪掉 FastAPI 的 `HTTPValidationError` 與 `ValidationError`、泛型元件改用 `title` 當名稱 |
 | 版號 | `info.version` 讀 `backend/pyproject.toml` 的 `[project].version` |
 | 匯出 | 用固定的佔位設定組 app，不跑 lifespan、不開資料庫、不需要環境變數；輸出排序過的 key、縮排 2、結尾換行，失敗時不動既有檔案、退出碼 1 |
+| 文件站副本 | 不帶 `--output` 時，同一份文字也寫到 `docs/diagrams/architecture/api.openapi.json`（`openapi-renderer` 外掛渲染它）；兩份內容位元組相同、都提交進 repo，副本不是第二個契約來源、前端 client 仍只讀 `backend/openapi.json`；帶 `--output PATH` 只寫該處、不寫副本；兩處寫入先寫同目錄暫存檔、全部成功才 `os.replace`，失敗時刪暫存檔、既有檔案不動、退出碼 1 |
 | 漂移檢查 | 指令見 `openspec/config.yaml` 的 `operations.apply`（後端契約漂移那一條） |
 
 :::note{title="operationId 的算法" collapsible}
