@@ -29,7 +29,7 @@ tags: [故事地圖, User Story, Epic]
 
 ## 互動 story map
 
-story 的 Epic 依它連到的規格頁在路線圖 Feature 裡的位置決定，所以除了 [§待決](#待決) 列出的那一個，同一頁規格的 story 都在同一個 Epic；E0 基礎建設收尾沒有規格頁，那一列是空的。
+story 的 Epic 依它連到的規格頁在路線圖 Feature 裡的位置決定，所以同一頁規格的 story 都在同一個 Epic，只有維護者另外指定的例外（側欄的未讀通知歸 E7）；E0 基礎建設收尾沒有規格頁，那一列是空的。
 
 角色篩選選了 :ref[專案負責人]{id="term.project-leader"}、:ref[標記員]{id="term.annotator"} 或 :ref[審核員]{id="term.reviewer"} 時，:ref[平台成員]{id="term.platform-member"} 的 story 也會亮起，因為任務角色持有者本身就是平台成員（[規格 02-01 §使用角色](../specs/02-dashboard/01-dashboard.mdx#使用角色)）；選審核員時 :ref[仲裁者]{id="term.arbiter"} 的 story 也會亮起，因為仲裁者是被指定的審核員。
 
@@ -172,7 +172,7 @@ import StoryMap from '@notes/components/story-map'
 | 從側欄知道自己在哪個模組，不走進沒有權限的頁面 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [07-01 側欄導覽](../specs/07-shared/01-sidebar.mdx) | [E2 共用介面外殼](roadmap.mdx#epic-一覽) |
 | 不離開目前的工作就切換語言與外觀 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [07-01 側欄導覽](../specs/07-shared/01-sidebar.mdx) | [E2 共用介面外殼](roadmap.mdx#epic-一覽) |
 | 在桌機查看目前頁面能用的快捷鍵 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [07-01 側欄導覽](../specs/07-shared/01-sidebar.mdx) | [E2 共用介面外殼](roadmap.mdx#epic-一覽) |
-| 在側欄看到未讀通知的數量，並一次全部標為已讀 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [07-01 側欄導覽](../specs/07-shared/01-sidebar.mdx) | 待維護者確認（見 [§待決](#待決) 第 1 列） |
+| 在側欄看到未讀通知的數量，並一次全部標為已讀 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [07-01 側欄導覽](../specs/07-shared/01-sidebar.mdx) | [E7 儀表板與通知](roadmap.mdx#epic-一覽) |
 | 同時開多個工作頁籤，切回來時檢視狀態都還在 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [07-02 工作頁籤](../specs/07-shared/02-workspace-tabs.mdx) | [E2 共用介面外殼](roadmap.mdx#epic-一覽) |
 | 把同一個任務的試標與正式標記各開一個頁籤來回比對 | :ref[專案負責人]{id="term.project-leader"} | [07-02 工作頁籤](../specs/07-shared/02-workspace-tabs.mdx) | [E2 共用介面外殼](roadmap.mdx#epic-一覽) |
 | 頁籤被自動淘汰時，不遺失還沒送出的作答或審核決定 | :ref[標記員]{id="term.annotator"}、:ref[審核員]{id="term.reviewer"} | [07-02 工作頁籤](../specs/07-shared/02-workspace-tabs.mdx) | [E2 共用介面外殼](roadmap.mdx#epic-一覽) |
@@ -187,14 +187,8 @@ story 只改 `.notecraft/components/story-map-data.ts`，圖跟著更新；本�
 | :--- | :--- |
 | 規格新增、刪除或改了使用者目標 | 該頁的 story：新增、刪除或改寫那一列，角色照規格的使用角色 |
 | 新增一頁規格 | 在 `SPECS` 加這一頁，story 放進對應的活動；路線圖還沒有它的 Feature 時，Epic 先標待確認並列進待決 |
-| 路線圖的 Epic 改了範圍或拆併 | 不改這份的資料，Epic 從 `roadmap-data.ts` 讀；只檢查待確認的 story 是否已經有答案 |
-| 待決有了結論 | 拿掉該 story 的 `epicPending`，把待決那一列移進決策紀錄 |
-
-## 待決
-
-| # | 問題 | 卡住什麼 | 誰決定 |
-| :--- | :--- | :--- | :--- |
-| 1 | 「在側欄看到未讀通知的數量，並一次全部標為已讀」屬於 E2 還是 E7：它的規格頁 07-01 在 E2 的範圍，但 E2 的 Sub-feature 沒有通知，E7 的 07-04 卻列了「兩個消費端」 | 這個 story 的 Epic 欄 | 維護者 |
+| 路線圖的 Epic 改了範圍或拆併 | 不改這份的資料，Epic 從 `roadmap-data.ts` 讀；只檢查待確認與設了 `epicOverride` 的 story 是否仍然成立 |
+| 待決有了結論 | 拿掉該 story 的 `epicPending`；結論和依規格頁推出的 Epic 不同時改設 `epicOverride`，把待決那一列移進決策紀錄 |
 
 ## 決策紀錄
 
@@ -204,3 +198,4 @@ story 只改 `.notecraft/components/story-map-data.ts`，圖跟著更新；本�
 | 2026-11-24 | 縱軸用路線圖的 Epic E0～E7，不另定 R1～R3 切片；一頁規格拆成數個 story，一個使用者目標一列（[§互動 story map](#互動-story-map)） | 個人 repo 故事地圖的 R1～R3 切片與規格編號 001～019 | [#616](https://github.com/label-suite/label-suite/issues/616) |
 | 2026-11-24 | 活動主幹照八個活動加一列共用介面，順序參考專案負責人的任務生命週期；互動圖加角色篩選（[§活動主幹](#活動主幹)） | — | [#616 留言](https://github.com/label-suite/label-suite/issues/616) |
 | 2026-11-24 | 不搬個人 repo 的 onboarding 流程、R1～R3 驗收清單與規格對照索引 | — | [#616](https://github.com/label-suite/label-suite/issues/616) |
+| 2026-11-24 | 「在側欄看到未讀通知的數量，並一次全部標為已讀」歸 E7，隨 07-04 通知事件，側欄是它的消費端之一（[§互動 story map](#互動-story-map)） | 依規格頁 07-01 推出的 E2 | [#616 留言](https://github.com/label-suite/label-suite/issues/616#issuecomment-7125032067) |

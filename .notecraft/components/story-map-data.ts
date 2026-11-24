@@ -4,7 +4,8 @@
  * Each story is one user goal taken from a spec page (its goals, business
  * flows and acceptance criteria). The Epic a story belongs to is not stored
  * here: it is derived from the roadmap's Epic features in roadmap-data.ts,
- * by the spec page the story links to. A story whose Epic is unclear carries
+ * by the spec page the story links to. Where the maintainer ruled a different
+ * Epic, the story carries `epicOverride`. A story whose Epic is unclear carries
  * `epicPending` instead, and stays unassigned until the maintainer decides.
  * Edit this file, not the component or the tables, when a story changes.
  */
@@ -120,6 +121,8 @@ export interface Story {
   roles: RoleId[];
   /** Spec page code, e.g. "01-01". */
   spec: string;
+  /** Epic id the maintainer ruled, used instead of the one derived from the spec page. */
+  epicOverride?: string;
   /** Set when the story's Epic is unclear; the maintainer decides. */
   epicPending?: true;
 }
@@ -219,7 +222,7 @@ export const STORIES: Story[] = [
   { id: "S70", activity: "shared", text: "從側欄知道自己在哪個模組，不走進沒有權限的頁面", roles: ALL, spec: "07-01" },
   { id: "S71", activity: "shared", text: "不離開目前的工作就切換語言與外觀", roles: ALL, spec: "07-01" },
   { id: "S72", activity: "shared", text: "在桌機查看目前頁面能用的快捷鍵", roles: ALL, spec: "07-01" },
-  { id: "S73", activity: "shared", text: "在側欄看到未讀通知的數量，並一次全部標為已讀", roles: ALL, spec: "07-01", epicPending: true },
+  { id: "S73", activity: "shared", text: "在側欄看到未讀通知的數量，並一次全部標為已讀", roles: ALL, spec: "07-01", epicOverride: "E7" },
   { id: "S74", activity: "shared", text: "同時開多個工作頁籤，切回來時檢視狀態都還在", roles: ALL, spec: "07-02" },
   { id: "S75", activity: "shared", text: "把同一個任務的試標與正式標記各開一個頁籤來回比對", roles: ["project-leader"], spec: "07-02" },
   { id: "S76", activity: "shared", text: "頁籤被自動淘汰時，不遺失還沒送出的作答或審核決定", roles: ["annotator", "reviewer"], spec: "07-02" },
@@ -230,9 +233,15 @@ export const STORIES: Story[] = [
 
 export const specByCode = (code: string): SpecPage | undefined => SPECS.find((s) => s.code === code);
 
-/** The Epic whose roadmap features include the story's spec page; undefined when pending. */
-export const epicOf = (story: Story): Epic | undefined =>
-  story.epicPending ? undefined : EPICS.find((e) => e.features.some((f) => f.label.startsWith(`${story.spec} `)));
+/**
+ * The Epic the maintainer ruled for the story, otherwise the Epic whose roadmap
+ * features include the story's spec page; undefined when pending.
+ */
+export const epicOf = (story: Story): Epic | undefined => {
+  if (story.epicPending) return undefined;
+  if (story.epicOverride) return EPICS.find((e) => e.id === story.epicOverride);
+  return EPICS.find((e) => e.features.some((f) => f.label.startsWith(`${story.spec} `)));
+};
 
 /** Whether a story lights up under a role-filter view; null means no filter. */
 export const matchesFilter = (story: Story, filter: FilterId | null): boolean => {
