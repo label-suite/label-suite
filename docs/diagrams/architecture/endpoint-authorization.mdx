@@ -58,7 +58,7 @@ updatedAt: '2026-11-23'
 
 | 路徑 | 誰拿得到 | 為什麼不在本表 | 出處 |
 | :--- | :--- | :--- | :--- |
-| `/docs`、`/docs/oauth2-redirect`、`/redoc`、`/openapi.json` | 任何人，不需登入 | FastAPI 內建的 API 文件頁，不在 `/api/v1` 底下、不套外層，也不在 `openapi.json` 的 `paths` 裡 | `app/main.py` 的 `create_app` 沒有關掉 FastAPI 的預設值；已歸檔的 [backend-skeleton `api-contract.md`](https://github.com/label-suite/label-suite/blob/main/openspec/changes/archive/2026-11-20-backend-skeleton/api-contract.md) §端點總覽 |
+| `/docs`、`/docs/oauth2-redirect`、`/redoc`、`/openapi.json` | `API_DOCS_ENABLED=true`（預設，Lite 與本機開發）：任何人，不需登入。`false`（正式層 compose）：沒有人，路由不註冊，回 `404` 的共通外層 | FastAPI 內建的 API 文件頁，不在 `/api/v1` 底下、不套外層，也不在 `openapi.json` 的 `paths` 裡 | `app/main.py` 的 `create_app` 依 `API_DOCS_ENABLED` 決定是否註冊（#592）；已歸檔的 [backend-skeleton `api-contract.md`](https://github.com/label-suite/label-suite/blob/main/openspec/changes/archive/2026-11-20-backend-skeleton/api-contract.md) §端點總覽 |
 | `/api/v1/probe`（`GET`、`POST`）、`/api/v1/probe-crash`、`/api/v1/probe-bad-response`、`/api/v1/probe-db-error` | 只有後端的測試 | 只在測試掛載：`backend/tests/probe.py` 定義，`backend/tests/conftest.py` 的 `app` fixture 掛進 `/api/v1`；正式的 `create_app` 不掛，`openapi.json` 裡也沒有 | `backend/tests/probe.py`、`backend/tests/conftest.py` |
 | 任何 `/api/v1` 路徑的 CORS 預檢（帶 `Origin` 與 `Access-Control-Request-Method` 的 `OPTIONS`） | 任何來源都可以送；只有允許清單內的來源拿到 CORS 標頭 | 由 `CORSMiddleware` 自己回，不到任何端點 | `app/main.py` 的 `CORSMiddleware` 設定；`api-envelope` spec 的「錯誤回應使用同一個錯誤外層」 |
 
@@ -70,7 +70,6 @@ updatedAt: '2026-11-23'
 | :--- | :--- | :--- |
 | 認證、授權與 CSRF | 目前唯一的端點刻意公開；第一個需要登入的端點要先把這幾層補上 | [ADR-004 的 D1](../../development/adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie)、[D3](../../development/adr/004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token) |
 | [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) 還沒有由規格 01-01 在權限矩陣列為刻意的例外 | 刻意公開目前只記在 `health-check` spec；它要求認證上線後由規格 01-01 在權限矩陣列為刻意的例外 | `openspec/specs/health-check/` 的「健康檢查刻意公開」 |
-| 正式環境要不要關閉 `/docs`、`/docs/oauth2-redirect`、`/redoc`、`/openapi.json` | 不關的話，任何人都讀得到完整的 API 文件 | [#506 的裁定](https://github.com/label-suite/label-suite/issues/506#issuecomment-7063942196)：本次不關，另開 issue，尚未開 |
 | 本文與程式的自動一致性檢查 | 只靠審查與驗收時人工對照，漏改不會讓任何檢查失敗 | [#547](https://github.com/label-suite/label-suite/issues/547) §不在範圍 |
 
 ## 決策紀錄

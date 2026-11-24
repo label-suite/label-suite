@@ -41,7 +41,7 @@ updatedAt: '2026-11-23'
 
 | `code` | HTTP | 訊息鍵 | 在哪裡產生 | 會回這個碼的端點 |
 | :--- | :--- | :--- | :--- | :--- |
-| `NOT_FOUND` | `404` | `common.not_found` | `app/core/errors.py` 的 `handle_http_exception`（路由找不到） | 沒有端點自己回；`/api/v1` 底下不存在的路徑由路由層回 |
+| `NOT_FOUND` | `404` | `common.not_found` | `app/core/errors.py` 的 `handle_http_exception`（路由找不到） | 沒有端點自己回；`/api/v1` 底下不存在的路徑由路由層回；`API_DOCS_ENABLED=false` 時 `/docs`、`/docs/oauth2-redirect`、`/redoc`、`/openapi.json` 沒有註冊，也由路由層回 |
 | `METHOD_NOT_ALLOWED` | `405` | `common.method_not_allowed` | `app/core/errors.py` 的 `handle_http_exception`（方法不允許） | [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth)：用 `GET` 以外的 method 呼叫 |
 | `NOT_ACCEPTABLE` | `406` | `common.not_acceptable` | `app/core/middleware.py` 的 `LocaleMiddleware`，接住 `NotAcceptableError` | 每個 `/api/v1` 請求（CORS 預檢除外：它在 `LocaleMiddleware` 外層就回應），含 [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) |
 | `VALIDATION_FAILED` | `422` | `common.validation_failed` | `app/core/errors.py` 的 `handle_validation_error` | 目前沒有：[`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) 沒有被驗證的輸入 |
