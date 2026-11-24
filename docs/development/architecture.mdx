@@ -169,6 +169,8 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 
 唯一的契約真相是規劃階段的 `api-contract.md` 加 FastAPI 匯出的 `openapi.json`，前端的 client 與型別都從它產生。
 
+同一次匯出也會寫出文件站副本 `docs/diagrams/architecture/api.openapi.json`，內容與 `backend/openapi.json` 位元組相同，由文件站渲染成 [API 文件](/view/diagrams/architecture/api.openapi)。
+
 | 面向 | 做法 |
 | :--- | :--- |
 | 路徑前綴 | `/api/v1`，資源名直接接在後面，理由見 [ADR-003 的 D5](adr/003-backend-architecture.mdx#d5-api-路徑前綴與成功回應外層) |
