@@ -100,6 +100,7 @@ def make_test_settings(tmp_path: Path) -> Settings:
     return Settings(
         cors_allowed_origins=[ALLOWED_ORIGIN],
         cors_allow_credentials=True,
+        api_docs_enabled=True,
         database_url=TEST_DATABASE_URL,
         sqlite_path=tmp_path / "test.db",
     )

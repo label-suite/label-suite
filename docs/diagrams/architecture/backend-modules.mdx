@@ -213,7 +213,7 @@ cd backend && uv run uvicorn app.main:create_app --factory
 | 步驟 | 做什麼 | 失敗時 |
 | :--- | :--- | :--- |
 | 1 | `settings` 是 `None` 時用 `load_settings(Settings)` 從環境變數讀 | `ConfigError`，只寫變數名與原因 |
-| 2 | 建 `FastAPI`：版號讀 `pyproject.toml`、`generate_unique_id_function` 設成 `generate_operation_id` | 讀不到版號就失敗，沒有預設值 |
+| 2 | 建 `FastAPI`：版號讀 `pyproject.toml`、`generate_unique_id_function` 設成 `generate_operation_id`；`API_DOCS_ENABLED` 為 `false` 時 `docs_url`、`redoc_url`、`openapi_url` 傳 `None`（四條內建路由都不註冊，請求落入既有 404 envelope） | 讀不到版號就失敗，沒有預設值 |
 | 3 | 載入訊息目錄，放進 `app.state.message_catalog` | `MessageCatalogError` |
 | 4 | 依序加中介層，見 [§請求管線](#請求管線) | — |
 | 5 | 註冊 exception handler，見 [§錯誤怎麼對到 envelope](#錯誤怎麼對到-envelope) | — |
@@ -342,7 +342,7 @@ log 只記型別、位置與 `traceId`，不記任何可能帶著請求或資料
 
 ### 設定
 
-設定只從環境變數來，分兩層：`DatabaseSettings` 只有資料庫，Alembic 只讀這一層；`Settings` 再加上 API 要的 CORS。一律透過 `load_settings` 建立。
+設定只從環境變數來，分兩層：`DatabaseSettings` 只有資料庫，Alembic 只讀這一層；`Settings` 再加上 API 要的 CORS 與內建文件路由的開關。一律透過 `load_settings` 建立。
 
 | 環境變數 | 層 | 必填 | 規則 |
 | :--- | :--- | :--- | :--- |
@@ -350,6 +350,7 @@ log 只記型別、位置與 `traceId`，不記任何可能帶著請求或資料
 | `SQLITE_PATH` | 資料庫 | 否 | 沒設 `DATABASE_URL` 時的 SQLite 檔，預設 `./data/label_suite.db`，解析成絕對路徑 |
 | `CORS_ALLOWED_ORIGINS` | API | 是 | 逗號分隔；每一個都是 `http(s)://host[:port]`，不能有路徑；含 `*` 就拒絕 |
 | `CORS_ALLOW_CREDENTIALS` | API | 否 | 預設 `true` |
+| `API_DOCS_ENABLED` | API | 否 | 布林，預設 `true`；`false` 時不提供 FastAPI 內建的 `/docs`、`/docs/oauth2-redirect`、`/redoc`、`/openapi.json`。`docker-compose.prod.yml` 的後端明確設為 `false` |
 
 變數名沒有前綴；驗證失敗時 `ConfigError` 一行列一個「變數名：原因」，不含設定值。
 
@@ -413,7 +414,7 @@ cd backend && uv run python -m app.scripts.export_openapi
 - 其他 `GET` 是 `get`、`POST` 是 `create`、`PUT` 與 `PATCH` 是 `update`、`DELETE` 是 `delete`，加上單數，例 `getHealth`
 - 單數化依序：不規則表（`health`、`statuses`、`buses`）、`ss` 不變、`ies` → `y`、`sses`／`xes`／`ches`／`shes` 去 `es`、其他 `s` 去掉；規則算錯的字加進 `_IRREGULAR_SINGULARS`
 - 一條路由只能有一個 method；handler 沒有回傳型別、或 method 是 `HEAD`／`OPTIONS` 時直接失敗
-- FastAPI 內建的 `/docs`、`/redoc`、`/openapi.json` 維持預設開啟，不在 `/api/v1` 底下、不套外層
+- FastAPI 內建的 `/docs`、`/docs/oauth2-redirect`、`/redoc`、`/openapi.json` 在 `API_DOCS_ENABLED=true`（預設）時提供，不在 `/api/v1` 底下、不套外層；`false`（正式層 compose）時四條都不註冊。匯出直接呼叫 `app.openapi()`，不經這些路由，不受開關影響
 :::
 
 ### health 的 503
