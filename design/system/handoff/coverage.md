@@ -235,7 +235,7 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 | `navigationBlob` | `7a60a4eeeeee` | `a05f8013a1e7` | **變了**（只把兩列裡指向 `dataset-analysis-detail.html` 的四個行號換成新位置，沒有改參數） |
 
 變動的 prototype 檔（共 8 個，全在 `pages/dataset/`）：
-- `dataset-analysis-detail.html`（+121 行）：
+- `dataset-analysis-detail.html`（+108／−13 行）：
   - **用詞**：`lblSeqPartThr`、`lblRelThr2`、`altHSeqThr` 的「參考值」改「參考線」（#473），中英文都改。
   - **行為（新）**：實體辨識切到 `Partial overlap` 時，IAA 報告標題的主要指標星號收起（連 `aria-label` 一起拿掉），後綴由「— 主要指標」改成「— 參考顯示」；切回 `Strict match` 還原（`dataset-analysis-detail.html:1976` 的 `updateMethodName()`；#435）。這是 `#state-seq-match-partial` 看得到的新狀態。
   - **行為（新）**：`setElText()` 讓門檻文字換語言時保留 `通過`／`未達` 判定字，並套用到次要 IAA 卡（#435）。
@@ -260,11 +260,11 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 | `05-dataset/02-analysis-detail.mdx` | 27 | b4 | **用詞與判定**：參考線（Q26）、部分重疊結果是「不判定」（#434） |
 | `04-annotation/02-annotation-workspace.mdx` | 15 | b3 | **行為**：說明彈窗只有「確認」與「返回標記清單」兩個出口，Esc 與點視窗外不關閉（#434） |
 | `04-annotation/01-annotation-list.mdx` | 10 | b3 | 只加一段理由 |
-| `03-task-management/01-task-list.mdx` | 7 | b2 | **行為**：刪除確認視窗點視窗外不關閉（#434） |
+| `03-task-management/01-task-list.mdx` | 6 | b2 | **行為**：刪除確認視窗點視窗外不關閉（#434） |
 | `06-admin/02-role-settings.mdx` | 7 | b2 | **入口**：側欄次選單與使用者管理的分頁兩個入口、平台成員讀不到矩陣（#551） |
 | `06-admin/01-user-management.mdx` | 6 | b2 | **行為**：沒有設定寄信服務時帳號照樣建立、「信未寄出」標記、設定密碼連結 24 小時內只能用一次（#551） |
 | `01-account/04-profile.mdx` | 4 | b1 | **行為**：換 Email 的連結失效面板，按鈕依登入狀態回個人設定或前往登入（#558） |
-| `07-shared/*`（sidebar、workspace-tabs、denied） | 13 | b1／b2 | 只改來源說明與一條不洩漏存在的規則（#166），沒有改畫面該有的東西 |
+| `07-shared/*`（sidebar 10、workspace-tabs 2、denied 2） | 14 | b1／b2 | 只改來源說明與一條不洩漏存在的規則（#166），沒有改畫面該有的東西 |
 
 另外 `index.mdx` 與各模組 `index.mdx` 新增的是跨頁 Logic Flow（#545–#558），沒有視圖指向它們。
 
