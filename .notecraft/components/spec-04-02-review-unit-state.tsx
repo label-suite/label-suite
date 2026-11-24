@@ -2,7 +2,7 @@ import { useRef, useEffect, useState, type KeyboardEvent, type ReactElement } fr
 import { motion, useReducedMotion } from "motion/react";
 
 /**
- * 規格 04-02 審核單位狀態機：四個節點、每條轉換的觸發條件，以及規格寫明不存在的轉換。
+ * 規格 04-02 審核單位狀態機：四個節點、每條轉換的觸發條件（爭議中到已定稿有三條），以及規格寫明不存在的轉換。
  * 從 prd-writing 的 state-machine-skeleton.tsx 複製；外殼的字面由「推進的模組」改成「誰的動作」，
  * 並在下方加一份「不存在的轉換」清單，其餘幾何與圖形不變。
  */
@@ -66,13 +66,13 @@ const MODULES: Module[] = [
   { id: "annotator", label: "標記員", color: "#1D4ED8" }, // --color-info
   { id: "reviewer", label: "審核員", color: "#047857" }, // --color-cta
   { id: "arbiter", label: "仲裁者", color: "#8B5CF6" }, // --color-file-markdown
-  { id: "leader", label: "專案負責人", color: "#A16207" }, // --color-warning
+  { id: "leader", label: "專案負責人", color: "#818CF8" }, // --color-secondary
 ];
 
 const STATES: State[] = [
   { id: "none", label: "不成立", x: 90, y: 110, desc: "標記員還沒提交這一筆，審核單位不成立；脈絡橫幅的狀態整個換成「尚無標記提交」。" },
   { id: "pending", label: "待審", x: 330, y: 110, desc: "標記員已提交，指派的那一位審核員還沒送出。還沒送出的決策草稿不計入狀態。" },
-  { id: "dispute", label: "爭議中", x: 640, y: 110, desc: "審核員的決策有修正或無法裁決，修正還沒生效，等仲裁定案。仲裁選了兩者皆非的項目落入最終例外池，單位維持爭議中，直到例外池收尾。" },
+  { id: "dispute", label: "爭議中", x: 640, y: 110, desc: "審核員的決策有修正或無法裁決，修正還沒生效，等仲裁定案。仲裁選了兩者皆非的項目落入最終例外池，單位維持爭議中，直到例外池收尾。離開爭議中有三條路：仲裁定案、例外池收尾、當事審核員在還沒有仲裁票時改判為全部通過。" },
   { id: "final", label: "已定稿", x: 485, y: 270, final: true, desc: "終態：單位全面唯讀，沒有決策、修正與送出，也沒有任何解鎖入口。" },
 ];
 
@@ -81,6 +81,7 @@ const TRANSITIONS: Transition[] = [
   { id: "t2", from: "pending", to: "final", label: "全部通過", trigger: "指派的審核員送出，逐項決策全部是通過，而且沒有改過答案", module: "reviewer", labelOffset: 16 },
   { id: "t3", from: "pending", to: "dispute", label: "修正或無法裁決", trigger: "審核員送出，任一項是修正或無法裁決；選了通過但答案和標記員的不同也算", module: "reviewer", labelOffset: 14 },
   { id: "t4", from: "dispute", to: "final", label: "仲裁定案", trigger: "所有爭議項都由仲裁採 A 或採 B 定案（任務沒有啟用中的仲裁者時，由專案負責人裁定）", module: "arbiter", bend: 34, labelOffset: 16 },
+  { id: "t6", from: "dispute", to: "final", label: "當事人改判", trigger: "單位還沒有任何仲裁票時，當事審核員按「修改我的審核」改判，送出後逐項全部是通過；依五句判定式推導為已定稿（維護者 2026-11-24 裁定）", module: "reviewer", labelOffset: 0 },
   { id: "t5", from: "dispute", to: "final", label: "例外池收尾", trigger: "落入最終例外池的項目全部由專案負責人收尾（採用標記員答案、採用審核員答案、自訂答案或排除於資料集），而且其餘爭議項都已定案", module: "leader", bend: -34, labelOffset: -16 },
 ];
 
