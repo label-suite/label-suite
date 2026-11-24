@@ -9,7 +9,7 @@ CITATION.cff.
 
 ---
 
-This product bundles the following third-party component:
+This product bundles the following third-party components:
 
   er-diagram-renderer, version 1.2.0
   Copyright (c) 2026 SteveLin100132
@@ -18,4 +18,13 @@ This product bundles the following third-party component:
   232375f61d6601f861473597431e05b275524ac3), path
   plugins/er-diagram-renderer.
   Vendored at .notecraft/plugins/er-diagram-renderer/, whose LICENSE.md
+  carries the full MIT license text.
+
+  openapi-renderer, version 1.0.0
+  Copyright (c) 2026 SteveLin100132
+  Licensed under the MIT License.
+  Source: https://github.com/SteveLin100132/notecraft (commit
+  b5c7d72460c0d7faee71186b2c5efa049c789778), path
+  plugins/openapi-renderer.
+  Vendored at .notecraft/plugins/openapi-renderer/, whose LICENSE.md
   carries the full MIT license text.
