@@ -247,7 +247,7 @@ prototype 頁面有變動時，檢查嵌入的 `page` 路徑仍存在。
 寫完後依「提問格式」問：
 
 - **現在生成（建議）**：依 `content-visualize` skill 的流程寫回 MDX；業務流程圖依 flow.md 從骨架複製後只改【流程】，並在預覽中走過每個流程 tab、完成 flow.md 的「自我檢查」（無法操作瀏覽器時，請使用者開 `pnpm docs:serve` 走過後回報）；
-  模組 Logic Flow 依 logic-flow-skeleton.tsx 複製後只改【節點與連線】，並在預覽中切過每個分段 tab、點過每個節點與連線確認出處（無法操作瀏覽器時，同樣請使用者開 `pnpm docs:serve` 走過後回報）
+  模組 Logic Flow 依 logic-flow-skeleton.tsx 複製後只改【節點與連線】（另換掉骨架檔頭寫明的兩處例外），並在預覽中切過每個分段 tab、點過每個節點與連線確認出處（無法操作瀏覽器時，同樣請使用者開 `pnpm docs:serve` 走過後回報）
 - **之後再生成**：保留 `status: pending`，之後說「處理 `docs/specs/xx/yy.mdx` 的視覺化標記」即可
 - **不需要**：移除標記
 
