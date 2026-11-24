@@ -5,7 +5,7 @@ two layers so that migrations can run without app-only settings:
 
 - ``DatabaseSettings`` holds ``DATABASE_URL`` and ``SQLITE_PATH`` and derives the
   async SQLAlchemy URL. Alembic's ``env.py`` reads only this class.
-- ``Settings`` extends it with the CORS settings the API needs.
+- ``Settings`` extends it with the CORS and API-docs settings the API needs.
 
 Always build either class through ``load_settings`` so a validation failure turns
 into a ``ConfigError`` that names the environment variable and the reason but
@@ -88,10 +88,14 @@ class Settings(DatabaseSettings):
             setting); each item is ``http(s)://host[:port]`` without a path, and
             ``*`` is rejected (Hard Rule 7).
         cors_allow_credentials: Whether CORS responses allow credentials.
+        api_docs_enabled: Whether the built-in ``/docs``, ``/docs/oauth2-redirect``,
+            ``/redoc`` and ``/openapi.json`` routes are served; the production
+            compose file pins it to false.
     """
 
     cors_allowed_origins: Annotated[list[str], NoDecode]
     cors_allow_credentials: bool = True
+    api_docs_enabled: bool = True
 
     @field_validator("cors_allowed_origins", mode="before")
     @classmethod

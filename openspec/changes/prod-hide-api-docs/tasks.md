@@ -2,9 +2,9 @@
 
 ## 1. 設定與 app factory
 
-- [ ] 1.1 以 TDD 在 `Settings` 新增布林欄位 `API_DOCS_ENABLED`（預設 true），非布林值由 `load_settings` 拒絕且錯誤訊息只含名稱與原因、不含值；測試涵蓋預設值、明確 true／false、非布林值（對應 spec Scenario「API_DOCS_ENABLED 不是布林值時啟動失敗」）。Python 用 uv。[@backend-developer]
-- [ ] 1.2 以 TDD 在 `create_app` 依設定在 false 時將 `docs_url`、`redoc_url`、`openapi_url` 設為 `None`；整合測試涵蓋：預設與 true 時四條路由回 200 非 envelope、false 時四條都回 envelope `NOT_FOUND` 404 且與任一不存在路徑的回應形態一致、false 時 `GET /api/v1/health` 仍為 200（對應 spec Scenario「正式層不提供內建 API 文件與介面描述路由」「Lite 層與本機開發維持提供內建 API 文件」「關閉內建文件不影響業務端點」「只設允許來源即可啟動」）。[@backend-developer]
-- [ ] 1.3 `PLACEHOLDER_SETTINGS` 明確設 `api_docs_enabled=True`；以 TDD 新增測試，經 `main(argv, app_factory=...)` 注入 `api_docs_enabled` 為 true 與 false 的兩個 `Settings`（不用環境變數），證明兩次匯出的 `openapi.json` 與文件站副本位元組相同，且 `paths` 不含四條內建路徑（對應 spec Scenario「契約匯出不受設定影響」）。[@backend-developer]
+- [x] 1.1 以 TDD 在 `Settings` 新增布林欄位 `API_DOCS_ENABLED`（預設 true），非布林值由 `load_settings` 拒絕且錯誤訊息只含名稱與原因、不含值；測試涵蓋預設值、明確 true／false、非布林值（對應 spec Scenario「API_DOCS_ENABLED 不是布林值時啟動失敗」）。Python 用 uv。[@backend-developer]
+- [x] 1.2 以 TDD 在 `create_app` 依設定在 false 時將 `docs_url`、`redoc_url`、`openapi_url` 設為 `None`；整合測試涵蓋：預設與 true 時四條路由回 200 非 envelope、false 時四條都回 envelope `NOT_FOUND` 404 且與任一不存在路徑的回應形態一致、false 時 `GET /api/v1/health` 仍為 200（對應 spec Scenario「正式層不提供內建 API 文件與介面描述路由」「Lite 層與本機開發維持提供內建 API 文件」「關閉內建文件不影響業務端點」「只設允許來源即可啟動」）。[@backend-developer]
+- [x] 1.3 `PLACEHOLDER_SETTINGS` 明確設 `api_docs_enabled=True`；以 TDD 新增測試，經 `main(argv, app_factory=...)` 注入 `api_docs_enabled` 為 true 與 false 的兩個 `Settings`（不用環境變數），證明兩次匯出的 `openapi.json` 與文件站副本位元組相同，且 `paths` 不含四條內建路徑（對應 spec Scenario「契約匯出不受設定影響」）。[@backend-developer]
 
 ## 2. 部署傳遞
 

@@ -95,6 +95,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         version=get_app_version(),
         lifespan=_lifespan,
         generate_unique_id_function=generate_operation_id,
+        # None leaves the four built-in routes unregistered, so they fall through
+        # to the shared 404 envelope like any other unknown path.
+        docs_url="/docs" if resolved.api_docs_enabled else None,
+        redoc_url="/redoc" if resolved.api_docs_enabled else None,
+        openapi_url="/openapi.json" if resolved.api_docs_enabled else None,
     )
     app.state.settings = resolved
     catalog = MessageCatalog.load()

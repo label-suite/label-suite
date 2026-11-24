@@ -80,14 +80,16 @@ def test_default_output_is_backend_openapi_json() -> None:
     assert DEFAULT_OUTPUT == BACKEND_DIR / "openapi.json"
 
 
-def test_placeholder_settings_name_all_four_fields_explicitly() -> None:
+def test_placeholder_settings_name_all_five_fields_explicitly() -> None:
     assert PLACEHOLDER_SETTINGS.model_fields_set == {
         "cors_allowed_origins",
         "cors_allow_credentials",
+        "api_docs_enabled",
         "database_url",
         "sqlite_path",
     }
     assert PLACEHOLDER_SETTINGS.database_url is None
+    assert PLACEHOLDER_SETTINGS.api_docs_enabled is True
 
 
 def _app_with_duplicate_operation_ids() -> FastAPI:
@@ -221,3 +223,17 @@ def test_write_outputs_replaces_every_target_with_the_same_text(tmp_path: Path) 
 
     assert [t.read_text(encoding="utf-8") for t in targets] == ["new\n", "new\n"]
     assert sorted(p.name for p in tmp_path.iterdir()) == ["a.json", "b.json"]
+
+
+@pytest.mark.parametrize("api_docs_enabled", [True, False])
+def test_export_ignores_api_docs_setting(tmp_path: Path, api_docs_enabled: bool) -> None:
+    baseline = tmp_path / "baseline.json"
+    toggled = tmp_path / "toggled.json"
+    assert main(["--output", str(baseline)]) == 0
+
+    settings = PLACEHOLDER_SETTINGS.model_copy(update={"api_docs_enabled": api_docs_enabled})
+    assert main(["--output", str(toggled)], app_factory=lambda: create_app(settings)) == 0
+
+    assert toggled.read_bytes() == baseline.read_bytes()
+    paths = json.loads(toggled.read_text(encoding="utf-8"))["paths"]
+    assert not {"/docs", "/docs/oauth2-redirect", "/redoc", "/openapi.json"} & set(paths)

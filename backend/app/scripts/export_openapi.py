@@ -42,6 +42,7 @@ DOCS_COPY_OUTPUT = (
 PLACEHOLDER_SETTINGS = Settings(
     cors_allowed_origins=["http://localhost"],
     cors_allow_credentials=True,
+    api_docs_enabled=True,
     database_url=None,
     sqlite_path=Path("./data/label_suite.db"),
 )
