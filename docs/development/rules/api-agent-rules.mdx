@@ -120,6 +120,8 @@ envelope 是 `{ success, code, message, data, timestamp, traceId }`，成功與�
 
 契約有三份產物各管一件事：`api-contract.md` 是規劃依據、`openapi.json` 是實作真相、`frontend/src/api/generated/` 是前端產物，三者都不得手改，實作要偏離規劃時先改 `api-contract.md` 再改程式。
 
+`docs/diagrams/architecture/api.openapi.json` 是 `openapi.json` 的位元組相同副本，不是第四份契約來源，同樣不得手改。
+
 | | |
 | :--- | :--- |
 | **適用路徑** | `openspec/changes/*/api-contract.md`、後端匯出的 `openapi.json`、`frontend/src/api/generated/**` |
@@ -149,7 +151,7 @@ envelope 是 `{ success, code, message, data, timestamp, traceId }`，成功與�
 | :--- | :--- |
 | **反例** | 後端加了一個欄位、PR 只有後端檔案（前端 typecheck 看不到破壞性變更）；手動補產物讓 CI 過 |
 | **例外** | 無 |
-| **檢查方式** | CI 的 `api-contract` job：先跑 `uv run python -m app.scripts.export_openapi` 重新匯出 `backend/openapi.json`，與已提交的版本有差異（含未追蹤）即失敗；再跑 `pnpm --filter frontend api:generate` 重產 `frontend/src/api/generated/`，同樣有差異即失敗。本機以 `pnpm run api:sync` 一條命令走完兩步。這道 gate 是本專案自己建的；原始 repo 的同名 gate 在它的歸檔紀錄裡標為「未實作」（`specs/foundation/000-foundation/spec.md` v1.12.4 的 (c) 項），**不得引用它當成已存在的機制**。「契約、`openapi.json` 與產物同一個 commit」只由差異檢查間接保證，沒有另設檢查 |
+| **檢查方式** | CI 的 `api-contract` job：先跑 `uv run python -m app.scripts.export_openapi` 重新匯出 `backend/openapi.json`，與已提交的版本有差異（含未追蹤）即失敗，文件站副本 `docs/diagrams/architecture/api.openapi.json` 一併比對；再跑 `pnpm --filter frontend api:generate` 重產 `frontend/src/api/generated/`，同樣有差異即失敗。本機以 `pnpm run api:sync` 一條命令走完兩步。這道 gate 是本專案自己建的；原始 repo 的同名 gate 在它的歸檔紀錄裡標為「未實作」（`specs/foundation/000-foundation/spec.md` v1.12.4 的 (c) 項），**不得引用它當成已存在的機制**。「契約、`openapi.json` 與產物同一個 commit」只由差異檢查間接保證，沒有另設檢查 |
 :::
 
 ### A6 單一 HTTP 邊界

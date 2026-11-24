@@ -30,7 +30,11 @@ import { fileURLToPath } from "node:url";
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
 /** The contract artifacts the contract step compares, relative to the repository root. */
-const CONTRACT_PATHS = ["backend/openapi.json", "frontend/src/api/generated"];
+const CONTRACT_PATHS = [
+  "backend/openapi.json",
+  "docs/diagrams/architecture/api.openapi.json",
+  "frontend/src/api/generated",
+];
 
 /** Where the frontend boundary tests (frontend/build/eslint-config.test.ts) write their probe files. */
 const PROBE_NAME = "boundary-probe.tsx";

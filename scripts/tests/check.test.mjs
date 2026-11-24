@@ -18,12 +18,14 @@ import { parse } from "yaml";
 import { OPTIONAL_STEPS, parseArgs, runCheck, STEPS } from "../check.mjs";
 
 const ROOT = fileURLToPath(new URL("../..", import.meta.url));
+const COPY = "docs/diagrams/architecture/api.openapi.json";
 const PG_SKIP_MESSAGE = "PostgreSQL 那一輪已跳過：未設 TEST_DATABASE_URL";
 
 let root;
 beforeEach(() => {
   root = mkdtempSync(join(tmpdir(), "check-mjs-"));
   write("backend/openapi.json", '{"openapi": "3.1.0"}\n');
+  write(COPY, '{"openapi": "3.1.0"}\n');
   write("frontend/src/api/generated/label-suite.ts", "export const a = 1;\n");
   write("frontend/src/api/generated/label-suite.schemas.ts", "export type A = number;\n");
 });
@@ -337,6 +339,36 @@ describe("the contract step compares with the working tree before the run", () =
     assert.match(output, /modified: backend\/openapi\.json/);
     assert.match(output, /added: frontend\/src\/api\/generated\/label-suite\.msw\.ts/);
     assert.match(output, /removed: frontend\/src\/api\/generated\/label-suite\.schemas\.ts/);
+  });
+
+  test("a hand-edited docs copy fails, is listed, and holds the regenerated content afterwards", async () => {
+    write(COPY, '{"openapi": "3.1.0", "info": "edited by hand"}\n');
+    const fake = fakeRunner({
+      effects: {
+        [SYNC]: () => {
+          write(COPY, '{"openapi": "3.1.0"}\n');
+        },
+      },
+    });
+    const { code, output } = await check({ runner: fake.runner });
+    assert.notEqual(code, 0);
+    assert.match(output, /^FAIL Contract/m);
+    assert.match(output, /modified: docs\/diagrams\/architecture\/api\.openapi\.json/);
+    assert.equal(read(COPY), '{"openapi": "3.1.0"}\n');
+  });
+
+  test("a deleted docs copy fails and is listed as added after the regeneration", async () => {
+    rmSync(join(root, COPY));
+    const fake = fakeRunner({
+      effects: {
+        [SYNC]: () => {
+          write(COPY, '{"openapi": "3.1.0"}\n');
+        },
+      },
+    });
+    const { code, output } = await check({ runner: fake.runner });
+    assert.notEqual(code, 0);
+    assert.match(output, /added: docs\/diagrams\/architecture\/api\.openapi\.json/);
   });
 
   test("a failing api:sync fails the step", async () => {
