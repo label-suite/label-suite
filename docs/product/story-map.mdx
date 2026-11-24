@@ -1,0 +1,202 @@
+---
+title: '使用者故事地圖'
+description: 'Label Suite 的使用者一路要做的事：八個活動底下的 story，每個 story 連到它的規格頁與路線圖的 Epic。'
+category: '產品'
+tags: [故事地圖, User Story, Epic]
+---
+
+# 使用者故事地圖
+
+這份文件把 `docs/specs/` 的 20 頁規格，依使用者一路要做的事串成一張地圖：每個 story 是一個使用者目標，標出誰在做、寫在哪一頁規格、屬於 [產品路線圖](roadmap.mdx) 的哪個 Epic。它不管順序，順序只看路線圖；也不管需求內容，story 和規格說法不同時以規格為準。
+
+## 活動主幹
+
+活動由左到右，依 :ref[專案負責人]{id="term.project-leader"} 走完一個任務的順序排列；「個人設定與共用介面」不屬於任何一段，橫跨所有活動。
+
+| # | 活動 | 涵蓋的規格頁 |
+| ---: | :--- | :--- |
+| 1 | 進入平台 | 01-01、01-02、01-03、01-05 |
+| 2 | 查看儀表板 | 02-01 |
+| 3 | 建立任務 | 03-02、05-03 |
+| 4 | 管理任務與成員 | 03-01、03-03、05-02 |
+| 5 | 執行標記 | 04-01、04-02 |
+| 6 | 審核與仲裁 | 03-03、04-02 |
+| 7 | 分析資料集 | 05-01、05-02 |
+| 8 | 系統管理 | 06-01、06-02 |
+| — | 個人設定與共用介面 | 01-04、07-01、07-02、07-03、07-04 |
+
+每個 story 取自規格的目標、業務流程與驗收標準，一個使用者目標一列；角色用 [PRD §使用者角色](../specs/00-prd.mdx#使用者角色) 的角色。
+
+## 互動 story map
+
+story 的 Epic 依它連到的規格頁在路線圖 Feature 裡的位置決定，所以同一頁規格的 story 都在同一個 Epic，只有設了 `epicOverride` 的例外（側欄的未讀通知歸 E7）；E0 基礎建設收尾沒有規格頁，那一列是空的。
+
+角色篩選選了 :ref[專案負責人]{id="term.project-leader"}、:ref[標記員]{id="term.annotator"} 或 :ref[審核員]{id="term.reviewer"} 時，:ref[平台成員]{id="term.platform-member"} 的 story 也會亮起，因為任務角色持有者本身就是平台成員（[規格 02-01 §使用角色](../specs/02-dashboard/01-dashboard.mdx#使用角色)）；選審核員時 :ref[仲裁者]{id="term.arbiter"} 的 story 也會亮起，因為仲裁者是被指定的審核員。
+
+{/* @ai-visualize
+id: story-map
+type: motion
+prompt: |
+  核心洞察：使用者一路要做的事串起全部規格頁；每個 story 都落在一個活動、一個 Epic 與一頁規格上，換個角色看，亮起來的是另一條路。
+  互動：上方角色篩選（全部／專案負責人／標記員／審核員／系統管理員），只讓該角色的 story 亮起，其餘壓暗；點 story 卡開它的規格頁。
+  圖形：橫軸是八個活動，縱軸是路線圖的 Epic E0～E7；「個人設定與共用介面」是圖下方橫跨所有活動的一列，依 Epic 分組；Epic 待確認的 story 用警示色。
+  資料：讀 story-map-data.ts 的 ACTIVITIES、STORIES、ROLES、FILTERS；Epic 名稱讀 roadmap-data.ts 的 EPICS，story 的 Epic 依它連到的規格頁在路線圖 Feature 裡的位置推出，不在元件內另寫一份。
+caption: 用角色篩選看一種角色的路；點 story 開它的規格頁
+status: generated
+*/}
+
+import GeneratedFrame from '@/components/GeneratedFrame.astro'
+import StoryMap from '@notes/components/story-map'
+
+<GeneratedFrame id="story-map" type="motion" prompt={"核心洞察：使用者一路要做的事串起全部規格頁；每個 story 都落在一個活動、一個 Epic 與一頁規格上，換個角色看，亮起來的是另一條路。\n互動：上方角色篩選（全部／專案負責人／標記員／審核員／系統管理員），只讓該角色的 story 亮起，其餘壓暗；點 story 卡開它的規格頁。\n圖形：橫軸是八個活動，縱軸是路線圖的 Epic E0～E7；「個人設定與共用介面」是圖下方橫跨所有活動的一列，依 Epic 分組；Epic 待確認的 story 用警示色。\n資料：讀 story-map-data.ts 的 ACTIVITIES、STORIES、ROLES、FILTERS；Epic 名稱讀 roadmap-data.ts 的 EPICS，story 的 Epic 依它連到的規格頁在路線圖 Feature 裡的位置推出，不在元件內另寫一份。\n"} caption="用角色篩選看一種角色的路；點 story 開它的規格頁">
+  <StoryMap client:visible />
+</GeneratedFrame>
+
+## 各活動的 story
+
+下面的表與上面的圖逐項一致，都照 `story-map-data.ts` 寫。
+
+### 進入平台
+
+| Story | 角色 | 規格 | Epic |
+| :--- | :--- | :--- | :--- |
+| 自己註冊成為平台成員，點驗證連結後帳號才建立 | :ref[平台成員]{id="term.platform-member"} | [01-02 註冊](../specs/01-account/02-register.mdx) | [E1 帳號](roadmap.mdx#epic-一覽) |
+| 用 Email 與密碼登入平台 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [01-01 登入](../specs/01-account/01-login.mdx) | [E1 帳號](roadmap.mdx#epic-一覽) |
+| 用 Google 帳號登入，不必另記一組密碼 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [01-01 登入](../specs/01-account/01-login.mdx) | [E1 帳號](roadmap.mdx#epic-一覽) |
+| 忘記密碼時用一次性連結自己設定新密碼 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [01-03 用一次性連結設定密碼](../specs/01-account/03-reset-password.mdx) | [E1 帳號](roadmap.mdx#epic-一覽) |
+| 受邀的人用設定密碼信設定自己的密碼 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [01-03 用一次性連結設定密碼](../specs/01-account/03-reset-password.mdx) | [E1 帳號](roadmap.mdx#epic-一覽) |
+| 一段時間內持續操作，不必反覆登入 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [01-05 登入狀態與安全](../specs/01-account/05-login-state.mdx) | [E1 帳號](roadmap.mdx#epic-一覽) |
+| 從這一台登出，其他裝置維持登入 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [01-05 登入狀態與安全](../specs/01-account/05-login-state.mdx) | [E1 帳號](roadmap.mdx#epic-一覽) |
+
+### 查看儀表板
+
+| Story | 角色 | 規格 | Epic |
+| :--- | :--- | :--- | :--- |
+| 登入後直接看到符合自己任務角色的版面 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [02-01 儀表板](../specs/02-dashboard/01-dashboard.mdx) | [E7 儀表板與通知](roadmap.mdx#epic-一覽) |
+| 還沒有任務角色時，從三張行動入口卡知道下一步 | :ref[平台成員]{id="term.platform-member"} | [02-01 儀表板](../specs/02-dashboard/01-dashboard.mdx) | [E7 儀表板與通知](roadmap.mdx#epic-一覽) |
+| 按「快速繼續」回到這個任務第一筆還沒提交的資料 | :ref[標記員]{id="term.annotator"} | [02-01 儀表板](../specs/02-dashboard/01-dashboard.mdx) | [E7 儀表板與通知](roadmap.mdx#epic-一覽) |
+| 按「快速審核」開到下一個可處理的審核單位 | :ref[審核員]{id="term.reviewer"} | [02-01 儀表板](../specs/02-dashboard/01-dashboard.mdx) | [E7 儀表板與通知](roadmap.mdx#epic-一覽) |
+| 從「等待 IAA 確認」的數字點進已篩好的任務列表 | :ref[系統管理員]{id="term.system-admin"}、:ref[專案負責人]{id="term.project-leader"} | [02-01 儀表板](../specs/02-dashboard/01-dashboard.mdx) | [E7 儀表板與通知](roadmap.mdx#epic-一覽) |
+
+### 建立任務
+
+| Story | 角色 | 規格 | Epic |
+| :--- | :--- | :--- | :--- |
+| 只靠任務設定開一個標記任務，建立完成為它的專案負責人 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [03-02 新增任務](../specs/03-task-management/02-task-new.mdx) | [E4 任務管理](roadmap.mdx#epic-一覽) |
+| 上傳資料集後當場看到資料，指定每一欄的用途 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [03-02 新增任務](../specs/03-task-management/02-task-new.mdx) | [E4 任務管理](roadmap.mdx#epic-一覽) |
+| 設定每一種輸出類型怎麼標，並在預覽上試標一次 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [03-02 新增任務](../specs/03-task-management/02-task-new.mdx) | [E4 任務管理](roadmap.mdx#epic-一覽) |
+| 設定試標抽樣筆數，以及要不要隔開試標與正式標記的資料 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [03-02 新增任務](../specs/03-task-management/02-task-new.mdx) | [E4 任務管理](roadmap.mdx#epic-一覽) |
+| 中途離開或重新整理時，不在沒被問過的情況下弄丟已填內容 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [03-02 新增任務](../specs/03-task-management/02-task-new.mdx) | [E4 任務管理](roadmap.mdx#epic-一覽) |
+| 匯入前逐欄宣告可公開或受保護，定版成不可改的資料集版本 | :ref[專案負責人]{id="term.project-leader"} | [05-03 資料匯入與版本](../specs/05-dataset/03-ingestion-lineage.mdx) | [E6 資料集](roadmap.mdx#epic-一覽) |
+| 草稿階段把某個欄位從可公開改成受保護 | :ref[專案負責人]{id="term.project-leader"} | [05-03 資料匯入與版本](../specs/05-dataset/03-ingestion-lineage.mdx) | [E6 資料集](roadmap.mdx#epic-一覽) |
+| 丟棄還沒定版、也沒被回合引用的草稿版本 | :ref[專案負責人]{id="term.project-leader"} | [05-03 資料匯入與版本](../specs/05-dataset/03-ingestion-lineage.mdx) | [E6 資料集](roadmap.mdx#epic-一覽) |
+
+### 管理任務與成員
+
+| Story | 角色 | 規格 | Epic |
+| :--- | :--- | :--- | :--- |
+| 在任務列表搜尋與篩選，找到要處理的任務，查詢條件留在網址上 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [03-01 任務列表](../specs/03-task-management/01-task-list.mdx) | [E4 任務管理](roadmap.mdx#epic-一覽) |
+| 刪除不再需要的草稿任務，確認後移到封存 | :ref[專案負責人]{id="term.project-leader"}、:ref[系統管理員]{id="term.system-admin"} | [03-01 任務列表](../specs/03-task-management/01-task-list.mdx) | [E4 任務管理](roadmap.mdx#epic-一覽) |
+| 在概覽看出任務現在卡在哪、下一步該做什麼 | :ref[專案負責人]{id="term.project-leader"} | [03-03 任務詳情](../specs/03-task-management/03-task-detail.mdx) | [E4 任務管理](roadmap.mdx#epic-一覽) |
+| 以唯讀方式取得審核需要的任務資訊，碰不到成員與推進 | :ref[審核員]{id="term.reviewer"} | [03-03 任務詳情](../specs/03-task-management/03-task-detail.mdx) | [E4 任務管理](roadmap.mdx#epic-一覽) |
+| 修改任務的設定 | :ref[專案負責人]{id="term.project-leader"} | [03-03 任務詳情](../specs/03-task-management/03-task-detail.mdx) | [E4 任務管理](roadmap.mdx#epic-一覽) |
+| 搜尋平台成員或用 Email 邀請，把標記員與審核員加進任務 | :ref[專案負責人]{id="term.project-leader"} | [03-03 任務詳情](../specs/03-task-management/03-task-detail.mdx) | [E4 任務管理](roadmap.mdx#epic-一覽) |
+| 點任務邀請信的連結，成員資格從邀請中變成啟用 | :ref[平台成員]{id="term.platform-member"} | [03-03 任務詳情](../specs/03-task-management/03-task-detail.mdx) | [E4 任務管理](roadmap.mdx#epic-一覽) |
+| 按「新增試標回合 R1」開始試標 | :ref[專案負責人]{id="term.project-leader"} | [03-03 任務詳情](../specs/03-task-management/03-task-detail.mdx) | [E4 任務管理](roadmap.mdx#epic-一覽) |
+| 看過最新回合的 IAA 後，填修訂紀錄再開下一個試標回合 | :ref[專案負責人]{id="term.project-leader"} | [03-03 任務詳情](../specs/03-task-management/03-task-detail.mdx) | [E4 任務管理](roadmap.mdx#epic-一覽) |
+| 開始正式標記，樣本輪流分派給啟用中的標記員 | :ref[專案負責人]{id="term.project-leader"} | [03-03 任務詳情](../specs/03-task-management/03-task-detail.mdx) | [E4 任務管理](roadmap.mdx#epic-一覽) |
+| 設定有誤時從等待 IAA 確認退回草稿，記下退回原因 | :ref[專案負責人]{id="term.project-leader"} | [03-03 任務詳情](../specs/03-task-management/03-task-detail.mdx) | [E4 任務管理](roadmap.mdx#epic-一覽) |
+| 把未指派的標記作業重新指派，或明確排除 | :ref[專案負責人]{id="term.project-leader"} | [03-03 任務詳情](../specs/03-task-management/03-task-detail.mdx) | [E4 任務管理](roadmap.mdx#epic-一覽) |
+| 看每位成員的進度與品質旗標 | :ref[專案負責人]{id="term.project-leader"} | [03-03 任務詳情](../specs/03-task-management/03-task-detail.mdx) | [E4 任務管理](roadmap.mdx#epic-一覽) |
+| 逐筆看標記員交了什麼、審核員怎麼判 | :ref[專案負責人]{id="term.project-leader"}、:ref[審核員]{id="term.reviewer"} | [03-03 任務詳情](../specs/03-task-management/03-task-detail.mdx) | [E4 任務管理](roadmap.mdx#epic-一覽) |
+| 看工時紀錄 | :ref[專案負責人]{id="term.project-leader"}、:ref[審核員]{id="term.reviewer"} | [03-03 任務詳情](../specs/03-task-management/03-task-detail.mdx) | [E4 任務管理](roadmap.mdx#epic-一覽) |
+| 結案條件都滿足後把任務標記完成 | :ref[專案負責人]{id="term.project-leader"} | [03-03 任務詳情](../specs/03-task-management/03-task-detail.mdx) | [E4 任務管理](roadmap.mdx#epic-一覽) |
+| 任務完成後匯出標記結果，之後重新下載同一份檔案 | :ref[專案負責人]{id="term.project-leader"} | [03-03 任務詳情](../specs/03-task-management/03-task-detail.mdx) | [E4 任務管理](roadmap.mdx#epic-一覽) |
+| 把序列標註的標記匯出成訓練用的序列格式，重匯結果相同 | :ref[專案負責人]{id="term.project-leader"} | [05-02 資料集分析詳情](../specs/05-dataset/02-analysis-detail.mdx) | [E6 資料集](roadmap.mdx#epic-一覽) |
+
+### 執行標記
+
+| Story | 角色 | 規格 | Epic |
+| :--- | :--- | :--- | :--- |
+| 在標記清單看清楚有哪些資料、自己處理到哪 | :ref[標記員]{id="term.annotator"}、:ref[審核員]{id="term.reviewer"} | [04-01 標記清單](../specs/04-annotation/01-annotation-list.mdx) | [E5 標記作業](roadmap.mdx#epic-一覽) |
+| 從側欄進來時挑一個自己有角色的任務 | :ref[標記員]{id="term.annotator"}、:ref[審核員]{id="term.reviewer"} | [04-01 標記清單](../specs/04-annotation/01-annotation-list.mdx) | [E5 標記作業](roadmap.mdx#epic-一覽) |
+| 從工作區返回清單時，篩選與頁碼都還在 | :ref[標記員]{id="term.annotator"}、:ref[審核員]{id="term.reviewer"} | [04-01 標記清單](../specs/04-annotation/01-annotation-list.mdx) | [E5 標記作業](roadmap.mdx#epic-一覽) |
+| 一致性確認完成後，看自己在歷次試標中的表現 | :ref[標記員]{id="term.annotator"} | [04-01 標記清單](../specs/04-annotation/01-annotation-list.mdx) | [E5 標記作業](roadmap.mdx#epic-一覽) |
+| 第一次進來先讀任務說明，確認後才開始 | :ref[標記員]{id="term.annotator"}、:ref[審核員]{id="term.reviewer"} | [04-02 標記工作區](../specs/04-annotation/02-annotation-workspace.mdx) | [E5 標記作業](roadmap.mdx#epic-一覽) |
+| 一次面對一筆資料，依任務設定作答，儲存草稿或提交 | :ref[標記員]{id="term.annotator"} | [04-02 標記工作區](../specs/04-annotation/02-annotation-workspace.mdx) | [E5 標記作業](roadmap.mdx#epic-一覽) |
+| 用快捷鍵儲存、提交與翻筆 | :ref[標記員]{id="term.annotator"} | [04-02 標記工作區](../specs/04-annotation/02-annotation-workspace.mdx) | [E5 標記作業](roadmap.mdx#epic-一覽) |
+| 把網址貼給別人，對方回到同一筆 | :ref[標記員]{id="term.annotator"}、:ref[審核員]{id="term.reviewer"} | [04-02 標記工作區](../specs/04-annotation/02-annotation-workspace.mdx) | [E5 標記作業](roadmap.mdx#epic-一覽) |
+
+### 審核與仲裁
+
+| Story | 角色 | 規格 | Epic |
+| :--- | :--- | :--- | :--- |
+| 對系統指派的審核單位逐項通過、修正或標為無法裁決 | :ref[審核員]{id="term.reviewer"} | [04-02 標記工作區](../specs/04-annotation/02-annotation-workspace.mdx) | [E5 標記作業](roadmap.mdx#epic-一覽) |
+| 看出標記員與審核員的答案差在哪幾項 | :ref[審核員]{id="term.reviewer"}、:ref[仲裁者]{id="term.arbiter"} | [04-02 標記工作區](../specs/04-annotation/02-annotation-workspace.mdx) | [E5 標記作業](roadmap.mdx#epic-一覽) |
+| 仲裁爭議：在標記員答案與審核員的決定之間選一邊 | :ref[仲裁者]{id="term.arbiter"} | [04-02 標記工作區](../specs/04-annotation/02-annotation-workspace.mdx) | [E5 標記作業](roadmap.mdx#epic-一覽) |
+| 任務沒有啟用中的仲裁者時，由專案負責人親自裁定爭議 | :ref[專案負責人]{id="term.project-leader"} | [03-03 任務詳情](../specs/03-task-management/03-task-detail.mdx) | [E4 任務管理](roadmap.mdx#epic-一覽) |
+| 逐筆收尾最終例外池：採標記員或審核員答案、自訂答案或排除 | :ref[專案負責人]{id="term.project-leader"} | [04-02 標記工作區](../specs/04-annotation/02-annotation-workspace.mdx) | [E5 標記作業](roadmap.mdx#epic-一覽) |
+
+### 分析資料集
+
+| Story | 角色 | 規格 | Epic |
+| :--- | :--- | :--- | :--- |
+| 一眼看到自己能分析的任務與各自的 IAA 狀態 | :ref[專案負責人]{id="term.project-leader"}、:ref[審核員]{id="term.reviewer"} | [05-01 資料集分析列表](../specs/05-dataset/01-analysis-list.mdx) | [E6 資料集](roadmap.mdx#epic-一覽) |
+| 用輸出類型找任務，複合任務也找得到 | :ref[專案負責人]{id="term.project-leader"}、:ref[審核員]{id="term.reviewer"} | [05-01 資料集分析列表](../specs/05-dataset/01-analysis-list.mdx) | [E6 資料集](roadmap.mdx#epic-一覽) |
+| 在同一個任務下切換統計總覽與品質監控 | :ref[專案負責人]{id="term.project-leader"}、:ref[審核員]{id="term.reviewer"} | [05-02 資料集分析詳情](../specs/05-dataset/02-analysis-detail.mdx) | [E6 資料集](roadmap.mdx#epic-一覽) |
+| 看每種輸出類型的 IAA 與門檻 | :ref[專案負責人]{id="term.project-leader"}、:ref[審核員]{id="term.reviewer"} | [05-02 資料集分析詳情](../specs/05-dataset/02-analysis-detail.mdx) | [E6 資料集](roadmap.mdx#epic-一覽) |
+| 看標記員的風險等級，和高分歧樣本分開看 | :ref[專案負責人]{id="term.project-leader"}、:ref[審核員]{id="term.reviewer"} | [05-02 資料集分析詳情](../specs/05-dataset/02-analysis-detail.mdx) | [E6 資料集](roadmap.mdx#epic-一覽) |
+| 從建議行動前往成員管理，調整標記員的參與狀態 | :ref[專案負責人]{id="term.project-leader"} | [05-02 資料集分析詳情](../specs/05-dataset/02-analysis-detail.mdx) | [E6 資料集](roadmap.mdx#epic-一覽) |
+
+### 系統管理
+
+| Story | 角色 | 規格 | Epic |
+| :--- | :--- | :--- | :--- |
+| 查詢帳號並新增帳號，以設定密碼信讓對方自己設密碼 | :ref[系統管理員]{id="term.system-admin"} | [06-01 使用者管理](../specs/06-admin/01-user-management.mdx) | [E3 系統管理](roadmap.mdx#epic-一覽) |
+| 連結過期或遺失時重發設定密碼信 | :ref[系統管理員]{id="term.system-admin"} | [06-01 使用者管理](../specs/06-admin/01-user-management.mdx) | [E3 系統管理](roadmap.mdx#epic-一覽) |
+| 停用帳號讓它立即無法使用，之後可以重新啟用 | :ref[系統管理員]{id="term.system-admin"} | [06-01 使用者管理](../specs/06-admin/01-user-management.mdx) | [E3 系統管理](roadmap.mdx#epic-一覽) |
+| 變更帳號的系統角色 | :ref[系統管理員]{id="term.system-admin"} | [06-01 使用者管理](../specs/06-admin/01-user-management.mdx) | [E3 系統管理](roadmap.mdx#epic-一覽) |
+| 查每一次帳號異動是誰在什麼時間改了什麼 | :ref[系統管理員]{id="term.system-admin"} | [06-01 使用者管理](../specs/06-admin/01-user-management.mdx) | [E3 系統管理](roadmap.mdx#epic-一覽) |
+| 在一個地方看完每個角色能做什麼 | :ref[系統管理員]{id="term.system-admin"} | [06-02 角色設定](../specs/06-admin/02-role-settings.mdx) | [E3 系統管理](roadmap.mdx#epic-一覽) |
+| 收窄角色權限，同時有人改時擋下 | :ref[系統管理員]{id="term.system-admin"} | [06-02 角色設定](../specs/06-admin/02-role-settings.mdx) | [E3 系統管理](roadmap.mdx#epic-一覽) |
+| 查權限矩陣是誰在什麼時候改了哪一格 | :ref[系統管理員]{id="term.system-admin"} | [06-02 角色設定](../specs/06-admin/02-role-settings.mdx) | [E3 系統管理](roadmap.mdx#epic-一覽) |
+
+### 個人設定與共用介面
+
+| Story | 角色 | 規格 | Epic |
+| :--- | :--- | :--- | :--- |
+| 自己維護姓名、聯絡方式與頭像 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [01-04 個人設定](../specs/01-account/04-profile.mdx) | [E1 帳號](roadmap.mdx#epic-一覽) |
+| 換登入用的 Email，新信箱驗證後才生效 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [01-04 個人設定](../specs/01-account/04-profile.mdx) | [E1 帳號](roadmap.mdx#epic-一覽) |
+| 改密碼；用 Google 帳號進來的人補設一組密碼 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [01-04 個人設定](../specs/01-account/04-profile.mdx) | [E1 帳號](roadmap.mdx#epic-一覽) |
+| 逐事件決定要不要收通知 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [01-04 個人設定](../specs/01-account/04-profile.mdx) | [E1 帳號](roadmap.mdx#epic-一覽) |
+| 從側欄知道自己在哪個模組，不走進沒有權限的頁面 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [07-01 側欄導覽](../specs/07-shared/01-sidebar.mdx) | [E2 共用介面外殼](roadmap.mdx#epic-一覽) |
+| 不離開目前的工作就切換語言與外觀 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [07-01 側欄導覽](../specs/07-shared/01-sidebar.mdx) | [E2 共用介面外殼](roadmap.mdx#epic-一覽) |
+| 在桌機查看目前頁面能用的快捷鍵 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [07-01 側欄導覽](../specs/07-shared/01-sidebar.mdx) | [E2 共用介面外殼](roadmap.mdx#epic-一覽) |
+| 在側欄看到未讀通知的數量，並一次全部標為已讀 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [07-01 側欄導覽](../specs/07-shared/01-sidebar.mdx) | [E7 儀表板與通知](roadmap.mdx#epic-一覽) |
+| 同時開多個工作頁籤，切回來時檢視狀態都還在 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [07-02 工作頁籤](../specs/07-shared/02-workspace-tabs.mdx) | [E2 共用介面外殼](roadmap.mdx#epic-一覽) |
+| 把同一個任務的試標與正式標記各開一個頁籤來回比對 | :ref[專案負責人]{id="term.project-leader"} | [07-02 工作頁籤](../specs/07-shared/02-workspace-tabs.mdx) | [E2 共用介面外殼](roadmap.mdx#epic-一覽) |
+| 頁籤被自動淘汰時，不遺失還沒送出的作答或審核決定 | :ref[標記員]{id="term.annotator"}、:ref[審核員]{id="term.reviewer"} | [07-02 工作頁籤](../specs/07-shared/02-workspace-tabs.mdx) | [E2 共用介面外殼](roadmap.mdx#epic-一覽) |
+| 被擋下時看懂是什麼狀況，而且有一條走得出去的路 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [07-03 無權限與找不到](../specs/07-shared/03-denied-and-not-found.mdx) | [E2 共用介面外殼](roadmap.mdx#epic-一覽) |
+| 知道自己會因為哪些事被通知 | :ref[平台成員]{id="term.platform-member"} | [07-04 通知事件](../specs/07-shared/04-notification-events.mdx) | [E7 儀表板與通知](roadmap.mdx#epic-一覽) |
+| 在儀表板的最近提醒只看到與全平台有關的事件 | :ref[系統管理員]{id="term.system-admin"} | [07-04 通知事件](../specs/07-shared/04-notification-events.mdx) | [E7 儀表板與通知](roadmap.mdx#epic-一覽) |
+
+## 怎麼更新
+
+story 只改 `.notecraft/components/story-map-data.ts`，圖跟著更新；本文的表要照同一份資料逐列改，兩邊不能各寫各的。
+
+| 時機 | 要改什麼 |
+| :--- | :--- |
+| 規格新增、刪除或改了使用者目標 | 該頁的 story：新增、刪除或改寫那一列，角色照規格的使用角色 |
+| 新增一頁規格 | 在 `SPECS` 加這一頁，story 放進對應的活動；路線圖還沒有它的 Feature 時，Epic 先標待確認並列進待決 |
+| 路線圖的 Epic 改了範圍或拆併 | 不改這份的資料，Epic 從 `roadmap-data.ts` 讀；只檢查待確認與設了 `epicOverride` 的 story 是否仍然成立 |
+| 待決有了結論 | 拿掉該 story 的 `epicPending`；結論和依規格頁推出的 Epic 不同時改設 `epicOverride`，把待決那一列移進決策紀錄 |
+
+## 決策紀錄
+
+| 日期 | 決策 | 取代了什麼 | 來源 |
+| :--- | :--- | :--- | :--- |
+| 2026-11-24 | 故事地圖放在 `docs/product/story-map.mdx`，與路線圖、使用者旅程同層，不放 PRD、不併入路線圖 | — | [#616](https://github.com/label-suite/label-suite/issues/616) |
+| 2026-11-24 | 縱軸用路線圖的 Epic E0～E7，不另定 R1～R3 切片；一頁規格拆成數個 story，一個使用者目標一列（[§互動 story map](#互動-story-map)） | 個人 repo 故事地圖的 R1～R3 切片與規格編號 001～019 | [#616](https://github.com/label-suite/label-suite/issues/616) |
+| 2026-11-24 | 活動主幹照八個活動加一列共用介面，順序參考專案負責人的任務生命週期；互動圖加角色篩選（[§活動主幹](#活動主幹)） | — | [#616 留言](https://github.com/label-suite/label-suite/issues/616) |
+| 2026-11-24 | 不搬個人 repo 的 onboarding 流程、R1～R3 驗收清單與規格對照索引 | — | [#616](https://github.com/label-suite/label-suite/issues/616) |
+| 2026-11-24 | 「在側欄看到未讀通知的數量，並一次全部標為已讀」歸 E7，隨 07-04 通知事件，側欄是它的消費端之一（[§互動 story map](#互動-story-map)） | 依規格頁 07-01 推出的 E2 | [#616 留言](https://github.com/label-suite/label-suite/issues/616#issuecomment-7125032067) |
