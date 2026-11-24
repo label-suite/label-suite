@@ -1,7 +1,7 @@
 {
   "id": "openapi-renderer",
   "origin": "https://github.com/SteveLin100132/notecraft/tree/HEAD/plugins/openapi-renderer",
-  "ref": null,
-  "commit": "HEAD",
+  "ref": "HEAD",
+  "commit": "b5c7d72460c0d7faee71186b2c5efa049c789778",
   "installedAt": "2026-11-24T02:04:16.067Z"
 }
