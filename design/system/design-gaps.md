@@ -356,7 +356,7 @@
 | **重現方式** | 開實體辨識任務的品質監控（例如 `pages/dataset/dataset-analysis-detail.html?task_id=T007&tab=quality`），標題列是星號、「Pairwise Entity-level F1（strict）」與「— 主要指標」。點 `Partial overlap`：星號消失，後綴變成「— 參考顯示」（英文模式「— Reference only」）。點回 `Strict match`：星號與「— 主要指標」回來。 |
 | **受影響範圍** | `dataset/dataset-analysis-detail#state-seq-match-partial`、`#state-seq-match-strict`、`#state-quality-entity-recognition`；本頁專屬的 `.iaa-primary-star` |
 | **依據** | 原型：`updateMethodName`（`dataset-analysis-detail.html:1976`–`:1999`）在 `S.seqMode === 'partial'` 時對星號加 `.hidden` 並移除 `aria-label`、把 `#iaaMethodSuffix` 換成 `iaaMethodSuffixRef`（「— 參考顯示」，`:437`；英文 `:849`），註解寫「依據 規格 05-02 §八種輸出類型各自的主指標與門檻 第 11 條、維護者裁定 2026-11-19 (#435)」。規格 [`05-dataset/02-analysis-detail.mdx`](../../docs/specs/05-dataset/02-analysis-detail.mdx) §逐型 IAA 報告的版面 第 3 條：「主指標旁有一個**星號標記**，標題後綴是 `— 主要指標`；星號的作用是標出『這一個才是用來判定達標的』」，沒有寫切到部分重疊時的例外；同頁 §八種輸出類型各自的主指標與門檻 第 11 條只說部分重疊「**只能切換顯示**，**不得**當成第二道達標判定」，也沒有出現「參考顯示」這個字。[Issue #435](https://github.com/label-suite/label-suite/issues/435) 的工作項寫「選 Partial overlap 時方法後綴仍是『— 主要指標』，與規格第 11 點不符」，但 issue 上沒有記下「參考顯示」這個用詞的裁定。 |
-| **待決問題** | 原型與規格要對齊到哪一邊（屬維護者）：(a) 照原型，用 `spec-writing` 在 05-02 §逐型 IAA 報告的版面 第 3 條補上「實體辨識切到部分重疊時星號收起、後綴改『— 參考顯示』」這條例外；(b) 照規格，維持第 3 條不變，改原型讓標題列不隨模式切換（屬**畫面修正**，開 UI issue 走 Ready gate）。不論選哪一邊，這次裁定要記在哪裡才查得到（例如 05-02 §已確認決議，或 #435 上的留言）？ |
+| **待決問題** | **已裁定（2026-11-24，#614）**：照原型，規格 05-02 §逐型 IAA 報告的版面 第 3 條補上這條例外，裁定記在 05-02 §已確認決議 Q29；原型不改。原題保留：原型與規格要對齊到哪一邊（屬維護者）：(a) 照原型，用 `spec-writing` 在 05-02 §逐型 IAA 報告的版面 第 3 條補上「實體辨識切到部分重疊時星號收起、後綴改『— 參考顯示』」這條例外；(b) 照規格，維持第 3 條不變，改原型讓標題列不隨模式切換（屬**畫面修正**，開 UI issue 走 Ready gate）。不論選哪一邊，這次裁定要記在哪裡才查得到（例如 05-02 §已確認決議，或 #435 上的留言）？ |
 
 ## 二、缺少狀態證據
 
