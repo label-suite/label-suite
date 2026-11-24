@@ -170,6 +170,7 @@ caption: 全站頁面一覽；點頁面開啟該頁規格
 status: generated
 */}
 
+import GeneratedFrame from '@/components/GeneratedFrame.astro'
 import PrdSiteMapTree from '@notes/components/prd-site-map-tree'
 
 <GeneratedFrame id="prd-site-map-tree" type="diagram" prompt={"核心洞察：一張圖看完整個系統有哪些頁面，不必逐一切換模組；查角色權限用下方的互動圖。\n互動：無（靜態）；每個頁面節點連到該頁規格。\n圖形：由左到右的樹狀圖，根節點「入口」→ 七個模組 → 20 頁，只畫到頁面這一層，不展開頁面裡的區塊與功能。\n資料：\n  MODULES：01 帳號、02 儀表板、03 任務管理、04 標記作業、05 資料集、06 系統管理、07 共用介面（模組色依 prd-writing 的 visualize.md）\n  PAGES：與本章條列逐項一致，模組歸屬依規格編號；每個節點標規格編號\n  不是獨立頁面：01-05、07-01、07-02、07-03、07-04 用另一種圖示與虛線框，並附圖例\n"} caption="全站頁面一覽；點頁面開啟該頁規格">
@@ -194,7 +195,6 @@ caption: 切換模組看頁面；用角色篩選看誰進得去
 status: generated
 */}
 
-import GeneratedFrame from '@/components/GeneratedFrame.astro'
 import PrdSiteMap from '@notes/components/prd-site-map'
 
 <GeneratedFrame id="prd-site-map" type="interactive" prompt={"骨架：.claude/skills/prd-writing/references/site-map-skeleton.tsx（複製後只改【資料】）。\n核心洞察：系統角色決定進不進得了平台與系統管理，任務角色決定進不進得了任務詳情、標記與分析。\n互動：模組切換、角色篩選、點頁面看詳情面板（依骨架，不加更多）。\n圖形：縱向主幹樹＋右側詳情面板。\n資料：\n  ROLES：平台成員（User）、系統管理員（ShieldCheck）、Seeder 管理員（KeyRound）、專案負責人（Crown）、審核員（ClipboardCheck）、標記員（PenLine）\n  MODULES：入口（灰）、01 帳號、02 儀表板、03 任務管理、04 標記作業、05 資料集、06 系統管理、07 共用介面\n  GROUPS：無\n  PAGES 與 access：與本章條列逐項一致（含 07-03、07-04）；20 頁 specState 全部 written；權限依 §權限矩陣\nDEFAULT_SELECTED：01-01 登入\n"} caption="切換模組看頁面；用角色篩選看誰進得去">
