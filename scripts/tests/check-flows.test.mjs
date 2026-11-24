@@ -747,10 +747,27 @@ test("parseLogicFlow reads every Logic Flow component in the repository", () => 
   }
 });
 
-test("logicFlowComponents takes only the module Logic Flow components", () => {
+test("logicFlowComponents takes only the module Logic Flow components and the overview", () => {
   const files = logicFlowComponents();
-  assert.ok(files.every((f) => /spec-\d\d-[^/]+-logic-flow\.tsx$/.test(f)));
+  assert.ok(files.every((f) => /spec-(?:\d\d-[^/]+|index)-logic-flow\.tsx$/.test(f)));
   assert.ok(!files.some((f) => /spec-\d\d-\d\d-/.test(f)), "a page flow was taken as a Logic Flow");
+});
+
+test("logicFlowComponents picks up the system-wide overview, and nothing else named like it", () => {
+  const dir = mkdtempSync(join(tmpdir(), "check-logic-flow-names-"));
+  for (const f of [
+    "spec-index-logic-flow.tsx",
+    "spec-02-dashboard-logic-flow.tsx",
+    "spec-02-01-dashboard-flow.tsx",
+    "spec-indexes-logic-flow.tsx",
+    "spec-index-flow.tsx",
+    "prd-site-map.tsx",
+  ])
+    writeFileSync(join(dir, f), "");
+  assert.deepEqual(
+    logicFlowComponents(dir).map((f) => f.split("/").at(-1)),
+    ["spec-02-dashboard-logic-flow.tsx", "spec-index-logic-flow.tsx"],
+  );
 });
 
 test("distToOutline measures a decision along its slanted sides, a page along its box", () => {

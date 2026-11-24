@@ -824,7 +824,8 @@ export function checkFlowsIn({
 // ------------------------------------------------------ Logic Flow layout ---
 //
 // The module-level Logic Flow components (spec-<NN>-<module>-logic-flow.tsx,
-// copied from logic-flow-skeleton.tsx) carry hand-placed coordinates instead
+// copied from logic-flow-skeleton.tsx, plus the system-wide overview
+// spec-index-logic-flow.tsx copied from the same skeleton) carry hand-placed coordinates instead
 // of the lane/col grid above, so none of checkGeometry applies to them. Two
 // layout defects slipped through review there (#558): arrowheads that stop
 // short of a slanted diamond side, and edge labels pushed off the canvas. The
@@ -834,7 +835,7 @@ export const LOGIC_SECTIONS_DECL = "const SECTIONS: Section[] = [";
 
 export function logicFlowComponents(dir = COMPONENTS_DIR) {
   return readdirSync(dir)
-    .filter((f) => /^spec-\d\d-.+-logic-flow\.tsx$/.test(f))
+    .filter((f) => /^spec-(?:\d\d-.+|index)-logic-flow\.tsx$/.test(f))
     .sort()
     .map((f) => join(dir, f));
 }
