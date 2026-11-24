@@ -9,8 +9,8 @@
 
 ## 2. 程式 PR：匯出指令與副本（`Closes #572`）
 
-- [ ] 2.1 先寫測試再改 `backend/app/scripts/export_openapi.py`：不帶 `--output` 寫 `backend/openapi.json` 與 `docs/diagrams/architecture/api.openapi.json` 且位元組相同；帶 `--output` 只寫該處；兩處先寫同目錄暫存檔、全部成功才替換、寫暫存檔階段失敗時既有檔案不變且不留暫存檔、退出碼 1；目標清單必須可注入（`write_outputs(text, targets)` 這個縫，或 `main` 的參數），測試一律用 `tmp_path`，預設目標的行為以 patch 目標常數驗證，測試絕不寫入 repo 內的檔案；對應 specs `api-schema-export` 的全部 Scenario；驗證：`uv run pytest`（含該測試檔）、`ruff`、`mypy` 通過 [@backend-developer]
-- [ ] 2.2 重新匯出並確認與 api-contract 一致：執行 `pnpm run api:sync`；驗證：`backend/openapi.json` 與 `frontend/src/api/generated/` 無差異，新增的 `docs/diagrams/architecture/api.openapi.json` 與 `backend/openapi.json` 位元組相同並一起提交 [@backend-developer]
+- [x] 2.1 先寫測試再改 `backend/app/scripts/export_openapi.py`：不帶 `--output` 寫 `backend/openapi.json` 與 `docs/diagrams/architecture/api.openapi.json` 且位元組相同；帶 `--output` 只寫該處；兩處先寫同目錄暫存檔、全部成功才替換、寫暫存檔階段失敗時既有檔案不變且不留暫存檔、退出碼 1；目標清單必須可注入（`write_outputs(text, targets)` 這個縫，或 `main` 的參數），測試一律用 `tmp_path`，預設目標的行為以 patch 目標常數驗證，測試絕不寫入 repo 內的檔案；對應 specs `api-schema-export` 的全部 Scenario；驗證：`uv run pytest`（含該測試檔）、`ruff`、`mypy` 通過 [@backend-developer]
+- [x] 2.2 重新匯出並確認與 api-contract 一致：執行 `pnpm run api:sync`；驗證：`backend/openapi.json` 與 `frontend/src/api/generated/` 無差異，新增的 `docs/diagrams/architecture/api.openapi.json` 與 `backend/openapi.json` 位元組相同並一起提交 [@backend-developer]
 
 ## 3. 程式 PR：CI 與本機契約漂移檢查
 
