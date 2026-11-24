@@ -77,6 +77,8 @@ interface PlacedFeature {
 interface PlacedPage extends SiteMapPage {
   y: number;
   open: boolean;
+  /** Held open by a search match; the chevron ignores clicks until the search clears */
+  forced: boolean;
   placed: PlacedFeature[];
 }
 
@@ -86,6 +88,8 @@ interface PlacedModule {
   color: string;
   y: number;
   open: boolean;
+  /** Held open by a search match; the chevron ignores clicks until the search clears */
+  forced: boolean;
   pages: PlacedPage[];
 }
 
@@ -113,21 +117,21 @@ function layout(
     if (!open) {
       const y = cursor + PAGE_H / 2;
       cursor += ROW;
-      return { ...m, color: moduleColor(m.id), y, open, pages: [] };
+      return { ...m, color: moduleColor(m.id), y, open, forced: hasMatch, pages: [] };
     }
     const pages = own.map((p): PlacedPage => {
       const y = cursor + PAGE_H / 2;
-      const pageOpen =
-        p.features.length > 0 && (openPages.has(p.spec) || p.features.some((f) => isMatch(f.title)));
+      const forced = p.features.some((f) => isMatch(f.title));
+      const pageOpen = p.features.length > 0 && (forced || openPages.has(p.spec));
       const placed = pageOpen
         ? p.features.map((f, k) => ({ ...f, y: y + k * FROW, match: isMatch(f.title) }))
         : [];
       if (pageOpen) anyFeatures = true;
       cursor += ROW + Math.max(0, placed.length - 1) * FROW;
-      return { ...p, y, open: pageOpen, placed };
+      return { ...p, y, open: pageOpen, forced, placed };
     });
     const y = (pages[0].y + pages[pages.length - 1].y) / 2;
-    return { ...m, color: moduleColor(m.id), y, open, pages };
+    return { ...m, color: moduleColor(m.id), y, open, forced: hasMatch, pages };
   });
   const rootY = (modules[0].y + modules[modules.length - 1].y) / 2;
   return {
@@ -341,13 +345,16 @@ export default function PrdSiteMapTree(): ReactElement {
           {modules.map((m) => {
             const Chevron = m.open ? ChevronDown : ChevronRight;
             const count = SITE_MAP_PAGES.filter((p) => p.spec.startsWith(`${m.id}-`)).length;
-            const flip = (): void => setClosedModules((s) => toggle(s, m.id));
+            const flip = (): void => {
+              if (!m.forced) setClosedModules((s) => toggle(s, m.id));
+            };
             return (
               <g
                 key={m.id}
                 role="button"
                 tabIndex={0}
                 aria-expanded={m.open}
+                aria-disabled={m.forced || undefined}
                 aria-label={`模組 ${m.id} ${m.label}，${count} 頁，${m.open ? "收合" : "展開"}`}
                 onClick={flip}
                 onKeyDown={onActivate(flip)}
@@ -396,7 +403,9 @@ export default function PrdSiteMapTree(): ReactElement {
               const Icon = p.standalone ? FileText : Layers;
               const Chevron = p.open ? ChevronDown : ChevronRight;
               const n = p.features.length;
-              const flip = (): void => setOpenPages((s) => toggle(s, p.spec));
+              const flip = (): void => {
+                if (!p.forced) setOpenPages((s) => toggle(s, p.spec));
+              };
               return (
                 <g key={p.spec}>
                   <rect
@@ -415,6 +424,7 @@ export default function PrdSiteMapTree(): ReactElement {
                       role="button"
                       tabIndex={0}
                       aria-expanded={p.open}
+                      aria-disabled={p.forced || undefined}
                       aria-label={`${p.open ? "收合" : "展開"} ${p.spec} ${p.label}的 ${n} 個功能`}
                       onClick={flip}
                       onKeyDown={onActivate(flip)}
