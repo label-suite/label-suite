@@ -438,6 +438,9 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+          # No dependencies are installed, so skip the pnpm cache that
+          # packageManager in package.json would otherwise turn on.
+          package-manager-cache: false
 
       - uses: astral-sh/setup-uv@v6
 
