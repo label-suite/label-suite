@@ -4,14 +4,14 @@ description: '標記員、審核員與仲裁者逐筆作業的工作頁：左欄
 category: '規格書'
 tags: [規格書, 標記作業, 已定案]
 createdAt: '2026-11-05'
-updatedAt: '2026-11-19'
+updatedAt: '2026-11-24'
 ---
 
 import PrototypeFrame from '@notes/components/prototype-frame';
 
 # 04-02 標記工作區
 
-:badge[已定案]{variant="success"} :badge[變更 #434]{variant="warning" href="https://github.com/label-suite/label-suite/issues/434"} :badge[標記作業]{variant="neutral"} :badge[六階段已寫完]{variant="success"} :badge[416 條舊編號全數對應]{variant="success"}
+:badge[已定案]{variant="success"} :badge[變更 #576]{variant="warning" href="https://github.com/label-suite/label-suite/issues/576"} :badge[標記作業]{variant="neutral"} :badge[六階段已寫完]{variant="success"} :badge[416 條舊編號全數對應]{variant="success"}
 
 > 來源：舊 repo `specs/annotation/015-annotation-workspace/spec.md`（**517 條**，本頁分到 **416 條**），釘在 `singyichen/label-suite@faf83356`
 > 參考畫面：`design/prototype/pages/annotation/annotation-workspace.html`
@@ -133,7 +133,7 @@ import Spec0402AnnotationWorkspaceFlow from '@notes/components/spec-04-02-annota
 - 替代流程：
   - A1（第 1 步）任務沒要求先讀說明 → 跳過說明彈窗直接開始，右欄的說明仍然常駐，回到第 3 步（見 [§指引閘門：第一次進來先讀說明](#指引閘門第一次進來先讀說明)）
   - A2（第 3 步）使用者在手機上 → 說明改由**底部抽屜**承載，翻筆時抽屜維持原本的開合狀態，回到第 4 步（見 [§工作區的外殼：三欄與行動版](#工作區的外殼三欄與行動版)）
-  - <mark>A3（第 2 步）使用者在說明彈窗按「返回標記清單」→ 回到這個任務的標記清單，**不記下確認**，下次進來照樣顯示彈窗，流程結束（見 [§指引閘門：第一次進來先讀說明](#指引閘門第一次進來先讀說明) 第 3 條）</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup>
+  - A3（第 2 步）使用者在說明彈窗按「返回標記清單」→ 回到這個任務的標記清單，**不記下確認**，下次進來照樣顯示彈窗，流程結束（見 [§指引閘門：第一次進來先讀說明](#指引閘門第一次進來先讀說明) 第 3 條）
 - 結果：使用者在確認過說明之後才動手；翻筆時網址一直等於畫面上的那一筆，所以任何一筆都能直接分享
 
 ## 規格
@@ -184,7 +184,7 @@ import Spec0402AnnotationWorkspaceFlow from '@notes/components/spec-04-02-annota
 | 層級 | 顯示 | 連到哪 |
 | :--- | :--- | :--- |
 | 第 1 層 作業區 | 審核員「審核作業」、標記員「標記作業」、專案負責人處理例外時「例外處置」 | **儀表板** |
-| 第 2 層 任務 | 「〈任務名稱〉（〈標記階段〉）」 | 標記清單，**回帶任務、角色與標記階段** |
+| 第 2 層 任務 | 「〈任務名稱〉（〈標記階段〉）」 | <mark>審核員與標記員：</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup>標記清單，**回帶任務、角色與標記階段**；<mark>專案負責人處理例外時：這個任務詳情的最終例外池（第 8 條）</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup> |
 | 第 3 層 目前單位 | 依角色不同，見第 2 條 | **不帶連結，它就是目前層級** |
 
 2. 第 3 層依角色分流，這是**資料公平性的硬性規則**：
@@ -200,6 +200,7 @@ import Spec0402AnnotationWorkspaceFlow from '@notes/components/spec-04-02-annota
 5. 第 2 層一定要**回帶身分參數**：帶著標記員身分進來的，返回清單的網址也要帶同一個身分；**沒帶身分進來的就不得補上**（否則「缺值套用預設」這件事在兩頁之間就不再是共識）
 6. 身分參數要和清單的四個檢視狀態**併存**，不能只轉發一種（見 [規格 04-01 §清單檢視狀態往返工作區](./01-annotation-list.mdx#清單檢視狀態往返工作區)）
 7. 麵包屑在窄螢幕**不會被隱藏**，但標記員帳號在它的尾端，需要橫向捲動才看得到——窄螢幕下審核單位的身分就由這一層承載
+8. <mark>第 2 層連到哪也**依角色分流**：專案負責人處理例外時，第 2 層連到這個任務的[規格 03-03 §最終例外池](../03-task-management/03-task-detail.mdx#最終例外池)，**不連標記清單**——他進不了標記清單（[規格 04-01 §已確認決議](./01-annotation-list.mdx#已確認決議) Q1）。第 5、6 條的回帶身分與檢視狀態，講的是連到標記清單的那兩種角色（[§已確認決議](#已確認決議) Q17）</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup>
 
 ### 左欄：標記清單
 
@@ -339,7 +340,7 @@ import Spec0402AnnotationWorkspaceFlow from '@notes/components/spec-04-02-annota
 
 1. 任務設定可以要求**先讀說明才開始標記**（開關在[規格 03-03 任務詳情](../03-task-management/03-task-detail.mdx)）
 2. **這個開關沒開，彈窗在任何情況下都不得出現**，也不受下面的確認紀錄影響（見[§已確認決議](#已確認決議) Q4）
-3. 開關開著時，進場顯示說明彈窗，使用者按確認按鈕才開始；<mark>彈窗只有兩個出口：**「確認」**記下確認並開始，**「返回標記清單」**回到這個任務的標記清單、**不記下確認**、下次進來照樣顯示。按 Esc、點視窗外面都**不關閉**彈窗。彈窗打開時焦點在「確認」（[§已確認決議](#已確認決議) Q16）</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup>；確認後**同一個帳號**對同一個任務的後續進入（含重新整理、換裝置、換瀏覽器）**不得再顯示**（同 Q4）。確認紀錄**綁在帳號上**，不綁裝置（[§已確認決議](#已確認決議) Q3）
+3. 開關開著時，進場顯示說明彈窗，使用者按確認按鈕才開始；彈窗只有兩個出口：**「確認」**記下確認並開始，**「返回標記清單」**回到這個任務的標記清單、**不記下確認**、下次進來照樣顯示。按 Esc、點視窗外面都**不關閉**彈窗。彈窗打開時焦點在「確認」（[§已確認決議](#已確認決議) Q16）；確認後**同一個帳號**對同一個任務的後續進入（含重新整理、換裝置、換瀏覽器）**不得再顯示**（同 Q4）。確認紀錄**綁在帳號上**，不綁裝置（[§已確認決議](#已確認決議) Q3）
 4. 彈窗的內容**和右欄「說明與檔案」同一個來源**，取其中 Markdown 類型的全文顯示；沒有 Markdown 類型時**退回顯示檔名清單**——**不得為彈窗另外維護第二份說明文字**
 5. 彈窗與右欄**必須是同一個:ref[指引版本]{id="term.guideline-version"}**
 6. 確認紀錄**以任務為鍵各自獨立**：確認了 A 任務**不得抑制** B 任務的彈窗；換任務就要**從頭重新判定**
@@ -1416,6 +1417,10 @@ import Spec0402AnnotationWorkspaceFlow from '@notes/components/spec-04-02-annota
 6. 那個單位在**所有例外項都收尾之前維持爭議中**，全數收尾後推導為**已定稿**
 7. 一筆收尾要算「已收尾」，**必須真的持有定案值**；自訂答案另外要求那個值**不得是空的**——負責人沒在作答控件選任何答案時的落空值，**不算已定稿**
 8. 但「採用審核員答案」承接的是**無法裁決**時，定案值**本身就是空的**——那是設計上既有的「無法判定」定案語意，**不是缺陷**，仍然算已定稿，而且**不得回填標記員的原答案**
+9. <mark>**返程**：專案負責人把例外處置畫面的全部待處置例外項收尾完之後，回到這個任務的[規格 03-03 §最終例外池](../03-task-management/03-task-detail.mdx#最終例外池)；例外池清空時那一區照樣顯示，呈現依同一節第 3 條</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup>
+10. <mark>處置例外時點側欄的「例外處置」，進到[規格 03-01 任務列表](../03-task-management/01-task-list.mdx)，不進標記清單（[規格 07-01 §進入模組的條件](../07-shared/01-sidebar.mdx#進入模組的條件)）</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup>
+
+- <mark>第 9 條回到來處的理由：專案負責人是從最終例外池單向進來的，回到那裡才看得到剩下還有沒有例外（[§已確認決議](#已確認決議) Q17）</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup>
 
 #### 例外處置畫面的外殼
 
@@ -1823,8 +1828,8 @@ import Spec0402AnnotationWorkspaceFlow from '@notes/components/spec-04-02-annota
 | 角色是審核員（儲存草稿） | **不提供「儲存草稿」**；`Ctrl/Cmd + S` 不得寫入草稿 |
 | 任務沒開「先讀說明」 | 說明彈窗**在任何情況下都不得出現**（見[§已確認決議](#已確認決議) Q4） |
 | 任務開了「先讀說明」、這個指引版本沒確認過 | 進場顯示彈窗，按確認才開始 |
-| <mark>說明彈窗開著時按 Esc 或點視窗外面</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup> | <mark>彈窗**不關閉**；只有「確認」與「返回標記清單」能離開彈窗</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup> |
-| <mark>在說明彈窗按「返回標記清單」</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup> | <mark>回到這個任務的標記清單，**不得**記下確認</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup> |
+| 說明彈窗開著時按 Esc 或點視窗外面 | 彈窗**不關閉**；只有「確認」與「返回標記清單」能離開彈窗 |
+| 在說明彈窗按「返回標記清單」 | 回到這個任務的標記清單，**不得**記下確認 |
 | 任務開了「先讀說明」、這個指引版本已確認過 | **不得重複顯示**（含重新整理）（同 Q4） |
 | 確認過 A 任務後進入 B 任務 | B 任務**從頭重新判定**，不得被 A 的確認抑制 |
 | 遇到另一個指引版本 | **必須重新確認**；舊版本的確認**不得失效** |
@@ -2044,6 +2049,8 @@ import Spec0402AnnotationWorkspaceFlow from '@notes/components/spec-04-02-annota
 | 自訂答案 | **只適用正式標記**——試標不產出最終答案 |
 | 排除於資料集 | **不產生最終答案**；視覺上要與其餘三個採用型處置**可區辨**，而且**在該畫面不可復原** |
 | 例外池 | **是最後一道出口**，**不得再有第四層轉送** |
+| <mark>專案負責人把例外處置畫面的全部待處置例外項收尾完</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup> | <mark>回到這個任務的最終例外池</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup> |
+| <mark>專案負責人處理例外時點麵包屑第 2 層</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup> | <mark>連到這個任務的最終例外池，**不得**連到標記清單</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup> |
 | 收尾紀錄 | 理由**選填**但欄位**必須隨每筆寫入、不得省略**；要算已收尾**必須真的持有定案值** |
 | 自訂答案的定案值為空 | **不算已定稿** |
 | 「採用審核員答案」承接「無法裁決」 | 定案值為空**是設計語意、不是缺陷**，仍算已定稿且**不得回填標記員原答案** |
@@ -2181,6 +2188,7 @@ import Spec0402AnnotationWorkspaceFlow from '@notes/components/spec-04-02-annota
 | 第 3 層（審核員） | 同上 | 查看第 3 層文字 | **同時**有那一筆的識別碼與受審標記員的帳號 |
 | 第 3 層（標記員） | 標記員在第 2 筆、共 10 筆 | 查看第 3 層文字 | 顯示「樣本 2 / 10」，**不含**那一筆的識別碼，**也不含**自己的帳號 |
 | 第 1 層（專案負責人） | 專案負責人在處理最終例外 | 查看麵包屑第 1 層 | 文字是「例外處置」，不是「標記作業」 |
+| 第 2 層（專案負責人）回最終例外池 | <mark>專案負責人在處理最終例外</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup> | <mark>點麵包屑第 2 層</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup> | <mark>回到這個任務詳情的最終例外池，沒有進入標記清單</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup> |
 | 麵包屑跟著換筆重畫 | 審核員從第一個單位切到第三個單位 | 查看麵包屑第 3 層 | 變成第三個單位，不是進來時的那一個 |
 | 返回網址帶回身分 | 帶著某個標記員身分進來 | 取麵包屑第 2 層的連結 | 連結帶著同一個身分參數 |
 | 沒帶身分就不補 | 網址沒帶任何身分參數 | 取麵包屑第 2 層的連結 | 連結裡**沒有**任何身分參數 |
@@ -2223,9 +2231,9 @@ import Spec0402AnnotationWorkspaceFlow from '@notes/components/spec-04-02-annota
 | 同名標題錨點不撞 | 某份說明裡有兩個文字一樣的標題 | 開啟它的預覽 | 兩個標題的錨點互不相同 |
 | 沒開先讀說明就不彈 | 某任務沒開「先讀說明」 | 進入工作區 | 完全**沒有**說明彈窗 |
 | 開了就彈一次 | 某任務開了「先讀說明」、這個指引版本沒確認過 | 進入工作區 | 顯示說明彈窗，按確認後開始標記 |
-| 閘門按 Esc 不關閉 | <mark>說明彈窗已顯示</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup> | <mark>按 Esc</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup> | <mark>彈窗仍開著，不能開始作答</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup> |
-| 從閘門返回標記清單 | <mark>說明彈窗已顯示</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup> | <mark>按「返回標記清單」</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup> | <mark>回到這個任務的標記清單；再進同一個任務時彈窗照樣顯示</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup> |
-| 閘門的初始焦點在確認 | <mark>某任務開了「先讀說明」、這個指引版本沒確認過</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup> | <mark>進入工作區、說明彈窗打開</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup> | <mark>鍵盤焦點在「確認」</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup> |
+| 閘門按 Esc 不關閉 | 說明彈窗已顯示 | 按 Esc | 彈窗仍開著，不能開始作答 |
+| 從閘門返回標記清單 | 說明彈窗已顯示 | 按「返回標記清單」 | 回到這個任務的標記清單；再進同一個任務時彈窗照樣顯示 |
+| 閘門的初始焦點在確認 | 某任務開了「先讀說明」、這個指引版本沒確認過 | 進入工作區、說明彈窗打開 | 鍵盤焦點在「確認」 |
 | 確認過不再彈 | 同上，已經確認過 | 重新整理 | **沒有**再彈 |
 | 逐任務各自判定 | 已確認 A 任務 | 進入 B 任務（也開了這個設定） | B 任務**照樣彈**一次 |
 | 換指引版本要重新確認 | 某任務的新回合換了指引版本 | 進入該回合的工作區 | 又彈一次，要再確認 |
@@ -2429,6 +2437,8 @@ import Spec0402AnnotationWorkspaceFlow from '@notes/components/spec-04-02-annota
 | 例外畫面的計數單位 | 同上，有 3 項待處置 | 查看進度 | 以例外項為單位，**不是**「已提交 / 總筆數」 |
 | 仲裁理由就地可見 | 同上 | 查看任一待處置項 | 看得到使它落入例外池的仲裁理由與裁定者身分，不必離開畫面 |
 | 全數收尾後定稿 | 某單位最後一個例外項被收尾 | 查看單位狀態 | 推導為已定稿 |
+| 例外收尾完回到最終例外池 | <mark>例外處置畫面只剩 1 項待處置</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup> | <mark>專案負責人確認處置那一項</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup> | <mark>回到這個任務詳情的最終例外池，看得到例外池已清空</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup> |
+| 處置例外時從側欄離開 | <mark>專案負責人在例外處置畫面</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup> | <mark>點側欄的「例外處置」</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup> | <mark>進到任務列表，沒有進入標記清單</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup> |
 | 責任鏈答得出前三問 | 某單位經標記、審核修正、仲裁定案 | 查看責任鏈 | 每一步都看得出誰、在哪個環節、做了什麼決定 |
 | 第四問沒填就顯示佔位 | 某審核員選了「修正」但沒填理由 | 查看那筆事件 | 顯示「未填寫理由」，不是留白也不是內部值 |
 | 微型歷程同源 | 某單位已定稿且曾有衝突 | 比對定稿卡的歷程列與操作紀錄 | 同一份資料推導，沒有第二份 |
@@ -2450,7 +2460,7 @@ import Spec0402AnnotationWorkspaceFlow from '@notes/components/spec-04-02-annota
 
 ## 待釐清
 
-**沒有未決問題。** 這一頁的十一題全部定案：**Q1、Q2、Q3、Q8、Q9、Q10 於 2026-11-09 裁定**，其餘先前已結，都在[§已確認決議](#已確認決議)（另有一條由別頁指過來的 Q14，以及本次新增的 Q15，兩條都已定案）。**Q11 在階段四開過、同一階段內撤回**（它的前提查錯了，詳見[§變更紀錄](#變更紀錄)），那個號碼**不再重用**；後續若有新題目從 Q16 起算。<mark>Q16 已於 2026-11-18 由維護者裁定，後續從 Q17 起算</mark><sup>[#434](https://github.com/label-suite/label-suite/issues/434)</sup>。一題在待釐清與已確認決議之間搬動時**保留原本的題號**。
+**沒有未決問題。** 這一頁的十一題全部定案：**Q1、Q2、Q3、Q8、Q9、Q10 於 2026-11-09 裁定**，其餘先前已結，都在[§已確認決議](#已確認決議)（另有一條由別頁指過來的 Q14，以及本次新增的 Q15，兩條都已定案）。**Q11 在階段四開過、同一階段內撤回**（它的前提查錯了，詳見[§變更紀錄](#變更紀錄)），那個號碼**不再重用**；後續若有新題目從 Q16 起算。Q16 已於 2026-11-18 由維護者裁定；**Q17** 於 2026-11-24 新增並同時定案（維護者 2026-11-23、2026-11-24 裁定），後續從 Q18 起算。一題在待釐清與已確認決議之間搬動時**保留原本的題號**。
 
 ## 已確認決議
 
@@ -2558,6 +2568,14 @@ import Spec0402AnnotationWorkspaceFlow from '@notes/components/spec-04-02-annota
 
 > 理由：原本按 Esc 就能關掉彈窗、不確認直接開始，等於繞過第 3 條「按確認才開始」。把 Esc 拿掉之後，使用者若不想讀，除了關掉分頁沒有別的路，所以給一個不記下確認的「返回標記清單」。焦點放在主要動作「確認」上。畫面已依 [Issue #423](https://github.com/label-suite/label-suite/issues/423) 改好（`design/system/design-gaps.md` G-46），規格依 [Issue #434](https://github.com/label-suite/label-suite/issues/434) 對齊。
 
+### Q17. 專案負責人處置完例外、或從例外處置畫面點麵包屑第 2 層，要去哪裡？（已定案，維護者裁定 2026-11-23、2026-11-24）
+
+- [x] **回到來處**：收尾完與麵包屑第 2 層都回這個任務詳情的最終例外池；側欄的「例外處置」進任務列表
+- [ ] 麵包屑第 2 層照舊連到標記清單
+
+> 理由：專案負責人是從那裡單向進來的，回到來處才看得到剩下還有沒有例外；他進不了標記清單（[規格 04-01 §已確認決議](./01-annotation-list.mdx#已確認決議) Q1），所以麵包屑第 2 層不能照舊一律連到標記清單。落在[§入口麵包屑的第三層](#入口麵包屑的第三層)第 1 條的表與第 8 條、[§最終例外池是最後一道出口](#最終例外池是最後一道出口)第 9、10 條。
+> 來源：[Issue #554 的裁定紀錄](https://github.com/label-suite/label-suite/issues/554#issuecomment-7095323972)（缺口一）、[Issue #551 的裁定紀錄](https://github.com/label-suite/label-suite/issues/551#issuecomment-7120107233)（第 6 題）
+
 ### Q5. 左欄標題可不可以帶回合標籤？（已定案，沿用舊來源）
 
 - **結論**：**不行**。標題固定「標記清單」，回合由[麵包屑第 2 層](#入口麵包屑的第三層)承載；但**筆數仍然要按當前回合的清單規模顯示**
@@ -2583,6 +2601,7 @@ import Spec0402AnnotationWorkspaceFlow from '@notes/components/spec-04-02-annota
 
 | 版本 | 日期 | 變更 |
 | :--- | :--- | :--- |
+| [#576](https://github.com/label-suite/label-suite/issues/576) | 2026-11-24 | **依 Q17 補專案負責人的返程**：§入口麵包屑的第三層 第 1 條的表把第 2 層的去處依角色分流、新增第 8 條；§最終例外池是最後一道出口 新增第 9 條（全部收尾完回 03-03 最終例外池）與第 10 條（側欄「例外處置」進任務列表）；§卡控機制 兩列、§驗收標準 三條 Scenario。原本第 2 層一律連到標記清單，收尾完的去向沒有寫。清掉 #434 的舊標示。**新增 Q17**（維護者 2026-11-23、2026-11-24）。 |
 | [#415](https://github.com/label-suite/label-suite/issues/415) | 2026-11-18 | §使用角色 補上「權限代號」提示框，與其他規格一致（範本見 [PR #417](https://github.com/label-suite/label-suite/pull/417)）。章節開頭原本沒有提示框，表格裡卻用著 `R／C／E` 與 `(o)` 這些代號。**表格一字未動，無新決議** |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §驗收標準 的 1 列：名稱欄的標示拿掉、文字保留；其餘三格本來就各自帶標示，沒有補任何一格。依 `writing-guide.md` §變更標示 2026-11-16 新增的例外：`check-flows.mjs` 的 `readPage()` 逐字讀第一格、不剝標籤，名稱一包標示流程圖元件就永遠對不上那一列 |
 | [#434](https://github.com/label-suite/label-suite/issues/434) | 2026-11-19 | **依 Q16 對齊畫面**：§業務流程 新增 A3（從說明彈窗返回標記清單，含 `@ai-visualize` prompt 與走查對應）、§指引閘門 第 3 條補兩個出口與初始焦點、§卡控機制 兩列、§驗收標準 三條 Scenario。原本第 3 條只寫「按確認按鈕才開始」，沒有寫 Esc 與其他出口；清掉 #196 的舊標示。**新增 Q16**（維護者 2026-11-18）。 |

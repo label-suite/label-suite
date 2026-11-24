@@ -777,7 +777,7 @@ const FLOWS: Flow[] = [
       { id: "n4", lane: 1, col: 2, kind: "decision", label: ["改過", "東西？"] },
       { id: "n5", lane: 1, col: 3, kind: "system", label: ["問「離開", "此頁面？」"] },
       { id: "n6", lane: 0, col: 4, kind: "decision", label: ["確認", "離開？"] },
-      { id: "n7", lane: 1, col: 5, kind: "system", end: true, label: ["回任務列表", "不建立任務"] },
+      { id: "n7", lane: 1, col: 5, kind: "system", end: true, label: ["離開到目標", "不建立任務"] },
       { id: "n3", lane: 1, col: 6, kind: "system", exception: true, end: true, label: ["還原原步驟", "回填資料"] },
     ],
     edges: [
@@ -822,8 +822,8 @@ const FLOWS: Flow[] = [
       },
       {
         title: "替代：完全沒有改過任何東西",
-        body: "不跳確認視窗，直接回到任務列表。",
-        scenarios: ["什麼都沒改就取消不確認"],
+        body: "不跳確認視窗，直接去他點的目標：點「取消」回到任務列表，點側欄就到他點的那一頁。",
+        scenarios: ["什麼都沒改就取消不確認", "什麼都沒改就從側欄跳走"],
         ref: "A2",
         highlight: ["n4", "e2", "n7"],
       },
@@ -849,9 +849,9 @@ const FLOWS: Flow[] = [
         highlight: ["n6", "e3", "n1"],
       },
       {
-        title: "結果：回到任務列表，任務沒有被建立",
-        body: "離開之後任務不存在，使用者填的內容也不會留下來。流程結束。",
-        scenarios: ["選離開就不建立任務"],
+        title: "結果：離開到他點的目標，任務沒有被建立",
+        body: "點「取消」回到任務列表，點側欄就到他點的那一頁。離開之後任務不存在，使用者填的內容也不會留下來。流程結束。",
+        scenarios: ["選離開就不建立任務", "從側欄跳走確認後到點的那一頁"],
         ref: "結果",
         highlight: ["a5", "n7"],
       },
