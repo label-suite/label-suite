@@ -291,6 +291,7 @@ describe("C6: api-contract", () => {
   const exportCmd = /\buv run python -m app\.scripts\.export_openapi\b/;
   const generateCmd = /\bpnpm --filter frontend api:generate\b/;
   const checkOpenapi = /git (?:diff|status)[^\n]*backend\/openapi\.json/;
+  const COPY = "docs/diagrams/architecture/api.openapi.json";
   const checkGenerated = /git (?:diff|status)[^\n]*frontend\/src\/api\/generated/;
 
   test("runs export, compares openapi.json, regenerates, then compares the generated client", () => {
@@ -319,6 +320,14 @@ describe("C6: api-contract", () => {
       assert.match(run, /--name-only|--porcelain/);
       assert.match(run, /exit 1/);
     }
+  });
+
+  test("the openapi.json comparison also covers the docs copy and names it in the hint", () => {
+    const run = job("api-contract").steps[requireStep("api-contract", checkOpenapi)].run;
+    assert.match(run, new RegExp(`git diff[^\\n]*${COPY.replaceAll(".", "\\.")}`));
+    assert.match(run, new RegExp(`git status[^\\n]*${COPY.replaceAll(".", "\\.")}`));
+    assert.match(run, /pnpm run api:sync/);
+    assert.doesNotMatch(run, /\bcmp\b/);
   });
 
   test("the export step is not run from the repository root", () => {

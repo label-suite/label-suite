@@ -116,7 +116,7 @@ operations:
       - "動到 backend/ 時，後端測試（PostgreSQL）：`cd backend && TEST_DATABASE_URL=postgresql+asyncpg://... uv run pytest`；`TEST_DATABASE_URL` 由本機 `docker run postgres:16` 提供，這次應為 0 skipped"
       - "動到 backend/ 時，lint 與格式：`cd backend && uv run ruff check . && uv run ruff format --check .`"
       - "動到 backend/ 時，型別檢查：`cd backend && uv run mypy --strict app`"
-      - '動到 backend/ 時，契約漂移：`cd backend && uv run python -m app.scripts.export_openapi && git diff --exit-code -- openapi.json && test -z "$(git status --porcelain -- openapi.json)"`；路徑相對於 backend/，`git status` 那段抓第一次匯出還沒提交的檔案'
+      - '動到 backend/ 時，契約漂移：`cd backend && uv run python -m app.scripts.export_openapi && git diff --exit-code -- openapi.json ../docs/diagrams/architecture/api.openapi.json && test -z "$(git status --porcelain -- openapi.json ../docs/diagrams/architecture/api.openapi.json)"`；路徑相對於 backend/，`git status` 那段抓第一次匯出還沒提交的檔案，兩個檔（後端契約與文件站副本）一起比對'
       - 後端 API 有變動時，同一個群組內重新產生 openapi.json 與前端型別，並確認與 api-contract 一致
       - 全部 task 完成且工作區乾淨後，交由 code-reviewer 審查；修正由實作角色另開 commit
       - 審查通過後交由 acceptance-verifier 對照每個 Scenario 驗收，報告寫在 change 目錄的 acceptance.md；未通過不進入下一步

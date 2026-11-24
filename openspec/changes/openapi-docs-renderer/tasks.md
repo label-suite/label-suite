@@ -14,9 +14,9 @@
 
 ## 3. 程式 PR：CI 與本機契約漂移檢查
 
-- [ ] 3.1 修改 `.github/workflows/ci.yml` 的 `api-contract` job：`git diff` 與未追蹤檢查的路徑納入 `docs/diagrams/architecture/api.openapi.json`，錯誤訊息列出落後檔名並提示 `pnpm run api:sync`，不新增 job、不加 `cmp`；驗證：本機模擬手改副本、刪除副本後執行該檢查步驟的指令都失敗並列出副本檔名，還原後通過，對應 specs `ci-quality-gates` 的 Scenario [@backend-developer]
-- [ ] 3.2 先補測試再改 `scripts/check.mjs`：`CONTRACT_PATHS` 納入 `docs/diagrams/architecture/api.openapi.json`（快照、還原與比對），在 `scripts/tests/check.test.mjs` 加副本被改動時檢查失敗的案例；驗證：`pnpm test:scripts` 通過 [@backend-developer]
-- [ ] 3.3 修改 `openspec/config.yaml` 的後端契約漂移指令，改為同時 `git diff` 與 `git status` 比對 `openapi.json` 與 `../docs/diagrams/architecture/api.openapi.json`（路徑相對於 backend/）；驗證：照該指令執行，副本被改動時失敗、還原後通過 [@backend-developer]
+- [x] 3.1 修改 `.github/workflows/ci.yml` 的 `api-contract` job：`git diff` 與未追蹤檢查的路徑納入 `docs/diagrams/architecture/api.openapi.json`，錯誤訊息列出落後檔名並提示 `pnpm run api:sync`，不新增 job、不加 `cmp`；驗證：本機模擬手改副本、刪除副本後執行該檢查步驟的指令都失敗並列出副本檔名，還原後通過，對應 specs `ci-quality-gates` 的 Scenario [@backend-developer]
+- [x] 3.2 先補測試再改 `scripts/check.mjs`：`CONTRACT_PATHS` 納入 `docs/diagrams/architecture/api.openapi.json`（快照、還原與比對），在 `scripts/tests/check.test.mjs` 加副本被改動時檢查失敗的案例；驗證：`pnpm test:scripts` 通過 [@backend-developer]
+- [x] 3.3 修改 `openspec/config.yaml` 的後端契約漂移指令，改為同時 `git diff` 與 `git status` 比對 `openapi.json` 與 `../docs/diagrams/architecture/api.openapi.json`（路徑相對於 backend/）；驗證：照該指令執行，副本被改動時失敗、還原後通過 [@backend-developer]
 
 ## 4. 程式 PR：外掛對應與文件
 
