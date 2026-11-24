@@ -45,13 +45,9 @@ export const SITE_MAP_PAGES: SiteMapPage[] = [
     path: "01-account/01-login",
     standalone: true,
     features: [
-      { title: "登入頁的內容", anchor: "登入頁的內容" },
+      { title: "登入頁", anchor: "登入頁" },
       { title: "用 Email 與密碼登入", anchor: "用-email-與密碼登入" },
-      { title: "欄位檢查與錯誤", anchor: "欄位檢查與錯誤" },
-      { title: "登入失敗", anchor: "登入失敗" },
-      { title: "密碼的顯示與隱藏", anchor: "密碼的顯示與隱藏" },
       { title: "用 Google 帳號登入", anchor: "用-google-帳號登入" },
-      { title: "送出中的狀態", anchor: "送出中的狀態" },
     ],
   },
   {
