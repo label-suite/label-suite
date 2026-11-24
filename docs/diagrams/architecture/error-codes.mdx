@@ -42,17 +42,17 @@ updatedAt: '2026-11-23'
 | `code` | HTTP | 訊息鍵 | 在哪裡產生 | 會回這個碼的端點 |
 | :--- | :--- | :--- | :--- | :--- |
 | `NOT_FOUND` | `404` | `common.not_found` | `app/core/errors.py` 的 `handle_http_exception`（路由找不到） | 沒有端點自己回；`/api/v1` 底下不存在的路徑由路由層回 |
-| `METHOD_NOT_ALLOWED` | `405` | `common.method_not_allowed` | `app/core/errors.py` 的 `handle_http_exception`（方法不允許） | `getHealth`：用 `GET` 以外的 method 呼叫 |
-| `NOT_ACCEPTABLE` | `406` | `common.not_acceptable` | `app/core/middleware.py` 的 `LocaleMiddleware`，接住 `NotAcceptableError` | 每個 `/api/v1` 請求（CORS 預檢除外：它在 `LocaleMiddleware` 外層就回應），含 `getHealth` |
-| `VALIDATION_FAILED` | `422` | `common.validation_failed` | `app/core/errors.py` 的 `handle_validation_error` | 目前沒有：`getHealth` 沒有被驗證的輸入 |
-| `INTERNAL_ERROR` | `500` | `common.internal_error` | `app/core/middleware.py` 的 `UnhandledExceptionMiddleware`；`app/core/errors.py` 的 `handle_http_exception`（沒有對應碼的 `HTTPException`） | 每個 `/api/v1` 請求，含 `getHealth` |
-| `DATABASE_UNAVAILABLE` | `503` | `common.database_unavailable` | `app/modules/health/service.py` 的 `HealthService.check()` 丟 `DatabaseUnavailableError`，由 `handle_app_error` 轉成外層 | `getHealth`：資料庫連不上或逾時 |
+| `METHOD_NOT_ALLOWED` | `405` | `common.method_not_allowed` | `app/core/errors.py` 的 `handle_http_exception`（方法不允許） | [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth)：用 `GET` 以外的 method 呼叫 |
+| `NOT_ACCEPTABLE` | `406` | `common.not_acceptable` | `app/core/middleware.py` 的 `LocaleMiddleware`，接住 `NotAcceptableError` | 每個 `/api/v1` 請求（CORS 預檢除外：它在 `LocaleMiddleware` 外層就回應），含 [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) |
+| `VALIDATION_FAILED` | `422` | `common.validation_failed` | `app/core/errors.py` 的 `handle_validation_error` | 目前沒有：[`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) 沒有被驗證的輸入 |
+| `INTERNAL_ERROR` | `500` | `common.internal_error` | `app/core/middleware.py` 的 `UnhandledExceptionMiddleware`；`app/core/errors.py` 的 `handle_http_exception`（沒有對應碼的 `HTTPException`） | 每個 `/api/v1` 請求，含 [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) |
+| `DATABASE_UNAVAILABLE` | `503` | `common.database_unavailable` | `app/modules/health/service.py` 的 `HealthService.check()` 丟 `DatabaseUnavailableError`，由 `handle_app_error` 轉成外層 | [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth)：資料庫連不上或逾時 |
 
 訊息鍵的字串在 `app/i18n/zh-TW/messages.json` 與 `app/i18n/en/messages.json`；每一層怎麼把例外變成外層，見 [後端模組與基礎建設的「錯誤怎麼對到 envelope」](./backend-modules.mdx#錯誤怎麼對到-envelope)。
 
 :::note{title="API 文件的宣告、測試用路由與成功碼" collapsible}
-- 上表的「會回這個碼的端點」寫的是實際會回的情況，不是 API 文件的宣告。`app/main.py` 的 `API_V1_ERROR_RESPONSES` 讓每個 `/api/v1` 操作都宣告 `404`、`405`、`406`、`500`；`getHealth` 另在 `app/modules/health/router.py` 宣告 `503`。所以 `getHealth` 在 `openapi.json` 裡有 `404`，實際不會回
-- `getHealth` 沒有宣告 `422`，`openapi.json` 裡也沒有
+- 上表的「會回這個碼的端點」寫的是實際會回的情況，不是 API 文件的宣告。`app/main.py` 的 `API_V1_ERROR_RESPONSES` 讓每個 `/api/v1` 操作都宣告 `404`、`405`、`406`、`500`；[`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) 另在 `app/modules/health/router.py` 宣告 `503`。所以 [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) 在 `openapi.json` 裡有 `404`，實際不會回
+- [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) 沒有宣告 `422`，`openapi.json` 裡也沒有
 - `422` 與 `500` 的整合測試靠 `backend/tests/probe.py` 的測試用路由觸發；它們只由 `backend/tests/conftest.py` 掛上，不在正式的 app 與 `openapi.json` 裡，見 [端點授權的「不在本表的路徑」](./endpoint-authorization.mdx#不在本表的路徑)
 - `NotFoundError` 在 `app/core/errors.py` 已定義，目前沒有模組丟它；`404` 都來自路由找不到
 - `406` 的 body 一律是 zh-TW；`messages.json` 的 en 字串只為了兩個語系的鍵一致而存在

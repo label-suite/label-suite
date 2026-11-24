@@ -42,7 +42,7 @@ updatedAt: '2026-11-23'
 
 | `operationId` | Method 與路徑 | 系統角色 | 任務成員身分 | PRD 權限矩陣 | 遮蔽的欄位（含答案） | 出處 |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `getHealth` | `GET /api/v1/health` | 不檢查；未登入也可呼叫 | 不檢查 | 無對應的格：矩陣外刻意公開的端點 | 無；回應只有 `status` 與 `database`，不讀任務、資料集或答案 | `app/modules/health/router.py` 的 `get_health` 沒有任何認證或授權依賴；`openspec/specs/health-check/` 的「健康檢查刻意公開」 |
+| [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) | `GET /api/v1/health` | 不檢查；未登入也可呼叫 | 不檢查 | 無對應的格：矩陣外刻意公開的端點 | 無；回應只有 `status` 與 `database`，不讀任務、資料集或答案 | `app/modules/health/router.py` 的 `get_health` 沒有任何認證或授權依賴；`openspec/specs/health-check/` 的「健康檢查刻意公開」 |
 
 :::note{title="各欄怎麼填" collapsible}
 - 「系統角色」與「任務成員身分」只列放行的角色，用 PRD 的角色名稱：系統角色是平台成員、系統管理員，任務成員身分是專案負責人、審核員、標記員；不檢查時寫「不檢查」
@@ -69,7 +69,7 @@ updatedAt: '2026-11-23'
 | 還沒有 | 風險 | 追蹤 |
 | :--- | :--- | :--- |
 | 認證、授權與 CSRF | 目前唯一的端點刻意公開；第一個需要登入的端點要先把這幾層補上 | [ADR-004 的 D1](../../development/adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie)、[D3](../../development/adr/004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token) |
-| `getHealth` 還沒有由規格 01-01 在權限矩陣列為刻意的例外 | 刻意公開目前只記在 `health-check` spec；它要求認證上線後由規格 01-01 在權限矩陣列為刻意的例外 | `openspec/specs/health-check/` 的「健康檢查刻意公開」 |
+| [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) 還沒有由規格 01-01 在權限矩陣列為刻意的例外 | 刻意公開目前只記在 `health-check` spec；它要求認證上線後由規格 01-01 在權限矩陣列為刻意的例外 | `openspec/specs/health-check/` 的「健康檢查刻意公開」 |
 | 正式環境要不要關閉 `/docs`、`/docs/oauth2-redirect`、`/redoc`、`/openapi.json` | 不關的話，任何人都讀得到完整的 API 文件 | [#506 的裁定](https://github.com/label-suite/label-suite/issues/506#issuecomment-7063942196)：本次不關，另開 issue，尚未開 |
 | 本文與程式的自動一致性檢查 | 只靠審查與驗收時人工對照，漏改不會讓任何檢查失敗 | [#547](https://github.com/label-suite/label-suite/issues/547) §不在範圍 |
 
