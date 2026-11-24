@@ -748,7 +748,7 @@ import PluginView from '@/components/PluginView.astro';
 | `created_at` | 建立時間 | `timestamptz` | NOT NULL | — | — |
 | `updated_at` | 最後改動 | `timestamptz` | NOT NULL | — | — |
 
-**規格來源**：[04-01](../../specs/04-annotation/01-annotation-list.mdx#資料欄位)（`:678`「審核單位｜**任務的某個回合 × 某一筆指派**」——這張表就是那個單位的定址）、[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)（`:984`「標記作業狀態……**推導值，不另存**」——所以這張表刻意沒有 `status` 欄）。**這兩條是表說明引用的規格**，維護者 2026-11-11 裁定它們**算**來源（[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決) D8）。
+**規格來源**：[04-01](../../specs/04-annotation/01-annotation-list.mdx#資料欄位)（`:700`「審核單位｜**任務的某個回合 × 某一筆指派**」——這張表就是那個單位的定址）、[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)（`:984`「標記作業狀態……**推導值，不另存**」——所以這張表刻意沒有 `status` 欄）。**這兩條是表說明引用的規格**，維護者 2026-11-11 裁定它們**算**來源（[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決) D8）。
 
 **沒有 `status` 欄，這是刻意的。** [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) 明寫「標記作業狀態……**推導值，不另存**」，由不可撤回的排除、目前的標記紀錄與受派者**依序**判定。存一個 `status` 會與那個順序產生第二個真相。
 
