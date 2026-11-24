@@ -4,8 +4,8 @@
 
 此群組是自己的一張 PR，須先於程式 PR 合併（`spec-migration.mdx` §PR 的變更範圍；design 決策 7）；不含 `Closes #572`。
 
-- [ ] 1.1 以 `pnpm exec notecraftapp install-plugin openapi-renderer` 安裝外掛本體到 `.notecraft/plugins/openapi-renderer/`（不加 `--apply`：不帶 `--apply` 不會改 `.notecraft/plugins.json`，帶了才會改）；驗證：目錄存在且版本為 store 目前版本，`git status` 只有該目錄與 `NOTICE` 變動 [@technical-writer]
-- [ ] 1.2 在根目錄 `NOTICE` 加上該外掛的授權條目，格式照既有 `er-diagram-renderer` 條目：名稱與版本、著作權、授權、來源（含 commit sha 與來源路徑）、vendored 路徑與 LICENSE 位置；驗證：條目欄位與既有條目逐項對應、sha 與路徑取自實際安裝內容 [@technical-writer]
+- [x] 1.1 以 `pnpm exec notecraftapp install-plugin openapi-renderer` 安裝外掛本體到 `.notecraft/plugins/openapi-renderer/`（不加 `--apply`：不帶 `--apply` 不會改 `.notecraft/plugins.json`，帶了才會改）；驗證：目錄存在且版本為 store 目前版本，`git status` 只有該目錄與 `NOTICE` 變動 [@technical-writer]（相依套件 PR #599 已合併，`9592ed8`）
+- [x] 1.2 在根目錄 `NOTICE` 加上該外掛的授權條目，格式照既有 `er-diagram-renderer` 條目：名稱與版本、著作權、授權、來源（含 commit sha 與來源路徑）、vendored 路徑與 LICENSE 位置；驗證：條目欄位與既有條目逐項對應、sha 與路徑取自實際安裝內容 [@technical-writer]（相依套件 PR #599 已合併，`9592ed8`）
 
 ## 2. 程式 PR：匯出指令與副本（`Closes #572`）
 
