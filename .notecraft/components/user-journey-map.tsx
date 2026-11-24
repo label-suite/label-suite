@@ -183,7 +183,7 @@ export default function UserJourneyMap(): ReactElement {
           <div className="grid gap-1.5" style={cols}>
             <div className="self-start pt-1 text-xs font-semibold text-slate-500">
               洞見
-              <span className="block font-normal">對應 PRD 目標</span>
+              <span className="block font-normal">對應 PRD 目標（提案）</span>
             </div>
             {STAGES.map((s, i) => (
               <div

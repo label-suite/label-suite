@@ -23,7 +23,7 @@ type: motion
 prompt: |
   核心洞察：這是一張還沒填的旅程圖；階段是提案，每一格都等訪談來填，不能把空白當成結論。
   互動：點一個階段，下方展開它的五層內容（行為、接觸點、受訪者原話、情緒、亮點與痛點）與洞見；再點一次或按關閉收起。
-  圖形：七個階段橫向排開；下方一列情緒曲線，訪談前畫成中線上的空心圓點與虛線佔位，有分數的階段之間改成實線；最後一列是洞見，每格標出對應的 PRD 目標代號。
+  圖形：七個階段橫向排開；下方一列情緒曲線，訪談前畫成中線上的空心圓點與虛線佔位，相鄰兩個階段都有分數時，兩者之間的線段改成實線；最後一列是洞見，每格標出對應的 PRD 目標代號。
   資料：讀 user-journey-data.ts 的 STAGES、LAYERS、PENDING；目標簡稱讀 roadmap-data.ts 的 GOALS，不在元件內另寫一份。
 caption: 點一個階段展開五層內容；虛線是訪談前的情緒佔位
 status: generated
@@ -32,7 +32,7 @@ status: generated
 import GeneratedFrame from '@/components/GeneratedFrame.astro'
 import UserJourneyMap from '@notes/components/user-journey-map'
 
-<GeneratedFrame id="user-journey-map" type="motion" prompt={"核心洞察：這是一張還沒填的旅程圖；階段是提案，每一格都等訪談來填，不能把空白當成結論。\n互動：點一個階段，下方展開它的五層內容（行為、接觸點、受訪者原話、情緒、亮點與痛點）與洞見；再點一次或按關閉收起。\n圖形：七個階段橫向排開；下方一列情緒曲線，訪談前畫成中線上的空心圓點與虛線佔位，有分數的階段之間改成實線；最後一列是洞見，每格標出對應的 PRD 目標代號。\n資料：讀 user-journey-data.ts 的 STAGES、LAYERS、PENDING；目標簡稱讀 roadmap-data.ts 的 GOALS，不在元件內另寫一份。\n"} caption="點一個階段展開五層內容；虛線是訪談前的情緒佔位">
+<GeneratedFrame id="user-journey-map" type="motion" prompt={"核心洞察：這是一張還沒填的旅程圖；階段是提案，每一格都等訪談來填，不能把空白當成結論。\n互動：點一個階段，下方展開它的五層內容（行為、接觸點、受訪者原話、情緒、亮點與痛點）與洞見；再點一次或按關閉收起。\n圖形：七個階段橫向排開；下方一列情緒曲線，訪談前畫成中線上的空心圓點與虛線佔位，相鄰兩個階段都有分數時，兩者之間的線段改成實線；最後一列是洞見，每格標出對應的 PRD 目標代號。\n資料：讀 user-journey-data.ts 的 STAGES、LAYERS、PENDING；目標簡稱讀 roadmap-data.ts 的 GOALS，不在元件內另寫一份。\n"} caption="點一個階段展開五層內容；虛線是訪談前的情緒佔位">
   <UserJourneyMap client:visible />
 </GeneratedFrame>
 
@@ -44,7 +44,7 @@ import UserJourneyMap from '@notes/components/user-journey-map'
 
 ### 對象
 
-實驗室裡做過標記的研究人員，而且至少負責設定過一次標記任務，也就是在那次任務裡擔任專案負責人的角色。只當過標記員的人不在這次的對象內，因為這張圖畫的是專案負責人的旅程。受訪人數與招募方式未決，見 [§待決](#待決) 第 1 列。
+實驗室裡做過標記的研究人員。受訪人數、招募方式，以及是否只訪談負責設定過標記任務的人，都未決，見 [§待決](#待決) 第 1 列。
 
 ### 進行方式
 
@@ -59,6 +59,8 @@ import UserJourneyMap from '@notes/components/user-journey-map'
 ### 紀錄方式
 
 每個階段的五層都依下表記錄；原話一律保留逐字稿的出處，摘要和原話分開寫。
+
+情緒的 -2 到 +2 自評分數、多位受訪者取平均、一條洞見至少要有兩位受訪者的原話支持，這三項是提案，訪談前可調整。
 
 | 層 | 記什麼 | 怎麼記 |
 | :--- | :--- | :--- |
@@ -120,7 +122,7 @@ import UserJourneyMap from '@notes/components/user-journey-map'
 | 要填的 | 改哪裡 |
 | :--- | :--- |
 | 五層內容 | 該階段的 `layers`，取代「待訪談」 |
-| 情緒分數 | 該階段的 `emotion`，填多位受訪者的平均；全部階段都有分數後，虛線佔位就會變成實線 |
+| 情緒分數 | 該階段的 `emotion`，填多位受訪者的平均（提案，見 [§紀錄方式](#紀錄方式)）；相鄰兩個階段都有分數時，兩者之間的虛線就會變成實線 |
 | 洞見與對應目標 | 該階段的 `insight` 與 `goals` |
 | 增刪或改名階段 | `STAGES` 陣列，並同步改 [§訪談設計](#訪談設計) 的階段問題 |
 
@@ -128,7 +130,7 @@ import UserJourneyMap from '@notes/components/user-journey-map'
 
 | # | 問題 | 卡住什麼 | 誰決定 |
 | :--- | :--- | :--- | :--- |
-| 1 | 受訪人數與招募方式 | 訪談排程 | 維護者 |
+| 1 | 受訪人數與招募方式，以及是否只訪談負責設定過標記任務的人（提案） | 訪談排程 | 維護者 |
 
 ## 決策紀錄
 
