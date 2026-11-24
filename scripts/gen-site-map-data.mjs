@@ -57,6 +57,11 @@ export const EXCLUDED_FEATURES = [
   "品質監控要先有試標才有東西看",
   // URL and screen-state sync
   "網址與畫面狀態同步",
+  // Language switching
+  "語言切換",
+  "語系切換不重新載入",
+  // Links out to other pages
+  "導向其他頁面",
 ];
 
 const SPEC_FILE_RE = /^0\d-[\w-]+\/0\d-[\w-]+\.mdx$/;

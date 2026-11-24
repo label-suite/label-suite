@@ -52,8 +52,6 @@ export const SITE_MAP_PAGES: SiteMapPage[] = [
       { title: "密碼的顯示與隱藏", anchor: "密碼的顯示與隱藏" },
       { title: "用 Google 帳號登入", anchor: "用-google-帳號登入" },
       { title: "送出中的狀態", anchor: "送出中的狀態" },
-      { title: "導向其他頁面", anchor: "導向其他頁面" },
-      { title: "語言切換", anchor: "語言切換" },
     ],
   },
   {
@@ -69,8 +67,6 @@ export const SITE_MAP_PAGES: SiteMapPage[] = [
       { title: "驗證信已寄出", anchor: "驗證信已寄出" },
       { title: "註冊成功", anchor: "註冊成功" },
       { title: "密碼的顯示與隱藏", anchor: "密碼的顯示與隱藏" },
-      { title: "導向其他頁面", anchor: "導向其他頁面" },
-      { title: "語言切換", anchor: "語言切換" },
     ],
   },
   {
@@ -85,8 +81,6 @@ export const SITE_MAP_PAGES: SiteMapPage[] = [
       { title: "連結無法使用", anchor: "連結無法使用" },
       { title: "密碼的顯示與隱藏", anchor: "密碼的顯示與隱藏" },
       { title: "送出中的狀態", anchor: "送出中的狀態" },
-      { title: "導向其他頁面", anchor: "導向其他頁面" },
-      { title: "語言切換", anchor: "語言切換" },
     ],
   },
   {
@@ -104,7 +98,6 @@ export const SITE_MAP_PAGES: SiteMapPage[] = [
       { title: "密碼的顯示與隱藏", anchor: "密碼的顯示與隱藏" },
       { title: "通知設定", anchor: "通知設定" },
       { title: "連結 Google 帳號", anchor: "連結-google-帳號" },
-      { title: "語言切換", anchor: "語言切換" },
     ],
   },
   {
@@ -174,7 +167,6 @@ export const SITE_MAP_PAGES: SiteMapPage[] = [
       { title: "點任務進入任務詳情", anchor: "點任務進入任務詳情" },
       { title: "新增任務", anchor: "新增任務" },
       { title: "刪除任務", anchor: "刪除任務" },
-      { title: "語言切換", anchor: "語言切換" },
     ],
   },
   {
@@ -355,7 +347,6 @@ export const SITE_MAP_PAGES: SiteMapPage[] = [
       { title: "分頁列與網址上的分頁參數", anchor: "分頁列與網址上的分頁參數" },
       { title: "任務上下文載入一次，切換分頁不重建", anchor: "任務上下文載入一次切換分頁不重建" },
       { title: "兩個分頁的捲動位置分開記", anchor: "兩個分頁的捲動位置分開記" },
-      { title: "語系切換不重新載入", anchor: "語系切換不重新載入" },
       { title: "這一頁的外殼碰不到的東西", anchor: "這一頁的外殼碰不到的東西" },
       { title: "共用五指標", anchor: "共用五指標" },
       { title: "逐型區塊依任務的輸出類型長出來", anchor: "逐型區塊依任務的輸出類型長出來" },
@@ -465,7 +456,6 @@ export const SITE_MAP_PAGES: SiteMapPage[] = [
       { title: "目前位置", anchor: "目前位置" },
       { title: "進入模組的條件", anchor: "進入模組的條件" },
       { title: "系統管理的次選單", anchor: "系統管理的次選單" },
-      { title: "語言切換", anchor: "語言切換" },
       { title: "外觀切換", anchor: "外觀切換" },
       { title: "通知", anchor: "通知" },
       { title: "快捷鍵總覽", anchor: "快捷鍵總覽" },
