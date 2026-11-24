@@ -188,7 +188,7 @@ prototype 的註解另外指名的章節裡，這一個不是元件（b1 原列�
 交付包第十三次重跑（`handoff/coverage.md` §九）點名 b4：`dataset-analysis-detail.html` 與七個 `quality-*` partial 因 #435 改了行為。
 
 - 畫面規格更新 **2 份**：[`dataset-analysis-detail`](pages/dataset-dataset-analysis-detail.md) 補上 Partial overlap 時星號收起與「— 參考顯示」後綴、換語言保留「通過／未達」、英文模式與 `qualityListRank.aria*` 鍵，`.iaa-bar-fill` 的預設色，以及交付包已有、畫面檔還沒列的 `#param-error`；行號依 2632 行的新檔重新對齊。[`dataset-analysis-list`](pages/dataset-dataset-analysis-list.md) 只補 `#param-error`。b4 的 32 個視圖現在都在畫面檔裡。
-- 元件規格更新 **10 份**的 b4 列（行號；[Progress Bar](components/progress-bar.md) 補 `.fail`／`.neutral` 與預設色，[Data Table](components/data-table.md) 補表格 `aria-label` 的翻譯鍵，[App Shell](components/app-shell.md) 視圖數 26 → 27）；[`ux-conventions.md`](ux-conventions.md) UXC-11 的行號。沒有新增元件，結構不變。
+- 元件規格更新 **11 份**的 b4 列（行號；[Progress Bar](components/progress-bar.md) 補 `.fail`／`.neutral` 與預設色，[Data Table](components/data-table.md) 補表格 `aria-label` 的翻譯鍵，[App Shell](components/app-shell.md) 兩頁視圖數改為 5 與 27，[Card](components/card.md)、[Button](components/button.md)、[Empty State](components/empty-state.md) 補上 `#param-error`）；[`ux-conventions.md`](ux-conventions.md) UXC-11 的行號。沒有新增元件，結構不變。
 - 差異新增 **1 筆**：G-57（星號與「參考顯示」規格沒有寫，待維護者）。G-54 加上交付包已收 `#param-error` 的狀態。需複核的既有裁定：無。
 
 ### b1～b3 規格側複核（交付包 `b16b294`，#608）
