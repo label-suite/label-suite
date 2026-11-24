@@ -20,7 +20,7 @@
 
 ## 4. 程式 PR：外掛對應與文件
 
-- [ ] 4.1 在 `.notecraft/plugins.json` 加入 `openapi-renderer` 對應 `**/*.openapi.json`，並在 PR body 列出此處改動；驗證：JSON 合法且 `er-diagram-renderer` 條目不變 [@technical-writer]
+- [x] 4.1 在 `.notecraft/plugins.json` 加入 `openapi-renderer` 對應 `**/*.openapi.json`，並在 PR body 列出此處改動；驗證：JSON 合法且 `er-diagram-renderer` 條目不變 [@technical-writer]
 - [ ] 4.2 本機建置文件站一次，開啟 `/view/diagrams/architecture/api.openapi`；驗證：頁面顯示 API 文件並記下實際路徑，供 4.3 寫入連結；路徑與預期的 `/view/diagrams/architecture/api.openapi` 不同時回報 [@technical-writer]
 - [ ] 4.3 修改 `docs/development/architecture.mdx` §API 契約 的表，加一句副本與用途並連到 `/view/diagrams/architecture/api.openapi`；驗證：`pnpm check:specs` 通過、連結路徑與 4.2 本機 build 確認的路徑一致 [@technical-writer]
 - [ ] 4.4 修改 `docs/development/rules/api-agent-rules.mdx`：A4 補一句副本是 `openapi.json` 的位元組相同複本、不是第四份契約來源、同樣不得手改；A5 檢查方式納入副本；ADR-003 不動；同步 `docs/diagrams/architecture/backend-modules.mdx` §目錄與 §OpenAPI 匯出與 operationId 檢查（副本與 `--output` 行為）；驗證：與 specs 用語一致，`pnpm check:specs` 通過 [@technical-writer]
