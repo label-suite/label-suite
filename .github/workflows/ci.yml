@@ -136,6 +136,15 @@ jobs:
       - name: Check the candidate table dictionary against the ER diagram
         run: node scripts/check-er-data.mjs
 
+      - name: Site map data generator regression tests
+        run: node --test scripts/tests/gen-site-map-data.test.mjs
+
+      # The PRD §Site Map tree reads .notecraft/components/site-map-data.ts,
+      # generated from each spec's `## 規格` subsections. Fails when a `###`
+      # was added or renamed without rerunning the generator.
+      - name: Check the site map data against the specs
+        run: node scripts/gen-site-map-data.mjs --check
+
       - name: Citation checker regression tests
         run: node --test scripts/tests/check-citations.test.mjs
 

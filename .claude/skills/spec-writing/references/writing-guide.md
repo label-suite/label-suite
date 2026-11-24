@@ -202,6 +202,8 @@ R：Read（可讀取）　C：Create（可新增）　E：Edit（可編輯）　
 | 畫面上的操作與回饋：按鈕、提示文字、確認視窗 | 資料表、欄位名稱、API、框架、元件名稱 |
 | 每個大項開頭的 `PrototypeFrame` 嵌入（見 SKILL.md 步驟 7） | 色碼、像素、動畫曲線、版面位置（畫面以 `design/prototype/` 為準） |
 
+新增、刪除或改名「## 規格」底下的 `###` 小節，或改了 PRD §Site Map 條列後，要重跑 `node scripts/gen-site-map-data.mjs` 並一起提交 `.notecraft/components/site-map-data.ts`：PRD 的全站樹靠它列出每頁的功能，CI 會擋下過期的資料檔。
+
 ## 卡控機制
 
 「不能做什麼、系統會擋什麼」，是驗證規則與反向測試的依據。
