@@ -12,6 +12,6 @@
 
 ## 3. 契約與驗證
 
-- [ ] 3.1 重新產生 openapi.json 與前端型別並確認與 api-contract 一致：在 repo 根目錄執行 `pnpm api:sync`，再執行 `git diff --exit-code -- backend/openapi.json docs/diagrams/architecture/api.openapi.json frontend/src/api/generated && test -z "$(git status --porcelain -- backend/openapi.json docs/diagrams/architecture/api.openapi.json frontend/src/api/generated)"`（後端契約、文件站副本與前端產生目錄一起比對，預期無差異）。[@backend-developer]
-- [ ] 3.2 後端檢查全數通過：`cd backend && uv run pytest`（SQLite，附 skipped 數量）、`TEST_DATABASE_URL=postgresql+asyncpg://... uv run pytest`（PostgreSQL，0 skipped）、`uv run ruff check . && uv run ruff format --check .`、`uv run mypy --strict app`。[@backend-developer]
+- [x] 3.1 重新產生 openapi.json 與前端型別並確認與 api-contract 一致：在 repo 根目錄執行 `pnpm api:sync`，再執行 `git diff --exit-code -- backend/openapi.json docs/diagrams/architecture/api.openapi.json frontend/src/api/generated && test -z "$(git status --porcelain -- backend/openapi.json docs/diagrams/architecture/api.openapi.json frontend/src/api/generated)"`（後端契約、文件站副本與前端產生目錄一起比對，預期無差異）。[@backend-developer]
+- [x] 3.2 後端檢查全數通過：`cd backend && uv run pytest`（SQLite，附 skipped 數量）、`TEST_DATABASE_URL=postgresql+asyncpg://... uv run pytest`（PostgreSQL，0 skipped）、`uv run ruff check . && uv run ruff format --check .`、`uv run mypy --strict app`。[@backend-developer]
 - [ ] 3.3 校對常駐文件 `docs/diagrams/architecture/backend-modules.mdx`、`endpoint-authorization.mdx` 與實作一致（設定名稱、預設值、四條路徑、404 形態），不一致處依實作修正；`pnpm check:specs` 通過；文件站建置不在本機執行，由 CI 驗證。[@technical-writer]
