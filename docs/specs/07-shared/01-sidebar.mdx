@@ -4,12 +4,12 @@ description: '所有登入後的使用者在每一頁都用同一套側欄知道
 category: '規格書'
 tags: [規格書, 共用介面, 已定案]
 createdAt: '2026-11-04'
-updatedAt: '2026-11-18'
+updatedAt: '2026-11-24'
 ---
 
 # 07-01 側欄導覽
 
-:badge[已定案]{variant="success"} :badge[變更 #188]{variant="warning" href="https://github.com/label-suite/label-suite/issues/188"} :badge[共用介面]{variant="neutral"}
+:badge[已定案]{variant="success"} :badge[變更 #576]{variant="warning" href="https://github.com/label-suite/label-suite/issues/576"} :badge[共用介面]{variant="neutral"}
 
 > 來源：舊 repo `specs/shared/008-sidebar-navbar-shared/spec.md`（100 條）、`specs/foundation/000-foundation/spec.md` 的 6 條業務規則（依 [搬移設計文件](../../development/workflow/spec-migration.mdx) 的 D4）
 > 參考畫面：無獨立頁面，不嵌入 `PrototypeFrame`。側欄出現在每一個登入後頁面裡，畫面以 `design/prototype/pages/shared/sidebar.js` 與 `sidebar.css` 為準（[§已確認決議](#已確認決議) Q5）
@@ -140,16 +140,17 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 
 「標記作業」與「資料集分析」要有對應的任務角色才進得去；沒有的時候系統擋下並把使用者帶到一個講得通的落點。
 
-1. 使用者點「標記作業」→ 系統確認使用者在目前的 :ref[任務]{id="term.task"} 是 :ref[標記員]{id="term.annotator"}、:ref[審核員]{id="term.reviewer"} 或 :ref[專案負責人]{id="term.project-leader"} → 是就進入標記清單
+1. 使用者點「標記作業」→ 系統確認使用者在<mark>任一個</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup> :ref[任務]{id="term.task"} 是 :ref[標記員]{id="term.annotator"}、:ref[審核員]{id="term.reviewer"} 或 :ref[專案負責人]{id="term.project-leader"} → 是就<mark>進入標記作業</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup>
 2. 使用者點「資料集分析」→ 系統確認使用者在目前的任務是 :ref[專案負責人]{id="term.project-leader"} 或審核員 → 是就進入資料集分析列表
 3. 條件不成立 → 系統擋下，「標記作業」回到儀表板、「資料集分析」回到任務列表，並顯示說明
 4. **第 3 條有一個例外**：使用者是從[規格 02-01 §還沒有任務角色的人看到什麼](../02-dashboard/01-dashboard.mdx#還沒有任務角色的人看到什麼)那三張行動入口卡進來的時候**不擋**，讓模組的入口頁自己顯示空狀態（[§已確認決議](#已確認決議) Q13）
 5. 第 4 條只放寬**那三個入口**；從側欄點導覽項仍然照第 3 條擋下
 
-- 「沒有任務角色」包含兩種：使用者在這個任務裡不是成員，或者目前沒有任何任務的上下文
+- <mark>第 2 條的</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup>「沒有任務角色」包含兩種：使用者在這個任務裡不是成員，或者目前沒有任何任務的上下文。<mark>第 1 條看的是使用者在任一個任務有沒有任務角色，目前沒有任務的上下文本身不會讓他被擋下（[§已確認決議](#已確認決議) Q16）</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup>
 - 第 4 條那個例外的理由：會看到那三張卡的人，定義上就是沒有任務角色的人；照第 3 條擋下的話，他在儀表板上按了按鈕又回到同一頁，什麼也沒發生
 - 系統管理員如果在某個任務裡沒有任務角色，同樣進不去該任務的標記與分析
 - 專案負責人進得去標記作業，但只處理審核員無法收斂的例外，不產出標記（PRD §權限矩陣與其條列）
+- <mark>第 1 條進入標記作業之後的落點依第三個導覽項的名稱分：讀作「例外處置」（第 5 條）時，點它進到[規格 03-01 任務列表](../03-task-management/01-task-list.mdx)；其餘進到標記清單，由那一頁列出他有標記員或審核員角色的任務讓他挑。專案負責人進不了標記清單（[規格 04-01 §已確認決議](../04-annotation/01-annotation-list.mdx#已確認決議) Q1），他處置例外的入口是[規格 03-03 §最終例外池](../03-task-management/03-task-detail.mdx#最終例外池)（[§已確認決議](#已確認決議) Q15）</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup>
 - 點導覽項**不預選任何任務**：進到的是該模組的清單頁，由使用者在清單上挑一個任務（[§已確認決議](#已確認決議) Q6）
 
 ### 系統管理的次選單
@@ -199,7 +200,7 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 3. 使用者沒有未讀通知 → 不顯示數量
 4. 使用者點通知入口 → 展開通知清單，清單上有「全部標為已讀」
 5. 使用者點「全部標為已讀」→ 未讀數量歸零、不再顯示
-6. 每一則通知顯示發生了什麼事、相關的任務、是誰做的，以及多久以前發生（相對時間）。<mark>**例外**：系統自己產生、沒有操作者的事件沒有「是誰做的」那一行（[規格 07-04 §已確認決議](./04-notification-events.mdx#已確認決議) Q5，維護者 2026-11-15）</mark><sup>[#188](https://github.com/label-suite/label-suite/issues/188)</sup>
+6. 每一則通知顯示發生了什麼事、相關的任務、是誰做的，以及多久以前發生（相對時間）。**例外**：系統自己產生、沒有操作者的事件沒有「是誰做的」那一行（[規格 07-04 §已確認決議](./04-notification-events.mdx#已確認決議) Q5，維護者 2026-11-15）
 7. 使用者再點一次入口或點清單以外的地方 → 清單收起
 
 - 通知清單不提供通知偏好設定的入口；偏好設定在 [規格 01-04 個人設定](../01-account/04-profile.mdx)
@@ -285,7 +286,8 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 | 條件 | 結果 |
 | :--- | :--- |
 | 使用者的系統角色是平台成員 | 側欄不顯示「系統管理」，使用者點不到 |
-| 使用者在目前任務不是標記員、審核員，也不是專案負責人，**而且是從側欄點導覽項進來的** | 擋下進入標記作業，回到儀表板並顯示說明 |
+| 使用者在<mark>任何一個任務都</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup>不是標記員、審核員，也不是專案負責人，**而且是從側欄點導覽項進來的** | 擋下進入標記作業，回到儀表板並顯示說明 |
+| <mark>第三個導覽項讀作「例外處置」時點它</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup> | <mark>進到任務列表，不進標記清單</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup> |
 | 承上，但使用者是**從儀表板行動入口卡**進來的 | **不擋**；讓標記作業的入口頁自己顯示空狀態（[§進入模組的條件](#進入模組的條件)第 4 條） |
 | 使用者在目前任務不是專案負責人也不是審核員 | 擋下進入資料集分析，回到任務列表並顯示說明 |
 | 同一頁同時有兩個以上導覽項想標成目前位置 | 只標一個，依 [§目前位置](#目前位置) 的模組對應 |
@@ -330,9 +332,10 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 | 每頁只有一個目前位置 | 停在任一登入後頁面 | 查看側欄 | 恰有一個導覽項被標成目前位置 |
 | 在任務詳情頁時任務管理是目前位置 | 停在任務詳情 | 查看側欄 | 目前位置是「任務管理」 |
 | 在角色設定頁時系統管理是目前位置 | 系統管理員停在角色設定 | 查看側欄 | 目前位置是「系統管理」，次選單內「角色設定」也是目前項 |
-| 沒有任務角色時點擊標記作業 | 使用者在目前任務沒有任何任務角色 | **從側欄**點「標記作業」 | 回到儀表板並顯示說明，沒有進入標記清單 |
+| 沒有任務角色時點擊標記作業 | <mark>使用者在任何一個任務都沒有任務角色</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup> | **從側欄**點「標記作業」 | 回到儀表板並顯示說明，沒有進入標記清單 |
+| 在別的任務有角色時點擊標記作業 | <mark>使用者在目前任務沒有任務角色，但在另一個任務是標記員</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup> | <mark>從側欄點「標記作業」</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup> | <mark>進入標記清單，沒有被退回儀表板</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup> |
 | 從儀表板行動入口卡進入不被擋下 | 使用者沒有任何任務角色 | 按儀表板上卡 B 的 `開始標記` | 進到標記作業的入口頁，由那一頁顯示它自己的空狀態，**沒有**被退回儀表板 |
-| 專案負責人進得去標記作業 | 使用者是目前任務的專案負責人 | 點「標記作業」 | 進入標記清單 |
+| 專案負責人進得去標記作業 | 使用者是目前任務的專案負責人 | <mark>點第三個導覽項「例外處置」</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup> | <mark>進到任務列表，沒有進入標記清單</mark><sup>[#576](https://github.com/label-suite/label-suite/issues/576)</sup> |
 | 點標記作業進到的是清單頁 | 使用者在目前任務是標記員，而且之前標記過 | 點「標記作業」 | 進入標記清單，沒有預先選定任何任務或輸出類型 |
 | 沒有任務角色時點擊資料集分析 | 使用者在目前任務不是專案負責人也不是審核員 | 點「資料集分析」 | 回到任務列表並顯示說明，沒有進入資料集分析列表 |
 | 展開系統管理次選單 | 系統管理員在桌機、側欄未收合 | 點「系統管理」 | 展開次選單，內容恰為「使用者管理」與「角色設定」 |
@@ -352,8 +355,8 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 | 從來沒設定過外觀 | 使用者從未切換過外觀 | 第一次載入登入後頁面 | 當成跟隨系統、**依作業系統的設定呈現** |
 | 關閉動態效果時不播動畫 | 使用者在作業系統關閉了動態效果 | 收合側欄或展開次選單 | 不播動畫，操作本身照常可用 |
 | 角色被改掉時側欄不立刻變 | 使用者的系統角色在側欄開著的時候被改掉 | 繼續停在目前頁面 | 側欄維持原本的導覽項，從下一次操作起才依新角色顯示 |
-| 有操作者的通知顯示四件事 | <mark>使用者有未讀通知，而那一則有操作者</mark><sup>[#188](https://github.com/label-suite/label-suite/issues/188)</sup> | <mark>展開通知清單</mark><sup>[#188](https://github.com/label-suite/label-suite/issues/188)</sup> | <mark>看得到事件、相關任務、是誰做的與多久以前</mark><sup>[#188](https://github.com/label-suite/label-suite/issues/188)</sup> |
-| 沒有操作者的通知少一行 | <mark>有一則系統自己產生、沒有操作者的通知（例如匯出完成）</mark><sup>[#188](https://github.com/label-suite/label-suite/issues/188)</sup> | <mark>展開通知清單</mark><sup>[#188](https://github.com/label-suite/label-suite/issues/188)</sup> | <mark>那一則沒有「是誰做的」那一行，其餘三件事照樣看得到</mark><sup>[#188](https://github.com/label-suite/label-suite/issues/188)</sup> |
+| 有操作者的通知顯示四件事 | 使用者有未讀通知，而那一則有操作者 | 展開通知清單 | 看得到事件、相關任務、是誰做的與多久以前 |
+| 沒有操作者的通知少一行 | 有一則系統自己產生、沒有操作者的通知（例如匯出完成） | 展開通知清單 | 那一則沒有「是誰做的」那一行，其餘三件事照樣看得到 |
 | 沒有未讀通知 | 使用者沒有未讀通知 | 查看通知入口 | 不顯示數量 |
 | 未讀通知數超過九 | 使用者有十二則未讀通知 | 查看通知入口 | 顯示「9+」 |
 | 全部標為已讀 | 使用者有未讀通知且通知清單已展開 | 點「全部標為已讀」 | 未讀數量歸零、不再顯示 |
@@ -388,7 +391,7 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 
 ## 待釐清
 
-**目前沒有待釐清的項目。** 五題都已由維護者於 2026-11-08 裁定，見[§已確認決議](#已確認決議)：Q2、Q5、Q6、Q7 由維護者拍板，Q4 依本頁來源 `shared:FR-018F` 的明文免責折回。另有兩條於 2026-11-09 新增並同時定案：**Q13**（由[規格 02-01](../02-dashboard/01-dashboard.mdx) Q2 引出）與 **Q14**（由[規格 01-04](../01-account/04-profile.mdx) Q7 引出，取代 Q10）。題號**只增不重排**，所以後續若有新題目從 Q15 起算。
+**目前沒有待釐清的項目。** 五題都已由維護者於 2026-11-08 裁定，見[§已確認決議](#已確認決議)：Q2、Q5、Q6、Q7 由維護者拍板，Q4 依本頁來源 `shared:FR-018F` 的明文免責折回。另有兩條於 2026-11-09 新增並同時定案：**Q13**（由[規格 02-01](../02-dashboard/01-dashboard.mdx) Q2 引出）與 **Q14**（由[規格 01-04](../01-account/04-profile.mdx) Q7 引出，取代 Q10）。題號**只增不重排**，所以後續若有新題目從 Q15 起算。**Q15、Q16** 於 2026-11-24 新增並同時定案（維護者 2026-11-23、2026-11-24 裁定），後續從 Q17 起算。
 
 ## 已確認決議
 
@@ -530,10 +533,30 @@ import Spec0701SidebarNavigationFlow from '@notes/components/spec-07-01-sidebar-
 > 01-04 是外觀偏好三個選項真正落地的頁面，所以那一頁沒有照抄 Q10 結案、把它交回給維護者。2026-11-09 重新確認的結果是**跟著作業系統**。
 > ⚠️ **這一條取代 Q10**。依 `spec-writing` 步驟 5 第 5 點，Q10 保留在上面並標註被取代；本頁的正文、§資料欄位、兩條邊界情況、一條 Scenario 與 §Q&A 都已改向（#183）。
 
+### Q15. 側欄的「標記作業」把專案負責人帶到哪裡？（已定案，維護者裁定 2026-11-23、2026-11-24）
+
+- [x] [§進入模組的條件](#進入模組的條件)第 1 條保留三種任務角色，但不再寫「進入標記清單」；第三個導覽項讀作「例外處置」時進到任務列表
+- [ ] 照原文，讓專案負責人也進入標記清單
+- [ ] 把專案負責人從第 1 條的三種角色移除
+
+> 理由：同一節的條列本來就寫專案負責人進得去標記作業、但只處理審核員無法收斂的例外，落點不是清單頁；[規格 04-01 §已確認決議](../04-annotation/01-annotation-list.mdx#已確認決議) Q1（維護者 2026-11-08）裁定他進不了標記清單，那一題不動。
+> 2026-11-23 裁定第 1 條與 Scenario「專案負責人進得去標記作業」不再指向標記清單、三種角色不移除；2026-11-24 裁定側欄的「例外處置」進任務列表，他處置完例外則回到任務詳情的最終例外池（[規格 04-02 §最終例外池是最後一道出口](../04-annotation/02-annotation-workspace.mdx#最終例外池是最後一道出口)）。
+> 來源：[Issue #554 的裁定紀錄](https://github.com/label-suite/label-suite/issues/554#issuecomment-7095323972)、[Issue #551 的裁定紀錄](https://github.com/label-suite/label-suite/issues/551#issuecomment-7120107233)（第 6 題）與[更正](https://github.com/label-suite/label-suite/issues/551#issuecomment-7120448479)
+
+### Q16. 「標記作業」的進入條件看目前任務，還是任一個任務？（已定案，維護者裁定 2026-11-24）
+
+- [x] **任一個任務**有任務角色就放行；標記清單列出他有標記員或審核員角色的任務讓他挑，一個都沒有時顯示那一頁的空狀態
+- [ ] 維持看目前任務
+
+> 理由：點導覽項不預選任何任務（Q6），所以從側欄進來必然不帶任務。
+> 這一條不取代 Q13：從儀表板行動入口卡進來的人照樣不擋（[§進入模組的條件](#進入模組的條件)第 4、5 條）。
+> 來源：[Issue #551 的裁定紀錄](https://github.com/label-suite/label-suite/issues/551#issuecomment-7120107233)（第 9 題）、[Issue #554 的裁定紀錄](https://github.com/label-suite/label-suite/issues/554#issuecomment-7095323972)（缺口三）
+
 ## 變更紀錄
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#576](https://github.com/label-suite/label-suite/issues/576) | 2026-11-24 | §規格 › 進入模組的條件、§卡控機制、§驗收標準、§待釐清、§已確認決議 | 第 1 條看使用者在**目前任務**的角色，三種角色「是就進入標記清單」；Scenario「專案負責人進得去標記作業」的 Then 是「進入標記清單」 | 第 1 條改看**任一個任務**，三種角色「是就進入標記作業」；讀作「例外處置」時進任務列表，其餘進標記清單；卡控與「沒有任務角色時點擊標記作業」改成任何一個任務都沒有角色才擋；新增 Scenario「在別的任務有角色時點擊標記作業」；Scenario「專案負責人進得去標記作業」的 When／Then 改成點「例外處置」進任務列表。頁首的 `變更 #188` 換成 `變更 #576`，#188 那一輪的標示清掉、文字保留 | Q15、Q16 |
 | [#415](https://github.com/label-suite/label-suite/issues/415) | 2026-11-18 | §使用角色 | 角色、權限與條件寫成條列 | 改成正典的三欄表格（角色／這一頁能做什麼／PRD §權限矩陣的上限），條件、理由與跨頁連結移到表格下方的條列。第三欄是**新增的資訊**：逐列指出 PRD §權限矩陣 的哪一列，對不到的寫出原因。形狀依 `spec-writing` 範本（[PR #417](https://github.com/label-suite/label-suite/pull/417)） | **無新決議，條文一字未改** |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §驗收標準 的 2 列 | 那兩列**只有** Scenario 名稱欄包著 `<mark>`＋`<sup>[#188]`，其餘三格沒有 | 名稱欄的標示拿掉、文字保留，改標 Given／When／Then（原本沒有標示的格一併補上）。依 `writing-guide.md` §變更標示 2026-11-16 新增的例外：`check-flows.mjs` 的 `readPage()` 逐字讀第一格、不剝標籤，名稱一包標示流程圖元件就永遠對不上那一列 | **無新決議**，Scenario 的文字與條文一字未改 |
 | [#85](https://github.com/label-suite/label-suite/issues/85) | 2026-11-16 | §使用角色、§已確認決議 Q1 與 Q3 的理由 | 四處寫「PRD 目前的上限還是 `R`／註明由 #85 處理」 | 改成 PRD 已於 2026-11-16 放寬成 `R／E (o)`、兩處註明也已落地 | **無新決議**，條文一字未改 |
