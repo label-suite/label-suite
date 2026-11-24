@@ -77,6 +77,9 @@ services:
       # No default on purpose, same as the Lite file (system-design D6, D7).
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?set CORS_ALLOWED_ORIGINS in .env}
       CORS_ALLOW_CREDENTIALS: ${CORS_ALLOW_CREDENTIALS:-true}
+      # Pinned, not read from .env: the production tier never serves the
+      # built-in /docs, /redoc and /openapi.json routes (ADR-008 D1).
+      API_DOCS_ENABLED: "false"
     healthcheck:
       # The slim base image has no curl, so the image's own Python makes the
       # call; urlopen raises on any non-2xx status (system-design D5). The check

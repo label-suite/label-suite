@@ -8,7 +8,7 @@
 
 ## 2. 部署傳遞
 
-- [ ] 2.1 `docker-compose.prod.yml` 的後端傳入固定值 `API_DOCS_ENABLED: "false"`；`.env.example` 加 `API_DOCS_ENABLED` 說明：預設 true，正式層 compose 把它固定為 false，所以 `.env` 裡的值不影響正式層（不沿用「兩份編排檔都傳入」的措辭）。驗證：`POSTGRES_PASSWORD=x CORS_ALLOWED_ORIGINS=http://localhost docker compose -f docker-compose.prod.yml config` 的後端服務輸出含 `API_DOCS_ENABLED: "false"`；本機沒有 docker 時改以人工檢視檔案並寫進 acceptance 步驟（對應 spec Scenario「正式層部署明確關閉內建文件」）。[@backend-developer]
+- [x] 2.1 `docker-compose.prod.yml` 的後端傳入固定值 `API_DOCS_ENABLED: "false"`；`.env.example` 加 `API_DOCS_ENABLED` 說明：預設 true，正式層 compose 把它固定為 false，所以 `.env` 裡的值不影響正式層（不沿用「兩份編排檔都傳入」的措辭）。驗證：`POSTGRES_PASSWORD=x CORS_ALLOWED_ORIGINS=http://localhost docker compose -f docker-compose.prod.yml config` 的後端服務輸出含 `API_DOCS_ENABLED: "false"`；本機沒有 docker 時改以人工檢視檔案並寫進 acceptance 步驟（對應 spec Scenario「正式層部署明確關閉內建文件」）。[@backend-developer]
 
 ## 3. 契約與驗證
 
