@@ -748,7 +748,7 @@ import PluginView from '@/components/PluginView.astro';
 | `created_at` | 建立時間 | `timestamptz` | NOT NULL | — | — |
 | `updated_at` | 最後改動 | `timestamptz` | NOT NULL | — | — |
 
-**規格來源**：[04-01](../../specs/04-annotation/01-annotation-list.mdx#資料欄位)（`:700`「審核單位｜**任務的某個回合 × 某一筆指派**」——這張表就是那個單位的定址）、[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)（`:984`「標記作業狀態……**推導值，不另存**」——所以這張表刻意沒有 `status` 欄）。**這兩條是表說明引用的規格**，維護者 2026-11-11 裁定它們**算**來源（[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決) D8）。
+**規格來源**：[04-01](../../specs/04-annotation/01-annotation-list.mdx#資料欄位)（`:700`「審核單位｜**任務的某個回合 × 某一筆指派**」——這張表就是那個單位的定址）、[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)（`:989`「標記作業狀態……**推導值，不另存**」——所以這張表刻意沒有 `status` 欄）。**這兩條是表說明引用的規格**，維護者 2026-11-11 裁定它們**算**來源（[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決) D8）。
 
 **沒有 `status` 欄，這是刻意的。** [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) 明寫「標記作業狀態……**推導值，不另存**」，由不可撤回的排除、目前的標記紀錄與受派者**依序**判定。存一個 `status` 會與那個順序產生第二個真相。
 
@@ -1103,7 +1103,7 @@ import PluginView from '@/components/PluginView.astro';
 | `task_id` | 同任務作用域 | `uuid` | NOT NULL | 見上**兩組**複合 FK | **刻意的反正規化**：它讓「匯出與執行必須屬同一任務」用兩個複合 FK 就擋得住 |
 | `position` | 清單中的順序 | `integer` | NOT NULL | **唯一 `(export_id, position)`**；CHECK `>= 1` | 從 1 開始。順序寫進產物的有序清單 |
 
-**規格來源**：[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)（`:994`「匯出時間……記錄列與檔名用的是**實際讀取結果的那個時間**，不是請求被接受的時間」——兩個時刻各自成立，而一次匯出可以納入多次執行，所以要有這張表記順序）。**這一條是表說明引用的規格**，維護者 2026-11-11 裁定它**算**來源（[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決) D8）。
+**規格來源**：[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)（`:999`「匯出時間……記錄列與檔名用的是**實際讀取結果的那個時間**，不是請求被接受的時間」——兩個時刻各自成立，而一次匯出可以納入多次執行，所以要有這張表記順序）。**這一條是表說明引用的規格**，維護者 2026-11-11 裁定它**算**來源（[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決) D8）。
 
 **這張表是反推出來的六項之一**（[盤點總帳§二](./data-field-inventory.mdx#二九條流程的反推)）：[03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位) 的畫面只顯示一個匯出時間，但「請求被接受」與「實際讀取結果」是兩個時刻，而一次匯出可以納入多次執行——所以要有這張表記順序。
 

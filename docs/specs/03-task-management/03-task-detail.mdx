@@ -11,7 +11,7 @@ import PrototypeFrame from '@notes/components/prototype-frame';
 
 # 03-03 任務詳情
 
-:badge[已定案]{variant="success"} :badge[變更 #551]{variant="warning" href="https://github.com/label-suite/label-suite/issues/551"} :badge[任務管理]{variant="neutral"} :badge[四階段已寫完]{variant="success"}
+:badge[已定案]{variant="success"} :badge[變更 #623]{variant="warning" href="https://github.com/label-suite/label-suite/issues/623"} :badge[任務管理]{variant="neutral"} :badge[四階段已寫完]{variant="success"}
 
 > 來源：舊 repo `specs/task-management/014-task-detail/spec.md`（326 條），釘在 `singyichen/label-suite@faf83356`
 > 參考畫面：`design/prototype/pages/task-management/task-detail.html` 與 `task-detail.panels/` 底下六個面板
@@ -421,7 +421,7 @@ import Spec0303TaskDetailFlow from '@notes/components/spec-03-03-task-detail-flo
 8. 搜尋結果**只排除已經在這個任務持有「本次選定的那個角色」的人**；同一個人可以再被加成另一個角色，加完之後才從那個角色的候選名單消失
 9. 「Email 邀請」要填 Email、選任務角色，然後寄出
 10. Email 要驗格式；**同一個任務、同一個 Email、同一個角色不能重複邀請**，但他已經有別的角色不算重複
-11. 寄成功之後，那個人以**「邀請中」**出現在目前成員清單，而且**不會蓋掉他另一個角色的狀態**；<mark>受邀者點信裡的連結 → 落在[登入頁](../01-account/01-login.mdx)，還沒有帳號的人從登入頁走[註冊](../01-account/02-register.mdx)；他登入之後，在這個任務的成員資格從「邀請中」變成「啟用」，並照[規格 01-01](../01-account/01-login.mdx#導向其他頁面) §導向其他頁面 的「使用者登入成功 → 前往」（第 3 條）進入儀表板（[§已確認決議](#已確認決議) Q50）；已經登入的人點連結 → 成員資格立刻從「邀請中」變成「啟用」，並照[規格 01-01](../01-account/01-login.mdx#導向其他頁面) §導向其他頁面 的「已經登入的人直接開登入頁 → 直接前往儀表板」（第 4 條）進入儀表板（[§已確認決議](#已確認決議) Q51）</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup>
+11. 寄成功之後，那個人以**「邀請中」**出現在目前成員清單，而且**不會蓋掉他另一個角色的狀態**；受邀者點信裡的連結 → 落在[登入頁](../01-account/01-login.mdx)，還沒有帳號的人從登入頁走[註冊](../01-account/02-register.mdx)；他登入之後，在這個任務的成員資格從「邀請中」變成「啟用」，並照[規格 01-01](../01-account/01-login.mdx#導向其他頁面) §導向其他頁面 的「使用者登入成功 → 前往」（第 3 條）進入儀表板（[§已確認決議](#已確認決議) Q50）；已經登入的人點連結 → 成員資格立刻從「邀請中」變成「啟用」，並照[規格 01-01](../01-account/01-login.mdx#導向其他頁面) §導向其他頁面 的「已經登入的人直接開登入頁 → 直接前往儀表板」（第 4 條）進入儀表板（[§已確認決議](#已確認決議) Q51）
 12. 目前成員清單的欄位依序是：姓名、Email、任務角色、**審核負荷**、狀態、加入時間、最後活動、操作
 13. 清單**先顯示任務既有的成員**，至少含建立任務時帶進來的那位專案負責人
 14. 任務角色與狀態都用有色標籤顯示；:ref[審核員]{id="term.reviewer"}和:ref[標記員]{id="term.annotator"}用不同顏色
@@ -843,6 +843,11 @@ import Spec0303TaskDetailFlow from '@notes/components/spec-03-03-task-detail-flo
 40. 記錄表底部的分頁列與[§標記結果](#標記結果)那張表**完全獨立**
 41. 操作欄的「下載」用**主要操作按鈕**的視覺語言（尺寸、內距、圓角、字重、主色底與游標狀態都對齊），**不是純文字連結**
 42. 匯出**不得讓標記員取得私有答案或測試集資訊**；任何回應也不得暴露受限物件的參照
+43. <mark>正式標記的**每一個最終答案**，JSON 與 JSON-MIN 兩種格式都要標出**定案來源**、**決定者帳號**與**理由**，不只走過爭議的那幾筆（[§已確認決議](#已確認決議) Q52、Q53）</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup>
+44. <mark>第 43 條的定案來源依那一項實際走過的路，分得出四種：**審核通過**（含爭議中、還沒有任何仲裁票時當事審核員改判為全部通過）、**仲裁定案**、**負責人裁定（無指定仲裁者）**（與[§負責人裁定](#負責人裁定)第 9 條是同一個標示）、**例外池收尾**；仲裁定案與負責人裁定另外看得出採的是標記員答案還是審核員答案，例外池收尾另外看得出是**採用標記員答案**、**採用審核員答案**還是**自訂答案**（「排除於資料集」不產生最終答案，見第 46 條）（[規格 04-02 §最終例外池是最後一道出口](../04-annotation/02-annotation-workspace.mdx#最終例外池是最後一道出口)第 2 條）</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup>
+45. <mark>第 43 條的理由取自決定者在那一步留下的理由；理由是選填的，沒填時**照樣保留這一項，值是空的**，不得省略</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup>
+46. <mark>例外池「排除於資料集」的輸出項**不進最終答案**，也**不出現在一般的結果裡**；匯出範圍含這種項目時，說明區另列一份**排除清單**，逐筆寫出樣本、輸出類型、決定者帳號與理由（[§已確認決議](#已確認決議) Q54）</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup>
+47. <mark>第 46 條的排除清單與第 30 條的排除摘要**分開列，不得合併**：前者排除的是一個爭議輸出項，後者排除的是整份標記作業</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup>
 
 - 第 1 與第 2 條都以 PRD 為準。來源條文只限定了角色（而且畫面也照做了），**但來源沒有「已完成後才開放」這條規則**；規格依 `spec-writing` 鐵律 5「不超出 PRD」寫成較嚴的那一版
 - 第 12 與第 18 條合起來是這一塊最容易做錯的地方：重新下載要給的是**當初那個檔案**，不是「用當初的條件重跑一次」。結果會變，檔案不會
@@ -1089,6 +1094,8 @@ import Spec0303TaskDetailFlow from '@notes/components/spec-03-03-task-detail-flo
 | 產物到期、被撤銷、來源被刪除或完整性驗證不符 | 拒絕下載，並給看得懂的繁體中文原因 |
 | 拒絕訊息裡出現內部儲存位置或私有答案 | 不允許 |
 | 被排除的標記作業出現在匯出的一般結果列裡 | 不允許；只能在說明區以排除摘要呈現 |
+| <mark>例外池排除的輸出項出現在匯出的一般結果裡</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup> | <mark>不允許；只能列在說明區的排除清單，與被排除的標記作業分開</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup> |
+| <mark>正式標記的最終答案匯出時少了定案來源、決定者或理由</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup> | <mark>不允許；理由沒填時照樣保留這一項，值是空的</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup> |
 | 詞元單位選「詞」但切詞引擎沒有版本資訊 | 擋下這次匯出並說明缺什麼，不產生檔案、記錄表也不新增紀錄 |
 | 這一頁自己拼標記前綴、自己判斷邊界或複製方案轉換表 | 不允許——只能呼叫共用的那一份推導 |
 | 最終例外池待處置為 0 就把區塊隱藏 | 不允許——要顯示空狀態，它是結案閘門唯一可稽核的呈現點 |
@@ -1349,9 +1356,9 @@ import Spec0303TaskDetailFlow from '@notes/components/spec-03-03-task-detail-flo
 | Email 格式不對擋下 | 專案負責人在 Email 邀請 | 填一個格式不對的 Email 並寄送 | 擋下，沒有寄出 |
 | 重複邀請同角色擋下 | 某 Email 已以審核員身分被邀請 | 再以審核員身分邀請同一個 Email | 擋下 |
 | 邀請成功顯示邀請中 | 專案負責人寄出一封邀請 | 查看成員清單 | 那個人以「邀請中」出現，且沒有蓋掉他另一個角色的狀態 |
-| 邀請信的連結落在登入頁 | <mark>某人收到這個任務的邀請信</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup> | <mark>點信裡的連結</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup> | <mark>落在登入頁；還沒有帳號的人可以從登入頁前往註冊</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup> |
-| 受邀者登入後成員資格變啟用 | <mark>某人在這個任務以「邀請中」出現在成員清單，已經點了邀請信裡的連結</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup> | <mark>在登入頁登入成功</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup> | <mark>進入儀表板；專案負責人的成員清單上，他那一列的狀態變成「啟用」</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup> |
-| 已登入的受邀者點連結就變啟用 | <mark>某人在這個任務以「邀請中」出現在成員清單，而且已經登入</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup> | <mark>點邀請信裡的連結</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup> | <mark>直接進入儀表板，沒有看到登入頁；專案負責人的成員清單上，他那一列的狀態變成「啟用」</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup> |
+| 邀請信的連結落在登入頁 | 某人收到這個任務的邀請信 | 點信裡的連結 | 落在登入頁；還沒有帳號的人可以從登入頁前往註冊 |
+| 受邀者登入後成員資格變啟用 | 某人在這個任務以「邀請中」出現在成員清單，已經點了邀請信裡的連結 | 在登入頁登入成功 | 進入儀表板；專案負責人的成員清單上，他那一列的狀態變成「啟用」 |
+| 已登入的受邀者點連結就變啟用 | 某人在這個任務以「邀請中」出現在成員清單，而且已經登入 | 點邀請信裡的連結 | 直接進入儀表板，沒有看到登入頁；專案負責人的成員清單上，他那一列的狀態變成「啟用」 |
 | 成員清單欄位 | 專案負責人在成員管理 | 查看成員清單表頭 | 依序是姓名、Email、任務角色、審核負荷、狀態、加入時間、最後活動、操作 |
 | 審核負荷對標記員顯示破折號 | 清單裡有一位標記員 | 查看他的審核負荷 | 顯示 `—` |
 | 審核負荷的已指派是推導值 | 某審核員待審 2 筆、已完成 3 筆 | 查看他的審核負荷 | 已指派是 5，等於待審加已完成 |
@@ -1448,6 +1455,11 @@ import Spec0303TaskDetailFlow from '@notes/components/spec-03-03-task-detail-flo
 | 擴張摘要可展開且不回寫 | 以「詞」為單位匯出，某筆標記的邊界落在詞的內部 | 查看擴張摘要並展開 | 顯示因對齊被擴張的段數，展開後逐筆看得到原始文字、擴張後文字與位置差值；任務裡存著的標記位置沒有被改動 |
 | 實體型不出現方案選擇 | 任務的輸出類型是實體辨識 | 開始匯出 | 不出現標註方案與詞元單位的選擇，也不呼叫序列推導 |
 | 匯出分得出原始與修正 | 某樣本經審核員修正過 | 匯出結果 | 檔案裡同時看得到標記員原本交的與審核員改成的，分得出哪一筆是審核員改的 |
+| 每個最終答案都標定案來源 | <mark>正式標記的某一項以審核通過定案，另一項以仲裁定案</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup> | <mark>匯出 JSON 與 JSON-MIN</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup> | <mark>兩種格式裡這兩項都看得到定案來源、決定者帳號與理由，定案來源分別是審核通過與仲裁定案</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup> |
+| 例外池收尾看得出收尾動作 | <mark>正式標記的某一項在例外池以自訂答案收尾</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup> | <mark>匯出結果</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup> | <mark>定案來源是例外池收尾，看得出收尾動作是自訂答案，決定者是那位專案負責人</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup> |
+| 負責人裁定看得出採哪一邊 | <mark>任務沒有啟用中的仲裁者，專案負責人把某個爭議項裁定為採審核員答案</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup> | <mark>匯出結果</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup> | <mark>定案來源是「負責人裁定（無指定仲裁者）」，看得出採的是審核員答案，決定者是那位專案負責人</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup> |
+| 沒填理由照樣留著理由 | <mark>某一項的仲裁者裁定時沒填理由</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup> | <mark>匯出 JSON-MIN</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup> | <mark>那一列有理由這一項，值是空的</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup> |
+| 例外池排除的項目列在排除清單 | <mark>某個爭議輸出項在例外池被排除於資料集</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup> | <mark>匯出該階段的結果</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup> | <mark>一般結果裡沒有那一項的最終答案；說明區的排除清單有那一筆，寫出樣本、輸出類型、決定者帳號與理由，而且和被排除的標記作業分開列</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup> |
 | 工時不夾帶標記內容 | 專案負責人在工時紀錄 | 查看資料內容 | 只有時間與筆數，沒有別人的登入狀態、私有答案或標準答案 |
 | 抽樣讀不到答案 | 某樣本的私有欄位含標準答案與訓練／測試歸屬 | 以同一組設定重跑抽樣 | 抽樣只用得到公開內容，產生的清單與對帳紀錄都沒有答案、沒有訓練／測試歸屬、也沒有受限的來源參照 |
 | 清單不帶測試集標記 | 同上 | 查看樣本清單 | 沒有任何從私有欄位推導出來的測試集標記 |
@@ -1509,11 +1521,38 @@ import Spec0303TaskDetailFlow from '@notes/components/spec-03-03-task-detail-flo
 
 ## 待釐清
 
-**沒有未決問題。** 二十題全部定案：19 題於 2026-11-08 裁定，Q30 於 **2026-11-09** 裁定，都在[§已確認決議](#已確認決議)。題號**只增不重排**：Q48 與 Q49 已於 2026-11-12 由維護者裁定（見[§已確認決議](#已確認決議)），所以後續若有新題目從 Q50 起算。<mark>Q50、Q51 已於 2026-11-24 由維護者裁定，後續從 Q52 起算</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup>。
+**沒有未決問題。** 二十題全部定案：19 題於 2026-11-08 裁定，Q30 於 **2026-11-09** 裁定，都在[§已確認決議](#已確認決議)。題號**只增不重排**：Q48 與 Q49 已於 2026-11-12 由維護者裁定（見[§已確認決議](#已確認決議)），所以後續若有新題目從 Q50 起算。Q50、Q51 已於 2026-11-24 由維護者裁定，後續從 Q52 起算；<mark>Q52–Q54 也已於 2026-11-24 由維護者裁定，後續從 Q55 起算</mark><sup>[#623](https://github.com/label-suite/label-suite/issues/623)</sup>。
 
 ## 已確認決議
 
 題號同樣只往後加，從待釐清搬過來的保留原號（階段一是 Q8–Q16、階段二是 Q22–Q27、階段三是 Q33–Q38、階段四是 Q41–Q44，另有從待釐清改列的 Q17 與 Q18；2026-11-08 又搬進 Q1–Q7、Q19–Q21、Q28、Q29、Q31、Q32、Q39、Q40、Q45–Q47；**Q30 於 2026-11-09 搬進**）。
+
+### Q54. 例外池「排除於資料集」的輸出項，在匯出檔裡怎麼留下紀錄？（已定案，維護者裁定 2026-11-24）
+
+- [x] 不進一般結果，在說明區另列一份排除清單，逐筆寫出樣本、輸出類型、決定者與理由，和第 30 條「被排除的標記作業」分開
+- [ ] 留在一般結果裡，那個輸出項標成「已排除」、沒有最終答案
+
+> 理由：維護者 2026-11-24 裁定，選項的理由是與[§匯出](#匯出)第 30 條同一個做法。
+> 落地位置：[§匯出](#匯出) 第 46、47 條、[§驗收標準](#驗收標準)的「例外池排除的項目列在排除清單」。
+> 來源：[Issue #623](https://github.com/label-suite/label-suite/issues/623)
+
+### Q53. 定案來源、決定者與理由，兩種匯出格式都要帶嗎？（已定案，維護者裁定 2026-11-24）
+
+- [x] JSON 與 JSON-MIN 都帶這三項；理由沒填時照樣保留，值是空的
+- [ ] JSON 全帶，JSON-MIN 只帶定案來源
+
+> 理由：維護者 2026-11-24 裁定。
+> 落地位置：[§匯出](#匯出) 第 43、45 條、[§驗收標準](#驗收標準)的「每個最終答案都標定案來源」「沒填理由照樣留著理由」。
+> 來源：[Issue #623](https://github.com/label-suite/label-suite/issues/623)
+
+### Q52. 匯出時哪些最終答案要標定案來源、決定者與理由？（已定案，維護者裁定 2026-11-24）
+
+- [x] 每一個最終答案都標：審核通過、仲裁定案、負責人裁定、例外池收尾
+- [ ] 只標走過爭議的（仲裁定案、負責人裁定、例外池收尾）
+
+> 理由：維護者 2026-11-24 裁定，選項的理由是讀檔的人不必猜沒標的那一筆走了哪條路。
+> 落地位置：[§匯出](#匯出) 第 43、44 條、[§驗收標準](#驗收標準)的「每個最終答案都標定案來源」「例外池收尾看得出收尾動作」。
+> 來源：[Issue #623](https://github.com/label-suite/label-suite/issues/623)
 
 ### Q51. 已經登入的受邀者點邀請信裡的連結時怎麼處理？（已定案，維護者裁定 2026-11-24）
 
@@ -1979,6 +2018,7 @@ import Spec0303TaskDetailFlow from '@notes/components/spec-03-03-task-detail-flo
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#623](https://github.com/label-suite/label-suite/issues/623) | 2026-11-24 | 頁首、§規格 › 匯出、§卡控機制、§驗收標準、§待釐清、§已確認決議 | 只有負責人裁定那條路要求在匯出標明定案來源（§負責人裁定 第 9 條）；仲裁定案、例外池收尾與審核通過的定案來源、決定者與理由在匯出裡怎麼呈現沒有條文；例外池「排除於資料集」的輸出項在匯出這一側沒有寫 | §匯出 新增第 43–47 條、§卡控機制 兩列：每個最終答案在兩種格式都標定案來源（四種）、決定者帳號與理由；例外池排除的輸出項列在說明區的排除清單，與被排除的標記作業分開；新增五條 Scenario；清掉 #551 的舊標示 | **新增 Q52、Q53、Q54**（維護者裁定 2026-11-24） |
 | [#551](https://github.com/label-suite/label-suite/issues/551) | 2026-11-24 | §規格 › 成員管理、§驗收標準、§待釐清、§已確認決議 | 第 11 條只寫到受邀者登入之後才從「邀請中」變成「啟用」，沒有寫已經登入的人點連結會怎樣 | 已經登入的人點連結，成員資格立刻變成「啟用」，照規格 01-01 §導向其他頁面 第 4 條進入儀表板；新增 Scenario「已登入的受邀者點連結就變啟用」 | **新增 Q51**（維護者裁定 2026-11-24，補充 Q50） |
 | [#551](https://github.com/label-suite/label-suite/issues/551) | 2026-11-24 | 頁首、§規格 › 成員管理、§驗收標準、§待釐清、§已確認決議 | 「Email 邀請」只寫到填 Email、選任務角色、寄出，以及寄成功後那個人以「邀請中」出現在成員清單，沒有寫受邀者點信裡的連結之後落在哪裡、什麼時候變成「啟用」 | 第 11 條補上：連結落在登入頁，沒有帳號的人從登入頁走註冊，登入之後成員資格從「邀請中」變成「啟用」並照規格 01-01 進入儀表板；新增兩條 Scenario；清掉 #170 的舊標示 | **新增 Q50**（維護者裁定 2026-11-24） |
 | [#415](https://github.com/label-suite/label-suite/issues/415) | 2026-11-18 | §使用角色 | 角色、權限與條件寫成條列 | 改成正典的三欄表格（角色／這一頁能做什麼／PRD §權限矩陣的上限），條件、理由與跨頁連結移到表格下方的條列。第三欄是**新增的資訊**：逐列指出 PRD §權限矩陣 的哪一列，對不到的寫出原因。形狀依 `spec-writing` 範本（[PR #417](https://github.com/label-suite/label-suite/pull/417)） | **無新決議，條文一字未改** |
