@@ -421,7 +421,7 @@ import Spec0303TaskDetailFlow from '@notes/components/spec-03-03-task-detail-flo
 8. 搜尋結果**只排除已經在這個任務持有「本次選定的那個角色」的人**；同一個人可以再被加成另一個角色，加完之後才從那個角色的候選名單消失
 9. 「Email 邀請」要填 Email、選任務角色，然後寄出
 10. Email 要驗格式；**同一個任務、同一個 Email、同一個角色不能重複邀請**，但他已經有別的角色不算重複
-11. 寄成功之後，那個人以**「邀請中」**出現在目前成員清單，而且**不會蓋掉他另一個角色的狀態**；<mark>受邀者點信裡的連結 → 落在[登入頁](../01-account/01-login.mdx)，還沒有帳號的人從登入頁走[註冊](../01-account/02-register.mdx)；他登入之後，在這個任務的成員資格從「邀請中」變成「啟用」，並照[規格 01-01](../01-account/01-login.mdx#導向其他頁面) §導向其他頁面 的「使用者登入成功 → 前往」（第 3 條）進入儀表板（[§已確認決議](#已確認決議) Q50）</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup>
+11. 寄成功之後，那個人以**「邀請中」**出現在目前成員清單，而且**不會蓋掉他另一個角色的狀態**；<mark>受邀者點信裡的連結 → 落在[登入頁](../01-account/01-login.mdx)，還沒有帳號的人從登入頁走[註冊](../01-account/02-register.mdx)；他登入之後，在這個任務的成員資格從「邀請中」變成「啟用」，並照[規格 01-01](../01-account/01-login.mdx#導向其他頁面) §導向其他頁面 的「使用者登入成功 → 前往」（第 3 條）進入儀表板（[§已確認決議](#已確認決議) Q50）；已經登入的人點連結 → 成員資格立刻從「邀請中」變成「啟用」，並照[規格 01-01](../01-account/01-login.mdx#導向其他頁面) §導向其他頁面 的「已經登入的人直接開登入頁 → 直接前往儀表板」（第 4 條）進入儀表板（[§已確認決議](#已確認決議) Q51）</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup>
 12. 目前成員清單的欄位依序是：姓名、Email、任務角色、**審核負荷**、狀態、加入時間、最後活動、操作
 13. 清單**先顯示任務既有的成員**，至少含建立任務時帶進來的那位專案負責人
 14. 任務角色與狀態都用有色標籤顯示；:ref[審核員]{id="term.reviewer"}和:ref[標記員]{id="term.annotator"}用不同顏色
@@ -1351,6 +1351,7 @@ import Spec0303TaskDetailFlow from '@notes/components/spec-03-03-task-detail-flo
 | 邀請成功顯示邀請中 | 專案負責人寄出一封邀請 | 查看成員清單 | 那個人以「邀請中」出現，且沒有蓋掉他另一個角色的狀態 |
 | 邀請信的連結落在登入頁 | <mark>某人收到這個任務的邀請信</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup> | <mark>點信裡的連結</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup> | <mark>落在登入頁；還沒有帳號的人可以從登入頁前往註冊</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup> |
 | 受邀者登入後成員資格變啟用 | <mark>某人在這個任務以「邀請中」出現在成員清單，已經點了邀請信裡的連結</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup> | <mark>在登入頁登入成功</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup> | <mark>進入儀表板；專案負責人的成員清單上，他那一列的狀態變成「啟用」</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup> |
+| 已登入的受邀者點連結就變啟用 | <mark>某人在這個任務以「邀請中」出現在成員清單，而且已經登入</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup> | <mark>點邀請信裡的連結</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup> | <mark>直接進入儀表板，沒有看到登入頁；專案負責人的成員清單上，他那一列的狀態變成「啟用」</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup> |
 | 成員清單欄位 | 專案負責人在成員管理 | 查看成員清單表頭 | 依序是姓名、Email、任務角色、審核負荷、狀態、加入時間、最後活動、操作 |
 | 審核負荷對標記員顯示破折號 | 清單裡有一位標記員 | 查看他的審核負荷 | 顯示 `—` |
 | 審核負荷的已指派是推導值 | 某審核員待審 2 筆、已完成 3 筆 | 查看他的審核負荷 | 已指派是 5，等於待審加已完成 |
@@ -1508,11 +1509,20 @@ import Spec0303TaskDetailFlow from '@notes/components/spec-03-03-task-detail-flo
 
 ## 待釐清
 
-**沒有未決問題。** 二十題全部定案：19 題於 2026-11-08 裁定，Q30 於 **2026-11-09** 裁定，都在[§已確認決議](#已確認決議)。題號**只增不重排**：Q48 與 Q49 已於 2026-11-12 由維護者裁定（見[§已確認決議](#已確認決議)），所以後續若有新題目從 Q50 起算。<mark>Q50 已於 2026-11-24 由維護者裁定，後續從 Q51 起算</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup>。
+**沒有未決問題。** 二十題全部定案：19 題於 2026-11-08 裁定，Q30 於 **2026-11-09** 裁定，都在[§已確認決議](#已確認決議)。題號**只增不重排**：Q48 與 Q49 已於 2026-11-12 由維護者裁定（見[§已確認決議](#已確認決議)），所以後續若有新題目從 Q50 起算。<mark>Q50、Q51 已於 2026-11-24 由維護者裁定，後續從 Q52 起算</mark><sup>[#551](https://github.com/label-suite/label-suite/issues/551)</sup>。
 
 ## 已確認決議
 
 題號同樣只往後加，從待釐清搬過來的保留原號（階段一是 Q8–Q16、階段二是 Q22–Q27、階段三是 Q33–Q38、階段四是 Q41–Q44，另有從待釐清改列的 Q17 與 Q18；2026-11-08 又搬進 Q1–Q7、Q19–Q21、Q28、Q29、Q31、Q32、Q39、Q40、Q45–Q47；**Q30 於 2026-11-09 搬進**）。
+
+### Q51. 已經登入的受邀者點邀請信裡的連結時怎麼處理？（已定案，維護者裁定 2026-11-24）
+
+- [x] 成員資格立刻從「邀請中」變成「啟用」，照[規格 01-01](../01-account/01-login.mdx#導向其他頁面) §導向其他頁面 第 4 條進入儀表板
+- [ ] 不定（Q50 只寫到登入之後才變成「啟用」）
+
+> 理由：維護者 2026-11-24 裁定，選項的理由是「和『登入後啟用』是同一個時間點，他已經登入了」。
+> 落地位置：[§成員管理](#成員管理) 第 11 條、[§驗收標準](#驗收標準)的「已登入的受邀者點連結就變啟用」。
+> 來源：[Issue #551](https://github.com/label-suite/label-suite/issues/551)
 
 ### Q50. 任務成員管理寄出的 Email 邀請，受邀者點信裡的連結落在哪裡？（已定案，維護者裁定 2026-11-24）
 
@@ -1969,6 +1979,7 @@ import Spec0303TaskDetailFlow from '@notes/components/spec-03-03-task-detail-flo
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#551](https://github.com/label-suite/label-suite/issues/551) | 2026-11-24 | §規格 › 成員管理、§驗收標準、§待釐清、§已確認決議 | 第 11 條只寫到受邀者登入之後才從「邀請中」變成「啟用」，沒有寫已經登入的人點連結會怎樣 | 已經登入的人點連結，成員資格立刻變成「啟用」，照規格 01-01 §導向其他頁面 第 4 條進入儀表板；新增 Scenario「已登入的受邀者點連結就變啟用」 | **新增 Q51**（維護者裁定 2026-11-24，補充 Q50） |
 | [#551](https://github.com/label-suite/label-suite/issues/551) | 2026-11-24 | 頁首、§規格 › 成員管理、§驗收標準、§待釐清、§已確認決議 | 「Email 邀請」只寫到填 Email、選任務角色、寄出，以及寄成功後那個人以「邀請中」出現在成員清單，沒有寫受邀者點信裡的連結之後落在哪裡、什麼時候變成「啟用」 | 第 11 條補上：連結落在登入頁，沒有帳號的人從登入頁走註冊，登入之後成員資格從「邀請中」變成「啟用」並照規格 01-01 進入儀表板；新增兩條 Scenario；清掉 #170 的舊標示 | **新增 Q50**（維護者裁定 2026-11-24） |
 | [#415](https://github.com/label-suite/label-suite/issues/415) | 2026-11-18 | §使用角色 | 角色、權限與條件寫成條列 | 改成正典的三欄表格（角色／這一頁能做什麼／PRD §權限矩陣的上限），條件、理由與跨頁連結移到表格下方的條列。第三欄是**新增的資訊**：逐列指出 PRD §權限矩陣 的哪一列，對不到的寫出原因。形狀依 `spec-writing` 範本（[PR #417](https://github.com/label-suite/label-suite/pull/417)） | **無新決議，條文一字未改** |
 | [#236](https://github.com/label-suite/label-suite/issues/236) | 2026-11-16 | §規格 › 抽樣設定 的註解 | 第 12 條下方那一行引 `AGENTS.md` 的「不寫死任務邏輯」，而 `AGENTS.md` 全篇是英文、從來沒有這七個字——那是轉述，不是原文 | 改引硬性規則 5 的原文「No hardcoded task logic」。維護者 2026-11-16 裁定引英文原文，不為了讓中文讀起來順而放水；`check-specs` **將新增**的節名引用檢查會逐字比對被引的文件（[#236](https://github.com/label-suite/label-suite/issues/236)，尚未落地） | **無新決議**，條文一字未改 |
