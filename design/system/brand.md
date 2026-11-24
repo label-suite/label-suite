@@ -18,7 +18,7 @@
 
 ## 產品是什麼
 
-Label Suite 是碩士論文 Demo Paper 的核心成果：用設定驅動的標記流程，讓研究團隊在同一個平台走完建立任務、試標、確認一致性、正式標記、審核、匯出，並在標記過程中就看到資料統計（`docs/specs/00-prd.mdx` §專案概述）。使用者是研究團隊成員，不是一般消費者；其中標記員與審核員的「好上手」以 SUS 75 分衡量（`00-prd.mdx:58`）。
+Label Suite 是碩士論文 Demo Paper 的核心成果：用設定驅動的標記流程，讓研究團隊在同一個平台走完建立任務、試標、確認一致性、正式標記、審核、匯出，並在標記過程中就看到資料統計（`docs/specs/00-prd.mdx` §專案概述）。使用者是研究團隊成員，不是一般消費者；其中標記員與審核員的「好上手」以 SUS 75 分衡量（`00-prd.mdx:60`）。
 
 banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`design/prototype/assets/logo/banner.svg`、`social-preview.svg`）。
 
@@ -37,7 +37,7 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 7. **送出中要有載入態且不能重複送出。**UXC-06（`.btn-loading`，`components-showcase.html:213`–`:214`）。已知缺口：只擋滑鼠、沒擋鍵盤（G-06）。
 8. **Skeleton 的尺寸要貼合載入後的內容**，以防 layout shift（UXC-08，`components-showcase.html:1134`）。所以 Skeleton 的尺寸不 token 化。
 9. **同一組一次性連結失效用同一句話。**`ONE_TIME_LINK_WORDING` 是單一來源（`pages/shared/sidebar.js:227`），重設密碼與驗證信兩頁都引用它（`reset-password.html:611`、`verify-email.html:390`）。
-10. **每個畫面同時支援繁中與英文、淺色與深色。**語言與外觀是共用介面的一部分（PRD 的「外觀切換（淺色／深色）」，`00-prd.mdx:136`、`docs/specs/07-shared/01-sidebar.mdx`）；元件要用語意 token，深色主題靠 `html[data-theme="dark"]` 重新對映同名 token，頁面不寫兩份（`tokens.css` 深色區塊的檔頭說明）。
+10. **每個畫面同時支援繁中與英文、淺色與深色。**語言與外觀是共用介面的一部分（PRD 的「外觀切換（淺色／深色）」，`00-prd.mdx:138`、`docs/specs/07-shared/01-sidebar.mdx`）；元件要用語意 token，深色主題靠 `html[data-theme="dark"]` 重新對映同名 token，頁面不寫兩份（`tokens.css` 深色區塊的檔頭說明）。
 11. **互動元件要有 `prefers-reduced-motion` 的退路。**共用 CSS 與 showcase 都有 `@media (prefers-reduced-motion: reduce)`（`pages/shared/sidebar.css:185`、`components-showcase.html:979`）；`account/profile` 是唯一漏掉的帳號頁（G-30）。
 12. **圖示一律用 SVG，不用 emoji，也不用文字字元（`✕`、`←`、`→`、`✓` 等）充當圖示。**維護者裁定（2026-11-18）；repo 內早有同向的依據：ADR-030「Lucide 是唯一圖示來源」，`task-config.engine.js:870`、`:977` 的註解寫「no text-glyph icons」「no hand-drawn glyphs」。細節見 [§圖示](#圖示)。
 13. **控制項外框用 `--color-border-control`，`--color-border` 只做裝飾。**輸入框、下拉選單、文字區塊、搜尋框、勾選框，以及長得像欄位的觸發鈕（日期區間、分類選擇）的外框用前者（淺色 `#7C899D` 對白底 3.55、對頁底 3.23:1；深色 `#6B6B78` 對卡片 3.42、對頁底 3.73:1），才過 WCAG 1.4.11 的 3:1；卡片、表格、分隔線用 `--color-border`（對白底只有 1.23:1）。焦點與錯誤狀態維持各自的 token。維護者裁定（2026-11-18，#427）；`tokens.css:26`、`:203`。
@@ -54,7 +54,7 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 | UXC 編號 | 沿用 prototype 已在用的 03–11，01／02 留空 | `ux-conventions.md`（2026-11-17） |
 | 外觀選項 | 三選一「跟隨系統／淺色／深色」，預設「跟隨系統」；`system` 真的讀作業系統 | `assets/theme.js:5`、`:17` 的註解（#195，2026-11-09） |
 | 語言 | 兩種：`zh`、`en`；沒有儲存值時預設 `zh`；選擇存在 `labelsuite.lang` | `pages/shared/sidebar.js:3`、`:410`–`:415` |
-| 說明按鈕 | 這期不做，下一期依 SUS 結果再決定 | `00-prd.mdx:147` |
+| 說明按鈕 | 這期不做，下一期依 SUS 結果再決定 | `00-prd.mdx:149` |
 | 引用 `MASTER.md` 版號 | `tokens.css` 與 prototype 註解引用的 `MASTER.md` 版號、行號指向原件，本 repo 解析不到 | `MASTER.md` §這份檔是重建的、G-25 |
 | 中文稱謂 | 全部中文介面文案用「你」，不用「您」 | 維護者裁定 2026-11-18 |
 | 送出用語 | 統一「送出」＋受詞（送出標記、送出審核、送出仲裁），不用「提交」 | 維護者裁定 2026-11-18 |
