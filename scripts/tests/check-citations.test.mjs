@@ -12,6 +12,9 @@ import {
   citationsIn,
   failed,
   historicalLines,
+  logicFlowComponentFiles,
+  logicFlowDocs,
+  logicFlowSegments,
 } from "../check-citations.mjs";
 
 // A throwaway repo: one prototype page and one design doc citing it, plus
@@ -562,4 +565,115 @@ test("開頭 or 末段 followed by a quote is checked through the quote", () => 
   assert.match(bad.errors[0], /「忘了密碼」 is not in 01-01 §導向其他頁面/);
   // with no quote after it, it is counted
   assert.equal(specRepo(["- 01-01 §導向其他頁面 開頭與第 1 條"]).stats.unverifiable, 1);
+});
+
+// A repo with module 01's §Logic Flow (two segments) and the system-wide
+// overview in docs/specs/index.mdx holding `lines`; `component` adds the
+// overview component with those edge texts.
+function overviewRepo(lines, { component = null } = {}) {
+  const root = mkdtempSync(join(tmpdir(), "spec-overview-"));
+  const put = (rel, text) => {
+    mkdirSync(dirname(join(root, rel)), { recursive: true });
+    writeFileSync(join(root, rel), text);
+  };
+  put("docs/specs/01-mod/01-a.mdx", PAGE_A);
+  put("docs/specs/01-mod/02-b.mdx", PAGE_B);
+  put(
+    "docs/specs/01-mod/index.mdx",
+    [
+      "## Logic Flow",
+      "",
+      "### 分段一：進來",
+      "",
+      "1. S → P1（起訖連線，無規格條文）",
+      "2. P1 → P2（01-01 §導向其他頁面 第 1 條）",
+      "3. P1 → P3（01-01 §導向其他頁面 第 2 條）",
+      "",
+      "### 分段二：出去",
+      "",
+      "1. P2 → P1（01-01 §導向其他頁面 第 1 條）",
+      "",
+      "<details>",
+      "",
+      "4. not an item of 分段二",
+      "",
+      "</details>",
+      "",
+    ].join("\n"),
+  );
+  put("docs/specs/index.mdx", ["# 規格書", "", "## Logic Flow", "", ...lines, ""].join("\n"));
+  const components = [];
+  if (component) {
+    const texts = component.map((t) => `      { id: "e", text: ${JSON.stringify(t)} },`);
+    put(".notecraft/components/spec-index-logic-flow.tsx", [...texts, ""].join("\n"));
+    components.push(".notecraft/components/spec-index-logic-flow.tsx");
+  }
+  return { root, ...checkSpecRefs({ root, components, allow: [] }) };
+}
+
+test("logicFlowDocs and logicFlowComponentFiles take the overview too", () => {
+  const { root } = overviewRepo(["1. 01 A → 02 B（01 §Logic Flow 分段一第 2 條）"], {
+    component: ["x"],
+  });
+  assert.deepEqual(logicFlowDocs(root), ["docs/specs/01-mod/index.mdx", "docs/specs/index.mdx"]);
+  assert.deepEqual(logicFlowComponentFiles(root), [
+    ".notecraft/components/spec-index-logic-flow.tsx",
+  ]);
+});
+
+test("logicFlowSegments reads each segment's item numbers and stops at a fold-out", () => {
+  const segs = logicFlowSegments(
+    "## Logic Flow\n\n### 分段一：a\n\n1. x\n2. y\n\n### 分段二：b\n\n1. z\n\n<details>\n\n3. w\n",
+  );
+  assert.deepEqual([...segs.keys()], ["一", "二"]);
+  assert.deepEqual([...segs.get("一")], [1, 2]);
+  assert.deepEqual([...segs.get("二")], [1]);
+});
+
+test("the overview's `NN §Logic Flow 分段X第 N 條` must name an existing segment and item", () => {
+  const ok = overviewRepo([
+    "1. 01 A → 02 B（01 §Logic Flow 分段一第 2、3 條、分段二第 1 條）",
+    "2. 01 A → 02 B（01 §Logic Flow 分段一第 1～3 條）",
+  ]);
+  assert.deepEqual(ok.errors, []);
+  // the module index's own spec references are verified too; count only the overview's
+  assert.equal(ok.stats.verified - overviewRepo([]).stats.verified, 3);
+  const bad = overviewRepo([
+    "1. A（01 §Logic Flow 分段一第 4 條）",
+    "2. B（01 §Logic Flow 分段三第 1 條）",
+    "3. C（09 §Logic Flow 分段一第 1 條）",
+    "4. D（01 §Logic Flow 分段一第 2 條、分段二第 4 條）",
+  ]);
+  assert.equal(bad.errors.length, 4);
+  assert.match(
+    bad.errors[0],
+    /index\.mdx:5: 01 §Logic Flow 分段一 has no 第 4 條 \(items 3: 1～3\)/,
+  );
+  assert.match(bad.errors[1], /index\.mdx:6: 01 §Logic Flow has no 分段三/);
+  assert.match(bad.errors[2], /index\.mdx:7: no module 09 with a §Logic Flow/);
+  assert.match(bad.errors[3], /index\.mdx:8: 01 §Logic Flow 分段二 has no 第 4 條/);
+});
+
+test("the overview's NN-NN spec references are checked as in a module index", () => {
+  assert.deepEqual(overviewRepo(["1. A（規格 01-01 §導向其他頁面 第 2 條）"]).errors, []);
+  const r = overviewRepo(["1. A（規格 01-01 §導向其他頁面 第 9 條）"]);
+  assert.match(r.errors[0], /index\.mdx:5: 01-01 §導向其他頁面 has no 第 9 條/);
+});
+
+test("a quote right after `§Logic Flow` is that Logic Flow's wording, not the page named before", () => {
+  const r = overviewRepo(["1. A → 01 的 01-01 登入頁（01 §Logic Flow 盤點「沒畫的進入」）"]);
+  assert.deepEqual(r.errors, []);
+  // the page named after it is read again
+  const bad = overviewRepo([
+    "1. A（01 §Logic Flow 盤點「沒畫的進入」；01-01 §導向其他頁面 的「前往登入」）",
+  ]);
+  assert.match(bad.errors[0], /「前往登入」/);
+});
+
+test("an overview component text identical to an overview bullet is mirrored", () => {
+  const text = "01 A → 02 B（01 §Logic Flow 分段一第 2 條）";
+  const r = overviewRepo([`1. ${text}`], { component: [text, "C（01-01 §規格一覽 第 1 條）"] });
+  assert.equal(r.stats.mirrored, 1);
+  assert.equal(r.errors.length, 1);
+  assert.match(r.errors[0], /spec-index-logic-flow\.tsx:2: 01-01 has no heading §規格一覽/);
 });

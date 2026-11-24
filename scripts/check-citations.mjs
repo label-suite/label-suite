@@ -784,6 +784,7 @@ export function checkSpecRefsIn(
   let joint = [];
   let secEnd = -1;
   let lastPageId = null; // for 同頁 after a 。
+  let lfFrom = -1; // end of the last `§Logic Flow`
   // A quote written before its citation, `：「…」；05-02 §X` or
   // `「…」（05-02 §X；§Y）`, waits for the references that follow it and must
   // be found in one of the scopes they name.
@@ -949,7 +950,18 @@ export function checkSpecRefsIn(
     if (g.sect) {
       const rest = t.slice(end).replace(/^\s+/, "");
       const token = rest.match(/^[^\s「（；，。）]*/)[0];
-      if (rest.startsWith("Logic Flow")) continue; // this section itself
+      // `§Logic Flow` names a module Logic Flow (or this one), not a spec
+      // section. What follows it -- `分段三第 2 條`, `盤點「沒畫的進入」` --
+      // belongs to that Logic Flow, so the spec page named before it no
+      // longer applies, and a quote right after it is that page's own wording.
+      if (rest.startsWith("Logic Flow")) {
+        if (st.pageId || st.bad) {
+          if (pending.some((p) => p.armed)) settle();
+          reset();
+        }
+        lfFrom = end;
+        continue;
+      }
       seen();
       // `同頁 §刪除任務` after a 。 reads against the page named before it
       if (!st.page && lastPageId && /同一?頁\s*$/.test(t.slice(0, at))) setPage(lastPageId, at);
@@ -1012,6 +1024,8 @@ export function checkSpecRefsIn(
       const bq = balancedQuote(t, at);
       if (!bq) continue;
       TOKEN.lastIndex = bq.end;
+      // `§Logic Flow 盤點「沒畫的進入」`: a Logic Flow's own heading words
+      if (lfFrom >= 0 && !st.page && /^[^「」（）；;。]*$/.test(t.slice(lfFrom, at))) continue;
       // a quote followed straight by its citation waits for it
       const followed = /^\s*（\s*(?:⟦|\d\d-\d\d|PRD)/.test(t.slice(bq.end));
       const orphan =
@@ -1209,14 +1223,20 @@ export function logicFlowUnits(text) {
   return units(kept.join("\n"));
 }
 
-// Module indexes with a §Logic Flow, and the Logic Flow components.
+// Module indexes with a §Logic Flow, then the specs index when it carries the
+// system-wide overview, and the Logic Flow components.
+export const OVERVIEW_DOC = "docs/specs/index.mdx";
+
 export function logicFlowDocs(root = ROOT) {
   const base = join(root, "docs/specs");
   if (!existsSync(base)) return [];
-  return readdirSync(base)
-    .sort()
-    .map((d) => `docs/specs/${d}/index.mdx`)
-    .filter((p) => existsSync(join(root, p)))
+  return [
+    ...readdirSync(base)
+      .sort()
+      .map((d) => `docs/specs/${d}/index.mdx`),
+    OVERVIEW_DOC,
+  ]
+    .filter((p) => existsSync(join(root, p)) && statSync(join(root, p)).isFile())
     .filter((p) =>
       readFileSync(join(root, p), "utf8")
         .split("\n")
@@ -1228,7 +1248,7 @@ export function logicFlowComponentFiles(root = ROOT) {
   const dir = join(root, ".notecraft/components");
   if (!existsSync(dir)) return [];
   return readdirSync(dir)
-    .filter((f) => /^spec-\d\d-.+-logic-flow\.tsx$/.test(f))
+    .filter((f) => /^spec-(?:\d\d-.+|index)-logic-flow\.tsx$/.test(f))
     .sort()
     .map((f) => `.notecraft/components/${f}`);
 }
@@ -1239,6 +1259,66 @@ export function componentTexts(src) {
   for (const m of src.matchAll(/\btext:\s*"((?:[^"\\]|\\.)*)"/g))
     out.push({ text: JSON.parse(`"${m[1]}"`), line: src.slice(0, m.index).split("\n").length });
   return out;
+}
+
+// The segments of a module §Logic Flow: `### 分段一：…` headings, each with
+// the numbers of its numbered items.
+export function logicFlowSegments(text) {
+  const lines = text.split("\n");
+  const from = lines.findIndex((l) => LOGIC_FLOW_HEADING.test(l));
+  const segs = new Map();
+  if (from < 0) return segs;
+  let cur = null;
+  for (let i = from + 1; i < lines.length; i++) {
+    const l = lines[i];
+    if (/^## /.test(l)) break;
+    const h = l.match(/^### 分段([一二三四五六七八九十]+)：/);
+    if (h) {
+      cur = new Set();
+      segs.set(h[1], cur);
+      continue;
+    }
+    if (/^#{1,3} |^<details>/.test(l)) cur = null;
+    const item = cur && l.match(/^(\d+)\.\s/);
+    if (item) cur.add(Number(item[1]));
+  }
+  return segs;
+}
+
+// The overview in the specs index cites module Logic Flows as
+// `02 §Logic Flow 分段三第 2 條、分段四第 2～4 條`. Each segment must exist in
+// module 02's §Logic Flow and hold each item number.
+const LF_REF = new RegExp(
+  String.raw`(?<![\d-])(\d\d) §Logic Flow((?:\s*[、，,]?\s*分段[一二三四五六七八九十]+第\s*\d+(?:\s*[、～~–-]\s*\d+)*\s*條)+)`,
+  "g",
+);
+const LF_ITEM = /分段([一二三四五六七八九十]+)第\s*(\d+(?:\s*[、～~–-]\s*\d+)*)\s*條/g;
+
+export function checkLogicFlowRefsIn(text, { segmentsOf, report }) {
+  for (const m of text.matchAll(LF_REF)) {
+    const mod = m[1];
+    const segs = segmentsOf(mod);
+    if (!segs) {
+      report("error", `no module ${mod} with a §Logic Flow`, m.index);
+      continue;
+    }
+    for (const it of m[2].matchAll(LF_ITEM)) {
+      const at = m.index + m[0].length - m[2].length + it.index;
+      const seg = segs.get(it[1]);
+      if (!seg) {
+        report("error", `${mod} §Logic Flow has no 分段${it[1]}`, at);
+        continue;
+      }
+      const missing = numbersOf(it[2]).filter((n) => !seg.has(n));
+      if (missing.length)
+        report(
+          "error",
+          `${mod} §Logic Flow 分段${it[1]} has no 第 ${missing.join("、")} 條 (items ${describe(new Map([...seg].map((n) => [n, ""])))})`,
+          at,
+        );
+      else report("verified", null, at);
+    }
+  }
 }
 
 export function checkSpecRefs({
@@ -1288,24 +1368,43 @@ export function checkSpecRefs({
         }
       },
     });
+  // module number -> its §Logic Flow segments, for the overview's references
+  const segCache = new Map();
+  const segmentsOf = (mod) => {
+    if (!segCache.has(mod)) {
+      const doc = docs.find((d) => d.startsWith(`docs/specs/${mod}-`));
+      segCache.set(mod, doc ? logicFlowSegments(readFileSync(join(root, doc), "utf8")) : null);
+    }
+    const segs = segCache.get(mod);
+    return segs && segs.size ? segs : null;
+  };
   for (const doc of docs) {
     const text = readFileSync(join(root, doc), "utf8");
-    const mod = doc.match(/docs\/specs\/(\d\d)-/)?.[1];
+    const overview = doc === OVERVIEW_DOC;
+    const mod = overview ? "index" : doc.match(/docs\/specs\/(\d\d)-/)?.[1];
     const bodies = new Set();
     for (const u of logicFlowUnits(text)) {
       bodies.add(u.text.replace(/^\s*\d+\.\s+/, "").trim());
-      run(
-        u.text,
-        dirname(doc),
-        (at) => `${doc}:${u.line + u.text.slice(0, at).split("\n").length - 1}`,
-        mod,
-      );
+      const whereOf = (at) => `${doc}:${u.line + u.text.slice(0, at).split("\n").length - 1}`;
+      run(u.text, dirname(doc), whereOf, overview ? null : mod);
+      if (overview)
+        checkLogicFlowRefsIn(u.text, {
+          segmentsOf,
+          report: (kind, msg, at) => {
+            stats.refs++;
+            if (kind === "verified") stats.verified++;
+            else errors.push(`${whereOf(at)}: ${msg}`);
+          },
+        });
     }
     if (mod) seen.set(mod, bodies);
   }
   for (const file of components) {
-    const mod = file.match(/spec-(\d\d)-/)?.[1];
-    const doc = docs.find((d) => d.includes(`/${mod}-`));
+    const mod = /spec-index-/.test(file) ? "index" : file.match(/spec-(\d\d)-/)?.[1];
+    const doc =
+      mod === "index"
+        ? docs.find((d) => d === OVERVIEW_DOC)
+        : docs.find((d) => d.includes(`/${mod}-`));
     for (const { text, line } of componentTexts(readFileSync(join(root, file), "utf8"))) {
       // a text identical to a bullet of its index was checked there
       if (seen.get(mod)?.has(text.trim())) {
