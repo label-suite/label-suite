@@ -452,6 +452,7 @@ cd backend && uv run python -m app.scripts.export_openapi
 - [ ] 有資料表時，model 放 `models.py` 並繼承 `Base`；migration 由 `dba` 寫
 - [ ] 資源名用預設規則單數化會算錯時，加進 `_IRREGULAR_SINGULARS`
 - [ ] `app/` 裡公開的模組、類別、函式與方法附 google 風格的英文 docstring（`Args:`／`Returns:`／`Raises:`），`_` 開頭的私有 helper 免寫；公開類別的建構參數寫在類別 docstring 的 `Args:`，`__init__` 本身不必另寫。`tests/` 與 `alembic/` 不受這條檢查。`uv run ruff check .` 會擋下 `app/` 的缺漏（[backend-agent-rules B2](../../development/rules/backend-agent-rules.mdx)、[#524](https://github.com/label-suite/label-suite/issues/524)）。router handler 與 schema 的 docstring 會寫進 `openapi.json`，改了要重新匯出
+- [ ] 函式的圈複雜度（10）、敘述數（30）與分支數（10）由 `uv run ruff check .` 擋下，檔案行數（400，排除空白行與只含 `#` 的行）由 `tests/unit/test_size_limits.py` 擋下；`alembic/versions/` 不受限（[backend-agent-rules B11](../../development/rules/backend-agent-rules.mdx)、[#561](https://github.com/label-suite/label-suite/issues/561)）
 - [ ] 重新匯出 `openapi.json`，再在前端跑 `pnpm --filter frontend api:generate`
 - [ ] 本文加一節：分層表、Class 圖與主要 Sequence 圖（見 [§誰改、什麼時候改](#誰改什麼時候改)）
 
