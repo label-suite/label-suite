@@ -56,13 +56,10 @@ export const SITE_MAP_PAGES: SiteMapPage[] = [
     path: "01-account/02-register",
     standalone: true,
     features: [
-      { title: "註冊頁的內容", anchor: "註冊頁的內容" },
+      { title: "註冊頁", anchor: "註冊頁" },
       { title: "填寫與送出", anchor: "填寫與送出" },
-      { title: "欄位檢查與錯誤", anchor: "欄位檢查與錯誤" },
-      { title: "密碼規則", anchor: "密碼規則" },
       { title: "驗證信已寄出", anchor: "驗證信已寄出" },
       { title: "註冊成功", anchor: "註冊成功" },
-      { title: "密碼的顯示與隱藏", anchor: "密碼的顯示與隱藏" },
     ],
   },
   {
