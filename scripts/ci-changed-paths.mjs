@@ -5,7 +5,9 @@
 //
 // Lists the files changed in `git diff --name-only <base>...<head>` and answers
 // `compose=true` when any of them is a compose file, a Dockerfile, a
-// .dockerignore, frontend/nginx.conf, or anything under backend/ or frontend/.
+// .dockerignore, frontend/nginx.conf, scripts/check-security-headers.sh,
+// e2e/playwright.config.ts, or anything under backend/, frontend/,
+// e2e/public-entry/ or e2e/shared/.
 // The answer is appended to $GITHUB_OUTPUT, or printed to stdout when that is
 // not set. A base that is empty, all zeros (the first push of a new branch), or
 // not a commit git can diff answers `compose=true` with the reason printed:
@@ -16,9 +18,15 @@ import { appendFileSync } from "node:fs";
 import { posix } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const EXACT = new Set(["docker-compose.yml", "docker-compose.prod.yml", "frontend/nginx.conf"]);
+const EXACT = new Set([
+  "docker-compose.yml",
+  "docker-compose.prod.yml",
+  "frontend/nginx.conf",
+  "scripts/check-security-headers.sh",
+  "e2e/playwright.config.ts",
+]);
 const BASENAMES = new Set(["Dockerfile", ".dockerignore"]);
-const PREFIXES = ["backend/", "frontend/"];
+const PREFIXES = ["backend/", "frontend/", "e2e/public-entry/", "e2e/shared/"];
 
 /**
  * Whether a list of changed paths touches anything the compose job builds or runs.
