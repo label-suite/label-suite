@@ -215,7 +215,7 @@ cd backend && uv run uvicorn app.main:create_app --factory
 | 步驟 | 做什麼 | 失敗時 |
 | :--- | :--- | :--- |
 | 1 | `settings` 是 `None` 時用 `load_settings(Settings)` 從環境變數讀 | `ConfigError`，只寫變數名與原因 |
-| 1a | `configure_logging(settings)`：安裝帶 `trace_id` 的 record factory；root 掛一個 `KeyValueFormatter` 的 handler，root 與 handler 的等級都是 `LOG_LEVEL`；`sqlalchemy.engine` 固定 `WARNING`；`uvicorn` 改走 root handler，`uvicorn.access` 清空 handler 並 `propagate=False`（關掉 uvicorn 內建 access log）。重複呼叫不會疊加 handler | — |
+| 1a | `configure_logging(settings)`：安裝帶 `trace_id` 的 record factory；root 掛一個 `KeyValueFormatter` 的 handler（預設寫 stderr，測試可用可選的 `stream` 參數擷取輸出），root 與 handler 的等級都是 `LOG_LEVEL`；`sqlalchemy`（含 `engine`、`pool`）、`aiosqlite`、`asyncpg` 固定 `WARNING`；`uvicorn` 改走 root handler，`uvicorn.access` 清空 handler 並 `propagate=False`（關掉 uvicorn 內建 access log）。重複呼叫不會疊加 handler | — |
 | 2 | 建 `FastAPI`：版號讀 `pyproject.toml`、`generate_unique_id_function` 設成 `generate_operation_id`；`API_DOCS_ENABLED` 為 `false` 時 `docs_url`、`redoc_url`、`openapi_url` 傳 `None`（四條內建路由都不註冊，請求落入既有 404 envelope） | 讀不到版號就失敗，沒有預設值 |
 | 3 | 載入訊息目錄，放進 `app.state.message_catalog` | `MessageCatalogError` |
 | 4 | 依序加中介層，見 [§請求管線](#請求管線)；`AccessLogMiddleware` 的 `quiet_success_routes` 在這裡傳入（`/api/v1/health`），core 不寫死路徑 | — |
@@ -233,7 +233,7 @@ lifespan 啟動時建 engine 與 sessionmaker，放在 `app.state.engine`、`app
 id: backend-request-pipeline
 type: motion
 prompt: |
-  核心洞察：一個 /api/v1 請求由外而內穿過 CorrelationIdMiddleware、CORSMiddleware、AccessLogMiddleware、UnhandledExceptionMiddleware、LocaleMiddleware、Starlette 的 ExceptionMiddleware，才到 Router、Service、Repository 與資料庫；每種結果都由固定的一層產生回應，回程再由外層加上標頭，而 traceId 從第一層決定之後一路相同，最後等於回應標頭 X-Correlation-ID，也等於每一筆 log 的 traceId。每個請求的伺服器紀錄恰好一筆：存取紀錄或那一層自己記的 WARNING／ERROR，不會兩者都有。
+  核心洞察：一個 /api/v1 請求由外而內穿過 CorrelationIdMiddleware、CORSMiddleware、AccessLogMiddleware、UnhandledExceptionMiddleware、LocaleMiddleware、Starlette 的 ExceptionMiddleware，才到 Router、Service、Repository 與資料庫；每種結果都由固定的一層產生回應，回程再由外層加上標頭，而 traceId 從第一層決定之後一路相同，最後等於回應標頭 X-Correlation-ID，也等於每一筆 log 的 traceId。存取紀錄與那一層自己記的 WARNING／ERROR 不會同時出現。
   互動：四個情境分頁（正常、422、500、health 503）；上一步、播放／暫停、下一步、重設；點任一層跳到該層的那一步。限流與關機還沒做，不畫。
   圖形：十層由上往下的直列，左側是去程、右側是回程；目前那一步的層實心，已走過的淡色；產生回應的那一層標「產生回應」；AccessLogMiddleware 在回程那一步另外顯示一張「log 行」卡片（寫出的一行 key=value，或「不寫：已記過」）。每一步下方的面板顯示這一層做什麼、目前的 traceId 晶片（一路同一個值），最後一步顯示狀態碼、code、message 與 X-Correlation-ID，並標示兩者相同。
   資料/數值：以 backend/app/main.py、app/core/middleware.py、log_config.py、errors.py、envelope.py 與 app/modules/health/ 為準。
@@ -324,7 +324,7 @@ log 只記型別、位置與 `traceId`，不記任何可能帶著請求或資料
 | 資料庫連不上只記一筆 WARNING：例外型別，traceId 由 record 自動帶；丟的例外帶 `already_logged=True`，handler 據以標記，存取紀錄不再寫 | `HealthService.check`、`handle_app_error` |
 | 存取紀錄只記 method、路由模板（沒有模板記固定的 `<unmatched>`，從不記實際路徑）、狀態碼、耗時與 traceId；不記 query、body、標頭、cookie、來源 IP，method 先經 `escape_for_log` | `AccessLogMiddleware` |
 | 每一筆紀錄都是一行 `key=value`，`msg` 裡的控制字元寫成跳脫序列；第三方紀錄帶 `exc_info` 時只寫 `excType`（例外型別），不寫例外訊息與 traceback 文字 | `KeyValueFormatter` |
-| uvicorn 內建 access log 會印出 query，在程式裡關掉；`sqlalchemy.engine` 固定 `WARNING`，`LOG_LEVEL=DEBUG` 也不會印出 SQL 本文 | `configure_logging` |
+| uvicorn 內建 access log 會印出 query，在程式裡關掉；`sqlalchemy`（父 logger，含 `engine` 與 `pool`）、`aiosqlite`、`asyncpg` 固定 `WARNING`，`LOG_LEVEL=DEBUG` 也不會印出 SQL 本文、參數或驅動的錯誤文字（`aiosqlite` 在 DEBUG 記下的參數不經 `hide_parameters`） | `configure_logging` |
 | engine 一律 `hide_parameters=True`，SQL 參數不會出現在例外訊息或 SQL echo | `db.create_engine` |
 | 設定錯誤只寫變數名與原因，不寫設定值；原本的 `ValidationError` 以 `from None` 丟掉 | `config.load_settings` |
 
@@ -361,7 +361,7 @@ log 只記型別、位置與 `traceId`，不記任何可能帶著請求或資料
 | `CORS_ALLOWED_ORIGINS` | API | 是 | 逗號分隔；每一個都是 `http(s)://host[:port]`，不能有路徑；含 `*` 就拒絕 |
 | `CORS_ALLOW_CREDENTIALS` | API | 否 | 預設 `true` |
 | `API_DOCS_ENABLED` | API | 否 | 布林，預設 `true`；`false` 時不提供 FastAPI 內建的 `/docs`、`/docs/oauth2-redirect`、`/redoc`、`/openapi.json`。`docker-compose.prod.yml` 的後端明確設為 `false` |
-| `LOG_LEVEL` | API | 否 | `DEBUG`、`INFO`、`WARNING`、`ERROR`、`CRITICAL` 之一，不分大小寫，預設 `INFO`；其他值 `ConfigError`。管整個後端的輸出等級（root 與它的 handler）；`sqlalchemy.engine` 不跟著它，固定 `WARNING` |
+| `LOG_LEVEL` | API | 否 | `DEBUG`、`INFO`、`WARNING`、`ERROR`、`CRITICAL` 之一，不分大小寫，預設 `INFO`；其他值 `ConfigError`。管整個後端的輸出等級（root 與它的 handler）；資料庫套件的 logger（`sqlalchemy`、`aiosqlite`、`asyncpg`）不跟著它，固定 `WARNING` |
 
 變數名沒有前綴；驗證失敗時 `ConfigError` 一行列一個「變數名：原因」，不含設定值。
 
@@ -477,3 +477,4 @@ cd backend && uv run python -m app.scripts.export_openapi
 | 2026-11-23 | 後端模組的分層、Class 圖與主要 Sequence 圖落地成本文；規劃時由 `sd` 先改本文，change 只寫異動摘要與路徑（[§誰改、什麼時候改](#誰改什麼時候改)） | 只散在各 change 的 `system-design.md` | [#546](https://github.com/label-suite/label-suite/issues/546) |
 | 2026-11-23 | 本文加一節後端基礎建設與已知限制，不另開文件（[§後端基礎建設](#後端基礎建設)） | — | [#546](https://github.com/label-suite/label-suite/issues/546) |
 | 2026-11-23 | 實作後由 `backend-developer` 依程式校正本文，`code-reviewer` 再核對（[§誰改、什麼時候改](#誰改什麼時候改)） | — | [#546](https://github.com/label-suite/label-suite/issues/546#issuecomment-7100137950) |
+| 2026-11-25 | 存取紀錄與所有後端紀錄的格式由 request-access-log change 定：一行 `key=value`，`msg` 固定最後（[§log 安全規則](#log-安全規則)） | #506 clarification Q15「access log 格式留給 01-01」 | [#567](https://github.com/label-suite/label-suite/issues/567) |
