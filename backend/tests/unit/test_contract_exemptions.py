@@ -15,26 +15,46 @@ import pytest
 from tests.unit.import_tree import PYPROJECT, append, build_tree, run_lint_imports
 
 CONTRACT_START = "[[tool.importlinter.contracts]]"
-SOURCE = re.compile(r"#\s.*(#\d+|\b[A-Z]\d+\b)")
+SOURCE = re.compile(r"#\d+|\b[A-Z]\d+\b")
 ENTRY = "app.modules.health.router -> app.modules.health.service"
+
+
+def has_reason_and_source(comment: str) -> bool:
+    """Return whether a ``#`` comment line holds a source reference and some reason text."""
+    if not comment.startswith("#") or not SOURCE.search(comment):
+        return False
+    reason = re.sub(r"[\s#()\[\]:;,.\-]", "", SOURCE.sub("", comment))
+    return bool(reason)
 
 
 def find_bad_exemptions(path: Path) -> list[str]:
     """Return one message per ignored import without a reason and source, or per silenced alert."""
     text = path.read_text()
+    contracts = tomllib.loads(text).get("tool", {}).get("importlinter", {}).get("contracts", [])
     problems: list[str] = []
-    for segment in text.split(CONTRACT_START)[1:]:
+    for index, segment in enumerate(text.split(CONTRACT_START)[1:]):
         found = re.search(r'^name\s*=\s*"([^"]+)"', segment, re.MULTILINE)
         name = found.group(1) if found else "<unnamed>"
         if re.search(r"^unmatched_ignore_imports_alerting\s*=", segment, re.MULTILINE):
             problems.append(f"{name}: unmatched_ignore_imports_alerting must not be set")
-        problems.extend(_entry_problems(name, segment.splitlines()))
+        entry_problems, qualified = _entry_problems(name, segment.splitlines())
+        problems.extend(entry_problems)
+        actual = len(contracts[index].get("ignore_imports", [])) if index < len(contracts) else 0
+        if not entry_problems and actual != qualified:
+            problems.append(
+                f"{name}: {actual} ignored imports but {qualified} carry a reason and a source; "
+                "use one entry per line, each under its own comment"
+            )
     return problems
 
 
-def _entry_problems(name: str, lines: list[str]) -> list[str]:
-    """Check the ``ignore_imports`` array of one contract, given as text lines."""
+def _entry_problems(name: str, lines: list[str]) -> tuple[list[str], int]:
+    """Check the ``ignore_imports`` array of one contract, given as text lines.
+
+    Returns the problems and the number of entry lines that carry a qualifying comment.
+    """
     problems: list[str] = []
+    qualified = 0
     inside = False
     for index, line in enumerate(lines):
         stripped = line.strip()
@@ -46,11 +66,12 @@ def _entry_problems(name: str, lines: list[str]) -> list[str]:
                 problems.append(f"{name}: ignore_imports must be a multi-line array, one per line")
         elif inside and stripped.startswith("]"):
             inside = False
-        elif inside and stripped.startswith('"'):
-            previous = lines[index - 1].strip()
-            if not (previous.startswith("#") and SOURCE.search(previous)):
+        elif inside and stripped and not stripped.startswith("#"):
+            if has_reason_and_source(lines[index - 1].strip()):
+                qualified += 1
+            else:
                 problems.append(f"{name}: ignored import {stripped} needs a reason and a source")
-    return problems
+    return problems, qualified
 
 
 def config(tmp_path: Path, contract_body: str) -> Path:
@@ -88,6 +109,33 @@ def test_comment_without_an_issue_or_rule_number_is_named(tmp_path: Path) -> Non
 
     assert len(problems) == 1
     assert ENTRY in problems[0]
+
+
+def test_single_quoted_ignored_import_without_a_comment_is_named(tmp_path: Path) -> None:
+    path = config(tmp_path, "ignore_imports = [\n    'app.a -> app.b',\n]\n")
+
+    problems = find_bad_exemptions(path)
+
+    assert len(problems) == 1
+    assert "Sample contract" in problems[0]
+
+
+def test_comment_with_only_a_source_and_no_reason_is_named(tmp_path: Path) -> None:
+    body = f'ignore_imports = [\n    # #1\n    "{ENTRY}",\n]\n'
+
+    problems = find_bad_exemptions(config(tmp_path, body))
+
+    assert len(problems) == 1
+    assert ENTRY in problems[0]
+
+
+def test_several_entries_on_one_line_are_named(tmp_path: Path) -> None:
+    body = f'ignore_imports = [\n    # reason (#563)\n    "{ENTRY}", "app.a -> app.b",\n]\n'
+
+    problems = find_bad_exemptions(config(tmp_path, body))
+
+    assert len(problems) == 1
+    assert "Sample contract" in problems[0]
 
 
 @pytest.mark.parametrize("source", ["#563", "B12"])

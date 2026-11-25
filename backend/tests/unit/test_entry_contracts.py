@@ -7,6 +7,7 @@ keeps every top-level package under ``app`` inside the entry contracts (design D
 
 import pkgutil
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -114,7 +115,7 @@ def unclassified_top_level(
     return problems
 
 
-def sources_of(contracts: list[dict[str, list[str]]]) -> dict[str, list[str]]:
+def sources_of(contracts: list[dict[str, Any]]) -> dict[str, list[str]]:
     return {c["name"]: c["source_modules"] for c in contracts if c["name"] in ENTRY_THIRD_PARTY}
 
 
@@ -176,7 +177,7 @@ def test_guard_accepts_registered_entries_outside_the_listed_sources(tmp_path: P
 
 def test_every_top_level_package_of_the_real_app_is_classified() -> None:
     contracts = load_contracts()
-    sources = sources_of(contracts)  # type: ignore[arg-type]
+    sources = sources_of(contracts)
 
     assert set(sources) == set(ENTRY_THIRD_PARTY)
     assert unclassified_top_level(Path(app.__path__[0]), sources, ENTRY_TOP_LEVEL_PACKAGES) == []

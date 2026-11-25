@@ -44,8 +44,9 @@ def unclassified_imports(
         env=env,
         capture_output=True,
         text=True,
-        check=True,
+        check=False,
     )
+    assert done.returncode == 0, f"grimp analysis of {root}/app failed:\n{done.stderr}"
     imported: set[str] = set(json.loads(done.stdout))
     classified = general.union(*entry_third_party.values())
     return sorted(imported - classified)
@@ -98,7 +99,12 @@ def test_declared_dependency_is_still_unclassified_without_a_list(tmp_path: Path
 
 
 def test_real_app_has_no_unclassified_package() -> None:
-    assert unclassified_imports(BACKEND_DIR, GENERAL_PACKAGES, ENTRY_THIRD_PARTY) == []
+    unclassified = unclassified_imports(BACKEND_DIR, GENERAL_PACKAGES, ENTRY_THIRD_PARTY)
+
+    assert unclassified == [], (
+        f"unclassified third-party packages {unclassified}: classify each as a general "
+        "package (GENERAL_PACKAGES) or register it as an entry package (ENTRY_THIRD_PARTY)"
+    )
 
 
 def test_real_app_reports_a_package_dropped_from_the_general_list() -> None:
