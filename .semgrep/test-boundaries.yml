@@ -92,8 +92,10 @@ rules:
       - pattern: $APP.dependency_overrides = $V
       - pattern: del $APP.dependency_overrides[$K]
       - pattern: $APP.dependency_overrides |= $V
-      - pattern: monkeypatch.setitem($APP.dependency_overrides, ...)
+      # Any receiver: monkeypatch, a monkeypatch.context() name, mocker, mock.
+      - pattern: $MP.setitem($APP.dependency_overrides, ...)
       - pattern: patch.dict($APP.dependency_overrides, ...)
+      - pattern: $X.patch.dict($APP.dependency_overrides, ...)
 
   - id: label-suite-test-mock-objects
     message: >-

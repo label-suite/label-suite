@@ -151,6 +151,29 @@ def test_missing_production_path_fails_and_lists_it(production: FastAPI, app: Fa
     assert ITEM_ROUTE in message
 
 
+def test_production_path_documented_differently_fails_and_lists_it(
+    production: FastAPI, app: FastAPI
+) -> None:
+    allowed = probe_paths()
+    assert_same_assembly(production, app, allowed)  # Caches the harness document.
+    path = next(iter(production.openapi()["paths"]))
+
+    # Same path, one more operation: the path stays, its document changes.
+    extra = APIRouter()
+
+    async def other_method() -> dict[str, str]:
+        return {}
+
+    extra.add_api_route(path, other_method, methods=["POST"])
+    app.include_router(extra)
+    _reset(app)
+
+    with pytest.raises(AssertionError, match="documented differently") as excinfo:
+        assert_same_assembly(production, app, allowed)
+
+    assert path in str(excinfo.value)
+
+
 def test_extra_path_outside_the_probe_router_fails_and_lists_it(
     production: FastAPI, app: FastAPI
 ) -> None:

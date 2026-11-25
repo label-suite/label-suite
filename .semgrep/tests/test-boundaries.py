@@ -98,6 +98,8 @@ def object_targets(monkeypatch, mocker, path, fake_send, buffer):
     # ruleid: label-suite-test-self-mock-object
     mocker.patch.object(export_openapi, "build_document")
     # ruleid: label-suite-test-self-mock-object
+    patch.multiple(Settings, x=1)
+    # ruleid: label-suite-test-self-mock-object
     patch.object(Settings, "x")
     # ruleid: label-suite-test-self-mock-object
     pytest.MonkeyPatch().setattr(Settings, "x", 1)
@@ -136,7 +138,7 @@ def harness_app_fixture(monkeypatch, app):
 # --- label-suite-test-dependency-overrides -----------------------------------
 
 
-def dependency_overrides(application, client, get_session, fake_session, monkeypatch):
+def dependency_overrides(application, client, get_session, fake_session, monkeypatch, mocker):
     # ruleid: label-suite-test-dependency-overrides
     application.dependency_overrides[get_session] = fake_session
     # ruleid: label-suite-test-dependency-overrides
@@ -159,6 +161,11 @@ def dependency_overrides(application, client, get_session, fake_session, monkeyp
     monkeypatch.setitem(application.dependency_overrides, get_session, fake_session)
     # ruleid: label-suite-test-dependency-overrides
     patch.dict(application.dependency_overrides, {get_session: fake_session})
+    with monkeypatch.context() as m:
+        # ruleid: label-suite-test-dependency-overrides
+        m.setitem(application.dependency_overrides, get_session, fake_session)
+    # ruleid: label-suite-test-dependency-overrides
+    mocker.patch.dict(application.dependency_overrides, {get_session: fake_session})
     # ok: label-suite-test-dependency-overrides
     current = application.dependency_overrides
     return current
@@ -194,6 +201,17 @@ def mock_objects(mocker):
     other = mocker.MagicMock()
     return session, send, plain, spec, full, other
 
+
+
+def bare_mock_names(Mock, create_autospec):
+    # A name imported from unittest.mock resolves to unittest.mock.Mock and is
+    # caught by the $X.Mock(...) form as well, so local names are used here to
+    # prove the bare Mock(...) and create_autospec(...) forms on their own.
+    # ruleid: label-suite-test-mock-objects
+    bare = Mock()
+    # ruleid: label-suite-test-mock-objects
+    bare_spec = create_autospec(Settings)
+    return bare, bare_spec
 
 # --- label-suite-test-own-app-factory ----------------------------------------
 
