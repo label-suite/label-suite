@@ -2387,7 +2387,10 @@
         });
       });
     });
-    return picks;
+    /* 網址帶的角色排在前面（Array.prototype.sort 是穩定排序，同角色維持種子順序）。 */
+    return picks.sort(function (a, b) {
+      return (a.role === context.role ? 0 : 1) - (b.role === context.role ? 0 : 1);
+    });
   }
 
   /* 與儀表板任務列 openAnnotationList() 帶的參數相同：任務、角色、標記階段、task_type，

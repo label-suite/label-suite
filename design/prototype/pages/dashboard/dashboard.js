@@ -322,8 +322,10 @@
       lang: lang,
       scenario: scenario,
     });
+    /* 行動入口卡只出現在還沒有任務角色的人的版面，所以原型帶 view=empty，落在
+       規格 04-01 Scenario「沒有可挑的任務時顯示空狀態」那一個空狀態；側欄的連結不帶。 */
     global.location.href = '../annotation/annotation-list.html?entry=nav&role='
-      + encodeURIComponent(role);
+      + encodeURIComponent(role) + '&view=empty';
   }
 
   function openAnnotationWorkspace(role, entry) {
