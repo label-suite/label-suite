@@ -4,7 +4,7 @@ description: '分層與允許 import、型別安全、Hooks、狀態的三個去
 category: '開發說明'
 tags: [開發說明, Agent, 規範, 前端]
 createdAt: '2026-11-10'
-updatedAt: '2026-11-23'
+updatedAt: '2026-11-25'
 ---
 
 # 前端開發規範
@@ -12,7 +12,7 @@ updatedAt: '2026-11-23'
 本文說明前端的十一條開發規範，由 `AGENTS.md` 的 Agent Rules Index 指過來；`AGENTS.md` 是規則本體，兩邊說法不同時以 `AGENTS.md` 為準，並回報給維護者。
 跨領域的規範在 [agent-rules.mdx](agent-rules.mdx)、後端在 [backend-agent-rules.mdx](backend-agent-rules.mdx)、授權與答案隔離在 [security-agent-rules.mdx](security-agent-rules.mdx)、API 契約與單一 HTTP 邊界在 [api-agent-rules.mdx](api-agent-rules.mdx)，這裡不重複。
 
-**`frontend/` 已存在，但只有 F1、F2、F3 的檢查在 CI 跑**（job 與指令寫在各條的「檢查方式」）；F4 至 F11 仍標「待建置」。標「待建置」就是字面意思：那些檢查還沒有寫，**不得因為這份文件存在就宣稱規則已被強制**。
+**`frontend/` 已存在，但在 CI 跑的只有 F1、F2、F3 的檢查，以及 F10 的一部分**（job 與指令寫在各條的「檢查方式」）；F4 至 F9 與 F11 仍標「待建置」。標「待建置」就是字面意思：那些檢查還沒有寫，**不得因為這份文件存在就宣稱規則已被強制**。
 
 每條規範的反例與檢查方式收在摺疊區塊，預設收起；適用路徑、禁止、正例與例外在表裡。
 
@@ -238,7 +238,7 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 
 :::note{title="F10 的反例與檢查方式" collapsible}
 - **反例**：`new Date(task.createdAt).toLocaleString()` 散在十個元件裡（格式與時區各自分歧）；把 `YYYY-MM-DD` 的生效日當成午夜時間點再轉時區（日期會跳一天）；把顯示時區寫成 `Asia/Taipei`——**本 repo 的顯示時區是裝置時區**
-- **檢查方式**：**待建置**。可用 lint 擋住 `src/lib/date.ts` 以外的地方 import 日期套件；「只有日期的欄位不轉時間點」要靠審查與規格的 Scenario
+- **檢查方式**：CI 的 `frontend` job 跑 `pnpm --filter frontend lint`，`frontend/eslint.config.js` 以 `no-restricted-imports` 擋住 `src/lib/date.ts` 以外的地方 import `dayjs` 與 `dayjs/*`；「只有日期的欄位不轉時間點」沒有機械檢查，要靠審查與規格的 Scenario
 :::
 
 ### F11 註解與 JSDoc

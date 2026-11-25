@@ -4,7 +4,7 @@ description: '三層測試的範圍與生命週期、TDD、行為測試與自證
 category: '開發說明'
 tags: [開發說明, Agent, 規範, 測試]
 createdAt: '2026-11-10'
-updatedAt: '2026-11-23'
+updatedAt: '2026-11-25'
 ---
 
 # 測試與交付證據規範
@@ -12,7 +12,7 @@ updatedAt: '2026-11-23'
 本文說明測試與交付證據的十二條規範，由 `AGENTS.md` 的 Agent Rules Index 指過來；`AGENTS.md` 是規則本體，兩邊說法不同時以 `AGENTS.md` 為準，並回報給維護者。
 跨領域的規範在 [agent-rules.mdx](agent-rules.mdx)、後端在 [backend-agent-rules.mdx](backend-agent-rules.mdx)、授權與答案隔離在 [security-agent-rules.mdx](security-agent-rules.mdx)、API 契約在 [api-agent-rules.mdx](api-agent-rules.mdx)、前端在 [frontend-agent-rules.mdx](frontend-agent-rules.mdx)，這裡不重複。
 
-**`backend/`、`frontend/` 與 `e2e/` 都已存在，但在 CI 跑的只有 T1 的 e2e 位置檢查、T9 七項 gate 中的六項，以及 T10 的「不得下降」**（job 與指令寫在各條的「檢查方式」）；T2 沒有機械檢查，其餘各條仍標「待建置」。標「待建置」就是字面意思：**不得因為這份文件存在就宣稱測試或 gate 已經在跑**，因為本文件談的正是「怎麼證明事情做完了」。
+**`backend/`、`frontend/` 與 `e2e/` 都已存在，但在 CI 跑的只有 T1 的 e2e 位置檢查、T4 的雙資料庫兩輪、T8 的固定等待與寫死主機埠號檢查、T9 七項 gate 中的六項，以及 T10 的「不得下降」**（job 與指令寫在各條的「檢查方式」）；T2 沒有機械檢查，其餘各條與上述各條沒建的部分仍標「待建置」。標「待建置」就是字面意思：**不得因為這份文件存在就宣稱測試或 gate 已經在跑**，因為本文件談的正是「怎麼證明事情做完了」。
 
 每條規範的反例與檢查方式收在摺疊區塊，預設收起；適用路徑、禁止、正例與例外在表裡。各條的來源在文末附錄。
 
@@ -92,7 +92,7 @@ integration 測試走真實路由、真認證授權、真 test DB，harness 不�
 
 :::note{title="T4 的反例與檢查方式" collapsible}
 - **反例**：`monkeypatch` 掉授權 dependency 以免準備成員資格——那會讓最該被測的那一段永遠沒被測到；用 SQLite 的結果宣稱 PostgreSQL 也可以
-- **檢查方式**：**待建置**。「harness 與 production 同構」可由共用組裝函式在結構上保證；雙資料庫要靠 CI 跑兩輪
+- **檢查方式**：雙資料庫由 CI 的 `backend-sqlite` 與 `backend-postgres` 兩個 job 各跑一輪 `uv run pytest`（見 [backend-agent-rules.mdx](backend-agent-rules.mdx) 的 B6、B7）。「harness 與 production 同構」**待建置**，可由共用組裝函式在結構上保證
 :::
 
 ### T5 隔離、清理與生命週期
@@ -156,7 +156,7 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 
 :::note{title="T8 的反例與檢查方式" collapsible}
 - **反例**：`page.locator('.task-row > td:nth-child(3)')`；`await page.waitForTimeout(3000)`；在每個 spec 開頭走一次登入表單
-- **檢查方式**：**待建置**。可用 lint 擋 `waitForTimeout` 與 CSS locator；`baseURL` 是否集中由設定檔結構保證
+- **檢查方式**：CI 的 `e2e` job 在跑旅程前先跑 `pnpm --filter e2e test:static`，`e2e/static/e2e-static-checks.mjs` 掃 `e2e/` 的每個檔案：`waitForTimeout(`、`setTimeout(`、`sleep(` 這類固定等待，以及 `playwright.config.ts` 以外出現的 `localhost`、`127.0.0.1` 與埠號，命中即失敗。CSS locator **待建置**；一個 spec 一條旅程、不各自重新登入沒有機械檢查，靠審查
 :::
 
 ### T9 開發前要落實的自動 gate

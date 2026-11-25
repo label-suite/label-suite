@@ -4,7 +4,7 @@ description: '跨領域的 Agent 開發規範：先搜尋再新增、依賴方�
 category: '開發說明'
 tags: [開發說明, Agent, 規範]
 createdAt: '2026-11-10'
-updatedAt: '2026-11-19'
+updatedAt: '2026-11-25'
 ---
 
 # Agent 開發規範
@@ -26,7 +26,7 @@ updatedAt: '2026-11-19'
 | 前端依賴方向、型別安全、UI 共用 | [frontend-agent-rules.mdx](frontend-agent-rules.mdx) |
 | 測試分層、雙資料庫驗證、交付證據 | [testing-agent-rules.mdx](testing-agent-rules.mdx) |
 
-**大多數規範還沒有任何自動檢查**：`backend/`、`frontend/` 與 `e2e/` 都已存在，但在 CI 跑的只有 [backend-agent-rules.mdx](backend-agent-rules.mdx) 的 B1、B2、B6、B7，[frontend-agent-rules.mdx](frontend-agent-rules.mdx) 的 F1 至 F3，[api-agent-rules.mdx](api-agent-rules.mdx) 的 A5，[security-agent-rules.mdx](security-agent-rules.mdx) S2 的 CORS 檢查，以及 [testing-agent-rules.mdx](testing-agent-rules.mdx) 的 T1、T9、T10 的一部分（本文的 R2 經由 B1 與 F1 檢查）；其餘「檢查方式」大多標「待建置」，不得因為文件存在就宣稱規則已被強制。
+**大多數規範還沒有任何自動檢查**：`backend/`、`frontend/` 與 `e2e/` 都已存在，但在 CI 跑的只有 [backend-agent-rules.mdx](backend-agent-rules.mdx) 的 B1、B2、B6、B7，[frontend-agent-rules.mdx](frontend-agent-rules.mdx) 的 F1 至 F3 與 F10 的一部分，[api-agent-rules.mdx](api-agent-rules.mdx) 的 A5 與 A4、A6 的一部分，[security-agent-rules.mdx](security-agent-rules.mdx) S2 的 CORS 檢查與 S8 的 `eval`／`exec` 檢查，以及 [testing-agent-rules.mdx](testing-agent-rules.mdx) 的 T1、T4、T8、T9、T10 的一部分（本文的 R2 經由 B1 與 F1 檢查）；其餘「檢查方式」大多標「待建置」，不得因為文件存在就宣稱規則已被強制。
 標「**人工／獨立審查**」的規範現在就要做，只是沒有工具代勞：本文的 R1、R3、R4、R5、R6、R7 與 [backend-agent-rules.mdx](backend-agent-rules.mdx) 的 B8，共七條。自動 gate 的清單與歸屬在 [testing-agent-rules.mdx](testing-agent-rules.mdx) 的 T9。
 
 ---
@@ -62,7 +62,7 @@ updatedAt: '2026-11-19'
 | **例外** | 無 |
 | **檢查方式** | 由 B1 與 F1 的檢查執行：CI 的 `backend-sqlite` job 跑 `uv run lint-imports`，`frontend` job 跑 `pnpm --filter frontend lint`；細節見兩條各自的「檢查方式」 |
 
-模組內分層（`app/modules/<module>/`）見 [architecture.mdx](../architecture.mdx)，後端的落地規則見 B1；前端那一半落地後，這一條只剩跨領域的原則敘述。
+模組內分層（`app/modules/<module>/`）見 [architecture.mdx](../architecture.mdx)，後端的落地規則見 B1、前端的見 F1；兩邊都已落地，這一條只剩跨領域的原則敘述。
 
 :::note{title="正例與反例（摺疊）" collapsible}
 - 正例：前端 `pages` → `features` → 共用的 `components/ui`（具體分層見 [frontend-agent-rules.mdx 的 F1](frontend-agent-rules.mdx#f1-分層與允許的-import)）。後端版本見 B1。
