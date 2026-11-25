@@ -514,7 +514,7 @@ var I18N = {
     classificationCauseNone: '無異常原因',
     classificationCauseInsufficient: '8 / 10，暫不評估',
     classificationCauseSystematic: '系統性偏差',
-    classificationActionReview: '審核標記',
+    classificationActionAdjust: '調整參與狀態',
     classificationLeaderOnly: '僅 Project Leader 可執行',
     anomSeqSpeedTitle:'標記速度異常', anomSeqOutlierTitle:'高分歧樣本',
     anomSeqSpd1Title:'Jordan Wu — 標記速度過快', anomSeqSpd1Detail:'平均 22s／句（門檻：≥ 30s），共 38 筆送出紀錄',
@@ -586,7 +586,6 @@ var I18N = {
       vaCauseASlow: '<strong>A</strong> 標記過慢',
       vaCauseVLow: '<strong>V</strong> 系統性偏低',
       vaCauseAFast: '<strong>A</strong> 標記過快',
-      actionReview: '審核標記',
       actionAdjust: '調整參與狀態',
       leaderOnly: '僅 Project Leader 可執行',
     },
@@ -921,7 +920,7 @@ var I18N = {
     classificationCauseNone: 'No anomaly cause',
     classificationCauseInsufficient: '8 / 10, not evaluated yet',
     classificationCauseSystematic: 'Systematic bias',
-    classificationActionReview: 'Review annotations',
+    classificationActionAdjust: 'Adjust participation',
     classificationLeaderOnly: 'Project Leader only',
     anomSeqSpeedTitle:'Speed Anomalies', anomSeqOutlierTitle:'High-divergence Samples',
     anomSeqSpd1Title:'Jordan Wu — Annotation speed too fast', anomSeqSpd1Detail:'Avg 22s/sent (threshold: ≥ 30s), 38 submissions',
@@ -979,7 +978,6 @@ var I18N = {
       vaCauseASlow: '<strong>A</strong> Too slow',
       vaCauseVLow: '<strong>V</strong> Systematically low',
       vaCauseAFast: '<strong>A</strong> Too fast',
-      actionReview: 'Review annotations',
       actionAdjust: 'Adjust participation',
       leaderOnly: 'Project Leader only',
     },
@@ -1634,18 +1632,12 @@ function syncRoleUi() {
 
 /* Risk-table action buttons live inside quality-*.html partials injected at
  * runtime, so a delegated listener is the single binding point for all of
- * them. The action kind is carried by the button's data-i18n key
- * (…actionAdjust vs …ActionReview) — the partials define no other
- * distinguishing attribute. Quality analysis is dry_run-based
- * (QUALITY_EMPTY_STATE_TRIGGER = dry_run_not_completed), hence
- * run_type=dry_run on the review target. */
+ * them. 規格 05-02 §建議行動只有專案負責人能執行（Q28）：每一列只剩一種行動
+ * 「調整參與狀態」，一律導到該任務詳情的成員管理分頁。 */
 document.addEventListener('click', function(e) {
   var btn = e.target.closest ? e.target.closest('.risk-action-btn') : null;
   if (!btn || btn.disabled) return;
-  var isAdjust = (btn.getAttribute('data-i18n') || '').indexOf('ctionAdjust') !== -1;
-  window.location.href = isAdjust
-    ? taskDetailUrl('&tab=member-management')
-    : '../annotation/annotation-list.html?task_id=' + encodeURIComponent(S_ROUTE.taskId) + '&role=reviewer&run_type=dry_run';
+  window.location.href = taskDetailUrl('&tab=member-management');
 });
 
 function updateTaskDetailHref() {

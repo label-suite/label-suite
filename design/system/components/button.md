@@ -78,7 +78,7 @@
 | `task-management/task-list#sim-delete-error` | 正典 `.btn-secondary` ＋ `.btn-danger`（`task-list.html:280`–`:288`） |
 | `task-management/task-new`（全部視圖） | 正典 `button.css` 的 variant |
 | `task-management/task-detail`（全部視圖） | 正典 variant ＋ `.mini-btn`（#423 起用正典，頁內不再重新定義）→ G-37 |
-| `annotation/annotation-list`（`#state-default`） | `.btn.btn-primary.slim` 快速繼續（`annotation-list.html:437`–`:458`）；回儀表板用正典 `.mini-btn`，清除篩選用 `.clear-btn` → `../design-gaps.md` G-37 |
+| `annotation/annotation-list`（`#state-default`） | `.btn.btn-primary.slim` 快速繼續（`annotation-list.html:450`–`:471`）；回儀表板用正典 `.mini-btn`，清除篩選用 `.clear-btn` → `../design-gaps.md` G-37 |
 | `annotation/annotation-workspace`（`#modal-guideline-gate`、`#state-review-decision`、`#state-arbitration`） | 指引閘門的確認是 `.btn.btn-cta`（`annotation-workspace.html:1138` 起）；審核三向決策是正典 `.mini-btn` 加本頁的 `mini-btn-active-*` 選中狀態，帶 `aria-pressed`（`annotation-workspace.config.js:3671`–`:3711`）→ G-37 |
 | `dataset/dataset-analysis-detail`（`#state-stats-empty`、`#param-q-state-*`、`#param-error`、`#state-quality-*`） | 載入正典 `button.css`，用 `.btn.btn-secondary.btn-sm`（空狀態的連結、重試、`.risk-action-btn`）；頁內又在 `dataset-analysis-detail.html:169`–`:175` 重寫 `.btn` → `../design-gaps.md` G-37 |
 

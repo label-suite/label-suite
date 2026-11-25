@@ -310,6 +310,24 @@
     global.location.href = listUrl;
   }
 
+  /* 行動入口卡的「開始標記／開始審核」（規格 02-01 §還沒有任務角色的人看到什麼 第 7 條、
+     規格 04-01 Q21–Q22，Issue #610）：不帶任務、帶入口標記 entry=nav，由標記清單列出
+     可挑的任務，一個都沒有時顯示它自己的空狀態。任務列與快速繼續仍走 openAnnotationList()。 */
+  function openActionEntry(role) {
+    global.LabelSuiteAnalytics.track('prototype_cta_clicked', {
+      cta: role === 'annotator'
+        ? 'annotator_action_entry_open'
+        : 'reviewer_action_entry_open',
+      task_role: role,
+      lang: lang,
+      scenario: scenario,
+    });
+    /* 行動入口卡只出現在還沒有任務角色的人的版面，所以原型帶 view=empty，落在
+       規格 04-01 Scenario「沒有可挑的任務時顯示空狀態」那一個空狀態；側欄的連結不帶。 */
+    global.location.href = '../annotation/annotation-list.html?entry=nav&role='
+      + encodeURIComponent(role) + '&view=empty';
+  }
+
   function openAnnotationWorkspace(role, entry) {
     global.LabelSuiteAnalytics.track('prototype_cta_clicked', {
       cta: role === 'annotator'
@@ -698,13 +716,13 @@
     document.getElementById('ctaAnnotatorBtn').addEventListener(
       'click',
       function () {
-        openAnnotationList('annotator', data.roleLists.annotator[0]);
+        openActionEntry('annotator');
       }
     );
     document.getElementById('ctaReviewerBtn').addEventListener(
       'click',
       function () {
-        openAnnotationList('reviewer', data.roleLists.reviewer[0]);
+        openActionEntry('reviewer');
       }
     );
     document.getElementById('adminViewAllBtn').addEventListener(

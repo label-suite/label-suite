@@ -118,6 +118,19 @@
       align-items: center;
       flex-shrink: 0;
     }
+    /* 規格 04-01 §路由上下文與回退 第 11 條（Issue #610）：可挑的任務卡沿用任務資訊卡的 .list-item，
+       整張卡可點；角色徽章的配色與任務詳情成員管理的角色徽章相同。 */
+    .task-picker-card { cursor: pointer; }
+    .badge-role-annotator {
+      color: var(--color-success);
+      background: var(--color-success-bg);
+      border-color: var(--color-success-border);
+    }
+    .badge-role-reviewer {
+      color: var(--color-primary-strong);
+      background: var(--color-primary-soft-bg);
+      border-color: var(--color-primary-border);
+    }
     .btn {
       display: inline-flex;
       align-items: center;
@@ -466,6 +479,12 @@
 
   <section class="empty-state empty-state-panel hidden" id="taskNotFound" data-testid="list-task-not-found"></section>
 
+  <!-- Issue #610（規格 04-01 §路由上下文與回退 第 11、12 條）：網址沒帶任務、但帶著入口標記
+       entry=nav 時，列出可挑的任務；一個都沒有就顯示這一頁的空狀態，不退回儀表板。
+       兩區都由 renderTaskPicker() 依資料產生。原型用 view=empty 重現空狀態。 -->
+  <section class="list hidden" id="taskPicker" aria-label="可挑的任務" data-testid="list-task-picker"></section>
+  <section class="empty-state empty-state-panel hidden" id="taskPickerEmpty" role="status" data-testid="list-task-picker-empty"></section>
+
   <!-- Issue singyichen/label-suite#449: shown when the reviewer arrived from the quick-review CTA
        and no review unit on this task is actionable for them. -->
   <section class="empty-state empty-state-panel hidden" id="noActionableNotice" role="status" data-testid="list-no-actionable-notice"></section>
@@ -587,6 +606,11 @@
       notFoundMessage: '任務代碼 {taskId} 不存在，請確認網址或回到儀表板重新選擇任務。',
       notFoundNoTaskMessage: '未指定任務，請回到儀表板重新選擇任務。',
       notFoundBackBtn: '回儀表板',
+      pageSubtitlePicker: '選一個任務，查看它的資料清單。',
+      taskPickerAria: '可挑的任務',
+      taskPickerEnterBtn: '進入',
+      taskPickerEmptyTitle: '目前沒有可處理的標記任務',
+      taskPickerEmptyDesc: '專案負責人把你加入任務、指派為標記員或審核員之後，任務會出現在這裡。',
       thLabelStats: '標記分布統計',
       thAnswer: '標記結果',
       thReviewStatus: '審核狀態',
@@ -661,6 +685,11 @@
       notFoundMessage: 'Task {taskId} does not exist. Please check the URL or return to the dashboard to pick another task.',
       notFoundNoTaskMessage: 'No task specified. Please return to the dashboard to pick a task.',
       notFoundBackBtn: 'Back to dashboard',
+      pageSubtitlePicker: 'Pick a task to see its data list.',
+      taskPickerAria: 'Tasks you can pick',
+      taskPickerEnterBtn: 'Open',
+      taskPickerEmptyTitle: 'No annotation tasks to work on yet',
+      taskPickerEmptyDesc: 'Tasks appear here after a project leader adds you to a task and assigns you as an annotator or reviewer.',
       thLabelStats: 'Label Distribution',
       thAnswer: 'Annotation Result',
       thReviewStatus: 'Review Status',
@@ -1035,7 +1064,13 @@
         annotator_id: params.get('annotator_id'),
         reviewer_id: params.get('reviewer_id')
       },
-      notice: params.get('notice') || ''
+      notice: params.get('notice') || '',
+      /* 入口標記（規格 04-01 §路由上下文與回退 第 1、11 條，Q22）：只有側欄「標記作業」與
+         儀表板行動入口卡的連結帶 entry=nav，用來分開站內點進來與深連結。 */
+      entryNav: params.get('entry') === 'nav',
+      /* PROTOTYPE-ONLY demo switch, same name as task-list / dataset-analysis-list:
+         view=empty 讓可挑的任務清單變成空的，以重現第 12 條的空狀態。 */
+      demoEmpty: params.get('view') === 'empty'
     };
   }
 
@@ -2293,10 +2328,13 @@
     }
   }
 
+  function hideListChrome() {
+    ['taskInfoCard', 'listToolbar', 'tableContainer', 'taskNotFound', 'taskPicker', 'taskPickerEmpty']
+      .forEach(function (id) { document.getElementById(id).classList.add('hidden'); });
+  }
+
   function renderNotFound(taskId) {
-    document.getElementById('taskInfoCard').classList.add('hidden');
-    document.getElementById('listToolbar').classList.add('hidden');
-    document.getElementById('tableContainer').classList.add('hidden');
+    hideListChrome();
 
     var el = document.getElementById('taskNotFound');
     el.classList.remove('hidden');
@@ -2324,6 +2362,182 @@
     var linkRow = document.createElement('div');
     linkRow.appendChild(backLink);
     el.appendChild(linkRow);
+  }
+
+  /* Issue #610（規格 04-01 §沒帶任務時挑一個任務、§路由上下文與回退 第 11、12 條，Q21–Q23）：
+     可挑的任務來自儀表板共用的指派種子 LabelSuiteAssignmentSeeds，也就是儀表板上
+     「我是標記員／審核員」的那些任務列；同一個任務兩種角色各列一張，因為角色要帶進網址。
+     只列 resolveTaskProfile() 解得到的任務，點進去才不會落到「找不到這個任務」。 */
+  function listPickableTasks(context) {
+    if (context.demoEmpty) return [];
+    var seeds = window.LabelSuiteAssignmentSeeds || [];
+    var picks = [];
+    seeds.forEach(function (seed) {
+      var profile = resolveTaskProfile(seed.exampleTaskId);
+      if (!profile) return;
+      ['annotator', 'reviewer'].forEach(function (role) {
+        var work = seed[role];
+        if (!work) return;
+        picks.push({
+          profile: profile,
+          role: role,
+          runType: work.runType === 'official_run' ? 'official_run' : 'dry_run',
+          work: work,
+          taskType: seed.annotationTaskType || ''
+        });
+      });
+    });
+    /* 網址帶的角色排在前面（Array.prototype.sort 是穩定排序，同角色維持種子順序）。 */
+    return picks.sort(function (a, b) {
+      return (a.role === context.role ? 0 : 1) - (b.role === context.role ? 0 : 1);
+    });
+  }
+
+  /* 與儀表板任務列 openAnnotationList() 帶的參數相同：任務、角色、標記階段、task_type，
+     審核員另帶種子指定的審核員身分；種子沒指定時轉發這一頁原本帶的身分參數。 */
+  function buildPickedTaskUrl(context, pick) {
+    var reviewerId = pick.role === 'reviewer'
+      ? (pick.work.reviewerId || context.identityParams.reviewer_id)
+      : context.identityParams.reviewer_id;
+    var annotatorId = context.identityParams.annotator_id;
+    return '../annotation/annotation-list.html' +
+      '?task_id=' + encodeURIComponent(pick.profile.id) +
+      '&role=' + encodeURIComponent(pick.role) +
+      '&run_type=' + encodeURIComponent(pick.runType) +
+      (pick.taskType ? '&task_type=' + encodeURIComponent(pick.taskType) : '') +
+      (annotatorId ? '&annotator_id=' + encodeURIComponent(annotatorId) : '') +
+      (reviewerId ? '&reviewer_id=' + encodeURIComponent(reviewerId) : '');
+  }
+
+  /* 進度與摘要的算法與任務資訊卡 renderTaskInfo() 相同：審核員由審核單位即時推導，
+     標記員讀指派種子，已全部送出時算 100%。 */
+  function pickProgress(pick) {
+    var isEn = CURRENT_LANG === 'en';
+    if (pick.role === 'reviewer') {
+      var data = window.LabelSuiteAnnotationWorkspaceData;
+      var summary = data.computeReviewSummary(pick.profile.id, pick.runType);
+      var text = data.formatReviewSummary(summary, pick.work.iaa);
+      return { pct: summary.coveragePct, text: text ? (isEn ? text.en : text.zh) : '' };
+    }
+    var completionState = readCompletionStateMap()[completionStateKey('annotator', pick.profile.id, pick.runType)];
+    var done = Boolean(completionState && completionState.allSubmitted);
+    var detail = pick.work.detail;
+    return {
+      pct: done ? 100 : (typeof pick.work.progress === 'number' ? pick.work.progress : 0),
+      text: detail ? (isEn ? detail.en : detail.zh) : ''
+    };
+  }
+
+  function buildTaskPickerCard(context, pick) {
+    var isEn = CURRENT_LANG === 'en';
+    var url = buildPickedTaskUrl(context, pick);
+    var progress = pickProgress(pick);
+    var taskName = (isEn && pick.profile.nameEn) ? pick.profile.nameEn : pick.profile.nameZh;
+
+    var card = document.createElement('article');
+    card.className = 'list-item task-picker-card';
+    card.setAttribute('data-testid', 'list-task-picker-card');
+    card.setAttribute('data-task-id', pick.profile.id);
+    card.setAttribute('data-role', pick.role);
+    card.addEventListener('click', function () { window.location.href = url; });
+
+    var header = document.createElement('div');
+    header.className = 'task-item-header';
+    var summary = document.createElement('div');
+    summary.className = 'task-item-summary';
+    var title = document.createElement('span');
+    title.className = 'list-item-title';
+    title.textContent = taskName;
+    summary.appendChild(title);
+    if (progress.text) {
+      var detail = document.createElement('span');
+      detail.className = 'list-item-detail';
+      detail.textContent = progress.text;
+      summary.appendChild(detail);
+    }
+    header.appendChild(summary);
+
+    var meta = document.createElement('div');
+    meta.className = 'task-item-meta';
+    var outputTypes = document.createElement('div');
+    outputTypes.className = 'task-item-badges';
+    pick.profile.outputTypes.forEach(function (key) {
+      var typeMeta = getOutputTypeMeta(key);
+      var span = document.createElement('span');
+      span.className = 'badge output-type-tag ' + (typeMeta ? typeMeta.badgeClass : 'badge-task-type-default');
+      span.textContent = getOutputTypeLabel(key);
+      outputTypes.appendChild(span);
+    });
+    meta.appendChild(outputTypes);
+
+    var badges = document.createElement('div');
+    badges.className = 'task-item-badges';
+    var roleBadge = document.createElement('span');
+    roleBadge.className = 'badge badge-role-' + pick.role;
+    roleBadge.textContent = t(pick.role === 'reviewer' ? 'roleLabelReviewer' : 'roleLabelAnnotator');
+    var runBadge = document.createElement('span');
+    runBadge.className = 'badge ' + runTypeBadgeClass(pick.runType);
+    runBadge.textContent = runTypeLabel(pick.runType);
+    badges.appendChild(roleBadge);
+    badges.appendChild(runBadge);
+    meta.appendChild(badges);
+
+    var actions = document.createElement('div');
+    actions.className = 'task-item-actions';
+    var enterBtn = document.createElement('button');
+    enterBtn.type = 'button';
+    enterBtn.className = 'btn btn-primary slim';
+    enterBtn.setAttribute('data-testid', 'list-task-picker-enter');
+    enterBtn.setAttribute('aria-label', t('taskPickerEnterBtn') + ' ' + taskName);
+    enterBtn.textContent = t('taskPickerEnterBtn');
+    enterBtn.addEventListener('click', function (event) {
+      event.stopPropagation();
+      window.location.href = url;
+    });
+    actions.appendChild(enterBtn);
+    meta.appendChild(actions);
+    header.appendChild(meta);
+    card.appendChild(header);
+
+    var bar = document.createElement('div');
+    bar.className = 'progress';
+    bar.style.marginTop = '10px';
+    bar.setAttribute('aria-hidden', 'true');
+    var fill = document.createElement('span');
+    fill.style.width = Math.max(0, Math.min(100, Number(progress.pct) || 0)) + '%';
+    bar.appendChild(fill);
+    card.appendChild(bar);
+    return card;
+  }
+
+  function renderTaskPicker(context) {
+    hideListChrome();
+    var picks = listPickableTasks(context);
+    if (!picks.length) {
+      var empty = document.getElementById('taskPickerEmpty');
+      empty.innerHTML = '';
+      var title = document.createElement('p');
+      title.className = 'empty-state-title';
+      title.textContent = t('taskPickerEmptyTitle');
+      var desc = document.createElement('p');
+      desc.className = 'empty-state-desc';
+      desc.textContent = t('taskPickerEmptyDesc');
+      var back = document.createElement('a');
+      back.className = 'btn btn-secondary empty-state-action';
+      back.href = '../dashboard/dashboard.html';
+      back.setAttribute('data-testid', 'list-task-picker-dashboard-link');
+      back.textContent = t('notFoundBackBtn');
+      empty.appendChild(title);
+      empty.appendChild(desc);
+      empty.appendChild(back);
+      empty.classList.remove('hidden');
+      return;
+    }
+    var list = document.getElementById('taskPicker');
+    list.innerHTML = '';
+    list.setAttribute('aria-label', t('taskPickerAria'));
+    picks.forEach(function (pick) { list.appendChild(buildTaskPickerCard(context, pick)); });
+    list.classList.remove('hidden');
   }
 
   /* Issue singyichen/label-suite#449: the reviewer quick-review CTA sends `notice` instead of
@@ -2399,8 +2613,10 @@
   function renderContext(context) {
     renderEntryBreadcrumb(context);
     document.getElementById('pageTitle').textContent = t('pageTitle');
-    document.getElementById('pageSubtitle').textContent =
-      context.role === 'reviewer' ? t('pageSubtitleReviewer') : t('pageSubtitleAnnotator');
+    var isPicking = !context.taskId && context.entryNav;
+    document.getElementById('pageSubtitle').textContent = isPicking
+      ? t('pageSubtitlePicker')
+      : (context.role === 'reviewer' ? t('pageSubtitleReviewer') : t('pageSubtitleAnnotator'));
 
     var searchInput = document.getElementById('searchInput');
     if (searchInput) {
@@ -2417,6 +2633,8 @@
       renderTaskInfo(context, context.profile);
       renderDryRunFeedback(context, context.profile);
       renderNoActionableNotice(context);
+    } else if (isPicking) {
+      renderTaskPicker(context);
     } else {
       renderNotFound(context.taskId);
     }

@@ -83,7 +83,7 @@ tags: [adr, frontend, react, shadcn, design-token]
 
 **變容易**
 
-- 分層表可以寫成機械的 lint 規則，擋住下層 import 上層與 feature 之間互相 import（檢查待建置）
+- 分層表可以寫成機械的 lint 規則，擋住下層 import 上層與 feature 之間互相 import：CI 的 `frontend` job 跑 `pnpm --filter frontend lint`，見 [F1 的檢查方式](../rules/frontend-agent-rules.mdx#f1-分層與允許的-import)
 
 **變困難**
 

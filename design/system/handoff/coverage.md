@@ -44,7 +44,7 @@
 
 本次結果（**第三版，兩步掃描**）：**兩個方向各 0 筆。**
 
-第七次重跑時（第八版）多了一筆：[Issue #422](https://github.com/label-suite/label-suite/issues/422) 在 `dataset-analysis-list.model.js:241` 與 `dataset-analysis-detail.html:1509` 新增 `error`（只認 `1`），**程式有、契約沒有**。建議把它補進 `navigation.mdx` §網址參數 的兩列資料集分析頁（本 skill 不改那份文件）。兩個視圖已收為 `#param-error`。
+第七次重跑時（第八版）多了一筆：[Issue #422](https://github.com/label-suite/label-suite/issues/422) 在 `dataset-analysis-list.model.js:241` 與 `dataset-analysis-detail.html:1507` 新增 `error`（只認 `1`），**程式有、契約沒有**。建議把它補進 `navigation.mdx` §網址參數 的兩列資料集分析頁（本 skill 不改那份文件）。兩個視圖已收為 `#param-error`。
 
 第八次重跑時（第九版）這一筆已關閉：`navigation.mdx` 的兩列資料集分析頁補上了 `error`，兩個方向又是各 0 筆。
 
@@ -54,7 +54,7 @@
 | :--- | :--- | ---: |
 | `task-detail.html:5048` | `URL_VIEW_STATE` | **16** |
 | `annotation-workspace.config.js:1560` | `LIST_VIEW_STATE_KEYS` ＋ `LIST_IDENTITY_KEYS` | **6** |
-| `dataset-analysis-detail.html:2528` | `PROTOTYPE_ONLY_PARAMS` | 0（`s_state` 已在表上） |
+| `dataset-analysis-detail.html:2520` | `PROTOTYPE_ONLY_PARAMS` | 0（`s_state` 已在表上） |
 | `sidebar.js:732` | 列舉既有鍵 | 0 |
 
 兩輪的修法：[PR #400](https://github.com/label-suite/label-suite/pull/400) 把那 22 個名字補進 `navigation.mdx` 的契約，本版把掃描法改成兩步，所以 `params` 欄現在才是真的全集——`task-management/task-detail` 從 11 個變 **25** 個、`annotation/annotation-workspace` 從 9 個變 **13** 個。
@@ -184,14 +184,14 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 | 視圖 | 證據（摘要） |
 | :--- | :--- |
-| `#state-theme-dark` | 主題鈕 `sidebar.js:2081`／`:2055`；載入 `theme.js` 的 11 頁走它的 `setChoice()`（`sidebar.js:364`–`:367` 提前 return），其餘 5 個帳號頁走 `:370`／`:374` |
-| `#state-lang-en` | `#langToggle` `sidebar.js:2047`／`#mobileLangToggle` `:2051` → `applyGlobalLanguage()` `:427` |
-| `#state-sidebar-collapsed` | **桌機**（`sidebar.js:513` 的 `min-width: 768px`）收合 → `body.sidebar-collapsed` `:2525` |
+| `#state-theme-dark` | 主題鈕 `sidebar.js:2087`／`:2061`；載入 `theme.js` 的 11 頁走它的 `setChoice()`（`sidebar.js:364`–`:367` 提前 return），其餘 5 個帳號頁走 `:370`／`:374` |
+| `#state-lang-en` | `#langToggle` `sidebar.js:2053`／`#mobileLangToggle` `:2057` → `applyGlobalLanguage()` `:427` |
+| `#state-sidebar-collapsed` | **桌機**（`sidebar.js:513` 的 `min-width: 768px`）收合 → `body.sidebar-collapsed` `:2531` |
 | `#state-mobile` | `sidebar.css` 的 `@media (max-width: 767px)`：另一套版面，另有 `#mobileLangToggle`／`#mobileThemeToggleBtn`／`#mobileLogoutBtn` |
-| `#state-user-chip` | `#userAvatar` `sidebar.js:2098`、`#userName`、`#roleIndicator` `:2101`；頭像取自 `label-suite-profile-avatar` `:55` |
-| `#state-logout` | `#logoutBtn` `sidebar.js:2104`／`#mobileLogoutBtn` `:2065`，一次清掉 7 個 storage 鍵 |
-| `#modal-notification` | `#notificationDropdown` `sidebar.js:2260`、`#notifMarkAllBtn` `:2275`、`#notificationBadge` |
-| `#modal-shortcut` | `#shortcutHelpModal` `sidebar.js:2109`，開關在 `:2209` |
+| `#state-user-chip` | `#userAvatar` `sidebar.js:2104`、`#userName`、`#roleIndicator` `:2107`；頭像取自 `label-suite-profile-avatar` `:55` |
+| `#state-logout` | `#logoutBtn` `sidebar.js:2110`／`#mobileLogoutBtn` `:2071`，一次清掉 7 個 storage 鍵 |
+| `#modal-notification` | `#notificationDropdown` `sidebar.js:2266`、`#notifMarkAllBtn` `:2281`、`#notificationBadge` |
+| `#modal-shortcut` | `#shortcutHelpModal` `sidebar.js:2115`，開關在 `:2215` |
 | `#role-super-admin` | `sidebar.js:536` 在不是 `super_admin` 時隱藏 `#navAdminItem` `:628` |
 | `#state-admin-submenu-open` | `sidebar.js:539`–`:541` 的 `System Administration` 子選單：桌機且未收合才展開成兩個連結 |
 | `#state-active-task-type` | `labelsuite.activeTaskType` `sidebar.js:4` 決定標記作業那一項的標籤與 `#roleIndicator` |
@@ -237,7 +237,7 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 變動的 prototype 檔（共 8 個，全在 `pages/dataset/`）：
 - `dataset-analysis-detail.html`（+108／−13 行）：
   - **用詞**：`lblSeqPartThr`、`lblRelThr2`、`altHSeqThr` 的「參考值」改「參考線」（#473），中英文都改。
-  - **行為（新）**：實體辨識切到 `Partial overlap` 時，IAA 報告標題的主要指標星號收起（連 `aria-label` 一起拿掉），後綴由「— 主要指標」改成「— 參考顯示」；切回 `Strict match` 還原（`dataset-analysis-detail.html:1976` 的 `updateMethodName()`；#435）。這是 `#state-seq-match-partial` 看得到的新狀態。
+  - **行為（新）**：實體辨識切到 `Partial overlap` 時，IAA 報告標題的主要指標星號收起（連 `aria-label` 一起拿掉），後綴由「— 主要指標」改成「— 參考顯示」；切回 `Strict match` 還原（`dataset-analysis-detail.html:1968` 的 `updateMethodName()`；#435）。這是 `#state-seq-match-partial` 看得到的新狀態。
   - **行為（新）**：`setElText()` 讓門檻文字換語言時保留 `通過`／`未達` 判定字，並套用到次要 IAA 卡（#435）。
   - **英文版**：新增 `qualityListRank.aria*` 21 條、`pairwiseAvg`、`anomStSpd1*`／`anomStOut1*`、`seqSpeedWarn`；序列標記的異常偵測區塊補上 `id`，語言切換才換得到（#435）。
   - **樣式**：`.iaa-bar-fill` 預設底色 `--color-ink-muted`（原本沒有預設，未通過也未達標時會沒顏色）。
@@ -247,7 +247,7 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 | :--- | ---: | :--- |
 | 新增 | 0 | 沒有新增視圖：Partial overlap 的星號收起是既有 `#state-seq-match-partial` 的內容 |
 | 移除 | 0 | |
-| 改寫 | 3 | `#state-seq-match-partial` 的重現步驟補上星號與後綴的變化；`#param-error`（`DEMO_LOAD_ERROR` 判斷，改指 `dataset-analysis-detail.html:1516`、`:2391`）與 `#state-seq-match-strict`（`syncSequenceUi`，改指 `dataset-analysis-detail.html:2030`）只換行號。ID 不變 |
+| 改寫 | 3 | `#state-seq-match-partial` 的重現步驟補上星號與後綴的變化；`#param-error`（`DEMO_LOAD_ERROR` 判斷，改指 `dataset-analysis-detail.html:1514`、`:2383`）與 `#state-seq-match-strict`（`syncSequenceUi`，改指 `dataset-analysis-detail.html:2022`）只換行號。ID 不變 |
 | `loads` 欄 | 0 | 沒有新增或移除載入的檔 |
 | 參數 | 0 | 沒有改讀網址參數的程式；兩步掃描的兩個方向仍各 0 筆 |
 | 受影響（prototype） | 27 | 全是 `dataset/dataset-analysis-detail` 的視圖（`b4-dataset-sweep`）；同批的 `dataset-analysis-list`（5 個視圖）沒有變 |

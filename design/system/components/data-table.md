@@ -69,7 +69,7 @@
 | `admin/user-management#state-default` | 本頁的表格（`user-management.html:326`–`:429`） |
 | `admin/role-settings#state-default` | `.matrix-table`（`role-settings.html:88`），sticky 首欄與表頭（`:111`、`:140`），外層 `role="region" tabindex="0"`——**鍵盤可捲**，與 G-27 相反 |
 | `task-management/task-detail`（`#tab-member-management`、`#tab-annotation-progress`、`#tab-annotation-results`、`#tab-work-log`） | `.member-table`（`member-management.html:19`；`annotation-progress.html:32`；`annotation-results.html:48`；`work-log.html:38`） |
-| `annotation/annotation-list`（`#state-default`、`#role-*`） | `.task-table`（`annotation-list.html:494`）。標記員的列是 `tr role="button" tabindex="0"`，Enter／Space 進工作區（`:1847`）；空狀態**不放進表格**，另用 [Empty State](empty-state.md) |
+| `annotation/annotation-list`（`#state-default`、`#role-*`） | `.task-table`（`annotation-list.html:513`）。標記員的列是 `tr role="button" tabindex="0"`，Enter／Space 進工作區（`:1882`）；空狀態**不放進表格**，另用 [Empty State](empty-state.md) |
 | `dataset/dataset-analysis-list`（`#state-default`、`#state-filtered-empty`、`#param-view-empty`） | `.task-table`（`dataset-analysis-list.html:274`），一列 `tr role="button" tabindex="0"`（`dataset-analysis-list.view.js:18`–`:19`）；焦點環原本寫死 rgba，#438 起改 `color-mix`（`dataset-analysis-list.html:76`–`:78`）→ `../design-gaps.md` G-02 |
 | `dataset/dataset-analysis-detail`（`#tab-quality`、`#state-quality-*`） | 本頁 `.annotator-table`（`dataset-analysis-detail.html:138`–`:142`、markup `:324`–`:340`）；各 `quality-*` partial 的表格 `aria-label` 帶 `data-i18n-aria-label`（`qualityListRank.aria*`），換語言跟著換（#435）→ G-10 |
 

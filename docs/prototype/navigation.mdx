@@ -352,7 +352,8 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 
 | 方向 | 觸發條件 | 目標 |
 |------|---------|------|
-| Incoming | Shared sidebar → 標記作業 | 本頁 |
+| Incoming | Shared sidebar → 標記作業 | 本頁（`?entry=nav`；在清單或工作區時沿用目前網址，帶著任務就落在那個任務） |
+| Incoming | `/dashboard/dashboard` 行動入口卡「開始標記」／「開始審核」 | 本頁（`?entry=nav&role=annotator`／`role=reviewer`，不帶任務；原型另帶 `view=empty`，落在沒有可挑任務的空狀態，`dashboard.js:316`） |
 | Incoming | `/annotation/annotation-workspace` 完成 / 返回清單 | 本頁 |
 | Outgoing | 開始 / 繼續標記 | `/annotation/annotation-workspace?task_id=<id>&sample_id=<id>&role=annotator&run_type=<type>&task_type=<type>` |
 | Outgoing | Reviewer 審查任務 | `/annotation/annotation-workspace?task_id=<id>&sample_id=<id>&role=reviewer&run_type=<type>&task_type=<type>` |
@@ -363,6 +364,7 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 | Outgoing | 使用者 chip | `/account/profile` |
 | Outgoing | 登出 | `/account/login` |
 | Inline | 搜尋 / 篩選 / task type 切換 / 分頁 | 停留，即時更新任務清單 |
+| Inline | 可挑的任務卡或「進入」（只在不帶 `task_id`、帶 `entry=nav` 時出現） | 本頁，帶 `task_id`、`role`、`run_type`、`task_type` 與身分參數 |
 
 ### `/annotation/annotation-workspace` ✅
 
@@ -483,11 +485,11 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 | `/admin/user-management` | `role`（`user` \| `super_admin`，`user-management.html:958` 的 `VALID_URL_ROLES`；不在清單內的值忽略）、`q`、`status`、`limit`、`offset` |
 | `/task-management/task-list` | `keyword`、`status`、`output_type`、`run_stage`、`task_role`、`limit`、`offset`、`view`（只認 `empty` 與 `error`）、`unauthorized`、`sim_delete_error` |
 | `/task-management/task-detail` | `task_role`（`project_leader` \| `reviewer` \| `annotator`，不給或不認得一律落到 `annotator`）；**`role` 是它的別名，`task_role` 優先**（`task-detail.html:5080`）、`status`、`sim_403`，以及 `URL_VIEW_STATE` 那 **16 個**畫面狀態參數（見下表） |
-| `/annotation/annotation-list` | `role`（`reviewer` \| `project_leader` \| `annotator`：**清單本體只二分** `reviewer`／`annotator`（`annotation-list.html:1030`），`project_leader` 只改側欄那一項的名稱與角色標示（`:409`–`:412`））、`run_type`、`status`、`q`、`notice`（`no_actionable_review`，而且要同時 `role=reviewer`）、`limit`、`offset` |
+| `/annotation/annotation-list` | `role`（`reviewer` \| `project_leader` \| `annotator`：**清單本體只二分** `reviewer`／`annotator`（`annotation-list.html:1059`），`project_leader` 只改側欄那一項的名稱與角色標示（`:422`–`:425`））、`run_type`、`status`、`q`、`notice`（`no_actionable_review`，而且要同時 `role=reviewer`）、`entry`（只認 `nav`：不帶 `task_id` 時列出可挑的任務，不顯示「尚未選擇任務」，`annotation-list.html:1070`）、`view`（只認 `empty`，而且只在不帶 `task_id`、帶 `entry=nav` 時有作用：可挑的任務清單當成空的，顯示空狀態，`:1073`）、`limit`、`offset` |
 | `/annotation/annotation-workspace` | **`task_id`（必填）**——解不到任務就導回清單（`annotation-workspace.config.js:7033`–`:7036`）、`role`（`reviewer` \| `project_leader` \| `annotator`）、`run_type`、`sample_id`；另外 **`status`、`q`、`limit`、`offset`、`annotator_id`、`reviewer_id` 六個會被原封不動讀出再轉手回清單**（`buildListReturnUrl()`，`:1554`–`:1565`），工作區自己不用它們，但「返回清單」要去哪裡由它們決定 |
 | `/dashboard/dashboard` | `view`（`skeleton` \| `error`）、`scenario`（`annotator` \| `reviewer` \| `project_leader` \| `super_admin_data` \| `user`，而且 `dashboard.html` 要有對應的 `id="view-<值>"`） |
 | `/dataset/dataset-analysis-list` | `keyword`、`iaa_status`、`output_type`、`view`（只認 `empty`）、`error`（只認 `1`，載入失敗；`dataset-analysis-list.model.js:241`）、`invalid_task`、`limit`、`offset` |
-| `/dataset/dataset-analysis-detail` | **`task_id`（必填）**——缺少、不認得或成員角色不在允許清單，一律導回列表並帶 `invalid_task=1`（`dataset-analysis-detail.html:2482`–`:2489`）、`tab`（**只認 `quality`**，其餘一律落到統計總覽，`:2611`）、`q_state`（`dry_run_in_progress` \| `report_pending` \| `report_generating` \| `report_failed` \| `ready`）、`s_state`（只認 `empty`）、`error`（只認 `1`，兩個面板都載入失敗；`:1509`，網址同步時不保留） |
+| `/dataset/dataset-analysis-detail` | **`task_id`（必填）**——缺少、不認得或成員角色不在允許清單，一律導回列表並帶 `invalid_task=1`（`dataset-analysis-detail.html:2474`–`:2481`）、`tab`（**只認 `quality`**，其餘一律落到統計總覽，`:2603`）、`q_state`（`dry_run_in_progress` \| `report_pending` \| `report_generating` \| `report_failed` \| `ready`）、`s_state`（只認 `empty`）、`error`（只認 `1`，兩個面板都載入失敗；`:1507`，網址同步時不保留） |
 
 ### `/task-management/task-detail` 的畫面狀態參數
 
@@ -501,7 +503,7 @@ Living styleguide（issue singyichen/label-suite#183）：即時列舉 `assets/t
 > | :--- | :--- | :--- |
 > | `task-management/task-detail.html:5048` | `URL_VIEW_STATE`（16 個） | 是——就是下表 |
 > | `annotation/annotation-workspace.config.js:1560` | `LIST_VIEW_STATE_KEYS`（`:1544`）＋ `LIST_IDENTITY_KEYS`（`:1552`） | 是——見 §各頁專屬 的工作區那一列 |
-> | `dataset/dataset-analysis-detail.html:2528` | `PROTOTYPE_ONLY_PARAMS`（`:2518`，只有 `s_state`） | 否，那個名字已在表上 |
+> | `dataset/dataset-analysis-detail.html:2520` | `PROTOTYPE_ONLY_PARAMS`（`:2510`，只有 `s_state`） | 否，那個名字已在表上 |
 > | `shared/sidebar.js:732` | `oldParams.get(key)`，列舉既有鍵 | 否，只比對有沒有變 |
 >
 > 第一版只列了兩處並宣稱「所以這一節現在是完整的」——**那句話是錯的**，漏掉中間兩處（判例：[PR #400](https://github.com/label-suite/label-suite/pull/400) 的獨立審查）。要掃參數就得把這四處都走過。
