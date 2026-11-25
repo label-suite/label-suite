@@ -345,10 +345,9 @@ export const SITE_MAP_PAGES: SiteMapPage[] = [
     features: [
       { title: "存取與分頁切換", anchor: "存取與分頁切換" },
       { title: "帳號列表", anchor: "帳號列表" },
-      { title: "新增帳號", anchor: "新增帳號" },
+      { title: "邀請新帳號", anchor: "邀請新帳號" },
       { title: "編輯帳號", anchor: "編輯帳號" },
       { title: "停用與啟用", anchor: "停用與啟用" },
-      { title: "重發設定密碼信", anchor: "重發設定密碼信" },
       { title: "異動紀錄", anchor: "異動紀錄" },
     ],
   },
