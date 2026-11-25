@@ -15,13 +15,13 @@
   - 不記來源 IP（Q9）
   - 耗時欄為 `duration_ms`：從進入存取紀錄中介層起，到最後一個回應 body 送出為止，毫秒、一位小數（Q11）
 - 存取紀錄**依狀態碼分級**：2xx／3xx 為 INFO、4xx 為 WARNING、5xx 為 ERROR（issue #567 §功能範圍）
-- **錯誤只記一次**：請求在處理過程中已經寫過錯誤紀錄（未處理例外、未對應狀態轉成的 500、健康檢查回 503 前寫的 WARNING）時，存取紀錄不再寫；驗收第 1 條對這類請求加例外。既有的錯誤紀錄與其測試維持不變（Q3；驗收第 2 條）
+- **錯誤只記一次**：請求在處理過程中已經寫過錯誤紀錄（未處理例外、未對應狀態轉成的 500、健康檢查回 503 前寫的 WARNING）時，存取紀錄不再寫；驗收第 1 條對這類請求加例外。既有錯誤紀錄的筆數與等級不變；訊息裡的 `traceId` 依 Q8 改由自動帶入，相關測試的斷言跟著改（Q3、Q8；驗收第 2 條）
 - 中介層位置：跨來源處理的內側、未處理例外攔截的外側，所以看得到 406 與最終的 500（Q4）
 - 後端的**每一筆伺服器紀錄自動帶上目前請求的 `traceId`**，業務程式不必改呼叫方式（驗收第 3 條）。請求以外寫的紀錄，`traceId` 欄固定為 `-`（Q7）。實作不照 issue 字面用 logging filter，改用 record factory，需求目標不變（N1）
 - **拿掉既有訊息裡手寫的 `traceId`**：未處理例外、未對應狀態轉 500、資料庫不可用這三處的訊息不再手寫 `traceId=%s`，改由自動帶入；測試改斷言自動帶入的值（Q8）
 - 存取紀錄**沿用既有的 log 安全規則**：不記 query、body、header、cookie，來自請求的值先跳脫（驗收第 4 條；security-agent-rules S5、S9）
 - **關閉伺服器程式內建的存取紀錄**：在後端程式的 log 設定裡關掉，一處涵蓋容器、本機開發指令與文件裡的手動啟動指令（Q10）
-- **後端 log 輸出設定**涵蓋整個後端：格式由本 change 定，為一行 `key=value` 文字（Q2）；預設等級 `INFO`，可用新的環境變數 `LOG_LEVEL` 調整，兩份編排檔把 `.env` 的 `LOG_LEVEL` 傳進後端容器（`LOG_LEVEL: ${LOG_LEVEL:-INFO}`，Q14）；資料庫套件的 SQL 紀錄明確維持 `WARNING`，不因預設等級是 `INFO` 而印出 SQL（Q12）
+- **後端 log 輸出設定**涵蓋整個後端：格式由本 change 定，為一行 `key=value` 文字（Q2）；預設等級 `INFO`，可用新的環境變數 `LOG_LEVEL` 調整，兩份編排檔把 `.env` 的 `LOG_LEVEL` 傳進後端容器（`LOG_LEVEL: ${LOG_LEVEL:-INFO}`，Q14）；資料庫引擎、連線池與驅動的紀錄明確固定為 `WARNING`，不因 `LOG_LEVEL` 是 `INFO` 或 `DEBUG` 而印出 SQL 本文、參數值或驅動的錯誤訊息（Q12）
 - **Q2 取代先前的決議**：歸檔 `2026-11-23-infra-compose-e2e-ci/clarification.md` Q15（#506，「access log 格式留給 01-01」）由本 change 的 Q2 取代
 - 同步常駐文件 `docs/diagrams/architecture/backend-modules.mdx`：§後端基礎建設的 `core/` 各模組、app factory、correlation id、§log 安全規則（並註明寄信降級的紀錄管道留給寄信的 change，N3）、§設定（`LOG_LEVEL`）。§已知限制：刪除 #567 那一列、新增「回應已開始送出後才出錯」一列（N2）；刪除 #567 那一列由實作在同一個 PR 進行（clarification P2、system-design §常駐文件異動）
 - 沒有 **BREAKING** 變更：不改任何端點、回應欄位、標頭或錯誤碼（api-contract §理由）。部署者在容器 log 看到的內容會改變：每個請求新增一行存取紀錄、所有後端紀錄改成一行 `key=value`、伺服器程式內建的存取紀錄消失。這屬於維運面的變化，不算 API 破壞
@@ -34,7 +34,7 @@
 
 ### Modified Capabilities
 
-- `runtime-config`：新增 `LOG_LEVEL` 設定，預設 `INFO`，值不合法時拒絕啟動，錯誤訊息指出變數名、不印出設定值（Q12）。既有 Requirement「其餘設定都有預設值」列出各設定的預設值，`LOG_LEVEL` 要加進去；驗證規則與「兩份編排檔把 `LOG_LEVEL` 傳進後端容器」（Q14）都寫進同一條 requirement（MODIFIED），與同 capability 既有的 `API_DOCS_ENABLED` 與正式層編排檔的寫法一致（design D8、D9）
+- `runtime-config`：新增 `LOG_LEVEL` 設定，預設 `INFO`，值不合法時拒絕啟動，錯誤訊息指出變數名、不印出設定值（Q12）。既有 Requirement「其餘設定都有預設值」列出各設定的預設值，`LOG_LEVEL` 要加進去；預設值與驗證規則寫進這一條（MODIFIED），與同一條裡 `API_DOCS_ENABLED` 的寫法一致；「兩層編排檔把 `LOG_LEVEL` 傳進後端容器」（Q14）另立一條（ADDED），比照同 capability 已有的「正式層部署明確關閉內建文件」以獨立 requirement 規範編排檔（design D9）
 - `api-envelope`：**不寫 delta**（寫 specs 時確認，理由見 design D9）。Q5 決定未處理例外那一筆維持記實際路徑，所以 Requirement「未處理例外留下可用追蹤編號對照的伺服器紀錄」的文字不變；但 Q8 拿掉訊息裡手寫的 `traceId` 之後，Scenario「未處理例外的紀錄含追蹤編號且不含請求內容」的「紀錄含與回應 `traceId` 相同的值」改由自動帶入的欄位成立。這個 Scenario 沒有限定值必須出現在訊息文字，Q8 之後照原文仍可判定，所以 requirement 與 Scenario 都不改
 
 以下 capability 會受影響，但 requirement 不變，所以不寫 delta：
@@ -60,7 +60,7 @@
 | Q9   | 來源 IP                         | 不記                                                                                                    |
 | Q10  | 伺服器程式內建的存取紀錄        | 在程式的 log 設定裡關閉                                                                                 |
 | Q11  | 耗時                            | `duration_ms`，從進入中介層到最後一個 body 送出，毫秒一位小數                                           |
-| Q12  | log 設定範圍                    | 整個後端；新增 `LOG_LEVEL`，預設 `INFO`；SQL 紀錄維持 `WARNING`                                         |
+| Q12  | log 設定範圍                    | 整個後端；新增 `LOG_LEVEL`，預設 `INFO`；資料庫引擎、連線池與驅動的紀錄維持 `WARNING`                   |
 | Q13  | 是否補回 `docs/specs/`          | 不補，依 spec-migration D4 追溯到 issue、ADR 與規則文件                                                 |
 | Q14  | 編排檔傳入 `LOG_LEVEL`          | 補：兩份編排檔的後端 `environment` 加 `LOG_LEVEL: ${LOG_LEVEL:-INFO}`                                   |
 | N1   | issue 字面寫 logging filter     | 改用 record factory                                                                                     |

@@ -8,7 +8,7 @@
 
 ### Requirement: 每個 /api/v1 請求留下一行存取紀錄
 
-系統 SHALL 在每個 `/api/v1` 請求的回應送完後寫**恰好一行**存取紀錄，`logger` 欄為 `app.access`，並含以下欄位：`method`（請求方法）、`route`（比對到的路由模板，含 `/api/v1` 前綴，MUST NOT 是實際路徑）、`status`（回應狀態碼）、`durationMs`（從進入存取紀錄處理起到最後一段回應 body 送出為止的毫秒數，一位小數）、`traceId`（與該回應的 `X-Correlation-ID` 同值）。存取紀錄 MUST NOT 含來源 IP。例外情形只有下列各條 requirement 明列的四種：成功的健康檢查、已記過錯誤的請求、CORS 預檢、`/api/v1` 以外的路徑。
+系統 SHALL 在每個 `/api/v1` 請求的回應送完後寫**恰好一行**存取紀錄，`logger` 欄為 `app.access`，並含以下欄位：`method`（請求方法）、`route`（比對到的路由模板，含 `/api/v1` 前綴，MUST NOT 是實際路徑）、`status`（回應狀態碼）、`durationMs`（從進入存取紀錄處理起到最後一段回應 body 送出為止的毫秒數，一位小數）、`traceId`（與該回應的 `X-Correlation-ID` 同值）。存取紀錄 MUST NOT 含來源 IP。例外情形只有下列各條 requirement 明列的四種：成功的健康檢查、已記過錯誤的請求、CORS 預檢、`/api/v1` 以外的路徑；此外，存取紀錄與其他紀錄一樣，只在等級不低於 `LOG_LEVEL` 時輸出。
 
 來源：issue #567 §功能範圍、§驗收條件 第 1 條；ADR-008 D4；ADR-003 D5；clarification Q5、Q9、Q11。
 
@@ -170,9 +170,9 @@
 - **WHEN** 以 `uvicorn app.main:create_app --factory` 啟動服務（不帶關閉存取紀錄的參數），呼叫端送出 `GET /api/v1/health?q=CANARY-query`
 - **THEN** 服務行程的輸出不含 `CANARY-query`，也沒有伺服器程式內建格式的存取紀錄行（例如含 `"GET /api/v1/health` 的那一行）
 
-### Requirement: 輸出等級由 LOG_LEVEL 決定且 SQL 紀錄維持 WARNING
+### Requirement: 輸出等級由 LOG_LEVEL 決定且資料庫相關紀錄維持 WARNING
 
-系統 SHALL 以 `LOG_LEVEL` 決定後端所有紀錄（含伺服器程式自己的紀錄）的最低輸出等級；低於該等級的紀錄 MUST NOT 輸出。資料庫引擎的紀錄 MUST 固定為 `WARNING`，不論 `LOG_LEVEL` 設為何值，SQL 本文 MUST NOT 出現在輸出中。
+系統 SHALL 以 `LOG_LEVEL` 決定後端所有紀錄（含伺服器程式自己的紀錄）的最低輸出等級；低於該等級的紀錄 MUST NOT 輸出。資料庫引擎、連線池與驅動的紀錄固定為 `WARNING`：不論 `LOG_LEVEL` 設為何值，它們低於 `WARNING` 的紀錄 MUST NOT 輸出，SQL 本文與 SQL 參數值 MUST NOT 出現在輸出中。
 
 來源：issue #567 §功能範圍；security-agent-rules S9；ADR-008 D4；clarification Q12。
 
@@ -184,5 +184,6 @@
 
 #### Scenario: 資料庫引擎的紀錄維持 WARNING
 
-- **WHEN** 分別以未設 `LOG_LEVEL` 與 `LOG_LEVEL=DEBUG` 啟動服務，資料庫可以連線，呼叫端送出 `GET /api/v1/health`
-- **THEN** 兩次的輸出都不含 `SELECT 1`
+- **WHEN** 以 Lite 層（SQLite）分別以未設 `LOG_LEVEL` 與 `LOG_LEVEL=DEBUG` 啟動服務，資料庫可以連線，呼叫端送出 `GET /api/v1/health`
+- **THEN** 兩次的輸出都不含 `SELECT 1`，且不含任何 SQL 參數值
+- **AND** 兩次的輸出都沒有資料庫引擎、連線池或驅動寫出的 `INFO` 或 `DEBUG` 紀錄

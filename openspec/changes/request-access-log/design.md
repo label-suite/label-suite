@@ -67,7 +67,11 @@
 
 ### D6. `configure_logging` 是唯一的輸出設定點，可重複呼叫（Q10、Q12）
 
-`create_app` 讀完設定後呼叫 `configure_logging(settings)`：安裝 record factory；在 root 掛一個以屬性標記的 `StreamHandler`（重呼叫時先移除自己標記的那一個再掛，不動 `caplog` 等其他 handler）；root 與該 handler 的等級都設成 `LOG_LEVEL`；`sqlalchemy.engine` 固定 `WARNING`；`uvicorn` 清空 handler、`propagate=True`；`uvicorn.access` 清空 handler、`propagate=False`。各項的理由（handler 也要設等級才壓得掉 uvicorn 的 INFO、root 為 INFO 時 SQLAlchemy 會印 SQL、uvicorn 先 `dictConfig` 後呼叫 factory 所以設定不會被蓋回）見 system-design §log 輸出設定的已知陷阱。
+`create_app` 讀完設定後呼叫 `configure_logging(settings)`：安裝 record factory；在 root 掛一個以屬性標記的 `StreamHandler`（重呼叫時先移除自己標記的那一個再掛，不動 `caplog` 等其他 handler）；root 與該 handler 的等級都設成 `LOG_LEVEL`；`sqlalchemy`（父 logger，涵蓋 `sqlalchemy.engine` 與 `sqlalchemy.pool`）、`aiosqlite`、`asyncpg` 固定 `WARNING`；`uvicorn` 清空 handler、`propagate=True`；`uvicorn.access` 清空 handler、`propagate=False`。各項的理由（handler 也要設等級才壓得掉 uvicorn 的 INFO、root 為 INFO 時 SQLAlchemy 會印 SQL、uvicorn 先 `dictConfig` 後呼叫 factory 所以設定不會被蓋回）見 system-design §log 輸出設定的已知陷阱。
+
+只釘 `sqlalchemy.engine` 不夠（design review 指出）：`LOG_LEVEL=DEBUG` 時 `aiosqlite` 會以 DEBUG 印出 SQL 本文與參數（繞過 engine 的 `hide_parameters=True`），`sqlalchemy.pool` 繼承 root、會在 INFO／DEBUG 印出驅動的錯誤訊息。所以改釘父 logger `sqlalchemy` 與兩個驅動的 logger，仍在 Q12「SQL 紀錄維持 `WARNING`」的意圖內。
+
+`configure_logging` 另接受一個選用參數 `stream`（預設 `sys.stderr`），讓本 repo 的 root handler 寫到指定的串流；測試傳入 `io.StringIO`，以實際的 `KeyValueFormatter` 輸出斷言整行格式與「整個輸出不含某字串」，不只看 `caplog.records`。正式程式不傳這個參數。
 
 - 替代：用 `--no-access-log` 關內建存取紀錄——要改 Dockerfile、`scripts/dev.mjs` 與文件三個啟動點，漏一處就漏（Q10 否決）
 - 替代：只設 `app.access` 的 handler、不碰 root——業務程式與 uvicorn 的紀錄格式不一，`LOG_LEVEL` 管不到全後端（Q12 否決）
@@ -87,7 +91,7 @@
 ### D9. spec delta 的範圍
 
 - `server-logging`：新增 capability，承載存取紀錄、traceId 帶入、格式與等級（proposal §Capabilities）
-- `runtime-config`：MODIFIED「其餘設定都有預設值」，把 `LOG_LEVEL` 的預設值、驗證與「兩層編排檔傳入後端容器」（Q14）寫進同一條，與既有 `API_DOCS_ENABLED` 的寫法一致，不另立一條；編排檔行為放在這個 capability，比照既有的「正式層部署明確關閉內建文件」
+- `runtime-config`：MODIFIED「其餘設定都有預設值」，把 `LOG_LEVEL` 的預設值與驗證寫進同一條，與同一條裡 `API_DOCS_ENABLED` 的寫法一致；ADDED「兩層編排檔把 LOG_LEVEL 傳進後端容器」（Q14），比照同 capability 已有的「正式層部署明確關閉內建文件」以獨立 requirement 規範編排檔，不混進「預設值」那一條
 - `api-envelope`：**不寫 delta**。Requirement「未處理例外留下可用追蹤編號對照的伺服器紀錄」要求紀錄「含該請求的 `traceId`、method、path 與例外細節」，Q5 保留實際路徑、例外細節仍是只有型別與 frame 的 traceback；Q8 之後 `traceId` 不在訊息文字裡，但仍在同一筆紀錄的 `traceId` 欄（record 屬性與輸出行的 `traceId=`）。Scenario「未處理例外的紀錄含追蹤編號且不含請求內容」的判定句「伺服器紀錄有一筆 `ERROR`，含與回應 `traceId` 相同的值與請求的 path」沒有限定值必須出現在訊息文字，照原文仍可客觀判定；改變的只是測試斷言的位置（How）。「恰好一筆」與「訊息不含 `traceId=`」由 `server-logging` 的 Scenario 另外釘住
 - `container-runtime`：不寫 delta。它的 requirement 規範服務組成、啟動順序、公開入口、遷移、健康檢查、volume 與 `.env.example`，沒有任何一條規範「哪些設定要傳進後端容器」，所以 Q14 不改它的 requirement 文字；`.env.example` 加 `LOG_LEVEL` 是照既有 requirement「設定範例檔列出所有設定且不含 secret」做
 - `request-correlation`、`health-check`：不寫 delta，理由見 proposal §Capabilities
@@ -98,16 +102,16 @@
 
 1. §已知限制 刪掉 #567 那一列、加上 N2 那一列（system-design §已知限制），由實作群組在同一個 PR 處理（clarification P2）
 2. 依落地的程式校正上述各節（`backend-modules.mdx` §誰改、什麼時候改：實作後由 `backend-developer` 校正）
-3. 重新產生互動元件 `.notecraft/components/backend-request-pipeline.tsx`，`status` 改回 `generated`，由 `technical-writer` 依 `content-visualize` skill 做。**不得在 worktree 執行 NoteCraft build**（會污染主倉庫共用的建置快取），渲染驗證交給 CI 的 `docs-site` job
+3. 重新產生互動元件 `.notecraft/components/backend-request-pipeline.tsx`，`status` 改回 `generated`，並依 `content-visualize` skill 第 5 步把 `GeneratedFrame` 的 `prompt` 與 `caption` 換成目前 `@ai-visualize` 區塊的值（現在仍是九層、沒有 `AccessLogMiddleware` 的舊 prompt；`import` 不改），由 `technical-writer` 做。**不得在 worktree 執行 NoteCraft build**（會污染主倉庫共用的建置快取），渲染驗證交給 CI 的 `docs-site` job
 
 ## Risks / Trade-offs
 
-- [record factory 與 root handler 是行程層的全域狀態，測試反覆建 app 會互相影響] → `configure_logging` 只移除自己標記的 handler、record factory 只包一次；測試以 fixture 在每個測試後還原 root 等級、root handler、`uvicorn`、`uvicorn.access`、`sqlalchemy.engine` 的設定
+- [record factory 與 root handler 是行程層的全域狀態，測試反覆建 app 會互相影響] → `configure_logging` 只移除自己標記的 handler、record factory 只包一次；測試以 fixture 在每個測試後還原 root 等級、root handler、`uvicorn`、`uvicorn.access`、`sqlalchemy`、`aiosqlite`、`asyncpg` 的設定
 - [FastAPI 升版改了 `iter_route_contexts` 或 `RouteContext`（N4）] → 測試釘住「完整模板含 `/api/v1` 前綴」；`openapi.py` 的 operationId 唯一性檢查依賴同一個函式，會一起紅
 - [回應已開始送出後才出錯時，uvicorn 會以 `exc_info` 再記一筆 ERROR，「錯誤只記一次」在這條路徑不成立（N2）] → 目前沒有串流端點；formatter 對 `exc_info` 只寫型別，不會外洩訊息；寫進 `backend-modules.mdx` §已知限制，留給第一個串流端點的 change
 - [`StreamHandler` 在事件迴圈上同步寫 stderr，收集端變慢時會拖慢請求] → 正常量每個請求一行；成功的健康檢查不寫（Q1）。日後需要時改 `QueueHandler` 加 `QueueListener`（system-design §交易、session 與效能）
 - [部署者既有的 log 解析規則失效：格式改成一行 `key=value`、uvicorn 內建存取紀錄消失] → 不是 API 破壞（proposal §What Changes 最後一項）；格式寫進 `backend-modules.mdx` §log 安全規則與本 spec
-- [`LOG_LEVEL=DEBUG` 可能讓第三方套件印出敏感內容] → `sqlalchemy.engine` 固定 `WARNING`；其他第三方紀錄帶 `exc_info` 時只寫型別；正式層預設 `INFO`
+- [`LOG_LEVEL=DEBUG` 可能讓第三方套件印出敏感內容] → `sqlalchemy`、`aiosqlite`、`asyncpg` 固定 `WARNING`；其他第三方紀錄帶 `exc_info` 時只寫型別；正式層預設 `INFO`
 - [reloader 父行程（`--reload`）的幾行不經 `create_app`，維持 uvicorn 原格式] → 只影響本機開發，不含請求內容
 
 ## Migration Plan
