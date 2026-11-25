@@ -1,0 +1,25 @@
+# Tasks
+
+## 1. 後端設定、docstring 修正與常駐文件
+
+本組全部在 `backend/` 下以 `uv run` 執行（Python 用 uv，不得出現 pip install）。不改 `.github/workflows/ci.yml`、`scripts/check.mjs`、`scripts/tests/`、`backend/tests/**`、`backend/alembic/**`（design Non-Goals）。完成後整組提交一次。
+
+- [ ] 1.1 依 design 決策 1 至 4（設定內容見 system-design §設定異動）改 `backend/pyproject.toml`：`[tool.mypy]` 加 `strict = true`；`[tool.ruff.lint]` 的 `select` 加 `"D"`、加 `ignore = ["D107"]`；新增 `[tool.ruff.lint.pydocstyle]`，`convention = "google"`；`per-file-ignores` 的 `"tests/**"` 改為 `["S101", "D"]`、新增 `"alembic/**" = ["D"]`；在設定旁加英文註解，寫明 B2 的私有 helper 例外來自 ruff 不檢查 `_` 開頭名稱的預設、所以不加規則。除上述之外不忽略或啟用其他規則（Q6）。完成判定：`uv run ruff check . --output-format concise` 只報 `app/core/log_safety.py:11:5: D301` 一處；`uv run mypy app` 與 `uv run mypy --strict app` 都是 `Success: no issues found` [@backend-developer]
+- [ ] 1.2 在 1.1 的設定下，先證明檢查會擋，再還原：暫時在 `backend/app` 加一個沒有 docstring 的公開函式、一個 `Args:` 只描述兩個參數中一個的公開函式、一個沒有 docstring 的 `_` 開頭函式、一個有類別 docstring 但 `__init__` 沒有 docstring 的公開類別、一個缺型別標註的公開函式，並在 `backend/tests` 加一個沒有 docstring 的測試函式。完成判定：`uv run ruff check .` 失敗，且只報前兩者（D103 與指出漏列參數名的 D417）加上 1.1 的 D301，`_` 開頭函式、`__init__` 與 `tests` 那一個都不報；`uv run mypy app` 與 `uv run mypy --strict app` 都報缺型別標註那一個函式、錯誤相同。對應 spec Scenario「公開介面缺 docstring 時 CI 失敗」「文件註解漏列參數時 CI 失敗」「私有 helper 與建構子不需要 docstring」「測試與遷移腳本不受文件註解規則約束」「本機不帶嚴格參數的型別檢查與 CI 一致」。指令與關鍵輸出寫進回報；接著刪掉全部樣本，`git status --porcelain -- backend/` 只剩 1.1 的 `pyproject.toml`，樣本不進任何 commit [@backend-developer]
+- [ ] 1.3 依 design 決策 5 修 `backend/app/core/log_safety.py` 的 D301：`escape_for_log` 的 docstring 改成 `r"""`，同時把內文的 `\\n`、`\\r`、`\\t`、`\\x1b` 改成單反斜線（或改寫內文去掉反斜線），不得只套 ruff 的 unsafe fix；函式本體不改。完成判定：修改前後各執行一次 `uv run python -c "from app.core.log_safety import escape_for_log; print(escape_for_log.__doc__)"`，兩次輸出相同；`uv run ruff check .` 通過；`uv run pytest` 通過（`escape_for_log` 沒有專屬測試，經 `app/core/middleware.py`、`app/core/errors.py` 的既有測試間接覆蓋；本 task 只改 docstring，不新增測試）[@backend-developer]
+- [ ] 1.4 依 design 決策 6 與 Q2，把 `backend/app/modules/health/repository.py` 的 `HealthRepository` 建構參數 `session`、`backend/app/modules/health/service.py` 的 `HealthService` 建構參數 `repository` 寫進各自類別 docstring 的 `Args:` 段；`__init__` 不加 docstring，程式不改。完成判定：兩個類別 docstring 都有描述該參數的 `Args:` 段（ruff 不檢查這一點，由 code-reviewer 核對）；`uv run ruff check .` 通過 [@backend-developer]
+- [ ] 1.5 依 design 決策 8 與 system-design §常駐文件異動，刪掉 `docs/diagrams/architecture/backend-modules.mdx` §已知限制 中「`pyproject.toml` 沒有設 mypy strict」那一列（追蹤 #524）；§已知限制 追蹤 #506 那一列不動（範圍外）；§新增業務模組的檢查清單 的 docstring 項已在規劃階段改好，只核對它與 1.1 的設定一致。完成判定：`grep -n "沒有設 mypy strict" docs/diagrams/architecture/backend-modules.mdx` 無輸出；在 repo 根目錄 `pnpm check:specs` 與 `pnpm exec notecraftapp build docs --rebuild` 通過；`pnpm exec prettier --check docs/diagrams/architecture/backend-modules.mdx` 通過 [@backend-developer]
+- [ ] 1.6 後端檢查全數通過：`uv run ruff check . && uv run ruff format --check .`、`uv run mypy app`、`uv run mypy --strict app`、`uv run lint-imports`、`uv run pytest`（SQLite，回報附 pytest 摘要的 skipped 數量）；本機有 docker 時另跑 `TEST_DATABASE_URL=postgresql+asyncpg://... uv run pytest`（PostgreSQL，應為 0 skipped），沒有 docker 時在回報註明未跑、交 CI 的 `backend-postgres` job 驗證；可行時在 repo 根目錄跑 `pnpm run check`，回報每一步的結果 [@backend-developer]
+- [ ] 1.7 確認契約與 api-contract 一致（本次無 API 變更，design 決策 7）：若 1.3、1.4 之外改到 router handler 或 Pydantic schema 的 docstring，先在 repo 根目錄跑 `pnpm run api:sync` 並把產物併入本組提交；最後在 `backend/` 執行 `uv run python -m app.scripts.export_openapi && git diff --exit-code -- openapi.json ../docs/diagrams/architecture/api.openapi.json && test -z "$(git status --porcelain -- openapi.json ../docs/diagrams/architecture/api.openapi.json)"`。完成判定：沒改到 handler 或 schema 時指令結束碼為 0、無差異 [@backend-developer]
+
+## 2. 規則文件同步
+
+依賴群組 1：文件描述的是群組 1 落地後的設定。
+
+- [ ] 2.1 依 Q5 與 design 決策 8，改 `docs/development/rules/backend-agent-rules.mdx`「B2 的反例與檢查方式」摺疊區塊：「檢查方式」改寫為實際指令與範圍——CI `backend-sqlite` job 與 `pnpm run check` 跑 `uv run mypy --strict app`，`backend/pyproject.toml` 的 `[tool.mypy]` 已設 `strict = true`，本機 `uv run mypy app` 結果相同，型別檢查範圍只有 `app`；`uv run ruff check .` 對整個 `backend/` 跑，選用規則加上 `D`（google 風格、忽略 D107），文件註解規則只約束 `app`，`tests/**`、`alembic/**` 以目錄樣式豁免，`_` 開頭的私有 helper 靠 ruff 預設不受檢；`uv run ruff format --check .` 檢查格式。「尚未檢查」改寫為現況——docstring 的**有無與段落格式**已機械檢查，但內容是否寫明前提、副作用與例外，以及建構參數是否寫在類別 docstring 的 `Args:`，仍靠審查；`tests` 的型別與 docstring 不受檢。只改這兩項，不改 B2 表格的適用路徑、禁止、正例與例外。完成判定：兩項文字與 1.1 落地的 `backend/pyproject.toml` 逐項一致；在 repo 根目錄 `pnpm check:specs`、`pnpm exec notecraftapp build docs --rebuild`、`pnpm exec prettier --check docs/development/rules/backend-agent-rules.mdx` 通過 [@technical-writer]
+
+## Workflow follow-up
+
+- 全部 task 完成且工作區乾淨後，交 code-reviewer 審查：特別核對 1.3 的顯示文字不變、1.4 的 `Args:` 段、1.5 已刪 #524 那一列、2.1 與設定一致；修正由實作角色另開 commit。
+- acceptance-verifier 對照 spec 每個 Scenario 驗收，報告寫在本 change 目錄的 `acceptance.md`，附人工驗收步驟（在 `backend/` 重做 1.2 的刻意違規樣本與預期輸出、`uv run mypy app` 與 `uv run mypy --strict app` 的比對、`git status` 確認樣本已還原）；本 change 沒有畫面，不需登入任何角色。
+- 驗收通過後由 ops 在合併前執行 `/opsx:archive`，把 `ci-quality-gates` 的 delta 同步進主規格，歸檔改動進同一張 PR；再依合併條件（CI 每個 job completed 且 success、審查無阻斷意見、PR 可合併）合併。
