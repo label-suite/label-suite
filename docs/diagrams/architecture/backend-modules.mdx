@@ -196,7 +196,7 @@ backend/
 | `envelope.py` | 組成功與錯誤外層；correlation id 的 contextvar | `ok`、`success`、`error_response`、`current_trace_id` |
 | `errors.py` | 領域錯誤與 exception handler；`AppError(already_logged=True)` 表示丟出的那一層已自己記過 | `AppError`、`NotFoundError`、`NotAcceptableError`、`DatabaseUnavailableError`、`register_exception_handlers` |
 | `middleware.py` | 自寫的純 ASGI 中介層 | `CorrelationIdMiddleware`、`AccessLogMiddleware`、`UnhandledExceptionMiddleware`、`LocaleMiddleware` |
-| `log_config.py` | 整個後端的 log 輸出設定與一行 `key=value` 格式；讓每筆 log record 帶目前請求的 `traceId`；「這個請求已記過」的標記 | `configure_logging`、`install_trace_id_record_factory`、`KeyValueFormatter`、`mark_error_logged`、`is_error_logged` |
+| `log_config.py` | 整個後端的 log 輸出設定與一行 `key=value` 格式；讓每筆 log record 帶目前請求的 `traceId`；「這個請求已記過」的標記 | `configure_logging`、`install_trace_id_record_factory`、`KeyValueFormatter`、`mark_error_logged`、`is_error_logged`、`is_repo_handler`；常數 `ACCESS_LOGGER_NAME`（`app.access`）、`NO_TRACE_ID`（`-`）、`UNMATCHED_ROUTE`（`<unmatched>`） |
 | `i18n.py` | `Accept-Language` 解析與訊息目錄 | `resolve_locale`、`MessageCatalog` |
 | `openapi.py` | operationId、唯一性檢查、API 文件後處理、版號 | `generate_operation_id`、`assert_unique_operation_ids`、`install_openapi`、`get_app_version` |
 | `log_safety.py` | 把來自請求的值轉成安全的一行 log | `escape_for_log` |
@@ -258,7 +258,7 @@ import BackendRequestPipeline from '@notes/components/backend-request-pipeline'
 | — | Starlette `ServerErrorMiddleware` | 框架固定的最外層，只剩最後保險 | 本 repo 的 `500` 不靠它 |
 | 1 | `CorrelationIdMiddleware` | 決定 correlation id，回應時加 `X-Correlation-ID` | 無 |
 | 2 | `CORSMiddleware` | 來源逐一列出；`X-Correlation-ID` 列在允許與公開的標頭 | 預檢回應（不是錯誤外層）；預檢不往內走，所以沒有存取紀錄 |
-| 3 | `AccessLogMiddleware`（只作用在 `/api/v1`） | 回應送完後寫一行存取紀錄到 `app.access`：method、路由模板（沒有模板記 `<unmatched>`）、狀態、耗時；2xx／3xx 記 INFO、4xx 記 WARNING、5xx 記 ERROR。請求已被標記為記過，或 2xx 且路由在 `quiet_success_routes` 裡（健康檢查）時不寫 | 無 |
+| 3 | `AccessLogMiddleware`（只作用在 `/api/v1`） | 回應送完後寫一行存取紀錄到 `app.access`：method、路由模板（沒有模板記 `<unmatched>`）、狀態、耗時；2xx／3xx 記 INFO、4xx 記 WARNING、5xx 記 ERROR。請求已被標記為記過，或 2xx 且路由在 `quiet_success_routes` 裡（健康檢查）時不寫。耗時從進入這一層到最後一段 body 送出，一位小數；路由模板由 `route_template` 以 `iter_route_contexts` 對照（含 `/api/v1` 前綴）。內層拋例外時照同一套判斷（還沒開始回應的記 `500`），再原樣往外拋 | 無 |
 | 4 | `UnhandledExceptionMiddleware` | 攔下沒有 handler 的例外，記一筆 ERROR，並標記這個請求已記過 | `500 INTERNAL_ERROR` |
 | 5 | `LocaleMiddleware`（只作用在 `/api/v1`） | 解析 `Accept-Language`，回應時加 `Content-Language` | `406 NOT_ACCEPTABLE`，一律 zh-TW |
 | 6 | Starlette `ExceptionMiddleware` | 執行註冊的 exception handler | `404`、`405`、`422` 與各 `AppError` |
@@ -284,7 +284,7 @@ service 只丟例外、不組回應；例外在下表那一層變成錯誤外層
 | `RequestValidationError` | `handle_validation_error` | `422` | `VALIDATION_FAILED` | `common.validation_failed` |
 | 路由找不到 | `handle_http_exception` | `404` | `NOT_FOUND` | `common.not_found` |
 | 方法不允許 | `handle_http_exception` | `405`，保留 `Allow` 標頭 | `METHOD_NOT_ALLOWED` | `common.method_not_allowed` |
-| 其他狀態的 `HTTPException` | `handle_http_exception`，另記一筆 ERROR | `500` | `INTERNAL_ERROR` | `common.internal_error` |
+| 其他狀態的 `HTTPException` | `handle_http_exception`，另記一筆 ERROR 並標記已記過 | `500` | `INTERNAL_ERROR` | `common.internal_error` |
 | `Accept-Language` 全被拒 | `LocaleMiddleware` | `406` | `NOT_ACCEPTABLE` | `common.not_acceptable` |
 | 其他例外，含 `ResponseValidationError` | `UnhandledExceptionMiddleware` | `500` | `INTERNAL_ERROR` | `common.internal_error` |
 
@@ -319,7 +319,7 @@ log 只記型別、位置與 `traceId`，不記任何可能帶著請求或資料
 
 | 規則 | 在哪裡做 |
 | :--- | :--- |
-| 來自請求的值（method、path、traceId）先經 `escape_for_log`：控制字元與非 ASCII 字元寫成跳脫序列，無法偽造新的一行 | `log_safety.py` |
+| 來自請求的值（method、path）先經 `escape_for_log`：控制字元與非 ASCII 字元寫成跳脫序列，無法偽造新的一行；traceId 不經它，由 `accept_or_generate` 限定字元集後才進 record | `log_safety.py`、`CorrelationIdMiddleware` |
 | 未處理例外只記一筆 ERROR：method、實際 path，以及只有型別與 frame 的 traceback，traceId 由 record 自動帶；不帶 `exc_info`、例外訊息、query、body、標頭、cookie。記完標記這個請求已記過，存取紀錄就不再寫 | `UnhandledExceptionMiddleware`、`format_exception_without_text`、`mark_error_logged` |
 | 資料庫連不上只記一筆 WARNING：例外型別，traceId 由 record 自動帶；丟的例外帶 `already_logged=True`，handler 據以標記，存取紀錄不再寫 | `HealthService.check`、`handle_app_error` |
 | 存取紀錄只記 method、路由模板（沒有模板記固定的 `<unmatched>`，從不記實際路徑）、狀態碼、耗時與 traceId；不記 query、body、標頭、cookie、來源 IP，method 先經 `escape_for_log` | `AccessLogMiddleware` |
@@ -361,7 +361,7 @@ log 只記型別、位置與 `traceId`，不記任何可能帶著請求或資料
 | `CORS_ALLOWED_ORIGINS` | API | 是 | 逗號分隔；每一個都是 `http(s)://host[:port]`，不能有路徑；含 `*` 就拒絕 |
 | `CORS_ALLOW_CREDENTIALS` | API | 否 | 預設 `true` |
 | `API_DOCS_ENABLED` | API | 否 | 布林，預設 `true`；`false` 時不提供 FastAPI 內建的 `/docs`、`/docs/oauth2-redirect`、`/redoc`、`/openapi.json`。`docker-compose.prod.yml` 的後端明確設為 `false` |
-| `LOG_LEVEL` | API | 否 | `DEBUG`、`INFO`、`WARNING`、`ERROR`、`CRITICAL` 之一，不分大小寫，預設 `INFO`；其他值 `ConfigError`。管整個後端的輸出等級（root 與它的 handler）；資料庫套件的 logger（`sqlalchemy`、`aiosqlite`、`asyncpg`）不跟著它，固定 `WARNING` |
+| `LOG_LEVEL` | API | 否 | `DEBUG`、`INFO`、`WARNING`、`ERROR`、`CRITICAL` 之一，不分大小寫，預設 `INFO`；其他值 `ConfigError`。管整個後端的輸出等級（root 與它的 handler）；資料庫套件的 logger（`sqlalchemy`、`aiosqlite`、`asyncpg`）不跟著它，固定 `WARNING`。兩層編排檔以 `${LOG_LEVEL:-INFO}` 傳入後端容器 |
 
 變數名沒有前綴；驗證失敗時 `ConfigError` 一行列一個「變數名：原因」，不含設定值。
 
@@ -461,7 +461,6 @@ cd backend && uv run python -m app.scripts.export_openapi
 
 | 還沒有 | 風險 | 追蹤 |
 | :--- | :--- | :--- |
-| 一般請求的存取 log；業務程式的 log 不會自動帶 `traceId` | 拿到使用者回報的 `traceId`，只找得到未處理例外那一筆 | [#567](https://github.com/label-suite/label-suite/issues/567) |
 | 登入失敗鎖定 | 登入失敗次數的限制還沒實作 | [規格 01-05 §已確認決議](../../specs/01-account/05-login-state.mdx#已確認決議) Q3（失敗 10 次擋 30 分鐘） |
 | 全域速率限制 | 端點沒有呼叫上限 | [ADR-004 的 D7](../../development/adr/004-auth-and-security.mdx#d7-不做全域速率限制登入失敗鎖定用-redis-計數)：後端不做，全域上限日後交給反向代理層 |
 | 認證、授權與 CSRF | 目前唯一的端點刻意公開；第一個需要登入的端點要先把這幾層補上 | [ADR-004 的 D1](../../development/adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie)、[D3](../../development/adr/004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token) |
@@ -469,6 +468,7 @@ cd backend && uv run python -m app.scripts.export_openapi
 | Nginx 與安全標頭 | 回應不帶 CSP 等安全標頭 | [#568](https://github.com/label-suite/label-suite/issues/568) |
 | 監控、告警與錯誤追蹤 | 出錯時只能看 log，沒有人會被通知 | [ADR-008 的 D4](../../development/adr/008-deployment-and-operations.mdx#d4-觀測性只做-ai_runs監控與錯誤追蹤本期不做) |
 | CI 的後端檢查：兩種資料庫的 pytest、ruff、mypy、契約漂移、分層 import 方向 | 這些檢查目前只在本機跑，PR 不會因為違反而失敗 | [#506](https://github.com/label-suite/label-suite/issues/506) |
+| 回應已開始送出後才出錯時，錯誤會被記兩筆（`UnhandledExceptionMiddleware` 一筆、uvicorn 以 `exc_info` 一筆，後者只寫例外型別） | 錯誤只記一次在這條路徑不成立 | 第一個串流端點的 change（request-access-log clarification N2） |
 
 ## 決策紀錄
 
@@ -477,4 +477,4 @@ cd backend && uv run python -m app.scripts.export_openapi
 | 2026-11-23 | 後端模組的分層、Class 圖與主要 Sequence 圖落地成本文；規劃時由 `sd` 先改本文，change 只寫異動摘要與路徑（[§誰改、什麼時候改](#誰改什麼時候改)） | 只散在各 change 的 `system-design.md` | [#546](https://github.com/label-suite/label-suite/issues/546) |
 | 2026-11-23 | 本文加一節後端基礎建設與已知限制，不另開文件（[§後端基礎建設](#後端基礎建設)） | — | [#546](https://github.com/label-suite/label-suite/issues/546) |
 | 2026-11-23 | 實作後由 `backend-developer` 依程式校正本文，`code-reviewer` 再核對（[§誰改、什麼時候改](#誰改什麼時候改)） | — | [#546](https://github.com/label-suite/label-suite/issues/546#issuecomment-7100137950) |
-| 2026-11-25 | 存取紀錄與所有後端紀錄的格式由 request-access-log change 定：一行 `key=value`，`msg` 固定最後（[§log 安全規則](#log-安全規則)） | #506 clarification Q15「access log 格式留給 01-01」 | [#567](https://github.com/label-suite/label-suite/issues/567) |
+| 2026-11-25 | 後端紀錄一律一行 `key=value`，格式由 request-access-log 定；`msg` 固定最後（[§log 安全規則](#log-安全規則)） | 歸檔 `2026-11-23-infra-compose-e2e-ci` clarification Q15（access log 格式留給 01-01） | request-access-log clarification Q2、[#567](https://github.com/label-suite/label-suite/issues/567) |
