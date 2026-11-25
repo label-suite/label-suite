@@ -695,6 +695,23 @@ jobs:
       - name: Stop the Lite tier
         run: docker compose down -v
 
+      # Runtime proof of the trusted proxy settings (#566, design D4, P2): a complete
+      # cycle of its own, after the Lite tier is down. Only the backend's command is
+      # swapped, for an app that reports the client address it sees; the override
+      # never touches the image or the default orchestration. Re-running `up` with
+      # the override over a running Lite tier would recreate only the backend and
+      # leave Nginx pointing at the old backend address (a 502), so it is not done.
+      - name: Start the Lite tier with the client address probe
+        run: docker compose -f docker-compose.yml -f e2e/shared/proxy-probe/compose.override.yml up --build --wait --wait-timeout 300
+
+      - name: Check the client address the backend sees through nginx
+        run: |
+          frontend=$(jq -r '.services.frontend.networks.default.ipv4_address' "$RUNNER_TEMP/lite.json")
+          e2e/shared/proxy-probe/check-client-address.sh http://localhost:8080 "$frontend"
+
+      - name: Stop the Lite tier with the client address probe
+        run: docker compose -f docker-compose.yml -f e2e/shared/proxy-probe/compose.override.yml down -v
+
       - name: Start the production tier
         run: POSTGRES_PASSWORD="$GENERATED_POSTGRES_PASSWORD" docker compose -f docker-compose.prod.yml up --build --wait --wait-timeout 300
 
@@ -725,6 +742,7 @@ jobs:
         if: failure()
         run: |
           docker compose logs --no-color || true
+          docker compose -f docker-compose.yml -f e2e/shared/proxy-probe/compose.override.yml logs --no-color || true
           POSTGRES_PASSWORD="$GENERATED_POSTGRES_PASSWORD" docker compose -f docker-compose.prod.yml logs --no-color || true
 
       - name: Upload the public entry report
