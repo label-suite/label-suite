@@ -13,7 +13,7 @@ updatedAt: '2026-11-23'
 跨領域規範在 [agent-rules.mdx](agent-rules.mdx)、後端分層與資料在 [backend-agent-rules.mdx](backend-agent-rules.mdx)、授權與答案隔離在 [security-agent-rules.mdx](security-agent-rules.mdx)，這裡不重複。
 各規範的反例、例外與檢查方式收在收合區塊，預設收起；那是實作與審查時才查的細節。
 
-**`backend/` 與 `frontend/` 目前都不存在**，所以下面每一條的「檢查方式」幾乎都還沒有自動檢查。標「待建置」就是字面意思：那些檢查要等實際有程式與 CI 才寫得出來，**不得因為這份文件存在就宣稱契約已被強制**。
+**`backend/` 與 `frontend/` 都已存在，但只有 A5 的檢查在 CI 跑**（`api-contract` job，見 A5 的「檢查方式」）；其餘各條仍標「待建置」。標「待建置」就是字面意思：那些檢查還沒有寫，**不得因為這份文件存在就宣稱契約已被強制**。
 
 ## 前提
 

@@ -12,7 +12,7 @@ updatedAt: '2026-11-23'
 本文說明前端的十一條開發規範，由 `AGENTS.md` 的 Agent Rules Index 指過來；`AGENTS.md` 是規則本體，兩邊說法不同時以 `AGENTS.md` 為準，並回報給維護者。
 跨領域的規範在 [agent-rules.mdx](agent-rules.mdx)、後端在 [backend-agent-rules.mdx](backend-agent-rules.mdx)、授權與答案隔離在 [security-agent-rules.mdx](security-agent-rules.mdx)、API 契約與單一 HTTP 邊界在 [api-agent-rules.mdx](api-agent-rules.mdx)，這裡不重複。
 
-**`frontend/` 目前不存在**，所以每條的「檢查方式」幾乎都還沒有自動檢查。標「待建置」就是字面意思：那些檢查要等實際有程式與 lint 設定才寫得出來，**不得因為這份文件存在就宣稱規則已被強制**。
+**`frontend/` 已存在，但只有 F1、F2、F3 的檢查在 CI 跑**（job 與指令寫在各條的「檢查方式」）；F4 至 F11 仍標「待建置」。標「待建置」就是字面意思：那些檢查還沒有寫，**不得因為這份文件存在就宣稱規則已被強制**。
 
 每條規範的反例與檢查方式收在摺疊區塊，預設收起；適用路徑、禁止、正例與例外在表裡。
 

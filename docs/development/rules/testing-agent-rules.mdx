@@ -12,7 +12,7 @@ updatedAt: '2026-11-23'
 本文說明測試與交付證據的十二條規範，由 `AGENTS.md` 的 Agent Rules Index 指過來；`AGENTS.md` 是規則本體，兩邊說法不同時以 `AGENTS.md` 為準，並回報給維護者。
 跨領域的規範在 [agent-rules.mdx](agent-rules.mdx)、後端在 [backend-agent-rules.mdx](backend-agent-rules.mdx)、授權與答案隔離在 [security-agent-rules.mdx](security-agent-rules.mdx)、API 契約在 [api-agent-rules.mdx](api-agent-rules.mdx)、前端在 [frontend-agent-rules.mdx](frontend-agent-rules.mdx)，這裡不重複。
 
-**`backend/`、`frontend/` 與 `e2e/` 目前都不存在**，所以每條的「檢查方式」幾乎都還沒有自動檢查。標「待建置」就是字面意思：**不得因為這份文件存在就宣稱測試或 gate 已經在跑**，因為本文件談的正是「怎麼證明事情做完了」。
+**`backend/`、`frontend/` 與 `e2e/` 都已存在，但在 CI 跑的只有 T1 的 e2e 位置檢查、T9 七項 gate 中的六項，以及 T10 的「不得下降」**（job 與指令寫在各條的「檢查方式」）；T2 沒有機械檢查，其餘各條仍標「待建置」。標「待建置」就是字面意思：**不得因為這份文件存在就宣稱測試或 gate 已經在跑**，因為本文件談的正是「怎麼證明事情做完了」。
 
 每條規範的反例與檢查方式收在摺疊區塊，預設收起；適用路徑、禁止、正例與例外在表裡。各條的來源在文末附錄。
 
@@ -31,7 +31,7 @@ updatedAt: '2026-11-23'
 
 | 層 | 工具 | 範圍 | 位置 | 指令 |
 | :--- | :--- | :--- | :--- | :--- |
-| unit | pytest（後端）／Vitest（前端） | 純函式、service、hook、單一元件 | `backend/tests/[module]/test_*.py`；前端與原始碼同目錄 `*.test.ts(x)` | `uv run pytest`／`pnpm test` |
+| unit | pytest（後端）／Vitest（前端） | 純函式、service、hook、單一元件 | `backend/tests/unit/**`；前端與原始碼同目錄 `*.test.ts(x)` | `uv run pytest`／`pnpm test` |
 | integration | pytest 加 httpx（後端）／Vitest 加 RTL 加 MSW（前端） | 真實路由、認證與授權、真 test DB；前端到網路邊界為止 | `backend/tests/integration/**`；前端同上 | `uv run pytest -m integration`／`pnpm test` |
 | e2e | Playwright | 跨頁、跨角色的使用者旅程，真前後端加真瀏覽器 | 根目錄 `e2e/[module]/[page].spec.ts` | `pnpm exec playwright test` |
 
