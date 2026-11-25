@@ -1,0 +1,90 @@
+---
+title: API 契約日常流程
+description: 改了後端 API 之後怎麼把 openapi.json 與前端 client 同步、operationId 改名會影響前端哪些名稱，以及 CI 的 api-contract 漂移檢查失敗時怎麼修。
+tags: [workflow, api-contract, openapi, orval]
+---
+
+# API 契約日常流程
+
+改了後端 API，就跑一次 `pnpm run api:sync`，再把變動的檔案一起提交；前端只呼叫生成的 client，不手寫 API 呼叫。
+契約由什麼組成、為什麼用 Orval，見 [architecture.mdx 的 §API 契約](../architecture.mdx#api-契約) 與 [ADR-003 的 D6](../adr/003-backend-architecture.mdx#d6-前端-client-用-orval-產生)；本文只寫日常步驟。環境與指令的前置設定見 [本機開發](local-development.mdx)。
+與 `AGENTS.md`、ADR 或 architecture.mdx 說法不同時，以它們為準（優先序見 [ADR 索引](../adr/index.mdx#衝突時以誰為準)），並回報維護者。
+
+## 改了 API 之後
+
+1. 改後端的 router 或 schema，照常寫測試。
+2. 在 repo 根目錄跑 `pnpm run api:sync`：先匯出 OpenAPI，再用 Orval 重新產生前端 client。
+3. 看 `git status`：有變動的契約產物會一起列出（見下表），全部和程式碼放同一個 commit。
+4. 前端改呼叫新產生的名稱；`pnpm --filter frontend typecheck` 會指出還在用舊名稱的地方。
+
+| 步驟 | 指令（`api:sync` 內部） | 寫出的檔案 |
+| :--- | :--- | :--- |
+| 匯出 | `cd backend && uv run python -m app.scripts.export_openapi` | `backend/openapi.json` 與位元組相同的文件站副本 `docs/diagrams/architecture/api.openapi.json` |
+| 產生 | `pnpm --filter frontend api:generate` | `frontend/src/api/generated/` 整個資料夾（每次先清空重產，不得手改） |
+
+匯出不需要任何環境變數，也不連資料庫；輸出固定排序，所以沒改 API 就不會有 diff。
+兩個產物都不要手改：下一次 `api:sync` 會蓋掉，CI 也會把手改視為漂移。
+
+## operationId 改名
+
+operationId 由 HTTP 方法、處理函式的回傳型別與路徑最後一段決定，Orval 用它命名整組產物，所以其中任何一項改變，前端所有引用都會跟著斷。規則由 `backend/app/core/openapi.py` 的 `generate_operation_id` 實作：
+
+- **資源名**：`/api/v1` 之後最後一個不是路徑參數的區段，依 `-` 拆字，每字首字母大寫（`task-items` 是 `TaskItems`）。
+- **動詞**：`GET` 是 `get`、`POST` 是 `create`、`PUT` 與 `PATCH` 是 `update`、`DELETE` 是 `delete`；一條路由只能有一個方法。
+- **例外的 `list`**：`GET` 且回傳型別註記是 `ApiResponse[PaginatedResponse[...]]` 時，動詞改 `list`，資源名維持原樣（`listTaskItems`），不單數化。
+- **其餘**：動詞加資源名，最後一個字轉單數（`POST /task-items` 是 `createTaskItem`；`/health` 的 `health` 列在不規則表，維持 `getHealth`）。
+- **回傳型別**：取自處理函式的回傳註記，不是 `response_model`；沒有註記會讓匯出失敗。
+
+| 產物檔 | `getHealth` 生成的名稱 |
+| :--- | :--- |
+| `label-suite.ts` | 函式 `getHealth`、hook `useGetHealth`、`getGetHealthQueryKey`、`getGetHealthQueryOptions`、型別 `GetHealthQueryError` |
+| `label-suite.msw.ts` | `getGetHealthMockHandler`、`getGetHealthResponseMock` |
+
+改名的後果是編譯期的：同步後 `pnpm --filter frontend typecheck` 會因為找不到舊名稱而失敗，照著錯誤訊息把呼叫端與測試改成新名稱即可。
+operationId 重複時匯出會失敗並列出兩條路由，修法是改其中一條的資源名，不是手動指定 operationId。
+
+:::note{title="一次實際走完的輸出：把 /health 改成 /healthz" collapsible}
+在拋棄式的工作樹上把 `backend/app/modules/health/router.py` 的 `@router.get("/health"` 改成 `"/healthz"`，跑同步並型別檢查（之後已還原）：
+
+```text
+$ pnpm run api:sync
+> (cd backend && uv run python -m app.scripts.export_openapi) && pnpm --filter frontend api:generate
+🍻 orval v8.48.0 - A swagger client generator for typescript
+labelSuite - Cleaning output folder
+labelSuite - 🎉 Label Suite API - Your OpenAPI spec has been converted into ready to use orval!
+
+$ git status --short
+ M backend/app/modules/health/router.py
+ M backend/openapi.json
+ M docs/diagrams/architecture/api.openapi.json
+ M frontend/src/api/generated/label-suite.faker.ts
+ M frontend/src/api/generated/label-suite.msw.ts
+ M frontend/src/api/generated/label-suite.ts
+
+$ git diff backend/openapi.json
+-    "/api/v1/health": {
++    "/api/v1/healthz": {
+...
+-        "operationId": "getHealth",
++        "operationId": "getHealthz",
+
+$ pnpm --filter frontend typecheck
+src/api/generated-contract.test.ts(29,3): error TS2724: '"./generated/label-suite"' has no
+exported member named 'useGetHealth'. Did you mean 'useGetHealthz'?
+src/api/generated-types.test.ts(10,10): error TS2724: '"./generated/label-suite"' has no
+exported member named 'getHealth'. Did you mean 'getHealthz'?
+```
+
+沒有改 API 時同一條指令跑完 `git status` 是乾淨的。
+:::
+
+## CI 的漂移檢查失敗
+
+CI 的 `api-contract` job 不起任何服務，只重跑匯出與產生，然後比對工作樹；有任何檔案和提交的不同就失敗，並把檔名列在錯誤訊息裡。
+
+| 錯誤訊息點名的檔案 | 原因 | 修法 |
+| :--- | :--- | :--- |
+| `backend/openapi.json` 或 `docs/diagrams/architecture/api.openapi.json` | 改了 API 沒匯出，或手改了匯出檔 | 本機跑 `pnpm run api:sync`，提交變動的檔案 |
+| `frontend/src/api/generated` | 匯出檔有更新但沒重新產生，或手改了生成的檔案 | 同上；不要編輯生成的檔案，要改行為就改後端或 `frontend/orval.config.ts` |
+
+推上去之前，`pnpm run check` 的「契約同步」步驟會重跑同步並比對，同樣能看到漂移。
