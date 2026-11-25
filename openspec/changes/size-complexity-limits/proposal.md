@@ -15,15 +15,15 @@ Epic #560 要在技術債長出來之前加上機器防線。子單 #561 處理�
 - **前端（`frontend/eslint.config.js`）**：新增三條上限，一律 `error`、不設報告期（Q11）。
   - 檔案行數 `max-lines` 300，函式行數 `max-lines-per-function` 80（`IIFEs: false`），兩者排除空白與註解（Q2、Q3）。
   - 複雜度 `complexity` 15（Q4）。
-  - 前端規則集中成一個設定物件，只套用 `SOURCE_FILES`；設定檔（`eslint.config.js`、`vite.config.ts`、`vitest.config.ts`）不在範圍，生成檔沿用既有全域 ignore；測試檔（既有 `TEST_FILES`）只豁免 `max-lines` 與 `max-lines-per-function`，複雜度照樣檢查（Q7）。
+  - 前端規則集中成一個設定物件，只套用 `SOURCE_FILES`（`src/**/*.{ts,tsx}`、`build/**/*.ts`）；不在其中的檔案不在範圍，例如套件根目錄的設定檔（`eslint.config.js`、`vite.config.ts`、`vitest.config.ts`、`orval.config.ts`），生成檔沿用既有全域 ignore；測試檔（既有 `TEST_FILES`）只豁免 `max-lines` 與 `max-lines-per-function`，複雜度照樣檢查（Q7）。
 - **後端（`backend/pyproject.toml`）**：ruff 以明確規則碼開 `C901`（`max-complexity` 10）、`PLR0915`（`max-statements` 30）、`PLR0912`（`max-branches` 10），不開 `PLR0913`、`PLR0911`、`PLR0917`；`select` 只在尾端追加；`alembic/versions/` 以既有 `per-file-ignores` 豁免這三條，`tests/` 不豁免；不開 `RUF100`（Q6、Q7、T2）。
-- **後端檔案行數**：ruff 沒有對應規則，採 B'：`backend/tests/unit/` 下的 pytest 測試，上限 400 行（排除空白行與只有 `#` 的行，docstring 計入），`alembic/versions/` 排除；例外表的條目同時是棘輪上限，條目過期（檔案已低於預設上限）時測試失敗（Q5）。不新增 CI job、不新增 `scripts/check.mjs` 步驟、不改 `ci.yml`。
+- **後端檔案行數**：ruff 沒有對應規則，採 B'：`backend/tests/unit/` 下的 pytest 測試，上限 400 行（純文字逐行計算：排除空白行與去掉前後空白後以 `#` 開頭的行，docstring 內以 `#` 開頭的行同樣排除，docstring 的其他行計入），`alembic/versions/` 排除；例外表的條目同時是棘輪上限，條目過期（檔案已低於預設上限）時測試失敗（Q5）。不新增 CI job、不新增 `scripts/check.mjs` 步驟、不改 `ci.yml`。
 - **既有超標程式**：具名豁免、本 change 不修、不另開 issue（Q8）。`frontend/src/pages/dev-gallery/dev-gallery-page.tsx`（174 行的頁面函式）在 `eslint.config.js` 的 `NAMED_EXEMPTIONS` 常數放寬到剛好高於現況（180），註明 `#561` 與理由；探針測試斷言清單內每個檔案仍然超標，豁免過期就失敗。不重構任何產品碼。
 - **證明規則有效（Q10 B：常駐探針測試）**：
   - 前端 `frontend/build/size-limits-config.test.ts`，使用實體探針檔 `size-probe.tsx`、`size-probe.test.tsx`（型別感知規則需要實體檔）。
   - 後端 `backend/tests/unit/test_size_limits.py`，比照 `test_layer_boundaries.py`，依規則碼過濾 ruff JSON。
   - 規則被改寬、降級或例外範圍被放大時，每次 CI 都會失敗。
-- **工具**：`scripts/check.mjs` 的殘留探針檢查只擴充探針名清單以認得上述新探針，不加步驟；同步 `scripts/tests/check.test.mjs`（T1）。
+- **工具**：`scripts/check.mjs` 的殘留探針檢查只擴充探針名清單以認得上述新探針，不加步驟；同步 `scripts/tests/check.test.mjs`（T1）。這個行為屬 `workspace-commands`，以 MODIFIED delta 把「check 遇到探針殘留檔時失敗」一般化為所有被中斷的前端 lint 探針測試留下的探針檔。
 - **規則文件寫回（Q1、Q12）**：新增 F12（前端，`frontend-agent-rules.mdx`）與 B11（後端，`backend-agent-rules.mdx`）各一條，各寫一句「行」的定義，F5 原意不改；同步兩份文件的文首狀態段與條數、`agent-rules.mdx` 的總覽段與 Q1 要改寫的附錄／來源對照（把「不採用」改寫成「不採用作為拆分判準；另設 CI 上限擋極端值」並寫明兩者關係）、`testing-agent-rules.mdx` T9。
 - **常駐文件**：`docs/diagrams/architecture/backend-modules.mdx` 的 §新增業務模組的檢查清單補一條，列為 tasks 的文件任務。
 
@@ -57,9 +57,11 @@ Epic #560 要在技術債長出來之前加上機器防線。子單 #561 處理�
 
 ### Modified Capabilities
 
-無。`ci-quality-gates` 不另寫 delta：新規則掛在既有 lint 步驟上，該 capability 的失敗條件已涵蓋「lint 有錯就失敗」（Q9）。若 specs 階段發現 `ci-quality-gates` 的現有文字確實需要改，再以 MODIFIED 補上並在 design 寫明。`workspace-commands`、`frontend-code-boundaries`、`backend-code-boundaries` 不受影響（沒有新增檢查步驟，Q5 B'）。
+- `workspace-commands`：MODIFIED「check 遇到探針殘留檔時失敗」。原文字只涵蓋 `frontend/src/pages/` 底下的分層探針，改為涵蓋被中斷的前端 lint 探針測試留下的探針檔：`src/pages/**/boundary-probe.tsx`、`src/components/boundary-probe.tsx`、`src/components/size-probe.tsx`、`src/components/size-probe.test.tsx`（Q10、T1；design D8）。`check` 的步驟不變。
 
-新增一個 capability，不需 `skip_specs`。
+`ci-quality-gates` 不另寫 delta：新規則掛在既有 lint 步驟上，該 capability 的失敗條件已涵蓋「lint 有錯就失敗」（Q9）。`frontend-code-boundaries`、`backend-code-boundaries` 不受影響。
+
+新增一個、修改一個 capability，不需 `skip_specs`。
 
 ## Impact
 
@@ -67,7 +69,7 @@ Epic #560 要在技術債長出來之前加上機器防線。子單 #561 處理�
 - **測試**：新增 `frontend/build/size-limits-config.test.ts`（含探針檔 `size-probe.tsx`、`size-probe.test.tsx`）、`backend/tests/unit/test_size_limits.py`（含後端檔案行數檢查與例外表）。
 - **工具**：只改 `scripts/check.mjs` 的殘留探針名清單與 `scripts/tests/check.test.mjs`；不改 `.github/workflows/ci.yml`，不新增 `scripts/` 檢查腳本、CI job 或 `check.mjs` 步驟。
 - **文件**：`docs/development/rules/agent-rules.mdx`、`frontend-agent-rules.mdx`（F12）、`backend-agent-rules.mdx`（B11）、`testing-agent-rules.mdx`（T9）；`docs/diagrams/architecture/backend-modules.mdx`。
-- **specs**：新增 `openspec/specs/code-size-limits/`（由本 change 的 delta 在歸檔時同步）。
+- **specs**：新增 `openspec/specs/code-size-limits/`，修改 `openspec/specs/workspace-commands/` 的「check 遇到探針殘留檔時失敗」（皆由本 change 的 delta 在歸檔時同步）。
 - **與兄弟 issue 的衝突風險**：#562 也會動 `frontend/eslint.config.js`，#563 也會動 `backend/pyproject.toml`（也可能動 `scripts/check.mjs`、`ci.yml`）；三張互不依賴，後合併者 merge `origin/main`。設計上把新規則集中成獨立的設定區塊、後端 `select` 只在尾端追加，以縮小衝突範圍；Q5 B' 不新增 CI 或 `check.mjs` 步驟，也是為了少碰共用檔。
 - **既有程式**：依 system-analysis 量測，現有後端在決議的數值下零違規（最大 `middleware.py` 319 行、tests 399 行）；前端只有 `frontend/src/pages/dev-gallery/dev-gallery-page.tsx:85` 的頁面函式（174 行）超標，由 Q8 的具名豁免處理，不改動該檔。
 
@@ -87,5 +89,5 @@ Epic #560 要在技術債長出來之前加上機器防線。子單 #561 處理�
 - `AGENTS.md`：Hard Rules、Language Rules、Agent Rules Index；「衝突不由 agent 裁決」「範圍鎖定」。
 - `docs/development/rules/agent-rules.mdx`（R3、R4、§附錄：刻意不採用的來源條文）、`frontend-agent-rules.mdx`（F5 與其「不採用」條文）、`backend-agent-rules.mdx`（B2）、`testing-agent-rules.mdx`（T9）、`agent-hook-contract.mdx`（H4、H7）。
 - ADR-001 至 ADR-008：全文掃描，沒有行數或複雜度數值的來源。
-- `openspec/specs/ci-quality-gates`（不改，見 Capabilities）。
+- `openspec/specs/ci-quality-gates`（不改，見 Capabilities）、`openspec/specs/workspace-commands`（MODIFIED，見 Capabilities）。
 - 本 change 的 `system-analysis.md`（§現況量測）、`system-design.md`（機制總覽、技術待決 T1 至 T5）、`ui-design.md`（無 UI 變更）、`api-contract.md`（無 API 變更）。
