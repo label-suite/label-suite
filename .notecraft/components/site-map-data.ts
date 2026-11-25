@@ -82,11 +82,9 @@ export const SITE_MAP_PAGES: SiteMapPage[] = [
     features: [
       { title: "頁面的內容", anchor: "頁面的內容" },
       { title: "個人資料", anchor: "個人資料" },
-      { title: "頭像", anchor: "頭像" },
       { title: "換 Email", anchor: "換-email" },
       { title: "偏好設定", anchor: "偏好設定" },
       { title: "密碼設定", anchor: "密碼設定" },
-      { title: "密碼的顯示與隱藏", anchor: "密碼的顯示與隱藏" },
       { title: "通知設定", anchor: "通知設定" },
       { title: "連結 Google 帳號", anchor: "連結-google-帳號" },
     ],
