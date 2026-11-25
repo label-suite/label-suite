@@ -352,7 +352,7 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，�
 
 | 面向 | 做法 |
 | :--- | :--- |
-| 本機與 CI | `docker compose up`；CI 用 workflow 的 service container 起 PostgreSQL 與 Redis |
+| 本機與 CI | `docker compose up`；CI 的 `backend-postgres` job 用 workflow 的 `postgres:16` service container 跑 PostgreSQL 那一輪測試，沒有 Redis；`compose` job 只在 PR 動到編排、image 或它們執行的程式時跑，以 `docker compose up --build --wait` 實際啟動 Lite 與正式兩層，經 Nginx 檢查健康 |
 | 正式環境 | Compose 加 Nginx；有的話用 Cloudflare 當 DNS、CDN 與 TLS 邊緣，Nginx 仍要擋安全標頭與隔離內部服務 |
 | image | 後端與 worker 共用一個多階段 Dockerfile；前端 build 完由 `nginx:alpine` 服務 `/dist` |
 | 寄信 | Resend；沒設 key 時把設定密碼連結印在伺服器 log，由部署者轉給使用者。因此 Lite 層的 log 視為敏感，畫面要讓管理員知道信沒有寄出去（條文見[規格 06-01](../specs/06-admin/01-user-management.mdx#已確認決議) Q9–Q11） |
