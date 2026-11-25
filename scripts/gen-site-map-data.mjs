@@ -58,8 +58,6 @@ export const EXCLUDED_FEATURES = [
   // Language switching
   "語言切換",
   "語系切換不重新載入",
-  // Links out to other pages
-  "導向其他頁面",
 ];
 
 const SPEC_FILE_RE = /^0\d-[\w-]+\/0\d-[\w-]+\.mdx$/;
