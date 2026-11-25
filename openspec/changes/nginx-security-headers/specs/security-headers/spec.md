@@ -10,7 +10,7 @@
 
 經公開入口的回應 SHALL 帶 `Content-Security-Policy`、`X-Frame-Options`、`X-Content-Type-Options`、`Referrer-Policy`、`Cross-Origin-Opener-Policy`、`Permissions-Policy` 與 `Server` 七個標頭，值 MUST 與本 requirement 的 Scenario 所列逐字元相同。`Content-Security-Policy` MUST 為強制模式，MUST NOT 以僅回報模式的標頭替代，也 MUST NOT 含違規回報的指令。
 
-來源：issue #568 §需求目標、§驗收條件 2；ADR-008 D1 §決定；security-agent-rules S9 §正例；`AGENTS.md` Hard Rule 9；clarification Q2、Q3、Q3-附。
+來源：issue #568 §需求目標、§驗收條件 2；ADR-008 D1 §決定；security-agent-rules S9 §正例；`AGENTS.md` Hard Rule 9；nginx-security-headers clarification Q2、Q3、Q3-附。
 
 #### Scenario: 頁面殼帶完整的安全標頭值
 
@@ -39,7 +39,7 @@
 
 公開入口的每一類回應 SHALL 帶「安全標頭的完整值」所列的七個標頭且值相同：頁面殼、前端路由的深層路徑、建置資源、後端成功回應、後端錯誤回應、公開入口自己產生的錯誤（含方法不允許與後端無法連線）。加上標頭 MUST NOT 改變回應的狀態碼與 body。
 
-來源：issue #568 §驗收條件 2；ADR-008 D1 §後果；archive `infra-compose-e2e-ci` system-design D6；clarification Q3-附、Q4、§交給後續產出。
+來源：issue #568 §驗收條件 2；ADR-008 D1 §後果；archive `infra-compose-e2e-ci` system-design D6；nginx-security-headers clarification Q3-附、Q4、§交給後續產出。
 
 #### Scenario: 公開入口的每一類回應都帶同一組安全標頭
 
@@ -63,7 +63,7 @@
 
 公開入口的回應 MUST NOT 帶 `Strict-Transport-Security` 標頭；HSTS 由公開入口前面的 TLS 邊緣負責，不在本系統的回應中發出。
 
-來源：issue #568 §需求目標；ADR-008 D1 §決定、§待決 第 1 列；clarification Q1。
+來源：issue #568 §需求目標；ADR-008 D1 §決定、§待決 第 1 列；nginx-security-headers clarification Q1。
 
 #### Scenario: 每一類回應都沒有 HSTS
 
@@ -74,7 +74,7 @@
 
 公開入口的每一個回應中，「安全標頭的完整值」所列的每個標頭 MUST 恰好出現一次；上游回應若帶同名標頭，最終回應 MUST NOT 出現兩個值。
 
-來源：issue #568 §驗收條件 2；clarification Q4；system-design D3。
+來源：issue #568 §驗收條件 2；nginx-security-headers clarification Q4、system-design D3。
 
 #### Scenario: 經後端轉發的回應沒有重複的安全標頭
 
@@ -85,7 +85,7 @@
 
 公開入口回應的安全標頭 SHALL 對所有角色與未登入的請求相同，MUST NOT 依請求是否帶身分憑證、以哪個角色登入而不同；標頭 MUST NOT 含任何資料、使用者識別或標準答案。
 
-來源：issue #568 §驗收條件 2；security-agent-rules S2 §正例；`AGENTS.md` Hard Rule 6；clarification Q4、第 10 面向。
+來源：issue #568 §驗收條件 2；security-agent-rules S2 §正例；`AGENTS.md` Hard Rule 6；nginx-security-headers clarification Q4、第 10 面向。
 
 #### Scenario: 帶與不帶身分憑證的回應標頭相同
 
@@ -97,7 +97,7 @@
 
 在公開入口以瀏覽器開啟前端正式建置的頁面殼時，安全標頭 MUST NOT 擋下前端自己的資源與同源 API 呼叫。「首頁正常」的判準 SHALL 為：頁面殼帶 `Content-Security-Policy`；頁面殼與它引用的每一支建置資源回 `200`；載入期間 CSP 違規 0 次、請求失敗 0 次；頁面內同源呼叫 `/api/v1/health` 成功。判準 MUST NOT 依賴頁面的文案或元素。
 
-來源：issue #568 §驗收條件 3；ADR-008 D1；clarification Q4、Q5。
+來源：issue #568 §驗收條件 3；ADR-008 D1；nginx-security-headers clarification Q4、Q5。
 
 #### Scenario: CSP 不擋前端自己的資源
 

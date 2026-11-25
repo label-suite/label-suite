@@ -18,7 +18,7 @@ change：`nginx-security-headers` · issue：#568 · 分支：`feat/nginx-securi
 **Goals:**
 
 - 把 system-design D0 的標頭與值落到 `frontend/nginx.conf`，並讓 `specs/security-headers` 的每個 Scenario 都有一個會在 CI 失敗的自動檢查
-- 驗證腳本的判定邏輯（缺少、值不符、重複、帶 HSTS、狀態碼不符）在不起容器的情況下就有回歸測試
+- 驗證腳本的判定邏輯（缺少、值不符、重複、帶 HSTS、帶 `Content-Security-Policy-Report-Only`、狀態碼不符）在不起容器的情況下就有回歸測試
 - 瀏覽器檢查的失敗訊息足以指出被擋的指令與位址
 
 **Non-Goals:**
@@ -51,7 +51,7 @@ change：`nginx-security-headers` · issue：#568 · 分支：`feat/nginx-securi
 
 ### D3：驗證腳本的回歸測試用假伺服器
 
-新增 `scripts/tests/check-security-headers.test.mjs`：每個案例在 `127.0.0.1` 的隨機埠起一個 Node `http` 伺服器，依 D2 的路徑回應指定的狀態碼與標頭，再以子程序執行 `bash scripts/check-security-headers.sh [--backend-down] http://127.0.0.1:<port>`，斷言結束碼與輸出。案例至少涵蓋：全部相符時結束碼 0；某一類缺 CSP；`X-Frame-Options` 值為 `DENY`；後端那兩類的 `X-Frame-Options` 出現兩次；帶 `Strict-Transport-Security`；帶 `Content-Security-Policy-Report-Only`；`Server` 帶版本；後端錯誤那一類回 `200` 而不是 `404`；帶憑證的變體缺標頭；`--backend-down` 時 `502` 相符與回 `200`；頁面殼取不到 `/assets/*.js`；沒給 base URL 時結束碼 2。
+新增 `scripts/tests/check-security-headers.test.mjs`：每個案例在 `127.0.0.1` 的隨機埠起一個 Node `http` 伺服器，依 D2 的路徑回應指定的狀態碼與標頭，再以子程序執行 `<bash> scripts/check-security-headers.sh [--backend-down] http://127.0.0.1:<port>`，斷言結束碼與輸出。`<bash>` 取環境變數 `CHECK_HEADERS_BASH`，未設時為 `bash`（PATH 上的那一支）；在 macOS 設 `CHECK_HEADERS_BASH=/bin/bash` 即以內建的 bash 3.2 跑完全部案例，證明 D2 的可攜性要求。案例至少涵蓋：全部相符時結束碼 0；某一類缺 CSP；`X-Frame-Options` 值為 `DENY`；後端那兩類的 `X-Frame-Options` 出現兩次；帶 `Strict-Transport-Security`；帶 `Content-Security-Policy-Report-Only`；`Server` 帶版本；後端錯誤那一類回 `200` 而不是 `404`；帶憑證的變體缺標頭；`--backend-down` 時 `502` 相符與回 `200`；頁面殼取不到 `/assets/*.js`；沒給 base URL 時結束碼 2。
 
 這支測試加進 `scripts-tests` job 的 `node --test` 清單與 `ci-workflow.test.mjs` C9 的 `SCRIPT_TESTS`，對應 `specs/ci-quality-gates`「CI 輔助腳本的測試獨立執行」。
 
@@ -76,28 +76,31 @@ change：`nginx-security-headers` · issue：#568 · 分支：`feat/nginx-securi
 3. `docker compose stop backend`（正式層帶 `-f docker-compose.prod.yml` 與同一個密碼變數）
 4. `scripts/check-security-headers.sh --backend-down http://localhost:8080`
 
-pnpm、Node 與 Chromium 的安裝步驟（`pnpm/action-setup`、`actions/setup-node`、`pnpm install --frozen-lockfile --filter e2e...`、`pnpm --filter e2e exec playwright install --with-deps chromium`）放在 Lite 層起服務之前，與 `e2e` job 同寫法；放在起服務之前，安裝失敗時不必先等 Lite 層。`timeout-minutes: 20` 不變，job 不加 `continue-on-error`、不改 `if`。`ci-workflow.test.mjs` C7 的順序斷言同步加上這四步，並斷言兩層各有一次標頭比對與一次 `--backend-down`、瀏覽器檢查只出現一次且在正式層。
+pnpm、Node 與 Chromium 的安裝步驟（`pnpm/action-setup`、`actions/setup-node`、`pnpm install --frozen-lockfile --filter e2e...`、`pnpm --filter e2e exec playwright install --with-deps chromium`）放在 Lite 層起服務之前，與 `e2e` job 同寫法；放在起服務之前，安裝失敗時不必先等 Lite 層。`timeout-minutes: 20` 不變，job 不加 `continue-on-error`、不改 `if`。另在既有的「Show the container logs」旁加一個 `if: failure()` 步驟，以 `actions/upload-artifact` 上傳 `e2e/playwright-report`（artifact 名 `playwright-report-public-entry`，與 `e2e` job 的 `playwright-report` 不同名；`if-no-files-found: ignore`，因為在瀏覽器檢查之前失敗時沒有報告）。`ci-workflow.test.mjs` C7 的順序斷言同步加上這四步，並斷言兩層各有一次標頭比對與一次 `--backend-down`、瀏覽器檢查只出現一次且在正式層；另斷言 `compose` 有一個上傳 `e2e/playwright-report` 的步驟，帶 `if: failure()` 與 `if-no-files-found: ignore`、artifact 名不是 `playwright-report`。C7 既有的「沒有 `continue-on-error`」斷言不變。
 
 替代方案：瀏覽器檢查放 `e2e` job 並在其中起容器。不採用：clarification Q4 已定放 `compose` job。
 
 ### D6：觸發清單
 
-照 system-design N2（clarification P3）：`scripts/ci-changed-paths.mjs` 的 `EXACT` 加 `scripts/check-security-headers.sh`、`e2e/playwright.config.ts`、`e2e/public-entry/shell.spec.ts`；檔頭註解的清單同步。測試加三個為真的案例與一個「只改 `e2e/system-health/dev-health.spec.ts` 為假」的案例。
+照 system-design N2（clarification P3），並依規劃審閱把旅程的部分改成目錄：`scripts/ci-changed-paths.mjs` 的 `EXACT` 加 `scripts/check-security-headers.sh`、`e2e/playwright.config.ts`；`PREFIXES` 加 `e2e/public-entry/`（之後在這個目錄新增的旅程也會觸發）與 `e2e/shared/`（`shell.spec.ts` 匯入的共用 fixture，改它會改變瀏覽器檢查的行為）。檔頭註解的清單同步。測試加：兩個 `EXACT` 新路徑各為真、`e2e/public-entry/shell.spec.ts` 為真、`e2e/public-entry/another.spec.ts` 為真、`e2e/shared/fixtures/index.ts` 為真、只改 `e2e/system-health/dev-health.spec.ts` 為假。
+
+替代方案：照 system-design N2 只列確切的 `e2e/public-entry/shell.spec.ts`。不採用：日後同目錄新增的旅程與共用 fixture 的改動都不會觸發 `compose`，瀏覽器檢查會在沒跑的情況下被合併。
 
 ### D7：`VITE_API_BASE_URL` 的耦合與文件
 
-照 system-design D7：耦合寫在 `frontend/nginx.conf` 的 CSP 註解、`frontend/Dockerfile` 的 `ARG VITE_API_BASE_URL` 註解、`architecture.mdx` §部署與維運 三處。`architecture.mdx` §部署與維運 依 system-design §元件清單 的那一列改寫（實際檢查方式、HSTS 歸 TLS 邊緣與正式層必須在 TLS 後面、N3、N4）；只寫「怎麼檢查、檢查哪幾類」，不另抄標頭與值（system-design D4）。`backend-modules.mdx` §已知限制「Nginx 與安全標頭」列刪除。這兩份文件在實作組做，不在規劃階段（clarification §交給後續產出）。
+照 system-design D7：耦合寫在 `frontend/nginx.conf` 的 CSP 註解、`frontend/Dockerfile` 的 `ARG VITE_API_BASE_URL` 註解、`architecture.mdx` §部署與維運 三處。`architecture.mdx` §部署與維運 依 system-design §元件清單 的那一列改寫（實際檢查方式、HSTS 歸 TLS 邊緣與正式層必須在 TLS 後面、N3、N4）；只寫「怎麼檢查、檢查哪幾類」，不另抄標頭與值（system-design D4）。`architecture.mdx` 在耦合說明旁另記一項已知限制：COOP `same-origin` 會讓彈出視窗式的登入失效、`form-action 'self'` 會擋「表單送出後 302 到外部」的轉址，規格 01-01 的 Google 登入若做成這兩種形式要同時放寬（system-design §仍開著的技術問題）；`frontend/nginx.conf` 的 COOP 與 CSP 那兩行也加同義的註解，值不變。`backend-modules.mdx` §已知限制「Nginx 與安全標頭」列刪除。這兩份文件在實作組做，不在規劃階段（clarification §交給後續產出）。
 
 ### Scenario 與檢查的對應
 
-| spec               | Requirement 或 Scenario                        | 由誰證明                                                   |
-| :----------------- | :--------------------------------------------- | :--------------------------------------------------------- |
-| `security-headers` | 安全標頭的完整值、每一類回應、HSTS、只出現一次 | 驗證腳本（D2），`compose` job 兩層各跑；判定邏輯由 D3 測試 |
-| `security-headers` | 安全標頭與身分無關                             | 驗證腳本的兩個帶憑證變體（D2）                             |
-| `security-headers` | CSP 不擋前端自己的資源                         | `e2e/public-entry/shell.spec.ts`（D4），`compose` 正式層   |
-| `ci-quality-gates` | 觸發路徑                                       | `scripts/tests/ci-changed-paths.test.mjs`（D6）            |
-| `ci-quality-gates` | 步驟、失敗條件、瀏覽器檢查、腳本測試獨立執行   | `scripts/tests/ci-workflow.test.mjs` C7、C9（D3、D5）      |
-| `e2e-testing`      | 預設跑法、容器模式、旅程                       | `playwright test --list` 與兩種模式的實際執行（D4）        |
+| spec               | Requirement 或 Scenario                        | 由誰證明                                                                 |
+| :----------------- | :--------------------------------------------- | :----------------------------------------------------------------------- |
+| `security-headers` | 安全標頭的完整值、每一類回應、HSTS、只出現一次 | 驗證腳本（D2），`compose` job 兩層各跑；判定邏輯由 D3 測試               |
+| `security-headers` | 安全標頭與身分無關                             | 驗證腳本的兩個帶憑證變體（D2）                                           |
+| `security-headers` | CSP 不擋前端自己的資源                         | `e2e/public-entry/shell.spec.ts`（D4），`compose` 正式層                 |
+| `ci-quality-gates` | 觸發路徑                                       | `scripts/tests/ci-changed-paths.test.mjs`（D6）                          |
+| `ci-quality-gates` | 步驟、失敗條件、瀏覽器檢查、腳本測試獨立執行   | `scripts/tests/ci-workflow.test.mjs` C7、C9（D3、D5）                    |
+| `ci-quality-gates` | 瀏覽器檢查不在 e2e 檢查中執行                  | 預設模式的 `playwright test --list` 不列 `public-entry/`（D4，task 2.1） |
+| `e2e-testing`      | 預設跑法、容器模式、旅程                       | `playwright test --list` 與兩種模式的實際執行（D4）                      |
 
 ## Risks / Trade-offs
 

@@ -27,7 +27,7 @@ e2e 測試 SHALL 放在根目錄 `e2e/`，是根目錄 pnpm 工作區的一個�
 
 前端與後端的位址與跑法 SHALL 只由 e2e 設定檔讀取三個環境變數（`E2E_BASE_URL`、`E2E_API_URL`、`E2E_TARGET`）決定，未設定時的本機預設值 MUST 只寫在該設定檔一處。`E2E_TARGET` 為 `compose` 時 SHALL 對準 `E2E_BASE_URL` 所指的既有公開入口、不自起任何伺服器；此時 `E2E_BASE_URL` 未設或為空 MUST 以錯誤結束，MUST NOT 退回預設值。spec 檔 MUST 以相對路徑導覽，MUST NOT 含主機名稱或埠號。
 
-來源：testing-agent-rules T8；ADR-007 D4；nginx-security-headers clarification Q4；system-design D5。
+來源：testing-agent-rules T8；ADR-007 D4；nginx-security-headers clarification Q4、system-design D5。
 
 #### Scenario: spec 不含主機與埠
 
@@ -55,7 +55,7 @@ e2e 測試 SHALL 放在根目錄 `e2e/`，是根目錄 pnpm 工作區的一個�
 
 e2e SHALL 有一條只在 `E2E_TARGET=compose` 時執行的旅程：瀏覽器開啟公開入口的 `/`，依主規格 `security-headers`「CSP 不擋前端自己的資源」的判準判定。頁面殼回應不帶 `Content-Security-Policy` 時 MUST 失敗；旅程 MUST NOT 比對 CSP 的值、MUST NOT 依賴頁面文案或新增的測試專用屬性，也不使用任何角色登入狀態。
 
-來源：issue #568 §驗收條件 3；clarification Q4、Q5；system-design D4、D5；testing-agent-rules T8。
+來源：issue #568 §驗收條件 3；nginx-security-headers clarification Q4、Q5、system-design D4、D5；testing-agent-rules T8。
 
 #### Scenario: 容器公開入口上的頁面殼載入正常
 

@@ -4,7 +4,7 @@
 
 ### Requirement: 容器編排在相關變更時驗證
 
-CI SHALL 在 pull request 動到 `docker-compose.yml`、`docker-compose.prod.yml`、任一 Dockerfile、任一 `.dockerignore`、`frontend/nginx.conf`、`scripts/check-security-headers.sh`、`e2e/playwright.config.ts`、`e2e/public-entry/shell.spec.ts`、`backend/` 或 `frontend/` 時執行容器編排驗證；沒有動到上述路徑時這個驗證 SHALL 跳過。無法取得用來比較的 base commit 時 MUST 當作有動到而執行，不得跳過。
+CI SHALL 在 pull request 動到 `docker-compose.yml`、`docker-compose.prod.yml`、任一 Dockerfile、任一 `.dockerignore`、`frontend/nginx.conf`、`scripts/check-security-headers.sh`、`e2e/playwright.config.ts`、`e2e/public-entry/` 或 `e2e/shared/` 下的檔案、`backend/` 或 `frontend/` 時執行容器編排驗證；沒有動到上述路徑時這個驗證 SHALL 跳過。無法取得用來比較的 base commit 時 MUST 當作有動到而執行，不得跳過。
 
 來源：clarification Q1、Q9；ADR-008 D1；#506 §驗收條件 1；system-design D7、D13；issue #568 §驗收條件 2、3；nginx-security-headers clarification Q4、P3。
 
@@ -30,7 +30,7 @@ CI SHALL 在 pull request 動到 `docker-compose.yml`、`docker-compose.prod.yml
 
 #### Scenario: 只改標頭驗證時執行容器驗證
 
-- **WHEN** PR 只修改 `scripts/check-security-headers.sh`、`e2e/playwright.config.ts` 或 `e2e/public-entry/shell.spec.ts` 其中一個檔案
+- **WHEN** PR 只修改 `scripts/check-security-headers.sh`、`e2e/playwright.config.ts`、`e2e/public-entry/` 下的任一檔案（含新增的 spec）或 `e2e/shared/` 下的任一檔案，其中一個
 - **THEN** CI 執行容器編排驗證
 
 #### Scenario: 只改其他 e2e 旅程時跳過容器驗證
@@ -89,14 +89,14 @@ CI SHALL 在 pull request 動到 `docker-compose.yml`、`docker-compose.prod.yml
 
 ### Requirement: 容器編排驗證比對公開入口的安全標頭
 
-容器編排驗證 SHALL 在每一層經公開入口請求主規格 `security-headers` 列的各類回應，比對每個安全標頭的完整值與狀態碼。任一類缺少標頭、值不符、同名標頭出現超過一次、帶 `Strict-Transport-Security` 或狀態碼不符時 MUST 失敗，輸出 MUST 列出回應類別、標頭名、期望值與實際值。
+容器編排驗證 SHALL 在每一層經公開入口請求主規格 `security-headers` 列的各類回應，比對每個安全標頭的完整值與狀態碼。任一類缺少標頭、值不符、同名標頭出現超過一次、帶 `Strict-Transport-Security`、帶 `Content-Security-Policy-Report-Only` 或狀態碼不符時 MUST 失敗，輸出 MUST 列出回應類別、標頭名、期望值與實際值。
 
-來源：issue #568 §驗收條件 2；ADR-008 D1；clarification Q1、Q3-附、Q4；system-design D2、D4。
+來源：issue #568 §驗收條件 2；ADR-008 D1；nginx-security-headers clarification Q1、Q3-附、Q4、system-design D2、D4。
 
 #### Scenario: 安全標頭被刪除時 CI 失敗
 
 - **WHEN** PR 從 `frontend/nginx.conf` 刪掉 `Content-Security-Policy` 那一行
-- **THEN** CI 的容器編排驗證在 Lite 層比對安全標頭那一步失敗，輸出含 `Content-Security-Policy`、期望的完整值與「實際沒有」
+- **THEN** CI 的容器編排驗證在 Lite 層比對安全標頭那一步失敗，輸出含回應類別、`Content-Security-Policy`、期望的完整值，實際值印成 `<missing>`
 
 #### Scenario: 安全標頭值不符時 CI 失敗
 
@@ -127,7 +127,7 @@ CI SHALL 在 pull request 動到 `docker-compose.yml`、`docker-compose.prod.yml
 
 容器編排驗證 SHALL 在正式層服務健康、停止後端之前，以瀏覽器對公開入口執行主規格 `security-headers`「CSP 不擋前端自己的資源」的判準；未達判準時 MUST 失敗，輸出 MUST 列出被擋的指令與位址或失敗的請求。這項檢查 MUST NOT 在 e2e 檢查中執行。
 
-來源：issue #568 §驗收條件 3；clarification Q4、Q5；system-design D5、D6。
+來源：issue #568 §驗收條件 3；nginx-security-headers clarification Q4、Q5、system-design D5、D6。
 
 #### Scenario: CSP 擋下前端資源時 CI 失敗
 

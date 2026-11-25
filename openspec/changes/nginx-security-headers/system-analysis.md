@@ -126,7 +126,7 @@ flowchart TD
 ### 需要先存在的（都已存在）
 
 - 唯一公開入口與前端映像：#506（`frontend/Dockerfile`、`frontend/nginx.conf`、兩份編排檔），已合併並歸檔為 `2026-11-23-infra-compose-e2e-ci`。
-- CI `compose` job 與路徑過濾：`ci-quality-gates`「容器編排在相關變更時驗證」已把 `frontend/nginx.conf` 列入觸發路徑，本 change 改這個檔一定會跑 `compose`。
+- CI `compose` job 與路徑過濾：`ci-quality-gates`「容器編排在相關變更時驗證」已把 `frontend/nginx.conf` 列入觸發路徑，本 change 改這個檔一定會跑 `compose`。新增的驗證本身也要列入觸發清單（clarification P3、system-design N2）：驗證腳本、`e2e/playwright.config.ts`，以及公開入口旅程所在的 `e2e/public-entry/` 與它共用的 `e2e/shared/` 兩個目錄（以目錄為單位，不只列單一旅程檔），否則只改驗證的 PR 不會跑 `compose`。
 - 正式層關閉後端內建 API 文件（#592）：正式層沒有需要額外放寬 CSP 的文件頁。
 
 ### 交接的限制（`system-design` 要承接，不是待決問題）
@@ -146,7 +146,13 @@ flowchart TD
 ### 會被後續依賴的
 
 - **規格 04-02 標記工作區的 PDF 說明檔「頁面內嵌入顯示」**：現行 `X-Frame-Options: DENY` 會讓瀏覽器拒絕顯示自家的同源嵌入；維護者裁定改為允許同源（`SAMEORIGIN`、`frame-ancestors 'self'`、`frame-src 'self'`），04-02 日後以同源內嵌框架實作 PDF 預覽可行（Q3，2026-11-25）。
-- **規格 01-01 用 Google 帳號登入**：登入是整頁導向到外部再回來，一般不受 CSP 的資源政策影響；若之後改成表單送出或在頁面內載入外部登入元件，CSP 要相應放寬。記為後續 change 的檢查點，不是本次的待決。
+- **規格 01-01 用 Google 帳號登入**：以整頁導向到外部再回來實作時，下列三項都不受影響；01-01 的實作 change 若改用其他做法，會撞上本 change 的可測契約：
+  - **頁面內嵌入外部登入元件**：程式、框架與連線來源都只允許同源（CSP，Q2），元件載不出來。
+  - **彈出視窗登入**：`Cross-Origin-Opener-Policy: same-origin` 會切斷彈出視窗與開啟頁的關聯，popup 流程失效（Q3-附）。
+  - **表單送到後端、再轉址到 Google**：`form-action 'self'` 也檢查表單送出後的轉址，這一步會被擋（Q2）。
+
+  維護者裁定這些值維持不變（Q3-附，2026-11-25）；這項取捨在實作組寫進 `architecture.mdx`，作為已知限制。記為後續 change 的檢查點，不是本次的待決。
+
 - **設計 token 的外部字型**：前端建置目前刻意不帶外部字型請求；之後若決定讓產品載入那些字型，CSP 的字型與樣式來源要放寬。
 - **全域速率限制**：ADR-004 D7 把它交給反向代理層，並以本 change 的建立作為重新討論的時間點之一；維護者裁定本 change 不做限流，因為限流要先有正確的來源 IP（#566）（Q8，2026-11-25）。
 - **正式部署的 change**：ADR-008 待決 1（TLS 模式）、待決 7（備份還原演練）都寫「在做正式部署的 change 時」決定；本 change 不是那個 change：HSTS 交給 TLS 邊緣、不決定 origin TLS 模式（Q1，2026-11-25）。
