@@ -6,7 +6,7 @@ tags: [architecture, fastapi, react, adr]
 
 # 技術架構
 
-`backend/`、`frontend/` 還不存在，本文寫的是「要照著做的架構」；第一個讀者是 OpenSpec 規劃階段的 `sd` 與 `ui-ux`，業務面以 `docs/specs/` 為準（見 [需求文件撰寫](workflow/spec-authoring.md)）。
+`backend/`、`frontend/` 與 `e2e/` 已經存在，但多數模組還沒實作；本文寫的是「要照著做的架構」，第一個讀者是 OpenSpec 規劃階段的 `sd` 與 `ui-ux`，業務面以 `docs/specs/` 為準（見 [需求文件撰寫](workflow/spec-authoring.md)）。
 本文是本 repo ADR 001–008 的落地做法，見 [§ADR 效力總表](#adr-效力總表)；個人 repo 38 份 ADR 在本 repo 照做、調整或被取代，見文末 [§附錄：個人 repo ADR 的對照](#附錄個人-repo-adr-的對照)。
 衝突時依序以 `AGENTS.md`、本 repo 的 [ADR](adr/index.mdx)、本文為準，個人 repo 的 ADR 只當參考；業務面一律以 `docs/specs/` 為準。發現不一致就照這個順序做，並回報維護者。
 
@@ -228,7 +228,7 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 | Lite | SQLite | 本機試用、單人、評估 | 預設，不需設定 |
 | 正式 | PostgreSQL 16 | 多人、並發寫入、部署 | 設 `DATABASE_URL` |
 
-Lite 層的 `./data` 必須是持久化 volume，而且 `backend` 與 `worker` 要掛同一個路徑，否則 worker 寫的資料 API 讀不到。
+Lite 層的資料放在持久化的具名 volume `label-suite-data`（掛在 `/app/data`），目前由 `migrate` 與 `backend` 掛載；之後加入的 `worker` 也要掛同一個 volume，否則 worker 寫的資料 API 讀不到。
 
 :::note{title="驅動與設定存放" collapsible}
 同一層的 API 與 worker 用不同驅動，因為 Celery 跑在同步執行緒裡，不能用 async engine：
@@ -352,7 +352,7 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，�
 
 | 面向 | 做法 |
 | :--- | :--- |
-| 本機與 CI | `docker compose up`；CI 用 workflow 的 service container 起 PostgreSQL 與 Redis |
+| 本機與 CI | `docker compose up`；CI 的 `backend-postgres` job 用 workflow 的 `postgres:16` service container 跑 PostgreSQL 那一輪測試，沒有 Redis；`compose` job 只在 PR 動到編排、image 或它們執行的程式時跑，以 `docker compose up --build --wait` 實際啟動 Lite 與正式兩層，經 Nginx 檢查健康 |
 | 正式環境 | Compose 加 Nginx；有的話用 Cloudflare 當 DNS、CDN 與 TLS 邊緣，Nginx 仍要擋安全標頭與隔離內部服務 |
 | image | 後端與 worker 共用一個多階段 Dockerfile；前端 build 完由 `nginx:alpine` 服務 `/dist` |
 | 寄信 | Resend；沒設 key 時把設定密碼連結印在伺服器 log，由部署者轉給使用者。因此 Lite 層的 log 視為敏感，畫面要讓管理員知道信沒有寄出去（條文見[規格 06-01](../specs/06-admin/01-user-management.mdx#已確認決議) Q9–Q11） |

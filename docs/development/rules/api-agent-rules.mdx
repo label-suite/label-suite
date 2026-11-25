@@ -4,7 +4,7 @@ description: 'API 契約與前端 client 的十條規範（A1 至 A10）：路�
 category: '開發說明'
 tags: [開發說明, Agent, 規範, API, 前端]
 createdAt: '2026-11-10'
-updatedAt: '2026-11-23'
+updatedAt: '2026-11-25'
 ---
 
 # API 契約與前端 Client 規範
@@ -13,7 +13,7 @@ updatedAt: '2026-11-23'
 跨領域規範在 [agent-rules.mdx](agent-rules.mdx)、後端分層與資料在 [backend-agent-rules.mdx](backend-agent-rules.mdx)、授權與答案隔離在 [security-agent-rules.mdx](security-agent-rules.mdx)，這裡不重複。
 各規範的反例、例外與檢查方式收在收合區塊，預設收起；那是實作與審查時才查的細節。
 
-**`backend/` 與 `frontend/` 目前都不存在**，所以下面每一條的「檢查方式」幾乎都還沒有自動檢查。標「待建置」就是字面意思：那些檢查要等實際有程式與 CI 才寫得出來，**不得因為這份文件存在就宣稱契約已被強制**。
+**`backend/` 與 `frontend/` 都已存在，但在 CI 跑的只有 A5 的檢查，以及 A4、A6 的一部分**（job 與指令寫在各條的「檢查方式」）；其餘各條與 A4、A6 沒建的部分仍標「待建置」。標「待建置」就是字面意思：那些檢查還沒有寫，**不得因為這份文件存在就宣稱契約已被強制**。
 
 ## 前提
 
@@ -133,7 +133,7 @@ envelope 是 `{ success, code, message, data, timestamp, traceId }`，成功與�
 | :--- | :--- |
 | **反例** | 在產物裡補一個後端還沒有的欄位讓前端先動工；`openapi.json` 與程式不一致時手動修 JSON；「Bruno 裡能跑就算對」 |
 | **例外** | 無。Bruno 保留成**可選的手動工具**，既不是契約也沒有 pre-PR 關卡 |
-| **檢查方式** | **待建置**。產物未被手改要靠 A5 的 CI 重產比對；`api-contract.md` 與 `openapi.json` 的一致性目前只有人工與獨立審查 |
+| **檢查方式** | 產物與 `openapi.json` 未被手改由 CI 的 `api-contract` job 擋：它重新匯出 `openapi.json`、重產 `frontend/src/api/generated/`，與已提交的版本有差異即失敗（見 A5）。`api-contract.md` 與 `openapi.json` 的一致性目前只有人工與獨立審查 |
 :::
 
 ### A5 重產與 drift 檢查
@@ -169,7 +169,7 @@ envelope 是 `{ success, code, message, data, timestamp, traceId }`，成功與�
 | :--- | :--- |
 | **反例** | 原始 repo 的實作 `frontend/src/shared/services/api-client.ts` 就是反例：它**沒有 `credentials: 'include'`**，所以 httpOnly cookie 根本不會隨請求送出；也沒有 `Accept-Language`、沒有 CSRF header、沒有 timeout。元件裡 `const r = await fetch('/api/v1/tasks')` 同樣是反例 |
 | **例外** | 檔案上傳與下載不走 JSON 解析，但仍然走同一層（base URL、credentials、CSRF、取消都一樣要） |
-| **檢查方式** | **待建置**。可用 lint 規則禁止 `pages/` 與 `features/` 直接用 `fetch`／`axios`，並禁止 import 產物目錄以外的 API 型別。security-agent-rules.mdx 的 S2 把一條測試指派到這裡：斷言元件不自己帶 `credentials`（`credentials` 的統一責任位置就是這一層），那條測試等 `frontend/` 存在才寫得出來 |
+| **檢查方式** | CI 的 `frontend` job 跑 `pnpm --filter frontend lint`：`frontend/eslint.config.js` 在 `src/pages/`、`src/features/`、`src/components/` 以 `no-restricted-imports` 禁止 import `axios`，以 `no-restricted-globals` 與 `no-restricted-properties` 禁止直接用 `fetch`（含 `window.fetch`、`globalThis.fetch`、`self.fetch`）。**待建置**：禁止 import 產物目錄以外的 API 型別；security-agent-rules.mdx 的 S2 指派到這裡的那條測試——斷言元件不自己帶 `credentials`（`credentials` 的統一責任位置就是這一層）——也還沒寫 |
 :::
 
 :::note{title="A6 的自訂 header 只加在寫入請求上" collapsible}

@@ -129,11 +129,11 @@ tags: [adr, backend, api, database, celery, i18n]
 
 - 路徑不必帶模組名，模組邊界只有目錄這一個表達處
 - Celery task 的定義跟著它所屬的模組，不另外散落
+- 層之間的 import 方向有機械檢查：CI 的 `backend-sqlite` job 跑 `uv run lint-imports`，見 [B1 的檢查方式](../rules/backend-agent-rules.mdx#b1-分層與允許的-import)
 
 **變困難**
 
 - 個人 repo 的 ADR-022 與其他文件仍寫舊路徑，讀來源時要自己換算成模組內路徑
-- 層之間的 import 方向目前只靠審查，機械檢查要等 `backend/` 存在才寫得出來
 
 ### 什麼情況要重新討論
 
@@ -261,7 +261,7 @@ tags: [adr, backend, api, database, celery, i18n]
 **變困難**
 
 - 產物一律不手改；實作要偏離契約時，要先改 `api-contract.md` 再改程式
-- 「CI 重新產生並比對」目前沒有機制：個人 repo 要求過這道關卡，但它自己的紀錄寫明命令未實作，所以在 `backend/` 與 CI 存在之前，這一條只靠審查
+- 改到契約的 PR 要在本機跑 `pnpm run api:sync` 並提交產物：CI 的 `api-contract` job 重新匯出 `openapi.json`、重產 `frontend/src/api/generated/`，與已提交的版本有差異就失敗，見 [A5 的檢查方式](../rules/api-agent-rules.mdx#a5-重產與-drift-檢查)
 
 ### 什麼情況要重新討論
 
@@ -310,7 +310,7 @@ tags: [adr, backend, api, database, celery, i18n]
 - 並發寫入的原子性要依 dialect 分別實作（例如 upsert 用各自 dialect 的 `on_conflict`），不能用 `session.merge()` 或先查再寫
 - Alembic 的 migration 要在兩種 dialect 上都測過，SQLite 要用 batch 操作並設 `render_as_batch=True`
 - 牽涉兩邊差異的行為要兩邊都有測試（[B7](../rules/backend-agent-rules.mdx#b7-雙資料庫的測試要求)）；整合測試仍要用真的 PostgreSQL
-- Lite 層不建議給多人使用，要在文件寫清楚，而且 `backend` 與 `worker` 要掛同一個 `./data` volume
+- Lite 層不建議給多人使用，要在文件寫清楚，而且資料所在的具名 volume `label-suite-data`（掛在 `/app/data`）目前由 `migrate` 與 `backend` 掛載，之後加入的 `worker` 也要掛同一個
 - JSON 欄位的彈性可能讓任務設定不一致，要靠應用層的 Pydantic schema 驗證
 
 ### 什麼情況要重新討論
@@ -408,7 +408,7 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 **變困難**
 
 - 審查者不再能保證從 diff 看到端點的行為，要看 `api-contract.md` 與 `openapi.json`
-- 用 collection 在 CI 抓契約 drift 的做法不再成立，drift 的把關全靠 [D6](#d6-前端-client-用-orval-產生) 的重產比對，而那一條目前還沒有機制
+- 用 collection 在 CI 抓契約 drift 的做法不再成立，drift 的把關全靠 [D6](#d6-前端-client-用-orval-產生) 的重產比對（CI 的 `api-contract` job）
 
 ### 什麼情況要重新討論
 

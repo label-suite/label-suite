@@ -357,7 +357,7 @@ CI 有兩個安全 job，DAST 與 API fuzzing 先不做。
 | 限制 | 對選擇的影響 |
 | :--- | :--- |
 | 標註結果是人工產出，無法由系統重建 | 不能以「研究原型」為由完全不做 |
-| 資料庫分兩層（[ADR-003 的 D7](003-backend-architecture.mdx#d7-資料庫分兩層)）：Lite 層是 `./data` volume 裡的單一 SQLite 檔，正式層是 PostgreSQL 16 | 兩層的備份手法不同，要分開決定 |
+| 資料庫分兩層（[ADR-003 的 D7](003-backend-architecture.mdx#d7-資料庫分兩層)）：Lite 層是具名 volume `label-suite-data`（掛在 `/app/data`）裡的單一 SQLite 檔，正式層是 PostgreSQL 16 | 兩層的備份手法不同，要分開決定 |
 | ADR-003 的 D7 已決定 Lite 層不建議多人使用 | Lite 層保護的是單人試用的資料，價值與正式層不同 |
 | 本 repo 沒有地端主機規劃（個人 repo ADR-023 的地端計畫在 [D1](#d1-compose-加-nginx-當-runtimecloudflare-可選) 已不採用） | 備份目的地不能綁在某台具名主機上 |
 | 這一期不引入新的 secret 與相依套件 | 排除需要雲端憑證的方案 |
@@ -366,7 +366,7 @@ CI 有兩個安全 job，DAST 與 API fuzzing 先不做。
 
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
-| A 正式層用 `pg_dump` 定期備份到獨立的 backups volume，Lite 層不做 | 現在就做得出來，不需要新的 secret 或相依套件；範圍與 ADR-003 的 D7 兩層定位一致 | 主機整台損毀時備份一起沒；Lite 層的使用者要自己備份 `./data` | 採用 |
+| A 正式層用 `pg_dump` 定期備份到獨立的 backups volume，Lite 層不做 | 現在就做得出來，不需要新的 secret 或相依套件；範圍與 ADR-003 的 D7 兩層定位一致 | 主機整台損毀時備份一起沒；Lite 層的使用者要自己備份具名 volume 裡的資料 | 採用 |
 | B 兩層都做：Lite 層也排一個 `VACUUM INTO` 的定期備份 | 兩層行為一致，文件不必分層解釋 | 多一個排程與一條 SQLite 專屬路徑，[B7](../rules/backend-agent-rules.mdx#b7-雙資料庫的測試要求) 要求兩種 dialect 都測；而 Lite 層本來就不建議多人使用，保護的資料價值低 | 不採用自動排程；`VACUUM INTO` 這個手法仍是 Lite 層手動備份的做法，見決定 |
 | C 備份上傳 S3 相容的物件儲存 | 真的做得到災難復原 | 多一組 secret 與一個相依套件，沒設定時還要再設計一條降級路徑（像 [D3](#d3-寄信用-resend沒設-key-時把連結印到-log) 的 Resend 那樣） | 不採用，列為重新討論的條件 |
 | D 直接複製 SQLite 檔或 PostgreSQL 的資料目錄 | 不需要額外工具 | 寫入進行中複製會得到壞檔；PostgreSQL 的資料目錄要先停機或改用 `pg_basebackup` 才一致 | 不採用 |
@@ -374,7 +374,7 @@ CI 有兩個安全 job，DAST 與 API fuzzing 先不做。
 
 ### 決定
 
-正式層用 `pg_dump` 定期備份，產物寫到獨立的 backups volume；Lite 層不做自動備援，改由使用者自己來，而且文件要給安全的做法：停掉服務再複製 `./data`，或在服務執行中用 `sqlite3 <db> "VACUUM INTO '<path>'"` 取一份一致的副本。不能只寫「複製 `./data`」—— 寫入進行中直接複製會得到壞檔（選項 D），而 SQLite 壞檔平常看不出來，要還原時才發現。備份只放在主資料碟上不足以災難復原，異地複製是部署者的責任，文件要寫明這一點。格式、頻率與保留份數（每日一次 `pg_dump -Fc`、滾動保留 7 份，裁定見 [#490 的留言](https://github.com/label-suite/label-suite/issues/490#issuecomment-7010266013)）見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)。
+正式層用 `pg_dump` 定期備份，產物寫到獨立的 backups volume；Lite 層不做自動備援，改由使用者自己來，而且文件要給安全的做法：停掉服務再用 `docker compose cp` 把 `backend` 服務的 `/app/data` 複製出來，或在服務執行中用 `sqlite3 <db> "VACUUM INTO '<path>'"` 取一份一致的副本。不能只寫「複製資料目錄」—— 寫入進行中直接複製會得到壞檔（選項 D），而 SQLite 壞檔平常看不出來，要還原時才發現。備份只放在主資料碟上不足以災難復原，異地複製是部署者的責任，文件要寫明這一點。格式、頻率與保留份數（每日一次 `pg_dump -Fc`、滾動保留 7 份，裁定見 [#490 的留言](https://github.com/label-suite/label-suite/issues/490#issuecomment-7010266013)）見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)。
 
 ### 後果
 
@@ -491,4 +491,5 @@ Celery worker 維持 warm shutdown：收到 SIGTERM 後不再領新任務，把�
 | 2026-11-19 | CI 安全掃描先做 SCA，SAST 延後（[D8](#d8-ci-安全掃描做相依套件掃描與-semgrep)） | —（沿用個人 repo ADR-028） | [#454](https://github.com/label-suite/label-suite/issues/454) |
 | 2026-11-22 | Semgrep 已建成；後端相依套件掃描改為 `uv run pip-audit`，任何已知弱點都失敗（`pip-audit` 2.10.1 沒有嚴重度旗標，後端比 high 嚴格） | 「Semgrep 延後」與後端 `pip-audit --fail-on high` | [#506](https://github.com/label-suite/label-suite/issues/506) |
 | 2026-11-19 | 資料備援只做正式層，備份產出到獨立 volume，異地複製是部署者的責任（[D9](#d9-資料備援只做正式層備份產出到獨立-volume)） | —（新裁定；個人 repo ADR-023 把備份目的地與保留政策列為未裁定） | [#490](https://github.com/label-suite/label-suite/issues/490) |
+| 2026-11-22 | Lite 層資料改放具名 volume `label-suite-data`，手動備份改用 `docker compose cp` 複製 `backend` 服務的 `/app/data`（[D9](#d9-資料備援只做正式層備份產出到獨立-volume)） | 「停掉服務再複製 `./data`」 | [#506](https://github.com/label-suite/label-suite/issues/506) |
 | 2026-11-19 | worker 收到 SIGTERM 先做完手上的任務，`stop_grace_period` 要大於 300 秒（[D10](#d10-worker-收到-sigterm-先做完手上的任務)） | 收斂 [ADR-003 的 D8](003-backend-architecture.mdx#d8-非同步任務用-celery-加-redis)「偶爾在重啟時掉一個 task 可以接受」中 worker 重啟那一種 | [#490](https://github.com/label-suite/label-suite/issues/490) |
