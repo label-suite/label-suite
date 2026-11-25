@@ -41,7 +41,6 @@ export const EXCLUDED_FEATURES = [
   // Screen widths
   "不同螢幕寬度的呈現",
   "在窄螢幕上的呈現",
-  "小螢幕的呈現",
   // Page scope
   "這一頁定什麼、不定什麼",
   // Loading, empty and load-failure screen states
