@@ -322,8 +322,7 @@ export const SITE_MAP_PAGES: SiteMapPage[] = [
     path: "07-shared/04-notification-events",
     standalone: false,
     features: [
-      { title: "兩個消費端", anchor: "兩個消費端" },
-      { title: "事件清單", anchor: "事件清單" },
+      { title: "查出哪些事會通知誰、出現在哪裡", anchor: "查出哪些事會通知誰出現在哪裡" },
       { title: "不在本頁範圍", anchor: "不在本頁範圍" },
     ],
   },
