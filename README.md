@@ -36,6 +36,8 @@ scripts/setup.sh   # enables the commit-msg and pre-commit Git hooks
 pnpm install       # installs Prettier, lint-staged, NoteCraft and OpenSpec
 ```
 
+To run the app, the tests and the API contract sync, see [`local-development.mdx`](docs/development/workflow/local-development.mdx).
+
 ## License and citation
 
 Released under the [Apache License 2.0](LICENSE). To cite Label Suite, use [`CITATION.cff`](CITATION.cff).
