@@ -4,7 +4,7 @@
 
 Epic #560 要在技術債長出來之前加上機器防線。子單 #563 處理其中「同一件事有好幾份實作」這一類：前端的 HTTP（Orval mutator）與日期（`src/lib/date.ts`）已各只有一個入口並由 ESLint 擋住（F10、A6），後端還沒有對應的清單，也沒有機器檢查。後端規則文件已把幾件事寫成「單一」（S1 認證 dependency、S2 單一 CSRF middleware 與單一發 cookie 的 helper、B3 `get_db`），但沒有任何一份文件定義「單一入口清單」，也沒有任何一條會在 import 繞過它時失敗。#506 已合併，`backend-sqlite` job 已跑 `uv run lint-imports` 與 `uv run pytest`，新契約與新測試可直接掛在這兩個既有 gate 上。
 
-今天 `backend/app/` 還沒有任何入口實作（寄信、OIDC、認證 dependency、對外 HTTP 呼叫皆為 0 處；唯一有實作的「單一」是 `core/db.py` 的 `get_db`），實測在 `origin/main` 上現有四個契約為 `4 kept, 0 broken`，下列任何候選契約在今天的 `app/` 命中都是 0，沒有既有違規要處理。所以本 change 定的是「清單與怎麼擋」，不是入口本身；入口由日後各自的功能 change 落地。
+今天 `backend/app/` 還沒有任何入口實作（寄信、OIDC、認證 dependency、對外 HTTP 呼叫皆為 0 處；唯一有實作的「單一」是 `core/db.py` 的 `get_db`），實測在 `origin/main` 上現有四個契約為 `4 kept, 0 broken`，下列任何契約在今天的 `app/` 命中都是 0，沒有既有違規要處理。所以本 change 定的是「清單與怎麼擋」，不是入口本身；入口由日後各自的功能 change 落地。
 
 這是技術 change，`docs/specs/` 沒有對應的業務規格，不涉及使用者可見功能。需求依據為 issue、ADR 與規則文件條號（spec-migration D4；維護者 2026-11-20 裁定，#503）。
 
