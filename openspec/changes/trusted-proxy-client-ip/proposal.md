@@ -88,8 +88,8 @@ issue #566 的驗收條件有兩個互相拉扯的要求：經 Nginx 要拿到�
 ## 引用來源
 
 - GitHub issue #566（使用情境、需求目標、三條驗收條件）。
-- `docs/specs/01-account/05-login-state.mdx` §規格 §登入與申請的嘗試次數、§已確認決議 Q3（來源 IP 的消費端；無對應的業務規格，見待決 9）。
+- `docs/specs/01-account/05-login-state.mdx` §規格 §登入與申請的嘗試次數、§已確認決議 Q3（來源 IP 的消費端；無對應的業務規格，見 `clarification.md` Q9）。
 - `docs/development/adr/004-auth-and-security.mdx` D7；`008-deployment-and-operations.mdx` D1、D6、§待決第 1 列；`docs/development/architecture.mdx` §部署與維運。
 - `docs/development/rules/security-agent-rules.mdx` S1、S9；`docs/diagrams/architecture/backend-modules.mdx`（存取紀錄、「還沒有」風險表第 4 列）。
 - `openspec/specs/server-logging/spec.md`、`container-runtime/spec.md`、`runtime-config/spec.md`、`security-headers/spec.md`、`backend-code-boundaries`。
-- 本 change 的 `system-analysis.md`（待決 1 至 12、需求矛盾 1 至 4）、`system-design.md`（實測 A、C、D、E；選項與建議；§常駐文件異動；技術待決 T1 至 T5）、`ui-design.md`（無 UI 變更）、`api-contract.md`（無 API 變更）。
+- 本 change 的 `system-analysis.md`（待決問題與需求矛盾；十二題的決議見 `clarification.md` Q1 至 Q12）、`system-design.md`（實測 A、C、D、E；選項與建議；§常駐文件異動；技術待決：T1、T2 的決議見 `clarification.md`，T3 至 T5 見 `design.md`）、`ui-design.md`（無 UI 變更）、`api-contract.md`（無 API 變更）。
