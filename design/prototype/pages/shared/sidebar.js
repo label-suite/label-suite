@@ -1964,6 +1964,12 @@
     var taskHref = opts.taskHref || '../task-management/task-list.html';
     var storedTaskType = readStoredActiveTaskType();
     var annotationHref = opts.annotationHref || '../annotation/annotation-list.html';
+    /* 入口標記（規格 07-01 §導覽項目與可見性、規格 04-01 §路由上下文與回退 第 11 條，Issue #610）：
+       「標記作業」的連結帶 entry=nav，標記清單才分得出這是站內點進來、不是深連結。
+       網址裡帶了任務時任務優先，entry=nav 不影響落點。 */
+    if (!/[?&]entry=/.test(annotationHref)) {
+      annotationHref += (annotationHref.indexOf('?') === -1 ? '?' : '&') + 'entry=nav';
+    }
     if (storedTaskType && annotationHref.indexOf('task_type=') === -1) {
       annotationHref += (annotationHref.indexOf('?') === -1 ? '?' : '&') + 'task_type=' + encodeURIComponent(storedTaskType);
     }
