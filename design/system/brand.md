@@ -223,7 +223,7 @@ token 名與值以 `tokens.css` 為準；本節只寫**怎麼用**。
 
 證據偏少，只收有明文的：
 
-- **登入後的每一頁共用側欄**：品牌區 `.brand-section`（logo＋wordmark＋語言切換）在最上、分隔線、導覽列（`sidebar.js:2037`–`:2051`、`sidebar.css:37`–`:44`）。側欄可收合，狀態存在 `labelsuite.sidebarCollapsed`（`sidebar.js:5`）。
+- **登入後的每一頁共用側欄**：品牌區 `.brand-section`（logo＋wordmark＋語言切換）在最上、分隔線、導覽列（`sidebar.js:2043`–`:2057`、`sidebar.css:37`–`:44`）。側欄可收合，狀態存在 `labelsuite.sidebarCollapsed`（`sidebar.js:5`）。
 - **工作頁籤**上限 8 個、重開堆疊上限 10（`sidebar.js` 的 `TAB_CAP`、`TAB_REOPEN_CAP`）。「工作頁籤」與頁內「Content Tabs」是兩個東西，命名見 [`MASTER.md`](MASTER.md) §命名約定。
 - **帳號頁**是置中的單卡版面，頂部 navbar 只有 logo 與語言切換（`login.html` 的 `.navbar`、`:353`–`:375`）。
 - **響應式規則（維護者裁定 2026-11-18）：**
@@ -288,7 +288,7 @@ token 名與值以 `tokens.css` 為準；本節只寫**怎麼用**。
 ### 用法
 
 - 線條圖示，單色，顏色由 `currentColor` 繼承；不另外上色。
-- 大多數頁面**不載入 `assets/icons/` 的檔案，而是把 `<svg>` 內嵌在 HTML／JS 裡**（`login.html:353`–`:358`、`sidebar.js:2040`；全 prototype 只有 `components-showcase.html` 以檔案引用 `chevron-down.svg`，見 [`pages/components-showcase.md`](pages/components-showcase.md)）。所以 `assets/icons/` 現況比較像**圖示資料庫**，不是頁面實際引用的來源。
+- 大多數頁面**不載入 `assets/icons/` 的檔案，而是把 `<svg>` 內嵌在 HTML／JS 裡**（`login.html:353`–`:358`、`sidebar.js:2046`；全 prototype 只有 `components-showcase.html` 以檔案引用 `chevron-down.svg`，見 [`pages/components-showcase.md`](pages/components-showcase.md)）。所以 `assets/icons/` 現況比較像**圖示資料庫**，不是頁面實際引用的來源。
 - 純裝飾圖示加 `aria-hidden="true"`；單獨成為控制項的圖示要有 `aria-label`（`login.html:366`–`:368` 的語言切換是圖示加文字，所以圖示本身 `aria-hidden`）。
 
 ---
@@ -374,7 +374,7 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 | 場景 | 做法 | 依據 |
 | :--- | :--- | :--- |
 | 帳號頁頂部 navbar | 32×32 主色圓角方（圓角 8px）＋內嵌 20×20 的標籤線稿（`--color-on-cta`：淺色白、深色深墨）；右側 wordmark 18px 襯線粗體；整塊是「回首頁」連結，`aria-label` 兩種語言 | `login.html:39`–`:68`、`:351`–`:361` |
-| 登入後側欄品牌區 | 36×36（`--radius-md`）＋ wordmark 16px；放在最上、下方一條 `--color-border` 分隔線；整塊連回儀表板（`brandHref`） | `sidebar.css:37`–`:75`、`sidebar.js:2036`–`:2044` |
+| 登入後側欄品牌區 | 36×36（`--radius-md`）＋ wordmark 16px；放在最上、下方一條 `--color-border` 分隔線；整塊連回儀表板（`brandHref`） | `sidebar.css:37`–`:75`、`sidebar.js:2042`–`:2050` |
 | 元件展示的頭像樣本 | `icon-colored.svg` 當作使用者頭像的示範圖 | `components-showcase.html:1366` |
 
 觀察到的規則：

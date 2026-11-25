@@ -4,7 +4,7 @@ description: '一個任務的分析詳情頁：同一個任務上下文底下，
 category: '規格書'
 tags: [規格書, 資料集, 已定案]
 createdAt: '2026-11-05'
-updatedAt: '2026-11-24'
+updatedAt: '2026-11-25'
 ---
 
 import PrototypeFrame from '@notes/components/prototype-frame';
@@ -805,10 +805,9 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 
 <PrototypeFrame page="dataset/dataset-analysis-detail" caption="分析詳情" client:idle />
 
-1. 風險表最後一欄是建議行動，只有一個按鈕：`調整參與狀態`（畫面還沒跟上，仍有 `審核標記`，見[§已確認決議](#已確認決議) Q28）
+1. 風險表最後一欄是建議行動，只有一個按鈕：`調整參與狀態`
 2. **只有:ref[專案負責人]{id="term.project-leader"}能觸發**這個行動
 3. :ref[審核員]{id="term.reviewer"}**只能看**風險等級與原因，**不得**觸發行動；他看到的是 `僅 Project Leader 可執行`
-   - **關係識別那一型的畫面少了這一句**：它的風險表有四個行動按鈕，卻沒有任何一個 `僅 Project Leader 可執行` 的說明，其餘六型都有。按鈕不可按但沒有說明，審核員會以為是壞掉了。那四個按鈕是拿掉 `審核標記` 之前的畫面，畫面還沒跟上（見[§已確認決議](#已確認決議) Q28）
 4. 那個按鈕是**導頁**，不在這一頁改任何東西：
 
 | 按鈕 | 去哪裡 |
@@ -1697,7 +1696,7 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 - [ ] 保留，落點照原文導向那個任務的標記清單
 
 > 理由：只有專案負責人能觸發建議行動，而「審核標記」的落點是那個任務的標記清單；[規格 04-01 §已確認決議](../04-annotation/01-annotation-list.mdx#已確認決議) Q1 裁定專案負責人進不了標記清單，兩條沒法同時成立。落在[§建議行動只有專案負責人能執行](#建議行動只有專案負責人能執行)、§卡控機制 與 §驗收標準。
-> **畫面要改**：`design/prototype/pages/dataset/dataset-analysis-detail.html` 的風險表仍有 `審核標記`，由 [Issue #610](https://github.com/label-suite/label-suite/issues/610) 處理；依維護者 2026-11-24 的裁定，那一張先畫 artifact 給維護者看過才移 Ready。
+> **畫面已跟上**：[Issue #610](https://github.com/label-suite/label-suite/issues/610) 拿掉了 `design/prototype/pages/dataset/dataset-analysis-detail.html` 風險表的 `審核標記`，七型 21 列每一列都只剩 `調整參與狀態`，關係識別那一型也補上 `僅 Project Leader 可執行`（維護者 2026-11-25 看過畫面提案後裁定）。
 > 來源：[Issue #551 的裁定紀錄](https://github.com/label-suite/label-suite/issues/551#issuecomment-7120107233)（第 7 題）；畫面落差的處理見 [Issue #576 的裁定紀錄](https://github.com/label-suite/label-suite/issues/576#issuecomment-7122460190)（第 4 題）
 
 ### Q29. 實體辨識切到部分重疊時，標題列的星號與「主要指標」後綴要不要隨之改變？（已定案，維護者裁定 2026-11-24）
@@ -1825,6 +1824,7 @@ import Spec0502AnalysisDetailFlow from '@notes/components/spec-05-02-analysis-de
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#610](https://github.com/label-suite/label-suite/issues/610) | 2026-11-25 | §規格 › 建議行動只有專案負責人能執行 第 1、3 條、§已確認決議 Q28 | 第 1 條註明畫面還沒跟上、仍有 `審核標記`；第 3 條的子條目說關係識別那一型的畫面少了 `僅 Project Leader 可執行`；Q28 寫「畫面要改」 | prototype 已跟上：拿掉第 1 條的括號與第 3 條的子條目，Q28 改寫成畫面已跟上。**規則沒有變，無新決議**，不加變更標示（#576 那一輪的標示保留） | 無新決議 |
 | [#614](https://github.com/label-suite/label-suite/issues/614) | 2026-11-24 | §規格 › 逐型 IAA 報告的版面 第 3 條、§八種輸出類型各自的主指標與門檻 第 11 條、§卡控機制、§驗收標準、§待釐清、§已確認決議 | 第 3 條只寫主指標旁有星號、後綴 `— 主要指標`，沒有寫實體辨識切到部分重疊時的例外（畫面早已如此切換，G-57） | 第 3 條補例外：實體辨識切到部分重疊時星號收起、後綴改 `— 參考顯示`，切回嚴格比對還原；第 11 條補一條對應的互見；新增卡控一條與兩個 Scenario（部分重疊時標題列改為參考顯示、切回嚴格比對後標題列還原）。頁首的 `變更 #576` 換成 `變更 #614`，#576 那一輪的標示清掉、文字保留 | Q29（維護者 2026-11-24 確認，依據本 issue） |
 | [#576](https://github.com/label-suite/label-suite/issues/576) | 2026-11-24 | §規格 › 建議行動只有專案負責人能執行 第 1、3 條、§已確認決議 Q28 | 沒有說明 prototype 仍有 `審核標記` | 第 1 條與第 3 條的子條目註明畫面還沒跟上，Q28 補上「畫面要改」與處理的 Issue。**規則沒有變，無新決議**（同一天前一輪的標示保留） | 無新決議 |
 | [#576](https://github.com/label-suite/label-suite/issues/576) | 2026-11-24 | §規格 › 建議行動只有專案負責人能執行、§資料欄位 的說明句、§卡控機制、§驗收標準、§待釐清、§已確認決議 | 建議行動有兩個按鈕；`審核標記` 導向那個任務的標記清單、預先帶上審核員視角與試標回合（原第 5 條說明預先帶試標回合的理由）；Scenario「審核標記導向標記清單」 | 拿掉 `審核標記`：建議行動只剩 `調整參與狀態`；刪除原第 5 條、卡控那一條與 Scenario「審核標記導向標記清單」，原第 6 條改為第 5 條；新增 Scenario「建議行動只剩調整參與狀態」。頁首的 `變更 #434` 換成 `變更 #576`，#434 那一輪的標示清掉、文字保留 | Q28 |

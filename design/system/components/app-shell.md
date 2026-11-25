@@ -12,15 +12,15 @@
 | :--- | :--- | :--- |
 | 側欄本體（品牌、導覽項、收合鈕） | 必填 | `pages/shared/sidebar.css`、`sidebar.js` |
 | 系統管理次選單（兩個連結） | 條件式 | `sidebar.js:539`–`:541`：**只有**系統管理員、桌機、且側欄未收合三者同時成立才展開 |
-| 通知鈴 ＋ `#notificationDropdown`（含 `#notifMarkAllBtn`「全部標為已讀」） | 選用 | `sidebar.css:660`（`.notif-bell-wrap`）、`:685`（`.notif-dropdown`）；`sidebar.js:2260`、`:2274` |
-| 語言切換 `#langToggle`／行動版 `#mobileLangToggle` | 必填 | `sidebar.js:2047`／`:2051` |
-| 主題切換 `#sidebarThemeToggleBtn`／`#mobileThemeToggleBtn` | 必填 | `sidebar.js:2081`／`:2055` |
-| 使用者區：`#userAvatar`、`#userName`、`#roleIndicator` | 必填 | `sidebar.js:2098`、`:2100` |
-| 登出 `#logoutBtn`／`#mobileLogoutBtn` | 必填 | `sidebar.js:2104`／`:2065` |
-| `#shortcutHelpModal` 快捷鍵說明 | 選用 | `sidebar.js:2109`（開關在 `:2209`） |
+| 通知鈴 ＋ `#notificationDropdown`（含 `#notifMarkAllBtn`「全部標為已讀」） | 選用 | `sidebar.css:660`（`.notif-bell-wrap`）、`:685`（`.notif-dropdown`）；`sidebar.js:2266`、`:2280` |
+| 語言切換 `#langToggle`／行動版 `#mobileLangToggle` | 必填 | `sidebar.js:2053`／`:2057` |
+| 主題切換 `#sidebarThemeToggleBtn`／`#mobileThemeToggleBtn` | 必填 | `sidebar.js:2087`／`:2061` |
+| 使用者區：`#userAvatar`、`#userName`、`#roleIndicator` | 必填 | `sidebar.js:2104`、`:2106` |
+| 登出 `#logoutBtn`／`#mobileLogoutBtn` | 必填 | `sidebar.js:2110`／`:2071` |
+| `#shortcutHelpModal` 快捷鍵說明 | 選用 | `sidebar.js:2115`（開關在 `:2215`） |
 | `.workspace-tab-bar` 工作頁籤列 | 條件式，開過兩頁以上才出現 | `sidebar.css:953`、`sidebar.js:1525` |
 
-`#userAvatar` 標了 `aria-hidden="true"`（`sidebar.js:2098`），所以頭像不朗讀，身分靠 `#userName` 與 `#roleIndicator` 的文字。
+`#userAvatar` 標了 `aria-hidden="true"`（`sidebar.js:2104`），所以頭像不朗讀，身分靠 `#userName` 與 `#roleIndicator` 的文字。
 
 ## 變體
 
@@ -61,13 +61,13 @@ hover／focus／disabled 等元件層狀態**未逐項盤點**——外殼不是
 
 ## 鍵盤與焦點
 
-`#shortcutHelpModal` 的存在表示有一套鍵盤快捷鍵，但**它不用 `modal-focus.js`**：整個 modal 由 `sidebar.js:2109` 自己注入與開關（`:2209`），`sidebar.js` 全檔沒有引用 `LabelSuiteModalFocus`。`#notificationDropdown` 同樣是 `sidebar.js:2260` 自建。
+`#shortcutHelpModal` 的存在表示有一套鍵盤快捷鍵，但**它不用 `modal-focus.js`**：整個 modal 由 `sidebar.js:2115` 自己注入與開關（`:2215`），`sidebar.js` 全檔沒有引用 `LabelSuiteModalFocus`。`#notificationDropdown` 同樣是 `sidebar.js:2266` 自建。
 
 所以 prototype 有**兩套覆蓋層焦點處理**：[Modal](modal.md) 的共用模組，與 app-shell 自己的。→ `../design-gaps.md` G-23
 
 ## 樣式出處
 
-`design/prototype/pages/shared/sidebar.css:1`–`:1233`、`design/prototype/pages/shared/sidebar.js:1`–`:2630`。
+`design/prototype/pages/shared/sidebar.css:1`–`:1233`、`design/prototype/pages/shared/sidebar.js:1`–`:2636`。
 
 `sidebar.css:963` 與 `sidebar.js:683` 都引用「`MASTER.md` 的 terminology note」來解釋頁籤與 Content Tabs 的命名分工——**那一節在本 repo 還不存在**，見 [content-tabs](content-tabs.md) 與 `../design-gaps.md` G-25。
 

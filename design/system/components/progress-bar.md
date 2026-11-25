@@ -57,7 +57,7 @@
 | :--- | :--- |
 | `components-showcase#state-default` | 65% 樣本 |
 | `dashboard/dashboard`（`#param-scenario-project-leader`、`#param-scenario-annotator`） | `dashboard.components.css:206`–`:241` 的 `.progress`，與正典同名；審核覆蓋率那一條有 `role="progressbar"` 與 `aria-value*`（`dashboard.js:213`–`:218`），一般進度條沒有（`:222`） |
-| `annotation/annotation-list#state-default` | 任務資訊卡的本頁 `.progress`（`annotation-list.html:179`–`:191`），全用 token；markup 帶 `aria-hidden="true"`（`:456`），旁邊的文字才是給輔助科技的 |
+| `annotation/annotation-list#state-default` | 任務資訊卡的本頁 `.progress`（`annotation-list.html:192`–`:204`），全用 token；markup 帶 `aria-hidden="true"`（`:469`），旁邊的文字才是給輔助科技的 |
 | `annotation/annotation-workspace`（`#role-*`） | 本頁 `.progress-track`／`.progress-fill`（`annotation-workspace.html:305`–`:316`），尺寸與 token 和正典相同、只換了 class 名；帶 `role="progressbar"` 與 `aria-value*`（`:1240`） |
 | `dataset/dataset-analysis-list#state-default` | 完成率欄的本頁 `.progress-track`／`.progress-fill`（`dataset-analysis-list.html:98`–`:107`），全用 token，但軌道是 `--color-border-muted`、填充是 `--color-primary`，與正典的 `--color-border`／`--color-cta` 不同；帶 `role="progressbar"`、`aria-label` 與 `aria-value*`（`dataset-analysis-list.view.js:67`–`:79`） |
 | `dataset/dataset-analysis-detail`（`#state-quality-*`） | 達標分數條 `.iaa-bar-wrap`／`.iaa-bar-fill`（`dataset-analysis-detail.html:84`–`:89`），寬度寫在 inline `style`；填充依 class 換 `--color-success`／`--color-warning`／`--color-error`／`--color-ink-muted`（`.pass`／`.warn`／`.fail`／`.neutral`），即正典說不要的逐狀態色；#435 起沒有狀態 class 時預設 `--color-ink-muted`（`:85`），序列標註那種沒有門檻的長條才看得到；沒有 `role="progressbar"`，數值在旁邊的文字 |
