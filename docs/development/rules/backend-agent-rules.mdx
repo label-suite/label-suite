@@ -52,8 +52,8 @@ Router 只呼叫 service，service 才碰 repository 與 model；資料層不處
 
 :::note{title="B2 的反例與檢查方式" collapsible}
 - **反例**：`python -m pytest`；為了讓一個測試過而把參數型別從 `TaskId` 放寬成 `str`
-- **檢查方式**：CI 的 `backend-sqlite` job 跑 `uv run mypy --strict app` 檢查型別標註；`uv run ruff check .` 與 `uv run ruff format --check .` 檢查 lint 與格式（`backend/pyproject.toml` 選用 `E`、`F`、`I`、`UP`、`B`、`S`、`ASYNC`），指令一律以 `uv run` 執行
-- **尚未檢查**：docstring 的有無與內容沒有機械檢查（`ruff` 沒有選 `D` 規則），靠審查
+- **檢查方式**：CI 的 `backend-sqlite` job 與 `pnpm run check` 跑 `uv run mypy --strict app`；`backend/pyproject.toml` 的 `[tool.mypy]` 已設 `strict = true`，所以本機 `uv run mypy app` 結果相同。型別檢查的範圍只有 `app`。`uv run ruff check .` 對整個 `backend/` 跑，選用 `E`、`F`、`I`、`UP`、`B`、`S`、`ASYNC` 與 `D`（docstring 規則，google 風格，忽略 `D107`）；文件註解規則實際上只約束 `app`，`tests/**` 與 `alembic/**` 以目錄樣式豁免 `D`，因為 B2 約束的是公開介面，測試函式與遷移腳本不是公開介面。`_` 開頭的私有 helper 不受 docstring 檢查，這是 ruff 不檢查 `_` 開頭名稱的預設，設定裡沒有為此加規則。`uv run ruff format --check .` 檢查格式。指令一律以 `uv run` 執行
+- **尚未檢查**：docstring 的**有無與段落格式**已機械檢查，但內容是否寫明前提、副作用與例外，以及建構參數是否寫在類別 docstring 的 `Args:`（`__init__` 的 `D107` 已忽略），仍靠審查；`tests` 的型別與 docstring 不受檢
 :::
 
 ### B3 session 的生命週期
