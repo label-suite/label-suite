@@ -58,7 +58,7 @@ issue #566 的驗收條件有兩個互相拉扯的要求：經 Nginx 要拿到�
 
 ### New Capabilities
 
-- `trusted-proxy-client-ip`：持有三組行為 Requirement：經 Nginx 時後端取得原始來源位址；直接連到後端並自帶 `X-Forwarded-For` 的請求不被採信；多段轉發鏈取右到左第一個不受信任的位址（沒有 Nginx 時只信任 loopback）。
+- `trusted-proxy-client-ip`：持有四組行為 Requirement：經 Nginx 時後端取得原始來源位址；直接連到後端並自帶 `X-Forwarded-For` 的請求不被採信；多段轉發鏈取右到左第一個不受信任的位址；沒有 Nginx 時只信任 loopback。
 
 ### Modified Capabilities
 

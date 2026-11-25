@@ -70,8 +70,3 @@
 - **WHEN** 以合法的 `CORS_ALLOWED_ORIGINS` 加 `LOG_LEVEL=CANARY-verbose` 啟動服務
 - **THEN** 服務拒絕啟動，程序以非零狀態結束
 - **AND** 錯誤訊息含 `LOG_LEVEL`，且不含 `CANARY-verbose`
-
-#### Scenario: FORWARDED_ALLOW_IPS 未設時只信任 loopback
-
-- **WHEN** 以合法的 `CORS_ALLOWED_ORIGINS`、不設 `FORWARDED_ALLOW_IPS` 載入後端設定並啟動服務
-- **THEN** 服務啟動成功，設定中的信任清單恰為 `127.0.0.1` 與 `::1`

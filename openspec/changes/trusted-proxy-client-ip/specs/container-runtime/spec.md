@@ -14,6 +14,11 @@
 - **THEN** 兩份輸出的預設網路都有 `ipam` 的 `subnet` 與 `ip_range`，兩者的值各自相同
 - **AND** 兩份輸出的 `frontend` 服務都有 `ipv4_address`，值相同且落在 `subnet` 內、不在 `ip_range` 內
 
+#### Scenario: 子網段在 Docker 預設位址池之外
+
+- **WHEN** 讀取兩份編排檔有效設定中預設網路的 `subnet`
+- **THEN** 該子網段不在 `172.16.0.0/12` 內，也不在 `192.168.0.0/16` 內
+
 ### Requirement: 後端只預設信任前端的固定位址
 
 兩份編排檔 SHALL 把 `FORWARDED_ALLOW_IPS` 傳進後端容器，`.env` 未設時預設值 MUST 恰為 `frontend` 服務的固定位址，不得是 `*`、前綴長度為 0 的網段，也不得涵蓋整個編排網路。`.env` 設了值時 MUST 以該值為準。`migrate` 服務不需要此變數。
@@ -28,7 +33,7 @@
 
 #### Scenario: .env 的值覆寫預設
 
-- **WHEN** 在 `.env` 加上 `FORWARDED_ALLOW_IPS=192.0.2.7`，展開兩份編排檔的有效設定
+- **WHEN** 以 `--env-file` 指向含 `FORWARDED_ALLOW_IPS=192.0.2.7` 的檔案（等同在 `.env` 加上該值），展開兩份編排檔的有效設定
 - **THEN** 兩份的後端服務 `FORWARDED_ALLOW_IPS` 都是 `192.0.2.7`
 
 ## MODIFIED Requirements

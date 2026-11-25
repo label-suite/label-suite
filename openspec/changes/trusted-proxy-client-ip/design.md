@@ -40,13 +40,15 @@
 
 ### D3 啟動檢查：`Settings.forwarded_allow_ips` 只驗證、不被後端使用（Q12；system-design §「啟動檢查」）
 
-規則見 specs `runtime-config`。驗證規則刻意與 uvicorn 的比對一致，才不會「檢查過了卻沒生效」：用 `ipaddress` 判斷單一位址與嚴格網段（擋實測 D9），拒絕 `*`、前綴長度 0（擋 D4、D10）、主機名稱與其他 literal（擋 D6、D11）、空清單（D5）與空項目。預設值 `127.0.0.1,::1` 與 uvicorn 預設相同，沒設環境變數時行為不變。`create_app` 在 uvicorn 包中介層之前被呼叫（`--factory`），所以後端自己讀同一個環境變數就能擋。不拒絕「很寬但不是全部」的網段（例 `10.0.0.0/8`）：什麼算太寬是部署決定。此決定使 Q1 不再是「零應用程式碼」，成本是一個欄位、一個驗證器與單元測試。
+規則見 specs `runtime-config`。驗證規則刻意與 uvicorn 的比對一致，才不會「檢查過了卻沒生效」：用 `ipaddress` 判斷單一位址與嚴格網段（擋實測 D9），拒絕 `*`、前綴長度 0（擋 D4、D10）、主機名稱與其他 literal（擋 D6、D11）、空清單（D5）與空項目。預設值 `127.0.0.1,::1` 與 uvicorn 預設相同，沒設環境變數時行為不變。`create_app` 在 uvicorn 包中介層之前被呼叫（`--factory`），所以後端自己讀同一個環境變數就能擋。不拒絕「很寬但不是全部」的網段（例 `10.0.0.0/8`）：什麼算太寬是部署決定。
+
+**檢查擋不住的兩種寫法**（已知限制，寫進 `.env.example` 與 `architecture.mdx`）：一是在編排檔以 `command` 覆寫啟動指令並帶 `--forwarded-allow-ips '*'`，旗標會蓋掉環境變數（實測 D2），`Settings` 看不到旗標；二是 `0.0.0.0/1,128.0.0.0/1` 這類以兩個前綴長度非 0 的網段合起來涵蓋整個 IPv4 空間，驗證器只擋前綴長度 0，不做涵蓋範圍計算。這兩種都是刻意繞過，不是寫壞；防線是 code review 與 `backend/Dockerfile` 的 `CMD` 不帶旗標（specs `trusted-proxy-client-ip`）。此決定使 Q1 不再是「零應用程式碼」，成本是一個欄位、一個驗證器與單元測試。
 
 ### D4 測試分層：真實 uvicorn 子行程三輪，加編排層 P1 與 P2（Q3；system-design §測試設計）
 
 - **整合測試**：子行程起 `tests.integration.<探針模組>:create_forwarded_probe_app --factory`，探針模組放在 `backend/tests/integration/`、檔名不以 `test_` 開頭（不被收集、不在 `app/`，production 不載入；比照 `probe.py` 的先例）。三輪對應 specs：未信任（`FORWARDED_ALLOW_IPS=192.0.2.1`）、受信任（`127.0.0.1`）、多層鏈。**「未信任」那一輪不能用不設環境變數**（實測 A1：預設清單含測試用戶端的 loopback），「預設是 loopback only」改由單元測試斷言 `Settings`。另有一條啟動失敗測試（`*`）。子行程帶自己的 `SQLITE_PATH`，SQLite 與 PostgreSQL 行為相同，不另開 PostgreSQL 版。
 - **P1**（靜態，必做）：CI `compose` job 對既有的 `docker compose config --format json` 加斷言，涵蓋 specs `container-runtime` 的兩個 Requirement，並確認 `frontend/nginx.conf` 仍含 `X-Forwarded-For $proxy_add_x_forwarded_for`。
-- **P2**（執行期，Lite 層一次）：只給 CI 用的 override 檔把後端 `command` 換成映像內的 uvicorn 跑一個掛進去的回報用 ASGI 檔；CI 送一般與偽造請求，只做否定斷言（回報位址不是 `frontend` 的固定位址、不是偽造值），因為發布埠的來源位址依平台而異（Docker Desktop 為 `192.168.65.1`，Linux 未測）。回報檔只存在於這個 override，不進映像與預設編排。override 與回報檔放 `scripts/` 或 `e2e/` 下，實作時擇一並在 task 記錄。
+- **P2**（執行期，Lite 層一次，自成一個完整週期）：只給 CI 用的 override 檔把後端 `command` 換成映像內的 uvicorn 跑一個掛進去的回報用 ASGI 檔。回報檔對任何路徑都回 `200`，包括 `/api/v1/health`（所以後端的 healthcheck 通過、`up --wait` 會成功），回應為含 `client` 與 `scheme` 的 JSON；請求一律打 `/api/v1/<探針路徑>`，因為 Nginx 只轉發 `/api/v1/`。**週期放在 CI `compose` job 的「Stop the Lite tier」（既有的 `docker compose down -v`）之後、「Start the production tier」之前**：`docker compose -f docker-compose.yml -f <override> up --build --wait` → 送一般與偽造請求並斷言 → `docker compose -f docker-compose.yml -f <override> down -v`。**不可**對正在跑的 Lite 層再以 override 重跑 `up`：那只會以新位址重建 `backend`，Nginx 在啟動時解析過後端位址不會更新（`frontend/nginx.conf:57-59`），請求會得 502。斷言只做否定（回報位址不是 `frontend` 的固定位址、不是偽造值），因為發布埠的來源位址依平台而異（Docker Desktop 為 `192.168.65.1`，Linux 未測）；另外有 `ip_range` 的網路，其 gateway 是 `ip_range` 的第一個位址（例如 `.128`），不是 `.1`，不得假設 `.1`，否定斷言仍成立。回報檔只存在於這個 override，不進映像與預設編排。override 與回報檔放 `scripts/` 或 `e2e/` 下，實作時擇一並在 task 記錄。
 - **誰負責 `.github/`**：`[@backend-developer]` 負責 `ci.yml` 與 P2 檔案。`rules.tasks` 只有四個角色，不新增角色；編排檔與 CI 屬同一個基礎建設單位（既有的 `compose` job 與兩份編排檔皆由後端相關 task 維護）。
 - **已知缺口**：「同網路其他容器直連後端偽造無效」只有實測 E4 與 P1 的靜態斷言（預設只信任單一位址）支持，P2 沒有從第三個容器發請求；不新增這一步，避免超出 system-design 的測試設計。若維護者要執行期證明，回 Q3 加一步。
 - **uvicorn 升版**：取值規則（右到左、`*` 反轉）是 0.54.0 的實測；整合測試的三輪就是升版時的回歸偵測，不另外 pin（T5）。
@@ -78,6 +80,7 @@
   - Cloudflare 或其他邊緣代理在 Nginx 前面時，拿到的是邊緣位址而不是真實用戶端（實測 E6、Q11）；還原需要 Nginx 的 real_ip 設定，屬 ADR-008 範圍。
   - Docker 發布埠的來源位址依平台而異（Docker Desktop 為 `192.168.65.1`，Linux 未測），所以測試不斷言固定值。
 - **子網段重疊**：與主機既有網路或 VPN 重疊時 `up` 失敗（明確失敗，見 D2）。
+- **兩層共用同一個子網段，不能在同一台主機同時運行**：後起的那層 `up` 會以 `Pool overlaps with other one on this address space`（Docker 29）失敗；只 `stop` Lite 層而沒有 `down`，網路仍在，正式層的 `up` 一樣失敗。切換層之前必須先 `down`。CI 的 `compose` job 已在「Stop the Lite tier」以 `down -v` 拆掉 Lite 層才起正式層，P2 週期也各自 `down -v`（D4）。寫進 `.env.example` 與 `architecture.mdx`，3.3 的實測記錄同樣記下。這是 T1「兩層同一組」帶來的取捨，不另外為兩層各配一組。
 - **設定寫錯的症狀**：編排檔沒傳或傳錯時，後端回到「所有人共用 Nginx 位址」（system-design Sequence Diagram 的 else 分支），沒有錯誤訊息；P2 與 P1 是偵測它的方式。
 - **uvicorn 升版改變取值規則**：由三輪整合測試偵測（D4）。
 - **Settings 驗證與 uvicorn 比對不一致**：兩者讀同一個變數、規則刻意對齊；不一致時的最壞情況是檢查過了但 uvicorn 靜默失效（fail closed），不會變成信任所有人，因為 `*` 與前綴長度 0 一律拒絕。
@@ -85,7 +88,7 @@
 
 ## Migration Plan
 
-沒有資料模型異動、沒有 Alembic migration、沒有 API 或畫面變動。部署上唯一的變動是兩份編排檔的預設網路改為固定子網段，既有部署第一次 `docker compose up` 會需要以新設定重建網路與容器；volume 與資料不受影響。實作時以實際 `up` 驗證既有舊網路存在時的行為，結果記在對應 task 的提交訊息，**未驗證前不寫成保證**。回滾：還原本 PR 即回到動態網路與 uvicorn 預設（loopback only）；環境變數 `FORWARDED_ALLOW_IPS` 不再被讀，不留殘餘狀態。
+沒有資料模型異動、沒有 Alembic migration、沒有 API 或畫面變動。部署上唯一的變動是兩份編排檔的預設網路改為固定子網段，既有部署第一次 `docker compose up` 會需要以新設定重建網路與容器；volume 與資料不受影響。實作時以實際 `up` 驗證既有舊網路存在時的行為，結果記在對應 task 的提交訊息，**未驗證前不寫成保證**。回滾：還原本 PR 即回到動態網路與 uvicorn 預設（loopback only），但已存在的固定子網路不會自己消失，需先 `docker compose down`（不加 `-v`，volume 與資料保留）再 `docker compose up` 才會以動態網路重建；環境變數 `FORWARDED_ALLOW_IPS` 不再被讀，不留殘餘狀態。
 
 ## Open Questions
 
