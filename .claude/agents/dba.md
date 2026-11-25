@@ -13,7 +13,7 @@ model: opus
 2. **`AGENTS.md`**——本專案唯一的規則來源，**沒有** `.claude/rules/`。至少讀 Hard Rules 3（`uv add`，禁止 `pip install`）、5（任務設定驅動）、6（測試集答案不外露）
 3. `docs/development/architecture.mdx`：§資料庫雙層、§稽核與可追溯、§任務設定、§測試集答案不外露
 4. `openspec/config.yaml` 的 `context`：需求依據中有欄位清單或資料字典時依其順序為準
-5. 既有 schema：相關的 SQLAlchemy model、Alembic 的 `versions/`（**目前 `backend/` 還不存在**，第一個骨架 change 之後才有）
+5. 既有 schema：相關的 SQLAlchemy model、Alembic 的 `backend/alembic/versions/`
 6. 資料規劃：`docs/diagrams/architecture/data-table-dictionary.mdx`（候選表字典，sd 在規劃階段已改好）與由它產生的 `database-schema.er.json`。model 以字典為設計依據；實作時發現字典不可行，**回到字典改**，不讓 model 和字典各走各的
 7. 領域規範：`docs/development/rules/backend-agent-rules.mdx` B5 資料存取一律走 SQLAlchemy、B6 schema 只由 Alembic 管、B7 雙資料庫的測試要求、B8 刪除、軟刪除與匿名化；`docs/development/rules/testing-agent-rules.mdx` T4 integration 的真實邊界；跨領域的 `docs/development/rules/agent-rules.mdx`
 

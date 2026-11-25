@@ -158,7 +158,7 @@ This repository has no `.claude/rules/` canon and will not get one (decided in #
 | Frontend dependency direction, type safety, shared UI | [docs/development/rules/frontend-agent-rules.mdx](docs/development/rules/frontend-agent-rules.mdx) | #109 |
 | Test layers, dual-database verification, delivery evidence | [docs/development/rules/testing-agent-rules.mdx](docs/development/rules/testing-agent-rules.mdx) | #110 |
 
-All six documents now exist, but most of their rules are not being checked: `backend/`, `frontend/` and `e2e/` do not exist yet, so most of the checks those documents describe are marked as not built. The rest are marked as manual review, which means a person or an independent reviewer does them, not a tool. Read "not built" as literal, and do not report a check as passing when the check has not been built.
+All six documents now exist, but most of their rules are not being checked. `backend/`, `frontend/` and `e2e/` now exist, yet `.github/workflows/ci.yml` runs only a few of the checks those documents describe (each document's opening paragraph names which). Of the other checks, most are marked as not built and the remainder as manual review, which means a person or an independent reviewer does them, not a tool. Read "not built" as literal, and do not report a check as passing when the check has not been built.
 
 Two rules are worth stating here because they are reversals of what the reference projects say:
 
