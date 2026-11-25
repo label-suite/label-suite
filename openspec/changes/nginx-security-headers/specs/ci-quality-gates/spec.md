@@ -40,7 +40,7 @@ CI SHALL 在 pull request 動到 `docker-compose.yml`、`docker-compose.prod.yml
 
 ### Requirement: 容器編排驗證的步驟與失敗條件
 
-容器編排驗證 SHALL 依序：確認容器編排工具的版本不低於專案寫明的最低版本，低於時 MUST 失敗並說明；驗證兩份編排檔的語法；確認缺少允許來源或正式層缺資料庫密碼時編排工具拒絕解析（這兩項沒有被拒絕時 MUST 失敗）；以 Lite 與正式層依序起服務、經公開入口取得健康檢查回應，再比對安全標頭（正式層另做瀏覽器檢查），停止後端後比對 502 回應的安全標頭。任一服務在 300 秒內沒有變成健康、或健康檢查回應的 `data.status`、`data.database` 不是 `ok` 時 MUST 失敗。
+容器編排驗證 SHALL 依序：確認容器編排工具的版本不低於專案寫明的最低版本，低於時 MUST 失敗並說明；驗證兩份編排檔的語法；確認缺少允許來源或正式層缺資料庫密碼時編排工具拒絕解析（這兩項沒有被拒絕時 MUST 失敗）；以 Lite 與正式層依序起服務、經公開入口取得健康檢查回應，再比對安全標頭（正式層另做瀏覽器檢查），停止後端後比對 502 或 504 回應的安全標頭。任一服務在 300 秒內沒有變成健康、或健康檢查回應的 `data.status`、`data.database` 不是 `ok` 時 MUST 失敗。
 
 來源：clarification Q1、Q9；ADR-008 D1；#506 §驗收條件 1；system-design D7、D13；issue #568 §驗收條件 2、3；nginx-security-headers clarification Q4。
 
@@ -62,7 +62,7 @@ CI SHALL 在 pull request 動到 `docker-compose.yml`、`docker-compose.prod.yml
 #### Scenario: 動到公開入口時 CI 驗證兩層的安全標頭
 
 - **WHEN** PR 只修改 `frontend/nginx.conf`，且它的安全標頭符合主規格 `security-headers`
-- **THEN** CI 執行容器編排驗證；Lite 與正式層各比對一次安全標頭、各在停止後端後比對一次 502 回應，正式層另做一次瀏覽器檢查，全部通過時驗證成功
+- **THEN** CI 執行容器編排驗證；Lite 與正式層各比對一次安全標頭、各在停止後端後比對一次 502 或 504 回應，正式層另做一次瀏覽器檢查，全部通過時驗證成功
 
 ### Requirement: CI 輔助腳本的測試獨立執行
 
@@ -91,7 +91,7 @@ CI SHALL 在 pull request 動到 `docker-compose.yml`、`docker-compose.prod.yml
 
 容器編排驗證 SHALL 在每一層經公開入口請求主規格 `security-headers` 列的各類回應，比對每個安全標頭的完整值與狀態碼。任一類缺少標頭、值不符、同名標頭出現超過一次、帶 `Strict-Transport-Security`、帶 `Content-Security-Policy-Report-Only` 或狀態碼不符時 MUST 失敗，輸出 MUST 列出回應類別、標頭名、期望值與實際值。
 
-來源：issue #568 §驗收條件 2；ADR-008 D1；nginx-security-headers clarification Q1、Q3-附、Q4、system-design D2、D4。
+來源：issue #568 §驗收條件 2；ADR-008 D1；nginx-security-headers clarification Q1、Q3-附、Q4、Q11、system-design D2、D4。
 
 #### Scenario: 安全標頭被刪除時 CI 失敗
 
@@ -118,9 +118,9 @@ CI SHALL 在 pull request 動到 `docker-compose.yml`、`docker-compose.prod.yml
 - **WHEN** PR 讓同一個安全標頭在後端回應中出現兩次（例如後端也送出 `X-Frame-Options`）
 - **THEN** CI 的容器編排驗證失敗，輸出指出該標頭出現的次數
 
-#### Scenario: 後端停止後的 502 缺標頭時 CI 失敗
+#### Scenario: 後端停止後的 502 或 504 缺標頭時 CI 失敗
 
-- **WHEN** 某一層停止後端後，公開入口對 `GET /api/v1/health` 的回應不是 `502`，或缺少任一安全標頭
+- **WHEN** 某一層停止後端後，公開入口對 `GET /api/v1/health` 的回應既不是 `502` 也不是 `504`，或缺少任一安全標頭
 - **THEN** CI 的容器編排驗證失敗，輸出指出該回應類別與不符的狀態碼或標頭
 
 ### Requirement: 容器編排驗證在正式層做瀏覽器檢查

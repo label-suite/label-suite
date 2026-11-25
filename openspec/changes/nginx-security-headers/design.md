@@ -44,14 +44,14 @@ change：`nginx-security-headers` · issue：#568 · 分支：`feat/nginx-securi
 - **預設模式的請求**：system-design D2 的五類加 `POST /`（405），另加兩個「帶身分憑證」的變體：`GET /` 與 `GET /api/v1/health` 各帶 `Cookie: session=probe` 與 `Authorization: Bearer probe`。這兩個變體對應 `specs/security-headers`「安全標頭與身分無關」；因為期望值本來就是常數，變體只要通過同一套比對，就證明了標頭不隨憑證而變（system-design §權限檢查點）。
 - **建置資源的路徑**：從 `GET /` 的 body 取第一個 `src="/assets/…\.js"`；取不到時以結束碼 1 失敗並說明，不跳過這一類。
 - **每一類的判定**：狀態碼相符；`specs/security-headers` 的七個標頭各恰好一行且值逐字元相同；沒有 `Strict-Transport-Security`；沒有 `Content-Security-Policy-Report-Only`。標頭名不分大小寫比對，值去掉結尾的 `\r` 後逐字元比對。任一類不符不中斷，跑完所有類別後一次列出全部不符，每筆一行「類別、標頭、期望值、實際值（缺少時寫 `<missing>`，重複時寫出現次數）」。
-- **`--backend-down`**：只請求 `GET /api/v1/health`，期望 `502`，其餘判定相同。
+- **`--backend-down`**：只請求 `GET /api/v1/health`，狀態碼為 `502` 或 `504` 都算相符（Nginx 依連線失敗方式回 EHOSTUNREACH 的 502 或 ETIMEDOUT 的 504，兩層實測都會出現，clarification Q11），其他狀態碼不符；標頭判定相同。
 - **可攜性**：只用 bash 3.2 也有的語法（不用關聯陣列、`mapfile`、`${var,,}`），外部工具只用 `curl`、`grep`、`sed`、`tr`、`awk`。
 
 替代方案：寫成 Node 腳本（`scripts/*.mjs` 的慣例）。不採用：`compose` job 的 Lite 層段落目前不裝 Node，system-design 元件清單也定為 `.sh`；判定邏輯不複雜，bash 加 curl 足夠。
 
 ### D3：驗證腳本的回歸測試用假伺服器
 
-新增 `scripts/tests/check-security-headers.test.mjs`：每個案例在 `127.0.0.1` 的隨機埠起一個 Node `http` 伺服器，依 D2 的路徑回應指定的狀態碼與標頭，再以子程序執行 `<bash> scripts/check-security-headers.sh [--backend-down] http://127.0.0.1:<port>`，斷言結束碼與輸出。`<bash>` 取環境變數 `CHECK_HEADERS_BASH`，未設時為 `bash`（PATH 上的那一支）；在 macOS 設 `CHECK_HEADERS_BASH=/bin/bash` 即以內建的 bash 3.2 跑完全部案例，證明 D2 的可攜性要求。案例至少涵蓋：全部相符時結束碼 0；某一類缺 CSP；`X-Frame-Options` 值為 `DENY`；後端那兩類的 `X-Frame-Options` 出現兩次；帶 `Strict-Transport-Security`；帶 `Content-Security-Policy-Report-Only`；`Server` 帶版本；後端錯誤那一類回 `200` 而不是 `404`；帶憑證的變體缺標頭；`--backend-down` 時 `502` 相符與回 `200`；頁面殼取不到 `/assets/*.js`；沒給 base URL 時結束碼 2。
+新增 `scripts/tests/check-security-headers.test.mjs`：每個案例在 `127.0.0.1` 的隨機埠起一個 Node `http` 伺服器，依 D2 的路徑回應指定的狀態碼與標頭，再以子程序執行 `<bash> scripts/check-security-headers.sh [--backend-down] http://127.0.0.1:<port>`，斷言結束碼與輸出。`<bash>` 取環境變數 `CHECK_HEADERS_BASH`，未設時為 `bash`（PATH 上的那一支）；在 macOS 設 `CHECK_HEADERS_BASH=/bin/bash` 即以內建的 bash 3.2 跑完全部案例，證明 D2 的可攜性要求。案例至少涵蓋：全部相符時結束碼 0；某一類缺 CSP；`X-Frame-Options` 值為 `DENY`；後端那兩類的 `X-Frame-Options` 出現兩次；帶 `Strict-Transport-Security`；帶 `Content-Security-Policy-Report-Only`；`Server` 帶版本；後端錯誤那一類回 `200` 而不是 `404`；帶憑證的變體缺標頭；`--backend-down` 時 `502` 相符、`504` 相符與回 `200` 不符；頁面殼取不到 `/assets/*.js`；沒給 base URL 時結束碼 2。
 
 這支測試加進 `scripts-tests` job 的 `node --test` 清單與 `ci-workflow.test.mjs` C9 的 `SCRIPT_TESTS`，對應 `specs/ci-quality-gates`「CI 輔助腳本的測試獨立執行」。
 
@@ -92,15 +92,15 @@ pnpm、Node 與 Chromium 的安裝步驟（`pnpm/action-setup`、`actions/setup-
 
 ### Scenario 與檢查的對應
 
-| spec               | Requirement 或 Scenario                        | 由誰證明                                                                 |
-| :----------------- | :--------------------------------------------- | :----------------------------------------------------------------------- |
-| `security-headers` | 安全標頭的完整值、每一類回應、HSTS、只出現一次 | 驗證腳本（D2），`compose` job 兩層各跑；判定邏輯由 D3 測試               |
-| `security-headers` | 安全標頭與身分無關                             | 驗證腳本的兩個帶憑證變體（D2）                                           |
-| `security-headers` | CSP 不擋前端自己的資源                         | `e2e/public-entry/shell.spec.ts`（D4），`compose` 正式層                 |
-| `ci-quality-gates` | 觸發路徑                                       | `scripts/tests/ci-changed-paths.test.mjs`（D6）                          |
-| `ci-quality-gates` | 步驟、失敗條件、瀏覽器檢查、腳本測試獨立執行   | `scripts/tests/ci-workflow.test.mjs` C7、C9（D3、D5）                    |
-| `ci-quality-gates` | 瀏覽器檢查不在 e2e 檢查中執行                  | 預設模式的 `playwright test --list` 不列 `public-entry/`（D4，task 2.1） |
-| `e2e-testing`      | 預設跑法、容器模式、旅程                       | `playwright test --list` 與兩種模式的實際執行（D4）                      |
+| spec               | Requirement 或 Scenario                                                     | 由誰證明                                                                 |
+| :----------------- | :-------------------------------------------------------------------------- | :----------------------------------------------------------------------- |
+| `security-headers` | 安全標頭的完整值、每一類回應（含後端停止時的 502 或 504）、HSTS、只出現一次 | 驗證腳本（D2），`compose` job 兩層各跑；判定邏輯由 D3 測試               |
+| `security-headers` | 安全標頭與身分無關                                                          | 驗證腳本的兩個帶憑證變體（D2）                                           |
+| `security-headers` | CSP 不擋前端自己的資源                                                      | `e2e/public-entry/shell.spec.ts`（D4），`compose` 正式層                 |
+| `ci-quality-gates` | 觸發路徑                                                                    | `scripts/tests/ci-changed-paths.test.mjs`（D6）                          |
+| `ci-quality-gates` | 步驟、失敗條件、瀏覽器檢查、腳本測試獨立執行                                | `scripts/tests/ci-workflow.test.mjs` C7、C9（D3、D5）                    |
+| `ci-quality-gates` | 瀏覽器檢查不在 e2e 檢查中執行                                               | 預設模式的 `playwright test --list` 不列 `public-entry/`（D4，task 2.1） |
+| `e2e-testing`      | 預設跑法、容器模式、旅程                                                    | `playwright test --list` 與兩種模式的實際執行（D4）                      |
 
 ## Risks / Trade-offs
 

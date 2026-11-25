@@ -114,7 +114,7 @@ Chromium（`e2e/node_modules/@playwright/test`，對 `http://localhost:18569/`�
 | 檔案                                                                       | 異動                                                                                                                                                                                                                                                                                                                                 | 依據                   |
 | :------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------- |
 | `frontend/nginx.conf`                                                      | server 層級新增 `Content-Security-Policy` 一行（強制模式、`always`）；`X-Frame-Options` 由 `DENY` 改為 `SAMEORIGIN`；註解寫明 `connect-src 'self'` 與 `VITE_API_BASE_URL` 的耦合（D7）、開發伺服器不帶 CSP（N3）。**不加 HSTS、不加 `limit_req`、不碰 `location /api/v1/` 的 `proxy_set_header`**                                    | Q1、Q2、Q3、Q7、Q8     |
-| `scripts/check-security-headers.sh`（新）                                  | 對一個 base URL 依 D2 逐類請求，**逐一比對標頭的完整值**、斷言 `Strict-Transport-Security` 不存在、偵測同名標頭重複；期望值只寫在這一處（D4）；`--backend-down` 模式只驗 502 那一類。可在本機對任一層執行                                                                                                                            | Q1、Q3-附、Q4          |
+| `scripts/check-security-headers.sh`（新）                                  | 對一個 base URL 依 D2 逐類請求，**逐一比對標頭的完整值**、斷言 `Strict-Transport-Security` 不存在、偵測同名標頭重複；期望值只寫在這一處（D4）；`--backend-down` 模式只驗後端停止那一類（`502` 或 `504`，clarification Q11）。可在本機對任一層執行                                                                                    | Q1、Q3-附、Q4          |
 | `e2e/playwright.config.ts`                                                 | 新增「對準既有容器入口」模式（D5）：由 `E2E_TARGET=compose` 切換，此模式**不起** `webServer`、只跑 `public-entry/**`；預設模式把 `public-entry/**` 加進 `testIgnore`，`e2e` job 行為不變。位址仍只在這個檔讀取                                                                                                                       | Q4、Q5                 |
 | `e2e/public-entry/shell.spec.ts`（新）                                     | 「CSP 不擋前端自己的資源」的瀏覽器檢查，判準照 Q5；前置斷言頁面殼回應**帶** CSP（避免在沒有 CSP 的目標上空轉通過），但不比對值（值只在驗證腳本，D4）                                                                                                                                                                                 | Q4、Q5                 |
 | `.github/workflows/ci.yml` `compose` job                                   | 兩層各在「Check the ... health through nginx」之後跑驗證腳本，再 `docker compose stop backend` 跑 `--backend-down`；正式層另裝 e2e 依賴與 Chromium、以 `E2E_TARGET=compose E2E_BASE_URL=http://localhost:8080` 跑瀏覽器檢查（D6）。**job 仍不列必過**，不改 `main` ruleset                                                           | Q4                     |
@@ -189,16 +189,16 @@ add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style
 
 驗證腳本請求下列六類，並對每一類**比對 D0 每個標頭的完整值**（不是只檢查存在）、斷言沒有 `Strict-Transport-Security`、斷言每個標頭只出現一次：
 
-| 類別              | 請求                                                                        | 為什麼要這一類                                                                    |
-| :---------------- | :-------------------------------------------------------------------------- | :-------------------------------------------------------------------------------- |
-| 頁面殼            | `GET /`                                                                     | CSP 真正生效的文件                                                                |
-| SPA 深層路徑      | `GET /<不存在的前端路徑>`                                                   | 走 `try_files` 退回 `index.html`                                                  |
-| 建置資源          | `GET` 頁面殼裡引用的那支 `/assets/*.js`                                     | 靜態檔；`nosniff` 對它最有意義                                                    |
-| 後端成功          | `GET /api/v1/health`                                                        | 走 `proxy_pass`                                                                   |
-| 後端錯誤 envelope | `GET /api/v1/<不存在的路徑>`（後端 404）                                    | 證明 `always` 讓後端 4xx 也帶標頭                                                 |
-| Nginx 自產錯誤    | `POST /`（405）；以及 `--backend-down` 模式下的 `GET /api/v1/health`（502） | Nginx 自己的錯誤頁也帶；502 證明上游失敗時仍帶（clarification 交給 tasks 的項目） |
+| 類別              | 請求                                                                                    | 為什麼要這一類                                                                         |
+| :---------------- | :-------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------- |
+| 頁面殼            | `GET /`                                                                                 | CSP 真正生效的文件                                                                     |
+| SPA 深層路徑      | `GET /<不存在的前端路徑>`                                                               | 走 `try_files` 退回 `index.html`                                                       |
+| 建置資源          | `GET` 頁面殼裡引用的那支 `/assets/*.js`                                                 | 靜態檔；`nosniff` 對它最有意義                                                         |
+| 後端成功          | `GET /api/v1/health`                                                                    | 走 `proxy_pass`                                                                        |
+| 後端錯誤 envelope | `GET /api/v1/<不存在的路徑>`（後端 404）                                                | 證明 `always` 讓後端 4xx 也帶標頭                                                      |
+| Nginx 自產錯誤    | `POST /`（405）；以及 `--backend-down` 模式下的 `GET /api/v1/health`（502 或 504，Q11） | Nginx 自己的錯誤頁也帶；502／504 證明上游失敗時仍帶（clarification 交給 tasks 的項目） |
 
-腳本也斷言每一類的狀態碼與上表一致（例如後端錯誤必須是 404、502 必須是 502），以免請求打錯路徑卻因為一樣帶標頭而通過。`--backend-down` 只驗 502 那一類，由 CI 在 `docker compose stop backend` 之後呼叫；不停後端的預設模式驗其餘五類加 405。失敗時印出「類別、標頭、期望值、實際值」，結束碼非 0。
+腳本也斷言每一類的狀態碼與上表一致（例如後端錯誤必須是 404、後端停止時必須是 502 或 504），以免請求打錯路徑卻因為一樣帶標頭而通過。`--backend-down` 只驗後端停止那一類（502 或 504），由 CI 在 `docker compose stop backend` 之後呼叫；不停後端的預設模式驗其餘五類加 405。失敗時印出「類別、標頭、期望值、實際值」，結束碼非 0。
 
 `/assets/missing.js` 回 200 頁面殼（N1）不在本 change，所以腳本不把「不存在的建置資源」列為一類，也不斷言它的狀態碼。
 
@@ -339,8 +339,8 @@ sequenceDiagram
       R->>D: stop backend
       R->>S: --backend-down 執行
       S->>N: GET /api/v1/health
-      N-->>S: 502 + 標頭
-      S-->>R: 同一套判定（狀態碼須為 502）
+      N-->>S: 502 或 504 + 標頭
+      S-->>R: 同一套判定（狀態碼須為 502 或 504，Q11）
       R->>D: down -v
     end
   end
@@ -398,5 +398,5 @@ sequenceDiagram
 ### 效能與資源
 
 - 回應大小：CSP 一行約 260 位元組，加上其餘標頭，每個回應多約 0.5 KB 標頭；對 API 的 JSON 回應與靜態檔都可忽略。
-- CI 時間：標頭腳本兩層合計數秒；停後端再驗 502 每層數秒；正式層的瀏覽器檢查要裝 pnpm 依賴與 Chromium，估計多 1–2 分鐘。`compose` 目前 `timeout-minutes: 20`，不需調整。
+- CI 時間：標頭腳本兩層合計數秒；停後端再驗 502 或 504 每層數秒；正式層的瀏覽器檢查要裝 pnpm 依賴與 Chromium，估計多 1–2 分鐘。`compose` 目前 `timeout-minutes: 20`，不需調整。
 - nginx 執行期：`add_header` 是每請求常數成本；沒有 `sub_filter`、`map` 或 envsubst。

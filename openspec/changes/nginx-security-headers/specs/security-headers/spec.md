@@ -37,9 +37,9 @@
 
 ### Requirement: 每一類回應都帶同一組安全標頭
 
-公開入口的每一類回應 SHALL 帶「安全標頭的完整值」所列的七個標頭且值相同：頁面殼、前端路由的深層路徑、建置資源、後端成功回應、後端錯誤回應、公開入口自己產生的錯誤（含方法不允許與後端無法連線）。加上標頭 MUST NOT 改變回應的狀態碼與 body。
+公開入口的每一類回應 SHALL 帶「安全標頭的完整值」所列的七個標頭且值相同：頁面殼、前端路由的深層路徑、建置資源、後端成功回應、後端錯誤回應、公開入口自己產生的錯誤（含方法不允許，與後端無法連線時的 `502` 或 `504`）。加上標頭 MUST NOT 改變回應的狀態碼與 body。
 
-來源：issue #568 §驗收條件 2；ADR-008 D1 §後果；archive `infra-compose-e2e-ci` system-design D6；nginx-security-headers clarification Q3-附、Q4、§交給後續產出。
+來源：issue #568 §驗收條件 2；ADR-008 D1 §後果；archive `infra-compose-e2e-ci` system-design D6；nginx-security-headers clarification Q3-附、Q4、Q11、§交給後續產出。
 
 #### Scenario: 公開入口的每一類回應都帶同一組安全標頭
 
@@ -53,10 +53,10 @@
 - **THEN** 回應為 `404`，body 是後端的錯誤外層（`success` 為 `false`、`code` 為 `"NOT_FOUND"`、`data` 為 `null`）
 - **AND** 回應帶七個標頭且值與頁面殼相同
 
-#### Scenario: 後端停止時公開入口的 502 也帶安全標頭
+#### Scenario: 後端停止時公開入口的 502 或 504 也帶安全標頭
 
 - **WHEN** 任一層編排已起後停止後端服務，再對公開入口送出 `GET /api/v1/health`
-- **THEN** 回應為 `502`
+- **THEN** 回應為 `502` 或 `504`（依公開入口連不到後端的方式而定，兩者皆合格）
 - **AND** 回應帶七個標頭且值與頁面殼相同
 
 ### Requirement: 回應不帶 HSTS
