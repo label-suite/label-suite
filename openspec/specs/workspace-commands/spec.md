@@ -67,9 +67,9 @@
 
 ### Requirement: check 依固定順序執行與 CI 相同的自查
 
-根目錄 SHALL 提供 `pnpm run check`，依固定順序執行格式、規格、前端 lint、型別檢查與測試、契約漂移、後端 lint、格式、型別檢查、分層檢查與測試；每一步呼叫的 MUST 是 CI 使用的同一個 package script 或指令，參數也相同，後端測試同樣輸出覆蓋率資料與 JUnit 結果檔。加上 `--with-semgrep` 時 SHALL 在預設步驟之後依序再執行原始碼安全掃描與測試替身邊界檢查兩步，指令與 CI `semgrep` job 的對應步驟相同。每一步 SHALL 印出名稱與結果；第一個失敗的步驟 MUST 讓指令以非 0 結束，後續步驟不再執行。
+根目錄 SHALL 提供 `pnpm run check`，依固定順序執行格式、規格、前端 lint、型別檢查與測試、契約漂移、後端 lint、格式、型別檢查、分層檢查與測試；每一步呼叫的 MUST 是 CI 使用的同一個 package script 或指令，參數也相同，後端測試同樣輸出覆蓋率資料與 JUnit 結果檔。加上 `--with-semgrep` 時 SHALL 在預設步驟之後依序加跑原始碼安全掃描與測試替身邊界檢查，指令與 CI `semgrep` job 的對應步驟相同。每一步 SHALL 印出名稱與結果；第一個失敗的步驟 MUST 讓指令以非 0 結束，後續步驟不再執行。
 
-來源：testing-agent-rules T9、T10、T11；agent-hook-contract H7；api-agent-rules A5；clarification Q4、Q7、Q11；維護者規劃審查裁定 R-A（2026-11-22）；system-design §本機自查的步驟；issue #562 工作項 2、testing-agent-rules T4、T6、clarification Q4（#562）。
+來源：testing-agent-rules T9、T10、T11；agent-hook-contract H7；api-agent-rules A5；clarification Q4、Q7、Q11；維護者規劃審查裁定 R-A（2026-11-22）；system-design §本機自查的步驟；issue #562 工作項 2、T4、T6 與其 clarification Q4。
 
 #### Scenario: 全部通過
 
