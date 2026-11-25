@@ -91,7 +91,7 @@ ADR-003 D3 的重新討論條件是「第一批模組合併後，審查反覆發
 - `backend-agent-rules.mdx` 新增 B12「單一入口」：適用路徑 `backend/app/**`；清單七項與三項禁止清單（唯一來源）；例外寫 D8；檢查方式寫契約名稱、`pyproject.toml` 位置、樣本測試、守門與分類與豁免測試；尚未檢查寫四項待建置的原因與標準庫 HTTP 客戶端；註明入口也是測試替身應該放的位置（Q8）。
 - B1 的檢查方式補一句指向 B12 取得入口與跨模組契約，不抄第二份表；B5 的「待建置」旁加一句「import-linter 只能擋整個套件，擋不了 `text`」。
 - 同步文首條數（十一條改十二條）與狀態段（B12 的三項入口契約與跨模組契約已在 CI 跑，其餘四項仍標待建置）、§附錄來源對照加 B12 一列、§決策紀錄加 2026-11-25（#563）一列。不寫 ADR（Q7 P）。
-- `agent-rules.mdx`、`testing-agent-rules.mdx` 只改狀態段與條數，文字上指向 B1 檢查方式的 R2、T9「import 邊界」列不改（B1 指向 B12 即可）。
+- `agent-rules.mdx`、`testing-agent-rules.mdx` 只改狀態段、條數與 B12 的提及處，文字上指向 B1 檢查方式的 R2；`testing-agent-rules.mdx` 的 T9「import 邊界」列在後端分層之外補上「單一入口」，已建置的契約欄改為「F1、B1 與 B12」（tasks 7.2）。
 - 與 #562 共用狀態段：#562 已合併，現行文字已含其內容；若本分支開工後 `origin/main` 的這三個檔又有變動，後合併者 merge `origin/main`，解衝突後重跑文件檢查。
 - 不在 worktree 執行 NoteCraft 建置（`pnpm exec notecraftapp build docs --rebuild`）：這是對 `openspec/config.yaml` operations.apply 的明示偏離，沿用 #562 的先例（`openspec/changes/archive/2026-11-25-integration-no-self-mocks/design.md` D11）：指向 worktree 的建置會污染共用快取。動到 `docs/` 的 task 改以 `node scripts/check-specs.mjs docs`、`node scripts/check-citations.mjs --strict` 與 `pnpm format:check` 收尾，渲染驗證交給 CI 的 `docs-site` job。
 
