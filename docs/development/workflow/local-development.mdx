@@ -106,6 +106,7 @@ PostgreSQL 輪不應該有任何測試被跳過；CI 會用 `scripts/check-junit
 | `POSTGRES_PASSWORD` | 正式層資料庫密碼；含 URL 保留字元（`@ : / ? #`）要百分比編碼 | 無（正式層必填；`.env.example` 刻意留空） | 正式層編排檔 |
 | `POSTGRES_DB` | 正式層資料庫容器建立的資料庫名 | `label_suite` | 正式層編排檔 |
 | `VITE_API_BASE_URL` | 本機開發伺服器呼叫 API 的位址，須為空或不帶結尾斜線的絕對 http(s) URL；前端映像在建置時固定為空，走同源 | 未設等同空；`.env.example` 給 `http://localhost:8000` | 前端開發伺服器 |
+| `FORWARDED_ALLOW_IPS` | 後端信任哪些代理位址的 `X-Forwarded-For` 與 `X-Forwarded-Proto`；逗號分隔的單一 IP 或 CIDR，不得為 `*` 或涵蓋全部位址的網段，非法值讓後端拒絕啟動。後端只驗證，比對由 uvicorn 做 | 未設時只信任 loopback（`127.0.0.1,::1`），所以本機 `pnpm run dev` 不需設定，`.env.example` 也把它註解掉；兩份編排檔傳入並預設為 `frontend` 的固定位址 `10.77.250.10` | 後端、兩份編排檔 |
 | `FRONTEND_PORT` | 前端容器在主機上公開的埠，是兩層唯一公開的埠 | `8080` | 兩份編排檔 |
 | `BACKEND_PORT` | `pnpm run dev` 啟動本機後端的埠；編排檔不讀，容器內的後端不對主機開埠 | `8000` | `scripts/dev.mjs` |
 

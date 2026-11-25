@@ -266,6 +266,8 @@ import BackendRequestPipeline from '@notes/components/backend-request-pipeline'
 
 `500` 自己攔、不交給 `ServerErrorMiddleware`：它在所有中介層外面，由它產生的 `500` 不會帶 `Access-Control-Allow-Origin` 與 `X-Correlation-ID`。自寫的中介層都是純 ASGI、不用 `BaseHTTPMiddleware`，contextvar 才不會在 task 之間斷掉、串流回應也不會被緩衝。兩個理由的出處見已歸檔的 [backend-skeleton `system-design.md`](https://github.com/label-suite/label-suite/blob/main/openspec/changes/archive/2026-11-20-backend-skeleton/system-design.md) §請求穿過的層。存取紀錄放在 CORS 內側、未處理例外外側：看得到 `406` 與最終的 `500` 及其「已記過」標記，預檢則自然不經過它。認證與 CSRF 還沒有，見 [§已知限制](#已知限制)。
 
+五個中介層之外還有 uvicorn 的 `ProxyHeadersMiddleware`：它包在整個 app 的最外面，在請求進到 `CorrelationIdMiddleware` 之前，就依 `FORWARDED_ALLOW_IPS` 把 `scope["client"]` 與 `scope["scheme"]` 改寫成 `X-Forwarded-For`（由右往左第一個不受信任的位址）與 `X-Forwarded-Proto` 的值，所以五個中介層、存取紀錄與所有路由看到的已是改寫後的值，應用程式不另外處理。對端不在信任清單內時兩個標頭都不看。`CMD` 不帶 `--forwarded-allow-ips` 與 `--proxy-headers`，信任清單只由環境變數決定；改寫後 `scope["client"]` 的埠是 0。
+
 :::note{title="CORS 的實際設定" collapsible}
 - 來源：`CORS_ALLOWED_ORIGINS`，見 [§設定](#設定)
 - 方法：`GET`、`POST`、`PUT`、`PATCH`、`DELETE`、`OPTIONS`
@@ -352,7 +354,7 @@ log 只記型別、位置與 `traceId`，不記任何可能帶著請求或資料
 
 ### 設定
 
-設定只從環境變數來，分兩層：`DatabaseSettings` 只有資料庫，Alembic 只讀這一層；`Settings` 再加上 API 要的 CORS、內建文件路由的開關與 log 等級。一律透過 `load_settings` 建立。
+設定只從環境變數來，分兩層：`DatabaseSettings` 只有資料庫，Alembic 只讀這一層；`Settings` 再加上 API 要的 CORS、內建文件路由的開關、log 等級與信任代理的位址清單。一律透過 `load_settings` 建立。
 
 | 環境變數 | 層 | 必填 | 規則 |
 | :--- | :--- | :--- | :--- |
@@ -362,6 +364,7 @@ log 只記型別、位置與 `traceId`，不記任何可能帶著請求或資料
 | `CORS_ALLOW_CREDENTIALS` | API | 否 | 預設 `true` |
 | `API_DOCS_ENABLED` | API | 否 | 布林，預設 `true`；`false` 時不提供 FastAPI 內建的 `/docs`、`/docs/oauth2-redirect`、`/redoc`、`/openapi.json`。`docker-compose.prod.yml` 的後端明確設為 `false` |
 | `LOG_LEVEL` | API | 否 | `DEBUG`、`INFO`、`WARNING`、`ERROR`、`CRITICAL` 之一，不分大小寫，預設 `INFO`；其他值 `ConfigError`。管整個後端的輸出等級（root 與它的 handler）；資料庫套件的 logger（`sqlalchemy`、`aiosqlite`、`asyncpg`）不跟著它，固定 `WARNING`。兩層編排檔以 `${LOG_LEVEL:-INFO}` 傳入後端容器 |
+| `FORWARDED_ALLOW_IPS` | API | 否 | 逗號分隔的單一 IP 或 CIDR（去除空白），預設 `127.0.0.1,::1`；`*`、前綴長度 0（`0.0.0.0/0`、`::/0`）、帶主機位元的網段（`127.0.0.1/8`）、主機名稱、空項目與空清單都 `ConfigError`。**後端只驗證，不使用它的值**：uvicorn 讀同一個變數做比對。兩層編排檔以 `${FORWARDED_ALLOW_IPS:-10.77.250.10}` 傳入後端容器，`migrate` 不傳 |
 
 變數名沒有前綴；驗證失敗時 `ConfigError` 一行列一個「變數名：原因」，不含設定值。
 
@@ -465,7 +468,7 @@ cd backend && uv run python -m app.scripts.export_openapi
 | 登入失敗鎖定 | 登入失敗次數的限制還沒實作 | [規格 01-05 §已確認決議](../../specs/01-account/05-login-state.mdx#已確認決議) Q3（失敗 10 次擋 30 分鐘） |
 | 全域速率限制 | 端點沒有呼叫上限 | [ADR-004 的 D7](../../development/adr/004-auth-and-security.mdx#d7-不做全域速率限制登入失敗鎖定用-redis-計數)：後端不做，全域上限日後交給反向代理層 |
 | 認證、授權與 CSRF | 目前唯一的端點刻意公開；第一個需要登入的端點要先把這幾層補上 | [ADR-004 的 D1](../../development/adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie)、[D3](../../development/adr/004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token) |
-| 信任反向代理的來源 IP | 放在 Nginx 後面時，後端看到的 client IP 都是 Nginx | [#566](https://github.com/label-suite/label-suite/issues/566) |
+| Cloudflare 或其他邊緣代理在 Nginx 前面；TLS 邊緣之後的 scheme | 後端拿到的是邊緣位址而不是真實用戶端，還原需要 Nginx 的 real_ip 設定；後端看到的 scheme 恆為 `http`；Docker 發布埠的來源位址依平台而異（Docker Desktop 為 `192.168.65.1`，Linux 未測）。後端只信任 Nginx 的固定位址，見 [architecture.mdx 的 §部署與維運](../../development/architecture.mdx#部署與維運) | [ADR-008](../../development/adr/008-deployment-and-operations.mdx) 尚未決定的 Cloudflare TLS 模式 |
 | 監控、告警與錯誤追蹤 | 出錯時只能看 log，沒有人會被通知 | [ADR-008 的 D4](../../development/adr/008-deployment-and-operations.mdx#d4-觀測性只做-ai_runs監控與錯誤追蹤本期不做) |
 | CI 的後端檢查：兩種資料庫的 pytest、ruff、mypy、契約漂移、分層 import 方向 | 這些檢查目前只在本機跑，PR 不會因為違反而失敗 | [#506](https://github.com/label-suite/label-suite/issues/506) |
 | 回應已開始送出後才出錯時，錯誤會被記兩筆（`UnhandledExceptionMiddleware` 一筆、uvicorn 以 `exc_info` 一筆，後者只寫例外型別） | 錯誤只記一次在這條路徑不成立 | 第一個串流端點的 change（request-access-log clarification N2） |
@@ -478,3 +481,4 @@ cd backend && uv run python -m app.scripts.export_openapi
 | 2026-11-23 | 本文加一節後端基礎建設與已知限制，不另開文件（[§後端基礎建設](#後端基礎建設)） | — | [#546](https://github.com/label-suite/label-suite/issues/546) |
 | 2026-11-23 | 實作後由 `backend-developer` 依程式校正本文，`code-reviewer` 再核對（[§誰改、什麼時候改](#誰改什麼時候改)） | — | [#546](https://github.com/label-suite/label-suite/issues/546#issuecomment-7100137950) |
 | 2026-11-25 | 後端紀錄一律一行 `key=value`，格式由 request-access-log 定；`msg` 固定最後（[§log 安全規則](#log-安全規則)） | 歸檔 `2026-11-23-infra-compose-e2e-ci` clarification Q15（access log 格式留給 01-01） | request-access-log clarification Q2、[#567](https://github.com/label-suite/label-suite/issues/567) |
+| 2026-11-26 | 後端只信任 Nginx 的固定位址轉發的來源標頭，`Settings` 新增只做驗證的 `FORWARDED_ALLOW_IPS`；已知限制的「信任反向代理的來源 IP」改記 Cloudflare 與 TLS 邊緣（[§設定](#設定)、[§請求管線](#請求管線)） | — | [#566](https://github.com/label-suite/label-suite/issues/566) |
