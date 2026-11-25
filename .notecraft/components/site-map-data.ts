@@ -95,7 +95,7 @@ export const SITE_MAP_PAGES: SiteMapPage[] = [
     path: "01-account/05-login-state",
     standalone: false,
     features: [
-      { title: "登入狀態的期限", anchor: "登入狀態的期限" },
+      { title: "登入狀態的期限與判定", anchor: "登入狀態的期限與判定" },
       { title: "登出", anchor: "登出" },
       { title: "帳號被改動時登入狀態失效", anchor: "帳號被改動時登入狀態失效" },
       { title: "延續登入狀態與疑似被盜用", anchor: "延續登入狀態與疑似被盜用" },
