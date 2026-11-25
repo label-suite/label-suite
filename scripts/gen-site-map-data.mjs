@@ -49,15 +49,10 @@ export const EXCLUDED_FEATURES = [
   "載入中、空的與載入失敗",
   "空的與找不到",
   "四種互斥的頁面狀態",
-  "兩個分頁各有一組自己的狀態",
-  "載入失敗只換掉內容區",
-  "統計總覽的空狀態",
-  "品質監控要先有試標才有東西看",
   // URL and screen-state sync
   "網址與畫面狀態同步",
   // Language switching
   "語言切換",
-  "語系切換不重新載入",
 ];
 
 const SPEC_FILE_RE = /^0\d-[\w-]+\/0\d-[\w-]+\.mdx$/;
