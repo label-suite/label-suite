@@ -32,7 +32,11 @@ class _Pinger(Protocol):
 
 
 class HealthService:
-    """Reports whether the service and its database are usable."""
+    """Reports whether the service and its database are usable.
+
+    Args:
+        repository: The data-access object whose ``ping`` queries the database.
+    """
 
     def __init__(self, repository: _Pinger) -> None:
         self._repository = repository
