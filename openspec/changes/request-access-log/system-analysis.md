@@ -30,7 +30,7 @@
 
 ## 範圍
 
-本節依 `clarification.md`（維護者 2026-11-25 裁定 Q1–Q13、N1–N3）回修；每條決議的編號附在括號內。
+本節依 `clarification.md`（維護者 2026-11-25 裁定 Q1–Q14、N1–N3）回修；每條決議的編號附在括號內。
 
 - 這次包含：
   - 每一個 `/api/v1` 請求留下一行存取紀錄，欄位為 method、路由模板（不是實際路徑）、狀態碼、耗時、traceId（issue #567 驗收第 1 條）；跨來源預檢由跨來源那一層自己回應，不記；`/api/v1` 以外的路徑不記（Q4、Q6）
@@ -39,11 +39,11 @@
   - 已記過錯誤的請求不再寫存取紀錄：未處理例外、無對應錯誤碼的 HTTP 例外轉成 500、健康檢查回 503 前已記的 WARNING，這三種請求由先記的那一筆代表，存取紀錄不寫；驗收第 1 條對這類請求加例外（Q3，驗收第 2 條）
   - 沒有路由模板的請求（路徑不存在的 404、語言全部不支援的 406）在路由模板欄記固定佔位文字；未處理例外那一筆維持記實際路徑（Q5）
   - 耗時從進入存取紀錄那一層算到最後一段回應送出，單位毫秒、一位小數（Q11）
-  - 後端每一筆伺服器紀錄自動帶上目前請求的 traceId，業務程式不必改寫呼叫方式（驗收第 3 條；手段依 N1）；請求以外寫的紀錄（啟動、關閉、遷移）填固定標記 `-`（Q7）
+  - 後端每一筆伺服器紀錄自動帶上目前請求的 traceId，業務程式不必改寫呼叫方式（驗收第 3 條；手段依 N1）；請求以外寫的紀錄（啟動、關閉；遷移行程不經後端應用程式的 log 設定，不在此列）填固定標記 `-`（Q7）
   - 既有紀錄訊息裡手寫的 traceId 拿掉，改由自動帶入提供，相關測試改斷言自動帶入的值（Q8）
   - 存取紀錄沿用既有的 log 安全規則：不記 query、body、header、cookie，來自請求的值先跳脫（驗收第 4 條）；不記來源 IP（Q9）
   - 關閉伺服器程式內建的存取紀錄（目前會印完整查詢字串），在後端的 log 設定裡關，一處涵蓋所有啟動方式（Q10）
-  - 全後端的 log 輸出設定，新增部署者可調的 log 等級環境變數（`LOG_LEVEL`，預設 INFO），資料庫引擎的紀錄明確設為 WARNING；須同步 `.env.example`、`runtime-config`、`backend-modules.mdx` §設定（Q12）
+  - 全後端的 log 輸出設定，新增部署者可調的 log 等級環境變數（`LOG_LEVEL`，預設 INFO），資料庫引擎的紀錄明確設為 WARNING；須同步 `.env.example`、`runtime-config`、`backend-modules.mdx` §設定（Q12）；容器編排檔把 `LOG_LEVEL` 傳進後端容器（Q14）
   - `docs/diagrams/architecture/backend-modules.mdx` 的同步：§請求管線、§correlation id、§log 安全規則、§設定 由 `sd` 在規劃時依決議改；§已知限制 第 1 列（#567）在實作合併前仍成立，**延到實作、由實作群組在同一張 PR 刪除**（比照 #524），同一組任務在 §已知限制 新增「回應已開始送出後才出錯」一列（N2）；實作後由 `backend-developer` 校正
 - 這次不包含：
   - 監控、告警、錯誤追蹤、集中式 log 平台（ADR-008 D4 本期不做）
@@ -109,7 +109,7 @@ flowchart TD
 - **`/api/v1` 以外的路徑**（API 文件頁、`/openapi.json`，正式層本來就關閉）：不記（Q6）。
 - **沒有路由模板的請求**：路徑不存在的 404，以及語言全部不支援的 406（在比對路由之前就被擋下，即使路徑存在也沒有模板），路由模板欄記固定佔位文字（Q5）。方法不允許的 405 **有**路由模板（路徑已部分比對到；`system-design` §路由模板怎麼取 實測），照一般請求記模板。
 - **回應已經開始送出後才出錯**：無法改寫回應，「錯誤只記一次」在這條路徑不成立；目前沒有串流端點，記為 `backend-modules.mdx` §已知限制，留給第一個串流端點的 change（N2）。
-- **請求以外寫的紀錄**（啟動、關閉、遷移）：沒有追蹤編號，自動帶入時填固定標記 `-`（Q7）。
+- **請求以外寫的紀錄**（啟動、關閉；遷移行程不經後端應用程式的 log 設定，不在此列）：沒有追蹤編號，自動帶入時填固定標記 `-`（Q7）。
 
 ## 跨模組依賴
 
@@ -154,7 +154,7 @@ flowchart TD
 
 ## 待決問題
 
-`sa` 原列的 13 條全部由維護者 2026-11-25 在 clarification 停點裁定（對應 `clarification.md` Q1–Q13），本節改寫為決議並保留原問題供追溯；本文沒有剩下待決的事。
+`sa` 原列的 13 條全部由維護者 2026-11-25 在 clarification 停點裁定（對應 `clarification.md` Q1–Q13），本節改寫為決議並保留原問題供追溯；Q14（編排檔沒有把 `LOG_LEVEL` 傳進後端容器）由 `planner` 寫 tasks 時發現、同日裁定，已併入 §範圍；本文沒有剩下待決的事。
 
 | #   | 問題                                                                                                                                                                                                                                                | 影響                                                                                      | 狀態                                                                                                                                                                                                 |
 | :-- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -164,7 +164,7 @@ flowchart TD
 | 4   | 存取紀錄放在請求管線的哪個位置？（來源：`backend-modules.mdx` §請求管線）                                                                                                                                                                           | 被擋在前面的請求有沒有存取紀錄；500 是否重複記；`system-design` 元件位置與管線圖          | 已決（Q4，2026-11-25）：跨來源那一層的內側、未處理例外那一層的外側                                                                                                                                   |
 | 5   | 沒有對應路由模板的請求（路徑不存在的 404、語言全部不支援的 406）要記什麼？（來源：issue #567「路由模板（不是實際路徑）」；`api-envelope` 主規格；方法不允許的 405 依 `system-design` 實測**有**模板，不屬此題——原文誤列，依 clarification P1 更正） | 存取紀錄欄位定義；未處理例外那一筆是否跟著改；`specs` Scenario 與測試                     | 已決（Q5，2026-11-25）：固定佔位文字；未處理例外那一筆維持記實際路徑，不動 `api-envelope`                                                                                                            |
 | 6   | 跨來源預檢與 `/api/v1` 以外的路徑是否要有存取紀錄？（來源：issue #567；`request-correlation` 主規格）                                                                                                                                               | 涵蓋範圍與測試矩陣；紀錄量                                                                | 已決（Q6，2026-11-25）：只記 `/api/v1`，預檢不記（隨 Q4）                                                                                                                                            |
-| 7   | 請求以外寫的紀錄自動帶入 traceId 時要填什麼？（來源：issue #567 驗收第 3 條；`backend-modules.mdx` §correlation id）                                                                                                                                | 自動帶入規則；啟動與遷移紀錄的呈現；`specs` Scenario                                      | 已決（Q7，2026-11-25）：固定標記 `-`                                                                                                                                                                 |
+| 7   | 請求以外寫的紀錄自動帶入 traceId 時要填什麼？（來源：issue #567 驗收第 3 條；`backend-modules.mdx` §correlation id）                                                                                                                                | 自動帶入規則；啟動與關閉紀錄的呈現；`specs` Scenario                                      | 已決（Q7，2026-11-25）：固定標記 `-`                                                                                                                                                                 |
 | 8   | 既有紀錄訊息裡手寫的 traceId 要保留還是移除？（來源：`backend-modules.mdx` §log 安全規則；`api-envelope` 主規格 Scenario）                                                                                                                          | 既有程式與測試；`api-envelope` Scenario 的驗證方式；§log 安全規則文字                     | 已決（Q8，2026-11-25）：拿掉；三處訊息改寫，測試改斷言自動帶入的值                                                                                                                                   |
 | 9   | 存取紀錄是否要記來源 IP？（來源：issue #567；#566 §使用情境；S9）                                                                                                                                                                                   | 存取紀錄欄位；與 #566 的依賴；S9 脫敏範圍                                                 | 已決（Q9，2026-11-25）：不記；與 #566 無依賴                                                                                                                                                         |
 | 10  | 伺服器程式內建的存取紀錄要關閉、保留，還是改成不含查詢字串？（來源：歸檔 `backend-skeleton/acceptance.md` §觀察 第 3 條；issue #567 驗收第 1、4 條）                                                                                                | 驗收第 1、4 條能否成立；啟動指令與設定；部署者看得到的紀錄                                | 已決（Q10，2026-11-25）：在後端的 log 設定裡關閉，一處涵蓋所有啟動方式                                                                                                                               |
@@ -189,7 +189,7 @@ flowchart TD
 - `docs/development/workflow/spec-migration.mdx` D4
 - `docs/diagrams/architecture/backend-modules.mdx` §請求管線、§correlation id、§log 安全規則、§已知限制、§誰改、什麼時候改
 - `openspec/specs/request-correlation/spec.md`、`openspec/specs/api-envelope/spec.md`、`openspec/specs/health-check/spec.md`、`openspec/specs/container-runtime/spec.md`、`openspec/specs/runtime-config/spec.md`
-- `openspec/changes/request-access-log/clarification.md`（2026-11-25 決議 Q1–Q13、N1–N3、P1–P3）；`openspec/changes/request-access-log/system-design.md` §路由模板怎麼取（405 實測）、§常駐文件異動
+- `openspec/changes/request-access-log/clarification.md`（2026-11-25 決議 Q1–Q14、N1–N3、P1–P3）；`openspec/changes/request-access-log/system-design.md` §路由模板怎麼取（405 實測）、§常駐文件異動
 - `openspec/changes/archive/2026-11-23-infra-compose-e2e-ci/clarification.md` Q15（已被本 change Q2 取代）；`openspec/changes/archive/2026-11-20-backend-skeleton/acceptance.md` §觀察 第 3 條
 - 現況程式（只讀）：`backend/app/core/middleware.py`、`backend/app/core/log_safety.py`、`backend/app/core/errors.py`、`backend/app/core/envelope.py`、`backend/app/main.py`、`backend/app/modules/health/service.py`、`backend/Dockerfile`、`docker-compose.yml`、`docker-compose.prod.yml`
 - 進行中的其他 change：無（`openspec/changes/` 只有本 change），沒有重疊或衝突
