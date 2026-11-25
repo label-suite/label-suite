@@ -16,6 +16,7 @@ import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { createServer } from "node:http";
+import { createServer as createTcpServer } from "node:net";
 import { fileURLToPath } from "node:url";
 import { describe, test } from "node:test";
 
@@ -80,12 +81,17 @@ async function startServer({ editHeaders, status, shell } = {}) {
 }
 
 /** Runs the script asynchronously, so the in-process server can still answer. */
-function run(args) {
+function run(args, env = {}) {
   return new Promise((resolve) => {
-    execFile(BASH, [SCRIPT, ...args], { encoding: "utf8" }, (error, stdout, stderr) => {
-      const code = error ? (typeof error.code === "number" ? error.code : -1) : 0;
-      resolve({ code, output: stdout + stderr });
-    });
+    execFile(
+      BASH,
+      [SCRIPT, ...args],
+      { encoding: "utf8", env: { ...process.env, ...env } },
+      (error, stdout, stderr) => {
+        const code = error ? (typeof error.code === "number" ? error.code : -1) : 0;
+        resolve({ code, output: stdout + stderr });
+      },
+    );
   });
 }
 
@@ -294,5 +300,37 @@ describe("check-security-headers.sh", () => {
     await server.close();
     const r = await run([url]);
     assert.equal(r.code, 2, r.output);
+  });
+
+  test('a header present with an empty value is reported as "", not <missing>', async () => {
+    const r = await check({
+      editHeaders: (req, headers) => {
+        if (req.url === "/") headers["Referrer-Policy"] = "";
+      },
+    });
+    assert.equal(r.code, 1, r.output);
+    assert.match(r.output, /Referrer-Policy.*expected "strict-origin-when-cross-origin", got ""/);
+    assert.doesNotMatch(r.output, /Referrer-Policy.*<missing>/);
+  });
+
+  test("a server that accepts the connection but never answers: exit 2 on the timeout", async () => {
+    const sockets = [];
+    const server = createTcpServer((socket) => {
+      sockets.push(socket);
+      socket.on("error", () => {});
+    });
+    await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const { port } = server.address();
+    try {
+      const r = await run([`http://127.0.0.1:${port}`], {
+        CHECK_HEADERS_CONNECT_TIMEOUT: "1",
+        CHECK_HEADERS_MAX_TIME: "2",
+      });
+      assert.equal(r.code, 2, r.output);
+      assert.match(r.output, /curl could not complete GET .*\(curl exit 28\)/);
+    } finally {
+      for (const socket of sockets) socket.destroy();
+      await new Promise((resolve) => server.close(resolve));
+    }
   });
 });

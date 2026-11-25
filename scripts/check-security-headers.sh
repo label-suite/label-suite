@@ -33,8 +33,16 @@
 # class, the header, the expected value and the actual one (<missing> when
 # absent, the count when repeated).
 #
+# A header present with an empty value is reported as "" (never <missing>).
+#
 # Exit codes: 0 every class matches; 1 at least one mismatch; 2 usage error
-# (no base URL, an unknown flag) or curl could not reach the base URL.
+# (no base URL, an unknown flag) or curl could not complete a request, which
+# includes a stalled one: every curl call has --connect-timeout 10 and
+# --max-time 90, so a hung connection fails fast instead of waiting for the CI
+# job limit. --max-time must stay above 60 s: in CI the --backend-down request
+# took exactly 60 s because nginx's default proxy_connect_timeout produced the
+# 504. The tests shorten both limits through CHECK_HEADERS_CONNECT_TIMEOUT and
+# CHECK_HEADERS_MAX_TIME; nothing else should set them.
 #
 # The EXPECTED block is the only place the expected values are written
 # (system-design D4): frontend/nginx.conf holds the actual values, this script
@@ -80,6 +88,9 @@ done
 if [ -z "$BASE_URL" ]; then usage; fi
 BASE_URL="${BASE_URL%/}"
 
+CONNECT_TIMEOUT="${CHECK_HEADERS_CONNECT_TIMEOUT:-10}"
+MAX_TIME="${CHECK_HEADERS_MAX_TIME:-90}"
+
 NL='
 '
 FAILURES=""
@@ -98,7 +109,7 @@ fetch() {
   if [ "$method" = "POST" ]; then
     set -- "$@" --data ""
   fi
-  out=$(curl -sS -X "$method" -D - -o /dev/null -w '%{http_code}' "$@" "${BASE_URL}${path}")
+  out=$(curl -sS --connect-timeout "$CONNECT_TIMEOUT" --max-time "$MAX_TIME" -X "$method" -D - -o /dev/null -w '%{http_code}' "$@" "${BASE_URL}${path}")
   rc=$?
   if [ $rc -ne 0 ]; then
     echo "curl could not complete ${method} ${BASE_URL}${path} (curl exit ${rc})" >&2
@@ -132,11 +143,8 @@ check() {
     name="${line%%: *}"
     expected="${line#*: }"
     values=$(header_values "$name")
-    if [ -z "$values" ]; then
-      count=0
-    else
-      count=$(printf '%s\n' "$values" | grep -c '')
-    fi
+    # Count lines, not characters, so a header with an empty value still counts.
+    count=$(header_values "$name" | grep -c '')
     if [ "$count" -eq 0 ]; then
       fail "$class" "$name" "\"$expected\"" "<missing>"
     elif [ "$count" -gt 1 ]; then
@@ -151,7 +159,7 @@ EOF
 
   for name in $FORBIDDEN; do
     values=$(header_values "$name")
-    if [ -n "$values" ]; then
+    if [ "$(header_values "$name" | grep -c '')" -gt 0 ]; then
       actual=$(printf '%s\n' "$values" | awk '{ printf "%s\"%s\"", (NR > 1 ? " | " : ""), $0 }')
       fail "$class" "$name" "<absent>" "$actual"
     fi
@@ -167,7 +175,7 @@ else
   check "page shell" 200 GET /
   check "SPA deep path" 200 GET /some/spa/path
 
-  shell_body=$(curl -sS "${BASE_URL}/")
+  shell_body=$(curl -sS --connect-timeout "$CONNECT_TIMEOUT" --max-time "$MAX_TIME" "${BASE_URL}/")
   rc=$?
   if [ $rc -ne 0 ]; then
     echo "curl could not complete GET ${BASE_URL}/ (curl exit ${rc})" >&2
