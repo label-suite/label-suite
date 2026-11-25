@@ -108,9 +108,13 @@ function overLimitSource(): string {
   return [...functions, ...filler].join("\n") + "\n";
 }
 
-/** Exactly `max-lines` code lines, plus 40 blank and 40 comment lines. */
+/**
+ * Exactly `max-lines` code lines, one function exactly at `max-lines-per-function`,
+ * plus 40 blank and 40 comment lines.
+ */
 function atLimitWithBlanksAndComments(): string {
-  const code = fillerLines(EXPECTED["max-lines"].max);
+  const longest = longFunction(EXPECTED["max-lines-per-function"].max);
+  const code = [...longest, ...fillerLines(EXPECTED["max-lines"].max - longest.length)];
   const padding = Array.from({ length: 40 }, (_, i) => ["", `// comment ${String(i)}`]).flat();
   return [...padding, ...code].join("\n") + "\n";
 }
@@ -130,22 +134,32 @@ async function lintProbe(relativePath: string, source: string): Promise<string[]
 }
 
 describe("size and complexity limits: agreed values", () => {
-  it("(a) applies the three limits at error level with the agreed options", async () => {
-    const eslint = new ESLint({ cwd: FRONTEND_ROOT });
-    const config: unknown = await eslint.calculateConfigForFile(PROBE);
+  it(
+    "(a) applies the three limits at error level with the agreed options",
+    async () => {
+      const eslint = new ESLint({ cwd: FRONTEND_ROOT });
+      const config: unknown = await eslint.calculateConfigForFile(PROBE);
 
-    for (const rule of SIZE_RULES) {
-      expect(ruleEntry(config, rule), rule).toEqual([2, EXPECTED[rule]]);
-    }
-  });
+      for (const rule of SIZE_RULES) {
+        expect(ruleEntry(config, rule), rule).toEqual([2, EXPECTED[rule]]);
+      }
+    },
+    TIMEOUT,
+  );
 
-  it("(e) leaves config files alone and ignores generated files", async () => {
-    const eslint = new ESLint({ cwd: FRONTEND_ROOT });
+  it(
+    "(e) leaves config files alone and ignores generated files",
+    async () => {
+      const eslint = new ESLint({ cwd: FRONTEND_ROOT });
 
-    expect(isOff(await effectiveEntry(eslint, "eslint.config.js", "max-lines"))).toBe(true);
-    expect(isOff(await effectiveEntry(eslint, "orval.config.ts", "max-lines"))).toBe(true);
-    expect(await eslint.calculateConfigForFile("src/api/generated/label-suite.ts")).toBeUndefined();
-  });
+      expect(isOff(await effectiveEntry(eslint, "eslint.config.js", "max-lines"))).toBe(true);
+      expect(isOff(await effectiveEntry(eslint, "orval.config.ts", "max-lines"))).toBe(true);
+      expect(
+        await eslint.calculateConfigForFile("src/api/generated/label-suite.ts"),
+      ).toBeUndefined();
+    },
+    TIMEOUT,
+  );
 });
 
 describe("size and complexity limits: probe files", () => {
@@ -165,11 +179,12 @@ describe("size and complexity limits: probe files", () => {
   );
 
   it(
-    "(c) does not count blank lines and comments towards the file limit",
+    "(c) passes a file and a function exactly at the limits, blank lines and comments not counted",
     async () => {
       const errors = await lintProbe(PROBE, atLimitWithBlanksAndComments());
 
       expect(errors).not.toContain("max-lines");
+      expect(errors).not.toContain("max-lines-per-function");
     },
     TIMEOUT,
   );
@@ -186,11 +201,15 @@ describe("size and complexity limits: probe files", () => {
     TIMEOUT,
   );
 
-  it("removes every probe file it wrote", async () => {
-    const entries = await readdir(new URL("../src/components/", import.meta.url));
+  it(
+    "removes every probe file it wrote",
+    async () => {
+      const entries = await readdir(new URL("../src/components/", import.meta.url));
 
-    expect(entries.filter((name) => name.startsWith("size-probe"))).toEqual([]);
-  });
+      expect(entries.filter((name) => name.startsWith("size-probe"))).toEqual([]);
+    },
+    TIMEOUT,
+  );
 });
 
 // ---- Walk over every linted source file (design D3) ----
@@ -263,6 +282,19 @@ describe("size and complexity limits: exemptions", () => {
       const { violations } = await walkSources();
 
       expect(violations).toEqual([]);
+    },
+    TIMEOUT,
+  );
+
+  it(
+    "finds exactly the allowed exemptions, so a moved, deleted or orphaned entry fails",
+    async () => {
+      const { exemptions } = await walkSources();
+      const allowed = Object.entries(ALLOWED_EXEMPTIONS).flatMap(([file, rules]) =>
+        Object.keys(rules).map((rule) => `${file} ${rule}`),
+      );
+
+      expect(exemptions.map(({ file, rule }) => `${file} ${rule}`).sort()).toEqual(allowed.sort());
     },
     TIMEOUT,
   );
