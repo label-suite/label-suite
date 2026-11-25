@@ -15,8 +15,10 @@ from tests.unit.import_tree import (
     ENTRY_THIRD_PARTY,
     ENTRY_TOP_LEVEL_PACKAGES,
     HTTP_CLIENT,
+    INDEPENDENCE,
     MAIL,
     OIDC,
+    ROUTER_PROTECTED,
     append,
     build_tree,
     load_contracts,
@@ -178,3 +180,55 @@ def test_every_top_level_package_of_the_real_app_is_classified() -> None:
 
     assert set(sources) == set(ENTRY_THIRD_PARTY)
     assert unclassified_top_level(Path(app.__path__[0]), sources, ENTRY_TOP_LEVEL_PACKAGES) == []
+
+
+def test_router_importing_another_modules_service_fails_with_the_chain(tmp_path: Path) -> None:
+    build_tree(tmp_path)
+    append(tmp_path, "app/modules/health/router.py", "from app.modules.other import service")
+
+    result = run_lint_imports(tmp_path)
+
+    assert result.returncode != 0
+    assert f"{INDEPENDENCE} BROKEN" in result.stdout
+    assert "app.modules.health.router -> app.modules.other.service" in result.stdout
+
+
+def test_a_third_module_importing_health_schemas_fails(tmp_path: Path) -> None:
+    build_tree(tmp_path, modules=("health", "other", "brandnew"))
+    append(tmp_path, "app/modules/brandnew/service.py", "from app.modules.health import schemas")
+
+    result = run_lint_imports(tmp_path)
+
+    assert result.returncode != 0
+    assert f"{INDEPENDENCE} BROKEN" in result.stdout
+    assert "app.modules.brandnew.service -> app.modules.health.schemas" in result.stdout
+
+
+def test_main_importing_several_routers_keeps_both_module_contracts(tmp_path: Path) -> None:
+    build_tree(tmp_path)
+
+    result = run_lint_imports(tmp_path)
+
+    assert result.returncode == 0, result.stdout
+    assert f"{INDEPENDENCE} KEPT" in result.stdout
+    assert f"{ROUTER_PROTECTED} KEPT" in result.stdout
+
+
+@pytest.mark.parametrize(
+    ("relative", "line"),
+    [
+        ("app/modules/other/service.py", "from app.modules.health import router"),
+        ("app/modules/health/service.py", "from app.modules.health import router"),
+    ],
+)
+def test_only_the_assembly_point_may_import_a_router(
+    tmp_path: Path, relative: str, line: str
+) -> None:
+    build_tree(tmp_path)
+    append(tmp_path, relative, line)
+
+    result = run_lint_imports(tmp_path)
+
+    assert result.returncode != 0
+    assert f"{ROUTER_PROTECTED} BROKEN" in result.stdout
+    assert "-> app.modules.health.router" in result.stdout

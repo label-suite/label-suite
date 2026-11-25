@@ -17,9 +17,11 @@ import app.modules
 from tests.unit.import_tree import (
     BACKEND_DIR,
     HTTP_CLIENT,
+    INDEPENDENCE,
     LINT_IMPORTS,
     MAIL,
     OIDC,
+    ROUTER_PROTECTED,
     append,
     build_tree,
     load_contracts,
@@ -32,7 +34,17 @@ ROUTER = "Routers do not use the data layer"
 CORE = "Core does not depend on modules"
 HTTP = "Data layer does not import HTTP"
 
-EXPECTED_CONTRACTS = {LAYERS, ROUTER, CORE, HTTP, MAIL, OIDC, HTTP_CLIENT}
+EXPECTED_CONTRACTS = {
+    LAYERS,
+    ROUTER,
+    CORE,
+    HTTP,
+    MAIL,
+    OIDC,
+    HTTP_CLIENT,
+    INDEPENDENCE,
+    ROUTER_PROTECTED,
+}
 
 
 def contract_name_diff(
@@ -119,6 +131,12 @@ def uncovered_modules(contracts: list[dict[str, Any]], modules: list[str]) -> li
         http = by_name[HTTP]["source_modules"]
         if not any(fnmatchcase(base, pattern) for pattern in layers):
             uncovered.add(module)
+        independent = by_name[INDEPENDENCE]["modules"]
+        if not any(fnmatchcase(base, pattern) for pattern in independent):
+            uncovered.add(module)
+        protected = by_name[ROUTER_PROTECTED]["protected_modules"]
+        if not any(fnmatchcase(f"{base}.router", pattern) for pattern in protected):
+            uncovered.add(module)
         for patterns, layer in ((router, "router"), (http, "repository"), (http, "models")):
             if not any(fnmatchcase(f"{base}.{layer}", pattern) for pattern in patterns):
                 uncovered.add(module)
@@ -132,15 +150,38 @@ def test_every_module_in_app_modules_is_covered_by_the_contracts() -> None:
     assert uncovered_modules(load_contracts(), modules) == []
 
 
+def explicit_health(contracts: list[dict[str, Any]], only: set[str]) -> list[dict[str, Any]]:
+    """Copy ``contracts`` and pin the named ones to ``health`` instead of a wildcard."""
+    copies = [dict(contract) for contract in contracts]
+    for contract in copies:
+        if contract["name"] not in only:
+            continue
+        for key in ("containers", "source_modules", "modules", "protected_modules"):
+            if key in contract:
+                contract[key] = [
+                    pattern.replace("*", "health") if "*" in pattern else pattern
+                    for pattern in contract[key]
+                ]
+                if key == "containers":
+                    contract[key] = ["app.modules.health"]
+    return copies
+
+
 def test_module_missing_from_the_contracts_is_reported_by_name() -> None:
-    contracts = [dict(contract) for contract in load_contracts()]
-    for contract in contracts:
-        if contract["name"] == LAYERS:
-            contract["containers"] = ["app.modules.health"]
-        if contract["name"] in (ROUTER, HTTP):
-            contract["source_modules"] = [
-                pattern.replace("*", "health") for pattern in contract["source_modules"]
-            ]
+    every = {LAYERS, ROUTER, HTTP, INDEPENDENCE, ROUTER_PROTECTED}
+    contracts = explicit_health(load_contracts(), every)
+
+    assert uncovered_modules(contracts, ["health", "brandnew"]) == ["brandnew"]
+
+
+def test_module_missing_only_from_the_independence_contract_is_reported() -> None:
+    contracts = explicit_health(load_contracts(), {INDEPENDENCE})
+
+    assert uncovered_modules(contracts, ["health", "brandnew"]) == ["brandnew"]
+
+
+def test_module_missing_only_from_the_router_protected_contract_is_reported() -> None:
+    contracts = explicit_health(load_contracts(), {ROUTER_PROTECTED})
 
     assert uncovered_modules(contracts, ["health", "brandnew"]) == ["brandnew"]
 

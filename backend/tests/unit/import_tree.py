@@ -22,6 +22,9 @@ MAIL = "Mail only through its entry"
 OIDC = "OIDC only through its entry"
 HTTP_CLIENT = "Outbound HTTP only through its entry"
 
+INDEPENDENCE = "Modules do not import each other"
+ROUTER_PROTECTED = "Only the assembly point imports routers"
+
 # Third-party packages each entry owns; must equal that contract's forbidden_modules (design D4).
 ENTRY_THIRD_PARTY: dict[str, set[str]] = {
     MAIL: {"resend", "smtplib", "aiosmtplib"},
