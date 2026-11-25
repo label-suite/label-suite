@@ -280,7 +280,8 @@ describe("size and complexity limits: exemptions", () => {
         const stillOver = results.some(({ messages }) =>
           messages.some(({ ruleId, severity }) => ruleId === rule && severity === 2),
         );
-        if (!stillOver) expired.push(`exemption expired (豁免已過期): ${file} ${rule}; remove it`);
+        if (!stillOver)
+          expired.push(`exemption expired: ${file} ${rule}; remove it from NAMED_EXEMPTIONS`);
       }
 
       expect(expired).toEqual([]);
