@@ -8,17 +8,19 @@ tags: [workflow, local-development, docker, environment]
 
 本文管 clone 之後怎麼把前後端跑起來、怎麼跑測試、`.env` 怎麼設；API 改了之後怎麼同步前端，見 [API 契約日常流程](api-contract-workflow.mdx)。
 為什麼資料庫分兩層、為什麼用 Compose，見 [ADR-003 的 D7](../adr/003-backend-architecture.mdx#d7-資料庫分兩層) 與 [ADR-008 的 D1](../adr/008-deployment-and-operations.mdx#d1-compose-加-nginx-當-runtimecloudflare-可選)；部署細節見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)。
+與 `AGENTS.md`、ADR 或 architecture.mdx 說法不同時，以它們為準（優先序見 [ADR 索引](../adr/index.mdx#衝突時以誰為準)），並回報維護者。
 
 ## 第一次設定
 
 clone 之後做一次，之後只要 `.env` 有改才需要回來看：
 
 ```bash
-scripts/setup.sh               # 啟用 commit-msg 與 pre-commit 兩個 Git hook
-pnpm install --frozen-lockfile # 根目錄、frontend、e2e 的 JavaScript 相依
-cd backend && uv sync --locked # 後端的 Python 相依，裝進 backend/.venv
-cd .. && cp .env.example .env  # 本機設定，.env 已被 Git 忽略
+pnpm run bootstrap             # 下面前三步的合併：setup.sh、pnpm install、uv sync
+cp .env.example .env           # 本機設定，.env 已被 Git 忽略；bootstrap 不會做這一步
 ```
+
+`pnpm run bootstrap` 等於依序跑 `scripts/setup.sh`（啟用 commit-msg 與 pre-commit 兩個 Git hook）、`pnpm install --frozen-lockfile`（根目錄、frontend、e2e 的 JavaScript 相依）與 `cd backend && uv sync --locked`（後端的 Python 相依，裝進 `backend/.venv`）。
+它不複製 `.env`，也不套 migration，也不起任何服務。
 
 `.env` 的預設值不必改就能跑 Lite 層（SQLite）；每個變數的用途見 [§環境變數](#環境變數)。
 
@@ -46,7 +48,7 @@ docker compose -f docker-compose.prod.yml up --build --wait --wait-timeout 300
 docker compose -f docker-compose.prod.yml down -v
 ```
 
-Compose 最低版本是 v2.20.0（原因見該節）。
+Compose 最低版本是 v2.20.0，原因見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)的「Compose 最低版本」列。
 `8080` 被占用時改 `.env` 的 `FRONTEND_PORT`，並把同一個埠加進 `CORS_ALLOWED_ORIGINS`。
 
 ## 前後端分開起
@@ -54,7 +56,7 @@ Compose 最低版本是 v2.20.0（原因見該節）。
 先套 migration 建出資料庫檔，再一次起兩個開發伺服器：
 
 ```bash
-cd backend && uv run alembic upgrade head && cd ..
+(cd backend && uv run alembic upgrade head)
 pnpm run dev
 ```
 
@@ -62,11 +64,14 @@ pnpm run dev
 也可以分兩個終端機各起一個，指令與它執行的相同：
 
 ```bash
-cd backend && uv run uvicorn app.main:create_app --factory --reload --port 8000
-pnpm --filter frontend dev
+# 終端機一：後端
+(cd backend && CORS_ALLOWED_ORIGINS=http://localhost:5173 uv run uvicorn app.main:create_app --factory --reload --port 8000)
+
+# 終端機二：前端
+VITE_API_BASE_URL=http://localhost:8000 pnpm --filter frontend dev
 ```
 
-分開起時環境變數要自己帶進後端的 shell（`CORS_ALLOWED_ORIGINS` 沒設，後端不會啟動）。
+只有 `pnpm run dev` 會讀根目錄 `.env`；分開起時兩個終端機都要自己帶變數：後端沒有 `CORS_ALLOWED_ORIGINS` 不會啟動，前端沒有 `VITE_API_BASE_URL` 會把 API 請求打到 `5173` 自己（Vite 沒有 proxy）。
 Lite 層的資料庫檔預設在 `backend/data/label_suite.db`，已被 Git 忽略；刪掉它就是重置資料。
 
 ## 跑測試
@@ -75,11 +80,11 @@ Lite 層的資料庫檔預設在 `backend/data/label_suite.db`，已被 Git 忽�
 
 ```bash
 # SQLite 輪（沒設 TEST_DATABASE_URL；postgres 標記的測試會跳過）
-cd backend && uv run pytest
+(cd backend && uv run pytest)
 
 # PostgreSQL 輪：先起一個拋棄式的資料庫，埠選一個沒被占用的
 docker run -d --name label-suite-test-pg -e POSTGRES_PASSWORD=devpass -p 55432:5432 postgres:16
-cd backend && TEST_DATABASE_URL=postgresql+asyncpg://postgres:devpass@localhost:55432/postgres uv run pytest
+(cd backend && TEST_DATABASE_URL=postgresql+asyncpg://postgres:devpass@localhost:55432/postgres uv run pytest)
 docker rm -f label-suite-test-pg
 ```
 
@@ -88,14 +93,14 @@ PostgreSQL 輪不應該有任何測試被跳過；CI 會用 `scripts/check-junit
 
 ## 環境變數
 
-只有 `CORS_ALLOWED_ORIGINS` 沒有預設值，沒設就起不來；`.env.example` 列出所有會被讀的變數，後端程式碼只讀其中標示「後端」的幾個。
+必填的只有兩個：`CORS_ALLOWED_ORIGINS` 沒設，兩層都起不來；`POSTGRES_PASSWORD` 沒設，正式層起不來（Lite 層不讀它）。`.env.example` 列出所有會被讀的變數，後端程式碼只讀其中標示「後端」的幾個。
 
 | 變數 | 用途 | 預設值 | 誰讀 |
 | :--- | :--- | :--- | :--- |
 | `CORS_ALLOWED_ORIGINS` | 允許的瀏覽器來源，逗號分隔；每項是 `http(s)://host[:port]`，不得含路徑或 `*`，至少一項 | 無（必填）；`.env.example` 給 `http://localhost:5173,http://localhost:8080` | 後端、兩份編排檔 |
 | `CORS_ALLOW_CREDENTIALS` | CORS 回應是否允許帶憑證 | `true` | 後端、兩份編排檔 |
-| `API_DOCS_ENABLED` | 是否提供 `/docs`、`/docs/oauth2-redirect`、`/redoc`、`/openapi.json` | `true`；正式層編排檔固定為 `false` | 後端 |
-| `SQLITE_PATH` | Lite 層的資料庫檔位置，相對路徑以後端工作目錄為準 | `./data/label_suite.db` | 後端、migration |
+| `API_DOCS_ENABLED` | 是否提供 `/docs`、`/docs/oauth2-redirect`、`/redoc`、`/openapi.json` | `true`；正式層編排檔固定為 `false` | 後端（Lite 編排檔不傳它，只影響容器外跑的後端） |
+| `SQLITE_PATH` | Lite 層的資料庫檔位置，相對路徑以後端工作目錄為準 | `./data/label_suite.db` | 後端、migration、Lite 編排檔（`migrate` 與 `backend`） |
 | `DATABASE_URL` | 設了就改走 PostgreSQL；接受 `postgresql`、`postgresql+asyncpg`、`postgres` 三種 scheme，一律轉成 `postgresql+asyncpg` | 未設（Lite 層）；正式層編排檔不讀它，自己用下面三個變數組 | 後端、migration |
 | `POSTGRES_USER` | 正式層資料庫容器建立並讓後端連線的角色 | `label_suite` | 正式層編排檔 |
 | `POSTGRES_PASSWORD` | 正式層資料庫密碼；含 URL 保留字元（`@ : / ? #`）要百分比編碼 | 無（正式層必填；`.env.example` 刻意留空） | 正式層編排檔 |

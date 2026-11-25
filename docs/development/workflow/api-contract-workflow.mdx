@@ -8,6 +8,7 @@ tags: [workflow, api-contract, openapi, orval]
 
 改了後端 API，就跑一次 `pnpm run api:sync`，再把變動的檔案一起提交；前端只呼叫生成的 client，不手寫 API 呼叫。
 契約由什麼組成、為什麼用 Orval，見 [architecture.mdx 的 §API 契約](../architecture.mdx#api-契約) 與 [ADR-003 的 D6](../adr/003-backend-architecture.mdx#d6-前端-client-用-orval-產生)；本文只寫日常步驟。環境與指令的前置設定見 [本機開發](local-development.mdx)。
+與 `AGENTS.md`、ADR 或 architecture.mdx 說法不同時，以它們為準（優先序見 [ADR 索引](../adr/index.mdx#衝突時以誰為準)），並回報維護者。
 
 ## 改了 API 之後
 
@@ -26,7 +27,13 @@ tags: [workflow, api-contract, openapi, orval]
 
 ## operationId 改名
 
-operationId 由 HTTP 方法加路徑最後一段資源名組成（`GET /api/v1/health` 是 `getHealth`；回傳 `ApiResponse[PaginatedResponse[...]]` 的 `GET` 是 `list` 加複數），Orval 用它命名整組產物，所以路徑最後一段改名，前端所有引用都會跟著斷。
+operationId 由 HTTP 方法、處理函式的回傳型別與路徑最後一段決定，Orval 用它命名整組產物，所以其中任何一項改變，前端所有引用都會跟著斷。規則由 `backend/app/core/openapi.py` 的 `generate_operation_id` 實作：
+
+- **資源名**：`/api/v1` 之後最後一個不是路徑參數的區段，依 `-` 拆字，每字首字母大寫（`task-items` 是 `TaskItems`）。
+- **動詞**：`GET` 是 `get`、`POST` 是 `create`、`PUT` 與 `PATCH` 是 `update`、`DELETE` 是 `delete`；一條路由只能有一個方法。
+- **例外的 `list`**：`GET` 且回傳型別註記是 `ApiResponse[PaginatedResponse[...]]` 時，動詞改 `list`，資源名維持原樣（`listTaskItems`），不單數化。
+- **其餘**：動詞加資源名，最後一個字轉單數（`POST /task-items` 是 `createTaskItem`；`/health` 的 `health` 列在不規則表，維持 `getHealth`）。
+- **回傳型別**：取自處理函式的回傳註記，不是 `response_model`；沒有註記會讓匯出失敗。
 
 | 產物檔 | `getHealth` 生成的名稱 |
 | :--- | :--- |
