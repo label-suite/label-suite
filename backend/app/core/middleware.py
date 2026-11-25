@@ -306,6 +306,7 @@ class AccessLogMiddleware:
     """
 
     def __init__(self, app: ASGIApp, *, quiet_success_routes: frozenset[str]) -> None:
+        """Wrap ``app``; 2xx responses on ``quiet_success_routes`` are not logged."""
         self.app = app
         self.quiet_success_routes = quiet_success_routes
         self.logger = logging.getLogger(ACCESS_LOGGER_NAME)
