@@ -200,7 +200,8 @@ R：Read（可讀取）　C：Create（可新增）　E：Edit（可編輯）　
 | 每個功能的 WHO | 沒有對應目標的功能（沒有 WHY 就是過度設計） |
 | 欄位的型別細節 | 「之後再決定」的欄位規則（移到待釐清） |
 | 畫面上的操作與回饋：按鈕、提示文字、確認視窗 | 資料表、欄位名稱、API、框架、元件名稱 |
-| 每個大項開頭的 `PrototypeFrame` 嵌入（見 SKILL.md 步驟 7） | 色碼、像素、動畫曲線、版面位置（畫面以 `design/prototype/` 為準） |
+| 「規格」章節開頭嵌一次 `PrototypeFrame`，大項依使用者任務分組（見 SKILL.md 步驟 7） | 色碼、像素、動畫曲線、版面位置（畫面以 `design/prototype/` 為準） |
+| 現行的規則，以及必要時一句理由 | 演變說明：原本怎樣、何時改的、某頁或 PRD 是否已跟上（寫在「變更紀錄」或對應決議的理由） |
 
 新增、刪除或改名「## 規格」底下的 `###` 小節，或改了 PRD §Site Map 條列後，要重跑 `node scripts/gen-site-map-data.mjs` 並一起提交 `.notecraft/components/site-map-data.ts`：PRD 的全站樹靠它列出每頁的功能，CI 會擋下過期的資料檔。
 
