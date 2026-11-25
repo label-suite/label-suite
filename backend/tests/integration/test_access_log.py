@@ -16,7 +16,6 @@ import re
 import socket
 import subprocess
 import sys
-import time
 from collections.abc import AsyncIterator, Callable, Iterator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -30,6 +29,7 @@ from app.core.config import LogLevel, Settings
 from app.core.middleware import route_template
 from app.main import create_api_router, create_app
 from tests.conftest import ALLOWED_ORIGIN, make_test_settings
+from tests.integration.uvicorn_process import free_port, wait_until_healthy
 from tests.probe import (
     BAD_GATEWAY_PATH,
     CRASH_PATH,
@@ -467,26 +467,6 @@ def test_route_template_is_none_without_a_matched_route(tmp_path: Path) -> None:
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 
 
-def _free_port() -> int:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
-        probe.bind(("127.0.0.1", 0))
-        port: int = probe.getsockname()[1]
-    return port
-
-
-def _wait_until_healthy(base_url: str, server: subprocess.Popen[str]) -> None:
-    deadline = time.monotonic() + 30
-    while time.monotonic() < deadline:
-        assert server.poll() is None, "uvicorn exited before it became healthy"
-        try:
-            if httpx.get(f"{base_url}{HEALTH_PATH}", timeout=1).status_code == 200:
-                return
-        except httpx.TransportError:
-            pass
-        time.sleep(0.2)
-    raise AssertionError("uvicorn did not become healthy within 30 seconds")
-
-
 def test_uvicorn_built_in_access_log_is_off(tmp_path: Path) -> None:
     env = {
         key: value
@@ -495,7 +475,7 @@ def test_uvicorn_built_in_access_log_is_off(tmp_path: Path) -> None:
     }
     env["CORS_ALLOWED_ORIGINS"] = ALLOWED_ORIGIN
     env["SQLITE_PATH"] = str(tmp_path / "app.db")
-    port = _free_port()
+    port = free_port()
     base_url = f"http://127.0.0.1:{port}"
 
     # No --no-access-log on purpose: create_app itself must turn it off (Q10).
@@ -518,7 +498,7 @@ def test_uvicorn_built_in_access_log_is_off(tmp_path: Path) -> None:
         text=True,
     )
     try:
-        _wait_until_healthy(base_url, server)
+        wait_until_healthy(base_url, server)
         response = httpx.get(f"{base_url}{HEALTH_PATH}", params={"q": "CANARY-query"}, timeout=5)
         assert response.status_code == 200
     finally:

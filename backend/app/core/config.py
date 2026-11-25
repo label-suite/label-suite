@@ -13,6 +13,7 @@ into a ``ConfigError`` that names the environment variable and the reason but
 never echoes the configured value (security-agent-rules S9).
 """
 
+import ipaddress
 from pathlib import Path
 from typing import Annotated, Any, Literal
 from urllib.parse import urlsplit
@@ -100,12 +101,21 @@ class Settings(DatabaseSettings):
             ``INFO`` by default. The database engine, pool and driver loggers do
             not follow it (``configure_logging`` pins them to ``WARNING``), and
             ``DatabaseSettings`` (Alembic) never reads it.
+        forwarded_allow_ips: The proxy addresses uvicorn trusts for
+            ``X-Forwarded-For`` and ``X-Forwarded-Proto``, from
+            ``FORWARDED_ALLOW_IPS``: a comma-separated list of single IP addresses or
+            CIDR networks, trimmed, ``["127.0.0.1", "::1"]`` by default. The backend
+            only validates it; uvicorn reads the same variable and does the matching.
+            ``*``, a zero-length prefix, host bits, hostnames, empty items and an
+            empty list are rejected because uvicorn would trust everyone or drop them
+            silently.
     """
 
     cors_allowed_origins: Annotated[list[str], NoDecode]
     cors_allow_credentials: bool = True
     api_docs_enabled: bool = True
     log_level: LogLevel = "INFO"
+    forwarded_allow_ips: Annotated[list[str], NoDecode] = ["127.0.0.1", "::1"]  # noqa: RUF012
 
     @field_validator("log_level", mode="before")
     @classmethod
@@ -132,6 +142,37 @@ class Settings(DatabaseSettings):
             if not _is_plain_origin(origin):
                 raise ValueError("each origin must be http(s)://host[:port] without a path")
         return origins
+
+    @field_validator("forwarded_allow_ips", mode="before")
+    @classmethod
+    def _parse_forwarded_allow_ips(cls, value: Any) -> list[str]:
+        if isinstance(value, str):
+            items = [item.strip() for item in value.split(",")]
+        elif isinstance(value, list | tuple):
+            items = [str(item).strip() for item in value]
+        else:
+            raise ValueError("must be a comma-separated list of IP addresses or networks")
+        if not items or items == [""]:
+            raise ValueError("must list at least one IP address or network")
+        for item in items:
+            if not _is_trusted_proxy_entry(item):
+                raise ValueError(
+                    "each item must be a single IP address or a CIDR network with no host "
+                    "bits set and a non-zero prefix length; "
+                    '"*", hostnames and empty items are not accepted'
+                )
+        return items
+
+
+def _is_trusted_proxy_entry(item: str) -> bool:
+    """Return whether ``item`` is a single IP address or a strict, non-zero-prefix network."""
+    try:
+        if "/" not in item:
+            ipaddress.ip_address(item)
+            return True
+        return ipaddress.ip_network(item, strict=True).prefixlen > 0
+    except ValueError:
+        return False
 
 
 def _is_plain_origin(origin: str) -> bool:

@@ -354,6 +354,7 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，�
 | :--- | :--- |
 | 本機與 CI | `docker compose up`；CI 的 `backend-postgres` job 用 workflow 的 `postgres:16` service container 跑 PostgreSQL 那一輪測試，沒有 Redis；`compose` job 只在 PR 動到編排、image 或它們執行的程式時跑，以 `docker compose up --build --wait` 實際啟動 Lite 與正式兩層，經 Nginx 檢查健康，並在兩層以 `scripts/check-security-headers.sh` 比對公開入口的安全標頭：頁面殼、前端路由深層路徑、建置資源、後端成功、後端錯誤、Nginx 自產的 405、停後端後的 502 或 504，外加帶身分憑證的兩個變體；正式層另以 `E2E_TARGET=compose` 跑一條瀏覽器檢查，確認 CSP 不擋前端自己的資源。`compose` 不列必過。本機對任一層起來後，執行 `scripts/check-security-headers.sh http://localhost:<埠>`（停掉後端後加 `--backend-down`）即可複查。本機的日常步驟見 [本機開發](workflow/local-development.mdx)與 [API 契約日常流程](workflow/api-contract-workflow.mdx) |
 | 正式環境 | Compose 加 Nginx；有的話用 Cloudflare 當 DNS、CDN 與 TLS 邊緣，Nginx 仍要擋安全標頭與隔離內部服務。HSTS 由 TLS 邊緣負責，Nginx 不發，所以正式層必須放在 TLS 後面（`Secure` 與 `__Host-` cookie 的前提）。邊緣代理可能改寫或移除 origin 的標頭，本 repo 只驗到 origin；部署後以 `curl -I https://<網域>/` 自查同一組標頭 |
+| 來源位址 | 後端只信任 Nginx 的 `X-Forwarded-For` 與 `X-Forwarded-Proto`：兩份編排檔把預設網路固定為子網段 `10.77.250.0/24`（動態配位限 `ip_range` `10.77.250.128/25`），`frontend` 釘在該網段內、`ip_range` 外的 `10.77.250.10`，後端的 `FORWARDED_ALLOW_IPS` 預設 `${FORWARDED_ALLOW_IPS:-10.77.250.10}`，所以只信任這一個位址，同網路其他容器偽造的標頭不被採信。比對由 uvicorn 內建的代理標頭處理做，取值是由右往左第一個不受信任的位址；`backend/Dockerfile` 的 `CMD` 不帶旗標。沒有 Nginx（本機 `pnpm run dev`、直接起後端）時未設變數，只信任 loopback。後端的 `Settings` 在啟動時驗證該變數，`*`、前綴長度 0、主機名稱與空項目讓服務拒絕啟動，錯誤訊息只含變數名；CI 的 `compose` job 靜態比對兩份編排檔的網路與預設值，並在 Lite 層送一般與偽造請求，確認回報的來源位址不是 `frontend` 的位址也不是偽造值 |
 | image | 後端與 worker 共用一個多階段 Dockerfile；前端 build 完由 `nginx:alpine` 服務 `/dist` |
 | 寄信 | Resend；沒設 key 時把設定密碼連結印在伺服器 log，由部署者轉給使用者。因此 Lite 層的 log 視為敏感，畫面要讓管理員知道信沒有寄出去（條文見[規格 06-01](../specs/06-admin/01-user-management.mdx#已確認決議) Q9–Q11） |
 | 監控 | Prometheus、Grafana、Sentry 本期不做，與 PRD「研究原型、不是生產規模服務」的定位一致；代價是出錯時只能看 log，沒有告警 |
@@ -368,6 +369,13 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，�
 - 開發伺服器（Vite）不經 Nginx，不帶 CSP 與 COOP；CSP 破損只在經 Nginx 的建置上看得到，本機日常開發看不到。
 - `connect-src 'self'` 與 `VITE_API_BASE_URL` 耦合：容器建置的 `VITE_API_BASE_URL` 是空字串，前端同源呼叫 API，所以放行；改成跨來源時，同一個 change 要把該來源加進 `frontend/nginx.conf` 的 `connect-src`，並同步 `scripts/check-security-headers.sh` 的期望值，否則所有 API 呼叫會被擋、畫面沒有錯誤訊息。
 - 已知限制：`Cross-Origin-Opener-Policy: same-origin` 會讓彈出視窗式的登入失效，`form-action 'self'` 會擋表單送出後 302 到外部的轉址。[規格 01-01](../specs/01-account/01-login.mdx) 的 Google 登入若做成這兩種形式，那個 change 要同時放寬這兩個值並同步驗證腳本；兩個值目前依維護者決定維持不變，整頁導向不受影響。
+:::
+
+:::note{title="來源位址的限制與耦合" collapsible}
+- 兩層共用同一個子網段，**不能在同一台主機同時運行**：後起的那一層 `up` 會以位址池重疊失敗，只 `stop` 而沒有 `down` 時網路仍在，一樣失敗。切換前先 `docker compose down`（正式層加 `-f docker-compose.prod.yml`）。子網段與主機既有網路或 VPN 重疊時 `up` 同樣明確失敗，改法見 `.env.example`：兩份編排檔的三個值與 `FORWARDED_ALLOW_IPS` 要一起改。
+- 啟動檢查擋不住兩種寫法，只靠 code review 與 `CMD` 不帶旗標防住：在編排檔以 `command` 覆寫啟動指令並帶 `--forwarded-allow-ips '*'`（旗標蓋過環境變數，`Settings` 看不到），以及 `0.0.0.0/1,128.0.0.0/1` 這類以兩個前綴長度非 0 的網段合起來涵蓋整個 IPv4 空間（驗證器只擋前綴長度 0，不計算涵蓋範圍）。兩者都不得使用。
+- 已知限制，歸到 [ADR-008](adr/008-deployment-and-operations.mdx) 尚未決定的 Cloudflare TLS 模式，不另開 issue：TLS 邊緣之後後端看到的 scheme 恆為 `http`；Cloudflare 或其他邊緣代理在 Nginx 前面時，後端拿到的是邊緣位址而不是真實用戶端，還原需要 Nginx 的 real_ip 設定；Docker 發布埠的來源位址依平台而異（Docker Desktop 為 `192.168.65.1`，Linux 未測），所以測試只做否定斷言。
+- 設定沒傳或傳錯時，後端回到「所有請求共用 Nginx 位址」，沒有錯誤訊息；偵測靠 CI 的上述兩項檢查。授權不得讀 `request.client.host`（[security-agent-rules](rules/security-agent-rules.mdx) S1）。
 :::
 
 :::note{title="安全掃描與分支推進" collapsible}
@@ -490,3 +498,4 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，�
 | 2026-11-20 | i18n 兩層的理由寫進 [ADR-003 的 D11](adr/003-backend-architecture.mdx#d11-i18n-分前端與後端兩層)，本文只留做法（[§i18n 兩層](#i18n-兩層)） | —（理由原本沒有落點，效力總表第 026 列只寫「沿用」） | [#513](https://github.com/label-suite/label-suite/issues/513) |
 | 2026-11-20 | 允許改 `components/ui/` 的 shadcn 原語加 variant，原語只用語意變數，shadcn 沒有的語意在對照層新增（[§前端](#前端)） | 原本寫「shadcn 元件不改寫」 | [#505](https://github.com/label-suite/label-suite/issues/505) 的 Q9 裁定，記錄於 [#527](https://github.com/label-suite/label-suite/issues/527) |
 | 2026-11-23 | ADR 效力總表改指向本 repo 的 ADR 001–008；個人 repo ADR 的對照移到文末附錄（[§ADR 效力總表](#adr-效力總表)、[§附錄：個人 repo ADR 的對照](#附錄個人-repo-adr-的對照)） | —（總表原本逐列對個人 repo 的 38 份 ADR） | [#515](https://github.com/label-suite/label-suite/issues/515) |
+| 2026-11-26 | 後端只信任 Nginx 的固定位址轉發的來源標頭，兩層編排固定子網段並釘住 `frontend`（[§部署與維運](#部署與維運)）；Cloudflare 與 TLS 邊緣的限制歸到 ADR-008 的 Cloudflare TLS 待決 | —（原本沒有信任範圍，後端看到的來源位址都是 Nginx） | [#566](https://github.com/label-suite/label-suite/issues/566) |
