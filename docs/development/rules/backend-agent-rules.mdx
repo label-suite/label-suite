@@ -238,7 +238,7 @@ Celery task 只收可序列化的識別資訊，在自己的行程裡重新查�
 
 三條入口契約的 `source_modules` 都是 `app.core`、`app.modules`、`app.main`、`app.scripts`，並帶 `allow_indirect_imports = true`，所以入口套件不在檢查來源內時可以 import 自己的套件，業務模組經由入口間接到達該套件也不算違規。跨模組有兩條契約：`Modules do not import each other`（`independence`，涵蓋 `app.modules.*`）與 `Only the assembly point imports routers`（`protected`，router 只准 `app.main` import）。
 
-入口也是測試替身應該放的位置：外部依賴只在入口被換掉，業務程式不必知道替身的存在，見 [testing-agent-rules.mdx](testing-agent-rules.mdx) 的 T6。
+入口也是測試替身應該放的位置，見 [testing-agent-rules.mdx](testing-agent-rules.mdx) 的 T6。
 
 :::note{title="B12 的反例與檢查方式" collapsible}
 - **反例**：某模組的 service 裡 `import resend` 自己寄信；`health` 模組的 router import 另一個模組的 service；某模組的 service import 自己的 router
