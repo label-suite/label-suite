@@ -423,7 +423,7 @@ export function historicalLines(text) {
 // ------------------------------------------- spec references in §Logic Flow
 //
 // A module index's §Logic Flow cites spec clauses by name, not by file:line:
-// `03-01 §點任務進入任務詳情 第 1、2 條`, `01-01 §導向其他頁面 4`,
+// `03-01 §點任務進入任務詳情 第 1、2 條`, `01-01 §登入頁 9`,
 // `§業務流程「進到任務列表」主流程第 1～3 步`, `01-04「用驗證連結換掉 Email」E1`,
 // `§已確認決議 Q19`, `07-04 §事件清單 第 8 列`, `[§四個步驟](./02-task-new.mdx#…)的「…」`.
 // Each unit (list item or paragraph) is read left to right, carrying the
