@@ -31,7 +31,7 @@ target-version = "py312"
 line-length = 100
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "S", "ASYNC", "D"]
+select = ["E", "F", "I", "UP", "B", "S", "ASYNC", "D", "C901", "PLR0912", "PLR0915"]
 # Constructor parameters go in the class docstring's Args: section (B2).
 ignore = ["D107"]
 
@@ -44,9 +44,20 @@ known-third-party = ["alembic"]
 # names that start with "_", so they stay exempt by default.
 convention = "google"
 
+# Function size limits (B11, clarification Q6): complexity 10, statements 30, branches 10.
+# Parameter and return counts are deliberately not limited.
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+max-statements = 30
+max-branches = 10
+
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "D"]
 "alembic/**" = ["D"]
+# Generated migration scripts are exempt from the size limits (clarification Q7).
+"alembic/versions/**" = ["C901", "PLR0912", "PLR0915"]
 
 [tool.mypy]
 plugins = ["pydantic.mypy"]
