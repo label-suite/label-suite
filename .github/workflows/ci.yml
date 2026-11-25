@@ -433,6 +433,17 @@ jobs:
       - name: Scan for the project rules
         run: semgrep scan --error --config .semgrep/label-suite.yml backend/ frontend/ e2e/
 
+      # T4, T6 (#562): integration tests and the harness files must not mock
+      # this project's own modules. Semgrep skips tests/ by default, so this
+      # step (S2) turns that default off with --x-ignore-semgrepignore-files,
+      # and the rules' paths.include limits the scan to the integration tests,
+      # conftest.py, probe.py and factories/. The flag is experimental; its
+      # behaviour is guaranteed only by the pinned image above, so a new image
+      # version must re-prove the scan scope in the same pull request. The
+      # project-rule scan above is left unchanged.
+      - name: Scan the tests for self-mocks (T4, T6)
+        run: semgrep scan --error --x-ignore-semgrepignore-files --config .semgrep/test-boundaries.yml backend/
+
   # pip-audit 2.10.1 has no severity flag, so any known vulnerability in the
   # backend environment fails the job. pnpm audit fails on high or above in the
   # production dependencies only.

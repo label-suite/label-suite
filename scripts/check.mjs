@@ -139,6 +139,15 @@ export const OPTIONAL_STEPS = {
         "semgrep scan --error --config .semgrep/label-suite.yml backend/ frontend/ e2e/",
       ],
     },
+    // T4, T6 (#562): integration tests and the harness files must not mock this
+    // project's own modules; the same command as the semgrep job in ci.yml.
+    {
+      id: "semgrep-test-boundaries",
+      name: "Semgrep test boundaries",
+      commands: [
+        "semgrep scan --error --x-ignore-semgrepignore-files --config .semgrep/test-boundaries.yml backend/",
+      ],
+    },
   ],
 };
 

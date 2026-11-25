@@ -26,7 +26,7 @@ updatedAt: '2026-11-25'
 | 前端依賴方向、型別安全、UI 共用 | [frontend-agent-rules.mdx](frontend-agent-rules.mdx) |
 | 測試分層、雙資料庫驗證、交付證據 | [testing-agent-rules.mdx](testing-agent-rules.mdx) |
 
-**大多數規範還沒有任何自動檢查**：`backend/`、`frontend/` 與 `e2e/` 都已存在，但在 CI 跑的只有 [backend-agent-rules.mdx](backend-agent-rules.mdx) 的 B1、B2、B6、B7、B11，[frontend-agent-rules.mdx](frontend-agent-rules.mdx) 的 F1 至 F3、F12 與 F10 的一部分，[api-agent-rules.mdx](api-agent-rules.mdx) 的 A5 與 A4、A6 的一部分，[security-agent-rules.mdx](security-agent-rules.mdx) S2 的 CORS 檢查與 S8 的 `eval`／`exec` 檢查，以及 [testing-agent-rules.mdx](testing-agent-rules.mdx) 的 T1、T4、T8、T9、T10 的一部分（本文的 R2 經由 B1 與 F1 檢查）；其餘「檢查方式」大多標「待建置」，不得因為文件存在就宣稱規則已被強制。
+**大多數規範還沒有任何自動檢查**：`backend/`、`frontend/` 與 `e2e/` 都已存在，但在 CI 跑的只有 [backend-agent-rules.mdx](backend-agent-rules.mdx) 的 B1、B2、B6、B7、B11，[frontend-agent-rules.mdx](frontend-agent-rules.mdx) 的 F1 至 F3、F12 與 F10 的一部分，[api-agent-rules.mdx](api-agent-rules.mdx) 的 A5 與 A4、A6 的一部分，[security-agent-rules.mdx](security-agent-rules.mdx) S2 的 CORS 檢查與 S8 的 `eval`／`exec` 檢查，以及 [testing-agent-rules.mdx](testing-agent-rules.mdx) 的 T1、T4、T6、T8、T9、T10 的一部分（本文的 R2 經由 B1 與 F1 檢查）；其餘「檢查方式」大多標「待建置」，不得因為文件存在就宣稱規則已被強制。
 標「**人工／獨立審查**」的規範現在就要做，只是沒有工具代勞：本文的 R1、R3、R4、R5、R6、R7 與 [backend-agent-rules.mdx](backend-agent-rules.mdx) 的 B8，共七條。自動 gate 的清單與歸屬在 [testing-agent-rules.mdx](testing-agent-rules.mdx) 的 T9。
 
 ---
@@ -312,3 +312,4 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 | 2026-11-19 | R1 連到 ADR-001 的 D1；R3 加上例外：本次改動呼叫、修改或取代的既有實作如果是錯的，直接修 | R3 原本對路徑內的錯誤實作也只能提出來 | [#444](https://github.com/label-suite/label-suite/issues/444) |
 | 2026-11-20 | 不用 Storybook，改用元件展示頁，本文件的 §待決 因此清空（現行做法見 [architecture.mdx 的 §前端](../architecture.mdx#前端)） | §待決 第 1 列「是否採用 Storybook」，連同它對前端程式工作的開工封鎖 | [#503](https://github.com/label-suite/label-suite/issues/503) |
 | 2026-11-25 | 「200 行→50 行」不採用作為拆分判準，但另設 CI 上限擋極端值（[F12](frontend-agent-rules.mdx)、[B11](backend-agent-rules.mdx)）；R3、R4 的判準不變 | 兩處「不採用」只寫了不設機械行數門檻，與新增的 CI 上限字面衝突 | [#561](https://github.com/label-suite/label-suite/issues/561) |
+| 2026-11-25 | 總覽「在 CI 跑的」清單把 testing-agent-rules 的條文改為含 T6 的一部分（後端的測試替身邊界檢查） | 清單只列 T1、T4、T8、T9、T10 | [#562](https://github.com/label-suite/label-suite/issues/562) |

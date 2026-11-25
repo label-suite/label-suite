@@ -539,6 +539,35 @@ describe("C11: semgrep", () => {
     assert.doesNotMatch(run, /--config \.semgrep\/(\s|$)/);
     assert.match(run, /backend\/ frontend\/ e2e\//);
   });
+
+  // T4, T6 and #562: the test-boundary check is its own step after the rule
+  // tests, and the project-rule scan above is left as it was.
+  test("checks the tests for self-mocks in one step after the rule tests, apart from the project scan", () => {
+    const steps = job("semgrep").steps;
+    const boundary = steps
+      .map((step, index) => ({ step, index }))
+      .filter(
+        ({ step }) =>
+          typeof step.run === "string" &&
+          /--config \.semgrep\/test-boundaries\.yml\b/.test(step.run),
+      );
+    assert.equal(
+      boundary.length,
+      1,
+      "semgrep must have exactly one step loading test-boundaries.yml",
+    );
+    const { step, index } = boundary[0];
+    assert.match(step.run, /semgrep scan --error\b/);
+    assert.match(step.run, /--x-ignore-semgrepignore-files\b/);
+    assert.match(step.run, /\s--config \.semgrep\/test-boundaries\.yml backend\/\s*$/);
+    assert.doesNotMatch(step.run, /label-suite\.yml/);
+    assert.ok(
+      requireStep("semgrep", /^semgrep --test \.semgrep\/\s*$/m) < index,
+      "the rule tests must run first",
+    );
+    const scan = steps[requireStep("semgrep", /semgrep scan --error\b/)].run;
+    assert.doesNotMatch(scan, /test-boundaries\.yml/);
+  });
 });
 
 describe("dependency-audit", () => {

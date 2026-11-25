@@ -4,7 +4,8 @@
 // the stop-at-first-failure rule and the steps that check.mjs implements itself
 // (the probe check and the contract comparison) without running the real tools
 // (spec workspace-commands, system-design §本機自查的步驟, design D10).
-// The last describe block asserts that steps 11 and 12 run the same pytest and skip-check commands as ci.yml.
+// The last two describe blocks assert that steps 11 and 12 run the same pytest and skip-check
+// commands as ci.yml, and that the --with-semgrep steps run the same commands as the semgrep job.
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -20,6 +21,8 @@ import { OPTIONAL_STEPS, parseArgs, runCheck, STEPS } from "../check.mjs";
 const ROOT = fileURLToPath(new URL("../..", import.meta.url));
 const COPY = "docs/diagrams/architecture/api.openapi.json";
 const PG_SKIP_MESSAGE = "PostgreSQL 那一輪已跳過：未設 TEST_DATABASE_URL";
+const BOUNDARY_SCAN =
+  "semgrep scan --error --x-ignore-semgrepignore-files --config .semgrep/test-boundaries.yml backend/";
 
 let root;
 beforeEach(() => {
@@ -142,14 +145,33 @@ describe("runCheck", () => {
       runner: flagged.runner,
     });
     assert.equal(code, 0, output);
-    assert.deepEqual(flagged.commands().slice(-4), [
+    assert.deepEqual(flagged.commands().slice(-5), [
       "pnpm --filter e2e test:static",
       "pnpm --filter e2e test",
       "semgrep --test .semgrep/",
       "semgrep scan --error --config .semgrep/label-suite.yml backend/ frontend/ e2e/",
+      BOUNDARY_SCAN,
     ]);
     assert.match(output, /^PASS e2e/m);
     assert.match(output, /^PASS Semgrep/m);
+    assert.match(output, /^PASS Semgrep test boundaries/m);
+    assert.match(output, /all 15 steps done/);
+  });
+
+  // T4, T6 and #562: the test-boundary check is a step of its own after Semgrep.
+  test("--with-semgrep runs the Semgrep step, then the test-boundary step", () => {
+    assert.deepEqual(
+      OPTIONAL_STEPS["--with-semgrep"].map((s) => s.id),
+      ["semgrep", "semgrep-test-boundaries"],
+    );
+  });
+
+  test("a failing test-boundary check prints FAIL and exits non-zero", async () => {
+    const fake = fakeRunner({ results: { [BOUNDARY_SCAN]: 1 } });
+    const { code, output } = await check({ flags: ["--with-semgrep"], runner: fake.runner });
+    assert.notEqual(code, 0);
+    assert.match(output, /^FAIL Semgrep test boundaries/m);
+    assert.equal(fake.commands().at(-1), BOUNDARY_SCAN);
   });
 
   test("an unknown flag is rejected", () => {
@@ -479,4 +501,23 @@ describe("steps 11 and 12 match ci.yml", () => {
       );
     assert.equal(normalize("backend-sqlite"), normalize("backend-postgres"));
   });
+});
+
+// T4, T6 and #562: the --with-semgrep steps run what the CI semgrep job runs, word for word.
+describe("the --with-semgrep steps match ci.yml", () => {
+  const workflow = parse(readFileSync(join(ROOT, ".github/workflows/ci.yml"), "utf8"));
+  const ciRuns = (workflow.jobs.semgrep?.steps ?? [])
+    .filter((step) => typeof step.run === "string")
+    .map((step) => step.run.trim());
+
+  for (const step of OPTIONAL_STEPS["--with-semgrep"]) {
+    test(`every command of ${step.id} is a step of the semgrep job`, () => {
+      for (const command of step.commands) {
+        assert.ok(
+          ciRuns.includes(command),
+          `the semgrep job in ci.yml has no step running exactly: ${command}`,
+        );
+      }
+    });
+  }
 });
