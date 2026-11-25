@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { ArrowDown, ArrowUp, Check, ChevronLeft, ChevronRight, Fingerprint, Pause, Play, RotateCcw } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, ChevronLeft, ChevronRight, Fingerprint, FileText, Pause, Play, RotateCcw } from "lucide-react";
 
 // Request pipeline of the backend on main, stepped per scenario.
 // Source of truth: backend/app/main.py (middleware order), app/core/middleware.py,
-// app/core/errors.py, app/core/envelope.py, app/modules/health/ and backend/tests/probe.py
-// (the 422 and 500 routes exist only in tests). Messages are the zh-TW strings of
+// app/core/log_config.py (access-log line format), app/core/errors.py, app/core/envelope.py,
+// app/modules/health/ and backend/tests/probe.py (the items, 422 and 500 routes exist only
+// in tests). Messages are the zh-TW strings of
 // backend/app/i18n/zh-TW/messages.json. Rate limiting and shutdown are not built yet,
 // so they are not drawn.
 
-type LayerId = "corr" | "cors" | "unhandled" | "locale" | "exc" | "router" | "service" | "repo" | "db";
+type LayerId = "corr" | "cors" | "access" | "unhandled" | "locale" | "exc" | "router" | "service" | "repo" | "db";
 type Group = "middleware" | "framework" | "module" | "store";
 type Tone = "normal" | "warn" | "error";
 
@@ -18,6 +19,7 @@ type Layer = { id: LayerId; name: string; where: string; group: Group };
 const LAYERS: Layer[] = [
   { id: "corr", name: "CorrelationIdMiddleware", where: "app/core/middleware.py", group: "middleware" },
   { id: "cors", name: "CORSMiddleware", where: "Starlette，設定在 app/main.py", group: "middleware" },
+  { id: "access", name: "AccessLogMiddleware", where: "app/core/middleware.py，log 格式在 app/core/log_config.py", group: "middleware" },
   { id: "unhandled", name: "UnhandledExceptionMiddleware", where: "app/core/middleware.py", group: "middleware" },
   { id: "locale", name: "LocaleMiddleware", where: "app/core/middleware.py", group: "middleware" },
   { id: "exc", name: "ExceptionMiddleware", where: "Starlette，handler 在 app/core/errors.py", group: "framework" },
@@ -34,7 +36,11 @@ const GROUP_LABEL: Record<Group, string> = {
   store: "資料庫",
 };
 
-type Step = { layer: LayerId; dir: "in" | "out"; text: string; produce?: boolean; tone?: Tone };
+// A log card shown on the AccessLogMiddleware return step: either the one line it writes
+// or the reason it writes nothing.
+type LogCard = { kind: "line" | "skip"; text: string };
+
+type Step = { layer: LayerId; dir: "in" | "out"; text: string; produce?: boolean; tone?: Tone; log?: LogCard };
 
 type Scenario = {
   id: string;
@@ -55,14 +61,18 @@ const IN_MIDDLEWARE: Step[] = [
     text: "請求沒帶 X-Correlation-ID（或格式不合 ^[A-Za-z0-9-]{8,64}$），產生新的 UUID4，寫進 scope state 與 contextvar。之後每一層拿到的都是這個值。",
   },
   { layer: "cors", dir: "in", text: "不是預檢請求，往內傳。" },
+  { layer: "access", dir: "in", text: "路徑在 /api/v1 之下，開始計時；不讀 query、標頭、來源位址與 body。" },
   { layer: "unhandled", dir: "in", text: "包住內層；內層沒有丟出例外就不介入。" },
   { layer: "locale", dir: "in", text: "Accept-Language: zh-TW，語系定為 zh-TW，寫進 scope state，外層的 message 會用這個語系取字。" },
   { layer: "exc", dir: "in", text: "包住路由；內層丟出有 handler 的例外時，在這裡轉成錯誤外層。" },
 ];
 
-const OUT_HEADERS = (unhandledText: string): Step[] => [
+const ACCESS_SKIP_LOGGED: LogCard = { kind: "skip", text: "不寫：這個請求的 WARNING／ERROR 已經有人記過" };
+
+const OUT_HEADERS = (unhandledText: string, access: Step): Step[] => [
   { layer: "locale", dir: "out", text: "回應開始時加上 Content-Language: zh-TW。" },
   { layer: "unhandled", dir: "out", text: unhandledText },
+  access,
   { layer: "cors", dir: "out", text: "加上 Access-Control-Allow-Origin，瀏覽器讀得到這個回應。" },
   { layer: "corr", dir: "out", text: "加上 X-Correlation-ID，值和外層的 traceId 相同。" },
 ];
@@ -71,14 +81,10 @@ const SCENARIOS: Scenario[] = [
   {
     id: "ok",
     label: "正常",
-    request: "GET /api/v1/health，資料庫正常",
+    request: "GET /api/v1/items/42（只在測試掛載）",
     steps: [
       ...IN_MIDDLEWARE,
-      { layer: "router", dir: "in", text: "依賴注入：get_db 開一個 session，get_health_service 建好 HealthService，接著呼叫 check()。" },
-      { layer: "service", dir: "in", text: "整段查詢包在 5 秒上限裡，呼叫 repository.ping()。" },
-      { layer: "repo", dir: "in", text: "對目前的 session 執行 SELECT 1。" },
-      { layer: "db", dir: "in", text: "回傳 1。" },
-      { layer: "service", dir: "out", text: "回傳 HealthData：status ok、database ok。" },
+      { layer: "router", dir: "in", text: "路由比對到 /api/v1/items/{item_id}，路徑參數 item_id 是 42；handler 不碰資料庫。" },
       {
         layer: "router",
         dir: "out",
@@ -86,7 +92,15 @@ const SCENARIOS: Scenario[] = [
         text: "ok(data, request) 組成功外層：code OK、message「成功」、timestamp 為 UTC 毫秒，traceId 取自 contextvar。",
       },
       { layer: "exc", dir: "out", text: "沒有例外，原樣往外傳。" },
-      ...OUT_HEADERS("沒有例外，不介入。"),
+      ...OUT_HEADERS("沒有例外，不介入。", {
+        layer: "access",
+        dir: "out",
+        text: "回應送完。狀態 200，沒有人記過錯誤，路由也不在安靜清單裡，所以寫一行 INFO。route 是模板 /api/v1/items/{item_id}，不是實際路徑 42，也不含 query。",
+        log: {
+          kind: "line",
+          text: `timestamp=2026-11-20T08:15:30.126Z level=INFO logger=app.access traceId=${TRACE} method=GET route=/api/v1/items/{item_id} status=200 durationMs=2.8 msg=request completed`,
+        },
+      }),
     ],
     status: "200",
     statusTone: "ok",
@@ -94,7 +108,7 @@ const SCENARIOS: Scenario[] = [
   "success": true,
   "code": "OK",
   "message": "成功",
-  "data": { "status": "ok", "database": "ok" },
+  "data": { "found": true },
   "timestamp": "2026-11-20T08:15:30.123Z",
   "traceId": "${TRACE}"
 }`,
@@ -118,7 +132,16 @@ const SCENARIOS: Scenario[] = [
         tone: "warn",
         text: "handle_validation_error 組 422 錯誤外層：code VALIDATION_FAILED，errors 一筆 body／displayName／missing。只留 Pydantic 的 type 與 msg，送進來的值不回顯。",
       },
-      ...OUT_HEADERS("回應已經組好，不介入。"),
+      ...OUT_HEADERS("回應已經組好，不介入。", {
+        layer: "access",
+        dir: "out",
+        tone: "warn",
+        text: "回應送完。狀態 422，沒有人記過錯誤，所以寫一行 WARNING（4xx 用 WARNING，5xx 用 ERROR）。",
+        log: {
+          kind: "line",
+          text: `timestamp=2026-11-20T08:15:30.126Z level=WARNING logger=app.access traceId=${TRACE} method=POST route=/api/v1/probe status=422 durationMs=1.9 msg=request completed`,
+        },
+      }),
     ],
     status: "422",
     statusTone: "client",
@@ -149,10 +172,17 @@ const SCENARIOS: Scenario[] = [
         dir: "out",
         produce: true,
         tone: "error",
-        text: "攔下例外：記一筆 ERROR（traceId、method、path、只有型別與 frame 的 traceback，不含例外訊息），回 500 INTERNAL_ERROR，message 只有通用說明。",
+        text: "攔下例外：記一筆 ERROR（method、實際 path、只有型別與 frame 的 traceback，不含例外訊息；traceId 由 log record 自動帶），標記已記過，回 500 INTERNAL_ERROR，message 只有通用說明。",
+      },
+      {
+        layer: "access",
+        dir: "out",
+        tone: "error",
+        text: "回應送完，但 UnhandledExceptionMiddleware 剛記過 ERROR 並標記已記過，所以這一層不再寫存取紀錄，同一件事不出現兩行。",
+        log: ACCESS_SKIP_LOGGED,
       },
       { layer: "cors", dir: "out", text: "加上 Access-Control-Allow-Origin：500 在 CORS 內側產生，瀏覽器讀得到錯誤外層。" },
-      { layer: "corr", dir: "out", text: "加上 X-Correlation-ID，值和外層的 traceId 相同，和 log 那一筆也相同。" },
+      { layer: "corr", dir: "out", text: "加上 X-Correlation-ID，值和外層的 traceId 相同，和 log 那一筆的 traceId 也相同。" },
     ],
     status: "500",
     statusTone: "server",
@@ -181,7 +211,7 @@ const SCENARIOS: Scenario[] = [
         layer: "service",
         dir: "out",
         tone: "error",
-        text: "認得這是連不上：記一筆 WARNING（traceId 與例外型別），丟出 DatabaseUnavailableError，不串接原例外。",
+        text: "認得這是連不上：記一筆 WARNING（例外型別；traceId 由 log record 自動帶），丟出 DatabaseUnavailableError(already_logged=True)，不串接原例外。",
       },
       { layer: "router", dir: "out", tone: "error", text: "例外穿過；get_db 收到同一個例外，rollback 後關閉 session。" },
       {
@@ -189,9 +219,15 @@ const SCENARIOS: Scenario[] = [
         dir: "out",
         produce: true,
         tone: "error",
-        text: "AppError 的 handler 組 503 錯誤外層：code DATABASE_UNAVAILABLE，不含連線字串或驅動訊息。",
+        text: "AppError 的 handler 看到 already_logged，標記已記過，組 503 錯誤外層：code DATABASE_UNAVAILABLE，不含連線字串或驅動訊息。",
       },
-      ...OUT_HEADERS("回應已經組好，不介入。"),
+      ...OUT_HEADERS("回應已經組好，不介入。", {
+        layer: "access",
+        dir: "out",
+        tone: "error",
+        text: "回應送完，但 Service 已經記過 WARNING 並標記，所以這一層不再寫存取紀錄。",
+        log: ACCESS_SKIP_LOGGED,
+      }),
     ],
     status: "503",
     statusTone: "server",
@@ -413,6 +449,24 @@ export default function BackendRequestPipeline() {
               )}
             </div>
             <p className="mt-1 text-sm leading-relaxed text-indigo-950">{cur.text}</p>
+            {cur.log && (
+              <div
+                className={
+                  "mt-2 rounded-lg border p-2 " +
+                  (cur.log.kind === "line" ? "border-indigo-200 bg-white" : "border-dashed border-slate-200 bg-white")
+                }
+              >
+                <div className="flex items-center gap-1 text-xs font-medium text-slate-500">
+                  <FileText size={12} aria-hidden="true" />
+                  log 行
+                </div>
+                {cur.log.kind === "line" ? (
+                  <code className="mt-1 block break-all font-mono text-xs leading-relaxed text-indigo-950">{cur.log.text}</code>
+                ) : (
+                  <p className="mt-1 text-xs text-slate-500">{cur.log.text}</p>
+                )}
+              </div>
+            )}
           </motion.div>
 
           <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -420,8 +474,11 @@ export default function BackendRequestPipeline() {
               <Fingerprint size={12} aria-hidden="true" />
               traceId {shortTrace(TRACE)}
             </span>
-            <span className="text-slate-500">第一層決定之後，每一步都是同一個值</span>
+            <span className="text-slate-500">第一層決定之後，每一步都是同一個值，log 行也帶它</span>
           </div>
+          <p className="text-xs text-slate-500">
+            另外：GET /api/v1/health 成功（2xx）時不寫存取紀錄，失敗才寫；路由清單由 create_app 傳入。
+          </p>
 
           <div className={"rounded-lg border bg-white p-3 transition-opacity " + (done ? "opacity-100" : "opacity-50")}>
             <div className="flex flex-wrap items-center gap-2">
