@@ -29,6 +29,9 @@ description: 掃描 Label Suite 看板上 Ready 的 issue，排出彼此不衝�
 │  └─ 審查者（general-purpose，新開的，沒寫過這份 diff）
 │       依 doc-writing 的自我檢查清單審 diff，只回報不修改
 │
+├─ Epic 結束後：架構審查者（`code-reviewer`，新開的，沒寫過該 Epic 的程式）
+│    只回報，由主 session 開彙總 issue，見步驟 7 的 §Epic 結束時的架構審查
+│
 └─ SDD 派工：沒有 lead。主 session 自己依序派 `.claude/agents/` 的各個角色
      （`sa`→`sd`∥`ui-ux`→…→`code-reviewer`→`acceptance-verifier`→`ops`），
      全部共用一個 issue、一個分支、一個 worktree，見步驟 5 的 §SDD 類
@@ -242,17 +245,26 @@ gh pr merge <pr> --merge
 
 合併後確認 issue 已經被 `Closes` 關掉，卡片移到 Done，留「已合併」的檢查點。Epic 的最後一張子 issue 完成時，Epic 也移到 Done，然後照下面的「Epic 結束時的架構審查」跑一次。
 
+CI 紅了就修、再 push，最多兩次。第三次還紅，就留一則附上**原始錯誤輸出**的檢查點，卡片留在 In Review，寫進波次報告，等維護者處理。
+
 ### Epic 結束時的架構審查
 
-lint 擋得住單一檔案，擋不住整體慢慢長歪。Epic 移到 Done 之後，對**這個 Epic 動過的程式**做一次審查；Epic 沒有動到 `backend/`、`frontend/`、`e2e/` 的程式就略過。審查不擋 Epic 的 Done。
+lint 擋得住單一檔案，擋不住整體慢慢長歪。Epic 移到 Done 之後，對**這個 Epic 動過的程式**做一次審查；Epic 沒有動到 `backend/`、`frontend/`、`e2e/` 的程式就略過（維護者 2026-11-25 確認）。審查不擋 Epic 的 Done。
 
-1. 主 session 新開一個 general-purpose 審查者，**不能是寫過這個 Epic 任何一行程式的人**。
-2. 給它三樣輸入：Epic 所有已合併 PR 的 diff 與動到的檔案（`gh pr diff`）、`docs/development/adr/`、`docs/development/rules/`。
-3. 要它找三類：新舊寫法並存、重複實作、模組之間的互相依賴。每條發現附檔案與行號、對照的 ADR 或規則、最小的修法。只回報，不改檔案、不開 issue。
-4. 主 session 讀完回報，**自己核對**幾條再收（審查者的回報不是證據），然後開**一張**彙總 issue：`gh issue create --type Task --label task --project "Label Suite"`，標題 `[Task] <Epic 範圍>: 架構審查發現`，內文每條發現一個 checkbox 工作項。卡片放 Todo，由維護者看過再決定哪些拆單；在 Epic 留言連到它。沒有發現就不開，只在 Epic 留一句「架構審查無發現」。
-5. Critical 或 High 的安全問題不進公開 issue，照 `AGENTS.md` 的 Security findings 回報 `SECURITY ESCALATION REQUIRED`；Medium、Low 才列進彙總 issue。
+1. 找出 Epic 的已合併 PR：先列子 issue，再找各自被哪張已合併的 PR 關掉。
 
-CI 紅了就修、再 push，最多兩次。第三次還紅，就留一則附上**原始錯誤輸出**的檢查點，卡片留在 In Review，寫進波次報告，等維護者處理。
+   ```bash
+   for n in $(gh api repos/label-suite/label-suite/issues/<epic>/sub_issues --paginate -q '.[].number'); do
+     gh api graphql -f query='query($n:Int!){repository(owner:"label-suite",name:"label-suite"){issue(number:$n){closedByPullRequestsReferences(first:5,includeClosedPrs:true){nodes{number merged}}}}}' \
+       -F n=$n -q '.data.repository.issue.closedByPullRequestsReferences.nodes[]|select(.merged)|.number'
+   done
+   ```
+
+2. 主 session 新開一個 `code-reviewer`（唯讀，檢查分層與 Hard Rules），它不能寫過這個 Epic 的任何程式。模型依 `CLAUDE.md`：Epic 的 PR 合計 10 個以上檔案用 Opus，否則 Sonnet。
+3. 給它三樣輸入：上面 PR 的 diff 與動到的檔案（`gh pr diff`）、`docs/development/adr/`、`docs/development/rules/`。
+4. 要它找三類：新舊寫法並存、重複實作、模組之間的互相依賴；另外順手看到的安全問題也要回報。每條發現附檔案與行號、對照的 ADR 或規則、最小的修法。只回報，不改檔案、不開 issue。
+5. 主 session 讀完回報，**自己核對**幾條再收（審查者的回報不是證據），然後**先**挑出 Critical 或 High 的安全問題：它們不進任何公開 issue，照 `AGENTS.md` 的 Security findings 回報 `SECURITY ESCALATION REQUIRED`，只寫受影響範圍與緊急程度。
+6. 其餘發現開成**一張**彙總 issue：`gh issue create --type Task --label task --project "Label Suite"`，標題 `[Task] <Epic 範圍>: 架構審查發現`，格式照 `.github/issue-templates.md` 的 Task 範本，每條發現一個 checkbox 工作項。建好後若 Status 是空的，用[看板 ID](#看板-id) 的 Todo 選項設成 Todo，由維護者看過再決定哪些拆單；在 Epic 留言連到它。沒有發現就不開，只在 Epic 留一句「架構審查無發現」。
 
 ## 步驟 8 檢查點留言
 
