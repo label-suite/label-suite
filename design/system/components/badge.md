@@ -66,7 +66,7 @@
 | `dashboard/dashboard`（`#param-scenario-super-admin-data`、`#param-scenario-reviewer`） | `dashboard.layout.css:238`、`:269`、`:278` 的 `.badge` 與 `.badge-error`／`.badge-draft`；任務型別配色來自 `shared/task-type-badge.css` |
 | `task-management/task-list#state-default` | 本頁 `<style>` 重寫（`task-list.html:90`–`:99`），型別配色同上 |
 | `task-management/task-detail`（`#tab-overview`、`#param-status`） | 本頁 `<style>` 重寫（`task-detail.html:115`–`:132`），中性與正式徽章同樣改用 #420 的 token |
-| `annotation/annotation-list`（`#state-default`、`#param-run-type`） | **本頁重寫的 `.badge`**（`annotation-list.html:142`–`:178`），階段徽章 `.badge-dry-run`／`.badge-official` 原本寫死 hex，#420 起改用中性 token 與 `--color-accent*`（`:169`–`:178`）→ `../design-gaps.md` G-02 |
+| `annotation/annotation-list`（`#state-default`、`#param-run-type`） | **本頁重寫的 `.badge`**（`annotation-list.html:155`–`:191`），階段徽章 `.badge-dry-run`／`.badge-official` 原本寫死 hex，#420 起改用中性 token 與 `--color-accent*`（`:182`–`:191`）→ `../design-gaps.md` G-02 |
 | `dataset/dataset-analysis-list`（`#state-default`） | 本頁 `.badge`（`dataset-analysis-list.html:121`）與 `.badge-iaa-*`（`:140`–`:144`）、`.badge-role-pl`／`-rev`（`:146`–`:147`），全用 token；輸出類型用 `task-type-badge.css`（`dataset-analysis-list.html:214` 載入） |
 | `dataset/dataset-analysis-detail`（`#tab-quality`、`#state-quality-*`、`#param-q-state-*`） | 本頁 `.badge-pass`／`-fail`／`-warn`／`-neutral`（`dataset-analysis-detail.html:58`–`:62`）與 `.risk-level-badge`（`:150`–`:154`），全用 token |
 

@@ -1185,7 +1185,7 @@
   document.getElementById('deleteTaskConfirmBtn').addEventListener('click', confirmDeleteModal);
   /* UXC-10：破壞性確認點遮罩不關，只能按「取消」、Esc 或「刪除」離開。
      維護者 2026-11-18 裁定刪除任務也適用（#423, design-gaps G-45）；
-     規格 03-01 任務列表 §刪除任務 第 5 條已改成「點視窗外面不關閉視窗」（Q22）。
+     規格 01-task-list §刪除任務 第 5 條已由 #434 改成「點視窗外面不關閉視窗」（Q22）。
      點遮罩會讓焦點掉到 body，而 modal-focus.js 的 Esc 監聽掛在視窗上，
      所以在遮罩上的 mousedown 取消預設動作，焦點留在視窗裡，Esc 仍然有效。 */
   document.getElementById('deleteTaskModal').addEventListener('mousedown', function(e) {

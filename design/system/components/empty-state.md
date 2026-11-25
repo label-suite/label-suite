@@ -85,9 +85,9 @@
 | `task-management/task-list`（`#state-filtered-empty`、`#param-view-empty`） | **表格內一列**（`createEmptyRow`，`task-list.html:834`–`:858`），不是 `.empty-state` class；兩種文案、只有篩選無結果才有清除鈕 → `../ux-conventions.md` UXC-09 |
 | `task-management/task-detail`（`#tab-annotation-progress`、`#tab-annotation-results`、`#tab-work-log`） | `empty-state-panel`（`annotation-progress.html:157`、`annotation-results.html:164`、`work-log.html:84`） |
 | `task-management/task-new#state-step2` | `empty-state-compact`（`task-config.engine.js:1890`） |
-| `dashboard/dashboard#param-scenario-reviewer` | `empty-state-compact`（`dashboard.js:431`） |
-| `annotation/annotation-list`（`#state-empty`、`#state-filtered-empty`） | `empty-state-page`（`annotation-list.html:508`）；兩種空換文案，只有篩不到才給清除篩選（`renderEmptyState`，`:1923`–`:1938`）→ UXC-09 |
-| `annotation/annotation-list`（`#state-no-task`、`#state-task-not-found`、`#param-notice-no-actionable-review`） | `empty-state-panel`（`#taskNotFound`，`annotation-list.html:467`；`#noActionableNotice`，`role="status"`，`:471`）。沒帶任務時標題是「尚未選擇任務」，與「找不到這個任務」分開（#423）→ `../design-gaps.md` G-48 |
+| `dashboard/dashboard#param-scenario-reviewer` | `empty-state-compact`（`dashboard.js:447`） |
+| `annotation/annotation-list`（`#state-empty`、`#state-filtered-empty`） | `empty-state-page`（`annotation-list.html:527`）；兩種空換文案，只有篩不到才給清除篩選（`renderEmptyState`，`:1958`–`:1973`）→ UXC-09 |
+| `annotation/annotation-list`（`#state-no-task`、`#state-task-not-found`、`#param-notice-no-actionable-review`） | `empty-state-panel`（`#taskNotFound`，`annotation-list.html:480`；`#noActionableNotice`，`role="status"`，`:490`）。沒帶任務時標題是「尚未選擇任務」，與「找不到這個任務」分開（#423）→ `../design-gaps.md` G-48 |
 | `annotation/annotation-workspace#tab-history` | 沒有操作紀錄時 `empty-state-compact`（`annotation-workspace.config.js:2280`） |
 | `dataset/dataset-analysis-list`（`#state-filtered-empty`、`#param-view-empty`、`#param-error`） | 表格內一列的 `empty-state empty-state-cell`（`createEmptyRow`，`dataset-analysis-list.view.js:133`），依參數換文案；清除鈕在工具列。`#param-error` 是同一個容器的錯誤列（`createErrorRow`，`:159`），`.error-title` 加一顆 `.clear-btn` 重試 |
 | `dataset/dataset-analysis-detail`（`#state-stats-empty`、`#param-q-state-dry-run-in-progress`、`#param-q-state-report-pending`、`#param-q-state-report-generating`、`#state-quality-single-label`、`#state-quality-multi-label`、`#state-quality-single-dim`、`#state-quality-relation-identification`） | `empty-state-panel`：統計 `#statsEmpty`（`dataset-analysis-detail.html:281`）、品質 `#qualityEmpty`（`:300`）；四個 quality partial 另有 `empty-state-panel empty-state-compact` |
