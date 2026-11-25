@@ -583,6 +583,78 @@ jobs:
             jq -e '.services.backend.healthcheck.interval == "30s" and (.services.backend.healthcheck.test | join(" ") | contains("/api/v1/health"))' "$RUNNER_TEMP/$file.json" > /dev/null || { echo "::error::$file: backend health check must poll /api/v1/health every 30s"; exit 1; }
           done
 
+      # Trusted proxy (#566, design D2 and D4). Both tiers must pin the same fixed
+      # subnet, a dynamic ip_range and a frontend address outside it, and the backend
+      # must trust only that address by default. The two --env-file flags are layered
+      # on purpose: one flag alone would replace the default .env and drop the required
+      # ${CORS_ALLOWED_ORIGINS:?} variable before any assertion ran. Nothing is started.
+      - name: Assert the trusted proxy settings of both orchestration files
+        run: |
+          printf 'FORWARDED_ALLOW_IPS=192.0.2.7\n' > "$RUNNER_TEMP/override.env"
+          docker compose --env-file .env --env-file "$RUNNER_TEMP/override.env" config --format json > "$RUNNER_TEMP/lite-override.json"
+          POSTGRES_PASSWORD="$GENERATED_POSTGRES_PASSWORD" docker compose -f docker-compose.prod.yml --env-file .env --env-file "$RUNNER_TEMP/override.env" config --format json > "$RUNNER_TEMP/prod-override.json"
+          grep -q 'proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;' frontend/nginx.conf || { echo "::error::nginx must append to X-Forwarded-For with \$proxy_add_x_forwarded_for"; exit 1; }
+          python3 - <<'PY'
+          import ipaddress
+          import json
+          import os
+          import sys
+
+          tmp = os.environ["RUNNER_TEMP"]
+          errors = []
+          POOLS = [ipaddress.ip_network("172.16.0.0/12"), ipaddress.ip_network("192.168.0.0/16")]
+
+
+          def fail(message):
+              errors.append(message)
+
+
+          def load(name):
+              with open(f"{tmp}/{name}.json") as handle:
+                  return json.load(handle)
+
+
+          def facts(tier):
+              cfg = load(tier)
+              try:
+                  pool = cfg["networks"]["default"]["ipam"]["config"][0]
+                  subnet = ipaddress.ip_network(pool["subnet"])
+                  ip_range = ipaddress.ip_network(pool["ip_range"])
+                  frontend = ipaddress.ip_address(cfg["services"]["frontend"]["networks"]["default"]["ipv4_address"])
+                  allow = cfg["services"]["backend"]["environment"]["FORWARDED_ALLOW_IPS"]
+              except (KeyError, IndexError, TypeError):
+                  fail(f"{tier}: needs a default network with ipam subnet and ip_range, a frontend ipv4_address and a backend FORWARDED_ALLOW_IPS")
+                  return None
+              if not ip_range.subnet_of(subnet):
+                  fail(f"{tier}: ip_range {ip_range} is not inside subnet {subnet}")
+              if frontend not in subnet or frontend in ip_range:
+                  fail(f"{tier}: frontend {frontend} must be in {subnet} and outside ip_range {ip_range}")
+              if any(subnet.overlaps(pool) for pool in POOLS):
+                  fail(f"{tier}: subnet {subnet} overlaps a Docker default address pool")
+              items = [item.strip() for item in allow.split(",")]
+              if allow != str(frontend):
+                  fail(f"{tier}: FORWARDED_ALLOW_IPS default {allow!r} must equal the frontend address {frontend}")
+              if "*" in items or any("/" in item and ipaddress.ip_network(item, strict=False).prefixlen == 0 for item in items):
+                  fail(f"{tier}: FORWARDED_ALLOW_IPS must not trust everyone")
+              return (str(subnet), str(ip_range), str(frontend))
+
+
+          lite, prod = facts("lite"), facts("prod")
+          if lite is not None and prod is not None and lite != prod:
+              fail(f"the tiers must share one subnet, ip_range and frontend address: {lite} != {prod}")
+
+          for tier in ("lite", "prod"):
+              env = load(f"{tier}-override")["services"]["backend"]["environment"]
+              if env.get("FORWARDED_ALLOW_IPS") != "192.0.2.7":
+                  fail(f"{tier}: a FORWARDED_ALLOW_IPS in .env must override the default")
+              if not env.get("CORS_ALLOWED_ORIGINS"):
+                  fail(f"{tier}: the layered env files must keep CORS_ALLOWED_ORIGINS")
+
+          for message in errors:
+              print(f"::error::{message}")
+          sys.exit(1 if errors else 0)
+          PY
+
       # The browser check runs on the production tier only, but Chromium is
       # installed before the first tier starts so a slow download cannot sit
       # between a running stack and its checks.
