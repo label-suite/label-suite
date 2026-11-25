@@ -81,6 +81,8 @@ services:
       # /docs, /docs/oauth2-redirect, /redoc and /openapi.json routes (#592).
       # The pin keeps them off even though nginx is the only public entry (ADR-008 D1).
       API_DOCS_ENABLED: "false"
+      # Passed from .env so deployers can tune log noise; INFO when unset (#567 Q14).
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
     healthcheck:
       # The slim base image has no curl, so the image's own Python makes the
       # call; urlopen raises on any non-2xx status (system-design D5). The check

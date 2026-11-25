@@ -5,7 +5,8 @@ two layers so that migrations can run without app-only settings:
 
 - ``DatabaseSettings`` holds ``DATABASE_URL`` and ``SQLITE_PATH`` and derives the
   async SQLAlchemy URL. Alembic's ``env.py`` reads only this class.
-- ``Settings`` extends it with the CORS and API-docs settings the API needs.
+- ``Settings`` extends it with the CORS, API-docs and log-level settings the API
+  needs.
 
 Always build either class through ``load_settings`` so a validation failure turns
 into a ``ConfigError`` that names the environment variable and the reason but
@@ -13,13 +14,16 @@ never echoes the configured value (security-agent-rules S9).
 """
 
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 from urllib.parse import urlsplit
 
 from pydantic import ValidationError, field_validator
 from pydantic_settings import BaseSettings, NoDecode
 
-__all__ = ["ConfigError", "DatabaseSettings", "Settings", "load_settings"]
+__all__ = ["ConfigError", "DatabaseSettings", "LogLevel", "Settings", "load_settings"]
+
+LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+"""The accepted ``LOG_LEVEL`` values, upper case (clarification Q12)."""
 
 _ASYNC_POSTGRES_SCHEME = "postgresql+asyncpg"
 _ACCEPTED_POSTGRES_SCHEMES = frozenset({"postgresql", "postgresql+asyncpg", "postgres"})
@@ -81,7 +85,7 @@ class DatabaseSettings(BaseSettings):
 
 
 class Settings(DatabaseSettings):
-    """Full API settings: the database layer plus CORS.
+    """Full API settings: the database layer plus CORS, API docs and the log level.
 
     Attributes:
         cors_allowed_origins: The explicit origin list (the only required
@@ -91,11 +95,24 @@ class Settings(DatabaseSettings):
         api_docs_enabled: Whether the built-in ``/docs``, ``/docs/oauth2-redirect``,
             ``/redoc`` and ``/openapi.json`` routes are served; the production
             compose file pins it to false.
+        log_level: The lowest level the whole backend writes, from
+            ``LOG_LEVEL``; case-insensitive, normalised to upper case and
+            ``INFO`` by default. The database engine, pool and driver loggers do
+            not follow it (``configure_logging`` pins them to ``WARNING``), and
+            ``DatabaseSettings`` (Alembic) never reads it.
     """
 
     cors_allowed_origins: Annotated[list[str], NoDecode]
     cors_allow_credentials: bool = True
     api_docs_enabled: bool = True
+    log_level: LogLevel = "INFO"
+
+    @field_validator("log_level", mode="before")
+    @classmethod
+    def _upper_case_log_level(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            return value.upper()
+        return value
 
     @field_validator("cors_allowed_origins", mode="before")
     @classmethod

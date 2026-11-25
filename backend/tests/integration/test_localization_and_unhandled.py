@@ -164,7 +164,8 @@ async def test_unhandled_exception_log_has_the_trace_id_and_no_request_content(
     assert len(errors) == 1
     record = errors[0]
     logged = record.getMessage() + (caplog.text or "")
-    assert trace_id in record.getMessage()
+    assert getattr(record, "trace_id", None) == trace_id
+    assert "traceId=" not in record.getMessage()
     assert CRASH_PATH in record.getMessage()
     assert "RuntimeError" in record.getMessage()
     assert "Traceback" in record.getMessage()

@@ -6,20 +6,31 @@ context variables survive across tasks and streaming responses are not buffered.
 
 import logging
 import re
+import time
 import traceback
 import uuid
+import weakref
+from typing import Any
 
+from fastapi.routing import iter_route_contexts
 from starlette.datastructures import Headers, MutableHeaders
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from app.core.envelope import correlation_id_var, current_trace_id, error_response
+from app.core.envelope import correlation_id_var, error_response
 from app.core.errors import NotAcceptableError
 from app.core.i18n import MessageCatalog, resolve_locale
+from app.core.log_config import (
+    ACCESS_LOGGER_NAME,
+    UNMATCHED_ROUTE,
+    is_error_logged,
+    mark_error_logged,
+)
 from app.core.log_safety import escape_for_log
 from app.core.paths import API_V1_PREFIX
 
 __all__ = [
     "CORRELATION_ID_HEADER",
+    "AccessLogMiddleware",
     "CorrelationIdMiddleware",
     "LocaleMiddleware",
     "UnhandledExceptionMiddleware",
@@ -139,12 +150,16 @@ class UnhandledExceptionMiddleware:
     ``Access-Control-Allow-Origin`` and ``X-Correlation-ID`` (Starlette's
     ``ServerErrorMiddleware`` sits outside both). The response body holds only
     the generic message; the exception goes to one ``ERROR`` log record with the
-    trace ID, method and path (escaped by ``escape_for_log``) and a traceback of
-    exception types and frames (``format_exception_without_text``), and never the
-    exception messages, query, body, headers or cookies.
+    method and path (escaped by ``escape_for_log``) and a traceback of exception
+    types and frames (``format_exception_without_text``), and never the
+    exception messages, query, body, headers or cookies. The trace ID comes with
+    the record (``trace_id``), not the message. Right after logging, the request
+    is marked as already logged (``mark_error_logged``) so the access log writes
+    nothing more for it.
 
     When the response has already started nothing can be rewritten, so the
-    exception is logged and re-raised. Non-HTTP scopes pass through unchanged.
+    exception is logged, marked and re-raised. Non-HTTP scopes pass through
+    unchanged.
     """
 
     def __init__(self, app: ASGIApp, *, catalog: MessageCatalog) -> None:
@@ -172,12 +187,12 @@ class UnhandledExceptionMiddleware:
             # No exc_info: the standard formatter would print str(exc), which can
             # hold request or database data. The traceback keeps types and frames.
             logger.error(
-                "Unhandled exception (traceId=%s) %s %s\n%s",
-                escape_for_log(current_trace_id()),
+                "Unhandled exception %s %s\n%s",
                 escape_for_log(scope.get("method", "")),
                 escape_for_log(scope.get("path", "")),
                 format_exception_without_text(exc),
             )
+            mark_error_logged(scope)
             if response_started:
                 raise
             response = error_response(
@@ -192,6 +207,152 @@ class UnhandledExceptionMiddleware:
 
 def _is_api_v1(path: str) -> bool:
     return path == API_V1_PREFIX or path.startswith(f"{API_V1_PREFIX}/")
+
+
+# One entry per route object: (route, full template, compiled path regex or None).
+_TemplateTable = dict[int, list[tuple[Any, str, re.Pattern[str] | None]]]
+_template_tables: "weakref.WeakKeyDictionary[Any, _TemplateTable]" = weakref.WeakKeyDictionary()
+
+
+def _build_template_table(app: Any) -> _TemplateTable:
+    table: _TemplateTable = {}
+    for context in iter_route_contexts(getattr(app, "routes", [])):
+        template = context.path_format
+        if template is None:
+            continue
+        regex = getattr(context, "path_regex", None)
+        route = context.original_route
+        table.setdefault(id(route), []).append((route, template, regex))
+    return table
+
+
+def _lookup_template(table: _TemplateTable, route: Any, route_path: str) -> str | None:
+    candidates = [entry for entry in table.get(id(route), []) if entry[0] is route]
+    if len(candidates) == 1:
+        return candidates[0][1]
+    for _, template, regex in candidates:
+        if regex is not None and regex.match(route_path):
+            return template
+    return None
+
+
+def route_template(scope: Scope) -> str | None:
+    """Return the full route template the request matched, e.g. ``/api/v1/items/{item_id}``.
+
+    Uses FastAPI's public ``iter_route_contexts`` on ``scope["app"]`` to map the
+    route object routing put in ``scope["route"]`` to its template including the
+    ``include_router`` prefixes (design D5); it never reads the private
+    ``scope["fastapi"]``. The table is built on first use per app and cached; a
+    miss rebuilds it once. When one route object is mounted under several
+    prefixes, the template whose path regex matches the request path wins.
+
+    Returns:
+        The template, or ``None`` when no route matched (``404``, a ``406`` from
+        ``LocaleMiddleware``) or the route cannot be found in the table.
+    """
+    route = scope.get("route")
+    app = scope.get("app")
+    if route is None or app is None:
+        return None
+    path: str = scope.get("path", "")
+    root_path: str = scope.get("root_path", "")
+    route_path = path[len(root_path) :] if root_path and path.startswith(root_path) else path
+
+    table = _template_tables.get(app)
+    if table is not None:
+        template = _lookup_template(table, route, route_path)
+        if template is not None:
+            return template
+    table = _build_template_table(app)
+    _template_tables[app] = table
+    return _lookup_template(table, route, route_path)
+
+
+def level_for_status(status: int) -> int:
+    """Return the access-log level: ``INFO`` below 400, ``WARNING`` for 4xx, ``ERROR`` above."""
+    if status < 400:
+        return logging.INFO
+    if status < 500:
+        return logging.WARNING
+    return logging.ERROR
+
+
+class AccessLogMiddleware:
+    """Write one access-log line per ``/api/v1`` request (spec server-logging).
+
+    Mount it inside CORS and outside ``UnhandledExceptionMiddleware`` (design
+    D1), so it sees the final status, including the ``500`` that layer builds
+    and the ``406`` of ``LocaleMiddleware``, while CORS preflights never reach
+    it. Non-HTTP scopes and paths outside ``/api/v1`` pass through unlogged.
+
+    Once the inner app is done it writes nothing when an inner layer already
+    logged the error (``is_error_logged``) or when the status is 2xx and the
+    route template is in ``quiet_success_routes``; otherwise it writes one record
+    to the ``app.access`` logger at ``level_for_status``. The record's extras
+    are ``http_method`` (escaped), ``http_route`` (the template or
+    ``<unmatched>``), ``http_status`` and ``duration_ms`` (one decimal, from
+    entering this layer to the last response body chunk, or to the inner app
+    returning if that chunk was never sent). It never reads the query string,
+    headers, client address or body.
+
+    When the inner app raises, the same rules apply, with ``500`` as the
+    status if no response had started, and the exception is re-raised.
+
+    Args:
+        app: The inner ASGI app.
+        quiet_success_routes: Route templates whose 2xx responses are not
+            logged; ``create_app`` passes the health check's, so core code does
+            not hard-code module paths.
+    """
+
+    def __init__(self, app: ASGIApp, *, quiet_success_routes: frozenset[str]) -> None:
+        """Wrap ``app``; 2xx responses on ``quiet_success_routes`` are not logged."""
+        self.app = app
+        self.quiet_success_routes = quiet_success_routes
+        self.logger = logging.getLogger(ACCESS_LOGGER_NAME)
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        """Handle one ASGI connection."""
+        if scope["type"] != "http" or not _is_api_v1(scope["path"]):
+            await self.app(scope, receive, send)
+            return
+
+        start = time.perf_counter()
+        status: int | None = None
+        finished: float | None = None
+
+        async def send_tracking_response(message: Message) -> None:
+            nonlocal status, finished
+            if message["type"] == "http.response.start":
+                status = int(message["status"])
+            await send(message)
+            if message["type"] == "http.response.body" and not message.get("more_body", False):
+                finished = time.perf_counter()
+
+        try:
+            await self.app(scope, receive, send_tracking_response)
+        except Exception:
+            self._emit(scope, status if status is not None else 500, start, finished)
+            raise
+        self._emit(scope, status if status is not None else 500, start, finished)
+
+    def _emit(self, scope: Scope, status: int, start: float, finished: float | None) -> None:
+        if is_error_logged(scope):
+            return
+        template = route_template(scope)
+        if 200 <= status < 300 and template in self.quiet_success_routes:
+            return
+        end = finished if finished is not None else time.perf_counter()
+        self.logger.log(
+            level_for_status(status),
+            "request completed",
+            extra={
+                "http_method": escape_for_log(scope.get("method", "")),
+                "http_route": template if template is not None else UNMATCHED_ROUTE,
+                "http_status": status,
+                "duration_ms": round((end - start) * 1000, 1),
+            },
+        )
 
 
 class LocaleMiddleware:
