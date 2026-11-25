@@ -156,7 +156,7 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 
 :::note{title="T8 的反例與檢查方式" collapsible}
 - **反例**：`page.locator('.task-row > td:nth-child(3)')`；`await page.waitForTimeout(3000)`；在每個 spec 開頭走一次登入表單
-- **檢查方式**：CI 的 `e2e` job 在跑旅程前先跑 `pnpm --filter e2e test:static`，`e2e/static/e2e-static-checks.mjs` 掃 `e2e/` 的每個檔案：`waitForTimeout(`、`setTimeout(`、`sleep(` 這類固定等待，以及 `playwright.config.ts` 以外出現的 `localhost`、`127.0.0.1` 與埠號，命中即失敗。CSS locator **待建置**；一個 spec 一條旅程、不各自重新登入沒有機械檢查，靠審查
+- **檢查方式**：CI 的 `e2e` job 在跑旅程前先跑 `pnpm --filter e2e test:static`，`e2e/static/e2e-static-checks.mjs` 在 `*.spec.ts` 與 `shared/**` 裡找 `waitForTimeout(`、`setTimeout(`、`sleep(` 這類固定等待，並在 `e2e/` 中 `playwright.config.ts` 以外的每個檔案找 `localhost`、`127.0.0.1` 與埠號，命中即失敗。CSS locator **待建置**；一個 spec 一條旅程、不各自重新登入沒有機械檢查，靠審查
 :::
 
 ### T9 開發前要落實的自動 gate

@@ -228,7 +228,7 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 | Lite | SQLite | 本機試用、單人、評估 | 預設，不需設定 |
 | 正式 | PostgreSQL 16 | 多人、並發寫入、部署 | 設 `DATABASE_URL` |
 
-Lite 層的資料放在具名 volume `label-suite-data`（掛在 `/app/data`），必須持久化，而且 `backend` 與 `worker` 要掛同一個 volume，否則 worker 寫的資料 API 讀不到。
+Lite 層的資料放在持久化的具名 volume `label-suite-data`（掛在 `/app/data`），目前由 `migrate` 與 `backend` 掛載；之後加入的 `worker` 也要掛同一個 volume，否則 worker 寫的資料 API 讀不到。
 
 :::note{title="驅動與設定存放" collapsible}
 同一層的 API 與 worker 用不同驅動，因為 Celery 跑在同步執行緒裡，不能用 async engine：
