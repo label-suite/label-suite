@@ -7,7 +7,11 @@ __all__ = ["HealthRepository"]
 
 
 class HealthRepository:
-    """Runs the health query on the request's session."""
+    """Runs the health query on the request's session.
+
+    Args:
+        session: The request-scoped async session the query runs on.
+    """
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session

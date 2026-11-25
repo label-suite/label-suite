@@ -8,9 +8,9 @@ __all__ = ["escape_for_log"]
 
 
 def escape_for_log(value: object) -> str:
-    """Return ``value`` as one log-safe line.
+    r"""Return ``value`` as one log-safe line.
 
-    Backslashes, control characters (``\\n``, ``\\r``, ``\\t``, ``\\x1b``, ...) and
+    Backslashes, control characters (``\n``, ``\r``, ``\t``, ``\x1b``, ...) and
     non-ASCII characters are written as Python escape sequences, so a
     request-derived value can never start a forged log line or carry terminal
     control sequences (log injection, Hard Rule 9).

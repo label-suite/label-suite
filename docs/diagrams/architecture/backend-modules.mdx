@@ -458,7 +458,6 @@ cd backend && uv run python -m app.scripts.export_openapi
 | Nginx 與安全標頭 | 回應不帶 CSP 等安全標頭 | [#568](https://github.com/label-suite/label-suite/issues/568) |
 | 監控、告警與錯誤追蹤 | 出錯時只能看 log，沒有人會被通知 | [ADR-008 的 D4](../../development/adr/008-deployment-and-operations.mdx#d4-觀測性只做-ai_runs監控與錯誤追蹤本期不做) |
 | CI 的後端檢查：兩種資料庫的 pytest、ruff、mypy、契約漂移、分層 import 方向 | 這些檢查目前只在本機跑，PR 不會因為違反而失敗 | [#506](https://github.com/label-suite/label-suite/issues/506) |
-| `pyproject.toml` 沒有設 mypy strict | 本機直接跑 `uv run mypy app` 不是 strict | [#524](https://github.com/label-suite/label-suite/issues/524) |
 
 ## 決策紀錄
 

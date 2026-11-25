@@ -31,17 +31,26 @@ target-version = "py312"
 line-length = 100
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "S", "ASYNC"]
+select = ["E", "F", "I", "UP", "B", "S", "ASYNC", "D"]
+# Constructor parameters go in the class docstring's Args: section (B2).
+ignore = ["D107"]
 
 [tool.ruff.lint.isort]
 # backend/alembic/ (the migration scripts) would otherwise make "alembic" look first-party.
 known-third-party = ["alembic"]
 
+[tool.ruff.lint.pydocstyle]
+# B2 exempts private helpers. No rule is needed for that: ruff does not check
+# names that start with "_", so they stay exempt by default.
+convention = "google"
+
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101"]
+"tests/**" = ["S101", "D"]
+"alembic/**" = ["D"]
 
 [tool.mypy]
 plugins = ["pydantic.mypy"]
+strict = true
 
 [tool.pydantic-mypy]
 init_forbid_extra = true
