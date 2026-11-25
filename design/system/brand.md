@@ -100,7 +100,7 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 **規則：全部中文介面文案用「你」，不用「您」。**維護者裁定（2026-11-18）。
 
 - 動作與後果說明本來就用「你」（例：`profile.html:1227`「除非你回到『密碼設定』重新設一組」），區塊副標與成功通知也一律改「你」（例：`profile.html:1179`「修改你的姓名與聯絡方式」、`:1221`「你現在可使用電子郵件與密碼登入」、`register.html:541`「填寫以下資訊以建立你的帳號」）。
-- prototype 原本有 13 行用「您」，已在 #418 改成「你」，列在 [§與 prototype 的落差](#與-prototype-的落差)。規格書 `docs/specs/01-account/04-profile.mdx:131` 的副標題也已在 #461 改成「你」。
+- prototype 原本有 13 行用「您」，已在 #418 改成「你」，列在 [§與 prototype 的落差](#與-prototype-的落差)。規格書 `docs/specs/01-account/04-profile.mdx:133` 的副標題也已在 #461 改成「你」。
 
 ### 按鈕用語
 

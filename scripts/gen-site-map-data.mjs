@@ -45,8 +45,6 @@ export const EXCLUDED_FEATURES = [
   // Page scope
   "這一頁定什麼、不定什麼",
   // Loading, empty and load-failure screen states
-  "還在載入與載入失敗",
-  "任務列表沒有任務時",
   "空狀態與載入失敗",
   "載入中、空的與載入失敗",
   "空的與找不到",
@@ -60,8 +58,6 @@ export const EXCLUDED_FEATURES = [
   // Language switching
   "語言切換",
   "語系切換不重新載入",
-  // Links out to other pages
-  "導向其他頁面",
 ];
 
 const SPEC_FILE_RE = /^0\d-[\w-]+\/0\d-[\w-]+\.mdx$/;
