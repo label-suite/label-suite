@@ -73,7 +73,7 @@
 
 ### Requirement: 單一入口清單只有一個來源，無法機械檢查的項目要寫明
 
-規則文件 SHALL 有且只有一處定義後端單一入口清單與各入口的禁止清單，共七項：寄信、Google OIDC、取得目前使用者、對外 HTTP 客戶端、發 session cookie 的 helper、CSRF 驗證 middleware、資料庫 session 取得。有專屬第三方套件的三項標明由分層檢查擋下；其餘四項標「待建置」並寫明原因。「尚未檢查」寫明標準庫的 HTTP 客戶端無法被擋，適用路徑只有 `backend/app/**`。其他規則的檢查方式 MUST 只指向該清單。
+規則文件 SHALL 有且只有一處定義後端單一入口清單與各入口的禁止清單，共七項：寄信、Google OIDC、取得目前使用者、對外 HTTP 客戶端、發 session cookie 的 helper、CSRF 驗證 middleware、資料庫 session 取得。有專屬第三方套件的三項標明由分層檢查擋下；其餘四項標「待建置」並寫明原因。「尚未檢查」寫明標準庫的 HTTP 客戶端無法被擋，適用路徑只有 `backend/app/**`。其他規則的檢查方式 MUST 只指向該清單。本 Requirement 的三個 Scenario 沒有常駐測試，由 tasks 7.3 的文件交叉核對（`grep -F` 比對契約名稱與禁止清單）與 acceptance 的文件閱讀證明。
 
 來源：issue #563 工作項 1、6；Epic #560；backend-agent-rules B1、B3、B5、B12（新）；security-agent-rules S1、S2；ADR-004 D3；clarification Q1、Q7、Q10、N1、N5、N8。
 
@@ -94,7 +94,7 @@
 
 ### Requirement: `app` 底下每個頂層套件都受入口契約檢查
 
-`backend/app/` 底下的每一個頂層套件或模組，SHALL 不是已列入每一條入口契約的檢查來源，就是已登記的入口套件；兩者皆非時，後端測試 MUST 失敗並指出該套件名。已登記的入口套件 MUST NOT 同時出現在任何入口契約的檢查來源內。今天沒有已登記的入口套件。
+`backend/app/` 底下的每一個頂層套件或模組，SHALL 不是已列入每一條入口契約的檢查來源，就是已登記的入口套件；兩者皆非時，後端測試 MUST 失敗並指出該套件名。檢查來源寫成整個 `app`（`app` 本身）時，視為已涵蓋所有頂層套件，守門測試 MUST 接受，不得當成漏列。已登記的入口套件 MUST NOT 同時出現在任何入口契約明列的檢查來源內。今天沒有已登記的入口套件。
 
 來源：issue #563 工作項 2；Epic #560；backend-agent-rules B12（新）；clarification Q3、N6；system-design §守門測試。
 
@@ -113,6 +113,11 @@
 - **WHEN** 某條入口契約的檢查來源少列了 `app` 底下既有的頂層套件，執行守門測試
 - **THEN** 測試失敗，訊息點名該契約與缺少的套件
 
+#### Scenario: 檢查來源寫成整個 app 時通過守門測試
+
+- **WHEN** 某條入口契約的檢查來源是整個 `app`，且入口套件在 `app/core` 之內，執行守門測試
+- **THEN** 測試不因漏列頂層套件而失敗
+
 #### Scenario: 既有的 app 通過守門測試
 
 - **WHEN** 在本 change 合併時的 `backend/` 執行守門測試
@@ -126,8 +131,8 @@
 
 #### Scenario: 未歸類的第三方套件使測試失敗
 
-- **WHEN** 樣本樹中某檔 `import requests`，而 `requests` 不在一般套件清單也不在任何入口的套件清單，執行分類測試
-- **THEN** 測試失敗，訊息點名 `requests`，並說明要歸為一般套件或登記為入口的套件
+- **WHEN** 樣本樹中某檔 `import yaml`，而 `yaml` 不在傳入的一般套件清單，也不在傳入的任何入口套件清單，執行分類測試
+- **THEN** 測試失敗，訊息點名 `yaml`，並說明要歸為一般套件或登記為入口的套件
 
 #### Scenario: 標準庫不需歸類
 
@@ -160,11 +165,6 @@
 - **WHEN** 樣本樹中 `health` 模組的 router import `other` 模組的 service，執行後端分層檢查
 - **THEN** 檢查以非 0 結束，輸出指出「Modules do not import each other」被違反，以及從 `app.modules.health.router` 到 `app.modules.other.service` 的 import 鏈
 
-#### Scenario: 新增的模組也受跨模組檢查
-
-- **WHEN** 樣本樹新增第三個模組，其 service import `health` 模組的 schemas，執行後端分層檢查
-- **THEN** 檢查以非 0 結束，並指出「Modules do not import each other」被違反
-
 #### Scenario: 組裝點 import 多個模組不違反獨立性
 
 - **WHEN** 樣本樹中 `app/main.py` 同時 import 兩個模組的 router，執行後端分層檢查
@@ -175,11 +175,6 @@
 任何模組的 router SHALL 只被 `app/main.py` import；其他任何檔案（包含同一模組與其他模組的 service、repository）import router 時，分層檢查 MUST 以非 0 結束，並指出被違反的契約與 import 鏈。
 
 來源：issue #563 工作項 2、5；Epic #560；backend-agent-rules B1、B12（新）；ADR-003 D3；clarification Q5。
-
-#### Scenario: 其他模組的 service import router 時檢查失敗
-
-- **WHEN** 樣本樹中 `health` 模組的 service import `other` 模組的 router，執行後端分層檢查
-- **THEN** 檢查以非 0 結束，並指出「Only the assembly point imports routers」被違反
 
 #### Scenario: 同一模組內的 service import 自己的 router 時檢查失敗
 
@@ -193,7 +188,7 @@
 
 ### Requirement: 檢查豁免必須帶理由與來源，過期即失敗
 
-契約若以 `ignore_imports` 放行某條 import，每一條放行 MUST 在設定檔緊接其上的註解寫明理由與來源（issue 編號或規則編號），否則後端測試 MUST 失敗並指出該條。任何契約 MUST NOT 設定關閉「放行項已不存在」警示的選項，設定時後端測試 MUST 失敗；因此放行項在其所指的 import 不再存在時，分層檢查 MUST 以非 0 結束。今天沒有任何豁免，也沒有白名單。
+契約若以 `ignore_imports` 放行某條 import，設定檔 MUST 把 `ignore_imports` 寫成多行陣列、每條放行各佔一行，且每一條放行 MUST 在緊接其上的註解寫明理由與來源（issue 編號或規則編號）；單行陣列含任一條放行，或任一條缺理由與來源，後端測試 MUST 失敗並指出該條。任何契約 MUST NOT 設定關閉「放行項已不存在」警示的選項，設定時後端測試 MUST 失敗；因此放行項在其所指的 import 不再存在時，分層檢查 MUST 以非 0 結束。今天沒有任何豁免，也沒有白名單。
 
 來源：issue #563 工作項 4；Epic #560；backend-agent-rules B12（新）；clarification Q6、N6；system-design §Q6。
 
@@ -201,6 +196,11 @@
 
 - **WHEN** 樣本設定檔的某條 `ignore_imports` 緊接其上沒有註解，執行豁免註解測試
 - **THEN** 測試失敗，訊息點名該契約與該條放行
+
+#### Scenario: 單行陣列的放行項使測試失敗
+
+- **WHEN** 樣本設定檔的某條契約把 `ignore_imports` 寫成單行陣列且含至少一條放行，執行豁免註解測試
+- **THEN** 測試失敗，訊息點名該契約，並說明要改成每條一行的多行陣列
 
 #### Scenario: 註解沒有來源時測試失敗
 

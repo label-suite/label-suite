@@ -223,7 +223,7 @@ Q2 其實是兩個問題，sa 合在一起問，設計上要拆開，因為答�
 | `app.main` 同時 import 兩個模組的 router                                   | 通過                                                                             |
 | 模組 A 的 service import 模組 B 的 router                                  | `Only the assembly point imports routers BROKEN`                                 |
 | 樹中新增 `app/stray/__init__.py`                                           | 守門測試失敗並點名 `stray`                                                       |
-| 在 tmp 樹的某檔 `import requests`，`requests` 不在任何清單                 | `unclassified_imports` 回傳 `['requests']`                                       |
+| 在 tmp 樹的某檔 `import yaml`，`yaml` 不在任何清單                         | `unclassified_imports` 回傳 `['yaml']`                                           |
 
 **對真樹的證明**：issue 工作項 5 要求「先對刻意違規的樣本確認會失敗」，常駐樣本滿足；`acceptance.md` 另記一次人工步驟（在暫存複本放一個違規檔、跑 `lint-imports` 看到非零結束碼）供抽查，不是必要路徑。
 
