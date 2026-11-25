@@ -181,7 +181,7 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 | :--- | :--- | :--- |
 | Python lint 與型別檢查 | [backend-agent-rules.mdx](backend-agent-rules.mdx) B2（`mypy --strict`、`ruff`）、B11（函式複雜度與檔案行數上限） | `backend-sqlite`：`uv run ruff check .`、`uv run ruff format --check .`、`uv run mypy --strict app` |
 | TypeScript strict 與 React Hooks | [frontend-agent-rules.mdx](frontend-agent-rules.mdx) F2、F3、F12 | `frontend`：`pnpm --filter frontend lint`、`pnpm --filter frontend typecheck` |
-| import 邊界（前端分層、後端分層） | F1 與 B1 | `backend-sqlite`：`uv run lint-imports`；`frontend`：同上的 lint |
+| import 邊界（前端分層、後端分層與單一入口） | F1、B1 與 B12 已建置的契約 | `backend-sqlite`：`uv run lint-imports`；`frontend`：同上的 lint |
 | OpenAPI 與前端 client 的 drift | [api-agent-rules.mdx](api-agent-rules.mdx) A5 | `api-contract` |
 | migration 在 SQLite 與 PostgreSQL 兩層都能跑 | B6、B7 與本文 T4 | `backend-sqlite`、`backend-postgres`（後者任何測試 skipped 即失敗） |
 | 授權與答案隔離的回歸 | [security-agent-rules.mdx](security-agent-rules.mdx) S5、S10 與本文 T7 | 未建成 |
