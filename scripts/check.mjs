@@ -36,10 +36,18 @@ const CONTRACT_PATHS = [
   "frontend/src/api/generated",
 ];
 
-/** Where the frontend boundary tests (frontend/build/eslint-config.test.ts) write their probe files. */
+/**
+ * Where the frontend lint probe tests write their probe files: the layer-boundary
+ * tests (frontend/build/eslint-config.test.ts) and the size and complexity tests
+ * (frontend/build/size-limits-config.test.ts).
+ */
 const PROBE_NAME = "boundary-probe.tsx";
 const PROBE_DIRS = ["frontend/src/pages"];
-const PROBE_FILES = ["frontend/src/components/boundary-probe.tsx"];
+const PROBE_FILES = [
+  "frontend/src/components/boundary-probe.tsx",
+  "frontend/src/components/size-probe.tsx",
+  "frontend/src/components/size-probe.test.tsx",
+];
 
 const PG_SKIP_MESSAGE = "PostgreSQL 那一輪已跳過：未設 TEST_DATABASE_URL";
 
@@ -196,8 +204,9 @@ async function executeStep(step, context) {
     const probes = findProbes(root);
     for (const probe of probes) {
       say(
-        `Found ${probe}: a file left behind by an interrupted frontend boundary test ` +
-          `(frontend/build/eslint-config.test.ts). Delete it and run check again.`,
+        `Found ${probe}: a file left behind by an interrupted frontend lint probe test ` +
+          `(frontend/build/eslint-config.test.ts or size-limits-config.test.ts). ` +
+          `Delete it and run check again.`,
       );
     }
     return probes.length === 0

@@ -233,6 +233,9 @@ describe("the leftover probe check", () => {
     "frontend/src/pages/boundary-probe.tsx",
     // Not named by the spec, but written by the same boundary test file and just as fatal to lint.
     "frontend/src/components/boundary-probe.tsx",
+    // Written by the size and complexity probe tests (frontend/build/size-limits-config.test.ts).
+    "frontend/src/components/size-probe.tsx",
+    "frontend/src/components/size-probe.test.tsx",
   ];
   for (const probe of PROBES) {
     test(`${probe} fails the run before lint, is explained, and is not deleted`, async () => {

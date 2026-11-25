@@ -4,9 +4,12 @@ node_modules/
 # is read by the orchestration files and the root commands (Hard Rule 8)
 .env
 
-# Leftovers of the frontend layer-boundary probe tests (probes in pages/ and components/) if interrupted
+# Leftovers of the frontend lint probe tests if interrupted: the layer-boundary
+# probes (pages/ and components/) and the size and complexity probes (components/)
 frontend/src/pages/**/boundary-probe.tsx
 frontend/src/components/boundary-probe.tsx
+frontend/src/components/size-probe.tsx
+frontend/src/components/size-probe.test.tsx
 
 # Agent worktrees (issue-dispatch creates one per issue)
 .claude/worktrees/

@@ -1,6 +1,6 @@
 ---
 title: '前端開發規範'
-description: '分層與允許 import、型別安全、Hooks、狀態的三個去處、重用與不過度抽象、design token 的映射、圖示與 SVG、四種畫面狀態與表單、無障礙最低要求、日期與時區、註解與 JSDoc。附來源逐條對照。'
+description: '分層與允許 import、型別安全、Hooks、狀態的三個去處、重用與不過度抽象、design token 的映射、圖示與 SVG、四種畫面狀態與表單、無障礙最低要求、日期與時區、註解與 JSDoc、檔案與函式長度與複雜度上限。附來源逐條對照。'
 category: '開發說明'
 tags: [開發說明, Agent, 規範, 前端]
 createdAt: '2026-11-10'
@@ -9,10 +9,10 @@ updatedAt: '2026-11-25'
 
 # 前端開發規範
 
-本文說明前端的十一條開發規範，由 `AGENTS.md` 的 Agent Rules Index 指過來；`AGENTS.md` 是規則本體，兩邊說法不同時以 `AGENTS.md` 為準，並回報給維護者。
+本文說明前端的十二條開發規範，由 `AGENTS.md` 的 Agent Rules Index 指過來；`AGENTS.md` 是規則本體，兩邊說法不同時以 `AGENTS.md` 為準，並回報給維護者。
 跨領域的規範在 [agent-rules.mdx](agent-rules.mdx)、後端在 [backend-agent-rules.mdx](backend-agent-rules.mdx)、授權與答案隔離在 [security-agent-rules.mdx](security-agent-rules.mdx)、API 契約與單一 HTTP 邊界在 [api-agent-rules.mdx](api-agent-rules.mdx)，這裡不重複。
 
-**`frontend/` 已存在，但在 CI 跑的只有 F1、F2、F3 的檢查，以及 F10 的一部分**（job 與指令寫在各條的「檢查方式」）；F4 至 F9 與 F11 仍標「待建置」。標「待建置」就是字面意思：那些檢查還沒有寫，**不得因為這份文件存在就宣稱規則已被強制**。
+**`frontend/` 已存在，但在 CI 跑的只有 F1、F2、F3 與 F12 的檢查，以及 F10 的一部分**（job 與指令寫在各條的「檢查方式」）；F4 至 F9 與 F11 仍標「待建置」。標「待建置」就是字面意思：那些檢查還沒有寫，**不得因為這份文件存在就宣稱規則已被強制**。
 
 每條規範的反例與檢查方式收在摺疊區塊，預設收起；適用路徑、禁止、正例與例外在表裡。
 
@@ -142,7 +142,7 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 
 :::note{title="F5 的反例與檢查方式" collapsible}
 - **反例**：`features/annotation/components/my-button.tsx` 自己寫一顆按鈕；把只有一處用到的 `formatTaskName` 放進 `lib/`；整個 feature 的每個元件都包 `React.memo`
-- **檢查方式**：**待建置**。這一條**不設行數門檻**，所以沒有機械檢查，由 `code-reviewer` 依職責判斷
+- **檢查方式**：**待建置**。這一條**不以行數作為拆分判準；另有 [F12](#f12-檔案函式長度與複雜度上限) 的 CI 上限擋極端值**，F12 不是 F5 的檢查，所以 F5 本身沒有機械檢查，由 `code-reviewer` 依職責判斷
 :::
 
 ### F6 視覺基準與 design token 的映射
@@ -257,6 +257,26 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 - **檢查方式**：**待建置**。`eslint-plugin-jsdoc` 可以檢查「有沒有、格式對不對」，描述與行為是否一致由 `code-reviewer` 審。**本條不要求每個具名單位都有 JSDoc**，所以覆蓋率沒有門檻
 :::
 
+### F12 檔案、函式長度與複雜度上限
+
+檔案不超過 300 行、函式不超過 80 行、函式的圈複雜度不超過 15；這是擋極端值的護欄，不是拆分判準。
+
+| | |
+| :--- | :--- |
+| **適用路徑** | `frontend/` 底下符合 `src/**/*.{ts,tsx}` 或 `build/**/*.ts` 的檔案 |
+| **禁止** | 單一檔案超過 300 行（`max-lines`）；單一函式（含 React 元件本體與箭頭函式）超過 80 行（`max-lines-per-function`）；單一函式的圈複雜度超過 15（`complexity`）。三條都是 `error`，lint 失敗 |
+| **正例** | 檔案或函式逼近上限時，先依 F5 與 [agent-rules.mdx](agent-rules.mdx) R4 判斷職責是否該拆；為了壓低行數把同一個概念硬拆成兩處，或把不相干的東西湊在一起，都不是這條要的 |
+| **例外** | （1）測試檔（`*.test.ts`、`*.test.tsx`、`src/test/**`）只豁免檔案與函式兩條長度上限，複雜度上限照樣適用；（2）不符合上述路徑樣式的檔案不在範圍，例如套件根目錄的 `eslint.config.js`、`vite.config.ts`、`vitest.config.ts`、`orval.config.ts`；（3）`src/api/generated/` 由全域 ignore 排除；（4）具名豁免集中在 `frontend/eslint.config.js` 的 `NAMED_EXEMPTIONS`，每筆有 issue 與理由，上限即棘輪（檔案再變長就再失敗），豁免過期由測試擋下。目前只有一筆：`src/pages/dev-gallery/dev-gallery-page.tsx` 的函式行數上限放寬到 180（[#561](https://github.com/label-suite/label-suite/issues/561)） |
+
+這裡的「行」排除空白行與註解行，與後端 [B11](backend-agent-rules.mdx) 的計法不同（B11 只排除空白行與以 `#` 開頭的行），兩邊的數字不可互比。
+
+與 F5 的關係：F5 與 R4 駁回以固定行數取代職責審查，這個判斷不變。F12 的上限只擋極端值，檔案或函式沒超過上限不代表不需要拆，超過上限也只是必須處理而不是自動該拆成幾份；是否拆分仍依 F5 與 R4 的職責判斷。
+
+:::note{title="F12 的反例與檢查方式" collapsible}
+- **反例**：在 `src/components/` 加一個 81 行的元件函式或有 16 條獨立 `if` 的函式，lint 失敗；為了不超過 80 行，把同一個元件的 JSX 隨意切成兩個互相依賴的檔案
+- **檢查方式**：CI 的 `frontend` job 的 Lint 步驟（`pnpm --filter frontend lint`）；`frontend/build/size-limits-config.test.ts` 守住三個數值、`error` 等級、測試檔與設定檔的例外範圍，以及 `NAMED_EXEMPTIONS` 是否過期
+:::
+
 ## 附錄：刻意不採用的來源條文
 
 | 不採用 | 出處 | 為什麼 |
@@ -266,7 +286,7 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | 「System role 從 JWT 取」當授權依據 | 原始 repo `frontend.md` §Role model | ADR-037：`role` 只供顯示。決定版面可以，當成能否取得資料的依據不行（[security-agent-rules.mdx](security-agent-rules.mdx) S3） |
 | 「禁止型別斷言 `as`」只留 `as const` 一個例外 | scaffold `typescript.md`（「唯一例外是 `as const`」）、duty-mate `typescript.md`（標題寫「escape hatch 除外」） | **沿用其禁止與 `as const` 例外，另增補一類**：第三方套件的型別缺口允許一處，但要在同一行註明是哪個套件的哪個缺口（F2 例外 3）。例外要列出來 |
 | 「Named export，禁止 default export」的例外清單 | scaffold `typescript.md`（例外已含 Vite／Vitest／Playwright／Orval 設定檔與 `*.config.ts`） | **沿用，另增補一類**：本 repo 有 22 個 `.notecraft/components/*.tsx` 依 NoteCraft 契約必須 default export（F11 例外 4）。來源沒有這一類，因為它沒有 NoteCraft |
-| 「超過約 200 行就拆檔」 | scaffold `frontend.md` §元件分層 | [agent-rules.mdx](agent-rules.mdx) 已駁回三個機械門檻（200 行、第二次重複才抽、5 檔案／300 diff 行），不以固定行數取代職責審查 |
+| 「超過約 200 行就拆檔」 | scaffold `frontend.md` §元件分層 | [agent-rules.mdx](agent-rules.mdx) 已駁回三個機械門檻（200 行、第二次重複才抽、5 檔案／300 diff 行），不以固定行數取代職責審查；不採用作為拆分判準，另設 [F12](#f12-檔案函式長度與複雜度上限) 的 CI 上限擋極端值 |
 | `themes/neutral.css`（shadcn 預設）與 `themes/trendlink.css` | scaffold `design-tokens.md` | 不得混入。本 repo 的唯一色值來源是 `tokens.css` |
 | 顯示時轉 `Asia/Taipei` | scaffold `date-handling.md` | 與規格 06-01 Q2 已定案的內容相反——本 repo 顯示依**瀏覽者裝置**的時區。只有「報表的日期區間」才固定台北（規格 03-03） |
 | 「禁止原生 `Date` API」這條鐵律本身 | duty-mate `date-handling.md`、scaffold `date-handling.md`（兩份都另有 `## 例外`，含第三方 adapter 與測試假時鐘） | **不採用那條鐵律**（不盲抄框架細節），改成要求**單一入口**與四種概念的分界；**它們的例外清單沿用**第三方 adapter 與假時鐘兩條（F10 例外） |
@@ -285,13 +305,14 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | F2 | `AGENTS.md` 硬性規則 7（TypeScript 不得有 `any`）；原始 repo `frontend.md` §TypeScript Code Style 的「strict、禁 `any`、props 用 `interface`」**沿用**；scaffold `typescript.md` 與 duty-mate `typescript.md` 的 `unknown` 加收窄**沿用**。兩者的「禁止 `as`」**沿用**，連它們自己的例外（scaffold 的「唯一例外是 `as const`」、duty-mate 的「escape hatch 除外」）一起收下，**另增補第三方型別缺口那一類**；scaffold 的「禁止 default export」同樣沿用它既有的工具設定檔例外，並**增補 `.notecraft/components/*.tsx`**。要的是「例外明列」，不是推翻禁止 |
 | F3 | React 的 Hooks 規則（框架層，不是本專案的決定）；scaffold `frontend.md` §狀態管理 的「不把 API 資料複製到 `useState`／context、衍生值直接從 query data 計算」**沿用**；原始 repo foundation spec FR-059（server state 的單一邊界）**沿用**。合法訂閱與瀏覽器同步不全面禁 `useEffect`，所以例外那一格是本條的必要部分 |
 | F4 | ADR-004（TanStack Query，沿用）；scaffold `frontend.md` §狀態管理 的「篩選分頁放 URL search params、不引入全域 store 除非 design 有理由」**沿用**。網址那一格是本 repo 規格已定：規格 03-01 §查詢條件保留在網址（關鍵字、三個篩選器、每頁筆數與頁次都寫進網址，無效值忽略並正規化）與規格 03-03 §網址與畫面狀態同步（分頁與篩選寫進網址，分享網址重現同一個畫面）。原始 repo `frontend.md` 的「Zustand 存 auth token／user／role」**不採用**（`httpOnly` cookie 的意義就是 JS 讀不到，見 [security-agent-rules.mdx](security-agent-rules.mdx)） |
-| F5 | [agent-rules.mdx](agent-rules.mdx) 的 R1（先搜尋再新增）與 **R4（不過度抽象）沿用**，本條只是前端的落點。R4 的判準是「兩個地方有同一段邏輯，而它**確實是同一個概念**」，而 `agent-rules.mdx` §來源對照 已把原始 repo `general.md` 的「同一段程式出現 2 次以上就抽出共用」標為**不採用**（「出現兩次不代表是同一個概念」）。scaffold `frontend.md` 的「**一個檔案一個主要元件；超過約 200 行就拆**」**不採用那個數字**，「一個檔案一個主要元件」沿用 |
+| F5 | [agent-rules.mdx](agent-rules.mdx) 的 R1（先搜尋再新增）與 **R4（不過度抽象）沿用**，本條只是前端的落點。R4 的判準是「兩個地方有同一段邏輯，而它**確實是同一個概念**」，而 `agent-rules.mdx` §來源對照 已把原始 repo `general.md` 的「同一段程式出現 2 次以上就抽出共用」標為**不採用**（「出現兩次不代表是同一個概念」）。scaffold `frontend.md` 的「**一個檔案一個主要元件；超過約 200 行就拆**」**不採用那個數字**，「一個檔案一個主要元件」沿用。另設 [F12](#f12-檔案函式長度與複雜度上限) 的 CI 上限擋極端值，不作為拆分判準 |
 | F6 | 維護者選定：寫一層對照、`tokens.css` 仍是唯一色值來源，選定方案明文「shadcn 元件一行都不改」，那句絕對說法已收窄（見[§決策紀錄](#決策紀錄)）；被否決的一直是「改寫 shadcn 元件去讀別的變數名」這件事，本條的禁止格照舊。`tokens.css` 與 `label-suite-design` skill 是視覺基準；scaffold `design-tokens.md` 的**結構沿用**（色值只寫在一處、元件只用語意 token、換主題不改元件、新增 token 要每個主題檔都補），但它的 `themes/neutral.css`／`trendlink.css` **不採用**。深色模式是本 repo 規格已定（規格 07-01 §外觀切換、規格 01-04 §偏好設定、規格 03-02 的深色 Scenario）；「跟隨系統」跟著作業系統見規格 01-04 Q7、規格 07-01 Q14（取代 Q10） |
 | F7 | ADR-030（Lucide 是唯一圖示來源）與 [architecture.mdx](../architecture.mdx) §前端 的例外**沿用**；duty-mate `icon-usage.md` 的**理由與事故沿用**（集中管理才能保證 `stroke-width`、`viewBox` 與端點風格一致；它散寫 inline SVG 的結果是 `stroke-width` 混用 1.5／1.9／2／2.5、尺寸單位混用三種），它的 Handlebars partial 做法不適用。不得把「禁手繪 icon」擴張成「禁所有 SVG」，所以例外（2）（3）（4）是本條的必要部分 |
 | F8 | [architecture.mdx](../architecture.mdx) §前端 的「每個資料區塊都要寫出 loading、error、empty、無權限（403）四種狀態與被遮蔽欄位的呈現」**沿用**（它明寫 ADR 沒有定義這個最低要求，由 OpenSpec 的 `ui-design` 產出負責）；scaffold `frontend.md` §四種畫面狀態 的判斷與呈現**沿用**（含「`403` 不顯示重試」）。「遮蔽依契約呈現、不自行猜角色」來自 [security-agent-rules.mdx](security-agent-rules.mdx) S4 與 [api-agent-rules.mdx](api-agent-rules.mdx) A2；「送出期間 disabled」在 A9 |
 | F9 | scaffold `frontend.md` §無障礙 的**五條**（語意元素、標籤與錯誤關聯、icon button 名稱、鍵盤與 Dialog 焦點、狀態不只靠顏色）**沿用**；**「減少動態效果」是本 repo 規格已定**：規格 03-02 §深色模式與動畫 第 2 條與它的 Scenario「要求減少動畫時動畫降到最低」，規格 07-01 的邊界情況「使用者在作業系統關閉了動態效果 → 側欄收合、次選單展開與通知清單展開都不播動畫，操作本身照常可用」與對應 Scenario |
 | F10 | 顯示時區依瀏覽者裝置、報表固定台北時區見規格 06-01 Q2、規格 03-01 §任務列的欄位、規格 03-03 §工時紀錄 第 10 條。UTC 儲存與 ISO 傳輸、date-only 用字串**沿用** scaffold `date-handling.md`，但它的「顯示時轉 `Asia/Taipei`」**不採用**（與本 repo 的裝置時區相反）。duty-mate `date-handling.md` 的**單一入口理由沿用**（集中管理 timezone、locale 與 plugin，避免各檔案重複 setup 導致行為分歧），它的「全面禁止原生 `Date` API」**不採用**——不盲抄 duty-mate 全面禁 Date／day.js 的框架細節 |
 | F11 | `AGENTS.md` §Language Rules（程式與註解只用英文）；scaffold `jsdoc.md` 的**內容要求沿用**（描述要寫名稱看不出來的資訊、不寫型別、`@throws` 寫觸發條件、props 用具名 `interface`、**不寫其他專案的需求編號**、產物與測試檔不寫），但它**開頭引言**的「每個具名的程式單位都要有 JSDoc」與 §內容要求 第 1 條的「描述句用繁體中文」**都不採用**；它的 §適用範圍 表（哪些要寫、哪些不寫）本文件沿用成 F11 的例外。原始 repo `frontend.md` §TypeScript Code Style 的「props 用 `interface`」**沿用** |
+| F12 | issue [#561](https://github.com/label-suite/label-suite/issues/561)、Epic [#560](https://github.com/label-suite/label-suite/issues/560)；`clarification.md` Q1（與「不採用機械行數門檻」並存）、Q2 至 Q4（300、80、15）、Q7（例外範圍）、Q8（具名豁免與棘輪）。不是來自參考來源，而是本 repo 維護者裁定 |
 
 ### 原始 repo（`singyichen/label-suite`）
 
@@ -317,7 +338,7 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | :--- | :--- | :--- |
 | `frontend.md` §元件分層 的四層表與「下層不 import 上層、features 不互相 import、共用往下搬」 | **沿用** | 成為 F1，路徑換成本 repo 的 `frontend/src/` |
 | `frontend.md` §元件分層 的「一個檔案一個主要元件」 | **沿用** | 成為 F5 |
-| `frontend.md` §元件分層 的「超過約 200 行就拆」 | **不採用** | 見上方「刻意不採用的來源條文」 |
+| `frontend.md` §元件分層 的「超過約 200 行就拆」 | **不採用作為拆分判準；另設 F12 的 CI 上限擋極端值** | 見上方「刻意不採用的來源條文」與 [F12](#f12-檔案函式長度與複雜度上限) |
 | `frontend.md` §狀態管理 的**五條** | **沿用四條** | 成為 F3（不複製 server 資料、衍生值直接算）與 F4（URL search params、全域 store 要有理由）；mutation 的失效慣例在 A9 |
 | `frontend.md` §元件 的「shadcn 優先、沒有的先 `npx shadcn add`、只用語意 token、icon 一律 `lucide-react`」 | **沿用** | 分別成為 F5、F6、F7 |
 | `frontend.md` §四種畫面狀態（鐵律）的判斷與呈現表 | **沿用** | 成為 F8 |
@@ -385,3 +406,4 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | 2026-11-19 | 前端框架、目錄分層、元件庫、design token 對照與圖示的理由寫進 [ADR-005](../adr/005-frontend-architecture.mdx)，本文只留做法（[前提](#前提)、[F1](#f1-分層與允許的-import)、[F6](#f6-視覺基準與-design-token-的映射)、[F7](#f7-圖示與-svg)） | —（理由原本只在個人 repo 的 ADR-004、011、016、030 與 [#109](https://github.com/label-suite/label-suite/issues/109) 的留言） | [#451](https://github.com/label-suite/label-suite/issues/451) |
 | 2026-11-20 | 日期套件用 day.js，搭配 utc 與 timezone 外掛，只在 `src/lib/date.ts` 裡 import（[F10](#f10-日期時區與可測的時鐘)） | §待決 第 1 列「日期套件選哪一個」 | [#503](https://github.com/label-suite/label-suite/issues/503) |
 | 2026-11-20 | 為了加 variant 而改 `components/ui/` 是允許的，原語仍只用語意變數；shadcn 沒有對應語意時在對照層新增 `--cta`、`--success`、`--warning`、`--info`，原語不直接用 `tokens.css` 的變數名（[F6](#f6-視覺基準與-design-token-的映射)） | 2026-11-10 那列引述的「shadcn 元件一行都不改」這個絕對說法；F6 第 1 點原本留著「直接用 `tokens.css` 的變數名」這個分支，並把選擇交給第一個前端 change 的 `ui-design.md` 逐一列出 | [#505](https://github.com/label-suite/label-suite/issues/505) 的 Q9 裁定，記錄於 [#527](https://github.com/label-suite/label-suite/issues/527) |
+| 2026-11-25 | 新增 F12：前端檔案 300 行、函式 80 行、複雜度 15 的 CI 上限；F5 與 R4「不以行數取代職責審查」的原意不變，上限只擋極端值 | 兩處「不採用」條文只寫了不設機械行數門檻，沒有區分「拆分判準」與「擋極端值的 CI 護欄」 | [#561](https://github.com/label-suite/label-suite/issues/561) |

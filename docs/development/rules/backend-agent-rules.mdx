@@ -1,6 +1,6 @@
 ---
 title: '後端開發規範'
-description: '後端的分層與允許 import、docstring 與指令、session 分離、交易擁有層、SQLAlchemy 專管存取、Alembic 專管 schema、雙資料庫測試、刪除與匿名化、Celery 的界線、設定與 secret。'
+description: '後端的分層與允許 import、docstring 與指令、session 分離、交易擁有層、SQLAlchemy 專管存取、Alembic 專管 schema、雙資料庫測試、刪除與匿名化、Celery 的界線、設定與 secret、函式複雜度與檔案行數上限。'
 category: '開發說明'
 tags: [開發說明, Agent, 規範, 後端]
 createdAt: '2026-11-10'
@@ -9,10 +9,10 @@ updatedAt: '2026-11-25'
 
 # 後端開發規範
 
-本文說明後端的十條開發規範，由 `AGENTS.md` 的 Agent Rules Index 指過來；`AGENTS.md` 是規則本體，兩邊說法不同時以 `AGENTS.md` 為準，並回報給維護者。
+本文說明後端的十一條開發規範，由 `AGENTS.md` 的 Agent Rules Index 指過來；`AGENTS.md` 是規則本體，兩邊說法不同時以 `AGENTS.md` 為準，並回報給維護者。
 跨領域的規範（先搜尋再新增、最小變更、衝突處理等）在 [agent-rules.mdx](agent-rules.mdx)，技術選型與 ADR 效力在 [architecture.mdx](../architecture.mdx)。
 
-**`backend/` 已存在，但只有 B1、B2、B6、B7 的檢查在 CI 跑**（job 與指令寫在各條的「檢查方式」）；B8 靠人工／獨立審查，其餘各條仍標「待建置」。標「待建置」就是字面意思：那些檢查還沒有寫，**不得因為這份文件存在就宣稱架構已被強制**。
+**`backend/` 已存在，但只有 B1、B2、B6、B7、B11 的檢查在 CI 跑**（job 與指令寫在各條的「檢查方式」）；B8 靠人工／獨立審查，其餘各條仍標「待建置」。標「待建置」就是字面意思：那些檢查還沒有寫，**不得因為這份文件存在就宣稱架構已被強制**。
 
 每條規範的反例與檢查方式收在摺疊區塊，預設收起；適用路徑、禁止、正例與例外在表裡。
 
@@ -193,6 +193,26 @@ Celery task 只收可序列化的識別資訊，在自己的行程裡重新查�
 - **檢查方式**：**待建置**。「`app/` 底下除 config 模組外不得 import `os.environ`」可靜態擋
 :::
 
+### B11 函式複雜度與檔案行數上限
+
+函式的圈複雜度、敘述數、分支數與檔案行數各有上限；這是擋極端值的護欄，不是拆分判準。
+
+| | |
+| :--- | :--- |
+| **適用路徑** | `backend/app/`、`backend/tests/`、`backend/alembic/` |
+| **禁止** | 函式的圈複雜度超過 10（`C901`）、敘述數超過 30（`PLR0915`）、分支數超過 10（`PLR0912`）；單一檔案超過 400 行 |
+| **正例** | 逼近上限時，先依 [agent-rules.mdx](agent-rules.mdx) R4 判斷職責是否該拆；不為了壓低數字把同一個概念硬拆成兩處 |
+| **例外** | （1）`alembic/versions/`（產生的 migration 腳本）不受函式與檔案兩類上限約束；`alembic/` 的其他檔案照常受限；（2）檔案行數的例外表是 `backend/tests/unit/test_size_limits.py` 的 `EXEMPTIONS`：條目即棘輪（檔案再變長就再失敗）、過期即失敗（檔案已不超標就必須移除條目），目前為空；新增條目要寫 issue 與理由。函式的三條 ruff 規則沒有例外表。**不檢查**參數數與回傳數，也不開 `RUF100` |
+
+檔案行數的「行」以純文字逐行計算、不做語法解析：排除空白行與去掉前後空白後以 `#` 開頭的行；docstring 內以 `#` 開頭的行同樣排除，docstring 的其他行計入。這與前端 [F12](frontend-agent-rules.mdx) 的計法不同（F12 由 ESLint 排除空白行與註解），兩邊的數字不可互比。
+
+與 R4 的關係：R4 與 [agent-rules.mdx](agent-rules.mdx) 駁回以固定行數取代職責審查，這個判斷不變。B11 的上限只擋極端值，沒超過上限不代表不需要拆，超過上限也只是必須處理而不是自動該拆成幾份；是否拆分仍依 R4 的職責判斷。
+
+:::note{title="B11 的反例與檢查方式" collapsible}
+- **反例**：在 `app/` 加一個有 31 個敘述的函式，`ruff` 報 `PLR0915`；一個檔案累計 401 行非空白、非 `#` 開頭的行，`test_size_limits.py` 失敗
+- **檢查方式**：CI 的 `backend-sqlite` job 的 Lint 步驟（`uv run ruff check .`）擋三條函式規則，數值在 `backend/pyproject.toml` 的 `[tool.ruff.lint.mccabe]` 與 `[tool.ruff.lint.pylint]`；兩個後端 job（`backend-sqlite`、`backend-postgres`）的 pytest 跑 `tests/unit/test_size_limits.py`，它檢查檔案行數、守住例外表的棘輪與過期，並以探針守住 ruff 規則碼、數值與 `alembic/versions/` 以外沒有被放寬
+:::
+
 ## 附錄：刻意不採用的來源條文
 
 | 不採用 | 出處 | 為什麼 |
@@ -222,6 +242,7 @@ Celery task 只收可序列化的識別資訊，在自己的行程裡重新查�
 | B8 | ADR-038 資料保留、刪除與匿名化（**沿用**）；[architecture.mdx](../architecture.mdx) 的保留政策列與稽核 append-only。scaffold `database.md` §軟刪除（鐵律）刻意不採用，不套用「所有 entity 一律軟刪除」 |
 | B9 | ADR-007 Celery（**沿用**，理由見 [ADR-003 的 D8](../adr/003-backend-architecture.mdx#d8-非同步任務用-celery-加-redis)）；[architecture.mdx](../architecture.mdx) 的 Celery 分層列（「不處理 HTTP、不回傳使用者可見訊息」）與評分流程圖。授權本身見 [security-agent-rules.mdx](security-agent-rules.mdx) |
 | B10 | `AGENTS.md` 硬性規則 8（祕密只從環境變數）與硬性規則 9（輸入驗證）；ADR-035 Google SSO 可選；寄信降級的維護者裁定（見[決策紀錄](#決策紀錄)）。「自行印出密碼或重設連結」是要防的，降級的做法未決時不自己決定 |
+| B11 | issue [#561](https://github.com/label-suite/label-suite/issues/561)、Epic [#560](https://github.com/label-suite/label-suite/issues/560)；`clarification.md` Q1（與「不採用機械行數門檻」並存）、Q5（檔案行數 400 與例外表）、Q6（複雜度 10、敘述 30、分支 10）、Q7（`alembic/versions/` 例外）、T2。不是來自參考來源，而是本 repo 維護者裁定 |
 
 ### 原始 repo（`singyichen/label-suite`）
 
@@ -285,3 +306,4 @@ Celery task 只收可序列化的識別資訊，在自己的行程裡重新查�
 | 2026-11-10 | duty-mate §軟刪除唯一原則（含「新 entity 一律繼承 `SoftDeletableEntity`」）改標不採用（[B8](#b8-刪除軟刪除與匿名化)） | 初版把 duty-mate 整份標成「原則沿用」 | [#106](https://github.com/label-suite/label-suite/issues/106) |
 | 2026-11-10 | B9 的「重試有界」接上 `architecture.mdx` 的既定數字（三次、60／180／540 秒、300 秒、24 小時） | 初版沒有給數字 | [#106](https://github.com/label-suite/label-suite/issues/106) |
 | 2026-11-19 | 分層、狀態機、資料庫雙層與 Celery 的理由寫進 [ADR-003](../adr/003-backend-architecture.mdx) 的 D3、D4、D7、D8，本文只留規則（B1、B7、B9） | —（理由原本只在個人 repo 的 ADR 與 [#105](https://github.com/label-suite/label-suite/issues/105) 的留言） | [#449](https://github.com/label-suite/label-suite/issues/449) |
+| 2026-11-25 | 新增 B11：後端函式複雜度 10、敘述 30、分支 10 與檔案 400 行的 CI 上限；R4「不以行數取代職責審查」的原意不變，上限只擋極端值 | 「不採用機械行數門檻」只寫了不設門檻，沒有區分「拆分判準」與「擋極端值的 CI 護欄」 | [#561](https://github.com/label-suite/label-suite/issues/561) |
