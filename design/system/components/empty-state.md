@@ -85,7 +85,7 @@
 | `task-management/task-list`（`#state-filtered-empty`、`#param-view-empty`） | **表格內一列**（`createEmptyRow`，`task-list.html:834`–`:858`），不是 `.empty-state` class；兩種文案、只有篩選無結果才有清除鈕 → `../ux-conventions.md` UXC-09 |
 | `task-management/task-detail`（`#tab-annotation-progress`、`#tab-annotation-results`、`#tab-work-log`） | `empty-state-panel`（`annotation-progress.html:157`、`annotation-results.html:164`、`work-log.html:84`） |
 | `task-management/task-new#state-step2` | `empty-state-compact`（`task-config.engine.js:1890`） |
-| `dashboard/dashboard#param-scenario-reviewer` | `empty-state-compact`（`dashboard.js:447`） |
+| `dashboard/dashboard#param-scenario-reviewer` | `empty-state-compact`（`dashboard.js:449`） |
 | `annotation/annotation-list`（`#state-empty`、`#state-filtered-empty`） | `empty-state-page`（`annotation-list.html:527`）；兩種空換文案，只有篩不到才給清除篩選（`renderEmptyState`，`:1958`–`:1973`）→ UXC-09 |
 | `annotation/annotation-list`（`#state-no-task`、`#state-task-not-found`、`#param-notice-no-actionable-review`） | `empty-state-panel`（`#taskNotFound`，`annotation-list.html:480`；`#noActionableNotice`，`role="status"`，`:490`）。沒帶任務時標題是「尚未選擇任務」，與「找不到這個任務」分開（#423）→ `../design-gaps.md` G-48 |
 | `annotation/annotation-workspace#tab-history` | 沒有操作紀錄時 `empty-state-compact`（`annotation-workspace.config.js:2280`） |

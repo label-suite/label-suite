@@ -58,7 +58,7 @@
 | :--- | :--- |
 | `components-showcase#state-default` | 兩層與三層各一 |
 | `task-management/task-detail`（全部 `#tab-*`） | 本頁一行式的 `.breadcrumb`（`task-detail.html:47`–`:49`，markup `:1877`–`:1880`），兩層 |
-| `annotation/annotation-list`（`#state-default`、`#role-*`） | `#entryBreadcrumb`（`annotation-list.html:448`），最後一層 `aria-current="page"`（`:2605`） |
+| `annotation/annotation-list`（`#state-default`、`#role-*`） | `#entryBreadcrumb`（`annotation-list.html:448`），最後一層 `aria-current="page"`（`:2608`） |
 | `annotation/annotation-workspace`（全部視圖） | `nav#entryBreadcrumb`（`annotation-workspace.html:1212`），第三層是樣本，`aria-current="page"`（`annotation-workspace.config.js:1603`） |
 | `dataset/dataset-analysis-detail`（全部視圖） | 本頁 `nav.breadcrumb`（`dataset-analysis-detail.html:250`–`:254`，樣式 `:39`–`:41`）：兩層「資料集分析 › 任務名稱」，分隔符 `aria-hidden`，目前頁是純文字 `<span>`、沒有 `aria-current` |
 

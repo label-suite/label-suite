@@ -492,6 +492,17 @@
 | **依據** | 原型：只有「已設定寄信服務但寄不出去」這一種故障，`MAIL_FAILURE_DOMAIN = '@mail-fail.test'`（`user-management.html:948`–`:951`），經 `simulateMailFailure`，新增時 `:1280`–`:1281` 擋下不建立、重發時 `:1343`–`:1345` 不生效；列上依 `passwordSet` 只決定要不要出「重發」（`:1090`）。規格 [`06-admin/01-user-management.mdx`](../../docs/specs/06-admin/01-user-management.mdx) §規格 › 帳號列表：「**尚未設定密碼、而且這個部署沒有設定寄信服務**的帳號，那一列多一個『信未寄出』的標記」；› 新增帳號：「**這個部署沒有設定寄信服務時**：帳號**照樣建立**……畫面在『使用者已建立』之外再告知系統管理員**信沒有寄出、這個部署沒有設定寄信服務、請從紀錄取出連結轉給對方**」；› 重發設定密碼信：「**這個部署沒有設定寄信服務時**：重發**仍然生效**……**不顯示『設定密碼信寄送失敗』**」；驗收標準三列「沒有設定寄信服務時新增帳號」「沒有設定寄信服務時重發」「信未寄出的標記只出現在尚未設定密碼的列」。 |
 | **待決問題** | 這個狀態與「信未寄出」標記要不要在原型畫出來（屬**畫面修正**，走 Ready gate）？要畫的話用什麼示範開關切換「沒有設定寄信服務」？標記長什麼樣（沿用哪一種徽章）？交付包要不要替它收視圖？ |
 
+### G-61 標記清單的可挑任務清單與它的空狀態沒有被收為視圖
+
+> #610 新增。同 G-51、G-54 的性質：屬交付包，不是本 skill 能改的。
+
+| 欄 | 內容 |
+| :--- | :--- |
+| **重現方式** | 開 `pages/annotation/annotation-list.html?entry=nav&role=annotator`：不帶任務，列出每個任務×角色一張的任務卡。再開 `pages/annotation/annotation-list.html?entry=nav&role=reviewer&view=empty`：顯示「目前沒有可處理的標記任務」與「回儀表板」。兩者都沒有視圖 ID。 |
+| **受影響範圍** | [Card](components/card.md)、[Empty State](components/empty-state.md)、[Button](components/button.md)；`annotation/annotation-list` |
+| **依據** | 原型：`#taskPicker`（`annotation-list.html:485`）、`#taskPickerEmpty`（`:486`），由 `renderTaskPicker`（`:2513`）依 `entryNav`（`:1070`）與 `demoEmpty`（`:1073`）產生。規格 [`04-annotation/01-annotation-list.mdx`](../../docs/specs/04-annotation/01-annotation-list.mdx) §路由上下文與回退 第 11 條：「網址**沒帶任務**、但**帶著入口標記**時：**不顯示**第 6 條的訊息，改為列出使用者有標記員或審核員角色的任務讓他挑」；第 12 條：「第 11 條一個可挑的任務都沒有時：顯示這一頁的空狀態，**不退回儀表板**」。交付包的 `annotation-list` 視圖不含它們，`#state-no-task` 的條件也還沒有排除 `entry=nav`。 |
+| **待決問題** | 要不要在下一次重跑 `design-handoff` 時補上這兩個視圖，並把 `#state-no-task` 的條件改成「不帶 `task_id`、也不帶 `entry=nav`」？本 skill 不替它們取 ID。 |
+
 ## 三、待重新設計
 
 **只登記，不提方案**（`design-system-setup` 步驟 7）。
