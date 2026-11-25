@@ -149,6 +149,7 @@ def sized_samples() -> dict[str, str]:
     return {
         "PLR0915": statements_sample(lint["pylint"]["max-statements"] + 1),
         "PLR0912": branches_sample(lint["pylint"]["max-branches"] + 1),
+        "C901": branches_sample(lint["mccabe"]["max-complexity"] + 1),
     }
 
 
@@ -163,7 +164,7 @@ def test_configured_limits_and_scope_match_the_agreed_values() -> None:
     assert sorted(ignores[ALEMBIC_VERSIONS]) == sorted(SIZE_CODES)
     for pattern, codes in ignores.items():
         if pattern != ALEMBIC_VERSIONS:
-            assert not set(codes) & set(SIZE_CODES), pattern
+            assert not [c for c in codes if any(size.startswith(c) for size in SIZE_CODES)], pattern
 
 
 def test_clean_small_function_reports_no_size_code(tmp_path: Path) -> None:
@@ -182,7 +183,7 @@ def test_function_over_the_branch_limit_reports_branches_and_complexity(tmp_path
     assert {"PLR0912", "C901"} <= codes
 
 
-@pytest.mark.parametrize("code", ["PLR0915", "PLR0912"])
+@pytest.mark.parametrize("code", ["PLR0915", "PLR0912", "C901"])
 @pytest.mark.parametrize(
     ("directory", "reported"),
     [("app", True), ("tests", True), ("alembic", True), (ALEMBIC_VERSIONS[:-3], False)],
