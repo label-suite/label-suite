@@ -18,8 +18,8 @@
 
 本組完成後，`Settings` 有只做驗證的 `forwarded_allow_ips`，非法值讓服務拒絕啟動，錯誤訊息只含變數名。建議訊息 `feat: validate the trusted proxy address list at startup (#566)`。
 
-- [ ] 1.1 依 design D3（clarification Q12；specs `runtime-config` 的「信任代理的位址清單在啟動時驗證」「信任清單的錯誤訊息只指出變數名與原因」與 MODIFIED「其餘設定都有預設值」），以 TDD 在 `backend/app/core/config.py` 新增 `forwarded_allow_ips` 與驗證器（寫法比照 `cors_allowed_origins`，只驗證、後端不使用其值），單元測試放 `backend/tests/unit/`。**先寫測試並跑出失敗**：欄位還不存在時，`cd backend && uv run pytest` 的對應單元測試先失敗；案例為 `*`、`0.0.0.0/0`、`::/0`、`127.0.0.1/8`、`localhost`、`1.2.3.4,,5.6.7.8`、空字串各自拒絕，合法的單一位址、CIDR、帶空白清單、`127.0.0.1,10.0.0.0/8`，未設定時預設恰為 `["127.0.0.1", "::1"]`，以及 `FORWARDED_ALLOW_IPS=CANARY-host.example` 的錯誤訊息含 `FORWARDED_ALLOW_IPS` 且不含 `CANARY-host.example`。故意弄壞：暫時讓驗證器放行 `*`，確認對應案例失敗，還原 [@backend-developer]
-- [ ] 1.2 本組收尾：`cd backend && uv run ruff check . && uv run ruff format --check . && uv run mypy --strict app && uv run lint-imports && uv run pytest` 全部以 0 結束，回報 pytest 摘要的 passed 與 skipped 數；後端契約漂移指令（`openspec/config.yaml` operations.apply）沒有差異，與 `api-contract.md`「本次無 API 變更」一致；`pnpm format:check` 以 0 結束 [@backend-developer]
+- [x] 1.1 依 design D3（clarification Q12；specs `runtime-config` 的「信任代理的位址清單在啟動時驗證」「信任清單的錯誤訊息只指出變數名與原因」與 MODIFIED「其餘設定都有預設值」），以 TDD 在 `backend/app/core/config.py` 新增 `forwarded_allow_ips` 與驗證器（寫法比照 `cors_allowed_origins`，只驗證、後端不使用其值），單元測試放 `backend/tests/unit/`。**先寫測試並跑出失敗**：欄位還不存在時，`cd backend && uv run pytest` 的對應單元測試先失敗；案例為 `*`、`0.0.0.0/0`、`::/0`、`127.0.0.1/8`、`localhost`、`1.2.3.4,,5.6.7.8`、空字串各自拒絕，合法的單一位址、CIDR、帶空白清單、`127.0.0.1,10.0.0.0/8`，未設定時預設恰為 `["127.0.0.1", "::1"]`，以及 `FORWARDED_ALLOW_IPS=CANARY-host.example` 的錯誤訊息含 `FORWARDED_ALLOW_IPS` 且不含 `CANARY-host.example`。故意弄壞：暫時讓驗證器放行 `*`，確認對應案例失敗，還原 [@backend-developer]
+- [x] 1.2 本組收尾：`cd backend && uv run ruff check . && uv run ruff format --check . && uv run mypy --strict app && uv run lint-imports && uv run pytest` 全部以 0 結束，回報 pytest 摘要的 passed 與 skipped 數；後端契約漂移指令（`openspec/config.yaml` operations.apply）沒有差異，與 `api-contract.md`「本次無 API 變更」一致；`pnpm format:check` 以 0 結束 [@backend-developer]
 
 ## 2. 真實 uvicorn 子行程的整合測試
 
