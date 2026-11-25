@@ -310,7 +310,7 @@ tags: [adr, backend, api, database, celery, i18n]
 - 並發寫入的原子性要依 dialect 分別實作（例如 upsert 用各自 dialect 的 `on_conflict`），不能用 `session.merge()` 或先查再寫
 - Alembic 的 migration 要在兩種 dialect 上都測過，SQLite 要用 batch 操作並設 `render_as_batch=True`
 - 牽涉兩邊差異的行為要兩邊都有測試（[B7](../rules/backend-agent-rules.mdx#b7-雙資料庫的測試要求)）；整合測試仍要用真的 PostgreSQL
-- Lite 層不建議給多人使用，要在文件寫清楚，而且 `backend` 與 `worker` 要掛同一個 `./data` volume
+- Lite 層不建議給多人使用，要在文件寫清楚，而且 `backend` 與 `worker` 要掛同一個具名 volume `label-suite-data`（掛在 `/app/data`）
 - JSON 欄位的彈性可能讓任務設定不一致，要靠應用層的 Pydantic schema 驗證
 
 ### 什麼情況要重新討論

@@ -6,7 +6,7 @@ tags: [architecture, fastapi, react, adr]
 
 # 技術架構
 
-`backend/`、`frontend/` 還不存在，本文寫的是「要照著做的架構」；第一個讀者是 OpenSpec 規劃階段的 `sd` 與 `ui-ux`，業務面以 `docs/specs/` 為準（見 [需求文件撰寫](workflow/spec-authoring.md)）。
+`backend/`、`frontend/` 與 `e2e/` 已經存在，但多數模組還沒實作；本文寫的是「要照著做的架構」，第一個讀者是 OpenSpec 規劃階段的 `sd` 與 `ui-ux`，業務面以 `docs/specs/` 為準（見 [需求文件撰寫](workflow/spec-authoring.md)）。
 本文是本 repo ADR 001–008 的落地做法，見 [§ADR 效力總表](#adr-效力總表)；個人 repo 38 份 ADR 在本 repo 照做、調整或被取代，見文末 [§附錄：個人 repo ADR 的對照](#附錄個人-repo-adr-的對照)。
 衝突時依序以 `AGENTS.md`、本 repo 的 [ADR](adr/index.mdx)、本文為準，個人 repo 的 ADR 只當參考；業務面一律以 `docs/specs/` 為準。發現不一致就照這個順序做，並回報維護者。
 
@@ -228,7 +228,7 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 | Lite | SQLite | 本機試用、單人、評估 | 預設，不需設定 |
 | 正式 | PostgreSQL 16 | 多人、並發寫入、部署 | 設 `DATABASE_URL` |
 
-Lite 層的 `./data` 必須是持久化 volume，而且 `backend` 與 `worker` 要掛同一個路徑，否則 worker 寫的資料 API 讀不到。
+Lite 層的資料放在具名 volume `label-suite-data`（掛在 `/app/data`），必須持久化，而且 `backend` 與 `worker` 要掛同一個 volume，否則 worker 寫的資料 API 讀不到。
 
 :::note{title="驅動與設定存放" collapsible}
 同一層的 API 與 worker 用不同驅動，因為 Celery 跑在同步執行緒裡，不能用 async engine：
