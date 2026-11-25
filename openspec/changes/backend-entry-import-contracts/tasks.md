@@ -55,7 +55,7 @@
 
 本組不新增程式，只在第 1 至 5 組之後確認整體狀態，把結果交給文件組引用。
 
-- [ ] 6.1 在 `backend/` 依序執行：`uv run lint-imports`（`Contracts: 9 kept, 0 broken.`）；`uv run ruff check . && uv run ruff format --check . && uv run mypy --strict app`；`uv run pytest`（回報 passed 與 skipped 數，標 `postgres` 的測試在這次被跳過）；以本機 `docker run postgres:16` 提供 `TEST_DATABASE_URL` 再跑一次 `uv run pytest`，skipped 為 0（本機沒有 Docker 時停下回報，不以「交 CI 驗證」略過）；後端契約漂移指令（`openspec/config.yaml` operations.apply）沒有差異，確認與 `api-contract.md`「本次無 API 變更」一致；`git diff origin/main -- backend/app` 為空（本 change 不改 `app/`）；`git status --porcelain` 乾淨 [@backend-developer]
+- [x] 6.1 在 `backend/` 依序執行：`uv run lint-imports`（`Contracts: 9 kept, 0 broken.`）；`uv run ruff check . && uv run ruff format --check . && uv run mypy --strict app`；`uv run pytest`（回報 passed 與 skipped 數，標 `postgres` 的測試在這次被跳過）；以本機 `docker run postgres:16` 提供 `TEST_DATABASE_URL` 再跑一次 `uv run pytest`，skipped 為 0（本機沒有 Docker 時停下回報，不以「交 CI 驗證」略過）；後端契約漂移指令（`openspec/config.yaml` operations.apply）沒有差異，確認與 `api-contract.md`「本次無 API 變更」一致；`git diff origin/main -- backend/app` 為空（本 change 不改 `app/`）；`git status --porcelain` 乾淨 [@backend-developer]
 
 ## 7. 規則文件（7.1、7.2 可平行）
 
