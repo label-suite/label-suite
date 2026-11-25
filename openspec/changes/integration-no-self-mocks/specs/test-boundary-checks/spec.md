@@ -8,7 +8,7 @@
 
 ### Requirement: 不得以字串指名替換本專案的模組
 
-在檢查範圍內，以字串指名替換目標的寫法（`monkeypatch.setattr`、`setitem`、`delattr`、`delitem`、`patch`、`patch.dict`、`patch.multiple` 的第一個參數），字串為 `app` 或以 `app.` 開頭時（含單引號、雙引號與 f-string），測試替身邊界檢查 SHALL 判為違規，並 MUST 在輸出列出檔案、行號與規則 id。
+在檢查範圍內，以字串指名替換目標的寫法（`monkeypatch.setattr`、`setitem`、`delattr`、`delitem`、`patch`、`patch.dict`、`patch.multiple` 的第一個位置參數，或以關鍵字參數 `target=` 指名的目標），字串為 `app` 或以 `app.` 開頭時（含單引號、雙引號與 f-string），測試替身邊界檢查 SHALL 判為違規，並 MUST 在輸出列出檔案、行號與規則 id。
 
 來源：issue #562 工作項 1、2；Epic #560；testing-agent-rules T4、T6；clarification Q1、Q2。
 
@@ -19,7 +19,7 @@
 
 #### Scenario: 各種字串寫法都被擋
 
-- **WHEN** 檢查範圍內的檔案分別含 `patch("app.core.config.Settings")`（裝飾器、`with` 與一般呼叫各一處）、`monkeypatch.setattr('app.main.x', 1)`、`monkeypatch.setattr(f"app.{name}.x", 1)`、`monkeypatch.delattr("app.main.x")`
+- **WHEN** 檢查範圍內的檔案分別含 `patch("app.core.config.Settings")`（裝飾器、`with` 與一般呼叫各一處）、`monkeypatch.setattr('app.main.x', 1)`、`monkeypatch.setattr(f"app.{name}.x", 1)`、`monkeypatch.delattr("app.main.x")`、`monkeypatch.setattr(target="app.main.x", value=1)`
 - **THEN** 每一處都被列為違規
 
 #### Scenario: 名稱只是以 app 開頭的字串不擋
@@ -50,7 +50,7 @@
 
 ### Requirement: export_openapi 的輸出路徑常數視為檔案系統邊界
 
-替換 `app.scripts.export_openapi` 模組的 `DEFAULT_OUTPUT` 與 `DOCS_COPY_OUTPUT` 兩個輸出路徑常數 SHALL 視為檔案系統邊界而不判為違規；同一個模組的其他屬性 MUST 照樣判為違規。本 change 合併時的後端程式 MUST 在檢查範圍內沒有任何違規。
+以 `from app.scripts import export_openapi` 匯入、名稱為 `export_openapi`，並以位置參數指名 `DEFAULT_OUTPUT`、`DOCS_COPY_OUTPUT` 的替換 SHALL 視為檔案系統邊界而不判為違規；同一個模組的其他屬性，以及替換這兩個常數的其他別名或寫法（含 `import … as`、全路徑、關鍵字參數 `name=`），MUST 照樣判為違規。本 change 合併時的後端程式 MUST 在檢查範圍內沒有任何違規。
 
 來源：issue #562 工作項 1、2；Epic #560；testing-agent-rules T4、T6；clarification Q3。
 
@@ -59,6 +59,11 @@
 - **WHEN** 檢查範圍內的檔案以 `from app.scripts import export_openapi` 匯入後，分別寫 `monkeypatch.setattr(export_openapi, "DEFAULT_OUTPUT", path)`、`monkeypatch.setattr(export_openapi, "DOCS_COPY_OUTPUT", path)` 與 `monkeypatch.setattr(export_openapi, "build_document", fake)`
 - **THEN** 前兩行不被列為違規，第三行被列為違規
 
+#### Scenario: 兩個輸出常數換個寫法仍被擋
+
+- **WHEN** 檢查範圍內的檔案分別含 `import app.scripts.export_openapi as eo` 後的 `monkeypatch.setattr(eo, "DEFAULT_OUTPUT", path)`、`import app.scripts.export_openapi` 後的 `monkeypatch.setattr(app.scripts.export_openapi, "DOCS_COPY_OUTPUT", path)`，以及 `from app.scripts import export_openapi` 後的 `monkeypatch.setattr(export_openapi, name="DEFAULT_OUTPUT", value=path)`
+- **THEN** 每一處都被列為違規
+
 #### Scenario: 既有程式通過檢查
 
 - **WHEN** 在本 change 合併時的 repo 根目錄對 `backend/` 執行測試替身邊界檢查
@@ -66,13 +71,13 @@
 
 ### Requirement: 不得改寫應用程式的依賴覆寫表
 
-在檢查範圍內，任何對應用程式 `dependency_overrides` 的寫入 SHALL 判為違規，包含以索引指派、`update`、`setdefault`、`pop`、整個重新指派，以及以 `monkeypatch.setitem` 或 `patch.dict` 指到它；只讀取 MUST NOT 判為違規。
+在檢查範圍內，任何對應用程式 `dependency_overrides` 的寫入 SHALL 判為違規，包含以索引指派、以 `del` 刪除鍵、`update`、`setdefault`、`pop`、`popitem`、`clear`、`|=` 合併、整個重新指派，以及以 `monkeypatch.setitem` 或 `patch.dict` 指到它；只讀取 MUST NOT 判為違規。
 
 來源：issue #562 工作項 1、2；Epic #560；testing-agent-rules T4；clarification Q1。
 
 #### Scenario: dependency_overrides 寫入被擋
 
-- **WHEN** 檢查範圍內的檔案分別含 `app.dependency_overrides[get_session] = fake_session`、`client.app.dependency_overrides.update({})`、`app.dependency_overrides = {}`
+- **WHEN** 檢查範圍內的檔案分別含 `app.dependency_overrides[get_session] = fake_session`、`client.app.dependency_overrides.update({})`、`app.dependency_overrides = {}`、`app.dependency_overrides.clear()`、`app.dependency_overrides.popitem()`、`del app.dependency_overrides[get_session]`、`app.dependency_overrides |= {get_session: fake_session}`
 - **THEN** 每一處都被列為違規，輸出列出依賴覆寫那條規則的 id
 
 #### Scenario: 只讀取依賴覆寫表不擋
@@ -93,7 +98,7 @@
 
 ### Requirement: 外部邊界與行程環境的替換不受限
 
-在網路邊界改為明列清單之前，目標不是本專案 `app` 套件的替換 SHALL 視為外部邊界而不判為違規；以 `monkeypatch.setenv`、`delenv`、`chdir` 改變環境變數與工作目錄 MUST NOT 判為違規。
+在網路邊界改為明列清單之前，目標不是本專案 `app` 套件的替換 SHALL 視為外部邊界而不判為違規；以 `monkeypatch.setenv`、`delenv`、`chdir` 改變環境變數與工作目錄 MUST NOT 判為違規。以 `unittest.mock` 替換外部目標時，匯入 `unittest.mock` 仍依「不得使用 mock 物件」判為違規；外部邊界 MUST 以 `monkeypatch` 替換。
 
 來源：issue #562 工作項 1；Epic #560；testing-agent-rules T6；clarification Q1、Q2。
 
@@ -106,6 +111,11 @@
 
 - **WHEN** 檢查範圍內的檔案含 `monkeypatch.setattr(sys, "stderr", buffer)`、`monkeypatch.setattr("sys.stderr", buffer)` 與 `monkeypatch.setattr(httpx.AsyncClient, "send", fake_send)`
 - **THEN** 這三行都不被列為違規
+
+#### Scenario: 以 unittest.mock 替換外部目標仍被擋
+
+- **WHEN** 檢查範圍內的檔案寫 `from unittest.mock import patch` 後以 `patch("httpx.AsyncClient.send")` 替換外部目標
+- **THEN** 匯入那一行被列為違規，輸出列出 mock 物件那條規則的 id；`patch("httpx.AsyncClient.send")` 那一行不被字串目標或匯入物件的規則列為違規
 
 #### Scenario: HTTP PATCH 路由裝飾器不被誤判
 
@@ -135,14 +145,14 @@
 
 ### Requirement: 檢查在 CI 每張 PR 執行且違規即失敗
 
-CI 的原始碼安全掃描 job SHALL 在每張 pull request 執行測試替身邊界檢查，排在規則樣本驗證之後；有任何違規 MUST 讓該 job 失敗並列出檔案、行號與規則 id。既有專案禁令掃描的規則集與掃描範圍 MUST NOT 因此改變。
+CI 的 `semgrep` job SHALL 在每張 pull request 執行測試替身邊界檢查，排在規則樣本驗證之後；有任何違規 MUST 讓該 job 失敗並列出檔案、行號與規則 id。既有專案禁令掃描的規則集與掃描範圍 MUST NOT 因此改變。
 
 來源：issue #562 工作項 2、6；Epic #560；testing-agent-rules T4、T6；clarification Q4、N1。
 
 #### Scenario: PR 加入違規時 CI 失敗
 
 - **WHEN** PR 在 `backend/tests/integration/` 的測試檔加入 `app.dependency_overrides[get_session] = fake_session`
-- **THEN** CI 的原始碼安全掃描 job 失敗，輸出列出該檔、行號與依賴覆寫那條規則的 id
+- **THEN** CI 的 `semgrep` job 失敗，輸出列出該檔、行號與依賴覆寫那條規則的 id
 
 #### Scenario: 既有專案禁令掃描不變
 
@@ -198,7 +208,7 @@ CI 的原始碼安全掃描 job SHALL 在每張 pull request 執行測試替身�
 
 ### Requirement: 例外必須帶規則 id 與理由
 
-`backend/tests/` 底下任一層的 Python 檔中，每個 `nosemgrep` 或 `nosem` 例外標記 SHALL 寫成 `# nosemgrep: <規則 id> -- <理由>`：規則 id 為測試替身邊界檢查的規則 id（可列多個，以逗號分隔），理由非空且引用 T4 或 T6。不符合此格式的標記（含不帶規則 id 的裸標記）MUST 讓後端測試失敗，並指出檔案與行號。
+`backend/tests/` 底下任一層的 Python 檔中，Semgrep 會認作例外標記的任何字樣（行首或空白之後緊接 `nosem` 的字樣，不分大小寫，含不在註解裡的，例如註解中段或字串常值裡的 ` nosemgrep`、` nosem`）SHALL 是寫成 `# nosemgrep: <規則 id> -- <理由>` 的合格標記，且一行只有這一個：規則 id 為測試替身邊界檢查的規則 id（可列多個，以逗號分隔），理由非空且引用 T4 或 T6。不符合此格式的字樣（含不帶規則 id 的裸標記、不以 `#` 開頭的字樣）MUST 讓後端測試失敗，並指出檔案與行號。
 
 來源：issue #562 工作項 1、2；Epic #560；testing-agent-rules T4、T6；clarification Q7、N3、N4。
 
@@ -211,6 +221,11 @@ CI 的原始碼安全掃描 job SHALL 在每張 pull request 執行測試替身�
 
 - **WHEN** 例外標記寫成 `# nosemgrep: label-suite-test-self-mock-object -- needed here`
 - **THEN** 例外標記檢查失敗，訊息指出理由要引用 T4 或 T6
+
+#### Scenario: 不在註解開頭的例外字樣同樣失敗
+
+- **WHEN** 測試檔有一行寫成 `x = 1  # see nosemgrep docs`（註解中段），另一行的字串常值含 `" nosem"`（沒有 `#`）
+- **THEN** 例外標記檢查失敗，兩行各自被列出檔案與行號
 
 #### Scenario: 合格的例外通過且抑制該規則
 
@@ -231,7 +246,7 @@ CI 的原始碼安全掃描 job SHALL 在每張 pull request 執行測試替身�
 #### Scenario: 規則被改寬鬆時樣本驗證失敗
 
 - **WHEN** PR 修改匯入物件那條規則，使一個標註為應命中的樣本不再被命中
-- **THEN** CI 的原始碼安全掃描 job 在規則樣本驗證那一步失敗，輸出列出漏掉的行
+- **THEN** CI 的 `semgrep` job 在規則樣本驗證那一步失敗，輸出列出漏掉的行
 
 #### Scenario: 放行範圍被擴大時樣本驗證失敗
 
@@ -252,7 +267,7 @@ CI 的原始碼安全掃描 job SHALL 在每張 pull request 執行測試替身�
 #### Scenario: T4 與 T6 的檢查方式是實際指令
 
 - **WHEN** 讀取 `docs/development/rules/testing-agent-rules.mdx` 的 T4 與 T6 檢查方式
-- **THEN** 兩條都寫出測試替身邊界檢查的指令與 CI 的原始碼安全掃描 job；T4 寫出組裝比對測試的檔名；T4 的「harness 與 production 同構」不再標「待建置」
+- **THEN** 兩條都寫出測試替身邊界檢查的指令與 CI 的 `semgrep` job；T4 寫出組裝比對測試的檔名；T4 的「harness 與 production 同構」不再標「待建置」
 
 #### Scenario: 已知缺口與前端缺口寫在 T6
 

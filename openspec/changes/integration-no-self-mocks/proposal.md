@@ -12,10 +12,10 @@ Epic #560 要在技術債長出來之前加上機器防線。子單 #562 處理�
 
 範圍來自 issue #562 的六個工作項。要擋哪些寫法、用什麼機制、例外怎麼記等細節，已由 `clarification.md` 依維護者 2026-11-25 的授權逐題決議（決議摘要見下節），下列內容照決議撰寫。
 
-- **機器檢查（Q1、Q4）**：新增 Semgrep 規則檔 `.semgrep/test-boundaries.yml`，樣本放在 `.semgrep/tests/`，擋下測試把本專案自己的模組換成替身：以 `app` 開頭的字串目標、從 `app` 匯入的物件被 `setattr`／`setitem`／`delattr`／`patch` 系列替換、`MagicMock`／`AsyncMock`／`Mock`／`create_autospec` 與 `unittest.mock` 的使用，以及任何對 `dependency_overrides` 的寫入。環境變數與工作目錄（`setenv`、`delenv`、`chdir`）不擋。
+- **機器檢查（Q1、Q4）**：新增 Semgrep 規則檔 `.semgrep/test-boundaries.yml`，樣本放在 `.semgrep/tests/`，擋下測試把本專案自己的模組換成替身：以 `app` 開頭的字串目標、從 `app` 匯入的物件被 `setattr`／`setitem`／`delattr`／`patch` 系列替換、`MagicMock`／`AsyncMock`／`Mock`／`create_autospec` 與 `unittest.mock` 的使用，以及任何對 `dependency_overrides` 的寫入（含 `clear`、`popitem`、`del`、`|=`）。環境變數與工作目錄（`setenv`、`delenv`、`chdir`）不擋。
 - **掃描範圍與接進 CI（Q2、N1）**：掃描範圍是 `backend/tests/integration/`、`backend/tests/conftest.py`、`backend/tests/probe.py` 與日後的 `factories/`。因為現行 `semgrep scan` 掃不到任何 `tests/`，採 S2：`.github/workflows/ci.yml` 的 `semgrep` job 新增一步，用 `--x-ignore-semgrepignore-files` 與 `.semgrep/test-boundaries.yml` 掃測試；現有 `label-suite.yml` 的掃描不動，不新增 `.semgrepignore`。該旗標是實驗性的，靠 CI 釘住的 `semgrep/semgrep:1.186.0` 映像保證行為。網路邊界現階段採「凡不是本專案 `app` 的目標都視為邊界」，之後接上外部服務（Resend、OIDC）再改成明列的邊界模組清單。
 - **本機與 CI 一致**：`scripts/check.mjs` 新增對應的一步，`scripts/tests/check.test.mjs` 的步驟數同步更新。
-- **既有 4 個命中（Q3）**：`backend/tests/integration/test_export_openapi.py` 對 `export_openapi` 的 `DEFAULT_OUTPUT`、`DOCS_COPY_OUTPUT` 兩個輸出路徑常數的替換視為檔案系統邊界，規則以 `pattern-not` 放行這兩個常數，同一個模組的其他屬性照擋；不改那 4 個測試。
+- **既有 4 個命中（Q3）**：`backend/tests/integration/test_export_openapi.py` 對 `export_openapi` 的 `DEFAULT_OUTPUT`、`DOCS_COPY_OUTPUT` 兩個輸出路徑常數的替換視為檔案系統邊界，規則以 `pattern-not` 放行這兩個常數，只限以 `from app.scripts import export_openapi` 匯入、以位置參數指名的寫法；同一個模組的其他屬性與其他寫法（別名、全路徑、`name=`）照擋；不改那 4 個測試。
 - **harness 與 production 共用同一個 app 組裝函式（Q6、T4）**：靜態規則擋 `conftest.py`、integration、`probe.py` 內的 `FastAPI(`、`fastapi.FastAPI(`、`Starlette(`；另加比對測試 `backend/tests/integration/test_harness_parity.py`，比 middleware 類別與順序、例外處理器與 `openapi()["paths"]`，harness 只能多出 `probe_router` 的路徑（只准加、不准減）。不比 `app.routes`，也不跑 lifespan（N6）。
 - **例外記法（Q7、N3）**：行內 `# nosemgrep: <rule-id> -- <理由，引用 T4 或 T6>`；另加一支小 pytest，檢查測試範圍內每個 `nosemgrep` 都帶規則 id 與理由，不帶規則 id 的 `# nosemgrep` 直接失敗。
 - **違規樣本的證據（Q8、N2）**：`.semgrep/tests/` 常駐樣本，由 CI 既有的 `semgrep --test .semgrep/` 每次執行；因 `semgrep --test` 不套用規則的 `paths`，掃描範圍改在驗收時一次性證明（暫時在 `conftest.py`、`probe.py` 放違規，確認 CI 用的指令會擋）。N5 的三種繞法（區域變數轉手、別處組字串、先讀出 `dependency_overrides` 再寫）Semgrep 看不到，樣本以「不標記」的行記下。
@@ -53,18 +53,20 @@ N7（新測試檔各自不得超過 #561 的 400 行上限）照常遵守。
 
 ### Modified Capabilities
 
-預設沒有。`ci-quality-gates`（新的 CI 步驟）與 `workspace-commands`（`scripts/check.mjs` 新的一步）只有在寫 specs 時確認既有 requirement 的描述必須改動，才補 MODIFIED delta；若新增的 CI 步驟與檢查步驟可完全由 `test-boundary-checks` 的 requirement 涵蓋，就只有新增一個 capability。`security-scanning` 不動（N1 採 S2，既有掃描範圍不變）。
+- `workspace-commands`：MODIFIED「check 依固定順序執行與 CI 相同的自查」，`--with-semgrep` 由一步變兩步，多出測試替身邊界檢查，指令與 CI `semgrep` job 的對應步驟相同（clarification Q4、P2；design D1、D7）。
+
+`ci-quality-gates` 不寫 delta：新檢查是既有 `semgrep` job 的一步，不是新 job，既有 requirement 的文字不改仍成立（design D1）。`security-scanning` 不動（N1 採 S2，既有掃描範圍不變）；`test-boundary-checks` 與 `workspace-commands` 一律稱「CI 的 `semgrep` job」，不借用 `security-scanning` 的「原始碼安全掃描」一詞。
 
 `backend-code-boundaries`、`code-size-limits`（#561 已歸檔，僅 N7 要求新測試檔遵守其上限）不受影響。
 
 ## Impact
 
-- **Semgrep**：新增 `.semgrep/test-boundaries.yml` 與 `.semgrep/tests/` 的違規、合規與「不標記」樣本；`.semgrep/label-suite.yml` 與根目錄 `.semgrepignore`（不新增）不動。
-- **CI**：`.github/workflows/ci.yml` 的 `semgrep` job 新增一步（`--x-ignore-semgrepignore-files` 加 `.semgrep/test-boundaries.yml`）；`semgrep --test .semgrep/` 既有步驟會涵蓋新樣本。
+- **Semgrep**：新增 `.semgrep/test-boundaries.yml`、樣本 `.semgrep/tests/test-boundaries.py`（違規、合規與「不標記」樣本）與符號連結 `.semgrep/tests/test-boundaries.yml`；`.semgrep/label-suite.yml` 與根目錄 `.semgrepignore`（不新增）不動。
+- **CI**：`.github/workflows/ci.yml` 的 `semgrep` job 新增一步（`--x-ignore-semgrepignore-files` 加 `.semgrep/test-boundaries.yml`）；`semgrep --test .semgrep/` 既有步驟會涵蓋新樣本；`scripts/tests/ci-workflow.test.mjs` 的「C11: semgrep」加斷言。
 - **工具**：`scripts/check.mjs` 新增對應的一步，`scripts/tests/check.test.mjs` 更新步驟數。
-- **後端測試**：新增 `backend/tests/integration/test_harness_parity.py`（Q6）與檢查 `nosemgrep` 理由的 pytest（Q7、N3，確切位置由 design 決定）；每個新檔 ≤ 400 行（N7）。`backend/tests/integration/test_export_openapi.py` 與 `backend/app/` 不動。
-- **文件**：`docs/development/rules/testing-agent-rules.mdx`（T4、T6、文首狀態段、N5 缺口、前端未納入的原因）、`agent-rules.mdx` 總覽；T9 表不加列。
-- **specs**：新增 `openspec/specs/test-boundary-checks/`；其他 delta 視上節。
+- **後端測試**：新增 `backend/tests/integration/test_harness_parity.py`（Q6）與 `backend/tests/unit/test_semgrep_exemptions.py`（Q7、N3）；每個新檔 ≤ 400 行（N7）。`backend/tests/integration/test_export_openapi.py` 與 `backend/app/` 不動。
+- **文件**：`docs/development/rules/testing-agent-rules.mdx`（T4、T6、文首狀態段、N5 缺口、前端未納入的原因）、`docs/development/rules/agent-rules.mdx` 總覽；T9 表不加列。
+- **specs**：新增 `openspec/specs/test-boundary-checks/spec.md`；`openspec/specs/workspace-commands/spec.md` 套用 MODIFIED delta。
 - **與兄弟 issue 的衝突風險**：#563 也可能動 `backend/pyproject.toml`、`scripts/check.mjs`、`ci.yml` 與規則文件狀態段；#561 已合併。互不依賴，後合併者 merge `origin/main`；新規則集中成獨立檔案以縮小衝突範圍。
 - **不動**：`backend/app/`、`backend/openapi.json`、`frontend/src/api/generated/`、`docs/diagrams/architecture/*`、`.semgrep/label-suite.yml`。
 

@@ -43,11 +43,17 @@
 
 | 規則 id                                 | 依據   | 規則本文                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | :-------------------------------------- | :----- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `label-suite-test-self-mock-string`     | Q1     | 照 system-design §規則本文                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `label-suite-test-self-mock-string`     | Q1     | 照 system-design §規則本文，另補關鍵字參數 `target=`：`pattern-either` 加 `$F(..., target="$T", ...)` 與 `$F(..., target=f"...", ...)`，`pattern-regex` 改為 `(\(\s*\|\btarget\s*=\s*)[a-z]?["']app(\.\|["'])`，使 `monkeypatch.setattr(target="app.main.x", value=1)` 也命中                                                                                                                                                     |
 | `label-suite-test-self-mock-object`     | Q1、Q3 | 照 system-design §規則本文，含 `DEFAULT_OUTPUT`、`DOCS_COPY_OUTPUT` 兩條 `pattern-not`；該節的接收者正規式已涵蓋內建 `setattr`（沒有接收者時也符合）                                                                                                                                                                                                                                                                              |
-| `label-suite-test-dependency-overrides` | Q1     | 照 system-design §規則本文                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `label-suite-test-dependency-overrides` | Q1     | 照 system-design §規則本文，另補四條：`$APP.dependency_overrides.clear()`、`$APP.dependency_overrides.popitem()`、`del $APP.dependency_overrides[$K]`、`$APP.dependency_overrides \|= $V`                                                                                                                                                                                                                                         |
 | `label-suite-test-mock-objects`         | Q1-D   | 本節定下（system-design 寫「實作時依上表補上」）：`pattern-either` 列 `MagicMock(...)`、`AsyncMock(...)`、`Mock(...)`、`create_autospec(...)`、`$X.MagicMock(...)`、`$X.AsyncMock(...)`、`$X.Mock(...)`、`$X.create_autospec(...)`、`import unittest.mock`、`from unittest import mock`、`from unittest.mock import $N`（含多名稱與別名）。`$X.` 那幾條涵蓋 `mock.MagicMock()`、`unittest.mock.MagicMock()`、`mocker.MagicMock()` |
 | `label-suite-test-own-app-factory`      | Q6 B   | 照 system-design §規則本文                                                                                                                                                                                                                                                                                                                                                                                                        |
+
+表格內程式碼裡的 `\|` 是 Markdown 表格的跳脫，寫進規則檔時是 `|`。新補的樣式（`target=`、依賴覆寫表的四條）沒有在 system-design 驗證過，由 tasks 1.1 的樣本證明。
+
+`self-mock-object` 的兩條 `pattern-not` 只放行一種寫法：以 `from app.scripts import export_openapi` 匯入、名稱為 `export_openapi`、以位置參數指名 `"DEFAULT_OUTPUT"` 或 `"DOCS_COPY_OUTPUT"`。`import app.scripts.export_openapi as eo` 後的 `eo`、全路徑 `app.scripts.export_openapi`、關鍵字參數 `name="DEFAULT_OUTPUT"` 都不符合 `pattern-not`，照樣命中（specs「export_openapi 的輸出路徑常數視為檔案系統邊界」），樣本各放一行 `ruleid`。
+
+`mock-objects` 刻意不涵蓋 `mocker.patch(...)`、`mocker.patch.object(...)` 對外部目標的替換（它們會回傳 `MagicMock`）：pytest-mock 不是本專案的相依套件，`mocker` fixture 不存在；對 `app` 目標的 `mocker.patch` 仍由 `self-mock-string`、`self-mock-object` 擋下（接收者正規式含 `mocker`）。日後若加入 pytest-mock，再補這兩個樣式。
 
 `any-patch`（Q1-C）與 `app-fixture-uses-create-app`（Q6 B 的輔助）不放進規則檔。每條的 `message` 以英文寫明違反 T4 或 T6、應改替換外部邊界，以及例外記法 `# nosemgrep: <rule-id> -- T4|T6 <reason>`。檔案頂端註解指向 testing-agent-rules T4、T6、issue #562 與 clarification Q1–Q3、Q6、Q7。YAML 要通過 `pnpm format:check`（Prettier 會格式化 `.semgrep/*.yml`），所以寫完以 `pnpm exec prettier --write` 格式化再驗證。
 
@@ -73,10 +79,10 @@ semgrep scan --error --x-ignore-semgrepignore-files --config .semgrep/test-bound
 
 新增 `.semgrep/tests/test-boundaries.py` 與符號連結 `.semgrep/tests/test-boundaries.yml -> ../test-boundaries.yml`（沿用 `label-suite.yml` 的配對方式；沒有這個連結 `semgrep --test` 找不到規則）。樣本內容：
 
-- 每條規則至少一個 `# ruleid:` 行，涵蓋 specs `test-boundary-checks` 各 Scenario 列出的寫法；
+- 每條規則至少一個 `# ruleid:` 行，涵蓋 specs `test-boundary-checks` 各 Scenario 列出的寫法，含 `monkeypatch.setattr(target="app.main.x", value=1)`、依賴覆寫表的 `clear()`、`popitem()`、`del …[k]`、`|=`，以及兩個輸出常數的三種不放行寫法（`eo` 別名、全路徑、`name=` 關鍵字參數）；
 - `# ok:` 行涵蓋 specs 中「不擋」的寫法：`application.x`、`sys.stderr`（物件與字串）、`httpx.AsyncClient.send`、`setenv`、`delenv`、`chdir`、`@router.patch("/items")`、只讀取 `dependency_overrides`、`create_app(...)` 與 `include_router(...)`、`export_openapi` 的兩個輸出常數；
 - 例外記法：同一行有 id 與理由（`ok`）、上一行有 id 與理由（`ok`）、只指名別的規則（`ruleid`）；
-- N5 的三種繞法各一行，**不加任何標註**，上方以一般註解寫明「已知擋不住（N5），日後若被命中，`--test` 會報 incorrect lines，改成 `ruleid`」。
+- N5 的三種繞法各一行，**不加任何標註**，上方以一般註解寫明「已知擋不住（N5），日後若被命中，`--test` 會報 incorrect lines，改成應命中標註」。這段說明註解本身不得含 `ruleid:`、`ok:` 或空白緊接 `nosem` 的字樣：`semgrep --test` 會把含 `ruleid:`／`ok:` 的註解當成下一行的標註，空白緊接 `nosem` 會抑制該行（D6），兩者都會讓「不標註」失效。
 
 樣本是合成程式碼，不含答案資料。`.semgrep/` 不在任何掃描指令的目標內，違規樣本不會讓掃描失敗。不建 `.semgrep/tests/test-boundaries.ts`（Q5）。
 
@@ -85,9 +91,9 @@ semgrep scan --error --x-ignore-semgrepignore-files --config .semgrep/test-bound
 新檔 `backend/tests/integration/test_harness_parity.py`，`pytestmark = pytest.mark.integration`：
 
 - **兩邊怎麼取得**：production 為 `create_app(make_test_settings(tmp_path))`；harness 直接用 `conftest.py` 的 `app` fixture（同一個 `tmp_path`、同一份設定），這樣比的是測試實際使用的 harness，而不是另外照抄一份。
-- **允許多出的路徑**：`{API_V1_PREFIX + route.path for route in probe_router.routes if isinstance(route, APIRoute)}`，`API_V1_PREFIX` 取自 `app.main`；不寫死探針路徑清單，探針新增路由時不必改測試。
+- **允許多出的路徑**：`{API_V1_PREFIX + route.path for route in probe_router.routes if isinstance(route, APIRoute)}`，`API_V1_PREFIX` 以 `from app.core.paths import API_V1_PREFIX` 匯入（`app.main` 也是從這裡取用）；不寫死探針路徑清單，探針新增路由時不必改測試。
 - **比對函式** `assert_same_assembly(production, harness, allowed_extra_paths)`：(1) `[m.cls for m in user_middleware]` 兩邊相等（含順序），不符時訊息列出兩邊清單；(2) `set(exception_handlers)` 相等，不符時列出差集；(3) `production.openapi()["paths"]` 的每個鍵都在 harness 中且值相等，缺少或不同時列出路徑；harness 多出的鍵必須是 allowed 的子集，否則列出多出的路徑。不比 `app.routes`（system-design 已驗證會假陰性）。
-- **突變案例**（Q8 對應，證明比對有效，每案各以 `pytest.raises(AssertionError, match=…)` 斷言訊息）：harness 的 `user_middleware.pop()` 後失敗；交換 harness 兩個中介層的順序後失敗；刪除 harness 一個 `exception_handlers` 鍵後失敗；把參數對調（以 harness 當 production、另一個 `create_app` 當 harness）使探針路徑成為「缺少」而失敗；harness 再以 `APIRouter()` 掛一條 `/api/v1/not-a-probe` 後失敗。突變後把 `middleware_stack` 設為 `None`，不啟動 app。
+- **突變案例**（Q8 對應，證明比對有效，每案各以 `pytest.raises(AssertionError, match=…)` 斷言訊息）：harness 的 `user_middleware.pop()` 後失敗；交換 harness 兩個中介層的順序後失敗；刪除 harness 一個 `exception_handlers` 鍵後失敗；把參數對調（以 harness 當 production、另一個 `create_app` 當 harness）使探針路徑成為「缺少」而失敗；harness 再以 `APIRouter()` 掛一條 `/api/v1/not-a-probe` 後失敗。突變後把 `middleware_stack` 設為 `None`，不啟動 app。`install_openapi` 會把 `openapi()` 的結果快取在 `openapi_schema`，所以在已呼叫過 `openapi()` 的 app 上改路由時，比對前要把該 app 的 `openapi_schema` 設為 `None`，否則比到的是舊文件。
 - **不跑 lifespan、不連資料庫**（N6），所以 SQLite 與 PostgreSQL 兩輪結果相同。
 - 檔案本身在 Semgrep 檢查範圍內：不得呼叫 `FastAPI(`、不得用 `setattr` 系列改 `app` 的東西，突變一律以 list／dict 操作與 `include_router` 完成。
 
@@ -96,10 +102,10 @@ semgrep scan --error --x-ignore-semgrepignore-files --config .semgrep/test-bound
 新檔 `backend/tests/unit/test_semgrep_exemptions.py`，只用 `re` 與 `pathlib`：
 
 - **走訪範圍**：`backend/tests/` 底下任一層的 `*.py`（以 `Path.rglob("*.py")` 取得，略過路徑含 `__pycache__` 的項目）。比 Semgrep 檢查範圍寬，順便擋住在 `tests/unit/` 等處放無意義的標記（system-design §例外的記法 末段）。
-- **偵測**：逐行比對 `#\s*nosem`（不分大小寫）；2026-11-25 以 1.186.0 映像實測：Semgrep 除了 `# nosemgrep` 也認得較短的 `# nosem`，而且同一行字串常值裡的 `"# nosemgrep"` 同樣會抑制該行的發現；所以偵測逐行比對原始文字，字串裡的寫法也算，不只看註解 token。
-- **合格格式**：`#\s*nosemgrep:\s*<id>(\s*,\s*<id>)*\s+--\s+<reason>`，其中每個 `<id>` 符合 `label-suite-test-[a-z0-9-]+`，`<reason>` 非空且含獨立的 `T4` 或 `T6`。其他拼法（含 `nosem`、裸 `nosemgrep`、缺 `--`、理由沒有條號）一律判為不合格，訊息列出 `相對路徑:行號`、該行內容與要求的格式。
-- **測試案例**：以 `tmp_path` 造樣本檔，驗證：裸 `# nosemgrep`、`# nosem`、`# NOSEMGREP`、只有 id 沒有 `--`、理由沒有 T4／T6、id 不是 `label-suite-test-*` 各自不合格；同一行合格、多個 id 合格；字串裡的 `"# nosemgrep"` 也被偵測。另一案對真實 `backend/tests/` 斷言沒有不合格的標記。
-- **自身不觸發**：本檔的 docstring 與樣本不得含 `#` 緊接 `nosem` 的字面，樣本以字串拼接產生（例如 `"#" + " nosem" + "grep"`）；本檔在走訪範圍內，不排除自己，等於由自己證明。
+- **偵測**：逐行以 `(?i)(?:^|\s)nosem` 比對原始文字。依 design-reviewer 以 1.186.0 映像實測：Semgrep 只要同一行任何位置出現空白緊接的 `nosem`／`nosemgrep`（不分大小寫）就抑制該行，`#` 不是必要條件，例如註解中段的 `# see nosemgrep`、字串常值裡的 `" nosem"` 都會抑制；沒有空白的 `#nosemgrep` 不抑制。所以偵測不看註解 token，也不要求 `#`；另把行首的 `nosem` 一併算入，寧可多抓。
+- **合格格式**：被偵測到的行，偵測樣式在該行恰好命中一次，且該處屬於 `#\s+nosemgrep:\s*<id>(\s*,\s*<id>)*\s+--\s+<reason>`，其中每個 `<id>` 符合 `label-suite-test-[a-z0-9-]+`，`<reason>` 非空且含獨立的 `T4` 或 `T6`。其他情況（含 `nosem`、裸 `nosemgrep`、缺 `--`、理由沒有條號、不以 `#` 開頭的字樣、同一行另有第二個字樣）一律判為不合格，訊息列出 `相對路徑:行號`、該行內容與要求的格式。「恰好一次」是因為同一行另有一個裸字樣時，Semgrep 會抑制該行所有規則，合格標記不能替它背書。
+- **測試案例**：以 `tmp_path` 造樣本檔，驗證：裸 `# nosemgrep`、`# nosem`、`# NOSEMGREP`、只有 id 沒有 `--`、理由沒有 T4／T6、id 不是 `label-suite-test-*`、註解中段的 `# see nosemgrep docs`、字串常值裡沒有 `#` 的 `" nosem"`、合格標記之後同一行再有一個裸字樣，各自不合格；同一行合格、多個 id 合格；字串裡的 `"# nosemgrep"` 也被偵測。另一案對真實 `backend/tests/` 斷言沒有不合格的標記。
+- **自身不觸發**：本檔字面（含 docstring、註解、樣本字串、正規式）不得出現行首或空白緊接 `nosem` 的字樣；樣本以字串拼接產生（例如 `"#" + " nos" + "emgrep"`，拼接點落在 `nosem` 中間），偵測樣式的字面 `(?i)(?:^|\s)nosem` 中 `nosem` 緊接的是 `)`，不觸發，可以直接寫；本檔在走訪範圍內，不排除自己，等於由自己證明。
 
 替代方案：在 Semgrep 內以 `generic` 規則強制理由，被裸 `nosemgrep` 抑制，不可行（system-design 已驗證）。
 
@@ -119,7 +125,7 @@ semgrep scan --error --x-ignore-semgrepignore-files --config .semgrep/test-bound
 
 ### D9 違規先失敗再提交（issue 工作項 5；Q8、N2）
 
-每一組都先對刻意違規跑出失敗再提交，失敗輸出摘要記在該組的提交訊息：規則組先寫樣本、在規則尚未寫入時跑 `semgrep --test .semgrep/` 得到 missed lines；範圍以暫時在 `conftest.py`、`probe.py`、`tests/integration/` 的檔案各放一行違規、以 D3 指令確認被擋再還原；兩支 pytest 先寫測試再實作，並以暫時改 `conftest.py` 的 `app` fixture、暫時放一個裸標記確認真實檔案的案例會失敗。驗收時 acceptance-verifier 再做一次範圍證明（N2）。
+每一組都先對刻意違規跑出失敗再提交，失敗輸出摘要記在該組的提交訊息：規則組先寫樣本，再放五條 id 齊全、樣式永不命中的規則空殼，跑 `semgrep --test .semgrep/` 得到每條規則的 missed lines（不先放齊 id 的話，樣本標了規則檔沒有的 id 只會得到 `Found rule id mismatch` 並以 2 結束，看不到漏掉的行），再逐條填入規則本文；範圍以暫時在 `conftest.py`、`probe.py`、`tests/integration/` 的檔案各放一行違規、以 D3 指令確認被擋再還原；兩支 pytest 先寫測試再實作，並以暫時改 `conftest.py` 的 `app` fixture、暫時放一個裸標記確認真實檔案的案例會失敗。驗收時 acceptance-verifier 再做一次範圍證明（N2）。
 
 ### D10 規則文件（Q5、Q9、N5；system-design §常駐文件異動）
 
@@ -147,7 +153,7 @@ semgrep scan --error --x-ignore-semgrepignore-files --config .semgrep/test-bound
 - [N2：範圍沒有常駐證明，有人改窄 `paths.include` 時樣本仍通過] → 範圍在 tasks 與驗收各做一次性證明；`paths.include` 的四個樣式寫在 T4 的適用路徑，改規則時審查對照。
 - [N6：比對測試不跑 lifespan，差異藏在 lifespan 時比不到] → lifespan 只由 `create_app` 掛上，另建 app 已被 `own-app-factory` 擋下；lifespan 行為由既有 integration 測試涵蓋。
 - [`mock-objects` 規則會連外部邊界用的 `unittest.mock` 一起擋] → Q1-D 的決議即如此；外部邊界改用 `monkeypatch.setattr` 替換非 `app` 目標（specs「外部邊界與行程環境的替換不受限」）。
-- [`security-scanning` 的「掃描只回報兩條專案規則」被讀成整個 `semgrep` job] → D1 說明該 Requirement 指專案禁令掃描那一步；`test-boundary-checks` 以 Scenario 守住那一步不變。若 design-reviewer 或維護者認為需要明文，改為在 `security-scanning` 補 MODIFIED delta，不影響實作。
+- [`security-scanning` 的「掃描只回報兩條專案規則」被讀成整個 `semgrep` job] → 已處理：`test-boundary-checks` 與 `workspace-commands` 一律稱「CI 的 `semgrep` job」，不用「原始碼安全掃描」一詞（該詞在 `security-scanning` 專指兩條專案禁令的掃描）；D1 說明該 Requirement 指專案禁令掃描那一步，`test-boundary-checks` 以 Scenario 守住那一步不變；不寫 `security-scanning` delta。
 - [新掃描讓 `semgrep` job 多約 20–30 秒] → 本機以映像實測約 24 秒（含映像啟動），不構成阻擋。
 - [與 #563 合併衝突] → D12。
 - [第 3 組沒有在本機跑 NoteCraft build] → D11；`docs-site` job 必過。
@@ -156,7 +162,7 @@ semgrep scan --error --x-ignore-semgrepignore-files --config .semgrep/test-bound
 
 沒有資料、API 或畫面的遷移，沒有 Alembic migration。上線就是合併本 change 的 PR；合併當下 `backend/` 在檢查範圍內零違規（`export_openapi` 的 4 處由 D2 放行），`backend/tests/` 沒有 `nosem` 標記，比對測試在現有 harness 上通過，所以 main 不會因合併而變紅。
 
-回滾：revert 本 change 的實作 commit（規則與接線組、後端測試組、文件組各一個）。三組可單獨 revert：只 revert 規則組時，CI 與 `check.mjs` 的新步驟與規則檔一起回去；後端測試組不依賴規則組也能單獨存在。沒有需要清理的狀態。
+回滾：revert 本 change 的實作 commit（規則與接線組、後端測試組、文件組各一個）。後端測試組與文件組可單獨 revert；後端測試組不依賴規則組也能單獨存在。revert 規則組時，CI 與 `check.mjs` 的新步驟與規則檔一起回去，**必須同時 revert 文件組**：文件組寫的檢查指令與規則檔路徑在規則組 revert 後不再存在，只 revert 規則組會讓 T4、T6 宣稱一個沒在跑的檢查（testing-agent-rules 文首「不得宣稱已經在跑」）。沒有需要清理的狀態。
 
 ## Open Questions
 
