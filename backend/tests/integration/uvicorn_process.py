@@ -8,10 +8,12 @@ import os
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
+from typing import IO
 
 import httpx
 
@@ -59,8 +61,18 @@ def scrubbed_env(tmp_path: Path, cors_origin: str, **extra: str) -> dict[str, st
     return env
 
 
-def start_uvicorn(target: str, port: int, env: dict[str, str]) -> subprocess.Popen[str]:
-    """Start ``python -m uvicorn <target> --factory`` on 127.0.0.1 with no proxy flags."""
+def start_uvicorn(
+    target: str,
+    port: int,
+    env: dict[str, str],
+    output: IO[str] | None = None,
+) -> subprocess.Popen[str]:
+    """Start ``python -m uvicorn <target> --factory`` on 127.0.0.1 with no proxy flags.
+
+    ``output`` receives both stdout and stderr when given (a file the caller reads
+    later); otherwise they are pipes the caller must drain with ``communicate``.
+    """
+    sink = output if output is not None else subprocess.PIPE
     return subprocess.Popen(  # noqa: S603 - fixed argv, no shell
         [
             sys.executable,
@@ -75,21 +87,36 @@ def start_uvicorn(target: str, port: int, env: dict[str, str]) -> subprocess.Pop
         ],
         cwd=BACKEND_DIR,
         env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stdout=sink,
+        stderr=subprocess.STDOUT if output is not None else subprocess.PIPE,
         text=True,
     )
 
 
 @contextmanager
 def running_uvicorn(target: str, env: dict[str, str]) -> Iterator[str]:
-    """Run a healthy uvicorn subprocess and yield its base URL; stop it on exit."""
+    """Run a healthy uvicorn subprocess and yield its base URL; stop it on exit.
+
+    The server's output goes to a temporary file, so a long-lived server never
+    blocks on a full pipe; when it fails to become healthy the output is appended
+    to the error.
+    """
     port = free_port()
     base_url = f"http://127.0.0.1:{port}"
-    server = start_uvicorn(target, port, env)
-    try:
-        wait_until_healthy(base_url, server)
-        yield base_url
-    finally:
-        server.terminate()
-        server.communicate(timeout=30)
+    with tempfile.TemporaryFile(mode="w+", encoding="utf-8") as output:
+        server = start_uvicorn(target, port, env, output)
+        try:
+            try:
+                wait_until_healthy(base_url, server)
+            except AssertionError as error:
+                output.flush()
+                output.seek(0)
+                raise AssertionError(f"{error}\n{output.read()}") from error
+            yield base_url
+        finally:
+            server.terminate()
+            try:
+                server.wait(timeout=30)
+            except subprocess.TimeoutExpired:
+                server.kill()
+                server.wait()

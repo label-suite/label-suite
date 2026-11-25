@@ -141,7 +141,7 @@ services:
 # container, so that container needs an address that never changes: it is pinned
 # below and kept out of ip_range, the only part of the subnet Docker hands out to
 # other containers. The subnet is outside Docker's default pools (172.16.0.0/12 and
-# 192.168.0.0/16). The same three values are in docker-compose.prod.yml; CI checks
+# 192.168.0.0/16). The same three values are in docker-compose.yml; CI checks
 # that they match. Because of that, the two tiers cannot run on one host at the same
 # time: `docker compose down` one before starting the other.
 networks:
