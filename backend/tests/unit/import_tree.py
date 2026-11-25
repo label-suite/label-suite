@@ -18,6 +18,19 @@ BACKEND_DIR = Path(__file__).resolve().parents[2]
 PYPROJECT = BACKEND_DIR / "pyproject.toml"
 LINT_IMPORTS = Path(sys.executable).parent / "lint-imports"
 
+MAIL = "Mail only through its entry"
+OIDC = "OIDC only through its entry"
+HTTP_CLIENT = "Outbound HTTP only through its entry"
+
+# Third-party packages each entry owns; must equal that contract's forbidden_modules (design D4).
+ENTRY_THIRD_PARTY: dict[str, set[str]] = {
+    MAIL: {"resend", "smtplib", "aiosmtplib"},
+    OIDC: {"authlib"},
+    HTTP_CLIENT: {"httpx", "requests", "aiohttp", "urllib3"},
+}
+# Top-level packages registered as entries (design D3); none exists today.
+ENTRY_TOP_LEVEL_PACKAGES: set[str] = set()
+
 MODULE_FILES = {
     "__init__.py": "",
     "schemas.py": "from app.core.base import Base\n",

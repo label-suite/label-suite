@@ -16,7 +16,10 @@ import pytest
 import app.modules
 from tests.unit.import_tree import (
     BACKEND_DIR,
+    HTTP_CLIENT,
     LINT_IMPORTS,
+    MAIL,
+    OIDC,
     append,
     build_tree,
     load_contracts,
@@ -29,7 +32,7 @@ ROUTER = "Routers do not use the data layer"
 CORE = "Core does not depend on modules"
 HTTP = "Data layer does not import HTTP"
 
-EXPECTED_CONTRACTS = {LAYERS, ROUTER, CORE, HTTP}
+EXPECTED_CONTRACTS = {LAYERS, ROUTER, CORE, HTTP, MAIL, OIDC, HTTP_CLIENT}
 
 
 def contract_name_diff(
@@ -150,6 +153,9 @@ def test_real_backend_passes_the_layer_check() -> None:
     assert result.returncode == 0, result.stdout
 
 
+SAMPLE_EXPECTED = {LAYERS, ROUTER, CORE, HTTP}
+
+
 def fake(*names: str) -> list[dict[str, Any]]:
     return [{"name": name} for name in names]
 
@@ -157,17 +163,17 @@ def fake(*names: str) -> list[dict[str, Any]]:
 def test_name_diff_sees_one_removed_and_one_added_when_the_count_is_unchanged() -> None:
     contracts = fake(LAYERS, ROUTER, CORE, "Brand new")
 
-    assert contract_name_diff(contracts, EXPECTED_CONTRACTS) == ([HTTP], ["Brand new"])
+    assert contract_name_diff(contracts, SAMPLE_EXPECTED) == ([HTTP], ["Brand new"])
 
 
 def test_name_diff_sees_a_removed_contract() -> None:
-    assert contract_name_diff(fake(LAYERS, ROUTER, CORE), EXPECTED_CONTRACTS) == ([HTTP], [])
+    assert contract_name_diff(fake(LAYERS, ROUTER, CORE), SAMPLE_EXPECTED) == ([HTTP], [])
 
 
 def test_name_diff_sees_a_renamed_contract() -> None:
     contracts = fake(LAYERS, ROUTER, CORE, "Data layer imports HTTP")
 
-    assert contract_name_diff(contracts, EXPECTED_CONTRACTS) == (
+    assert contract_name_diff(contracts, SAMPLE_EXPECTED) == (
         [HTTP],
         ["Data layer imports HTTP"],
     )

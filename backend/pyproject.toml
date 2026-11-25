@@ -110,6 +110,32 @@ source_modules = ["app.modules.*.repository", "app.modules.*.models"]
 forbidden_modules = ["fastapi", "starlette"]
 allow_indirect_imports = true
 
+# Entry contracts (B12, issue #563). One contract per entry. The entry package is not
+# listed in source_modules, so it may import its own SDK while every other top-level
+# package may not (L3). allow_indirect_imports is required: without it, a package that
+# uses an existing entry would fail too (L4). test_entry_contracts.py keeps
+# source_modules complete when a new top-level package appears.
+[[tool.importlinter.contracts]]
+name = "Mail only through its entry"
+type = "forbidden"
+source_modules = ["app.core", "app.modules", "app.main", "app.scripts"]
+forbidden_modules = ["resend", "smtplib", "aiosmtplib"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "OIDC only through its entry"
+type = "forbidden"
+source_modules = ["app.core", "app.modules", "app.main", "app.scripts"]
+forbidden_modules = ["authlib"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "Outbound HTTP only through its entry"
+type = "forbidden"
+source_modules = ["app.core", "app.modules", "app.main", "app.scripts"]
+forbidden_modules = ["httpx", "requests", "aiohttp", "urllib3"]
+allow_indirect_imports = true
+
 [tool.coverage.run]
 source = ["app"]
 branch = true
