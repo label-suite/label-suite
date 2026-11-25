@@ -572,6 +572,22 @@ jobs:
             jq -e '.services.backend.healthcheck.interval == "30s" and (.services.backend.healthcheck.test | join(" ") | contains("/api/v1/health"))' "$RUNNER_TEMP/$file.json" > /dev/null || { echo "::error::$file: backend health check must poll /api/v1/health every 30s"; exit 1; }
           done
 
+      # The browser check runs on the production tier only, but Chromium is
+      # installed before the first tier starts so a slow download cannot sit
+      # between a running stack and its checks.
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install the e2e dependencies
+        run: pnpm install --frozen-lockfile --filter e2e...
+
+      - name: Install the Chromium browser
+        run: pnpm --filter e2e exec playwright install --with-deps chromium
+
       - name: Start the Lite tier
         run: docker compose up --build --wait --wait-timeout 300
 
@@ -581,6 +597,17 @@ jobs:
           body=$(curl -fsS http://localhost:8080/api/v1/health)
           echo "$body"
           jq -e '.data.status == "ok" and .data.database == "ok"' <<< "$body"
+
+      - name: Check the Lite security headers
+        run: scripts/check-security-headers.sh http://localhost:8080
+
+      # Stopping the backend makes nginx answer its own error page; the headers
+      # must still be there (502 or 504, either is accepted).
+      - name: Stop the Lite backend
+        run: docker compose stop backend
+
+      - name: Check the Lite security headers with the backend down
+        run: scripts/check-security-headers.sh --backend-down http://localhost:8080
 
       - name: Stop the Lite tier
         run: docker compose down -v
@@ -594,6 +621,20 @@ jobs:
           echo "$body"
           jq -e '.data.status == "ok" and .data.database == "ok"' <<< "$body"
 
+      - name: Check the production security headers
+        run: scripts/check-security-headers.sh http://localhost:8080
+
+      # Loads the page shell in a browser against the running production tier and
+      # fails on a CSP violation or a failed request.
+      - name: Check the public entry in a browser
+        run: E2E_TARGET=compose E2E_BASE_URL=http://localhost:8080 pnpm --filter e2e test
+
+      - name: Stop the production backend
+        run: POSTGRES_PASSWORD="$GENERATED_POSTGRES_PASSWORD" docker compose -f docker-compose.prod.yml stop backend
+
+      - name: Check the production security headers with the backend down
+        run: scripts/check-security-headers.sh --backend-down http://localhost:8080
+
       - name: Stop the production tier
         run: POSTGRES_PASSWORD="$GENERATED_POSTGRES_PASSWORD" docker compose -f docker-compose.prod.yml down -v
 
@@ -602,6 +643,14 @@ jobs:
         run: |
           docker compose logs --no-color || true
           POSTGRES_PASSWORD="$GENERATED_POSTGRES_PASSWORD" docker compose -f docker-compose.prod.yml logs --no-color || true
+
+      - name: Upload the public entry report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-public-entry
+          path: e2e/playwright-report
+          if-no-files-found: ignore
 
   # Combines the two backend rounds (a path only PostgreSQL reaches would count
   # as uncovered in one round) and compares the result with the baseline file.
@@ -722,6 +771,7 @@ jobs:
           node --test \
             scripts/tests/check-coverage.test.mjs \
             scripts/tests/check-junit-skips.test.mjs \
+            scripts/tests/check-security-headers.test.mjs \
             scripts/tests/ci-changed-paths.test.mjs \
             scripts/tests/check.test.mjs \
             scripts/tests/dev.test.mjs \

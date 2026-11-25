@@ -5,6 +5,7 @@
 // Steps are found by the command they run, never by their display name, so renaming
 // a step does not break the test (design R10). Each task that adds a job adds its
 // assertions here; this file currently covers C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 and C11.
+// C7 includes the header comparison, the production browser check and the failure-only report upload.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { describe, test } from "node:test";
@@ -354,6 +355,14 @@ describe("C7: changes and compose", () => {
   const HEALTH = /localhost:8080\/api\/v1\/health/;
   const LITE_DOWN = /^docker compose down -v\s*$/m;
   const PROD_DOWN = /docker compose -f docker-compose\.prod\.yml down -v/;
+  const HEADERS = /scripts\/check-security-headers\.sh http:\/\/localhost:8080\s*$/m;
+  const HEADERS_DOWN = /scripts\/check-security-headers\.sh --backend-down http:\/\/localhost:8080/;
+  const BROWSER =
+    /E2E_TARGET=compose E2E_BASE_URL=http:\/\/localhost:8080 pnpm --filter e2e test\s*$/m;
+  const LITE_STOP = /^docker compose stop backend\s*$/m;
+  const PROD_STOP =
+    /POSTGRES_PASSWORD="?\$\{?[A-Z_]+\}?"? docker compose -f docker-compose\.prod\.yml stop backend/;
+  const CHROMIUM = /\bplaywright install --with-deps chromium\b/;
 
   const stepsOf = () => job("compose").steps;
   const indexes = (pattern) =>
@@ -404,12 +413,22 @@ describe("C7: changes and compose", () => {
       at(CORS_REJECTED),
       at(PASSWORD_REJECTED),
       at(STATIC),
+      at(CHROMIUM),
       at(LITE_UP),
       at(HEALTH),
+      indexes(HEADERS)[0],
+      at(LITE_STOP),
+      indexes(HEADERS_DOWN)[0],
       at(LITE_DOWN),
       at(PROD_UP),
+      indexes(HEALTH)[1],
+      indexes(HEADERS)[1],
+      at(BROWSER),
+      at(PROD_STOP),
+      indexes(HEADERS_DOWN)[1],
       at(PROD_DOWN),
     ];
+    for (const entry of order) assert.notEqual(entry, undefined, "a compose step is missing");
     assert.deepEqual(
       order,
       [...order].sort((a, b) => a - b),
@@ -420,6 +439,42 @@ describe("C7: changes and compose", () => {
     assert.equal(health.length, 2, "one health check per tier");
     assert.ok(at(LITE_UP) < health[0] && health[0] < at(LITE_DOWN));
     assert.ok(at(PROD_UP) < health[1] && health[1] < at(PROD_DOWN));
+  });
+
+  test("each tier compares the headers once and again with --backend-down after stopping the backend", () => {
+    assert.equal(indexes(HEADERS).length, 2, "one header comparison per tier");
+    assert.equal(indexes(HEADERS_DOWN).length, 2, "one --backend-down comparison per tier");
+    assert.equal(indexes(LITE_STOP).length, 1);
+    assert.equal(indexes(PROD_STOP).length, 1);
+    const [liteDown, prodDown] = indexes(HEADERS_DOWN);
+    assert.ok(indexes(LITE_UP)[0] < indexes(HEADERS)[0]);
+    assert.ok(indexes(LITE_STOP)[0] < liteDown && liteDown < indexes(LITE_DOWN)[0]);
+    assert.ok(indexes(PROD_STOP)[0] < prodDown && prodDown < indexes(PROD_DOWN)[0]);
+  });
+
+  test("the browser check runs once, on the production tier between its up and its backend stop", () => {
+    const browser = indexes(BROWSER);
+    assert.equal(browser.length, 1, "exactly one browser check");
+    assert.ok(indexes(PROD_UP)[0] < browser[0] && browser[0] < indexes(PROD_STOP)[0]);
+  });
+
+  test("Chromium and the e2e dependencies are installed before the Lite tier starts", () => {
+    const chromium = indexes(CHROMIUM);
+    assert.equal(chromium.length, 1);
+    assert.ok(chromium[0] < indexes(LITE_UP)[0]);
+    const install = indexes(/\bpnpm install --frozen-lockfile --filter e2e\.\.\./);
+    assert.equal(install.length, 1);
+    assert.ok(install[0] < chromium[0]);
+  });
+
+  test("a failure-only step uploads the Playwright report under its own name and tolerates its absence", () => {
+    const uploads = uploadSteps("compose");
+    assert.equal(uploads.length, 1);
+    assert.equal(uploads[0].if, "failure()");
+    assert.match(uploads[0].with.path, /e2e\/playwright-report/);
+    assert.equal(uploads[0].with.name, "playwright-report-public-entry");
+    assert.notEqual(uploads[0].with.name, "playwright-report");
+    assert.equal(uploads[0].with["if-no-files-found"], "ignore");
   });
 
   test("both rejection checks require a non-zero exit and name the variable in the output", () => {
@@ -665,6 +720,7 @@ describe("C9: scripts-tests", () => {
   const SCRIPT_TESTS = [
     "check-coverage",
     "check-junit-skips",
+    "check-security-headers",
     "ci-changed-paths",
     "check",
     "dev",

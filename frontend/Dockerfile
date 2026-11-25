@@ -42,6 +42,11 @@ COPY frontend ./frontend
 # so the browser calls relative paths and readApiConfig accepts the empty value
 # (system-design D6). Declared after the copies above so overriding it does not
 # invalidate the install layer.
+# The Content-Security-Policy in frontend/nginx.conf allows API calls to the
+# same origin only (connect-src 'self'). Setting a cross-origin URL here means
+# adding that origin to connect-src, and to the expected value in
+# scripts/check-security-headers.sh, in the same change; otherwise the browser
+# blocks every API call (#568 system-design D7).
 ARG VITE_API_BASE_URL=""
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 

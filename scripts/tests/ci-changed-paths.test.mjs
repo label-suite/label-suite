@@ -48,6 +48,22 @@ describe("touchesCompose", () => {
     }
   });
 
+  test("the header check, the e2e config and the public-entry and shared e2e files: true", () => {
+    for (const path of [
+      "scripts/check-security-headers.sh",
+      "e2e/playwright.config.ts",
+      "e2e/public-entry/shell.spec.ts",
+      "e2e/public-entry/another.spec.ts",
+      "e2e/shared/fixtures/index.ts",
+    ]) {
+      assert.equal(touchesCompose([path]), true, path);
+    }
+  });
+
+  test("another e2e journey alone: false", () => {
+    assert.equal(touchesCompose(["e2e/system-health/dev-health.spec.ts"]), false);
+  });
+
   test("look-alike names do not match", () => {
     for (const path of [
       "backend-notes.md",
