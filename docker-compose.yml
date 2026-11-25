@@ -55,6 +55,8 @@ services:
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?set CORS_ALLOWED_ORIGINS in .env}
       CORS_ALLOW_CREDENTIALS: ${CORS_ALLOW_CREDENTIALS:-true}
       SQLITE_PATH: ${SQLITE_PATH:-./data/label_suite.db}
+      # Passed from .env so deployers can tune log noise; INFO when unset (#567 Q14).
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
     volumes:
       - label-suite-data:/app/data
     healthcheck:

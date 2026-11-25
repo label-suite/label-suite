@@ -17,6 +17,7 @@ from app.core.config import Settings, load_settings
 from app.core.db import create_engine, create_sessionmaker
 from app.core.errors import register_exception_handlers
 from app.core.i18n import MessageCatalog
+from app.core.log_config import configure_logging
 from app.core.middleware import (
     CORRELATION_ID_HEADER,
     CorrelationIdMiddleware,
@@ -74,6 +75,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     Args:
         settings: The settings to use; ``None`` reads them from the environment.
 
+    Side effects:
+        Configures the process-wide log output from ``LOG_LEVEL``
+        (``configure_logging``) once the settings are valid; a repeated call
+        replaces this repository's root handler rather than adding a second one.
+
     Returns:
         The app with the four middlewares, the exception handlers, the
         ``/api/v1`` router with the health module mounted, and the
@@ -89,6 +95,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         OperationIdCollisionError: When two operations share an operationId.
     """
     resolved = settings if settings is not None else load_settings(Settings)
+    configure_logging(resolved)
 
     app = FastAPI(
         title=API_TITLE,
