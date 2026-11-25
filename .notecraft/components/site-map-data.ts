@@ -228,10 +228,7 @@ export const SITE_MAP_PAGES: SiteMapPage[] = [
     path: "04-annotation/01-annotation-list",
     standalone: true,
     features: [
-      { title: "兩種入口並存", anchor: "兩種入口並存" },
-      { title: "路由上下文與回退", anchor: "路由上下文與回退" },
-      { title: "頁首資訊", anchor: "頁首資訊" },
-      { title: "入口麵包屑", anchor: "入口麵包屑" },
+      { title: "進入標記模組", anchor: "進入標記模組" },
       { title: "任務資訊卡", anchor: "任務資訊卡" },
       { title: "清單檢視狀態往返工作區", anchor: "清單檢視狀態往返工作區" },
       { title: "標記員視圖的清單", anchor: "標記員視圖的清單" },
