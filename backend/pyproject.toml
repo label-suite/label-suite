@@ -110,6 +110,47 @@ source_modules = ["app.modules.*.repository", "app.modules.*.models"]
 forbidden_modules = ["fastapi", "starlette"]
 allow_indirect_imports = true
 
+# Entry contracts (B12, issue #563). One contract per entry. The entry package is not
+# listed in source_modules, so it may import its own SDK while every other top-level
+# package may not (L3). allow_indirect_imports is required: without it, a package that
+# uses an existing entry would fail too (L4). test_entry_contracts.py keeps
+# source_modules complete when a new top-level package appears.
+[[tool.importlinter.contracts]]
+name = "Mail only through its entry"
+type = "forbidden"
+source_modules = ["app.core", "app.modules", "app.main", "app.scripts"]
+forbidden_modules = ["resend", "smtplib", "aiosmtplib"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "OIDC only through its entry"
+type = "forbidden"
+source_modules = ["app.core", "app.modules", "app.main", "app.scripts"]
+forbidden_modules = ["authlib"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "Outbound HTTP only through its entry"
+type = "forbidden"
+source_modules = ["app.core", "app.modules", "app.main", "app.scripts"]
+forbidden_modules = ["httpx", "requests", "aiohttp", "urllib3"]
+allow_indirect_imports = true
+
+# Cross-module contracts (B12, issue #563). independence blocks every import between
+# business modules, router included; a module that really needs another one adds a
+# commented ignore_imports in its own change (design D8). protected keeps routers
+# importable only by the assembly point (L5, L6).
+[[tool.importlinter.contracts]]
+name = "Modules do not import each other"
+type = "independence"
+modules = ["app.modules.*"]
+
+[[tool.importlinter.contracts]]
+name = "Only the assembly point imports routers"
+type = "protected"
+protected_modules = ["app.modules.*.router"]
+allowed_importers = ["app.main"]
+
 [tool.coverage.run]
 source = ["app"]
 branch = true

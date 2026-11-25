@@ -5,12 +5,8 @@ The violating cases build a throwaway package tree under ``tmp_path`` that mirro
 there, so no violating file ever lives in ``app/``.
 """
 
-import os
 import pkgutil
-import shutil
 import subprocess
-import sys
-import tomllib
 from fnmatch import fnmatchcase
 from pathlib import Path
 from typing import Any
@@ -18,57 +14,45 @@ from typing import Any
 import pytest
 
 import app.modules
-
-BACKEND_DIR = Path(__file__).resolve().parents[2]
-PYPROJECT = BACKEND_DIR / "pyproject.toml"
-LINT_IMPORTS = Path(sys.executable).parent / "lint-imports"
+from tests.unit.import_tree import (
+    BACKEND_DIR,
+    HTTP_CLIENT,
+    INDEPENDENCE,
+    LINT_IMPORTS,
+    MAIL,
+    OIDC,
+    ROUTER_PROTECTED,
+    append,
+    build_tree,
+    load_contracts,
+    run_lint_imports,
+    write,
+)
 
 LAYERS = "Module layers"
 ROUTER = "Routers do not use the data layer"
 CORE = "Core does not depend on modules"
 HTTP = "Data layer does not import HTTP"
 
-MODULE_FILES = {
-    "__init__.py": "",
-    "schemas.py": "from app.core.base import Base\n",
-    "repository.py": "from app.core.base import Base\n",
-    "service.py": (
-        "from app.modules.{m}.repository import x\nfrom app.modules.{m}.schemas import y\n"
-    ),
-    "router.py": "from app.modules.{m}.service import x\nfrom app.modules.{m}.schemas import y\n",
+EXPECTED_CONTRACTS = {
+    LAYERS,
+    ROUTER,
+    CORE,
+    HTTP,
+    MAIL,
+    OIDC,
+    HTTP_CLIENT,
+    INDEPENDENCE,
+    ROUTER_PROTECTED,
 }
 
 
-def write(root: Path, relative: str, content: str) -> None:
-    path = root / relative
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(content)
-
-
-def build_tree(root: Path, modules: tuple[str, ...] = ("health", "other")) -> None:
-    """Write a clean ``app`` package with the given modules and a ``main.py``."""
-    shutil.copy(PYPROJECT, root / "pyproject.toml")
-    write(root, "app/__init__.py", "")
-    write(root, "app/core/__init__.py", "")
-    write(root, "app/core/base.py", "class Base: ...\n")
-    write(root, "app/modules/__init__.py", "")
-    for module in modules:
-        for name, content in MODULE_FILES.items():
-            write(root, f"app/modules/{module}/{name}", content.format(m=module))
-    imports = "".join(f"from app.modules.{m}.router import router as {m}_router\n" for m in modules)
-    write(root, "app/main.py", imports)
-
-
-def run_lint_imports(cwd: Path) -> subprocess.CompletedProcess[str]:
-    env = {**os.environ, "PYTHONPATH": str(cwd)}
-    return subprocess.run(  # noqa: S603 - fixed argv, no shell
-        [str(LINT_IMPORTS)], cwd=cwd, env=env, capture_output=True, text=True, check=False
-    )
-
-
-def append(root: Path, relative: str, line: str) -> None:
-    path = root / relative
-    path.write_text(path.read_text() + line + "\n")
+def contract_name_diff(
+    contracts: list[dict[str, Any]], expected: set[str]
+) -> tuple[list[str], list[str]]:
+    """Return ``(missing, extra)`` contract names compared with the expected set."""
+    names = {contract["name"] for contract in contracts}
+    return sorted(expected - names), sorted(names - expected)
 
 
 def test_clean_tree_with_main_importing_several_routers_passes(tmp_path: Path) -> None:
@@ -77,7 +61,7 @@ def test_clean_tree_with_main_importing_several_routers_passes(tmp_path: Path) -
     result = run_lint_imports(tmp_path)
 
     assert result.returncode == 0, result.stdout
-    assert "4 kept, 0 broken" in result.stdout
+    assert f"{len(load_contracts())} kept, 0 broken" in result.stdout
 
 
 @pytest.mark.parametrize(
@@ -136,12 +120,6 @@ def test_module_added_after_the_contracts_were_written_is_still_checked(tmp_path
     assert f"{ROUTER} BROKEN" in result.stdout
 
 
-def load_contracts(path: Path = PYPROJECT) -> list[dict[str, Any]]:
-    with path.open("rb") as handle:
-        contracts: list[dict[str, Any]] = tomllib.load(handle)["tool"]["importlinter"]["contracts"]
-    return contracts
-
-
 def uncovered_modules(contracts: list[dict[str, Any]], modules: list[str]) -> list[str]:
     """Return the modules some per-module contract does not cover (patterns match with fnmatch)."""
     by_name = {contract["name"]: contract for contract in contracts}
@@ -152,6 +130,12 @@ def uncovered_modules(contracts: list[dict[str, Any]], modules: list[str]) -> li
         router = by_name[ROUTER]["source_modules"]
         http = by_name[HTTP]["source_modules"]
         if not any(fnmatchcase(base, pattern) for pattern in layers):
+            uncovered.add(module)
+        independent = by_name[INDEPENDENCE]["modules"]
+        if not any(fnmatchcase(base, pattern) for pattern in independent):
+            uncovered.add(module)
+        protected = by_name[ROUTER_PROTECTED]["protected_modules"]
+        if not any(fnmatchcase(f"{base}.router", pattern) for pattern in protected):
             uncovered.add(module)
         for patterns, layer in ((router, "router"), (http, "repository"), (http, "models")):
             if not any(fnmatchcase(f"{base}.{layer}", pattern) for pattern in patterns):
@@ -166,15 +150,38 @@ def test_every_module_in_app_modules_is_covered_by_the_contracts() -> None:
     assert uncovered_modules(load_contracts(), modules) == []
 
 
+def explicit_health(contracts: list[dict[str, Any]], only: set[str]) -> list[dict[str, Any]]:
+    """Copy ``contracts`` and pin the named ones to ``health`` instead of a wildcard."""
+    copies = [dict(contract) for contract in contracts]
+    for contract in copies:
+        if contract["name"] not in only:
+            continue
+        for key in ("containers", "source_modules", "modules", "protected_modules"):
+            if key in contract:
+                contract[key] = [
+                    pattern.replace("*", "health") if "*" in pattern else pattern
+                    for pattern in contract[key]
+                ]
+                if key == "containers":
+                    contract[key] = ["app.modules.health"]
+    return copies
+
+
 def test_module_missing_from_the_contracts_is_reported_by_name() -> None:
-    contracts = [dict(contract) for contract in load_contracts()]
-    for contract in contracts:
-        if contract["name"] == LAYERS:
-            contract["containers"] = ["app.modules.health"]
-        if contract["name"] in (ROUTER, HTTP):
-            contract["source_modules"] = [
-                pattern.replace("*", "health") for pattern in contract["source_modules"]
-            ]
+    every = {LAYERS, ROUTER, HTTP, INDEPENDENCE, ROUTER_PROTECTED}
+    contracts = explicit_health(load_contracts(), every)
+
+    assert uncovered_modules(contracts, ["health", "brandnew"]) == ["brandnew"]
+
+
+def test_module_missing_only_from_the_independence_contract_is_reported() -> None:
+    contracts = explicit_health(load_contracts(), {INDEPENDENCE})
+
+    assert uncovered_modules(contracts, ["health", "brandnew"]) == ["brandnew"]
+
+
+def test_module_missing_only_from_the_router_protected_contract_is_reported() -> None:
+    contracts = explicit_health(load_contracts(), {ROUTER_PROTECTED})
 
     assert uncovered_modules(contracts, ["health", "brandnew"]) == ["brandnew"]
 
@@ -185,3 +192,35 @@ def test_real_backend_passes_the_layer_check() -> None:
     )
 
     assert result.returncode == 0, result.stdout
+
+
+SAMPLE_EXPECTED = {LAYERS, ROUTER, CORE, HTTP}
+
+
+def fake(*names: str) -> list[dict[str, Any]]:
+    return [{"name": name} for name in names]
+
+
+def test_name_diff_sees_one_removed_and_one_added_when_the_count_is_unchanged() -> None:
+    contracts = fake(LAYERS, ROUTER, CORE, "Brand new")
+
+    assert contract_name_diff(contracts, SAMPLE_EXPECTED) == ([HTTP], ["Brand new"])
+
+
+def test_name_diff_sees_a_removed_contract() -> None:
+    assert contract_name_diff(fake(LAYERS, ROUTER, CORE), SAMPLE_EXPECTED) == ([HTTP], [])
+
+
+def test_name_diff_sees_a_renamed_contract() -> None:
+    contracts = fake(LAYERS, ROUTER, CORE, "Data layer imports HTTP")
+
+    assert contract_name_diff(contracts, SAMPLE_EXPECTED) == (
+        [HTTP],
+        ["Data layer imports HTTP"],
+    )
+
+
+def test_real_contract_names_equal_the_expected_set() -> None:
+    missing, extra = contract_name_diff(load_contracts(), EXPECTED_CONTRACTS)
+
+    assert (missing, extra) == ([], []), f"missing {missing}, unexpected {extra}"
