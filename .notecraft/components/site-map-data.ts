@@ -69,10 +69,8 @@ export const SITE_MAP_PAGES: SiteMapPage[] = [
     standalone: true,
     features: [
       { title: "申請重設密碼", anchor: "申請重設密碼" },
-      { title: "申請後看到什麼", anchor: "申請後看到什麼" },
       { title: "設定新密碼", anchor: "設定新密碼" },
       { title: "連結無法使用", anchor: "連結無法使用" },
-      { title: "密碼的顯示與隱藏", anchor: "密碼的顯示與隱藏" },
       { title: "送出中的狀態", anchor: "送出中的狀態" },
     ],
   },
