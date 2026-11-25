@@ -477,7 +477,7 @@ export default function BackendRequestPipeline() {
             <span className="text-slate-500">第一層決定之後，每一步都是同一個值，log 行也帶它</span>
           </div>
           <p className="text-xs text-slate-500">
-            另外：GET /api/v1/health 成功（2xx）時不寫存取紀錄，失敗才寫；路由清單由 create_app 傳入。
+            另外：GET /api/v1/health 成功（2xx）時不寫存取紀錄；其他狀態照分級寫，已記過錯誤的（如 503）除外；路由清單由 create_app 傳入。
           </p>
 
           <div className={"rounded-lg border bg-white p-3 transition-opacity " + (done ? "opacity-100" : "opacity-50")}>
