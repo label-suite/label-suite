@@ -358,6 +358,50 @@
 | **依據** | 原型：`updateMethodName`（`dataset-analysis-detail.html:1968`–`:1991`）在 `S.seqMode === 'partial'` 時對星號加 `.hidden` 並移除 `aria-label`、把 `#iaaMethodSuffix` 換成 `iaaMethodSuffixRef`（「— 參考顯示」，`:437`；英文 `:848`），註解寫「依據 規格 05-02 §八種輸出類型各自的主指標與門檻 第 11 條、維護者裁定 2026-11-19 (#435)」。規格 [`05-dataset/02-analysis-detail.mdx`](../../docs/specs/05-dataset/02-analysis-detail.mdx) §逐型 IAA 報告的版面 第 3 條：「主指標旁有一個**星號標記**，標題後綴是 `— 主要指標`；星號的作用是標出『這一個才是用來判定達標的』」，沒有寫切到部分重疊時的例外；同頁 §八種輸出類型各自的主指標與門檻 第 11 條只說部分重疊「**只能切換顯示**，**不得**當成第二道達標判定」，也沒有出現「參考顯示」這個字。[Issue #435](https://github.com/label-suite/label-suite/issues/435) 的工作項寫「選 Partial overlap 時方法後綴仍是『— 主要指標』，與規格第 11 點不符」，但 issue 上沒有記下「參考顯示」這個用詞的裁定。 |
 | **待決問題** | **已裁定（2026-11-24，#614）**：照原型，規格 05-02 §逐型 IAA 報告的版面 第 3 條補上這條例外，裁定記在 05-02 §已確認決議 Q29；原型不改。原題保留：原型與規格要對齊到哪一邊（屬維護者）：(a) 照原型，用 `spec-writing` 在 05-02 §逐型 IAA 報告的版面 第 3 條補上「實體辨識切到部分重疊時星號收起、後綴改『— 參考顯示』」這條例外；(b) 照規格，維持第 3 條不變，改原型讓標題列不隨模式切換（屬**畫面修正**，開 UI issue 走 Ready gate）。不論選哪一邊，這次裁定要記在哪裡才查得到（例如 05-02 §已確認決議，或 #435 上的留言）？ |
 
+### G-62 登入送出中只停用按鈕，規格要整頁凍結
+
+> #719 新增（維護者在 clarification 停點裁定以規格為準；`design/prototype/` 不改）。
+
+| 欄 | 內容 |
+| :--- | :--- |
+| **重現方式** | 開 `pages/account/login.html`，兩欄填妥後點「登入」，在 800 ms 的送出中點語言切換、「忘記密碼？」與「前往註冊」：都還能點。 |
+| **受影響範圍** | [規格 01-01](../../docs/specs/01-account/01-login.mdx) §用 Email 與密碼登入 第 8～10 條；`account/login`；[Button](components/button.md) |
+| **依據** | 原型：`login.html:700`–`:706` 只對 `#loginBtn` 設 `disabled` 並換成 spinner，頁面其餘部分沒有任何停用。規格 01-01 §用 Email 與密碼登入 第 9 條：「送出中 → **整頁其餘部分都不可互動**，包含語言切換與底部的連結」，卡控機制與邊界情況也各寫一次。 |
+| **待決問題** | 已裁定（2026-11-26，[#719](https://github.com/label-suite/label-suite/issues/719#issuecomment-7187190476)）：以規格為準，實作整頁凍結；原型不改。原題保留：原型與規格要對齊到哪一邊？ |
+
+### G-63 登入失敗橫幅只在送出或換語言時收起，規格要任一欄輸入就收起
+
+> #719 新增（維護者在 clarification 停點裁定以規格為準；`design/prototype/` 不改）。
+
+| 欄 | 內容 |
+| :--- | :--- |
+| **重現方式** | 開 `pages/account/login.html`，兩欄填任意值送出得到「帳號或密碼錯誤，請再試一次」，再在任一欄輸入文字：橫幅仍在。 |
+| **受影響範圍** | [規格 01-01](../../docs/specs/01-account/01-login.mdx) §用 Email 與密碼登入 第 14 條；`account/login`；[Alert Banner](components/alert-banner.md) |
+| **依據** | 原型：`login.html:661`–`:666` 兩個 `input` 監聽只呼叫 `clearFieldError`，只清欄位錯誤；`#errorBanner` 的 `visible` 只在 `clearErrors`（`:651`–`:658`，由送出 `:616` 與換語言 `:671` 呼叫）才移除。規格 01-01 第 14 條：「使用者在任何一欄重新輸入 → 失敗訊息消失」。 |
+| **待決問題** | 已裁定（2026-11-26，[#719](https://github.com/label-suite/label-suite/issues/719#issuecomment-7187190476)）：以規格為準，任一欄輸入就收起橫幅；原型不改。原題保留：原型與規格要對齊到哪一邊？ |
+
+### G-64 登入頁用了 tokens.css 沒有的字級與卡片內距
+
+> #719 新增（維護者在 clarification 停點裁定以規格為準；`design/prototype/` 不改）。
+
+| 欄 | 內容 |
+| :--- | :--- |
+| **重現方式** | 開 `pages/account/login.html`，檢視 `.card`、`.card-title`、`.card-subtitle` 與其他說明文字的計算樣式。 |
+| **受影響範圍** | `account/login`；[Input](components/input.md)、[Button](components/button.md) 的周邊文字 |
+| **依據** | 原型：`login.html:104` 卡片 `padding: 40px 40px 36px`；`:134` 標題 `font-size: 22px`；`:139`、`:292` `font-size: 15px`；`:78`、`:191`、`:216`、`:321` `font-size: 13px`。`assets/tokens.css` 的字級（Type Scale）只有 48／36／24／18／16／14／12，間距只有 4／8／16／24／32／48／64，沒有 22／15／13 與 40／36。 |
+| **待決問題** | 已裁定（2026-11-26，[#719](https://github.com/label-suite/label-suite/issues/719#issuecomment-7187190476)）：實作就近套用既有 token，不新增 token；原型不改。對應：22px 取 `--text-h2`（24px），15px 取 `--text-body`（16px），36px 內距取 `--space-xl`（32px）。仍待實作時決定：13px 與 12px、14px 等距，40px 與 32px、48px 等距，兩者沒有「最近」的 token。 |
+
+### G-65 登入頁語言切換鈕的無障礙名稱不含畫面上的「ZH」
+
+> #719 新增（維護者在 clarification 停點裁定以規格為準；`design/prototype/` 不改）。
+
+| 欄 | 內容 |
+| :--- | :--- |
+| **重現方式** | 開 `pages/account/login.html`，檢視語言切換鈕的無障礙名稱：中文模式是「切換語言」、英文模式是「Switch language」；畫面上顯示的是 `ZH`／`EN`。 |
+| **受影響範圍** | [規格 01-01](../../docs/specs/01-account/01-login.mdx) §語言切換 第 2 條；`account/login` |
+| **依據** | 原型：`login.html:366` `aria-label="切換語言"`、`:559` `langToggleAria: 'Switch language'`，名稱不含可見的代號。規格 01-01 §語言切換 第 2 條：語言切換鈕的說明文字一定包含畫面上看得到的代號（`ZH` 或 `EN`）。 |
+| **待決問題** | 已裁定（2026-11-26，[#719](https://github.com/label-suite/label-suite/issues/719#issuecomment-7187190476)）：以規格為準，實作的無障礙名稱要含可見的代號（例如 `ZH，切換語言`）；原型不改。原題保留：原型與規格要對齊到哪一邊？ |
+
 ## 二、缺少狀態證據
 
 ### G-05 焦點樣式幾乎全面缺席
