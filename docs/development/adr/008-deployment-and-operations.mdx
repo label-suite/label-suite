@@ -130,6 +130,7 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；有 Cloudflare 時用�
 - 要有 token 儲存
 - Lite 層的 log 含可用的設定密碼連結，必須當敏感資料處理
 - 沒有 key 時，連結要由部署者手動轉給使用者
+- 沒有設定寄信服務的 Lite 部署沒有自行註冊，帳號只能由系統管理員邀請（維護者 2026-11-26 裁定）
 
 ### 什麼情況要重新討論
 
@@ -501,3 +502,4 @@ Celery worker 維持 warm shutdown：收到 SIGTERM 後不再領新任務，把�
 | 2026-11-26 | 還原演練每週自動、每季人工（[D9](#d9-資料備援只做正式層備份產出到獨立-volume)） | —（原為待決） | [#687](https://github.com/label-suite/label-suite/issues/687) |
 | 2026-11-26 | 接受刪除請求在備份裡的七天曝險並寫進隱私說明；刪除請求另記小表，還原後先重新套用（[D9](#d9-資料備援只做正式層備份產出到獨立-volume)、[D7](#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)） | —（原為待決） | [#687](https://github.com/label-suite/label-suite/issues/687) |
 | 2026-11-26 | 六題欄位與表的細節：刪除請求小表放同一個 PostgreSQL、不對 `users` 加 FK、備份之外另留一份；匿名化時 `email` 改寫成 `deleted-<id>@invalid`、`name` 改寫成「已刪除的使用者」；`status` 為 `queued`／`running`／`succeeded`／`failed`／`cancelled`（後三者終態）；`ai_run_events` 加可為 null 的 `payload`，由終態事件帶（超出第 2 列字面的「status、at」，維護者已確認）；`dataset_version` 定版後只有撤回兩欄可從 null 寫一次；欄名與型別照草案（[D5](#d5-ai-可追溯用只新增的-ai_runs-表)、[D7](#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)） | —（補足上列八列未定的細節） | [#687 的回覆](https://github.com/label-suite/label-suite/issues/687#issuecomment-7183496309) |
+| 2026-11-26 | 沒設 key 時關閉自行註冊（[D3](#d3-寄信用-resend沒設-key-時把連結印到-log)） | —（原為 architecture §待決 第 2 列） | [#683](https://github.com/label-suite/label-suite/issues/683) |
