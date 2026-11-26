@@ -6,7 +6,7 @@
 
 - [決定表](https://github.com/label-suite/label-suite/issues/719#issuecomment-7187190476)（以下簡稱「決定表」）
 - [暫時落點畫面確認](https://github.com/label-suite/label-suite/issues/719#issuecomment-7187214559)（依 Ready gate，以下簡稱「落點確認」）
-- 同日後續問答：維護者核准規格 01-01 Q13 與 01-05 Q19 的擬稿文案，並核准 security-agent-rules S4 的撤銷事件不含任務成員身分變更
+- 同日後續問答：維護者核准規格 01-01 Q13 的擬稿文案，並核准 security-agent-rules S4 的撤銷事件不含任務成員身分變更；被動登出兩句的英文後來改用舊 repo 實作計畫的文案（`Session expired, please sign in again`、`Authentication failed, please sign in`），以規格 01-05 Q19 為準
 
 上游四份已在 a93d962 依決定改寫；本份照決定寫，不再有「建議，待 clarification」的範圍。各項後面的括號是決定表的題號，完整對照見 [§待決問題](#待決問題)。
 
@@ -23,7 +23,7 @@
 - 登入頁依後端回報的部署能力決定：沒有設定寄信服務時不顯示「前往註冊」（規格 01-02 Q10 的共用判斷，本次建立；sa-6）；沒有設定 Google 時不顯示 Google 按鈕與「或」分隔線（sa-8、01-01 Q10）
 - 「忘記密碼？」與「前往註冊」照 prototype 顯示，去處由 01-03、01-02 的 change 補上；在那之前點下去落到「其他路徑」，依登入狀態導回（sa-6、U7）
 - 已登入的人開登入頁、以及任何人登入成功後，一律到落點，不回原本要開的頁（規格 01-01 §登入頁 第 9 條、Q3、Q7；sa-5／7、sa-10）
-- 登入頁缺的三處文案照規格 01-01 Q13 的擬稿：平台沒回應的那一句、進行中指示的輔助技術名稱（中文「載入中」、英文 `Loading`），以及被動登出兩句的英文（01-05 Q19）；擬稿已由維護者核准（U3）
+- 登入頁缺的三處文案照規格 01-01 Q13：平台沒回應的那一句、進行中指示的輔助技術名稱（中文「載入中」、英文 `Loading`），以及被動登出兩句的英文（01-05 Q19 的最終文案）（U3）
 
 **一段登入狀態（規格 01-05，sa-2）**
 
@@ -79,15 +79,16 @@
 ### Modified Capabilities
 
 - `api-envelope`：「錯誤碼為大寫底線格式並定義第一批通用碼」加 `AUTH_REQUIRED`（401）、`CSRF_FAILED`（403）（C1）；「成功回應包一層六欄位外層」的「本次沒有 `204` 例外」改為允許登出的 `204`（PL3）
-- `frontend-routing`：「兩頁只在開發模式註冊」中 `/` 與未知路徑導向 `/dev/health` 改為依登入狀態導向；「正式建置不含開發頁與測試替身」中「開啟 `/` 只有空殼、不發後端請求」改寫；「每頁設定瀏覽器標題」加登入頁與暫時落點（PL4、U7；BREAKING）
-- `frontend-i18n`：「介面語言依瀏覽器語言決定」改為預設繁體中文、登入頁可切換、記住選擇並跨頁沿用（U4；BREAKING）
-- `frontend-api-client`：「唯一出口送出的請求帶憑證與介面語言」加寫入請求帶 `X-CSRF-Token`；「伺服器資料快取不自動重試」「認證錯誤只認 401」的「整個過程只送 1 次」改寫，把「`401` 先延續一次再重送原請求」與「`409 ACCOUNT_REFRESH_CONFLICT` 稍等後重送一次」寫成僅有的例外（PL2）
-- `runtime-config`：「其餘設定都有預設值」加入 `AUTH_SECRET`（正式層必填、Lite 層自動產生）、`GOOGLE_*` 一起設或一起不設、`RESEND_API_KEY` 只看有沒有設（PL1）
-- `container-runtime`：「後端缺必要設定時編排啟動失敗」加正式層缺 `AUTH_SECRET`；「Lite 層以預設值起服務」寫明 `AUTH_SECRET` 在 Lite 層自動產生並存進具名 volume；「設定範例檔列出所有設定且不含 secret」加新設定與兩層差別的說明（PL1）
-- `database-migration`：「遷移在兩種資料庫上可升可降可再升」的「升到最新後版本紀錄只有基準版本」「除版本紀錄表外沒有其他資料表」在新增第一個業務 revision 後不再成立（PL6）
+- `frontend-routing`：REMOVED「兩頁只在開發模式註冊」「正式建置不含開發頁與測試替身」，改以 ADDED「開發頁只在開發模式註冊且不經過守門」「正式建置含登入相關頁面且不含開發頁與測試替身」取代（舊 Scenario 的 `/` 導向 `/dev/health` 與「只有空殼」不再成立）；MODIFIED「每頁設定瀏覽器標題」加登入頁與暫時落點（PL4、U7；BREAKING）
+- `frontend-i18n`：REMOVED「介面語言依瀏覽器語言決定」，ADDED「介面語言預設繁體中文並記住使用者的選擇」；MODIFIED「介面文字只取自語言檔」加 `auth` 語言檔（U4；BREAKING）。`dev-health-page` 與 `e2e-testing` 的語言相關 Scenario 以「介面語言為 en」或固定 `zh-TW` 為前提，新規則下仍成立，不修改
+- `frontend-api-client`：MODIFIED「唯一出口送出的請求帶憑證與介面語言」（寫入帶 `X-CSRF-Token`）、「伺服器資料快取不自動重試」、「認證錯誤只認 401」；ADDED「`AUTH_REQUIRED` 時先延續一次再重送原請求」，把延續成功後重送與 `409 ACCOUNT_REFRESH_CONFLICT` 等候後重送寫成僅有的兩個例外（PL2）
+- `runtime-config`：MODIFIED「其餘設定都有預設值」；ADDED「`AUTH_SECRET` 的來源依資料庫層而定」「Google 登入的設定一起設或一起不設」「寄信服務只看有沒有設定」（PL1、sa-6、sa-8）
+- `container-runtime`：MODIFIED「設定範例檔列出所有設定且不含 secret」；ADDED「正式層缺 AUTH_SECRET 時拒絕啟動」「Lite 層的 AUTH_SECRET 存在資料 volume 並跨重啟沿用」（PL1）
+- `database-migration`：MODIFIED「遷移在兩種資料庫上可升可降可再升」（版本紀錄改為鏈上最新的版本）；ADDED「帳號組的三張表在兩種資料庫上可升可降」（PL6、N1）
 - `backend-code-boundaries`：「入口與間接使用不算違規」寫的「今天 `backend/app/` 沒有任何入口」不再成立，本次新增 OIDC 入口 `app/oidc/`（PL5）
 - `component-gallery`：「原語宣告的 variant 集合固定」的 Badge 五個 variant 加角色變體；「展示頁列出每個宣告的項目」的七個區塊加新原語 `label`、`separator`（PL7）
-- `ci-quality-gates`：新增「認證」「授權與權限檢查」兩項關鍵路徑的 90% 分支覆蓋率門檻（sa-13）
+- `ci-quality-gates`：ADDED「認證與授權的關鍵路徑分支覆蓋率門檻」（sa-13）
+- `e2e-testing`：ADDED「登入到落點再登出的旅程」（`e2e/account/login.spec.ts`；帳號由初始化指令建立，不連 Google）
 
 `user-management` 不修改：本次是實作它既有的「Seeder 管理員只能由初始化指令建立」，資料庫層的 Seeder 保護與異動紀錄仍留給 06-01（`system-design.md` §Seeder 初始化指令、§資料模型異動）。`api-schema-export` 不修改：`auth-options` 的單數化只是在既有規則的不規則單數清單加一項（C2，列為 task）。
 
@@ -99,10 +100,10 @@
 - **前端**：登入頁、Google 回調、兩種路由包裝、暫時落點；新增 shadcn/ui 原語 `label`、`separator`，`button` 的送出中狀態與 `badge` 的角色變體，元件展示頁各補一節（`ui-design.md` §元件樹）
 - **相依套件**：`pyjwt`、`argon2-cffi`、`authlib`（以 `uv add` 加入並歸類）；不加 `redis`，登入失敗鎖定在 #726（`system-design.md` T7）
 - **部署與文件**：`.env.example`（`AUTH_SECRET` 兩層差別）、兩份編排檔、Lite Quick Start；`docs/development/workflow/local-development.mdx` 與部署文件加「建立第一位系統管理員」一步；`Secure` 與 `__Host-` cookie 只在 HTTPS 或 `localhost` 有效（T9）寫進部署文件；常駐文件 `backend-modules.mdx`、`frontend-routes.mdx`、`error-codes.mdx`、`endpoint-authorization.mdx`、資料表字典與 ER 已由上游先改，合併時併進主表
-- **CI 與測試規則**：兩項關鍵路徑覆蓋率門檻（後端路徑清單見 `system-design.md` §維護者的決定，前端路徑由 `ui-design.md` 列）；testing-agent-rules T10「尚未檢查」那一列與 Issue #111 本文改寫成兩項已由 #719 建立（sa-13）；Google 一律以 `app.oidc` 的測試替身代替，CI 與 e2e 不連真的 Google（testing-agent-rules T6）
+- **CI 與測試規則**：兩項關鍵路徑覆蓋率門檻（後端路徑清單見 `system-design.md` §維護者的決定，前端路徑見 `design.md` D10）；testing-agent-rules T10「尚未檢查」那一列與 Issue #111 本文改寫成兩項已由 #719 建立（sa-13）；Google 一律以 `app.oidc` 的測試替身代替，CI 與 e2e 不連真的 Google（testing-agent-rules T6）
 - **Hard Rule 5、6**：本次與任務類型無關；沒有任何端點或畫面讀取任務、資料集或標準答案。守門是日後答案隔離（授權第 4 步）所在的位置，本次交出的身分只含帳號識別、登入狀態識別與系統角色
 - **不在本次**：記住我（sa-1）；登入失敗鎖定（#726，sa-3）；01-05 的撤銷事件本身與紀錄保留清除（#726）；權限矩陣與授權第 3、4 步（06-02，sa-11）；註冊（01-02，#723）、設定密碼（01-03，#724）、個人設定與連結 Google（01-04，#727）；側欄與登出控制項（07-01）、無權限與找不到頁（07-03）、儀表板版面（02-01）；使用者管理的其他部分（06-01）；答案隔離、評分、IAA 三項覆蓋率門檻（#111）
-- **規格書與規則文件**：本 change 不改 `docs/specs/`、`design/prototype/` 與規則文件。決定帶來的需求與規則異動由另一條文件分支 `docs/login-clarification-specs` 承載：規格 01-01 §已確認決議 Q10–Q15（sa-8、sa-9、N2、U3、U8、U2）、規格 01-05 Q19 與 §四種改動讓所有裝置重新登入 的自動連結一列（U3）、security-agent-rules S4（N3，撤銷事件不含系統角色與任務成員身分變更）、`design/system/design-gaps.md` G-62–G-65（U1、U2、U5、U8）。specs 階段的 Requirement 以那條分支的規格文字為依據，該分支須先於或與本 change 一起合併
+- **規格書與規則文件**：本 change 不改 `docs/specs/`、`design/prototype/` 與規則文件。決定帶來的需求與規則異動由另一條文件分支 `docs/login-clarification-specs` 承載：規格 01-01 §已確認決議 Q10–Q15（sa-8、sa-9、N2、U3、U8、U2）、規格 01-05 Q19 與 §四種改動讓所有裝置重新登入 的自動連結一列（U3）、security-agent-rules S4（N3，撤銷事件不含系統角色與任務成員身分變更）、`design/system/design-gaps.md` G-62–G-65（U1、U2、U5、U8）。specs 階段的 Requirement 以那條分支的規格文字為依據；該分支已由 PR #742 合併進 `main`（c6b5036）
 
 ## 引用的需求來源
 
