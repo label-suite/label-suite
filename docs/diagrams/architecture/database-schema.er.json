@@ -1641,7 +1641,7 @@
      "name": "id",
      "type": "uuid",
      "required": "required",
-     "note": "評分工作主鍵；PK；(task_id, id) 另供複合 FK 父鍵。來源：/submissions/{id}/status 的 {id}",
+     "note": "評分工作主鍵；PK；(task_id, id) 另供複合 FK 父鍵",
      "pk": true
     },
     {
@@ -1690,7 +1690,7 @@
      "name": "failure_code",
      "type": "varchar(64)",
      "required": "nullable",
-     "note": "安全失敗代碼；CHECK status='failed' → failure_code IS NOT NULL。來源：不存內部路徑或答案（AGENTS.md 硬性規則 8）"
+     "note": "安全失敗代碼；CHECK status='failed' → failure_code IS NOT NULL。來源：不存內部路徑或答案（答案部分見 AGENTS.md 硬性規則 6）"
     },
     {
      "name": "created_at",
@@ -1702,7 +1702,7 @@
      "name": "started_at",
      "type": "timestamptz",
      "required": "nullable",
-     "note": "開始計算時間；入列時為空，worker 開始時寫一次"
+     "note": "開始計算時間；入列時為空；worker 開始時寫一次（提案）"
     },
     {
      "name": "finished_at",
@@ -1711,7 +1711,7 @@
      "note": "結束時間；CHECK status IN ('done','failed') → finished_at IS NOT NULL。來源：未完成不冒稱已結束"
     }
    ],
-   "description": "**一列代表一次背景評分工作**，記的是 [§非同步任務](/notes/development/architecture#非同步任務) 的 `parse_submission` → `load_answers` → `compute_metrics` → `write_results` 跑到哪、成不成功；它不存結果，也不存答案。`GET /api/v1/submissions/{id}/status` 的 `{id}` 就是這一張的 `id`。\n\n**和另外兩張的關係**：多對一指向 `task_run`（複合 FK，同任務才接得上）；**不指向 `task_trial_iaa_result`**——那張的 PK 就是 `trial_round_id`，`write_results` 寫的是那一列，[ADR-003 D10](/notes/development/adr/003-backend-architecture#d10-背景計算的結果寫入做成冪等) 的結果寫入冪等落在它的 PK；本表的唯一鍵管的是「同一次送出別重複建工作」，是另一層。\n\n**這張表沒有自己的條文，而那是對的**：它的結構由 [§非同步任務](/notes/development/architecture#非同步任務) 的流程與 ADR-003 D10 的冪等要求推出來，不是任何一頁規格的資料欄位。"
+   "description": "**一列代表一次背景評分工作**，記的是 [§非同步任務](/notes/development/architecture#非同步任務) 的 `parse_submission` → `load_answers` → `compute_metrics` → `write_results` 跑到哪、成不成功；它不存結果，也不存答案。\n\n**和另外兩張的關係**：多對一指向 `task_run`（複合 FK，同任務才接得上）；**不指向 `task_trial_iaa_result`**——那張的 PK 就是 `trial_round_id`，`write_results` 寫的是那一列，[ADR-003 D10](/notes/development/adr/003-backend-architecture#d10-背景計算的結果寫入做成冪等) 的結果寫入冪等落在它的 PK；本表的唯一鍵管的是「同一次送出別重複建工作」，是另一層。\n\n**這張表沒有規格條文可指**：它是維護者 2026-11-26 裁定新增的（見 [#685 的回覆](https://github.com/label-suite/label-suite/issues/685#issuecomment-7183496070)），結構由 [§非同步任務](/notes/development/architecture#非同步任務) 的流程與 ADR-003 D10 的冪等要求推出來，不是任何一頁規格的資料欄位。"
   },
   {
    "name": "annotation_record",
