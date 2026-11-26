@@ -30,7 +30,7 @@
 | `#sim-403` | `?sim_403=1`（`:5100`） | `taskForbidden` 面板（`:1918`–`:1922`） |
 | `#state-panel-load-failed` | 讓某一個 partial 請求失敗：只有那個分頁留佔位與重試，其他照常（`:4587`–`:4649`） | `.panel` ＋ [Button](../components/button.md)（`.mini-btn`） |
 
-載入中的骨架（`.skeleton-stack`／`.skeleton-card`／`.skeleton-line`，`:1896`–`:1908`）與「任務不存在」面板（`taskNotFound`，`:1912`）找得到，交付包沒有列成視圖 → [Skeleton](../components/skeleton.md)。操作結果的通知（`showToast`，`:11421`）也沒有對應視圖 → [Toast](../components/toast.md)。
+載入中的骨架（`.skeleton-stack`／`.skeleton-card`／`.skeleton-line`，`:1896`–`:1908`）與「任務不存在」面板（`taskNotFound`，`:1912`）找得到，交付包沒有列成視圖 → [Skeleton](../components/skeleton.md)。操作結果的通知（`showToast`，`:11482`）也沒有對應視圖 → [Toast](../components/toast.md)。
 
 ## 這一頁專屬的
 
@@ -40,10 +40,10 @@
 | `.panel`（`:94`） | 容器在 `pages/shared/card.css`，和 `dashboard` 共用；本頁只加 `margin-bottom`（#423）→ [Card](../components/card.md)、G-41 |
 | `.toggle-switch` | 用 `task-config.css` 的正典版（40×22、開啟色 `--color-primary`）；本頁的重新定義（42×24、`--color-cta`）已於 #423 刪除 → G-42 |
 | `.skeleton-*`（`:70`–`:92`） | [Skeleton](../components/skeleton.md)：與 showcase 的 pulse 變體逐字相同（`components-showcase.html:437` 起） |
-| `.toast*` | [Toast](../components/toast.md)：#423 起 `showToast` 依 `TOAST_DURATIONS`（`:11415`）分級，error 只能手動關 → G-39 |
+| `.toast*` | [Toast](../components/toast.md)：#423 起 `showToast` 依 `TOAST_DURATIONS`（`:11476`）分級，error 只能手動關 → G-39 |
 | `.breadcrumb`（`:46`–`:48`） | 本頁一行式的版本 |
 
-八個 modal 都接了 `modal-focus.js`：`backToDraft`（`:6097`）、`settingsLeave`（`:7943`）、`memberAction`（`:8392`）、`arSeqExport`（`:11088`）、`risk`（`:11462`）、`trialRoundRevision`（`:11515`），`taxonomyDelete` 與 `datasetPreview` 由 `task-config.engine.js:6216`、`:6143` 接上 → G-43。
+八個 modal 都接了 `modal-focus.js`：`backToDraft`（`:6156`）、`settingsLeave`（`:8004`）、`memberAction`（`:8453`）、`arSeqExport`（`:11149`）、`risk`（`:11523`）、`trialRoundRevision`（`:11576`），`taxonomyDelete` 與 `datasetPreview` 由 `task-config.engine.js:6216`、`:6143` 接上 → G-43。
 
 ## 業務行為
 
