@@ -193,8 +193,8 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 | `multi_label` | `label_options[]`、`max_selections` | 可搜尋的階層多選 | f1_micro、f1_macro、hamming_loss |
 | `single_dim` | `dimension_name`、`min`、`max`、`step` | 滑桿 | pearson_r、spearman_rho、mse |
 | `multi_dim` | `dimensions[]` | 多個滑桿 | pearson_r（逐維）、mean_mse |
-| `sequence_tagging` | `entities[]`、`snap_unit` | 字元 offset span 選取 | span 級指標 |
-| `entity_recognition` | `entities[]` 或 `polarity_options[]`、`allow_overlapping`、`scheme` | 實體選取加標籤 | entity_f1、span_f1 |
+| `sequence_tagging` | `entities[]`、`snap_unit` | 不重疊的整段切分（每個字元最多屬於一個 span，例如斷詞、分句） | span 級指標 |
+| `entity_recognition` | `entities[]` 或 `polarity_options[]`、`allow_overlapping`、`scheme` | 挑出部分片段（可重疊、可帶極性） | entity_f1、span_f1 |
 | `relation_identification` | `relation_types[]`、`source_output` | 實體加關係連線 | triple_f1 |
 | `free_text` | `max_length` | 文字區塊 | ROUGE、BERTScore、BLEU |
 
@@ -203,6 +203,7 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 - v1 限制：同一種 output type 每個任務最多一次，output 數量沒有上限
 - 多 output 的任務產生分數向量而不是單一分數，IAA 也逐 output type 獨立計算
 - `sequence_tagging` 的標記是半開區間的字元 offset span `{ start, end, label }`，不是對齊 token 的標籤；個人 repo ADR-029 那一列的 `tagging_scheme`、`token_f1`、`token_accuracy` 不採用
+- `sequence_tagging` 的設定驗證要擋下重疊的 span（每個字元最多屬於一個 span），規則本體見 [security-agent-rules.mdx 的 S8](rules/security-agent-rules.mdx#s8-設定的驗證與-span-的表示)；兩者的定位差別見 [ADR-006 的 D3](adr/006-task-config-and-answer-isolation.mdx#d3-序列標記用半開字元-offset-span)
 - `snap_unit` 只影響拖曳落點，不改變既有 span 的意義，所以不需要凍結 tokenizer 版本；改用 span 的理由見 [ADR-006 的 D3](adr/006-task-config-and-answer-isolation.mdx#d3-序列標記用半開字元-offset-span)
 :::
 

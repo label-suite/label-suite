@@ -4,7 +4,7 @@ description: '身分只來自 httpOnly cookie、token 不離開 cookie、CSRF �
 category: '開發說明'
 tags: [開發說明, Agent, 規範, 安全]
 createdAt: '2026-11-10'
-updatedAt: '2026-11-25'
+updatedAt: '2026-11-26'
 ---
 
 # 授權與答案隔離規範
@@ -148,12 +148,12 @@ updatedAt: '2026-11-25'
 | :--- | :--- |
 | **適用路徑** | `backend/app/**` 讀任務設定的地方；序列標記相關的程式 |
 | **禁止** | **`eval` 或任何動態執行設定提供的程式**；接受未經 schema 驗證的設定；回退已淘汰的 token 對齊模型 |
-| **正例** | 設定走 schema 驗證加允許清單；**驗證 output 之間的依賴與循環**；span 用**半開字元 offset** |
+| **正例** | 設定走 schema 驗證加允許清單；**驗證 output 之間的依賴與循環**；`sequence_tagging` 的 span **不得重疊**，每個字元最多屬於一個 span；span 用**半開字元 offset** |
 | **例外** | 無 |
 
 :::note{title="S8 的反例與檢查方式" collapsible}
-- **反例**：`eval(config["scoring_expr"])`——設定是使用者可控輸入，等於遠端執行；或用 token index 表示 span
-- **檢查方式**：「不得出現 `eval`／`exec`」由 CI 的 `backend-sqlite` job 的 `uv run ruff check .` 擋：`backend/pyproject.toml` 選用的 `S` 規則組含 `S307`（`eval`）與 `S102`（`exec`）。循環依賴的測試**待建置**
+- **反例**：`eval(config["scoring_expr"])`——設定是使用者可控輸入，等於遠端執行；或用 token index 表示 span；或讓 `sequence_tagging` 的兩個 span 覆蓋同一個字元
+- **檢查方式**：「不得出現 `eval`／`exec`」由 CI 的 `backend-sqlite` job 的 `uv run ruff check .` 擋：`backend/pyproject.toml` 選用的 `S` 規則組含 `S307`（`eval`）與 `S102`（`exec`）。循環依賴與 span 重疊的測試**待建置**
 :::
 
 ### S9 稽核、脫敏與保留
