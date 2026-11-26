@@ -56,7 +56,7 @@ The organization project **Label Suite** (https://github.com/orgs/label-suite/pr
 
 ## SDD Workflow
 
-Every change follows the `label-suite-sdd` schema: nine planning and implementation artifacts whose order the OpenSpec CLI enforces. A documentation or tooling change may instead pass `--schema spec-driven` and use the four-artifact flow, the escape hatch the maintainer kept on 2026-11-04. The schema lives in `openspec/schemas/label-suite-sdd/`; the dispatch order, the rules per artifact and the one checkpoint live in `openspec/config.yaml`.
+Every change follows the `label-suite-sdd` schema: nine planning and implementation artifacts whose order the OpenSpec CLI enforces. A documentation or tooling change may instead pass `--schema spec-driven` and use the four-artifact flow. The schema lives in `openspec/schemas/label-suite-sdd/`; the dispatch order, the rules per artifact and the one checkpoint live in `openspec/config.yaml`.
 
 ### Roles
 

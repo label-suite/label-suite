@@ -235,6 +235,7 @@ H2 兩邊都由腳本自己在無法判斷時 exit `2`、原因寫 stderr，這�
 
 | 日期 | 決策 | 取代了什麼 | 來源 |
 | :--- | :--- | :--- | :--- |
+| 2026-11-04 | 預設 schema 是 `label-suite-sdd`；文件與工具類的小 change 可以改帶 `--schema spec-driven`，走四份產物的流程（`AGENTS.md` §SDD Workflow） | `openspec/config.yaml` 原本的預設 `schema: spec-driven` | [#51](https://github.com/label-suite/label-suite/issues/51) |
 | 2026-11-10 | 會改 `design/prototype/` 或任何介面的 issue，維護者看過畫面的 artifact 並說可以之後才移到 Ready；畫 artifact 不等於取得改 `design/prototype/` 的授權（`AGENTS.md` §Project Board and Dispatch 的 Ready gate） | 原 Ready gate「對到 Epic 清單的子 issue 視同核可」，以及寫在 §What `/sdd` authorizes 底下的 artifact 規則 | [#52 留言](https://github.com/label-suite/label-suite/issues/52#issuecomment-6755755370) |
 | 2026-11-11 | 兩個平台的 hook 設定手寫兩份、由 H1 核對，不做單一來源生成器（[D3](#d3-兩個平台的-hook-設定手寫兩份不做生成器)） | 初版標為待裁定 | [#111](https://github.com/label-suite/label-suite/issues/111) |
 | 2026-11-11 | H3 只回報診斷，不改檔、不自動 `git add`、不自動套用 formatter（[D4](#d4-h3-只回報診斷不自動修)） | 初版標為待裁定 | [#111](https://github.com/label-suite/label-suite/issues/111) |
