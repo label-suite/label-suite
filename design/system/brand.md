@@ -99,34 +99,34 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 
 **規則：全部中文介面文案用「你」，不用「您」。**維護者裁定（2026-11-18）。
 
-- 動作與後果說明本來就用「你」（例：`profile.html:1227`「除非你回到『密碼設定』重新設一組」），區塊副標與成功通知也一律改「你」（例：`profile.html:1179`「修改你的姓名與聯絡方式」、`:1221`「你現在可使用電子郵件與密碼登入」、`register.html:562`「填寫以下資訊以建立你的帳號」）。
+- 動作與後果說明本來就用「你」（例：`profile.html:1238`「除非你回到『密碼設定』重新設一組」），區塊副標與成功通知也一律改「你」（例：`profile.html:1189`「修改你的姓名與聯絡方式」、`:1232`「你現在可使用電子郵件與密碼登入」、`register.html:562`「填寫以下資訊以建立你的帳號」）。
 - prototype 原本有 13 行用「您」，已在 #418 改成「你」，列在 [§與 prototype 的落差](#與-prototype-的落差)。規格書 `docs/specs/01-account/04-profile.mdx:133` 的副標題也已在 #461 改成「你」。
 
 ### 按鈕用語
 
 - **「送出」＋受詞，不用「提交」。**維護者裁定（2026-11-18）：標記員「送出標記」、審核員「送出審核」（`annotation-workspace.config.js:62` 已是這個寫法）、仲裁「送出仲裁」（`:86`）；狀態詞「已提交」改「已送出」，「提交時間」改「送出時間」。現況與這條不符的行數列在 [§與 prototype 的落差](#與-prototype-的落差)。
-- **帳號流程用「動詞＋受詞」說出結果，不寫「確定」這種空動詞。**登入、建立帳號、寄送重設連結、更新密碼、重新寄送驗證信、前往登入（`register.html:572`、`forgot-password.html:441`、`reset-password.html:605`、`profile.html:1213`）。英文對應：Sign In、Create Account、Send Reset Link、Update Password（Title Case，無句點）。
+- **帳號流程用「動詞＋受詞」說出結果，不寫「確定」這種空動詞。**登入、建立帳號、寄送重設連結、更新密碼、重新寄送驗證信、前往登入（`register.html:572`、`forgot-password.html:441`、`reset-password.html:605`、`profile.html:1224`）。英文對應：Sign In、Create Account、Send Reset Link、Update Password（Title Case，無句點）。
 - **表單通用鈕是「儲存」與「取消」**（`user-management.html:678`–`:687`、`task-new.html:640`–`:641`）。標記員另有「儲存草稿」（`annotation-workspace.config.js:22`）。
 - **送出鈕旁說明後果。**審核送出旁會寫「送出後進入爭議池，待仲裁定案」或「送出後即定稿，成為最終答案」（`annotation-workspace.config.js:73`–`:74`，顯示在 `#wsReviewSubmitConsequence`，`annotation-workspace.html:1276`）。
 - **載入中的按鈕文字**：進行式加刪節號，「建立中…」（`components-showcase.html:1045`）；登入頁的送出鈕改以 spinner 取代文字並帶 `aria-label="載入中"`（UXC-06）。
 - **破壞性動作要先確認，確認句型**：「確定要停用 …」（`user-management.html:803`）、未儲存離開：「你有尚未儲存的變更，離開將會遺失所有已填寫的內容。」（`task-new.html:647`）。UXC-10、UXC-03 在 b2／b3 才寫完。
-- **返回類連結**：「返回登入」「返回個人設定」「前往登入」（`register.html:527`、`profile.html:1212`、`reset-password.html:557`）；**不帶箭頭字元**（見鐵律 12）；現況的 `← 返回登入` 列在落差表。
+- **返回類連結**：「返回登入」「返回個人設定」「前往登入」（`register.html:527`、`profile.html:1223`、`reset-password.html:557`）；**不帶箭頭字元**（見鐵律 12）；現況的 `← 返回登入` 列在落差表。
 
 ### 錯誤與驗證訊息
 
 - **欄位驗證：「請」開頭，說出要做什麼。**「請輸入電子郵件」「請輸入密碼」「請輸入有效的電子郵件格式」（`login.html:528`–`:529`、`register.html:578`）；英文對應「Email is required」「Password is required」。
 - **規則寫在訊息裡，不只說錯。**「密碼至少需 8 個字元，含大寫英文、小寫英文與數字」（`register.html:580`）；密碼規則另有常駐的 hint（`:569`）。
 - **登入失敗不指出是帳號還是密碼**：「帳號或密碼錯誤，請再試一次」（`login.html:526`）；英文 `Invalid email or password`（`:550`）。
-- **說出原因與下一步。**「瀏覽器的儲存空間放不下這張圖，請換一張小一點的；其他欄位已經存好了」（`profile.html:1217`）——先說發生什麼，再說怎麼辦，並交代沒壞的部分。
+- **說出原因與下一步。**「瀏覽器的儲存空間放不下這張圖，請換一張小一點的；其他欄位已經存好了」（`profile.html:1228`）——先說發生什麼，再說怎麼辦，並交代沒壞的部分。
 - **一次性連結失效**：「連結無法使用，請重新申請」；英文 `This link can no longer be used. Please request a new one.`（`sidebar.js:228`–`:229`）。
 - **標記員被擋下時說明條件**：句型是「請完成所有標記項目後再送出」（`annotation-workspace.config.js:59`）；審核員失去資格時說明還能做什麼：「…可檢視自己審核過的內容與歷程，但無法再送出審核決策。」（`:114`）。
 - **無障礙名稱（aria-label）和可見文字一樣要兩種語言**（`ssoAriaLabel`、`navAriaLabel` 等，`login.html:530`–`:535`、`:554`–`:559`）。
 
 ### 標點與格式
 
-- 中文句末多數不加句號（欄位標籤、toast 標題、按鈕），完整句子才加（例：`task-new.html:627` 的 `s3NoticeText`）；toast 副文字是子句，不加句號（`profile.html:1223`）。
+- 中文句末多數不加句號（欄位標籤、toast 標題、按鈕），完整句子才加（例：`task-new.html:627` 的 `s3NoticeText`）；toast 副文字是子句，不加句號（`profile.html:1234`）。
 - 「？」用全形（「忘記密碼？」「還沒有帳號？」，`login.html:519`、`:521`）。
-- 破折號用全形雙線「——」（`profile.html:1230`）。
+- 破折號用全形雙線「——」（`profile.html:1241`）。
 - **日期、時間、數字（維護者裁定 2026-11-18）：**
 
 | 項目 | 格式 | 範例 |
@@ -248,7 +248,7 @@ token 名與值以 `tokens.css` 為準；本節只寫**怎麼用**。
 
 | 斷點 | 條數 | 位置 |
 | :--- | :--- | :--- |
-| `max-width: 767px` | 16 | `dataset-analysis-detail.html:218`、`role-settings.html:253`、`:323`、`dataset-analysis-list.html:199`、`annotation-workspace.html:957`、`:1026`、`verify-email.html:292`、`sidebar.css:1086`、`:1124`、`login.html:354`、`user-management.html:253`、`:331`、`register.html:342`、`profile.html:641`、`forgot-password.html:319`、`reset-password.html:413` |
+| `max-width: 767px` | 16 | `dataset-analysis-detail.html:218`、`role-settings.html:253`、`:323`、`dataset-analysis-list.html:199`、`annotation-workspace.html:957`、`:1026`、`verify-email.html:292`、`sidebar.css:1086`、`:1124`、`login.html:354`、`user-management.html:253`、`:331`、`register.html:342`、`profile.html:649`、`forgot-password.html:319`、`reset-password.html:413` |
 | `max-width: 768px` | 8 | `task-list.html:156`、`task-new.html:152`、`task-detail.html:1006`、`:1873`、`dashboard.components.css:275`、`content-tabs.css:36`、`annotation-list.html:367`、`sidebar.css:828` |
 | `min-width: 768px` | 1 | `profile.html:50` |
 | `max-width: 420px` | 3 | `task-list.html:170`、`task-detail.html:1040`、`annotation-list.html:416` |
@@ -410,7 +410,7 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 
 ### Q1：「您」（13 行）
 
-- 介面文案 11 行：`task-detail.html:2142`、`:2472`；`dataset-analysis-list.i18n.js:46`；`annotation-workspace.config.js:67`；`profile.html:693`、`:740`、`:1181`、`:1191`、`:1233`；`register.html:427`、`:615`。
+- 介面文案 11 行：`task-detail.html:2142`、`:2472`；`dataset-analysis-list.i18n.js:46`；`annotation-workspace.config.js:67`；`profile.html:701`、`:748`、`:1191`、`:1202`、`:1244`；`register.html:427`、`:615`。
 - 樣本資料 2 行（標記範例裡的對話文字，是否同改由維護者決定）：`task-detail.data.js:909`、`:917`。
 
 ### Q2：「提交」（93 行）
@@ -456,7 +456,7 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 
 ### Q5：中文文案裡的「Email」（33 行）
 
-`components-showcase.html:1064`；`forgot-password.html:451`、`:490`；`profile.html:873`、`:963`、`:973`、`:983`、`:993`、`:1003`、`:1013`、`:1153`、`:1208`、`:1223`、`:1233`；`user-management.html:395`、`:777`、`:823`、`:824`；`task-detail.html:2434`、`:2436`、`:2437`、`:2438`、`:2439`、`:2440`、`:2464`、`:2470`；`task-detail.panels/member-management.html:4`、`:9`、`:11`、`:36`、`:37`、`:39`；`task-new.html:644`。
+`components-showcase.html:1064`；`forgot-password.html:451`、`:490`；`profile.html:883`、`:973`、`:983`、`:993`、`:1003`、`:1013`、`:1023`、`:1163`、`:1219`、`:1234`、`:1244`；`user-management.html:395`、`:777`、`:823`、`:824`；`task-detail.html:2434`、`:2436`、`:2437`、`:2438`、`:2439`、`:2440`、`:2464`、`:2470`；`task-detail.panels/member-management.html:4`、`:9`、`:11`、`:36`、`:37`、`:39`；`task-new.html:644`。
 
 ### Q7：線寬不是 2 的內嵌圖示（29 處＋ logo 1 處）
 
@@ -464,7 +464,7 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 - 1.5（3）：`dataset-analysis-detail.html:296`、`:315`；`user-management.html:555`。
 - 3（2）：`components-showcase.html:1234`、`task-new.html:902`。
 - 2.2（2）：`verify-email.html:366`、`reset-password.html:491`。
-- 2.4（1）：`profile.html:1059`。
+- 2.4（1）：`profile.html:1069`。
 - logo（1）：`assets/logo/banner.svg:13` 的 1.8。
 - 未列入：`dataset-analysis-detail.partials/stats-*.html` 裡寫 1、1.5、0.5 的線條是圖表的格線與軸線，不是圖示。
 
