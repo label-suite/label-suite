@@ -375,7 +375,7 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，�
 :::note{title="來源位址的限制與耦合" collapsible}
 - 兩層共用同一個子網段，**不能在同一台主機同時運行**：後起的那一層 `up` 會以位址池重疊失敗，只 `stop` 而沒有 `down` 時網路仍在，一樣失敗。切換前先 `docker compose down`（正式層加 `-f docker-compose.prod.yml`）。子網段與主機既有網路或 VPN 重疊時 `up` 同樣明確失敗，改法見 `.env.example`：兩份編排檔的三個值與 `FORWARDED_ALLOW_IPS` 要一起改。
 - 啟動檢查擋不住兩種寫法，只靠 code review 與 `CMD` 不帶旗標防住：在編排檔以 `command` 覆寫啟動指令並帶 `--forwarded-allow-ips '*'`（旗標蓋過環境變數，`Settings` 看不到），以及 `0.0.0.0/1,128.0.0.0/1` 這類以兩個前綴長度非 0 的網段合起來涵蓋整個 IPv4 空間（驗證器只擋前綴長度 0，不計算涵蓋範圍）。兩者都不得使用。
-- 已知限制，歸到 [ADR-008](adr/008-deployment-and-operations.mdx) 尚未決定的 Cloudflare TLS 模式，不另開 issue：TLS 邊緣之後後端看到的 scheme 恆為 `http`；Cloudflare 或其他邊緣代理在 Nginx 前面時，後端拿到的是邊緣位址而不是真實用戶端，還原需要 Nginx 的 real_ip 設定；Docker 發布埠的來源位址依平台而異（Docker Desktop 為 `192.168.65.1`，Linux 未測），所以測試只做否定斷言。
+- 已知限制，歸到 [ADR-008 的 D1](adr/008-deployment-and-operations.mdx#d1-compose-加-nginx-當-runtimecloudflare-可選) 的 Cloudflare Full (strict) TLS 模式，不另開 issue：TLS 邊緣之後後端看到的 scheme 恆為 `http`；Cloudflare 或其他邊緣代理在 Nginx 前面時，後端拿到的是邊緣位址而不是真實用戶端，還原需要 Nginx 的 real_ip 設定；Docker 發布埠的來源位址依平台而異（Docker Desktop 為 `192.168.65.1`，Linux 未測），所以測試只做否定斷言。
 - 設定沒傳或傳錯時，後端回到「所有請求共用 Nginx 位址」，沒有錯誤訊息；偵測靠 CI 的上述兩項檢查。授權不得讀 `request.client.host`（[security-agent-rules](rules/security-agent-rules.mdx) S1）。
 :::
 

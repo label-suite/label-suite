@@ -35,7 +35,7 @@ tags: [adr, deployment, operations, audit, ci]
 
 ### 決定
 
-Compose 是預設 runtime，Nginx 是唯一公開入口；有 Cloudflare 時用它當 DNS、CDN 與 TLS 邊緣，Nginx 仍要擋安全標頭、做路由並隔離內部服務。每個環境怎麼起、CI 怎麼起服務見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)，分支與映像推進見 [commit-and-release.md](../workflow/commit-and-release.md)。
+Compose 是預設 runtime，Nginx 是唯一公開入口；有 Cloudflare 時用它當 DNS、CDN 與 TLS 邊緣，Nginx 仍要擋安全標頭、做路由並隔離內部服務；Cloudflare 到 origin 這一段用 Full (strict) TLS 模式，origin 裝 Cloudflare Origin CA 憑證。每個環境怎麼起、CI 怎麼起服務見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)，分支與映像推進見 [commit-and-release.md](../workflow/commit-and-release.md)。
 
 ### 後果
 
@@ -49,7 +49,8 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；有 Cloudflare 時用�
 - 貢獻者要裝 Docker；來源記錄 macOS 的 volume I/O 較慢
 - 資料庫 migration 要在 backend 容器內執行；多容器的 log 要合併來看
 - 沒有 Kubernetes 的自我修復與自動擴展；來源記錄零停機部署的能力有限
-- 有 Cloudflare 時多一道代理邊界，要確認它和 Nginx 的行為一致，包括 TLS 模式；Cloudflare 到 origin 這一段的 TLS 模式沒有決定，見[待決](#待決)第 1 列
+- 有 Cloudflare 時多一道代理邊界，要確認它和 Nginx 的行為一致
+- origin 要安裝 Cloudflare Origin CA 憑證；憑證怎麼放進 Nginx、怎麼更新，留到正式部署的 change 再寫
 
 ### 什麼情況要重新討論
 
@@ -200,7 +201,7 @@ AI 輔助流程（產生、評估、工具呼叫）的紀錄要存成什麼形�
 
 ### 決定
 
-AI 輔助流程記在只新增、不更新也不刪除的 `ai_runs` 與其生命週期事件；使用者接受、編輯或拒絕一個 AI 產出記在 `ai_runs`，不另寫 `audit_events`。`ai_runs` 的欄位還沒有寫進[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)，兩張表的分界見 [architecture.mdx 的 §稽核與可追溯](../architecture.mdx#稽核與可追溯)。
+AI 輔助流程記在只新增、不更新也不刪除的 `ai_runs` 與 `ai_run_events`：`ai_runs` 只在建立時寫一次，每次狀態轉換就新增一列 `ai_run_events`（`status`、`at`）；目前狀態取最新的事件，`completed_at` 是終態事件的時間。使用者接受、編輯或拒絕一個 AI 產出記在 `ai_runs`，不另寫 `audit_events`。`ai_runs` 與 `ai_run_events` 的欄位還沒有寫進[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)，兩張表的分界見 [architecture.mdx 的 §稽核與可追溯](../architecture.mdx#稽核與可追溯)。
 
 ### 後果
 
@@ -210,7 +211,8 @@ AI 輔助流程記在只新增、不更新也不刪除的 `ai_runs` 與其生命
 
 **變困難**
 
-- 表只新增，更正要寫新事件，不能改舊列；一次 run 的狀態怎麼在不更新列的前提下表達，見[待決](#待決)第 2 列
+- 表只新增，更正要寫新事件，不能改舊列
+- 目前狀態與完成時間要從最新的事件推得，不能直接讀 `ai_runs` 的欄位
 
 ### 什麼情況要重新討論
 
@@ -280,7 +282,15 @@ AI 輔助流程記在只新增、不更新也不刪除的 `ai_runs` 與其生命
 
 ### 決定
 
-使用者的刪除請求就地匿名化同一列，不把 FK 指向共用墓碑帳號；稽核事件至少保留一個曆年、不自動刪除，事件列永遠不刪，過了最短保留期後只能把 PII 欄位墓碑化；帶答案的歷史 JSON 跟著它所屬的資料集版本或 run 保存。規則見 [backend-agent-rules.mdx 的 B8](../rules/backend-agent-rules.mdx#b8-刪除軟刪除與匿名化)與 [security-agent-rules.mdx 的 S9](../rules/security-agent-rules.mdx#s9-稽核脫敏與保留)。
+使用者的刪除請求就地匿名化同一列，不把 FK 指向共用墓碑帳號；稽核事件至少保留一個曆年、不自動刪除，事件列永遠不刪，過了最短保留期後只能把 PII 欄位墓碑化；帶答案的歷史 JSON 跟著它所屬的資料集版本或 run 保存。規則見 [backend-agent-rules.mdx 的 B8](../rules/backend-agent-rules.mdx#b8-刪除軟刪除與匿名化)與 [security-agent-rules.mdx 的 S9](../rules/security-agent-rules.mdx#s9-稽核脫敏與保留)。匿名化與保留的細節如下。
+
+| 項目 | 做法 |
+| :--- | :--- |
+| 稽核事件的行為人 | 事件保留 `user_id`，畫面顯示成「已刪除的使用者 #短碼」，同一個人做過的事仍然串得起來；短碼怎麼產生未定 |
+| 匿名化帳號的狀態 | `users` 加 `anonymized_at`（`timestamptz`，可為 null）；個資欄位清掉之後，這個帳號不能再登入 |
+| 清除工作的頻率 | 每天跑一次（Celery beat），實際保留最多只會比期限多一天 |
+| 版本撤回 | 只標記撤回，不刪除：版本加 `withdrawn_at` 與撤回原因；撤回後不能再指派到新任務，已經跑過的 run 與帶答案的歷史 JSON 照舊保存，撤回本身記一筆稽核 |
+| 刪除請求的記錄 | 另記在一張只存 `user_id` 與時間的小表；從備份還原之後，要先把這些刪除重新套用一次，才能恢復服務（見 [D9](#d9-資料備援只做正式層備份產出到獨立-volume)） |
 
 ### 後果
 
@@ -290,7 +300,9 @@ AI 輔助流程記在只新增、不更新也不刪除的 `ai_runs` 與其生命
 
 **變困難**
 
-- 匿名化後，稽核事件上的行為人顯示會失去身分；來源把這在最短保留期內是否可接受列為未決，見[待決](#待決)第 3 列
+- 匿名化後，稽核事件上的行為人只顯示成「已刪除的使用者 #短碼」，不再有身分；這在最短保留期內可以接受
+- 清除工作每天一次，實際保留會比期限多最多一天
+- 版本撤回不刪除，撤回後的版本與其歷史 JSON 要一直存續
 - 帶答案的歷史 JSON 要跟著版本或 run 存續，不能隨使用者被刪
 
 ### 什麼情況要重新討論
@@ -370,11 +382,11 @@ CI 有兩個安全 job，DAST 與 API fuzzing 先不做。
 | B 兩層都做：Lite 層也排一個 `VACUUM INTO` 的定期備份 | 兩層行為一致，文件不必分層解釋 | 多一個排程與一條 SQLite 專屬路徑，[B7](../rules/backend-agent-rules.mdx#b7-雙資料庫的測試要求) 要求兩種 dialect 都測；而 Lite 層本來就不建議多人使用，保護的資料價值低 | 不採用自動排程；`VACUUM INTO` 這個手法仍是 Lite 層手動備份的做法，見決定 |
 | C 備份上傳 S3 相容的物件儲存 | 真的做得到災難復原 | 多一組 secret 與一個相依套件，沒設定時還要再設計一條降級路徑（像 [D3](#d3-寄信用-resend沒設-key-時把連結印到-log) 的 Resend 那樣） | 不採用，列為重新討論的條件 |
 | D 直接複製 SQLite 檔或 PostgreSQL 的資料目錄 | 不需要額外工具 | 寫入進行中複製會得到壞檔；PostgreSQL 的資料目錄要先停機或改用 `pg_basebackup` 才一致 | 不採用 |
-| E 本期不做備援，只寫進待決 | 範圍最小 | 標註結果掉了補不回來，和監控不同；等於把唯一一份資料押在單一磁碟上 | 不採用 |
+| E 本期不做備援 | 範圍最小 | 標註結果掉了補不回來，和監控不同；等於把唯一一份資料押在單一磁碟上 | 不採用 |
 
 ### 決定
 
-正式層用 `pg_dump` 定期備份，產物寫到獨立的 backups volume；Lite 層不做自動備援，改由使用者自己來，而且文件要給安全的做法：停掉服務再用 `docker compose cp` 把 `backend` 服務的 `/app/data` 複製出來，或在服務執行中用 `sqlite3 <db> "VACUUM INTO '<path>'"` 取一份一致的副本。不能只寫「複製資料目錄」—— 寫入進行中直接複製會得到壞檔（選項 D），而 SQLite 壞檔平常看不出來，要還原時才發現。備份只放在主資料碟上不足以災難復原，異地複製是部署者的責任，文件要寫明這一點。格式、頻率與保留份數（每日一次 `pg_dump -Fc`、滾動保留 7 份，裁定見 [#490 的留言](https://github.com/label-suite/label-suite/issues/490#issuecomment-7010266013)）見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)。
+正式層用 `pg_dump` 定期備份，產物寫到獨立的 backups volume；Lite 層不做自動備援，改由使用者自己來，而且文件要給安全的做法：停掉服務再用 `docker compose cp` 把 `backend` 服務的 `/app/data` 複製出來，或在服務執行中用 `sqlite3 <db> "VACUUM INTO '<path>'"` 取一份一致的副本。不能只寫「複製資料目錄」—— 寫入進行中直接複製會得到壞檔（選項 D），而 SQLite 壞檔平常看不出來，要還原時才發現。備份只放在主資料碟上不足以災難復原，異地複製是部署者的責任，文件要寫明這一點。還原演練每週自動、每季人工：每週排程把最新的備份還原到暫時的 PostgreSQL，檢查各表筆數，失敗就報警；每季由部署者依 runbook 完整走一次還原；runbook 本身留到正式部署的 change 再寫。刪除請求在備份裡有最多約七天的曝險，這一點接受，寫進隱私說明；從備份還原之後的處理見 [D7](#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)。格式、頻率與保留份數（每日一次 `pg_dump -Fc`、滾動保留 7 份，裁定見 [#490 的留言](https://github.com/label-suite/label-suite/issues/490#issuecomment-7010266013)）見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)。
 
 ### 後果
 
@@ -386,9 +398,9 @@ CI 有兩個安全 job，DAST 與 API fuzzing 先不做。
 **變困難**
 
 - 主機整台損毀（磁碟、電源、核心）時備份一起沒，只有部署者自行異地複製能救
-- 備份要定期驗證還原得回來，否則只是一堆沒驗過的檔案；驗證的頻率沒有決定，見[待決](#待決)第 7 列
+- 要維護每週的還原排程與報警，並由部署者每季依 runbook 走一次還原；runbook 還沒有寫
 - Lite 層與正式層的行為不同，文件要分開說，不能只寫一句「系統有備份」
-- 備份檔含測試集答案與個資，存取控制要比照原資料庫；[D7](#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列) 的就地匿名化不會回溯既有的備份，所以刪除請求的曝險上限就是保留期，滾動 7 份約七天。七天內怎麼處理沒有決定，見[待決](#待決)第 8 列
+- 備份檔含測試集答案與個資，存取控制要比照原資料庫；[D7](#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列) 的就地匿名化不會回溯既有的備份，所以刪除請求的曝險上限就是保留期，滾動 7 份約七天；還原之後要先重新套用刪除請求的記錄才能恢復服務
 
 ### 什麼情況要重新討論
 
@@ -450,32 +462,19 @@ Celery worker 維持 warm shutdown：收到 SIGTERM 後不再領新任務，把�
 
 | 決定 | 來源 |
 | :--- | :--- |
-| D1 | 個人 repo ADR-008（Context、Candidates、Consequences）與 ADR-023（Candidates、Cloudflare 的角色、Consequences）。選項 A 的好處取自兩份的 Decision；選項 B 至 F 的好處沒有記錄的，已在表內標明。「單人研究系統的 MVP 階段」「Demo Paper 一個指令啟動」「單人開發、沒有 Kubernetes 經驗」都依賴本 repo 沒有確認的前提（研究原型、論文與 demo）；本 repo 是否同樣認定，來源沒有記錄。ADR-023 的其餘內容本 repo 不採用：Cloudflare 的 Full (strict) TLS 規則與禁用 Flexible（本 repo 沒有核對，見下方備註）、地端伺服器計畫與主機命名、staging 與 production 的政策（改由 [commit-and-release.md](../workflow/commit-and-release.md) 的三分支規劃管）、Nginx 路由契約、secrets 清單、以 image tag 回滾、延後的決定。本節的重新討論條件是推論，來源沒有記錄 |
+| D1 | 個人 repo ADR-008（Context、Candidates、Consequences）與 ADR-023（Candidates、Cloudflare 的角色、Consequences）。選項 A 的好處取自兩份的 Decision；選項 B 至 F 的好處沒有記錄的，已在表內標明。「單人研究系統的 MVP 階段」「Demo Paper 一個指令啟動」「單人開發、沒有 Kubernetes 經驗」都依賴本 repo 沒有確認的前提（研究原型、論文與 demo）；本 repo 是否同樣認定，來源沒有記錄。ADR-023 的其餘內容本 repo 不採用：地端伺服器計畫與主機命名、staging 與 production 的政策（改由 [commit-and-release.md](../workflow/commit-and-release.md) 的三分支規劃管）、Nginx 路由契約、secrets 清單、以 image tag 回滾、延後的決定。本節的重新討論條件是推論，來源沒有記錄 |
 | D2 | 個人 repo ADR-008 的 Image Strategy。來源只記錄共用 image 的理由，沒有把另寫 Dockerfile 列為選項；選項 B 是推論。NLP 套件要宣告在同一份 `pyproject.toml` 出自 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務)。本節的重新討論條件是推論，來源沒有記錄 |
 | D3 | 個人 repo ADR-013（Candidates、Rejected、Consequences）。來源沒有降級路徑；降級路徑出自維護者裁定（#105 第 4 列，裁定記錄的理由是與 Google SSO 的可選整合形狀一致，並要求明寫 Lite 層 log 視為敏感，在規格與畫面讓管理員知道信沒有寄出），畫面條文出自規格 06-01 的 Q9 至 Q11。選項 B 的好處只記錄了「走 SMTP relay」。本節的重新討論條件中，免費額度取自來源，Lite 層 log 那一條是推論，來源沒有記錄 |
 | D4 | 個人 repo ADR-018（Candidates Evaluated 與各項的 rejected 理由）、ADR-020（Candidates Evaluated 與各項的 rejected 理由）、維護者裁定（#105 第 6 列：`ai_runs` 不是運維工具而是研究可追溯性；代價是出錯時只能看 log、沒有告警），PRD 的定位出自 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)。兩份來源本身是 Accepted，本 repo 本期不做它們。ADR-018 與 ADR-020 的儀表板、告警範圍、標籤隱私規則、Sentry 的脫敏與 source map 規則本 repo 不採用，因為本期不做。選項 F 的好處與維護者裁定的代價出自上述兩處。本節的重新討論條件中，第一條出自 PRD 的定位、第二條是推論，來源沒有記錄 |
-| D5 | 個人 repo ADR-019（Design Options Evaluated、Decision、Consequences）。分界出自 [architecture.mdx 的 §稽核與可追溯](../architecture.mdx#稽核與可追溯)。來源的資料模型把 `ai_runs` 列寫成有 `status` 與 `completed_at`，與本 repo 的「只新增」有出入，見[待決](#待決)第 2 列。來源的事件清單依賴 ADR-017 的 Planner、Generator、Evaluator 分層，ADR-017 在本 repo 的效力已改連到 [ADR-002 的 D4](002-development-workflow.mdx#d4-規劃實作審查與驗收由不同角色負責)，本 repo 不採用該事件清單；來源的角色存取表用的是個人 repo 的角色名稱，本 repo 不採用；快照的儲存後端在來源是延後的決定，本 repo 沒有核對。本節的重新討論條件是推論，來源沒有記錄 |
+| D5 | 個人 repo ADR-019（Design Options Evaluated、Decision、Consequences）。分界出自 [architecture.mdx 的 §稽核與可追溯](../architecture.mdx#稽核與可追溯)。來源的資料模型把 `ai_runs` 列寫成有 `status` 與 `completed_at`，與本 repo 的「只新增」有出入，本 repo 改由 `ai_run_events` 表達這兩個值。來源的事件清單依賴 ADR-017 的 Planner、Generator、Evaluator 分層，ADR-017 在本 repo 的效力已改連到 [ADR-002 的 D4](002-development-workflow.mdx#d4-規劃實作審查與驗收由不同角色負責)，本 repo 不採用該事件清單；來源的角色存取表用的是個人 repo 的角色名稱，本 repo 不採用；快照的儲存後端在來源是延後的決定，本 repo 沒有核對。本節的重新討論條件是推論，來源沒有記錄 |
 | D6 | 個人 repo ADR-032（Options、Decision、Consequences）。同交易寫入對應 [backend-agent-rules.mdx 的 B4](../rules/backend-agent-rules.mdx#b4-交易的擁有層)；至少保留 1 個曆年出自規格 06-02。選項 A、B 的好處沒有記錄；選項 C 的好處取自來源的選擇理由。來源的存取角色（個人 repo 的角色名稱）、事件目錄、索引、候選 FK、系統行為人的 CHECK 與原型豁免本 repo 不採用，由資料表字典與規格管。本節的重新討論條件是推論，來源沒有記錄 |
-| D7 | 個人 repo ADR-038 的 Context 與 Decision，以及 ADR-032 的保留規則。來源沒有列出選項；選項 B、C 是從 Context 與 Decision 推論（B 的理由沒有記錄），選項 D 出自 B8。ADR-038 的下列內容本 repo 不採用，由規格與資料設計管：session 與 refresh token 的清除、30 天匯出檔（規格 03-task-detail）、原始檔的 RESTRICT（規格 05-03）、以特權 migration 角色做匿名化的緊急路徑（個人 repo ADR-024）。來源的四個 TBD（個人 repo 追蹤的 issue）見[待決](#待決)第 3 至 6 列。本節的重新討論條件是推論，來源沒有記錄 |
+| D7 | 個人 repo ADR-038 的 Context 與 Decision，以及 ADR-032 的保留規則。來源沒有列出選項；選項 B、C 是從 Context 與 Decision 推論（B 的理由沒有記錄），選項 D 出自 B8。ADR-038 的下列內容本 repo 不採用，由規格與資料設計管：session 與 refresh token 的清除、30 天匯出檔（規格 03-task-detail）、原始檔的 RESTRICT（規格 05-03）、以特權 migration 角色做匿名化的緊急路徑（個人 repo ADR-024）。來源的四個 TBD（個人 repo 追蹤的 issue）已由維護者裁定，見決策紀錄。本節的重新討論條件是推論，來源沒有記錄 |
 | D8 | 個人 repo ADR-028（Alternatives、Decision、Consequences）。「論文 demo、不對網際網路開放」依賴本 repo 沒有確認的前提；來源記錄 DAST 在系統對網際網路開放時重新討論，API fuzzing 在 OpenAPI schema 穩定後重新討論。選項 F 的歸屬出自來源（由測試 ADR 負責）。Dependabot 的邊界在 [dependency-policy.mdx](../workflow/dependency-policy.mdx)。選項 A 的代價、選項 C 至 E 的好處沒有記錄。Semgrep 已建成、後端 `pip-audit` 門檻比 high 嚴格是本 repo 的做法，與來源的 `--fail-on high` 與延後不同 |
 | D9 | **本 repo 新裁定**（[#490](https://github.com/label-suite/label-suite/issues/490)），個人 repo 沒有對應的 ADR。最接近的是 ADR-023：它在 Consequences 的 Harder 寫「production 備份必須複製到主資料碟以外或另一台主機，只放 `/data/label-suite/prod/backups` 不足以災難復原」，而「備份目的地與保留政策」列在它的 **Deferred Decisions**，從未裁定；而且 ADR-023 的地端伺服器計畫在 [D1](#d1-compose-加-nginx-當-runtimecloudflare-可選) 已不採用，那句約束所依附的主機規劃本 repo 沒有。兩層的形狀出自 [ADR-003 的 D7](003-backend-architecture.mdx#d7-資料庫分兩層)；「Lite 層不建議多人使用」也出自該節。選項 B 至 E 是從限制表推出的，來源沒有列過選項 |
 | D10 | **本 repo 新裁定**（[#490](https://github.com/label-suite/label-suite/issues/490)），兩個 repo 都沒有來源。個人 repo ADR-006 的 `graceful degradation when Redis is unavailable` 講的是 Redis 不可用時降級直接查資料庫，不是關機流程；ADR-023 的「零停機部署有限」與 Deferred Decisions 的 blue-green 講的是部署切換，而且同樣未裁定。300 秒上限、重試三次與 `stop_grace_period` 預設 10 秒出自 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務)與 Compose 的預設值；「偶爾在重啟時掉一個 task 可以接受」出自 [ADR-003 的 D8](003-backend-architecture.mdx#d8-非同步任務用-celery-加-redis) 拒絕 RabbitMQ 的理由，本節只收斂其中 worker 重啟那一種。選項 A 至 D 全部是推論 |
 | — | 個人 repo ADR-026（i18n 兩層）不收：它管前後端的字串邊界，不是部署、維運或稽核；它的理由在 [ADR-003 的 D11](003-backend-architecture.mdx#d11-i18n-分前端與後端兩層)，做法在 [architecture.mdx 的 §i18n 兩層](../architecture.mdx#i18n-兩層) |
 
-備註：個人 repo ADR-023 要求 Cloudflare 用 Full (strict) TLS、禁用 Flexible，因為 Flexible 會破壞 secure cookie 與轉發協定。本 repo 的 cookie 設定見 [ADR-004 的 D3](004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token)，這條規則沒有被任何本 repo 文件採用，本文只記錄它沒被採用，不自行決定，見[待決](#待決)第 1 列。
-
-## 待決
-
-| # | 問題 | 卡住什麼 | 誰決定 |
-| :--- | :--- | :--- | :--- |
-| 1 | Cloudflare 到 origin 這一段的 TLS 模式沒有決定（來源要求 Full (strict)、禁用 Flexible，本 repo 沒有採用） | D1 與 [ADR-004 的 D3](004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token) 的 `__Host-` 前綴 cookie | 維護者，在做正式部署的 change 時 |
-| 2 | `ai_runs` 的 `status`、`completed_at` 在只新增下怎麼表達（來源有這兩欄） | D5 與資料表字典的 `ai_runs` 條目 | 維護者，在做 AI 輔助流程的 change 時 |
-| 3 | 稽核事件上的行為人顯示，在最短保留期內失去身分是否可接受 | D7 的匿名化範圍 | 維護者，在做資料保留與匿名化的 change 時 |
-| 4 | 匿名化帳號的狀態怎麼持久化 | D7 | 維護者，在做資料保留與匿名化的 change 時 |
-| 5 | 清除工作的頻率與最長保留期怎麼配合 | D7 的保留期 | 維護者，在做資料保留與匿名化的 change 時 |
-| 6 | 版本撤回的流程 | D7 帶答案歷史 JSON 的保存 | 維護者，在做資料保留與匿名化的 change 時 |
-| 7 | 備份的還原演練頻率（備份沒驗過等於沒有） | [D9](#d9-資料備援只做正式層備份產出到獨立-volume) 的備份是否真的可用 | 維護者，在做正式部署的 change 時 |
-| 8 | 刪除請求在備份裡的七天曝險怎麼處理（就地匿名化不回溯既有備份） | [D9](#d9-資料備援只做正式層備份產出到獨立-volume) 與 [D7](#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列) | 維護者，在做資料保留與匿名化的 change 時 |
+備註：個人 repo ADR-023 要求 Cloudflare 用 Full (strict) TLS、禁用 Flexible，因為 Flexible 會破壞 secure cookie 與轉發協定；本 repo 採用 Full (strict)，見 [D1](#d1-compose-加-nginx-當-runtimecloudflare-可選)。本 repo 的 cookie 設定見 [ADR-004 的 D3](004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token)。
 
 ## 決策紀錄
 
@@ -493,3 +492,11 @@ Celery worker 維持 warm shutdown：收到 SIGTERM 後不再領新任務，把�
 | 2026-11-19 | 資料備援只做正式層，備份產出到獨立 volume，異地複製是部署者的責任（[D9](#d9-資料備援只做正式層備份產出到獨立-volume)） | —（新裁定；個人 repo ADR-023 把備份目的地與保留政策列為未裁定） | [#490](https://github.com/label-suite/label-suite/issues/490) |
 | 2026-11-22 | Lite 層資料改放具名 volume `label-suite-data`，手動備份改用 `docker compose cp` 複製 `backend` 服務的 `/app/data`（[D9](#d9-資料備援只做正式層備份產出到獨立-volume)） | 「停掉服務再複製 `./data`」 | [#506](https://github.com/label-suite/label-suite/issues/506) |
 | 2026-11-19 | worker 收到 SIGTERM 先做完手上的任務，`stop_grace_period` 要大於 300 秒（[D10](#d10-worker-收到-sigterm-先做完手上的任務)） | 收斂 [ADR-003 的 D8](003-backend-architecture.mdx#d8-非同步任務用-celery-加-redis)「偶爾在重啟時掉一個 task 可以接受」中 worker 重啟那一種 | [#490](https://github.com/label-suite/label-suite/issues/490) |
+| 2026-11-26 | Cloudflare 到 origin 用 Full (strict) TLS，origin 裝 Cloudflare Origin CA 憑證（[D1](#d1-compose-加-nginx-當-runtimecloudflare-可選)） | —（原為待決；個人 repo ADR-023 的 TLS 規則原本未採用） | [#687](https://github.com/label-suite/label-suite/issues/687) |
+| 2026-11-26 | `ai_runs` 只在建立時寫一次，狀態轉換新增 `ai_run_events`（[D5](#d5-ai-可追溯用只新增的-ai_runs-表)） | —（原為待決；個人 repo ADR-019 的 `ai_runs` 有 `status`、`completed_at` 兩欄） | [#687](https://github.com/label-suite/label-suite/issues/687) |
+| 2026-11-26 | 稽核事件保留 `user_id`，匿名化後顯示成「已刪除的使用者 #短碼」（[D7](#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)） | —（原為待決） | [#687](https://github.com/label-suite/label-suite/issues/687) |
+| 2026-11-26 | `users` 加 `anonymized_at`，個資清掉後不能再登入（[D7](#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)） | —（原為待決） | [#687](https://github.com/label-suite/label-suite/issues/687) |
+| 2026-11-26 | 清除工作每天跑一次（Celery beat）（[D7](#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)） | —（原為待決） | [#687](https://github.com/label-suite/label-suite/issues/687) |
+| 2026-11-26 | 版本撤回只標記不刪除，加 `withdrawn_at` 與撤回原因，撤回記一筆稽核（[D7](#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)） | —（原為待決） | [#687](https://github.com/label-suite/label-suite/issues/687) |
+| 2026-11-26 | 還原演練每週自動、每季人工（[D9](#d9-資料備援只做正式層備份產出到獨立-volume)） | —（原為待決） | [#687](https://github.com/label-suite/label-suite/issues/687) |
+| 2026-11-26 | 接受刪除請求在備份裡的七天曝險並寫進隱私說明；刪除請求另記小表，還原後先重新套用（[D9](#d9-資料備援只做正式層備份產出到獨立-volume)、[D7](#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)） | —（原為待決） | [#687](https://github.com/label-suite/label-suite/issues/687) |
