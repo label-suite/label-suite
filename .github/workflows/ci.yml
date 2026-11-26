@@ -852,6 +852,14 @@ jobs:
       - name: Check the Lite security headers
         run: scripts/check-security-headers.sh http://localhost:8080
 
+      # Spec container-runtime "重啟後登入狀態仍有效" (login-auth-guard task 4.5): create
+      # the Seeder admin, sign in through nginx, `docker compose down` without -v,
+      # bring Lite back up and reuse the cookies. Same project and .env as the Lite
+      # start above; AUTH_SECRET stays empty, so the secret is the one the backend
+      # generated on the data volume. Lite is up again when the step ends.
+      - name: Check that a Lite sign-in survives a restart
+        run: scripts/check-login-survives-restart.sh http://localhost:8080
+
       # Stopping the backend makes nginx answer its own error page; the headers
       # must still be there (502 or 504, either is accepted).
       - name: Stop the Lite backend
