@@ -4,14 +4,14 @@ description: '所有人用 Email 與密碼登入平台；登入頁同時提供�
 category: '規格書'
 tags: [規格書, 帳號, 已定案]
 createdAt: '2026-11-05'
-updatedAt: '2026-11-25'
+updatedAt: '2026-11-26'
 ---
 
 import PrototypeFrame from '@notes/components/prototype-frame';
 
 # 01-01 登入
 
-:badge[已定案]{variant="success"} :badge[帳號]{variant="neutral"}
+:badge[已定案]{variant="success"} :badge[變更 #683]{variant="warning" href="https://github.com/label-suite/label-suite/issues/683"} :badge[帳號]{variant="neutral"}
 
 > 來源：舊 repo `specs/account/001-login-email-password/spec.md`（43 條，前綴 `email-password`）與 `specs/account/002-login-google-sso/spec.md`（12 條，前綴 `google-sso`），釘在 `singyichen/label-suite@faf83356`，見 `docs/specs/legacy/01-01-login.ids` 的首行
 > 參考畫面：`design/prototype/pages/account/login.html`
@@ -22,7 +22,7 @@ import PrototypeFrame from '@notes/components/prototype-frame';
 - 提供 Email 與密碼的登入，讓所有平台使用者進入平台開始工作
 - 在同一頁提供用 Google 帳號登入的入口，讓已經有 Google 帳號的人不必另記一組密碼
 - 讓使用者在填錯或漏填時立刻知道是哪一欄的問題，不必重新填整張表單
-- 讓未登入的訪客從這一頁找得到註冊與忘記密碼的去路
+- 讓未登入的訪客從這一頁找得到註冊與忘記密碼的去路<mark>；註冊的去路只在這個部署有設定寄信服務、開放自行註冊時才出現</mark><sup>[#683](https://github.com/label-suite/label-suite/issues/683)</sup>
 
 ## 使用角色
 
@@ -112,17 +112,20 @@ import Spec0101LoginFlow from '@notes/components/spec-01-01-login-flow'
 
 未登入的訪客開啟登入頁，一次看到所有能走的路：兩種登入方式，加上註冊與忘記密碼；從這一頁前往註冊、忘記密碼，登入成功後前往儀表板。
 
-1. 使用者開啟登入頁 → 顯示頁首（品牌與語言切換）、登入卡片，以及卡片底部的註冊導流
+1. 使用者開啟登入頁 → 顯示頁首（品牌與語言切換）、登入卡片，以及卡片底部的註冊導流<mark>（這個部署沒有設定寄信服務時沒有這一列，見第 10 條）</mark><sup>[#683](https://github.com/label-suite/label-suite/issues/683)</sup>
 2. 登入卡片裡依序是：標題與副標、「使用 Google 帳號繼續」、一條寫著「或」的分隔線、Email 欄、密碼欄、「登入」按鈕
 3. 「忘記密碼？」在密碼欄的標籤那一列，和「密碼」並排
-4. 卡片底部顯示「還沒有帳號？」與「前往註冊」
+4. 卡片底部顯示「還沒有帳號？」與「前往註冊」<mark>（只在這個部署有設定寄信服務時）</mark><sup>[#683](https://github.com/label-suite/label-suite/issues/683)</sup>
 5. 頁首的語言切換鈕上只顯示目前語言的代號：繁體中文顯示 `ZH`、英文顯示 `EN`
 6. 使用者點「忘記密碼？」→ 前往 [規格 01-03 用一次性連結設定密碼](./03-reset-password.mdx)
 7. 使用者點「前往註冊」→ 前往 [規格 01-02 註冊](./02-register.mdx)
 8. 使用者登入成功 → 前往[儀表板](../02-dashboard/01-dashboard.mdx)
 9. **已經登入的人直接開登入頁 → 直接前往儀表板，不顯示登入頁**
+10. <mark>這個部署沒有設定寄信服務 → 卡片底部「還沒有帳號？ 前往註冊」整列不顯示，其餘不變（[規格 01-02 §已確認決議](./02-register.mdx#已確認決議) Q10）</mark><sup>[#683](https://github.com/label-suite/label-suite/issues/683)</sup>
 
 - 三個去處都與 PRD §Site Map 一致
+- <mark>「這個部署有沒有設定寄信服務」由部署決定，登入頁、註冊頁與註冊的送出共用同一個判斷；Google 登入不受影響</mark><sup>[#683](https://github.com/label-suite/label-suite/issues/683)</sup>
+- <mark>prototype 用網址參數 `?sim_no_mail=1` 模擬「沒有設定寄信服務」；沒帶參數就是有設定，畫面與以前相同</mark><sup>[#683](https://github.com/label-suite/label-suite/issues/683)</sup>
 
 ### 用 Email 與密碼登入
 
@@ -208,6 +211,7 @@ import Spec0101LoginFlow from '@notes/components/spec-01-01-login-flow'
 | 帳號或密碼對不上 | 不進入平台，顯示「帳號或密碼錯誤，請再試一次」，不說明是哪一個不對 |
 | 帳號是停用中的 | 不進入平台（[規格 06-01](../06-admin/01-user-management.mdx) 已定停用後立即無法登入）；顯示的訊息**和帳號密碼錯誤同一句** |
 | 正在送出中 | 整頁其餘部分不可互動，「登入」只會送出一次 |
+| <mark>這個部署沒有設定寄信服務</mark><sup>[#683](https://github.com/label-suite/label-suite/issues/683)</sup> | <mark>登入頁不顯示註冊入口（「還沒有帳號？ 前往註冊」整列）；其餘照常</mark><sup>[#683](https://github.com/label-suite/label-suite/issues/683)</sup> |
 
 ## 邊界情況（Edge Case）
 
@@ -221,13 +225,14 @@ import Spec0101LoginFlow from '@notes/components/spec-01-01-login-flow'
 | 瀏覽器不讓平台記住語言，或記住的值不是兩種語言之一 | 當成繁體中文，不出現錯誤畫面 |
 | 已經顯示過錯誤後再送出成功 | 錯誤先清掉，才進入送出中與導向 |
 | 快速連點「使用 Google 帳號繼續」 | 不出現錯誤畫面 |
+| <mark>這個部署沒有設定寄信服務時開啟登入頁</mark><sup>[#683](https://github.com/label-suite/label-suite/issues/683)</sup> | <mark>底部沒有註冊那一列；Google 按鈕、忘記密碼與語言切換照常，卡片排版不留空洞</mark><sup>[#683](https://github.com/label-suite/label-suite/issues/683)</sup> |
 | 送出後平台沒有回應 | 顯示一句可以重試的說明；兩欄的內容都還在，使用者可以重試 |
 
 ## 驗收標準
 
 | Scenario | Given | When | Then |
 | :--- | :--- | :--- | :--- |
-| 登入頁顯示完整的登入入口 | 未登入的訪客 | 開啟登入頁 | 顯示頁首、登入卡片（標題、Google 按鈕、「或」分隔線、Email 欄、密碼欄、登入按鈕）、密碼標籤列的「忘記密碼？」與底部的「前往註冊」 |
+| 登入頁顯示完整的登入入口 | 未登入的訪客<mark>，這個部署有設定寄信服務</mark><sup>[#683](https://github.com/label-suite/label-suite/issues/683)</sup> | 開啟登入頁 | 顯示頁首、登入卡片（標題、Google 按鈕、「或」分隔線、Email 欄、密碼欄、登入按鈕）、密碼標籤列的「忘記密碼？」與底部的「前往註冊」 |
 | 語言切換鈕只顯示代號 | 目前是繁體中文 | 查看頁首的語言切換鈕 | 上面只顯示 `ZH` 一個代號 |
 | 沒填 Email 就送出 | 密碼已填，Email 空白 | 點「登入」 | Email 欄旁顯示必填的說明，停在登入頁 |
 | 沒填密碼就送出 | Email 已填，密碼空白 | 點「登入」 | 密碼欄旁顯示必填的說明，停在登入頁 |
@@ -239,7 +244,7 @@ import Spec0101LoginFlow from '@notes/components/spec-01-01-login-flow'
 | 停用的帳號無法登入 | 帳號存在、密碼正確，但帳號是停用中的 | 點「登入」 | 沒有進入平台；顯示的是**和帳號密碼錯誤同一句**「帳號或密碼錯誤，請再試一次」 |
 | 失敗時不清空已填的內容 | 剛顯示過帳號或密碼錯誤 | 查看兩個欄位 | 兩欄的內容都還在 |
 | 送出中點語言切換沒反應 | 兩欄都已填妥 | 點「登入」後在送出中點語言切換 | 語言沒有改變，頁面維持原狀 |
-| 送出中點底部連結沒反應 | 兩欄都已填妥 | 點「登入」後在送出中點「前往註冊」 | 沒有離開登入頁 |
+| 送出中點底部連結沒反應 | 兩欄都已填妥<mark>，這個部署有設定寄信服務</mark><sup>[#683](https://github.com/label-suite/label-suite/issues/683)</sup> | 點「登入」後在送出中點「前往註冊」 | 沒有離開登入頁 |
 | 送出中重複點擊只送出一次 | 兩欄都已填妥 | 點「登入」後再連點「登入」 | 只送出一次，只導向一次 |
 | 密碼可切換顯示 | 密碼欄有內容且遮住 | 點切換顯示的按鈕 | 密碼變成看得見，按鈕的說明文字跟著改 |
 | 密碼再點一次變回遮住 | 密碼正顯示中 | 再點切換顯示的按鈕 | 密碼變回遮住，按鈕的說明文字跟著改 |
@@ -249,13 +254,14 @@ import Spec0101LoginFlow from '@notes/components/spec-01-01-login-flow'
 | Google 按鈕的文字隨語言切換 | 目前是繁體中文 | 切換為英文 | 按鈕文字變成 `Continue with Google`，說明文字一起換 |
 | 切換語言整頁即時更新 | 目前是繁體中文 | 點語言切換 | 標題、欄位標籤、按鈕文字都變成英文，頁面沒有重新整理 |
 | 切換語言可以切回來 | 目前是英文 | 點語言切換 | 全部文字與說明文字都回到繁體中文 |
-| 切換語言後到註冊頁仍是同一種語言 | 使用者已切換為英文 | 點「前往註冊」 | 註冊頁也是英文 |
+| 切換語言後到註冊頁仍是同一種語言 | 使用者已切換為英文<mark>，這個部署有設定寄信服務</mark><sup>[#683](https://github.com/label-suite/label-suite/issues/683)</sup> | 點「前往註冊」 | 註冊頁也是英文 |
 | 從註冊頁回到登入頁仍是同一種語言 | 使用者在登入頁切換為英文後前往註冊頁 | 從註冊頁回到登入頁 | 登入頁仍是英文，沒有回到預設語言 |
 | 切換語言會清掉欄位錯誤 | Email 欄正顯示必填的說明 | 點語言切換 | 錯誤消失 |
 | 第一次來的人看到繁體中文 | 瀏覽器沒有記住過語言 | 開啟登入頁 | 顯示繁體中文 |
 | 記住的語言值無效時用繁體中文 | 瀏覽器記住的語言不是兩種之一 | 開啟登入頁 | 顯示繁體中文，沒有錯誤畫面 |
 | 點忘記密碼前往重設 | 使用者在登入頁 | 點「忘記密碼？」 | 前往用一次性連結設定密碼頁 |
-| 點前往註冊 | 使用者在登入頁 | 點「前往註冊」 | 前往註冊頁 |
+| 沒有設定寄信服務時登入頁不顯示前往註冊 | <mark>這個部署沒有設定寄信服務</mark><sup>[#683](https://github.com/label-suite/label-suite/issues/683)</sup> | <mark>開啟登入頁</mark><sup>[#683](https://github.com/label-suite/label-suite/issues/683)</sup> | <mark>底部沒有「還沒有帳號？」與「前往註冊」；Google 按鈕、Email 欄、密碼欄、「忘記密碼？」與「登入」照常顯示</mark><sup>[#683](https://github.com/label-suite/label-suite/issues/683)</sup> |
+| 點前往註冊 | 使用者在登入頁<mark>，這個部署有設定寄信服務</mark><sup>[#683](https://github.com/label-suite/label-suite/issues/683)</sup> | 點「前往註冊」 | 前往註冊頁 |
 | 錯誤後再送出成功 | 曾顯示過必填的說明，之後兩欄都填妥 | 點「登入」 | 錯誤先清掉，才進入送出中並導向儀表板 |
 | 送出後平台沒有回應 | 兩欄都已填妥 | 點「登入」後平台沒有回應 | 顯示一句可以重試的說明，兩欄的內容都還在 |
 | 已登入的人開登入頁直接進儀表板 | 使用者已經登入 | 直接開登入頁 | 前往儀表板，沒有看到登入頁 |
@@ -350,6 +356,7 @@ import Spec0101LoginFlow from '@notes/components/spec-01-01-login-flow'
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#683](https://github.com/label-suite/label-suite/issues/683) | 2026-11-26 | 頁首、§目標、§規格（登入頁）、§卡控機制、§邊界情況、§驗收標準 | 卡片底部固定顯示「還沒有帳號？ 前往註冊」，不分部署 | 這個部署沒有設定寄信服務時，整列不顯示，其餘不變；決議寫在 [規格 01-02](./02-register.mdx#已確認決議) 的 Q10，本頁不重寫。既有四條提到「前往註冊」的 Scenario 加上「這個部署有設定寄信服務」的前提，另補一條「沒有設定寄信服務時登入頁不顯示前往註冊」 | 見 01-02 Q10（維護者裁定 2026-11-26） |
 | [#624](https://github.com/label-suite/label-suite/issues/624) | 2026-11-25 | §規格、§業務流程與§已確認決議 Q3 的連結、§已確認決議 Q1 的理由（從正文移入一段）、§卡控機制、§已確認決議 的順序、附錄 | §規格 依功能面向切成 10 個 `###`（登入頁的內容、用 Email 與密碼登入、欄位檢查與錯誤、登入失敗、密碼的顯示與隱藏、用 Google 帳號登入、送出中的狀態、導向其他頁面、語言切換、不同螢幕寬度的呈現），每節各嵌一次 prototype；正文夾著演變說明；決議引用幾乎每條都有；§已確認決議 依 Q1、2、3、4、8、5、6、7、9 排列 | 依使用者任務合成 5 個 `###`：**登入頁**（併入登入頁的內容、導向其他頁面）、**用 Email 與密碼登入**（併入欄位檢查與錯誤、登入失敗、密碼的顯示與隱藏、送出中的狀態）、用 Google 帳號登入、語言切換、不同螢幕寬度的呈現；prototype 只在 §規格 開頭嵌一次。「註冊頁原本抵銷不揭露的立場」移進 Q1 的理由；「PRD 已跟上」與兩條和決議理由逐字相同的理由句改由 Q4、Q3、Q8 的理由承載；決議引用只留在規則第一次出現的地方；§已確認決議 依題號排序。舊錨點 `#登入頁的內容`、`#導向其他頁面`、`#欄位檢查與錯誤`、`#登入失敗`、`#密碼的顯示與隱藏`、`#送出中的狀態` 不再存在，連進來的頁面已改連新錨點 | **無新決議，規則一條未改** |
 | [#415](https://github.com/label-suite/label-suite/issues/415) | 2026-11-18 | §使用角色 | 角色、權限與條件寫成條列 | 改成正典的三欄表格（角色／這一頁能做什麼／PRD §權限矩陣的上限），條件、理由與跨頁連結移到表格下方的條列。第三欄是**新增的資訊**：逐列指出 PRD §權限矩陣 的哪一列，對不到的寫出原因。形狀依 `spec-writing` 範本（[PR #417](https://github.com/label-suite/label-suite/pull/417)） | **無新決議，條文一字未改** |
 | [#85](https://github.com/label-suite/label-suite/issues/85) | 2026-11-16 | §使用角色、§已確認決議 Q4 的理由、附錄兩列 | 四處寫「超出 PRD『保留入口』的字面，PRD 的改動由 #85 處理」 | 改成 PRD 已於 2026-11-16 依 #85 落地、落差已消除 | **無新決議**，條文一字未改 |
