@@ -559,7 +559,7 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 
 `shared/content-tabs.css` 不提供 `role="tablist"`／`role="tab"`／`aria-selected`，也沒有方向鍵巡覽；且窄視窗下 `scrollbar-width: none`（`:40`）隱藏捲軸，滑鼠使用者沒有「還有更多分頁」的提示。
 
-**b2 核對**：三個使用頁面**自己補上了**語意——`admin/user-management`（`user-management.html:285`–`:287`）與 `admin/role-settings`（`role-settings.html:335`–`:337`）在 `<a>` 上加 `role="tablist"`／`role="tab"`／`aria-selected`；`task-detail` 另有方向鍵巡覽（`task-detail.html:11686`–`:11702`）。共用的 `content-tabs.css` 本身仍不提供，缺口不變。
+**b2 核對**：三個使用頁面**自己補上了**語意——`admin/user-management`（`user-management.html:285`–`:287`）與 `admin/role-settings`（`role-settings.html:335`–`:337`）在 `<a>` 上加 `role="tablist"`／`role="tab"`／`aria-selected`；`task-detail` 另有方向鍵巡覽（`task-detail.html:11884`–`:11900`）。共用的 `content-tabs.css` 本身仍不提供，缺口不變。
 
 **b3 核對**：`annotation-workspace` 的 `.admin-tabs--panel`（`annotation-workspace.html:1290`–`:1291`）是兩顆 `<button>`，**沒有補上**語意，只能點（`setupGuidelineTabs`，`annotation-workspace.config.js:6736`–`:6754`）。
 
@@ -615,7 +615,7 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 
 > b2 新增。延伸 G-23。
 
-`admin/user-management`、`admin/role-settings`、`task-management/task-new` 三頁全檔 `modal-focus`／`ModalFocus` 0 次；`task-detail` 八個 modal 在 b2 時只有四個接上；現在全部接上，`LabelSuiteModalFocus.open` 在 `task-detail.html:5991`、`:7741`、`:8188`、`:10881`、`:11255`、`:11309`，類別刪除與資料集預覽在 `task-config.engine.js:6216`、`:6143`。只有 `task-list` 全部接上 `modal-focus.js`（`task-list.html:701`）。沒接的那些開啟後焦點不進視窗、關閉後不回觸發鈕，Esc 由各頁自己的 `keydown` 處理。
+`admin/user-management`、`admin/role-settings`、`task-management/task-new` 三頁全檔 `modal-focus`／`ModalFocus` 0 次；`task-detail` 八個 modal 在 b2 時只有四個接上；現在全部接上，`LabelSuiteModalFocus.open` 在 `task-detail.html:6088`、`:7934`、`:8383`、`:11079`、`:11453`、`:11507`，類別刪除與資料集預覽在 `task-config.engine.js:6216`、`:6143`。只有 `task-list` 全部接上 `modal-focus.js`（`task-list.html:701`）。沒接的那些開啟後焦點不進視窗、關閉後不回觸發鈕，Esc 由各頁自己的 `keydown` 處理。
 
 **b3 核對**：`annotation-workspace` 全部接上（見 G-23 的 b3 核對）。
 

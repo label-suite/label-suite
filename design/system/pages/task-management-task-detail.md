@@ -18,7 +18,7 @@
 | `#tab-annotation-results` | `?tab=annotation-results` | [Data Table](../components/data-table.md)（`annotation-results.html:48`、`:95`）、[Pagination](../components/pagination.md)（`:63`、`:112`）、[Empty State](../components/empty-state.md)（`:164`）、[Modal](../components/modal.md)（`arSeqExportModal`，`:138`） |
 | `#tab-work-log` | `?tab=work-log` | [Date Range Picker](../components/date-range-picker.md)（`work-log.html:7`）、[Data Table](../components/data-table.md)（`:38`）、[Metric](../components/metric.md)（4 處）、[Empty State](../components/empty-state.md)（`:84`） |
 | `#tab-settings` | `?tab=settings` | [Toggle Switch](../components/toggle-switch.md)（`settings.html:274`、`:345`）、[Tooltip](../components/tooltip.md)（`:321`–`:323`）、[Chip](../components/chip.md)（`:74`、`:78`）、[Accordion](../components/accordion.md)、[Color Dot](../components/color-dot.md)、[Modal](../components/modal.md)（`settingsLeave`，`task-detail.html:1967`） |
-| `#param-section-basic` | `?tab=settings&section=basic`（預設；`SETTINGS_SECTIONS`，`:4969`） | 同 `#tab-settings` |
+| `#param-section-basic` | `?tab=settings&section=basic`（預設；`SETTINGS_SECTIONS`，`:4971`） | 同 `#tab-settings` |
 | `#param-section-labeling` | `?tab=settings&section=labeling` | 同上，加 [Modal](../components/modal.md)（`taxonomyDelete`，`:1944`；`datasetPreview`，`:1927`） |
 | `#param-section-sampling` | `?tab=settings&section=sampling` | 同 `#tab-settings` |
 | `#param-section-review` | `?tab=settings&section=review` | 同 `#tab-settings` |
@@ -26,11 +26,11 @@
 | `#param-status` | `?status=<任務狀態>`：狀態轉換與回合表跟著變 | [Badge](../components/badge.md)、[Modal](../components/modal.md)（`risk`，`:1955`；`backToDraft`，`:1981`；`trialRoundRevision`，`:1999`） |
 | `#role-project-leader` | `?task_role=project_leader` | 同 `#tab-overview`，操作最多 |
 | `#role-reviewer` | `?task_role=reviewer` | 同 `#tab-overview`，操作減少 |
-| `#role-annotator` | `?task_role=annotator`，或不給、給錯值（fail closed，`:5084`） | **不算繪**，直接導到 `task-list.html?unauthorized=annotator`（`:5111`），看到的是 `task-management/task-list#param-unauthorized` |
-| `#sim-403` | `?sim_403=1`（`:5098`） | `taskForbidden` 面板（`:1918`–`:1922`） |
+| `#role-annotator` | `?task_role=annotator`，或不給、給錯值（fail closed，`:5086`） | **不算繪**，直接導到 `task-list.html?unauthorized=annotator`（`:5113`），看到的是 `task-management/task-list#param-unauthorized` |
+| `#sim-403` | `?sim_403=1`（`:5100`） | `taskForbidden` 面板（`:1918`–`:1922`） |
 | `#state-panel-load-failed` | 讓某一個 partial 請求失敗：只有那個分頁留佔位與重試，其他照常（`:4587`–`:4649`） | `.panel` ＋ [Button](../components/button.md)（`.mini-btn`） |
 
-載入中的骨架（`.skeleton-stack`／`.skeleton-card`／`.skeleton-line`，`:1896`–`:1908`）與「任務不存在」面板（`taskNotFound`，`:1912`）找得到，交付包沒有列成視圖 → [Skeleton](../components/skeleton.md)。操作結果的通知（`showToast`，`:11223`）也沒有對應視圖 → [Toast](../components/toast.md)。
+載入中的骨架（`.skeleton-stack`／`.skeleton-card`／`.skeleton-line`，`:1896`–`:1908`）與「任務不存在」面板（`taskNotFound`，`:1912`）找得到，交付包沒有列成視圖 → [Skeleton](../components/skeleton.md)。操作結果的通知（`showToast`，`:11421`）也沒有對應視圖 → [Toast](../components/toast.md)。
 
 ## 這一頁專屬的
 
@@ -40,10 +40,10 @@
 | `.panel`（`:94`） | 容器在 `pages/shared/card.css`，和 `dashboard` 共用；本頁只加 `margin-bottom`（#423）→ [Card](../components/card.md)、G-41 |
 | `.toggle-switch` | 用 `task-config.css` 的正典版（40×22、開啟色 `--color-primary`）；本頁的重新定義（42×24、`--color-cta`）已於 #423 刪除 → G-42 |
 | `.skeleton-*`（`:70`–`:92`） | [Skeleton](../components/skeleton.md)：與 showcase 的 pulse 變體逐字相同（`components-showcase.html:437` 起） |
-| `.toast*` | [Toast](../components/toast.md)：#423 起 `showToast` 依 `TOAST_DURATIONS`（`:11217`）分級，error 只能手動關 → G-39 |
+| `.toast*` | [Toast](../components/toast.md)：#423 起 `showToast` 依 `TOAST_DURATIONS`（`:11415`）分級，error 只能手動關 → G-39 |
 | `.breadcrumb`（`:46`–`:48`） | 本頁一行式的版本 |
 
-八個 modal 都接了 `modal-focus.js`：`backToDraft`（`:6000`）、`settingsLeave`（`:7750`）、`memberAction`（`:8197`）、`arSeqExport`（`:10890`）、`risk`（`:11264`）、`trialRoundRevision`（`:11317`），`taxonomyDelete` 與 `datasetPreview` 由 `task-config.engine.js:6216`、`:6143` 接上 → G-43。
+八個 modal 都接了 `modal-focus.js`：`backToDraft`（`:6097`）、`settingsLeave`（`:7943`）、`memberAction`（`:8392`）、`arSeqExport`（`:11088`）、`risk`（`:11462`）、`trialRoundRevision`（`:11515`），`taxonomyDelete` 與 `datasetPreview` 由 `task-config.engine.js:6216`、`:6143` 接上 → G-43。
 
 ## 業務行為
 
