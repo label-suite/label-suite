@@ -100,6 +100,7 @@ rules:
   tasks:
     - 依 clarification 的決議撰寫
     - task 群組以「可獨立提交且能 build 的單位」劃分，依相依順序排列
+    # 角色清單依 AGENTS.md §SDD Workflow 的 Roles 表：apply 實作只有這四個角色，審查、驗收、歸檔是另外的階段，不標在 tasks.md。
     - 每個 task 結尾標一個負責角色：[@backend-developer]、[@frontend-developer]、[@dba]、[@technical-writer]
     - 可平行的 task 放在同一個群組並在群組標題註明「（可平行）」
     - 測試與實作放在同一個 task（TDD，見 docs/development/architecture.mdx §測試分層），不另拆測試 task

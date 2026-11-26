@@ -336,10 +336,6 @@ artifacts:
 
       Reference specs for what needs to be built, design for how to build it,
       and api-contract.md for the frontend/backend hand-off.
-
-      本專案的補充：每個 task **標一個負責角色**
-      （sa、sd、ui-ux、planner、backend-developer、frontend-developer、dba、
-      technical-writer、code-reviewer、acceptance-verifier、ops 之一）。
     requires:
       - api-contract
       - specs
