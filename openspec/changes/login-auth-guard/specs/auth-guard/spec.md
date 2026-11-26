@@ -64,7 +64,7 @@
 
 #### Scenario: 重新啟用不恢復舊的登入狀態
 
-- **WHEN** 帳號已登入，測試前置把它的 `credential_version` 加一並標為停用、再標回啟用（模擬 06-01 的停用與重新啟用），以停用前的 cookie 送出 `GET /api/v1/current-session`
+- **WHEN** 帳號已登入，測試前置把它的 `credential_version` 加一、為它所有登入狀態寫入 `revoked_at`、標為停用，再標回啟用（模擬 06-01 的停用與重新啟用），以停用前的 cookie 送出 `GET /api/v1/current-session`
 - **THEN** 系統回覆 `401 AUTH_REQUIRED`
 - **AND** 以正確的 Email 與密碼重新登入成功
 

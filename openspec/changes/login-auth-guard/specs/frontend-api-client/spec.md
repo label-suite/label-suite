@@ -42,7 +42,7 @@
 
 ### Requirement: 伺服器資料快取不自動重試
 
-伺服器資料快取的預設 SHALL 不自動重試失敗的查詢，也不自動重送失敗的寫入；每次失敗只完成一次請求（開發模式下 React StrictMode 的雙重掛載會中止第一次請求，被中止的請求不計，見 design.md D6），由使用者或呼叫端決定是否再試。唯一的例外是「登入狀態過期時延續一次再重送」，見「`AUTH_REQUIRED` 時先延續一次再重送原請求」。
+伺服器資料快取的預設 SHALL 不自動重試失敗的查詢，也不自動重送失敗的寫入；每次失敗只完成一次請求（開發模式下 React StrictMode 的雙重掛載會中止第一次請求，被中止的請求不計，見 design.md D6），由使用者或呼叫端決定是否再試。唯一的例外是「登入狀態過期時延續並重送原請求，延續與重送各至多兩次」，見「`AUTH_REQUIRED` 時延續並重送原請求（各至多兩次）」。
 
 來源：api-agent-rules A7、A9；clarification Q4；login-auth-guard PL2。
 
@@ -80,7 +80,7 @@
 
 ## ADDED Requirements
 
-### Requirement: `AUTH_REQUIRED` 時先延續一次再重送原請求
+### Requirement: `AUTH_REQUIRED` 時延續並重送原請求（各至多兩次）
 
 請求收到 `401`、`code` 為 `AUTH_REQUIRED` 時，唯一出口 SHALL 先送出一次延續：延續成功就重送原請求一次；延續回 `409 ACCOUNT_REFRESH_CONFLICT` 就短暫等候後以目前的 cookie 重送原請求一次，重送仍收到 `401 AUTH_REQUIRED` 時最多再延續一次並在成功後再重送一次；延續回其他錯誤就把錯誤交給呼叫端。延續至多 2 次、重送至多 2 次。同時多個請求遇到時共用同一次延續；延續請求本身 MUST NOT 再觸發延續。
 

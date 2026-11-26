@@ -607,13 +607,13 @@ sequenceDiagram
   U->>DB: SELECT users WHERE google_subject = :subject
   alt 已連結
     DB-->>U: User
-  else 沒有連結，Email 相同且 email_verified = true（ADR-004 D5 自動綁定，不另外告知）
+    G->>G: 判定 is_active、anonymized_at 為空；不成立時 raise GoogleLoginRejectedError（與沒有對應帳號同一個碼，維護者 N2），不寫任何東西
+  else 沒有連結，Email 相同、email_verified = true、帳號啟用且未匿名化（ADR-004 D5 自動綁定，不另外告知）
     G->>U: get_by_email(normalize_email(email))
-    DB-->>U: User
+    DB-->>U: User（先判定啟用與未匿名化，不成立就直接 raise GoogleLoginRejectedError，不綁定、不寫入，沒有「先綁再回滾」）
     G->>G: user.google_subject = subject；hashed_password = null；credential_version + 1
     G->>S: revoke_all(user.id, now)（所有裝置失效，不記登出）
   end
-  G->>G: 判定 is_active、anonymized_at 為空；不成立時 raise GoogleLoginRejectedError（與沒有對應帳號同一個碼，維護者 N2）
   G->>S: start(user, source, now)
   S->>DB: INSERT account_session、account_refresh_token
   G->>DB: commit

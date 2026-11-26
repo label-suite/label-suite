@@ -81,7 +81,7 @@
 - `api-envelope`：「錯誤碼為大寫底線格式並定義第一批通用碼」加 `AUTH_REQUIRED`（401）、`CSRF_FAILED`（403）（C1）；「成功回應包一層六欄位外層」的「本次沒有 `204` 例外」改為允許登出的 `204`（PL3）
 - `frontend-routing`：REMOVED「兩頁只在開發模式註冊」「正式建置不含開發頁與測試替身」，改以 ADDED「開發頁只在開發模式註冊且不經過守門」「正式建置含登入相關頁面且不含開發頁與測試替身」取代（舊 Scenario 的 `/` 導向 `/dev/health` 與「只有空殼」不再成立）；MODIFIED「每頁設定瀏覽器標題」加登入頁與暫時落點（PL4、U7；BREAKING）
 - `frontend-i18n`：REMOVED「介面語言依瀏覽器語言決定」，ADDED「介面語言預設繁體中文並記住使用者的選擇」；MODIFIED「介面文字只取自語言檔」加 `auth` 語言檔（U4；BREAKING）。`dev-health-page` 與 `e2e-testing` 的語言相關 Scenario 以「介面語言為 en」或固定 `zh-TW` 為前提，新規則下仍成立，不修改
-- `frontend-api-client`：MODIFIED「唯一出口送出的請求帶憑證與介面語言」（寫入帶 `X-CSRF-Token`）、「伺服器資料快取不自動重試」、「認證錯誤只認 401」；ADDED「`AUTH_REQUIRED` 時先延續一次再重送原請求」，把延續成功後重送與 `409 ACCOUNT_REFRESH_CONFLICT` 等候後重送寫成僅有的兩個例外（PL2）
+- `frontend-api-client`：MODIFIED「唯一出口送出的請求帶憑證與介面語言」（寫入帶 `X-CSRF-Token`）、「伺服器資料快取不自動重試」、「認證錯誤只認 401」；ADDED「`AUTH_REQUIRED` 時延續並重送原請求（各至多兩次）」，把延續成功後重送、`409 ACCOUNT_REFRESH_CONFLICT` 等候後重送，以及重送仍不通時再延續一次寫成僅有的例外，延續與重送各至多兩次（PL2，以規格 01-05 §多個分頁同時延續登入狀態 第 3 條為準）
 - `runtime-config`：MODIFIED「其餘設定都有預設值」；ADDED「`AUTH_SECRET` 的來源依資料庫層而定」「Google 登入的設定一起設或一起不設」「寄信服務只看有沒有設定」（PL1、sa-6、sa-8）
 - `container-runtime`：MODIFIED「設定範例檔列出所有設定且不含 secret」；ADDED「正式層缺 AUTH_SECRET 時拒絕啟動」「Lite 層的 AUTH_SECRET 存在資料 volume 並跨重啟沿用」（PL1）
 - `database-migration`：MODIFIED「遷移在兩種資料庫上可升可降可再升」（版本紀錄改為鏈上最新的版本）；ADDED「帳號組的三張表在兩種資料庫上可升可降」（PL6、N1）
