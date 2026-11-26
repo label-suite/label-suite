@@ -640,7 +640,7 @@
     {
      "name": "id",
      "type": "uuid",
-     "required": "required",
+     "required": "system",
      "note": "run 身分；PK",
      "pk": true
     },
@@ -685,7 +685,7 @@
     {
      "name": "created_at",
      "type": "timestamptz",
-     "required": "required",
+     "required": "system",
      "note": "建立時間；索引（提案）。來源：ADR-008 D5：要能依時間查"
     }
    ],

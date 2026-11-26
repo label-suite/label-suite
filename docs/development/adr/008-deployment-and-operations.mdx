@@ -201,7 +201,7 @@ AI 輔助流程（產生、評估、工具呼叫）的紀錄要存成什麼形�
 
 ### 決定
 
-AI 輔助流程記在只新增、不更新也不刪除的 `ai_runs` 與 `ai_run_events`：`ai_runs` 只在建立時寫一次，每次狀態轉換就新增一列 `ai_run_events`（`status`、`at`）；目前狀態取最新的事件，`completed_at` 是終態事件的時間。`status` 的值是 `queued`、`running`、`succeeded`、`failed`、`cancelled`，後三者是終態；`ai_run_events` 另有可為 null 的 `payload`（json），由終態事件帶輸出與評估。使用者接受、編輯或拒絕一個 AI 產出記在 `ai_runs`，不另寫 `audit_events`。兩張表的欄位見[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)，兩張表的分界見 [architecture.mdx 的 §稽核與可追溯](../architecture.mdx#稽核與可追溯)。
+AI 輔助流程記在只新增、不更新也不刪除的 `ai_runs` 與 `ai_run_events`：`ai_runs` 只在建立時寫一次，每次狀態轉換就新增一列 `ai_run_events`（`status`、`at`）；目前狀態取最新的事件，`completed_at` 是終態事件的時間。`status` 的值是 `queued`、`running`、`succeeded`、`failed`、`cancelled`，後三者是終態；`ai_run_events` 另有可為 null 的 `payload`（json），由終態事件帶輸出與評估。接受／編輯／拒絕怎麼落在這兩張表未定，留到做 AI 輔助功能的 change 決定。兩張表的欄位見[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)，兩張表的分界見 [architecture.mdx 的 §稽核與可追溯](../architecture.mdx#稽核與可追溯)。
 
 ### 後果
 
@@ -290,7 +290,7 @@ AI 輔助流程記在只新增、不更新也不刪除的 `ai_runs` 與 `ai_run_
 | 匿名化帳號的狀態 | `users` 加 `anonymized_at`（`timestamptz`，可為 null）；個資欄位清掉之後，這個帳號不能再登入；`email` 改寫成 `deleted-<id>@invalid`，`name` 改寫成「已刪除的使用者」 |
 | 清除工作的頻率 | 每天跑一次（Celery beat），實際保留最多只會比期限多一天 |
 | 版本撤回 | 只標記撤回，不刪除：版本加 `withdrawn_at` 與 `withdrawal_reason`，定版之後只有這兩欄可以從 null 寫成一個值，其餘欄位仍不可變；撤回後不能再指派到新任務，已經跑過的 run 與帶答案的歷史 JSON 照舊保存，撤回本身記一筆稽核 |
-| 刪除請求的記錄 | 另記在同一個 PostgreSQL 裡一張只存 `user_id` 與時間的小表，不對 `users` 加 FK，並在備份之外另留一份；從備份還原之後，要先依那一份把這些刪除重新套用一次，才能恢復服務（見 [D9](#d9-資料備援只做正式層備份產出到獨立-volume)） |
+| 刪除請求的記錄 | 另記在同一個 PostgreSQL 裡一張只存 `user_id` 與時間的小表，不對 `users` 加 FK，並在備份之外另留一份（那一份放在哪個儲存、怎麼同步未定，留到資料保留與匿名化的 change）；從備份還原之後，要先依那一份把這些刪除重新套用一次，才能恢復服務（見 [D9](#d9-資料備援只做正式層備份產出到獨立-volume)） |
 
 ### 後果
 
@@ -500,3 +500,4 @@ Celery worker 維持 warm shutdown：收到 SIGTERM 後不再領新任務，把�
 | 2026-11-26 | 版本撤回只標記不刪除，加 `withdrawn_at` 與撤回原因，撤回記一筆稽核（[D7](#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)） | —（原為待決） | [#687](https://github.com/label-suite/label-suite/issues/687) |
 | 2026-11-26 | 還原演練每週自動、每季人工（[D9](#d9-資料備援只做正式層備份產出到獨立-volume)） | —（原為待決） | [#687](https://github.com/label-suite/label-suite/issues/687) |
 | 2026-11-26 | 接受刪除請求在備份裡的七天曝險並寫進隱私說明；刪除請求另記小表，還原後先重新套用（[D9](#d9-資料備援只做正式層備份產出到獨立-volume)、[D7](#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)） | —（原為待決） | [#687](https://github.com/label-suite/label-suite/issues/687) |
+| 2026-11-26 | 六題欄位與表的細節：刪除請求小表放同一個 PostgreSQL、不對 `users` 加 FK、備份之外另留一份；匿名化時 `email` 改寫成 `deleted-<id>@invalid`、`name` 改寫成「已刪除的使用者」；`status` 為 `queued`／`running`／`succeeded`／`failed`／`cancelled`（後三者終態）；`ai_run_events` 加可為 null 的 `payload`，由終態事件帶（超出第 2 列字面的「status、at」，維護者已確認）；`dataset_version` 定版後只有撤回兩欄可從 null 寫一次；欄名與型別照草案（[D5](#d5-ai-可追溯用只新增的-ai_runs-表)、[D7](#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)） | —（補足上列八列未定的細節） | [#687 的回覆](https://github.com/label-suite/label-suite/issues/687#issuecomment-7183496309) |
