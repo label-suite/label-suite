@@ -116,7 +116,7 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；有 Cloudflare 時用�
 
 ### 決定
 
-用 Resend 寄信，`RESEND_API_KEY` 是可選設定；沒設 key 時，把設定密碼連結印在伺服器 log，由部署者轉給使用者，所以 Lite 層的 log 視為敏感，畫面也要讓管理員知道信沒有寄出去。降級路徑的形狀與 Google SSO 的可選整合一致（[ADR-004 的 D4](004-auth-and-security.mdx#d4-google-sso-直接走-oidc)），畫面條文見[規格 06-01 的 Q9 至 Q11](../../specs/06-admin/01-user-management.mdx#已確認決議)。信由 API 還是 worker 寄出，見 [architecture.mdx 的 §容器視圖](../architecture.mdx#容器視圖c4-第二層)；沒有 key 時自行註冊走不通，見 [architecture.mdx 的 §待決](../architecture.mdx#待決)第 2 列。
+用 Resend 寄信，`RESEND_API_KEY` 是可選設定；沒設 key 時，把設定密碼連結印在伺服器 log，由部署者轉給使用者，所以 Lite 層的 log 視為敏感，畫面也要讓管理員知道信沒有寄出去。降級路徑的形狀與 Google SSO 的可選整合一致（[ADR-004 的 D4](004-auth-and-security.mdx#d4-google-sso-直接走-oidc)），畫面條文見[規格 06-01 的 Q9 至 Q11](../../specs/06-admin/01-user-management.mdx#已確認決議)。信由 API 還是 worker 寄出，見 [architecture.mdx 的 §容器視圖](../architecture.mdx#容器視圖c4-第二層)；沒有 key 時關閉自行註冊，註冊頁與註冊的送出都拒絕，Lite 部署只能由系統管理員邀請帳號，見[規格 01-02 的 Q10](../../specs/01-account/02-register.mdx#已確認決議)。
 
 ### 後果
 
