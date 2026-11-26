@@ -1,6 +1,6 @@
 ---
 title: '候選資料表字典與關聯限制'
-description: '42 張候選資料表、370 欄的逐欄字典：英文識別碼、中文業務意義、型別、可空性、鍵與限制、規格來源，以及寫入者、讀取權限、不可變與版本界線、複合關聯與敏感邊界。規劃結構，不是已落地的資料庫。'
+description: '42 張候選資料表、370 欄的逐欄字典：英文識別碼、中文業務意義、型別、可空性、鍵與限制、規格來源，以及寫入者、讀取權限、不可變與版本界線、複合關聯與敏感邊界。帳號組的 3 張已落地，其餘仍是規劃結構。'
 category: '架構'
 tags: [架構, 資料模型, 字典, 關聯限制]
 createdAt: '2026-11-11'
@@ -11,7 +11,7 @@ import PluginView from '@/components/PluginView.astro';
 
 # 候選資料表字典與關聯限制
 
-:badge[Issue #235]{variant="neutral"} :badge[規劃結構，非已落地]{variant="warning"}
+:badge[Issue #235]{variant="neutral"} :badge[3 張已落地，其餘為規劃結構]{variant="warning"}
 
 > 這一份是 [#233](https://github.com/label-suite/label-suite/issues/233) 三步的**第二步**。
 > 第一步是[資料欄位盤點總帳](./data-field-inventory.mdx)（哪些資料要存），第三步是 [#236](https://github.com/label-suite/label-suite/issues/236)（以 ER 外掛呈現）。
@@ -20,10 +20,10 @@ import PluginView from '@/components/PluginView.astro';
 > 圖上**畫不出來**的兩類東西——**複合 FK** 與**只能在應用層擋的限制**——只在本文件裡，逐條內容在各組的「組的關聯與限制」小節（[`admin`](#admin-組的關聯與限制)、[`dataset`](#dataset-組的關聯與限制)、[`run`](#run-組的關聯與限制)、[`annotation` 與 `review`](#annotation-與-review-組的關聯與限制)），以及 `task_reviewer_roster_member` 與 `task_trial_round` 自己的限制表。**圖上沒有線不代表沒有限制。**
 > **複合 FK 不寫條數**：初版的「34 組」把三個指路格重複計入，而 §十 自己的數法對「延後」「自指」這兩種寫法沒有定（見[§十 統計與驗收對照](#十統計與驗收對照)）。應用層與 DB 的條數留著，那兩個數有精準的數法。
 
-:::warning{title="這裡沒有任何已落地的資料結構"}
-`backend/` 不存在、`backend/alembic/versions/` 沒有任何 revision、也沒有 ORM model。**本文件每一張表都是候選設計**。
+:::warning{title="大部分的表還沒有落地"}
+目前只有 `account` 組的 `users`、`account_session`、`account_refresh_token` 三張已落地（[#719](https://github.com/label-suite/label-suite/issues/719)，Alembic revision `7bf0f909ce8f`，ORM model 在 `backend/app/modules/account/models.py`）。**其餘 39 張仍是候選設計**，沒有 revision 也沒有 model。
 
-表落地之後，由 `dba` 在該表標題下方加一行 `` **已落地**：Alembic revision `<revision id>` ``，ER 圖的表說明同步加上同一行；`pnpm check:er` 比對兩邊的標記，並確認每個 revision 真的在 `backend/alembic/versions/` 裡。**沒有這一行的表就是還沒落地**——目前一張都沒有。標記只是索引，結構的最終依據仍是 Alembic revision 與資料庫 metadata。prototype 的 `localStorage` 與 fixture 也不是資料表。
+表落地之後，由 `dba` 在該表標題下方加一行 `` **已落地**：Alembic revision `<revision id>` ``，ER 圖的表說明同步加上同一行；`pnpm check:er` 比對兩邊的標記，並確認每個 revision 真的在 `backend/alembic/versions/` 裡。**沒有這一行的表就是還沒落地**——目前有這一行的是上面那三張。標記只是索引，結構的最終依據仍是 Alembic revision 與資料庫 metadata。prototype 的 `localStorage` 與 fixture 也不是資料表。
 :::
 
 <PluginView src="diagrams/architecture/database-schema.er.json" caption="候選資料表 ER 圖（42 張表，從本文件產生）" />
@@ -113,6 +113,8 @@ import PluginView from '@/components/PluginView.astro';
 
 ### `users` — 平台帳號
 
+**已落地**：Alembic revision `7bf0f909ce8f`
+
 一列代表一位可登入的使用者。**PRD 明寫帳號沒有刪除，只有停用與啟用**，所以**不得有軟刪除欄**。使用者的刪除請求不刪這一列，而是**就地匿名化**（`anonymized_at`，見[ADR-008 D7](../../development/adr/008-deployment-and-operations.mdx#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)）。
 
 | 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
@@ -143,6 +145,8 @@ import PluginView from '@/components/PluginView.astro';
 
 ### `account_session` — 一次登入狀態
 
+**已落地**：Alembic revision `7bf0f909ce8f`
+
 一列代表一次登入。[01-05](../../specs/01-account/05-login-state.mdx#資料欄位) 的四個時間與狀態欄全在這裡。
 
 | 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
@@ -165,6 +169,8 @@ import PluginView from '@/components/PluginView.astro';
 | **保留** | 一段登入狀態結束起**最短一年、最長 13 個月**（[01-05](../../specs/01-account/05-login-state.mdx#登入狀態紀錄的保留與到期清理)）：到期而沒被標記作業引用的**整筆清除**；仍被引用的**只清 `source_info`**，`started_at`、`logged_out_at`、`user_id`、`revoked_at` 保留，所以耗時照樣算得出來。清除每天一次，最多多留一天 |
 
 ### `account_refresh_token` — 一段登入狀態的 refresh token
+
+**已落地**：Alembic revision `7bf0f909ce8f`
 
 一列代表一張 refresh token。它所屬的 `account_session` 就是 token family：一段登入狀態從登入到結束發出的每一張 token 都指向它。依據見[§一](#候選表從-40-張變成-41-張)的 #719 一段。
 
@@ -1341,6 +1347,7 @@ import PluginView from '@/components/PluginView.astro';
 
 | Issue | 日期 | 變更 |
 | :--- | :--- | :--- |
+| [#719](https://github.com/label-suite/label-suite/issues/719) | 2026-11-26 | **`users`、`account_session`、`account_refresh_token` 落地**：Alembic revision `7bf0f909ce8f`（`down_revision` 為基準 `0dfb129ee036`）依序建三張表，down 反序刪除，不寫入任何帳號。欄位、型別、可空性與限制都照本文件，沒有偏差。實作上的命名：唯一限制 `uq_users_email`、`uq_users_google_subject`、`uq_account_session_user_id_id`、`uq_account_refresh_token_token_hash`；CHECK `ck_users_name_length`、`ck_users_contact_info_length`、`ck_users_role_allowed`、`ck_users_credential_version_non_negative`、`ck_account_session_logged_out_within_revocation`、`ck_account_refresh_token_reissue_count_range`；Seeder 的部分唯一索引 `ix_users_is_seeder`（`WHERE is_seeder`），兩種資料庫名稱相同。三張表加上「已落地」標記，開頭警語與 [`database-schema.er.json`](./database-schema.er.json) 的「已落地業務表」同步為 3 |
 | [#719](https://github.com/label-suite/label-suite/issues/719) | 2026-11-26 | **新增 `account_refresh_token`**（`account` 組，7 張）：維護者在 #719 的 clarification 決定 refresh token 存在新表（N1）；依據 ADR-004 D1 與 01-05 §延續登入狀態與疑似被盜用。`users.is_seeder` 加部分唯一索引（至多一位 Seeder，capability `user-management`「Seeder 管理員只能由初始化指令建立」）。表 **41 → 42**、欄 **363 → 370**、單欄 FK **41 → 42**。[`database-schema.er.json`](./database-schema.er.json) 同步 |
 | [#719](https://github.com/label-suite/label-suite/issues/719) | 2026-11-26 | **收回 `users` 的 `google_subject`、`credential_version`、`is_seeder`**：D7 以「沒有規格依據」不收，之後依據出現——[01-05 的 Q18](../../specs/01-account/05-login-state.mdx#已確認決議)（以「是否連結」判定 Google 登入、不看 Email）、[ADR-004 D2、D5](../../development/adr/004-auth-and-security.mdx#d2-授權用的角色每次從資料庫讀)（憑證版本）、[PRD §角色清單](../../specs/00-prd.mdx#角色清單)與 capability `user-management`（seeder 標記）。`users.email` 的唯一限制從 `lower(email)` 改成對**存入的正規化值**：SQLite 的 `lower()` 只轉 ASCII，與 01-05 Q14 的正規化不同，兩種資料庫會判出不同的重複。欄 **360 → 363**、本專案不收的原始欄位 **6 → 3**、單欄 FK 不變 41。[`database-schema.er.json`](./database-schema.er.json) 同步 |
 | [#196](https://github.com/label-suite/label-suite/issues/196) | 2026-11-26 | **登入狀態紀錄的保留期限定案**（維護者 2026-11-26 裁定）：`account_session` 新增 `source_info`（登入來源資訊，個資，結束滿 13 個月清除），欄位 359 → 360、本專案新增欄位 5 → 6；§保留 由「未定」改成最短一年、最長 13 個月與到期處理；`account_password_token` 的保留改寫成不適用這條規則，仍待 D3 |

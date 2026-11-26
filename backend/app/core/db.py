@@ -10,10 +10,12 @@ request and rolls back on an exception, but never commits (backend-agent-rules B
 """
 
 from collections.abc import AsyncIterator
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import Request
-from sqlalchemy import MetaData, event
+from sqlalchemy import DateTime, MetaData, event
+from sqlalchemy.engine import Dialect
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -21,6 +23,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.types import TypeDecorator
 
 from app.core.config import DatabaseSettings
 
@@ -28,6 +31,7 @@ __all__ = [
     "NAMING_CONVENTION",
     "POSTGRES_CONNECT_TIMEOUT_SECONDS",
     "Base",
+    "UtcDateTime",
     "create_engine",
     "create_sessionmaker",
     "get_db",
@@ -57,6 +61,44 @@ class Base(DeclarativeBase):
     """Declarative base of every ORM model; its metadata carries ``NAMING_CONVENTION``."""
 
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
+
+
+class UtcDateTime(TypeDecorator[datetime]):
+    """A ``timestamptz`` column that only stores and returns UTC.
+
+    Binding a naive ``datetime`` raises ``ValueError``, so no local time can slip
+    in. Aware values are converted to UTC. PostgreSQL stores them as
+    ``timestamptz``; SQLite has no time zone, so the UTC value is written without
+    an offset in SQLAlchemy's fixed ``YYYY-MM-DD HH:MM:SS.ffffff`` text form, which
+    keeps text comparison (CHECK constraints, ``ORDER BY``) in time order. Every
+    value read back is an aware ``datetime`` in UTC on both tiers.
+    """
+
+    impl = DateTime(timezone=True)
+    cache_ok = True
+
+    def process_bind_param(self, value: datetime | None, dialect: Dialect) -> datetime | None:
+        """Convert an aware value to UTC, dropping the offset on SQLite.
+
+        Raises:
+            ValueError: ``value`` is a naive ``datetime``.
+        """
+        if value is None:
+            return None
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("UtcDateTime only accepts timezone-aware datetimes")
+        utc = value.astimezone(UTC)
+        if dialect.name == "sqlite":
+            return utc.replace(tzinfo=None)
+        return utc
+
+    def process_result_value(self, value: datetime | None, dialect: Dialect) -> datetime | None:
+        """Return the stored value as an aware ``datetime`` in UTC."""
+        if value is None:
+            return None
+        if value.tzinfo is None:
+            return value.replace(tzinfo=UTC)
+        return value.astimezone(UTC)
 
 
 def _enable_sqlite_foreign_keys(dbapi_connection: Any, _connection_record: Any) -> None:

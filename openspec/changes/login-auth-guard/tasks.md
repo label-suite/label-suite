@@ -17,7 +17,7 @@
 
 ## 2. 帳號組的資料表與遷移
 
-- [ ] 2.1 在 `app/modules/account/models.py` 建 `User`、`AccountSession`、`AccountRefreshToken`，`app/core/db.py` 加 `UtcDateTime`；新增一個 Alembic revision（`down_revision` 為 `0dfb129ee036`）依序建 `users`、`account_session`、`account_refresh_token`，down 反序刪除，不寫入任何帳號；先寫 `specs/database-migration` 的 MODIFIED 與 ADDED Scenario 為 integration 測試，驗證：以 `TEST_DATABASE_URL` 指向 PostgreSQL 與不設（SQLite）各跑一輪 `uv run pytest -m integration`，升到最新、降回基準、再升到最新、約束名稱一致與 Seeder 部分唯一索引都通過（system-design §資料模型異動、design D9） [@dba]
+- [ ] 2.1 在 `app/modules/account/models.py` 建 `User`、`AccountSession`、`AccountRefreshToken`，並在同一個目錄建立 `router.py`、`service.py`、`repository.py`、`schemas.py` 四個只含模組 docstring（寫明所屬的層，內容由群組 4 補上）的檔案，滿足 `pyproject.toml`「Module layers」契約對每個模組四層必備的要求（不把層改成可選）；`app/core/db.py` 加 `UtcDateTime`；新增一個 Alembic revision（`down_revision` 為 `0dfb129ee036`）依序建 `users`、`account_session`、`account_refresh_token`，down 反序刪除，不寫入任何帳號；先寫 `specs/database-migration` 的 MODIFIED 與 ADDED Scenario 為 integration 測試，驗證：`uv run lint-imports` 與 `uv run pytest tests/unit/test_layer_boundaries.py` 通過；以 `TEST_DATABASE_URL` 指向 PostgreSQL 與不設（SQLite）各跑一輪 `uv run pytest -m integration`，升到最新、降回基準、再升到最新、約束名稱一致與 Seeder 部分唯一索引都通過（system-design §資料模型異動、design D9） [@dba]
 - [ ] 2.2 依實作校正 `docs/diagrams/architecture/data-table-dictionary.mdx` 與 `database-schema.er.json`，為 `users`、`account_session`、`account_refresh_token` 標記已落地與 Alembic revision；驗證：`pnpm check:er` 通過 [@dba]
 - [ ] 2.3 確認本群組沒有改變任何端點：前後端兩條契約漂移檢查指令都以 0 結束 [@dba]
 

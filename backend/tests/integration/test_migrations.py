@@ -23,6 +23,7 @@ from tests.conftest import alembic_config, run_alembic
 pytestmark = pytest.mark.integration
 
 BASELINE_DOWN_REVISION = None
+BASELINE_REVISION = "0dfb129ee036"
 
 
 def _script() -> ScriptDirectory:
@@ -48,7 +49,7 @@ def test_there_is_exactly_one_baseline_revision_with_no_parent() -> None:
     script = _script()
     bases = script.get_bases()
 
-    assert len(bases) == 1
+    assert bases == [BASELINE_REVISION]
     assert script.get_revision(bases[0]).down_revision is BASELINE_DOWN_REVISION
 
 
@@ -69,10 +70,26 @@ async def test_migrations_upgrade_downgrade_and_upgrade_again(db_engine: AsyncEn
 async def test_baseline_creates_no_business_table(db_engine: AsyncEngine) -> None:
     await run_alembic(db_engine, "downgrade", "base")
 
+    await run_alembic(db_engine, "upgrade", BASELINE_REVISION)
+
+    try:
+        async with db_engine.connect() as conn:
+            assert await conn.run_sync(_table_names) == {"alembic_version"}
+    finally:
+        await run_alembic(db_engine, "upgrade", "head")
+
+
+async def test_downgrade_to_base_leaves_only_the_version_table(db_engine: AsyncEngine) -> None:
     await run_alembic(db_engine, "upgrade", "head")
 
-    async with db_engine.connect() as conn:
-        assert await conn.run_sync(_table_names) == {"alembic_version"}
+    await run_alembic(db_engine, "downgrade", "base")
+
+    try:
+        async with db_engine.connect() as conn:
+            assert await conn.run_sync(_table_names) == {"alembic_version"}
+            assert await conn.run_sync(_version_rows) == []
+    finally:
+        await run_alembic(db_engine, "upgrade", "head")
 
 
 async def test_migrated_engine_fixture_is_at_head(migrated_engine: AsyncEngine) -> None:
