@@ -198,7 +198,7 @@ Cookie 屬性、JWT 的欄位與任務角色不放進 JWT，見 [architecture.md
 | :--- | :--- |
 | Google 的驗證證明的是信箱的控制權 | 只有 Google 回報 `email_verified: true`，這個證明才成立 |
 | 連結之後只認一種主要身分，可以被接管的入口越少越好 | 綁定時丟掉本地帳號持有的所有憑證，不讓密碼與 Google 兩個入口並存 |
-| [規格 01-04](../../specs/01-account/04-profile.mdx) 與 [01-05](../../specs/01-account/05-login-state.mdx) 的四種改動已寫明連結 Google 會清掉本地密碼 | 本決定與規格一致，不改規格 |
+| [規格 01-04 §連結 Google 帳號 第 4 條](../../specs/01-account/04-profile.mdx#連結-google-帳號)與 [01-05 §四種改動讓所有裝置重新登入](../../specs/01-account/05-login-state.mdx#四種改動讓所有裝置重新登入)已寫明連結 Google 會清掉本地密碼 | 本決定與規格一致，不改規格 |
 
 ### 考慮過的選項
 
@@ -227,7 +227,7 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 
 ### 什麼情況要重新討論
 
-- 規格 01-04 第 257 條或 01-05 的四種改動改成不清掉本地密碼之後，重看「丟掉本地憑證」這一步
+- [規格 01-04 §連結 Google 帳號 第 4 條](../../specs/01-account/04-profile.mdx#連結-google-帳號)或 01-05 的四種改動改成不清掉本地密碼之後，重看「丟掉本地憑證」這一步
 
 ## D6 權限矩陣當授權輸入
 
