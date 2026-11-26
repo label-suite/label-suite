@@ -18,6 +18,7 @@ import {
   REQUIRED_FIELDS,
   formatRecords,
   parsePayload,
+  patchPaths,
   resolveTargetPath,
 } from "../lib/hook-payload.mjs";
 
@@ -117,6 +118,61 @@ test("each write tool reads its own documented path field", () => {
   // apply_patch deliberately has none: the official docs record only
   // tool_input.command for it (completion-report.md §1.4).
   assert.equal(PATH_FIELDS.apply_patch, undefined);
+});
+
+test("an apply_patch PostToolUse payload names the tool and carries no path", () => {
+  // check-changed.sh keys its git-based candidate list on tool_name, so the
+  // name has to come through even though there is no path to go with it.
+  const r = parsePayload(
+    json({
+      tool_name: "apply_patch",
+      tool_input: { command: "*** Begin Patch\n*** Add File: docs/a.md\n+x\n*** End Patch\n" },
+      tool_response: "Success. Updated the following files:\nA docs/a.md\n",
+      cwd: "/tmp",
+    }),
+    "PostToolUse",
+  );
+  assert.equal(r.ok, true);
+  assert.ok(r.records.some(([n, v]) => n === "tool_name" && v === "apply_patch"));
+  // Never tool_path: H2 must keep seeing "no path field" and its documented NA.
+  assert.ok(!r.records.some(([n]) => n === "tool_path"));
+  assert.deepEqual(
+    r.records.filter(([n]) => n === "patch_path").map(([, v]) => v),
+    ["docs/a.md"],
+  );
+});
+
+test("patchPaths keeps added, updated and moved-to files and drops deletions", () => {
+  const patch = [
+    "*** Begin Patch",
+    "*** Add File: docs/新 檔.md",
+    "+x",
+    "*** Update File: a.py",
+    "@@",
+    "-1",
+    "+2",
+    "*** Delete File: gone.py",
+    "*** Update File: old/name.ts",
+    "*** Move to: new/name.ts",
+    "*** Update File: a.py",
+    "*** End Patch",
+  ].join("\r\n");
+  assert.deepEqual(patchPaths(patch), ["docs/新 檔.md", "a.py", "new/name.ts"]);
+});
+
+test("patchPaths returns nothing for malformed or missing patch text", () => {
+  assert.deepEqual(patchPaths("not a patch *** Update File:"), []);
+  assert.deepEqual(patchPaths("*** Move to: orphan.py"), []);
+  assert.deepEqual(patchPaths(undefined), []);
+  assert.deepEqual(patchPaths("*** Add File: bad\x1fname"), []);
+});
+
+test("patch_path records are emitted for apply_patch only", () => {
+  const r = parsePayload(
+    json({ tool_name: "Bash", tool_input: { command: "*** Add File: x.md" }, cwd: "/tmp" }),
+    "PostToolUse",
+  );
+  assert.ok(!r.records.some(([n]) => n === "patch_path"));
 });
 
 test("values are carried through verbatim, including shell metacharacters", () => {

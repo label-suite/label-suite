@@ -71,7 +71,7 @@ undecidable() { # undecidable <reason>
 }
 
 # ── Locate the checkout ──────────────────────────────────────────────
-CWD="$PWD"; EVENT_PATH=""
+CWD="$PWD"; EVENT_PATH=""; EVENT_TOOL=""; PATCH_PATHS=()
 if [ "$MODE" = "event" ]; then
   payload=$(cat)
   if ! printf '%s' "$payload" | node "$HERE/lib/hook-payload.mjs" --event "$EVENT" \
@@ -82,7 +82,9 @@ if [ "$MODE" = "event" ]; then
   for rec in ${RECS+"${RECS[@]}"}; do
     case "${rec%%$'\x1F'*}" in
       cwd)       CWD="${rec#*$'\x1F'}" ;;
+      tool_name) EVENT_TOOL="${rec#*$'\x1F'}" ;;
       tool_path) EVENT_PATH="${rec#*$'\x1F'}" ;;
+      patch_path) PATCH_PATHS+=("${rec#*$'\x1F'}") ;;
     esac
   done
 fi
@@ -104,7 +106,42 @@ fi
 # ── The file list ────────────────────────────────────────────────────
 CANDIDATES=()
 case "$MODE" in
-  event) [ -n "$EVENT_PATH" ] && CANDIDATES=("$EVENT_PATH") ;;
+  event)
+    if [ "$EVENT_TOOL" = "apply_patch" ] && [ "${#PATCH_PATHS[@]}" -gt 0 ]; then
+      # Codex's apply_patch has no path field. hook-payload.mjs reads the
+      # files the patch added, updated or moved to out of its own headers;
+      # they are relative to the session's cwd, not to the repository root.
+      # The loop below normalises them and drops anything outside the
+      # workspace or no longer on disk.
+      for p in "${PATCH_PATHS[@]}"; do
+        case "$p" in /*) CANDIDATES+=("$p") ;; *) CANDIDATES+=("$CWD/$p") ;; esac
+      done
+    elif [ "$EVENT_TOOL" = "apply_patch" ]; then
+      # No readable file header: the patch text is in a shape this checker
+      # does not recognise. Rather than check nothing, take what git reports
+      # as changed in this checkout -- tracked files that differ from HEAD
+      # (staged or not) plus untracked files that are not ignored. That is a
+      # superset of what the patch touched, and the same set H6 later asks
+      # evidence for. ACMR leaves deletions out; -z keeps spaces and CJK
+      # intact; git only ever names paths inside the checkout.
+      if git -C "$REPO" rev-parse -q --verify HEAD >/dev/null 2>&1; then
+        git -C "$REPO" diff --name-only --diff-filter=ACMR -z HEAD \
+          > "$HC_BUFFER_DIR/list" 2>/dev/null \
+          || undecidable "無法取得 apply_patch 之後的變更清單，本次沒有任何一項被判定"
+      else
+        # No commit yet: everything in the index is new.
+        git -C "$REPO" ls-files --cached -z > "$HC_BUFFER_DIR/list" 2>/dev/null \
+          || undecidable "無法取得 apply_patch 之後的變更清單，本次沒有任何一項被判定"
+      fi
+      git -C "$REPO" ls-files --others --exclude-standard -z \
+        >> "$HC_BUFFER_DIR/list" 2>/dev/null \
+        || undecidable "無法取得 apply_patch 之後的未追蹤檔案清單，本次沒有任何一項被判定"
+      hc_read_nul_list CANDIDATES < "$HC_BUFFER_DIR/list"
+      emit_err "說明：apply_patch 的命令裡讀不到檔案標頭，候選檔案改取這個 checkout 相對 HEAD 的全部變更，可能包含這次 patch 之前就已改動的檔案。"
+    elif [ -n "$EVENT_PATH" ]; then
+      CANDIDATES=("$EVENT_PATH")
+    fi
+    ;;
   files) CANDIDATES=(${ARGS+"${ARGS[@]}"}) ;;
   range)
     range="${ARGS[0]-}"

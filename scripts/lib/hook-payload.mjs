@@ -29,6 +29,16 @@ export const REQUIRED_FIELDS = {
 // there is the documented normal case rather than an anomaly. D11 turns that
 // distinction into two different verdicts, which it can only do if this table
 // stays silent about apply_patch.
+//
+// Staying silent here does not leave H3 blind. H2 must not read paths out of
+// the patch text: the format is undocumented, and the 2026-11-17 ruling chose
+// to state the gap rather than build a protection on it. H3 only reports, and
+// its spec limits it to the files this edit touched, so for apply_patch this
+// module offers the paths named in the patch's own file headers as separate
+// patch_path records (see patchPaths below). They never become tool_path, so
+// check-write-target.sh still sees no path and keeps its documented NA. When
+// the headers are absent or unreadable, check-changed.sh falls back to what
+// git reports as changed in the checkout.
 export const PATH_FIELDS = {
   Edit: "file_path",
   Write: "file_path",
@@ -42,8 +52,45 @@ export const RECORD_NAMES = [
   "tool_name",
   "tool_path",
   "tool_command",
+  "patch_path",
   "stop_hook_active",
 ];
+
+/**
+ * Lists the files an apply_patch envelope leaves behind: every `*** Add File:`
+ * and `*** Update File:` header, with an `*** Move to:` line replacing the
+ * path of the update it follows. `*** Delete File:` paths are left out, since
+ * a deleted file is nothing to check. Paths are returned exactly as written
+ * (relative ones are relative to the session's cwd); the caller normalises
+ * them and confines them to the workspace. A path carrying a control
+ * character cannot be framed safely and is dropped rather than truncated.
+ *
+ * This reads a format the official documentation does not describe, so it
+ * is only ever used to narrow a report, never to grant or refuse anything.
+ */
+export function patchPaths(command) {
+  if (typeof command !== "string") return [];
+  const paths = [];
+  let lastUpdate = -1;
+  for (const rawLine of command.split("\n")) {
+    const line = rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine;
+    const header = /^\*\*\* (Add|Update|Delete) File: (.+)$/.exec(line);
+    if (header) {
+      lastUpdate = -1;
+      if (header[1] === "Delete") continue;
+      paths.push(header[2].trim());
+      if (header[1] === "Update") lastUpdate = paths.length - 1;
+      continue;
+    }
+    const move = /^\*\*\* Move to: (.+)$/.exec(line);
+    if (move && lastUpdate >= 0) {
+      paths[lastUpdate] = move[1].trim();
+      lastUpdate = -1;
+    }
+  }
+  // eslint-disable-next-line no-control-regex
+  return [...new Set(paths)].filter((p) => p !== "" && !/[\x00-\x1F]/.test(p));
+}
 
 const RECORD_SEP = "\0";
 const FIELD_SEP = "\x1F";
@@ -128,6 +175,9 @@ export function parsePayload(raw, eventName) {
       }
       if (typeof input.command === "string") {
         records.push(["tool_command", input.command]);
+        if (toolName === "apply_patch") {
+          for (const p of patchPaths(input.command)) records.push(["patch_path", p]);
+        }
       }
     }
   }

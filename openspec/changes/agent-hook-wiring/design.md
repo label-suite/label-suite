@@ -430,6 +430,12 @@ spec「執行時間與輸出大小有上限且由平台設定控制」。
 
 **決策。** 一支檢查器，四種檔案清單來源（D2 的輸入模式），**路由與判定完全相同**。
 
+**事件模式（H3）的檔案清單。** Claude 的 `Edit`／`Write`／`NotebookEdit` 取 payload 的路徑欄位（D11 的表）。
+Codex 的 `apply_patch` 沒有路徑欄位，改從 `tool_input.command` 的檔案標頭（`*** Add File:`、`*** Update File:`，後接 `*** Move to:` 時取新路徑）讀出本次留下的檔案，相對路徑以 session 的 `cwd` 為基準，`*** Delete File:` 不列入；
+讀不到任何標頭時，退回 `git diff --name-only --diff-filter=ACMR -z HEAD` 加未追蹤且未忽略的檔案，並在 stderr 說明這份清單可能包含 patch 之前就已改動的檔案。
+這個解析只用來縮小 H3 的回報範圍（spec「H3 的檢查範圍限制在本次受影響且仍存在的檔案」），**不交給 H2**：`hook-payload.mjs` 把它輸出成另一種紀錄 `patch_path`，不是 `tool_path`，`check-write-target.sh` 對 `apply_patch` 仍走 D11 的 `NA:`，維持維護者 2026-11-17「不以未文件化的封包格式建立寫檔目標保護」的裁定。
+2026-11-26 的 Codex 實測（一般 clone）顯示，原本事件模式只取路徑欄位，`apply_patch` 的候選清單是空的，H3 沒有跑任何檢查、證據記錄的 `covered` 為空，Stop 時 H6 因此擋下。
+
 **副檔名路由表**（spec 刻意沒寫，契約 §H3 有）：
 
 | 命中條件                        | 執行的檢查                          | 粒度                        | 啟用條件                 |

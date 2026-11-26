@@ -340,6 +340,118 @@ rc=$( ( cd "$REPO" && PATH="$TMP/onlybash" "$CHECKER" --staged >"$TMP/out" 2>"$T
 
 git -C "$REPO" reset -q
 
+# ── apply_patch: no path field, so the candidates come from git ──────
+#
+# Codex's apply_patch PostToolUse payload carries only tool_input.command.
+# H3 reads the files the patch touched from its headers, falls back to git
+# when there are none, and never reports files the patch deleted or moved
+# away from.
+
+git -C "$REPO" add -A >/dev/null; git -C "$REPO" commit -qm "before apply_patch cases" >/dev/null
+harness_set_tool uv 0 ''
+seed backend/ap_update.py 'print(1)'
+seed backend/ap_delete.py 'print(1)'
+seed backend/ap_move_from.py 'print(1)'
+git -C "$REPO" add -A >/dev/null; git -C "$REPO" commit -qm "apply_patch baseline" >/dev/null
+
+patch_event() { # patch_event <command text> -> exit code; output in $TMP/out, $TMP/err
+  node -e 'process.stdout.write(JSON.stringify({session_id:"s",cwd:process.argv[1],hook_event_name:"PostToolUse",tool_name:"apply_patch",tool_use_id:"c",tool_input:{command:process.argv[2]},tool_response:"Success."}))' \
+    "$REPO" "$1" \
+    | ( cd "$REPO" && "$CHECKER" --event PostToolUse >"$TMP/out" 2>"$TMP/err" ); echo $?
+}
+
+# What the patch below did to the working tree: add (with spaces and CJK in
+# the name), update, delete, and move.
+seed 'backend/新增 的 檔.py' 'print(2)'
+seed backend/ap_update.py 'print(2)'
+rm -f "$REPO/backend/ap_delete.py"
+mv "$REPO/backend/ap_move_from.py" "$REPO/backend/ap_move_to.py"
+PATCH='*** Begin Patch
+*** Add File: backend/新增 的 檔.py
++print(2)
+*** Update File: backend/ap_update.py
+@@
+-print(1)
++print(2)
+*** Delete File: backend/ap_delete.py
+*** Update File: backend/ap_move_from.py
+*** Move to: backend/ap_move_to.py
+*** End Patch'
+harness_reset_calls
+rc=$(patch_event "$PATCH")
+[ "$rc" = "0" ] || fail "apply_patch: H3 did not exit 0 (got $rc)"
+calls=$(harness_calls | grep 'ruff check' | head -1)
+for want in '新增 的 檔.py' 'ap_update.py' 'ap_move_to.py'; do
+  printf '%s' "$calls" | grep -qF "$want" || fail "apply_patch: $want was not routed: $calls"
+done
+for unwanted in 'ap_delete.py' 'ap_move_from.py'; do
+  printf '%s' "$calls" | grep -qF "$unwanted" && fail "apply_patch: a path that no longer exists reached a tool: $unwanted"
+  grep -qF "$unwanted" "$TMP/err" && fail "apply_patch: a removed path was reported: $unwanted"
+done
+grep -q '^FAIL' "$TMP/err" && fail "apply_patch: a false failure was reported: $(grep '^FAIL' "$TMP/err" | head -1)"
+grep -q '讀不到檔案標頭' "$TMP/err" && fail "apply_patch: a readable patch fell back to the git list"
+EVD="$REPO/.git/label-suite/evidence"
+rec="$EVD/$(ls -1t "$EVD" | head -1)"
+grep -qF 'ap_update.py' "$rec" || fail "apply_patch: the evidence record does not cover the updated file"
+
+# Only what this patch touched: another dirty file stays out of the report.
+harness_reset_calls
+rc=$(patch_event '*** Begin Patch
+*** Update File: backend/ap_move_to.py
+*** End Patch')
+calls=$(harness_calls | grep 'ruff check' | head -1)
+printf '%s' "$calls" | grep -qF 'ap_move_to.py' || fail "apply_patch: the one patched file was not routed: $calls"
+printf '%s' "$calls" | grep -qF 'ap_update.py' && fail "apply_patch: a file the patch did not touch was routed: $calls"
+
+# A relative header is relative to the session cwd, not the repository root.
+harness_reset_calls
+rc=$(node -e 'process.stdout.write(JSON.stringify({cwd:process.argv[1],hook_event_name:"PostToolUse",tool_name:"apply_patch",tool_input:{command:"*** Begin Patch\n*** Update File: ap_update.py\n*** End Patch"}}))' \
+       "$REPO/backend" | ( cd "$REPO/backend" && "$CHECKER" --event PostToolUse >"$TMP/out" 2>"$TMP/err" ); echo $?)
+[ "$rc" = "0" ] || fail "apply_patch: a patch from a subdirectory did not exit 0 (got $rc)"
+harness_calls | grep 'ruff check' | grep -qF 'ap_update.py' \
+  || fail "apply_patch: a header relative to the session cwd was not resolved: $(grep -E '^(NA|FAIL)' "$TMP/err" | head -2)"
+
+# Malformed patch text: no header to read, so the git list stands in.
+harness_reset_calls
+rc=$(patch_event 'this is not a patch *** Update File:')
+[ "$rc" = "0" ] || fail "apply_patch: malformed patch text did not exit 0 (got $rc)"
+harness_calls | grep 'ruff check' | grep -qF 'ap_update.py' \
+  || fail "apply_patch: malformed patch text lost the git-based candidates"
+grep -q '讀不到檔案標頭' "$TMP/err" || fail "apply_patch: the git fallback was not explained"
+grep -q '^UNKNOWN' "$TMP/err" && fail "apply_patch: malformed patch text was treated as an unusable payload"
+
+# A path outside the workspace named in the patch never becomes a candidate:
+# git only reports paths inside the checkout.
+harness_reset_calls
+rc=$(patch_event '*** Begin Patch
+*** Add File: /etc/ap-outside.py
++x
+*** Update File: ../ap-outside-sibling.py
+*** End Patch')
+[ "$rc" = "0" ] || fail "apply_patch: an outside path in the patch did not exit 0 (got $rc)"
+harness_calls | grep -qF 'ap-outside' && fail "apply_patch: a path outside the workspace reached a tool"
+grep -q 'ap-outside.py 在 workspace 之外' "$TMP/err" || fail "apply_patch: the outside path was not reported as skipped"
+
+# A clean checkout after a patch (for example one that was reverted) routes
+# nothing and says so.
+git -C "$REPO" add -A >/dev/null; git -C "$REPO" commit -qm "apply_patch results" >/dev/null
+harness_reset_calls
+rc=$(patch_event '*** Begin Patch
+*** End Patch')
+[ "$rc" = "0" ] || fail "apply_patch: a clean tree did not exit 0 (got $rc)"
+[ -z "$(harness_calls)" ] || fail "apply_patch: a clean tree still ran a tool"
+grep -q '^NA: 本次沒有命中任何已啟用的路由' "$TMP/err" || fail "apply_patch: a clean tree was not reported as NA"
+
+# A Claude write tool still uses its own path, not the git list.
+seed backend/ap_update.py 'print(3)'
+seed backend/ap_other.py 'print(3)'
+harness_reset_calls
+printf '{"cwd":"%s","hook_event_name":"PostToolUse","tool_name":"Write","tool_input":{"file_path":"%s/backend/ap_other.py"}}' "$REPO" "$REPO" \
+  | ( cd "$REPO" && "$CHECKER" --event PostToolUse >"$TMP/out" 2>"$TMP/err" )
+harness_calls | grep 'ruff check' | grep -qF 'ap_update.py' \
+  && fail "a Write event picked up files it did not write"
+git -C "$REPO" checkout -q -- backend/ap_update.py; rm -f "$REPO/backend/ap_other.py"
+
 # ── --list-routes names the routes that are on ───────────────────────
 
 ( cd "$REPO" && "$CHECKER" --list-routes >"$TMP/out" 2>"$TMP/err" )
