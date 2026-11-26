@@ -16,8 +16,9 @@ context: |
   例：「來源：ADR-003 D5、api-agent-rules A7」。delta 與 docs/specs/ 不一致時以
   docs/specs/ 為準：停下來，把衝突列為待維護者回答的問題，不得自行選邊。
 
-  需求依據順序：維護者指定的需求文件與 docs/specs/ 的規格書 ＞ docs/specs/00-prd.mdx
-  ＞ docs/ 其他需求文件 ＞ openspec/。openspec 只引用規格的編號與章節，不另抄一份；
+  需求依據順序採分項優先：角色、權限上限、範圍與模組劃分以 docs/specs/00-prd.mdx 為準；
+  其餘業務規則以維護者指定的需求文件與 docs/specs/ 的規格書為準。這兩類之外，
+  PRD 其餘內容 ＞ docs/ 其他需求文件 ＞ openspec/。openspec 只引用規格的編號與章節，不另抄一份；
   需求要改先用 spec-writing 改 docs/specs/。引用的規格標為「草稿」或「待釐清」仍有未決項時，
   那一題記進 system-analysis 的待決問題，由 clarification 在那個停點一次問完。
 
