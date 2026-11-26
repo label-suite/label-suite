@@ -36,7 +36,7 @@ operationId 由 `generate_operation_id` 依「method 加 `/api/v1` 之後最後�
 | `__Host-ls_csrf` | `HMAC(secret, sid)`                                                                                                | **否**（double-submit 的設計，S2 的唯一例外） | `Lax`      | 同 `__Host-ls_at`                                                    | 同上                                                           |
 | `__Host-ls_oidc` | Google 登入流程的 `state`、`nonce`、PKCE verifier，經 `AUTH_SECRET` 衍生的金鑰簽章                                 | 是                                            | `Lax`      | 10 分鐘                                                              | `getGoogleAuthorization`；`createGoogleSession` 不論成敗都清掉 |
 
-失敗的登入、延續與 `deleteCurrentSession` 會在回應裡清掉 `__Host-ls_at`、`__Host-ls_rt`、`__Host-ls_csrf`（`Max-Age=0`），各段另註明。
+延續的 `401`、Google 登入完成的 `400`／`401` 是**錯誤外層也帶 `Set-Cookie`** 的回應（實作：`AppError.response_hook` 由 `handle_app_error` 套用，仍經 `SessionCookies`）。失敗的登入、延續與 `deleteCurrentSession` 會在回應裡清掉 `__Host-ls_at`、`__Host-ls_rt`、`__Host-ls_csrf`（`Max-Age=0`），各段另註明。
 
 **CSRF**：`POST`、`PUT`、`PATCH`、`DELETE` 帶著 access cookie（`__Host-ls_at`）時，要帶標頭 `X-CSRF-Token`，值等於 `__Host-ls_csrf`，且等於 `HMAC(secret, sid)`；驗不過回 `403 CSRF_FAILED`。**沒有** access cookie 的寫入不驗，直接交給路由（`design.md` D3、`specs/csrf-protection`）。本次的四個寫入端點 `createSession`、`createGoogleSession`、`createSessionRefresh`、`deleteCurrentSession` **全部在放行清單**（理由見 `system-design.md` §技術待決 T2；維護者 2026-11-26 確認），清單寫死在 `CsrfMiddleware`；之後新增的寫入端點預設都要驗。
 
@@ -318,7 +318,7 @@ refresh cookie 可驗證且登入狀態有效時，把它標成失效並記下�
 
 `201`，`Location: /api/v1/current-session`，設定三個 session cookie並清掉 `__Host-ls_oidc`。`data` 欄位同 `createSession`。
 
-帳號的對應：先找**已連結這個 Google 帳號**的帳號，找到就登入，不看 Email 是否相同；沒有已連結的帳號時，若 Google 回報 Email 已驗證、且有 Email 相同的既有帳號，依 ADR-004 D5 自動綁定（維護者 sa-9）：同一筆交易寫入連結、清掉本地密碼、`credential_version` 加一、撤銷該帳號既有的所有登入狀態，再為這一台開新的登入狀態。回應本身不說明有沒有綁定，畫面也**不另外告知**（sa-9）。
+帳號的對應：先找**已連結這個 Google 帳號**的帳號，找到就登入，不看 Email 是否相同；沒有已連結的帳號時，若 Google 回報 Email 已驗證、且有 Email 相同的既有帳號，依 ADR-004 D5 自動綁定（維護者 sa-9；那個帳號必須啟用、未匿名化，而且還沒連結任何 Google 帳號，否則回 `ACCOUNT_GOOGLE_REJECTED`）：同一筆交易寫入連結、清掉本地密碼、`credential_version` 加一、撤銷該帳號既有的所有登入狀態，再為這一台開新的登入狀態。回應本身不說明有沒有綁定，畫面也**不另外告知**（sa-9）。
 
 ### 欄位遮蔽
 
@@ -330,12 +330,12 @@ refresh cookie 可驗證且登入狀態有效時，把它標成失效並記下�
 
 ### 錯誤
 
-| HTTP | `code`                        | 觸發條件                                                                                                                                                                                                                                                                                                                     |
-| :--- | :---------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 400  | `ACCOUNT_GOOGLE_FLOW_INVALID` | 流程 cookie 不在、過期或簽章不對；`state` 不符；向 Google 換 token 失敗；`id_token` 驗不過（簽章、`iss`、`aud`、`exp`、`nonce`）。清掉流程 cookie。前端據此**安靜回登入頁、不顯示錯誤橫幅**（與 01-01「Google 驗證沒通過回到登入頁」同一個結果）                                                                             |
-| 401  | `ACCOUNT_GOOGLE_REJECTED`     | 沒有任何帳號連結這個 Google 帳號，且（沒有 Email 相同的既有帳號，或 Google 回報 Email 未驗證）；已連結或可綁定的帳號是停用或已匿名化的，也回這個碼（維護者 N2）。不建立帳號；有沒有設定寄信服務都同一個碼與同一句「無法用這個 Google 帳號登入。需要帳號的話，請聯絡系統管理員邀請你。」，不說明是哪一種原因。清掉流程 cookie |
-| 409  | `ACCOUNT_GOOGLE_UNAVAILABLE`  | 這個部署沒有設定 Google                                                                                                                                                                                                                                                                                                      |
-| 422  | `VALIDATION_FAILED`           | 欄位缺少、為空、超過長度上限、有未宣告的欄位，或 Content-Type 不是 JSON                                                                                                                                                                                                                                                      |
+| HTTP | `code`                        | 觸發條件                                                                                                                                                                                                                                                                                                                                                                                       |
+| :--- | :---------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 400  | `ACCOUNT_GOOGLE_FLOW_INVALID` | 流程 cookie 不在、過期或簽章不對；`state` 不符；向 Google 換 token 失敗；`id_token` 驗不過（簽章、`iss`、`aud`、`exp`、`nonce`）。清掉流程 cookie。前端據此**安靜回登入頁、不顯示錯誤橫幅**（與 01-01「Google 驗證沒通過回到登入頁」同一個結果）                                                                                                                                               |
+| 401  | `ACCOUNT_GOOGLE_REJECTED`     | 沒有任何帳號連結這個 Google 帳號，且（沒有 Email 相同的既有帳號，或 Google 回報 Email 未驗證）；已連結或可綁定的帳號是停用或已匿名化的，也回這個碼（維護者 N2）；Email 相同的帳號已連結**另一個** Google 帳號時也回這個碼，不改連。不建立帳號；有沒有設定寄信服務都同一個碼與同一句「無法用這個 Google 帳號登入。需要帳號的話，請聯絡系統管理員邀請你。」，不說明是哪一種原因。清掉流程 cookie |
+| 409  | `ACCOUNT_GOOGLE_UNAVAILABLE`  | 這個部署沒有設定 Google                                                                                                                                                                                                                                                                                                                                                                        |
+| 422  | `VALIDATION_FAILED`           | 欄位缺少、為空、超過長度上限、有未宣告的欄位，或 Content-Type 不是 JSON                                                                                                                                                                                                                                                                                                                        |
 
 前端回調頁分辨三種結果只看 HTTP 狀態與 `code`，不讀 `message`：
 

@@ -25,11 +25,15 @@ backend/app/
 ├─ scripts/create_seeder.py    新增：建立第一位 Seeder 管理員的初始化指令（06-01、capability user-management）
 ├─ modules/account/            新增業務模組
 │  ├─ router.py
-│  ├─ service.py
+│  ├─ service/                套件（T11）：__init__.py 匯出公開名稱
+│  │  ├─ errors.py            帳號模組的 AppError 子類別
+│  │  ├─ session.py           SessionService、SessionPolicy、AccountPrincipalLoader
+│  │  ├─ login.py             PasswordLoginService、LoginOptionsService
+│  │  ├─ google.py            GoogleLoginService
+│  │  └─ seeder.py            SeederService
 │  ├─ repository.py
 │  ├─ models.py
-│  ├─ schemas.py
-│  └─ errors.py
+│  └─ schemas.py
 └─ main.py                     修改：解析 AUTH_SECRET、掛 account router、加 CsrfMiddleware、把 AccountPrincipalLoader 放進 app.state
 ```
 
@@ -37,23 +41,23 @@ backend/app/
 
 ### 元件清單
 
-| 層         | 元件                                                                                                                                                                            | 新增／修改 | 職責                                                                                                                                                                                    |
-| :--------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :--------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Router     | `account.router`：`get_login_options`、`create_session`、`get_session`、`refresh_session`、`delete_session`、`get_google_authorization`、`create_google_session`                | 新增       | HTTP 轉接：組 `SourceInfo`（來源位址與 User-Agent，截斷）、呼叫 service、經 `SessionCookies` 寫或清 cookie、用 `ok()` 包外層；`delete_session` 回 `204`（envelope 的明文例外，無 body） |
-| 依賴       | `core.auth.get_current_principal`                                                                                                                                               | 新增       | 授權四步的第 1、2 步：驗 access cookie、交給 `PrincipalLoader` 讀資料庫、回 `Principal`；任何一項不成立都丟同一個 `AuthenticationRequiredError`                                         |
-| Service    | `PasswordLoginService`                                                                                                                                                          | 新增       | Email 與密碼登入；擁有登入那一筆交易                                                                                                                                                    |
-| Service    | `GoogleLoginService`                                                                                                                                                            | 新增       | 產生 Google 授權網址與流程 cookie；完成時先在交易外向 Google 換 token，再在交易內找帳號、依 ADR-004 D5 自動綁定、開始登入狀態                                                           |
-| Service    | `SessionService`                                                                                                                                                                | 新增       | 一段登入狀態的開始、延續（輪替 refresh token、寬限、疑似盜用）、登出與全部撤銷；期限規則集中在 `SessionPolicy`                                                                          |
-| Service    | `AccountPrincipalLoader`                                                                                                                                                        | 新增       | 實作 `core.auth.PrincipalLoader`；一次查詢讀登入狀態與帳號，依序判定，**不寫入**                                                                                                        |
-| Service    | `LoginOptionsService`                                                                                                                                                           | 新增       | 回登入頁要的兩個開關：`google_configured()` 與 `mail_configured()`；不碰資料庫                                                                                                          |
-| Repository | `UserRepository`、`AccountSessionRepository`、`RefreshTokenRepository`                                                                                                          | 新增       | 只查與寫，不 commit；延續的「消耗」用條件式 `UPDATE ... WHERE consumed_at IS NULL` 加 rowcount，兩種資料庫行為相同                                                                      |
-| Model      | `User`、`AccountSession`、`AccountRefreshToken`                                                                                                                                 | 新增       | 三張都依字典（`account_refresh_token` 由維護者 N1 決定新增）                                                                                                                            |
-| Schema     | `LoginRequest`、`GoogleSessionRequest`（`RequestModel`）；`SessionData`、`SessionUserData`、`LoginOptionsData`、`GoogleAuthorizationData`（`ResponseModel`）                    | 新增       | request 只收 camelCase、拒絕未宣告欄位；response 明列欄位                                                                                                                               |
-| 錯誤       | `InvalidCredentialsError`、`GoogleLoginRejectedError`、`GoogleFlowInvalidError`、`GoogleUnavailableError`、`SessionExpiredError`、`SessionInvalidError`、`RefreshConflictError` | 新增       | 繼承 `AppError`；碼與 HTTP 狀態由 `api-contract.md` 定                                                                                                                                  |
-| 基礎建設   | `AccessTokenCodec`、`SessionCookies`、`CsrfMiddleware`、`PasswordHasher`、`normalize_email`、`UtcDateTime`、`Settings`                                                          | 新增或修改 | 見上面的目錄                                                                                                                                                                            |
-| 入口       | `app.oidc.google.GoogleOidcClient`                                                                                                                                              | 新增       | 用 `authlib` 產生授權網址、以 PKCE 換 token、驗 `id_token`（簽章、`iss`、`aud`、`exp`、`nonce`）；回 `GoogleIdentity(subject, email, email_verified)`                                   |
-| 指令       | `app.scripts.create_seeder`、`SeederService`                                                                                                                                    | 新增       | 建立第一位 Seeder 管理員；冪等；密碼只從互動輸入或標準輸入讀，見 [§Seeder 初始化指令](#seeder-初始化指令)                                                                               |
-| 基礎建設   | `core.auth_secret.resolve_auth_secret`                                                                                                                                          | 新增       | `AUTH_SECRET` 的來源：有設就用；Lite 層沒設就讀或產生資料 volume 裡的檔案；正式層沒設就啟動失敗，見 [§`AUTH_SECRET` 的來源](#auth_secret-的來源)                                        |
+| 層         | 元件                                                                                                                                                                            | 新增／修改                     | 職責                                                                                                                                                                                    |
+| :--------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :----------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Router     | `account.router`：`get_login_options`、`create_session`、`get_session`、`refresh_session`、`delete_session`、`get_google_authorization`、`create_google_session`                | 新增                           | HTTP 轉接：組 `SourceInfo`（來源位址與 User-Agent，截斷）、呼叫 service、經 `SessionCookies` 寫或清 cookie、用 `ok()` 包外層；`delete_session` 回 `204`（envelope 的明文例外，無 body） |
+| 依賴       | `core.auth.get_current_principal`                                                                                                                                               | 新增                           | 授權四步的第 1、2 步：驗 access cookie、交給 `PrincipalLoader` 讀資料庫、回 `Principal`；任何一項不成立都丟同一個 `AuthenticationRequiredError`                                         |
+| Service    | `PasswordLoginService`                                                                                                                                                          | 新增                           | Email 與密碼登入；擁有登入那一筆交易                                                                                                                                                    |
+| Service    | `GoogleLoginService`                                                                                                                                                            | 新增                           | 產生 Google 授權網址與流程 cookie；完成時先在交易外向 Google 換 token，再在交易內找帳號、依 ADR-004 D5 自動綁定、開始登入狀態                                                           |
+| Service    | `SessionService`                                                                                                                                                                | 新增                           | 一段登入狀態的開始、延續（輪替 refresh token、寬限、疑似盜用）、登出與全部撤銷；期限規則集中在 `SessionPolicy`                                                                          |
+| Service    | `AccountPrincipalLoader`                                                                                                                                                        | 新增                           | 實作 `core.auth.PrincipalLoader`；一次查詢讀登入狀態與帳號，依序判定，**不寫入**                                                                                                        |
+| Service    | `LoginOptionsService`                                                                                                                                                           | 新增                           | 回登入頁要的兩個開關：`google_configured()` 與 `mail_configured()`；不碰資料庫                                                                                                          |
+| Repository | `UserRepository`、`AccountSessionRepository`、`RefreshTokenRepository`                                                                                                          | 新增                           | 只查與寫，不 commit；延續的「消耗」用條件式 `UPDATE ... WHERE consumed_at IS NULL` 加 rowcount，兩種資料庫行為相同                                                                      |
+| Model      | `User`、`AccountSession`、`AccountRefreshToken`                                                                                                                                 | 新增                           | 三張都依字典（`account_refresh_token` 由維護者 N1 決定新增）                                                                                                                            |
+| Schema     | `LoginRequest`、`GoogleSessionRequest`（`RequestModel`）；`SessionData`、`SessionUserData`、`LoginOptionsData`、`GoogleAuthorizationData`（`ResponseModel`）                    | 新增                           | request 只收 camelCase、拒絕未宣告欄位；response 明列欄位                                                                                                                               |
+| 錯誤       | `InvalidCredentialsError`、`GoogleLoginRejectedError`、`GoogleFlowInvalidError`、`GoogleUnavailableError`、`SessionExpiredError`、`SessionInvalidError`、`RefreshConflictError` | 新增；放在 `service/errors.py` | 繼承 `AppError`；碼與 HTTP 狀態由 `api-contract.md` 定                                                                                                                                  |
+| 基礎建設   | `AccessTokenCodec`、`SessionCookies`、`CsrfMiddleware`、`PasswordHasher`、`normalize_email`、`UtcDateTime`、`Settings`                                                          | 新增或修改                     | 見上面的目錄                                                                                                                                                                            |
+| 入口       | `app.oidc.google.GoogleOidcClient`                                                                                                                                              | 新增                           | 用 `authlib` 產生授權網址、以 PKCE 換 token、驗 `id_token`（簽章、`iss`、`aud`、`exp`、`nonce`）；回 `GoogleIdentity(subject, email, email_verified)`                                   |
+| 指令       | `app.scripts.create_seeder`、`SeederService`                                                                                                                                    | 新增                           | 建立第一位 Seeder 管理員；冪等；密碼只從互動輸入或標準輸入讀，見 [§Seeder 初始化指令](#seeder-初始化指令)                                                                               |
+| 基礎建設   | `core.auth_secret.resolve_auth_secret`                                                                                                                                          | 新增                           | `AUTH_SECRET` 的來源：有設就用；Lite 層沒設就讀或產生資料 volume 裡的檔案；正式層沒設就啟動失敗，見 [§`AUTH_SECRET` 的來源](#auth_secret-的來源)                                        |
 
 ### Class Diagram
 
@@ -356,24 +360,25 @@ stateDiagram-v2
 | Seeder 初始化指令 | `SeederService.create` 一筆：新增帳號（角色 `super_admin`、啟用、`is_seeder = true`、密碼雜湊），commit                                                              | 指令自己開 engine 與一個 `AsyncSession`，結束就 dispose；不經 `get_db`                            |
 
 - API 一律用 `get_db` 的 `AsyncSession`，一個請求一個；Seeder 指令一次執行一個 session；本次沒有 worker 端，不開同步 session（B3）
+- 錯誤回應也要清 cookie 時（延續的 `401`、Google 登入完成的 `400`／`401`），service 不碰 HTTP，由 router 在丟出的 `AppError` 上設 `response_hook`，交給 `SessionCookies.clear`（與清流程 cookie）；`core/errors.py` 的 `handle_app_error` 組好錯誤外層之後套用它。這樣清 cookie 仍只經 `SessionCookies` 一處（B12 入口 5），錯誤外層仍由 handler 組
 - Repository 不 commit（B4）；`get_db` 遇例外 rollback，所以 service 在丟錯前要先 commit 的只有「疑似盜用時撤銷全部」這一種，程式註解要寫明為什麼
 
 ### Seeder 初始化指令
 
 依維護者 sa-4，本次提前實作 capability `user-management` 的「Seeder 管理員只能由初始化指令建立」（06-01）。資料庫層的保護（擋住停用、降級、清除標記）仍屬 06-01 的 change（「Seeder 管理員受到保護」）。
 
-| 項目       | 做法                                                                                                                                                                                                                                                                                                   |
-| :--------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 入口       | `uv run python -m app.scripts.create_seeder --email <Email> --name <顯示名稱>`；容器裡是 `docker compose run --rm -it backend python -m app.scripts.create_seeder --email ... --name ...`。只有部署者在主機上執行得到，沒有任何 HTTP 端點能建立 Seeder                                                 |
-| 讀設定     | 只用 `DatabaseSettings`（與 Alembic 相同），不需要 `CORS_ALLOWED_ORIGINS` 或 `AUTH_SECRET`；資料庫要先 `alembic upgrade head`                                                                                                                                                                          |
-| 密碼怎麼給 | **不收命令列參數、不讀環境變數**（會留在 shell 歷史與 `ps`／`docker inspect`）。標準輸入是終端機時用 `getpass` 問兩次並比對；加 `--password-stdin` 時從標準輸入讀一行（給自動化，例 `printf '%s\n' "$PW" \| ... --password-stdin`）。不內建預設密碼                                                    |
-| 密碼規則   | 與 01-02 Q5 同一套（至少 8 個字元，含大寫、小寫與數字）；不合就以退出碼 2 結束、不寫入                                                                                                                                                                                                                 |
-| Email      | 經 `normalize_email`，超過 254 字或格式不對就退出碼 2                                                                                                                                                                                                                                                  |
-| 冪等       | 先查 `UserRepository.get_seeder()` 與 `get_by_email()`：已有 Seeder 且 Email 相同 → 印「已存在，未變更」、退出碼 0，**不問密碼、不改密碼**；已有 Seeder 但 Email 不同 → 退出碼 2「已有另一位 Seeder 管理員」；Email 屬於一般帳號 → 退出碼 2「這個 Email 已有帳號，初始化只建立全新帳號」，不提升該帳號 |
-| 交易       | `SeederService.create` 在一筆交易寫入帳號、密碼雜湊、`role = super_admin`、`is_active = true`、`is_seeder = true`；兩個人同時執行時，`users` 的部分唯一索引（`is_seeder` 為 true 至多一列）與 `email` 唯一限制讓第二個失敗，指令把 `IntegrityError` 轉成同上的退出碼 2                                 |
-| 輸出       | 成功印一行「已建立 Seeder 管理員 <Email>」到標準輸出；**任何輸出與 log 都不含密碼或雜湊**；錯誤訊息只寫原因                                                                                                                                                                                            |
-| 異動紀錄   | capability `user-management` 的「每次帳號異動都寫入異動紀錄」管的是系統管理員在 06-01 的操作；`audit_events` 本次不建，初始化不寫異動紀錄，交給 06-01 決定是否回補                                                                                                                                     |
-| 文件       | 實作時在 `docs/development/workflow/local-development.mdx` 的 §用 Docker Compose 起整套 與 §前後端分開起 各加一步「建立第一位系統管理員」（兩種執行方式各一行指令，說明密碼會被詢問兩次、不會顯示），§環境變數 註明這支指令不需要額外的變數；部署文件同樣補一步                                        |
+| 項目       | 做法                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| :--------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 入口       | `uv run python -m app.scripts.create_seeder --email <Email> --name <顯示名稱>`；容器裡是 `docker compose run --rm -it backend python -m app.scripts.create_seeder --email ... --name ...`。只有部署者在主機上執行得到，沒有任何 HTTP 端點能建立 Seeder                                                                                                                                                                                                                                          |
+| 讀設定     | 只用 `DatabaseSettings`（與 Alembic 相同），不需要 `CORS_ALLOWED_ORIGINS` 或 `AUTH_SECRET`；資料庫要先 `alembic upgrade head`                                                                                                                                                                                                                                                                                                                                                                   |
+| 密碼怎麼給 | **不收命令列參數、不讀環境變數**（會留在 shell 歷史與 `ps`／`docker inspect`）。標準輸入是終端機時用 `getpass` 問兩次並比對；加 `--password-stdin` 時從標準輸入讀一行（給自動化，例 `printf '%s\n' "$PW" \| ... --password-stdin`）。不內建預設密碼                                                                                                                                                                                                                                             |
+| 密碼規則   | 與 01-02 Q5 同一套（至少 8 個字元，含大寫、小寫與數字）；不合就以退出碼 2 結束、不寫入                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Email      | 經 `normalize_email`，超過 254 字或格式不對就退出碼 2                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 冪等       | 先查 `UserRepository.get_seeder()` 與 `get_by_email()`：已有 Seeder 且 Email 相同 → 印 `The Seeder admin <Email> already exists; nothing was changed.`、退出碼 0，**不問密碼、不改密碼**；已有 Seeder 但 Email 不同 → 退出碼 2，標準錯誤印 `create_seeder: another Seeder admin already exists; nothing was changed`；Email 屬於一般帳號 → 退出碼 2，`create_seeder: an account with this Email already exists; initialisation only creates a new account and never promotes one`，不提升該帳號 |
+| 交易       | `SeederService.create` 在一筆交易寫入帳號、密碼雜湊、`role = super_admin`、`is_active = true`、`is_seeder = true`；兩個人同時執行時，`users` 的部分唯一索引（`is_seeder` 為 true 至多一列）與 `email` 唯一限制讓第二個失敗，指令把 `IntegrityError` 轉成同上的退出碼 2                                                                                                                                                                                                                          |
+| 輸出       | 成功印一行 `Created the Seeder admin <Email>.` 到標準輸出；錯誤一律以 `create_seeder: ` 開頭寫到標準錯誤；輸出是英文（程式語言規則：程式裡的字串用英文）；**任何輸出與 log 都不含密碼或雜湊**；錯誤訊息只寫原因                                                                                                                                                                                                                                                                                 |
+| 異動紀錄   | capability `user-management` 的「每次帳號異動都寫入異動紀錄」管的是系統管理員在 06-01 的操作；`audit_events` 本次不建，初始化不寫異動紀錄，交給 06-01 決定是否回補                                                                                                                                                                                                                                                                                                                              |
+| 文件       | 實作時在 `docs/development/workflow/local-development.mdx` 的 §用 Docker Compose 起整套 與 §前後端分開起 各加一步「建立第一位系統管理員」（兩種執行方式各一行指令，說明密碼會被詢問兩次、不會顯示），§環境變數 註明這支指令不需要額外的變數；部署文件同樣補一步                                                                                                                                                                                                                                 |
 
 ### `AUTH_SECRET` 的來源
 
@@ -608,9 +613,9 @@ sequenceDiagram
   alt 已連結
     DB-->>U: User
     G->>G: 判定 is_active、anonymized_at 為空；不成立時 raise GoogleLoginRejectedError（與沒有對應帳號同一個碼，維護者 N2），不寫任何東西
-  else 沒有連結，Email 相同、email_verified = true、帳號啟用且未匿名化（ADR-004 D5 自動綁定，不另外告知）
+  else 沒有連結，Email 相同、email_verified = true、帳號啟用、未匿名化且還沒連結任何 Google 帳號（ADR-004 D5 自動綁定，不另外告知）
     G->>U: get_by_email(normalize_email(email))
-    DB-->>U: User（先判定啟用與未匿名化，不成立就直接 raise GoogleLoginRejectedError，不綁定、不寫入，沒有「先綁再回滾」）
+    DB-->>U: User（先判定啟用、未匿名化，且 google_subject 為空；任一不成立就直接 raise GoogleLoginRejectedError，不綁定、不寫入，沒有「先綁再回滾」——已連結**另一個** Google 帳號的帳號不會被改連）
     G->>G: user.google_subject = subject；hashed_password = null；credential_version + 1
     G->>S: revoke_all(user.id, now)（所有裝置失效，不記登出）
   end
@@ -1072,7 +1077,7 @@ sequenceDiagram
   S->>U: add(User role=super_admin, is_active=true, is_seeder=true)
   U->>DB: INSERT users
   S->>DB: commit
-  X-->>D: 「已建立 Seeder 管理員 admin@example.org」，退出碼 0；不印密碼
+  X-->>D: Created the Seeder admin admin@example.org.（退出碼 0；不印密碼）
 ```
 
 ### Scenario: 重複執行初始化
@@ -1088,8 +1093,8 @@ sequenceDiagram
   S->>DB: SELECT users（Seeder 與這個 Email）
   DB-->>S: 已有 Seeder，Email 相同
   S-->>X: 已存在
-  X-->>D: 「已存在，未變更」，退出碼 0；不問密碼、不寫入
-  Note over D,DB: 以另一個 Email 執行時：退出碼 2「已有另一位 Seeder 管理員」，不寫入
+  X-->>D: The Seeder admin admin@example.org already exists; nothing was changed.（退出碼 0；不問密碼、不寫入）
+  Note over D,DB: 以另一個 Email 執行時：退出碼 2，create_seeder: another Seeder admin already exists、不寫入
 ```
 
 ### Scenario: 以既有帳號執行初始化
@@ -1105,7 +1110,7 @@ sequenceDiagram
   S->>DB: SELECT users
   DB-->>S: 沒有 Seeder；E 存在且 is_seeder = false
   S-->>X: 不可建立
-  X-->>D: 退出碼 2「這個 Email 已有帳號，初始化只建立全新帳號」；E 的角色、狀態與登入狀態都不動
+  X-->>D: create_seeder: an account with this Email already exists（退出碼 2）；E 的角色、狀態與登入狀態都不動
 ```
 
 ## 常駐文件異動
@@ -1185,7 +1190,7 @@ sequenceDiagram
 | PL1     | Lite 層沒設 `AUTH_SECRET` 時首次啟動自動產生並存進資料 volume；正式層仍要明確設定                          | [§`AUTH_SECRET` 的來源](#auth_secret-的來源)                                                  |
 | U6      | 前端查守門時連不上或 `5xx`，當成未登入，回登入頁並顯示「沒回應」那句                                       | 後端不需要新東西：`getCurrentSession` 失敗只有 `401 AUTH_REQUIRED` 與通用的 `5xx`，前端分得開 |
 
-**覆蓋率門檻的後端路徑清單**（sa-13，testing-agent-rules T10 的「認證」與「授權與權限檢查」）：`app/core/auth.py`、`app/core/auth_secret.py`、`app/core/tokens.py`、`app/core/cookies.py`、`app/core/csrf.py`、`app/core/passwords.py`、`app/core/email_identity.py`、`app/modules/account/service.py`、`app/oidc/google.py`。前端的路徑由 `ui-design.md` 列。答案隔離、評分、IAA 三項不建空殼，仍屬 #111，#111 本文之後改寫成兩項已由 #719 建立。
+**覆蓋率門檻的後端路徑清單**（sa-13，testing-agent-rules T10 的「認證」與「授權與權限檢查」）：`app/core/auth.py`、`app/core/auth_secret.py`、`app/core/tokens.py`、`app/core/cookies.py`、`app/core/csrf.py`、`app/core/passwords.py`、`app/core/email_identity.py`、`app/modules/account/service/`（套件內各檔）、`app/oidc/google.py`。前端的路徑由 `ui-design.md` 列。答案隔離、評分、IAA 三項不建空殼，仍屬 #111，#111 本文之後改寫成兩項已由 #719 建立。
 
 ### 技術待決
 
@@ -1203,4 +1208,4 @@ sequenceDiagram
 | T8  | `AUTH_SECRET` 的兩層差別                                    | 正式層必填、沒有預設值（B10、Hard Rule 8）；Lite 層依 PL1 自動產生，值只存在資料 volume 的 `0o600` 檔案，不進 image、不進 `.env`、不進 log。`.env.example` 寫明兩層的差別與產生方式                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | T9  | `Secure` 與 `__Host-` cookie 只在 HTTPS 或 `localhost` 有效 | Lite 經 `http://localhost` 使用沒問題；用區網 IP 的純 HTTP 開啟時瀏覽器不會存 cookie、登不進去。這是部署限制，寫進部署文件，不放寬 cookie 屬性                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | T10 | 守門每個請求多一次查詢                                      | ADR-004 D2 已接受；一次以主鍵 JOIN `account_session` 與 `users`。之後若要快取，必須維持立即撤銷（D2 的後果）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| T11 | `service.py` 的行數                                         | 四個 service 加一個 loader 可能超過 B11 的 400 行；超過時把 `service` 改成套件（`service/__init__.py` 匯出），import-linter 的層仍是 `app.modules.account.service`，不新增未受層契約管的檔案                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| T11 | `service` 的行數                                            | 四個 service 加一個 loader 超過 B11 的 400 行，所以 `service` 是套件：`service/errors.py`、`session.py`、`login.py`、`google.py`、`seeder.py`，由 `service/__init__.py` 匯出；import-linter 的層仍是 `app.modules.account.service`，沒有新增不受層契約管的檔案。帳號錯誤放 `service/errors.py`，router 從 `service` 取得                                                                                                                                                                                                                                                                                                                                             |
