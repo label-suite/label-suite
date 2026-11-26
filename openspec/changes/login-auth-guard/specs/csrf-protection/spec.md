@@ -45,7 +45,7 @@
 
 ### Requirement: 四個登入相關的寫入端點放行
 
-`POST /api/v1/sessions`、`POST /api/v1/session-refreshes`、`POST /api/v1/google-sessions` 與 `DELETE /api/v1/current-session` SHALL 不做 CSRF 驗證，即使帶著登入 cookie；其餘寫入端點 MUST 驗證。三個 `POST` 只接受 `application/json`。
+`POST /api/v1/sessions`、`POST /api/v1/session-refreshes`、`POST /api/v1/google-sessions` 與 `DELETE /api/v1/current-session` SHALL 不做 CSRF 驗證，即使帶著登入 cookie；其餘帶 `__Host-ls_at` 的寫入 MUST 驗證。三個 `POST` 只接受 `application/json`。
 
 來源：ADR-004 D3；security-agent-rules S2；`system-design.md` §技術待決 T2；`api-contract.md` §共用約定。
 

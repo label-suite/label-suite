@@ -22,6 +22,7 @@
 
 - 登入失敗鎖定（#726）：只保留 `system-design.md` §登入失敗鎖定的插入點，不建任何程式、碼或計數服務
 - 撤銷事件本身（改密碼、換 Email、重設密碼、個人設定的連結 Google）、登入狀態紀錄的保留與每日清除（#726 與各自的頁面）
+- 停用帳號時加一 `credential_version` 並撤銷所有登入狀態，以及重新啟用：屬 06-01 的 change。本次的守門只負責觀察得到的前提——帳號已停用，或 `credential_version` 與 access token 不符——就拒絕；測試以前置資料模擬這兩種狀態（`specs/auth-guard`「重新啟用不恢復舊的登入狀態」）
 - e2e 各角色的 `storageState` fixture：本次只有一條登入旅程，fixture 等第一個登入後的業務頁面再建
 - 規格 01-01 中以註冊頁為前提的兩條 Scenario「切換語言後到註冊頁仍是同一種語言」「從註冊頁回到登入頁仍是同一種語言」：註冊頁不存在（01-02，#723），本次以「切換後的語言跨頁沿用」（落點）驗證同一條規則，兩條原 Scenario 交給 #723 驗收；「點忘記密碼前往重設」「點前往註冊」本次只驗證前往的路徑，到達目的頁交給 #724、#723
 
@@ -40,11 +41,14 @@
 
 ### D3 CSRF 只在帶登入 cookie 的寫入請求上驗證
 
+維護者 2026-11-26 已確認這個範圍。
+
 `CsrfMiddleware` 對 `POST`、`PUT`、`PATCH`、`DELETE`：請求**沒有** `__Host-ls_at` 時直接放行給路由；有時才要求 `X-CSRF-Token` 等於 `__Host-ls_csrf` 且等於 `HMAC(secret, sid)`（`sid` 取自 access JWT，只驗簽章不看到期）。放行清單照 T2 寫死四條。
 
 - **理由**：跨站偽造借用的是瀏覽器自動帶上的登入 cookie；沒有 cookie 的請求沒有可借用的身分，需要登入的端點會由 `get_current_principal` 回 `401`
 - **替代方案**：所有寫入一律驗證。這會讓匿名的 `POST /api/v1/health` 從 `405` 變成 `403`，打破主規格 `api-envelope`「不支援的方法回 405 錯誤外層」的 Scenario，也讓之後的匿名寫入端點都要進放行清單
 - 這一條補上 `api-contract.md` 沒寫的「沒有 access cookie 時怎麼辦」，行為寫在 `specs/csrf-protection`「沒有登入 cookie 的寫入請求不驗 CSRF」
+- 還沒有登入狀態之前的請求（Email 與密碼登入、Google 登入完成），由只收 `application/json` 加上 CORS 預檢擋住跨站送出；ADR-004 D3 補一句寫明這一點（tasks 5.3）
 
 ### D4 空字串一律當成沒設
 
@@ -63,6 +67,7 @@
 - **理由**：`test-boundary-checks` 禁止替換本專案匯入的物件與改寫依賴覆寫表，也要求 harness 與 production 組裝一致，所以 app 裡的替身沒有合法的方式被換進去；替身放在 production 程式裡也違反 testing-agent-rules T6「外部替身設在邊界上」
 - **代價**：測試要自己組 Google 的 token 回應與 JWKS；共用的組裝放在 `backend/tests/support/google_oidc.py`
 - e2e 不經 Google（`specs/e2e-testing`）；Google 的五條 Scenario 由後端 integration 與前端 integration（MSW）驗證
+- `authlib` 的非同步客戶端是 `authlib.integrations.httpx_client`，執行期需要 `httpx`；它目前只在 `backend/pyproject.toml` 的 `dev` 群組，所以 tasks 1.1 以 `uv add` 把它移到執行期相依。歸類不變：`httpx` 仍是「對外 HTTP 客戶端」入口的套件（`backend/tests/unit/import_tree.py` 的 `HTTP_CLIENT`），`app/oidc/` 只 import `authlib`、MUST NOT 直接 import `httpx`（主規格 `backend-code-boundaries`「對外 HTTP 客戶端套件只能經 HTTP 入口使用」）；`httpx` 由 `authlib` 間接使用，不算違規。相依分類測試與 `uv run lint-imports` 要在 1.1 證明這兩件事
 
 ### D6 Seeder 初始化指令照 system-design
 
@@ -73,10 +78,28 @@
 照 `ui-design.md` §資料來源、§狀態放哪裡：
 
 - 「目前的登入狀態」是一個 TanStack Query 查詢，守門兩種包裝與暫時落點共用；判定中只畫頁面底色
-- 延續放在唯一出口：`frontend/src/api/session-refresh.ts` 持有同一時間唯一一個延續 promise（single-flight），`mutator.ts` 只在 `401` 且 `code` 為 `AUTH_REQUIRED` 時呼叫它，延續請求本身不再觸發延續；`409 ACCOUNT_REFRESH_CONFLICT` 等候 300 ms 後重送一次（秒數不寫進 spec，01-05 §多個分頁同時延續登入狀態 的備註）
+- 延續放在唯一出口：`frontend/src/api/session-refresh.ts` 持有同一時間唯一一個延續 promise（single-flight），`mutator.ts` 只在 `401` 且 `code` 為 `AUTH_REQUIRED` 時呼叫它，延續請求本身不再觸發延續；`409 ACCOUNT_REFRESH_CONFLICT` 等候 300 ms 後重送一次；重送仍收到 `401 AUTH_REQUIRED` 時再延續一次（不再走 `409` 的等候），成功就再重送一次，否則把錯誤交給呼叫端。整個流程延續至多 2 次、重送至多 2 次（秒數不寫進 spec，01-05 §多個分頁同時延續登入狀態 的備註）
+- 上一條依規格 01-05 §多個分頁同時延續登入狀態 第 3 條「重試還是不通 → 最多再延續一次」；clarification 的 PL2 只寫了「等候後重送一次」，比規格窄，依需求依據順序以規格為準（維護者 2026-11-26 確認）
+- 延續回 `401 AUTH_REQUIRED`（請求沒有 refresh cookie，本來就沒有登入狀態）時回登入頁、不帶任何句子；只有 `ACCOUNT_SESSION_EXPIRED`、`ACCOUNT_SESSION_INVALID` 帶被動登出的兩句（維護者 2026-11-26 確認）
 - `X-CSRF-Token` 在 `mutator.ts` 讀 `document.cookie` 的 `__Host-ls_csrf` 後加上；`createSession` 等放行端點帶不帶都可
 - 被動登出、Google E2 與「沒有回應」三種要在登入頁顯示的句子，以導覽時的路由狀態帶一個列舉值，不放網址
 - 「載入中」「平台暫時沒有回應」與被動登出兩句的文案取自規格 01-01 Q13、01-05 Q19 的最終文字
+- **錯誤橫幅的文字來源**：前端以錯誤外層的 `code` 對到 `auth` 語言檔的鍵，不直接顯示後端的 `message`；後端的 `messages.json` 仍為每個 `ACCOUNT_` 碼與兩個通用碼備好中英文，供 API 呼叫端與日誌使用，兩邊的字相同。對照：
+
+  | `code`／情況                  | `auth` 鍵                        | 繁體中文                                                           | 英文                                                                                                                                  | 後端 `messages.json` 鍵       |
+  | :---------------------------- | :------------------------------- | :----------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------ | :---------------------------- |
+  | `ACCOUNT_INVALID_CREDENTIALS` | `login.error.invalidCredentials` | 帳號或密碼錯誤，請再試一次                                         | Invalid email or password（prototype `login.html:550`）                                                                               | `account.invalid_credentials` |
+  | `ACCOUNT_GOOGLE_REJECTED`     | `login.error.googleRejected`     | 無法用這個 Google 帳號登入。需要帳號的話，請聯絡系統管理員邀請你。 | You can't sign in with this Google account. If you need an account, ask an administrator to invite you.（prototype `login.html:551`） | `account.google_rejected`     |
+  | `ACCOUNT_SESSION_EXPIRED`     | `login.error.sessionExpired`     | 登入已過期，請重新登入                                             | Session expired, please sign in again                                                                                                 | `account.session_expired`     |
+  | `ACCOUNT_SESSION_INVALID`     | `login.error.sessionInvalid`     | 驗證失敗，請重新登入                                               | Authentication failed, please sign in                                                                                                 | `account.session_invalid`     |
+  | 沒有回應、`5xx`               | `login.error.unavailable`        | 平台暫時沒有回應，請稍後再試。                                     | The platform is not responding. Please try again later.                                                                               | —（通用碼沿用 `common.*`）    |
+  | `ACCOUNT_GOOGLE_FLOW_INVALID` | —（不顯示）                      | —                                                                  | —                                                                                                                                     | `account.google_flow_invalid` |
+  | `ACCOUNT_GOOGLE_UNAVAILABLE`  | —（當成沒有回應）                | —                                                                  | —                                                                                                                                     | `account.google_unavailable`  |
+  | `ACCOUNT_REFRESH_CONFLICT`    | —（不進畫面）                    | —                                                                  | —                                                                                                                                     | `account.refresh_conflict`    |
+  | `AUTH_REQUIRED`               | —（不顯示）                      | —                                                                  | —                                                                                                                                     | `common.auth_required`        |
+  | `CSRF_FAILED`                 | —（本次畫面不會遇到）            | —                                                                  | —                                                                                                                                     | `common.csrf_failed`          |
+
+  後端四個不進畫面的碼與兩個通用碼的中英文句子由 tasks 3.2、4.2 依 `api-contract.md` 的觸發條件撰寫，不透露原因
 
 ### D8 介面語言的記憶
 
@@ -99,11 +122,11 @@ repo 根新增 `critical-coverage.json`，兩項各列後端與前端的檔案�
 
 ### D11 e2e 的帳號由初始化指令建立
 
-`e2e/account/login.spec.ts` 用 Playwright 的 setup project：等後端起好（`webServer` 已跑完遷移）後，以 `uv run python -m app.scripts.create_seeder --email ... --name ... --password-stdin` 對同一個 SQLite 檔建立帳號；密碼在 setup 執行期以亂數產生、經檔案交給旅程（放在 Playwright 輸出目錄，不在 `e2e/shared/fixtures/`）。設定檔仍是唯一讀位址環境變數的地方（主規格 `e2e-testing`）。
+`e2e/account/login.spec.ts` 用 Playwright 的 setup project：等後端起好（`webServer` 已跑完遷移）後，以 `uv run python -m app.scripts.create_seeder --email ... --name ... --password-stdin` 對同一個 SQLite 檔建立帳號。初始化指令是冪等的，而且已有另一位 Seeder 時會失敗，所以每次執行都用 Playwright 清空後的新 SQLite 檔（設定檔現有的行為）；setup 先確認資料庫裡沒有任何帳號再建立，避免沿用舊檔時以退出碼 2 中斷；密碼在 setup 執行期以亂數產生、經檔案交給旅程（放在 Playwright 輸出目錄，不在 `e2e/shared/fixtures/`）。設定檔仍是唯一讀位址環境變數的地方（主規格 `e2e-testing`）。
 
-### D12 暫時落點的英文文案先擬稿
+### D12 暫時落點的英文文案
 
-規格沒有暫時落點的英文；依 clarification Q16（U3）「缺的由派工擬稿並在 PR 列給維護者確認」，`auth` 語言檔的英文先用：`You're signed in`、`The dashboard is still being built. Once it's ready, signing in will take you straight there.`、`Sign out`，瀏覽器標題 `Label Suite — Signed In`；角色名稱用 prototype 既有的 `Platform Member`、`System Admin`。PR 本文列出這幾句給維護者確認。
+規格沒有暫時落點的英文；依 clarification Q16（U3）由派工擬稿，維護者 2026-11-26 已核准。`auth` 語言檔的英文：`You're signed in`、`The dashboard is still being built. Once it's ready, signing in will take you straight there.`、`Sign out`，瀏覽器標題 `Label Suite — Signed In`；角色名稱用 prototype 既有的 `Platform Member`、`System Admin`。
 
 ## Risks / Trade-offs
 
@@ -111,7 +134,7 @@ repo 根新增 `critical-coverage.json`，兩項各列後端與前端的檔案�
 - [前端開發伺服器 `:5173` 與後端 `:8000` 不同來源，CSRF cookie 要讓前端讀得到] → cookie 不分埠，兩者同屬 `localhost`；`credentials: include` 與允許清單已有，CORS 允許標頭加 `X-CSRF-Token`
 - [守門每個請求多一次 JOIN] → ADR-004 D2 已接受；之後要快取必須維持立即撤銷（T10）
 - [刪掉 Lite volume 或 `auth_secret` 會讓所有人登出] → 預期行為，寫進 `.env.example` 註解與部署文件；log 只寫來源與路徑（`system-design.md` §`AUTH_SECRET` 的來源）
-- [延續衝突的等候秒數寫死在前端] → 只影響使用者感受不到的重試時機；規格只要求有界，測試以假時間驗證只重送一次
+- [延續衝突的等候秒數寫死在前端] → 只影響使用者感受不到的重試時機；規格只要求有界，測試以假時間驗證延續至多 2 次、重送至多 2 次
 - [CSRF 在沒有 access cookie 時放行（D3）] → access cookie 過期仍會帶著（存活與 refresh token 相同），所以已登入過的瀏覽器在 7 天內的寫入都會被驗證；登入狀態徹底結束後 cookie 被清掉，那時也沒有身分可借用
 - [Google 替身改在網路邊界（D5），與 `system-design.md` §目錄 的寫法不同] → 本份為準；`system-design.md` §目錄 那一行是明確問題，交 `sd` 回修，tasks 不建 `FakeGoogleOidcClient`
 - [規格 01-01 的四條以註冊頁、重設密碼頁為前提的 Scenario 本次只部分驗證] → 見 Non-Goals，交給 #723、#724，在 `acceptance.md` 逐條標明
@@ -127,8 +150,3 @@ repo 根新增 `critical-coverage.json`，兩項各列後端與前端的檔案�
    - 程式回到前一版即可，前一版不讀這三張表
    - 資料庫降回 `0dfb129ee036` 會刪掉三張表與其中所有帳號；已有真實帳號的部署不降版，只回滾程式（`system-design.md` §資料模型異動）
    - Lite 的 `auth_secret` 檔留在 volume 不影響前一版
-
-## Open Questions
-
-- ADR-004 D4 與 architecture §Google SSO 寫「沒設定 Google 時按鈕退回 no-op」，規格 01-01 Q10 已改為不顯示按鈕。業務行為以規格為準，本 change 照規格實作；ADR 的文字要不要跟著改，屬 ADR 的維護，不影響本 change 的 specs 或 tasks
-- 暫時落點的英文文案（D12）待維護者在 PR 確認；確認前後只差語言檔的字串

@@ -38,7 +38,7 @@ operationId 由 `generate_operation_id` 依「method 加 `/api/v1` 之後最後�
 
 失敗的登入、延續與 `deleteCurrentSession` 會在回應裡清掉 `__Host-ls_at`、`__Host-ls_rt`、`__Host-ls_csrf`（`Max-Age=0`），各段另註明。
 
-**CSRF**：`POST`、`PUT`、`PATCH`、`DELETE` 要帶標頭 `X-CSRF-Token`，值等於 `__Host-ls_csrf`，且等於 `HMAC(secret, sid)`；驗不過回 `403 CSRF_FAILED`。本次的端點中只有 `createSession`、`createSessionRefresh`、`createGoogleSession`、`deleteCurrentSession` 四個寫入，**全部放行**（理由見 `system-design.md` §技術待決 T2），這張放行清單寫死在 `CsrfMiddleware`；之後新增的寫入端點預設都要驗。
+**CSRF**：`POST`、`PUT`、`PATCH`、`DELETE` 帶著 access cookie（`__Host-ls_at`）時，要帶標頭 `X-CSRF-Token`，值等於 `__Host-ls_csrf`，且等於 `HMAC(secret, sid)`；驗不過回 `403 CSRF_FAILED`。**沒有** access cookie 的寫入不驗，直接交給路由（`design.md` D3、`specs/csrf-protection`）。本次的四個寫入端點 `createSession`、`createGoogleSession`、`createSessionRefresh`、`deleteCurrentSession` **全部在放行清單**（理由見 `system-design.md` §技術待決 T2；維護者 2026-11-26 確認），清單寫死在 `CsrfMiddleware`；之後新增的寫入端點預設都要驗。
 
 **只收 JSON**：三個 `POST` 的 body 一律 `Content-Type: application/json`（`createSessionRefresh` 送 `{}`），讓跨站表單送不出、`fetch` 必定觸發 CORS 預檢；其他 Content-Type 回 `422 VALIDATION_FAILED`（`errors` 一筆 `location: "body"`）。
 
@@ -78,10 +78,10 @@ operationId 由 `generate_operation_id` 依「method 加 `/api/v1` 之後最後�
 
 `200`。
 
-| 欄位                      | 型別    | nullable | 說明                                                                                                                                            |
-| :------------------------ | :------ | :------- | :---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `selfRegistrationEnabled` | boolean | 否       | 這個部署有沒有設定寄信服務（`RESEND_API_KEY` 有沒有設），即是否開放自行註冊；登入頁、註冊頁與註冊的送出共用這一個判斷（01-02 Q10，維護者 sa-6） |
-| `googleEnabled`           | boolean | 否       | 三個 `GOOGLE_*` 設定是否齊全；false 時前端**不顯示** Google 按鈕與「或」分隔線（維護者 sa-8）                                                   |
+| 欄位                      | 型別    | nullable | 說明                                                                                                                                                                                                        |
+| :------------------------ | :------ | :------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `selfRegistrationEnabled` | boolean | 否       | 這個部署有沒有設定寄信服務（`RESEND_API_KEY` 有沒有設），即是否開放自行註冊；登入頁、註冊頁與註冊的送出共用這一個判斷（01-02 Q10，維護者 sa-6）                                                             |
+| `googleEnabled`           | boolean | 否       | 三個 `GOOGLE_*` 都設時 true、三個都不設時 false（只設一部分服務根本不會啟動，`specs/runtime-config`「Google 登入的設定一起設或一起不設」）；false 時前端**不顯示** Google 按鈕與「或」分隔線（維護者 sa-8） |
 
 ```json
 { "selfRegistrationEnabled": false, "googleEnabled": true }
@@ -215,12 +215,13 @@ operationId 由 `generate_operation_id` 依「method 加 `/api/v1` 之後最後�
 
 ### 錯誤
 
-| HTTP | `code`                     | 觸發條件                                                                                                                                                                                                                                                                 |
-| :--- | :------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 401  | `ACCOUNT_SESSION_EXPIRED`  | 所屬登入狀態已過 90 天的絕對上限或 7 天的閒置限制；後端同時把它標成失效（不記登出）並清掉三個 cookie。前端顯示「登入已過期，請重新登入」（01-05 Q4）                                                                                                                     |
-| 401  | `ACCOUNT_SESSION_INVALID`  | 沒有 refresh cookie、查不到這張 token、所屬登入狀態已失效（登出或安全撤銷，沒有寬限資格）、帳號停用或已匿名化，或同一張 token 在寬限期**外**又被使用（疑似被盜用：該帳號所有登入狀態一起失效）。清掉三個 cookie；前端顯示「驗證失敗，請重新登入」。不說明是哪一種        |
-| 409  | `ACCOUNT_REFRESH_CONFLICT` | 同一張 token 在寬限期內被用到第三次以上：不發新 token、不撤銷任何登入狀態、**不清 cookie**（同一台的另一個分頁可能剛拿到新的）。前端等一下再用目前的 cookie 重試一次原請求，仍不行才回登入頁（01-05 §多個分頁同時延續登入狀態；A7 的「refresh 併發回 `409`」，不進畫面） |
-| 422  | `VALIDATION_FAILED`        | body 不是 `{}` 或不是 JSON                                                                                                                                                                                                                                               |
+| HTTP | `code`                     | 觸發條件                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| :--- | :------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 401  | `AUTH_REQUIRED`            | 請求**沒有** refresh cookie（例如從沒登入過的訪客，或 cookie 已被清掉）。不清任何東西、不寫資料庫；前端照一般的未登入處理，**不顯示**被動登出的兩句（01-05 Q4 只用在「曾經登入、後來不能通行」）                                                                                                                                                                                                                                                 |
+| 401  | `ACCOUNT_SESSION_EXPIRED`  | 所屬登入狀態已過 90 天的絕對上限或 7 天的閒置限制；後端同時把它標成失效（不記登出）並清掉三個 cookie。前端顯示「登入已過期，請重新登入」（01-05 Q4）                                                                                                                                                                                                                                                                                             |
+| 401  | `ACCOUNT_SESSION_INVALID`  | **帶著** refresh cookie 但不能用：查不到這張 token、所屬登入狀態已失效（登出或安全撤銷，沒有寬限資格）、帳號停用或已匿名化，或同一張 token 在寬限期**外**又被使用（疑似被盜用：該帳號所有登入狀態一起失效）。清掉三個 cookie；前端顯示「驗證失敗，請重新登入」。不說明是哪一種                                                                                                                                                                   |
+| 409  | `ACCOUNT_REFRESH_CONFLICT` | 同一張 token 在寬限期內被用到第三次以上：不發新 token、不撤銷任何登入狀態、**不清 cookie**（同一台的另一個分頁可能剛拿到新的）。前端短暫等候同來源另一個分頁的結果，用目前的 cookie 重送一次原請求；重送仍回 `401` 時再延續一次、成功就再重送一次。合計**最多兩次延續、兩次重送**，仍不行才回登入頁（01-05 §多個分頁同時延續登入狀態 第 2、3 條；`ui-design.md` X7）（01-05 §多個分頁同時延續登入狀態；A7 的「refresh 併發回 `409`」，不進畫面） |
+| 422  | `VALIDATION_FAILED`        | body 不是 `{}` 或不是 JSON                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
 ## deleteCurrentSession
 

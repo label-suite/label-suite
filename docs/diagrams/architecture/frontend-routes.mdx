@@ -136,7 +136,8 @@ frontend/
 還沒有合併；合併後由 `frontend-developer` 依程式改寫上面對應的段落。
 
 - **守門層**：`app/` 新增兩種路由包裝——「需要登入」與「只給未登入的人」，都讀同一個「目前的登入狀態」查詢；判定完成前不畫任何一頁的內容，避免登入頁閃一下再跳走。只做授權四步的第 1、2 步。查詢連不上、逾時或 `5xx` 時當成未登入，帶回登入頁並顯示「沒有回應」那一句；登入後一律去落點，不帶原本要去的頁面
-- **`401` 的處理**：任何請求回 `401 AUTH_REQUIRED`（`isAuthError()`）→ 先試一次延續（`createSessionRefresh`；同一時間只發一次），成功就重送原請求；延續回 `409 ACCOUNT_REFRESH_CONFLICT` 時不回登入頁，稍等後重送原請求一次；回 `ACCOUNT_SESSION_EXPIRED`／`ACCOUNT_SESSION_INVALID` 才清掉登入狀態的查詢快取，以取代歷史紀錄的方式回 `/account/login`，並依碼顯示被動登出的兩句之一；`403` 不在這裡處理，交給各頁
+- **`401` 的處理**：任何請求回 `401 AUTH_REQUIRED`（`isAuthError()`）→ 試延續（`createSessionRefresh`；同一時間只發一次），全程最多延續 2 次、重送原請求 2 次（規格 01-05 §多個分頁同時延續登入狀態）：延續成功就重送；延續回 `409 ACCOUNT_REFRESH_CONFLICT` 時不回登入頁，短暫等候後重送一次；重送仍回 `401` 就再延續一次；還是不行才清掉登入狀態的查詢快取，以取代歷史紀錄的方式回 `/account/login`。延續最後回 `ACCOUNT_SESSION_EXPIRED`／`ACCOUNT_SESSION_INVALID` 時登入頁顯示對應的被動登出那一句；回 `AUTH_REQUIRED`（沒有 refresh cookie，例如從沒登入過的訪客）時不顯示任何句子；`403` 不在這裡處理，交給各頁
+- **錯誤橫幅的文案**：前端依錯誤外層的 `code`（網路錯誤依 `ApiError.kind`）對到 `auth` 語言檔，不顯示後端的 `message`
 - **CSRF**：`POST`、`PUT`、`PATCH`、`DELETE` 由 `apiFetch` 帶 `X-CSRF-Token` 標頭，值取自 `__Host-ls_csrf` cookie（`api-contract` §CSRF）
 - **登出**：暫時落點的「登出」鈕呼叫 `deleteCurrentSession`；不論結果都清掉登入狀態的查詢快取，以取代歷史紀錄的方式回 `/account/login`。07-01 側欄完成後由側欄的登出接手
 - **Google 登入不用 `302`**：授權網址由後端以 JSON 回給前端，前端整頁導覽過去；Google 回到前端的 `/account/google/callback`，再由前端把 `code`、`state` 送給後端。兩個端點都走 `apiFetch` 與生成的 hook

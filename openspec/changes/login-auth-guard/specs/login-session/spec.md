@@ -60,7 +60,7 @@
 
 ### Requirement: 延續登入狀態
 
-持有有效 `__Host-ls_rt` 的呼叫端 SHALL 能以 `POST /api/v1/session-refreshes`、body `{}` 延續同一段登入狀態：成功回 `201`、`Location: /api/v1/current-session`，重設三個 cookie（新的 refresh token），`data` 欄位同登入。帳號停用或已匿名化時 MUST 拒絕且不發新憑證。
+持有有效 `__Host-ls_rt` 的呼叫端 SHALL 能以 `POST /api/v1/session-refreshes`、body `{}` 延續同一段登入狀態：成功回 `201`、`Location: /api/v1/current-session`，重設三個 cookie（新的 refresh token），`data` 欄位同登入。請求沒有 refresh cookie 時 SHALL 回 `401 AUTH_REQUIRED`（沒有登入狀態可延續，不是被動登出）；帳號停用或已匿名化時 MUST 拒絕且不發新憑證。
 
 來源：規格 01-05 §延續登入狀態與疑似被盜用、§帳號被停用或重新啟用 第 2 條；ADR-004 D1；`api-contract.md` §createSessionRefresh。
 
@@ -80,14 +80,19 @@
 - **WHEN** 送出延續，body 為 `{"sid": "x"}`
 - **THEN** 系統回覆 `422`，`code` 為 `"VALIDATION_FAILED"`
 
+#### Scenario: 沒有 refresh cookie 時延續回 AUTH_REQUIRED
+
+- **WHEN** 沒有任何 cookie 的呼叫端送出 `POST /api/v1/session-refreshes`，body 為 `{}`
+- **THEN** 系統回覆 `401`，`code` 為 `"AUTH_REQUIRED"`，不是 `ACCOUNT_SESSION_EXPIRED` 或 `ACCOUNT_SESSION_INVALID`
+
 #### Scenario: 延續登入狀態失敗不計次
 
-- **WHEN** 同一個呼叫端連續送出 20 次沒有 refresh cookie 的延續
+- **WHEN** 同一個呼叫端以同一張已失效的 refresh token 連續送出 20 次延續
 - **THEN** 20 次都回覆 `401 ACCOUNT_SESSION_INVALID`，沒有任何一次回覆 `429` 或其他鎖定的碼
 
 ### Requirement: 多個分頁同時延續不互相踢掉
 
-同一張 refresh token 在寬限期內第二次使用時，系統 SHALL 再發一次同一段登入狀態的新憑證；第三次以上 SHALL 回 `409 ACCOUNT_REFRESH_CONFLICT`，不發新憑證、不清 cookie、不撤銷任何登入狀態。畫面遇到 `409` 時 SHALL 短暫等候後以目前的 cookie 重送原請求一次，仍不通才帶回登入頁。
+同一張 refresh token 在寬限期內第二次使用時，系統 SHALL 再發一次同一段登入狀態的新憑證；第三次以上 SHALL 回 `409 ACCOUNT_REFRESH_CONFLICT`，不發新憑證、不清 cookie、不撤銷任何登入狀態。畫面遇到 `409` 時 SHALL 短暫等候後以目前的 cookie 重送原請求一次；仍不通就最多再延續一次，成功就再重送一次，還是不行才帶回登入頁。整個過程延續至多 2 次、原請求的重送至多 2 次。
 
 來源：規格 01-05 §多個分頁同時延續登入狀態 第 1–4 條、§已確認決議 Q13；§邊界情況；Scenario「兩個分頁同時延續不會互相踢掉」「慢的那個分頁自動重試一次」「重試仍失敗就帶回登入頁」「同一次延續用第三次就不給」。
 
@@ -110,8 +115,13 @@
 
 #### Scenario: 重試仍失敗就帶回登入頁
 
-- **WHEN** 延續收到 `409 ACCOUNT_REFRESH_CONFLICT` 後重送的原請求仍回覆 `401 AUTH_REQUIRED`
-- **THEN** 畫面回到 `/account/login`，整個過程中延續請求不超過 1 次、原請求的重送不超過 1 次
+- **WHEN** 延續收到 `409 ACCOUNT_REFRESH_CONFLICT`，等候後重送的原請求仍回覆 `401 AUTH_REQUIRED`，再延續一次回覆 `401 ACCOUNT_SESSION_INVALID`
+- **THEN** 畫面回到 `/account/login`，整個過程中延續請求恰好 2 次、原請求的重送恰好 1 次，沒有第三次延續
+
+#### Scenario: 重試不通時再延續一次就成功
+
+- **WHEN** 延續收到 `409 ACCOUNT_REFRESH_CONFLICT`，等候後重送的原請求仍回覆 `401 AUTH_REQUIRED`，再延續一次回覆 `201`，第二次重送的原請求回覆 `200`
+- **THEN** 畫面沒有顯示錯誤，也沒有離開目前的頁面；延續共 2 次、原請求的重送共 2 次
 
 ### Requirement: 疑似被盜用時所有裝置一起登出
 
@@ -133,7 +143,7 @@
 
 ### Requirement: 被動登出時顯示對應的一句
 
-延續回 `401 ACCOUNT_SESSION_EXPIRED` 時，畫面 SHALL 回到登入頁並在錯誤橫幅顯示「登入已過期，請重新登入」（英文 `Session expired, please sign in again`）；回 `401 ACCOUNT_SESSION_INVALID` 時顯示「驗證失敗，請重新登入」（英文 `Authentication failed, please sign in`）。兩句 MUST NOT 帶出任何帳號或裝置資訊，也不放在網址裡。
+延續回 `401 ACCOUNT_SESSION_EXPIRED` 時，畫面 SHALL 回到登入頁並在錯誤橫幅顯示「登入已過期，請重新登入」（英文 `Session expired, please sign in again`）；回 `401 ACCOUNT_SESSION_INVALID` 時顯示「驗證失敗，請重新登入」（英文 `Authentication failed, please sign in`）。延續回 `401 AUTH_REQUIRED`（本來就沒有登入狀態）時回到登入頁、MUST NOT 顯示任何錯誤橫幅。兩句 MUST NOT 帶出任何帳號或裝置資訊，也不放在網址裡。
 
 來源：規格 01-05 §不能通行的登入狀態不說明原因 第 4 條、§已確認決議 Q4、Q19；§邊界情況；Scenario「英文介面的登入已過期顯示英文那句」「英文介面的驗證失敗顯示英文那句」。
 
@@ -151,6 +161,11 @@
 
 - **WHEN** 介面語言為英文，延續收到 `401 ACCOUNT_SESSION_INVALID`，使用者回到登入頁
 - **THEN** 錯誤橫幅顯示 `Authentication failed, please sign in`
+
+#### Scenario: 沒有登入狀態時回到登入頁不顯示橫幅
+
+- **WHEN** 畫面的請求收到 `401 AUTH_REQUIRED`，接著延續也收到 `401 AUTH_REQUIRED`
+- **THEN** 畫面回到 `/account/login`，登入頁沒有錯誤橫幅
 
 #### Scenario: 重新整理後不再顯示被動登出那句
 

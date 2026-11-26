@@ -17,10 +17,10 @@
 - **WHEN** 沒有任何 cookie 的呼叫端送出 `GET /api/v1/auth-options`，部署有設定寄信服務、沒有設定 Google
 - **THEN** 系統回覆 `200`，`data` 恰好是 `{"selfRegistrationEnabled": true, "googleEnabled": false}`
 
-#### Scenario: Google 設定不齊全時視為沒有設定
+#### Scenario: 三個 Google 設定都設時開啟 Google
 
-- **WHEN** 三個 Google 設定只設了其中兩個，呼叫端送出 `GET /api/v1/auth-options`
-- **THEN** `data.googleEnabled` 為 `false`
+- **WHEN** 三個 Google 設定都已設定，呼叫端送出 `GET /api/v1/auth-options`
+- **THEN** `data.googleEnabled` 為 `true`（三個都不設時為 `false`；只設一部分時服務拒絕啟動，見主規格 `runtime-config`「Google 登入的設定一起設或一起不設」）
 
 ### Requirement: 登入頁依部署能力顯示入口
 
@@ -280,7 +280,7 @@ Email 正規化後對到一個啟用中、未匿名化、有本地密碼的帳�
 
 ### Requirement: Google 登入只登入或連結既有帳號
 
-完成 Google 登入時，系統 SHALL 先找已連結這個 Google 帳號的帳號，不看 Email 是否相同；沒有時，若 Google 回報 Email 已驗證且有 Email 相同的既有帳號，SHALL 自動連結並登入，不另外通知。成功回 `201`，`data` 欄位同 Email 與密碼登入。Google 登入 MUST NOT 建立帳號。
+完成 Google 登入時，系統 SHALL 先找已連結這個 Google 帳號的帳號，不看 Email 是否相同；沒有時，若 Google 回報 Email 已驗證且有 Email 相同、啟用中、未匿名化的既有帳號，SHALL 自動連結並登入（停用或已匿名化的不連結），不另外通知。成功回 `201`，`data` 欄位同 Email 與密碼登入。Google 登入 MUST NOT 建立帳號。
 
 來源：規格 01-01 §用 Google 帳號登入 第 2、5 條；§已確認決議 Q11；規格 01-05 §沒有本地密碼的帳號 第 1、4 條、§四種改動讓所有裝置重新登入、§已確認決議 Q18；ADR-004 D5；Scenario「已連結 Google 的帳號 Email 不同仍能登入」「Google 登入自動連結既有帳號」。
 
@@ -300,6 +300,12 @@ Email 正規化後對到一個啟用中、未匿名化、有本地密碼的帳�
 - **WHEN** 上一個 Scenario 的帳號在另一台裝置 B 已登入著，這一台以 Google 自動連結並登入
 - **THEN** B 下一次送出 `GET /api/v1/current-session` 回覆 `401 AUTH_REQUIRED`，B 延續登入狀態回覆 `401 ACCOUNT_SESSION_INVALID`
 - **AND** 這一台剛開始的登入狀態可以通行
+
+#### Scenario: 停用的同 Email 帳號不會被自動連結
+
+- **WHEN** 平台上有 Email 相同、還沒連結過 Google、但已停用的帳號，Google 回報這個 Email 已驗證，使用者以這個 Google 帳號完成登入
+- **THEN** 系統回覆 `401 ACCOUNT_GOOGLE_REJECTED`
+- **AND** 該帳號的 Google 連結仍為空，本地密碼沒有被清掉
 
 #### Scenario: Google 登入不建立帳號
 

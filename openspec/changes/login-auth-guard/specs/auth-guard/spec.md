@@ -47,7 +47,7 @@
 
 ### Requirement: 每一次操作都用當下的帳號狀態與系統角色
 
-需要登入的操作 SHALL 每一次都從資料庫讀當下的帳號狀態與系統角色，不沿用登入時或憑證內的值。系統角色變更 MUST NOT 讓登入狀態失效，下一次操作就以新角色判定；帳號停用時該帳號所有登入狀態的下一次操作都被拒絕；重新啟用 MUST NOT 恢復停用前的登入狀態。
+需要登入的操作 SHALL 每一次都從資料庫讀當下的帳號狀態與系統角色，不沿用登入時或憑證內的值。系統角色變更 MUST NOT 讓登入狀態失效，下一次操作就以新角色判定；帳號停用時該帳號所有登入狀態的下一次操作都被拒絕；憑證版本已變更的登入狀態 MUST 被拒，所以重新啟用不會恢復停用前的登入狀態（停用時加一憑證版本並撤銷屬 06-01）。
 
 來源：規格 01-05 §每一次操作都用最新的身分判定 第 1–3 條、§帳號被停用或重新啟用 第 1–4 條、§已確認決議 Q10、Q11；security-agent-rules S3、S4；Scenario「角色變更從下一次操作起生效」「停用帳號讓所有裝置立刻失效」「重新啟用不恢復舊的登入狀態」。
 
@@ -64,7 +64,7 @@
 
 #### Scenario: 重新啟用不恢復舊的登入狀態
 
-- **WHEN** 帳號被停用後又被重新啟用，以停用前的 cookie 送出 `GET /api/v1/current-session`
+- **WHEN** 帳號已登入，測試前置把它的 `credential_version` 加一並標為停用、再標回啟用（模擬 06-01 的停用與重新啟用），以停用前的 cookie 送出 `GET /api/v1/current-session`
 - **THEN** 系統回覆 `401 AUTH_REQUIRED`
 - **AND** 以正確的 Email 與密碼重新登入成功
 
@@ -94,6 +94,7 @@
 
 - **WHEN** 沒有登入 cookie 的訪客開啟 `/dashboard/dashboard`
 - **THEN** 網址變成 `/account/login`，沒有 query string，瀏覽器上一頁不會回到 `/dashboard/dashboard`
+- **AND** 登入頁沒有錯誤橫幅
 
 #### Scenario: 登入後一律去落點
 
@@ -121,6 +122,7 @@
 
 - **WHEN** 沒有登入 cookie 的訪客開啟 `/`
 - **THEN** 網址變成 `/account/login`
+- **AND** 登入頁沒有錯誤橫幅
 
 #### Scenario: 已登入開啟根路徑
 
@@ -131,6 +133,7 @@
 
 - **WHEN** 沒有登入 cookie 的訪客開啟 `/no-such-page`
 - **THEN** 網址變成 `/account/login`，瀏覽器上一頁不會回到 `/no-such-page`
+- **AND** 登入頁沒有錯誤橫幅
 
 ### Requirement: 守門查詢失敗時當成未登入
 

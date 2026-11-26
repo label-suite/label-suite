@@ -242,7 +242,7 @@
      "name": "credential_version",
      "type": "integer",
      "required": "system",
-     "note": "憑證版本；CHECK >= 0；預設 0。來源：ADR-004 D2：access token 帶著它，每個已驗證的請求都和這一欄比對；D5：綁定 Google 時加一；security-agent-rules S4：停用時加一（S4 另寫系統角色變更也加一，與 01-05 不一致，記在 #719 的待決）。只增不減"
+     "note": "憑證版本；CHECK >= 0；預設 0。來源：ADR-004 D2：access token 帶著它，每個已驗證的請求都和這一欄比對；D5：綁定 Google 時加一；security-agent-rules S4：停用與 01-05 列出的四種改動時加一；系統角色變更不加（01-05）。只增不減"
     },
     {
      "name": "is_seeder",

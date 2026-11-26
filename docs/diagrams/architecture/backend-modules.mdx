@@ -357,7 +357,7 @@ backend/
 | `app/modules/` | 業務模組 | 有業務規則、會出現在 spec 的 Scenario |
 | `app/core/` | 基礎建設 | 換一個業務也照樣需要，通常只在 `create_app` 掛一次 |
 | `app/scripts/` | 命令列工具 | 用 `uv run python -m app.scripts.<name>` 執行，不是端點 |
-| `app/oidc/` | Google OIDC 入口 | 對外整合的單一入口（[backend-agent-rules B12](../../development/rules/backend-agent-rules.mdx) 的 (a) 寫法：頂層入口套件，登記在 `tests/unit/import_tree.py` 的 `ENTRY_TOP_LEVEL_PACKAGES`）；測試替身也放這裡 |
+| `app/oidc/` | Google OIDC 入口 | 對外整合的單一入口（[backend-agent-rules B12](../../development/rules/backend-agent-rules.mdx) 的 (a) 寫法：頂層入口套件，登記在 `tests/unit/import_tree.py` 的 `ENTRY_TOP_LEVEL_PACKAGES`）；測試替身不放這裡，測試在網路邊界以 `monkeypatch` 替換 `httpx.AsyncClient.send` |
 
 ### `core/` 各模組
 
@@ -443,7 +443,7 @@ import BackendRequestPipeline from '@notes/components/backend-request-pipeline'
 | 3 | `AccessLogMiddleware`（只作用在 `/api/v1`） | 回應送完後寫一行存取紀錄到 `app.access`：method、路由模板（沒有模板記 `<unmatched>`）、狀態、耗時；2xx／3xx 記 INFO、4xx 記 WARNING、5xx 記 ERROR。請求已被標記為記過，或 2xx 且路由在 `quiet_success_routes` 裡（健康檢查）時不寫。耗時從進入這一層到最後一段 body 送出，一位小數；路由模板由 `route_template` 以 `iter_route_contexts` 對照（含 `/api/v1` 前綴）。內層拋例外時照同一套判斷（還沒開始回應的記 `500`），再原樣往外拋 | 無 |
 | 4 | `UnhandledExceptionMiddleware` | 攔下沒有 handler 的例外，記一筆 ERROR，並標記這個請求已記過 | `500 INTERNAL_ERROR` |
 | 5 | `LocaleMiddleware`（只作用在 `/api/v1`） | 解析 `Accept-Language`，回應時加 `Content-Language` | `406 NOT_ACCEPTABLE`，一律 zh-TW |
-| 5a | `CsrfMiddleware`（只作用在 `/api/v1` 的 `POST`、`PUT`、`PATCH`、`DELETE`） | 比對 `X-CSRF-Token` 標頭與 CSRF cookie，再以 access token 裡的 `sid` 驗 `HMAC(secret, sid)`；還沒有 session 的三條（Email 與密碼登入、延續、Google 登入完成）放行，改由只收 `application/json` 擋跨站表單 | `403 CSRF_FAILED` |
+| 5a | `CsrfMiddleware`（只作用在 `/api/v1` 的 `POST`、`PUT`、`PATCH`、`DELETE`） | 請求**沒有** access cookie 時不驗、直接交給路由；有時比對 `X-CSRF-Token` 標頭與 CSRF cookie，再以 access token 裡的 `sid`（驗簽章、不看到期）驗 `HMAC(secret, sid)`。放行清單四條：Email 與密碼登入、Google 登入完成、延續、登出 | `403 CSRF_FAILED` |
 | 6 | Starlette `ExceptionMiddleware` | 執行註冊的 exception handler | `404`、`405`、`422` 與各 `AppError` |
 | 7 | Router → Service → Repository | 模組內分層 | 成功外層，由 Router 的 `ok()` 組 |
 

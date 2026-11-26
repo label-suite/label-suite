@@ -82,9 +82,9 @@
 
 ### Requirement: `AUTH_REQUIRED` 時先延續一次再重送原請求
 
-請求收到 `401`、`code` 為 `AUTH_REQUIRED` 時，唯一出口 SHALL 先送出一次延續：延續成功就重送原請求一次；延續回 `409 ACCOUNT_REFRESH_CONFLICT` 就短暫等候後以目前的 cookie 重送原請求一次；延續回其他錯誤就把錯誤交給呼叫端。同時多個請求遇到時共用同一次延續；延續請求本身 MUST NOT 再觸發延續。
+請求收到 `401`、`code` 為 `AUTH_REQUIRED` 時，唯一出口 SHALL 先送出一次延續：延續成功就重送原請求一次；延續回 `409 ACCOUNT_REFRESH_CONFLICT` 就短暫等候後以目前的 cookie 重送原請求一次，重送仍收到 `401 AUTH_REQUIRED` 時最多再延續一次並在成功後再重送一次；延續回其他錯誤就把錯誤交給呼叫端。延續至多 2 次、重送至多 2 次。同時多個請求遇到時共用同一次延續；延續請求本身 MUST NOT 再觸發延續。
 
-來源：規格 01-05 §多個分頁同時延續登入狀態 第 1–3 條、§登入狀態能撐多久；api-agent-rules A7；`ui-design.md` §進入、離開與返回 X7；login-auth-guard PL2。
+來源：規格 01-05 §多個分頁同時延續登入狀態 第 1–3 條、§登入狀態能撐多久；api-agent-rules A7；`ui-design.md` §進入、離開與返回 X7；login-auth-guard PL2（以規格 01-05 第 3 條為準，見 `design.md` D7）。
 
 #### Scenario: 延續成功後重送原請求一次
 
@@ -100,6 +100,16 @@
 
 - **WHEN** 查詢收到 `401 AUTH_REQUIRED`，延續回覆 `409 ACCOUNT_REFRESH_CONFLICT`，等候後重送的原請求回覆 `200`
 - **THEN** 查詢成功，整個過程原請求送出 2 次、延續 1 次
+
+#### Scenario: 衝突後重送仍不通時再延續一次
+
+- **WHEN** 查詢收到 `401 AUTH_REQUIRED`，延續回覆 `409 ACCOUNT_REFRESH_CONFLICT`，等候後重送的原請求又收到 `401 AUTH_REQUIRED`，第二次延續回覆 `201`，第二次重送回覆 `200`
+- **THEN** 查詢成功，整個過程原請求送出 3 次、延續 2 次
+
+#### Scenario: 延續最多兩次
+
+- **WHEN** 查詢收到 `401 AUTH_REQUIRED`，延續回覆 `409 ACCOUNT_REFRESH_CONFLICT`，重送又收到 `401 AUTH_REQUIRED`，第二次延續回覆 `401 ACCOUNT_SESSION_INVALID`
+- **THEN** 查詢失敗，呼叫端拿到 `code` 為 `ACCOUNT_SESSION_INVALID` 的錯誤，延續恰好 2 次、原請求送出 2 次
 
 #### Scenario: 多個請求同時遇到 401 只延續一次
 
