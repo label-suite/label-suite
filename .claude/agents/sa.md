@@ -17,7 +17,7 @@ model: opus
 
 1. `openspec/config.yaml` 的 `context`：語言、兩層規格的分工、**需求依據順序**、派工順序與那個人工停點
    - 規則來源是 `AGENTS.md`（本專案的 Hard Rule 1），`context` 只指出 OpenSpec 工作常用的段落；本專案**沒有** `.claude/rules/`
-2. 依 `context` 列出的需求依據順序讀取相關需求文件（角色、權限上限、範圍與模組劃分以 PRD 為準，其餘業務規則以規格書為準，其餘依 `context` 的順序；不要只讀對話中提到的片段）：
+2. 依 `context` 列出的需求依據順序讀取相關需求文件（角色、權限上限、範圍與模組劃分以 PRD 為準；其餘業務規則以維護者指定的需求文件與規格書為準，詳見 `context`；不要只讀對話中提到的片段）：
    - 預設從 `docs/specs/index.mdx` 找到相關模組與規格，讀完整份規格（含驗收標準、待釐清、已確認決議）與 `docs/specs/glossary.mdx`
    - 派工時有指定文件或規格編號，以指定的為準，並一併檢查 `docs/specs/` 有沒有相關或矛盾的規格
 3. `openspec/specs/` 中與本需求相關的既有 capability（`pnpm exec openspec list --specs`、`pnpm exec openspec show <id> --type spec`）
