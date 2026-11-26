@@ -1,9 +1,6 @@
 # API Contract
 
-<!-- 前後端唯一的交接依據。沒有 API 變更時，整份只寫：本次無 API 變更。
-     operationId 由 FastAPI 的 generate_unique_id_function 固定成「動詞加資源」（例 listUsers、getUser），不手寫也不逐個覆寫；
-     這裡寫的必須與那個策略算出來的一致。
-     路徑前綴一律 /api/v1，成功回應包一層 envelope，兩項都已定案。 -->
+<!-- 前後端唯一的交接依據。沒有 API 變更時，整份只寫：本次無 API 變更。 -->
 
 ## 端點總覽
 
@@ -12,9 +9,7 @@
 
 ## 常駐文件異動
 
-<!-- 錯誤碼或端點授權有異動時，先改常駐文件，這一節只寫路徑與異動摘要，不重抄常駐文件的內容。
-     error-codes.mdx：新的錯誤碼，或會回既有錯誤碼的新端點。endpoint-authorization.mdx：新端點，或端點的角色、PRD 權限矩陣的格、遮蔽的欄位（含答案）。
-     下面各端點的段落仍寫這次的角色、錯誤與欄位遮蔽。只動到其中一份時，刪掉另一份的路徑；兩份都沒有異動時，刪掉路徑與表格，只寫一行「本次無常駐文件異動」。 -->
+<!-- 下面各端點的段落仍寫這次的角色、錯誤與欄位遮蔽。只動到其中一份時，刪掉另一份的路徑；兩份都沒有異動時，刪掉路徑與表格，只寫一行「本次無常駐文件異動」。 -->
 
 - 常駐文件：`docs/diagrams/architecture/error-codes.mdx`、`docs/diagrams/architecture/endpoint-authorization.mdx`
 
@@ -33,8 +28,7 @@
 
 ### Response
 
-<!-- 成功回應包一層 envelope，所以這一節寫的是 **envelope 裡那層資料的欄位**，不必重複 envelope 本身。
-     204 無 body、檔案與串流是明文例外，不套用 envelope；屬於例外的端點要寫明它為什麼是例外。 -->
+<!-- 成功回應包一層 envelope，所以這一節寫的是 **envelope 裡那層資料的欄位**，不必重複 envelope 本身。 -->
 
 | 欄位 | 型別 | nullable | 說明 |
 | :--- | :--- | :--- | :--- |
