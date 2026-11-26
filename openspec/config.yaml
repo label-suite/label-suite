@@ -47,6 +47,7 @@ context: |
   change 名稱：kebab-case、字母開頭。
   CLI 以 `pnpm exec openspec` 執行（@fission-ai/openspec 是本專案的 devDependency）。
 
+# 與 scaffold 刻意不同：本專案沒有「可延後／暫定值」制度，system-analysis、system-design、clarification 都不處理暫定值。
 rules:
   # 與 scaffold 刻意不同：system-analysis 遇到待決問題不停（scaffold 在這裡停下問），統一留到 clarification 的停點。
   system-analysis:
@@ -62,6 +63,7 @@ rules:
     - classDiagram 的 Model 只畫屬性；表間關聯與多重性以 ER 為準
     - 後端模組的分層、Class Diagram 或主要 Sequence Diagram 有異動時，先改 docs/diagrams/architecture/backend-modules.mdx（動到 app/core/ 的基礎建設時改它的「後端基礎建設」節）；「常駐文件異動」節寫出這個路徑與異動摘要，不重抄常駐文件的內容
     - 權限檢查與欄位遮蔽都在後端完成；權限不得超出 PRD §權限矩陣，需要超出時列進待決問題
+  # 與 scaffold 刻意不同：畫面以 design/prototype/pages/ 為準，沒有「Prototype 與 UI Kit 對照」。
   ui-design:
     - 每塊資料都要對應到 api-contract 的 operationId
     - 路由、頁面元件、對應的規格編號或 Logic Flow 節點有異動時，先改 docs/diagrams/architecture/frontend-routes.mdx（動到前端骨架時改它的「前端骨架」節）；「常駐文件異動」節寫出這個路徑與異動摘要，不重抄常駐文件的內容
@@ -81,6 +83,7 @@ rules:
     - 列出引用的規格編號與章節（例：規格 02-03 §卡控機制）、其他需求文件章節與待決問題編號
     - 先讀 system-analysis、system-design、ui-design、api-contract 四份，不得與之矛盾
   # 與 scaffold 刻意不同：十個面向（scaffold 是八個），多出的第 9、10 面向對應 Hard Rule 5、6。
+  # 與 scaffold 刻意不同：改變需求的決議只走 spec-writing 回寫規格書，不分流到 prd-writing。
   clarification:
     - 依 clarify skill 的關卡模式，**十個面向**都要有結論；specs、design、tasks 相關的檢查項標「後續產物」
     - 第 9 面向「任務設定驅動」：這次的行為有沒有寫死某一種任務類型？新增任務類型要不要改核心程式？（Hard Rule 5）
@@ -104,7 +107,7 @@ rules:
     - 每個 task 結尾標一個負責角色：[@backend-developer]、[@frontend-developer]、[@dba]、[@technical-writer]
     - 可平行的 task 放在同一個群組並在群組標題註明「（可平行）」
     - 測試與實作放在同一個 task（TDD，見 docs/development/architecture.mdx §測試分層），不另拆測試 task
-    - 後端 API 有變動的群組，最後一個 task 是「重新產生 openapi.json 與前端型別並確認與 api-contract 一致」
+    - 後端有改動的群組，最後一個 task 是「重新產生 openapi.json 與前端型別並確認與 api-contract 一致」
     - 有 schema 變更的 [@dba] task 要含「依實作校正資料表字典與 ER、為建立的表標記已落地與 Alembic revision、`pnpm check:er` 通過」
     - Python 用 uv、JavaScript 用 pnpm；不得出現 npm install 或 pip install
     - tasks 定稿後先提交規劃產出物，再交由 design-reviewer 審閱；修訂由 planner 另開 commit
