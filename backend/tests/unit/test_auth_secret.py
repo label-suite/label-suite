@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from app.core.auth_secret import SECRET_FILE_NAME, resolve_auth_secret
+from app.core.auth_secret import KEY_FILE_NAME, resolve_auth_secret
 from app.core.config import ConfigError, Settings
 
 ORIGIN = "http://localhost:5173"
@@ -34,7 +34,7 @@ def _settings(
 
 
 def _secret_file(tmp_path: Path) -> Path:
-    return (tmp_path / "data").resolve() / SECRET_FILE_NAME
+    return (tmp_path / "data").resolve() / KEY_FILE_NAME
 
 
 def _mode(path: Path) -> int:
@@ -162,4 +162,4 @@ def test_concurrent_workers_end_up_with_one_secret(tmp_path: Path) -> None:
     assert len(results) == 8
     assert len(set(results)) == 1
     assert results[0] == _secret_file(tmp_path).read_text(encoding="utf-8")
-    assert sorted(p.name for p in _secret_file(tmp_path).parent.iterdir()) == [SECRET_FILE_NAME]
+    assert sorted(p.name for p in _secret_file(tmp_path).parent.iterdir()) == [KEY_FILE_NAME]

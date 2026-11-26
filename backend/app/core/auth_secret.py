@@ -18,9 +18,9 @@ from pydantic import SecretStr
 
 from app.core.config import AUTH_SECRET_MIN_LENGTH, ConfigError, Settings
 
-__all__ = ["SECRET_FILE_NAME", "resolve_auth_secret"]
+__all__ = ["KEY_FILE_NAME", "resolve_auth_secret"]
 
-SECRET_FILE_NAME = "auth_secret"  # noqa: S105 - a file name, not a secret
+KEY_FILE_NAME = "auth_secret"
 """The Lite-tier secret file, in the directory of ``SQLITE_PATH``."""
 
 _FILE_MODE = 0o600
@@ -58,7 +58,7 @@ def resolve_auth_secret(settings: Settings) -> SecretStr:
     if not settings.is_lite():
         raise ConfigError("AUTH_SECRET: required when DATABASE_URL is set")
 
-    path = settings.sqlite_path.parent / SECRET_FILE_NAME
+    path = settings.sqlite_path.parent / KEY_FILE_NAME
     path.parent.mkdir(parents=True, exist_ok=True)
     if not path.exists() and _create(path):
         logger.info("AUTH_SECRET not set; generated a new secret at %s", path)
