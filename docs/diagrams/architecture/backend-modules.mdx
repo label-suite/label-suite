@@ -157,17 +157,17 @@ sequenceDiagram
 
 帳號：登入（Email 與密碼、Google）、一段登入狀態的開始、延續與結束，以及之後每個模組共用的「目前是誰」判定所需的資料讀取。七個端點的資源直接接在 `/api/v1` 後面（api-agent-rules A1 不插模組段）；規格依據是 01-01 與 01-05。
 
-:::note{title="還在等 clarification 的部分"}
-本節依 change `login-auth-guard` 的 `system-design.md` 寫成。其中延續登入狀態（`refresh`）的存放、登入失敗鎖定、Google 自動綁定與登出四塊依該 change 的提案畫出，clarification 定案後由 `sd` 同步校正本節；實作後由 `backend-developer` 依程式再校正一次。
+:::note{title="規劃中，待實作後校正"}
+本節依 change `login-auth-guard` 的 `system-design.md` 與維護者 2026-11-26 的決定寫成；實作後由 `backend-developer` 依程式校正。登入失敗鎖定不在這個 change（交給 #726），本模組只留插入點：`PasswordLoginService.login` 查帳號之前檢查、丟錯之前記失敗、commit 之後清除，都在交易外。
 :::
 
 | 層 | 檔案 | 做什麼 |
 | :--- | :--- | :--- |
 | Router | `router.py` | 七個 handler：登入頁設定、Email 與密碼登入、目前的登入狀態、延續、登出、Google 授權網址、Google 登入完成。發 cookie 一律經 `core.cookies.SessionCookies`，不自己 `set_cookie` |
-| Service | `service.py` | `PasswordLoginService`、`GoogleLoginService`、`SessionService`、`LoginOptionsService`，以及實作 `core.auth.PrincipalLoader` 的 `AccountPrincipalLoader`；交易都由這一層 commit。依賴工廠也在這裡 |
+| Service | `service.py` | `PasswordLoginService`、`GoogleLoginService`、`SessionService`、`LoginOptionsService`、`SeederService`，以及實作 `core.auth.PrincipalLoader` 的 `AccountPrincipalLoader`；交易都由這一層 commit。依賴工廠也在這裡 |
 | Repository | `repository.py` | `UserRepository`、`AccountSessionRepository`、`RefreshTokenRepository`；只查與寫，不 commit |
-| Models | `models.py` | `User`、`AccountSession`、`AccountRefreshToken`；前兩張的欄位見[候選資料表字典](./data-table-dictionary.mdx)的 `account` 組。`AccountRefreshToken` 是延續登入狀態的存放提案，clarification 定案之前不在字典裡 |
-| Schemas | `schemas.py` | request 只有 `LoginRequest`、`GoogleSessionRequest`；response 一律明列欄位，**不回** `hashed_password`、`google_subject`、`credential_version`、`is_seeder` |
+| Models | `models.py` | `User`、`AccountSession`、`AccountRefreshToken`；欄位見[候選資料表字典](./data-table-dictionary.mdx)的 `account` 組 |
+| Schemas | `schemas.py` | request 只有 `LoginRequest`、`GoogleSessionRequest`；response 一律明列欄位（登入者自己的 `id`、`name`、`email`、`role`），**不回** `hashed_password`、`google_subject`、`credential_version`、`is_seeder` |
 | 錯誤 | `errors.py` | 繼承 `AppError` 的帳號錯誤；登入失敗的幾種原因共用同一個錯誤碼，不分是帳號不存在、密碼錯誤還是停用 |
 
 ### 分層與類別
@@ -212,10 +212,17 @@ classDiagram
     <<service>>
     +get() LoginOptionsData
   }
+  class SeederService {
+    <<service>>
+    +find_existing(email str) SeederCheck
+    +create(email str, name str, password str) User
+  }
   class UserRepository {
     <<repository>>
     +get_by_email(normalized str) User
     +get_by_google_subject(subject str) User
+    +get_seeder() User
+    +add(user User) None
   }
   class AccountSessionRepository {
     <<repository>>
@@ -250,6 +257,7 @@ classDiagram
   GoogleLoginService --> GoogleOidcClient
   GoogleLoginService --> UserRepository
   GoogleLoginService --> SessionService
+  SeederService --> UserRepository
   SessionService --> AccountSessionRepository
   SessionService --> RefreshTokenRepository
   AccountPrincipalLoader ..|> PrincipalLoader
@@ -285,7 +293,7 @@ sequenceDiagram
   S-->>L: IssuedSession
   L-->>R: IssuedSession
   R->>R: SessionCookies.set_session（access、refresh、CSRF 三個 cookie）
-  R-->>C: 200 成功外層，data 只有 user 的 id、name、role
+  R-->>C: 201 成功外層，data 只有 user 的 id、name、email、role
 ```
 
 #### 每一次操作都用最新的身分判定
@@ -335,6 +343,7 @@ backend/
 │  ├─ core/                  全站共用的基礎建設，見下表
 │  ├─ i18n/<locale>/messages.json   外層 message 的字串
 │  ├─ scripts/export_openapi.py     匯出 openapi.json（不帶 --output 時同時寫文件站副本）
+│  ├─ scripts/create_seeder.py      建立第一位 Seeder 管理員（密碼互動輸入或 --password-stdin；冪等）
 │  ├─ oidc/                  Google OIDC 的入口套件（B12 單一入口，唯一 import authlib 的地方）
 │  └─ modules/<module>/      業務模組：router、service、repository、schemas（有表時加 models）
 └─ tests/
@@ -371,6 +380,7 @@ backend/
 | `tokens.py` | access JWT 的簽發與驗證；不透明 token 與它的雜湊；短期簽章 payload | `AccessClaims`、`AccessTokenCodec`、`new_opaque_token`、`hash_token`、`sign_payload`、`verify_payload` |
 | `cookies.py` | 發與清 session cookie 的唯一 helper（B12 入口 5） | `SessionCookies` |
 | `csrf.py` | CSRF 驗證 middleware（B12 入口 6） | `CsrfMiddleware`、`CsrfFailedError` |
+| `auth_secret.py` | `AUTH_SECRET` 的來源：有設就用；Lite 層沒設就在資料 volume 產生並重用；正式層沒設就失敗 | `resolve_auth_secret` |
 | `passwords.py` | 密碼雜湊與驗證 | `PasswordHasher` |
 | `email_identity.py` | Email 的正規化與長度上限（01-05 Q14，登入、註冊、邀請、換 Email 共用） | `normalize_email`、`MAX_EMAIL_LENGTH` |
 
@@ -540,7 +550,7 @@ log 只記型別、位置與 `traceId`，不記任何可能帶著請求或資料
 | `API_DOCS_ENABLED` | API | 否 | 布林，預設 `true`；`false` 時不提供 FastAPI 內建的 `/docs`、`/docs/oauth2-redirect`、`/redoc`、`/openapi.json`。`docker-compose.prod.yml` 的後端明確設為 `false` |
 | `LOG_LEVEL` | API | 否 | `DEBUG`、`INFO`、`WARNING`、`ERROR`、`CRITICAL` 之一，不分大小寫，預設 `INFO`；其他值 `ConfigError`。管整個後端的輸出等級（root 與它的 handler）；資料庫套件的 logger（`sqlalchemy`、`aiosqlite`、`asyncpg`）不跟著它，固定 `WARNING`。兩層編排檔以 `${LOG_LEVEL:-INFO}` 傳入後端容器 |
 | `FORWARDED_ALLOW_IPS` | API | 否 | 逗號分隔的單一 IP 或 CIDR（去除空白），預設 `127.0.0.1,::1`；`*`、前綴長度 0（`0.0.0.0/0`、`::/0`）、帶主機位元的網段（`127.0.0.1/8`）、主機名稱、空項目與空清單都 `ConfigError`。**後端只驗證，不使用它的值**：uvicorn 讀同一個變數做比對。兩層編排檔以 `${FORWARDED_ALLOW_IPS:-10.77.250.10}` 傳入後端容器，`migrate` 不傳 |
-| `AUTH_SECRET` | API | 是 | 至少 32 字元；簽 access JWT、CSRF token 的 HMAC 與 Google 登入流程的短期 cookie，三者以不同的用途標籤各自衍生金鑰。沒有預設值，缺少就 `ConfigError` |
+| `AUTH_SECRET` | API | 正式層是 | 至少 32 字元；簽 access JWT、CSRF token 的 HMAC 與 Google 登入流程的短期 cookie，三者以不同的用途標籤各自衍生金鑰。有設 `DATABASE_URL`（正式層）而沒設就 `ConfigError`；Lite 層沒設時 `resolve_auth_secret` 讀或產生 `SQLITE_PATH` 同目錄的 `auth_secret`（權限 `0o600`，在資料 volume 裡，刪 volume 才會變），啟動時記一行 INFO 只寫來源與路徑，不印值 |
 | `GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`、`GOOGLE_REDIRECT_URI` | API | 否 | 三個一起設或一起不設，只設一部分就 `ConfigError`；都沒設時 `google_configured()` 為 false |
 | `RESEND_API_KEY` | API | 否 | 本後端目前只看它有沒有設：`mail_configured()`，登入頁、註冊頁與註冊的送出共用這一個判斷（01-02 Q10） |
 
@@ -644,7 +654,7 @@ cd backend && uv run python -m app.scripts.export_openapi
 
 | 還沒有 | 風險 | 追蹤 |
 | :--- | :--- | :--- |
-| 登入失敗鎖定 | 登入失敗次數的限制還沒實作 | [規格 01-05 §已確認決議](../../specs/01-account/05-login-state.mdx#已確認決議) Q3（失敗 10 次擋 30 分鐘） |
+| 登入失敗鎖定 | 登入失敗次數的限制還沒實作；`account` 模組只留插入點 | [#726](https://github.com/label-suite/label-suite/issues/726)；[規格 01-05 §已確認決議](../../specs/01-account/05-login-state.mdx#已確認決議) Q3（失敗 10 次擋 30 分鐘；「同一個人」以帳號加來源位址認定） |
 | 全域速率限制 | 端點沒有呼叫上限 | [ADR-004 的 D7](../../development/adr/004-auth-and-security.mdx#d7-不做全域速率限制登入失敗鎖定用-redis-計數)：後端不做，全域上限日後交給反向代理層 |
 | 授權四步的第 3、4 步（權限矩陣的 cell、附加條件含答案隔離） | `get_current_principal` 只做到第 1、2 步；第一個需要矩陣或附加條件的端點要先補上 | [ADR-004 的 D6](../../development/adr/004-auth-and-security.mdx#d6-權限矩陣當授權輸入)；change `login-auth-guard` 的待決 11 |
 | Cloudflare 或其他邊緣代理在 Nginx 前面；TLS 邊緣之後的 scheme | 後端拿到的是邊緣位址而不是真實用戶端，還原需要 Nginx 的 real_ip 設定；後端看到的 scheme 恆為 `http`；Docker 發布埠的來源位址依平台而異（Docker Desktop 為 `192.168.65.1`，Linux 未測）。後端只信任 Nginx 的固定位址，見 [architecture.mdx 的 §部署與維運](../../development/architecture.mdx#部署與維運) | [ADR-008 的 D1](../../development/adr/008-deployment-and-operations.mdx#d1-compose-加-nginx-當-runtimecloudflare-可選) 尚未落地的 origin 憑證設定（Full (strict) 已決，憑證怎麼放進 Nginx 留到正式部署的 change） |

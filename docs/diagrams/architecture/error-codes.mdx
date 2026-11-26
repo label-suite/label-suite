@@ -67,18 +67,17 @@ updatedAt: '2026-11-26'
 
 ### account
 
-前綴 `ACCOUNT_`；產生的位置都是 `app/modules/account/errors.py` 定義、由 service 丟出，經 `handle_app_error` 轉成外層。標「提案」的碼依附 change `login-auth-guard` 待決的建議方案，clarification 定案後校正。
+前綴 `ACCOUNT_`；產生的位置都是 `app/modules/account/errors.py` 定義、由 service 丟出，經 `handle_app_error` 轉成外層。依 change `login-auth-guard` 的設計與維護者 2026-11-26 的決定寫成，實作後校正。登入失敗鎖定（規格 01-05 Q3）不在這個 change，沒有它的碼，交給 #726。
 
 | `code` | HTTP | 訊息鍵 | 在哪裡產生 | 會回這個碼的端點 |
 | :--- | :--- | :--- | :--- | :--- |
 | `ACCOUNT_INVALID_CREDENTIALS` | `401` | `account.invalid_credentials` | `PasswordLoginService.login` | [`createSession`](/view/diagrams/architecture/api.openapi#op/createSession)：帳號不存在、密碼不符、停用、已匿名化、沒有本地密碼或 Email 正規化後超過 254 字，全部同一個碼 |
-| `ACCOUNT_LOGIN_THROTTLED` | `429` | `account.login_throttled` | `PasswordLoginService.login`（提案，待決 3 選 3-A 或 3-B 才有） | [`createSession`](/view/diagrams/architecture/api.openapi#op/createSession)：連續失敗 10 次後 30 分鐘內 |
-| `ACCOUNT_SESSION_EXPIRED` | `401` | `account.session_expired` | `SessionService.refresh`（依附待決 2） | [`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh)：已過 90 天或 7 天 |
-| `ACCOUNT_SESSION_INVALID` | `401` | `account.session_invalid` | `SessionService.refresh`（依附待決 2） | [`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh)：token 不存在、登入狀態已失效、帳號停用，或寬限期外重用（疑似被盜用），不分原因 |
-| `ACCOUNT_REFRESH_CONFLICT` | `409` | `account.refresh_conflict` | `SessionService.refresh`（依附待決 2） | [`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh)：同一張 token 在寬限期內被用到第三次以上 |
+| `ACCOUNT_SESSION_EXPIRED` | `401` | `account.session_expired` | `SessionService.refresh` | [`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh)：已過 90 天或 7 天 |
+| `ACCOUNT_SESSION_INVALID` | `401` | `account.session_invalid` | `SessionService.refresh` | [`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh)：token 不存在、登入狀態已失效、帳號停用，或寬限期外重用（疑似被盜用），不分原因 |
+| `ACCOUNT_REFRESH_CONFLICT` | `409` | `account.refresh_conflict` | `SessionService.refresh` | [`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh)：同一張 token 在寬限期內被用到第三次以上 |
 | `ACCOUNT_GOOGLE_UNAVAILABLE` | `409` | `account.google_unavailable` | `GoogleLoginService.begin`、`complete` | [`getGoogleAuthorization`](/view/diagrams/architecture/api.openapi#op/getGoogleAuthorization)、[`createGoogleSession`](/view/diagrams/architecture/api.openapi#op/createGoogleSession)：部署沒有設定 Google |
 | `ACCOUNT_GOOGLE_FLOW_INVALID` | `400` | `account.google_flow_invalid` | `GoogleLoginService.complete` | [`createGoogleSession`](/view/diagrams/architecture/api.openapi#op/createGoogleSession)：流程 cookie 不在或無效、`state` 不符、換 token 或驗 `id_token` 失敗 |
-| `ACCOUNT_GOOGLE_REJECTED` | `401` | `account.google_rejected` | `GoogleLoginService.complete` | [`createGoogleSession`](/view/diagrams/architecture/api.openapi#op/createGoogleSession)：沒有已連結的帳號，且沒有 Email 相同的帳號或 Email 未驗證；提案 N2-A 另含停用與已匿名化，不分原因 |
+| `ACCOUNT_GOOGLE_REJECTED` | `401` | `account.google_rejected` | `GoogleLoginService.complete` | [`createGoogleSession`](/view/diagrams/architecture/api.openapi#op/createGoogleSession)：沒有已連結的帳號，且沒有 Email 相同的帳號或 Email 未驗證；也含停用與已匿名化的帳號（維護者 N2），不分原因 |
 
 ## 已知限制
 
@@ -93,4 +92,4 @@ updatedAt: '2026-11-26'
 | :--- | :--- | :--- | :--- |
 | 2026-11-23 | 全系統的錯誤碼落地成本文；規劃時由 `sd` 先改本文，change 只寫異動摘要與路徑（[§誰改、什麼時候改](#誰改什麼時候改)） | 模組專屬碼只散在各 change 的 `api-contract.md` | [#547](https://github.com/label-suite/label-suite/issues/547) |
 | 2026-11-23 | 實作後由 `backend-developer` 依程式校正本文，`code-reviewer` 再核對（[§誰改、什麼時候改](#誰改什麼時候改)） | — | [#547 的裁定](https://github.com/label-suite/label-suite/issues/547#issuecomment-7102478776) |
-| 2026-11-26 | 新增通用碼 `AUTH_REQUIRED`、`CSRF_FAILED` 與 `account` 模組的八個碼（規劃，待實作後校正） | 已知限制的「`400`、`401`、`403`、`409` 還沒有」 | [#719](https://github.com/label-suite/label-suite/issues/719) |
+| 2026-11-26 | 新增通用碼 `AUTH_REQUIRED`、`CSRF_FAILED` 與 `account` 模組的七個碼（規劃，待實作後校正） | 已知限制的「`400`、`401`、`403`、`409` 還沒有」 | [#719](https://github.com/label-suite/label-suite/issues/719) |

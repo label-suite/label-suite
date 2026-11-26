@@ -1,6 +1,6 @@
 ---
 title: '候選資料表字典與關聯限制'
-description: '41 張候選資料表、363 欄的逐欄字典：英文識別碼、中文業務意義、型別、可空性、鍵與限制、規格來源，以及寫入者、讀取權限、不可變與版本界線、複合關聯與敏感邊界。規劃結構，不是已落地的資料庫。'
+description: '42 張候選資料表、370 欄的逐欄字典：英文識別碼、中文業務意義、型別、可空性、鍵與限制、規格來源，以及寫入者、讀取權限、不可變與版本界線、複合關聯與敏感邊界。規劃結構，不是已落地的資料庫。'
 category: '架構'
 tags: [架構, 資料模型, 字典, 關聯限制]
 createdAt: '2026-11-11'
@@ -26,7 +26,7 @@ import PluginView from '@/components/PluginView.astro';
 表落地之後，由 `dba` 在該表標題下方加一行 `` **已落地**：Alembic revision `<revision id>` ``，ER 圖的表說明同步加上同一行；`pnpm check:er` 比對兩邊的標記，並確認每個 revision 真的在 `backend/alembic/versions/` 裡。**沒有這一行的表就是還沒落地**——目前一張都沒有。標記只是索引，結構的最終依據仍是 Alembic revision 與資料庫 metadata。prototype 的 `localStorage` 與 fixture 也不是資料表。
 :::
 
-<PluginView src="diagrams/architecture/database-schema.er.json" caption="候選資料表 ER 圖（41 張表，從本文件產生）" />
+<PluginView src="diagrams/architecture/database-schema.er.json" caption="候選資料表 ER 圖（42 張表，從本文件產生）" />
 
 ## 這份文件的邊界
 
@@ -50,7 +50,8 @@ import PluginView from '@/components/PluginView.astro';
 | `submission` 新增 | **+1 張 / +12 欄 / +0 單欄 FK** | 背景評分工作的紀錄；FK 全是複合 FK |
 | `ai_runs`、`ai_run_events`、`user_deletion_request` 新增 | **+3 張 / +15 欄 / +3 單欄 FK** | 出自 ADR-008 的裁定，見下 |
 | 既有表加欄 | **+3 欄**：`users.anonymized_at`、`dataset_version.withdrawn_at`、`dataset_version.withdrawal_reason` | 同上，單欄 FK 不變 |
-| 本文件 | **41 張 / 363 欄 / 41 單欄 FK** | 複合 FK 另列於各組的§關聯 |
+| [#719](https://github.com/label-suite/label-suite/issues/719) 新增 `account_refresh_token` | **+1 張 / +7 欄 / +1 單欄 FK** | 維護者 2026-11-26 決定（#719 的 N1），見下 |
+| 本文件 | **42 張 / 370 欄 / 42 單欄 FK** | 複合 FK 另列於各組的§關聯 |
 
 移除不是「不需要那個機制」。更新權杖、冪等紀錄與審核員候選名單在實作時都可能真的需要，但那時要另開 issue 寫清楚為什麼——**這樣字典裡其餘每一張表都追得到規格**——**8 張除外**，它們整節沒有任何指回 `docs/specs/` 的連結。其中 4 張是另一種形態：結構由別頁的規則決定、本來就沒有自己的條文（維護者 2026-11-12 裁定 D11，見[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決)）；第 5 張是 `submission`，由維護者 2026-11-26 裁定新增（見 [#685 的回覆](https://github.com/label-suite/label-suite/issues/685#issuecomment-7183496070)）。另有 `ai_runs`、`ai_run_events`、`user_deletion_request` 三張同樣沒有規格條文可指，依據是維護者 2026-11-26 對 ADR-008 待決八列的裁定，見[#687 的回覆](https://github.com/label-suite/label-suite/issues/687#issuecomment-7183496309)與 [ADR-008 的 D5、D7、D9](../../development/adr/008-deployment-and-operations.mdx)。
 
@@ -69,13 +70,15 @@ import PluginView from '@/components/PluginView.astro';
 
 **[#719](https://github.com/label-suite/label-suite/issues/719) 2026-11-26 收回 `users` 的三欄**（`google_subject`、`credential_version`、`is_seeder`）：D7 拿掉它們的理由是「沒有規格依據」，之後依據出現了——[01-05 的 Q18](../../specs/01-account/05-login-state.mdx#已確認決議)（2026-11-26）定「有沒有帳號**連結**這個 Google 帳號」且不看 Email 是否相同、[ADR-004 的 D2 與 D5](../../development/adr/004-auth-and-security.mdx#d2-授權用的角色每次從資料庫讀) 要求憑證版本、[PRD §角色清單](../../specs/00-prd.mdx#角色清單)與既有 capability `user-management` 要求 Seeder 管理員的保護與 seeder 標記。D7 自己寫「需要時另開 issue 寫清楚為什麼」，#719 就是那張 issue。合計 **363**。`task_config_version` 的三欄仍不收。
 
+**#719 另新增 `account_refresh_token`（+7 欄，合計 370）**：D7 拿掉的 `refresh_tokens` 是原始規劃的同類表。依據是 [ADR-004 D1](../../development/adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie)「伺服器要維護 refresh token 的資料表」與 [01-05 §延續登入狀態與疑似被盜用](../../specs/01-account/05-login-state.mdx#延續登入狀態與疑似被盜用)的寬限、第三次不給與疑似盜用——那些判定要逐張記錄；維護者 2026-11-26 在 [#719 的決定](https://github.com/label-suite/label-suite/issues/719#issuecomment-7187190476)（N1）選定新表。
+
 ### 九個領域分組
 
 沿用原始規劃的分組，因為它與本專案的模組邊界對得上：
 
 | 分組 | 張數 | 對應模組 | 資料責任 |
 | :--- | ---: | :--- | :--- |
-| `account` | 6 | 01 帳號 | 帳號本身、登入狀態、一次性連結、通知開關、刪除請求（**提案**：放進這一組） |
+| `account` | 7 | 01 帳號 | 帳號本身、登入狀態與它的 refresh token、一次性連結、通知開關、刪除請求（**提案**：放進這一組） |
 | `admin` | 5 | 06 系統管理 | 稽核事件、權限矩陣與它的版本、AI 輔助流程的 run 與事件（**提案**：放進這一組） |
 | `dataset` | 5 | 05 資料集 | 資料集、版本（含版本來源）、來源批次、項目與受保護紀錄 |
 | `task` | 5 | 03 任務管理 | 任務本體、設定版本、指引版本、成員、審核員名冊 |
@@ -104,7 +107,7 @@ import PluginView from '@/components/PluginView.astro';
 
 ---
 
-## 二、`account` 帳號（6 張）
+## 二、`account` 帳號（7 張）
 
 **權威頁是 [01-05 登入狀態](../../specs/01-account/05-login-state.mdx#資料欄位)**——規格自己寫明它「不定義任何畫面欄位，上表是其他頁共用的規則依據」，而且「表中沒有任何一欄是使用者可以直接編輯的」。所以帳號層欄位的來源一律記 01-05，01-01 到 01-04 是讀它。
 
@@ -127,7 +130,7 @@ import PluginView from '@/components/PluginView.astro';
 | `anonymized_at` | 匿名化時間 | `timestamptz` | **可空** | 空值＝未匿名化 | [ADR-008 D7](../../development/adr/008-deployment-and-operations.mdx#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)：維護者裁定，個資欄位清掉之後這個帳號**不能再登入**（應用層） |
 | `google_subject` | 已連結的 Google 帳號的固定識別碼（OIDC 的 `sub`） | `varchar(255)` | **可空** | **唯一**；空值＝沒有連結 Google | [01-05 的 Q18](../../specs/01-account/05-login-state.mdx#已確認決議)：能不能用一個 Google 帳號登入，看的是「有沒有帳號**連結**這個 Google 帳號」，**不看 Email 是否相同**，所以要存 Google 那一側不會變的識別，不能拿 Email 比對；[ADR-004 D5](../../development/adr/004-auth-and-security.mdx#d5-google-登入綁定既有帳號的條件)：綁定時寫入。長度 255 依 OIDC 對 `sub` 的上限（**提案**） |
 | `credential_version` | 憑證版本 | `integer` | 系統寫入 | CHECK `>= 0`；預設 0 | [ADR-004 D2](../../development/adr/004-auth-and-security.mdx#d2-授權用的角色每次從資料庫讀)：access token 帶著它，每個已驗證的請求都和這一欄比對；[D5](../../development/adr/004-auth-and-security.mdx#d5-google-登入綁定既有帳號的條件)：綁定 Google 時加一；[security-agent-rules S4](../../development/rules/security-agent-rules.mdx#s4-遮蔽與-allowlist-在後端)：停用時加一（S4 另寫系統角色變更也加一並撤銷登入狀態，與 [01-05 §每一次操作都用最新的身分判定](../../specs/01-account/05-login-state.mdx#每一次操作都用最新的身分判定)不一致，記在 #719 的待決）。**只增不減**，舊的 access token 在下一個請求就失效 |
-| `is_seeder` | 是否為 Seeder 管理員 | `boolean` | 系統寫入 | 預設 false | [PRD §角色清單](../../specs/00-prd.mdx#角色清單)：Seeder 管理員「不能被停用、降級或移除」；既有 capability `user-management` 的「Seeder 管理員受到保護」「Seeder 管理員只能由初始化指令建立」要求這個 **seeder 標記**。**只由初始化指令寫入**；擋住清除與停用的資料庫層保護屬 06-01 的 change |
+| `is_seeder` | 是否為 Seeder 管理員 | `boolean` | 系統寫入 | 預設 false；**部分唯一索引** `WHERE is_seeder`（至多一位 Seeder 管理員） | [PRD §角色清單](../../specs/00-prd.mdx#角色清單)：Seeder 管理員「不能被停用、降級或移除」；既有 capability `user-management` 的「Seeder 管理員受到保護」「Seeder 管理員只能由初始化指令建立」要求這個 **seeder 標記**。**只由初始化指令寫入**；擋住清除與停用的資料庫層保護屬 06-01 的 change |
 
 **[#719](https://github.com/label-suite/label-suite/issues/719) 收回的三欄**：`google_subject`、`credential_version`、`is_seeder` 原本因 D7「沒有規格依據就不留」而不收（2026-11-11），依據出現之後由 #719 收回，依據寫在各欄的規格來源；理由見[§一](#候選表從-40-張變成-41-張)。
 
@@ -160,6 +163,29 @@ import PluginView from '@/components/PluginView.astro';
 | **讀取權限** | 本人與系統管理員 |
 | **不可變** | `started_at` 建立後不再變；`revoked_at` 一旦有值不再回復 |
 | **保留** | 一段登入狀態結束起**最短一年、最長 13 個月**（[01-05](../../specs/01-account/05-login-state.mdx#登入狀態紀錄的保留與到期清理)）：到期而沒被標記作業引用的**整筆清除**；仍被引用的**只清 `source_info`**，`started_at`、`logged_out_at`、`user_id`、`revoked_at` 保留，所以耗時照樣算得出來。清除每天一次，最多多留一天 |
+
+### `account_refresh_token` — 一段登入狀態的 refresh token
+
+一列代表一張 refresh token。它所屬的 `account_session` 就是 token family：一段登入狀態從登入到結束發出的每一張 token 都指向它。依據見[§一](#候選表從-40-張變成-41-張)的 #719 一段。
+
+| 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `id` | refresh token 的識別碼 | `uuid` | NOT NULL | **PK** | — |
+| `session_id` | 所屬的登入狀態 | `uuid` | NOT NULL | **FK → `account_session.id`，CASCADE**；索引 | [01-05](../../specs/01-account/05-login-state.mdx#一次登入是一段登入狀態)：延續不開新的登入狀態，所以每張 token 都掛在同一段上 |
+| `token_hash` | token 的雜湊 | `char(64)` | NOT NULL | **唯一** | **原文不得寫入資料庫**；cookie 裡的值經 SHA-256 後比對 |
+| `issued_at` | 發出時間 | `timestamptz` | NOT NULL | — | — |
+| `expires_at` | 到期時間 | `timestamptz` | NOT NULL | — | [01-05](../../specs/01-account/05-login-state.mdx#登入狀態能撐多久)：取「發出時間加 7 天」與「登入起算 90 天」較早者，**延續不越過絕對上限**（Q12） |
+| `consumed_at` | 第一次被用來延續的時間 | `timestamptz` | **可空** | — | 空值＝還沒用過。[01-05](../../specs/01-account/05-login-state.mdx#延續登入狀態與疑似被盜用)：寬限期內再用一次可額外重發，寬限期外再用視為疑似被盜用，都以這一欄起算 |
+| `reissue_count` | 寬限期內額外重發的次數 | `smallint` | NOT NULL | CHECK 0–1；預設 0 | [01-05](../../specs/01-account/05-login-state.mdx#多個分頁同時延續登入狀態)、Q13：寬限期內最多額外重發一次，第三次不給、也不撤銷其他裝置 |
+
+**`CASCADE` 的理由**：token 只對它的登入狀態有意義；登入狀態紀錄依 01-05 的保留規則整筆清除時，token 一起清掉，不留下指不到東西的雜湊。
+
+| | |
+| :--- | :--- |
+| **寫入者** | 全部**系統寫入**：登入時發第一張，延續時寫 `consumed_at` 或 `reissue_count` 並發下一張 |
+| **讀取權限** | **沒有任何使用者讀得到**；只有延續與登出流程比對雜湊 |
+| **不可變** | `session_id`、`token_hash`、`issued_at`、`expires_at`；`consumed_at` 只從空值寫一次；`reissue_count` 只增 |
+| **保留** | 隨所屬的登入狀態（**提案**：登入狀態失效後即可清除這一張表的列，不必等 13 個月，因為耗時與責任歷程只引用 `account_session`）；清除排程屬 #726 |
 
 ### `account_password_token` — 密碼重設與邀請連結
 
@@ -1275,12 +1301,12 @@ import PluginView from '@/components/PluginView.astro';
 
 | 項目 | 數 |
 | :--- | ---: |
-| 候選表 | **41 張**（原始 40 扣掉 D7 的 3 張，加 `submission`，再加 ADR-008 裁定帶來的 3 張） |
-| 欄位 | **363 欄** |
-| 算式 | 原始 37 張共 **330 欄** − **6 欄**（D7 理由延伸，維護者 2026-11-11 裁定）＋ **6 欄**（本專案新增） ＋ **12 欄**（`submission` 整張新增） ＋ **18 欄**（ADR-008 裁定：3 張新表 15 欄、既有表加 3 欄） ＋ **3 欄**（[#719](https://github.com/label-suite/label-suite/issues/719) 收回 `users` 的三欄） = **363** |
+| 候選表 | **42 張**（原始 40 扣掉 D7 的 3 張，加 `submission`，再加 ADR-008 裁定帶來的 3 張，再加 #719 的 `account_refresh_token`） |
+| 欄位 | **370 欄** |
+| 算式 | 原始 37 張共 **330 欄** − **6 欄**（D7 理由延伸，維護者 2026-11-11 裁定）＋ **6 欄**（本專案新增） ＋ **12 欄**（`submission` 整張新增） ＋ **18 欄**（ADR-008 裁定：3 張新表 15 欄、既有表加 3 欄） ＋ **3 欄**（[#719](https://github.com/label-suite/label-suite/issues/719) 收回 `users` 的三欄） ＋ **7 欄**（#719 新增 `account_refresh_token`） = **370** |
 | 本專案新增的欄位 | **6**：`account_session.last_seen_at`（閒置限制的起點，原始沒有）、`account_session.source_info`（01-05 的「登入來源資訊」，個資，原始沒有）、`task.archived_at` 與 `task.archived_by_user_id`（原始 `task` 沒有任何封存欄）、`task_membership.last_activity_at`（維護者 2026-11-11 裁定存成欄位）、`task_run_cycle.rejection_reason`（03-03 的「退回原因」，[#170](https://github.com/label-suite/label-suite/issues/170)；原始沒有） |
 | 本專案不收的原始欄位 | **3**：`task_config_version` 的 `schema_version_no`／`schema_digest`／`schema_registry_version`。D7 原本不收 6 欄，`users` 的 `google_subject`／`is_seeder`／`credential_version` 由 [#719](https://github.com/label-suite/label-suite/issues/719) 收回 |
-| 單欄 FK | **41** |
+| 單欄 FK | **42** |
 | **複合 FK** | 圖上畫不出來，**逐條內容**在各組的§關聯與限制。**這裡刻意不寫條數**，理由見下一列 |
 | 計數方式 | 單欄 FK 數 `(表, 欄)`。**複合 FK 不寫條數**：初版寫「每表、每欄組、每目標各一」，但「延後複合 FK」「自指而目標沒寫表名」「見上／見下」這三種寫法算不算，那句話都沒有定——照不同的讀法會得到 27、30 或 31，而**初版的 34 是把三個「見上／見下」的指路格當成宣告格重複計入**（`task_trial_round.task_id`、`task_export_run.task_id`、`task_work_interval.user_id`）。所以改成指向逐條內容（維護者 2026-11-11 裁定，見 [#236](https://github.com/label-suite/label-suite/issues/236)）。「另供複合 FK 父鍵」是這張表**提供**的唯一鍵，**不計入**它宣告的 FK |
 | 可空性與原始相反的欄位 | **2**：`annotation_review_decision.reason` 與 `annotation_history_event.reason`，原始都標 nullable，而 04-02 明寫**不得用「沒有這個欄位」來表示空** |
@@ -1315,6 +1341,7 @@ import PluginView from '@/components/PluginView.astro';
 
 | Issue | 日期 | 變更 |
 | :--- | :--- | :--- |
+| [#719](https://github.com/label-suite/label-suite/issues/719) | 2026-11-26 | **新增 `account_refresh_token`**（`account` 組，7 張）：維護者在 #719 的 clarification 決定 refresh token 存在新表（N1）；依據 ADR-004 D1 與 01-05 §延續登入狀態與疑似被盜用。`users.is_seeder` 加部分唯一索引（至多一位 Seeder，capability `user-management`「Seeder 管理員只能由初始化指令建立」）。表 **41 → 42**、欄 **363 → 370**、單欄 FK **41 → 42**。[`database-schema.er.json`](./database-schema.er.json) 同步 |
 | [#719](https://github.com/label-suite/label-suite/issues/719) | 2026-11-26 | **收回 `users` 的 `google_subject`、`credential_version`、`is_seeder`**：D7 以「沒有規格依據」不收，之後依據出現——[01-05 的 Q18](../../specs/01-account/05-login-state.mdx#已確認決議)（以「是否連結」判定 Google 登入、不看 Email）、[ADR-004 D2、D5](../../development/adr/004-auth-and-security.mdx#d2-授權用的角色每次從資料庫讀)（憑證版本）、[PRD §角色清單](../../specs/00-prd.mdx#角色清單)與 capability `user-management`（seeder 標記）。`users.email` 的唯一限制從 `lower(email)` 改成對**存入的正規化值**：SQLite 的 `lower()` 只轉 ASCII，與 01-05 Q14 的正規化不同，兩種資料庫會判出不同的重複。欄 **360 → 363**、本專案不收的原始欄位 **6 → 3**、單欄 FK 不變 41。[`database-schema.er.json`](./database-schema.er.json) 同步 |
 | [#196](https://github.com/label-suite/label-suite/issues/196) | 2026-11-26 | **登入狀態紀錄的保留期限定案**（維護者 2026-11-26 裁定）：`account_session` 新增 `source_info`（登入來源資訊，個資，結束滿 13 個月清除），欄位 359 → 360、本專案新增欄位 5 → 6；§保留 由「未定」改成最短一年、最長 13 個月與到期處理；`account_password_token` 的保留改寫成不適用這條規則，仍待 D3 |
 | [#687](https://github.com/label-suite/label-suite/issues/687) | 2026-11-26 | **落地維護者對 ADR-008 待決八列的裁定與六個欄位問題的回答**（[#687 的回覆](https://github.com/label-suite/label-suite/issues/687#issuecomment-7183496309)）：`users` 加 `anonymized_at`（匿名化時 `email` 改寫成 `deleted-<id>@invalid`、`name` 改寫成「已刪除的使用者」）；`dataset_version` 加 `withdrawn_at` 與 `withdrawal_reason`，定版後這兩欄是不可變的唯一例外、只能從空值寫一次；**新增 `ai_runs`、`ai_run_events`**（`admin` 組，5 張）與 **`user_deletion_request`**（`account` 組，6 張，不對 `users` 加 FK）。`ai_run_events.payload` 由終態事件帶，超出裁定原本的「status、at」，維護者已確認。表 **38 → 41**、欄 **341 → 359**、單欄 FK **38 → 41**；§關聯與限制 落在 DB **27 → 28**、應用層 **22 → 24**。分組放哪一組、索引、讀取權限、保留與兩條撤回／payload 的 CHECK 沒有裁定，標為提案。[`database-schema.er.json`](./database-schema.er.json) 同步 |

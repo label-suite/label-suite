@@ -4,19 +4,19 @@
 
 全部端點掛在 `/api/v1`，成功回應包一層 envelope `{ success, code, message, data, timestamp, traceId }`，下面各段的 Response 只寫 `data` 那一層。唯一的 envelope 例外是 `deleteCurrentSession` 的 `204`（無 body）。Google 登入不使用 `302`：授權網址以 JSON 回給前端，Google 回到前端的路由，前端再呼叫 `createGoogleSession`（`system-design.md` §技術待決 T1，協調者 2026-11-26 採用）。
 
-標 **提案** 的端點或欄位，依附 `system-design.md` §待決問題與提案 的建議方案；clarification 選了別的方案時，由 `sd` 回修本份與兩份常駐文件。
+每一處都已依維護者 2026-11-26 在 clarification 停點的決定寫成定案（[#719 的決定表](https://github.com/label-suite/label-suite/issues/719#issuecomment-7187190476)），本份沒有提案；決定與本份的對應見 [§維護者的決定](#維護者的決定)。
 
 ## 端點總覽
 
-| Method   | Path                           | operationId              | 角色                                             | 異動                             |
-| :------- | :----------------------------- | :----------------------- | :----------------------------------------------- | :------------------------------- |
-| `GET`    | `/api/v1/auth-options`         | `getAuthOptions`         | 不檢查（未登入也可呼叫）                         | 新增                             |
-| `POST`   | `/api/v1/sessions`             | `createSession`          | 不檢查（未登入的訪客送出登入）                   | 新增                             |
-| `GET`    | `/api/v1/current-session`      | `getCurrentSession`      | 已登入：平台成員、系統管理員（含 Seeder 管理員） | 新增                             |
-| `POST`   | `/api/v1/session-refreshes`    | `createSessionRefresh`   | 持有 refresh cookie 的人；不檢查系統角色         | 新增（**提案**：待決 2-A、N1-A） |
-| `DELETE` | `/api/v1/current-session`      | `deleteCurrentSession`   | 不檢查（登入狀態不能驗證時也要能清 cookie）      | 新增（**提案**：待決 5-A）       |
-| `GET`    | `/api/v1/google-authorization` | `getGoogleAuthorization` | 不檢查                                           | 新增                             |
-| `POST`   | `/api/v1/google-sessions`      | `createGoogleSession`    | 不檢查（持有流程 cookie 的人）                   | 新增                             |
+| Method   | Path                           | operationId              | 角色                                             | 異動 |
+| :------- | :----------------------------- | :----------------------- | :----------------------------------------------- | :--- |
+| `GET`    | `/api/v1/auth-options`         | `getAuthOptions`         | 不檢查（未登入也可呼叫）                         | 新增 |
+| `POST`   | `/api/v1/sessions`             | `createSession`          | 不檢查（未登入的訪客送出登入）                   | 新增 |
+| `GET`    | `/api/v1/current-session`      | `getCurrentSession`      | 已登入：平台成員、系統管理員（含 Seeder 管理員） | 新增 |
+| `POST`   | `/api/v1/session-refreshes`    | `createSessionRefresh`   | 持有 refresh cookie 的人；不檢查系統角色         | 新增 |
+| `DELETE` | `/api/v1/current-session`      | `deleteCurrentSession`   | 不檢查（登入狀態不能驗證時也要能清 cookie）      | 新增 |
+| `GET`    | `/api/v1/google-authorization` | `getGoogleAuthorization` | 不檢查                                           | 新增 |
+| `POST`   | `/api/v1/google-sessions`      | `createGoogleSession`    | 不檢查（持有流程 cookie 的人）                   | 新增 |
 
 operationId 由 `generate_operation_id` 依「method 加 `/api/v1` 之後最後一個非參數路徑段」算出，不手寫：
 
@@ -54,13 +54,13 @@ operationId 由 `generate_operation_id` 依「method 加 `/api/v1` 之後最後�
 
 - 常駐文件：`docs/diagrams/architecture/error-codes.mdx`、`docs/diagrams/architecture/endpoint-authorization.mdx`
 
-| 文件                         | 節                 | 異動       | 摘要                                                                                                                                       |
-| :--------------------------- | :----------------- | :--------- | :----------------------------------------------------------------------------------------------------------------------------------------- |
-| `error-codes.mdx`            | 通用碼             | 新增兩列   | `AUTH_REQUIRED`（401）、`CSRF_FAILED`（403）；`VALIDATION_FAILED` 的端點欄加上本次三個有 body 的端點                                       |
-| `error-codes.mdx`            | 模組專屬碼         | 新增一張表 | `account` 模組前綴 `ACCOUNT_` 的七個碼，其中 `ACCOUNT_LOGIN_THROTTLED` 標提案（待決 3）、`ACCOUNT_REFRESH_CONFLICT` 與兩個延續碼依附待決 2 |
-| `error-codes.mdx`            | 已知限制、決策紀錄 | 修改、新增 | 「`400`、`401`、`403`、`409` 還沒有」那一列改成只剩 `403`（權限不足）與一般 `409`；決策紀錄一列                                            |
-| `endpoint-authorization.mdx` | 端點               | 新增七列   | 每列的放行對象、對不到 PRD 權限矩陣任何一格的理由、遮蔽欄位（全部「無」，`getCurrentSession` 寫明回應只明列三欄）                          |
-| `endpoint-authorization.mdx` | 已知限制、決策紀錄 | 修改、新增 | 「認證、授權與 CSRF」改成「授權第 3、4 步」；決策紀錄一列                                                                                  |
+| 文件                         | 節                 | 異動       | 摘要                                                                                                                                               |
+| :--------------------------- | :----------------- | :--------- | :------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `error-codes.mdx`            | 通用碼             | 新增兩列   | `AUTH_REQUIRED`（401）、`CSRF_FAILED`（403）；`VALIDATION_FAILED` 的端點欄加上本次三個有 body 的端點                                               |
+| `error-codes.mdx`            | 模組專屬碼         | 新增一張表 | `account` 模組前綴 `ACCOUNT_` 的七個碼；登入失敗鎖定不在本次，沒有它的碼                                                                           |
+| `error-codes.mdx`            | 已知限制、決策紀錄 | 修改、新增 | 「`400`、`401`、`403`、`409` 還沒有」那一列改成只剩 `403`（權限不足）與一般 `409`；決策紀錄一列                                                    |
+| `endpoint-authorization.mdx` | 端點               | 新增七列   | 每列的放行對象、對到或對不到 PRD 權限矩陣的格、遮蔽欄位（全部「無」；回帳號資料的寫明只明列 `id`、`name`、`email`、`role` 四欄，都是登入者自己的） |
+| `endpoint-authorization.mdx` | 已知限制、決策紀錄 | 修改、新增 | 「認證、授權與 CSRF」改成「授權第 3、4 步」；決策紀錄一列                                                                                          |
 
 `api-envelope` spec 的「第一批通用碼」只列了六個；新增的兩個通用碼要由 `planner` 在本 change 的 spec delta 補進那條 Requirement。
 
@@ -78,10 +78,10 @@ operationId 由 `generate_operation_id` 依「method 加 `/api/v1` 之後最後�
 
 `200`。
 
-| 欄位                      | 型別    | nullable | 說明                                                                                                                    |
-| :------------------------ | :------ | :------- | :---------------------------------------------------------------------------------------------------------------------- |
-| `selfRegistrationEnabled` | boolean | 否       | 這個部署有沒有設定寄信服務（`RESEND_API_KEY` 有沒有設），即是否開放自行註冊。**提案**：依待決 6-A，本次建立這個共用判斷 |
-| `googleEnabled`           | boolean | 否       | 三個 `GOOGLE_*` 設定是否齊全；false 時前端怎麼呈現按鈕見待決 8                                                          |
+| 欄位                      | 型別    | nullable | 說明                                                                                                                                            |
+| :------------------------ | :------ | :------- | :---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `selfRegistrationEnabled` | boolean | 否       | 這個部署有沒有設定寄信服務（`RESEND_API_KEY` 有沒有設），即是否開放自行註冊；登入頁、註冊頁與註冊的送出共用這一個判斷（01-02 Q10，維護者 sa-6） |
+| `googleEnabled`           | boolean | 否       | 三個 `GOOGLE_*` 設定是否齊全；false 時前端**不顯示** Google 按鈕與「或」分隔線（維護者 sa-8）                                                   |
 
 ```json
 { "selfRegistrationEnabled": false, "googleEnabled": true }
@@ -122,19 +122,27 @@ operationId 由 `generate_operation_id` 依「method 加 `/api/v1` 之後最後�
 
 `201`，`Location: /api/v1/current-session`，並設定 `__Host-ls_at`、`__Host-ls_rt`、`__Host-ls_csrf` 三個 cookie。
 
-| 欄位        | 型別                          | nullable | 說明                                                                                          |
-| :---------- | :---------------------------- | :------- | :-------------------------------------------------------------------------------------------- |
-| `user.id`   | string（UUID）                | 否       | 帳號的識別碼                                                                                  |
-| `user.name` | string                        | 否       | 顯示名稱                                                                                      |
-| `user.role` | string：`user`、`super_admin` | 否       | 目前的系統角色，**只供顯示**；授權一律以後端每次讀到的值為準。Seeder 管理員也是 `super_admin` |
+| 欄位         | 型別                          | nullable | 說明                                                                                          |
+| :----------- | :---------------------------- | :------- | :-------------------------------------------------------------------------------------------- |
+| `user.id`    | string（UUID）                | 否       | 帳號的識別碼                                                                                  |
+| `user.name`  | string                        | 否       | 顯示名稱                                                                                      |
+| `user.email` | string                        | 否       | 登入者自己的 Email（存的是正規化之後的值）；落點頁顯示它（維護者 sa-5／7）                    |
+| `user.role`  | string：`user`、`super_admin` | 否       | 目前的系統角色，**只供顯示**；授權一律以後端每次讀到的值為準。Seeder 管理員也是 `super_admin` |
 
 ```json
-{ "user": { "id": "5b0f4c1e-6a3d-4f6e-9a0b-2f1c8d7e9a10", "name": "王小明", "role": "user" } }
+{
+  "user": {
+    "id": "5b0f4c1e-6a3d-4f6e-9a0b-2f1c8d7e9a10",
+    "name": "王小明",
+    "email": "user@example.com",
+    "role": "user"
+  }
+}
 ```
 
 ### 欄位遮蔽
 
-不是依角色遮蔽，而是回應 schema 只明列上表三欄；以下欄位在任何角色、任何情況都**不在回應裡**（不是換成某個值）：`email`、`hashed_password`、`google_subject`、`credential_version`、`is_seeder`、`is_active`、`anonymized_at`、登入狀態的 `sid` 與 `source_info`。token 只在 cookie 裡，不出現在 body。
+不是依角色遮蔽，而是回應 schema 只明列上表四欄，全部是登入者**自己的**資料（PRD 01 帳號 `R/E (o)`），所以沒有對誰遮蔽的問題；以下欄位在任何角色、任何情況都**不在回應裡**（不是換成某個值）：`hashed_password`、`google_subject`、`credential_version`、`is_seeder`、`is_active`、`anonymized_at`、登入狀態的 `sid` 與 `source_info`。token 只在 cookie 裡，不出現在 body。
 
 ### 測試集答案隔離
 
@@ -142,11 +150,10 @@ operationId 由 `generate_operation_id` 依「method 加 `/api/v1` 之後最後�
 
 ### 錯誤
 
-| HTTP | `code`                        | 觸發條件                                                                                                                                                                                       |
-| :--- | :---------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 401  | `ACCOUNT_INVALID_CREDENTIALS` | 帳號不存在、密碼不符、帳號停用、已匿名化、沒有本地密碼（只能用 Google），或 Email 正規化後超過 254 字元——**全部同一個碼、同一句**「帳號或密碼錯誤，請再試一次」，不分原因；不設任何 cookie     |
-| 422  | `VALIDATION_FAILED`           | Content-Type 不是 `application/json`、body 不是合法 JSON、欄位缺少、去空白後為空、超過長度上限、或有未宣告的欄位；`errors` 逐欄位列出，不回顯送來的值                                          |
-| 429  | `ACCOUNT_LOGIN_THROTTLED`     | **提案**（只在待決 3 選 3-A 或 3-B 時存在；建議的 3-C 不建這個碼）：同一個人連續失敗 10 次，30 分鐘內一律回這個碼，密碼正確也一樣。`message` 不透露帳號存不存在；不帶 `Retry-After` 以外的資訊 |
+| HTTP | `code`                        | 觸發條件                                                                                                                                                                                   |
+| :--- | :---------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 401  | `ACCOUNT_INVALID_CREDENTIALS` | 帳號不存在、密碼不符、帳號停用、已匿名化、沒有本地密碼（只能用 Google），或 Email 正規化後超過 254 字元——**全部同一個碼、同一句**「帳號或密碼錯誤，請再試一次」，不分原因；不設任何 cookie |
+| 422  | `VALIDATION_FAILED`           | Content-Type 不是 `application/json`、body 不是合法 JSON、欄位缺少、去空白後為空、超過長度上限、或有未宣告的欄位；`errors` 逐欄位列出，不回顯送來的值                                      |
 
 ## getCurrentSession
 
@@ -160,11 +167,11 @@ operationId 由 `generate_operation_id` 依「method 加 `/api/v1` 之後最後�
 
 ### Response
 
-`200`。欄位與 `createSession` 相同（`user.id`、`user.name`、`user.role`）；`role` 是**這一次**從資料庫讀到的值，不是 JWT 裡的。
+`200`。欄位與 `createSession` 相同（`user.id`、`user.name`、`user.email`、`user.role`）；`role` 是**這一次**從資料庫讀到的值，不是 JWT 裡的。
 
 ### 欄位遮蔽
 
-同 `createSession`：只明列三欄。
+同 `createSession`：只明列四欄。
 
 ### 測試集答案隔離
 
@@ -178,7 +185,7 @@ operationId 由 `generate_operation_id` 依「method 加 `/api/v1` 之後最後�
 
 ## createSessionRefresh
 
-**提案**：依待決 2-A（本次含延續）與 N1-A（refresh token 存在新表 `account_refresh_token`）。選 2-C 時整個端點不建。
+維護者 sa-2：延續（含多分頁與疑似盜用）在本次；N1：refresh token 存在新表 `account_refresh_token`。
 
 - **Method / Path**：`POST /api/v1/session-refreshes`（命令資源：每次延續是一次「延續」的建立，api-agent-rules A1 的命令資源寫法）
 - **角色**：持有 `__Host-ls_rt` 的人；不檢查系統角色，但輪替之前先讀帳號狀態，停用就拒絕
@@ -217,7 +224,7 @@ operationId 由 `generate_operation_id` 依「method 加 `/api/v1` 之後最後�
 
 ## deleteCurrentSession
 
-**提案**：依待決 5-A（本次建立登出端點，控制項屬 07-01）。選 5-B 時這個端點留給 07-01 的 change。
+維護者 sa-2、sa-5／7：登出在本次；呼叫它的是落點 `/dashboard/dashboard` 的登出鈕，07-01 的側欄之後呼叫同一個端點。
 
 - **Method / Path**：`DELETE /api/v1/current-session`
 - **角色**：不檢查。登入狀態已經不能驗證時也要能清掉本機的 cookie（01-05 §從這一台登出 第 4 條）
@@ -283,9 +290,9 @@ refresh cookie 可驗證且登入狀態有效時，把它標成失效並記下�
 
 ### 錯誤
 
-| HTTP | `code`                       | 觸發條件                                                                                                                        |
-| :--- | :--------------------------- | :------------------------------------------------------------------------------------------------------------------------------ |
-| 409  | `ACCOUNT_GOOGLE_UNAVAILABLE` | 這個部署沒有設定 Google（`googleEnabled` 為 false）。建議的 8-A 下前端看到 `googleEnabled=false` 就不呼叫這個端點；這個碼是防呆 |
+| HTTP | `code`                       | 觸發條件                                                                                                            |
+| :--- | :--------------------------- | :------------------------------------------------------------------------------------------------------------------ |
+| 409  | `ACCOUNT_GOOGLE_UNAVAILABLE` | 這個部署沒有設定 Google（`googleEnabled` 為 false）。這時前端不顯示 Google 按鈕（sa-8），正常不會呼叫；這個碼是防呆 |
 
 ## createGoogleSession
 
@@ -310,7 +317,7 @@ refresh cookie 可驗證且登入狀態有效時，把它標成失效並記下�
 
 `201`，`Location: /api/v1/current-session`，設定三個 session cookie並清掉 `__Host-ls_oidc`。`data` 欄位同 `createSession`。
 
-帳號的對應：先找**已連結這個 Google 帳號**的帳號，找到就登入，不看 Email 是否相同；沒有已連結的帳號時，若 Google 回報 Email 已驗證、且有 Email 相同的既有帳號，**提案**（待決 9-A）自動綁定：同一筆交易寫入連結、清掉本地密碼、`credential_version` 加一、撤銷該帳號既有的所有登入狀態，再為這一台開新的登入狀態。回應本身不說明有沒有綁定（是否告知「密碼已清掉」見待決 9 與 `ui-design.md`）。
+帳號的對應：先找**已連結這個 Google 帳號**的帳號，找到就登入，不看 Email 是否相同；沒有已連結的帳號時，若 Google 回報 Email 已驗證、且有 Email 相同的既有帳號，依 ADR-004 D5 自動綁定（維護者 sa-9）：同一筆交易寫入連結、清掉本地密碼、`credential_version` 加一、撤銷該帳號既有的所有登入狀態，再為這一台開新的登入狀態。回應本身不說明有沒有綁定，畫面也**不另外告知**（sa-9）。
 
 ### 欄位遮蔽
 
@@ -322,20 +329,20 @@ refresh cookie 可驗證且登入狀態有效時，把它標成失效並記下�
 
 ### 錯誤
 
-| HTTP | `code`                        | 觸發條件                                                                                                                                                                                                                                                                                                                               |
-| :--- | :---------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 400  | `ACCOUNT_GOOGLE_FLOW_INVALID` | 流程 cookie 不在、過期或簽章不對；`state` 不符；向 Google 換 token 失敗；`id_token` 驗不過（簽章、`iss`、`aud`、`exp`、`nonce`）。清掉流程 cookie。前端據此**安靜回登入頁、不顯示錯誤橫幅**（與 01-01「Google 驗證沒通過回到登入頁」同一個結果）                                                                                       |
-| 401  | `ACCOUNT_GOOGLE_REJECTED`     | 沒有任何帳號連結這個 Google 帳號，且（沒有 Email 相同的既有帳號，或 Google 回報 Email 未驗證）。**提案**（待決 N2-A）：已連結或可綁定的帳號是停用或已匿名化的，也回這個碼。不建立帳號；有沒有設定寄信服務都同一個碼與同一句「無法用這個 Google 帳號登入。需要帳號的話，請聯絡系統管理員邀請你。」，不說明是哪一種原因。清掉流程 cookie |
-| 409  | `ACCOUNT_GOOGLE_UNAVAILABLE`  | 這個部署沒有設定 Google                                                                                                                                                                                                                                                                                                                |
-| 422  | `VALIDATION_FAILED`           | 欄位缺少、為空、超過長度上限、有未宣告的欄位，或 Content-Type 不是 JSON                                                                                                                                                                                                                                                                |
+| HTTP | `code`                        | 觸發條件                                                                                                                                                                                                                                                                                                                     |
+| :--- | :---------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 400  | `ACCOUNT_GOOGLE_FLOW_INVALID` | 流程 cookie 不在、過期或簽章不對；`state` 不符；向 Google 換 token 失敗；`id_token` 驗不過（簽章、`iss`、`aud`、`exp`、`nonce`）。清掉流程 cookie。前端據此**安靜回登入頁、不顯示錯誤橫幅**（與 01-01「Google 驗證沒通過回到登入頁」同一個結果）                                                                             |
+| 401  | `ACCOUNT_GOOGLE_REJECTED`     | 沒有任何帳號連結這個 Google 帳號，且（沒有 Email 相同的既有帳號，或 Google 回報 Email 未驗證）；已連結或可綁定的帳號是停用或已匿名化的，也回這個碼（維護者 N2）。不建立帳號；有沒有設定寄信服務都同一個碼與同一句「無法用這個 Google 帳號登入。需要帳號的話，請聯絡系統管理員邀請你。」，不說明是哪一種原因。清掉流程 cookie |
+| 409  | `ACCOUNT_GOOGLE_UNAVAILABLE`  | 這個部署沒有設定 Google                                                                                                                                                                                                                                                                                                      |
+| 422  | `VALIDATION_FAILED`           | 欄位缺少、為空、超過長度上限、有未宣告的欄位，或 Content-Type 不是 JSON                                                                                                                                                                                                                                                      |
 
 前端回調頁分辨三種結果只看 HTTP 狀態與 `code`，不讀 `message`：
 
-| 結果                                                | 前端看到                                                                        | 畫面（`ui-design.md`）                                    |
-| :-------------------------------------------------- | :------------------------------------------------------------------------------ | :-------------------------------------------------------- |
-| E1：取消或驗證沒通過                                | Google 回 `error`（不呼叫本端點），或本端點回 `400 ACCOUNT_GOOGLE_FLOW_INVALID` | 回登入頁，不顯示錯誤                                      |
-| E2：沒有對應帳號、Email 未驗證（提案 N2-A：含停用） | `401 ACCOUNT_GOOGLE_REJECTED`；單一個碼，不帶原因                               | 回登入頁，顯示 Google 那一句                              |
-| 網路錯誤或 `5xx`                                    | 沒有回應、不是 JSON，或 `500 INTERNAL_ERROR` 等 `5xx`                           | 回登入頁，顯示「沒有回應」那一句可重試的說明（不當成 E1） |
+| 結果                                                     | 前端看到                                                                        | 畫面（`ui-design.md`）                                    |
+| :------------------------------------------------------- | :------------------------------------------------------------------------------ | :-------------------------------------------------------- |
+| E1：取消或驗證沒通過                                     | Google 回 `error`（不呼叫本端點），或本端點回 `400 ACCOUNT_GOOGLE_FLOW_INVALID` | 回登入頁，不顯示錯誤                                      |
+| E2：沒有對應帳號、Email 未驗證、帳號停用或已匿名化（N2） | `401 ACCOUNT_GOOGLE_REJECTED`；單一個碼，不帶原因                               | 回登入頁，顯示 Google 那一句                              |
+| 網路錯誤或 `5xx`                                         | 沒有回應、不是 JSON，或 `500 INTERNAL_ERROR` 等 `5xx`                           | 回登入頁，顯示「沒有回應」那一句可重試的說明（不當成 E1） |
 
 `409 ACCOUNT_GOOGLE_UNAVAILABLE` 與 `422` 在正常流程不會出現（前端不會在沒設定時開始流程、body 由前端組），前端當成網路錯誤那一類處理。
 
@@ -343,26 +350,31 @@ refresh cookie 可驗證且登入狀態有效時，把它標成失效並記下�
 
 無。七個端點全部新增；既有的 `getHealth` 不變。`CORSMiddleware` 允許的請求標頭多了 `X-CSRF-Token`，不影響既有請求。
 
-## 待決與本份的新問題
+## 維護者的決定
 
-本份依附的提案（`system-design.md` §待決問題與提案）：
+本份照維護者 2026-11-26 的決定寫（[#719 的決定表](https://github.com/label-suite/label-suite/issues/719#issuecomment-7187190476)），下表只列影響契約的幾題。
 
-| 待決 | 影響本份的哪裡                                                                                                    | 本份採的方案                                   |
-| :--- | :---------------------------------------------------------------------------------------------------------------- | :--------------------------------------------- |
-| 2    | `createSessionRefresh` 整個端點、`ACCOUNT_SESSION_EXPIRED`、`ACCOUNT_SESSION_INVALID`、`ACCOUNT_REFRESH_CONFLICT` | 2-A：本次建                                    |
-| 3    | `ACCOUNT_LOGIN_THROTTLED`                                                                                         | 3-C：本次不建，碼只列為提案                    |
-| 5    | `deleteCurrentSession`                                                                                            | 5-A：本次建                                    |
-| 6    | `getAuthOptions.selfRegistrationEnabled`                                                                          | 6-A：本次建立共用判斷                          |
-| 8    | `ACCOUNT_GOOGLE_UNAVAILABLE` 與 `googleEnabled` 的用法                                                            | 8-A：前端依 `googleEnabled` 不呼叫，後端仍防呆 |
-| 9    | `createGoogleSession` 的自動綁定                                                                                  | 9-A：照 ADR-004 D5                             |
-| N1   | `createSessionRefresh` 的存放                                                                                     | N1-A：新表 `account_refresh_token`             |
-| N2   | `ACCOUNT_GOOGLE_REJECTED` 是否涵蓋停用與已匿名化                                                                  | N2-A：涵蓋                                     |
+| #              | 決定                                                                            | 本份落在哪裡                                                                                                                                               |
+| :------------- | :------------------------------------------------------------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| sa-2           | 期限、延續、被動登出兩句、登出都在本次                                          | `createSessionRefresh`（`ACCOUNT_SESSION_EXPIRED`、`ACCOUNT_SESSION_INVALID`、`ACCOUNT_REFRESH_CONFLICT`）、`deleteCurrentSession`                         |
+| sa-3           | 登入失敗鎖定不在本次                                                            | `createSession` 沒有 `429`；`error-codes.mdx` 沒有鎖定的碼                                                                                                 |
+| sa-4           | 建立第一位 Seeder 管理員的指令                                                  | 不是端點，本份沒有；見 `system-design.md` §Seeder 初始化指令                                                                                               |
+| sa-5／7、sa-10 | 落點 `/dashboard/dashboard` 顯示名字、Email、系統角色與登出鈕；登入後一律去落點 | `user.email` 加進回應；登入端點不收 `returnTo`                                                                                                             |
+| sa-6           | 建「有沒有設定寄信服務」的共用判斷                                              | `getAuthOptions.selfRegistrationEnabled`                                                                                                                   |
+| sa-8           | 沒設定 Google 就不顯示按鈕                                                      | `getAuthOptions.googleEnabled`；`ACCOUNT_GOOGLE_UNAVAILABLE` 只是防呆                                                                                      |
+| sa-9           | Google 自動綁定照 ADR-004 D5，不另外告知                                        | `createGoogleSession`                                                                                                                                      |
+| sa-11          | 守門只做授權第 1、2 步                                                          | `getCurrentSession` 的角色欄；沒有依權限矩陣的 `403`                                                                                                       |
+| N1             | 新表 `account_refresh_token`                                                    | `createSessionRefresh`、`deleteCurrentSession`                                                                                                             |
+| N2             | 停用、已匿名化的帳號用 Google 也回 E2                                           | `ACCOUNT_GOOGLE_REJECTED`                                                                                                                                  |
+| U6             | 前端查守門時連不上或 `5xx` 當成未登入，回登入頁並顯示「沒回應」那句             | 不需要新東西：`getCurrentSession` 的失敗只有 `401 AUTH_REQUIRED`（試延續、再回登入頁）與通用的 `5xx`／沒有回應（回登入頁、「沒回應」那句），兩者前端分得開 |
 
-本份新發現的問題（都不需要維護者決定，交給 `planner` 與 `design-reviewer` 核對）：
+## 本份的新問題
 
-| #   | 問題                                                                                                                                                       | 處理                                                                                                                                                                                                                                                                                                                          |
-| :-- | :--------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| C1  | `api-envelope` spec 的「第一批通用碼」只列六個，本次新增 `AUTH_REQUIRED`、`CSRF_FAILED` 兩個通用碼                                                         | `planner` 在 spec delta 修改那條 Requirement；兩個碼不加前綴，因為它們由 `core` 產生、之後每個模組都會回                                                                                                                                                                                                                      |
-| C2  | `auth-options` 的單數化                                                                                                                                    | 實作時在 `_IRREGULAR_SINGULARS` 加 `"options": "options"`，tasks 要列這一項                                                                                                                                                                                                                                                   |
-| C3  | `ui-design.md` 原本寫 Google 起點是整頁導向後端、由後端以 `302` 導回                                                                                       | 協調者已採 T1，`ui-ux` 已改成前端回調路由 `/account/google/callback`；`GOOGLE_REDIRECT_URI` 指向它                                                                                                                                                                                                                            |
-| C4  | `ui-design.md` 對齊時用了 `system-design.md` 圖中暫寫的路徑與 handler 名（`getSession`、`getLoginOptions`、`refreshSession`，路徑在 `/api/v1/auth/` 底下） | operationId 由路徑算出、不看函式名（A1），`refreshSession` 這種動詞算不出來；路徑也不得插 `auth` 段（A1）。以本份端點總覽為準：`getCurrentSession`、`getAuthOptions`、`createSessionRefresh`，另有 `deleteCurrentSession`；`createSession`、`getGoogleAuthorization`、`createGoogleSession` 不變。`ui-design.md` 要照本表回填 |
+都不需要維護者決定，交給 `planner` 與 `design-reviewer` 核對。
+
+| #   | 問題                                                                                               | 處理                                                                                                     |
+| :-- | :------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------- |
+| C1  | `api-envelope` spec 的「第一批通用碼」只列六個，本次新增 `AUTH_REQUIRED`、`CSRF_FAILED` 兩個通用碼 | `planner` 在 spec delta 修改那條 Requirement；兩個碼不加前綴，因為它們由 `core` 產生、之後每個模組都會回 |
+| C2  | `auth-options` 的單數化                                                                            | 實作時在 `_IRREGULAR_SINGULARS` 加 `"options": "options"`，tasks 要列這一項                              |
+| C3  | Google 回調                                                                                        | 已定：前端路由 `/account/google/callback`，`GOOGLE_REDIRECT_URI` 指向它                                  |
+| C4  | operationId 以本份端點總覽為準                                                                     | `ui-design.md` 已對齊                                                                                    |
