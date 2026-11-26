@@ -4,7 +4,7 @@ description: 'Claude Code 2.1.273 與 Codex 0.153.0 的 hook 事件、阻擋能�
 category: '開發說明'
 tags: [開發說明, Agent, 規範, hooks]
 createdAt: '2026-11-11'
-updatedAt: '2026-11-20'
+updatedAt: '2026-11-26'
 ---
 
 # Agent Hook 契約與平台支援矩陣
@@ -66,7 +66,7 @@ updatedAt: '2026-11-20'
 | **目的** | 剛改過的檔案立刻拿到可修正的診斷，而不是等 CI |
 | **事件** | `PostToolUse`。Claude matcher `Edit|Write|NotebookEdit`；Codex matcher `apply_patch` |
 | **適用路徑／角色** | 只對**本次受影響且已存在**的檔案，依副檔名分流：`.py` → `ruff check`（整個 `backend/`）加 `mypy --strict`（只有 `app/`，範圍照 `openspec/config.yaml`），兩者都不在 `PATH` 上（`uv sync` 裝進 `backend/.venv`），所以經 `uv run --directory <backend> --project <backend> --no-sync` 以 `backend/` 為工作目錄呼叫，檔名給相對路徑——ruff 的 `per-file-ignores` 是對工作目錄解析的；`.ts`／`.tsx` → `tsc -b`（整個專案，不帶檔案參數——單檔編譯看不到專案設定）加 `eslint`（逐檔），同樣不在 `PATH` 上（在 `frontend/node_modules/.bin`），所以經 `pnpm -C <frontend> exec` 以 `frontend/` 為工作目錄呼叫——eslint 的 flat config 也是對工作目錄解析的；`docs/` 底下的 `.mdx` **與 `.md`** → `node scripts/check-specs.mjs docs`（`.md` 自 [PR #395](https://github.com/label-suite/label-suite/pull/395) 起才在它的範圍內）。**排除** `frontend/src/api/generated/`、Alembic migration、`pnpm-lock.yaml`、`uv.lock` 與 vendor |
-| **payload 欄位** | `tool_name`、`tool_input` 的檔案路徑、`cwd` |
+| **payload 欄位** | `tool_name`、`tool_input` 的檔案路徑、`cwd`。Codex 的 `apply_patch` 沒有路徑欄位，改讀 `tool_input.command` 裡的檔案標頭（`*** Add File:`、`*** Update File:`，接 `*** Move to:` 時取新路徑，`*** Delete File:` 不列），相對路徑以 `cwd` 為基準；讀不到標頭時取這個 checkout 相對 `HEAD` 的變更加未追蹤檔案，並在 stderr 註明清單可能包含之前的改動。這個解析只用來縮小 H3 的回報範圍，H2 不採用（[§能力缺口與承接](#能力缺口與承接)第 8 條） |
 | **共用檢查器** | `scripts/check-changed.sh`（**已存在並註冊到 `PostToolUse`**；同一支的 `--staged` 模式由 H4 的 Git hook 叫起，`--range` 由 H7 的 CI 叫起）。`docs/` 那條沿用既有的 `scripts/check-specs.mjs` |
 | **timeout** | **30 秒** |
 | **輸出與退出碼** | 診斷走 stderr。**一律不以 exit `2` 阻擋**——見下 |
@@ -156,6 +156,10 @@ updatedAt: '2026-11-20'
    **承接**：**手寫兩份、由 H1 核對**，不做生成器。所以 H1 的環境檢查要同時核對兩份設定指向的腳本是否都存在、兩邊是否都實際生效（Claude 看 `disableAllHooks`，Codex 看 `[features] hooks` 與信任狀態）——一致性靠這道檢查，不靠結構保證。
 8. **Codex 的寫檔途徑沒有 hook 層的目標保護，而 Claude 有——這一項兩平台不對等。** `apply_patch` 與 `Bash` 共用 `tool_input.command`，沒有任何路徑欄位，`command` 的內部結構官方也未記載（見[§工具名稱](#工具名稱)）。所以 H2 的寫檔那組在 Codex 上無法判斷目標是什麼：它輸出一行 `NA:` 說明這條途徑沒有保護，然後放行，**不是**因為缺欄位就擋下每一次 `apply_patch`。Claude 的 `Edit`／`Write`／`NotebookEdit` 在 `tool_input` 直接給路徑，那一側擋得住。
    **承接**：與第 3 條同為平台權限層，而**本 change 沒有設定權限層**，所以這個缺口目前也沒有實際的承接者。改為承認缺口、不解析未文件化的封包格式，是維護者 2026-11-17 的裁定。
+9. **Codex 在 linked worktree 裡載入不到本 repo 的 hook，要等主 checkout 的工作目錄也有 `.codex/hooks.json`。** 官方文件寫 linked worktree 的專案層「可以從主 checkout 的對應目錄讀取 hook」。實測 codex-cli 0.172.0：主 checkout 沒有 `.codex/` 時，worktree 裡 `/hooks` 一個 repo hook 都沒有（加 `--no-daemon` 也一樣），同一個 commit 放進一般 checkout 就會被發現；上游 [openai/codex#27133](https://github.com/openai/codex/issues/27133) 回報了相同現象。`issue-dispatch` 與 SDD 的工作都在 linked worktree 裡做，所以這份設定進到主 checkout 之前，那些 Codex session 裡**沒有任何 repo hook 會執行**。主 checkout 有了設定之後會不會載入，目前只有文件的說法，還沒實測。
+   **承接**：共用檢查器可以直接呼叫（`scripts/check-*.sh`，與 hook 是同一批）；H4、H5 的 Git hook 照常執行，因為 `core.hooksPath` 寫在 worktree 共用的 Git 設定裡；H7 的 CI 是最後一道。
+10. **Codex 不把 exit `0` 的 hook 寫在 stderr 的訊息交給模型或終端，所以第 8 條的 `NA:` 在 Codex 上看不到。** `check-write-target.sh` 收到 `apply_patch` 的 `PreToolUse` payload 時，確實把 `NA:` 與三行說明寫到 stderr、exit `0`、stdout 為空（本機餵 payload 實跑）。官方文件只寫 exit `2` 時 stderr 當阻擋原因、`PreToolUse` 與 `PostToolUse` 的純文字 stdout 被忽略，沒有說 exit `0` 的 stderr 去哪；Codex 實測時模型收到的工具結果與終端畫面都沒有那行。這個結論來自文件與一次實測，沒有追到 CLI 原始碼。H3 的診斷同樣是 exit `0` 加 stderr，依同一份文件在 Codex 上也不保證看得到，這一點還沒實測。
+   **承接**：第 8 條的缺口在 Codex 上改由 H1 的 Session 開始報告說出來（實測模型有收到那份報告）；H3 漏看的診斷由 Stop 時的 H6 補上——缺證據時它以 exit `2` 擋下，那個原因看得到。官方文件提到 stdout 的 JSON 可以帶 `systemMessage`，但沒說會顯示在哪裡，本契約沒有採用。
 
 ---
 
@@ -341,3 +345,5 @@ Codex 的 `command` 欄位是**字串，不是陣列**——官方文件的範�
 | 2026-11-20 | 兩份 hook 註冊設定落地：`.claude/settings.json` 新增 `hooks` key、新建 `.codex/hooks.json`，五個 handler 指向同一批檢查器；不寫 `onFailure`（本機 2.1.273 未達 2.1.295）也不寫 `MultiEdit`（工具名未確認） | 「agent 事件的註冊還沒落地，那四個不會被任何事件叫起」 | [#111](https://github.com/label-suite/label-suite/issues/111) |
 | 2026-11-20 | `.py` 路由經 `uv run` 以 `backend/` 為工作目錄逐檔呼叫 `ruff check`（整個 `backend/`）與 `mypy --strict`（只有 `app/`）（[§H3](#h3-編輯後按路徑跑快速檢查)） | 直接在 `PATH` 上找 `ruff`／`mypy`——`backend/` 落地後，那讓每一次 Python 改動都被判成「已啟用但缺工具」 | 維護者裁定（記錄於 [#111](https://github.com/label-suite/label-suite/issues/111)）；逐檔照本 change 的 design.md，`--strict` 與 `uv run` 照 [backend-agent-rules B2](backend-agent-rules.mdx#b2-docstring型別與指令) 與 `openspec/config.yaml` |
 | 2026-11-20 | `.ts`／`.tsx` 路由經 `pnpm -C <frontend> exec` 以 `frontend/` 為工作目錄呼叫 `tsc -b`（整個專案）與 `eslint`（逐檔）；`--staged` 時把已安裝的工具鏈接進鏡像（[§H3](#h3-編輯後按路徑跑快速檢查)） | 直接在 `PATH` 上找 `tsc`／`eslint`，以及 `tsc --noEmit`——`frontend/` 落地後，那讓每一次 TypeScript 改動都被判成「已啟用但缺工具」 | 比照同日 `.py` 路由的裁定；指令名照 `openspec/config.yaml` 的 `pnpm --filter frontend lint`／`typecheck` |
+| 2026-11-26 | H3 對 Codex `apply_patch` 改讀 `tool_input.command` 的檔案標頭找出本次改到的檔，讀不到時取 checkout 相對 `HEAD` 的變更；H2 仍不解析（[§H3](#h3-編輯後按路徑跑快速檢查)） | 事件模式只取路徑欄位，`apply_patch` 的候選清單是空的，H3 什麼都沒跑、Stop 時 H6 因缺證據擋下 | [#111](https://github.com/label-suite/label-suite/issues/111) |
+| 2026-11-26 | §能力缺口與承接新增第 9 條（linked worktree 載入不到 Codex 的 repo hook）與第 10 條（Codex 不顯示 exit `0` 的 stderr） | — | [#111](https://github.com/label-suite/label-suite/issues/111) |
