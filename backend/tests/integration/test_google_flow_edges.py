@@ -19,7 +19,7 @@ from app.core.tokens import TokenKeys, sign_payload
 from tests.conftest import TEST_AUTH_SECRET
 from tests.factories.accounts import add_user, reload_user
 from tests.support.browser import SESSION_COOKIES, Browser, cleared, set_cookies
-from tests.support.google_oidc import FakeGoogle
+from tests.support.google_oidc import CLIENT_ID, FakeGoogle
 
 pytestmark = pytest.mark.integration
 
@@ -107,3 +107,28 @@ async def test_email_verified_as_the_string_true_links_the_account(
 
     assert response.status_code == 201
     assert (await reload_user(account_db, user.id)).google_subject == "google-sub-1"
+
+
+async def test_a_token_for_another_audience_is_400_even_when_azp_names_us(
+    google_client: httpx.AsyncClient, account_db: AsyncSession, google: FakeGoogle
+) -> None:
+    await add_user(account_db, google_subject="google-sub-1")
+    google.audience = "someone-else.apps.googleusercontent.com"
+    google.authorized_party = CLIENT_ID
+
+    response = await _complete(Browser(google_client), google)
+
+    assert _code(response) == (400, "ACCOUNT_GOOGLE_FLOW_INVALID")
+    assert not set(SESSION_COOKIES) & set(set_cookies(response))
+
+
+async def test_completing_without_google_configured_also_clears_the_flow_cookie(
+    client: httpx.AsyncClient, account_db: AsyncSession
+) -> None:
+    browser = Browser(client)
+    browser.cookies[OIDC_FLOW_COOKIE] = sign_payload(FLOW_KEY, "left over")
+
+    response = await browser.request("POST", COMPLETE, json={"code": "4/c", "state": "s"})
+
+    assert _code(response) == (409, "ACCOUNT_GOOGLE_UNAVAILABLE")
+    assert cleared(response) == {OIDC_FLOW_COOKIE}

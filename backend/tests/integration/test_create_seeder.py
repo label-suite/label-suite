@@ -242,3 +242,38 @@ async def test_a_seeder_created_in_between_makes_the_insert_fail_cleanly(
         await SeederService(account_db).create("late@example.org", "晚到", _fresh_password())
 
     assert await UserRepository(account_db).count() == 1
+
+
+async def test_password_stdin_from_a_terminal_is_refused(
+    tmp_path: Path, account_db: AsyncSession
+) -> None:
+    code, output = await _run(
+        tmp_path,
+        "--email",
+        ADMIN,
+        "--name",
+        "管理員",
+        "--password-stdin",
+        secrets_typed=["Aa1bbbbbbb", "Aa1bbbbbbb"],
+    )
+
+    assert code == 2
+    assert "terminal" in output
+    assert await UserRepository(account_db).count() == 0
+
+
+@pytest.mark.parametrize(("length", "expected"), [(1024, 0), (1025, 2)])
+async def test_the_password_has_the_same_1024_character_limit_as_sign_in(
+    tmp_path: Path, account_db: AsyncSession, length: int, expected: int
+) -> None:
+    password = "Aa1" + "b" * (length - 3)
+
+    code, output = await _run(
+        tmp_path, "--email", ADMIN, "--name", "管理員", "--password-stdin", stdin=password + "\n"
+    )
+
+    assert code == expected
+    assert password not in output
+    assert await UserRepository(account_db).count() == (1 if expected == 0 else 0)
+    if expected == 2:
+        assert "1024" in output

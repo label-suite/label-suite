@@ -28,6 +28,7 @@ from app.modules.account.service import (
     GoogleFlowInvalidError,
     GoogleLoginRejectedError,
     GoogleLoginService,
+    GoogleUnavailableError,
     IssuedSession,
     LoginOptionsService,
     PasswordLoginService,
@@ -162,7 +163,7 @@ async def create_google_session(
         issued = await service.complete(
             body.code, body.state, SessionCookies.read_oidc_flow(request), _source(request), now
         )
-    except (GoogleFlowInvalidError, GoogleLoginRejectedError) as exc:
+    except (GoogleFlowInvalidError, GoogleLoginRejectedError, GoogleUnavailableError) as exc:
         exc.response_hook = SessionCookies.clear_oidc_flow
         raise
     _deliver(response, issued, now)

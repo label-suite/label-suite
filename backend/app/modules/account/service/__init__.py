@@ -26,6 +26,7 @@ from app.modules.account.service.login import (
     get_password_login_service,
 )
 from app.modules.account.service.seeder import (
+    MAX_PASSWORD_LENGTH,
     SeederCheck,
     SeederConflictError,
     SeederService,
@@ -42,6 +43,7 @@ from app.modules.account.service.session import (
 )
 
 __all__ = [
+    "MAX_PASSWORD_LENGTH",
     "AccountPrincipalLoader",
     "GoogleAuthorization",
     "GoogleFlowInvalidError",

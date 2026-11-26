@@ -9,6 +9,10 @@ pipe one line. There is no password option and no password environment variable,
 never lands in shell history, ``ps`` or ``docker inspect``, and there is no default.
 The command reads only the database settings (``DATABASE_URL`` or ``SQLITE_PATH``).
 
+``--password-stdin`` is refused when standard input is a terminal, where the password
+would be echoed. A password longer than 1024 characters, the most sign-in accepts, is
+refused too.
+
 Exit codes: ``0`` created, or the Seeder admin already has this Email (nothing
 changed, no password asked); ``2`` refused or invalid input, nothing written. No output
 contains the password or its hash.
@@ -28,6 +32,7 @@ from app.core.config import ConfigError, DatabaseSettings, load_settings
 from app.core.db import create_engine
 from app.core.email_identity import EmailTooLongError, normalize_email
 from app.modules.account.service import (
+    MAX_PASSWORD_LENGTH,
     SeederCheck,
     SeederConflictError,
     SeederService,
@@ -97,6 +102,11 @@ def _password(
             raise _Refused("the two passwords differ")
     else:
         raise _Refused("standard input is not a terminal; pass --password-stdin")
+    if len(raw) > MAX_PASSWORD_LENGTH:
+        raise _Refused(
+            f"the password is longer than {MAX_PASSWORD_LENGTH} characters, "
+            "the most sign-in accepts"
+        )
     if not password_meets_policy(raw):
         raise _Refused(
             "the password needs at least 8 characters with an upper-case letter, "
@@ -133,6 +143,12 @@ async def run(
     tty = stdin.isatty() if interactive is None else interactive
     try:
         args = _parse(argv)
+        if args.password_stdin and tty:
+            # A terminal would echo the password as it is typed; ask instead.
+            raise _Refused(
+                "--password-stdin reads a pipe, but standard input is a terminal; "
+                "leave the option out to be asked without echo"
+            )
         email, name = _identity(args)
         database = settings if settings is not None else load_settings(DatabaseSettings)
     except (_Refused, ConfigError) as exc:

@@ -16,9 +16,17 @@ from app.core.passwords import PasswordHasher
 from app.modules.account.models import User
 from app.modules.account.repository import UserRepository
 
-__all__ = ["SeederCheck", "SeederConflictError", "SeederService", "password_meets_policy"]
+__all__ = [
+    "MAX_PASSWORD_LENGTH",
+    "SeederCheck",
+    "SeederConflictError",
+    "SeederService",
+    "password_meets_policy",
+]
 
 _MIN_PASSWORD_LENGTH = 8
+MAX_PASSWORD_LENGTH = 1024
+"""The longest password accepted; the same limit as ``LoginRequest.password``."""
 
 
 def password_meets_policy(raw: str) -> bool:

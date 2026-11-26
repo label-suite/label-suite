@@ -69,6 +69,7 @@ class GoogleOidcClient:
     """
 
     def __init__(self, *, client_id: str, client_secret: str, redirect_uri: str) -> None:
+        self._client_id = client_id
         self._redirect_uri = redirect_uri
         metadata: dict[str, Any] = {
             "authorization_endpoint": _AUTHORIZATION_URL,
@@ -117,8 +118,14 @@ class GoogleOidcClient:
             answer = await self._app.fetch_access_token(
                 self._redirect_uri, code=code, code_verifier=code_verifier
             )
+            # authlib accepts any aud when azp names this client, so aud is pinned here.
             claims = await self._app.parse_id_token(
-                answer, nonce=nonce, claims_options={"iss": {"values": _ISSUERS}}
+                answer,
+                nonce=nonce,
+                claims_options={
+                    "iss": {"values": _ISSUERS},
+                    "aud": {"essential": True, "value": self._client_id},
+                },
             )
         except Exception:
             raise GoogleOidcError from None
