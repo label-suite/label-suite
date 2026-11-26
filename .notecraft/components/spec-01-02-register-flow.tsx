@@ -520,6 +520,67 @@ function FlowShell({ flows }: { flows: Flow[] }): ReactElement {
 
 const FLOWS: Flow[] = [
   {
+    id: "open-page",
+    label: "開啟註冊頁",
+    trigger: "沒有帳號的人開啟註冊頁",
+    result: "有設定寄信服務的部署，使用者看到可填的註冊表單；沒有設定的部署，使用者知道為什麼不能註冊、該找誰，而且不會有任何帳號被建立",
+    lanes: ["未登入的訪客", "系統"],
+    nodes: [
+      { id: "s", lane: 0, col: 0, kind: "start", label: [] },
+      { id: "n1", lane: 0, col: 0, kind: "action", label: ["開啟", "註冊頁"] },
+      { id: "n2", lane: 1, col: 1, kind: "decision", label: ["有設定", "寄信？"] },
+      { id: "n3", lane: 1, col: 2, kind: "system", end: true, label: ["顯示", "註冊表單"] },
+      { id: "n4", lane: 1, col: 3, kind: "system", exception: true, end: true, label: ["顯示", "說明卡"] },
+      { id: "n5", lane: 0, col: 4, kind: "action", exception: true, label: ["繞過畫面", "直接送出"] },
+      { id: "n6", lane: 1, col: 5, kind: "system", exception: true, end: true, label: ["一律拒絕", "不建帳號"] },
+    ],
+    edges: [
+      { id: "a0", from: "s", to: "n1" },
+      { id: "a1", from: "n1", to: "n2" },
+      { id: "a2", from: "n2", to: "n3", label: "是" },
+      { id: "e1", from: "n2", to: "n4", exception: true, label: "否", exit: "bottom", enter: "bottom", via: laneBottom(1) - 8 },
+      { id: "e2", from: "n1", to: "n5", exception: true, exit: "top", enter: "top", via: laneTop(0) + 16 },
+      { id: "e3", from: "n5", to: "n6", exception: true },
+    ],
+    steps: [
+      {
+        title: "開啟註冊頁，系統判斷這個部署有沒有設定寄信服務",
+        body: "登入頁、註冊頁與註冊的送出共用同一個判斷。有沒有設定由部署決定，使用者在畫面上不能切換。",
+        scenarios: ["有設定寄信服務時註冊頁照舊"],
+        ref: "主流程 1",
+        highlight: ["s", "a0", "n1", "a1", "n2"],
+      },
+      {
+        title: "有設定，顯示註冊表單",
+        body: "接下一段「送出註冊表單」。流程結束。",
+        scenarios: ["有設定寄信服務時註冊頁照舊"],
+        ref: "主流程 2",
+        highlight: ["a2", "n3"],
+      },
+      {
+        title: "例外：沒有設定寄信服務，改顯示說明卡",
+        body: "直接開網址也一樣：不顯示四個欄位與「建立帳號」，改顯示標題「目前不開放自行註冊」、說明、提示與主要按鈕「回到登入」。已寄出的驗證連結不受影響，照常可用。流程結束。",
+        scenarios: ["沒有設定寄信服務時註冊頁顯示說明卡", "說明卡上沒有註冊表單", "說明卡點回到登入", "說明卡的文字隨語言切換"],
+        ref: "E1",
+        highlight: ["n2", "e1", "n4"],
+      },
+      {
+        title: "例外：沒有設定寄信服務時有人繞過畫面直接送出註冊",
+        body: "一律拒絕：不建立帳號、不記待驗證的請求，結果是「目前不開放自行註冊」。這是部署狀態，不涉及任何 Email 有沒有帳號。流程結束。",
+        scenarios: ["沒有設定寄信服務時繞過畫面的註冊被拒絕"],
+        ref: "E2",
+        highlight: ["n1", "e2", "n5", "e3", "n6"],
+      },
+      {
+        title: "結果：使用者知道為什麼不能註冊，也不會有帳號被建立",
+        body: "沒有設定寄信服務的部署只能由系統管理員邀請帳號；說明卡上的提示就是這個去路。流程結束。",
+        scenarios: ["沒有設定寄信服務時已登入者開註冊頁前往儀表板"],
+        ref: "結果",
+        highlight: ["n4", "n6"],
+      },
+    ],
+  },
+  {
     id: "submit-form",
     label: "送出註冊表單",
     trigger: "沒有帳號的人想加入平台",
