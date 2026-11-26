@@ -85,7 +85,7 @@ updatedAt: '2026-11-26'
 | **禁止** | 回傳裸 ORM model；前端自己依角色決定要不要藏值；用「前端藏按鈕」代替後端拒絕 |
 | **正例** | 回應 schema **明確 allowlist** 欄位；該遮蔽的由後端標記（例如欄位列在遮蔽清單裡），前端只負責把它渲染成「已遮蔽」 |
 | **例外** | 無 |
-| **session 與快取的失效規則** | PRD §權限矩陣 已定：「停用後該帳號登入狀態失效；角色變更從下一次操作起生效」。落地方式：**帳號停用、系統角色變更、任務成員身分變更時，`credential_version` 加一並撤銷該使用者的 refresh token family**——照 [architecture.mdx](../architecture.mdx) 已有的 SSO 綁定做法（同一筆交易內加一並撤銷所有 session）。權限矩陣若要快取，失效鍵是矩陣版本列 |
+| **session 與快取的失效規則** | PRD §權限矩陣 已定：「停用後該帳號登入狀態失效；角色變更從下一次操作起生效」。落地方式：**帳號停用，以及[規格 01-05](../../specs/01-account/05-login-state.mdx#四種改動讓所有裝置重新登入) 列出的改動，`credential_version` 加一並撤銷該使用者的 refresh token family**——照 [architecture.mdx](../architecture.mdx) 已有的 SSO 綁定做法（同一筆交易內加一並撤銷所有 session）。**系統角色變更不撤銷任何登入狀態**：下一次操作依 S3 從 DB 讀到新角色，立即生效（規格 01-05 的[每一次操作都用最新的身分判定](../../specs/01-account/05-login-state.mdx#每一次操作都用最新的身分判定)為準，維護者裁定 2026-11-26）。權限矩陣若要快取，失效鍵是矩陣版本列 |
 
 :::note{title="S4 的反例與檢查方式" collapsible}
 - **反例**：`return task`（ORM 物件直接序列化，將來加一個欄位就外洩）；或前端 `if (role !== 'project_leader') hideField()`——那是體驗，不是授權
@@ -273,3 +273,4 @@ updatedAt: '2026-11-26'
 | 2026-11-10 | 初版：十條規範、六條刻意不採用的來源條文、原始 repo 與 scaffold 的逐條對照 | — | [#107](https://github.com/label-suite/label-suite/issues/107) |
 | 2026-11-19 | S1 至 S4 的認證與授權理由寫進 [ADR-004](../adr/004-auth-and-security.mdx)，本文只留規範與檢查方式 | —（理由原本只在個人 repo 的 ADR-021、035、037 與 #107 的留言） | [#450](https://github.com/label-suite/label-suite/issues/450) |
 | 2026-11-19 | S5 至 S8 的答案隔離與任務設定理由寫進 [ADR-006](../adr/006-task-config-and-answer-isolation.mdx)，本文只留規範與檢查方式 | —（理由原本只在個人 repo 的 ADR-005、007、010、029、031 與 architecture.mdx） | [#452](https://github.com/label-suite/label-suite/issues/452) |
+| 2026-11-26 | S4 的失效規則改成：系統角色變更不撤銷登入狀態，下一次操作用新角色；帳號停用與規格 01-05 列出的改動才加一 `credential_version` 並撤銷 | 2026-11-10 那一列把系統角色與任務成員身分變更也列為撤銷事件，與規格 01-05「每一次操作都用最新的身分判定」不符；規格為準 | [#719](https://github.com/label-suite/label-suite/issues/719#issuecomment-7187190476) |
