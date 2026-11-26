@@ -627,8 +627,8 @@ const FLOWS: Flow[] = [
       },
       {
         title: "Google 確認身分，回到平台並進入儀表板",
-        body: "本期真的接上 Google 帳號登入，但 Google 只登入或綁定既有帳號，不建立新帳號。「怎麼把一個既有帳號連結到 Google 帳號」不在這一頁，在個人設定的第五個區塊。",
-        scenarios: ["點 Google 帳號登入"],
+        body: "本期真的接上 Google 帳號登入，但 Google 只登入或綁定既有帳號，不建立新帳號。確認身分後要看有對應帳號？已連結這個 Google 帳號的人，不論 Email 是否相同都能登入。「怎麼把一個既有帳號連結到 Google 帳號」不在這一頁，在個人設定的第五個區塊。",
+        scenarios: ["點 Google 帳號登入", "已連結 Google 的帳號 Email 不同仍能登入"],
         ref: "主流程 2",
         highlight: ["a3", "n6", "a4", "n4"],
       },
@@ -640,9 +640,9 @@ const FLOWS: Flow[] = [
         highlight: ["n3", "e1", "n5"],
       },
       {
-        title: "例外：這個 Google 帳號在平台上沒有對應帳號",
-        body: "回到登入頁，用既有的錯誤橫幅顯示同一句說明，不建立帳號、不導向註冊。Google 回報 Email 未驗證時也是同一句。流程結束。",
-        scenarios: ["Google 帳號沒有對應的平台帳號", "Google 回報 Email 未驗證"],
+        title: "例外：沒有對應帳號",
+        body: "沒有任何帳號連結這個 Google 帳號，也沒有 Email 相同的既有帳號：回到登入頁，用既有的錯誤橫幅顯示同一句說明，不建立帳號、不導向註冊。Google 回報 Email 未驗證時也是同一句，沒有設定寄信服務的部署也一樣。結果是顯示說明不建帳號。流程結束。",
+        scenarios: ["Google 帳號沒有對應的平台帳號", "Google 回報 Email 未驗證", "沒有設定寄信服務時 Google 沒有對應帳號仍是同一句"],
         ref: "E2",
         highlight: ["n6", "e2", "n7"],
       },

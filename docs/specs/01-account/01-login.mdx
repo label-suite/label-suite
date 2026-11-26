@@ -54,9 +54,9 @@ prompt: |
   泳道：未登入的訪客、系統
   流程：
     用 Email 與密碼登入：觸發 使用者要進入平台；主流程 填 Email 與密碼 → 點「登入」→ 兩欄都有填嗎？→ 是：進入送出中、全頁不可互動 → 帳號與密碼對得上嗎？→ 是：進入儀表板；A1 使用者在送出中重複點「登入」→ 按鈕已停用，只會送出一次；E1 有欄位沒填 → 在該欄位旁顯示必填的說明，停在登入頁，流程結束；E2 帳號或密碼不對 → 顯示「帳號或密碼錯誤，請再試一次」，兩欄都不清空，流程結束
-    用 Google 帳號登入：觸發 使用者想用 Google 帳號進來；主流程 點「使用 Google 帳號繼續」→ 交給 Google 驗證 → 確認身分後進入儀表板，流程結束；E1 使用者在 Google 那一側取消或驗證不通過 → 回到登入頁，可以改用 Email 與密碼登入，流程結束；E2 這個 Google 帳號在平台上沒有對應帳號，或 Google 回報 Email 未驗證 → 回到登入頁，顯示同一句說明，不建立帳號、不導向註冊，流程結束
+    用 Google 帳號登入：觸發 使用者想用 Google 帳號進來；主流程 點「使用 Google 帳號繼續」→ 交給 Google 驗證 → 確認身分後進入儀表板，流程結束；E1 使用者在 Google 那一側取消或驗證不通過 → 回到登入頁，可以改用 Email 與密碼登入，流程結束；E2 沒有對應帳號（沒有任何帳號連結這個 Google 帳號，也沒有 Email 相同的既有帳號），或 Google 回報 Email 未驗證 → 回到登入頁，顯示同一句說明，不建立帳號、不導向註冊，流程結束
     切換語言：觸發 使用者看不懂目前的語言；主流程 點語言切換 → 整頁文字即時換成另一種語言，不必重新整理 → 記住這個選擇 → 之後到註冊、忘記密碼或儀表板都維持同一種語言；A1 切換時某欄位正顯示錯誤 → 錯誤先清掉，使用者重新送出時再依新語言顯示
-  走查對應：依驗收標準的 Scenario 名稱（登入頁顯示完整的登入入口、沒填 Email 就送出、沒填密碼就送出、只填空白字元的 Email、兩欄都沒填、重新輸入就清掉錯誤、送出中點語言切換沒反應、送出中點底部連結沒反應、送出中重複點擊只送出一次、登入成功進入儀表板、帳號或密碼不對、停用的帳號無法登入、點 Google 帳號登入、Google 帳號沒有對應的平台帳號、Google 回報 Email 未驗證、切換語言整頁即時更新、切換語言後到註冊頁仍是同一種語言、從註冊頁回到登入頁仍是同一種語言、切換語言會清掉欄位錯誤）
+  走查對應：依驗收標準的 Scenario 名稱（登入頁顯示完整的登入入口、沒填 Email 就送出、沒填密碼就送出、只填空白字元的 Email、兩欄都沒填、重新輸入就清掉錯誤、送出中點語言切換沒反應、送出中點底部連結沒反應、送出中重複點擊只送出一次、登入成功進入儀表板、帳號或密碼不對、停用的帳號無法登入、點 Google 帳號登入、Google 帳號沒有對應的平台帳號、Google 回報 Email 未驗證、沒有設定寄信服務時 Google 沒有對應帳號仍是同一句、已連結 Google 的帳號 Email 不同仍能登入、切換語言整頁即時更新、切換語言後到註冊頁仍是同一種語言、從註冊頁回到登入頁仍是同一種語言、切換語言會清掉欄位錯誤）
 caption: 切換流程看不同情境；選「逐步走查」依序看主流程、替代與例外流程
 status: generated
 */}
@@ -64,7 +64,7 @@ status: generated
 import GeneratedFrame from '@/components/GeneratedFrame.astro'
 import Spec0101LoginFlow from '@notes/components/spec-01-01-login-flow'
 
-<GeneratedFrame id="spec-01-01-login-flow" type="motion" prompt={"骨架：.claude/skills/spec-writing/references/flow-skeleton.tsx（複製後只改【流程】）。\n核心洞察：登入只有三個可能的結局——進得去、告訴你哪一欄沒填、告訴你帳號或密碼不對；而第三種刻意不說是哪一個不對。\n泳道：未登入的訪客、系統\n流程：\n  用 Email 與密碼登入：觸發 使用者要進入平台；主流程 填 Email 與密碼 → 點「登入」→ 兩欄都有填嗎？→ 是：進入送出中、全頁不可互動 → 帳號與密碼對得上嗎？→ 是：進入儀表板；A1 使用者在送出中重複點「登入」→ 按鈕已停用，只會送出一次；E1 有欄位沒填 → 在該欄位旁顯示必填的說明，停在登入頁，流程結束；E2 帳號或密碼不對 → 顯示「帳號或密碼錯誤，請再試一次」，兩欄都不清空，流程結束\n  用 Google 帳號登入：觸發 使用者想用 Google 帳號進來；主流程 點「使用 Google 帳號繼續」→ 交給 Google 驗證 → 確認身分後進入儀表板，流程結束；E1 使用者在 Google 那一側取消或驗證不通過 → 回到登入頁，可以改用 Email 與密碼登入，流程結束；E2 這個 Google 帳號在平台上沒有對應帳號，或 Google 回報 Email 未驗證 → 回到登入頁，顯示同一句說明，不建立帳號、不導向註冊，流程結束\n  切換語言：觸發 使用者看不懂目前的語言；主流程 點語言切換 → 整頁文字即時換成另一種語言，不必重新整理 → 記住這個選擇 → 之後到註冊、忘記密碼或儀表板都維持同一種語言；A1 切換時某欄位正顯示錯誤 → 錯誤先清掉，使用者重新送出時再依新語言顯示\n走查對應：依驗收標準的 Scenario 名稱（登入頁顯示完整的登入入口、沒填 Email 就送出、沒填密碼就送出、只填空白字元的 Email、兩欄都沒填、重新輸入就清掉錯誤、送出中點語言切換沒反應、送出中點底部連結沒反應、送出中重複點擊只送出一次、登入成功進入儀表板、帳號或密碼不對、停用的帳號無法登入、點 Google 帳號登入、Google 帳號沒有對應的平台帳號、Google 回報 Email 未驗證、切換語言整頁即時更新、切換語言後到註冊頁仍是同一種語言、從註冊頁回到登入頁仍是同一種語言、切換語言會清掉欄位錯誤）\n"} caption="切換流程看不同情境；選「逐步走查」依序看主流程、替代與例外流程">
+<GeneratedFrame id="spec-01-01-login-flow" type="motion" prompt={"骨架：.claude/skills/spec-writing/references/flow-skeleton.tsx（複製後只改【流程】）。\n核心洞察：登入只有三個可能的結局——進得去、告訴你哪一欄沒填、告訴你帳號或密碼不對；而第三種刻意不說是哪一個不對。\n泳道：未登入的訪客、系統\n流程：\n  用 Email 與密碼登入：觸發 使用者要進入平台；主流程 填 Email 與密碼 → 點「登入」→ 兩欄都有填嗎？→ 是：進入送出中、全頁不可互動 → 帳號與密碼對得上嗎？→ 是：進入儀表板；A1 使用者在送出中重複點「登入」→ 按鈕已停用，只會送出一次；E1 有欄位沒填 → 在該欄位旁顯示必填的說明，停在登入頁，流程結束；E2 帳號或密碼不對 → 顯示「帳號或密碼錯誤，請再試一次」，兩欄都不清空，流程結束\n  用 Google 帳號登入：觸發 使用者想用 Google 帳號進來；主流程 點「使用 Google 帳號繼續」→ 交給 Google 驗證 → 確認身分後進入儀表板，流程結束；E1 使用者在 Google 那一側取消或驗證不通過 → 回到登入頁，可以改用 Email 與密碼登入，流程結束；E2 沒有對應帳號（沒有任何帳號連結這個 Google 帳號，也沒有 Email 相同的既有帳號），或 Google 回報 Email 未驗證 → 回到登入頁，顯示同一句說明，不建立帳號、不導向註冊，流程結束\n  切換語言：觸發 使用者看不懂目前的語言；主流程 點語言切換 → 整頁文字即時換成另一種語言，不必重新整理 → 記住這個選擇 → 之後到註冊、忘記密碼或儀表板都維持同一種語言；A1 切換時某欄位正顯示錯誤 → 錯誤先清掉，使用者重新送出時再依新語言顯示\n走查對應：依驗收標準的 Scenario 名稱（登入頁顯示完整的登入入口、沒填 Email 就送出、沒填密碼就送出、只填空白字元的 Email、兩欄都沒填、重新輸入就清掉錯誤、送出中點語言切換沒反應、送出中點底部連結沒反應、送出中重複點擊只送出一次、登入成功進入儀表板、帳號或密碼不對、停用的帳號無法登入、點 Google 帳號登入、Google 帳號沒有對應的平台帳號、Google 回報 Email 未驗證、沒有設定寄信服務時 Google 沒有對應帳號仍是同一句、已連結 Google 的帳號 Email 不同仍能登入、切換語言整頁即時更新、切換語言後到註冊頁仍是同一種語言、從註冊頁回到登入頁仍是同一種語言、切換語言會清掉欄位錯誤）\n"} caption="切換流程看不同情境；選「逐步走查」依序看主流程、替代與例外流程">
   <Spec0101LoginFlow client:visible />
 </GeneratedFrame>
 
@@ -91,7 +91,7 @@ import Spec0101LoginFlow from '@notes/components/spec-01-01-login-flow'
   - 替代流程：無
   - 例外流程：
     - E1（第 1 步）使用者在 Google 那一側取消或驗證不通過 → 回到登入頁，可以改用 Email 與密碼登入，流程結束
-    - <mark>E2（第 2 步）這個 Google 帳號在平台上沒有對應帳號，或 Google 回報 Email 未驗證 → 回到登入頁，顯示同一句說明，不建立帳號、不導向註冊，流程結束（[規格 01-05 §已確認決議](./05-login-state.mdx#已確認決議) Q18）</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup>
+    - <mark>E2（第 2 步）沒有對應帳號（沒有任何帳號連結這個 Google 帳號，也沒有 Email 相同的既有帳號），或 Google 回報 Email 未驗證 → 回到登入頁，顯示同一句說明，不建立帳號、不導向註冊，流程結束（[規格 01-05 §已確認決議](./05-login-state.mdx#已確認決議) Q18）</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup>
   - 結果：使用者用 Google 帳號登入成功並前往儀表板（[§已確認決議](#已確認決議) Q4：本期就接上）
 
 - **切換語言**
@@ -161,7 +161,7 @@ import Spec0101LoginFlow from '@notes/components/spec-01-01-login-flow'
 1. 使用者開啟登入頁 → 卡片上有「使用 Google 帳號繼續」，含 Google 的圖示
 2. 使用者點它 → **本期真的能用 Google 帳號登入**
 3. 使用者切換語言 → 按鈕的文字與說明文字一起換（中文「使用 Google 帳號繼續」、英文 `Continue with Google`）
-4. <mark>使用者用 Google 登入，但這個 Google 帳號在平台上沒有對應帳號，或 Google 回報 Email 未驗證 → 回到登入頁，用登入頁既有的錯誤橫幅顯示同一句「無法用這個 Google 帳號登入。需要帳號的話，請聯絡系統管理員邀請你。」；**不建立帳號、不導向註冊**，也不因為這個部署有沒有設定寄信服務而換句子（[規格 01-05 §已確認決議](./05-login-state.mdx#已確認決議) Q18）</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup>
+4. <mark>使用者用 Google 登入，但沒有對應帳號（沒有任何帳號連結這個 Google 帳號，也沒有 Email 相同的既有帳號），或 Google 回報 Email 未驗證 → 回到登入頁，用登入頁既有的錯誤橫幅顯示同一句「無法用這個 Google 帳號登入。需要帳號的話，請聯絡系統管理員邀請你。」；**不建立帳號、不導向註冊**，也不因為這個部署有沒有設定寄信服務而換句子（[規格 01-05 §已確認決議](./05-login-state.mdx#已確認決議) Q18）</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup>
 
 - 這個入口和 Email 登入並列在同一頁，不是另開一頁
 - 按鈕的位置與文字**不因為接上而改變**，使用者不需要重新認識它
@@ -215,7 +215,7 @@ import Spec0101LoginFlow from '@notes/components/spec-01-01-login-flow'
 | 帳號或密碼對不上 | 不進入平台，顯示「帳號或密碼錯誤，請再試一次」，不說明是哪一個不對 |
 | 帳號是停用中的 | 不進入平台（[規格 06-01](../06-admin/01-user-management.mdx) 已定停用後立即無法登入）；顯示的訊息**和帳號密碼錯誤同一句** |
 | 正在送出中 | 整頁其餘部分不可互動，「登入」只會送出一次 |
-| <mark>用 Google 登入，但這個 Google 帳號在平台上沒有對應帳號，或 Google 回報 Email 未驗證</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> | <mark>不進入平台、不建立帳號、不導向註冊；回到登入頁並顯示同一句說明</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> |
+| <mark>用 Google 登入，但沒有對應帳號（沒有任何帳號連結這個 Google 帳號，也沒有 Email 相同的既有帳號），或 Google 回報 Email 未驗證</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> | <mark>不進入平台、不建立帳號、不導向註冊；回到登入頁並顯示同一句說明</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> |
 | 這個部署沒有設定寄信服務 | 登入頁不顯示註冊入口（「還沒有帳號？ 前往註冊」整列）；其餘照常 |
 
 ## 邊界情況（Edge Case）
@@ -230,7 +230,8 @@ import Spec0101LoginFlow from '@notes/components/spec-01-01-login-flow'
 | 瀏覽器不讓平台記住語言，或記住的值不是兩種語言之一 | 當成繁體中文，不出現錯誤畫面 |
 | 已經顯示過錯誤後再送出成功 | 錯誤先清掉，才進入送出中與導向 |
 | 快速連點「使用 Google 帳號繼續」 | 不出現錯誤畫面 |
-| <mark>這個部署沒有設定寄信服務、關閉自行註冊時，用沒有對應帳號的 Google 帳號登入</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> | <mark>和有設定寄信服務時是同一句說明，不提註冊</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> |
+| <mark>這個部署沒有設定寄信服務、關閉自行註冊時，用沒有對應帳號的 Google 帳號登入（定義見 [規格 01-05](./05-login-state.mdx#已確認決議) Q18）</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> | <mark>和有設定寄信服務時是同一句說明，不提註冊</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> |
+| <mark>已連結 Google 的帳號，Google 的 Email 與平台上的 Email 不同</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> | <mark>照常用 Google 登入進入儀表板；「沒有對應帳號」只看有沒有帳號連結這個 Google 帳號、有沒有 Email 相同的既有帳號</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> |
 | 這個部署沒有設定寄信服務時開啟登入頁 | 底部沒有註冊那一列；Google 按鈕、忘記密碼與語言切換照常，卡片排版不留空洞 |
 | 送出後平台沒有回應 | 顯示一句可以重試的說明；兩欄的內容都還在，使用者可以重試 |
 
@@ -257,8 +258,10 @@ import Spec0101LoginFlow from '@notes/components/spec-01-01-login-flow'
 | 密碼顯示中切換語言 | 密碼正顯示中 | 點語言切換 | 密碼仍然顯示中，只有說明文字換語言 |
 | 點 Google 帳號登入 | 使用者在登入頁 | 點「使用 Google 帳號繼續」 | 交給 Google 驗證；確認身分後進入儀表板 |
 | Google 驗證沒通過回到登入頁 | 使用者在 Google 那一側取消或驗證不通過 | 回到平台 | 停在登入頁，可以改用 Email 與密碼登入，不出現錯誤畫面 |
-| Google 帳號沒有對應的平台帳號 | <mark>平台上沒有任何 Email 與這個 Google 帳號相同的帳號</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> | <mark>使用者用這個 Google 帳號登入</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> | <mark>回到登入頁，用既有的錯誤橫幅顯示「無法用這個 Google 帳號登入。需要帳號的話，請聯絡系統管理員邀請你。」；沒有建立任何帳號，也沒有導向註冊頁</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> |
-| Google 回報 Email 未驗證 | <mark>Google 回報這個帳號的 Email 沒有驗證</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> | <mark>使用者用這個 Google 帳號登入</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> | <mark>顯示和「Google 帳號沒有對應的平台帳號」同一句說明，沒有任何文字說明是未驗證</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> |
+| Google 帳號沒有對應的平台帳號 | <mark>沒有任何帳號連結這個 Google 帳號，平台上也沒有 Email 相同的既有帳號</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> | <mark>使用者用這個 Google 帳號登入</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> | <mark>回到登入頁，用既有的錯誤橫幅顯示「無法用這個 Google 帳號登入。需要帳號的話，請聯絡系統管理員邀請你。」；沒有建立任何帳號，也沒有導向註冊頁</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> |
+| Google 回報 Email 未驗證 | <mark>沒有任何帳號連結這個 Google 帳號，Google 回報這個 Email 沒有驗證</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> | <mark>使用者用這個 Google 帳號登入</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> | <mark>顯示和「Google 帳號沒有對應的平台帳號」同一句說明，沒有任何文字說明是未驗證</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> |
+| 沒有設定寄信服務時 Google 沒有對應帳號仍是同一句 | <mark>這個部署沒有設定寄信服務，沒有任何帳號連結這個 Google 帳號，平台上也沒有 Email 相同的既有帳號</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> | <mark>使用者用這個 Google 帳號登入</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> | <mark>顯示同一句「無法用這個 Google 帳號登入。需要帳號的話，請聯絡系統管理員邀請你。」，沒有提到註冊</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> |
+| 已連結 Google 的帳號 Email 不同仍能登入 | <mark>某個帳號已連結這個 Google 帳號，平台上的 Email 與 Google 的 Email 不同</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> | <mark>使用者用這個 Google 帳號登入</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> | <mark>登入成功，進入儀表板；已連結的帳號不看 Email 是否相同</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> |
 | Google 按鈕的文字隨語言切換 | 目前是繁體中文 | 切換為英文 | 按鈕文字變成 `Continue with Google`，說明文字一起換 |
 | 切換語言整頁即時更新 | 目前是繁體中文 | 點語言切換 | 標題、欄位標籤、按鈕文字都變成英文，頁面沒有重新整理 |
 | 切換語言可以切回來 | 目前是英文 | 點語言切換 | 全部文字與說明文字都回到繁體中文 |
@@ -282,7 +285,7 @@ import Spec0101LoginFlow from '@notes/components/spec-01-01-login-flow'
 
 ## 待釐清
 
-**沒有未決問題。** 這一頁的十題全部定案：4 條來自來源自己**釘了日期的釐清紀錄**與 PRD、**Q1、Q2、Q3、Q4、Q8 於 2026-11-09、Q10 於 2026-11-26 由維護者裁定**，都在[§已確認決議](#已確認決議)。題號**只增不重排**，所以後續若有新題目從 Q11 起算。
+**沒有未決問題。** 這一頁的九題全部定案：4 條來自來源自己**釘了日期的釐清紀錄**與 PRD、**Q1、Q2、Q3、Q4、Q8 於 2026-11-09 由維護者裁定**，都在[§已確認決議](#已確認決議)。題號**只增不重排**，所以後續若有新題目從 Q10 起算。
 
 ## 已確認決議
 
@@ -360,19 +363,11 @@ import Spec0101LoginFlow from '@notes/components/spec-01-01-login-flow'
 
 > 理由：兩份來源有 11 個字串完全相同的舊編號（`FR-001`～`FR-006`、`FR-004A`、`SC-001`～`SC-004`），不加前綴會塌成同一列、分不出來源。前綴格式由 Issue #58 修好的檢查工具支援，`spec-writing` 的「搬移舊規格」第 5 點也這樣規定（#69）。
 
-### Q10. 用 Google 登入、但平台上沒有對應帳號時，會怎樣？（已定案，維護者裁定 2026-11-26）
-
-- [x] **拒絕**：回到登入頁，用既有的錯誤橫幅顯示一句說明，不建立帳號、不導向註冊
-- [ ] 導向註冊頁
-
-> 這一題的決議與理由寫在 [規格 01-05 §已確認決議](./05-login-state.mdx#已確認決議) Q18，本頁不重寫；本頁只寫畫面怎麼呈現（§規格 › 用 Google 帳號登入第 4 條）。
-> 來源：[Issue #705 的裁定](https://github.com/label-suite/label-suite/issues/705#issuecomment-7185302940)
-
 ## 變更紀錄
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| [#705](https://github.com/label-suite/label-suite/issues/705) | 2026-11-26 | 頁首、§業務流程（用 Google 帳號登入）、§規格（用 Google 帳號登入）、§卡控機制、§邊界情況、§驗收標準、§已確認決議 | 用 Google 登入、但平台上沒有對應帳號時，規格沒有寫；#683 的標示清掉 | 回到登入頁，用既有的錯誤橫幅顯示同一句說明，不建立帳號、不導向註冊；Google 回報 Email 未驗證也是同一句，不因這個部署有沒有設定寄信服務而不同。新增例外流程 E2、兩條 Scenario，prototype 加 `?sim_google_no_account=1`；決議見 [規格 01-05](./05-login-state.mdx#已確認決議) Q18，本頁 Q10 只指過去 | 見 01-05 Q18（維護者裁定 2026-11-26） |
+| [#705](https://github.com/label-suite/label-suite/issues/705) | 2026-11-26 | 頁首、§業務流程（用 Google 帳號登入）、§規格（用 Google 帳號登入）、§卡控機制、§邊界情況、§驗收標準 | 用 Google 登入、但沒有對應帳號時，規格沒有寫；#683 的標示清掉；流程圖元件步驟 2 的內文原有一句已過時的「PRD 的上限是保留入口」 | 回到登入頁，用既有的錯誤橫幅顯示同一句說明，不建立帳號、不導向註冊；Google 回報 Email 未驗證也是同一句，不因這個部署有沒有設定寄信服務而不同。新增例外流程 E2、四條 Scenario，並把流程圖元件步驟 2 內文那句過時的話拿掉，prototype 加 `?sim_google_no_account=1`；決議（含「沒有對應帳號」的定義）只寫在 [規格 01-05](./05-login-state.mdx#已確認決議) Q18，本頁不重寫 | 見 01-05 Q18（維護者裁定 2026-11-26） |
 | [#683](https://github.com/label-suite/label-suite/issues/683) | 2026-11-26 | 頁首、§目標、§規格（登入頁）、§卡控機制、§邊界情況、§驗收標準 | 卡片底部固定顯示「還沒有帳號？ 前往註冊」，不分部署 | 這個部署沒有設定寄信服務時，整列不顯示，其餘不變；決議寫在 [規格 01-02](./02-register.mdx#已確認決議) 的 Q10，本頁不重寫。既有四條提到「前往註冊」的 Scenario 加上「這個部署有設定寄信服務」的前提，另補一條「沒有設定寄信服務時登入頁不顯示前往註冊」 | 見 01-02 Q10（維護者裁定 2026-11-26） |
 | [#624](https://github.com/label-suite/label-suite/issues/624) | 2026-11-25 | §規格、§業務流程與§已確認決議 Q3 的連結、§已確認決議 Q1 的理由（從正文移入一段）、§卡控機制、§已確認決議 的順序、附錄 | §規格 依功能面向切成 10 個 `###`（登入頁的內容、用 Email 與密碼登入、欄位檢查與錯誤、登入失敗、密碼的顯示與隱藏、用 Google 帳號登入、送出中的狀態、導向其他頁面、語言切換、不同螢幕寬度的呈現），每節各嵌一次 prototype；正文夾著演變說明；決議引用幾乎每條都有；§已確認決議 依 Q1、2、3、4、8、5、6、7、9 排列 | 依使用者任務合成 5 個 `###`：**登入頁**（併入登入頁的內容、導向其他頁面）、**用 Email 與密碼登入**（併入欄位檢查與錯誤、登入失敗、密碼的顯示與隱藏、送出中的狀態）、用 Google 帳號登入、語言切換、不同螢幕寬度的呈現；prototype 只在 §規格 開頭嵌一次。「註冊頁原本抵銷不揭露的立場」移進 Q1 的理由；「PRD 已跟上」與兩條和決議理由逐字相同的理由句改由 Q4、Q3、Q8 的理由承載；決議引用只留在規則第一次出現的地方；§已確認決議 依題號排序。舊錨點 `#登入頁的內容`、`#導向其他頁面`、`#欄位檢查與錯誤`、`#登入失敗`、`#密碼的顯示與隱藏`、`#送出中的狀態` 不再存在，連進來的頁面已改連新錨點 | **無新決議，規則一條未改** |
 | [#415](https://github.com/label-suite/label-suite/issues/415) | 2026-11-18 | §使用角色 | 角色、權限與條件寫成條列 | 改成正典的三欄表格（角色／這一頁能做什麼／PRD §權限矩陣的上限），條件、理由與跨頁連結移到表格下方的條列。第三欄是**新增的資訊**：逐列指出 PRD §權限矩陣 的哪一列，對不到的寫出原因。形狀依 `spec-writing` 範本（[PR #417](https://github.com/label-suite/label-suite/pull/417)） | **無新決議，條文一字未改** |
