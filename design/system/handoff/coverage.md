@@ -52,7 +52,7 @@
 
 | 位置 | 名字從哪來 | 宣告新參數 |
 | :--- | :--- | ---: |
-| `task-detail.html:5048` | `URL_VIEW_STATE` | **16** |
+| `task-detail.html:5050` | `URL_VIEW_STATE` | **16** |
 | `annotation-workspace.config.js:1560` | `LIST_VIEW_STATE_KEYS` ＋ `LIST_IDENTITY_KEYS` | **6** |
 | `dataset-analysis-detail.html:2520` | `PROTOTYPE_ONLY_PARAMS` | 0（`s_state` 已在表上） |
 | `sidebar.js:732` | 列舉既有鍵 | 0 |
