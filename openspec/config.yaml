@@ -80,7 +80,7 @@ rules:
     - 第 9 面向「任務設定驅動」：這次的行為有沒有寫死某一種任務類型？新增任務類型要不要改核心程式？（Hard Rule 5）
     - 第 10 面向「測試集答案不外露」：標記員能到達的端點與畫面，payload 裡有沒有標準答案或測試集標記？（Hard Rule 6）
     - 每個決議寫出理由、日期與回修位置；改變需求的決議先用 spec-writing 回寫 docs/specs/ 的規格書
-    - 寫進規格書「已確認決議」的依據只有 docs/development/workflow/spec-migration.mdx §「已確認決議」的五種依據 那五種
+    - 寫進規格書「已確認決議」的依據只有 docs/development/workflow/spec-migration.mdx §「已確認決議」的五種依據
     - 不新增 proposal 沒有的功能，只釐清既有範圍
   specs:
     - 只寫 What，不寫 How；技術細節放 design 或 tasks

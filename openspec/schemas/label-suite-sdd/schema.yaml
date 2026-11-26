@@ -14,7 +14,7 @@ artifacts:
       規格書沒有業務流程時，才用 Mermaid flowchart 畫完整流程（happy path + 主要例外）並列入待決問題。
       只寫業務，不寫技術：不出現框架、資料表、端點名稱。
       待決問題一律**記進「待決問題」並繼續**，不要停下來問使用者、也不要自行假設：
-      所有需要維護者決定的事由 clarification 在那個那個停點次問完（本專案改掉 scaffold 的關卡 1）。
+      所有需要維護者決定的事由 clarification 在那個停點一次問完（本專案改掉 scaffold 的關卡 1）。
     requires: []
 
   - id: system-design

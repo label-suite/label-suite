@@ -23,7 +23,7 @@
 
 <!-- 每個需要維護者決定的項目一節；沒有就寫「無」。
      決議改變需求時，先用 spec-writing 改 docs/specs/ 的規格書，再回修 openspec 產出，並在這裡註明回寫的規格編號與章節。
-     決議寫進規格書的「已確認決議」時，依據只有 docs/development/workflow/spec-migration.mdx §「已確認決議」的五種依據 那五種。 -->
+     決議寫進規格書的「已確認決議」時，依據只有 docs/development/workflow/spec-migration.mdx §「已確認決議」的五種依據。 -->
 
 ### Q1. <問題標題>
 
