@@ -33,7 +33,7 @@ model: opus
 
 ## 設計前提
 
-- **框架與版本已定**（ADR-004 與 `architecture.mdx` §前端）：**React 19** 加 Vite 加 TypeScript strict 的 SPA，路由 React Router v6，伺服器狀態 TanStack Query
+- **框架與版本已定**（ADR-005 與 `architecture.mdx` §前端）：**React 19** 加 Vite 加 TypeScript strict 的 SPA，路由 React Router v6，伺服器狀態 TanStack Query
 - **目錄分層與元件庫也已定**（`architecture.mdx` §前端與 §決策紀錄）：`pages/` 加 `features/`、元件庫 **shadcn/ui**（元件放 `components/ui/`）。元件**以語意描述為主**（「主要按鈕」「資料表」「分頁器」），需要時可指名 shadcn/ui 的元件，但不貼實作程式碼。**不用 Storybook**，改用元件展示頁（列出各個 variant，並配一支完整性測試）
 - 圖示統一 **Lucide**（ADR-030，唯一圖示來源）；**只用** Lucide，不得用 emoji 或自己畫的 SVG 當圖示；例外只有品牌與 logo 標記（彩色 logo、banner、Google SSO 的 G）
 - 樣式只用 `tokens.css` 的**語意** token，**不寫色碼、不自訂間距**；需要新的語意時列為待決問題，不自行發明
