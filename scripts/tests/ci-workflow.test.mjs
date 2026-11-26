@@ -749,6 +749,24 @@ describe("C3: coverage", () => {
     assert.ok(steps.indexOf(upload) > requireStep("coverage", /check-coverage\.mjs\b/));
   });
 
+  test("the critical-path check reads the list and both reports after the JSON export", () => {
+    // login-auth-guard task 9.1, design D10: authentication and authorization at 90% branches.
+    const index = requireStep("coverage", /node scripts\/check-critical-coverage\.mjs\b/);
+    const step = job("coverage").steps[index];
+    for (const option of [
+      /--list critical-coverage\.json\b/,
+      /--backend backend\/coverage\.json\b/,
+      /--frontend frontend\/coverage\/coverage-summary\.json\b/,
+    ]) {
+      assert.match(step.run, option);
+    }
+    assert.ok(requireStep("coverage", /\bcoverage json\b/) < index);
+    assert.ok(requireStep("coverage", /check-coverage\.mjs\b/) < index);
+    assert.equal("working-directory" in step, false, "it runs from the repository root");
+    assert.equal("continue-on-error" in step, false);
+    assert.equal("if" in step, false);
+  });
+
   test("the job asks for no permission beyond the workflow's contents: read", () => {
     assert.equal("permissions" in job("coverage"), false);
     assert.deepEqual(workflow.permissions, { contents: "read" });
@@ -758,6 +776,7 @@ describe("C3: coverage", () => {
 describe("C9: scripts-tests", () => {
   const SCRIPT_TESTS = [
     "check-coverage",
+    "check-critical-coverage",
     "check-junit-skips",
     "check-security-headers",
     "ci-changed-paths",

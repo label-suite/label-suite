@@ -1014,6 +1014,12 @@ jobs:
           fi
           node scripts/check-coverage.mjs "${args[@]}"
 
+      # Authentication and authorization paths need 90% branch coverage in each
+      # tier, from the same combined backend data and frontend summary
+      # (login-auth-guard task 9.1, design D10; the list is critical-coverage.json).
+      - name: Check the critical-path branch coverage
+        run: node scripts/check-critical-coverage.mjs --list critical-coverage.json --backend backend/coverage.json --frontend frontend/coverage/coverage-summary.json
+
       # Uploaded after a failure too: a missing baseline fails the comparison but
       # still writes the suggested file, which is how the first baseline is made.
       - name: Upload the suggested baseline
@@ -1047,6 +1053,7 @@ jobs:
         run: |
           node --test \
             scripts/tests/check-coverage.test.mjs \
+            scripts/tests/check-critical-coverage.test.mjs \
             scripts/tests/check-junit-skips.test.mjs \
             scripts/tests/check-security-headers.test.mjs \
             scripts/tests/ci-changed-paths.test.mjs \

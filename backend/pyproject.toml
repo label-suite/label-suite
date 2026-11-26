@@ -157,3 +157,6 @@ allowed_importers = ["app.main"]
 [tool.coverage.run]
 source = ["app"]
 branch = true
+# Async SQLAlchemy runs each database call in a greenlet; without this, lines that run
+# after such a call are not recorded (login-auth-guard task 9.1).
+concurrency = ["greenlet", "thread"]

@@ -1,0 +1,26 @@
+{
+  "$comment": "Critical-path branch coverage (login-auth-guard design D10, testing-agent-rules T10). Checked by scripts/check-critical-coverage.mjs in the CI coverage job. Paths are relative to the repository root; a path ending in / is a directory. Answer isolation, scoring and IAA are not here yet (#111).",
+  "threshold": 90,
+  "items": [
+    {
+      "id": "authentication",
+      "name": "認證",
+      "backend": [
+        "backend/app/core/auth_secret.py",
+        "backend/app/core/tokens.py",
+        "backend/app/core/cookies.py",
+        "backend/app/core/passwords.py",
+        "backend/app/core/email_identity.py",
+        "backend/app/modules/account/service/",
+        "backend/app/oidc/google.py"
+      ],
+      "frontend": ["frontend/src/features/auth/", "frontend/src/api/session-refresh.ts"]
+    },
+    {
+      "id": "authorization",
+      "name": "授權與權限檢查",
+      "backend": ["backend/app/core/auth.py", "backend/app/core/csrf.py"],
+      "frontend": ["frontend/src/features/auth/route-guards.tsx"]
+    }
+  ]
+}
