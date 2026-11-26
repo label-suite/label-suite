@@ -251,6 +251,14 @@
 
     .email-change-btn:hover { background: var(--color-primary-soft-bg); }
 
+    /* label-suite/label-suite#704（規格 01-04 §規格 › 換 Email）：這個部署沒有設定寄信服務時，
+       「變更」不可點，列下方多一行說明。預設不顯示；只有 `?sim_no_mail=1` 時 JS 才啟用。 */
+    .email-change-btn[aria-disabled="true"] {
+      color: var(--color-text-soft);
+      cursor: not-allowed;
+    }
+    .email-change-btn[aria-disabled="true"]:hover { background: none; }
+
     /* label-suite/label-suite#195: same shape as .email-change-btn -- this page's
        idiom for a small inline text action -- in the error colour, because
        removing the photo discards something the user put there. */
@@ -792,11 +800,13 @@
               </span>
               <button class="email-change-btn" id="emailChangeBtn"
                       type="button"
-                      onclick="setState('emailChange')"
+                      onclick="handleEmailChangeOpen()"
                       aria-label="變更電子郵件">
                 <span id="labelEmailChange">變更</span>
               </button>
             </div>
+            <!-- 未設定寄信服務時的說明（#704）。預設隱藏。 -->
+            <p class="field-hint" id="emailNoMailHint" data-testid="email-no-mail-hint" hidden>這個 Label Suite 還沒有設定寄信服務，無法寄出驗證信，所以暫時不能自行變更 Email。需要變更的話，請聯絡系統管理員。</p>
           </div>
 
           <div class="btn-row">
@@ -1187,6 +1197,7 @@
         labelContact:            '聯絡方式',
         labelEmail:              '電子郵件',
         labelEmailChange:        '變更',
+        emailNoMailHint:         '這個 Label Suite 還沒有設定寄信服務，無法寄出驗證信，所以暫時不能自行變更 Email。需要變更的話，請聯絡系統管理員。',
         avatarRemoveLabel:       '移除頭像',
         avatarHintText:          'JPG, PNG 或 WebP，上限 5 MB',
         contactHint:             '可填寫電話、LINE 或其他聯絡方式',
@@ -1283,6 +1294,7 @@
         labelContact:            'Contact Info',
         labelEmail:              'Email',
         labelEmailChange:        'Change',
+        emailNoMailHint:         "This Label Suite has no mail service set up, so it can't send verification emails and you can't change your Email yourself for now. To change it, please ask a system administrator.",
         avatarRemoveLabel:       'Remove photo',
         avatarHintText:          'JPG, PNG, or WebP — max 5 MB',
         contactHint:             'Phone, LINE, or any other contact method',
@@ -1376,7 +1388,7 @@
         'pageTitle', 'pageSubtitle',
         'profileSectionTitle', 'profileSectionDesc',
         'prefSectionTitle', 'prefSectionDesc', 'prefAppearance',
-        'labelName', 'labelContact', 'labelEmail', 'labelEmailChange',
+        'labelName', 'labelContact', 'labelEmail', 'labelEmailChange', 'emailNoMailHint',
         'avatarHintText', 'avatarRemoveLabel', 'contactHint', 'saveProfileLabel',
         'pwSectionTitle', 'pwSectionDesc', 'ssoBannerText',
         'labelCurrentPw', 'labelNewPw', 'labelConfirmPw', 'newPwHint',
@@ -1600,7 +1612,18 @@
       clearEmailChangeErrors();
     }
 
+    /* label-suite/label-suite#704（規格 01-04 §規格 › 換 Email）：這個部署沒有設定寄信服務時，
+       自行換 Email 關閉。真實產品由後端告知並拒絕任何繞過畫面的送出；prototype 用
+       `?sim_no_mail=1` 模擬。沒帶參數 = 有設定寄信服務，畫面與以前完全相同。 */
+    const mailNotConfigured = new URLSearchParams(window.location.search).get('sim_no_mail') === '1';
+
+    function handleEmailChangeOpen() {
+      if (mailNotConfigured) return;
+      setState('emailChange');
+    }
+
     function handleEmailChangeSubmit() {
+      if (mailNotConfigured) return;
       const newEmail = document.getElementById('fieldNewEmail').value.trim();
       const emailRe  = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -1851,6 +1874,10 @@
     });
 
     /* ── Init ───────────────────────────────────────────────────── */
+    if (mailNotConfigured) {
+      document.getElementById('emailChangeBtn').setAttribute('aria-disabled', 'true');
+      document.getElementById('emailNoMailHint').hidden = false;
+    }
     applyLang(window.LabelSuiteSharedSidebar.getStoredLang());
     /* Point 6: the page comes back showing whatever was last saved. */
     refreshAvatarPreview();

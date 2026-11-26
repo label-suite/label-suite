@@ -9,7 +9,7 @@ updatedAt: '2026-11-26'
 
 # Label Suite PRD
 
-:badge[定稿]{variant="success"} :badge[變更 #683]{variant="warning" href="https://github.com/label-suite/label-suite/issues/683"}
+:badge[定稿]{variant="success"} :badge[變更 #704]{variant="warning" href="https://github.com/label-suite/label-suite/issues/704"}
 
 Label Suite 是給學術 NLP 研究團隊用的資料標記與品質評估平台：研究人員用設定組出標記任務，再由團隊在同一個平台完成試標、正式標記、審核與資料品質分析。
 
@@ -70,7 +70,7 @@ SUS 問卷在正式標記功能完成後就開始招募受試者，預留填答�
 
 | 角色 | 在系統裡主要做什麼 |
 | :--- | :--- |
-| :ref[平台成員]{id="term.platform-member"} | <mark>自行註冊（這個部署有設定寄信服務時；沒有設定時關閉自行註冊）</mark><sup>[#683](https://github.com/label-suite/label-suite/issues/683)</sup>或由系統管理員邀請加入；建立自己的任務、參與被指派的任務 |
+| :ref[平台成員]{id="term.platform-member"} | 自行註冊（這個部署有設定寄信服務時；沒有設定時關閉自行註冊）或由系統管理員邀請加入；建立自己的任務、參與被指派的任務 |
 | :ref[系統管理員]{id="term.system-admin"} | 管理平台帳號、系統角色與角色權限；可以看到所有任務的列表 |
 | :ref[Seeder 管理員]{id="term.seeder-admin"} | 平台部署時建立的第一位系統管理員，權限同系統管理員，但不能被停用、降級或移除 |
 | :ref[專案負責人]{id="term.project-leader"} | 建立任務的人自動取得；設定任務、指派成員、啟動試標與正式標記、確認一致性結果、匯出標記結果 |
@@ -129,7 +129,7 @@ R：Read（可讀取）　C：Create（可新增）　E：Edit（可編輯）　
 
 ### 範圍內
 
-- 帳號：Email 與密碼登入、註冊<mark>（這個部署有設定寄信服務時才開放）</mark><sup>[#683](https://github.com/label-suite/label-suite/issues/683)</sup>、用一次性連結設定密碼、個人設定（含頭像、外觀偏好、通知設定與連結 Google 帳號）、登入狀態與安全；登入頁的 Google SSO 本期接上
+- 帳號：Email 與密碼登入、註冊（這個部署有設定寄信服務時才開放）、用一次性連結設定密碼、個人設定（含頭像、外觀偏好、通知設定與連結 Google 帳號）、登入狀態與安全；登入頁的 Google SSO 本期接上
 - 儀表板：登入後依使用者在各任務的角色，彙整自己的任務並快速回到標記或審核
 - 任務管理：用任務設定建立任務（上傳 JSON 資料集），管理成員，推進 :ref[試標]{id="term.dry-run"} 與 :ref[正式標記]{id="term.official-run"}，刪除還是草稿的任務，任務完成後匯出 JSON／JSON-MIN
 - 標記作業：標記員依任務設定作答，審核員審核、處理爭議與仲裁
@@ -207,7 +207,7 @@ import PrdSiteMap from '@notes/components/prd-site-map'
 
 - 未登入時
   - 登入，含 Google SSO 入口（所有人）：見 [規格 01-01](./01-account/01-login.mdx)
-  - 註冊（所有人）：見 [規格 01-02](./01-account/02-register.mdx)<mark>；這個部署有設定寄信服務時才開放，沒有設定時登入頁不顯示入口、註冊頁改顯示說明</mark><sup>[#683](https://github.com/label-suite/label-suite/issues/683)</sup>
+  - 註冊（所有人）：見 [規格 01-02](./01-account/02-register.mdx)；這個部署有設定寄信服務時才開放，沒有設定時登入頁不顯示入口、註冊頁改顯示說明
   - 用一次性連結設定密碼（所有人）：見 [規格 01-03](./01-account/03-reset-password.mdx)
 - 登入後，從側欄進入
   - 儀表板（平台成員 (o)、系統管理員）：見 [規格 02-01](./02-dashboard/01-dashboard.mdx)
@@ -239,7 +239,7 @@ C4 model 第一層：把 Label Suite 當成一個整體，只看誰使用它、�
 id: prd-system-context
 type: interactive
 prompt: |
-  核心洞察：Label Suite 對外只有兩個依賴，而且都是可選的；兩個都沒設定時平台照樣能跑，只是 Google 按鈕退回 no-op、設定密碼連結改由部署者從伺服器 log 轉交、自行註冊關閉。
+  核心洞察：Label Suite 對外只有兩個依賴，而且都是可選的；兩個都沒設定時平台照樣能跑，只是 Google 按鈕退回 no-op、設定密碼連結改由部署者從伺服器 log 轉交、自行註冊與自行換 Email 關閉。
   互動：點人或系統看說明與關係（其餘連線壓暗）；「部署設定」切換 Google OIDC、Resend 是否設定，未設定的連線變灰虛線，Resend 未設定時亮出黃色虛線的替代路徑。
   圖形：C4 第一層。上排三種人（部署者、系統管理員、平台成員），中間 Label Suite，下排兩個可選外部系統（Google OIDC、Resend，虛線框）；Resend 寄信給使用者的線沿右側繞到平台成員。
   資料：與本節表格逐項一致（對象、類型、關係）；不畫第二層的內部元件。
@@ -249,17 +249,17 @@ status: generated
 
 import PrdSystemContext from '@notes/components/prd-system-context'
 
-<GeneratedFrame id="prd-system-context" type="interactive" prompt={"核心洞察：Label Suite 對外只有兩個依賴，而且都是可選的；兩個都沒設定時平台照樣能跑，只是 Google 按鈕退回 no-op、設定密碼連結改由部署者從伺服器 log 轉交、自行註冊關閉。\n互動：點人或系統看說明與關係（其餘連線壓暗）；「部署設定」切換 Google OIDC、Resend 是否設定，未設定的連線變灰虛線，Resend 未設定時亮出黃色虛線的替代路徑。\n圖形：C4 第一層。上排三種人（部署者、系統管理員、平台成員），中間 Label Suite，下排兩個可選外部系統（Google OIDC、Resend，虛線框）；Resend 寄信給使用者的線沿右側繞到平台成員。\n資料：與本節表格逐項一致（對象、類型、關係）；不畫第二層的內部元件。\n"} caption="點對象看關係；切換「部署設定」看外部整合沒設定時的樣子">
+<GeneratedFrame id="prd-system-context" type="interactive" prompt={"核心洞察：Label Suite 對外只有兩個依賴，而且都是可選的；兩個都沒設定時平台照樣能跑，只是 Google 按鈕退回 no-op、設定密碼連結改由部署者從伺服器 log 轉交、自行註冊與自行換 Email 關閉。\n互動：點人或系統看說明與關係（其餘連線壓暗）；「部署設定」切換 Google OIDC、Resend 是否設定，未設定的連線變灰虛線，Resend 未設定時亮出黃色虛線的替代路徑。\n圖形：C4 第一層。上排三種人（部署者、系統管理員、平台成員），中間 Label Suite，下排兩個可選外部系統（Google OIDC、Resend，虛線框）；Resend 寄信給使用者的線沿右側繞到平台成員。\n資料：與本節表格逐項一致（對象、類型、關係）；不畫第二層的內部元件。\n"} caption="點對象看關係；切換「部署設定」看外部整合沒設定時的樣子">
   <PrdSystemContext client:visible />
 </GeneratedFrame>
 
 | 對象 | 類型 | 和 Label Suite 的關係 |
 | :--- | :--- | :--- |
-| :ref[平台成員]{id="term.platform-member"} | 人 | 註冊<mark>（這個部署有設定寄信服務時）</mark><sup>[#683](https://github.com/label-suite/label-suite/issues/683)</sup>與登入；依任務角色建立任務、標記、審核、匯出標記結果 |
+| :ref[平台成員]{id="term.platform-member"} | 人 | 註冊（這個部署有設定寄信服務時）與登入；依任務角色建立任務、標記、審核、匯出標記結果 |
 | :ref[系統管理員]{id="term.system-admin"} | 人 | 管理平台帳號、系統角色與角色權限；包含部署時建立的 :ref[Seeder 管理員]{id="term.seeder-admin"} |
 | 部署者 | 人，不是系統角色 | 部署平台、建立 Seeder 管理員、直接匯入批次資料；Resend 未設定時，從伺服器 log 取得設定密碼連結轉給使用者 |
 | Google（OIDC） | 外部系統，可選 | 登入頁的 Google SSO；`GOOGLE_CLIENT_ID` 沒設定時按鈕退回 no-op，Email 與密碼登入照常可用 |
-| Resend | 外部系統，可選 | 寄出註冊驗證信、忘記密碼信、設定密碼信與任務邀請信（專案負責人在任務的成員管理以 Email 邀請成員，見[規格 03-03](./03-task-management/03-task-detail.mdx#成員管理)）；沒有設定 key 時，設定密碼連結改印在伺服器 log，由部署者轉給使用者<mark>，並且關閉自行註冊（驗證信寄不出去，訪客也沒有人能轉交連結），這種部署只能由系統管理員邀請帳號</mark><sup>[#683](https://github.com/label-suite/label-suite/issues/683)</sup> |
+| Resend | 外部系統，可選 | 寄出註冊驗證信、忘記密碼信、設定密碼信與任務邀請信（專案負責人在任務的成員管理以 Email 邀請成員，見[規格 03-03](./03-task-management/03-task-detail.mdx#成員管理)）；沒有設定 key 時，設定密碼連結改印在伺服器 log，由部署者轉給使用者，並且關閉自行註冊（驗證信寄不出去，訪客也沒有人能轉交連結），這種部署只能由系統管理員邀請帳號<mark>；也不開放自行換 Email（驗證信寄不出去），個人設定的「變更」不可點，要換請系統管理員改</mark><sup>[#704](https://github.com/label-suite/label-suite/issues/704)</sup> |
 
 - 範圍外的「開放其他系統串接與第三方整合」不在圖上：這期除了上面兩個可選整合，沒有其他外部系統
 - 平台內部的元件（前端、API、背景工作、資料庫）屬於 C4 第二層，見 [技術架構](../development/architecture.mdx)

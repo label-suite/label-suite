@@ -12,7 +12,7 @@
 
 | 視圖 | 怎麼走到 | 用到的元件 |
 | :--- | :--- | :--- |
-| `#state-default` | 開 `pages/account/profile.html` | [App Shell](../components/app-shell.md)、[Button](../components/button.md)（`.btn-primary`，`:803`）、[Input](../components/input.md)（`.field-hint`／`.field-error`）、[Toggle Switch](../components/toggle-switch.md)（通知設定，共 36 處）、[Avatar](../components/avatar.md)、[Password Eye Toggle](../components/password-eye-toggle.md)（`:871`）、[Skeleton](../components/skeleton.md)（49 處） |
+| `#state-default` | 開 `pages/account/profile.html` | [App Shell](../components/app-shell.md)、[Button](../components/button.md)（`.btn-primary`，`:813`）、[Input](../components/input.md)（`.field-hint`／`.field-error`）、[Toggle Switch](../components/toggle-switch.md)（通知設定，共 36 處）、[Avatar](../components/avatar.md)、[Password Eye Toggle](../components/password-eye-toggle.md)（`:881`）、[Skeleton](../components/skeleton.md)（49 處） |
 | `#state-avatar-preview` | 選一張圖或點「移除頭像」：**只改預覽，要按儲存才生效** | [Avatar](../components/avatar.md) ＋ `.avatar-remove-btn`（`:751`） |
 | `#state-google-linked` | 點「連結 Google 帳號」：第五個區塊切成已連結狀態 | `.google-account`／`.google-linked-row`／`.google-linked-check`／`.google-no-unlink`／`.google-status` |
 | `#toast-saved` | 改個人資料或通知設定後儲存 | [Toast](../components/toast.md)（本頁自己的 `.toast*`，見下） |
@@ -36,4 +36,4 @@
 
 ## 業務行為
 
-連回規格 [`01-account/04-profile.mdx`](../../../docs/specs/01-account/04-profile.mdx)。UXC-06（送出中的載入態與重複送出防護）在本頁有三處註解標記（`:347`、`:1528`、`:1571`），是全 prototype 引用 UXC-06 的唯一一頁。
+連回規格 [`01-account/04-profile.mdx`](../../../docs/specs/01-account/04-profile.mdx)。UXC-06（送出中的載入態與重複送出防護）在本頁有三處註解標記（`:355`、`:1540`、`:1583`），是全 prototype 引用 UXC-06 的唯一一頁。

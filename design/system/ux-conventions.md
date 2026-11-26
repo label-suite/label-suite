@@ -35,7 +35,7 @@
 - [Spinner](components/spinner.md)：取代送出鈕的文字，帶 `aria-label="載入中"`（`design/prototype/pages/account/login.html:689`）
 - [Button](components/button.md)：`.btn-loading` 以 `opacity: .7` ＋ `pointer-events: none` 表示送出中（`design/prototype/components-showcase.html:214`）
 
-引用處：`design/prototype/pages/account/profile.html:347`（「UXC-06 / MASTER Loading state: opacity-70 + spinner while pending」）、`:1528`（「loading state + double-submission guard while the (simulated) request runs」）、`:1571`。
+引用處：`design/prototype/pages/account/profile.html:355`（「UXC-06 / MASTER Loading state: opacity-70 + spinner while pending」）、`:1540`（「loading state + double-submission guard while the (simulated) request runs」）、`:1583`。
 
 **已知缺口**：`.btn-loading` 只關掉滑鼠（`pointer-events: none`），**沒有加 `disabled`**，所以鍵盤仍然按得動——防護只擋得住一半（[`design-gaps.md`](design-gaps.md) G-06）。
 
@@ -71,7 +71,7 @@
 遵守它的元件：
 
 - [Skeleton](components/skeleton.md)：A variant 的 `.skeleton-line.title` 220×20、`.body` 12px、`.body.short` 65%；B variant 的 `.skel-avatar` 72×72、`.skel-input` 42px、`.skel-btn` 90×40（`components-showcase.html:449`–`:451`、`:464`–`:467`）
-- [Avatar](components/avatar.md)：`account/profile` 的 `.avatar-preview` 與 `.skel-avatar` **都是 72×72**（`profile.html:149`、`:560`），骨架和載入後的頭像一樣大——這是本批次找到最乾淨地遵守 UXC-08 的一處
+- [Avatar](components/avatar.md)：`account/profile` 的 `.avatar-preview` 與 `.skel-avatar` **都是 72×72**（`profile.html:149`、`:568`），骨架和載入後的頭像一樣大——這是本批次找到最乾淨地遵守 UXC-08 的一處
 
 **這條約定解釋了為什麼 Skeleton 的尺寸不該 token 化**：它們是逐處量出來的，不是設計刻度。
 
