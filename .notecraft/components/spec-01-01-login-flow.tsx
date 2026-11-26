@@ -603,15 +603,19 @@ const FLOWS: Flow[] = [
       { id: "n1", lane: 0, col: 0, kind: "action", label: ["點 Google", "繼續"] },
       { id: "n2", lane: 1, col: 1, kind: "system", label: ["交給", "Google"] },
       { id: "n3", lane: 1, col: 2, kind: "decision", label: ["身分", "確認？"] },
-      { id: "n4", lane: 1, col: 3, kind: "system", end: true, label: ["進入", "儀表板"] },
-      { id: "n5", lane: 1, col: 4, kind: "system", exception: true, end: true, label: ["回到", "登入頁"] },
+      { id: "n6", lane: 1, col: 3, kind: "decision", label: ["有對應", "帳號？"] },
+      { id: "n4", lane: 1, col: 4, kind: "system", end: true, label: ["進入", "儀表板"] },
+      { id: "n5", lane: 1, col: 5, kind: "system", exception: true, end: true, label: ["回到", "登入頁"] },
+      { id: "n7", lane: 1, col: 6, kind: "system", exception: true, end: true, label: ["顯示說明", "不建帳號"] },
     ],
     edges: [
       { id: "a0", from: "s", to: "n1" },
       { id: "a1", from: "n1", to: "n2" },
       { id: "a2", from: "n2", to: "n3" },
-      { id: "a3", from: "n3", to: "n4", label: "是" },
+      { id: "a3", from: "n3", to: "n6", label: "是" },
+      { id: "a4", from: "n6", to: "n4", label: "是" },
       { id: "e1", from: "n3", to: "n5", exception: true, label: "否", exit: "bottom", enter: "bottom", via: laneBottom(1) - 8 },
+      { id: "e2", from: "n6", to: "n7", exception: true, label: "否", exit: "top", enter: "top", via: laneTop(1) - 8 },
     ],
     steps: [
       {
@@ -623,10 +627,10 @@ const FLOWS: Flow[] = [
       },
       {
         title: "Google 確認身分，回到平台並進入儀表板",
-        body: "本期真的接上 Google 帳號登入。⚠️ PRD 的上限是「保留入口」，本期接上是維護者 2026-11-09 的裁定；PRD 的改動由 Issue #85 處理。「怎麼把一個既有帳號連結到 Google 帳號」不在這一頁，在個人設定的第五個區塊。",
-        scenarios: ["點 Google 帳號登入"],
+        body: "本期真的接上 Google 帳號登入，但 Google 只登入或綁定既有帳號，不建立新帳號。確認身分後，系統看有沒有對應帳號（流程圖的「有對應帳號？」）：已連結這個 Google 帳號的人不論 Email 是否相同都能登入，Email 相同的既有帳號則自動綁定後登入。「怎麼把一個既有帳號連結到 Google 帳號」不在這一頁，在個人設定的第五個區塊。",
+        scenarios: ["點 Google 帳號登入", "已連結 Google 的帳號 Email 不同仍能登入"],
         ref: "主流程 2",
-        highlight: ["a3", "n4"],
+        highlight: ["a3", "n6", "a4", "n4"],
       },
       {
         title: "例外：在 Google 那一側取消或驗證不通過",
@@ -634,6 +638,13 @@ const FLOWS: Flow[] = [
         scenarios: ["Google 驗證沒通過回到登入頁"],
         ref: "E1",
         highlight: ["n3", "e1", "n5"],
+      },
+      {
+        title: "例外：沒有對應帳號",
+        body: "沒有任何帳號連結這個 Google 帳號，也沒有 Email 相同的既有帳號：回到登入頁，用既有的錯誤橫幅顯示說明，不建帳號、不導向註冊，說明對每一種拒絕都是同一句。沒有已連結的帳號、而 Google 回報 Email 未驗證時也是同一句，沒有設定寄信服務的部署也一樣。流程結束。",
+        scenarios: ["Google 帳號沒有對應的平台帳號", "Google 回報 Email 未驗證", "沒有設定寄信服務時 Google 沒有對應帳號仍是同一句"],
+        ref: "E2",
+        highlight: ["n6", "e2", "n7"],
       },
       {
         title: "結果：用 Google 帳號登入成功並前往儀表板",

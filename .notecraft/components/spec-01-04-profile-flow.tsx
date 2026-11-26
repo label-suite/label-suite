@@ -751,7 +751,7 @@ const FLOWS: Flow[] = [
         highlight: ["s", "a0", "n1", "a1", "n2"],
       },
       {
-        title: "替代：用 Google 帳號進來、帳號本來沒有密碼",
+        title: "替代：帳號已連結 Google、本來沒有密碼",
         body: "不顯示現有密碼欄，跳過那一道檢查，直接設定新密碼；設好之後也能用 Email 與密碼登入。接回主流程的新密碼檢查。",
         scenarios: ["Google 帳號不顯示現有密碼欄", "Google 帳號設定密碼"],
         ref: "A1",

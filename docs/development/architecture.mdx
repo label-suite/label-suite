@@ -163,7 +163,7 @@ CSRF cookie 刻意讓 JS 讀得到，是系統裡唯一非 `httpOnly` 的 cookie
 
 為什麼不引入外部 IdP、為什麼這樣綁定，見 [ADR-004 的 D4](adr/004-auth-and-security.mdx#d4-google-sso-直接走-oidc) 與 [D5](adr/004-auth-and-security.mdx#d5-google-登入綁定既有帳號的條件)。
 直接整合 OIDC（`authlib`），不引入外部 IdP；沒設 `GOOGLE_CLIENT_ID` 時按鈕退回 no-op，所以 SSO 是可選的。
-Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並在同一筆交易內把 `hashed_password` 設為 `null`、`credential_version` 加一、撤銷所有 session。
+Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並在同一筆交易內把 `hashed_password` 設為 `null`、`credential_version` 加一、撤銷所有 session。沒有任何帳號連結這個 Google 帳號、也沒有 email 相同的既有帳號，或沒有已連結的帳號、而 `email_verified` 不是 true，一律拒絕登入、不建立帳號；Google 只登入或綁定既有帳號。已連結的帳號不看 email 是否相同。
 
 ## API 契約
 
@@ -501,3 +501,4 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，�
 | 2026-11-26 | 後端只信任 Nginx 的固定位址轉發的來源標頭，兩層編排固定子網段並釘住 `frontend`（[§部署與維運](#部署與維運)）；Cloudflare 與 TLS 邊緣的限制歸到 ADR-008 的 Cloudflare TLS 待決 | —（原本沒有信任範圍，後端看到的來源位址都是 Nginx） | [#566](https://github.com/label-suite/label-suite/issues/566) |
 | 2026-11-26 | 沒設寄信 key 時關閉自行註冊，Lite 部署只能由系統管理員邀請，邀請沿用設定密碼連結印在 log 的降級路徑（[§部署與維運](#部署與維運)） | —（原本只在 §待決 第 2 列記為「自行註冊走不通」，降級路徑沒有涵蓋註冊驗證信） | [#683](https://github.com/label-suite/label-suite/issues/683) |
 | 2026-11-26 | 沒設寄信 key 時也不開放自行換 Email，要換請系統管理員改（[§部署與維運](#部署與維運)） | —（降級路徑只涵蓋設定密碼連結與註冊，沒有涵蓋換 Email 的驗證信） | [#704](https://github.com/label-suite/label-suite/issues/704) |
+| 2026-11-26 | 沒有帳號連結這個 Google 帳號、也沒有 email 相同的既有帳號時拒絕登入、不建立帳號（[§Google SSO](#google-sso)，理由見 [ADR-004 D5](adr/004-auth-and-security.mdx#d5-google-登入綁定既有帳號的條件)） | —（原本只寫 `email_verified` 不是 true 時拒絕，沒有寫沒有對應帳號的情形） | [#705](https://github.com/label-suite/label-suite/issues/705#issuecomment-7185302940) |

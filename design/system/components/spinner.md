@@ -37,7 +37,7 @@
 
 ## 鍵盤與焦點
 
-不可聚焦。`account/login#state-submitting` 的重現步驟寫明：送出後按鈕停用、文字換成帶 `aria-label="載入中"` 的 spinner（`login.html:682`–`:689`），所以有無障礙名稱。
+不可聚焦。`account/login#state-submitting` 的重現步驟寫明：送出後按鈕停用、文字換成帶 `aria-label="載入中"` 的 spinner（`login.html:696`–`:703`），所以有無障礙名稱。
 
 `forgot-password` 與 `reset-password` 另有 `.loading-status` 這個 class，待逐頁確認是不是同一套的 live region。
 

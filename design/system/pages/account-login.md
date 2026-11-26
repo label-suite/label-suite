@@ -14,7 +14,7 @@
 | :--- | :--- | :--- |
 | `#state-default` | 開 `pages/account/login.html` | [Auth Navbar](../components/auth-navbar.md)、[Language Toggle](../components/lang-toggle.md)、[Auth Card](../components/auth-card.md)、[Password Eye Toggle](../components/password-eye-toggle.md)、[Button](../components/button.md)（`.sso-btn`／`.login-btn`，見下）、[Divider](../components/divider.md)（`.divider`，見下） |
 | `#state-field-error` | 帳號或密碼留空／格式不符後送出 | 同上 ＋ [Input](../components/input.md) 的 `.field-error`，表單層級錯誤用 [Alert Banner](../components/alert-banner.md)（本頁的 class 是 `.error-banner`） |
-| `#state-submitting` | 送出登入 | 同上 ＋ [Spinner](../components/spinner.md)（`login.html:689`） |
+| `#state-submitting` | 送出登入 | 同上 ＋ [Spinner](../components/spinner.md)（`login.html:703`） |
 | `#sim-logged-in` | 加 `?sim_logged_in=1` | **無**。本頁只載 `sidebar.js` 用它的 `redirectIfLoggedIn()`（`pages/shared/sidebar.js:95`）直接導向 `/dashboard/dashboard`，不渲染任何外殼 |
 | `#sim-logged-out` | 加 `?sim_logged_out=1` | 同 `#state-default`；這個旗標存在的理由是登入成功後 `login.html` 會寫下 `labelsuite.loggedIn`，之後四個帳號頁都會被導走，而它們沒有側欄可以登出（`sidebar.js:92`） |
 

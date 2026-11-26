@@ -9,7 +9,7 @@ updatedAt: '2026-11-26'
 
 # 01-05 登入狀態與安全
 
-:badge[已定案]{variant="success"} :badge[變更 #196]{variant="warning" href="https://github.com/label-suite/label-suite/issues/196"} :badge[帳號]{variant="neutral"}
+:badge[已定案]{variant="success"} :badge[變更 #705]{variant="warning" href="https://github.com/label-suite/label-suite/issues/705"} :badge[帳號]{variant="neutral"}
 
 > 來源：舊 repo `specs/account/020-auth-session-security/spec.md`（33 條），釘在 `singyichen/label-suite@faf83356`，見 `docs/specs/legacy/01-05-login-state.ids` 的首行
 > 參考畫面：**無**。PRD §Site Map 把本頁列為「不是獨立頁面」——它定的是其他每一頁背後共用的規則，使用者不會「打開登入狀態與安全」這一頁
@@ -126,21 +126,21 @@ import Spec0105LoginStateFlow from '@notes/components/spec-01-05-login-state-flo
 4. 一段登入狀態結束的原因可能是：使用者自己登出、安全事件撤銷，或時間到了自然結束（見 [§登入狀態能撐多久](#登入狀態能撐多久)）
 
 - 這三種結束方式**使用者看到的都是回到登入頁**，但平台分得出差別，見 [§登出紀錄只記真正的登出](#登出紀錄只記真正的登出)
-- <mark>一段登入狀態的紀錄**最短保留一年、最長保留 13 個月**，到期怎麼清見 [§登入狀態紀錄的保留與到期清理](#登入狀態紀錄的保留與到期清理)（[§已確認決議](#已確認決議) Q17）</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup>
+- 一段登入狀態的紀錄**最短保留一年、最長保留 13 個月**，到期怎麼清見 [§登入狀態紀錄的保留與到期清理](#登入狀態紀錄的保留與到期清理)（[§已確認決議](#已確認決議) Q17）
 - 登入狀態怎麼存放、放在哪裡，不屬於規格；那是後續技術規劃的事
 
 #### 登入狀態紀錄的保留與到期清理
 
-<mark>一段登入狀態結束之後，它的紀錄還要留著，因為標記作業的工時與責任歷程引用它。</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup>
+一段登入狀態結束之後，它的紀錄還要留著，因為標記作業的工時與責任歷程引用它。
 
-1. <mark>紀錄從**那一段登入狀態結束（失效）的那一刻**起算，**最短保留一年**；這段期間不得清除任何欄位（[§已確認決議](#已確認決議) Q17）</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup>
-2. <mark>紀錄**最長保留 13 個月**</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup>
-3. <mark>滿 13 個月、而且沒有任何標記作業引用它 → **整筆清除**</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup>
-4. <mark>滿 13 個月、但仍被標記作業引用 → **只清掉「登入來源資訊」**（來源網路位址與裝置資訊），**保留**開始時間、登出時間、這段登入狀態屬於哪個帳號與是否已失效</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup>
-5. <mark>第 4 條**不產生新的狀態**：沒有「紀錄已清除」這種結果，因為保留下來的欄位就是耗時的來源，所以到期之後耗時照樣算得出來（[規格 04-02 §耗時](../04-annotation/02-annotation-workspace.mdx#耗時)）；清掉個資也不會讓已失效的登入狀態復活，登出紀錄不變</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup>
-6. <mark>清除**每天進行一次**，所以一筆紀錄**最多比期限多保留一天**；這一天算在容許範圍內，不算違規</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup>
+1. 紀錄從**那一段登入狀態結束（失效）的那一刻**起算，**最短保留一年**；這段期間不得清除任何欄位（[§已確認決議](#已確認決議) Q17）
+2. 紀錄**最長保留 13 個月**
+3. 滿 13 個月、而且沒有任何標記作業引用它 → **整筆清除**
+4. 滿 13 個月、但仍被標記作業引用 → **只清掉「登入來源資訊」**（來源網路位址與裝置資訊），**保留**開始時間、登出時間、這段登入狀態屬於哪個帳號與是否已失效
+5. 第 4 條**不產生新的狀態**：沒有「紀錄已清除」這種結果，因為保留下來的欄位就是耗時的來源，所以到期之後耗時照樣算得出來（[規格 04-02 §耗時](../04-annotation/02-annotation-workspace.mdx#耗時)）；清掉個資也不會讓已失效的登入狀態復活，登出紀錄不變
+6. 清除**每天進行一次**，所以一筆紀錄**最多比期限多保留一天**；這一天算在容許範圍內，不算違規
 
-- <mark>清除機制本身怎麼排程、怎麼實作，不屬於規格</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup>
+- 清除機制本身怎麼排程、怎麼實作，不屬於規格
 
 #### 登入狀態能撐多久
 
@@ -340,7 +340,7 @@ import Spec0105LoginStateFlow from '@notes/components/spec-01-05-login-state-flo
 
 #### 沒有本地密碼的帳號
 
-1. 用 Google 帳號註冊或登入進來的人 → 帳號上可以**沒有**密碼
+1. <mark>連結了 Google 帳號的人 → 帳號上可以**沒有**密碼；Google 只登入或綁定**既有**帳號，不能建立新帳號（[§已確認決議](#已確認決議) Q18）</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup>
 2. 沒有密碼的人 → 不能用 Email 與密碼登入，只能用 Google
 3. 沒有密碼的人想補一組 → 走 [規格 01-04 §密碼設定](./04-profile.mdx#密碼設定)，那一頁不顯示現有密碼欄
 4. 本來有密碼的人連結了 Google 帳號 → 原本的密碼被清掉，又回到「沒有密碼」的狀態
@@ -358,11 +358,11 @@ import Spec0105LoginStateFlow from '@notes/components/spec-01-05-login-state-flo
 
 | 欄位 | 型別 | 必填 | 規則 | 使用者看到 |
 | :--- | :--- | :--- | :--- | :--- |
-| 登入狀態的開始時間 | 日期時間 | 是 | 絕對上限從這一刻起算；之後的使用不會改變它<mark>；到期後仍被標記作業引用時保留</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | 不顯示 |
+| 登入狀態的開始時間 | 日期時間 | 是 | 絕對上限從這一刻起算；之後的使用不會改變它；到期後仍被標記作業引用時保留 | 不顯示 |
 | 最後一次使用的時間 | 日期時間 | 是 | 閒置限制從這一刻起算；每次使用就更新 | 不顯示 |
-| 登入狀態是否已失效 | 是／否 | 是 | 任何原因造成的失效都算，含登出、安全撤銷與自然到期<mark>；到期後仍被標記作業引用時保留</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | 不顯示；失效後的下一次操作會被帶回登入頁 |
-| 登出時間 | 日期時間 | 否 | **只記可驗證的明確登出**；有值時該段登入狀態必然已失效，且登出時間不晚於失效時間<mark>；到期後仍被標記作業引用時保留</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | 不顯示 |
-| <mark>登入來源資訊</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | <mark>文字</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | <mark>否</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | <mark>來源網路位址與裝置資訊，屬個資；一段登入狀態結束滿 13 個月就清掉（見 [§登入狀態紀錄的保留與到期清理](#登入狀態紀錄的保留與到期清理)）</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | <mark>不顯示</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> |
+| 登入狀態是否已失效 | 是／否 | 是 | 任何原因造成的失效都算，含登出、安全撤銷與自然到期；到期後仍被標記作業引用時保留 | 不顯示；失效後的下一次操作會被帶回登入頁 |
+| 登出時間 | 日期時間 | 否 | **只記可驗證的明確登出**；有值時該段登入狀態必然已失效，且登出時間不晚於失效時間；到期後仍被標記作業引用時保留 | 不顯示 |
+| 登入來源資訊 | 文字 | 否 | 來源網路位址與裝置資訊，屬個資；一段登入狀態結束滿 13 個月就清掉（見 [§登入狀態紀錄的保留與到期清理](#登入狀態紀錄的保留與到期清理)） | 不顯示 |
 | Email | 文字 | 是 | 正規化後判重；上限 254 字，在正規化之後計算 | 登入、註冊與個人設定的 Email 欄 |
 | 系統角色 | 單選：平台成員、系統管理員 | 是 | 每次操作以當下的值判定，不以登入時的為準 | 側欄與個人設定顯示的角色 |
 | 帳號狀態 | 單選：啟用、停用 | 是 | 每次操作以當下的值判定；停用立刻讓所有登入狀態失效 | 使用者自己看不到；[規格 06-01](../06-admin/01-user-management.mdx) 的列表看得到 |
@@ -388,9 +388,9 @@ import Spec0105LoginStateFlow from '@notes/components/spec-01-05-login-state-flo
 | Email 正規化後超過 254 字 | 擋下 |
 | 登出時兩種登入資料都不能驗證 | 只清掉本機留著的資料，不聲稱已讓伺服器端失效，不記成登出 |
 | 想登出別人的某一台裝置 | 任何角色都沒有這個操作，只能停用整個帳號 |
-| <mark>登入狀態結束未滿一年</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | <mark>不得清除該段紀錄的任何欄位</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> |
-| <mark>登入狀態結束滿 13 個月，且沒有標記作業引用</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | <mark>整筆清除</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> |
-| <mark>登入狀態結束滿 13 個月，但仍被標記作業引用</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | <mark>只清掉登入來源資訊，保留開始時間、登出時間、這段登入狀態屬於哪個帳號與是否已失效</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> |
+| 登入狀態結束未滿一年 | 不得清除該段紀錄的任何欄位 |
+| 登入狀態結束滿 13 個月，且沒有標記作業引用 | 整筆清除 |
+| 登入狀態結束滿 13 個月，但仍被標記作業引用 | 只清掉登入來源資訊，保留開始時間、登出時間、這段登入狀態屬於哪個帳號與是否已失效 |
 | 登入連續失敗 10 次 | 擋住 30 分鐘；訊息不透露帳號存不存在 |
 | 同一個人每小時申請重設密碼超過 5 次 | 擋住到下一個小時；訊息不透露帳號存不存在 |
 | 延續登入狀態失敗 | 不計次，直接要求重新登入 |
@@ -416,9 +416,9 @@ import Spec0105LoginStateFlow from '@notes/components/spec-01-05-login-state-flo
 | 管理員邀請時用的信箱和別人只差大小寫 | 擋下，顯示這個 Email 已被使用 |
 | 疑似被盜用而所有裝置一起被登出 | 每一台都回到登入頁，顯示「驗證失敗，請重新登入」 |
 | 連結 Google 帳號之後想用密碼登入 | 登不進來，因為原本的密碼已被清掉；要先自己設一組 |
-| <mark>一段登入狀態剛好結束滿 13 個月</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | <mark>清除每天進行一次，最多多留一天；超過那一天仍留著就是違規</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> |
-| <mark>紀錄到期的當天，標記作業仍引用它</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | <mark>只清登入來源資訊，時間欄位保留</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> |
-| <mark>紀錄的登入來源資訊已被清掉，有人查看那段工作的耗時</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | <mark>耗時照樣算得出來，沒有「紀錄已清除」的顯示</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> |
+| 一段登入狀態剛好結束滿 13 個月 | 清除每天進行一次，最多多留一天；超過那一天仍留著就是違規 |
+| 紀錄到期的當天，標記作業仍引用它 | 只清登入來源資訊，時間欄位保留 |
+| 紀錄的登入來源資訊已被清掉，有人查看那段工作的耗時 | 耗時照樣算得出來，沒有「紀錄已清除」的顯示 |
 | 手機掉了、但使用者記得密碼 | 他**看不到**那一台、也不能遠端登出它；唯一的辦法是去個人設定改密碼，讓其他裝置一起失效 |
 
 ## 驗收標準
@@ -457,15 +457,15 @@ import Spec0105LoginStateFlow from '@notes/components/spec-01-05-login-state-flo
 | 同一個字的不同寫法也視為同一個 | 平台已有某個含非英文字母的信箱 | 有人用同一個信箱的另一種寫法註冊 | 擋下，視為同一個信箱 |
 | 用大寫寫自己的 Email 登入 | 使用者註冊時用的是小寫 | 用全大寫輸入同一個信箱登入 | 登入成功 |
 | 正規化後超過上限就拒絕 | 使用者輸入的信箱正規化後超過 254 字 | 送出 | 擋下 |
-| 沒有本地密碼的人只能用 Google | 帳號是用 Google 註冊的、沒有密碼 | 用 Email 與密碼登入 | 登不進來 |
+| 沒有本地密碼的人只能用 Google | <mark>帳號已連結 Google、沒有密碼</mark><sup>[#705](https://github.com/label-suite/label-suite/issues/705)</sup> | 用 Email 與密碼登入 | 登不進來 |
 | 登入狀態自然到期不記成登出 | 一段登入狀態因為達到絕對上限或超過閒置限制而結束 | 查看這段登入狀態的登出紀錄 | 沒有登出時間 |
 | 安全撤銷不記成登出 | 一段登入狀態因為帳號被停用而失效 | 查看這段登入狀態的登出紀錄 | 沒有登出時間 |
-| 未滿一年不清除 | <mark>一段登入狀態結束已經 11 個月</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | <mark>清除工作執行</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | <mark>該段紀錄的所有欄位都還在</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> |
-| 滿 13 個月且沒被引用就整筆清除 | <mark>一段登入狀態結束已滿 13 個月，沒有任何標記作業引用它</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | <mark>清除工作執行</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | <mark>整筆紀錄不存在</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> |
-| 滿 13 個月但被引用只清個資 | <mark>一段登入狀態結束已滿 13 個月，仍被標記作業引用</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | <mark>清除工作執行</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | <mark>登入來源資訊被清掉，開始時間、登出時間、這段登入狀態屬於哪個帳號與是否已失效都還在</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> |
-| 清掉個資後耗時照樣算得出來 | <mark>一段有明確登出的登入狀態已被清掉登入來源資訊</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | <mark>查看用它算出的耗時</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | <mark>耗時照樣顯示，沒有「紀錄已清除」的狀態</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> |
-| 清掉個資不讓登入狀態復活 | <mark>一段已失效的登入狀態已被清掉登入來源資訊</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | <mark>拿它去操作</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | <mark>被拒絕並帶回登入頁，登出時間不變</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> |
-| 超過期限最多多留一天 | <mark>一段登入狀態結束剛好滿 13 個月</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | <mark>清除工作每天執行一次</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> | <mark>最晚在一天之內被清；超過一天仍留著才算違規</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup> |
+| 未滿一年不清除 | 一段登入狀態結束已經 11 個月 | 清除工作執行 | 該段紀錄的所有欄位都還在 |
+| 滿 13 個月且沒被引用就整筆清除 | 一段登入狀態結束已滿 13 個月，沒有任何標記作業引用它 | 清除工作執行 | 整筆紀錄不存在 |
+| 滿 13 個月但被引用只清個資 | 一段登入狀態結束已滿 13 個月，仍被標記作業引用 | 清除工作執行 | 登入來源資訊被清掉，開始時間、登出時間、這段登入狀態屬於哪個帳號與是否已失效都還在 |
+| 清掉個資後耗時照樣算得出來 | 一段有明確登出的登入狀態已被清掉登入來源資訊 | 查看用它算出的耗時 | 耗時照樣顯示，沒有「紀錄已清除」的狀態 |
+| 清掉個資不讓登入狀態復活 | 一段已失效的登入狀態已被清掉登入來源資訊 | 拿它去操作 | 被拒絕並帶回登入頁，登出時間不變 |
+| 超過期限最多多留一天 | 一段登入狀態結束剛好滿 13 個月 | 清除工作每天執行一次 | 最晚在一天之內被清；超過一天仍留著才算違規 |
 | 登入連續失敗十次被擋 | 同一個人連續十次用錯的密碼登入 | 第十一次送出 | 被擋住 30 分鐘，訊息和帳號密碼錯誤一樣不透露帳號存不存在 |
 | 申請重設密碼每小時五次 | 同一個人在一小時內已申請五次 | 第六次送出 | 被擋住，訊息不透露帳號存不存在 |
 | 延續登入狀態失敗不計次 | 延續失敗 | 查看結果 | 直接要求重新登入，沒有累計次數也沒有鎖定 |
@@ -525,7 +525,7 @@ import Spec0105LoginStateFlow from '@notes/components/spec-01-05-login-state-flo
 > **這個已知限制要寫成明文**：這一頁通篇在講「其他裝置」，而使用者看不到有哪些、也不能主動處理；**手機掉了的人唯一的辦法是去改密碼**，用副作用達到目的——而登入狀態的絕對上限是 90 天（Q1），所以那個情況可以持續很久。
 > 要提供的話有 **PRD 連帶影響**（模組地圖要多一個頁面或在 01-04 多一個區塊）。這一項**不在 [Issue #85](https://github.com/label-suite/label-suite/issues/85) 的範圍內**，那一單已於 2026-11-16 結案；要做時另開一張單（#183）。
 
-### Q6. 一段登入狀態的紀錄要保留多久？（已定案，維護者裁定 2026-11-09；<mark>最長期限部分已被 Q17 取代</mark><sup>[#196](https://github.com/label-suite/label-suite/issues/196)</sup>）
+### Q6. 一段登入狀態的紀錄要保留多久？（已定案，維護者裁定 2026-11-09；最長期限部分已被 Q17 取代）
 
 - [x] **依來源：被標記作業引用著的就留著，最短一年；最長期限之後再定**
 - [ ] 現在就定一個明確的保留期限
@@ -618,7 +618,7 @@ import Spec0105LoginStateFlow from '@notes/components/spec-01-05-login-state-flo
 - [ ] 每個帳號都必須有密碼
 
 > 理由：來源的 `FR-010` 明寫本地密碼可為空，表示沒有可用的本地密碼；`FR-006` 另外指向 [規格 01-04 §密碼設定](./04-profile.mdx#密碼設定)，由那一頁補設密碼。
-> 連結 Google 會清掉既有密碼（`FR-007`），所以這個狀態不只出現在用 Google 註冊的人身上（#73）。
+> 連結 Google 會清掉既有密碼（`FR-007`），所以這個狀態出現在連結了 Google 帳號的人身上（#73）。
 
 ### Q17. 一段登入狀態的紀錄最長保留多久？到期之後怎麼處理？（已定案，維護者裁定 2026-11-26）
 
@@ -631,10 +631,23 @@ import Spec0105LoginStateFlow from '@notes/components/spec-01-05-login-state-flo
 > 這一條**沒有新增「紀錄已清除」的狀態**：[規格 04-01](../04-annotation/01-annotation-list.mdx#已確認決議) 與 [規格 04-02](../04-annotation/02-annotation-workspace.mdx#已確認決議) 只需要寫明耗時的來源欄位在期限之後仍然保留（04-02 的 Q19）。
 > 來源：[Issue #196](https://github.com/label-suite/label-suite/issues/196#issuecomment-7184513423)
 
+### Q18. Google 可以建立新帳號嗎？用 Google 登入、但沒有對應帳號時會怎樣？（已定案，維護者裁定 2026-11-26）
+
+- [x] **不可以**：Google 只登入或綁定**既有**帳號；沒有對應帳號時，回到登入頁並顯示一句說明，不建立帳號、不導向註冊
+- [ ] 沒有對應帳號時導向註冊頁，或直接用 Google 的資料建立新帳號
+
+「沒有對應帳號」的意思（維護者同日另裁）：**沒有任何帳號連結了這個 Google 帳號，而且沒有 Email 相同的既有帳號**。已經連結過這個 Google 帳號的人，不論 Google 的 Email 與平台上的 Email 是否相同，都能用它登入。
+
+> 理由：平台只有兩條建立帳號的路：自行註冊（有設定寄信服務時，見 [規格 01-02 §已確認決議](./02-register.mdx#已確認決議) Q10 第 5 條，那裡先寫了 Google 不能建立新帳號）與系統管理員邀請（[規格 06-01](../06-admin/01-user-management.mdx)）。Google 是第三條登入方式，不是第三條建立帳號的路；「用 Google 帳號註冊」的字樣會被讀成第二條自行註冊，所以「沒有本地密碼的帳號」只出現在連結了 Google 的既有帳號上。
+> 畫面：Google 回報 Email 未驗證、又沒有已連結的帳號可登入時，與「沒有對應帳號」是同一句，不讓畫面變成查詢工具（與 [規格 01-01 §用 Email 與密碼登入](./01-login.mdx#用-email-與密碼登入)刻意不說帳號存不存在同一個立場）；句子也不因為這個部署有沒有設定寄信服務、開不開放自行註冊而不同。句子的文字與畫面只寫在 [規格 01-01 §用 Google 帳號登入](./01-login.mdx#用-google-帳號登入)。
+> 綁定既有帳號的條件（Google 回報這個 Email 已驗證才自動綁定）見 [ADR-004 D5](../../development/adr/004-auth-and-security.mdx#d5-google-登入綁定既有帳號的條件)。
+> 來源：[Issue #705 的裁定](https://github.com/label-suite/label-suite/issues/705#issuecomment-7185302940)；「沒有對應帳號」的定義見[這則留言](https://github.com/label-suite/label-suite/issues/705#issuecomment-7185779846)
+
 ## 變更紀錄
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#705](https://github.com/label-suite/label-suite/issues/705) | 2026-11-26 | 頁首、§規格 › 沒有本地密碼的帳號第 1 條、§驗收標準（沒有本地密碼的人只能用 Google）、§已確認決議 Q16 的理由與新增 Q18（含「沒有對應帳號」的定義） | 第 1 條寫「用 Google 帳號註冊或登入進來的人」，其餘兩處也說「用 Google 註冊」，暗示 Google 能建立新帳號；#196 的標示未清 | 第 1 條改成「連結了 Google 帳號的人」，並寫明 Google 只登入或綁定既有帳號；Scenario 的前提與 Q16 的理由同步改。#196 的標示清掉，內容不變 | Q18（維護者裁定 2026-11-26） |
 | [#683](https://github.com/label-suite/label-suite/issues/683) | 2026-11-26 | §Email 的識別規則（表格註冊那一列）、§邊界情況與§驗收標準各一處 | 註冊一律顯示「驗證信已寄出」，不分部署 | 加上「這個部署有設定寄信服務時」 | 無新決議（見 [規格 01-02](./02-register.mdx#已確認決議) Q10） |
 | [#196](https://github.com/label-suite/label-suite/issues/196) | 2026-11-26 | §規格 › 一次登入是一段登入狀態與新增的「登入狀態紀錄的保留與到期清理」、§資料欄位、§卡控機制、§邊界情況、§驗收標準、§已確認決議 Q6 與新增 Q17、§附錄 FR-001 列 | 紀錄最短保留一年，最長期限未定，並附一則非規範的指路說明紀錄被清掉時耗時顯示什麼。 | 最長保留 13 個月（從登入狀態結束起算）；到期沒被引用的整筆清除，被引用的只清登入來源資訊並保留開始時間、登出時間、這段登入狀態屬於哪個帳號與是否已失效；不新增「紀錄已清除」狀態；清除每天一次，最多多留一天；§資料欄位 新增「登入來源資訊」。刪掉那則指路說明，改由 04 兩頁各自說明。Q6 保留題號並標註被 Q17 取代。 | Q17（維護者裁定 2026-11-26） |
 | [#641](https://github.com/label-suite/label-suite/issues/641) | 2026-11-25 | §使用角色、§規格、§邊界情況、§已確認決議 Q6 的理由 | §規格 有 16 個 `###`，依規則逐條平鋪，正文夾著演變說明。 | 依使用者任務合成 7 個 `###`（原本 15 節成為其下的 `####`，標題、錨點與條號不變），演變說明改由 Q1～Q3、Q5、Q6 的理由承載，並把指錯的 Q15 改指 [規格 01-04](./04-profile.mdx#已確認決議)。 | **無新決議，規則一條未改** |

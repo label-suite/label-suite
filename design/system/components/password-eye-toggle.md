@@ -36,7 +36,7 @@
 
 原生 `<button>`，起始帶 `aria-label="顯示密碼"`（`login.html:464`）；確認密碼那一個是「顯示確認密碼」（`register.html:505`、`reset-password.html:521`），兩個欄位分得開。
 
-**標籤會跟著狀態走**：點擊時切換 `input.type` 並改寫 `aria-label`（`login.html:614`–`:620`），切換語言時也會依目前的顯示狀態重算（`:595`，`pwVisible ? t.eyeHide : t.eyeShow`）。這是 b1 少見的、把動態無障礙名稱做對的地方。
+**標籤會跟著狀態走**：點擊時切換 `input.type` 並改寫 `aria-label`（`login.html:624`–`:630`），切換語言時也會依目前的顯示狀態重算（`:608`，`pwVisible ? t.eyeHide : t.eyeShow`）。這是 b1 少見的、把動態無障礙名稱做對的地方。
 
 沒有用 `aria-pressed`；以切換 `aria-label` 承載狀態是可接受的替代做法，不另列為缺口。
 
