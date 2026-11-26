@@ -4799,6 +4799,7 @@ function interpolate(template, payload) {
     ANNOTATION_PROGRESS = cloneData(ANNOTATION_PROGRESS_BY_TASK[resolvedId] || (profile && profile.annotationProgress) || DEFAULT_ANNOTATION_PROGRESS);
     UNASSIGNED_ANNOTATION_ASSIGNMENTS = cloneData(UNASSIGNED_ANNOTATION_ASSIGNMENTS_BY_TASK[resolvedId] || (profile && profile.unassignedAssignments) || DEFAULT_UNASSIGNED_ANNOTATION_ASSIGNMENTS);
     WORK_LOG_ENTRIES = cloneData(WORK_LOG_ENTRIES_BY_TASK[resolvedId] || (profile && profile.workLogEntries) || DEFAULT_WORK_LOG_ENTRIES);
+    if (!TASK_NOT_FOUND) restorePersistedTaskMembers(resolvedId);
     if (EXPORT_HISTORY_BY_TASK[resolvedId]) {
       TASK_DATA.exportHistory = cloneData(EXPORT_HISTORY_BY_TASK[resolvedId]);
     }
@@ -4866,6 +4867,7 @@ function interpolate(template, payload) {
        before this existed and stays on cycle 1. */
     if (profile && profile.trialCycle) TASK_DATA.trialCycle = profile.trialCycle;
     if (profile && profile.closedCycles) TASK_DATA.closedCycles = cloneData(profile.closedCycles);
+    if (!TASK_NOT_FOUND) restorePersistedTaskEdits(resolvedId);
   }
 
   /* FR-028: not-found / forbidden keep the header with a fixed title; the task
@@ -5154,25 +5156,120 @@ function interpolate(template, payload) {
      status to decide the highest disclosable round, so that split-write
      window is a Data Fairness leak, not just a display glitch. */
   function persistTrialRunState() {
+    persistTaskState({
+      trialRounds: cloneData(TASK_DATA.trialRounds || []),
+      /* Q29: the cycle has to travel with the rounds. Without it a reload
+         resolves the open cycle to 1 -- the one that was closed -- so the
+         round numbers, the IAA readings and the table's separator labels all
+         come back inverted, and the reason the task was sent back is gone. */
+      trialCycle: getCurrentTrialCycle(),
+      closedCycles: cloneData(TASK_DATA.closedCycles || [])
+    });
+  }
+
+  /* label-suite/label-suite#698: the one writer of this task's shared record.
+     Every write -- a trial round, a settings save, a member change -- merges
+     its fields into the task's existing record and stamps the current status
+     in the SAME setItem, for the reason persistTrialRunState() gives above: a
+     reader must never see a new status beside old settings, or old rounds
+     beside a new status. Merging (not replacing) keeps a round write from
+     wiping the saved settings and vice versa. */
+  function persistTaskState(fields) {
     var taskListData = window.LabelSuiteTaskListData;
     try {
       var all = taskListData.loadTrialRunState();
-      all[TASK_DATA.taskId] = {
-        status: TASK_DATA.status,
-        trialRounds: cloneData(TASK_DATA.trialRounds || []),
-        /* Q29: the cycle has to travel with the rounds. Without it a reload
-           resolves the open cycle to 1 -- the one that was closed -- so the
-           round numbers, the IAA readings and the table's separator labels all
-           come back inverted, and the reason the task was sent back is gone. */
-        trialCycle: getCurrentTrialCycle(),
-        closedCycles: cloneData(TASK_DATA.closedCycles || [])
-      };
+      all[TASK_DATA.taskId] = Object.assign({}, all[TASK_DATA.taskId], fields, { status: TASK_DATA.status });
       window.localStorage.setItem(taskListData.trialRunStateKey, JSON.stringify(all));
     } catch (error) {
       /* localStorage unavailable (private mode, quota); state simply won't
          persist across reload/navigation, same graceful degradation as
          loadCreatedTasks() elsewhere in this file's data module. */
     }
+  }
+
+  function readPersistedTaskRecord(taskId) {
+    var taskListData = window.LabelSuiteTaskListData;
+    var all = taskListData && taskListData.loadTrialRunState ? taskListData.loadTrialRunState() : {};
+    var record = all[taskId];
+    return record && typeof record === 'object' ? record : {};
+  }
+
+  /* label-suite/label-suite#698: persists one settings section's save. A patch
+     has three halves, each for a different reader:
+       taskData -- TASK_DATA fields; resetTaskData() re-applies them last, so
+                   this page shows the saved values after a reload;
+       profile  -- task-detail.data.js profile fields, overlaid by that file
+                   for the annotation list and workspace (labels, guideline
+                   files, reviewer roster);
+       list     -- task-list.data.js entry fields (name, source file, output
+                   types, updated date) for the task list.
+     Halves accumulate across saves, so saving one section never resets
+     another. The same patch is applied to the in-memory profile and list
+     entry right away, so this page's own readers of those seeds agree with
+     what a reload would give. */
+  function persistTaskEdits(patch) {
+    var stamp = { updatedAt: TASK_DATA.updatedAt };
+    var listPatch = Object.assign({}, patch.list, { updatedAt: String(TASK_DATA.updatedAt || '').slice(0, 10) });
+    var taskDataPatch = Object.assign({}, patch.taskData, stamp);
+    var profilePatch = patch.profile || {};
+
+    var profiles = (window.LabelSuiteTaskDetailData && window.LabelSuiteTaskDetailData.profiles) || {};
+    if (profiles[TASK_DATA.taskId]) Object.assign(profiles[TASK_DATA.taskId], cloneData(profilePatch));
+    var listTasks = (window.LabelSuiteTaskListData && window.LabelSuiteTaskListData.tasks) || [];
+    listTasks.forEach(function(task) {
+      if (task.id === TASK_DATA.taskId) Object.assign(task, cloneData(listPatch));
+    });
+
+    var edits = readPersistedTaskRecord(TASK_DATA.taskId).edits || {};
+    persistTaskState({
+      edits: {
+        taskData: Object.assign({}, edits.taskData, cloneData(taskDataPatch)),
+        profile: Object.assign({}, edits.profile, cloneData(profilePatch)),
+        list: Object.assign({}, edits.list, cloneData(listPatch))
+      }
+    });
+  }
+
+  /* label-suite/label-suite#698: member management lives only in this page's
+     memory (TASK_MEMBERS, the unassigned / excluded pools and the progress
+     figures a removal moves work out of), so persist the four together; a
+     removal that kept the member gone but lost the unassigned work it created
+     would silently drop that work. */
+  function persistTaskMembers() {
+    persistTaskState({
+      members: {
+        roster: cloneData(TASK_MEMBERS),
+        unassignedAssignments: cloneData(UNASSIGNED_ANNOTATION_ASSIGNMENTS),
+        excludedAssignments: cloneData(EXCLUDED_ANNOTATION_ASSIGNMENTS),
+        annotationProgress: cloneData(ANNOTATION_PROGRESS)
+      }
+    });
+  }
+
+  /* label-suite/label-suite#698: read side of persistTaskMembers(); called
+     from resetTaskData() after the per-task seeds are cloned. */
+  function restorePersistedTaskMembers(taskId) {
+    var members = readPersistedTaskRecord(taskId).members;
+    if (!members || !Array.isArray(members.roster)) return;
+    TASK_MEMBERS = cloneData(members.roster);
+    if (Array.isArray(members.unassignedAssignments)) UNASSIGNED_ANNOTATION_ASSIGNMENTS = cloneData(members.unassignedAssignments);
+    if (Array.isArray(members.excludedAssignments)) EXCLUDED_ANNOTATION_ASSIGNMENTS = cloneData(members.excludedAssignments);
+    if (members.annotationProgress && Array.isArray(members.annotationProgress.rounds)) {
+      ANNOTATION_PROGRESS = cloneData(members.annotationProgress);
+    }
+  }
+
+  /* label-suite/label-suite#698: read side of persistTaskEdits()'s taskData
+     half; called last in resetTaskData() so it wins over the seed. A null
+     itemPairLabels records the save's `delete`. */
+  function restorePersistedTaskEdits(taskId) {
+    var edits = readPersistedTaskRecord(taskId).edits;
+    var taskDataPatch = edits && edits.taskData;
+    if (!taskDataPatch) return;
+    Object.keys(taskDataPatch).forEach(function(key) {
+      if (key === 'itemPairLabels' && taskDataPatch[key] === null) delete TASK_DATA.itemPairLabels;
+      else TASK_DATA[key] = cloneData(taskDataPatch[key]);
+    });
   }
 
   /* FR-013(3): a round created from a fully-submitted prior round must not
@@ -6772,6 +6869,35 @@ function getTaskTypeLabel() {
     TASK_DATA.datasetTotal = TASK_DATA.datasetRecords.length;
     TASK_DATA.taskTypeKey = resolveLegacyTaskTypeKey(TASK_DATA.taskCategories, TASK_DATA.taskInputTypes, state.selectedOutputTypes);
     TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
+    var overviewProfilePatch = {
+      taskCategories: TASK_DATA.taskCategories,
+      taskInputTypes: TASK_DATA.taskInputTypes,
+      outputs: TASK_DATA.outputs,
+      fieldRoleMap: TASK_DATA.fieldRoleMap,
+      list_title_field: TASK_DATA.list_title_field,
+      dialogue_fields: TASK_DATA.dialogue_fields,
+      prefill_fields: TASK_DATA.prefill_fields,
+      itemPairLabels: TASK_DATA.itemPairLabels || null,
+      datasetFileName: TASK_DATA.datasetFileName,
+      datasetRecords: TASK_DATA.datasetRecords,
+      datasetTotal: TASK_DATA.datasetTotal
+    };
+    persistTaskEdits({
+      taskData: Object.assign({
+        taskNameZh: TASK_DATA.taskNameZh,
+        taskNameEn: TASK_DATA.taskNameEn,
+        taskTypeKey: TASK_DATA.taskTypeKey,
+        datasetSourceZh: TASK_DATA.datasetSourceZh,
+        datasetSourceEn: TASK_DATA.datasetSourceEn
+      }, overviewProfilePatch),
+      profile: overviewProfilePatch,
+      list: {
+        nameZh: TASK_DATA.taskNameZh,
+        nameEn: TASK_DATA.taskNameEn,
+        sourceFile: TASK_DATA.datasetFileName,
+        outputTypes: TASK_DATA.outputs.map(function(out) { return out.type; })
+      }
+    });
 
     state.overviewEditMode = false;
     state.overviewDirty = false;
@@ -6878,6 +7004,17 @@ function getTaskTypeLabel() {
     TASK_DATA.isolationLastActor = state.samplingDraft.isolationLastActor;
     TASK_DATA.isolationLastUpdated = state.samplingDraft.isolationLastUpdated;
     TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
+    persistTaskEdits({
+      taskData: {
+        samplingMode: TASK_DATA.samplingMode,
+        samplingValue: TASK_DATA.samplingValue,
+        targetAgreementOverrides: TASK_DATA.targetAgreementOverrides,
+        minAnnotators: TASK_DATA.minAnnotators,
+        isolationEnabled: TASK_DATA.isolationEnabled,
+        isolationLastActor: TASK_DATA.isolationLastActor,
+        isolationLastUpdated: TASK_DATA.isolationLastUpdated
+      }
+    });
 
     state.samplingEditMode = false;
     state.samplingDirty = false;
@@ -7100,11 +7237,16 @@ function getTaskTypeLabel() {
     TASK_DATA.reviewerIds = state.reviewDraft.reviewerIds.slice();
     var arbitersChanged = TASK_DATA.arbiterIds.join('|') !== state.reviewDraft.arbiterIds.join('|');
     TASK_DATA.arbiterIds = state.reviewDraft.arbiterIds.slice();
-    /* Sync the profile only on change; a profile without arbiterIds means no arbiter (singyichen/label-suite#1146). */
-    var savedProfile = window.LabelSuiteTaskDetailData && window.LabelSuiteTaskDetailData.profiles &&
-      window.LabelSuiteTaskDetailData.profiles[TASK_DATA.taskId];
-    if (savedProfile && arbitersChanged) savedProfile.arbiterIds = TASK_DATA.arbiterIds.slice();
     TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
+    /* Sync the profile's arbiterIds only on change; a profile without arbiterIds means no arbiter (singyichen/label-suite#1146).
+       persistTaskEdits() applies the profile half in memory too, which is
+       where the old direct savedProfile.arbiterIds write now happens. */
+    var reviewProfilePatch = { reviewerIds: TASK_DATA.reviewerIds };
+    if (arbitersChanged) reviewProfilePatch.arbiterIds = TASK_DATA.arbiterIds;
+    persistTaskEdits({
+      taskData: { reviewerIds: TASK_DATA.reviewerIds, arbiterIds: TASK_DATA.arbiterIds },
+      profile: reviewProfilePatch
+    });
 
     state.reviewEditMode = false;
     state.reviewDirty = false;
@@ -7360,8 +7502,32 @@ function getTaskTypeLabel() {
     return true;
   }
 
+  /* label-suite/label-suite#698: the annotation workspace reads the task
+     profile's guidelineFiles, which carry each file's url/content; this page
+     shows names and types only, and not necessarily the same list. So the
+     save is carried over as a change -- the files removed here leave the
+     profile's list, the files added here join it -- and every untouched
+     profile file keeps its content. Built from the ANNOTATOR files only:
+     the reviewer guideline never reaches an annotator-facing list (Data
+     Fairness). */
+  function buildAnnotatorProfileGuidelineFiles(previousFiles, nextFiles) {
+    var previousNames = previousFiles.map(function(file) { return file.name; });
+    var nextNames = nextFiles.map(function(file) { return file.name; });
+    var profile = window.LabelSuiteTaskDetailData && window.LabelSuiteTaskDetailData.profiles &&
+      window.LabelSuiteTaskDetailData.profiles[TASK_DATA.taskId];
+    var kept = ((profile && profile.guidelineFiles) || []).filter(function(file) {
+      return !(previousNames.indexOf(file.name) >= 0 && nextNames.indexOf(file.name) < 0);
+    });
+    var keptNames = kept.map(function(file) { return file.name; });
+    var added = nextFiles.filter(function(file) {
+      return previousNames.indexOf(file.name) < 0 && keptNames.indexOf(file.name) < 0;
+    });
+    return cloneData(kept.concat(added));
+  }
+
   function saveGuidelineEdit() {
     if (!isGuidelineEditable() || !state.guidelineDraft) return;
+    var previousAnnotatorGuidelineFiles = getTaskGuidelineRoleFiles('annotator');
     var nextAnnotatorGuidelineText = (state.guidelineDraft.annotatorGuidelineText || '').trim();
     var nextReviewerGuidelineText = (state.guidelineDraft.reviewerGuidelineText || '').trim();
     if (state.lang === 'zh') {
@@ -7388,6 +7554,27 @@ function getTaskTypeLabel() {
     }
     TASK_DATA.guidelineUploaded = hasTaskGuidelineRoleContent('annotator') || hasTaskGuidelineRoleContent('reviewer');
     TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
+    var guidelineProfilePatch = {
+      guidelineFiles: buildAnnotatorProfileGuidelineFiles(previousAnnotatorGuidelineFiles, TASK_DATA.annotatorGuidelineFiles)
+    };
+    if (isForceGuidelineEditable()) guidelineProfilePatch.forceShowGuideline = TASK_DATA.forceGuideline;
+    persistTaskEdits({
+      taskData: {
+        annotatorGuidelineTextZh: TASK_DATA.annotatorGuidelineTextZh,
+        annotatorGuidelineTextEn: TASK_DATA.annotatorGuidelineTextEn,
+        reviewerGuidelineTextZh: TASK_DATA.reviewerGuidelineTextZh,
+        reviewerGuidelineTextEn: TASK_DATA.reviewerGuidelineTextEn,
+        annotatorGuidelineText: TASK_DATA.annotatorGuidelineText,
+        reviewerGuidelineText: TASK_DATA.reviewerGuidelineText,
+        annotatorGuidelineFiles: TASK_DATA.annotatorGuidelineFiles,
+        reviewerGuidelineFiles: TASK_DATA.reviewerGuidelineFiles,
+        guidelineText: TASK_DATA.guidelineText,
+        guidelineFiles: TASK_DATA.guidelineFiles,
+        forceGuideline: TASK_DATA.forceGuideline,
+        guidelineUploaded: TASK_DATA.guidelineUploaded
+      },
+      profile: guidelineProfilePatch
+    });
     state.guidelineEditMode = false;
     state.guidelineDirty = false;
     state.guidelineDraft = null;
@@ -7547,6 +7734,12 @@ function getTaskTypeLabel() {
     if ((state.taskInputTypes && state.taskInputTypes[0]) === 'item_pair') TASK_DATA.itemPairLabels = getItemPairLabels();
     else delete TASK_DATA.itemPairLabels;
     TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
+    var settingsPatch = { outputs: TASK_DATA.outputs, itemPairLabels: TASK_DATA.itemPairLabels || null };
+    persistTaskEdits({
+      taskData: settingsPatch,
+      profile: settingsPatch,
+      list: { outputTypes: TASK_DATA.outputs.map(function(out) { return out.type; }) }
+    });
 
     state.settingsEditMode = false;
     state.settingsDirty = false;
@@ -8058,6 +8251,7 @@ function getTaskTypeLabel() {
       lastActive: '-',
     });
     user.activeTaskCount = (user.activeTaskCount || 0) + 1;
+    persistTaskMembers();
     showToast(t('toastMemberUpdated'));
     trackEvent('prototype_member_added', { member_email: user.email, role: role, source: 'platform_search' });
     renderMemberManagement();
@@ -8171,6 +8365,7 @@ function getTaskTypeLabel() {
       lastActive: '-',
     });
     input.value = '';
+    persistTaskMembers();
     showToast(t('toastMemberInvited'));
     trackEvent('prototype_member_added', { member_email: email, role: roleSelect.value, source: 'email_invite' });
     renderMemberManagement();
@@ -8214,6 +8409,7 @@ function getTaskTypeLabel() {
     } else if (action.type === 'enable') {
       target.status = 'active';
     }
+    persistTaskMembers();
     showToast(t('toastMemberUpdated'));
     trackEvent('prototype_member_action_confirmed', { action_type: action.type, member_email: target.email || '' });
     closeMemberActionModal();
@@ -8820,6 +9016,7 @@ function getTaskTypeLabel() {
     if (target) {
       target.pending += item.sampleIds.length;
     }
+    persistTaskMembers();
     showToast(t('toastMemberUpdated'));
     renderAnnotationProgress();
   }
@@ -8831,6 +9028,7 @@ function getTaskTypeLabel() {
     item.excludedAt = new Date().toISOString();
     item.reason = t('excludedMetadataReason');
     EXCLUDED_ANNOTATION_ASSIGNMENTS.push(item);
+    persistTaskMembers();
     showToast(t('toastMemberUpdated'));
     renderAnnotationProgress();
   }

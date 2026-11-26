@@ -364,6 +364,11 @@
   tasks.forEach(function (task) {
     var persisted = trialRunState[task.id];
     if (persisted && persisted.status) task.status = persisted.status;
+    /* label-suite/label-suite#698: the list half of task-detail.html's saved
+     * settings (persistTaskEdits(): name, source file, output types, updated
+     * date) travels in the same record as the status above. */
+    var listEdits = persisted && persisted.edits && persisted.edits.list;
+    if (listEdits && typeof listEdits === 'object') Object.assign(task, listEdits);
   });
 
   global.LabelSuiteTaskListData = {
