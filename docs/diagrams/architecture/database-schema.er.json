@@ -1,8 +1,8 @@
 {
  "$schema": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/er-diagram-renderer/schema.json",
  "meta": {
-  "title": "Label Suite 候選資料表 ER 圖（37 張）",
-  "description": "**規劃結構，尚未部署。** 已落地業務表：**0**——`backend/` 不存在、`backend/alembic/versions/` 沒有任何 revision、也沒有 ORM model。要查「實際落地了什麼」，唯一的辦法是讀 Alembic revision 與資料庫 metadata，不是讀這張圖。\\n\\n本圖顯示 **37 張候選表、329 欄、38 個單欄 FK**。每一欄的中文意義、可空性與**規格來源**都來自[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)；哪些資料要存則來自[資料欄位盤點總帳](/notes/diagrams/architecture/data-field-inventory)。\\n\\n**這張圖畫不出來的東西有兩類，都在字典裡**：**複合 FK**（例如「父版本不得跨資料集」要 `(dataset_id, parent_version_id)` 兩欄一起比），以及**只能在應用層擋的限制**（例如版本來源不得形成循環、名冊的子集合關係）。逐條內容在字典各組的「組的關聯與限制」小節，以及幾張表自己的限制表裡。**圖上沒有線不代表沒有限制。**應用層的限制字典數得出來（**24 條落在 DB、22 條只能在應用層擋**，數法寫在字典 §十）；**複合 FK 刻意不寫條數**，理由同樣在 §十。\\n\\n**分析報告沒有表**：05-02 的 64 個欄位列全部即時計算，維護者 2026-11-11 裁定不建分析表。那是裁定的結果，不是漏畫。",
+  "title": "Label Suite 候選資料表 ER 圖（38 張）",
+  "description": "**規劃結構，尚未部署。** 已落地業務表：**0**——`backend/` 不存在、`backend/alembic/versions/` 沒有任何 revision、也沒有 ORM model。要查「實際落地了什麼」，唯一的辦法是讀 Alembic revision 與資料庫 metadata，不是讀這張圖。\\n\\n本圖顯示 **38 張候選表、341 欄、38 個單欄 FK**。每一欄的中文意義、可空性與**規格來源**都來自[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)；哪些資料要存則來自[資料欄位盤點總帳](/notes/diagrams/architecture/data-field-inventory)。\\n\\n**這張圖畫不出來的東西有兩類，都在字典裡**：**複合 FK**（例如「父版本不得跨資料集」要 `(dataset_id, parent_version_id)` 兩欄一起比），以及**只能在應用層擋的限制**（例如版本來源不得形成循環、名冊的子集合關係）。逐條內容在字典各組的「組的關聯與限制」小節，以及幾張表自己的限制表裡。**圖上沒有線不代表沒有限制。**應用層的限制字典數得出來（**27 條落在 DB、22 條只能在應用層擋**，數法寫在字典 §十）；**複合 FK 刻意不寫條數**，理由同樣在 §十。\\n\\n**分析報告沒有表**：05-02 的 64 個欄位列全部即時計算，維護者 2026-11-11 裁定不建分析表。那是裁定的結果，不是漏畫。",
   "source": "/notes/diagrams/architecture/data-table-dictionary",
   "backTo": "/notes/diagrams/architecture/data-field-inventory"
  },
@@ -76,7 +76,7 @@
   {
    "key": "run",
    "label": "發布與執行",
-   "description": "對應模組 03 加 04。資料責任：發布週期、試標回合、抽樣快照、執行紀錄、指派與排除。**全部是候選表，尚未進行資料庫遷移。**"
+   "description": "對應模組 03 加 04。資料責任：發布週期、試標回合、抽樣快照、執行紀錄、指派與排除、背景評分工作。**全部是候選表，尚未進行資料庫遷移。**"
   },
   {
    "key": "annotation",
@@ -1631,6 +1631,87 @@
     }
    ],
    "description": "**與指派名額分表，是為了避免「`assignee_membership_id` 是空的」被誤判成已排除。**\n\n**「不可撤回」在 DB 擋不住 DELETE。** 唯一限制保證不會有第二筆，但不保證沒人刪掉第一筆——要靠應用層不提供刪除路徑，或加一個拒絕 DELETE 的觸發器。\n\n**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)"
+  },
+  {
+   "name": "submission",
+   "label": "一次背景評分工作",
+   "group": "run",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "required",
+     "note": "評分工作主鍵；PK；(task_id, id) 另供複合 FK 父鍵",
+     "pk": true
+    },
+    {
+     "name": "task_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "同任務參照作用域；見下"
+    },
+    {
+     "name": "task_run_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "評分的那次執行；複合 FK (task_id, task_run_id) → task_run(task_id, id)。來源：回合由 task_run.trial_round_id 找到，所以不另存回合欄"
+    },
+    {
+     "name": "submitted_by_membership_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "觸發的成員；複合 FK (task_id, submitted_by_membership_id) → task_membership(task_id, id)。來源：同 annotation_record.author_membership_id，要留得住以哪個角色送出"
+    },
+    {
+     "name": "idempotency_key",
+     "type": "varchar",
+     "required": "required",
+     "note": "送出重試鍵；唯一 (task_run_id, idempotency_key)。來源：同 task_run.publication_idempotency_key，避免重複建立評分工作"
+    },
+    {
+     "name": "request_digest",
+     "type": "char(64)",
+     "required": "required",
+     "note": "請求內容摘要。來源：同一個 key 但內容不同時要擋下；不含答案"
+    },
+    {
+     "name": "status",
+     "type": "varchar(16)",
+     "required": "required",
+     "note": "工作狀態；CHECK 限 pending／running／done／failed；預設 pending。來源：status 端點回任務狀態；running 讓輪詢分得出還沒開始與正在跑，重試期間維持 running"
+    },
+    {
+     "name": "celery_task_id",
+     "type": "varchar",
+     "required": "nullable",
+     "note": "佇列的 task_id；入列前為空。來源：端點回 task_id；不叫 task_id，因為那個名字已是任務作用域"
+    },
+    {
+     "name": "failure_code",
+     "type": "varchar(64)",
+     "required": "nullable",
+     "note": "安全失敗代碼；CHECK status='failed' → failure_code IS NOT NULL。來源：不存內部路徑或答案（答案部分見 AGENTS.md 硬性規則 6）"
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "收到時間"
+    },
+    {
+     "name": "started_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "開始計算時間；入列時為空；worker 開始時寫一次（提案）"
+    },
+    {
+     "name": "finished_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "結束時間；CHECK status IN ('done','failed') → finished_at IS NOT NULL。來源：未完成不冒稱已結束"
+    }
+   ],
+   "description": "**一列代表一次背景評分工作**，記的是 [§非同步任務](/notes/development/architecture#非同步任務) 的 `parse_submission` → `load_answers` → `compute_metrics` → `write_results` 跑到哪、成不成功；它不存結果，也不存答案。\n\n**和另外兩張的關係**：多對一指向 `task_run`（複合 FK，同任務才接得上）；**不指向 `task_trial_iaa_result`**——那張的 PK 就是 `trial_round_id`，`write_results` 寫的是那一列，[ADR-003 D10](/notes/development/adr/003-backend-architecture#d10-背景計算的結果寫入做成冪等) 的結果寫入冪等落在它的 PK；本表的唯一鍵管的是「同一次送出別重複建工作」，是另一層。\n\n**這張表沒有規格條文可指**：它是維護者 2026-11-26 裁定新增的（見 [#685 的回覆](https://github.com/label-suite/label-suite/issues/685#issuecomment-7183496070)），結構由 [§非同步任務](/notes/development/architecture#非同步任務) 的流程與 ADR-003 D10 的冪等要求推出來，不是任何一頁規格的資料欄位。"
   },
   {
    "name": "annotation_record",
