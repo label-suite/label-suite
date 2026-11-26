@@ -151,7 +151,7 @@ updatedAt: '2026-11-26'
 5. **hook 的預設行為是 fail-open；Claude 有 opt-in 的 fail-closed 開關，Codex 沒有。** 兩邊在 hook 失敗、timeout 或輸出不合法時預設都讓動作照做。Claude 的 handler 欄位 `onFailure: "block"`（`command`、`http` 需 **v2.1.295**，`mcp_tool` 需 **v2.1.328**；本機 **2.1.330** 兩者都滿足）會讓「啟動失敗、exit 非 `0`／`2`、timeout、輸出無法解析」比照該事件的 exit `2`；它對 `Stop`、`SubagentStop`、`TaskCompleted`、`TeammateIdle` 與 `async` 背景 hook 無效。Codex 的官方文件沒有等價欄位。
    **承接**：H2 的包裝腳本自己負責 fail-closed（檢查器不存在或無法判斷就 exit `2`），兩個平台一致；真正不能漏的保護放 **branch protection 與 CI**。Claude 的註冊要不要再加 `onFailure: "block"` 未決，見 [§待決](#待決) 第 1 列。
 6. **平台權限層兩側都查完了，但查完不等於設好。** Claude 的 `permissions.deny` 有見過實例（參考來源那份 settings 擋 `.env.*`、`*.pem`、`*.key`、`*id_rsa*`、`credentials.json` 的寫入）；Codex 這一半於 2026-11-17 核對官方文件（`https://learn.chatgpt.com/docs/permissions`，runtime codex-cli 0.153.0）。Codex 的 permission profile 與舊的 sandbox 設定**互斥**，不得把 `permissions`、`default_permissions`、`sandbox_mode`、`sandbox_workspace_write` 並列成四個同時生效的鍵。**本 change 沒有設定任何一邊的權限層**，第 3 與第 8 條的承接因此都還是空的。
-   **承接**：列為實作 PR 的前置查核項。「平台權限控制」與「hook 攔截」要分清楚，而這一半還沒查完——**不在這份文件裡假裝查過了**。
+   **承接**：設定權限層不在本 change 的範圍內，要另開工作處理；在那之前，第 3 與第 8 條沒有實際的承接者。「平台權限控制」與「hook 攔截」要分清楚——兩側查完的是能力，**不是已經設好的保護**。
 7. **`.claude/` 與 `.codex/` 兩份設定有漂移風險。** 事件集合與工具名都不同，改一邊忘了另一邊不會有任何報錯。
    **承接**：**手寫兩份、由 H1 核對**，不做生成器。所以 H1 的環境檢查要同時核對兩份設定指向的腳本是否都存在、兩邊是否都實際生效（Claude 看 `disableAllHooks`，Codex 看 `[features] hooks` 與信任狀態）——一致性靠這道檢查，不靠結構保證。
 8. **Codex 的寫檔途徑沒有 hook 層的目標保護，而 Claude 有——這一項兩平台不對等。** `apply_patch` 與 `Bash` 共用 `tool_input.command`，沒有任何路徑欄位，`command` 的內部結構官方也未記載（見[§工具名稱](#工具名稱)）。所以 H2 的寫檔那組在 Codex 上無法判斷目標是什麼：它輸出一行 `NA:` 說明這條途徑沒有保護，然後放行，**不是**因為缺欄位就擋下每一次 `apply_patch`。Claude 的 `Edit`／`Write`／`NotebookEdit` 在 `tool_input` 直接給路徑，那一側擋得住。
@@ -354,3 +354,4 @@ Codex 的 `command` 欄位是**字串，不是陣列**——官方文件的範�
 | 2026-11-26 | H3 對 Codex `apply_patch` 改讀 `tool_input.command` 的檔案標頭找出本次改到的檔，讀不到時取 checkout 相對 `HEAD` 的變更；H2 仍不解析（[§H3](#h3-編輯後按路徑跑快速檢查)） | 事件模式只取路徑欄位，`apply_patch` 的候選清單是空的，H3 什麼都沒跑、Stop 時 H6 因缺證據擋下 | [#111](https://github.com/label-suite/label-suite/issues/111) |
 | 2026-11-26 | §能力缺口與承接新增第 9 條（linked worktree 載入不到 Codex 的 repo hook）與第 10 條（Codex 不顯示 exit `0` 的 stderr） | — | [#111](https://github.com/label-suite/label-suite/issues/111) |
 | 2026-11-26 | H3／H4／H7 的程式碼路由同時以目錄限定：`.py` 只收 `backend/`、`.ts`／`.tsx` 只收 `frontend/`，其他位置標 not applicable（[§H3](#h3-編輯後按路徑跑快速檢查)） | 只看副檔名，`e2e/`、`.semgrep/`、`.notecraft/` 的檔被交給兩個專案的工具而判為失敗 | 派工主 session 依維護者 2026-11-25 的授權裁定（記錄於 [#111](https://github.com/label-suite/label-suite/issues/111)） |
+| 2026-11-26 | 第 6 條的「承接」改寫為「設定權限層不在本 change 範圍內、第 3 與第 8 條暫無承接者」（[§能力缺口與承接](#能力缺口與承接)） | 標題已改成兩側查完，「承接」仍寫「列為實作 PR 的前置查核項……這一半還沒查完」，前後矛盾 | [#111](https://github.com/label-suite/label-suite/issues/111) |
