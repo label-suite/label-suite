@@ -197,8 +197,8 @@ Cookie 屬性、JWT 的欄位與任務角色不放進 JWT，見 [architecture.md
 | 限制 | 對選擇的影響 |
 | :--- | :--- |
 | Google 的驗證證明的是信箱的控制權 | 只有 Google 回報 `email_verified: true`，這個證明才成立 |
-| 來源的前提：當時的註冊不驗證 email 所有權，既有本地帳號什麼都沒證明 | 綁定時把 Google 當擁有者，丟掉本地帳號持有的所有憑證 |
-| 本 repo 的註冊與邀請都先驗證信箱 | 上一列的前提在本 repo 可能不成立，見 [§待決](#待決) |
+| 連結之後只認一種主要身分，可以被接管的入口越少越好 | 綁定時丟掉本地帳號持有的所有憑證，不讓密碼與 Google 兩個入口並存 |
+| [規格 01-04 §連結 Google 帳號 第 4 條](../../specs/01-account/04-profile.mdx#連結-google-帳號)與 [01-05 §四種改動讓所有裝置重新登入](../../specs/01-account/05-login-state.mdx#四種改動讓所有裝置重新登入)已寫明連結 Google 會清掉本地密碼 | 本決定與規格一致，不改規格 |
 
 ### 考慮過的選項
 
@@ -227,7 +227,7 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 
 ### 什麼情況要重新討論
 
-- [§待決](#待決) 的那一列有了結論之後，依結論重看「丟掉本地憑證」這一步
+- [規格 01-04 §連結 Google 帳號 第 4 條](../../specs/01-account/04-profile.mdx#連結-google-帳號)或 01-05 的四種改動改成不清掉本地密碼之後，重看「丟掉本地憑證」這一步
 
 ## D6 權限矩陣當授權輸入
 
@@ -333,16 +333,10 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 | D2 | 個人 repo ADR-021 的角色欄位修訂（Context 的落差說明、Decision、被否決的版本號方案、Cost、Consequences）；`credential_version` 只管高風險憑證變更，也出自同一份修訂 |
 | D3 | [#107 的留言](https://github.com/label-suite/label-suite/issues/107#issuecomment-6762365378)的 CSRF 裁定與四個要素；Origin 與 Referer 檢查出自個人 repo ADR-021 的 Consequences，它沒有記錄這個選項的好處與代價；`SameSite=Lax` 擋不住同站子網域出自 [architecture.mdx 的 §CSRF](../architecture.mdx#csrf)；本節的重新討論條件是推論，來源沒有記錄 |
 | D4 | 個人 repo ADR-035（Context 的限制表、Options Evaluated、Decision、Optional-integration guarantee、Reversal trigger、Consequences）；選項 A、B 的好處沒有記錄 |
-| D5 | 個人 repo ADR-035 的帳號綁定修訂（Account-linking strategy、Consequences）；選項 B、C 沒有記錄好處，C 也沒有記錄代價 |
+| D5 | 個人 repo ADR-035 的帳號綁定修訂（Account-linking strategy、Consequences）；來源以「註冊不驗證信箱」為由丟掉本地憑證，本 repo 的註冊與邀請都先驗證信箱，所以改採[維護者的裁定](https://github.com/label-suite/label-suite/issues/684)當理由；選項 B、C 沒有記錄好處，C 也沒有記錄代價 |
 | D6 | 個人 repo ADR-037（Context、Decision、Consequences）；來源沒有列出選項，D6 的選項 A、B 是從 Context 的兩種失敗情形推出的；快取規則出自 [security-agent-rules.mdx 的 S3](../rules/security-agent-rules.mdx#s3-授權的四段順序)；本節的重新討論條件是推論，來源沒有記錄 |
 | D7 | [#565 的本文與裁定留言](https://github.com/label-suite/label-suite/issues/565#issuecomment-7100090994)；規格 01-05 的 Q3；[ADR-003 的 D8](003-backend-architecture.mdx#d8-非同步任務用-celery-加-redis)；選項 A、B、C 的好處與 B、D 的代價來源沒有記錄；選項 A、B 的不採用或採用理由也沒有記錄；本節的重新討論條件是推論，來源沒有記錄 |
 | — | 個人 repo ADR-021 後來的修訂（token family 的資料表結構、30 秒寬限重發、email 的 Unicode 正規化、session 保留與刪除）、ADR-037 後來的修訂（permission key 的登錄與種子列、拒絕稽核的範圍、仲裁沿用審核 key），不在 [architecture.mdx](../architecture.mdx) 裡，本 ADR 不收；它們屬於資料庫與業務規格，由各自的 change 決定是否採用 |
-
-## 待決
-
-| # | 問題 | 卡住什麼 | 誰決定 |
-| :--- | :--- | :--- | :--- |
-| 1 | 本 repo 的註冊與邀請都先驗證信箱，個人 repo ADR-035「綁定時丟掉本地憑證」的前提是否仍成立 | [D5](#d5-google-登入綁定既有帳號的條件) 綁定時丟掉本地密碼那一步要不要保留 | 維護者，在做註冊或 Google SSO 的 change 時 |
 
 ## 決策紀錄
 
@@ -355,3 +349,4 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 | 2026-11-19 | 只在 `email_verified: true` 時自動綁定既有帳號，並丟掉本地密碼、撤銷所有 session（[D5](#d5-google-登入綁定既有帳號的條件)） | —（沿用個人 repo ADR-035 的帳號綁定修訂） | [#450](https://github.com/label-suite/label-suite/issues/450) |
 | 2026-11-19 | 權限矩陣是授權的必要輸入，依四步判定（[D6](#d6-權限矩陣當授權輸入)） | —（沿用個人 repo ADR-037） | [#450](https://github.com/label-suite/label-suite/issues/450) |
 | 2026-11-23 | 後端不做全域速率限制，只做登入失敗鎖定，失敗次數計在 Redis；全域上限日後交給反向代理層（[D7](#d7-不做全域速率限制登入失敗鎖定用-redis-計數)） | —（原本沒有 ADR 討論過） | [#565 留言](https://github.com/label-suite/label-suite/issues/565#issuecomment-7100090994) |
+| 2026-11-26 | 連結 Google 時維持清掉本地密碼，理由改為連結之後只認一種主要身分、減少可被接管的入口，與規格 01-04、01-05 一致（[D5](#d5-google-登入綁定既有帳號的條件)） | 來源「註冊不驗證信箱」的理由，本 repo 的註冊與邀請都先驗證信箱，不適用 | [#684](https://github.com/label-suite/label-suite/issues/684) |
