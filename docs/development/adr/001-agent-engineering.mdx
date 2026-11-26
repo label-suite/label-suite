@@ -101,7 +101,7 @@ agent 常在已經有同樣功能的地方再寫一份 helper、型別或元件�
 
 ### 背景
 
-同一個 hook 在 Claude Code 與 Codex 各要一份設定；要決定的是，用什麼方式讓兩份設定不漂移。
+同一個 hook 在 Claude Code 與 Codex 各要一份設定；要決定的是，用什麼方式讓兩份設定不漂移。hook 目前接上線的現況與承接見 [agent-hook-contract.mdx 的 §能力缺口與承接](../rules/agent-hook-contract.mdx#能力缺口與承接)。
 
 | 限制 | 對選擇的影響 |
 | :--- | :--- |
@@ -141,7 +141,7 @@ agent 常在已經有同樣功能的地方再寫一份 helper、型別或元件�
 
 ### 背景
 
-編輯後的快速檢查（H3）會產生診斷；要決定的是，檢查有結果之後，hook 要不要替 agent 把檔案修好。
+編輯後的快速檢查（H3）會產生診斷；要決定的是，檢查有結果之後，hook 要不要替 agent 把檔案修好。hook 目前接上線的現況與承接見 [agent-hook-contract.mdx 的 §能力缺口與承接](../rules/agent-hook-contract.mdx#能力缺口與承接)。
 
 | 限制 | 對選擇的影響 |
 | :--- | :--- |
@@ -181,7 +181,7 @@ H3 只回報診斷，不改檔、不自動 `git add`、不自動套用 formatter
 
 ### 背景
 
-H2 要在動作發生前擋下 `AGENTS.md` 硬性規則 2、3、10 禁止的命令；要決定的是，檢查器本身不存在或無法判斷時，動作要放行還是擋下。
+H2 要在動作發生前擋下 `AGENTS.md` 硬性規則 2、3、10 禁止的命令；要決定的是，檢查器本身不存在或無法判斷時，動作要放行還是擋下。hook 目前接上線的現況與承接見 [agent-hook-contract.mdx 的 §能力缺口與承接](../rules/agent-hook-contract.mdx#能力缺口與承接)。
 
 | 限制 | 對選擇的影響 |
 | :--- | :--- |
@@ -229,12 +229,6 @@ H2 兩邊都由腳本自己在無法判斷時 exit `2`、原因寫 stderr；不�
 | D3、D4、D5 | [agent-hook-contract.mdx 的決策紀錄](../rules/agent-hook-contract.mdx#決策紀錄)裡 2026-11-11 的對應列，以及該契約的 H1、H2、H3 與平台支援矩陣；理由只取自那份文件，沒有對應的個人 repo ADR 可對照 |
 | — | 個人 repo ADR-017（三層 agent 架構）與 ADR-033（OpenSpec 流程）談的是角色分工與流程，不是 D1、D2；它們在本 repo 已被取代，見 [architecture.mdx 的 §附錄：個人 repo ADR 的對照](../architecture.mdx#附錄個人-repo-adr-的對照) |
 
-## 待決
-
-| # | 問題 | 卡住什麼 | 誰決定 |
-| :--- | :--- | :--- | :--- |
-| 1 | D3、D4、D5 的背景要不要補上「hook 目前有沒有接上線」的現況，以及 agent-hook-contract.mdx 的 §能力缺口與承接 的承接內容 | 那兩處之後還會改寫（見 [agent-hook-contract.mdx 的 §能力缺口與承接](../rules/agent-hook-contract.mdx#能力缺口與承接)），內容還會變；本節先不描述 | 維護者 |
-
 ## 決策紀錄
 
 | 日期 | 決策 | 取代了什麼 | 來源 |
@@ -247,3 +241,4 @@ H2 兩邊都由腳本自己在無法判斷時 exit `2`、原因寫 stderr；不�
 | 2026-11-19 | 先搜尋再新增維持人工檢查加 PR 紀錄；元件索引與 hook 強制延後（[D1](#d1-先搜尋再新增)） | — | [#444](https://github.com/label-suite/label-suite/issues/444) |
 | 2026-11-19 | 這次改動會碰到的程式路徑內，錯誤的既有實作直接修（[D2](#d2-範圍內直接修正錯誤實作)） | R3「只改本次請求要求的程式」不再擋路徑內的錯誤實作；死碼照舊只提出來 | [#444 留言](https://github.com/label-suite/label-suite/issues/444) |
 | 2026-11-23 | D5 的重新討論條件改為「在本機實測 `onFailure: "block"` 確實擋下缺檔的 hook 之後」（[D5](#d5-h2-失敗時由腳本自己-exit-2)）；決定本身不變 | 原條件「本機 Claude Code 升到 v2.1.295 以上之後」：本機已是 2.1.330，該條件已成立 | [#536](https://github.com/label-suite/label-suite/issues/536) |
+| 2026-11-26 | D3、D4、D5 的背景不補 hook 的接線現況，只連到 [agent-hook-contract.mdx 的 §能力缺口與承接](../rules/agent-hook-contract.mdx#能力缺口與承接) | 原 §待決 第 1 列「要不要補上接線現況」 | [#689](https://github.com/label-suite/label-suite/issues/689) |
