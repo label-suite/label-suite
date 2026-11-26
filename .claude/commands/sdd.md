@@ -43,7 +43,7 @@ apply（接續，不停）
 13  CI 每個 job 都綠、審查無阻斷意見、PR 可合併 → 合併
 
 （PR 由實作者在 apply 期間開——Hard Rule 2 要求有 PR，開了之後把卡片移 In Review。
-驗收通過後**合併在 `/sdd` 的授權裡**（維護者 2026-11-19 裁定）；發版與手動關 issue 不在。）
+驗收通過後**合併在 `/sdd` 的授權裡**；發版與手動關 issue 不在。）
 ```
 
 每一步的角色、必讀與自我檢查寫在 `.claude/agents/<role>.md`；派工順序與那個停點寫在 `openspec/config.yaml`；**十個面向的定義在 `.claude/skills/clarify/SKILL.md` 的步驟 4**（`config.yaml` 只要求「十個面向都要有結論」並點名新增的第 9、10 個）。

@@ -57,7 +57,7 @@ text = text.replace(/\b(?:ghp_|github_pat_|sk-|xox[baprs]-)\S+/g, '***');
 //    absolute path long enough became `***`, and a checker whose whole job is
 //    to say which file it rejected stopped saying it. The cost is a base64
 //    blob whose every slash-separated run is under twenty characters, which is
-//    narrow next to naming no paths at all (maintainer's ruling, 2026-11-18).
+//    narrow next to naming no paths at all.
 //
 //    Not spanning `/` was not enough, because a single path segment can be
 //    twenty characters of its own. A macOS temporary directory always is:

@@ -43,7 +43,7 @@ model: opus
 - [ ] 看不到的資源回 **404**，沒有用 403 洩漏它存在；錯誤訊息沒有內部識別碼或堆疊
 - [ ] API 的 async session 與 worker 的 sync session **分離**，沒有跨請求或跨 task 共用可變 session
 - [ ] 符合 SOLID：單一職責、依賴注入、沒有循環依賴或萬能 Service
-- [ ] **目錄分層是模組內分層** `app/modules/<module>/`（2026-11-10 裁定），而且與該 change 的 `system-design.md` 一致
+- [ ] **目錄分層是模組內分層** `app/modules/<module>/`，而且與該 change 的 `system-design.md` 一致
 - [ ] request schema 有型別、範圍與未知欄位的驗證；query 參數有轉型
 - [ ] **operationId 符合「動詞加資源」**且全專案唯一
 - [ ] model 與 Alembic migration 一致，`downgrade()` 完整，**SQLite 與 PostgreSQL 兩層都能跑**

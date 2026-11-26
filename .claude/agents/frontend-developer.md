@@ -9,14 +9,14 @@ model: opus
 
 ## 先看清楚這一份的狀態
 
-版本、目錄分層、元件庫與 client 生成工具**都已經由維護者 2026-11-10 裁定**（見 `docs/development/architecture.mdx` §前端，裁定見 §決策紀錄）。所以照下面寫，不要再把它們當待決：
+版本、目錄分層、元件庫與 client 生成工具**都已經定案**（見 `docs/development/architecture.mdx` §前端與 §決策紀錄）。所以照下面寫，不要再把它們當待決：
 
 - 框架與版本已定：**React 19** 加 Vite 加 TypeScript strict，路由 React Router v6，伺服器狀態 TanStack Query（ADR-004 的 React 18 記為被覆寫）
 - **元件庫已定：shadcn/ui**，元件以原始碼形式放進 `components/ui/`（覆寫 ADR-016 的 `shared/ui/`）。需要的元件照 `ui-design.md` 的語意描述加入。**不用 Storybook**，改用元件展示頁：一頁只在開發時開的頁面，列出 `components/ui/` 與標記 widget 的各個 variant，並配一支完整性測試
 - **型別與 client 的生成工具已定：Orval**，由後端匯出的 `openapi.json` 產生到 `frontend/src/api/generated/`（TanStack Query hooks、型別、MSW mock）。**產物一律不手改**；Orval 的 mutator 就是那道單一 HTTP 邊界
 - **目錄分層已定：`pages/` 加 `features/`**（覆寫 ADR-011 的垂直功能切片）。照這個結構寫；該 change 的 `ui-design.md` 或 `design.md` 與它不一致時**停下回報**，不要自己另選一種
 
-上面每一項都是裁定，不是你能改的；真正還沒定的事照樣**停下回報**，不要自己拍板——那是那個停點要決定的事。
+上面每一項都已定案，不是你能改的；真正還沒定的事照樣**停下回報**，不要自己拍板——那是那個停點要決定的事。
 
 ## 必讀
 

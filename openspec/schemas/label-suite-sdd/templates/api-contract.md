@@ -3,7 +3,7 @@
 <!-- 前後端唯一的交接依據。沒有 API 變更時，整份只寫：本次無 API 變更。
      operationId 由 FastAPI 的 generate_unique_id_function 固定成「動詞加資源」（例 listUsers、getUser），不手寫也不逐個覆寫；
      這裡寫的必須與那個策略算出來的一致。
-     路徑前綴一律 /api/v1，成功回應包一層 envelope（兩項都是維護者 2026-11-10 裁定）。 -->
+     路徑前綴一律 /api/v1，成功回應包一層 envelope，兩項都已定案。 -->
 
 ## 端點總覽
 
