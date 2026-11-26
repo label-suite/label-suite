@@ -239,7 +239,7 @@ C4 model 第一層：把 Label Suite 當成一個整體，只看誰使用它、�
 id: prd-system-context
 type: interactive
 prompt: |
-  核心洞察：Label Suite 對外只有兩個依賴，而且都是可選的；兩個都沒設定時平台照樣能跑，只是 Google 按鈕退回 no-op、設定密碼連結改由部署者從伺服器 log 轉交。
+  核心洞察：Label Suite 對外只有兩個依賴，而且都是可選的；兩個都沒設定時平台照樣能跑，只是 Google 按鈕退回 no-op、設定密碼連結改由部署者從伺服器 log 轉交、自行註冊關閉。
   互動：點人或系統看說明與關係（其餘連線壓暗）；「部署設定」切換 Google OIDC、Resend 是否設定，未設定的連線變灰虛線，Resend 未設定時亮出黃色虛線的替代路徑。
   圖形：C4 第一層。上排三種人（部署者、系統管理員、平台成員），中間 Label Suite，下排兩個可選外部系統（Google OIDC、Resend，虛線框）；Resend 寄信給使用者的線沿右側繞到平台成員。
   資料：與本節表格逐項一致（對象、類型、關係）；不畫第二層的內部元件。
@@ -249,7 +249,7 @@ status: generated
 
 import PrdSystemContext from '@notes/components/prd-system-context'
 
-<GeneratedFrame id="prd-system-context" type="interactive" prompt={"核心洞察：Label Suite 對外只有兩個依賴，而且都是可選的；兩個都沒設定時平台照樣能跑，只是 Google 按鈕退回 no-op、設定密碼連結改由部署者從伺服器 log 轉交。\n互動：點人或系統看說明與關係（其餘連線壓暗）；「部署設定」切換 Google OIDC、Resend 是否設定，未設定的連線變灰虛線，Resend 未設定時亮出黃色虛線的替代路徑。\n圖形：C4 第一層。上排三種人（部署者、系統管理員、平台成員），中間 Label Suite，下排兩個可選外部系統（Google OIDC、Resend，虛線框）；Resend 寄信給使用者的線沿右側繞到平台成員。\n資料：與本節表格逐項一致（對象、類型、關係）；不畫第二層的內部元件。\n"} caption="點對象看關係；切換「部署設定」看外部整合沒設定時的樣子">
+<GeneratedFrame id="prd-system-context" type="interactive" prompt={"核心洞察：Label Suite 對外只有兩個依賴，而且都是可選的；兩個都沒設定時平台照樣能跑，只是 Google 按鈕退回 no-op、設定密碼連結改由部署者從伺服器 log 轉交、自行註冊關閉。\n互動：點人或系統看說明與關係（其餘連線壓暗）；「部署設定」切換 Google OIDC、Resend 是否設定，未設定的連線變灰虛線，Resend 未設定時亮出黃色虛線的替代路徑。\n圖形：C4 第一層。上排三種人（部署者、系統管理員、平台成員），中間 Label Suite，下排兩個可選外部系統（Google OIDC、Resend，虛線框）；Resend 寄信給使用者的線沿右側繞到平台成員。\n資料：與本節表格逐項一致（對象、類型、關係）；不畫第二層的內部元件。\n"} caption="點對象看關係；切換「部署設定」看外部整合沒設定時的樣子">
   <PrdSystemContext client:visible />
 </GeneratedFrame>
 

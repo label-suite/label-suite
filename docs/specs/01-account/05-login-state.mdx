@@ -4,7 +4,7 @@ description: '使用者登入後的登入狀態能撐多久、什麼時候會失
 category: '規格書'
 tags: [規格書, 帳號, 已定案]
 createdAt: '2026-11-05'
-updatedAt: '2026-11-25'
+updatedAt: '2026-11-26'
 ---
 
 # 01-05 登入狀態與安全
@@ -604,6 +604,7 @@ import Spec0105LoginStateFlow from '@notes/components/spec-01-05-login-state-flo
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| [#683](https://github.com/label-suite/label-suite/issues/683) | 2026-11-26 | §Email 的識別規則（表格註冊那一列） | 註冊一律顯示「驗證信已寄出」，不分部署 | 加上「這個部署有設定寄信服務時」 | 無新決議（見 [規格 01-02](./02-register.mdx#已確認決議) Q10） |
 | [#641](https://github.com/label-suite/label-suite/issues/641) | 2026-11-25 | §使用角色、§規格、§邊界情況、§已確認決議 Q6 的理由 | §規格 有 16 個 `###`，依規則逐條平鋪，正文夾著演變說明。 | 依使用者任務合成 7 個 `###`（原本 15 節成為其下的 `####`，標題、錨點與條號不變），演變說明改由 Q1～Q3、Q5、Q6 的理由承載，並把指錯的 Q15 改指 [規格 01-04](./04-profile.mdx#已確認決議)。 | **無新決議，規則一條未改** |
 | [#415](https://github.com/label-suite/label-suite/issues/415) | 2026-11-18 | §使用角色 | 角色、權限與條件寫成條列 | 改成正典的三欄表格（角色／這一頁能做什麼／PRD §權限矩陣的上限），條件、理由與跨頁連結移到表格下方的條列。第三欄是**新增的資訊**：逐列指出 PRD §權限矩陣 的哪一列，對不到的寫出原因。形狀依 `spec-writing` 範本（[PR #417](https://github.com/label-suite/label-suite/pull/417)） | **無新決議，條文一字未改** |
 | [#85](https://github.com/label-suite/label-suite/issues/85) | 2026-11-16 | §使用角色 的註、§已確認決議 Q7 與 Q8 的理由 | 三處把裝置清單與 01-04 的 PRD 描述都寫成「記在 #85」 | #85 已結案：01-04 的描述已落地；裝置清單**不在**那一單的範圍內，要做時另開單 | **無新決議**，條文一字未改 |
