@@ -201,7 +201,7 @@ AI 輔助流程（產生、評估、工具呼叫）的紀錄要存成什麼形�
 
 ### 決定
 
-AI 輔助流程記在只新增、不更新也不刪除的 `ai_runs` 與 `ai_run_events`：`ai_runs` 只在建立時寫一次，每次狀態轉換就新增一列 `ai_run_events`（`status`、`at`）；目前狀態取最新的事件，`completed_at` 是終態事件的時間。使用者接受、編輯或拒絕一個 AI 產出記在 `ai_runs`，不另寫 `audit_events`。`ai_runs` 與 `ai_run_events` 的欄位還沒有寫進[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)，兩張表的分界見 [architecture.mdx 的 §稽核與可追溯](../architecture.mdx#稽核與可追溯)。
+AI 輔助流程記在只新增、不更新也不刪除的 `ai_runs` 與 `ai_run_events`：`ai_runs` 只在建立時寫一次，每次狀態轉換就新增一列 `ai_run_events`（`status`、`at`）；目前狀態取最新的事件，`completed_at` 是終態事件的時間。`status` 的值是 `queued`、`running`、`succeeded`、`failed`、`cancelled`，後三者是終態；`ai_run_events` 另有可為 null 的 `payload`（json），由終態事件帶輸出與評估。使用者接受、編輯或拒絕一個 AI 產出記在 `ai_runs`，不另寫 `audit_events`。兩張表的欄位見[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)，兩張表的分界見 [architecture.mdx 的 §稽核與可追溯](../architecture.mdx#稽核與可追溯)。
 
 ### 後果
 
@@ -287,10 +287,10 @@ AI 輔助流程記在只新增、不更新也不刪除的 `ai_runs` 與 `ai_run_
 | 項目 | 做法 |
 | :--- | :--- |
 | 稽核事件的行為人 | 事件保留 `user_id`，畫面顯示成「已刪除的使用者 #短碼」，同一個人做過的事仍然串得起來；短碼怎麼產生未定 |
-| 匿名化帳號的狀態 | `users` 加 `anonymized_at`（`timestamptz`，可為 null）；個資欄位清掉之後，這個帳號不能再登入 |
+| 匿名化帳號的狀態 | `users` 加 `anonymized_at`（`timestamptz`，可為 null）；個資欄位清掉之後，這個帳號不能再登入；`email` 改寫成 `deleted-<id>@invalid`，`name` 改寫成「已刪除的使用者」 |
 | 清除工作的頻率 | 每天跑一次（Celery beat），實際保留最多只會比期限多一天 |
-| 版本撤回 | 只標記撤回，不刪除：版本加 `withdrawn_at` 與撤回原因；撤回後不能再指派到新任務，已經跑過的 run 與帶答案的歷史 JSON 照舊保存，撤回本身記一筆稽核 |
-| 刪除請求的記錄 | 另記在一張只存 `user_id` 與時間的小表；從備份還原之後，要先把這些刪除重新套用一次，才能恢復服務（見 [D9](#d9-資料備援只做正式層備份產出到獨立-volume)） |
+| 版本撤回 | 只標記撤回，不刪除：版本加 `withdrawn_at` 與 `withdrawal_reason`，定版之後只有這兩欄可以從 null 寫成一個值，其餘欄位仍不可變；撤回後不能再指派到新任務，已經跑過的 run 與帶答案的歷史 JSON 照舊保存，撤回本身記一筆稽核 |
+| 刪除請求的記錄 | 另記在同一個 PostgreSQL 裡一張只存 `user_id` 與時間的小表，不對 `users` 加 FK，並在備份之外另留一份；從備份還原之後，要先依那一份把這些刪除重新套用一次，才能恢復服務（見 [D9](#d9-資料備援只做正式層備份產出到獨立-volume)） |
 
 ### 後果
 
