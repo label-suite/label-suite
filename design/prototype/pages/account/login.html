@@ -483,7 +483,7 @@
         </button>
 
         <!-- Register row -->
-        <p class="register-row">
+        <p class="register-row" id="registerRow">
           <span id="registerText">還沒有帳號？</span>
           <a href="./register.html" id="registerLink" data-testid="register-link"> 前往註冊</a>
         </p>
@@ -559,6 +559,14 @@
     };
 
     let lang = window.LabelSuiteSharedSidebar.getStoredLang();
+
+    /* label-suite/label-suite#683（規格 01-01 §登入頁）：這個部署沒有設定寄信服務時，
+       自行註冊關閉，所以「還沒有帳號？ 前往註冊」整列不顯示，其餘不變。真實產品由
+       後端告知；prototype 用 `?sim_no_mail=1` 模擬，沒帶參數 = 有設定寄信服務，
+       畫面與以前完全相同。 */
+    if (new URLSearchParams(window.location.search).get('sim_no_mail') === '1') {
+      document.getElementById('registerRow').hidden = true;
+    }
     const getTrackingContext = () => ({ lang });
 
     function applyLang(l) {

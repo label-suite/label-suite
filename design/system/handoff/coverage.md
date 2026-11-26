@@ -52,7 +52,7 @@
 
 | 位置 | 名字從哪來 | 宣告新參數 |
 | :--- | :--- | ---: |
-| `task-detail.html:5048` | `URL_VIEW_STATE` | **16** |
+| `task-detail.html:5050` | `URL_VIEW_STATE` | **16** |
 | `annotation-workspace.config.js:1560` | `LIST_VIEW_STATE_KEYS` ＋ `LIST_IDENTITY_KEYS` | **6** |
 | `dataset-analysis-detail.html:2520` | `PROTOTYPE_ONLY_PARAMS` | 0（`s_state` 已在表上） |
 | `sidebar.js:732` | 列舉既有鍵 | 0 |
@@ -415,7 +415,7 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 | :--- | ---: | :--- |
 | 新增 | 0 | |
 | 移除 | 0 | |
-| 改寫 | 0 | 交付包引用的行號（`login.html:677` 的 `#loginBtnText`、`reset-password.html:548` 的 `successPanel`、`task-list.html:1219` 的 `TASK_LIST_DATA_READY`）都在原地替換的檔裡，行數不變；行數有變的只有 `tokens.css`，交付包沒有引用它的行號 |
+| 改寫 | 0 | 交付包引用的行號（`login.html:677` 的 `#loginBtnText`、`reset-password.html:548` 的 `successPanel`、`task-list.html:1219` 的 `TASK_LIST_DATA_READY`）都在原地替換的檔裡，行數不變；行數有變的只有 `tokens.css`，交付包沒有引用它的行號；本節的行號是 `6aa0a4c` 當時的位置（行號仍是 `6aa0a4c` 的位置），之後 prototype 的行數再變也不回頭改 |
 | `loads` 欄 | 0 | 沒有新增或移除載入的檔 |
 | 參數 | 0 | 沒有改讀網址參數的程式 |
 | 受影響 | 153 | 154 個視圖中有 153 個的畫面載入了變動的檔（`tokens.css` 140 個、`sidebar.css` 128 個、`task-config.css` 41 個，其餘各 1–7 個） |

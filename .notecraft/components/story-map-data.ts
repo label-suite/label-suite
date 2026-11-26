@@ -145,9 +145,9 @@ export const STORIES: Story[] = [
   // 查看儀表板
   { id: "S08", activity: "dashboard", text: "登入後直接看到符合自己任務角色的版面", roles: ALL, spec: "02-01" },
   { id: "S09", activity: "dashboard", text: "還沒有任務角色時，從三張行動入口卡知道下一步", roles: ["platform-member"], spec: "02-01" },
-  { id: "S10", activity: "dashboard", text: "按「快速繼續」回到這個任務第一筆還沒提交的資料", roles: ["annotator"], spec: "02-01" },
-  { id: "S11", activity: "dashboard", text: "按「快速審核」開到下一個可處理的審核單位", roles: ["reviewer"], spec: "02-01" },
-  { id: "S12", activity: "dashboard", text: "從「等待 IAA 確認」的數字點進已篩好的任務列表", roles: ["system-admin", "project-leader"], spec: "02-01" },
+  { id: "S10", activity: "dashboard", text: "按「快速繼續」回到這個任務第一筆還沒提交的資料", roles: ["annotator"], spec: "02-01", epicOverride: "E5" },
+  { id: "S11", activity: "dashboard", text: "按「快速審核」開到下一個可處理的審核單位", roles: ["reviewer"], spec: "02-01", epicOverride: "E5" },
+  { id: "S12", activity: "dashboard", text: "從「等待 IAA 確認」的數字點進已篩好的任務列表", roles: ["system-admin", "project-leader"], spec: "02-01", epicOverride: "E7" },
 
   // 建立任務
   { id: "S13", activity: "create", text: "只靠任務設定開一個標記任務，建立完成為它的專案負責人", roles: ALL, spec: "03-02" },

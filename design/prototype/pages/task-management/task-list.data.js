@@ -360,10 +360,34 @@
     }
   }
 
+  /* label-suite/label-suite#698: the keys task-detail.html's persistTaskEdits()
+   * may write into a record's edits.list / edits.profile halves. Every overlay
+   * copies only these keys out of the stored JSON, so a hand-edited or stale
+   * record cannot set a task's id or status, or reach __proto__. */
+  var TASK_EDIT_LIST_KEYS = ['nameZh', 'nameEn', 'sourceFile', 'outputTypes', 'updatedAt'];
+  var TASK_EDIT_PROFILE_KEYS = [
+    'taskCategories', 'taskInputTypes', 'outputs', 'fieldRoleMap', 'list_title_field',
+    'dialogue_fields', 'prefill_fields', 'itemPairLabels', 'datasetFileName', 'datasetRecords',
+    'datasetTotal', 'reviewerIds', 'arbiterIds', 'guidelineFiles', 'forceShowGuideline'
+  ];
+
+  function pickKeys(source, keys) {
+    var picked = {};
+    if (!source || typeof source !== 'object') return picked;
+    keys.forEach(function (key) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) picked[key] = source[key];
+    });
+    return picked;
+  }
+
   var trialRunState = loadTrialRunState();
   tasks.forEach(function (task) {
     var persisted = trialRunState[task.id];
     if (persisted && persisted.status) task.status = persisted.status;
+    /* label-suite/label-suite#698: the list half of task-detail.html's saved
+     * settings (persistTaskEdits(): name, source file, output types, updated
+     * date) travels in the same record as the status above. */
+    Object.assign(task, pickKeys(persisted && persisted.edits && persisted.edits.list, TASK_EDIT_LIST_KEYS));
   });
 
   global.LabelSuiteTaskListData = {
@@ -372,6 +396,9 @@
     /* issue singyichen/label-suite#850: single owner of the shared trial-run record's key and
      * read policy; task-detail.data.js and task-detail.html reuse these. */
     trialRunStateKey: TRIAL_RUN_STATE_KEY,
-    loadTrialRunState: loadTrialRunState
+    loadTrialRunState: loadTrialRunState,
+    taskEditListKeys: TASK_EDIT_LIST_KEYS,
+    taskEditProfileKeys: TASK_EDIT_PROFILE_KEYS,
+    pickKeys: pickKeys
   };
 }(window));

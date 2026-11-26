@@ -1516,6 +1516,16 @@
   var trialRunState = taskListData && taskListData.loadTrialRunState ? taskListData.loadTrialRunState() : {};
   Object.keys(trialRunState).forEach(function (taskId) {
     var persisted = trialRunState[taskId];
+    /* label-suite/label-suite#698: the same record carries the profile half of
+     * task-detail.html's saved settings (persistTaskEdits()) -- labels,
+     * dataset, guideline files, reviewer roster -- written in the same
+     * setItem as the status task-list.data.js overlays, so the annotation
+     * pages never read a new status with old settings. Applied before the
+     * round overlay below, which owns trialRounds/materializedRuns. */
+    var profileEdits = persisted && persisted.edits && persisted.edits.profile;
+    if (profileEdits && profiles[taskId] && taskListData && taskListData.pickKeys) {
+      Object.assign(profiles[taskId], taskListData.pickKeys(profileEdits, taskListData.taskEditProfileKeys));
+    }
     var rounds = persisted && Array.isArray(persisted.trialRounds) ? persisted.trialRounds : null;
     if (!rounds || !rounds.length || !profiles[taskId]) return;
     profiles[taskId].trialRounds = rounds;

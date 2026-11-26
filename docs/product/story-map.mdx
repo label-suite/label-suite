@@ -29,7 +29,7 @@ tags: [故事地圖, User Story, Epic]
 
 ## 互動 story map
 
-story 的 Epic 依它連到的規格頁在路線圖 Feature 裡的位置決定，所以同一頁規格的 story 都在同一個 Epic，只有設了 `epicOverride` 的例外（側欄的未讀通知歸 E7）；E0 基礎建設收尾沒有規格頁，那一列是空的。
+story 的 Epic 依它連到的規格頁在路線圖 Feature 裡的位置決定（規格頁出現在多個 Epic 時取第一個），只有設了 `epicOverride` 的例外（側欄的未讀通知歸 E7；儀表板的快速繼續與快速審核歸 E5、「等待 IAA 確認」歸 E7）；E0 基礎建設收尾沒有規格頁，那一列是空的。
 
 角色篩選選了 :ref[專案負責人]{id="term.project-leader"}、:ref[標記員]{id="term.annotator"} 或 :ref[審核員]{id="term.reviewer"} 時，:ref[平台成員]{id="term.platform-member"} 的 story 也會亮起，因為任務角色持有者本身就是平台成員（[規格 02-01 §使用角色](../specs/02-dashboard/01-dashboard.mdx#使用角色)）；選審核員時 :ref[仲裁者]{id="term.arbiter"} 的 story 也會亮起，因為仲裁者是被指定的審核員。
 
@@ -72,10 +72,10 @@ import StoryMap from '@notes/components/story-map'
 
 | Story | 角色 | 規格 | Epic |
 | :--- | :--- | :--- | :--- |
-| 登入後直接看到符合自己任務角色的版面 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [02-01 儀表板](../specs/02-dashboard/01-dashboard.mdx) | [E7 儀表板與通知](roadmap.mdx#epic-一覽) |
-| 還沒有任務角色時，從三張行動入口卡知道下一步 | :ref[平台成員]{id="term.platform-member"} | [02-01 儀表板](../specs/02-dashboard/01-dashboard.mdx) | [E7 儀表板與通知](roadmap.mdx#epic-一覽) |
-| 按「快速繼續」回到這個任務第一筆還沒提交的資料 | :ref[標記員]{id="term.annotator"} | [02-01 儀表板](../specs/02-dashboard/01-dashboard.mdx) | [E7 儀表板與通知](roadmap.mdx#epic-一覽) |
-| 按「快速審核」開到下一個可處理的審核單位 | :ref[審核員]{id="term.reviewer"} | [02-01 儀表板](../specs/02-dashboard/01-dashboard.mdx) | [E7 儀表板與通知](roadmap.mdx#epic-一覽) |
+| 登入後直接看到符合自己任務角色的版面 | :ref[平台成員]{id="term.platform-member"}、:ref[系統管理員]{id="term.system-admin"} | [02-01 儀表板](../specs/02-dashboard/01-dashboard.mdx) | [E2 共用介面外殼](roadmap.mdx#epic-一覽) |
+| 還沒有任務角色時，從三張行動入口卡知道下一步 | :ref[平台成員]{id="term.platform-member"} | [02-01 儀表板](../specs/02-dashboard/01-dashboard.mdx) | [E2 共用介面外殼](roadmap.mdx#epic-一覽) |
+| 按「快速繼續」回到這個任務第一筆還沒提交的資料 | :ref[標記員]{id="term.annotator"} | [02-01 儀表板](../specs/02-dashboard/01-dashboard.mdx) | [E5 標記作業](roadmap.mdx#epic-一覽) |
+| 按「快速審核」開到下一個可處理的審核單位 | :ref[審核員]{id="term.reviewer"} | [02-01 儀表板](../specs/02-dashboard/01-dashboard.mdx) | [E5 標記作業](roadmap.mdx#epic-一覽) |
 | 從「等待 IAA 確認」的數字點進已篩好的任務列表 | :ref[系統管理員]{id="term.system-admin"}、:ref[專案負責人]{id="term.project-leader"} | [02-01 儀表板](../specs/02-dashboard/01-dashboard.mdx) | [E7 儀表板與通知](roadmap.mdx#epic-一覽) |
 
 ### 建立任務

@@ -32,7 +32,7 @@
 
 遵守它的元件（兩個以上）：
 
-- [Spinner](components/spinner.md)：取代送出鈕的文字，帶 `aria-label="載入中"`（`design/prototype/pages/account/login.html:681`）
+- [Spinner](components/spinner.md)：取代送出鈕的文字，帶 `aria-label="載入中"`（`design/prototype/pages/account/login.html:689`）
 - [Button](components/button.md)：`.btn-loading` 以 `opacity: .7` ＋ `pointer-events: none` 表示送出中（`design/prototype/components-showcase.html:214`）
 
 引用處：`design/prototype/pages/account/profile.html:355`（「UXC-06 / MASTER Loading state: opacity-70 + spinner while pending」）、`:1540`（「loading state + double-submission guard while the (simulated) request runs」）、`:1583`。
@@ -147,7 +147,7 @@
 
 遵守它的元件：
 
-- [Input](components/input.md)：`annotation/annotation-workspace` 的理由輸入框，`input` 事件一有非空白的值就隱藏錯誤（`syncOnInput`，`design/prototype/pages/annotation/annotation-workspace.config.js:668`–`:674`）；帳號頁的 `.field-error` 同樣在 `input` 事件清掉（`account/login.html:636`–`:641`、`account/register.html:728`–`:734`、`account/reset-password.html:780`–`:785`）
-- [Alert Banner](components/alert-banner.md)：`account/register` 一開始打字就把表單層級的錯誤橫幅收起來（`register.html:736`）
+- [Input](components/input.md)：`annotation/annotation-workspace` 的理由輸入框，`input` 事件一有非空白的值就隱藏錯誤（`syncOnInput`，`design/prototype/pages/annotation/annotation-workspace.config.js:668`–`:674`）；帳號頁的 `.field-error` 同樣在 `input` 事件清掉（`account/login.html:644`–`:649`、`account/register.html:768`–`:774`、`account/reset-password.html:780`–`:785`）
+- [Alert Banner](components/alert-banner.md)：`account/register` 一開始打字就把表單層級的錯誤橫幅收起來（`register.html:776`）
 
 只清**錯誤**，不清值，也不在輸入當下重新驗證——那會變成檢查就驗證，違反 UXC-04。

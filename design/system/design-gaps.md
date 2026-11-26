@@ -189,7 +189,7 @@
 | :--- | :--- |
 | **重現方式** | 在 `components-showcase.html` 的 Palette 區塊找 `--color-card`：**找不到**（那一頁從 `tokens.css` 即時列舉）。但五個帳號頁都在用它。 |
 | **受影響範圍** | [Auth Card](components/auth-card.md)、[Auth Navbar](components/auth-navbar.md)、[Language Toggle](components/lang-toggle.md)；五個登出帳號頁 |
-| **依據** | `assets/tokens.css` 全檔沒有 `--color-card:` 的定義。五頁各自定義兩次（淺色 `#FFFFFF`、深色 `#16161F`）：`login.html:19`／`:372`、`register.html:19`／`:348`、`forgot-password.html:19`／`:312`、`reset-password.html:19`／`:406`、`verify-email.html:24`／`:310`。全站 **22 處**引用 `var(--color-card)`，全部在這五頁。值五頁一致。 |
+| **依據** | `assets/tokens.css` 全檔沒有 `--color-card:` 的定義。五頁各自定義兩次（淺色 `#FFFFFF`、深色 `#16161F`）：`login.html:19`／`:372`、`register.html:19`／`:362`、`forgot-password.html:19`／`:312`、`reset-password.html:19`／`:406`、`verify-email.html:24`／`:310`。全站 **22 處**引用 `var(--color-card)`，全部在這五頁。值五頁一致。 |
 | **待決問題** | 要升格進 `tokens.css` 嗎？它和既有的 `--color-surface`／`--bg-surface`／`--color-white` 是什麼關係——是第四個同義詞，還是真的有區別？ |
 
 **狀態（#420）**：已修正。依 G-03 的處理，五個帳號頁改載 `tokens.css`、刪掉本地 token；`--color-card` 不升格，換成同值的 `--color-white`（淺色 `#FFFFFF`、深色 `#16161F`，與 `tokens.css` 相同），全站已沒有 `var(--color-card)`。上文的行號指的是修正前。
@@ -559,7 +559,7 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 
 `shared/content-tabs.css` 不提供 `role="tablist"`／`role="tab"`／`aria-selected`，也沒有方向鍵巡覽；且窄視窗下 `scrollbar-width: none`（`:40`）隱藏捲軸，滑鼠使用者沒有「還有更多分頁」的提示。
 
-**b2 核對**：三個使用頁面**自己補上了**語意——`admin/user-management`（`user-management.html:285`–`:287`）與 `admin/role-settings`（`role-settings.html:335`–`:337`）在 `<a>` 上加 `role="tablist"`／`role="tab"`／`aria-selected`；`task-detail` 另有方向鍵巡覽（`task-detail.html:11686`–`:11702`）。共用的 `content-tabs.css` 本身仍不提供，缺口不變。
+**b2 核對**：三個使用頁面**自己補上了**語意——`admin/user-management`（`user-management.html:285`–`:287`）與 `admin/role-settings`（`role-settings.html:335`–`:337`）在 `<a>` 上加 `role="tablist"`／`role="tab"`／`aria-selected`；`task-detail` 另有方向鍵巡覽（`task-detail.html:11945`–`:11961`）。共用的 `content-tabs.css` 本身仍不提供，缺口不變。
 
 **b3 核對**：`annotation-workspace` 的 `.admin-tabs--panel`（`annotation-workspace.html:1290`–`:1291`）是兩顆 `<button>`，**沒有補上**語意，只能點（`setupGuidelineTabs`，`annotation-workspace.config.js:6736`–`:6754`）。
 
@@ -591,7 +591,7 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 
 ### G-30 `account/profile` 是唯一沒有 `prefers-reduced-motion` 的帳號頁
 
-五個登出帳號頁**各自都有**（`login.html:345`、`register.html:316`、`forgot-password.html:311`、`reset-password.html:405`、`verify-email.html:281`），規則是 `*, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }`，`*` 蓋得住 [Spinner](components/spinner.md) 的 `animation: spin 0.7s linear infinite`（`login.html:314`）。
+五個登出帳號頁**各自都有**（`login.html:345`、`register.html:330`、`forgot-password.html:311`、`reset-password.html:405`、`verify-email.html:281`），規則是 `*, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }`，`*` 蓋得住 [Spinner](components/spinner.md) 的 `animation: spin 0.7s linear infinite`（`login.html:314`）。
 
 **`account/profile.html` 一條都沒有**，而它是 b1 動畫最多的一頁：`skeleton` 相關 class 出現 49 處。它的骨架動畫不受減少動態保護。`components-showcase.html:978`–`:980` 的那條只涵蓋 showcase 自己。
 
@@ -615,7 +615,7 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 
 > b2 新增。延伸 G-23。
 
-`admin/user-management`、`admin/role-settings`、`task-management/task-new` 三頁全檔 `modal-focus`／`ModalFocus` 0 次；`task-detail` 八個 modal 在 b2 時只有四個接上；現在全部接上，`LabelSuiteModalFocus.open` 在 `task-detail.html:5991`、`:7741`、`:8188`、`:10881`、`:11255`、`:11309`，類別刪除與資料集預覽在 `task-config.engine.js:6216`、`:6143`。只有 `task-list` 全部接上 `modal-focus.js`（`task-list.html:701`）。沒接的那些開啟後焦點不進視窗、關閉後不回觸發鈕，Esc 由各頁自己的 `keydown` 處理。
+`admin/user-management`、`admin/role-settings`、`task-management/task-new` 三頁全檔 `modal-focus`／`ModalFocus` 0 次；`task-detail` 八個 modal 在 b2 時只有四個接上；現在全部接上，`LabelSuiteModalFocus.open` 在 `task-detail.html:6147`、`:7995`、`:8444`、`:11140`、`:11514`、`:11568`，類別刪除與資料集預覽在 `task-config.engine.js:6216`、`:6143`。只有 `task-list` 全部接上 `modal-focus.js`（`task-list.html:701`）。沒接的那些開啟後焦點不進視窗、關閉後不回觸發鈕，Esc 由各頁自己的 `keydown` 處理。
 
 **b3 核對**：`annotation-workspace` 全部接上（見 G-23 的 b3 核對）。
 
@@ -682,7 +682,7 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 | 編號 | 原本寫的 | 為什麼不成立 |
 | :--- | :--- | :--- |
 | G-16 | Accordion 的 header 是 `div[role=button]`，showcase 沒有腳本，所以 Enter／Space 按不動 | **有腳本**：`components-showcase.html:1582`–`:1594` 綁了 `click` 與 `keydown`，攔 `Enter` 與 `Space`（`:1589`）並同步 `aria-expanded`（`:1585`）。寫下時沒有去看 `<script>` 區塊。 |
-| G-32 | Password Eye Toggle 的 `aria-label` 不隨狀態更新 | **會更新**：`pages/account/login.html:606`–`:612` 切換 `input.type` 時一併改寫 `aria-label`，`:587` 在換語言時也依目前狀態重算。 |
+| G-32 | Password Eye Toggle 的 `aria-label` 不隨狀態更新 | **會更新**：`pages/account/login.html:614`–`:620` 切換 `input.type` 時一併改寫 `aria-label`，`:595` 在換語言時也依目前狀態重算。 |
 | G-35 | `account/profile` 的頭像骨架（72px）比實際頭像（80px）小，違反 UXC-08 | **兩者都是 72px**：`profile.html:149` 的 `.avatar-preview` 與 `:568` 的 `.skel-avatar` 相同。80px 只存在於 showcase 的 demo（`components-showcase.html:920`，註解標 `md:w-20 — desktop demo size`）。 |
 
 同一輪自審還修正了兩條**寫錯但仍成立**的：Alert Banner 原寫「樣本沒有 `role="alert"`」（實際有，`components-showcase.html:1115`）與「全 prototype 0 個修飾子」（實際有一個，`pages/admin/user-management.html:182` 的 `.alert-banner.warning`）——後者反而讓 G-07 更有力；Toast 原寫「沒有 `aria-live`」（實際容器有，`components-showcase.html:1384`），改成焦點順序的問題。
