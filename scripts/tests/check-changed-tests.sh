@@ -366,12 +366,12 @@ rc=$( ( cd "$REPO" && PATH="$TMP/onlybash" "$CHECKER" --staged >"$TMP/out" 2>"$T
 
 git -C "$REPO" reset -q
 
-# ── apply_patch: no path field, so the candidates come from git ──────
+# ── apply_patch: no path field, so the candidates come from the patch ─
 #
 # Codex's apply_patch PostToolUse payload carries only tool_input.command.
 # H3 reads the files the patch touched from its headers, falls back to git
-# when there are none, and never reports files the patch deleted or moved
-# away from.
+# only when the text has no Add, Update or Delete header at all, and never
+# reports files the patch deleted or moved away from.
 
 git -C "$REPO" add -A >/dev/null; git -C "$REPO" commit -qm "before apply_patch cases" >/dev/null
 harness_set_tool uv 0 ''
@@ -446,8 +446,8 @@ harness_calls | grep 'ruff check' | grep -qF 'ap_update.py' \
 grep -q '讀不到檔案標頭' "$TMP/err" || fail "apply_patch: the git fallback was not explained"
 grep -q '^UNKNOWN' "$TMP/err" && fail "apply_patch: malformed patch text was treated as an unusable payload"
 
-# A path outside the workspace named in the patch never becomes a candidate:
-# git only reports paths inside the checkout.
+# A path outside the workspace named in a header goes through the header
+# path, and the normalisation in the routing loop skips it with a reason.
 harness_reset_calls
 rc=$(patch_event '*** Begin Patch
 *** Add File: /etc/ap-outside.py
@@ -475,15 +475,24 @@ grep -q '讀不到檔案標頭' "$TMP/err" && fail "apply_patch: a delete-only p
 grep -q '^NA: 本次沒有命中任何已啟用的路由' "$TMP/err" || fail "apply_patch: a delete-only patch was not reported as NA"
 git -C "$REPO" checkout -q -- docs/ap-a.md docs/ap-b.md
 
-# A clean checkout after a patch (for example one that was reverted) routes
-# nothing and says so.
+# A clean checkout, in both modes. Header mode on a file whose content did
+# not change still routes it: the header, not git, decides what to check.
 git -C "$REPO" add -A >/dev/null; git -C "$REPO" commit -qm "apply_patch results" >/dev/null
 harness_reset_calls
 rc=$(patch_event '*** Begin Patch
+*** Update File: backend/ap_update.py
 *** End Patch')
-[ "$rc" = "0" ] || fail "apply_patch: a clean tree did not exit 0 (got $rc)"
-[ -z "$(harness_calls)" ] || fail "apply_patch: a clean tree still ran a tool"
-grep -q '^NA: 本次沒有命中任何已啟用的路由' "$TMP/err" || fail "apply_patch: a clean tree was not reported as NA"
+[ "$rc" = "0" ] || fail "apply_patch: a header-mode patch on a clean tree did not exit 0 (got $rc)"
+harness_calls | grep 'ruff check' | grep -qF 'ap_update.py' \
+  || fail "apply_patch: a header-mode patch on a clean tree did not route the named file"
+# An empty patch has no header, so it falls back to git, which on a clean
+# tree has nothing to offer.
+harness_reset_calls
+rc=$(patch_event '*** Begin Patch
+*** End Patch')
+[ "$rc" = "0" ] || fail "apply_patch: an empty patch on a clean tree did not exit 0 (got $rc)"
+[ -z "$(harness_calls)" ] || fail "apply_patch: an empty patch on a clean tree still ran a tool"
+grep -q '^NA: 本次沒有命中任何已啟用的路由' "$TMP/err" || fail "apply_patch: an empty patch on a clean tree was not reported as NA"
 
 # A Claude write tool still uses its own path, not the git list.
 seed backend/ap_update.py 'print(3)'
