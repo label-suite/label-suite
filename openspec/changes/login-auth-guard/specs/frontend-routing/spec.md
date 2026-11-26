@@ -38,7 +38,7 @@
 #### Scenario: 正式建置開啟根路徑依登入狀態導向
 
 - **WHEN** 以正式建置的輸出、沒有登入 cookie，開啟 `/`
-- **THEN** 只送出 `GET /api/v1/current-session` 一個查詢登入狀態的請求，網址變為 `/account/login`
+- **THEN** 只送出 `GET /api/v1/current-session` 一個查詢登入狀態的請求，網址變為 `/account/login`（這個請求數不含 `frontend-api-client` 在收到 `401 AUTH_REQUIRED` 時送出的那一次延續請求 `POST /api/v1/session-refreshes`）
 - **AND** 頁面沒有健康檢查頁或元件展示頁的內容
 
 #### Scenario: 正式建置在開發頁路徑也不顯示開發頁
