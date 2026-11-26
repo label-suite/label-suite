@@ -18,12 +18,13 @@ from typing import Any
 import httpx
 import pytest
 from fastapi import FastAPI
+from pydantic import SecretStr
 from sqlalchemy import make_url
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.core.config import Settings
 from app.main import create_app
-from tests.conftest import ALLOWED_ORIGIN, TEST_DATABASE_URL
+from tests.conftest import ALLOWED_ORIGIN, TEST_AUTH_SECRET, TEST_DATABASE_URL
 
 pytestmark = pytest.mark.integration
 
@@ -53,6 +54,7 @@ def _settings(database_url: str, tmp_path: Path) -> Settings:
         cors_allow_credentials=True,
         database_url=database_url,
         sqlite_path=tmp_path / "unused.db",
+        auth_secret=SecretStr(TEST_AUTH_SECRET),
     )
 
 
@@ -262,7 +264,16 @@ async def test_silent_database_times_out_within_the_limit(tmp_path: Path) -> Non
 
 
 def _clear_service_environment(monkeypatch: pytest.MonkeyPatch) -> None:
-    for name in ("DATABASE_URL", "SQLITE_PATH", "CORS_ALLOW_CREDENTIALS"):
+    for name in (
+        "DATABASE_URL",
+        "SQLITE_PATH",
+        "CORS_ALLOW_CREDENTIALS",
+        "AUTH_SECRET",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "GOOGLE_REDIRECT_URI",
+        "RESEND_API_KEY",
+    ):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("CORS_ALLOWED_ORIGINS", ALLOWED_ORIGIN)
 
@@ -311,6 +322,7 @@ async def test_production_tier_with_database_url(
     lite = tmp_path / "never.db"
     monkeypatch.setenv("SQLITE_PATH", str(lite))
     monkeypatch.setenv("DATABASE_URL", _with_scheme(scheme))
+    monkeypatch.setenv("AUTH_SECRET", TEST_AUTH_SECRET)
 
     async with _serve(create_app()) as http:
         response = await http.get(HEALTH_PATH)

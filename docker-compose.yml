@@ -61,6 +61,14 @@ services:
       # frontend's pinned address below. Set it in .env only when the subnet changes
       # (#566; the value is validated at start-up, "*" is rejected).
       FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-10.77.250.10}
+      # Sign-in settings (login-auth-guard design D4). Unset reaches the backend as
+      # an empty string, which it treats as unset: without AUTH_SECRET the Lite
+      # backend generates one and keeps it on the data volume below.
+      AUTH_SECRET: ${AUTH_SECRET:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
     volumes:
       - label-suite-data:/app/data
     healthcheck:

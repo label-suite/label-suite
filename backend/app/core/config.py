@@ -5,8 +5,10 @@ two layers so that migrations can run without app-only settings:
 
 - ``DatabaseSettings`` holds ``DATABASE_URL`` and ``SQLITE_PATH`` and derives the
   async SQLAlchemy URL. Alembic's ``env.py`` reads only this class.
-- ``Settings`` extends it with the CORS, API-docs and log-level settings the API
-  needs.
+- ``Settings`` extends it with the CORS, API-docs, log-level and login settings
+  the API needs (``AUTH_SECRET``, the three ``GOOGLE_*`` and ``RESEND_API_KEY``).
+  An empty string counts as unset for the login settings, because Compose passes
+  an unset ``${VAR:-}`` as an empty string (login-auth-guard design D4).
 
 Always build either class through ``load_settings`` so a validation failure turns
 into a ``ConfigError`` that names the environment variable and the reason but
@@ -18,7 +20,7 @@ from pathlib import Path
 from typing import Annotated, Any, Literal
 from urllib.parse import urlsplit
 
-from pydantic import ValidationError, field_validator
+from pydantic import SecretStr, ValidationError, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode
 
 __all__ = ["ConfigError", "DatabaseSettings", "LogLevel", "Settings", "load_settings"]
@@ -29,6 +31,9 @@ LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 _ASYNC_POSTGRES_SCHEME = "postgresql+asyncpg"
 _ACCEPTED_POSTGRES_SCHEMES = frozenset({"postgresql", "postgresql+asyncpg", "postgres"})
 _ORIGIN_SCHEMES = frozenset({"http", "https"})
+AUTH_SECRET_MIN_LENGTH = 32
+"""The shortest accepted ``AUTH_SECRET``, in characters (login-auth-guard system-design)."""
+_GOOGLE_FIELDS = ("google_client_id", "google_client_secret", "google_redirect_uri")
 
 
 class ConfigError(Exception):
@@ -86,7 +91,7 @@ class DatabaseSettings(BaseSettings):
 
 
 class Settings(DatabaseSettings):
-    """Full API settings: the database layer plus CORS, API docs and the log level.
+    """Full API settings: the database layer plus CORS, API docs, log level and login.
 
     Attributes:
         cors_allowed_origins: The explicit origin list (the only required
@@ -109,6 +114,17 @@ class Settings(DatabaseSettings):
             ``*``, a zero-length prefix, host bits, hostnames, empty items and an
             empty list are rejected because uvicorn would trust everyone or drop them
             silently.
+        auth_secret: ``AUTH_SECRET``, at least 32 characters; ``None`` when unset or
+            empty. ``create_app`` replaces ``None`` with the value
+            ``resolve_auth_secret`` returns (generated on the Lite tier, required on
+            the production tier), so after start-up it is always set.
+        google_client_id: ``GOOGLE_CLIENT_ID``; ``None`` when unset or empty.
+        google_client_secret: ``GOOGLE_CLIENT_SECRET``; ``None`` when unset or empty.
+        google_redirect_uri: ``GOOGLE_REDIRECT_URI``; ``None`` when unset or empty.
+            The three Google settings are set together or not at all; a partial set
+            is rejected, naming each missing variable.
+        resend_api_key: ``RESEND_API_KEY``; ``None`` when unset or empty. Only
+            whether it is set matters today (``mail_configured``).
     """
 
     cors_allowed_origins: Annotated[list[str], NoDecode]
@@ -116,6 +132,56 @@ class Settings(DatabaseSettings):
     api_docs_enabled: bool = True
     log_level: LogLevel = "INFO"
     forwarded_allow_ips: Annotated[list[str], NoDecode] = ["127.0.0.1", "::1"]  # noqa: RUF012
+    auth_secret: SecretStr | None = None
+    google_client_id: str | None = None
+    google_client_secret: SecretStr | None = None
+    google_redirect_uri: str | None = None
+    resend_api_key: SecretStr | None = None
+
+    @field_validator(
+        "auth_secret",
+        "google_client_id",
+        "google_client_secret",
+        "google_redirect_uri",
+        "resend_api_key",
+        mode="before",
+    )
+    @classmethod
+    def _empty_is_unset(cls, value: Any) -> Any:
+        if isinstance(value, str) and value == "":
+            return None
+        if isinstance(value, SecretStr) and value.get_secret_value() == "":
+            return None
+        return value
+
+    @field_validator("auth_secret", mode="after")
+    @classmethod
+    def _long_enough_auth_secret(cls, value: SecretStr | None) -> SecretStr | None:
+        if value is not None and len(value.get_secret_value()) < AUTH_SECRET_MIN_LENGTH:
+            raise ValueError(f"must be at least {AUTH_SECRET_MIN_LENGTH} characters")
+        return value
+
+    @model_validator(mode="after")
+    def _google_all_or_nothing(self) -> "Settings":
+        missing = [name for name in _GOOGLE_FIELDS if getattr(self, name) is None]
+        if 0 < len(missing) < len(_GOOGLE_FIELDS):
+            raise ValueError(
+                "\n".join(
+                    f"{name.upper()}: required when any Google setting is set; set "
+                    "GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and GOOGLE_REDIRECT_URI "
+                    "together, or none of them"
+                    for name in missing
+                )
+            )
+        return self
+
+    def google_configured(self) -> bool:
+        """Return whether this deployment has Google sign-in configured (all three set)."""
+        return all(getattr(self, name) is not None for name in _GOOGLE_FIELDS)
+
+    def mail_configured(self) -> bool:
+        """Return whether this deployment has a mail service, i.e. ``RESEND_API_KEY`` is set."""
+        return self.resend_api_key is not None
 
     @field_validator("log_level", mode="before")
     @classmethod
@@ -216,6 +282,12 @@ def load_settings[SettingsT: DatabaseSettings](cls: type[SettingsT]) -> Settings
         lines = []
         for error in exc.errors(include_input=False, include_url=False):
             loc = error["loc"]
-            name = str(loc[0]).upper() if loc else "CONFIGURATION"
-            lines.append(f"{name}: {error['msg']}")
+            if loc:
+                lines.append(f"{str(loc[0]).upper()}: {error['msg']}")
+            elif error["type"] == "value_error" and "ctx" in error:
+                # A whole-model check (the Google all-or-nothing rule) already writes
+                # one "<ENV_VAR>: <reason>" line per problem.
+                lines.append(str(error["ctx"]["error"]))
+            else:
+                lines.append(f"CONFIGURATION: {error['msg']}")
         raise ConfigError("\n".join(lines)) from None

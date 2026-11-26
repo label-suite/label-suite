@@ -11,9 +11,10 @@
 # Requires Docker Compose v2.20.0 or newer, for the same reason as the Lite file
 # (system-design D7). Neither tier contains Redis or a worker.
 #
-# POSTGRES_PASSWORD has no default: unset or empty makes Compose fail
-# interpolation before any container is created (system-design D4;
-# Hard Rule 8 - the password comes from .env, never from this file).
+# POSTGRES_PASSWORD and AUTH_SECRET have no default: unset or empty makes Compose
+# fail interpolation before any container is created (system-design D4;
+# login-auth-guard design D4; Hard Rule 8 - both come from .env, never from this
+# file).
 
 # Own project name, so this tier never reuses the Lite tier's containers or its
 # named volume.
@@ -87,6 +88,14 @@ services:
       # frontend's pinned address below. Set it in .env only when the subnet changes
       # (#566; the value is validated at start-up, "*" is rejected).
       FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-10.77.250.10}
+      # No default on purpose: unset or empty makes Compose fail interpolation
+      # before any container is created (login-auth-guard design D4; Hard Rule 8).
+      AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET is required for the production tier}
+      # Optional; empty counts as unset (design D4).
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
     healthcheck:
       # The slim base image has no curl, so the image's own Python makes the
       # call; urlopen raises on any non-2xx status (system-design D5). The check

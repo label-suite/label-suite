@@ -13,6 +13,7 @@ from typing import Any
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.core.auth_secret import resolve_auth_secret
 from app.core.config import Settings, load_settings
 from app.core.db import create_engine, create_sessionmaker
 from app.core.errors import register_exception_handlers
@@ -80,6 +81,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         Configures the process-wide log output from ``LOG_LEVEL``
         (``configure_logging``) once the settings are valid; a repeated call
         replaces this repository's root handler rather than adding a second one.
+        Resolves ``AUTH_SECRET`` (``resolve_auth_secret``): on the Lite tier
+        without it, reads or creates ``auth_secret`` next to the SQLite file.
 
     Returns:
         The app with the five middlewares, the exception handlers, the
@@ -91,12 +94,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     Raises:
         ConfigError: When ``settings`` is ``None`` and the environment is not a
-            valid configuration; the message names the variable, never its value.
+            valid configuration, or when ``AUTH_SECRET`` cannot be resolved (the
+            production tier without it); the message names the variable, never
+            its value.
         MessageCatalogError: When the message files are missing or out of sync.
         OperationIdCollisionError: When two operations share an operationId.
     """
-    resolved = settings if settings is not None else load_settings(Settings)
-    configure_logging(resolved)
+    loaded = settings if settings is not None else load_settings(Settings)
+    configure_logging(loaded)
+    # Before any component is built, so every later reader sees the final secret.
+    resolved = loaded.model_copy(update={"auth_secret": resolve_auth_secret(loaded)})
 
     app = FastAPI(
         title=API_TITLE,

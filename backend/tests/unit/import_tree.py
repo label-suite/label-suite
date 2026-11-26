@@ -31,8 +31,9 @@ ENTRY_THIRD_PARTY: dict[str, set[str]] = {
     OIDC: {"authlib"},
     HTTP_CLIENT: {"httpx", "requests", "aiohttp", "urllib3"},
 }
-# Top-level packages registered as entries (design D3); none exists today.
-ENTRY_TOP_LEVEL_PACKAGES: set[str] = set()
+# Top-level packages registered as entries (design D3): app/oidc is the OIDC entry
+# (login-auth-guard PL5, design D5).
+ENTRY_TOP_LEVEL_PACKAGES: set[str] = {"oidc"}
 
 MODULE_FILES = {
     "__init__.py": "",

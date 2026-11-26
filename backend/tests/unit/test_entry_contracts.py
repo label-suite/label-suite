@@ -183,6 +183,13 @@ def test_every_top_level_package_of_the_real_app_is_classified() -> None:
     assert unclassified_top_level(Path(app.__path__[0]), sources, ENTRY_TOP_LEVEL_PACKAGES) == []
 
 
+def test_oidc_is_a_registered_entry_package_of_the_real_app() -> None:
+    names = {info.name for info in pkgutil.iter_modules(app.__path__)}
+
+    assert "oidc" in names
+    assert "oidc" in ENTRY_TOP_LEVEL_PACKAGES
+
+
 def test_router_importing_another_modules_service_fails_with_the_chain(tmp_path: Path) -> None:
     build_tree(tmp_path)
     append(tmp_path, "app/modules/health/router.py", "from app.modules.other import service")

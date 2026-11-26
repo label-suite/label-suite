@@ -19,7 +19,18 @@ import httpx
 
 HEALTH_PATH = "/api/v1/health"
 BACKEND_DIR = Path(__file__).resolve().parents[2]
-_SCRUBBED = {"DATABASE_URL", "TEST_DATABASE_URL", "LOG_LEVEL", "SQLITE_PATH", "FORWARDED_ALLOW_IPS"}
+_SCRUBBED = {
+    "DATABASE_URL",
+    "TEST_DATABASE_URL",
+    "LOG_LEVEL",
+    "SQLITE_PATH",
+    "FORWARDED_ALLOW_IPS",
+    "AUTH_SECRET",
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "GOOGLE_REDIRECT_URI",
+    "RESEND_API_KEY",
+}
 
 
 def free_port() -> int:
