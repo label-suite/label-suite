@@ -1,6 +1,6 @@
 # System Design
 
-本份是 change `login-auth-guard`（Issue #719）的後端技術藍圖：把 `system-analysis.md` 的範圍轉成 Router、Service、Repository、Model 與 schema，畫出每個關鍵 Scenario 的 Sequence Diagram，並寫出資料模型異動與權限檢查點。端點的欄位、錯誤碼與 operationId 由 `api-contract.md` 定，本份只寫到「哪一層做什麼」。
+本份是 change `login-auth-guard`（Issue #719）的後端技術藍圖：把 `system-analysis.md` 的範圍轉成 Router、Service、Repository、Model 與 schema，畫出每個關鍵 Scenario 的 Sequence Diagram，並寫出資料模型異動與權限檢查點。端點的欄位、錯誤碼與 operationId 由 `api-contract.md` 定，本份只寫到「哪一層做什麼」；圖中的路徑與錯誤碼已依 `api-contract.md` 同步。
 
 三件已裁定的事照裁定寫，不再列成待決：模組內分層 `app/modules/<module>/`、成功回應包一層 envelope、路徑前綴 `/api/v1`。`system-analysis.md` 的 13 個待決問題中，需要維護者決定的寫成**提案**（見 [§待決問題與提案](#待決問題與提案)），設計上把每一題做成一個清楚的接縫：選哪一個方案，只影響接縫那一側，不必改守門本身。第 12 題依 sa 的建議當明確問題（P）處理，已先改字典與 ER。
 
@@ -35,21 +35,21 @@ backend/app/
 
 ### 元件清單
 
-| 層         | 元件                                                                                                                                                                                   | 新增／修改 | 職責                                                                                                                                                                                    |
-| :--------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Router     | `account.router`：`get_login_options`、`create_session`、`get_session`、`refresh_session`、`delete_session`、`get_google_authorization`、`create_google_session`                       | 新增       | HTTP 轉接：組 `SourceInfo`（來源位址與 User-Agent，截斷）、呼叫 service、經 `SessionCookies` 寫或清 cookie、用 `ok()` 包外層；`delete_session` 回 `204`（envelope 的明文例外，無 body） |
-| 依賴       | `core.auth.get_current_principal`                                                                                                                                                      | 新增       | 授權四步的第 1、2 步：驗 access cookie、交給 `PrincipalLoader` 讀資料庫、回 `Principal`；任何一項不成立都丟同一個 `AuthenticationRequiredError`                                         |
-| Service    | `PasswordLoginService`                                                                                                                                                                 | 新增       | Email 與密碼登入；擁有登入那一筆交易                                                                                                                                                    |
-| Service    | `GoogleLoginService`                                                                                                                                                                   | 新增       | 產生 Google 授權網址與流程 cookie；完成時先在交易外向 Google 換 token，再在交易內找帳號、（提案）綁定、開始登入狀態                                                                     |
-| Service    | `SessionService`                                                                                                                                                                       | 新增       | 一段登入狀態的開始、延續（輪替 refresh token、寬限、疑似盜用）、登出與全部撤銷；期限規則集中在 `SessionPolicy`                                                                          |
-| Service    | `AccountPrincipalLoader`                                                                                                                                                               | 新增       | 實作 `core.auth.PrincipalLoader`；一次查詢讀登入狀態與帳號，依序判定，**不寫入**                                                                                                        |
-| Service    | `LoginOptionsService`                                                                                                                                                                  | 新增       | 回登入頁要的兩個開關：`google_configured()` 與 `mail_configured()`；不碰資料庫                                                                                                          |
-| Repository | `UserRepository`、`AccountSessionRepository`、`RefreshTokenRepository`                                                                                                                 | 新增       | 只查與寫，不 commit；延續的「消耗」用條件式 `UPDATE ... WHERE consumed_at IS NULL` 加 rowcount，兩種資料庫行為相同                                                                      |
-| Model      | `User`、`AccountSession`、`AccountRefreshToken`                                                                                                                                        | 新增       | 前兩張依字典；第三張是提案（待決 N1）                                                                                                                                                   |
-| Schema     | `LoginRequest`、`GoogleSessionRequest`（`RequestModel`）；`SessionData`、`SessionUserData`、`LoginOptionsData`、`GoogleAuthorizationData`（`ResponseModel`）                           | 新增       | request 只收 camelCase、拒絕未宣告欄位；response 明列欄位                                                                                                                               |
-| 錯誤       | `InvalidCredentialsError`、`GoogleLoginRejectedError`、`GoogleFlowInvalidError`、`GoogleUnavailableError`、`SessionExpiredError`、`SessionInvalidError`、（提案）`LoginThrottledError` | 新增       | 繼承 `AppError`；碼與 HTTP 狀態由 `api-contract.md` 定                                                                                                                                  |
-| 基礎建設   | `AccessTokenCodec`、`SessionCookies`、`CsrfMiddleware`、`PasswordHasher`、`normalize_email`、`UtcDateTime`、`Settings`                                                                 | 新增或修改 | 見上面的目錄                                                                                                                                                                            |
-| 入口       | `app.oidc.google.GoogleOidcClient`                                                                                                                                                     | 新增       | 用 `authlib` 產生授權網址、以 PKCE 換 token、驗 `id_token`（簽章、`iss`、`aud`、`exp`、`nonce`）；回 `GoogleIdentity(subject, email, email_verified)`                                   |
+| 層         | 元件                                                                                                                                                                                                           | 新增／修改 | 職責                                                                                                                                                                                    |
+| :--------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Router     | `account.router`：`get_login_options`、`create_session`、`get_session`、`refresh_session`、`delete_session`、`get_google_authorization`、`create_google_session`                                               | 新增       | HTTP 轉接：組 `SourceInfo`（來源位址與 User-Agent，截斷）、呼叫 service、經 `SessionCookies` 寫或清 cookie、用 `ok()` 包外層；`delete_session` 回 `204`（envelope 的明文例外，無 body） |
+| 依賴       | `core.auth.get_current_principal`                                                                                                                                                                              | 新增       | 授權四步的第 1、2 步：驗 access cookie、交給 `PrincipalLoader` 讀資料庫、回 `Principal`；任何一項不成立都丟同一個 `AuthenticationRequiredError`                                         |
+| Service    | `PasswordLoginService`                                                                                                                                                                                         | 新增       | Email 與密碼登入；擁有登入那一筆交易                                                                                                                                                    |
+| Service    | `GoogleLoginService`                                                                                                                                                                                           | 新增       | 產生 Google 授權網址與流程 cookie；完成時先在交易外向 Google 換 token，再在交易內找帳號、（提案）綁定、開始登入狀態                                                                     |
+| Service    | `SessionService`                                                                                                                                                                                               | 新增       | 一段登入狀態的開始、延續（輪替 refresh token、寬限、疑似盜用）、登出與全部撤銷；期限規則集中在 `SessionPolicy`                                                                          |
+| Service    | `AccountPrincipalLoader`                                                                                                                                                                                       | 新增       | 實作 `core.auth.PrincipalLoader`；一次查詢讀登入狀態與帳號，依序判定，**不寫入**                                                                                                        |
+| Service    | `LoginOptionsService`                                                                                                                                                                                          | 新增       | 回登入頁要的兩個開關：`google_configured()` 與 `mail_configured()`；不碰資料庫                                                                                                          |
+| Repository | `UserRepository`、`AccountSessionRepository`、`RefreshTokenRepository`                                                                                                                                         | 新增       | 只查與寫，不 commit；延續的「消耗」用條件式 `UPDATE ... WHERE consumed_at IS NULL` 加 rowcount，兩種資料庫行為相同                                                                      |
+| Model      | `User`、`AccountSession`、`AccountRefreshToken`                                                                                                                                                                | 新增       | 前兩張依字典；第三張是提案（待決 N1）                                                                                                                                                   |
+| Schema     | `LoginRequest`、`GoogleSessionRequest`（`RequestModel`）；`SessionData`、`SessionUserData`、`LoginOptionsData`、`GoogleAuthorizationData`（`ResponseModel`）                                                   | 新增       | request 只收 camelCase、拒絕未宣告欄位；response 明列欄位                                                                                                                               |
+| 錯誤       | `InvalidCredentialsError`、`GoogleLoginRejectedError`、`GoogleFlowInvalidError`、`GoogleUnavailableError`、`SessionExpiredError`、`SessionInvalidError`、`RefreshConflictError`、（提案）`LoginThrottledError` | 新增       | 繼承 `AppError`；碼與 HTTP 狀態由 `api-contract.md` 定                                                                                                                                  |
+| 基礎建設   | `AccessTokenCodec`、`SessionCookies`、`CsrfMiddleware`、`PasswordHasher`、`normalize_email`、`UtcDateTime`、`Settings`                                                                                         | 新增或修改 | 見上面的目錄                                                                                                                                                                            |
+| 入口       | `app.oidc.google.GoogleOidcClient`                                                                                                                                                                             | 新增       | 用 `authlib` 產生授權網址、以 PKCE 換 token、驗 `id_token`（簽章、`iss`、`aud`、`exp`、`nonce`）；回 `GoogleIdentity(subject, email, email_verified)`                                   |
 
 ### Class Diagram
 
@@ -363,7 +363,7 @@ sequenceDiagram
   participant U as UserRepository
   participant Q as AccountSessionRepository / RefreshTokenRepository
   participant DB as 資料庫
-  C->>R: POST /api/v1/auth/sessions（application/json；email、password）
+  C->>R: POST /api/v1/sessions（application/json；email、password）
   alt Content-Type 不是 application/json，或欄位缺少、空白、超過上限
     R-->>C: 422 VALIDATION_FAILED（逐欄位錯誤，不回顯送來的值）
   end
@@ -403,7 +403,7 @@ sequenceDiagram
   participant L as PasswordLoginService
   participant U as UserRepository
   participant DB as 資料庫
-  C->>R: POST /api/v1/auth/sessions
+  C->>R: POST /api/v1/sessions
   R->>L: login(email, password, source)
   L->>U: get_by_email(normalized)
   U->>DB: SELECT users
@@ -430,7 +430,7 @@ sequenceDiagram
   participant L as PasswordLoginService
   participant U as UserRepository
   participant DB as 資料庫
-  C->>R: POST /api/v1/auth/sessions（密碼正確）
+  C->>R: POST /api/v1/sessions（密碼正確）
   R->>L: login(email, password, source)
   L->>U: get_by_email(normalized)
   U->>DB: SELECT users
@@ -450,7 +450,7 @@ sequenceDiagram
   participant R as Router create_session
   participant L as PasswordLoginService
   participant DB as 資料庫
-  C->>R: POST /api/v1/auth/sessions（password 只有 6 個字元）
+  C->>R: POST /api/v1/sessions（password 只有 6 個字元）
   Note over R: LoginRequest.password 只要求非空與長度上限，沒有組成規則的驗證器
   R->>L: login(email, password, source)
   L->>DB: SELECT users、驗雜湊、INSERT 登入狀態、commit（同「登入成功進入儀表板」）
@@ -467,7 +467,7 @@ sequenceDiagram
   participant L as PasswordLoginService
   participant U as UserRepository
   participant DB as 資料庫
-  C->>R: POST /api/v1/auth/sessions（email = "USER@EXAMPLE.COM"）
+  C->>R: POST /api/v1/sessions（email = "USER@EXAMPLE.COM"）
   R->>L: login(email, password, source)
   L->>L: normalize_email：去前後空白、NFKC、casefold → "user@example.com"
   L->>U: get_by_email("user@example.com")
@@ -486,7 +486,7 @@ sequenceDiagram
   participant C as Client
   participant R as Router create_session
   participant L as PasswordLoginService
-  C->>R: POST /api/v1/auth/sessions（email 正規化後超過 254 字）
+  C->>R: POST /api/v1/sessions（email 正規化後超過 254 字）
   alt 原始輸入超過 schema 的長度上限
     R-->>C: 422 VALIDATION_FAILED（只說 email 欄太長，不查資料庫）
   end
@@ -508,7 +508,7 @@ sequenceDiagram
   participant L as PasswordLoginService
   participant U as UserRepository
   participant DB as 資料庫
-  C->>R: POST /api/v1/auth/sessions
+  C->>R: POST /api/v1/sessions
   R->>L: login(email, password, source)
   L->>U: get_by_email(normalized)
   U->>DB: SELECT users
@@ -529,7 +529,7 @@ sequenceDiagram
   participant L as PasswordLoginService
   participant T as LoginThrottle（提案）
   participant K as 計數存放（3-A Redis／3-B 資料表）
-  C->>R: 第十一次 POST /api/v1/auth/sessions
+  C->>R: 第十一次 POST /api/v1/sessions
   R->>L: login(email, password, source)
   L->>T: check(key)（key 依待決 3 的「同一個人」定義）
   T->>K: 讀失敗次數與擋住到何時
@@ -554,7 +554,7 @@ sequenceDiagram
   participant U as UserRepository
   participant S as SessionService
   participant DB as 資料庫
-  C->>R: GET /api/v1/auth/google/authorization
+  C->>R: GET /api/v1/google-authorization
   R->>G: begin()
   alt 部署沒有設定 Google
     G-->>R: raise GoogleUnavailableError
@@ -567,7 +567,7 @@ sequenceDiagram
   R->>R: SessionCookies.set_oidc_flow（httpOnly、__Host- 前綴）
   R-->>C: 200 成功外層，data.authorizationUrl
   Note over C: 瀏覽器前往 Google，回到前端的回調路由（不畫）
-  C->>R: POST /api/v1/auth/google/sessions（code、state；帶流程 cookie）
+  C->>R: POST /api/v1/google-sessions（code、state；帶流程 cookie）
   R->>G: complete(code, state, flow_cookie, source)
   G->>G: verify_payload(flow_cookie)，比對 state
   G->>O: exchange(code, verifier, nonce)（交易外的對外呼叫）
@@ -600,7 +600,7 @@ sequenceDiagram
   participant G as GoogleLoginService
   participant O as GoogleOidcClient
   Note over C: Google 回 error=access_denied 時，前端回調路由直接回登入頁，不呼叫後端（不畫）
-  C->>R: POST /api/v1/auth/google/sessions（code、state）
+  C->>R: POST /api/v1/google-sessions（code、state）
   R->>G: complete(code, state, flow_cookie, source)
   alt 流程 cookie 不在、過期、簽章不對，或 state 不符
     G-->>R: raise GoogleFlowInvalidError
@@ -622,7 +622,7 @@ sequenceDiagram
   participant G as GoogleLoginService
   participant U as UserRepository
   participant DB as 資料庫
-  C->>R: POST /api/v1/auth/google/sessions
+  C->>R: POST /api/v1/google-sessions
   R->>G: complete(...)
   G->>G: 驗流程 cookie、換 token（同「點 Google 帳號登入」）
   G->>U: get_by_google_subject(subject)
@@ -646,7 +646,7 @@ sequenceDiagram
   participant G as GoogleLoginService
   participant U as UserRepository
   participant DB as 資料庫
-  C->>R: POST /api/v1/auth/google/sessions
+  C->>R: POST /api/v1/google-sessions
   R->>G: complete(...)
   G->>U: get_by_google_subject(subject)
   U->>DB: SELECT
@@ -669,7 +669,7 @@ sequenceDiagram
   participant U as UserRepository
   participant S as SessionService
   participant DB as 資料庫
-  C->>R: POST /api/v1/auth/google/sessions
+  C->>R: POST /api/v1/google-sessions
   R->>G: complete(...)
   G->>U: get_by_google_subject(subject)
   U->>DB: SELECT users WHERE google_subject = :subject
@@ -693,7 +693,7 @@ sequenceDiagram
   participant R as Router get_session
   participant S as SessionService
   participant DB as 資料庫
-  C->>A: GET /api/v1/auth/session（帶 access cookie）
+  C->>A: GET /api/v1/current-session（帶 access cookie）
   A->>P: load(claims, db)
   P->>DB: SELECT account_session JOIN users WHERE account_session.id = :sid
   DB-->>P: 一列
@@ -714,7 +714,7 @@ sequenceDiagram
   participant C as Client
   participant R as Router get_login_options
   participant O as LoginOptionsService
-  C->>R: GET /api/v1/auth/login-options（不需登入）
+  C->>R: GET /api/v1/auth-options（不需登入）
   R->>O: get()
   O->>O: settings.mail_configured()：RESEND_API_KEY 沒設 → false
   O->>O: settings.google_configured()
@@ -917,8 +917,8 @@ sequenceDiagram
   DB-->>Q: 0 列
   S->>Q: reissue_if_below(T, limit=1)
   DB-->>Q: 0 列（reissue_count 已是 1）
-  S-->>R: raise SessionInvalidError（不撤銷任何登入狀態）
-  R-->>C: 401；不清 cookie（同一台的另一個分頁可能剛拿到新的）
+  S-->>R: raise RefreshConflictError（不撤銷任何登入狀態）
+  R-->>C: 409 ACCOUNT_REFRESH_CONFLICT；不清 cookie（同一台的另一個分頁可能剛拿到新的）
 ```
 
 ### Scenario: 疑似被盜用時所有裝置一起登出
@@ -978,7 +978,7 @@ sequenceDiagram
   participant S as SessionService
   participant Q as AccountSessionRepository / RefreshTokenRepository
   participant DB as 資料庫
-  C->>R: DELETE /api/v1/auth/session（帶 refresh cookie）
+  C->>R: DELETE /api/v1/current-session（帶 refresh cookie）
   R->>S: logout(raw_refresh, now)
   S->>Q: get_by_hash(hash_token(raw))
   Q->>DB: SELECT
@@ -1000,7 +1000,7 @@ sequenceDiagram
   participant R as Router delete_session
   participant S as SessionService
   participant DB as 資料庫
-  C->>R: DELETE /api/v1/auth/session（refresh cookie 不在或查不到）
+  C->>R: DELETE /api/v1/current-session（refresh cookie 不在或查不到）
   R->>S: logout(None 或查不到的值, now)
   S->>DB: SELECT（cookie 不在時不查）
   S-->>R: 不寫任何東西、不記登出
@@ -1049,15 +1049,15 @@ sequenceDiagram
 
 ## 權限檢查點
 
-| 層                                           | 檢查                                                                                                                                                                                                                    | 適用                                            |
-| :------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------- |
-| `CorsMiddleware`                             | 來源逐一列出（Hard Rule 7），本次只多允許 `X-CSRF-Token` 標頭                                                                                                                                                           | 全部                                            |
-| `CsrfMiddleware`                             | 會改資料的方法要 `X-CSRF-Token` 與 CSRF cookie 相同，且等於 `HMAC(secret, sid)`；`sid` 取自 access token（驗簽章、不看是否過期）。還沒有 session 的三條（Email 與密碼登入、延續、Google 登入完成）與登出放行，理由見 T2 | 本次與之後所有 `POST`／`PUT`／`PATCH`／`DELETE` |
-| `get_current_principal`（授權第 1 步）       | 登入狀態存在、屬於 `sub`、未失效、未過 90 天與 7 天；帳號啟用、未匿名化；`credential_version` 相同                                                                                                                      | `GET /auth/session` 與之後所有需要登入的端點    |
-| 同上（授權第 2 步）                          | 系統角色取自資料庫，只接受 `user` 與 `super_admin`；不讀 JWT 的 `role`                                                                                                                                                  | 同上                                            |
-| 授權第 3、4 步                               | **本次不建**（待決 11 的提案 11-A）；第一個需要權限矩陣或附加條件（含答案隔離）的端點要先補上                                                                                                                           | —                                               |
-| `PasswordLoginService`、`GoogleLoginService` | 帳號啟用、未匿名化；密碼登入要求有本地密碼；Google 只登入或綁定既有帳號，不建立帳號                                                                                                                                     | 兩條登入                                        |
-| `SessionService.refresh`                     | 輪替之前先讀帳號狀態，停用就拒絕、不發新 token                                                                                                                                                                          | 延續                                            |
+| 層                                           | 檢查                                                                                                                                                                                                                    | 適用                                                   |
+| :------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------- |
+| `CorsMiddleware`                             | 來源逐一列出（Hard Rule 7），本次只多允許 `X-CSRF-Token` 標頭                                                                                                                                                           | 全部                                                   |
+| `CsrfMiddleware`                             | 會改資料的方法要 `X-CSRF-Token` 與 CSRF cookie 相同，且等於 `HMAC(secret, sid)`；`sid` 取自 access token（驗簽章、不看是否過期）。還沒有 session 的三條（Email 與密碼登入、延續、Google 登入完成）與登出放行，理由見 T2 | 本次與之後所有 `POST`／`PUT`／`PATCH`／`DELETE`        |
+| `get_current_principal`（授權第 1 步）       | 登入狀態存在、屬於 `sub`、未失效、未過 90 天與 7 天；帳號啟用、未匿名化；`credential_version` 相同                                                                                                                      | `GET /api/v1/current-session` 與之後所有需要登入的端點 |
+| 同上（授權第 2 步）                          | 系統角色取自資料庫，只接受 `user` 與 `super_admin`；不讀 JWT 的 `role`                                                                                                                                                  | 同上                                                   |
+| 授權第 3、4 步                               | **本次不建**（待決 11 的提案 11-A）；第一個需要權限矩陣或附加條件（含答案隔離）的端點要先補上                                                                                                                           | —                                                      |
+| `PasswordLoginService`、`GoogleLoginService` | 帳號啟用、未匿名化；密碼登入要求有本地密碼；Google 只登入或綁定既有帳號，不建立帳號                                                                                                                                     | 兩條登入                                               |
+| `SessionService.refresh`                     | 輪替之前先讀帳號狀態，停用就拒絕、不發新 token                                                                                                                                                                          | 延續                                                   |
 
 **未登入的訪客**能到的只有登入頁設定、兩條登入、Google 授權網址與登出；它們不讀、不回任何業務資料。PRD §權限矩陣管的是登入之後的功能，這幾條對不到矩陣的任何一列（規格 01-01 §使用角色），本次**沒有放寬**任何一格。
 
@@ -1079,7 +1079,7 @@ sequenceDiagram
 | 4   | 第一個可以登入的帳號從哪裡來                     | 維護者                        | 帳號的建立不在本模組的任何端點；`users` 表本次就建，`is_seeder` 欄也在                                                                                                                                 | **4-A（建議）**：本次提前做 06-01 的「Seeder 管理員只能由初始化指令建立」，一支 `uv run python -m app.scripts.create_seeder` 命令（不內建預設密碼、同一身分重複執行不變、在同一交易寫入帳號與標記），資料庫層的保護仍留給 06-01；**4-B**：只在測試與驗收用測試資料建立帳號，正式部署交付後仍登不進去，直到 06-01                                                                                                                                                                                    |
 | 5   | 暫時落點與登出                                   | 維護者（畫面要過 Ready gate） | 後端只回「登入成功」，不指定落點；登入成功與已登入時前端一律導向 `/`，由前端路由決定 `/` 是儀表板還是暫時落點，02-01 完成時只改前端那一條路由                                                          | 後端部分：**5-A（建議）**：本次建立登出端點（`DELETE`），控制項放不放在暫時落點由 `ui-design` 與維護者決定；**5-B**：登出端點留給 07-01 的 change                                                                                                                                                                                                                                                                                                                                                   |
 | 6   | 「忘記密碼」「前往註冊」的去處與寄信判斷         | 維護者                        | `Settings.mail_configured()` 是唯一的判斷，登入頁設定端點回 `selfRegistrationEnabled`                                                                                                                  | **6-A（建議）**：本次建立這個共用判斷（只看 `RESEND_API_KEY` 有沒有設），01-02 的 change 直接用；連結的去處見 `ui-design.md`。**6-B**：本次一律回 false，等 01-02 再建（與規格「有設定就顯示」不符）                                                                                                                                                                                                                                                                                                |
-| 7   | 已登入的人開登入頁是否也走暫時落點               | 維護者                        | 同 5：後端只回 `GET /auth/session` 的 200 或 401                                                                                                                                                       | 與 5 一起定，後端不受影響                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 7   | 已登入的人開登入頁是否也走暫時落點               | 維護者                        | 同 5：後端只回 `GET /api/v1/current-session` 的 200 或 401                                                                                                                                             | 與 5 一起定，後端不受影響                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | 8   | 沒設定 Google 時按鈕怎麼呈現                     | 維護者（可能要改規格）        | `LoginOptionsData.googleEnabled` 讓前端決定呈現；授權網址端點在沒設定時丟 `GoogleUnavailableError`                                                                                                     | **8-A（建議）**：照 ADR-004 D4 按鈕在、點了不動作（前端依 `googleEnabled=false` 不呼叫後端），規格補一條；**8-B**：沒設定時不顯示按鈕（與 01-01 第 1 條「按鈕一定在」不符，要改規格）。自動化驗收以 `app.oidc` 的測試替身代替 Google（testing-agent-rules T6），CI 與 e2e 不連真的 Google                                                                                                                                                                                                           |
 | 9   | 登入頁 Google 自動綁定算不算「連結 Google 成功」 | 維護者                        | 綁定只在 `GoogleLoginService.complete` 的一個分支，與「開始登入狀態」在同一筆交易                                                                                                                      | **9-A（建議）**：算，照 ADR-004 D5：同一筆交易寫 `google_subject`、清本地密碼、`credential_version` 加一、撤銷**既有的**所有登入狀態，再為這一台開新的登入狀態，所以這一台保留、其他裝置失效；規格 01-01 補流程與是否告知「密碼已清掉」。**9-B**：綁定但不清密碼、不撤銷（要改 ADR-004 D5）。**9-C**：登入頁不自動綁定，只接受已連結的帳號（要改 ADR-004 D5 與 01-05 Q18 的「沒有對應帳號」定義）                                                                                                   |
 | 10  | 登入後回原頁還是一律去落點                       | 維護者                        | 登入端點不收 `returnTo`；若要回原頁，只接受站內相對路徑，由前端驗證並帶在前端狀態，不經後端                                                                                                            | **10-A（建議）**：一律去落點，照規格現況；**10-B**：回原頁，先補規格                                                                                                                                                                                                                                                                                                                                                                                                                                |
@@ -1100,16 +1100,16 @@ sequenceDiagram
 
 這些不需要維護者決定，記下設計上的取捨，交給 `api-contract`、`planner` 與 `design-reviewer` 核對。
 
-| #   | 項目                                                        | 決定與理由                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| :-- | :---------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| T1  | Google 回調不用 `302`                                       | envelope 的例外只有 `204`、檔案與串流三種（architecture §API 契約），`302` 不在其中。改成 Google 回到**前端**的回調路由，前端再呼叫 `POST /api/v1/auth/google/sessions`；授權網址也以 JSON 回給前端。`code` 出現在前端網址是 SPA 加 PKCE 的標準做法：verifier 留在後端的 httpOnly 流程 cookie，單獨拿到 `code` 換不到 token。代價是前端多一條回調路由。**與 `ui-design.md` 目前的寫法不一致**：它假設 Google 起點是整頁導向後端、由後端以導回 `/` 或登入頁加網址參數結束，那需要 `302` 成為新的 envelope 例外。由 `api-contract` 定稿時兩份對齊；若要走 `302`，須先由維護者把它加進 architecture §API 契約 的例外清單（clarification 的 Q） |
-| T2  | 哪些寫入端點不驗 double-submit CSRF                         | Email 與密碼登入、Google 登入完成、延續三條在 session 之前或 access token 過期之後，沒有可綁定的 `sid`；三條都只收 `application/json`，跨站表單送不出這種請求、`fetch` 會先觸發 CORS 預檢，預檢由逐一列出的來源擋下（ADR-004 D3 自己寫自訂標頭那一層的強度等於 CORS allowlist）。Google 那條另有 `state` 與 PKCE 擋登入 CSRF。登出用 `DELETE`，跨站同樣要預檢，而且登入狀態已不能驗證時也要能清 cookie（01-05「登入狀態已經不能驗證時登出」），所以放行。放行清單寫死在 `CsrfMiddleware`，端點不自己處理（S2）                                                                                                                              |
-| T3  | `last_seen_at` 只在延續時更新                               | 守門不寫入，每個請求省一次寫；代價是閒置的起算點最多比實際最後一次操作早 15 分鐘（一張 access token 的效期），相對於 7 天可忽略                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| T4  | 「只有一個取得新的」的解讀                                  | 01-05 Q13 寫寬限期內「最多額外重發一次」、Scenario「同一次延續用第三次就不給」也預設第二次有發；所以第二次使用會拿到同一段登入狀態的另一張 token。Scenario「兩個分頁同時延續不會互相踢掉」的「只有一個取得新的」解讀成「只有一段登入狀態」，交給 specs 寫成可測的 Then                                                                                                                                                                                                                                                                                                                                                                      |
-| T5  | 寬限期 30 秒                                                | 規格把秒數交給實作（01-05 §多個分頁同時延續 的備註）；30 秒取自個人 repo ADR-021 的修訂（ADR-004 附錄記為不收、由各 change 決定），寫在 `SessionPolicy`，specs 不寫死                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| T6  | 密碼雜湊用 argon2id，驗證丟到執行緒                         | 雜湊一次約數十毫秒，直接在 async handler 裡算會擋住事件迴圈；帳號不存在時跑一次假驗證，耗時不洩漏帳號存在與否                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| T7  | 新的第三方套件                                              | `pyjwt`（JWT）、`argon2-cffi`（密碼）、`authlib`（OIDC，只在 `app/oidc/`）；以 `uv add` 加入，並在 `tests/unit/test_dependency_classification.py` 歸類、在 `import_tree.py` 登記入口套件 `oidc`。選 3-A 時再加 `redis`，並決定它是否成為 B12 的新入口                                                                                                                                                                                                                                                                                                                                                                                       |
-| T8  | `AUTH_SECRET` 是新的必填設定                                | 沒有預設值（B10、Hard Rule 8）；`.env.example` 寫產生方式但不給可用的值，兩種部署編排與 Lite 的 Quick Start 都要跟著改。由它以不同用途標籤衍生三把金鑰（JWT、CSRF、Google 流程 cookie），一把外洩不必換其他設定                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| T9  | `Secure` 與 `__Host-` cookie 只在 HTTPS 或 `localhost` 有效 | Lite 經 `http://localhost` 使用沒問題；用區網 IP 的純 HTTP 開啟時瀏覽器不會存 cookie、登不進去。這是部署限制，寫進部署文件，不放寬 cookie 屬性                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| T10 | 守門每個請求多一次查詢                                      | ADR-004 D2 已接受；一次以主鍵 JOIN `account_session` 與 `users`。之後若要快取，必須維持立即撤銷（D2 的後果）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| T11 | `service.py` 的行數                                         | 四個 service 加一個 loader 可能超過 B11 的 400 行；超過時把 `service` 改成套件（`service/__init__.py` 匯出），import-linter 的層仍是 `app.modules.account.service`，不新增未受層契約管的檔案                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| #   | 項目                                                        | 決定與理由                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| :-- | :---------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| T1  | Google 回調不用 `302`                                       | envelope 的例外只有 `204`、檔案與串流三種（architecture §API 契約），`302` 不在其中。改成 Google 回到**前端**的回調路由，前端再呼叫 `POST /api/v1/google-sessions`；授權網址也以 JSON 回給前端。`code` 出現在前端網址是 SPA 加 PKCE 的標準做法：verifier 留在後端的 httpOnly 流程 cookie，單獨拿到 `code` 換不到 token。代價是前端多一條回調路由。**與 `ui-design.md` 目前的寫法不一致**：它假設 Google 起點是整頁導向後端、由後端以導回 `/` 或登入頁加網址參數結束，那需要 `302` 成為新的 envelope 例外。由 `api-contract` 定稿時兩份對齊；若要走 `302`，須先由維護者把它加進 architecture §API 契約 的例外清單（clarification 的 Q） |
+| T2  | 哪些寫入端點不驗 double-submit CSRF                         | Email 與密碼登入、Google 登入完成、延續三條在 session 之前或 access token 過期之後，沒有可綁定的 `sid`；三條都只收 `application/json`，跨站表單送不出這種請求、`fetch` 會先觸發 CORS 預檢，預檢由逐一列出的來源擋下（ADR-004 D3 自己寫自訂標頭那一層的強度等於 CORS allowlist）。Google 那條另有 `state` 與 PKCE 擋登入 CSRF。登出用 `DELETE`，跨站同樣要預檢，而且登入狀態已不能驗證時也要能清 cookie（01-05「登入狀態已經不能驗證時登出」），所以放行。放行清單寫死在 `CsrfMiddleware`，端點不自己處理（S2）                                                                                                                         |
+| T3  | `last_seen_at` 只在延續時更新                               | 守門不寫入，每個請求省一次寫；代價是閒置的起算點最多比實際最後一次操作早 15 分鐘（一張 access token 的效期），相對於 7 天可忽略                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| T4  | 「只有一個取得新的」的解讀                                  | 01-05 Q13 寫寬限期內「最多額外重發一次」、Scenario「同一次延續用第三次就不給」也預設第二次有發；所以第二次使用會拿到同一段登入狀態的另一張 token。Scenario「兩個分頁同時延續不會互相踢掉」的「只有一個取得新的」解讀成「只有一段登入狀態」，交給 specs 寫成可測的 Then                                                                                                                                                                                                                                                                                                                                                                 |
+| T5  | 寬限期 30 秒                                                | 規格把秒數交給實作（01-05 §多個分頁同時延續 的備註）；30 秒取自個人 repo ADR-021 的修訂（ADR-004 附錄記為不收、由各 change 決定），寫在 `SessionPolicy`，specs 不寫死                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| T6  | 密碼雜湊用 argon2id，驗證丟到執行緒                         | 雜湊一次約數十毫秒，直接在 async handler 裡算會擋住事件迴圈；帳號不存在時跑一次假驗證，耗時不洩漏帳號存在與否                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| T7  | 新的第三方套件                                              | `pyjwt`（JWT）、`argon2-cffi`（密碼）、`authlib`（OIDC，只在 `app/oidc/`）；以 `uv add` 加入，並在 `tests/unit/test_dependency_classification.py` 歸類、在 `import_tree.py` 登記入口套件 `oidc`。選 3-A 時再加 `redis`，並決定它是否成為 B12 的新入口                                                                                                                                                                                                                                                                                                                                                                                  |
+| T8  | `AUTH_SECRET` 是新的必填設定                                | 沒有預設值（B10、Hard Rule 8）；`.env.example` 寫產生方式但不給可用的值，兩種部署編排與 Lite 的 Quick Start 都要跟著改。由它以不同用途標籤衍生三把金鑰（JWT、CSRF、Google 流程 cookie），一把外洩不必換其他設定                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| T9  | `Secure` 與 `__Host-` cookie 只在 HTTPS 或 `localhost` 有效 | Lite 經 `http://localhost` 使用沒問題；用區網 IP 的純 HTTP 開啟時瀏覽器不會存 cookie、登不進去。這是部署限制，寫進部署文件，不放寬 cookie 屬性                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| T10 | 守門每個請求多一次查詢                                      | ADR-004 D2 已接受；一次以主鍵 JOIN `account_session` 與 `users`。之後若要快取，必須維持立即撤銷（D2 的後果）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| T11 | `service.py` 的行數                                         | 四個 service 加一個 loader 可能超過 B11 的 400 行；超過時把 `service` 改成套件（`service/__init__.py` 匯出），import-linter 的層仍是 `app.modules.account.service`，不新增未受層契約管的檔案                                                                                                                                                                                                                                                                                                                                                                                                                                           |

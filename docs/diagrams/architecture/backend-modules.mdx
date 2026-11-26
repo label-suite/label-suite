@@ -35,7 +35,7 @@ change 的 `system-design.md` 仍然畫這次新增或修改的類別，以及�
 | 模組 | 資料夾 | 端點（operationId） | 行為的契約 |
 | :--- | :--- | :--- | :--- |
 | [health](#health) | `app/modules/health/` | `getHealth`（`GET /api/v1/health`） | `openspec/specs/health-check/` |
-| [account](#account) | `app/modules/account/` | `/api/v1/auth/` 底下七個端點；operationId 以 `backend/openapi.json` 為準 | 由 change `login-auth-guard` 建立 |
+| [account](#account) | `app/modules/account/` | `getAuthOptions`、`createSession`、`getCurrentSession`、`createSessionRefresh`、`deleteCurrentSession`、`getGoogleAuthorization`、`createGoogleSession`（路徑以 `backend/openapi.json` 為準） | 由 change `login-auth-guard` 建立 |
 
 ## health
 
@@ -155,7 +155,7 @@ sequenceDiagram
 
 ## account
 
-帳號：登入（Email 與密碼、Google）、一段登入狀態的開始、延續與結束，以及之後每個模組共用的「目前是誰」判定所需的資料讀取。端點在 `/api/v1/auth/` 底下；規格依據是 01-01 與 01-05。
+帳號：登入（Email 與密碼、Google）、一段登入狀態的開始、延續與結束，以及之後每個模組共用的「目前是誰」判定所需的資料讀取。七個端點的資源直接接在 `/api/v1` 後面（api-agent-rules A1 不插模組段）；規格依據是 01-01 與 01-05。
 
 :::note{title="還在等 clarification 的部分"}
 本節依 change `login-auth-guard` 的 `system-design.md` 寫成。其中延續登入狀態（`refresh`）的存放、登入失敗鎖定、Google 自動綁定與登出四塊依該 change 的提案畫出，clarification 定案後由 `sd` 同步校正本節；實作後由 `backend-developer` 依程式再校正一次。
@@ -271,7 +271,7 @@ sequenceDiagram
   participant U as UserRepository
   participant Q as AccountSessionRepository 與 RefreshTokenRepository
   participant DB as 資料庫
-  C->>R: POST /api/v1/auth/sessions（email、password；CSRF middleware 對這條放行）
+  C->>R: POST /api/v1/sessions（email、password；CSRF middleware 對這條放行）
   R->>L: login(email, password, source)
   L->>L: normalize_email()，超過 254 字直接當成帳密不對
   L->>U: get_by_email(normalized)
@@ -462,7 +462,7 @@ service 只丟例外、不組回應；例外在下表那一層變成錯誤外層
 | 其他狀態的 `HTTPException` | `handle_http_exception`，另記一筆 ERROR 並標記已記過 | `500` | `INTERNAL_ERROR` | `common.internal_error` |
 | `Accept-Language` 全被拒 | `LocaleMiddleware` | `406` | `NOT_ACCEPTABLE` | `common.not_acceptable` |
 | CSRF 驗不過 | `CsrfMiddleware` | `403` | `CSRF_FAILED` | `common.csrf_failed` |
-| 沒有可通行的登入狀態 | `get_current_principal` 丟 `AuthenticationRequiredError` | `401` | `AUTH_REQUIRED` | `auth.required` |
+| 沒有可通行的登入狀態 | `get_current_principal` 丟 `AuthenticationRequiredError` | `401` | `AUTH_REQUIRED` | `common.auth_required` |
 | 其他例外，含 `ResponseValidationError` | `UnhandledExceptionMiddleware` | `500` | `INTERNAL_ERROR` | `common.internal_error` |
 
 錯誤碼的格式與通用碼見 `openspec/specs/api-envelope/spec.md`。

@@ -4,7 +4,7 @@ description: 'main 上每個 /api/v1 端點開給誰：系統角色、任務成�
 category: '架構'
 tags: [架構, 後端, API, 授權]
 createdAt: '2026-11-23'
-updatedAt: '2026-11-23'
+updatedAt: '2026-11-26'
 ---
 
 # 端點授權
@@ -38,11 +38,18 @@ updatedAt: '2026-11-23'
 
 ## 端點
 
-目前 `/api/v1` 只有一個端點，刻意公開。
+目前 `/api/v1` 有八個端點：健康檢查與帳號模組的七個。帳號模組標「提案」的兩列依附 change `login-auth-guard` 待決的建議方案。
 
 | `operationId` | Method 與路徑 | 系統角色 | 任務成員身分 | PRD 權限矩陣 | 遮蔽的欄位（含答案） | 出處 |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) | `GET /api/v1/health` | 不檢查；未登入也可呼叫 | 不檢查 | 無對應的格：矩陣外刻意公開的端點 | 無；回應只有 `status` 與 `database`，不讀任務、資料集或答案 | `app/modules/health/router.py` 的 `get_health` 沒有任何認證或授權依賴；`openspec/specs/health-check/` 的「健康檢查刻意公開」 |
+| [`getAuthOptions`](/view/diagrams/architecture/api.openapi#op/getAuthOptions) | `GET /api/v1/auth-options` | 不檢查；未登入也可呼叫 | 不檢查 | 無對應的格：PRD 權限矩陣管的是登入之後的功能，登入前的訪客對不到任何一列（規格 01-01 §使用角色） | 無；只有兩個布林（是否開放自行註冊、是否設定 Google），不讀帳號、任務或答案 | `app/modules/account/router.py`；契約見 change `login-auth-guard` 的 `api-contract.md` |
+| [`createSession`](/view/diagrams/architecture/api.openapi#op/createSession) | `POST /api/v1/sessions` | 不檢查；未登入的訪客送出登入 | 不檢查 | 無對應的格：PRD 權限矩陣管的是登入之後的功能，登入前的訪客對不到任何一列（規格 01-01 §使用角色） | 無依角色的遮蔽；回應只明列 `user.id`、`user.name`、`user.role`，`email`、`hashed_password`、`google_subject`、`credential_version`、`is_seeder` 與登入狀態的 `sid` 一律不在回應裡；不讀任務、資料集或答案 | `app/modules/account/router.py`；契約見 change `login-auth-guard` 的 `api-contract.md` |
+| [`getCurrentSession`](/view/diagrams/architecture/api.openapi#op/getCurrentSession) | `GET /api/v1/current-session` | 平台成員、系統管理員（含 Seeder 管理員）；以資料庫當下的角色判定 | 不檢查 | 依系統角色：01 帳號，平台成員 `R (o)`、系統管理員 `R (o)`（讀自己的帳號） | 無依角色的遮蔽；回應只明列 `user.id`、`user.name`、`user.role`，`email`、`hashed_password`、`google_subject`、`credential_version`、`is_seeder` 與登入狀態的 `sid` 一律不在回應裡；不讀任務、資料集或答案 | `app/modules/account/router.py`；契約見 change `login-auth-guard` 的 `api-contract.md`；`get_current_principal`（`app/core/auth.py`） |
+| [`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh) | `POST /api/v1/session-refreshes`（提案） | 不檢查系統角色；持有 refresh cookie，且帳號啟用 | 不檢查 | 無對應的格：PRD 權限矩陣管的是登入之後的功能，登入前的訪客對不到任何一列（規格 01-01 §使用角色）；它延續既有的登入狀態，不讀業務資料 | 無依角色的遮蔽；回應只明列 `user.id`、`user.name`、`user.role`，`email`、`hashed_password`、`google_subject`、`credential_version`、`is_seeder` 與登入狀態的 `sid` 一律不在回應裡；不讀任務、資料集或答案 | `app/modules/account/router.py`；契約見 change `login-auth-guard` 的 `api-contract.md` |
+| [`deleteCurrentSession`](/view/diagrams/architecture/api.openapi#op/deleteCurrentSession) | `DELETE /api/v1/current-session`（提案） | 不檢查；登入狀態不能驗證時也要能清 cookie | 不檢查 | 依系統角色：01 帳號，`E (o)`（結束自己這一台的登入狀態）；不能驗證時只清本機 cookie | 無；`204` 沒有 body | `app/modules/account/router.py`；契約見 change `login-auth-guard` 的 `api-contract.md` |
+| [`getGoogleAuthorization`](/view/diagrams/architecture/api.openapi#op/getGoogleAuthorization) | `GET /api/v1/google-authorization` | 不檢查 | 不檢查 | 無對應的格：PRD 權限矩陣管的是登入之後的功能，登入前的訪客對不到任何一列（規格 01-01 §使用角色） | 無；只回 Google 的授權網址，PKCE verifier 只在 httpOnly cookie | `app/modules/account/router.py`；契約見 change `login-auth-guard` 的 `api-contract.md` |
+| [`createGoogleSession`](/view/diagrams/architecture/api.openapi#op/createGoogleSession) | `POST /api/v1/google-sessions` | 不檢查；持有同一個瀏覽器的 Google 流程 cookie | 不檢查 | 無對應的格：PRD 權限矩陣管的是登入之後的功能，登入前的訪客對不到任何一列（規格 01-01 §使用角色） | 無依角色的遮蔽；回應只明列 `user.id`、`user.name`、`user.role`，`email`、`hashed_password`、`google_subject`、`credential_version`、`is_seeder` 與登入狀態的 `sid` 一律不在回應裡；不讀任務、資料集或答案；Google 那一側的 `sub`、Email 與 `email_verified` 也不回 | `app/modules/account/router.py`；契約見 change `login-auth-guard` 的 `api-contract.md` |
 
 :::note{title="各欄怎麼填" collapsible}
 - 「系統角色」與「任務成員身分」只列放行的角色，用 PRD 的角色名稱：系統角色是平台成員、系統管理員，任務成員身分是專案負責人、審核員、標記員；不檢查時寫「不檢查」
@@ -68,7 +75,7 @@ updatedAt: '2026-11-23'
 
 | 還沒有 | 風險 | 追蹤 |
 | :--- | :--- | :--- |
-| 認證、授權與 CSRF | 目前唯一的端點刻意公開；第一個需要登入的端點要先把這幾層補上 | [ADR-004 的 D1](../../development/adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie)、[D3](../../development/adr/004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token) |
+| 授權四步的第 3、4 步（權限矩陣的 cell、附加條件含答案隔離） | `get_current_principal` 只做到第 1、2 步；第一個需要矩陣或附加條件的端點要先補上 | [ADR-004 的 D1](../../development/adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie)、[D3](../../development/adr/004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token) |
 | [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) 還沒有由規格 01-01 在權限矩陣列為刻意的例外 | 刻意公開目前只記在 `health-check` spec；它要求認證上線後由規格 01-01 在權限矩陣列為刻意的例外 | `openspec/specs/health-check/` 的「健康檢查刻意公開」 |
 | 本文與程式的自動一致性檢查 | 只靠審查與驗收時人工對照，漏改不會讓任何檢查失敗 | [#547](https://github.com/label-suite/label-suite/issues/547) §不在範圍 |
 
@@ -78,4 +85,5 @@ updatedAt: '2026-11-23'
 | :--- | :--- | :--- | :--- |
 | 2026-11-23 | 全系統的端點授權落地成本文；規劃時由 `sd` 先改本文，change 只寫異動摘要與路徑（[§誰改、什麼時候改](#誰改什麼時候改)） | 只散在各 change 的 `api-contract.md` | [#547](https://github.com/label-suite/label-suite/issues/547) |
 | 2026-11-23 | 實作後由 `backend-developer` 依程式校正本文，`code-reviewer` 再核對（[§誰改、什麼時候改](#誰改什麼時候改)） | — | [#547 的裁定](https://github.com/label-suite/label-suite/issues/547#issuecomment-7102478776) |
+| 2026-11-26 | 新增帳號模組的七個端點（規劃，待實作後校正）；已知限制的「認證、授權與 CSRF」縮成授權第 3、4 步 | — | [#719](https://github.com/label-suite/label-suite/issues/719) |
 | 2026-11-23 | 遮蔽欄收所有依角色遮蔽的欄位，與 `api-contract.md` 的「欄位遮蔽」同範圍，答案欄位另加標記（[§端點](#端點)） | 只收答案欄位 | [#547 的裁定](https://github.com/label-suite/label-suite/issues/547#issuecomment-7102478776) |

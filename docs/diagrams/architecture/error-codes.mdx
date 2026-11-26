@@ -4,7 +4,7 @@ description: 'main 上後端會回的每一個錯誤碼：HTTP 狀態、i18n 訊
 category: '架構'
 tags: [架構, 後端, API, 錯誤碼]
 createdAt: '2026-11-23'
-updatedAt: '2026-11-23'
+updatedAt: '2026-11-26'
 ---
 
 # 錯誤碼
@@ -37,14 +37,16 @@ updatedAt: '2026-11-23'
 
 ## 通用碼
 
-通用碼不加前綴，全站共用；下表六個是目前全部的通用碼，格式與定義見 `api-envelope` spec 的「錯誤碼為大寫底線格式並定義第一批通用碼」。
+通用碼不加前綴，全站共用；下表八個是目前全部的通用碼，格式與定義見 `api-envelope` spec 的「錯誤碼為大寫底線格式並定義第一批通用碼」（`AUTH_REQUIRED`、`CSRF_FAILED` 兩個由 change `login-auth-guard` 加進那條 Requirement）。
 
 | `code` | HTTP | 訊息鍵 | 在哪裡產生 | 會回這個碼的端點 |
 | :--- | :--- | :--- | :--- | :--- |
 | `NOT_FOUND` | `404` | `common.not_found` | `app/core/errors.py` 的 `handle_http_exception`（路由找不到） | 沒有端點自己回；`/api/v1` 底下不存在的路徑由路由層回；`API_DOCS_ENABLED=false` 時 `/docs`、`/docs/oauth2-redirect`、`/redoc`、`/openapi.json` 沒有註冊，也由路由層回 |
 | `METHOD_NOT_ALLOWED` | `405` | `common.method_not_allowed` | `app/core/errors.py` 的 `handle_http_exception`（方法不允許） | [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth)：用 `GET` 以外的 method 呼叫 |
 | `NOT_ACCEPTABLE` | `406` | `common.not_acceptable` | `app/core/middleware.py` 的 `LocaleMiddleware`，接住 `NotAcceptableError` | 每個 `/api/v1` 請求（CORS 預檢除外：它在 `LocaleMiddleware` 外層就回應），含 [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) |
-| `VALIDATION_FAILED` | `422` | `common.validation_failed` | `app/core/errors.py` 的 `handle_validation_error` | 目前沒有：[`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) 沒有被驗證的輸入 |
+| `VALIDATION_FAILED` | `422` | `common.validation_failed` | `app/core/errors.py` 的 `handle_validation_error` | [`createSession`](/view/diagrams/architecture/api.openapi#op/createSession)、[`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh)、[`createGoogleSession`](/view/diagrams/architecture/api.openapi#op/createGoogleSession)：body 缺欄位、超過上限、有未宣告的欄位或不是 JSON；[`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) 沒有被驗證的輸入 |
+| `AUTH_REQUIRED` | `401` | `common.auth_required` | `app/core/auth.py` 的 `get_current_principal` 丟 `AuthenticationRequiredError` | [`getCurrentSession`](/view/diagrams/architecture/api.openapi#op/getCurrentSession)：沒有可通行的登入狀態，不分原因；之後每個掛 `get_current_principal` 的端點 |
+| `CSRF_FAILED` | `403` | `common.csrf_failed` | `app/core/csrf.py` 的 `CsrfMiddleware` | 目前沒有：本次的四個寫入端點都在放行清單；之後每個不在放行清單的 `POST`／`PUT`／`PATCH`／`DELETE` |
 | `INTERNAL_ERROR` | `500` | `common.internal_error` | `app/core/middleware.py` 的 `UnhandledExceptionMiddleware`；`app/core/errors.py` 的 `handle_http_exception`（沒有對應碼的 `HTTPException`） | 每個 `/api/v1` 請求，含 [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) |
 | `DATABASE_UNAVAILABLE` | `503` | `common.database_unavailable` | `app/modules/health/service.py` 的 `HealthService.check()` 丟 `DatabaseUnavailableError`，由 `handle_app_error` 轉成外層 | [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth)：資料庫連不上或逾時 |
 
@@ -61,15 +63,28 @@ updatedAt: '2026-11-23'
 
 ## 模組專屬碼
 
-目前沒有模組專屬碼。
+每個模組一張表，欄位與 [§通用碼](#通用碼) 相同；碼要加模組前綴。程式端要做的事見 [後端模組與基礎建設的「新增業務模組的檢查清單」](./backend-modules.mdx#新增業務模組的檢查清單)。
 
-第一個業務模組加錯誤碼時，在這裡開一張表，欄位與 [§通用碼](#通用碼) 相同；碼要加模組前綴。程式端要做的事見 [後端模組與基礎建設的「新增業務模組的檢查清單」](./backend-modules.mdx#新增業務模組的檢查清單)。
+### account
+
+前綴 `ACCOUNT_`；產生的位置都是 `app/modules/account/errors.py` 定義、由 service 丟出，經 `handle_app_error` 轉成外層。標「提案」的碼依附 change `login-auth-guard` 待決的建議方案，clarification 定案後校正。
+
+| `code` | HTTP | 訊息鍵 | 在哪裡產生 | 會回這個碼的端點 |
+| :--- | :--- | :--- | :--- | :--- |
+| `ACCOUNT_INVALID_CREDENTIALS` | `401` | `account.invalid_credentials` | `PasswordLoginService.login` | [`createSession`](/view/diagrams/architecture/api.openapi#op/createSession)：帳號不存在、密碼不符、停用、已匿名化、沒有本地密碼或 Email 正規化後超過 254 字，全部同一個碼 |
+| `ACCOUNT_LOGIN_THROTTLED` | `429` | `account.login_throttled` | `PasswordLoginService.login`（提案，待決 3 選 3-A 或 3-B 才有） | [`createSession`](/view/diagrams/architecture/api.openapi#op/createSession)：連續失敗 10 次後 30 分鐘內 |
+| `ACCOUNT_SESSION_EXPIRED` | `401` | `account.session_expired` | `SessionService.refresh`（依附待決 2） | [`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh)：已過 90 天或 7 天 |
+| `ACCOUNT_SESSION_INVALID` | `401` | `account.session_invalid` | `SessionService.refresh`（依附待決 2） | [`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh)：token 不存在、登入狀態已失效、帳號停用，或寬限期外重用（疑似被盜用），不分原因 |
+| `ACCOUNT_REFRESH_CONFLICT` | `409` | `account.refresh_conflict` | `SessionService.refresh`（依附待決 2） | [`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh)：同一張 token 在寬限期內被用到第三次以上 |
+| `ACCOUNT_GOOGLE_UNAVAILABLE` | `409` | `account.google_unavailable` | `GoogleLoginService.begin`、`complete` | [`getGoogleAuthorization`](/view/diagrams/architecture/api.openapi#op/getGoogleAuthorization)、[`createGoogleSession`](/view/diagrams/architecture/api.openapi#op/createGoogleSession)：部署沒有設定 Google |
+| `ACCOUNT_GOOGLE_FLOW_INVALID` | `400` | `account.google_flow_invalid` | `GoogleLoginService.complete` | [`createGoogleSession`](/view/diagrams/architecture/api.openapi#op/createGoogleSession)：流程 cookie 不在或無效、`state` 不符、換 token 或驗 `id_token` 失敗 |
+| `ACCOUNT_GOOGLE_REJECTED` | `401` | `account.google_rejected` | `GoogleLoginService.complete` | [`createGoogleSession`](/view/diagrams/architecture/api.openapi#op/createGoogleSession)：沒有已連結的帳號，且沒有 Email 相同的帳號或 Email 未驗證；提案 N2-A 另含停用與已匿名化，不分原因 |
 
 ## 已知限制
 
 | 還沒有 | 風險 | 追蹤 |
 | :--- | :--- | :--- |
-| `400`、`401`、`403`、`409` 的錯誤碼 | 第一個需要登入或有狀態轉換的端點要先定義；`401`、`403` 與 CSRF 失敗由規格 01-01 登入定義 | 已歸檔的 [backend-skeleton `api-contract.md`](https://github.com/label-suite/label-suite/blob/main/openspec/changes/archive/2026-11-20-backend-skeleton/api-contract.md) §錯誤碼 |
+| 權限不足的 `403` 與狀態轉換的 `409` | 授權第 3 步（權限矩陣）與第一個有狀態機的端點要先定義；`401` 與 CSRF 的 `403` 已由 change `login-auth-guard` 定義 | 已歸檔的 [backend-skeleton `api-contract.md`](https://github.com/label-suite/label-suite/blob/main/openspec/changes/archive/2026-11-20-backend-skeleton/api-contract.md) §錯誤碼 |
 | 本文與 `openapi.json`、程式的自動一致性檢查 | 只靠審查時人工對照，漏改不會讓任何檢查失敗 | [#547](https://github.com/label-suite/label-suite/issues/547) §不在範圍 |
 
 ## 決策紀錄
@@ -78,3 +93,4 @@ updatedAt: '2026-11-23'
 | :--- | :--- | :--- | :--- |
 | 2026-11-23 | 全系統的錯誤碼落地成本文；規劃時由 `sd` 先改本文，change 只寫異動摘要與路徑（[§誰改、什麼時候改](#誰改什麼時候改)） | 模組專屬碼只散在各 change 的 `api-contract.md` | [#547](https://github.com/label-suite/label-suite/issues/547) |
 | 2026-11-23 | 實作後由 `backend-developer` 依程式校正本文，`code-reviewer` 再核對（[§誰改、什麼時候改](#誰改什麼時候改)） | — | [#547 的裁定](https://github.com/label-suite/label-suite/issues/547#issuecomment-7102478776) |
+| 2026-11-26 | 新增通用碼 `AUTH_REQUIRED`、`CSRF_FAILED` 與 `account` 模組的八個碼（規劃，待實作後校正） | 已知限制的「`400`、`401`、`403`、`409` 還沒有」 | [#719](https://github.com/label-suite/label-suite/issues/719) |
