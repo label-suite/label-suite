@@ -96,7 +96,33 @@ grep -q '^covered:.*docs/a-page.mdx' "$EV/$(ls -1t "$EV" | head -1)" \
 seed docs/a-page.mdx 'text, changed'
 rc=$(run false)
 [ "$rc" = "2" ] || fail "a stale docs record was still accepted (got $rc)"
-rm -f "$REPO/docs/a-page.mdx" "$REPO/scripts/check-specs.mjs"
+rm -f "$REPO/docs/a-page.mdx"
+
+# A routed file with a space (and CJK) in its name. `covered:` is a
+# space-separated list, so the path is percent-encoded in it; read back
+# unencoded, the digest broke and H6 refused the stop forever.
+rm -rf "$EV"
+seed 'docs/新 檔.md' 'text'
+produce_evidence 'docs/新 檔.md'
+grep -q '^covered: docs/新%20檔.md' "$EV/$(ls -1t "$EV" | head -1)" \
+  || fail "the space in a covered path was not encoded: $(grep '^covered:' "$EV/$(ls -1t "$EV" | head -1)")"
+rc=$(run false)
+[ "$rc" = "0" ] || fail "a covered file with a space in its name was blocked (got $rc): $(cat "$TMP/err")"
+# A record in the old format, with the space unencoded, is dropped rather
+# than crashing or matching.
+rm -rf "$EV"; mkdir -p "$EV"
+{
+  printf 'command: x\nexit: 0\ncovered: docs/新 檔.md \n'
+  printf 'head: %s\n' "$(git -C "$REPO" rev-parse HEAD)"
+  printf 'content: %s\n' "$(cat "$REPO/docs/新 檔.md" | node -e 'const c=require("node:crypto");let d=[];process.stdin.on("data",x=>d.push(x)).on("end",()=>process.stdout.write(c.createHash("sha256").update(Buffer.concat(d)).digest("hex")))')"
+  printf 'agents: %s\n' "$(node -e 'process.stdout.write(require("node:crypto").createHash("sha256").update(require("node:fs").readFileSync(process.argv[1])).digest("hex"))' "$REPO/AGENTS.md")"
+} > "$EV/old-format.rec"
+rc=$(run false)
+[ "$rc" = "2" ] || fail "an old-format record with an unencoded space was accepted or crashed (got $rc)"
+grep -q 'aborted' "$TMP/err" && fail "an old-format record crashed the checker"
+rm -f "$REPO/docs/新 檔.md"; rm -rf "$EV"
+
+rm -f "$REPO/scripts/check-specs.mjs"
 mv "$REPO/.backend-aside" "$REPO/backend"
 rm -rf "$EV"
 harness_set_tool uv 0 ''

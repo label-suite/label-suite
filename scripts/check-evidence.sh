@@ -112,7 +112,8 @@ if ! AGENTS_SHA=$(hc_sha256 "$REPO/AGENTS.md" 2>/dev/null); then
   FINISHED=1; hc_flush; exit "$EXIT_BLOCK"
 fi
 
-COVERED=""
+# One covered path per line; matched as whole lines below.
+COVERED=$'\n'
 if [ -d "$EV" ]; then
   for rec in "$EV"/*; do
     [ -f "$rec" ] || continue
@@ -125,16 +126,26 @@ if [ -d "$EV" ]; then
     # A record whose contents cannot be digested does not count. `|| continue`
     # rather than a default: the failing direction here must drop the record,
     # never supply a value that something could match.
-    now=$(cd "$REPO" && cat $rec_covered </dev/null 2>/dev/null | hc_sha256 2>/dev/null) || continue
+    # Each entry is percent-encoded (hc_path_encode in check-changed.sh), so
+    # splitting on spaces is safe. A record written before the encoding, with
+    # a space in a path, decodes to names that do not exist: the digest fails
+    # and the record is simply dropped.
+    REC_FILES=()
+    read -r -a rec_entries <<< "$rec_covered"
+    for entry in ${rec_entries+"${rec_entries[@]}"}; do
+      REC_FILES+=("$(hc_path_decode "$entry")")
+    done
+    [ "${#REC_FILES[@]}" -gt 0 ] || continue
+    now=$(cd "$REPO" && cat "${REC_FILES[@]}" </dev/null 2>/dev/null | hc_sha256 2>/dev/null) || continue
     [ "$(field content)" = "$now" ] || continue
-    COVERED="$COVERED $rec_covered"
+    for f in "${REC_FILES[@]}"; do COVERED="$COVERED$f"$'\n'; done
   done
 fi
 
 missing=0
 for rel in "${NEED[@]}"; do
-  case " $COVERED " in
-    *" $rel "*) : ;;
+  case "$COVERED" in
+    *$'\n'"$rel"$'\n'*) : ;;
     *) missing=1; emit_err "BLOCK: $rel 沒有一筆涵蓋它、通過且與目前狀態一致的證據" ;;
   esac
 done

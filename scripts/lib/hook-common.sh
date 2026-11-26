@@ -164,3 +164,27 @@ hc_read_nul_list() {
     eval "$__name+=(\"\$__entry\")"
   done
 }
+
+# hc_path_encode <path> — prints the path with the bytes that would break a
+# space-separated list percent-encoded: `%`, space, backslash, tab and
+# newline. The evidence record's `covered:` field is such a list, and a
+# routed file may well have a space in its name.
+hc_path_encode() {
+  local p="$1"
+  p=${p//%/%25}
+  p=${p//\\/%5C}
+  p=${p// /%20}
+  p=${p//$'\t'/%09}
+  p=${p//$'\n'/%0A}
+  printf '%s' "$p"
+}
+
+# hc_path_decode <encoded> — the inverse of hc_path_encode. Backslashes were
+# encoded on the way in, so the only escapes %b sees are the ones made here.
+hc_path_decode() {
+  local p="$1"
+  p=${p//\\/%5C}
+  p=${p//%/\\x}
+  printf '%b' "$p"
+}
+

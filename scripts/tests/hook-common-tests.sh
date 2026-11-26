@@ -245,6 +245,13 @@ buf=$(bash -c "set -uo pipefail; source '$LIB'; hc_init; printf %s \"\$HC_BUFFER
 [ -d "$keep" ]  || fail "cleanup removed a directory it did not create"
 rm -rf "$keep"
 
+# ── Path encoding for space-separated lists round-trips ──────────────
+
+for sample in 'docs/新 檔.md' 'a%20b' 'back\slash\x41' $'tab\there' $'new\nline' 'plain/path.py'; do
+  out=$(bash -c 'source "$1"; e=$(hc_path_encode "$2"); case "$e" in *" "*) printf "SPACE"; exit;; esac; hc_path_decode "$e"' _ "$LIB" "$sample")
+  [ "$out" = "$sample" ] || fail "hc_path_encode/decode did not round-trip: $(printf %q "$sample") -> $(printf %q "$out")"
+done
+
 if [ "$failures" -gt 0 ]; then
   echo "$failures hook-common test(s) failed."
   exit 1

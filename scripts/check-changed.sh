@@ -376,8 +376,13 @@ if [ -n "$GIT_DIR" ]; then
   # the docs route is always enabled -- leaving its files out meant no
   # docs-only change could ever satisfy H6, which is how the Stop hook came to
   # block a documentation commit on the day it was registered.
-  covered=$(printf '%s ' ${PY_FILES+"${PY_FILES[@]}"} ${TS_FILES+"${TS_FILES[@]}"} \
-                         ${DOC_FILES+"${DOC_FILES[@]}"})
+  # Space-separated, each path percent-encoded (hc_path_encode), so a name
+  # with a space in it is still one entry when check-evidence reads it back.
+  covered=""
+  for rel in ${PY_FILES+"${PY_FILES[@]}"} ${TS_FILES+"${TS_FILES[@]}"} \
+             ${DOC_FILES+"${DOC_FILES[@]}"}; do
+    covered="$covered$(hc_path_encode "$rel") "
+  done
   # The record has two halves. The first carries text that came from outside —
   # tool names, paths — and goes through the same masking the diagnostics do.
   # The second carries digests this checker computed itself from content that
