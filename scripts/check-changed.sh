@@ -71,7 +71,7 @@ undecidable() { # undecidable <reason>
 }
 
 # ── Locate the checkout ──────────────────────────────────────────────
-CWD="$PWD"; EVENT_PATH=""; EVENT_TOOL=""; PATCH_PATHS=()
+CWD="$PWD"; EVENT_PATH=""; EVENT_TOOL=""; PATCH_PATHS=(); PATCH_HEADERS=0
 if [ "$MODE" = "event" ]; then
   payload=$(cat)
   if ! printf '%s' "$payload" | node "$HERE/lib/hook-payload.mjs" --event "$EVENT" \
@@ -85,6 +85,7 @@ if [ "$MODE" = "event" ]; then
       tool_name) EVENT_TOOL="${rec#*$'\x1F'}" ;;
       tool_path) EVENT_PATH="${rec#*$'\x1F'}" ;;
       patch_path) PATCH_PATHS+=("${rec#*$'\x1F'}") ;;
+      patch_headers) PATCH_HEADERS=1 ;;
     esac
   done
 fi
@@ -108,17 +109,19 @@ fi
 CANDIDATES=()
 case "$MODE" in
   event)
-    if [ "$EVENT_TOOL" = "apply_patch" ] && [ "${#PATCH_PATHS[@]}" -gt 0 ]; then
+    if [ "$EVENT_TOOL" = "apply_patch" ] && [ "$PATCH_HEADERS" = "1" ]; then
       # Codex's apply_patch has no path field. hook-payload.mjs reads the
       # files the patch added, updated or moved to out of its own headers;
       # they are relative to the session's cwd, not to the repository root.
       # The loop below normalises them and drops anything outside the
-      # workspace or no longer on disk.
-      for p in "${PATCH_PATHS[@]}"; do
+      # workspace or no longer on disk. A delete-only patch has headers but
+      # leaves nothing to check, which ends as NA rather than in the git
+      # fallback below.
+      for p in ${PATCH_PATHS+"${PATCH_PATHS[@]}"}; do
         case "$p" in /*) CANDIDATES+=("$p") ;; *) CANDIDATES+=("$CWD/$p") ;; esac
       done
     elif [ "$EVENT_TOOL" = "apply_patch" ]; then
-      # No readable file header: the patch text is in a shape this checker
+      # No Add, Update or Delete header at all: the patch text is in a shape this checker
       # does not recognise. Rather than check nothing, take what git reports
       # as changed in this checkout -- tracked files that differ from HEAD
       # (staged or not) plus untracked files that are not ignored. That is a

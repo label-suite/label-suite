@@ -19,6 +19,7 @@ import {
   formatRecords,
   parsePayload,
   patchPaths,
+  readPatch,
   resolveTargetPath,
 } from "../lib/hook-payload.mjs";
 
@@ -165,6 +166,24 @@ test("patchPaths returns nothing for malformed or missing patch text", () => {
   assert.deepEqual(patchPaths("*** Move to: orphan.py"), []);
   assert.deepEqual(patchPaths(undefined), []);
   assert.deepEqual(patchPaths("*** Add File: bad\x1fname"), []);
+});
+
+test("readPatch tells a delete-only patch apart from unrecognised text", () => {
+  assert.deepEqual(readPatch("*** Begin Patch\n*** Delete File: a.md\n*** End Patch"), {
+    paths: [],
+    sawHeader: true,
+  });
+  assert.deepEqual(readPatch("not a patch"), { paths: [], sawHeader: false });
+  const r = parsePayload(
+    json({
+      tool_name: "apply_patch",
+      tool_input: { command: "*** Delete File: a.md" },
+      cwd: "/tmp",
+    }),
+    "PostToolUse",
+  );
+  assert.ok(r.records.some(([n, v]) => n === "patch_headers" && v === "yes"));
+  assert.ok(!r.records.some(([n]) => n === "patch_path"));
 });
 
 test("patch_path records are emitted for apply_patch only", () => {

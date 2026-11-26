@@ -35,7 +35,7 @@ export const REQUIRED_FIELDS = {
 // to state the gap rather than build a protection on it. H3 only reports, and
 // its spec limits it to the files this edit touched, so for apply_patch this
 // module offers the paths named in the patch's own file headers as separate
-// patch_path records (see patchPaths below). They never become tool_path, so
+// patch_path records, plus a patch_headers marker (see readPatch below). They never become tool_path, so
 // check-write-target.sh still sees no path and keeps its documented NA. When
 // the headers are absent or unreadable, check-changed.sh falls back to what
 // git reports as changed in the checkout.
@@ -53,6 +53,7 @@ export const RECORD_NAMES = [
   "tool_path",
   "tool_command",
   "patch_path",
+  "patch_headers",
   "stop_hook_active",
 ];
 
@@ -65,17 +66,23 @@ export const RECORD_NAMES = [
  * them and confines them to the workspace. A path carrying a control
  * character cannot be framed safely and is dropped rather than truncated.
  *
+ * `sawHeader` says whether any Add, Update or Delete header was found at
+ * all, so a delete-only patch (headers, but nothing left to check) can be
+ * told apart from text this reader does not recognise.
+ *
  * This reads a format the official documentation does not describe, so it
  * is only ever used to narrow a report, never to grant or refuse anything.
  */
-export function patchPaths(command) {
-  if (typeof command !== "string") return [];
+export function readPatch(command) {
+  if (typeof command !== "string") return { paths: [], sawHeader: false };
   const paths = [];
+  let sawHeader = false;
   let lastUpdate = -1;
   for (const rawLine of command.split("\n")) {
     const line = rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine;
     const header = /^\*\*\* (Add|Update|Delete) File: (.+)$/.exec(line);
     if (header) {
+      sawHeader = true;
       lastUpdate = -1;
       if (header[1] === "Delete") continue;
       paths.push(header[2].trim());
@@ -88,8 +95,16 @@ export function patchPaths(command) {
       lastUpdate = -1;
     }
   }
-  // eslint-disable-next-line no-control-regex
-  return [...new Set(paths)].filter((p) => p !== "" && !/[\x00-\x1F]/.test(p));
+  return {
+    // eslint-disable-next-line no-control-regex
+    paths: [...new Set(paths)].filter((p) => p !== "" && !/[\x00-\x1F]/.test(p)),
+    sawHeader,
+  };
+}
+
+/** The surviving paths alone; see readPatch. */
+export function patchPaths(command) {
+  return readPatch(command).paths;
 }
 
 const RECORD_SEP = "\0";
@@ -176,7 +191,9 @@ export function parsePayload(raw, eventName) {
       if (typeof input.command === "string") {
         records.push(["tool_command", input.command]);
         if (toolName === "apply_patch") {
-          for (const p of patchPaths(input.command)) records.push(["patch_path", p]);
+          const patch = readPatch(input.command);
+          if (patch.sawHeader) records.push(["patch_headers", "yes"]);
+          for (const p of patch.paths) records.push(["patch_path", p]);
         }
       }
     }

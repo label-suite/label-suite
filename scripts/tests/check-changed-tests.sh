@@ -458,6 +458,23 @@ rc=$(patch_event '*** Begin Patch
 harness_calls | grep -qF 'ap-outside' && fail "apply_patch: a path outside the workspace reached a tool"
 grep -q 'ap-outside.py 在 workspace 之外' "$TMP/err" || fail "apply_patch: the outside path was not reported as skipped"
 
+# A delete-only patch has headers but leaves nothing behind: NA, and the
+# other dirty files in the checkout stay out of it (no git fallback).
+seed docs/ap-a.md 'a'
+seed docs/ap-b.md 'b'
+git -C "$REPO" add -A >/dev/null; git -C "$REPO" commit -qm "docs for the delete-only case" >/dev/null
+rm -f "$REPO/docs/ap-a.md"
+seed docs/ap-b.md 'b, edited before this patch'
+harness_reset_calls
+rc=$(patch_event '*** Begin Patch
+*** Delete File: docs/ap-a.md
+*** End Patch')
+[ "$rc" = "0" ] || fail "apply_patch: a delete-only patch did not exit 0 (got $rc)"
+grep -q 'check-specs' "$TMP/err" && fail "apply_patch: a delete-only patch ran the docs check for another dirty file"
+grep -q '讀不到檔案標頭' "$TMP/err" && fail "apply_patch: a delete-only patch fell back to the git list"
+grep -q '^NA: 本次沒有命中任何已啟用的路由' "$TMP/err" || fail "apply_patch: a delete-only patch was not reported as NA"
+git -C "$REPO" checkout -q -- docs/ap-a.md docs/ap-b.md
+
 # A clean checkout after a patch (for example one that was reverted) routes
 # nothing and says so.
 git -C "$REPO" add -A >/dev/null; git -C "$REPO" commit -qm "apply_patch results" >/dev/null
