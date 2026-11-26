@@ -71,7 +71,7 @@
 | 畫面 | 用到的 variant |
 | :--- | :--- |
 | `components-showcase#state-default` | 全部七個加兩個狀態 |
-| `account/profile`（`state-default`） | `.btn-primary`（`profile.html:803`） |
+| `account/profile`（`state-default`） | `.btn-primary`（`profile.html:813`） |
 | `admin/role-settings`（`#state-default`、`#state-dirty`） | `.btn-ghost`／`.btn-cta` **本頁重新定義**（`role-settings.html:77`–`:78`、`:241`–`:242`）；`.btn-danger`（`:872`） |
 | `admin/user-management`（`#state-default`、`#toast-action`） | `.btn-primary`／`.btn-ghost` 本頁只補版面規則（`user-management.html:56`），外觀來自 `button.css`；`.btn-danger`（`user-management.html:604`） |
 | `dashboard/dashboard`（全部視圖） | 本頁的 `.btn` 外框（`dashboard.layout.css:208`–`:238`）加正典 variant：`.btn-primary`、三個角色 CTA 的 `.btn-cta`、`.btn-secondary.slim`；彩色鈕已於 #423 刪除 → `../design-gaps.md` G-37 |

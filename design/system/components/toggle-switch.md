@@ -28,7 +28,7 @@
 
 ## token
 
-`--color-border-control`、`--color-primary`、`--color-toggle-thumb`、`--color-on-cta`、`--radius-full`、`--dur-fast`。圓鈕關閉時用 `--color-toggle-thumb`（淺色白、深色 slate-200 `#E2E8F0`，`components-showcase.html:339`），開啟時圓鈕疊在主色軌道上，改用 `--color-on-cta`（`:341`）。#437 之前圓鈕是字面 `white`，深色主題開啟時白鈕疊在亮靛藍上只有 2.98:1，現在是 5.36:1。關閉的淺色圓鈕對 `--color-border` 軌道只有 1.23:1，這是 #437 之前就有的現況，#437 沒有改淺色。#438 把關閉時的軌道改成 `--color-border-control`（`components-showcase.html:338`、`task-config.css:245`、`account/profile.html:616` 三份一起改）：改軌道而不改圓鈕，因為軌道對頁面底色本身也要達 3:1。改後軌道對白底 3.55:1、對頁面底色 3.23:1，關閉的圓鈕對軌道淺色 3.55:1、深色 4.26:1。淺色軌道因此由 `#E2E8F0` 變成 `#7C899D`，是看得見的改變；這一組對比也寫進 `token-usage.json`，由 tokens 建置檢查。
+`--color-border-control`、`--color-primary`、`--color-toggle-thumb`、`--color-on-cta`、`--radius-full`、`--dur-fast`。圓鈕關閉時用 `--color-toggle-thumb`（淺色白、深色 slate-200 `#E2E8F0`，`components-showcase.html:339`），開啟時圓鈕疊在主色軌道上，改用 `--color-on-cta`（`:341`）。#437 之前圓鈕是字面 `white`，深色主題開啟時白鈕疊在亮靛藍上只有 2.98:1，現在是 5.36:1。關閉的淺色圓鈕對 `--color-border` 軌道只有 1.23:1，這是 #437 之前就有的現況，#437 沒有改淺色。#438 把關閉時的軌道改成 `--color-border-control`（`components-showcase.html:338`、`task-config.css:245`、`account/profile.html:624` 三份一起改）：改軌道而不改圓鈕，因為軌道對頁面底色本身也要達 3:1。改後軌道對白底 3.55:1、對頁面底色 3.23:1，關閉的圓鈕對軌道淺色 3.55:1、深色 4.26:1。淺色軌道因此由 `#E2E8F0` 變成 `#7C899D`，是看得見的改變；這一組對比也寫進 `token-usage.json`，由 tokens 建置檢查。
 
 ## 鍵盤與焦點
 

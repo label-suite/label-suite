@@ -43,9 +43,9 @@
 
 **狀態（#437）**：`white` 關鍵字已處理。`design/prototype/` 的 CSS、HTML、JS 原有 25 處獨立的 `white`（不算 `--color-white`、`white-space` 這類字串），其中 15 處是實際上色、10 處是註解與文案；上色的 15 處全部換掉。現在剩 11 處 `white`，都不是上色：`tokens.css` 的註解 7 處（含 #437 新增的一處）、`dashboard.components.css:358`、`:362` 的註解 3 處、`dataset-analysis-detail.html:809` 的畫面文案 1 處。寫死的 `#fff` 原有 2 處（不算 `modal.css:78` 的註解），換掉側欄通知徽章那處，剩 `account/profile.html:178`：頭像遮罩上的上傳圖示，遮罩固定是 48% 黑，白色在兩種主題都對。改法分三類：
 
-- **主色填色上的字與圖形**改 `--color-on-cta`：Toggle Switch 開啟時的圓鈕（`task-config.css:248`、`components-showcase.html:341`、`account/profile.html:634`）、分類預覽勾選框（`task-config.css:233`）、輸出類型序號徽章（`:490`）、選取 chip 的勾與圓點（`:561`–`:564`，showcase `:525`–`:537`）。帳號頁與個人資料頁 spinner 的其餘三邊由半透明白改成 `--color-on-cta` 的 `color-mix()`。
+- **主色填色上的字與圖形**改 `--color-on-cta`：Toggle Switch 開啟時的圓鈕（`task-config.css:248`、`components-showcase.html:341`、`account/profile.html:642`）、分類預覽勾選框（`task-config.css:233`）、輸出類型序號徽章（`:490`）、選取 chip 的勾與圓點（`:561`–`:564`，showcase `:525`–`:537`）。帳號頁與個人資料頁 spinner 的其餘三邊由半透明白改成 `--color-on-cta` 的 `color-mix()`。
 - **版面底色**改 `--color-white`：關係抽取預覽列（`task-config.css:439`、`:445`）、統一預覽框（`:480`）、任務列表按鈕焦點環的外圈（`task-list.html:69`）。
-- **新增兩個 token**：`--color-toggle-thumb`（關閉時的圓鈕，淺色 `#FFFFFF`、深色 `#E2E8F0`；`task-config.css:246`、showcase `components-showcase.html:339`、`account/profile.html:627`）與 `--color-on-badge-notify`（側欄通知數字，兩種主題都是 `#FFFFFF`，對 `--color-badge-notify` 6.47:1，`sidebar.css:676`）。
+- **新增兩個 token**：`--color-toggle-thumb`（關閉時的圓鈕，淺色 `#FFFFFF`、深色 `#E2E8F0`；`task-config.css:246`、showcase `components-showcase.html:339`、`account/profile.html:635`）與 `--color-on-badge-notify`（側欄通知數字，兩種主題都是 `#FFFFFF`，對 `--color-badge-notify` 6.47:1，`sidebar.css:676`）。
 
 淺色畫面逐頁比對與改前像素相同；深色下上述元件改成深墨或 slate-200，不再是白。`rgba()` 的半透明白（原型狀態切換列，見 [Proto Toggle Bar](components/proto-toggle-bar.md)；`task-detail.html:1787` 的內陰影）與 CSS 裡 data-URI SVG 的 `white`（#438）不在本單範圍。#438 盤點時原型的 data-URI 裡沒有 `white`，這句指的應是下拉箭頭寫死的筆畫色，處理見下段。
 
@@ -54,7 +54,7 @@
 - **主色的 `rgba(99,102,241,…)` 改 `color-mix(in srgb, var(--color-primary) N%, transparent)`**，N 照原本的透明度：列表頁焦點環（`list-page.css:30`、`:39`，12%）、showcase 輸入框焦點環（`components-showcase.html:305`，12%）、showcase 頭像框線（`:914`，20%）、`dataset-analysis-list.html:78` 的列焦點（18%）、`annotation-workspace.html:123`、`:833`、`:854`（20%）。淺色計算值與改前相同，深色跟著深色主色換。其他頁的 `rgba()` 焦點環（`task-config.css`、`task-new.html`、`task-detail.html`、`user-management.html`、`role-settings.html`、`sidebar.css`、`account/profile.html`、帳號頁、`task-list.html`）不在本單範圍，#442 已處理（見下段）。
 - **`task-detail.html:1787` 的內陰影**改 `color-mix(in srgb, var(--color-white) 92%, transparent)`：淺色同值，深色變成卡片底色的 92%，不再是一條亮白線。
 - **下拉選單箭頭**：data-URI SVG 讀不到 `var()`，`<select>` 又沒有偽元素可以改用 mask，所以每個主題各寫一份 URI，筆畫色對齊 `--color-ink-muted`（淺色 `#5E6B7F`、深色 `#9CA3AF`）。共 9 條規則：`list-page.css:34`、`:103`（深色 `:108`–`:109`）、`user-management.html:79`、`:138`、`:164`（深色 `:171`–`:173`）、`dashboard.components.css:371`（深色 `:377`）、`task-detail.html:227`、`:623`（深色 `:233`、`:629`）、`task-new.html:68`（深色 `:73`）。淺色由 `#94A3B8` 改 `#5E6B7F`：舊色 #420 起已不是 token，對白底只有 2.56:1；新色 5.40:1。這是淺色的可見改變，維護者若要保留舊色可以只還原淺色那一份。
-- **Toggle Switch 關閉時的軌道**由 `--color-border` 改 `--color-border-control`（`components-showcase.html:338`、`task-config.css:245`、`account/profile.html:616`）。圓鈕 `--color-toggle-thumb` 疊在舊軌道上淺色只有 1.23:1，達不到 UI 元件的 3:1；改軌道而不改圓鈕，因為軌道對頁面底色也要 3:1（白底 3.55、頁底 3.23:1），圓鈕對新軌道淺色 3.55、深色 4.26:1。這是淺色的可見改變（軌道由 `#E2E8F0` 變 `#7C899D`）。`token-usage.json` 補了這一組對比，`tokens.json` 的未達清單仍是原本 8 組。
+- **Toggle Switch 關閉時的軌道**由 `--color-border` 改 `--color-border-control`（`components-showcase.html:338`、`task-config.css:245`、`account/profile.html:624`）。圓鈕 `--color-toggle-thumb` 疊在舊軌道上淺色只有 1.23:1，達不到 UI 元件的 3:1；改軌道而不改圓鈕，因為軌道對頁面底色也要 3:1（白底 3.55、頁底 3.23:1），圓鈕對新軌道淺色 3.55、深色 4.26:1。這是淺色的可見改變（軌道由 `#E2E8F0` 變 `#7C899D`）。`token-usage.json` 補了這一組對比，`tokens.json` 的未達清單仍是原本 8 組。
 - **showcase 頭像**：首字 `.avatar-preview` 改 `--color-on-cta`（`components-showcase.html:931`）；上傳遮罩的圖示改寫死 `#fff`（`:946`），理由同 `account/profile.html:178`：遮罩在兩種主題都是黑色半透明，白色兩邊都對。所以寫死的 `#fff` 現在是 2 處。
 - **showcase 色點外框**：`.entity-color-dot`、`.annotation-preview-color` 淺色的黑色半透明不變，深色加一條覆寫改 `--color-ink` 的 18%（`components-showcase.html:741`–`:743`），對齊 `task-config.css` 的做法。
 - **`dataset-analysis-detail.html:10`** 補載 `assets/data-palette.css`：實體色點的 `--data-entity-N` 原本在這頁是空值（淺色計算出 `#6366F1`，深色 `#818CF8`）。
@@ -64,7 +64,7 @@
 **狀態（#442）**：其餘頁面寫死的主色與錯誤色 `rgba()` 改成 token 的 `color-mix()`，N 照原本的透明度。本段列的是修正後的行號。
 
 - **主色 `rgba(99,102,241,…)`**：`design/prototype/` 原有 34 處，現在只剩 `tokens.css:146` 的 `--shadow-card`：它本身就是 token 定義，深色另有一份（`tokens.css:272`），而 tokens 建置會略過 `color-mix()` 值，所以留著。其餘 33 處分三類：
-  - **焦點環** 26 處：帳號四頁（`login.html:251`、`register.html:210`、`forgot-password.html:222`、`reset-password.html:224`）、`account/profile.html:209`、`user-management.html:75`、`:83`、`:159`、`:168`、`dashboard.components.css:376`、`task-config.css:162`、`:172`、`:195`、`:217`、`:226`、`:253`、`:391`、`task-detail.html:252`、`:1205`、`:1252`、`task-new.html:66`、`:69`、`:75`，都是 12%；`account/profile.html:635` 的 Toggle Switch 是 25%；`sidebar.css:234` 的側欄工具鈕與 `task-list.html:69` 的 `.btn` 是 18%。
+  - **焦點環** 26 處：帳號四頁（`login.html:251`、`register.html:210`、`forgot-password.html:222`、`reset-password.html:224`）、`account/profile.html:209`、`user-management.html:75`、`:83`、`:159`、`:168`、`dashboard.components.css:376`、`task-config.css:162`、`:172`、`:195`、`:217`、`:226`、`:253`、`:391`、`task-detail.html:252`、`:1205`、`:1252`、`task-new.html:66`、`:69`、`:75`，都是 12%；`account/profile.html:643` 的 Toggle Switch 是 25%；`sidebar.css:234` 的側欄工具鈕與 `task-list.html:69` 的 `.btn` 是 18%。
   - **框線** 6 處：`task-config.css:370` 的 schema 展開箭頭（28%）、`:389` schema 卡 hover（45%）、`:390` `.is-on`（38%）、`:446` 與 `:488` 兩個關係徽章（30%）、`sidebar.css:314` 側欄頭像（16%）。
   - **底色** 1 處：`role-settings.html:157` 系統權限格 `.sys-bg`（2.5%）。
 - **錯誤色 `rgba(185,28,28,…)`** 8 處改 `color-mix(in srgb, var(--color-error) N%, transparent)`：帳號四頁錯誤輸入框的環（`login.html:255`、`register.html:214`、`forgot-password.html:226`、`reset-password.html:228`，8%）、`account/profile.html:214`（10%）、`task-detail.html:1220` 底色（8%）、`:1450` 框線（26%）、`:1453` 底色（6%）。
@@ -375,7 +375,7 @@
 | :--- | :--- |
 | **重現方式** | 在 `components-showcase.html` 的 `#comp-buttons`，Tab 到「建立中…」那顆（`.btn-loading`），按 Enter。 |
 | **受影響範圍** | [Button](components/button.md)、[UXC-06](ux-conventions.md#uxc-06-送出中的載入態與重複送出防護) |
-| **依據** | `components-showcase.html:213`「`.btn-loading { opacity: 0.7; cursor: not-allowed; pointer-events: none; }`」、`:220`「`.btn-disabled, button[disabled] { opacity: 0.4; cursor: not-allowed; pointer-events: none; }`」。`pointer-events: none` 不影響鍵盤；只有 `button[disabled]` 那一半真的擋得住，`.btn-loading` 與 `.btn-disabled` 兩個 class 單獨用時擋不住。UXC-06 的引用（`account/profile.html:1528`）明寫「double-submission guard」。 |
+| **依據** | `components-showcase.html:213`「`.btn-loading { opacity: 0.7; cursor: not-allowed; pointer-events: none; }`」、`:220`「`.btn-disabled, button[disabled] { opacity: 0.4; cursor: not-allowed; pointer-events: none; }`」。`pointer-events: none` 不影響鍵盤；只有 `button[disabled]` 那一半真的擋得住，`.btn-loading` 與 `.btn-disabled` 兩個 class 單獨用時擋不住。UXC-06 的引用（`account/profile.html:1540`）明寫「double-submission guard」。 |
 | **待決問題** | 要改成加 `disabled` 屬性嗎？`.btn-loading` 的語意是「按鈕還在、只是忙」，加 `disabled` 會讓它退出 Tab 順序，可能不是想要的。 |
 
 ### G-08 Toast 的 error 不自動消失，又不搶焦點
@@ -467,7 +467,7 @@
 | :--- | :--- |
 | **重現方式** | 開 `pages/account/profile.html`，點 Email 旁的「變更」、輸入新信箱按「下一步」：停在「驗證信已寄送」。之後沒有任何畫面能模擬「點了信裡已過期或已失效的連結」。再開 `pages/account/verify-email.html`，按原型狀態列的「已過期」：面板寫「連結無法使用，請重新申請」，但按鈕是「重新註冊」，那是註冊流程的面板，沒有「回個人設定」或「前往登入」。 |
 | **受影響範圍** | `account/profile#state-default`（換 Email 流程沒有失效落點的視圖）、`account/verify-email`；[State Panel](components/state-panel.md)；規格 01-04 §換 Email 第 9 條、§業務流程「用驗證連結換掉 Email」的 E1、§邊界情況、§驗收標準 |
-| **依據** | 原型：`profile.html` 的 `setState`（`:1437`–`:1448`）只有 `skeleton`、`emailChange`、`emailSent` 與一般狀態，換 Email 走到 `emailSent`（`:1615`）就結束；`verify-email.html:341`–`:350` 的 `#tokenErrorPanel` 只有一個連到 `register.html` 的「重新註冊」。規格 [`01-account/04-profile.mdx`](../../docs/specs/01-account/04-profile.mdx) §換 Email 第 9 條：「連結過期、已經失效，或被新請求蓋掉 → 不換 Email，顯示與規格 01-03 §連結無法使用、規格 01-02 §註冊成功**同一套**的一次性連結失效面板，訊息不分原因，一律是『連結無法使用，請重新申請』」；同條子項：「面板上的按鈕看使用者**當時有沒有登入**：已登入顯示『回個人設定』→ 前往這一頁；未登入顯示『前往登入』→ 前往登入頁」（Q19，維護者 2026-11-23）。 |
+| **依據** | 原型：`profile.html` 的 `setState`（`:1449`–`:1460`）只有 `skeleton`、`emailChange`、`emailSent` 與一般狀態，換 Email 走到 `emailSent`（`:1638`）就結束；`verify-email.html:341`–`:350` 的 `#tokenErrorPanel` 只有一個連到 `register.html` 的「重新註冊」。規格 [`01-account/04-profile.mdx`](../../docs/specs/01-account/04-profile.mdx) §換 Email 第 9 條：「連結過期、已經失效，或被新請求蓋掉 → 不換 Email，顯示與規格 01-03 §連結無法使用、規格 01-02 §註冊成功**同一套**的一次性連結失效面板，訊息不分原因，一律是『連結無法使用，請重新申請』」；同條子項：「面板上的按鈕看使用者**當時有沒有登入**：已登入顯示『回個人設定』→ 前往這一頁；未登入顯示『前往登入』→ 前往登入頁」（Q19，維護者 2026-11-23）。 |
 | **待決問題** | 這個失效面板要不要在原型畫出來（屬**畫面修正**，走 Ready gate）？要畫的話放在哪一頁、用什麼示範開關分出「已登入」與「未登入」兩種按鈕？交付包要不要替它收一個視圖？ |
 
 ### G-59 連結 Google 帳號時在 Google 那一側取消或不通過，原型沒有那個狀態
@@ -478,7 +478,7 @@
 | :--- | :--- |
 | **重現方式** | 開 `pages/account/profile.html`，在「連結 Google 帳號」區塊點「連結 Google 帳號」：出現「正在前往 Google 驗證…」的 toast，0.6 秒後區塊一律切成「已連結」。沒有任何方式走到「取消」或「驗證不通過」，也看不到「沒有連結 Google 帳號，請再試一次」這句。 |
 | **受影響範圍** | `account/profile#state-google-linked`、`#state-default`；[Toast](components/toast.md)；規格 01-04 §連結 Google 帳號 第 7 條、§邊界情況、§驗收標準 |
-| **依據** | 原型：`handleGoogleLink`（`profile.html:1761`–`:1765`）只有一條路：`showToast('info', t('toastGoogleLinking'), '')` 後 `setState('sso')`。規格 [`01-account/04-profile.mdx`](../../docs/specs/01-account/04-profile.mdx) §連結 Google 帳號 第 7 條：「使用者在 Google 那一側取消，或驗證不通過 → 回到這一頁，Google 區塊維持**未連結**並顯示一句說明『沒有連結 Google 帳號，請再試一次』；登入狀態不變，不必重新登入」；說明不分原因，英文是「Your Google account was not linked. Please try again.」（Q20，維護者 2026-11-23）。 |
+| **依據** | 原型：`handleGoogleLink`（`profile.html:1784`–`:1788`）只有一條路：`showToast('info', t('toastGoogleLinking'), '')` 後 `setState('sso')`。規格 [`01-account/04-profile.mdx`](../../docs/specs/01-account/04-profile.mdx) §連結 Google 帳號 第 7 條：「使用者在 Google 那一側取消，或驗證不通過 → 回到這一頁，Google 區塊維持**未連結**並顯示一句說明『沒有連結 Google 帳號，請再試一次』；登入狀態不變，不必重新登入」；說明不分原因，英文是「Your Google account was not linked. Please try again.」（Q20，維護者 2026-11-23）。 |
 | **待決問題** | 這個失敗狀態要不要在原型畫出來（屬**畫面修正**，走 Ready gate）？那句說明放在區塊裡的哪裡、用什麼樣式（區塊內文字或 toast）？交付包要不要替它收一個視圖？ |
 
 ### G-60 使用者管理沒有「這個部署沒有設定寄信服務」的狀態，也沒有「信未寄出」標記
@@ -549,7 +549,7 @@
 
 ### G-17 Avatar 的尺寸三個數字各不相同，而且少一個動作
 
-showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），它的 CSS 是 `width: 80px`（`:920`），出貨的 `profile.html:149` `.avatar-preview` 是 72px。另外 `profile.html:751` 有「移除頭像」（`.avatar-remove-btn`），正典的上傳契約 `§Avatar upload contract`（`components-showcase.html:1596`–`:1632`）沒有這個動作。
+showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），它的 CSS 是 `width: 80px`（`:920`），出貨的 `profile.html:149` `.avatar-preview` 是 72px。另外 `profile.html:759` 有「移除頭像」（`.avatar-remove-btn`），正典的上傳契約 `§Avatar upload contract`（`components-showcase.html:1596`–`:1632`）沒有這個動作。
 
 ### G-20 Review Status Track 的軌道標籤沒有 ARIA 關聯
 
@@ -683,6 +683,6 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 | :--- | :--- | :--- |
 | G-16 | Accordion 的 header 是 `div[role=button]`，showcase 沒有腳本，所以 Enter／Space 按不動 | **有腳本**：`components-showcase.html:1582`–`:1594` 綁了 `click` 與 `keydown`，攔 `Enter` 與 `Space`（`:1589`）並同步 `aria-expanded`（`:1585`）。寫下時沒有去看 `<script>` 區塊。 |
 | G-32 | Password Eye Toggle 的 `aria-label` 不隨狀態更新 | **會更新**：`pages/account/login.html:606`–`:612` 切換 `input.type` 時一併改寫 `aria-label`，`:587` 在換語言時也依目前狀態重算。 |
-| G-35 | `account/profile` 的頭像骨架（72px）比實際頭像（80px）小，違反 UXC-08 | **兩者都是 72px**：`profile.html:149` 的 `.avatar-preview` 與 `:560` 的 `.skel-avatar` 相同。80px 只存在於 showcase 的 demo（`components-showcase.html:920`，註解標 `md:w-20 — desktop demo size`）。 |
+| G-35 | `account/profile` 的頭像骨架（72px）比實際頭像（80px）小，違反 UXC-08 | **兩者都是 72px**：`profile.html:149` 的 `.avatar-preview` 與 `:568` 的 `.skel-avatar` 相同。80px 只存在於 showcase 的 demo（`components-showcase.html:920`，註解標 `md:w-20 — desktop demo size`）。 |
 
 同一輪自審還修正了兩條**寫錯但仍成立**的：Alert Banner 原寫「樣本沒有 `role="alert"`」（實際有，`components-showcase.html:1115`）與「全 prototype 0 個修飾子」（實際有一個，`pages/admin/user-management.html:182` 的 `.alert-banner.warning`）——後者反而讓 G-07 更有力；Toast 原寫「沒有 `aria-live`」（實際容器有，`components-showcase.html:1384`），改成焦點順序的問題。
