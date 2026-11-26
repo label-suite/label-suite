@@ -204,13 +204,13 @@ Cookie 屬性、JWT 的欄位與任務角色不放進 JWT，見 [architecture.md
 
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
-| A 只在 Google 回報 `email_verified: true` 時自動綁定，其餘拒絕登入；綁定時在同一筆交易內丟掉本地密碼、撤銷全部 session | 避免靠未驗證的 email 接管帳號；常見情形不需要手動綁定流程 | 本地密碼被丟掉，擁有者之後要另外重設；綁定的任何一步失敗，整筆交易回滾 | 採用 |
+| A 只在 Google 回報 `email_verified: true` 時自動綁定，其餘（沒有已連結的帳號時）拒絕登入；綁定時在同一筆交易內丟掉本地密碼、撤銷全部 session | 避免靠未驗證的 email 接管帳號；常見情形不需要手動綁定流程 | 本地密碼被丟掉，擁有者之後要另外重設；綁定的任何一步失敗，整筆交易回滾 | 採用 |
 | B 不看 `email_verified`，一律綁定 | — | 可以用未驗證的 email 接管帳號 | 不採用 |
 | C 一律走手動綁定流程 | — | 來源只寫常見情形不需要手動流程，沒有記錄其他代價 | 不採用，理由沒有記錄 |
 
 ### 決定
 
-Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並在同一筆交易內把 `hashed_password` 設為 `null`、`credential_version` 加一、撤銷所有 session；否則拒絕登入。
+Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並在同一筆交易內把 `hashed_password` 設為 `null`、`credential_version` 加一、撤銷所有 session；沒有已連結的帳號、又沒有已驗證的 email 可對上既有帳號時，拒絕登入。
 沒有任何帳號連結這個 Google 帳號、也沒有 email 相同的既有帳號時，同樣拒絕登入，**不建立帳號**：Google 只登入或綁定既有帳號；已經連結這個 Google 帳號的帳號，不論 email 是否相同都能登入。兩種拒絕對使用者是同一句說明（[規格 01-05 的 Q18](../../specs/01-account/05-login-state.mdx#已確認決議)）。
 做法見 [architecture.mdx 的 §Google SSO](../architecture.mdx#google-sso)。
 

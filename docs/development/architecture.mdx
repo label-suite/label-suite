@@ -163,7 +163,7 @@ CSRF cookie 刻意讓 JS 讀得到，是系統裡唯一非 `httpOnly` 的 cookie
 
 為什麼不引入外部 IdP、為什麼這樣綁定，見 [ADR-004 的 D4](adr/004-auth-and-security.mdx#d4-google-sso-直接走-oidc) 與 [D5](adr/004-auth-and-security.mdx#d5-google-登入綁定既有帳號的條件)。
 直接整合 OIDC（`authlib`），不引入外部 IdP；沒設 `GOOGLE_CLIENT_ID` 時按鈕退回 no-op，所以 SSO 是可選的。
-Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並在同一筆交易內把 `hashed_password` 設為 `null`、`credential_version` 加一、撤銷所有 session。沒有任何帳號連結這個 Google 帳號、也沒有 email 相同的既有帳號，或 `email_verified` 不是 true，一律拒絕登入、不建立帳號；Google 只登入或綁定既有帳號。已連結的帳號不看 email 是否相同。
+Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並在同一筆交易內把 `hashed_password` 設為 `null`、`credential_version` 加一、撤銷所有 session。沒有任何帳號連結這個 Google 帳號、也沒有 email 相同的既有帳號，或沒有已連結的帳號、而 `email_verified` 不是 true，一律拒絕登入、不建立帳號；Google 只登入或綁定既有帳號。已連結的帳號不看 email 是否相同。
 
 ## API 契約
 
