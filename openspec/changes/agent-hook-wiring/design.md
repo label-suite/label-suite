@@ -438,13 +438,13 @@ Codex 的 `apply_patch` 沒有路徑欄位，改從 `tool_input.command` 的檔�
 
 **副檔名路由表**（spec 刻意沒寫，契約 §H3 有）：
 
-| 命中條件                           | 執行的檢查                          | 粒度                        | 啟用條件                                           |
-| :--------------------------------- | :---------------------------------- | :-------------------------- | :------------------------------------------------- |
-| `backend/**/*.py`                  | `ruff check`、`mypy`                | 逐檔                        | `backend/` 存在                                    |
-| `frontend/**/*.ts`、`*.tsx`        | `tsc --noEmit`、`eslint`            | `tsc` 整專案；`eslint` 逐檔 | `frontend/` 存在                                   |
-| 其他位置的 `*.py`、`*.ts`、`*.tsx` | 無                                  | —                           | 標 `NA:` 並寫明不在 `backend/`、`frontend/` 專案內 |
-| `docs/**/*.mdx`、`docs/**/*.md`    | `node scripts/check-specs.mjs docs` | 整棵 `docs/`                | 一律啟用（檢查器已存在）                           |
-| 其他                               | 無                                  | —                           | 標 `NA:`                                           |
+| 命中條件                                | 執行的檢查                          | 粒度                        | 啟用條件                                           |
+| :-------------------------------------- | :---------------------------------- | :-------------------------- | :------------------------------------------------- |
+| `backend/**/*.py`                       | `ruff check`、`mypy`                | 逐檔                        | `backend/` 存在                                    |
+| `frontend/**/*.ts`、`frontend/**/*.tsx` | `tsc --noEmit`、`eslint`            | `tsc` 整專案；`eslint` 逐檔 | `frontend/` 存在                                   |
+| 其他位置的 `*.py`、`*.ts`、`*.tsx`      | 無                                  | —                           | 標 `NA:` 並寫明不在 `backend/`、`frontend/` 專案內 |
+| `docs/**/*.mdx`、`docs/**/*.md`         | `node scripts/check-specs.mjs docs` | 整棵 `docs/`                | 一律啟用（檢查器已存在）                           |
+| 其他                                    | 無                                  | —                           | 標 `NA:`                                           |
 
 依維護者 2026-11-25 授權（重大決策照建議走），2026-11-26 由派工主 session 裁定：路由同時以目錄限定——工具設定只在 `backend/`、`frontend/` 兩個專案裡，`openspec/config.yaml` 也寫「動到 backend/、frontend/ 時」才跑；原本只看副檔名，把 `e2e/`、`.semgrep/` fixture、`.notecraft/` 元件交給兩個專案的工具而誤判失敗。`e2e/` 由誰檢查不在本 change 範圍內。
 
