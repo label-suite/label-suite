@@ -1,9 +1,9 @@
 # 覆蓋核對
 
-交付包版本：commit `387482bb70756070d49416910844e0436c443b22`，prototype tree `a4336be42bc70922d3955479e6174c752e138476`。
+交付包版本：commit `b16b294b1ea604d0231c5ef6e3dff16bf825f6b9`，prototype tree `ee820973ad42dba66377a64291495a6452d68dd9`。
 產生依據：[`design-handoff` skill](../../../.claude/skills/design-handoff/SKILL.md) 的步驟 4。工作源頭是 [Issue #248](https://github.com/label-suite/label-suite/issues/248)。
 
-**本次是第十三版**（第十二次重跑）。差異見 §九。
+**本次是第十四版**（第十三次重跑）。差異見 §九。
 
 | 項目 | 數 |
 | :--- | ---: |
@@ -44,7 +44,7 @@
 
 本次結果（**第三版，兩步掃描**）：**兩個方向各 0 筆。**
 
-第七次重跑時（第八版）多了一筆：[Issue #422](https://github.com/label-suite/label-suite/issues/422) 在 `dataset-analysis-list.model.js:241` 與 `dataset-analysis-detail.html:1509` 新增 `error`（只認 `1`），**程式有、契約沒有**。建議把它補進 `navigation.mdx` §網址參數 的兩列資料集分析頁（本 skill 不改那份文件）。兩個視圖已收為 `#param-error`。
+第七次重跑時（第八版）多了一筆：[Issue #422](https://github.com/label-suite/label-suite/issues/422) 在 `dataset-analysis-list.model.js:241` 與 `dataset-analysis-detail.html:1507` 新增 `error`（只認 `1`），**程式有、契約沒有**。建議把它補進 `navigation.mdx` §網址參數 的兩列資料集分析頁（本 skill 不改那份文件）。兩個視圖已收為 `#param-error`。
 
 第八次重跑時（第九版）這一筆已關閉：`navigation.mdx` 的兩列資料集分析頁補上了 `error`，兩個方向又是各 0 筆。
 
@@ -54,7 +54,7 @@
 | :--- | :--- | ---: |
 | `task-detail.html:5048` | `URL_VIEW_STATE` | **16** |
 | `annotation-workspace.config.js:1560` | `LIST_VIEW_STATE_KEYS` ＋ `LIST_IDENTITY_KEYS` | **6** |
-| `dataset-analysis-detail.html:2528` | `PROTOTYPE_ONLY_PARAMS` | 0（`s_state` 已在表上） |
+| `dataset-analysis-detail.html:2520` | `PROTOTYPE_ONLY_PARAMS` | 0（`s_state` 已在表上） |
 | `sidebar.js:732` | 列舉既有鍵 | 0 |
 
 兩輪的修法：[PR #400](https://github.com/label-suite/label-suite/pull/400) 把那 22 個名字補進 `navigation.mdx` 的契約，本版把掃描法改成兩步，所以 `params` 欄現在才是真的全集——`task-management/task-detail` 從 11 個變 **25** 個、`annotation/annotation-workspace` 從 9 個變 **13** 個。
@@ -184,14 +184,14 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 | 視圖 | 證據（摘要） |
 | :--- | :--- |
-| `#state-theme-dark` | 主題鈕 `sidebar.js:2081`／`:2055`；載入 `theme.js` 的 11 頁走它的 `setChoice()`（`sidebar.js:364`–`:367` 提前 return），其餘 5 個帳號頁走 `:370`／`:374` |
-| `#state-lang-en` | `#langToggle` `sidebar.js:2047`／`#mobileLangToggle` `:2051` → `applyGlobalLanguage()` `:427` |
-| `#state-sidebar-collapsed` | **桌機**（`sidebar.js:513` 的 `min-width: 768px`）收合 → `body.sidebar-collapsed` `:2525` |
+| `#state-theme-dark` | 主題鈕 `sidebar.js:2087`／`:2061`；載入 `theme.js` 的 11 頁走它的 `setChoice()`（`sidebar.js:364`–`:367` 提前 return），其餘 5 個帳號頁走 `:370`／`:374` |
+| `#state-lang-en` | `#langToggle` `sidebar.js:2053`／`#mobileLangToggle` `:2057` → `applyGlobalLanguage()` `:427` |
+| `#state-sidebar-collapsed` | **桌機**（`sidebar.js:513` 的 `min-width: 768px`）收合 → `body.sidebar-collapsed` `:2531` |
 | `#state-mobile` | `sidebar.css` 的 `@media (max-width: 767px)`：另一套版面，另有 `#mobileLangToggle`／`#mobileThemeToggleBtn`／`#mobileLogoutBtn` |
-| `#state-user-chip` | `#userAvatar` `sidebar.js:2098`、`#userName`、`#roleIndicator` `:2101`；頭像取自 `label-suite-profile-avatar` `:55` |
-| `#state-logout` | `#logoutBtn` `sidebar.js:2104`／`#mobileLogoutBtn` `:2065`，一次清掉 7 個 storage 鍵 |
-| `#modal-notification` | `#notificationDropdown` `sidebar.js:2260`、`#notifMarkAllBtn` `:2275`、`#notificationBadge` |
-| `#modal-shortcut` | `#shortcutHelpModal` `sidebar.js:2109`，開關在 `:2209` |
+| `#state-user-chip` | `#userAvatar` `sidebar.js:2104`、`#userName`、`#roleIndicator` `:2107`；頭像取自 `label-suite-profile-avatar` `:55` |
+| `#state-logout` | `#logoutBtn` `sidebar.js:2110`／`#mobileLogoutBtn` `:2071`，一次清掉 7 個 storage 鍵 |
+| `#modal-notification` | `#notificationDropdown` `sidebar.js:2266`、`#notifMarkAllBtn` `:2281`、`#notificationBadge` |
+| `#modal-shortcut` | `#shortcutHelpModal` `sidebar.js:2115`，開關在 `:2215` |
 | `#role-super-admin` | `sidebar.js:536` 在不是 `super_admin` 時隱藏 `#navAdminItem` `:628` |
 | `#state-admin-submenu-open` | `sidebar.js:539`–`:541` 的 `System Administration` 子選單：桌機且未收合才展開成兩個連結 |
 | `#state-active-task-type` | `labelsuite.activeTaskType` `sidebar.js:4` 決定標記作業那一項的標籤與 `#roleIndicator` |
@@ -223,7 +223,63 @@ PRD §Site Map 另外**四份**列為「不是獨立頁面」的規格**都有�
 
 ## 九、重跑紀錄
 
-### 第十二次（本版）
+### 第十三次（本版）
+
+上一版釘在 `387482b`。之後 [Issue #473](https://github.com/label-suite/label-suite/issues/473)（`9464627`）把「參考值」改成「參考線」；同一段期間 [Issue #435](https://github.com/label-suite/label-suite/issues/435) 的三個 commit（`9cd74bf`、`d8c0a05`、`b74390d`）也改了同一頁，所以**變動的不只是用詞**。`docs/specs/` 有 61 個 commit（各模組的 Logic Flow #545–#558、#434 的裁定、#551 的管理端入口與不可能狀態），`navigation.mdx` 只改了兩列的四個行號引用。
+
+| 欄位 | 第十三版 | 本版 | |
+| :--- | :--- | :--- | :--- |
+| `commit` | `387482bb7075` | `b16b294b1ea6` | 必然變 |
+| `prototypeTree` | `a4336be42bc7` | `ee820973ad42` | **變了** |
+| `specsTree` | `41776418aee0` | `efa1a6e2360e` | **變了** |
+| `navigationBlob` | `7a60a4eeeeee` | `a05f8013a1e7` | **變了**（只把兩列裡指向 `dataset-analysis-detail.html` 的四個行號換成新位置，沒有改參數） |
+
+變動的 prototype 檔（共 8 個，全在 `pages/dataset/`）：
+- `dataset-analysis-detail.html`（+108／−13 行）：
+  - **用詞**：`lblSeqPartThr`、`lblRelThr2`、`altHSeqThr` 的「參考值」改「參考線」（#473），中英文都改。
+  - **行為（新）**：實體辨識切到 `Partial overlap` 時，IAA 報告標題的主要指標星號收起（連 `aria-label` 一起拿掉），後綴由「— 主要指標」改成「— 參考顯示」；切回 `Strict match` 還原（`dataset-analysis-detail.html:1968` 的 `updateMethodName()`；#435）。這是 `#state-seq-match-partial` 看得到的新狀態。
+  - **行為（新）**：`setElText()` 讓門檻文字換語言時保留 `通過`／`未達` 判定字，並套用到次要 IAA 卡（#435）。
+  - **英文版**：新增 `qualityListRank.aria*` 21 條、`pairwiseAvg`、`anomStSpd1*`／`anomStOut1*`、`seqSpeedWarn`；序列標記的異常偵測區塊補上 `id`，語言切換才換得到（#435）。
+  - **樣式**：`.iaa-bar-fill` 預設底色 `--color-ink-muted`（原本沒有預設，未通過也未達標時會沒顏色）。
+- 7 個 `quality-*.html` partial：用詞（`entity_recognition`、`relation_identification` 的「參考值」→「參考線」）、`aria-label` 與表頭加 `data-i18n`、序列標記的異常偵測區塊加 `id`。**沒有改結構、沒有新增或移除元素。**
+
+| 類 | 數 | 內容 |
+| :--- | ---: | :--- |
+| 新增 | 0 | 沒有新增視圖：Partial overlap 的星號收起是既有 `#state-seq-match-partial` 的內容 |
+| 移除 | 0 | |
+| 改寫 | 3 | `#state-seq-match-partial` 的重現步驟補上星號與後綴的變化；`#param-error`（`DEMO_LOAD_ERROR` 判斷，改指 `dataset-analysis-detail.html:1514`、`:2383`）與 `#state-seq-match-strict`（`syncSequenceUi`，改指 `dataset-analysis-detail.html:2022`）只換行號。ID 不變 |
+| `loads` 欄 | 0 | 沒有新增或移除載入的檔 |
+| 參數 | 0 | 沒有改讀網址參數的程式；兩步掃描的兩個方向仍各 0 筆 |
+| 受影響（prototype） | 27 | 全是 `dataset/dataset-analysis-detail` 的視圖（`b4-dataset-sweep`）；同批的 `dataset-analysis-list`（5 個視圖）沒有變 |
+| 受影響（規格） | 89 | 154 個視圖中有 89 個的 `spec` 指到變動的規格頁（見下表）。**所有 `spec` 錨點仍然解得到，沒有一個被改名或刪掉** |
+
+`spec` 指到變動規格頁的視圖，依頁面：
+
+| 規格頁 | 視圖 | 批次 | 變動性質 |
+| :--- | ---: | :--- | :--- |
+| `05-dataset/02-analysis-detail.mdx` | 27 | b4 | **用詞與判定**：參考線（Q26）、部分重疊結果是「不判定」（#434） |
+| `04-annotation/02-annotation-workspace.mdx` | 15 | b3 | **行為**：說明彈窗只有「確認」與「返回標記清單」兩個出口，Esc 與點視窗外不關閉（#434） |
+| `04-annotation/01-annotation-list.mdx` | 10 | b3 | 只加一段理由 |
+| `03-task-management/01-task-list.mdx` | 6 | b2 | **行為**：刪除確認視窗點視窗外不關閉（#434） |
+| `06-admin/02-role-settings.mdx` | 7 | b2 | **入口**：側欄次選單與使用者管理的分頁兩個入口、平台成員讀不到矩陣（#551） |
+| `06-admin/01-user-management.mdx` | 6 | b2 | **行為**：沒有設定寄信服務時帳號照樣建立、「信未寄出」標記、設定密碼連結 24 小時內只能用一次（#551） |
+| `01-account/04-profile.mdx` | 4 | b1 | **行為**：換 Email 的連結失效面板，按鈕依登入狀態回個人設定或前往登入（#558） |
+| `07-shared/*`（sidebar 10、workspace-tabs 2、denied 2） | 14 | b1／b2 | 只改來源說明與一條不洩漏存在的規則（#166），沒有改畫面該有的東西 |
+
+另外 `index.mdx` 與各模組 `index.mdx` 新增的是跨頁 Logic Flow（#545–#558），沒有視圖指向它們。
+
+### 應重驗的批次（第十三次）
+
+| 批次 | 受影響視圖（prototype） | 受影響視圖（規格） | 判斷 |
+| :--- | ---: | ---: | :--- |
+| `b1-shared-account` | 0 | 16 | 規格新增換 Email 失效面板；`account/profile` 的 prototype 沒有動，是原型與規格的差異，不是這次重驗的輸入 |
+| `b2-admin-dashboard-task` | 0 | 21 | 規格改了入口、寄信服務、刪除視窗；prototype 沒有動 |
+| `b3-annotation-review` | 0 | 25 | 規格改了說明彈窗的出口；prototype 沒有動 |
+| `b4-dataset-sweep` | **27** | 27 | **prototype 與規格都動了**：用詞、Partial overlap 的星號與後綴、英文版翻譯與 `aria-label` |
+
+**只有 `b4` 的 prototype 輸入變了。** 它不只是「參考線」用詞：Partial overlap 的星號收起與後綴是畫面行為，要核對 `design/system/pages/dataset-dataset-analysis-detail.md`（已手動跟上用詞，見 #473）有沒有寫到；英文版與 `aria-label` 的 `data-i18n` 屬文案與可及性，不改元件結構。`b1`–`b3` 的 prototype 輸入沒變，規格那一側的變動是 prototype 與規格的新差異，該進 `design-gaps.md`，由 `design-system-setup` 或維護者決定，本 skill 不判斷。
+
+### 第十二次
 
 上一版釘在 `8702db2`。之後 [Issue #455](https://github.com/label-suite/label-suite/issues/455) 修正 `navigation.mdx` 超出範圍的引用（補檔名、改行號），[Issue #461](https://github.com/label-suite/label-suite/issues/461) 把兩頁規格的「您」改成「你」（`01-account/04-profile.mdx`、`05-dataset/02-analysis-detail.mdx`，只改用字），[Issue #458](https://github.com/label-suite/label-suite/issues/458) 把其餘不跟主題換色的寫死 `rgba()` 改掉，改了三個 prototype 檔。
 

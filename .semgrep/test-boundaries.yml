@@ -1,0 +1,144 @@
+# Test-double boundaries for the backend integration tests and the harness
+# assembly files: testing-agent-rules T4 (the harness is assembled like
+# production) and T6 (replace only external boundaries). Issue #562; the
+# decisions are in openspec/changes/integration-no-self-mocks/clarification.md
+# Q1-Q3, Q6 and Q7.
+#
+# Scanned by its own CI step with --x-ignore-semgrepignore-files, because
+# Semgrep skips tests/ by default; the paths.include below limits the rules
+# to the integration tests, conftest.py, probe.py and factories/.
+# `semgrep --test` ignores paths, so the samples in
+# .semgrep/tests/test-boundaries.py prove the patterns, not the scope.
+#
+# An exemption is one inline comment on the line or the line above:
+#   # nosemgrep: <rule-id> -- T4|T6 <reason>
+# backend/tests/unit/test_semgrep_exemptions.py enforces that format.
+rules:
+  - id: label-suite-test-self-mock-string
+    message: >-
+      Integration tests must not replace a module of this project named by a
+      string (T4). Replace an external boundary instead (T6), or record an
+      exemption as `# nosemgrep: label-suite-test-self-mock-string -- T4|T6
+      <reason>`.
+    severity: ERROR
+    languages: [python]
+    paths:
+      include:
+        - /backend/tests/integration/
+        - /backend/tests/conftest.py
+        - /backend/tests/probe.py
+        - /backend/tests/factories/
+    patterns:
+      - pattern-either:
+          - pattern: $F("$T", ...)
+          - pattern: $F(f"...", ...)
+          - pattern: $F(..., target="$T", ...)
+          - pattern: $F(..., target=f"...", ...)
+      - metavariable-regex:
+          metavariable: $F
+          regex: ^(.*\.)?(setattr|setitem|delattr|delitem|patch(\.(dict|multiple))?)$
+      - pattern-regex: (\(\s*|\btarget\s*=\s*)[a-z]?["']app(\.|["'])
+
+  - id: label-suite-test-self-mock-object
+    message: >-
+      Integration tests must not replace an object imported from app (T4).
+      Replace an external boundary instead (T6), or record an exemption as
+      `# nosemgrep: label-suite-test-self-mock-object -- T4|T6 <reason>`.
+    severity: ERROR
+    languages: [python]
+    paths:
+      include:
+        - /backend/tests/integration/
+        - /backend/tests/conftest.py
+        - /backend/tests/probe.py
+        - /backend/tests/factories/
+    patterns:
+      - pattern-either:
+          - pattern: $F(app.$A, ...)
+          - pattern: $F(app.$A.$B, ...)
+          - pattern: $F(app.$A.$B.$C, ...)
+          - pattern: $F(app.$A.$B.$C.$D, ...)
+          - pattern: $F(app.$A.$B.$C.$D.$E, ...)
+      - metavariable-regex:
+          metavariable: $F
+          regex: ^(.*\.)?(setattr|setitem|delattr|delitem|patch(\.(object|dict|multiple))?)$
+      # Q3 C: the output-path constants of export_openapi are a filesystem
+      # boundary. Only this import name and positional form is let through.
+      - pattern-not: $F(export_openapi, "DEFAULT_OUTPUT", ...)
+      - pattern-not: $F(export_openapi, "DOCS_COPY_OUTPUT", ...)
+
+  - id: label-suite-test-dependency-overrides
+    message: >-
+      Integration tests must not write to the application's
+      dependency_overrides (T4): the harness must run the same dependencies
+      as production. Replace an external boundary instead (T6), or record an
+      exemption as `# nosemgrep: label-suite-test-dependency-overrides --
+      T4|T6 <reason>`.
+    severity: ERROR
+    languages: [python]
+    paths:
+      include:
+        - /backend/tests/integration/
+        - /backend/tests/conftest.py
+        - /backend/tests/probe.py
+        - /backend/tests/factories/
+    pattern-either:
+      - pattern: $APP.dependency_overrides[$K] = $V
+      - pattern: $APP.dependency_overrides.update(...)
+      - pattern: $APP.dependency_overrides.setdefault(...)
+      - pattern: $APP.dependency_overrides.pop(...)
+      - pattern: $APP.dependency_overrides.popitem()
+      - pattern: $APP.dependency_overrides.clear()
+      - pattern: $APP.dependency_overrides = $V
+      - pattern: del $APP.dependency_overrides[$K]
+      - pattern: $APP.dependency_overrides |= $V
+      # Any receiver: monkeypatch, a monkeypatch.context() name, mocker, mock.
+      - pattern: $MP.setitem($APP.dependency_overrides, ...)
+      - pattern: patch.dict($APP.dependency_overrides, ...)
+      - pattern: $X.patch.dict($APP.dependency_overrides, ...)
+
+  - id: label-suite-test-mock-objects
+    message: >-
+      Integration tests must not use unittest.mock or mock objects (T4, T6).
+      Replace an external boundary with monkeypatch instead, or record an
+      exemption as `# nosemgrep: label-suite-test-mock-objects -- T4|T6
+      <reason>`.
+    severity: ERROR
+    languages: [python]
+    paths:
+      include:
+        - /backend/tests/integration/
+        - /backend/tests/conftest.py
+        - /backend/tests/probe.py
+        - /backend/tests/factories/
+    pattern-either:
+      - pattern: MagicMock(...)
+      - pattern: AsyncMock(...)
+      - pattern: Mock(...)
+      - pattern: create_autospec(...)
+      - pattern: $X.MagicMock(...)
+      - pattern: $X.AsyncMock(...)
+      - pattern: $X.Mock(...)
+      - pattern: $X.create_autospec(...)
+      - pattern: import unittest.mock
+      - pattern: from unittest import mock
+
+  - id: label-suite-test-own-app-factory
+    message: >-
+      The test harness must not build its own application (T4); get it from
+      app.main.create_app so it is assembled like production. Record an
+      exemption, if one is ever needed, as `# nosemgrep:
+      label-suite-test-own-app-factory -- T4 <reason>`.
+    severity: ERROR
+    languages: [python]
+    paths:
+      include:
+        - /backend/tests/integration/
+        - /backend/tests/conftest.py
+        - /backend/tests/probe.py
+        - /backend/tests/factories/
+    pattern-either:
+      - pattern: FastAPI(...)
+      - pattern: fastapi.FastAPI(...)
+      - pattern: Starlette(...)
+      - pattern: starlette.applications.Starlette(...)

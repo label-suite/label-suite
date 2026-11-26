@@ -14,7 +14,9 @@ import pytest
 from pydantic import BaseModel, ValidationError
 from sqlalchemy.exc import DBAPIError
 
+from app.core.envelope import correlation_id_var
 from app.core.i18n import MessageCatalog
+from app.core.log_config import install_trace_id_record_factory, is_error_logged
 from app.core.middleware import LocaleMiddleware, UnhandledExceptionMiddleware
 
 Message = MutableMapping[str, Any]
@@ -146,8 +148,52 @@ async def test_exception_after_the_response_started_is_re_raised(
         await send({"type": "http.response.start", "status": 200, "headers": []})
         raise RuntimeError("late")
 
+    scope = _scope("/api/v1/x")
     with pytest.raises(RuntimeError, match="late"):
-        await _call(UnhandledExceptionMiddleware(inner, catalog=catalog), _scope("/api/v1/x"))
+        await _call(UnhandledExceptionMiddleware(inner, catalog=catalog), scope)
+
+    assert is_error_logged(scope) is True
+
+
+async def test_unhandled_exception_marks_the_request_as_logged(catalog: MessageCatalog) -> None:
+    async def inner(scope: Scope, receive: Receive, send: Send) -> None:
+        raise RuntimeError("boom")
+
+    scope = _scope("/api/v1/x")
+    await _call(UnhandledExceptionMiddleware(inner, catalog=catalog), scope)
+
+    assert is_error_logged(scope) is True
+
+
+async def test_successful_request_is_not_marked_as_logged(catalog: MessageCatalog) -> None:
+    scope = _scope("/api/v1/x")
+    await _call(UnhandledExceptionMiddleware(_empty_ok, catalog=catalog), scope)
+
+    assert is_error_logged(scope) is False
+
+
+async def test_unhandled_log_carries_the_trace_id_outside_the_message(
+    catalog: MessageCatalog, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.ERROR)
+    install_trace_id_record_factory()
+
+    async def inner(scope: Scope, receive: Receive, send: Send) -> None:
+        raise RuntimeError("boom")
+
+    token = correlation_id_var.set("client-trace-0004")
+    try:
+        sent = await _call(
+            UnhandledExceptionMiddleware(inner, catalog=catalog), _scope("/api/v1/x")
+        )
+    finally:
+        correlation_id_var.reset(token)
+
+    record = next(r for r in caplog.records if r.levelno == logging.ERROR)
+    assert json.loads(sent[1]["body"])["traceId"] == "client-trace-0004"
+    assert getattr(record, "trace_id", None) == "client-trace-0004"
+    assert "traceId=" not in record.getMessage()
+    assert "client-trace-0004" not in record.getMessage()
 
 
 async def test_unhandled_middleware_passes_non_http_scopes_through(

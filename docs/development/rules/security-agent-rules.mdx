@@ -4,7 +4,7 @@ description: '身分只來自 httpOnly cookie、token 不離開 cookie、CSRF �
 category: '開發說明'
 tags: [開發說明, Agent, 規範, 安全]
 createdAt: '2026-11-10'
-updatedAt: '2026-11-19'
+updatedAt: '2026-11-25'
 ---
 
 # 授權與答案隔離規範
@@ -14,7 +14,7 @@ updatedAt: '2026-11-19'
 
 **這份管的是產品不變量，不是 UI 約定。** 每條的「禁止」被違反，影響的是誰能看到什麼資料，不是體驗好不好。
 
-**`backend/` 與 `frontend/` 目前都不存在**，所以每條的「檢查方式」幾乎都還沒有自動檢查。標「待建置」就是字面意思：**不得因為這份文件存在就宣稱授權已被強制**。
+**`backend/` 與 `frontend/` 都已存在，但在 CI 跑的只有 S2 的 CORS 萬用來源檢查與 S8 的 `eval`／`exec` 檢查**（job 與指令寫在各條的「檢查方式」）；S2、S8 沒建的部分與其餘各條仍標「待建置」。標「待建置」就是字面意思：**不得因為這份文件存在就宣稱授權已被強制**。
 
 每條規範的反例與檢查方式收在摺疊區塊，預設收起；適用路徑、禁止、正例與例外在表裡。
 
@@ -49,7 +49,7 @@ updatedAt: '2026-11-19'
 
 :::note{title="S2 的反例與檢查方式" collapsible}
 - **反例**：把 token 放進 Zustand 或任何前端 store——`httpOnly` 的意義就是 JS 讀不到它，會這樣寫表示架構被誤解了；每個寫入端點各自檢查 CSRF；**或把 CSRF 做成只比對 cookie 與 header 是否相等**——那種擋不住子網域覆寫 cookie
-- **檢查方式**：**待建置**。負向測試要涵蓋「缺 CSRF header」「header 與 cookie 不符」「HMAC 無效」三種；CORS 的 `allow_origins=["*"]` 已列在 Semgrep 禁令
+- **檢查方式**：CORS 的 `allow_origins=["*"]` 由 CI 的 `semgrep` job 擋：它先跑 `semgrep --test .semgrep/` 驗規則對得上回歸樣本，再跑 `semgrep scan --error --config .semgrep/label-suite.yml backend/ frontend/ e2e/`，規則 `label-suite-cors-wildcard-origin` 命中即失敗（使用官方映像 `semgrep/semgrep:1.186.0`）。CSRF 的負向測試（「缺 CSRF header」「header 與 cookie 不符」「HMAC 無效」三種）**待建置**，要等有 CSRF middleware 與 session 才寫得出來；前端不碰 token 也沒有機械檢查
 - **統一責任位置**：`credentials` 在 [api-agent-rules.mdx](api-agent-rules.mdx) 的單一前端 HTTP client，cookie flags 在後端單一發 cookie 的 helper；兩者各要一條測試（斷言沒有第二處設 cookie、斷言元件不自己帶 credentials）
 :::
 
@@ -153,7 +153,7 @@ updatedAt: '2026-11-19'
 
 :::note{title="S8 的反例與檢查方式" collapsible}
 - **反例**：`eval(config["scoring_expr"])`——設定是使用者可控輸入，等於遠端執行；或用 token index 表示 span
-- **檢查方式**：**待建置**。「不得出現 `eval`／`exec`」可靜態擋；循環依賴要有測試
+- **檢查方式**：「不得出現 `eval`／`exec`」由 CI 的 `backend-sqlite` job 的 `uv run ruff check .` 擋：`backend/pyproject.toml` 選用的 `S` 規則組含 `S307`（`eval`）與 `S102`（`exec`）。循環依賴的測試**待建置**
 :::
 
 ### S9 稽核、脫敏與保留

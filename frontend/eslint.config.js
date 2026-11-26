@@ -108,6 +108,40 @@ function restrictedImports(...restrictions) {
 
 const FETCH_GLOBAL = ["error", { name: "fetch", message: GENERATED_CLIENT_MESSAGE }];
 
+/**
+ * Size and complexity limits (frontend-agent-rules F12; numbers decided in #561,
+ * clarification Q2 300, Q3 80, Q4 15). They apply to SOURCE_FILES only, so the
+ * config files at the package root stay out of scope (Q7). Blank lines and
+ * comments are not counted. build/size-limits-config.test.ts guards the numbers,
+ * the error level and the exemption scope.
+ */
+const SIZE_LIMITS = {
+  "max-lines": ["error", { max: 300, skipBlankLines: true, skipComments: true }],
+  "max-lines-per-function": [
+    "error",
+    { max: 80, skipBlankLines: true, skipComments: true, IIFEs: false },
+  ],
+  complexity: ["error", { max: 15 }],
+};
+
+/**
+ * Named exemptions for existing code over a limit (clarification Q8). Each entry
+ * names one file and one limit; `max` is a ceiling (a ratchet): the file fails
+ * again once it grows past it. build/size-limits-config.test.ts fails when an
+ * entry is no longer needed, so remove it as soon as the file is fixed. A new
+ * entry needs an issue and a reason.
+ */
+const NAMED_EXEMPTIONS = [
+  {
+    file: "src/pages/dev-gallery/dev-gallery-page.tsx",
+    rule: "max-lines-per-function",
+    max: 180,
+    issue: 561,
+    reason:
+      "The development-only component gallery page (174 lines) is not refactored by #561; the ceiling keeps it from growing.",
+  },
+];
+
 const FETCH_PROPERTIES = [
   "error",
   { object: "window", property: "fetch", message: GENERATED_CLIENT_MESSAGE },
@@ -194,6 +228,14 @@ export default defineConfig(
       ],
     },
     rules: {
+      // A file that matches no element is reported, rather than silently
+      // escaping every rule below. `boundaries/dependencies` only judges files
+      // it could classify, so a file placed directly in `src/pages/` -- which
+      // `src/pages/*` does not match, that pattern being the page folder --
+      // used to import a feature's internals with no complaint. Verified on a
+      // deliberate violation: the same bad import is reported inside a page
+      // folder and was not reported at the root (design D3's rule).
+      "boundaries/no-unknown-files": "error",
       "boundaries/dependencies": [
         "error",
         {
@@ -340,4 +382,16 @@ export default defineConfig(
       ),
     },
   },
+
+  // Size and complexity limits (frontend-agent-rules F12; #561, clarification
+  // Q2-Q4). Test files are exempt from the two length limits only (Q7).
+  { files: SOURCE_FILES, rules: SIZE_LIMITS },
+  { files: TEST_FILES, rules: { "max-lines": "off", "max-lines-per-function": "off" } },
+
+  // Named exemptions (clarification Q8), last so they win over the limits above.
+  // Each keeps the limit's options and only raises `max`.
+  ...NAMED_EXEMPTIONS.map(({ file, rule, max }) => ({
+    files: [file],
+    rules: { [rule]: ["error", { ...SIZE_LIMITS[rule][1], max }] },
+  })),
 );

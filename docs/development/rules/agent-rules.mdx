@@ -4,7 +4,7 @@ description: '跨領域的 Agent 開發規範：先搜尋再新增、依賴方�
 category: '開發說明'
 tags: [開發說明, Agent, 規範]
 createdAt: '2026-11-10'
-updatedAt: '2026-11-19'
+updatedAt: '2026-11-25'
 ---
 
 # Agent 開發規範
@@ -26,7 +26,7 @@ updatedAt: '2026-11-19'
 | 前端依賴方向、型別安全、UI 共用 | [frontend-agent-rules.mdx](frontend-agent-rules.mdx) |
 | 測試分層、雙資料庫驗證、交付證據 | [testing-agent-rules.mdx](testing-agent-rules.mdx) |
 
-**大多數規範還沒有任何自動檢查**：`backend/`、`frontend/` 與 `e2e/` 都還不存在，所以「檢查方式」大多標「待建置」，不得因為文件存在就宣稱規則已被強制。
+**大多數規範還沒有任何自動檢查**：`backend/`、`frontend/` 與 `e2e/` 都已存在，但在 CI 跑的只有 [backend-agent-rules.mdx](backend-agent-rules.mdx) 的 B1、B2、B6、B7、B11 與 B12 已建置的部分（寄信、Google OIDC、對外 HTTP 客戶端三項入口契約與兩條跨模組契約；B12 的其餘四項仍標「待建置」），[frontend-agent-rules.mdx](frontend-agent-rules.mdx) 的 F1 至 F3、F12 與 F10 的一部分，[api-agent-rules.mdx](api-agent-rules.mdx) 的 A5 與 A4、A6 的一部分，[security-agent-rules.mdx](security-agent-rules.mdx) S2 的 CORS 檢查與 S8 的 `eval`／`exec` 檢查，以及 [testing-agent-rules.mdx](testing-agent-rules.mdx) 的 T1、T4、T6、T8、T9、T10 的一部分（本文的 R2 經由 B1 與 F1 檢查）；其餘「檢查方式」大多標「待建置」，不得因為文件存在就宣稱規則已被強制。
 標「**人工／獨立審查**」的規範現在就要做，只是沒有工具代勞：本文的 R1、R3、R4、R5、R6、R7 與 [backend-agent-rules.mdx](backend-agent-rules.mdx) 的 B8，共七條。自動 gate 的清單與歸屬在 [testing-agent-rules.mdx](testing-agent-rules.mdx) 的 T9。
 
 ---
@@ -58,11 +58,11 @@ updatedAt: '2026-11-19'
 
 | | |
 | :--- | :--- |
-| **適用路徑** | `frontend/`（還不存在，所以這一條**現在沒有適用對象**）。**`backend/` 由 [backend-agent-rules.mdx](backend-agent-rules.mdx) 的 B1 取代**——那一條寫明了層級與允許的 import，比這裡具體 |
+| **適用路徑** | `frontend/`，具體的層級與允許的 import 見 [frontend-agent-rules.mdx 的 F1](frontend-agent-rules.mdx#f1-分層與允許的-import)。**`backend/` 由 [backend-agent-rules.mdx](backend-agent-rules.mdx) 的 B1 取代**——那一條寫明了層級與允許的 import，比這裡具體 |
 | **例外** | 無 |
-| **檢查方式** | **待建置**。後端的具體分層由 B1 定，前端由 [frontend-agent-rules.mdx 的 F1](frontend-agent-rules.mdx#f1-分層與允許的-import) 定；兩邊的自動檢查都要等實際有程式 |
+| **檢查方式** | 由 B1 與 F1 的檢查執行：CI 的 `backend-sqlite` job 跑 `uv run lint-imports`，`frontend` job 跑 `pnpm --filter frontend lint`；細節見兩條各自的「檢查方式」 |
 
-模組內分層（`app/modules/<module>/`）見 [architecture.mdx](../architecture.mdx)，後端的落地規則見 B1；前端那一半落地後，這一條只剩跨領域的原則敘述。
+模組內分層（`app/modules/<module>/`）見 [architecture.mdx](../architecture.mdx)，後端的落地規則見 B1、前端的見 F1；兩邊都已落地，這一條只剩跨領域的原則敘述。
 
 :::note{title="正例與反例（摺疊）" collapsible}
 - 正例：前端 `pages` → `features` → 共用的 `components/ui`（具體分層見 [frontend-agent-rules.mdx 的 F1](frontend-agent-rules.mdx#f1-分層與允許的-import)）。後端版本見 B1。
@@ -176,7 +176,7 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 
 | 不採用的門檻 | 出處 | 為什麼不採用 |
 | :--- | :--- | :--- |
-| 「寫了 200 行而其實 50 行就夠 → 重寫」 | 原始 repo `general.md` | 行數不是複雜度。50 行的爛抽象比 200 行的直白程式更難改 |
+| 「寫了 200 行而其實 50 行就夠 → 重寫」 | 原始 repo `general.md` | 行數不是複雜度。50 行的爛抽象比 200 行的直白程式更難改。不採用作為拆分判準；另設 CI 上限擋極端值（[F12](frontend-agent-rules.mdx)、[B11](backend-agent-rules.mdx)），兩者並存：上限只擋極端值，是否拆分仍依 R4 的職責判斷 |
 | 「同一段程式出現 2 次以上 → 抽出共用」 | 原始 repo `general.md` | 出現兩次不代表是同一個概念。R4 的例外已經覆蓋真正該共用的情形 |
 | 「一張 PR 不得超過 5 個檔案或 300 行 diff」 | 原始 repo `git-workflow.md`（Constitution Principle X） | 本 repo 以**單一目的**判斷 PR 大小（`AGENTS.md` 的 Pull Requests：一句話說不清就拆）。行數門檻會逼人把一個目的拆成兩張，反而更難審 |
 
@@ -227,7 +227,7 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 | `general.md` §AI Agent Non-Negotiables 的「後端指令一律走 `uv run`」 | **沿用** | 維護者裁定它屬後端規範，**已落地於 [backend-agent-rules.mdx](backend-agent-rules.mdx) 的 B2**。不進 `AGENTS.md` Hard Rules——它是後端指令的細節，而且在沒有 `backend/` 之前沒有適用對象 |
 | `general.md` §Fail Loudly | **沿用** | 成為 R7 |
 | **`general.md` §Conflicting Patterns（「pick one, prefer newer or better-tested」）** | **改寫** | **這一條被反轉**。本 repo 改成 R5：照已確認決議，沒有決議就回報維護者。理由：本 repo 已有「五個依據＋機械檢查」的決議機制，自行選邊會繞過它 |
-| `general.md` 的「200 行→50 行」與「出現 2 次就抽」 | **不採用** | 機械門檻，見 [§附錄：刻意不採用的來源條文](#附錄刻意不採用的來源條文) |
+| `general.md` 的「200 行→50 行」與「出現 2 次就抽」 | **不採用** | 機械門檻，見 [§附錄：刻意不採用的來源條文](#附錄刻意不採用的來源條文)。「200 行→50 行」不採用作為拆分判準；另設 CI 上限擋極端值（[F12](frontend-agent-rules.mdx)、[B11](backend-agent-rules.mdx)），與 R4 並存 |
 | `general.md` 的 `ponytail:` 標記（含其 MIT 出處） | **不採用** | 那個標記綁著外部 skill 的工具鏈，本 repo 沒有那條工具鏈 |
 | `general.md` §What simplicity does not override 的 Red test contracts（`senior-qa`、`--cov-fail-under=80`）與兩份 constitution | **不採用** | 本 repo 沒有那些憲章與角色。測試門檻見 [testing-agent-rules.mdx](testing-agent-rules.mdx) |
 | `general.md` §What simplicity does not override 的 Prose outside code（commit body 要 WHY、PR／issue 是審查文件） | **沿用** | 已在 `AGENTS.md` Commits（每條 bullet 粗體動詞加原因）與 Pull Requests |
@@ -311,3 +311,5 @@ DRY 與 KISS 衝突時**以 KISS 為先**：重複兩次而語意不同，不是
 | 2026-11-10 | 獨立審查後更正來源對照：duty-mate 其實存在（`trendlink/duty-mate`），補上 12 份規則的逐條對照；scaffold 補上 16 份規則裡四份「共通」的對照；兩列「沿用」改「待採用」（輸入驗證與 `uv run` 當時兩邊都沒有條文）；被誇大的「沿用」逐列拆開。教訓：附搜尋清單的否定結論會勸退後面的人再查，所以結論錯了會錯得更久；初版那份「已查」清單只掃了個人帳號與本機，沒掃組織 | 初版把 duty-mate 記成「找不到」 | [#105](https://github.com/label-suite/label-suite/issues/105) |
 | 2026-11-19 | R1 連到 ADR-001 的 D1；R3 加上例外：本次改動呼叫、修改或取代的既有實作如果是錯的，直接修 | R3 原本對路徑內的錯誤實作也只能提出來 | [#444](https://github.com/label-suite/label-suite/issues/444) |
 | 2026-11-20 | 不用 Storybook，改用元件展示頁，本文件的 §待決 因此清空（現行做法見 [architecture.mdx 的 §前端](../architecture.mdx#前端)） | §待決 第 1 列「是否採用 Storybook」，連同它對前端程式工作的開工封鎖 | [#503](https://github.com/label-suite/label-suite/issues/503) |
+| 2026-11-25 | 「200 行→50 行」不採用作為拆分判準，但另設 CI 上限擋極端值（[F12](frontend-agent-rules.mdx)、[B11](backend-agent-rules.mdx)）；R3、R4 的判準不變 | 兩處「不採用」只寫了不設機械行數門檻，與新增的 CI 上限字面衝突 | [#561](https://github.com/label-suite/label-suite/issues/561) |
+| 2026-11-25 | 總覽「在 CI 跑的」清單把 testing-agent-rules 的條文改為含 T6 的一部分（後端的測試替身邊界檢查） | 清單只列 T1、T4、T8、T9、T10 | [#562](https://github.com/label-suite/label-suite/issues/562) |

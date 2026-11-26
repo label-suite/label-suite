@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import ConfigError, Settings
 from app.core.middleware import (
+    AccessLogMiddleware,
     CorrelationIdMiddleware,
     LocaleMiddleware,
     UnhandledExceptionMiddleware,
@@ -49,6 +50,20 @@ def test_middlewares_are_ordered_outermost_first(tmp_path: Path) -> None:
     assert [middleware.cls for middleware in app.user_middleware] == [
         CorrelationIdMiddleware,
         CORSMiddleware,
+        AccessLogMiddleware,
         UnhandledExceptionMiddleware,
         LocaleMiddleware,
     ]
+
+
+def test_access_log_skips_only_a_successful_health_check(tmp_path: Path) -> None:
+    app = create_app(
+        Settings(
+            cors_allowed_origins=["http://localhost:5173"],
+            database_url=None,
+            sqlite_path=tmp_path / "app.db",
+        )
+    )
+
+    (access,) = [m for m in app.user_middleware if m.cls is AccessLogMiddleware]
+    assert access.kwargs == {"quiet_success_routes": frozenset({"/api/v1/health"})}

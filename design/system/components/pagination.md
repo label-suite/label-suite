@@ -65,7 +65,7 @@
 | `admin/user-management#state-default` | 本頁重寫的 `.page-btn`（`user-management.html:115`–`:133`） |
 | `task-management/task-list#state-default` | 本頁重寫的 `.page-btn`（`task-list.html:112`；markup `:257`–`:274`）；三種空／錯誤狀態整條隱藏 |
 | `task-management/task-detail`（`#tab-member-management`、`#tab-annotation-progress`、`#tab-annotation-results`、`#tab-work-log`） | 各 panel 的 `.page-btn`（`annotation-progress.html:134`、`annotation-results.html:63`、`:112` 等） |
-| `annotation/annotation-list#state-default` | `.pagination`（`annotation-list.html:509`），「共 N 筆 · 第 N / N 頁」 |
+| `annotation/annotation-list#state-default` | `.pagination`（`annotation-list.html:528`），「共 N 筆 · 第 N / N 頁」 |
 | `dataset/dataset-analysis-list`（`#state-default`） | `list-page.css` 的 `.pagination`（`dataset-analysis-list.html:285`–`:301`），`.page-size-select` 與 `.page-btn`；目前頁 `aria-current="page"`（`dataset-analysis-list.view.js:239`） |
 
 b1 的帳號頁一個都沒用。b2 已補上（見上表）。b3 已補上（見上表）。b4 已補上（見上表）。

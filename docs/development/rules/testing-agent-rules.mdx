@@ -4,7 +4,7 @@ description: '三層測試的範圍與生命週期、TDD、行為測試與自證
 category: '開發說明'
 tags: [開發說明, Agent, 規範, 測試]
 createdAt: '2026-11-10'
-updatedAt: '2026-11-19'
+updatedAt: '2026-11-25'
 ---
 
 # 測試與交付證據規範
@@ -12,7 +12,7 @@ updatedAt: '2026-11-19'
 本文說明測試與交付證據的十二條規範，由 `AGENTS.md` 的 Agent Rules Index 指過來；`AGENTS.md` 是規則本體，兩邊說法不同時以 `AGENTS.md` 為準，並回報給維護者。
 跨領域的規範在 [agent-rules.mdx](agent-rules.mdx)、後端在 [backend-agent-rules.mdx](backend-agent-rules.mdx)、授權與答案隔離在 [security-agent-rules.mdx](security-agent-rules.mdx)、API 契約在 [api-agent-rules.mdx](api-agent-rules.mdx)、前端在 [frontend-agent-rules.mdx](frontend-agent-rules.mdx)，這裡不重複。
 
-**`backend/`、`frontend/` 與 `e2e/` 目前都不存在**，所以每條的「檢查方式」幾乎都還沒有自動檢查。標「待建置」就是字面意思：**不得因為這份文件存在就宣稱測試或 gate 已經在跑**，因為本文件談的正是「怎麼證明事情做完了」。
+**`backend/`、`frontend/` 與 `e2e/` 都已存在，但在 CI 跑的只有 T1 的 e2e 位置檢查、T4 的雙資料庫兩輪、測試替身邊界檢查與 harness 組裝比對、T6 的後端部分（與 T4 同一個測試替身邊界檢查）、T8 的固定等待與寫死主機埠號檢查、T9 七項 gate 中的六項，以及 T10 的「不得下降」**（job 與指令寫在各條的「檢查方式」）；T2 沒有機械檢查，其餘各條與上述各條沒建的部分（含 T6 的前端）仍標「待建置」。標「待建置」就是字面意思：**不得因為這份文件存在就宣稱測試或 gate 已經在跑**，因為本文件談的正是「怎麼證明事情做完了」。
 
 每條規範的反例與檢查方式收在摺疊區塊，預設收起；適用路徑、禁止、正例與例外在表裡。各條的來源在文末附錄。
 
@@ -31,7 +31,7 @@ updatedAt: '2026-11-19'
 
 | 層 | 工具 | 範圍 | 位置 | 指令 |
 | :--- | :--- | :--- | :--- | :--- |
-| unit | pytest（後端）／Vitest（前端） | 純函式、service、hook、單一元件 | `backend/tests/[module]/test_*.py`；前端與原始碼同目錄 `*.test.ts(x)` | `uv run pytest`／`pnpm test` |
+| unit | pytest（後端）／Vitest（前端） | 純函式、service、hook、單一元件 | `backend/tests/unit/**`；前端與原始碼同目錄 `*.test.ts(x)` | `uv run pytest`／`pnpm test` |
 | integration | pytest 加 httpx（後端）／Vitest 加 RTL 加 MSW（前端） | 真實路由、認證與授權、真 test DB；前端到網路邊界為止 | `backend/tests/integration/**`；前端同上 | `uv run pytest -m integration`／`pnpm test` |
 | e2e | Playwright | 跨頁、跨角色的使用者旅程，真前後端加真瀏覽器 | 根目錄 `e2e/[module]/[page].spec.ts` | `pnpm exec playwright test` |
 
@@ -39,7 +39,8 @@ updatedAt: '2026-11-19'
 
 :::note{title="T1 的反例與檢查方式" collapsible}
 - **反例**：`e2e/annotation/submit.spec.ts` 裡其實是用 httpx 打 `/api/v1/...`（那是 integration）；用 Playwright 驗一個日期格式化函式
-- **檢查方式**：**待建置**。位置與命名可由 CI 的路徑規則檢查；「名字對不對」要靠審查
+- **檢查方式**：e2e 的位置由 CI 的 `e2e` job 在跑旅程前先跑 `pnpm --filter e2e test:static`，其中一項要求每個 spec 都在 `e2e/<module>/<page>.spec.ts`（同一支檢查另擋 spec 與共用檔裡的固定時間等待、設定檔以外的主機與埠，以及 `shared/fixtures/` 底下的非 TypeScript 檔）
+- **尚未檢查**：後端與前端測試檔的位置、「這個測試叫的名字對不對」沒有機械檢查，靠審查
 :::
 
 ### T2 TDD 與紅燈的原因
@@ -84,14 +85,17 @@ integration 測試走真實路由、真認證授權、真 test DB，harness 不�
 
 | | |
 | :--- | :--- |
-| **適用路徑** | `backend/tests/integration/**` |
+| **適用路徑** | `backend/tests/integration/**`、`backend/tests/conftest.py`、`backend/tests/probe.py`、`backend/tests/factories/**` |
 | **禁止** | mock ORM 或 session 來「測資料庫」；繞過認證或授權 dependency 直接呼叫 service 當成 API 測試；**harness 比 production 寬鬆**（少一個 middleware、放寬驗證、關掉 CSRF）；只在一種資料庫上跑 migration |
 | **正例** | 打真實路由（httpx 的 ASGI transport 或起一個 test server）、經過真的認證與授權 dependency、連真的 test DB；**harness 與 production 共用同一個 app 組裝函式**；**SQLite（Lite）與 PostgreSQL 兩層各自跑完 migration**，並對涉及差異的行為各有測試 |
-| **例外** | **反向不在此限**：harness 比 production 更嚴格（多一層斷言），或把**外部**依賴換成替身（T6），都允許。「測試要多做一層才會過」代表產品碼有問題，不是幫測試補一層 |
+| **例外** | **反向不在此限**：harness 比 production 更嚴格（多一層斷言），或把**外部**依賴換成替身（T6），都允許。「測試要多做一層才會過」代表產品碼有問題，不是幫測試補一層；**探針路由只准加、不准減**：harness 比 production 多出來的路徑只能是探針路由的路徑；`export_openapi` 的 `DEFAULT_OUTPUT`、`DOCS_COPY_OUTPUT` 視為檔案系統邊界，替換它們不算替換本專案的模組 |
 
 :::note{title="T4 的反例與檢查方式" collapsible}
 - **反例**：`monkeypatch` 掉授權 dependency 以免準備成員資格——那會讓最該被測的那一段永遠沒被測到；用 SQLite 的結果宣稱 PostgreSQL 也可以
-- **檢查方式**：**待建置**。「harness 與 production 同構」可由共用組裝函式在結構上保證；雙資料庫要靠 CI 跑兩輪
+- **檢查方式**：雙資料庫由 CI 的 `backend-sqlite` 與 `backend-postgres` 兩個 job 各跑一輪 `uv run pytest`（見 [backend-agent-rules.mdx](backend-agent-rules.mdx) 的 B6、B7）。測試替身邊界檢查與 harness 組裝比對已建置：
+  - **靜態掃描**：CI `semgrep` job 在規則樣本驗證與既有專案禁令掃描之後多一步，指令是 `semgrep scan --error --x-ignore-semgrepignore-files --config .semgrep/test-boundaries.yml backend/`；本機用 `pnpm run check --with-semgrep`，其中的「Semgrep test boundaries」步驟跑同一個指令。規則在 `.semgrep/test-boundaries.yml`，範圍是上面四個適用路徑，擋下以字串指名替換 `app` 模組、替換從 `app` 匯入的物件、寫入 `dependency_overrides`、使用 mock 物件（含匯入 `unittest.mock`）與另建應用程式；`backend/tests/unit/` 不在範圍。Semgrep 預設會略過 `tests/`，所以指令帶 `--x-ignore-semgrepignore-files`；這個實驗旗標只由 CI 釘住的 `semgrep/semgrep` 映像版本保證，**升級映像版本時要在同一個 PR 重驗範圍**（暫時在 `conftest.py`、`probe.py` 與 `tests/integration/` 的檔案各放一行違規，確認被擋再還原，並重跑 `semgrep --test .semgrep/`）
+  - **組裝比對**：`backend/tests/integration/test_harness_parity.py` 比對 production 的 `create_app(...)` 與 `conftest.py` 的 `app` fixture，兩者的中介層類別與順序、例外處理器的鍵、OpenAPI 的路徑必須相同，harness 只准多出探針路由的路徑；比對不跑 lifespan、不連資料庫，所以兩輪資料庫結果一致
+  - **例外記法**：不得改的寫法只能以單行註解放行，格式為 `# nosemgrep: <rule-id> -- T4|T6 <理由>`；`backend/tests/unit/test_semgrep_exemptions.py` 檢查 `backend/tests/` 底下每個 `nosemgrep` 標記都指名 `label-suite-test-*` 規則並引用 T4 或 T6，裸標記與缺理由的標記都會失敗
 :::
 
 ### T5 隔離、清理與生命週期
@@ -123,7 +127,11 @@ integration 測試走真實路由、真認證授權、真 test DB，harness 不�
 
 :::note{title="T6 的反例與檢查方式" collapsible}
 - **反例**：測試用真的 Resend API key 寄一封信出去；fixture 裡放一份有標準答案的資料集；前端測試用 MSW 回一個「管理員」身分就宣稱權限測過了
-- **檢查方式**：**待建置**。可用 CI 的 secret 掃描擋住 fixture 裡的金鑰（見 T9）；「答案不在 fixture 裡」屬 [security-agent-rules.mdx](security-agent-rules.mdx) S5 的覆蓋面
+- **檢查方式**：
+  - **後端**：與 T4 由同一個指令檢查（`semgrep scan --error --x-ignore-semgrepignore-files --config .semgrep/test-boundaries.yml backend/`，CI 與 `pnpm run check --with-semgrep` 相同）。規則的判斷是「替換對象是不是本專案的 `app`」：目標不是 `app` 的替換（`sys`、`httpx` 等）視為外部邊界，不擋；接上外部服務、要把網路邊界改成明列清單時，再改規則。以 `unittest.mock` 替換外部目標時，匯入 `unittest.mock` 仍依 mock 物件規則判為違規，外部邊界一律以 `monkeypatch` 替換；`monkeypatch.setenv`、`delenv`、`chdir` 不擋
+  - **已知擋不住的三種寫法**（clarification N5，目前 0 處）：先把 `app` 的物件存進區域變數再替換、在別處組出字串再傳給 `setattr`、先把 `dependency_overrides` 讀進變數再透過該變數寫入。常駐樣本把這三種以不加標註的行記下；要擋得改用 AST 測試，兩套機制並存的成本不划算，所以先寫在這裡
+  - **前端**：**待建置**。前端的 integration 與 unit 測試在同一個目錄、同一種副檔名（`*.test.ts(x)`），沒有路徑能區分範圍，掃了只會掃到 unit 測試；要先定前端 integration 的檔名慣例（改 T1）才有意義，也不另開 issue
+  - **secret 與答案**：CI 的 secret 掃描擋住 fixture 裡的金鑰（見 T9）；「答案不在 fixture 裡」屬 [security-agent-rules.mdx](security-agent-rules.mdx) S5 的覆蓋面
 :::
 
 ### T7 多維輸入用決策表
@@ -155,12 +163,12 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 
 :::note{title="T8 的反例與檢查方式" collapsible}
 - **反例**：`page.locator('.task-row > td:nth-child(3)')`；`await page.waitForTimeout(3000)`；在每個 spec 開頭走一次登入表單
-- **檢查方式**：**待建置**。可用 lint 擋 `waitForTimeout` 與 CSS locator；`baseURL` 是否集中由設定檔結構保證
+- **檢查方式**：CI 的 `e2e` job 在跑旅程前先跑 `pnpm --filter e2e test:static`，`e2e/static/e2e-static-checks.mjs` 在 `*.spec.ts` 與 `shared/**` 裡找 `waitForTimeout(`、`setTimeout(`、`sleep(` 這類固定等待，並在 `e2e/` 中 `playwright.config.ts` 以外的每個檔案找 `localhost`、`127.0.0.1` 與埠號，命中即失敗。CSS locator **待建置**；一個 spec 一條旅程、不各自重新登入沒有機械檢查，靠審查
 :::
 
 ### T9 開發前要落實的自動 gate
 
-正式開發前要落實下列七個自動 gate，本文件只定政策、不實作任何 gate；七項的實作全歸 [#111](https://github.com/label-suite/label-suite/issues/111)。
+正式開發前要落實下列七個自動 gate，本文件只定政策、不實作任何 gate。CI 上已建成六項，下表右欄寫 job 名稱；第 6 項（授權與答案隔離的回歸）還沒有建，本機 hook 與 T10 的關鍵路徑 90% 分支覆蓋也還沒有建。
 
 | | |
 | :--- | :--- |
@@ -169,19 +177,19 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 | **正例** | 下表每一項都有明確的實作歸屬，實作在那裡做，本文件只定政策 |
 | **例外** | 無 |
 
-| gate | 政策寫在哪 |
-| :--- | :--- |
-| Python lint 與型別檢查 | [backend-agent-rules.mdx](backend-agent-rules.mdx) B2（`mypy --strict`、`ruff` 的 `D` 規則） |
-| TypeScript strict 與 React Hooks | [frontend-agent-rules.mdx](frontend-agent-rules.mdx) F2、F3 |
-| import 邊界（前端分層、後端分層） | F1 與 B1 |
-| OpenAPI 與前端 client 的 drift | [api-agent-rules.mdx](api-agent-rules.mdx) A5 |
-| migration 在 SQLite 與 PostgreSQL 兩層都能跑 | B6、B7 與本文 T4 |
-| 授權與答案隔離的回歸 | [security-agent-rules.mdx](security-agent-rules.mdx) S5、S10 與本文 T7 |
-| 依賴、secret 與 CORS 掃描 | `AGENTS.md` 硬性規則 7、8 與 ADR-028（SCA 加延後 SAST、Semgrep 擋 `allow_origins=["*"]`；ADR-028 已定方向） |
+| gate | 政策寫在哪 | CI 的實作 |
+| :--- | :--- | :--- |
+| Python lint 與型別檢查 | [backend-agent-rules.mdx](backend-agent-rules.mdx) B2（`mypy --strict`、`ruff`）、B11（函式複雜度與檔案行數上限） | `backend-sqlite`：`uv run ruff check .`、`uv run ruff format --check .`、`uv run mypy --strict app` |
+| TypeScript strict 與 React Hooks | [frontend-agent-rules.mdx](frontend-agent-rules.mdx) F2、F3、F12 | `frontend`：`pnpm --filter frontend lint`、`pnpm --filter frontend typecheck` |
+| import 邊界（前端分層、後端分層與單一入口） | F1、B1 與 B12 已建置的契約 | `backend-sqlite`：`uv run lint-imports`；`frontend`：同上的 lint |
+| OpenAPI 與前端 client 的 drift | [api-agent-rules.mdx](api-agent-rules.mdx) A5 | `api-contract` |
+| migration 在 SQLite 與 PostgreSQL 兩層都能跑 | B6、B7 與本文 T4 | `backend-sqlite`、`backend-postgres`（後者任何測試 skipped 即失敗） |
+| 授權與答案隔離的回歸 | [security-agent-rules.mdx](security-agent-rules.mdx) S5、S10 與本文 T7 | 未建成 |
+| 依賴、secret 與 CORS 掃描 | `AGENTS.md` 硬性規則 7、8 與 ADR-028（SCA 加延後 SAST、Semgrep 擋 `allow_origins=["*"]`；ADR-028 已定方向） | `dependency-audit`（`uv run pip-audit`、`pnpm audit --prod --audit-level high`）與 `semgrep`（CORS 萬用來源、寫死的 secret） |
 
 :::note{title="T9 的反例與檢查方式" collapsible}
 - **反例**：在一張文件 PR 裡加一支 lint 腳本或 CI job
-- **檢查方式**：**全部待建置**。`backend/`、`frontend/` 與 `e2e/` 都不存在，所以七項裡沒有任何一項現在是跑著的
+- **檢查方式**：七項裡六項由上表的 CI job 跑；第 6 項**沒有在跑**，不得宣稱授權與答案隔離已有自動回歸。CI 通過不等於本機 hook 通過，本機 hook 尚未建成
 :::
 
 ### T10 覆蓋率
@@ -197,7 +205,10 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 
 :::note{title="T10 的反例與檢查方式" collapsible}
 - **反例**：把 `src/api/generated/` 算進分母（產物是工具產生的，覆蓋它沒有意義，而且會讓整體數字看起來很高）；為了讓百分比好看而刪掉一個會紅的測試
-- **檢查方式**：**待建置**。`pytest --cov` 與 `vitest --coverage` 可以產出報告；「不得下降」需要 CI 記住基準，與 T9 的 gate 一起建置
+- **檢查方式**：CI 的 `coverage` job 在 `backend-sqlite`、`backend-postgres`、`frontend` 都完成後執行：合併 SQLite 與 PostgreSQL 兩輪的後端覆蓋率，連同前端的 `coverage-summary.json`，交給 `node scripts/check-coverage.mjs`，和 repo 根目錄的 `coverage-baseline.json`（後端 `percentCovered`，前端 `statements` 與 `branches`，容許誤差 0.1 個百分點）比。依序檢查：（1）PR 的基準不得低於 base 分支的基準（任何一項較低或容許誤差變大即失敗）；（2）實測值不得低於「PR 的基準減容許誤差」。只能持平或上升。要調低基準，須由維護者在 PR 加 `coverage-baseline-lower` 標籤，第（1）步才放行
+- **更新基準是選擇性的**：實測上升時不失敗，`coverage` job 印出完整的建議基準檔並上傳為 artifact `coverage-baseline-suggested`；想把基準往上收，就把這個 artifact 原樣提交成 `coverage-baseline.json`，不收也照樣通過。數字只以 CI 的為準：腳本沒有 `--update`、不寫回 repo，本機的 `check` 指令不跑它（本機只有 SQLite 一輪，數字對不上）
+- **分母**：後端只量 `app/`（Alembic 不在其中）；前端量 `src/**`，排除 `src/api/generated/`、測試與設定檔
+- **尚未檢查**：五項關鍵路徑的 90% 分支覆蓋沒有建（五項的程式還不存在）
 :::
 
 ### T11 evidence
@@ -254,9 +265,9 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 | T1 | [architecture.mdx](../architecture.mdx) §測試分層（工具、範圍、位置、三層不重疊）**沿用**；ADR-009、012、034。**「用 Supertest 打 API 叫 integration，不叫 e2e」**來自 scaffold `testing.md` §測試名詞**沿用**（本 repo 換成 httpx）；原始 repo 的位置慣例**部分沿用**：後端 `tests/[module]/test_[file].py` 與 e2e `e2e/[module]/[page].spec.ts` **沿用**；**前端的 `src/[module]/__tests__/[file].test.tsx` 不採用**——本 repo 是與原始碼同目錄，見 [ADR-007 的 D3](../adr/007-testing-strategy.mdx#d3-前端測試與原始碼放同一個目錄) |
 | T2 | ADR-009 與 [architecture.mdx](../architecture.mdx)（TDD、測試與實作同一個 task）**沿用**；scaffold `testing.md` §TDD 的三步與「**測試紅了先判斷是測試缺陷還是實作缺陷，未確認前不改實作**」**沿用**；「不以測試數量代替驗收行為」是起草工作項的明文，本條照收 |
 | T3 | 起草工作項列的四種自證形式（source includes、regex／AST 片段、簽章、config key 存在），本條照收。**owner layer 的概念取自 `trendlink/trendlink-portal` 的 `.claude/rules/testing-architecture.md`**（每個 Scenario 只有一個主責層，其他層只能寫補充、不能取代），本文件沿用它的**原則**；它的 ledger 與骨架產生器是工具，要另開可追溯的 Issue，不在這份文件偷渡實作 |
-| T4 | 原始 repo `testing-backend.md` 的「**資料庫測試要用真的 test DB，不 mock ORM 層**」**沿用**；scaffold `integration-test-http.md` **鐵律三「harness 不得比 production 寬鬆」與鐵律四「真 test db、schema 以 migration 建立」沿用**（含「反向與外部替身不在此限」那句例外）；雙資料庫來自 ADR-024 與 [backend-agent-rules.mdx](backend-agent-rules.mdx) B6、B7。**它的 `AUTH_MODE=dev` 測試 token 不採用**，見上表 |
+| T4 | 原始 repo `testing-backend.md` 的「**資料庫測試要用真的 test DB，不 mock ORM 層**」**沿用**；scaffold `integration-test-http.md` **鐵律三「harness 不得比 production 寬鬆」與鐵律四「真 test db、schema 以 migration 建立」沿用**（含「反向與外部替身不在此限」那句例外）；雙資料庫來自 ADR-024 與 [backend-agent-rules.mdx](backend-agent-rules.mdx) B6、B7。**它的 `AUTH_MODE=dev` 測試 token 不採用**，見上表。測試替身邊界檢查與組裝比對：issue [#562](https://github.com/label-suite/label-suite/issues/562)、Epic [#560](https://github.com/label-suite/label-suite/issues/560)；`clarification.md` Q1 至 Q9。不是來自參考來源，而是本 repo 維護者裁定 |
 | T5 | 原始 repo `testing-backend.md` 的 fixture 慣例**沿用**；scaffold `integration-test-http.md` 的**紀律沿用**（同時只跑一個共用 test DB 的行程、輸出先落檔再讀、`--detectOpenHandles` 綠燈不代表沒有 open handle、間歇性問題要能重現才算結案），**它的 NestJS 生命週期修法與 duty-mate 的 Jest 佇列修法都不逐字搬**，為起草工作項的明文 |
-| T6 | `AGENTS.md` 硬性規則 6（測試集答案不外露）與 8（祕密只從環境變數來）；ADR-013、ADR-035 與寄信降級的決定（見[決策紀錄](#決策紀錄)）；scaffold `testing.md` 的「web 端以 MSW handler 模擬 API（優先用 Orval 產生的 mock），**不 mock `fetch` 本身**」**沿用**；`trendlink/trendlink-portal` `testing-architecture.md` 的 **L2-contract 層**（決定性替身、不連真實第三方）**沿用原則**。「MSW 不代替真後端的授權驗證」是起草工作項的明文 |
+| T6 | `AGENTS.md` 硬性規則 6（測試集答案不外露）與 8（祕密只從環境變數來）；ADR-013、ADR-035 與寄信降級的決定（見[決策紀錄](#決策紀錄)）；scaffold `testing.md` 的「web 端以 MSW handler 模擬 API（優先用 Orval 產生的 mock），**不 mock `fetch` 本身**」**沿用**；`trendlink/trendlink-portal` `testing-architecture.md` 的 **L2-contract 層**（決定性替身、不連真實第三方）**沿用原則**。「MSW 不代替真後端的授權驗證」是起草工作項的明文。後端的自我替換檢查與前端未納入：issue [#562](https://github.com/label-suite/label-suite/issues/562)、Epic [#560](https://github.com/label-suite/label-suite/issues/560)；`clarification.md` Q1 至 Q9（前端為 Q5，三種擋不住的寫法為 N5） |
 | T7 | scaffold `testing.md` §Decision Table 寫法**沿用**（編號對回 Scenario、缺值拆兩格、邊界值各一列、「斷言要看值，不只看狀態碼：建立後要讀回並比對欄位」）；**拆格有事故背書**——duty-mate `dto-boolean.md` 的決策表就是因為沒把「key 存在但值為 undefined」與「key 不存在」分開，漏掉了真正的缺陷；而它那次事故（2026-07-07「列入排班時好時壞」）**兩個方向都錯**，成因也有兩個：陣列 fall through，以及 **`Boolean('false') === true` 的隱式轉型**，所以 `false` 那一格是第三格而不是「缺值」的一種；角色×成員×狀態的維度來自 [security-agent-rules.mdx](security-agent-rules.mdx) S10 與 PRD §權限矩陣 |
 | T8 | 原始 repo `testing-e2e.md` **沿用**（位置、一個 spec 一條旅程、role／label／text 優先、`storageState`、不寫死埠而讀 `baseURL`）；[architecture.mdx](../architecture.mdx) 的「`data-testid` 的共用契約沿用」與「ADR-014 的 prototype 層 Playwright 測試**不適用本 repo**」（留在個人 repo）**沿用**；scaffold `testing.md` 的「不用 `setTimeout` 等待」**沿用** |
 | T9 | 七項為起草工作項所列，本條照收；分工為本文件定義測試與 gate 的政策，如何觸發與傳遞結果歸 CI 與 hook 的建置工作 |
@@ -344,3 +355,5 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 | 2026-11-10 | duty-mate 的 `testing-architecture.md` 不在 `develop`（在未合併分支），改以 trendlink-portal 的改寫版為來源（查核日 2026-11-10） | 起草時點名的 duty-mate `develop` 來源 | [#110](https://github.com/label-suite/label-suite/issues/110) |
 | 2026-11-10 | starter-kit 是維護者本機目錄、不是 GitHub repo，結論從「不存在」改成「存在但這個 loop 讀不到」；`trendlink` 組織 24 個 repo、`singyichen` 與本機的搜尋查核日為 2026-11-10 | 五輪搜尋零命中後的「不存在」結論 | [#111](https://github.com/label-suite/label-suite/issues/111) |
 | 2026-11-19 | 三層分工、覆蓋率政策、前端測試位置與正式 E2E 位置的理由移到 [ADR-007](../adr/007-testing-strategy.mdx)，T1 與 T10 只留做法並連過去 | —（理由原本散在 T10 的覆蓋率導言與附錄的不採用表） | [#453](https://github.com/label-suite/label-suite/issues/453) |
+| 2026-11-22 | T9 七項 gate 中六項由 CI 建成；授權與答案隔離回歸、本機 hook 與 T10 的關鍵路徑 90% 分支覆蓋尚未建，歸屬仍在 #111 | 「七項的實作全歸 #111」 | [#506](https://github.com/label-suite/label-suite/issues/506)、[#111](https://github.com/label-suite/label-suite/issues/111) |
+| 2026-11-25 | T4、T6 的檢查方式由「待建置」改成實際指令：CI `semgrep` job 的測試替身邊界檢查、harness 組裝比對與 `nosemgrep` 例外格式檢查；T4 的適用路徑補 `conftest.py`、`probe.py`；T6 的前端維持「待建置」，三種擋不住的寫法寫進文件，不另開 issue | T4「harness 與 production 同構」與 T6 的檢查方式原本都標「待建置」 | [#562](https://github.com/label-suite/label-suite/issues/562) |

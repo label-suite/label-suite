@@ -100,14 +100,14 @@ const NODES: FlowNode[] = [
   { id: "s", kind: "start", lane: 0, col: 0, row: 1 },
   { id: "t1", kind: "event", lane: 0, col: 1, row: 1, lines: ["建立任務"], state: "草稿" },
   { id: "t2", kind: "event", lane: 0, col: 2, row: 1, lines: ["啟動試標"], state: "→ 試標中" },
-  { id: "a1", kind: "event", lane: 1, col: 3, lines: ["標記員", "試標作答"] },
-  { id: "i1", kind: "event", lane: 2, col: 4, lines: ["計算 IAA"], state: "→ 等待 IAA 確認" },
-  { id: "d1", kind: "decision", lane: 0, col: 5, row: 1, lines: ["接受", "IAA？"] },
+  { id: "a1", kind: "event", lane: 1, col: 3, lines: ["試標作答", "與審核"], state: "→ 等待 IAA 確認" },
+  { id: "i1", kind: "event", lane: 2, col: 4, lines: ["計算 IAA"] },
+  { id: "d1", kind: "decision", lane: 0, col: 5, row: 1, lines: ["開始正式", "標記？"] },
   { id: "x1", kind: "event", lane: 0, col: 5, row: 0, lines: ["退回草稿或", "再開一輪"], exception: true },
   { id: "t3", kind: "event", lane: 0, col: 6, row: 1, lines: ["啟動", "正式標記"], state: "→ 正式標記中" },
   { id: "a2", kind: "event", lane: 1, col: 6, lines: ["正式作答", "與審核"] },
-  { id: "i2", kind: "event", lane: 2, col: 7, lines: ["統計與", "品質分數"], state: "→ 已完成" },
-  { id: "t4", kind: "event", lane: 0, col: 7, row: 1, lines: ["匯出", "標記結果"], end: true },
+  { id: "i2", kind: "event", lane: 2, col: 7, lines: ["統計與", "品質分數"] },
+  { id: "t4", kind: "event", lane: 0, col: 7, row: 1, lines: ["標記完成", "匯出結果"], state: "→ 已完成", end: true },
 ];
 
 const EDGES: FlowEdge[] = [
@@ -143,8 +143,8 @@ const STEPS: Step[] = [
   },
   {
     ref: "交接 2",
-    title: "試標送出，計算 IAA",
-    body: "試標的標記結果都送出後，資料集計算 IAA，任務改為「等待 IAA 確認」。",
+    title: "試標收尾，計算 IAA",
+    body: "本回合的試標完成條件全部滿足（沒有未指派的試標作業、每位啟用中的標記員都完成、全部審核單位已定稿、沒有爭議中的審核單位、最終例外池已清空）後，任務自動改為「等待 IAA 確認」；資料集算出那一回合的 IAA。",
     handoff: "04 標記作業 → 05 資料集：試標的標記結果",
     spec: "規格 04-02、05-02（未撰寫）",
     highlight: ["a1", "i1", "a1-i1"],
@@ -152,7 +152,7 @@ const STEPS: Step[] = [
   {
     ref: "交接 3",
     title: "專案負責人查看 IAA",
-    body: "專案負責人在任務詳情查看 IAA，決定接受、退回草稿，或再開一輪試標；IAA 只供參考，不會自動擋下。",
+    body: "專案負責人在任務詳情查看 IAA，決定開始正式標記、退回草稿，或新增下一個試標回合；IAA 要先算完，但未達標只是提醒，不會擋下。",
     handoff: "05 資料集 → 03 任務管理：IAA",
     spec: "規格 03-03、05-02（未撰寫）",
     highlight: ["i1", "d1", "i1-d1"],
@@ -174,7 +174,7 @@ const STEPS: Step[] = [
   {
     ref: "交接 4",
     title: "啟動正式標記",
-    body: "專案負責人接受 IAA 結果並啟動正式標記，任務改為「正式標記中」；標記員開始正式作答，審核員開始審核。",
+    body: "專案負責人啟動正式標記，任務改為「正式標記中」；標記員開始正式作答，審核員開始審核。",
     handoff: "03 任務管理 → 04 標記作業：正式標記的資料與成員",
     spec: "規格 03-03、04-02（未撰寫）",
     highlight: ["d1", "t3", "a2", "d1-t3", "t3-a2"],
@@ -190,8 +190,8 @@ const STEPS: Step[] = [
   {
     ref: "交接 6",
     title: "任務完成，匯出結果",
-    body: "標記結果都已送出、審核都已定稿、沒有未決爭議、仲裁都已完成、品質分數都已算出後，任務進入「已完成」，專案負責人匯出標記結果。",
-    handoff: "05 資料集 → 03 任務管理：任務已完成",
+    body: "結案條件全部滿足（正式標記作業全數提交、全部審核單位已定稿或經例外池排除、沒有爭議中的審核單位、最終例外池已清空、品質指標就緒）後，專案負責人把任務標記完成，任務進入「已完成」，並匯出標記結果。",
+    handoff: "05 資料集 → 03 任務管理：品質指標",
     spec: "規格 03-03（未撰寫）",
     highlight: ["i2", "t4", "i2-t4"],
   },

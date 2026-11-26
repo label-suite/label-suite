@@ -13,8 +13,19 @@ import {
   SKELETON,
   geometryFingerprint,
   checkAgainstSpec,
+  ENDPOINT_TOLERANCE,
+  ENDPOINT_TOLERANCE_INSIDE,
+  LABEL_ASCENT,
+  LABEL_FONT,
   checkFlowsIn,
   checkGeometry,
+  checkLogicFlowsIn,
+  checkLogicLayout,
+  distToOutline,
+  labelExtent,
+  logicFlowComponents,
+  parseLogicFlow,
+  textWidth,
   checkGraph,
   checkRefs,
   checkShape,
@@ -703,4 +714,280 @@ test("parseFlows refuses a via form it cannot read, instead of dropping the rout
   const file = skeletonDerived().find((f) => /spec-03-01/.test(f));
   const src = readFileSync(file, "utf8").replace(/via: laneBottom\(1\) - 8/, "via: colX(2) + 10");
   assert.throws(() => parseFlows(src), /`via:` written but .* understood/);
+});
+
+// --- Logic Flow layout: arrow tips on the outline, labels inside the canvas ---
+
+const logicNode = (id, kind, x, y, w, h) => ({ id, kind, x, y, w, h });
+const logicSection = (over) => ({
+  id: "s",
+  w: 400,
+  h: 200,
+  nodes: [
+    logicNode("P1", "page", 60, 100, 100, 40),
+    logicNode("D1", "decision", 250, 100, 120, 60),
+  ],
+  edges: [],
+  ...over,
+});
+const logicErrors = (over) => collect((r) => checkLogicLayout(logicSection(over), r)).join("\n");
+
+test("parseLogicFlow reads every Logic Flow component in the repository", () => {
+  const files = logicFlowComponents();
+  assert.ok(files.length >= 6, `expected at least 6 Logic Flow components, found ${files.length}`);
+  for (const file of files) {
+    const sections = parseLogicFlow(readFileSync(file, "utf8"));
+    assert.ok(sections.length > 0, `${file}: no sections parsed`);
+    for (const s of sections) {
+      assert.ok(s.w > 0 && s.h > 0, `${file}: ${s.id} has no canvas size`);
+      assert.ok(s.nodes.length > 0 && s.edges.length > 0, `${file}: ${s.id} parsed empty`);
+      for (const e of s.edges)
+        assert.ok(e.pts.length >= 2, `${file}: ${s.id}/${e.id} has no route`);
+    }
+  }
+});
+
+test("logicFlowComponents takes only the module Logic Flow components and the overview", () => {
+  const files = logicFlowComponents();
+  assert.ok(files.every((f) => /spec-(?:\d\d-[^/]+|index)-logic-flow\.tsx$/.test(f)));
+  assert.ok(!files.some((f) => /spec-\d\d-\d\d-/.test(f)), "a page flow was taken as a Logic Flow");
+});
+
+test("logicFlowComponents picks up the system-wide overview, and nothing else named like it", () => {
+  const dir = mkdtempSync(join(tmpdir(), "check-logic-flow-names-"));
+  for (const f of [
+    "spec-index-logic-flow.tsx",
+    "spec-02-dashboard-logic-flow.tsx",
+    "spec-02-01-dashboard-flow.tsx",
+    "spec-indexes-logic-flow.tsx",
+    "spec-index-flow.tsx",
+    "prd-site-map.tsx",
+  ])
+    writeFileSync(join(dir, f), "");
+  assert.deepEqual(
+    logicFlowComponents(dir).map((f) => f.split("/").at(-1)),
+    ["spec-02-dashboard-logic-flow.tsx", "spec-index-logic-flow.tsx"],
+  );
+});
+
+test("distToOutline measures a decision along its slanted sides, a page along its box", () => {
+  const d = logicNode("D1", "decision", 250, 100, 120, 60);
+  // the midpoint of the upper-left side lies on the diamond
+  assert.equal(distToOutline([220, 85], d), 0);
+  // the corner of the bounding box does not: this is how 04's arrows fell short
+  assert.ok(distToOutline([190, 70], d) > 20);
+  const p = logicNode("P1", "page", 60, 100, 100, 40);
+  assert.equal(distToOutline([60, 80], p), 0);
+  assert.equal(distToOutline([60, 76], p), 4);
+});
+
+test("checkLogicLayout reports an arrow that stops short of a diamond's slanted side", () => {
+  const edge = (pts) => [{ id: "1-1", from: "P1", to: "D1", pts }];
+  // aimed at the bounding box's left edge, above the vertex: off the diamond
+  assert.match(
+    logicErrors({
+      edges: edge([
+        [110, 85],
+        [190, 85],
+      ]),
+    }),
+    /1-1.*outside the outline of D1/,
+  );
+  // ended on the slanted side instead: accepted
+  assert.equal(
+    logicErrors({
+      edges: edge([
+        [110, 85],
+        [220, 85],
+      ]),
+    }),
+    "",
+  );
+  // the left vertex itself: accepted
+  assert.equal(
+    logicErrors({
+      edges: edge([
+        [110, 100],
+        [190, 100],
+      ]),
+    }),
+    "",
+  );
+});
+
+test("checkLogicLayout accepts a tip within the tolerance and rejects one just past it", () => {
+  const edge = (x) => [
+    {
+      id: "1-1",
+      from: "D1",
+      to: "P1",
+      pts: [
+        [190, 100],
+        [x, 100],
+      ],
+    },
+  ];
+  assert.equal(logicErrors({ edges: edge(110 + ENDPOINT_TOLERANCE) }), "");
+  assert.match(
+    logicErrors({ edges: edge(110 + ENDPOINT_TOLERANCE + 1) }),
+    /4\.0px outside the outline of P1/,
+  );
+  // inside, the node's fill covers the tip, so the allowance is tighter
+  assert.equal(logicErrors({ edges: edge(110 - ENDPOINT_TOLERANCE_INSIDE) }), "");
+  assert.match(logicErrors({ edges: edge(110 - 2) }), /2\.0px inside the outline of P1/);
+});
+
+test("distToOutline is negative inside a node and positive outside it", () => {
+  const p = logicNode("P1", "page", 60, 100, 100, 40);
+  assert.equal(distToOutline([108, 100], p), -2);
+  assert.equal(distToOutline([112, 100], p), 2);
+  const d = logicNode("D1", "decision", 250, 100, 120, 60);
+  assert.ok(distToOutline([250, 100], d) < -20, "the centre of a diamond is inside it");
+});
+
+test("checkLogicLayout reports a label clipped by the top of the canvas", () => {
+  const edge = (lp) => [
+    {
+      id: "2-10",
+      from: "D1",
+      to: "P1",
+      pts: [
+        [190, 100],
+        [110, 100],
+      ],
+      label: "否：導回清單",
+      lp,
+    },
+  ];
+  // 04 分段二 had this label at y=7: the CJK glyphs rise about 11px above it
+  assert.match(
+    logicErrors({ edges: edge([200, 7]) }),
+    /2-10.*leaves the 400x200 canvas \(top by 4\.0px\)/,
+  );
+  assert.equal(logicErrors({ edges: edge([200, LABEL_ASCENT]) }), "");
+});
+
+test("checkLogicLayout reports a label past the left, right or bottom edge", () => {
+  const edge = (lp) => [
+    {
+      id: "1-1",
+      from: "D1",
+      to: "P1",
+      pts: [
+        [190, 100],
+        [110, 100],
+      ],
+      label: "回清單",
+      lp,
+    },
+  ];
+  // three CJK glyphs at fontSize 12 are 36px wide, 18px each side of lp
+  assert.match(logicErrors({ edges: edge([10, 100]) }), /left by 8\.0px/);
+  assert.match(logicErrors({ edges: edge([390, 100]) }), /right by 8\.0px/);
+  assert.match(logicErrors({ edges: edge([200, 199]) }), /bottom by 2\.0px/);
+  assert.equal(logicErrors({ edges: edge([18, 100]) }), "");
+});
+
+test("labelExtent gives Latin capitals at least 0.7 em and CJK a full em", () => {
+  // wide capitals: the estimate must not fall below what the font draws
+  for (const caps of ["IAA", "WMQ", "OMW"]) {
+    const [a0, , a1] = labelExtent(caps, [100, 50]);
+    assert.ok(
+      a1 - a0 >= 0.7 * LABEL_FONT * caps.length,
+      `"${caps}" is estimated at ${a1 - a0}px, under 0.7 em per glyph`,
+    );
+  }
+  const [b0, , b1] = labelExtent("確認中", [100, 50]);
+  assert.equal(b1 - b0, 3 * LABEL_FONT);
+  assert.equal(textWidth("ab 1"), 4 * 0.6 * LABEL_FONT);
+});
+
+test("checkLogicLayout reports a gap note that leaves the canvas, using the skeleton's anchor", () => {
+  const gap = (x, y, lines) => ({ gaps: [{ x, y, lines }] });
+  // in the right half the note starts at x: four CJK glyphs need 48px
+  assert.match(
+    logicErrors(gap(360, 100, ["規格沒寫"])),
+    /gap note 1 line 1 "規格沒寫" at \(360, 100\) leaves the 400x200 canvas \(right by 8\.0px\)/,
+  );
+  assert.equal(logicErrors(gap(350, 100, ["規格沒寫"])), "");
+  // in the left half it is centred on x
+  assert.match(logicErrors(gap(20, 100, ["規格沒寫"])), /left by 4\.0px/);
+  assert.equal(logicErrors(gap(24, 100, ["規格沒寫"])), "");
+  // each further line is 15px lower
+  assert.match(
+    logicErrors(gap(100, 185, ["一", "二"])),
+    /gap note 1 line 2 "二" at \(100, 200\) .*bottom by 3\.0px/,
+  );
+  assert.equal(logicErrors(gap(100, 182, ["一", "二"])), "");
+});
+
+test("checkLogicLayout reports a node id pushed off the top of the canvas", () => {
+  const nodes = (y, h, kind = "page") => ({ nodes: [logicNode("P1", kind, 60, y, 100, h)] });
+  // a page's id sits 4px above its top edge, glyphs rising 11px over that
+  assert.match(logicErrors(nodes(34, 40)), /P1: the node id is cut off .*top by 1\.0px/);
+  assert.equal(logicErrors(nodes(35, 40)), "");
+  // a decision's id sits 8px below its top vertex
+  assert.match(logicErrors(nodes(32, 60, "decision")), /top by 1\.0px/);
+  assert.equal(logicErrors(nodes(33, 60, "decision")), "");
+});
+
+test("parseLogicFlow refuses a node or label it cannot read, instead of skipping it", () => {
+  const src = (nodeArgs, extra = "") =>
+    `const SECTIONS: Section[] = [ { id: "s", label: "x", w: 100, h: 100, nodes: [ n(${nodeArgs}) ], edges: [ { id: "1", from: "A", to: "A", kind: "plain", pts: [[1, 2], [3, 4]]${extra} } ], gaps: [] } ];`;
+  assert.equal(parseLogicFlow(src(`"A", "page", ["a"], 10, 20, 30, 40`))[0].nodes[0].x, 10);
+  assert.throws(
+    () => parseLogicFlow(src(`"A", "page", ["a"], CX, 20, 30, 40`)),
+    /n\(\.\.\.\) calls/,
+  );
+  assert.throws(
+    () => parseLogicFlow(src(`"A", "page", ["a"], 10, 20, 30, 40`, `, label: "a", lp: [X, 2]`)),
+    /lp is written but did not parse/,
+  );
+  assert.throws(() => parseLogicFlow("const SECTIONS: Section[] = [];"), /has no sections/);
+  const withGap = src(`"A", "page", ["a"], 10, 20, 30, 40`).replace(
+    "gaps: []",
+    `gaps: [{ x: 5, y: 6, lines: ["甲", "乙"] }]`,
+  );
+  assert.deepEqual(parseLogicFlow(withGap)[0].gaps, [{ x: 5, y: 6, lines: ["甲", "乙"] }]);
+  assert.throws(
+    () => parseLogicFlow(withGap.replace("x: 5", "x: X")),
+    /a gap's x, y or lines did not parse/,
+  );
+});
+
+test("checkLogicFlowsIn reports a component whose arrow was moved off its target", () => {
+  const file = logicFlowComponents().find((f) =>
+    f.endsWith("spec-03-task-management-logic-flow.tsx"),
+  );
+  const src = readFileSync(file, "utf8");
+  // pull the first edge's tip 10px back along its last segment, wherever the
+  // layout currently puts it
+  const [section] = parseLogicFlow(src);
+  const edge = section.edges[0];
+  const [a, b] = edge.pts.slice(-2);
+  const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const moved = [
+    ...edge.pts.slice(0, -1),
+    [b[0] - ((b[0] - a[0]) * 10) / len, b[1] - ((b[1] - a[1]) * 10) / len],
+  ];
+  const fmt = (pts) => `[${pts.map(([x, y]) => `[${x}, ${y}]`).join(", ")}]`;
+  assert.ok(src.includes(`pts: ${fmt(edge.pts)}`), "the edge's pts were not found verbatim");
+  const dir = mkdtempSync(join(tmpdir(), "check-logic-flows-"));
+  const copy = join(dir, "spec-03-task-management-logic-flow.tsx");
+  writeFileSync(copy, src.replace(`pts: ${fmt(edge.pts)}`, `pts: ${fmt(moved)}`));
+  const { errors } = checkLogicFlowsIn({ files: [copy] });
+  assert.match(
+    errors.join("\n"),
+    new RegExp(`${section.id}/${edge.id}: .*10\\.0px outside the outline of ${edge.to}`),
+  );
+});
+
+test("checkLogicFlowsIn refuses to pass by checking nothing", () => {
+  const { errors } = checkLogicFlowsIn({ files: [] });
+  assert.match(errors.join("\n"), /pass by doing nothing/);
+});
+
+test("every Logic Flow component in the repository passes the layout check", () => {
+  const { errors } = checkLogicFlowsIn();
+  assert.deepEqual(errors, []);
 });

@@ -6,16 +6,23 @@
     "check:specs": "node scripts/check-specs.mjs docs",
     "check:flows": "node scripts/check-flows.mjs",
     "check:er": "node scripts/check-er-data.mjs",
+    "gen:site-map": "node scripts/gen-site-map-data.mjs",
+    "check:site-map": "node scripts/gen-site-map-data.mjs --check",
     "test:scripts": "node --test scripts/tests/*.test.mjs",
     "docs:serve": "notecraftapp serve docs --port 4330",
     "prototype": "node scripts/serve-prototype.mjs",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "bootstrap": "scripts/setup.sh && pnpm install --frozen-lockfile && cd backend && uv sync --locked",
+    "dev": "node scripts/dev.mjs",
+    "api:sync": "(cd backend && uv run python -m app.scripts.export_openapi) && pnpm --filter frontend api:generate",
+    "check": "node scripts/check.mjs"
   },
   "devDependencies": {
     "@fission-ai/openspec": "1.14.1",
     "lint-staged": "17.6.1",
     "notecraftapp": "1.15.0",
-    "prettier": "3.10.1"
+    "prettier": "3.10.1",
+    "yaml": "2.9.1"
   }
 }

@@ -1,6 +1,6 @@
 ---
 title: ADR-008 部署與維運
-description: 部署、維運與稽核的決定：Compose 加 Nginx 當 runtime、後端與 worker 共用 image、寄信用 Resend 並可降級、觀測性只做 ai_runs、AI 與使用者行為各一張只新增的稽核表、就地匿名化、CI 安全掃描先做 SCA、備援只做正式層、worker 收到 SIGTERM 先做完手上的任務。
+description: 部署、維運與稽核的決定：Compose 加 Nginx 當 runtime、後端與 worker 共用 image、寄信用 Resend 並可降級、觀測性只做 ai_runs、AI 與使用者行為各一張只新增的稽核表、就地匿名化、CI 安全掃描做相依套件掃描與 Semgrep、備援只做正式層、worker 收到 SIGTERM 先做完手上的任務。
 tags: [adr, deployment, operations, audit, ci]
 ---
 
@@ -297,7 +297,7 @@ AI 輔助流程記在只新增、不更新也不刪除的 `ai_runs` 與其生命
 
 - 保留期或匿名化範圍被法規或機構要求改變時（本節的重新討論條件是推論）
 
-## D8 CI 安全掃描先做 SCA，SAST 延後
+## D8 CI 安全掃描做相依套件掃描與 Semgrep
 
 ### 背景
 
@@ -314,30 +314,37 @@ AI 輔助流程記在只新增、不更新也不刪除的 `ai_runs` 與其生命
 | :--- | :--- | :--- | :--- |
 | A `pip-audit`（後端相依套件掃描） | 來源記錄：沿用既有做法 | 來源記錄：沒有記錄代價 | 採用 |
 | B `pnpm audit`（前端相依套件掃描） | 來源記錄：現在就接，前端出現前不會觸發 | 來源記錄：誤報較多，用 `--prod` 或逐筆 ignore 處理，不降低門檻 | 採用 |
-| C Semgrep SAST | 來源記錄：可蓋專案禁令（至少兩條）加上一份註冊表規則集 | 來源記錄：延後，等有後端程式才接；之前禁令只靠 agent 把關 | 延後：後端程式建立之後 |
+| C Semgrep SAST | 來源記錄：可蓋專案禁令（至少兩條）加上一份註冊表規則集 | 來源記錄：原本延後到有後端程式才接，延後期間禁令只靠 agent 把關 | 採用：已建成，只蓋專案禁令 |
 | D DAST | 來源記錄：沒有記錄好處 | 來源記錄：目前不做 | 不採用：系統對網際網路開放、不只本機或 demo 使用時重新討論 |
 | E API fuzzing（Schemathesis） | 來源記錄：沒有記錄好處 | 來源記錄：延後 | 延後：OpenAPI schema 穩定之後 |
 | F Playwright E2E | 來源記錄：不屬安全掃描 | 來源記錄：由測試策略負責 | 不在這裡決定，見 [ADR-007](007-testing-strategy.mdx) |
 
 ### 決定
 
-CI 先做相依套件掃描：後端 `uv run pip-audit --fail-on high`、前端 `pnpm audit --prod --audit-level high`，兩端門檻都是 high；Semgrep 等有程式再接，DAST 與 API fuzzing 先不做。做法與 Semgrep 的最低規則見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)，相依套件警示的升級邊界見 [dependency-policy.mdx](../workflow/dependency-policy.mdx)。
+CI 有兩個安全 job，DAST 與 API fuzzing 先不做。
+
+- **相依套件掃描**（job `dependency-audit`）：後端 `uv run pip-audit`，任何已知弱點都失敗；前端 `pnpm audit --prod --audit-level high`，正式依賴有 high 以上弱點才失敗。**後端門檻比 high 嚴格**，因為 `pip-audit` 2.10.1 沒有嚴重度旗標（維護者 2026-11-22 裁定），所以不加 `--fail-on`、也不另寫嚴重度腳本。
+- **Semgrep**（job `semgrep`）：用固定版本的官方映像 `semgrep/semgrep:1.186.0`，免得新版釋出就改變 PR 的判準；先跑 `semgrep --test .semgrep/` 驗規則對得上回歸樣本，再跑 `semgrep scan --error --config .semgrep/label-suite.yml backend/ frontend/ e2e/`。目前蓋兩條專案禁令：CORS 的 `allow_origins=["*"]`、寫死的 API key 與 secret（`AGENTS.md` 硬性規則 7、8），沒有註冊表規則集。
+
+做法見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)，相依套件警示的升級邊界見 [dependency-policy.mdx](../workflow/dependency-policy.mdx)。
 
 ### 後果
 
 **變容易**
 
 - 相依套件的已知高風險弱點在 PR 就被擋下
+- CORS 萬用來源與寫死的 secret 在 PR 就被擋下，不再只靠 agent 把關
 
 **變困難**
 
 - `pnpm audit` 誤報較多，只能用 `--prod` 或逐筆 ignore 處理，不能降低門檻
 - 沒有修補版本的 high CVE 會讓 CI 失敗；來源記錄的出口是逐筆 ignore 並開 issue 追蹤
-- Semgrep 延後期間，專案禁令只靠 agent 把關
+- 後端的相依套件掃描比 high 嚴格：任何已知弱點（含 low 與 medium）都會讓 `dependency-audit` 失敗
 
 ### 什麼情況要重新討論
 
-- 後端程式建立之後（接 Semgrep）
+- `pip-audit` 提供嚴重度旗標，後端門檻可以改回 high 時（本節的重新討論條件是推論）
+- 要加 Semgrep 的註冊表規則集或新的專案禁令時（本節的重新討論條件是推論）
 - 系統對網際網路開放，不只本機或 demo 使用時（DAST）
 - OpenAPI schema 穩定之後（API fuzzing）
 
@@ -350,7 +357,7 @@ CI 先做相依套件掃描：後端 `uv run pip-audit --fail-on high`、前端 
 | 限制 | 對選擇的影響 |
 | :--- | :--- |
 | 標註結果是人工產出，無法由系統重建 | 不能以「研究原型」為由完全不做 |
-| 資料庫分兩層（[ADR-003 的 D7](003-backend-architecture.mdx#d7-資料庫分兩層)）：Lite 層是 `./data` volume 裡的單一 SQLite 檔，正式層是 PostgreSQL 16 | 兩層的備份手法不同，要分開決定 |
+| 資料庫分兩層（[ADR-003 的 D7](003-backend-architecture.mdx#d7-資料庫分兩層)）：Lite 層是具名 volume `label-suite-data`（掛在 `/app/data`）裡的單一 SQLite 檔，正式層是 PostgreSQL 16 | 兩層的備份手法不同，要分開決定 |
 | ADR-003 的 D7 已決定 Lite 層不建議多人使用 | Lite 層保護的是單人試用的資料，價值與正式層不同 |
 | 本 repo 沒有地端主機規劃（個人 repo ADR-023 的地端計畫在 [D1](#d1-compose-加-nginx-當-runtimecloudflare-可選) 已不採用） | 備份目的地不能綁在某台具名主機上 |
 | 這一期不引入新的 secret 與相依套件 | 排除需要雲端憑證的方案 |
@@ -359,7 +366,7 @@ CI 先做相依套件掃描：後端 `uv run pip-audit --fail-on high`、前端 
 
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
-| A 正式層用 `pg_dump` 定期備份到獨立的 backups volume，Lite 層不做 | 現在就做得出來，不需要新的 secret 或相依套件；範圍與 ADR-003 的 D7 兩層定位一致 | 主機整台損毀時備份一起沒；Lite 層的使用者要自己備份 `./data` | 採用 |
+| A 正式層用 `pg_dump` 定期備份到獨立的 backups volume，Lite 層不做 | 現在就做得出來，不需要新的 secret 或相依套件；範圍與 ADR-003 的 D7 兩層定位一致 | 主機整台損毀時備份一起沒；Lite 層的使用者要自己備份具名 volume 裡的資料 | 採用 |
 | B 兩層都做：Lite 層也排一個 `VACUUM INTO` 的定期備份 | 兩層行為一致，文件不必分層解釋 | 多一個排程與一條 SQLite 專屬路徑，[B7](../rules/backend-agent-rules.mdx#b7-雙資料庫的測試要求) 要求兩種 dialect 都測；而 Lite 層本來就不建議多人使用，保護的資料價值低 | 不採用自動排程；`VACUUM INTO` 這個手法仍是 Lite 層手動備份的做法，見決定 |
 | C 備份上傳 S3 相容的物件儲存 | 真的做得到災難復原 | 多一組 secret 與一個相依套件，沒設定時還要再設計一條降級路徑（像 [D3](#d3-寄信用-resend沒設-key-時把連結印到-log) 的 Resend 那樣） | 不採用，列為重新討論的條件 |
 | D 直接複製 SQLite 檔或 PostgreSQL 的資料目錄 | 不需要額外工具 | 寫入進行中複製會得到壞檔；PostgreSQL 的資料目錄要先停機或改用 `pg_basebackup` 才一致 | 不採用 |
@@ -367,7 +374,7 @@ CI 先做相依套件掃描：後端 `uv run pip-audit --fail-on high`、前端 
 
 ### 決定
 
-正式層用 `pg_dump` 定期備份，產物寫到獨立的 backups volume；Lite 層不做自動備援，改由使用者自己來，而且文件要給安全的做法：停掉服務再複製 `./data`，或在服務執行中用 `sqlite3 <db> "VACUUM INTO '<path>'"` 取一份一致的副本。不能只寫「複製 `./data`」—— 寫入進行中直接複製會得到壞檔（選項 D），而 SQLite 壞檔平常看不出來，要還原時才發現。備份只放在主資料碟上不足以災難復原，異地複製是部署者的責任，文件要寫明這一點。格式、頻率與保留份數（每日一次 `pg_dump -Fc`、滾動保留 7 份，裁定見 [#490 的留言](https://github.com/label-suite/label-suite/issues/490#issuecomment-7010266013)）見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)。
+正式層用 `pg_dump` 定期備份，產物寫到獨立的 backups volume；Lite 層不做自動備援，改由使用者自己來，而且文件要給安全的做法：停掉服務再用 `docker compose cp` 把 `backend` 服務的 `/app/data` 複製出來，或在服務執行中用 `sqlite3 <db> "VACUUM INTO '<path>'"` 取一份一致的副本。不能只寫「複製資料目錄」—— 寫入進行中直接複製會得到壞檔（選項 D），而 SQLite 壞檔平常看不出來，要還原時才發現。備份只放在主資料碟上不足以災難復原，異地複製是部署者的責任，文件要寫明這一點。格式、頻率與保留份數（每日一次 `pg_dump -Fc`、滾動保留 7 份，裁定見 [#490 的留言](https://github.com/label-suite/label-suite/issues/490#issuecomment-7010266013)）見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)。
 
 ### 後果
 
@@ -450,7 +457,7 @@ Celery worker 維持 warm shutdown：收到 SIGTERM 後不再領新任務，把�
 | D5 | 個人 repo ADR-019（Design Options Evaluated、Decision、Consequences）。分界出自 [architecture.mdx 的 §稽核與可追溯](../architecture.mdx#稽核與可追溯)。來源的資料模型把 `ai_runs` 列寫成有 `status` 與 `completed_at`，與本 repo 的「只新增」有出入，見[待決](#待決)第 2 列。來源的事件清單依賴 ADR-017 的 Planner、Generator、Evaluator 分層，ADR-017 在本 repo 的效力已改連到 [ADR-002 的 D4](002-development-workflow.mdx#d4-規劃實作審查與驗收由不同角色負責)，本 repo 不採用該事件清單；來源的角色存取表用的是個人 repo 的角色名稱，本 repo 不採用；快照的儲存後端在來源是延後的決定，本 repo 沒有核對。本節的重新討論條件是推論，來源沒有記錄 |
 | D6 | 個人 repo ADR-032（Options、Decision、Consequences）。同交易寫入對應 [backend-agent-rules.mdx 的 B4](../rules/backend-agent-rules.mdx#b4-交易的擁有層)；至少保留 1 個曆年出自規格 06-02。選項 A、B 的好處沒有記錄；選項 C 的好處取自來源的選擇理由。來源的存取角色（個人 repo 的角色名稱）、事件目錄、索引、候選 FK、系統行為人的 CHECK 與原型豁免本 repo 不採用，由資料表字典與規格管。本節的重新討論條件是推論，來源沒有記錄 |
 | D7 | 個人 repo ADR-038 的 Context 與 Decision，以及 ADR-032 的保留規則。來源沒有列出選項；選項 B、C 是從 Context 與 Decision 推論（B 的理由沒有記錄），選項 D 出自 B8。ADR-038 的下列內容本 repo 不採用，由規格與資料設計管：session 與 refresh token 的清除、30 天匯出檔（規格 03-task-detail）、原始檔的 RESTRICT（規格 05-03）、以特權 migration 角色做匿名化的緊急路徑（個人 repo ADR-024）。來源的四個 TBD（個人 repo 追蹤的 issue）見[待決](#待決)第 3 至 6 列。本節的重新討論條件是推論，來源沒有記錄 |
-| D8 | 個人 repo ADR-028（Alternatives、Decision、Consequences）。「論文 demo、不對網際網路開放」依賴本 repo 沒有確認的前提；來源記錄 DAST 在系統對網際網路開放時重新討論，API fuzzing 在 OpenAPI schema 穩定後重新討論。選項 F 的歸屬出自來源（由測試 ADR 負責）。Dependabot 的邊界在 [dependency-policy.mdx](../workflow/dependency-policy.mdx)。選項 A 的代價、選項 C 至 E 的好處沒有記錄 |
+| D8 | 個人 repo ADR-028（Alternatives、Decision、Consequences）。「論文 demo、不對網際網路開放」依賴本 repo 沒有確認的前提；來源記錄 DAST 在系統對網際網路開放時重新討論，API fuzzing 在 OpenAPI schema 穩定後重新討論。選項 F 的歸屬出自來源（由測試 ADR 負責）。Dependabot 的邊界在 [dependency-policy.mdx](../workflow/dependency-policy.mdx)。選項 A 的代價、選項 C 至 E 的好處沒有記錄。Semgrep 已建成、後端 `pip-audit` 門檻比 high 嚴格是本 repo 的做法，與來源的 `--fail-on high` 與延後不同 |
 | D9 | **本 repo 新裁定**（[#490](https://github.com/label-suite/label-suite/issues/490)），個人 repo 沒有對應的 ADR。最接近的是 ADR-023：它在 Consequences 的 Harder 寫「production 備份必須複製到主資料碟以外或另一台主機，只放 `/data/label-suite/prod/backups` 不足以災難復原」，而「備份目的地與保留政策」列在它的 **Deferred Decisions**，從未裁定；而且 ADR-023 的地端伺服器計畫在 [D1](#d1-compose-加-nginx-當-runtimecloudflare-可選) 已不採用，那句約束所依附的主機規劃本 repo 沒有。兩層的形狀出自 [ADR-003 的 D7](003-backend-architecture.mdx#d7-資料庫分兩層)；「Lite 層不建議多人使用」也出自該節。選項 B 至 E 是從限制表推出的，來源沒有列過選項 |
 | D10 | **本 repo 新裁定**（[#490](https://github.com/label-suite/label-suite/issues/490)），兩個 repo 都沒有來源。個人 repo ADR-006 的 `graceful degradation when Redis is unavailable` 講的是 Redis 不可用時降級直接查資料庫，不是關機流程；ADR-023 的「零停機部署有限」與 Deferred Decisions 的 blue-green 講的是部署切換，而且同樣未裁定。300 秒上限、重試三次與 `stop_grace_period` 預設 10 秒出自 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務)與 Compose 的預設值；「偶爾在重啟時掉一個 task 可以接受」出自 [ADR-003 的 D8](003-backend-architecture.mdx#d8-非同步任務用-celery-加-redis) 拒絕 RabbitMQ 的理由，本節只收斂其中 worker 重啟那一種。選項 A 至 D 全部是推論 |
 | — | 個人 repo ADR-026（i18n 兩層）不收：它管前後端的字串邊界，不是部署、維運或稽核；它的理由在 [ADR-003 的 D11](003-backend-architecture.mdx#d11-i18n-分前端與後端兩層)，做法在 [architecture.mdx 的 §i18n 兩層](../architecture.mdx#i18n-兩層) |
@@ -481,6 +488,8 @@ Celery worker 維持 warm shutdown：收到 SIGTERM 後不再領新任務，把�
 | 2026-11-19 | AI 可追溯用只新增的 `ai_runs` 表（[D5](#d5-ai-可追溯用只新增的-ai_runs-表)） | —（沿用個人 repo ADR-019；事件清單與角色存取表未採用） | [#454](https://github.com/label-suite/label-suite/issues/454) |
 | 2026-11-19 | 使用者行為記在單一只新增的 `audit_events` 表（[D6](#d6-使用者行為記在單一只新增的-audit_events-表)） | —（沿用個人 repo ADR-032；存取角色與事件目錄未採用） | [#454](https://github.com/label-suite/label-suite/issues/454) |
 | 2026-11-19 | 稽核保留至少一個曆年，刪除請求就地匿名化同一列（[D7](#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)） | —（沿用個人 repo ADR-038 與 ADR-032 的保留規則） | [#454](https://github.com/label-suite/label-suite/issues/454) |
-| 2026-11-19 | CI 安全掃描先做 SCA，SAST 延後（[D8](#d8-ci-安全掃描先做-scasast-延後)） | —（沿用個人 repo ADR-028） | [#454](https://github.com/label-suite/label-suite/issues/454) |
+| 2026-11-19 | CI 安全掃描先做 SCA，SAST 延後（[D8](#d8-ci-安全掃描做相依套件掃描與-semgrep)） | —（沿用個人 repo ADR-028） | [#454](https://github.com/label-suite/label-suite/issues/454) |
+| 2026-11-22 | Semgrep 已建成；後端相依套件掃描改為 `uv run pip-audit`，任何已知弱點都失敗（`pip-audit` 2.10.1 沒有嚴重度旗標，後端比 high 嚴格） | 「Semgrep 延後」與後端 `pip-audit --fail-on high` | [#506](https://github.com/label-suite/label-suite/issues/506) |
 | 2026-11-19 | 資料備援只做正式層，備份產出到獨立 volume，異地複製是部署者的責任（[D9](#d9-資料備援只做正式層備份產出到獨立-volume)） | —（新裁定；個人 repo ADR-023 把備份目的地與保留政策列為未裁定） | [#490](https://github.com/label-suite/label-suite/issues/490) |
+| 2026-11-22 | Lite 層資料改放具名 volume `label-suite-data`，手動備份改用 `docker compose cp` 複製 `backend` 服務的 `/app/data`（[D9](#d9-資料備援只做正式層備份產出到獨立-volume)） | 「停掉服務再複製 `./data`」 | [#506](https://github.com/label-suite/label-suite/issues/506) |
 | 2026-11-19 | worker 收到 SIGTERM 先做完手上的任務，`stop_grace_period` 要大於 300 秒（[D10](#d10-worker-收到-sigterm-先做完手上的任務)） | 收斂 [ADR-003 的 D8](003-backend-architecture.mdx#d8-非同步任務用-celery-加-redis)「偶爾在重啟時掉一個 task 可以接受」中 worker 重啟那一種 | [#490](https://github.com/label-suite/label-suite/issues/490) |

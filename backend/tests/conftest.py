@@ -7,10 +7,18 @@ engine; ``migrated_engine`` builds on it and runs ``alembic upgrade head``.
 ``app`` is the production assembly from ``create_app`` with the test-only probe
 router added under the same ``/api/v1`` parent router; ``client`` runs its
 lifespan and talks to it through ``httpx.ASGITransport`` (design D8).
+
+``create_app`` configures process-wide logging, so ``restore_logging`` puts the
+root logger and the uvicorn and database loggers back after every test, and
+``capture_logs`` re-points this repository's root handler at an in-memory stream
+so a test can assert on the real one-line ``key=value`` output
+(request-access-log design D6, §Risks item 1).
 """
 
+import io
+import logging
 import os
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable, Iterator
 from pathlib import Path
 
 import httpx
@@ -23,10 +31,59 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.core.config import DatabaseSettings, Settings
 from app.core.db import create_engine
+from app.core.log_config import configure_logging, is_repo_handler
 from app.main import create_api_router, create_app
 from tests.probe import probe_router
 
 TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL") or None
+
+_CONFIGURED_LOGGERS = ("uvicorn", "uvicorn.access", "sqlalchemy", "aiosqlite", "asyncpg")
+"""The named loggers ``configure_logging`` changes besides the root logger."""
+
+
+@pytest.fixture(autouse=True)
+def restore_logging() -> Iterator[None]:
+    """Undo ``configure_logging`` after each test.
+
+    Only the handler ``configure_logging`` marks is removed from the root logger:
+    pytest swaps its own capture handlers per test phase, so restoring a
+    snapshot of the root handler list would leave a stale pytest handler behind.
+    """
+    root = logging.getLogger()
+    root_level = root.level
+    saved = {
+        name: (logger.level, list(logger.handlers), logger.propagate)
+        for name in _CONFIGURED_LOGGERS
+        for logger in [logging.getLogger(name)]
+    }
+    try:
+        yield
+    finally:
+        for handler in [h for h in root.handlers if is_repo_handler(h)]:
+            root.removeHandler(handler)
+        root.setLevel(root_level)
+        for name, (level, handlers, propagate) in saved.items():
+            logger = logging.getLogger(name)
+            logger.setLevel(level)
+            logger.handlers[:] = handlers
+            logger.propagate = propagate
+
+
+@pytest.fixture
+def capture_logs() -> Callable[[Settings], io.StringIO]:
+    """Return a function that re-runs ``configure_logging`` writing to a new buffer.
+
+    Call it after ``create_app`` (which configures logging to stderr); the
+    returned ``StringIO`` then receives exactly what this repository's root
+    handler writes, formatted by ``KeyValueFormatter``.
+    """
+
+    def capture(settings: Settings) -> io.StringIO:
+        buffer = io.StringIO()
+        configure_logging(settings, stream=buffer)
+        return buffer
+
+    return capture
 
 
 def make_test_database_settings(tmp_path: Path) -> DatabaseSettings:
@@ -100,6 +157,7 @@ def make_test_settings(tmp_path: Path) -> Settings:
     return Settings(
         cors_allowed_origins=[ALLOWED_ORIGIN],
         cors_allow_credentials=True,
+        api_docs_enabled=True,
         database_url=TEST_DATABASE_URL,
         sqlite_path=tmp_path / "test.db",
     )

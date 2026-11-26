@@ -18,7 +18,7 @@
 
 ## 產品是什麼
 
-Label Suite 是碩士論文 Demo Paper 的核心成果：用設定驅動的標記流程，讓研究團隊在同一個平台走完建立任務、試標、確認一致性、正式標記、審核、匯出，並在標記過程中就看到資料統計（`docs/specs/00-prd.mdx` §專案概述）。使用者是研究團隊成員，不是一般消費者；其中標記員與審核員的「好上手」以 SUS 75 分衡量（`00-prd.mdx:58`）。
+Label Suite 是碩士論文 Demo Paper 的核心成果：用設定驅動的標記流程，讓研究團隊在同一個平台走完建立任務、試標、確認一致性、正式標記、審核、匯出，並在標記過程中就看到資料統計（`docs/specs/00-prd.mdx` §專案概述）。使用者是研究團隊成員，不是一般消費者；其中標記員與審核員的「好上手」以 SUS 75 分衡量（`00-prd.mdx:60`）。
 
 banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`design/prototype/assets/logo/banner.svg`、`social-preview.svg`）。
 
@@ -37,7 +37,7 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 7. **送出中要有載入態且不能重複送出。**UXC-06（`.btn-loading`，`components-showcase.html:213`–`:214`）。已知缺口：只擋滑鼠、沒擋鍵盤（G-06）。
 8. **Skeleton 的尺寸要貼合載入後的內容**，以防 layout shift（UXC-08，`components-showcase.html:1134`）。所以 Skeleton 的尺寸不 token 化。
 9. **同一組一次性連結失效用同一句話。**`ONE_TIME_LINK_WORDING` 是單一來源（`pages/shared/sidebar.js:227`），重設密碼與驗證信兩頁都引用它（`reset-password.html:611`、`verify-email.html:390`）。
-10. **每個畫面同時支援繁中與英文、淺色與深色。**語言與外觀是共用介面的一部分（PRD 的「外觀切換（淺色／深色）」，`00-prd.mdx:136`、`docs/specs/07-shared/01-sidebar.mdx`）；元件要用語意 token，深色主題靠 `html[data-theme="dark"]` 重新對映同名 token，頁面不寫兩份（`tokens.css` 深色區塊的檔頭說明）。
+10. **每個畫面同時支援繁中與英文、淺色與深色。**語言與外觀是共用介面的一部分（PRD 的「外觀切換（淺色／深色）」，`00-prd.mdx:138`、`docs/specs/07-shared/01-sidebar.mdx`）；元件要用語意 token，深色主題靠 `html[data-theme="dark"]` 重新對映同名 token，頁面不寫兩份（`tokens.css` 深色區塊的檔頭說明）。
 11. **互動元件要有 `prefers-reduced-motion` 的退路。**共用 CSS 與 showcase 都有 `@media (prefers-reduced-motion: reduce)`（`pages/shared/sidebar.css:185`、`components-showcase.html:979`）；`account/profile` 是唯一漏掉的帳號頁（G-30）。
 12. **圖示一律用 SVG，不用 emoji，也不用文字字元（`✕`、`←`、`→`、`✓` 等）充當圖示。**維護者裁定（2026-11-18）；repo 內早有同向的依據：ADR-030「Lucide 是唯一圖示來源」，`task-config.engine.js:870`、`:977` 的註解寫「no text-glyph icons」「no hand-drawn glyphs」。細節見 [§圖示](#圖示)。
 13. **控制項外框用 `--color-border-control`，`--color-border` 只做裝飾。**輸入框、下拉選單、文字區塊、搜尋框、勾選框，以及長得像欄位的觸發鈕（日期區間、分類選擇）的外框用前者（淺色 `#7C899D` 對白底 3.55、對頁底 3.23:1；深色 `#6B6B78` 對卡片 3.42、對頁底 3.73:1），才過 WCAG 1.4.11 的 3:1；卡片、表格、分隔線用 `--color-border`（對白底只有 1.23:1）。焦點與錯誤狀態維持各自的 token。維護者裁定（2026-11-18，#427）；`tokens.css:26`、`:203`。
@@ -54,7 +54,7 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 | UXC 編號 | 沿用 prototype 已在用的 03–11，01／02 留空 | `ux-conventions.md`（2026-11-17） |
 | 外觀選項 | 三選一「跟隨系統／淺色／深色」，預設「跟隨系統」；`system` 真的讀作業系統 | `assets/theme.js:5`、`:17` 的註解（#195，2026-11-09） |
 | 語言 | 兩種：`zh`、`en`；沒有儲存值時預設 `zh`；選擇存在 `labelsuite.lang` | `pages/shared/sidebar.js:3`、`:410`–`:415` |
-| 說明按鈕 | 這期不做，下一期依 SUS 結果再決定 | `00-prd.mdx:147` |
+| 說明按鈕 | 這期不做，下一期依 SUS 結果再決定 | `00-prd.mdx:149` |
 | 引用 `MASTER.md` 版號 | `tokens.css` 與 prototype 註解引用的 `MASTER.md` 版號、行號指向原件，本 repo 解析不到 | `MASTER.md` §這份檔是重建的、G-25 |
 | 中文稱謂 | 全部中文介面文案用「你」，不用「您」 | 維護者裁定 2026-11-18 |
 | 送出用語 | 統一「送出」＋受詞（送出標記、送出審核、送出仲裁），不用「提交」 | 維護者裁定 2026-11-18 |
@@ -100,7 +100,7 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 **規則：全部中文介面文案用「你」，不用「您」。**維護者裁定（2026-11-18）。
 
 - 動作與後果說明本來就用「你」（例：`profile.html:1227`「除非你回到『密碼設定』重新設一組」），區塊副標與成功通知也一律改「你」（例：`profile.html:1179`「修改你的姓名與聯絡方式」、`:1221`「你現在可使用電子郵件與密碼登入」、`register.html:541`「填寫以下資訊以建立你的帳號」）。
-- prototype 原本有 13 行用「您」，已在 #418 改成「你」，列在 [§與 prototype 的落差](#與-prototype-的落差)。規格書 `docs/specs/01-account/04-profile.mdx:131` 的副標題也已在 #461 改成「你」。
+- prototype 原本有 13 行用「您」，已在 #418 改成「你」，列在 [§與 prototype 的落差](#與-prototype-的落差)。規格書 `docs/specs/01-account/04-profile.mdx:133` 的副標題也已在 #461 改成「你」。
 
 ### 按鈕用語
 
@@ -223,7 +223,7 @@ token 名與值以 `tokens.css` 為準；本節只寫**怎麼用**。
 
 證據偏少，只收有明文的：
 
-- **登入後的每一頁共用側欄**：品牌區 `.brand-section`（logo＋wordmark＋語言切換）在最上、分隔線、導覽列（`sidebar.js:2037`–`:2051`、`sidebar.css:37`–`:44`）。側欄可收合，狀態存在 `labelsuite.sidebarCollapsed`（`sidebar.js:5`）。
+- **登入後的每一頁共用側欄**：品牌區 `.brand-section`（logo＋wordmark＋語言切換）在最上、分隔線、導覽列（`sidebar.js:2043`–`:2057`、`sidebar.css:37`–`:44`）。側欄可收合，狀態存在 `labelsuite.sidebarCollapsed`（`sidebar.js:5`）。
 - **工作頁籤**上限 8 個、重開堆疊上限 10（`sidebar.js` 的 `TAB_CAP`、`TAB_REOPEN_CAP`）。「工作頁籤」與頁內「Content Tabs」是兩個東西，命名見 [`MASTER.md`](MASTER.md) §命名約定。
 - **帳號頁**是置中的單卡版面，頂部 navbar 只有 logo 與語言切換（`login.html` 的 `.navbar`、`:353`–`:375`）。
 - **響應式規則（維護者裁定 2026-11-18）：**
@@ -280,7 +280,7 @@ token 名與值以 `tokens.css` 為準；本節只寫**怎麼用**。
 
 ### 來源與規則
 
-- **圖示來源是 [Lucide](https://lucide.dev/)，授權 ISC。**維護者裁定（2026-11-18）。repo 內的依據：`sidebar.js:666` 的註解引用 `https://lucide.dev/icons/chevron-down`；`docs/development/rules/frontend-agent-rules.mdx:287` 寫「ADR-030（Lucide 是唯一圖示來源）」；原件 `MASTER.md:2893` 寫「the project's single icon library」。
+- **圖示來源是 [Lucide](https://lucide.dev/)，授權 ISC。**維護者裁定（2026-11-18）。repo 內的依據：`sidebar.js:666` 的註解引用 `https://lucide.dev/icons/chevron-down`；`docs/development/rules/frontend-agent-rules.mdx:310` 寫「ADR-030（Lucide 是唯一圖示來源）」；原件 `MASTER.md:2893` 寫「the project's single icon library」。
 - **版本：未知。**`assets/icons/` 的 28 個 SVG 與 `assets/logo/icon.svg` 都沒有版本註解，prototype 內也沒有 `lucide` 套件或版號；原件 `MASTER.md` 同樣沒寫。要寫入版本需要維護者提供當初取用的版本，或之後改以套件鎖版（那是 `frontend/` 的事，現在不存在）。
 - **線寬統一為 2。**`assets/icons/` 28 個全部是 `stroke-width="2"`，`24×24`、`fill="none"`、`stroke="currentColor"`、圓角端點與轉角、`aria-hidden="true"`（抽查 `check.svg`、`tag.svg`）。內嵌圖示不是 2 的行列在落差表。
 - **一律 SVG。不用 emoji，也不用 `✕`、`←`、`→`、`✓`、`▾` 等字元。**關閉用 Lucide 的 `x`，返回用 `arrow-left`／`chevron-left`，勾選用 `check`，下拉箭頭用 `chevron-down`。這是鐵律 12。
@@ -288,7 +288,7 @@ token 名與值以 `tokens.css` 為準；本節只寫**怎麼用**。
 ### 用法
 
 - 線條圖示，單色，顏色由 `currentColor` 繼承；不另外上色。
-- 大多數頁面**不載入 `assets/icons/` 的檔案，而是把 `<svg>` 內嵌在 HTML／JS 裡**（`login.html:353`–`:358`、`sidebar.js:2040`；全 prototype 只有 `components-showcase.html` 以檔案引用 `chevron-down.svg`，見 [`pages/components-showcase.md`](pages/components-showcase.md)）。所以 `assets/icons/` 現況比較像**圖示資料庫**，不是頁面實際引用的來源。
+- 大多數頁面**不載入 `assets/icons/` 的檔案，而是把 `<svg>` 內嵌在 HTML／JS 裡**（`login.html:353`–`:358`、`sidebar.js:2046`；全 prototype 只有 `components-showcase.html` 以檔案引用 `chevron-down.svg`，見 [`pages/components-showcase.md`](pages/components-showcase.md)）。所以 `assets/icons/` 現況比較像**圖示資料庫**，不是頁面實際引用的來源。
 - 純裝飾圖示加 `aria-hidden="true"`；單獨成為控制項的圖示要有 `aria-label`（`login.html:366`–`:368` 的語言切換是圖示加文字，所以圖示本身 `aria-hidden`）。
 
 ---
@@ -374,7 +374,7 @@ SVG 檔無法引用 CSS 變數，維護者裁定保留寫死色值（2026-11-18�
 | 場景 | 做法 | 依據 |
 | :--- | :--- | :--- |
 | 帳號頁頂部 navbar | 32×32 主色圓角方（圓角 8px）＋內嵌 20×20 的標籤線稿（`--color-on-cta`：淺色白、深色深墨）；右側 wordmark 18px 襯線粗體；整塊是「回首頁」連結，`aria-label` 兩種語言 | `login.html:39`–`:68`、`:351`–`:361` |
-| 登入後側欄品牌區 | 36×36（`--radius-md`）＋ wordmark 16px；放在最上、下方一條 `--color-border` 分隔線；整塊連回儀表板（`brandHref`） | `sidebar.css:37`–`:75`、`sidebar.js:2036`–`:2044` |
+| 登入後側欄品牌區 | 36×36（`--radius-md`）＋ wordmark 16px；放在最上、下方一條 `--color-border` 分隔線；整塊連回儀表板（`brandHref`） | `sidebar.css:37`–`:75`、`sidebar.js:2042`–`:2050` |
 | 元件展示的頭像樣本 | `icon-colored.svg` 當作使用者頭像的示範圖 | `components-showcase.html:1366` |
 
 觀察到的規則：

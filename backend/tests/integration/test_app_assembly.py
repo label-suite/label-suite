@@ -5,17 +5,24 @@ the test-only probe router stands in for endpoints that take input. Group 4 has
 no ``LocaleMiddleware`` yet, so every message is the zh-TW fallback (design D5).
 """
 
+import io
+import logging
 import os
 import re
 import shutil
 import subprocess
+import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 import httpx
 import pytest
+from fastapi import APIRouter, FastAPI
 
+from app.core.config import ConfigError, DatabaseSettings, Settings
+from app.core.log_config import is_repo_handler
+from app.main import create_api_router, create_app
 from tests.conftest import ALLOWED_ORIGIN
 from tests.probe import PROBE_PATH
 
@@ -291,3 +298,130 @@ def test_server_refuses_to_start_without_allowed_origins(tmp_path: Path) -> None
 
     assert result.returncode != 0
     assert "CORS_ALLOWED_ORIGINS" in result.stderr
+
+
+# --- log output (request-access-log task 1.3) -----------------------------------------
+
+_LOG_PROBE_PATH = "/api/v1/probe-log-levels"
+
+
+def _with_log_level_probe(app: FastAPI) -> FastAPI:
+    router = APIRouter()
+
+    @router.get("/probe-log-levels")
+    async def log_levels() -> dict[str, str]:
+        logger = logging.getLogger("app.probe")
+        logger.info("CANARY-info-record")
+        logger.debug("CANARY-debug-record")
+        return {}
+
+    api = create_api_router()
+    api.include_router(router)
+    app.include_router(api)
+    return app
+
+
+def _create_app_from_env(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, log_level: str | None
+) -> tuple[FastAPI, io.StringIO]:
+    """Build the app from the environment with stderr redirected to a buffer."""
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", ALLOWED_ORIGIN)
+    monkeypatch.setenv("SQLITE_PATH", str(tmp_path / "app.db"))
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    if log_level is None:
+        monkeypatch.delenv("LOG_LEVEL", raising=False)
+    else:
+        monkeypatch.setenv("LOG_LEVEL", log_level)
+    stderr = io.StringIO()
+    monkeypatch.setattr(sys, "stderr", stderr)
+    return create_app(), stderr
+
+
+async def _get(app: FastAPI, path: str) -> httpx.Response:
+    async with app.router.lifespan_context(app):
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as http:
+            return await http.get(path)
+
+
+def test_creating_the_app_twice_keeps_one_repo_root_handler(tmp_path: Path) -> None:
+    settings = Settings(
+        cors_allowed_origins=[ALLOWED_ORIGIN],
+        database_url=None,
+        sqlite_path=tmp_path / "app.db",
+    )
+
+    create_app(settings)
+    create_app(settings)
+
+    assert sum(is_repo_handler(handler) for handler in logging.getLogger().handlers) == 1
+
+
+async def test_info_is_written_and_debug_is_not_when_log_level_is_unset(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    app, stderr = _create_app_from_env(monkeypatch, tmp_path, None)
+
+    response = await _get(_with_log_level_probe(app), _LOG_PROBE_PATH)
+
+    assert response.status_code == 200
+    output = stderr.getvalue()
+    assert re.search(
+        r"level=INFO logger=app\.probe traceId=\S+ msg=CANARY-info-record$", output, re.M
+    )
+    assert "CANARY-debug-record" not in output
+
+
+@pytest.mark.parametrize("log_level", ["warning", "WARNING"])
+async def test_warning_log_level_drops_info_whatever_its_case(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, log_level: str
+) -> None:
+    app, stderr = _create_app_from_env(monkeypatch, tmp_path, log_level)
+
+    response = await _get(_with_log_level_probe(app), _LOG_PROBE_PATH)
+
+    assert response.status_code == 200
+    assert "CANARY-info-record" not in stderr.getvalue()
+    assert "level=INFO" not in stderr.getvalue()
+
+
+def test_invalid_log_level_fails_before_logging_is_configured(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    root = logging.getLogger()
+    root_level = root.level
+
+    with pytest.raises(ConfigError) as caught:
+        _create_app_from_env(monkeypatch, tmp_path, "CANARY-verbose")
+
+    assert "LOG_LEVEL" in str(caught.value)
+    assert "CANARY-verbose" not in str(caught.value)
+    assert not any(is_repo_handler(handler) for handler in root.handlers)
+    assert root.level == root_level
+
+
+@pytest.mark.parametrize("log_level", [None, "DEBUG"])
+async def test_lite_health_check_writes_no_database_records(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, log_level: str | None
+) -> None:
+    # Explicitly Lite (SQLite through aiosqlite), even when TEST_DATABASE_URL is set.
+    database = DatabaseSettings(database_url=None, sqlite_path=tmp_path / "lite.db")
+    monkeypatch.delenv("LOG_LEVEL", raising=False)
+    settings = Settings(
+        cors_allowed_origins=[ALLOWED_ORIGIN],
+        database_url=database.database_url,
+        sqlite_path=database.sqlite_path,
+        **({} if log_level is None else {"log_level": log_level}),
+    )
+    stderr = io.StringIO()
+    monkeypatch.setattr(sys, "stderr", stderr)
+    app = create_app(settings)
+
+    response = await _get(app, "/api/v1/health")
+
+    assert response.status_code == 200
+    output = stderr.getvalue()
+    assert "SELECT 1" not in output
+    assert not re.search(r"level=(INFO|DEBUG) logger=(sqlalchemy|aiosqlite|asyncpg)", output), (
+        output
+    )

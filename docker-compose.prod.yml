@@ -1,0 +1,157 @@
+# Production-tier orchestration: db (PostgreSQL), migrate, backend and frontend
+# (ADR-008 D1; backend-agent-rules B7; system-design D2, D4).
+#
+# A standalone file, not an overlay on docker-compose.yml: use it on its own,
+# `docker compose -f docker-compose.prod.yml up --build --wait --wait-timeout 300`.
+# Overlaying would have to undo the Lite tier's volume mount through merge
+# directives that a deployer cannot read off the file (system-design D2). The
+# price is about thirty duplicated lines, which `docker compose config --quiet`
+# on both files plus the compose smoke test in CI keep from drifting.
+#
+# Requires Docker Compose v2.20.0 or newer, for the same reason as the Lite file
+# (system-design D7). Neither tier contains Redis or a worker.
+#
+# POSTGRES_PASSWORD has no default: unset or empty makes Compose fail
+# interpolation before any container is created (system-design D4;
+# Hard Rule 8 - the password comes from .env, never from this file).
+
+# Own project name, so this tier never reuses the Lite tier's containers or its
+# named volume.
+name: label-suite-prod
+
+x-backend-image: &backend-image
+  build:
+    context: ./backend
+  image: label-suite-backend:latest
+
+# Both the migration and the API talk to the db service over the Compose
+# network. The URL is composed from the same three variables the db service
+# itself reads, so the two can never disagree. A password containing URL
+# reserved characters has to be percent-encoded in .env (system-design D4).
+x-database-url: &database-url
+  DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-label_suite}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:-label_suite}
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-label_suite}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-label_suite}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      # $$ keeps Compose from interpolating: the values come from the
+      # container's own environment, set above (system-design D5).
+      test: ["CMD-SHELL", 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+    # No ports: the database is reachable only inside the Compose network
+    # (ADR-008 D1; system-design D6).
+
+  # One-off: brings the database to the latest revision before the API starts.
+  # It reads database settings only - a migration never needs
+  # CORS_ALLOWED_ORIGINS (system-design D1).
+  migrate:
+    <<: *backend-image
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment: *database-url
+    restart: "no"
+
+  backend:
+    <<: *backend-image
+    depends_on:
+      # A failed migration leaves the API down and fails `up`, with the error in
+      # the migrate log only (system-design D1).
+      migrate:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+    environment:
+      <<: *database-url
+      # No default on purpose, same as the Lite file (system-design D6, D7).
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?set CORS_ALLOWED_ORIGINS in .env}
+      CORS_ALLOW_CREDENTIALS: ${CORS_ALLOW_CREDENTIALS:-true}
+      # Pinned, not read from .env: the production tier never serves the built-in
+      # /docs, /docs/oauth2-redirect, /redoc and /openapi.json routes (#592).
+      # The pin keeps them off even though nginx is the only public entry (ADR-008 D1).
+      API_DOCS_ENABLED: "false"
+      # Passed from .env so deployers can tune log noise; INFO when unset (#567 Q14).
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # The only address uvicorn trusts for X-Forwarded-For and X-Forwarded-Proto: the
+      # frontend's pinned address below. Set it in .env only when the subnet changes
+      # (#566; the value is validated at start-up, "*" is rejected).
+      FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-10.77.250.10}
+    healthcheck:
+      # The slim base image has no curl, so the image's own Python makes the
+      # call; urlopen raises on any non-2xx status (system-design D5). The check
+      # queries the database, so a database outage turns the API unhealthy.
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen("http://127.0.0.1:8000/api/v1/health", timeout=5).read()
+      interval: 30s
+      timeout: 10s
+      start_period: 20s
+      retries: 3
+    # No ports: reachable only through the frontend's reverse proxy.
+    stop_grace_period: 30s
+
+  frontend:
+    build:
+      # The build context is the repository root, not frontend/
+      # (frontend/Dockerfile).
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        # Empty: this container serves the API from its own origin
+        # (system-design D6).
+        VITE_API_BASE_URL: ""
+    image: label-suite-frontend:latest
+    networks:
+      default:
+        # Pinned, outside the network's ip_range, so no other container can take it
+        # and the backend's trust list stays a single address (#566 design D2).
+        ipv4_address: 10.77.250.10
+    depends_on:
+      # nginx resolves the backend upstream once, at start-up, so it must not
+      # start before the API is healthy (system-design D5; frontend/nginx.conf).
+      backend:
+        condition: service_healthy
+    ports:
+      # The only published port of either tier (system-design D6). Changing it
+      # means changing CORS_ALLOWED_ORIGINS in .env to match.
+      - "${FRONTEND_PORT:-8080}:80"
+    healthcheck:
+      # busybox wget, present in nginx:alpine; the SPA fallback answers 200.
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+
+# Fixed subnet for the default network (#566, trusted-proxy-client-ip design D2).
+# The backend trusts X-Forwarded-For and X-Forwarded-Proto only from the frontend
+# container, so that container needs an address that never changes: it is pinned
+# below and kept out of ip_range, the only part of the subnet Docker hands out to
+# other containers. The subnet is outside Docker's default pools (172.16.0.0/12 and
+# 192.168.0.0/16). The same three values are in docker-compose.yml; CI checks
+# that they match. Because of that, the two tiers cannot run on one host at the same
+# time: `docker compose down` one before starting the other.
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 10.77.250.0/24
+          ip_range: 10.77.250.128/25
+
+volumes:
+  # The database files. `docker compose -f docker-compose.prod.yml down` keeps
+  # it; adding -v removes it with the data.
+  pg-data:

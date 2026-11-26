@@ -1,18 +1,18 @@
 ---
 title: '後端開發規範'
-description: '後端的分層與允許 import、docstring 與指令、session 分離、交易擁有層、SQLAlchemy 專管存取、Alembic 專管 schema、雙資料庫測試、刪除與匿名化、Celery 的界線、設定與 secret。'
+description: '後端的分層與允許 import、docstring 與指令、session 分離、交易擁有層、SQLAlchemy 專管存取、Alembic 專管 schema、雙資料庫測試、刪除與匿名化、Celery 的界線、設定與 secret、函式複雜度與檔案行數上限、單一入口與模組間 import 邊界。'
 category: '開發說明'
 tags: [開發說明, Agent, 規範, 後端]
 createdAt: '2026-11-10'
-updatedAt: '2026-11-16'
+updatedAt: '2026-11-25'
 ---
 
 # 後端開發規範
 
-本文說明後端的十條開發規範，由 `AGENTS.md` 的 Agent Rules Index 指過來；`AGENTS.md` 是規則本體，兩邊說法不同時以 `AGENTS.md` 為準，並回報給維護者。
+本文說明後端的十二條開發規範，由 `AGENTS.md` 的 Agent Rules Index 指過來；`AGENTS.md` 是規則本體，兩邊說法不同時以 `AGENTS.md` 為準，並回報給維護者。
 跨領域的規範（先搜尋再新增、最小變更、衝突處理等）在 [agent-rules.mdx](agent-rules.mdx)，技術選型與 ADR 效力在 [architecture.mdx](../architecture.mdx)。
 
-**`backend/` 目前不存在**，所以每條的「檢查方式」都還沒有自動檢查。標「待建置」就是字面意思：那些檢查要等實際有程式才寫得出來，**不得因為這份文件存在就宣稱架構已被強制**。
+**`backend/` 已存在，但只有 B1、B2、B6、B7、B11 與 B12 的一部分檢查在 CI 跑**（job 與指令寫在各條的「檢查方式」）；B12 已建置的只有寄信、Google OIDC、對外 HTTP 客戶端三項入口契約與兩條跨模組契約，其餘四項仍標「待建置」；B8 靠人工／獨立審查，其餘各條仍標「待建置」。標「待建置」就是字面意思：那些檢查還沒有寫，**不得因為這份文件存在就宣稱架構已被強制**。
 
 每條規範的反例與檢查方式收在摺疊區塊，預設收起；適用路徑、禁止、正例與例外在表裡。
 
@@ -27,13 +27,14 @@ Router 只呼叫 service，service 才碰 repository 與 model；資料層不處
 | **適用路徑** | `backend/app/modules/**` |
 | **禁止** | Router 直接呼叫 Repository；資料層處理 HTTP（讀 request、回 status code、丟 `HTTPException`）；狀態機的轉移判斷寫在 Router 或 Repository |
 | **正例** | `router → service → repository／model`；狀態轉移只在 service，違反時丟 `InvalidTransitionError` |
-| **例外** | 無。唯讀的健康檢查之類不碰業務資料的端點不在此列 |
+| **例外** | 無。唯讀的健康檢查之類不碰業務資料的端點沒有資料層可碰，但健康檢查模組（`app/modules/health/`）仍是分層檢查對象，檢查照跑 |
 
 完整的轉移條件以 `docs/specs/` 與 PRD §共用狀態機 為準，不以個人 repo ADR-022 的表為準——那張表帶著個人 repo 的 FR 編號；為什麼放 service 層見 [ADR-003 的 D4](../adr/003-backend-architecture.mdx#d4-任務狀態機只放在-service-層)。
 
 :::note{title="B1 的反例與檢查方式" collapsible}
 - **反例**：Router 裡 `await repo.get(...)` 然後自己組回應；Repository 裡 `raise HTTPException(404)`
-- **檢查方式**：**待建置**。可用 import linter（例如 `import-linter` 的 layered contract）機械擋住反向 import，但要等 `backend/` 存在
+- **檢查方式**：CI 的 `backend-sqlite` job 跑 `uv run lint-imports`，契約寫在 `backend/pyproject.toml`：`app.modules.*` 內依 router、service、repository、models、schemas 的 layers 契約；router 不得直接 import 同模組的 repository 或 models；`app.core` 不得 import `app.modules`；repository 與 models 不得 import `fastapi`、`starlette`。`backend/tests/unit/test_layer_boundaries.py` 另以違規範例驗證契約真的會失敗。取得入口與跨模組（業務模組互相 import、router 只由組裝點 import）的契約見 [B12](#b12-單一入口)，這裡不重複清單
+- **尚未檢查**：「狀態機的轉移判斷只在 service」沒有機械檢查，靠審查
 :::
 
 ### B2 docstring、型別與指令
@@ -51,7 +52,8 @@ Router 只呼叫 service，service 才碰 repository 與 model；資料層不處
 
 :::note{title="B2 的反例與檢查方式" collapsible}
 - **反例**：`python -m pytest`；為了讓一個測試過而把參數型別從 `TaskId` 放寬成 `str`
-- **檢查方式**：**待建置**。型別可用 `mypy --strict`、docstring 可用 `ruff` 的 `D` 規則；兩者都要等 `backend/` 與它的設定檔
+- **檢查方式**：CI 的 `backend-sqlite` job 與 `pnpm run check` 跑 `uv run mypy --strict app`；`backend/pyproject.toml` 的 `[tool.mypy]` 已設 `strict = true`，所以本機 `uv run mypy app` 結果相同。型別檢查的範圍只有 `app`。`uv run ruff check .` 對整個 `backend/` 跑，選用 `E`、`F`、`I`、`UP`、`B`、`S`、`ASYNC` 與 `D`（docstring 規則，google 風格，忽略 `D107`）；文件註解規則實際上只約束 `app`，`tests/**` 與 `alembic/**` 以目錄樣式豁免 `D`，因為 B2 約束的是公開介面，測試函式與遷移腳本不是公開介面。`_` 開頭的私有 helper 不受 docstring 檢查，這是 ruff 不檢查 `_` 開頭名稱的預設，設定裡沒有為此加規則。`uv run ruff format --check .` 檢查格式。指令一律以 `uv run` 執行
+- **尚未檢查**：docstring 的**有無與段落格式**已機械檢查，但內容是否寫明前提、副作用與例外，以及建構參數是否寫在類別 docstring 的 `Args:`（`__init__` 的 `D107` 已忽略），仍靠審查；`tests` 的型別與 docstring 不受檢
 :::
 
 ### B3 session 的生命週期
@@ -104,7 +106,7 @@ API 一個請求一個 session、worker 一個 task 一個同步 session，用�
 
 :::note{title="B5 的反例與檢查方式" collapsible}
 - **反例**：`session.execute(text(f"SELECT * FROM tasks WHERE id = '{task_id}'"))`
-- **檢查方式**：**待建置**。可用「`app/` 底下不得 import `text`」的靜態檢查，migration 目錄排除
+- **檢查方式**：**待建置**。可用「`app/` 底下不得 import `text`」的靜態檢查，migration 目錄排除。import-linter 只能擋整個套件，擋不了 `text` 這種名稱，所以不能用它補這一條（見 [B12](#b12-單一入口) 的尚未檢查）
 :::
 
 ### B6 schema 只由 Alembic 管
@@ -120,7 +122,8 @@ API 一個請求一個 session、worker 一個 task 一個同步 session，用�
 
 :::note{title="B6 的反例與檢查方式" collapsible}
 - **反例**：測試 fixture 裡 `Base.metadata.create_all(engine)`；直接編輯上一版已部署的 migration 檔
-- **檢查方式**：**待建置**。CI 可跑 `upgrade → downgrade → upgrade`；`create_all` 可靜態擋
+- **檢查方式**：`backend/tests/integration/test_migrations.py` 在所選的測試資料庫上跑 `upgrade → downgrade → upgrade`，由 CI 的 `backend-sqlite` 與 `backend-postgres` 兩個 job 各跑一次
+- **尚未檢查**：禁用 `create_all`、禁改已部署 migration 都沒有機械檢查，靠審查
 :::
 
 ### B7 雙資料庫的測試要求
@@ -136,7 +139,7 @@ API 一個請求一個 session、worker 一個 task 一個同步 session，用�
 
 :::note{title="B7 的反例與檢查方式" collapsible}
 - **反例**：整個測試套件只跑 SQLite，PR 寫「資料層測試通過」
-- **檢查方式**：**待建置**。CI 要有兩條 job（SQLite 與真 PostgreSQL），而這要等 `backend/` 與 CI 設定
+- **檢查方式**：CI 有兩個後端 job：`backend-sqlite` 不設 `TEST_DATABASE_URL`，標 `postgres` 的測試在這一輪 skipped；`backend-postgres` 以 `postgres:16` 服務容器與 `TEST_DATABASE_URL` 跑 `uv run pytest`，之後 `node ../scripts/check-junit-skips.mjs` 在任何測試被 skipped 時失敗，所以標 `postgres` 的測試不會悄悄停跑。哪些行為「牽涉兩層差異」仍由撰寫測試的人判斷，靠審查
 :::
 
 ### B8 刪除、軟刪除與匿名化
@@ -190,6 +193,59 @@ Celery task 只收可序列化的識別資訊，在自己的行程裡重新查�
 - **檢查方式**：**待建置**。「`app/` 底下除 config 模組外不得 import `os.environ`」可靜態擋
 :::
 
+### B11 函式複雜度與檔案行數上限
+
+函式的圈複雜度、敘述數、分支數與檔案行數各有上限；這是擋極端值的護欄，不是拆分判準。
+
+| | |
+| :--- | :--- |
+| **適用路徑** | `backend/app/`、`backend/tests/`、`backend/alembic/` |
+| **禁止** | 函式的圈複雜度超過 10（`C901`）、敘述數超過 30（`PLR0915`）、分支數超過 10（`PLR0912`）；單一檔案超過 400 行 |
+| **正例** | 逼近上限時，先依 [agent-rules.mdx](agent-rules.mdx) R4 判斷職責是否該拆；不為了壓低數字把同一個概念硬拆成兩處 |
+| **例外** | （1）`alembic/versions/`（產生的 migration 腳本）不受函式與檔案兩類上限約束；`alembic/` 的其他檔案照常受限；（2）檔案行數的例外表是 `backend/tests/unit/test_size_limits.py` 的 `EXEMPTIONS`：條目即棘輪（檔案再變長就再失敗）、過期即失敗（檔案已不超標就必須移除條目），目前為空；新增條目要寫 issue 與理由。函式的三條 ruff 規則沒有例外表。**不檢查**參數數與回傳數，也不開 `RUF100` |
+
+檔案行數的「行」以純文字逐行計算、不做語法解析：排除空白行與去掉前後空白後以 `#` 開頭的行；docstring 內以 `#` 開頭的行同樣排除，docstring 的其他行計入。這與前端 [F12](frontend-agent-rules.mdx) 的計法不同（F12 由 ESLint 排除空白行與註解），兩邊的數字不可互比。
+
+與 R4 的關係：R4 與 [agent-rules.mdx](agent-rules.mdx) 駁回以固定行數取代職責審查，這個判斷不變。B11 的上限只擋極端值，沒超過上限不代表不需要拆，超過上限也只是必須處理而不是自動該拆成幾份；是否拆分仍依 R4 的職責判斷。
+
+:::note{title="B11 的反例與檢查方式" collapsible}
+- **反例**：在 `app/` 加一個有 31 個敘述的函式，`ruff` 報 `PLR0915`；一個檔案累計 401 行非空白、非 `#` 開頭的行，`test_size_limits.py` 失敗
+- **檢查方式**：CI 的 `backend-sqlite` job 的 Lint 步驟（`uv run ruff check .`）擋三條函式規則，數值在 `backend/pyproject.toml` 的 `[tool.ruff.lint.mccabe]` 與 `[tool.ruff.lint.pylint]`；兩個後端 job（`backend-sqlite`、`backend-postgres`）的 pytest 跑 `tests/unit/test_size_limits.py`，它檢查檔案行數、守住例外表的棘輪與過期，並以探針守住 ruff 規則碼、數值與 `alembic/versions/` 以外沒有被放寬
+:::
+
+### B12 單一入口
+
+每一種對外的整合與橫切能力，後端只准有一個入口；業務程式經由入口使用，不直接 import 底層套件。業務模組之間也不得互相 import，router 只由組裝點 `app.main` import。
+
+| | |
+| :--- | :--- |
+| **適用路徑** | `backend/app/**`。`backend/alembic/` 與 `backend/tests/` 不在 import 檢查的圖內，不受檢 |
+| **禁止** | 單一入口清單（下表七項）中，入口以外的程式直接 import 該入口包裝的底層套件；任兩個業務模組（`app/modules/` 底下）互相 import，不分 router、service、repository、models、schemas；組裝點以外的任何檔案 import router |
+| **正例** | 業務模組 import 入口，入口再 import 自己的套件（間接使用不算違規）；`app/main.py` 同時 import 多個模組的 router |
+| **例外** | 入口本身 import 自己的套件。今天 `backend/app/` 沒有任何入口，契約沒有 `ignore_imports`，也沒有白名單。第一個入口落地的 change 要在同一個 change 裡升級契約，二擇一：（a）入口是新的頂層套件：不動契約，把它登記進 `backend/tests/unit/import_tree.py` 的 `ENTRY_TOP_LEVEL_PACKAGES`，它因不在 `source_modules` 內而被放行；（b）入口在 `app/core/` 或 `app/modules/` 內：該契約改成 `source_modules = ["app"]` 加帶理由與來源的 `ignore_imports`。兩種都要同步 `backend/tests/unit/import_tree.py` 的 `ENTRY_THIRD_PARTY`。放行 import 的 `ignore_imports` 必須寫成多行陣列、每條各佔一行，緊接其上的註解寫明理由與來源（issue 編號或規則編號）；契約不得設定關閉「放行項已不存在」警示的選項，放行項過期時檢查就失敗 |
+
+單一入口清單（本文唯一定義處，其他規則只指向這裡）：
+
+| # | 入口 | 禁止直接 import（`forbidden_modules`） | 狀態 |
+| :-: | :--- | :--- | :--- |
+| 1 | 寄信 | `resend`、`smtplib`、`aiosmtplib` | 已建置：契約 `Mail only through its entry` |
+| 2 | Google OIDC | `authlib` | 已建置：契約 `OIDC only through its entry` |
+| 3 | 對外 HTTP 客戶端 | `httpx`、`requests`、`aiohttp`、`urllib3` | 已建置：契約 `Outbound HTTP only through its entry`。每個整合自己的包裝就是它的入口，不另設共用 HTTP 層 |
+| 4 | 取得目前使用者 | — | 待建置：import-linter 只看 import 圖，看不到方法呼叫與依賴注入接線 |
+| 5 | 發 session cookie 的 helper | — | 待建置：同上 |
+| 6 | CSRF 驗證 middleware | — | 待建置：同上 |
+| 7 | 資料庫 session 取得（`get_db`） | — | 待建置：同上 |
+
+三條入口契約的 `source_modules` 都是 `app.core`、`app.modules`、`app.main`、`app.scripts`，並帶 `allow_indirect_imports = true`，所以入口套件不在檢查來源內時可以 import 自己的套件，業務模組經由入口間接到達該套件也不算違規。跨模組有兩條契約：`Modules do not import each other`（`independence`，涵蓋 `app.modules.*`）與 `Only the assembly point imports routers`（`protected`，router 只准 `app.main` import）。
+
+入口也是測試替身應該放的位置，見 [testing-agent-rules.mdx](testing-agent-rules.mdx) 的 T6。
+
+:::note{title="B12 的反例與檢查方式" collapsible}
+- **反例**：某模組的 service 裡 `import resend` 自己寄信；`health` 模組的 router import 另一個模組的 service；某模組的 service import 自己的 router
+- **檢查方式**：CI 的 `backend-sqlite` job 跑 `uv run lint-imports`，契約名稱與設定在 `backend/pyproject.toml`：`Mail only through its entry`、`OIDC only through its entry`、`Outbound HTTP only through its entry`、`Modules do not import each other`、`Only the assembly point imports routers`。兩個後端 job 的 pytest 另跑四個測試檔：`backend/tests/unit/test_entry_contracts.py` 以違規樣本驗證入口與跨模組契約真的會失敗，並守住「`app` 底下每個頂層套件不是列入每條入口契約的檢查來源，就是已登記的入口套件」；`backend/tests/unit/test_dependency_classification.py` 要求 `app` 實際 import 的每個第三方套件都已歸類，且入口的套件清單與契約的 `forbidden_modules` 一致；`backend/tests/unit/test_contract_exemptions.py` 守住 `ignore_imports` 的註解、多行寫法與不得關閉過期警示；`backend/tests/unit/test_layer_boundaries.py` 以契約數量與名稱集合比對 `pyproject.toml`，增、刪或改名契約而沒有同步預期名稱時失敗
+- **尚未檢查**：（1）取得目前使用者、發 session cookie 的 helper、CSRF 驗證 middleware、`get_db` 四項沒有機械檢查，標「待建置」，原因見上表，不用 Semgrep；（2）標準庫的 `urllib.request` 與 `http.client` 擋不了，外部套件只認根套件，`urllib` 整包會誤擋 `urllib.parse`；不宣稱 Ruff `S310` 補得上；（3）子模組與名稱擋不了，例如 `sqlalchemy.text`（見 [B5](#b5-資料存取一律走-sqlalchemy)）；（4）入口 A import 入口 B 的套件沒有契約，入口落地時再補；（5）新的第三方套件被歸為「一般套件」就不受入口限制，歸類本身靠審查
+:::
+
 ## 附錄：刻意不採用的來源條文
 
 | 不採用 | 出處 | 為什麼 |
@@ -219,6 +275,8 @@ Celery task 只收可序列化的識別資訊，在自己的行程裡重新查�
 | B8 | ADR-038 資料保留、刪除與匿名化（**沿用**）；[architecture.mdx](../architecture.mdx) 的保留政策列與稽核 append-only。scaffold `database.md` §軟刪除（鐵律）刻意不採用，不套用「所有 entity 一律軟刪除」 |
 | B9 | ADR-007 Celery（**沿用**，理由見 [ADR-003 的 D8](../adr/003-backend-architecture.mdx#d8-非同步任務用-celery-加-redis)）；[architecture.mdx](../architecture.mdx) 的 Celery 分層列（「不處理 HTTP、不回傳使用者可見訊息」）與評分流程圖。授權本身見 [security-agent-rules.mdx](security-agent-rules.mdx) |
 | B10 | `AGENTS.md` 硬性規則 8（祕密只從環境變數）與硬性規則 9（輸入驗證）；ADR-035 Google SSO 可選；寄信降級的維護者裁定（見[決策紀錄](#決策紀錄)）。「自行印出密碼或重設連結」是要防的，降級的做法未決時不自己決定 |
+| B11 | issue [#561](https://github.com/label-suite/label-suite/issues/561)、Epic [#560](https://github.com/label-suite/label-suite/issues/560)；`clarification.md` Q1（與「不採用機械行數門檻」並存）、Q5（檔案行數 400 與例外表）、Q6（複雜度 10、敘述 30、分支 10）、Q7（`alembic/versions/` 例外）、T2。不是來自參考來源，而是本 repo 維護者裁定 |
+| B12 | issue [#563](https://github.com/label-suite/label-suite/issues/563)、Epic [#560](https://github.com/label-suite/label-suite/issues/560)；[ADR-003 的 D3](../adr/003-backend-architecture.mdx#d3-後端採模組內分層)（業務模組之間不互相 import）、[ADR-004 的 D3](../adr/004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token) 與 D4（CSRF、Google SSO）、[ADR-008 的 D3](../adr/008-deployment-and-operations.mdx#d3-寄信用-resend沒設-key-時把連結印到-log)（寄信）；[security-agent-rules.mdx](security-agent-rules.mdx) 的 S1、S2；B3；`clarification.md` Q1 至 Q10。不是來自參考來源，而是本 repo 維護者裁定 |
 
 ### 原始 repo（`singyichen/label-suite`）
 
@@ -282,3 +340,5 @@ Celery task 只收可序列化的識別資訊，在自己的行程裡重新查�
 | 2026-11-10 | duty-mate §軟刪除唯一原則（含「新 entity 一律繼承 `SoftDeletableEntity`」）改標不採用（[B8](#b8-刪除軟刪除與匿名化)） | 初版把 duty-mate 整份標成「原則沿用」 | [#106](https://github.com/label-suite/label-suite/issues/106) |
 | 2026-11-10 | B9 的「重試有界」接上 `architecture.mdx` 的既定數字（三次、60／180／540 秒、300 秒、24 小時） | 初版沒有給數字 | [#106](https://github.com/label-suite/label-suite/issues/106) |
 | 2026-11-19 | 分層、狀態機、資料庫雙層與 Celery 的理由寫進 [ADR-003](../adr/003-backend-architecture.mdx) 的 D3、D4、D7、D8，本文只留規則（B1、B7、B9） | —（理由原本只在個人 repo 的 ADR 與 [#105](https://github.com/label-suite/label-suite/issues/105) 的留言） | [#449](https://github.com/label-suite/label-suite/issues/449) |
+| 2026-11-25 | 新增 B11：後端函式複雜度 10、敘述 30、分支 10 與檔案 400 行的 CI 上限；R4「不以行數取代職責審查」的原意不變，上限只擋極端值 | 「不採用機械行數門檻」只寫了不設門檻，沒有區分「拆分判準」與「擋極端值的 CI 護欄」 | [#561](https://github.com/label-suite/label-suite/issues/561) |
+| 2026-11-25 | 新增 B12：後端單一入口清單七項，其中寄信、Google OIDC、對外 HTTP 客戶端三項與業務模組互相 import、router 只由組裝點 import 由 import-linter 契約擋下，其餘四項標待建置；標準庫 HTTP 客戶端擋不了 | B1 只管模組內分層，沒有任何規則限制誰能 import 寄信、OIDC、HTTP 客戶端套件，也不管業務模組之間的 import | [#563](https://github.com/label-suite/label-suite/issues/563)（維護者的常設授權） |

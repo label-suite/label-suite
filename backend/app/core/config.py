@@ -5,21 +5,26 @@ two layers so that migrations can run without app-only settings:
 
 - ``DatabaseSettings`` holds ``DATABASE_URL`` and ``SQLITE_PATH`` and derives the
   async SQLAlchemy URL. Alembic's ``env.py`` reads only this class.
-- ``Settings`` extends it with the CORS settings the API needs.
+- ``Settings`` extends it with the CORS, API-docs and log-level settings the API
+  needs.
 
 Always build either class through ``load_settings`` so a validation failure turns
 into a ``ConfigError`` that names the environment variable and the reason but
 never echoes the configured value (security-agent-rules S9).
 """
 
+import ipaddress
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 from urllib.parse import urlsplit
 
 from pydantic import ValidationError, field_validator
 from pydantic_settings import BaseSettings, NoDecode
 
-__all__ = ["ConfigError", "DatabaseSettings", "Settings", "load_settings"]
+__all__ = ["ConfigError", "DatabaseSettings", "LogLevel", "Settings", "load_settings"]
+
+LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+"""The accepted ``LOG_LEVEL`` values, upper case (clarification Q12)."""
 
 _ASYNC_POSTGRES_SCHEME = "postgresql+asyncpg"
 _ACCEPTED_POSTGRES_SCHEMES = frozenset({"postgresql", "postgresql+asyncpg", "postgres"})
@@ -81,17 +86,43 @@ class DatabaseSettings(BaseSettings):
 
 
 class Settings(DatabaseSettings):
-    """Full API settings: the database layer plus CORS.
+    """Full API settings: the database layer plus CORS, API docs and the log level.
 
     Attributes:
         cors_allowed_origins: The explicit origin list (the only required
             setting); each item is ``http(s)://host[:port]`` without a path, and
             ``*`` is rejected (Hard Rule 7).
         cors_allow_credentials: Whether CORS responses allow credentials.
+        api_docs_enabled: Whether the built-in ``/docs``, ``/docs/oauth2-redirect``,
+            ``/redoc`` and ``/openapi.json`` routes are served; the production
+            compose file pins it to false.
+        log_level: The lowest level the whole backend writes, from
+            ``LOG_LEVEL``; case-insensitive, normalised to upper case and
+            ``INFO`` by default. The database engine, pool and driver loggers do
+            not follow it (``configure_logging`` pins them to ``WARNING``), and
+            ``DatabaseSettings`` (Alembic) never reads it.
+        forwarded_allow_ips: The proxy addresses uvicorn trusts for
+            ``X-Forwarded-For`` and ``X-Forwarded-Proto``, from
+            ``FORWARDED_ALLOW_IPS``: a comma-separated list of single IP addresses or
+            CIDR networks, trimmed, ``["127.0.0.1", "::1"]`` by default. The backend
+            only validates it; uvicorn reads the same variable and does the matching.
+            ``*``, a zero-length prefix, host bits, hostnames, empty items and an
+            empty list are rejected because uvicorn would trust everyone or drop them
+            silently.
     """
 
     cors_allowed_origins: Annotated[list[str], NoDecode]
     cors_allow_credentials: bool = True
+    api_docs_enabled: bool = True
+    log_level: LogLevel = "INFO"
+    forwarded_allow_ips: Annotated[list[str], NoDecode] = ["127.0.0.1", "::1"]  # noqa: RUF012
+
+    @field_validator("log_level", mode="before")
+    @classmethod
+    def _upper_case_log_level(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            return value.upper()
+        return value
 
     @field_validator("cors_allowed_origins", mode="before")
     @classmethod
@@ -111,6 +142,37 @@ class Settings(DatabaseSettings):
             if not _is_plain_origin(origin):
                 raise ValueError("each origin must be http(s)://host[:port] without a path")
         return origins
+
+    @field_validator("forwarded_allow_ips", mode="before")
+    @classmethod
+    def _parse_forwarded_allow_ips(cls, value: Any) -> list[str]:
+        if isinstance(value, str):
+            items = [item.strip() for item in value.split(",")]
+        elif isinstance(value, list | tuple):
+            items = [str(item).strip() for item in value]
+        else:
+            raise ValueError("must be a comma-separated list of IP addresses or networks")
+        if not items or items == [""]:
+            raise ValueError("must list at least one IP address or network")
+        for item in items:
+            if not _is_trusted_proxy_entry(item):
+                raise ValueError(
+                    "each item must be a single IP address or a CIDR network with no host "
+                    "bits set and a non-zero prefix length; "
+                    '"*", hostnames and empty items are not accepted'
+                )
+        return items
+
+
+def _is_trusted_proxy_entry(item: str) -> bool:
+    """Return whether ``item`` is a single IP address or a strict, non-zero-prefix network."""
+    try:
+        if "/" not in item:
+            ipaddress.ip_address(item)
+            return True
+        return ipaddress.ip_network(item, strict=True).prefixlen > 0
+    except ValueError:
+        return False
 
 
 def _is_plain_origin(origin: str) -> bool:

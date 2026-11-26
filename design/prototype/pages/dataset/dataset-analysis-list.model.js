@@ -16,7 +16,7 @@
   var VALID_MEMBERSHIP_ROLES = Object.keys(ROLE_BADGE_CLS);
   var KNOWN_MEMBERSHIP_ROLES = VALID_MEMBERSHIP_ROLES.concat('annotator');
   /* 徽章的排列順序。維護者 2026-11-11 裁定「專案負責人 → 審核員」，
-     依 PRD §權限矩陣 的欄序（00-prd.mdx:98）。規格 05-01 四處寫「依設定的角色順序」
+     依 PRD §權限矩陣 的欄序（00-prd.mdx:100）。規格 05-01 四處寫「依設定的角色順序」
      但沒有任何一頁定義那個順序，所以它在這裡。 */
   var MEMBERSHIP_ROLE_ORDER = ['project_leader', 'reviewer', 'annotator'];
 

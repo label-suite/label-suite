@@ -7,7 +7,9 @@ import pytest
 from sqlalchemy.exc import DBAPIError, OperationalError
 from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 
+from app.core.envelope import correlation_id_var
 from app.core.errors import DatabaseUnavailableError
+from app.core.log_config import install_trace_id_record_factory
 from app.modules.health.schemas import HealthData, HealthStatus
 from app.modules.health.service import HealthService
 
@@ -52,16 +54,25 @@ async def test_check_turns_connection_failures_into_database_unavailable(
     error: BaseException, caplog: pytest.LogCaptureFixture
 ) -> None:
     caplog.set_level(logging.WARNING)
+    install_trace_id_record_factory()
 
-    with pytest.raises(DatabaseUnavailableError) as caught:
-        await HealthService(FakeRepository(error)).check()
+    token = correlation_id_var.set("client-trace-0002")
+    try:
+        with pytest.raises(DatabaseUnavailableError) as caught:
+            await HealthService(FakeRepository(error)).check()
+    finally:
+        correlation_id_var.reset(token)
 
     assert caught.value.__cause__ is None
     assert caught.value.__suppress_context__ is True
+    assert caught.value.already_logged is True
     warnings = [record for record in caplog.records if record.levelno == logging.WARNING]
     assert len(warnings) == 1
-    assert type(error).__name__ in warnings[0].getMessage()
-    assert "traceId=" in warnings[0].getMessage()
+    message = warnings[0].getMessage()
+    assert type(error).__name__ in message
+    assert getattr(warnings[0], "trace_id", None) == "client-trace-0002"
+    assert "traceId=" not in message
+    assert "client-trace-0002" not in message
     assert "CANARY" not in caplog.text
 
 
@@ -91,9 +102,11 @@ async def test_check_bounds_a_hanging_ping_and_reports_database_unavailable(
 
     assert caught.value.__cause__ is None
     assert repository.cancelled is True
+    assert caught.value.already_logged is True
     warnings = [record for record in caplog.records if record.levelno == logging.WARNING]
     assert len(warnings) == 1
     assert "TimeoutError" in warnings[0].getMessage()
+    assert "traceId=" not in warnings[0].getMessage()
 
 
 async def test_check_lets_unrelated_errors_through() -> None:

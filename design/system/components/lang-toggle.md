@@ -14,7 +14,7 @@
 
 **這是帳號頁唯一沒有分裂的元件**：五頁的 `.lang-toggle` 規則集雜湊完全相同。其餘（`.card` 四份、`.navbar` 兩份、`.spinner` 兩份、`.submit-btn` 兩份、`.success-panel` 兩份）都已分歧 → `../design-gaps.md` G-28。
 
-登入後的版本是另一套：側欄的 `#langToggle`（`pages/shared/sidebar.js:2047`）與行動版 `#mobileLangToggle`（`:2051`），見 [App Shell](app-shell.md)。
+登入後的版本是另一套：側欄的 `#langToggle`（`pages/shared/sidebar.js:2053`）與行動版 `#mobileLangToggle`（`:2057`），見 [App Shell](app-shell.md)。
 
 ## 適用狀態
 

@@ -1,0 +1,27 @@
+rules:
+  - id: label-suite-cors-wildcard-origin
+    message: >-
+      CORS allowed origins must be listed explicitly; a wildcard origin is
+      forbidden (AGENTS.md Hard Rule 7).
+    severity: ERROR
+    languages: [python]
+    pattern-either:
+      - pattern: CORSMiddleware(..., allow_origins=[..., "*", ...], ...)
+      - pattern: $APP.add_middleware(CORSMiddleware, ..., allow_origins=[..., "*", ...], ...)
+      - pattern: $APP.add_middleware(CORSMiddleware, ..., allow_origins="*", ...)
+      - pattern: CORSMiddleware(..., allow_origins="*", ...)
+
+  - id: label-suite-hardcoded-secret
+    message: >-
+      Do not hardcode secrets; read them from environment variables
+      (AGENTS.md Hard Rule 8).
+    severity: ERROR
+    languages: [python, typescript]
+    # A single regex keeps one rule valid for both languages: Semgrep parses a
+    # multi-language rule's AST patterns with the first language only, so an
+    # AST pattern cannot cover Python keyword arguments and TypeScript object
+    # keys at once. Matches a name containing api_key, secret, token or
+    # password (optionally quoted or type-annotated) assigned, or given as a
+    # keyword argument or object property, a non-empty string literal.
+    pattern-regex: >-
+      (?i)["']?\b\w*(?:api_?key|secret|token|password)\w*["']?(?:\s*:\s*[A-Za-z_][\w.\[\], |]*)?\s*(?::|=(?!=))\s*["'][^"']

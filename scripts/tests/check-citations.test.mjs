@@ -6,7 +6,16 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
-import { checkCitations, citationsIn, failed, historicalLines } from "../check-citations.mjs";
+import {
+  checkCitations,
+  checkSpecRefs,
+  citationsIn,
+  failed,
+  historicalLines,
+  logicFlowComponentFiles,
+  logicFlowDocs,
+  logicFlowSegments,
+} from "../check-citations.mjs";
 
 // A throwaway repo: one prototype page and one design doc citing it, plus
 // any extra files a test needs ({ path: text }).
@@ -210,4 +219,461 @@ test("--strict fails on an unverified citation, the default does not", () => {
   assert.equal(r.warnings.length, 1);
   assert.equal(failed(r), false);
   assert.equal(failed(r, { strict: true }), true);
+});
+
+// ------------------------------------------- spec references in §Logic Flow
+
+const PAGE_A = [
+  "# 01-01 A",
+  "",
+  "## 業務流程",
+  "",
+  "- **送出表單**",
+  "  - 觸發：使用者點「送出」",
+  "  - 主流程：",
+  "    1. 使用者點「送出」",
+  "    2. 系統檢查兩欄",
+  "  - 例外流程：",
+  "    - E1（第 2 步）欄位沒填 → 停在這一頁",
+  "",
+  "## 規格",
+  "",
+  "### 導向其他頁面",
+  "",
+  "1. 點「前往註冊」→ 註冊頁",
+  "2. 點「忘記密碼？」→ **申請頁**",
+  "",
+  "### 存取與入口：誰進得來",
+  "",
+  "- **存取**",
+  "  1. 未登入的訪客 → 登入頁",
+  "  2. 平台成員 → 儀表板",
+  "",
+  "## 卡控機制",
+  "",
+  "| 條件 | 結果 |",
+  "| :--- | :--- |",
+  "| 沒填 | 擋下 |",
+  "| 格式錯 | 顯示錯誤 |",
+  "",
+  "## 邊界情況（Edge Case）",
+  "",
+  "- 連點兩次 → 只送一次",
+  "",
+  "## 已確認決議",
+  "",
+  "### Q3. 要不要記住語言？（已定案）",
+  "",
+].join("\n");
+
+const PAGE_B = [
+  "# 01-02 B",
+  "",
+  "## 業務流程",
+  "",
+  "### 開清單",
+  "",
+  "- 觸發：使用者從側欄點進來",
+  "- 主流程：",
+  "  1. 使用者點進來",
+  "  2. 系統解析網址",
+  "  3. 顯示清單",
+  "- 替代流程：",
+  "  - A1（第 2 步）他是審核員 → 換一個版面",
+  "",
+  "### 挑一筆",
+  "",
+  "1. 使用者篩選",
+  "2. 沒有符合的 → 顯示空結果（替代流程 **A1**）",
+  "3. 點某一列",
+  "",
+].join("\n");
+
+// A throwaway repo with two spec pages and a module index whose §Logic Flow
+// holds `lines`; `component` adds a Logic Flow component with those edge texts.
+function specRepo(lines, { component = null, pageA = PAGE_A } = {}) {
+  const root = mkdtempSync(join(tmpdir(), "spec-refs-"));
+  const put = (rel, text) => {
+    mkdirSync(dirname(join(root, rel)), { recursive: true });
+    writeFileSync(join(root, rel), text);
+  };
+  put("docs/specs/01-mod/01-a.mdx", pageA);
+  put("docs/specs/01-mod/02-b.mdx", PAGE_B);
+  put(
+    "docs/specs/01-mod/index.mdx",
+    ["# 01 模組", "", "## Logic Flow", "", ...lines, ""].join("\n"),
+  );
+  const components = [];
+  if (component) {
+    const texts = component.map((t) => `      { id: "e", text: ${JSON.stringify(t)} },`);
+    put(".notecraft/components/spec-01-mod-logic-flow.tsx", [...texts, ""].join("\n"));
+    components.push(".notecraft/components/spec-01-mod-logic-flow.tsx");
+  }
+  return checkSpecRefs({ root, components, allow: [] });
+}
+
+test("a spec page that does not exist is an error", () => {
+  const r = specRepo(["1. P1 → P2（01-09 §導向其他頁面 第 1 條）"]);
+  assert.match(r.errors[0], /no spec page 01-09/);
+});
+
+test("§節名 must be a heading of the cited page", () => {
+  assert.deepEqual(specRepo(["1. P1 → P2（01-01 §導向其他頁面 第 1 條）"]).errors, []);
+  const r = specRepo(["1. P1 → P2（01-01 §規格一覽 第 1 條）"]);
+  assert.match(r.errors[0], /01-01 has no heading §規格一覽/);
+});
+
+test("a heading is also matched without its trailing （…） or after its ：", () => {
+  const r = specRepo([
+    "1. A（01-01 §邊界情況「連點兩次 → 只送一次」）",
+    "2. B（01-01 §存取與入口 的「存取」第 2 條）",
+  ]);
+  assert.deepEqual(r.errors, []);
+});
+
+test("第 N 條 must be an item of the section, ranges included", () => {
+  assert.deepEqual(specRepo(["1. A（01-01 §導向其他頁面 第 1～2 條）"]).errors, []);
+  const r = specRepo(["1. A（01-01 §導向其他頁面 第 1、3 條）"]);
+  assert.match(r.errors[0], /§導向其他頁面 has no 第 3 條 \(numbered items 2: 1～2\)/);
+});
+
+test("a bare number right after §節名 is a clause number", () => {
+  assert.deepEqual(specRepo(["1. A（01-01 §導向其他頁面 2、Q3）"]).errors, []);
+  assert.match(specRepo(["1. A（01-01 §導向其他頁面 4）"]).errors[0], /has no 第 4 條/);
+});
+
+test("第 N 條 counts top-level bullets, and 第 N 列 table rows, when there is no numbered list", () => {
+  assert.deepEqual(specRepo(["1. A（01-01 §卡控機制 第 2 列）"]).errors, []);
+  assert.match(
+    specRepo(["1. A（01-01 §卡控機制 第 3 列）"]).errors[0],
+    /has no 第 3 列 \(table rows/,
+  );
+  assert.deepEqual(specRepo(["1. A（01-01 §邊界情況 第 1 條）"]).errors, []);
+  assert.match(specRepo(["1. A（01-01 §邊界情況 第 2 條）"]).errors[0], /has no 第 2 條 \(bullets/);
+});
+
+test("a quote naming a `- **group**` narrows the section to it", () => {
+  assert.deepEqual(specRepo(["1. A（01-01 §規格「存取」第 2 條）"]).errors, []);
+  assert.match(specRepo(["1. A（01-01 §規格「存取」第 3 條）"]).errors[0], /has no 第 3 條/);
+});
+
+test("主流程第 N 步, EN and AN must exist in the named flow", () => {
+  const ok = specRepo([
+    "1. A（01-01 §業務流程「送出表單」觸發、主流程第 1～2 步、E1）",
+    "2. B（01-02 §開清單 主流程第 3 步、A1；01-02「挑一筆」主流程 2、A1）",
+  ]);
+  assert.deepEqual(ok.errors, []);
+  const bad = specRepo(["1. A（01-01 業務流程「送出表單」主流程第 3 步、E2）"]);
+  assert.match(bad.errors[0], /「送出表單」主流程 has no 第 3 步 \(steps 2: 1～2\)/);
+  assert.match(bad.errors[1], /「送出表單」 has no E2 \(it has E1\)/);
+});
+
+test("QN must be a decision heading of the page", () => {
+  assert.deepEqual(specRepo(["1. A（01-01 §已確認決議 Q3）"]).errors, []);
+  assert.match(specRepo(["1. A（01-01 §已確認決議 Q4）"]).errors[0], /01-01 has no §已確認決議 Q4/);
+});
+
+test("a quote must be verbatim in its section, ignoring emphasis and spacing", () => {
+  assert.deepEqual(specRepo(["1. A（01-01 §導向其他頁面「忘記密碼？」→ 申請頁」）"]).errors, []);
+  const r = specRepo(["1. A（01-01 §導向其他頁面「忘了密碼」）"]);
+  assert.match(r.errors[0], /「忘了密碼」 is not in 01-01 §導向其他頁面/);
+});
+
+test("a quote next to a clause number must be in that clause", () => {
+  assert.deepEqual(specRepo(["1. A（01-01 §導向其他頁面 第 2 條的「忘記密碼？」）"]).errors, []);
+  assert.deepEqual(specRepo(["- 依 01-01 §導向其他頁面 的「前往註冊」（第 1 條）。"]).errors, []);
+  const r = specRepo(["1. A（01-01 §導向其他頁面 第 1 條寫「忘記密碼？」）"]);
+  assert.match(r.errors[0], /is not in 01-01 §導向其他頁面 第 1 條; it is in 第 2 條/);
+});
+
+test("a link to a spec page sets the page; its label may carry the section", () => {
+  const ok = specRepo(["- P2（見[§導向其他頁面](./01-a.mdx#導向其他頁面)的「前往註冊」）"]);
+  assert.deepEqual(ok.errors, []);
+  const r = specRepo(["- P2（見[規格 01-01](./01-a.mdx#x) §導向其他頁面 的「前往登入」）"]);
+  assert.match(r.errors[0], /「前往登入」 is not in 01-01 §導向其他頁面/);
+});
+
+test("the context ends with its （…） and with 。, and a bare page mention leaves it alone", () => {
+  // 「否」 after the parenthesis is the diagram's own label, not a quote of 01-01
+  assert.deepEqual(specRepo(["1. A（01-01 §導向其他頁面 第 1 條），所以「否」不畫"]).errors, []);
+  assert.deepEqual(specRepo(["- 01-01 §導向其他頁面 第 1 條。之後「否」不畫"]).errors, []);
+  // 歸給 01-02、 names a page; 第 2 條 still reads against 01-01
+  const r = specRepo(["- 01-01 §導向其他頁面 第 1 條歸給 01-02、第 2 條寫「忘記密碼？」"]);
+  assert.deepEqual(r.errors, []);
+});
+
+test("references the scanner cannot place are counted as unverifiable, not passed", () => {
+  const r = specRepo(["1. A（主流程 3；E1；§驗收標準「x」；01-01 §卡控機制 那張表）"]);
+  assert.deepEqual(r.errors, []);
+  assert.equal(r.stats.unverifiable, 5);
+  assert.equal(r.notes.length, 5);
+});
+
+test("分段 self-references and quotes of what a spec does not say are skipped", () => {
+  const r = specRepo([
+    "- 分段一第 9 條照 01-01 §導向其他頁面 畫，01-01 §導向其他頁面 沒有寫「全部收尾後導向…」",
+  ]);
+  assert.deepEqual(r.errors, []);
+});
+
+test("a component text identical to its bullet is not checked twice; a drifted one is", () => {
+  const bullet = "P1 → P2（01-01 §導向其他頁面 第 1 條）";
+  const same = specRepo([`1. ${bullet}`], { component: [bullet] });
+  assert.equal(same.stats.mirrored, 1);
+  const drift = specRepo([`1. ${bullet}`], {
+    component: ["P1 → P2（01-01 §導向其他頁面 第 5 條）"],
+  });
+  assert.match(
+    drift.errors[0],
+    /^\.notecraft\/components\/spec-01-mod-logic-flow\.tsx:1: .*has no 第 5 條/,
+  );
+});
+
+test("an unused spec allowlist entry is an error", () => {
+  const root = mkdtempSync(join(tmpdir(), "spec-refs-"));
+  mkdirSync(join(root, "docs/specs/01-mod"), { recursive: true });
+  writeFileSync(join(root, "docs/specs/01-mod/index.mdx"), "## Logic Flow\n\n- 沒有出處\n");
+  const allow = [{ file: "docs/specs/01-mod/index.mdx", text: "y" }];
+  const r = checkSpecRefs({ root, components: [], allow });
+  assert.match(
+    r.errors[0],
+    /spec allowlist entry for docs\/specs\/01-mod\/index\.mdx \("y"\) matched nothing/,
+  );
+  // an entry for a file the run did not read is left alone
+  assert.deepEqual(checkSpecRefs({ root, docs: [], components: [], allow }).errors, []);
+});
+
+test("checkCitations reports spec reference errors with the rest", () => {
+  const root = mkdtempSync(join(tmpdir(), "spec-refs-"));
+  mkdirSync(join(root, "docs/specs/01-mod"), { recursive: true });
+  writeFileSync(join(root, "docs/specs/01-mod/01-a.mdx"), PAGE_A);
+  writeFileSync(
+    join(root, "docs/specs/01-mod/index.mdx"),
+    "## Logic Flow\n\n1. A（01-01 §導向其他頁面 第 7 條）\n",
+  );
+  const r = checkCitations({ root, docs: [], logicFlowComponents: [] });
+  assert.match(r.errors[0], /has no 第 7 條/);
+  assert.equal(failed(r), true);
+  assert.equal(r.spec.stats.refs, 2);
+});
+
+test("a quote written before its citation is checked against the scopes named after it", () => {
+  assert.deepEqual(
+    specRepo(["1. A（同一道卡控：「忘記密碼？」；01-01 §導向其他頁面 第 2 條）"]).errors,
+    [],
+  );
+  const bad = specRepo(["1. A（同一道卡控：「忘了密碼」；01-01 §導向其他頁面 第 2 條）"]);
+  assert.match(bad.errors[0], /「忘了密碼」 is not in 01-01 §導向其他頁面/);
+  // one already in the scope named before it stays there; one that is not
+  // moves to the citation right after it
+  assert.deepEqual(
+    specRepo(["- 01-01 §卡控機制 寫「擋下」與「忘記密碼？」（01-01 §導向其他頁面）"]).errors,
+    [],
+  );
+  const moved = specRepo(["- 01-01 §卡控機制 寫「擋下」與「忘了密碼」（01-01 §導向其他頁面）"]);
+  assert.match(moved.errors[0], /「忘了密碼」 is not in 01-01 §導向其他頁面/);
+  // a quote before a § that has no page is counted, not passed
+  const r = specRepo(["- 寫「忘記密碼？」；§導向其他頁面"]);
+  assert.deepEqual(r.errors, []);
+  assert.equal(r.stats.unverifiable, 2);
+});
+
+test("a code span holding a flow id is checked like the bare id", () => {
+  assert.deepEqual(specRepo(["- 01-02 §開清單 的 `A1` 換一個版面"]).errors, []);
+  assert.match(specRepo(["- 01-02 §開清單 的 `E1` 換一個版面"]).errors[0], /「開清單」 has no E1/);
+  // any other code span is still skipped
+  assert.deepEqual(specRepo(["- 01-02 §開清單 的 `E1 → D2`"]).errors, []);
+});
+
+test("a cited name that only starts with a heading is not that heading", () => {
+  assert.match(
+    specRepo(["1. A（01-01 §導向其他頁面說明 第 1 條）"]).errors[0],
+    /no heading §導向其他頁面說明/,
+  );
+  assert.match(
+    specRepo(["1. A（01-01 §導向其他頁面的補充）"]).errors[0],
+    /no heading §導向其他頁面的補充/,
+  );
+  // the phrases the specs do write straight after a heading still pass
+  const ok = specRepo([
+    "- 01-01 §導向其他頁面的「前往註冊」，§導向其他頁面第 2 條，§卡控機制都沒有寫「改密碼」",
+  ]);
+  assert.deepEqual(ok.errors, []);
+});
+
+test("前N條 checks that the section has that many items", () => {
+  assert.deepEqual(specRepo(["1. A（01-01 §卡控機制 前兩列）"]).errors, []);
+  assert.match(specRepo(["1. A（01-01 §卡控機制 前三列）"]).errors[0], /fewer than 3 table rows/);
+});
+
+test("in a module with one spec page, a § with no page reads against it", () => {
+  const root = mkdtempSync(join(tmpdir(), "spec-refs-"));
+  const put = (rel, text) => {
+    mkdirSync(dirname(join(root, rel)), { recursive: true });
+    writeFileSync(join(root, rel), text);
+  };
+  put("docs/specs/01-mod/01-a.mdx", PAGE_A);
+  put(
+    "docs/specs/01-mod/index.mdx",
+    "## Logic Flow\n\n1. A（§導向其他頁面 第 2 條）\n2. B（§導向其他頁面 第 9 條）\n",
+  );
+  const r = checkSpecRefs({ root, components: [], allow: [] });
+  assert.equal(r.errors.length, 1);
+  assert.match(r.errors[0], /index\.mdx:4: 01-01 §導向其他頁面 has no 第 9 條/);
+  // with two pages in the module the same § has no page to read against
+  const two = specRepo(["1. A（§導向其他頁面 第 2 條）"]);
+  assert.deepEqual(two.errors, []);
+  assert.equal(two.stats.unverifiable, 2);
+});
+
+test("同頁 after a 。 picks up the page named before it", () => {
+  assert.deepEqual(specRepo(["- 01-01 §卡控機制 第 1 列。同頁 §導向其他頁面 第 2 條"]).errors, []);
+  const r = specRepo(["- 01-01 §卡控機制 第 1 列。同頁 §導向其他頁面 第 3 條"]);
+  assert.match(r.errors[0], /01-01 §導向其他頁面 has no 第 3 條/);
+  // without 同頁 the § after a 。 has no page
+  assert.equal(specRepo(["- 01-01 §卡控機制 第 1 列。§導向其他頁面"]).stats.unverifiable, 1);
+});
+
+test("a quote may sit in any section joined by 與", () => {
+  assert.deepEqual(specRepo(["- 01-01 §卡控機制 與 §導向其他頁面 來說明「擋下」"]).errors, []);
+  assert.deepEqual(specRepo(["- 01-01 §卡控機制 與 §導向其他頁面 來說明「前往註冊」"]).errors, []);
+  // not when the sections are separate references
+  const r = specRepo(["- 01-01 §卡控機制 第 1 列；§導向其他頁面 來說明「擋下」"]);
+  assert.match(r.errors[0], /「擋下」 is not in 01-01 §導向其他頁面/);
+});
+
+test("§X同節 is counted as unverifiable, not checked against §X", () => {
+  const r = specRepo(["1. A（01-01 §規格同節第 9 條）"]);
+  assert.deepEqual(r.errors, []);
+  assert.equal(r.stats.unverifiable, 1);
+  assert.match(r.notes[0], /§規格同節第 9 條 \(a section named in an earlier item\)/);
+});
+
+test("a quote naming a heading inside the section narrows the section to it", () => {
+  assert.deepEqual(specRepo(["1. A（01-01 §規格「導向其他頁面」第 2 條）"]).errors, []);
+  assert.match(
+    specRepo(["1. A（01-01 §規格「導向其他頁面」第 2 條「未登入的訪客」）"]).errors[0],
+    /「未登入的訪客」 is not in 01-01 §導向其他頁面 第 2 條/,
+  );
+});
+
+test("開頭 or 末段 followed by a quote is checked through the quote", () => {
+  const ok = specRepo(["- 01-01 §導向其他頁面 末段的補充條明說「忘記密碼？」"]);
+  assert.deepEqual(ok.errors, []);
+  assert.equal(ok.stats.unverifiable, 0);
+  const bad = specRepo(["- 01-01 §導向其他頁面 開頭說「忘了密碼」"]);
+  assert.match(bad.errors[0], /「忘了密碼」 is not in 01-01 §導向其他頁面/);
+  // with no quote after it, it is counted
+  assert.equal(specRepo(["- 01-01 §導向其他頁面 開頭與第 1 條"]).stats.unverifiable, 1);
+});
+
+// A repo with module 01's §Logic Flow (two segments) and the system-wide
+// overview in docs/specs/index.mdx holding `lines`; `component` adds the
+// overview component with those edge texts.
+function overviewRepo(lines, { component = null } = {}) {
+  const root = mkdtempSync(join(tmpdir(), "spec-overview-"));
+  const put = (rel, text) => {
+    mkdirSync(dirname(join(root, rel)), { recursive: true });
+    writeFileSync(join(root, rel), text);
+  };
+  put("docs/specs/01-mod/01-a.mdx", PAGE_A);
+  put("docs/specs/01-mod/02-b.mdx", PAGE_B);
+  put(
+    "docs/specs/01-mod/index.mdx",
+    [
+      "## Logic Flow",
+      "",
+      "### 分段一：進來",
+      "",
+      "1. S → P1（起訖連線，無規格條文）",
+      "2. P1 → P2（01-01 §導向其他頁面 第 1 條）",
+      "3. P1 → P3（01-01 §導向其他頁面 第 2 條）",
+      "",
+      "### 分段二：出去",
+      "",
+      "1. P2 → P1（01-01 §導向其他頁面 第 1 條）",
+      "",
+      "<details>",
+      "",
+      "4. not an item of 分段二",
+      "",
+      "</details>",
+      "",
+    ].join("\n"),
+  );
+  put("docs/specs/index.mdx", ["# 規格書", "", "## Logic Flow", "", ...lines, ""].join("\n"));
+  const components = [];
+  if (component) {
+    const texts = component.map((t) => `      { id: "e", text: ${JSON.stringify(t)} },`);
+    put(".notecraft/components/spec-index-logic-flow.tsx", [...texts, ""].join("\n"));
+    components.push(".notecraft/components/spec-index-logic-flow.tsx");
+  }
+  return { root, ...checkSpecRefs({ root, components, allow: [] }) };
+}
+
+test("logicFlowDocs and logicFlowComponentFiles take the overview too", () => {
+  const { root } = overviewRepo(["1. 01 A → 02 B（01 §Logic Flow 分段一第 2 條）"], {
+    component: ["x"],
+  });
+  assert.deepEqual(logicFlowDocs(root), ["docs/specs/01-mod/index.mdx", "docs/specs/index.mdx"]);
+  assert.deepEqual(logicFlowComponentFiles(root), [
+    ".notecraft/components/spec-index-logic-flow.tsx",
+  ]);
+});
+
+test("logicFlowSegments reads each segment's item numbers and stops at a fold-out", () => {
+  const segs = logicFlowSegments(
+    "## Logic Flow\n\n### 分段一：a\n\n1. x\n2. y\n\n### 分段二：b\n\n1. z\n\n<details>\n\n3. w\n",
+  );
+  assert.deepEqual([...segs.keys()], ["一", "二"]);
+  assert.deepEqual([...segs.get("一")], [1, 2]);
+  assert.deepEqual([...segs.get("二")], [1]);
+});
+
+test("the overview's `NN §Logic Flow 分段X第 N 條` must name an existing segment and item", () => {
+  const ok = overviewRepo([
+    "1. 01 A → 02 B（01 §Logic Flow 分段一第 2、3 條、分段二第 1 條）",
+    "2. 01 A → 02 B（01 §Logic Flow 分段一第 1～3 條）",
+  ]);
+  assert.deepEqual(ok.errors, []);
+  // the module index's own spec references are verified too; count only the overview's
+  assert.equal(ok.stats.verified - overviewRepo([]).stats.verified, 3);
+  const bad = overviewRepo([
+    "1. A（01 §Logic Flow 分段一第 4 條）",
+    "2. B（01 §Logic Flow 分段三第 1 條）",
+    "3. C（09 §Logic Flow 分段一第 1 條）",
+    "4. D（01 §Logic Flow 分段一第 2 條、分段二第 4 條）",
+  ]);
+  assert.equal(bad.errors.length, 4);
+  assert.match(
+    bad.errors[0],
+    /index\.mdx:5: 01 §Logic Flow 分段一 has no 第 4 條 \(items 3: 1～3\)/,
+  );
+  assert.match(bad.errors[1], /index\.mdx:6: 01 §Logic Flow has no 分段三/);
+  assert.match(bad.errors[2], /index\.mdx:7: no module 09 with a §Logic Flow/);
+  assert.match(bad.errors[3], /index\.mdx:8: 01 §Logic Flow 分段二 has no 第 4 條/);
+});
+
+test("the overview's NN-NN spec references are checked as in a module index", () => {
+  assert.deepEqual(overviewRepo(["1. A（規格 01-01 §導向其他頁面 第 2 條）"]).errors, []);
+  const r = overviewRepo(["1. A（規格 01-01 §導向其他頁面 第 9 條）"]);
+  assert.match(r.errors[0], /index\.mdx:5: 01-01 §導向其他頁面 has no 第 9 條/);
+});
+
+test("a quote right after `§Logic Flow` is that Logic Flow's wording, not the page named before", () => {
+  const r = overviewRepo(["1. A → 01 的 01-01 登入頁（01 §Logic Flow 盤點「沒畫的進入」）"]);
+  assert.deepEqual(r.errors, []);
+  // the page named after it is read again
+  const bad = overviewRepo([
+    "1. A（01 §Logic Flow 盤點「沒畫的進入」；01-01 §導向其他頁面 的「前往登入」）",
+  ]);
+  assert.match(bad.errors[0], /「前往登入」/);
+});
+
+test("an overview component text identical to an overview bullet is mirrored", () => {
+  const text = "01 A → 02 B（01 §Logic Flow 分段一第 2 條）";
+  const r = overviewRepo([`1. ${text}`], { component: [text, "C（01-01 §規格一覽 第 1 條）"] });
+  assert.equal(r.stats.mirrored, 1);
+  assert.equal(r.errors.length, 1);
+  assert.match(r.errors[0], /spec-index-logic-flow\.tsx:2: 01-01 has no heading §規格一覽/);
 });

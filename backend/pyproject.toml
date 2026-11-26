@@ -17,7 +17,9 @@ dependencies = [
 [dependency-groups]
 dev = [
     "httpx>=0.28.1",
+    "import-linter>=2.17",
     "mypy>=2.4.1",
+    "pip-audit>=2.10.1",
     "pytest>=9.2.0",
     "pytest-asyncio>=1.5.0",
     "pytest-cov>=7.1.0",
@@ -29,17 +31,37 @@ target-version = "py312"
 line-length = 100
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "S", "ASYNC"]
+select = ["E", "F", "I", "UP", "B", "S", "ASYNC", "D", "C901", "PLR0912", "PLR0915"]
+# Constructor parameters go in the class docstring's Args: section (B2).
+ignore = ["D107"]
 
 [tool.ruff.lint.isort]
 # backend/alembic/ (the migration scripts) would otherwise make "alembic" look first-party.
 known-third-party = ["alembic"]
 
+[tool.ruff.lint.pydocstyle]
+# B2 exempts private helpers. No rule is needed for that: ruff does not check
+# names that start with "_", so they stay exempt by default.
+convention = "google"
+
+# Function size limits (B11, clarification Q6): complexity 10, statements 30, branches 10.
+# Parameter and return counts are deliberately not limited.
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+max-statements = 30
+max-branches = 10
+
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101"]
+"tests/**" = ["S101", "D"]
+"alembic/**" = ["D"]
+# Generated migration scripts are exempt from the size limits (clarification Q7).
+"alembic/versions/**" = ["C901", "PLR0912", "PLR0915"]
 
 [tool.mypy]
 plugins = ["pydantic.mypy"]
+strict = true
 
 [tool.pydantic-mypy]
 init_forbid_extra = true
@@ -54,3 +76,81 @@ markers = [
     "integration: API-level tests through the real app assembly and a test database",
     "postgres: tests that only hold on PostgreSQL; skipped when TEST_DATABASE_URL is unset",
 ]
+
+[tool.importlinter]
+root_package = "app"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Module layers"
+type = "layers"
+containers = ["app.modules.*"]
+# Top to bottom. schemas sits lowest so every layer may use it; models is optional
+# because a module only gets one when it has tables.
+layers = ["router", "service", "repository", "(models)", "schemas"]
+
+[[tool.importlinter.contracts]]
+name = "Routers do not use the data layer"
+type = "forbidden"
+source_modules = ["app.modules.*.router"]
+forbidden_modules = ["app.modules.*.repository", "app.modules.*.models"]
+# Only a direct import is a violation: router -> service -> repository is the intended path.
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "Core does not depend on modules"
+type = "forbidden"
+source_modules = ["app.core"]
+forbidden_modules = ["app.modules"]
+
+[[tool.importlinter.contracts]]
+name = "Data layer does not import HTTP"
+type = "forbidden"
+source_modules = ["app.modules.*.repository", "app.modules.*.models"]
+forbidden_modules = ["fastapi", "starlette"]
+allow_indirect_imports = true
+
+# Entry contracts (B12, issue #563). One contract per entry. The entry package is not
+# listed in source_modules, so it may import its own SDK while every other top-level
+# package may not (L3). allow_indirect_imports is required: without it, a package that
+# uses an existing entry would fail too (L4). test_entry_contracts.py keeps
+# source_modules complete when a new top-level package appears.
+[[tool.importlinter.contracts]]
+name = "Mail only through its entry"
+type = "forbidden"
+source_modules = ["app.core", "app.modules", "app.main", "app.scripts"]
+forbidden_modules = ["resend", "smtplib", "aiosmtplib"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "OIDC only through its entry"
+type = "forbidden"
+source_modules = ["app.core", "app.modules", "app.main", "app.scripts"]
+forbidden_modules = ["authlib"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "Outbound HTTP only through its entry"
+type = "forbidden"
+source_modules = ["app.core", "app.modules", "app.main", "app.scripts"]
+forbidden_modules = ["httpx", "requests", "aiohttp", "urllib3"]
+allow_indirect_imports = true
+
+# Cross-module contracts (B12, issue #563). independence blocks every import between
+# business modules, router included; a module that really needs another one adds a
+# commented ignore_imports in its own change (design D8). protected keeps routers
+# importable only by the assembly point (L5, L6).
+[[tool.importlinter.contracts]]
+name = "Modules do not import each other"
+type = "independence"
+modules = ["app.modules.*"]
+
+[[tool.importlinter.contracts]]
+name = "Only the assembly point imports routers"
+type = "protected"
+protected_modules = ["app.modules.*.router"]
+allowed_importers = ["app.main"]
+
+[tool.coverage.run]
+source = ["app"]
+branch = true

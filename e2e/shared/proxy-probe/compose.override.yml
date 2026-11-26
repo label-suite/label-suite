@@ -1,0 +1,24 @@
+# CI only (#566, trusted-proxy-client-ip design D4, P2). Layered on docker-compose.yml:
+#
+#   docker compose -f docker-compose.yml -f e2e/shared/proxy-probe/compose.override.yml up ...
+#
+# It swaps the backend's command for the image's own uvicorn running
+# report_client.py, which answers every path with the client address and scheme it
+# sees. The trust list still comes from FORWARDED_ALLOW_IPS in docker-compose.yml,
+# because the command carries no proxy flag. Not part of the default orchestration
+# and not part of any image. Start and stop it as its own cycle: re-running `up`
+# with this file over a running Lite tier recreates only the backend, and Nginx
+# keeps the old backend address.
+services:
+  backend:
+    command:
+      - uvicorn
+      - report_client:app
+      - --app-dir
+      - /probe
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+    volumes:
+      - ./e2e/shared/proxy-probe:/probe:ro

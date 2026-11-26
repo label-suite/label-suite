@@ -11,7 +11,14 @@ import pytest
 
 from app.core.config import ConfigError, DatabaseSettings, Settings, load_settings
 
-ENV_VARS = ("CORS_ALLOWED_ORIGINS", "CORS_ALLOW_CREDENTIALS", "DATABASE_URL", "SQLITE_PATH")
+ENV_VARS = (
+    "CORS_ALLOWED_ORIGINS",
+    "CORS_ALLOW_CREDENTIALS",
+    "DATABASE_URL",
+    "SQLITE_PATH",
+    "API_DOCS_ENABLED",
+    "LOG_LEVEL",
+)
 VALID_ORIGIN = "http://localhost:5173"
 
 
@@ -233,3 +240,91 @@ def test_relative_sqlite_path_becomes_absolute(monkeypatch: pytest.MonkeyPatch) 
     settings = load_settings(Settings)
 
     assert settings.sqlite_path == (Path.cwd() / "nested" / "dir" / "lite.db").resolve()
+
+
+# --- API_DOCS_ENABLED -----------------------------------------------------------------
+
+
+def test_api_docs_enabled_defaults_to_true(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", VALID_ORIGIN)
+
+    assert load_settings(Settings).api_docs_enabled is True
+
+
+@pytest.mark.parametrize(("raw", "expected"), [("true", True), ("false", False)])
+def test_api_docs_enabled_reads_explicit_boolean(
+    monkeypatch: pytest.MonkeyPatch, raw: str, expected: bool
+) -> None:
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", VALID_ORIGIN)
+    monkeypatch.setenv("API_DOCS_ENABLED", raw)
+
+    assert load_settings(Settings).api_docs_enabled is expected
+
+
+def test_api_docs_enabled_rejects_non_boolean_without_echoing_value(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", VALID_ORIGIN)
+    monkeypatch.setenv("API_DOCS_ENABLED", "CANARY-maybe")
+
+    error = _load_error(Settings)
+
+    assert "API_DOCS_ENABLED" in str(error)
+    assert "CANARY-maybe" not in str(error)
+
+
+# --- LOG_LEVEL ------------------------------------------------------------------------
+
+
+def test_log_level_defaults_to_info(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", VALID_ORIGIN)
+
+    assert load_settings(Settings).log_level == "INFO"
+
+
+@pytest.mark.parametrize("raw", ["warning", "WARNING", "Warning"])
+def test_log_level_is_case_insensitive(monkeypatch: pytest.MonkeyPatch, raw: str) -> None:
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", VALID_ORIGIN)
+    monkeypatch.setenv("LOG_LEVEL", raw)
+
+    assert load_settings(Settings).log_level == "WARNING"
+
+
+@pytest.mark.parametrize("level", ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
+def test_log_level_accepts_every_listed_level(monkeypatch: pytest.MonkeyPatch, level: str) -> None:
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", VALID_ORIGIN)
+    monkeypatch.setenv("LOG_LEVEL", level.lower())
+
+    assert load_settings(Settings).log_level == level
+
+
+@pytest.mark.parametrize("raw", ["CANARY-verbose", "", "NOTSET", "WARN", "10"])
+def test_log_level_rejects_other_values_without_echoing_value(
+    monkeypatch: pytest.MonkeyPatch, raw: str
+) -> None:
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", VALID_ORIGIN)
+    monkeypatch.setenv("LOG_LEVEL", raw)
+
+    error = _load_error(Settings)
+
+    assert "LOG_LEVEL" in str(error)
+
+
+def test_invalid_log_level_error_does_not_echo_the_value(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", VALID_ORIGIN)
+    monkeypatch.setenv("LOG_LEVEL", "CANARY-verbose")
+
+    error = _load_error(Settings)
+
+    assert "LOG_LEVEL" in str(error)
+    assert "CANARY-verbose" not in str(error)
+    assert "canary" not in str(error).lower()
+
+
+def test_database_settings_do_not_read_log_level(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LOG_LEVEL", "CANARY-verbose")
+
+    settings = load_settings(DatabaseSettings)
+
+    assert not hasattr(settings, "log_level")
+    assert "log_level" not in DatabaseSettings.model_fields

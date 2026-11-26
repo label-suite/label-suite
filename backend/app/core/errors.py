@@ -21,6 +21,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 
 from app.core.envelope import error_response
+from app.core.log_config import mark_error_logged
 from app.core.log_safety import escape_for_log
 from app.core.schemas import ErrorDetail
 
@@ -47,21 +48,29 @@ class AppError(Exception):
         code: The application error code, e.g. ``NOT_FOUND``.
         message_key: Message-catalog key of the localised envelope message.
         params: Named values substituted into the localised message.
+        already_logged: Whether the raiser already wrote its own ``WARNING`` or
+            ``ERROR`` record for this failure; ``handle_app_error`` then marks
+            the request so the access log does not write a second line. A plain
+            flag that never reaches the response.
     """
 
     status_code: int = 500
     code: str = "INTERNAL_ERROR"
     message_key: str = "common.internal_error"
 
-    def __init__(self, params: Mapping[str, str] | None = None) -> None:
+    def __init__(
+        self, params: Mapping[str, str] | None = None, *, already_logged: bool = False
+    ) -> None:
         """Create the error.
 
         Args:
             params: Optional named values for the message template. They end up
                 in a response, so never pass internal identifiers or secrets.
+            already_logged: Pass ``True`` only after logging the failure yourself.
         """
         super().__init__(self.code)
         self.params: dict[str, str] = dict(params or {})
+        self.already_logged = already_logged
 
 
 class NotFoundError(AppError):
@@ -140,8 +149,14 @@ def _state(request: Request) -> Mapping[str, Any] | None:
 
 
 async def handle_app_error(request: Request, exc: Exception) -> JSONResponse:
-    """Turn an ``AppError`` into its error envelope."""
+    """Turn an ``AppError`` into its error envelope.
+
+    When ``exc.already_logged`` is true the request is marked as already logged
+    (``mark_error_logged``), so the access log writes nothing for it.
+    """
     assert isinstance(exc, AppError)  # noqa: S101 - registered for AppError only
+    if exc.already_logged:
+        mark_error_logged(request.scope)
     return error_response(
         exc.status_code,
         exc.code,
@@ -170,19 +185,20 @@ async def handle_http_exception(request: Request, exc: Exception) -> JSONRespons
 
     ``404`` and ``405`` come from routing; the ``405`` keeps the exception's
     headers, including ``Allow``. A status with no defined envelope code is
-    logged and answered as ``500 INTERNAL_ERROR`` rather than with an invented
-    code.
+    logged as one ``ERROR`` (the trace ID comes with the record, not the
+    message), the request is marked as already logged, and it is answered as
+    ``500 INTERNAL_ERROR`` rather than with an invented code.
     """
     assert isinstance(exc, HTTPException)  # noqa: S101 - registered for it only
     mapped = _HTTP_STATUS_ERRORS.get(exc.status_code)
     if mapped is None:
         logger.error(
-            "HTTPException with unmapped status %s (traceId=%s) %s %s",
+            "HTTPException with unmapped status %s %s %s",
             exc.status_code,
-            escape_for_log((_state(request) or {}).get("correlation_id")),
             escape_for_log(request.method),
             escape_for_log(request.url.path),
         )
+        mark_error_logged(request.scope)
         status_code, code, message_key = 500, InternalError.code, InternalError.message_key
         headers = None
     else:

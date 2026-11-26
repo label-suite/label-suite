@@ -1,6 +1,6 @@
 ---
 title: ADR-004 認證與安全
-description: 認證與授權的決定：token 放在 httpOnly cookie、角色每次從資料庫讀、CSRF 用綁定 session 的 double-submit token、Google SSO 直接走 OIDC、綁定既有帳號的條件、權限矩陣當授權輸入。
+description: 認證與授權的決定：token 放在 httpOnly cookie、角色每次從資料庫讀、CSRF 用綁定 session 的 double-submit token、Google SSO 直接走 OIDC、綁定既有帳號的條件、權限矩陣當授權輸入、不做全域速率限制而登入失敗鎖定用 Redis 計數。
 tags: [adr, auth, security, csrf, oidc]
 ---
 
@@ -276,6 +276,53 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 - `backend/` 的授權實作建立之後，每次讀矩陣列的成本讓請求明顯變慢，需要加快取
 - 有操作需要的授權條件，無法用 cell 加附加條件這兩層表達
 
+## D7 不做全域速率限制，登入失敗鎖定用 Redis 計數
+
+### 背景
+
+要決定後端要不要對所有端點套一個全域的呼叫上限，以及登入失敗的次數計在哪裡。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 後端目前沒有通用的 API 速率限制；參考的 NestJS 腳手架對所有端點套一個全域上限（100 次／60 秒，health 豁免） | 要決定照做還是不做 |
+| 規格 01-05 Q3 已定「登入失敗 10 次擋 30 分鐘」，規格要求不得無限次 | 登入的次數限制有規格依據，還沒有程式 |
+| Redis 已由 [ADR-003 的 D8](003-backend-architecture.mdx#d8-非同步任務用-celery-加-redis) 引入 | 計數可以放進已經存在的服務 |
+| 放在 Nginx 後面時，要先信任代理的來源 IP，否則所有人共用一個額度 | 以 IP 為鍵的全域上限，要先有信任代理來源 IP 的設定 |
+
+### 考慮過的選項
+
+來源只比較了兩組選項：做或不做全域限流，以及計數放程序內記憶體或 Redis。
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 後端做全域限流，照腳手架對所有端點套一個上限 | — | 要先信任代理的來源 IP，否則所有人共用一個額度 | 不採用，理由沒有記錄 |
+| B 後端不做全域限流，只做登入失敗鎖定 | — | — | 採用，理由沒有記錄 |
+| C 計數放程序內記憶體 | — | 多個 worker 各算各的 | 不採用 |
+| D 計數放 Redis | 多個 worker 共用同一份計數；重啟不歸零；Redis 已由 ADR-003 的 D8 引入 | — | 採用 |
+
+### 決定
+
+後端先不做全域速率限制，只做登入失敗鎖定：失敗 10 次擋 30 分鐘，數字與擋住時的訊息規則照[規格 01-05 的 Q3](../../specs/01-account/05-login-state.mdx#已確認決議)；失敗次數計在 Redis，由各 worker 共用。
+全域上限日後若要，交給反向代理那一層。
+登入鎖定的實作屬帳號模組 01-05 的 change。
+
+### 後果
+
+**變容易**
+
+- 多個 worker 看到同一份失敗次數，重啟也不會讓次數歸零
+- 後端不必決定全域上限的計數鍵與豁免端點
+
+**變困難**
+
+- 後端的一般端點沒有呼叫上限，直到反向代理層補上
+- 登入鎖定多一個對 Redis 的依賴
+
+### 什麼情況要重新討論
+
+- 要在後端這一層而不是反向代理層加全域上限
+- Nginx 與安全標頭的 change 建立之後，反向代理層仍無法提供全域上限
+
 ## 附錄：來源對照
 
 比對的版本：個人 repo ADR-021、035、037 的現行內容。
@@ -288,6 +335,7 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 | D4 | 個人 repo ADR-035（Context 的限制表、Options Evaluated、Decision、Optional-integration guarantee、Reversal trigger、Consequences）；選項 A、B 的好處沒有記錄 |
 | D5 | 個人 repo ADR-035 的帳號綁定修訂（Account-linking strategy、Consequences）；選項 B、C 沒有記錄好處，C 也沒有記錄代價 |
 | D6 | 個人 repo ADR-037（Context、Decision、Consequences）；來源沒有列出選項，D6 的選項 A、B 是從 Context 的兩種失敗情形推出的；快取規則出自 [security-agent-rules.mdx 的 S3](../rules/security-agent-rules.mdx#s3-授權的四段順序)；本節的重新討論條件是推論，來源沒有記錄 |
+| D7 | [#565 的本文與裁定留言](https://github.com/label-suite/label-suite/issues/565#issuecomment-7100090994)；規格 01-05 的 Q3；[ADR-003 的 D8](003-backend-architecture.mdx#d8-非同步任務用-celery-加-redis)；選項 A、B、C 的好處與 B、D 的代價來源沒有記錄；選項 A、B 的不採用或採用理由也沒有記錄；本節的重新討論條件是推論，來源沒有記錄 |
 | — | 個人 repo ADR-021 後來的修訂（token family 的資料表結構、30 秒寬限重發、email 的 Unicode 正規化、session 保留與刪除）、ADR-037 後來的修訂（permission key 的登錄與種子列、拒絕稽核的範圍、仲裁沿用審核 key），不在 [architecture.mdx](../architecture.mdx) 裡，本 ADR 不收；它們屬於資料庫與業務規格，由各自的 change 決定是否採用 |
 
 ## 待決
@@ -306,3 +354,4 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 | 2026-11-19 | Google SSO 直接用 `authlib` 整合 OIDC，不引入外部身分平台（[D4](#d4-google-sso-直接走-oidc)） | —（沿用個人 repo ADR-035） | [#450](https://github.com/label-suite/label-suite/issues/450) |
 | 2026-11-19 | 只在 `email_verified: true` 時自動綁定既有帳號，並丟掉本地密碼、撤銷所有 session（[D5](#d5-google-登入綁定既有帳號的條件)） | —（沿用個人 repo ADR-035 的帳號綁定修訂） | [#450](https://github.com/label-suite/label-suite/issues/450) |
 | 2026-11-19 | 權限矩陣是授權的必要輸入，依四步判定（[D6](#d6-權限矩陣當授權輸入)） | —（沿用個人 repo ADR-037） | [#450](https://github.com/label-suite/label-suite/issues/450) |
+| 2026-11-23 | 後端不做全域速率限制，只做登入失敗鎖定，失敗次數計在 Redis；全域上限日後交給反向代理層（[D7](#d7-不做全域速率限制登入失敗鎖定用-redis-計數)） | —（原本沒有 ADR 討論過） | [#565 留言](https://github.com/label-suite/label-suite/issues/565#issuecomment-7100090994) |

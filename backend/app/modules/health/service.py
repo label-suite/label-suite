@@ -10,7 +10,6 @@ from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import POSTGRES_CONNECT_TIMEOUT_SECONDS, get_db
-from app.core.envelope import current_trace_id
 from app.core.errors import DatabaseUnavailableError
 from app.modules.health.repository import HealthRepository
 from app.modules.health.schemas import HealthData, HealthStatus
@@ -32,7 +31,11 @@ class _Pinger(Protocol):
 
 
 class HealthService:
-    """Reports whether the service and its database are usable."""
+    """Reports whether the service and its database are usable.
+
+    Args:
+        repository: The data-access object whose ``ping`` queries the database.
+    """
 
     def __init__(self, repository: _Pinger) -> None:
         self._repository = repository
@@ -46,9 +49,11 @@ class HealthService:
         not the engine.
 
         Side effects:
-            Logs one ``WARNING`` with the trace ID and the exception type when
-            the database is unavailable; never the exception text, which can
-            hold the connection string or driver details (S9).
+            Logs one ``WARNING`` holding only the exception type when the
+            database is unavailable (the trace ID comes with the record), and
+            marks the raised exception ``already_logged``; never logs the
+            exception text, which can hold the connection string or driver
+            details (S9).
 
         Returns:
             ``HealthData`` with both fields ``ok``.
@@ -63,12 +68,11 @@ class HealthService:
                 await self._repository.ping()
         except _UNAVAILABLE_ERRORS as exc:
             logger.warning(
-                "Database unavailable (traceId=%s): %s.%s",
-                current_trace_id(),
+                "Database unavailable: %s.%s",
                 type(exc).__module__,
                 type(exc).__qualname__,
             )
-            raise DatabaseUnavailableError() from None
+            raise DatabaseUnavailableError(already_logged=True) from None
         return HealthData(status=HealthStatus.OK, database=HealthStatus.OK)
 
 

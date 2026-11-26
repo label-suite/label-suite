@@ -167,10 +167,14 @@ docs/specs/
 3. 每條卡控機制、每條邊界情況、每個替代與例外流程，都要在「驗收標準」有至少一個 Scenario 對應
 4. 待釐清有未決項目時，frontmatter `tags` 放 `草稿`、開頭 badge 用 `:badge[草稿]{variant="warning"}`；全部決議後改成 `已定案`、`variant="success"`
 5. 修改既有規格時：只改受影響的段落，更新 `updatedAt`；改變既有決議時，在「已確認決議」補一條新的，不刪舊的（舊的標註被哪一條取代）
-6. 依 Issue 修改時，依 [references/writing-guide.md](references/writing-guide.md)「需求變更」：
+6. 決議引用以**規則**為單位、整頁（§規格、§卡控機制、§邊界情況、§驗收標準）一起算：一條規則在第一次出現的地方引它的決議，之後同一條規則再被重述時不重複引；不同的規則即使依據同一條決議，各自引一次。理由與完整脈絡只在該題決議寫一次（例子見 writing-guide）
+7. §已確認決議 依題號由小到大排序；改變既有決議時補的新題接在最後（題號最大），不插在舊題之間
+8. 正文只寫現行規則，不寫演變說明（原本怎樣、何時改的、某頁或 PRD 是否已跟上）；演變寫在「變更紀錄」，或該題決議的理由
+9. 依 Issue 修改時，依 [references/writing-guide.md](references/writing-guide.md)「需求變更」：
    - 「變更紀錄」最上面新增一列，**不看規則有沒有變**；舊的規則不留在正文，寫在這一列的「原本」
    - **這次有變更需求時**（改了條文、卡控、邊界情況、業務流程、驗收標準、`資料欄位`，或 `已確認決議` 的結論）才加變更標示：先清掉上一次的，再用 `<mark>` 加上標 `<sup>[#N](Issue 網址)</sup>` 標出這次所有改動，頁首加 `:badge[變更 #N]{variant="warning" href="Issue 網址"}`
    - 只加導覽、修正被後續改動打成假的敘述這類**不改規則**的改動**不加標示**，只更新 `updatedAt` 與變更紀錄
+   - **只換位置與寫法、規則一條未改的重構**（合併或拆分 `###`、移動決議引用、重排決議、把正文的演變說明移進變更紀錄）同屬不改規則：不加 `<mark>` 與頁首 badge，只更新 `updatedAt`，「變更紀錄」加一列；記法與 PR 要附的前後對照見 writing-guide「變更紀錄」
    - 新增規格時「變更紀錄」只有「初版」一列
 
 ### 步驟 6：自我檢查
@@ -182,36 +186,44 @@ docs/specs/
 - [ ] §使用角色 是三欄表格；每個角色都有 R／C／E／D 組合，「只能看自己的」這類差異有寫出來；第三欄逐列指得到 PRD §權限矩陣 的哪一列，對不到的寫出原因
 - [ ] 業務流程有觸發、前置條件、主流程與結果；每個判斷的兩個出口都有下文；替代與例外流程都寫明回到第幾步或流程結束，並能對到一條卡控或邊界情況；不適用時寫出原因
 - [ ] 規格每個大項都有摘要句（誰、在哪、什麼情況下）與「操作 → 系統回應」的步驟，沒有用 WHAT／WHO 等當標籤；5W1H 檢查過沒有遺漏；欄位都寫出資料敏感度（型別細節）
+- [ ] 正文只寫現行規則，沒有演變說明（原本怎樣、何時改的、某頁或 PRD 是否已跟上）；那些寫在「變更紀錄」或對應決議的理由
+- [ ] 決議引用以規則為單位：每條規則只在第一次出現的地方引決議，同一條規則的後續重述沒有重複引；依據同一決議的不同規則各引一次
+- [ ] §已確認決議 的題號由小到大排序，沒有亂序、新題都接在最後
 - [ ] 卡控用「條件 → 結果」寫死，沒有「應該要擋」
 - [ ] 邊界情況涵蓋空狀態、極值、跨期、並發、載入失敗；每條都寫出使用者看到的結果
 - [ ] 每條卡控、邊界情況、替代與例外流程都有對應的 Scenario；每個 Scenario 只有一個 When、Then 可驗證
 - [ ] 術語表的 `id` 全站唯一，`:ref` 的 `id` 都存在
-- [ ] 指到其他章節或規格的「§…」「規格 NN-NN」都是連結；錨點用 Grep 對過標題確實存在，沒有連到單一 Q 題或沒有錨點的分組
+- [ ] 指到其他章節或規格的「§…」「規格 NN-NN」都是連結；錨點用 Grep 對過標題確實存在，沒有連到單一 Q 題或沒有錨點的分組；**例外只有 §Logic Flow 的分段清單——它的出處一律純文字，因為每條都要與元件的 `edges[].text` 逐字對齊（維護者 2026-11-23 裁定、2026-11-24 裁定範圍）；該節的導言（一句結論與固定段）、節點清單、分段小引言、「三類判準逐條盤點」與「缺口」兩個摺疊區塊不在例外內，都要用連結**
+- [ ] 凡「…」引的是某份規格的文字，都要在來源檔逐字對得上：兩支檢查器比對時都忽略 `**粗體**`，所以引文可以保留或去掉粗體；來源句中間夾著 Markdown 連結時，不要把連結語法抄進引文，改成在連結前後分段引（`check-specs` 不會略過連結語法）。來源句夾著粗體或連結時最容易引錯。`node scripts/check-citations.mjs --strict` 會查 §Logic Flow 裡的規格出處與其後的引文；`check-specs` 只查緊接在連結或反引號檔名後面的 §節名與引文（`[規格 0X-0Y](path#anchor) §節 的「…」`），其他位置的引文要自己對
 - [ ] 全文繁體中文、全形標點，冒號用「：」
 - [ ] 涉及標準答案或測試集的頁面：卡控與 Scenario 寫明標註員看不到答案，沒有寫系統端的做法
-- [ ] 有對應 prototype 頁面的規格大項都以 `PrototypeFrame` 開頭；prototype 上的每個區塊都能在規格、卡控、驗收標準或待釐清其中一處找到
+- [ ] 有對應的 prototype 頁面時，`PrototypeFrame` 在「規格」章節開頭嵌一次，大項依使用者任務分組、不逐項重複嵌入；prototype 上的每個區塊都能在規格、卡控、驗收標準或待釐清其中一處找到
 - [ ] 搬移的規格：附錄「舊編號對照」涵蓋 `.ids` 的每個舊編號，`刪除` 的列都有理由
 - [ ] 有寫 Q&A 的話：每題是一個預設收合的 `tip`，標題是問題本文的**純文字**（沒有「Q. 」前綴、沒有行內程式碼或粗體），答案寫在 directive 本體
 - [ ] 依 Issue 修改時：「變更紀錄」最上面一列寫了原本與修改後，`updatedAt` 已更新
+- [ ] 只換位置與寫法的重構：沒有 `<mark>`、沒有頁首 badge，`updatedAt` 已更新，「變更紀錄」依 writing-guide「變更紀錄」的記法加了一列
 - [ ] 依 Issue **變更需求**時另外：上一次的標示都已清掉；這次每個改動都有 `<mark>` 與連到 Issue 的上標（含流程、卡控、邊界、驗收）；頁首有 `:badge[變更 #N]{variant="warning" href="Issue 網址"}`。**不改規則的改動不加標示**；**§驗收標準 的 Scenario 名稱那一格不包標示**（改標 Given／When／Then，見 writing-guide §變更標示）
 
 ### 步驟 7：Prototype 嵌入與流程圖
 
-**Prototype 嵌入（不需詢問）**：規格有畫面時，「規格」章節每個大項以它描述的 prototype 頁面開頭，讓讀者先看到畫面再讀規則。
+**Prototype 嵌入（不需詢問）**：規格有畫面時，在「規格」章節開頭嵌入它描述的 prototype 頁面**一次**，讓讀者先看到畫面再讀規則；底下的大項依使用者任務分組（一個任務一個 `###`），不在每個大項重複嵌入同一個頁面。
 不畫 tsx Wireframe；畫面以 `design/prototype/` 為準。寫法：
 
 ```mdx
 import PrototypeFrame from '@notes/components/prototype-frame';
 
-### 使用者管理
+## 規格
 
 <PrototypeFrame page="admin/user-management" caption="使用者管理" client:idle />
+
+### 新增使用者
 ```
 
 - `import` 放在 frontmatter 之後，全檔一次
 - `page` 是 `design/prototype/pages/` 底下的路徑，不含 `.html`；`caption` 必填（同時是 iframe 的 `title`）；`client:idle` 必填，少了它框會停在載入狀態
 - 元件會在框下方顯示原始檔路徑，內文不重複；沒啟動 `pnpm prototype` 時只顯示提示，規格文字仍須能獨立閱讀
-- 找不到對應 prototype 頁面的大項不嵌入，改在「待釐清」新增一題，說明缺哪個頁面
+- 一份規格描述 prototype 的兩個以上頁面時（例如申請頁與設定頁），每個頁面在第一個描述它的大項開頭嵌一次
+- 找不到對應 prototype 頁面時不嵌入，改在「待釐清」新增一題，說明缺哪個頁面
 - 沒有畫面的功能（例如排程、匯入規則）不嵌入
 - 詳細說明見 `docs/prototype/index.mdx`
 
@@ -222,17 +234,19 @@ import PrototypeFrame from '@notes/components/prototype-frame';
 **修改既有規格時**：已生成（`status: generated`）的流程圖，若這次的變更影響到流程步驟、文案或對應的 Scenario，先更新標記的 prompt，再把「重新生成」列入下方提問（選項同下）；元件依骨架只改【流程】，不加變更標示。沒影響就不動，並在回報中說明。
 prototype 頁面有變動時，檢查嵌入的 `page` 路徑仍存在。
 
+**模組 Logic Flow（首次建立模組 `index.mdx`，或這次的變更改了模組內頁面之間的走法時）**：依模組索引範本（[templates/module-index.mdx](templates/module-index.mdx)）的「## Logic Flow」一節寫入 `@ai-visualize` 標記（`status: pending`），骨架見 [references/logic-flow-skeleton.tsx](references/logic-flow-skeleton.tsx)，待遇與業務流程圖骨架相同：複製後只改【節點與連線】，另有骨架檔頭寫明的兩處例外必須換掉——檔頭換成本模組一句話說明、中段橫幅去掉「（以下為模組 01 帳號範例）」括號；要不要現在生成，同下方三個選項。
+
 寫完後用 AskUserQuestion 問：
 
-- **現在生成 (Recommended)**：依 `content-visualize` skill 的流程寫回 MDX；元件依 flow.md 從骨架複製後只改【流程】，
-  並在預覽中走過每個流程 tab、完成 flow.md 的「自我檢查」
+- **現在生成 (Recommended)**：依 `content-visualize` skill 的流程寫回 MDX；業務流程圖依 flow.md 從骨架複製後只改【流程】，並在預覽中走過每個流程 tab、完成 flow.md 的「自我檢查」；
+  模組 Logic Flow 依 logic-flow-skeleton.tsx 複製後只改【節點與連線】（另換掉骨架檔頭寫明的兩處例外），並在預覽中切過每個分段 tab、點過每個節點與連線確認出處
 - **之後再生成**：保留 `status: pending`，之後說「處理 `docs/specs/xx/yy.mdx` 的視覺化標記」即可
 - **不需要**：移除標記
 
 ### 步驟 8：更新索引與驗證
 
 1. 更新模組 `index.mdx` 的頁面一覽，以及 `docs/specs/index.mdx` 裡 `specs.module-map` 定義區塊的模組地圖（首次使用時依範本建立）：
-   新頁面加一列；PRD 預留的頁面補上連結、拿掉「（未撰寫）」；地圖不放撰寫狀態
+   新頁面加一列；PRD 預留的頁面補上連結、拿掉「（未撰寫）」；地圖不放撰寫狀態。新頁面若改變了模組內頁面之間的走法，同步更新該模組 `index.mdx` 的 §Logic Flow
 2. 在 repo 根目錄跑 `pnpm check:specs` 與 `pnpm exec notecraftapp build docs`（NoteCraft 需要 Node 22 以上），失敗就修正（常見原因：`:ref` 找不到 `id`、`define` 重複、冒號被當成指令、舊編號對照缺漏）
 3. build 通過後先跑 `git status`，再用 AskUserQuestion 問是否提交（工作區另有無關變更時，在問題中註明「另有 N 個無關檔案，這次不會帶入」）：
    - **現在 commit (Recommended)**：只 `git add` 這次產生或修改的檔案（步驟 9 回報表的規格檔、更新過的索引與 `glossary.mdx`、`docs/specs/legacy/` 的 `.ids`、有生成流程圖時的 `.notecraft/components/<id>.tsx`），不用 `git add -A`；

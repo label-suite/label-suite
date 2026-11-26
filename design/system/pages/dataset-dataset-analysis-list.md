@@ -1,10 +1,10 @@
 # `dataset/dataset-analysis-list`
 
-> 批次 `b4-dataset-sweep` ｜規格 [`docs/specs/05-dataset/01-analysis-list.mdx`](../../../docs/specs/05-dataset/01-analysis-list.mdx) ｜檔案 `design/prototype/pages/dataset/dataset-analysis-list.html`（324 行）＋ `.data.js`、`.i18n.js`、`.model.js`（263 行）、`.view.js`（322 行）、`.js`（335 行）｜交付包 commit `eb9a884`
+> 批次 `b4-dataset-sweep` ｜規格 [`docs/specs/05-dataset/01-analysis-list.mdx`](../../../docs/specs/05-dataset/01-analysis-list.mdx) ｜檔案 `design/prototype/pages/dataset/dataset-analysis-list.html`（324 行）＋ `.data.js`、`.i18n.js`、`.model.js`（263 行）、`.view.js`（322 行）、`.js`（335 行）｜交付包 commit `b16b294`（#608 重驗只補 `#param-error`；本頁 prototype 在第十三次重跑沒有變）
 
 ## 入口
 
-側欄「資料集分析」。`dataset/dataset-analysis-detail` 遇到不合法的任務時也會導回本頁並帶 `?invalid_task=1`（`dataset-analysis-detail.html:2584`）。
+側欄「資料集分析」。`dataset/dataset-analysis-detail` 遇到不合法的任務時也會導回本頁並帶 `?invalid_task=1`（`dataset-analysis-detail.html:2576`）。
 
 載入：`assets/tokens.css`、`assets/data-palette.css`（#420）、`pages/shared/sidebar.css`（`:9`）、`empty-state.css`（`:10`）、`list-page.css`（`:11`）、`task-type-badge.css`（`:214`）；腳本 `sidebar.js`（`:221`）、`theme.js`、`analytics.js` 與本頁五支腳本（`:318`–`:322`）。**沒有載入 `button.css`、`modal.css`、`modal-focus.js`**。本頁在 `<style>` 定義了 `--navbar-mobile-height`／`--navbar-mobile-top-height`（`:22`），G-24 在本頁不成立。
 
@@ -16,8 +16,9 @@
 | `#state-filtered-empty` | 用 `?keyword=`／`?iaa_status=`／`?output_type=` 篩到 0 列 | [Empty State](../components/empty-state.md)（表格內的 `empty-state empty-state-cell`，`createEmptyRow(true)`，`dataset-analysis-list.view.js:133`；文案 `dataset-analysis-list.i18n.js:40`–`:41`）、[List Toolbar](../components/list-toolbar.md)（清除篩選由工具列的 `.clear-btn` 負責，空狀態裡沒有按鈕） |
 | `#param-view-empty` | `?view=empty`（`dataset-analysis-list.model.js:237` 清空任務） | [Empty State](../components/empty-state.md)（同一個 `createEmptyRow(false)`，文案「尚無可分析的任務」，`dataset-analysis-list.i18n.js:38`–`:39`） |
 | `#param-invalid-task` | `?invalid_task=1`（`dataset-analysis-list.js:293`、`:314`–`:316`） | [Toast](../components/toast.md)（error：「找不到指定的任務，或您沒有該任務的存取權限。」） |
+| `#param-error` | `?error=1`（`dataset-analysis-list.model.js:241` 設 `state.loadFailed`；開關不寫回網址） | [Empty State](../components/empty-state.md)（表格內的 `empty-state empty-state-cell`，`createErrorRow`，`dataset-analysis-list.view.js:159`，條件 `:277`），用 `.error-title`（`:168`）與一顆 `.clear-btn` 重試；分頁列不顯示（`:220`） |
 
-另外找得到但交付包沒有列的：載入失敗的錯誤列（`createErrorRow`，`dataset-analysis-list.view.js:159`，條件 `state.loadFailed`，`dataset-analysis-list.model.js:138`），用 `.error-title`（`dataset-analysis-list.view.js:168`）與一顆 `.clear-btn` 重試；沒有網址參數能觸發 → `../design-gaps.md` G-54。
+載入失敗的錯誤列原本沒有網址參數能觸發（條件 `state.loadFailed`，`dataset-analysis-list.model.js:138`）；#422 加了 `?error=1`，交付包已收為 `#param-error`（上表）→ `../design-gaps.md` G-54。
 
 ## 這一頁專屬的
 

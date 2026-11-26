@@ -1,5 +1,6 @@
 packages:
   - frontend
+  - e2e
 
 # pnpm 10 skips dependency install scripts by default; these two need theirs
 # (esbuild's platform binary, msw's postinstall step).

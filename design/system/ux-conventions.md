@@ -79,13 +79,13 @@
 
 清單頁的 `q`／`keyword`、`status`、`limit`／`offset` 這類狀態寫進網址，重新整理與分享連結都能回到同一個畫面。
 
-依據：`design/prototype/pages/admin/user-management.html:957`（「URL state (UXC-11): q / role / status / limit / offset」）、`pages/annotation/annotation-list.html:1051`（「filter/search/pagination live in the URL (limit/offset…」）、`components-showcase.html:1181`（「行為契約見 UXC-11（limit/offset、URL 同步）」）。
+依據：`design/prototype/pages/admin/user-management.html:957`（「URL state (UXC-11): q / role / status / limit / offset」）、`pages/annotation/annotation-list.html:1086`（「filter/search/pagination live in the URL (limit/offset…」）、`components-showcase.html:1181`（「行為契約見 UXC-11（limit/offset、URL 同步）」）。
 
 遵守它的元件：[Pagination](components/pagination.md)、[List Toolbar](components/list-toolbar.md)。兩者在 b1 都**沒有可重現的視圖**（showcase 只展示版面、不展示網址行為），所以這一條在本批次只記到契約層。
 
 **b2 補上可重現的樣本**：`admin/user-management#state-filtered-empty`（`?q=`／`?status=`／`?role=`）與 `task-management/task-list#state-filtered-empty`（`?keyword=`／`?status=`／`?output_type=`／`?run_stage=`，規格 [`01-task-list.mdx` §查詢條件保留在網址](../../docs/specs/03-task-management/01-task-list.mdx)）。
 
-**b4 補上**：`dataset/dataset-analysis-list#state-filtered-empty`（`?keyword=`／`?iaa_status=`／`?output_type=`，由 `syncUrl` 只從狀態組網址，`design/prototype/pages/dataset/dataset-analysis-list.js:71`）。`dataset/dataset-analysis-detail` 的 `syncUrlState`（`dataset-analysis-detail.html:2506`）同樣只從狀態組網址（#155 Q4，維護者 2026-11-08），但它保存的是 `task_id` 與 `tab`，不是清單狀態。
+**b4 補上**：`dataset/dataset-analysis-list#state-filtered-empty`（`?keyword=`／`?iaa_status=`／`?output_type=`，由 `syncUrl` 只從狀態組網址，`design/prototype/pages/dataset/dataset-analysis-list.js:71`）。`dataset/dataset-analysis-detail` 的 `syncUrlState`（`dataset-analysis-detail.html:2512`）同樣只從狀態組網址（#155 Q4，維護者 2026-11-08），但它保存的是 `task_id` 與 `tab`，不是清單狀態。
 
 這條和 `docs/prototype/navigation.mdx` §網址參數 是同一件事的兩面：那一節是**宣告有哪些參數**，這一條是**為什麼要有**。
 
@@ -115,7 +115,7 @@
 
 依據的規格：[`03-task-management/01-task-list.mdx` §空狀態與載入失敗](../../docs/specs/03-task-management/01-task-list.mdx)（三種情況的文案表，且「不放第二顆新增任務」）。第三種「載入失敗」**絕對不能顯示成空資料**，`task-list` 用另一列錯誤列（`createErrorRow`，`task-list.html:868`–`:906`）處理。
 
-**b3 核對**：`annotation/annotation-list` 遵守。`renderEmptyState`（`design/prototype/pages/annotation/annotation-list.html:1923`–`:1938`）用同一個 `empty-state-page` 容器，只依「本來有沒有資料」換文案（「找不到符合條件的資料。」／「目前尚無資料。」），只有前者加清除篩選。對應規格 [`04-annotation/01-annotation-list.mdx` §空的與找不到](../../docs/specs/04-annotation/01-annotation-list.mdx) 第 4–6 條。
+**b3 核對**：`annotation/annotation-list` 遵守。`renderEmptyState`（`design/prototype/pages/annotation/annotation-list.html:1958`–`:1973`）用同一個 `empty-state-page` 容器，只依「本來有沒有資料」換文案（「找不到符合條件的資料。」／「目前尚無資料。」），只有前者加清除篩選。對應規格 [`04-annotation/01-annotation-list.mdx` §空的與找不到](../../docs/specs/04-annotation/01-annotation-list.mdx) 第 4–6 條。
 
 **b4 核對**：`dataset/dataset-analysis-list` 遵守。`createEmptyRow(noResults)`（`design/prototype/pages/dataset/dataset-analysis-list.view.js:133`）沿用 `task-list` 的「表格裡的一列」做法，依參數換文案（`dataset-analysis-list.i18n.js:38`–`:41`）；篩不到時的文案叫人「清除篩選」，清除鈕在工具列（`.clear-btn`，`dataset-analysis-list.html:258`），空狀態裡不另放。載入失敗另有錯誤列（`createErrorRow`，`dataset-analysis-list.view.js:159`），不顯示成空資料。`dataset/dataset-analysis-detail` 的兩種空（統計 `#statsEmpty`、品質 `#qualityEmpty`）是「還沒有資料」的空，沒有篩選，這一條不適用。
 

@@ -65,26 +65,25 @@ const VB_H = 360;
 const MODULES: Module[] = [
   { id: "m03", label: "03 任務管理", color: "#1D4ED8" },
   { id: "m04", label: "04 標記作業", color: "#8B5CF6" },
-  { id: "m05", label: "05 資料集", color: "#818CF8" },
 ];
 
 const STATES: State[] = [
   { id: "start", label: "建立", x: 30, y: 130, start: true },
-  { id: "draft", label: "草稿", x: 200, y: 130, desc: "專案負責人剛建立任務，或在「等待 IAA 確認」時退回；可以修改任務設定與成員。" },
-  { id: "dry", label: "試標中", x: 440, y: 130, desc: "專案負責人啟動試標，或在「等待 IAA 確認」時再開一輪；標記員作答試標資料。" },
-  { id: "iaa", label: "等待 IAA 確認", x: 680, y: 130, desc: "試標的標記結果都已送出，資料集算出 IAA；由專案負責人決定接受、退回或再開一輪。這是唯一能回頭的狀態。" },
-  { id: "official", label: "正式標記中", x: 680, y: 300, desc: "專案負責人接受 IAA 結果並啟動正式標記；標記員作答、審核員審核。" },
-  { id: "done", label: "已完成", x: 440, y: 300, final: true, desc: "標記結果都已送出、審核都已定稿、沒有未決爭議、仲裁都已完成、品質分數都已算出；結束狀態，不能往回走。" },
+  { id: "draft", label: "草稿", x: 200, y: 130, desc: "專案負責人剛建立任務，或在「等待 IAA 確認」時退回草稿；可以修改任務設定與成員。" },
+  { id: "dry", label: "試標中", x: 440, y: 130, desc: "專案負責人開始第一個試標回合，或在「等待 IAA 確認」時新增下一個試標回合；標記員作答試標資料。不能直接退回草稿，要先跑完這一回合。" },
+  { id: "iaa", label: "等待 IAA 確認", x: 680, y: 130, desc: "本回合的試標完成條件全部滿足，系統自動轉入；由專案負責人決定開始正式標記、新增下一個試標回合或退回草稿。這是唯一能回頭的狀態。" },
+  { id: "official", label: "正式標記中", x: 680, y: 300, desc: "專案負責人開始正式標記；標記員作答、審核員審核。不能回到任何前一個狀態。" },
+  { id: "done", label: "已完成", x: 440, y: 300, final: true, desc: "專案負責人標記完成，而且結案條件全部滿足；結束狀態，不能往回走。" },
 ];
 
 const TRANSITIONS: Transition[] = [
   { id: "t1", from: "start", to: "draft", label: "建立任務", trigger: "專案負責人建立任務", module: "m03", labelOffset: 16 },
-  { id: "t2", from: "draft", to: "dry", label: "啟動試標", trigger: "專案負責人啟動試標", module: "m03", labelOffset: 16 },
-  { id: "t3", from: "dry", to: "iaa", label: "算出 IAA", trigger: "試標的標記結果都已送出（04 標記作業），資料集算出 IAA", module: "m05", labelOffset: 16 },
-  { id: "t4", from: "iaa", to: "official", label: "接受 IAA", trigger: "專案負責人接受 IAA 結果並啟動正式標記", module: "m03", labelOffset: -60 },
-  { id: "t5", from: "iaa", to: "draft", label: "退回", trigger: "專案負責人在「等待 IAA 確認」時退回草稿，重新調整任務設定", module: "m03", bend: 80, labelOffset: -14 },
-  { id: "t6", from: "iaa", to: "dry", label: "再開一輪", trigger: "專案負責人在「等待 IAA 確認」時再開一輪試標", module: "m03", bend: -30, labelOffset: 16 },
-  { id: "t7", from: "official", to: "done", label: "全部定稿", trigger: "標記結果都已送出、審核都已定稿、沒有未決爭議、仲裁都已完成，資料集算出品質分數", module: "m04", labelOffset: 16 },
+  { id: "t2", from: "draft", to: "dry", label: "開始試標", trigger: "專案負責人開始第一個試標回合，成員人數與資料池都檢查過", module: "m03", labelOffset: 16 },
+  { id: "t3", from: "dry", to: "iaa", label: "試標完成", trigger: "系統自動：本回合沒有未指派的試標作業、每位啟用中的標記員都完成、全部審核單位已定稿、沒有爭議中的審核單位、最終例外池已清空；與 IAA 達標與否無關", module: "m04", labelOffset: 16 },
+  { id: "t4", from: "iaa", to: "official", label: "開始正式標記", trigger: "專案負責人開始正式標記：最新回合的 IAA 已算完、正式標記池有剩餘", module: "m03", labelOffset: -60 },
+  { id: "t5", from: "iaa", to: "draft", label: "退回", trigger: "專案負責人退回草稿：關掉目前這一輪、記下退回原因", module: "m03", bend: 80, labelOffset: -14 },
+  { id: "t6", from: "iaa", to: "dry", label: "再開一輪", trigger: "專案負責人新增下一個試標回合：修訂紀錄填齊、最新回合的 IAA 已算完", module: "m03", bend: -30, labelOffset: 16 },
+  { id: "t7", from: "official", to: "done", label: "標記完成", trigger: "專案負責人標記完成；結案條件五條同時成立：正式標記作業全數提交、全部審核單位已定稿或經例外池排除、沒有爭議中的審核單位、最終例外池已清空、品質指標就緒", module: "m03", labelOffset: 16 },
 ];
 
 const DEFAULT_STATE = "iaa";

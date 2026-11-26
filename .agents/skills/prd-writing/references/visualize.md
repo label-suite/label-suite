@@ -5,7 +5,7 @@ PRD 有三張固定的互動圖，各自從一份骨架複製：**【骨架】�
 
 | 圖         | 放在哪             | 元件 id                                           | 骨架                                                     | 不寫的情況       |
 | :--------- | :----------------- | :------------------------------------------------ | :------------------------------------------------------- | :--------------- |
-| Site Map   | §Site Map 最前面   | `prd-site-map`                                    | [site-map-skeleton.tsx](site-map-skeleton.tsx)           | 無，一律要有     |
+| Site Map   | §Site Map 最前面   | `prd-site-map-tree`（全站樹，可展開到每頁的功能）、`prd-site-map`（角色篩選） | `prd-site-map-tree` 無骨架，資料檔 `site-map-data.ts` 由 `scripts/gen-site-map-data.mjs` 產生；`prd-site-map` 用 [site-map-skeleton.tsx](site-map-skeleton.tsx) | 無，一律要有     |
 | 跨模組流程 | §跨模組流程 最前面 | `prd-<主題>-flow`（例：`prd-cross-module-flow`）  | [module-flow-skeleton.tsx](module-flow-skeleton.tsx)     | 該節寫「不適用」 |
 | 共用狀態機 | §共用狀態機 最前面 | `prd-<實體>-state`（例：`prd-opportunity-state`） | [state-machine-skeleton.tsx](state-machine-skeleton.tsx) | 該節寫「不適用」 |
 
@@ -32,6 +32,8 @@ PRD 有三張固定的互動圖，各自從一份骨架複製：**【骨架】�
 - 圖寬由資料決定，外層可以橫向捲動，頁面不捲動
 
 ## Site Map
+
+§Site Map 有兩張圖。第一張 `prd-site-map-tree` 是全站樹：入口 → 模組 → 頁面 → 功能，模組與頁面可展開收合（預設到頁面層）、可搜尋功能名稱；功能是各規格「## 規格」底下的 `###` 小節扣掉通用小節，資料檔 `.notecraft/components/site-map-data.ts` 由 `node scripts/gen-site-map-data.mjs` 從 §Site Map 條列與規格產生，不手改，CI 的 `--check` 會擋下過期的資料檔；排除清單只寫在那支腳本裡。以下是第二張 `prd-site-map` 的寫法。
 
 左側是一次看一個模組的縱向主幹樹，右側是詳情面板：上方切換模組，模組節點在最上面，主幹往下串起子模組，子模組左右交錯掛在主幹兩側，頁面在子模組下方垂直排列，左右支線互為鏡像。
 
