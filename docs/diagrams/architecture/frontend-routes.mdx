@@ -47,6 +47,7 @@ change 的 `ui-design.md` 仍然寫這次頁面的元件樹、資料來源、畫
 | 路由 | 頁面元件 | 註冊於 | 對應的規格 | Logic Flow 節點 |
 | :--- | :--- | :--- | :--- | :--- |
 | `/account/login` | `LoginPage`（`pages/account-login/`）；只給未登入的人，已登入時以取代歷史紀錄的方式導向落點 | 開發模式與正式建置 | 規格 01-01 §登入頁、§用 Email 與密碼登入、§用 Google 帳號登入、§語言切換 | 帳號模組 P1；D1 是 → X5 |
+| `/account/google/callback` | `GoogleCallbackPage`（`pages/account-google-callback/`）：沒有自己的畫面，把 Google 帶回來的 `code`、`state` 交給後端後導走；只給未登入的人 | 開發模式與正式建置 | 規格 01-01 §用 Google 帳號登入、E1、E2 | 帳號模組 X1 → D3；D3 是 → X5，D3 否 → P1 |
 | `/dashboard/dashboard` | 登入後的落點；02-01 完成前的內容**待決** | 開發模式與正式建置；需要登入 | 規格 02-01（本次只有路由與守門，版面不在本次） | 帳號模組 X5 |
 | `/` | 不顯示內容，依登入狀態以取代歷史紀錄的方式導向：已登入 → 落點，未登入 → `/account/login` | 開發模式與正式建置（取代開發模式原本導向 `/dev/health` 的那一條） | 規格 01-01 §登入頁 第 9 條、Q3 | 帳號模組 S → D1 |
 | 其他路徑 | **待決**：找不到頁屬規格 07-03，還沒有 | — | 規格 07-03 | 無 |
@@ -63,7 +64,8 @@ change 的 `ui-design.md` 仍然寫這次頁面的元件樹、資料來源、畫
 | :--- | :--- | :--- | :--- |
 | `DevHealthPage` | `HealthStatusPanel`（`features/system-health/`） | `useGetHealth`（`getHealth`） | `systemHealth` |
 | `DevGalleryPage` | 無；直接列出 `components/ui/` 的原語 | 無，不送任何請求 | `devGallery` |
-| `LoginPage`（規劃中，#719） | `LoginForm`、`GoogleSignInButton`（`features/auth/`）；外殼用登出狀態的頁首與卡片 | 待 `api-contract` 對齊：登入、取得目前的登入狀態、取得登入頁的部署能力（寄信服務、Google） | `auth`（規劃中） |
+| `LoginPage`（規劃中，#719） | `LoginForm`、`GoogleSignInButton`（`features/auth/`）；外殼用登出狀態的頁首與卡片 | `createSession`、`getCurrentSession`、`getAuthOptions`、`getGoogleAuthorization`；守門另用 `createSessionRefresh`（提案） | `auth`（規劃中） |
+| `GoogleCallbackPage`（規劃中，#719） | `GoogleCallbackHandler`（`features/auth/`） | `createGoogleSession` | `auth`（規劃中） |
 
 :::note{title="健康檢查頁的四種狀態" collapsible}
 - `HealthStatusPanel` 用 `toHealthViewState` 把查詢結果轉成四種狀態之一：載入中、正常、後端錯誤（任何錯誤外層）、連不上
@@ -133,7 +135,10 @@ frontend/
 還沒有合併；合併後由 `frontend-developer` 依程式改寫上面對應的段落。
 
 - **守門層**：`app/` 新增兩種路由包裝——「需要登入」與「只給未登入的人」，都讀同一個「目前的登入狀態」查詢；判定完成前不畫任何一頁的內容，避免登入頁閃一下再跳走
-- **`401` 的處理**：任何請求回錯誤外層的 `401`（`isAuthError()`）→ 清掉登入狀態的查詢快取，以取代歷史紀錄的方式回 `/account/login`；`403` 不在這裡處理，交給各頁
+- **`401` 的處理**：任何請求回 `401 AUTH_REQUIRED`（`isAuthError()`）→ 先試一次延續（`createSessionRefresh`，提案；同一時間只發一次），成功就重送原請求；延續回 `409 ACCOUNT_REFRESH_CONFLICT` 時不回登入頁，稍等後重送原請求一次；回 `ACCOUNT_SESSION_EXPIRED`／`ACCOUNT_SESSION_INVALID` 才清掉登入狀態的查詢快取，以取代歷史紀錄的方式回 `/account/login`；`403` 不在這裡處理，交給各頁
+- **CSRF**：`POST`、`PUT`、`PATCH`、`DELETE` 由 `apiFetch` 帶 `X-CSRF-Token` 標頭，值取自 `__Host-ls_csrf` cookie（`api-contract` §CSRF）
+- **登出**：`deleteCurrentSession`（提案）只有端點，控制項屬 07-01；本次是否有呼叫它的畫面隨落點的待決
+- **Google 登入不用 `302`**：授權網址由後端以 JSON 回給前端，前端整頁導覽過去；Google 回到前端的 `/account/google/callback`，再由前端把 `code`、`state` 送給後端。兩個端點都走 `apiFetch` 與生成的 hook
 - **語言**：規格 01-01 §語言切換 要求登入頁有語言切換、第一次來預設繁體中文、記住選擇並跨頁沿用，與現在「依 `navigator.language` 決定一次、沒有切換」不同；改法待 change 的 specs 定案（會修改 `frontend-i18n` capability）
 - **原語**：預期新增 `label`、`separator`，`button` 增加送出中的狀態；展示頁要各有一節
 :::
