@@ -1,6 +1,6 @@
 # Design Gaps
 
-> 批次 `b1-shared-account` 建立、`b2-admin-dashboard-task`、`b3-annotation-review`、`b4-dataset-sweep` 補寫 ｜交付包 commit `b1fd43c` → `eb9a884`、prototype tree `815b853`；G-57～G-60 依交付包 `b16b294`（#608）
+> 批次 `b1-shared-account` 建立、`b2-admin-dashboard-task`、`b3-annotation-review`、`b4-dataset-sweep` 補寫 ｜交付包 commit `b1fd43c` → `eb9a884`、prototype tree `815b853`；G-57～G-60 依交付包 `b16b294`（#608）；G-62～G-65 為 #719 新增
 
 每一筆四欄齊全：**重現方式**（不截圖）、**受影響範圍**、**依據**（兩邊原文都引出來）、**待決問題**。
 分三類：原型與業務規格差異 ／ 缺少狀態證據 ／ 待重新設計。
@@ -389,7 +389,7 @@
 | **重現方式** | 開 `pages/account/login.html`，檢視 `.card`、`.card-title`、`.card-subtitle` 與其他說明文字的計算樣式。 |
 | **受影響範圍** | `account/login`；[Input](components/input.md)、[Button](components/button.md) 的周邊文字 |
 | **依據** | 原型：`login.html:104` 卡片 `padding: 40px 40px 36px`；`:134` 標題 `font-size: 22px`；`:139`、`:292` `font-size: 15px`；`:78`、`:191`、`:216`、`:321` `font-size: 13px`。`assets/tokens.css` 的字級（Type Scale）只有 48／36／24／18／16／14／12，間距只有 4／8／16／24／32／48／64，沒有 22／15／13 與 40／36。 |
-| **待決問題** | 已裁定（2026-11-26，[#719](https://github.com/label-suite/label-suite/issues/719#issuecomment-7187190476)）：實作就近套用既有 token，不新增 token；原型不改。對應：22px 取 `--text-h2`（24px），15px 取 `--text-body`（16px），36px 內距取 `--space-xl`（32px）。仍待實作時決定：13px 與 12px、14px 等距，40px 與 32px、48px 等距，兩者沒有「最近」的 token。 |
+| **待決問題** | 已裁定（2026-11-26，[#719](https://github.com/label-suite/label-suite/issues/719#issuecomment-7187190476)）：實作就近套用既有 token，不新增 token；原型不改。對應（依 U5 的「就近套用既有 token」推得，不是逐項裁定）：22px 取 `--text-h2`（24px），15px 取 `--text-body`（16px），36px 內距取 `--space-xl`（32px）。仍待實作時決定：13px 與 12px、14px 等距，40px 與 32px、48px 等距，兩者沒有「最近」的 token。 |
 
 ### G-65 登入頁語言切換鈕的無障礙名稱不含畫面上的「ZH」
 
