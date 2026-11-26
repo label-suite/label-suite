@@ -25,14 +25,16 @@
 
 本機 Claude Code **2.1.273**：
 
-| 鍵                                                 | 版本下限 | 本機可用 |
-| :------------------------------------------------- | :------- | :------- |
-| `permissions.blockReadsOutsideWorkingDirectories`  | 2.1.257  | **可用** |
-| `onFailure: "block"`                               | 2.1.295  | 不可用   |
-| `permissions.blockWritesOutsideWorkingDirectories` | 2.1.314  | 不可用   |
-| `permissions.denyInsteadOfPrompting`               | 2.1.319  | 不可用   |
+| 鍵                                                 | 版本下限 | 本機可用           |
+| :------------------------------------------------- | :------- | :----------------- |
+| `permissions.blockReadsOutsideWorkingDirectories`  | 2.1.257  | **可用**           |
+| `onFailure: "block"`                               | 2.1.295  | 不可用（現況見下） |
+| `permissions.blockWritesOutsideWorkingDirectories` | 2.1.314  | 不可用             |
+| `permissions.denyInsteadOfPrompting`               | 2.1.319  | 不可用             |
 
 三個不可用，所以 D7 的「腳本自行 fail-closed」仍是唯一可行路徑，不能改用 `onFailure`。
+
+**`onFailure` 的現況（2026-11-26）**：上表是 2.1.273 當時的判定。之後本機升到 2.1.295 以上，並在 Claude Code 2.1.323 實測擋得住（見 8.1 的「`onFailure: "block"` 實測」），維護者決定在兩個 H2 handler 加上它（task 6.3、ADR-001 D5）。它疊在 D7 之上，不取代 D7：腳本自己的 exit `2` 仍是兩邊共通的基線，Codex 沒有等價欄位。
 本次**沒有**設定任何權限層（D19），所以 `blockReads…` 雖然可用也未啟用——**可用 ≠ 已設定**。
 
 ### 1.3 Codex `hooks.json` 的 `command` 欄位（已完成）
@@ -106,7 +108,35 @@ Linux 側於 **2026-11-20** 在 PR #526 的 `hooks` job（`ubuntu-latest`）補�
 | 6   | `pre-commit`        | 擋下 merge commit 本身——`ruff`／`mypy` 不在 `PATH` 上，見 8.2 第 1 項                                                                                                                                  |
 | 7   | `commit-msg`        | 兩次擋下：一次 subject 76 字超過 72，一次 message 含 CJK                                                                                                                                               |
 
-**Codex 側（未完成）。** 需要一個 Codex session，本流程跑不到。要觀察的四件事已寫進 [#111 的留言](https://github.com/label-suite/label-suite/issues/111)：`SessionStart` 收不收 matcher、`apply_patch` 是否命中、payload 欄位、H2 的攔截是否真的擋下動作。**在那之前，Codex 側的註冊只是靜態核對過（H1 確認兩份設定指向的腳本都存在且一致），沒有任何一次真的事件證據。**
+**Codex 側（已完成，2026-11-26，維護者代跑）。** codex-cli **0.172.0**，互動式 `codex --no-daemon --no-alt-screen`，每次先以 `/hooks` 信任六個 repo hook、退出後開全新 session；所有改檔都由該 session 呼叫 `apply_patch`，沒有手動執行任何 hook 或檢查器補證據。
+
+- **第一次嘗試**（[留言](https://github.com/label-suite/label-suite/issues/111#issuecomment-7178347257)、[Codex 回報](https://github.com/label-suite/label-suite/issues/111#issuecomment-7178355116)）：在 linked worktree 裡 Codex 載入不到 repo hook，停在載入這一步。改用一般 HTTPS clone；這個限制記為契約 §能力缺口與承接第 9 條
+- **第二次**（`7dfd629`，[原始回報](https://github.com/label-suite/label-suite/issues/111#issuecomment-7178474719)、[判定](https://github.com/label-suite/label-suite/issues/111#issuecomment-7178504801)）：第 1、3、4 項通過，第 2 項未通過
+- **第三次**（`b7d2a1b`，[原始回報](https://github.com/label-suite/label-suite/issues/111#issuecomment-7179714570)）：修正 2b（`5af6f39`、`a327f41`）與 H6 的空格檔名（`7f1270a`）後，只重測第 2 項，通過
+
+| 項目                                                  | 跑在哪個 commit      | 結果                     | 證據                                                                                                                                                                          |
+| :---------------------------------------------------- | :------------------- | :----------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. `SessionStart` matcher                             | `7dfd629`            | 通過                     | runtime rollout 的 `hooks.additional_context` 收到 check-env 的四段報告；其中的 FAIL（hooksPath、pnpm）是測試 clone 的環境問題，與 hook 是否生效無關                          |
+| 2a. `apply_patch` 的 `PreToolUse` 診斷                | `7dfd629`、`b7d2a1b` | 平台能力缺口，不當成失敗 | 預期的 `NA:` 行兩次都沒有出現在畫面或模型的工具回覆（`{}`）；Codex 不顯示 exit `0` 時的 stderr，記為契約第 10 條                                                              |
+| 2b. tracked 檔加一行（`docs/product/README.md`）      | `b7d2a1b`            | 通過                     | `.rec`：`command: node scripts/check-specs.mjs docs`、`exit: 0`、`covered: docs/product/README.md`。在 `7dfd629` 時是 `command: （無）`、`covered:` 空白，Stop 因缺證據 BLOCK |
+| 2b. 改完直接結束一輪                                  | `b7d2a1b`            | 通過                     | Stop 沒有 BLOCK，該輪正常完成（runtime 的 `task_complete`）；Stop 本身沒有可見輸出，不宣稱有一條 PASS                                                                         |
+| 2b. 同一 patch 新增 `docs/新 檔.md`、刪除剛加的測試檔 | `b7d2a1b`            | 通過                     | `.rec`：`covered: docs/新%20檔.md`、`exit: 0`，刪掉的檔不在 `covered` 裡；之後的 Stop 沒有因 `docs/新 檔.md` BLOCK                                                            |
+| 2b. 收尾還原                                          | `b7d2a1b`            | 通過                     | 還原時 README 也跑了 docs 檢查；`git status --short` 無輸出、`git diff --exit-code` rc=0                                                                                      |
+| 2b（選做）. 只刪 tracked docs 檔、另有未提交檔        | —                    | **沒有跑**               | 檢查點標為選做；這條路徑只有 `check-changed-tests.sh` 的腳本測試                                                                                                              |
+| 3. payload 缺欄位                                     | `7dfd629`            | 通過                     | 沒有提到缺欄位的 BLOCK／UNKNOWN；出現的兩條 UNKNOWN 是 managed policy 與信任狀態，本來就預期會有                                                                              |
+| 4. force push dry-run                                 | `7dfd629`            | 通過                     | 執行前回 `Command blocked by PreToolUse hook: BLOCK: 觸犯 AGENTS.md 硬性規則 10 — git push 的強制推送`，命令沒有執行                                                          |
+
+第 1、3、4 項只跑在 `7dfd629`，依 2026-11-26 01:05 檢查點的安排沒有在 `b7d2a1b` 重測。這段期間 H1、H2 的三支腳本（`check-env.sh`、`check-command.sh`、`check-write-target.sh`）本身沒有改，但它們共用的 `scripts/lib/hook-payload.mjs`、`hook-common.sh` 有改（`apply_patch` 的檔案標頭解析與 `covered` 的 percent-encode），所以第 1、3、4 項在 `b7d2a1b` 上的通過是推論，不是實測；這兩支共用檔的行為由 `hook-payload.test.mjs`、`hook-common-tests.sh` 覆蓋。
+
+**`onFailure: "block"` 實測（Claude 側，2026-11-26）。** Claude Code **2.1.323**，在三個暫存 git repo 各跑一次 `claude -p --model haiku`，讓它執行 `touch ran.marker`，`PreToolUse`／`Bash` 掛一個 handler（[檢查點](https://github.com/label-suite/label-suite/issues/111#issuecomment-7179892935)）：
+
+| 情況                                         | Bash 是否執行         | tool_result                                                                                                                                         |
+| :------------------------------------------- | :-------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 指向不存在的腳本，加 `onFailure: "block"`    | 否（marker 不存在）   | `PreToolUse:Bash hook error: […/does-not-exist.sh]: failed; blocking because onFailure is "block"` 加 `No such file or directory`，`is_error: true` |
+| 指向不存在的腳本，不設 `onFailure`（對照組） | **是**（marker 存在） | `(Bash completed with no output)`，`is_error: false`：fail-open                                                                                     |
+| 腳本 `exit 1`，加 `onFailure: "block"`       | 否                    | `PreToolUse:Bash hook error: […/crash.sh]: failed; blocking because onFailure is "block"` 加 `No stderr output`                                     |
+
+依此，兩個 H2 handler 加上 `onFailure: "block"`（task 6.3）。H2 的兩支腳本只會 exit `0` 或 `2`，正常情況下行為不變；它只在腳本本身跑不起來、crash 或 timeout 時起作用。
 
 ### 8.2 全量回歸與效能
 
@@ -146,18 +176,19 @@ H2 另有一組跨七種輸入各 40 輪（共 280 次）的量測：median 268 
 
 **這個 gate 不完整，本 change 不宣稱做完。**
 
-| #   | 未覆蓋                                 | 現況                                                                                                                                                                                                        |
-| :-- | :------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | branch protection 未啟用               | CI job 會紅，但技術上還擋不住合併。H7 的真正 gate 在 branch protection，不在本 change                                                                                                                       |
-| 2   | 平台權限層未設定                       | Codex 的 `filesystem = "deny"`、Claude 的 `permissions.deny` 都還沒設（維護者 2026-11-17 裁定不在本 change 做）                                                                                             |
-| 3   | **Codex 側沒有 hook 層的寫檔目標保護** | `apply_patch` 沒有路徑欄位（官方文件 2026-11-17 查核），受保護路徑的寫入在 Codex 上擋不住，Claude 側擋得住，**兩平台不對等**；承接它的權限層就是第 2 項                                                     |
-| 4   | Codex 的讀取攔截                       | Codex 沒有讀取類的工具名，hook 層在讀取上沒有攔截點，同樣由第 2 項承接                                                                                                                                      |
-| 5   | Codex 側未經 runtime 實測              | 見 8.1；`SessionStart` 收不收 matcher 也還沒驗過，契約已記成未實測                                                                                                                                          |
-| 6   | ~~`frontend/` 不存在~~                 | **已解除**：`frontend/` 於 2026-11-20 隨 #505 落地，`.ts`／`.tsx` 路由已對真 `tsc -b` 與 `eslint` 驗過，含 `--staged`——鏡像裡放壞檔會紅，工作區修好但沒 staged 仍然紅。`.py` 同樣已對真 `ruff`／`mypy` 驗過 |
-| 7   | Alembic migration 的排除樣式           | 仍是 `backend/**/alembic/versions/**` 這個佔位；`backend/` 已存在，實際路徑是 `backend/alembic/versions/`，樣式能匹配，但沒有專門的測試釘住                                                                 |
-| 8   | 組織層 managed policy                  | H1 明寫 `UNKNOWN:`，非互動環境查不到，不代表已通過                                                                                                                                                          |
-| 9   | Codex 的信任狀態                       | H1 明寫 `UNKNOWN:`，沒有非互動的查詢方式，被 Claude 叫起時不替它作保                                                                                                                                        |
-| 10  | `forbidden-terms-lint.sh` 只掃檢查器層 | 不掃 `scripts/tests/`。實測擴到那裡會報三行、三行都合法，需要豁免機制，而沒有豁免機制正是這道 gate 的強項。測試層靠變異測試保護                                                                             |
+| #   | 未覆蓋                                   | 現況                                                                                                                                                                                                          |
+| :-- | :--------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | branch protection 未啟用                 | CI job 會紅，但技術上還擋不住合併。H7 的真正 gate 在 branch protection，不在本 change                                                                                                                         |
+| 2   | 平台權限層未設定                         | Codex 的 `filesystem = "deny"`、Claude 的 `permissions.deny` 都還沒設（維護者 2026-11-17 裁定不在本 change 做）                                                                                               |
+| 3   | **Codex 側沒有 hook 層的寫檔目標保護**   | `apply_patch` 沒有路徑欄位（官方文件 2026-11-17 查核），受保護路徑的寫入在 Codex 上擋不住，Claude 側擋得住，**兩平台不對等**；承接它的權限層就是第 2 項                                                       |
+| 4   | Codex 的讀取攔截                         | Codex 沒有讀取類的工具名，hook 層在讀取上沒有攔截點，同樣由第 2 項承接                                                                                                                                        |
+| 5   | Codex 側 runtime 實測的剩餘缺口          | 8.1 的必測項目已通過。剩下三件：選做的「只刪 tracked docs 檔」沒有跑；`apply_patch` 的 `NA:` 診斷在 Codex 看不到（契約第 10 條）；linked worktree 載入不到 repo hook，只能在一般 clone 實測（契約第 9 條）    |
+| 6   | ~~`frontend/` 不存在~~                   | **已解除**：`frontend/` 於 2026-11-20 隨 #505 落地，`.ts`／`.tsx` 路由已對真 `tsc -b` 與 `eslint` 驗過，含 `--staged`——鏡像裡放壞檔會紅，工作區修好但沒 staged 仍然紅。`.py` 同樣已對真 `ruff`／`mypy` 驗過   |
+| 7   | Alembic migration 的排除樣式             | 仍是 `backend/**/alembic/versions/**` 這個佔位；`backend/` 已存在，實際路徑是 `backend/alembic/versions/`，樣式能匹配，但沒有專門的測試釘住                                                                   |
+| 8   | 組織層 managed policy                    | H1 明寫 `UNKNOWN:`，非互動環境查不到，不代表已通過                                                                                                                                                            |
+| 9   | Codex 的信任狀態                         | H1 明寫 `UNKNOWN:`，沒有非互動的查詢方式，被 Claude 叫起時不替它作保                                                                                                                                          |
+| 10  | `forbidden-terms-lint.sh` 只掃檢查器層   | 不掃 `scripts/tests/`。實測擴到那裡會報三行、三行都合法，需要豁免機制，而沒有豁免機制正是這道 gate 的強項。測試層靠變異測試保護                                                                               |
+| 11  | Codex 的 H2 在腳本以外的失敗仍 fail-open | Claude 的兩個 H2 handler 有 `onFailure: "block"`，設定路徑打錯、腳本 crash 或 timeout 都會擋下；Codex 沒有等價欄位，同樣的失敗在 Codex 放行，只靠腳本自己的 exit `2`。兩邊不對稱，契約 §能力缺口與承接第 5 條 |
 
 ### 8.5 退出碼字彙與各模式的編碼
 
@@ -186,4 +217,4 @@ H2 另有一組跨七種輸入各 40 輪（共 280 次）的量測：median 268 
 
 ### 8.7 這份報告的界限
 
-本 change 把 `AGENTS.md` 的規則接到了 agent 的事件上，**沒有**把那個 gate 做完整：上面 8.4 的十項都還開著，其中第 1、2 項是 gate 的兩塊主要缺口，第 3、4、5 項是 Codex 側與 Claude 側不對等的部分。工作項 8.1 的 Codex 半邊尚未完成，所以 `tasks.md` 的 31 項中 **30 項已完成、1 項待維護者在 Codex 代跑**。
+本 change 把 `AGENTS.md` 的規則接到了 agent 的事件上，**沒有**把那個 gate 做完整：上面 8.4 的十一項，除已解除的第 6 項外都還開著，其中第 1、2 項是 gate 的兩塊主要缺口，第 3、4、5、11 項是 Codex 側與 Claude 側不對等的部分。8.1 的兩個平台都已實測，`tasks.md` 的 32 項全部完成。
