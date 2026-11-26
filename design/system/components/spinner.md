@@ -26,7 +26,7 @@
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
 | 旋轉中 | 這是它唯一的狀態 | `login.html:306` |
-| 減少動態 | **有**。五個登出帳號頁各自都寫了 `@media (prefers-reduced-motion: reduce)`，以 `*, *::before, *::after { animation-duration: 0.01ms !important; }` 蓋掉旋轉 | `login.html:342`–`:344`，另四頁同理（`register.html:328`、`forgot-password.html:310`、`reset-password.html:404`、`verify-email.html:280`） |
+| 減少動態 | **有**。五個登出帳號頁各自都寫了 `@media (prefers-reduced-motion: reduce)`，以 `*, *::before, *::after { animation-duration: 0.01ms !important; }` 蓋掉旋轉 | `login.html:342`–`:344`，另四頁同理（`register.html:329`、`forgot-password.html:310`、`reset-password.html:404`、`verify-email.html:280`） |
 | 其他 | 不適用 | — |
 
 ## token

@@ -10,7 +10,7 @@
 
 | 視圖 | 怎麼走到 | 用到的元件 |
 | :--- | :--- | :--- |
-| `#state-default` | 開 `pages/account/register.html` | [Auth Navbar](../components/auth-navbar.md)、[Language Toggle](../components/lang-toggle.md)、[Auth Card](../components/auth-card.md)、[Input](../components/input.md)（`.field-hint`）、[Password Eye Toggle](../components/password-eye-toggle.md)（**兩個**：`register.html:465` 密碼、`:501` 確認密碼）、[Button](../components/button.md)（`.submit-btn`） |
+| `#state-default` | 開 `pages/account/register.html` | [Auth Navbar](../components/auth-navbar.md)、[Language Toggle](../components/lang-toggle.md)、[Auth Card](../components/auth-card.md)、[Input](../components/input.md)（`.field-hint`）、[Password Eye Toggle](../components/password-eye-toggle.md)（**兩個**：`register.html:466` 密碼、`:501` 確認密碼）、[Button](../components/button.md)（`.submit-btn`） |
 | `#state-field-error` | 欄位留空或格式不符後送出 | 同上 ＋ `.field-error` |
 | `#state-submitted` | 填妥四個欄位送出 | 同上 ＋ [Alert Banner](../components/alert-banner.md)（本頁的 class 是 `.banner--success`）；四個欄位停用，**帳號還沒有建立** |
 | `#sim-logged-in` | 加 `?sim_logged_in=1` | **無**（`redirectIfLoggedIn()` 直接導走） |

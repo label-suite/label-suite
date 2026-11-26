@@ -14,7 +14,7 @@
 
 ## 變體
 
-`.eye-toggle` 在三頁的定義**完全相同**（login、register、reset-password）。`reset-password` 與 `register` 各有兩個實例（密碼、確認密碼），id 分別是 `eyeToggle1`／`eyeToggle2`（`register.html:468`、`:504`）與 `eyeToggleNew`／`eyeToggleConfirm`（`reset-password.html:488`、`:521`）。
+`.eye-toggle` 在三頁的定義**完全相同**（login、register、reset-password）。`reset-password` 與 `register` 各有兩個實例（密碼、確認密碼），id 分別是 `eyeToggle1`／`eyeToggle2`（`register.html:469`、`:505`）與 `eyeToggleNew`／`eyeToggleConfirm`（`reset-password.html:488`、`:521`）。
 
 `account/profile` 另有一個（`profile.html:867`），外框 class 是 `.input-pw-wrap` 而非 `.input-wrapper` → `../design-gaps.md` G-28。
 
@@ -34,7 +34,7 @@
 
 ## 鍵盤與焦點
 
-原生 `<button>`，起始帶 `aria-label="顯示密碼"`（`login.html:464`）；確認密碼那一個是「顯示確認密碼」（`register.html:504`、`reset-password.html:521`），兩個欄位分得開。
+原生 `<button>`，起始帶 `aria-label="顯示密碼"`（`login.html:464`）；確認密碼那一個是「顯示確認密碼」（`register.html:505`、`reset-password.html:521`），兩個欄位分得開。
 
 **標籤會跟著狀態走**：點擊時切換 `input.type` 並改寫 `aria-label`（`login.html:614`–`:620`），切換語言時也會依目前的顯示狀態重算（`:595`，`pwVisible ? t.eyeHide : t.eyeShow`）。這是 b1 少見的、把動態無障礙名稱做對的地方。
 

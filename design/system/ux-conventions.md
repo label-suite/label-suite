@@ -147,7 +147,7 @@
 
 遵守它的元件：
 
-- [Input](components/input.md)：`annotation/annotation-workspace` 的理由輸入框，`input` 事件一有非空白的值就隱藏錯誤（`syncOnInput`，`design/prototype/pages/annotation/annotation-workspace.config.js:668`–`:674`）；帳號頁的 `.field-error` 同樣在 `input` 事件清掉（`account/login.html:644`–`:649`、`account/register.html:767`–`:773`、`account/reset-password.html:780`–`:785`）
-- [Alert Banner](components/alert-banner.md)：`account/register` 一開始打字就把表單層級的錯誤橫幅收起來（`register.html:775`）
+- [Input](components/input.md)：`annotation/annotation-workspace` 的理由輸入框，`input` 事件一有非空白的值就隱藏錯誤（`syncOnInput`，`design/prototype/pages/annotation/annotation-workspace.config.js:668`–`:674`）；帳號頁的 `.field-error` 同樣在 `input` 事件清掉（`account/login.html:644`–`:649`、`account/register.html:768`–`:774`、`account/reset-password.html:780`–`:785`）
+- [Alert Banner](components/alert-banner.md)：`account/register` 一開始打字就把表單層級的錯誤橫幅收起來（`register.html:776`）
 
 只清**錯誤**，不清值，也不在輸入當下重新驗證——那會變成檢查就驗證，違反 UXC-04。

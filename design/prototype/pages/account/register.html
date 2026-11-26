@@ -268,6 +268,7 @@
     /* `display: flex` above beats the UA's `[hidden] { display: none }`, so the
        sent-mail state's `btn.hidden = true` would otherwise do nothing. */
     .submit-btn[hidden] { display: none; }
+    .form[hidden] { display: none; }
 
     /* ── 未設定寄信服務時的說明卡（label-suite/label-suite#683、規格 01-02 §註冊頁） ──
        預設不顯示；只有 `?sim_no_mail=1` 時 JS 才把表單換成它。 */
