@@ -1523,8 +1523,8 @@
      * pages never read a new status with old settings. Applied before the
      * round overlay below, which owns trialRounds/materializedRuns. */
     var profileEdits = persisted && persisted.edits && persisted.edits.profile;
-    if (profileEdits && typeof profileEdits === 'object' && profiles[taskId]) {
-      Object.assign(profiles[taskId], profileEdits);
+    if (profileEdits && profiles[taskId] && taskListData && taskListData.pickKeys) {
+      Object.assign(profiles[taskId], taskListData.pickKeys(profileEdits, taskListData.taskEditProfileKeys));
     }
     var rounds = persisted && Array.isArray(persisted.trialRounds) ? persisted.trialRounds : null;
     if (!rounds || !rounds.length || !profiles[taskId]) return;

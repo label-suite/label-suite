@@ -5163,22 +5163,26 @@ function interpolate(template, payload) {
          round numbers, the IAA readings and the table's separator labels all
          come back inverted, and the reason the task was sent back is gone. */
       trialCycle: getCurrentTrialCycle(),
-      closedCycles: cloneData(TASK_DATA.closedCycles || [])
+      closedCycles: cloneData(TASK_DATA.closedCycles || []),
+      status: TASK_DATA.status
     });
   }
 
   /* label-suite/label-suite#698: the one writer of this task's shared record.
      Every write -- a trial round, a settings save, a member change -- merges
-     its fields into the task's existing record and stamps the current status
-     in the SAME setItem, for the reason persistTrialRunState() gives above: a
-     reader must never see a new status beside old settings, or old rounds
-     beside a new status. Merging (not replacing) keeps a round write from
-     wiping the saved settings and vice versa. */
+     its fields into the task's existing record in ONE setItem, so a reader
+     always sees the status and the settings of the same moment (the reason
+     persistTrialRunState() gives above). Merging (not replacing) keeps a
+     round write from wiping the saved settings and vice versa. Only
+     persistTrialRunState() passes `status`: it runs on real status
+     transitions, whereas TASK_DATA.status can also be a `&status=` URL
+     simulation (parseRole()), which a settings or member save must not turn
+     into the task's stored status. */
   function persistTaskState(fields) {
     var taskListData = window.LabelSuiteTaskListData;
     try {
       var all = taskListData.loadTrialRunState();
-      all[TASK_DATA.taskId] = Object.assign({}, all[TASK_DATA.taskId], fields, { status: TASK_DATA.status });
+      all[TASK_DATA.taskId] = Object.assign({}, all[TASK_DATA.taskId], fields);
       window.localStorage.setItem(taskListData.trialRunStateKey, JSON.stringify(all));
     } catch (error) {
       /* localStorage unavailable (private mode, quota); state simply won't
@@ -5208,17 +5212,21 @@ function interpolate(template, payload) {
      entry right away, so this page's own readers of those seeds agree with
      what a reload would give. */
   function persistTaskEdits(patch) {
+    var taskListData = window.LabelSuiteTaskListData;
     var stamp = { updatedAt: TASK_DATA.updatedAt };
-    var listPatch = Object.assign({}, patch.list, { updatedAt: String(TASK_DATA.updatedAt || '').slice(0, 10) });
-    var taskDataPatch = Object.assign({}, patch.taskData, stamp);
-    var profilePatch = patch.profile || {};
+    var listPatch = taskListData.pickKeys(
+      Object.assign({}, patch.list, { updatedAt: String(TASK_DATA.updatedAt || '').slice(0, 10) }),
+      taskListData.taskEditListKeys
+    );
+    var taskDataPatch = taskListData.pickKeys(Object.assign({}, patch.taskData, stamp), TASK_EDIT_TASK_DATA_KEYS);
+    var profilePatch = taskListData.pickKeys(patch.profile, taskListData.taskEditProfileKeys);
 
     var profiles = (window.LabelSuiteTaskDetailData && window.LabelSuiteTaskDetailData.profiles) || {};
     if (profiles[TASK_DATA.taskId]) Object.assign(profiles[TASK_DATA.taskId], cloneData(profilePatch));
-    var listTasks = (window.LabelSuiteTaskListData && window.LabelSuiteTaskListData.tasks) || [];
-    listTasks.forEach(function(task) {
+    (taskListData.tasks || []).forEach(function(task) {
       if (task.id === TASK_DATA.taskId) Object.assign(task, cloneData(listPatch));
     });
+    if (patch.reviewerOnly) persistReviewerOnlyEdits(patch.reviewerOnly);
 
     var edits = readPersistedTaskRecord(TASK_DATA.taskId).edits || {};
     persistTaskState({
@@ -5263,13 +5271,64 @@ function interpolate(template, payload) {
      half; called last in resetTaskData() so it wins over the seed. A null
      itemPairLabels records the save's `delete`. */
   function restorePersistedTaskEdits(taskId) {
+    var taskListData = window.LabelSuiteTaskListData;
     var edits = readPersistedTaskRecord(taskId).edits;
-    var taskDataPatch = edits && edits.taskData;
-    if (!taskDataPatch) return;
+    var taskDataPatch = Object.assign(
+      taskListData.pickKeys(edits && edits.taskData, TASK_EDIT_TASK_DATA_KEYS),
+      taskListData.pickKeys(readReviewerOnlyEdits()[taskId], REVIEWER_ONLY_EDIT_KEYS)
+    );
     Object.keys(taskDataPatch).forEach(function(key) {
       if (key === 'itemPairLabels' && taskDataPatch[key] === null) delete TASK_DATA.itemPairLabels;
       else TASK_DATA[key] = cloneData(taskDataPatch[key]);
     });
+  }
+
+  /* label-suite/label-suite#698: the TASK_DATA keys persistTaskEdits() may
+     store in the shared record's edits.taskData, and the only ones
+     restorePersistedTaskEdits() copies back. */
+  var TASK_EDIT_TASK_DATA_KEYS = [
+    'taskNameZh', 'taskNameEn', 'taskTypeKey', 'datasetSourceZh', 'datasetSourceEn',
+    'taskCategories', 'taskInputTypes', 'outputs', 'fieldRoleMap', 'list_title_field',
+    'dialogue_fields', 'prefill_fields', 'itemPairLabels', 'datasetFileName', 'datasetRecords',
+    'datasetTotal', 'samplingMode', 'samplingValue', 'targetAgreementOverrides', 'minAnnotators',
+    'isolationEnabled', 'isolationLastActor', 'isolationLastUpdated', 'reviewerIds', 'arbiterIds',
+    'annotatorGuidelineTextZh', 'annotatorGuidelineTextEn', 'annotatorGuidelineText',
+    'annotatorGuidelineFiles', 'guidelineText', 'guidelineFiles', 'forceGuideline',
+    'guidelineUploaded', 'updatedAt'
+  ];
+
+  /* label-suite/label-suite#698 (Hard Rule 6 hygiene): the reviewer guideline
+     is kept out of labelsuite.trialRunState, the record every annotator page
+     parses, and stored under its own key that only this page reads. It is
+     written in the same save as the shared record but needs no atomicity
+     with it: no reader pairs it with a status. */
+  var REVIEWER_ONLY_EDITS_KEY = 'labelsuite.taskReviewerGuidelineEdits';
+  var REVIEWER_ONLY_EDIT_KEYS = [
+    'reviewerGuidelineTextZh', 'reviewerGuidelineTextEn', 'reviewerGuidelineText', 'reviewerGuidelineFiles'
+  ];
+
+  function readReviewerOnlyEdits() {
+    try {
+      var raw = window.localStorage.getItem(REVIEWER_ONLY_EDITS_KEY);
+      var parsed = raw ? JSON.parse(raw) : {};
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function persistReviewerOnlyEdits(fields) {
+    try {
+      var all = readReviewerOnlyEdits();
+      all[TASK_DATA.taskId] = Object.assign(
+        {},
+        window.LabelSuiteTaskListData.pickKeys(all[TASK_DATA.taskId], REVIEWER_ONLY_EDIT_KEYS),
+        cloneData(window.LabelSuiteTaskListData.pickKeys(fields, REVIEWER_ONLY_EDIT_KEYS))
+      );
+      window.localStorage.setItem(REVIEWER_ONLY_EDITS_KEY, JSON.stringify(all));
+    } catch (error) {
+      /* localStorage unavailable; same silent degradation as persistTaskState(). */
+    }
   }
 
   /* FR-013(3): a round created from a fully-submitted prior round must not
@@ -7562,18 +7621,20 @@ function getTaskTypeLabel() {
       taskData: {
         annotatorGuidelineTextZh: TASK_DATA.annotatorGuidelineTextZh,
         annotatorGuidelineTextEn: TASK_DATA.annotatorGuidelineTextEn,
-        reviewerGuidelineTextZh: TASK_DATA.reviewerGuidelineTextZh,
-        reviewerGuidelineTextEn: TASK_DATA.reviewerGuidelineTextEn,
         annotatorGuidelineText: TASK_DATA.annotatorGuidelineText,
-        reviewerGuidelineText: TASK_DATA.reviewerGuidelineText,
         annotatorGuidelineFiles: TASK_DATA.annotatorGuidelineFiles,
-        reviewerGuidelineFiles: TASK_DATA.reviewerGuidelineFiles,
         guidelineText: TASK_DATA.guidelineText,
         guidelineFiles: TASK_DATA.guidelineFiles,
         forceGuideline: TASK_DATA.forceGuideline,
         guidelineUploaded: TASK_DATA.guidelineUploaded
       },
-      profile: guidelineProfilePatch
+      profile: guidelineProfilePatch,
+      reviewerOnly: {
+        reviewerGuidelineTextZh: TASK_DATA.reviewerGuidelineTextZh,
+        reviewerGuidelineTextEn: TASK_DATA.reviewerGuidelineTextEn,
+        reviewerGuidelineText: TASK_DATA.reviewerGuidelineText,
+        reviewerGuidelineFiles: TASK_DATA.reviewerGuidelineFiles
+      }
     });
     state.guidelineEditMode = false;
     state.guidelineDirty = false;
