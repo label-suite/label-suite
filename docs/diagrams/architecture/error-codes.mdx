@@ -42,11 +42,11 @@ updatedAt: '2026-11-26'
 | `code` | HTTP | 訊息鍵 | 在哪裡產生 | 會回這個碼的端點 |
 | :--- | :--- | :--- | :--- | :--- |
 | `NOT_FOUND` | `404` | `common.not_found` | `app/core/errors.py` 的 `handle_http_exception`（路由找不到） | 沒有端點自己回；`/api/v1` 底下不存在的路徑由路由層回；`API_DOCS_ENABLED=false` 時 `/docs`、`/docs/oauth2-redirect`、`/redoc`、`/openapi.json` 沒有註冊，也由路由層回 |
-| `METHOD_NOT_ALLOWED` | `405` | `common.method_not_allowed` | `app/core/errors.py` 的 `handle_http_exception`（方法不允許） | [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth)：用 `GET` 以外的 method 呼叫 |
+| `METHOD_NOT_ALLOWED` | `405` | `common.method_not_allowed` | `app/core/errors.py` 的 `handle_http_exception`（方法不允許） | 每個 `/api/v1` 路徑用它沒有的 method 呼叫，例：[`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) 用 `GET` 以外的 method；帶著 access cookie 的 `POST`／`PUT`／`PATCH`／`DELETE` 會先經 CSRF 判定，驗不過時回的是 `403 CSRF_FAILED` |
 | `NOT_ACCEPTABLE` | `406` | `common.not_acceptable` | `app/core/middleware.py` 的 `LocaleMiddleware`，接住 `NotAcceptableError` | 每個 `/api/v1` 請求（CORS 預檢除外：它在 `LocaleMiddleware` 外層就回應），含 [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) |
 | `VALIDATION_FAILED` | `422` | `common.validation_failed` | `app/core/errors.py` 的 `handle_validation_error` | [`createSession`](/view/diagrams/architecture/api.openapi#op/createSession)、[`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh)、[`createGoogleSession`](/view/diagrams/architecture/api.openapi#op/createGoogleSession)：body 缺欄位、超過上限、有未宣告的欄位或不是 JSON；[`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) 沒有被驗證的輸入 |
-| `AUTH_REQUIRED` | `401` | `common.auth_required` | `app/core/auth.py` 的 `get_current_principal` 丟 `AuthenticationRequiredError`；`app/modules/account/service.py` 的 `SessionService.refresh` 在請求沒有 refresh cookie 時丟同一個錯誤 | [`getCurrentSession`](/view/diagrams/architecture/api.openapi#op/getCurrentSession)：沒有可通行的登入狀態，不分原因；[`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh)：請求沒有 refresh cookie；之後每個掛 `get_current_principal` 的端點 |
-| `CSRF_FAILED` | `403` | `common.csrf_failed` | `app/core/csrf.py` 的 `CsrfMiddleware` | 目前沒有：本次的四個寫入端點都在放行清單；之後每個不在放行清單、而且帶著 access cookie 的 `POST`／`PUT`／`PATCH`／`DELETE`（沒有 access cookie 的寫入不驗） |
+| `AUTH_REQUIRED` | `401` | `common.auth_required` | `app/core/auth.py` 定義的 `AuthenticationRequiredError`，經 `handle_app_error` 轉成外層。丟出的地方：`get_current_principal`（cookie 不在、token 驗不過或過期，或 `AccountPrincipalLoader.load` 拒絕）；`app/modules/account/router.py` 的 `create_session_refresh` 在請求沒有 refresh cookie 時；`SessionService.current` 在判定通過後帳號已不存在時 | [`getCurrentSession`](/view/diagrams/architecture/api.openapi#op/getCurrentSession)：沒有可通行的登入狀態，不分原因；[`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh)：請求沒有 refresh cookie（不清 cookie）；之後每個掛 `get_current_principal` 的端點 |
+| `CSRF_FAILED` | `403` | `common.csrf_failed` | `app/core/csrf.py` 的 `CsrfMiddleware` 在路由之前直接組錯誤外層（碼取自 `CsrfFailedError`）；缺 `X-CSRF-Token` 或 CSRF cookie、access token 簽章不對，或兩者任一不等於 `HMAC(csrf key, sid)` | 目前沒有：本次的四個寫入端點都在放行清單；之後每個不在放行清單、而且帶著 access cookie 的 `POST`／`PUT`／`PATCH`／`DELETE`（沒有 access cookie 的寫入不驗） |
 | `INTERNAL_ERROR` | `500` | `common.internal_error` | `app/core/middleware.py` 的 `UnhandledExceptionMiddleware`；`app/core/errors.py` 的 `handle_http_exception`（沒有對應碼的 `HTTPException`） | 每個 `/api/v1` 請求，含 [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) |
 | `DATABASE_UNAVAILABLE` | `503` | `common.database_unavailable` | `app/modules/health/service.py` 的 `HealthService.check()` 丟 `DatabaseUnavailableError`，由 `handle_app_error` 轉成外層 | [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth)：資料庫連不上或逾時 |
 
@@ -67,17 +67,17 @@ updatedAt: '2026-11-26'
 
 ### account
 
-前綴 `ACCOUNT_`；產生的位置都是 `app/modules/account/errors.py` 定義、由 service 丟出，經 `handle_app_error` 轉成外層。依 change `login-auth-guard` 的設計與維護者 2026-11-26 的決定寫成，實作後校正。登入失敗鎖定（規格 01-05 Q3）不在這個 change，沒有它的碼，交給 #726。
+前綴 `ACCOUNT_`；七個錯誤都定義在 `app/modules/account/service/errors.py`、不帶參數，由 service 丟出，經 `handle_app_error` 轉成外層。登入失敗鎖定（規格 01-05 Q3）還沒有，所以沒有它的碼，見[後端模組與基礎建設的「已知限制」](./backend-modules.mdx#已知限制)。
 
 | `code` | HTTP | 訊息鍵 | 在哪裡產生 | 會回這個碼的端點 |
 | :--- | :--- | :--- | :--- | :--- |
 | `ACCOUNT_INVALID_CREDENTIALS` | `401` | `account.invalid_credentials` | `PasswordLoginService.login` | [`createSession`](/view/diagrams/architecture/api.openapi#op/createSession)：帳號不存在、密碼不符、停用、已匿名化、沒有本地密碼或 Email 正規化後超過 254 字，全部同一個碼 |
-| `ACCOUNT_SESSION_EXPIRED` | `401` | `account.session_expired` | `SessionService.refresh` | [`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh)：已過 90 天或 7 天 |
-| `ACCOUNT_SESSION_INVALID` | `401` | `account.session_invalid` | `SessionService.refresh` | [`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh)：帶著 refresh cookie 但不能用：token 查不到、登入狀態已失效、帳號停用或已匿名化，或寬限期外重用（疑似被盜用），不分原因；沒有 cookie 時回 `AUTH_REQUIRED` |
-| `ACCOUNT_REFRESH_CONFLICT` | `409` | `account.refresh_conflict` | `SessionService.refresh` | [`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh)：同一張 token 在寬限期內被用到第三次以上 |
+| `ACCOUNT_SESSION_EXPIRED` | `401` | `account.session_expired` | `SessionService.refresh` | [`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh)：已過 90 天或 7 天；同時撤銷這段登入狀態並清掉三個 session cookie |
+| `ACCOUNT_SESSION_INVALID` | `401` | `account.session_invalid` | `SessionService.refresh` | [`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh)：帶著 refresh cookie 但不能用：token 查不到、登入狀態已失效、帳號停用或已匿名化，或寬限期外重用（疑似被盜用，同時撤銷這個帳號全部的登入狀態），不分原因；回應清掉三個 session cookie；沒有 cookie 時回 `AUTH_REQUIRED` |
+| `ACCOUNT_REFRESH_CONFLICT` | `409` | `account.refresh_conflict` | `SessionService.refresh` | [`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh)：同一張 token 在寬限期內被用到第三次以上；什麼都不改，cookie 不動 |
 | `ACCOUNT_GOOGLE_UNAVAILABLE` | `409` | `account.google_unavailable` | `GoogleLoginService.begin`、`complete` | [`getGoogleAuthorization`](/view/diagrams/architecture/api.openapi#op/getGoogleAuthorization)、[`createGoogleSession`](/view/diagrams/architecture/api.openapi#op/createGoogleSession)：部署沒有設定 Google |
-| `ACCOUNT_GOOGLE_FLOW_INVALID` | `400` | `account.google_flow_invalid` | `GoogleLoginService.complete` | [`createGoogleSession`](/view/diagrams/architecture/api.openapi#op/createGoogleSession)：流程 cookie 不在或無效、`state` 不符、換 token 或驗 `id_token` 失敗 |
-| `ACCOUNT_GOOGLE_REJECTED` | `401` | `account.google_rejected` | `GoogleLoginService.complete` | [`createGoogleSession`](/view/diagrams/architecture/api.openapi#op/createGoogleSession)：沒有已連結的帳號，且沒有 Email 相同的帳號或 Email 未驗證；也含停用與已匿名化的帳號（維護者 N2），不分原因 |
+| `ACCOUNT_GOOGLE_FLOW_INVALID` | `400` | `account.google_flow_invalid` | `GoogleLoginService.complete` | [`createGoogleSession`](/view/diagrams/architecture/api.openapi#op/createGoogleSession)：流程 cookie 不在、簽章不對或已過期、`state` 不符、換 token 或驗 `id_token` 失敗；回應清掉流程 cookie |
+| `ACCOUNT_GOOGLE_REJECTED` | `401` | `account.google_rejected` | `GoogleLoginService.complete` | [`createGoogleSession`](/view/diagrams/architecture/api.openapi#op/createGoogleSession)：沒有已連結的帳號，且 Google 的 Email 未驗證、正規化後超過 254 字、沒有 Email 相同的帳號，或 Email 相同的帳號已連結另一個 Google 帳號；也含停用與已匿名化的帳號（維護者 N2），不分原因；回應清掉流程 cookie |
 
 ## 已知限制
 
@@ -93,3 +93,4 @@ updatedAt: '2026-11-26'
 | 2026-11-23 | 全系統的錯誤碼落地成本文；規劃時由 `sd` 先改本文，change 只寫異動摘要與路徑（[§誰改、什麼時候改](#誰改什麼時候改)） | 模組專屬碼只散在各 change 的 `api-contract.md` | [#547](https://github.com/label-suite/label-suite/issues/547) |
 | 2026-11-23 | 實作後由 `backend-developer` 依程式校正本文，`code-reviewer` 再核對（[§誰改、什麼時候改](#誰改什麼時候改)） | — | [#547 的裁定](https://github.com/label-suite/label-suite/issues/547#issuecomment-7102478776) |
 | 2026-11-26 | 新增通用碼 `AUTH_REQUIRED`、`CSRF_FAILED` 與 `account` 模組的七個碼（規劃，待實作後校正） | 已知限制的「`400`、`401`、`403`、`409` 還沒有」 | [#719](https://github.com/label-suite/label-suite/issues/719) |
+| 2026-11-26 | 依實作校正 `AUTH_REQUIRED` 與 `account` 七個碼的產生位置與會回它的情況（[§通用碼](#通用碼)、[§account](#account)） | 本文 2026-11-26 依設計寫成的列（`app/modules/account/errors.py`、`SessionService.refresh` 丟 `AUTH_REQUIRED`） | [#719](https://github.com/label-suite/label-suite/issues/719) |

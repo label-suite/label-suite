@@ -124,6 +124,7 @@ Cookie 屬性、JWT 的欄位與任務角色不放進 JWT，見 [architecture.md
 ### 決定
 
 每個會改資料的請求都要帶綁定 session 的 double-submit token，由單一 middleware 驗 HMAC，端點不各自處理。
+還沒有登入狀態之前的請求（Email 與密碼登入、Google 登入完成）由只收 `application/json` 加上 CORS 預檢擋下跨站送出，CSRF token 只驗帶登入 cookie 的寫入。
 規則本體見 [security-agent-rules.mdx 的 S2](../rules/security-agent-rules.mdx#s2-token-不離開-cookiecsrf-與-cors-的統一位置)，要素與負向測試見 [architecture.mdx 的 §CSRF](../architecture.mdx#csrf)。
 
 ### 後果
@@ -167,7 +168,7 @@ Cookie 屬性、JWT 的欄位與任務角色不放進 JWT，見 [architecture.md
 
 ### 決定
 
-不引入外部身分平台，Google SSO 直接用 `authlib` 整合 OIDC，回調驗過 `id_token` 後，由系統自己發 httpOnly cookie；沒設 `GOOGLE_CLIENT_ID` 時按鈕退回 no-op，所以 SSO 只是可選的附加功能，不是必要的基礎設施。
+不引入外部身分平台，Google SSO 直接用 `authlib` 整合 OIDC，回調驗過 `id_token` 後，由系統自己發 httpOnly cookie；沒設定時登入頁不顯示 Google 按鈕與「或」分隔線（[規格 01-01 §已確認決議](../../specs/01-account/01-login.mdx#已確認決議) Q10），所以 SSO 只是可選的附加功能，不是必要的基礎設施。
 做法見 [architecture.mdx 的 §Google SSO](../architecture.mdx#google-sso)。
 
 ### 後果
@@ -332,8 +333,8 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 | :--- | :--- |
 | D1 | 個人 repo ADR-021（Context 的限制與儲存選項比較表、Token Expiry Tradeoffs、Decision、Consequences）；可接受的身分來源只有 cookie 的裁定見 [#107 的留言](https://github.com/label-suite/label-suite/issues/107#issuecomment-6762365378)；選項 B 的比較表只記複雜度中等對 D 的低，沒有其他理由；本節的重新討論條件是推論，來源沒有記錄 |
 | D2 | 個人 repo ADR-021 的角色欄位修訂（Context 的落差說明、Decision、被否決的版本號方案、Cost、Consequences）；`credential_version` 只管高風險憑證變更，也出自同一份修訂 |
-| D3 | [#107 的留言](https://github.com/label-suite/label-suite/issues/107#issuecomment-6762365378)的 CSRF 裁定與四個要素；Origin 與 Referer 檢查出自個人 repo ADR-021 的 Consequences，它沒有記錄這個選項的好處與代價；`SameSite=Lax` 擋不住同站子網域出自 [architecture.mdx 的 §CSRF](../architecture.mdx#csrf)；本節的重新討論條件是推論，來源沒有記錄 |
-| D4 | 個人 repo ADR-035（Context 的限制表、Options Evaluated、Decision、Optional-integration guarantee、Reversal trigger、Consequences）；選項 A、B 的好處沒有記錄 |
+| D3 | [#107 的留言](https://github.com/label-suite/label-suite/issues/107#issuecomment-6762365378)的 CSRF 裁定與四個要素；Origin 與 Referer 檢查出自個人 repo ADR-021 的 Consequences，它沒有記錄這個選項的好處與代價；`SameSite=Lax` 擋不住同站子網域出自 [architecture.mdx 的 §CSRF](../architecture.mdx#csrf)；只驗帶登入 cookie 的寫入、登入前的請求靠只收 `application/json` 加上 CORS 預檢，出自 [#719 留言](https://github.com/label-suite/label-suite/issues/719#issuecomment-7189470423)記下的維護者確認；本節的重新討論條件是推論，來源沒有記錄 |
+| D4 | 個人 repo ADR-035（Context 的限制表、Options Evaluated、Decision、Optional-integration guarantee、Reversal trigger、Consequences）；選項 A、B 的好處沒有記錄；沒設定時不顯示 Google 按鈕出自 [規格 01-01 §已確認決議](../../specs/01-account/01-login.mdx#已確認決議) Q10 |
 | D5 | 個人 repo ADR-035 的帳號綁定修訂（Account-linking strategy、Consequences）；來源以「註冊不驗證信箱」為由丟掉本地憑證，本 repo 的註冊與邀請都先驗證信箱，所以改採[維護者的裁定](https://github.com/label-suite/label-suite/issues/684)當理由；選項 B、C 沒有記錄好處，C 也沒有記錄代價 |
 | D6 | 個人 repo ADR-037（Context、Decision、Consequences）；來源沒有列出選項，D6 的選項 A、B 是從 Context 的兩種失敗情形推出的；快取規則出自 [security-agent-rules.mdx 的 S3](../rules/security-agent-rules.mdx#s3-授權的四段順序)；本節的重新討論條件是推論，來源沒有記錄 |
 | D7 | [#565 的本文與裁定留言](https://github.com/label-suite/label-suite/issues/565#issuecomment-7100090994)；規格 01-05 的 Q3；[ADR-003 的 D8](003-backend-architecture.mdx#d8-非同步任務用-celery-加-redis)；選項 A、B、C 的好處與 B、D 的代價來源沒有記錄；選項 A、B 的不採用或採用理由也沒有記錄；本節的重新討論條件是推論，來源沒有記錄 |
@@ -352,3 +353,5 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 | 2026-11-23 | 後端不做全域速率限制，只做登入失敗鎖定，失敗次數計在 Redis；全域上限日後交給反向代理層（[D7](#d7-不做全域速率限制登入失敗鎖定用-redis-計數)） | —（原本沒有 ADR 討論過） | [#565 留言](https://github.com/label-suite/label-suite/issues/565#issuecomment-7100090994) |
 | 2026-11-26 | 連結 Google 時維持清掉本地密碼，理由改為連結之後只認一種主要身分、減少可被接管的入口，與規格 01-04、01-05 一致（[D5](#d5-google-登入綁定既有帳號的條件)） | 來源「註冊不驗證信箱」的理由，本 repo 的註冊與邀請都先驗證信箱，不適用 | [#684](https://github.com/label-suite/label-suite/issues/684) |
 | 2026-11-26 | 沒有任何帳號連結這個 Google 帳號、也沒有 email 相同的既有帳號時拒絕登入、不建立帳號，與 `email_verified` 不是 true 同一個結果；已連結的帳號不看 email 是否相同（[D5](#d5-google-登入綁定既有帳號的條件)） | —（原本只寫「否則拒絕登入」，沒有寫沒有對應帳號的情形） | [#705 留言](https://github.com/label-suite/label-suite/issues/705#issuecomment-7185302940) |
+| 2026-11-26 | 還沒有登入狀態之前的請求（Email 與密碼登入、Google 登入完成）由只收 `application/json` 加上 CORS 預檢擋下跨站送出，CSRF token 只驗帶登入 cookie 的寫入（[D3](#d3-csrf-用綁定-session-的-double-submit-token)） | —（原本沒有寫沒有登入 cookie 的寫入怎麼處理） | [#719 留言](https://github.com/label-suite/label-suite/issues/719#issuecomment-7189470423) |
+| 2026-11-26 | 沒設定 Google 時登入頁不顯示 Google 按鈕與「或」分隔線（[D4](#d4-google-sso-直接走-oidc)） | 沒設 `GOOGLE_CLIENT_ID` 時按鈕退回 no-op | [#719 留言](https://github.com/label-suite/label-suite/issues/719#issuecomment-7187190476) |

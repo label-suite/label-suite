@@ -1,6 +1,6 @@
 ---
 title: 本機開發
-description: 在自己的機器上把 Label Suite 跑起來：用 Docker Compose 起整套、前後端分開起、在 SQLite 與 PostgreSQL 上跑測試，以及 .env.example 每個環境變數的用途與預設值。
+description: 在自己的機器上把 Label Suite 跑起來：用 Docker Compose 起整套、前後端分開起、建立第一位系統管理員、在 SQLite 與 PostgreSQL 上跑測試，以及 .env.example 每個環境變數的用途與預設值。
 tags: [workflow, local-development, docker, environment]
 ---
 
@@ -48,17 +48,28 @@ docker compose -f docker-compose.prod.yml up --build --wait --wait-timeout 300
 docker compose -f docker-compose.prod.yml down -v
 ```
 
+起好之後，建立第一位系統管理員（Seeder 管理員），才有帳號能登入：
+
+```bash
+docker compose run --rm -it backend python -m app.scripts.create_seeder --email <Email> --name <顯示名稱>
+```
+
+正式層在 `docker compose` 後面加 `-f docker-compose.prod.yml`。這支指令的行為見 [§建立第一位系統管理員](#建立第一位系統管理員)；它建的帳號存在資料 volume 裡，`docker compose down -v` 會連帳號一起刪掉。
+
 Compose 最低版本是 v2.20.0，原因見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)的「Compose 最低版本」列。
 `8080` 被占用時改 `.env` 的 `FRONTEND_PORT`，並把同一個埠加進 `CORS_ALLOWED_ORIGINS`。
 
 ## 前後端分開起
 
-先套 migration 建出資料庫檔，再一次起兩個開發伺服器：
+先套 migration 建出資料庫檔，建立第一位系統管理員，再一次起兩個開發伺服器：
 
 ```bash
 (cd backend && uv run alembic upgrade head)
+(cd backend && uv run python -m app.scripts.create_seeder --email <Email> --name <顯示名稱>)
 pnpm run dev
 ```
+
+建立系統管理員那一步只要做一次，行為見 [§建立第一位系統管理員](#建立第一位系統管理員)。
 
 `pnpm run dev` 會讀根目錄 `.env`，起後端（uvicorn，`--reload`，埠 `BACKEND_PORT`）與前端（Vite，固定 `5173`），任一個結束就把另一個也停掉，Ctrl-C 兩個一起停。
 也可以分兩個終端機各起一個，指令與它執行的相同：
@@ -73,6 +84,25 @@ VITE_API_BASE_URL=http://localhost:8000 pnpm --filter frontend dev
 
 只有 `pnpm run dev` 會讀根目錄 `.env`；分開起時兩個終端機都要自己帶變數：後端沒有 `CORS_ALLOWED_ORIGINS` 不會啟動，前端沒有 `VITE_API_BASE_URL` 會把 API 請求打到 `5173` 自己（Vite 沒有 proxy）。
 Lite 層的資料庫檔預設在 `backend/data/label_suite.db`，已被 Git 忽略；刪掉它就是重置資料。
+
+## 建立第一位系統管理員
+
+沒有任何端點能建立帳號；第一位系統管理員只能由初始化指令 `app.scripts.create_seeder` 建立，兩種跑法各一行指令，見 [§用 Docker Compose 起整套](#用-docker-compose-起整套) 與 [§前後端分開起](#前後端分開起)。
+
+| 項目 | 行為 |
+| :--- | :--- |
+| 密碼 | 指令會詢問兩次，輸入時不顯示；兩次不同就不建立。不收命令列參數或環境變數，也沒有預設密碼 |
+| 密碼規則 | 至少 8 個字元，含大寫、小寫與數字 |
+| 建出的帳號 | 啟用中的系統管理員（`super_admin`），標記為 Seeder 管理員；之後用這組 Email 與密碼在登入頁登入 |
+| 再跑一次 | 同一個 Email：印出已存在、不問密碼、什麼都不改，退出碼 `0`。另一個 Email 已是 Seeder 管理員，或這個 Email 屬於一般帳號：拒絕、不寫入，退出碼 `2` |
+| 讀哪些設定 | 只讀資料庫設定（`DATABASE_URL` 或 `SQLITE_PATH`），與 migration 相同；資料庫要先跑過 migration |
+
+:::note{title="給自動化用：從標準輸入讀密碼" collapsible}
+- 加 `--password-stdin`，指令改從標準輸入讀一行密碼、不詢問；例：`printf '%s\n' "$PW" | uv run python -m app.scripts.create_seeder --email <Email> --name <顯示名稱> --password-stdin`
+- 標準輸入不是終端機、又沒帶 `--password-stdin` 時，指令拒絕並以退出碼 `2` 結束
+- 在容器裡用管線送密碼時，把 `-it` 換成 `-T`
+- 任何輸出都不含密碼或它的雜湊；成功印 `Created the Seeder admin <Email>.`，錯誤以 `create_seeder: ` 開頭寫到標準錯誤
+:::
 
 ## 跑測試
 
@@ -93,7 +123,7 @@ PostgreSQL 輪不應該有任何測試被跳過；CI 會用 `scripts/check-junit
 
 ## 環境變數
 
-必填的只有兩個：`CORS_ALLOWED_ORIGINS` 沒設，兩層都起不來；`POSTGRES_PASSWORD` 沒設，正式層起不來（Lite 層不讀它）。`.env.example` 列出所有會被讀的變數，後端程式碼只讀其中標示「後端」的幾個。
+必填的有三個：`CORS_ALLOWED_ORIGINS` 沒設，兩層都起不來；`POSTGRES_PASSWORD` 與 `AUTH_SECRET` 沒設，正式層起不來（Lite 層不讀 `POSTGRES_PASSWORD`，`AUTH_SECRET` 可以不設）。`.env.example` 列出所有會被讀的變數，後端程式碼只讀其中標示「後端」的幾個；建立第一位系統管理員的指令不需要另外的變數。
 
 | 變數 | 用途 | 預設值 | 誰讀 |
 | :--- | :--- | :--- | :--- |
@@ -107,6 +137,9 @@ PostgreSQL 輪不應該有任何測試被跳過；CI 會用 `scripts/check-junit
 | `POSTGRES_DB` | 正式層資料庫容器建立的資料庫名 | `label_suite` | 正式層編排檔 |
 | `VITE_API_BASE_URL` | 本機開發伺服器呼叫 API 的位址，須為空或不帶結尾斜線的絕對 http(s) URL；前端映像在建置時固定為空，走同源 | 未設等同空；`.env.example` 給 `http://localhost:8000` | 前端開發伺服器 |
 | `FORWARDED_ALLOW_IPS` | 後端信任哪些代理位址的 `X-Forwarded-For` 與 `X-Forwarded-Proto`；逗號分隔的單一 IP 或 CIDR，不得為 `*` 或涵蓋全部位址的網段，非法值讓後端拒絕啟動。後端只驗證，比對由 uvicorn 做 | 未設時只信任 loopback（`127.0.0.1,::1`），所以本機 `pnpm run dev` 不需設定，`.env.example` 也把它註解掉；兩份編排檔傳入並預設為 `frontend` 的固定位址 `10.77.250.10` | 後端、兩份編排檔 |
+| `AUTH_SECRET` | 簽登入用的 access token、CSRF 值與 Google 登入流程 cookie 的祕密，至少 32 字元；空字串等同沒設 | Lite 層可以不設：後端第一次啟動時產生一把，存成 `SQLITE_PATH` 同目錄的 `auth_secret`（權限 `0600`；容器裡在資料 volume），之後重用，刪掉 volume 或這個檔案等於所有人登出。正式層必填：`docker-compose.prod.yml` 沒有它就不建任何容器，設了 `DATABASE_URL` 的後端沒有它就拒絕啟動。`.env.example` 刻意留空 | 後端、兩份編排檔 |
+| `GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`、`GOOGLE_REDIRECT_URI` | Google 登入；三個一起設或都不設，只設一部分時後端拒絕啟動。`GOOGLE_REDIRECT_URI` 是前端的回調頁，例 `http://localhost:8080/account/google/callback` | 都不設：登入頁不顯示 Google 按鈕；空字串等同沒設 | 後端、兩份編排檔 |
+| `RESEND_API_KEY` | 寄信服務的金鑰；後端目前只看它有沒有設，有設時登入頁提供「前往註冊」 | 不設；空字串等同沒設 | 後端、兩份編排檔 |
 | `FRONTEND_PORT` | 前端容器在主機上公開的埠，是兩層唯一公開的埠 | `8080` | 兩份編排檔 |
 | `BACKEND_PORT` | `pnpm run dev` 啟動本機後端的埠；編排檔不讀，容器內的後端不對主機開埠 | `8000` | `scripts/dev.mjs` |
 

@@ -4,7 +4,7 @@ description: '後端的分層與允許 import、docstring 與指令、session �
 category: '開發說明'
 tags: [開發說明, Agent, 規範, 後端]
 createdAt: '2026-11-10'
-updatedAt: '2026-11-25'
+updatedAt: '2026-11-26'
 ---
 
 # 後端開發規範
@@ -186,7 +186,7 @@ Celery task 只收可序列化的識別資訊，在自己的行程裡重新查�
 | **適用路徑** | `backend/app/core/config*`、所有讀環境變數的地方 |
 | **禁止** | 散落各處 `os.environ[...]`；必要設定缺失時用預設值悄悄啟動；**在未決的情況下自行把密碼或重設連結印出來** |
 | **正例** | 設定集中在一個 Pydantic Settings 類別驗證；必要設定缺失**明確失敗**（啟動就報錯，不是第一個請求才爆） |
-| **例外** | **可選整合的降級要維護者確認**。已確認的一例：`GOOGLE_CLIENT_ID` 沒設定時 SSO 按鈕退回 no-op；寄信降級的做法為「連結印在伺服器 log，Lite 版的 log 視為敏感」 |
+| **例外** | **可選整合的降級要維護者確認**。已確認的一例：沒設定 Google 時登入頁不顯示 Google 按鈕與「或」分隔線；寄信降級的做法為「連結印在伺服器 log，Lite 版的 log 視為敏感」 |
 
 :::note{title="B10 的反例與檢查方式" collapsible}
 - **反例**：`SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret")`——缺設定時靜默用弱預設值
@@ -342,3 +342,4 @@ Celery task 只收可序列化的識別資訊，在自己的行程裡重新查�
 | 2026-11-19 | 分層、狀態機、資料庫雙層與 Celery 的理由寫進 [ADR-003](../adr/003-backend-architecture.mdx) 的 D3、D4、D7、D8，本文只留規則（B1、B7、B9） | —（理由原本只在個人 repo 的 ADR 與 [#105](https://github.com/label-suite/label-suite/issues/105) 的留言） | [#449](https://github.com/label-suite/label-suite/issues/449) |
 | 2026-11-25 | 新增 B11：後端函式複雜度 10、敘述 30、分支 10 與檔案 400 行的 CI 上限；R4「不以行數取代職責審查」的原意不變，上限只擋極端值 | 「不採用機械行數門檻」只寫了不設門檻，沒有區分「拆分判準」與「擋極端值的 CI 護欄」 | [#561](https://github.com/label-suite/label-suite/issues/561) |
 | 2026-11-25 | 新增 B12：後端單一入口清單七項，其中寄信、Google OIDC、對外 HTTP 客戶端三項與業務模組互相 import、router 只由組裝點 import 由 import-linter 契約擋下，其餘四項標待建置；標準庫 HTTP 客戶端擋不了 | B1 只管模組內分層，沒有任何規則限制誰能 import 寄信、OIDC、HTTP 客戶端套件，也不管業務模組之間的 import | [#563](https://github.com/label-suite/label-suite/issues/563)（維護者的常設授權） |
+| 2026-11-26 | 可選整合降級的已確認一例改為：沒設定 Google 時登入頁不顯示 Google 按鈕與「或」分隔線（[B10](#b10-設定與-secret)） | 沒設 `GOOGLE_CLIENT_ID` 時 SSO 按鈕退回 no-op | [#719 留言](https://github.com/label-suite/label-suite/issues/719#issuecomment-7187190476) |
