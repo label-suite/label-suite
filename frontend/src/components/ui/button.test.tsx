@@ -62,6 +62,15 @@ describe("Button interaction", () => {
 });
 
 describe("Button loading state", () => {
+  it("stops the spinner from turning when reduced motion is requested", () => {
+    const { container } = render(<Button loading>Checking</Button>);
+
+    expect(container.querySelector("svg")).toHaveClass(
+      "animate-spin",
+      "motion-reduce:animate-none",
+    );
+  });
+
   it("is busy and aria-disabled, but not natively disabled", () => {
     render(<Button loading>Checking</Button>);
     const button = screen.getByRole("button", { name: "Checking" });

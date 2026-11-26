@@ -105,3 +105,82 @@ export function scriptedHandler(
   });
   return { handler, counter: { count: () => requests } };
 }
+
+/** GET of the deployment's sign-in options. */
+export const AUTH_OPTIONS_URL = `${TEST_API_BASE_URL}/api/v1/auth-options`;
+
+/** POST of the Email-and-password sign-in. */
+export const SESSIONS_URL = `${TEST_API_BASE_URL}/api/v1/sessions`;
+
+/** GET of Google's authorisation URL. */
+export const GOOGLE_AUTHORIZATION_URL = `${TEST_API_BASE_URL}/api/v1/google-authorization`;
+
+/** POST that completes the Google sign-in. */
+export const GOOGLE_SESSIONS_URL = `${TEST_API_BASE_URL}/api/v1/google-sessions`;
+
+/** The platform member of the spec scenarios. */
+export const SPEC_MEMBER: SessionUserData = {
+  id: "5a1e2c3d-4b5f-4a6e-8c7d-9e0f1a2b3c4d",
+  name: "王小明",
+  email: "user@example.com",
+  role: "user",
+};
+
+/** A system administrator. */
+export const SAMPLE_ADMIN: SessionUserData = {
+  id: "6b2f3d4e-5c6a-4b7f-9d8e-0f1a2b3c4d5e",
+  name: "Admin Chen",
+  email: "admin@example.com",
+  role: "super_admin",
+};
+
+/** The deployment switches answered by `getAuthOptions`. */
+export interface AuthOptions {
+  /** Whether Google sign-in is configured. */
+  googleEnabled: boolean;
+  /** Whether self-registration (a mail service) is configured. */
+  selfRegistrationEnabled: boolean;
+}
+
+/** Answers the sign-in options with `options` (both on by default). */
+export function authOptionsHandler(
+  options: AuthOptions = { googleEnabled: true, selfRegistrationEnabled: true },
+): HttpHandler {
+  return http.get(AUTH_OPTIONS_URL, () =>
+    HttpResponse.json({
+      success: true,
+      code: "OK",
+      message: "成功",
+      data: options,
+      timestamp: "2026-11-26T08:00:00.000Z",
+      traceId: "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+    }),
+  );
+}
+
+/** A visitor with no cookies: the session and the refresh both answer 401 AUTH_REQUIRED. */
+export function signedOutHandlers(): HttpHandler[] {
+  return [
+    http.get(CURRENT_SESSION_URL, () =>
+      HttpResponse.json(accountErrorBody("AUTH_REQUIRED"), { status: 401 }),
+    ),
+    http.post(SESSION_REFRESH_URL, () =>
+      HttpResponse.json(accountErrorBody("AUTH_REQUIRED"), { status: 401 }),
+    ),
+  ];
+}
+
+/** A signed-in visitor: the session answers 200 with `user`. */
+export function signedInHandler(user: SessionUserData = SAMPLE_MEMBER): HttpHandler {
+  return http.get(CURRENT_SESSION_URL, () => HttpResponse.json(sessionBody(user)));
+}
+
+/** A successful session body for `user`, for sign-in and refresh answers. */
+export function sessionCreatedResponse(user: SessionUserData = SAMPLE_MEMBER): Response {
+  return HttpResponse.json(sessionBody(user), { status: 201 });
+}
+
+/** An error envelope response with `code` and `status`. */
+export function accountErrorResponse(code: AccountErrorCode, status: number): Response {
+  return HttpResponse.json(accountErrorBody(code), { status });
+}
