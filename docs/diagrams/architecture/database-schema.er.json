@@ -1,8 +1,8 @@
 {
  "$schema": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/er-diagram-renderer/schema.json",
  "meta": {
-  "title": "Label Suite 候選資料表 ER 圖（38 張）",
-  "description": "**規劃結構，尚未部署。** 已落地業務表：**0**——`backend/` 不存在、`backend/alembic/versions/` 沒有任何 revision、也沒有 ORM model。要查「實際落地了什麼」，唯一的辦法是讀 Alembic revision 與資料庫 metadata，不是讀這張圖。\\n\\n本圖顯示 **38 張候選表、341 欄、38 個單欄 FK**。每一欄的中文意義、可空性與**規格來源**都來自[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)；哪些資料要存則來自[資料欄位盤點總帳](/notes/diagrams/architecture/data-field-inventory)。\\n\\n**這張圖畫不出來的東西有兩類，都在字典裡**：**複合 FK**（例如「父版本不得跨資料集」要 `(dataset_id, parent_version_id)` 兩欄一起比），以及**只能在應用層擋的限制**（例如版本來源不得形成循環、名冊的子集合關係）。逐條內容在字典各組的「組的關聯與限制」小節，以及幾張表自己的限制表裡。**圖上沒有線不代表沒有限制。**應用層的限制字典數得出來（**27 條落在 DB、22 條只能在應用層擋**，數法寫在字典 §十）；**複合 FK 刻意不寫條數**，理由同樣在 §十。\\n\\n**分析報告沒有表**：05-02 的 64 個欄位列全部即時計算，維護者 2026-11-11 裁定不建分析表。那是裁定的結果，不是漏畫。",
+  "title": "Label Suite 候選資料表 ER 圖（41 張）",
+  "description": "**規劃結構，尚未部署。** 已落地業務表：**0**——`backend/` 不存在、`backend/alembic/versions/` 沒有任何 revision、也沒有 ORM model。要查「實際落地了什麼」，唯一的辦法是讀 Alembic revision 與資料庫 metadata，不是讀這張圖。\\n\\n本圖顯示 **41 張候選表、359 欄、41 個單欄 FK**。每一欄的中文意義、可空性與**規格來源**都來自[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)；哪些資料要存則來自[資料欄位盤點總帳](/notes/diagrams/architecture/data-field-inventory)。\\n\\n**這張圖畫不出來的東西有兩類，都在字典裡**：**複合 FK**（例如「父版本不得跨資料集」要 `(dataset_id, parent_version_id)` 兩欄一起比），以及**只能在應用層擋的限制**（例如版本來源不得形成循環、名冊的子集合關係）。逐條內容在字典各組的「組的關聯與限制」小節，以及幾張表自己的限制表裡。**圖上沒有線不代表沒有限制。**應用層的限制字典數得出來（**28 條落在 DB、24 條只能在應用層擋**，數法寫在字典 §十）；**複合 FK 刻意不寫條數**，理由同樣在 §十。\\n\\n**分析報告沒有表**：05-02 的 64 個欄位列全部即時計算，維護者 2026-11-11 裁定不建分析表。那是裁定的結果，不是漏畫。",
   "source": "/notes/diagrams/architecture/data-table-dictionary",
   "backTo": "/notes/diagrams/architecture/data-field-inventory"
  },
@@ -56,12 +56,12 @@
   {
    "key": "account",
    "label": "帳號與登入",
-   "description": "對應模組 01 帳號。資料責任：帳號本身、登入狀態、一次性連結、通知開關。**全部是候選表，尚未進行資料庫遷移。**"
+   "description": "對應模組 01 帳號。資料責任：帳號本身、登入狀態、一次性連結、通知開關、刪除請求。**全部是候選表，尚未進行資料庫遷移。**"
   },
   {
    "key": "admin",
    "label": "系統管理",
-   "description": "對應模組 06 系統管理。資料責任：稽核事件、權限矩陣與它的版本。**全部是候選表，尚未進行資料庫遷移。**"
+   "description": "對應模組 06 系統管理。資料責任：稽核事件、權限矩陣與它的版本、AI 輔助流程的 run 與事件。**全部是候選表，尚未進行資料庫遷移。**"
   },
   {
    "key": "dataset",
@@ -174,14 +174,14 @@
      "name": "email",
      "type": "varchar(254)",
      "required": "required",
-     "note": "登入帳號，也是寄信地址；唯一（lower(email)）。來源：01-05：正規化後判重；上限 254 字在正規化之後計算",
+     "note": "登入帳號，也是寄信地址；唯一（lower(email)）。來源：01-05：正規化後判重；上限 254 字在正規化之後計算。匿名化時改寫成 deleted-<id>@invalid（ADR-008 D7，維護者裁定 Q2）",
      "unique": true
     },
     {
      "name": "name",
      "type": "varchar(100)",
      "required": "required",
-     "note": "顯示名稱；CHECK 長度 1–100。來源：01-04：1–100 字；06-01：可以和其他帳號重複"
+     "note": "顯示名稱；CHECK 長度 1–100。來源：01-04：1–100 字；06-01：可以和其他帳號重複。匿名化時改寫成「已刪除的使用者」（ADR-008 D7，維護者裁定 Q2）"
     },
     {
      "name": "contact_info",
@@ -224,6 +224,12 @@
      "type": "timestamptz",
      "required": "system",
      "note": "最後修改時間"
+    },
+    {
+     "name": "anonymized_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "匿名化時間；空值＝未匿名化。來源：ADR-008 D7：維護者裁定，個資欄位清掉之後這個帳號不能再登入（應用層）"
     }
    ],
    "description": "一列代表一位可登入的使用者。**PRD 明寫帳號沒有刪除，只有停用與啟用**，所以**不得有軟刪除欄**。\n\n**待決的兩欄**（原始規劃有、本專案規格沒有對應）——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**規格來源**：[01-04](/notes/specs/01-account/04-profile#資料欄位)、[01-05](/notes/specs/01-account/05-login-state#資料欄位)、[06-01](/notes/specs/06-admin/01-user-management#資料欄位)"
@@ -427,6 +433,27 @@
    "description": "**維護者 2026-11-11 裁定：字典做成事件鍵驅動。** 所以表的形狀確定，而**六個事件鍵的合法值清單留給 [#188](https://github.com/label-suite/label-suite/issues/188)**——清單之後怎麼變都不用改表。\n\n**「從來沒存過時全部開啟」是讀取時的預設，不是資料庫預設值。** [01-04](/notes/specs/01-account/04-profile#資料欄位) 明寫這一點：缺列時兩個頻道都當開啟，**讀取不建列**。所以這張表可以完全沒有某個使用者的列，那不代表他關掉了通知。\n\n**規格來源**：[01-04](/notes/specs/01-account/04-profile#資料欄位)"
   },
   {
+   "name": "user_deletion_request",
+   "label": "刪除請求紀錄",
+   "group": "account",
+   "columns": [
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "請求刪除的帳號；PK；不加 FK（維護者裁定 Q1）。來源：ADR-008 D7：只存 user_id 與時間",
+     "pk": true
+    },
+    {
+     "name": "requested_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "請求時間。來源：ADR-008 D7：欄名經維護者確認（Q6）"
+    }
+   ],
+   "description": "**一列代表一位使用者的刪除請求**，只存 `user_id` 與時間；從備份還原之後，要先依這份記錄把刪除重新套用一次（[ADR-008 D7](/notes/development/adr/008-deployment-and-operations#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)）。**不對 `users` 加 FK**，並在備份之外另留一份。\n\n**這張表沒有規格條文可指**：它是維護者 2026-11-26 裁定新增的（見 [#687 的回覆](https://github.com/label-suite/label-suite/issues/687#issuecomment-7183496309)）。"
+  },
+  {
    "name": "audit_events",
    "label": "操作稽核紀錄",
    "group": "admin",
@@ -566,6 +593,105 @@
    "description": "**只有一列的表**，承載 [06-02](/notes/specs/06-admin/02-role-settings#資料欄位) 的「矩陣版本」樂觀鎖。\n\n**「真的沒變更就不遞增」是應用層的事，不是 DB 的。** DB 只能保證「比對預期版本後才允許寫」，判斷有沒有實際差異要在服務層做——這一條屬§應用層才擋得住的限制。\n\n**規格來源**：[06-02](/notes/specs/06-admin/02-role-settings#資料欄位)"
   },
   {
+   "name": "ai_run_events",
+   "label": "AI run 的狀態轉換事件",
+   "group": "admin",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint",
+     "required": "system",
+     "note": "流水號；PK。來源：與 audit_events.id 同形（提案）",
+     "pk": true
+    },
+    {
+     "name": "ai_run_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "所屬 run；FK → ai_runs.id，RESTRICT；索引 (ai_run_id, at)（提案）。來源：ADR-008 D5：事件指向 ai_runs；索引為提案",
+     "fk": "ai_runs"
+    },
+    {
+     "name": "status",
+     "type": "varchar",
+     "required": "required",
+     "note": "轉換後的狀態；CHECK 限 queued／running／succeeded／failed／cancelled；後三者是終態。來源：ADR-008 D5：維護者裁定 Q3"
+    },
+    {
+     "name": "at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "轉換時間。來源：ADR-008 D5：欄名 at"
+    },
+    {
+     "name": "payload",
+     "type": "json",
+     "required": "nullable",
+     "note": "終態事件帶的輸出與評估；CHECK payload IS NULL OR status IN ('succeeded','failed','cancelled')（提案）。來源：ADR-008 D5：維護者裁定 Q4，可空的 payload json，由終態事件帶；這超出裁定第 2 列原本的「status、at」，維護者已確認；CHECK 為提案"
+    }
+   ],
+   "description": "**每一次狀態轉換新增一列，只新增、不更新也不刪除。** 目前狀態取同一個 `ai_run_id` 最新的一列；`completed_at` 由終態事件的 `at` 推導（[ADR-008 D5](/notes/development/adr/008-deployment-and-operations#d5-ai-可追溯用只新增的-ai_runs-表)）。\n\n**這張表沒有規格條文可指**：來源是維護者 2026-11-26 的裁定（見 [#687 的回覆](https://github.com/label-suite/label-suite/issues/687#issuecomment-7183496309)）。**標記者不可讀**：`payload` 的輸出與評估可能帶標準答案（硬性規則 6）。"
+  },
+  {
+   "name": "ai_runs",
+   "label": "AI 輔助流程的 run",
+   "group": "admin",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "system",
+     "note": "run 身分；PK",
+     "pk": true
+    },
+    {
+     "name": "task_id",
+     "type": "uuid",
+     "required": "nullable",
+     "note": "任務作用域；FK → task.id，RESTRICT；索引（提案）。來源：§稽核與可追溯：要能依任務查；FK 與可空性為提案",
+     "fk": "task"
+    },
+    {
+     "name": "requested_by_user_id",
+     "type": "uuid",
+     "required": "nullable",
+     "note": "發起者；FK → users.id，RESTRICT（提案）；系統觸發時為空。來源：ADR-008 D5：要能依使用者查；FK 與可空性為提案",
+     "fk": "users"
+    },
+    {
+     "name": "model",
+     "type": "varchar",
+     "required": "required",
+     "note": "模型。來源：§稽核與可追溯：記模型"
+    },
+    {
+     "name": "prompt_version",
+     "type": "varchar",
+     "required": "required",
+     "note": "prompt 版本。來源：同上：記 prompt 版本"
+    },
+    {
+     "name": "config_hash",
+     "type": "char(64)",
+     "required": "required",
+     "note": "設定雜湊。來源：同上：記 config hash；型別為提案"
+    },
+    {
+     "name": "input_snapshot",
+     "type": "json",
+     "required": "required",
+     "note": "輸入快照。來源：同上：記輸入快照；可能含答案，見下方讀取權限"
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "required": "system",
+     "note": "建立時間；索引（提案）。來源：ADR-008 D5：要能依時間查"
+    }
+   ],
+   "description": "**一列代表一次 AI 輔助流程的 run，只在建立時寫一次，之後不更新也不刪除**；狀態轉換寫在 `ai_run_events`（[ADR-008 D5](/notes/development/adr/008-deployment-and-operations#d5-ai-可追溯用只新增的-ai_runs-表)）。\n\n**這張表沒有規格條文可指**：它是維護者 2026-11-26 對 ADR-008 待決第 2 列的裁定（見 [#687 的回覆](https://github.com/label-suite/label-suite/issues/687#issuecomment-7183496309)），不是任何一頁規格的資料欄位。**標記者不可讀**：輸入快照可能帶標準答案（硬性規則 6）。"
+  },
+  {
    "name": "dataset",
    "label": "資料集",
    "group": "dataset",
@@ -653,6 +779,18 @@
      "type": "timestamptz",
      "required": "nullable",
      "note": "定版時間；CHECK state='sealed' → sealed_at IS NOT NULL。來源：05-03：一律以 UTC 表示"
+    },
+    {
+     "name": "withdrawn_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "撤回時間；空值＝未撤回；CHECK withdrawn_at IS NULL OR state='sealed'（提案）。來源：ADR-008 D7：維護者裁定，只標記撤回、不刪除；CHECK 為提案"
+    },
+    {
+     "name": "withdrawal_reason",
+     "type": "text",
+     "required": "nullable",
+     "note": "撤回原因；CHECK withdrawn_at IS NOT NULL OR withdrawal_reason IS NULL（提案）。來源：ADR-008 D7：維護者裁定記錄撤回原因，欄名與型別經確認（Q6）；是否必填沒有裁定"
     }
    ],
    "description": "**三條版本來源限制，只有兩條能由資料庫擋下——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**規格來源**：[05-03](/notes/specs/05-dataset/03-ingestion-lineage#資料欄位)"
