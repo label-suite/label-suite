@@ -1,6 +1,6 @@
 ---
 title: '候選資料表字典與關聯限制'
-description: '41 張候選資料表、359 欄的逐欄字典：英文識別碼、中文業務意義、型別、可空性、鍵與限制、規格來源，以及寫入者、讀取權限、不可變與版本界線、複合關聯與敏感邊界。規劃結構，不是已落地的資料庫。'
+description: '41 張候選資料表、360 欄的逐欄字典：英文識別碼、中文業務意義、型別、可空性、鍵與限制、規格來源，以及寫入者、讀取權限、不可變與版本界線、複合關聯與敏感邊界。規劃結構，不是已落地的資料庫。'
 category: '架構'
 tags: [架構, 資料模型, 字典, 關聯限制]
 createdAt: '2026-11-11'
@@ -50,7 +50,7 @@ import PluginView from '@/components/PluginView.astro';
 | `submission` 新增 | **+1 張 / +12 欄 / +0 單欄 FK** | 背景評分工作的紀錄；FK 全是複合 FK |
 | `ai_runs`、`ai_run_events`、`user_deletion_request` 新增 | **+3 張 / +15 欄 / +3 單欄 FK** | 出自 ADR-008 的裁定，見下 |
 | 既有表加欄 | **+3 欄**：`users.anonymized_at`、`dataset_version.withdrawn_at`、`dataset_version.withdrawal_reason` | 同上，單欄 FK 不變 |
-| 本文件 | **41 張 / 359 欄 / 41 單欄 FK** | 複合 FK 另列於各組的§關聯 |
+| 本文件 | **41 張 / 360 欄 / 41 單欄 FK** | 複合 FK 另列於各組的§關聯 |
 
 移除不是「不需要那個機制」。更新權杖、冪等紀錄與審核員候選名單在實作時都可能真的需要，但那時要另開 issue 寫清楚為什麼——**這樣字典裡其餘每一張表都追得到規格**——**8 張除外**，它們整節沒有任何指回 `docs/specs/` 的連結。其中 4 張是另一種形態：結構由別頁的規則決定、本來就沒有自己的條文（維護者 2026-11-12 裁定 D11，見[盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決)）；第 5 張是 `submission`，由維護者 2026-11-26 裁定新增（見 [#685 的回覆](https://github.com/label-suite/label-suite/issues/685#issuecomment-7183496070)）。另有 `ai_runs`、`ai_run_events`、`user_deletion_request` 三張同樣沒有規格條文可指，依據是維護者 2026-11-26 對 ADR-008 待決八列的裁定，見[#687 的回覆](https://github.com/label-suite/label-suite/issues/687#issuecomment-7183496309)與 [ADR-008 的 D5、D7、D9](../../development/adr/008-deployment-and-operations.mdx)。
 
@@ -65,7 +65,7 @@ import PluginView from '@/components/PluginView.astro';
 | `task_config_version.schema_digest` | 規格化 outputs 與欄位用途的摘要 |
 | `task_config_version.schema_registry_version` | 驗證定義的版本 |
 
-同一條原則：**沒有規格依據就不留**，需要時另開 issue 寫清楚為什麼。所以本文件比原始這 37 張的 330 欄**少這六欄、另新增五欄**，合計 329；再加 `submission` 的 12 欄得 341，再加 ADR-008 裁定帶來的 18 欄（`users.anonymized_at`、`dataset_version` 兩個撤回欄、`ai_runs` 8 欄、`ai_run_events` 5 欄、`user_deletion_request` 2 欄），共 359。
+同一條原則：**沒有規格依據就不留**，需要時另開 issue 寫清楚為什麼。所以本文件比原始這 37 張的 330 欄**少這六欄、另新增六欄**，合計 330；再加 `submission` 的 12 欄得 342，再加 ADR-008 裁定帶來的 18 欄（`users.anonymized_at`、`dataset_version` 兩個撤回欄、`ai_runs` 8 欄、`ai_run_events` 5 欄、`user_deletion_request` 2 欄），共 360。
 
 ### 九個領域分組
 
@@ -150,6 +150,7 @@ import PluginView from '@/components/PluginView.astro';
 | `last_seen_at` | 最後一次使用的時間 | `timestamptz` | NOT NULL | — | [01-05](../../specs/01-account/05-login-state.mdx#資料欄位)：閒置限制從這一刻起算，**每次使用就更新**。**原始規劃沒有這一欄，本專案新增** |
 | `revoked_at` | 失效時間 | `timestamptz` | **可空** | — | [01-05](../../specs/01-account/05-login-state.mdx#資料欄位)：空值＝未失效。**任何原因都算**，含登出、安全撤銷與自然到期 |
 | `logged_out_at` | 明確登出的時間 | `timestamptz` | **可空** | **CHECK** `logged_out_at IS NULL OR (revoked_at IS NOT NULL AND logged_out_at <= revoked_at)` | [01-05](../../specs/01-account/05-login-state.mdx#資料欄位)：**只記可驗證的明確登出**；有值時該段必然已失效，**且不晚於失效時間** |
+| `source_info` | 登入來源資訊 | `text` | **可空** | — | [01-05](../../specs/01-account/05-login-state.mdx#資料欄位)：來源網路位址與裝置資訊，**屬個資**；一段登入狀態結束滿 13 個月就清掉，使用者看不到。**原始規劃沒有這一欄，本專案新增** |
 
 **`RESTRICT` 的理由**：工時區間（`task_work_interval`）與歷程事件（`annotation_history_event`）都參照登入狀態當責任證據，刪掉它會讓歷史無法追溯。而帳號本來就沒有刪除，所以 `RESTRICT` 不會卡住任何合法操作。
 
@@ -158,7 +159,7 @@ import PluginView from '@/components/PluginView.astro';
 | **寫入者** | 全部**系統寫入**。[01-05](../../specs/01-account/05-login-state.mdx#資料欄位) 明寫「表中沒有任何一欄是使用者可以直接編輯的」 |
 | **讀取權限** | 本人與系統管理員 |
 | **不可變** | `started_at` 建立後不再變；`revoked_at` 一旦有值不再回復 |
-| **保留** | 保留期限**未定**，見盤點總帳的[待決 D3](./data-field-inventory.mdx#五裁定紀錄與待裁決)（[#196](https://github.com/label-suite/label-suite/issues/196)） |
+| **保留** | 一段登入狀態結束起**最短一年、最長 13 個月**（[01-05](../../specs/01-account/05-login-state.mdx#登入狀態紀錄的保留與到期清理)）：到期而沒被標記作業引用的**整筆清除**；仍被引用的**只清 `source_info`**，`started_at`、`logged_out_at`、`user_id`、`revoked_at` 保留，所以耗時照樣算得出來。清除每天一次，最多多留一天 |
 
 ### `account_password_token` — 密碼重設與邀請連結
 
@@ -182,7 +183,7 @@ import PluginView from '@/components/PluginView.astro';
 | **寫入者** | 全部系統寫入 |
 | **讀取權限** | **沒有任何使用者讀得到**；只有驗證流程比對雜湊 |
 | **不可變** | `token_hash`、`expires_at`、`purpose` |
-| **保留** | 同 `account_session`，待 [D3](./data-field-inventory.mdx#五裁定紀錄與待裁決) |
+| **保留** | 規格沒有定（01-05 的 13 個月規則只管登入狀態紀錄），待 [D3](./data-field-inventory.mdx#五裁定紀錄與待裁決) |
 
 ### `account_email_change_request` — Email 變更申請
 
@@ -1275,9 +1276,9 @@ import PluginView from '@/components/PluginView.astro';
 | 項目 | 數 |
 | :--- | ---: |
 | 候選表 | **41 張**（原始 40 扣掉 D7 的 3 張，加 `submission`，再加 ADR-008 裁定帶來的 3 張） |
-| 欄位 | **359 欄** |
-| 算式 | 原始 37 張共 **330 欄** − **6 欄**（D7 理由延伸，維護者 2026-11-11 裁定）＋ **5 欄**（本專案新增） ＋ **12 欄**（`submission` 整張新增） ＋ **18 欄**（ADR-008 裁定：3 張新表 15 欄、既有表加 3 欄） = **359** |
-| 本專案新增的欄位 | **5**：`account_session.last_seen_at`（閒置限制的起點，原始沒有）、`task.archived_at` 與 `task.archived_by_user_id`（原始 `task` 沒有任何封存欄）、`task_membership.last_activity_at`（維護者 2026-11-11 裁定存成欄位）、`task_run_cycle.rejection_reason`（03-03 的「退回原因」，[#170](https://github.com/label-suite/label-suite/issues/170)；原始沒有） |
+| 欄位 | **360 欄** |
+| 算式 | 原始 37 張共 **330 欄** − **6 欄**（D7 理由延伸，維護者 2026-11-11 裁定）＋ **6 欄**（本專案新增） ＋ **12 欄**（`submission` 整張新增） ＋ **18 欄**（ADR-008 裁定：3 張新表 15 欄、既有表加 3 欄） = **360** |
+| 本專案新增的欄位 | **6**：`account_session.last_seen_at`（閒置限制的起點，原始沒有）、`account_session.source_info`（01-05 的「登入來源資訊」，個資，原始沒有）、`task.archived_at` 與 `task.archived_by_user_id`（原始 `task` 沒有任何封存欄）、`task_membership.last_activity_at`（維護者 2026-11-11 裁定存成欄位）、`task_run_cycle.rejection_reason`（03-03 的「退回原因」，[#170](https://github.com/label-suite/label-suite/issues/170)；原始沒有） |
 | 本專案不收的原始欄位 | **6**：`users` 的 `google_subject`／`is_seeder`／`credential_version`、`task_config_version` 的 `schema_version_no`／`schema_digest`／`schema_registry_version` |
 | 單欄 FK | **41** |
 | **複合 FK** | 圖上畫不出來，**逐條內容**在各組的§關聯與限制。**這裡刻意不寫條數**，理由見下一列 |
@@ -1314,6 +1315,7 @@ import PluginView from '@/components/PluginView.astro';
 
 | Issue | 日期 | 變更 |
 | :--- | :--- | :--- |
+| [#196](https://github.com/label-suite/label-suite/issues/196) | 2026-11-26 | **登入狀態紀錄的保留期限定案**（維護者 2026-11-26 裁定）：`account_session` 新增 `source_info`（登入來源資訊，個資，結束滿 13 個月清除），欄位 359 → 360、本專案新增欄位 5 → 6；§保留 由「未定」改成最短一年、最長 13 個月與到期處理；`account_password_token` 的保留改寫成不適用這條規則，仍待 D3 |
 | [#687](https://github.com/label-suite/label-suite/issues/687) | 2026-11-26 | **落地維護者對 ADR-008 待決八列的裁定與六個欄位問題的回答**（[#687 的回覆](https://github.com/label-suite/label-suite/issues/687#issuecomment-7183496309)）：`users` 加 `anonymized_at`（匿名化時 `email` 改寫成 `deleted-<id>@invalid`、`name` 改寫成「已刪除的使用者」）；`dataset_version` 加 `withdrawn_at` 與 `withdrawal_reason`，定版後這兩欄是不可變的唯一例外、只能從空值寫一次；**新增 `ai_runs`、`ai_run_events`**（`admin` 組，5 張）與 **`user_deletion_request`**（`account` 組，6 張，不對 `users` 加 FK）。`ai_run_events.payload` 由終態事件帶，超出裁定原本的「status、at」，維護者已確認。表 **38 → 41**、欄 **341 → 359**、單欄 FK **38 → 41**；§關聯與限制 落在 DB **27 → 28**、應用層 **22 → 24**。分組放哪一組、索引、讀取權限、保留與兩條撤回／payload 的 CHECK 沒有裁定，標為提案。[`database-schema.er.json`](./database-schema.er.json) 同步 |
 | [#685](https://github.com/label-suite/label-suite/issues/685) | 2026-11-26 | **新增 `submission`**（`run` 組，9 張）：一列代表一次背景評分工作，12 欄。維護者 2026-11-26 裁定新增這張表，並逐題裁定唯一鍵為 `(task_run_id, idempotency_key)` 加 `request_digest`、`status` 為 `pending`／`running`／`done`／`failed`、表記的是一次背景評分工作、觸發者以複合 FK 指向 `task_membership`。它指向 `task_run` 但**不指向** `task_trial_iaa_result`（後者的 PK 就是 ADR-003 D10 的冪等落點）。表 **37 → 38**、欄 **329 → 341**、單欄 FK 不變 38；§關聯與限制 落在 DB 的條數 **24 → 27**。[`database-schema.er.json`](./database-schema.er.json) 同步 |
 | [#381](https://github.com/label-suite/label-suite/issues/381) | 2026-11-16 | 定下「已落地」的標法：表標題下方一行 `` **已落地**：Alembic revision `<id>` ``，ER 表說明同一行，`check:er` 比對兩邊、比對 ER 摘要的「已落地業務表」張數、並確認 revision 存在。開頭警語改寫成這個標法；目前仍是 0 張 |
