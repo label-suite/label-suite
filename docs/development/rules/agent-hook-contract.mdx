@@ -55,7 +55,7 @@ updatedAt: '2026-11-26'
 | **timeout** | **5 秒**。這支擋在每個工具呼叫前面，不能慢 |
 | **輸出與退出碼** | 擋下時 **exit `2`，原因寫 stderr**；`permissionDecision: "deny"` 加 `permissionDecisionReason` 兩邊也都收。優先用 exit `2`，理由見 [ADR-001 D5](../adr/001-agent-engineering.mdx#d5-h2-失敗時由腳本-exit-2-擋下claude-另加-onfailure) |
 | **阻擋或提醒** | **阻擋**。必須在動作前拒絕；不能只在執行後提醒 |
-| **缺工具／無適用檔案** | 檢查器不存在或壞掉時，**兩個平台的預設都是讓動作照做**（fail-open），所以**兩邊都靠腳本自己在無法判斷時 exit `2`**（理由見 [ADR-001 D5](../adr/001-agent-engineering.mdx#d5-h2-失敗時由腳本-exit-2-擋下claude-另加-onfailure)）：包裝腳本一律先確認檢查器存在且可執行，不存在就 exit `2`。**不得用 `|| true` 把判斷不了變成通過**，也不得假設路徑打錯會被擋下。Claude 的兩個 H2 handler 另加 `onFailure: "block"`，把腳本管不到的「設定路徑打錯、腳本 crash、timeout」也擋下來；Codex 沒有等價欄位，這一層只有 Claude 有，Codex 的 H2 仍只靠腳本 exit `2`（[§查核方式](#查核方式)第 4 點的實測） |
+| **缺工具／無適用檔案** | 檢查器不存在或壞掉時，**兩個平台的預設都是讓動作照做**（fail-open），所以**兩邊都靠腳本自己在無法判斷時 exit `2`**（理由見 [ADR-001 D5](../adr/001-agent-engineering.mdx#d5-h2-失敗時由腳本-exit-2-擋下claude-另加-onfailure)）：包裝腳本一律先確認檢查器存在且可執行，不存在就 exit `2`。**不得用 `|| true` 把判斷不了變成通過**；在 Codex，或 Claude 未設 `onFailure` 時，也不得假設路徑打錯會被擋下。Claude 的兩個 H2 handler 另加 `onFailure: "block"`，把腳本管不到的「設定路徑打錯、腳本 crash」也擋下來（實測見 [§查核方式](#查核方式)第 4 點；timeout 依官方文件，未實測）。Codex 沒有等價欄位，同樣的失敗在 Codex 仍是 fail-open，H2 只靠腳本 exit `2`，兩邊在這一點不對稱 |
 
 **這一條的保護範圍有明確上限，寫在[§能力缺口與承接](#能力缺口與承接)第 2 條，不得當成完整安全邊界。**
 
@@ -148,8 +148,8 @@ updatedAt: '2026-11-26'
 3. **Codex 攔不住讀取。** 沒有 `Read`／`Grep`／`Glob` 工具名，讀檔走 shell，所以「不要讀 `.env` 的值」在 Codex 上沒有 hook 層的攔截點。
    **承接**：平台權限層的宣告式機制——Codex 的 `filesystem = "deny"`、Claude 的 `permissions.deny`；`AGENTS.md` 硬性規則 8 本來就要求 secret 從環境變數來。**本 change 沒有設定權限層**，所以這個缺口目前沒有實際的承接者。**不宣稱 Codex 有等價攔截。**
 4. **`PostToolUse` 在兩邊都撤銷不了編輯**，能做的只是替換 model 看到的結果，所以 H3 一律當提醒。真正的 gate 在 H4、H5、H7。
-5. **hook 的預設行為是 fail-open；Claude 有 opt-in 的 fail-closed 開關，Codex 沒有。** 兩邊在 hook 失敗、timeout 或輸出不合法時預設都讓動作照做。Claude 的 handler 欄位 `onFailure: "block"`（`command`、`http` 需 **v2.1.295**，`mcp_tool` 需 **v2.1.328**；本機 **2.1.330** 兩者都滿足）會讓「啟動失敗、exit 非 `0`／`2`、timeout、輸出無法解析」比照該事件的 exit `2`；它對 `Stop`、`SubagentStop`、`TaskCompleted`、`TeammateIdle` 與 `async` 背景 hook 無效。Codex 的官方文件沒有等價欄位。
-   **承接**：H2 的包裝腳本自己負責 fail-closed（檢查器不存在或無法判斷就 exit `2`），兩個平台一致；真正不能漏的保護放 **branch protection 與 CI**。Claude 的兩個 H2 handler 另加 `onFailure: "block"`，腳本以外的失敗（設定路徑打錯、腳本 crash、timeout）也會擋下；Codex 沒有這一層，同樣的失敗在 Codex 仍是 fail-open，兩邊不對稱。
+5. **hook 的預設行為是 fail-open；Claude 有 opt-in 的 fail-closed 開關，Codex 沒有。** 兩邊在 hook 失敗、timeout 或輸出不合法時預設都讓動作照做。Claude 的 handler 欄位 `onFailure: "block"`（`command`、`http` 需 **v2.1.295**，`mcp_tool` 需 **v2.1.328**；官方文件對照時記錄的版本是 **2.1.330**，實測時 `claude --version` 是 **2.1.323**，兩者都高於 2.1.295）會讓「啟動失敗、exit 非 `0`／`2`、timeout、輸出無法解析」比照該事件的 exit `2`；它對 `Stop`、`SubagentStop`、`TaskCompleted`、`TeammateIdle` 與 `async` 背景 hook 無效。Codex 的官方文件沒有等價欄位。
+   **承接**：H2 的包裝腳本自己負責 fail-closed（檢查器不存在或無法判斷就 exit `2`），兩個平台一致；真正不能漏的保護放 **branch protection 與 CI**。Claude 另加的 `onFailure: "block"` 與兩邊的不對稱見 [§H2](#h2-工具執行前破壞性命令與受保護目標) 的「缺工具／無適用檔案」。
 6. **平台權限層兩側都查完了，但查完不等於設好。** Claude 的 `permissions.deny` 有見過實例（參考來源那份 settings 擋 `.env.*`、`*.pem`、`*.key`、`*id_rsa*`、`credentials.json` 的寫入）；Codex 這一半於 2026-11-17 核對官方文件（`https://learn.chatgpt.com/docs/permissions`，runtime codex-cli 0.153.0）。Codex 的 permission profile 與舊的 sandbox 設定**互斥**，不得把 `permissions`、`default_permissions`、`sandbox_mode`、`sandbox_workspace_write` 並列成四個同時生效的鍵。**本 change 沒有設定任何一邊的權限層**，第 3 與第 8 條的承接因此都還是空的。
    **承接**：設定權限層不在本 change 的範圍內，要另開工作處理；在那之前，第 3 與第 8 條沒有實際的承接者。「平台權限控制」與「hook 攔截」要分清楚——兩側查完的是能力，**不是已經設好的保護**。
 7. **`.claude/` 與 `.codex/` 兩份設定有漂移風險。** 事件集合與工具名都不同，改一邊忘了另一邊不會有任何報錯。
@@ -219,12 +219,12 @@ updatedAt: '2026-11-26'
 | exit `0` | 成功，套用 JSON 輸出欄位 | 同 |
 | 其他非零 | **非阻擋錯誤，動作照做**，只顯示 stderr 第一行（handler 設了 `onFailure: "block"` 時視為失敗並阻擋） | 文件只定義 `2` 為阻擋；其他非零視為錯誤 |
 | hook 失敗或 timeout 時 | **預設動作照做**。文件原文：路徑打錯或腳本 crash 的 policy hook「lets everything through」；handler 設 `onFailure: "block"` 才改為阻擋 | **動作照做**。`PreToolUse` 回傳不支援的欄位（`continue`／`stopReason`／`suppressOutput`，另有 `ask` 與舊式 `approve`）時，Codex 把該次 hook 標為失敗並**繼續執行那個工具** |
-| 失敗即阻擋的開關 | 有：`command`、`http` handler 的 `onFailure: "block"`（**v2.1.295 以上**；`mcp_tool` 需 v2.1.328 以上；本機 2.1.330）。計為失敗的有：啟動失敗、exit 非 `0`／`2`（即使已印出 `allow` 的 JSON）、HTTP 非 2xx、timeout、輸出無法解析；失敗時比照該事件的 exit `2`，`PermissionRequest` 則拒絕。對 `Stop`、`SubagentStop`、`TaskCompleted`、`TeammateIdle` 與 `async` 背景 hook 無效 | **沒有**（官方文件未見等價欄位；文件另寫 MCP tool hook 出錯或找不到 server 不會阻擋） |
+| 失敗即阻擋的開關 | 有：`command`、`http` handler 的 `onFailure: "block"`（**v2.1.295 以上**；`mcp_tool` 需 v2.1.328 以上；官方文件對照時記錄的版本 2.1.330）。計為失敗的有：啟動失敗、exit 非 `0`／`2`（即使已印出 `allow` 的 JSON）、HTTP 非 2xx、timeout、輸出無法解析；失敗時比照該事件的 exit `2`，`PermissionRequest` 則拒絕。對 `Stop`、`SubagentStop`、`TaskCompleted`、`TeammateIdle` 與 `async` 背景 hook 無效 | **沒有**（官方文件未見等價欄位；文件另寫 MCP tool hook 出錯或找不到 server 不會阻擋） |
 
 **三個會咬人的差異**：
 
 - **`PostToolUse` 在兩邊都撤銷不了，而它們能做的事幾乎一樣。** 兩邊都是「把 model 看到的結果換掉」而不是「把動作收回來」：Claude 用 `decision: "block"`（附在結果旁）或 `updatedToolOutput`（整個替換），Codex 用 `decision: "block"`／exit `2`／`continue: false`（替換後繼續）。工作項 2 的「PostToolUse 回報失敗不等於撤銷原編輯」在兩個平台都成立。真正不對稱的是**通用 `continue: false`**：Claude 的會停住整個處理，Codex 的只是標記該次 hook run。
-- **`onFailure: "block"` 只有 Claude 有，而且要明確設。** 本機 **2.1.330** 已滿足它的版本下限（v2.1.295），但 Codex 沒有等價欄位，所以「檢查器自己壞掉時要不要擋」在 **Codex 仍只能由腳本自己以 exit `2` 表達**；Claude 這邊在腳本 exit `2` 之上，H2 的兩個 handler 再疊一層 `onFailure: "block"`（Stop／SubagentStop 不設，它在那裡無效）。
+- **`onFailure: "block"` 只有 Claude 有，而且要明確設。** 本 repo 怎麼用、兩邊怎麼不對稱，見 [§H2](#h2-工具執行前破壞性命令與受保護目標) 的「缺工具／無適用檔案」。
 - **預設是 fail-open，不是 fail-closed。** 兩邊在 hook 失敗、timeout 或輸出無法解析時預設都讓動作**照做**（Claude 設了 `onFailure: "block"` 才例外）。Claude 的文件直說路徑打錯或 crash 的 policy hook「lets everything through」；Codex 在 `PreToolUse` 收到不支援的欄位時會標記失敗並繼續執行那個工具。**不得假設不寫就會擋。**
 
 ### 工具名稱
@@ -285,13 +285,17 @@ Codex 的 `command` 欄位是**字串，不是陣列**——官方文件的範�
 1. **這台機器沒有 `timeout`，也沒有 `gtimeout`。** 所以 hook 腳本裡**不能**用 shell 的 `timeout` 去包檢查器——在 macOS 上那行會直接 `command not found`，而且如果寫成 `timeout 30 checker || true` 還會把「工具不存在」偽裝成通過。要用的是**平台 hook 設定自己的 `timeout` 欄位**（兩邊都有）。跨 macOS／Linux 驗證 timeout 不依賴機器剛好裝了 GNU timeout，這件事在本機就已經成立。
 2. **Codex 的事件名稱是 PascalCase，不是 snake_case。** 從 `codex` binary 的 strings 讀得到 `pre_tool_use`、`post_tool_use`、`session_start`、`user_prompt_submit`，但官方文件寫的是 `PreToolUse`、`PostToolUse`、`SessionStart`、`UserPromptSubmit`。那些 snake_case 是**內部 enum 名稱**，不是設定檔的 wire format。**逆向讀 binary 不能當依據**，照它寫設定會得到一個永遠不觸發的 hook。
 3. **Codex 有 hook 信任模型，Claude 沒有。** 非 managed 的 hook 要先逐一審核並信任，而**信任是綁在 hook 定義的 hash 上**：新加或改過的 hook 在被信任之前是 **skipped**。這件事對「必要 gate」是決定性的，見§能力缺口第 1 條。
-4. **「這個欄位存在」不等於「這個版本有」，也不等於「已經實測會擋」。** Claude 的 `onFailure: "block"` 是唯一的宣告式 fail-closed 開關，官方文件註明 `command`／`http` 需 **v2.1.295 以上**、`mcp_tool` 需 **v2.1.328 以上**，本機 **2.1.330** 滿足。它已在本機實跑過：Claude Code **2.1.323**，`claude -p` 在暫存 git repo 執行 `touch`，PreToolUse／`Bash` 掛一個 handler——指向不存在的腳本加 `onFailure: "block"`、腳本 `exit 1` 加 `onFailure: "block"`，兩次 Bash 都沒有執行，tool_result 為 `hook error: … failed; blocking because onFailure is "block"`；同樣缺檔但不設 `onFailure` 的對照組，Bash 照常執行（fail-open）。版本下限與實際會擋是兩件事，升級 Claude Code 後若懷疑行為改變，照這三種情況重跑。
+4. **「這個欄位存在」不等於「這個版本有」，也不等於「已經實測會擋」。** Claude 的 `onFailure: "block"` 官方文件註明 `command`／`http` 需 **v2.1.295 以上**、`mcp_tool` 需 **v2.1.328 以上**；官方文件對照時記錄的版本是 **2.1.330**，實測時 `claude --version` 是 **2.1.323**，兩者都高於 2.1.295，實測的四種情況在下方「查核對象與結果」的 `onFailure` 四列，本 repo 怎麼用見 [§H2](#h2-工具執行前破壞性命令與受保護目標)。
 
 :::note{title="查核對象與結果" collapsible}
 
 | 查核對象 | 指令或網址 | 結果 |
 | :--- | :--- | :--- |
-| Claude Code runtime | `claude --version` | **2.1.330**（Claude Code） |
+| Claude Code runtime | `claude --version` | 官方文件對照時記錄的版本是 **2.1.330**；實測 `onFailure` 時是 **2.1.323** |
+| `onFailure` 實測：缺檔加 `onFailure: "block"` | `claude -p --model haiku` 在暫存 git repo 執行 `touch ran.marker`，PreToolUse／`Bash` 掛一個 handler：指向不存在的腳本 | **擋下**：marker 不存在，tool_result 為 `hook error: … failed; blocking because onFailure is "block"`，`is_error: true` |
+| `onFailure` 實測：缺檔不設（對照組） | 同上，不設 `onFailure` | **照常執行**：marker 存在，`(Bash completed with no output)`，`is_error: false`（fail-open） |
+| `onFailure` 實測：`exit 1` 加 `onFailure: "block"` | 同上，腳本 `exit 1` | **擋下**：marker 不存在，`hook error: … failed; blocking because onFailure is "block"` 加 `No stderr output` |
+| `onFailure` 實測：`exit 0` 加 `onFailure: "block"`（正向對照） | 同上，腳本只會 `exit 0` | **照常執行**：marker 存在，`(Bash completed with no output)`，`is_error: false`；`onFailure` 不會擋下正常結束的 hook |
 | Codex runtime | `codex --version` | **codex-cli 0.156.0** |
 | Codex 是否支援 hook | `codex features list` | `hooks` → **`stable` 且 `true`**（預設開啟，不是實驗功能；`plugin_hooks` 為 `removed`） |
 | Claude 官方權限文件 | `code.claude.com/docs/en/permissions` §What runs before you trust a folder | 表中「settings files 裡的 hooks」在「只信任父資料夾」與「`claude -p`／SDK、資料夾從未信任」兩欄都是 Used；專案 subagent frontmatter 的 hook 兩欄都是 Not used |

@@ -215,7 +215,7 @@ H2 兩邊都由腳本自己在無法判斷時 exit `2`、原因寫 stderr，這�
 
 - 每支 H2 的包裝腳本仍要自己負責 fail-closed：Codex 沒有等價欄位，`onFailure` 只補 Claude 那一邊
 - 兩邊不對稱：腳本以外的失敗（設定路徑打錯、腳本 crash）在 Claude 擋下，在 Codex 仍然放行
-- 兩份設定手寫兩份，`onFailure` 只出現在 Claude 那份，H1 只比對指向的目標，不比對這個欄位
+- 兩份設定手寫兩份，`onFailure` 只出現在 Claude 那份，H1 只比對指向的目標，不比對這個欄位；這個欄位改由 `scripts/tests/check-env-tests.sh` 在 CI 釘住
 
 ### 什麼情況要重新討論
 
