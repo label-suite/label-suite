@@ -2,12 +2,13 @@
 export type AppLanguage = "zh-TW" | "en";
 
 /**
- * Maps the browser's reported language to an interface language: any code
- * starting with `zh` (case-insensitive) is `zh-TW`; everything else, including
- * an empty or missing value, is `en` (clarification Q5).
+ * Maps a remembered language value to an interface language: exactly `zh-TW`
+ * or `en` is kept; anything else, including an empty or missing value and
+ * other spellings such as `EN-us`, is `zh-TW`. The browser's reported
+ * language is never consulted (spec 01-01 §語言切換, login-auth-guard D8).
  *
- * @param navigatorLanguage The value of `navigator.language`, if any.
+ * @param stored The remembered value, if any.
  */
-export function resolveLanguage(navigatorLanguage: string | null | undefined): AppLanguage {
-  return navigatorLanguage?.toLowerCase().startsWith("zh") ? "zh-TW" : "en";
+export function resolveLanguage(stored: string | null | undefined): AppLanguage {
+  return stored === "en" ? "en" : "zh-TW";
 }

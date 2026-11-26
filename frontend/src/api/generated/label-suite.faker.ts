@@ -12,9 +12,24 @@ import {
   HealthStatus
 } from './label-suite.schemas';
 import type {
-  HealthDataResponse
+  GoogleAuthorizationDataResponse,
+  HealthDataResponse,
+  LoginOptionsDataResponse,
+  SessionDataResponse
 } from './label-suite.schemas';
 
 
+export const getGetAuthOptionsResponseMock = (overrideResponse: Partial<Extract<LoginOptionsDataResponse, object>> = {}): LoginOptionsDataResponse => ({code: faker.string.alpha({length: {min: 10, max: 20}}), data: {googleEnabled: faker.datatype.boolean(), selfRegistrationEnabled: faker.datatype.boolean()}, message: faker.string.alpha({length: {min: 10, max: 20}}), success: faker.datatype.boolean(), timestamp: faker.date.past().toISOString().slice(0, 19) + 'Z', traceId: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
+
+export const getGetCurrentSessionResponseMock = (overrideResponse: Partial<Extract<SessionDataResponse, object>> = {}): SessionDataResponse => ({code: faker.string.alpha({length: {min: 10, max: 20}}), data: {user: {email: faker.string.alpha({length: {min: 10, max: 20}}), id: faker.string.alpha({length: {min: 10, max: 20}}), name: faker.string.alpha({length: {min: 10, max: 20}}), role: faker.helpers.arrayElement(['user','super_admin'] as const)}}, message: faker.string.alpha({length: {min: 10, max: 20}}), success: faker.datatype.boolean(), timestamp: faker.date.past().toISOString().slice(0, 19) + 'Z', traceId: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
+
+export const getGetGoogleAuthorizationResponseMock = (overrideResponse: Partial<Extract<GoogleAuthorizationDataResponse, object>> = {}): GoogleAuthorizationDataResponse => ({code: faker.string.alpha({length: {min: 10, max: 20}}), data: {authorizationUrl: faker.string.alpha({length: {min: 10, max: 20}})}, message: faker.string.alpha({length: {min: 10, max: 20}}), success: faker.datatype.boolean(), timestamp: faker.date.past().toISOString().slice(0, 19) + 'Z', traceId: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
+
+export const getCreateGoogleSessionResponseMock = (overrideResponse: Partial<Extract<SessionDataResponse, object>> = {}): SessionDataResponse => ({code: faker.string.alpha({length: {min: 10, max: 20}}), data: {user: {email: faker.string.alpha({length: {min: 10, max: 20}}), id: faker.string.alpha({length: {min: 10, max: 20}}), name: faker.string.alpha({length: {min: 10, max: 20}}), role: faker.helpers.arrayElement(['user','super_admin'] as const)}}, message: faker.string.alpha({length: {min: 10, max: 20}}), success: faker.datatype.boolean(), timestamp: faker.date.past().toISOString().slice(0, 19) + 'Z', traceId: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
+
 export const getGetHealthResponseMock = (overrideResponse: Partial<Extract<HealthDataResponse, object>> = {}): HealthDataResponse => ({code: faker.string.alpha({length: {min: 10, max: 20}}), data: {database: faker.helpers.arrayElement(Object.values(HealthStatus)), status: faker.helpers.arrayElement(Object.values(HealthStatus))}, message: faker.string.alpha({length: {min: 10, max: 20}}), success: faker.datatype.boolean(), timestamp: faker.date.past().toISOString().slice(0, 19) + 'Z', traceId: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
+
+export const getCreateSessionRefreshResponseMock = (overrideResponse: Partial<Extract<SessionDataResponse, object>> = {}): SessionDataResponse => ({code: faker.string.alpha({length: {min: 10, max: 20}}), data: {user: {email: faker.string.alpha({length: {min: 10, max: 20}}), id: faker.string.alpha({length: {min: 10, max: 20}}), name: faker.string.alpha({length: {min: 10, max: 20}}), role: faker.helpers.arrayElement(['user','super_admin'] as const)}}, message: faker.string.alpha({length: {min: 10, max: 20}}), success: faker.datatype.boolean(), timestamp: faker.date.past().toISOString().slice(0, 19) + 'Z', traceId: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
+
+export const getCreateSessionResponseMock = (overrideResponse: Partial<Extract<SessionDataResponse, object>> = {}): SessionDataResponse => ({code: faker.string.alpha({length: {min: 10, max: 20}}), data: {user: {email: faker.string.alpha({length: {min: 10, max: 20}}), id: faker.string.alpha({length: {min: 10, max: 20}}), name: faker.string.alpha({length: {min: 10, max: 20}}), role: faker.helpers.arrayElement(['user','super_admin'] as const)}}, message: faker.string.alpha({length: {min: 10, max: 20}}), success: faker.datatype.boolean(), timestamp: faker.date.past().toISOString().slice(0, 19) + 'Z', traceId: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
 

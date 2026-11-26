@@ -4,8 +4,19 @@ import { Slot } from "radix-ui";
 
 import { cn } from "@/lib/utils";
 
-/** The variants the approved screen uses (ui-design.md §/dev/gallery, Q9). */
-export const badgeVariantValues = ["success", "warning", "error", "info", "neutral"] as const;
+/**
+ * The variants the approved screens use (ui-design.md §/dev/gallery, Q9).
+ * `role` is the system-role pill of the landing page (design/system Badge
+ * `.badge-role`; login-auth-guard ui-design §元件與 design token).
+ */
+export const badgeVariantValues = [
+  "success",
+  "warning",
+  "error",
+  "info",
+  "neutral",
+  "role",
+] as const;
 
 export type BadgeVariant = (typeof badgeVariantValues)[number];
 
@@ -15,6 +26,7 @@ const variantClasses = {
   error: "border-error-border bg-error-bg text-error",
   info: "border-info-border bg-info-bg text-info",
   neutral: "border-border bg-muted text-muted-foreground",
+  role: "border-primary-border bg-accent px-2.5 py-1 text-accent-foreground",
 } satisfies Record<BadgeVariant, string>;
 
 export const badgeVariants = cva(

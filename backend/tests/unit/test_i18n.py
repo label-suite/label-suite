@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from app.core.auth import AuthenticationRequiredError
+from app.core.csrf import CsrfFailedError
 from app.core.errors import AppError, DatabaseUnavailableError, NotAcceptableError, NotFoundError
 from app.core.i18n import (
     DEFAULT_LOCALE,
@@ -16,6 +18,15 @@ from app.core.i18n import (
     MessageCatalog,
     MessageCatalogError,
     resolve_locale,
+)
+from app.modules.account.service import (
+    GoogleFlowInvalidError,
+    GoogleLoginRejectedError,
+    GoogleUnavailableError,
+    InvalidCredentialsError,
+    RefreshConflictError,
+    SessionExpiredError,
+    SessionInvalidError,
 )
 
 # --- resolve_locale -------------------------------------------------------------------
@@ -118,6 +129,34 @@ EXPECTED_MESSAGES = {
         "資料庫暫時無法連線，請稍後再試",
         "The database is temporarily unavailable. Please try again later.",
     ),
+    # login-auth-guard tasks 3.2 and 3.3: neither sentence says why the request failed.
+    "common.auth_required": ("請先登入", "Please sign in first."),
+    "common.csrf_failed": (
+        "無法確認這個請求，請重新整理頁面後再試",
+        "This request could not be verified. Please reload the page and try again.",
+    ),
+    # login-auth-guard task 4.2; the sentences shown on screen follow design D7.
+    "account.invalid_credentials": ("帳號或密碼錯誤，請再試一次", "Invalid email or password"),
+    "account.session_expired": ("登入已過期，請重新登入", "Session expired, please sign in again"),
+    "account.session_invalid": ("驗證失敗，請重新登入", "Authentication failed, please sign in"),
+    "account.refresh_conflict": (
+        "登入狀態正在更新，請稍後再試",
+        "Your session is being renewed. Please try again shortly.",
+    ),
+    # login-auth-guard task 4.3.
+    "account.google_rejected": (
+        "無法用這個 Google 帳號登入。需要帳號的話，請聯絡系統管理員邀請你。",
+        "You can't sign in with this Google account. "
+        "If you need an account, ask an administrator to invite you.",
+    ),
+    "account.google_flow_invalid": (
+        "Google 登入沒有完成，請再試一次",
+        "Google sign-in did not complete. Please try again.",
+    ),
+    "account.google_unavailable": (
+        "這個平台沒有開放 Google 登入",
+        "Google sign-in is not available on this platform.",
+    ),
 }
 
 
@@ -138,7 +177,20 @@ def test_bundled_catalog_has_exactly_the_contract_keys() -> None:
 def test_every_app_error_message_key_exists_in_the_catalog() -> None:
     catalog = MessageCatalog.load()
 
-    for error in (NotFoundError(), NotAcceptableError(), DatabaseUnavailableError()):
+    for error in (
+        NotFoundError(),
+        NotAcceptableError(),
+        DatabaseUnavailableError(),
+        AuthenticationRequiredError(),
+        CsrfFailedError(),
+        InvalidCredentialsError(),
+        SessionExpiredError(),
+        SessionInvalidError(),
+        RefreshConflictError(),
+        GoogleLoginRejectedError(),
+        GoogleFlowInvalidError(),
+        GoogleUnavailableError(),
+    ):
         assert error.message_key in catalog.keys()
 
 

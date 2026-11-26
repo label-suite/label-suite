@@ -4,7 +4,7 @@ description: 'main 上後端現在的樣子：每個業務模組的分層、Clas
 category: '架構'
 tags: [架構, 後端, 模組, 基礎建設]
 createdAt: '2026-11-23'
-updatedAt: '2026-11-25'
+updatedAt: '2026-11-26'
 ---
 
 # 後端模組與基礎建設
@@ -30,11 +30,12 @@ change 的 `system-design.md` 仍然畫這次新增或修改的類別，以及�
 
 ## 模組一覽
 
-一個業務模組一個資料夾 `backend/app/modules/<module>/`；目前只有 `health`。
+一個業務模組一個資料夾 `backend/app/modules/<module>/`；目前有 `health` 與 `account`。
 
 | 模組 | 資料夾 | 端點（operationId） | 行為的契約 |
 | :--- | :--- | :--- | :--- |
 | [health](#health) | `app/modules/health/` | `getHealth`（`GET /api/v1/health`） | `openspec/specs/health-check/` |
+| [account](#account) | `app/modules/account/` | `getAuthOptions`、`createSession`、`getCurrentSession`、`createSessionRefresh`、`deleteCurrentSession`、`getGoogleAuthorization`、`createGoogleSession`（路徑以 `backend/openapi.json` 為準） | `openspec/specs/` 的 `account-login`、`login-session`、`auth-guard`、`csrf-protection`；Seeder 指令是 `user-management` |
 
 ## health
 
@@ -152,6 +153,208 @@ sequenceDiagram
 
 哪些例外算「連不上」、上限怎麼算，見 [§health 的 503](#health-的-503)。
 
+## account
+
+帳號：登入（Email 與密碼、Google）、一段登入狀態的開始、延續與結束、之後每個模組共用的「目前是誰」判定所需的資料讀取，以及建立第一位 Seeder 管理員的初始化指令。七個端點的資源直接接在 `/api/v1` 後面（api-agent-rules A1 不插模組段）；規格依據是 01-01、01-05 與 06-01。
+
+登入失敗鎖定還沒有（見 [§已知限制](#已知限制)）；插入點在 `PasswordLoginService.login` 正規化 Email 之後、查帳號之前。
+
+| 層 | 檔案 | 做什麼 |
+| :--- | :--- | :--- |
+| Router | `router.py` | 七個 handler：`get_auth_options`、`create_session`、`get_current_session`、`create_session_refresh`、`delete_current_session`、`get_google_authorization`、`create_google_session`。組 `SourceInfo`、發與清 cookie 一律經 `core.cookies.SessionCookies`、在兩個 `201` 回應加 `Location: /api/v1/current-session`；錯誤回應也要清 cookie 時，在接住後重丟的錯誤上設 `response_hook`（見 [§錯誤怎麼對到 envelope](#錯誤怎麼對到-envelope)） |
+| Service | `service/`（套件） | 合起來超過 400 行（B11），所以拆成套件；import-linter 仍把 `app.modules.account.service` 當成同一層，呼叫端只從 `service/__init__.py` import。交易都由這一層 commit，依賴工廠也在這裡，各檔見下表 |
+| Repository | `repository.py` | `UserRepository`、`AccountSessionRepository`、`RefreshTokenRepository`；只查與寫，不 commit。延續的「消耗」與寬限期重發是單一條件式 `UPDATE ... WHERE`，以 rowcount 判斷誰搶到，兩種資料庫行為相同 |
+| Models | `models.py` | `User`、`AccountSession`、`AccountRefreshToken`；欄位見[候選資料表字典](./data-table-dictionary.mdx)的 `account` 組 |
+| Schemas | `schemas.py` | request 有 `LoginRequest`、`RefreshRequest`（一律是空物件 `{}`）、`GoogleSessionRequest`；response 一律明列欄位（登入者自己的 `id`、`name`、`email`、`role`），**不回** `hashed_password`、`google_subject`、`credential_version`、`is_seeder` 與登入狀態的識別碼 |
+
+| `service/` 裡的檔案 | 內容 |
+| :--- | :--- |
+| `__init__.py` | 對外唯一的 import 入口，re-export 下列各檔的公開名稱 |
+| `login.py` | `PasswordLoginService`、`LoginOptionsService`，與依賴工廠 `get_password_login_service`、`get_login_options_service` |
+| `google.py` | `GoogleLoginService`、`GoogleAuthorization`、依賴工廠 `get_google_login_service` |
+| `session.py` | `SessionService`、`SessionPolicy`、`SourceInfo`、`IssuedSession`、實作 `core.auth.PrincipalLoader` 的 `AccountPrincipalLoader`、`session_data`、`may_sign_in`、依賴工廠 `get_session_service` |
+| `seeder.py` | `SeederService`、`SeederCheck`、`SeederConflictError`、`password_meets_policy`；只有初始化指令呼叫，見 [§Seeder 初始化指令](#seeder-初始化指令) |
+| `errors.py` | 七個繼承 `AppError` 的帳號錯誤，都不帶參數；登入失敗的幾種原因共用同一個錯誤碼，不分是帳號不存在、密碼錯誤還是停用。碼與 HTTP 狀態見[錯誤碼](./error-codes.mdx#account) |
+
+### 分層與類別
+
+`router.py` 只 import `service` 與 `schemas`；`AccountPrincipalLoader` 由 `app.main` 在組裝時放進 `app.state.principal_loader`，`core` 因此不必 import 本模組（契約 `Core does not depend on modules`）。
+
+```mermaid
+classDiagram
+  direction LR
+  class AccountRouter {
+    <<router>>
+    +get_auth_options(request, service) ApiResponse~LoginOptionsData~
+    +create_session(request, response, body LoginRequest, service) ApiResponse~SessionData~
+    +get_current_session(request, principal Principal, service) ApiResponse~SessionData~
+    +create_session_refresh(request, response, body RefreshRequest, service) ApiResponse~SessionData~
+    +delete_current_session(request, service) Response
+    +get_google_authorization(request, response, service) ApiResponse~GoogleAuthorizationData~
+    +create_google_session(request, response, body GoogleSessionRequest, service) ApiResponse~SessionData~
+  }
+  class PasswordLoginService {
+    <<service>>
+    +login(email str, password str, source SourceInfo, now datetime) IssuedSession
+  }
+  class GoogleLoginService {
+    <<service>>
+    +begin() GoogleAuthorization
+    +complete(code str, state str, flow_cookie str | None, source SourceInfo, now datetime) IssuedSession
+  }
+  class SessionService {
+    <<service>>
+    +start(user User, source SourceInfo, now datetime) IssuedSession
+    +current(principal Principal) SessionData
+    +refresh(raw_refresh str, now datetime) IssuedSession
+    +logout(raw_refresh str | None, now datetime) None
+    +revoke_all(user_id UUID, now datetime) int
+  }
+  class AccountPrincipalLoader {
+    <<service>>
+    +load(claims AccessClaims, db AsyncSession) Principal
+  }
+  class LoginOptionsService {
+    <<service>>
+    +get() LoginOptionsData
+  }
+  class SeederService {
+    <<service>>
+    +find_existing(normalized_email str) SeederCheck
+    +create(normalized_email str, name str, password str) User
+  }
+  class UserRepository {
+    <<repository>>
+    +get_by_id(user_id UUID) User | None
+    +get_by_email(normalized str) User | None
+    +get_by_google_subject(subject str) User | None
+    +get_seeder() User | None
+    +count() int
+    +add(user User) None
+  }
+  class AccountSessionRepository {
+    <<repository>>
+    +add(row AccountSession) None
+    +get_with_user(session_id UUID) tuple | None
+    +touch(session_id UUID, at datetime) None
+    +revoke(session_id UUID, at datetime, logged_out bool) bool
+    +revoke_all_for_user(user_id UUID, at datetime) int
+  }
+  class RefreshTokenRepository {
+    <<repository>>
+    +add(row AccountRefreshToken) None
+    +get_with_session(token_hash str) tuple | None
+    +consume_if_unused(token_id UUID, at datetime) bool
+    +consumed_at(token_id UUID) datetime | None
+    +reissue_if_below(token_id UUID, limit int) bool
+  }
+  class PrincipalLoader {
+    <<protocol>>
+    +load(claims AccessClaims, db AsyncSession) Principal
+  }
+  class GoogleOidcClient {
+    <<entry>>
+    +authorization_url(state str, nonce str, code_verifier str) str
+    +exchange(code str, code_verifier str, nonce str) GoogleIdentity
+  }
+  AccountRouter --> PasswordLoginService : Depends
+  AccountRouter --> GoogleLoginService : Depends
+  AccountRouter --> SessionService : Depends
+  AccountRouter --> LoginOptionsService : Depends
+  PasswordLoginService --> UserRepository
+  PasswordLoginService --> SessionService
+  GoogleLoginService --> GoogleOidcClient
+  GoogleLoginService --> UserRepository
+  GoogleLoginService --> SessionService
+  SeederService --> UserRepository
+  SessionService --> AccountSessionRepository
+  SessionService --> RefreshTokenRepository
+  SessionService --> UserRepository
+  AccountPrincipalLoader ..|> PrincipalLoader
+  AccountPrincipalLoader --> AccountSessionRepository
+```
+
+`IssuedSession` 帶著這次要發的 access token、refresh token、CSRF 值、refresh token 的到期時間與帳號，Router 把這幾個純值交給 `SessionCookies.set_session` 寫成三個 cookie 再組回應。`AccountSessionRepository.get_with_user` 回 `(AccountSession, User)`，`RefreshTokenRepository.get_with_session` 回 `(AccountRefreshToken, AccountSession, User)`，查不到都是 `None`。`GoogleOidcClient` 的兩個方法都是 async，在入口套件 `app/oidc/`；`PrincipalLoader`、`Principal`、`AccessClaims` 在 `core/auth.py` 與 `core/tokens.py`，見 [§`core/` 各模組](#core-各模組)。
+
+:::note{title="登入狀態的期限與寬限（SessionPolicy）" collapsible}
+- 絕對上限 90 天（從登入算起）、閒置上限 7 天（從最後一次延續算起），任一個到了就過期
+- access token 15 分鐘，但不超過 90 天上限；refresh token 到期是「現在加 7 天」與「90 天上限」取早的那個，三個 session cookie 都活到這個時間
+- 同一張 refresh token 第一次使用後 30 秒內再用，算同一個瀏覽器的另一個分頁，可以多發 1 次；寬限期內第三次用回 `409 ACCOUNT_REFRESH_CONFLICT`，什麼都不改；寬限期外重用視為疑似盜用，撤銷這個帳號全部的登入狀態並 commit 後才回 `401`
+- 延續的判定順序：token 查不到、登入狀態已撤銷或帳號不能登入 → 已過期（撤銷但不記登出）→ 重用；已撤銷的登入狀態不會有寬限
+- 登出只在 refresh token 對得到、登入狀態仍有效且未過期時才撤銷並記 `logged_out_at`；其他情況什麼都不寫，回應一律 `204`
+:::
+
+### 主要情境
+
+#### 登入成功進入儀表板
+
+```mermaid
+sequenceDiagram
+  participant C as Client
+  participant R as create_session
+  participant L as PasswordLoginService
+  participant S as SessionService
+  participant U as UserRepository
+  participant Q as AccountSessionRepository 與 RefreshTokenRepository
+  participant DB as 資料庫
+  C->>R: POST /api/v1/sessions（email、password；CSRF middleware 對這條放行）
+  R->>L: login(email, password, source, now)
+  L->>L: normalize_email()，超過 254 字就空跑一次密碼驗證後當成帳密不對
+  L->>U: get_by_email(normalized)
+  U->>DB: SELECT users
+  DB-->>U: User
+  L->>L: 驗密碼（帳號不存在或沒有本地密碼時空跑一次）、is_active、anonymized_at 為空
+  L->>S: start(user, source, now)
+  S->>Q: add(AccountSession)、flush、add(AccountRefreshToken)、flush
+  Q->>DB: INSERT
+  S-->>L: IssuedSession（不 commit）
+  L->>DB: commit
+  L-->>R: IssuedSession
+  R->>R: SessionCookies.set_session（access、refresh、CSRF 三個 cookie）並加 Location
+  R-->>C: 201 成功外層，data 只有 user 的 id、name、email、role
+```
+
+#### 每一次操作都用最新的身分判定
+
+```mermaid
+sequenceDiagram
+  participant C as Client
+  participant G as get_current_principal（core）
+  participant P as AccountPrincipalLoader
+  participant Q as AccountSessionRepository
+  participant DB as 資料庫
+  participant H as 任一受保護的 handler
+  C->>G: 帶 access cookie 的請求
+  G->>G: SessionCookies.read_access，AccessTokenCodec.decode（簽章、exp）
+  alt cookie 不在、簽章不對或已過期
+    G-->>C: 401 AUTH_REQUIRED，不說明原因
+  end
+  G->>P: load(claims, db)
+  P->>Q: get_with_user(claims.session_id)
+  Q->>DB: SELECT account_session JOIN users
+  DB-->>Q: 一列或沒有
+  P->>P: 依序判定：存在、屬於 claims.user_id、未撤銷、未過 90 天與 7 天、帳號啟用且未匿名化、credential_version 相同、role 是兩個值之一
+  alt 任何一項不成立
+    P-->>G: 拒絕
+    G-->>C: 401 AUTH_REQUIRED，不說明原因
+  end
+  P-->>G: Principal（role 取自資料庫，不取 JWT）
+  G->>H: principal
+```
+
+### Seeder 初始化指令
+
+第一位系統管理員只能由 `app/scripts/create_seeder.py` 建立，沒有任何端點能建立帳號；怎麼執行見[本機開發的「建立第一位系統管理員」](../../development/workflow/local-development.mdx#建立第一位系統管理員)。
+
+| 項目 | 做法 |
+| :--- | :--- |
+| 參數 | 只有 `--email`、`--name`（去除前後空白後 1 到 100 字）、`--password-stdin`；Email 經 `normalize_email`，超過 254 字或不像 Email 就拒絕 |
+| 密碼 | 標準輸入是終端機時以 `getpass` 問兩次並比對；`--password-stdin` 時讀一行；兩者都不是就拒絕。規則由 `password_meets_policy` 判斷：至少 8 字元，含大寫、小寫與數字 |
+| 冪等 | `SeederService.find_existing` 回 `SeederCheck`：`UNCHANGED`（同一個 Email 已是 Seeder，不問密碼、退出碼 `0`）、`OTHER_SEEDER` 與 `EMAIL_TAKEN`（拒絕，退出碼 `2`）、`CREATE` |
+| 交易 | `SeederService.create` 在一筆交易寫入啟用中的 `super_admin`、`is_seeder = true` 與 argon2id 雜湊；兩個人同時執行時由部分唯一索引或 Email 唯一限制擋下，`IntegrityError` 轉成 `SeederConflictError`，退出碼 `2` |
+| 設定 | 只讀 `DatabaseSettings`，自己開 engine 與 session、結束時 dispose；不需要 `CORS_ALLOWED_ORIGINS` 或 `AUTH_SECRET` |
+| 輸出 | 英文；成功一行到標準輸出，錯誤以 `create_seeder: ` 開頭寫到標準錯誤；不含密碼或雜湊 |
+
 ## 後端基礎建設
 
 `app/core/` 放換一個業務也照樣需要的東西，業務邏輯一律在 `app/modules/<module>/`；理由見 [ADR-003 的 D3](../../development/adr/003-backend-architecture.mdx#d3-後端採模組內分層)。
@@ -164,17 +367,21 @@ backend/
 ├─ alembic.ini
 ├─ alembic/
 │  ├─ env.py                 只讀 DatabaseSettings；自動載入各模組的 models
-│  └─ versions/              目前只有空的基準 revision
+│  └─ versions/              基準 revision 與 account 的三張表
 ├─ openapi.json              匯出的 API 文件，提交進 repo
 ├─ app/
 │  ├─ main.py                create_app()：組裝入口
 │  ├─ core/                  全站共用的基礎建設，見下表
 │  ├─ i18n/<locale>/messages.json   外層 message 的字串
 │  ├─ scripts/export_openapi.py     匯出 openapi.json（不帶 --output 時同時寫文件站副本）
-│  └─ modules/<module>/      業務模組：router、service、repository、schemas（有表時加 models）
+│  ├─ scripts/create_seeder.py      建立第一位 Seeder 管理員（密碼互動輸入或 --password-stdin；冪等）
+│  ├─ oidc/                  Google OIDC 的入口套件（B12 單一入口，唯一 import authlib 的地方）
+│  └─ modules/<module>/      業務模組：router、service、repository、schemas（有表時加 models；service 超過 400 行時改成 service/ 套件）
 └─ tests/
    ├─ unit/
    ├─ integration/
+   ├─ factories/             建立測試資料的 helper（目前是 accounts.py）
+   ├─ support/               測試用的替身與客戶端（browser.py、google_oidc.py）
    └─ probe.py               只在測試掛載的探測路由
 ```
 
@@ -183,6 +390,8 @@ backend/
 | `app/modules/` | 業務模組 | 有業務規則、會出現在 spec 的 Scenario |
 | `app/core/` | 基礎建設 | 換一個業務也照樣需要，通常只在 `create_app` 掛一次 |
 | `app/scripts/` | 命令列工具 | 用 `uv run python -m app.scripts.<name>` 執行，不是端點 |
+| `tests/factories/`、`tests/support/` | 測試輔助 | 多個測試檔共用、不是測試本身；見 [§測試輔助](#測試輔助) |
+| `app/oidc/` | Google OIDC 入口 | 對外整合的單一入口（[backend-agent-rules B12](../../development/rules/backend-agent-rules.mdx) 的 (a) 寫法：頂層入口套件，登記在 `tests/unit/import_tree.py` 的 `ENTRY_TOP_LEVEL_PACKAGES`）；測試替身不放這裡，測試在網路邊界以 `monkeypatch` 替換 `httpx.AsyncClient.send` |
 
 ### `core/` 各模組
 
@@ -190,17 +399,24 @@ backend/
 
 | 檔案 | 管什麼 | 主要介面 |
 | :--- | :--- | :--- |
-| `config.py` | 唯一的設定入口 | `DatabaseSettings`、`Settings`、`load_settings`、`ConfigError` |
-| `db.py` | engine、request session、declarative base | `create_engine`、`create_sessionmaker`、`get_db`、`Base`、`NAMING_CONVENTION` |
+| `config.py` | 唯一的設定入口 | `DatabaseSettings`、`Settings`（含 `google_configured()`、`mail_configured()`）、`load_settings`、`ConfigError` |
+| `db.py` | engine、request session、declarative base；時間欄位一律存 UTC | `create_engine`、`create_sessionmaker`、`get_db`、`Base`、`NAMING_CONVENTION`、`UtcDateTime`（SQLite 讀回的時間沒有時區，這個型別在讀寫時補成 UTC） |
 | `schemas.py` | 共用 schema 基底、外層、分頁 | `RequestModel`、`ResponseModel`、`ApiResponse`、`ErrorResponse`、`ErrorDetail`、`PaginatedResponse`、`PaginationParams` |
 | `envelope.py` | 組成功與錯誤外層；correlation id 的 contextvar | `ok`、`success`、`error_response`、`current_trace_id` |
-| `errors.py` | 領域錯誤與 exception handler；`AppError(already_logged=True)` 表示丟出的那一層已自己記過 | `AppError`、`NotFoundError`、`NotAcceptableError`、`DatabaseUnavailableError`、`register_exception_handlers` |
+| `errors.py` | 領域錯誤與 exception handler；`AppError(already_logged=True)` 表示丟出的那一層已自己記過；`AppError.response_hook` 讓 router 在錯誤回應送出前改 HTTP 層（例：清 cookie） | `AppError`、`NotFoundError`、`NotAcceptableError`、`DatabaseUnavailableError`、`register_exception_handlers` |
 | `middleware.py` | 自寫的純 ASGI 中介層 | `CorrelationIdMiddleware`、`AccessLogMiddleware`、`UnhandledExceptionMiddleware`、`LocaleMiddleware` |
 | `log_config.py` | 整個後端的 log 輸出設定與一行 `key=value` 格式；讓每筆 log record 帶目前請求的 `traceId`；「這個請求已記過」的標記 | `configure_logging`、`install_trace_id_record_factory`、`KeyValueFormatter`、`mark_error_logged`、`is_error_logged`、`is_repo_handler`；常數 `ACCESS_LOGGER_NAME`（`app.access`）、`NO_TRACE_ID`（`-`）、`UNMATCHED_ROUTE`（`<unmatched>`） |
 | `i18n.py` | `Accept-Language` 解析與訊息目錄 | `resolve_locale`、`MessageCatalog` |
 | `openapi.py` | operationId、唯一性檢查、API 文件後處理、版號 | `generate_operation_id`、`assert_unique_operation_ids`、`install_openapi`、`get_app_version` |
 | `log_safety.py` | 把來自請求的值轉成安全的一行 log | `escape_for_log` |
 | `paths.py` | 路徑常數 | `API_V1_PREFIX`（`/api/v1`） |
+| `auth.py` | 取得目前使用者（B12 入口 4）；授權四步的第 1、2 步 | `Principal`、`SystemRole`、`PrincipalLoader`（Protocol）、`get_current_principal`、`AuthenticationRequiredError` |
+| `tokens.py` | 從 `AUTH_SECRET` 以用途標籤衍生三把金鑰；access JWT 的簽發與驗證；不透明 token 與它的雜湊；綁定登入狀態的 CSRF 值；短期簽章 payload | `TokenKeys`（`derive`）、`AccessClaims`、`AccessTokenCodec`（`issue`、`decode`、給 CSRF 用的 `decode_ignoring_expiry`）、`InvalidAccessTokenError`、`new_opaque_token`、`hash_token`、`csrf_value_for`、`sign_payload`、`verify_payload` |
+| `cookies.py` | 發、清與讀登入 cookie 的唯一 helper（B12 入口 5）；四個 cookie 都是 `__Host-`、`Secure`、`Path=/`、`SameSite=Lax`，只有 CSRF cookie 不是 `HttpOnly` | `SessionCookies`：`set_session`（收 access、refresh、CSRF 三個純值與 `expires_at`、`now`）、`set_oidc_flow`、`clear`、`clear_oidc_flow`、`read_access`、`read_refresh`、`read_csrf`、`read_oidc_flow`；cookie 名稱常數與 `OIDC_FLOW_MAX_AGE`（600 秒） |
+| `csrf.py` | CSRF 驗證 middleware（B12 入口 6）；放行清單只寫在這裡 | `CsrfMiddleware`、`CsrfFailedError`、`CSRF_EXEMPT_OPERATIONS`、`CSRF_HEADER`（`X-CSRF-Token`） |
+| `auth_secret.py` | `AUTH_SECRET` 的來源：有設就用；Lite 層沒設就在資料 volume 產生並重用；正式層沒設就失敗 | `resolve_auth_secret`、`KEY_FILE_NAME` |
+| `passwords.py` | argon2id 密碼雜湊與驗證，在 worker thread 執行，不擋 event loop | `PasswordHasher`：三個方法都是 async：`hash`、`verify`（雜湊格式不對回 `False`，不丟例外）、`verify_dummy`（帳號不存在時空跑一次驗證，讓回應時間不洩漏帳號是否存在） |
+| `email_identity.py` | Email 的正規化與長度上限（01-05 Q14，登入、註冊、邀請、換 Email 共用）；上限以正規化之後的值計算 | `normalize_email`、`MAX_EMAIL_LENGTH`（254）、`EmailTooLongError`（訊息不含 Email） |
 
 `log_safety.py` 與 `paths.py` 不 import `app` 的任何東西，任何模組都能用而不產生循環；`envelope.py` 擁有 correlation id 的 contextvar，所以依賴方向只會是 middleware → envelope。`log_config.py` 只 import `envelope` 與 `config`，`middleware.py` 與 `errors.py` 都能 import 它。
 
@@ -216,18 +432,19 @@ cd backend && uv run uvicorn app.main:create_app --factory
 | :--- | :--- | :--- |
 | 1 | `settings` 是 `None` 時用 `load_settings(Settings)` 從環境變數讀 | `ConfigError`，只寫變數名與原因 |
 | 1a | `configure_logging(settings)`：安裝帶 `trace_id` 的 record factory；root 掛一個 `KeyValueFormatter` 的 handler（預設寫 stderr，測試可用可選的 `stream` 參數擷取輸出），root 與 handler 的等級都是 `LOG_LEVEL`；`sqlalchemy`（含 `engine`、`pool`）、`aiosqlite`、`asyncpg` 固定 `WARNING`；`uvicorn` 改走 root handler，`uvicorn.access` 清空 handler 並 `propagate=False`（關掉 uvicorn 內建 access log）。重複呼叫不會疊加 handler | — |
+| 1b | `resolve_auth_secret` 決定 `AUTH_SECRET`，寫回 `settings`；`TokenKeys.derive` 衍生三把金鑰，建 `AccessTokenCodec`。組好 app 後，金鑰、codec 與 `AccountPrincipalLoader` 分別放進 `app.state.token_keys`、`access_codec`、`principal_loader` | `ConfigError`（正式層沒設，或 Lite 層存的祕密檔不合格），只寫變數名 |
 | 2 | 建 `FastAPI`：版號讀 `pyproject.toml`、`generate_unique_id_function` 設成 `generate_operation_id`；`API_DOCS_ENABLED` 為 `false` 時 `docs_url`、`redoc_url`、`openapi_url` 傳 `None`（四條內建路由都不註冊，請求落入既有 404 envelope） | 讀不到版號就失敗，沒有預設值 |
 | 3 | 載入訊息目錄，放進 `app.state.message_catalog` | `MessageCatalogError` |
 | 4 | 依序加中介層，見 [§請求管線](#請求管線)；`AccessLogMiddleware` 的 `quiet_success_routes` 在這裡傳入（`/api/v1/health`），core 不寫死路徑 | — |
 | 5 | 註冊 exception handler，見 [§錯誤怎麼對到 envelope](#錯誤怎麼對到-envelope) | — |
-| 6 | 建 `/api/v1` 父 router，把各模組的 router 掛進去 | — |
+| 6 | 建 `/api/v1` 父 router，把 `health` 與 `account` 的 router 掛進去 | — |
 | 7 | 檢查 operationId 不重複，換上後處理過的 `app.openapi` | `OperationIdCollisionError` |
 
 lifespan 啟動時建 engine 與 sessionmaker，放在 `app.state.engine`、`app.state.sessionmaker`；關閉時 `dispose()` engine。模組層沒有任何全域的 engine 或 session。
 
 ### 請求管線
 
-一個 `/api/v1` 請求由外而內穿過五個中介層與 exception handler 才到模組；每一種失敗都在固定的一層產生回應，而且每個回應的 `traceId` 都和 `X-Correlation-ID` 標頭同值。
+一個 `/api/v1` 請求由外而內穿過六個中介層與 exception handler 才到模組；每一種失敗都在固定的一層產生回應，而且每個回應的 `traceId` 都和 `X-Correlation-ID` 標頭同值。
 
 {/* @ai-visualize
 id: backend-request-pipeline
@@ -261,17 +478,18 @@ import BackendRequestPipeline from '@notes/components/backend-request-pipeline'
 | 3 | `AccessLogMiddleware`（只作用在 `/api/v1`） | 回應送完後寫一行存取紀錄到 `app.access`：method、路由模板（沒有模板記 `<unmatched>`）、狀態、耗時；2xx／3xx 記 INFO、4xx 記 WARNING、5xx 記 ERROR。請求已被標記為記過，或 2xx 且路由在 `quiet_success_routes` 裡（健康檢查）時不寫。耗時從進入這一層到最後一段 body 送出，一位小數；路由模板由 `route_template` 以 `iter_route_contexts` 對照（含 `/api/v1` 前綴）。內層拋例外時照同一套判斷（還沒開始回應的記 `500`），再原樣往外拋 | 無 |
 | 4 | `UnhandledExceptionMiddleware` | 攔下沒有 handler 的例外，記一筆 ERROR，並標記這個請求已記過 | `500 INTERNAL_ERROR` |
 | 5 | `LocaleMiddleware`（只作用在 `/api/v1`） | 解析 `Accept-Language`，回應時加 `Content-Language` | `406 NOT_ACCEPTABLE`，一律 zh-TW |
+| 5a | `CsrfMiddleware`（只作用在 `POST`、`PUT`、`PATCH`、`DELETE`） | 在路由之前判定。請求**沒有** access cookie 時不驗、直接交給路由；有時要 `X-CSRF-Token` 標頭與 CSRF cookie 都在，且兩者都等於以 access token 裡的 `sid`（驗簽章、不看到期）算出的 `HMAC(csrf key, sid)`。放行清單 `CSRF_EXEMPT_OPERATIONS` 以 method 加完整路徑比對，四條：Email 與密碼登入、Google 登入完成、延續、登出 | `403 CSRF_FAILED` |
 | 6 | Starlette `ExceptionMiddleware` | 執行註冊的 exception handler | `404`、`405`、`422` 與各 `AppError` |
 | 7 | Router → Service → Repository | 模組內分層 | 成功外層，由 Router 的 `ok()` 組 |
 
-`500` 自己攔、不交給 `ServerErrorMiddleware`：它在所有中介層外面，由它產生的 `500` 不會帶 `Access-Control-Allow-Origin` 與 `X-Correlation-ID`。自寫的中介層都是純 ASGI、不用 `BaseHTTPMiddleware`，contextvar 才不會在 task 之間斷掉、串流回應也不會被緩衝。兩個理由的出處見已歸檔的 [backend-skeleton `system-design.md`](https://github.com/label-suite/label-suite/blob/main/openspec/changes/archive/2026-11-20-backend-skeleton/system-design.md) §請求穿過的層。存取紀錄放在 CORS 內側、未處理例外外側：看得到 `406` 與最終的 `500` 及其「已記過」標記，預檢則自然不經過它。認證與 CSRF 還沒有，見 [§已知限制](#已知限制)。
+`500` 自己攔、不交給 `ServerErrorMiddleware`：它在所有中介層外面，由它產生的 `500` 不會帶 `Access-Control-Allow-Origin` 與 `X-Correlation-ID`。自寫的中介層都是純 ASGI、不用 `BaseHTTPMiddleware`，contextvar 才不會在 task 之間斷掉、串流回應也不會被緩衝。兩個理由的出處見已歸檔的 [backend-skeleton `system-design.md`](https://github.com/label-suite/label-suite/blob/main/openspec/changes/archive/2026-11-20-backend-skeleton/system-design.md) §請求穿過的層。存取紀錄放在 CORS 內側、未處理例外外側：看得到 `406` 與最終的 `500` 及其「已記過」標記，預檢則自然不經過它。認證不是中介層，是端點掛的依賴 `get_current_principal`，見 [§account](#account)；CSRF 在 `LocaleMiddleware` 內側，錯誤外層的 `message` 才有語系。
 
-五個中介層之外還有 uvicorn 的 `ProxyHeadersMiddleware`：它包在整個 app 的最外面，在請求進到 `CorrelationIdMiddleware` 之前，就依 `FORWARDED_ALLOW_IPS` 把 `scope["client"]` 與 `scope["scheme"]` 改寫成 `X-Forwarded-For`（由右往左第一個不受信任的位址）與 `X-Forwarded-Proto` 的值，所以五個中介層、存取紀錄與所有路由看到的已是改寫後的值，應用程式不另外處理。對端不在信任清單內時兩個標頭都不看。`CMD` 不帶 `--forwarded-allow-ips` 與 `--proxy-headers`，信任清單只由環境變數決定；改寫後 `scope["client"]` 的埠是 0。
+六個中介層之外還有 uvicorn 的 `ProxyHeadersMiddleware`：它包在整個 app 的最外面，在請求進到 `CorrelationIdMiddleware` 之前，就依 `FORWARDED_ALLOW_IPS` 把 `scope["client"]` 與 `scope["scheme"]` 改寫成 `X-Forwarded-For`（由右往左第一個不受信任的位址）與 `X-Forwarded-Proto` 的值，所以六個中介層、存取紀錄與所有路由看到的已是改寫後的值，應用程式不另外處理。對端不在信任清單內時兩個標頭都不看。`CMD` 不帶 `--forwarded-allow-ips` 與 `--proxy-headers`，信任清單只由環境變數決定；改寫後 `scope["client"]` 的埠是 0。
 
 :::note{title="CORS 的實際設定" collapsible}
 - 來源：`CORS_ALLOWED_ORIGINS`，見 [§設定](#設定)
 - 方法：`GET`、`POST`、`PUT`、`PATCH`、`DELETE`、`OPTIONS`
-- 允許的請求標頭：`Content-Type`、`Accept-Language`、`X-Correlation-ID`
+- 允許的請求標頭：`Content-Type`、`Accept-Language`、`X-Correlation-ID`、`X-CSRF-Token`
 - 公開的回應標頭：`X-Correlation-ID`
 - `allow_credentials` 跟著 `CORS_ALLOW_CREDENTIALS`，預設 `true`
 :::
@@ -282,12 +500,14 @@ service 只丟例外、不組回應；例外在下表那一層變成錯誤外層
 
 | 例外或情況 | 在哪一層變成回應 | HTTP | `code` | 訊息鍵 |
 | :--- | :--- | :--- | :--- | :--- |
-| `AppError` 的子類別 | `handle_app_error` | 類別的 `status_code` | 類別的 `code` | 類別的 `message_key` |
+| `AppError` 的子類別 | `handle_app_error`；錯誤上設了 `response_hook` 時，組好錯誤外層後最後套用它 | 類別的 `status_code` | 類別的 `code` | 類別的 `message_key` |
 | `RequestValidationError` | `handle_validation_error` | `422` | `VALIDATION_FAILED` | `common.validation_failed` |
 | 路由找不到 | `handle_http_exception` | `404` | `NOT_FOUND` | `common.not_found` |
 | 方法不允許 | `handle_http_exception` | `405`，保留 `Allow` 標頭 | `METHOD_NOT_ALLOWED` | `common.method_not_allowed` |
 | 其他狀態的 `HTTPException` | `handle_http_exception`，另記一筆 ERROR 並標記已記過 | `500` | `INTERNAL_ERROR` | `common.internal_error` |
 | `Accept-Language` 全被拒 | `LocaleMiddleware` | `406` | `NOT_ACCEPTABLE` | `common.not_acceptable` |
+| CSRF 驗不過 | `CsrfMiddleware` | `403` | `CSRF_FAILED` | `common.csrf_failed` |
+| 沒有可通行的登入狀態 | `AuthenticationRequiredError`（`AppError` 的子類別），由 `get_current_principal` 丟出，經 `handle_app_error` | `401` | `AUTH_REQUIRED` | `common.auth_required` |
 | 其他例外，含 `ResponseValidationError` | `UnhandledExceptionMiddleware` | `500` | `INTERNAL_ERROR` | `common.internal_error` |
 
 錯誤碼的格式與通用碼見 `openspec/specs/api-envelope/spec.md`。
@@ -298,6 +518,7 @@ service 只丟例外、不組回應；例外在下表那一層變成錯誤外層
 - `ErrorDetail` 的 `location` 取 Pydantic `loc` 的第一段，`field` 是其餘各段以 `.` 串接；body 無法解析（`json_invalid`）時 `field` 為空字串
 - 只留 Pydantic 的 `type`（成為 `code`）與 `msg`（成為 `message`，英文）；`input`、`ctx`、`url` 一律丟掉，送進來的值不會回顯
 - `AppError(params)` 的 `params` 會填進訊息範本、回到前端，不能放內部識別碼或祕密
+- `response_hook` 只由 router 設定：service 不碰 HTTP，router 接住錯誤、設好 hook 再原樣重丟。目前兩處：延續回 `ACCOUNT_SESSION_EXPIRED`、`ACCOUNT_SESSION_INVALID` 時設 `SessionCookies.clear`；Google 登入完成回 `ACCOUNT_GOOGLE_FLOW_INVALID`、`ACCOUNT_GOOGLE_REJECTED` 時設 `SessionCookies.clear_oidc_flow`。清 cookie 因此仍只經 `SessionCookies`
 - 每個 `/api/v1` 操作都在 API 文件宣告 `404`、`405`、`406`、`500` 回應：父 router 統一帶上，模組不必各自寫
 :::
 
@@ -327,6 +548,7 @@ log 只記型別、位置與 `traceId`，不記任何可能帶著請求或資料
 | 存取紀錄只記 method、路由模板（沒有模板記固定的 `<unmatched>`，從不記實際路徑）、狀態碼、耗時與 traceId；不記 query、body、標頭、cookie、來源 IP，method 先經 `escape_for_log` | `AccessLogMiddleware` |
 | 每一筆紀錄都是一行 `key=value`，`msg` 裡的控制字元寫成跳脫序列；第三方紀錄帶 `exc_info` 時只寫 `excType`（例外型別），不寫例外訊息與 traceback 文字 | `KeyValueFormatter` |
 | uvicorn 內建 access log 會印出 query，在程式裡關掉；`sqlalchemy`（父 logger，含 `engine` 與 `pool`）、`aiosqlite`、`asyncpg` 固定 `WARNING`，`LOG_LEVEL=DEBUG` 也不會印出 SQL 本文、參數或驅動的錯誤文字（`aiosqlite` 在 DEBUG 記下的參數不經 `hide_parameters`） | `configure_logging` |
+| `AUTH_SECRET` 只記來源與路徑，不記值、長度或雜湊；Google 交換或驗證失敗時丟出的錯誤不串接原例外，Google 的回應不會進 log | `resolve_auth_secret`、`GoogleOidcClient.exchange` |
 | engine 一律 `hide_parameters=True`，SQL 參數不會出現在例外訊息或 SQL echo | `db.create_engine` |
 | 設定錯誤只寫變數名與原因，不寫設定值；原本的 `ValidationError` 以 `from None` 丟掉 | `config.load_settings` |
 
@@ -354,7 +576,7 @@ log 只記型別、位置與 `traceId`，不記任何可能帶著請求或資料
 
 ### 設定
 
-設定只從環境變數來，分兩層：`DatabaseSettings` 只有資料庫，Alembic 只讀這一層；`Settings` 再加上 API 要的 CORS、內建文件路由的開關、log 等級與信任代理的位址清單。一律透過 `load_settings` 建立。
+設定只從環境變數來，分兩層：`DatabaseSettings` 只有資料庫，Alembic 只讀這一層；`Settings` 再加上 API 要的 CORS、內建文件路由的開關、log 等級、信任代理的位址清單，以及認證用的祕密、Google 與寄信是否設定。一律透過 `load_settings` 建立。
 
 | 環境變數 | 層 | 必填 | 規則 |
 | :--- | :--- | :--- | :--- |
@@ -365,8 +587,11 @@ log 只記型別、位置與 `traceId`，不記任何可能帶著請求或資料
 | `API_DOCS_ENABLED` | API | 否 | 布林，預設 `true`；`false` 時不提供 FastAPI 內建的 `/docs`、`/docs/oauth2-redirect`、`/redoc`、`/openapi.json`。`docker-compose.prod.yml` 的後端明確設為 `false` |
 | `LOG_LEVEL` | API | 否 | `DEBUG`、`INFO`、`WARNING`、`ERROR`、`CRITICAL` 之一，不分大小寫，預設 `INFO`；其他值 `ConfigError`。管整個後端的輸出等級（root 與它的 handler）；資料庫套件的 logger（`sqlalchemy`、`aiosqlite`、`asyncpg`）不跟著它，固定 `WARNING`。兩層編排檔以 `${LOG_LEVEL:-INFO}` 傳入後端容器 |
 | `FORWARDED_ALLOW_IPS` | API | 否 | 逗號分隔的單一 IP 或 CIDR（去除空白），預設 `127.0.0.1,::1`；`*`、前綴長度 0（`0.0.0.0/0`、`::/0`）、帶主機位元的網段（`127.0.0.1/8`）、主機名稱、空項目與空清單都 `ConfigError`。**後端只驗證，不使用它的值**：uvicorn 讀同一個變數做比對。兩層編排檔以 `${FORWARDED_ALLOW_IPS:-10.77.250.10}` 傳入後端容器，`migrate` 不傳 |
+| `AUTH_SECRET` | API | 正式層是 | 至少 32 字元；簽 access JWT、CSRF token 的 HMAC 與 Google 登入流程的短期 cookie，三者以不同的用途標籤各自衍生金鑰。有設 `DATABASE_URL`（正式層）而沒設就 `ConfigError`；Lite 層沒設時 `resolve_auth_secret` 讀或產生 `SQLITE_PATH` 同目錄的 `auth_secret`（權限 `0o600`，在資料 volume 裡，刪 volume 才會變），啟動時記一行 INFO 只寫來源與路徑，不印值 |
+| `GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`、`GOOGLE_REDIRECT_URI` | API | 否 | 三個一起設或一起不設，只設一部分就 `ConfigError`；都沒設時 `google_configured()` 為 false |
+| `RESEND_API_KEY` | API | 否 | 本後端目前只看它有沒有設：`mail_configured()`，登入頁、註冊頁與註冊的送出共用這一個判斷（01-02 Q10） |
 
-變數名沒有前綴；驗證失敗時 `ConfigError` 一行列一個「變數名：原因」，不含設定值。
+變數名沒有前綴；`AUTH_SECRET`、三個 `GOOGLE_*` 與 `RESEND_API_KEY` 的空字串等同沒設（Compose 以 `${VAR:-}` 傳入沒設的變數）。驗證失敗時 `ConfigError` 一行列一個「變數名：原因」，不含設定值。
 
 ### 資料庫雙層
 
@@ -377,7 +602,7 @@ log 只記型別、位置與 `traceId`，不記任何可能帶著請求或資料
 | session | `get_db` 一個請求開一個 `AsyncSession`；發生例外時 rollback 再往外拋，**從不 commit**，交易由 service 負責 |
 | model | 繼承 `core.db.Base`，放在 `app/modules/<module>/models.py`；Alembic 自動載入，不必改 `env.py` |
 | 約束命名 | `Base.metadata` 帶固定的命名慣例，SQLite 重建表時 batch migration 才找得到約束 |
-| migration | `render_as_batch` 一律開啟，一份 migration 兩種資料庫都能跑；目前只有空的基準 revision `0dfb129ee036` |
+| migration | `render_as_batch` 一律開啟，一份 migration 兩種資料庫都能跑；目前有空的基準 revision `0dfb129ee036` 與建立 `account` 三張表的 `7bf0f909ce8f` |
 
 :::note{title="兩層 engine 的差異" collapsible}
 - Lite（SQLite）：URL 是 `sqlite+aiosqlite:///<絕對路徑>`；建 engine 時先建好上層目錄，每條新連線都執行 `PRAGMA foreign_keys=ON`
@@ -446,11 +671,12 @@ cd backend && uv run python -m app.scripts.export_openapi
 
 照 `health` 的寫法開新模組；以下每一項在程式裡都有對應的機制，漏了會在啟動、匯出或審查時被擋。
 
-- [ ] 建 `app/modules/<module>/`，放 `router.py`、`service.py`、`repository.py`、`schemas.py`；依賴工廠 `get_<module>_service` 放在 `service.py`
+- [ ] 建 `app/modules/<module>/`，放 `router.py`、`service.py`、`repository.py`、`schemas.py`；依賴工廠 `get_<module>_service` 放在 `service.py`。service 超過檔案行數上限時改成 `service/` 套件，呼叫端只從它的 `__init__.py` import（`account` 是這樣）
 - [ ] request schema 繼承 `RequestModel`、response schema 繼承 `ResponseModel`
 - [ ] handler 用回傳型別宣告回應（`ApiResponse[X]`，列表是 `ApiResponse[PaginatedResponse[X]]`），不用 `response_model=`；回傳時呼叫 `ok(data, request)`
 - [ ] 業務錯誤繼承 `AppError`，設定 `status_code`、`code`、`message_key`；新的訊息鍵同時加進 `zh-TW` 與 `en` 的 `messages.json`
 - [ ] 在 `create_app` 把模組的 router 掛進 `/api/v1` 父 router
+- [ ] 需要登入的端點掛 `Depends(get_current_principal)`（`app.core.auth`），不自己讀 cookie；角色一律取 `Principal.role`，不讀 JWT 的 `role`
 - [ ] service 擁有交易：需要寫入時自己 commit，`get_db` 不會幫你 commit
 - [ ] 有資料表時，model 放 `models.py` 並繼承 `Base`；migration 由 `dba` 寫
 - [ ] 資源名用預設規則單數化會算錯時，加進 `_IRREGULAR_SINGULARS`
@@ -459,15 +685,25 @@ cd backend && uv run python -m app.scripts.export_openapi
 - [ ] 重新匯出 `openapi.json`，再在前端跑 `pnpm --filter frontend api:generate`
 - [ ] 本文加一節：分層表、Class 圖與主要 Sequence 圖（見 [§誰改、什麼時候改](#誰改什麼時候改)）
 
+### 測試輔助
+
+多個測試檔共用的 helper 放在 `backend/tests/factories/` 與 `backend/tests/support/`，不放進 `app/`。
+
+| 檔案 | 提供什麼 |
+| :--- | :--- |
+| `factories/accounts.py` | `add_user` 以 ORM 加真正的 argon2id 雜湊建立並 commit 一個帳號（`plain=None` 時沒有本地密碼），與 Seeder 指令寫入的方式相同；`sessions_of`、`tokens_of`、`reload_user` 重新讀回資料庫的狀態；`PLAIN` 是測試帳號的預設密碼 |
+| `support/browser.py` | `Browser` 代表一台裝置：自己保存 cookie、以 `Cookie` 標頭送出（`__Host-` 加 `Secure` 的 cookie 不會被一般 cookie jar 送回 `http://testserver`），`csrf=True` 時像前端一樣把 CSRF cookie 複製到 `X-CSRF-Token`；另有 `set_cookies`、`cleared` 解析 `Set-Cookie` |
+| `support/google_oidc.py` | `FakeGoogle` 在網路邊界替換 `httpx.AsyncClient.send`，只接 Google 的 token 與金鑰兩個端點：以執行期產生的 RSA 金鑰簽 `id_token`、公開 JWKS，並驗 PKCE；app 用的仍是正式的 `GoogleOidcClient` |
+
 ## 已知限制
 
 已落地的後端讓一條請求走得通、出錯時回得了外層；下表是它還沒有的東西與風險。
 
 | 還沒有 | 風險 | 追蹤 |
 | :--- | :--- | :--- |
-| 登入失敗鎖定 | 登入失敗次數的限制還沒實作 | [規格 01-05 §已確認決議](../../specs/01-account/05-login-state.mdx#已確認決議) Q3（失敗 10 次擋 30 分鐘） |
+| 登入失敗鎖定 | 登入失敗次數的限制還沒實作；`account` 模組只留插入點 | [#726](https://github.com/label-suite/label-suite/issues/726)；[規格 01-05 §已確認決議](../../specs/01-account/05-login-state.mdx#已確認決議) Q3（失敗 10 次擋 30 分鐘；「同一個人」以帳號加來源位址認定） |
 | 全域速率限制 | 端點沒有呼叫上限 | [ADR-004 的 D7](../../development/adr/004-auth-and-security.mdx#d7-不做全域速率限制登入失敗鎖定用-redis-計數)：後端不做，全域上限日後交給反向代理層 |
-| 認證、授權與 CSRF | 目前唯一的端點刻意公開；第一個需要登入的端點要先把這幾層補上 | [ADR-004 的 D1](../../development/adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie)、[D3](../../development/adr/004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token) |
+| 授權四步的第 3、4 步（權限矩陣的 cell、附加條件含答案隔離） | `get_current_principal` 只做到第 1、2 步；第一個需要矩陣或附加條件的端點要先補上 | [ADR-004 的 D6](../../development/adr/004-auth-and-security.mdx#d6-權限矩陣當授權輸入)；change `login-auth-guard` 的待決 11 |
 | Cloudflare 或其他邊緣代理在 Nginx 前面；TLS 邊緣之後的 scheme | 後端拿到的是邊緣位址而不是真實用戶端，還原需要 Nginx 的 real_ip 設定；後端看到的 scheme 恆為 `http`；Docker 發布埠的來源位址依平台而異（Docker Desktop 為 `192.168.65.1`，Linux 未測）。後端只信任 Nginx 的固定位址，見 [architecture.mdx 的 §部署與維運](../../development/architecture.mdx#部署與維運) | [ADR-008 的 D1](../../development/adr/008-deployment-and-operations.mdx#d1-compose-加-nginx-當-runtimecloudflare-可選) 尚未落地的 origin 憑證設定（Full (strict) 已決，憑證怎麼放進 Nginx 留到正式部署的 change） |
 | 監控、告警與錯誤追蹤 | 出錯時只能看 log，沒有人會被通知 | [ADR-008 的 D4](../../development/adr/008-deployment-and-operations.mdx#d4-觀測性只做-ai_runs監控與錯誤追蹤本期不做) |
 | CI 的後端檢查：兩種資料庫的 pytest、ruff、mypy、契約漂移、分層 import 方向 | 這些檢查目前只在本機跑，PR 不會因為違反而失敗 | [#506](https://github.com/label-suite/label-suite/issues/506) |
@@ -481,4 +717,6 @@ cd backend && uv run python -m app.scripts.export_openapi
 | 2026-11-23 | 本文加一節後端基礎建設與已知限制，不另開文件（[§後端基礎建設](#後端基礎建設)） | — | [#546](https://github.com/label-suite/label-suite/issues/546) |
 | 2026-11-23 | 實作後由 `backend-developer` 依程式校正本文，`code-reviewer` 再核對（[§誰改、什麼時候改](#誰改什麼時候改)） | — | [#546](https://github.com/label-suite/label-suite/issues/546#issuecomment-7100137950) |
 | 2026-11-25 | 後端紀錄一律一行 `key=value`，格式由 request-access-log 定；`msg` 固定最後（[§log 安全規則](#log-安全規則)） | 歸檔 `2026-11-23-infra-compose-e2e-ci` clarification Q15（access log 格式留給 01-01） | request-access-log clarification Q2、[#567](https://github.com/label-suite/label-suite/issues/567) |
+| 2026-11-26 | 新增 `account` 模組一節；基礎建設加上認證依賴、token、cookie、CSRF、密碼與 Email 正規化，以及 `app/oidc/` 入口（規劃，待實作後校正） | 已知限制的「認證、授權與 CSRF」縮成授權第 3、4 步 | [#719](https://github.com/label-suite/label-suite/issues/719) |
 | 2026-11-26 | 後端只信任 Nginx 的固定位址轉發的來源標頭，`Settings` 新增只做驗證的 `FORWARDED_ALLOW_IPS`；已知限制的「信任反向代理的來源 IP」改記 Cloudflare 與 TLS 邊緣（[§設定](#設定)、[§請求管線](#請求管線)） | — | [#566](https://github.com/label-suite/label-suite/issues/566) |
+| 2026-11-26 | 依實作校正 `account` 一節與基礎建設：service 改成 `service/` 套件、錯誤放 `service/errors.py`、Class 圖改成實際簽章、加上 Seeder 初始化指令、`AppError.response_hook` 與測試輔助（[§account](#account)、[§測試輔助](#測試輔助)） | 本文 2026-11-26 依設計寫成的 `account` 一節（單一 `service.py`、`errors.py`） | [#719](https://github.com/label-suite/label-suite/issues/719) |

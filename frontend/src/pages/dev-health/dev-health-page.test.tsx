@@ -4,7 +4,7 @@ import { StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createQueryClient } from "@/app/query-client";
-import { i18n, resolveLanguage } from "@/lib/i18n";
+import { LANGUAGE_STORAGE_KEY, i18n, readStoredLanguage } from "@/lib/i18n";
 import { HEALTH_OK_TRACE_ID, HEALTH_URL, healthOkHandler } from "@/test/envelope-fixtures";
 import { server } from "@/test/msw-server";
 
@@ -87,9 +87,10 @@ describe("DevHealthPage", () => {
     expect(document.title).toBe("Label Suite — 系統健康檢查");
   });
 
-  it("shows English text and asks for English when the browser language is en-US", async () => {
-    vi.spyOn(navigator, "language", "get").mockReturnValue("en-US");
-    await i18n.changeLanguage(resolveLanguage(navigator.language));
+  it("shows English text and asks for English when English is remembered", async () => {
+    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, "en");
+    // What initI18n does at start-up with the remembered value.
+    await i18n.changeLanguage(readStoredLanguage());
     renderPage();
 
     const heading = screen.getByRole("heading", { level: 1 });
@@ -98,6 +99,16 @@ describe("DevHealthPage", () => {
     expect(document.title).toBe("Label Suite — System health check");
     expect(await screen.findByText("Healthy")).toBeInTheDocument();
     expect(seen.map((request) => request.acceptLanguage)).toEqual(["en"]);
+  });
+
+  it("offers no control to switch the interface language", async () => {
+    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, "en");
+    await i18n.changeLanguage(readStoredLanguage());
+    renderPage();
+
+    expect(await screen.findByText("Healthy")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^(EN|ZH)$|language|語言/i })).toBeNull();
+    expect(screen.queryByRole("combobox")).toBeNull();
   });
 
   // main.tsx renders under StrictMode, which mounts, unmounts and remounts in

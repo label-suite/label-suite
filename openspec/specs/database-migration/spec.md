@@ -8,19 +8,19 @@
 
 ### Requirement: 遷移在兩種資料庫上可升可降可再升
 
-系統 SHALL 提供一條基準遷移，讓資料庫結構遷移在 SQLite 與 PostgreSQL 上都能完成「升到最新、降回起點、再升到最新」；基準遷移 MUST NOT 建立任何業務資料表，降回起點後 MUST 完全還原（只剩遷移版本紀錄為空）。
+系統 SHALL 讓資料庫結構遷移在 SQLite 與 PostgreSQL 上都能完成「升到最新、降回起點、再升到最新」：遷移鏈從基準遷移開始，基準遷移 MUST NOT 建立任何業務資料表；升到最新後遷移版本紀錄恰好一筆、值為鏈上最新的版本；降回起點後 MUST 完全還原（只剩遷移版本紀錄為空，沒有任何業務資料表）。
 
-來源：ADR-003 D7、backend-agent-rules B6、B7、testing-agent-rules T4、clarification Q8。
+來源：ADR-003 D7、backend-agent-rules B6、B7、testing-agent-rules T4、clarification Q8；login-auth-guard PL6。
 
 #### Scenario: 資料庫遷移在兩種資料庫上可升可降
 
 - **WHEN** 對一個空的 SQLite 測試資料庫與一個空的 PostgreSQL 測試資料庫，各依序執行升到最新、降回起點、再升到最新
 - **THEN** 三個步驟在兩種資料庫上都成功
-- **AND** 每次升到最新後，遷移版本紀錄恰好有一筆、值為基準遷移的版本；降回起點後遷移版本紀錄為空
+- **AND** 每次升到最新後，遷移版本紀錄恰好有一筆、值為鏈上最新的版本；降回起點後遷移版本紀錄為空，除了遷移版本紀錄表以外沒有其他資料表
 
 #### Scenario: 基準遷移不建立業務資料表
 
-- **WHEN** 對空的測試資料庫升到最新
+- **WHEN** 對空的測試資料庫只升到基準遷移的版本
 - **THEN** 資料庫中除了遷移版本紀錄表以外沒有其他資料表
 
 ### Requirement: 遷移與服務使用同一份資料庫設定
@@ -44,3 +44,29 @@
 
 - **WHEN** 一個名為 `sample` 的資料表有主鍵 `id`、在 `code` 欄位上有未指定名稱的唯一約束、`owner_id` 欄位參照 `owner` 表
 - **THEN** 產生的約束名稱分別為 `pk_sample`、`uq_sample_code`、`fk_sample_owner_id_owner`，在 SQLite 與 PostgreSQL 上相同
+
+### Requirement: 帳號組的三張表在兩種資料庫上可升可降
+
+基準遷移之後的帳號組遷移 SHALL 建立 `users`、`account_session`、`account_refresh_token` 三張表，在 SQLite 與 PostgreSQL 上產生相同的欄位、約束名稱與索引；降回基準遷移時 MUST 依相反順序刪除這三張表。遷移 MUST NOT 寫入任何帳號資料。
+
+來源：規格 01-05 §資料欄位；login-auth-guard 決定表 N1、sa-4；主規格 `user-management`「Seeder 管理員只能由初始化指令建立」；ADR-003 D7；backend-agent-rules B6、B7；testing-agent-rules T4；`docs/diagrams/architecture/data-table-dictionary.mdx` §二 帳號組。
+
+#### Scenario: 升到最新後有三張帳號表且沒有帳號
+
+- **WHEN** 對空的 SQLite 與 PostgreSQL 測試資料庫各升到最新
+- **THEN** 兩者都有 `users`、`account_session`、`account_refresh_token` 三張表，`users` 沒有任何列
+
+#### Scenario: 兩種資料庫的約束名稱相同
+
+- **WHEN** 升到最新後列出兩種資料庫上三張表的主鍵、唯一、檢查、外鍵約束與索引名稱
+- **THEN** 兩邊的名稱集合完全相同
+
+#### Scenario: 至多一位 Seeder 管理員
+
+- **WHEN** 升到最新後，在兩種資料庫上各直接寫入兩筆 seeder 標記為真的帳號
+- **THEN** 第二筆寫入在兩種資料庫上都因唯一限制失敗
+
+#### Scenario: 降回基準遷移時刪除三張表
+
+- **WHEN** 升到最新後降回基準遷移的版本
+- **THEN** 兩種資料庫上都沒有 `users`、`account_session`、`account_refresh_token`

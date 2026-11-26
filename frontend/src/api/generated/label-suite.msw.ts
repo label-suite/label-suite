@@ -10,19 +10,90 @@ import {
 } from 'msw';
 import type {
   HttpResponseResolver,
+  PathParams,
   RequestHandlerOptions
 } from 'msw';
 
 import {
+  getCreateGoogleSessionResponseMock,
+  getCreateSessionRefreshResponseMock,
+  getCreateSessionResponseMock,
+  getGetAuthOptionsResponseMock,
+  getGetCurrentSessionResponseMock,
+  getGetGoogleAuthorizationResponseMock,
   getGetHealthResponseMock
 } from './label-suite.faker.ts';
 
 import type {
-  HealthDataResponse
+  GoogleAuthorizationDataResponse,
+  GoogleSessionRequest,
+  HealthDataResponse,
+  LoginOptionsDataResponse,
+  LoginRequest,
+  RefreshRequest,
+  SessionDataResponse
 } from './label-suite.schemas';
 
-export { getGetHealthResponseMock } from './label-suite.faker.ts';
+export { getGetAuthOptionsResponseMock, getGetCurrentSessionResponseMock, getGetGoogleAuthorizationResponseMock, getCreateGoogleSessionResponseMock, getGetHealthResponseMock, getCreateSessionRefreshResponseMock, getCreateSessionResponseMock } from './label-suite.faker.ts';
 
+
+export const getGetAuthOptionsMockHandler = (overrideResponse?: LoginOptionsDataResponse | ((info: Parameters<HttpResponseResolver>[0]) => Promise<LoginOptionsDataResponse> | LoginOptionsDataResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/auth-options', async (info: Parameters<HttpResponseResolver>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetAuthOptionsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getDeleteCurrentSessionMockHandler = (overrideResponse?: void | ((info: Parameters<HttpResponseResolver>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/current-session', async (info: Parameters<HttpResponseResolver>[0]) => {
+  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
+
+    return new HttpResponse(null,
+      { status: 204
+      })
+  }, options)
+}
+
+export const getGetCurrentSessionMockHandler = (overrideResponse?: SessionDataResponse | ((info: Parameters<HttpResponseResolver>[0]) => Promise<SessionDataResponse> | SessionDataResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/current-session', async (info: Parameters<HttpResponseResolver>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetCurrentSessionResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getGetGoogleAuthorizationMockHandler = (overrideResponse?: GoogleAuthorizationDataResponse | ((info: Parameters<HttpResponseResolver>[0]) => Promise<GoogleAuthorizationDataResponse> | GoogleAuthorizationDataResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/google-authorization', async (info: Parameters<HttpResponseResolver>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetGoogleAuthorizationResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getCreateGoogleSessionMockHandler = (overrideResponse?: SessionDataResponse | ((info: Parameters<HttpResponseResolver<PathParams, GoogleSessionRequest>>[0]) => Promise<SessionDataResponse> | SessionDataResponse), options?: RequestHandlerOptions) => {
+  return http.post<PathParams, GoogleSessionRequest>('*/api/v1/google-sessions', async (info: Parameters<HttpResponseResolver<PathParams, GoogleSessionRequest>>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateGoogleSessionResponseMock(),
+      { status: 201
+      })
+  }, options)
+}
 
 export const getGetHealthMockHandler = (overrideResponse?: HealthDataResponse | ((info: Parameters<HttpResponseResolver>[0]) => Promise<HealthDataResponse> | HealthDataResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/health', async (info: Parameters<HttpResponseResolver>[0]) => {
@@ -35,6 +106,37 @@ export const getGetHealthMockHandler = (overrideResponse?: HealthDataResponse | 
       })
   }, options)
 }
+
+export const getCreateSessionRefreshMockHandler = (overrideResponse?: SessionDataResponse | ((info: Parameters<HttpResponseResolver<PathParams, RefreshRequest>>[0]) => Promise<SessionDataResponse> | SessionDataResponse), options?: RequestHandlerOptions) => {
+  return http.post<PathParams, RefreshRequest>('*/api/v1/session-refreshes', async (info: Parameters<HttpResponseResolver<PathParams, RefreshRequest>>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateSessionRefreshResponseMock(),
+      { status: 201
+      })
+  }, options)
+}
+
+export const getCreateSessionMockHandler = (overrideResponse?: SessionDataResponse | ((info: Parameters<HttpResponseResolver<PathParams, LoginRequest>>[0]) => Promise<SessionDataResponse> | SessionDataResponse), options?: RequestHandlerOptions) => {
+  return http.post<PathParams, LoginRequest>('*/api/v1/sessions', async (info: Parameters<HttpResponseResolver<PathParams, LoginRequest>>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateSessionResponseMock(),
+      { status: 201
+      })
+  }, options)
+}
 export const getLabelSuiteAPIMock = () => [
-  getGetHealthMockHandler()
+  getGetAuthOptionsMockHandler(),
+  getDeleteCurrentSessionMockHandler(),
+  getGetCurrentSessionMockHandler(),
+  getGetGoogleAuthorizationMockHandler(),
+  getCreateGoogleSessionMockHandler(),
+  getGetHealthMockHandler(),
+  getCreateSessionRefreshMockHandler(),
+  getCreateSessionMockHandler()
 ]

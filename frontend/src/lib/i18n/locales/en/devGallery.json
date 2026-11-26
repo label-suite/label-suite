@@ -13,9 +13,11 @@
   "sections": {
     "button": "Button",
     "input": "Input",
+    "label": "Label",
     "badge": "Badge",
     "alert": "Alert",
     "card": "Card",
+    "separator": "Separator",
     "states": "Skeleton · Empty",
     "tokens": "Token mapping"
   },
@@ -35,6 +37,11 @@
     "placeholder": "Enter text",
     "error": "This field's format is not valid",
     "disabledValue": "Cannot edit"
+  },
+  "label": {
+    "meta": "Linked to its field by htmlFor",
+    "field": "Email",
+    "placeholder": "name@example.com"
   },
   "alert": {
     "sample": "{{variant}}: {{message}}",

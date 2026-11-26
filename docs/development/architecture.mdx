@@ -138,7 +138,7 @@ JWT payload 只放 `sub`、`sid`、`credential_version`、`role`、`iat`、`exp`
 
 ### CSRF
 
-會改資料的請求都要帶綁定 session 的 double-submit token，由單一 middleware 驗 HMAC。
+會改資料的請求都要帶綁定 session 的 double-submit token，由單一 middleware 驗 HMAC；只驗帶登入 cookie 的寫入，還沒有登入狀態之前的請求（Email 與密碼登入、Google 登入完成）由只收 `application/json` 加上 CORS 預檢擋下跨站送出。
 每個要素為什麼不能省，見 [ADR-004 的 D3](adr/004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token)。
 
 | 要素 | 做法 |
@@ -162,7 +162,7 @@ CSRF cookie 刻意讓 JS 讀得到，是系統裡唯一非 `httpOnly` 的 cookie
 ### Google SSO
 
 為什麼不引入外部 IdP、為什麼這樣綁定，見 [ADR-004 的 D4](adr/004-auth-and-security.mdx#d4-google-sso-直接走-oidc) 與 [D5](adr/004-auth-and-security.mdx#d5-google-登入綁定既有帳號的條件)。
-直接整合 OIDC（`authlib`），不引入外部 IdP；沒設 `GOOGLE_CLIENT_ID` 時按鈕退回 no-op，所以 SSO 是可選的。
+直接整合 OIDC（`authlib`），不引入外部 IdP；沒設定 Google 時登入頁不顯示 Google 按鈕與「或」分隔線，所以 SSO 是可選的。
 Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並在同一筆交易內把 `hashed_password` 設為 `null`、`credential_version` 加一、撤銷所有 session。沒有任何帳號連結這個 Google 帳號、也沒有 email 相同的既有帳號，或沒有已連結的帳號、而 `email_verified` 不是 true，一律拒絕登入、不建立帳號；Google 只登入或綁定既有帳號。已連結的帳號不看 email 是否相同。
 
 ## API 契約
@@ -356,6 +356,10 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，�
 | 本機與 CI | `docker compose up`；CI 的 `backend-postgres` job 用 workflow 的 `postgres:16` service container 跑 PostgreSQL 那一輪測試，沒有 Redis；`compose` job 只在 PR 動到編排、image 或它們執行的程式時跑，以 `docker compose up --build --wait` 實際啟動 Lite 與正式兩層，經 Nginx 檢查健康，並在兩層以 `scripts/check-security-headers.sh` 比對公開入口的安全標頭：頁面殼、前端路由深層路徑、建置資源、後端成功、後端錯誤、Nginx 自產的 405、停後端後的 502 或 504，外加帶身分憑證的兩個變體；正式層另以 `E2E_TARGET=compose` 跑一條瀏覽器檢查，確認 CSP 不擋前端自己的資源。`compose` 不列必過。本機對任一層起來後，執行 `scripts/check-security-headers.sh http://localhost:<埠>`（停掉後端後加 `--backend-down`）即可複查。本機的日常步驟見 [本機開發](workflow/local-development.mdx)與 [API 契約日常流程](workflow/api-contract-workflow.mdx) |
 | 正式環境 | Compose 加 Nginx；有的話用 Cloudflare 當 DNS、CDN 與 TLS 邊緣，Nginx 仍要擋安全標頭與隔離內部服務。HSTS 由 TLS 邊緣負責，Nginx 不發，所以正式層必須放在 TLS 後面（`Secure` 與 `__Host-` cookie 的前提）。邊緣代理可能改寫或移除 origin 的標頭，本 repo 只驗到 origin；部署後以 `curl -I https://<網域>/` 自查同一組標頭 |
 | 來源位址 | 後端只信任 Nginx 的 `X-Forwarded-For` 與 `X-Forwarded-Proto`：兩份編排檔把預設網路固定為子網段 `10.77.250.0/24`（動態配位限 `ip_range` `10.77.250.128/25`），`frontend` 釘在該網段內、`ip_range` 外的 `10.77.250.10`，後端的 `FORWARDED_ALLOW_IPS` 預設 `${FORWARDED_ALLOW_IPS:-10.77.250.10}`，所以只信任這一個位址，同網路其他容器偽造的標頭不被採信。比對由 uvicorn 內建的代理標頭處理做，取值是由右往左第一個不受信任的位址；`backend/Dockerfile` 的 `CMD` 不帶旗標。沒有 Nginx（本機 `pnpm run dev`、直接起後端）時未設變數，只信任 loopback。後端的 `Settings` 在啟動時驗證該變數，`*`、前綴長度 0、主機名稱與空項目讓服務拒絕啟動，錯誤訊息只含變數名；CI 的 `compose` job 靜態比對兩份編排檔的網路與預設值，並在 Lite 層送一般與偽造請求，確認回報的來源位址不是 `frontend` 的位址也不是偽造值 |
+| 登入的祕密 | 正式層必須設 `AUTH_SECRET`（至少 32 字元）：`docker-compose.prod.yml` 沒有它就不建任何容器，設了 `DATABASE_URL` 的後端沒有它就拒絕啟動。Lite 層可以不設：後端第一次啟動時產生一把，存成資料 volume `label-suite-data` 裡的 `/app/data/auth_secret`，之後重用；log 只寫來源與路徑。刪掉這個 volume（`docker compose down -v`）或這個檔案，所有登入狀態都驗不過，等於全部登出 |
+| 登入 cookie 的前提 | 登入的 cookie 都帶 `__Host-` 前綴與 `Secure`，瀏覽器只在 HTTPS 或 `localhost` 上存它們：Lite 層只支援經 `http://localhost:<FRONTEND_PORT>` 使用，用區網位址或其他主機名稱以純 HTTP 連進來時登入會失敗；其他位址要放在 HTTPS 後面 |
+| 第一位系統管理員 | 部署後執行一次初始化指令建立 Seeder 管理員：`docker compose run --rm -it backend python -m app.scripts.create_seeder --email <Email> --name <顯示名稱>`（正式層加 `-f docker-compose.prod.yml`），密碼問兩次、不顯示；同一個 Email 重跑什麼都不改。行為見 [本機開發的「建立第一位系統管理員」](workflow/local-development.mdx#建立第一位系統管理員) |
+| Google 登入 | 可選；要開時 `GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`、`GOOGLE_REDIRECT_URI` 三個一起設，只設一部分後端拒絕啟動，都不設時登入頁不顯示 Google 按鈕。`GOOGLE_REDIRECT_URI` 是前端回調頁的完整網址 `<公開入口>/account/google/callback`，例 Lite 層的 `http://localhost:8080/account/google/callback`，要和在 Google 登記的值相同 |
 | image | 後端與 worker 共用一個多階段 Dockerfile；前端 build 完由 `nginx:alpine` 服務 `/dist` |
 | 寄信 | Resend；沒設 key 時把設定密碼連結印在伺服器 log，由部署者轉給使用者，所以 Lite 層的 log 視為敏感，畫面要讓管理員知道信沒有寄出去（條文見[規格 06-01](../specs/06-admin/01-user-management.mdx#已確認決議) Q9–Q11）。沒設 key 時也關閉自行註冊：註冊頁與註冊的送出都拒絕，Lite 部署只能由系統管理員邀請（條文見[規格 01-02](../specs/01-account/02-register.mdx#已確認決議) Q10）。沒設 key 時也不開放自行換 Email：個人設定的「變更」不可點，要換請系統管理員改（條文見[規格 01-04](../specs/01-account/04-profile.mdx#已確認決議) Q21） |
 | 監控 | Prometheus、Grafana、Sentry 本期不做，與 PRD「研究原型、不是生產規模服務」的定位一致；代價是出錯時只能看 log，沒有告警 |
@@ -502,3 +506,6 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，�
 | 2026-11-26 | 沒設寄信 key 時關閉自行註冊，Lite 部署只能由系統管理員邀請，邀請沿用設定密碼連結印在 log 的降級路徑（[§部署與維運](#部署與維運)） | —（原本只在 §待決 第 2 列記為「自行註冊走不通」，降級路徑沒有涵蓋註冊驗證信） | [#683](https://github.com/label-suite/label-suite/issues/683) |
 | 2026-11-26 | 沒設寄信 key 時也不開放自行換 Email，要換請系統管理員改（[§部署與維運](#部署與維運)） | —（降級路徑只涵蓋設定密碼連結與註冊，沒有涵蓋換 Email 的驗證信） | [#704](https://github.com/label-suite/label-suite/issues/704) |
 | 2026-11-26 | 沒有帳號連結這個 Google 帳號、也沒有 email 相同的既有帳號時拒絕登入、不建立帳號（[§Google SSO](#google-sso)，理由見 [ADR-004 D5](adr/004-auth-and-security.mdx#d5-google-登入綁定既有帳號的條件)） | —（原本只寫 `email_verified` 不是 true 時拒絕，沒有寫沒有對應帳號的情形） | [#705](https://github.com/label-suite/label-suite/issues/705#issuecomment-7185302940) |
+| 2026-11-26 | CSRF token 只驗帶登入 cookie 的寫入，登入前的請求靠只收 `application/json` 加上 CORS 預檢（[§CSRF](#csrf)，理由見 [ADR-004 D3](adr/004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token)） | —（原本沒有寫沒有登入 cookie 的寫入怎麼處理） | [#719 留言](https://github.com/label-suite/label-suite/issues/719#issuecomment-7189470423) |
+| 2026-11-26 | 沒設定 Google 時登入頁不顯示 Google 按鈕與「或」分隔線（[§Google SSO](#google-sso)，見 [ADR-004 D4](adr/004-auth-and-security.mdx#d4-google-sso-直接走-oidc)） | 沒設 `GOOGLE_CLIENT_ID` 時按鈕退回 no-op | [#719 留言](https://github.com/label-suite/label-suite/issues/719#issuecomment-7187190476) |
+| 2026-11-26 | 部署加上登入的四件事：正式層必設 `AUTH_SECRET`、Lite 自動產生並存在資料 volume；`__Host-` 與 `Secure` cookie 只在 HTTPS 或 `localhost` 有效；部署後執行一次 Seeder 初始化指令；Google 三個變數一起設（[§部署與維運](#部署與維運)） | — | [#719 留言](https://github.com/label-suite/label-suite/issues/719#issuecomment-7187190476) |

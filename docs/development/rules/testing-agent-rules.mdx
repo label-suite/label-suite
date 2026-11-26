@@ -168,7 +168,7 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 
 ### T9 開發前要落實的自動 gate
 
-正式開發前要落實下列七個自動 gate，本文件只定政策、不實作任何 gate。CI 上已建成六項，下表右欄寫 job 名稱；第 6 項（授權與答案隔離的回歸）還沒有建，本機 hook 與 T10 的關鍵路徑 90% 分支覆蓋也還沒有建。
+正式開發前要落實下列七個自動 gate，本文件只定政策、不實作任何 gate。CI 上已建成六項，下表右欄寫 job 名稱；第 6 項（授權與答案隔離的回歸）還沒有建，本機 hook 也還沒有建。T10 的關鍵路徑 90% 分支覆蓋只建了「認證」「授權與權限檢查」兩項（見 [T10](#t10-覆蓋率)），答案隔離、評分、IAA 計算三項還沒有建。
 
 | | |
 | :--- | :--- |
@@ -208,7 +208,8 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 - **檢查方式**：CI 的 `coverage` job 在 `backend-sqlite`、`backend-postgres`、`frontend` 都完成後執行：合併 SQLite 與 PostgreSQL 兩輪的後端覆蓋率，連同前端的 `coverage-summary.json`，交給 `node scripts/check-coverage.mjs`，和 repo 根目錄的 `coverage-baseline.json`（後端 `percentCovered`，前端 `statements` 與 `branches`，容許誤差 0.1 個百分點）比。依序檢查：（1）PR 的基準不得低於 base 分支的基準（任何一項較低或容許誤差變大即失敗）；（2）實測值不得低於「PR 的基準減容許誤差」。只能持平或上升。要調低基準，須由維護者在 PR 加 `coverage-baseline-lower` 標籤，第（1）步才放行
 - **更新基準是選擇性的**：實測上升時不失敗，`coverage` job 印出完整的建議基準檔並上傳為 artifact `coverage-baseline-suggested`；想把基準往上收，就把這個 artifact 原樣提交成 `coverage-baseline.json`，不收也照樣通過。數字只以 CI 的為準：腳本沒有 `--update`、不寫回 repo，本機的 `check` 指令不跑它（本機只有 SQLite 一輪，數字對不上）
 - **分母**：後端只量 `app/`（Alembic 不在其中）；前端量 `src/**`，排除 `src/api/generated/`、測試與設定檔
-- **尚未檢查**：五項關鍵路徑的 90% 分支覆蓋沒有建（五項的程式還不存在）
+- **關鍵路徑 90% 分支覆蓋**：「認證」（`authentication`）與「授權與權限檢查」（`authorization`）兩項已建立。repo 根的 `critical-coverage.json` 列出每一項在後端與前端各算哪些檔案；同一個 `coverage` job 再執行 `node scripts/check-critical-coverage.mjs`，讀合併後的後端 `coverage.json` 與前端 `coverage-summary.json`，每項每層把分支數加總後算百分比，低於 90.0 就失敗；清單列到不存在的檔案也失敗。「不得下降」那一項檢查不受影響
+- **尚未檢查**：答案隔離、評分、IAA 計算三項的 90% 分支覆蓋還沒有建（這三項的程式還不存在），追蹤見 [#111](https://github.com/label-suite/label-suite/issues/111)
 :::
 
 ### T11 evidence
@@ -352,3 +353,4 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 | 2026-11-22 | T9 七項 gate 中六項由 CI 建成；授權與答案隔離回歸、本機 hook 與 T10 的關鍵路徑 90% 分支覆蓋尚未建，歸屬仍在 #111 | 「七項的實作全歸 #111」 | [#506](https://github.com/label-suite/label-suite/issues/506)、[#111](https://github.com/label-suite/label-suite/issues/111) |
 | 2026-11-25 | T4、T6 的檢查方式由「待建置」改成實際指令：CI `semgrep` job 的測試替身邊界檢查、harness 組裝比對與 `nosemgrep` 例外格式檢查；T4 的適用路徑補 `conftest.py`、`probe.py`；T6 的前端維持「待建置」，三種擋不住的寫法寫進文件，不另開 issue | T4「harness 與 production 同構」與 T6 的檢查方式原本都標「待建置」 | [#562](https://github.com/label-suite/label-suite/issues/562) |
 | 2026-11-26 | starter-kit 的 `hooks/` 六份腳本與 `settings-snippet.json` 不納入來源對照：它是維護者本機的參考資料，不在 repo 裡，也無法重現 | 原 §待決 第 1 列「要不要納入來源對照」 | [#689](https://github.com/label-suite/label-suite/issues/689) |
+| 2026-11-26 | 關鍵路徑 90% 分支覆蓋先建「認證」「授權與權限檢查」兩項，清單在 `critical-coverage.json`、檢查在 `scripts/check-critical-coverage.mjs`，跑在 `coverage` job；其餘三項仍未建（[T9](#t9-開發前要落實的自動-gate)、[T10](#t10-覆蓋率)） | T9、T10 的「五項關鍵路徑的 90% 分支覆蓋沒有建」 | [#719 留言](https://github.com/label-suite/label-suite/issues/719#issuecomment-7187190476) |

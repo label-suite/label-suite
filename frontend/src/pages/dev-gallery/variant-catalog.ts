@@ -10,6 +10,7 @@
 import type { AlertVariant } from "@/components/ui/alert";
 import type { BadgeVariant } from "@/components/ui/badge";
 import type { ButtonSize, ButtonVariant } from "@/components/ui/button";
+import type { SeparatorOrientation } from "@/components/ui/separator";
 
 /** How the gallery shows one declared value. */
 export interface Demo {
@@ -23,6 +24,8 @@ export interface Demo {
 export const buttonStateValues = ["disabled", "loading"] as const;
 /** The three Input samples. */
 export const inputStateValues = ["default", "invalid", "disabled"] as const;
+/** The Label sample: one label tied to an Input. */
+export const labelSampleValues = ["field"] as const;
 /** The Card sample's parts; the section count is these names joined. */
 export const cardPartValues = ["header", "content", "footer"] as const;
 /** The Skeleton sample: two bars. */
@@ -32,6 +35,7 @@ export const emptySampleValues = ["panel"] as const;
 
 export type ButtonState = (typeof buttonStateValues)[number];
 export type InputState = (typeof inputStateValues)[number];
+export type LabelSample = (typeof labelSampleValues)[number];
 export type CardPart = (typeof cardPartValues)[number];
 export type SkeletonSample = (typeof skeletonSampleValues)[number];
 export type EmptySample = (typeof emptySampleValues)[number];
@@ -56,6 +60,9 @@ export const variantCatalog = {
       disabled: { labelKey: "input.states.disabled" },
     } satisfies Record<InputState, Demo>,
   },
+  label: {
+    sample: { field: { labelKey: "label.field" } } satisfies Record<LabelSample, Demo>,
+  },
   badge: {
     variant: {
       success: {},
@@ -63,6 +70,7 @@ export const variantCatalog = {
       error: {},
       info: {},
       neutral: {},
+      role: {},
     } satisfies Record<BadgeVariant, Demo>,
   },
   alert: {
@@ -75,6 +83,9 @@ export const variantCatalog = {
   },
   card: {
     part: { header: {}, content: {}, footer: {} } satisfies Record<CardPart, Demo>,
+  },
+  separator: {
+    orientation: { horizontal: {}, vertical: {} } satisfies Record<SeparatorOrientation, Demo>,
   },
   skeleton: {
     sample: { lines: {} } satisfies Record<SkeletonSample, Demo>,
@@ -98,13 +109,15 @@ export function galleryItem(component: string, axis: string, value: string): str
   return `${component}:${axis}:${value}`;
 }
 
-/** The seven sections, in page order; ids are the anchors the nav links to. */
+/** The nine sections, in page order; ids are the anchors the nav links to. */
 export const gallerySections = [
   "button",
   "input",
+  "label",
   "badge",
   "alert",
   "card",
+  "separator",
   "states",
   "tokens",
 ] as const;

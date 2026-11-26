@@ -80,16 +80,27 @@ def test_default_output_is_backend_openapi_json() -> None:
     assert DEFAULT_OUTPUT == BACKEND_DIR / "openapi.json"
 
 
-def test_placeholder_settings_name_all_five_fields_explicitly() -> None:
+def test_placeholder_settings_name_all_six_fields_explicitly() -> None:
     assert PLACEHOLDER_SETTINGS.model_fields_set == {
         "cors_allowed_origins",
         "cors_allow_credentials",
         "api_docs_enabled",
         "database_url",
         "sqlite_path",
+        "auth_secret",
     }
     assert PLACEHOLDER_SETTINGS.database_url is None
     assert PLACEHOLDER_SETTINGS.api_docs_enabled is True
+
+
+def test_export_never_touches_the_lite_secret_file(tmp_path: Path) -> None:
+    # The placeholder carries its own secret, so building the app reads or writes no file.
+    assert PLACEHOLDER_SETTINGS.auth_secret is not None
+    settings = PLACEHOLDER_SETTINGS.model_copy(update={"sqlite_path": tmp_path / "x.db"})
+
+    create_app(settings)
+
+    assert list(tmp_path.iterdir()) == []
 
 
 def _app_with_duplicate_operation_ids() -> FastAPI:

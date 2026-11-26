@@ -18,6 +18,7 @@ so a test can assert on the real one-line ``key=value`` output
 import io
 import logging
 import os
+import secrets
 from collections.abc import AsyncIterator, Callable, Iterator
 from pathlib import Path
 
@@ -26,6 +27,7 @@ import pytest
 from alembic import command
 from alembic.config import Config
 from fastapi import FastAPI
+from pydantic import SecretStr
 from sqlalchemy import Connection
 from sqlalchemy.ext.asyncio import AsyncEngine
 
@@ -147,12 +149,17 @@ async def migrated_engine(db_engine: AsyncEngine) -> AsyncEngine:
 
 ALLOWED_ORIGIN = "http://localhost:5173"
 
+TEST_AUTH_SECRET = secrets.token_urlsafe(48)
+"""A per-run ``AUTH_SECRET`` for the harness, generated so no secret is written down
+(Hard Rule 8); the production tier refuses to start without one."""
+
 
 def make_test_settings(tmp_path: Path) -> Settings:
     """Return full app settings on the selected test database.
 
     Every field is passed explicitly so nothing in the developer's environment
-    leaks in.
+    leaks in. ``AUTH_SECRET`` is set on both tiers, so neither run writes the
+    Lite-tier secret file.
     """
     return Settings(
         cors_allowed_origins=[ALLOWED_ORIGIN],
@@ -160,6 +167,7 @@ def make_test_settings(tmp_path: Path) -> Settings:
         api_docs_enabled=True,
         database_url=TEST_DATABASE_URL,
         sqlite_path=tmp_path / "test.db",
+        auth_secret=SecretStr(TEST_AUTH_SECRET),
     )
 
 

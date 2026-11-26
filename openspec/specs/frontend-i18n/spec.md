@@ -6,48 +6,20 @@
 
 ## Requirements
 
-### Requirement: 介面語言依瀏覽器語言決定
-
-前端 SHALL 在啟動時依瀏覽器回報的語言決定介面語言：語言代碼以 `zh` 開頭（不分大小寫）時為 `zh-TW`，其餘情況（含空值或沒有值）為 `en`。畫面 MUST NOT 提供語言切換控制項；執行期間介面語言不變。
-
-來源：architecture.mdx §i18n 兩層；api-agent-rules A8；clarification Q5。
-
-#### Scenario: 介面語言依瀏覽器語言決定且請求語言一致
-
-- **WHEN** 瀏覽器語言為 `zh-TW`，開啟健康檢查頁
-- **THEN** 頁面標題 h1 為「系統健康檢查」
-- **AND** 健康檢查請求的 `Accept-Language` 為 `zh-TW`
-
-#### Scenario: 各種瀏覽器語言對應的介面語言
-
-- **WHEN** 瀏覽器語言分別為 `zh-TW`、`zh-CN`、`zh`、`ZH-hk`、`en-US`、`ja`、空字串、沒有值
-- **THEN** 介面語言依序為 `zh-TW`、`zh-TW`、`zh-TW`、`zh-TW`、`en`、`en`、`en`、`en`
-
-#### Scenario: 英文瀏覽器顯示英文介面並送出英文偏好
-
-- **WHEN** 瀏覽器語言為 `en-US`，開啟健康檢查頁
-- **THEN** 頁面標題 h1 為英文語言檔對應的文字，不是「系統健康檢查」
-- **AND** 健康檢查請求的 `Accept-Language` 為 `en`
-
-#### Scenario: 畫面沒有語言切換控制項
-
-- **WHEN** 開啟健康檢查頁與元件展示頁
-- **THEN** 兩頁都沒有可切換介面語言的控制項
-
 ### Requirement: 介面文字只取自語言檔
 
-兩個開發頁的所有介面文字 SHALL 取自語言檔的翻譯鍵，依模組分為 `common`、`systemHealth`、`devGallery` 三組；`common` 只放跨頁共用的文字，啟動時載入；`systemHealth`、`devGallery` 只在對應的開發頁載入時才載入，正式建置輸出 MUST NOT 含這兩組的文字；`zh-TW` 與 `en` 兩份語言檔的鍵集 MUST 完全相同，任何一份多出或缺少鍵時測試失敗。元件展示頁上元件 variant 的值名稱（例如 `cta`、`lg`）是程式識別值，原樣顯示、不翻譯。
+每個頁面的所有介面文字 SHALL 取自語言檔的翻譯鍵，依模組分為 `common`、`auth`、`systemHealth`、`devGallery` 四組；`common` 只放跨頁共用的文字，啟動時載入；`auth` 放登入頁、Google 回調與暫時落點的文字；`systemHealth`、`devGallery` 只在對應的開發頁載入時才載入，正式建置輸出 MUST NOT 含這兩組的文字；`zh-TW` 與 `en` 兩份語言檔的鍵集 MUST 完全相同，任何一份多出或缺少鍵時測試失敗。元件展示頁上元件 variant 的值名稱（例如 `cta`、`lg`）是程式識別值，原樣顯示、不翻譯。
 
-來源：architecture.mdx §i18n 兩層；api-agent-rules A8；`brand.md` 鐵律 10；clarification Q5。
+來源：architecture.mdx §i18n 兩層；api-agent-rules A8；`brand.md` 鐵律 10；clarification Q5；login-auth-guard `ui-design.md` §元件樹。
 
 #### Scenario: 兩份語言檔的鍵集一致
 
-- **WHEN** 比對 `zh-TW` 與 `en` 三組語言檔的所有鍵
+- **WHEN** 比對 `zh-TW` 與 `en` 四組語言檔的所有鍵
 - **THEN** 兩份語言檔的鍵集完全相同
 
 #### Scenario: 語言檔缺鍵時測試失敗
 
-- **WHEN** `en` 的 `systemHealth` 語言檔少了一個 `zh-TW` 有的鍵，執行鍵集一致測試
+- **WHEN** `en` 的 `auth` 語言檔少了一個 `zh-TW` 有的鍵，執行鍵集一致測試
 - **THEN** 測試失敗，訊息列出缺少的鍵名
 
 #### Scenario: 開發頁的語言檔不進正式建置
@@ -71,3 +43,35 @@
 
 - **WHEN** 介面語言為 `en`，後端以 `503` 回應 `message` 為 `The database is temporarily unavailable. Please try again later.` 的錯誤外層
 - **THEN** 健康檢查頁顯示的後端說明正好是 `The database is temporarily unavailable. Please try again later.`
+
+### Requirement: 介面語言預設繁體中文並記住使用者的選擇
+
+前端 SHALL 在啟動時讀取瀏覽器記住的語言選擇：值為 `zh-TW` 或 `en` 時用它，沒有值、讀不到或是其他值時一律為 `zh-TW`，不看瀏覽器回報的語言。使用者在登入頁或暫時落點的頁首切換語言後，介面語言即時改變並記住，之後開啟任何頁面都沿用。開發頁 MUST NOT 提供語言切換控制項。
+
+來源：規格 01-01 §語言切換 第 1–3 條、§資料欄位「語言」、§邊界情況、§已確認決議 Q5；architecture.mdx §i18n 兩層；api-agent-rules A8；login-auth-guard U4；Scenario「第一次來的人看到繁體中文」「記住的語言值無效時用繁體中文」。
+
+#### Scenario: 第一次來的人看到繁體中文
+
+- **WHEN** 瀏覽器語言為 `en-US`、沒有記住過語言，開啟登入頁
+- **THEN** 介面語言為 `zh-TW`，登入卡的副標為「登入你的帳號」
+- **AND** 登入頁設定請求的 `Accept-Language` 為 `zh-TW`
+
+#### Scenario: 記住的語言值無效時用繁體中文
+
+- **WHEN** 瀏覽器記住的語言值分別為 `ja`、空字串、`EN-us`，開啟登入頁
+- **THEN** 三次的介面語言都是 `zh-TW`，畫面沒有出現錯誤
+
+#### Scenario: 切換後的語言跨頁沿用
+
+- **WHEN** 使用者在登入頁切換為英文後登入，到達 `/dashboard/dashboard`
+- **THEN** 落點以英文顯示，請求的 `Accept-Language` 為 `en`
+
+#### Scenario: 重新開啟後沿用記住的語言
+
+- **WHEN** 使用者在登入頁切換為英文後重新整理頁面
+- **THEN** 登入頁仍以英文顯示，語言切換鈕顯示 `EN`
+
+#### Scenario: 開發頁沒有語言切換控制項但沿用記住的語言
+
+- **WHEN** 瀏覽器記住的語言為 `en`，開啟健康檢查頁與元件展示頁
+- **THEN** 兩頁都以英文介面顯示，都沒有可切換介面語言的控制項

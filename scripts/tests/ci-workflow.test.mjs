@@ -363,6 +363,7 @@ describe("C7: changes and compose", () => {
   const PROD_STOP =
     /POSTGRES_PASSWORD="?\$\{?[A-Z_]+\}?"? docker compose -f docker-compose\.prod\.yml stop backend/;
   const CHROMIUM = /\bplaywright install --with-deps chromium\b/;
+  const RESTART = /^scripts\/check-login-survives-restart\.sh http:\/\/localhost:8080\s*$/m;
 
   const stepsOf = () => job("compose").steps;
   const indexes = (pattern) =>
@@ -417,6 +418,7 @@ describe("C7: changes and compose", () => {
       at(LITE_UP),
       at(HEALTH),
       indexes(HEADERS)[0],
+      at(RESTART),
       at(LITE_STOP),
       indexes(HEADERS_DOWN)[0],
       at(LITE_DOWN),
@@ -450,6 +452,14 @@ describe("C7: changes and compose", () => {
     assert.ok(indexes(LITE_UP)[0] < indexes(HEADERS)[0]);
     assert.ok(indexes(LITE_STOP)[0] < liteDown && liteDown < indexes(LITE_DOWN)[0]);
     assert.ok(indexes(PROD_STOP)[0] < prodDown && prodDown < indexes(PROD_DOWN)[0]);
+  });
+
+  test("the restart check runs once, on the Lite tier after its headers and before its backend stop", () => {
+    // login-auth-guard task 4.5: spec container-runtime "重啟後登入狀態仍有效".
+    const restart = indexes(RESTART);
+    assert.equal(restart.length, 1, "exactly one restart check");
+    assert.ok(indexes(HEADERS)[0] < restart[0] && restart[0] < indexes(LITE_STOP)[0]);
+    assert.equal("env" in stepsOf()[restart[0]], false, "Lite runs with .env only");
   });
 
   test("the browser check runs once, on the production tier between its up and its backend stop", () => {
@@ -739,6 +749,24 @@ describe("C3: coverage", () => {
     assert.ok(steps.indexOf(upload) > requireStep("coverage", /check-coverage\.mjs\b/));
   });
 
+  test("the critical-path check reads the list and both reports after the JSON export", () => {
+    // login-auth-guard task 9.1, design D10: authentication and authorization at 90% branches.
+    const index = requireStep("coverage", /node scripts\/check-critical-coverage\.mjs\b/);
+    const step = job("coverage").steps[index];
+    for (const option of [
+      /--list critical-coverage\.json\b/,
+      /--backend backend\/coverage\.json\b/,
+      /--frontend frontend\/coverage\/coverage-summary\.json\b/,
+    ]) {
+      assert.match(step.run, option);
+    }
+    assert.ok(requireStep("coverage", /\bcoverage json\b/) < index);
+    assert.ok(requireStep("coverage", /check-coverage\.mjs\b/) < index);
+    assert.equal("working-directory" in step, false, "it runs from the repository root");
+    assert.equal("continue-on-error" in step, false);
+    assert.equal("if" in step, false);
+  });
+
   test("the job asks for no permission beyond the workflow's contents: read", () => {
     assert.equal("permissions" in job("coverage"), false);
     assert.deepEqual(workflow.permissions, { contents: "read" });
@@ -748,6 +776,7 @@ describe("C3: coverage", () => {
 describe("C9: scripts-tests", () => {
   const SCRIPT_TESTS = [
     "check-coverage",
+    "check-critical-coverage",
     "check-junit-skips",
     "check-security-headers",
     "ci-changed-paths",

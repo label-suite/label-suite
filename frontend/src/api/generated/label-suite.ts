@@ -5,27 +5,37 @@
  * OpenAPI spec version: 0.0.0
  */
 import {
+  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
   ErrorResponse,
-  HealthDataResponse
+  GoogleAuthorizationDataResponse,
+  GoogleSessionRequest,
+  HealthDataResponse,
+  LoginOptionsDataResponse,
+  LoginRequest,
+  RefreshRequest,
+  SessionDataResponse
 } from './label-suite.schemas.ts';
 
 import { apiFetch } from '../mutator.ts';
-import type { ErrorType } from '../mutator.ts';
+import type { ErrorType , BodyType } from '../mutator.ts';
 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -46,6 +56,462 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+/**
+ * Return which sign-in options this deployment offers. Needs no credentials.
+ * @summary Get Auth Options
+ */
+export const getAuthOptions = (
+
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+
+
+      return apiFetch<LoginOptionsDataResponse>(
+      {url: `/api/v1/auth-options`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetAuthOptionsQueryKey = () => {
+    return [
+    `/api/v1/auth-options`
+    ] as const;
+    }
+
+
+export const getGetAuthOptionsQueryOptions = <TData = Awaited<ReturnType<typeof getAuthOptions>>, TError = ErrorType<ErrorResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthOptions>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAuthOptionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAuthOptions>>> = ({ signal }) => getAuthOptions(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAuthOptions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAuthOptionsQueryResult = NonNullable<Awaited<ReturnType<typeof getAuthOptions>>>
+export type GetAuthOptionsQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * Return which sign-in options this deployment offers. Needs no credentials.
+ * @summary Get Auth Options
+ */
+export function useGetAuthOptions<TData = Awaited<ReturnType<typeof getAuthOptions>>, TError = ErrorType<ErrorResponse>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthOptions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAuthOptions>>,
+          TError,
+          Awaited<ReturnType<typeof getAuthOptions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Return which sign-in options this deployment offers. Needs no credentials.
+ * @summary Get Auth Options
+ */
+export function useGetAuthOptions<TData = Awaited<ReturnType<typeof getAuthOptions>>, TError = ErrorType<ErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthOptions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAuthOptions>>,
+          TError,
+          Awaited<ReturnType<typeof getAuthOptions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Return which sign-in options this deployment offers. Needs no credentials.
+ * @summary Get Auth Options
+ */
+export function useGetAuthOptions<TData = Awaited<ReturnType<typeof getAuthOptions>>, TError = ErrorType<ErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthOptions>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Return which sign-in options this deployment offers. Needs no credentials.
+ * @summary Get Auth Options
+ */
+export function useGetAuthOptions<TData = Awaited<ReturnType<typeof getAuthOptions>>, TError = ErrorType<ErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthOptions>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAuthOptionsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Sign this device out. Always answers 204 and clears the session cookies.
+ * @summary Delete Current Session
+ */
+export const deleteCurrentSession = (
+
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+
+
+      return apiFetch<void>(
+      {url: `/api/v1/current-session`, method: 'DELETE', signal
+    },
+      options);
+    }
+
+
+
+
+export const getDeleteCurrentSessionMutationKey = () => ['deleteCurrentSession'] as const;
+
+export const getDeleteCurrentSessionMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCurrentSession>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteCurrentSession>>, TError,void, TContext> => {
+
+const mutationKey = getDeleteCurrentSessionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCurrentSession>>, void> = () => {
+
+
+          return  deleteCurrentSession(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteCurrentSessionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCurrentSession>>>
+
+    export type DeleteCurrentSessionMutationError = ErrorType<ErrorResponse>
+
+
+    /**
+ * Sign this device out. Always answers 204 and clears the session cookies.
+ * @summary Delete Current Session
+ */
+export const useDeleteCurrentSession = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCurrentSession>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteCurrentSession>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getDeleteCurrentSessionMutationOptions(options), queryClient);
+    }
+
+/**
+ * Return the signed-in caller.
+ * @summary Get Current Session
+ */
+export const getCurrentSession = (
+
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+
+
+      return apiFetch<SessionDataResponse>(
+      {url: `/api/v1/current-session`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetCurrentSessionQueryKey = () => {
+    return [
+    `/api/v1/current-session`
+    ] as const;
+    }
+
+
+export const getGetCurrentSessionQueryOptions = <TData = Awaited<ReturnType<typeof getCurrentSession>>, TError = ErrorType<ErrorResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCurrentSession>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCurrentSessionQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCurrentSession>>> = ({ signal }) => getCurrentSession(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCurrentSession>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetCurrentSessionQueryResult = NonNullable<Awaited<ReturnType<typeof getCurrentSession>>>
+export type GetCurrentSessionQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * Return the signed-in caller.
+ * @summary Get Current Session
+ */
+export function useGetCurrentSession<TData = Awaited<ReturnType<typeof getCurrentSession>>, TError = ErrorType<ErrorResponse>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCurrentSession>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCurrentSession>>,
+          TError,
+          Awaited<ReturnType<typeof getCurrentSession>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Return the signed-in caller.
+ * @summary Get Current Session
+ */
+export function useGetCurrentSession<TData = Awaited<ReturnType<typeof getCurrentSession>>, TError = ErrorType<ErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCurrentSession>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCurrentSession>>,
+          TError,
+          Awaited<ReturnType<typeof getCurrentSession>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Return the signed-in caller.
+ * @summary Get Current Session
+ */
+export function useGetCurrentSession<TData = Awaited<ReturnType<typeof getCurrentSession>>, TError = ErrorType<ErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCurrentSession>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Return the signed-in caller.
+ * @summary Get Current Session
+ */
+export function useGetCurrentSession<TData = Awaited<ReturnType<typeof getCurrentSession>>, TError = ErrorType<ErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCurrentSession>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCurrentSessionQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Start Google sign-in: return Google's authorisation URL for a full-page navigation.
+ * @summary Get Google Authorization
+ */
+export const getGoogleAuthorization = (
+
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+
+
+      return apiFetch<GoogleAuthorizationDataResponse>(
+      {url: `/api/v1/google-authorization`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetGoogleAuthorizationQueryKey = () => {
+    return [
+    `/api/v1/google-authorization`
+    ] as const;
+    }
+
+
+export const getGetGoogleAuthorizationQueryOptions = <TData = Awaited<ReturnType<typeof getGoogleAuthorization>>, TError = ErrorType<ErrorResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGoogleAuthorization>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGoogleAuthorizationQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGoogleAuthorization>>> = ({ signal }) => getGoogleAuthorization(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGoogleAuthorization>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetGoogleAuthorizationQueryResult = NonNullable<Awaited<ReturnType<typeof getGoogleAuthorization>>>
+export type GetGoogleAuthorizationQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * Start Google sign-in: return Google's authorisation URL for a full-page navigation.
+ * @summary Get Google Authorization
+ */
+export function useGetGoogleAuthorization<TData = Awaited<ReturnType<typeof getGoogleAuthorization>>, TError = ErrorType<ErrorResponse>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGoogleAuthorization>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGoogleAuthorization>>,
+          TError,
+          Awaited<ReturnType<typeof getGoogleAuthorization>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Start Google sign-in: return Google's authorisation URL for a full-page navigation.
+ * @summary Get Google Authorization
+ */
+export function useGetGoogleAuthorization<TData = Awaited<ReturnType<typeof getGoogleAuthorization>>, TError = ErrorType<ErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGoogleAuthorization>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGoogleAuthorization>>,
+          TError,
+          Awaited<ReturnType<typeof getGoogleAuthorization>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Start Google sign-in: return Google's authorisation URL for a full-page navigation.
+ * @summary Get Google Authorization
+ */
+export function useGetGoogleAuthorization<TData = Awaited<ReturnType<typeof getGoogleAuthorization>>, TError = ErrorType<ErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGoogleAuthorization>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Start Google sign-in: return Google's authorisation URL for a full-page navigation.
+ * @summary Get Google Authorization
+ */
+export function useGetGoogleAuthorization<TData = Awaited<ReturnType<typeof getGoogleAuthorization>>, TError = ErrorType<ErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGoogleAuthorization>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetGoogleAuthorizationQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Finish Google sign-in with the code and state Google returned, and start a session.
+ * @summary Create Google Session
+ */
+export const createGoogleSession = (
+    googleSessionRequest: BodyType<GoogleSessionRequest>,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+
+
+      return apiFetch<SessionDataResponse>(
+      {url: `/api/v1/google-sessions`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: googleSessionRequest, signal
+    },
+      options);
+    }
+
+
+
+
+export const getCreateGoogleSessionMutationKey = () => ['createGoogleSession'] as const;
+
+export const getCreateGoogleSessionMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGoogleSession>>, TError,CreateGoogleSessionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createGoogleSession>>, TError,CreateGoogleSessionMutationVariables, TContext> => {
+
+const mutationKey = getCreateGoogleSessionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createGoogleSession>>, CreateGoogleSessionMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createGoogleSession(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateGoogleSessionMutationResult = NonNullable<Awaited<ReturnType<typeof createGoogleSession>>>
+    export type CreateGoogleSessionMutationBody = BodyType<GoogleSessionRequest>
+    export type CreateGoogleSessionMutationError = ErrorType<ErrorResponse>
+    export type CreateGoogleSessionMutationVariables = {data: BodyType<GoogleSessionRequest>}
+
+    /**
+ * Finish Google sign-in with the code and state Google returned, and start a session.
+ * @summary Create Google Session
+ */
+export const useCreateGoogleSession = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGoogleSession>>, TError,CreateGoogleSessionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createGoogleSession>>,
+        TError,
+        CreateGoogleSessionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateGoogleSessionMutationOptions(options), queryClient);
+    }
 
 /**
  * Report whether the service and its database are available. Needs no credentials.
@@ -152,4 +618,144 @@ export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TErr
 
 
 
+
+/**
+ * Extend the session of this device and rotate its credentials. The body is ``{}``.
+ * @summary Create Session Refresh
+ */
+export const createSessionRefresh = (
+    refreshRequest: BodyType<RefreshRequest>,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+
+
+      return apiFetch<SessionDataResponse>(
+      {url: `/api/v1/session-refreshes`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: refreshRequest, signal
+    },
+      options);
+    }
+
+
+
+
+export const getCreateSessionRefreshMutationKey = () => ['createSessionRefresh'] as const;
+
+export const getCreateSessionRefreshMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSessionRefresh>>, TError,CreateSessionRefreshMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createSessionRefresh>>, TError,CreateSessionRefreshMutationVariables, TContext> => {
+
+const mutationKey = getCreateSessionRefreshMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createSessionRefresh>>, CreateSessionRefreshMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createSessionRefresh(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateSessionRefreshMutationResult = NonNullable<Awaited<ReturnType<typeof createSessionRefresh>>>
+    export type CreateSessionRefreshMutationBody = BodyType<RefreshRequest>
+    export type CreateSessionRefreshMutationError = ErrorType<ErrorResponse>
+    export type CreateSessionRefreshMutationVariables = {data: BodyType<RefreshRequest>}
+
+    /**
+ * Extend the session of this device and rotate its credentials. The body is ``{}``.
+ * @summary Create Session Refresh
+ */
+export const useCreateSessionRefresh = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSessionRefresh>>, TError,CreateSessionRefreshMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createSessionRefresh>>,
+        TError,
+        CreateSessionRefreshMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateSessionRefreshMutationOptions(options), queryClient);
+    }
+
+/**
+ * Sign in with Email and password and start a session on this device.
+ * @summary Create Session
+ */
+export const createSession = (
+    loginRequest: BodyType<LoginRequest>,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+
+
+      return apiFetch<SessionDataResponse>(
+      {url: `/api/v1/sessions`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: loginRequest, signal
+    },
+      options);
+    }
+
+
+
+
+export const getCreateSessionMutationKey = () => ['createSession'] as const;
+
+export const getCreateSessionMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSession>>, TError,CreateSessionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createSession>>, TError,CreateSessionMutationVariables, TContext> => {
+
+const mutationKey = getCreateSessionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createSession>>, CreateSessionMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createSession(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateSessionMutationResult = NonNullable<Awaited<ReturnType<typeof createSession>>>
+    export type CreateSessionMutationBody = BodyType<LoginRequest>
+    export type CreateSessionMutationError = ErrorType<ErrorResponse>
+    export type CreateSessionMutationVariables = {data: BodyType<LoginRequest>}
+
+    /**
+ * Sign in with Email and password and start a session on this device.
+ * @summary Create Session
+ */
+export const useCreateSession = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSession>>, TError,CreateSessionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createSession>>,
+        TError,
+        CreateSessionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateSessionMutationOptions(options), queryClient);
+    }
 

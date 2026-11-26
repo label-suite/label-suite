@@ -23,6 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import { GalleryNav } from "./gallery-nav";
 import { GallerySection } from "./gallery-section";
+import { LabelSection, SeparatorSection } from "./primitive-sections";
 import { ThemeToggle } from "./theme-toggle";
 import { TokenMappingSection } from "./token-mapping-section";
 import {
@@ -171,6 +172,8 @@ export function DevGalleryPage() {
             ))}
           </GallerySection>
 
+          <LabelSection />
+
           <div className="grid grid-cols-1 gap-(--space-lg) lg:grid-cols-2">
             <GallerySection
               id="badge"
@@ -245,21 +248,23 @@ export function DevGalleryPage() {
               </Card>
             </GallerySection>
 
-            <GallerySection id="states" title={t("sections.states")} meta={t("states.meta")}>
-              <div
-                data-gallery-item={galleryItem("skeleton", "sample", "lines")}
-                className="flex flex-col gap-(--space-sm)"
-              >
-                <Skeleton className="h-3.5 w-4/5" />
-                <Skeleton className="h-3.5 w-[55%]" />
-              </div>
-              <Empty
-                data-gallery-item={galleryItem("empty", "sample", "panel")}
-                title={t("states.emptyTitle")}
-                description={t("states.emptyDescription")}
-              />
-            </GallerySection>
+            <SeparatorSection />
           </div>
+
+          <GallerySection id="states" title={t("sections.states")} meta={t("states.meta")}>
+            <div
+              data-gallery-item={galleryItem("skeleton", "sample", "lines")}
+              className="flex flex-col gap-(--space-sm)"
+            >
+              <Skeleton className="h-3.5 w-4/5" />
+              <Skeleton className="h-3.5 w-[55%]" />
+            </div>
+            <Empty
+              data-gallery-item={galleryItem("empty", "sample", "panel")}
+              title={t("states.emptyTitle")}
+              description={t("states.emptyDescription")}
+            />
+          </GallerySection>
 
           <TokenMappingSection />
         </div>

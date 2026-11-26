@@ -45,6 +45,7 @@ _FASTAPI_VALIDATION_COMPONENTS = ("HTTPValidationError", "ValidationError")
 
 _IRREGULAR_SINGULARS: dict[str, str] = {
     "health": "health",
+    "options": "options",
     "statuses": "status",
     "buses": "bus",
 }

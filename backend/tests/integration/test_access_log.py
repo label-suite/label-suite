@@ -24,11 +24,12 @@ from typing import Any
 import httpx
 import pytest
 from fastapi import APIRouter, FastAPI
+from pydantic import SecretStr
 
 from app.core.config import LogLevel, Settings
 from app.core.middleware import route_template
 from app.main import create_api_router, create_app
-from tests.conftest import ALLOWED_ORIGIN, make_test_settings
+from tests.conftest import ALLOWED_ORIGIN, TEST_AUTH_SECRET, make_test_settings
 from tests.integration.uvicorn_process import free_port, wait_until_healthy
 from tests.probe import (
     BAD_GATEWAY_PATH,
@@ -273,6 +274,7 @@ async def test_unreachable_database_leaves_one_warning_record_with_the_trace_id(
         cors_allowed_origins=[ALLOWED_ORIGIN],
         database_url=f"postgresql://u:p@127.0.0.1:{_closed_port()}/x",
         sqlite_path=tmp_path / "unused.db",
+        auth_secret=SecretStr(TEST_AUTH_SECRET),
     )
     app = create_app(settings)
     tap = LogTap(capture_logs(settings))

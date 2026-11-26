@@ -6,6 +6,7 @@ import pytest
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import ConfigError, Settings
+from app.core.csrf import CsrfMiddleware
 from app.core.middleware import (
     AccessLogMiddleware,
     CorrelationIdMiddleware,
@@ -13,6 +14,7 @@ from app.core.middleware import (
     UnhandledExceptionMiddleware,
 )
 from app.main import create_app
+from app.modules.account.service import AccountPrincipalLoader
 
 
 def test_create_app_without_settings_reads_the_environment_and_fails_loudly(
@@ -53,6 +55,7 @@ def test_middlewares_are_ordered_outermost_first(tmp_path: Path) -> None:
         AccessLogMiddleware,
         UnhandledExceptionMiddleware,
         LocaleMiddleware,
+        CsrfMiddleware,
     ]
 
 
@@ -67,3 +70,28 @@ def test_access_log_skips_only_a_successful_health_check(tmp_path: Path) -> None
 
     (access,) = [m for m in app.user_middleware if m.cls is AccessLogMiddleware]
     assert access.kwargs == {"quiet_success_routes": frozenset({"/api/v1/health"})}
+
+
+def test_cors_allows_the_csrf_header(tmp_path: Path) -> None:
+    app = create_app(
+        Settings(
+            cors_allowed_origins=["http://localhost:5173"],
+            database_url=None,
+            sqlite_path=tmp_path / "app.db",
+        )
+    )
+
+    (cors,) = [m for m in app.user_middleware if m.cls is CORSMiddleware]
+    assert "X-CSRF-Token" in cors.kwargs["allow_headers"]
+
+
+def test_the_account_principal_loader_is_wired_into_app_state(tmp_path: Path) -> None:
+    app = create_app(
+        Settings(
+            cors_allowed_origins=["http://localhost:5173"],
+            database_url=None,
+            sqlite_path=tmp_path / "app.db",
+        )
+    )
+
+    assert isinstance(app.state.principal_loader, AccountPrincipalLoader)

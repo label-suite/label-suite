@@ -152,9 +152,9 @@
 
 ### Requirement: 入口與間接使用不算違規
 
-入口套件 import 自己的第三方套件 SHALL 不算違規；業務模組只經由入口間接到達該套件也 SHALL 不算違規。入口的檔案位置不在本 change 範圍，今天 `backend/app/` 沒有任何入口，三條入口契約在真實的 `app` 上皆無違規。
+入口套件 import 自己的第三方套件 SHALL 不算違規；業務模組只經由入口間接到達該套件也 SHALL 不算違規。`backend/app/` 目前有一個入口套件 `app/oidc/`（Google OIDC 的入口）；三條入口契約在真實的 `app` 上皆無違規。
 
-來源：issue #563 工作項 2、5；Epic #560；backend-agent-rules B12（新）；clarification Q2、Q3、N6。
+來源：issue #563 工作項 2、5；Epic #560；backend-agent-rules B12（新）；clarification Q2、Q3、N6；ADR-004 D4；login-auth-guard PL5。
 
 #### Scenario: 入口 import 自己的套件時通過
 
@@ -170,6 +170,11 @@
 
 - **WHEN** 在本 change 合併時的 `backend/` 執行後端分層檢查
 - **THEN** 檢查以結束碼 0 結束，且沒有任何入口契約被破壞
+
+#### Scenario: OIDC 套件只出現在 OIDC 入口
+
+- **WHEN** 在本 change 合併時的 `backend/app/` 搜尋 import `authlib` 的檔案
+- **THEN** 只有 `app/oidc/` 底下的檔案 import `authlib`
 
 ### Requirement: 單一入口清單只有一個來源，無法機械檢查的項目要寫明
 
@@ -194,9 +199,9 @@
 
 ### Requirement: `app` 底下每個頂層套件都受入口契約檢查
 
-`backend/app/` 底下的每一個頂層套件或模組，SHALL 不是已列入每一條入口契約的檢查來源，就是已登記的入口套件；兩者皆非時，後端測試 MUST 失敗並指出該套件名。檢查來源寫成整個 `app`（`app` 本身）時，視為已涵蓋所有頂層套件，守門測試 MUST 接受，不得當成漏列。已登記的入口套件 MUST NOT 同時出現在任何入口契約明列的檢查來源內。今天沒有已登記的入口套件。
+`backend/app/` 底下的每一個頂層套件或模組，SHALL 不是已列入每一條入口契約的檢查來源，就是已登記的入口套件；兩者皆非時，後端測試 MUST 失敗並指出該套件名。檢查來源寫成整個 `app`（`app` 本身）時，視為已涵蓋所有頂層套件，守門測試 MUST 接受，不得當成漏列。已登記的入口套件 MUST NOT 同時出現在任何入口契約明列的檢查來源內。目前已登記的入口套件只有 `oidc`。
 
-來源：issue #563 工作項 2；Epic #560；backend-agent-rules B12（新）；clarification Q3、N6；system-design §守門測試。
+來源：issue #563 工作項 2；Epic #560；backend-agent-rules B12（新）；clarification Q3、N6；system-design §守門測試；login-auth-guard PL5。
 
 #### Scenario: 新的頂層套件未歸類時測試失敗
 
@@ -221,7 +226,7 @@
 #### Scenario: 既有的 app 通過守門測試
 
 - **WHEN** 在本 change 合併時的 `backend/` 執行守門測試
-- **THEN** 測試通過
+- **THEN** 測試通過，且 `oidc` 是已登記的入口套件
 
 ### Requirement: 每個被 import 的第三方套件都已歸類
 

@@ -127,7 +127,7 @@ export function Button({
     >
       {loading && !asChild ? (
         <>
-          <LoaderCircle aria-hidden="true" className="animate-spin" />
+          <LoaderCircle aria-hidden="true" className="animate-spin motion-reduce:animate-none" />
           {children}
         </>
       ) : (

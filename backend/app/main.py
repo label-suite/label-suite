@@ -13,7 +13,9 @@ from typing import Any
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.core.auth_secret import resolve_auth_secret
 from app.core.config import Settings, load_settings
+from app.core.csrf import CSRF_HEADER, CsrfMiddleware
 from app.core.db import create_engine, create_sessionmaker
 from app.core.errors import register_exception_handlers
 from app.core.i18n import MessageCatalog
@@ -33,6 +35,9 @@ from app.core.openapi import (
 )
 from app.core.paths import API_V1_PREFIX
 from app.core.schemas import ErrorResponse
+from app.core.tokens import AccessTokenCodec, TokenKeys
+from app.modules.account.router import router as account_router
+from app.modules.account.service import AccountPrincipalLoader
 from app.modules.health.router import router as health_router
 
 __all__ = ["API_V1_ERROR_RESPONSES", "create_api_router", "create_app"]
@@ -44,7 +49,7 @@ API_V1_ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
 """Error responses every ``/api/v1`` operation can return (api-contract §共用契約)."""
 
 CORS_ALLOWED_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
-CORS_ALLOWED_HEADERS = ["Content-Type", "Accept-Language", CORRELATION_ID_HEADER]
+CORS_ALLOWED_HEADERS = ["Content-Type", "Accept-Language", CORRELATION_ID_HEADER, CSRF_HEADER]
 CORS_EXPOSED_HEADERS = [CORRELATION_ID_HEADER]
 
 
@@ -80,10 +85,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         Configures the process-wide log output from ``LOG_LEVEL``
         (``configure_logging``) once the settings are valid; a repeated call
         replaces this repository's root handler rather than adding a second one.
+        Resolves ``AUTH_SECRET`` (``resolve_auth_secret``): on the Lite tier
+        without it, reads or creates ``auth_secret`` next to the SQLite file.
+        Derives the purpose keys from it into ``app.state.token_keys`` and puts the
+        access-token codec in ``app.state.access_codec`` and the account module's
+        ``AccountPrincipalLoader`` in ``app.state.principal_loader``.
 
     Returns:
-        The app with the five middlewares, the exception handlers, the
-        ``/api/v1`` router with the health module mounted, and the
+        The app with the six middlewares, the exception handlers, the
+        ``/api/v1`` router with the health and account modules mounted, and the
         post-processed ``app.openapi`` installed;
         ``info.version`` is ``[project].version`` of ``pyproject.toml``. The
         database engine is created by the lifespan, not here, so building the
@@ -91,12 +101,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     Raises:
         ConfigError: When ``settings`` is ``None`` and the environment is not a
-            valid configuration; the message names the variable, never its value.
+            valid configuration, or when ``AUTH_SECRET`` cannot be resolved (the
+            production tier without it); the message names the variable, never
+            its value.
         MessageCatalogError: When the message files are missing or out of sync.
         OperationIdCollisionError: When two operations share an operationId.
     """
-    resolved = settings if settings is not None else load_settings(Settings)
-    configure_logging(resolved)
+    loaded = settings if settings is not None else load_settings(Settings)
+    configure_logging(loaded)
+    # Before any component is built, so every later reader sees the final secret.
+    auth_secret = resolve_auth_secret(loaded)
+    resolved = loaded.model_copy(update={"auth_secret": auth_secret})
+    keys = TokenKeys.derive(auth_secret)
+    codec = AccessTokenCodec(keys.access)
 
     app = FastAPI(
         title=API_TITLE,
@@ -112,10 +129,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = resolved
     catalog = MessageCatalog.load()
     app.state.message_catalog = catalog
+    app.state.token_keys = keys
+    app.state.access_codec = codec
+    # core.auth only defines the protocol; the account module implements it.
+    app.state.principal_loader = AccountPrincipalLoader()
 
     # add_middleware puts each new layer outside the previous ones, so this runs
-    # innermost first: Locale, Unhandled, AccessLog, CORS, Correlation (design D3;
-    # request-access-log design D1).
+    # innermost first: Csrf, Locale, Unhandled, AccessLog, CORS, Correlation (design D3;
+    # request-access-log design D1; login-auth-guard design D3). Csrf sits inside
+    # Locale so its 403 is localised, and refuses before routing.
+    app.add_middleware(CsrfMiddleware, codec=codec, csrf_key=keys.csrf, catalog=catalog)
     app.add_middleware(LocaleMiddleware, catalog=catalog)
     app.add_middleware(UnhandledExceptionMiddleware, catalog=catalog)
     # A successful health check is polled every 30 seconds and is not logged
@@ -137,6 +160,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     register_exception_handlers(app)
     api = create_api_router()
     api.include_router(health_router)
+    api.include_router(account_router)
     app.include_router(api)
     assert_unique_operation_ids(app)
     install_openapi(app)

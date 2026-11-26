@@ -11,12 +11,14 @@ import argparse
 import contextlib
 import json
 import os
+import secrets
 import sys
 import tempfile
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
 from fastapi import FastAPI
+from pydantic import SecretStr
 
 from app.core.config import Settings
 from app.core.openapi import ComponentNameCollisionError, OperationIdCollisionError
@@ -45,10 +47,14 @@ PLACEHOLDER_SETTINGS = Settings(
     api_docs_enabled=True,
     database_url=None,
     sqlite_path=Path("./data/label_suite.db"),
+    # Random per run and never used to sign anything: it only keeps create_app from
+    # reading or writing the Lite-tier secret file (system-design §AUTH_SECRET 的來源).
+    auth_secret=SecretStr(secrets.token_urlsafe(48)),
 )
 """Fixed settings for the export. Every field is set explicitly, so no
-environment variable can change the document; none of them reaches the schema
-and no database is opened because the lifespan never runs."""
+environment variable can change the document; none of them reaches the schema,
+no database is opened because the lifespan never runs, and no secret file is
+touched because ``auth_secret`` is set."""
 
 
 def render_openapi(app: FastAPI) -> str:

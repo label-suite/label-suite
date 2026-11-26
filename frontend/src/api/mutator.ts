@@ -1,9 +1,10 @@
 /**
  * apiFetch is the Orval mutator and the single HTTP boundary (api-agent-rules
- * A6). The base URL, credentials, Accept-Language, timeout and cancellation,
- * and the conversion of every failure into ApiError live here and nowhere else
- * (system-design §唯一出口的處理順序). It knows no operationId, so adding an
- * endpoint needs no change here.
+ * A6). The base URL, credentials, Accept-Language, the CSRF header, timeout
+ * and cancellation, the session refresh on `401 AUTH_REQUIRED`, and the
+ * conversion of every failure into ApiError live here and nowhere else
+ * (system-design §唯一出口的處理順序, login-auth-guard design D7). It knows no
+ * operationId, so adding an endpoint needs no change here.
  */
 import { composeSignals, type AbortSource } from "@/lib/abort";
 import { getCurrentLanguage } from "@/lib/i18n";
@@ -11,6 +12,7 @@ import { getCurrentLanguage } from "@/lib/i18n";
 import { ApiError } from "./api-error";
 import { readApiConfig } from "./config";
 import { isErrorEnvelope, isSuccessEnvelope } from "./envelope";
+import { sendWithSessionRefresh } from "./session-refresh";
 
 /** Request metadata lifted out of the success envelope. */
 export interface ResponseMeta {
@@ -43,6 +45,57 @@ export interface RequestConfig {
 export interface ApiFetchOptions {
   /** Request timeout in milliseconds; defaults to readApiConfig's 15 seconds. */
   timeoutMs?: number;
+  /**
+   * Send the request once, without the refresh-and-resend on `401
+   * AUTH_REQUIRED`. Only the refresh request itself sets it, so a refused
+   * refresh never starts another refresh (design D7).
+   */
+  skipSessionRefresh?: boolean;
+}
+
+/** The cookie whose value the backend expects back in X-CSRF-Token (api-contract §CSRF). */
+const CSRF_COOKIE = "__Host-ls_csrf";
+
+/** Methods that change state and so carry the CSRF header. */
+const WRITE_METHODS: ReadonlySet<RequestConfig["method"]> = new Set([
+  "POST",
+  "PUT",
+  "PATCH",
+  "DELETE",
+]);
+
+/**
+ * Returns the value of the CSRF cookie in a `document.cookie` string, or null
+ * when it is absent or empty. This is the one cookie the frontend reads; the
+ * access and refresh cookies are httpOnly and never visible here (S2).
+ *
+ * @param cookies The `document.cookie` string.
+ */
+export function readCsrfCookie(cookies: string): string | null {
+  for (const pair of cookies.split(";")) {
+    const separator = pair.indexOf("=");
+    if (separator !== -1 && pair.slice(0, separator).trim() === CSRF_COOKIE) {
+      const value = pair.slice(separator + 1).trim();
+      return value === "" ? null : value;
+    }
+  }
+  return null;
+}
+
+/** The request headers apiFetch adds to what the generated client passed. */
+function buildHeaders(config: RequestConfig, hasBody: boolean): Headers {
+  const headers = new Headers(config.headers);
+  headers.set("Accept-Language", getCurrentLanguage());
+  if (hasBody) {
+    headers.set("Content-Type", "application/json");
+  }
+  if (WRITE_METHODS.has(config.method)) {
+    const csrf = readCsrfCookie(document.cookie);
+    if (csrf !== null) {
+      headers.set("X-CSRF-Token", csrf);
+    }
+  }
+  return headers;
 }
 
 /**
@@ -121,24 +174,32 @@ function parseJson(text: string): unknown {
 /**
  * The single HTTP exit of the frontend. Resolves to `{ data, meta }` for a
  * success envelope and to undefined for a 204; every failure is thrown as an
- * ApiError. No retries.
+ * ApiError. Nothing is retried, except the refresh-and-resend on `401
+ * AUTH_REQUIRED` (at most two refreshes and two resends, design D7).
  *
  * @param config The request Orval generated.
  * @param options Per-call options such as a longer timeout.
  */
-export async function apiFetch<T>(
+export function apiFetch<T>(
   config: RequestConfig,
   options?: ApiFetchOptions,
+): Promise<ApiResponse<T>> {
+  if (options?.skipSessionRefresh === true) {
+    return sendOnce<T>(config, options);
+  }
+  return sendWithSessionRefresh(() => sendOnce<T>(config, options));
+}
+
+/** Sends one request and converts the response, without any refresh or resend. */
+async function sendOnce<T>(
+  config: RequestConfig,
+  options: ApiFetchOptions | undefined,
 ): Promise<ApiResponse<T>> {
   const { baseUrl, defaultTimeoutMs } = readApiConfig();
   const request = `${config.method} ${config.url}`;
 
-  const headers = new Headers(config.headers);
-  headers.set("Accept-Language", getCurrentLanguage());
   const hasBody = config.data !== undefined;
-  if (hasBody) {
-    headers.set("Content-Type", "application/json");
-  }
+  const headers = buildHeaders(config, hasBody);
 
   const composed = composeSignals(config.signal, options?.timeoutMs ?? defaultTimeoutMs);
   try {

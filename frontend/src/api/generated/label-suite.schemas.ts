@@ -38,6 +38,46 @@ export interface ErrorResponse {
 }
 
 /**
+ * The Google authorisation URL the browser navigates to.
+ *
+ * Attributes:
+ *     authorization_url: Includes ``state``, ``nonce``, the S256 PKCE challenge and
+ *         ``redirect_uri``; the verifier stays in the flow cookie.
+ */
+export interface GoogleAuthorizationData {
+  authorizationUrl: string;
+}
+
+export interface GoogleAuthorizationDataResponse {
+  code: string;
+  data: GoogleAuthorizationData;
+  message: string;
+  success: boolean;
+  timestamp: string;
+  traceId: string;
+}
+
+/**
+ * Completing Google sign-in with what Google sent back to the frontend.
+ *
+ * Attributes:
+ *     code: The authorisation code, passed on as received.
+ *     state: Must equal the ``state`` in the flow cookie.
+ */
+export interface GoogleSessionRequest {
+  /**
+     * @minLength 1
+     * @maxLength 2048
+     */
+  code: string;
+  /**
+     * @minLength 1
+     * @maxLength 512
+     */
+  state: string;
+}
+
+/**
  * The only reported state. Adding a value is a breaking change (A10).
  */
 export type HealthStatus = typeof HealthStatus[keyof typeof HealthStatus];
@@ -62,6 +102,94 @@ export interface HealthData {
 export interface HealthDataResponse {
   code: string;
   data: HealthData;
+  message: string;
+  success: boolean;
+  timestamp: string;
+  traceId: string;
+}
+
+/**
+ * What the sign-in page offers on this deployment.
+ *
+ * Attributes:
+ *     self_registration_enabled: Whether a mail service is configured.
+ *     google_enabled: Whether all three Google settings are set.
+ */
+export interface LoginOptionsData {
+  googleEnabled: boolean;
+  selfRegistrationEnabled: boolean;
+}
+
+export interface LoginOptionsDataResponse {
+  code: string;
+  data: LoginOptionsData;
+  message: string;
+  success: boolean;
+  timestamp: string;
+  traceId: string;
+}
+
+/**
+ * Email-and-password sign-in.
+ *
+ * Attributes:
+ *     email: 1 to 320 characters once surrounding whitespace is removed; the format
+ *         is not checked (spec 01-01 §資料欄位).
+ *     password: 1 to 1024 characters, taken as typed: not trimmed, no composition
+ *         rule (spec 01-01 Q8).
+ */
+export interface LoginRequest {
+  /**
+     * @minLength 1
+     * @maxLength 320
+     */
+  email: string;
+  /**
+     * @minLength 1
+     * @maxLength 1024
+     */
+  password: string;
+}
+
+/**
+ * The body of a refresh: always the empty object ``{}``.
+ */
+export interface RefreshRequest { [key: string]: never }
+
+export type SessionUserDataRole = typeof SessionUserDataRole[keyof typeof SessionUserDataRole];
+
+
+export const SessionUserDataRole = {
+  user: 'user',
+  super_admin: 'super_admin',
+} as const;
+
+/**
+ * The signed-in account, as shown by the landing page.
+ *
+ * Attributes:
+ *     id: The account ID.
+ *     name: The display name.
+ *     email: The stored, normalised Email.
+ *     role: The system role read from the database for this request; display only.
+ */
+export interface SessionUserData {
+  email: string;
+  id: string;
+  name: string;
+  role: SessionUserDataRole;
+}
+
+/**
+ * ``data`` of the sign-in, refresh and current-session responses.
+ */
+export interface SessionData {
+  user: SessionUserData;
+}
+
+export interface SessionDataResponse {
+  code: string;
+  data: SessionData;
   message: string;
   success: boolean;
   timestamp: string;

@@ -18,7 +18,13 @@ ENV_VARS = (
     "SQLITE_PATH",
     "API_DOCS_ENABLED",
     "LOG_LEVEL",
+    "AUTH_SECRET",
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "GOOGLE_REDIRECT_URI",
+    "RESEND_API_KEY",
 )
+GOOGLE_VARS = ("GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REDIRECT_URI")
 VALID_ORIGIN = "http://localhost:5173"
 
 
@@ -328,3 +334,138 @@ def test_database_settings_do_not_read_log_level(monkeypatch: pytest.MonkeyPatch
 
     assert not hasattr(settings, "log_level")
     assert "log_level" not in DatabaseSettings.model_fields
+
+
+# --- AUTH_SECRET, GOOGLE_* and RESEND_API_KEY (login-auth-guard design D4) ------------
+
+
+def test_login_settings_are_optional_and_off_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", VALID_ORIGIN)
+
+    settings = load_settings(Settings)
+
+    assert settings.auth_secret is None
+    assert settings.google_client_id is None
+    assert settings.google_client_secret is None
+    assert settings.google_redirect_uri is None
+    assert settings.resend_api_key is None
+    assert settings.google_configured() is False
+    assert settings.mail_configured() is False
+
+
+@pytest.mark.parametrize("name", ["AUTH_SECRET", *GOOGLE_VARS, "RESEND_API_KEY"])
+def test_empty_login_setting_counts_as_unset(monkeypatch: pytest.MonkeyPatch, name: str) -> None:
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", VALID_ORIGIN)
+    monkeypatch.setenv(name, "")
+
+    settings = load_settings(Settings)
+
+    assert getattr(settings, name.lower()) is None
+
+
+def test_all_three_empty_google_settings_count_as_not_configured(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", VALID_ORIGIN)
+    for name in GOOGLE_VARS:
+        monkeypatch.setenv(name, "")
+
+    assert load_settings(Settings).google_configured() is False
+
+
+def test_auth_secret_of_32_characters_is_accepted(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", VALID_ORIGIN)
+    monkeypatch.setenv("AUTH_SECRET", "x" * 32)
+
+    settings = load_settings(Settings)
+
+    assert settings.auth_secret is not None
+    assert settings.auth_secret.get_secret_value() == "x" * 32
+
+
+@pytest.mark.parametrize("value", ["CANARY-short", "CANARY" + "y" * 25])
+def test_short_auth_secret_fails_without_echoing_the_value(
+    monkeypatch: pytest.MonkeyPatch, value: str
+) -> None:
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", VALID_ORIGIN)
+    monkeypatch.setenv("AUTH_SECRET", value)
+
+    error = _load_error()
+
+    assert "AUTH_SECRET" in str(error)
+    assert "CANARY" not in str(error)
+    assert str(len(value)) not in str(error)
+
+
+def test_secret_settings_are_hidden_from_the_settings_repr(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", VALID_ORIGIN)
+    monkeypatch.setenv("AUTH_SECRET", "CANARY-auth-" + "z" * 32)
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "client-id")
+    monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "CANARY-google-secret")
+    monkeypatch.setenv("GOOGLE_REDIRECT_URI", "http://localhost:8080/account/google/callback")
+    monkeypatch.setenv("RESEND_API_KEY", "CANARY-resend")
+
+    text = repr(load_settings(Settings))
+
+    assert "CANARY" not in text
+
+
+def test_only_google_client_id_fails_naming_the_two_missing_variables(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", VALID_ORIGIN)
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "CANARY-id")
+
+    error = _load_error()
+
+    lines = str(error).splitlines()
+    assert any(line.startswith("GOOGLE_CLIENT_SECRET: ") for line in lines)
+    assert any(line.startswith("GOOGLE_REDIRECT_URI: ") for line in lines)
+    assert not any(line.startswith("GOOGLE_CLIENT_ID: ") for line in lines)
+    assert "CANARY" not in str(error)
+
+
+def test_two_of_three_google_settings_fails_naming_the_missing_one(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", VALID_ORIGIN)
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "CANARY-id")
+    monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "CANARY-secret")
+    monkeypatch.setenv("GOOGLE_REDIRECT_URI", "")
+
+    error = _load_error()
+
+    lines = str(error).splitlines()
+    assert len(lines) == 1
+    assert lines[0].startswith("GOOGLE_REDIRECT_URI: ")
+    assert "CANARY" not in str(error)
+
+
+def test_all_three_google_settings_mean_google_is_configured(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", VALID_ORIGIN)
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "client-id")
+    monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "client-secret")
+    monkeypatch.setenv("GOOGLE_REDIRECT_URI", "http://localhost:8080/account/google/callback")
+
+    assert load_settings(Settings).google_configured() is True
+
+
+def test_resend_api_key_means_mail_is_configured(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", VALID_ORIGIN)
+    monkeypatch.setenv("RESEND_API_KEY", "re_test")
+
+    assert load_settings(Settings).mail_configured() is True
+
+
+def test_database_settings_ignore_the_login_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "CANARY-id")
+    monkeypatch.setenv("AUTH_SECRET", "CANARY-short")
+
+    settings = load_settings(DatabaseSettings)
+
+    assert "auth_secret" not in DatabaseSettings.model_fields
+    assert not hasattr(settings, "google_client_id")

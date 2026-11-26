@@ -25,18 +25,16 @@
  * - The backend runs on a SQLite file under the Playwright output directory,
  *   which Playwright clears before it starts the web servers, so every run
  *   migrates a fresh database.
+ * - A `setup` project runs first and creates the Seeder admin with the
+ *   initialisation command; the chromium project depends on it (login-auth-guard
+ *   design D11). In compose mode there is no setup: no journey signs in there.
  */
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
 import { defineConfig, devices, type PlaywrightTestConfig } from "@playwright/test";
+
+import { BACKEND_DIR, OUTPUT_DIR, SQLITE_PATH } from "./shared/run-paths.ts";
 
 const DEFAULT_BASE_URL = "http://localhost:5173";
 const DEFAULT_API_URL = "http://localhost:8000";
-
-const CONFIG_DIR = path.dirname(fileURLToPath(import.meta.url));
-const OUTPUT_DIR = path.join(CONFIG_DIR, "test-results");
-const SQLITE_PATH = path.join(OUTPUT_DIR, "backend", "label_suite.db");
 
 const isCI = Boolean(process.env.CI);
 
@@ -128,10 +126,14 @@ function devServerConfig(): PlaywrightTestConfig {
     testMatch: "**/*.spec.ts",
     testIgnore: ["shared/**", "node_modules/**", "public-entry/**"],
     use: useFor(baseUrl),
+    projects: [
+      { name: "setup", testMatch: "**/*.setup.ts" },
+      { name: "chromium", use: { ...devices["Desktop Chrome"] }, dependencies: ["setup"] },
+    ],
     webServer: [
       {
         name: "backend",
-        cwd: path.join(CONFIG_DIR, "..", "backend"),
+        cwd: BACKEND_DIR,
         command: `uv run alembic upgrade head && uv run uvicorn app.main:create_app --factory --host ${apiUrl.hostname} --port ${portOf(apiUrl)}`,
         url: `${apiUrl.origin}/api/v1/health`,
         env: {

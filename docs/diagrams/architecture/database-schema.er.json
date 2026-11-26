@@ -1,8 +1,8 @@
 {
  "$schema": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/er-diagram-renderer/schema.json",
  "meta": {
-  "title": "Label Suite 候選資料表 ER 圖（41 張）",
-  "description": "**規劃結構，尚未部署。** 已落地業務表：**0**——`backend/` 不存在、`backend/alembic/versions/` 沒有任何 revision、也沒有 ORM model。要查「實際落地了什麼」，唯一的辦法是讀 Alembic revision 與資料庫 metadata，不是讀這張圖。\\n\\n本圖顯示 **41 張候選表、360 欄、41 個單欄 FK**。每一欄的中文意義、可空性與**規格來源**都來自[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)；哪些資料要存則來自[資料欄位盤點總帳](/notes/diagrams/architecture/data-field-inventory)。\\n\\n**這張圖畫不出來的東西有兩類，都在字典裡**：**複合 FK**（例如「父版本不得跨資料集」要 `(dataset_id, parent_version_id)` 兩欄一起比），以及**只能在應用層擋的限制**（例如版本來源不得形成循環、名冊的子集合關係）。逐條內容在字典各組的「組的關聯與限制」小節，以及幾張表自己的限制表裡。**圖上沒有線不代表沒有限制。**應用層的限制字典數得出來（**28 條落在 DB、24 條只能在應用層擋**，數法寫在字典 §十）；**複合 FK 刻意不寫條數**，理由同樣在 §十。\\n\\n**分析報告沒有表**：05-02 的 64 個欄位列全部即時計算，維護者 2026-11-11 裁定不建分析表。那是裁定的結果，不是漏畫。",
+  "title": "Label Suite 候選資料表 ER 圖（42 張）",
+  "description": "**大部分是規劃結構。** 已落地業務表：**3**——`account` 組的 `users`、`account_session`、`account_refresh_token`（Alembic revision `7bf0f909ce8f`，#719），其餘 39 張沒有 revision 也沒有 ORM model。要查「實際落地了什麼」，唯一的辦法是讀 Alembic revision 與資料庫 metadata，不是讀這張圖。\\n\\n本圖顯示 **42 張候選表、370 欄、42 個單欄 FK**。每一欄的中文意義、可空性與**規格來源**都來自[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)；哪些資料要存則來自[資料欄位盤點總帳](/notes/diagrams/architecture/data-field-inventory)。\\n\\n**這張圖畫不出來的東西有兩類，都在字典裡**：**複合 FK**（例如「父版本不得跨資料集」要 `(dataset_id, parent_version_id)` 兩欄一起比），以及**只能在應用層擋的限制**（例如版本來源不得形成循環、名冊的子集合關係）。逐條內容在字典各組的「組的關聯與限制」小節，以及幾張表自己的限制表裡。**圖上沒有線不代表沒有限制。**應用層的限制字典數得出來（**28 條落在 DB、24 條只能在應用層擋**，數法寫在字典 §十）；**複合 FK 刻意不寫條數**，理由同樣在 §十。\\n\\n**分析報告沒有表**：05-02 的 64 個欄位列全部即時計算，維護者 2026-11-11 裁定不建分析表。那是裁定的結果，不是漏畫。",
   "source": "/notes/diagrams/architecture/data-table-dictionary",
   "backTo": "/notes/diagrams/architecture/data-field-inventory"
  },
@@ -174,7 +174,7 @@
      "name": "email",
      "type": "varchar(254)",
      "required": "required",
-     "note": "登入帳號，也是寄信地址；唯一（lower(email)）。來源：01-05：正規化後判重；上限 254 字在正規化之後計算。匿名化時改寫成 deleted-<id>@invalid（ADR-008 D7，維護者裁定 Q2）",
+     "note": "登入帳號，也是寄信地址；存正規化之後的值；唯一（對正規化之後的值）。來源：01-05：正規化後判重；上限 254 字在正規化之後計算。正規化在應用層做，不用 lower(email) 表達式索引：SQLite 的 lower() 只轉 ASCII，兩種資料庫會判出不同的重複（01-05 Q14，#719）。匿名化時改寫成 deleted-<id>@invalid（ADR-008 D7，維護者裁定 Q2）",
      "unique": true
     },
     {
@@ -230,9 +230,28 @@
      "type": "timestamptz",
      "required": "nullable",
      "note": "匿名化時間；空值＝未匿名化。來源：ADR-008 D7：維護者裁定，個資欄位清掉之後這個帳號不能再登入（應用層）"
+    },
+    {
+     "name": "google_subject",
+     "type": "varchar(255)",
+     "required": "nullable",
+     "unique": true,
+     "note": "已連結的 Google 帳號的固定識別碼（OIDC 的 sub）；唯一；空值＝沒有連結 Google。來源：01-05 Q18：看有沒有帳號連結這個 Google 帳號，不看 Email 是否相同；ADR-004 D5：綁定時寫入。長度 255 依 OIDC 對 sub 的上限（提案）"
+    },
+    {
+     "name": "credential_version",
+     "type": "integer",
+     "required": "system",
+     "note": "憑證版本；CHECK >= 0；預設 0。來源：ADR-004 D2：access token 帶著它，每個已驗證的請求都和這一欄比對；D5：綁定 Google 時加一；security-agent-rules S4：停用與 01-05 列出的四種改動時加一；系統角色變更不加（01-05）。只增不減"
+    },
+    {
+     "name": "is_seeder",
+     "type": "boolean",
+     "required": "system",
+     "note": "是否為 Seeder 管理員；預設 false；部分唯一索引 WHERE is_seeder（至多一位 Seeder 管理員）。來源：PRD §角色清單：不能被停用、降級或移除；capability user-management 要求 seeder 標記。只由初始化指令寫入；資料庫層的保護屬 06-01 的 change"
     }
    ],
-   "description": "一列代表一位可登入的使用者。**PRD 明寫帳號沒有刪除，只有停用與啟用**，所以**不得有軟刪除欄**。\n\n**待決的兩欄**（原始規劃有、本專案規格沒有對應）——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**規格來源**：[01-04](/notes/specs/01-account/04-profile#資料欄位)、[01-05](/notes/specs/01-account/05-login-state#資料欄位)、[06-01](/notes/specs/06-admin/01-user-management#資料欄位)"
+   "description": "**已落地**：Alembic revision `7bf0f909ce8f`\n\n一列代表一位可登入的使用者。**PRD 明寫帳號沒有刪除，只有停用與啟用**，所以**不得有軟刪除欄**。\n\n`google_subject`、`credential_version`、`is_seeder` 三欄原本因 D7 不收，依據出現之後由 #719 收回——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**規格來源**：[01-04](/notes/specs/01-account/04-profile#資料欄位)、[01-05](/notes/specs/01-account/05-login-state#資料欄位)、[06-01](/notes/specs/06-admin/01-user-management#資料欄位)"
   },
   {
    "name": "account_session",
@@ -284,7 +303,60 @@
      "note": "登入來源資訊。來源：01-05：來源網路位址與裝置資訊，屬個資；一段登入狀態結束滿 13 個月就清掉，使用者看不到。原始規劃沒有這一欄，本專案新增"
     }
    ],
-   "description": "一列代表一次登入。[01-05](/notes/specs/01-account/05-login-state#資料欄位) 的四個時間與狀態欄全在這裡。\n\n**`RESTRICT` 的理由**：工時區間（`task_work_interval`）與歷程事件（`annotation_history_event`）都參照登入狀態當責任證據，刪掉它會讓歷史無法追溯。而帳號本來就沒有刪除，所以 `RESTRICT` 不會卡住任何合法操作。\n\n**規格來源**：[01-05](/notes/specs/01-account/05-login-state#資料欄位)"
+   "description": "**已落地**：Alembic revision `7bf0f909ce8f`\n\n一列代表一次登入。[01-05](/notes/specs/01-account/05-login-state#資料欄位) 的四個時間與狀態欄全在這裡。\n\n**`RESTRICT` 的理由**：工時區間（`task_work_interval`）與歷程事件（`annotation_history_event`）都參照登入狀態當責任證據，刪掉它會讓歷史無法追溯。而帳號本來就沒有刪除，所以 `RESTRICT` 不會卡住任何合法操作。\n\n**規格來源**：[01-05](/notes/specs/01-account/05-login-state#資料欄位)"
+  },
+  {
+   "name": "account_refresh_token",
+   "label": "一段登入狀態的 refresh token",
+   "group": "account",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "required": "required",
+     "note": "refresh token 的識別碼；PK",
+     "pk": true
+    },
+    {
+     "name": "session_id",
+     "type": "uuid",
+     "required": "required",
+     "note": "所屬的登入狀態；FK → account_session.id，CASCADE；索引。來源：01-05：延續不開新的登入狀態",
+     "fk": "account_session"
+    },
+    {
+     "name": "token_hash",
+     "type": "char(64)",
+     "required": "required",
+     "note": "token 的雜湊；唯一。原文不得寫入資料庫",
+     "unique": true
+    },
+    {
+     "name": "issued_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "發出時間"
+    },
+    {
+     "name": "expires_at",
+     "type": "timestamptz",
+     "required": "required",
+     "note": "到期時間。來源：01-05：取發出時間加 7 天與登入起算 90 天較早者，延續不越過絕對上限（Q12）"
+    },
+    {
+     "name": "consumed_at",
+     "type": "timestamptz",
+     "required": "nullable",
+     "note": "第一次被用來延續的時間；空值＝還沒用過。來源：01-05：寬限期內可額外重發，寬限期外再用視為疑似被盜用"
+    },
+    {
+     "name": "reissue_count",
+     "type": "smallint",
+     "required": "required",
+     "note": "寬限期內額外重發的次數；CHECK 0–1；預設 0。來源：01-05 Q13：最多額外重發一次"
+    }
+   ],
+   "description": "**已落地**：Alembic revision `7bf0f909ce8f`\n\n一列代表一張 refresh token；它所屬的 `account_session` 就是 token family。維護者 2026-11-26 在 #719 決定新增（N1），依據 ADR-004 D1 與 01-05 §延續登入狀態與疑似被盜用。\n\n**`CASCADE` 的理由**：token 只對它的登入狀態有意義，登入狀態整筆清除時一起清掉。\n\n**依據**：ADR-004 D1 與維護者 #719 的 N1 決定；規則引用 01-05 §延續登入狀態與疑似被盜用，但 01-05 §資料欄位 沒有這張表的欄位（它是延續機制的存放，不是畫面資料），所以不列為該頁的規格來源表。"
   },
   {
    "name": "account_password_token",

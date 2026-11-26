@@ -245,6 +245,7 @@ def test_put_is_an_update_too() -> None:
     ("plural", "singular"),
     [
         ("health", "health"),
+        ("options", "options"),
         ("statuses", "status"),
         ("buses", "bus"),
         ("access", "access"),
@@ -417,3 +418,21 @@ def test_info_version_comes_from_pyproject(app: FastAPI) -> None:
     assert get_app_version() == expected
     assert app.openapi()["info"]["version"] == expected
     assert app.openapi()["info"]["title"] == "Label Suite API"
+
+
+ACCOUNT_OPERATION_IDS = {
+    ("GET", "/api/v1/auth-options"): "getAuthOptions",
+    ("POST", "/api/v1/sessions"): "createSession",
+    ("GET", "/api/v1/current-session"): "getCurrentSession",
+    ("POST", "/api/v1/session-refreshes"): "createSessionRefresh",
+    ("DELETE", "/api/v1/current-session"): "deleteCurrentSession",
+    ("GET", "/api/v1/google-authorization"): "getGoogleAuthorization",
+    ("POST", "/api/v1/google-sessions"): "createGoogleSession",
+}
+
+
+@pytest.mark.parametrize(("key", "operation_id"), ACCOUNT_OPERATION_IDS.items())
+def test_the_account_operation_ids_follow_the_contract(
+    app: FastAPI, key: tuple[str, str], operation_id: str
+) -> None:
+    assert _operations(app.openapi())[key]["operationId"] == operation_id
