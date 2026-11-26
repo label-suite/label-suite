@@ -524,6 +524,7 @@
         registerText: '還沒有帳號？',
         registerLink: ' 前往註冊',
         errorMsg:     '帳號或密碼錯誤，請再試一次',
+        googleNoAccountMsg: '無法用這個 Google 帳號登入。需要帳號的話，請聯絡系統管理員邀請你。',
         emailRequired:    '請輸入電子郵件',
         passwordRequired: '請輸入密碼',
         cardRegion:   '登入',
@@ -547,6 +548,7 @@
         registerText: "Don't have an account?",
         registerLink: ' Register',
         errorMsg:     'Invalid email or password',
+        googleNoAccountMsg: 'You can\'t sign in with this Google account. If you need an account, ask an administrator to invite you.',
         emailRequired:    'Email is required',
         passwordRequired: 'Password is required',
         cardRegion:   'Sign in',
@@ -567,6 +569,13 @@
     if (new URLSearchParams(window.location.search).get('sim_no_mail') === '1') {
       document.getElementById('registerRow').hidden = true;
     }
+    /* label-suite/label-suite#705（規格 01-01 §用 Google 帳號登入、01-05 Q18）：
+       Google 不能建立新帳號。用 Google 登入、但平台上沒有對應帳號（或 Google 回報
+       Email 未驗證）時，回到登入頁並顯示同一則錯誤橫幅，不建帳號、不導向註冊。
+       真實產品由後端回報；prototype 用 `?sim_google_no_account=1` 模擬，沒帶參數
+       = 與以前完全相同。英文文案只是 prototype 字串，規格不把它當作規範。 */
+    let simGoogleNoAccount =
+      new URLSearchParams(window.location.search).get('sim_google_no_account') === '1';
     const getTrackingContext = () => ({ lang });
 
     function applyLang(l) {
@@ -589,7 +598,8 @@
       if (loginBtnTextEl) loginBtnTextEl.textContent = t.loginBtnText;
       document.getElementById('registerText').textContent = t.registerText;
       document.getElementById('registerLink').textContent = t.registerLink;
-      document.getElementById('errorMsg').textContent    = t.errorMsg;
+      document.getElementById('errorMsg').textContent    =
+        simGoogleNoAccount ? t.googleNoAccountMsg : t.errorMsg;
       document.getElementById('ssoBtn').setAttribute('aria-label', t.ssoAriaLabel);
       document.querySelector('.navbar-brand').setAttribute('aria-label', t.navAriaLabel);
       document.querySelector('[role="region"]').setAttribute('aria-label', t.cardRegion);
@@ -642,6 +652,10 @@
       clearFieldError('email', 'emailError');
       clearFieldError('password', 'passwordError');
       document.getElementById('errorBanner').classList.remove('visible');
+      if (simGoogleNoAccount) {
+        simGoogleNoAccount = false;
+        document.getElementById('errorMsg').textContent = i18n[lang].errorMsg;
+      }
     }
 
     document.getElementById('email').addEventListener('input', () => {
@@ -723,6 +737,9 @@
       getTrackingContext
     );
     applyLang(window.LabelSuiteSharedSidebar.getStoredLang());
+    if (simGoogleNoAccount) {
+      document.getElementById('errorBanner').classList.add('visible');
+    }
     window.LabelSuiteAnalytics.trackPageView('login', getTrackingContext);
   </script>
 </body>

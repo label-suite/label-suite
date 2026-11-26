@@ -682,7 +682,7 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 | 編號 | 原本寫的 | 為什麼不成立 |
 | :--- | :--- | :--- |
 | G-16 | Accordion 的 header 是 `div[role=button]`，showcase 沒有腳本，所以 Enter／Space 按不動 | **有腳本**：`components-showcase.html:1582`–`:1594` 綁了 `click` 與 `keydown`，攔 `Enter` 與 `Space`（`:1589`）並同步 `aria-expanded`（`:1585`）。寫下時沒有去看 `<script>` 區塊。 |
-| G-32 | Password Eye Toggle 的 `aria-label` 不隨狀態更新 | **會更新**：`pages/account/login.html:614`–`:620` 切換 `input.type` 時一併改寫 `aria-label`，`:595` 在換語言時也依目前狀態重算。 |
+| G-32 | Password Eye Toggle 的 `aria-label` 不隨狀態更新 | **會更新**：`pages/account/login.html:624`–`:630` 切換 `input.type` 時一併改寫 `aria-label`，`:608` 在換語言時也依目前狀態重算。 |
 | G-35 | `account/profile` 的頭像骨架（72px）比實際頭像（80px）小，違反 UXC-08 | **兩者都是 72px**：`profile.html:149` 的 `.avatar-preview` 與 `:560` 的 `.skel-avatar` 相同。80px 只存在於 showcase 的 demo（`components-showcase.html:920`，註解標 `md:w-20 — desktop demo size`）。 |
 
 同一輪自審還修正了兩條**寫錯但仍成立**的：Alert Banner 原寫「樣本沒有 `role="alert"`」（實際有，`components-showcase.html:1115`）與「全 prototype 0 個修飾子」（實際有一個，`pages/admin/user-management.html:182` 的 `.alert-banner.warning`）——後者反而讓 G-07 更有力；Toast 原寫「沒有 `aria-live`」（實際容器有，`components-showcase.html:1384`），改成焦點順序的問題。

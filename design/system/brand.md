@@ -89,10 +89,10 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 
 ### 語言
 
-- **雙語並行，繁體中文（`zh-TW`）與英文對等。**每個帳號頁都有 `i18n = { zh: {...}, en: {...} }` 兩份完整文案，鍵名一一對應（例：`pages/account/login.html:508`–`:555`）。新增任何字串兩份一起加。
-- **切換鈕顯示的是目前語言的代碼 `ZH`／`EN`**，aria-label 是「切換語言」／「Switch language」（`login.html:515`、`:534`、`:538`、`:557`；`sidebar.js:430`）。
-- **頁面標題格式**：`Label Suite — <頁名>`；英文版同格式（`login.html:514`、`:537`）。dashboard 另帶「（原型）」，那是 prototype 標記，不是品牌規則（`dashboard.i18n.js:7`）。
-- **品牌名不翻譯**：「Label Suite」在兩種語言都照寫，aria-label 才分「Label Suite 首頁」／「Label Suite home」（`login.html:533`、`:556`）。
+- **雙語並行，繁體中文（`zh-TW`）與英文對等。**每個帳號頁都有 `i18n = { zh: {...}, en: {...} }` 兩份完整文案，鍵名一一對應（例：`pages/account/login.html:508`–`:557`）。新增任何字串兩份一起加。
+- **切換鈕顯示的是目前語言的代碼 `ZH`／`EN`**，aria-label 是「切換語言」／「Switch language」（`login.html:515`、`:535`、`:539`、`:559`；`sidebar.js:430`）。
+- **頁面標題格式**：`Label Suite — <頁名>`；英文版同格式（`login.html:514`、`:538`）。dashboard 另帶「（原型）」，那是 prototype 標記，不是品牌規則（`dashboard.i18n.js:7`）。
+- **品牌名不翻譯**：「Label Suite」在兩種語言都照寫，aria-label 才分「Label Suite 首頁」／「Label Suite home」（`login.html:534`、`:558`）。
 - 字體對應：中文行高 1.8、英文 1.6（`tokens.css` §Semantic type rules，`html[lang="zh-TW"]`）。
 
 ### 稱謂
@@ -114,13 +114,13 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 
 ### 錯誤與驗證訊息
 
-- **欄位驗證：「請」開頭，說出要做什麼。**「請輸入電子郵件」「請輸入密碼」「請輸入有效的電子郵件格式」（`login.html:527`–`:528`、`register.html:578`）；英文對應「Email is required」「Password is required」。
+- **欄位驗證：「請」開頭，說出要做什麼。**「請輸入電子郵件」「請輸入密碼」「請輸入有效的電子郵件格式」（`login.html:528`–`:529`、`register.html:578`）；英文對應「Email is required」「Password is required」。
 - **規則寫在訊息裡，不只說錯。**「密碼至少需 8 個字元，含大寫英文、小寫英文與數字」（`register.html:580`）；密碼規則另有常駐的 hint（`:569`）。
-- **登入失敗不指出是帳號還是密碼**：「帳號或密碼錯誤，請再試一次」（`login.html:526`）；英文 `Invalid email or password`（`:549`）。
+- **登入失敗不指出是帳號還是密碼**：「帳號或密碼錯誤，請再試一次」（`login.html:526`）；英文 `Invalid email or password`（`:550`）。
 - **說出原因與下一步。**「瀏覽器的儲存空間放不下這張圖，請換一張小一點的；其他欄位已經存好了」（`profile.html:1217`）——先說發生什麼，再說怎麼辦，並交代沒壞的部分。
 - **一次性連結失效**：「連結無法使用，請重新申請」；英文 `This link can no longer be used. Please request a new one.`（`sidebar.js:228`–`:229`）。
 - **標記員被擋下時說明條件**：句型是「請完成所有標記項目後再送出」（`annotation-workspace.config.js:59`）；審核員失去資格時說明還能做什麼：「…可檢視自己審核過的內容與歷程，但無法再送出審核決策。」（`:114`）。
-- **無障礙名稱（aria-label）和可見文字一樣要兩種語言**（`ssoAriaLabel`、`navAriaLabel` 等，`login.html:529`–`:534`、`:552`–`:557`）。
+- **無障礙名稱（aria-label）和可見文字一樣要兩種語言**（`ssoAriaLabel`、`navAriaLabel` 等，`login.html:530`–`:535`、`:554`–`:559`）。
 
 ### 標點與格式
 

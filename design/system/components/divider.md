@@ -61,6 +61,6 @@
 
 **全 prototype 只有 showcase 用得到 `.divider-hr`。** b4 的 `.panel-divider` 是另一份做法（見上表）。
 
-正典把文字分隔的用途指名給登入頁，而 `account/login#state-default` 確實有那一條（`login.html:414`，文字是「或」／「or」，隨語言切換，`:518`／`:541`／`:583`）——但它用的是**完全不同的做法**：class 叫 `.divider`，線是 `::before` 與 `::after` 兩個偽元素（`login.html:185`、`:193`），不是正典的 `.divider-text` ＋ 兩個 `<hr>`。
+正典把文字分隔的用途指名給登入頁，而 `account/login#state-default` 確實有那一條（`login.html:414`，文字是「或」／「or」，隨語言切換，`:518`／`:542`／`:592`）——但它用的是**完全不同的做法**：class 叫 `.divider`，線是 `::before` 與 `::after` 兩個偽元素（`login.html:185`、`:193`），不是正典的 `.divider-text` ＋ 兩個 `<hr>`。
 
 也就是說這個元件的唯一指名用途，在實作上沒有採用正典 → `../design-gaps.md` G-18。
