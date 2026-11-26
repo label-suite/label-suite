@@ -627,7 +627,7 @@ const FLOWS: Flow[] = [
       },
       {
         title: "Google 確認身分，回到平台並進入儀表板",
-        body: "本期真的接上 Google 帳號登入，但 Google 只登入或綁定既有帳號，不建立新帳號。確認身分後要看有對應帳號？已連結這個 Google 帳號的人，不論 Email 是否相同都能登入。「怎麼把一個既有帳號連結到 Google 帳號」不在這一頁，在個人設定的第五個區塊。",
+        body: "本期真的接上 Google 帳號登入，但 Google 只登入或綁定既有帳號，不建立新帳號。確認身分後，系統會判斷「有對應帳號？」：已連結這個 Google 帳號的人，不論 Email 是否相同都能登入。「怎麼把一個既有帳號連結到 Google 帳號」不在這一頁，在個人設定的第五個區塊。",
         scenarios: ["點 Google 帳號登入", "已連結 Google 的帳號 Email 不同仍能登入"],
         ref: "主流程 2",
         highlight: ["a3", "n6", "a4", "n4"],

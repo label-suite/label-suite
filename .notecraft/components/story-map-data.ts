@@ -217,7 +217,7 @@ export const STORIES: Story[] = [
   // 個人設定與共用介面（橫跨各活動）
   { id: "S66", activity: "shared", text: "自己維護姓名、聯絡方式與頭像", roles: ALL, spec: "01-04" },
   { id: "S67", activity: "shared", text: "換登入用的 Email，新信箱驗證後才生效", roles: ALL, spec: "01-04" },
-  { id: "S68", activity: "shared", text: "改密碼；用 Google 帳號進來的人補設一組密碼", roles: ALL, spec: "01-04" },
+  { id: "S68", activity: "shared", text: "改密碼；已連結 Google 的人補設一組密碼", roles: ALL, spec: "01-04" },
   { id: "S69", activity: "shared", text: "逐事件決定要不要收通知", roles: ALL, spec: "01-04" },
   { id: "S70", activity: "shared", text: "從側欄知道自己在哪個模組，不走進沒有權限的頁面", roles: ALL, spec: "07-01" },
   { id: "S71", activity: "shared", text: "不離開目前的工作就切換語言與外觀", roles: ALL, spec: "07-01" },
