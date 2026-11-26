@@ -211,7 +211,7 @@ Cookie 屬性、JWT 的欄位與任務角色不放進 JWT，見 [architecture.md
 ### 決定
 
 Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並在同一筆交易內把 `hashed_password` 設為 `null`、`credential_version` 加一、撤銷所有 session；否則拒絕登入。
-Google 回報的 email 對不上任何帳號時，同樣拒絕登入，**不建立帳號**：Google 只登入或綁定既有帳號。兩種拒絕對使用者是同一句說明（[規格 01-05 的 Q18](../../specs/01-account/05-login-state.mdx#已確認決議)）。
+沒有任何帳號連結這個 Google 帳號、也沒有 email 相同的既有帳號時，同樣拒絕登入，**不建立帳號**：Google 只登入或綁定既有帳號；已經連結這個 Google 帳號的帳號，不論 email 是否相同都能登入。兩種拒絕對使用者是同一句說明（[規格 01-05 的 Q18](../../specs/01-account/05-login-state.mdx#已確認決議)）。
 做法見 [architecture.mdx 的 §Google SSO](../architecture.mdx#google-sso)。
 
 ### 後果
@@ -350,5 +350,5 @@ Google 回報的 email 對不上任何帳號時，同樣拒絕登入，**不建�
 | 2026-11-19 | 只在 `email_verified: true` 時自動綁定既有帳號，並丟掉本地密碼、撤銷所有 session（[D5](#d5-google-登入綁定既有帳號的條件)） | —（沿用個人 repo ADR-035 的帳號綁定修訂） | [#450](https://github.com/label-suite/label-suite/issues/450) |
 | 2026-11-19 | 權限矩陣是授權的必要輸入，依四步判定（[D6](#d6-權限矩陣當授權輸入)） | —（沿用個人 repo ADR-037） | [#450](https://github.com/label-suite/label-suite/issues/450) |
 | 2026-11-23 | 後端不做全域速率限制，只做登入失敗鎖定，失敗次數計在 Redis；全域上限日後交給反向代理層（[D7](#d7-不做全域速率限制登入失敗鎖定用-redis-計數)） | —（原本沒有 ADR 討論過） | [#565 留言](https://github.com/label-suite/label-suite/issues/565#issuecomment-7100090994) |
-| 2026-11-26 | Google 回報的 email 對不上任何帳號時拒絕登入、不建立帳號，與 `email_verified` 不是 true 同一個結果（[D5](#d5-google-登入綁定既有帳號的條件)） | —（原本只寫「否則拒絕登入」，沒有寫對不上帳號的情形） | [#705 留言](https://github.com/label-suite/label-suite/issues/705#issuecomment-7185302940) |
 | 2026-11-26 | 連結 Google 時維持清掉本地密碼，理由改為連結之後只認一種主要身分、減少可被接管的入口，與規格 01-04、01-05 一致（[D5](#d5-google-登入綁定既有帳號的條件)） | 來源「註冊不驗證信箱」的理由，本 repo 的註冊與邀請都先驗證信箱，不適用 | [#684](https://github.com/label-suite/label-suite/issues/684) |
+| 2026-11-26 | 沒有任何帳號連結這個 Google 帳號、也沒有 email 相同的既有帳號時拒絕登入、不建立帳號，與 `email_verified` 不是 true 同一個結果；已連結的帳號不看 email 是否相同（[D5](#d5-google-登入綁定既有帳號的條件)） | —（原本只寫「否則拒絕登入」，沒有寫沒有對應帳號的情形） | [#705 留言](https://github.com/label-suite/label-suite/issues/705#issuecomment-7185302940) |
