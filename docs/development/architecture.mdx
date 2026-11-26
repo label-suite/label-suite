@@ -203,7 +203,7 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 - v1 限制：同一種 output type 每個任務最多一次，output 數量沒有上限
 - 多 output 的任務產生分數向量而不是單一分數，IAA 也逐 output type 獨立計算
 - `sequence_tagging` 的標記是半開區間的字元 offset span `{ start, end, label }`，不是對齊 token 的標籤；個人 repo ADR-029 那一列的 `tagging_scheme`、`token_f1`、`token_accuracy` 不採用
-- `sequence_tagging` 的設定驗證要擋下重疊的 span（每個字元最多屬於一個 span），規則本體見 [security-agent-rules.mdx 的 S8](rules/security-agent-rules.mdx#s8-設定的驗證與-span-的表示)；要重疊用 `entity_recognition`，兩者的定位見 [ADR-006 的 D3](adr/006-task-config-and-answer-isolation.mdx#d3-序列標記用半開字元-offset-span)
+- `sequence_tagging` 的設定驗證要擋下重疊的 span（每個字元最多屬於一個 span），規則本體見 [security-agent-rules.mdx 的 S8](rules/security-agent-rules.mdx#s8-設定的驗證與-span-的表示)；兩者的定位差別見 [ADR-006 的 D3](adr/006-task-config-and-answer-isolation.mdx#d3-序列標記用半開字元-offset-span)
 - `snap_unit` 只影響拖曳落點，不改變既有 span 的意義，所以不需要凍結 tokenizer 版本；改用 span 的理由見 [ADR-006 的 D3](adr/006-task-config-and-answer-isolation.mdx#d3-序列標記用半開字元-offset-span)
 :::
 
