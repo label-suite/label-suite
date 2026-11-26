@@ -243,11 +243,11 @@ Lite 層的資料放在持久化的具名 volume `label-suite-data`（掛在 `/a
 
 ## 非同步任務
 
-評分一律走 Celery：端點只收檔、送進佇列、回 `task_id`，結果另外查。
+評分一律走 Celery：端點只建立一列 [`submission`](../diagrams/architecture/data-table-dictionary.mdx)（一次背景評分工作）、送進佇列、回 `task_id`，結果另外查。
 
-1. FastAPI 端點驗檔案，送進 `scoring` 佇列，回 envelope 包住的 `{"task_id": "..."}`
-2. Celery worker 依序跑 `parse_submission` → `load_answers` → `compute_metrics` → `write_results`
-3. `GET /api/v1/submissions/{id}/status` 回任務狀態與結果
+1. FastAPI 端點驗請求，用 `(task_run_id, idempotency_key)` 建立 `submission`（`status` 為 `pending`），送進 `scoring` 佇列，回 envelope 包住的 `{"task_id": "..."}`
+2. Celery worker 把 `submission.status` 轉 `running`，依序跑 `parse_submission` → `load_answers` → `compute_metrics` → `write_results`；`write_results` 寫的是 `task_trial_iaa_result`，與 `submission.status` 轉 `done` 同一個交易，失敗時轉 `failed` 並寫 `failure_code`
+3. `GET /api/v1/submissions/{id}/status` 的 `{id}` 是 `submission.id`，回 `status`、`failure_code`、時間與結果指標，不回任何答案相關內容
 
 :::note{title="Redis 分區與 Celery 參數" collapsible}
 Redis 7 同時當 broker、result backend 與應用快取，用 DB 編號隔開：broker `/0`、result `/1`、cache `/2`。快取 DB 的淘汰策略是 `allkeys-lru`；共用實例不設 `maxmemory`。
