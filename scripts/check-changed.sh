@@ -97,8 +97,9 @@ FRONTEND=0; [ -d "$REPO/frontend" ] && FRONTEND=1
 
 if [ "$MODE" = "list-routes" ]; then
   emit_out "routes:"
-  [ "$BACKEND" = "1" ] && emit_out "  py -> ruff check, mypy --strict (backend/ 存在)" || emit_out "  py -> NA (backend/ 不存在)"
-  [ "$FRONTEND" = "1" ] && emit_out "  ts,tsx -> tsc -b, eslint (frontend/ 存在)" || emit_out "  ts,tsx -> NA (frontend/ 不存在)"
+  [ "$BACKEND" = "1" ] && emit_out "  backend/**/*.py -> ruff check, mypy --strict (backend/ 存在)" || emit_out "  backend/**/*.py -> NA (backend/ 不存在)"
+  [ "$FRONTEND" = "1" ] && emit_out "  frontend/**/*.ts,tsx -> tsc -b, eslint (frontend/ 存在)" || emit_out "  frontend/**/*.ts,tsx -> NA (frontend/ 不存在)"
+  emit_out "  其他位置的 *.py, *.ts, *.tsx -> NA (不在 backend/、frontend/ 專案內)"
   emit_out "  docs/**/*.mdx, docs/**/*.md -> node scripts/check-specs.mjs docs (一律啟用)"
   FINISHED=1; hc_flush; exit 0
 fi
@@ -204,7 +205,13 @@ for cand in ${CANDIDATES+"${CANDIDATES[@]}"}; do
     py)   PY_FILES+=("$rel") ;;
     ts)   TS_FILES+=("$rel") ;;
     docs) DOC_HITS=1; DOC_FILES+=("$rel") ;;
-    *)    emit_err "NA: $rel 沒有命中任何路由" ;;
+    *)
+      if hook_route_outside_project "$rel"; then
+        emit_err "NA: $rel 不在 backend/ 或 frontend/ 專案內，那兩條路由的工具設定只涵蓋各自的專案，略過"
+      else
+        emit_err "NA: $rel 沒有命中任何路由"
+      fi
+      ;;
   esac
 done
 

@@ -129,8 +129,9 @@ jobs:
         run: |
           expected=$(cat <<'ROUTES'
           routes:
-            py -> ruff check, mypy --strict (backend/ 存在)
-            ts,tsx -> tsc -b, eslint (frontend/ 存在)
+            backend/**/*.py -> ruff check, mypy --strict (backend/ 存在)
+            frontend/**/*.ts,tsx -> tsc -b, eslint (frontend/ 存在)
+            其他位置的 *.py, *.ts, *.tsx -> NA (不在 backend/、frontend/ 專案內)
             docs/**/*.mdx, docs/**/*.md -> node scripts/check-specs.mjs docs (一律啟用)
           ROUTES
           )

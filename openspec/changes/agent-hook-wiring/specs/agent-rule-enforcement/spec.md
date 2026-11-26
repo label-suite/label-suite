@@ -415,6 +415,11 @@
 - **WHEN** 本次變更的檔案都不在任何檢查的範圍內
 - **THEN** 標為 not applicable 並以 exit `0` 結束
 
+#### Scenario: 後端或前端副檔名的檔案不在該專案目錄內
+
+- **WHEN** 本次變更含 `.py`、`.ts` 或 `.tsx` 檔案，但它不在 `backend/`（`.py`）或 `frontend/`（`.ts`、`.tsx`）底下，例如 `e2e/`、`.semgrep/`、`.notecraft/` 裡的檔
+- **THEN** 不交給該路由的工具，標為 not applicable 並寫明它不在對應的專案目錄內，不回報失敗
+
 ### Requirement: 編輯後檢查不改動工作區
 
 系統 SHALL 讓 H3 只回報診斷：它 MUST NOT 修改任何檔案、MUST NOT 自動套用 formatter、MUST NOT 自動將檔案加入 staged 區。要修正由 agent 依診斷自行處理。

@@ -165,7 +165,15 @@ rm -rf "$EV" "$REPO/backend"
 seed app.ts 'export const a = 1'
 rc=$(run false)
 [ "$rc" = "0" ] || fail "an absent frontend/ blocked the stop (got $rc)"
-grep -q '^NA:' "$TMP/err" || fail "the absent layer was not marked NA"
+
+# A .py or .ts outside backend/ and frontend/ has no enabled route, so no
+# evidence is asked for it even when those layers exist.
+mkdir -p "$REPO/backend" "$REPO/frontend"
+seed .semgrep/tests/fixture.py 'x'
+seed e2e/spec.ts 'x'
+rc=$(run false)
+[ "$rc" = "0" ] || fail "a code file outside its project was asked for evidence (got $rc)"
+rm -rf "$REPO/backend" "$REPO/frontend" "$REPO/.semgrep" "$REPO/e2e"
 
 # ── Nothing changed since HEAD is nothing to prove ───────────────────
 

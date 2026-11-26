@@ -158,6 +158,32 @@ rc=$( ( cd "$REPO" && PATH="$NODE_ONLY:/usr/bin:/bin" "$CHECKER" --files fronten
 grep -q 'pnpm' "$TMP/err" || fail "the failure did not name what was missing"
 grep -q '^NA:' "$TMP/err" && fail "a missing frontend runner was marked NA"
 
+# ── The code routes are scoped to their projects ─────────────────────
+#
+# ruff/mypy and tsc/eslint take their configuration from backend/ and
+# frontend/. A .py or .ts elsewhere is outside both projects: NA with the
+# reason, never handed to a tool, never a failure.
+for outside in .semgrep/tests/x.py e2e/a.ts .notecraft/components/x.tsx; do
+  seed "$outside" 'x'
+  harness_reset_calls
+  rc=$(files "$outside")
+  [ "$rc" = "0" ] || fail "a code file outside its project did not exit 0: $outside (got $rc)"
+  [ -n "$(harness_calls)" ] && fail "a code file outside its project reached a tool: $outside"
+  grep -qF "NA: $outside 不在 backend/ 或 frontend/ 專案內" "$TMP/err" \
+    || fail "a code file outside its project was not marked NA with the reason: $outside: $(head -1 "$TMP/err")"
+  grep -q '^FAIL' "$TMP/err" && fail "a code file outside its project was reported as a failure: $outside"
+done
+seed backend/app/scoped.py 'print(1)'
+harness_reset_calls
+rc=$(files backend/app/scoped.py)
+harness_calls | grep -q 'ruff check -- app/scoped.py' || fail "backend/app/x.py was no longer routed to ruff"
+seed frontend/src/scoped.tsx 'export const a = 1;'
+harness_reset_calls
+rc=$(files frontend/src/scoped.tsx)
+harness_calls | grep -q 'eslint -- src/scoped.tsx' || fail "frontend/src/x.tsx was no longer routed to eslint"
+rm -f "$REPO/.semgrep/tests/x.py" "$REPO/e2e/a.ts" "$REPO/.notecraft/components/x.tsx" \
+      "$REPO/backend/app/scoped.py" "$REPO/frontend/src/scoped.tsx"
+
 # ── The exclusions, applied before routing ───────────────────────────
 
 for excluded in \
@@ -457,6 +483,8 @@ git -C "$REPO" checkout -q -- backend/ap_update.py; rm -f "$REPO/backend/ap_othe
 ( cd "$REPO" && "$CHECKER" --list-routes >"$TMP/out" 2>"$TMP/err" )
 grep -q 'docs' "$TMP/out" || fail "--list-routes did not list the docs route"
 grep -q 'py' "$TMP/out"   || fail "--list-routes did not list the python route"
+grep -qF 'backend/**/*.py' "$TMP/out" || fail "--list-routes did not scope the python route to backend/"
+grep -qF 'frontend/**/*.ts,tsx' "$TMP/out" || fail "--list-routes did not scope the typescript route to frontend/"
 
 # ── Evidence, the by-product of a check having really run ────────────
 
