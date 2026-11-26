@@ -1,7 +1,6 @@
 schema: label-suite-sdd
 
-# 小型 change（文件、工具）仍可用 `--schema spec-driven` 走四份產物的舊流程
-# （維護者 2026-11-04 裁定，#51）。
+# 小型 change（文件、工具）仍可用 `--schema spec-driven` 走四份產物的舊流程。
 
 context: |
   規格分兩層：
@@ -12,7 +11,7 @@ context: |
   delta 中的每條 requirement 都須追溯到 docs/specs/ 的規格（註明規格編號 NN-NN 與
   Scenario 名稱，例：「來源：01-02 停用使用者」）。技術 change 沒有 docs/specs/ 的
   規格可追溯時（見 spec-migration 的 D4），改為追溯到 ADR 與規則文件的條號，
-  例：「來源：ADR-003 D5、api-agent-rules A7」（維護者 2026-11-20 裁定，#503）。delta 與 docs/specs/ 不一致時以
+  例：「來源：ADR-003 D5、api-agent-rules A7」。delta 與 docs/specs/ 不一致時以
   docs/specs/ 為準：停下來，把衝突列為待維護者回答的問題，不得自行選邊。
 
   需求依據順序：維護者指定的需求文件與 docs/specs/ 的規格書 ＞ docs/specs/00-prd.mdx
@@ -29,7 +28,7 @@ context: |
   **只有一個人工停點**：clarification 的 Q（需要維護者決定的項目）逐題問答。P（明確
   問題）直接派原撰寫角色回修，不問維護者。
   其餘環節（明確問題的回修、規劃審閱、程式審查、驗收、歸檔、階段之間的提交、合併）
-  全部自動，不詢問。驗收不再停下來等維護者（維護者 2026-11-19 裁定）：acceptance.md
+  全部自動，不詢問。驗收不再停下來等維護者：acceptance.md
   的人工驗收步驟照樣要寫，但它是事後抽查與出事時的紀錄，不是等人簽收的交付物。
   **故障類中斷不算關卡，照停**：task 描述有歧義、實作中發現規格有問題、工作超出 tasks.md
   的範圍、指令出錯——這些代表規劃錯了，不得硬推。
@@ -64,15 +63,15 @@ rules:
     - 路由、頁面元件、對應的規格編號或 Logic Flow 節點有異動時，先改 docs/diagrams/architecture/frontend-routes.mdx（動到前端骨架時改它的「前端骨架」節）；「常駐文件異動」節寫出這個路徑與異動摘要，不重抄常駐文件的內容
     - loading／error／empty／無權限四種狀態都要寫；有遮蔽欄位時寫出呈現方式
     - 畫面長相以 design/prototype/pages/ 為準；token 只用 design/prototype/assets/tokens.css 與 label-suite-design skill 的語意名稱，不寫色碼
-    - 框架依 ADR-005 加 2026-11-10 裁定（React 19 加 Vite 加 TypeScript strict，路由 React Router v6、伺服器狀態 TanStack Query，元件庫 shadcn/ui 放 components/ui/，目錄分層 pages/ 加 features/，見 docs/development/architecture.mdx §前端）；**不用 Storybook，改用元件展示頁**。元件以語意描述為主，需要時可指名 shadcn/ui 的元件，不貼實作程式碼
+    - 框架依 ADR-005 與 docs/development/architecture.mdx §前端（React 19 加 Vite 加 TypeScript strict，路由 React Router v6、伺服器狀態 TanStack Query，元件庫 shadcn/ui 放 components/ui/，目錄分層 pages/ 加 features/）；**不用 Storybook，改用元件展示頁**。元件以語意描述為主，需要時可指名 shadcn/ui 的元件，不貼實作程式碼
     - 沒有 UI 變更就只寫一行「本次無 UI 變更」
   api-contract:
     - operationId 全專案唯一，由 FastAPI 的 generate_unique_id_function **固定成「動詞加資源」**（例 listUsers、getUser），不手寫也不逐個覆寫
     - 每個端點都要列出角色、錯誤碼與遮蔽欄位（沒有就寫「無」）
     - 錯誤碼或端點授權有異動時，先改 docs/diagrams/architecture/error-codes.mdx（新的錯誤碼、會回既有錯誤碼的新端點）與 endpoint-authorization.mdx（新端點、角色、PRD 權限矩陣的格、遮蔽的欄位（含答案））；「常駐文件異動」節寫出這兩個路徑與異動摘要，不重抄常駐文件的內容
     - 看不到的資源回 404，不得用 403 洩漏它存在；錯誤訊息不得回傳內部識別碼或堆疊
-    - 成功回應**包一層 envelope**（維護者 2026-11-10 裁定）；**204 無 body、檔案與串流是明文例外**，端點屬於例外時要寫出理由
-    - 路徑前綴一律 `/api/v1`（維護者 2026-11-10 裁定）
+    - 成功回應**包一層 envelope**；**204 無 body、檔案與串流是明文例外**，端點屬於例外時要寫出理由
+    - 路徑前綴一律 `/api/v1`
   proposal:
     - 列出引用的規格編號與章節（例：規格 02-03 §卡控機制）、其他需求文件章節與待決問題編號
     - 先讀 system-analysis、system-design、ui-design、api-contract 四份，不得與之矛盾
