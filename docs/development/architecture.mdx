@@ -289,7 +289,7 @@ Redis 7 同時當 broker、result backend 與應用快取，用 DB 編號隔開�
 | `ai_runs` 加其生命週期事件 | AI 輔助流程的 run：模型、prompt 版本、config hash、輸入與輸出快照、工具呼叫、評估結果 |
 | `audit_events` | 人發起的領域行為：發布、提交、裁決、投票、成員變更、匯出 |
 
-分界：使用者接受、編輯或拒絕一個 AI 產出，記在 `ai_runs`，不另寫 `audit_events`；人的行為觸發了一個 AI run，則寫 `audit_events` 並帶 `ai_run_id` 關聯。
+分界：使用者接受、編輯或拒絕一個 AI 產出怎麼記錄未定，留到做 AI 輔助功能的 change 決定；人的行為觸發了一個 AI run，則寫 `audit_events` 並帶 `ai_run_id` 關聯。
 
 :::note{title="audit_events 的欄位與保存" collapsible}
 | 欄位 | 說明 |
