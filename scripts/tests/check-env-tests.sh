@@ -252,6 +252,35 @@ d=$(make_repo ci_bad); rm -f "$d/scripts/check-command.sh"
 ( cd "$d" && "$CHECKER" --ci >"$TMP/out" 2>"$TMP/err" )
 [ $? != 0 ] || fail "--ci exited 0 despite a registration pointing at a missing target"
 
+# ── The repository's own registrations: onFailure only where it means something ──
+# H1 compares the two registrations by target, not by field, so it would not
+# notice the Claude H2 handlers losing `onFailure: "block"`. Without it a
+# mistyped path or a crashed H2 script lets the call through again. It is not
+# set on Stop/SubagentStop (Claude ignores it there), and Codex has no such
+# field, so `.codex/hooks.json` must not carry one either.
+node - "$ROOT/.claude/settings.json" "$ROOT/.codex/hooks.json" >"$TMP/out" 2>&1 <<'JS'
+const fs = require('node:fs');
+const [claudePath, codexPath] = process.argv.slice(2);
+const handlers = (cfg) =>
+  Object.entries(cfg.hooks || {}).flatMap(([event, groups]) =>
+    groups.flatMap((g) => (g.hooks || []).map((h) => ({ event, matcher: g.matcher, ...h }))));
+const problems = [];
+const claude = handlers(JSON.parse(fs.readFileSync(claudePath, 'utf8')));
+const h2 = claude.filter((h) => h.event === 'PreToolUse');
+if (h2.length !== 2) problems.push(`expected 2 Claude PreToolUse handlers, found ${h2.length}`);
+for (const h of h2) {
+  if (h.onFailure !== 'block') problems.push(`Claude PreToolUse ${h.matcher} lacks onFailure: "block"`);
+}
+for (const h of claude.filter((h) => h.event !== 'PreToolUse')) {
+  if ('onFailure' in h) problems.push(`Claude ${h.event} carries onFailure, which is H2-only`);
+}
+for (const h of handlers(JSON.parse(fs.readFileSync(codexPath, 'utf8')))) {
+  if ('onFailure' in h) problems.push(`Codex ${h.event} carries onFailure, a field Codex does not have`);
+}
+if (problems.length) { console.log(problems.join('\n')); process.exit(1); }
+JS
+[ $? = 0 ] || fail "the real hook registrations: $(cat "$TMP/out")"
+
 if [ "$failures" -eq 0 ]; then
   echo "check-env-tests: OK"
 else

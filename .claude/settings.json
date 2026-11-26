@@ -43,7 +43,8 @@
           {
             "type": "command",
             "command": "${CLAUDE_PROJECT_DIR}/scripts/check-command.sh --event PreToolUse",
-            "timeout": 5
+            "timeout": 5,
+            "onFailure": "block"
           }
         ]
       },
@@ -53,7 +54,8 @@
           {
             "type": "command",
             "command": "${CLAUDE_PROJECT_DIR}/scripts/check-write-target.sh --event PreToolUse",
-            "timeout": 5
+            "timeout": 5,
+            "onFailure": "block"
           }
         ]
       }
