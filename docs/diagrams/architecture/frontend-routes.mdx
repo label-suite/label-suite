@@ -1,6 +1,6 @@
 ---
 title: '前端路由與骨架'
-description: 'main 上前端現在的樣子：每條路由的頁面元件、對應的規格編號與 Logic Flow 節點，以及前端骨架（單一 HTTP 邊界、生成的 hooks 與 MSW mock、元件展示頁）與已知限制。'
+description: 'main 上前端現在的樣子：每條路由的頁面元件、對應的規格編號與 Logic Flow 節點，以及前端骨架（單一 HTTP 邊界、登入狀態與守門、生成的 hooks 與 MSW mock、元件展示頁）與已知限制。'
 category: '架構'
 tags: [架構, 前端, 路由, 骨架]
 createdAt: '2026-11-23'
@@ -30,31 +30,19 @@ change 的 `ui-design.md` 仍然寫這次頁面的元件樹、資料來源、畫
 
 ## 路由
 
-目前只有兩個開發用頁面，只在開發模式註冊；正式建置是空殼，任何路徑都不顯示內容。
+登入頁、Google 回調、暫時落點與 `/` 在開發模式與正式建置都註冊，經守門判定後才顯示；兩個開發用頁面只在開發模式註冊，不經守門。
 
 | 路由 | 頁面元件 | 註冊於 | 對應的規格 | Logic Flow 節點 |
 | :--- | :--- | :--- | :--- | :--- |
+| `/account/login` | `LoginPage`（`pages/account-login/`）；包在 `PublicOnlyRoute` 裡，已登入時以取代歷史紀錄的方式導向落點 | 開發模式與正式建置 | 規格 01-01 §登入頁、§用 Email 與密碼登入、§用 Google 帳號登入、§語言切換 | 帳號模組 P1；D1 是 → X5 |
+| `/account/google/callback` | `GoogleCallbackPage`（`pages/google-callback/`）：沒有自己的畫面，只畫頁面底色；把 Google 帶回來的 `code`、`state` 交給後端一次後導走；包在 `PublicOnlyRoute` 裡 | 開發模式與正式建置 | 規格 01-01 §用 Google 帳號登入、E1、E2 | 帳號模組 X1 → D3；D3 是 → X5，D3 否 → P1 |
+| `/dashboard/dashboard` | `DashboardPlaceholderPage`（`pages/dashboard-placeholder/`）：02-01 完成前的暫時落點，沿用登入頁的頁首與卡片、沒有側欄；顯示「你已登入」、名字與 Email、系統角色與「登出」鈕。包在 `RequireAuthRoute` 裡。02-01 外殼完成時換成儀表板，路徑不變 | 開發模式與正式建置；需要登入 | 規格 02-01（之後取代）；規格 01-05 §從這一台登出 | 帳號模組 X5；登出 X5 → X7 → P1 |
+| `/` | `RootRedirect`：不顯示內容，依登入狀態以取代歷史紀錄的方式導向：已登入 → 落點，未登入 → `/account/login` | 開發模式與正式建置 | 規格 01-01 §登入頁 第 9 條、Q3 | 帳號模組 S → D1 |
+| 其他路徑 | 以取代歷史紀錄的方式導向 `/`，再依登入狀態導向；規格 07-03 的找不到頁完成時取代這一條 | 開發模式與正式建置 | 規格 07-03（之後取代） | 無 |
 | `/dev/health` | `DevHealthPage`（`pages/dev-health/`） | 開發模式 | 無 `docs/specs/` 規格；行為見 `openspec/specs/dev-health-page/` | 無 |
 | `/dev/gallery` | `DevGalleryPage`（`pages/dev-gallery/`） | 開發模式 | 無 `docs/specs/` 規格；行為見 `openspec/specs/component-gallery/` | 無 |
-| `/` 與其他路徑 | 以取代歷史紀錄的方式導向 `/dev/health` | 開發模式 | `openspec/specs/frontend-routing/` | 無 |
-| 任何路徑 | 不顯示內容 | 正式建置 | `openspec/specs/frontend-routing/` | 無 |
 
-路由表在 `src/app/router.tsx` 的 `createAppRouter()`：以 `import.meta.env.DEV` 分支，正式建置時這個分支連同兩頁的程式與文案一起被移除。首頁與找不到頁面由規格 01-01 的 change 一起設計，還沒有實作（見已歸檔的 [frontend-skeleton `proposal.md`](https://github.com/label-suite/label-suite/blob/main/openspec/changes/archive/2026-11-20-frontend-skeleton/proposal.md)）。
-
-:::note{title="規劃中：login-auth-guard（#719）" collapsible}
-下表是 change `login-auth-guard` 的規劃，**還沒有合併**；合併後由 `frontend-developer` 依程式校正，再把它併進上面的路由表。內容依維護者 2026-11-26 的決定（[#719 決定表](https://github.com/label-suite/label-suite/issues/719#issuecomment-7187190476)），細節見那個 change 的 `ui-design.md`。
-
-| 路由 | 頁面元件 | 註冊於 | 對應的規格 | Logic Flow 節點 |
-| :--- | :--- | :--- | :--- | :--- |
-| `/account/login` | `LoginPage`（`pages/account-login/`）；只給未登入的人，已登入時以取代歷史紀錄的方式導向落點 | 開發模式與正式建置 | 規格 01-01 §登入頁、§用 Email 與密碼登入、§用 Google 帳號登入、§語言切換 | 帳號模組 P1；D1 是 → X5 |
-| `/account/google/callback` | `GoogleCallbackPage`（`pages/account-google-callback/`）：沒有自己的畫面，把 Google 帶回來的 `code`、`state` 交給後端後導走；只給未登入的人 | 開發模式與正式建置 | 規格 01-01 §用 Google 帳號登入、E1、E2 | 帳號模組 X1 → D3；D3 是 → X5，D3 否 → P1 |
-| `/dashboard/dashboard` | `DashboardPlaceholderPage`（`pages/dashboard-dashboard/`）：02-01 完成前的暫時落點，沿用登入頁的頁首與卡片、沒有側欄；顯示「你已登入」、名字與 Email、系統角色、建置中的說明與「登出」鈕（維護者 2026-11-26 依 Ready gate 核准的畫面 artifact）。02-01 外殼完成時換成儀表板，路徑不變 | 開發模式與正式建置；需要登入 | 規格 02-01（之後取代）；規格 01-05 §從這一台登出 | 帳號模組 X5；登出 X5 → X7 → P1 |
-| `/` | 不顯示內容，依登入狀態以取代歷史紀錄的方式導向：已登入 → 落點，未登入 → `/account/login` | 開發模式與正式建置（取代開發模式原本導向 `/dev/health` 的那一條） | 規格 01-01 §登入頁 第 9 條、Q3 | 帳號模組 S → D1 |
-| 其他路徑 | 以取代歷史紀錄的方式導向 `/`，再依登入狀態導向；規格 07-03 的找不到頁完成時取代這一條 | 開發模式與正式建置（取代開發模式原本導向 `/dev/health` 的那一條） | 規格 07-03（之後取代） | 無 |
-
-- 路徑沿用 prototype 的頁面識別（`docs/prototype/navigation.mdx` 的 `/account/login`、`/dashboard/dashboard`），讓 02-01 外殼的 change 只換頁面元件、不改路由與導向
-- `/dev/health`、`/dev/gallery` 不經過守門，維持只在開發模式註冊
-:::
+路由表在 `src/app/router.tsx` 的 `createAppRouter()`：兩個開發用頁面以 lazy route 放在 `import.meta.env.DEV` 分支，正式建置時這個分支連同兩頁的程式與文案一起被移除。路徑常數 `LOGIN_PATH`、`GOOGLE_CALLBACK_PATH`、`LANDING_PATH` 與三個守門元件都從 `features/auth` 匯出。路徑沿用 prototype 的頁面識別（`docs/prototype/navigation.mdx`），讓 02-01 外殼只換頁面元件、不改路由與導向。
 
 ## 頁面與功能元件
 
@@ -64,14 +52,23 @@ change 的 `ui-design.md` 仍然寫這次頁面的元件樹、資料來源、畫
 | :--- | :--- | :--- | :--- |
 | `DevHealthPage` | `HealthStatusPanel`（`features/system-health/`） | `useGetHealth`（`getHealth`） | `systemHealth` |
 | `DevGalleryPage` | 無；直接列出 `components/ui/` 的原語 | 無，不送任何請求 | `devGallery` |
-| `LoginPage`（規劃中，#719） | `LoginForm`、`GoogleSignInButton`（`features/auth/`）；外殼用登出狀態的頁首與卡片 | `createSession`、`getCurrentSession`、`getAuthOptions`、`getGoogleAuthorization`；守門另用 `createSessionRefresh` | `auth`（規劃中） |
-| `GoogleCallbackPage`（規劃中，#719） | `GoogleCallbackHandler`（`features/auth/`） | `createGoogleSession` | `auth`（規劃中） |
-| `DashboardPlaceholderPage`（規劃中，#719） | `SignedInCard`、`LogoutButton`（`features/auth/`）；外殼同登入頁 | `getCurrentSession`（與守門共用同一份）、`deleteCurrentSession` | `auth`（規劃中） |
+| `LoginPage` | `LoginView`（`features/auth/`）：`AuthLayout`（頁首與 `LanguageToggle`）、`AuthCard`、`FormErrorBanner`、`GoogleSignIn`、`LoginForm`（含 `PasswordInput`）；送出與 Google 開始由 `useLoginController` 處理 | `useGetAuthOptions`（`getAuthOptions`）；請求函式 `createSession`、`getGoogleAuthorization`；登入成功後重查 `getCurrentSession` | `auth` |
+| `GoogleCallbackPage` | `GoogleCallbackHandler`（`features/auth/`） | 請求函式 `createGoogleSession`；成功後重查 `getCurrentSession` | 無畫面文案 |
+| `DashboardPlaceholderPage` | `AuthLayout`、`SignedInCard`（含角色 `Badge` 與 `LogoutButton`）（`features/auth/`） | `getCurrentSession`（與守門共用同一份快取）、`useDeleteCurrentSession`（`deleteCurrentSession`） | `auth` |
 
 :::note{title="健康檢查頁的四種狀態" collapsible}
 - `HealthStatusPanel` 用 `toHealthViewState` 把查詢結果轉成四種狀態之一：載入中、正常、後端錯誤（任何錯誤外層）、連不上
 - 後端回的 `message`、`code`、`traceId` 與錯誤種類原樣顯示，不再翻譯
 - 兩頁都在進入時設定 `document.title`
+:::
+
+:::note{title="登入相關頁面的行為" collapsible}
+- 登入頁：登入頁設定回來前、或取不到時，Google 按鈕、「或」分隔線與「前往註冊」都不畫，也不顯示橫幅；`googleEnabled` 為假時不畫 Google 按鈕與分隔線，`selfRegistrationEnabled` 為假時不畫「前往註冊」整列
+- 錯誤橫幅的文字依 `LoginNotice` 取 `auth` 語言檔的 `login.error.*`，不顯示後端的 `message`；五種：`invalidCredentials`、`googleRejected`、`sessionExpired`、`sessionInvalid`、`unavailable`
+- 登入頁開啟時顯示的那一句：導覽狀態帶來的（Google 回調的 E2、沒有回應）優先，其次是守門查詢帶的；讀一次就清掉，同一次造訪重開登入頁不再出現
+- Google 回調：網址有 `error`、或缺 `code`、`state` 時不呼叫後端，安靜回登入頁；`ACCOUNT_GOOGLE_FLOW_INVALID` 安靜回登入頁（E1），`ACCOUNT_GOOGLE_REJECTED` 帶 Google 那一句（E2），其他失敗帶「沒有回應」那一句；同一組 `code`、`state` 只送一次，回調網址一律以取代的方式離開歷史紀錄
+- 登出：`LogoutButton` 送出期間不再接受按鍵；不論結果都清掉其他查詢快取、把登入狀態記成未登入，由守門帶回登入頁
+- 登入頁與落點在進入時設定 `document.title`
 :::
 
 ## 前端骨架
@@ -91,7 +88,7 @@ frontend/
    ├─ pages/<page>/         頁面：組合功能元件與原語
    ├─ features/<feature>/   功能元件與它的狀態轉換
    ├─ components/ui/        shadcn/ui 原語，匯出 variant 陣列
-   ├─ api/                  mutator.ts（唯一出口）、ApiError、外層判定、config
+   ├─ api/                  mutator.ts（唯一出口）、session-refresh.ts、ApiError、外層判定、config
    │  └─ generated/         Orval 產物，禁止手改
    ├─ lib/                  i18n、date（day.js 唯一入口）、abort、utils
    ├─ styles/               theme.css：shadcn 變數對到 tokens.css 的變數名
@@ -107,7 +104,7 @@ frontend/
 
 ### 單一 HTTP 邊界
 
-`src/api/mutator.ts` 的 `apiFetch` 是前端唯一的 HTTP 出口，也是 Orval 的 mutator：base URL、cookie、`Accept-Language`、逾時、取消，以及把每一種失敗轉成 `ApiError`，都只在這裡。理由見 `docs/development/rules/api-agent-rules.mdx` 的 A6。
+`src/api/mutator.ts` 的 `apiFetch` 是前端唯一的 HTTP 出口，也是 Orval 的 mutator：base URL、cookie、`Accept-Language`、CSRF 標頭、逾時、取消、`401` 之後的延續，以及把每一種失敗轉成 `ApiError`，都只在這裡。理由見 `docs/development/rules/api-agent-rules.mdx` 的 A6。
 
 | 結果 | `apiFetch` 回傳或丟出 |
 | :--- | :--- |
@@ -119,30 +116,38 @@ frontend/
 | 逾時 | `ApiError`，`kind: "timeout"` |
 | 呼叫端取消 | `ApiError`，`kind: "aborted"` |
 
-失敗一律不自動重試：`apiFetch` 不重試，`createQueryClient()` 把查詢與寫入的 `retry` 都關掉。元件與 hook 只會看到 `ApiError`，不會看到原生的 `TypeError`、`DOMException` 或 `Response`。
+失敗一律不自動重試：`apiFetch` 只在 `401 AUTH_REQUIRED` 時延續登入狀態後重送（見 [§登入狀態與守門](#登入狀態與守門)），其他失敗不重試；`createQueryClient()` 把查詢與寫入的 `retry` 都關掉。元件與 hook 只會看到 `ApiError`，不會看到原生的 `TypeError`、`DOMException` 或 `Response`。
 
 :::note{title="apiFetch 的細節" collapsible}
 - `VITE_API_BASE_URL`：空字串代表同源相對路徑；否則必須是結尾沒有 `/` 的絕對 `http(s)` URL。`main.tsx` 啟動時先呼叫 `readApiConfig()`，不合格就不 render
 - 每個請求都 `credentials: "include"`，`Accept-Language` 取目前的介面語言；有 body 時設 `Content-Type: application/json`
+- `POST`、`PUT`、`PATCH`、`DELETE` 讀得到 `__Host-ls_csrf` cookie 時，把它的值放進 `X-CSRF-Token` 標頭
+- `ApiFetchOptions.skipSessionRefresh` 讓請求只送一次、不延續；只有延續請求本身設它
 - 預設逾時 15 秒，可用 `ApiFetchOptions.timeoutMs` 逐次覆寫；TanStack Query 傳進來的 signal 與逾時合成一個
 - query 參數用 `URLSearchParams` 組，`null` 與 `undefined` 略過，陣列重複同一個 key
 - 外層只驗外層本身的欄位，`data` 裡面的形狀交給生成的型別
 - 非 `http` 的 `ApiError.message` 是英文診斷字串，不含回應內容或原生錯誤的訊息
 - `isAuthError()` 只認錯誤外層的 `401`；`403` 不算
-- 語言：`main.tsx` 依 `navigator.language` 決定一次，沒有語言切換；只預載 `common` namespace，頁面的 namespace 由各自的入口註冊
+- 語言：`main.tsx` 呼叫 `initI18n()`，讀 `localStorage` 的 `labelsuite.lang`；值不是 `en`、讀不到或沒有時是 `zh-TW`，不看瀏覽器語言，並把 `<html lang>` 設成同一個值。登入頁頁首的 `LanguageToggle` 經 `changeInterfaceLanguage` 切換、記住並更新 `<html lang>`。啟動時預載 `common` 與 `auth` 兩個 namespace，開發用頁面的 namespace 由各自的入口註冊
 :::
 
-:::note{title="規劃中的骨架異動：login-auth-guard（#719）" collapsible}
-還沒有合併；合併後由 `frontend-developer` 依程式改寫上面對應的段落。
+### 登入狀態與守門
 
-- **守門層**：`app/` 新增兩種路由包裝——「需要登入」與「只給未登入的人」，都讀同一個「目前的登入狀態」查詢；判定完成前不畫任何一頁的內容，避免登入頁閃一下再跳走。只做授權四步的第 1、2 步。查詢連不上、逾時或 `5xx` 時當成未登入，帶回登入頁並顯示「沒有回應」那一句；登入後一律去落點，不帶原本要去的頁面
-- **`401` 的處理**：任何請求回 `401 AUTH_REQUIRED`（`isAuthError()`）→ 試延續（`createSessionRefresh`；同一時間只發一次），全程最多延續 2 次、重送原請求 2 次（規格 01-05 §多個分頁同時延續登入狀態）：延續成功就重送；延續回 `409 ACCOUNT_REFRESH_CONFLICT` 時不回登入頁，短暫等候後重送一次；重送仍回 `401` 就再延續一次；還是不行才清掉登入狀態的查詢快取，以取代歷史紀錄的方式回 `/account/login`。延續最後回 `ACCOUNT_SESSION_EXPIRED`／`ACCOUNT_SESSION_INVALID` 時登入頁顯示對應的被動登出那一句；回 `AUTH_REQUIRED`（沒有 refresh cookie，例如從沒登入過的訪客）時不顯示任何句子；`403` 不在這裡處理，交給各頁
-- **錯誤橫幅的文案**：前端依錯誤外層的 `code`（網路錯誤依 `ApiError.kind`）對到 `auth` 語言檔，不顯示後端的 `message`
-- **CSRF**：`POST`、`PUT`、`PATCH`、`DELETE` 由 `apiFetch` 帶 `X-CSRF-Token` 標頭，值取自 `__Host-ls_csrf` cookie（`api-contract` §CSRF）
-- **登出**：暫時落點的「登出」鈕呼叫 `deleteCurrentSession`；不論結果都清掉登入狀態的查詢快取，以取代歷史紀錄的方式回 `/account/login`。07-01 側欄完成後由側欄的登出接手
-- **Google 登入不用 `302`**：授權網址由後端以 JSON 回給前端，前端整頁導覽過去；Google 回到前端的 `/account/google/callback`，再由前端把 `code`、`state` 送給後端。兩個端點都走 `apiFetch` 與生成的 hook
-- **語言**：規格 01-01 §語言切換 要求登入頁有語言切換、第一次來預設繁體中文、記住選擇並跨頁沿用，與現在「依 `navigator.language` 決定一次、沒有切換」不同；change 的 specs 會修改 `frontend-i18n` capability。語言鈕的無障礙名稱含目前代號（例「ZH，切換語言」）
-- **原語**：新增 `label`、`separator`，`button` 增加送出中的狀態，`badge` 增加角色變體；展示頁要各有一節
+所有守門都讀同一個「目前的登入狀態」查詢；任何請求回 `401 AUTH_REQUIRED` 時，由 `apiFetch` 先延續登入狀態再重送，頁面不必自己處理。只做授權四步的第 1、2 步，角色能看到什麼由後端決定。
+
+| 元件 | 在哪裡 | 做什麼 |
+| :--- | :--- | :--- |
+| `useSessionState`、`sessionQueryOptions` | `features/auth/session-query.ts` | 以生成的 `getGetCurrentSessionQueryKey()` 為 key 查 `getCurrentSession`，`staleTime` 無限；查詢**不會失敗**：除了取消，每一種拒絕或沒有回應都轉成 `{ kind: "signedOut", notice }`，守門只看資料分支 |
+| `RequireAuthRoute`、`PublicOnlyRoute`、`RootRedirect` | `features/auth/route-guards.tsx` | 查詢回來前只畫頁面底色，避免頁面閃一下再跳走；之後以取代歷史紀錄的方式導向登入頁或落點 |
+| `sendWithSessionRefresh`、`refreshSession` | `src/api/session-refresh.ts` | 延續是 single-flight：同一時間只有一個 `createSessionRefresh`，其他被拒的請求共用它；整個流程延續至多 2 次、重送至多 2 次 |
+| `App`、`AppProviders` | `src/app/app.tsx`、`providers.tsx` | 可選的 `queryClient`（`AppProviders` 的屬性名是 `client`）讓測試換成新的快取；沒給時用整頁共用的那一個 |
+
+:::note{title="延續的步驟與登入頁的句子" collapsible}
+- 延續：延續成功就重送一次；延續回 `409 ACCOUNT_REFRESH_CONFLICT`（另一個分頁剛延續過）時等 300 毫秒再重送一次；那次重送仍回 `401 AUTH_REQUIRED` 時再延續一次，成功就再重送一次；其他失敗原樣交給呼叫端。延續請求本身帶 `skipSessionRefresh`，不會再觸發延續
+- 守門查詢失敗時登入頁顯示的句子（`noticeForSessionError`）：`ACCOUNT_SESSION_EXPIRED`、`ACCOUNT_SESSION_INVALID` 各對到一句被動登出；`AUTH_REQUIRED` 與用完的 `ACCOUNT_REFRESH_CONFLICT` 不顯示句子；連不上、逾時、回應不是外層或 `5xx` 顯示「沒有回應」那一句
+- 登入成功後重查登入狀態，守門自己把頁面帶到落點，一律去落點、不帶回原本要去的頁面
+- `403` 不在這裡處理，交給各頁
+- Google 登入不用 `302`：授權網址由後端以 JSON 回給前端，前端整頁導覽過去；Google 回到前端的 `/account/google/callback`，再由前端把 `code`、`state` 送給後端
 :::
 
 ### 生成的 hooks 與 MSW mock
@@ -175,7 +180,7 @@ frontend/
 | `ThemeToggle` | 切換 `<html data-theme>` 的淺色與深色；只存在元件狀態，離開展示頁恢復淺色 |
 | `TokenMappingSection` | 列出 `styles/theme.css` 的對照；只有這一頁可以把 `theme.css` 讀成原始文字 |
 
-目前的原語：`alert`、`badge`、`button`、`card`、`empty`、`input`、`skeleton`。新增原語時，展示頁要有它的一節，否則完整性測試失敗。
+目前的原語：`alert`、`badge`（含角色變體 `role`）、`button`（含送出中的 `loading`）、`card`、`empty`、`input`、`label`、`separator`、`skeleton`。新增原語時，展示頁要有它的一節，否則完整性測試失敗。
 
 :::note{title="design token 怎麼進到元件" collapsible}
 - `build/extract-tokens.ts` 在開發與建置時讀 `design/prototype/assets/tokens.css`，只取 `:root` 與 `html[data-theme="dark"]` 的 `--*` 宣告，以虛擬模組 `virtual:design-tokens.css` 提供，不寫檔
@@ -185,11 +190,10 @@ frontend/
 
 ## 已知限制
 
-已落地的前端只有開發用頁面；下表是它還沒有的東西與風險。
+已落地的前端有登入、守門與暫時落點；下表是它還沒有的東西與風險。
 
 | 還沒有 | 風險 | 追蹤 |
 | :--- | :--- | :--- |
-| 登入與登入狀態的處理；`401` 只能用 `isAuthError()` 認出來，沒有導向登入頁 | 第一個需要登入的頁面要先補上 | [ADR-004 的 D1](../../development/adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie)；規劃中：[#719](https://github.com/label-suite/label-suite/issues/719) |
 | CI 的前端檢查：lint、型別、測試、建置、契約漂移，以及跑過前後端的 e2e | 這些檢查目前只在本機跑，PR 不會因為違反而失敗 | [#506](https://github.com/label-suite/label-suite/issues/506) |
 | 前端的錯誤追蹤與監控 | 使用者端的錯誤只有使用者回報的 `traceId` 可查 | [ADR-008 的 D4](../../development/adr/008-deployment-and-operations.mdx#d4-觀測性只做-ai_runs監控與錯誤追蹤本期不做) |
 
@@ -200,3 +204,4 @@ frontend/
 | 2026-11-23 | 前端的路由、頁面元件、對應的規格編號與 Logic Flow 節點落地成本文；規劃時由 `ui-ux` 先改本文，change 只寫異動摘要與路徑（[§誰改、什麼時候改](#誰改什麼時候改)） | 只散在各 change 的 `ui-design.md` | [#546](https://github.com/label-suite/label-suite/issues/546) |
 | 2026-11-23 | 本文加一節前端骨架與已知限制，不另開文件（[§前端骨架](#前端骨架)） | — | [#546](https://github.com/label-suite/label-suite/issues/546) |
 | 2026-11-23 | 實作後由 `frontend-developer` 依程式校正本文，`code-reviewer` 再核對（[§誰改、什麼時候改](#誰改什麼時候改)） | — | [#546](https://github.com/label-suite/label-suite/issues/546#issuecomment-7100137950) |
+| 2026-11-26 | 加上登入頁、Google 回調、暫時落點與 `/` 的守門導向，取代開發模式 `/` 與其他路徑導向 `/dev/health`；骨架加上登入狀態查詢、single-flight 延續、CSRF 標頭與記住的介面語言（[§路由](#路由)、[§登入狀態與守門](#登入狀態與守門)） | 開發模式 `/` 與其他路徑導向 `/dev/health`；依 `navigator.language` 決定一次語言；已知限制的「登入與登入狀態的處理」 | [#719](https://github.com/label-suite/label-suite/issues/719) |

@@ -56,6 +56,8 @@ docker compose run --rm -it backend python -m app.scripts.create_seeder --email 
 
 正式層在 `docker compose` 後面加 `-f docker-compose.prod.yml`。這支指令的行為見 [§建立第一位系統管理員](#建立第一位系統管理員)；它建的帳號存在資料 volume 裡，`docker compose down -v` 會連帳號一起刪掉。
 
+登入的 cookie 只在 HTTPS 或 `localhost` 上存得進瀏覽器，所以 Lite 層要用 `http://localhost:8080` 開，不要用區網位址；原因見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)的「登入 cookie 的前提」列。
+
 Compose 最低版本是 v2.20.0，原因見 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)的「Compose 最低版本」列。
 `8080` 被占用時改 `.env` 的 `FRONTEND_PORT`，並把同一個埠加進 `CORS_ALLOWED_ORIGINS`。
 
