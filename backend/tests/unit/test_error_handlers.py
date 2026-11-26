@@ -15,6 +15,7 @@ import httpx
 import pytest
 from fastapi import FastAPI
 from starlette.exceptions import HTTPException
+from starlette.responses import Response
 
 from app.core.errors import (
     AppError,
@@ -57,12 +58,22 @@ def _build_app() -> FastAPI:
     async def named_teapot(name: str) -> None:
         raise HTTPException(status_code=418)
 
+    @app.get("/hooked")
+    async def hooked() -> None:
+        error = NotFoundError()
+        error.response_hook = _mark_response
+        raise error
+
     @app.post("/body")
     async def body(payload: Body) -> None:
         return None
 
     app.add_middleware(CorrelationIdMiddleware)
     return app
+
+
+def _mark_response(response: Response) -> None:
+    response.headers["X-Hooked"] = "yes"
 
 
 class _ScopeRecorder:
@@ -230,3 +241,17 @@ async def test_already_logged_never_reaches_the_response(client: httpx.AsyncClie
     }
     assert "already" not in response.text.lower()
     assert "logged" not in response.text.lower()
+
+
+async def test_a_response_hook_on_the_error_adjusts_the_error_response(
+    client: httpx.AsyncClient,
+) -> None:
+    response = await client.get("/hooked")
+
+    assert response.status_code == 404
+    assert response.json()["code"] == "NOT_FOUND"
+    assert response.headers["X-Hooked"] == "yes"
+
+
+def test_an_app_error_has_no_response_hook_by_default() -> None:
+    assert NotFoundError().response_hook is None

@@ -1,4 +1,11 @@
 {
+  "account.google_flow_invalid": "Google 登入沒有完成，請再試一次",
+  "account.google_rejected": "無法用這個 Google 帳號登入。需要帳號的話，請聯絡系統管理員邀請你。",
+  "account.google_unavailable": "這個平台沒有開放 Google 登入",
+  "account.invalid_credentials": "帳號或密碼錯誤，請再試一次",
+  "account.refresh_conflict": "登入狀態正在更新，請稍後再試",
+  "account.session_expired": "登入已過期，請重新登入",
+  "account.session_invalid": "驗證失敗，請重新登入",
   "common.auth_required": "請先登入",
   "common.csrf_failed": "無法確認這個請求，請重新整理頁面後再試",
   "common.database_unavailable": "資料庫暫時無法連線，請稍後再試",

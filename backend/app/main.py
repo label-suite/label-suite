@@ -36,6 +36,8 @@ from app.core.openapi import (
 from app.core.paths import API_V1_PREFIX
 from app.core.schemas import ErrorResponse
 from app.core.tokens import AccessTokenCodec, TokenKeys
+from app.modules.account.router import router as account_router
+from app.modules.account.service import AccountPrincipalLoader
 from app.modules.health.router import router as health_router
 
 __all__ = ["API_V1_ERROR_RESPONSES", "create_api_router", "create_app"]
@@ -86,11 +88,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         Resolves ``AUTH_SECRET`` (``resolve_auth_secret``): on the Lite tier
         without it, reads or creates ``auth_secret`` next to the SQLite file.
         Derives the purpose keys from it into ``app.state.token_keys`` and puts the
-        access-token codec in ``app.state.access_codec``.
+        access-token codec in ``app.state.access_codec`` and the account module's
+        ``AccountPrincipalLoader`` in ``app.state.principal_loader``.
 
     Returns:
         The app with the six middlewares, the exception handlers, the
-        ``/api/v1`` router with the health module mounted, and the
+        ``/api/v1`` router with the health and account modules mounted, and the
         post-processed ``app.openapi`` installed;
         ``info.version`` is ``[project].version`` of ``pyproject.toml``. The
         database engine is created by the lifespan, not here, so building the
@@ -128,6 +131,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.message_catalog = catalog
     app.state.token_keys = keys
     app.state.access_codec = codec
+    # core.auth only defines the protocol; the account module implements it.
+    app.state.principal_loader = AccountPrincipalLoader()
 
     # add_middleware puts each new layer outside the previous ones, so this runs
     # innermost first: Csrf, Locale, Unhandled, AccessLog, CORS, Correlation (design D3;
@@ -155,6 +160,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     register_exception_handlers(app)
     api = create_api_router()
     api.include_router(health_router)
+    api.include_router(account_router)
     app.include_router(api)
     assert_unique_operation_ids(app)
     install_openapi(app)

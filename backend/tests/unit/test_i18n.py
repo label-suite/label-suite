@@ -19,6 +19,15 @@ from app.core.i18n import (
     MessageCatalogError,
     resolve_locale,
 )
+from app.modules.account.service import (
+    GoogleFlowInvalidError,
+    GoogleLoginRejectedError,
+    GoogleUnavailableError,
+    InvalidCredentialsError,
+    RefreshConflictError,
+    SessionExpiredError,
+    SessionInvalidError,
+)
 
 # --- resolve_locale -------------------------------------------------------------------
 
@@ -126,6 +135,28 @@ EXPECTED_MESSAGES = {
         "無法確認這個請求，請重新整理頁面後再試",
         "This request could not be verified. Please reload the page and try again.",
     ),
+    # login-auth-guard task 4.2; the sentences shown on screen follow design D7.
+    "account.invalid_credentials": ("帳號或密碼錯誤，請再試一次", "Invalid email or password"),
+    "account.session_expired": ("登入已過期，請重新登入", "Session expired, please sign in again"),
+    "account.session_invalid": ("驗證失敗，請重新登入", "Authentication failed, please sign in"),
+    "account.refresh_conflict": (
+        "登入狀態正在更新，請稍後再試",
+        "Your session is being renewed. Please try again shortly.",
+    ),
+    # login-auth-guard task 4.3.
+    "account.google_rejected": (
+        "無法用這個 Google 帳號登入。需要帳號的話，請聯絡系統管理員邀請你。",
+        "You can't sign in with this Google account. "
+        "If you need an account, ask an administrator to invite you.",
+    ),
+    "account.google_flow_invalid": (
+        "Google 登入沒有完成，請再試一次",
+        "Google sign-in did not complete. Please try again.",
+    ),
+    "account.google_unavailable": (
+        "這個平台沒有開放 Google 登入",
+        "Google sign-in is not available on this platform.",
+    ),
 }
 
 
@@ -152,6 +183,13 @@ def test_every_app_error_message_key_exists_in_the_catalog() -> None:
         DatabaseUnavailableError(),
         AuthenticationRequiredError(),
         CsrfFailedError(),
+        InvalidCredentialsError(),
+        SessionExpiredError(),
+        SessionInvalidError(),
+        RefreshConflictError(),
+        GoogleLoginRejectedError(),
+        GoogleFlowInvalidError(),
+        GoogleUnavailableError(),
     ):
         assert error.message_key in catalog.keys()
 

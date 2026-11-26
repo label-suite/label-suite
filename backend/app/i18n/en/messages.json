@@ -1,4 +1,11 @@
 {
+  "account.google_flow_invalid": "Google sign-in did not complete. Please try again.",
+  "account.google_rejected": "You can't sign in with this Google account. If you need an account, ask an administrator to invite you.",
+  "account.google_unavailable": "Google sign-in is not available on this platform.",
+  "account.invalid_credentials": "Invalid email or password",
+  "account.refresh_conflict": "Your session is being renewed. Please try again shortly.",
+  "account.session_expired": "Session expired, please sign in again",
+  "account.session_invalid": "Authentication failed, please sign in",
   "common.auth_required": "Please sign in first.",
   "common.csrf_failed": "This request could not be verified. Please reload the page and try again.",
   "common.database_unavailable": "The database is temporarily unavailable. Please try again later.",

@@ -12,13 +12,14 @@ D4). ``ResponseValidationError`` deliberately has no handler: it falls through t
 """
 
 import logging
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
+from starlette.responses import Response
 
 from app.core.envelope import error_response
 from app.core.log_config import mark_error_logged
@@ -52,6 +53,10 @@ class AppError(Exception):
             ``ERROR`` record for this failure; ``handle_app_error`` then marks
             the request so the access log does not write a second line. A plain
             flag that never reaches the response.
+        response_hook: Called with the error response before it is sent, or
+            ``None``. A router sets it on an error it caught and re-raises when the
+            error response needs an HTTP-level change the service cannot know
+            about, such as clearing the login cookies through ``SessionCookies``.
     """
 
     status_code: int = 500
@@ -71,6 +76,7 @@ class AppError(Exception):
         super().__init__(self.code)
         self.params: dict[str, str] = dict(params or {})
         self.already_logged = already_logged
+        self.response_hook: Callable[[Response], None] | None = None
 
 
 class NotFoundError(AppError):
@@ -152,12 +158,13 @@ async def handle_app_error(request: Request, exc: Exception) -> JSONResponse:
     """Turn an ``AppError`` into its error envelope.
 
     When ``exc.already_logged`` is true the request is marked as already logged
-    (``mark_error_logged``), so the access log writes nothing for it.
+    (``mark_error_logged``), so the access log writes nothing for it. When
+    ``exc.response_hook`` is set it is applied to the response last.
     """
     assert isinstance(exc, AppError)  # noqa: S101 - registered for AppError only
     if exc.already_logged:
         mark_error_logged(request.scope)
-    return error_response(
+    response = error_response(
         exc.status_code,
         exc.code,
         exc.message_key,
@@ -165,6 +172,9 @@ async def handle_app_error(request: Request, exc: Exception) -> JSONResponse:
         state=_state(request),
         params=exc.params,
     )
+    if exc.response_hook is not None:
+        exc.response_hook(response)
+    return response
 
 
 async def handle_validation_error(request: Request, exc: Exception) -> JSONResponse:
