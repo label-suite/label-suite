@@ -1,4 +1,6 @@
 {
+  "common.auth_required": "Please sign in first.",
+  "common.csrf_failed": "This request could not be verified. Please reload the page and try again.",
   "common.database_unavailable": "The database is temporarily unavailable. Please try again later.",
   "common.internal_error": "Something went wrong. Please try again later.",
   "common.method_not_allowed": "This operation is not supported.",

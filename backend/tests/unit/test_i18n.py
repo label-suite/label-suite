@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from app.core.auth import AuthenticationRequiredError
+from app.core.csrf import CsrfFailedError
 from app.core.errors import AppError, DatabaseUnavailableError, NotAcceptableError, NotFoundError
 from app.core.i18n import (
     DEFAULT_LOCALE,
@@ -118,6 +120,12 @@ EXPECTED_MESSAGES = {
         "資料庫暫時無法連線，請稍後再試",
         "The database is temporarily unavailable. Please try again later.",
     ),
+    # login-auth-guard tasks 3.2 and 3.3: neither sentence says why the request failed.
+    "common.auth_required": ("請先登入", "Please sign in first."),
+    "common.csrf_failed": (
+        "無法確認這個請求，請重新整理頁面後再試",
+        "This request could not be verified. Please reload the page and try again.",
+    ),
 }
 
 
@@ -138,7 +146,13 @@ def test_bundled_catalog_has_exactly_the_contract_keys() -> None:
 def test_every_app_error_message_key_exists_in_the_catalog() -> None:
     catalog = MessageCatalog.load()
 
-    for error in (NotFoundError(), NotAcceptableError(), DatabaseUnavailableError()):
+    for error in (
+        NotFoundError(),
+        NotAcceptableError(),
+        DatabaseUnavailableError(),
+        AuthenticationRequiredError(),
+        CsrfFailedError(),
+    ):
         assert error.message_key in catalog.keys()
 
 

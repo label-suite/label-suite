@@ -1,4 +1,6 @@
 {
+  "common.auth_required": "請先登入",
+  "common.csrf_failed": "無法確認這個請求，請重新整理頁面後再試",
   "common.database_unavailable": "資料庫暫時無法連線，請稍後再試",
   "common.internal_error": "系統發生錯誤，請稍後再試",
   "common.method_not_allowed": "不支援這個操作",
