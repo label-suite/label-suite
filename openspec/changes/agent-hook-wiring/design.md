@@ -229,8 +229,8 @@ spec「執行時間與輸出大小有上限且由平台設定控制」。
 
 ### D7 fail-closed：兩組阻擋型檢查器的進場守衛，以及一條禁止 `|| true` 的 CI lint
 
-**依據：** 契約 §H2「缺工具／無適用檔案」、§能力缺口與承接第 5 條（兩平台預設 fail-open，
-`onFailure: "block"` 需 Claude Code 2.1.295，本機 2.1.273 沒有）；spec「無法判斷不得回報為通過」。
+**依據：** 契約 §H2「缺工具／無適用檔案」、§能力缺口與承接第 5 條（兩平台預設 fail-open；
+Claude 的 `onFailure: "block"` 只補 Claude 一邊，Codex 沒有等價欄位，見 D15）；spec「無法判斷不得回報為通過」。
 
 **決策。** 兩組檢查器在做任何判定**之前**依序守衛，任一步不成立就 `exit 2` 並在 stderr 說明：
 
@@ -556,8 +556,12 @@ Codex 的 `apply_patch` 沒有路徑欄位，改從 `tool_input.command` 的檔�
 
 三件要照辦的事：
 
-- **不寫 `onFailure: "block"`。** 它需要 2.1.295，本機 2.1.273（契約 §查核方式第 4 點）。
-  fail-closed 由 D7 的腳本守衛做。升級到 2.1.295 之後可以改用，屆時把版本下限記進契約。
+- **兩個 `PreToolUse`（H2）handler 加 `"onFailure": "block"`，其他 handler 不加。** 維護者 2026-11-26 決定
+  （ADR-001 D5 選項 B）。依據是 Claude Code 2.1.323 的本機實測：指向不存在的腳本、腳本 `exit 1`，
+  兩者加上它都擋下 Bash；不設的對照組照常執行（契約 §查核方式第 4 點）。它疊在 D7 的腳本守衛之上，
+  **不取代** D7：腳本 exit `2` 仍是兩平台共通的基線。`Stop`／`SubagentStop` 不加，官方文件寫明它對這兩個事件無效；
+  `SessionStart`、`PostToolUse` 是提醒型，失敗時擋下沒有意義。Codex 沒有等價欄位，D16 的 `.codex/hooks.json` 不變。
+  （原文「不寫 `onFailure`，本機 2.1.273 未達 2.1.295」於 2026-11-26 取代。）
 - **matcher 是未定錨的 JavaScript regex**（契約 §工具名稱），所以 `Bash` 會命中 `Bash` 也會命中含 `Bash` 的工具名；
   本設計接受這個較寬的命中（寬只會多檢查，不會漏）。
 - **`MultiEdit` 不寫進 matcher。** 契約明說它是否仍是有效工具名「本次沒有確認」，
@@ -712,7 +716,7 @@ spec 刻意把四件事排除在系統行為之外（它們是交付方式，不
 | **兩份手寫設定漂移。** 改一邊忘另一邊不會有任何報錯。                                                                                                                                                                           | H1 核對（D9）加 CI 核對（D17 第 2 步）。兩道都是機器執行，不靠人記得。                                                                                                                                                                                                                      |
 | **字串比對繞得過**（變數展開、編碼、動態組命令）。                                                                                                                                                                              | D10 第 5、6 點：窄範圍的無法判斷即擋，並在每則訊息寫明邊界。真正的保護在權限層與 branch protection，**而這兩者本 change 都沒有建置**（D19、D17），完成報告必須照實寫。                                                                                                                      |
 | **Codex 側沒有 hook 層的寫檔目標保護。** `apply_patch` 與 `Bash` 共用 `tool_input.command`、沒有路徑欄位（官方文件，2026-11-17 查核），所以受保護路徑的寫入在 Codex 上**擋不住**；Claude 側擋得住。兩個平台在這一項**不對等**。 | 維護者 2026-11-17 裁定承認缺口、交由平台權限層承接（D11、D19），**而權限層本 change 未設定**（Q2）。本 change 能做的三件：H1 的輸出明寫這個缺口、`apply_patch` 的 `NA:` 行就地說明、契約 §能力缺口 列成第二條（task 7.2）。完成報告（task 8.4）必須把它列為未覆蓋能力，不得宣稱兩平台等價。 |
-| **兩平台預設 fail-open，`onFailure: "block"` 要 2.1.295、本機 2.1.273。**                                                                                                                                                       | D7 的進場守衛加 D7 的 CI lint；升級後改用宣告式開關並記版本下限。                                                                                                                                                                                                                           |
+| **兩平台預設 fail-open；`onFailure: "block"` 只有 Claude 有。**                                                                                                                                                                 | D7 的進場守衛加 D7 的 CI lint 是兩邊共通的基線；Claude 的 H2 另加 `onFailure: "block"`（D15），設定路徑打錯或腳本 crash 在 Claude 擋下、在 Codex 仍放行，契約記為兩邊不對稱。                                                                                                               |
 | **H3 的 30 秒對大型 `tsc --noEmit` 可能不夠**，被平台中斷。                                                                                                                                                                     | H3 本來就是提醒（契約 §H3），真正的 gate 在 H4、H7。被中斷時 D2 的 `UNKNOWN:` 行會寫出哪一項沒判完，不會偽裝成通過。                                                                                                                                                                        |
 | **新增的 pre-commit 與 H2 會改變既有工作習慣**（proposal §破壞性變更）。                                                                                                                                                        | D18 的 setup 輸出寫明停用與復原方式；誤擋屬「故障」，依 `AGENTS.md` §SDD Workflow 停下回報，不得靠放寬規則收場。                                                                                                                                                                            |
 | **`backend/`、`frontend/` 都不存在，`.py`／`.ts` 路由在本 change 裡無法對真工具驗證。**                                                                                                                                         | D21 第 1 點的假 runner 驗「路由與啟用語意」；真工具的驗證要等那兩層 bootstrap，完成報告列為未覆蓋能力。                                                                                                                                                                                     |
