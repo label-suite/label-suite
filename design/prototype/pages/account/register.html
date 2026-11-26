@@ -268,6 +268,19 @@
     /* `display: flex` above beats the UA's `[hidden] { display: none }`, so the
        sent-mail state's `btn.hidden = true` would otherwise do nothing. */
     .submit-btn[hidden] { display: none; }
+
+    /* ── 未設定寄信服務時的說明卡（label-suite/label-suite#683、規格 01-02 §註冊頁） ──
+       預設不顯示；只有 `?sim_no_mail=1` 時 JS 才把表單換成它。 */
+    .closed-notice {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      text-align: center;
+    }
+    .closed-notice[hidden] { display: none; }
+    .closed-notice p { font-size: 15px; color: var(--color-ink); line-height: 1.5; }
+    .closed-notice .closed-hint { color: var(--color-ink-muted); font-size: 14px; }
+    .closed-notice .submit-btn { text-decoration: none; margin-top: 12px; }
     .submit-btn:hover:not(:disabled) {
       background: var(--color-cta-hover);
     }
@@ -514,6 +527,13 @@
         </p>
 
       </form>
+
+      <!-- 未設定寄信服務：不顯示表單，改顯示說明卡（#683）。預設隱藏。 -->
+      <div class="closed-notice" id="closedNotice" data-testid="closed-notice" hidden>
+        <p id="closedBody">這個 Label Suite 還沒有設定寄信服務，無法寄出驗證信，所以暫停自行註冊。</p>
+        <p class="closed-hint" id="closedHint">需要帳號的話，請聯絡系統管理員為你建立帳號。</p>
+        <a class="submit-btn" href="./login.html?sim_no_mail=1" id="closedBackBtn" data-testid="closed-back-btn">回到登入</a>
+      </div>
     </div>
   </main>
 
@@ -562,6 +582,10 @@
         sentTitle:              '驗證信已寄出',
         sentBody:               '我們已經寄了一封信到 {email}。請打開信件並點裡面的連結，你的帳號會在那時候建立。',
         sentSpam:               '沒收到的話，看一下垃圾郵件匣。',
+        closedTitle:            '目前不開放自行註冊',
+        closedBody:             '這個 Label Suite 還沒有設定寄信服務，無法寄出驗證信，所以暫停自行註冊。',
+        closedHint:             '需要帳號的話，請聯絡系統管理員為你建立帳號。',
+        closedBack:             '回到登入',
         // aria
         navAriaLabel:           'Label Suite 首頁',
         langToggleAria:         '切換語言',
@@ -599,6 +623,10 @@
         sentTitle:              'Verification email sent',
         sentBody:               "We've sent an email to {email}. Open it and follow the link \u2014 that's when your account gets created.",
         sentSpam:               "If it hasn't arrived, check your spam folder.",
+        closedTitle:            'Self-registration is closed',
+        closedBody:             "This Label Suite has no mail service set up, so it can't send verification emails and self-registration is paused.",
+        closedHint:             'If you need an account, please ask a system administrator to create one for you.',
+        closedBack:             'Back to sign in',
         // aria
         navAriaLabel:           'Label Suite home',
         langToggleAria:         'Switch language',
@@ -619,6 +647,12 @@
        follow the language without disappearing, so applyLang() repaints it from
        here instead of the form being the only source of truth. */
     let sentEmail = null;
+
+    /* label-suite/label-suite#683（規格 01-02 §註冊頁）：這個部署沒有設定寄信服務時，
+       自行註冊關閉，直接開網址也一樣。真實產品由後端告知；prototype 用
+       `?sim_no_mail=1` 模擬。沒帶參數 = 有設定寄信服務，畫面與以前完全相同。
+       「回到登入」把同一個參數帶回登入頁，讓登入頁也維持「沒有註冊入口」。 */
+    const mailNotConfigured = new URLSearchParams(window.location.search).get('sim_no_mail') === '1';
 
     /* Builds the panel out of nodes rather than innerHTML so the address the
        visitor typed is never parsed as markup. */
@@ -648,9 +682,14 @@
       });
       document.title = t.pageTitle;
 
-      document.getElementById('cardTitle').textContent            = sentEmail ? t.sentTitle : t.cardTitle;
+      document.getElementById('cardTitle').textContent            = mailNotConfigured ? t.closedTitle : (sentEmail ? t.sentTitle : t.cardTitle);
       document.getElementById('cardSubtitle').textContent         = t.cardSubtitle;
-      document.getElementById('cardSubtitle').hidden              = Boolean(sentEmail);
+      document.getElementById('cardSubtitle').hidden              = Boolean(sentEmail) || mailNotConfigured;
+      document.getElementById('registerForm').hidden              = mailNotConfigured;
+      document.getElementById('closedNotice').hidden              = !mailNotConfigured;
+      document.getElementById('closedBody').textContent           = t.closedBody;
+      document.getElementById('closedHint').textContent           = t.closedHint;
+      document.getElementById('closedBackBtn').textContent        = t.closedBack;
       document.getElementById('nameLabel').textContent            = t.nameLabel;
       document.getElementById('name').placeholder                 = t.namePlaceholder;
       document.getElementById('emailLabel').textContent           = t.emailLabel;

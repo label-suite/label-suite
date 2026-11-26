@@ -26,7 +26,7 @@
 | 狀態 | 有沒有 | 依據 |
 | :--- | :--- | :--- |
 | 旋轉中 | 這是它唯一的狀態 | `login.html:306` |
-| 減少動態 | **有**。五個登出帳號頁各自都寫了 `@media (prefers-reduced-motion: reduce)`，以 `*, *::before, *::after { animation-duration: 0.01ms !important; }` 蓋掉旋轉 | `login.html:342`–`:344`，另四頁同理（`register.html:315`、`forgot-password.html:310`、`reset-password.html:404`、`verify-email.html:280`） |
+| 減少動態 | **有**。五個登出帳號頁各自都寫了 `@media (prefers-reduced-motion: reduce)`，以 `*, *::before, *::after { animation-duration: 0.01ms !important; }` 蓋掉旋轉 | `login.html:342`–`:344`，另四頁同理（`register.html:328`、`forgot-password.html:310`、`reset-password.html:404`、`verify-email.html:280`） |
 | 其他 | 不適用 | — |
 
 ## token
@@ -37,7 +37,7 @@
 
 ## 鍵盤與焦點
 
-不可聚焦。`account/login#state-submitting` 的重現步驟寫明：送出後按鈕停用、文字換成帶 `aria-label="載入中"` 的 spinner（`login.html:674`–`:681`），所以有無障礙名稱。
+不可聚焦。`account/login#state-submitting` 的重現步驟寫明：送出後按鈕停用、文字換成帶 `aria-label="載入中"` 的 spinner（`login.html:682`–`:689`），所以有無障礙名稱。
 
 `forgot-password` 與 `reset-password` 另有 `.loading-status` 這個 class，待逐頁確認是不是同一套的 live region。
 
