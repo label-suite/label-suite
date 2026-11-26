@@ -4,7 +4,7 @@ description: 'Claude Code 2.1.330 與 Codex 0.156.0 的 hook 事件、阻擋能�
 category: '開發說明'
 tags: [開發說明, Agent, 規範, hooks]
 createdAt: '2026-11-11'
-updatedAt: '2026-11-23'
+updatedAt: '2026-11-26'
 ---
 
 # Agent Hook 契約與平台支援矩陣
@@ -17,7 +17,7 @@ updatedAt: '2026-11-23'
 
 | 邊界 | 說明 |
 | :--- | :--- |
-| 不實作任何 gate | [T9](testing-agent-rules.mdx) 明文禁止在規範文件裡實作 gate。`.claude/` 的設定與 `scripts/`、`.github/` 的檢查器由 [#111](https://github.com/label-suite/label-suite/issues/111) 後兩張 PR 實作 |
+| 不實作任何 gate | [T9](testing-agent-rules.mdx) 明文禁止在規範文件裡實作 gate。檢查器與 CI job 在 `scripts/`、`.github/`，agent 事件的註冊在 `.claude/`，都由 [#111](https://github.com/label-suite/label-suite/issues/111) 實作 |
 | 不是規則來源 | hook 只呼叫本 repo 的共用檢查器。檢查器要擋什麼，依六份規範文件 |
 | hook 不等於權限控制 | hook 攔不住平台權限層、產品授權與 CI 要負責的事。**本機 hook 通過不能代替 CI**（T9 的禁止格） |
 | 不宣稱兩邊等價 | Claude 的設定、事件名稱、exit code 與工具名稱**不會**自動在 Codex 生效。見[§平台支援矩陣](#平台支援矩陣)與[§能力缺口與承接](#能力缺口與承接) |
@@ -27,7 +27,7 @@ updatedAt: '2026-11-23'
 
 七個 hook 各列九個欄位：目的、事件、適用路徑或角色、payload 欄位、共用檢查器、timeout、輸出與退出碼、阻擋或提醒、缺工具或無適用檔案時的行為。
 
-檢查器標「待建置」就是字面意思；**不得因為這份契約存在就宣稱 hook 已經在跑**。
+**七個 hook 的檢查器都已存在，註冊也都落地了。** 下表的「共用檢查器」欄說的是那支腳本在不在，「事件」欄說的是它由什麼叫起；兩者仍要分開讀，因為兩件事會各自腐壞。Git 事件由 `core.hooksPath=scripts/git-hooks` 接上（`commit-msg` 跑 H5，`pre-commit` 跑排版與 H4），agent 事件由 `.claude/settings.json` 的 `hooks` key 與 `.codex/hooks.json` 兩份手寫設定接上，H1 自己會核對那兩份是否一致。**註冊存在不等於會執行**：Codex 側的 hook 在被 `/hooks` 信任前是**靜默**跳過的，而兩個平台都還可以用 `--no-verify`、`disableAllHooks` 或 `[features] hooks = false` 整批關掉——真正的 gate 在 H7 的 CI。
 
 ### H1 Session 開始：環境自我檢查
 
@@ -37,7 +37,7 @@ updatedAt: '2026-11-23'
 | **事件** | `SessionStart`（matcher `startup|resume|clear|compact|fork`，兩邊都支援這五種） |
 | **適用路徑／角色** | 整個 repo，不分角色 |
 | **payload 欄位** | `cwd`（定位 repo）、`hook_event_name`、`session_id`（只用於 log 關聯） |
-| **共用檢查器** | `scripts/check-env.sh`（**待建置**）：核對 `core.hooksPath` 是否指向 `scripts/git-hooks`、`AGENTS.md` 是否存在、`node`／`pnpm`／`uv` 版本，以及**本次的 hook 是不是真的會跑**——Claude 看 `disableAllHooks`，Codex 看 `[features] hooks` 是否被關掉、以及該 hook 有沒有被信任；另外**核對 `.claude/settings.json` 與 `.codex/hooks.json` 兩份設定指向的腳本是否都存在**——兩份設定手寫兩份、由這道檢查核對（[§能力缺口與承接](#能力缺口與承接)第 7 條、[ADR-001 D3](../adr/001-agent-engineering.mdx#d3-兩個平台的-hook-設定手寫兩份不做生成器)） |
+| **共用檢查器** | `scripts/check-env.sh`（**已存在並註冊到 `SessionStart`**）：核對 `core.hooksPath` 是否指向 `scripts/git-hooks`、`AGENTS.md` 是否存在、`node`／`pnpm`／`uv` 版本，以及**本次的 hook 是不是真的會跑**——Claude 看 `disableAllHooks`，Codex 看 `[features] hooks` 是否被關掉、以及該 hook 有沒有被信任；另外**核對 `.claude/settings.json` 與 `.codex/hooks.json` 兩份設定指向的腳本是否都存在**——兩份設定手寫兩份、不做生成器，這道檢查是它們唯一的防漂移機制（[§能力缺口與承接](#能力缺口與承接)第 7 條的承接、[ADR-001 D3](../adr/001-agent-engineering.mdx#d3-兩個平台的-hook-設定手寫兩份不做生成器)） |
 | **timeout** | **10 秒**。環境檢查不該讓對話等 |
 | **輸出與退出碼** | 一律 exit `0`，訊息走 stdout。缺東西時列出「缺什麼、怎麼補」 |
 | **阻擋或提醒** | **提醒**。`SessionStart` 在兩邊都擋不住，所以也不假裝它能擋 |
@@ -49,13 +49,13 @@ updatedAt: '2026-11-23'
 | :--- | :--- |
 | **目的** | 在動作**發生前**擋下 `AGENTS.md` 硬性規則 2、3、10 會禁止的事：commit／push 到 `main`、`git push --force`、`rm -rf`、`git reset --hard`、`git branch -D`、用 `pip install`／`npm install` 取代 `uv add`／`pnpm add` |
 | **事件** | `PreToolUse`。Claude matcher `Bash`；Codex matcher `Bash`。寫檔目標的保護另註冊一組：Claude `Edit|Write|NotebookEdit`，Codex `apply_patch` |
-| **適用路徑／角色** | 命令那組不分路徑；寫檔那組只看目標路徑。清單**沿用**參考 settings 的 `permissions.deny` 五類：`**/.env.*`、`*.pem`、`*.key`、`*id_rsa*`、`*credentials.json`。**合法例外**：`.env.example` 與其他 `*.example`、`*.pub`、`scripts/tests/fixtures/` 底下的假憑證——這些要放行，否則連範例設定檔都寫不了。`docs/specs/00-prd.mdx` **不在**受保護清單（見[決策紀錄](#決策紀錄)） |
+| **適用路徑／角色** | 命令那組不分路徑；寫檔那組只看目標路徑。清單**沿用**參考 settings 的 `permissions.deny`，加上裸檔名 `.env` 共六類：`**/.env`、`**/.env.*`、`*.pem`、`*.key`、`*id_rsa*`、`*credentials.json`。**合法例外**：`.env.example` 與其他 `*.example`、`*.pub`、`scripts/tests/fixtures/` 底下的假憑證——這些要放行，否則連範例設定檔都寫不了。`docs/specs/00-prd.mdx` **不在**受保護清單（見[決策紀錄](#決策紀錄)） |
 | **payload 欄位** | `tool_name`、`tool_input`（Bash 取 `command`；寫檔取檔案路徑）、`tool_use_id`、`cwd` |
-| **共用檢查器** | `scripts/check-command.sh`、`scripts/check-write-target.sh`（**兩者待建置**） |
+| **共用檢查器** | `scripts/check-command.sh`、`scripts/check-write-target.sh`（**兩者已存在並註冊到 `PreToolUse`**，各自吃命令類與寫檔類的工具名） |
 | **timeout** | **5 秒**。這支擋在每個工具呼叫前面，不能慢 |
-| **輸出與退出碼** | 擋下時 **exit `2`，原因寫 stderr**；`permissionDecision: "deny"` 加 `permissionDecisionReason` 兩邊也都收。優先用 exit `2`，理由見 [ADR-001 D5](../adr/001-agent-engineering.mdx#d5-h2-失敗時由腳本自己-exit-2) |
+| **輸出與退出碼** | 擋下時 **exit `2`，原因寫 stderr**；`permissionDecision: "deny"` 加 `permissionDecisionReason` 兩邊也都收。優先用 exit `2`，理由見 [ADR-001 D5](../adr/001-agent-engineering.mdx#d5-h2-失敗時由腳本-exit-2-擋下claude-另加-onfailure) |
 | **阻擋或提醒** | **阻擋**。必須在動作前拒絕；不能只在執行後提醒 |
-| **缺工具／無適用檔案** | 檢查器不存在或壞掉時，**兩個平台的預設都是讓動作照做**（fail-open），所以**兩邊都靠腳本自己在無法判斷時 exit `2`**（理由見 [ADR-001 D5](../adr/001-agent-engineering.mdx#d5-h2-失敗時由腳本自己-exit-2)）：包裝腳本一律先確認檢查器存在且可執行，不存在就 exit `2`。**不得用 `|| true` 把判斷不了變成通過**，也不得假設路徑打錯會被擋下。Claude 另有 opt-in 的 `onFailure: "block"` 可以把「設定路徑打錯、腳本 crash」也擋下來，本契約是否加上它未決，見 [§待決](#待決) 第 2 列 |
+| **缺工具／無適用檔案** | 檢查器不存在或壞掉時，**兩個平台的預設都是讓動作照做**（fail-open），所以**兩邊都靠腳本自己在無法判斷時 exit `2`**（理由見 [ADR-001 D5](../adr/001-agent-engineering.mdx#d5-h2-失敗時由腳本-exit-2-擋下claude-另加-onfailure)）：包裝腳本一律先確認檢查器存在且可執行，不存在就 exit `2`。**不得用 `|| true` 把判斷不了變成通過**；在 Codex，或 Claude 未設 `onFailure` 時，也不得假設路徑打錯會被擋下。Claude 的兩個 H2 handler 另加 `onFailure: "block"`，把腳本管不到的「設定路徑打錯、腳本 crash」也擋下來（實測見 [§查核方式](#查核方式)第 4 點；timeout 依官方文件，未實測）。Codex 沒有等價欄位，同樣的失敗在 Codex 仍是 fail-open，H2 只靠腳本 exit `2`，兩邊在這一點不對稱 |
 
 **這一條的保護範圍有明確上限，寫在[§能力缺口與承接](#能力缺口與承接)第 2 條，不得當成完整安全邊界。**
 
@@ -65,13 +65,13 @@ updatedAt: '2026-11-23'
 | :--- | :--- |
 | **目的** | 剛改過的檔案立刻拿到可修正的診斷，而不是等 CI |
 | **事件** | `PostToolUse`。Claude matcher `Edit|Write|NotebookEdit`；Codex matcher `apply_patch` |
-| **適用路徑／角色** | 只對**本次受影響且已存在**的檔案，依副檔名分流：`.py` → `ruff` 加 `mypy`；`.ts`／`.tsx` → `tsc --noEmit` 加 `eslint`；`docs/` 底下的 `.mdx` **與 `.md`** → `node scripts/check-specs.mjs docs`（`.md` 自 [PR #395](https://github.com/label-suite/label-suite/pull/395) 起才在它的範圍內）。**排除** `frontend/src/api/generated/`、Alembic migration、`pnpm-lock.yaml`、`uv.lock` 與 vendor |
-| **payload 欄位** | `tool_name`、`tool_input` 的檔案路徑、`cwd` |
-| **共用檢查器** | `scripts/check-changed.sh`（**待建置**）。`docs/` 那條沿用既有的 `scripts/check-specs.mjs` |
+| **適用路徑／角色** | 只對**本次受影響且已存在**的檔案，依目錄與副檔名分流：`backend/` 底下的 `.py` → `ruff check`（整個 `backend/`）加 `mypy --strict`（只有 `app/`，範圍照 `openspec/config.yaml`），兩者都不在 `PATH` 上（`uv sync` 裝進 `backend/.venv`），所以經 `uv run --directory <backend> --project <backend> --no-sync` 以 `backend/` 為工作目錄呼叫，檔名給相對路徑——ruff 的 `per-file-ignores` 是對工作目錄解析的；`frontend/` 底下的 `.ts`／`.tsx` → `tsc -b`（整個專案，不帶檔案參數——單檔編譯看不到專案設定）加 `eslint`（逐檔），同樣不在 `PATH` 上（在 `frontend/node_modules/.bin`），所以經 `pnpm -C <frontend> exec` 以 `frontend/` 為工作目錄呼叫——eslint 的 flat config 也是對工作目錄解析的；這兩條只收 `backend/`、`frontend/` 專案內的檔，其他位置的 `.py`、`.ts`、`.tsx`（例如 `e2e/`、`.semgrep/`、`.notecraft/`）標 not applicable 並寫明原因，因為兩組工具的設定只涵蓋各自的專案；`docs/` 底下的 `.mdx` **與 `.md`** → `node scripts/check-specs.mjs docs`（`.md` 自 [PR #395](https://github.com/label-suite/label-suite/pull/395) 起才在它的範圍內）。**排除** `frontend/src/api/generated/`、Alembic migration、`pnpm-lock.yaml`、`uv.lock` 與 vendor |
+| **payload 欄位** | `tool_name`、`tool_input` 的檔案路徑、`cwd`。Codex 的 `apply_patch` 沒有路徑欄位，改讀 `tool_input.command` 裡的檔案標頭（`*** Add File:`、`*** Update File:`，接 `*** Move to:` 時取新路徑，`*** Delete File:` 不列），相對路徑以 `cwd` 為基準；讀不到標頭時取這個 checkout 相對 `HEAD` 的變更加未追蹤檔案，並在 stderr 註明清單可能包含之前的改動。這個解析只用來縮小 H3 的回報範圍，H2 不採用（[§能力缺口與承接](#能力缺口與承接)第 8 條） |
+| **共用檢查器** | `scripts/check-changed.sh`（**已存在並註冊到 `PostToolUse`**；同一支的 `--staged` 模式由 H4 的 Git hook 叫起，`--range` 由 H7 的 CI 叫起）。`docs/` 那條沿用既有的 `scripts/check-specs.mjs` |
 | **timeout** | **30 秒** |
 | **輸出與退出碼** | 診斷走 stderr。**一律不以 exit `2` 阻擋**——見下 |
 | **阻擋或提醒** | **提醒**。`PostToolUse` 在兩邊都撤銷不了已發生的編輯，能做的只是替換 model 看到的結果；本契約**刻意不用**那個替換（理由見 [ADR-001 D4](../adr/001-agent-engineering.mdx#d4-h3-只回報診斷不自動修)）。真正的 gate 是 H4、H5 與 H7 |
-| **缺工具／無適用檔案** | 本次沒有命中的檔案（例如只改了 `docs/` 以外的 `.md`）→ 標 not applicable 並 exit `0`；檔案被刪除或改名 → 不對不存在的檔案報錯；`ruff`／`mypy`／`tsc` 不存在且該層尚未 bootstrap → 標 not applicable。**已宣告啟用的檢查缺工具時要明確失敗**，不是靜默通過 |
+| **缺工具／無適用檔案** | 本次沒有命中的檔案（例如只改了 `docs/` 以外的 `.md`）→ 標 not applicable 並 exit `0`；檔案被刪除或改名 → 不對不存在的檔案報錯；`ruff`／`mypy`／`tsc`／`eslint` 不存在且該層尚未 bootstrap → 標 not applicable。**已宣告啟用的檢查缺工具時要明確失敗**，不是靜默通過——`.py` 的「缺工具」指 `PATH` 上沒有、`backend/` 的 uv 環境也叫不動，單是不在 `PATH` 上是常態而非缺工具 |
 
 **check-only。** H3 **只回報診斷，不改檔、不自動 `git add`**，連 formatter 都不自動套用；要修由 agent 自己依診斷修（理由見 [ADR-001 D4](../adr/001-agent-engineering.mdx#d4-h3-只回報診斷不自動修)）。
 
@@ -83,11 +83,11 @@ updatedAt: '2026-11-23'
 | **事件** | Git `pre-commit`（不是 agent 事件）。由 `core.hooksPath=scripts/git-hooks` 啟用 |
 | **適用路徑／角色** | `git diff --cached` 命中的檔案，分流規則同 H3 |
 | **payload 欄位** | 無（Git hook 沒有 JSON payload）。輸入是 staged snapshot |
-| **共用檢查器** | 現行只有排版：`scripts/git-hooks/pre-commit` 經 lint-staged（`.lintstagedrc.mjs`）對 staged 的 `*.{json,md,yml,yaml,css,js,mjs}` 跑 `prettier --write`，改完重新暫存。H3 分流的那支 `scripts/check-changed.sh` 仍**待建置**，建好後與 H3 共用，差別只在檔案清單怎麼來 |
-| **timeout** | 無平台 timeout。腳本自己設上限；**不得用 shell `timeout`**（本機沒有，見[§查核方式](#查核方式)） |
+| **共用檢查器** | 兩件事，順序有意義：先由 lint-staged（`.lintstagedrc.mjs`）對 staged 的 `*.{json,md,yml,yaml,css,js,mjs}` 跑 `prettier --write` 並重新暫存，再把結果交給 `scripts/check-changed.sh --staged`（與 H3 同一支，差別只在檔案清單怎麼來）。排版會改寫並重新暫存檔案，所以檢查器必須排在後面，否則它判的是這次提交已經不會收錄的內容 |
+| **timeout** | 無平台 timeout，檢查器也不自建 watchdog：上限由執行這支 hook 的環境承擔，CI 那一側以 `timeout-minutes` 表達（H7）。**不得用 shell `timeout`**（本機沒有，見[§查核方式](#查核方式)） |
 | **輸出與退出碼** | 非零即擋下 commit，這是 Git 的既有語意 |
 | **阻擋或提醒** | **阻擋**。但 `--no-verify` 可跳過，所以它不是最終 gate：排版的 gate 是 CI 的 `format` job（`pnpm format:check`） |
-| **缺工具／無適用檔案** | 必須讀**staged 版本**（`git show :<path>`），不能拿工作區的檔案充數，否則「unstaged 的修正」會被誤當成「staged 已通過」。部分暫存與在子目錄執行都要正確——`git rev-parse --show-toplevel` 已是本 repo 既有作法。找不到 `lint-staged` 或 `prettier` 時 exit `1` 並提示 `pnpm install`，不略過 |
+| **缺工具／無適用檔案** | 必須讀**staged 版本**（`git show :<path>`），不能拿工作區的檔案充數，否則「unstaged 的修正」會被誤當成「staged 已通過」。部分暫存與在子目錄執行都要正確——`git rev-parse --show-toplevel` 已是本 repo 既有作法。排版那一半綁在 `.lintstagedrc.mjs` 上：設定檔在而找不到 `lint-staged` 或 `prettier` 時 exit `1` 並提示 `pnpm install`，不略過；沒有設定檔的 checkout（例如測試用的臨時 repo）沒有東西要排版，直接進到檢查器那一半 |
 
 ### H5 Git commit-msg：檢查提交訊息
 
@@ -97,7 +97,7 @@ updatedAt: '2026-11-23'
 | **事件** | Git `commit-msg` |
 | **適用路徑／角色** | 提交訊息本身 |
 | **payload 欄位** | 無。輸入是 `$1`（訊息檔路徑） |
-| **共用檢查器** | **`scripts/check-commit-msg.sh`（已存在）**。本 repo 已經在跑的 hook 只有它與 H4 的 Prettier 排版 |
+| **共用檢查器** | **`scripts/check-commit-msg.sh`（已存在）**。它是唯一只由 Git 事件叫起、沒有 agent 事件對應的檢查器 |
 | **timeout** | 無 |
 | **輸出與退出碼** | 非零即擋下 commit |
 | **阻擋或提醒** | **阻擋**；同樣可被 `--no-verify` 跳過，所以 CI 的 `commit-messages` job 才是真正的 gate |
@@ -113,7 +113,7 @@ updatedAt: '2026-11-23'
 | **事件** | `Stop` 與 `SubagentStop`（兩邊都有，且**兩邊都可阻擋**） |
 | **適用路徑／角色** | 整個 repo。`SubagentStart`／`SubagentStop` **兩邊都能以 agent／subagent type 當 matcher** 分流角色。但 **Codex 的 `Stop` 不吃 matcher**（`UserPromptSubmit`、`Interrupt` 也不吃），所以 `Stop` 那一支要自己從 payload 判斷 |
 | **payload 欄位** | **`stop_hook_active`**（防重入就靠它：為 `true` 代表這次結束本來就是上一個 stop hook 擋下所造成的）、`last_assistant_message`、`session_id`、`transcript_path`（只在本機用，**不外傳**）、`cwd`。`SubagentStop` 另有 `agent_type` 可供分流 |
-| **共用檢查器** | `scripts/check-evidence.sh`（**待建置**） |
+| **共用檢查器** | `scripts/check-evidence.sh`（**已存在並註冊到 `Stop` 與 `SubagentStop`**） |
 | **timeout** | **60 秒** |
 | **輸出與退出碼** | 擋下時 exit `2` 或 `decision: "block"`，原因要寫「缺哪一項證據」 |
 | **阻擋或提醒** | **阻擋**，但**必須防重入**：被擋下之後 agent 會再結束一次，又觸發自己。先讀 `stop_hook_active`，為 `true` 就直接放行——這是兩邊文件都提供的現成機制，不要自己另造標記檔 |
@@ -126,7 +126,7 @@ updatedAt: '2026-11-23'
 | | |
 | :--- | :--- |
 | **目的** | 本機 hook 有**四條**被跳過的途徑——Git 的 `--no-verify`、Claude 的 `disableAllHooks`、Codex 的 `[features] hooks = false`，以及 Codex 的 hook 未被信任而 skipped——所以合併前的真正 gate 在 CI |
-| **事件** | `pull_request`（`.github/workflows/ci.yml`，已存在四個 job：`commit-messages`、`docs-site`、`format`、`specs`） |
+| **事件** | `pull_request`（`.github/workflows/ci.yml`，已存在五個 job：`commit-messages`、`docs-site`、`format`、`specs`，以及在 ubuntu 與 macOS 兩個平台跑檢查器回歸測試的 `hooks`） |
 | **適用路徑／角色** | 整個 PR |
 | **payload 欄位** | GitHub 事件的 `base.sha` 與 `head.sha`（現行 `commit-messages` job 已經在用） |
 | **共用檢查器** | 與 H3、H4、H5 **同一組**。CI 與本機共用邏輯是防漂移的唯一辦法 |
@@ -146,14 +146,20 @@ updatedAt: '2026-11-23'
 2. **字串比對不是完整的命令安全邊界。** H2 讀的是 `tool_input.command` 的字串。複合命令、引號、變數展開、`eval`、`git -C <path>`、refspec 寫法、base64 之類的編碼都能繞過字串規則；反過來，Issue 本文或 commit body 裡**提到** `rm -rf` 的文字也可能被誤判成正在執行。
    **承接**：H2 擋**明顯**的情況並寫明它不是安全邊界；真正的保護靠平台權限層（Claude 的 `permissions.deny`、Codex 的 sandbox 與權限設定）與 **branch protection**。驗收要涵蓋複合命令、引號、參數變體與「文件裡提到命令」這幾類。
 3. **Codex 攔不住讀取。** 沒有 `Read`／`Grep`／`Glob` 工具名，讀檔走 shell，所以「不要讀 `.env` 的值」在 Codex 上沒有 hook 層的攔截點。
-   **承接**：靠平台權限／sandbox 設定與 `.gitignore`；`AGENTS.md` 硬性規則 8 本來就要求 secret 從環境變數來。**不宣稱 Codex 有等價攔截。**
+   **承接**：平台權限層的宣告式機制——Codex 的 `filesystem = "deny"`、Claude 的 `permissions.deny`；`AGENTS.md` 硬性規則 8 本來就要求 secret 從環境變數來。**本 change 沒有設定權限層**，所以這個缺口目前沒有實際的承接者。**不宣稱 Codex 有等價攔截。**
 4. **`PostToolUse` 在兩邊都撤銷不了編輯**，能做的只是替換 model 看到的結果，所以 H3 一律當提醒。真正的 gate 在 H4、H5、H7。
-5. **hook 的預設行為是 fail-open；Claude 有 opt-in 的 fail-closed 開關，Codex 沒有。** 兩邊在 hook 失敗、timeout 或輸出不合法時預設都讓動作照做。Claude 的 handler 欄位 `onFailure: "block"`（`command`、`http` 需 **v2.1.295**，`mcp_tool` 需 **v2.1.328**；本機 **2.1.330** 兩者都滿足）會讓「啟動失敗、exit 非 `0`／`2`、timeout、輸出無法解析」比照該事件的 exit `2`；它對 `Stop`、`SubagentStop`、`TaskCompleted`、`TeammateIdle` 與 `async` 背景 hook 無效。Codex 的官方文件沒有等價欄位。
-   **承接**：H2 的包裝腳本自己負責 fail-closed（檢查器不存在或無法判斷就 exit `2`），兩個平台一致；真正不能漏的保護放 **branch protection 與 CI**。Claude 的註冊要不要再加 `onFailure: "block"` 未決，見 [§待決](#待決) 第 2 列。
-6. **平台權限層的對照本次沒做。** Claude 的 `permissions.deny` 有見過實例（參考來源那份 settings 擋 `.env.*`、`*.pem`、`*.key`、`*id_rsa*`、`credentials.json` 的寫入）；Codex 的 `config.toml` 有 `permissions`、`default_permissions`、`sandbox_mode`、`sandbox_workspace_write` 等鍵，但**這次只查了 hook 文件，沒有核對權限設定的官方文件**。
-   **承接**：列為實作 PR 的前置查核項。「平台權限控制」與「hook 攔截」要分清楚，而這一半還沒查完——**不在這份文件裡假裝查過了**。
+5. **hook 的預設行為是 fail-open；Claude 有 opt-in 的 fail-closed 開關，Codex 沒有。** 兩邊在 hook 失敗、timeout 或輸出不合法時預設都讓動作照做。Claude 的 handler 欄位 `onFailure: "block"`（`command`、`http` 需 **v2.1.295**，`mcp_tool` 需 **v2.1.328**；官方文件對照時記錄的版本是 **2.1.330**，實測時 `claude --version` 是 **2.1.323**，兩者都高於 2.1.295）會讓「啟動失敗、exit 非 `0`／`2`、timeout、輸出無法解析」比照該事件的 exit `2`；它對 `Stop`、`SubagentStop`、`TaskCompleted`、`TeammateIdle` 與 `async` 背景 hook 無效。Codex 的官方文件沒有等價欄位。
+   **承接**：H2 的包裝腳本自己負責 fail-closed（檢查器不存在或無法判斷就 exit `2`），兩個平台一致；真正不能漏的保護放 **branch protection 與 CI**。Claude 另加的 `onFailure: "block"` 與兩邊的不對稱見 [§H2](#h2-工具執行前破壞性命令與受保護目標) 的「缺工具／無適用檔案」。
+6. **平台權限層兩側都查完了，但查完不等於設好。** Claude 的 `permissions.deny` 有見過實例（參考來源那份 settings 擋 `.env.*`、`*.pem`、`*.key`、`*id_rsa*`、`credentials.json` 的寫入）；Codex 這一半於 2026-11-17 核對官方文件（`https://learn.chatgpt.com/docs/permissions`，runtime codex-cli 0.153.0）。Codex 的 permission profile 與舊的 sandbox 設定**互斥**，不得把 `permissions`、`default_permissions`、`sandbox_mode`、`sandbox_workspace_write` 並列成四個同時生效的鍵。**本 change 沒有設定任何一邊的權限層**，第 3 與第 8 條的承接因此都還是空的。
+   **承接**：設定權限層不在本 change 的範圍內，要另開工作處理；在那之前，第 3 與第 8 條沒有實際的承接者。「平台權限控制」與「hook 攔截」要分清楚——兩側查完的是能力，**不是已經設好的保護**。
 7. **`.claude/` 與 `.codex/` 兩份設定有漂移風險。** 事件集合與工具名都不同，改一邊忘了另一邊不會有任何報錯。
    **承接**：**手寫兩份、由 H1 核對**，不做生成器。所以 H1 的環境檢查要同時核對兩份設定指向的腳本是否都存在、兩邊是否都實際生效（Claude 看 `disableAllHooks`，Codex 看 `[features] hooks` 與信任狀態）——一致性靠這道檢查，不靠結構保證。
+8. **Codex 的寫檔途徑沒有 hook 層的目標保護，而 Claude 有——這一項兩平台不對等。** `apply_patch` 與 `Bash` 共用 `tool_input.command`，沒有任何路徑欄位，`command` 的內部結構官方也未記載（見[§工具名稱](#工具名稱)）。所以 H2 的寫檔那組在 Codex 上無法判斷目標是什麼：它輸出一行 `NA:` 說明這條途徑沒有保護，然後放行，**不是**因為缺欄位就擋下每一次 `apply_patch`。Claude 的 `Edit`／`Write`／`NotebookEdit` 在 `tool_input` 直接給路徑，那一側擋得住。
+   **承接**：與第 3 條同為平台權限層，而**本 change 沒有設定權限層**，所以這個缺口目前也沒有實際的承接者。改為承認缺口、不解析未文件化的封包格式，是維護者 2026-11-17 的裁定。
+9. **Codex 在 linked worktree 裡載入不到本 repo 的 hook，要等主 checkout 的工作目錄也有 `.codex/hooks.json`。** 官方文件（`https://learn.chatgpt.com/docs/hooks` §Where Codex looks for hooks，查核日 2026-11-26）寫 linked worktree 的專案層「可以從主 checkout 的對應目錄讀取 hook」，但沒有說要滿足什麼條件。以 codex-cli 0.172.0 實測（這是 runtime 實測的版本，不是[§平台支援矩陣](#平台支援矩陣)比對文件時的 0.156.0）：主 checkout 沒有 `.codex/` 時，worktree 裡 `/hooks` 一個 repo hook 都沒有（加 `--no-daemon` 也一樣），同一個 commit 放進一般 checkout 就會被發現；上游 [openai/codex#27133](https://github.com/openai/codex/issues/27133) 回報了相同現象。`issue-dispatch` 與 SDD 的工作都在 linked worktree 裡做，所以這份設定進到主 checkout 之前，那些 Codex session 裡**沒有任何 repo hook 會執行**。主 checkout 有了設定之後會不會載入，目前只有文件的說法，還沒實測。
+   **承接**：共用檢查器可以直接呼叫（`scripts/check-*.sh`，與 hook 是同一批）；H4、H5 的 Git hook 照常執行，因為 `core.hooksPath` 寫在 worktree 共用的 Git 設定裡；H7 的 CI 是最後一道。
+10. **Codex 不把 exit `0` 的 hook 寫在 stderr 的訊息交給模型或終端，所以第 8 條的 `NA:` 在 Codex 上看不到。** `check-write-target.sh` 收到 `apply_patch` 的 `PreToolUse` payload 時，確實把 `NA:` 與三行說明寫到 stderr、exit `0`、stdout 為空（本機餵 payload 實跑）。官方文件（`https://learn.chatgpt.com/docs/hooks` §PreToolUse、§PostToolUse，查核日 2026-11-26）只寫 exit `2` 時 stderr 當阻擋原因、兩個事件的純文字 stdout 被忽略（Plain text on `stdout` is ignored），沒有說 exit `0` 的 stderr 去哪；以 codex-cli 0.172.0 實測時，模型收到的工具結果與終端畫面都沒有那行。這個結論來自文件與一次實測，沒有追到 CLI 原始碼。H3 的診斷同樣是 exit `0` 加 stderr，依同一份文件在 Codex 上也不保證看得到，這一點還沒實測。
+   **承接**：第 8 條的缺口在 Codex 上改由 H1 的 Session 開始報告說出來（實測模型有收到那份報告）；H3 漏看的診斷由 Stop 時的 H6 補上——缺證據時它以 exit `2` 擋下，那個原因看得到。官方文件提到 stdout 的 JSON 可以帶 `systemMessage`，但沒說會顯示在哪裡，本契約沒有採用。
 
 ---
 
@@ -184,7 +190,7 @@ updatedAt: '2026-11-23'
 
 | 事件 | Claude Code 2.1.330 | Codex 0.156.0 | 本 repo |
 | :--- | :--- | :--- | :--- |
-| `SessionStart` | 有（matcher：`startup`／`resume`／`clear`／`compact`／`fork`） | 有（同樣 fires on startup、resume、clear、compact、fork） | **H1** |
+| `SessionStart` | 有（matcher：`startup`／`resume`／`clear`／`compact`／`fork`） | 有（同樣 fires on startup、resume、clear、compact、fork）；**它收不收 matcher 沒有實測過**，本 repo 的註冊把五種全部列進 matcher，所以收或不收都該在這五種時機觸發 | **H1** |
 | `SessionEnd` | 有（matcher：`clear`／`resume`／`logout`／`prompt_input_exit`／`other`） | 有（含 idle timeout） | 不用（時間預算太小，見下） |
 | `UserPromptSubmit` | 有，**可阻擋** | 有，**可阻擋** | 不用 |
 | `PreToolUse` | 有，**可阻擋**（matcher：工具名） | 有，**可阻擋**（matcher：工具名） | **H2** |
@@ -213,12 +219,12 @@ updatedAt: '2026-11-23'
 | exit `0` | 成功，套用 JSON 輸出欄位 | 同 |
 | 其他非零 | **非阻擋錯誤，動作照做**，只顯示 stderr 第一行（handler 設了 `onFailure: "block"` 時視為失敗並阻擋） | 文件只定義 `2` 為阻擋；其他非零視為錯誤 |
 | hook 失敗或 timeout 時 | **預設動作照做**。文件原文：路徑打錯或腳本 crash 的 policy hook「lets everything through」；handler 設 `onFailure: "block"` 才改為阻擋 | **動作照做**。`PreToolUse` 回傳不支援的欄位（`continue`／`stopReason`／`suppressOutput`，另有 `ask` 與舊式 `approve`）時，Codex 把該次 hook 標為失敗並**繼續執行那個工具** |
-| 失敗即阻擋的開關 | 有：`command`、`http` handler 的 `onFailure: "block"`（**v2.1.295 以上**；`mcp_tool` 需 v2.1.328 以上；本機 2.1.330）。計為失敗的有：啟動失敗、exit 非 `0`／`2`（即使已印出 `allow` 的 JSON）、HTTP 非 2xx、timeout、輸出無法解析；失敗時比照該事件的 exit `2`，`PermissionRequest` 則拒絕。對 `Stop`、`SubagentStop`、`TaskCompleted`、`TeammateIdle` 與 `async` 背景 hook 無效 | **沒有**（官方文件未見等價欄位；文件另寫 MCP tool hook 出錯或找不到 server 不會阻擋） |
+| 失敗即阻擋的開關 | 有：`command`、`http` handler 的 `onFailure: "block"`（**v2.1.295 以上**；`mcp_tool` 需 v2.1.328 以上；官方文件對照時記錄的版本 2.1.330）。計為失敗的有：啟動失敗、exit 非 `0`／`2`（即使已印出 `allow` 的 JSON）、HTTP 非 2xx、timeout、輸出無法解析；失敗時比照該事件的 exit `2`，`PermissionRequest` 則拒絕。對 `Stop`、`SubagentStop`、`TaskCompleted`、`TeammateIdle` 與 `async` 背景 hook 無效 | **沒有**（官方文件未見等價欄位；文件另寫 MCP tool hook 出錯或找不到 server 不會阻擋） |
 
 **三個會咬人的差異**：
 
 - **`PostToolUse` 在兩邊都撤銷不了，而它們能做的事幾乎一樣。** 兩邊都是「把 model 看到的結果換掉」而不是「把動作收回來」：Claude 用 `decision: "block"`（附在結果旁）或 `updatedToolOutput`（整個替換），Codex 用 `decision: "block"`／exit `2`／`continue: false`（替換後繼續）。工作項 2 的「PostToolUse 回報失敗不等於撤銷原編輯」在兩個平台都成立。真正不對稱的是**通用 `continue: false`**：Claude 的會停住整個處理，Codex 的只是標記該次 hook run。
-- **`onFailure: "block"` 只有 Claude 有，而且要明確設。** 本機 **2.1.330** 已滿足它的版本下限（v2.1.295），但 Codex 沒有等價欄位，所以「檢查器自己壞掉時要不要擋」在 **Codex 仍只能由腳本自己以 exit `2` 表達**；Claude 這邊的腳本 exit `2` 是否再疊一層 `onFailure`，見 [§待決](#待決) 第 2 列。
+- **`onFailure: "block"` 只有 Claude 有，而且要明確設。** 本 repo 怎麼用、兩邊怎麼不對稱，見 [§H2](#h2-工具執行前破壞性命令與受保護目標) 的「缺工具／無適用檔案」。
 - **預設是 fail-open，不是 fail-closed。** 兩邊在 hook 失敗、timeout 或輸出無法解析時預設都讓動作**照做**（Claude 設了 `onFailure: "block"` 才例外）。Claude 的文件直說路徑打錯或 crash 的 policy hook「lets everything through」；Codex 在 `PreToolUse` 收到不支援的欄位時會標記失敗並繼續執行那個工具。**不得假設不寫就會擋。**
 
 ### 工具名稱
@@ -234,12 +240,17 @@ matcher 比對的是工具名，而**兩邊的工具名不一樣**。這是本�
 | MCP | `mcp__<server>__<tool>` | `mcp__<server>__<tool>` |
 | 本地 function tool | — | `update_plan`、`spawn_agent` 等，走同一條 hook 路徑 |
 | hosted 工具 | `WebSearch` 等有 hook | `WebSearch` 等 hosted 工具**不支援 hook** |
+| 寫檔工具的 payload 形狀 | `tool_input` 直接給路徑：`Edit`／`Write` 用 `file_path`、`NotebookEdit` 用 `notebook_path` | `apply_patch` 與 `Bash` **共用 `tool_input.command`，沒有任何路徑欄位**，而 `command` 的內部結構官方未記載（`https://learn.chatgpt.com/docs/hooks`，查核日 2026-11-17） |
+
+**沒有路徑欄位不是「待確認的欄位名」，是查核過的事實。** 它的後果是 hook 層在 Codex 的 `apply_patch` 這條途徑上沒有寫檔目標保護；承接者見[§能力缺口與承接](#能力缺口與承接)第 8 條。
 
 matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Write` 是替代列舉；含其他字元時當 regex（Claude 的文件明寫是**未定錨**的 JavaScript regex，所以 `^Bash$` 與 `Bash` 不同義）。
 
 **既有設定的空轉警告。** 參考來源那份 `.claude/settings.json`（原始本機 repo）用 `Read|Edit|Write|Grep|Glob|NotebookEdit` 當 matcher 來擋敏感檔。搬到 Codex 時，`Read`、`Grep`、`Glob`、`NotebookEdit` **永遠不會命中**，只剩 `Edit|Write`（作為 `apply_patch` 的別名）有效——也就是「**攔截讀取**」這件事在 Codex 上整個落空。那份設定另一個 `PostToolUse` matcher（`Edit|Write|MultiEdit|NotebookEdit|Bash`，呼叫選用的外部 harness）含有 `MultiEdit`，但 Claude 官方[工具清單](https://code.claude.com/docs/en/tools-reference)沒有這個工具，matcher 寫它不會命中任何東西；編輯類改用 `Edit` 或 `Edit|Write`。其餘 matcher 搬進本 repo 前，仍要用 `/hooks` 與實際事件對過，不要照抄。
 
 ### 設定位置、handler、timeout、信任
+
+Codex 的 `command` 欄位是**字串，不是陣列**——官方文件的範例是 `"command": "python3 ~/.codex/hooks/session_start.py"`（`https://learn.chatgpt.com/docs/hooks`，查核日 2026-11-17）。
 
 :::note{title="設定對照表" collapsible}
 
@@ -274,13 +285,17 @@ matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Wr
 1. **這台機器沒有 `timeout`，也沒有 `gtimeout`。** 所以 hook 腳本裡**不能**用 shell 的 `timeout` 去包檢查器——在 macOS 上那行會直接 `command not found`，而且如果寫成 `timeout 30 checker || true` 還會把「工具不存在」偽裝成通過。要用的是**平台 hook 設定自己的 `timeout` 欄位**（兩邊都有）。跨 macOS／Linux 驗證 timeout 不依賴機器剛好裝了 GNU timeout，這件事在本機就已經成立。
 2. **Codex 的事件名稱是 PascalCase，不是 snake_case。** 從 `codex` binary 的 strings 讀得到 `pre_tool_use`、`post_tool_use`、`session_start`、`user_prompt_submit`，但官方文件寫的是 `PreToolUse`、`PostToolUse`、`SessionStart`、`UserPromptSubmit`。那些 snake_case 是**內部 enum 名稱**，不是設定檔的 wire format。**逆向讀 binary 不能當依據**，照它寫設定會得到一個永遠不觸發的 hook。
 3. **Codex 有 hook 信任模型，Claude 沒有。** 非 managed 的 hook 要先逐一審核並信任，而**信任是綁在 hook 定義的 hash 上**：新加或改過的 hook 在被信任之前是 **skipped**。這件事對「必要 gate」是決定性的，見§能力缺口第 1 條。
-4. **「這個欄位存在」不等於「這個版本有」，也不等於「已經實測會擋」。** Claude 的 `onFailure: "block"` 是唯一的宣告式 fail-closed 開關，官方文件註明 `command`／`http` 需 **v2.1.295 以上**、`mcp_tool` 需 **v2.1.328 以上**，本機 **2.1.330** 滿足。但本次只核對官方文件與版本下限，**沒有**在本機實跑（缺檔的 hook 加 `onFailure: "block"`）驗證它真的擋下呼叫；接上設定之前要先實測一次。
+4. **「這個欄位存在」不等於「這個版本有」，也不等於「已經實測會擋」。** Claude 的 `onFailure: "block"` 官方文件註明 `command`／`http` 需 **v2.1.295 以上**、`mcp_tool` 需 **v2.1.328 以上**；官方文件對照時記錄的版本是 **2.1.330**，實測時 `claude --version` 是 **2.1.323**，兩者都高於 2.1.295，實測的四種情況在下方「查核對象與結果」的 `onFailure` 四列，本 repo 怎麼用見 [§H2](#h2-工具執行前破壞性命令與受保護目標)。
 
 :::note{title="查核對象與結果" collapsible}
 
 | 查核對象 | 指令或網址 | 結果 |
 | :--- | :--- | :--- |
-| Claude Code runtime | `claude --version` | **2.1.330**（Claude Code） |
+| Claude Code runtime | `claude --version` | 官方文件對照時記錄的版本是 **2.1.330**；實測 `onFailure` 時是 **2.1.323** |
+| `onFailure` 實測：缺檔加 `onFailure: "block"` | `claude -p --model haiku` 在暫存 git repo 執行 `touch ran.marker`，PreToolUse／`Bash` 掛一個 handler：指向不存在的腳本 | **擋下**：marker 不存在，tool_result 為 `hook error: … failed; blocking because onFailure is "block"`，`is_error: true` |
+| `onFailure` 實測：缺檔不設（對照組） | 同上，不設 `onFailure` | **照常執行**：marker 存在，`(Bash completed with no output)`，`is_error: false`（fail-open） |
+| `onFailure` 實測：`exit 1` 加 `onFailure: "block"` | 同上，腳本 `exit 1` | **擋下**：marker 不存在，`hook error: … failed; blocking because onFailure is "block"` 加 `No stderr output` |
+| `onFailure` 實測：`exit 0` 加 `onFailure: "block"`（正向對照） | 同上，腳本只會 `exit 0` | **照常執行**：marker 存在，`(Bash completed with no output)`，`is_error: false`；`onFailure` 不會擋下正常結束的 hook |
 | Codex runtime | `codex --version` | **codex-cli 0.156.0** |
 | Codex 是否支援 hook | `codex features list` | `hooks` → **`stable` 且 `true`**（預設開啟，不是實驗功能；`plugin_hooks` 為 `removed`） |
 | Claude 官方權限文件 | `code.claude.com/docs/en/permissions` §What runs before you trust a folder | 表中「settings files 裡的 hooks」在「只信任父資料夾」與「`claude -p`／SDK、資料夾從未信任」兩欄都是 Used；專案 subagent frontmatter 的 hook 兩欄都是 Not used |
@@ -288,7 +303,7 @@ matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Wr
 | Codex 官方 hook 文件 | `learn.chatgpt.com/docs/hooks` | 14 個事件 |
 | 確認 Codex 文件是官方的 | `developers.openai.com/codex/hooks` | **308 轉址**到 `learn.chatgpt.com/docs/hooks`，故採為官方來源 |
 | 本機有沒有 `timeout` | `command -v timeout` / `command -v gtimeout` | **兩個都沒有** |
-| 本 repo 既有的 Git hook 入口 | `scripts/setup.sh`、`scripts/git-hooks/commit-msg`、`scripts/git-hooks/pre-commit` | `core.hooksPath=scripts/git-hooks`；commit-msg 以 `git rev-parse --show-toplevel` 定位後呼叫 `scripts/check-commit-msg.sh`；pre-commit 先找本 checkout、再找主 checkout（`git rev-parse --git-common-dir` 的上一層）的 `node_modules/.bin` 後執行 lint-staged |
+| 本 repo 既有的 Git hook 入口 | `scripts/setup.sh`、`scripts/git-hooks/commit-msg`、`scripts/git-hooks/pre-commit` | `core.hooksPath=scripts/git-hooks`；commit-msg 以 `git rev-parse --show-toplevel` 定位後呼叫 `scripts/check-commit-msg.sh`；pre-commit 先找本 checkout、再找主 checkout（`git rev-parse --git-common-dir` 的上一層）的 `node_modules/.bin` 後執行 lint-staged，再以 `--staged` 呼叫 `scripts/check-changed.sh` |
 
 :::
 
@@ -305,18 +320,11 @@ matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Wr
 | Claude Code 官方權限文件（`code.claude.com/docs/en/permissions`） | 設定檔 hook 在未信任資料夾也照用、專案 subagent frontmatter hook 不用 | 信任模型一列「沒有逐一審核」的依據 |
 | 本機 runtime | `claude --version`、`codex --version`、`codex features list`、`command -v timeout` | 版本與「沒有 `timeout`」都以實測為準，不引用文件 |
 | `codex` binary 的 strings | 內部 enum 是 snake_case | **不採為依據**，並在查核方式裡寫明理由，避免後人重蹈 |
-| 本 repo | `scripts/setup.sh`（`core.hooksPath`）、`scripts/git-hooks/commit-msg`（`git rev-parse --show-toplevel` 加共用 checker）、`.github/workflows/ci.yml`（四個 job）、`.claude/settings.json`（目前有 attribution 與 `issue-dispatch` 用的權限白名單，沒有 `hooks`） | **保留並擴充既有入口**，不另建重複的 commit checker |
+| 本 repo | `scripts/setup.sh`（`core.hooksPath`）、`scripts/git-hooks/commit-msg`（`git rev-parse --show-toplevel` 加共用 checker）、`.github/workflows/ci.yml`（五個 job，含 `hooks`）、`.claude/settings.json`（attribution、`issue-dispatch` 用的權限白名單，以及五個 handler 的 `hooks`） | **保留並擴充既有入口**，不另建重複的 commit checker |
 | 參考來源的 `.claude/settings.json`（原始本機 repo） | 七支腳本與 `SessionStart`／`PreToolUse`／`PostToolUse`／`PreCompact`／`Stop`／`UserPromptSubmit` 的接線、`permissions.deny` 清單、`command -v harness ... || true` 的選用外部呼叫 | 參考**事件分工**；移除個人絕對路徑與外部 harness 假設。其 matcher 含 `Read|Grep|Glob|NotebookEdit`，搬到 Codex 會空轉，已在§工具名稱寫明 |
 | [testing-agent-rules.mdx](testing-agent-rules.mdx) T9、T11、T12 | 七個 gate 的政策與歸屬、evidence 的五個欄位、那個人工停點 | H6 與 H7 直接接到這三條，不另定政策 |
 
 ---
-
-## 待決
-
-| # | 問題 | 卡住什麼 | 誰決定 |
-| :--- | :--- | :--- | :--- |
-| 1 | Codex hook 的信任要不要寫進 `scripts/setup.sh` 的指引。提議：在 setup 輸出提示「Codex 使用者要跑 `/hooks` 信任，否則 hook 會被跳過」 | 這會影響新人上手流程，而且 `setup.sh` 目前只做一件事（設 `core.hooksPath`），多印一段提示要不要算在它的職責內 | 維護者 |
-| 2 | Claude 的 H2 註冊要不要在腳本 exit `2` 之外再加 `onFailure: "block"`（可補上「設定路徑打錯、腳本 crash」仍 fail-open 的缺口，Codex 沒有等價物，兩邊會不對稱） | [ADR-001 D5](../adr/001-agent-engineering.mdx#d5-h2-失敗時由腳本自己-exit-2) 的選項 B 是否採用；採用前要先在本機實測缺檔時真的會擋 | 維護者 |
 
 ## 決策紀錄
 
@@ -333,5 +341,16 @@ matcher 語法兩邊一致：`"*"`、`""` 或省略代表全部命中；`Edit|Wr
 | 2026-11-11 | Codex 的 `SubagentStart`／`SubagentStop` 吃 subagent type matcher；Codex 有 `[features] hooks = false` 一行全關（H1 的檢查項與 H7 的四條跳過途徑同步補上） | 初版誤標 matcher「未確認」、漏了 `[features] hooks = false` | [#111](https://github.com/label-suite/label-suite/issues/111) |
 | 2026-11-11 | H2 優先用 exit `2`，理由是 Codex 的 `PreToolUse` 不支援 `continue`／`stopReason`／`suppressOutput`，回傳會讓該次 hook 失敗並繼續執行工具；H6 payload 補 `stop_hook_active`；矩陣補 Claude 的 `PreCompact` 可阻擋；`.env.example` 等列為受保護路徑的合法例外 | 初版以欄位名不同為理由；H6 payload 無 `stop_hook_active`；矩陣漏 `PreCompact` 可阻擋；無合法例外 | [#111](https://github.com/label-suite/label-suite/issues/111) |
 | 2026-11-20 | H4 先接上 Prettier 排版：pre-commit 經 lint-staged 只排 staged 的檔案，CI 新增 `format` job 當 gate；不用 husky，因為它會改寫 `core.hooksPath`（[§H4](#h4-git-pre-commit檢查-staged-快照)） | H5 的 commit-msg 是唯一在跑的 hook 檢查器 | [#498](https://github.com/label-suite/label-suite/issues/498) |
-| 2026-11-23 | 重新對照 Claude Code 2.1.330 與 codex-cli 0.156.0 的官方 hook 文件：Claude 的 `onFailure: "block"` 現行版本已可用（`command`／`http` v2.1.295 起、`mcp_tool` v2.1.328 起），H2 契約維持「兩邊都由腳本自己 exit `2`」，是否在 Claude 註冊再加 `onFailure` 列[待決](#待決)第 2 列；Claude 事件數更新為 33、`Bash` matcher 也涵蓋 Monitor 命令；Codex 的事件、工具名稱與信任模型沒有改變結論 | 2026-11-11 列的前提「`onFailure: "block"` 需 v2.1.295、本機 2.1.273 沒有」已不成立；該列「H2 由腳本自己 exit `2`」的做法本身不變 | [#536](https://github.com/label-suite/label-suite/issues/536) |
+| 2026-11-17 | Codex 的 hook 信任指引寫進 `scripts/setup.sh`，放在單一函式與單一呼叫點（[§H4](#h4-git-pre-commit檢查-staged-快照)的安裝流程） | §待決 第 1 題「要不要算在 `setup.sh` 的職責內」 | [#111](https://github.com/label-suite/label-suite/issues/111) |
+| 2026-11-17 | 承認 Codex 的 `apply_patch` 沒有路徑欄位，寫檔目標保護改由權限層承接並明寫缺口，不解析官方未記載的封包格式（[§能力缺口與承接](#能力缺口與承接)第 8 條） | D11 原本的「找不到可辨識路徑欄位就 `exit 2`」——那會擋下每一次 `apply_patch` | [#111](https://github.com/label-suite/label-suite/issues/111) |
+| 2026-11-20 | 六支共用檢查器與各自的回歸測試落地，契約的「待建置」標記改為「已存在但尚未註冊」；H4 的 pre-commit 補上 `scripts/check-changed.sh --staged`；CI 新增在 ubuntu 與 macOS 兩個平台跑的 `hooks` job | H1、H2、H3、H6 的檢查器標為**待建置**，H4 只做排版 | [#111](https://github.com/label-suite/label-suite/issues/111) |
+| 2026-11-20 | 兩份 hook 註冊設定落地：`.claude/settings.json` 新增 `hooks` key、新建 `.codex/hooks.json`，五個 handler 指向同一批檢查器；不寫 `onFailure`（本機 2.1.273 未達 2.1.295）也不寫 `MultiEdit`（工具名未確認） | 「agent 事件的註冊還沒落地，那四個不會被任何事件叫起」 | [#111](https://github.com/label-suite/label-suite/issues/111) |
+| 2026-11-20 | `.py` 路由經 `uv run` 以 `backend/` 為工作目錄逐檔呼叫 `ruff check`（整個 `backend/`）與 `mypy --strict`（只有 `app/`）（[§H3](#h3-編輯後按路徑跑快速檢查)） | 直接在 `PATH` 上找 `ruff`／`mypy`——`backend/` 落地後，那讓每一次 Python 改動都被判成「已啟用但缺工具」 | 維護者裁定（記錄於 [#111](https://github.com/label-suite/label-suite/issues/111)）；逐檔照本 change 的 design.md，`--strict` 與 `uv run` 照 [backend-agent-rules B2](backend-agent-rules.mdx#b2-docstring型別與指令) 與 `openspec/config.yaml` |
+| 2026-11-20 | `.ts`／`.tsx` 路由經 `pnpm -C <frontend> exec` 以 `frontend/` 為工作目錄呼叫 `tsc -b`（整個專案）與 `eslint`（逐檔）；`--staged` 時把已安裝的工具鏈接進鏡像（[§H3](#h3-編輯後按路徑跑快速檢查)） | 直接在 `PATH` 上找 `tsc`／`eslint`，以及 `tsc --noEmit`——`frontend/` 落地後，那讓每一次 TypeScript 改動都被判成「已啟用但缺工具」 | 比照同日 `.py` 路由的裁定；指令名照 `openspec/config.yaml` 的 `pnpm --filter frontend lint`／`typecheck` |
+| 2026-11-23 | 重新對照 Claude Code 2.1.330 與 codex-cli 0.156.0 的官方 hook 文件：Claude 的 `onFailure: "block"` 現行版本已可用（`command`／`http` v2.1.295 起、`mcp_tool` v2.1.328 起），H2 契約維持「兩邊都由腳本自己 exit `2`」，是否在 Claude 註冊再加 `onFailure` 列 §待決 第 1 列；Claude 事件數更新為 33、`Bash` matcher 也涵蓋 Monitor 命令；Codex 的事件、工具名稱與信任模型沒有改變結論 | 2026-11-11 列的前提「`onFailure: "block"` 需 v2.1.295、本機 2.1.273 沒有」已不成立；該列「H2 由腳本自己 exit `2`」的做法本身不變 | [#536](https://github.com/label-suite/label-suite/issues/536) |
 | 2026-11-23 | 參考設定 matcher 裡的 `MultiEdit` 不在 Claude 官方工具清單上，編輯類 matcher 用 `Edit` 或 `Edit\|Write`（[§工具名稱](#工具名稱)） | 原文「`MultiEdit` 是否仍有效，本次沒有確認」 | [#542](https://github.com/label-suite/label-suite/issues/542) |
+| 2026-11-26 | H3 對 Codex `apply_patch` 改讀 `tool_input.command` 的檔案標頭找出本次改到的檔，讀不到時取 checkout 相對 `HEAD` 的變更；H2 仍不解析（[§H3](#h3-編輯後按路徑跑快速檢查)） | 事件模式只取路徑欄位，`apply_patch` 的候選清單是空的，H3 什麼都沒跑、Stop 時 H6 因缺證據擋下 | [#111](https://github.com/label-suite/label-suite/issues/111) |
+| 2026-11-26 | Claude 的兩個 H2 handler 加 `onFailure: "block"`，腳本自己 exit `2` 仍是兩邊共通的基線；Stop／SubagentStop 不設（Claude 在那裡忽略它），Codex 沒有等價欄位、`.codex/hooks.json` 不動，兩邊不對稱寫進 [§H2](#h2-工具執行前破壞性命令與受保護目標)與[§能力缺口與承接](#能力缺口與承接)第 5 條。依據是 Claude Code 2.1.323 的本機實測（[§查核方式](#查核方式)第 4 點） | §待決 第 1 列「Claude 的 H2 註冊要不要在腳本 exit `2` 之外再加 `onFailure: "block"`」；2026-11-23 列的「H2 契約維持兩邊都由腳本自己 exit `2`」 | 維護者決定（記錄於 [#111](https://github.com/label-suite/label-suite/issues/111)） |
+| 2026-11-26 | §能力缺口與承接新增第 9 條（linked worktree 載入不到 Codex 的 repo hook）與第 10 條（Codex 不顯示 exit `0` 的 stderr） | — | [#111](https://github.com/label-suite/label-suite/issues/111) |
+| 2026-11-26 | H3／H4／H7 的程式碼路由同時以目錄限定：`.py` 只收 `backend/`、`.ts`／`.tsx` 只收 `frontend/`，其他位置標 not applicable（[§H3](#h3-編輯後按路徑跑快速檢查)） | 只看副檔名，`e2e/`、`.semgrep/`、`.notecraft/` 的檔被交給兩個專案的工具而判為失敗 | 派工主 session 依維護者 2026-11-25 的授權裁定（記錄於 [#111](https://github.com/label-suite/label-suite/issues/111)） |
+| 2026-11-26 | 第 6 條的「承接」改寫為「設定權限層不在本 change 範圍內、第 3 與第 8 條暫無承接者」（[§能力缺口與承接](#能力缺口與承接)） | 標題已改成兩側查完，「承接」仍寫「列為實作 PR 的前置查核項……這一半還沒查完」，前後矛盾 | [#111](https://github.com/label-suite/label-suite/issues/111) |

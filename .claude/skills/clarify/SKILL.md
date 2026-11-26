@@ -121,7 +121,7 @@ description: 釐清 OpenSpec change 規劃產物（system-analysis、system-desi
 - [ ] **待決與已裁定都要對過**：`architecture.mdx` §待決 只列還沒定的題目（目前兩列：個人 repo 的 ADR 修訂、沒設 Resend key 時的自行註冊）；已裁定的集中在同檔 §決策紀錄。所以這一關要查兩個反方向的錯：
       （a）**還沒定的被偷偷定掉**——這次的 change 碰到 §待決 的任一列時，規劃產物要寫成提案或待決，不是寫成結論；
       （b）**已裁定的被當成還沒定**——§決策紀錄 的各列（後端模組內分層、成功回應包 envelope、`/api/v1` 前綴、Lite 層無 Resend key 的降級、onboarding 的界線、只做 `ai_runs`、Bruno 降級成可選工具、前端 React 19 加 `pages/` 與 `features/` 加 shadcn/ui、Orval、token 對照層、不用 Storybook 改用元件展示頁、日期套件 day.js、回應外層的六個欄位與 camelCase）若又被列成待決問題，就是把拍過的板重新搬上那個停點，照樣要指出來。
-      原本列在表外的「前端型別與 client 生成工具」也**已裁定：Orval**，輸出 `frontend/src/api/generated/`（見 `architecture.mdx` §前端），不再是待決
+      原本列在表外的「前端型別與 client 生成工具」也**已定案：Orval**，輸出 `frontend/src/api/generated/`（見 `architecture.mdx` §前端），不再是待決
 - [ ] task 數量與粒度是否合理？
 
 #### 4.5 邊界情況

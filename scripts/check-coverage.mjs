@@ -25,7 +25,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-/** The tolerance ruled in clarification Q7, used only to fill a suggested baseline that has none. */
+/** The default tolerance, used only to fill a suggested baseline that has none. */
 const DEFAULT_TOLERANCE = 0.1;
 
 /** Float slack so 95.0 - 0.1 does not misjudge a value sitting exactly on the line. */

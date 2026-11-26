@@ -440,7 +440,7 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 
 ### 決定
 
-背景計算的結果表要有「一份輸入最多一份結果」的唯一鍵，寫入一律用各 dialect 的 `on_conflict` 做 upsert，不先刪後寫。規則本體見 [backend-agent-rules.mdx 的 B9](../rules/backend-agent-rules.mdx#b9-celery-的界線)，它已要求「重跑同一個 task 不會產生第二筆結果」；本節補的是理由，以及冪等要落在結果表的唯一鍵上、不是只靠寫入端自律。現有的 [`task_trial_iaa_result`](../../diagrams/architecture/data-table-dictionary.mdx) 已經把 `trial_round_id` 設成 PK 兼 FK，正好就是這個形狀；本節把它從單一張表的性質升成所有背景計算結果表的要求。具體欄位與約束仍由資料表字典管。
+背景計算的結果表要有「一份輸入最多一份結果」的唯一鍵，寫入一律用各 dialect 的 `on_conflict` 做 upsert，不先刪後寫。規則本體見 [backend-agent-rules.mdx 的 B9](../rules/backend-agent-rules.mdx#b9-celery-的界線)，它已要求「重跑同一個 task 不會產生第二筆結果」；本節補的是理由，以及冪等要落在結果表的唯一鍵上、不是只靠寫入端自律。現有的 [`task_trial_iaa_result`](../../diagrams/architecture/data-table-dictionary.mdx) 已經把 `trial_round_id` 設成 PK 兼 FK，正好就是這個形狀；本節把它從單一張表的性質升成所有背景計算結果表的要求。另一層是「同一次送出別重複建工作」：它的唯一鍵落在 [`submission`](../../diagrams/architecture/data-table-dictionary.mdx) 的 `(task_run_id, idempotency_key)`，同 key 不同內容靠 `request_digest` 擋下，與 `task_trial_iaa_result` 的 PK 是兩層，互不取代。具體欄位與約束仍由資料表字典管。
 
 ### 後果
 
@@ -524,12 +524,6 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 | — | 個人 repo ADR-024 後來的修訂（以資料庫 trigger 保護 append-only 與封存的資料表）、ADR-022 的轉移表與快照不變式，不在 [architecture.mdx](../architecture.mdx) 裡，本 ADR 不收；它們屬於資料庫與業務規格，由各自的 change 決定是否採用 |
 | D11 | 個人 repo ADR-026（Context 的兩類字串與兩種反模式、Alternatives Considered 的三個選項與拒絕理由、Decision 的兩層與前端渲染契約、Consequences 的 Easier 與 Harder）。**兩處與來源不同**：來源把後端那一層的欄位叫 `detail`，本 repo 的人讀訊息在回應外層的 `message`（見 [D5](#d5-api-路徑前綴與成功回應外層) 與 [api-agent-rules 的 A8](../rules/api-agent-rules.mdx#a8-i18n-的兩層分工)）；來源 Harder 第 1 條把「字串不得內嵌」的強制放在 `.claude/rules/backend.md`，本 repo 沒有那份 canon（決定於 [#53](https://github.com/label-suite/label-suite/issues/53)），該條由 A8 的禁止格承接。來源的 `Accept-Language` 解析細節（q-value、`*` 通配、`q=0` 拒絕、全部被拒回 `406`）已在 A8，本節不重述。**來源的 Alternatives Considered 只有選項、說明與拒絕理由三欄**，所以選項表的「好處」與「代價」兩欄是推論；**來源也沒有「什麼情況要重新討論」這一節**，該節的兩條同樣是推論 |
 
-## 待決
-
-| # | 問題 | 卡住什麼 | 誰決定 |
-| :--- | :--- | :--- | :--- |
-| 1 | [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務) 用 `submission`、`parse_submission`、`/submissions/{id}/status` 這組名字，[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)裡沒有對應的表，最接近的是 `task_run` 與 `task_trial_iaa_result` | [D10](#d10-背景計算的結果寫入做成冪等) 的唯一鍵實際落在哪張表 | 維護者，在做評分流程的 change 時 |
-
 ## 決策紀錄
 
 | 日期 | 決策 | 取代了什麼 | 來源 |
@@ -547,3 +541,4 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 | 2026-11-19 | Bruno 降成可選的手動工具，取消 pre-PR 硬關卡（[D9](#d9-bruno-只當可選工具)） | 個人 repo ADR-025 的 pre-PR 硬關卡 | [#105 留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393) |
 | 2026-11-20 | envelope 的欄位定為 `{ success, code, message, data, timestamp, traceId }`，錯誤套同一個外層，JSON 欄位一律 camelCase（[D5](#d5-api-路徑前綴與成功回應外層)） | D5 原本寫「envelope 有哪些欄位未決」 | [#503](https://github.com/label-suite/label-suite/issues/503) |
 | 2026-11-20 | i18n 分前端與後端兩層，後端依 `Accept-Language` 決定回應訊息的語言（[D11](#d11-i18n-分前端與後端兩層)） | —（兩層的做法原本只記在 `architecture.mdx` 與 A8，理由沒有落點） | [#513](https://github.com/label-suite/label-suite/issues/513) |
+| 2026-11-26 | 資料表字典新增 `submission`，D10 的送出冪等鍵落在它的 `(task_run_id, idempotency_key)`，結果寫入冪等仍落在 `task_trial_iaa_result` 的 PK（[D10](#d10-背景計算的結果寫入做成冪等)） | 原待決第 1 列：`submission` 在字典裡沒有對應的表，唯一鍵不知落在哪張 | [#685](https://github.com/label-suite/label-suite/issues/685#issuecomment-7183496070) |

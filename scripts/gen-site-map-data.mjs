@@ -32,8 +32,7 @@ const NOT_STANDALONE = "不是獨立頁面";
 
 // Generic subsections every page (or many pages) has; they say how a page
 // behaves, not what it offers, so they are not features. Matched by the exact
-// heading text. The list was confirmed by the maintainer on 2026-11-24 in
-// issue #617; the screen-state and screen-width entries spell out the
+// heading text. The screen-state and screen-width entries spell out the
 // "similar subsections" by the names the specs actually use.
 export const EXCLUDED_FEATURES = [
   // Data fields

@@ -1,6 +1,6 @@
 ---
 title: ADR-001 Agent 工程
-description: Agent 怎麼避免重造既有程式、碰到錯誤的既有實作時怎麼處理，以及 agent hook 的設定與阻擋策略：先搜尋再新增、範圍內直接修正、兩份設定手寫、H3 不自動修、H2 失敗時 exit 2。
+description: Agent 怎麼避免重造既有程式、碰到錯誤的既有實作時怎麼處理，以及 agent hook 的設定與阻擋策略：先搜尋再新增、範圍內直接修正、兩份設定手寫、H3 不自動修、H2 失敗時擋下（腳本 exit 2，Claude 另加 onFailure）。
 tags: [adr, agent, engineering]
 ---
 
@@ -177,7 +177,7 @@ H3 只回報診斷，不改檔、不自動 `git add`、不自動套用 formatter
 
 - 診斷反覆被 agent 略過，導致同一類問題一再留到 H4 或 CI 才被擋下
 
-## D5 H2 失敗時由腳本自己 exit 2
+## D5 H2 失敗時由腳本 exit 2 擋下，Claude 另加 onFailure
 
 ### 背景
 
@@ -186,8 +186,8 @@ H2 要在動作發生前擋下 `AGENTS.md` 硬性規則 2、3、10 禁止的命�
 | 限制 | 對選擇的影響 |
 | :--- | :--- |
 | 兩個平台的預設都是 fail-open：hook 失敗、timeout 或輸出不合法時，動作照做（Claude 文件寫路徑打錯或 crash 的 policy hook「lets everything through」） | 不寫任何處理，檢查器壞了就等於沒有 H2 |
-| Claude 的宣告式 fail-closed 開關 `onFailure: "block"` 需要 v2.1.295，本機是 2.1.330（見 [agent-hook-contract.mdx 的查核方式](../rules/agent-hook-contract.mdx#查核方式)） | Claude 這一邊可以用，但還沒有在本機實測，採不採用見該文件的[待決](../rules/agent-hook-contract.mdx#待決) |
-| Codex 沒有等價欄位（官方文件未見） | 即使 Claude 那邊採用 `onFailure`，Codex 仍沒有，兩邊會不對稱 |
+| Claude 的宣告式 fail-closed 開關 `onFailure: "block"` 需要 v2.1.295；在 Claude Code 2.1.323 實測，指向不存在的腳本與腳本 `exit 1` 都被擋下，不設時同樣缺檔的 hook 照常放行（見 [agent-hook-contract.mdx 的查核方式](../rules/agent-hook-contract.mdx#查核方式)） | Claude 這一邊可以用，而且實測擋得住腳本管不到的失敗；它對 `Stop`、`SubagentStop` 無效 |
+| Codex 沒有等價欄位（官方文件未見） | Claude 那邊加上 `onFailure`，Codex 仍沒有，兩邊不對稱；兩邊共通的只有腳本自己的 exit `2` |
 | 選 exit `2` 的理由不是欄位名不同：`PreToolUse` 的欄位名兩邊一致 | 理由只剩下面這一列 |
 | Codex 的 `PreToolUse` 回傳不支援的欄位（`continue`、`stopReason`、`suppressOutput`）時，該次 hook 被標為失敗並繼續執行那個工具 | 用 JSON 欄位表達阻擋有被誤放行的風險 |
 
@@ -195,30 +195,32 @@ H2 要在動作發生前擋下 `AGENTS.md` 硬性規則 2、3、10 禁止的命�
 
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
-| A 兩邊都由腳本自己在無法判斷時 exit `2`：包裝腳本先確認檢查器存在且可執行，不存在就 exit `2` | 兩個平台都能用；exit `2` 沒有 Codex 不支援欄位的風險 | 靠腳本自己負責；設定裡的路徑打錯或腳本本身 crash 時仍是 fail-open，不得假設會被擋下 | 採用 |
-| B Claude 用 `onFailure: "block"` | 宣告式的 fail-closed | 要 v2.1.295 以上（本機 2.1.330 已滿足）；Codex 沒有等價欄位，只有一邊；尚未在本機實測 | 延後：是否採用見 [agent-hook-contract.mdx 的待決](../rules/agent-hook-contract.mdx#待決) |
+| A 兩邊都由腳本自己在無法判斷時 exit `2`：包裝腳本先確認檢查器存在且可執行，不存在就 exit `2` | 兩個平台都能用；exit `2` 沒有 Codex 不支援欄位的風險 | 靠腳本自己負責；設定裡的路徑打錯或腳本本身 crash 時仍是 fail-open，不得假設會被擋下 | 採用，作為兩邊共通的基線 |
+| B Claude 用 `onFailure: "block"` | 宣告式的 fail-closed | 要 v2.1.295 以上；Codex 沒有等價欄位，只有一邊；對 `Stop`、`SubagentStop` 無效 | 採用，只加在 Claude 的 H2，疊在 A 之上，不取代 A |
 | C 不處理，靠預設 | 不用寫任何東西 | 預設是 fail-open，不得假設不寫就會擋 | 不採用 |
 | D 以 `permissionDecision: "deny"` 加 `permissionDecisionReason` 當主要的阻擋方式 | 兩邊都收 | 同一條路徑上若回傳 Codex 不支援的欄位，會讓該次 hook 失敗並繼續執行工具 | 不當主要做法，優先 exit `2` |
 
 ### 決定
 
-H2 兩邊都由腳本自己在無法判斷時 exit `2`、原因寫 stderr；不用 `|| true` 把判斷不了變成通過，優先用 exit `2` 而不是 JSON 欄位。做法見 [agent-hook-contract.mdx 的 H2](../rules/agent-hook-contract.mdx#h2-工具執行前破壞性命令與受保護目標)。
+H2 兩邊都由腳本自己在無法判斷時 exit `2`、原因寫 stderr，這是兩邊共通的基線；不用 `|| true` 把判斷不了變成通過，優先用 exit `2` 而不是 JSON 欄位。Claude 的 H2 handler 另加 `onFailure: "block"`，Codex 沒有等價欄位，維持只靠腳本。做法見 [agent-hook-contract.mdx 的 H2](../rules/agent-hook-contract.mdx#h2-工具執行前破壞性命令與受保護目標)。
 
 ### 後果
 
 **變容易**
 
 - 檢查器不存在或無法判斷時，兩個平台都能擋下動作
+- Claude 這一邊，設定路徑打錯或腳本 crash 也會擋下
 
 **變困難**
 
-- 每支 H2 的包裝腳本都要自己負責 fail-closed：Claude 的 `onFailure` 存在但尚未採用、也未在本機實測，Codex 沒有等價欄位
-- 腳本以外的失敗（設定路徑打錯、腳本 crash）仍然放行
+- 每支 H2 的包裝腳本仍要自己負責 fail-closed：Codex 沒有等價欄位，`onFailure` 只補 Claude 那一邊
+- 兩邊不對稱：腳本以外的失敗（設定路徑打錯、腳本 crash）在 Claude 擋下，在 Codex 仍然放行
+- 兩份設定手寫兩份，`onFailure` 只出現在 Claude 那份，H1 只比對指向的目標，不比對這個欄位；這個欄位改由 `scripts/tests/check-env-tests.sh` 在 CI 釘住
 
 ### 什麼情況要重新討論
 
-- 在本機實測 `onFailure: "block"` 確實擋下缺檔的 hook 之後：評估選項 B
-- Codex 出現等價的 fail-closed 欄位
+- Codex 出現等價的 fail-closed 欄位：Codex 那份設定也加上
+- 升級 Claude Code 後，缺檔或 crash 的 H2 hook 不再被 `onFailure: "block"` 擋下
 
 ## 附錄：來源對照
 
@@ -233,12 +235,21 @@ H2 兩邊都由腳本自己在無法判斷時 exit `2`、原因寫 stderr；不�
 
 | 日期 | 決策 | 取代了什麼 | 來源 |
 | :--- | :--- | :--- | :--- |
+| 2026-11-04 | 預設 schema 是 `label-suite-sdd`；文件與工具類的小 change 可以改帶 `--schema spec-driven`，走四份產物的流程（[AGENTS.md §SDD Workflow](../../../AGENTS.md#sdd-workflow)） | `openspec/config.yaml` 原本的預設 `schema: spec-driven` | [#51](https://github.com/label-suite/label-suite/issues/51) |
+| 2026-11-10 | 會改 `design/prototype/` 或任何介面的 issue，維護者看過畫面的 artifact 並說可以之後才移到 Ready；畫 artifact 不等於取得改 `design/prototype/` 的授權（[AGENTS.md §Project Board and Dispatch](../../../AGENTS.md#project-board-and-dispatch) 的 Ready gate） | 原 Ready gate「對到 Epic 清單的子 issue 視同核可」，以及寫在 §What `/sdd` authorizes 底下的 artifact 規則 | [#52 留言](https://github.com/label-suite/label-suite/issues/52#issuecomment-6755755370) |
 | 2026-11-11 | 兩個平台的 hook 設定手寫兩份、由 H1 核對，不做單一來源生成器（[D3](#d3-兩個平台的-hook-設定手寫兩份不做生成器)） | 初版標為待裁定 | [#111](https://github.com/label-suite/label-suite/issues/111) |
 | 2026-11-11 | H3 只回報診斷，不改檔、不自動 `git add`、不自動套用 formatter（[D4](#d4-h3-只回報診斷不自動修)） | 初版標為待裁定 | [#111](https://github.com/label-suite/label-suite/issues/111) |
 | 2026-11-11 | H3 一律當提醒，不以 exit `2` 阻擋：`PostToolUse` 在兩邊都撤銷不了編輯（[D4](#d4-h3-只回報診斷不自動修)） | 初版「`PostToolUse` 的語意在兩邊相反」（Claude 純提醒、Codex 可擋後續），兩個方向都錯 | [#111](https://github.com/label-suite/label-suite/issues/111) |
-| 2026-11-11 | H2 優先用 exit `2`，不用 JSON 欄位當主要的阻擋方式（[D5](#d5-h2-失敗時由腳本自己-exit-2)） | 初版以欄位名不同為理由；H6 payload 無 `stop_hook_active`；矩陣漏 `PreCompact` 可阻擋；無合法例外 | [#111](https://github.com/label-suite/label-suite/issues/111) |
-| 2026-11-11 | H2 兩邊都由腳本自己 exit `2` 做 fail-closed，不等 `onFailure: "block"`（[D5](#d5-h2-失敗時由腳本自己-exit-2)） | 初版把 `onFailure: "block"` 當成 Claude 現成的 fail-closed 開關 | [#111](https://github.com/label-suite/label-suite/issues/111) |
+| 2026-11-11 | H2 優先用 exit `2`，不用 JSON 欄位當主要的阻擋方式（[D5](#d5-h2-失敗時由腳本-exit-2-擋下claude-另加-onfailure)） | 初版以欄位名不同為理由；H6 payload 無 `stop_hook_active`；矩陣漏 `PreCompact` 可阻擋；無合法例外 | [#111](https://github.com/label-suite/label-suite/issues/111) |
+| 2026-11-11 | H2 兩邊都由腳本自己 exit `2` 做 fail-closed，不等 `onFailure: "block"`（[D5](#d5-h2-失敗時由腳本-exit-2-擋下claude-另加-onfailure)） | 初版把 `onFailure: "block"` 當成 Claude 現成的 fail-closed 開關 | [#111](https://github.com/label-suite/label-suite/issues/111) |
+| 2026-11-12 | `design/prototype/` 的註解可以用繁體中文，程式碼與識別碼仍是英文（[AGENTS.md §Language Rules](../../../AGENTS.md#language-rules)） | Language Rules 第一列「註解只用英文」適用於 `design/prototype/` | [#292](https://github.com/label-suite/label-suite/issues/292) |
+| 2026-11-18 | hook 檢查器（`scripts/check-*.sh`）印出的診斷用繁體中文，前綴、旗標與路徑仍是英文；`scripts/check-commit-msg.sh` 維持英文（[AGENTS.md §Language Rules](../../../AGENTS.md#language-rules)） | Language Rules 第一列「只用英文」適用於檢查器的診斷 | [#111](https://github.com/label-suite/label-suite/issues/111) |
 | 2026-11-19 | 先搜尋再新增維持人工檢查加 PR 紀錄；元件索引與 hook 強制延後（[D1](#d1-先搜尋再新增)） | — | [#444](https://github.com/label-suite/label-suite/issues/444) |
 | 2026-11-19 | 這次改動會碰到的程式路徑內，錯誤的既有實作直接修（[D2](#d2-範圍內直接修正錯誤實作)） | R3「只改本次請求要求的程式」不再擋路徑內的錯誤實作；死碼照舊只提出來 | [#444 留言](https://github.com/label-suite/label-suite/issues/444) |
-| 2026-11-23 | D5 的重新討論條件改為「在本機實測 `onFailure: "block"` 確實擋下缺檔的 hook 之後」（[D5](#d5-h2-失敗時由腳本自己-exit-2)）；決定本身不變 | 原條件「本機 Claude Code 升到 v2.1.295 以上之後」：本機已是 2.1.330，該條件已成立 | [#536](https://github.com/label-suite/label-suite/issues/536) |
+| 2026-11-19 | 卡片在 Ready 就是維護者對該 issue 的常設合併授權，條件是 CI 全過、且由沒寫這次改動的審查者通過；主 session 合併並把卡片移到 Done（[AGENTS.md §Project Board and Dispatch](../../../AGENTS.md#project-board-and-dispatch) 的 Dispatch） | — | [#462](https://github.com/label-suite/label-suite/issues/462) |
+| 2026-11-19 | 驗收不再停下來等維護者；人工驗收步驟照寫、留作紀錄，`ops` 在合併前跑 `/opsx:archive`（[AGENTS.md §The one checkpoint](../../../AGENTS.md#the-one-checkpoint)） | 停點二：維護者親自覆驗後才歸檔 | [#464](https://github.com/label-suite/label-suite/issues/464) |
+| 2026-11-19 | `/sdd` 授權合併：驗收通過、必要檢查全綠即可合併；發版與手動關 issue 不在授權內（[AGENTS.md §What `/sdd` authorizes](../../../AGENTS.md#what-sdd-authorizes)） | `/sdd` 不含合併授權 | [#464](https://github.com/label-suite/label-suite/issues/464) |
+| 2026-11-20 | `issue-dispatch` 派產品程式碼的 issue：`clarification.md` 沒有 Q 項就做到合併，有 Q 項就留檢查點、卡片留在 In Progress、改派別張；程式類一波只排一張（[AGENTS.md §Project Board and Dispatch](../../../AGENTS.md#project-board-and-dispatch) 的 Dispatch） | 只派文件、工具與 `openspec/` 的 issue | [#525](https://github.com/label-suite/label-suite/issues/525) |
+| 2026-11-23 | D5 的重新討論條件改為「在本機實測 `onFailure: "block"` 確實擋下缺檔的 hook 之後」（[D5](#d5-h2-失敗時由腳本-exit-2-擋下claude-另加-onfailure)）；決定本身不變 | 原條件「本機 Claude Code 升到 v2.1.295 以上之後」：本機已是 2.1.330，該條件已成立 | [#536](https://github.com/label-suite/label-suite/issues/536) |
 | 2026-11-26 | D3、D4、D5 的背景不補 hook 的接線現況，只連到 [agent-hook-contract.mdx 的 §能力缺口與承接](../rules/agent-hook-contract.mdx#能力缺口與承接) | 原 §待決 第 1 列「要不要補上接線現況」 | [#689](https://github.com/label-suite/label-suite/issues/689) |
+| 2026-11-26 | D5 採用選項 B：Claude 的 H2 handler 另加 `onFailure: "block"`，腳本自己 exit `2` 仍是兩邊共通的基線（[D5](#d5-h2-失敗時由腳本-exit-2-擋下claude-另加-onfailure)） | D5 原決定「H2 兩邊都只由腳本自己 exit `2`」與選項 B 的「延後」；重新討論條件「在本機實測確實擋下缺檔的 hook 之後」已成立（Claude Code 2.1.323 實測，缺檔與 exit 1 都擋下） | 維護者決定（記錄於 [#111](https://github.com/label-suite/label-suite/issues/111)） |

@@ -100,7 +100,7 @@ gh pr list --state all --search "${N}" --json number,title,state,headRefName
 
 一波是衝突圖裡最大的獨立集合，最多 3 張。
 
-**SDD 派工一波只排一張**（維護者 2026-11-20 裁定）；一般派工仍照衝突圖，一波最多 3 張。裁定限制的是 SDD 那一類的張數，沒有禁止同一波同時帶一般派工。
+**SDD 派工一波只排一張**；一般派工仍照衝突圖，一波最多 3 張。這條限制的是 SDD 那一類的張數，沒有禁止同一波同時帶一般派工。
 
 同一波可以同時寫，但 **NoteCraft 的本機 build 不能同時跑**：快取在全機共用的 `~/.notecraft/`。lead 不跑本機 build，以 CI 的 `docs-site` job 為準；主 session 要在本機看頁面時，一次只 build 一個分支。
 
@@ -159,7 +159,7 @@ PR 的開法照步驟 6，但時機不同：**實作期間就先開**，不等�
 
 ### clarification 有 Q 項時怎麼停
 
-`clarification.md` 沒有 Q 項就一路做到合併，不問（維護者 2026-11-20 裁定）。有 Q 項就停，而且停的方式和「需要裁定」那一類不同：
+`clarification.md` 沒有 Q 項就一路做到合併，不問。有 Q 項就停，而且停的方式和「需要裁定」那一類不同：
 
 1. 把每一題以檢查點留言貼在 issue 上，格式見下。
 2. 卡片**留在 In Progress**，不要移回 Todo——規劃已經做了一半，移回去下一輪會從頭重做。
@@ -226,7 +226,7 @@ gh pr view <pr> --json mergeable,mergeStateStatus,headRefOid,statusCheckRollup
 
 - `mergeable` 是 `MERGEABLE`，`mergeStateStatus` 是 `CLEAN`
 - 檢查數大於 0，而且全部通過
-- `commit-messages`、`docs-site`、`format`、`specs` 四個 job 都在，而且都是 `SUCCESS`（每個 PR 都會跑，缺一個就代表還沒註冊）
+- `commit-messages`、`docs-site`、`format`、`hooks`、`specs` 五個 job 都在，而且都是 `SUCCESS`（每個 PR 都會跑，缺一個就代表還沒註冊）
 - 這個 head SHA 沒有還在 `queued` 或 `in_progress` 的 run：
   `gh run list --branch <branch> --json status,headSha --jq '[.[]|select(.headSha=="<sha>" and .status!="completed")]|length'` 要是 `0`
 - 審查已經通過，issue 的工作項和 PR 的 Test Plan 全部勾完
@@ -341,7 +341,7 @@ gh project item-edit --project-id PVT_kwDOEWdNqs4BoCOI --id "$ITEM" \
 | 刪掉的 worktree 路徑殘留在 `~/.notecraft/app-*/.astro/data-store.json` 與 `node_modules/.astro/data-store.json`，之後的 build 會找不到模組 | lead 不跑本機 build；本機要 build 時若遇到，把這兩個快取移開再 build |
 | 裁定寫在後面的留言，不在內文 | 步驟 1 讀完整串留言 |
 | 合併了但 PR 缺少 `Closes`，issue 留著沒關 | 步驟 9 比對 issue 和 PR |
-| `gh pr checks --watch` 在 PR 一個檢查都沒有時也會回 0 | 步驟 7 以四個 job 的名稱與 run 數量為準 |
+| `gh pr checks --watch` 在 PR 一個檢查都沒有時也會回 0 | 步驟 7 以五個 job 的名稱與 run 數量為準 |
 | lead 的 commit 本文寫成 `**Add**:`（粗體動詞後多冒號），commit-msg hook 擋下（試跑 #453） | 派工 prompt 寫明粗體動詞後直接接說明，不加冒號 |
 | ADR 的 lead 會自己補理由與「考慮過的選項」，來源其實沒有（試跑 #453） | 獨立審查第一項就核對每個理由與選項的出處；派工 prompt 寫明「來源沒有的理由不寫」 |
 | ADR 編號與個人 repo 的 ADR 編號撞號（本 repo ADR-007 ≠ 個人 repo ADR-007），舊文件裡裸寫的「ADR-007」會變成歧義（試跑 #453） | 動到的文件裡，個人 repo 的 ADR 一律寫成「個人 repo ADR-0xx」 |
