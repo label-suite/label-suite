@@ -144,7 +144,7 @@ const PAGES: PageNode[] = [
     module: "m00",
     spec: "01-02",
     specState: "written",
-    desc: "自行註冊成為平台成員；也可以由系統管理員邀請加入。",
+    desc: "這個部署有設定寄信服務時，可以自行註冊成為平台成員；沒有設定時關閉自行註冊；也可以由系統管理員邀請加入。",
     entry: "登入頁的註冊入口",
     access: ANYONE,
   },
