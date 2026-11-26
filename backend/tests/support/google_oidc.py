@@ -38,6 +38,8 @@ class FakeGoogle:
         email_verified: The ``email_verified`` claim.
         audience: The ``aud`` claim; the app's client ID unless a test changes it.
         fail_exchange: Answer the token request with ``400 invalid_grant``.
+        omit_id_token: Answer the token request without an ``id_token``.
+        omit_email: Leave the ``email`` claim out of the ``id_token``.
         exchanges: The form bodies of the token requests received.
     """
 
@@ -45,9 +47,11 @@ class FakeGoogle:
         self.key = RSAKey.generate_key(2048, parameters={"kid": "test-key", "alg": "RS256"})
         self.subject = "google-sub-1"
         self.email = "user@example.com"
-        self.email_verified: bool = True
+        self.email_verified: bool | str = True
         self.audience = CLIENT_ID
         self.fail_exchange = False
+        self.omit_id_token = False
+        self.omit_email = False
         self.exchanges: list[dict[str, str]] = []
         self.challenge: str | None = None
         self.nonce: str | None = None
@@ -95,6 +99,8 @@ class FakeGoogle:
             "exp": now + 600,
             "nonce": self.nonce,
         }
+        if self.omit_email:
+            del claims["email"]
         signed = jwt.encode({"alg": "RS256", "kid": "test-key"}, claims, self.key)
         body = {
             "access_token": "ya29.test-access",
@@ -103,6 +109,8 @@ class FakeGoogle:
             "scope": "openid email",
             "id_token": signed,
         }
+        if self.omit_id_token:
+            del body["id_token"]
         return httpx.Response(
             200,
             content=json.dumps(body).encode(),

@@ -5,6 +5,9 @@ claims), the opaque tokens and their hash, the CSRF value bound to a session, an
 signed payload the Google flow cookie carries.
 """
 
+import base64
+import hashlib
+import hmac
 import secrets
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -297,3 +300,29 @@ def test_signed_payload_rejects_any_change(mutate: str) -> None:
         candidate, key = "not-signed", keys.oidc_flow
 
     assert verify_payload(key, candidate) is None
+
+
+@pytest.mark.parametrize("change", [{"iat": "1"}, {"exp": 1.5}, {"iat": True}])
+def test_token_with_non_integer_times_is_rejected(change: dict[str, object]) -> None:
+    keys = _keys()
+    payload: dict[str, object] = {
+        "sub": str(USER_ID),
+        "sid": str(SESSION_ID),
+        "credential_version": 3,
+        "role": "user",
+        "iat": int(NOW.timestamp()),
+        "exp": int((NOW + timedelta(minutes=15)).timestamp()),
+        **change,
+    }
+    token = jwt.encode(payload, keys.access, algorithm="HS256")
+
+    with pytest.raises(InvalidAccessTokenError):
+        AccessTokenCodec(keys.access).decode_ignoring_expiry(token)
+
+
+def test_a_correctly_signed_body_that_is_not_utf8_text_is_rejected() -> None:
+    key = _keys().oidc_flow
+    body = base64.urlsafe_b64encode(b"\xff\xfe\xfd").rstrip(b"=").decode()
+    mac = base64.urlsafe_b64encode(hmac.new(key, body.encode(), hashlib.sha256).digest())
+
+    assert verify_payload(key, f"{body}.{mac.rstrip(b'=').decode()}") is None

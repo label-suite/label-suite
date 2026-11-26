@@ -61,7 +61,8 @@ fi
 cookies=$(tr -d '\r' < "$work/headers" \
   | sed -n 's/^[Ss][Ee][Tt]-[Cc][Oo][Oo][Kk][Ii][Ee]: *\(__Host-ls_[^;]*\).*/\1/p' \
   | paste -sd ';' - | sed 's/;/; /g')
-count=$(printf '%s' "$cookies" | tr ';' '\n' | grep -c '__Host-ls_' || true)
+# awk counts and always exits 0, so zero cookies is a count, not a failed step.
+count=$(printf '%s' "$cookies" | tr ';' '\n' | awk '/__Host-ls_/ { n++ } END { print n + 0 }')
 if [ "$count" -ne 3 ]; then
   echo "FAIL: the sign-in set $count login cookies, expected 3" >&2
   exit 1

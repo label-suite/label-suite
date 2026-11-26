@@ -6,19 +6,12 @@ flow, signing in or linking an existing account only, the one rejection, and the
 quiet ``400`` when the flow does not verify.
 """
 
-import secrets
-from collections.abc import AsyncIterator
-from pathlib import Path
-
 import httpx
 import pytest
-from pydantic import SecretStr
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.cookies import OIDC_FLOW_COOKIE
-from app.main import create_app
 from app.modules.account.repository import UserRepository
-from tests.conftest import make_test_settings
 from tests.factories.accounts import PLAIN, add_user, reload_user
 from tests.support.browser import SESSION_COOKIES, Browser, cleared, set_cookies
 from tests.support.google_oidc import CLIENT_ID, REDIRECT_URI, FakeGoogle
@@ -28,31 +21,6 @@ pytestmark = pytest.mark.integration
 AUTHORIZE = "/api/v1/google-authorization"
 COMPLETE = "/api/v1/google-sessions"
 REJECTED = "無法用這個 Google 帳號登入。需要帳號的話，請聯絡系統管理員邀請你。"
-
-
-@pytest.fixture
-async def google_client(
-    tmp_path: Path, migrated_engine: AsyncEngine
-) -> AsyncIterator[httpx.AsyncClient]:
-    settings = make_test_settings(tmp_path).model_copy(
-        update={
-            "google_client_id": CLIENT_ID,
-            "google_client_secret": SecretStr(secrets.token_urlsafe(24)),
-            "google_redirect_uri": REDIRECT_URI,
-        }
-    )
-    app = create_app(settings)
-    async with app.router.lifespan_context(app):
-        transport = httpx.ASGITransport(app=app)
-        async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as http:
-            yield http
-
-
-@pytest.fixture
-def google(monkeypatch: pytest.MonkeyPatch) -> FakeGoogle:
-    fake = FakeGoogle()
-    fake.install(monkeypatch)
-    return fake
 
 
 async def _complete(browser: Browser, google: FakeGoogle, **override: str) -> httpx.Response:

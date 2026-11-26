@@ -214,3 +214,17 @@ async def test_every_rejection_has_the_same_body_apart_from_time_and_trace() -> 
     for body in bodies:
         assert str(USER_ID) not in str(body)
         assert str(SESSION_ID) not in str(body)
+
+
+@pytest.mark.parametrize("missing", ["access_codec", "principal_loader"])
+async def test_an_app_wired_without_the_codec_or_loader_fails_loudly_not_as_401(
+    missing: str,
+) -> None:
+    keys = _keys()
+    app = _build_app(keys, RecordingLoader(accept=True))
+    delattr(app.state, missing)
+    transport = httpx.ASGITransport(app=app, raise_app_exceptions=True)
+
+    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+        with pytest.raises(RuntimeError, match="principal_loader are required"):
+            await client.get("/me", headers=_cookie(_token(keys)))

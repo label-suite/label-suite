@@ -284,3 +284,14 @@ async def test_logout_of_an_already_ended_session_records_nothing(db: AsyncSessi
     (row,) = await sessions_of(db, user.id)
     assert row.revoked_at == NOW + timedelta(minutes=1)
     assert row.logged_out_at is None
+
+
+async def test_logout_of_an_expired_session_records_no_logout(db: AsyncSession) -> None:
+    user = await add_user(db)
+    raw, _ = await _signed_in(db, user)
+
+    await _service(db).logout(raw, NOW + timedelta(days=8))
+
+    (row,) = await sessions_of(db, user.id)
+    assert row.revoked_at is None
+    assert row.logged_out_at is None
