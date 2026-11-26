@@ -334,13 +334,7 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 
 查過的範圍：`trendlink` 組織 24 個 repo 的 tree（`truncated: false` 已確認）、`singyichen` 的全部 repo、`trendlink/lexpayroll`（**空 repo**，它宣告的子 repo `lexpayroll-api`／`lexpayroll-web` 在 `trendlink` 下是 404）、組織內以 `starter` 搜尋 repo 名稱（0 筆）、以及本機 `find ~`（只有 `whest-starterkit`，那是科學計算起始包，[agent-rules.mdx](agent-rules.mdx) 已排除）。
 
-所以這一類的結論是「存在但這個 loop 讀不到」，而且該 issue 已經規定「交付物不得依賴其他開發者擁有這些目錄」。要納入對照需要維護者把那幾份檔案貼進 Issue 或放進本 repo，見 [§待決](#待決)。
-
-## 待決
-
-| # | 問題 | 卡住什麼 | 誰決定 |
-| :--- | :--- | :--- | :--- |
-| 1 | starter-kit 的 `hooks/` 六份腳本與 `settings-snippet.json` 要不要納入來源對照 | 它們在維護者本機，這個 loop 讀不到；要先貼進 Issue 或放進本 repo | 維護者 |
+所以這一類的結論是「存在但這個 loop 讀不到」，而且該 issue 已經規定「交付物不得依賴其他開發者擁有這些目錄」。starter-kit 不納入來源對照。
 
 ## 決策紀錄
 
@@ -357,3 +351,4 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 | 2026-11-19 | 三層分工、覆蓋率政策、前端測試位置與正式 E2E 位置的理由移到 [ADR-007](../adr/007-testing-strategy.mdx)，T1 與 T10 只留做法並連過去 | —（理由原本散在 T10 的覆蓋率導言與附錄的不採用表） | [#453](https://github.com/label-suite/label-suite/issues/453) |
 | 2026-11-22 | T9 七項 gate 中六項由 CI 建成；授權與答案隔離回歸、本機 hook 與 T10 的關鍵路徑 90% 分支覆蓋尚未建，歸屬仍在 #111 | 「七項的實作全歸 #111」 | [#506](https://github.com/label-suite/label-suite/issues/506)、[#111](https://github.com/label-suite/label-suite/issues/111) |
 | 2026-11-25 | T4、T6 的檢查方式由「待建置」改成實際指令：CI `semgrep` job 的測試替身邊界檢查、harness 組裝比對與 `nosemgrep` 例外格式檢查；T4 的適用路徑補 `conftest.py`、`probe.py`；T6 的前端維持「待建置」，三種擋不住的寫法寫進文件，不另開 issue | T4「harness 與 production 同構」與 T6 的檢查方式原本都標「待建置」 | [#562](https://github.com/label-suite/label-suite/issues/562) |
+| 2026-11-26 | starter-kit 的 `hooks/` 六份腳本與 `settings-snippet.json` 不納入來源對照：它是維護者本機的參考資料，不在 repo 裡，也無法重現 | 原 §待決 第 1 列「要不要納入來源對照」 | [#689](https://github.com/label-suite/label-suite/issues/689) |
