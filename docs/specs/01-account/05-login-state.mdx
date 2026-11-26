@@ -456,7 +456,8 @@ import Spec0105LoginStateFlow from '@notes/components/spec-01-05-login-state-flo
 | 重試仍失敗就帶回登入頁 | 重試之後仍然不通 | 再延續一次仍失敗 | 被帶回登入頁，沒有繼續重試 |
 | 同一次延續用第三次就不給 | 同一次延續已經被用過兩次 | 第三次使用它 | 不給新的登入狀態，也沒有任何其他裝置被踢掉 |
 | 疑似被盜用時所有裝置一起登出 | 同一次延續已過寬限期 | 它又被使用一次 | 該使用者所有裝置的登入狀態全部失效 |
-| 英文介面的被動登出顯示英文那句 | <mark>使用者的介面語言是英文，登入狀態因為絕對上限到了而結束</mark><sup>[#719](https://github.com/label-suite/label-suite/issues/719)</sup> | <mark>使用者回到登入頁</mark><sup>[#719](https://github.com/label-suite/label-suite/issues/719)</sup> | <mark>顯示 `Your session has expired. Please sign in again.`；憑證不再有效時顯示 `Authentication failed. Please sign in again.`</mark><sup>[#719](https://github.com/label-suite/label-suite/issues/719)</sup> |
+| 英文介面的登入已過期顯示英文那句 | <mark>使用者的介面語言是英文，登入狀態因為絕對上限到了而結束</mark><sup>[#719](https://github.com/label-suite/label-suite/issues/719)</sup> | <mark>使用者回到登入頁</mark><sup>[#719](https://github.com/label-suite/label-suite/issues/719)</sup> | <mark>顯示 `Your session has expired. Please sign in again.`</mark><sup>[#719](https://github.com/label-suite/label-suite/issues/719)</sup> |
+| 英文介面的驗證失敗顯示英文那句 | <mark>使用者的介面語言是英文，登入狀態因為憑證不再有效而結束</mark><sup>[#719](https://github.com/label-suite/label-suite/issues/719)</sup> | <mark>使用者回到登入頁</mark><sup>[#719](https://github.com/label-suite/label-suite/issues/719)</sup> | <mark>顯示 `Authentication failed. Please sign in again.`</mark><sup>[#719](https://github.com/label-suite/label-suite/issues/719)</sup> |
 | 安全撤銷的登入狀態沒有寬限資格 | 一段登入狀態是因為登出或安全事件而失效 | 再次使用它 | 直接拒絕，不會因此把所有裝置一起登出 |
 | 不能通行的登入狀態不說明原因 | 一段登入狀態不存在、已失效，或屬於另一個帳號 | 拿它去操作 | 被拒絕，訊息裡沒有它存不存在、屬於誰或該帳號的任何資訊 |
 | 大小寫不同的同一信箱視為同一個帳號 | 平台已有 `user@example.com` | **管理員**要用 `User@Example.com` 邀請 | 擋下，顯示這個 Email 已被使用 |
@@ -662,7 +663,7 @@ import Spec0105LoginStateFlow from '@notes/components/spec-01-05-login-state-flo
 
 | Issue | 日期 | 變更章節 | 原本 | 修改後 | 對應決議 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| [#719](https://github.com/label-suite/label-suite/issues/719) | 2026-11-26 | 頁首、§規格 › 四種改動讓所有裝置重新登入（連結 Google 帳號那一列）、§規格 › 不能通行的登入狀態不說明原因（新增第 4 條）、§驗收標準、§已確認決議 新增 Q19；#705 的標示清掉，內容不變 | 連結 Google 帳號只寫由 01-04 第五個區塊擁有；被動登出的兩句只有中文 | 加上「在登入頁用 Google 登入而自動連結既有帳號時也算這一種事件」；新增兩句的英文（擬稿）與一條 Scenario | Q19（維護者裁定 2026-11-26；自動連結見 [規格 01-01](./01-login.mdx#已確認決議) Q11） |
+| [#719](https://github.com/label-suite/label-suite/issues/719) | 2026-11-26 | 頁首、§規格 › 四種改動讓所有裝置重新登入（連結 Google 帳號那一列）、§規格 › 不能通行的登入狀態不說明原因（新增第 4 條）、§驗收標準、§已確認決議 新增 Q19；#705 的標示清掉，內容不變 | 連結 Google 帳號只寫由 01-04 第五個區塊擁有；被動登出的兩句只有中文 | 加上「在登入頁用 Google 登入而自動連結既有帳號時也算這一種事件」；新增兩句的英文（擬稿）與兩條 Scenario | Q19（維護者裁定 2026-11-26；自動連結見 [規格 01-01](./01-login.mdx#已確認決議) Q11） |
 | [#705](https://github.com/label-suite/label-suite/issues/705) | 2026-11-26 | 頁首、§規格 › 沒有本地密碼的帳號第 1 條、§驗收標準（沒有本地密碼的人只能用 Google）、§已確認決議 Q16 的理由與新增 Q18（含「沒有對應帳號」的定義） | 第 1 條寫「用 Google 帳號註冊或登入進來的人」，其餘兩處也說「用 Google 註冊」，暗示 Google 能建立新帳號；#196 的標示未清 | 第 1 條改成「連結了 Google 帳號的人」，並寫明 Google 只登入或綁定既有帳號；Scenario 的前提與 Q16 的理由同步改。#196 的標示清掉，內容不變 | Q18（維護者裁定 2026-11-26） |
 | [#683](https://github.com/label-suite/label-suite/issues/683) | 2026-11-26 | §Email 的識別規則（表格註冊那一列）、§邊界情況與§驗收標準各一處 | 註冊一律顯示「驗證信已寄出」，不分部署 | 加上「這個部署有設定寄信服務時」 | 無新決議（見 [規格 01-02](./02-register.mdx#已確認決議) Q10） |
 | [#196](https://github.com/label-suite/label-suite/issues/196) | 2026-11-26 | §規格 › 一次登入是一段登入狀態與新增的「登入狀態紀錄的保留與到期清理」、§資料欄位、§卡控機制、§邊界情況、§驗收標準、§已確認決議 Q6 與新增 Q17、§附錄 FR-001 列 | 紀錄最短保留一年，最長期限未定，並附一則非規範的指路說明紀錄被清掉時耗時顯示什麼。 | 最長保留 13 個月（從登入狀態結束起算）；到期沒被引用的整筆清除，被引用的只清登入來源資訊並保留開始時間、登出時間、這段登入狀態屬於哪個帳號與是否已失效；不新增「紀錄已清除」狀態；清除每天一次，最多多留一天；§資料欄位 新增「登入來源資訊」。刪掉那則指路說明，改由 04 兩頁各自說明。Q6 保留題號並標註被 Q17 取代。 | Q17（維護者裁定 2026-11-26） |
