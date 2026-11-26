@@ -13,9 +13,11 @@
   "sections": {
     "button": "Button",
     "input": "Input",
+    "label": "Label",
     "badge": "Badge",
     "alert": "Alert",
     "card": "Card",
+    "separator": "Separator",
     "states": "Skeleton · Empty",
     "tokens": "Token 對照"
   },
@@ -35,6 +37,11 @@
     "placeholder": "輸入文字",
     "error": "這一欄的格式不正確",
     "disabledValue": "不能編輯"
+  },
+  "label": {
+    "meta": "以 htmlFor 關聯欄位",
+    "field": "電子郵件",
+    "placeholder": "name@example.com"
   },
   "alert": {
     "sample": "{{variant}}：{{message}}",

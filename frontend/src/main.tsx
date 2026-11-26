@@ -14,8 +14,8 @@ import { initI18n } from "@/lib/i18n";
 
 // Fail at start-up, before anything renders, when VITE_API_BASE_URL is invalid.
 readApiConfig();
-// The interface language is decided once from the browser (design D7).
-initI18n(navigator.language);
+// The interface language is the remembered choice, or zh-TW (login-auth-guard D8).
+initI18n();
 
 const container = document.getElementById("root");
 if (container === null) {

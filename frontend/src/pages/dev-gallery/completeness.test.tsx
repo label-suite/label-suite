@@ -14,6 +14,7 @@ import { describe, expect, it } from "vitest";
 import { alertVariantValues } from "@/components/ui/alert";
 import { badgeVariantValues } from "@/components/ui/badge";
 import { buttonSizeValues, buttonVariantValues } from "@/components/ui/button";
+import { separatorOrientationValues } from "@/components/ui/separator";
 
 import { DevGalleryPage } from "./index";
 import {
@@ -21,6 +22,7 @@ import {
   cardPartValues,
   emptySampleValues,
   inputStateValues,
+  labelSampleValues,
   skeletonSampleValues,
   variantCatalog,
 } from "./variant-catalog";
@@ -32,9 +34,11 @@ import {
 const PRIMITIVE_SECTIONS: Record<string, string> = {
   "button.tsx": "button",
   "input.tsx": "input",
+  "label.tsx": "label",
   "badge.tsx": "badge",
   "alert.tsx": "alert",
   "card.tsx": "card",
+  "separator.tsx": "separator",
   "skeleton.tsx": "states",
   "empty.tsx": "states",
 };
@@ -69,9 +73,11 @@ const DECLARED: Declared[] = [
   { component: "button", axis: "size", values: buttonSizeValues },
   { component: "button", axis: "state", values: buttonStateValues },
   { component: "input", axis: "state", values: inputStateValues },
+  { component: "label", axis: "sample", values: labelSampleValues },
   { component: "badge", axis: "variant", values: badgeVariantValues },
   { component: "alert", axis: "variant", values: alertVariantValues },
   { component: "card", axis: "part", values: cardPartValues },
+  { component: "separator", axis: "orientation", values: separatorOrientationValues },
   { component: "skeleton", axis: "sample", values: skeletonSampleValues },
   { component: "empty", axis: "sample", values: emptySampleValues },
 ];
@@ -118,9 +124,11 @@ describe("variant catalog (layer 1)", () => {
     ["button size", variantCatalog.button.size, buttonSizeValues],
     ["button state", variantCatalog.button.state, buttonStateValues],
     ["input state", variantCatalog.input.state, inputStateValues],
+    ["label sample", variantCatalog.label.sample, labelSampleValues],
     ["badge variant", variantCatalog.badge.variant, badgeVariantValues],
     ["alert variant", variantCatalog.alert.variant, alertVariantValues],
     ["card part", variantCatalog.card.part, cardPartValues],
+    ["separator orientation", variantCatalog.separator.orientation, separatorOrientationValues],
     ["skeleton sample", variantCatalog.skeleton.sample, skeletonSampleValues],
     ["empty sample", variantCatalog.empty.sample, emptySampleValues],
   ] as const)("has exactly the declared %s values", (_label, demos, values) => {
@@ -154,6 +162,19 @@ describe("DevGalleryPage completeness (layer 2)", () => {
         new RegExp(`^${value}：`),
       );
     }
+    const labelSample = page.querySelector<HTMLElement>(itemSelector("label", "sample", "field"));
+    expect(labelSample).not.toBeNull();
+    if (labelSample !== null) {
+      expect(within(labelSample).getByRole("textbox", { name: "電子郵件" })).toBeInTheDocument();
+    }
+    for (const value of separatorOrientationValues) {
+      const sample = page.querySelector(itemSelector("separator", "orientation", value));
+      expect(sample).toHaveTextContent(value);
+      expect(sample?.querySelector(`[data-slot="separator"]`)).toHaveAttribute(
+        "data-orientation",
+        value,
+      );
+    }
     const inputNames = { default: "預設", invalid: "驗證錯誤", disabled: "停用" };
     for (const value of inputStateValues) {
       const item = page.querySelector<HTMLElement>(itemSelector("input", "state", value));
@@ -169,19 +190,30 @@ describe("DevGalleryPage completeness (layer 2)", () => {
     const counts = {
       Button: "variant × 6 · size × 3 · 狀態 × 2",
       Input: "狀態 × 3",
-      Badge: "variant × 5",
+      Badge: "variant × 6",
       Alert: "variant × 4",
       Card: "header · content · footer",
+      Separator: "horizontal · vertical",
     };
     for (const [section, count] of Object.entries(counts)) {
       expect(within(screen.getByRole("region", { name: section })).getByText(count)).toBeVisible();
     }
   });
 
-  it("names each of the seven sections with an h2, in order", () => {
+  it("names each of the nine sections with an h2, in order", () => {
     renderGallery();
 
-    const titles = ["Button", "Input", "Badge", "Alert", "Card", "Skeleton · Empty", "Token 對照"];
+    const titles = [
+      "Button",
+      "Input",
+      "Label",
+      "Badge",
+      "Alert",
+      "Card",
+      "Separator",
+      "Skeleton · Empty",
+      "Token 對照",
+    ];
     expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual(titles);
     for (const title of titles) {
       const region = screen.getByRole("region", { name: title });

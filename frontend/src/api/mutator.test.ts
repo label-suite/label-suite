@@ -17,7 +17,7 @@ import { server } from "@/test/msw-server";
 
 import { ApiError, isApiError } from "./api-error";
 import type { HealthDataResponse } from "./generated/label-suite.schemas";
-import { apiFetch, buildRequestUrl, type RequestConfig } from "./mutator";
+import { apiFetch, buildRequestUrl, readCsrfCookie, type RequestConfig } from "./mutator";
 
 const HEALTH_REQUEST: RequestConfig = { url: "/api/v1/health", method: "GET" };
 
@@ -110,6 +110,7 @@ describe("apiFetch request", () => {
     expect(request?.headers.get("Accept-Language")).toBe("zh-TW");
     expect(request?.headers.has("Content-Type")).toBe(false);
     expect(request?.headers.has("X-Correlation-ID")).toBe(false);
+    expect(request?.headers.has("X-CSRF-Token")).toBe(false);
   });
 
   it("sends English as the request language when the interface is in English", async () => {
@@ -136,6 +137,71 @@ describe("apiFetch request", () => {
 
     expect(contentType).toBe("application/json");
     expect(body).toBe('{"name":"a"}');
+  });
+});
+
+describe("readCsrfCookie", () => {
+  it("returns the value of __Host-ls_csrf among other cookies", () => {
+    expect(readCsrfCookie("theme=dark; __Host-ls_csrf=abc123; other=1")).toBe("abc123");
+  });
+
+  it("returns null when there is no CSRF cookie", () => {
+    expect(readCsrfCookie("theme=dark")).toBeNull();
+    expect(readCsrfCookie("")).toBeNull();
+  });
+
+  it("does not take a cookie whose name only ends with the CSRF name", () => {
+    expect(readCsrfCookie("x__Host-ls_csrf=evil")).toBeNull();
+  });
+
+  it("returns null for an empty CSRF cookie", () => {
+    expect(readCsrfCookie("__Host-ls_csrf=")).toBeNull();
+  });
+});
+
+describe("apiFetch CSRF header", () => {
+  /** Makes document.cookie read as `cookies` for this test. */
+  function withCookies(cookies: string): void {
+    vi.spyOn(document, "cookie", "get").mockReturnValue(cookies);
+  }
+
+  /** Sends `method` to an echo endpoint and returns the X-CSRF-Token it carried. */
+  async function csrfHeaderOf(method: "POST" | "PUT" | "PATCH" | "DELETE"): Promise<string | null> {
+    let header: string | null = "not received";
+    const url = `${TEST_API_BASE_URL}/api/v1/echo`;
+    const resolver = ({ request }: { request: Request }) => {
+      header = request.headers.get("X-CSRF-Token");
+      return new HttpResponse(null, { status: 204 });
+    };
+    server.use(http.post(url, resolver), http.put(url, resolver), http.patch(url, resolver));
+    server.use(http.delete(url, resolver));
+
+    await apiFetch<undefined>({ url: "/api/v1/echo", method });
+    return header;
+  }
+
+  it.each(["POST", "PUT", "PATCH", "DELETE"] as const)(
+    "sends the CSRF cookie's value with %s",
+    async (method) => {
+      withCookies("__Host-ls_csrf=abc123");
+
+      expect(await csrfHeaderOf(method)).toBe("abc123");
+    },
+  );
+
+  it("sends no CSRF header when the cookie is absent", async () => {
+    withCookies("theme=dark");
+
+    expect(await csrfHeaderOf("POST")).toBeNull();
+  });
+
+  it("sends no CSRF header with a GET even when the cookie is present", async () => {
+    withCookies("__Host-ls_csrf=abc123");
+    const capture = captureHealthRequest();
+
+    await apiFetch<HealthDataResponse>(HEALTH_REQUEST);
+
+    expect(capture.last()?.headers.has("X-CSRF-Token")).toBe(false);
   });
 });
 

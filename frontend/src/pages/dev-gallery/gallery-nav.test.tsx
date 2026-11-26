@@ -15,9 +15,11 @@ import { DevGalleryPage } from "./index";
 const LINKS = [
   ["Button", "#button"],
   ["Input", "#input"],
+  ["Label", "#label"],
   ["Badge", "#badge"],
   ["Alert", "#alert"],
   ["Card", "#card"],
+  ["Separator", "#separator"],
   ["Skeleton · Empty", "#states"],
   ["Token 對照", "#tokens"],
 ] as const;
@@ -55,7 +57,7 @@ afterEach(() => {
 });
 
 describe("gallery nav", () => {
-  it("is a nav named 元件目錄 with the eyebrow and seven section links", () => {
+  it("is a nav named 元件目錄 with the eyebrow and nine section links", () => {
     openAt("/dev/gallery");
 
     const nav = screen.getByRole("navigation", { name: "元件目錄" });

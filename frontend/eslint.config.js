@@ -194,6 +194,7 @@ export default defineConfig(
             "buttonVariants",
             "buttonVariantValues",
             "buttonSizeValues",
+            "separatorOrientationValues",
           ],
         },
       ],
