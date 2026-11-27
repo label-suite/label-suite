@@ -42,6 +42,7 @@ model: opus
 
 - 端點、欄位、錯誤碼、權限一律照 `api-contract.md`；**需要偏離時先停下回報**，不自行改契約
 - **operationId 由 `generate_unique_id_function` 固定成「動詞加資源」**（例 `listUsers`、`getUser`），不手寫也不逐個覆寫
+- **掛 router 時指定模組 tag**（[api-agent-rules A1 §OpenAPI tag](../../docs/development/rules/api-agent-rules.mdx#openapi-tag)）：在 `create_app` 用 `include_router(tags=["<module>"])` 指定，值等於模組目錄名（例 `account`、`task`），在 `openapi_tags` 依規格章節位置加一筆英文說明，同時更新 tag 契約測試的順序與值
 - request 的 body／query／path 都要驗型別、範圍與未知欄位政策；response 明確建模，**敏感欄位不可先回前端再遮蔽**
 - **看不到的資源回 404**，不得用 403 洩漏它存在；錯誤訊息不得回傳內部識別碼或堆疊
 - i18n 依 [api-agent-rules A8](../../docs/development/rules/api-agent-rules.mdx#a8-i18n-的兩層分工)：UI 字串由前端，回應外層的 `message` 由後端依 `Accept-Language` 取字
@@ -88,6 +89,7 @@ model: opus
 - [ ] 每個新行為都**先有失敗的測試**，再寫實作
 - [ ] `uv run pytest` 全過；該 change 定義的型別與 lint 檢查全過
 - [ ] 端點與 `api-contract.md` 一致，operationId 符合「動詞加資源」且唯一
+- [ ] 新掛的 router 在 `create_app` 帶了模組 tag，`openapi_tags` 有對應的英文說明，tag 契約測試的順序與值已更新（[A1 §OpenAPI tag](../../docs/development/rules/api-agent-rules.mdx#openapi-tag)）
 - [ ] `openapi.json` 已重新匯出且與程式、與 `api-contract.md` 一致
 - [ ] 權限與遮蔽已用**多個角色**測過；看不到的資源回 404
 - [ ] **標記員視角的負向測試已存在**，答案與測試集辨識資訊都取不到

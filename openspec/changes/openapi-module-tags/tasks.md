@@ -15,11 +15,11 @@
 
 每處只寫一句操作性的檢查項並連到 `docs/development/rules/api-agent-rules.mdx` A1，不重寫規則本文（Q1、design D4）；模組名舉例照 ADR-003 D14（P1）。
 
-- [ ] 3.1 `.claude/agents/backend-developer.md`：§API 與 OpenAPI 在 operationId 條目旁加「掛 router 時在 `create_app` 用 `include_router(tags=["<module>"])` 指定模組 tag，在 `openapi_tags` 依規格章節位置加一筆英文說明，同時更新 tag 契約測試的順序與值」，完成檢查清單加一項；驗證：以 `git diff -- .claude/agents/backend-developer.md` 檢視，插入點緊鄰既有的 operationId 條目與檢查項，兩處都連到 A1 的錨點 [@technical-writer]
-- [ ] 3.2 `.claude/agents/code-reviewer.md`：審查清單在 operationId 項旁加「每個 operation 恰好一個 tag，且 tag 名稱等於所屬模組目錄名」（名稱對錯靠審查，P7）；驗證：以 `git diff -- .claude/agents/code-reviewer.md` 檢視，插入點緊鄰 operationId 項，該項連到 A1 的錨點 [@technical-writer]
-- [ ] 3.3 `.claude/agents/sd.md`：api-contract 寫法在 operationId 條目旁加「每個端點標 tag（模組），值等於所屬 `backend/app/modules/` 目錄名」，自我檢查加一項；驗證：以 `git diff -- .claude/agents/sd.md` 檢視，兩處插入點緊鄰 operationId 條目與檢查項，都連到 A1 的錨點 [@technical-writer]
-- [ ] 3.4 `openspec/config.yaml` 的 `rules.api-contract` 加一條「端點總覽要有模組（tag）欄，值等於所屬模組目錄名，規則見 api-agent-rules A1」；`openspec/schemas/label-suite-sdd/templates/api-contract.md` 端點總覽表加「模組（tag）」欄、每個端點段落加「模組（tag）」一行；`openspec/schemas/label-suite-sdd/schema.yaml` 的 api-contract instruction 端點欄位清單加 tag（模組）（P2）；驗證：`pnpm exec openspec instructions api-contract --change openapi-module-tags --json` 的輸出含 tag（模組）欄與新規則，`pnpm check:specs` 通過 [@technical-writer]
-- [ ] 3.5 `.claude/agents/design-reviewer.md`、`.claude/skills/clarify/SKILL.md`、`.agents/skills/clarify/SKILL.md`：各自的 operationId 檢查項旁加「api-contract 每個端點都標了 tag，且等於所屬模組」；兩份 clarify 副本只在各自的 operationId 檢查項旁插入，不整份同步（design D4）；驗證：以 `git diff` 檢視三個檔案，各自只在 operationId 檢查項旁多一項，都連到 A1 的錨點 [@technical-writer]
+- [x] 3.1 `.claude/agents/backend-developer.md`：§API 與 OpenAPI 在 operationId 條目旁加「掛 router 時在 `create_app` 用 `include_router(tags=["<module>"])` 指定模組 tag，在 `openapi_tags` 依規格章節位置加一筆英文說明，同時更新 tag 契約測試的順序與值」，完成檢查清單加一項；驗證：以 `git diff -- .claude/agents/backend-developer.md` 檢視，插入點緊鄰既有的 operationId 條目與檢查項，兩處都連到 A1 的錨點 [@technical-writer]
+- [x] 3.2 `.claude/agents/code-reviewer.md`：審查清單在 operationId 項旁加「每個 operation 恰好一個 tag，且 tag 名稱等於所屬模組目錄名」（名稱對錯靠審查，P7）；驗證：以 `git diff -- .claude/agents/code-reviewer.md` 檢視，插入點緊鄰 operationId 項，該項連到 A1 的錨點 [@technical-writer]
+- [x] 3.3 `.claude/agents/sd.md`：api-contract 寫法在 operationId 條目旁加「每個端點標 tag（模組），值等於所屬 `backend/app/modules/` 目錄名」，自我檢查加一項；驗證：以 `git diff -- .claude/agents/sd.md` 檢視，兩處插入點緊鄰 operationId 條目與檢查項，都連到 A1 的錨點 [@technical-writer]
+- [x] 3.4 `openspec/config.yaml` 的 `rules.api-contract` 加一條「端點總覽要有模組（tag）欄，值等於所屬模組目錄名，規則見 api-agent-rules A1」；`openspec/schemas/label-suite-sdd/templates/api-contract.md` 端點總覽表加「模組（tag）」欄、每個端點段落加「模組（tag）」一行；`openspec/schemas/label-suite-sdd/schema.yaml` 的 api-contract instruction 端點欄位清單加 tag（模組）（P2）；驗證：`pnpm exec openspec instructions api-contract --change openapi-module-tags --json` 的輸出含 tag（模組）欄與新規則，`pnpm check:specs` 通過 [@technical-writer]
+- [x] 3.5 `.claude/agents/design-reviewer.md`、`.claude/skills/clarify/SKILL.md`、`.agents/skills/clarify/SKILL.md`：各自的 operationId 檢查項旁加「api-contract 每個端點都標了 tag，且等於所屬模組」；兩份 clarify 副本只在各自的 operationId 檢查項旁插入，不整份同步（design D4）；驗證：以 `git diff` 檢視三個檔案，各自只在 operationId 檢查項旁多一項，都連到 A1 的錨點 [@technical-writer]
 
 ## Workflow follow-up
 

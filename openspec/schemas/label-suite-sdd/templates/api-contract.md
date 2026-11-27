@@ -4,8 +4,8 @@
 
 ## 端點總覽
 
-| Method | Path | operationId | 角色 | 異動 |
-| :--- | :--- | :--- | :--- | :--- |
+| Method | Path | operationId | 模組（tag） | 角色 | 異動 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
 
 ## 常駐文件異動
 
@@ -19,6 +19,7 @@
 ## <operationId>
 
 - **Method / Path**：
+- **模組（tag）**：
 - **角色**：
 
 ### Request
