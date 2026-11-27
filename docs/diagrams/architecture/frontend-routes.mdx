@@ -52,7 +52,7 @@ change 的 `ui-design.md` 仍然寫這次頁面的元件樹、資料來源、畫
 | :--- | :--- | :--- | :--- |
 | `DevHealthPage` | `HealthStatusPanel`（`features/system-health/`） | `useGetHealth`（`getHealth`） | `systemHealth` |
 | `DevGalleryPage` | 無；直接列出 `components/ui/` 的原語 | 無，不送任何請求 | `devGallery` |
-| `LoginPage` | `LoginView`（`features/auth/`）：`AuthLayout`（頁首與 `LanguageToggle`）、`AuthCard`、`FormErrorBanner`、`GoogleSignIn`、`LoginForm`（含 `PasswordInput`）；送出與 Google 開始由 `useLoginController` 處理 | `useGetAuthOptions`（`getAuthOptions`）；請求函式 `createSession`、`getGoogleAuthorization`；登入成功後重查 `getCurrentSession` | `auth` |
+| `LoginPage` | `LoginView`（`features/auth/`）：`AuthLayout`（頁首；品牌標誌 `BrandMark` 與語言切換 `LanguageToggle` 取自 `components/`）、`AuthCard`、`FormErrorBanner`、`GoogleSignIn`、`LoginForm`（含 `PasswordInput`）；送出與 Google 開始由 `useLoginController` 處理 | `useGetAuthOptions`（`getAuthOptions`）；請求函式 `createSession`、`getGoogleAuthorization`；登入成功後重查 `getCurrentSession` | `auth` |
 | `GoogleCallbackPage` | `GoogleCallbackHandler`（`features/auth/`） | 請求函式 `createGoogleSession`；成功後重查 `getCurrentSession` | 無畫面文案 |
 | `DashboardPlaceholderPage` | `AuthLayout`、`SignedInCard`（含角色 `Badge` 與 `LogoutButton`）（`features/auth/`） | `getCurrentSession`（與守門共用同一份快取）、`useDeleteCurrentSession`（`deleteCurrentSession`） | `auth` |
 
@@ -87,7 +87,8 @@ frontend/
    ├─ app/                  router、providers、QueryClient
    ├─ pages/<page>/         頁面：組合功能元件與原語
    ├─ features/<feature>/   功能元件與它的狀態轉換
-   ├─ components/ui/        shadcn/ui 原語，匯出 variant 陣列
+   ├─ components/           跨 feature 共用的元件（品牌標誌、語言切換）
+   │  └─ ui/                shadcn/ui 原語，匯出 variant 陣列
    ├─ api/                  mutator.ts（唯一出口）、session-refresh.ts、ApiError、外層判定、config
    │  └─ generated/         Orval 產物，禁止手改
    ├─ lib/                  i18n、date（day.js 唯一入口）、abort、utils
@@ -99,6 +100,7 @@ frontend/
 | :--- | :--- | :--- |
 | `pages/` | 一條路由一個資料夾 | 被 `router.tsx` 掛上去 |
 | `features/` | 一個功能一個資料夾，對外只從 `index.ts` 匯出 | 會送請求，或有自己的狀態轉換 |
+| `components/`（`ui/` 以外） | 共用元件：用到它的產品畫面分屬一個以上 feature 的設計系統元件，不認識業務 | 依 `docs/development/rules/frontend-agent-rules.mdx` 的 F5，由 `scripts/check-component-reuse.mjs` 檢查 |
 | `components/ui/` | 沒有業務的原語 | 換一個頁面也照樣能用 |
 | `api/`、`lib/` | 全站共用的基礎建設 | 不 import `pages/`、`features/` |
 
@@ -204,4 +206,5 @@ frontend/
 | 2026-11-23 | 本文加一節前端骨架與已知限制，不另開文件（[§前端骨架](#前端骨架)） | — | [#546](https://github.com/label-suite/label-suite/issues/546) |
 | 2026-11-23 | 實作後由 `frontend-developer` 依程式校正本文，`code-reviewer` 再核對（[§誰改、什麼時候改](#誰改什麼時候改)） | — | [#546](https://github.com/label-suite/label-suite/issues/546#issuecomment-7100137950) |
 | 2026-11-26 | 加上登入頁、Google 回調、暫時落點與 `/` 的守門導向，取代開發模式 `/` 與其他路徑導向 `/dev/health`；骨架加上登入狀態查詢、single-flight 延續、CSRF 標頭與記住的介面語言（[§路由](#路由)、[§登入狀態與守門](#登入狀態與守門)） | 開發模式 `/` 與其他路徑導向 `/dev/health`；依 `navigator.language` 決定一次語言；已知限制的「登入與登入狀態的處理」 | [#719](https://github.com/label-suite/label-suite/issues/719) |
+| 2026-11-27 | 品牌標誌與語言切換從 `features/auth/` 搬到 `components/`，目錄加上 `components/` 這一層放共用元件（[§目錄](#目錄)、[§頁面與功能元件](#頁面與功能元件)）；側欄用到之後兩者跨了帳號與登入後外殼兩個 feature | 兩者放在 `features/auth/` | [#720](https://github.com/label-suite/label-suite/issues/720) |
 | 2026-11-27 | 已知限制拿掉「CI 的前端檢查」一列：lint、型別、測試與建置由 CI 的 `frontend` 跑，契約漂移由 `api-contract` 跑，跑過前後端的 e2e 由 `e2e` 跑（[§已知限制](#已知限制)） | 已知限制的「CI 的前端檢查……目前只在本機跑」，追蹤於已關閉的 #506 | [#745](https://github.com/label-suite/label-suite/issues/745) |
