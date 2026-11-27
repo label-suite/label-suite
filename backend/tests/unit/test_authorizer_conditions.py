@@ -32,6 +32,7 @@ from app.core.db import get_db
 from app.core.errors import AppError, NotFoundError, register_exception_handlers
 from app.core.i18n import MessageCatalog
 from app.core.permissions import PermissionKey, TaskRole
+from tests.authz_probe import EDIT_HIDDEN_CONDITION, REFUSING_CONDITIONS
 from tests.support.authz import (
     FakePermissionMatrixProvider,
     FakeTaskMembershipReader,
@@ -93,26 +94,26 @@ def test_there_are_seven_condition_kinds_including_the_reserved_acting_role() ->
 @pytest.mark.parametrize(
     ("kind", "error"),
     [
-        ("task_ownership", NotFoundError()),
-        ("task_state", TaskStateConflictError()),
-        ("assignment", NotFoundError()),
-        ("reviewer_identity", NotFoundError()),
-        ("dataset_visibility", NotFoundError()),
-        ("acting_role", NotFoundError()),
+        ("task_ownership", NotFoundError),
+        ("task_state", TaskStateConflictError),
+        ("assignment", NotFoundError),
+        ("reviewer_identity", NotFoundError),
+        ("dataset_visibility", NotFoundError),
+        ("acting_role", NotFoundError),
     ],
 )
 async def test_a_refusing_condition_denies_even_when_the_cell_is_on(
-    kind: ConditionKind, error: AppError
+    kind: ConditionKind, error: type[AppError]
 ) -> None:
     principal, authorizer, _ = _member("project_leader")
     condition = RefusingCondition(kind, error)
 
-    with pytest.raises(type(error)) as raised:
+    with pytest.raises(error) as raised:
         await authorizer.authorize(
             principal, K.TASK_DETAIL_VIEW, DB, task_id=TASK_T, conditions=(condition,)
         )
 
-    assert raised.value is error
+    assert type(raised.value) is error
     assert len(condition.calls) == 1
 
 
@@ -142,7 +143,7 @@ async def test_all_conditions_passing_lets_the_operation_through_in_order() -> N
 async def test_the_first_refusing_condition_stops_the_rest() -> None:
     principal, authorizer, _ = _member("project_leader")
     refusing, later = (
-        RefusingCondition("assignment", NotFoundError()),
+        RefusingCondition("assignment", NotFoundError),
         PassingCondition("task_state"),
     )
 
@@ -155,7 +156,7 @@ async def test_the_first_refusing_condition_stops_the_rest() -> None:
 
 async def test_conditions_do_not_run_when_the_cell_is_off() -> None:
     principal, authorizer, _ = _member("reviewer")
-    condition = RefusingCondition("task_ownership", NotFoundError())
+    condition = RefusingCondition("task_ownership", NotFoundError)
 
     with pytest.raises(PermissionDeniedError):
         await authorizer.authorize(
@@ -184,12 +185,33 @@ async def test_check_conditions_rebuilds_the_context_from_a_grant() -> None:
     await authorizer.check_conditions(grant, (passing,), DB)
     with pytest.raises(NotFoundError):
         await authorizer.check_conditions(
-            grant, (RefusingCondition("assignment", NotFoundError()),), DB
+            grant, (RefusingCondition("assignment", NotFoundError),), DB
         )
 
     (context,) = passing.calls
     assert (context.principal, context.key, context.task_id) == (principal, grant.key, TASK_T)
     assert context.effective_roles == grant.effective_roles
+
+
+@pytest.mark.parametrize(
+    "condition",
+    [*REFUSING_CONDITIONS.values(), EDIT_HIDDEN_CONDITION],
+    ids=[*REFUSING_CONDITIONS, "edit-hidden"],
+)
+async def test_a_refusing_condition_raises_a_new_error_on_every_check(
+    condition: RefusingCondition,
+) -> None:
+    principal, authorizer, _ = _member("project_leader")
+    grant = await authorizer.authorize(principal, K.TASK_DETAIL_VIEW, DB, task_id=TASK_T)
+    raised: list[BaseException] = []
+
+    for _ in range(2):
+        with pytest.raises(AppError) as caught:
+            await authorizer.check_conditions(grant, (condition,), DB)
+        raised.append(caught.value)
+
+    assert raised[0] is not raised[1]
+    condition.calls.clear()
 
 
 # --- GroundTruthBarrier ---------------------------------------------------------------

@@ -3,8 +3,10 @@
 Covers spec ``database-migration``'s ADDED requirement for the two matrix tables, and
 the structure and constraints of spec ``role-permission-matrix``: row counts, no
 cross-layer row, the pending keys' rows, the fixed-cell CHECK and the single version
-row. Cell values are not copied here: ``test_permission_registry.py`` and
-``test_matrix_seed_parity.py`` check them against spec 06-02.
+row. The CHECK is tried on every cell the registry fixes and on every cell it does not,
+so a registry change without the matching CHECK change fails here. Cell values are not
+copied here: ``test_permission_registry.py`` and ``test_matrix_seed_parity.py`` check
+them against spec 06-02.
 
 The name check compares each tier against one fixed expected set, so a SQLite run and
 a PostgreSQL run that both pass have identical name sets. Every test that writes the
@@ -23,6 +25,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 from app.core.db import Base
+from app.core.permissions import PERMISSION_REGISTRY, applicable_cells
 from app.modules.account.models import User
 from app.modules.admin.models import AdminRolePermission, AdminRolePermissionVersion
 from tests.conftest import run_alembic
@@ -192,10 +195,13 @@ async def test_downgrade_to_account_revision_drops_only_the_matrix_tables(
     await account_db.commit()
 
     await run_alembic(matrix_db, "downgrade", ACCOUNT_REVISION)
-
-    async with matrix_db.connect() as conn:
-        tables = await conn.run_sync(_tables)
-        users = list((await conn.execute(select(User.id))).scalars())
+    try:
+        async with matrix_db.connect() as conn:
+            tables = await conn.run_sync(_tables)
+            users = list((await conn.execute(select(User.id))).scalars())
+    finally:
+        # matrix_db rewrites rows only, so this test brings the tables back itself.
+        await run_alembic(matrix_db, "upgrade", "head")
     assert tables.isdisjoint(MATRIX_TABLES)
     assert ACCOUNT_TABLES <= tables
     assert users == [user_id]
@@ -252,28 +258,44 @@ async def test_pending_keys_keep_their_applicable_rows(migrated_engine: AsyncEng
 # --- spec role-permission-matrix: fixed cells and the version row ------------
 
 
+FIXED_CELLS = [
+    (role, str(spec.key), value)
+    for spec in PERMISSION_REGISTRY.values()
+    for role, value in spec.fixed.items()
+]
+"""Every fixed platform cell in the registry, with its permanent value."""
+
+CHANGEABLE_CELLS = [
+    (cell.layer, cell.role_key, str(cell.key), cell.allowed)
+    for cell in applicable_cells()
+    if cell.role_key not in PERMISSION_REGISTRY[cell.key].fixed
+]
+"""Every applicable cell the registry does not fix, with its initial value."""
+
+
 @pytest.mark.parametrize(
-    ("role", "key", "value"),
-    [
-        ("user", "admin.role_settings.manage", True),
-        ("super_admin", "admin.user_management.manage", False),
-        ("user", "dashboard.view", False),
-    ],
-    ids=["member-admin-cell-on", "admin-admin-cell-off", "dashboard-off"],
+    ("role", "key", "value"), FIXED_CELLS, ids=[f"{role}-{key}" for role, key, _ in FIXED_CELLS]
 )
 async def test_fixed_cell_cannot_be_changed(
     matrix_db: AsyncEngine, role: str, key: str, value: bool
 ) -> None:
     with pytest.raises(IntegrityError):
-        await _set_cell(matrix_db, "system", role, key, value)
+        await _set_cell(matrix_db, "system", role, key, not value)
 
-    assert await _allowed(matrix_db, "system", role, key) is not value
+    assert await _allowed(matrix_db, "system", role, key) is value
 
 
-async def test_a_cell_that_is_not_fixed_can_be_changed(matrix_db: AsyncEngine) -> None:
-    await _set_cell(matrix_db, "system", "user", "task.create", False)
+@pytest.mark.parametrize(
+    ("layer", "role", "key", "initial"),
+    CHANGEABLE_CELLS,
+    ids=[f"{layer}-{role}-{key}" for layer, role, key, _ in CHANGEABLE_CELLS],
+)
+async def test_a_cell_that_is_not_fixed_can_be_changed(
+    matrix_db: AsyncEngine, layer: str, role: str, key: str, initial: bool
+) -> None:
+    await _set_cell(matrix_db, layer, role, key, not initial)
 
-    assert await _allowed(matrix_db, "system", "user", "task.create") is False
+    assert await _allowed(matrix_db, layer, role, key) is (not initial)
 
 
 async def test_a_second_version_row_is_rejected(matrix_db: AsyncEngine) -> None:

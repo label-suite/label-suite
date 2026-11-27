@@ -121,17 +121,17 @@ def answer_path(task_id: object) -> str:
 
 
 REFUSING_CONDITIONS: dict[ConditionKind, RefusingCondition] = {
-    "task_ownership": RefusingCondition("task_ownership", NotFoundError()),
-    "task_state": RefusingCondition("task_state", ProbeTaskStateError()),
-    "assignment": RefusingCondition("assignment", NotFoundError()),
-    "reviewer_identity": RefusingCondition("reviewer_identity", NotFoundError()),
-    "dataset_visibility": RefusingCondition("dataset_visibility", NotFoundError()),
-    "acting_role": RefusingCondition("acting_role", NotFoundError()),
+    "task_ownership": RefusingCondition("task_ownership", NotFoundError),
+    "task_state": RefusingCondition("task_state", ProbeTaskStateError),
+    "assignment": RefusingCondition("assignment", NotFoundError),
+    "reviewer_identity": RefusingCondition("reviewer_identity", NotFoundError),
+    "dataset_visibility": RefusingCondition("dataset_visibility", NotFoundError),
+    "acting_role": RefusingCondition("acting_role", NotFoundError),
 }
 """One refusing condition per kind except ``answer_isolation`` (the real barrier)."""
 
 PASSING_CONDITIONS = (PassingCondition("task_ownership"), PassingCondition("task_state"))
-EDIT_HIDDEN_CONDITION = RefusingCondition("task_ownership", NotFoundError())
+EDIT_HIDDEN_CONDITION = RefusingCondition("task_ownership", NotFoundError)
 """Declared by the ``task.detail.edit`` probe; must not run when the cell is off."""
 
 

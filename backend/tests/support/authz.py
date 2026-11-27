@@ -9,10 +9,10 @@ implementations; none of them replaces an object this project imports.
 - ``FakeTaskMembershipReader``: the active task roles per ``(task_id, user_id)``;
   anyone not listed has none, which is also how a disabled or invited member looks.
 - ``RefusingCondition`` and ``PassingCondition``: a step-4 condition of any kind that
-  always raises the given error, or always passes; both record their calls.
+  always raises a new instance of the given error, or always passes; both record their calls.
 """
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from uuid import UUID
 
@@ -100,22 +100,23 @@ class FakeTaskMembershipReader:
 
 @dataclass
 class RefusingCondition:
-    """A step-4 condition that always raises ``error``.
+    """A step-4 condition that always raises a new error built by ``error``.
 
     Attributes:
         kind: The condition kind it stands in for.
-        error: The error to raise, e.g. ``NotFoundError()`` for a hidden resource.
+        error: Builds the error to raise on each check, e.g. ``NotFoundError`` for a
+            hidden resource; a new instance every time, so no traceback is shared.
         calls: The context of every check.
     """
 
     kind: ConditionKind
-    error: AppError
+    error: Callable[[], AppError]
     calls: list[AccessContext] = field(default_factory=list)
 
     async def check(self, context: AccessContext, db: AsyncSession) -> None:
-        """Record the call and refuse."""
+        """Record the call and refuse with a new error."""
         self.calls.append(context)
-        raise self.error
+        raise self.error()
 
 
 @dataclass
