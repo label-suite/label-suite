@@ -128,6 +128,11 @@
 - **WHEN** 任務 T 的專案負責人把同一個操作的任務換成他不是成員的任務 U
 - **THEN** 對任務 T 的呼叫成功，對任務 U 的呼叫回 `404`、`code` 為 `"NOT_FOUND"`
 
+#### Scenario: 任務識別碼格式不對時當成找不到
+
+- **WHEN** 已登入的專案負責人以不是 UUID 的任務識別碼 `not-a-uuid` 呼叫需要 `task.detail.view` 的任務範圍操作
+- **THEN** 系統回覆 `404`、`code` 為 `"NOT_FOUND"`，不是 `422`
+
 ### Requirement: 任務頁面取生效角色的允許聯集
 
 一人在同一任務有多個生效的任務角色、操作沒有指定作用角色時，系統 SHALL 以這些角色的允許聯集判斷：任一生效角色的格為開即通過第 3 段；任一生效角色的格缺列即拒絕。聯集只放寬「有沒有這個權限」，附加條件仍要逐一通過。
@@ -152,13 +157,13 @@
 
 #### Scenario: 工作區只依作用角色
 
-- **WHEN** 某人在任務 T 同時是專案負責人與審核員，以作用角色 `reviewer` 呼叫需要 `annotation.annotate` 的任務 T 範圍操作（審核員那一格關、專案負責人那一格也關），以及以作用角色 `reviewer` 呼叫需要 `annotation.review` 的操作（審核員那一格開）
-- **THEN** 前者回 `403`、`code` 為 `"PERMISSION_DENIED"`；後者成功
+- **WHEN** 某人在任務 T 同時是專案負責人與審核員，以作用角色 `reviewer` 呼叫需要 `task.detail.edit` 的任務 T 範圍操作（專案負責人那一格開、審核員那一格關），以及以作用角色 `reviewer` 呼叫需要 `annotation.review` 的操作（審核員那一格開）
+- **THEN** 前者回 `403`、`code` 為 `"PERMISSION_DENIED"`，沒有因為專案負責人那一格為開而放寬；後者成功
 
 #### Scenario: 作用角色比聯集嚴格
 
-- **WHEN** 同一人以作用角色 `reviewer` 呼叫需要 `task.detail.edit` 的任務 T 範圍操作（專案負責人那一格開、審核員那一格關）
-- **THEN** 系統回覆 `403`、`code` 為 `"PERMISSION_DENIED"`
+- **WHEN** 同一人不指定作用角色呼叫需要 `task.detail.edit` 的任務 T 範圍操作，再以作用角色 `reviewer` 呼叫同一個操作
+- **THEN** 不指定時取聯集而成功；指定 `reviewer` 時回 `403`、`code` 為 `"PERMISSION_DENIED"`
 
 #### Scenario: 網址參數不能建立身分
 
@@ -194,9 +199,9 @@
 
 #### Scenario: 標準答案不經任何角色放行
 
-- **WHEN** 系統管理員、任務 T 的專案負責人、審核員與標記員，在所需的格全部為開時，各呼叫一個宣告會讀任務 T 標準答案的操作
-- **THEN** 四次都回 `404`、`code` 為 `"NOT_FOUND"`，`message` 與呼叫一個不存在的資源時相同
-- **AND** 四個回應 body 的 `data` 都為 `null`，序列化後不含任何標準答案的值，也不含 `answer`、`groundTruth`、`isTestItem` 字樣
+- **WHEN** 四位在任務 T 都有生效成員身分的呼叫者——同時是任務 T 專案負責人的系統管理員、專案負責人、審核員與標記員（標記員 × `task.detail.view` 的格先改為開，四人的生效角色對 `task.detail.view` 都為開）——各呼叫一個需要 `task.detail.view`、宣告會讀任務 T 標準答案的任務 T 範圍操作，再各呼叫一個需要同一個鍵、但沒有宣告讀標準答案的任務 T 範圍操作
+- **THEN** 後者四次都成功，表示四人都通過了成員身分與矩陣格兩段；前者四次都回 `404`、`code` 為 `"NOT_FOUND"`，`message` 與呼叫一個不存在的資源時相同，這個 `404` 來自答案隔離
+- **AND** 前者四個回應 body 的 `data` 都為 `null`，序列化後不含任何標準答案的值，也不含 `answer`、`groundTruth`、`isTestItem` 字樣
 
 ### Requirement: 授權拒絕的回應不外露內部資訊
 
@@ -207,8 +212,8 @@
 #### Scenario: 權限不足的錯誤外層
 
 - **WHEN** 平台成員以 `Accept-Language: zh-TW` 呼叫需要 `admin.user_management.view` 的操作
-- **THEN** 系統回覆 `403`，body 的 `success` 為 `false`、`code` 為 `"PERMISSION_DENIED"`、`message` 為 `"你沒有執行這個操作的權限"`、`data` 為 `null`、`errors` 為 `null`
-- **AND** body 序列化後不含 `admin.user_management.view`、`user`、`super_admin` 或任何版本號，回應沒有 `Set-Cookie` 標頭
+- **THEN** 系統回覆 `403`，body 的頂層欄位恰好是 `success`、`code`、`message`、`data`、`timestamp`、`traceId`、`errors` 七個；`success` 為 `false`、`code` 為 `"PERMISSION_DENIED"`、`message` 等於 `"你沒有執行這個操作的權限"`、`data` 為 `null`、`errors` 為 `null`
+- **AND** body 序列化後不含 `admin.user_management.view` 與 `super_admin`，回應沒有 `Set-Cookie` 標頭
 
 #### Scenario: 權限不足的英文訊息
 
@@ -217,5 +222,5 @@
 
 #### Scenario: 每一種第 3 段拒絕都是同一個回應
 
-- **WHEN** 平台成員分別呼叫需要認不得的鍵、待啟用的鍵、錯層的鍵、格為關的鍵的操作
+- **WHEN** 平台成員分別呼叫需要認不得的鍵、待啟用的鍵、錯層的鍵（任務層鍵 `task.detail.view` 用在不屬於任何任務的操作）、格為關的鍵的操作
 - **THEN** 四個回應的狀態、`code` 與 `message` 都相同

@@ -68,33 +68,39 @@
 
 本次組裝點不放 `app.state.task_membership_reader`。`require_permission` 遇到任務範圍的操作而 `app.state` 沒有 reader 時丟 `RuntimeError`，經未處理例外轉成 `500 INTERNAL_ERROR`，與 `principal_loader` 沒接上時同一種處理；不提供「永遠回空集合」的預設實作，以免接線錯誤被當成 `404` 掩蓋。測試以 `app.state` 放入 `FakeTaskMembershipReader` 驗任務範圍的行為，另有一個測試驗沒接上時是 `500`。
 
-### D8 任務 ID 與作用角色只從路徑參數取（P13 的 N4）
+### D8 任務 ID 與作用角色只從路徑參數取，型別不對回 404（P13 的 N4）
 
-`require_permission(key, task_id_param=..., acting_role_param=...)` 由端點宣告參數名，只讀 `request.path_params`，不讀 query 或 body（06-02 §一人多任務角色 第 6 條）。端點若以型別宣告路徑參數（例 `UUID`），型別錯時由 FastAPI 在依賴之前回 `422`；`require_permission` 本身拿到無法轉成 UUID 或不是三種任務角色之一的值時，當成沒有身分回 `404`，作為不洩漏存在的防線。第一個任務層端點要哪一種對外行為（`422` 或 `404`），在那張卡的 `api-contract.md` 定（N4）；本次只以探測路由測依賴本身的 `404`。
+`require_permission(key, task_id_param=..., acting_role_param=...)` 由端點宣告參數名，只讀 `request.path_params`，不讀 query 或 body（06-02 §一人多任務角色 第 6 條）。路徑上的任務 ID 不是合法 UUID、或作用角色不是三種任務角色之一時，`require_permission` 當成沒有生效身分，回 `404 NOT_FOUND`。
+
+- 依據：FastAPI 0.165（`backend/uv.lock`）的 `solve_dependencies` 先執行子依賴、再驗證端點自己宣告的路徑參數，所以即使端點把 `taskId` 宣告成 `UUID`，型別錯的值也會先到 `require_permission`，對外結果就是 `404`，不會是 `422`
+- 理由：與 S10「看不到的資源回 404」一致，也與「沒有成員身分」同一個回應，呼叫者無法從 `404` 與 `422` 的差別分辨格式與存在；所以這不留給後續的卡決定
+- 驗證：探測路由宣告 `taskId: UUID`，integration 測試以 `not-a-uuid` 呼叫，斷言 `404 NOT_FOUND` 而不是 `422`（`specs/permission-authorization`「任務識別碼格式不對時當成找不到」）
 
 ### D9 測試的分層與檔案切分
 
 400 行上限下，測試依關注點切成下列檔案；每個檔都要在 400 行內：
 
-| 檔案                                                | 層          | 涵蓋                                                                                                                              |
-| :-------------------------------------------------- | :---------- | :-------------------------------------------------------------------------------------------------------------------------------- |
-| `tests/unit/test_permission_registry.py`            | unit        | 24 個鍵與層級、5 個待啟用、62 個適用格、初始值、固定格（`specs/role-permission-matrix` 的白名單與初始值，不需資料庫的部分）       |
-| `tests/unit/test_authorizer_platform.py`            | unit        | 3a–3d 平台層：認不得、待啟用、錯層、版本不存在、缺列、格為關、白名單外的列被忽略（以替身 provider）                               |
-| `tests/unit/test_authorizer_task.py`                | unit        | 2b：沒有身分、停用與邀請中（替身回空集合）、聯集、作用角色、作用角色不是他的、reader 沒接上                                       |
-| `tests/unit/test_authorizer_conditions.py`          | unit        | 第 4 段：每種 `ConditionKind` 的替身條件不通過各一個負向測試、全部通過放行、格為關時不執行條件、`GroundTruthBarrier`              |
-| `tests/integration/test_admin_permission_schema.py` | integration | 兩張表、62 列、約束名稱、固定格與版本的 CHECK、升降再升（`specs/database-migration`、`specs/role-permission-matrix`）             |
-| `tests/integration/test_matrix_seed_parity.py`      | integration | 升級後的 62 列與 `applicable_cells()` 逐格相同、版本為 1（D4 的一致性保證）                                                       |
-| `tests/integration/test_admin_matrix_provider.py`   | integration | `AdminPermissionMatrixProvider` 對真實資料庫：版本不存在、缺列、白名單外的列、改格後下一次讀到新值                                |
-| `tests/integration/test_authz_platform.py`          | integration | 平台層探測路由：各角色的放行與 `403`、錯誤外層的內容與語系、沒有 `Set-Cookie`、角色降級後下一次被拒、`api-envelope` 的新 Scenario |
-| `tests/integration/test_authz_task.py`              | integration | 任務範圍探測路由（`app.state` 放替身 reader）：`404` 與找不到同訊息、聯集、作用角色、資源條件、標準答案                           |
+| 檔案                                                | 層          | 涵蓋                                                                                                                                                                     |
+| :-------------------------------------------------- | :---------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tests/unit/test_permission_registry.py`            | unit        | 24 個鍵與層級、5 個待啟用、62 個適用格、初始值、固定格（`specs/role-permission-matrix` 的白名單與初始值，不需資料庫的部分）                                              |
+| `tests/unit/test_authorizer_platform.py`            | unit        | 3a–3d 平台層：認不得、待啟用、錯層、版本不存在、缺列、格為關、白名單外的列被忽略（以替身 provider）                                                                      |
+| `tests/unit/test_authorizer_task.py`                | unit        | 2b：沒有身分、停用與邀請中（替身回空集合）、聯集、作用角色、作用角色不是他的、reader 沒接上                                                                              |
+| `tests/unit/test_authorizer_conditions.py`          | unit        | 第 4 段：每種 `ConditionKind` 的替身條件不通過各一個負向測試、全部通過放行、格為關時不執行條件、`GroundTruthBarrier` 確實被呼叫且回 `404`                                |
+| `tests/integration/test_admin_permission_schema.py` | integration | 兩張表、列數、錯層列不存在、約束名稱、固定格與版本的 CHECK、升降再升（`specs/database-migration` 與 `specs/role-permission-matrix` 的結構與約束）；不重抄 06-02 的逐格值 |
+| `tests/integration/test_matrix_seed_parity.py`      | integration | 升級後的 62 列與 `applicable_cells()` 逐格相同、版本為 1（D4 的一致性保證）；逐格值的正確性由它與 `test_permission_registry.py` 兩處負責                                 |
+| `tests/integration/test_admin_matrix_provider.py`   | integration | `AdminPermissionMatrixProvider` 對真實資料庫：版本不存在、缺列、白名單外的列、改格後下一次讀到新值                                                                       |
+| `tests/integration/test_authz_platform.py`          | integration | 平台層探測路由：各角色的放行與 `403`、錯誤外層的內容與語系、沒有 `Set-Cookie`、角色降級後下一次被拒、`api-envelope` 的新 Scenario                                        |
+| `tests/integration/test_authz_task.py`              | integration | 任務範圍探測路由（`app.state` 放替身 reader）：`404` 與找不到同訊息、聯集、作用角色、資源條件、標準答案                                                                  |
 
-- 探測路由放新檔 `tests/authz_probe.py`，由 `tests/conftest.py` 與既有的 `probe_router` 一樣掛在 `/api/v1` 底下；不加進 `tests/probe.py`，讓兩個檔各自的用途單純
+- 探測路由寫在新檔 `tests/authz_probe.py` 的 `authz_probe_router`，由 `tests/probe.py` 以 `probe_router.include_router(authz_probe_router)` 併進既有的 `probe_router`；`tests/conftest.py` 的掛載與 `tests/integration/test_harness_parity.py` 的 `probe_paths()` 都只認 `probe_router`，所以不必改 parity 測試，探測路徑仍只經這一個 router 加進 harness
+- 矩陣狀態的隔離：PostgreSQL 的測試共用一個資料庫，`upgrade head` 不會重寫已存在的列，改過或刪過矩陣的測試會污染之後的測試（例：刪掉版本列後所有授權都變 `403`）。`tests/integration/conftest.py` 新增 `matrix_db` fixture，在測試前後都把兩張表重設成 62 個初始格與版本 `1`：做法是把遷移降回 `7bf0f909ce8f` 再升到最新，重跑系統管理組的 data migration；不用 `applicable_cells()` 寫回，因為 fixture 在群組 1 就要用，那時登錄表還不存在，而且這樣重設出來的正是部署時的初始矩陣。降回只刪兩張矩陣表，帳號組的表與資料不受影響；任何會改、刪或新增矩陣列的測試（1.1 的 CHECK 測試、3.1 的 provider 測試、3.2 的整合測試）都要用它
+- 與規格 06-02 同名的 Scenario（「錯層的格不儲存」「適用格的總數」「待啟用的鍵仍有適用列」「預設矩陣的平台層初始值」「預設矩陣的任務層初始值」）在本次只驗儲存與資料這一側；畫面上的呈現由 #729 驗。固定格的四條 Scenario 刻意不用 06-02 的名稱，因為那幾列的 When 是畫面操作
 - 替身放 `tests/support/authz.py`：`FakeTaskMembershipReader`、`FakePermissionMatrixProvider`、`RefusingCondition(kind, error)`、`PassingCondition(kind)`
 - 測試替身邊界檢查（`test-boundary-checks`）不受影響：替身是實作 Protocol 的新類別，經 `app.state` 注入，與 `principal_loader` 的測試做法相同，不替換本專案匯入的物件
 
 ### D10 覆蓋率關鍵路徑與架構待決結案
 
-- `critical-coverage.json` 的 `authorization.backend` 加 `backend/app/core/authz.py`、`backend/app/core/permissions.py`、`backend/app/modules/admin/service.py`（system-design §權限檢查點 的覆蓋率門檻路徑；testing-agent-rules T10）；前端不變
+- `critical-coverage.json` 的 `authorization.backend` 加 `backend/app/core/authz.py`、`backend/app/core/permissions.py`、`backend/app/modules/admin/service.py`（system-design §權限檢查點 的覆蓋率門檻路徑；testing-agent-rules T10）；前端不變。`$comment` 改寫：答案隔離在授權層的落點（`GroundTruthBarrier`）已隨 `authz.py` 計入「授權與權限檢查」，答案隔離作為獨立一項、評分與 IAA 仍未建（#111）
 - `docs/development/architecture.mdx` §待決 第 2 列移除，在 §決策紀錄 加一列：第 2 步任務成員身分與第 4 步附加條件由持有資料的模組實作 `app/core/` 定義的 Protocol 提供，指向 #755；§授權四步 正文若寫著該項未決，同步改成現況（照常駐文件寫法約束：正文不寫日期與 issue 編號）
 
 ### D11 常駐文件依實作校正
