@@ -4,7 +4,7 @@ description: 'main 上後端現在的樣子：每個業務模組的分層、Clas
 category: '架構'
 tags: [架構, 後端, 模組, 基礎建設]
 createdAt: '2026-11-23'
-updatedAt: '2026-11-26'
+updatedAt: '2026-11-27'
 ---
 
 # 後端模組與基礎建設
@@ -680,8 +680,8 @@ cd backend && uv run python -m app.scripts.export_openapi
 - [ ] service 擁有交易：需要寫入時自己 commit，`get_db` 不會幫你 commit
 - [ ] 有資料表時，model 放 `models.py` 並繼承 `Base`；migration 由 `dba` 寫
 - [ ] 資源名用預設規則單數化會算錯時，加進 `_IRREGULAR_SINGULARS`
-- [ ] `app/` 裡公開的模組、類別、函式與方法附 google 風格的英文 docstring（`Args:`／`Returns:`／`Raises:`），`_` 開頭的私有 helper 免寫；公開類別的建構參數寫在類別 docstring 的 `Args:`，`__init__` 本身不必另寫。`tests/` 與 `alembic/` 不受這條檢查。`uv run ruff check .` 會擋下 `app/` 的缺漏（[backend-agent-rules B2](../../development/rules/backend-agent-rules.mdx)、[#524](https://github.com/label-suite/label-suite/issues/524)）。router handler 與 schema 的 docstring 會寫進 `openapi.json`，改了要重新匯出
-- [ ] 函式的圈複雜度（10）、敘述數（30）與分支數（10）由 `uv run ruff check .` 擋下，檔案行數（400，排除空白行與只含 `#` 的行）由 `tests/unit/test_size_limits.py` 擋下；`alembic/versions/` 不受限（[backend-agent-rules B11](../../development/rules/backend-agent-rules.mdx)、[#561](https://github.com/label-suite/label-suite/issues/561)）
+- [ ] `app/` 裡公開的模組、類別、函式與方法附 google 風格的英文 docstring（`Args:`／`Returns:`／`Raises:`），`_` 開頭的私有 helper 免寫；公開類別的建構參數寫在類別 docstring 的 `Args:`，`__init__` 本身不必另寫。`tests/` 與 `alembic/` 不受這條檢查。`uv run ruff check .` 會擋下 `app/` 的缺漏（[backend-agent-rules B2](../../development/rules/backend-agent-rules.mdx)）。router handler 與 schema 的 docstring 會寫進 `openapi.json`，改了要重新匯出
+- [ ] 函式的圈複雜度（10）、敘述數（30）與分支數（10）由 `uv run ruff check .` 擋下，檔案行數（400，排除空白行與只含 `#` 的行）由 `tests/unit/test_size_limits.py` 擋下；`alembic/versions/` 不受限（[backend-agent-rules B11](../../development/rules/backend-agent-rules.mdx)）
 - [ ] 重新匯出 `openapi.json`，再在前端跑 `pnpm --filter frontend api:generate`
 - [ ] 本文加一節：分層表、Class 圖與主要 Sequence 圖（見 [§誰改、什麼時候改](#誰改什麼時候改)）
 
@@ -717,6 +717,8 @@ cd backend && uv run python -m app.scripts.export_openapi
 | 2026-11-23 | 本文加一節後端基礎建設與已知限制，不另開文件（[§後端基礎建設](#後端基礎建設)） | — | [#546](https://github.com/label-suite/label-suite/issues/546) |
 | 2026-11-23 | 實作後由 `backend-developer` 依程式校正本文，`code-reviewer` 再核對（[§誰改、什麼時候改](#誰改什麼時候改)） | — | [#546](https://github.com/label-suite/label-suite/issues/546#issuecomment-7100137950) |
 | 2026-11-25 | 後端紀錄一律一行 `key=value`，格式由 request-access-log 定；`msg` 固定最後（[§log 安全規則](#log-安全規則)） | 歸檔 `2026-11-23-infra-compose-e2e-ci` clarification Q15（access log 格式留給 01-01） | request-access-log clarification Q2、[#567](https://github.com/label-suite/label-suite/issues/567) |
+| 2026-11-25 | 新增業務模組的檢查清單加上一項：`app/` 公開的模組、類別、函式與方法附 google 風格的英文 docstring，由 `uv run ruff check .` 擋下（[§新增業務模組的檢查清單](#新增業務模組的檢查清單)） | — | [#524](https://github.com/label-suite/label-suite/issues/524) |
+| 2026-11-25 | 新增業務模組的檢查清單加上一項：函式複雜度、敘述數、分支數與檔案行數的上限（[§新增業務模組的檢查清單](#新增業務模組的檢查清單)） | — | [#561](https://github.com/label-suite/label-suite/issues/561) |
 | 2026-11-26 | 新增 `account` 模組一節；基礎建設加上認證依賴、token、cookie、CSRF、密碼與 Email 正規化，以及 `app/oidc/` 入口（規劃，待實作後校正） | 已知限制的「認證、授權與 CSRF」縮成授權第 3、4 步 | [#719](https://github.com/label-suite/label-suite/issues/719) |
 | 2026-11-26 | 後端只信任 Nginx 的固定位址轉發的來源標頭，`Settings` 新增只做驗證的 `FORWARDED_ALLOW_IPS`；已知限制的「信任反向代理的來源 IP」改記 Cloudflare 與 TLS 邊緣（[§設定](#設定)、[§請求管線](#請求管線)） | — | [#566](https://github.com/label-suite/label-suite/issues/566) |
 | 2026-11-26 | 依實作校正 `account` 一節與基礎建設：service 改成 `service/` 套件、錯誤放 `service/errors.py`、Class 圖改成實際簽章、加上 Seeder 初始化指令、`AppError.response_hook` 與測試輔助（[§account](#account)、[§測試輔助](#測試輔助)） | 本文 2026-11-26 依設計寫成的 `account` 一節（單一 `service.py`、`errors.py`） | [#719](https://github.com/label-suite/label-suite/issues/719) |
