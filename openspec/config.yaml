@@ -28,6 +28,12 @@ context: |
     → planner 寫 proposal → 主 agent 以 clarify skill 的關卡模式寫 clarification
     → planner 寫 specs 與 design → planner 寫 tasks → design-reviewer 審閱、planner 回修。
 
+  常駐文件寫法約束：改 `docs/diagrams/architecture/` 的常駐文件時照做；只照這四條，不載入整份 `doc-writing`：
+  1. 正文只寫現況，不寫日期、演變、「原本……後來……」
+  2. 正文不出現 issue 編號或決議代號（Q18、N1 之類）
+  3. 這次的依據與異動，寫進文件結尾的「決策紀錄」，一列一筆
+  4. 理由最多一句，詳細論證連到 ADR
+
   **只有一個人工停點**：clarification 的 Q（需要維護者決定的項目）逐題問答。P（明確
   問題）直接派原撰寫角色回修，不問維護者。
   其餘環節（明確問題的回修、規劃審閱、程式審查、驗收、歸檔、階段之間的提交、合併）
@@ -92,6 +98,7 @@ rules:
     - 每個決議寫出理由、日期與回修位置；改變需求的決議先用 spec-writing 回寫 docs/specs/ 的規格書
     - 寫進規格書「已確認決議」的依據只有 docs/development/workflow/spec-migration.mdx §「已確認決議」的五種依據
     - 不新增 proposal 沒有的功能，只釐清既有範圍
+    - 決議把規格頁的驗收標準移出本次時，必填「移出本次的驗收標準」表（規格頁、Scenario 名稱、接手 issue `#N`）；寫不出接手 issue 的 Q 不算決議完成
   specs:
     - 只寫 What，不寫 How；技術細節放 design 或 tasks
     - 每個 Requirement 至少一個 Scenario，且可以直接寫成測試
@@ -110,6 +117,7 @@ rules:
     - 測試與實作放在同一個 task（TDD，見 docs/development/architecture.mdx §測試分層），不另拆測試 task
     - 後端有改動的群組，最後一個 task 是「重新產生 openapi.json 與前端型別並確認與 api-contract 一致」
     - 有 schema 變更的 [@dba] task 要含「依實作校正資料表字典與 ER、為建立的表標記已落地與 Alembic revision、`pnpm check:er` 通過」
+    - 依實作校正常駐文件（backend-modules、error-codes、endpoint-authorization、frontend-routes）由寫那段程式的實作角色在自己的 task 內完成，不另拆成 [@technical-writer] 的 task
     - Python 用 uv、JavaScript 用 pnpm；不得出現 npm install 或 pip install
     - tasks 定稿後先提交規劃產出物，再交由 design-reviewer 審閱；修訂由 planner 另開 commit
 
@@ -133,6 +141,7 @@ operations:
       - 後端 API 有變動時，同一個群組內重新產生 openapi.json 與前端型別，並確認與 api-contract 一致
       - 全部 task 完成且工作區乾淨後，交由 code-reviewer 審查；修正由實作角色另開 commit
       - 審查通過後交由 acceptance-verifier 對照每個 Scenario 驗收，報告寫在 change 目錄的 acceptance.md；未通過不進入下一步
+      - "acceptance.md 要附「規格頁驗收標準覆蓋」表：本次範圍內規格頁的全部驗收標準，每條標「已驗證」「部分驗證 → #N」「clarification 移出 → #N」之一；沒有去處的記為缺陷、結論不通過。Then 的控制項依部署設定才出現時，要在它出現的設定下驗證，只能在部分設定下驗的標「部分驗證 → #N」。`#N` 是已涵蓋那段行為、還開著的既有 issue；找不到就不編號、不開新 issue，記進 acceptance.md 的「待處理」並停下，交主 session 決定"
       - acceptance.md 要附**人工驗收步驟**：啟動指令、用哪個角色登入、點哪幾頁、每一步預期看到什麼。它留作紀錄，不是停下來等維護者簽收的交付物
       - 驗收通過後步驟結束時自動提交，**不停**；接著由 ops 執行 /opsx:archive，歸檔改動進同一張 PR，再走合併條件（CI 每個 job 都 completed 且 success、審查無阻斷意見、PR 可合併）
   # 與 scaffold 刻意不同：archive 在合併之前執行，與程式同一張 PR；這裡不重做驗收。
@@ -140,5 +149,6 @@ operations:
     guidance:
       - 歸檔前確認工作區乾淨；驗收已經在 apply 的最後做過，這裡不重做驗收判定
       - 同步主規格與搬移到 archive 由 ops 執行；新 capability 的 Purpose 不留 TBD
+      - "ops 依 acceptance.md 的覆蓋表，在每張接手 issue 本文加上「從 #<本張> 移交的驗收」清單；主 session 合併前核對覆蓋表上每個 `#N` 都有對應清單，缺了就不合併"
       - "**在合併之前執行**：歸檔改動與程式進同一張 PR，main 上不會出現已合併但未歸檔的 change"
       - 步驟結束時自動提交；PR 在 apply 期間就已經開好，這裡不另開

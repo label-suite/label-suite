@@ -68,6 +68,15 @@ model: opus
 4. 跑 `uv run pytest` 的 integration 測試確認既有行為不受影響
 5. **校正字典與 ER**：逐表比對 model、migration 與字典。實作與 sd 的設計不同（改了型別、加了索引、拆了欄位）時，**先改字典、再同步 ER**，讓兩份描述的是實際建出來的結構。這次 migration 建立的每張表，在字典的表標題下方與 ER 該表的 `description` 開頭各加一行 `` **已落地**：Alembic revision `<revision id>` ``，並把 ER `meta.description` 的「已落地業務表：**N**」加上這次的張數。最後跑 `pnpm check:er`，它會比對兩邊的標記、張數，以及每個 revision 是否真的出現在 `backend/alembic/versions/`
 
+## 常駐文件寫法約束
+
+改 `docs/diagrams/architecture/` 的常駐文件時照做；只照這四條，不載入整份 `doc-writing`：
+
+1. 正文只寫現況，不寫日期、演變、「原本……後來……」
+2. 正文不出現 issue 編號或決議代號（Q18、N1 之類）
+3. 這次的依據與異動，寫進文件結尾的「決策紀錄」，一列一筆
+4. 理由最多一句，詳細論證連到 ADR
+
 ## 完成前自我檢查
 
 - [ ] model 與 migration 一致，沒有任何自動同步

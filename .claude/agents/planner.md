@@ -36,6 +36,7 @@ model: opus
 - 每個 task 只有一個負責角色；跨角色的工作拆成多個 task
 - 依相依順序排列：資料表與 migration → API 與測試 → contract 同步 → 前端頁面與測試 → 文件
 - 測試與實作在同一個 task（TDD），不另拆「寫測試」task
+- 依實作校正常駐文件（`backend-modules.mdx`、`error-codes.mdx`、`endpoint-authorization.mdx`、`frontend-routes.mdx`）寫進寫那段程式的 `[@backend-developer]`／`[@frontend-developer]` task，字典與 ER 的校正寫進 `[@dba]` task；**不另拆成 `[@technical-writer]` 的 task**，因為這幾個角色的定義要它們自己校正
 - 不新增 design 沒提到的工作，也不遺漏 design 提到的工作
 
 ## 品質標準
@@ -52,7 +53,7 @@ model: opus
 - [ ] specs 沒有 How；每個 Requirement 有 Scenario，含錯誤與權限情境
 - [ ] api-contract 的每個端點都被至少一個 Scenario 覆蓋，反之亦然
 - [ ] design 的決策都有對應段落，風險與 migration 回滾已說明
-- [ ] tasks 符合 `rules.tasks`，順序沒有反向依賴、沒有環
+- [ ] tasks 符合 `rules.tasks`，順序沒有反向依賴、沒有環；校正常駐文件沒有派給 `[@technical-writer]`
 - [ ] `pnpm exec openspec validate <change>` 通過
 - [ ] specs、design、tasks 符合 clarification.md 的決議
 - [ ] 待決問題已列出，沒有替需求做決定

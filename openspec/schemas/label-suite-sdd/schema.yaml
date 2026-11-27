@@ -116,6 +116,7 @@ artifacts:
       決議會改變需求時，先回寫上游再回修 openspec 產出。
       回修由原撰寫角色處理（sa、sd、ui-ux、planner），回修後重新檢查受影響的面向。
       clarification.md 記錄檢查結論、每個 Q 的決議與理由、已修正的 P；
+      決議把規格頁的驗收標準移出本次時，「移出本次的驗收標準」表（規格頁、Scenario 名稱、接手 issue `#N`）必填。
       後續的 specs、design、tasks 必須依這裡的決議撰寫。全數通過（沒有未決的 Q、P 都已修正）才算完成。
     requires:
       - proposal
