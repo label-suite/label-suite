@@ -140,10 +140,10 @@ forbidden_modules = ["httpx", "requests", "aiohttp", "urllib3"]
 allow_indirect_imports = true
 
 # Cross-module contracts (B12, issue #563). independence blocks every import between
-# business modules, router included; a module that reads another module's data adds one
-# commented ignore_imports per place, pointing only at that module's service, never its
-# repository or models (ADR-003 D12). protected keeps routers importable only by the
-# assembly point (L5, L6).
+# business modules, router included; a module that reads or writes another module's data
+# adds one commented ignore_imports per place, service to service only:
+# "app.modules.<caller>.service -> app.modules.<callee>.service" (ADR-003 D12).
+# protected keeps routers importable only by the assembly point (L5, L6).
 [[tool.importlinter.contracts]]
 name = "Modules do not import each other"
 type = "independence"
