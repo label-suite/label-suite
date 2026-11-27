@@ -103,7 +103,7 @@ import RoadmapSwimlane from '@notes/components/roadmap-swimlane'
 3. **系統管理排在任務管理前**：任務管理的權限要在系統管理收窄過的角色上檢查。
 4. **任務管理 → 標記作業 → 資料集**：照跨模組流程的交接順序；資料集不往後排，因為試標要靠 IAA 才能推進到正式標記。
 5. **儀表板跟著資料分段做**：02-01 拆成四段，外殼隨 E2、任務區塊隨 E4、標記與審核區塊隨 E5、「等待 IAA 確認」卡片與最近提醒隨 E7 收尾。
-6. **資料集內部先匯入，分析列表在逐型 IAA 之後**：05-03 資料匯入與版本 → 05-02 分析詳情（一）（二）（三）→ 05-01 分析列表 → 05-02 分析詳情（四）；因為 05-01 的 IAA 狀態徽章只能讀 05-02（三）逐型 IAA 報告的結果。
+6. **資料集內部先匯入，分析列表在逐型 IAA 之後**：05-03 資料匯入與版本 → 05-02 分析詳情（一）（二）（三）→ 05-01 分析列表 → 05-02 分析詳情（四）；因為 05-01 的 IAA 狀態徽章只能讀 05-02（三）的結果（[規格 05-02 §IAA 狀態是列表頁的唯一來源](../specs/05-dataset/02-analysis-detail.mdx#iaa-狀態是列表頁的唯一來源)）。
 7. **共用基礎建設排在第一個用到它的功能之前**：共用的授權檢查、寄信與背景工作、稽核紀錄、檔案儲存、IAA 計算介面等，第一次出現時獨立開卡，不併進那一個功能（規則見 [AGENTS.md §Project Board and Dispatch](../../AGENTS.md#project-board-and-dispatch) 的 Size gate）。
 
 效益與複雜度只分高低，用來說明每個 Epic 的投入與回報，不決定順序；所以低效益的前置工作仍然排在前面。
@@ -134,7 +134,7 @@ import RoadmapBenefitComplexity from '@notes/components/roadmap-benefit-complexi
 | :--- | :--- |
 | 一個 Epic 完成 | 從 `roadmap-data.ts` 把下一段的 Epic 往前移，並對照規格確認它的 Feature 還是最新的 |
 | 規格或 PRD 改了模組範圍或依賴 | 改對應 Epic 的範圍、一句話與排序依據 |
-| 改變 Epic 或規格頁先後的 blocked-by 調整（含拆單、插入共用基礎建設卡） | 更新 [§排序依據](#排序依據) 與決策紀錄；規則見 [AGENTS.md §Project Board and Dispatch](../../AGENTS.md#project-board-and-dispatch) 的 Dependencies |
+| Epic 或規格頁的先後有變 | 更新 [§排序依據](#排序依據) 與決策紀錄；規則見 [AGENTS.md §Project Board and Dispatch](../../AGENTS.md#project-board-and-dispatch) 的 Dependencies |
 | 試用回饋指出新的需求 | 先走規格流程，再決定排進哪個時段 |
 
 一句話、時段、象限都只改 `roadmap-data.ts`；元件與本文不另寫一份。
@@ -151,4 +151,4 @@ import RoadmapBenefitComplexity from '@notes/components/roadmap-benefit-complexi
 | 2026-11-23 | 三個時段的 Epic 都拆到 Feature 與 Sub-feature，寫法與帳號相同（[§怎麼讀](#怎麼讀)） | 越遠越粗：接下來兩個月只到 Epic、之後只到 Goal | [#534](https://github.com/label-suite/label-suite/issues/534) |
 | 2026-11-23 | 路線圖只列有規格頁的模組與基礎建設收尾，時段剩下個月與接下來兩個月，儀表板與通知併入接下來兩個月（[§怎麼讀](#怎麼讀)） | 論文驗證、發版與 DOI 兩個 Epic，以及「之後」時段與 R3 論文版 | [#534](https://github.com/label-suite/label-suite/issues/534) |
 | 2026-11-26 | 儀表板 02-01 拆四段跟著資料做，E1 與 E2 交錯，E6 內部順序 05-03 → 05-01 → 05-02（[§排序依據](#排序依據)） | 「儀表板與通知排在最後」 | [#703](https://github.com/label-suite/label-suite/issues/703) |
-| 2026-11-27 | 05-01 移到 05-02（三）之後，E6 內部順序改為 05-03 → 05-02（一）（二）（三）→ 05-01 → 05-02（四）；共用基礎建設卡排在第一個用到它的功能之前（[§排序依據](#排序依據)） | 2026-11-26 那列的 E6 內部順序 05-03 → 05-01 → 05-02 | [#753](https://github.com/label-suite/label-suite/issues/753) |
+| 2026-11-27 | 05-01 移到 05-02（三）之後，E6 內部順序改為 05-03 → 05-02（一）（二）（三）→ 05-01 → 05-02（四）；共用基礎建設卡排在第一個用到它的功能之前（[§排序依據](#排序依據)） | 2026-11-26 那列的 E6 內部順序 05-03 → 05-01 → 05-02 | [規格 05-02](../specs/05-dataset/02-analysis-detail.mdx#iaa-狀態是列表頁的唯一來源)、[#753](https://github.com/label-suite/label-suite/issues/753) |
