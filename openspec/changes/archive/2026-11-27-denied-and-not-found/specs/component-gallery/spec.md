@@ -4,9 +4,9 @@
 
 ### Requirement: 展示頁列出每個宣告的項目
 
-元件展示頁 SHALL 依序以 Button、Input、Label、Badge、Alert、Card、Separator、Dialog、Skeleton · Empty、無權限與找不到、Token 對照十一個區塊展示；原語宣告的每一個 variant、尺寸，以及 Button 的 `disabled`、`loading` 與 Input 的預設、驗證錯誤、停用狀態，各在頁面上出現一次，且可被測試辨識為「元件、維度、值」。Dialog 區塊有一個開啟範例對話框的按鈕。每個區塊標頭的計數 SHALL 由宣告的集合算出。`components/ui/` 的每一個原語都 MUST 出現在展示頁。
+元件展示頁 SHALL 以十一個區塊展示，區塊與順序見 Scenario「新原語各有一個區塊」；原語宣告的每一個 variant、尺寸，以及 Button 的 `disabled`、`loading` 與 Input 的預設、驗證錯誤、停用狀態，各在頁面上出現一次，且可被測試辨識為「元件、維度、值」。Dialog 區塊有一個開啟範例對話框的按鈕。每個區塊標頭的計數 SHALL 由宣告的集合算出。`components/ui/` 的每一個原語都 MUST 出現在展示頁。
 
-來源：ADR-005 D3；frontend-agent-rules F5；clarification Q9、Q19（UI-4）；畫面 artifact 第 4 版 Gallery.dc.html；login-auth-guard PL7、`ui-design.md` §元件樹 › 登入頁；sidebar-nav `ui-design.md` §元件樹（快捷鍵總覽的對話框原語）；denied-and-not-found clarification Q8、`ui-design.md` §元件樹 › 元件展示頁的一節「無權限與找不到」。
+來源：ADR-005 D3；frontend-agent-rules F5；clarification Q9、Q19（UI-4）；畫面 artifact 第 4 版 Gallery.dc.html；login-auth-guard PL7；sidebar-nav、denied-and-not-found 的 `ui-design.md` §元件樹；denied-and-not-found clarification Q8。
 
 #### Scenario: 每個宣告的 variant 都在頁面上
 
