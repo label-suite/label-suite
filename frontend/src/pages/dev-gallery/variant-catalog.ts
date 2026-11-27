@@ -34,6 +34,17 @@ export const dialogSampleValues = ["basic"] as const;
 export const skeletonSampleValues = ["lines"] as const;
 /** The Empty sample: the panel-sized empty state. */
 export const emptySampleValues = ["panel"] as const;
+/** The BlockedScreen samples (design D8): both kinds, then a long identifier. */
+export const blockedSampleValues = ["notFound", "denied", "longIdentifier"] as const;
+
+/** The samples' identifier: fixed, not translated, unlike any real task id. */
+export const blockedSampleIdentifier = "demo-task-001";
+/**
+ * A 300-character identifier of letters, digits and hyphens with no spaces,
+ * built at run time; hyphens only in its prefix, so the browser has to wrap it
+ * at arbitrary characters rather than at hyphens.
+ */
+export const blockedLongIdentifier = `demo-long-${"a1b2c3d4e5".repeat(29)}`;
 
 export type ButtonState = (typeof buttonStateValues)[number];
 export type InputState = (typeof inputStateValues)[number];
@@ -42,6 +53,7 @@ export type CardPart = (typeof cardPartValues)[number];
 export type DialogSample = (typeof dialogSampleValues)[number];
 export type SkeletonSample = (typeof skeletonSampleValues)[number];
 export type EmptySample = (typeof emptySampleValues)[number];
+export type BlockedSample = (typeof blockedSampleValues)[number];
 
 export const variantCatalog = {
   button: {
@@ -115,7 +127,7 @@ export function galleryItem(component: string, axis: string, value: string): str
   return `${component}:${axis}:${value}`;
 }
 
-/** The ten sections, in page order; ids are the anchors the nav links to. */
+/** The eleven sections, in page order; ids are the anchors the nav links to. */
 export const gallerySections = [
   "button",
   "input",
@@ -126,6 +138,7 @@ export const gallerySections = [
   "separator",
   "dialog",
   "states",
+  "blocked",
   "tokens",
 ] as const;
 

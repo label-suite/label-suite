@@ -15,11 +15,13 @@
     "separator": "Separator",
     "dialog": "Dialog",
     "states": "Skeleton · Empty",
+    "blocked": "無權限與找不到",
     "tokens": "Token 對照"
   },
   "count": {
     "variants": "variant × {{n}}",
-    "states": "狀態 × {{n}}"
+    "states": "狀態 × {{n}}",
+    "samples": "樣本 × {{n}}"
   },
   "button": {
     "count": "variant × {{variants}} · size × {{sizes}} · 狀態 × {{states}}"
@@ -68,6 +70,17 @@
     "meta": "四種畫面狀態的共用元件",
     "emptyTitle": "還沒有資料",
     "emptyDescription": "說明為什麼是空的，以及下一步"
+  },
+  "blocked": {
+    "notFound": {
+      "title": "找不到這個任務",
+      "description": "任務代碼 <identifier/> 不存在，請確認網址或回到儀表板重新選擇任務。"
+    },
+    "denied": {
+      "title": "無權限檢視此任務",
+      "description": "你目前無權限檢視任務代碼 <identifier/>，請回到儀表板或聯絡管理員。"
+    },
+    "back": "回儀表板"
   },
   "tokens": {
     "meta": "shadcn/ui 變數 ← prototype tokens.css"

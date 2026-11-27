@@ -136,7 +136,7 @@ frontend/
 - 外層只驗外層本身的欄位，`data` 裡面的形狀交給生成的型別
 - 非 `http` 的 `ApiError.message` 是英文診斷字串，不含回應內容或原生錯誤的訊息
 - `isAuthError()` 只認錯誤外層的 `401`；`403` 不算
-- `api-error.ts` 的錯誤分類把 `ApiError` 分成三種：`403 PERMISSION_DENIED` 是無權限、`404 NOT_FOUND` 是找不到，其他（含 `403 CSRF_FAILED`）一律是其他；只分類，要不要畫成無權限或找不到的整頁畫面、返回去哪裡由各頁決定
+- `api-error.ts` 的錯誤分類 `classifyRejection()` 把任何丟出來的值分成三種（`RejectionKind`）：`403 PERMISSION_DENIED` 是無權限、`404 NOT_FOUND` 是找不到，其他（含 `403 CSRF_FAILED`，以及不是 `ApiError` 的值）一律是其他；狀態碼與錯誤碼要同時吻合，只分類，要不要畫成無權限或找不到的整頁畫面、返回去哪裡由各頁決定
 - 語言：`main.tsx` 呼叫 `initI18n()`，讀 `localStorage` 的 `labelsuite.lang`；值不是 `en`、讀不到或沒有時是 `zh-TW`，不看瀏覽器語言，並把 `<html lang>` 設成同一個值。登入頁頁首與側欄的 `LanguageToggle` 經 `changeInterfaceLanguage` 切換、記住並更新 `<html lang>`。啟動時預載 `common`、`auth`、`appShell` 三個 namespace，開發用頁面的 namespace 由各自的入口註冊；英文缺某個鍵時顯示繁體中文原文（`fallbackLng` 是 `zh-TW`），不顯示鍵名
 - 外觀：`index.html` 在 `<head>`、模組腳本之前以同源外部腳本 `<script src="/theme-init.js">` 載入 `public/theme-init.js`，它在第一次繪製前讀 `localStorage` 的 `label-suite-theme`（淺色、深色、跟隨系統；無效、讀不到或沒有時當跟隨系統），把解析後的值寫到 `<html data-theme>`；不用內嵌腳本，所以內容安全政策 `script-src 'self'` 不必放寬。之後由 `lib/theme` 接手：`main.tsx` 呼叫 `initTheme()` 套用並在跟隨系統時訂閱作業系統的變化，`ThemeToggle` 經 `useResolvedTheme` 讀、經 `setThemeChoice` 寫。兩份解讀規則以同一張案例表測試，不會各走各的。登入頁與登入後的每一頁都照它呈現，登出不清這個鍵
 :::
@@ -194,7 +194,9 @@ frontend/
 
 目前的原語：`alert`、`badge`（含角色變體 `role`）、`button`（含送出中的 `loading`）、`card`、`dialog`、`empty`、`input`、`label`、`separator`、`skeleton`。新增原語時，展示頁要有它的一節，否則完整性測試失敗。
 
-原語以外，展示頁另有一節「無權限與找不到」，畫 `components/` 的 `BlockedScreen` 三個樣本：找不到、無權限，以及識別碼很長的找不到。返回去處是儀表板，字面是展示頁自己的示意文字（`devGallery`），樣本不移焦點。正式路由還沒有任何頁面畫這兩種畫面，所以這一節是看得到它們的唯一地方。
+原語以外，展示頁另有一節「無權限與找不到」（錨點 `#blocked`，排在「Skeleton · Empty」與「Token 對照」之間），由 `blocked-section.tsx` 的 `BlockedSection` 畫 `components/blocked-screen.tsx` 的 `BlockedScreen` 三個樣本：找不到、無權限，以及識別碼很長的找不到，各帶 `data-gallery-item="blocked-screen:kind:<值>"`（值為 `notFound`、`denied`、`longIdentifier`，宣告在 `variant-catalog.ts` 的 `blockedSampleValues`）。返回去處是儀表板，字面是展示頁自己的示意文字（`devGallery` 的 `blocked.*`），識別碼是 `variant-catalog.ts` 的固定示意值，樣本標題是二級、不移焦點。正式路由還沒有任何頁面畫這兩種畫面，所以這一節是看得到它們的唯一地方。
+
+樣本的返回連結是 React Router 的 `Link`，所以展示頁要在 Router 裡畫：執行時由正式路由提供，測試一律經 `render-gallery.tsx` 的 `renderGallery()` 以 `MemoryRouter` 包住，不直接 render `DevGalleryPage`。
 
 :::note{title="design token 怎麼進到元件" collapsible}
 - `build/extract-tokens.ts` 在開發與建置時讀 `design/prototype/assets/tokens.css`，只取 `:root` 與 `html[data-theme="dark"]` 的 `--*` 宣告，以虛擬模組 `virtual:design-tokens.css` 提供，不寫檔
@@ -227,3 +229,4 @@ frontend/
 | 2026-11-27 | 已知限制拿掉「CI 的前端檢查」一列：lint、型別、測試與建置由 CI 的 `frontend` 跑，契約漂移由 `api-contract` 跑，跑過前後端的 e2e 由 `e2e` 跑（[§已知限制](#已知限制)） | 已知限制的「CI 的前端檢查……目前只在本機跑」，追蹤於已關閉的 #506 | [#745](https://github.com/label-suite/label-suite/issues/745) |
 | 2026-11-27 | `components/` 加無權限與找不到的整頁畫面 `BlockedScreen`：只有標題、說明與一個寫出去處的返回連結，字面、去處與識別碼由使用它的頁面傳入，不送請求（[§目錄](#目錄)）；理由是規格 07-03 要全站共用同一個骨架，而 prototype 的任務詳情與標記清單分屬兩個 feature | 兩個模組各自畫自己的面板 | [#721](https://github.com/label-suite/label-suite/issues/721) |
 | 2026-11-27 | 「其他路徑」維持導回 `/`，不以找不到取代；`api-error.ts` 加錯誤分類；元件展示頁加「無權限與找不到」一節（[§路由](#路由)、[§單一 HTTP 邊界](#單一-http-邊界)、[§元件展示頁](#元件展示頁)）；理由是規格 07-03 只涵蓋網址定址到的那一筆，而正式路由還沒有頁面畫得出這兩種畫面 | 「其他路徑」預告由規格 07-03 的找不到頁取代 | [#721](https://github.com/label-suite/label-suite/issues/721) |
+| 2026-11-27 | 元件展示頁的測試改經共用的 `renderGallery()` 以 `MemoryRouter` 包住展示頁（[§元件展示頁](#元件展示頁)）；理由是「無權限與找不到」一節的返回連結是 React Router 的 `Link`，離開 Router 畫不出來 | 各測試檔直接 render `DevGalleryPage` | [#721](https://github.com/label-suite/label-suite/issues/721) |

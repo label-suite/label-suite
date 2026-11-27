@@ -22,6 +22,7 @@ import { Empty } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
+import { BlockedSection } from "./blocked-section";
 import { GalleryNav } from "./gallery-nav";
 import { GallerySection } from "./gallery-section";
 import { DialogSection, LabelSection, SeparatorSection } from "./primitive-sections";
@@ -267,6 +268,8 @@ export function DevGalleryPage() {
               description={t("states.emptyDescription")}
             />
           </GallerySection>
+
+          <BlockedSection />
 
           <TokenMappingSection />
         </div>
