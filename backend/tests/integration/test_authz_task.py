@@ -18,8 +18,6 @@ from fastapi import FastAPI
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
-from app.core.authz import GroundTruthBarrier
-from app.core.errors import NotFoundError
 from app.core.permissions import TaskRole
 from app.modules.admin.models import AdminRolePermission
 from tests.authz_probe import (
@@ -334,7 +332,6 @@ async def test_an_annotator_whose_cell_is_off_is_refused_before_ground_truth(
     account_db: AsyncSession,
     matrix_db: AsyncEngine,
     reader: FakeTaskMembershipReader,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     async with matrix_db.connect() as conn:
         cell = await conn.scalar(
@@ -345,18 +342,11 @@ async def test_an_annotator_whose_cell_is_off_is_refused_before_ground_truth(
             )
         )
     assert cell is False
-    barrier_calls: list[object] = []
-
-    async def spy_check(self: GroundTruthBarrier, context: object, db: object) -> None:
-        barrier_calls.append(context)
-        raise NotFoundError
-
-    monkeypatch.setattr(GroundTruthBarrier, "check", spy_check)
     annotator = await _caller(client, account_db, reader, "annotator@example.com", "annotator")
 
+    # 403, not the barrier's 404: see unit test_the_barrier_is_not_reached_when_the_cell_is_off
     body = _assert_status(await _get(annotator, answer_path(TASK_T)), 403, "PERMISSION_DENIED")
 
-    assert barrier_calls == []
     serialized = json.dumps(body)
     for word in ANSWER_WORDS:
         assert word not in serialized
