@@ -61,17 +61,35 @@
 
 - **替代方案**：用 React Router `NavLink` 依路徑前綴判斷——任務詳情、角色設定這類次層頁的路徑與導覽項不一定同前綴，且做不到「全站恰好一個」；不採用
 
-### D5 擋下只攔一般點擊，說明以 navigation state 帶、讀過就清
+### D5 擋下只攔一般點擊，說明先存進元件狀態再清 router state
 
-第三個導覽項與「資料集分析」的 `href` 照樣指向真正的模組頁；`onClick` 在一般點擊（沒有 Ctrl／⌘、Shift、中鍵）且 `buildSidebarNav` 判定要擋時 `preventDefault`，以 `navigate(落點, { state: { blockedNotice: "annotation" | "datasetAnalysis" }, replace: 已在落點 })` 導向。`features/app-shell/blocked-notice.tsx` 的 `BlockedNotice` 以既有 `components/ui/alert.tsx`（`info`）畫出說明，畫過後以 `replace` 清掉 `location.state`，所以重新整理、上一頁、下一頁都不再出現；種類只認兩個值，其他值不畫（Q4；ui §非畫面的模組「擋下說明」、§畫面狀態 › 擋下說明）。說明文字取自 `appShell` 語言檔，不插值任何任務資料。
+第三個導覽項與「資料集分析」的 `href` 照樣指向真正的模組頁；`onClick` 在一般點擊（沒有 Ctrl／⌘、Shift、中鍵）且 `buildSidebarNav` 判定要擋時 `preventDefault`，以 `navigate(落點, { state: { blockedNotice: "annotation" | "datasetAnalysis" }, replace: 已在落點 })` 導向（Q4；ui §非畫面的模組「擋下說明」、§畫面狀態 › 擋下說明）。
+
+`features/app-shell/blocked-notice.tsx` 的 `BlockedNotice` 不直接以 `location.state` 決定畫不畫，因為 state 一清掉下一次渲染（包括切換語言）說明就會消失：
+
+1. 每當 `location.key` 改變且 `location.state.blockedNotice` 是兩個已知種類之一，就把 `{ arrivalKey: location.key, kind }` 存進元件狀態
+2. 存好之後才以 `navigate(目前路徑, { replace: true, state: null })` 清掉 router state。這次 replace 產生的新 location 沒有 state，元件**不**因此清除已存的種類
+3. 說明用既有 `components/ui/alert.tsx`（`info`）畫出，文字每次渲染都從 `appShell` 語言檔取，所以切換語言後變成英文；不插值任何任務資料。種類只認兩個值，其他值不畫
+4. 說明一直留到離開這一頁（元件卸載）為止。重新整理、上一頁、下一頁回到的歷史紀錄都已沒有 state，所以不再出現
+5. 已在落點時再點一次被擋的導覽項，會帶著新的 `location.key` 再到達一次，步驟 1 重新存入；Alert 以 `arrivalKey` 作 `key` 重新掛載，讓 `role="alert"` 再朗讀一次
 
 - **替代方案**：網址 query（`?blocked=annotation`）——可分享、重新整理會重現，違反 07-01 §進入模組的條件 的註「重新整理之後不再出現」；不採用
 - **替代方案**：Toast——要新增原語與未核可的畫面，Q4 已否決
 
-### D6 換頁時背景重查登入狀態，焦點不重查
+### D6 外殼每次被重新掛載或換頁時背景重查登入狀態，焦點不重查
 
-`AppShellLayout` 監看 `location.pathname`，改變時（不含第一次掛載）對既有的登入狀態查詢呼叫 `refetch`，查詢維持 `staleTime: Infinity`、`refetchOnWindowFocus: false`；重查進行中側欄沿用上一份資料、不顯示載入中；重查得到未登入時守門照既有規則帶回登入頁（Q11；ui §資料來源 的「為什麼換頁就重查、焦點不重查」；sd §關鍵情境「角色被改掉時側欄不立刻變」）。
+本次只有 `/dashboard/dashboard` 在外殼底下。點一個還沒建置的導覽項（例如「任務管理」→ `/task-management/task-list`）會落到外殼以外的 `{ path: "*" }`，經 `/`（`RootRedirect` 讀 `staleTime: Infinity` 的快取）回到落點，途中外殼會**卸載再重新掛載**。所以「只監看 `AppShellLayout` 的 pathname、不含第一次掛載」永遠不會觸發，觸發點要能跨過外殼的重新掛載：
 
+1. `createAppRouter()` 在所有路由外加一層沒有 path 的根 layout route（`src/app/app-root.tsx` 的 `AppRoot`，只畫 `<Outlet>`），它以 context 提供一個 ref，記錄「這次頁面載入裡外殼是否已經掛載過」。這一層不會因為換頁而卸載，只有整頁重新載入才重來
+2. `AppShellLayout` 掛載時讀這個 ref：還沒掛載過就只把它設成已掛載、不重查（頁面載入的第一次，守門剛查過）；已掛載過就對既有的登入狀態查詢呼叫 `refetch({ cancelRefetch: false })`
+3. `AppShellLayout` 掛載期間，`location.pathname` 改變時同樣呼叫 `refetch({ cancelRefetch: false })`，涵蓋日後外殼底下多頁之間的換頁（外殼不卸載的情況）
+4. `cancelRefetch: false` 讓一連串轉址裡進行中的那一次重查被沿用，不重送
+5. 查詢維持 `staleTime: Infinity`、`refetchOnWindowFocus: false`；重查進行中側欄沿用上一份資料、不顯示載入中；重查得到未登入時守門照既有規則帶回登入頁（Q11；ui §資料來源 的「為什麼換頁就重查、焦點不重查」；sd §關鍵情境「角色被改掉時側欄不立刻變」）
+
+這樣頁面載入時（含已登入的人開 `/account/login` 被導向落點）外殼是第一次掛載，不會多送請求，`auth-guard`「兩種路由共用同一次查詢」的「只送出 1 次」仍成立。登出後在同一次頁面載入裡再登入，外殼第二次掛載會多一次重查，結果與登入回應相同，只多一個請求。
+
+- **替代方案**：在根 layout 監看所有 pathname 改變就重查——已登入的人開 `/account/login` 被導向落點時會多送一次，違反 `auth-guard`「兩種路由共用同一次查詢」；不採用
+- **替代方案**：只在外殼監看 pathname、不含第一次掛載（原寫法）——本次的換頁都經過外殼以外的轉址，永遠不會觸發；不採用
 - **替代方案**：`refetchOnWindowFocus: true`——停在原頁時側欄就會變，違反 07-01 §邊界情況；不採用
 - **替代方案**：定時輪詢——同樣會在使用者沒有操作時改變側欄，也多出不必要的請求；不採用
 
@@ -133,7 +151,7 @@ E2E 沿用 `e2e/` 的真後端加 Vite 開發伺服器。`e2e/static` 要求旅�
 - 螢幕寬度以 `page.setViewportSize` 的 1280、820、375px 代表桌機、平板、手機
 - 「角色被改掉」以 `e2e/shared/account_db.py` 直接改資料庫的 `users.role`，再以 `page.evaluate` 觸發 `blur`／`focus`
 - 「等待中」以 `page.route` 延遲 `DELETE /api/v1/current-session`；「錯誤訊息」以 `page.route` 讓換頁後那次 `GET /api/v1/current-session` 回 `500`
-- 「不閃淺色」以 `page.addInitScript` 在文件解析前掛 `MutationObserver` 記錄 `data-theme` 的每一次值；作業系統深淺與減少動態效果以 `page.emulateMedia`
+- 「不閃淺色」以 `page.addInitScript` 在文件解析前掛 `MutationObserver` 記錄 `data-theme` 每一次變動後的值，並在第一個 `requestAnimationFrame`（第一次繪製前的那一格）記下當下的值，兩者都必須是 `dark`；作業系統深淺與減少動態效果以 `page.emulateMedia`
 - 「不截斷」以每個導覽項文字元素的 `scrollWidth <= clientWidth` 且文件 `scrollWidth <= innerWidth` 判定，英文介面以頁面上的語言切換切過去（瀏覽器語系仍固定 zh-TW，`e2e-testing`「介面語言固定為 zh-TW」不變）
 
 ## Risks / Trade-offs
@@ -144,7 +162,7 @@ E2E 沿用 `e2e/` 的真後端加 Vite 開發伺服器。`e2e/static` 要求旅�
 - [`theme-init.js` 被 CSP 或路徑設定擋下，正式層深色會閃] → 檔案放 `public/` 由 Vite 原樣複製到建置根目錄，同源；`e2e/public-entry` 既有的「載入期間 CSP 違規 0 次、請求失敗 0 次」會涵蓋它
 - [暫時落點沒有任何主要操作按鈕，「手機底部導覽不遮擋主要操作」只能以「最後一個內容元素沒被遮住」驗證] → acceptance 以這個判準驗收；#722 的儀表板有真正的主要操作時應再驗一次（acceptance.md 的覆蓋表照實標註）
 - [依任務角色的真值表只有「沒有任務角色」一支在本次能驗收] → `buildSidebarNav` 的 unit 測試先鎖住完整真值表；E2E 與驗收只算本次的 41 條，其餘依 clarification §移出本次的驗收標準 移交
-- [移除 `LogoutButton` 與 `AuthLayout` 會讓既有的 `e2e/dashboard/dashboard.spec.ts` 與前端單元測試失效] → 在同一個群組內改寫，以側欄的「登出」控制項重跑 `e2e-testing`「登入、到落點、再登出」
+- [移除 `LogoutButton` 與 `AuthLayout` 會讓既有的 `e2e/dashboard/dashboard.spec.ts` 與前端unit 測試失效] → 在同一個群組內改寫，以側欄的「登出」控制項重跑 `e2e-testing`「登入、到落點、再登出」
 - [`check-component-reuse.mjs` 在搬檔完成前一直失敗，CI 的 `specs` job 在那之前是紅的] → tasks 把三個元件搬移與 `components/app-shell/` 骨架放在最前面的群組，該群組提交時就要通過
 - [每次換頁多一次登入狀態查詢] → 單次主鍵 JOIN，成本低（sd §技術待決問題）；不採輪詢或焦點重查
 - [外觀切換放 `components/` 依 F5 字面不成立] → D2 已依 F5 的例外寫明，只涵蓋這一個元件

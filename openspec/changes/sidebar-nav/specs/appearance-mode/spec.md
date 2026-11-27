@@ -48,7 +48,8 @@
 #### Scenario: 重新整理時不閃淺色
 
 - **WHEN** 外觀偏好為深色、作業系統為淺色，使用者在 `/dashboard/dashboard` 重新整理
-- **THEN** 從文件開始解析到載入完成，根元素的 `data-theme` 每一次被讀到都是 `dark`，從未出現 `light` 或沒有值
+- **THEN** 第一次繪製時根元素的 `data-theme` 已是 `dark`
+- **AND** 從文件開始解析到載入完成，根元素 `data-theme` 的每一次變動後的值都是 `dark`，從未變成 `light` 或被移除
 
 #### Scenario: 登出後登入頁沿用外觀
 
