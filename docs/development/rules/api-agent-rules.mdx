@@ -4,7 +4,7 @@ description: 'API 契約與前端 client 的十條規範（A1 至 A10）：路�
 category: '開發說明'
 tags: [開發說明, Agent, 規範, API, 前端]
 createdAt: '2026-11-10'
-updatedAt: '2026-11-25'
+updatedAt: '2026-11-27'
 ---
 
 # API 契約與前端 Client 規範
@@ -13,17 +13,18 @@ updatedAt: '2026-11-25'
 跨領域規範在 [agent-rules.mdx](agent-rules.mdx)、後端分層與資料在 [backend-agent-rules.mdx](backend-agent-rules.mdx)、授權與答案隔離在 [security-agent-rules.mdx](security-agent-rules.mdx)，這裡不重複。
 各規範的反例、例外與檢查方式收在收合區塊，預設收起；那是實作與審查時才查的細節。
 
-**`backend/` 與 `frontend/` 都已存在，但在 CI 跑的只有 A5 的檢查，以及 A4、A6 的一部分**（job 與指令寫在各條的「檢查方式」）；其餘各條與 A4、A6 沒建的部分仍標「待建置」。標「待建置」就是字面意思：那些檢查還沒有寫，**不得因為這份文件存在就宣稱契約已被強制**。
+**`backend/` 與 `frontend/` 都已存在，但在 CI 跑的只有 A5 的檢查、A1 的 OpenAPI tag 檢查，以及 A4、A6 的一部分**（job 與指令寫在各條的「檢查方式」）；其餘各條與 A4、A6 沒建的部分仍標「待建置」。標「待建置」就是字面意思：那些檢查還沒有寫，**不得因為這份文件存在就宣稱契約已被強制**。
 
 ## 前提
 
-開工前先確認這六件事；各自的完整規則在對應的 A 條。
+開工前先確認這七件事；各自的完整規則在對應的 A 條。
 
 | 前提 | 現行做法 | 規則在 |
 | :--- | :--- | :--- |
 | 路徑前綴 | **`/api/v1`**（見 [architecture.mdx §API 契約](../architecture.mdx#api-契約)） | A1 |
 | operationId | 由 FastAPI 的 `generate_unique_id_function` 固定成「動詞加資源」，不手寫也不逐個覆寫 | A1 |
 | 成功回應格式 | 包一層 envelope；`204` 無 body、檔案與串流是明文例外 | A1 |
+| OpenAPI tag | 一個後端模組一個 tag，名稱等於 `backend/app/modules/` 下的目錄名；在 `create_app` 掛載 router 時帶上 | [A1](#openapi-tag) |
 | 前端型別與 client 生成 | **Orval**，由後端匯出的 `openapi.json` 產生到 `frontend/src/api/generated/` | A5 |
 | Bruno | 可選的手動工具，沒有 pre-PR 關卡；唯一的契約真相是 `api-contract.md` 加 `openapi.json` | A4 |
 | i18n | 兩層；前端只負責 UI 字串，後端 `message` 由後端依 `Accept-Language` 解析 | A8 |
@@ -48,7 +49,7 @@ envelope 是 `{ success, code, message, data, timestamp, traceId }`，成功與�
 | :--- | :--- |
 | **反例** | `POST /api/v1/tasks/{id}/doPublish`（動詞式又沒記理由）；`@router.get(..., operation_id="get_task_by_id_v2")`（逐個覆寫）；「這個端點只回一個布林，所以不包 envelope」 |
 | **例外** | `204` 無 body、檔案下載與串流不套 envelope。**例外要逐一寫進該 change 的 `api-contract.md` 並寫出理由**，不逐案自由心證（見 [architecture.mdx §API 契約](../architecture.mdx#api-契約)） |
-| **檢查方式** | **待建置**。前綴與複數名詞可用自寫腳本掃匯出的 `openapi.json`；operationId 的穩定性靠 A10 的 snapshot diff。兩者都要等 `backend/` 與 CI 存在 |
+| **檢查方式** | OpenAPI tag 的部分**已建置**：`backend/tests/unit/test_openapi_tags.py` 對 `create_app` 組出的 app 驗每個 operation 恰好一個 tag、該 tag 在頂層 `tags` 宣告、頂層每筆的 `description` 去空白後非空且只寫模組用途（一句 ASCII 英文，不含路徑字元、主機或答案相關字詞），並鎖住頂層 tag 的順序與每個 operation 的 tag 值；由 CI 的 `backend-sqlite`、`backend-postgres` 兩個 job 的 `uv run pytest` 執行。tag 名稱是否等於模組目錄名不由測試驗，靠審查。前綴、複數名詞與 operationId 穩定性的部分**待建置**：前綴與複數名詞可用自寫腳本掃匯出的 `openapi.json`；operationId 的穩定性靠 A10 的 snapshot diff |
 :::
 
 :::note{title="A1 的路徑不帶模組段" collapsible}
@@ -60,6 +61,21 @@ envelope 是 `{ success, code, message, data, timestamp, traceId }`，成功與�
 
 **operationId 不得依賴函式名自動生成。** `generate_unique_id_function` 必須從 **method 與資源路徑**算出「動詞加資源」，**不得從 handler 的 Python 函式名推導**；否則把 `get_task` 重新命名成 `read_task` 會悄悄改掉前端 hook 的名稱。原始 repo 要求每條 route 顯式寫 `operation_id=` 來防這件事，本專案採不同機制，見 [附錄：刻意不採用的來源條文](#附錄刻意不採用的來源條文)。
 :::
+
+#### OpenAPI tag
+
+介面描述檔依後端模組分組：一個模組一個 tag，名稱等於 `backend/app/modules/` 下的目錄名，每個 operation 恰好帶一個，沒有例外。
+
+| | |
+| :--- | :--- |
+| **適用路徑** | `backend/app/main.py` 的 `create_app`、`backend/app/modules/**` 的 router、`openspec/changes/*/api-contract.md` |
+| **規則** | tag 名稱照模組目錄名（`account`、`dashboard`、`task`、`dataset`、`admin`、`health`），小寫、與目錄同字，不在模組內再依資源細分；介面描述檔裡的**每個** operation 都恰好一個 tag，不屬於任何模組的 operation 也沒有例外；每個 tag 在頂層 `tags` 宣告一筆，附一句非空的英文 `description` |
+| **頂層 `description`** | 只寫模組對外的用途，不含內部識別碼、類別名、檔案路徑、部署或主機資訊，也不提標準答案或測試集 |
+| **頂層順序** | 宣告順序就是 API 文件的分組顯示順序：照規格章節排，`health` 放最後，即 `account`（01）、`dashboard`（02）、`task`（03、04）、`dataset`（05）、`admin`（06）、`health`；尚未存在的模組不列，新增模組時依它的規格章節插入對應位置 |
+| **寫在哪裡** | 在 `create_app` 掛載時以 `include_router(tags=["<module>"])` 帶上，頂層宣告與說明傳給 `FastAPI(openapi_tags=...)`；模組自己的 `APIRouter()` 不寫 tags，否則 FastAPI 會把兩處的 tag 串接成兩個 |
+| **禁止** | operation 沒有 tag 或帶兩個以上；tag 沒在頂層宣告；頂層 `description` 為空或只有空白；tag 名稱與目錄名不同（例 `accounts`）；用 tag 表達授權邊界 |
+
+tag 只是文件的描述性欄位，不參與 operationId 的計算，也不用來表達授權邊界。缺 tag、未宣告與空說明由測試擋下，名稱是否等於目錄名由審查把關（見 [A1 的檢查方式](#a1-路由http-statusoperationid-與回應外層)）。
 
 ### A2 request 驗證與 response 建模
 
@@ -372,3 +388,4 @@ server state 只放 TanStack Query，query key 一律來自 Orval 產物匯出�
 | 2026-11-20 | envelope 的欄位定為 `{ success, code, message, data, timestamp, traceId }`（[A1](#a1-路由http-statusoperationid-與回應外層)） | §待決 第 1 列「欄位未決」，以及附錄「不要照抄 NestJS 的 `ApiResponseDto` 形狀」那一列 | [#503](https://github.com/label-suite/label-suite/issues/503) |
 | 2026-11-20 | 錯誤回應套同一個外層（`success: false`、`code`、`data: null`），`422` 的逐欄位錯誤放 `errors`；人讀訊息從 `detail` 改為外層的 `message`（[A7](#a7-錯誤處理與安全訊息)、[A8](#a8-i18n-的兩層分工)） | 錯誤 body 用 `{ detail }`、`422` 的 `detail` 是 `ErrorDetail[]` | [#503](https://github.com/label-suite/label-suite/issues/503) |
 | 2026-11-20 | API JSON 欄位一律 camelCase，Python 內部維持 snake_case，由共用 base 的 alias generator 在一處轉換（[A2](#a2-request-驗證與-response-建模)、[A3](#a3-分頁)） | A3 原本七個欄位寫成 `has_more`、`total_pages`、`next_offset` | [#503](https://github.com/label-suite/label-suite/issues/503) |
+| 2026-11-27 | 介面描述檔依後端模組分組：一個模組一個 tag、名稱等於模組目錄名、每個 operation 恰好一個，頂層宣告附英文說明，順序照規格章節且 `health` 最後；在 `create_app` 掛載時帶上，缺 tag、未宣告與空說明由測試擋、名稱由審查把關（[A1 §OpenAPI tag](#openapi-tag)） | —（原本沒有分組規則，所有 operation 落在 Swagger UI 的 `default`） | [#765](https://github.com/label-suite/label-suite/issues/765) |

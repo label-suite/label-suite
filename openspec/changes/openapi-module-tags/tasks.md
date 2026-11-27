@@ -4,7 +4,7 @@
 
 ## 1. 分組規則本文
 
-- [ ] 1.1 在 `docs/development/rules/api-agent-rules.mdx` 的 A1 新增「OpenAPI tag」一段（design D4）：一個後端模組一個 tag、名稱等於 `backend/app/modules/` 下的目錄名、每個 operation 恰好一個且沒有例外（P3）、頂層 `tags` 宣告並附一句非空英文說明（只寫模組用途，不含內部識別碼、路徑、部署資訊或答案相關內容）、順序照規格章節且 `health` 最後（`account`、`dashboard`、`task`、`dataset`、`admin`、`health`，Q2）、在 `create_app` 掛載時以 `include_router(tags=[...])` 帶上而模組 `APIRouter()` 不寫 tags（P4）、缺 tag／未宣告／空說明由測試擋而名稱對錯由審查把關（P5、P7）、tag 不表達授權邊界（P9）；模組名舉例照 ADR-003 D14（P1）。同一份文件另改三處：A1 收合區塊的「檢查方式」把 tag 的部分標為已建置，寫出 `backend/tests/unit/test_openapi_tags.py` 與 CI job `backend-sqlite`、`backend-postgres`（前綴與 operationId 穩定性維持「待建置」）；文件開頭「在 CI 跑的只有……」那句加上 A1 的 tag 檢查；§前提「開工前先確認這六件事」加一列 OpenAPI tag 指向 A1，改成七件事。§決策紀錄補一列（照常駐文件寫法約束：正文只寫現況、不寫 issue 編號）。驗證：`pnpm check:specs` 與 `pnpm exec notecraftapp build docs --rebuild`（`technical-writer.md` 要求）通過，A1 的錨點可被連結 [@technical-writer]
+- [x] 1.1 在 `docs/development/rules/api-agent-rules.mdx` 的 A1 新增「OpenAPI tag」一段（design D4）：一個後端模組一個 tag、名稱等於 `backend/app/modules/` 下的目錄名、每個 operation 恰好一個且沒有例外（P3）、頂層 `tags` 宣告並附一句非空英文說明（只寫模組用途，不含內部識別碼、路徑、部署資訊或答案相關內容）、順序照規格章節且 `health` 最後（`account`、`dashboard`、`task`、`dataset`、`admin`、`health`，Q2）、在 `create_app` 掛載時以 `include_router(tags=[...])` 帶上而模組 `APIRouter()` 不寫 tags（P4）、缺 tag／未宣告／空說明由測試擋而名稱對錯由審查把關（P5、P7）、tag 不表達授權邊界（P9）；模組名舉例照 ADR-003 D14（P1）。同一份文件另改三處：A1 收合區塊的「檢查方式」把 tag 的部分標為已建置，寫出 `backend/tests/unit/test_openapi_tags.py` 與 CI job `backend-sqlite`、`backend-postgres`（前綴與 operationId 穩定性維持「待建置」）；文件開頭「在 CI 跑的只有……」那句加上 A1 的 tag 檢查；§前提「開工前先確認這六件事」加一列 OpenAPI tag 指向 A1，改成七件事。§決策紀錄補一列（照常駐文件寫法約束：正文只寫現況、不寫 issue 編號）。驗證：`pnpm check:specs` 與 `pnpm exec notecraftapp build docs --rebuild`（`technical-writer.md` 要求）通過，A1 的錨點可被連結 [@technical-writer]
 
 ## 2. 後端分組、測試與契約重產
 
