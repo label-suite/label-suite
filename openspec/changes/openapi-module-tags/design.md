@@ -49,7 +49,7 @@
 
 做法見 `system-design.md` §設計選項 B（clarification P5、P6）。補充：
 
-- 放在新檔 `backend/tests/unit/test_openapi_tags.py`，不加進 `backend/tests/unit/test_openapi.py`：後者再加這些測試會超過 `backend/tests/unit/test_size_limits.py` 的 400 行上限。`app` fixture 已在 `backend/tests/conftest.py` 共用（`create_app(make_test_settings(...))`），新檔直接取用，讀 `app.openapi()`
+- 放在新檔 `backend/tests/unit/test_openapi_tags.py`，不加進 `backend/tests/unit/test_openapi.py`：後者再加這些測試會超過 `backend/tests/unit/test_size_limits.py` 的 400 行上限。新檔用自己的 `production_app` fixture（`create_app(make_test_settings(...))`），讀 `app.openapi()`；不沿用 `backend/tests/conftest.py` 的 `app` fixture，因為它另外在 `/api/v1` 掛了一個不帶 tag 的探測 router，會讓「恰好一個 tag」的正向測試失敗
 - 走訪 `paths` 時只取 HTTP method 的 key（`get`、`put`、`post`、`delete`、`patch`、`head`、`options`、`trace`），略過 `parameters`、`summary` 等
 - 把「列出違規」寫成新檔內的 helper 函式（例 `collect_tag_violations(document)`），回傳每個違規的種類、method、path 與實際值；不放進 `app/` 程式碼（P6：不加啟動檢查）
 - 三個正向測試函式對真實 app 分別驗：恰好一個 tag、tag 在頂層宣告、頂層 `description` 去空白後非空
