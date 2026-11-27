@@ -45,7 +45,7 @@ change 的 `system-design.md` 仍然畫這次新增或修改的類別，以及�
 
 | 模組 | 負責的規格頁 | 表 | 現況 |
 | :--- | :--- | ---: | :--- |
-| `account` | [01-01](../../specs/01-account/01-login.mdx)～[01-05](../../specs/01-account/05-login-state.mdx)、[06-01 使用者管理](../../specs/06-admin/01-user-management.mdx) | 7 | 已有程式，見 [§account](#account)；其餘頁面未實作 |
+| `account` | [01-01](../../specs/01-account/01-login.mdx)～[01-05](../../specs/01-account/05-login-state.mdx)、[06-01 使用者管理](../../specs/06-admin/01-user-management.mdx) | 7 | 已有程式，見 [§account](#account)：只涵蓋該節列的範圍，model 只有 `users`、`account_session`、`account_refresh_token` 3 張；其餘 4 張表、01-02～01-04、06-01 的使用者管理頁面都未實作 |
 | `dashboard` | [02-01 儀表板](../../specs/02-dashboard/01-dashboard.mdx) | 0 | 未實作 |
 | `task` | [03-01](../../specs/03-task-management/01-task-list.mdx)～[03-03](../../specs/03-task-management/03-task-detail.mdx)、[04-01](../../specs/04-annotation/01-annotation-list.mdx)、[04-02](../../specs/04-annotation/02-annotation-workspace.mdx) | 25 | 未實作 |
 | `dataset` | [05-01](../../specs/05-dataset/01-analysis-list.mdx)～[05-03](../../specs/05-dataset/03-ingestion-lineage.mdx) | 5 | 未實作 |
@@ -147,7 +147,7 @@ change 的 `system-design.md` 仍然畫這次新增或修改的類別，以及�
 
 ### 02-01 儀表板怎麼取資料
 
-`dashboard` 模組沒有表，service 只呼叫 `task` 的 service 公開函式（上表第 5 列）。審核員任務列的摘要數字要呼叫 04-01 用的同一個函式，不在 `dashboard` 重算（[02-01 §審核員任務列的摘要數字從哪裡來](../../specs/02-dashboard/01-dashboard.mdx#審核員任務列的摘要數字從哪裡來)）。
+02-01 用獨立的 `dashboard` 模組：沒有表，service 只呼叫 `task` 的 service 公開函式（上表第 5 列；取法的決定見 [#750 留言](https://github.com/label-suite/label-suite/issues/750#issuecomment-7208521478)）。審核員任務列的摘要數字要呼叫 04-01 用的同一個函式，不在 `dashboard` 重算（[02-01 §審核員任務列的摘要數字從哪裡來](../../specs/02-dashboard/01-dashboard.mdx#審核員任務列的摘要數字從哪裡來)）。
 
 ## health
 
@@ -843,3 +843,4 @@ cd backend && uv run python -m app.scripts.export_openapi
 | 2026-11-26 | 依實作校正 `account` 一節與基礎建設：service 改成 `service/` 套件、錯誤放 `service/errors.py`、Class 圖改成實際簽章、加上 Seeder 初始化指令、`AppError.response_hook` 與測試輔助（[§account](#account)、[§測試輔助](#測試輔助)） | 本文 2026-11-26 依設計寫成的 `account` 一節（單一 `service.py`、`errors.py`） | [#719](https://github.com/label-suite/label-suite/issues/719) |
 | 2026-11-27 | 已知限制拿掉「CI 的後端檢查」一列：兩種資料庫的 pytest 由 CI 的 `backend-sqlite`、`backend-postgres` 跑，ruff、mypy 與分層 import 方向（`lint-imports`）由 `backend-sqlite` 跑，契約漂移由 `api-contract` 跑（[§已知限制](#已知限制)） | 已知限制的「CI 的後端檢查……目前只在本機跑」，追蹤於已關閉的 #506 | [#745](https://github.com/label-suite/label-suite/issues/745) |
 | 2026-11-27 | 新增預定模組與 42 張表的歸屬：`account`（含 06-01）、`dashboard`、`task`（03 加 04）、`dataset`、`admin`（只剩 06-02），`audit_events` 放 `app/core/`；預期 5 處跨模組 service 呼叫（[§預定模組與資料表歸屬](#預定模組與資料表歸屬)） | 本文原本只寫已存在的 `health` 與 `account`，其他模組與表的歸屬由各 change 的 `sd` 臨場決定 | [#750 留言](https://github.com/label-suite/label-suite/issues/750#issuecomment-7208259366) |
+| 2026-11-27 | 02-01 用獨立的 `dashboard` 模組，沒有表、只呼叫 `task` 的 service（[§02-01 儀表板怎麼取資料](#02-01-儀表板怎麼取資料)） | — | [#750 留言](https://github.com/label-suite/label-suite/issues/750#issuecomment-7208521478) |

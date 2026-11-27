@@ -614,9 +614,11 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 | C 03 與 04 合成 `task`（`task`、`run`、`annotation`、`review`、`export`、`work` 六組 25 張），共 5 個業務模組 | `ignore_imports` 確定項 6 條（範圍 5–8），搭配 B 的 06-01 做法為 5 條；雙向依賴只剩 `task`↔`dataset` 1 對；03 與 04 之間的呼叫與寫入都變成模組內呼叫；02-01 只需呼叫 `task` 一個模組 | `task` 有 25 張表、5 頁規格，是其他模組的 3 倍以上，service 一定要套件化；模組內 03 與 04 的界線沒有 import-linter 契約擋；規格章節與模組不一對一，`sd` 要知道 04 的頁在 `task` 裡；03 與 04 的 issue 改同一個資料夾，並行派工時衝突機率較高 | 採用，搭配 B 的 06-01 做法 |
 | 照字典九組各一個模組，加 `dashboard` 共 10 個 | 字典說這九組與模組邊界對得上 | `run`、`annotation`、`review` 之間是複合 FK 最密的地方，粗估有向模組對約 28–32 條（未逐項列） | 不採用，沒有列入比較 |
 
+02-01 的取法另外列了三種：獨立 `dashboard` 模組、端點放進資料最多的模組、前端直接組合各模組既有的端點。在 C 底下 02-01 讀的資料全在 `task`，獨立模組多 1 條放行；端點放進 `task` 為 0 條，代價是 02 章節沒有自己的模組。選的是獨立 `dashboard` 模組。
+
 ### 決定
 
-後端分成五個業務模組：`account`（01-01～01-05 與 06-01）、`dashboard`（02-01，沒有表，只呼叫 `task` 的 service）、`task`（03-01～03-03、04-01、04-02）、`dataset`（05-01～05-03）、`admin`（06-02）；`health` 不變，`audit_events` 依 [D13](#d13-稽核紀錄的-model-與寫入函式放在-core) 放 `app/core/`。
+後端分成五個業務模組：`account`（01-01～01-05 與 06-01）、`dashboard`（02-01，獨立模組，沒有表，只呼叫 `task` 的 service；審核員摘要呼叫 04-01 用的同一個函式，見[規格 02-01](../../specs/02-dashboard/01-dashboard.mdx#審核員任務列的摘要數字從哪裡來)）、`task`（03-01～03-03、04-01、04-02）、`dataset`（05-01～05-03）、`admin`（06-02）；`health` 不變，`audit_events` 依 [D13](#d13-稽核紀錄的-model-與寫入函式放在-core) 放 `app/core/`。
 模組清單、42 張表的逐表歸屬與預期的跨模組呼叫見 [backend-modules.mdx 的 §預定模組與資料表歸屬](../../diagrams/architecture/backend-modules.mdx#預定模組與資料表歸屬)；跨模組怎麼呼叫見 [D12](#d12-跨模組呼叫只走-service-對-service-的公開函式)。
 
 ### 後果
@@ -639,7 +641,7 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 ### 什麼情況要重新討論
 
 - 審查反覆發現 `task` 套件裡 03 的檔案直接使用 04 的 repository，或反過來
-- 實際加進 `backend/pyproject.toml` 的跨模組 `ignore_imports` 超過 7 條（[backend-modules.mdx](../../diagrams/architecture/backend-modules.mdx#預期的跨模組呼叫) 的 5 條確定項，加上列為不算的兩處看設計的呼叫）
+- 實際加進 `backend/pyproject.toml` 的跨模組 `ignore_imports` 超過 7 條：[backend-modules.mdx](../../diagrams/architecture/backend-modules.mdx#預期的跨模組呼叫) 的 5 條確定項，加上看設計（`account` → `task`）與以後才需要（`dashboard` → `account`）的兩處；07-04 通知或 `ai_runs` 落地時新增的呼叫不算在內
 - 03 與 04 的 issue 並行派工時反覆在 `app/modules/task/` 發生衝突
 
 ## 附錄：來源對照
@@ -662,7 +664,7 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 | D11 | 個人 repo ADR-026（Context 的兩類字串與兩種反模式、Alternatives Considered 的三個選項與拒絕理由、Decision 的兩層與前端渲染契約、Consequences 的 Easier 與 Harder）。**兩處與來源不同**：來源把後端那一層的欄位叫 `detail`，本 repo 的人讀訊息在回應外層的 `message`（見 [D5](#d5-api-路徑前綴與成功回應外層) 與 [api-agent-rules 的 A8](../rules/api-agent-rules.mdx#a8-i18n-的兩層分工)）；來源 Harder 第 1 條把「字串不得內嵌」的強制放在 `.claude/rules/backend.md`，本 repo 沒有那份 canon（決定於 [#53](https://github.com/label-suite/label-suite/issues/53)），該條由 A8 的禁止格承接。來源的 `Accept-Language` 解析細節（q-value、`*` 通配、`q=0` 拒絕、全部被拒回 `406`）已在 A8，本節不重述。**來源的 Alternatives Considered 只有選項、說明與拒絕理由三欄**，所以選項表的「好處」與「代價」兩欄是推論；**來源也沒有「什麼情況要重新討論」這一節**，該節的兩條同樣是推論 |
 | D12 | 維護者 2026-11-27 的裁定 1，記在 [#749](https://github.com/label-suite/label-suite/issues/749) 本文（只記做法與不准的兩層，沒有記選項的好處與代價；選項表只填本節「後果」已有的事實，其餘留「—」）；契約原本的寫法出自 `backend/pyproject.toml` 跨模組契約上方的註解；`ignore_imports` 的寫法與檢查見 [B12](../rules/backend-agent-rules.mdx#b12-單一入口)；寫入、雙向依賴與 import 寫法、只准 service 對 service 三項，出自維護者 2026-11-27 對 [#749 檢查點](https://github.com/label-suite/label-suite/issues/749#issuecomment-7208259754)的補充裁定（只 import 模組的理由是避免循環 import，其餘只記做法，沒有記理由）；重新討論條件改寫自 [D3](#d3-後端採模組內分層) 原本的「跨模組共用的 service 或 schema 沒有合適的位置」，去掉其中已經過去的「第一批模組合併之後」 |
 | D13 | 維護者 2026-11-27 的裁定 2，記在 [#749](https://github.com/label-suite/label-suite/issues/749) 本文（只記做法與判準，沒有列出其他選項；選項 A 的代價取自本節「後果」）；`audit_events` 的性質見 [ADR-008 的 D6](008-deployment-and-operations.mdx#d6-使用者行為記在單一只新增的-audit_events-表)；model 的載入方式出自 `backend/alembic/env.py`；重新討論條件由裁定的判準反推，來源沒有記錄 |
-| D14 | 維護者 2026-11-27 選定方案 C 並把 06-01 放 `account`，記在 [#750 的檢查點](https://github.com/label-suite/label-suite/issues/750#issuecomment-7208259366)（只記選擇，沒有記理由）；四個選項與它們的好處、代價取自 #750 的方案比較（第二則檢查點所述、給維護者看過的 artifact），比較中的數字出自[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)的分組與關聯限制、各規格頁的資料欄位與 `backend/pyproject.toml` 的 independence 契約；九組各一個模組的 28–32 條是粗估，沒有逐項列；重新討論的三個條件由「變困難」反推，來源沒有記錄 |
+| D14 | 維護者 2026-11-27 選定方案 C 並把 06-01 放 `account`，記在 [#750 的檢查點](https://github.com/label-suite/label-suite/issues/750#issuecomment-7208259366)（只記選擇，沒有記理由）；四個選項與它們的好處、代價取自 #750 的方案比較（第二則檢查點所述、給維護者看過的 artifact），比較中的數字出自[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)的分組與關聯限制、各規格頁的資料欄位與 `backend/pyproject.toml` 的 independence 契約；九組各一個模組的 28–32 條是粗估，沒有逐項列；02-01 用獨立 `dashboard` 模組是維護者另一次的選擇，記在 [#750 的檢查點](https://github.com/label-suite/label-suite/issues/750#issuecomment-7208521478)（只記選擇，沒有記理由），三種取法取自方案比較 §八 第 7 題；重新討論的第 2 條的 7 取自方案比較 C 的範圍 5–8 扣掉 06-01 的 1 條；其餘兩條由「變困難」反推，來源沒有記錄 |
 
 ## 待決
 
@@ -694,3 +696,4 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 | 2026-11-27 | [D3](#d3-後端採模組內分層) 的重新討論條件「跨模組共用的 service 或 schema 沒有合適的位置」改指向 D12、D13 | D3 原本的條件 | [#749](https://github.com/label-suite/label-suite/issues/749) |
 | 2026-11-27 | 跨模組寫入照讀取的規則，被呼叫的 service 不 commit、由發起的 service 在同一個交易 commit；允許雙向依賴，只 import 模組；只准 service 對 service，router 只呼叫自己模組的 service（[D12](#d12-跨模組呼叫只走-service-對-service-的公開函式)） | D12 原本只寫讀取，沒有限制放行的左邊 | [#749 留言](https://github.com/label-suite/label-suite/issues/749#issuecomment-7208259754) |
 | 2026-11-27 | 後端分成 `account`（含 06-01）、`dashboard`、`task`（03 加 04）、`dataset`、`admin`（06-02）五個業務模組，42 張表的歸屬寫進 backend-modules.mdx（[D14](#d14-後端業務模組的切分)） | — | [#750 留言](https://github.com/label-suite/label-suite/issues/750#issuecomment-7208259366) |
+| 2026-11-27 | 02-01 用獨立的 `dashboard` 模組，沒有表、只呼叫 `task` 的 service（[D14](#d14-後端業務模組的切分)） | 方案比較的另兩種取法：端點放進 `task`、前端直接組合既有端點 | [#750 留言](https://github.com/label-suite/label-suite/issues/750#issuecomment-7208521478) |
