@@ -88,4 +88,4 @@
 #### Scenario: 長識別碼樣本不撐破版面
 
 - **WHEN** 視窗寬度分別為 375px 與 1280px，開啟 `/dev/gallery#blocked`
-- **THEN** `longIdentifier` 樣本的說明完整包含它的示意識別碼，樣本容器與文件的 `scrollWidth` 都不大於各自的可視寬度
+- **THEN** `longIdentifier` 樣本的說明完整包含它的示意識別碼，樣本容器與「無權限與找不到」區塊的 `scrollWidth` 都不大於各自的 `clientWidth`
