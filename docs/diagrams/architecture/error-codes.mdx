@@ -4,7 +4,7 @@ description: 'main 上後端會回的每一個錯誤碼：HTTP 狀態、i18n 訊
 category: '架構'
 tags: [架構, 後端, API, 錯誤碼]
 createdAt: '2026-11-23'
-updatedAt: '2026-11-26'
+updatedAt: '2026-11-27'
 ---
 
 # 錯誤碼
@@ -37,7 +37,7 @@ updatedAt: '2026-11-26'
 
 ## 通用碼
 
-通用碼不加前綴，全站共用；下表八個是目前全部的通用碼，格式與定義見 `api-envelope` spec 的「錯誤碼為大寫底線格式並定義第一批通用碼」（`AUTH_REQUIRED`、`CSRF_FAILED` 兩個由 change `login-auth-guard` 加進那條 Requirement）。
+通用碼不加前綴，全站共用；下表九個是目前全部的通用碼，格式與定義見 `api-envelope` spec 的「錯誤碼為大寫底線格式並定義第一批通用碼」（`AUTH_REQUIRED`、`CSRF_FAILED` 兩個由 change `login-auth-guard` 加進那條 Requirement，`PERMISSION_DENIED` 由 change `authz-steps-3-4` 加進）。
 
 | `code` | HTTP | 訊息鍵 | 在哪裡產生 | 會回這個碼的端點 |
 | :--- | :--- | :--- | :--- | :--- |
@@ -47,6 +47,7 @@ updatedAt: '2026-11-26'
 | `VALIDATION_FAILED` | `422` | `common.validation_failed` | `app/core/errors.py` 的 `handle_validation_error` | [`createSession`](/view/diagrams/architecture/api.openapi#op/createSession)、[`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh)、[`createGoogleSession`](/view/diagrams/architecture/api.openapi#op/createGoogleSession)：body 缺欄位、超過上限、有未宣告的欄位或不是 JSON；[`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) 沒有被驗證的輸入 |
 | `AUTH_REQUIRED` | `401` | `common.auth_required` | `app/core/auth.py` 定義的 `AuthenticationRequiredError`，經 `handle_app_error` 轉成外層。丟出的地方：`get_current_principal`（cookie 不在、token 驗不過或過期，或 `AccountPrincipalLoader.load` 拒絕）；`app/modules/account/router.py` 的 `create_session_refresh` 在請求沒有 refresh cookie 時；`SessionService.current` 在判定通過後帳號已不存在時 | [`getCurrentSession`](/view/diagrams/architecture/api.openapi#op/getCurrentSession)：沒有可通行的登入狀態，不分原因；[`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh)：請求沒有 refresh cookie（不清 cookie）；之後每個掛 `get_current_principal` 的端點 |
 | `CSRF_FAILED` | `403` | `common.csrf_failed` | `app/core/csrf.py` 的 `CsrfMiddleware` 在路由之前直接組錯誤外層（碼取自 `CsrfFailedError`）；缺 `X-CSRF-Token` 或 CSRF cookie、access token 簽章不對，或兩者任一不等於 `HMAC(csrf key, sid)` | 目前沒有：本次的四個寫入端點都在放行清單；之後每個不在放行清單、而且帶著 access cookie 的 `POST`／`PUT`／`PATCH`／`DELETE`（沒有 access cookie 的寫入不驗） |
+| `PERMISSION_DENIED` | `403` | `common.permission_denied` | `app/core/authz.py` 定義的 `PermissionDeniedError`，由 `Authorizer`（經 `require_permission` 依賴）在授權第 3 步丟出，經 `handle_app_error` 轉成外層：權限鍵不在白名單或尚未啟用、鍵的層級與操作不符、矩陣版本列不存在、生效角色的格缺列或全部為關。訊息不帶權限鍵、角色、矩陣版本或拒絕在哪一步 | 目前沒有：沒有端點掛 `require_permission`；之後每個掛它的端點。被拒的資源對呼叫者來說是看不到的時，回 `404 NOT_FOUND`，不回這個碼 |
 | `INTERNAL_ERROR` | `500` | `common.internal_error` | `app/core/middleware.py` 的 `UnhandledExceptionMiddleware`；`app/core/errors.py` 的 `handle_http_exception`（沒有對應碼的 `HTTPException`） | 每個 `/api/v1` 請求，含 [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) |
 | `DATABASE_UNAVAILABLE` | `503` | `common.database_unavailable` | `app/modules/health/service.py` 的 `HealthService.check()` 丟 `DatabaseUnavailableError`，由 `handle_app_error` 轉成外層 | [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth)：資料庫連不上或逾時 |
 
@@ -83,7 +84,7 @@ updatedAt: '2026-11-26'
 
 | 還沒有 | 風險 | 追蹤 |
 | :--- | :--- | :--- |
-| 權限不足的 `403` 與狀態轉換的 `409` | 授權第 3 步（權限矩陣）與第一個有狀態機的端點要先定義；`401` 與 CSRF 的 `403` 已由 change `login-auth-guard` 定義 | 已歸檔的 [backend-skeleton `api-contract.md`](https://github.com/label-suite/label-suite/blob/main/openspec/changes/archive/2026-11-20-backend-skeleton/api-contract.md) §錯誤碼 |
+| 狀態轉換的 `409` | 第一個有狀態機的端點要先定義；權限不足的 `403` 已有 `PERMISSION_DENIED`，授權各步的拒絕各回 `403` 還是 `404` 由第一批掛 `require_permission` 的端點依 `api-contract.md` 落定 | 已歸檔的 [backend-skeleton `api-contract.md`](https://github.com/label-suite/label-suite/blob/main/openspec/changes/archive/2026-11-20-backend-skeleton/api-contract.md) §錯誤碼 |
 | 本文與 `openapi.json`、程式的自動一致性檢查 | 只靠審查時人工對照，漏改不會讓任何檢查失敗 | [#547](https://github.com/label-suite/label-suite/issues/547) §不在範圍 |
 
 ## 決策紀錄
@@ -94,3 +95,4 @@ updatedAt: '2026-11-26'
 | 2026-11-23 | 實作後由 `backend-developer` 依程式校正本文，`code-reviewer` 再核對（[§誰改、什麼時候改](#誰改什麼時候改)） | — | [#547 的裁定](https://github.com/label-suite/label-suite/issues/547#issuecomment-7102478776) |
 | 2026-11-26 | 新增通用碼 `AUTH_REQUIRED`、`CSRF_FAILED` 與 `account` 模組的七個碼（規劃，待實作後校正） | 已知限制的「`400`、`401`、`403`、`409` 還沒有」 | [#719](https://github.com/label-suite/label-suite/issues/719) |
 | 2026-11-26 | 依實作校正 `AUTH_REQUIRED` 與 `account` 七個碼的產生位置與會回它的情況（[§通用碼](#通用碼)、[§account](#account)） | 本文 2026-11-26 依設計寫成的列（`app/modules/account/errors.py`、`SessionService.refresh` 丟 `AUTH_REQUIRED`） | [#719](https://github.com/label-suite/label-suite/issues/719) |
+| 2026-11-27 | 新增通用碼 `PERMISSION_DENIED`（`403`），授權第 3 步拒絕時回（規劃，待實作後校正） | 已知限制的「權限不足的 `403` 與狀態轉換的 `409`」縮成只剩 `409` | [#755](https://github.com/label-suite/label-suite/issues/755) |
