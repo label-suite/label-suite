@@ -161,6 +161,8 @@ CSRF cookie 刻意讓 JS 讀得到，是系統裡唯一非 `httpOnly` 的 cookie
 3. 把操作解析成已啟用、在白名單內的 permission key 與它所屬的層（系統或任務），要求對應角色的 cell 為 `allowed=true`。未知的 key、缺少的列、層級不符、成員身分失效、矩陣版本列不存在，一律拒絕
 4. 檢查附加條件：任務歸屬與狀態、指派與審核者身分、資料集可見性、測試集答案隔離。cell 為 true 也蓋不過這些條件；被隱藏的任務要在不洩漏它存在的前提下回應
 
+第 2 步的任務成員身分與第 4 步附加條件需要的資料，由持有資料的模組實作 `app/core/` 定義的 Protocol 提供，在 `app/main.py` 組裝時接上；`app/core/` 不 import 業務模組。
+
 ### Google SSO
 
 為什麼不引入外部 IdP、為什麼這樣綁定，見 [ADR-004 的 D4](adr/004-auth-and-security.mdx#d4-google-sso-直接走-oidc) 與 [D5](adr/004-auth-and-security.mdx#d5-google-登入綁定既有帳號的條件)。
@@ -469,7 +471,6 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，�
 | # | 問題 | 卡住什麼 | 誰決定 |
 | :--- | :--- | :--- | :--- |
 | 1 | 個人 repo 的 ADR 修訂：029 的 `sequence_tagging` 列、033 改 supersede 或標註只適用個人 repo、033 檔案與 `README.md` 索引的狀態不一致（Accepted 對 Proposed）、036 寫明規格 canon 已移到本 repo | 不卡本 repo 實作；兩個 repo 的說法不一致，追溯會指錯地方 | 維護者，在個人 repo 處理 |
-| 2 | [§授權四步](#授權四步) 第 2 步「該任務目前有效的成員身分」與第 4 步附加條件（任務歸屬與狀態、指派與審核者身分、資料集可見性）的資料由誰提供給 `app/core/`：比照 `PrincipalLoader` 由持有表的模組經 `app/core/` 定義的 Protocol 提供，還是各模組在自己的 service 裡呼叫持有那些表的模組（`task`、`dataset`）的 service | 第一個任務範圍端點的授權設計；第 3 步矩陣的接法已定（[ADR-004 的 D6](adr/004-auth-and-security.mdx#d6-權限矩陣當授權輸入)） | 維護者 |
 
 ## 決策紀錄
 
@@ -515,3 +516,4 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，�
 | 2026-11-26 | 部署加上登入的四件事：正式層必設 `AUTH_SECRET`、Lite 自動產生並存在資料 volume；`__Host-` 與 `Secure` cookie 只在 HTTPS 或 `localhost` 有效；部署後執行一次 Seeder 初始化指令；Google 三個變數一起設（[§部署與維運](#部署與維運)） | — | [#719 留言](https://github.com/label-suite/label-suite/issues/719#issuecomment-7187190476) |
 | 2026-11-27 | 跨模組讀資料與稽核紀錄的位置寫進 [ADR-003 的 D12](adr/003-backend-architecture.mdx#d12-跨模組呼叫只走-service-對-service-的公開函式)、[D13](adr/003-backend-architecture.mdx#d13-稽核紀錄的-model-與寫入函式放在-core)，授權第 3、4 步的位置補進 [ADR-004 的 D6](adr/004-auth-and-security.mdx#d6-權限矩陣當授權輸入)（[§ADR 效力總表](#adr-效力總表)） | — | [#749](https://github.com/label-suite/label-suite/issues/749) |
 | 2026-11-27 | 後端業務模組的切分寫進 [ADR-003 的 D14](adr/003-backend-architecture.mdx#d14-後端業務模組的切分)，模組與資料表歸屬寫在 [backend-modules.mdx](../diagrams/architecture/backend-modules.mdx#預定模組與資料表歸屬)（[§ADR 效力總表](#adr-效力總表)） | — | [#750 留言](https://github.com/label-suite/label-suite/issues/750#issuecomment-7208259366) |
+| 2026-11-27 | 授權第 2 步的任務成員身分與第 4 步的附加條件，由持有資料的模組實作 `app/core/` 定義的 Protocol 提供（[§授權四步](#授權四步)） | §待決 第 2 列「第 2、4 步的資料由持有表的模組經 Protocol 提供，還是各模組在自己的 service 裡呼叫持有那些表的模組的 service」 | [#755](https://github.com/label-suite/label-suite/issues/755) |
