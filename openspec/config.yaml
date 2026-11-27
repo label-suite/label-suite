@@ -28,6 +28,12 @@ context: |
     → planner 寫 proposal → 主 agent 以 clarify skill 的關卡模式寫 clarification
     → planner 寫 specs 與 design → planner 寫 tasks → design-reviewer 審閱、planner 回修。
 
+  常駐文件寫法約束：改 `docs/diagrams/architecture/` 的常駐文件時照做；只照這四條，不載入整份 `doc-writing`：
+  1. 正文只寫現況，不寫日期、演變、「原本……後來……」
+  2. 正文不出現 issue 編號或決議代號（Q18、N1 之類）
+  3. 這次的依據與異動，寫進文件結尾的「決策紀錄」，一列一筆
+  4. 理由最多一句，詳細論證連到 ADR
+
   **只有一個人工停點**：clarification 的 Q（需要維護者決定的項目）逐題問答。P（明確
   問題）直接派原撰寫角色回修，不問維護者。
   其餘環節（明確問題的回修、規劃審閱、程式審查、驗收、歸檔、階段之間的提交、合併）
@@ -111,6 +117,7 @@ rules:
     - 測試與實作放在同一個 task（TDD，見 docs/development/architecture.mdx §測試分層），不另拆測試 task
     - 後端有改動的群組，最後一個 task 是「重新產生 openapi.json 與前端型別並確認與 api-contract 一致」
     - 有 schema 變更的 [@dba] task 要含「依實作校正資料表字典與 ER、為建立的表標記已落地與 Alembic revision、`pnpm check:er` 通過」
+    - 依實作校正常駐文件（backend-modules、error-codes、endpoint-authorization、frontend-routes）由寫那段程式的實作角色在自己的 task 內完成，不另拆成 [@technical-writer] 的 task
     - Python 用 uv、JavaScript 用 pnpm；不得出現 npm install 或 pip install
     - tasks 定稿後先提交規劃產出物，再交由 design-reviewer 審閱；修訂由 planner 另開 commit
 
