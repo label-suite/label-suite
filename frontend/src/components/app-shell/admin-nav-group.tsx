@@ -22,7 +22,7 @@ export interface AdminNavGroupProps {
 }
 
 const SUBMENU_LINK =
-  "flex min-h-11 items-center rounded-(--radius-md) px-(--space-md) text-(length:--text-label) font-medium text-muted-foreground outline-none transition-colors duration-(--dur-fast) ease-(--ease-standard) hover:bg-surface-subtle hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:transition-none data-[current=true]:font-semibold data-[current=true]:text-primary";
+  "flex min-h-11 items-center rounded-(--radius-md) px-(--space-md) text-(length:--text-label) font-medium text-muted-foreground outline-none transition-colors duration-(--dur-fast) ease-(--ease-standard) hover:bg-surface-subtle hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:transition-none motion-reduce:duration-0 data-[current=true]:font-semibold data-[current=true]:text-primary";
 
 /** While `open`, a pointer press outside `container` sets it closed. */
 function useCloseOnOutsidePress(
@@ -162,7 +162,7 @@ export function AdminNavGroup({ item, viewport, collapsed, onNavClick }: AdminNa
         <ChevronDown
           aria-hidden="true"
           className={cn(
-            "ml-auto size-3 shrink-0 text-muted-foreground transition-colors duration-(--dur-fast) ease-(--ease-standard) motion-reduce:transition-none",
+            "ml-auto size-3 shrink-0 text-muted-foreground transition-colors duration-(--dur-fast) ease-(--ease-standard) motion-reduce:transition-none motion-reduce:duration-0",
             open && "text-icon-accent",
           )}
         />

@@ -395,10 +395,12 @@ describe("AppShell collapse", () => {
     const animated = Array.from(document.querySelectorAll("[class*='transition']"));
     expect(animated.length).toBeGreaterThan(0);
     expect(screen.getByRole("banner").getAttribute("class")).toMatch(/transition-\[width/);
+    // Both: transition-none drops the property, duration-0 makes the computed
+    // transition-duration 0s, which is what the Scenario measures.
     for (const element of animated) {
-      expect(element.getAttribute("class"), element.outerHTML.slice(0, 80)).toContain(
-        "motion-reduce:transition-none",
-      );
+      const classes = element.getAttribute("class") ?? "";
+      expect(classes, element.outerHTML.slice(0, 80)).toContain("motion-reduce:transition-none");
+      expect(classes, element.outerHTML.slice(0, 80)).toContain("motion-reduce:duration-0");
     }
   });
 });
@@ -623,6 +625,23 @@ describe("AppShell on a phone", () => {
     expect(onToggle).not.toHaveBeenCalled();
     for (const link of within(mainNav()).getAllByRole("link")) {
       expect(link.querySelector(".sr-only")).toBeNull();
+    }
+  });
+
+  it("lets long labels wrap inside their item, breaking a word only when needed (Q13)", () => {
+    render(<ShellHarness viewport="mobile" navItems={ADMIN_ITEMS} />);
+
+    for (const item of navControls()) {
+      expect(item).toHaveClass("whitespace-normal", "[overflow-wrap:anywhere]", "text-center");
+      expect(item).not.toHaveClass("whitespace-nowrap");
+    }
+  });
+
+  it("keeps the desktop items as they were: no forced word breaks", () => {
+    render(<ShellHarness navItems={ADMIN_ITEMS} />);
+
+    for (const item of navControls()) {
+      expect(item).not.toHaveClass("[overflow-wrap:anywhere]");
     }
   });
 

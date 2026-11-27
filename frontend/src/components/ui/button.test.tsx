@@ -68,6 +68,7 @@ describe("Button motion", () => {
     expect(screen.getByRole("button", { name: "Save" })).toHaveClass(
       "transition-all",
       "motion-reduce:transition-none",
+      "motion-reduce:duration-0",
     );
   });
 });

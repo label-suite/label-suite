@@ -87,7 +87,7 @@ export function AppShell(props: AppShellProps) {
         className={
           desktop
             ? cn(
-                "sticky top-0 z-(--z-sticky) flex h-screen shrink-0 flex-col overflow-y-auto border-r border-border bg-card py-(--space-lg) transition-[width,padding] duration-(--dur-normal) ease-(--ease-standard) motion-reduce:transition-none",
+                "sticky top-0 z-(--z-sticky) flex h-screen shrink-0 flex-col overflow-y-auto border-r border-border bg-card py-(--space-lg) transition-[width,padding] duration-(--dur-normal) ease-(--ease-standard) motion-reduce:transition-none motion-reduce:duration-0",
                 isCollapsed ? SIDEBAR_WIDTH.collapsed : SIDEBAR_WIDTH.expanded,
                 isCollapsed ? SIDEBAR_PADDING.collapsed : SIDEBAR_PADDING.expanded,
               )

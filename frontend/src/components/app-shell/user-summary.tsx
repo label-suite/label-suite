@@ -49,7 +49,7 @@ export function UserSummary({
         <Link
           to={profileHref}
           aria-label={t("landmarks.profileLink")}
-          className="flex min-w-0 flex-1 items-center gap-2.5 rounded-(--radius-md) outline-none transition-opacity duration-(--dur-fast) ease-(--ease-standard) hover:opacity-75 focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:transition-none"
+          className="flex min-w-0 flex-1 items-center gap-2.5 rounded-(--radius-md) outline-none transition-opacity duration-(--dur-fast) ease-(--ease-standard) hover:opacity-75 focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:transition-none motion-reduce:duration-0"
         >
           <span
             aria-hidden="true"
