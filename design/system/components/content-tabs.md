@@ -1,6 +1,8 @@
 # Desktop Content Tabs
 
 > 正典章節：`MASTER.md` §Desktop Content Tabs ｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c` ｜未標檔名的行號指 `design/prototype/pages/shared/content-tabs.css`
+>
+> 程式實作：尚未實作
 
 ## 結構
 

@@ -1,6 +1,8 @@
 # Language Toggle
 
 > 正典章節：`MASTER.md` §Buttons 的 `.btn-language`（維護者 2026-11-17 裁定：與本元件視為同一個，規格用正典名）｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
+>
+> 程式實作：`frontend/src/features/auth/language-toggle.tsx`
 
 ## 結構
 

@@ -1,6 +1,8 @@
 # Card
 
 > 正典章節：原件 `MASTER.md` §Cards（只見於 `pages/dashboard/dashboard.layout.css:171` 的註解，本 repo 無原文）｜批次 `b2-admin-dashboard-task` ｜交付包 commit `eb9a884`
+>
+> 程式實作：`frontend/src/components/ui/card.tsx`
 
 ## 結構
 

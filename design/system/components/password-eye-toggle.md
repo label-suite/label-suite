@@ -1,6 +1,8 @@
 # Password Eye Toggle
 
 > 正典章節：**無**。`MASTER.md` §Inputs 沒有密碼欄位這個情境。｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
+>
+> 程式實作：`frontend/src/features/auth/password-input.tsx`
 
 ## 結構
 

@@ -1,6 +1,8 @@
 # Badge
 
 > 正典章節：`MASTER.md` §Semantic State Colors（基礎）＋ §Status Badges（role 變體）｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
+>
+> 程式實作：`frontend/src/components/ui/badge.tsx`
 
 ## 結構
 

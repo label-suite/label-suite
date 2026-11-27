@@ -1,6 +1,8 @@
 # Review Status Track
 
 > 正典章節：`MASTER.md` §Review Status Track ｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`（正典定義在 showcase） ｜未標檔名的行號指 `design/prototype/components-showcase.html`
+>
+> 程式實作：尚未實作
 
 ## 結構
 

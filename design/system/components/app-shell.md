@@ -3,6 +3,8 @@
 > 正典章節：`MASTER.md` — Sidebar（`pages/task-management/task-new.html:22` 這樣引用它）｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
 >
 > 這是交付包的 `shared/app-shell` 條目：**一個沒有自己 HTML 檔的畫面**。`pages/shared/` 一個 `.html` 都沒有，外殼整套由 `sidebar.js` 注入。
+>
+> 程式實作：尚未實作
 
 ## 結構
 

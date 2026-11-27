@@ -1,6 +1,8 @@
 # Step Indicator
 
 > 正典章節：原件 `MASTER.md` §Step Indicator（只見於 `assets/tokens.css:21` 的註解，本 repo 無原文）｜批次 `b2-admin-dashboard-task` ｜交付包 commit `eb9a884` ｜**單頁專屬** ｜未標檔名的行號指 `design/prototype/pages/task-management/task-new.html`
+>
+> 程式實作：尚未實作
 
 ## 結構
 

@@ -1,6 +1,8 @@
 # Pagination
 
 > 正典章節：`MASTER.md` §Pagination ｜行為契約 [UXC-11](../ux-conventions.md#uxc-11-篩選搜尋與分頁的狀態放在網址上)｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
+>
+> 程式實作：尚未實作
 
 ## 結構
 
