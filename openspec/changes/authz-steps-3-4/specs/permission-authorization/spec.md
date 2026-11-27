@@ -193,7 +193,7 @@
 
 ### Requirement: 標準答案不經任何角色放行
 
-宣告會讀標準答案的操作，系統 SHALL 對任何登入的人一律回 `404 NOT_FOUND`，與資源不存在同一個回應；沒有任何系統角色、任務角色或矩陣設定能讓它放行，回應 MUST NOT 含標準答案或透露那裡有答案。
+宣告會讀標準答案的操作，系統 SHALL 對任何登入的人都不放行：通過成員身分與矩陣格兩段的人，一律在附加條件這一段得到 `404 NOT_FOUND`，與資源不存在同一個回應；在前面某一段就被擋下的人，得到那一段自己的拒絕。沒有任何系統角色、任務角色或矩陣設定能讓它放行，任何一種回應都 MUST NOT 含標準答案或透露那裡有答案。
 
 來源：PRD §不是角色的讀取對象；AGENTS.md Hard Rule 6；security-agent-rules S5、S6；規格 06-02 §授權判斷的順序 第 4 條；clarification Q1。
 
@@ -202,6 +202,12 @@
 - **WHEN** 四位在任務 T 都有生效成員身分的呼叫者——同時是任務 T 專案負責人的系統管理員、專案負責人、審核員與標記員（標記員 × `task.detail.view` 的格先改為開，四人的生效角色對 `task.detail.view` 都為開）——各呼叫一個需要 `task.detail.view`、宣告會讀任務 T 標準答案的任務 T 範圍操作，再各呼叫一個需要同一個鍵、但沒有宣告讀標準答案的任務 T 範圍操作
 - **THEN** 後者四次都成功，表示四人都通過了成員身分與矩陣格兩段；前者四次都回 `404`、`code` 為 `"NOT_FOUND"`，`message` 與呼叫一個不存在的資源時相同，這個 `404` 來自答案隔離
 - **AND** 前者四個回應 body 的 `data` 都為 `null`，序列化後不含任何標準答案的值，也不含 `answer`、`groundTruth`、`isTestItem` 字樣
+
+#### Scenario: 格為關的標記員讀標準答案得到 403，回應不含答案
+
+- **WHEN** 矩陣為初始狀態（標記員 × `task.detail.view` 為關），任務 T 只有標記員身分的人呼叫一個需要 `task.detail.view`、宣告會讀任務 T 標準答案的任務 T 範圍操作
+- **THEN** 系統回覆 `403`、`code` 為 `"PERMISSION_DENIED"`，在矩陣格那一段就被擋下
+- **AND** 回應 body 的 `data` 為 `null`，序列化後不含任何標準答案的值，也不含 `answer`、`groundTruth`、`isTestItem` 字樣
 
 ### Requirement: 授權拒絕的回應不外露內部資訊
 
