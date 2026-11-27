@@ -4,7 +4,7 @@
 >
 > 這是交付包的 `shared/app-shell` 條目：**一個沒有自己 HTML 檔的畫面**。`pages/shared/` 一個 `.html` 都沒有，外殼整套由 `sidebar.js` 注入。
 >
-> 程式實作：尚未實作
+> 程式實作：`frontend/src/components/app-shell/app-shell.tsx`
 
 ## 結構
 

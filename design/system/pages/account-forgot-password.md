@@ -10,7 +10,7 @@
 
 | 視圖 | 怎麼走到 | 用到的元件 |
 | :--- | :--- | :--- |
-| `#state-default` | 開 `pages/account/forgot-password.html` | [Auth Navbar](../components/auth-navbar.md)、[Language Toggle](../components/lang-toggle.md)、[Auth Card](../components/auth-card.md)、[Input](../components/input.md)（`.field-error`）、[Button](../components/button.md)（`.submit-btn`） |
+| `#state-default` | 開 `pages/account/forgot-password.html` | [Auth Navbar](../components/auth-navbar.md)、[Brand Mark](../components/brand-mark.md)（頁首與卡片的 logo）、[Language Toggle](../components/lang-toggle.md)、[Auth Card](../components/auth-card.md)、[Input](../components/input.md)（`.field-error`）、[Button](../components/button.md)（`.submit-btn`） |
 | `#state-submitted` | 送出任一 Email（**不論存不存在**）：停在本頁顯示同一句通用提示 | [State Panel](../components/state-panel.md)（本頁的 class 是 `.success-panel`，`:399`）、`.back-row` |
 | `#sim-logged-in` | 加 `?sim_logged_in=1` | **無**（`redirectIfLoggedIn()` 直接導走） |
 | `#sim-logged-out` | 加 `?sim_logged_out=1` | 同 `#state-default` |

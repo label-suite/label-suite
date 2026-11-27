@@ -2,7 +2,7 @@
 
 > 正典章節：`MASTER.md` §Buttons 的 `.btn-language`（維護者 2026-11-17 裁定：與本元件視為同一個，規格用正典名）｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
 >
-> 程式實作：`frontend/src/features/auth/language-toggle.tsx`
+> 程式實作：`frontend/src/components/language-toggle.tsx`
 
 ## 結構
 
@@ -16,7 +16,7 @@
 
 **這是帳號頁唯一沒有分裂的元件**：五頁的 `.lang-toggle` 規則集雜湊完全相同。其餘（`.card` 四份、`.navbar` 兩份、`.spinner` 兩份、`.submit-btn` 兩份、`.success-panel` 兩份）都已分歧 → `../design-gaps.md` G-28。
 
-登入後的版本是另一套：側欄的 `#langToggle`（`pages/shared/sidebar.js:2053`）與行動版 `#mobileLangToggle`（`:2057`），見 [App Shell](app-shell.md)。
+登入後的版本在 prototype 是另一套 markup：側欄的 `#langToggle`（`pages/shared/sidebar.js:2053`）與行動版 `#mobileLangToggle`（`:2057`），見 [App Shell](app-shell.md)。兩者的結構（地球圖示＋語言代碼）、文案與行為相同，實作上是**同一個元件**：側欄用預設尺寸，手機上方品牌列用精簡尺寸（`.mobile-lang-toggle`，圖示 16px、`sidebar.js:2057`–`:2060`），不建第二份（#720 clarification Q9）。
 
 ## 適用狀態
 
@@ -59,4 +59,4 @@
 
 ## 用到它的畫面
 
-五個登出帳號頁（實際版）、`components-showcase`（正典版）。`account/profile` **沒有語言鈕**——它靠側欄的那一個。
+五個登出帳號頁（實際版）、`components-showcase`（正典版）、`shared/app-shell`（側欄品牌區與手機上方品牌列）。`account/profile` **沒有自己的語言鈕**——它靠側欄的那一個。
