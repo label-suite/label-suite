@@ -72,16 +72,16 @@ classDiagram
 
 ### 元件與職責
 
-| 元件                                                                      | 檔案                                                                   | 異動 | 職責                                                                                                                                                                                                                       |
-| :------------------------------------------------------------------------ | :--------------------------------------------------------------------- | :--- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `create_app`                                                              | `backend/app/main.py`                                                  | 修改 | 建 `FastAPI` 時傳 `openapi_tags=OPENAPI_TAGS`（list 的順序就是兩個文件入口的顯示順序，依 Q2）；`api.include_router(account_router, tags=["account"])`、`api.include_router(health_router, tags=["health"])`（依 P4 採 A2） |
-| `OPENAPI_TAGS`（名稱暫定）                                                | `backend/app/main.py`                                                  | 新增 | tag 的名稱與英文說明的唯一來源；說明是給人看的模組用途，不寫內部識別碼、類別名或檔案路徑（handler docstring 同一條規矩）                                                                                                   |
-| health 的 `router`                                                        | `backend/app/modules/health/router.py`                                 | 不動 | 維持 `APIRouter()`，不寫 `tags`，避免與掛載處的 tag 串接成兩個（P4）                                                                                                                                                       |
-| account 的 `router`                                                       | `backend/app/modules/account/router.py`                                | 不動 | 同上                                                                                                                                                                                                                       |
-| `install_openapi`、`generate_operation_id`、`assert_unique_operation_ids` | `backend/app/core/openapi.py`                                          | 不動 | tag 由 FastAPI 原生產生，後處理不必處理；operationId 的算法不看 tag，所以 8 個 operationId 不變                                                                                                                            |
-| 匯出指令                                                                  | `backend/app/scripts/export_openapi.py`                                | 不動 | `json.dumps(sort_keys=True)` 只排序物件的 key，頂層 `tags` 是 list，宣告順序原樣保留                                                                                                                                       |
-| tag 檢查測試                                                              | `backend/tests/unit/test_openapi.py`（建議沿用此檔與其 `app` fixture） | 新增 | 列舉 app 的每個 operation，斷言恰好一個 tag、該 tag 在頂層宣告、頂層每筆 `description` 非空（P5）；新模組漏帶 tag 時失敗（列舉方式見選項 B）                                                                               |
-| Pydantic schema                                                           | —                                                                      | 不動 | 沒有 Request／Response／Query schema 異動                                                                                                                                                                                  |
+| 元件                                                                      | 檔案                                                                                                        | 異動 | 職責                                                                                                                                                                                                                       |
+| :------------------------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------- | :--- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `create_app`                                                              | `backend/app/main.py`                                                                                       | 修改 | 建 `FastAPI` 時傳 `openapi_tags=OPENAPI_TAGS`（list 的順序就是兩個文件入口的顯示順序，依 Q2）；`api.include_router(account_router, tags=["account"])`、`api.include_router(health_router, tags=["health"])`（依 P4 採 A2） |
+| `OPENAPI_TAGS`（名稱暫定）                                                | `backend/app/main.py`                                                                                       | 新增 | tag 的名稱與英文說明的唯一來源；說明是給人看的模組用途，不寫內部識別碼、類別名或檔案路徑（handler docstring 同一條規矩）                                                                                                   |
+| health 的 `router`                                                        | `backend/app/modules/health/router.py`                                                                      | 不動 | 維持 `APIRouter()`，不寫 `tags`，避免與掛載處的 tag 串接成兩個（P4）                                                                                                                                                       |
+| account 的 `router`                                                       | `backend/app/modules/account/router.py`                                                                     | 不動 | 同上                                                                                                                                                                                                                       |
+| `install_openapi`、`generate_operation_id`、`assert_unique_operation_ids` | `backend/app/core/openapi.py`                                                                               | 不動 | tag 由 FastAPI 原生產生，後處理不必處理；operationId 的算法不看 tag，所以 8 個 operationId 不變                                                                                                                            |
+| 匯出指令                                                                  | `backend/app/scripts/export_openapi.py`                                                                     | 不動 | `json.dumps(sort_keys=True)` 只排序物件的 key，頂層 `tags` 是 list，宣告順序原樣保留                                                                                                                                       |
+| tag 檢查測試                                                              | `backend/tests/unit/test_openapi_tags.py`（新檔；`test_openapi.py` 受 `test_size_limits.py` 的 400 行上限） | 新增 | 列舉 app 的每個 operation，斷言恰好一個 tag、該 tag 在頂層宣告、頂層每筆 `description` 非空（P5）；新模組漏帶 tag 時失敗（列舉方式見選項 B）                                                                               |
+| Pydantic schema                                                           | —                                                                                                           | 不動 | 沒有 Request／Response／Query schema 異動                                                                                                                                                                                  |
 
 ### 設計選項 A：tag 宣告在哪裡
 
@@ -104,7 +104,7 @@ FastAPI 會把 `APIRouter(tags=...)` 與 `include_router(tags=...)` 兩者的 ta
 | B1 讀產生出來的文件 | 用 `create_app(make_test_settings(...))` 組 app，走訪 `app.openapi()["paths"]` 每個 path item 中屬於 HTTP method 的 key（`get`、`put`、`post`、`delete`、`patch` 等，略過 `parameters`、`summary` 這類非 operation 的 key），斷言 `len(operation.get("tags", [])) == 1` | 驗的就是對外的契約本身；和既有 `test_the_account_operation_ids_follow_the_contract` 讀 `app.openapi()` 的方式一致；不依賴 FastAPI 內部 API | 失敗訊息要自己組（列出缺 tag 的 method 與 path）                                                             |
 | B2 走訪路由         | 仿 `assert_unique_operation_ids` 用 `iter_route_contexts(app.routes)` 讀每條 `APIRoute` 的 tags                                                                                                                                                                         | 可以在 `create_app` 啟動時就失敗（像 operationId 撞名檢查）                                                                                | `iter_route_contexts` 是較內部的 API；若做成啟動檢查，就超出 issue「加一個測試」的範圍；未採用啟動檢查（P6） |
 
-**採用 B1，放在 `backend/tests/unit/test_openapi.py`；只做測試，不在 `create_app` 加啟動檢查（clarification P6）。** 斷言的對象是 `create_app` 組出的真實 app，所以之後新模組掛進 `/api/v1` 卻沒帶 tag，這條測試就會失敗。`include_in_schema=False` 的路由（FastAPI 內建的 `/docs`、`/redoc`、`/openapi.json`）本來就不在文件裡，不受影響。
+**採用 B1，放在新檔 `backend/tests/unit/test_openapi_tags.py`；只做測試，不在 `create_app` 加啟動檢查（clarification P6）。** 斷言的對象是 `create_app` 組出的真實 app，所以之後新模組掛進 `/api/v1` 卻沒帶 tag，這條測試就會失敗。`include_in_schema=False` 的路由（FastAPI 內建的 `/docs`、`/redoc`、`/openapi.json`）本來就不在文件裡，不受影響。
 
 測試的範圍依 clarification P5，三項都驗：
 
@@ -180,6 +180,8 @@ sequenceDiagram
   end
 ```
 
+上圖的 `alt` 分支涵蓋四個失敗 Scenario：漏帶 tag、帶了兩個 tag（同屬「tag 數不是 1」）、tag 沒在頂層宣告、說明為空。
+
 tag **名稱**是否等於模組目錄名，由 `code-reviewer` 審查，測試不驗（clarification P7）。
 
 ### Scenario: 匯出的介面描述檔帶分組
@@ -214,12 +216,12 @@ Orval 維持 `mode: "split"`，hook 與型別名稱只取決於 operationId 與 
 
 這份常駐文件的異動依 clarification 交給 tasks 執行，規劃階段不改；下表是要做的異動，`planner` 列進 `tasks.md`。改寫時照 `openspec/config.yaml` 的常駐文件寫法約束（正文只寫現況、不寫 issue 編號，依據寫進決策紀錄），規則本文連到 `api-agent-rules.mdx` A1（Q1），模組名舉例照 ADR-003 D14（P1）。
 
-| 節                               | 異動     | 摘要                                                                                                                                                                                              |
-| :------------------------------- | :------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| §app factory 與 lifespan         | 修改     | 步驟 2 加「傳 `openapi_tags`（宣告順序即顯示順序：照規格章節，`health` 最後）」；步驟 6 寫明掛載時用 `include_router(tags=[...])` 帶模組 tag                                                      |
-| §OpenAPI 匯出與 operationId 檢查 | 修改     | 表格加一列 tag：一個模組一個 tag、名稱等於 `app/modules/` 下的目錄名、每個 operation 恰好一個、頂層宣告附非空的英文說明；缺 tag、未宣告與空說明由 `tests/unit/test_openapi.py` 擋，名稱對錯靠審查 |
-| §新增業務模組的檢查清單          | 修改     | 加一項「掛 router 時用 `include_router(tags=["<module>"])` 指定模組 tag，模組的 `APIRouter()` 不寫 tags；在 `openapi_tags` 依規格章節的位置加一筆英文說明」                                       |
-| §決策紀錄                        | 新增一列 | 後端 OpenAPI 依模組分 tag，列出異動的節，來源連 issue                                                                                                                                             |
+| 節                               | 異動     | 摘要                                                                                                                                                                                                   |
+| :------------------------------- | :------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| §app factory 與 lifespan         | 修改     | 步驟 2 加「傳 `openapi_tags`（宣告順序即顯示順序：照規格章節，`health` 最後）」；步驟 6 寫明掛載時用 `include_router(tags=[...])` 帶模組 tag                                                           |
+| §OpenAPI 匯出與 operationId 檢查 | 修改     | 表格加一列 tag：一個模組一個 tag、名稱等於 `app/modules/` 下的目錄名、每個 operation 恰好一個、頂層宣告附非空的英文說明；缺 tag、未宣告與空說明由 `tests/unit/test_openapi_tags.py` 擋，名稱對錯靠審查 |
+| §新增業務模組的檢查清單          | 修改     | 加一項「掛 router 時用 `include_router(tags=["<module>"])` 指定模組 tag，模組的 `APIRouter()` 不寫 tags；在 `openapi_tags` 依規格章節的位置加一筆英文說明」                                            |
+| §決策紀錄                        | 新增一列 | 後端 OpenAPI 依模組分 tag，列出異動的節，來源連 issue                                                                                                                                                  |
 
 `docs/diagrams/architecture/error-codes.mdx` 與 `endpoint-authorization.mdx` 不受影響：沒有新錯誤碼，端點的角色、權限矩陣的格與遮蔽欄位都不變。
 

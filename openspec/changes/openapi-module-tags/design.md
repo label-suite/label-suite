@@ -45,27 +45,55 @@
 
 替代方案：在程式裡依一張「模組→章節號」表自動排序。未採用：多一層抽象、多一份要維護的對照表，而順序只影響文件顯示、不影響任何 wire 行為。
 
-### D3：測試讀產生出來的文件（B1），三項檢查各一個測試函式
+### D3：測試讀產生出來的文件（B1），放在新檔 `test_openapi_tags.py`
 
 做法見 `system-design.md` §設計選項 B（clarification P5、P6）。補充：
 
-- 放在 `backend/tests/unit/test_openapi.py`，沿用該檔既有的 `app` fixture（`create_app(make_test_settings(...))`），讀 `app.openapi()`
+- 放在新檔 `backend/tests/unit/test_openapi_tags.py`，不加進 `backend/tests/unit/test_openapi.py`：後者再加這些測試會超過 `backend/tests/unit/test_size_limits.py` 的 400 行上限。`app` fixture 已在 `backend/tests/conftest.py` 共用（`create_app(make_test_settings(...))`），新檔直接取用，讀 `app.openapi()`
 - 走訪 `paths` 時只取 HTTP method 的 key（`get`、`put`、`post`、`delete`、`patch`、`head`、`options`、`trace`），略過 `parameters`、`summary` 等
-- 三個測試函式分別驗：恰好一個 tag、tag 在頂層宣告、頂層 `description` 去空白後非空；失敗訊息列出每個違規的 method、path 與實際值，對應 spec 的三個失敗 Scenario
-- 另加一個契約測試（比照既有的 `test_the_account_operation_ids_follow_the_contract`），斷言頂層 `tags` 的 `name` 依序為 `account`、`health`，以及 8 個 operation 各自的 tag 值；新增模組時要一併更新這個測試，順序錯誤因此也會被擋下
-- 失敗 Scenario 的反向驗證：另以一個測試專用的小型 FastAPI app（掛一條不帶 tag、一條帶兩個 tag、一條帶未宣告 tag 的路由，並給一筆空說明）呼叫同一個檢查邏輯，斷言它回報違規。為了讓正向與反向共用邏輯，把「列出違規」寫成測試檔內的 helper 函式（例 `collect_tag_violations(document)`），不放進 `app/` 程式碼（P6：不加啟動檢查）
+- 把「列出違規」寫成新檔內的 helper 函式（例 `collect_tag_violations(document)`），回傳每個違規的種類、method、path 與實際值；不放進 `app/` 程式碼（P6：不加啟動檢查）
+- 三個正向測試函式對真實 app 分別驗：恰好一個 tag、tag 在頂層宣告、頂層 `description` 去空白後非空
+- 一個說明內容測試：每筆 `description` 只含 ASCII 可列印字元、恰好一句（句點只在結尾），且不含 spec 列出的路徑、識別碼、部署與答案相關字樣
+- 一個契約測試（比照既有的 `test_the_account_operation_ids_follow_the_contract`），斷言頂層 `tags` 的 `name` 依序為 `account`、`health`，以及 8 個 operation 各自的 tag 值
+- 四個反向測試用測試專用的小型 FastAPI app，分別構造漏帶、帶兩個、帶未宣告 tag、空說明，斷言 helper 回報對應的違規與 method、path（或 tag 名稱）
 
 替代方案：B2 走訪路由，或在 `create_app` 做啟動檢查。未採用的理由見 `system-design.md` §設計選項 B 與 clarification P6。
 
+#### Scenario 與驗證對照
+
+| Scenario                         | 由誰驗                                                                                                                                            |
+| :------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 每個操作都歸在所屬模組的分組     | 契約測試（tag 值）＋正向「恰好一個 tag」                                                                                                          |
+| 新模組漏掉分組時檢查失敗         | 反向測試：漏帶                                                                                                                                    |
+| 同一操作帶兩個分組時檢查失敗     | 反向測試：帶兩個                                                                                                                                  |
+| 頂層分組每筆都有名稱與非空說明   | 契約測試（名稱）＋正向「說明非空」                                                                                                                |
+| 頂層分組的說明只寫模組用途       | 說明內容測試                                                                                                                                      |
+| 操作的分組未在頂層宣告時檢查失敗 | 反向測試：未宣告                                                                                                                                  |
+| 頂層分組的說明為空時檢查失敗     | 反向測試：空說明                                                                                                                                  |
+| 頂層分組依規格章節排序           | 契約測試（順序）                                                                                                                                  |
+| 加上分組後操作識別名不變         | 既有 `test_the_account_operation_ids_follow_the_contract` 與既有 `getHealth` 識別名測試（不改），加上 task 2.2 核對 8 個 operationId              |
+| 前端產生的呼叫層名稱不變         | task 2.2：前端契約漂移檢查、核對產物沒有增減檔案、`useGetHealth`／`getHealth` 仍存在；前端 `typecheck` 與 `build` 擋下名稱消失                    |
+| 匯出的介面描述檔帶分組           | task 2.2 重匯出後核對兩份檔案的 `tags`；兩份一致與提交一致由既有漂移測試 `test_committed_document_matches_the_code` 與 CI `api-contract` job 擋下 |
+
+#### 新增模組時的連動
+
+契約測試與 spec 中寫死 `account`、`health` 的 Scenario（「每個操作都歸在所屬模組的分組」「頂層分組每筆都有名稱與非空說明」「頂層分組依規格章節排序」「加上分組後操作識別名不變」）只描述目前的兩個模組。下一個新增模組的 change 要在自己的 spec delta 以 MODIFIED 改寫這幾個 Scenario 的值，並同步更新契約測試的順序與值；`backend-modules.mdx` 檢查清單與 `backend-developer.md` 都寫明這一步。
+
 ### D4：規則本文寫在 A1，其他各處只連過去
 
-依 clarification Q1。A1 新增一小段「OpenAPI tag」：一個後端模組一個 tag、名稱等於 `backend/app/modules/` 下的目錄名、每個 operation 恰好一個且沒有例外（P3）、頂層宣告附非空英文說明、順序照規格章節且 `health` 最後（Q2）、掛載處帶 tag 而模組 `APIRouter()` 不寫、名稱對錯由審查把關；A1 開頭的速查表加一列 tag，並在 `api-agent-rules.mdx` §決策紀錄補一列。
+依 clarification Q1。A1 新增一小段「OpenAPI tag」：一個後端模組一個 tag、名稱等於 `backend/app/modules/` 下的目錄名、每個 operation 恰好一個且沒有例外（P3）、頂層宣告附非空英文說明、順序照規格章節且 `health` 最後（Q2）、掛載處帶 tag 而模組 `APIRouter()` 不寫、名稱對錯由審查把關。同一份文件另外三處要跟著改，否則與實況不符：
+
+- A1 收合區塊的「檢查方式」：tag 的部分標為已建置，寫出測試檔 `backend/tests/unit/test_openapi_tags.py` 與跑它的 CI job `backend-sqlite`、`backend-postgres`；前綴、operationId 穩定性的部分維持「待建置」
+- 文件開頭「在 CI 跑的只有 A5 的檢查，以及 A4、A6 的一部分」改成也列出 A1 的 tag 檢查
+- §前提「開工前先確認這六件事」加一列 OpenAPI tag（指向 A1），改成七件事
+
+並在 `api-agent-rules.mdx` §決策紀錄補一列。
 
 其他各處只寫一句操作性的檢查項並連到 A1，模組名舉例照 ADR-003 D14（P1）：
 
 | 檔案                                                                 | 加什麼                                                                                              |
 | :------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------- |
-| `.claude/agents/backend-developer.md`                                | §API 與 OpenAPI 一條「掛 router 時指定模組 tag」；完成檢查清單一項                                  |
+| `.claude/agents/backend-developer.md`                                | §API 與 OpenAPI 一條「掛 router 時指定模組 tag，同時更新 tag 契約測試的順序與值」；完成檢查清單一項 |
 | `.claude/agents/code-reviewer.md`                                    | 審查清單一項「每個 operation 恰好一個 tag，且 tag 名稱等於所屬模組目錄名」                          |
 | `.claude/agents/sd.md`                                               | api-contract 寫法一條「每個端點標 tag（模組）」；自我檢查一項                                       |
 | `openspec/config.yaml`                                               | `rules.api-contract` 一條「端點總覽要有 tag（模組）欄，值等於所屬模組目錄名」                       |
@@ -78,7 +106,7 @@
 
 ### D5：常駐文件由寫那段程式的角色校正
 
-`backend-modules.mdx` 的異動清單見 `system-design.md` §常駐文件異動；依 `rules.tasks`，由改 `main.py` 的 `backend-developer` 在同一個 task 內完成，不另拆 `technical-writer` task。`error-codes.mdx`、`endpoint-authorization.mdx`、`frontend-routes.mdx` 不受影響。
+`backend-modules.mdx` 的異動清單見 `system-design.md` §常駐文件異動；依 `rules.tasks`，由改 `main.py` 的 `backend-developer` 在同一個 task（tasks 2.1）內完成，不另拆 task。§新增業務模組的檢查清單 不新增一項，而是把 tag 要求併進既有的「在 `create_app` 把模組的 router 掛進 `/api/v1` 父 router」一項，並寫明「同時更新 tag 契約測試的順序與值」。`error-codes.mdx`、`endpoint-authorization.mdx`、`frontend-routes.mdx` 不受影響。
 
 A1、角色檔、範本、`config.yaml`、`schema.yaml` 屬規則與工具文件，不是程式的校正，由 `technical-writer` 負責；它們只連到 A1，不依賴後端程式先落地。
 

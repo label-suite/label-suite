@@ -39,6 +39,12 @@
 - **THEN** 陣列恰好有兩筆，`name` 分別為 `account` 與 `health`，沒有重複
 - **AND** 每筆的 `description` 去掉前後空白後不是空字串
 
+#### Scenario: 頂層分組的說明只寫模組用途
+
+- **WHEN** 執行匯出指令後讀取 `backend/openapi.json` 頂層 `tags` 每筆的 `description`
+- **THEN** 每筆只含 ASCII 可列印字元，以一個句點結尾，且句點只出現在結尾（恰好一句英文）
+- **AND** 每筆都不含 `/`、`\`、`_`、`://`、`localhost`，也不含 `answer`、`ground truth`、`test set`（不分大小寫）
+
 #### Scenario: 操作的分組未在頂層宣告時檢查失敗
 
 - **WHEN** 組裝的服務中有一個操作帶的分組（例 `accounts`）不在頂層 `tags` 的 `name` 中，然後執行分組檢查
@@ -62,11 +68,6 @@
 - **WHEN** 執行匯出指令後讀取 `backend/openapi.json` 的頂層 `tags`
 - **THEN** 各筆 `name` 依序為 `account`、`health`
 
-#### Scenario: 重複匯出時分組順序不變
-
-- **WHEN** 程式未變，連續執行兩次匯出指令
-- **THEN** 兩次產出的頂層 `tags` 的 `name` 依序都是 `account`、`health`
-
 ### Requirement: 加上分組不改變操作識別名與請求回應
 
 系統 SHALL 在加上分組後維持每個操作的識別名、參數、請求內容與回應宣告不變；分組只是文件的描述性欄位，MUST NOT 參與操作識別名的計算，也 MUST NOT 用來表達授權邊界。
@@ -86,7 +87,7 @@
 
 ### Requirement: 匯出的介面描述檔與文件站副本帶相同分組
 
-系統 SHALL 讓匯出指令寫出的 `backend/openapi.json` 與文件站副本 `docs/diagrams/architecture/api.openapi.json` 都含操作的分組與頂層 `tags`，兩份位元組完全相同；版本庫中提交的兩份檔案 MUST 與目前程式匯出的結果一致。
+系統 SHALL 讓匯出指令寫出的 `backend/openapi.json` 與文件站副本 `docs/diagrams/architecture/api.openapi.json` 都含操作的分組與頂層 `tags`。兩份位元組相同、與提交的檔案一致、重複匯出內容相同，由既有 requirement「匯出指令不需環境變數與資料庫並產出穩定的檔案」規範，本條不重述。
 
 來源：api-agent-rules A4、A5；issue #765 §預期調整第 4 項；ADR-003 D6。
 
@@ -94,4 +95,3 @@
 
 - **WHEN** 不帶輸出路徑執行匯出指令
 - **THEN** `backend/openapi.json` 與 `docs/diagrams/architecture/api.openapi.json` 都含頂層 `tags`，且每個操作都有 `tags`
-- **AND** 兩份檔案位元組完全相同，也與版本庫中提交的檔案沒有差異
