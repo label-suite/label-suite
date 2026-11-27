@@ -83,7 +83,7 @@
 `frontend/src/main.tsx` 以 `<StrictMode>` 包住整個應用，開發模式（E2E 跑的就是它）下 effect 會「執行、清理、再執行」一次，refs 保留。所以判斷「要不要重查」不能依「這個 effect 是不是第一次跑」或「外殼是不是第一次掛載」，否則 StrictMode 的模擬重新掛載就會讓每次頁面載入多送一次查詢。判斷改依 StrictMode 重跑時不會變的值：`location.key` 與 `location.pathname`。
 
 1. `createAppRouter()` 在所有路由外加一層沒有 path 的根 layout route（`src/app/app-root.tsx` 的 `AppRoot`，只畫 `<Outlet>`），這一層不因換頁而卸載，只有整頁重新載入才重來。它以 context 提供一個 ref：`{ checkedKey, checkedPathname, leftSince }`，前兩者是上一次登入狀態檢查時外殼所在的 `location.key` 與 pathname（初值為空），`leftSince` 表示那之後路由是否到過別的 pathname
-2. `AppRoot` 有一個依 `location.pathname` 的 effect：pathname 和它上一次看到的不同時把 `leftSince` 設為 true。它只做比較與設值，StrictMode 重跑時結果相同
+2. `AppRoot` 有一個依 `location.pathname` 的 effect：目前的 pathname 不等於 ref 裡的 `checkedPathname`（外殼記下的值，不是 `AppRoot` 自己上一次看到的 pathname）時，把 `leftSince` 設為 true；相等時不動。它只做比較與設值，StrictMode 重跑時結果相同
 3. `AppShellLayout` 有一個依 `location.key`、`location.pathname` 的 effect，依序判斷：
    - `checkedKey` 為空（這次頁面載入外殼第一次到達，守門剛查過）→ 記下目前的 key 與 pathname、`leftSince` 設為 false，**不重查**
    - `location.key` 等於 `checkedKey`（StrictMode 的重跑，或同一個 location 的重新渲染）→ 什麼都不做
@@ -92,7 +92,7 @@
 4. `cancelRefetch: false` 讓一連串轉址裡進行中的那一次重查被沿用，不重送
 5. 查詢維持 `staleTime: Infinity`、`refetchOnWindowFocus: false`；重查進行中側欄沿用上一份資料、不顯示載入中；重查得到未登入時守門照既有規則帶回登入頁（Q11；ui §資料來源 的「為什麼換頁就重查、焦點不重查」；sd §關鍵情境「角色被改掉時側欄不立刻變」）
 
-React 先跑子層再跑父層的 effect，所以外殼底下的直接換頁（日後多頁時）在同一次 commit 裡 `AppRoot` 還沒設 `leftSince`；這時靠第 3 點的「pathname 不同」判斷。經外殼以外的轉址（本次「任務管理 → `*` → `/` → 落點」）回到同一個 pathname 時，中途的 pathname 已讓 `AppRoot` 設好 `leftSince`。
+React 先跑子層再跑父層的 effect，所以同一次 commit 裡外殼的 effect 先記下到達、`AppRoot` 的 effect 後跑。`AppRoot` 比對的是外殼剛記下的 `checkedPathname`，到達的那一頁與它相等，`leftSince` 維持外殼剛設的 false，不會在外殼記下到達之後又被設回 true；若改成比對 `AppRoot` 自己上一次看到的 pathname，從 `/account/login` 導向落點或轉址鏈回到落點的那一次 commit 就會把 `leftSince` 設回 true，接著在落點點被擋的「標記作業」就會誤觸重查。外殼底下的直接換頁（日後多頁時）在同一次 commit 裡 `AppRoot` 還沒機會設 `leftSince`，靠第 3 點的「pathname 不同」判斷；經外殼以外的轉址（本次「任務管理 → `*` → `/` → 落點」）回到同一個 pathname 時，中途的 `/task-management/task-list` 與 `/` 都不等於 `checkedPathname`，已讓 `AppRoot` 設好 `leftSince`。
 
 這樣頁面載入時（含已登入的人開 `/account/login` 被導向落點）`checkedKey` 為空，不會多送請求，StrictMode 下也一樣，`auth-guard`「兩種路由共用同一次查詢」的「只送出 1 次」與 `e2e/account/session-guard.spec.ts` 既有的查詢次數都不變。登出後在同一次頁面載入裡再登入，外殼會以新的 key 與離開過的 pathname 到達而多一次重查，結果與登入回應相同，只多一個請求。
 
