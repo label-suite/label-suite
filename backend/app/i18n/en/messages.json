@@ -14,5 +14,6 @@
   "common.not_acceptable": "The requested language is not supported.",
   "common.not_found": "The requested resource was not found.",
   "common.ok": "Success",
+  "common.permission_denied": "You do not have permission to perform this action.",
   "common.validation_failed": "Some fields are invalid. Please check the highlighted fields."
 }
