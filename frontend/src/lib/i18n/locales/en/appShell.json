@@ -9,6 +9,16 @@
     "systemAdmin": "System Administration",
     "profile": "Profile"
   },
+  "navMobile": {
+    "dashboard": "Dash\u00adboard",
+    "taskManagement": "Task Man\u00adage\u00adment",
+    "annotation": "Anno\u00adta\u00adtion",
+    "review": "Review",
+    "exceptionDisposition": "Ex\u00adcep\u00adtion Dis\u00adpo\u00adsi\u00adtion",
+    "datasetAnalysis": "Data\u00adset Ana\u00adlyt\u00adics",
+    "systemAdmin": "Sys\u00adtem Admin\u00adis\u00adtra\u00adtion",
+    "profile": "Profile"
+  },
   "adminNav": {
     "userManagement": "User Management",
     "roleSettings": "Role Settings"

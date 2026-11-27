@@ -683,14 +683,27 @@ test.describe("long English labels (clarification Q13)", () => {
       await page.setViewportSize(viewport);
       await signIn(page, createAccount({ name: "Admin", role: "super_admin" }));
       await sidebar(page).getByTestId("lang-toggle").click();
-      await expect(navItems(page, "Main navigation")).toHaveText([
+      // hyphens: auto needs the language; lib/i18n keeps <html lang> in step.
+      await expect(page.locator("html")).toHaveAttribute("lang", "en");
+      const englishNames = [
         "Dashboard",
         "Task Management",
         "Annotation",
         "Dataset Analytics",
         "System Administration",
         "Profile",
-      ]);
+      ];
+      // The names come from the accessibility tree, matched exactly: no soft hyphen in any.
+      await expect(navItems(page, "Main navigation")).toHaveCount(englishNames.length);
+      for (const [index, name] of englishNames.entries()) {
+        const item = navItems(page, "Main navigation").nth(index);
+        await expect(item).toHaveAccessibleName(name);
+        // On a wide sidebar System Administration is the submenu's button.
+        const role = viewport.width !== PHONE.width && index === 4 ? "button" : "link";
+        await expect(
+          mainNav(page, "Main navigation").getByRole(role, { name, exact: true }),
+        ).toHaveCount(1);
+      }
 
       const measured = await navItems(page, "Main navigation").evaluateAll((items) =>
         items.map((item) => {
@@ -724,6 +737,14 @@ test.describe("long English labels (clarification Q13)", () => {
           };
         }),
       );
+      // Where a word breaks, and whether a hyphen is drawn, is not in the DOM;
+      // the screenshot is the record of how the labels wrap.
+      await test.info().attach(`main-navigation-${String(viewport.width)}px`, {
+        body: await mainNav(page, "Main navigation").screenshot({
+          path: test.info().outputPath(`main-navigation-${String(viewport.width)}px.png`),
+        }),
+        contentType: "image/png",
+      });
       await test.info().attach("measurements", {
         body: JSON.stringify(measured, null, 2),
         contentType: "application/json",
@@ -766,7 +787,82 @@ test.describe("long English labels (clarification Q13)", () => {
             .toBeLessThanOrEqual(next.labelLeft + 0.5);
         }
       }
+      if (viewport.width === PHONE.width) {
+        await expectBreaksAtHyphens(page);
+      }
       await expectNoSideScroll(page);
     });
   }
 });
+
+/** One rendered line of a label: its text, and the character that ends it in the source. */
+interface RenderedLine {
+  /** The line's characters, soft hyphens included. */
+  text: string;
+  /** The last source character placed on this line. */
+  last: string;
+  /** The first source character of the next line, or "" on the last line. */
+  next: string;
+}
+
+/**
+ * Checks, line by line, that every phone label breaks only at a space or at a
+ * soft hyphen (where the browser draws "-"), never in the middle of a word
+ * (maintainer ruling on Q13). Lines are read from the label's text node,
+ * character by character, grouped by the top of each character's box.
+ */
+async function expectBreaksAtHyphens(page: Page): Promise<void> {
+  const labels = await navItems(page, "Main navigation").evaluateAll((items) =>
+    items.map((item) => {
+      const span = item.querySelector("span");
+      const node = span?.firstChild;
+      const lines: { text: string; last: string; next: string }[] = [];
+      if (node === null || node === undefined || node.nodeType !== Node.TEXT_NODE) {
+        return { name: item.getAttribute("aria-label") ?? "", lines };
+      }
+      const text = node.textContent ?? "";
+      const range = document.createRange();
+      let top: number | null = null;
+      let current = "";
+      for (let index = 0; index < text.length; index += 1) {
+        range.setStart(node, index);
+        range.setEnd(node, index + 1);
+        // A character at a line start can also report an empty box at the end of the
+        // line before; only a box with width shows where it is drawn.
+        const rect = Array.from(range.getClientRects())
+          .filter((box) => box.width > 0 && box.height > 0)
+          .at(-1);
+        const char = text.charAt(index);
+        if (rect !== undefined && top !== null && rect.top > top + 1) {
+          lines.push({ text: current, last: current.at(-1) ?? "", next: char });
+          current = "";
+        }
+        if (rect !== undefined && (top === null || rect.top > top + 1)) {
+          top = rect.top;
+        }
+        current += char;
+      }
+      lines.push({ text: current, last: current.at(-1) ?? "", next: "" });
+      return { name: item.getAttribute("aria-label") ?? "", lines };
+    }),
+  );
+  await test.info().attach("phone-label-lines", {
+    body: JSON.stringify(labels, null, 2),
+    contentType: "application/json",
+  });
+  for (const label of labels) {
+    const lines: RenderedLine[] = label.lines;
+    for (const line of lines.slice(0, -1)) {
+      expect
+        .soft(
+          line.last === "\u00AD" || line.last === " " || line.next === " ",
+          `${label.name}: the line ${JSON.stringify(line.text)} ends at a space or a soft hyphen`,
+        )
+        .toBe(true);
+    }
+  }
+  const shot = await mainNav(page, "Main navigation").screenshot({
+    path: test.info().outputPath("main-navigation-375px-shy.png"),
+  });
+  await test.info().attach("main-navigation-375px-shy", { body: shot, contentType: "image/png" });
+}

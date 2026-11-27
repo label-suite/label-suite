@@ -628,12 +628,58 @@ describe("AppShell on a phone", () => {
     }
   });
 
-  it("lets long labels wrap inside their item, breaking a word only when needed (Q13)", () => {
+  it("lets long labels wrap inside their item, hyphenating by syllable first (Q13)", () => {
     render(<ShellHarness viewport="mobile" navItems={ADMIN_ITEMS} />);
 
     for (const item of navControls()) {
-      expect(item).toHaveClass("whitespace-normal", "[overflow-wrap:anywhere]", "text-center");
+      expect(item).toHaveClass(
+        "whitespace-normal",
+        "hyphens-auto",
+        "[overflow-wrap:anywhere]",
+        "text-center",
+      );
       expect(item).not.toHaveClass("whitespace-nowrap");
+    }
+  });
+
+  it("shows the soft-hyphenated English labels on a phone, named without the hyphens (Q13)", async () => {
+    render(<ShellHarness viewport="mobile" navItems={ADMIN_ITEMS} />);
+
+    await act(async () => {
+      await changeInterfaceLanguage("en");
+    });
+
+    const nav = screen.getByRole("navigation", { name: "Main navigation" });
+    expect(navControls("Main navigation").map((item) => item.textContent)).toEqual([
+      "Dash\u00ADboard",
+      "Task Man\u00ADage\u00ADment",
+      "Anno\u00ADta\u00ADtion",
+      "Data\u00ADset Ana\u00ADlyt\u00ADics",
+      "Sys\u00ADtem Admin\u00ADis\u00ADtra\u00ADtion",
+      "Profile",
+    ]);
+    for (const name of [
+      "Dashboard",
+      "Task Management",
+      "Annotation",
+      "Dataset Analytics",
+      "System Administration",
+      "Profile",
+    ]) {
+      const link = within(nav).getByRole("link", { name });
+      expect(link).toHaveAttribute("title", name);
+    }
+  });
+
+  it("keeps the plain labels on the desktop sidebar", async () => {
+    render(<ShellHarness navItems={ADMIN_ITEMS} />);
+
+    await act(async () => {
+      await changeInterfaceLanguage("en");
+    });
+
+    for (const item of navControls("Main navigation")) {
+      expect(item.textContent).not.toContain("\u00AD");
     }
   });
 
@@ -642,6 +688,7 @@ describe("AppShell on a phone", () => {
 
     for (const item of navControls()) {
       expect(item).not.toHaveClass("[overflow-wrap:anywhere]");
+      expect(item).not.toHaveClass("hyphens-auto");
     }
   });
 

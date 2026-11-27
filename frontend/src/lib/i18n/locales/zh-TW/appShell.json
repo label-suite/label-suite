@@ -9,6 +9,16 @@
     "systemAdmin": "系統管理",
     "profile": "個人設定"
   },
+  "navMobile": {
+    "dashboard": "儀表板",
+    "taskManagement": "任務管理",
+    "annotation": "標記作業",
+    "review": "審核作業",
+    "exceptionDisposition": "例外處置",
+    "datasetAnalysis": "資料集分析",
+    "systemAdmin": "系統管理",
+    "profile": "個人設定"
+  },
   "adminNav": {
     "userManagement": "使用者管理",
     "roleSettings": "角色設定"

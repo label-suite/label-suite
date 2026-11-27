@@ -199,6 +199,39 @@ describe("appShell and common locale text", () => {
     },
   );
 
+  it("has phone labels with soft hyphens in English and the plain labels in zh-TW (Q13)", () => {
+    const SHY = "\u00AD";
+    const plain = [
+      "dashboard",
+      "taskManagement",
+      "annotation",
+      "review",
+      "exceptionDisposition",
+      "datasetAnalysis",
+      "systemAdmin",
+      "profile",
+    ];
+    for (const key of plain) {
+      expect(text("zh-TW", "appShell", `navMobile.${key}`)).toBe(
+        text("zh-TW", "appShell", `nav.${key}`),
+      );
+      const phone = text("en", "appShell", `navMobile.${key}`);
+      expect(typeof phone === "string" ? phone.replaceAll(SHY, "") : phone).toBe(
+        text("en", "appShell", `nav.${key}`),
+      );
+    }
+    expect(text("en", "appShell", "navMobile.dashboard")).toBe(`Dash${SHY}board`);
+    expect(text("en", "appShell", "navMobile.taskManagement")).toBe(`Task Man${SHY}age${SHY}ment`);
+    expect(text("en", "appShell", "navMobile.annotation")).toBe(`Anno${SHY}ta${SHY}tion`);
+    expect(text("en", "appShell", "navMobile.datasetAnalysis")).toBe(
+      `Data${SHY}set Ana${SHY}lyt${SHY}ics`,
+    );
+    expect(text("en", "appShell", "navMobile.systemAdmin")).toBe(
+      `Sys${SHY}tem Admin${SHY}is${SHY}tra${SHY}tion`,
+    );
+    expect(text("en", "appShell", "navMobile.profile")).toBe("Profile");
+  });
+
   it("no longer keeps the shared components' text under auth (design D10)", () => {
     expect(text("zh-TW", "auth", "nav")).toBeUndefined();
     expect(text("en", "auth", "nav")).toBeUndefined();
