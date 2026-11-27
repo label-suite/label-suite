@@ -128,6 +128,7 @@ description: 釐清 OpenSpec change 規劃產物（system-analysis、system-desi
 - [ ] 錯誤碼是否對應 specs 中的失敗 Scenario（驗證失敗、未登入、無權限、找不到、衝突）？**看不到的資源是否回 404 而不是 403？**
 - [ ] 欄位命名、型別、列表分頁契約是否與 system-design 和既有的 `openapi.json` 一致？
 - [ ] **operationId 是否符合「動詞加資源」且全專案唯一？**
+- [ ] api-contract 每個端點是否都標了 tag，且等於所屬模組目錄名？（[api-agent-rules A1 §OpenAPI tag](../../../docs/development/rules/api-agent-rules.mdx#openapi-tag)）
 - [ ] ui-design 的資料來源是否都對得到 contract 中的端點與欄位？
 
 #### 4.3 邏輯一致性

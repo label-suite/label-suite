@@ -68,6 +68,7 @@ model: opus
 依 schema 範本章節撰寫，每個新增或修改的端點都要有：
 
 - method、path、**operationId**——由 FastAPI 的 `generate_unique_id_function` **固定成「動詞加資源」**（例 `listUsers`、`getUser`），全專案唯一，不手寫也不逐個覆寫
+- **模組（tag）**——每個端點標一個，值等於所屬 `backend/app/modules/` 目錄名（例 `account`、`task`；[api-agent-rules A1 §OpenAPI tag](../../docs/development/rules/api-agent-rules.mdx#openapi-tag)）
 - path／query／body 欄位：名稱、型別、必填、驗證規則、未知欄位的政策、範例
 - response 的欄位與型別（JSON 上的型別，例如大整數 id 以字串回傳）；列表端點的分頁契約（上限、排序穩定性、空頁）
 - 錯誤碼：HTTP status 與觸發條件。**看不到的資源回 404，不得用 403 洩漏它存在**；訊息不得回傳內部識別碼或堆疊
@@ -93,6 +94,7 @@ model: opus
 - [ ] 每個關鍵 Scenario 都有一張 Sequence Diagram，標題與規格書驗收標準的名稱一致
 - [ ] Sequence Diagram 止於 Router 回傳回應，沒有畫面或 render
 - [ ] api-contract 每個端點都有角色、錯誤碼、遮蔽欄位與測試集答案隔離的說明；operationId 符合「動詞加資源」且不與既有端點重複
+- [ ] api-contract 每個端點都標了模組（tag），值等於所屬模組目錄名（[A1 §OpenAPI tag](../../docs/development/rules/api-agent-rules.mdx#openapi-tag)）
 - [ ] **權限沒有超出 `docs/specs/00-prd.mdx` §權限矩陣**；需要超出時寫成待決問題，不默默放寬
 - [ ] 目錄分層照 `app/modules/<module>/`、成功回應包一層 envelope、前綴 `/api/v1`——三件**都照定案寫**，沒有重新列成待決問題；屬於 envelope 例外（`204`、檔案、串流）的端點已寫出理由
 - [ ] 需要的 schema 變更已列出，交由 Alembic migration 處理，並寫出可逆性與雙資料庫差異

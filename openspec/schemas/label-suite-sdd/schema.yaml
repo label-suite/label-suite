@@ -46,6 +46,7 @@ artifacts:
     template: api-contract.md
     instruction: |
       列出新增或修改的每個端點：method、path、operationId（全專案唯一）、
+      tag（模組，值等於所屬 backend/app/modules/ 目錄名，見 api-agent-rules A1 §OpenAPI tag）、
       request（path／query／body 欄位、型別、必填、驗證規則）、response（欄位、型別、nullable）、
       錯誤碼與觸發條件、需要的角色、會被遮蔽的欄位與遮蔽後的值。
       這份是前後端同時開工的依據；實作後由後端產生的 openapi.json 必須與它一致。

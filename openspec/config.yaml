@@ -81,6 +81,7 @@ rules:
     - 沒有 UI 變更就只寫一行「本次無 UI 變更」
   api-contract:
     - operationId 全專案唯一，由 FastAPI 的 generate_unique_id_function **固定成「動詞加資源」**（例 listUsers、getUser），不手寫也不逐個覆寫；api-contract 寫的 operationId 必須與這個策略算出來的一致
+    - 端點總覽要有模組（tag）欄，值等於所屬 backend/app/modules/ 目錄名（例 account、task），規則見 api-agent-rules A1 §OpenAPI tag
     - 每個端點都要列出角色、錯誤碼與遮蔽欄位（沒有就寫「無」）
     - 錯誤碼或端點授權有異動時，先改 docs/diagrams/architecture/error-codes.mdx（新的錯誤碼、會回既有錯誤碼的新端點）與 endpoint-authorization.mdx（新端點、角色、PRD 權限矩陣的格、遮蔽的欄位（含答案））；「常駐文件異動」節寫出這兩個路徑與異動摘要，不重抄常駐文件的內容
     - 看不到的資源回 404，不得用 403 洩漏它存在；錯誤訊息不得回傳內部識別碼或堆疊

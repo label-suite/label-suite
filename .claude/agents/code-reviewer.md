@@ -46,6 +46,7 @@ model: opus
 - [ ] **目錄分層是模組內分層** `app/modules/<module>/`，而且與該 change 的 `system-design.md` 一致
 - [ ] request schema 有型別、範圍與未知欄位的驗證；query 參數有轉型
 - [ ] **operationId 符合「動詞加資源」**且全專案唯一
+- [ ] **每個 operation 恰好一個 tag，且 tag 名稱等於所屬模組目錄名**（例 `account`，不是 `accounts`；名稱對錯測試不驗，靠審查；[api-agent-rules A1 §OpenAPI tag](../../docs/development/rules/api-agent-rules.mdx#openapi-tag)）
 - [ ] model 與 Alembic migration 一致，`downgrade()` 完整，**SQLite 與 PostgreSQL 兩層都能跑**
 - [ ] model 與 migration 和**資料表字典、ER** 一致：實作和設計不同的地方已回寫到字典再同步 ER；這次建立的表標了「已落地」與 revision id；`pnpm check:er` 通過
 

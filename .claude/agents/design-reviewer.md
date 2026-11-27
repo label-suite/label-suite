@@ -44,6 +44,7 @@ model: opus
 
 - [ ] 每個 Scenario 用到的端點都在 contract 中；contract 中每個端點都有 Scenario 覆蓋
 - [ ] 每個端點有權限、錯誤碼、遮蔽欄位說明；operationId 唯一
+- [ ] api-contract 每個端點都標了 tag，且等於所屬模組目錄名（[api-agent-rules A1 §OpenAPI tag](../../docs/development/rules/api-agent-rules.mdx#openapi-tag)）
 - [ ] system-design 的 Sequence Diagram 與 contract 一致（路徑、欄位、錯誤）
 - [ ] ui-design 的每個資料區塊都對得到 contract 的 operationId，四種狀態齊全
 - [ ] **元件樹每個元件都對到設計系統與程式位置**：引用了 `design/system/components/<元件>.md`，寫明沿用的路徑（與該規格的「程式實作」一致）或新建的位置；共用元件放 `frontend/src/components/`，沒有「由 design.md 決定」這類延後決定的位置

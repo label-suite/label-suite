@@ -471,7 +471,10 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Get Auth Options"
+        "summary": "Get Auth Options",
+        "tags": [
+          "account"
+        ]
       }
     },
     "/api/v1/current-session": {
@@ -523,7 +526,10 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Delete Current Session"
+        "summary": "Delete Current Session",
+        "tags": [
+          "account"
+        ]
       },
       "get": {
         "description": "Return the signed-in caller.",
@@ -590,7 +596,10 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Get Current Session"
+        "summary": "Get Current Session",
+        "tags": [
+          "account"
+        ]
       }
     },
     "/api/v1/google-authorization": {
@@ -659,7 +668,10 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Get Google Authorization"
+        "summary": "Get Google Authorization",
+        "tags": [
+          "account"
+        ]
       }
     },
     "/api/v1/google-sessions": {
@@ -768,7 +780,10 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Create Google Session"
+        "summary": "Create Google Session",
+        "tags": [
+          "account"
+        ]
       }
     },
     "/api/v1/health": {
@@ -837,7 +852,10 @@
             "description": "Service Unavailable"
           }
         },
-        "summary": "Get Health"
+        "summary": "Get Health",
+        "tags": [
+          "health"
+        ]
       }
     },
     "/api/v1/session-refreshes": {
@@ -936,7 +954,10 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Create Session Refresh"
+        "summary": "Create Session Refresh",
+        "tags": [
+          "account"
+        ]
       }
     },
     "/api/v1/sessions": {
@@ -1025,8 +1046,21 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Create Session"
+        "summary": "Create Session",
+        "tags": [
+          "account"
+        ]
       }
     }
-  }
+  },
+  "tags": [
+    {
+      "description": "Sign-in, sessions and the signed-in caller.",
+      "name": "account"
+    },
+    {
+      "description": "Service and database availability check.",
+      "name": "health"
+    }
+  ]
 }
