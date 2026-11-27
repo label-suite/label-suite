@@ -10,7 +10,13 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 
-import { checkTree, importedModules, parseSpec } from "../check-component-reuse.mjs";
+import {
+  checkTree,
+  featureOf,
+  importedModules,
+  parseInventory,
+  parseSpec,
+} from "../check-component-reuse.mjs";
 
 const SCRIPT = fileURLToPath(new URL("../check-component-reuse.mjs", import.meta.url));
 
@@ -27,7 +33,33 @@ function tree(files) {
   return root;
 }
 
+/** The inventory's 「元件 → 畫面」 table, all screens in the b1 column. */
+const inventory = (rows) =>
+  [
+    "# Screen Inventory",
+    "",
+    "## 元件 → 畫面",
+    "",
+    "| 元件 | b1 用到它的畫面 | b2 用到它的畫面 | b3 用到它的畫面 | b4 用到它的畫面 | 數 | 程式實作 |",
+    "| :--- | :--- | :--- | :--- | :--- | ---: | :--- |",
+    ...Object.entries(rows).map(
+      ([name, screens]) =>
+        `| [${name}](components/${name}.md) | ${screens.map((x) => `\`${x}\``).join(" · ")} | **（b2 無）** | **（b3 無）** | **（b4 無）** | ${screens.length} | 尚未實作 |`,
+    ),
+    "",
+  ].join("\n");
+
+const ROWS = {
+  button: ["account/login", "admin/user-management"],
+  "alert-banner": ["account/login", "components-showcase"],
+  "lang-toggle": ["account/login", "components-showcase"],
+  "auth-card": ["account/login", "account/register"],
+  card: ["dashboard/dashboard", "task-management/task-new"],
+  "step-indicator": ["task-management/task-new"],
+};
+
 const BASE = {
+  "design/system/screen-inventory.md": inventory(ROWS),
   "design/system/components/button.md": spec("`frontend/src/components/ui/button.tsx`"),
   "design/system/components/alert-banner.md": spec("`frontend/src/components/ui/alert.tsx`"),
   "design/system/components/lang-toggle.md": spec("尚未實作"),
@@ -37,14 +69,68 @@ const BASE = {
 };
 const none = { move: [], notSame: [] };
 
-test("parseSpec reads paths, 尚未實作 and the shared mark", () => {
+test("parseSpec reads paths, 尚未實作 and the not-shared mark", () => {
   const a = parseSpec("button", spec("`frontend/src/components/ui/button.tsx`（`loading`）"));
   assert.deepEqual(a.paths, ["frontend/src/components/ui/button.tsx"]);
-  assert.equal(a.shared, true);
+  assert.equal(a.marked, false);
   assert.deepEqual(a.errors, []);
   const b = parseSpec("step-indicator", spec("尚未實作", "｜**單頁專屬**"));
   assert.deepEqual(b.paths, []);
-  assert.equal(b.shared, false);
+  assert.equal(b.marked, true);
+});
+
+test("featureOf maps module screens by their first segment and three screens by name", () => {
+  assert.equal(featureOf("account/profile"), "account");
+  assert.equal(featureOf("task-management/task-new"), "task-management");
+  assert.equal(featureOf("components-showcase"), "dev-gallery");
+  assert.equal(featureOf("shared/app-shell"), "app-shell");
+  assert.equal(featureOf("index"), null);
+  assert.throws(() => featureOf("reports/weekly"), /SCREEN_FEATURE/);
+  assert.throws(() => featureOf("account"), /SCREEN_FEATURE/);
+});
+
+test("parseInventory collects the features of each component and reports unmapped screens", () => {
+  const r = parseInventory(
+    inventory({ button: ["account/login", "account/register"], x: ["reports/weekly"] }),
+  );
+  assert.deepEqual([...r.features.get("button")], ["account"]);
+  assert.match(r.errors.join("\n"), /reports\/weekly/);
+});
+
+test("a component used by one feature may live in that feature", () => {
+  const root = tree({
+    ...BASE,
+    "design/system/components/auth-card.md": spec("`frontend/src/features/auth/auth-card.tsx`"),
+    "frontend/src/features/auth/auth-card.tsx": "export const x = 1;\n",
+  });
+  const r = checkTree(root, none);
+  assert.deepEqual(r.errors, []);
+  assert.equal(r.violations.size, 0);
+  rmSync(root, { recursive: true });
+});
+
+test("a component used by more than one feature may not live in a feature", () => {
+  const root = tree({
+    ...BASE,
+    "design/system/components/card.md": spec("`frontend/src/features/dashboard/card.tsx`"),
+    "frontend/src/features/dashboard/card.tsx": "export const x = 1;\n",
+  });
+  const why = checkTree(root, none).violations.get("frontend/src/features/dashboard/card.tsx");
+  assert.match(why[0], /card（用在 dashboard、task-management）/);
+  rmSync(root, { recursive: true });
+});
+
+test("a spec missing from the inventory, or an unmapped screen, fails", () => {
+  const root = tree({
+    ...BASE,
+    "design/system/screen-inventory.md": inventory({ ...ROWS, button: ["reports/weekly"] }),
+  });
+  const errors = checkTree(root, none).errors.join("\n");
+  assert.match(errors, /reports\/weekly/);
+  rmSync(root, { recursive: true });
+  const root2 = tree({ ...BASE, "design/system/components/modal.md": spec("尚未實作") });
+  assert.match(checkTree(root2, none).errors.join("\n"), /沒有 modal/);
+  rmSync(root2, { recursive: true });
 });
 
 test("parseSpec rejects a spec without the field or with an empty one", () => {
