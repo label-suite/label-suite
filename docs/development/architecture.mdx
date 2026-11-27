@@ -35,7 +35,7 @@ label-suite/
 │  ├─ tests/                      pytest：unit 與 integration
 │  └─ bruno/                      可選的手動工具，不是 pre-PR 關卡
 ├─ frontend/
-│  ├─ src/app/                    router、provider、全站 layout（依 scaffold 的四層，#109）
+│  ├─ src/app/                    router、provider、全站 layout（依 scaffold 的四層，見 frontend-agent-rules F1）
 │  ├─ src/{pages,features}/       pages 組頁面、features 放功能邏輯
 │  ├─ src/components/ui/          shadcn 元件，不知道業務
 │  ├─ src/api/generated/          Orval 產物，不手改
@@ -178,7 +178,7 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 | 錯誤回應 | 套同一個外層：`success: false`、`code` 放應用錯誤碼、`data: null`；`422` 另帶 `errors: ErrorDetail[]` |
 | JSON 欄位命名 | 一律 camelCase。Python 內部維持 snake_case，由共用 base 的 alias generator 在一處轉換 |
 | envelope 的例外 | `204` 無 body、檔案下載與串流不套 envelope；每個例外都要逐一寫進該 change 的 `api-contract.md`，不逐案自由心證 |
-| operationId | 用 `generate_unique_id_function` 固定成「動詞加資源」（#51） |
+| operationId | 用 `generate_unique_id_function` 固定成「動詞加資源」，規則見 [api-agent-rules.mdx 的 A1](rules/api-agent-rules.mdx#a1-路由http-statusoperationid-與回應外層) |
 | 前端 client | Orval 由 `openapi.json` 產生到 `frontend/src/api/generated/`（TanStack Query hooks、型別、MSW mock），不手改；Orval 的 mutator 就是單一 HTTP 邊界 |
 | Bruno | 可選的手動工具，不是 pre-PR 關卡 |
 
@@ -343,7 +343,7 @@ Redis 7 同時當 broker、result backend 與應用快取，用 DB 編號隔開�
 :::note{title="TDD、fixture 與 prototype 測試" collapsible}
 - TDD：先寫會失敗的測試，再寫剛好讓它通過的程式，然後重構。agent 同樣適用，OpenSpec 的 `rules.tasks` 要求測試與實作放在同一個 task，不另拆測試 task
 - `e2e/shared/fixtures/` 放各角色的 `storageState` 與 seed helper
-- prototype 層的 Playwright 測試不在本 repo：那些測試與 `design/prototype/package.json`、`playwright.config.ts` 依 #16 留在個人 repo；prototype 在本 repo 只當線框，用 `PrototypeFrame` 嵌進規格書
+- prototype 層的 Playwright 測試不在本 repo：那些測試與 `design/prototype/package.json`、`playwright.config.ts` 留在個人 repo；prototype 在本 repo 只當線框，用 `PrototypeFrame` 嵌進規格書
 - `data-testid` 的共用契約沿用：prototype HTML 標的 `data-testid` 原字串重用在 React 元件與 `e2e/` 裡
 :::
 
@@ -423,7 +423,7 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，�
 | 個人 repo ADR-011 | 前端垂直功能切片 | Accepted | **被覆寫**：改用 `pages/` 加 `features/`，見 [§前端](#前端)與 [本 repo ADR-005 的 D2](adr/005-frontend-architecture.mdx#d2-目錄分層採-pages-加-features) |
 | 個人 repo ADR-012 | Vitest 加 RTL 加 Playwright | Accepted | 沿用，E2E 位置已由 034 取代，見 [§測試分層](#測試分層)與 [本 repo ADR-007 的 D3](adr/007-testing-strategy.mdx#d3-前端測試與原始碼放同一個目錄) |
 | 個人 repo ADR-013 | Resend 寄信 | Accepted | 需調整：補上未設定 key 時的降級路徑，見 [§部署與維運](#部署與維運)與 [本 repo ADR-008 的 D3](adr/008-deployment-and-operations.mdx#d3-寄信用-resend沒設-key-時把連結印到-log) |
-| 個人 repo ADR-014 | Prototype 層 Playwright 測試 | Accepted | 不適用：測試與 `package.json` 依 #16 留在個人 repo |
+| 個人 repo ADR-014 | Prototype 層 Playwright 測試 | Accepted | 不適用：測試與 `package.json` 留在個人 repo，見 [§測試分層](#測試分層) |
 | 個人 repo ADR-015 | 角色導向漸進式 onboarding | Accepted | **本期部分採用**：空狀態與情境提示做，導覽與角色導向漸進揭露不做，見 [§前端](#前端) |
 | 個人 repo ADR-016 | shadcn/ui 加 Storybook | Accepted | **部分被覆寫**：採 shadcn/ui，元件放 `components/ui/`；Storybook 不採用，改用元件展示頁；shadcn/ui 見 [本 repo ADR-005 的 D3](adr/005-frontend-architecture.mdx#d3-元件庫用-shadcnui) |
 | 個人 repo ADR-017 | 三層 agent（Planner／Generator／Evaluator） | Accepted | 已被取代：以 [本 repo ADR-002 的 D4](adr/002-development-workflow.mdx#d4-規劃實作審查與驗收由不同角色負責)與 `CLAUDE.md` 為準（含它與 017 相反的 compact 規則）；017 的「Evaluator 只用外部確定性工具、禁止自評」由 `code-reviewer` 與 `acceptance-verifier` 承接 |
@@ -472,6 +472,7 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，�
 
 | 日期 | 決策 | 取代了什麼 | 來源 |
 | :--- | :--- | :--- | :--- |
+| 2026-10-29 | prototype 層的 Playwright 測試與 `design/prototype/package.json`、`playwright.config.ts` 留在個人 repo，本 repo 只放線框（[§測試分層](#測試分層)） | —（個人 repo ADR-014 在本 repo 不適用） | [#16](https://github.com/label-suite/label-suite/issues/16) |
 | 2026-11-10 | 後端採模組內分層 `app/modules/<module>/`（[§後端分層](#後端分層)） | 個人 repo ADR-022 的扁平 `app/services/`；025 與其他 ADR 零星出現的 `app/schemas/`、`app/api/routes` 寫法 | [#105](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393) |
 | 2026-11-10 | 成功回應包一層 envelope，204、檔案與串流是例外（[§API 契約](#api-契約)） | —（ADR 沒有定義成功回應格式） | [#105](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393) |
 | 2026-11-10 | 路徑前綴用 `/api/v1`（[§API 契約](#api-契約)） | —（ADR 用了八次但沒有決定它）；operationId 策略另由 #51 落地 | [#105](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393) |
