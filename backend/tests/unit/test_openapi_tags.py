@@ -159,7 +159,8 @@ def _small_app(
     app = FastAPI(openapi_tags=declared)
 
     @router.get("/things")
-    def list_things() -> ApiResponse[Thing]: ...
+    def list_things() -> ApiResponse[Thing]:
+        raise NotImplementedError
 
     app.include_router(router, prefix="/api/v1", tags=tags)
     return app
