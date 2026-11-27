@@ -133,7 +133,9 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 
 新寫 component、hook 或 util 之前先搜尋既有的；只有確實是同一個概念的兩處才抽，不以出現次數或行數為門檻。
 
-**共用元件**是用到它的畫面分屬一個以上 feature 的設計系統元件，只能放 `components/`；只有一個 feature 的畫面用到的，留在那個 feature。畫面看 `design/system/screen-inventory.md` 的「元件 → 畫面」表，畫面依原型模組（畫面 ID 的第一段）歸 feature，`components-showcase` 歸元件展示頁、`shared/app-shell` 歸登入後的外殼，對照寫在 `scripts/check-component-reuse.mjs` 的 `SCREEN_FEATURE`；規格標「單頁專屬」或「原型鷹架」的一律不算共用。
+**共用元件**是用到它的產品畫面分屬一個以上 feature 的設計系統元件，只能放 `components/`；只有一個 feature 的產品畫面用到的，留在那個 feature。用到它的畫面看 `design/system/screen-inventory.md` 的「元件 → 畫面」表；原型的元件展示頁（`components-showcase`）與原型索引（`index`）不是產品畫面，不算使用方；規格標「單頁專屬」或「原型鷹架」的一律不算共用。
+
+畫面歸哪個 feature 依一條對應慣例：產品畫面歸它的原型模組（畫面 ID 的第一段），一個原型模組對到一個 feature，例如原型的 `account` 對到 `features/auth`；`shared/app-shell` 是登入後的外殼，自成一個。對照寫在 `scripts/check-component-reuse.mjs` 的 `SCREEN_FEATURE`，出現對照沒有的畫面 ID 時檢查會失敗，不會猜。
 
 | | |
 | :--- | :--- |
@@ -144,7 +146,7 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 
 :::note{title="F5 的反例與檢查方式" collapsible}
 - **反例**：`features/annotation/components/my-button.tsx` 自己寫一顆按鈕；把只有一處用到的 `formatTaskName` 放進 `lib/`；整個 feature 的每個元件都包 `React.memo`
-- **檢查方式**：CI 的 `specs` job 與 `scripts/check-changed.sh` 的 `.ts`／`.tsx` 路由跑 `node scripts/check-component-reuse.mjs`：`features/` 或 `pages/` 底下的元件檔名對到 `design/system/components/` 的共用元件（同名，或最後一個字相同，例如 `*-toggle`、`*-banner`）卻沒有 import 它在 `components/` 的實作、共用元件的「程式實作」指向 `features/` 或 `pages/`、或「程式實作」的路徑不存在時失敗；現有的違規列在腳本的允許清單，每列寫明由哪張單搬走，搬完那一列不刪也會失敗
+- **檢查方式**：CI 的 `specs` job 與 `scripts/check-changed.sh` 的 `.ts`／`.tsx` 路由跑 `node scripts/check-component-reuse.mjs`：`features/` 或 `pages/` 底下的元件檔名對到共用元件（和規格名或它在 `components/` 的實作檔名同名、或最後一個字相同，例如 `*-toggle`、`*-banner`、`*-alert`）卻沒有 import 它在 `components/` 的實作、共用元件的「程式實作」指向 `features/` 或 `pages/`、「程式實作」的路徑不存在、或清冊的「程式實作」欄和規格不一致時失敗；現有的違規列在腳本的允許清單，每列寫明由哪張單（`#N`）搬走與觸發的元件，搬完那一列不刪也會失敗
 - **尚未檢查**：hook、util 的重複與「是不是同一個概念」沒有機械檢查，由 `code-reviewer` 依職責判斷。這一條**不以行數作為拆分判準；另有 [F12](#f12-檔案函式長度與複雜度上限) 的 CI 上限擋極端值**，F12 不是 F5 的檢查
 :::
 
@@ -411,4 +413,5 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | 2026-11-20 | 為了加 variant 而改 `components/ui/` 是允許的，原語仍只用語意變數；shadcn 沒有對應語意時在對照層新增 `--cta`、`--success`、`--warning`、`--info`，原語不直接用 `tokens.css` 的變數名（[F6](#f6-視覺基準與-design-token-的映射)） | 2026-11-10 那列引述的「shadcn 元件一行都不改」這個絕對說法；F6 第 1 點原本留著「直接用 `tokens.css` 的變數名」這個分支，並把選擇交給第一個前端 change 的 `ui-design.md` 逐一列出 | [#505](https://github.com/label-suite/label-suite/issues/505) 的 Q9 裁定，記錄於 [#527](https://github.com/label-suite/label-suite/issues/527) |
 | 2026-11-25 | 新增 F12：前端檔案 300 行、函式 80 行、複雜度 15 的 CI 上限；F5 與 R4「不以行數取代職責審查」的原意不變，上限只擋極端值 | 兩處「不採用」條文只寫了不設機械行數門檻，沒有區分「拆分判準」與「擋極端值的 CI 護欄」 | [#561](https://github.com/label-suite/label-suite/issues/561) |
 | 2026-11-27 | F5 的元件部分改由 `scripts/check-component-reuse.mjs` 加審查檢查，設計系統的共用元件只能放 `components/`（[F5](#f5-重用與不過度抽象)） | F5 的檢查方式「待建置」，只靠 `code-reviewer` 判斷 | [#747](https://github.com/label-suite/label-suite/issues/747) |
-| 2026-11-27 | 共用元件的定義：用到它的畫面分屬一個以上 feature（[F5](#f5-重用與不過度抽象)） | 規格沒有標「單頁專屬」或「原型鷹架」就算共用 | [#747](https://github.com/label-suite/label-suite/issues/747) 的維護者裁定 |
+| 2026-11-27 | 只被同一個 feature 的畫面使用的元件不算共用，依 `screen-inventory.md` 的「元件 → 畫面」表判斷（[F5](#f5-重用與不過度抽象)） | 規格沒有標「單頁專屬」或「原型鷹架」就算共用 | [#747 檢查點：共用元件判準](https://github.com/label-suite/label-suite/issues/747#issuecomment-7209042364) |
+| 2026-11-27 | 原型的元件展示頁不算使用元件的 feature，共用與否只看產品畫面（[F5](#f5-重用與不過度抽象)） | 把元件展示頁算成 `/dev/gallery` 的使用方 | [#747 檢查點：元件展示頁不算使用方](https://github.com/label-suite/label-suite/issues/747#issuecomment-7209249601) |
