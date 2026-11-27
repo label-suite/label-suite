@@ -706,7 +706,6 @@ cd backend && uv run python -m app.scripts.export_openapi
 | 授權四步的第 3、4 步（權限矩陣的 cell、附加條件含答案隔離） | `get_current_principal` 只做到第 1、2 步；第一個需要矩陣或附加條件的端點要先補上 | [ADR-004 的 D6](../../development/adr/004-auth-and-security.mdx#d6-權限矩陣當授權輸入)；change `login-auth-guard` 的待決 11 |
 | Cloudflare 或其他邊緣代理在 Nginx 前面；TLS 邊緣之後的 scheme | 後端拿到的是邊緣位址而不是真實用戶端，還原需要 Nginx 的 real_ip 設定；後端看到的 scheme 恆為 `http`；Docker 發布埠的來源位址依平台而異（Docker Desktop 為 `192.168.65.1`，Linux 未測）。後端只信任 Nginx 的固定位址，見 [architecture.mdx 的 §部署與維運](../../development/architecture.mdx#部署與維運) | [ADR-008 的 D1](../../development/adr/008-deployment-and-operations.mdx#d1-compose-加-nginx-當-runtimecloudflare-可選) 尚未落地的 origin 憑證設定（Full (strict) 已決，憑證怎麼放進 Nginx 留到正式部署的 change） |
 | 監控、告警與錯誤追蹤 | 出錯時只能看 log，沒有人會被通知 | [ADR-008 的 D4](../../development/adr/008-deployment-and-operations.mdx#d4-觀測性只做-ai_runs監控與錯誤追蹤本期不做) |
-| CI 的後端檢查：兩種資料庫的 pytest、ruff、mypy、契約漂移、分層 import 方向 | 這些檢查目前只在本機跑，PR 不會因為違反而失敗 | [#506](https://github.com/label-suite/label-suite/issues/506) |
 | 回應已開始送出後才出錯時，錯誤會被記兩筆（`UnhandledExceptionMiddleware` 一筆、uvicorn 以 `exc_info` 一筆，後者只寫例外型別） | 錯誤只記一次在這條路徑不成立 | 第一個串流端點的 change（request-access-log clarification N2） |
 
 ## 決策紀錄
@@ -722,3 +721,4 @@ cd backend && uv run python -m app.scripts.export_openapi
 | 2026-11-26 | 新增 `account` 模組一節；基礎建設加上認證依賴、token、cookie、CSRF、密碼與 Email 正規化，以及 `app/oidc/` 入口（規劃，待實作後校正） | 已知限制的「認證、授權與 CSRF」縮成授權第 3、4 步 | [#719](https://github.com/label-suite/label-suite/issues/719) |
 | 2026-11-26 | 後端只信任 Nginx 的固定位址轉發的來源標頭，`Settings` 新增只做驗證的 `FORWARDED_ALLOW_IPS`；已知限制的「信任反向代理的來源 IP」改記 Cloudflare 與 TLS 邊緣（[§設定](#設定)、[§請求管線](#請求管線)） | — | [#566](https://github.com/label-suite/label-suite/issues/566) |
 | 2026-11-26 | 依實作校正 `account` 一節與基礎建設：service 改成 `service/` 套件、錯誤放 `service/errors.py`、Class 圖改成實際簽章、加上 Seeder 初始化指令、`AppError.response_hook` 與測試輔助（[§account](#account)、[§測試輔助](#測試輔助)） | 本文 2026-11-26 依設計寫成的 `account` 一節（單一 `service.py`、`errors.py`） | [#719](https://github.com/label-suite/label-suite/issues/719) |
+| 2026-11-27 | 已知限制拿掉「CI 的後端檢查」一列：兩種資料庫的 pytest 由 CI 的 `backend-sqlite`、`backend-postgres` 跑，ruff、mypy 與分層 import 方向（`lint-imports`）由 `backend-sqlite` 跑，契約漂移由 `api-contract` 跑（[§已知限制](#已知限制)） | 已知限制的「CI 的後端檢查……目前只在本機跑」，追蹤於已關閉的 #506 | [#745](https://github.com/label-suite/label-suite/issues/745) |

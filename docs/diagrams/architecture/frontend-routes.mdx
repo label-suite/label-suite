@@ -4,7 +4,7 @@ description: 'main 上前端現在的樣子：每條路由的頁面元件、對�
 category: '架構'
 tags: [架構, 前端, 路由, 骨架]
 createdAt: '2026-11-23'
-updatedAt: '2026-11-26'
+updatedAt: '2026-11-27'
 ---
 
 # 前端路由與骨架
@@ -194,7 +194,6 @@ frontend/
 
 | 還沒有 | 風險 | 追蹤 |
 | :--- | :--- | :--- |
-| CI 的前端檢查：lint、型別、測試、建置、契約漂移，以及跑過前後端的 e2e | 這些檢查目前只在本機跑，PR 不會因為違反而失敗 | [#506](https://github.com/label-suite/label-suite/issues/506) |
 | 前端的錯誤追蹤與監控 | 使用者端的錯誤只有使用者回報的 `traceId` 可查 | [ADR-008 的 D4](../../development/adr/008-deployment-and-operations.mdx#d4-觀測性只做-ai_runs監控與錯誤追蹤本期不做) |
 
 ## 決策紀錄
@@ -205,3 +204,4 @@ frontend/
 | 2026-11-23 | 本文加一節前端骨架與已知限制，不另開文件（[§前端骨架](#前端骨架)） | — | [#546](https://github.com/label-suite/label-suite/issues/546) |
 | 2026-11-23 | 實作後由 `frontend-developer` 依程式校正本文，`code-reviewer` 再核對（[§誰改、什麼時候改](#誰改什麼時候改)） | — | [#546](https://github.com/label-suite/label-suite/issues/546#issuecomment-7100137950) |
 | 2026-11-26 | 加上登入頁、Google 回調、暫時落點與 `/` 的守門導向，取代開發模式 `/` 與其他路徑導向 `/dev/health`；骨架加上登入狀態查詢、single-flight 延續、CSRF 標頭與記住的介面語言（[§路由](#路由)、[§登入狀態與守門](#登入狀態與守門)） | 開發模式 `/` 與其他路徑導向 `/dev/health`；依 `navigator.language` 決定一次語言；已知限制的「登入與登入狀態的處理」 | [#719](https://github.com/label-suite/label-suite/issues/719) |
+| 2026-11-27 | 已知限制拿掉「CI 的前端檢查」一列：lint、型別、測試與建置由 CI 的 `frontend` 跑，契約漂移由 `api-contract` 跑，跑過前後端的 e2e 由 `e2e` 跑（[§已知限制](#已知限制)） | 已知限制的「CI 的前端檢查……目前只在本機跑」，追蹤於已關閉的 #506 | [#745](https://github.com/label-suite/label-suite/issues/745) |
