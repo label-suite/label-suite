@@ -20,8 +20,8 @@ model: opus
 3. 依 context 的需求依據順序讀取 proposal 引用的需求章節
 4. 相關既有 capability，以及後端匯出的 `backend/openapi.json`——確認修改端點時的破壞性影響
 5. 資料規劃：`docs/diagrams/architecture/data-table-dictionary.mdx` 與 `database-schema.er.json`（system-design 有資料模型異動時必讀）
-6. 常駐文件：`docs/diagrams/architecture/backend-modules.mdx`（system-design 有「常駐文件異動」時必讀）、`frontend-routes.mdx`（ui-design 有「常駐文件異動」時必讀），以及 `error-codes.mdx` 與 `endpoint-authorization.mdx`（api-contract 有「常駐文件異動」時必讀）
-7. 元件的對照：`design/system/components/`（ui-design 元件樹引用的規格與它們的「程式實作」）
+6. 常駐文件：`docs/diagrams/architecture/backend-modules.mdx`（system-design 有「常駐文件異動」或用到別的模組的資料表與能力時必讀，後者看 §預定模組與資料表歸屬）、`frontend-routes.mdx`（ui-design 有「常駐文件異動」時必讀），以及 `error-codes.mdx` 與 `endpoint-authorization.mdx`（api-contract 有「常駐文件異動」時必讀）
+7. 元件與跨模組的決定：`design/system/components/`（ui-design 元件樹引用的規格與它們的「程式實作」）；[ADR-003](../../docs/development/adr/003-backend-architecture.mdx) 的 D12、D13、D14 與 [ADR-004](../../docs/development/adr/004-auth-and-security.mdx) 的 D6（system-design 用到別的模組時）
 8. 執行 `pnpm exec openspec validate <change>`、`pnpm exec openspec status --change <change>`、`pnpm check:er`
 
 ## 審查清單
@@ -60,6 +60,12 @@ model: opus
 
 - [ ] 常駐文件與 change 一致：`backend-modules.mdx` 與 system-design、`frontend-routes.mdx` 與 ui-design、`error-codes.mdx` 與 `endpoint-authorization.mdx` 與 api-contract 說的是同一件事；「常駐文件異動」節的每一列都對得到常駐文件裡已改好的段落，沒有重抄常駐文件的內容
 - [ ] **端點授權與常駐文件一致**：api-contract 每個端點的角色、遮蔽欄位與 `endpoint-authorization.mdx` 那一列相同，那一列對到的 PRD 權限矩陣格存在，放行的角色沒有超出它；錯誤碼與 `error-codes.mdx` 相同
+
+**跨模組取用**（system-design 用到別的模組的資料表或能力時）
+
+- [ ] 跨模組取用照 ADR-003 [D12](../../docs/development/adr/003-backend-architecture.mdx#d12-跨模組呼叫只走-service-對-service-的公開函式)：只呼叫對方 service 的公開函式，要加的 `ignore_imports` 已列出；**沒有直接用別的模組的 repository 或 model**
+- [ ] 共用能力沒有放進單一模組：稽核寫入走 `app/core/`（[D13](../../docs/development/adr/003-backend-architecture.mdx#d13-稽核紀錄的-model-與寫入函式放在-core)），權限檢查走 `app/core/` 的 dependency（ADR-004 [D6](../../docs/development/adr/004-auth-and-security.mdx#d6-權限矩陣當授權輸入)）
+- [ ] 用到的表與能力歸哪個模組，和 `backend-modules.mdx` §預定模組與資料表歸屬（ADR-003 [D14](../../docs/development/adr/003-backend-architecture.mdx#d14-後端業務模組的切分)）一致
 
 **design 與 tasks**
 

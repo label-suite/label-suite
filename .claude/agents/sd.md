@@ -24,8 +24,9 @@ model: opus
 7. 資料規劃兩份（`docs/diagrams/architecture/`）：`data-table-dictionary.mdx`（候選表字典，**唯一可信的上游**）、`database-schema.er.json`（由字典產生的 ER 圖資料）。字典的 FK 欄與每張表的「被誰參照」是跨表影響的依據。`data-field-inventory.mdx`（欄位盤點總帳）是凍結的歷史快照，不再更新、也不由你維護；只在要查某個欄位當初的分類或 D1–D11 的裁定與待決時讀，表與欄一律以字典為準
 8. 後端的常駐文件 `docs/diagrams/architecture/backend-modules.mdx`：`main` 上每個後端模組的分層、Class Diagram 與主要 Sequence Diagram，以及「後端基礎建設」節（請求管線、錯誤外層、設定、資料庫、OpenAPI 匯出、新增業務模組的檢查清單）。**規劃時先改它**，再寫 system-design
 9. API 的常駐文件 `docs/diagrams/architecture/error-codes.mdx`（`main` 上每個錯誤碼的 HTTP 狀態、訊息鍵、產生的位置與會回它的端點）與 `endpoint-authorization.mdx`（`main` 上每個端點放行的系統角色與任務成員身分、對到的 PRD 權限矩陣格、遮蔽的欄位（含答案））。**寫 api-contract 前先改它們**
-10. schema 範本：`openspec/schemas/label-suite-sdd/templates/system-design.md`、`api-contract.md`，以及 `pnpm exec openspec instructions <artifact> --change <name>`
-11. 領域規範：`docs/development/rules/api-agent-rules.mdx` 全部十條（A1 至 A10），它是契約的唯一規範；`docs/development/rules/backend-agent-rules.mdx` B1 分層與允許的 import、B4 交易的擁有層；`docs/development/rules/security-agent-rules.mdx` S1 身分只來自驗證完成的 session、S2 token 不離開 cookie；CSRF 與 CORS 的統一位置、S3 授權的四段順序
+10. 跨模組取用的決定：[ADR-003](../../docs/development/adr/003-backend-architecture.mdx) 的 [D12](../../docs/development/adr/003-backend-architecture.mdx#d12-跨模組呼叫只走-service-對-service-的公開函式)（跨模組讀寫只走對方 service 的公開函式）、[D13](../../docs/development/adr/003-backend-architecture.mdx#d13-稽核紀錄的-model-與寫入函式放在-core)（稽核寫入走 `app/core/`）、[D14](../../docs/development/adr/003-backend-architecture.mdx#d14-後端業務模組的切分)（模組切分，逐表歸屬在 `backend-modules.mdx` §預定模組與資料表歸屬），以及 [ADR-004](../../docs/development/adr/004-auth-and-security.mdx) 的 [D6](../../docs/development/adr/004-auth-and-security.mdx#d6-權限矩陣當授權輸入)（權限檢查走 `app/core/` 的 dependency）
+11. schema 範本：`openspec/schemas/label-suite-sdd/templates/system-design.md`、`api-contract.md`，以及 `pnpm exec openspec instructions <artifact> --change <name>`
+12. 領域規範：`docs/development/rules/api-agent-rules.mdx` 全部十條（A1 至 A10），它是契約的唯一規範；`docs/development/rules/backend-agent-rules.mdx` B1 分層與允許的 import、B4 交易的擁有層；`docs/development/rules/security-agent-rules.mdx` S1 身分只來自驗證完成的 session、S2 token 不離開 cookie；CSRF 與 CORS 的統一位置、S3 授權的四段順序
 
 ## 技術前提
 
@@ -59,6 +60,7 @@ model: opus
 - 有狀態轉換時補 `stateDiagram-v2`；交易邊界、session 生命週期（API 的 async session 與 worker 的 sync session **分離**）、效能疑慮寫在技術待決問題
 - 資料模型異動：表、欄位、索引、**Alembic migration 的 down 能不能還原**，以及 **SQLite 與 PostgreSQL 的差異**（JSON／JSONB、約束、日期、並發）
 - 後端模組的分層、Class Diagram 或主要 Sequence Diagram 有異動時，**先改常駐文件 `backend-modules.mdx`**：新模組加一節，既有模組改它的分層表與圖；動到 `app/core/` 的基礎建設時改「後端基礎建設」節。system-design 的「常駐文件異動」節寫出路徑與異動摘要，不重抄常駐文件的內容；「分層與類別」與「關鍵情境」仍畫這次新增或修改的類別與這次的 Scenario
+- **用到別的模組的資料表或能力時，寫明取用方式**，照上面必讀第 10 項的決定：跨模組讀寫呼叫對方 service 的哪個公開函式，並列出要加的 `ignore_imports`；稽核寫入走 `app/core/`；權限檢查走 `app/core/` 的 dependency。哪張表、哪個能力歸哪個模組以 `backend-modules.mdx` §預定模組與資料表歸屬為準，不自己重劃
 - 資料模型有異動時，**先改字典、再同步 ER、最後跑 `pnpm check:er`**，三步都在規劃階段做完。順序不能倒：ER 是從字典產生的，只改 ER 的修改會被 `check:er` 判成漂移。system-design 的「資料模型異動」節寫出字典與 ER 的路徑，再用異動表摘要改了什麼；不在 system-design 重抄整張表的欄位
 
 ## 產出二：api-contract.md
@@ -87,6 +89,7 @@ model: opus
 
 - [ ] 讀過 system-analysis.md，待決問題已延續或標記處理方式
 - [ ] Class Diagram 是 Router → Service → Repository／Model，Router 不直接碰 Repository
+- [ ] 用到別的模組時：只呼叫對方 service 的公開函式並列出 `ignore_imports`，沒有直接用對方的 repository 或 model；稽核與權限檢查走 `app/core/`；表與能力的歸屬和 §預定模組與資料表歸屬一致
 - [ ] 每個關鍵 Scenario 都有一張 Sequence Diagram，標題與規格書驗收標準的名稱一致
 - [ ] Sequence Diagram 止於 Router 回傳回應，沒有畫面或 render
 - [ ] api-contract 每個端點都有角色、錯誤碼、遮蔽欄位與測試集答案隔離的說明；operationId 符合「動詞加資源」且不與既有端點重複
