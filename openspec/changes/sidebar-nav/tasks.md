@@ -48,8 +48,8 @@
 
 ## 5. 整合檢查
 
-- [ ] 5.1 確認 API 契約沒有漂移：依序執行上方後端與前端兩條契約漂移檢查指令，都以 0 結束；另以 `git diff --exit-code "$(git merge-base origin/main HEAD)" -- backend/openapi.json docs/diagrams/architecture/api.openapi.json frontend/src/api/generated` 確認三處與 `main` 完全相同（`api-contract.md` 開頭「應與 `main` 逐位元組相同」）[@frontend-developer]
-- [ ] 5.2 在乾淨的工作區跑一次全部檢查：`pnpm --filter frontend lint`、`typecheck`、`test`、`build`，`node scripts/check-component-reuse.mjs`（0 個 `FAIL`），`pnpm check:specs`，`pnpm exec openspec validate sidebar-nav --strict`；全部通過，`git status` 乾淨 [@frontend-developer]
+- [x] 5.1 確認 API 契約沒有漂移：依序執行上方後端與前端兩條契約漂移檢查指令，都以 0 結束；另以 `git diff --exit-code "$(git merge-base origin/main HEAD)" -- backend/openapi.json docs/diagrams/architecture/api.openapi.json frontend/src/api/generated` 確認三處與 `main` 完全相同（`api-contract.md` 開頭「應與 `main` 逐位元組相同」）[@frontend-developer]
+- [x] 5.2 在乾淨的工作區跑一次全部檢查：`pnpm --filter frontend lint`、`typecheck`、`test`、`build`，`node scripts/check-component-reuse.mjs`（0 個 `FAIL`），`pnpm check:specs`，`pnpm exec openspec validate sidebar-nav --strict`；全部通過，`git status` 乾淨 [@frontend-developer]
 
 ## Workflow follow-up
 
