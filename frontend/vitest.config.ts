@@ -27,6 +27,7 @@ export default mergeConfig(
           "src/api/generated/**",
           "src/test/**",
           "**/*.test.{ts,tsx}",
+          "**/*.test-helper.{ts,tsx}",
           "**/*.d.ts",
           "*.config.*",
           "dist/**",

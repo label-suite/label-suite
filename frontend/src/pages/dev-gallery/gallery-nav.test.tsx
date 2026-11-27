@@ -4,13 +4,13 @@
  * The narrow-window layout (nav above the content) is checked by hand at
  * acceptance; jsdom has no layout.
  */
-import { act, render, screen, within } from "@testing-library/react";
+import { act, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { server } from "@/test/msw-server";
 
-import { DevGalleryPage } from "./index";
+import { renderGallery } from "./render-gallery.test-helper";
 
 const LINKS = [
   ["Button", "#button"],
@@ -22,6 +22,7 @@ const LINKS = [
   ["Separator", "#separator"],
   ["Dialog", "#dialog"],
   ["Skeleton · Empty", "#states"],
+  ["無權限與找不到", "#blocked"],
   ["Token 對照", "#tokens"],
 ] as const;
 
@@ -30,7 +31,7 @@ let requests: string[] = [];
 /** Opens the gallery at `url`, as if the developer typed it. */
 function openAt(url: string) {
   window.history.replaceState(null, "", url);
-  return render(<DevGalleryPage />);
+  return renderGallery();
 }
 
 function navLinks(): HTMLElement[] {
@@ -58,7 +59,7 @@ afterEach(() => {
 });
 
 describe("gallery nav", () => {
-  it("is a nav named 元件目錄 with the eyebrow and ten section links", () => {
+  it("is a nav named 元件目錄 with the eyebrow and eleven section links", () => {
     openAt("/dev/gallery");
 
     const nav = screen.getByRole("navigation", { name: "元件目錄" });
@@ -76,6 +77,17 @@ describe("gallery nav", () => {
 
     expect(screen.getByRole("link", { name: "Badge" })).toHaveAttribute("aria-current");
     expect(currentLinks()).toEqual(["Badge"]);
+    expect(navLinks()).toHaveLength(11);
+  });
+
+  it("marks the 無權限與找不到 link at #blocked, and it points at the section of that name", () => {
+    openAt("/dev/gallery#blocked");
+
+    expect(navLinks()).toHaveLength(11);
+    expect(currentLinks()).toEqual(["無權限與找不到"]);
+    const target = document.getElementById("blocked");
+    expect(target?.tagName).toBe("SECTION");
+    expect(screen.getByRole("region", { name: "無權限與找不到" })).toBe(target);
   });
 
   it("marks no link without an anchor", () => {

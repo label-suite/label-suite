@@ -229,7 +229,11 @@ interface WalkResult {
 }
 
 const isTestFile = (file: string): boolean =>
-  file.endsWith(".test.ts") || file.endsWith(".test.tsx") || file.startsWith("src/test/");
+  file.endsWith(".test.ts") ||
+  file.endsWith(".test.tsx") ||
+  file.endsWith(".test-helper.ts") ||
+  file.endsWith(".test-helper.tsx") ||
+  file.startsWith("src/test/");
 
 /** Files matching SOURCE_FILES (src/**\/*.{ts,tsx}, build/**\/*.ts); readdir only, no stat. */
 async function sourceFiles(): Promise<string[]> {

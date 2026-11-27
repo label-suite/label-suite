@@ -8,7 +8,7 @@
  * The page is imported from the dev-gallery entry, so the devGallery namespace
  * is registered the same way as at runtime (design D7).
  */
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
@@ -17,8 +17,9 @@ import { badgeVariantValues } from "@/components/ui/badge";
 import { buttonSizeValues, buttonVariantValues } from "@/components/ui/button";
 import { separatorOrientationValues } from "@/components/ui/separator";
 
-import { DevGalleryPage } from "./index";
+import { renderGallery } from "./render-gallery.test-helper";
 import {
+  blockedSampleValues,
   buttonStateValues,
   cardPartValues,
   dialogSampleValues,
@@ -84,6 +85,7 @@ const DECLARED: Declared[] = [
   { component: "dialog", axis: "sample", values: dialogSampleValues },
   { component: "skeleton", axis: "sample", values: skeletonSampleValues },
   { component: "empty", axis: "sample", values: emptySampleValues },
+  { component: "blocked-screen", axis: "kind", values: blockedSampleValues },
 ];
 
 function itemSelector(component: string, axis: string, value: string): string {
@@ -118,10 +120,6 @@ function assertEveryPrimitiveShown(page: HTMLElement, files: readonly string[]):
   }
 }
 
-function renderGallery(): HTMLElement {
-  return render(<DevGalleryPage />).container;
-}
-
 describe("variant catalog (layer 1)", () => {
   it.each([
     ["button variant", variantCatalog.button.variant, buttonVariantValues],
@@ -143,7 +141,7 @@ describe("variant catalog (layer 1)", () => {
 
 describe("DevGalleryPage completeness (layer 2)", () => {
   it("shows one item per declared value, named by the value", () => {
-    const page = renderGallery();
+    const page = renderGallery().container;
 
     for (const declared of DECLARED) {
       expect(() => {
@@ -199,13 +197,14 @@ describe("DevGalleryPage completeness (layer 2)", () => {
       Alert: "variant × 4",
       Card: "header · content · footer",
       Separator: "horizontal · vertical",
+      無權限與找不到: "樣本 × 3",
     };
     for (const [section, count] of Object.entries(counts)) {
       expect(within(screen.getByRole("region", { name: section })).getByText(count)).toBeVisible();
     }
   });
 
-  it("names each of the ten sections with an h2, in order", () => {
+  it("names each of the eleven sections with an h2, in order", () => {
     renderGallery();
 
     const titles = [
@@ -218,9 +217,20 @@ describe("DevGalleryPage completeness (layer 2)", () => {
       "Separator",
       "Dialog",
       "Skeleton · Empty",
+      "無權限與找不到",
       "Token 對照",
     ];
-    expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual(titles);
+    // The blocked-screen samples are regions with level-two titles too, nested
+    // inside their section; the gallery's sections are the outermost regions.
+    const regions = screen.getAllByRole("region");
+    const sections = regions.filter(
+      (region) => !regions.some((other) => other !== region && other.contains(region)),
+    );
+    expect(
+      sections.map(
+        (section) => within(section).getAllByRole("heading", { level: 2 })[0]?.textContent,
+      ),
+    ).toEqual(titles);
     for (const title of titles) {
       const region = screen.getByRole("region", { name: title });
       expect(region.tagName).toBe("SECTION");
@@ -229,7 +239,7 @@ describe("DevGalleryPage completeness (layer 2)", () => {
   });
 
   it("fails and names the value when Button declares a variant the gallery lacks", () => {
-    const page = renderGallery();
+    const page = renderGallery().container;
 
     expect(() => {
       assertEveryValueShown(page, {
@@ -241,7 +251,7 @@ describe("DevGalleryPage completeness (layer 2)", () => {
   });
 
   it("has a section for every primitive file", () => {
-    const page = renderGallery();
+    const page = renderGallery().container;
 
     expect(primitiveFiles.length).toBeGreaterThan(0);
     expect(() => {
@@ -250,7 +260,7 @@ describe("DevGalleryPage completeness (layer 2)", () => {
   });
 
   it("fails and names the file when a primitive has no section", () => {
-    const page = renderGallery();
+    const page = renderGallery().container;
 
     expect(() => {
       assertEveryPrimitiveShown(page, [...primitiveFiles, "foo.tsx"]);
@@ -262,7 +272,7 @@ describe("DevGalleryPage completeness (layer 2)", () => {
 
     expect(testFiles).toEqual(expect.arrayContaining(["button.test.tsx", "input.test.tsx"]));
     expect(primitiveFiles.filter((file) => file.endsWith(".test.tsx"))).toEqual([]);
-    const page = renderGallery();
+    const page = renderGallery().container;
     expect(() => {
       assertEveryPrimitiveShown(page, primitiveFiles);
     }).not.toThrow();

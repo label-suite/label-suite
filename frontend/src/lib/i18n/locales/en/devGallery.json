@@ -15,11 +15,13 @@
     "separator": "Separator",
     "dialog": "Dialog",
     "states": "Skeleton · Empty",
+    "blocked": "Denied and not found",
     "tokens": "Token mapping"
   },
   "count": {
     "variants": "variant × {{n}}",
-    "states": "state × {{n}}"
+    "states": "state × {{n}}",
+    "samples": "samples × {{n}}"
   },
   "button": {
     "count": "variant × {{variants}} · size × {{sizes}} · state × {{states}}"
@@ -68,6 +70,17 @@
     "meta": "Shared components for the four screen states",
     "emptyTitle": "No data yet",
     "emptyDescription": "Explain why it is empty, and the next step"
+  },
+  "blocked": {
+    "notFound": {
+      "title": "Task not found",
+      "description": "Task <identifier/> does not exist. Please check the URL or return to the dashboard to pick another task."
+    },
+    "denied": {
+      "title": "You are not allowed to view this task",
+      "description": "You do not have permission to view task <identifier/>. Please return to the dashboard or contact an administrator."
+    },
+    "back": "Back to dashboard"
   },
   "tokens": {
     "meta": "shadcn/ui variable ← prototype tokens.css"

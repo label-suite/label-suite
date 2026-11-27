@@ -1,6 +1,6 @@
 # Design Gaps
 
-> 批次 `b1-shared-account` 建立、`b2-admin-dashboard-task`、`b3-annotation-review`、`b4-dataset-sweep` 補寫 ｜交付包 commit `b1fd43c` → `eb9a884`、prototype tree `815b853`；G-57～G-60 依交付包 `b16b294`（#608）；G-62～G-65 為 #719 新增；G-66 為 #720 新增
+> 批次 `b1-shared-account` 建立、`b2-admin-dashboard-task`、`b3-annotation-review`、`b4-dataset-sweep` 補寫 ｜交付包 commit `b1fd43c` → `eb9a884`、prototype tree `815b853`；G-57～G-60 依交付包 `b16b294`（#608）；G-62～G-65 為 #719 新增；G-66 為 #720 新增；G-67、G-68 為 #721 新增
 
 每一筆四欄齊全：**重現方式**（不截圖）、**受影響範圍**、**依據**（兩邊原文都引出來）、**待決問題**。
 分三類：原型與業務規格差異 ／ 缺少狀態證據 ／ 待重新設計。
@@ -413,6 +413,17 @@
 | **依據** | 原型：`sidebar.css:92`、`:219`、`:268`、`:326`、`:444`、`:521`、`:874` `font-size: 13px`；`:335`、`:554`、`:790`、`:926`（手機主導覽，`white-space: nowrap`，`:931`）`font-size: 11px`；`:677` `font-size: 10px`。字級 token 從 `--text-display` 到 `--text-label`（`assets/tokens.css:109`–`:115`）只有 48／36／24／18／16／14／12，沒有 13、11、10。規格 07-01 §不同螢幕寬度的呈現 的註寫「尺寸以 prototype 為準」，同頁 §邊界情況 要語言文字較長時導覽不截斷。 |
 | **待決問題** | 已裁定（2026-11-27，#720 clarification Q13）：取最接近且**不大於** prototype 的既有字級 token，不新增 token；原型不改。對應：13px 取 `--text-label`（12px）。仍待實作時確認：11px 與 10px 沒有不大於它們的 token，最小的 `--text-label`（12px）比原型大，手機主導覽的英文長標籤（「System Administration」「Exception Disposition」「Dataset Analytics」）更可能放不下；Q13 要以英文介面的 E2E 實測證明不截斷，放不下時回報維護者，不自行改文案或新增 token。實測（#720 群組 4）：英文、375px、六項時每項 62.5px，五項放不下；維護者 2026-11-27 決定手機主導覽的文字允許換行（與原型 `white-space: nowrap`，`sidebar.css:931` 不同），英文以連字號依音節斷字，不改文案與 token。原題保留：13／11／10px 要對到哪一個 token？ |
 
+### G-67 無權限與找不到的面板，任務詳情用 Card、標記清單用 Empty State
+
+> #721 新增（clarification Q7，依維護者 2026-11-27 的授權採用主 session 建議；`design/prototype/` 不改）。
+
+| 欄 | 內容 |
+| :--- | :--- |
+| **重現方式** | 開 `pages/task-management/task-detail.html?task_id=NOPE`，看找不到的面板；再開 `pages/task-management/task-detail.html?sim_403=1`（任務要查得到，`sim_403` 才生效）看無權限的面板：實線框、白底、文字靠左。再開 `pages/annotation/annotation-list.html?task_id=NOPE`：同樣是「標題、說明、回去處的連結」，卻是虛線框、淺灰底、文字置中。用螢幕閱讀器各開一次：任務詳情的面板會被當成警示朗讀，標記清單的不會。 |
+| **受影響範圍** | [Card](components/card.md)、[Empty State](components/empty-state.md)；`task-management/task-detail`（`#sim-403`、`taskNotFound`）、`annotation/annotation-list`（`#state-task-not-found`、`#state-no-task`）；[規格 07-03](../../docs/specs/07-shared/03-denied-and-not-found.mdx) §畫面的組成 |
+| **依據** | 任務詳情：`task-detail.html:1912`「`<div id="taskNotFound" class="panel hidden" role="alert" aria-live="polite">`」、`:1918`「`<div id="taskForbidden" class="panel hidden" role="alert" aria-live="polite" data-testid="task-forbidden-pane">`」；`.panel` 定義在 `shared/card.css:8`–`:15`「`border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-white); padding: var(--space-lg);`」。標記清單：`annotation-list.html:480`「`<section class="empty-state empty-state-panel hidden" id="taskNotFound" data-testid="list-task-not-found"></section>`」；`shared/empty-state.css:4`「`.empty-state { text-align: center; }`」、`:24`–`:29`「`.empty-state-panel { padding: 20px; border: 1px dashed var(--color-border); border-radius: var(--radius-lg); background: var(--color-slate-50); }`」。規格 07-03 §畫面的組成：「兩種畫面用同一個骨架，使用者才不必在每個模組重新學一次。」§不在本頁範圍 第 3 條：「**空狀態**（有權限、那一筆也在，只是還沒有內容）與**載入失敗**都不是這兩種畫面」。[State Panel](components/state-panel.md) §用到它的畫面 只註明兩者是「各自的實作」，沒有登記這個差異。 |
+| **待決問題** | 已裁定（2026-11-27，#721 clarification Q7）：以任務詳情的 Card 為準（實線框、白底、靠左），不用 Empty State 面板，因為 07-03 明說這兩種畫面不是空狀態；到達時焦點移到標題，不用 `role="alert"`，避免讀兩次。原型不改；標記清單的實作（#773）照 Card 做，與自己的原型不同。原題保留：兩種畫面共用一個骨架時，容器以哪一個原型為準？朗讀要照任務詳情的 `role="alert"`，還是照標記清單不加？ |
+
 ## 二、缺少狀態證據
 
 ### G-05 焦點樣式幾乎全面缺席
@@ -727,6 +738,17 @@ showcase 說明寫「profile 64/80px」（`components-showcase.html:1364`），�
 **已裁定（2026-11-18）**：修正：加 `aria-pressed`。修正於 #422。
 
 **狀態（#422）**：已修正。`quality-entity_recognition.html` 的 `#matchStrict`／`#matchPartial` 帶 `aria-pressed`，`syncSequenceUi` 每次切換都與 `.active` 同步更新（`dataset-analysis-detail.html:2022` 起）。`.match-btn` 樣式現在在 `:107`–`:109`。
+
+### G-68 無權限與找不到的共用畫面沒有元件規格
+
+> #721 新增（clarification Q8，依維護者 2026-11-27 的授權採用主 session 建議）。
+
+| 欄 | 內容 |
+| :--- | :--- |
+| **重現方式** | 在 `design/system/components/` 與 `MASTER.md` 的元件一覽找「無權限」「找不到」或任務詳情、標記清單那兩種面板：沒有任何一份元件規格描述它。 |
+| **受影響範圍** | `frontend/src/components/blocked-screen.tsx`（#721 新建的共用畫面）；之後畫這兩種畫面的每一頁（任務詳情、標記清單、工作頁籤切回）；`scripts/check-component-reuse.mjs` 以 `design/system/components/` 為準，抓不到各模組另畫一份 |
+| **依據** | [State Panel](components/state-panel.md) §用到它的畫面：「`task-detail` 的 `taskForbidden`／`taskNotFound` 與 `dashboard` 的 `.dashboard-error-state` 也是各自的實作」、「`annotation-list` 的 `#taskNotFound`／`#noActionableNotice` 是 `empty-state-panel`」。[規格 07-03](../../docs/specs/07-shared/03-denied-and-not-found.mdx) §畫面的組成 第 1 條：「畫面由三個部分組成：**標題**、**說明**、**一個返回操作**」，第 5 條：「返回操作**只有一個**，而且它的標籤要**寫出去處**」。容器的選擇見 G-67。 |
+| **待決問題** | 已裁定（2026-11-27，#721 clarification Q8）：先登記，元件規格等下次 `design-handoff` 重跑時補（結構照規格 07-03 §畫面的組成，容器照 G-67）；#721 不寫 `design/system/components/`。原題保留：要不要為這個共用畫面補一份元件規格，什麼時候補？ |
 
 ---
 

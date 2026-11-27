@@ -68,3 +68,32 @@ export function isApiError(value: unknown): value is ApiError {
 export function isAuthError(value: unknown): boolean {
   return isApiError(value) && value.kind === "http" && value.status === 401;
 }
+
+/**
+ * Which full-page state a rejected read maps to: `denied` (no permission),
+ * `notFound` (missing, or not to be known to exist), or `other` (the block's
+ * own error state).
+ */
+export type RejectionKind = "denied" | "notFound" | "other";
+
+/**
+ * Classifies a rejection by the error envelope's status and code together
+ * (api-contract §為什麼要看 `code`): only `403 PERMISSION_DENIED` is denied
+ * and only `404 NOT_FOUND` is notFound, so `403 CSRF_FAILED` stays other.
+ * A pure function: it sends nothing, reads no cache and does not decide
+ * whether the page draws a full-page state or where its way back leads.
+ *
+ * @param value Any thrown value, such as a query's `error`.
+ */
+export function classifyRejection(value: unknown): RejectionKind {
+  if (!isApiError(value) || value.kind !== "http") {
+    return "other";
+  }
+  if (value.status === 403 && value.code === "PERMISSION_DENIED") {
+    return "denied";
+  }
+  if (value.status === 404 && value.code === "NOT_FOUND") {
+    return "notFound";
+  }
+  return "other";
+}

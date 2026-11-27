@@ -38,7 +38,7 @@ change 的 `ui-design.md` 仍然寫這次頁面的元件樹、資料來源、畫
 | `/account/google/callback` | `GoogleCallbackPage`（`pages/google-callback/`）：沒有自己的畫面，只畫頁面底色；把 Google 帶回來的 `code`、`state` 交給後端一次後導走；包在 `PublicOnlyRoute` 裡 | 開發模式與正式建置 | 規格 01-01 §用 Google 帳號登入、E1、E2 | 帳號模組 X1 → D3；D3 是 → X5，D3 否 → P1 |
 | `/dashboard/dashboard` | `DashboardPlaceholderPage`（`pages/dashboard-placeholder/`）：02-01 完成前的暫時落點，畫在登入後外殼裡；卡片顯示「你已登入」、名字與 Email、系統角色，沒有自己的登出鈕，登出由側欄的登出控制項做。被側欄擋下帶回來時，卡片上方顯示一次擋下說明。02-01 完成時換成儀表板，路徑不變 | 開發模式與正式建置；需要登入 | 規格 02-01（之後取代）；規格 07-01 §進入模組的條件 第 3 條；規格 01-05 §從這一台登出 | 帳號模組 X5；共用模組 P1、X1；登出 X5 → X7 → P1 |
 | `/` | `RootRedirect`：不顯示內容，依登入狀態以取代歷史紀錄的方式導向：已登入 → 落點，未登入 → `/account/login` | 開發模式與正式建置 | 規格 01-01 §登入頁 第 9 條、Q3 | 帳號模組 S → D1 |
-| 其他路徑 | 以取代歷史紀錄的方式導向 `/`，再依登入狀態導向；規格 07-03 的找不到頁完成時取代這一條 | 開發模式與正式建置 | 規格 07-03（之後取代） | 無 |
+| 其他路徑 | 以取代歷史紀錄的方式導向 `/`，再依登入狀態導向；不顯示找不到 | 開發模式與正式建置 | 無；規格 07-03 的找不到只涵蓋網址定址到的那一筆，不涵蓋未註冊的網址 | 無 |
 | `/dev/health` | `DevHealthPage`（`pages/dev-health/`） | 開發模式 | 無 `docs/specs/` 規格；行為見 `openspec/specs/dev-health-page/` | 無 |
 | `/dev/gallery` | `DevGalleryPage`（`pages/dev-gallery/`） | 開發模式 | 無 `docs/specs/` 規格；行為見 `openspec/specs/component-gallery/` | 無 |
 
@@ -93,9 +93,9 @@ frontend/
    ├─ app/                  router、根 layout AppRoot、外殼組合層 AppShellLayout、providers、QueryClient
    ├─ pages/<page>/         頁面：組合功能元件與原語
    ├─ features/<feature>/   功能元件與它的狀態轉換
-   ├─ components/           跨 feature 共用的元件（品牌標誌、語言切換、外觀切換、app-shell/ 側欄外殼）
+   ├─ components/           跨 feature 共用的元件（品牌標誌、語言切換、外觀切換、無權限與找不到的整頁畫面、app-shell/ 側欄外殼）
    │  └─ ui/                shadcn/ui 原語，匯出 variant 陣列
-   ├─ api/                  mutator.ts（唯一出口）、session-refresh.ts、ApiError、外層判定、config
+   ├─ api/                  mutator.ts（唯一出口）、session-refresh.ts、ApiError、外層判定、錯誤分類、config
    │  └─ generated/         Orval 產物，禁止手改
    ├─ lib/                  i18n、theme（外觀偏好）、date（day.js 唯一入口）、abort、utils
    ├─ styles/               theme.css：shadcn 變數對到 tokens.css 的變數名
@@ -136,6 +136,7 @@ frontend/
 - 外層只驗外層本身的欄位，`data` 裡面的形狀交給生成的型別
 - 非 `http` 的 `ApiError.message` 是英文診斷字串，不含回應內容或原生錯誤的訊息
 - `isAuthError()` 只認錯誤外層的 `401`；`403` 不算
+- `api-error.ts` 的錯誤分類 `classifyRejection()` 把任何丟出來的值分成三種（`RejectionKind`）：`403 PERMISSION_DENIED` 是無權限、`404 NOT_FOUND` 是找不到，其他（含 `403 CSRF_FAILED`，以及不是 `ApiError` 的值）一律是其他；狀態碼與錯誤碼要同時吻合，只分類，要不要畫成無權限或找不到的整頁畫面、返回去哪裡由各頁決定
 - 語言：`main.tsx` 呼叫 `initI18n()`，讀 `localStorage` 的 `labelsuite.lang`；值不是 `en`、讀不到或沒有時是 `zh-TW`，不看瀏覽器語言，並把 `<html lang>` 設成同一個值。登入頁頁首與側欄的 `LanguageToggle` 經 `changeInterfaceLanguage` 切換、記住並更新 `<html lang>`。啟動時預載 `common`、`auth`、`appShell` 三個 namespace，開發用頁面的 namespace 由各自的入口註冊；英文缺某個鍵時顯示繁體中文原文（`fallbackLng` 是 `zh-TW`），不顯示鍵名
 - 外觀：`index.html` 在 `<head>`、模組腳本之前以同源外部腳本 `<script src="/theme-init.js">` 載入 `public/theme-init.js`，它在第一次繪製前讀 `localStorage` 的 `label-suite-theme`（淺色、深色、跟隨系統；無效、讀不到或沒有時當跟隨系統），把解析後的值寫到 `<html data-theme>`；不用內嵌腳本，所以內容安全政策 `script-src 'self'` 不必放寬。之後由 `lib/theme` 接手：`main.tsx` 呼叫 `initTheme()` 套用並在跟隨系統時訂閱作業系統的變化，`ThemeToggle` 經 `useResolvedTheme` 讀、經 `setThemeChoice` 寫。兩份解讀規則以同一張案例表測試，不會各走各的。登入頁與登入後的每一頁都照它呈現，登出不清這個鍵
 :::
@@ -193,6 +194,10 @@ frontend/
 
 目前的原語：`alert`、`badge`（含角色變體 `role`）、`button`（含送出中的 `loading`）、`card`、`dialog`、`empty`、`input`、`label`、`separator`、`skeleton`。新增原語時，展示頁要有它的一節，否則完整性測試失敗。
 
+原語以外，展示頁另有一節「無權限與找不到」（錨點 `#blocked`，排在「Skeleton · Empty」與「Token 對照」之間），由 `blocked-section.tsx` 的 `BlockedSection` 畫 `components/blocked-screen.tsx` 的 `BlockedScreen` 三個樣本：找不到、無權限，以及識別碼很長的找不到，各帶 `data-gallery-item="blocked-screen:kind:<值>"`（值為 `notFound`、`denied`、`longIdentifier`，宣告在 `variant-catalog.ts` 的 `blockedSampleValues`）。返回去處是儀表板，字面是展示頁自己的示意文字（`devGallery` 的 `blocked.*`），識別碼是 `variant-catalog.ts` 的固定示意值，樣本標題是二級、不移焦點。正式路由還沒有任何頁面畫這兩種畫面，所以這一節是看得到它們的唯一地方。
+
+樣本的返回連結是 React Router 的 `Link`，所以展示頁要在 Router 裡畫：執行時由正式路由提供，測試一律經 `render-gallery.test-helper.tsx` 的 `renderGallery()` 以 `MemoryRouter` 包住，不直接 render `DevGalleryPage`。
+
 :::note{title="design token 怎麼進到元件" collapsible}
 - `build/extract-tokens.ts` 在開發與建置時讀 `design/prototype/assets/tokens.css`，只取 `:root` 與 `html[data-theme="dark"]` 的 `--*` 宣告，以虛擬模組 `virtual:design-tokens.css` 提供，不寫檔
 - `main.tsx` 直接 import 它、不放在 `@layer` 裡，所以 `tokens.css` 的值會蓋過 Tailwind 同名的主題變數
@@ -207,6 +212,7 @@ frontend/
 | :--- | :--- | :--- |
 | 側欄導覽項的多數落點頁 | 點了經 `/` 回到暫時落點；「資料集分析」被擋下時要去的任務列表也不存在，所以那句擋下說明目前看不到 | 規格 02-01、03-01、04-01、05-01、06-01、06-02、01-04 各頁的實作 |
 | 任務角色的讀取 | 側欄把每一位使用者都當成沒有任何任務角色：第三個導覽項讀作「標記作業」、角色標示讀作「一般使用者」，點「標記作業」「資料集分析」一律被擋下 | 規格 03-03 的任務成員管理 |
+| 定址到那一筆的頁面（任務詳情、標記清單） | 無權限與找不到的整頁畫面與錯誤分類沒有產品頁面使用，只在元件展示頁看得到；正式環境也還沒有端點會回這兩種拒絕 | 規格 03-03、04-01 的實作 |
 | 前端的錯誤追蹤與監控 | 使用者端的錯誤只有使用者回報的 `traceId` 可查 | [ADR-008 的 D4](../../development/adr/008-deployment-and-operations.mdx#d4-觀測性只做-ai_runs監控與錯誤追蹤本期不做) |
 
 ## 決策紀錄
@@ -221,3 +227,6 @@ frontend/
 | 2026-11-27 | 登入後的路由包進外殼，暫時落點畫在外殼裡、拿掉卡片自己的登出鈕；路由以 `handle` 宣告目前位置；擋下說明以 navigation state 帶到落點；外觀切換搬到 `components/`，展示頁改用它並記住選擇（[§路由](#路由)、[§頁面與功能元件](#頁面與功能元件)、[§元件展示頁](#元件展示頁)）；理由是規格 07-01 要每個登入後頁面都有側欄，而同一份外觀偏好只能有一個擁有者 | 暫時落點沿用登入頁頁首、沒有側欄、有自己的登出鈕；展示頁的外觀只存在元件狀態、離開還原淺色 | [#720](https://github.com/label-suite/label-suite/issues/720) |
 | 2026-11-27 | 所有路由包進根 layout `AppRoot`，外殼依 `location.key`、pathname 與 `AppRoot` 記下的「離開過」判斷換頁後的背景重查；外觀改由 `public/theme-init.js` 在第一次繪製前套用、`lib/theme` 之後接手（[§登入狀態與守門](#登入狀態與守門)、[§前端骨架](#前端骨架)）；理由是換頁會經外殼以外的轉址讓外殼卸載再掛載，而 StrictMode 的重跑不能多送查詢，內嵌腳本又會被 `script-src 'self'` 擋下 | 外殼只看 pathname 改變就重查；外觀由 `lib/theme` 在第一次繪製前套用 | [#720](https://github.com/label-suite/label-suite/issues/720) |
 | 2026-11-27 | 已知限制拿掉「CI 的前端檢查」一列：lint、型別、測試與建置由 CI 的 `frontend` 跑，契約漂移由 `api-contract` 跑，跑過前後端的 e2e 由 `e2e` 跑（[§已知限制](#已知限制)） | 已知限制的「CI 的前端檢查……目前只在本機跑」，追蹤於已關閉的 #506 | [#745](https://github.com/label-suite/label-suite/issues/745) |
+| 2026-11-27 | `components/` 加無權限與找不到的整頁畫面 `BlockedScreen`：只有標題、說明與一個寫出去處的返回連結，字面、去處與識別碼由使用它的頁面傳入，不送請求（[§目錄](#目錄)）；理由是規格 07-03 要全站共用同一個骨架，而 prototype 的任務詳情與標記清單分屬兩個 feature | 兩個模組各自畫自己的面板 | [#721](https://github.com/label-suite/label-suite/issues/721) |
+| 2026-11-27 | 「其他路徑」維持導回 `/`，不以找不到取代；`api-error.ts` 加錯誤分類；元件展示頁加「無權限與找不到」一節（[§路由](#路由)、[§單一 HTTP 邊界](#單一-http-邊界)、[§元件展示頁](#元件展示頁)）；理由是規格 07-03 只涵蓋網址定址到的那一筆，而正式路由還沒有頁面畫得出這兩種畫面 | 「其他路徑」預告由規格 07-03 的找不到頁取代 | [#721](https://github.com/label-suite/label-suite/issues/721) |
+| 2026-11-27 | 元件展示頁的測試改經共用的 `renderGallery()` 以 `MemoryRouter` 包住展示頁（[§元件展示頁](#元件展示頁)）；理由是「無權限與找不到」一節的返回連結是 React Router 的 `Link`，離開 Router 畫不出來 | 各測試檔直接 render `DevGalleryPage` | [#721](https://github.com/label-suite/label-suite/issues/721) |
