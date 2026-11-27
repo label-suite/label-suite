@@ -202,7 +202,7 @@ gh issue view <N> --json comments \
 lead 回報後：
 
 1. 主 session 用 `git -C <worktree> diff origin/main...HEAD` 讀完整個 diff，對照 issue 的工作項。不用 `cd` 進 lead 的 worktree。
-2. 另開一個新的審查者。**程式類改派 `code-reviewer`，不用 `doc-writing` 的清單**——它要看的是分層、型別與契約同步，見 `.claude/agents/code-reviewer.md`。文件與 `openspec/` 類用新開的 general-purpose 審查者。prompt 只給 issue 編號、worktree 路徑和「依 `.claude/skills/doc-writing/SKILL.md` 步驟 5 的清單，以及 `AGENTS.md` §Review Guidelines 審查 `origin/main...HEAD`」，不給主 session 自己的看法。`openspec/` 的 diff 改依 `openspec/config.yaml` 的規則，加上 `AGENTS.md` §Review Guidelines 審查，不用 `doc-writing` 的清單；diff 裡 `docs/` 的部分仍用 `doc-writing` 步驟 5。
+2. 另開一個新的審查者。**程式類改派 `code-reviewer`，不用 `doc-writing` 的清單**——它要看的是分層、型別與契約同步，見 `.claude/agents/code-reviewer.md`。文件與 `openspec/` 類用新開的 general-purpose 審查者。prompt 只給 issue 編號、worktree 路徑和「依 `.claude/skills/doc-writing/SKILL.md` 步驟 5 的清單，以及 `AGENTS.md` §Review Guidelines 審查 `origin/main...HEAD`」，不給主 session 自己的看法。`openspec/` 的 diff 改依 `openspec/config.yaml` 的規則，加上 `AGENTS.md` §Review Guidelines 審查，不用 `doc-writing` 的清單；diff 裡 `docs/` 的部分仍用 `doc-writing` 步驟 5。**程式類的 diff 改了 `docs/`（例如常駐文件）時，在 `code-reviewer` 之外再開一個新的 general-purpose 審查者，只對 `docs/` 那部分依 `doc-writing` 步驟 5 的自我檢查清單審查**——`code-reviewer` 不看文件寫法。
 3. 主 session 逐條核對審查意見。Critical 或 High 就用 `SendMessage` 交回原本的 lead 修，修完再審一次；Medium 或 Low 寫進 PR 的「非阻擋」，但違反 `doc-writing` 鐵律的（例如來源沒有的理由、正文寫出來源 repo）即使是 Medium 也在合併前交回 lead 修，主 session 讀修正的 diff 確認即可，不必重審；真的有問題但在範圍外的，另開 issue，在 PR 裡寫出編號。
 4. 開 PR。body 先寫進 scratchpad 的檔案，再用 `--body-file` 傳：
 
@@ -229,12 +229,13 @@ gh pr view <pr> --json mergeable,mergeStateStatus,headRefOid,statusCheckRollup
 - `commit-messages`、`docs-site`、`format`、`hooks`、`specs` 五個 job 都在，而且都是 `SUCCESS`（每個 PR 都會跑，缺一個就代表還沒註冊）
 - 這個 head SHA 沒有還在 `queued` 或 `in_progress` 的 run：
   `gh run list --branch <branch> --json status,headSha --jq '[.[]|select(.headSha=="<sha>" and .status!="completed")]|length'` 要是 `0`
-- 審查已經通過，issue 的工作項和 PR 的 Test Plan 全部勾完
+- 審查已經通過，issue 的工作項和 PR 的 Test Plan 全部勾完。issue 本文要實際查過沒有未勾的項目，`gh issue view <N> --json body -q .body | grep -c -- '- \[ \]'` 要是 `0`；不能只憑 lead 或角色的回報
 
 程式類（SDD 派工）另外要全部成立：
 
 - `code-reviewer` 審查通過，阻斷意見都已修
 - `acceptance-verifier` 的 `acceptance.md` 判定通過
+- 主 session 自己核對 `acceptance.md`「規格頁驗收標準覆蓋」表上的每個 `#N`：那張 issue 的本文都有 `ops` 寫入的「從 #<本張> 移交的驗收」清單，而且列到表上交給它的每一條。缺了就不合併，交回 `ops` 補
 - `ops` 已經跑完 `/opsx:archive`，而且歸檔改動就在**這一張 PR** 裡——`AGENTS.md` §SDD Workflow 要求 main 不留「合併了但還沒歸檔」的 change
 
 程式類 PR 屬 **程式 PR** 這一類，範圍見 [spec-migration.mdx 的 §PR 的變更範圍](../../../docs/development/workflow/spec-migration.mdx)：`backend/`、`frontend/`、`e2e/`，連帶該 change 的 `openspec/changes/<change>/` 與 `openspec/specs/`。逐檔比對照那張表走。
@@ -353,6 +354,7 @@ gh project item-edit --project-id PVT_kwDOEWdNqs4BoCOI --id "$ITEM" \
 | 2026-11-19 | 驗收不再停下來等維護者；`ops` 在合併前跑 `/opsx:archive`，歸檔改動與程式進同一張 PR（[步驟 5](#步驟-5-派工) 的 §SDD 類、[步驟 7](#步驟-7-合併)） | §待決 原本第 1 列：「產品程式的 SDD change 要怎麼接進來：誰歸檔、什麼時候歸檔」 | [#464](https://github.com/label-suite/label-suite/issues/464) |
 | 2026-11-20 | 六類 PR 新增**程式 PR**（`backend/`、`frontend/`、`e2e/`，連帶該 change 的 `openspec/` 產出），見 `spec-migration.mdx`；派工範圍加入產品程式碼，走 `label-suite-sdd` 全流程；clarification 有 Q 項就以檢查點留言停在 In Progress，派工改做別張；程式類一波只排一張（[步驟 3](#步驟-3-分類)、[步驟 4](#步驟-4-排波次)、[步驟 5](#步驟-5-派工)） | 「只派文件、工具與 `openspec/` 目錄下的 issue」，以及把產品程式算成範圍外 | [#525](https://github.com/label-suite/label-suite/issues/525) |
 | 2026-11-25 | 每個 Epic 移到 Done 之後，對它動過的程式跑一次架構審查：新開的審查者找新舊寫法並存、重複實作、模組互依，結果開成一張彙總 issue（工作項為 checkbox、放 Todo），由維護者決定拆哪些（[步驟 7](#步驟-7-合併) 的 §Epic 結束時的架構審查） | 只靠 lint 與單張 PR 的審查，沒有跨 PR 的整體檢查 | [#564](https://github.com/label-suite/label-suite/issues/564) |
+| 2026-11-27 | 合併前核對 issue 本文沒有未勾的項目、程式類核對覆蓋表上每個 `#N` 都有移交清單；程式類 PR 改了 `docs/` 時另以 `doc-writing` 步驟 5 審那一部分（[步驟 6](#步驟-6-審查與開-pr)、[步驟 7](#步驟-7-合併)） | 移交驗收由主 session 合併後臨時補記；程式類 PR 只派 `code-reviewer` | [#744](https://github.com/label-suite/label-suite/issues/744) |
 
 ## 附錄：與原 skill 的對照
 
