@@ -17,7 +17,7 @@ import { badgeVariantValues } from "@/components/ui/badge";
 import { buttonSizeValues, buttonVariantValues } from "@/components/ui/button";
 import { separatorOrientationValues } from "@/components/ui/separator";
 
-import { renderGallery } from "./render-gallery";
+import { renderGallery } from "./render-gallery.test-helper";
 import {
   blockedSampleValues,
   buttonStateValues,
@@ -220,8 +220,17 @@ describe("DevGalleryPage completeness (layer 2)", () => {
       "無權限與找不到",
       "Token 對照",
     ];
-    const sectionTitles = document.querySelectorAll("section[id] > div > h2");
-    expect(Array.from(sectionTitles, (h) => h.textContent)).toEqual(titles);
+    // The blocked-screen samples are regions with level-two titles too, nested
+    // inside their section; the gallery's sections are the outermost regions.
+    const regions = screen.getAllByRole("region");
+    const sections = regions.filter(
+      (region) => !regions.some((other) => other !== region && other.contains(region)),
+    );
+    expect(
+      sections.map(
+        (section) => within(section).getAllByRole("heading", { level: 2 })[0]?.textContent,
+      ),
+    ).toEqual(titles);
     for (const title of titles) {
       const region = screen.getByRole("region", { name: title });
       expect(region.tagName).toBe("SECTION");

@@ -196,7 +196,7 @@ frontend/
 
 原語以外，展示頁另有一節「無權限與找不到」（錨點 `#blocked`，排在「Skeleton · Empty」與「Token 對照」之間），由 `blocked-section.tsx` 的 `BlockedSection` 畫 `components/blocked-screen.tsx` 的 `BlockedScreen` 三個樣本：找不到、無權限，以及識別碼很長的找不到，各帶 `data-gallery-item="blocked-screen:kind:<值>"`（值為 `notFound`、`denied`、`longIdentifier`，宣告在 `variant-catalog.ts` 的 `blockedSampleValues`）。返回去處是儀表板，字面是展示頁自己的示意文字（`devGallery` 的 `blocked.*`），識別碼是 `variant-catalog.ts` 的固定示意值，樣本標題是二級、不移焦點。正式路由還沒有任何頁面畫這兩種畫面，所以這一節是看得到它們的唯一地方。
 
-樣本的返回連結是 React Router 的 `Link`，所以展示頁要在 Router 裡畫：執行時由正式路由提供，測試一律經 `render-gallery.tsx` 的 `renderGallery()` 以 `MemoryRouter` 包住，不直接 render `DevGalleryPage`。
+樣本的返回連結是 React Router 的 `Link`，所以展示頁要在 Router 裡畫：執行時由正式路由提供，測試一律經 `render-gallery.test-helper.tsx` 的 `renderGallery()` 以 `MemoryRouter` 包住，不直接 render `DevGalleryPage`。
 
 :::note{title="design token 怎麼進到元件" collapsible}
 - `build/extract-tokens.ts` 在開發與建置時讀 `design/prototype/assets/tokens.css`，只取 `:root` 與 `html[data-theme="dark"]` 的 `--*` 宣告，以虛擬模組 `virtual:design-tokens.css` 提供，不寫檔

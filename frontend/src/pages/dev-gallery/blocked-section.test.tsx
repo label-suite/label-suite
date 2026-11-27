@@ -6,7 +6,7 @@
 import { screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { renderGallery } from "./render-gallery";
+import { renderGallery } from "./render-gallery.test-helper";
 import { blockedLongIdentifier, blockedSampleIdentifier } from "./variant-catalog";
 
 function section(): HTMLElement {

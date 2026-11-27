@@ -12,10 +12,19 @@ import tseslint from "typescript-eslint";
 
 /**
  * "Test files", defined once and shared by every rule below: colocated tests,
- * the test support folder, and the Vitest config. Only these may import test
- * doubles (msw, faker, src/test/, Orval's generated *.msw.ts and *.faker.ts).
+ * colocated test helpers (`*.test-helper.ts(x)`, imported only by the tests
+ * beside them), the test support folder, and the Vitest config. Only these may
+ * import test doubles (msw, faker, src/test/, Orval's generated *.msw.ts and
+ * *.faker.ts) and test helpers.
  */
-const TEST_FILES = ["**/*.test.ts", "**/*.test.tsx", "src/test/**", "vitest.config.ts"];
+const TEST_FILES = [
+  "**/*.test.ts",
+  "**/*.test.tsx",
+  "**/*.test-helper.ts",
+  "**/*.test-helper.tsx",
+  "src/test/**",
+  "vitest.config.ts",
+];
 
 /** Folders where server data may only come through the generated client (A6). */
 const UI_LAYERS = ["src/pages/**", "src/features/**", "src/components/**"];
@@ -58,7 +67,7 @@ const AXIOS_RESTRICTION = {
 };
 
 const TEST_DOUBLE_MESSAGE =
-  "Test doubles (msw, @faker-js/faker, src/test/, generated *.msw.ts and *.faker.ts) may only be imported by test files, so they never reach the production bundle.";
+  "Test doubles (msw, @faker-js/faker, src/test/, generated *.msw.ts and *.faker.ts) and test helpers (*.test-helper.ts(x)) may only be imported by test files, so they never reach the production bundle.";
 
 const TEST_DOUBLE_RESTRICTION = {
   paths: [
@@ -77,6 +86,9 @@ const TEST_DOUBLE_RESTRICTION = {
         "**/*.msw.ts",
         "**/*.faker",
         "**/*.faker.ts",
+        "**/*.test-helper",
+        "**/*.test-helper.ts",
+        "**/*.test-helper.tsx",
       ],
       message: TEST_DOUBLE_MESSAGE,
     },

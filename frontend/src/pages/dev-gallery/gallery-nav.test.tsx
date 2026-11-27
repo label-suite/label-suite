@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { server } from "@/test/msw-server";
 
-import { renderGallery } from "./render-gallery";
+import { renderGallery } from "./render-gallery.test-helper";
 
 const LINKS = [
   ["Button", "#button"],

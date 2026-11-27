@@ -12,7 +12,7 @@ import { alertVariantValues } from "@/components/ui/alert";
 import { LANGUAGE_STORAGE_KEY, i18n, readStoredLanguage } from "@/lib/i18n";
 import { THEME_STORAGE_KEY, initTheme, setThemeChoice } from "@/lib/theme";
 
-import { renderGallery } from "./render-gallery";
+import { renderGallery } from "./render-gallery.test-helper";
 
 describe("DevGalleryPage Alert samples", () => {
   it("shows every Alert sample as a note, with no live alert region on the page", () => {

@@ -142,7 +142,7 @@ describe("BlockedScreen", () => {
   });
 
   it("shows markup and a right-to-left override in an identifier as isolated plain text", () => {
-    const strange = "<img src=x onerror=alert(1)>‮abc";
+    const strange = "<img src=x onerror=alert(1)>\u202Eabc";
     renderScreen(notFoundProps(strange));
 
     const region = screen.getByRole("region", { name: NOT_FOUND_TITLE });
