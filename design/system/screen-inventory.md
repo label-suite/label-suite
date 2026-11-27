@@ -34,43 +34,43 @@
 
 由 `pages/` 的「視圖與元件」一節反推。
 
-| 元件 | b1 用到它的畫面 | b2 用到它的畫面 | b3 用到它的畫面 | b4 用到它的畫面 | 數 |
-| :--- | :--- | :--- | :--- | :--- | ---: |
-| [Accordion](components/accordion.md) | `components-showcase` | `task-management/task-detail` · `task-management/task-new` | **（b3 無）** | `dataset/dataset-analysis-detail` | 4 |
-| [Alert Banner](components/alert-banner.md) | `account/login` · `account/register` · `components-showcase` | `admin/role-settings` · `admin/user-management` | **（b3 無）** | **（b4 無）** | 5 |
-| [App Shell（Sidebar）](components/app-shell.md) | `account/profile` · `shared/app-shell` | `admin/role-settings` · `admin/user-management` · `dashboard/dashboard` · `task-management/task-detail` · `task-management/task-list` · `task-management/task-new` | `annotation/annotation-list` · `annotation/annotation-workspace` | `dataset/dataset-analysis-detail` · `dataset/dataset-analysis-list` | 12 |
-| [Auth Card](components/auth-card.md) | `account/forgot-password` · `account/login` · `account/register` · `account/reset-password` · `account/verify-email` | **（b2 無）** | **（b3 無）** | **（b4 無）** | 5 |
-| [Auth Navbar](components/auth-navbar.md) | `account/forgot-password` · `account/login` · `account/register` · `account/reset-password` · `account/verify-email` | **（b2 無）** | **（b3 無）** | **（b4 無）** | 5 |
-| [Avatar](components/avatar.md) | `account/profile` · `components-showcase` | **（b2 無）** | **（b3 無）** | **（b4 無）** | 2 |
-| [Badge](components/badge.md) | `components-showcase` | `admin/role-settings` · `admin/user-management` · `dashboard/dashboard` · `task-management/task-detail` · `task-management/task-list` | `annotation/annotation-list` | `dataset/dataset-analysis-detail` · `dataset/dataset-analysis-list` | 9 |
-| [Breadcrumb](components/breadcrumb.md) | `components-showcase` | `task-management/task-detail` | `annotation/annotation-list` · `annotation/annotation-workspace` | `dataset/dataset-analysis-detail` | 5 |
-| [Button](components/button.md) | `account/forgot-password` · `account/login` · `account/profile` · `account/register` · `account/reset-password` · `components-showcase` | `admin/role-settings` · `admin/user-management` · `dashboard/dashboard` · `task-management/task-detail` · `task-management/task-list` · `task-management/task-new` | `annotation/annotation-list` · `annotation/annotation-workspace` | `dataset/dataset-analysis-detail` | 15 |
-| [Card](components/card.md) | **（b1 無）** | `dashboard/dashboard` · `task-management/task-detail` · `task-management/task-new` | `annotation/annotation-workspace` | `dataset/dataset-analysis-detail` | 5 |
-| [Chip](components/chip.md) | `components-showcase` | `task-management/task-detail` · `task-management/task-new` | **（b3 無）** | `dataset/dataset-analysis-detail` | 4 |
-| [Color Dot](components/color-dot.md) | `components-showcase` | `task-management/task-detail` · `task-management/task-new` | **（b3 無）** | `dataset/dataset-analysis-detail` | 4 |
-| [Data Table](components/data-table.md) | **（b1 無）** | `admin/role-settings` · `admin/user-management` · `task-management/task-detail` · `task-management/task-list` | `annotation/annotation-list` | `dataset/dataset-analysis-detail` · `dataset/dataset-analysis-list` | 7 |
-| [Date Range Picker](components/date-range-picker.md) | `components-showcase` | `task-management/task-detail` | **（b3 無）** | **（b4 無）** | 2 |
-| [Desktop Content Tabs](components/content-tabs.md) | **（b1 無）** | `admin/role-settings` · `admin/user-management` · `task-management/task-detail` | `annotation/annotation-workspace` | `dataset/dataset-analysis-detail` | 5 |
-| [Divider](components/divider.md) | `account/login` · `components-showcase` | **（b2 無）** | **（b3 無）** | `dataset/dataset-analysis-detail` | 3 |
-| [Empty State](components/empty-state.md) | **（b1 無）** | `admin/role-settings` · `admin/user-management` · `dashboard/dashboard` · `task-management/task-detail` · `task-management/task-list` · `task-management/task-new` | `annotation/annotation-list` · `annotation/annotation-workspace` | `dataset/dataset-analysis-detail` · `dataset/dataset-analysis-list` | 10 |
-| [Input](components/input.md) | `account/forgot-password` · `account/login` · `account/profile` · `account/register` · `account/reset-password` · `components-showcase` | `admin/user-management` · `task-management/task-new` | `annotation/annotation-workspace` | **（b4 無）** | 9 |
-| [Language Toggle](components/lang-toggle.md) | `account/forgot-password` · `account/login` · `account/register` · `account/reset-password` · `account/verify-email` · `components-showcase` | **（b2 無）** | **（b3 無）** | **（b4 無）** | 6 |
-| [List Toolbar](components/list-toolbar.md) | **（b1 無）** | `admin/user-management` · `task-management/task-list` | `annotation/annotation-list` | `dataset/dataset-analysis-list` | 4 |
-| [Metric KPI Tile](components/metric.md) | `components-showcase` | `dashboard/dashboard` · `task-management/task-detail` | **（b3 無）** | `dataset/dataset-analysis-detail` | 4 |
-| [Modal](components/modal.md) | **（b1 無）** | `admin/role-settings` · `admin/user-management` · `task-management/task-detail` · `task-management/task-list` · `task-management/task-new` | `annotation/annotation-workspace` | **（b4 無）** | 6 |
-| [Pagination](components/pagination.md) | `components-showcase` | `admin/user-management` · `task-management/task-detail` · `task-management/task-list` | `annotation/annotation-list` | `dataset/dataset-analysis-list` | 6 |
-| [Password Eye Toggle](components/password-eye-toggle.md) | `account/login` · `account/profile` · `account/register` · `account/reset-password` | **（b2 無）** | **（b3 無）** | **（b4 無）** | 4 |
-| [Progress Bar](components/progress-bar.md) | `components-showcase` | `dashboard/dashboard` | `annotation/annotation-list` · `annotation/annotation-workspace` | `dataset/dataset-analysis-detail` · `dataset/dataset-analysis-list` | 6 |
-| [Proto Toggle Bar](components/proto-toggle-bar.md) | `account/reset-password` · `account/verify-email` | **（b2 無）** | **（b3 無）** | **（b4 無）** | 2 |
-| [Review Status Track](components/review-status-track.md) | `components-showcase` | **（b2 無）** | `annotation/annotation-workspace` | **（b4 無）** | 2 |
-| [Skeleton](components/skeleton.md) | `account/profile` · `components-showcase` | `dashboard/dashboard` · `task-management/task-detail` | **（b3 無）** | **（b4 無）** | 4 |
-| [Spinner](components/spinner.md) | `account/login` | **（b2 無）** | **（b3 無）** | **（b4 無）** | 1 |
-| [State Panel](components/state-panel.md) | `account/forgot-password` · `account/reset-password` · `account/verify-email` · `components-showcase` | **（b2 無）** | **（b3 無）** | **（b4 無）** | 4 |
-| [Status Pill](components/status-pill.md) | `components-showcase` | **（b2 無）** | `annotation/annotation-list` | **（b4 無）** | 2 |
-| [Step Indicator](components/step-indicator.md) | **（b1 無）** | `task-management/task-new` | **（b3 無）** | **（b4 無）** | 1 |
-| [Toast](components/toast.md) | `account/profile` · `components-showcase` | `admin/role-settings` · `admin/user-management` · `task-management/task-detail` · `task-management/task-list` · `task-management/task-new` | `annotation/annotation-workspace` | `dataset/dataset-analysis-list` | 9 |
-| [Toggle Switch](components/toggle-switch.md) | `account/profile` · `components-showcase` | `task-management/task-detail` · `task-management/task-new` | **（b3 無）** | **（b4 無）** | 4 |
-| [Tooltip](components/tooltip.md) | **（b1 無）** | `task-management/task-detail` · `task-management/task-new` | `annotation/annotation-workspace` | **（b4 無）** | 3 |
+| 元件 | b1 用到它的畫面 | b2 用到它的畫面 | b3 用到它的畫面 | b4 用到它的畫面 | 數 | 程式實作 |
+| :--- | :--- | :--- | :--- | :--- | ---: | :--- |
+| [Accordion](components/accordion.md) | `components-showcase` | `task-management/task-detail` · `task-management/task-new` | **（b3 無）** | `dataset/dataset-analysis-detail` | 4 | 尚未實作 |
+| [Alert Banner](components/alert-banner.md) | `account/login` · `account/register` · `components-showcase` | `admin/role-settings` · `admin/user-management` | **（b3 無）** | **（b4 無）** | 5 | `frontend/src/components/ui/alert.tsx` |
+| [App Shell（Sidebar）](components/app-shell.md) | `account/profile` · `shared/app-shell` | `admin/role-settings` · `admin/user-management` · `dashboard/dashboard` · `task-management/task-detail` · `task-management/task-list` · `task-management/task-new` | `annotation/annotation-list` · `annotation/annotation-workspace` | `dataset/dataset-analysis-detail` · `dataset/dataset-analysis-list` | 12 | 尚未實作 |
+| [Auth Card](components/auth-card.md) | `account/forgot-password` · `account/login` · `account/register` · `account/reset-password` · `account/verify-email` | **（b2 無）** | **（b3 無）** | **（b4 無）** | 5 | `frontend/src/features/auth/auth-card.tsx` |
+| [Auth Navbar](components/auth-navbar.md) | `account/forgot-password` · `account/login` · `account/register` · `account/reset-password` · `account/verify-email` | **（b2 無）** | **（b3 無）** | **（b4 無）** | 5 | `frontend/src/features/auth/auth-layout.tsx` |
+| [Avatar](components/avatar.md) | `account/profile` · `components-showcase` | **（b2 無）** | **（b3 無）** | **（b4 無）** | 2 | 尚未實作 |
+| [Badge](components/badge.md) | `components-showcase` | `admin/role-settings` · `admin/user-management` · `dashboard/dashboard` · `task-management/task-detail` · `task-management/task-list` | `annotation/annotation-list` | `dataset/dataset-analysis-detail` · `dataset/dataset-analysis-list` | 9 | `frontend/src/components/ui/badge.tsx` |
+| [Breadcrumb](components/breadcrumb.md) | `components-showcase` | `task-management/task-detail` | `annotation/annotation-list` · `annotation/annotation-workspace` | `dataset/dataset-analysis-detail` | 5 | 尚未實作 |
+| [Button](components/button.md) | `account/forgot-password` · `account/login` · `account/profile` · `account/register` · `account/reset-password` · `components-showcase` | `admin/role-settings` · `admin/user-management` · `dashboard/dashboard` · `task-management/task-detail` · `task-management/task-list` · `task-management/task-new` | `annotation/annotation-list` · `annotation/annotation-workspace` | `dataset/dataset-analysis-detail` | 15 | `frontend/src/components/ui/button.tsx` |
+| [Card](components/card.md) | **（b1 無）** | `dashboard/dashboard` · `task-management/task-detail` · `task-management/task-new` | `annotation/annotation-workspace` | `dataset/dataset-analysis-detail` | 5 | `frontend/src/components/ui/card.tsx` |
+| [Chip](components/chip.md) | `components-showcase` | `task-management/task-detail` · `task-management/task-new` | **（b3 無）** | `dataset/dataset-analysis-detail` | 4 | 尚未實作 |
+| [Color Dot](components/color-dot.md) | `components-showcase` | `task-management/task-detail` · `task-management/task-new` | **（b3 無）** | `dataset/dataset-analysis-detail` | 4 | 尚未實作 |
+| [Data Table](components/data-table.md) | **（b1 無）** | `admin/role-settings` · `admin/user-management` · `task-management/task-detail` · `task-management/task-list` | `annotation/annotation-list` | `dataset/dataset-analysis-detail` · `dataset/dataset-analysis-list` | 7 | 尚未實作 |
+| [Date Range Picker](components/date-range-picker.md) | `components-showcase` | `task-management/task-detail` | **（b3 無）** | **（b4 無）** | 2 | 尚未實作 |
+| [Desktop Content Tabs](components/content-tabs.md) | **（b1 無）** | `admin/role-settings` · `admin/user-management` · `task-management/task-detail` | `annotation/annotation-workspace` | `dataset/dataset-analysis-detail` | 5 | 尚未實作 |
+| [Divider](components/divider.md) | `account/login` · `components-showcase` | **（b2 無）** | **（b3 無）** | `dataset/dataset-analysis-detail` | 3 | `frontend/src/components/ui/separator.tsx` |
+| [Empty State](components/empty-state.md) | **（b1 無）** | `admin/role-settings` · `admin/user-management` · `dashboard/dashboard` · `task-management/task-detail` · `task-management/task-list` · `task-management/task-new` | `annotation/annotation-list` · `annotation/annotation-workspace` | `dataset/dataset-analysis-detail` · `dataset/dataset-analysis-list` | 10 | `frontend/src/components/ui/empty.tsx` |
+| [Input](components/input.md) | `account/forgot-password` · `account/login` · `account/profile` · `account/register` · `account/reset-password` · `components-showcase` | `admin/user-management` · `task-management/task-new` | `annotation/annotation-workspace` | **（b4 無）** | 9 | `frontend/src/components/ui/input.tsx` |
+| [Language Toggle](components/lang-toggle.md) | `account/forgot-password` · `account/login` · `account/register` · `account/reset-password` · `account/verify-email` · `components-showcase` | **（b2 無）** | **（b3 無）** | **（b4 無）** | 6 | `frontend/src/features/auth/language-toggle.tsx` |
+| [List Toolbar](components/list-toolbar.md) | **（b1 無）** | `admin/user-management` · `task-management/task-list` | `annotation/annotation-list` | `dataset/dataset-analysis-list` | 4 | 尚未實作 |
+| [Metric KPI Tile](components/metric.md) | `components-showcase` | `dashboard/dashboard` · `task-management/task-detail` | **（b3 無）** | `dataset/dataset-analysis-detail` | 4 | 尚未實作 |
+| [Modal](components/modal.md) | **（b1 無）** | `admin/role-settings` · `admin/user-management` · `task-management/task-detail` · `task-management/task-list` · `task-management/task-new` | `annotation/annotation-workspace` | **（b4 無）** | 6 | 尚未實作 |
+| [Pagination](components/pagination.md) | `components-showcase` | `admin/user-management` · `task-management/task-detail` · `task-management/task-list` | `annotation/annotation-list` | `dataset/dataset-analysis-list` | 6 | 尚未實作 |
+| [Password Eye Toggle](components/password-eye-toggle.md) | `account/login` · `account/profile` · `account/register` · `account/reset-password` | **（b2 無）** | **（b3 無）** | **（b4 無）** | 4 | `frontend/src/features/auth/password-input.tsx` |
+| [Progress Bar](components/progress-bar.md) | `components-showcase` | `dashboard/dashboard` | `annotation/annotation-list` · `annotation/annotation-workspace` | `dataset/dataset-analysis-detail` · `dataset/dataset-analysis-list` | 6 | 尚未實作 |
+| [Proto Toggle Bar](components/proto-toggle-bar.md) | `account/reset-password` · `account/verify-email` | **（b2 無）** | **（b3 無）** | **（b4 無）** | 2 | 尚未實作 |
+| [Review Status Track](components/review-status-track.md) | `components-showcase` | **（b2 無）** | `annotation/annotation-workspace` | **（b4 無）** | 2 | 尚未實作 |
+| [Skeleton](components/skeleton.md) | `account/profile` · `components-showcase` | `dashboard/dashboard` · `task-management/task-detail` | **（b3 無）** | **（b4 無）** | 4 | `frontend/src/components/ui/skeleton.tsx` |
+| [Spinner](components/spinner.md) | `account/login` | **（b2 無）** | **（b3 無）** | **（b4 無）** | 1 | `frontend/src/components/ui/button.tsx`（`loading`） |
+| [State Panel](components/state-panel.md) | `account/forgot-password` · `account/reset-password` · `account/verify-email` · `components-showcase` | **（b2 無）** | **（b3 無）** | **（b4 無）** | 4 | 尚未實作 |
+| [Status Pill](components/status-pill.md) | `components-showcase` | **（b2 無）** | `annotation/annotation-list` | **（b4 無）** | 2 | 尚未實作 |
+| [Step Indicator](components/step-indicator.md) | **（b1 無）** | `task-management/task-new` | **（b3 無）** | **（b4 無）** | 1 | 尚未實作 |
+| [Toast](components/toast.md) | `account/profile` · `components-showcase` | `admin/role-settings` · `admin/user-management` · `task-management/task-detail` · `task-management/task-list` · `task-management/task-new` | `annotation/annotation-workspace` | `dataset/dataset-analysis-list` | 9 | 尚未實作 |
+| [Toggle Switch](components/toggle-switch.md) | `account/profile` · `components-showcase` | `task-management/task-detail` · `task-management/task-new` | **（b3 無）** | **（b4 無）** | 4 | 尚未實作 |
+| [Tooltip](components/tooltip.md) | **（b1 無）** | `task-management/task-detail` · `task-management/task-new` | `annotation/annotation-workspace` | **（b4 無）** | 3 | 尚未實作 |
 
 35 個元件裡，**35 個**在已完成批次的畫面上有使用紀錄，**0 個**沒有。
 
@@ -78,6 +78,7 @@
 
 - `pages/` 提到的元件都在 `components/` 裡：是
 - `components/` 的每一份都有「用到它的畫面」一節：是（35／35）
+- `components/` 的每一份標頭都有「程式實作」一行：是（35／35）
 - 本批（b4）畫面檔連到的元件，元件檔都列了該畫面，反之亦然：是
 - 交付包 b1 的 9 個條目都有對應的 `pages/` 檔：是
 - 交付包 b1 的每個視圖都出現在畫面檔裡：是

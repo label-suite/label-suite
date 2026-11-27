@@ -1,6 +1,8 @@
 # Toast
 
 > 正典章節：`MASTER.md` §Toast ｜行為契約 [UXC-07](../ux-conventions.md#uxc-07-toast-單一實例與分級存續時間)｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c` ｜未標檔名的行號指 `design/prototype/components-showcase.html`
+>
+> 程式實作：尚未實作
 
 ## 結構
 

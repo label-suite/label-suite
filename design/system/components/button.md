@@ -1,6 +1,8 @@
 # Button
 
 > 正典章節：`MASTER.md` §Buttons ｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
+>
+> 程式實作：`frontend/src/components/ui/button.tsx`
 
 ## 結構
 

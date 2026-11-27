@@ -23,7 +23,7 @@ model: opus
 1. 被派的 task，以及它所屬 change 的 `specs/**/spec.md`、`design.md`、`ui-design.md`、`api-contract.md`、`clarification.md`
 2. **`AGENTS.md`**——本專案唯一的規則來源，**沒有** `.claude/rules/`。至少讀 Hard Rules 3（依賴用 `pnpm add`，禁止 `npm install`）、6（測試集答案不外露）、7（**禁止 `any`**）
 3. `docs/development/architecture.mdx`：§前端、§認證與授權、§測試集答案不外露、§i18n 兩層、§測試分層、§待決
-4. `design/system/components/` 的對應元件規格——**用哪些元件、哪些狀態以那裡為準**，不要只看 HTML 推回去
+4. `design/system/components/` 的對應元件規格——**用哪些元件、哪些狀態以那裡為準**，不要只看 HTML 推回去；每份標頭的「程式實作」是這個元件現在的程式位置（或「尚未實作」）
 5. `design/system/brand.md`——稱謂、按鈕用語、圖示與斷點的規則本體
 6. `design/prototype/pages/` 的對應畫面與 `design/prototype/assets/tokens.css`、`label-suite-design` skill——**版面與文案以 prototype 為準，token 以那兩個為唯一來源**
 7. 所屬模組 `index.mdx` 的 §Logic Flow——這個頁面在模組裡怎麼被進入、完成後或離開時去哪一頁；路由的進入方式、離開與返回以這裡的節點與連線為準，不要自己發明導覽邏輯。與該頁規格不一致時以規格為準，並停下回報；尚未有這一節時，依該頁規格的 §導向其他頁面，並在產出中記為待補
@@ -51,6 +51,14 @@ model: opus
 | 無權限  | 明確告知沒有權限，**不顯示成錯誤或空白** |
 
 另外處理：表單驗證錯誤、送出中與**防重複送出**；後端遮蔽的欄位顯示「已遮蔽」，**不顯示為空值或「無資料」**；唯讀角色不顯示寫入操作，但**仍以後端回應為準**——藏按鈕不能代替拒絕存取。
+
+## 元件重用
+
+- **新增元件前先查對照表與 `components/`**：`design/system/components/<元件>.md` 的「程式實作」與 `frontend/src/components/`；已經實作的就沿用，不另寫一份
+- 位置照 `ui-design.md` 元件樹寫的「沿用」或「新建，放 `<路徑>`」；ui-design 沒寫位置時停下回報，不自己選
+- **共用元件**（定義見 [frontend-agent-rules F5](../../docs/development/rules/frontend-agent-rules.mdx#f5-重用與不過度抽象)）**只能建在 `frontend/src/components/`，不能建在 `features/` 或 `pages/`**
+- 需要的共用元件還在某個 feature 或 page 裡時，依 [ADR-001 D2](../../docs/development/adr/001-agent-engineering.mdx#d2-範圍內直接修正錯誤實作) 在**同一張 PR** 把它搬到 `components/`，更新它的引用，並刪掉 `scripts/check-component-reuse.mjs` 允許清單裡那一列
+- `node scripts/check-component-reuse.mjs` 會擋下檔名對到共用元件、卻沒有沿用 `components/` 實作的檔案
 
 ## 樣式與設計系統
 
@@ -85,6 +93,8 @@ model: opus
 
 實作完成、測試通過之後，對照 `docs/diagrams/architecture/frontend-routes.mdx`。實作出來的路由、頁面元件、對應的規格編號或 Logic Flow 節點和 ui-ux 的設計不同時，**依程式回頭校正常駐文件**，讓它描述的是實際寫出來的樣子；動到前端骨架（單一 HTTP 邊界、生成的 hooks 與 MSW mock、元件展示頁）的，改「前端骨架」節。不讓程式和常駐文件各走各的；和設計不同之處另在回報的「待確認」寫出來
 
+新增或搬移了設計系統有規格的元件時，同一步更新那份 `design/system/components/<元件>.md` 標頭的「程式實作」：寫成新的檔案路徑，或從「尚未實作」改成路徑；只改這一欄，規格的其他內容不動。改完重新生成 `design/system/screen-inventory.md` 的「程式實作」欄，並跑 `node scripts/check-component-reuse.mjs`
+
 ## 常駐文件寫法約束
 
 改 `docs/diagrams/architecture/` 的常駐文件時照做；只照這四條，不載入整份 `doc-writing`：
@@ -108,6 +118,7 @@ model: opus
 - [ ] 沒有 `npm install`（依賴用 `pnpm add`）
 - [ ] 元件庫只用 shadcn/ui（元件在 `components/ui/`）、型別與 client 只來自 Orval 產物（`frontend/src/api/generated/`，未手改）；沒有引入其他元件庫或生成工具
 - [ ] `frontend-routes.mdx` 已依實作校正：路由與頁面元件和程式一致；動到前端骨架時「前端骨架」節也已更新
+- [ ] 新增元件前查過「程式實作」與 `components/`，沒有重做已實作的元件；共用元件都在 `components/`；新增或搬移的元件已更新「程式實作」，`node scripts/check-component-reuse.mjs` 通過
 
 ## 回報格式
 
@@ -117,6 +128,7 @@ model: opus
 - 改動檔案：{清單}
 - 測試：元件與 hook {n} 通過；lint、型別檢查、build 通過
 - 常駐文件：frontend-routes.mdx 已依實作校正／與設計一致、無須改動
+- 程式實作欄：已更新 {元件清單}／沒有新增或搬移設計系統的元件
 - 暫以語意描述自行實作、待補 shadcn/ui 元件：{清單，無則寫「無」}
 - 待確認：{contract 缺口、ui-design 未涵蓋的狀態、需要那個停點決定的事，無則寫「無」}
 ```

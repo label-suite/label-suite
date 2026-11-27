@@ -1,6 +1,8 @@
 # Skeleton
 
 > 正典章節：`MASTER.md` §Skeleton ｜行為契約 [UXC-08](../ux-conventions.md#uxc-08-skeleton-尺寸要貼合載入後的內容)｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
+>
+> 程式實作：`frontend/src/components/ui/skeleton.tsx`
 
 ## 結構
 

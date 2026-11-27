@@ -131,7 +131,7 @@ jobs:
           expected=$(cat <<'ROUTES'
           routes:
             backend/**/*.py -> ruff check, mypy --strict (backend/ 存在)
-            frontend/**/*.ts,tsx -> tsc -b, eslint (frontend/ 存在)
+            frontend/**/*.ts,tsx -> tsc -b, eslint, node scripts/check-component-reuse.mjs (frontend/ 存在)
             其他位置的 *.py, *.ts, *.tsx -> NA (不在 backend/、frontend/ 專案內)
             docs/**/*.mdx, docs/**/*.md -> node scripts/check-specs.mjs docs (一律啟用)
           ROUTES
@@ -305,6 +305,18 @@ jobs:
       # verbatim); fix the reference, or add a SPEC_ALLOW entry with its reason.
       - name: Check the file:line citations and the Logic Flow spec references
         run: node scripts/check-citations.mjs --strict
+
+      - name: Component reuse checker regression tests
+        run: node --test scripts/tests/check-component-reuse.test.mjs
+
+      # Fails when a component file under frontend/src/features/ or pages/ is
+      # named like a shared design-system component without importing its
+      # implementation in frontend/src/components/, when a shared component's
+      # 「程式實作」 points into features/ or pages/, or when a spec's 「程式實作」
+      # names a missing file. Existing violations are listed in the script, each
+      # with the issue that moves it; a row whose file no longer violates fails.
+      - name: Check that new screens reuse the design-system components
+        run: node scripts/check-component-reuse.mjs
 
   # The two backend jobs run on every pull request, with no path filter and no
   # job-level condition, so a docs-only pull request still runs them. Each job

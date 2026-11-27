@@ -48,7 +48,7 @@ model: opus
 - prototype 對照：每個頁面對應的 `design/prototype/pages/…` 來源與**對應的規格編號**
 - 頁面與路由：path、需要的系統角色與任務成員身分、進入方式、離開與返回
 - 常駐文件異動：路由、頁面元件、對應的規格編號或 Logic Flow 節點有異動時，**先改 `frontend-routes.mdx`**（動到前端骨架時改「前端骨架」節），這一節只寫路徑與異動摘要，不重抄常駐文件的內容
-- 元件樹：頁面 → 區塊 → 元件，元件用語意名稱
+- 元件樹：頁面 → 區塊 → 元件，元件用語意名稱。**每個元件都引用 `design/system/components/<元件>.md`，並寫明「沿用 `<路徑>`」（路徑照那份規格的「程式實作」）或「新建，放 `<路徑>`」**；共用元件（定義見 [frontend-agent-rules F5](../../docs/development/rules/frontend-agent-rules.mdx#f5-重用與不過度抽象)）只能放 `frontend/src/components/`，**不能寫「由 design.md 決定」或留到實作再定**。設計系統沒有對應規格的元件，寫明這一點與新建的位置
 - 資料來源：每個區塊用哪個 operationId、查詢參數與 URL 狀態（**可分享的篩選與分頁放 query string**，不放 local state）
 - 狀態管理：伺服器狀態（Query）、URL 狀態、純 UI 狀態分別放哪裡；mutation 成功後要 invalidate 哪些查詢。**要不要全域 store 由設計證明**，不預設需要
 - 四種狀態：每個資料區塊的 loading、error、empty、**無權限**呈現，另加表單驗證錯誤與送出中（含防重複送出）
@@ -60,6 +60,7 @@ model: opus
 
 - [ ] prototype 已**實際打開**檢視，每頁都有來源對照與規格編號
 - [ ] 元件與狀態已對過 `design/system/components/` 與 `pages/`；畫面上找不到的狀態已查 `design-gaps.md`，沒有當成新發現
+- [ ] 元件樹的每個元件都引用了 `design/system/components/<元件>.md`，寫明沿用的路徑或新建的位置；共用元件都放 `frontend/src/components/`，沒有延後決定的位置
 - [ ] 畫面上的名稱、文案、欄位與控制項都對過 prototype；**畫面沒有的控制項沒有被寫成規則**（列成待決問題）
 - [ ] 每個資料區塊都標出 operationId 或待對齊的資料需求
 - [ ] 路由或頁面有異動時：`frontend-routes.mdx` 已先改好，與 ui-design 一致；「常駐文件異動」節寫了路徑與摘要，沒有重抄常駐文件。沒有異動時寫「本次無常駐文件異動」

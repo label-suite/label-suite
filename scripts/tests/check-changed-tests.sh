@@ -150,6 +150,9 @@ harness_calls | grep -q 'pnpm -C [^ ]*/frontend exec eslint -- src/a.ts' \
 harness_calls | grep -qE 'tsc -b [^ ]' \
   && fail "tsc -b was given file arguments, which drops the project's settings"
 harness_calls | grep -q -- '--fix' && fail "eslint was invoked in a mode that rewrites files"
+# The component reuse check rides on the same route and needs node only.
+grep -q 'PASS: node scripts/check-component-reuse.mjs' "$TMP/err" \
+  || fail "a .ts change did not run the component reuse check: $(cat "$TMP/err")"
 
 # An enabled layer whose runner is missing is an explicit failure, not NA.
 harness_reset_calls

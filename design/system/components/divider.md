@@ -1,6 +1,8 @@
 # Divider
 
 > 正典章節：`MASTER.md` §Divider ｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c` ｜未標檔名的行號指 `design/prototype/components-showcase.html`
+>
+> 程式實作：`frontend/src/components/ui/separator.tsx`
 
 ## 結構
 

@@ -1,6 +1,8 @@
 # List Toolbar
 
 > 正典章節：`MASTER.md` 無對應章節（`shared/list-page.css` 自己是來源）｜行為契約 [UXC-11](../ux-conventions.md#uxc-11-篩選搜尋與分頁的狀態放在網址上)｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c` ｜未標檔名的行號指 `design/prototype/pages/shared/list-page.css`
+>
+> 程式實作：尚未實作
 
 ## 結構
 

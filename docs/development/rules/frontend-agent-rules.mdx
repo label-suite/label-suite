@@ -4,7 +4,7 @@ description: '分層與允許 import、型別安全、Hooks、狀態的三個去
 category: '開發說明'
 tags: [開發說明, Agent, 規範, 前端]
 createdAt: '2026-11-10'
-updatedAt: '2026-11-25'
+updatedAt: '2026-11-27'
 ---
 
 # 前端開發規範
@@ -12,7 +12,7 @@ updatedAt: '2026-11-25'
 本文說明前端的十二條開發規範，由 `AGENTS.md` 的 Agent Rules Index 指過來；`AGENTS.md` 是規則本體，兩邊說法不同時以 `AGENTS.md` 為準，並回報給維護者。
 跨領域的規範在 [agent-rules.mdx](agent-rules.mdx)、後端在 [backend-agent-rules.mdx](backend-agent-rules.mdx)、授權與答案隔離在 [security-agent-rules.mdx](security-agent-rules.mdx)、API 契約與單一 HTTP 邊界在 [api-agent-rules.mdx](api-agent-rules.mdx)，這裡不重複。
 
-**`frontend/` 已存在，但在 CI 跑的只有 F1、F2、F3 與 F12 的檢查，以及 F10 的一部分**（job 與指令寫在各條的「檢查方式」）；F4 至 F9 與 F11 仍標「待建置」。標「待建置」就是字面意思：那些檢查還沒有寫，**不得因為這份文件存在就宣稱規則已被強制**。
+**`frontend/` 已存在，但在 CI 跑的只有 F1、F2、F3 與 F12 的檢查，以及 F5、F10 的一部分**（job 與指令寫在各條的「檢查方式」）；F4、F6 至 F9 與 F11 仍標「待建置」。標「待建置」就是字面意思：那些檢查還沒有寫，**不得因為這份文件存在就宣稱規則已被強制**。
 
 每條規範的反例與檢查方式收在摺疊區塊，預設收起；適用路徑、禁止、正例與例外在表裡。
 
@@ -133,16 +133,21 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 
 新寫 component、hook 或 util 之前先搜尋既有的；只有確實是同一個概念的兩處才抽，不以出現次數或行數為門檻。
 
+**共用元件**是用到它的產品畫面分屬一個以上 feature 的設計系統元件，只能放 `components/`；只有一個 feature 的產品畫面用到的，留在那個 feature。用到它的畫面看 `design/system/screen-inventory.md` 的「元件 → 畫面」表；原型的元件展示頁（`components-showcase`）與原型索引（`index`）不是產品畫面，不算使用方；規格標「單頁專屬」或「原型鷹架」的一律不算共用。
+
+畫面歸哪個 feature 依一條對應慣例：產品畫面歸它的原型模組（畫面 ID 的第一段），一個原型模組對到一個 feature，例如原型的 `account` 對到 `features/auth`；`shared/app-shell` 是登入後的外殼，自成一個。對照寫在 `scripts/check-component-reuse.mjs` 的 `SCREEN_FEATURE`，出現對照沒有的畫面 ID 時檢查會失敗，不會猜。
+
 | | |
 | :--- | :--- |
 | **適用路徑** | `frontend/src/**` |
-| **禁止** | 新寫一個 component／hook／util 之前沒有先搜尋既有的；每一頁各自重造 Button、Dialog、Table、Skeleton；把還只有一處用到的程式先抽成共用元件；無差別地 `memo`／`useMemo`／`useCallback` 包一層 |
-| **正例** | 先 grep 既有的名稱與相近語意，再決定新增；shadcn 已有的元件優先用 `components/ui/`，不夠用時先擴充它的 props；**兩處確實是同一個概念時**才抽（判準見 [agent-rules.mdx](agent-rules.mdx) R4），不以出現次數為門檻；`memo` 只在有量測到的重繪問題時加，並在註解寫出原因；一個檔案一個主要元件 |
+| **禁止** | 新寫一個 component／hook／util 之前沒有先搜尋既有的；每一頁各自重造 Button、Dialog、Table、Skeleton；把共用元件建在 `features/` 或 `pages/`；把還只有一處用到的程式先抽成共用元件；無差別地 `memo`／`useMemo`／`useCallback` 包一層 |
+| **正例** | 先查 `design/system/components/<元件>.md` 的「程式實作」、再 grep 既有的名稱與相近語意，然後才決定新增；shadcn 已有的元件優先用 `components/ui/`，不夠用時先擴充它的 props；**兩處確實是同一個概念時**才抽（判準見 [agent-rules.mdx](agent-rules.mdx) R4），不以出現次數為門檻；`memo` 只在有量測到的重繪問題時加，並在註解寫出原因；一個檔案一個主要元件 |
 | **例外** | 無。設計上需要一次抽象（例如同一個 change 內同時建立三個同構頁面）時，在該 change 的 `design.md` 寫明 |
 
 :::note{title="F5 的反例與檢查方式" collapsible}
 - **反例**：`features/annotation/components/my-button.tsx` 自己寫一顆按鈕；把只有一處用到的 `formatTaskName` 放進 `lib/`；整個 feature 的每個元件都包 `React.memo`
-- **檢查方式**：**待建置**。這一條**不以行數作為拆分判準；另有 [F12](#f12-檔案函式長度與複雜度上限) 的 CI 上限擋極端值**，F12 不是 F5 的檢查，所以 F5 本身沒有機械檢查，由 `code-reviewer` 依職責判斷
+- **檢查方式**：CI 的 `specs` job 與 `scripts/check-changed.sh` 的 `.ts`／`.tsx` 路由跑 `node scripts/check-component-reuse.mjs`：`features/` 或 `pages/` 底下的元件檔名對到共用元件（和規格名或它在 `components/` 的實作檔名同名、或最後一個字相同，例如 `*-toggle`、`*-banner`、`*-alert`）卻沒有 import 它在 `components/` 的實作、共用元件的「程式實作」指向 `features/` 或 `pages/`、「程式實作」的路徑不存在、或清冊的「程式實作」欄和規格不一致時失敗；現有的違規列在腳本的允許清單，每列寫明由哪張單（`#N`）搬走與觸發的元件，搬完那一列不刪也會失敗
+- **尚未檢查**：hook、util 的重複與「是不是同一個概念」沒有機械檢查，由 `code-reviewer` 依職責判斷。這一條**不以行數作為拆分判準；另有 [F12](#f12-檔案函式長度與複雜度上限) 的 CI 上限擋極端值**，F12 不是 F5 的檢查
 :::
 
 ### F6 視覺基準與 design token 的映射
@@ -407,3 +412,6 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | 2026-11-20 | 日期套件用 day.js，搭配 utc 與 timezone 外掛，只在 `src/lib/date.ts` 裡 import（[F10](#f10-日期時區與可測的時鐘)） | §待決 第 1 列「日期套件選哪一個」 | [#503](https://github.com/label-suite/label-suite/issues/503) |
 | 2026-11-20 | 為了加 variant 而改 `components/ui/` 是允許的，原語仍只用語意變數；shadcn 沒有對應語意時在對照層新增 `--cta`、`--success`、`--warning`、`--info`，原語不直接用 `tokens.css` 的變數名（[F6](#f6-視覺基準與-design-token-的映射)） | 2026-11-10 那列引述的「shadcn 元件一行都不改」這個絕對說法；F6 第 1 點原本留著「直接用 `tokens.css` 的變數名」這個分支，並把選擇交給第一個前端 change 的 `ui-design.md` 逐一列出 | [#505](https://github.com/label-suite/label-suite/issues/505) 的 Q9 裁定，記錄於 [#527](https://github.com/label-suite/label-suite/issues/527) |
 | 2026-11-25 | 新增 F12：前端檔案 300 行、函式 80 行、複雜度 15 的 CI 上限；F5 與 R4「不以行數取代職責審查」的原意不變，上限只擋極端值 | 兩處「不採用」條文只寫了不設機械行數門檻，沒有區分「拆分判準」與「擋極端值的 CI 護欄」 | [#561](https://github.com/label-suite/label-suite/issues/561) |
+| 2026-11-27 | F5 的元件部分改由 `scripts/check-component-reuse.mjs` 加審查檢查，設計系統的共用元件只能放 `components/`（[F5](#f5-重用與不過度抽象)） | F5 的檢查方式「待建置」，只靠 `code-reviewer` 判斷 | [#747](https://github.com/label-suite/label-suite/issues/747) |
+| 2026-11-27 | 只被同一個 feature 的畫面使用的元件不算共用，依 `screen-inventory.md` 的「元件 → 畫面」表判斷（[F5](#f5-重用與不過度抽象)） | 規格沒有標「單頁專屬」或「原型鷹架」就算共用 | [#747 檢查點：共用元件判準](https://github.com/label-suite/label-suite/issues/747#issuecomment-7209042364) |
+| 2026-11-27 | 原型的元件展示頁不算使用元件的 feature，共用與否只看產品畫面（[F5](#f5-重用與不過度抽象)） | 把元件展示頁算成 `/dev/gallery` 的使用方 | [#747 檢查點：元件展示頁不算使用方](https://github.com/label-suite/label-suite/issues/747#issuecomment-7209249601) |

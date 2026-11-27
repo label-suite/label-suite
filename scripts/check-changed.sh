@@ -99,7 +99,7 @@ FRONTEND=0; [ -d "$REPO/frontend" ] && FRONTEND=1
 if [ "$MODE" = "list-routes" ]; then
   emit_out "routes:"
   [ "$BACKEND" = "1" ] && emit_out "  backend/**/*.py -> ruff check, mypy --strict (backend/ 存在)" || emit_out "  backend/**/*.py -> NA (backend/ 不存在)"
-  [ "$FRONTEND" = "1" ] && emit_out "  frontend/**/*.ts,tsx -> tsc -b, eslint (frontend/ 存在)" || emit_out "  frontend/**/*.ts,tsx -> NA (frontend/ 不存在)"
+  [ "$FRONTEND" = "1" ] && emit_out "  frontend/**/*.ts,tsx -> tsc -b, eslint, node scripts/check-component-reuse.mjs (frontend/ 存在)" || emit_out "  frontend/**/*.ts,tsx -> NA (frontend/ 不存在)"
   emit_out "  其他位置的 *.py, *.ts, *.tsx -> NA (不在 backend/、frontend/ 專案內)"
   emit_out "  docs/**/*.mdx, docs/**/*.md -> node scripts/check-specs.mjs docs (一律啟用)"
   FINISHED=1; hc_flush; exit 0
@@ -351,6 +351,11 @@ if [ "${#TS_FILES[@]}" -gt 0 ]; then
       run_tool "tsc -b" "${TS_RUN[@]}" tsc -b
       run_tool "eslint" "${TS_RUN[@]}" eslint -- "${TS_REL[@]}"
     fi
+    # A whole-tree check, like tsc -b: a component file is judged against
+    # every design-system spec, not only against the files that changed. It
+    # needs node only, so it runs even when pnpm is missing.
+    run_tool "node scripts/check-component-reuse.mjs" \
+      node "$HERE/check-component-reuse.mjs" "$CONTENT_ROOT"
   fi
 fi
 

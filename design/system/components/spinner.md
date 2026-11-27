@@ -1,6 +1,8 @@
 # Spinner
 
 > 正典章節：**無**。`MASTER.md` 的載入語彙是 [Skeleton](skeleton.md) 與 [Button](button.md) 的 `.btn-loading`；這個旋轉圈是帳號頁自己加的。｜行為契約 [UXC-06](../ux-conventions.md#uxc-06-送出中的載入態與重複送出防護)｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
+>
+> 程式實作：`frontend/src/components/ui/button.tsx`（`loading`）
 
 ## 結構
 

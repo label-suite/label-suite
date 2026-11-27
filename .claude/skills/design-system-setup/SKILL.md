@@ -85,6 +85,10 @@ design/system/
 | 樣式出處 | 這個樣子是哪個 CSS 檔的哪一段決定的 | 檔名加行號 |
 | 可重現樣本 | 怎麼在 prototype 上看到它：哪個視圖 ID、怎麼走到 | 交付包的視圖 ID |
 
+另在標頭的引言區塊加一行 **程式實作**：`> 程式實作：` 後面寫這個元件在 `frontend/src/` 的檔案路徑（用反引號，可以有多個），還沒有程式就寫「尚未實作」。這一欄記的是程式現況，不是 prototype 的事實，所以依據是 `frontend/src/` 的檔案本身，不受鐵律 3 的四種依據限制；它是 `ui-design.md` 決定「沿用」或「新建」的對照表，也是 `scripts/check-component-reuse.mjs` 的輸入。新增或搬移元件後由 `frontend-developer` 更新、`technical-writer` 稽核時核對；本 skill 重跑時**原樣保留**，不依 prototype 改寫它。
+
+`screen-inventory.md` 的「元件 → 畫面」表也是那支腳本的輸入：一個元件算不算共用、能不能留在 feature 裡，看用到它的畫面分屬幾個 feature（定義見 [frontend-agent-rules F5](../../../docs/development/rules/frontend-agent-rules.mdx#f5-重用與不過度抽象)）。所以重新生成清冊後要再跑一次 `node scripts/check-component-reuse.mjs`；出現新的畫面 ID 前綴時，那支腳本會失敗，要在它的 `SCREEN_FEATURE` 補上歸屬。
+
 另加一節 **shadcn 對照**：候選原語（例：`Button`、`Dialog`、`Command`）與**差距**——我們有而它沒有的、它有而我們沒有的、語意對不上的。這一節是寫給之後的 `ui-design.md` 看的，不是現在要換元件。
 
 ---
@@ -124,7 +128,7 @@ design/system/
 
 ### 步驟 6：生成 `screen-inventory.md`
 
-從 `components/` 與 `pages/` 生成，不手寫。每一列：畫面 ID、視圖數、用到的元件、這一批有沒有處理過。
+從 `components/` 與 `pages/` 生成，不手寫。每一列：畫面 ID、視圖數、用到的元件、這一批有沒有處理過。「元件 → 畫面」表另帶一欄**程式實作**，照抄各元件標頭的那一欄。
 
 ### 步驟 7：寫 `design-gaps.md`
 
@@ -143,7 +147,7 @@ design/system/
 
 1. `MASTER.md` 更新元件一覽與批次狀態（哪一批做完了、交付包版本是哪一個）
 2. 逐項確認：
-   - 每個元件的七個欄位都有內容，每一條都有依據
+   - 每個元件的七個欄位都有內容，每一條都有依據；標頭有「程式實作」一行，`node scripts/check-component-reuse.mjs` 通過
    - 每個 `pages/` 列的元件在 `components/` 找得到，反向也成立
    - `screen-inventory.md` 是生成的，和前兩者一致
    - 這一批交付包裡的每個視圖，都能在某個 `pages/` 檔裡找到

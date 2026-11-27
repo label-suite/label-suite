@@ -1,6 +1,8 @@
 # Auth Card
 
 > 正典章節：**無**。這是帳號頁自己長出來的元件，`MASTER.md` 沒有對應章節，`pages/shared/` 也沒有檔。｜批次 `b1-shared-account` ｜交付包 commit `b1fd43c`
+>
+> 程式實作：`frontend/src/features/auth/auth-card.tsx`
 
 ## 結構
 
