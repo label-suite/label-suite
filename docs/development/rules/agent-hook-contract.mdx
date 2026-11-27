@@ -4,7 +4,7 @@ description: 'Claude Code 2.1.330 與 Codex 0.156.0 的 hook 事件、阻擋能�
 category: '開發說明'
 tags: [開發說明, Agent, 規範, hooks]
 createdAt: '2026-11-11'
-updatedAt: '2026-11-26'
+updatedAt: '2026-11-27'
 ---
 
 # Agent Hook 契約與平台支援矩陣
@@ -65,7 +65,7 @@ updatedAt: '2026-11-26'
 | :--- | :--- |
 | **目的** | 剛改過的檔案立刻拿到可修正的診斷，而不是等 CI |
 | **事件** | `PostToolUse`。Claude matcher `Edit|Write|NotebookEdit`；Codex matcher `apply_patch` |
-| **適用路徑／角色** | 只對**本次受影響且已存在**的檔案，依目錄與副檔名分流：`backend/` 底下的 `.py` → `ruff check`（整個 `backend/`）加 `mypy --strict`（只有 `app/`，範圍照 `openspec/config.yaml`），兩者都不在 `PATH` 上（`uv sync` 裝進 `backend/.venv`），所以經 `uv run --directory <backend> --project <backend> --no-sync` 以 `backend/` 為工作目錄呼叫，檔名給相對路徑——ruff 的 `per-file-ignores` 是對工作目錄解析的；`frontend/` 底下的 `.ts`／`.tsx` → `tsc -b`（整個專案，不帶檔案參數——單檔編譯看不到專案設定）加 `eslint`（逐檔），同樣不在 `PATH` 上（在 `frontend/node_modules/.bin`），所以經 `pnpm -C <frontend> exec` 以 `frontend/` 為工作目錄呼叫——eslint 的 flat config 也是對工作目錄解析的；這兩條只收 `backend/`、`frontend/` 專案內的檔，其他位置的 `.py`、`.ts`、`.tsx`（例如 `e2e/`、`.semgrep/`、`.notecraft/`）標 not applicable 並寫明原因，因為兩組工具的設定只涵蓋各自的專案；`docs/` 底下的 `.mdx` **與 `.md`** → `node scripts/check-specs.mjs docs`（`.md` 自 [PR #395](https://github.com/label-suite/label-suite/pull/395) 起才在它的範圍內）。**排除** `frontend/src/api/generated/`、Alembic migration、`pnpm-lock.yaml`、`uv.lock` 與 vendor |
+| **適用路徑／角色** | 只對**本次受影響且已存在**的檔案，依目錄與副檔名分流：`backend/` 底下的 `.py` → `ruff check`（整個 `backend/`）加 `mypy --strict`（只有 `app/`，範圍照 `openspec/config.yaml`），兩者都不在 `PATH` 上（`uv sync` 裝進 `backend/.venv`），所以經 `uv run --directory <backend> --project <backend> --no-sync` 以 `backend/` 為工作目錄呼叫，檔名給相對路徑——ruff 的 `per-file-ignores` 是對工作目錄解析的；`frontend/` 底下的 `.ts`／`.tsx` → `tsc -b`（整個專案，不帶檔案參數——單檔編譯看不到專案設定）加 `eslint`（逐檔），同樣不在 `PATH` 上（在 `frontend/node_modules/.bin`），所以經 `pnpm -C <frontend> exec` 以 `frontend/` 為工作目錄呼叫——eslint 的 flat config 也是對工作目錄解析的；同一條路由另跑 `node scripts/check-component-reuse.mjs`（整棵樹的元件重用檢查，只要 node）；這兩條只收 `backend/`、`frontend/` 專案內的檔，其他位置的 `.py`、`.ts`、`.tsx`（例如 `e2e/`、`.semgrep/`、`.notecraft/`）標 not applicable 並寫明原因，因為兩組工具的設定只涵蓋各自的專案；`docs/` 底下的 `.mdx` **與 `.md`** → `node scripts/check-specs.mjs docs`（`.md` 自 [PR #395](https://github.com/label-suite/label-suite/pull/395) 起才在它的範圍內）。**排除** `frontend/src/api/generated/`、Alembic migration、`pnpm-lock.yaml`、`uv.lock` 與 vendor |
 | **payload 欄位** | `tool_name`、`tool_input` 的檔案路徑、`cwd`。Codex 的 `apply_patch` 沒有路徑欄位，改讀 `tool_input.command` 裡的檔案標頭（`*** Add File:`、`*** Update File:`，接 `*** Move to:` 時取新路徑，`*** Delete File:` 不列），相對路徑以 `cwd` 為基準；讀不到標頭時取這個 checkout 相對 `HEAD` 的變更加未追蹤檔案，並在 stderr 註明清單可能包含之前的改動。這個解析只用來縮小 H3 的回報範圍，H2 不採用（[§能力缺口與承接](#能力缺口與承接)第 8 條） |
 | **共用檢查器** | `scripts/check-changed.sh`（**已存在並註冊到 `PostToolUse`**；同一支的 `--staged` 模式由 H4 的 Git hook 叫起，`--range` 由 H7 的 CI 叫起）。`docs/` 那條沿用既有的 `scripts/check-specs.mjs` |
 | **timeout** | **30 秒** |
@@ -354,3 +354,4 @@ Codex 的 `command` 欄位是**字串，不是陣列**——官方文件的範�
 | 2026-11-26 | §能力缺口與承接新增第 9 條（linked worktree 載入不到 Codex 的 repo hook）與第 10 條（Codex 不顯示 exit `0` 的 stderr） | — | [#111](https://github.com/label-suite/label-suite/issues/111) |
 | 2026-11-26 | H3／H4／H7 的程式碼路由同時以目錄限定：`.py` 只收 `backend/`、`.ts`／`.tsx` 只收 `frontend/`，其他位置標 not applicable（[§H3](#h3-編輯後按路徑跑快速檢查)） | 只看副檔名，`e2e/`、`.semgrep/`、`.notecraft/` 的檔被交給兩個專案的工具而判為失敗 | 派工主 session 依維護者 2026-11-25 的授權裁定（記錄於 [#111](https://github.com/label-suite/label-suite/issues/111)） |
 | 2026-11-26 | 第 6 條的「承接」改寫為「設定權限層不在本 change 範圍內、第 3 與第 8 條暫無承接者」（[§能力缺口與承接](#能力缺口與承接)） | 標題已改成兩側查完，「承接」仍寫「列為實作 PR 的前置查核項……這一半還沒查完」，前後矛盾 | [#111](https://github.com/label-suite/label-suite/issues/111) |
+| 2026-11-27 | `.ts`／`.tsx` 路由另跑 `node scripts/check-component-reuse.mjs`（[§H3](#h3-編輯後按路徑跑快速檢查)） | 這條路由只跑 `tsc -b` 與 `eslint` | [#747](https://github.com/label-suite/label-suite/issues/747) |
