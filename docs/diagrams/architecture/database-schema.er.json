@@ -251,7 +251,7 @@
      "note": "是否為 Seeder 管理員；預設 false；部分唯一索引 WHERE is_seeder（至多一位 Seeder 管理員）。來源：PRD §角色清單：不能被停用、降級或移除；capability user-management 要求 seeder 標記。只由初始化指令寫入；資料庫層的保護屬 06-01 的 change"
     }
    ],
-   "description": "**已落地**：Alembic revision `7bf0f909ce8f`\n\n一列代表一位可登入的使用者。**PRD 明寫帳號沒有刪除，只有停用與啟用**，所以**不得有軟刪除欄**。\n\n**規格來源**：[01-04](/notes/specs/01-account/04-profile#資料欄位)、[01-05](/notes/specs/01-account/05-login-state#資料欄位)、[06-01](/notes/specs/06-admin/01-user-management#資料欄位)"
+   "description": "**已落地**：Alembic revision `7bf0f909ce8f`\n\n一列代表一位可登入的使用者。**PRD 明寫帳號沒有刪除，只有停用與啟用**，所以**不得有軟刪除欄**。匿名化時 `email` 改寫成 `deleted-<id>@invalid`、`name` 改寫成「已刪除的使用者」（ADR-008 D7）。\n\n**規格來源**：[01-04](/notes/specs/01-account/04-profile#資料欄位)、[01-05](/notes/specs/01-account/05-login-state#資料欄位)、[06-01](/notes/specs/06-admin/01-user-management#資料欄位)"
   },
   {
    "name": "account_session",
@@ -356,7 +356,7 @@
      "note": "寬限期內額外重發的次數；CHECK 0–1；預設 0。來源：01-05 Q13：最多額外重發一次"
     }
    ],
-   "description": "**已落地**：Alembic revision `7bf0f909ce8f`\n\n一列代表一張 refresh token；它所屬的 `account_session` 就是 token family。依據 ADR-004 D1 與 01-05 §延續登入狀態與疑似被盜用。\n\n**`CASCADE` 的理由**：token 只對它的登入狀態有意義，登入狀態整筆清除時一起清掉。\n\n**依據**：ADR-004 D1；規則引用 01-05 §延續登入狀態與疑似被盜用，但 01-05 §資料欄位 沒有這張表的欄位（它是延續機制的存放，不是畫面資料），所以不列為該頁的規格來源表。"
+   "description": "**已落地**：Alembic revision `7bf0f909ce8f`\n\n一列代表一張 refresh token；它所屬的 `account_session` 就是 token family。依據 ADR-004 D1 與 01-05 §延續登入狀態與疑似被盜用，經過見字典的決策紀錄。\n\n**`CASCADE` 的理由**：token 只對它的登入狀態有意義，登入狀態整筆清除時一起清掉。\n\n**依據**：ADR-004 D1；規則引用 01-05 §延續登入狀態與疑似被盜用，但 01-05 §資料欄位 沒有這張表的欄位（它是延續機制的存放，不是畫面資料），所以不列為該頁的規格來源表。"
   },
   {
    "name": "account_password_token",
@@ -492,7 +492,7 @@
      "name": "event_key",
      "type": "varchar",
      "required": "required",
-     "note": "通知事件；複合 PK 之一。不加 CHECK——合法值由設定登錄管理，清單未定。來源：01-04：六個事件",
+     "note": "通知事件；複合 PK 之一。不加 CHECK——合法值由設定登錄管理，六個事件見 01-04 §通知設定。來源：01-04：六個事件",
      "pk": true
     },
     {
@@ -508,7 +508,7 @@
      "note": "是否寄信。來源：同上"
     }
    ],
-   "description": "**字典做成事件鍵驅動**：表的形狀固定，**六個事件鍵的合法值清單**未定，清單之後怎麼變都不用改表。\n\n**「從來沒存過時全部開啟」是讀取時的預設，不是資料庫預設值。** [01-04](/notes/specs/01-account/04-profile#資料欄位) 明寫這一點：缺列時兩個頻道都當開啟，**讀取不建列**。所以這張表可以完全沒有某個使用者的列，那不代表他關掉了通知。\n\n**規格來源**：[01-04](/notes/specs/01-account/04-profile#資料欄位)"
+   "description": "**字典做成事件鍵驅動**：表的形狀固定，合法值由設定登錄管理，六個事件列在 [01-04 §通知設定](/notes/specs/01-account/04-profile#通知設定)，清單之後怎麼變都不用改表。\n\n**「從來沒存過時全部開啟」是讀取時的預設，不是資料庫預設值。** [01-04](/notes/specs/01-account/04-profile#資料欄位) 明寫這一點：缺列時兩個頻道都當開啟，**讀取不建列**。所以這張表可以完全沒有某個使用者的列，那不代表他關掉了通知。\n\n**規格來源**：[01-04](/notes/specs/01-account/04-profile#資料欄位)"
   },
   {
    "name": "user_deletion_request",
@@ -1413,7 +1413,7 @@
      "name": "rejection_reason",
      "type": "text",
      "required": "required",
-     "note": "退回原因。來源：03-03：選填，允許空白；隨那一輪的關閉一起寫入，不得省略欄位；空值以空字串表示，與 annotation_review_decision.reason 同一條原則。和 close_reason 是兩件事：那一欄是列舉，這一欄是負責人填的那段文字，completed 關閉時留空"
+     "note": "退回原因。來源：03-03：選填，允許空白；隨那一輪的關閉一起寫入，不得省略欄位。空值以空字串表示，與 annotation_review_decision.reason 同一條原則。和 close_reason 是兩件事：那一欄是列舉，這一欄是負責人填的那段文字，completed 關閉時留空"
     }
    ],
    "description": "**這張表記的是「輪」**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 的「回合編號」規則欄寫「同一輪裡唯一，**退回草稿後新一輪從 1 重新算**」——「輪」就是週期。同一頁的「資料欄位」有「試標輪」與「退回原因」，[04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位) 也有「試標輪」，所以序號與退回原因都有條文可指；畫面上試標回合表與 04-01 的回饋面板都標著「第 N 輪」。\n\n**規格來源**：[04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位)、[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)（`:939` 的「試標輪」與 `:940` 的「退回原因」）"

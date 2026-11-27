@@ -52,7 +52,7 @@ import PluginView from '@/components/PluginView.astro';
 
 | 原始表或欄 | 原本是什麼 |
 | :--- | :--- |
-| `refresh_tokens` | 更新權杖；`account_refresh_token` 是它的同類表，依據見那張表的規格來源 |
+| `refresh_tokens` | 更新權杖；`account_refresh_token` 是它的同類表，依據見[那張表的說明](#account_refresh_token--一段登入狀態的-refresh-token) |
 | `shared_idempotency_record` | 冪等紀錄 |
 | `task_run_reviewer_candidate` | 審核員候選名單 |
 | `task_config_version.schema_version_no` | 同列的資料結構版本 |
@@ -181,7 +181,7 @@ import PluginView from '@/components/PluginView.astro';
 
 **已落地**：Alembic revision `7bf0f909ce8f`
 
-一列代表一張 refresh token。它所屬的 `account_session` 就是 token family：一段登入狀態從登入到結束發出的每一張 token 都指向它。依據見[決策紀錄](#決策紀錄)。
+一列代表一張 refresh token。它所屬的 `account_session` 就是 token family：一段登入狀態從登入到結束發出的每一張 token 都指向它。依據是 [ADR-004 D1](../../development/adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie) 與 [01-05 §延續登入狀態與疑似被盜用](../../specs/01-account/05-login-state.mdx#延續登入狀態與疑似被盜用)，經過見[決策紀錄](#決策紀錄)。
 
 | 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -250,12 +250,12 @@ import PluginView from '@/components/PluginView.astro';
 
 ### `account_notification_preference` — 通知開關
 
-**字典做成事件鍵驅動**：表的形狀固定，**六個事件鍵的合法值清單**未定（見[§待決](#待決)第 2 列），清單之後怎麼變都不用改表。
+**字典做成事件鍵驅動**：表的形狀固定，合法值由設定登錄管理，六個事件列在 [01-04 §通知設定](../../specs/01-account/04-profile.mdx#通知設定)，清單之後怎麼變都不用改表。
 
 | 識別碼 | 中文意義 | 型別 | 可空 | 鍵／限制 | 規格來源 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `user_id` | 設定所屬帳號 | `uuid` | NOT NULL | **複合 PK 之一**；**FK → `users.id`，CASCADE** | [01-04](../../specs/01-account/04-profile.mdx#資料欄位) |
-| `event_key` | 通知事件 | `varchar` | NOT NULL | **複合 PK 之一**。**不加 CHECK**——合法值由設定登錄管理，清單見[§待決](#待決)第 2 列 | [01-04](../../specs/01-account/04-profile.mdx#資料欄位)：六個事件 |
+| `event_key` | 通知事件 | `varchar` | NOT NULL | **複合 PK 之一**。**不加 CHECK**——合法值由設定登錄管理，六個事件見 [01-04 §通知設定](../../specs/01-account/04-profile.mdx#通知設定) | [01-04](../../specs/01-account/04-profile.mdx#資料欄位)：六個事件 |
 | `in_app_enabled` | 是否發站內通知 | `boolean` | NOT NULL | — | [01-04](../../specs/01-account/04-profile.mdx#資料欄位)：兩種方式之一 |
 | `email_enabled` | 是否寄信 | `boolean` | NOT NULL | — | 同上 |
 
@@ -284,7 +284,7 @@ import PluginView from '@/components/PluginView.astro';
 | **不可變** | 只新增（**提案**） |
 | **保留** | ADR 沒有決定；暫不刪除（**提案**） |
 
-**放哪裡**：放在同一個 PostgreSQL，**不對 `users` 加 FK**，並在備份之外另留一份；從備份還原之後，依那一份重新套用刪除。「備份之外那一份」放在哪個儲存、怎麼同步未定，留給資料保留與匿名化的 change。
+**放哪裡**：放在同一個 PostgreSQL，**不對 `users` 加 FK**，並在備份之外另留一份；從備份還原之後，依那一份重新套用刪除。「備份之外那一份」放在哪個儲存、怎麼同步，見[§待決](#待決)第 2 列。
 
 **這張表沒有規格條文可指**：它依 ADR-008 新增（見[決策紀錄](#決策紀錄)），不是任何一頁規格的資料欄位。
 
@@ -454,7 +454,7 @@ import PluginView from '@/components/PluginView.astro';
 | `created_at` | 建立時間 | `timestamptz` | 系統寫入 | — | UTC |
 | `sealed_at` | 定版時間 | `timestamptz` | **可空** | **CHECK** `state='sealed' → sealed_at IS NOT NULL` | [05-03](../../specs/05-dataset/03-ingestion-lineage.mdx#資料欄位)：**一律以 UTC 表示** |
 | `withdrawn_at` | 撤回時間 | `timestamptz` | **可空** | 空值＝未撤回；**CHECK** `withdrawn_at IS NULL OR state='sealed'`（**提案**） | [ADR-008 D7](../../development/adr/008-deployment-and-operations.mdx#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)：只標記撤回、不刪除；CHECK 為提案 |
-| `withdrawal_reason` | 撤回原因 | `text` | **可空** | **CHECK** `withdrawn_at IS NOT NULL OR withdrawal_reason IS NULL`（**提案**） | [ADR-008 D7](../../development/adr/008-deployment-and-operations.mdx#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)：記錄撤回原因；是否必填未定 |
+| `withdrawal_reason` | 撤回原因 | `text` | **可空** | **CHECK** `withdrawn_at IS NOT NULL OR withdrawal_reason IS NULL`（**提案**） | [ADR-008 D7](../../development/adr/008-deployment-and-operations.mdx#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)：記錄撤回原因；是否必填見[§待決](#待決)第 3 列 |
 
 **三條版本來源限制，只有兩條能由資料庫擋下：**
 
@@ -737,7 +737,7 @@ import PluginView from '@/components/PluginView.astro';
 | `opened_at` | 開啟時間 | `timestamptz` | NOT NULL | — | — |
 | `closed_at` | 關閉時間 | `timestamptz` | **可空** | **CHECK** 與 `close_reason` 同時為空或同時非空 | 退回草稿或正式標記完結。**只關閉，不刪除** |
 | `close_reason` | 關閉原因 | `varchar(16)` | **可空** | CHECK 限 `rejected`／`completed` | `rejected`＝退回草稿；`completed`＝正式標記完結 |
-| `rejection_reason` | 退回原因 | `text` | **NOT NULL，允許空字串** | — | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：「**選填**，允許空白；隨那一輪的關閉一起寫入，**不得省略欄位**」；空值以空字串表示 |
+| `rejection_reason` | 退回原因 | `text` | **NOT NULL，允許空字串** | — | [03-03](../../specs/03-task-management/03-task-detail.mdx#資料欄位)：「**選填**，允許空白；隨那一輪的關閉一起寫入，**不得省略欄位**」 |
 
 :::note{title="欄位的實作細節" collapsible}
 - `rejection_reason`：空值以空字串表示，與 `annotation_review_decision.reason` 同一條原則。**和 `close_reason` 是兩件事**：那一欄是列舉，這一欄是負責人填的那段文字，`completed` 關閉時留空
@@ -1362,8 +1362,9 @@ import PluginView from '@/components/PluginView.astro';
 
 | # | 問題 | 卡住什麼 | 誰決定 |
 | :--- | :--- | :--- | :--- |
-| 1 | `account_refresh_token` 的清除排程 | 這張表「保留」的清除時機 | 維護者（追蹤於 [#726](https://github.com/label-suite/label-suite/issues/726)） |
-| 2 | 通知偏好六個事件鍵的合法值清單 | `account_notification_preference.event_key` 的合法值 | 維護者（追蹤於 [#188](https://github.com/label-suite/label-suite/issues/188)） |
+| 1 | `account_refresh_token` 的清除排程 | 這張表「保留」的清除時機 | 追蹤於 [#726](https://github.com/label-suite/label-suite/issues/726) |
+| 2 | `user_deletion_request` 在備份之外那一份放在哪個儲存、怎麼同步 | 從備份還原後重新套用刪除 | 資料保留與匿名化的 change |
+| 3 | `dataset_version.withdrawal_reason` 是否必填 | 這一欄的可空性與 CHECK | — |
 
 ## 決策紀錄
 
@@ -1379,7 +1380,7 @@ import PluginView from '@/components/PluginView.astro';
 | 2026-11-11 | 表說明引用的規格算來源：`task_annotation_assignment` 與 `task_export_run` 補上表級的規格來源 | — | [盤點總帳 D8](./data-field-inventory.mdx#五裁定紀錄與待裁決) |
 | 2026-11-11 | `annotation_review_submission` 用表自己的儲存格寫一句表說明 | — | [盤點總帳 D10](./data-field-inventory.mdx#五裁定紀錄與待裁決) |
 | 2026-11-11 | 分析報告不建表，05-02 的欄位全部即時計算（[§IAA 的兩套東西，不可混用](#iaa-的兩套東西不可混用)） | — | [盤點總帳 D4](./data-field-inventory.mdx#五裁定紀錄與待裁決) |
-| 2026-11-11 | 通知偏好做成事件鍵驅動，表的形狀固定，事件鍵的合法值清單另訂 | — | 維護者裁定，原文未附來源 |
+| 2026-11-11 | 通知偏好做成事件鍵驅動，表的形狀固定，事件鍵的合法值清單另訂 | — | [盤點總帳 §五](./data-field-inventory.mdx#五裁定紀錄與待裁決) |
 | 2026-11-11 | 資料集版本來源不得形成循環，寫入前走版本來源鍊，不加物化路徑欄位 | — | 維護者裁定，原文未附來源 |
 | 2026-11-11 | `dataset_item_private.protected_payload` 的讀取角色與答案同級（僅計分程序） | — | [盤點總帳 D5](./data-field-inventory.mdx#五裁定紀錄與待裁決) |
 | 2026-11-11 | 任務封存可逆：復原時清空 `archived_at` 與 `archived_by_user_id`，不記復原者 | — | [盤點總帳 D6](./data-field-inventory.mdx#五裁定紀錄與待裁決) |
