@@ -43,6 +43,7 @@ model: opus
 - [ ] 列出所有 Scenario，每個轉成一條驗收項目（WHEN／THEN）與預定的證據來源（API 呼叫、E2E、既有測試）
 - [ ] 確認沒有漏掉的 Scenario，也記錄 spec 沒描述但實作出現的額外行為
 - [ ] Scenario 名稱與 `docs/specs/` 的驗收標準對得起來；對不起來的記成缺陷（規格與 spec 脫節）
+- [ ] **反向核對規格頁**：列出本張範圍內每一份規格頁的**全部**驗收標準，每條標一個去處——「已驗證」「部分驗證 → #N」「clarification 移出 → #N」（後者取自 `clarification.md` 的「移出本次的驗收標準」表）。只做 change 的 Scenario → 規格頁這一個方向，被移出或沒寫成 Scenario 的條文就看不到；沒有去處的那一條記為缺陷
 
 ### 2. Decision Table
 
@@ -70,12 +71,14 @@ model: opus
 - [ ] 以受限角色登入：寫入操作不出現，**遮蔽欄位顯示「已遮蔽」而非空白**
 - [ ] **token 不在前端**：`page.evaluate` 確認 `localStorage` 與 `sessionStorage` 裡沒有 token；認證 cookie 是 `httpOnly`（所以 `document.cookie` 讀不到它）
 - [ ] **瀏覽器端沒有答案**：以標記員身分檢查頁面的網路回應與 bundle，沒有標準答案或測試集辨識資訊
+- [ ] **依部署設定才出現的控制項**：Then 列出的控制項要開了某項設定才出現時（例如設了 Google 登入才有「使用 Google 帳號繼續」、設了寄信服務才有「前往註冊」），要在**它出現的設定下**驗證；在沒開的部署下判通過不算驗到。只能在部分設定下驗的，覆蓋表標「部分驗證 → #N」
 - [ ] 選擇器優先 role／label／text；需要時沿用 prototype 的 `data-testid` 原字串
 - [ ] 表單欄位級斷言：存檔後畫面上顯示的值與輸入一致
 
 ### 5. DoD
 
 - [ ] spec 每個 Scenario 都驗證通過
+- [ ] 規格頁驗收標準覆蓋表的每一條都有去處
 - [ ] Decision Table 的情境都有對應驗證
 - [ ] 後端 `uv run pytest` 全綠；前端元件與 hook 測試全綠；**根目錄 `e2e/` 的 Playwright 全綠**
 - [ ] **Alembic `upgrade` → `downgrade` → `upgrade` 在 SQLite 與 PostgreSQL 兩層都成功**
@@ -97,6 +100,12 @@ model: opus
 ### Scenario 結果
 
 | Scenario | 對應的規格書驗收標準 | 證據 | 結果 |
+
+### 規格頁驗收標準覆蓋
+
+（本張範圍內規格頁的**全部**驗收標準，一條一列；去處只能是「已驗證」「部分驗證 → #N」「clarification 移出 → #N」三者之一）
+
+| 規格頁 | 驗收標準（Scenario 名稱） | 去處 | 本次驗到哪裡／說明 |
 
 ### Decision Table
 
@@ -131,7 +140,7 @@ model: opus
    - 負責角色：{backend-developer／frontend-developer／dba／technical-writer}
 ```
 
-任一 Scenario 未驗證或未通過、任一 DoD 項目未達成、任一 Hard Rule 必驗項未通過，結論即為**不通過**。缺陷描述必須可重現、可定位。
+任一 Scenario 未驗證或未通過、任一 DoD 項目未達成、任一 Hard Rule 必驗項未通過、覆蓋表有任一條沒有去處，結論即為**不通過**。覆蓋表上的每個 `#N` 由 `ops` 在歸檔時寫成接手 issue 的移交清單，所以 `#N` 要寫既有 issue 的編號。缺陷描述必須可重現、可定位。
 
 **人工驗收步驟不是選填。** 只留機器證據的話，之後要抽查或出事要追，沒有人知道這個 change 當初該怎麼驗——而現在沒有人會在合併前替你補上這一段。
 

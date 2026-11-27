@@ -232,6 +232,7 @@ description: 釐清 OpenSpec change 規劃產物（system-analysis、system-desi
 1. 決議會改變需求 → **先用 `spec-writing` 改 `docs/specs/` 的規格書**，再回修 openspec 產出。寫進規格書「已確認決議」的依據只有 [§「已確認決議」的五種依據](../../../docs/development/workflow/spec-migration.mdx#已確認決議的五種依據) 那**五種**
 2. 派原撰寫角色回修：system-analysis → `sa`；system-design、api-contract → `sd`；ui-design → `ui-ux`；proposal → `planner`。P 項目一併修正
 3. 把決議、理由、**日期**、回修位置寫進 `clarification.md`，並在「交給後續產出」條列 specs、design、tasks 要遵守的事
+   - 決議把規格頁的驗收標準移出本次（交給別張 issue、不寫成 Scenario）時，**必填**「移出本次的驗收標準」表：規格頁、Scenario 名稱、接手 issue `#N`，一條一列。「交給後續產出」只管本 change 內的產出，移出本次的那幾條只記在這張表；`acceptance-verifier` 依它填覆蓋表、`ops` 依它在接手 issue 寫移交清單，沒寫進表的條文就會在兩邊都消失。接手 issue 寫不出 `#N`，這個 Q 就還沒決議完
 4. 只對受影響的面向重新檢查；全數通過（沒有未決的 Q、P 都已修正）後回到 propose 流程，繼續產生 specs
 5. 維護者對某個 Q 選擇暫不決定 → **停止 propose**，回報卡在哪裡，不往下產生 specs
 

@@ -92,6 +92,7 @@ rules:
     - 每個決議寫出理由、日期與回修位置；改變需求的決議先用 spec-writing 回寫 docs/specs/ 的規格書
     - 寫進規格書「已確認決議」的依據只有 docs/development/workflow/spec-migration.mdx §「已確認決議」的五種依據
     - 不新增 proposal 沒有的功能，只釐清既有範圍
+    - 決議把規格頁的驗收標準移出本次時，必填「移出本次的驗收標準」表（規格頁、Scenario 名稱、接手 issue `#N`）；寫不出接手 issue 的 Q 不算決議完成
   specs:
     - 只寫 What，不寫 How；技術細節放 design 或 tasks
     - 每個 Requirement 至少一個 Scenario，且可以直接寫成測試
@@ -133,6 +134,7 @@ operations:
       - 後端 API 有變動時，同一個群組內重新產生 openapi.json 與前端型別，並確認與 api-contract 一致
       - 全部 task 完成且工作區乾淨後，交由 code-reviewer 審查；修正由實作角色另開 commit
       - 審查通過後交由 acceptance-verifier 對照每個 Scenario 驗收，報告寫在 change 目錄的 acceptance.md；未通過不進入下一步
+      - "acceptance.md 要附「規格頁驗收標準覆蓋」表：本次範圍內規格頁的全部驗收標準，每條標「已驗證」「部分驗證 → #N」「clarification 移出 → #N」之一；沒有去處的記為缺陷、結論不通過。Then 的控制項依部署設定才出現時，要在它出現的設定下驗證，只能在部分設定下驗的標「部分驗證 → #N」"
       - acceptance.md 要附**人工驗收步驟**：啟動指令、用哪個角色登入、點哪幾頁、每一步預期看到什麼。它留作紀錄，不是停下來等維護者簽收的交付物
       - 驗收通過後步驟結束時自動提交，**不停**；接著由 ops 執行 /opsx:archive，歸檔改動進同一張 PR，再走合併條件（CI 每個 job 都 completed 且 success、審查無阻斷意見、PR 可合併）
   # 與 scaffold 刻意不同：archive 在合併之前執行，與程式同一張 PR；這裡不重做驗收。
@@ -140,5 +142,6 @@ operations:
     guidance:
       - 歸檔前確認工作區乾淨；驗收已經在 apply 的最後做過，這裡不重做驗收判定
       - 同步主規格與搬移到 archive 由 ops 執行；新 capability 的 Purpose 不留 TBD
+      - "ops 依 acceptance.md 的覆蓋表，在每張接手 issue 本文加上「從 #<本張> 移交的驗收」清單；主 session 合併前核對覆蓋表上每個 `#N` 都有對應清單，缺了就不合併"
       - "**在合併之前執行**：歸檔改動與程式進同一張 PR，main 上不會出現已合併但未歸檔的 change"
       - 步驟結束時自動提交；PR 在 apply 期間就已經開好，這裡不另開
