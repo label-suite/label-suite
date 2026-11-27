@@ -158,6 +158,7 @@ describe("appShell and common locale text", () => {
     ["appShell", "role.reviewer", "審核員", "Reviewer"],
     ["appShell", "role.projectLeader", "專案負責人", "Project leader"],
     ["appShell", "role.generalUser", "一般使用者", "General user"],
+    ["appShell", "role.systemAdmin", "系統管理員", "System Admin"],
     ["appShell", "shortcuts.open", "快捷鍵", "Keyboard shortcuts"],
     ["appShell", "shortcuts.title", "目前頁面可用快捷鍵", "Available shortcuts for this page"],
     ["appShell", "shortcuts.close", "關閉快捷鍵", "Close keyboard shortcuts"],

@@ -17,7 +17,8 @@
     "annotator": "Annotator",
     "reviewer": "Reviewer",
     "projectLeader": "Project leader",
-    "generalUser": "General user"
+    "generalUser": "General user",
+    "systemAdmin": "System Admin"
   },
   "shortcuts": {
     "open": "Keyboard shortcuts",
