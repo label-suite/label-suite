@@ -522,10 +522,8 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
-| A 放行只指向對方的 `service`，經由它公開的函式讀 | 理由沒有記錄 | 每一處都要在契約加一條附理由註解的 `ignore_imports` | 採用 |
-| B 放行指向對方的 `repository` 或 `models` | 理由沒有記錄 | 理由沒有記錄 | 不採用 |
-
-維護者的裁定只記了採用的做法與不准的兩層，沒有記選項的好處與代價，這裡不補。
+| A 放行只指向對方的 `service`，經由它公開的函式讀 | 一個模組的 repository 與 models 不會被別的模組直接 import | 每一處都要在契約加一條附理由的放行 | 採用 |
+| B 放行指向對方的 `repository` 或 `models` | — | — | 不採用 |
 
 ### 決定
 
@@ -545,7 +543,7 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 
 ### 什麼情況要重新討論
 
-- `backend/` 的第一批模組合併之後，審查反覆發現跨模組要共用的 schema，或本節與 [D13](#d13-稽核紀錄的-model-與寫入函式放在-core) 都管不到的共用，沒有合適的位置
+- 審查反覆發現好幾個模組都要共用的 schema，或本節與 [D13](#d13-稽核紀錄的-model-與寫入函式放在-core) 都管不到的跨模組共用
 
 ## D13 稽核紀錄的 model 與寫入函式放在 core
 
@@ -564,9 +562,7 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
-| A model 與寫入函式放在 `app/core/`（例如 `core/audit.py`），任何模組都直接呼叫 | 它屬於「換一個業務也照樣需要」的基礎建設 | 理由沒有記錄 | 採用 |
-
-維護者的裁定只記了採用的做法與判準，沒有列出其他選項，這裡不補。
+| A model 與寫入函式放在 `app/core/`（例如 `core/audit.py`），任何模組都直接呼叫 | 它屬於「換一個業務也照樣需要」的基礎建設 | 稽核的 model 與寫入函式不能引用任何業務模組的型別 | 採用 |
 
 ### 決定
 
@@ -605,8 +601,8 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 | D10 | 個人 repo ADR-024 的 §Dialect-Specific Paths 第一條「Atomic upsert (FR-083)」：Celery 背景工作的寫入在兩層都要原子，依 dialect 偵測選 PostgreSQL 或 SQLite 的 `on_conflict_do_update()`／`on_conflict_do_nothing()`，兩層都不得用 `session.merge()` 或 check-then-act。選項 A 與選項 C 的拒絕理由都出自這一條；選項 B、D 是推論。本 repo 既有的 [B9](../rules/backend-agent-rules.mdx#b9-celery-的界線) 已要求 task 冪等，本節是第一次把理由與「冪等要落在結果表的唯一鍵上」寫下來（[#490](https://github.com/label-suite/label-suite/issues/490)）。重試三次的設定出自 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務)；`trial_round_id` 當 PK 兼 FK 出自[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)的 `task_trial_iaa_result` |
 | — | 個人 repo ADR-024 後來的修訂（以資料庫 trigger 保護 append-only 與封存的資料表）、ADR-022 的轉移表與快照不變式，不在 [architecture.mdx](../architecture.mdx) 裡，本 ADR 不收；它們屬於資料庫與業務規格，由各自的 change 決定是否採用 |
 | D11 | 個人 repo ADR-026（Context 的兩類字串與兩種反模式、Alternatives Considered 的三個選項與拒絕理由、Decision 的兩層與前端渲染契約、Consequences 的 Easier 與 Harder）。**兩處與來源不同**：來源把後端那一層的欄位叫 `detail`，本 repo 的人讀訊息在回應外層的 `message`（見 [D5](#d5-api-路徑前綴與成功回應外層) 與 [api-agent-rules 的 A8](../rules/api-agent-rules.mdx#a8-i18n-的兩層分工)）；來源 Harder 第 1 條把「字串不得內嵌」的強制放在 `.claude/rules/backend.md`，本 repo 沒有那份 canon（決定於 [#53](https://github.com/label-suite/label-suite/issues/53)），該條由 A8 的禁止格承接。來源的 `Accept-Language` 解析細節（q-value、`*` 通配、`q=0` 拒絕、全部被拒回 `406`）已在 A8，本節不重述。**來源的 Alternatives Considered 只有選項、說明與拒絕理由三欄**，所以選項表的「好處」與「代價」兩欄是推論；**來源也沒有「什麼情況要重新討論」這一節**，該節的兩條同樣是推論 |
-| D12 | 維護者 2026-11-27 的裁定 1，記在 [#749](https://github.com/label-suite/label-suite/issues/749) 本文（只記做法與不准的兩層，沒有記選項的好處與代價）；契約原本的寫法出自 `backend/pyproject.toml` 跨模組契約上方的註解；`ignore_imports` 的寫法與檢查見 [B12](../rules/backend-agent-rules.mdx#b12-單一入口)；重新討論條件改寫自 [D3](#d3-後端採模組內分層) 原本的「跨模組共用的 service 或 schema 沒有合適的位置」 |
-| D13 | 維護者 2026-11-27 的裁定 2，記在 [#749](https://github.com/label-suite/label-suite/issues/749) 本文（只記做法與判準，沒有列出其他選項）；`audit_events` 的性質見 [ADR-008 的 D6](008-deployment-and-operations.mdx#d6-使用者行為記在單一只新增的-audit_events-表)；model 的載入方式出自 `backend/alembic/env.py`；重新討論條件由裁定的判準反推，來源沒有記錄 |
+| D12 | 維護者 2026-11-27 的裁定 1，記在 [#749](https://github.com/label-suite/label-suite/issues/749) 本文（只記做法與不准的兩層，沒有記選項的好處與代價；選項表只填本節「後果」已有的事實，其餘留「—」）；契約原本的寫法出自 `backend/pyproject.toml` 跨模組契約上方的註解；`ignore_imports` 的寫法與檢查見 [B12](../rules/backend-agent-rules.mdx#b12-單一入口)；重新討論條件改寫自 [D3](#d3-後端採模組內分層) 原本的「跨模組共用的 service 或 schema 沒有合適的位置」，去掉其中已經過去的「第一批模組合併之後」 |
+| D13 | 維護者 2026-11-27 的裁定 2，記在 [#749](https://github.com/label-suite/label-suite/issues/749) 本文（只記做法與判準，沒有列出其他選項；選項 A 的代價取自本節「後果」）；`audit_events` 的性質見 [ADR-008 的 D6](008-deployment-and-operations.mdx#d6-使用者行為記在單一只新增的-audit_events-表)；model 的載入方式出自 `backend/alembic/env.py`；重新討論條件由裁定的判準反推，來源沒有記錄 |
 
 ## 決策紀錄
 
