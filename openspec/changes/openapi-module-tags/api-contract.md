@@ -76,7 +76,7 @@
 
 檢查方式：
 
-- 新的後端測試（`backend/tests/unit/test_openapi.py`，只做測試、不加啟動檢查，P6）驗三件事（P5）：每個 operation 恰好一個 tag、該 tag 在頂層 `tags` 宣告、頂層每筆 `description` 非空。新模組掛進 `/api/v1` 卻沒帶 tag、同一個模組在 router 與掛載處各帶一次 tag、或忘了在頂層宣告，測試都會失敗
+- 新的後端測試（`backend/tests/unit/test_openapi_tags.py`，只做測試、不加啟動檢查，P6）驗三件事（P5）：每個 operation 恰好一個 tag、該 tag 在頂層 `tags` 宣告、頂層每筆 `description` 非空。新模組掛進 `/api/v1` 卻沒帶 tag、同一個模組在 router 與掛載處各帶一次 tag、或忘了在頂層宣告，測試都會失敗
 - tag 在 `create_app` 掛載時以 `include_router(tags=["<module>"])` 帶上，模組自己的 `APIRouter()` 不寫 tags（P4）；這是實作位置，不影響文件內容
 - tag 名稱是否等於目錄名，由 `code-reviewer` 審查，測試不驗（P7）
 - 規則適用文件裡的**所有** operation，沒有例外（P3）；目前沒有不屬於任何模組的 operation，將來出現時測試會失敗，屆時再決定歸屬
