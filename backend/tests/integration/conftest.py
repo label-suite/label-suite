@@ -1,10 +1,12 @@
-"""Fixtures for the account integration tests.
+"""Fixtures for the account and admin integration tests.
 
 ``account_db`` is a session on the same migrated test database the ``client`` app
 uses (both are keyed on ``tmp_path``). PostgreSQL runs share one database, so the
 three account tables are emptied before and after each test; only this test's rows
-are ever removed. ``google_client`` is the production app with Google configured, and
-``google`` puts ``FakeGoogle`` at the network boundary.
+are ever removed. ``matrix_db`` resets the role permission matrix to its initial
+cells and version before and after each test that writes it. ``google_client`` is the
+production app with Google configured, and ``google`` puts ``FakeGoogle`` at the network
+boundary.
 """
 
 import secrets
@@ -19,7 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from app.main import create_app
 from app.modules.account.models import AccountRefreshToken, AccountSession, User
-from tests.conftest import make_test_settings
+from tests.conftest import make_test_settings, run_alembic
 from tests.support.google_oidc import CLIENT_ID, REDIRECT_URI, FakeGoogle
 
 
@@ -37,6 +39,35 @@ async def account_db(migrated_engine: AsyncEngine) -> AsyncIterator[AsyncSession
     async with async_sessionmaker(migrated_engine, expire_on_commit=False)() as session:
         yield session
     await clear_accounts(migrated_engine)
+
+
+ACCOUNT_REVISION = "7bf0f909ce8f"
+"""The account-group revision; the admin-group migration sits directly on top of it."""
+
+
+async def reset_matrix(engine: AsyncEngine) -> None:
+    """Re-run the admin-group migration so the matrix holds its 62 initial cells and version 1.
+
+    Downgrading to ``ACCOUNT_REVISION`` drops only the two matrix tables, so the account
+    tables and their rows are left as they are (authz-steps-3-4 design D9).
+    """
+    await run_alembic(engine, "downgrade", ACCOUNT_REVISION)
+    await run_alembic(engine, "upgrade", "head")
+
+
+@pytest.fixture
+async def matrix_db(migrated_engine: AsyncEngine) -> AsyncIterator[AsyncEngine]:
+    """Yield the migrated test engine with the initial matrix, and restore it afterwards.
+
+    Every test that updates, deletes or inserts matrix rows uses this fixture, so a
+    PostgreSQL run that shares one database never carries a changed matrix into the
+    next test.
+    """
+    await reset_matrix(migrated_engine)
+    try:
+        yield migrated_engine
+    finally:
+        await reset_matrix(migrated_engine)
 
 
 @pytest.fixture
