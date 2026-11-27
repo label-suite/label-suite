@@ -15,7 +15,7 @@ module implements it and the assembly point ``app.main`` puts it in ``app.state`
 Every failure, whatever the reason, is the same ``AuthenticationRequiredError``
 (``401 AUTH_REQUIRED``, one sentence), so a response never tells why it failed or whose
 session it was. Steps 3 and 4 (the permission matrix and the per-operation conditions,
-including answer isolation) come after this and are not built yet.
+including answer isolation) come after this, in ``app.core.authz``.
 """
 
 from dataclasses import dataclass

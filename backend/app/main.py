@@ -38,6 +38,7 @@ from app.core.schemas import ErrorResponse
 from app.core.tokens import AccessTokenCodec, TokenKeys
 from app.modules.account.router import router as account_router
 from app.modules.account.service import AccountPrincipalLoader
+from app.modules.admin.service import AdminPermissionMatrixProvider
 from app.modules.health.router import router as health_router
 
 __all__ = ["API_V1_ERROR_RESPONSES", "OPENAPI_TAGS", "create_api_router", "create_app"]
@@ -98,8 +99,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         Resolves ``AUTH_SECRET`` (``resolve_auth_secret``): on the Lite tier
         without it, reads or creates ``auth_secret`` next to the SQLite file.
         Derives the purpose keys from it into ``app.state.token_keys`` and puts the
-        access-token codec in ``app.state.access_codec`` and the account module's
-        ``AccountPrincipalLoader`` in ``app.state.principal_loader``.
+        access-token codec in ``app.state.access_codec``, the account module's
+        ``AccountPrincipalLoader`` in ``app.state.principal_loader`` and the admin
+        module's ``AdminPermissionMatrixProvider`` in
+        ``app.state.permission_matrix_provider``. ``app.state.task_membership_reader``
+        is not set: no module implements it yet, so a task-scoped permission check
+        fails loudly with ``RuntimeError`` (authz-steps-3-4 design D7).
 
     Returns:
         The app with the six middlewares, the exception handlers, the
@@ -145,6 +150,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.access_codec = codec
     # core.auth only defines the protocol; the account module implements it.
     app.state.principal_loader = AccountPrincipalLoader()
+    # core.authz only defines the protocol; the admin module owns the matrix. The admin
+    # router has no route yet, so it is not mounted and no admin tag is declared.
+    app.state.permission_matrix_provider = AdminPermissionMatrixProvider()
 
     # add_middleware puts each new layer outside the previous ones, so this runs
     # innermost first: Csrf, Locale, Unhandled, AccessLog, CORS, Correlation (design D3;

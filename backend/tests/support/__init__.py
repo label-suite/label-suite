@@ -1,1 +1,1 @@
-"""Test support: the cookie-keeping browser and the Google network stand-in."""
+"""Test support: the cookie-keeping browser, the Google stand-in, the authorization doubles."""

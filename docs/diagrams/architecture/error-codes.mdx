@@ -4,7 +4,7 @@ description: 'main 上後端會回的每一個錯誤碼：HTTP 狀態、i18n 訊
 category: '架構'
 tags: [架構, 後端, API, 錯誤碼]
 createdAt: '2026-11-23'
-updatedAt: '2026-11-26'
+updatedAt: '2026-11-27'
 ---
 
 # 錯誤碼
@@ -37,16 +37,17 @@ updatedAt: '2026-11-26'
 
 ## 通用碼
 
-通用碼不加前綴，全站共用；下表八個是目前全部的通用碼，格式與定義見 `api-envelope` spec 的「錯誤碼為大寫底線格式並定義第一批通用碼」（`AUTH_REQUIRED`、`CSRF_FAILED` 兩個由 change `login-auth-guard` 加進那條 Requirement）。
+通用碼不加前綴，全站共用；下表九個是目前全部的通用碼，格式與定義見 `api-envelope` spec 的「錯誤碼為大寫底線格式並定義第一批通用碼」（`AUTH_REQUIRED`、`CSRF_FAILED` 兩個由 change `login-auth-guard` 加進那條 Requirement，`PERMISSION_DENIED` 由 change `authz-steps-3-4` 加進）。
 
 | `code` | HTTP | 訊息鍵 | 在哪裡產生 | 會回這個碼的端點 |
 | :--- | :--- | :--- | :--- | :--- |
-| `NOT_FOUND` | `404` | `common.not_found` | `app/core/errors.py` 的 `handle_http_exception`（路由找不到） | 沒有端點自己回；`/api/v1` 底下不存在的路徑由路由層回；`API_DOCS_ENABLED=false` 時 `/docs`、`/docs/oauth2-redirect`、`/redoc`、`/openapi.json` 沒有註冊，也由路由層回 |
+| `NOT_FOUND` | `404` | `common.not_found` | `app/core/errors.py` 的 `handle_http_exception`（路由找不到）；`app/core/authz.py` 丟 `NotFoundError`：`require_permission` 讀到的路徑參數無法轉換（任務識別碼不是 UUID、作用角色不是三種任務角色之一），所以格式錯的任務識別碼回的是它而不是 `422`；`Authorizer` 在授權第 2 步發現這個任務沒有生效的成員身分（不是成員、已停用、仍在邀請中），或指定的作用角色不是他的生效角色；授權第 4 步的附加條件遇到看不到的資源，含讀標準答案的操作（`GroundTruthBarrier` 對任何人都回它）。訊息與路由找不到相同，不說明原因 | 沒有端點自己回；`/api/v1` 底下不存在的路徑由路由層回；`API_DOCS_ENABLED=false` 時 `/docs`、`/docs/oauth2-redirect`、`/redoc`、`/openapi.json` 沒有註冊，也由路由層回 |
 | `METHOD_NOT_ALLOWED` | `405` | `common.method_not_allowed` | `app/core/errors.py` 的 `handle_http_exception`（方法不允許） | 每個 `/api/v1` 路徑用它沒有的 method 呼叫，例：[`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) 用 `GET` 以外的 method；帶著 access cookie 的 `POST`／`PUT`／`PATCH`／`DELETE` 會先經 CSRF 判定，驗不過時回的是 `403 CSRF_FAILED` |
 | `NOT_ACCEPTABLE` | `406` | `common.not_acceptable` | `app/core/middleware.py` 的 `LocaleMiddleware`，接住 `NotAcceptableError` | 每個 `/api/v1` 請求（CORS 預檢除外：它在 `LocaleMiddleware` 外層就回應），含 [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) |
 | `VALIDATION_FAILED` | `422` | `common.validation_failed` | `app/core/errors.py` 的 `handle_validation_error` | [`createSession`](/view/diagrams/architecture/api.openapi#op/createSession)、[`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh)、[`createGoogleSession`](/view/diagrams/architecture/api.openapi#op/createGoogleSession)：body 缺欄位、超過上限、有未宣告的欄位或不是 JSON；[`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) 沒有被驗證的輸入 |
 | `AUTH_REQUIRED` | `401` | `common.auth_required` | `app/core/auth.py` 定義的 `AuthenticationRequiredError`，經 `handle_app_error` 轉成外層。丟出的地方：`get_current_principal`（cookie 不在、token 驗不過或過期，或 `AccountPrincipalLoader.load` 拒絕）；`app/modules/account/router.py` 的 `create_session_refresh` 在請求沒有 refresh cookie 時；`SessionService.current` 在判定通過後帳號已不存在時 | [`getCurrentSession`](/view/diagrams/architecture/api.openapi#op/getCurrentSession)：沒有可通行的登入狀態，不分原因；[`createSessionRefresh`](/view/diagrams/architecture/api.openapi#op/createSessionRefresh)：請求沒有 refresh cookie（不清 cookie）；之後每個掛 `get_current_principal` 的端點 |
 | `CSRF_FAILED` | `403` | `common.csrf_failed` | `app/core/csrf.py` 的 `CsrfMiddleware` 在路由之前直接組錯誤外層（碼取自 `CsrfFailedError`）；缺 `X-CSRF-Token` 或 CSRF cookie、access token 簽章不對，或兩者任一不等於 `HMAC(csrf key, sid)` | 目前沒有：本次的四個寫入端點都在放行清單；之後每個不在放行清單、而且帶著 access cookie 的 `POST`／`PUT`／`PATCH`／`DELETE`（沒有 access cookie 的寫入不驗） |
+| `PERMISSION_DENIED` | `403` | `common.permission_denied` | `app/core/authz.py` 定義的 `PermissionDeniedError`，由 `Authorizer`（經 `require_permission` 依賴）在授權第 3 步丟出，經 `handle_app_error` 轉成外層：權限鍵不在白名單或尚未啟用、鍵的層級與操作不符、矩陣版本列不存在、生效角色的格缺列或全部為關。平台層的鍵一律回它；任務層的鍵只在第 2 步已確認呼叫者是這個任務的生效成員之後才會走到這裡。訊息不帶權限鍵、角色、矩陣版本或拒絕在哪一步，也不動 cookie | 目前沒有：沒有端點掛 `require_permission`；之後每個掛它的端點。授權第 2 步與第 4 步遇到看不到的資源回的是 `404 NOT_FOUND`，不是這個碼 |
 | `INTERNAL_ERROR` | `500` | `common.internal_error` | `app/core/middleware.py` 的 `UnhandledExceptionMiddleware`；`app/core/errors.py` 的 `handle_http_exception`（沒有對應碼的 `HTTPException`） | 每個 `/api/v1` 請求，含 [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) |
 | `DATABASE_UNAVAILABLE` | `503` | `common.database_unavailable` | `app/modules/health/service.py` 的 `HealthService.check()` 丟 `DatabaseUnavailableError`，由 `handle_app_error` 轉成外層 | [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth)：資料庫連不上或逾時 |
 
@@ -56,7 +57,7 @@ updatedAt: '2026-11-26'
 - 上表的「會回這個碼的端點」寫的是實際會回的情況，不是 API 文件的宣告。`app/main.py` 的 `API_V1_ERROR_RESPONSES` 讓每個 `/api/v1` 操作都宣告 `404`、`405`、`406`、`500`；[`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) 另在 `app/modules/health/router.py` 宣告 `503`。所以 [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) 在 `openapi.json` 裡有 `404`，實際不會回
 - [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) 沒有宣告 `422`，`openapi.json` 裡也沒有
 - `422` 與 `500` 的整合測試靠 `backend/tests/probe.py` 的測試用路由觸發；它們只由 `backend/tests/conftest.py` 掛上，不在正式的 app 與 `openapi.json` 裡，見 [端點授權的「不在本表的路徑」](./endpoint-authorization.mdx#不在本表的路徑)
-- `NotFoundError` 在 `app/core/errors.py` 已定義，目前沒有模組丟它；`404` 都來自路由找不到
+- `NotFoundError` 在 `app/core/errors.py` 已定義；授權依賴會丟它，但目前沒有端點掛 `require_permission`，所以實際的 `404` 仍都來自路由找不到。授權第 4 步「看得到但狀態不允許」不用這兩個碼，由條件所屬模組的碼表定
 - `406` 的 body 一律是 zh-TW；`messages.json` 的 en 字串只為了兩個語系的鍵一致而存在
 - 成功外層的 `code` 是 `OK`（訊息鍵 `common.ok`），不是錯誤碼，不列在上表；定義見 `api-envelope` spec 的「成功回應包一層六欄位外層」
 :::
@@ -83,7 +84,7 @@ updatedAt: '2026-11-26'
 
 | 還沒有 | 風險 | 追蹤 |
 | :--- | :--- | :--- |
-| 權限不足的 `403` 與狀態轉換的 `409` | 授權第 3 步（權限矩陣）與第一個有狀態機的端點要先定義；`401` 與 CSRF 的 `403` 已由 change `login-auth-guard` 定義 | 已歸檔的 [backend-skeleton `api-contract.md`](https://github.com/label-suite/label-suite/blob/main/openspec/changes/archive/2026-11-20-backend-skeleton/api-contract.md) §錯誤碼 |
+| 狀態轉換的 `409` | 第一個有狀態機的端點要先定義；授權第 4 步「看得到但狀態不允許」的碼也在那時定 | 已歸檔的 [backend-skeleton `api-contract.md`](https://github.com/label-suite/label-suite/blob/main/openspec/changes/archive/2026-11-20-backend-skeleton/api-contract.md) §錯誤碼 |
 | 本文與 `openapi.json`、程式的自動一致性檢查 | 只靠審查時人工對照，漏改不會讓任何檢查失敗 | [#547](https://github.com/label-suite/label-suite/issues/547) §不在範圍 |
 
 ## 決策紀錄
@@ -94,3 +95,5 @@ updatedAt: '2026-11-26'
 | 2026-11-23 | 實作後由 `backend-developer` 依程式校正本文，`code-reviewer` 再核對（[§誰改、什麼時候改](#誰改什麼時候改)） | — | [#547 的裁定](https://github.com/label-suite/label-suite/issues/547#issuecomment-7102478776) |
 | 2026-11-26 | 新增通用碼 `AUTH_REQUIRED`、`CSRF_FAILED` 與 `account` 模組的七個碼（規劃，待實作後校正） | 已知限制的「`400`、`401`、`403`、`409` 還沒有」 | [#719](https://github.com/label-suite/label-suite/issues/719) |
 | 2026-11-26 | 依實作校正 `AUTH_REQUIRED` 與 `account` 七個碼的產生位置與會回它的情況（[§通用碼](#通用碼)、[§account](#account)） | 本文 2026-11-26 依設計寫成的列（`app/modules/account/errors.py`、`SessionService.refresh` 丟 `AUTH_REQUIRED`） | [#719](https://github.com/label-suite/label-suite/issues/719) |
+| 2026-11-27 | 新增通用碼 `PERMISSION_DENIED`（`403`），授權第 3 步拒絕時回（已落地：`app/core/authz.py` 的 `PermissionDeniedError`） | 已知限制的「權限不足的 `403` 與狀態轉換的 `409`」縮成只剩 `409` | [#755](https://github.com/label-suite/label-suite/issues/755) |
+| 2026-11-27 | 授權各步的拒絕：第 2 步與第 4 步看不到的資源回 `404 NOT_FOUND`，第 3 步回 `403 PERMISSION_DENIED`；`NOT_FOUND` 加上授權依賴這個產生位置，含路徑參數無法轉換（已落地：`app/core/authz.py`） | 已知限制的「授權各步回 `403` 還是 `404` 由第一批端點落定」 | [#755 的 clarification Q3](https://github.com/label-suite/label-suite/issues/755) |

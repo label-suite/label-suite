@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from app.core.auth import AuthenticationRequiredError
+from app.core.authz import PermissionDeniedError
 from app.core.csrf import CsrfFailedError
 from app.core.errors import AppError, DatabaseUnavailableError, NotAcceptableError, NotFoundError
 from app.core.i18n import (
@@ -135,6 +136,11 @@ EXPECTED_MESSAGES = {
         "無法確認這個請求，請重新整理頁面後再試",
         "This request could not be verified. Please reload the page and try again.",
     ),
+    # authz-steps-3-4 task 2.2: one fixed sentence that names no key, role or step.
+    "common.permission_denied": (
+        "你沒有執行這個操作的權限",
+        "You do not have permission to perform this action.",
+    ),
     # login-auth-guard task 4.2; the sentences shown on screen follow design D7.
     "account.invalid_credentials": ("帳號或密碼錯誤，請再試一次", "Invalid email or password"),
     "account.session_expired": ("登入已過期，請重新登入", "Session expired, please sign in again"),
@@ -183,6 +189,7 @@ def test_every_app_error_message_key_exists_in_the_catalog() -> None:
         DatabaseUnavailableError(),
         AuthenticationRequiredError(),
         CsrfFailedError(),
+        PermissionDeniedError(),
         InvalidCredentialsError(),
         SessionExpiredError(),
         SessionInvalidError(),
@@ -275,6 +282,7 @@ def test_effective_locale_falls_back_to_the_default(locale: object, expected: st
         (NotFoundError(), 404, "NOT_FOUND", "common.not_found"),
         (NotAcceptableError(), 406, "NOT_ACCEPTABLE", "common.not_acceptable"),
         (DatabaseUnavailableError(), 503, "DATABASE_UNAVAILABLE", "common.database_unavailable"),
+        (PermissionDeniedError(), 403, "PERMISSION_DENIED", "common.permission_denied"),
     ],
 )
 def test_app_errors_carry_status_code_and_message_key(

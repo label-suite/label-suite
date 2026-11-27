@@ -15,6 +15,8 @@ from app.core.middleware import (
 )
 from app.main import create_app
 from app.modules.account.service import AccountPrincipalLoader
+from app.modules.admin.router import router as admin_router
+from app.modules.admin.service import AdminPermissionMatrixProvider
 
 
 def test_create_app_without_settings_reads_the_environment_and_fails_loudly(
@@ -95,3 +97,33 @@ def test_the_account_principal_loader_is_wired_into_app_state(tmp_path: Path) ->
     )
 
     assert isinstance(app.state.principal_loader, AccountPrincipalLoader)
+
+
+def test_the_admin_matrix_provider_is_wired_and_no_membership_reader_is(tmp_path: Path) -> None:
+    app = create_app(
+        Settings(
+            cors_allowed_origins=["http://localhost:5173"],
+            database_url=None,
+            sqlite_path=tmp_path / "app.db",
+        )
+    )
+
+    assert isinstance(app.state.permission_matrix_provider, AdminPermissionMatrixProvider)
+    # No module implements the reader yet; a task-scoped check fails loudly (design D7).
+    assert not hasattr(app.state, "task_membership_reader")
+
+
+def test_the_admin_router_has_no_route_and_no_operation_is_tagged_admin(tmp_path: Path) -> None:
+    app = create_app(
+        Settings(
+            cors_allowed_origins=["http://localhost:5173"],
+            database_url=None,
+            sqlite_path=tmp_path / "app.db",
+        )
+    )
+
+    assert admin_router.routes == []
+    paths = app.openapi()["paths"].values()
+    tags = {tag for item in paths for operation in item.values() for tag in operation["tags"]}
+    assert "admin" not in tags
+    assert "admin" not in {entry["name"] for entry in app.openapi()["tags"]}
