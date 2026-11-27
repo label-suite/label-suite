@@ -1,12 +1,12 @@
 ---
 title: ADR-003 後端架構
-description: 後端與 API 契約的決定：前後端同一個 repo、FastAPI、模組內分層、狀態機放 service 層、路徑前綴與回應 envelope、Orval 產生前端 client、SQLite 加 PostgreSQL 雙層、Celery 加 Redis、Bruno 降成可選工具、背景計算的結果寫入做成冪等、i18n 分前端與後端兩層、跨模組呼叫只走 service 對 service、稽核紀錄放在 core。
+description: 後端與 API 契約的決定：前後端同一個 repo、FastAPI、模組內分層、狀態機放 service 層、路徑前綴與回應 envelope、Orval 產生前端 client、SQLite 加 PostgreSQL 雙層、Celery 加 Redis、Bruno 降成可選工具、背景計算的結果寫入做成冪等、i18n 分前端與後端兩層、跨模組呼叫只走 service 對 service、稽核紀錄放在 core、業務模組怎麼切與資料表歸誰。
 tags: [adr, backend, api, database, celery, i18n]
 ---
 
 # ADR-003 後端架構
 
-這份 ADR 管後端的骨架與它對外的契約：repo 怎麼分、用什麼框架、目錄怎麼分層、API 的前綴與回應外層、前端 client 怎麼產生、資料庫與背景工作用什麼、背景計算的結果怎麼寫才不會重複、使用者看得到的字串由哪一層決定語言、一個模組怎麼讀寫另一個模組的資料、稽核紀錄放在哪裡。認證與授權、測試、部署與前端的目錄不在這裡，測試見 [ADR-007](007-testing-strategy.mdx)。
+這份 ADR 管後端的骨架與它對外的契約：repo 怎麼分、用什麼框架、目錄怎麼分層、API 的前綴與回應外層、前端 client 怎麼產生、資料庫與背景工作用什麼、背景計算的結果怎麼寫才不會重複、使用者看得到的字串由哪一層決定語言、一個模組怎麼讀寫另一個模組的資料、稽核紀錄放在哪裡、業務模組怎麼切。認證與授權、測試、部署與前端的目錄不在這裡，測試見 [ADR-007](007-testing-strategy.mdx)。
 規則本體在 [backend-agent-rules.mdx](../rules/backend-agent-rules.mdx) 與 [api-agent-rules.mdx](../rules/api-agent-rules.mdx)，落地的做法在 [architecture.mdx](../architecture.mdx)，本文只寫為什麼；衝突時的優先序見 [ADR 索引](index.mdx#衝突時以誰為準)。
 
 ## D1 前後端放在同一個 repo
@@ -588,6 +588,62 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 
 - 稽核紀錄出現只有某個業務才需要的欄位或寫入規則，不再是「換一個業務也照樣需要」
 
+## D14 後端業務模組的切分
+
+### 背景
+
+要決定後端分成哪幾個業務模組、各負責哪些規格頁，以及資料表字典的 42 張表各歸哪個模組。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| 每一處跨模組呼叫都要在 independence 契約加一條附理由的 `ignore_imports`，只准 service 對 service（[D12](#d12-跨模組呼叫只走-service-對-service-的公開函式)） | 切法決定要加幾條放行，以及有幾對模組互相依賴 |
+| 字典把 42 張表分成九組，其中 `run` 組標「03 加 04」，沒有指定單一模組（[字典 §九個領域分組](../../diagrams/architecture/data-table-dictionary.mdx#九個領域分組)） | 03 與 04 分成兩個模組時，`run` 組要另外決定歸哪邊 |
+| `annotation` 與 `review` 組有六張表以三欄複合 FK 指向 `run` 組的 `task_annotation_assignment`；`run` 組有八個「同任務」複合 FK，評分結果、回合狀態與 `submission.status` 要同交易寫（字典的 [`run` 組](../../diagrams/architecture/data-table-dictionary.mdx#run-組的關聯與限制)與 [`annotation` 與 `review` 組](../../diagrams/architecture/data-table-dictionary.mdx#annotation-與-review-組的關聯與限制)的關聯與限制） | 03 與 04 的表拆到兩個模組，就有跨模組的 FK、來回呼叫，以及一次動作跨兩個模組的交易 |
+| 06-01 使用者管理讀寫的 `users`、`account_password_token` 都在字典的 `account` 組 | 06-01 放 `account` 或管理模組，都不改任何一張表的歸屬，只改程式放哪裡與少不少一條放行 |
+| `audit_events` 的 model 與寫入函式放在 `app/core/`（[D13](#d13-稽核紀錄的-model-與寫入函式放在-core)） | 它不屬於任何業務模組 |
+| 02-01 儀表板彙整多個模組的資料，自己沒有表 | 它的資料要從持有表的模組的 service 取 |
+
+### 考慮過的選項
+
+`ignore_imports` 的條數以「有向模組對一條」估計，是下限（計算單位未決，見 [§待決](#待決) 第 1 列）。
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 照規格章節切：`account`（01）、`dashboard`（02）、`task`（03）、`annotation`（04）、`dataset`（05）、`admin`（06-01、06-02），`run` 組放 `task` | 規格章節與模組一對一 | `ignore_imports` 確定項 12 條（範圍 11–14）；3 對雙向依賴（`task`↔`annotation`、`task`↔`dataset`、`annotation`↔`dataset`）；最後一個審核單位定稿（`annotation`）要同交易把任務轉「等待 IAA 確認」並建 `submission`（`task`），一次動作跨兩個模組；03-03 一頁要讀 `annotation` 的 5 種資料；`admin` 的 06-01 整頁都經 `account` 的 service 做 | 不採用 |
+| B 同 A，但 06-01 的程式放 `account`，`admin` 只剩 06-02 | 06-01 不新增任何跨模組呼叫，`ignore_imports` 確定項 11 條（範圍 10–13） | 06 章節拆在兩個模組；`account` 同時放本人自助與系統管理員管理別人兩種端點，要靠 `app/core/` 的矩陣檢查區分；`account` 變大；03 與 04 那一側的代價同 A | 不採用 |
+| C 03 與 04 合成 `task`（`task`、`run`、`annotation`、`review`、`export`、`work` 六組 25 張），共 5 個業務模組 | `ignore_imports` 確定項 6 條（範圍 5–8），搭配 B 的 06-01 做法為 5 條；雙向依賴只剩 `task`↔`dataset` 1 對；03 與 04 之間的呼叫與寫入都變成模組內呼叫；02-01 只需呼叫 `task` 一個模組 | `task` 有 25 張表、5 頁規格，是其他模組的 3 倍以上，service 一定要套件化；模組內 03 與 04 的界線沒有 import-linter 契約擋；規格章節與模組不一對一，`sd` 要知道 04 的頁在 `task` 裡；03 與 04 的 issue 改同一個資料夾，並行派工時衝突機率較高 | 採用，搭配 B 的 06-01 做法 |
+| 照字典九組各一個模組，加 `dashboard` 共 10 個 | 字典說這九組與模組邊界對得上 | `run`、`annotation`、`review` 之間是複合 FK 最密的地方，粗估有向模組對約 28–32 條（未逐項列） | 不採用，沒有列入比較 |
+
+02-01 的取法另外列了三種：獨立 `dashboard` 模組、端點放進資料最多的模組、前端直接組合各模組既有的端點。在 C 底下 02-01 讀的資料全在 `task`，獨立模組多 1 條放行；端點放進 `task` 為 0 條，代價是 02 章節沒有自己的模組。選的是獨立 `dashboard` 模組。
+
+### 決定
+
+後端分成五個業務模組：`account`（01-01～01-05 與 06-01）、`dashboard`（02-01，獨立模組，沒有表，只呼叫 `task` 的 service；審核員摘要呼叫 04-01 用的同一個函式，見[規格 02-01](../../specs/02-dashboard/01-dashboard.mdx#審核員任務列的摘要數字從哪裡來)）、`task`（03-01～03-03、04-01、04-02）、`dataset`（05-01～05-03）、`admin`（06-02）；`health` 不變，`audit_events` 依 [D13](#d13-稽核紀錄的-model-與寫入函式放在-core) 放 `app/core/`。
+模組清單、42 張表的逐表歸屬與預期的跨模組呼叫見 [backend-modules.mdx 的 §預定模組與資料表歸屬](../../diagrams/architecture/backend-modules.mdx#預定模組與資料表歸屬)；跨模組怎麼呼叫見 [D12](#d12-跨模組呼叫只走-service-對-service-的公開函式)。
+
+### 後果
+
+**變容易**
+
+- 03 與 04 之間的讀寫與「定稿 → 轉狀態 → 建評分工作」都在 `task` 一個模組裡，用同一個 service 的交易
+- 預期的跨模組 service 呼叫約 5 處，雙向依賴只有 `task`↔`dataset` 一對
+- 06-01 只動 `account` 的表，放進 `account` 不新增跨模組呼叫
+- 開新模組或加表時，表歸哪個模組已經定好，不必由各 change 的 `sd` 臨場決定
+
+**變困難**
+
+- `task` 模組很大，service 要拆成套件，套件裡 03 與 04 的界線只能靠審查守住
+- 規格章節與模組不一對一：04 的頁在 `task`，06 拆在 `account` 與 `admin`
+- 03 與 04 的 issue 都改 `app/modules/task/`，並行派工時容易撞在一起
+- `account` 同時有本人自助與系統管理員管理別人的端點，授權要靠 `app/core/` 的矩陣檢查區分
+- `task` 與 `dataset` 互相呼叫，要照 D12 只 import 模組的約定避開循環 import
+
+### 什麼情況要重新討論
+
+- 審查反覆發現 `task` 套件裡 03 的檔案直接使用 04 的 repository，或反過來
+- 實際加進 `backend/pyproject.toml` 的跨模組 `ignore_imports` 超過 7 條：[backend-modules.mdx](../../diagrams/architecture/backend-modules.mdx#預期的跨模組呼叫) 的 5 條確定項，加上看設計（`account` → `task`）與以後才需要（`dashboard` → `account`）的兩處；07-04 通知或 `ai_runs` 落地時新增的呼叫不算在內
+- 03 與 04 的 issue 並行派工時反覆在 `app/modules/task/` 發生衝突
+
 ## 附錄：來源對照
 
 比對的版本：個人 repo ADR-001、003、005、006、007、022、024、025、026 的現行內容（`docs/adr/` 最後異動的 commit 是 `9a5da8e`，2026-10-12）。D10 的來源也在其中，是 ADR-024 的 Dialect-Specific Paths，見下表。
@@ -608,6 +664,14 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 | D11 | 個人 repo ADR-026（Context 的兩類字串與兩種反模式、Alternatives Considered 的三個選項與拒絕理由、Decision 的兩層與前端渲染契約、Consequences 的 Easier 與 Harder）。**兩處與來源不同**：來源把後端那一層的欄位叫 `detail`，本 repo 的人讀訊息在回應外層的 `message`（見 [D5](#d5-api-路徑前綴與成功回應外層) 與 [api-agent-rules 的 A8](../rules/api-agent-rules.mdx#a8-i18n-的兩層分工)）；來源 Harder 第 1 條把「字串不得內嵌」的強制放在 `.claude/rules/backend.md`，本 repo 沒有那份 canon（決定於 [#53](https://github.com/label-suite/label-suite/issues/53)），該條由 A8 的禁止格承接。來源的 `Accept-Language` 解析細節（q-value、`*` 通配、`q=0` 拒絕、全部被拒回 `406`）已在 A8，本節不重述。**來源的 Alternatives Considered 只有選項、說明與拒絕理由三欄**，所以選項表的「好處」與「代價」兩欄是推論；**來源也沒有「什麼情況要重新討論」這一節**，該節的兩條同樣是推論 |
 | D12 | 維護者 2026-11-27 的裁定 1，記在 [#749](https://github.com/label-suite/label-suite/issues/749) 本文（只記做法與不准的兩層，沒有記選項的好處與代價；選項表只填本節「後果」已有的事實，其餘留「—」）；契約原本的寫法出自 `backend/pyproject.toml` 跨模組契約上方的註解；`ignore_imports` 的寫法與檢查見 [B12](../rules/backend-agent-rules.mdx#b12-單一入口)；寫入、雙向依賴與 import 寫法、只准 service 對 service 三項，出自維護者 2026-11-27 對 [#749 檢查點](https://github.com/label-suite/label-suite/issues/749#issuecomment-7208259754)的補充裁定（只 import 模組的理由是避免循環 import，其餘只記做法，沒有記理由）；重新討論條件改寫自 [D3](#d3-後端採模組內分層) 原本的「跨模組共用的 service 或 schema 沒有合適的位置」，去掉其中已經過去的「第一批模組合併之後」 |
 | D13 | 維護者 2026-11-27 的裁定 2，記在 [#749](https://github.com/label-suite/label-suite/issues/749) 本文（只記做法與判準，沒有列出其他選項；選項 A 的代價取自本節「後果」）；`audit_events` 的性質見 [ADR-008 的 D6](008-deployment-and-operations.mdx#d6-使用者行為記在單一只新增的-audit_events-表)；model 的載入方式出自 `backend/alembic/env.py`；重新討論條件由裁定的判準反推，來源沒有記錄 |
+| D14 | 維護者 2026-11-27 選定方案 C 並把 06-01 放 `account`，記在 [#750 的檢查點](https://github.com/label-suite/label-suite/issues/750#issuecomment-7208259366)（只記選擇，沒有記理由）；四個選項與它們的好處、代價取自 #750 的方案比較（第二則檢查點所述、給維護者看過的 artifact），比較中的數字出自[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)的分組與關聯限制、各規格頁的資料欄位與 `backend/pyproject.toml` 的 independence 契約；九組各一個模組的 28–32 條是粗估，沒有逐項列；02-01 用獨立 `dashboard` 模組是維護者另一次的選擇，記在 [#750 的檢查點](https://github.com/label-suite/label-suite/issues/750#issuecomment-7208521478)（只記選擇，沒有記理由），三種取法取自方案比較 §八 第 7 題；重新討論的第 2 條的 7 取自方案比較 C 的範圍 5–8 扣掉 06-01 的 1 條；其餘兩條由「變困難」反推，來源沒有記錄 |
+
+## 待決
+
+| # | 問題 | 卡住什麼 | 誰決定 |
+| :--- | :--- | :--- | :--- |
+| 1 | `ignore_imports` 的計算單位：一個有向模組對一條，還是呼叫端的 service 是套件時每個子模組各一條，或每個公開函式各一條 | [D14](#d14-後端業務模組的切分) 的條數估計只是下限；[B12](../rules/backend-agent-rules.mdx#b12-單一入口) 的放行要寫到多細 | 維護者 |
+| 2 | 跨模組呼叫的回傳型別若定義在被呼叫端的 `schemas`，呼叫端要 import 對方的 `schemas`，而 [D12](#d12-跨模組呼叫只走-service-對-service-的公開函式) 的放行右邊只准 `service`：型別放哪裡 | 第一個有跨模組呼叫的 change 的 service 簽章 | 維護者 |
 
 ## 決策紀錄
 
@@ -631,3 +695,5 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 | 2026-11-27 | `audit_events` 的 model 與寫入函式放在 `app/core/`，任何模組直接呼叫（[D13](#d13-稽核紀錄的-model-與寫入函式放在-core)） | — | [#749](https://github.com/label-suite/label-suite/issues/749) |
 | 2026-11-27 | [D3](#d3-後端採模組內分層) 的重新討論條件「跨模組共用的 service 或 schema 沒有合適的位置」改指向 D12、D13 | D3 原本的條件 | [#749](https://github.com/label-suite/label-suite/issues/749) |
 | 2026-11-27 | 跨模組寫入照讀取的規則，被呼叫的 service 不 commit、由發起的 service 在同一個交易 commit；允許雙向依賴，只 import 模組；只准 service 對 service，router 只呼叫自己模組的 service（[D12](#d12-跨模組呼叫只走-service-對-service-的公開函式)） | D12 原本只寫讀取，沒有限制放行的左邊 | [#749 留言](https://github.com/label-suite/label-suite/issues/749#issuecomment-7208259754) |
+| 2026-11-27 | 後端分成 `account`（含 06-01）、`dashboard`、`task`（03 加 04）、`dataset`、`admin`（06-02）五個業務模組，42 張表的歸屬寫進 backend-modules.mdx（[D14](#d14-後端業務模組的切分)） | — | [#750 留言](https://github.com/label-suite/label-suite/issues/750#issuecomment-7208259366) |
+| 2026-11-27 | 02-01 用獨立的 `dashboard` 模組，沒有表、只呼叫 `task` 的 service（[D14](#d14-後端業務模組的切分)） | 方案比較的另兩種取法：端點放進 `task`、前端直接組合既有端點 | [#750 留言](https://github.com/label-suite/label-suite/issues/750#issuecomment-7208521478) |
