@@ -53,6 +53,13 @@
   --surface-subtle: var(--color-slate-50);
   --icon-accent: var(--color-primary);
   --card-shadow: var(--shadow-card);
+
+  /*
+   * The sidebar's current-location background (sidebar-nav D14). It only
+   * points at tokens.css's existing --nav-active-bg, which tokens.css gives a
+   * separate dark value; no new token.
+   */
+  --nav-active: var(--nav-active-bg);
 }
 
 /*
@@ -110,5 +117,6 @@ html[data-theme="dark"] {
   --color-control-disabled: var(--control-disabled);
   --color-surface-subtle: var(--surface-subtle);
   --color-icon-accent: var(--icon-accent);
+  --color-nav-active: var(--nav-active);
   --shadow-card: var(--card-shadow);
 }

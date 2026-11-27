@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-const NAMESPACES = ["auth", "common", "devGallery", "systemHealth"];
+const NAMESPACES = ["appShell", "auth", "common", "devGallery", "systemHealth"];
 const LANGUAGES = ["en", "zh-TW"];
 
 /** Every locale file, read straight from disk (not through i18next). */
@@ -130,5 +130,82 @@ describe("auth locale text", () => {
   ])("has the approved text for %s (design D7, D12)", (key, zhTW, en) => {
     expect(text("zh-TW", key)).toBe(zhTW);
     expect(text("en", key)).toBe(en);
+  });
+});
+
+describe("appShell and common locale text", () => {
+  /** Reads one dotted key from a namespace's locale file, or undefined when it is absent. */
+  function text(language: string, namespace: string, key: string): unknown {
+    let node: unknown = files[`./locales/${language}/${namespace}.json`];
+    for (const part of key.split(".")) {
+      node = isRecord(node) ? node[part] : undefined;
+    }
+    return node;
+  }
+
+  it.each([
+    ["appShell", "nav.dashboard", "儀表板", "Dashboard"],
+    ["appShell", "nav.taskManagement", "任務管理", "Task Management"],
+    ["appShell", "nav.annotation", "標記作業", "Annotation"],
+    ["appShell", "nav.review", "審核作業", "Review"],
+    ["appShell", "nav.exceptionDisposition", "例外處置", "Exception Disposition"],
+    ["appShell", "nav.datasetAnalysis", "資料集分析", "Dataset Analytics"],
+    ["appShell", "nav.systemAdmin", "系統管理", "System Administration"],
+    ["appShell", "nav.profile", "個人設定", "Profile"],
+    ["appShell", "adminNav.userManagement", "使用者管理", "User Management"],
+    ["appShell", "adminNav.roleSettings", "角色設定", "Role Settings"],
+    ["appShell", "role.annotator", "標記員", "Annotator"],
+    ["appShell", "role.reviewer", "審核員", "Reviewer"],
+    ["appShell", "role.projectLeader", "專案負責人", "Project leader"],
+    ["appShell", "role.generalUser", "一般使用者", "General user"],
+    ["appShell", "shortcuts.open", "快捷鍵", "Keyboard shortcuts"],
+    ["appShell", "shortcuts.title", "目前頁面可用快捷鍵", "Available shortcuts for this page"],
+    ["appShell", "shortcuts.close", "關閉快捷鍵", "Close keyboard shortcuts"],
+    ["appShell", "shortcuts.groups.global", "全域", "Global"],
+    ["appShell", "shortcuts.actions.openOverview", "開啟快捷鍵總覽", "Open shortcut overview"],
+    [
+      "appShell",
+      "shortcuts.actions.closeDialog",
+      "關閉視窗或取消選取",
+      "Close dialog or clear selection",
+    ],
+    [
+      "appShell",
+      "blocked.annotation",
+      "你目前在任何任務都沒有標記或審核角色，所以還不能進入標記作業。",
+      "You don't have an annotation or review role in any task yet, so you can't open Annotation.",
+    ],
+    [
+      "appShell",
+      "blocked.datasetAnalysis",
+      "資料集分析需要你在這個任務擔任專案負責人或審核員。",
+      "Dataset Analytics requires you to be the project leader or a reviewer on this task.",
+    ],
+    ["appShell", "collapse.collapse", "收合側欄", "Collapse sidebar"],
+    ["appShell", "collapse.expand", "展開側欄", "Expand sidebar"],
+    ["appShell", "landmarks.mainNav", "主導覽", "Main navigation"],
+    ["appShell", "landmarks.tools", "全域工具", "Global tools"],
+    ["appShell", "landmarks.profileLink", "前往個人設定", "Go to Profile"],
+    ["appShell", "signOut", "登出", "Sign out"],
+    ["common", "brandHome", "Label Suite 首頁", "Label Suite home"],
+    ["common", "languageToggle", "{{code}}，切換語言", "{{code}}, Switch language"],
+    ["common", "theme.switchToDark", "切換為深色模式", "Switch to dark mode"],
+    ["common", "theme.switchToLight", "切換為淺色模式", "Switch to light mode"],
+  ])(
+    "has the approved text for %s %s (sidebar-nav ui-design §文案)",
+    (namespace, key, zhTW, en) => {
+      expect(text("zh-TW", namespace, key)).toBe(zhTW);
+      expect(text("en", namespace, key)).toBe(en);
+    },
+  );
+
+  it("no longer keeps the shared components' text under auth (design D10)", () => {
+    expect(text("zh-TW", "auth", "nav")).toBeUndefined();
+    expect(text("en", "auth", "nav")).toBeUndefined();
+  });
+
+  it("no longer keeps the gallery's own theme switch text (clarification Q5)", () => {
+    expect(text("zh-TW", "devGallery", "theme")).toBeUndefined();
+    expect(text("en", "devGallery", "theme")).toBeUndefined();
   });
 });

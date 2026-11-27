@@ -1,3 +1,9 @@
 {
-  "documentTitle": "Label Suite — {{page}}"
+  "documentTitle": "Label Suite — {{page}}",
+  "brandHome": "Label Suite home",
+  "languageToggle": "{{code}}, Switch language",
+  "theme": {
+    "switchToDark": "Switch to dark mode",
+    "switchToLight": "Switch to light mode"
+  }
 }

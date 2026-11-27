@@ -1,6 +1,6 @@
 /**
  * Vitest setup (design D7, D11): jest-dom matchers, the MSW server lifecycle,
- * and the i18n instance with the `common` and `auth` namespaces in zh-TW. Feature and
+ * and the i18n instance with the `common`, `auth` and `appShell` namespaces in zh-TW. Feature and
  * page namespaces are registered by their own entry modules when a test
  * imports them, the same way as at runtime.
  */

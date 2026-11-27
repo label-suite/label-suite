@@ -2,8 +2,9 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
-import { BrandMark } from "./brand-mark";
-import { LanguageToggle } from "./language-toggle";
+import { BrandMark } from "@/components/brand-mark";
+import { LanguageToggle } from "@/components/language-toggle";
+
 import { guardLink } from "./guard-link";
 
 /** Props of {@link AuthLayout}. */
@@ -22,14 +23,14 @@ export interface AuthLayoutProps {
  * and the language switch, and a main area that centres one card. No sidebar.
  */
 export function AuthLayout({ children, frozen = false, onLanguageChange }: AuthLayoutProps) {
-  const { t } = useTranslation("auth");
+  const { t } = useTranslation("common");
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <header className="sticky top-0 z-(--z-sticky) flex h-14 items-center justify-between border-b border-border bg-card px-(--space-md) md:h-16 md:px-(--space-xl)">
         <Link
           to="/"
-          aria-label={t("nav.brandHome")}
+          aria-label={t("brandHome")}
           {...guardLink(frozen)}
           className="flex items-center gap-(--space-sm) rounded-(--radius-md) outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
         >

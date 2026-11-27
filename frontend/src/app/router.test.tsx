@@ -365,10 +365,10 @@ describe("createAppRouter in development mode", () => {
     expectNoLanguageSwitch();
   });
 
-  it("returns to light when leaving the gallery for the health page", async () => {
+  it("離開展示頁不還原外觀: stays dark on the health page, which has no switch", async () => {
     const user = userEvent.setup();
     const current = openAt("/dev/gallery");
-    await user.click(await screen.findByRole("button", { name: "深色" }));
+    await user.click(await screen.findByRole("button", { name: "切換為深色模式" }));
     expect(document.documentElement.dataset.theme).toBe("dark");
 
     await act(async () => {
@@ -376,7 +376,8 @@ describe("createAppRouter in development mode", () => {
     });
 
     expect(await screen.findByRole("heading", { level: 1 })).toHaveTextContent("系統健康檢查");
-    expect(document.documentElement.dataset.theme).toBe("light");
+    expect(document.documentElement.dataset.theme).toBe("dark");
+    expect(screen.queryByRole("button", { name: /切換為(深|淺)色模式/ })).toBeNull();
   });
 });
 

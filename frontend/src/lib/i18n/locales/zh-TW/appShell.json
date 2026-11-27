@@ -1,0 +1,48 @@
+{
+  "nav": {
+    "dashboard": "儀表板",
+    "taskManagement": "任務管理",
+    "annotation": "標記作業",
+    "review": "審核作業",
+    "exceptionDisposition": "例外處置",
+    "datasetAnalysis": "資料集分析",
+    "systemAdmin": "系統管理",
+    "profile": "個人設定"
+  },
+  "adminNav": {
+    "userManagement": "使用者管理",
+    "roleSettings": "角色設定"
+  },
+  "role": {
+    "annotator": "標記員",
+    "reviewer": "審核員",
+    "projectLeader": "專案負責人",
+    "generalUser": "一般使用者"
+  },
+  "shortcuts": {
+    "open": "快捷鍵",
+    "title": "目前頁面可用快捷鍵",
+    "close": "關閉快捷鍵",
+    "groups": {
+      "global": "全域"
+    },
+    "actions": {
+      "openOverview": "開啟快捷鍵總覽",
+      "closeDialog": "關閉視窗或取消選取"
+    }
+  },
+  "blocked": {
+    "annotation": "你目前在任何任務都沒有標記或審核角色，所以還不能進入標記作業。",
+    "datasetAnalysis": "資料集分析需要你在這個任務擔任專案負責人或審核員。"
+  },
+  "collapse": {
+    "collapse": "收合側欄",
+    "expand": "展開側欄"
+  },
+  "landmarks": {
+    "mainNav": "主導覽",
+    "tools": "全域工具",
+    "profileLink": "前往個人設定"
+  },
+  "signOut": "登出"
+}

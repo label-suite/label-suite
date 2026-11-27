@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import enAppShell from "./locales/en/appShell.json";
+
 type I18nModule = typeof import("./index");
 
 let mod: I18nModule;
@@ -52,17 +54,38 @@ describe("initI18n", () => {
     expect(mod.getCurrentLanguage()).toBe("zh-TW");
   });
 
-  it("loads common and auth, and no development page namespace", () => {
+  it("loads common, auth and appShell, and no development page namespace", () => {
     const i18n = mod.initI18n();
 
     expect(i18n.t("documentTitle", { ns: "common", page: "X" })).toBe("Label Suite — X");
+    // appShell is loaded at start-up, so its text ships in the production bundle.
+    expect(i18n.t("role.generalUser", { ns: "appShell" })).toBe("一般使用者");
     for (const language of ["zh-TW", "en"]) {
       expect(i18n.hasResourceBundle(language, "common")).toBe(true);
       expect(i18n.hasResourceBundle(language, "auth")).toBe(true);
+      expect(i18n.hasResourceBundle(language, "appShell")).toBe(true);
       expect(i18n.hasResourceBundle(language, "systemHealth")).toBe(false);
       expect(i18n.hasResourceBundle(language, "devGallery")).toBe(false);
     }
     expect(i18n.exists("probe", { ns: "systemHealth" })).toBe(false);
+  });
+});
+
+describe("a key missing from the current language (sidebar-nav P1, design D10)", () => {
+  it("shows the Traditional Chinese text, never the key name", async () => {
+    const i18n = mod.initI18n();
+    // Simulate an English locale file without the 任務管理 nav item.
+    const nav = Object.fromEntries(
+      Object.entries(enAppShell.nav).filter(([key]) => key !== "taskManagement"),
+    );
+    i18n.removeResourceBundle("en", "appShell");
+    i18n.addResourceBundle("en", "appShell", { ...enAppShell, nav });
+
+    await mod.changeInterfaceLanguage("en");
+
+    expect(i18n.t("nav.taskManagement", { ns: "appShell" })).toBe("任務管理");
+    expect(i18n.t("nav.dashboard", { ns: "appShell" })).toBe("Dashboard");
+    expect(i18n.t("nav.profile", { ns: "appShell" })).toBe("Profile");
   });
 });
 

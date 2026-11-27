@@ -1,8 +1,7 @@
 import type { ReactNode } from "react";
 
+import { BrandMark } from "@/components/brand-mark";
 import { Card } from "@/components/ui/card";
-
-import { BrandMark } from "./brand-mark";
 
 /** Props of {@link AuthCard}. */
 export interface AuthCardProps {

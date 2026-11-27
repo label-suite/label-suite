@@ -4,7 +4,7 @@
  * a value added to a primitive must be added here too; the page renders from
  * these records, and the completeness test compares their keys with the
  * arrays at run time. The values below without a primitive array (Button
- * states, Input states, Card parts, the Skeleton and Empty samples) are
+ * states, Input states, Card parts, the Dialog, Skeleton and Empty samples) are
  * declared by the catalog itself.
  */
 import type { AlertVariant } from "@/components/ui/alert";
@@ -28,6 +28,8 @@ export const inputStateValues = ["default", "invalid", "disabled"] as const;
 export const labelSampleValues = ["field"] as const;
 /** The Card sample's parts; the section count is these names joined. */
 export const cardPartValues = ["header", "content", "footer"] as const;
+/** The Dialog sample: one button that opens a sample dialog. */
+export const dialogSampleValues = ["basic"] as const;
 /** The Skeleton sample: two bars. */
 export const skeletonSampleValues = ["lines"] as const;
 /** The Empty sample: the panel-sized empty state. */
@@ -37,6 +39,7 @@ export type ButtonState = (typeof buttonStateValues)[number];
 export type InputState = (typeof inputStateValues)[number];
 export type LabelSample = (typeof labelSampleValues)[number];
 export type CardPart = (typeof cardPartValues)[number];
+export type DialogSample = (typeof dialogSampleValues)[number];
 export type SkeletonSample = (typeof skeletonSampleValues)[number];
 export type EmptySample = (typeof emptySampleValues)[number];
 
@@ -87,6 +90,9 @@ export const variantCatalog = {
   separator: {
     orientation: { horizontal: {}, vertical: {} } satisfies Record<SeparatorOrientation, Demo>,
   },
+  dialog: {
+    sample: { basic: {} } satisfies Record<DialogSample, Demo>,
+  },
   skeleton: {
     sample: { lines: {} } satisfies Record<SkeletonSample, Demo>,
   },
@@ -109,7 +115,7 @@ export function galleryItem(component: string, axis: string, value: string): str
   return `${component}:${axis}:${value}`;
 }
 
-/** The nine sections, in page order; ids are the anchors the nav links to. */
+/** The ten sections, in page order; ids are the anchors the nav links to. */
 export const gallerySections = [
   "button",
   "input",
@@ -118,6 +124,7 @@ export const gallerySections = [
   "alert",
   "card",
   "separator",
+  "dialog",
   "states",
   "tokens",
 ] as const;

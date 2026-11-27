@@ -1,0 +1,48 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "taskManagement": "Task Management",
+    "annotation": "Annotation",
+    "review": "Review",
+    "exceptionDisposition": "Exception Disposition",
+    "datasetAnalysis": "Dataset Analytics",
+    "systemAdmin": "System Administration",
+    "profile": "Profile"
+  },
+  "adminNav": {
+    "userManagement": "User Management",
+    "roleSettings": "Role Settings"
+  },
+  "role": {
+    "annotator": "Annotator",
+    "reviewer": "Reviewer",
+    "projectLeader": "Project leader",
+    "generalUser": "General user"
+  },
+  "shortcuts": {
+    "open": "Keyboard shortcuts",
+    "title": "Available shortcuts for this page",
+    "close": "Close keyboard shortcuts",
+    "groups": {
+      "global": "Global"
+    },
+    "actions": {
+      "openOverview": "Open shortcut overview",
+      "closeDialog": "Close dialog or clear selection"
+    }
+  },
+  "blocked": {
+    "annotation": "You don't have an annotation or review role in any task yet, so you can't open Annotation.",
+    "datasetAnalysis": "Dataset Analytics requires you to be the project leader or a reviewer on this task."
+  },
+  "collapse": {
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar"
+  },
+  "landmarks": {
+    "mainNav": "Main navigation",
+    "tools": "Global tools",
+    "profileLink": "Go to Profile"
+  },
+  "signOut": "Sign out"
+}

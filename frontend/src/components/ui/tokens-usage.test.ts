@@ -20,12 +20,16 @@ const COLOUR_VALUE = /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|
 const PALETTE_CLASS =
   /\b(?:bg|text|border|ring|outline|fill|stroke|shadow|from|via|to|divide|placeholder|decoration|accent|caret)-(?:white|black|(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d{2,3})\b/;
 
-/** The primitives of system-design.md §目錄結構, plus label and separator (login-auth-guard 6.3). */
+/**
+ * The primitives of system-design.md §目錄結構, plus label and separator
+ * (login-auth-guard 6.3) and dialog (sidebar-nav D9).
+ */
 const PRIMITIVES = [
   "./alert.tsx",
   "./badge.tsx",
   "./button.tsx",
   "./card.tsx",
+  "./dialog.tsx",
   "./empty.tsx",
   "./input.tsx",
   "./label.tsx",
@@ -38,7 +42,7 @@ describe("components/ui uses only semantic variables", () => {
     .filter((path) => !path.endsWith(".test.tsx"))
     .sort();
 
-  it("holds exactly the nine primitives", () => {
+  it("holds exactly the ten primitives", () => {
     expect(primitives).toEqual(PRIMITIVES);
   });
 
