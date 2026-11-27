@@ -17,7 +17,7 @@
 #### Scenario: 新原語各有一個區塊
 
 - **WHEN** 渲染元件展示頁
-- **THEN** 頁面有 Label、Separator、Dialog 與「無權限與找不到」四個區塊，區塊順序依序為 Button、Input、Label、Badge、Alert、Card、Separator、Dialog、Skeleton · Empty、無權限與找不到、Token 對照
+- **THEN** 頁面有 Label、Separator、Dialog 三個原語區塊，以及「無權限與找不到」區塊，區塊順序依序為 Button、Input、Label、Badge、Alert、Card、Separator、Dialog、Skeleton · Empty、無權限與找不到、Token 對照
 - **AND** 按下 Dialog 區塊的開啟按鈕後出現一個對話框，按 `Esc` 關閉後焦點回到該按鈕
 
 #### Scenario: 元件展示頁的完整性測試擋下漏寫的variant

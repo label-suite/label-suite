@@ -52,7 +52,7 @@
 `BlockedIdentifier` 只有一個 prop `value: string`。
 
 - **恰一個返回操作**：元件不收 `children`、不收第二個動作或重試的 prop，只用 `backTo` 與 `backLabel` 畫一個連結，型別本身就擋住第二個操作（07-03 §畫面的組成 第 5、6 條）
-- **取代內容區**由呼叫端負責：元件是一塊佔滿內容欄寬度的區塊，呼叫端在判定拒絕或找不到時「改畫它、不畫原本的內容」。Scenario「反向：不得用空白內容代替找不到」在 unit 測試以一個測試檔內的示意頁面驗（同一個內容區在兩種狀態間切換），不新增產品頁
+- **取代內容區**由呼叫端負責：元件是一塊佔滿內容欄寬度的區塊，呼叫端在判定拒絕或找不到時「改畫它、不畫原本的內容」。Scenario「反向：不得用空白內容代替找不到」在 unit 測試以一個測試檔內的示意頁面驗（同一個內容區在兩種狀態間切換），不新增產品頁。這個測試檔同時 import `BlockedScreen` 與 `classifyRejection`，而 `components/` 依 `boundaries/dependencies` 只能 import `lib/`，所以放在 `frontend/src/pages/dev-gallery/blocked-flow.test.tsx`（`pages/` 可以 import `components/`、`api/`、`lib/`）
 - 替代方案：元件收 `identifier` 與文案鍵、自己組說明 → 元件就有了自己的文案與 i18n 依賴，違反 07-03 §畫面的組成 第一則註與 Q3；收 `back: { to, label }` 物件 → 與兩個字串等價，平的 props 在呼叫端與測試都比較好讀
 
 ### D3. 拒絕回應的分類叫 `classifyRejection`
@@ -106,6 +106,8 @@
 照 `ui-design.md` §元件樹 › 元件展示頁的一節（Q8）：
 
 - `gallerySections` 在 `states` 與 `tokens` 之間加 `blocked`，目錄與區塊順序跟著它走；樣本清單 `blockedSampleValues = ["notFound", "denied", "longIdentifier"] as const`，區塊標頭計數由它算出
+- 區塊畫在新檔 `frontend/src/pages/dev-gallery/blocked-section.tsx` 的 `BlockedSection`，`DevGalleryPage` 只多一行 `<BlockedSection />`：`DevGalleryPage` 在 `frontend/eslint.config.js` 的 `NAMED_EXEMPTIONS` 有 180 行的 `max-lines-per-function` 上限，目前已 177 行。檔名字尾用 `-section`，不用 `-panel`、`-state`、`-card`，因為那幾個字尾會被 `check-component-reuse.mjs` 規則 3 對上 `design/system/components/` 的規格
+- 樣本的返回連結是 React Router 的 `Link`，展示頁從此需要 Router；既有直接 `render(<DevGalleryPage />)` 的測試（`completeness.test.tsx`、`dev-gallery-page.test.tsx`、`gallery-nav.test.tsx`）改用共用的測試 helper `renderGallery()`，以 `MemoryRouter` 包住；完整性測試的 `DECLARED` 加 `blocked-screen` 的 `kind`
 - 每個樣本外包一層帶 `data-gallery-item={galleryItem("blocked-screen", "kind", value)}` 的元素；樣本傳 `headingLevel={2}`、`focusOnMount={false}`、`backTo="/dashboard/dashboard"`
 - **為什麼用展示頁當 e2e 的入口**：本單沒有任何產品頁面畫得出這兩種畫面（Q1），而為了測試另開一條產品路由會多出一個使用者看得到、規格沒有的頁面（Q1 的理由）；展示頁只在開發模式存在、不經守門、不送任何後端請求（`component-gallery`「展示樣本不含測試集答案」），既有的 `e2e/system-health/dev-pages.spec.ts` 已在預設模式開它。換行與水平捲軸這類 jsdom 量不到的行為只能在真瀏覽器驗
 - e2e 檔放 `e2e/system-health/dev-gallery.spec.ts`，與既有開發頁旅程同一個目錄，符合 `e2e:static` 的 `<module>/<page>.spec.ts` 位置規則
