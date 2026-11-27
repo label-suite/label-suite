@@ -35,7 +35,7 @@ label-suite/
 │  ├─ tests/                      pytest：unit 與 integration
 │  └─ bruno/                      可選的手動工具，不是 pre-PR 關卡
 ├─ frontend/
-│  ├─ src/app/                    router、provider、全站 layout（依 scaffold 的四層，見 frontend-agent-rules F1）
+│  ├─ src/app/                    router、provider、全站 layout（依 scaffold 的四層）
 │  ├─ src/{pages,features}/       pages 組頁面、features 放功能邏輯
 │  ├─ src/components/ui/          shadcn 元件，不知道業務
 │  ├─ src/api/generated/          Orval 產物，不手改
@@ -51,6 +51,8 @@ label-suite/
 ├─ docker-compose.yml             Lite 層，預設 SQLite
 └─ docker-compose.prod.yml        PostgreSQL 全套
 ```
+
+`frontend/src/` 的四層與允許的 import 見 [frontend-agent-rules.mdx 的 F1](rules/frontend-agent-rules.mdx#f1-分層與允許的-import)。
 :::
 
 ## 容器視圖（C4 第二層）

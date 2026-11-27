@@ -9,17 +9,17 @@ updatedAt: '2026-11-27'
 
 # 資料欄位盤點總帳與追溯矩陣
 
-:badge[歷史快照，不再更新]{variant="warning"} :badge[盤點，非資料表設計]{variant="warning"}
+:badge[盤點，非資料表設計]{variant="warning"}
 
 :::warning{title="這是歷史快照，不再更新"}
-本頁是 [#234](https://github.com/label-suite/label-suite/issues/234) 當時的欄位盤點，已經凍結。**表與欄以[候選資料表字典](./data-table-dictionary.mdx)為準**；字典目前收 42 張候選表、370 欄。
+本頁是 #234 當時的欄位盤點，已經凍結。**表與欄以[候選資料表字典](./data-table-dictionary.mdx)為準**，現況見字典。
 下文的數字、狀態與「本頁是字典上游」的說法都不再跟著規格與字典同步，有些在凍結前就已落後。保留本頁是因為規格頁、字典與 `pnpm check:er` 仍引用它。
 :::
 
 > 這一份是 [#233](https://github.com/label-suite/label-suite/issues/233) 三步的**第一步**：先確定哪些資料需要保存，再設計表。
 > **它不是資料表設計。** 候選表字典與關聯限制歸 [#235](https://github.com/label-suite/label-suite/issues/235)，ER 外掛呈現歸 [#236](https://github.com/label-suite/label-suite/issues/236)。
 >
-> 第二步與第三步都已經交付：[候選資料表字典與關聯限制](./data-table-dictionary.mdx)，以及可搜尋、可聚焦關聯的 **[候選資料表 ER 圖](/view/diagrams/architecture/database-schema.er)**（37 張表、329 欄、38 個單欄 FK，是 #236 交付時的數字；現況見字典）。ER 圖是從字典產生的，不是另一份獨立維護的資料；**本頁的分類與去留才是它的上游**。
+> 第二步與第三步都已經交付：[候選資料表字典與關聯限制](./data-table-dictionary.mdx)，以及可搜尋、可聚焦關聯的 **[候選資料表 ER 圖](/view/diagrams/architecture/database-schema.er)**（37 張表、329 欄、38 個單欄 FK，是當時的數字；現況見字典）。ER 圖是從字典產生的，不是另一份獨立維護的資料；**本頁的分類與去留才是它的上游**。
 > 這裡**沒有 DDL、沒有 ORM、沒有 migration**，也沒有任何已部署的資料結構。
 
 ## 這份文件的邊界
