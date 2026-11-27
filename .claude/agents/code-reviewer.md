@@ -21,7 +21,7 @@ model: opus
 
 在乾淨的工作區跑該 change 定義的檢查（後端 `uv run`、前端 `pnpm`），以及重新匯出 `openapi.json`，再看 `git status`：有差異代表契約產物沒更新，列為必須修正，並用 `git restore` 還原剛產生的檔案、不留下改動。工具能抓到的問題直接列為必須修正，不必逐條人工找。
 
-動到 `docs/` 或 `scripts/` 時另外跑 `pnpm check:specs` 與 `pnpm test:scripts`。動到 model 或 Alembic migration 時另外跑 `pnpm check:er`。
+動到 `frontend/` 或 `design/system/components/` 時另外跑 `node scripts/check-component-reuse.mjs`。動到 `docs/` 或 `scripts/` 時另外跑 `pnpm check:specs` 與 `pnpm test:scripts`。動到 model 或 Alembic migration 時另外跑 `pnpm check:er`。
 
 ## 審查清單
 
@@ -54,6 +54,7 @@ model: opus
 - [ ] 只透過**單一 HTTP 邊界**呼叫 API；沒有手寫 `fetch`／`axios`、沒有手寫 API 型別、生成產物沒被手改
 - [ ] **token 完全不經前端**：沒有儲存或讀取 token、沒有寫入 `localStorage`／`sessionStorage`、權限判斷不來自 UI state
 - [ ] 元件放對層，與 `ui-design.md` 一致；下層沒有反向 import 上層、沒有循環依賴
+- [ ] **新增的元件沒有重做對照表裡已實作的元件**（`design/system/components/<元件>.md` 的「程式實作」），**共用元件放在 `components/`**；新增或搬移的元件已更新「程式實作」
 - [ ] 每個資料區塊處理 loading／error／empty／**無權限**；遮蔽欄位的顯示符合 `ui-design.md`，**不是空白或「無資料」**
 - [ ] 只用 `tokens.css` 的語意 token，**沒有寫死色碼、inline color 或原色 class**
 - [ ] 元件庫只用 shadcn/ui（元件在 `components/ui/`）、型別與 client 只來自 Orval 產物（`frontend/src/api/generated/`，未手改）；沒有其他元件庫或生成工具
