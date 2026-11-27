@@ -24,9 +24,9 @@
 
 ### Requirement: 展示頁列出每個宣告的項目
 
-元件展示頁 SHALL 依序以 Button、Input、Label、Badge、Alert、Card、Separator、Skeleton · Empty、Token 對照九個區塊展示；原語宣告的每一個 variant、尺寸，以及 Button 的 `disabled`、`loading` 與 Input 的預設、驗證錯誤、停用狀態，各在頁面上出現一次，且可被測試辨識為「元件、維度、值」。每個區塊標頭的計數 SHALL 由宣告的集合算出。`components/ui/` 的每一個原語都 MUST 出現在展示頁。
+元件展示頁 SHALL 依序以 Button、Input、Label、Badge、Alert、Card、Separator、Dialog、Skeleton · Empty、Token 對照十個區塊展示；原語宣告的每一個 variant、尺寸，以及 Button 的 `disabled`、`loading` 與 Input 的預設、驗證錯誤、停用狀態，各在頁面上出現一次，且可被測試辨識為「元件、維度、值」。Dialog 區塊有一個開啟範例對話框的按鈕。每個區塊標頭的計數 SHALL 由宣告的集合算出。`components/ui/` 的每一個原語都 MUST 出現在展示頁。
 
-來源：ADR-005 D3；frontend-agent-rules F5；clarification Q9、Q19（UI-4）；畫面 artifact 第 4 版 Gallery.dc.html；login-auth-guard PL7、`ui-design.md` §元件樹 › 登入頁。
+來源：ADR-005 D3；frontend-agent-rules F5；clarification Q9、Q19（UI-4）；畫面 artifact 第 4 版 Gallery.dc.html；login-auth-guard PL7、`ui-design.md` §元件樹 › 登入頁；sidebar-nav `ui-design.md` §元件樹（快捷鍵總覽的對話框原語）。
 
 #### Scenario: 每個宣告的 variant 都在頁面上
 
@@ -37,7 +37,8 @@
 #### Scenario: 新原語各有一個區塊
 
 - **WHEN** 渲染元件展示頁
-- **THEN** 頁面有 Label 與 Separator 兩個區塊，區塊順序依序為 Button、Input、Label、Badge、Alert、Card、Separator、Skeleton · Empty、Token 對照
+- **THEN** 頁面有 Label、Separator 與 Dialog 三個區塊，區塊順序依序為 Button、Input、Label、Badge、Alert、Card、Separator、Dialog、Skeleton · Empty、Token 對照
+- **AND** 按下 Dialog 區塊的開啟按鈕後出現一個對話框，按 `Esc` 關閉後焦點回到該按鈕
 
 #### Scenario: 元件展示頁的完整性測試擋下漏寫的variant
 
@@ -58,33 +59,6 @@
 
 - **WHEN** 渲染元件展示頁
 - **THEN** 頁面上沒有「完整性測試擋下漏寫的 variant（示意）」區塊
-
-### Requirement: 展示頁切換淺色與深色
-
-元件展示頁的標題列 SHALL 提供「淺色／深色」切換：兩顆按鈕位於 `role="group"`、名稱為「主題」的群組中，各以 `aria-pressed` 表示是否選中；選擇只設定 `<html>` 的 `data-theme`（`light` 或 `dark`），預設為淺色，MUST NOT 寫入任何瀏覽器儲存，重新整理後回到淺色；離開元件展示頁時 SHALL 把 `data-theme` 還原為 `light`，深色不帶到其他頁。健康檢查頁不提供此切換。
-
-來源：ADR-005 D4；frontend-agent-rules F4、F9；clarification Q13；畫面 artifact 第 4 版 Gallery.dc.html §頁首標題列。
-
-#### Scenario: 元件展示頁切換淺色與深色
-
-- **WHEN** 開啟元件展示頁，按下「深色」
-- **THEN** `<html>` 的 `data-theme` 為 `dark`，「深色」按鈕的 `aria-pressed` 為 `true`、「淺色」為 `false`
-- **AND** `localStorage` 與 `sessionStorage` 都沒有新增項目
-
-#### Scenario: 預設為淺色且重新整理後回到淺色
-
-- **WHEN** 開啟元件展示頁、切到深色後重新整理頁面
-- **THEN** `<html>` 的 `data-theme` 為 `light`，「淺色」按鈕的 `aria-pressed` 為 `true`
-
-#### Scenario: 離開展示頁時回到淺色
-
-- **WHEN** 在元件展示頁切到深色後，於同一個分頁導向 `/dev/health`
-- **THEN** `<html>` 的 `data-theme` 為 `light`
-
-#### Scenario: 鍵盤可以切換主題
-
-- **WHEN** 以 Tab 聚焦到「深色」按鈕並按 Space
-- **THEN** `<html>` 的 `data-theme` 為 `dark`
 
 ### Requirement: Token 對照與對照層樣式檔一致
 
@@ -140,3 +114,30 @@
 
 - **WHEN** 開啟元件展示頁並在各區塊間切換、切換主題
 - **THEN** 整個過程沒有任何對後端的請求
+
+### Requirement: 展示頁的外觀切換沿用外觀偏好
+
+元件展示頁的標題列 SHALL 提供與側欄同一個外觀切換控制項：一顆按鈕、同一時間只指向一個方向，點擊在淺色與深色之間切換，並寫入這台瀏覽器的外觀偏好（與側欄、登入頁讀寫同一份）。開啟展示頁時依外觀偏好呈現，重新整理後維持；離開展示頁 MUST NOT 還原外觀。健康檢查頁不提供此切換，但照外觀偏好呈現。
+
+來源：ADR-005 D4；frontend-agent-rules F4、F9；畫面 artifact 第 4 版 Gallery.dc.html §頁首標題列；規格 07-01 §外觀切換 第 4、5 條、§已確認決議 Q21；clarification Q5。
+
+#### Scenario: 元件展示頁切換淺色與深色
+
+- **WHEN** 外觀偏好為淺色，開啟元件展示頁，按下外觀切換
+- **THEN** `<html>` 的 `data-theme` 為 `dark`，外觀切換的可存取名稱為「切換為淺色模式」，標題列只有一個外觀切換控制項
+- **AND** 這台瀏覽器的外觀偏好記為深色
+
+#### Scenario: 重新整理後沿用外觀偏好
+
+- **WHEN** 在元件展示頁切到深色後重新整理頁面
+- **THEN** `<html>` 的 `data-theme` 為 `dark`，外觀切換的可存取名稱為「切換為淺色模式」
+
+#### Scenario: 離開展示頁不還原外觀
+
+- **WHEN** 在元件展示頁切到深色後，於同一個分頁導向 `/dev/health`
+- **THEN** `<html>` 的 `data-theme` 為 `dark`，健康檢查頁沒有外觀切換控制項
+
+#### Scenario: 鍵盤可以切換主題
+
+- **WHEN** 外觀偏好為淺色，以 Tab 聚焦到外觀切換並按 Space
+- **THEN** `<html>` 的 `data-theme` 為 `dark`
