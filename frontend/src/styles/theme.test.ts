@@ -96,6 +96,8 @@ const EXPECTED_LIGHT_MAPPING: Record<string, string> = {
   "--surface-subtle": "var(--color-slate-50)",
   "--icon-accent": "var(--color-primary)",
   "--card-shadow": "var(--shadow-card)",
+  // The sidebar's current-location background (sidebar-nav ui-design §元件與 design token, D14).
+  "--nav-active": "var(--nav-active-bg)",
 };
 
 /**
@@ -216,6 +218,7 @@ describe("index.css, the Tailwind entry", () => {
 
   it("still generates the semantic utilities of the mapping layer", async () => {
     const css = await buildUtilities([
+      "bg-nav-active",
       "bg-primary",
       "text-muted-foreground",
       "border-input",
@@ -231,6 +234,8 @@ describe("index.css, the Tailwind entry", () => {
     expect(css).toContain("var(--surface-subtle)");
     expect(css).toContain(".text-icon-accent");
     expect(css).toContain("var(--icon-accent)");
+    expect(css).toContain(".bg-nav-active");
+    expect(css).toContain("var(--nav-active)");
   });
 
   it("imports Tailwind and the mapping layer", () => {

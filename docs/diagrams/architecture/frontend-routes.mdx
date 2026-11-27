@@ -30,19 +30,23 @@ change 的 `ui-design.md` 仍然寫這次頁面的元件樹、資料來源、畫
 
 ## 路由
 
-登入頁、Google 回調、暫時落點與 `/` 在開發模式與正式建置都註冊，經守門判定後才顯示；兩個開發用頁面只在開發模式註冊，不經守門。
+登入頁、Google 回調、暫時落點與 `/` 在開發模式與正式建置都註冊，經守門判定後才顯示；兩個開發用頁面只在開發模式註冊，不經守門。登入後的路由都包在登入後外殼這個 layout 裡，側欄畫在這一層（見下方表格後的說明）。
 
 | 路由 | 頁面元件 | 註冊於 | 對應的規格 | Logic Flow 節點 |
 | :--- | :--- | :--- | :--- | :--- |
 | `/account/login` | `LoginPage`（`pages/account-login/`）；包在 `PublicOnlyRoute` 裡，已登入時以取代歷史紀錄的方式導向落點 | 開發模式與正式建置 | 規格 01-01 §登入頁、§用 Email 與密碼登入、§用 Google 帳號登入、§語言切換 | 帳號模組 P1；D1 是 → X5 |
 | `/account/google/callback` | `GoogleCallbackPage`（`pages/google-callback/`）：沒有自己的畫面，只畫頁面底色；把 Google 帶回來的 `code`、`state` 交給後端一次後導走；包在 `PublicOnlyRoute` 裡 | 開發模式與正式建置 | 規格 01-01 §用 Google 帳號登入、E1、E2 | 帳號模組 X1 → D3；D3 是 → X5，D3 否 → P1 |
-| `/dashboard/dashboard` | `DashboardPlaceholderPage`（`pages/dashboard-placeholder/`）：02-01 完成前的暫時落點，沿用登入頁的頁首與卡片、沒有側欄；顯示「你已登入」、名字與 Email、系統角色與「登出」鈕。包在 `RequireAuthRoute` 裡。02-01 外殼完成時換成儀表板，路徑不變 | 開發模式與正式建置；需要登入 | 規格 02-01（之後取代）；規格 01-05 §從這一台登出 | 帳號模組 X5；登出 X5 → X7 → P1 |
+| `/dashboard/dashboard` | `DashboardPlaceholderPage`（`pages/dashboard-placeholder/`）：02-01 完成前的暫時落點，畫在登入後外殼裡；卡片顯示「你已登入」、名字與 Email、系統角色，沒有自己的登出鈕，登出由側欄的登出控制項做。被側欄擋下帶回來時，卡片上方顯示一次擋下說明。02-01 完成時換成儀表板，路徑不變 | 開發模式與正式建置；需要登入 | 規格 02-01（之後取代）；規格 07-01 §進入模組的條件 第 3 條；規格 01-05 §從這一台登出 | 帳號模組 X5；共用模組 P1、X1；登出 X5 → X7 → P1 |
 | `/` | `RootRedirect`：不顯示內容，依登入狀態以取代歷史紀錄的方式導向：已登入 → 落點，未登入 → `/account/login` | 開發模式與正式建置 | 規格 01-01 §登入頁 第 9 條、Q3 | 帳號模組 S → D1 |
 | 其他路徑 | 以取代歷史紀錄的方式導向 `/`，再依登入狀態導向；規格 07-03 的找不到頁完成時取代這一條 | 開發模式與正式建置 | 規格 07-03（之後取代） | 無 |
 | `/dev/health` | `DevHealthPage`（`pages/dev-health/`） | 開發模式 | 無 `docs/specs/` 規格；行為見 `openspec/specs/dev-health-page/` | 無 |
 | `/dev/gallery` | `DevGalleryPage`（`pages/dev-gallery/`） | 開發模式 | 無 `docs/specs/` 規格；行為見 `openspec/specs/component-gallery/` | 無 |
 
-路由表在 `src/app/router.tsx` 的 `createAppRouter()`：兩個開發用頁面以 lazy route 放在 `import.meta.env.DEV` 分支，正式建置時這個分支連同兩頁的程式與文案一起被移除。路徑常數 `LOGIN_PATH`、`GOOGLE_CALLBACK_PATH`、`LANDING_PATH` 與三個守門元件都從 `features/auth` 匯出。路徑沿用 prototype 的頁面識別（`docs/prototype/navigation.mdx`），讓 02-01 外殼只換頁面元件、不改路由與導向。
+**登入後外殼**：`RequireAuthRoute` 底下包一層沒有自己 path 的 layout route，元素是 `AppShellLayout`（`src/app/`），它向 `features/auth` 取登入者與登出、向 `features/app-shell` 取導覽項模型與收合狀態，交給 `components/app-shell/` 的 `AppShell` 畫側欄，頁面畫在它的 `<Outlet>`。每一條包在外殼裡的路由都在 route 的 `handle` 宣告自己屬於哪個導覽項（`navKey`）；系統管理的頁另外宣告次選單項（`adminSubKey`）與角色標示覆寫（`roleIndicator`）。外殼讀最深一層的宣告標出目前位置，缺宣告時測試失敗。
+
+側欄的導覽項一律連到最終路徑（規格 07-shared 模組索引 §Logic Flow 的 X1～X8）；那些頁還沒註冊時，照「其他路徑」那一列經 `/` 回到暫時落點。「標記作業」的連結帶入口標記 `entry=nav`。擋下說明以 router 的 navigation state 帶到落點，不進網址。
+
+路由表在 `src/app/router.tsx` 的 `createAppRouter()`：每一條路由（含兩個開發用頁面與其他路徑）都包在一層沒有 path 的根 layout `AppRoot`（`src/app/app-root.tsx`）底下，它只畫 `<Outlet>`，換頁時不卸載，供外殼判斷要不要重查登入狀態（見 [§登入狀態與守門](#登入狀態與守門)）。兩個開發用頁面以 lazy route 放在 `import.meta.env.DEV` 分支，正式建置時這個分支連同兩頁的程式與文案一起被移除。路徑常數 `LOGIN_PATH`、`GOOGLE_CALLBACK_PATH`、`LANDING_PATH` 與三個守門元件都從 `features/auth` 匯出。路徑沿用 prototype 的頁面識別（`docs/prototype/navigation.mdx`），讓 02-01 外殼只換頁面元件、不改路由與導向。
 
 ## 頁面與功能元件
 
@@ -52,9 +56,10 @@ change 的 `ui-design.md` 仍然寫這次頁面的元件樹、資料來源、畫
 | :--- | :--- | :--- | :--- |
 | `DevHealthPage` | `HealthStatusPanel`（`features/system-health/`） | `useGetHealth`（`getHealth`） | `systemHealth` |
 | `DevGalleryPage` | 無；直接列出 `components/ui/` 的原語 | 無，不送任何請求 | `devGallery` |
-| `LoginPage` | `LoginView`（`features/auth/`）：`AuthLayout`（頁首與 `LanguageToggle`）、`AuthCard`、`FormErrorBanner`、`GoogleSignIn`、`LoginForm`（含 `PasswordInput`）；送出與 Google 開始由 `useLoginController` 處理 | `useGetAuthOptions`（`getAuthOptions`）；請求函式 `createSession`、`getGoogleAuthorization`；登入成功後重查 `getCurrentSession` | `auth` |
+| `LoginPage` | `LoginView`（`features/auth/`）：`AuthLayout`（頁首；品牌標誌 `BrandMark` 與語言切換 `LanguageToggle` 取自 `components/`）、`AuthCard`、`FormErrorBanner`、`GoogleSignIn`、`LoginForm`（含 `PasswordInput`）；送出與 Google 開始由 `useLoginController` 處理 | `useGetAuthOptions`（`getAuthOptions`）；請求函式 `createSession`、`getGoogleAuthorization`；登入成功後重查 `getCurrentSession` | `auth` |
 | `GoogleCallbackPage` | `GoogleCallbackHandler`（`features/auth/`） | 請求函式 `createGoogleSession`；成功後重查 `getCurrentSession` | 無畫面文案 |
-| `DashboardPlaceholderPage` | `AuthLayout`、`SignedInCard`（含角色 `Badge` 與 `LogoutButton`）（`features/auth/`） | `getCurrentSession`（與守門共用同一份快取）、`useDeleteCurrentSession`（`deleteCurrentSession`） | `auth` |
+| `AppShellLayout`（layout，不是頁面） | `AppShell`（`components/app-shell/`，只負責畫；導覽項模型、任務角色來源、收合偏好與擋下說明在 `features/app-shell/`）：品牌區（`BrandMark`、`LanguageToggle` 取自 `components/`）、導覽項與系統管理次選單、底部工具列（快捷鍵入口、`ThemeToggle` 取自 `components/`）、使用者晶片與登出、快捷鍵總覽（`components/ui/dialog`）、只在取得焦點時看得到的收合鈕；登入者與登出由 `AppShellLayout` 向 `features/auth` 取得後以 props 傳入 | `getCurrentSession`（與守門共用同一份快取）；登出經 `features/auth` 的 `useSignOut`（`deleteCurrentSession`） | `appShell`、`common` |
+| `DashboardPlaceholderPage` | `SignedInCard`（含角色 `Badge`，沒有登出鈕）（`features/auth/`）；`BlockedNotice`（`features/app-shell/`，以 `components/ui/alert` 顯示擋下說明） | `getCurrentSession`（與守門共用同一份快取） | `auth`、`appShell` |
 
 :::note{title="健康檢查頁的四種狀態" collapsible}
 - `HealthStatusPanel` 用 `toHealthViewState` 把查詢結果轉成四種狀態之一：載入中、正常、後端錯誤（任何錯誤外層）、連不上
@@ -67,7 +72,7 @@ change 的 `ui-design.md` 仍然寫這次頁面的元件樹、資料來源、畫
 - 錯誤橫幅的文字依 `LoginNotice` 取 `auth` 語言檔的 `login.error.*`，不顯示後端的 `message`；五種：`invalidCredentials`、`googleRejected`、`sessionExpired`、`sessionInvalid`、`unavailable`
 - 登入頁開啟時顯示的那一句：導覽狀態帶來的（Google 回調的 E2、沒有回應）優先，其次是守門查詢帶的；讀一次就清掉，同一次造訪重開登入頁不再出現
 - Google 回調：網址有 `error`、或缺 `code`、`state` 時不呼叫後端，安靜回登入頁；`ACCOUNT_GOOGLE_FLOW_INVALID` 安靜回登入頁（E1），`ACCOUNT_GOOGLE_REJECTED` 帶 Google 那一句（E2），其他失敗帶「沒有回應」那一句；同一組 `code`、`state` 只送一次，回調網址一律以取代的方式離開歷史紀錄
-- 登出：`LogoutButton` 送出期間不再接受按鍵；不論結果都清掉其他查詢快取、把登入狀態記成未登入，由守門帶回登入頁
+- 登出：側欄的登出鈕（桌機、已收合、手機三個位置共用一個送出狀態）經 `useSignOut` 送出，送出期間不再接受按鍵；不論結果都清掉其他查詢快取、把登入狀態記成未登入，由守門帶回登入頁
 - 登入頁與落點在進入時設定 `document.title`
 :::
 
@@ -82,15 +87,17 @@ frontend/
 ├─ orval.config.ts          唯一的 Orval 設定：讀 ../backend/openapi.json
 ├─ vite.config.ts           開發伺服器固定 5173 port，不設 proxy
 ├─ build/extract-tokens.ts  Vite 外掛：從 tokens.css 取出 CSS 變數
+├─ public/theme-init.js     第一次繪製前套用外觀；index.html 在模組腳本之前載入，不經打包
 └─ src/
-   ├─ main.tsx              啟動：檢查 API 設定、決定語言、render
-   ├─ app/                  router、providers、QueryClient
+   ├─ main.tsx              啟動：檢查 API 設定、決定語言、接手外觀、render
+   ├─ app/                  router、根 layout AppRoot、外殼組合層 AppShellLayout、providers、QueryClient
    ├─ pages/<page>/         頁面：組合功能元件與原語
    ├─ features/<feature>/   功能元件與它的狀態轉換
-   ├─ components/ui/        shadcn/ui 原語，匯出 variant 陣列
+   ├─ components/           跨 feature 共用的元件（品牌標誌、語言切換、外觀切換、app-shell/ 側欄外殼）
+   │  └─ ui/                shadcn/ui 原語，匯出 variant 陣列
    ├─ api/                  mutator.ts（唯一出口）、session-refresh.ts、ApiError、外層判定、config
    │  └─ generated/         Orval 產物，禁止手改
-   ├─ lib/                  i18n、date（day.js 唯一入口）、abort、utils
+   ├─ lib/                  i18n、theme（外觀偏好）、date（day.js 唯一入口）、abort、utils
    ├─ styles/               theme.css：shadcn 變數對到 tokens.css 的變數名
    └─ test/                 Vitest setup、MSW server、外層 fixture
 ```
@@ -99,6 +106,7 @@ frontend/
 | :--- | :--- | :--- |
 | `pages/` | 一條路由一個資料夾 | 被 `router.tsx` 掛上去 |
 | `features/` | 一個功能一個資料夾，對外只從 `index.ts` 匯出 | 會送請求，或有自己的狀態轉換 |
+| `components/`（`ui/` 以外） | 共用元件：用到它的產品畫面分屬一個以上 feature 的設計系統元件，不認識業務 | 依 `docs/development/rules/frontend-agent-rules.mdx` 的 F5，由 `scripts/check-component-reuse.mjs` 檢查 |
 | `components/ui/` | 沒有業務的原語 | 換一個頁面也照樣能用 |
 | `api/`、`lib/` | 全站共用的基礎建設 | 不 import `pages/`、`features/` |
 
@@ -128,7 +136,8 @@ frontend/
 - 外層只驗外層本身的欄位，`data` 裡面的形狀交給生成的型別
 - 非 `http` 的 `ApiError.message` 是英文診斷字串，不含回應內容或原生錯誤的訊息
 - `isAuthError()` 只認錯誤外層的 `401`；`403` 不算
-- 語言：`main.tsx` 呼叫 `initI18n()`，讀 `localStorage` 的 `labelsuite.lang`；值不是 `en`、讀不到或沒有時是 `zh-TW`，不看瀏覽器語言，並把 `<html lang>` 設成同一個值。登入頁頁首的 `LanguageToggle` 經 `changeInterfaceLanguage` 切換、記住並更新 `<html lang>`。啟動時預載 `common` 與 `auth` 兩個 namespace，開發用頁面的 namespace 由各自的入口註冊
+- 語言：`main.tsx` 呼叫 `initI18n()`，讀 `localStorage` 的 `labelsuite.lang`；值不是 `en`、讀不到或沒有時是 `zh-TW`，不看瀏覽器語言，並把 `<html lang>` 設成同一個值。登入頁頁首與側欄的 `LanguageToggle` 經 `changeInterfaceLanguage` 切換、記住並更新 `<html lang>`。啟動時預載 `common`、`auth`、`appShell` 三個 namespace，開發用頁面的 namespace 由各自的入口註冊；英文缺某個鍵時顯示繁體中文原文（`fallbackLng` 是 `zh-TW`），不顯示鍵名
+- 外觀：`index.html` 在 `<head>`、模組腳本之前以同源外部腳本 `<script src="/theme-init.js">` 載入 `public/theme-init.js`，它在第一次繪製前讀 `localStorage` 的 `label-suite-theme`（淺色、深色、跟隨系統；無效、讀不到或沒有時當跟隨系統），把解析後的值寫到 `<html data-theme>`；不用內嵌腳本，所以內容安全政策 `script-src 'self'` 不必放寬。之後由 `lib/theme` 接手：`main.tsx` 呼叫 `initTheme()` 套用並在跟隨系統時訂閱作業系統的變化，`ThemeToggle` 經 `useResolvedTheme` 讀、經 `setThemeChoice` 寫。兩份解讀規則以同一張案例表測試，不會各走各的。登入頁與登入後的每一頁都照它呈現，登出不清這個鍵
 :::
 
 ### 登入狀態與守門
@@ -137,9 +146,11 @@ frontend/
 
 | 元件 | 在哪裡 | 做什麼 |
 | :--- | :--- | :--- |
-| `useSessionState`、`sessionQueryOptions` | `features/auth/session-query.ts` | 以生成的 `getGetCurrentSessionQueryKey()` 為 key 查 `getCurrentSession`，`staleTime` 無限；查詢**不會失敗**：除了取消，每一種拒絕或沒有回應都轉成 `{ kind: "signedOut", notice }`，守門只看資料分支 |
+| `useSessionState`、`sessionQueryOptions` | `features/auth/session-query.ts` | 以生成的 `getGetCurrentSessionQueryKey()` 為 key 查 `getCurrentSession`，`staleTime` 無限、視窗取得焦點不重查；查詢**不會失敗**：除了取消，每一種拒絕或沒有回應都轉成 `{ kind: "signedOut", notice }`，守門只看資料分支 |
 | `RequireAuthRoute`、`PublicOnlyRoute`、`RootRedirect` | `features/auth/route-guards.tsx` | 查詢回來前只畫頁面底色，避免頁面閃一下再跳走；之後以取代歷史紀錄的方式導向登入頁或落點 |
 | `sendWithSessionRefresh`、`refreshSession` | `src/api/session-refresh.ts` | 延續是 single-flight：同一時間只有一個 `createSessionRefresh`，其他被拒的請求共用它；整個流程延續至多 2 次、重送至多 2 次 |
+| `AppRoot` | `src/app/app-root.tsx` | 沒有 path、包住每一條路由（含開發頁與其他路徑）的根 layout，只畫 `<Outlet>`；整頁重新載入才重來。以 context 提供一個 ref：外殼上一次檢查登入狀態時的 `location.key`（`checkedKey`）、pathname（`checkedPathname`），與之後路由是否到過別的 pathname（`leftSince`）。目前的 pathname 不等於外殼記下的 `checkedPathname` 時把 `leftSince` 設為 true，比對的是外殼記下的值，不是它自己上一次看到的 pathname |
+| `AppShellLayout` | `src/app/app-shell-layout.tsx`、`session-check.ts` | 外殼的組合層：向 `features/auth` 取登入者與 `useSignOut`，向 `features/app-shell` 取導覽模型、收合、快捷鍵與擋下，交給 `components/app-shell` 畫。依 `location.key` 與 pathname 判斷要不要在背景重查登入狀態：這次頁面載入第一次到達只記下、不重查（守門剛查過）；同一個 key（StrictMode 重跑或重新渲染）不動；key 不同而 pathname 不同或 `leftSince` 為 true（換了頁，含經外殼以外的轉址回到同一頁）時以 `refetch({ cancelRefetch: false })` 重查一次；key 不同但 pathname 相同又沒離開過（清擋下說明的 state、已在落點時再被擋）只記下。所以 StrictMode 重跑不會多查，視窗取得焦點也不重查。重查在 effect 之後的 microtask 送出，避開 StrictMode 模擬卸載時查詢沒有觀察者而被取消。重查回來之前側欄維持上一份資料；得到未登入時由守門帶回登入頁 |
 | `App`、`AppProviders` | `src/app/app.tsx`、`providers.tsx` | 可選的 `queryClient`（`AppProviders` 的屬性名是 `client`）讓測試換成新的快取；沒給時用整頁共用的那一個 |
 
 :::note{title="延續的步驟與登入頁的句子" collapsible}
@@ -177,10 +188,10 @@ frontend/
 | :--- | :--- |
 | `variant-catalog.ts` | 每個原語的展示清單；有匯出 variant 陣列的原語用 `satisfies` 綁住，原語加了 variant 這裡不跟著加就型別錯誤 |
 | `completeness.test.tsx` | 兩層：清單的 key 等於原語匯出的陣列；畫面上每個宣告的值各有一個 `[data-gallery-item]`，而且 `components/ui/` 的每個原語檔都有一節 |
-| `ThemeToggle` | 切換 `<html data-theme>` 的淺色與深色；只存在元件狀態，離開展示頁恢復淺色 |
+| `ThemeToggle` | 取自 `components/` 的共用外觀切換，和側欄是同一個元件、讀寫同一份外觀偏好；記住選擇，離開展示頁不還原 |
 | `TokenMappingSection` | 列出 `styles/theme.css` 的對照；只有這一頁可以把 `theme.css` 讀成原始文字 |
 
-目前的原語：`alert`、`badge`（含角色變體 `role`）、`button`（含送出中的 `loading`）、`card`、`empty`、`input`、`label`、`separator`、`skeleton`。新增原語時，展示頁要有它的一節，否則完整性測試失敗。
+目前的原語：`alert`、`badge`（含角色變體 `role`）、`button`（含送出中的 `loading`）、`card`、`dialog`、`empty`、`input`、`label`、`separator`、`skeleton`。新增原語時，展示頁要有它的一節，否則完整性測試失敗。
 
 :::note{title="design token 怎麼進到元件" collapsible}
 - `build/extract-tokens.ts` 在開發與建置時讀 `design/prototype/assets/tokens.css`，只取 `:root` 與 `html[data-theme="dark"]` 的 `--*` 宣告，以虛擬模組 `virtual:design-tokens.css` 提供，不寫檔
@@ -190,10 +201,12 @@ frontend/
 
 ## 已知限制
 
-已落地的前端有登入、守門與暫時落點；下表是它還沒有的東西與風險。
+已落地的前端有登入、守門、登入後外殼（側欄）與暫時落點；下表是它還沒有的東西與風險。
 
 | 還沒有 | 風險 | 追蹤 |
 | :--- | :--- | :--- |
+| 側欄導覽項的多數落點頁 | 點了經 `/` 回到暫時落點；「資料集分析」被擋下時要去的任務列表也不存在，所以那句擋下說明目前看不到 | 規格 02-01、03-01、04-01、05-01、06-01、06-02、01-04 各頁的實作 |
+| 任務角色的讀取 | 側欄把每一位使用者都當成沒有任何任務角色：第三個導覽項讀作「標記作業」、角色標示讀作「一般使用者」，點「標記作業」「資料集分析」一律被擋下 | 規格 03-03 的任務成員管理 |
 | 前端的錯誤追蹤與監控 | 使用者端的錯誤只有使用者回報的 `traceId` 可查 | [ADR-008 的 D4](../../development/adr/008-deployment-and-operations.mdx#d4-觀測性只做-ai_runs監控與錯誤追蹤本期不做) |
 
 ## 決策紀錄
@@ -204,4 +217,7 @@ frontend/
 | 2026-11-23 | 本文加一節前端骨架與已知限制，不另開文件（[§前端骨架](#前端骨架)） | — | [#546](https://github.com/label-suite/label-suite/issues/546) |
 | 2026-11-23 | 實作後由 `frontend-developer` 依程式校正本文，`code-reviewer` 再核對（[§誰改、什麼時候改](#誰改什麼時候改)） | — | [#546](https://github.com/label-suite/label-suite/issues/546#issuecomment-7100137950) |
 | 2026-11-26 | 加上登入頁、Google 回調、暫時落點與 `/` 的守門導向，取代開發模式 `/` 與其他路徑導向 `/dev/health`；骨架加上登入狀態查詢、single-flight 延續、CSRF 標頭與記住的介面語言（[§路由](#路由)、[§登入狀態與守門](#登入狀態與守門)） | 開發模式 `/` 與其他路徑導向 `/dev/health`；依 `navigator.language` 決定一次語言；已知限制的「登入與登入狀態的處理」 | [#719](https://github.com/label-suite/label-suite/issues/719) |
+| 2026-11-27 | 品牌標誌與語言切換從 `features/auth/` 搬到 `components/`，目錄加上 `components/` 這一層放共用元件（[§目錄](#目錄)、[§頁面與功能元件](#頁面與功能元件)）；側欄用到之後兩者跨了帳號與登入後外殼兩個 feature | 兩者放在 `features/auth/` | [#720](https://github.com/label-suite/label-suite/issues/720) |
+| 2026-11-27 | 登入後的路由包進外殼，暫時落點畫在外殼裡、拿掉卡片自己的登出鈕；路由以 `handle` 宣告目前位置；擋下說明以 navigation state 帶到落點；外觀切換搬到 `components/`，展示頁改用它並記住選擇（[§路由](#路由)、[§頁面與功能元件](#頁面與功能元件)、[§元件展示頁](#元件展示頁)）；理由是規格 07-01 要每個登入後頁面都有側欄，而同一份外觀偏好只能有一個擁有者 | 暫時落點沿用登入頁頁首、沒有側欄、有自己的登出鈕；展示頁的外觀只存在元件狀態、離開還原淺色 | [#720](https://github.com/label-suite/label-suite/issues/720) |
+| 2026-11-27 | 所有路由包進根 layout `AppRoot`，外殼依 `location.key`、pathname 與 `AppRoot` 記下的「離開過」判斷換頁後的背景重查；外觀改由 `public/theme-init.js` 在第一次繪製前套用、`lib/theme` 之後接手（[§登入狀態與守門](#登入狀態與守門)、[§前端骨架](#前端骨架)）；理由是換頁會經外殼以外的轉址讓外殼卸載再掛載，而 StrictMode 的重跑不能多送查詢，內嵌腳本又會被 `script-src 'self'` 擋下 | 外殼只看 pathname 改變就重查；外觀由 `lib/theme` 在第一次繪製前套用 | [#720](https://github.com/label-suite/label-suite/issues/720) |
 | 2026-11-27 | 已知限制拿掉「CI 的前端檢查」一列：lint、型別、測試與建置由 CI 的 `frontend` 跑，契約漂移由 `api-contract` 跑，跑過前後端的 e2e 由 `e2e` 跑（[§已知限制](#已知限制)） | 已知限制的「CI 的前端檢查……目前只在本機跑」，追蹤於已關閉的 #506 | [#745](https://github.com/label-suite/label-suite/issues/745) |

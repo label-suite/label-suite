@@ -47,7 +47,7 @@
 
 ## 元件一覽
 
-35 份。「正典」欄指 `MASTER.md` 的章節名是否由 prototype 註解指名；「b1」～「b4」欄是各批用到它的畫面數，來自 [`screen-inventory.md`](screen-inventory.md)。
+37 份。「正典」欄指 `MASTER.md` 的章節名是否由 prototype 註解指名；「b1」～「b4」欄是各批用到它的畫面數，來自 [`screen-inventory.md`](screen-inventory.md)。
 
 ### 正典區塊定義的（20）
 
@@ -88,7 +88,7 @@
 | [List Toolbar](components/list-toolbar.md) | `shared/list-page.css:1`–`:47` | 0 | 2 | 1 | 1 | ✅ b2 補上樣本 |
 | [Data Table](components/data-table.md) | `shared/list-page.css:49`–`:72` | 0 | 4 | 1 | 2 | ✅ b2 補上樣本 |
 
-### 外殼與帳號頁自己長出來的（7）
+### 外殼與帳號頁自己長出來的（9）
 
 正典沒有章節，但它們真實存在而且有使用畫面。
 
@@ -97,7 +97,9 @@
 | [App Shell（Sidebar）](components/app-shell.md) | `shared/sidebar.css` ＋ `sidebar.js` | 2 | 6 | 2 | 2 | ✅ b1 完成；b2 核完 token 清單（G-24） |
 | [Auth Card](components/auth-card.md) | 五個帳號頁各自的 `<style>` | 5 | 0 | 0 | 0 | ✅ b1 完成（已分裂成四份，G-28） |
 | [Auth Navbar](components/auth-navbar.md) | 同上 | 5 | 0 | 0 | 0 | ✅ b1 完成（已分裂成兩份，G-28） |
-| [Language Toggle](components/lang-toggle.md) | 同上；正典對應 `.btn-language` | 6 | 0 | 0 | 0 | ✅ b1 完成（五頁唯一沒分裂的） |
+| [Language Toggle](components/lang-toggle.md) | 同上；正典對應 `.btn-language`；外殼的 `#langToggle`、`#mobileLangToggle` | 7 | 0 | 0 | 0 | ✅ b1 完成（五頁唯一沒分裂的）；#720 補上 `shared/app-shell` |
+| [Brand Mark](components/brand-mark.md) | 五個帳號頁的 `.navbar-logo`、`.card-logo`；`shared/sidebar.css` 的 `.navbar-logo` | 6 | 0 | 0 | 0 | ✅ #720 新增 |
+| [Theme Toggle](components/theme-toggle.md) | `shared/sidebar.css` ＋ `sidebar.js` 的 `#sidebarThemeToggleBtn`、`#mobileThemeToggleBtn` | 1 | 0 | 0 | 0 | ✅ #720 新增 |
 | [Spinner](components/spinner.md) | 四個帳號頁各自的 `<style>` | 1 | 0 | 0 | 0 | ✅ b1 完成 |
 | [Password Eye Toggle](components/password-eye-toggle.md) | 四個帳號頁各自的 `<style>` | 4 | 0 | 0 | 0 | ✅ b1 完成 |
 | [Proto Toggle Bar](components/proto-toggle-bar.md) | `reset-password`、`verify-email` | 2 | 0 | 0 | 0 | ✅ b1 完成（**原型鷹架，不是產品元件**） |
@@ -207,7 +209,7 @@ prototype 的註解另外指名的章節裡，這一個不是元件（b1 原列�
 依 [`screen-inventory.md`](screen-inventory.md) 的雙向一致性：
 
 - 交付包 19 個條目、140 個視圖，每一個都出現在某份畫面檔。交付包列為無法重現的兩個（`annotation/annotation-list#state-loading`、`annotation/annotation-workspace#state-task-goal-and-instruction`）照實寫在畫面檔，追蹤在 label-suite/label-suite#187。
-- `components/` 35 份每份都有「用到它的畫面」，且至少有一個畫面用到。只用在一頁的有 [Spinner](components/spinner.md)、[Step Indicator](components/step-indicator.md)。
+- `components/` 37 份每份都有「用到它的畫面」，且至少有一個畫面用到。只用在一頁的有 [Spinner](components/spinner.md)、[Step Indicator](components/step-indicator.md)、[Theme Toggle](components/theme-toggle.md)。
 - 元件檔裡「待 b4 補」的佔位行已全部換掉。
 
 ### 之後要做的
@@ -228,3 +230,4 @@ prototype 的註解另外指名的章節裡，這一個不是元件（b1 原列�
 | 6 | 2026-11-24 | #608 `b4-dataset-sweep` 依交付包 `b16b294` 重驗：#435 的行為改動寫進畫面規格、補 `#param-error`、行號對齊；G-57。 |
 | 7 | 2026-11-24 | #608 b1～b3 規格側複核：G-58～G-60；G-45、G-46 加複核紀錄。 |
 | 8 | 2026-11-25 | #610：標記清單畫面規格登記可挑的任務清單與空狀態、`#state-no-task` 的條件排除 `entry=nav`；G-61；行號對齊。 |
+| 9 | 2026-11-27 | #720：新增 Brand Mark、Theme Toggle 兩份元件（共 37 份）；Language Toggle 補上 `shared/app-shell` 並改「程式實作」；App Shell 的「程式實作」寫 `components/app-shell/`；五個帳號頁與 `shared/app-shell` 的畫面規格列出新元件；G-66。 |

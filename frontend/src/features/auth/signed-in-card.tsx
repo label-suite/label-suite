@@ -4,15 +4,15 @@ import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 
-import { LogoutButton } from "./logout-button";
 import { ROLE_NAME_KEYS } from "./role-names";
 import { useSessionState } from "./session-query";
 
 /**
  * The temporary landing card (maintainer-approved artifact; ui-design §元件樹 ›
  * 暫時落點): "you're signed in", the account's own name and Email, its system
- * role (never a task role), a note and the sign-out button. It reads the same
- * session query as the guard, so it sends no request of its own.
+ * role (never a task role) and a note. Signing out is the sidebar's job
+ * (sidebar-nav clarification Q2), so the card has no button. It reads the
+ * same session query as the guard, so it sends no request of its own.
  */
 export function SignedInCard() {
   const { t } = useTranslation("auth");
@@ -39,7 +39,6 @@ export function SignedInCard() {
       <p className="text-(length:--text-caption) text-muted-foreground">
         {t("dashboard.description")}
       </p>
-      <LogoutButton />
     </Card>
   );
 }

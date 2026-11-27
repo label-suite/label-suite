@@ -1,21 +1,27 @@
 /**
  * The i18n layer (design D7, clarification Q5; login-auth-guard D8).
  *
- * `common` and `auth` (the sign-in page, the Google callback and the landing
- * page, all in the production bundle) are loaded at start-up. Development page
+ * `common` (shared components), `auth` (the sign-in page, the Google callback
+ * and the landing page) and `appShell` (the signed-in shell) are loaded at
+ * start-up and ship in the production bundle (sidebar-nav D10). Development page
  * namespaces such as `systemHealth` and `devGallery` are added by their own
  * entry modules through registerNamespace, so their text ships only with the
  * dev-only chunks.
  *
  * The interface language is remembered in localStorage under
  * `labelsuite.lang` (brand.md §設計決策). A missing, unreadable or unknown
- * value means `zh-TW`; the browser's language is not consulted.
+ * value means `zh-TW`; the browser's language is not consulted. A key missing
+ * from English falls back to its Traditional Chinese text rather than showing
+ * the key name (sidebar-nav clarification P1); the key-set test still fails a
+ * commit that leaves one out.
  */
 import i18next, { type i18n as I18nInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 
+import enAppShell from "./locales/en/appShell.json";
 import enAuth from "./locales/en/auth.json";
 import enCommon from "./locales/en/common.json";
+import zhTWAppShell from "./locales/zh-TW/appShell.json";
 import zhTWAuth from "./locales/zh-TW/auth.json";
 import zhTWCommon from "./locales/zh-TW/common.json";
 import { resolveLanguage, type AppLanguage } from "./resolve-language";
@@ -54,20 +60,20 @@ function applyDocumentLanguage(language: AppLanguage): void {
 }
 
 /**
- * Initialises the i18n instance with the `common` and `auth` namespaces, in
- * the remembered language, and sets `<html lang>` to match.
+ * Initialises the i18n instance with the `common`, `auth` and `appShell`
+ * namespaces, in the remembered language, and sets `<html lang>` to match.
  */
 export function initI18n(): I18nInstance {
   const language = readStoredLanguage();
   void i18n.use(initReactI18next).init({
     lng: language,
     supportedLngs: ["zh-TW", "en"],
-    fallbackLng: false,
-    ns: ["common", "auth"],
+    fallbackLng: "zh-TW",
+    ns: ["common", "auth", "appShell"],
     defaultNS: "common",
     resources: {
-      "zh-TW": { common: zhTWCommon, auth: zhTWAuth },
-      en: { common: enCommon, auth: enAuth },
+      "zh-TW": { common: zhTWCommon, auth: zhTWAuth, appShell: zhTWAppShell },
+      en: { common: enCommon, auth: enAuth, appShell: enAppShell },
     },
     initAsync: false,
     interpolation: { escapeValue: false },

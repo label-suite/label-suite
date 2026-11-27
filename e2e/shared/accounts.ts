@@ -77,6 +77,14 @@ export function createAccount(options: NewAccount = {}): TestAccount {
   return account;
 }
 
+/**
+ * Changes an account's system role in the database, leaving its sessions
+ * valid: the next session query reads the new role (spec 07-01 §邊界情況).
+ */
+export function setRole(email: string, role: "user" | "super_admin"): void {
+  runHelper(["set", "--email", email, "--role", role]);
+}
+
 /** Deactivates (false) or reactivates (true) an account. */
 export function setActive(email: string, active: boolean): void {
   runHelper(["set", "--email", email, "--active", active ? "true" : "false"]);

@@ -1,3 +1,9 @@
 {
-  "documentTitle": "Label Suite — {{page}}"
+  "documentTitle": "Label Suite — {{page}}",
+  "brandHome": "Label Suite 首頁",
+  "languageToggle": "{{code}}，切換語言",
+  "theme": {
+    "switchToDark": "切換為深色模式",
+    "switchToLight": "切換為淺色模式"
+  }
 }

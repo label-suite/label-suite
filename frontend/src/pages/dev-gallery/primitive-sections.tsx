@@ -1,11 +1,23 @@
 /**
- * The gallery sections of the two primitives added by login-auth-guard (task
- * 6.3): Label and Separator. Kept apart from dev-gallery-page.tsx so that
- * page stays under its size ceiling (eslint.config.js NAMED_EXEMPTIONS).
+ * The gallery sections of the primitives added after the first gallery: Label
+ * and Separator (login-auth-guard task 6.3) and Dialog (sidebar-nav task 1.5).
+ * Kept apart from dev-gallery-page.tsx so that page stays under its size
+ * ceiling (eslint.config.js NAMED_EXEMPTIONS).
  */
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
 
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator, separatorOrientationValues } from "@/components/ui/separator";
@@ -59,6 +71,39 @@ export function SeparatorSection() {
         >
           <span className="text-(length:--text-caption) text-muted-foreground">{orientation}</span>
           <Separator orientation={orientation} />
+        </div>
+      ))}
+    </GallerySection>
+  );
+}
+
+/** The Dialog section (sidebar-nav D9): one button that opens a sample dialog. */
+export function DialogSection() {
+  const { t } = useTranslation(NAMESPACE);
+
+  return (
+    <GallerySection id="dialog" title={t("sections.dialog")} meta={t("dialog.meta")}>
+      {catalogEntries(variantCatalog.dialog.sample).map(([sample]) => (
+        <div key={sample} data-gallery-item={galleryItem("dialog", "sample", sample)}>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button type="button" variant="outline">
+                {t("dialog.open")}
+              </Button>
+            </DialogTrigger>
+            <DialogContent closeLabel={t("dialog.close")}>
+              <DialogHeader>
+                <DialogTitle>{t("dialog.title")}</DialogTitle>
+                <DialogDescription>{t("dialog.description")}</DialogDescription>
+              </DialogHeader>
+              <p className="text-(length:--text-caption)">{t("dialog.body")}</p>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button type="button">{t("dialog.confirm")}</Button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       ))}
     </GallerySection>

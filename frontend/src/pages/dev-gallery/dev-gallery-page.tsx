@@ -6,6 +6,7 @@
 import { useEffect, useId } from "react";
 import { Trans, useTranslation } from "react-i18next";
 
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Alert, AlertDescription, alertVariantValues } from "@/components/ui/alert";
 import { Badge, badgeVariantValues } from "@/components/ui/badge";
 import { Button, buttonSizeValues, buttonVariantValues } from "@/components/ui/button";
@@ -23,8 +24,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import { GalleryNav } from "./gallery-nav";
 import { GallerySection } from "./gallery-section";
-import { LabelSection, SeparatorSection } from "./primitive-sections";
-import { ThemeToggle } from "./theme-toggle";
+import { DialogSection, LabelSection, SeparatorSection } from "./primitive-sections";
 import { TokenMappingSection } from "./token-mapping-section";
 import {
   buttonStateValues,
@@ -250,6 +250,8 @@ export function DevGalleryPage() {
 
             <SeparatorSection />
           </div>
+
+          <DialogSection />
 
           <GallerySection id="states" title={t("sections.states")} meta={t("states.meta")}>
             <div

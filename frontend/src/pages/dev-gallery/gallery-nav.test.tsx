@@ -20,6 +20,7 @@ const LINKS = [
   ["Alert", "#alert"],
   ["Card", "#card"],
   ["Separator", "#separator"],
+  ["Dialog", "#dialog"],
   ["Skeleton · Empty", "#states"],
   ["Token 對照", "#tokens"],
 ] as const;
@@ -57,7 +58,7 @@ afterEach(() => {
 });
 
 describe("gallery nav", () => {
-  it("is a nav named 元件目錄 with the eyebrow and nine section links", () => {
+  it("is a nav named 元件目錄 with the eyebrow and ten section links", () => {
     openAt("/dev/gallery");
 
     const nav = screen.getByRole("navigation", { name: "元件目錄" });
@@ -107,8 +108,8 @@ describe("gallery nav", () => {
     for (const [name] of LINKS) {
       await user.click(screen.getByRole("link", { name }));
     }
-    await user.click(screen.getByRole("button", { name: "深色" }));
-    await user.click(screen.getByRole("button", { name: "淺色" }));
+    await user.click(screen.getByRole("button", { name: "切換為深色模式" }));
+    await user.click(screen.getByRole("button", { name: "切換為淺色模式" }));
 
     expect(window.location.hash).toBe("#tokens");
     expect(requests).toEqual([]);

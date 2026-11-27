@@ -12,7 +12,7 @@
 
 ## 視圖與元件
 
-13 個視圖全部屬於同一個元件 [App Shell](../components/app-shell.md)。
+13 個視圖全部屬於同一個元件 [App Shell](../components/app-shell.md)。外殼裡另外用到三個跨畫面的元件：品牌區的 [Brand Mark](../components/brand-mark.md) 與 [Language Toggle](../components/lang-toggle.md)（每個視圖都有；`#state-lang-en` 是點它的結果），底部工具列與手機品牌列的 [Theme Toggle](../components/theme-toggle.md)（每個視圖都有；`#state-theme-dark` 是點它的結果）。
 
 | 視圖 | 怎麼走到 |
 | :--- | :--- |
@@ -37,7 +37,7 @@
 | 東西 | 說明 |
 | :--- | :--- |
 | `#shortcutHelpModal`、`#notificationDropdown` | 覆蓋層整套自建，**不用 `modal-focus.js`**（`sidebar.js` 全檔 `LabelSuiteModalFocus` 出現 0 次）→ `../design-gaps.md` G-23 |
-| `#langToggle`、`#mobileLangToggle` | 登入後的語言切換，和帳號頁的 [Language Toggle](../components/lang-toggle.md) 是兩套 |
+| `#langToggle`、`#mobileLangToggle` | 登入後的語言切換；prototype 的 markup 和帳號頁的 [Language Toggle](../components/lang-toggle.md) 是兩套，但結構、文案與行為相同，實作是同一個元件的兩種尺寸（#720 clarification Q9） |
 | `.workspace-tab-bar`（`sidebar.css:966`） | 工作頁籤列，有上限、重開堆疊、改鍵三種通知；`tokens.css` 為它留了 `--workspace-tab-min-width`／`-max-width` |
 
 ## 業務行為

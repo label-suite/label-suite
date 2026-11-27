@@ -9,6 +9,7 @@
  * is registered the same way as at runtime (design D7).
  */
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
 import { alertVariantValues } from "@/components/ui/alert";
@@ -20,6 +21,7 @@ import { DevGalleryPage } from "./index";
 import {
   buttonStateValues,
   cardPartValues,
+  dialogSampleValues,
   emptySampleValues,
   inputStateValues,
   labelSampleValues,
@@ -39,6 +41,7 @@ const PRIMITIVE_SECTIONS: Record<string, string> = {
   "alert.tsx": "alert",
   "card.tsx": "card",
   "separator.tsx": "separator",
+  "dialog.tsx": "dialog",
   "skeleton.tsx": "states",
   "empty.tsx": "states",
 };
@@ -78,6 +81,7 @@ const DECLARED: Declared[] = [
   { component: "alert", axis: "variant", values: alertVariantValues },
   { component: "card", axis: "part", values: cardPartValues },
   { component: "separator", axis: "orientation", values: separatorOrientationValues },
+  { component: "dialog", axis: "sample", values: dialogSampleValues },
   { component: "skeleton", axis: "sample", values: skeletonSampleValues },
   { component: "empty", axis: "sample", values: emptySampleValues },
 ];
@@ -129,6 +133,7 @@ describe("variant catalog (layer 1)", () => {
     ["alert variant", variantCatalog.alert.variant, alertVariantValues],
     ["card part", variantCatalog.card.part, cardPartValues],
     ["separator orientation", variantCatalog.separator.orientation, separatorOrientationValues],
+    ["dialog sample", variantCatalog.dialog.sample, dialogSampleValues],
     ["skeleton sample", variantCatalog.skeleton.sample, skeletonSampleValues],
     ["empty sample", variantCatalog.empty.sample, emptySampleValues],
   ] as const)("has exactly the declared %s values", (_label, demos, values) => {
@@ -200,7 +205,7 @@ describe("DevGalleryPage completeness (layer 2)", () => {
     }
   });
 
-  it("names each of the nine sections with an h2, in order", () => {
+  it("names each of the ten sections with an h2, in order", () => {
     renderGallery();
 
     const titles = [
@@ -211,6 +216,7 @@ describe("DevGalleryPage completeness (layer 2)", () => {
       "Alert",
       "Card",
       "Separator",
+      "Dialog",
       "Skeleton · Empty",
       "Token 對照",
     ];
@@ -267,6 +273,20 @@ describe("DevGalleryPage completeness (layer 2)", () => {
 
     expect(screen.queryByText(/完整性測試擋下漏寫的 variant/)).not.toBeInTheDocument();
     expect(screen.queryByText(/示意/)).not.toBeInTheDocument();
+  });
+
+  it("opens a sample dialog from the Dialog section, and Esc gives focus back", async () => {
+    const user = userEvent.setup();
+    renderGallery();
+    const section = screen.getByRole("region", { name: "Dialog" });
+    const open = within(section).getByRole("button", { name: "開啟對話框" });
+
+    await user.click(open);
+    expect(screen.getByRole("dialog", { name: "對話框標題" })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(open).toHaveFocus();
   });
 
   it("ties the invalid sample to its error message and disables the disabled one", () => {

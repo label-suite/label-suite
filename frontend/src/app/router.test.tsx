@@ -7,8 +7,10 @@ import type { QueryClient } from "@tanstack/react-query";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { delay, http, HttpResponse } from "msw";
+import { isValidElement, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { readRouteDeclaration } from "@/features/app-shell";
 import { LANGUAGE_STORAGE_KEY, i18n, readStoredLanguage } from "@/lib/i18n";
 import { HEALTH_URL, errorBody, healthOkHandler } from "@/test/envelope-fixtures";
 import { server } from "@/test/msw-server";
@@ -27,6 +29,8 @@ import {
 } from "@/test/session-fixtures";
 
 import { App } from "./app";
+import { AppRoot } from "./app-root";
+import { AppShellLayout } from "./app-shell-layout";
 import { createQueryClient } from "./query-client";
 import { createAppRouter, type AppRouter } from "./router";
 
@@ -365,10 +369,10 @@ describe("createAppRouter in development mode", () => {
     expectNoLanguageSwitch();
   });
 
-  it("returns to light when leaving the gallery for the health page", async () => {
+  it("離開展示頁不還原外觀: stays dark on the health page, which has no switch", async () => {
     const user = userEvent.setup();
     const current = openAt("/dev/gallery");
-    await user.click(await screen.findByRole("button", { name: "深色" }));
+    await user.click(await screen.findByRole("button", { name: "切換為深色模式" }));
     expect(document.documentElement.dataset.theme).toBe("dark");
 
     await act(async () => {
@@ -376,7 +380,8 @@ describe("createAppRouter in development mode", () => {
     });
 
     expect(await screen.findByRole("heading", { level: 1 })).toHaveTextContent("系統健康檢查");
-    expect(document.documentElement.dataset.theme).toBe("light");
+    expect(document.documentElement.dataset.theme).toBe("dark");
+    expect(screen.queryByRole("button", { name: /切換為(深|淺)色模式/ })).toBeNull();
   });
 });
 
@@ -414,3 +419,99 @@ function expectNoLanguageSwitch(): void {
     expect(screen.queryAllByRole(role, { name: languageName })).toEqual([]);
   }
 }
+
+/** The parts of a route the declaration check reads. */
+interface RouteNode {
+  /** The route's path, when it has one. */
+  path?: string;
+  /** What it draws. */
+  element?: ReactNode;
+  /** Its declaration for the shell. */
+  handle?: unknown;
+  /** Child routes. */
+  children?: RouteNode[];
+}
+
+function drawsShell(route: RouteNode): boolean {
+  return isValidElement(route.element) && route.element.type === AppShellLayout;
+}
+
+/** A declaration the shell can read: the same check AppShellLayout uses, so a typo fails here. */
+function declaresNavKey(handle: unknown): boolean {
+  return readRouteDeclaration([handle]) !== null;
+}
+
+/**
+ * Every route with an element under the shell layout that declares no known
+ * `navKey`, named by its path (clarification P3): no default fills the gap.
+ */
+function routesMissingNavKey(routes: readonly RouteNode[], insideShell = false): string[] {
+  return routes.flatMap((route) => {
+    const inside = insideShell || drawsShell(route);
+    const own =
+      insideShell && route.element !== undefined && !declaresNavKey(route.handle)
+        ? [route.path ?? "(no path)"]
+        : [];
+    return [...own, ...routesMissingNavKey(route.children ?? [], inside)];
+  });
+}
+
+describe("the shell's routes (sidebar-nav design D4, clarification P3)", () => {
+  it("wraps every route, developer pages and * included, in AppRoot", () => {
+    const current = createAppRouter();
+    router = current;
+
+    const routes: readonly RouteNode[] = current.routes;
+    expect(routes).toHaveLength(1);
+    const [root] = routes;
+    expect(root?.path).toBeUndefined();
+    expect(isValidElement(root?.element) && root.element.type === AppRoot).toBe(true);
+    const paths = (root?.children ?? []).map((route) => route.path);
+    expect(paths).toEqual(expect.arrayContaining(["/dev/health", "/dev/gallery", "/", "*"]));
+  });
+
+  it("has a navKey on every route with an element under the shell, and the landing page is one", () => {
+    const current = createAppRouter();
+    router = current;
+
+    const routes: readonly RouteNode[] = current.routes;
+    expect(routesMissingNavKey(routes)).toEqual([]);
+    const shell = routes
+      .flatMap((route) => route.children ?? [])
+      .flatMap((route) => route.children ?? [])
+      .find(drawsShell);
+    expect(shell?.children?.map((route) => [route.path, route.handle])).toEqual([
+      ["/dashboard/dashboard", { navKey: "dashboard" }],
+    ]);
+  });
+
+  it("fails and names the path when a route under the shell declares no navKey", () => {
+    const tree: RouteNode[] = [
+      {
+        element: <AppShellLayout />,
+        children: [
+          { path: "/dashboard/dashboard", element: <p />, handle: { navKey: "dashboard" } },
+          { path: "/task-management/task-list", element: <p /> },
+          { path: "/account/profile", element: <p />, handle: { title: "x" } },
+        ],
+      },
+      { path: "/account/login", element: <p /> },
+    ];
+
+    expect(routesMissingNavKey(tree)).toEqual(["/task-management/task-list", "/account/profile"]);
+  });
+
+  it("fails on a navKey the shell does not know, such as a typo", () => {
+    const tree: RouteNode[] = [
+      {
+        element: <AppShellLayout />,
+        children: [
+          { path: "/dashboard/dashboard", element: <p />, handle: { navKey: "dashbaord" } },
+          { path: "/account/profile", element: <p />, handle: { navKey: 3 } },
+        ],
+      },
+    ];
+
+    expect(routesMissingNavKey(tree)).toEqual(["/dashboard/dashboard", "/account/profile"]);
+  });
+});

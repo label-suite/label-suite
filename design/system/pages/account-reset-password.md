@@ -12,7 +12,7 @@
 
 | 視圖 | 怎麼走到 | 用到的元件 |
 | :--- | :--- | :--- |
-| `#proto-valid` | 開頁後點底部原型切換鈕選「valid」，呼叫 `showState('valid')` | [Auth Navbar](../components/auth-navbar.md)、[Language Toggle](../components/lang-toggle.md)、[Auth Card](../components/auth-card.md)、[Input](../components/input.md)、[Password Eye Toggle](../components/password-eye-toggle.md)（**兩個**：`:535`、`:567`）、[Button](../components/button.md)（`.submit-btn`）、[Proto Toggle Bar](../components/proto-toggle-bar.md) |
+| `#proto-valid` | 開頁後點底部原型切換鈕選「valid」，呼叫 `showState('valid')` | [Auth Navbar](../components/auth-navbar.md)、[Brand Mark](../components/brand-mark.md)（頁首與卡片的 logo）、[Language Toggle](../components/lang-toggle.md)、[Auth Card](../components/auth-card.md)、[Input](../components/input.md)、[Password Eye Toggle](../components/password-eye-toggle.md)（**兩個**：`:535`、`:567`）、[Button](../components/button.md)（`.submit-btn`）、[Proto Toggle Bar](../components/proto-toggle-bar.md) |
 | `#proto-expired` | 切到 `showState('expired')` | [State Panel](../components/state-panel.md)（本頁的 class 是 `.token-error-panel`，`:453`）＋ [Proto Toggle Bar](../components/proto-toggle-bar.md) |
 | `#proto-used` | 切到 `showState('used')` | **與 expired 顯示同一句**（規格 01-03 Q2：三種原因不分辨） |
 | `#state-mismatch` | 在 `#proto-valid` 的表單裡兩個密碼欄填不一致後送出 | 同 `#proto-valid` ＋ `.field-error` |

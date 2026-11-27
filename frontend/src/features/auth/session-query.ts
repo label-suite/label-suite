@@ -49,14 +49,16 @@ async function fetchSessionState(signal: AbortSignal): Promise<SessionState> {
 
 /**
  * The query options. The result stays fresh until something that changes the
- * session (sign-in, sign-out) refetches or replaces it, so moving between the
- * guarded pages sends no further request.
+ * session (sign-in, sign-out) refetches or replaces it, or the signed-in shell
+ * refetches it on the next page (sidebar-nav design D6). Window focus never
+ * refetches it: the sidebar must not change while the user stays put (Q11).
  */
 export function sessionQueryOptions() {
   return {
     queryKey: sessionQueryKey,
     queryFn: ({ signal }: { signal: AbortSignal }) => fetchSessionState(signal),
     staleTime: Number.POSITIVE_INFINITY,
+    refetchOnWindowFocus: false,
   };
 }
 

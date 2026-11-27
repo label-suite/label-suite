@@ -12,7 +12,7 @@
 
 | 視圖 | 怎麼走到 | 用到的元件 |
 | :--- | :--- | :--- |
-| `#proto-valid` | 原型切換鈕切到 `showState('valid')`（`:367`） | [Auth Navbar](../components/auth-navbar.md)、[Language Toggle](../components/lang-toggle.md)、[Auth Card](../components/auth-card.md)、[State Panel](../components/state-panel.md)（本頁的 class 是 `.success-panel`）、[Proto Toggle Bar](../components/proto-toggle-bar.md) |
+| `#proto-valid` | 原型切換鈕切到 `showState('valid')`（`:367`） | [Auth Navbar](../components/auth-navbar.md)、[Brand Mark](../components/brand-mark.md)（頁首與卡片的 logo）、[Language Toggle](../components/lang-toggle.md)、[Auth Card](../components/auth-card.md)、[State Panel](../components/state-panel.md)（本頁的 class 是 `.success-panel`）、[Proto Toggle Bar](../components/proto-toggle-bar.md) |
 | `#proto-expired` | 切到 `showState('expired')`（`:368`） | [State Panel](../components/state-panel.md)（`.token-error-panel`）；**與 `account/reset-password` 同一份文案** |
 | `#proto-used` | 切到 `showState('used')`（`:369`） | 與 expired 同一句 |
 | `#sim-hold` | 加 `?sim_hold=1` | 擋住驗證成功後的那一次導向，讓成功面板留在畫面上。prototype 的註解寫明這是為了把面板看清楚 |
