@@ -2,7 +2,7 @@
  "$schema": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/er-diagram-renderer/schema.json",
  "meta": {
   "title": "Label Suite 候選資料表 ER 圖（42 張）",
-  "description": "**大部分是規劃結構。** 已落地業務表：**3**——`account` 組的 `users`、`account_session`、`account_refresh_token`（Alembic revision `7bf0f909ce8f`，#719），其餘 39 張沒有 revision 也沒有 ORM model。要查「實際落地了什麼」，唯一的辦法是讀 Alembic revision 與資料庫 metadata，不是讀這張圖。\\n\\n本圖顯示 **42 張候選表、370 欄、42 個單欄 FK**。每一欄的中文意義、可空性與**規格來源**都來自[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)；哪些資料要存則來自[資料欄位盤點總帳](/notes/diagrams/architecture/data-field-inventory)。\\n\\n**這張圖畫不出來的東西有兩類，都在字典裡**：**複合 FK**（例如「父版本不得跨資料集」要 `(dataset_id, parent_version_id)` 兩欄一起比），以及**只能在應用層擋的限制**（例如版本來源不得形成循環、名冊的子集合關係）。逐條內容在字典各組的「組的關聯與限制」小節，以及幾張表自己的限制表裡。**圖上沒有線不代表沒有限制。**應用層的限制字典數得出來（**28 條落在 DB、24 條只能在應用層擋**，數法寫在字典 §十）；**複合 FK 刻意不寫條數**，理由同樣在 §十。\\n\\n**分析報告沒有表**：05-02 的 64 個欄位列全部即時計算，維護者 2026-11-11 裁定不建分析表。那是裁定的結果，不是漏畫。",
+  "description": "**大部分是規劃結構。** 已落地業務表：**3**——`account` 組的 `users`、`account_session`、`account_refresh_token`（Alembic revision `7bf0f909ce8f`），其餘 39 張沒有 revision 也沒有 ORM model。要查「實際落地了什麼」，唯一的辦法是讀 Alembic revision 與資料庫 metadata，不是讀這張圖。\\n\\n本圖顯示 **42 張候選表、370 欄、42 個單欄 FK**。每一欄的中文意義、可空性與**規格來源**都來自[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)；哪些資料要存則來自[資料欄位盤點總帳](/notes/diagrams/architecture/data-field-inventory)。\\n\\n**這張圖畫不出來的東西有兩類，都在字典裡**：**複合 FK**（例如「父版本不得跨資料集」要 `(dataset_id, parent_version_id)` 兩欄一起比），以及**只能在應用層擋的限制**（例如版本來源不得形成循環、名冊的子集合關係）。逐條內容在字典各組的「組的關聯與限制」小節，以及幾張表自己的限制表裡。**圖上沒有線不代表沒有限制。**應用層的限制字典數得出來（**28 條落在 DB、24 條只能在應用層擋**，數法寫在字典的附錄）；**複合 FK 刻意不寫條數**，理由同樣在字典的附錄。\\n\\n**分析報告沒有表**：05-02 的 64 個欄位列全部即時計算，不建分析表（盤點總帳 D4），不是漏畫。",
   "source": "/notes/diagrams/architecture/data-table-dictionary",
   "backTo": "/notes/diagrams/architecture/data-field-inventory"
  },
@@ -174,14 +174,14 @@
      "name": "email",
      "type": "varchar(254)",
      "required": "required",
-     "note": "登入帳號，也是寄信地址；存正規化之後的值；唯一（對正規化之後的值）。來源：01-05：正規化後判重；上限 254 字在正規化之後計算。正規化在應用層做，不用 lower(email) 表達式索引：SQLite 的 lower() 只轉 ASCII，兩種資料庫會判出不同的重複（01-05 Q14，#719）。匿名化時改寫成 deleted-<id>@invalid（ADR-008 D7，維護者裁定 Q2）",
+     "note": "登入帳號，也是寄信地址；存正規化之後的值；唯一（對正規化之後的值）。來源：01-05：正規化後判重；上限 254 字在正規化之後計算。正規化在應用層做，不用 lower(email) 表達式索引：SQLite 的 lower() 只轉 ASCII，兩種資料庫會判出不同的重複（01-05 Q14）",
      "unique": true
     },
     {
      "name": "name",
      "type": "varchar(100)",
      "required": "required",
-     "note": "顯示名稱；CHECK 長度 1–100。來源：01-04：1–100 字；06-01：可以和其他帳號重複。匿名化時改寫成「已刪除的使用者」（ADR-008 D7，維護者裁定 Q2）"
+     "note": "顯示名稱；CHECK 長度 1–100。來源：01-04：1–100 字；06-01：可以和其他帳號重複"
     },
     {
      "name": "contact_info",
@@ -229,7 +229,7 @@
      "name": "anonymized_at",
      "type": "timestamptz",
      "required": "nullable",
-     "note": "匿名化時間；空值＝未匿名化。來源：ADR-008 D7：維護者裁定，個資欄位清掉之後這個帳號不能再登入（應用層）"
+     "note": "匿名化時間；空值＝未匿名化。來源：ADR-008 D7：個資欄位清掉之後這個帳號不能再登入（應用層）"
     },
     {
      "name": "google_subject",
@@ -251,7 +251,7 @@
      "note": "是否為 Seeder 管理員；預設 false；部分唯一索引 WHERE is_seeder（至多一位 Seeder 管理員）。來源：PRD §角色清單：不能被停用、降級或移除；capability user-management 要求 seeder 標記。只由初始化指令寫入；資料庫層的保護屬 06-01 的 change"
     }
    ],
-   "description": "**已落地**：Alembic revision `7bf0f909ce8f`\n\n一列代表一位可登入的使用者。**PRD 明寫帳號沒有刪除，只有停用與啟用**，所以**不得有軟刪除欄**。\n\n`google_subject`、`credential_version`、`is_seeder` 三欄原本因 D7 不收，依據出現之後由 #719 收回——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**規格來源**：[01-04](/notes/specs/01-account/04-profile#資料欄位)、[01-05](/notes/specs/01-account/05-login-state#資料欄位)、[06-01](/notes/specs/06-admin/01-user-management#資料欄位)"
+   "description": "**已落地**：Alembic revision `7bf0f909ce8f`\n\n一列代表一位可登入的使用者。**PRD 明寫帳號沒有刪除，只有停用與啟用**，所以**不得有軟刪除欄**。\n\n**規格來源**：[01-04](/notes/specs/01-account/04-profile#資料欄位)、[01-05](/notes/specs/01-account/05-login-state#資料欄位)、[06-01](/notes/specs/06-admin/01-user-management#資料欄位)"
   },
   {
    "name": "account_session",
@@ -356,7 +356,7 @@
      "note": "寬限期內額外重發的次數；CHECK 0–1；預設 0。來源：01-05 Q13：最多額外重發一次"
     }
    ],
-   "description": "**已落地**：Alembic revision `7bf0f909ce8f`\n\n一列代表一張 refresh token；它所屬的 `account_session` 就是 token family。維護者 2026-11-26 在 #719 決定新增（N1），依據 ADR-004 D1 與 01-05 §延續登入狀態與疑似被盜用。\n\n**`CASCADE` 的理由**：token 只對它的登入狀態有意義，登入狀態整筆清除時一起清掉。\n\n**依據**：ADR-004 D1 與維護者 #719 的 N1 決定；規則引用 01-05 §延續登入狀態與疑似被盜用，但 01-05 §資料欄位 沒有這張表的欄位（它是延續機制的存放，不是畫面資料），所以不列為該頁的規格來源表。"
+   "description": "**已落地**：Alembic revision `7bf0f909ce8f`\n\n一列代表一張 refresh token；它所屬的 `account_session` 就是 token family。依據 ADR-004 D1 與 01-05 §延續登入狀態與疑似被盜用。\n\n**`CASCADE` 的理由**：token 只對它的登入狀態有意義，登入狀態整筆清除時一起清掉。\n\n**依據**：ADR-004 D1；規則引用 01-05 §延續登入狀態與疑似被盜用，但 01-05 §資料欄位 沒有這張表的欄位（它是延續機制的存放，不是畫面資料），所以不列為該頁的規格來源表。"
   },
   {
    "name": "account_password_token",
@@ -473,7 +473,7 @@
      "note": "申請時間"
     }
    ],
-   "description": "**「同一時間最多一筆」是本專案規格明文，而原始規劃沒有對應的唯一限制。** 字典裡那條部分唯一索引是字典提議的落法——**提議，不是裁定**。\n\n**規格來源**：[01-04](/notes/specs/01-account/04-profile#資料欄位)"
+   "description": "**「同一時間最多一筆」是本專案規格明文，而原始規劃沒有對應的唯一限制。** 字典裡那條部分唯一索引是字典提議的落法——**是提議，還沒定案**。\n\n**規格來源**：[01-04](/notes/specs/01-account/04-profile#資料欄位)"
   },
   {
    "name": "account_notification_preference",
@@ -492,7 +492,7 @@
      "name": "event_key",
      "type": "varchar",
      "required": "required",
-     "note": "通知事件；複合 PK 之一。不加 CHECK——合法值由設定登錄管理，歸 #188。來源：01-04：六個事件",
+     "note": "通知事件；複合 PK 之一。不加 CHECK——合法值由設定登錄管理，清單未定。來源：01-04：六個事件",
      "pk": true
     },
     {
@@ -508,7 +508,7 @@
      "note": "是否寄信。來源：同上"
     }
    ],
-   "description": "**維護者 2026-11-11 裁定：字典做成事件鍵驅動。** 所以表的形狀確定，而**六個事件鍵的合法值清單留給 [#188](https://github.com/label-suite/label-suite/issues/188)**——清單之後怎麼變都不用改表。\n\n**「從來沒存過時全部開啟」是讀取時的預設，不是資料庫預設值。** [01-04](/notes/specs/01-account/04-profile#資料欄位) 明寫這一點：缺列時兩個頻道都當開啟，**讀取不建列**。所以這張表可以完全沒有某個使用者的列，那不代表他關掉了通知。\n\n**規格來源**：[01-04](/notes/specs/01-account/04-profile#資料欄位)"
+   "description": "**字典做成事件鍵驅動**：表的形狀固定，**六個事件鍵的合法值清單**未定，清單之後怎麼變都不用改表。\n\n**「從來沒存過時全部開啟」是讀取時的預設，不是資料庫預設值。** [01-04](/notes/specs/01-account/04-profile#資料欄位) 明寫這一點：缺列時兩個頻道都當開啟，**讀取不建列**。所以這張表可以完全沒有某個使用者的列，那不代表他關掉了通知。\n\n**規格來源**：[01-04](/notes/specs/01-account/04-profile#資料欄位)"
   },
   {
    "name": "user_deletion_request",
@@ -519,17 +519,17 @@
      "name": "user_id",
      "type": "uuid",
      "required": "required",
-     "note": "請求刪除的帳號；PK；不加 FK（維護者裁定 Q1）。來源：ADR-008 D7：只存 user_id 與時間",
+     "note": "請求刪除的帳號；PK；不加 FK。來源：ADR-008 D7：只存 user_id 與時間",
      "pk": true
     },
     {
      "name": "requested_at",
      "type": "timestamptz",
      "required": "required",
-     "note": "請求時間。來源：ADR-008 D7：欄名經維護者確認（Q6）"
+     "note": "請求時間。來源：ADR-008 D7：只存 user_id 與時間"
     }
    ],
-   "description": "**一列代表一位使用者的刪除請求**，只存 `user_id` 與時間；從備份還原之後，要先依這份記錄把刪除重新套用一次（[ADR-008 D7](/notes/development/adr/008-deployment-and-operations#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)）。**不對 `users` 加 FK**，並在備份之外另留一份。\n\n**這張表沒有規格條文可指**：它是維護者 2026-11-26 裁定新增的（見 [#687 的回覆](https://github.com/label-suite/label-suite/issues/687#issuecomment-7183496309)）。"
+   "description": "**一列代表一位使用者的刪除請求**，只存 `user_id` 與時間；從備份還原之後，要先依這份記錄把刪除重新套用一次（[ADR-008 D7](/notes/development/adr/008-deployment-and-operations#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)）。**不對 `users` 加 FK**，並在備份之外另留一份。\n\n**這張表沒有規格條文可指**：它依 ADR-008 新增，經過見字典的決策紀錄。"
   },
   {
    "name": "audit_events",
@@ -600,7 +600,7 @@
      "note": "伺服器端發生時間；索引。來源：UTC"
     }
    ],
-   "description": "一張共用的稽核表，不按模組拆。[06-02](/notes/specs/06-admin/02-role-settings#資料欄位) 的「稽核紀錄」落在這裡。\n\n**這張表與 `annotation_history_event` 是兩套政策，不可合併**：前者至少一年、後者**永不刪除**（[04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位)）。差異寫進[盤點總帳的 D3](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決)，仍待裁。\n\n**規格來源**：[06-02](/notes/specs/06-admin/02-role-settings#資料欄位)"
+   "description": "一張共用的稽核表，不按模組拆。[06-02](/notes/specs/06-admin/02-role-settings#資料欄位) 的「稽核紀錄」落在這裡。\n\n**這張表與 `annotation_history_event` 是兩套政策，不可合併**：前者至少一年、後者**永不刪除**（[04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位)）。差異仍未決，見[盤點總帳 D3](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決)。\n\n**規格來源**：[06-02](/notes/specs/06-admin/02-role-settings#資料欄位)"
   },
   {
    "name": "admin_role_permission",
@@ -693,7 +693,7 @@
      "name": "status",
      "type": "varchar",
      "required": "required",
-     "note": "轉換後的狀態；CHECK 限 queued／running／succeeded／failed／cancelled；後三者是終態。來源：ADR-008 D5：維護者裁定 Q3"
+     "note": "轉換後的狀態；CHECK 限 queued／running／succeeded／failed／cancelled；後三者是終態。來源：ADR-008 D5"
     },
     {
      "name": "at",
@@ -705,10 +705,10 @@
      "name": "payload",
      "type": "json",
      "required": "nullable",
-     "note": "終態事件帶的輸出與評估；CHECK payload IS NULL OR status IN ('succeeded','failed','cancelled')（提案）。來源：ADR-008 D5：維護者裁定 Q4，可空的 payload json，由終態事件帶；這超出裁定第 2 列原本的「status、at」，維護者已確認；CHECK 為提案"
+     "note": "終態事件帶的輸出與評估；CHECK payload IS NULL OR status IN ('succeeded','failed','cancelled')（提案）。來源：ADR-008 D5：可空的 payload json，由終態事件帶；CHECK 為提案"
     }
    ],
-   "description": "**每一次狀態轉換新增一列，只新增、不更新也不刪除。** 目前狀態取同一個 `ai_run_id` 最新的一列；`completed_at` 由終態事件的 `at` 推導（[ADR-008 D5](/notes/development/adr/008-deployment-and-operations#d5-ai-可追溯用只新增的-ai_runs-表)）。\n\n**這張表沒有規格條文可指**：來源是維護者 2026-11-26 的裁定（見 [#687 的回覆](https://github.com/label-suite/label-suite/issues/687#issuecomment-7183496309)）。**標記者不可讀**：`payload` 的輸出與評估可能帶標準答案（硬性規則 6）。"
+   "description": "**每一次狀態轉換新增一列，只新增、不更新也不刪除。** 目前狀態取同一個 `ai_run_id` 最新的一列；`completed_at` 由終態事件的 `at` 推導（[ADR-008 D5](/notes/development/adr/008-deployment-and-operations#d5-ai-可追溯用只新增的-ai_runs-表)）。\n\n**這張表沒有規格條文可指**：同 `ai_runs`，來源見字典的決策紀錄。**標記者不可讀**：`payload` 的輸出與評估可能帶標準答案（硬性規則 6）。"
   },
   {
    "name": "ai_runs",
@@ -767,7 +767,7 @@
      "note": "建立時間；索引（提案）。來源：ADR-008 D5：要能依時間查"
     }
    ],
-   "description": "**一列代表一次 AI 輔助流程的 run，只在建立時寫一次，之後不更新也不刪除**；狀態轉換寫在 `ai_run_events`（[ADR-008 D5](/notes/development/adr/008-deployment-and-operations#d5-ai-可追溯用只新增的-ai_runs-表)）。\n\n**這張表沒有規格條文可指**：它是維護者 2026-11-26 對 ADR-008 待決第 2 列的裁定（見 [#687 的回覆](https://github.com/label-suite/label-suite/issues/687#issuecomment-7183496309)），不是任何一頁規格的資料欄位。**標記者不可讀**：輸入快照可能帶標準答案（硬性規則 6）。"
+   "description": "**一列代表一次 AI 輔助流程的 run，只在建立時寫一次，之後不更新也不刪除**；狀態轉換寫在 `ai_run_events`（[ADR-008 D5](/notes/development/adr/008-deployment-and-operations#d5-ai-可追溯用只新增的-ai_runs-表)）。\n\n**這張表沒有規格條文可指**：它出自 ADR-008（經過見字典的決策紀錄），不是任何一頁規格的資料欄位。**標記者不可讀**：輸入快照可能帶標準答案（硬性規則 6）。"
   },
   {
    "name": "dataset",
@@ -862,13 +862,13 @@
      "name": "withdrawn_at",
      "type": "timestamptz",
      "required": "nullable",
-     "note": "撤回時間；空值＝未撤回；CHECK withdrawn_at IS NULL OR state='sealed'（提案）。來源：ADR-008 D7：維護者裁定，只標記撤回、不刪除；CHECK 為提案"
+     "note": "撤回時間；空值＝未撤回；CHECK withdrawn_at IS NULL OR state='sealed'（提案）。來源：ADR-008 D7：只標記撤回、不刪除；CHECK 為提案"
     },
     {
      "name": "withdrawal_reason",
      "type": "text",
      "required": "nullable",
-     "note": "撤回原因；CHECK withdrawn_at IS NOT NULL OR withdrawal_reason IS NULL（提案）。來源：ADR-008 D7：維護者裁定記錄撤回原因，欄名與型別經確認（Q6）；是否必填沒有裁定"
+     "note": "撤回原因；CHECK withdrawn_at IS NOT NULL OR withdrawal_reason IS NULL（提案）。來源：ADR-008 D7：記錄撤回原因；是否必填未定"
     }
    ],
    "description": "**三條版本來源限制，只有兩條能由資料庫擋下——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**規格來源**：[05-03](/notes/specs/05-dataset/03-ingestion-lineage#資料欄位)"
@@ -941,7 +941,7 @@
      "note": "建立時間。來源：UTC"
     }
    ],
-   "description": "一列是一個已接受的來源檔。[05-03](/notes/specs/05-dataset/03-ingestion-lineage#資料欄位) 的七個批次欄位全在這裡。\n\n**`classification_manifest` 的 JSON 結構要記下來，不能只寫「JSON」**（[#235](https://github.com/label-suite/label-suite/issues/235) 工作項 2 明文要求）——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**「兩類互斥」在 DB 擋不住**，JSON 內的集合關係要在寫入前驗證——規格也明寫「**寫入前驗證過**」。\n\n**規格來源**：[03-02](/notes/specs/03-task-management/02-task-new#資料欄位)、[05-03](/notes/specs/05-dataset/03-ingestion-lineage#資料欄位)"
+   "description": "一列是一個已接受的來源檔。[05-03](/notes/specs/05-dataset/03-ingestion-lineage#資料欄位) 的七個批次欄位全在這裡。\n\n**`classification_manifest` 的 JSON 結構要記下來，不能只寫「JSON」**——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**「兩類互斥」在 DB 擋不住**，JSON 內的集合關係要在寫入前驗證——規格也明寫「**寫入前驗證過**」。\n\n**規格來源**：[03-02](/notes/specs/03-task-management/02-task-new#資料欄位)、[05-03](/notes/specs/05-dataset/03-ingestion-lineage#資料欄位)"
   },
   {
    "name": "dataset_item",
@@ -1012,7 +1012,7 @@
      "name": "protected_payload",
      "type": "json",
      "required": "nullable",
-     "note": "受保護但非答案的值。來源：05-03：鍵名一律取自分類清單；不得存答案。讀取角色維護者 2026-11-11 裁定與答案同級（僅計分程序）"
+     "note": "受保護但非答案的值。來源：05-03：鍵名一律取自分類清單；不得存答案。讀取角色與答案同級（僅計分程序）"
     },
     {
      "name": "created_at",
@@ -1113,13 +1113,13 @@
      "name": "archived_at",
      "type": "timestamptz",
      "required": "nullable",
-     "note": "封存時間。來源：03-01：非空＝已封存，不出現在列表。維護者 2026-11-11 裁定可逆，復原時清空"
+     "note": "封存時間。來源：03-01：非空＝已封存，不出現在列表。可逆，復原時清空"
     },
     {
      "name": "archived_by_user_id",
      "type": "uuid",
      "required": "nullable",
-     "note": "封存的人；FK → users.id，RESTRICT；CHECK 兩欄同時為空或同時非空。來源：03-01：封存時記下。復原時一併清空，不記復原者（維護者 2026-11-11 裁定）",
+     "note": "封存的人；FK → users.id，RESTRICT；CHECK 兩欄同時為空或同時非空。來源：03-01：封存時記下。復原時一併清空，不記復原者",
      "fk": "users"
     },
     {
@@ -1181,7 +1181,7 @@
      "note": "建立時間"
     }
    ],
-   "description": "一列是同任務的一個完整設定快照。**這是本專案「JSON 內嵌」的主要落點。**\n\n**`config_payload` 的結構要記下來，不能只寫「JSON」——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**輸出類型維持 config-driven（[#235](https://github.com/label-suite/label-suite/issues/235) 工作項 6）**：八種型別的設定全部塞在 `output_configs{}` 裡，**不為它們建八張表、也不在核心加八個分支**。這直接接到 `AGENTS.md` 硬性規則 5「task 類型是 config-driven，加一種不得改核心程式」。\n\n**不收的三欄**（原始有、本專案規格沒有對應）：`schema_version_no`、`schema_digest`、`schema_registry_version`。它們是驗證定義的版本追溯機制，本專案規格沒有提到，同 D7 的理由不留；需要時另開 issue。\n\n**規格來源**：[03-02](/notes/specs/03-task-management/02-task-new#資料欄位)"
+   "description": "一列是同任務的一個完整設定快照。**這是本專案「JSON 內嵌」的主要落點。**\n\n**`config_payload` 的結構要記下來，不能只寫「JSON」——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**輸出類型維持 config-driven**：八種型別的設定全部塞在 `output_configs{}` 裡，**不為它們建八張表、也不在核心加八個分支**。這直接接到 `AGENTS.md` 硬性規則 5「task 類型是 config-driven，加一種不得改核心程式」。\n\n**不收的三欄**（原始有、本專案規格沒有對應）：`schema_version_no`、`schema_digest`、`schema_registry_version`。它們是驗證定義的版本追溯機制，本專案規格沒有提到，沒有規格依據就不收；需要時另開 issue。\n\n**規格來源**：[03-02](/notes/specs/03-task-management/02-task-new#資料欄位)"
   },
   {
    "name": "task_guideline_version",
@@ -1304,7 +1304,7 @@
      "note": "最後狀態變更"
     }
    ],
-   "description": "**同一人可以同時持有多個任務角色**，一個角色一列。\n\n[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 的「最後活動」**規則欄是 `—`**——規格只說成員清單要顯示它，沒說它怎麼來，所以存或算都要裁。\n\n**裁定存成欄位**：每次活動更新這一欄。代價是每個標記動作都要多寫一次；換到的是成員清單不必為了一個時間戳去查整張歷程表。另一個選項（取該成員最新一筆 `annotation_history_event` 的時間）已被排除。\n\n這與[盤點總帳](/notes/diagrams/architecture/data-field-inventory)把它歸為**持久**一致，兩份文件不必再對齊。\n\n**「任務角色加入時決定、之後唯讀」在 DB 擋不住。** 唯一限制 `(task_id, user_id, task_role)` 只保證不重複，**不保證沒人 UPDATE 那一欄**——那要在應用層擋，或加一個拒絕更新該欄的觸發器。\n\n**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)"
+   "description": "**同一人可以同時持有多個任務角色**，一個角色一列。\n\n[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 的「最後活動」**規則欄是 `—`**——規格只說成員清單要顯示它，沒說它怎麼來，所以存或算要另外決定。\n\n**存成欄位**：每次活動更新這一欄。代價是每個標記動作都要多寫一次；換到的是成員清單不必為了一個時間戳去查整張歷程表。另一個選項（取該成員最新一筆 `annotation_history_event` 的時間）已被排除。\n\n這與[盤點總帳](/notes/diagrams/architecture/data-field-inventory)把它歸為**持久**一致，兩份文件不必再對齊。\n\n**「任務角色加入時決定、之後唯讀」在 DB 擋不住。** 唯一限制 `(task_id, user_id, task_role)` 只保證不重複，**不保證沒人 UPDATE 那一欄**——那要在應用層擋，或加一個拒絕更新該欄的觸發器。\n\n**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)"
   },
   {
    "name": "task_reviewer_roster_member",
@@ -1339,7 +1339,7 @@
      "note": "顯示順序"
     }
    ],
-   "description": "**用 `can_arbitrate` 而不是另一張仲裁者名冊表，是為了讓「子集合」這件事在結構上成立**：仲裁者只能是這張表上的列，不可能出現一個不在審核員名冊上的仲裁者。\n\n**複合 FK 是必要的**：單欄 FK 指向 `task_membership.id` 擋不住「這個成員資格屬於另一個任務」。這正是 [#235](https://github.com/label-suite/label-suite/issues/235) 工作項 4 要求檢查的——**合法 ID 被錯接到另一個上下文**。\n\n**兩條擋不住的——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)"
+   "description": "**用 `can_arbitrate` 而不是另一張仲裁者名冊表，是為了讓「子集合」這件事在結構上成立**：仲裁者只能是這張表上的列，不可能出現一個不在審核員名冊上的仲裁者。\n\n**複合 FK 是必要的**：單欄 FK 指向 `task_membership.id` 擋不住「這個成員資格屬於另一個任務」。它擋住的是**合法 ID 被錯接到另一個上下文**。\n\n**兩條擋不住的——明細見[候選資料表字典](/notes/diagrams/architecture/data-table-dictionary)的這張表那一節。\n\n**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)"
   },
   {
    "name": "task_run_cycle",
@@ -1364,7 +1364,7 @@
      "name": "cycle_no",
      "type": "integer",
      "required": "required",
-     "note": "同任務序號；唯一 (task_id, cycle_no)；CHECK >= 1。來源：03-03：試標輪……每個回合都屬於一輪；同一個任務同時最多只有一輪沒關掉，退回草稿會關掉目前這一輪並開始下一輪（#170）。原本只有反推依據"
+     "note": "同任務序號；唯一 (task_id, cycle_no)；CHECK >= 1。來源：03-03：試標輪……每個回合都屬於一輪；同一個任務同時最多只有一輪沒關掉，退回草稿會關掉目前這一輪並開始下一輪"
     },
     {
      "name": "dataset_version_id",
@@ -1413,10 +1413,10 @@
      "name": "rejection_reason",
      "type": "text",
      "required": "required",
-     "note": "退回原因。來源：03-03：選填，允許空白；隨那一輪的關閉一起寫入，不得省略欄位（#170）。空值以空字串表示，與 annotation_review_decision.reason 同一條原則。和 close_reason 是兩件事：那一欄是列舉，這一欄是負責人填的那段文字，completed 關閉時留空"
+     "note": "退回原因。來源：03-03：選填，允許空白；隨那一輪的關閉一起寫入，不得省略欄位；空值以空字串表示，與 annotation_review_decision.reason 同一條原則。和 close_reason 是兩件事：那一欄是列舉，這一欄是負責人填的那段文字，completed 關閉時留空"
     }
    ],
-   "description": "**這張表是反推出來的**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 的「回合編號」規則欄寫「同一輪裡唯一，**退回草稿後新一輪從 1 重新算**」——「輪」就是週期。**反推當時它沒有畫面**，使用者只看得到回合編號；[#170](https://github.com/label-suite/label-suite/issues/170) 於 2026-11-12 把「試標輪」與「退回原因」寫進同一頁的「資料欄位」、[#282](https://github.com/label-suite/label-suite/issues/282) 於 2026-11-12 把「試標輪」鏡像進 [04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位)，所以今天序號與退回原因都有條文可指，而畫面上試標回合表與 04-01 的回饋面板都標著「第 N 輪」。\n\n**規格來源**：[04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位)、[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)（`:939` 的「試標輪」與 `:940` 的「退回原因」，#170）"
+   "description": "**這張表記的是「輪」**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 的「回合編號」規則欄寫「同一輪裡唯一，**退回草稿後新一輪從 1 重新算**」——「輪」就是週期。同一頁的「資料欄位」有「試標輪」與「退回原因」，[04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位) 也有「試標輪」，所以序號與退回原因都有條文可指；畫面上試標回合表與 04-01 的回饋面板都標著「第 N 輪」。\n\n**規格來源**：[04-02](/notes/specs/04-annotation/02-annotation-workspace#資料欄位)、[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)（`:939` 的「試標輪」與 `:940` 的「退回原因」）"
   },
   {
    "name": "task_trial_round",
@@ -1627,7 +1627,7 @@
      "fk": "users"
     }
    ],
-   "description": "**憑證只是憑證，真正的成員在 `task_run_item`。** 這一點要寫清楚，否則會有人以為刪掉 `task_run_item` 還能從憑證重建——憑證只有摘要與外部參照，**不是資料來源**。\n\n**這張表沒有自己的條文，而那是對的**：整節沒有指回 `docs/specs/` 的連結，欄位的「規格來源」欄寫的是設計理由而不是規格引用——因為它的結構是從別頁的規則推出來的。維護者 2026-11-12 裁定 D11：和 D9 同類，不另找依據也不硬補一條（[盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決)）。"
+   "description": "**憑證只是憑證，真正的成員在 `task_run_item`。** 這一點要寫清楚，否則會有人以為刪掉 `task_run_item` 還能從憑證重建——憑證只有摘要與外部參照，**不是資料來源**。\n\n**這張表沒有自己的條文，而那是對的**：整節沒有指回 `docs/specs/` 的連結，欄位的「規格來源」欄寫的是設計理由而不是規格引用——因為它的結構是從別頁的規則推出來的。它和不持有業務資料的那三頁規格同類，不另找依據也不硬補一條（[盤點總帳 D11](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決)）。"
   },
   {
    "name": "task_run",
@@ -1747,7 +1747,7 @@
      "note": "執行內排序；唯一 (task_run_id, list_position)；CHECK >= 1"
     }
    ],
-   "description": "**`task_run_cycle_id` 在這張表是刻意的反正規化。** 它可以從 `task_run` JOIN 出來，但那樣就**無法用一個唯一限制表達「同週期不重選」**——跨表的唯一性 DB 做不到。這是為了把一條規則落進 DB 而付的代價，寫在這裡免得後人誤刪。\n\n**這張表沒有自己的條文，而那是對的**：整節沒有指回 `docs/specs/` 的連結，欄位的「規格來源」欄寫的是設計理由而不是規格引用——因為它的結構是從別頁的規則推出來的。維護者 2026-11-12 裁定 D11：和 D9 同類，不另找依據也不硬補一條（[盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決)）。"
+   "description": "**`task_run_cycle_id` 在這張表是刻意的反正規化。** 它可以從 `task_run` JOIN 出來，但那樣就**無法用一個唯一限制表達「同週期不重選」**——跨表的唯一性 DB 做不到。這是為了把一條規則落進 DB 而付的代價，寫在這裡免得後人誤刪。\n\n**這張表沒有自己的條文，而那是對的**：整節沒有指回 `docs/specs/` 的連結，欄位的「規格來源」欄寫的是設計理由而不是規格引用——因為它的結構是從別頁的規則推出來的。它和不持有業務資料的那三頁規格同類，不另找依據也不硬補一條（[盤點總帳 D11](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決)）。"
   },
   {
    "name": "task_annotation_assignment",
@@ -1804,7 +1804,7 @@
      "note": "最後改動"
     }
    ],
-   "description": "**[04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位) 的「審核單位」就是「任務的某個回合 × 某一筆指派」**，所以這張表是審核單位定址的一半。\n\n**規格來源**：[04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位)（`:671`「審核單位｜**任務的某個回合 × 某一筆指派**」——這張表就是那個單位的定址）、[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)（`:944`「標記作業狀態……**推導值，不另存**」——所以這張表刻意沒有 `status` 欄）。**這兩條是表說明引用的規格**，維護者 2026-11-11 裁定它們**算**來源（[盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決) D8）。\n\n**沒有 `status` 欄，這是刻意的。** [03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 明寫「標記作業狀態……**推導值，不另存**」，由不可撤回的排除、目前的標記紀錄與受派者**依序**判定。存一個 `status` 會與那個順序產生第二個真相。"
+   "description": "**[04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位) 的「審核單位」就是「任務的某個回合 × 某一筆指派」**，所以這張表是審核單位定址的一半。\n\n**規格來源**：[04-01](/notes/specs/04-annotation/01-annotation-list#資料欄位)（`:671`「審核單位｜**任務的某個回合 × 某一筆指派**」——這張表就是那個單位的定址）、[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)（`:944`「標記作業狀態……**推導值，不另存**」——所以這張表刻意沒有 `status` 欄）。**這兩條是表說明引用的規格**，它們**算**來源（[盤點總帳 D8](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決)）。\n\n**沒有 `status` 欄，這是刻意的。** [03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 明寫「標記作業狀態……**推導值，不另存**」，由不可撤回的排除、目前的標記紀錄與受派者**依序**判定。存一個 `status` 會與那個順序產生第二個真相。"
   },
   {
    "name": "task_annotation_exclusion",
@@ -1927,7 +1927,7 @@
      "note": "結束時間；CHECK status IN ('done','failed') → finished_at IS NOT NULL。來源：未完成不冒稱已結束"
     }
    ],
-   "description": "**一列代表一次背景評分工作**，記的是 [§非同步任務](/notes/development/architecture#非同步任務) 的 `parse_submission` → `load_answers` → `compute_metrics` → `write_results` 跑到哪、成不成功；它不存結果，也不存答案。\n\n**和另外兩張的關係**：多對一指向 `task_run`（複合 FK，同任務才接得上）；**不指向 `task_trial_iaa_result`**——那張的 PK 就是 `trial_round_id`，`write_results` 寫的是那一列，[ADR-003 D10](/notes/development/adr/003-backend-architecture#d10-背景計算的結果寫入做成冪等) 的結果寫入冪等落在它的 PK；本表的唯一鍵管的是「同一次送出別重複建工作」，是另一層。\n\n**這張表沒有規格條文可指**：它是維護者 2026-11-26 裁定新增的（見 [#685 的回覆](https://github.com/label-suite/label-suite/issues/685#issuecomment-7183496070)），結構由 [§非同步任務](/notes/development/architecture#非同步任務) 的流程與 ADR-003 D10 的冪等要求推出來，不是任何一頁規格的資料欄位。"
+   "description": "**一列代表一次背景評分工作**，記的是 [§非同步任務](/notes/development/architecture#非同步任務) 的 `parse_submission` → `load_answers` → `compute_metrics` → `write_results` 跑到哪、成不成功；它不存結果，也不存答案。\n\n**和另外兩張的關係**：多對一指向 `task_run`（複合 FK，同任務才接得上）；**不指向 `task_trial_iaa_result`**——那張的 PK 就是 `trial_round_id`，`write_results` 寫的是那一列，[ADR-003 D10](/notes/development/adr/003-backend-architecture#d10-背景計算的結果寫入做成冪等) 的結果寫入冪等落在它的 PK；本表的唯一鍵管的是「同一次送出別重複建工作」，是另一層。\n\n**這張表沒有規格條文可指**：依據見字典的決策紀錄，結構由 [§非同步任務](/notes/development/architecture#非同步任務) 的流程與 ADR-003 D10 的冪等要求推出來，不是任何一頁規格的資料欄位。"
   },
   {
    "name": "annotation_record",
@@ -2128,7 +2128,7 @@
      "note": "最新改判時間"
     }
    ],
-   "description": "**一個審核單位只有一個提交者。** 這張表就是那個約束的落點：三欄審核單位鍵上的**唯一 `(run_id, assignment_id)`** 擋住兩位審核員並列正式提交，而首次提交者即**固定歸屬**、之後每次合法改判把 `version` +1。\n\n**這一句是從下表的儲存格收上來的，不是另外寫的**——這張表在規格裡沒有直接對應的條文（**維護者 2026-11-11 裁定 D10：就用表自己的儲存格寫一句**）。它**沒有自己的規格來源，而那是對的**：那一題登記成 D11，維護者 2026-11-12 裁定它和 D9 同類——結構由別頁的規則決定，本來就沒有自己的條文（[盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決)）。"
+   "description": "**一個審核單位只有一個提交者。** 這張表就是那個約束的落點：三欄審核單位鍵上的**唯一 `(run_id, assignment_id)`** 擋住兩位審核員並列正式提交，而首次提交者即**固定歸屬**、之後每次合法改判把 `version` +1。\n\n**這一句是從下表的儲存格收上來的，不是另外寫的**——這張表在規格裡沒有直接對應的條文（[盤點總帳 D10](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決)）。它**沒有自己的規格來源，而那是對的**：結構由別頁的規則決定，本來就沒有自己的條文（[盤點總帳 D11](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決)）。"
   },
   {
    "name": "annotation_review_submission_revision",
@@ -2180,7 +2180,7 @@
      "note": "本次提交時間"
     }
    ],
-   "description": "**每次正式提交一份完整快照。`decision_payload` 是已提交決策的唯一權威紀錄。**\n\n**這張表沒有自己的條文，而那是對的**：整節沒有指回 `docs/specs/` 的連結，欄位的「規格來源」欄寫的是設計理由而不是規格引用——因為它的結構是從別頁的規則推出來的。維護者 2026-11-12 裁定 D11：和 D9 同類，不另找依據也不硬補一條（[盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決)）。"
+   "description": "**每次正式提交一份完整快照。`decision_payload` 是已提交決策的唯一權威紀錄。**\n\n**這張表沒有自己的條文，而那是對的**：整節沒有指回 `docs/specs/` 的連結，欄位的「規格來源」欄寫的是設計理由而不是規格引用——因為它的結構是從別頁的規則推出來的。它和不持有業務資料的那三頁規格同類，不另找依據也不硬補一條（[盤點總帳 D11](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決)）。"
   },
   {
    "name": "annotation_review_decision",
@@ -2518,7 +2518,7 @@
      "name": "lead_time_ms",
      "type": "integer",
      "required": "nullable",
-     "note": "耗時；CHECK >= 0；見上。來源：04-02：頁面可見時間累計，切到背景暫停；不得用事件時間相減；登入狀態失效的時間不得當結束時間；算不出來就留空並顯示「未知」、不補推估值（不論原因，#196）"
+     "note": "耗時；CHECK >= 0；見上。來源：04-02：頁面可見時間累計，切到背景暫停；不得用事件時間相減；登入狀態失效的時間不得當結束時間；算不出來就留空並顯示「未知」、不補推估值（不論原因）"
     },
     {
      "name": "occurred_at",
@@ -2734,7 +2734,7 @@
      "note": "清單中的順序；唯一 (export_id, position)；CHECK >= 1。來源：從 1 開始。順序寫進產物的有序清單"
     }
    ],
-   "description": "**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)（`:954`「匯出時間……記錄列與檔名用的是**實際讀取結果的那個時間**，不是請求被接受的時間」——兩個時刻各自成立，而一次匯出可以納入多次執行，所以要有這張表記順序）。**這一條是表說明引用的規格**，維護者 2026-11-11 裁定它**算**來源（[盤點總帳 §五](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決) D8）。\n\n**這張表是反推出來的六項之一**（[盤點總帳§二](/notes/diagrams/architecture/data-field-inventory#二九條流程的反推)）：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 的畫面只顯示一個匯出時間，但「請求被接受」與「實際讀取結果」是兩個時刻，而一次匯出可以納入多次執行——所以要有這張表記順序。"
+   "description": "**規格來源**：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位)（`:954`「匯出時間……記錄列與檔名用的是**實際讀取結果的那個時間**，不是請求被接受的時間」——兩個時刻各自成立，而一次匯出可以納入多次執行，所以要有這張表記順序）。**這一條是表說明引用的規格**，它**算**來源（[盤點總帳 D8](/notes/diagrams/architecture/data-field-inventory#五裁定紀錄與待裁決)）。\n\n**這張表是反推出來的六項之一**（[盤點總帳§二](/notes/diagrams/architecture/data-field-inventory#二九條流程的反推)）：[03-03](/notes/specs/03-task-management/03-task-detail#資料欄位) 的畫面只顯示一個匯出時間，但「請求被接受」與「實際讀取結果」是兩個時刻，而一次匯出可以納入多次執行——所以要有這張表記順序。"
   },
   {
    "name": "task_work_interval",
