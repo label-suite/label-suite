@@ -61,6 +61,17 @@ describe("Button interaction", () => {
   });
 });
 
+describe("Button motion", () => {
+  it("turns its colour transition off when reduced motion is requested (F9)", () => {
+    render(<Button>Save</Button>);
+
+    expect(screen.getByRole("button", { name: "Save" })).toHaveClass(
+      "transition-all",
+      "motion-reduce:transition-none",
+    );
+  });
+});
+
 describe("Button loading state", () => {
   it("stops the spinner from turning when reduced motion is requested", () => {
     const { container } = render(<Button loading>Checking</Button>);
