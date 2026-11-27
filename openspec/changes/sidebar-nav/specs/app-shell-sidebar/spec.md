@@ -39,7 +39,7 @@
 
 ### Requirement: 語言文字較長時導覽不截斷
 
-英文介面下，導覽項文字（含「System Administration」「Dataset Analytics」「Task Management」）在每一種寬度 SHALL 完整顯示，MUST NOT 被截斷或以省略號代替；每一種寬度都允許換行，寬度 767px 以下的下方主導覽只在一個字放不下時才在字中間斷行。
+英文介面下，導覽項文字（含「System Administration」「Dataset Analytics」「Task Management」）在每一種寬度 SHALL 完整顯示，MUST NOT 被截斷或以省略號代替；每一種寬度都允許換行，寬度 767px 以下的下方主導覽在一個英文字放不下時依音節加連字號斷行（例如「Dash-／board」），連音節斷行也放不下時才在字中間斷行。
 
 來源：規格 07-01 §邊界情況「某個導覽項在新語言下的文字特別長」、§不同螢幕寬度的呈現 第 3 條；Scenario「語言文字較長時導覽不截斷」；clarification Q13。
 
