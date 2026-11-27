@@ -20,10 +20,14 @@
 
 ## 元件樹
 
+<!-- 每個元件引用 design/system/components/<元件>.md，寫明「沿用 <路徑>」（照該規格的「程式實作」）或「新建，放 <路徑>」。
+     設計系統的共用元件（規格沒有標「單頁專屬」或「原型鷹架」）只能放 frontend/src/components/，不寫「由 design.md 決定」。
+     設計系統沒有對應規格的元件，寫「設計系統無」與新建的位置。 -->
+
 ```text
 PageName
-├─ Toolbar
-└─ DataTable
+├─ Toolbar        list-toolbar.md：新建，放 frontend/src/components/ui/list-toolbar.tsx
+└─ SubmitButton   button.md：沿用 frontend/src/components/ui/button.tsx
 ```
 
 ## 資料來源

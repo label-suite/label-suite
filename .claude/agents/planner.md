@@ -37,6 +37,7 @@ model: opus
 - 依相依順序排列：資料表與 migration → API 與測試 → contract 同步 → 前端頁面與測試 → 文件
 - 測試與實作在同一個 task（TDD），不另拆「寫測試」task
 - 依實作校正常駐文件（`backend-modules.mdx`、`error-codes.mdx`、`endpoint-authorization.mdx`、`frontend-routes.mdx`）寫進寫那段程式的 `[@backend-developer]`／`[@frontend-developer]` task，字典與 ER 的校正寫進 `[@dba]` task；**不另拆成 `[@technical-writer]` 的 task**，因為這幾個角色的定義要它們自己校正
+- 元件放哪裡照 `ui-design.md` 元件樹寫的位置，design 與 tasks 都不另選；新建的共用元件在 task 裡寫出檔案路徑（例如 `frontend/src/components/ui/list-toolbar.tsx`）。ui-design 留著沒決定的位置不自己補，回報退回 `ui-ux`
 - 不新增 design 沒提到的工作，也不遺漏 design 提到的工作
 
 ## 品質標準
@@ -54,6 +55,7 @@ model: opus
 - [ ] api-contract 的每個端點都被至少一個 Scenario 覆蓋，反之亦然
 - [ ] design 的決策都有對應段落，風險與 migration 回滾已說明
 - [ ] tasks 符合 `rules.tasks`，順序沒有反向依賴、沒有環；校正常駐文件沒有派給 `[@technical-writer]`
+- [ ] design 與 tasks 的元件位置和 ui-design 元件樹一致；新建的共用元件在 task 寫出了檔案路徑
 - [ ] `pnpm exec openspec validate <change>` 通過
 - [ ] specs、design、tasks 符合 clarification.md 的決議
 - [ ] 待決問題已列出，沒有替需求做決定

@@ -158,6 +158,7 @@ description: 釐清 OpenSpec change 規劃產物（system-analysis、system-desi
 - [ ] 資料庫 schema 變更是否影響其他模組？是否有對應的 Alembic migration task？**SQLite 與 PostgreSQL 兩層是否都考慮到？**
 - [ ] **被改的表，上下游都查過了嗎？** 依字典逐表看它的 FK 欄（它參照誰）與「被誰參照」，列出受波及的表與所屬模組；system-design 的異動表沒提到的，就是一個問題
 - [ ] 字典與 ER 是否已在規劃階段改好、`pnpm check:er` 通過？只改了 ER 或只寫在 system-design、字典沒動，是 P 類缺陷，退回 `sd`
+- [ ] ui-design 元件樹的每個元件是否都引用了 `design/system/components/<元件>.md`，並寫明「沿用 `<路徑>`」或「新建，放 `<路徑>`」？共用元件（規格沒有標「單頁專屬」或「原型鷹架」）是否放 `frontend/src/components/`？**元件位置留著沒決定**（寫「由 design.md 決定」、留到實作再定、或根本沒寫）是 P 類缺陷，退回 `ui-ux`
 
 #### 4.7 可測試性
 - [ ] 每個 Scenario 是否可被自動化測試覆蓋（後端 pytest、前端 Vitest、E2E Playwright）？

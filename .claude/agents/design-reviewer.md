@@ -21,7 +21,8 @@ model: opus
 4. 相關既有 capability，以及後端匯出的 `backend/openapi.json`——確認修改端點時的破壞性影響
 5. 資料規劃：`docs/diagrams/architecture/data-table-dictionary.mdx` 與 `database-schema.er.json`（system-design 有資料模型異動時必讀）
 6. 常駐文件：`docs/diagrams/architecture/backend-modules.mdx`（system-design 有「常駐文件異動」時必讀）、`frontend-routes.mdx`（ui-design 有「常駐文件異動」時必讀），以及 `error-codes.mdx` 與 `endpoint-authorization.mdx`（api-contract 有「常駐文件異動」時必讀）
-7. 執行 `pnpm exec openspec validate <change>`、`pnpm exec openspec status --change <change>`、`pnpm check:er`
+7. 元件的對照：`design/system/components/`（ui-design 元件樹引用的規格與它們的「程式實作」）
+8. 執行 `pnpm exec openspec validate <change>`、`pnpm exec openspec status --change <change>`、`pnpm check:er`
 
 ## 審查清單
 
@@ -45,6 +46,7 @@ model: opus
 - [ ] 每個端點有權限、錯誤碼、遮蔽欄位說明；operationId 唯一
 - [ ] system-design 的 Sequence Diagram 與 contract 一致（路徑、欄位、錯誤）
 - [ ] ui-design 的每個資料區塊都對得到 contract 的 operationId，四種狀態齊全
+- [ ] **元件樹每個元件都對到設計系統與程式位置**：引用了 `design/system/components/<元件>.md`，寫明沿用的路徑（與該規格的「程式實作」一致）或新建的位置；共用元件放 `frontend/src/components/`，沒有「由 design.md 決定」這類延後決定的位置
 - [ ] 破壞性變更有標示，前端影響已列入 tasks
 
 **資料模型**（system-design 有資料模型異動時）
@@ -66,6 +68,7 @@ model: opus
 - [ ] 依賴順序正確（migration 在使用它的程式之前、contract 同步在前端使用之前），沒有環
 - [ ] 標示可平行的群組之間沒有資料或檔案依賴
 - [ ] design 提到的工作都有 task，tasks 沒有超出 design 的範圍
+- [ ] design 與 tasks 的元件位置照 ui-design 元件樹；新建的共用元件在 task 寫出了檔案路徑
 
 ## 輸出格式
 
