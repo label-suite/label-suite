@@ -5,29 +5,32 @@
 //
 // Reads every design/system/components/<name>.md and its 「程式實作」 field
 // (backticked file paths, or 「尚未實作」; a backticked word without a slash,
-// such as a prop name, is a note), then checks three things:
+// such as a prop name, is a note), then checks:
 //
-//   1. Every spec has exactly one 「程式實作」 field, and every path it names exists.
+//   1. Every spec has exactly one 「程式實作」 field, every path it names exists,
+//      and the inventory's 「程式實作」 column says the same as the spec.
 //   2. A shared component's implementation does not live in frontend/src/features/
 //      or frontend/src/pages/.
-//   3. A component file under features/ or pages/ whose name matches a shared spec
-//      -- the same name, or the same last word (`*-toggle`, `*-banner`) -- imports
-//      one of the matched specs' implementations under frontend/src/components/.
-//      Wrapping the shared component is reuse; a file with the name and without
-//      the import is a second copy.
+//   3. A component file under features/ or pages/ whose name matches a shared
+//      component imports one of the matched components' implementations under
+//      frontend/src/components/. A name matches when it equals, or ends in the
+//      same last word as, the spec name (`*-toggle`, `*-banner`) or the file name
+//      of the spec's implementation under components/ (`*-alert` for alert.tsx).
+//      Wrapping the shared component is reuse; the name without the import is a
+//      second copy.
 //
 // Shared is defined in docs/development/rules/frontend-agent-rules.mdx F5 and
-// implemented here. A component is shared when the
-// screens that use it, read from the 「元件 → 畫面」 table of
-// design/system/screen-inventory.md, belong to more than one frontend feature,
-// and its spec is not marked 單頁專屬 or 原型鷹架. A component used only by the
-// screens of one feature stays in that feature. Each screen ID maps to a
-// feature through SCREEN_FEATURE; a screen ID it does not cover, or a spec
-// missing from the table, fails instead of being guessed.
+// implemented here: the product screens that use a component, read from the
+// 「元件 → 畫面」 table of design/system/screen-inventory.md, belong to more than
+// one frontend feature, and its spec is not marked 單頁專屬 or 原型鷹架 anywhere
+// in its text. Each screen ID maps to a feature through SCREEN_FEATURE; a screen
+// ID it does not cover, or a spec missing from the table, fails instead of being
+// guessed.
 //
 // Existing violations sit in MOVE, one row per file, each naming the issue that
-// moves it; a row whose file no longer violates fails, so it is deleted once the
-// move lands. NOT_SAME holds files whose name only looks like a component's.
+// moves it and the component the file hits; a row whose file no longer violates
+// fails, so it is deleted once the move lands. NOT_SAME holds files whose name
+// only looks like a component's.
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, posix, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -39,57 +42,42 @@ const SCANNED = [`${SRC}/features/`, `${SRC}/pages/`];
 const NOT_YET = "尚未實作";
 const NOT_SHARED_MARKS = ["單頁專屬", "原型鷹架"];
 const INVENTORY = "design/system/screen-inventory.md";
+const ISSUE = /^#\d+$/;
 
 // Screen ID (as written in the inventory) → the frontend feature that owns it.
-// A product screen belongs to the feature of its prototype module, the first
-// path segment: every account/* screen is one feature, and so on. Three IDs are
-// not module screens and are named in full: the prototype's component showcase
-// is the design system's styleguide, whose frontend counterpart is the
-// /dev/gallery page, so a component shown there counts as used by that page;
-// the app shell is the signed-in frame every module sits in; the prototype index
-// lists screens and uses no component.
+// The convention: a product screen belongs to the feature of its prototype
+// module, the first path segment, so every account/* screen is one feature
+// (today features/auth). Three IDs are named in full: the signed-in app shell
+// is a product screen of its own; the prototype's component showcase and its
+// index are not product screens, so they map to null and count for nothing.
 export const SCREEN_FEATURE = {
   modules: ["account", "admin", "annotation", "dashboard", "dataset", "task-management"],
   screens: {
-    "components-showcase": "dev-gallery",
     "shared/app-shell": "app-shell",
+    "components-showcase": null,
     index: null,
   },
 };
 
-// Existing violations. `movedBy` is the issue that moves the file into
-// frontend/src/components/; a row without an owning issue is not allowed.
-// Delete a row in the same pull request that moves its file.
-export const MOVE = [
-  {
-    file: "frontend/src/features/auth/language-toggle.tsx",
-    component: "lang-toggle",
-    movedBy: "#720",
-  },
-  {
-    file: "frontend/src/pages/dev-gallery/theme-toggle.tsx",
-    component: "app-shell",
-    movedBy: "#720",
-  },
-];
+// Existing violations. `movedBy` is the issue (`#N`) that moves the file into
+// frontend/src/components/; `component` is the spec the file hits. Delete a row
+// in the same pull request that moves its file.
+export const MOVE = [];
 
 // Files whose name matches a spec only by accident: `reason` says why it is a
 // different component. Prefer renaming the file over adding a row here.
-export const NOT_SAME = [
-  {
-    file: "frontend/src/features/system-health/health-status-panel.tsx",
-    component: "state-panel",
-    reason: "/dev/health 的結果卡；State Panel 是送出後取代表單的狀態區塊",
-  },
-];
+export const NOT_SAME = [];
 
 const toPosix = (p) => p.split(sep).join("/");
+const lastWord = (name) => name.split("-").at(-1);
+const stripExt = (p) => p.replace(/\.(tsx|ts)$/, "").replace(/\/index$/, "");
+const nameMatches = (base, name) => base === name || lastWord(base) === lastWord(name);
 
 /**
  * Map a screen ID to its feature.
  *
  * @param {string} screen a screen ID from the inventory, e.g. `account/login`
- * @returns {string|null} the feature, or null for a screen that owns none
+ * @returns {string|null} the feature, or null for a screen that is not a product screen
  * @throws {Error} when SCREEN_FEATURE does not cover the screen
  */
 export function featureOf(screen, map = SCREEN_FEATURE) {
@@ -102,22 +90,25 @@ export function featureOf(screen, map = SCREEN_FEATURE) {
 }
 
 /**
- * Read which features use each component, from the inventory's 「元件 → 畫面」 table.
+ * Read the inventory's 「元件 → 畫面」 table.
  *
  * @param {string} text the inventory text
- * @returns {{features: Map<string, Set<string>>, errors: string[]}} keyed by spec name
+ * @returns {{features: Map<string, Set<string>>, impl: Map<string, string>, errors: string[]}}
+ *   keyed by spec name; `impl` is the 「程式實作」 cell as written
  */
 export function parseInventory(text, map = SCREEN_FEATURE) {
   const features = new Map();
+  const impl = new Map();
   const errors = [];
   const start = text.indexOf("| 元件 |");
-  if (start < 0) return { features, errors: [`${INVENTORY} 找不到「元件 → 畫面」表`] };
+  if (start < 0) return { features, impl, errors: [`${INVENTORY} 找不到「元件 → 畫面」表`] };
   for (const line of text.slice(start).split("\n").slice(2)) {
     if (!line.startsWith("|")) break;
     const name = /\(components\/([a-z0-9-]+)\.md\)/.exec(line)?.[1];
     if (!name) continue;
+    const cells = line.split("|");
     const used = new Set();
-    for (const cell of line.split("|").slice(2, -3)) {
+    for (const cell of cells.slice(2, -3)) {
       for (const m of cell.matchAll(/`([^`]+)`/g)) {
         try {
           const feature = featureOf(m[1], map);
@@ -128,19 +119,18 @@ export function parseInventory(text, map = SCREEN_FEATURE) {
       }
     }
     features.set(name, used);
+    impl.set(name, cells.at(-2).trim());
   }
-  return { features, errors };
+  return { features, impl, errors };
 }
-
-const lastWord = (name) => name.split("-").at(-1);
 
 /**
  * Parse one component spec.
  *
  * @param {string} name the file name without `.md`
  * @param {string} text the spec text
- * @returns {{name: string, marked: boolean, paths: string[], errors: string[]}}
- *   `marked` is true for a spec marked 單頁專屬 or 原型鷹架
+ * @returns {{name: string, marked: boolean, field: string, paths: string[], errors: string[]}}
+ *   `marked` is true for a spec marked 單頁專屬 or 原型鷹架; `field` is the raw value
  */
 export function parseSpec(name, text) {
   const errors = [];
@@ -160,9 +150,8 @@ export function parseSpec(name, text) {
         errors.push(`${SPEC_DIR}/${name}.md：「程式實作」的 \`${p}\` 不在 ${SRC}/ 底下`);
     }
   }
-  const header = text.split("\n").slice(0, 6).join("\n");
-  const marked = NOT_SHARED_MARKS.some((mark) => header.includes(mark));
-  return { name, marked, paths, errors };
+  const marked = NOT_SHARED_MARKS.some((mark) => text.includes(mark));
+  return { name, marked, field: fields[0] ?? "", paths, errors };
 }
 
 /** List repo-relative component files under the scanned trees (tests excluded). */
@@ -190,14 +179,12 @@ export function importedModules(file, text) {
   return out;
 }
 
-const stripExt = (p) => p.replace(/\.(tsx|ts)$/, "").replace(/\/index$/, "");
-
 /**
  * Judge the tree.
  *
  * @param {string} root repository root
  * @param {{move?: object[], notSame?: object[]}} [lists]
- * @returns {{errors: string[], violations: Map<string, string[]>, stale: string[]}}
+ * @returns {{errors: string[], violations: Map<string, {whys: string[], specs: Set<string>}>, stale: string[]}}
  */
 export function checkTree(root, { move = MOVE, notSame = NOT_SAME } = {}) {
   const errors = [];
@@ -205,34 +192,38 @@ export function checkTree(root, { move = MOVE, notSame = NOT_SAME } = {}) {
     .filter((f) => f.endsWith(".md"))
     .sort()
     .map((f) => parseSpec(f.slice(0, -3), readFileSync(join(root, SPEC_DIR, f), "utf8")));
-  const specNames = new Set(specs.map((s) => s.name));
   if (!existsSync(join(root, INVENTORY)))
     throw new Error(`${INVENTORY} 不存在，無法判定哪些元件共用`);
   const inventory = parseInventory(readFileSync(join(root, INVENTORY), "utf8"));
   errors.push(...new Set(inventory.errors));
-  for (const spec of specs) {
-    if (!inventory.features.has(spec.name))
-      errors.push(`${INVENTORY} 的「元件 → 畫面」表沒有 ${spec.name}`);
-    spec.features = [...(inventory.features.get(spec.name) ?? [])].sort();
-    spec.shared = !spec.marked && spec.features.length > 1;
-  }
 
-  // Rule 1: the field is there and its paths exist.
+  // Rule 1: the field is there, its paths exist, and the inventory agrees.
   for (const spec of specs) {
     errors.push(...spec.errors);
     for (const p of spec.paths) {
       if (!existsSync(join(root, p)))
         errors.push(`${SPEC_DIR}/${spec.name}.md：「程式實作」的 \`${p}\` 不存在`);
     }
-  }
-  for (const row of [...move, ...notSame]) {
-    if (!specNames.has(row.component))
-      errors.push(`允許清單的 ${row.file} 指向不存在的元件規格 ${row.component}`);
+    if (!inventory.features.has(spec.name)) {
+      errors.push(`${INVENTORY} 的「元件 → 畫面」表沒有 ${spec.name}`);
+    } else if (inventory.impl.get(spec.name) !== spec.field) {
+      errors.push(
+        `${INVENTORY} 的 ${spec.name}「程式實作」是「${inventory.impl.get(spec.name)}」，規格寫的是「${spec.field}」；重新生成清冊`,
+      );
+    }
+    spec.features = [...(inventory.features.get(spec.name) ?? [])].sort();
+    spec.shared = !spec.marked && spec.features.length > 1;
   }
 
   const violations = new Map();
-  const add = (file, why) => violations.set(file, [...(violations.get(file) ?? []), why]);
+  const add = (file, why, names) => {
+    const v = violations.get(file) ?? { whys: [], specs: new Set() };
+    v.whys.push(why);
+    for (const n of names) v.specs.add(n);
+    violations.set(file, v);
+  };
   const shared = specs.filter((s) => s.shared);
+  const homesOf = (s) => s.paths.filter((p) => p.startsWith(SHARED_HOME));
 
   // Rule 2: a shared component's implementation lives under components/.
   for (const spec of shared) {
@@ -241,6 +232,7 @@ export function checkTree(root, { move = MOVE, notSame = NOT_SAME } = {}) {
         add(
           p,
           `是共用元件 ${spec.name}（用在 ${spec.features.join("、")}）的程式實作，應放 ${SHARED_HOME}`,
+          [spec.name],
         );
       }
     }
@@ -249,25 +241,43 @@ export function checkTree(root, { move = MOVE, notSame = NOT_SAME } = {}) {
   // Rule 3: a file named like a shared component wraps its shared implementation.
   for (const file of listComponentFiles(root)) {
     const base = posix.basename(file, ".tsx");
-    const matched = shared.filter((s) => s.name === base || lastWord(s.name) === lastWord(base));
+    const matched = shared.filter(
+      (s) =>
+        nameMatches(base, s.name) ||
+        homesOf(s).some((p) => nameMatches(base, posix.basename(stripExt(p)))),
+    );
     if (matched.length === 0) continue;
     const imports = [...importedModules(file, readFileSync(join(root, file), "utf8"))].map(
       stripExt,
     );
-    const homes = matched
-      .flatMap((s) => s.paths.filter((p) => p.startsWith(SHARED_HOME)))
-      .map(stripExt);
-    if (homes.some((h) => imports.includes(h))) continue;
+    if (matched.flatMap(homesOf).some((h) => imports.includes(stripExt(h)))) continue;
     if (matched.some((s) => s.paths.includes(file))) continue; // already reported by rule 2
-    const names = matched.map((s) => s.name).join("、");
-    add(file, `檔名近似設計系統元件 ${names}，卻沒有沿用它在 ${SHARED_HOME} 的實作`);
+    const names = matched.map((s) => s.name);
+    add(
+      file,
+      `檔名近似設計系統元件 ${names.join("、")}，卻沒有沿用它在 ${SHARED_HOME} 的實作`,
+      names,
+    );
   }
 
-  // Allowlists: suppress listed files; a listed file that no longer violates is stale.
+  // Allowlists: validate the rows, suppress listed files, report stale rows.
   const stale = [];
+  for (const row of move) {
+    if (!ISSUE.test(row.movedBy ?? ""))
+      errors.push(`允許清單的 ${row.file}：movedBy 要寫成 #N，現在是「${row.movedBy}」`);
+  }
   for (const row of [...move, ...notSame]) {
-    if (violations.has(row.file)) violations.delete(row.file);
-    else stale.push(row.file);
+    const v = violations.get(row.file);
+    if (!v) {
+      stale.push(row.file);
+      continue;
+    }
+    if (!v.specs.has(row.component)) {
+      errors.push(
+        `允許清單的 ${row.file} 寫的元件是 ${row.component}，但它觸發的是 ${[...v.specs].join("、")}`,
+      );
+    }
+    violations.delete(row.file);
   }
   return { errors, violations, stale };
 }
@@ -288,7 +298,7 @@ export function main(argv, { stdout = process.stdout, stderr = process.stderr } 
   }
   const { errors, violations, stale } = result;
   for (const e of errors) stderr.write(`FAIL: ${e}\n`);
-  for (const [file, whys] of violations) {
+  for (const [file, { whys }] of violations) {
     stderr.write(
       `FAIL: ${file} ${whys.join("；")}。用在一個以上 feature 的設計系統元件只能放 ${SHARED_HOME}（frontend-agent-rules F5）\n`,
     );

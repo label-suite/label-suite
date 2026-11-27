@@ -23,17 +23,7 @@ const SCRIPT = fileURLToPath(new URL("../check-component-reuse.mjs", import.meta
 const spec = (impl, mark = "") =>
   `# X\n\n> 正典章節：無 ${mark}｜批次 \`b1\`\n>\n> 程式實作：${impl}\n\n## 結構\n`;
 
-/** Build a tree from {relativePath: content}; return its root. */
-function tree(files) {
-  const root = mkdtempSync(join(tmpdir(), "component-reuse-"));
-  for (const [rel, content] of Object.entries(files)) {
-    mkdirSync(dirname(join(root, rel)), { recursive: true });
-    writeFileSync(join(root, rel), content);
-  }
-  return root;
-}
-
-/** The inventory's 「元件 → 畫面」 table, all screens in the b1 column. */
+/** The inventory's 「元件 → 畫面」 table: rows are name → [screens, 程式實作]. */
 const inventory = (rows) =>
   [
     "# Screen Inventory",
@@ -43,99 +33,104 @@ const inventory = (rows) =>
     "| 元件 | b1 用到它的畫面 | b2 用到它的畫面 | b3 用到它的畫面 | b4 用到它的畫面 | 數 | 程式實作 |",
     "| :--- | :--- | :--- | :--- | :--- | ---: | :--- |",
     ...Object.entries(rows).map(
-      ([name, screens]) =>
-        `| [${name}](components/${name}.md) | ${screens.map((x) => `\`${x}\``).join(" · ")} | **（b2 無）** | **（b3 無）** | **（b4 無）** | ${screens.length} | 尚未實作 |`,
+      ([name, [screens, impl]]) =>
+        `| [${name}](components/${name}.md) | ${screens.map((x) => `\`${x}\``).join(" · ")} | **（b2 無）** | **（b3 無）** | **（b4 無）** | ${screens.length} | ${impl} |`,
     ),
     "",
   ].join("\n");
 
-const ROWS = {
+const SCREENS = {
   button: ["account/login", "admin/user-management"],
-  "alert-banner": ["account/login", "components-showcase"],
+  "alert-banner": ["account/login", "admin/role-settings"],
   "lang-toggle": ["account/login", "components-showcase"],
   "auth-card": ["account/login", "account/register"],
   card: ["dashboard/dashboard", "task-management/task-new"],
-  "step-indicator": ["task-management/task-new"],
+  modal: ["admin/role-settings", "task-management/task-new"],
+  "step-indicator": ["task-management/task-new", "dataset/x"],
 };
 
-const BASE = {
-  "design/system/screen-inventory.md": inventory(ROWS),
-  "design/system/components/button.md": spec("`frontend/src/components/ui/button.tsx`"),
-  "design/system/components/alert-banner.md": spec("`frontend/src/components/ui/alert.tsx`"),
-  "design/system/components/lang-toggle.md": spec("尚未實作"),
-  "design/system/components/step-indicator.md": spec("尚未實作", "｜**單頁專屬**"),
-  "frontend/src/components/ui/button.tsx": "export function Button() {}\n",
-  "frontend/src/components/ui/alert.tsx": "export function Alert() {}\n",
+const SPECS = {
+  button: spec("`frontend/src/components/ui/button.tsx`"),
+  "alert-banner": spec("`frontend/src/components/ui/alert.tsx`"),
+  "lang-toggle": spec("尚未實作"),
+  "step-indicator": spec("尚未實作", "｜**單頁專屬**"),
 };
+
+/**
+ * Build a tree. `specs` overrides SPECS (name → spec text); the inventory is
+ * generated from the specs, its 程式實作 column copied from each header,
+ * unless `files` supplies one.
+ */
+function tree({ specs = {}, files = {}, screens = SCREENS } = {}) {
+  const all = { ...SPECS, ...specs };
+  const rows = Object.fromEntries(
+    Object.entries(all).map(([name, text]) => [name, [screens[name], parseSpec(name, text).field]]),
+  );
+  const content = {
+    "design/system/screen-inventory.md": inventory(rows),
+    "frontend/src/components/ui/button.tsx": "export function Button() {}\n",
+    "frontend/src/components/ui/alert.tsx": "export function Alert() {}\n",
+    ...Object.fromEntries(
+      Object.entries(all).map(([name, text]) => [`design/system/components/${name}.md`, text]),
+    ),
+    ...files,
+  };
+  const root = mkdtempSync(join(tmpdir(), "component-reuse-"));
+  for (const [rel, text] of Object.entries(content)) {
+    mkdirSync(dirname(join(root, rel)), { recursive: true });
+    writeFileSync(join(root, rel), text);
+  }
+  return root;
+}
+
 const none = { move: [], notSame: [] };
+const judge = (opts, lists = none) => {
+  const root = tree(opts);
+  try {
+    return checkTree(root, lists);
+  } finally {
+    rmSync(root, { recursive: true });
+  }
+};
 
-test("parseSpec reads paths, 尚未實作 and the not-shared mark", () => {
+test("parseSpec reads paths, 尚未實作 and the not-shared mark anywhere in the text", () => {
   const a = parseSpec("button", spec("`frontend/src/components/ui/button.tsx`（`loading`）"));
   assert.deepEqual(a.paths, ["frontend/src/components/ui/button.tsx"]);
   assert.equal(a.marked, false);
   assert.deepEqual(a.errors, []);
-  const b = parseSpec("step-indicator", spec("尚未實作", "｜**單頁專屬**"));
+  const b = parseSpec(
+    "x",
+    `${spec("尚未實作")}\n\n${"段落\n".repeat(10)}這是原型鷹架，不是產品元件。\n`,
+  );
   assert.deepEqual(b.paths, []);
   assert.equal(b.marked, true);
-});
-
-test("featureOf maps module screens by their first segment and three screens by name", () => {
-  assert.equal(featureOf("account/profile"), "account");
-  assert.equal(featureOf("task-management/task-new"), "task-management");
-  assert.equal(featureOf("components-showcase"), "dev-gallery");
-  assert.equal(featureOf("shared/app-shell"), "app-shell");
-  assert.equal(featureOf("index"), null);
-  assert.throws(() => featureOf("reports/weekly"), /SCREEN_FEATURE/);
-  assert.throws(() => featureOf("account"), /SCREEN_FEATURE/);
-});
-
-test("parseInventory collects the features of each component and reports unmapped screens", () => {
-  const r = parseInventory(
-    inventory({ button: ["account/login", "account/register"], x: ["reports/weekly"] }),
-  );
-  assert.deepEqual([...r.features.get("button")], ["account"]);
-  assert.match(r.errors.join("\n"), /reports\/weekly/);
-});
-
-test("a component used by one feature may live in that feature", () => {
-  const root = tree({
-    ...BASE,
-    "design/system/components/auth-card.md": spec("`frontend/src/features/auth/auth-card.tsx`"),
-    "frontend/src/features/auth/auth-card.tsx": "export const x = 1;\n",
-  });
-  const r = checkTree(root, none);
-  assert.deepEqual(r.errors, []);
-  assert.equal(r.violations.size, 0);
-  rmSync(root, { recursive: true });
-});
-
-test("a component used by more than one feature may not live in a feature", () => {
-  const root = tree({
-    ...BASE,
-    "design/system/components/card.md": spec("`frontend/src/features/dashboard/card.tsx`"),
-    "frontend/src/features/dashboard/card.tsx": "export const x = 1;\n",
-  });
-  const why = checkTree(root, none).violations.get("frontend/src/features/dashboard/card.tsx");
-  assert.match(why[0], /card（用在 dashboard、task-management）/);
-  rmSync(root, { recursive: true });
-});
-
-test("a spec missing from the inventory, or an unmapped screen, fails", () => {
-  const root = tree({
-    ...BASE,
-    "design/system/screen-inventory.md": inventory({ ...ROWS, button: ["reports/weekly"] }),
-  });
-  const errors = checkTree(root, none).errors.join("\n");
-  assert.match(errors, /reports\/weekly/);
-  rmSync(root, { recursive: true });
-  const root2 = tree({ ...BASE, "design/system/components/modal.md": spec("尚未實作") });
-  assert.match(checkTree(root2, none).errors.join("\n"), /沒有 modal/);
-  rmSync(root2, { recursive: true });
 });
 
 test("parseSpec rejects a spec without the field or with an empty one", () => {
   assert.match(parseSpec("x", "# X\n\n> 正典章節：無\n").errors[0], /恰好一個/);
   assert.match(parseSpec("x", spec("看情況")).errors[0], /尚未實作/);
+});
+
+test("featureOf maps module screens by their first segment; showcase and index count for nothing", () => {
+  assert.equal(featureOf("account/profile"), "account");
+  assert.equal(featureOf("task-management/task-new"), "task-management");
+  assert.equal(featureOf("shared/app-shell"), "app-shell");
+  assert.equal(featureOf("components-showcase"), null);
+  assert.equal(featureOf("index"), null);
+  assert.throws(() => featureOf("reports/weekly"), /SCREEN_FEATURE/);
+  assert.throws(() => featureOf("account"), /SCREEN_FEATURE/);
+});
+
+test("parseInventory collects features and 程式實作, and reports unmapped screens", () => {
+  const r = parseInventory(
+    inventory({
+      button: [["account/login", "account/register", "components-showcase"], "尚未實作"],
+      x: [["reports/weekly"], "尚未實作"],
+    }),
+  );
+  assert.deepEqual([...r.features.get("button")], ["account"]);
+  assert.equal(r.impl.get("button"), "尚未實作");
+  assert.match(r.errors.join("\n"), /reports\/weekly/);
 });
 
 test("importedModules resolves the @/ alias and relative imports", () => {
@@ -149,91 +144,142 @@ test("importedModules resolves the @/ alias and relative imports", () => {
   ]);
 });
 
-test("a feature file that wraps the shared component passes", () => {
-  const root = tree({
-    ...BASE,
-    "frontend/src/features/auth/logout-button.tsx":
-      'import { Button } from "@/components/ui/button";\n',
+test("a component used by one feature may live in that feature", () => {
+  const r = judge({
+    specs: { "auth-card": spec("`frontend/src/features/auth/auth-card.tsx`") },
+    files: { "frontend/src/features/auth/auth-card.tsx": "export const x = 1;\n" },
   });
-  const r = checkTree(root, none);
   assert.deepEqual(r.errors, []);
   assert.equal(r.violations.size, 0);
-  rmSync(root, { recursive: true });
+});
+
+test("the showcase does not make a component shared", () => {
+  const r = judge({
+    specs: { "lang-toggle": spec("`frontend/src/features/auth/language-toggle.tsx`") },
+    files: { "frontend/src/features/auth/language-toggle.tsx": "export const x = 1;\n" },
+  });
+  assert.deepEqual(r.errors, []);
+  assert.equal(r.violations.size, 0);
+});
+
+test("a component used by more than one feature may not live in a feature", () => {
+  const r = judge({
+    specs: { card: spec("`frontend/src/features/dashboard/card.tsx`") },
+    files: { "frontend/src/features/dashboard/card.tsx": "export const x = 1;\n" },
+  });
+  const v = r.violations.get("frontend/src/features/dashboard/card.tsx");
+  assert.match(v.whys[0], /card（用在 dashboard、task-management）/);
+});
+
+test("a spec marked 單頁專屬 is not shared even when used by two features", () => {
+  const r = judge({
+    specs: {
+      "step-indicator": spec("`frontend/src/features/task/step-indicator.tsx`", "｜**單頁專屬**"),
+    },
+    files: { "frontend/src/features/task/step-indicator.tsx": "export const x = 1;\n" },
+  });
+  assert.equal(r.violations.size, 0);
+});
+
+test("a feature file that wraps the shared component passes", () => {
+  const r = judge({
+    files: {
+      "frontend/src/features/auth/logout-button.tsx":
+        'import { Button } from "@/components/ui/button";\n',
+    },
+  });
+  assert.deepEqual(r.errors, []);
+  assert.equal(r.violations.size, 0);
 });
 
 test("a near-named feature file without the shared import fails", () => {
-  const root = tree({
-    ...BASE,
-    "frontend/src/features/auth/session-banner.tsx": "export const x = 1;\n",
+  const r = judge({
+    files: { "frontend/src/features/auth/session-banner.tsx": "export const x = 1;\n" },
   });
-  const r = checkTree(root, none);
   assert.match(
-    r.violations.get("frontend/src/features/auth/session-banner.tsx")[0],
+    r.violations.get("frontend/src/features/auth/session-banner.tsx").whys[0],
     /alert-banner/,
   );
-  rmSync(root, { recursive: true });
 });
 
-test("a page file named like a component with no shared implementation fails", () => {
-  const root = tree({ ...BASE, "frontend/src/pages/x/theme-toggle.tsx": "export const x = 1;\n" });
-  assert.ok(checkTree(root, none).violations.has("frontend/src/pages/x/theme-toggle.tsx"));
-  rmSync(root, { recursive: true });
-});
-
-test("a shared component implemented under features/ fails; a single-page one does not", () => {
-  const root = tree({
-    ...BASE,
-    "design/system/components/lang-toggle.md": spec(
-      "`frontend/src/features/auth/language-toggle.tsx`",
-    ),
-    "design/system/components/step-indicator.md": spec(
-      "`frontend/src/features/task/step-indicator.tsx`",
-      "｜**單頁專屬**",
-    ),
-    "frontend/src/features/auth/language-toggle.tsx": "export const x = 1;\n",
-    "frontend/src/features/task/step-indicator.tsx": "export const x = 1;\n",
+test("a file named like a shared component's implementation file fails without the import", () => {
+  const r = judge({
+    specs: { modal: spec("`frontend/src/components/ui/dialog.tsx`") },
+    files: {
+      "frontend/src/components/ui/dialog.tsx": "export function Dialog() {}\n",
+      "frontend/src/features/x/form-alert.tsx": "export const x = 1;\n",
+      "frontend/src/features/x/confirm-dialog.tsx": "export const x = 1;\n",
+      "frontend/src/features/x/delete-dialog.tsx":
+        'import { Dialog } from "@/components/ui/dialog";\n',
+    },
   });
-  const r = checkTree(root, none);
-  assert.match(
-    r.violations.get("frontend/src/features/auth/language-toggle.tsx")[0],
-    /lang-toggle/,
-  );
-  assert.equal(r.violations.has("frontend/src/features/task/step-indicator.tsx"), false);
-  rmSync(root, { recursive: true });
+  assert.match(r.violations.get("frontend/src/features/x/form-alert.tsx").whys[0], /alert-banner/);
+  assert.match(r.violations.get("frontend/src/features/x/confirm-dialog.tsx").whys[0], /modal/);
+  assert.equal(r.violations.has("frontend/src/features/x/delete-dialog.tsx"), false);
 });
 
 test("a 程式實作 path that does not exist fails", () => {
-  const root = tree({
-    ...BASE,
-    "design/system/components/card.md": spec("`frontend/src/components/ui/card.tsx`"),
-  });
-  assert.match(checkTree(root, none).errors.join("\n"), /card\.tsx` 不存在/);
+  const r = judge({ specs: { card: spec("`frontend/src/components/ui/card.tsx`") } });
+  assert.match(r.errors.join("\n"), /card\.tsx` 不存在/);
+});
+
+test("the inventory's 程式實作 column must match the spec header", () => {
+  const root = tree();
+  writeFileSync(
+    join(root, "design/system/components/lang-toggle.md"),
+    spec("`frontend/src/components/ui/button.tsx`"),
+  );
+  const errors = checkTree(root, none).errors.join("\n");
   rmSync(root, { recursive: true });
+  assert.match(errors, /lang-toggle「程式實作」是「尚未實作」/);
+});
+
+test("a spec missing from the inventory, or an unmapped screen, fails", () => {
+  const unmapped = judge({ screens: { ...SCREENS, button: ["reports/weekly"] } });
+  assert.match(unmapped.errors.join("\n"), /reports\/weekly/);
+  const root = tree();
+  writeFileSync(join(root, "design/system/components/tooltip.md"), spec("尚未實作"));
+  const errors = checkTree(root, none).errors.join("\n");
+  rmSync(root, { recursive: true });
+  assert.match(errors, /沒有 tooltip/);
 });
 
 test("test files are not scanned", () => {
-  const root = tree({ ...BASE, "frontend/src/features/auth/session-banner.test.tsx": "x\n" });
-  assert.equal(checkTree(root, none).violations.size, 0);
-  rmSync(root, { recursive: true });
+  const r = judge({ files: { "frontend/src/features/auth/session-banner.test.tsx": "x\n" } });
+  assert.equal(r.violations.size, 0);
 });
 
 test("an allowlisted file is suppressed, and a row that no longer violates is stale", () => {
-  const root = tree({ ...BASE, "frontend/src/pages/x/theme-toggle.tsx": "export const x = 1;\n" });
   const move = [
-    { file: "frontend/src/pages/x/theme-toggle.tsx", component: "lang-toggle", movedBy: "#720" },
-    { file: "frontend/src/pages/x/gone.tsx", component: "lang-toggle", movedBy: "#720" },
+    {
+      file: "frontend/src/features/x/session-banner.tsx",
+      component: "alert-banner",
+      movedBy: "#1",
+    },
+    { file: "frontend/src/features/x/gone.tsx", component: "alert-banner", movedBy: "#1" },
   ];
-  const r = checkTree(root, { move, notSame: [] });
+  const r = judge(
+    { files: { "frontend/src/features/x/session-banner.tsx": "export const x = 1;\n" } },
+    { move, notSame: [] },
+  );
+  assert.deepEqual(r.errors, []);
   assert.equal(r.violations.size, 0);
-  assert.deepEqual(r.stale, ["frontend/src/pages/x/gone.tsx"]);
-  rmSync(root, { recursive: true });
+  assert.deepEqual(r.stale, ["frontend/src/features/x/gone.tsx"]);
 });
 
-test("an allowlist row naming an unknown spec fails", () => {
-  const root = tree(BASE);
-  const move = [{ file: "frontend/src/pages/x/a.tsx", component: "no-such", movedBy: "#1" }];
-  assert.match(checkTree(root, { move, notSame: [] }).errors.join("\n"), /no-such/);
-  rmSync(root, { recursive: true });
+test("an allowlist row must name an issue and a component the file actually hits", () => {
+  const files = { "frontend/src/features/x/session-banner.tsx": "export const x = 1;\n" };
+  const file = "frontend/src/features/x/session-banner.tsx";
+  const badIssue = judge(
+    { files },
+    { move: [{ file, component: "alert-banner", movedBy: "待開單" }], notSame: [] },
+  );
+  assert.match(badIssue.errors.join("\n"), /movedBy 要寫成 #N/);
+  const wrongSpec = judge(
+    { files },
+    { move: [], notSame: [{ file, component: "card", reason: "r" }] },
+  );
+  assert.match(wrongSpec.errors.join("\n"), /寫的元件是 card，但它觸發的是 alert-banner/);
 });
 
 test("the CLI passes on the repository as it stands", () => {
@@ -243,9 +289,9 @@ test("the CLI passes on the repository as it stands", () => {
 });
 
 test("the CLI reports NA when the root has no component specs", () => {
-  const root = tree({ "README.md": "x\n" });
+  const root = mkdtempSync(join(tmpdir(), "component-reuse-"));
   const r = spawnSync(process.execPath, [SCRIPT, root], { encoding: "utf8" });
+  rmSync(root, { recursive: true });
   assert.equal(r.status, 0, r.stderr);
   assert.match(r.stdout, /^NA:/);
-  rmSync(root, { recursive: true });
 });
