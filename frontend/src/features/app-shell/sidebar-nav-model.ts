@@ -44,8 +44,8 @@ export interface SidebarNavInput {
   systemRole: SessionUserDataRole;
   /** The task-role source's answer. */
   taskRoles: TaskRoleAnswer;
-  /** The deepest route's declaration. */
-  route: SidebarRouteDeclaration;
+  /** The deepest route's declaration; null marks no item current (the router test forbids it). */
+  route: SidebarRouteDeclaration | null;
 }
 
 /** Why and where a plain click is sent instead of the item's own target. */
@@ -97,7 +97,7 @@ function thirdItemLabelKey(taskRoles: TaskRoleAnswer): string {
 
 /** The role label (07-01 §導覽項目與可見性 notes): a page's own label wins, then the current task role. */
 function roleLabelKey({ route, taskRoles }: SidebarNavInput): string {
-  if (route.roleIndicator === "systemAdmin") {
+  if (route?.roleIndicator === "systemAdmin") {
     return "role.systemAdmin";
   }
   const current = taskRoles.currentTaskRole;
@@ -133,18 +133,18 @@ function datasetEntry(taskRoles: TaskRoleAnswer, current: boolean): SidebarNavEn
   };
 }
 
-function adminEntry(route: SidebarRouteDeclaration): SidebarNavEntry {
+function adminEntry(route: SidebarRouteDeclaration | null): SidebarNavEntry {
   const sub = (key: AdminSubKey, labelKey: string, href: string): ShellSubNavItem => ({
     key,
     labelKey,
     href,
-    current: route.navKey === "systemAdmin" && route.adminSubKey === key,
+    current: route?.navKey === "systemAdmin" && route.adminSubKey === key,
   });
   return {
     key: "systemAdmin",
     labelKey: "nav.systemAdmin",
     href: USER_MANAGEMENT_HREF,
-    current: route.navKey === "systemAdmin",
+    current: route?.navKey === "systemAdmin",
     blocked: null,
     children: [
       sub("userManagement", "adminNav.userManagement", USER_MANAGEMENT_HREF),
@@ -162,19 +162,20 @@ function adminEntry(route: SidebarRouteDeclaration): SidebarNavEntry {
  */
 export function buildSidebarNav(input: SidebarNavInput): SidebarNavModel {
   const { systemRole, taskRoles, route } = input;
+  const currentKey = route?.navKey ?? null;
   const plain = (key: NavKey, labelKey: string, href: string): SidebarNavEntry => ({
     key,
     labelKey,
     href,
-    current: route.navKey === key,
+    current: currentKey === key,
     blocked: null,
   });
 
   const items: SidebarNavEntry[] = [
     plain("dashboard", "nav.dashboard", DASHBOARD_HREF),
     plain("taskManagement", "nav.taskManagement", TASK_LIST_HREF),
-    annotationEntry(taskRoles, route.navKey === "annotation"),
-    datasetEntry(taskRoles, route.navKey === "datasetAnalysis"),
+    annotationEntry(taskRoles, currentKey === "annotation"),
+    datasetEntry(taskRoles, currentKey === "datasetAnalysis"),
   ];
   // Rules 2, 3: only a system admin sees System Administration; showing it is not authorization.
   if (systemRole === "super_admin") {

@@ -11,6 +11,7 @@ export {
   type BlockedNoticeKind,
   type BlockedNoticeState,
 } from "./blocked-notice-state";
+export { readRouteDeclaration } from "./route-declaration";
 export {
   GLOBAL_SHORTCUT_GROUP,
   shortcutGroupsFor,

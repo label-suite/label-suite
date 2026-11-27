@@ -90,7 +90,8 @@
    - key 不同，且 pathname 不同於 `checkedPathname` 或 `leftSince` 為 true（使用者換了頁，包括經外殼以外的轉址回到同一個落點）→ 呼叫 `refetch({ cancelRefetch: false })`，記下新的 key 與 pathname、`leftSince` 設為 false
    - key 不同但 pathname 相同且沒有離開過（擋下說明清 state 的 `replace`、已在落點時再點被擋的導覽項）→ 只記下新的 key，不重查
 4. `cancelRefetch: false` 讓一連串轉址裡進行中的那一次重查被沿用，不重送
-5. 查詢維持 `staleTime: Infinity`、`refetchOnWindowFocus: false`；重查進行中側欄沿用上一份資料、不顯示載入中；重查得到未登入時守門照既有規則帶回登入頁（Q11；ui §資料來源 的「為什麼換頁就重查、焦點不重查」；sd §關鍵情境「角色被改掉時側欄不立刻變」）
+5. 重查在 effect 判斷並記下之後，排到 commit 之後的 microtask 才送出：轉址回來時守門、外殼都是新掛載，StrictMode 會同步模擬一次卸載，effect 裡直接呼叫的查詢那時沒有觀察者，TanStack Query 會取消它，而 `staleTime: Infinity` 讓重新掛載也不再查。每個 `location.key` 仍只判斷、只送一次
+6. 查詢維持 `staleTime: Infinity`、`refetchOnWindowFocus: false`；重查進行中側欄沿用上一份資料、不顯示載入中；重查得到未登入時守門照既有規則帶回登入頁（Q11；ui §資料來源 的「為什麼換頁就重查、焦點不重查」；sd §關鍵情境「角色被改掉時側欄不立刻變」）
 
 React 先跑子層再跑父層的 effect，所以同一次 commit 裡外殼的 effect 先記下到達、`AppRoot` 的 effect 後跑。`AppRoot` 比對的是外殼剛記下的 `checkedPathname`，到達的那一頁與它相等，`leftSince` 維持外殼剛設的 false，不會在外殼記下到達之後又被設回 true；若改成比對 `AppRoot` 自己上一次看到的 pathname，從 `/account/login` 導向落點或轉址鏈回到落點的那一次 commit 就會把 `leftSince` 設回 true，接著在落點點被擋的「標記作業」就會誤觸重查。外殼底下的直接換頁（日後多頁時）在同一次 commit 裡 `AppRoot` 還沒機會設 `leftSince`，靠第 3 點的「pathname 不同」判斷；經外殼以外的轉址（本次「任務管理 → `*` → `/` → 落點」）回到同一個 pathname 時，中途的 `/task-management/task-list` 與 `/` 都不等於 `checkedPathname`，已讓 `AppRoot` 設好 `leftSince`。
 

@@ -123,7 +123,6 @@ describe("auth locale text", () => {
       "儀表板還在建置中，完成後登入會直接帶你過去。",
       "The dashboard is still being built. Once it's ready, signing in will take you straight there.",
     ],
-    ["dashboard.signOut", "登出", "Sign out"],
     ["dashboard.pageName", "你已登入", "Signed In"],
     ["dashboard.role.user", "平台成員", "Platform Member"],
     ["dashboard.role.super_admin", "系統管理員", "System Admin"],
@@ -203,6 +202,9 @@ describe("appShell and common locale text", () => {
   it("no longer keeps the shared components' text under auth (design D10)", () => {
     expect(text("zh-TW", "auth", "nav")).toBeUndefined();
     expect(text("en", "auth", "nav")).toBeUndefined();
+    // Signing out moved to the sidebar: its text is appShell's `signOut`.
+    expect(text("zh-TW", "auth", "dashboard.signOut")).toBeUndefined();
+    expect(text("en", "auth", "dashboard.signOut")).toBeUndefined();
   });
 
   it("no longer keeps the gallery's own theme switch text (clarification Q5)", () => {

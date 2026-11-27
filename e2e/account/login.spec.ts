@@ -43,7 +43,9 @@ test("signs in, reaches the landing page and signs out", async ({ page }) => {
   await expect(page).toHaveURL(pathIs(LANDING_PATH));
   await expect(card).toBeVisible();
 
-  await card.getByRole("button", { name: "登出" }).click();
+  // Signing out is the sidebar's job; the card has no button.
+  await expect(card.getByRole("button", { name: "登出" })).toHaveCount(0);
+  await page.getByRole("banner").getByRole("button", { name: "登出" }).click();
   await expect(page).toHaveURL(pathIs(LOGIN_PATH));
   await expect(page.getByRole("region", { name: "登入" })).toBeVisible();
 

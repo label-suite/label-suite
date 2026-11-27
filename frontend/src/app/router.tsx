@@ -3,7 +3,8 @@
  * §頁面與路由, §元件樹 › 守門).
  *
  * The sign-in page, the Google callback, the temporary landing page and `/`
- * exist in every build and go through the page guards; any other path is
+ * exist in every build and go through the page guards; the signed-in pages
+ * are drawn inside the app shell (sidebar-nav D1, D4); any other path is
  * replaced by `/`, which redirects by session (U7, until 07-03's not-found
  * page). The two developer pages are added only when `import.meta.env.DEV` is
  * true and are not guarded. A production build replaces that flag with
@@ -23,6 +24,9 @@ import {
 import { LoginPage } from "@/pages/account-login";
 import { DashboardPlaceholderPage } from "@/pages/dashboard-placeholder";
 import { GoogleCallbackPage } from "@/pages/google-callback";
+
+import { AppRoot } from "./app-root";
+import { AppShellLayout } from "./app-shell-layout";
 
 /** The router the app renders; RouterProvider takes it as is. */
 export type AppRouter = ReturnType<typeof createBrowserRouter>;
@@ -58,16 +62,30 @@ const appRoutes: RouteObject[] = [
   },
   {
     element: <RequireAuthRoute />,
-    children: [{ path: LANDING_PATH, element: <DashboardPlaceholderPage /> }],
+    children: [
+      {
+        // Every signed-in route lives in the shell and declares its sidebar item (design D4).
+        element: <AppShellLayout />,
+        children: [
+          {
+            path: LANDING_PATH,
+            element: <DashboardPlaceholderPage />,
+            handle: { navKey: "dashboard" },
+          },
+        ],
+      },
+    ],
   },
   { path: "/", element: <RootRedirect /> },
   { path: "*", element: <Navigate replace to="/" /> },
 ];
 
-/** Builds the browser router; development mode adds the two developer pages. */
+/**
+ * Builds the browser router; development mode adds the two developer pages.
+ * AppRoot wraps every route, so its session-check mark outlives the shell
+ * (design D6).
+ */
 export function createAppRouter(): AppRouter {
-  if (import.meta.env.DEV) {
-    return createBrowserRouter([...devRoutes(), ...appRoutes]);
-  }
-  return createBrowserRouter(appRoutes);
+  const routes = import.meta.env.DEV ? [...devRoutes(), ...appRoutes] : appRoutes;
+  return createBrowserRouter([{ element: <AppRoot />, children: routes }]);
 }

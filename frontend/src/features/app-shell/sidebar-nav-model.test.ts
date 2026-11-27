@@ -261,6 +261,13 @@ describe("current location (07-01 §目前位置)", () => {
     },
   );
 
+  it("marks nothing when the route declares no item", () => {
+    const model = build({ systemRole: "super_admin", route: null });
+
+    expect(model.items.filter((entry) => entry.current)).toEqual([]);
+    expect(model.roleLabelKey).toBe("role.generalUser");
+  });
+
   it("marks System Administration and the declared submenu entry on an admin page", () => {
     const model = build({
       systemRole: "super_admin",

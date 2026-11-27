@@ -1,6 +1,7 @@
 /**
- * The temporary landing page /dashboard/dashboard: spec auth-guard
- * 「暫時落點顯示目前登入者並提供登出」, login-session 「從這一台登出」,
+ * The temporary landing page /dashboard/dashboard, drawn in the signed-in
+ * shell: spec auth-guard 「暫時落點顯示目前登入者」, login-session 「從這一台登出」
+ * (signing out from the sidebar),
  * frontend-i18n 「切換後的語言跨頁沿用」, and the browser-side checks of the
  * acceptance (requests, credentials, no token in the page). Real backend and
  * Vite dev server (login-auth-guard acceptance).
@@ -42,9 +43,9 @@ test("平台成員看到自己的身分 / 落點的瀏覽器標題", async ({ pa
   await expect(card.getByText(`王小明（${account.email}）`)).toBeVisible();
   await expect(card.getByText("平台成員", { exact: true })).toBeVisible();
   await expect(card.getByText("儀表板還在建置中，完成後登入會直接帶你過去。")).toBeVisible();
-  await expect(card.getByRole("button", { name: "登出" })).toBeVisible();
-  await expect(page.getByRole("navigation", { name: /側欄|sidebar/i })).toHaveCount(0);
-  await expect(page.getByRole("complementary")).toHaveCount(0);
+  await expect(card.getByRole("button", { name: "登出" })).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: "主導覽" })).toBeVisible();
+  await expect(page.getByRole("banner").getByRole("button", { name: "登出" })).toBeVisible();
   await expect(page).toHaveTitle("Label Suite — 你已登入");
 });
 
@@ -68,7 +69,7 @@ test("切換後的語言跨頁沿用", async ({ page }) => {
   expect((await query).headers()["accept-language"]).toBe("en");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("You're signed in");
   await expect(page.getByText("Platform Member", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
+  await expect(page.getByRole("banner").getByRole("button", { name: "Sign out" })).toBeVisible();
   await expect(page).toHaveTitle("Label Suite — Signed In");
 });
 
@@ -88,7 +89,7 @@ test("從這一台登出只影響這一台 / 登出不影響其他裝置", async
     (response) => response.request().method() === "DELETE",
   );
   const historyBefore = await page.evaluate(() => window.history.length);
-  await page.getByRole("button", { name: "登出" }).click();
+  await page.getByRole("banner").getByRole("button", { name: "登出" }).click();
   const request = await signOut;
   const response = await signOutResponse;
   expect(new URL(request.url()).pathname).toBe(CURRENT);
@@ -120,7 +121,7 @@ test("登出失敗時畫面仍回到登入頁", async ({ page }) => {
       await route.continue();
     }
   });
-  await page.getByRole("button", { name: "登出" }).click();
+  await page.getByRole("banner").getByRole("button", { name: "登出" }).click();
   await expect(page).toHaveURL(pathIs(LOGIN_PATH));
 });
 
@@ -153,7 +154,7 @@ test("the browser holds no token, sends cookies with every API call, and gets no
   });
 
   await signIn(page, account);
-  await page.getByRole("button", { name: "登出" }).click();
+  await page.getByRole("banner").getByRole("button", { name: "登出" }).click();
   await expect(page).toHaveURL(pathIs(LOGIN_PATH));
   await signIn(page, account);
 

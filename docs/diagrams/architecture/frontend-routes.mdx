@@ -46,7 +46,7 @@ change 的 `ui-design.md` 仍然寫這次頁面的元件樹、資料來源、畫
 
 側欄的導覽項一律連到最終路徑（規格 07-shared 模組索引 §Logic Flow 的 X1～X8）；那些頁還沒註冊時，照「其他路徑」那一列經 `/` 回到暫時落點。「標記作業」的連結帶入口標記 `entry=nav`。擋下說明以 router 的 navigation state 帶到落點，不進網址。
 
-路由表在 `src/app/router.tsx` 的 `createAppRouter()`：兩個開發用頁面以 lazy route 放在 `import.meta.env.DEV` 分支，正式建置時這個分支連同兩頁的程式與文案一起被移除。路徑常數 `LOGIN_PATH`、`GOOGLE_CALLBACK_PATH`、`LANDING_PATH` 與三個守門元件都從 `features/auth` 匯出。路徑沿用 prototype 的頁面識別（`docs/prototype/navigation.mdx`），讓 02-01 外殼只換頁面元件、不改路由與導向。
+路由表在 `src/app/router.tsx` 的 `createAppRouter()`：每一條路由（含兩個開發用頁面與其他路徑）都包在一層沒有 path 的根 layout `AppRoot`（`src/app/app-root.tsx`）底下，它只畫 `<Outlet>`，換頁時不卸載，供外殼判斷要不要重查登入狀態（見 [§登入狀態與守門](#登入狀態與守門)）。兩個開發用頁面以 lazy route 放在 `import.meta.env.DEV` 分支，正式建置時這個分支連同兩頁的程式與文案一起被移除。路徑常數 `LOGIN_PATH`、`GOOGLE_CALLBACK_PATH`、`LANDING_PATH` 與三個守門元件都從 `features/auth` 匯出。路徑沿用 prototype 的頁面識別（`docs/prototype/navigation.mdx`），讓 02-01 外殼只換頁面元件、不改路由與導向。
 
 ## 頁面與功能元件
 
@@ -87,9 +87,10 @@ frontend/
 ├─ orval.config.ts          唯一的 Orval 設定：讀 ../backend/openapi.json
 ├─ vite.config.ts           開發伺服器固定 5173 port，不設 proxy
 ├─ build/extract-tokens.ts  Vite 外掛：從 tokens.css 取出 CSS 變數
+├─ public/theme-init.js     第一次繪製前套用外觀；index.html 在模組腳本之前載入，不經打包
 └─ src/
-   ├─ main.tsx              啟動：檢查 API 設定、決定語言、render
-   ├─ app/                  router、providers、QueryClient
+   ├─ main.tsx              啟動：檢查 API 設定、決定語言、接手外觀、render
+   ├─ app/                  router、根 layout AppRoot、外殼組合層 AppShellLayout、providers、QueryClient
    ├─ pages/<page>/         頁面：組合功能元件與原語
    ├─ features/<feature>/   功能元件與它的狀態轉換
    ├─ components/           跨 feature 共用的元件（品牌標誌、語言切換、外觀切換、app-shell/ 側欄外殼）
@@ -136,7 +137,7 @@ frontend/
 - 非 `http` 的 `ApiError.message` 是英文診斷字串，不含回應內容或原生錯誤的訊息
 - `isAuthError()` 只認錯誤外層的 `401`；`403` 不算
 - 語言：`main.tsx` 呼叫 `initI18n()`，讀 `localStorage` 的 `labelsuite.lang`；值不是 `en`、讀不到或沒有時是 `zh-TW`，不看瀏覽器語言，並把 `<html lang>` 設成同一個值。登入頁頁首與側欄的 `LanguageToggle` 經 `changeInterfaceLanguage` 切換、記住並更新 `<html lang>`。啟動時預載 `common`、`auth`、`appShell` 三個 namespace，開發用頁面的 namespace 由各自的入口註冊；英文缺某個鍵時顯示繁體中文原文（`fallbackLng` 是 `zh-TW`），不顯示鍵名
-- 外觀：`lib/theme` 在第一次繪製前讀 `localStorage` 的 `label-suite-theme`（淺色、深色、跟隨系統；無效或沒有時當跟隨系統），把解析後的值寫到 `<html data-theme>`，跟隨系統時訂閱作業系統的變化；登入頁與登入後的每一頁都照它呈現
+- 外觀：`index.html` 在 `<head>`、模組腳本之前以同源外部腳本 `<script src="/theme-init.js">` 載入 `public/theme-init.js`，它在第一次繪製前讀 `localStorage` 的 `label-suite-theme`（淺色、深色、跟隨系統；無效、讀不到或沒有時當跟隨系統），把解析後的值寫到 `<html data-theme>`；不用內嵌腳本，所以內容安全政策 `script-src 'self'` 不必放寬。之後由 `lib/theme` 接手：`main.tsx` 呼叫 `initTheme()` 套用並在跟隨系統時訂閱作業系統的變化，`ThemeToggle` 經 `useResolvedTheme` 讀、經 `setThemeChoice` 寫。兩份解讀規則以同一張案例表測試，不會各走各的。登入頁與登入後的每一頁都照它呈現，登出不清這個鍵
 :::
 
 ### 登入狀態與守門
@@ -145,10 +146,11 @@ frontend/
 
 | 元件 | 在哪裡 | 做什麼 |
 | :--- | :--- | :--- |
-| `useSessionState`、`sessionQueryOptions` | `features/auth/session-query.ts` | 以生成的 `getGetCurrentSessionQueryKey()` 為 key 查 `getCurrentSession`，`staleTime` 無限；查詢**不會失敗**：除了取消，每一種拒絕或沒有回應都轉成 `{ kind: "signedOut", notice }`，守門只看資料分支 |
+| `useSessionState`、`sessionQueryOptions` | `features/auth/session-query.ts` | 以生成的 `getGetCurrentSessionQueryKey()` 為 key 查 `getCurrentSession`，`staleTime` 無限、視窗取得焦點不重查；查詢**不會失敗**：除了取消，每一種拒絕或沒有回應都轉成 `{ kind: "signedOut", notice }`，守門只看資料分支 |
 | `RequireAuthRoute`、`PublicOnlyRoute`、`RootRedirect` | `features/auth/route-guards.tsx` | 查詢回來前只畫頁面底色，避免頁面閃一下再跳走；之後以取代歷史紀錄的方式導向登入頁或落點 |
 | `sendWithSessionRefresh`、`refreshSession` | `src/api/session-refresh.ts` | 延續是 single-flight：同一時間只有一個 `createSessionRefresh`，其他被拒的請求共用它；整個流程延續至多 2 次、重送至多 2 次 |
-| `AppShellLayout` | `src/app/app-shell-layout.tsx` | 每次換頁（pathname 改變）在背景重查一次登入狀態，回來之前側欄維持原樣；視窗重新取得焦點不重查。重查得到未登入時由守門帶回登入頁 |
+| `AppRoot` | `src/app/app-root.tsx` | 沒有 path、包住每一條路由（含開發頁與其他路徑）的根 layout，只畫 `<Outlet>`；整頁重新載入才重來。以 context 提供一個 ref：外殼上一次檢查登入狀態時的 `location.key`（`checkedKey`）、pathname（`checkedPathname`），與之後路由是否到過別的 pathname（`leftSince`）。目前的 pathname 不等於外殼記下的 `checkedPathname` 時把 `leftSince` 設為 true，比對的是外殼記下的值，不是它自己上一次看到的 pathname |
+| `AppShellLayout` | `src/app/app-shell-layout.tsx`、`session-check.ts` | 外殼的組合層：向 `features/auth` 取登入者與 `useSignOut`，向 `features/app-shell` 取導覽模型、收合、快捷鍵與擋下，交給 `components/app-shell` 畫。依 `location.key` 與 pathname 判斷要不要在背景重查登入狀態：這次頁面載入第一次到達只記下、不重查（守門剛查過）；同一個 key（StrictMode 重跑或重新渲染）不動；key 不同而 pathname 不同或 `leftSince` 為 true（換了頁，含經外殼以外的轉址回到同一頁）時以 `refetch({ cancelRefetch: false })` 重查一次；key 不同但 pathname 相同又沒離開過（清擋下說明的 state、已在落點時再被擋）只記下。所以 StrictMode 重跑不會多查，視窗取得焦點也不重查。重查在 effect 之後的 microtask 送出，避開 StrictMode 模擬卸載時查詢沒有觀察者而被取消。重查回來之前側欄維持上一份資料；得到未登入時由守門帶回登入頁 |
 | `App`、`AppProviders` | `src/app/app.tsx`、`providers.tsx` | 可選的 `queryClient`（`AppProviders` 的屬性名是 `client`）讓測試換成新的快取；沒給時用整頁共用的那一個 |
 
 :::note{title="延續的步驟與登入頁的句子" collapsible}
@@ -217,4 +219,5 @@ frontend/
 | 2026-11-26 | 加上登入頁、Google 回調、暫時落點與 `/` 的守門導向，取代開發模式 `/` 與其他路徑導向 `/dev/health`；骨架加上登入狀態查詢、single-flight 延續、CSRF 標頭與記住的介面語言（[§路由](#路由)、[§登入狀態與守門](#登入狀態與守門)） | 開發模式 `/` 與其他路徑導向 `/dev/health`；依 `navigator.language` 決定一次語言；已知限制的「登入與登入狀態的處理」 | [#719](https://github.com/label-suite/label-suite/issues/719) |
 | 2026-11-27 | 品牌標誌與語言切換從 `features/auth/` 搬到 `components/`，目錄加上 `components/` 這一層放共用元件（[§目錄](#目錄)、[§頁面與功能元件](#頁面與功能元件)）；側欄用到之後兩者跨了帳號與登入後外殼兩個 feature | 兩者放在 `features/auth/` | [#720](https://github.com/label-suite/label-suite/issues/720) |
 | 2026-11-27 | 登入後的路由包進外殼，暫時落點畫在外殼裡、拿掉卡片自己的登出鈕；路由以 `handle` 宣告目前位置；擋下說明以 navigation state 帶到落點；外觀切換搬到 `components/`，展示頁改用它並記住選擇（[§路由](#路由)、[§頁面與功能元件](#頁面與功能元件)、[§元件展示頁](#元件展示頁)）；理由是規格 07-01 要每個登入後頁面都有側欄，而同一份外觀偏好只能有一個擁有者 | 暫時落點沿用登入頁頁首、沒有側欄、有自己的登出鈕；展示頁的外觀只存在元件狀態、離開還原淺色 | [#720](https://github.com/label-suite/label-suite/issues/720) |
+| 2026-11-27 | 所有路由包進根 layout `AppRoot`，外殼依 `location.key`、pathname 與 `AppRoot` 記下的「離開過」判斷換頁後的背景重查；外觀改由 `public/theme-init.js` 在第一次繪製前套用、`lib/theme` 之後接手（[§登入狀態與守門](#登入狀態與守門)、[§前端骨架](#前端骨架)）；理由是換頁會經外殼以外的轉址讓外殼卸載再掛載，而 StrictMode 的重跑不能多送查詢，內嵌腳本又會被 `script-src 'self'` 擋下 | 外殼只看 pathname 改變就重查；外觀由 `lib/theme` 在第一次繪製前套用 | [#720](https://github.com/label-suite/label-suite/issues/720) |
 | 2026-11-27 | 已知限制拿掉「CI 的前端檢查」一列：lint、型別、測試與建置由 CI 的 `frontend` 跑，契約漂移由 `api-contract` 跑，跑過前後端的 e2e 由 `e2e` 跑（[§已知限制](#已知限制)） | 已知限制的「CI 的前端檢查……目前只在本機跑」，追蹤於已關閉的 #506 | [#745](https://github.com/label-suite/label-suite/issues/745) |
