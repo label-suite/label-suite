@@ -152,7 +152,7 @@ React 先跑子層再跑父層的 effect，所以同一次 commit 裡外殼的 e
 
 ### D14 版面數值與字級
 
-斷點 767／768px（ui §響應式）；側欄寬度、手機兩條列的高度照 prototype 的數值集中寫在外殼一處（G-24）。字級依 clarification Q13 取 `--text-label`，差異已登記 `design/system/design-gaps.md` G-66。目前位置的底色在 `frontend/src/styles/theme.css` 對照層新增 `--nav-active`，指向既有的 `--nav-active-bg`，不新增 token（ui §元件與 design token 的註）。
+斷點 767／768px（ui §響應式）；側欄寬度、手機兩條列的高度照 prototype 的數值集中寫在外殼一處（G-24）。字級依 clarification Q13 取 `--text-label`，差異已登記 `design/system/design-gaps.md` G-66。手機主導覽的文字允許換行（必要時字中斷行、置中），英文長標籤在 375px 才不會溢到相鄰項；桌機不變（clarification Q13 的續決）。目前位置的底色在 `frontend/src/styles/theme.css` 對照層新增 `--nav-active`，指向既有的 `--nav-active-bg`，不新增 token（ui §元件與 design token 的註）。
 
 ### D15 E2E 的測法
 

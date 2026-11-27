@@ -411,7 +411,7 @@
 | **重現方式** | 開 `pages/dashboard/dashboard.html`，檢視側欄導覽項 `.nav-link`、底部工具鈕 `.sidebar-utility-btn`、角色標示 `.user-role` 與通知徽章 `.notif-badge` 的計算樣式；再把視窗縮到 767px 以下、切成英文，看下方主導覽的文字。 |
 | **受影響範圍** | `shared/app-shell` 全部視圖；[App Shell](components/app-shell.md)、[Theme Toggle](components/theme-toggle.md)；[規格 07-01](../../docs/specs/07-shared/01-sidebar.mdx) §邊界情況「語言文字較長時導覽不截斷」 |
 | **依據** | 原型：`sidebar.css:92`、`:219`、`:268`、`:326`、`:444`、`:521`、`:874` `font-size: 13px`；`:335`、`:554`、`:790`、`:926`（手機主導覽，`white-space: nowrap`，`:931`）`font-size: 11px`；`:677` `font-size: 10px`。字級 token 從 `--text-display` 到 `--text-label`（`assets/tokens.css:109`–`:115`）只有 48／36／24／18／16／14／12，沒有 13、11、10。規格 07-01 §不同螢幕寬度的呈現 的註寫「尺寸以 prototype 為準」，同頁 §邊界情況 要語言文字較長時導覽不截斷。 |
-| **待決問題** | 已裁定（2026-11-27，#720 clarification Q13）：取最接近且**不大於** prototype 的既有字級 token，不新增 token；原型不改。對應：13px 取 `--text-label`（12px）。仍待實作時確認：11px 與 10px 沒有不大於它們的 token，最小的 `--text-label`（12px）比原型大，手機主導覽的英文長標籤（「System Administration」「Exception Disposition」「Dataset Analytics」）更可能放不下；Q13 要以英文介面的 E2E 實測證明不截斷，放不下時回報維護者，不自行改文案或新增 token。原題保留：13／11／10px 要對到哪一個 token？ |
+| **待決問題** | 已裁定（2026-11-27，#720 clarification Q13）：取最接近且**不大於** prototype 的既有字級 token，不新增 token；原型不改。對應：13px 取 `--text-label`（12px）。仍待實作時確認：11px 與 10px 沒有不大於它們的 token，最小的 `--text-label`（12px）比原型大，手機主導覽的英文長標籤（「System Administration」「Exception Disposition」「Dataset Analytics」）更可能放不下；Q13 要以英文介面的 E2E 實測證明不截斷，放不下時回報維護者，不自行改文案或新增 token。實測（#720 群組 4）：英文、375px、六項時每項 62.5px，五項放不下；維護者 2026-11-27 決定手機主導覽的文字允許換行（與原型 `white-space: nowrap`，`sidebar.css:931` 不同），不改文案與 token。原題保留：13／11／10px 要對到哪一個 token？ |
 
 ## 二、缺少狀態證據
 
