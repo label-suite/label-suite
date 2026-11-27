@@ -14,7 +14,7 @@
 | 可行性           | 通過：不新增套件；任務角色讀取依 ADR-003 D14 留給 `task` 模組（Q1）                                         | 0      |
 | 邊界情況         | 待釐清 → 已決議：擋下說明的呈現（Q4）、收合沒有鍵盤路徑（Q12）、英文長標籤（Q13）                           | 3      |
 | 跨功能影響       | 待釐清 → 已決議：元件展示頁外觀切換（Q5）、元件規格與畫面清冊（Q9）；`auth-guard`、`login-session` 出 delta | 2      |
-| 可測試性         | 待釐清 → 已決議：23 條前置不存在的 Scenario 移出並寫明接手單（§移出本次的驗收標準）                         | 1      |
+| 可測試性         | 待釐清 → 已決議：32 條前置不存在或屬其他單的 Scenario 移出並寫明接手單（§移出本次的驗收標準）               | 1      |
 | 規格範圍         | 通過：不改 `docs/specs/00-prd.mdx`、`design/prototype/`；規格書回寫走 `spec-writing`（Q3、Q4、Q6）          | 0      |
 | 任務設定驅動     | 通過：側欄不依任務類型分支；「標記作業」不帶 `task_type`（07-01 Q6），只帶入口標記                          | 0      |
 | 測試集答案不外露 | 通過：側欄只讀登入者自己的帳號欄位；擋下說明是固定文案，不帶任務名或任務 ID                                 | 0      |
@@ -64,7 +64,7 @@
 
 - **來源**：sa 待決 11、需求矛盾 2；ui U3；`openspec/specs/component-gallery` Requirement「展示頁切換淺色與深色」
 - **問題**：展示頁原本「不記住、離開還原淺色」，會蓋掉使用者在側欄選的外觀
-- **決議**：展示頁改用同一個共用外觀切換，讀寫同一份外觀偏好，離開不還原；`component-gallery` 那條出 MODIFIED。`theme-toggle.tsx` 照 Issue #720 字面搬到 `frontend/src/components/`
+- **決議**：展示頁改用同一個共用外觀切換，讀寫同一份外觀偏好，離開不還原；`component-gallery` 那條改為 REMOVED「展示頁切換淺色與深色」加 ADDED「展示頁的外觀切換沿用外觀偏好」（舊條的兩個 Scenario 與新行為相反，MODIFIED 不能丟掉既有 Scenario；見 design D7）。`theme-toggle.tsx` 照 Issue #720 字面搬到 `frontend/src/components/`
 - **理由**：同一個外觀屬性只能有一個擁有者
 - **已回修**：ui U3、§元件樹；proposal §Capabilities
 - **日期**：2026-11-27
