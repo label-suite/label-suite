@@ -49,7 +49,7 @@ backend/
 | 共用層（Protocol）    | `core.authz.TaskMembershipReader`                                                                                                 | 讀某人在某任務**生效中**的任務角色集合（邀請中、已停用不算）；本次只有測試替身，`task` 模組（#763 起）實作                                                                                                                    |
 | 共用層（Protocol）    | `core.authz.AccessCondition`                                                                                                      | 第 4 段的一種附加條件；`kind` 標明種類，`check(context, db)` 不通過時丟錯；任務歸屬與狀態、指派與審核者、資料集可見性由 `task`、`dataset` 模組實作；另預留依作用角色判斷的種類 `acting_role`（clarification Q4），本次不實作  |
 | 共用層                | `core.authz.GroundTruthBarrier`                                                                                                   | 第 4 段的答案隔離在授權層的落點：宣告會讀標準答案的操作，對任何登入的人一律拒絕（PRD §不是角色的讀取對象：只有經授權的計分程序讀得到，矩陣沒有它的格）；不需要任何業務資料，本次就能真的測                                    |
-| 共用層（值物件）      | `AccessContext`、`AccessGrant`、`MatrixLookup`                                                                                    | 第 4 段條件的輸入；交給 service 的授權結果（含生效角色與矩陣版本，service 做紀錄層級的條件時沿用）                                                                                                                            |
+| 共用層（值物件）      | `AccessContext`、`AccessGrant`、`MatrixLookup`                                                                                    | 第 4 段條件的輸入；交給 service 的授權結果（含生效角色、作用角色與矩陣版本；`Authorizer.check_conditions(grant, ...)` 以它重建 `AccessContext`，所以 `AccessGrant` 也帶 `acting_role`）                                       |
 | 共用層（錯誤）        | `core.authz.PermissionDeniedError`（`403`）；既有的 `core.errors.NotFoundError`（`404`）                                          | 拒絕的兩種結果；哪一種拒絕對到哪一個見 [§權限檢查點](#權限檢查點)，碼與訊息鍵見 `api-contract.md` 與 `error-codes.mdx`（clarification Q3 採 R1）                                                                              |
 | Service（`admin`）    | `AdminPermissionMatrixProvider`                                                                                                   | 實作 `PermissionMatrixProvider`（Q2 採 C1）；一次讀版本列與所需的格，不 commit                                                                                                                                                |
 | Repository（`admin`） | `AdminRolePermissionRepository`                                                                                                   | `get_version()`、`cells_for(layer, key, role_keys)`；只查，不寫                                                                                                                                                               |
@@ -146,6 +146,7 @@ classDiagram
     +task_id: UUID | None
     +task_roles: frozenset~TaskRole~
     +effective_roles: frozenset~str~
+    +acting_role: TaskRole | None
     +matrix_version: int
   }
 
@@ -394,7 +395,7 @@ sequenceDiagram
     Z-->>D: PermissionDeniedError
     D-->>C: 403 錯誤外層
   end
-  Z-->>D: AccessGrant(effective_roles = {reviewer})
+  Z-->>D: AccessGrant(effective_roles = {reviewer}, acting_role = reviewer)
   D->>H: grant
   H-->>C: 200 成功外層
 ```
