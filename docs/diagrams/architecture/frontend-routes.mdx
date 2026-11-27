@@ -93,7 +93,7 @@ frontend/
    ├─ app/                  router、根 layout AppRoot、外殼組合層 AppShellLayout、providers、QueryClient
    ├─ pages/<page>/         頁面：組合功能元件與原語
    ├─ features/<feature>/   功能元件與它的狀態轉換
-   ├─ components/           跨 feature 共用的元件（品牌標誌、語言切換、外觀切換、app-shell/ 側欄外殼）
+   ├─ components/           跨 feature 共用的元件（品牌標誌、語言切換、外觀切換、無權限與找不到的整頁畫面、app-shell/ 側欄外殼）
    │  └─ ui/                shadcn/ui 原語，匯出 variant 陣列
    ├─ api/                  mutator.ts（唯一出口）、session-refresh.ts、ApiError、外層判定、config
    │  └─ generated/         Orval 產物，禁止手改
@@ -221,3 +221,4 @@ frontend/
 | 2026-11-27 | 登入後的路由包進外殼，暫時落點畫在外殼裡、拿掉卡片自己的登出鈕；路由以 `handle` 宣告目前位置；擋下說明以 navigation state 帶到落點；外觀切換搬到 `components/`，展示頁改用它並記住選擇（[§路由](#路由)、[§頁面與功能元件](#頁面與功能元件)、[§元件展示頁](#元件展示頁)）；理由是規格 07-01 要每個登入後頁面都有側欄，而同一份外觀偏好只能有一個擁有者 | 暫時落點沿用登入頁頁首、沒有側欄、有自己的登出鈕；展示頁的外觀只存在元件狀態、離開還原淺色 | [#720](https://github.com/label-suite/label-suite/issues/720) |
 | 2026-11-27 | 所有路由包進根 layout `AppRoot`，外殼依 `location.key`、pathname 與 `AppRoot` 記下的「離開過」判斷換頁後的背景重查；外觀改由 `public/theme-init.js` 在第一次繪製前套用、`lib/theme` 之後接手（[§登入狀態與守門](#登入狀態與守門)、[§前端骨架](#前端骨架)）；理由是換頁會經外殼以外的轉址讓外殼卸載再掛載，而 StrictMode 的重跑不能多送查詢，內嵌腳本又會被 `script-src 'self'` 擋下 | 外殼只看 pathname 改變就重查；外觀由 `lib/theme` 在第一次繪製前套用 | [#720](https://github.com/label-suite/label-suite/issues/720) |
 | 2026-11-27 | 已知限制拿掉「CI 的前端檢查」一列：lint、型別、測試與建置由 CI 的 `frontend` 跑，契約漂移由 `api-contract` 跑，跑過前後端的 e2e 由 `e2e` 跑（[§已知限制](#已知限制)） | 已知限制的「CI 的前端檢查……目前只在本機跑」，追蹤於已關閉的 #506 | [#745](https://github.com/label-suite/label-suite/issues/745) |
+| 2026-11-27 | `components/` 加無權限與找不到的整頁畫面 `BlockedScreen`：只有標題、說明與一個寫出去處的返回連結，字面、去處與識別碼由使用它的頁面傳入，不送請求（[§目錄](#目錄)）；理由是規格 07-03 要全站共用同一個骨架，而 prototype 的任務詳情與標記清單分屬兩個 feature | 兩個模組各自畫自己的面板 | [#721](https://github.com/label-suite/label-suite/issues/721) |
