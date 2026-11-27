@@ -1,5 +1,5 @@
 {
-  "$comment": "Critical-path branch coverage (login-auth-guard design D10, testing-agent-rules T10). Checked by scripts/check-critical-coverage.mjs in the CI coverage job. Paths are relative to the repository root; a path ending in / is a directory. Answer isolation, scoring and IAA are not here yet (#111).",
+  "$comment": "Critical-path branch coverage (login-auth-guard design D10, testing-agent-rules T10). Checked by scripts/check-critical-coverage.mjs in the CI coverage job. Paths are relative to the repository root; a path ending in / is a directory. The authorization-layer part of answer isolation (GroundTruthBarrier in backend/app/core/authz.py) is counted under authorization; answer isolation as an item of its own, scoring and IAA are not here yet (#111).",
   "threshold": 90,
   "items": [
     {
@@ -19,7 +19,13 @@
     {
       "id": "authorization",
       "name": "授權與權限檢查",
-      "backend": ["backend/app/core/auth.py", "backend/app/core/csrf.py"],
+      "backend": [
+        "backend/app/core/auth.py",
+        "backend/app/core/csrf.py",
+        "backend/app/core/authz.py",
+        "backend/app/core/permissions.py",
+        "backend/app/modules/admin/service.py"
+      ],
       "frontend": ["frontend/src/features/auth/route-guards.tsx"]
     }
   ]

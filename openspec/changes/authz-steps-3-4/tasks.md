@@ -31,7 +31,7 @@
 
 ## 4. 關鍵路徑清單與架構文件（可平行）
 
-- [ ] 4.1 在 `critical-coverage.json` 的 `authorization.backend` 加入 `backend/app/core/authz.py`、`backend/app/core/permissions.py`、`backend/app/modules/admin/service.py`，並改寫 `$comment`：答案隔離在授權層的落點已隨 `authz.py` 計入「授權與權限檢查」，答案隔離作為獨立一項、評分與 IAA 仍未建（#111）（design D10、testing-agent-rules T10）；驗證：`pnpm test:scripts` 通過，兩輪後端覆蓋率合併後執行 `node scripts/check-coverage.mjs`（不得下降）與 `node scripts/check-critical-coverage.mjs` 都以 0 結束，「授權與權限檢查」一項後端分支覆蓋率不低於 90.0 [@backend-developer]
+- [x] 4.1 在 `critical-coverage.json` 的 `authorization.backend` 加入 `backend/app/core/authz.py`、`backend/app/core/permissions.py`、`backend/app/modules/admin/service.py`，並改寫 `$comment`：答案隔離在授權層的落點已隨 `authz.py` 計入「授權與權限檢查」，答案隔離作為獨立一項、評分與 IAA 仍未建（#111）（design D10、testing-agent-rules T10）；驗證：`pnpm test:scripts` 通過，兩輪後端覆蓋率合併後執行 `node scripts/check-coverage.mjs`（不得下降）與 `node scripts/check-critical-coverage.mjs` 都以 0 結束，「授權與權限檢查」一項後端分支覆蓋率不低於 90.0 [@backend-developer]
 - [x] 4.2 結案 `docs/development/architecture.mdx` §待決 第 2 列：移除該列，在 §決策紀錄 加一列「授權第 2 步的任務成員身分與第 4 步的附加條件，由持有資料的模組實作 `app/core/` 定義的 Protocol 提供」，指向 #755；§授權四步 正文若仍寫這項未決，改成現況（正文不寫日期與 issue 編號，design D10）；驗證：`pnpm exec notecraftapp build docs --rebuild` 通過，`pnpm check:specs` 通過 [@technical-writer]
 
 ## Workflow follow-up
