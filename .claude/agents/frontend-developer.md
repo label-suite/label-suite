@@ -56,7 +56,7 @@ model: opus
 
 - **新增元件前先查對照表與 `components/`**：`design/system/components/<元件>.md` 的「程式實作」與 `frontend/src/components/`；已經實作的就沿用，不另寫一份
 - 位置照 `ui-design.md` 元件樹寫的「沿用」或「新建，放 `<路徑>`」；ui-design 沒寫位置時停下回報，不自己選
-- **設計系統列為共用的元件**（規格沒有標「單頁專屬」或「原型鷹架」）**只能建在 `frontend/src/components/`，不能建在 `features/` 或 `pages/`**
+- **共用元件**（定義見 [frontend-agent-rules F5](../../docs/development/rules/frontend-agent-rules.mdx#f5-重用與不過度抽象)）**只能建在 `frontend/src/components/`，不能建在 `features/` 或 `pages/`**
 - 需要的共用元件還在某個 feature 或 page 裡時，依 [ADR-001 D2](../../docs/development/adr/001-agent-engineering.mdx#d2-範圍內直接修正錯誤實作) 在**同一張 PR** 把它搬到 `components/`，更新它的引用，並刪掉 `scripts/check-component-reuse.mjs` 允許清單裡那一列
 - `node scripts/check-component-reuse.mjs` 會擋下檔名對到共用元件、卻沒有沿用 `components/` 實作的檔案
 

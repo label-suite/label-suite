@@ -87,6 +87,8 @@ design/system/
 
 另在標頭的引言區塊加一行 **程式實作**：`> 程式實作：` 後面寫這個元件在 `frontend/src/` 的檔案路徑（用反引號，可以有多個），還沒有程式就寫「尚未實作」。這一欄記的是程式現況，不是 prototype 的事實，所以依據是 `frontend/src/` 的檔案本身，不受鐵律 3 的四種依據限制；它是 `ui-design.md` 決定「沿用」或「新建」的對照表，也是 `scripts/check-component-reuse.mjs` 的輸入。新增或搬移元件後由 `frontend-developer` 更新、`technical-writer` 稽核時核對；本 skill 重跑時**原樣保留**，不依 prototype 改寫它。
 
+`screen-inventory.md` 的「元件 → 畫面」表也是那支腳本的輸入：一個元件算不算共用、能不能留在 feature 裡，看用到它的畫面分屬幾個 feature（定義見 [frontend-agent-rules F5](../../../docs/development/rules/frontend-agent-rules.mdx#f5-重用與不過度抽象)）。所以重新生成清冊後要再跑一次 `node scripts/check-component-reuse.mjs`；出現新的畫面 ID 前綴時，那支腳本會失敗，要在它的 `SCREEN_FEATURE` 補上歸屬。
+
 另加一節 **shadcn 對照**：候選原語（例：`Button`、`Dialog`、`Command`）與**差距**——我們有而它沒有的、它有而我們沒有的、語意對不上的。這一節是寫給之後的 `ui-design.md` 看的，不是現在要換元件。
 
 ---
