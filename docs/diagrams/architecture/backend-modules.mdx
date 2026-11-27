@@ -477,8 +477,8 @@ sequenceDiagram
 | 層 | 檔案 | 做什麼 |
 | :--- | :--- | :--- |
 | Router | `router.py` | 一個沒有路由的 `APIRouter`，`create_app` 不掛它、`OPENAPI_TAGS` 沒有 `admin`；只為了符合 `Module layers` 契約（除了 `models`，每一層都要存在） |
-| Service | `service.py` | `AdminPermissionMatrixProvider` 實作 `core.authz.PermissionMatrixProvider`：一次讀版本列與「一個鍵 × 這次的生效角色」的格，回 `MatrixLookup`；只讀，不 commit |
-| Repository | `repository.py` | `AdminRolePermissionRepository`：`get_version()`、`cells_for(layer, key, role_keys)`；只查，不寫 |
+| Service | `service.py` | `AdminPermissionMatrixProvider` 實作 `core.authz.PermissionMatrixProvider`：每次 `lookup` 以請求的 session 建一個 repository，讀版本列與「一個鍵 × 這次的生效角色」的格，回 `MatrixLookup`；不快取、只讀、不 commit |
+| Repository | `repository.py` | `AdminRolePermissionRepository`：`get_version()` 讀唯一的版本列，`cells_for(layer, key, role_keys)` 讀這些角色存在的格，缺列的角色不放進結果、不補值，`role_keys` 為空時不查；只查，不寫、不 commit |
 | Models | `models.py` | `AdminRolePermission`、`AdminRolePermissionVersion`；欄位見[候選資料表字典](./data-table-dictionary.mdx)的 `admin` 組 |
 | Schemas | `schemas.py` | 沒有內容；同樣只為了符合 `Module layers` 契約 |
 
@@ -541,7 +541,7 @@ sequenceDiagram
   participant DB as 資料庫
   Z->>P: lookup(db, layer, key, role_keys)
   P->>R: get_version()
-  R->>DB: SELECT version FROM admin_role_permission_version WHERE id = 1
+  R->>DB: SELECT version FROM admin_role_permission_version
   P->>R: cells_for(layer, key, role_keys)
   R->>DB: SELECT role_key, allowed FROM admin_role_permission WHERE role_type = :layer AND permission_key = :key AND role_key IN (:roles)
   DB-->>R: 零到三列
@@ -578,7 +578,8 @@ backend/
    ├─ integration/
    ├─ factories/             建立測試資料的 helper（目前是 accounts.py）
    ├─ support/               測試用的替身與客戶端（browser.py、google_oidc.py、authz.py）
-   └─ probe.py               只在測試掛載的探測路由
+   ├─ probe.py               只在測試掛載的探測路由
+   └─ authz_probe.py         只在測試掛載的授權探測路由，加進 probe.py 的 probe_router
 ```
 
 | 目錄 | 放什麼 | 判斷方式 |
@@ -879,6 +880,7 @@ cd backend && uv run python -m app.scripts.export_openapi
 - [ ] 在 `create_app` 把模組的 router 掛進 `/api/v1` 父 router：掛載時用 `include_router(tags=["<module>"])` 指定模組 tag、模組的 `APIRouter()` 不寫 tags，在 `OPENAPI_TAGS`（傳給 `openapi_tags`）依規格章節的位置加一筆英文說明，同時更新 `tests/unit/test_openapi_tags.py` 契約測試的順序與值（[api-agent-rules A1](../../development/rules/api-agent-rules.mdx#a1-路由http-statusoperationid-與回應外層)）
 - [ ] 需要登入的端點掛 `Depends(get_current_principal)`（`app.core.auth`），不自己讀 cookie；角色一律取 `Principal.role`，不讀 JWT 的 `role`
 - [ ] 需要權限的端點掛 `Depends(require_permission(<PermissionKey>, ...))`（`app.core.authz`），不自己讀矩陣、不自己比對角色；任務範圍的端點宣告 `task_id_param`（工作區另宣告 `acting_role_param`），需要讀那一筆才能判斷的條件由 service 呼叫 `Authorizer.check_conditions`；router 另宣告 `403` 與 `404` 回應。新的權限鍵只加在 `app/core/permissions.py`，預設 `enabled=False`
+- [ ] 第一個掛任務層鍵的模組在 `create_app` 放進 `app.state.task_membership_reader`（實作 `core.authz.TaskMembershipReader`）；沒放時任務範圍的端點一律回 `500 INTERNAL_ERROR`，不會退回成 `404`
 - [ ] service 擁有交易：需要寫入時自己 commit，`get_db` 不會幫你 commit
 - [ ] 有資料表時，model 放 `models.py` 並繼承 `Base`；migration 由 `dba` 寫
 - [ ] 資源名用預設規則單數化會算錯時，加進 `_IRREGULAR_SINGULARS`
@@ -896,6 +898,7 @@ cd backend && uv run python -m app.scripts.export_openapi
 | `factories/accounts.py` | `add_user` 以 ORM 加真正的 argon2id 雜湊建立並 commit 一個帳號（`plain=None` 時沒有本地密碼），與 Seeder 指令寫入的方式相同；`sessions_of`、`tokens_of`、`reload_user` 重新讀回資料庫的狀態；`PLAIN` 是測試帳號的預設密碼 |
 | `support/browser.py` | `Browser` 代表一台裝置：自己保存 cookie、以 `Cookie` 標頭送出（`__Host-` 加 `Secure` 的 cookie 不會被一般 cookie jar 送回 `http://testserver`），`csrf=True` 時像前端一樣把 CSRF cookie 複製到 `X-CSRF-Token`；另有 `set_cookies`、`cleared` 解析 `Set-Cookie` |
 | `support/authz.py` | 授權的測試替身，各自實作 `app.core.authz` 的 Protocol，直接交給 `Authorizer` 或放進 `app.state`：`FakePermissionMatrixProvider`（從 62 個初始格與版本 `1` 開始的記憶體內矩陣，可改格、刪列、拿掉版本）、`FakeTaskMembershipReader`（依 `task_id` 與 `user_id` 回固定的生效任務角色，沒登記的回空集合）、`RefusingCondition`（任一種 `ConditionKind`，一律丟指定的錯）與 `PassingCondition`（一律通過）；兩個條件替身都記下每次收到的 `AccessContext`。`task`、`dataset` 落地前，授權第 2、4 步的測試靠它們 |
+| `authz_probe.py` | 授權的探測路由，由 `add_authz_probes(probe_router)` 直接加進 `probe.py` 的 `probe_router`（不用 `include_router`：FastAPI 0.165 把包含進來的 router 當成一個延遲展開的項目，`test_harness_parity.py` 的 `probe_paths()` 看不到它的路徑）。每個白名單的鍵各有平台、任務範圍（宣告 `taskId: UUID`）與帶作用角色三條路由，另有一個白名單外的鍵、六種會拒絕的附加條件、兩個都通過的條件、格為關時不該執行的條件，以及掛 `GroundTruthBarrier` 的讀標準答案路由；`path` 輔助函式組出各自的網址 |
 | `support/google_oidc.py` | `FakeGoogle` 在網路邊界替換 `httpx.AsyncClient.send`，只接 Google 的 token 與金鑰兩個端點：以執行期產生的 RSA 金鑰簽 `id_token`、公開 JWKS，並驗 PKCE；app 用的仍是正式的 `GoogleOidcClient` |
 
 ## 已知限制
@@ -906,7 +909,7 @@ cd backend && uv run python -m app.scripts.export_openapi
 | :--- | :--- | :--- |
 | 登入失敗鎖定 | 登入失敗次數的限制還沒實作；`account` 模組只留插入點 | [#726](https://github.com/label-suite/label-suite/issues/726)；[規格 01-05 §已確認決議](../../specs/01-account/05-login-state.mdx#已確認決議) Q3（失敗 10 次擋 30 分鐘；「同一個人」以帳號加來源位址認定） |
 | 全域速率限制 | 端點沒有呼叫上限 | [ADR-004 的 D7](../../development/adr/004-auth-and-security.mdx#d7-不做全域速率限制登入失敗鎖定用-redis-計數)：後端不做，全域上限日後交給反向代理層 |
-| 授權第 2 步的任務成員身分與第 4 步的業務條件（任務歸屬與狀態、指派、審核者身分、資料集可見性、依作用角色的條件） | 只有 `app/core/authz.py` 的 Protocol 與測試替身；`app.state.task_membership_reader` 沒有實作者，任務範圍的端點在 `task` 模組接上之前無法使用。讀標準答案的操作已由 `GroundTruthBarrier` 對所有人關閉 | `task`、`dataset` 模組各自的 change；[ADR-004 的 D6](../../development/adr/004-auth-and-security.mdx#d6-權限矩陣當授權輸入) |
+| 授權第 2 步的任務成員身分與第 4 步的業務條件（任務歸屬與狀態、指派、審核者身分、資料集可見性、依作用角色的條件） | 只有 `app/core/authz.py` 的 Protocol 與測試替身；`app.state.task_membership_reader` 沒有實作者，任務範圍的端點在 `task` 模組接上之前一律回 `500 INTERNAL_ERROR`。平台層的判斷已接上 `admin` 的矩陣；讀標準答案的操作已由 `GroundTruthBarrier` 對所有人關閉。目前沒有任何正式端點掛 `require_permission`，整合測試只經測試掛載的探測路由驗證 | `task`、`dataset` 模組各自的 change；[ADR-004 的 D6](../../development/adr/004-auth-and-security.mdx#d6-權限矩陣當授權輸入) |
 | Cloudflare 或其他邊緣代理在 Nginx 前面；TLS 邊緣之後的 scheme | 後端拿到的是邊緣位址而不是真實用戶端，還原需要 Nginx 的 real_ip 設定；後端看到的 scheme 恆為 `http`；Docker 發布埠的來源位址依平台而異（Docker Desktop 為 `192.168.65.1`，Linux 未測）。後端只信任 Nginx 的固定位址，見 [architecture.mdx 的 §部署與維運](../../development/architecture.mdx#部署與維運) | [ADR-008 的 D1](../../development/adr/008-deployment-and-operations.mdx#d1-compose-加-nginx-當-runtimecloudflare-可選) 尚未落地的 origin 憑證設定（Full (strict) 已決，憑證怎麼放進 Nginx 留到正式部署的 change） |
 | 監控、告警與錯誤追蹤 | 出錯時只能看 log，沒有人會被通知 | [ADR-008 的 D4](../../development/adr/008-deployment-and-operations.mdx#d4-觀測性只做-ai_runs監控與錯誤追蹤本期不做) |
 | 回應已開始送出後才出錯時，錯誤會被記兩筆（`UnhandledExceptionMiddleware` 一筆、uvicorn 以 `exc_info` 一筆，後者只寫例外型別） | 錯誤只記一次在這條路徑不成立 | 第一個串流端點的 change（request-access-log clarification N2） |
@@ -937,4 +940,5 @@ cd backend && uv run python -m app.scripts.export_openapi
 | 2026-11-27 | 02-01 用獨立的 `dashboard` 模組，沒有表、只呼叫 `task` 的 service（[§02-01 儀表板怎麼取資料](#02-01-儀表板怎麼取資料)） | — | [#750 留言](https://github.com/label-suite/label-suite/issues/750#issuecomment-7208521478) |
 | 2026-11-27 | 後端 OpenAPI 依模組分 tag：`create_app` 掛載時帶模組 tag、`OPENAPI_TAGS` 依規格章節宣告且 `health` 最後，由 `tests/unit/test_openapi_tags.py` 擋缺 tag、未宣告與空說明（[§app factory 與 lifespan](#app-factory-與-lifespan)、[§OpenAPI 匯出與 operationId 檢查](#openapi-匯出與-operationid-檢查)、[§新增業務模組的檢查清單](#新增業務模組的檢查清單)） | 各 operation 沒有 tag，API 文件全落在 `default` | [#765](https://github.com/label-suite/label-suite/issues/765) |
 | 2026-11-27 | 基礎建設加上授權第 3、4 步的 `permissions.py` 與 `authz.py`，已落地並依實作校正：`AccessGrant` 多帶 `acting_role`，路徑參數無法轉換回 `404`、缺接線丟 `RuntimeError`（[§`core/` 各模組](#core-各模組)、[§錯誤怎麼對到 envelope](#錯誤怎麼對到-envelope)、[§測試輔助](#測試輔助)） | — | [#755](https://github.com/label-suite/label-suite/issues/755) |
-| 2026-11-27 | 新增 `admin` 一節（兩張矩陣表、初始矩陣、讀矩陣，沒有端點）；模組一覽、預定模組歸屬、目錄、app factory、錯誤對照、檢查清單、測試輔助與已知限制跟著改（規劃，待實作後校正；[§admin](#admin)） | 已知限制的「授權四步的第 3、4 步」縮成第 2 步的任務成員身分與第 4 步的業務條件 | [#755 的 clarification](https://github.com/label-suite/label-suite/issues/755) |
+| 2026-11-27 | 新增 `admin` 一節（兩張矩陣表、初始矩陣、讀矩陣，沒有端點）；模組一覽、預定模組歸屬、目錄、app factory、錯誤對照、檢查清單、測試輔助與已知限制跟著改（已落地並依實作校正；[§admin](#admin)） | 已知限制的「授權四步的第 3、4 步」縮成第 2 步的任務成員身分與第 4 步的業務條件 | [#755 的 clarification](https://github.com/label-suite/label-suite/issues/755) |
+| 2026-11-27 | 依實作校正 `admin` 一節與基礎建設：repository 讀版本列不帶條件、`cells_for` 不補缺列；檢查清單加上接 `task_membership_reader`；目錄與測試輔助加上 `tests/authz_probe.py`（直接加進 `probe_router`，不用 `include_router`）；已知限制寫明沒接 reader 時回 `500`（[§admin](#admin)、[§新增業務模組的檢查清單](#新增業務模組的檢查清單)、[§測試輔助](#測試輔助)、[§已知限制](#已知限制)） | 本文 2026-11-27 依設計寫成的 `admin` 一節與各節 | [#755](https://github.com/label-suite/label-suite/issues/755) |

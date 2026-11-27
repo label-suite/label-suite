@@ -14,6 +14,7 @@ from sqlalchemy.exc import DBAPIError
 from app.core.envelope import ok
 from app.core.errors import AppError
 from app.core.schemas import ApiResponse, RequestModel, ResponseModel
+from tests.authz_probe import add_authz_probes
 
 PROBE_PATH = "/api/v1/probe"
 CRASH_PATH = "/api/v1/probe-crash"
@@ -122,3 +123,8 @@ async def third_party_log_probe(request: Request) -> ApiResponse[ProbeData]:
     """Write one ``WARNING`` through a logger outside this repository, then answer ``200``."""
     logging.getLogger(THIRD_PARTY_LOGGER).warning(THIRD_PARTY_MESSAGE)
     return ok(ProbeData(display_name="probe"), request)
+
+
+# The authorization probes (authz-steps-3-4 design D9) join this router, so the harness
+# still mounts exactly one probe router and the parity test's probe paths include them.
+add_authz_probes(probe_router)

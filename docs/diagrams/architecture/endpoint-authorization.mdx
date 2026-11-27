@@ -67,6 +67,7 @@ updatedAt: '2026-11-27'
 | :--- | :--- | :--- | :--- |
 | `/docs`、`/docs/oauth2-redirect`、`/redoc`、`/openapi.json` | `API_DOCS_ENABLED=true`（預設，Lite 與本機開發）：任何人，不需登入。`false`（正式層 compose）：沒有人，路由不註冊，回 `404` 的共通外層 | FastAPI 內建的 API 文件頁，不在 `/api/v1` 底下、不套外層，也不在 `openapi.json` 的 `paths` 裡 | `app/main.py` 的 `create_app` 依 `API_DOCS_ENABLED` 決定是否註冊；已歸檔的 [backend-skeleton `api-contract.md`](https://github.com/label-suite/label-suite/blob/main/openspec/changes/archive/2026-11-20-backend-skeleton/api-contract.md) §端點總覽 |
 | `/api/v1/probe`（`GET`、`POST`）、`/api/v1/probe-crash`、`/api/v1/probe-bad-response`、`/api/v1/probe-db-error` | 只有後端的測試 | 只在測試掛載：`backend/tests/probe.py` 定義，`backend/tests/conftest.py` 的 `app` fixture 掛進 `/api/v1`；正式的 `create_app` 不掛，`openapi.json` 裡也沒有 | `backend/tests/probe.py`、`backend/tests/conftest.py` |
+| `/api/v1/authz-probe/...`（每個權限鍵的平台、任務範圍與帶作用角色三條，加上白名單外的鍵、附加條件與讀標準答案的路由；都是 `GET`） | 只有後端的測試；各自掛 `require_permission`，依登入者的系統角色、測試放進 `app.state` 的任務成員身分替身與資料庫的矩陣放行 | 只在測試掛載：`backend/tests/authz_probe.py` 定義，加進 `probe.py` 的 `probe_router`；讀標準答案的那條掛 `GroundTruthBarrier`，對任何人回 `404`。正式的 `create_app` 不掛，`openapi.json` 裡也沒有 | `backend/tests/authz_probe.py`；`openspec/specs/permission-authorization/` |
 | 任何 `/api/v1` 路徑的 CORS 預檢（帶 `Origin` 與 `Access-Control-Request-Method` 的 `OPTIONS`） | 任何來源都可以送；只有允許清單內的來源拿到 CORS 標頭 | 由 `CORSMiddleware` 自己回，不到任何端點 | `app/main.py` 的 `CORSMiddleware` 設定；`api-envelope` spec 的「錯誤回應使用同一個錯誤外層」 |
 
 前端的 `/dev/health`、`/dev/gallery` 是前端路由，不是 API 端點，見 [前端路由與骨架](./frontend-routes.mdx#路由)。
@@ -75,7 +76,7 @@ updatedAt: '2026-11-27'
 
 | 還沒有 | 風險 | 追蹤 |
 | :--- | :--- | :--- |
-| 授權四步的第 3、4 步（權限矩陣的 cell、附加條件含答案隔離） | `get_current_principal` 只做到第 1、2 步；第一個需要矩陣或附加條件的端點要先補上 | [ADR-004 的 D1](../../development/adr/004-auth-and-security.mdx#d1-認證-token-放在-httponly-cookie)、[D3](../../development/adr/004-auth-and-security.mdx#d3-csrf-用綁定-session-的-double-submit-token) |
+| 任務範圍授權的資料來源：第 2 步的任務成員身分與第 4 步的業務條件（任務歸屬與狀態、指派、審核者身分、資料集可見性、依作用角色的條件） | 第 3、4 步的判斷已由 `require_permission`（`app/core/authz.py`）提供，平台層的格讀 `admin` 模組的矩陣，讀標準答案的操作由 `GroundTruthBarrier` 對所有人關閉；但目前沒有任何端點掛它，`app.state.task_membership_reader` 也沒有實作者，第一個任務範圍的端點沒接上它時一律回 `500` | `task`、`dataset` 模組各自的 change；[ADR-004 的 D6](../../development/adr/004-auth-and-security.mdx#d6-權限矩陣當授權輸入) |
 | [`getHealth`](/view/diagrams/architecture/api.openapi#op/getHealth) 還沒有由規格 01-01 在權限矩陣列為刻意的例外 | 刻意公開目前只記在 `health-check` spec；它要求認證上線後由規格 01-01 在權限矩陣列為刻意的例外 | `openspec/specs/health-check/` 的「健康檢查刻意公開」 |
 | 本文與程式的自動一致性檢查 | 只靠審查與驗收時人工對照，漏改不會讓任何檢查失敗 | [#547](https://github.com/label-suite/label-suite/issues/547) §不在範圍 |
 
@@ -89,3 +90,4 @@ updatedAt: '2026-11-27'
 | 2026-11-24 | 內建 API 文件四條路徑依 `API_DOCS_ENABLED` 決定是否註冊，正式層 compose 關閉（[§不在本表的路徑](#不在本表的路徑)） | 一律註冊、任何人都讀得到；已知限制的「正式環境要不要關閉」 | [#592](https://github.com/label-suite/label-suite/issues/592) |
 | 2026-11-26 | 新增帳號模組的七個端點（規劃，待實作後校正）；已知限制的「認證、授權與 CSRF」縮成授權第 3、4 步 | — | [#719](https://github.com/label-suite/label-suite/issues/719) |
 | 2026-11-26 | 依實作校正帳號模組七列的出處（handler 名稱與授權依賴）（[§端點](#端點)） | 本文 2026-11-26 依設計寫成的七列 | [#719](https://github.com/label-suite/label-suite/issues/719) |
+| 2026-11-27 | 已知限制的「授權四步的第 3、4 步」改成只剩任務範圍授權的資料來源：`require_permission` 與平台層的矩陣已落地、還沒有端點掛它；不在本表的路徑加上測試掛載的授權探測路由（[§已知限制](#已知限制)、[§不在本表的路徑](#不在本表的路徑)） | 已知限制的「授權四步的第 3、4 步」 | [#755](https://github.com/label-suite/label-suite/issues/755) |

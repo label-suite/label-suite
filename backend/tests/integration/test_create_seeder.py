@@ -15,14 +15,19 @@ from pathlib import Path
 
 import httpx
 import pytest
-from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.passwords import PasswordHasher
+from app.main import create_app
 from app.modules.account.repository import UserRepository
 from app.modules.account.service import SeederConflictError, SeederService
 from app.scripts.create_seeder import run
-from tests.conftest import BACKEND_DIR, TEST_DATABASE_URL, make_test_database_settings
+from tests.conftest import (
+    BACKEND_DIR,
+    TEST_DATABASE_URL,
+    make_test_database_settings,
+    make_test_settings,
+)
 from tests.factories.accounts import add_user, reload_user, sessions_of
 from tests.support.browser import Browser
 
@@ -227,8 +232,9 @@ async def test_the_module_entry_point_runs_with_stdin(
     assert await UserRepository(account_db).get_seeder() is not None
 
 
-def test_no_endpoint_creates_an_account(app: FastAPI) -> None:
-    paths = app.openapi()["paths"]
+def test_no_endpoint_creates_an_account(tmp_path: Path) -> None:
+    # The production assembly, not the harness: test-only probe routes are not endpoints.
+    paths = create_app(make_test_settings(tmp_path)).openapi()["paths"]
 
     assert not [path for path in paths if "user" in path or "seeder" in path]
 
