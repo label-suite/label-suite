@@ -65,6 +65,8 @@ gh project item-list 1 --owner label-suite --limit 400 --format json \
 
 `state` 必須是 `OPEN`。新認領的 Status 必須是 Ready；In Progress 或 In Review 的，照步驟 2 依最後一則檢查點留言判斷是不是重入。Todo、Done、已關閉，或第二個指令沒有輸出（issue 不在看板上），都算不符，就停下來回報維護者，不動卡片、不留言。
 
+狀態相符、又是產品程式碼的新認領，照[步驟 3](#步驟-3-分類) 的 §產品程式碼單的大小檢查先數大小。
+
 ## 步驟 2 撞車檢查
 
 用 issue 編號比對，任何一項命中就是有人在做，跳過並寫進波次報告。
@@ -93,6 +95,20 @@ gh pr list --state all --search "${N}" --json number,title,state,headRefName
 拿不準屬於哪一類，就當作範圍外——**但碰 `backend/`、`frontend/`、`e2e/` 的一律歸 SDD 派工**，不因為它會改到畫面就改判範圍外。
 
 **實作畫面的 `frontend/` issue 歸 SDD 派工，不是範圍外。** 「範圍外」擋的是改 `design/` 底下那份設計來源，不是擋實作它的程式。畫面改動的那道關卡在 `AGENTS.md` 的 Ready gate——維護者看過 artifact 才移 Ready——卡片已經在 Ready，那道關卡就已經過了；這個 skill 不重判，也不替它畫 artifact。
+
+### 產品程式碼單的大小檢查
+
+SDD 派工的單在**新認領之前**先數大小；已在 In Progress、從檢查點重入的不重數。怎麼數、門檻多少、超過了怎麼拆，都只寫在 `AGENTS.md` §Project Board and Dispatch 的 Size gate 一條，這裡只寫怎麼執行。
+
+單涵蓋整頁規格時，數那一頁 `## 驗收標準` 表格的資料列：
+
+```bash
+awk '/^## 驗收標準/{f=1;next} /^## /{f=0} f && /^\| / && !/^\| *:?-/{n++} END{print n-1}' docs/specs/<模組>/<頁面>.mdx
+```
+
+定義以 `AGENTS.md` 的 Size gate 為準。`n-1` 扣掉的是表頭；分隔列已由 `:?-` 排除。單只涵蓋頁面的部分章節時（拆出來的子單），數它本文列出的章節或列。
+
+超過門檻就**不認領**：卡片不動、不開 worktree，在單上留一則檢查點（階段寫「超過大小門檻」，列出條目數、門檻與「依 Size gate 拆單後才能派」），寫進波次報告的跳過清單，改做下一張。這張單最新一則 issue-dispatch 檢查點已經是「超過大小門檻」、條目數也相同時，不再留言，只寫進跳過清單，免得每輪都留一則。拆單要先給維護者看過，不在派工裡做。
 
 ## 步驟 4 排波次
 
@@ -269,7 +285,7 @@ lint 擋得住單一檔案，擋不住整體慢慢長歪。Epic 移到 Done 之�
 
 ## 步驟 8 檢查點留言
 
-每到一個階段就留一則：派工、待審查、審查結果、PR 已開、已合併、卡住，以及 SDD 類的「clarification 的 Q 項」（格式見[步驟 5](#步驟-5-派工)）。
+每到一個階段就留一則：派工、待審查、審查結果、PR 已開、已合併、卡住、超過大小門檻（見[步驟 3](#步驟-3-分類) 的 §產品程式碼單的大小檢查），以及 SDD 類的「clarification 的 Q 項」（格式見[步驟 5](#步驟-5-派工)）。
 
 ```markdown
 <!-- issue-dispatch checkpoint -->
@@ -355,6 +371,7 @@ gh project item-edit --project-id PVT_kwDOEWdNqs4BoCOI --id "$ITEM" \
 | 2026-11-20 | 六類 PR 新增**程式 PR**（`backend/`、`frontend/`、`e2e/`，連帶該 change 的 `openspec/` 產出），見 `spec-migration.mdx`；派工範圍加入產品程式碼，走 `label-suite-sdd` 全流程；clarification 有 Q 項就以檢查點留言停在 In Progress，派工改做別張；程式類一波只排一張（[步驟 3](#步驟-3-分類)、[步驟 4](#步驟-4-排波次)、[步驟 5](#步驟-5-派工)） | 「只派文件、工具與 `openspec/` 目錄下的 issue」，以及把產品程式算成範圍外 | [#525](https://github.com/label-suite/label-suite/issues/525) |
 | 2026-11-25 | 每個 Epic 移到 Done 之後，對它動過的程式跑一次架構審查：新開的審查者找新舊寫法並存、重複實作、模組互依，結果開成一張彙總 issue（工作項為 checkbox、放 Todo），由維護者決定拆哪些（[步驟 7](#步驟-7-合併) 的 §Epic 結束時的架構審查） | 只靠 lint 與單張 PR 的審查，沒有跨 PR 的整體檢查 | [#564](https://github.com/label-suite/label-suite/issues/564) |
 | 2026-11-27 | 合併前核對 issue 本文沒有未勾的項目、程式類核對覆蓋表上每個 `#N` 都有移交清單；程式類 PR 改了 `docs/` 時另以 `doc-writing` 步驟 5 審那一部分（[步驟 6](#步驟-6-審查與開-pr)、[步驟 7](#步驟-7-合併)） | 移交驗收由主 session 合併後臨時補記；程式類 PR 只派 `code-reviewer` | [#744](https://github.com/label-suite/label-suite/issues/744) |
+| 2026-11-27 | 產品程式碼單新認領前先數大小，超過 `AGENTS.md` Size gate 的門檻就不認領、留檢查點並跳過（[步驟 3](#步驟-3-分類) 的 §產品程式碼單的大小檢查） | 產品程式碼單不論大小都直接認領，一頁規格一張單、一個 PR | [#753](https://github.com/label-suite/label-suite/issues/753) |
 
 ## 附錄：與原 skill 的對照
 
