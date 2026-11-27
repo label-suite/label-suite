@@ -80,6 +80,28 @@ async function expectSidebarWidth(page: Page, width: number): Promise<void> {
   await expect.poll(async () => (await boxOf(sidebar(page))).width).toBe(width);
 }
 
+/**
+ * Waits until every request the page started so far has been reported: after
+ * the page's pending work and a frame, it fetches a file from its own origin
+ * and waits for the answer. The browser reports requests in the order it
+ * sends them, so a query the app sent before is counted by then. It waits on
+ * an event, never on a clock (testing-agent-rules T8, e2e static checks).
+ */
+async function settleRequests(page: Page): Promise<void> {
+  const sentinel = page.waitForResponse((response) =>
+    response.url().includes("/theme-init.js?settle="),
+  );
+  await page.evaluate(async () => {
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => {
+        resolve();
+      });
+    });
+    await fetch(`/theme-init.js?settle=${String(Date.now())}`, { cache: "no-store" });
+  });
+  await sentinel;
+}
+
 /** Counts the "current session" queries the page sends from now on. */
 function countSessionQueries(page: Page): () => number {
   const seen: Request[] = [];
@@ -210,6 +232,7 @@ test.describe("items by role", () => {
       window.dispatchEvent(new Event("blur"));
       window.dispatchEvent(new Event("focus"));
     });
+    await settleRequests(page);
     await expectItems(page, ADMIN_ITEMS);
     expect(queries()).toBe(0);
 
@@ -217,6 +240,9 @@ test.describe("items by role", () => {
     await expect(page).toHaveURL(pathIs(LANDING_PATH));
     await expectItems(page, MEMBER_ITEMS);
     await expect(page.getByRole("button", { name: "系統管理" })).toHaveCount(0);
+    // The next page asked once, also through the redirect chain and StrictMode.
+    await settleRequests(page);
+    expect(queries()).toBe(1);
   });
 
   test("沒有任務角色時角色標示讀作一般使用者", async ({ page }) => {

@@ -10,6 +10,7 @@ import { delay, http, HttpResponse } from "msw";
 import { isValidElement, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { readRouteDeclaration } from "@/features/app-shell";
 import { LANGUAGE_STORAGE_KEY, i18n, readStoredLanguage } from "@/lib/i18n";
 import { HEALTH_URL, errorBody, healthOkHandler } from "@/test/envelope-fixtures";
 import { server } from "@/test/msw-server";
@@ -435,12 +436,13 @@ function drawsShell(route: RouteNode): boolean {
   return isValidElement(route.element) && route.element.type === AppShellLayout;
 }
 
+/** A declaration the shell can read: the same check AppShellLayout uses, so a typo fails here. */
 function declaresNavKey(handle: unknown): boolean {
-  return typeof handle === "object" && handle !== null && "navKey" in handle;
+  return readRouteDeclaration([handle]) !== null;
 }
 
 /**
- * Every route with an element under the shell layout that declares no
+ * Every route with an element under the shell layout that declares no known
  * `navKey`, named by its path (clarification P3): no default fills the gap.
  */
 function routesMissingNavKey(routes: readonly RouteNode[], insideShell = false): string[] {
@@ -497,5 +499,19 @@ describe("the shell's routes (sidebar-nav design D4, clarification P3)", () => {
     ];
 
     expect(routesMissingNavKey(tree)).toEqual(["/task-management/task-list", "/account/profile"]);
+  });
+
+  it("fails on a navKey the shell does not know, such as a typo", () => {
+    const tree: RouteNode[] = [
+      {
+        element: <AppShellLayout />,
+        children: [
+          { path: "/dashboard/dashboard", element: <p />, handle: { navKey: "dashbaord" } },
+          { path: "/account/profile", element: <p />, handle: { navKey: 3 } },
+        ],
+      },
+    ];
+
+    expect(routesMissingNavKey(tree)).toEqual(["/dashboard/dashboard", "/account/profile"]);
   });
 });
