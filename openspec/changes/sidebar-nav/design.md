@@ -68,7 +68,7 @@
 `features/app-shell/blocked-notice.tsx` 的 `BlockedNotice` 不直接以 `location.state` 決定畫不畫，因為 state 一清掉下一次渲染（包括切換語言）說明就會消失：
 
 1. 每當 `location.key` 改變且 `location.state.blockedNotice` 是兩個已知種類之一，就把 `{ arrivalKey: location.key, kind }` 存進元件狀態
-2. 存好之後才以 `navigate(目前路徑, { replace: true, state: null })` 清掉 router state。這次 replace 產生的新 location 沒有 state，元件**不**因此清除已存的種類
+2. 存好之後才以 `navigate(目前路徑, { replace: true, state: null })` 清掉 router state。這次 replace 產生的新 location 沒有 state，元件**不**因此清除已存的種類。清除必須冪等：只在 `location.state.blockedNotice` 仍存在時才送出這次 `replace`，StrictMode 重跑 effect 時 state 已清或存入的 `arrivalKey` 已等於目前的 key，就不再送，也不重存
 3. 說明用既有 `components/ui/alert.tsx`（`info`）畫出，文字每次渲染都從 `appShell` 語言檔取，所以切換語言後變成英文；不插值任何任務資料。種類只認兩個值，其他值不畫
 4. 說明一直留到離開這一頁（元件卸載）為止。重新整理、上一頁、下一頁回到的歷史紀錄都已沒有 state，所以不再出現
 5. 已在落點時再點一次被擋的導覽項，會帶著新的 `location.key` 再到達一次，步驟 1 重新存入；Alert 以 `arrivalKey` 作 `key` 重新掛載，讓 `role="alert"` 再朗讀一次
@@ -80,14 +80,23 @@
 
 本次只有 `/dashboard/dashboard` 在外殼底下。點一個還沒建置的導覽項（例如「任務管理」→ `/task-management/task-list`）會落到外殼以外的 `{ path: "*" }`，經 `/`（`RootRedirect` 讀 `staleTime: Infinity` 的快取）回到落點，途中外殼會**卸載再重新掛載**。所以「只監看 `AppShellLayout` 的 pathname、不含第一次掛載」永遠不會觸發，觸發點要能跨過外殼的重新掛載：
 
-1. `createAppRouter()` 在所有路由外加一層沒有 path 的根 layout route（`src/app/app-root.tsx` 的 `AppRoot`，只畫 `<Outlet>`），它以 context 提供一個 ref，記錄「這次頁面載入裡外殼是否已經掛載過」。這一層不會因為換頁而卸載，只有整頁重新載入才重來
-2. `AppShellLayout` 掛載時讀這個 ref：還沒掛載過就只把它設成已掛載、不重查（頁面載入的第一次，守門剛查過）；已掛載過就對既有的登入狀態查詢呼叫 `refetch({ cancelRefetch: false })`
-3. `AppShellLayout` 掛載期間，`location.pathname` 改變時同樣呼叫 `refetch({ cancelRefetch: false })`，涵蓋日後外殼底下多頁之間的換頁（外殼不卸載的情況）
+`frontend/src/main.tsx` 以 `<StrictMode>` 包住整個應用，開發模式（E2E 跑的就是它）下 effect 會「執行、清理、再執行」一次，refs 保留。所以判斷「要不要重查」不能依「這個 effect 是不是第一次跑」或「外殼是不是第一次掛載」，否則 StrictMode 的模擬重新掛載就會讓每次頁面載入多送一次查詢。判斷改依 StrictMode 重跑時不會變的值：`location.key` 與 `location.pathname`。
+
+1. `createAppRouter()` 在所有路由外加一層沒有 path 的根 layout route（`src/app/app-root.tsx` 的 `AppRoot`，只畫 `<Outlet>`），這一層不因換頁而卸載，只有整頁重新載入才重來。它以 context 提供一個 ref：`{ checkedKey, checkedPathname, leftSince }`，前兩者是上一次登入狀態檢查時外殼所在的 `location.key` 與 pathname（初值為空），`leftSince` 表示那之後路由是否到過別的 pathname
+2. `AppRoot` 有一個依 `location.pathname` 的 effect：pathname 和它上一次看到的不同時把 `leftSince` 設為 true。它只做比較與設值，StrictMode 重跑時結果相同
+3. `AppShellLayout` 有一個依 `location.key`、`location.pathname` 的 effect，依序判斷：
+   - `checkedKey` 為空（這次頁面載入外殼第一次到達，守門剛查過）→ 記下目前的 key 與 pathname、`leftSince` 設為 false，**不重查**
+   - `location.key` 等於 `checkedKey`（StrictMode 的重跑，或同一個 location 的重新渲染）→ 什麼都不做
+   - key 不同，且 pathname 不同於 `checkedPathname` 或 `leftSince` 為 true（使用者換了頁，包括經外殼以外的轉址回到同一個落點）→ 呼叫 `refetch({ cancelRefetch: false })`，記下新的 key 與 pathname、`leftSince` 設為 false
+   - key 不同但 pathname 相同且沒有離開過（擋下說明清 state 的 `replace`、已在落點時再點被擋的導覽項）→ 只記下新的 key，不重查
 4. `cancelRefetch: false` 讓一連串轉址裡進行中的那一次重查被沿用，不重送
 5. 查詢維持 `staleTime: Infinity`、`refetchOnWindowFocus: false`；重查進行中側欄沿用上一份資料、不顯示載入中；重查得到未登入時守門照既有規則帶回登入頁（Q11；ui §資料來源 的「為什麼換頁就重查、焦點不重查」；sd §關鍵情境「角色被改掉時側欄不立刻變」）
 
-這樣頁面載入時（含已登入的人開 `/account/login` 被導向落點）外殼是第一次掛載，不會多送請求，`auth-guard`「兩種路由共用同一次查詢」的「只送出 1 次」仍成立。登出後在同一次頁面載入裡再登入，外殼第二次掛載會多一次重查，結果與登入回應相同，只多一個請求。
+React 先跑子層再跑父層的 effect，所以外殼底下的直接換頁（日後多頁時）在同一次 commit 裡 `AppRoot` 還沒設 `leftSince`；這時靠第 3 點的「pathname 不同」判斷。經外殼以外的轉址（本次「任務管理 → `*` → `/` → 落點」）回到同一個 pathname 時，中途的 pathname 已讓 `AppRoot` 設好 `leftSince`。
 
+這樣頁面載入時（含已登入的人開 `/account/login` 被導向落點）`checkedKey` 為空，不會多送請求，StrictMode 下也一樣，`auth-guard`「兩種路由共用同一次查詢」的「只送出 1 次」與 `e2e/account/session-guard.spec.ts` 既有的查詢次數都不變。登出後在同一次頁面載入裡再登入，外殼會以新的 key 與離開過的 pathname 到達而多一次重查，結果與登入回應相同，只多一個請求。
+
+- **替代方案**：以「外殼是否掛載過」或「effect 是否第一次跑」判斷（前一版寫法）——StrictMode 的模擬重新掛載會被當成第二次，每次頁面載入多送一次查詢，違反 `session-guard.spec.ts` 的次數；不採用
 - **替代方案**：在根 layout 監看所有 pathname 改變就重查——已登入的人開 `/account/login` 被導向落點時會多送一次，違反 `auth-guard`「兩種路由共用同一次查詢」；不採用
 - **替代方案**：只在外殼監看 pathname、不含第一次掛載（原寫法）——本次的換頁都經過外殼以外的轉址，永遠不會觸發；不採用
 - **替代方案**：`refetchOnWindowFocus: true`——停在原頁時側欄就會變，違反 07-01 §邊界情況；不採用
