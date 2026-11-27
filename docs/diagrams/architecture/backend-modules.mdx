@@ -545,11 +545,11 @@ cd backend && uv run uvicorn app.main:create_app --factory
 | 1 | `settings` 是 `None` 時用 `load_settings(Settings)` 從環境變數讀 | `ConfigError`，只寫變數名與原因 |
 | 1a | `configure_logging(settings)`：安裝帶 `trace_id` 的 record factory；root 掛一個 `KeyValueFormatter` 的 handler（預設寫 stderr，測試可用可選的 `stream` 參數擷取輸出），root 與 handler 的等級都是 `LOG_LEVEL`；`sqlalchemy`（含 `engine`、`pool`）、`aiosqlite`、`asyncpg` 固定 `WARNING`；`uvicorn` 改走 root handler，`uvicorn.access` 清空 handler 並 `propagate=False`（關掉 uvicorn 內建 access log）。重複呼叫不會疊加 handler | — |
 | 1b | `resolve_auth_secret` 決定 `AUTH_SECRET`，寫回 `settings`；`TokenKeys.derive` 衍生三把金鑰，建 `AccessTokenCodec`。組好 app 後，金鑰、codec 與 `AccountPrincipalLoader` 分別放進 `app.state.token_keys`、`access_codec`、`principal_loader` | `ConfigError`（正式層沒設，或 Lite 層存的祕密檔不合格），只寫變數名 |
-| 2 | 建 `FastAPI`：版號讀 `pyproject.toml`、`generate_unique_id_function` 設成 `generate_operation_id`；`API_DOCS_ENABLED` 為 `false` 時 `docs_url`、`redoc_url`、`openapi_url` 傳 `None`（四條內建路由都不註冊，請求落入既有 404 envelope） | 讀不到版號就失敗，沒有預設值 |
+| 2 | 建 `FastAPI`：版號讀 `pyproject.toml`、`generate_unique_id_function` 設成 `generate_operation_id`、`openapi_tags` 傳 `OPENAPI_TAGS`（宣告順序即 API 文件的分組顯示順序：照規格章節，`health` 最後）；`API_DOCS_ENABLED` 為 `false` 時 `docs_url`、`redoc_url`、`openapi_url` 傳 `None`（四條內建路由都不註冊，請求落入既有 404 envelope） | 讀不到版號就失敗，沒有預設值 |
 | 3 | 載入訊息目錄，放進 `app.state.message_catalog` | `MessageCatalogError` |
 | 4 | 依序加中介層，見 [§請求管線](#請求管線)；`AccessLogMiddleware` 的 `quiet_success_routes` 在這裡傳入（`/api/v1/health`），core 不寫死路徑 | — |
 | 5 | 註冊 exception handler，見 [§錯誤怎麼對到 envelope](#錯誤怎麼對到-envelope) | — |
-| 6 | 建 `/api/v1` 父 router，把 `health` 與 `account` 的 router 掛進去 | — |
+| 6 | 建 `/api/v1` 父 router，把 `health` 與 `account` 的 router 掛進去；掛載時用 `include_router(tags=["<module>"])` 帶模組 tag，模組的 `APIRouter()` 不寫 tags | — |
 | 7 | 檢查 operationId 不重複，換上後處理過的 `app.openapi` | `OperationIdCollisionError` |
 
 lifespan 啟動時建 engine 與 sessionmaker，放在 `app.state.engine`、`app.state.sessionmaker`；關閉時 `dispose()` engine。模組層沒有任何全域的 engine 或 session。
@@ -753,6 +753,7 @@ cd backend && uv run python -m app.scripts.export_openapi
 | :--- | :--- |
 | operationId | `generate_operation_id` 由 method、`/api/v1` 之後最後一個非參數路徑段與 handler 的回傳型別算出，不看函式名；不手寫也不逐個覆寫 |
 | 重複檢查 | `create_app` 與第一次產生 API 文件時各查一次，重複就失敗並列出兩條路由 |
+| tag | 一個模組一個 tag，名稱等於 `app/modules/` 下的目錄名；每個 operation 恰好一個，且在頂層 `tags` 宣告並附一句非空的英文說明（[api-agent-rules A1](../../development/rules/api-agent-rules.mdx#a1-路由http-statusoperationid-與回應外層)）。缺 tag、未宣告與空說明由 `tests/unit/test_openapi_tags.py` 擋，名稱對錯靠審查；tag 不參與 operationId 的計算 |
 | 後處理 | 每個 `422` 改指向 `ErrorResponse`、刪掉 FastAPI 的 `HTTPValidationError` 與 `ValidationError`、泛型元件改用 `title` 當名稱 |
 | 版號 | `info.version` 讀 `backend/pyproject.toml` 的 `[project].version` |
 | 匯出 | 用固定的佔位設定組 app，不跑 lifespan、不開資料庫、不需要環境變數；輸出排序過的 key、縮排 2、結尾換行，失敗時不動既有檔案、退出碼 1 |
@@ -787,7 +788,7 @@ cd backend && uv run python -m app.scripts.export_openapi
 - [ ] request schema 繼承 `RequestModel`、response schema 繼承 `ResponseModel`
 - [ ] handler 用回傳型別宣告回應（`ApiResponse[X]`，列表是 `ApiResponse[PaginatedResponse[X]]`），不用 `response_model=`；回傳時呼叫 `ok(data, request)`
 - [ ] 業務錯誤繼承 `AppError`，設定 `status_code`、`code`、`message_key`；新的訊息鍵同時加進 `zh-TW` 與 `en` 的 `messages.json`
-- [ ] 在 `create_app` 把模組的 router 掛進 `/api/v1` 父 router
+- [ ] 在 `create_app` 把模組的 router 掛進 `/api/v1` 父 router：掛載時用 `include_router(tags=["<module>"])` 指定模組 tag、模組的 `APIRouter()` 不寫 tags，在 `OPENAPI_TAGS`（傳給 `openapi_tags`）依規格章節的位置加一筆英文說明，同時更新 `tests/unit/test_openapi_tags.py` 契約測試的順序與值（[api-agent-rules A1](../../development/rules/api-agent-rules.mdx#a1-路由http-statusoperationid-與回應外層)）
 - [ ] 需要登入的端點掛 `Depends(get_current_principal)`（`app.core.auth`），不自己讀 cookie；角色一律取 `Principal.role`，不讀 JWT 的 `role`
 - [ ] service 擁有交易：需要寫入時自己 commit，`get_db` 不會幫你 commit
 - [ ] 有資料表時，model 放 `models.py` 並繼承 `Base`；migration 由 `dba` 寫
@@ -844,3 +845,4 @@ cd backend && uv run python -m app.scripts.export_openapi
 | 2026-11-27 | 已知限制拿掉「CI 的後端檢查」一列：兩種資料庫的 pytest 由 CI 的 `backend-sqlite`、`backend-postgres` 跑，ruff、mypy 與分層 import 方向（`lint-imports`）由 `backend-sqlite` 跑，契約漂移由 `api-contract` 跑（[§已知限制](#已知限制)） | 已知限制的「CI 的後端檢查……目前只在本機跑」，追蹤於已關閉的 #506 | [#745](https://github.com/label-suite/label-suite/issues/745) |
 | 2026-11-27 | 新增預定模組與 42 張表的歸屬：`account`（含 06-01）、`dashboard`、`task`（03 加 04）、`dataset`、`admin`（只剩 06-02），`audit_events` 放 `app/core/`；預期 5 處跨模組 service 呼叫（[§預定模組與資料表歸屬](#預定模組與資料表歸屬)） | 本文原本只寫已存在的 `health` 與 `account`，其他模組與表的歸屬由各 change 的 `sd` 臨場決定 | [#750 留言](https://github.com/label-suite/label-suite/issues/750#issuecomment-7208259366) |
 | 2026-11-27 | 02-01 用獨立的 `dashboard` 模組，沒有表、只呼叫 `task` 的 service（[§02-01 儀表板怎麼取資料](#02-01-儀表板怎麼取資料)） | — | [#750 留言](https://github.com/label-suite/label-suite/issues/750#issuecomment-7208521478) |
+| 2026-11-27 | 後端 OpenAPI 依模組分 tag：`create_app` 掛載時帶模組 tag、`OPENAPI_TAGS` 依規格章節宣告且 `health` 最後，由 `tests/unit/test_openapi_tags.py` 擋缺 tag、未宣告與空說明（[§app factory 與 lifespan](#app-factory-與-lifespan)、[§OpenAPI 匯出與 operationId 檢查](#openapi-匯出與-operationid-檢查)、[§新增業務模組的檢查清單](#新增業務模組的檢查清單)） | 各 operation 沒有 tag，API 文件全落在 `default` | [#765](https://github.com/label-suite/label-suite/issues/765) |

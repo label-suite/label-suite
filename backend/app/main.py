@@ -40,13 +40,23 @@ from app.modules.account.router import router as account_router
 from app.modules.account.service import AccountPrincipalLoader
 from app.modules.health.router import router as health_router
 
-__all__ = ["API_V1_ERROR_RESPONSES", "create_api_router", "create_app"]
+__all__ = ["API_V1_ERROR_RESPONSES", "OPENAPI_TAGS", "create_api_router", "create_app"]
 
 API_TITLE = "Label Suite API"
 API_V1_ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
     status: {"model": ErrorResponse} for status in (404, 405, 406, 500)
 }
 """Error responses every ``/api/v1`` operation can return (api-contract §共用契約)."""
+
+OPENAPI_TAGS: list[dict[str, str]] = [
+    {"name": "account", "description": "Sign-in, sessions and the signed-in caller."},
+    {"name": "health", "description": "Service and database availability check."},
+]
+"""One tag per backend module, in spec chapter order with ``health`` last (api-agent-rules A1).
+
+The list order is the group order of the API docs. A new module adds its entry at its
+chapter's position and is mounted with ``include_router(tags=["<module>"])``.
+"""
 
 CORS_ALLOWED_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 CORS_ALLOWED_HEADERS = ["Content-Type", "Accept-Language", CORRELATION_ID_HEADER, CSRF_HEADER]
@@ -93,7 +103,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     Returns:
         The app with the six middlewares, the exception handlers, the
-        ``/api/v1`` router with the health and account modules mounted, and the
+        ``/api/v1`` router with the health and account modules mounted under
+        their module tags (declared in ``OPENAPI_TAGS``), and the
         post-processed ``app.openapi`` installed;
         ``info.version`` is ``[project].version`` of ``pyproject.toml``. The
         database engine is created by the lifespan, not here, so building the
@@ -120,6 +131,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         version=get_app_version(),
         lifespan=_lifespan,
         generate_unique_id_function=generate_operation_id,
+        openapi_tags=OPENAPI_TAGS,
         # None leaves the four built-in routes unregistered, so they fall through
         # to the shared 404 envelope like any other unknown path.
         docs_url="/docs" if resolved.api_docs_enabled else None,
@@ -159,8 +171,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     register_exception_handlers(app)
     api = create_api_router()
-    api.include_router(health_router)
-    api.include_router(account_router)
+    # The module tag is given here, not in the module's APIRouter(), so each
+    # operation carries exactly one tag (api-agent-rules A1).
+    api.include_router(health_router, tags=["health"])
+    api.include_router(account_router, tags=["account"])
     app.include_router(api)
     assert_unique_operation_ids(app)
     install_openapi(app)
