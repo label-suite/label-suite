@@ -895,3 +895,22 @@ describe("C9: scripts-tests-windows", () => {
     assert.equal(b, a);
   });
 });
+
+describe("hooks: three platforms, Windows under bash (#830)", () => {
+  test("the matrix is ubuntu, macOS and Windows", () => {
+    assert.deepEqual(job("hooks").strategy?.matrix?.os, [
+      "ubuntu-latest",
+      "macos-latest",
+      "windows-latest",
+    ]);
+    assert.equal(job("hooks").strategy?.["fail-fast"], false);
+  });
+
+  test("every step runs under bash, and Windows gets python3 before the suites", () => {
+    assert.equal(job("hooks").defaults?.run?.shell, "bash");
+    const shim = requireStep("hooks", /python3-shim/);
+    const suites = requireStep("hooks", /scripts\/tests\/\*-tests\.sh/);
+    assert.ok(shim < suites, "the python3 shim must come before the suites that need it");
+    assert.equal(job("hooks").steps[shim].if, "runner.os == 'Windows'");
+  });
+});

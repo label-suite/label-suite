@@ -33,14 +33,20 @@ jobs:
     # red job rather than something a reader has to notice. macOS is in the
     # matrix because this repository is public and its runner minutes are
     # free; the cross-platform requirement is issue #111's, not a nicety.
+    # Windows runs the same suites under Git Bash (#830). It is not a required
+    # check (maintainer decision, 2026-11-28): it reports, it does not gate.
     name: hooks (${{ matrix.os }})
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.hooks == 'true') }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    # Windows steps default to PowerShell; every step here is bash.
+    defaults:
+      run:
+        shell: bash
     # The checkers set no limit of their own -- they are forbidden to shell out
     # to `timeout`, which this machine does not have -- so the ceiling for the
     # CI side is expressed here.
@@ -86,6 +92,19 @@ jobs:
       # `pnpm exec`, which installs nothing.
       - name: Provision the frontend toolchain the TypeScript route runs in
         run: pnpm install --frozen-lockfile
+
+      # The suites build their JSON payloads with `python3`, which a Windows
+      # runner provides only as `python`. A shim keeps the suites unchanged;
+      # on the other platforms the step does not run.
+      - name: Provide python3 on Windows
+        if: runner.os == 'Windows'
+        run: |
+          command -v python3 >/dev/null 2>&1 && python3 -c 'import json' 2>/dev/null && exit 0
+          shim="$RUNNER_TEMP/python3-shim"
+          mkdir -p "$shim"
+          printf '#!/bin/sh\nexec python "$@"\n' > "$shim/python3"
+          chmod +x "$shim/python3"
+          echo "$shim" >> "$GITHUB_PATH"
 
       # A glob, not a list. A suite that is added and not wired up is the
       # failure this job exists to prevent, and a list is the place that gets
@@ -149,15 +168,18 @@ jobs:
       # and it is the only place in this process that runs on Linux. The
       # library must not depend on either behaviour: it truncates in node and
       # the assertion is that its output decodes on both platforms.
+      # `head` runs in this shell and node only decodes what it is handed: a
+      # node `execSync("head ...")` goes through cmd.exe on Windows, which has
+      # no `head`, and `/tmp` means a different directory to node there.
       - name: Truncation does not depend on this platform's head
         run: |
-          node -e 'process.stdout.write("\u4e2d".repeat(23000))' > /tmp/wide.txt
+          wide="$RUNNER_TEMP/wide.txt"
+          node -e 'process.stdout.write("\u4e2d".repeat(23000))' > "$wide"
           printf 'platform: %s, head: ' "$(uname -s)"
-          head -c 65536 /tmp/wide.txt | tail -c 4 | od -An -tx1 | tr -d ' \n'
+          head -c 65536 "$wide" | tail -c 4 | od -An -tx1 | tr -d ' \n'
           printf '\n'
-          node -e '
-            const b = require("node:child_process").execSync(
-              "head -c 65536 /tmp/wide.txt", { maxBuffer: 1 << 24 });
+          head -c 65536 "$wide" | node -e '
+            const b = require("node:fs").readFileSync(0);
             try {
               new TextDecoder("utf-8", { fatal: true }).decode(b);
               console.log("raw head -c output decodes on this platform");
