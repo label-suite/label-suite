@@ -77,7 +77,7 @@ pythonpath = ["."]
 testpaths = ["tests"]
 markers = [
     "integration: API-level tests through the real app assembly and a test database",
-    "postgres: tests that only hold on PostgreSQL; skipped when TEST_DATABASE_URL is unset",
+    "postgres: tests that only hold on PostgreSQL; the marker only selects them (-m postgres), and each test skips itself with its own skipif(TEST_DATABASE_URL is None)",
 ]
 
 [tool.importlinter]
