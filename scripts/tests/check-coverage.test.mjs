@@ -15,7 +15,9 @@ import { afterEach, beforeEach, test } from "node:test";
 const ROOT = fileURLToPath(new URL("../..", import.meta.url));
 const SCRIPT = join(ROOT, "scripts/check-coverage.mjs");
 const FIXTURES = join(ROOT, "scripts/tests/fixtures/coverage");
-const PRETTIER = join(ROOT, "node_modules/.bin/prettier");
+// Run prettier's JS entry through node: the .bin shim is a .cmd file on win32,
+// which spawnSync cannot start without a shell.
+const PRETTIER = join(ROOT, "node_modules/prettier/bin/prettier.cjs");
 const fixture = (name) => join(FIXTURES, name);
 
 let outDir;
@@ -155,7 +157,10 @@ test("a rise from 85.0 to 86.0 passes and prints exactly the suggested baseline 
   });
   assert.equal(written, `${JSON.stringify(JSON.parse(written), null, 2)}\n`);
   assert.ok(r.stdout.includes(written), "the log must contain the whole suggested file");
-  const prettier = spawnSync(PRETTIER, ["--check", r.suggested], { encoding: "utf8", cwd: ROOT });
+  const prettier = spawnSync(process.execPath, [PRETTIER, "--check", r.suggested], {
+    encoding: "utf8",
+    cwd: ROOT,
+  });
   assert.equal(prettier.status, 0, prettier.stdout + prettier.stderr);
 });
 

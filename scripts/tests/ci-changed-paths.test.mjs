@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { after, before, describe, test } from "node:test";
 
@@ -124,7 +124,7 @@ describe("CLI", () => {
 
   /** Run the script in the temp repo; return its result and what it wrote to $GITHUB_OUTPUT. */
   function run(args, { githubOutput = true } = {}) {
-    const outFile = join(repo, "..", `${repo.split("/").pop()}-output.txt`);
+    const outFile = join(dirname(repo), `${basename(repo)}-output.txt`);
     writeFileSync(outFile, "previous=1\n");
     const env = { ...process.env };
     delete env.GITHUB_OUTPUT;
