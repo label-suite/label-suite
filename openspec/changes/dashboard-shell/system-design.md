@@ -37,7 +37,7 @@
 **提案 B 的形狀**（只在 clarification 選 B 時才實作；正式的欄位與錯誤碼由 `api-contract.md` 寫）：
 
 - 位置：`app/modules/dashboard/`；`task` 側只有 `app/modules/task/service.py` 的一個公開函式，沒有 router、不掛進 app（同 `admin` 目前的做法）
-- 端點：`GET /api/v1/dashboard/task-role-summary`，operationId 依 `generate_operation_id` 的規則算出 `getTaskRoleSummary`（最後一個非參數段 `task-role-summary`，動詞 `get`），與既有的 8 個 operationId（`getHealth` 與 `account` 的 7 個）不重複
+- 端點：`GET /api/v1/task-role-summary`，operationId 依 `generate_operation_id` 的規則算出 `getTaskRoleSummary`（最後一個非參數段 `task-role-summary`，動詞 `get`），與既有的 8 個 operationId（`getHealth` 與 `account` 的 7 個）不重複；路徑不插模組段 `dashboard`（api-agent-rules A1）
 - 回應 `data`：`heldRoles`，任務角色名稱的陣列（`project_leader`／`reviewer`／`annotator` 的子集合，依矩陣欄序排列，沒有就是 `[]`）。**不帶任務 ID、任務名稱或筆數**——版面只需要「有沒有」，與 sidebar-nav 提案形狀、前端 `TaskRoleAnswer.heldRoles` 一致。規格 02-01 §資料欄位 把它寫成三個計數，但那一列「使用者看到」是「不直接顯示」，計數大於 0 與集合包含該角色對版面的決定等價；要回計數時改成 `projectLeaderTaskCount`、`reviewerTaskCount`、`annotatorTaskCount` 三個非負整數，由 `api-contract.md` 二選一
 - 版面優先序（專案負責人 > 審核員 > 標記員）在前端以純函式決定，不在後端：它不是授權，只是版面（02-01 §使用角色「任務角色只決定版面」）
 - 只讀呼叫者自己：使用者 ID 只取 `AccessGrant.principal.user_id`，不接受任何 path、query 或 body 參數
@@ -262,7 +262,7 @@ sequenceDiagram
   alt 待決問題 1 提案 A
     Note over C: 不再送請求；畫面端的任務角色來源回答「沒有」→ 三張行動入口卡
   else 待決問題 1 提案 B
-    C->>G: GET /api/v1/dashboard/task-role-summary（不帶任何參數）
+    C->>G: GET /api/v1/task-role-summary（不帶任何參數）
     G->>G: 第 1、2 步；第 3 步 dashboard.view 的系統層格（固定開）
     alt 不能通行
       G-->>C: 401 AUTH_REQUIRED
@@ -299,7 +299,7 @@ sequenceDiagram
   alt 待決問題 3 提案 A
     Note over C: 不再送請求；區塊 A 的四個示範值與示範值標示都在畫面端
   else 待決問題 3 提案 B
-    C->>G: GET 平台使用者統計（path 由 api-contract 定）
+    C->>G: GET /api/v1/platform-user-summary
     G->>G: 第 3 步 dashboard.view；第 4 步「呼叫者是系統管理員」（不經 admin.platform_overview.view）
     alt 呼叫者是平台成員
       G-->>C: 404 NOT_FOUND（不以 403 洩漏它存在）
@@ -322,7 +322,7 @@ sequenceDiagram
   participant DR as DashboardRouter
   participant DS as DashboardService
   participant T as task 公開函式 held_task_roles
-  C->>G: GET /api/v1/dashboard/task-role-summary
+  C->>G: GET /api/v1/task-role-summary
   Note over C: 畫面端：回應回來前顯示骨架（不在本圖）
   G->>G: 授權第 1、2、3 步（每次讀資料庫，不快取）
   G->>DR: AccessGrant
@@ -347,7 +347,7 @@ sequenceDiagram
   participant DS as DashboardService
   participant DB as 資料庫
   loop 第一次讀取，以及每一次按「重試」
-    C->>M: GET /api/v1/dashboard/task-role-summary
+    C->>M: GET /api/v1/task-role-summary
     M->>G: 轉交
     G->>DB: 授權第 1、2、3 步的讀取
     alt 資料庫或程式出錯
@@ -373,7 +373,7 @@ sequenceDiagram
   participant AR as AccountRouter.get_current_session
   participant DB as 資料庫
   opt 待決問題 1 提案 B
-    C->>M: GET /api/v1/dashboard/task-role-summary
+    C->>M: GET /api/v1/task-role-summary
     M-->>C: 500 INTERNAL_ERROR（錯誤外層不帶 Set-Cookie；後端不撤銷 account_session、不動 refresh token）
   end
   Note over C: 使用者重新整理頁面
