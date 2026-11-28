@@ -12,7 +12,8 @@
  *
  * Counts are of finished requests: dev-mode StrictMode aborts the first copy
  * of each mount query, and an aborted request is not a request sent (design
- * D6).
+ * D6). Stubs choose a response by refresh phase, never by request order: the
+ * aborted first copy may reach a stub before the live one.
  */
 import type { Page, Request } from "@playwright/test";
 
@@ -224,18 +225,18 @@ test.describe("refresh conflicts (the 409 is stubbed; everything else is real)",
   test("慢的那個分頁自動重試一次", async ({ page }) => {
     const account = createAccount();
     await signIn(page, account);
-    let queries = 0;
+    let refreshCalls = 0;
     await page.route(`**${CURRENT}`, async (route) => {
-      queries += 1;
-      if (queries === 1) {
+      if (refreshCalls < 1) {
         await fulfillError(route, 401, "AUTH_REQUIRED");
       } else {
         await route.continue();
       }
     });
-    await page.route(`**${REFRESH}`, (route) =>
-      fulfillError(route, 409, "ACCOUNT_REFRESH_CONFLICT"),
-    );
+    await page.route(`**${REFRESH}`, async (route) => {
+      refreshCalls += 1;
+      await fulfillError(route, 409, "ACCOUNT_REFRESH_CONFLICT");
+    });
     const refreshes = countFinished(page, "POST", REFRESH);
     const originals = countFinished(page, "GET", CURRENT);
     await page.goto(LANDING_PATH);
@@ -274,16 +275,14 @@ test.describe("refresh conflicts (the 409 is stubbed; everything else is real)",
   test("重試不通時再延續一次就成功", async ({ page }) => {
     const account = createAccount();
     await signIn(page, account);
-    let queries = 0;
+    let refreshCalls = 0;
     await page.route(`**${CURRENT}`, async (route) => {
-      queries += 1;
-      if (queries <= 2) {
+      if (refreshCalls < 2) {
         await fulfillError(route, 401, "AUTH_REQUIRED");
       } else {
         await route.continue();
       }
     });
-    let refreshCalls = 0;
     await page.route(`**${REFRESH}`, async (route) => {
       refreshCalls += 1;
       if (refreshCalls === 1) {
