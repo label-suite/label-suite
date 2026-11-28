@@ -19,9 +19,9 @@
     "check": "node scripts/check.mjs"
   },
   "devDependencies": {
-    "@fission-ai/openspec": "1.14.1",
-    "lint-staged": "17.6.1",
-    "notecraftapp": "1.15.0",
+    "@fission-ai/openspec": "1.17.0",
+    "lint-staged": "17.6.2",
+    "notecraftapp": "1.16.1",
     "prettier": "3.10.1",
     "yaml": "2.9.1"
   }
