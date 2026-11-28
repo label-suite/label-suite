@@ -79,7 +79,9 @@ drive() { # drive <checker-dir> <name> <argv> <event> <tool> <extra> <path-overr
 # ── D7: the same undecidable state costs the same in every blocking mode ──
 
 NODE_DIR=$(dirname "$(command -v node)")
-FULL="$NODE_DIR:/usr/bin:/bin"
+# git's own directory as well: Git for Windows keeps git.exe outside /usr/bin,
+# and without it every mode reported "cannot locate the repository" (#830).
+FULL="$NODE_DIR:$(dirname "$(command -v git)"):/usr/bin:/bin"
 
 for case in "${CASES[@]}"; do
   IFS='|' read -r name argv ev tool extra want <<< "$case"

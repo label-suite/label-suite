@@ -36,10 +36,15 @@ WORK=$(make_repo work feature)
 ON_MAIN=$(make_repo onmain main)
 
 payload() { # payload <repo> <command>
-  REPO="$1" CMD="$2" python3 -c '
-import json, os
+  # The command goes in on stdin, not in the environment: Git Bash rewrites an
+  # environment value that starts with `/` on its way to a Windows program, so
+  # `/bin/rm -rf x` reached the payload as `C:/Program Files/Git/usr/bin/rm
+  # -rf x` (#830). The repository path is meant to be converted; it is the cwd
+  # a Windows agent would send.
+  printf '%s' "$2" | REPO="$1" python3 -c '
+import json, os, sys
 print(json.dumps({"cwd": os.environ["REPO"], "hook_event_name": "PreToolUse",
-                  "tool_name": "Bash", "tool_input": {"command": os.environ["CMD"]}}))'
+                  "tool_name": "Bash", "tool_input": {"command": sys.stdin.read()}}))'
 }
 
 run() { # run <repo> <command> -> exit code, stderr in $TMP/err
@@ -198,6 +203,9 @@ grep -q 'cwd' "$TMP/err" || fail "#830: the empty-reader refusal did not say wha
 # a command handed to the analyser on argv lost its first word. The command
 # now travels through a file; an absolute path to rm must still be read as rm.
 block "$WORK" '/bin/rm -rf /tmp/x' '#830: rm -rf spelled with an absolute path was not blocked'
+# …and the Windows spellings of the same program are still rm.
+block "$WORK" '"C:\Program Files\Git\usr\bin\rm.exe" -rf x' '#830: rm.exe by a Windows path was not blocked'
+block "$WORK" 'RM.EXE -rf x' '#830: rm in another letter case was not blocked'
 
 # ═══ D7: the entry guards, all of which block ════════════════════════
 

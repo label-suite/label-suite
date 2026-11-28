@@ -107,8 +107,15 @@ harness_reset_calls
 # way to drop `uv`, because on this machine they are installed side by side and
 # that is exactly how an earlier version of this test passed while measuring
 # nothing. A directory holding node alone is what makes the runner absent.
+# git has to be there too: Git for Windows keeps git.exe outside /usr/bin, so
+# without it this measured "cannot locate the repository" instead (#830).
+# Wrappers, not symlinks: Git Bash's `ln -s` makes a copy, and a copied
+# `node` with no `.exe` is not something it will run.
 NODE_ONLY="$TMP/node-only"; mkdir -p "$NODE_ONLY"
-ln -sf "$(command -v node)" "$NODE_ONLY/node"
+for tool in node git; do
+  printf '#!/bin/sh\nexec "%s" "$@"\n' "$(command -v "$tool")" > "$NODE_ONLY/$tool"
+  chmod +x "$NODE_ONLY/$tool"
+done
 command -v uv >/dev/null 2>&1 && PATH="$NODE_ONLY:/usr/bin:/bin" command -v uv >/dev/null 2>&1 \
   && fail "the stripped PATH still reaches uv, so this case measures nothing"
 rc=$( ( cd "$REPO" && PATH="$NODE_ONLY:/usr/bin:/bin" "$CHECKER" --files backend/app/x.py >"$TMP/out" 2>"$TMP/err" ); echo $? )
