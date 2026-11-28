@@ -756,7 +756,7 @@ log 只記型別、位置與 `traceId`，不記任何可能帶著請求或資料
 | 每一筆紀錄都是一行 `key=value`，`msg` 裡的控制字元寫成跳脫序列；第三方紀錄帶 `exc_info` 時只寫 `excType`（例外型別），不寫例外訊息與 traceback 文字 | `KeyValueFormatter` |
 | uvicorn 內建 access log 會印出 query，在程式裡關掉；`sqlalchemy`（父 logger，含 `engine` 與 `pool`）、`aiosqlite`、`asyncpg` 固定 `WARNING`，`LOG_LEVEL=DEBUG` 也不會印出 SQL 本文、參數或驅動的錯誤文字（`aiosqlite` 在 DEBUG 記下的參數不經 `hide_parameters`）；`httpx`、`httpcore` 也固定 `WARNING`，不會印出請求網址與 DEBUG 才有的請求標頭（含 `Authorization`） | `configure_logging` |
 | 寄信紀錄只寫 `mailId`、`kind`、`mode`、`outcome`、`attempt`／`attempts`、`reason`（固定字彙：`status_<狀態碼>`、`timeout`、`connect_error`、`retries_exhausted`、`not_configured_in_worker`）、`excType` 與 `providerMessageId`（只收 `[A-Za-z0-9._-]`，否則寫 `-`）；不寫收件者（含網域）、主旨、內文、連結、寄件人、金鑰、寄信服務回應的本文與佇列位址。排不進佇列時不帶 `exc_info`，例外型別手寫進 `excType` | `MailService`、`send_mail`、`ResendTransport` |
-| 寄信入口的錯誤都沒有文字（`args` 是空的），丟出時 `from None`，Celery 的 `Retry in 60s: <exc>` 與失敗紀錄因此印不出內容；排入時 `argsrepr="()"`、`kwargsrepr="{redacted}"`，worker 的收件紀錄、`inspect active` 與事件看不到參數；`ignore_result=True`，result backend 不存寄信資料 | `app/mail/errors.py`、`MailService.enqueue`、`send_mail` |
+| 寄信入口的錯誤都沒有文字（`args` 是空的），丟出時 `from None`，Celery 的 `Retry in 60s: <exc>` 與失敗紀錄因此印不出內容；排入時與每次重試重新排入時都帶 `argsrepr="()"`、`kwargsrepr="{redacted}"`（常數 `ARGS_REPR`、`KWARGS_REPR` 只定義在 `app/mail/tasks.py`；Celery 的 `retry` 不會沿用第一次的值，所以重試要自己再帶），worker 的收件紀錄、`inspect active`／`reserved`／`scheduled` 與事件看不到參數；`ignore_result=True`，result backend 不存寄信資料 | `app/mail/errors.py`、`MailService.enqueue`、`send_mail` |
 | `REDIS_URL` 可能帶帳密，不出現在設定的 `repr` | `WorkerSettings` |
 | worker 不裝 Celery 自己的 handler（`worker_hijack_root_logger=False`），`setup_logging` signal 改呼叫 `configure_logging`，worker 的紀錄和 API 一樣是一行 `key=value`、`traceId=-` | `create_celery_app` |
 | `AUTH_SECRET` 只記來源與路徑，不記值、長度或雜湊；Google 交換或驗證失敗時丟出的錯誤不串接原例外，Google 的回應不會進 log | `resolve_auth_secret`、`GoogleOidcClient.exchange` |
@@ -890,7 +890,7 @@ cd backend && uv run python -m app.scripts.export_openapi
 | `app/mail/service.py` | `MailService` 是消費者唯一用的門面。`enqueue` 排入 `default` 佇列，回 `QUEUED` 或 `NOT_CONFIGURED`；`send_now` 在 worker thread 呼叫寄信服務一次，回 `SENT`、`FAILED` 或 `NOT_CONFIGURED`，不重試、不經佇列。沒有設定寄信服務時兩者都不產生信件識別碼、不碰佇列與寄信服務 |
 | `app/mail/message.py` | `MailMessage` 是一封組好的信，建構時驗證：收件者經 `normalize_email`、不超過 254 字元、不得空白或換行；主旨 1–200 字元、不含 CR 與 LF；純文字內文不得為空；`kind` 符合 `^[a-z][a-z0-9_]{0,31}$`，只用來寫紀錄。錯誤只點名欄位、不帶值。`to_task_payload`、`from_task_payload` 轉成 task 參數並在 worker 端重新驗證 |
 | `app/mail/transport.py` | `ResendTransport` 是唯一碰寄信服務的地方：同步 `httpx.Client`、逾時 10 秒，`POST https://api.resend.com/emails`，帶 `Authorization: Bearer` 與 `Idempotency-Key: <mailId>`。連線錯誤、逾時、`429`、`5xx` 與錯誤名稱為 `concurrent_idempotent_requests` 的 `409` 丟 `TransientMailError`，其他非 `2xx` 丟 `PermanentMailError`，一律 `from None`、不帶寄信服務的回應本文 |
-| `app/mail/tasks.py` | `send_mail(mail_id, payload)`：`ignore_result=True`、不回傳值、不開資料庫連線；在 worker 端再判斷一次 `mail_configured()`；暫時性失敗依 60、180、540 秒呼叫 `self.retry`，最多重試三次 |
+| `app/mail/tasks.py` | `send_mail(mail_id, payload)`：`ignore_result=True`、不回傳值、不開資料庫連線；在 worker 端再判斷一次 `mail_configured()`；暫時性失敗依 60、180、540 秒呼叫 `self.retry`，最多重試三次，重新排入時同樣帶遮蔽過的 `argsrepr`、`kwargsrepr` |
 | `app/mail/errors.py` | `MailDeliveryError` 與它的子類 `TransientMailError`（`reason`）、`PermanentMailError`（`provider_status`、`reason`）、`MailQueueUnavailableError`；全都沒有文字，也不繼承 `AppError`：消費者自己決定要回什麼 |
 | `app/mail/unsent_link.py` | `record_unsent_link(kind, link)` 寫進專用 logger `app.mail.unsent_link`，見 [§log 安全規則](#log-安全規則) |
 | `app/core/celery_app.py` | `create_celery_app(settings)` 建 Celery app，見下表；不 import 任何 task |
@@ -1058,7 +1058,7 @@ sequenceDiagram
     TR-->>WK: TransientMailError(reason) from None
     alt n < 3
       WK->>WK: log WARNING outcome=retry attempt=n+1 reason
-      WK->>BR: self.retry(countdown=60／180／540)
+      WK->>BR: self.retry(countdown=60／180／540, argsrepr="()", kwargsrepr="{redacted}")
     else 重試用盡
       WK->>WK: log ERROR outcome=failed attempts=4 reason=retries_exhausted
     end
@@ -1173,3 +1173,4 @@ worker 端的設定說沒有寄信服務時（API 與 worker 的設定不一致�
 | 2026-11-28 | Resend 的 `Idempotency-Key` 有效 24 小時（2026-11-28 查證 [Resend 文件](https://resend.com/docs/dashboard/emails/idempotency-keys)），長於整段重試，重試不會重寄；`409 concurrent_idempotent_requests`（同鍵請求還在處理）歸暫時性並重試，`409 invalid_idempotent_request`（同鍵不同內容）歸永久失敗（[§背景工作與寄信](#背景工作與寄信)） | — | [#756](https://github.com/label-suite/label-suite/issues/756) |
 | 2026-11-28 | 測試以 `ConnectionAttempts` 數 `kombu.Connection` 真正開連線的次數，不數建立的連線物件：Celery 5.7 的 eager `apply_async` 會建 producer 與連線物件，但不連線（[§測試輔助](#測試輔助)） | email-celery-worker design D8「數 `kombu.Connection` 的建立」 | [#756](https://github.com/label-suite/label-suite/issues/756) |
 | 2026-11-28 | 後端的 Celery 依賴寫成 `celery[redis]`，不寫裸 `celery`：kombu 的 Redis 傳輸層會 import `packaging`，執行期映像以 `uv sync --locked --no-dev` 安裝，只靠開發群組帶進來的套件測試全過、容器裡卻缺；`backend/tests/unit/test_runtime_dependencies.py` 從 `uv.lock` 走執行期依賴閉包（含 extras、不含開發群組），斷言 `celery`、`kombu`、`redis`、`packaging` 都在其中 | 裸 `celery` 加上開發群組偶然帶進來的 `packaging` | [#756](https://github.com/label-suite/label-suite/issues/756) |
+| 2026-11-28 | `send_mail` 重試時自己帶 `argsrepr`、`kwargsrepr`，兩個常數只定義在 `app/mail/tasks.py`，`MailService` 從那裡取：Celery 5.7 的 `Task.retry` 經 `signature_from_request` 重新排入，不沿用第一次的值，重試中的信會在 `inspect` 與事件裡露出完整參數（[§log 安全規則](#log-安全規則)、[§背景工作與寄信](#背景工作與寄信)） | 只在 `MailService.enqueue` 帶遮蔽值 | [#756](https://github.com/label-suite/label-suite/issues/756) 程式審查 |

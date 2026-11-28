@@ -28,14 +28,12 @@ from app.core.celery_app import QUEUE_DEFAULT
 from app.core.config import WorkerSettings
 from app.mail.errors import MailDeliveryError, MailQueueUnavailableError
 from app.mail.message import MailMessage
-from app.mail.tasks import LOGGER_NAME, SEND_MAIL_TASK_NAME
+from app.mail.tasks import ARGS_REPR, KWARGS_REPR, LOGGER_NAME, SEND_MAIL_TASK_NAME
 from app.mail.transport import ResendTransport
 
 __all__ = ["DispatchStatus", "MailDispatch", "MailOutcome", "MailService", "OutcomeStatus"]
 
 _QUEUE_ERRORS = (OperationalError, redis.exceptions.RedisError, OSError)
-_ARGS_REPR = "()"
-_KWARGS_REPR = "{redacted}"
 
 _log = logging.getLogger(LOGGER_NAME)
 
@@ -115,8 +113,8 @@ class MailService:
         options: dict[str, Any] = {
             "kwargs": {"mail_id": mail_id, "payload": message.to_task_payload()},
             "queue": QUEUE_DEFAULT,
-            "argsrepr": _ARGS_REPR,
-            "kwargsrepr": _KWARGS_REPR,
+            "argsrepr": ARGS_REPR,
+            "kwargsrepr": KWARGS_REPR,
         }
         try:
             if self._celery.conf.task_always_eager:

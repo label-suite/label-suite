@@ -292,7 +292,7 @@ Redis 7 同時當 broker、result backend 與應用快取，用 DB 編號隔開�
 | 永久性失敗 | 其他 `4xx`（含錯誤種類為 `invalid_idempotent_request` 的 `409`），不重試 |
 | 單次呼叫逾時 | 寄信服務 10 秒；佇列 socket 逾時 2 秒，排入的最壞情況約數秒 |
 | log 欄位 | 只有 `mailId`、`kind`、`mode`、`outcome`、`attempt` 或 `attempts`、固定字彙的 `reason`、`excType`、`providerMessageId`；不寫收件者、主旨、內文、連結、寄件人與寄信服務的錯誤本文；`httpx`、`httpcore` 的 logger 固定 `WARNING` |
-| 佇列中的明文 | 信件內容（含一次性連結）在 worker 取走前明文停在 Redis：Redis 不對外發布埠、ack 後即刪，Celery 的 `argsrepr` 遮蔽參數、`ignore_result` 不存結果 |
+| 佇列中的明文 | 信件內容（含一次性連結）在 worker 取走前明文停在 Redis：Redis 不對外發布埠、ack 後即刪，第一次排入與每次重試重新排入都以 Celery 的 `argsrepr`、`kwargsrepr` 遮蔽參數，`inspect` 與事件看不到內容，`ignore_result` 不存結果 |
 | Redis 掉訊息 | 佇列中未寄出的信會遺失；這些信使用者都能重新觸發，不重開 [ADR-003 的 D8](adr/003-backend-architecture.mdx#d8-非同步任務用-celery-加-redis) |
 
 寄信 task 在 `app/mail/tasks.py`，由 `app/worker.py` 登記（[ADR-003 的 D15](adr/003-backend-architecture.mdx#d15-共用基礎建設的-celery-task-落在它的入口套件)）。

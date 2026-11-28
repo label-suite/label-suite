@@ -16,16 +16,26 @@ recipient, the subject, the body, a link, the sender or the provider's answer.
 
 import logging
 import re
+from collections.abc import Callable
 from typing import Any
 
 from celery import Task, shared_task
+from celery.exceptions import Retry
 
 from app.core.celery_app import settings_of
 from app.mail.errors import PermanentMailError, TransientMailError
 from app.mail.message import MailMessage
 from app.mail.transport import ResendTransport
 
-__all__ = ["LOGGER_NAME", "MAX_RETRIES", "RETRY_COUNTDOWNS", "SEND_MAIL_TASK_NAME", "send_mail"]
+__all__ = [
+    "ARGS_REPR",
+    "KWARGS_REPR",
+    "LOGGER_NAME",
+    "MAX_RETRIES",
+    "RETRY_COUNTDOWNS",
+    "SEND_MAIL_TASK_NAME",
+    "send_mail",
+]
 
 LOGGER_NAME = "app.mail"
 """The logger every mail outcome line is written to."""
@@ -38,6 +48,18 @@ RETRY_COUNTDOWNS = (60, 180, 540)
 
 MAX_RETRIES = len(RETRY_COUNTDOWNS)
 """Retries after the first attempt; at most four attempts in all."""
+
+ARGS_REPR = "()"
+"""What Celery shows for the task's positional arguments (``argsrepr``)."""
+
+KWARGS_REPR = "{redacted}"
+"""What Celery shows for the task's keyword arguments (``kwargsrepr``).
+
+Every publish of ``send_mail`` passes both, the first one from ``MailService.enqueue``
+and each retry from the task itself: Celery does not carry them over to a retried
+message, which would otherwise show the recipient, the content and any link in
+``inspect`` output and in task events while it waits (design D6).
+"""
 
 _UUID = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
 _UNKNOWN = "-"
@@ -56,7 +78,8 @@ def send_mail(self: Task[Any, Any], mail_id: str, payload: dict[str, Any]) -> No
 
     Raises:
         celery.exceptions.Retry: After a temporary failure while retries remain;
-            Celery schedules the next attempt.
+            Celery republishes the mail for the next attempt, with the same masked
+            ``argsrepr`` and ``kwargsrepr`` as the first publish.
     """
     attempt = self.request.retries + 1
     safe_id = mail_id if isinstance(mail_id, str) and _UUID.fullmatch(mail_id) else _UNKNOWN
@@ -94,8 +117,14 @@ def send_mail(self: Task[Any, Any], mail_id: str, payload: dict[str, Any]) -> No
             attempt,
             error.reason,
         )
-        raise self.retry(
-            countdown=RETRY_COUNTDOWNS[self.request.retries], max_retries=MAX_RETRIES
+        # celery-types leaves argsrepr and kwargsrepr out of retry's options, which
+        # Celery passes on to apply_async; the Callable view admits them.
+        retry: Callable[..., Retry] = self.retry
+        raise retry(
+            countdown=RETRY_COUNTDOWNS[self.request.retries],
+            max_retries=MAX_RETRIES,
+            argsrepr=ARGS_REPR,
+            kwargsrepr=KWARGS_REPR,
         ) from None
     _log.info(
         "mailId=%s kind=%s mode=queued outcome=sent attempt=%d providerMessageId=%s",

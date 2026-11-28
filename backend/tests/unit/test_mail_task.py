@@ -7,6 +7,7 @@ worker side of spec ``mail-delivery``: "排入背景工作的信寄出成功", "
 "同一封信的每次嘗試帶同一個冪等鍵" and "永久性失敗與重試用盡記為最終失敗".
 """
 
+import json
 import logging
 import uuid
 from collections.abc import Iterator
@@ -16,12 +17,14 @@ from typing import Any
 import httpx
 import pytest
 from celery import Celery, signals
+from celery.exceptions import Retry
 from pydantic import SecretStr
 
 from app.core.celery_app import create_celery_app
 from app.core.config import WorkerSettings
 from app.mail import tasks
 from app.mail.message import MailMessage
+from tests.support.mail import PublishSpy
 from tests.support.resend import FakeResend
 
 SENDER = "Label Suite <noreply@example.test>"
@@ -278,3 +281,45 @@ def test_the_task_stores_no_result_and_returns_nothing(tmp_path: Path, resend: F
 def test_the_retry_schedule_is_bounded() -> None:
     assert tasks.RETRY_COUNTDOWNS == (60, 180, 540)
     assert tasks.MAX_RETRIES == 3
+
+
+def test_a_real_retry_republishes_with_the_masked_argument_reprs(
+    tmp_path: Path, resend: FakeResend, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Not eager: Task.retry republishes through signature_from_request, which does not
+    # carry the original argsrepr/kwargsrepr headers over (design D6, S9).
+    publish = PublishSpy().install(monkeypatch)
+    resend.script(503)
+    task = create_celery_app(_settings(tmp_path)).tasks[tasks.SEND_MAIL_TASK_NAME]
+    message = MailMessage(
+        to="canary-to@canary-domain.example",
+        subject="CANARY-subject",
+        text="CANARY-body CANARY-link",
+        html=None,
+        kind="signup_verify",
+    )
+    kwargs = {"mail_id": str(uuid.uuid4()), "payload": message.to_task_payload()}
+    task.push_request(
+        id=str(uuid.uuid4()),
+        args=[],
+        kwargs=kwargs,
+        retries=0,
+        called_directly=False,
+        delivery_info={"exchange": "", "routing_key": "default"},
+        is_eager=False,
+    )
+    try:
+        with pytest.raises(Retry):
+            task.run(**kwargs)
+    finally:
+        task.pop_request()
+
+    [(_, publish_kwargs)] = publish.calls
+    headers = publish_kwargs["headers"]
+    assert headers["retries"] == 1
+    text = json.dumps(headers)
+    for canary in ("canary-to", "canary-domain", "CANARY-subject", "CANARY-body", "CANARY-link"):
+        assert canary not in text, canary
+    assert headers["argsrepr"] == "()"
+    assert headers["kwargsrepr"] == "{redacted}"
+    assert (tasks.ARGS_REPR, tasks.KWARGS_REPR) == ("()", "{redacted}")

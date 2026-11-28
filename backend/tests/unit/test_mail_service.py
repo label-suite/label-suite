@@ -184,6 +184,18 @@ async def test_a_publish_error_becomes_queue_unavailable(
     assert "CANARY-pw" not in caplog.text
 
 
+async def test_an_unexpected_publish_error_is_not_swallowed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Only queue errors become MailQueueUnavailableError; a broken install (such as a
+    # transport whose dependency is missing) must fail loudly, not look like a queue
+    # outage.
+    PublishSpy(error=ModuleNotFoundError("packaging")).install(monkeypatch)
+
+    with pytest.raises(ModuleNotFoundError):
+        await _service(worker_settings(tmp_path)).enqueue(sample_message())
+
+
 # --- send_now (mail-delivery 當場寄只嘗試一次並當場回報) ------------------------------------
 
 
