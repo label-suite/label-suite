@@ -26,7 +26,7 @@ updatedAt: '2026-11-27'
 | 目錄分層 | **`pages/` 加 `features/`**，見 [F1](#f1-分層與允許的-import) |
 | 元件庫 | **shadcn/ui**，元件以原始碼形式放進 `components/ui/`。**不用 Storybook**，改用元件展示頁（[architecture.mdx](../architecture.mdx) §前端） |
 | API client 與型別 | **Orval**，產物在 `src/api/generated/`；規則在 [api-agent-rules.mdx](api-agent-rules.mdx) |
-| design token 的映射 | **寫一層對照，`design/prototype/assets/tokens.css` 仍是唯一色值來源**，見 [F6](#f6-視覺基準與-design-token-的映射) |
+| design token 的映射 | **寫一層對照，語意色仍只來自 `design/prototype/assets/tokens.css`；資料色 `--data-*` 另來自 `data-palette.css`，不進對照層**，見 [F6](#f6-視覺基準與-design-token-的映射) |
 | 深色模式 | **要做**：側欄一鍵切換、立即生效、跨頁保持（規格 07-01 §外觀切換）；「跟隨系統」**跟著作業系統的設定變**（規格 01-04 §偏好設定 第 4 條、規格 07-01 §已確認決議 Q14） |
 
 ## 規範
@@ -152,19 +152,19 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 
 ### F6 視覺基準與 design token 的映射
 
-色值只存在 `tokens.css` 一處，shadcn 的語意變數透過 `src/styles/` 的一層對照指過去，元件只用語意 class。
+語意色的色值只存在 `tokens.css` 一處，shadcn 的語意變數透過 `src/styles/` 的一層對照指過去，元件只用語意 class。資料色（`--data-*`，角色色、圖表色）另外來自 `design/prototype/assets/data-palette.css`，不進對照層，`components/ui/` 的原語不讀。
 
 | | |
 | :--- | :--- |
 | **適用路徑** | `frontend/src/styles/**`、`frontend/src/components/ui/**`，以及任何寫樣式的地方 |
 | **禁止** | 在元件寫死色碼（class、`style`、SVG 屬性都算）；用 Tailwind 原色 class（`bg-blue-500`、`text-gray-600`）；寫 `p-[13px]` 這類**字面數值**的任意值去對齊品牌刻度（**引用變數的任意值不在此限**，見摺疊區塊第 3 點）；把 scaffold 的 `neutral.css`／`trendlink.css` 主題搬進來；在元件裡依主題做條件判斷；**改寫 `components/ui/` 的 shadcn 元件去讀別的變數名** |
-| **正例** | **對照層在 `src/styles/`**：shadcn 的語意變數指向 `tokens.css` 的值（`--background: var(--color-surface)`、`--foreground: var(--color-ink)`…），色值**只存在 `tokens.css` 一處**；元件只用語意 class（`bg-background`、`text-muted-foreground`）；深色模式由 `html[data-theme="dark"]` 驅動，shadcn 的 dark variant 設成吃那個屬性 |
-| **例外** | `tokens.css` 自己是色值的所在地，不受「不得寫色碼」限制。`design/prototype/` 的 HTML 另有自己的用法，不受本條約束（而且**本文件這一類工作不得改 `design/prototype/`**） |
+| **正例** | **對照層在 `src/styles/`**：shadcn 的語意變數指向 `tokens.css` 的值（`--background: var(--color-surface)`、`--foreground: var(--color-ink)`…），語意色的色值**只存在 `tokens.css` 一處**；資料色另來自 `data-palette.css`，不進對照層，由用到的 feature 以引用變數的任意值使用（例如 `bg-[var(--data-role-violet-bg)]`）；元件只用語意 class（`bg-background`、`text-muted-foreground`）；深色模式由 `html[data-theme="dark"]` 驅動，shadcn 的 dark variant 設成吃那個屬性 |
+| **例外** | `tokens.css` 與 `data-palette.css` 自己是色值的所在地，不受「不得寫色碼」限制。`design/prototype/` 的 HTML 另有自己的用法，不受本條約束（而且**本文件這一類工作不得改 `design/prototype/`**） |
 
 視覺基準是 `tokens.css`（103 個不重複的變數名）與 `label-suite-design` skill。映射前要逐一確認三件事，不是改個名字就好，見下方摺疊區塊。
 
 :::note{title="F6 映射前要確認的三件事" collapsible}
-三件都是落地時已知、已經有人踩過的坑。第 1 點的落點已經裁定過（見[§決策紀錄](#決策紀錄)）；第 2、3 點是本文件的要求，不是維護者選定的內容（選定的只有「寫一層對照」與「`tokens.css` 唯一色值來源」兩件）。
+三件都是落地時已知、已經有人踩過的坑。第 1 點的落點已經裁定過（見[§決策紀錄](#決策紀錄)）；第 2、3 點是本文件的要求，不是維護者選定的內容（選定的只有「寫一層對照」與「語意色只來自 `tokens.css`、資料色另有來源檔」兩件）。
 
 1. **shadcn 沒有對應語意的 token，在對照層新增語意變數。** `tokens.css` 有 `--color-cta`（確認、完成類的主要按鈕）、`--color-ink-muted`、`--workspace-tab-min-width` 這些 shadcn 沒有的語意。對照層只能處理「兩邊都有」的部分；剩下的新增 shadcn 風格的語意變數（`--cta`、`--success`、`--warning`、`--info`），對照層與元件都用它。**原語不直接用 `tokens.css` 的變數名**——那是上面禁止格的「去讀別的變數名」，不是可選的另一條路。
 2. **`--radius-*` 與 `--font-sans` 和 Tailwind v4 的 theme namespace 同名。** scaffold 自己的 `design-tokens.md` 就記著「主題檔的 `@theme` 不得重複定義 `globals.css` 的 `@theme inline` 已有的**變數**（`--font-sans`、`--radius-*`、`--color-*`）」。而 `tokens.css` 有 `--radius-sm/md/lg`（4／8／12px）與 `--font-sans`。把它們接進 Tailwind 的 `@theme` 會**改掉 `rounded-*` 這些既有 utility 的語意**，所以映射時要逐一確認會動到哪些 utility，並在 PR 寫出來。
@@ -292,7 +292,7 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | 「禁止型別斷言 `as`」只留 `as const` 一個例外 | scaffold `typescript.md`（「唯一例外是 `as const`」）、duty-mate `typescript.md`（標題寫「escape hatch 除外」） | **沿用其禁止與 `as const` 例外，另增補一類**：第三方套件的型別缺口允許一處，但要在同一行註明是哪個套件的哪個缺口（F2 例外 3）。例外要列出來 |
 | 「Named export，禁止 default export」的例外清單 | scaffold `typescript.md`（例外已含 Vite／Vitest／Playwright／Orval 設定檔與 `*.config.ts`） | **沿用，另增補一類**：本 repo 有 22 個 `.notecraft/components/*.tsx` 依 NoteCraft 契約必須 default export（F11 例外 4）。來源沒有這一類，因為它沒有 NoteCraft |
 | 「超過約 200 行就拆檔」 | scaffold `frontend.md` §元件分層 | [agent-rules.mdx](agent-rules.mdx) 已駁回三個機械門檻（200 行、第二次重複才抽、5 檔案／300 diff 行），不以固定行數取代職責審查；不採用作為拆分判準，另設 [F12](#f12-檔案函式長度與複雜度上限) 的 CI 上限擋極端值 |
-| `themes/neutral.css`（shadcn 預設）與 `themes/trendlink.css` | scaffold `design-tokens.md` | 不得混入。本 repo 的唯一色值來源是 `tokens.css` |
+| `themes/neutral.css`（shadcn 預設）與 `themes/trendlink.css` | scaffold `design-tokens.md` | 不得混入。本 repo 的語意色只來自 `tokens.css`，資料色另來自 `data-palette.css` |
 | 顯示時轉 `Asia/Taipei` | scaffold `date-handling.md` | 與規格 06-01 Q2 已定案的內容相反——本 repo 顯示依**瀏覽者裝置**的時區。只有「報表的日期區間」才固定台北（規格 03-03） |
 | 「禁止原生 `Date` API」這條鐵律本身 | duty-mate `date-handling.md`、scaffold `date-handling.md`（兩份都另有 `## 例外`，含第三方 adapter 與測試假時鐘） | **不採用那條鐵律**（不盲抄框架細節），改成要求**單一入口**與四種概念的分界；**它們的例外清單沿用**第三方 adapter 與假時鐘兩條（F10 例外） |
 | 「每個具名的程式單位都要有 JSDoc」與繁體中文描述 | scaffold `jsdoc.md` 的開頭引言與 §內容要求 第 1 條 | 中文註解違反 `AGENTS.md` §Language Rules |
@@ -311,7 +311,7 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | F3 | React 的 Hooks 規則（框架層，不是本專案的決定）；scaffold `frontend.md` §狀態管理 的「不把 API 資料複製到 `useState`／context、衍生值直接從 query data 計算」**沿用**；原始 repo foundation spec FR-059（server state 的單一邊界）**沿用**。合法訂閱與瀏覽器同步不全面禁 `useEffect`，所以例外那一格是本條的必要部分 |
 | F4 | ADR-004（TanStack Query，沿用）；scaffold `frontend.md` §狀態管理 的「篩選分頁放 URL search params、不引入全域 store 除非 design 有理由」**沿用**。網址那一格是本 repo 規格已定：規格 03-01 §查詢條件保留在網址（關鍵字、三個篩選器、每頁筆數與頁次都寫進網址，無效值忽略並正規化）與規格 03-03 §網址與畫面狀態同步（分頁與篩選寫進網址，分享網址重現同一個畫面）。原始 repo `frontend.md` 的「Zustand 存 auth token／user／role」**不採用**（`httpOnly` cookie 的意義就是 JS 讀不到，見 [security-agent-rules.mdx](security-agent-rules.mdx)） |
 | F5 | [agent-rules.mdx](agent-rules.mdx) 的 R1（先搜尋再新增）與 **R4（不過度抽象）沿用**，本條只是前端的落點。R4 的判準是「兩個地方有同一段邏輯，而它**確實是同一個概念**」，而 `agent-rules.mdx` §來源對照 已把原始 repo `general.md` 的「同一段程式出現 2 次以上就抽出共用」標為**不採用**（「出現兩次不代表是同一個概念」）。scaffold `frontend.md` 的「**一個檔案一個主要元件；超過約 200 行就拆**」**不採用那個數字**，「一個檔案一個主要元件」沿用。另設 [F12](#f12-檔案函式長度與複雜度上限) 的 CI 上限擋極端值，不作為拆分判準 |
-| F6 | 維護者選定：寫一層對照、`tokens.css` 仍是唯一色值來源，選定方案明文「shadcn 元件一行都不改」，那句絕對說法已收窄（見[§決策紀錄](#決策紀錄)）；被否決的一直是「改寫 shadcn 元件去讀別的變數名」這件事，本條的禁止格照舊。`tokens.css` 與 `label-suite-design` skill 是視覺基準；scaffold `design-tokens.md` 的**結構沿用**（色值只寫在一處、元件只用語意 token、換主題不改元件、新增 token 要每個主題檔都補），但它的 `themes/neutral.css`／`trendlink.css` **不採用**。深色模式是本 repo 規格已定（規格 07-01 §外觀切換、規格 01-04 §偏好設定、規格 03-02 的深色 Scenario）；「跟隨系統」跟著作業系統見規格 01-04 Q7、規格 07-01 Q14（取代 Q10） |
+| F6 | 維護者選定：寫一層對照、語意色仍只來自 `tokens.css`（資料色另來自 `data-palette.css`，不進對照層），選定方案明文「shadcn 元件一行都不改」，那句絕對說法已收窄（見[§決策紀錄](#決策紀錄)）；被否決的一直是「改寫 shadcn 元件去讀別的變數名」這件事，本條的禁止格照舊。`tokens.css` 與 `label-suite-design` skill 是視覺基準；scaffold `design-tokens.md` 的**結構沿用**（色值只寫在一處、元件只用語意 token、換主題不改元件、新增 token 要每個主題檔都補），但它的 `themes/neutral.css`／`trendlink.css` **不採用**。深色模式是本 repo 規格已定（規格 07-01 §外觀切換、規格 01-04 §偏好設定、規格 03-02 的深色 Scenario）；「跟隨系統」跟著作業系統見規格 01-04 Q7、規格 07-01 Q14（取代 Q10） |
 | F7 | ADR-030（Lucide 是唯一圖示來源）與 [architecture.mdx](../architecture.mdx) §前端 的例外**沿用**；duty-mate `icon-usage.md` 的**理由與事故沿用**（集中管理才能保證 `stroke-width`、`viewBox` 與端點風格一致；它散寫 inline SVG 的結果是 `stroke-width` 混用 1.5／1.9／2／2.5、尺寸單位混用三種），它的 Handlebars partial 做法不適用。不得把「禁手繪 icon」擴張成「禁所有 SVG」，所以例外（2）（3）（4）是本條的必要部分 |
 | F8 | [architecture.mdx](../architecture.mdx) §前端 的「每個資料區塊都要寫出 loading、error、empty、無權限（403）四種狀態與被遮蔽欄位的呈現」**沿用**（它明寫 ADR 沒有定義這個最低要求，由 OpenSpec 的 `ui-design` 產出負責）；scaffold `frontend.md` §四種畫面狀態 的判斷與呈現**沿用**（含「`403` 不顯示重試」）。「遮蔽依契約呈現、不自行猜角色」來自 [security-agent-rules.mdx](security-agent-rules.mdx) S4 與 [api-agent-rules.mdx](api-agent-rules.mdx) A2；「送出期間 disabled」在 A9 |
 | F9 | scaffold `frontend.md` §無障礙 的**五條**（語意元素、標籤與錯誤關聯、icon button 名稱、鍵盤與 Dialog 焦點、狀態不只靠顏色）**沿用**；**「減少動態效果」是本 repo 規格已定**：規格 03-02 §深色模式與動畫 第 2 條與它的 Scenario「要求減少動畫時動畫降到最低」，規格 07-01 的邊界情況「使用者在作業系統關閉了動態效果 → 側欄收合、次選單展開與通知清單展開都不播動畫，操作本身照常可用」與對應 Scenario |
@@ -356,7 +356,7 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | `typescript.md` §匯出 的「直接從模組檔匯入，避免多層 barrel 造成循環依賴」 | **沿用** | 成為 F1 的禁止事項 |
 | `typescript.md` §錯誤處理 的 `catch (error: unknown)`、禁空 catch | **沿用** | 成為 F2 |
 | `typescript.md` §檔案內順序 | **不採用** | 屬風格，本 repo 未立條文；由 lint 的 import 排序處理即可 |
-| `design-tokens.md` 的三條鐵律與結構 | **沿用結構** | 成為 F6：色值只寫在一處、元件只用語意 token、換主題不改元件、新增 token 要每個主題都補 |
+| `design-tokens.md` 的三條鐵律與結構 | **沿用結構** | 成為 F6：色值只寫在一處、元件只用語意 token、換主題不改元件、新增 token 要每個主題都補（資料色 `--data-*` 例外：來自資料色檔，不進對照層） |
 | `design-tokens.md` 的 `themes/*.css` 兩個主題檔 | **不採用** | 見上方「刻意不採用的來源條文」 |
 | `design-tokens.md` 的「主題檔的 `@theme` 不得重複定義 `globals.css` 的 `@theme inline` 已有的變數」 | **沿用** | 成為 F6 映射三坑的第 2 點——它正好點出本 repo 的 `--radius-*` 與 `--font-sans` 會撞到 Tailwind 的 namespace |
 | `date-handling.md` 的 UTC 儲存、ISO 8601 傳輸、date-only 用字串、單一入口 | **沿用** | 成為 F10 |
@@ -415,3 +415,4 @@ hook 一律在元件最上層無條件呼叫，伺服器資料一律用 Orval �
 | 2026-11-27 | F5 的元件部分改由 `scripts/check-component-reuse.mjs` 加審查檢查，設計系統的共用元件只能放 `components/`（[F5](#f5-重用與不過度抽象)） | F5 的檢查方式「待建置」，只靠 `code-reviewer` 判斷 | [#747](https://github.com/label-suite/label-suite/issues/747) |
 | 2026-11-27 | 只被同一個 feature 的畫面使用的元件不算共用，依 `screen-inventory.md` 的「元件 → 畫面」表判斷（[F5](#f5-重用與不過度抽象)） | 規格沒有標「單頁專屬」或「原型鷹架」就算共用 | [#747 檢查點：共用元件判準](https://github.com/label-suite/label-suite/issues/747#issuecomment-7209042364) |
 | 2026-11-27 | 原型的元件展示頁不算使用元件的 feature，共用與否只看產品畫面（[F5](#f5-重用與不過度抽象)） | 把元件展示頁算成 `/dev/gallery` 的使用方 | [#747 檢查點：元件展示頁不算使用方](https://github.com/label-suite/label-suite/issues/747#issuecomment-7209249601) |
+| 2026-11-28 | 語意色只來自 `tokens.css`；資料色（`--data-*`，角色色、圖表色）另外來自 `data-palette.css`，不進對照層，`components/ui/` 的原語不讀（[F6](#f6-視覺基準與-design-token-的映射)） | F6 的「`tokens.css` 是唯一色值來源」字面 | [#722](https://github.com/label-suite/label-suite/issues/722) 的 clarification Q8 補充決議 |
