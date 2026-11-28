@@ -72,6 +72,102 @@ export function resolveSpawn(command, args, platform = process.platform, env = p
   return { command, args };
 }
 
+const SEED_VARS = ["DEV_SEED_ADMIN_EMAIL", "DEV_SEED_ADMIN_NAME", "DEV_SEED_ADMIN_PASSWORD"];
+
+/**
+ * Run one command to completion and resolve with its exit code (127 when it cannot start).
+ * `input` goes to the command's stdin; it never appears in argv. Output is inherited, and
+ * neither alembic nor create_seeder prints the password.
+ */
+function runToEnd(spawnFn, command, args, { cwd, env, input, platform }) {
+  return new Promise((resolve) => {
+    const target = resolveSpawn(command, args, platform, env);
+    let child;
+    try {
+      child = spawnFn(target.command, target.args, {
+        cwd,
+        env,
+        stdio: [input === undefined ? "ignore" : "pipe", "inherit", "inherit"],
+        windowsHide: true,
+      });
+    } catch {
+      return resolve(127);
+    }
+    child.on("error", () => resolve(127));
+    child.on("exit", (code, signal) => resolve(code ?? signalExitCode(signal)));
+    if (input !== undefined && child.stdin) {
+      child.stdin.on?.("error", () => {}); // the seeder may exit before it reads the line
+      child.stdin.end(`${input}\n`);
+    }
+  });
+}
+
+/**
+ * Create the local admin from DEV_SEED_ADMIN_* before the servers start (issue #801).
+ * Nothing set: does nothing. Only some set: warns and skips. All set: `alembic upgrade head`,
+ * then `create_seeder --password-stdin` with the password on stdin. A failure of either step
+ * is a warning; the servers start anyway. The password is never written to argv or a message.
+ *
+ * @param {Record<string, string | undefined>} env the merged environment
+ * @param {object} [options]
+ * @param {string} [options.root] repository root
+ * @param {(text: string) => void} [options.say] prints a `[dev]` line
+ * @param {NodeJS.Platform} [options.platform]
+ * @param {typeof spawn} [options.spawnFn]
+ * @returns {Promise<{email: string} | null>} the Email to remind about, or null when no admin is ready
+ */
+export async function seedDevAdmin(
+  env,
+  { root = ROOT, say = () => {}, platform = process.platform, spawnFn = spawn } = {},
+) {
+  const set = SEED_VARS.filter((name) => (env[name] ?? "").trim() !== "");
+  if (set.length === 0) return null;
+  if (set.length < SEED_VARS.length) {
+    const missing = SEED_VARS.filter((name) => !set.includes(name));
+    say(
+      `${missing.join(", ")} not set; skipping the local admin (all of ${SEED_VARS.join(", ")} are needed)`,
+    );
+    return null;
+  }
+  const email = env.DEV_SEED_ADMIN_EMAIL;
+  const name = env.DEV_SEED_ADMIN_NAME;
+  const password = env.DEV_SEED_ADMIN_PASSWORD;
+  // The children need the database settings, not the password.
+  const { DEV_SEED_ADMIN_PASSWORD: _omitted, ...childEnv } = env;
+  const cwd = join(root, "backend");
+
+  const migrated = await runToEnd(spawnFn, "uv", ["run", "alembic", "upgrade", "head"], {
+    cwd,
+    env: childEnv,
+    platform,
+  });
+  if (migrated !== 0) {
+    say(`alembic upgrade head failed (exit ${migrated}); skipping the local admin`);
+    return null;
+  }
+  const seeded = await runToEnd(
+    spawnFn,
+    "uv",
+    [
+      "run",
+      "python",
+      "-m",
+      "app.scripts.create_seeder",
+      "--email",
+      email,
+      "--name",
+      name,
+      "--password-stdin",
+    ],
+    { cwd, env: childEnv, input: password, platform },
+  );
+  if (seeded !== 0) {
+    say(`create_seeder exited ${seeded}; the local admin was not created (see its message above)`);
+    return null;
+  }
+  return { email };
+}
+
 /** How often dev records each server's descendants on Windows. */
 const SNAPSHOT_INTERVAL_MS = 10_000;
 
@@ -189,6 +285,7 @@ function signalGroup(child, signal, { platform, spawnFn }) {
  * @param {() => Promise<{pid: number, ppid: number, created: string}[]>} [options.listProcesses]
  *   the Windows process table (tests inject a fake)
  * @param {number} [options.snapshotIntervalMs] how often Windows descendants are recorded
+ * @param {(say: (text: string) => void) => void} [options.onStarted] called once both servers are spawned
  * @returns {Promise<number>} the exit code dev should end with
  */
 export function supervise(
@@ -201,6 +298,7 @@ export function supervise(
     spawnFn = spawn,
     listProcesses = listWindowsProcesses,
     snapshotIntervalMs = SNAPSHOT_INTERVAL_MS,
+    onStarted,
   } = {},
 ) {
   return new Promise((resolve) => {
@@ -341,10 +439,23 @@ export function supervise(
       });
       child.on("exit", (code, signal) => finished(name, code ?? signalExitCode(signal)));
     }
+    onStarted?.(say);
   });
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const env = loadDevEnv(ROOT, process.env);
-  process.exitCode = await supervise(devCommands(env), { env });
+  const say = (text) => process.stdout.write(`[dev] ${text}\n`);
+  const admin = await seedDevAdmin(env, { say });
+  // The servers never need the seed password; keep it out of their environment.
+  const { DEV_SEED_ADMIN_PASSWORD: _omitted, ...serverEnv } = env;
+  process.exitCode = await supervise(devCommands(serverEnv), {
+    env: serverEnv,
+    onStarted: (log) => {
+      if (admin)
+        log(
+          `Sign in as ${admin.email} at http://localhost:5173; the password is DEV_SEED_ADMIN_PASSWORD in .env`,
+        );
+    },
+  });
 }

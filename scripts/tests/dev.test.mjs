@@ -18,6 +18,7 @@ import {
   loadDevEnv,
   parseProcessList,
   resolveSpawn,
+  seedDevAdmin,
   supervise,
 } from "../dev.mjs";
 
@@ -403,5 +404,149 @@ describe("parseProcessList", () => {
       { pid: 1, ppid: 0, created: "5" },
     ]);
     assert.equal(parseProcessList('{"pid":2,"ppid":1,"created":6}')[0].pid, 2);
+  });
+});
+
+describe("seedDevAdmin (injected spawn)", () => {
+  const PASSWORD = "Sup3r-secret-Pw";
+  const full = {
+    DEV_SEED_ADMIN_EMAIL: "dev@example.com",
+    DEV_SEED_ADMIN_NAME: "Dev Admin",
+    DEV_SEED_ADMIN_PASSWORD: PASSWORD,
+    DATABASE_URL: "sqlite+aiosqlite:///x.db",
+  };
+
+  /** A spawn that records each call and exits with the next code in `codes`. */
+  function fakeRun(codes) {
+    const calls = [];
+    const fn = (command, args, options) => {
+      const child = new EventEmitter();
+      const written = [];
+      child.stdin = Object.assign(new EventEmitter(), { end: (text) => written.push(text) });
+      calls.push({ command, args, options, written });
+      const code = codes[calls.length - 1] ?? 0;
+      setImmediate(() => child.emit("exit", code, null));
+      return child;
+    };
+    return { fn, calls };
+  }
+  const collect = () => {
+    const lines = [];
+    return { lines, say: (text) => lines.push(text) };
+  };
+
+  test("all three set: migrate, then seed with the password on stdin only", async () => {
+    const { fn, calls } = fakeRun([0, 0]);
+    const { lines, say } = collect();
+    const result = await seedDevAdmin(full, { root: "/repo", say, spawnFn: fn, platform: "linux" });
+    assert.deepEqual(result, { email: "dev@example.com" });
+    assert.equal(calls.length, 2);
+    assert.deepEqual(calls[0].args, ["run", "alembic", "upgrade", "head"]);
+    assert.deepEqual(calls[1].args, [
+      "run",
+      "python",
+      "-m",
+      "app.scripts.create_seeder",
+      "--email",
+      "dev@example.com",
+      "--name",
+      "Dev Admin",
+      "--password-stdin",
+    ]);
+    for (const c of calls) {
+      assert.equal(c.command, "uv");
+      assert.equal(c.options.cwd, join("/repo", "backend"));
+      assert.equal(c.options.env.DATABASE_URL, full.DATABASE_URL);
+      assert.ok(!c.args.some((a) => a.includes(PASSWORD)));
+      assert.equal(c.options.env.DEV_SEED_ADMIN_PASSWORD, undefined);
+    }
+    assert.deepEqual(calls[1].written, [`${PASSWORD}\n`]);
+    assert.deepEqual(calls[0].written, []);
+    assert.ok(!lines.join("\n").includes(PASSWORD));
+  });
+
+  test("none set (or only blanks): neither command runs and nothing is said", async () => {
+    for (const env of [
+      {},
+      { DEV_SEED_ADMIN_EMAIL: "", DEV_SEED_ADMIN_NAME: " ", DEV_SEED_ADMIN_PASSWORD: "" },
+    ]) {
+      const { fn, calls } = fakeRun([]);
+      const { lines, say } = collect();
+      assert.equal(await seedDevAdmin(env, { say, spawnFn: fn }), null);
+      assert.equal(calls.length, 0);
+      assert.equal(lines.length, 0);
+    }
+  });
+
+  test("only some set: warns by variable name, runs nothing, leaks no value", async () => {
+    const { fn, calls } = fakeRun([]);
+    const { lines, say } = collect();
+    const env = { DEV_SEED_ADMIN_EMAIL: "dev@example.com", DEV_SEED_ADMIN_PASSWORD: PASSWORD };
+    assert.equal(await seedDevAdmin(env, { say, spawnFn: fn }), null);
+    assert.equal(calls.length, 0);
+    assert.equal(lines.length, 1);
+    assert.match(lines[0], /DEV_SEED_ADMIN_NAME/);
+    assert.ok(!lines[0].includes(PASSWORD));
+  });
+
+  test("seeder exit 2: warns without the password and returns null (servers still start)", async () => {
+    const { fn, calls } = fakeRun([0, 2]);
+    const { lines, say } = collect();
+    assert.equal(await seedDevAdmin(full, { say, spawnFn: fn }), null);
+    assert.equal(calls.length, 2);
+    assert.match(lines.join("\n"), /create_seeder exited 2/);
+    assert.ok(!lines.join("\n").includes(PASSWORD));
+  });
+
+  test("migration failure: warns, skips the seeder, returns null", async () => {
+    const { fn, calls } = fakeRun([1]);
+    const { lines, say } = collect();
+    assert.equal(await seedDevAdmin(full, { say, spawnFn: fn }), null);
+    assert.equal(calls.length, 1);
+    assert.match(lines.join("\n"), /alembic upgrade head failed/);
+  });
+
+  test("a command that cannot start is a warning, not a throw", async () => {
+    const fn = () => {
+      const child = new EventEmitter();
+      setImmediate(() => child.emit("error", new Error("spawn uv ENOENT")));
+      return child;
+    };
+    const { lines, say } = collect();
+    assert.equal(await seedDevAdmin(full, { say, spawnFn: fn }), null);
+    assert.match(lines.join("\n"), /failed/);
+  });
+});
+
+describe("supervise onStarted", () => {
+  test("runs once after both servers are spawned, with the [dev] logger", async () => {
+    const out = [];
+    const calls = [];
+    const fn = (command, args, options) => {
+      const child = new EventEmitter();
+      child.pid = undefined;
+      child.kill = () => {};
+      calls.push(child);
+      return child;
+    };
+    const done = supervise(
+      [
+        { name: "backend", command: "uv", args: [], cwd: "." },
+        { name: "frontend", command: "pnpm", args: [], cwd: "." },
+      ],
+      {
+        stdout: { write: (t) => out.push(t) },
+        env: {},
+        platform: "linux",
+        spawnFn: fn,
+        onStarted: (say) => {
+          assert.equal(calls.length, 2);
+          say("hello");
+        },
+      },
+    );
+    assert.deepEqual(out, ["[dev] hello\n"]);
+    for (const c of calls) c.emit("exit", 0, null);
+    assert.equal(await done, 0);
   });
 });
