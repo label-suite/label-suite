@@ -23,9 +23,9 @@
 
 ## 5. 規則文件（依 1.1 的實跑結果措辭，可平行）
 
-- [ ] 5.1 更新 `.claude/agents/dba.md`：§資料模型準則的「每個欄位加英文 `comment`」與 §檢查清單對應項，註明「說明存在」與「PostgreSQL 與 model 一致」已由 CI 兩層測試檢查，「英文」與品質仍靠 review。驗證：`pnpm check:specs` 通過，且文字不宣稱英文已被自動檢查 [@technical-writer]
-- [ ] 5.2 更新 `docs/development/rules/backend-agent-rules.mdx`：開頭「在 CI 跑的」清單加入本檢查；B7 的「檢查方式」寫明兩個測試檔路徑，以及 `backend-sqlite` 跑 metadata 層、`backend-postgres` 兩層都跑；既有 drift 的角色依 design D7 的表措辭；決策紀錄加一列（理由一句，連到 ADR-003 D7）。驗證：`pnpm check:specs` 通過；不在 worktree 跑 `notecraftapp build`（會污染全機快取，主倉庫也看不到改動），文件站建置以 CI 的 `docs-site` job 為證據 [@technical-writer]
-- [ ] 5.3 更新 `docs/development/rules/testing-agent-rules.mdx`：開頭已建置清單加入本檢查；T9 gate 表第五列若實作沒有新增 gate 則維持原樣，只在檢查方式補一句。驗證：`pnpm check:specs` 通過，與 5.2 對「CI 跑了什麼」的說法一致 [@technical-writer]
+- [x] 5.1 更新 `.claude/agents/dba.md`：§資料模型準則的「每個欄位加英文 `comment`」與 §檢查清單對應項，註明「說明存在」與「PostgreSQL 與 model 一致」已由 CI 兩層測試檢查，「英文」與品質仍靠 review。驗證：`pnpm check:specs` 通過，且文字不宣稱英文已被自動檢查 [@technical-writer]
+- [x] 5.2 更新 `docs/development/rules/backend-agent-rules.mdx`：開頭「在 CI 跑的」清單加入本檢查；B7 的「檢查方式」寫明兩個測試檔路徑，以及 `backend-sqlite` 跑 metadata 層、`backend-postgres` 兩層都跑；既有 drift 的角色依 design D7 的表措辭；決策紀錄加一列（理由一句，連到 ADR-003 D7）。驗證：`pnpm check:specs` 通過；不在 worktree 跑 `notecraftapp build`（會污染全機快取，主倉庫也看不到改動），文件站建置以 CI 的 `docs-site` job 為證據 [@technical-writer]
+- [x] 5.3 更新 `docs/development/rules/testing-agent-rules.mdx`：開頭已建置清單加入本檢查；T9 gate 表第五列若實作沒有新增 gate 則維持原樣，只在檢查方式補一句。驗證：`pnpm check:specs` 通過，與 5.2 對「CI 跑了什麼」的說法一致 [@technical-writer]
 
 ## Workflow follow-up
 

@@ -41,7 +41,7 @@ model: opus
 - 依查詢條件（篩選、排序、關聯）建立索引
 - **稽核兩張表是 append-only**（`ai_runs` 與 `audit_events`，ADR-019／032）：不設計更新或刪除路徑；`audit_events` 的 `payload_summary` 是**去識別化**的 JSON
 - **測試集答案**（Hard Rule 6）：答案與測試集辨識資訊放在受控的表，欄位與索引的設計不得讓標記員能到達的查詢順手帶出它們
-- 每個欄位加**英文** `comment`，model 的公開介面有**英文** docstring（`AGENTS.md` §Language Rules：程式與註解只用英文。該表 2026-11-12 新增一列，讓 `design/prototype/` 的註解可用繁體中文——那個資料夾不在這個角色的範圍內，所以**這裡沒有例外**）
+- 每張表與每個欄位加**英文** `comment`，model 的公開介面有**英文** docstring。CI 兩層測試檢查「表與欄位的說明存在且非空白」與「PostgreSQL 實際存的說明與 model 一致」（`backend/tests/unit/test_db_comments.py`、`backend/tests/integration/test_db_comments_postgres.py`）；**「是英文」與說明的品質沒有自動檢查，仍靠 review**（`AGENTS.md` §Language Rules：程式與註解只用英文。該表 2026-11-12 新增一列，讓 `design/prototype/` 的註解可用繁體中文——那個資料夾不在這個角色的範圍內，所以**這裡沒有例外**）
 
 ## Migration 準則
 
@@ -86,7 +86,7 @@ model: opus
 - [ ] 稽核表仍是 append-only；`payload_summary` 去識別化
 - [ ] 任務設定仍走 JSON，**沒有為某一種任務類型加專用欄位**
 - [ ] 答案與測試集辨識資訊沒有進入標記員能到達的查詢路徑；seed 與 fixture 裡沒有答案
-- [ ] 每個欄位都有英文 `comment`，model 有英文 docstring
+- [ ] 每張表與每個欄位都有英文 `comment`，model 有英文 docstring（說明存在與 PostgreSQL 一致由 CI 檢查；英文與品質由你確認）
 - [ ] 資料遺失風險已在回報中說明
 - [ ] seed 冪等、沒有真實資料
 - [ ] 字典與 ER 已依實作校正；這次建立的表都標了「已落地」與 revision id，`pnpm check:er` 通過

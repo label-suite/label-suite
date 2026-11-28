@@ -4,7 +4,7 @@ description: '三層測試的範圍與生命週期、TDD、行為測試與自證
 category: '開發說明'
 tags: [開發說明, Agent, 規範, 測試]
 createdAt: '2026-11-10'
-updatedAt: '2026-11-26'
+updatedAt: '2026-11-28'
 ---
 
 # 測試與交付證據規範
@@ -12,7 +12,7 @@ updatedAt: '2026-11-26'
 本文說明測試與交付證據的十二條規範，由 `AGENTS.md` 的 Agent Rules Index 指過來；`AGENTS.md` 是規則本體，兩邊說法不同時以 `AGENTS.md` 為準，並回報給維護者。
 跨領域的規範在 [agent-rules.mdx](agent-rules.mdx)、後端在 [backend-agent-rules.mdx](backend-agent-rules.mdx)、授權與答案隔離在 [security-agent-rules.mdx](security-agent-rules.mdx)、API 契約在 [api-agent-rules.mdx](api-agent-rules.mdx)、前端在 [frontend-agent-rules.mdx](frontend-agent-rules.mdx)，這裡不重複。
 
-**`backend/`、`frontend/` 與 `e2e/` 都已存在，但在 CI 跑的只有 T1 的 e2e 位置檢查、T4 的雙資料庫兩輪、測試替身邊界檢查與 harness 組裝比對、T6 的後端部分（與 T4 同一個測試替身邊界檢查）、T8 的固定等待與寫死主機埠號檢查、T9 七項 gate 中的六項，以及 T10 的「不得下降」**（job 與指令寫在各條的「檢查方式」）；T2 沒有機械檢查，其餘各條與上述各條沒建的部分（含 T6 的前端）仍標「待建置」。標「待建置」就是字面意思：**不得因為這份文件存在就宣稱測試或 gate 已經在跑**，因為本文件談的正是「怎麼證明事情做完了」。
+**`backend/`、`frontend/` 與 `e2e/` 都已存在，但在 CI 跑的只有 T1 的 e2e 位置檢查、T4 的雙資料庫兩輪（含資料庫表與欄位說明的覆蓋檢查）、測試替身邊界檢查與 harness 組裝比對、T6 的後端部分（與 T4 同一個測試替身邊界檢查）、T8 的固定等待與寫死主機埠號檢查、T9 七項 gate 中的六項，以及 T10 的「不得下降」**（job 與指令寫在各條的「檢查方式」）；T2 沒有機械檢查，其餘各條與上述各條沒建的部分（含 T6 的前端）仍標「待建置」。標「待建置」就是字面意思：**不得因為這份文件存在就宣稱測試或 gate 已經在跑**，因為本文件談的正是「怎麼證明事情做完了」。
 
 每條規範的反例與檢查方式收在摺疊區塊，預設收起；適用路徑、禁止、正例與例外在表裡。各條的來源在文末附錄。
 
@@ -189,6 +189,7 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 
 :::note{title="T9 的反例與檢查方式" collapsible}
 - **反例**：在一張文件 PR 裡加一支 lint 腳本或 CI job
+- **資料庫說明覆蓋沒有新增 gate**：表與欄位說明的檢查是 pytest 測試（`backend/tests/unit/test_db_comments.py` 與 `backend/tests/integration/test_db_comments_postgres.py`），由上表第五列的 `backend-sqlite` 與 `backend-postgres` 兩個 job 跑，內容見 [backend-agent-rules.mdx 的 B7](backend-agent-rules.mdx#b7-雙資料庫的測試要求)
 - **檢查方式**：七項裡六項由上表的 CI job 跑；第 6 項**沒有在跑**，不得宣稱授權與答案隔離已有自動回歸。CI 通過不等於本機 hook 通過，本機 hook 尚未建成
 :::
 
@@ -354,3 +355,4 @@ E2E 用語意選擇器與條件式等待，一個 spec 一條旅程，設定集�
 | 2026-11-25 | T4、T6 的檢查方式由「待建置」改成實際指令：CI `semgrep` job 的測試替身邊界檢查、harness 組裝比對與 `nosemgrep` 例外格式檢查；T4 的適用路徑補 `conftest.py`、`probe.py`；T6 的前端維持「待建置」，三種擋不住的寫法寫進文件，不另開 issue | T4「harness 與 production 同構」與 T6 的檢查方式原本都標「待建置」 | [#562](https://github.com/label-suite/label-suite/issues/562) |
 | 2026-11-26 | starter-kit 的 `hooks/` 六份腳本與 `settings-snippet.json` 不納入來源對照：它是維護者本機的參考資料，不在 repo 裡，也無法重現 | 原 §待決 第 1 列「要不要納入來源對照」 | [#689](https://github.com/label-suite/label-suite/issues/689) |
 | 2026-11-26 | 關鍵路徑 90% 分支覆蓋先建「認證」「授權與權限檢查」兩項，清單在 `critical-coverage.json`、檢查在 `scripts/check-critical-coverage.mjs`，跑在 `coverage` job；其餘三項仍未建（[T9](#t9-開發前要落實的自動-gate)、[T10](#t10-覆蓋率)） | T9、T10 的「五項關鍵路徑的 90% 分支覆蓋沒有建」 | [#719 留言](https://github.com/label-suite/label-suite/issues/719#issuecomment-7187190476) |
+| 2026-11-28 | 資料庫表與欄位說明的覆蓋檢查列入已建置：它是現有雙資料庫兩輪裡的 pytest 測試，T9 的 gate 表維持原樣 | 該檢查原本不在已建置清單，也沒有說明歸哪一列 gate | [#822](https://github.com/label-suite/label-suite/issues/822) |

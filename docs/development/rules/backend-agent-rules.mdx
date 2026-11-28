@@ -13,7 +13,7 @@ updatedAt: '2026-11-28'
 跨領域的規範（先搜尋再新增、最小變更、衝突處理等）在 [agent-rules.mdx](agent-rules.mdx)，技術選型與 ADR 效力在 [architecture.mdx](../architecture.mdx)。
 後端落實 [R1](agent-rules.mdx#r1-先搜尋再新增) 時，新增 helper、util、常數、例外或依賴之前，先查 `app/core/` 的共用模組（清單見 [backend-modules.mdx 的 §`core/` 各模組](../../diagrams/architecture/backend-modules.mdx#core-各模組)）與相鄰模組；這一條靠人工／獨立審查，沒有自動檢查。
 
-**`backend/` 已存在，但只有 B1、B2、B6、B7、B11 與 B12 的一部分檢查在 CI 跑**（job 與指令寫在各條的「檢查方式」）；B12 已建置的只有寄信、Google OIDC、對外 HTTP 客戶端三項入口契約與兩條跨模組契約，其餘四項仍標「待建置」；B8 與上面 R1 的後端落點靠人工／獨立審查，其餘各條仍標「待建置」。標「待建置」就是字面意思：那些檢查還沒有寫，**不得因為這份文件存在就宣稱架構已被強制**。
+**`backend/` 已存在，但只有 B1、B2、B6、B7、B11 與 B12 的一部分檢查在 CI 跑**（job 與指令寫在各條的「檢查方式」；B7 含資料庫表與欄位說明的覆蓋檢查）；B12 已建置的只有寄信、Google OIDC、對外 HTTP 客戶端三項入口契約與兩條跨模組契約，其餘四項仍標「待建置」；B8 與上面 R1 的後端落點靠人工／獨立審查，其餘各條仍標「待建置」。標「待建置」就是字面意思：那些檢查還沒有寫，**不得因為這份文件存在就宣稱架構已被強制**。
 
 每條規範的反例與檢查方式收在摺疊區塊，預設收起；適用路徑、禁止、正例與例外在表裡。
 
@@ -141,6 +141,11 @@ API 一個請求一個 session、worker 一個 task 一個同步 session，用�
 :::note{title="B7 的反例與檢查方式" collapsible}
 - **反例**：整個測試套件只跑 SQLite，PR 寫「資料層測試通過」
 - **檢查方式**：CI 有兩個後端 job：`backend-sqlite` 不設 `TEST_DATABASE_URL`，標 `postgres` 的測試在這一輪 skipped；`backend-postgres` 以 `postgres:16` 服務容器與 `TEST_DATABASE_URL` 跑 `uv run pytest`，之後 `node ../scripts/check-junit-skips.mjs` 在任何測試被 skipped 時失敗，所以標 `postgres` 的測試不會悄悄停跑。哪些行為「牽涉兩層差異」仍由撰寫測試的人判斷，靠審查
+- **表與欄位說明的覆蓋**（已建置，兩層測試）：
+  - `backend/tests/unit/test_db_comments.py`（metadata 層）：載入所有業務模組的 model 後，要求共用 `Base.metadata` 的每張表與每個欄位都有非空白的 `comment`，失敗訊息指名 `表.欄位`；另檢查已落地的五張表都被載入、每個 `models` 模組都登記了 mapper，避免漏載讓檢查空轉。不需資料庫，所以 `backend-sqlite` 與 `backend-postgres` 都會跑
+  - `backend/tests/integration/test_db_comments_postgres.py`（PostgreSQL 層）：標 `postgres`，在 `alembic upgrade head` 後讀系統目錄，逐表比對資料庫存的說明與 model 的是否相同，差異指名 `表.欄位` 並列出兩邊的值。只有 `backend-postgres` 會跑；`backend-sqlite` 把它標為 skipped
+  - **「是英文」與說明的品質沒有自動檢查**，靠審查
+  - 與既有 drift 比對的分工（以 PostgreSQL 16 實測）：model 與資料庫的說明不同時，既有的 `compare_metadata` drift 測試已經會失敗；**model 與資料庫兩邊都沒有說明時 drift 為空，抓不到**，由 metadata 層負責；PostgreSQL 層則在同一處檢查每張表，並指名 `表.欄位`
 :::
 
 ### B8 刪除、軟刪除與匿名化
@@ -347,3 +352,4 @@ Celery task 只收可序列化的識別資訊，在自己的行程裡重新查�
 | 2026-11-27 | B12 的例外補上業務模組之間唯一的放行形式：只透過對方 service 公開的函式，`ignore_imports` 只准指向對方的 `service`；稽核紀錄的寫入在 `app/core/`、直接 import，授權第 3、4 步在 `app/core/` 檢查、矩陣資料經 Protocol 提供，兩者都不需要放行（[B12](#b12-單一入口)） | B12 原本只禁止業務模組互相 import，沒有寫放行的形式 | [#749](https://github.com/label-suite/label-suite/issues/749) |
 | 2026-11-27 | B12 的例外補上跨模組寫入、雙向依賴與只 import 模組的寫法，放行的兩邊都只准是 `service`，router 只呼叫自己模組的 service（[B12](#b12-單一入口)） | 原本只限制放行的右邊，沒有寫寫入與 import 寫法 | [#749 留言](https://github.com/label-suite/label-suite/issues/749#issuecomment-7208259754) |
 | 2026-11-28 | 開頭補上 R1 的後端落點：新增前先查 `app/core/` 與相鄰模組，檢查方式維持人工／獨立審查 | 本文原本只在開頭指回 [agent-rules.mdx](agent-rules.mdx)，沒有後端的落點 | [#810](https://github.com/label-suite/label-suite/issues/810) |
+| 2026-11-28 | B7 補上資料庫表與欄位說明的覆蓋檢查：metadata 層與 PostgreSQL 層兩個測試檔；英文與品質仍靠審查 | B7 的檢查方式只管雙資料庫的跑法，沒有檢查說明是否存在；`dba` 的「每個欄位加英文 comment」沒有任何機械檢查 | [#822](https://github.com/label-suite/label-suite/issues/822)、[ADR-003 的 D7](../adr/003-backend-architecture.mdx#d7-資料庫分兩層) |
