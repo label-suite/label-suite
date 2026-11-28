@@ -246,7 +246,9 @@ test("resolveTargetPath resolves symlinks and relative segments", () => {
     const r = resolveTargetPath(path.join(root, "link", "..", "link", "f.txt"), root);
     // realpathSync on the expectation too: on macOS /var is itself a symlink to
     // /private/var, and resolving that is the function working, not failing.
-    assert.equal(r.resolved, path.join(realpathSync(root), "real", "f.txt"));
+    // The native one, as the function uses: on Windows it also expands an 8.3
+    // short name such as RUNNER~1 in the temporary directory.
+    assert.equal(r.resolved, path.join(realpathSync.native(root), "real", "f.txt"));
     assert.equal(r.outsideWorkspace, false);
   } finally {
     rmSync(root, { recursive: true, force: true });
