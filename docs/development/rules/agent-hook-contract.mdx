@@ -126,28 +126,34 @@ updatedAt: '2026-11-28'
 | | |
 | :--- | :--- |
 | **目的** | 本機 hook 有**四條**被跳過的途徑——Git 的 `--no-verify`、Claude 的 `disableAllHooks`、Codex 的 `[features] hooks = false`，以及 Codex 的 hook 未被信任而 skipped——所以合併前的真正 gate 在 CI |
-| **事件** | `pull_request`（`.github/workflows/ci.yml`，必要檢查包含 `commit-messages`、`docs-site`、`format`、`specs`，以及在 ubuntu 與 macOS 兩個平台跑檢查器回歸測試的 `hooks`；Windows 跑不列入必過的 `scripts-tests-windows`） |
-| **適用路徑／角色** | 整個 PR。`commit-messages`、`format`、`specs`、`semgrep`、`dependency-audit`、`changes` 每次都跑；其餘 job 只在相關路徑有改動時跑，由 `changes` job 依 `scripts/ci-changed-paths.mjs` 的路徑表判斷，見下方「依路徑略過的 job」 |
+| **事件** | `pull_request`（`.github/workflows/ci.yml`）。必要檢查包含 `commit-messages`、`format`、`specs`，以及沒有相關改動時會依路徑略過的 `docs-site` 和 `hooks`（在 ubuntu 與 macOS 兩個平台跑檢查器回歸測試）；Windows 跑不列入必過的 `scripts-tests-windows` |
+| **適用路徑／角色** | 整個 PR。`commit-messages`、`format`、`specs`、`semgrep`、`dependency-audit`、`changes` 每次都跑；其餘 job 只在相關路徑有改動時跑，見下方「依路徑略過的 job」 |
 | **payload 欄位** | GitHub 事件的 `base.sha` 與 `head.sha`（`commit-messages` 與 `changes` 都在用） |
 | **共用檢查器** | 與 H3、H4、H5 **同一組**。CI 與本機共用邏輯是防漂移的唯一辦法 |
 | **timeout** | 由 workflow 設定 |
 | **輸出與退出碼** | job 失敗即擋下合併（搭配 branch protection） |
 | **阻擋或提醒** | **阻擋**。**本機通過不能代替 CI**（[T9](testing-agent-rules.mdx) 的禁止格） |
-| **缺工具／無適用檔案** | CI 不得標 not applicable 來跳過已宣告啟用的必要檢查。branch protection 的啟用是**維護者的設定權限**，不是實作這份契約的人能改的——這兩件事要分清楚 |
+| **缺工具／無適用檔案** | CI 不得標 not applicable 來跳過已宣告啟用的必要檢查。branch protection 的啟用是**維護者的設定權限**，不是實作這份契約的人能改的——這兩件事要分清楚。依路徑略過 job 是設計好的例外：略過的依據是 `changes` job 算出的路徑，不是 job 自己標 not applicable |
 
-**依路徑略過的 job**：條件 job 一律寫 `needs: changes` 加 job 層的 `if:`，不用 workflow 層的 `paths`，因為以 `if:` 略過的 job 在必要檢查裡算通過。改到下表的全域觸發路徑、或 base 算不出差異時，所有條件 job 都跑。
+**依路徑略過的 job**：`changes` job 依 `scripts/ci-changed-paths.mjs` 的路徑表決定每個條件 job 跑不跑，路徑表以那支腳本為準。條件 job 一律寫 `needs: changes` 加 job 層的 `if:`，不用 workflow 層的 `paths`，因為以 `if:` 略過的 job 在必要檢查裡算通過。改到全域觸發路徑、base 算不出差異，或 `changes` job 本身失敗時，所有條件 job 都跑。
+
+:::note{title="路徑表摘要（以 scripts/ci-changed-paths.mjs 為準）" collapsible}
 
 | job | 觸發路徑 |
 | :--- | :--- |
-| 全域觸發（全部都跑） | `.github/**`、`pnpm-lock.yaml`、`backend/uv.lock`、`package.json`、`pnpm-workspace.yaml`、`backend/pyproject.toml`、`.prettierrc.json`、`.prettierignore`、`.lintstagedrc.mjs`、`coverage-baseline.json`、`critical-coverage.json`、`scripts/ci-changed-paths.mjs` |
-| `backend-sqlite`、`backend-postgres`、`coverage` | `backend/**`、`frontend/**` |
+| 全域觸發（全部都跑） | `.github/**`、lockfile、根目錄的 `package.json` 與 `pnpm-workspace.yaml`、`backend/pyproject.toml`、Prettier 與 lint-staged 設定、兩份覆蓋率基準、`scripts/ci-changed-paths.mjs` |
+| `backend-sqlite`、`backend-postgres`、`coverage` | `backend/**`、`frontend/**`，以及覆蓋率與 skip 的三支檢查腳本 |
 | `frontend` | 同上，另加 `design/prototype/assets/**` |
-| `e2e` | 同上，另加 `e2e/**` |
-| `api-contract` | `backend/**`、`frontend/src/api/**`、`docs/diagrams/architecture/api.openapi.json` |
+| `e2e` | 同上，另加 `design/prototype/assets/**` 與 `e2e/**` |
+| `api-contract` | `backend/**`、`frontend/src/api/**`、`frontend/orval.config.ts`、`frontend/package.json`、`docs/diagrams/architecture/api.openapi.json` |
 | `docs-site` | `docs/**`、`.notecraft/**`、`design/**` |
 | `scripts-tests`、`scripts-tests-windows` | `scripts/**` |
 | `hooks` | `scripts/**`、`.claude/**`、`.codex/**`、`.semgrep/**`、`AGENTS.md`、`CLAUDE.md`、`backend/**`、`frontend/**`、`e2e/**`、`docs/**` |
 | `compose` | 編排檔、Dockerfile、`.dockerignore`、`frontend/nginx.conf`、`scripts/check-security-headers.sh`、`e2e/playwright.config.ts`、`backend/**`、`frontend/**`、`e2e/public-entry/**`、`e2e/shared/**` |
+
+搬移的檔案以舊路徑和新路徑各算一次。
+
+:::
 
 ---
 
