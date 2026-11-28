@@ -7,9 +7,11 @@
 // SIGINT or SIGTERM is forwarded to both and dev exits with 128 + the signal
 // number (spec workspace-commands, system-design §元件清單 scripts/dev.mjs).
 //
-// Each server runs in its own process group so a signal reaches the whole tree
-// (pnpm starts Vite, uvicorn --reload starts a worker). Their stdin is closed:
-// a background process group reading the terminal would be stopped by SIGTTIN.
+// On POSIX each server runs in its own process group so a signal reaches the
+// whole tree (pnpm starts Vite, uvicorn --reload starts a worker). Their stdin
+// is closed: a background process group reading the terminal would be stopped
+// by SIGTTIN. Windows has no process groups: pnpm is started through cmd.exe
+// (it is pnpm.cmd there) and a stop runs `taskkill /T /F` on the whole tree.
 import { spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { constants } from "node:os";
@@ -57,9 +59,34 @@ export function devCommands(env, root = ROOT) {
   ];
 }
 
-/** Send a signal to a child's whole process group; ignore a group that is already gone. */
-function signalGroup(child, signal) {
+/**
+ * The command and args to spawn. On Windows pnpm is pnpm.cmd, which Node (>= 18.20, CVE-2024-27980)
+ * refuses to spawn directly, so it goes through cmd.exe; its args are fixed in devCommands().
+ */
+export function resolveSpawn(command, args, platform = process.platform, env = process.env) {
+  if (platform === "win32" && command === "pnpm")
+    return { command: env.ComSpec ?? "cmd.exe", args: ["/d", "/s", "/c", command, ...args] };
+  return { command, args };
+}
+
+/**
+ * Signal a child's whole tree: the process group on POSIX, `taskkill /T /F` on Windows
+ * (which has no groups and no graceful signal). Ignore a tree that is already gone.
+ */
+function signalGroup(child, signal, { platform, spawnFn }) {
   if (child.pid === undefined) return;
+  if (platform === "win32") {
+    try {
+      const killer = spawnFn("taskkill", ["/pid", String(child.pid), "/T", "/F"], {
+        stdio: "ignore",
+        windowsHide: true,
+      });
+      killer.on?.("error", () => {});
+    } catch {
+      // Already gone.
+    }
+    return;
+  }
   try {
     process.kill(-child.pid, signal);
   } catch {
@@ -79,24 +106,33 @@ function signalGroup(child, signal) {
  * @param {{write(text: string): void}} [options.stdout] where dev's own messages go
  * @param {Record<string, string | undefined>} [options.env] environment for the commands
  * @param {number} [options.killTimeoutMs]
+ * @param {NodeJS.Platform} [options.platform] the platform to behave as (tests inject win32)
+ * @param {typeof spawn} [options.spawnFn] process starter (tests inject a fake)
  * @returns {Promise<number>} the exit code dev should end with
  */
 export function supervise(
   commands,
-  { stdout = process.stdout, env = process.env, killTimeoutMs = KILL_TIMEOUT_MS } = {},
+  {
+    stdout = process.stdout,
+    env = process.env,
+    killTimeoutMs = KILL_TIMEOUT_MS,
+    platform = process.platform,
+    spawnFn = spawn,
+  } = {},
 ) {
   return new Promise((resolve) => {
     const running = new Map();
     let exitCode;
     let killTimer;
 
+    const signalTree = (child, signal) => signalGroup(child, signal, { platform, spawnFn });
     const say = (text) => stdout.write(`[dev] ${text}\n`);
 
     const stopAll = (signal) => {
-      for (const child of running.values()) signalGroup(child, signal);
+      for (const child of running.values()) signalTree(child, signal);
       if (killTimer === undefined && running.size > 0) {
         killTimer = setTimeout(() => {
-          for (const child of running.values()) signalGroup(child, "SIGKILL");
+          for (const child of running.values()) signalTree(child, "SIGKILL");
         }, killTimeoutMs);
         killTimer.unref();
       }
@@ -116,7 +152,7 @@ export function supervise(
       if (!running.has(name)) return;
       const child = running.get(name);
       running.delete(name);
-      signalGroup(child, "SIGTERM");
+      signalTree(child, "SIGTERM");
       if (exitCode === undefined) {
         exitCode = code;
         if (running.size > 0)
@@ -132,10 +168,11 @@ export function supervise(
     };
 
     for (const { name, command, args, cwd } of commands) {
-      const child = spawn(command, args, {
+      const target = resolveSpawn(command, args, platform, env);
+      const child = spawnFn(target.command, target.args, {
         cwd,
         env,
-        detached: true,
+        detached: platform !== "win32",
         stdio: ["ignore", "inherit", "inherit"],
       });
       running.set(name, child);

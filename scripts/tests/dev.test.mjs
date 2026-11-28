@@ -5,13 +5,14 @@
 // both. Real uvicorn and Vite are replaced by fixtures/dev/fake-server.mjs.
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import { EventEmitter } from "node:events";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, test } from "node:test";
 
-import { devCommands, loadDevEnv, supervise } from "../dev.mjs";
+import { devCommands, loadDevEnv, resolveSpawn, supervise } from "../dev.mjs";
 
 const ROOT = fileURLToPath(new URL("../..", import.meta.url));
 const FAKE = fileURLToPath(new URL("./fixtures/dev/fake-server.mjs", import.meta.url));
@@ -163,5 +164,103 @@ describe("loadDevEnv", () => {
       undefined,
       "the one required setting gets no invented default",
     );
+  });
+});
+
+describe("resolveSpawn", () => {
+  test("on win32 pnpm goes through cmd.exe, ComSpec first", () => {
+    assert.deepEqual(resolveSpawn("pnpm", ["--filter", "frontend", "dev"], "win32", {}), {
+      command: "cmd.exe",
+      args: ["/d", "/s", "/c", "pnpm", "--filter", "frontend", "dev"],
+    });
+    assert.equal(
+      resolveSpawn("pnpm", [], "win32", { ComSpec: "C:\\Windows\\cmd.exe" }).command,
+      "C:\\Windows\\cmd.exe",
+    );
+  });
+
+  test("on win32 other commands (uv.exe) are spawned directly, so no shell sees their args", () => {
+    assert.deepEqual(resolveSpawn("uv", ["run", "x & y"], "win32", {}), {
+      command: "uv",
+      args: ["run", "x & y"],
+    });
+  });
+
+  test("on POSIX nothing changes", () => {
+    assert.deepEqual(resolveSpawn("pnpm", ["a"], "linux", {}), { command: "pnpm", args: ["a"] });
+  });
+});
+
+describe("supervise on win32 (injected platform and spawn)", () => {
+  function fakeSpawn({ withPid = true } = {}) {
+    const calls = [];
+    let nextPid = 100;
+    const fn = (command, args, options) => {
+      const child = new EventEmitter();
+      child.pid = withPid ? nextPid++ : undefined; // no pid: POSIX kill() is skipped, never a real group
+      child.kill = () => {};
+      calls.push({ command, args, options, child });
+      return child;
+    };
+    return { fn, calls };
+  }
+  const commands = [
+    { name: "backend", command: "uv", args: ["run", "uvicorn"], cwd: "." },
+    { name: "frontend", command: "pnpm", args: ["--filter", "frontend", "dev"], cwd: "." },
+  ];
+
+  test("starts pnpm through cmd.exe without a process group, and taskkills the tree when one ends", async () => {
+    const { fn, calls } = fakeSpawn();
+    const done = supervise(commands, {
+      stdout: { write() {} },
+      env: {},
+      platform: "win32",
+      spawnFn: fn,
+    });
+    const [backend, frontend] = calls;
+    assert.equal(backend.command, "uv");
+    assert.equal(frontend.command, "cmd.exe");
+    assert.deepEqual(frontend.args.slice(0, 4), ["/d", "/s", "/c", "pnpm"]);
+    assert.equal(frontend.options.detached, false);
+
+    frontend.child.emit("exit", 2, null);
+    const killed = calls.filter((c) => c.command === "taskkill");
+    // The exited frontend and the still-running backend are both stopped as whole trees.
+    assert.ok(killed.every((c) => c.args.includes("/T") && c.args.includes("/F")));
+    assert.ok(killed.some((c) => c.args[1] === String(backend.child.pid)));
+    backend.child.emit("exit", 1, null);
+    assert.equal(await done, 2);
+  });
+
+  test("SIGTERM to dev taskkills both trees and exits 143", async () => {
+    const { fn, calls } = fakeSpawn();
+    const done = supervise(commands, {
+      stdout: { write() {} },
+      env: {},
+      platform: "win32",
+      spawnFn: fn,
+    });
+    process.emit("SIGTERM", "SIGTERM");
+    const pids = calls
+      .filter((c) => c.command === "taskkill")
+      .map((c) => c.args[1])
+      .sort();
+    assert.deepEqual(
+      pids,
+      calls
+        .slice(0, 2)
+        .map((c) => String(c.child.pid))
+        .sort(),
+    );
+    for (const c of calls.slice(0, 2)) c.child.emit("exit", 1, null);
+    assert.equal(await done, 143);
+  });
+
+  test("POSIX keeps detached process groups", () => {
+    const { fn, calls } = fakeSpawn({ withPid: false });
+    supervise(commands, { stdout: { write() {} }, env: {}, platform: "linux", spawnFn: fn });
+    assert.equal(calls[0].options.detached, true);
+    assert.equal(calls[1].command, "pnpm");
+    for (const c of calls) c.child.emit("exit", 0, null);
   });
 });
