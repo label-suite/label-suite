@@ -4,6 +4,8 @@
 
 角色標記：`e2e/` 沒有專屬角色，`tasks` 規則只允許四個實作角色，這裡標 `[@frontend-developer]`（與既有改 `e2e/` 的 task 一致）；`.claude/agents/frontend-developer.md` 寫「全端 E2E 不在本角色的 TDD 範圍」，這裡指的是本 task 自己依 design D5 先重現再修，不是該角色的前端 TDD。派工時若維護者認為該換角色，在這裡改標。
 
+本次只改 E2E，`frontend-developer` 的前端 TDD 檢查表（MSW、四種畫面狀態等）不適用；先重現再修的順序依 design D5。
+
 驗證指令都在根目錄執行；Playwright 的 `-g` 與 `--repeat-each` 透過 `pnpm --filter e2e exec playwright test` 傳入。
 
 ## 1. 修正 session-guard 的兩個攔截器
@@ -13,4 +15,4 @@
 
 ## 2. 整體驗證
 
-- [ ] 2.1 跑完整 E2E 與靜態檢查：`pnpm --filter e2e test` 全過、`pnpm --filter e2e test:static` 通過、e2e 套件的 tsc 型別檢查通過（`pnpm --filter e2e exec tsc --noEmit`，若 `e2e` 的型別檢查指令不同，以 `e2e/package.json` 與 CI `e2e` job 實際跑的為準）。推上 PR 後確認 CI 的 `e2e` job 通過。不含 Windows 步驟：PR 只寫 `Closes #804`，#812 由維護者在合併後於 Windows 驗（clarification Q2；design D5）。[@frontend-developer]
+- [ ] 2.1 跑完整 E2E 與靜態檢查：`pnpm --filter e2e test` 全過、`pnpm --filter e2e test:static` 通過（CI 的 `e2e` job 只跑這兩個）。另在本機加跑 `pnpm --filter e2e exec tsc --noEmit` 確認型別，這一步不屬於 CI job。推上 PR 後確認 CI 的 `e2e` job 通過。不含 Windows 步驟：PR 只寫 `Closes #804`，#812 由維護者在合併後於 Windows 驗（clarification Q2；design D5）。[@frontend-developer]

@@ -20,7 +20,7 @@
 
 ### Modified Capabilities
 
-- `e2e-testing`：新增 Requirement「路由攔截器依情境階段回應，不依請求順序」。現有 Requirement「等待只用條件式」只約束等待，沒有約束攔截器怎麼挑回應（clarification Q6）。來源：testing-agent-rules T8、T5（間歇性問題要能重現才算結案）。
+- `e2e-testing`：新增 Requirement「路由攔截器依情境階段回應，不依請求順序」。現有 Requirement「等待只用條件式」只約束等待，沒有約束攔截器怎麼挑回應（clarification Q6）。來源：testing-agent-rules T5 禁止欄「測試結果隨執行時間變化」；同屬 E2E 等待紀律，T8 未直接涵蓋攔截器。
 - `login-session`：只修改 Requirement「多個分頁同時延續不互相踢掉」的來源註記，補上 Scenario「重試不通時再延續一次就成功」，指到規格 01-05 §規格「多個分頁同時延續登入狀態」第 3 條（clarification Q5）。行為不變、Scenario 不動；不改 `docs/specs/`。
 
 > 兩個 capability 都帶 delta，不設 `skip_specs`（clarification P1）。
