@@ -1,0 +1,95 @@
+{
+  "pageName": "Dashboard",
+  "title": "Dashboard",
+  "subtitle": "Track task progress and team collaboration at a glance",
+  "loading": "Loading",
+  "error": {
+    "title": "Failed to load dashboard",
+    "description": "Task membership data could not be loaded. Please try again.",
+    "retry": "Retry"
+  },
+  "entry": {
+    "title": "Start Your First Workflow",
+    "subtitle": "Use these three action entry points to reach your first success quickly.",
+    "cards": {
+      "leader": {
+        "title": "Create Labeling Project",
+        "description": "Upload data, set labeling rules, and assign team members.",
+        "cta": "Start Creating Task",
+        "steps": {
+          "step1": {
+            "name": "Create Task",
+            "description": "Define task objectives and label rules"
+          },
+          "step2": {
+            "name": "Upload Data",
+            "description": "Upload the first batch and verify parsing"
+          },
+          "step3": {
+            "name": "Assign Team",
+            "description": "Assign at least one annotator and one reviewer"
+          }
+        }
+      },
+      "annotator": {
+        "title": "Conduct Data Labeling",
+        "description": "View pending tasks, complete data labeling, and submit results.",
+        "cta": "Start Annotating",
+        "steps": {
+          "step1": {
+            "name": "Open Task",
+            "description": "Enter the annotation workspace and view pending items"
+          },
+          "step2": {
+            "name": "Annotate",
+            "description": "Follow label rules and complete annotation work"
+          },
+          "step3": {
+            "name": "Submit Annotation",
+            "description": "Self-check consistency, then submit results"
+          }
+        }
+      },
+      "reviewer": {
+        "title": "Conduct Labeling Review",
+        "description": "Review each annotator independently, correct results directly, and arbitrate disputes.",
+        "cta": "Start Reviewing",
+        "steps": {
+          "step1": {
+            "name": "Review Annotations",
+            "description": "Inspect annotation content and compare against guidelines"
+          },
+          "step2": {
+            "name": "Correct or Arbitrate",
+            "description": "Approve, modify, or cannot adjudicate; disputes go to arbitration and the exception pool"
+          },
+          "step3": {
+            "name": "Complete Review",
+            "description": "Confirm review list and mark task complete"
+          }
+        }
+      }
+    }
+  },
+  "stats": {
+    "title": "Platform Stats",
+    "subtitle": "System overview",
+    "totalUsers": {
+      "label": "Total Users",
+      "value": "0 Users"
+    },
+    "projectLeaders": {
+      "label": "Project Leaders",
+      "value": "0 Leaders"
+    },
+    "annotators": {
+      "label": "Annotators",
+      "value": "0 Annotators"
+    },
+    "reviewers": {
+      "label": "Reviewers",
+      "value": "0 Reviewers"
+    },
+    "demoNote": "Demo static values: these metric cards are not yet connected to real data; how they are calculated is defined separately."
+  }
+}
