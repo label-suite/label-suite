@@ -103,6 +103,13 @@ jobs:
           chmod +x "$shim/python3"
           echo "$shim" >> "$GITHUB_PATH"
 
+      - name: Diagnose Windows checker run
+        if: runner.os == 'Windows'
+        continue-on-error: true
+        run: |
+          command -v python3 python node bash; python3 -c 'print("py ok")'
+          printf '{"cwd":"%s","hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"rm -rf /tmp/x"}}' "$PWD" | bash scripts/check-command.sh; echo "rc=$?"
+
       # A glob, not a list. A suite that is added and not wired up is the
       # failure this job exists to prevent, and a list is the place that gets
       # forgotten. check-commit-msg-tests.sh runs here as well as in
