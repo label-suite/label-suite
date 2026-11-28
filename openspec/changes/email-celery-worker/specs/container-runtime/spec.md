@@ -34,10 +34,10 @@
 - **WHEN** Lite 編排已起，從主機對後端容器的應用埠（8000）發出請求
 - **THEN** 連線失敗；同一請求改經 `http://localhost:${FRONTEND_PORT}/api/v1/health` 則回應 200
 
-#### Scenario: Redis 不能從主機直接連線
+#### Scenario: Redis 沒有對應的主機埠
 
-- **WHEN** Lite 編排已起，從主機對 `localhost:6379` 發出 Redis `PING`
-- **THEN** 連線失敗
+- **WHEN** Lite 編排已起，分別執行 `docker compose port redis 6379` 與 `docker compose port worker 6379`
+- **THEN** 兩個指令的輸出都為空，Redis 與 worker 沒有對應到任何主機埠
 
 #### Scenario: 非檔案路徑回前端頁面
 

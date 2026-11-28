@@ -6,7 +6,7 @@
 
 ### Requirement: 信件在交出時驗證欄位
 
-呼叫端交給寄信能力的每封信 SHALL 由收件者、主旨、純文字內文、可選的 HTML 內文與種類組成，交出時即驗證：收件者正規化後 MUST 不超過 254 字元；主旨 MUST 為 1 到 200 字元且 MUST NOT 含 CR 或 LF；純文字內文 MUST 不為空；種類 MUST 符合 `^[a-z][a-z0-9_]{0,31}$`。驗證不通過時 MUST 當場拒絕，不排入佇列、不呼叫寄信服務，拒絕的錯誤 MUST NOT 帶欄位值。種類只用於紀錄，與任務類型無關。
+呼叫端交給寄信能力的每封信 SHALL 由收件者、主旨、純文字內文、可選的 HTML 內文與種類組成，交出時即驗證：收件者正規化後 MUST 不超過 254 字元；主旨 MUST 為 1 到 200 字元且 MUST NOT 含 CR 或 LF；純文字內文 MUST 不為空；種類 MUST 符合 `^[a-z][a-z0-9_]{0,31}$`。驗證不通過時 MUST 當場拒絕，不排入佇列、不呼叫寄信服務，錯誤 MUST NOT 帶欄位值。設定的寄件人 `MAIL_FROM` 同樣 MUST NOT 含 CR 或 LF，含時服務與 worker MUST 拒絕啟動。種類只用於紀錄，與任務類型無關。
 
 來源：`AGENTS.md` Hard Rule 9；backend-agent-rules B10；security-agent-rules S9；`system-design.md` §元件與職責（信件）；clarification 技術預設「語言參數」。
 
@@ -15,6 +15,11 @@
 - **WHEN** 呼叫端以主旨 `Hello\r\nBcc: CANARY-inject@example.com` 交出一封信，分別以當場寄與排入背景兩種寄法
 - **THEN** 兩次都當場拒絕，佇列沒有收到任何工作，寄信服務的替身沒有收到任何請求
 - **AND** 拒絕的錯誤文字不含 `CANARY-inject`
+
+#### Scenario: 寄件人設定含換行時拒絕啟動
+
+- **WHEN** 以合法的 `CORS_ALLOWED_ORIGINS`、`RESEND_API_KEY=re_test` 與 `MAIL_FROM` 為 `noreply@example.test\r\nBcc: CANARY-inject@example.com`，分別啟動服務與載入 worker 的設定
+- **THEN** 兩者都拒絕啟動，錯誤訊息含 `MAIL_FROM`，且不含 `CANARY-inject`
 
 #### Scenario: 種類不合格式時拒絕
 
@@ -64,8 +69,8 @@
 
 #### Scenario: 非 JSON 編碼的工作被拒絕
 
-- **WHEN** 對背景工作程序送出一個以 JSON 以外編碼的工作
-- **THEN** 該工作不被執行，寄信服務的替身沒有收到請求
+- **WHEN** 讀取背景工作程序的序列化設定，並以該設定解碼一則以 pickle 編碼的工作內容
+- **THEN** 工作編碼與可接受的內容類型都只有 JSON，解碼以「內容類型不被接受」被拒絕，沒有任何工作被執行
 
 ### Requirement: 暫時性失敗以有界次數重試
 
@@ -163,10 +168,10 @@
 
 #### Scenario: 佇列無法連線時排入失敗
 
-- **WHEN** 有設定寄信服務，佇列位址為 `redis://CANARY-host:6390`（無法連線），呼叫端以排入背景交出一封信
+- **WHEN** 有設定寄信服務，佇列位址為 `redis://:CANARY-pw@127.0.0.1:1`（關閉的埠，帶一組帳密 canary），呼叫端以排入背景交出一封信
 - **THEN** 呼叫端在 10 秒內收到「佇列無法使用」的錯誤，錯誤的文字為空
 - **AND** 寄信服務的替身沒有收到任何請求
-- **AND** 寫一行 `outcome=queue_unavailable` 的 `WARNING` 紀錄，全部紀錄輸出都不含 `CANARY-host`
+- **AND** 寫一行 `outcome=queue_unavailable` 的 `WARNING` 紀錄，全部紀錄輸出都不含 `CANARY-pw`
 
 ### Requirement: 寄信紀錄只寫允許的欄位
 

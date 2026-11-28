@@ -2,7 +2,7 @@
 
 ### Requirement: 入口與間接使用不算違規
 
-入口套件 import 自己的第三方套件 SHALL 不算違規；業務模組只經由入口間接到達該套件也 SHALL 不算違規。`backend/app/` 目前有兩個入口套件：`app/oidc/`（Google OIDC 的入口）與 `app/mail/`（寄信的入口）；寄信入口以對外 HTTP 客戶端呼叫寄信服務，這是 B12 第 3 項「每個整合自己的包裝就是它的入口」允許的寫法。三條入口契約在真實的 `app` 上皆無違規。
+入口套件 import 自己的第三方套件 SHALL 不算違規；業務模組只經由入口間接到達該套件也 SHALL 不算違規。`backend/app/` 目前有兩個入口套件：`app/oidc/`（Google OIDC 的入口）與 `app/mail/`（寄信的入口）；寄信入口直接以對外 HTTP 客戶端呼叫寄信服務，OIDC 入口仍只經 `authlib` 間接使用它，這是 B12 第 3 項「每個整合自己的包裝就是它的入口」允許的寫法。三條入口契約在真實的 `app` 上皆無違規。
 
 來源：issue #563 工作項 2、5；Epic #560；backend-agent-rules B12（新）；clarification Q2、Q3、N6；ADR-004 D4；login-auth-guard PL5；ADR-008 D3；email-celery-worker clarification Q7、Q8。
 
@@ -26,11 +26,11 @@
 - **WHEN** 在本 change 合併時的 `backend/app/` 搜尋 import `authlib` 的檔案
 - **THEN** 只有 `app/oidc/` 底下的檔案 import `authlib`
 
-#### Scenario: 對外 HTTP 客戶端只出現在入口套件
+#### Scenario: 直接匯入對外 HTTP 客戶端的只有寄信入口
 
-- **WHEN** 在本 change 合併時的 `backend/app/` 搜尋 import `httpx` 的檔案
-- **THEN** 只有 `app/oidc/` 與 `app/mail/` 底下的檔案 import `httpx`
-- **AND** `backend/app/` 沒有任何檔案 import `resend`、`smtplib` 或 `aiosmtplib`
+- **WHEN** 在本 change 合併時的 `backend/` 列出直接 import `httpx` 的模組
+- **THEN** 每一個都在 `app/mail/` 底下；`app/oidc/` 底下沒有任何模組直接 import `httpx`，仍只經 `authlib` 間接到達
+- **AND** `backend/app/` 沒有任何模組 import `resend`、`smtplib` 或 `aiosmtplib`
 
 ### Requirement: `app` 底下每個頂層套件都受入口契約檢查
 

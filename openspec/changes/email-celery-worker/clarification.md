@@ -61,7 +61,7 @@
 
 - **來源**：`system-analysis.md` 待決問題 8、9；`system-design.md` T11
 - **決議**：是否印連結由各功能決定；入口提供 `record_unsent_link`，寫進專用 logger `app.mail.unsent_link`（`propagate=False`，一般 log 管道看不到）。一般 log 只寫 `mailId`、類型、次數、結果、固定字彙的原因、`excType`、寄信服務的訊息 id；收件者連網域都不寫，寄信服務的錯誤本文也不寫。`httpx`、`httpcore` 的 logger 固定 `WARNING`
-- **理由**：S9 把 Email 列為個資；`httpcore` 的 DEBUG 會印出 `Authorization` 標頭
+- **理由**：S9 要求 log 不含 PII，Email 屬之；`httpcore` 的 DEBUG 會印出 `Authorization` 標頭
 - **已回修**：spec delta、`backend-modules.mdx`（tasks 排入）
 - **日期**：2026-11-28
 
@@ -106,6 +106,15 @@
 | CI `compose`（T8）                   | 只驗 worker `inspect ping`                                                                                                                                                                                                   |
 | 常駐文件（T10）                      | 由 apply 的 task 更新，排在實作群組最後一個 task 之前                                                                                                                                                                        |
 | capability                           | 新增 `mail-delivery`；worker 與 Redis 併入修改 `container-runtime`；另修改 `runtime-config`、`backend-code-boundaries`、`server-logging`、`ci-quality-gates`，`workspace-commands`、`e2e-testing` 視 eager 預設而定          |
+
+### Q9. Redis 掉訊息是否觸發 ADR-003 D8 的重新討論
+
+- **來源**：`system-analysis.md` 待決問題 12 後半；design-reviewer 2026-11-28
+- **問題**：ADR-003 D8 接受 Redis 重啟時偶爾掉一個背景工作，理由原本只針對評分；D8 寫明「評分之外出現必須保證不掉的工作」時要重新討論。註冊驗證信、設定密碼信算不算
+- **決議**：不算，不重開 D8
+- **理由**：這些信使用者都能重新觸發（重寄、重新邀請）
+- **已回修**：`design.md`、`proposal.md` 的 Risks 改指本題；ADR-003 決策紀錄記一筆（tasks 排入）
+- **日期**：2026-11-28
 
 ## 告知
 

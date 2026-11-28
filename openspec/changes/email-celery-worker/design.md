@@ -43,7 +43,8 @@
 
 - `RESEND_API_KEY` 與 `MAIL_FROM` 全有或全無（空字串當成沒設，沿用 login-auth-guard design D4），只設一個時 `ConfigError` 指出缺的那個（clarification Q6）
 - `database_url` 有值且 eager 為 true 時 `ConfigError("CELERY_TASK_ALWAYS_EAGER: ...")`（技術預設）
-- `REDIS_URL` 只接受 `redis`／`rediss` scheme、路徑為空或 `/`；`broker_url()`、`result_backend_url()` 推導 `/0`、`/1`（`architecture.mdx` §非同步任務 已固定編號）
+- `REDIS_URL` 只接受 `redis`／`rediss` scheme、路徑為空或 `/`，允許查詢字串（`rediss://` 的 `ssl_cert_reqs` 等），空字串套用預設值（沿用 login-auth-guard design D4）；`broker_url()`、`result_backend_url()` 推導 `/0`、`/1` 並保留查詢字串；`/2` 留給快取（`architecture.mdx` §非同步任務 已固定編號）
+- `MAIL_FROM` 含 CR 或 LF 時丟 `ConfigError`，只點名 `MAIL_FROM`、不印值（Hard Rule 9，擋寄件人標頭注入）
 
 `LOG_LEVEL` 從 `Settings` 下移到 `WorkerSettings`，worker 才能用同一個驗證；`Settings` 的行為不變。`mail_configured()` 下移，語意改成兩者都有設，`selfRegistrationEnabled` 跟著它，`account` 的回應形狀不變（`api-contract.md` §理由）。
 
@@ -51,10 +52,10 @@
 
 ### D3 兩條寄法共用 transport，當場寄在 thread 跑
 
-依 clarification Q1、`system-design.md` §待決 1 選項 (b)：
+依 clarification Q1、`system-design.md` §會改變結構的決議 › 當場寄與排入並存（Q1）：
 
 - `MailService.enqueue(message) -> MailDispatch`：`async`，回 `QUEUED` 或 `NOT_CONFIGURED`；排不進丟 `MailQueueUnavailableError`（eager 時的處理見 D4）
-- `MailService.send_now(message) -> MailOutcome`：`async`，以 `anyio.to_thread.run_sync` 執行 `ResendTransport.send`，回 `SENT`／`NOT_CONFIGURED`／`FAILED`；`TransientMailError` 與 `PermanentMailError` 都轉成 `FAILED`，不重試
+- `MailService.send_now(message) -> MailOutcome`：`async`，以 `asyncio.to_thread` 執行 `ResendTransport.send`（與 `core/passwords.py` 同一種寫法），回 `SENT`／`NOT_CONFIGURED`／`FAILED`；`TransientMailError` 與 `PermanentMailError` 都轉成 `FAILED`，不重試
 - `ResendTransport` 是同步 `httpx.Client`、逾時 10 秒、`Authorization: Bearer`、`Idempotency-Key: <mail_id>`；把結果分類成成功（回訊息 id）、`TransientMailError`（連線錯誤、逾時、`429`、`5xx`）、`PermanentMailError`（其他 `4xx`），丟出時 `from None`（技術預設「重試政策」、clarification Q7）
 
 當場寄放 thread 的理由與 `core/passwords.py` 把 argon2 放進 thread 相同：`httpx.Client` 是同步呼叫，直接在 `async def` 裡跑會卡住 event loop。兩條路徑共用 transport，失敗分類只寫一次。
@@ -65,7 +66,7 @@
 
 - 設定層：D2 的 `ConfigError` 擋住「正式層加 eager」
 - 編排層：兩份編排檔的 `environment` 明列每個變數，不用 `env_file`，所以 `.env` 的 `CELERY_TASK_ALWAYS_EAGER=true` 進不了容器；CI `compose` 的結構斷言檢查兩層每個服務都沒有它（`specs/container-runtime`「容器內不同步執行背景工作」）
-- 行程內：`create_celery_app` 依設定設 `task_always_eager` 與 `task_eager_propagates=False`；`MailService.enqueue` 偵測到 eager 時以 `anyio.to_thread.run_sync` 執行 `apply_async`，讓同步的 HTTP 呼叫不在 event loop 上跑；非 eager 時直接 `apply_async`（ADR-003 D8「在 `async def` 路由裡直接呼叫，不另包 executor」；`system-design.md` §待決 5 末段）。消費者不必知道目前是不是 eager
+- 行程內：`create_celery_app` 依設定設 `task_always_eager` 與 `task_eager_propagates=False`；`MailService.enqueue` 偵測到 eager 時以 `asyncio.to_thread` 執行 `apply_async`，讓同步的 HTTP 呼叫不在 event loop 上跑；非 eager 時直接 `apply_async`（ADR-003 D8「在 `async def` 路由裡直接呼叫，不另包 executor」；`system-design.md` §跑法：容器真佇列，dev 與 e2e 預設 eager、§session 與交易邊界）。消費者不必知道目前是不是 eager
 
 eager 下 `self.retry` 會立即同步重跑，退避看不到；這只發生在本機與 e2e，重試行為由單元測試以 `send_mail.apply()` 驗證（D8）。
 
@@ -95,7 +96,9 @@ eager 下 `self.retry` 會立即同步重跑，退避看不到；這只發生在
 
 - 寄信服務替身放 `backend/tests/support/resend.py`，以 `monkeypatch` 換 `httpx.Client.send`，可設定每次回應（狀態碼、逾時、連線錯誤）並記下每個請求的標頭與本文；與 `FakeGoogle` 同一種寫法，semgrep `test-boundaries.yml` 不必改（testing-agent-rules T6）
 - task 本體以 `send_mail.apply(kwargs=...)` 測：會經參數驗證但不經 broker；重試以 `apply()` 的 `Retry` 例外與 `countdown` 斷言，不真的等 60 秒
-- 「排入」以 eager 加「參數可 JSON 往返」斷言；「佇列連不上」以指向關閉埠的 `REDIS_URL` 測（連線被拒會立即失敗，另以 monkeypatch 讓 publish 拋 `OperationalError` 測分類）
+- 「排入」以 eager 加「參數可 JSON 往返」斷言；「佇列連不上」以 `REDIS_URL=redis://:CANARY-pw@127.0.0.1:1`（關閉的埠加帳密 canary）測，連線被拒會立即失敗，另以 monkeypatch 讓 publish 拋 `OperationalError` 測分類
+- 「只收 JSON」在 unit 層測：斷言 `task_serializer`、`accept_content` 只有 JSON，並以 kombu 依該設定解碼一則 pickle 編碼的內容、斷言被拒（`ContentDisallowed`）；不真的送訊息，所以不需要 broker，也不改 `broker_url`
+- worker 紀錄格式在 unit 層測：直接觸發 `celery.signals.setup_logging`，再由 `celery.worker` 與 `app.mail` logger 各寫一筆，斷言只經本專案的 handler 輸出；不起真的 worker 行程，Celery 啟動橫幅（直接寫 stdout，不是紀錄）不在範圍
 - canary 測試一次跑完 `specs/mail-delivery` 的五條路徑，同時收 `caplog` 與 Celery 自己的 logger
 - 「沒有對佇列位址的連線嘗試」以 monkeypatch `kombu.Connection` 的建立為計數器斷言
 - 後端測試不需要 Redis（`specs/ci-quality-gates`「後端測試不需要佇列服務」）
@@ -108,7 +111,9 @@ eager 下 `self.retry` 會立即同步重跑，退避看不到；這只發生在
 
 - `pyproject.toml` 新增「Routers do not import the mail entry」（`forbidden`，source `app.modules.*.router`、forbidden `app.mail`、`allow_indirect_imports = true`）與「Mail entry does not import modules」（`forbidden`，source `app.mail`、forbidden `app.modules`，不設 `allow_indirect_imports`，間接也擋）
 - 三條入口契約的 `source_modules` 加 `app.worker`；`test_entry_contracts.py` 的 `CHECKED_PACKAGES` 同步；`import_tree.py` 的 `ENTRY_TOP_LEVEL_PACKAGES` 加 `mail`，`ENTRY_THIRD_PARTY[MAIL]` 維持 `{"resend", "smtplib", "aiosmtplib"}`（clarification Q7）
-- `test_dependency_classification.py` 的 `GENERAL_PACKAGES` 加 `celery`、`kombu`、`redis`（clarification Q7）；`anyio` 若尚未歸類一併加入
+- `test_dependency_classification.py` 的 `GENERAL_PACKAGES` 加 `celery`、`kombu`、`redis`（clarification Q7）
+- 直接 import `httpx` 的模組只在 `app/mail/`；`app/oidc/` 仍只經 `authlib` 到達 `httpx`，既有的 `test_real_oidc_entry_does_not_import_httpx_directly` 不變
+- `mypy --strict` 與 `celery`、`kombu` 的型別：1.1 先查兩者的 wheel 有沒有 `py.typed`。沒有時依序採用：(1) 首選 `uv add --dev celery-types`，前提是它存在於 PyPI 且 `uv run pip-audit` 通過；(2) 否則在 `pyproject.toml` 加範圍只限 `celery.*`、`kombu.*` 的 `[[tool.mypy.overrides]]`（`ignore_missing_imports = true`），註解寫明理由與 #756。`redis` 套件自帶型別，不需要處理。apply 不得採用這兩種以外的做法（例如全域 `ignore_missing_imports`，或散落各處的 `# type: ignore`）
 - `test_layer_boundaries.py` 的 `EXPECTED_CONTRACTS` 加兩個名稱，並為兩條新契約各加一個常駐違規樣本
 
 ### D10 紀錄設定
@@ -117,7 +122,7 @@ eager 下 `self.retry` 會立即同步重跑，退避看不到；這只發生在
 
 ### D11 兩層編排與 CI `compose`
 
-編排檔照 `system-design.md` §兩層編排 的表：`redis:7-alpine`、不發布埠、`redis-cli ping`；`worker` 沿用 `x-backend-image`、`command: ["celery", "-A", "app.worker", "worker", "-Q", "default,scoring", "--concurrency", "2"]`、`stop_grace_period: 330s`、healthcheck `celery -A app.worker inspect ping -d celery@$$HOSTNAME` 每 30 秒；Lite 掛 `label-suite-data:/app/data`，正式層帶 `*database-url`。`backend` 與 `worker` 都以 `REDIS_URL: redis://redis:6379`、`RESEND_API_KEY: ${RESEND_API_KEY:-}`、`MAIL_FROM: ${MAIL_FROM:-}` 傳入；`backend.depends_on` 加 `redis: service_healthy`。`docker-compose.prod.yml` 開頭註解改寫（clarification P1）。
+編排檔照 `system-design.md` §兩層編排 的表：`redis:7-alpine`、不發布埠、`redis-cli ping`；`worker` 沿用 `x-backend-image`、`command: ["celery", "-A", "app.worker", "worker", "-Q", "default,scoring", "--concurrency", "2"]`、`stop_grace_period: 330s`、healthcheck `celery -A app.worker inspect ping -d celery@$$HOSTNAME` 每 30 秒；Lite 掛 `label-suite-data:/app/data` 並帶 `SQLITE_PATH: ${SQLITE_PATH:-./data/label_suite.db}`，正式層帶 `*database-url`；兩層都帶 `LOG_LEVEL: ${LOG_LEVEL:-INFO}`。`backend` 與 `worker` 都以 `REDIS_URL: redis://redis:6379`、`RESEND_API_KEY: ${RESEND_API_KEY:-}`、`MAIL_FROM: ${MAIL_FROM:-}` 傳入；`backend.depends_on` 加 `redis: service_healthy`。`docker-compose.prod.yml` 開頭註解改寫（clarification P1）。
 
 CI `compose` job：
 
@@ -133,15 +138,21 @@ CI `compose` job：
 - `e2e/playwright.config.ts` 的後端 `webServer.env` 加 `CELERY_TASK_ALWAYS_EAGER: "true"`；`E2E_TARGET=compose` 時沒有 `webServer`，不受影響
 - 本機想走真佇列的步驟（清掉 eager、`docker run redis:7`、另開 `celery -A app.worker worker`、Windows 加 `--pool=solo`）寫進 `local-development.mdx`（技術預設 T9）
 
-### D13 常駐文件由 technical-writer 在實作群組最後一個 task 之前改
+### D13 常駐文件的負責角色
 
-`rules.tasks` 寫「依實作校正常駐文件由寫那段程式的實作角色完成」，但 `clarification.md`「交給後續產出」明定 `backend-modules.mdx`、`architecture.mdx`、`backend-agent-rules`、ADR-003、ADR-008 D3、`local-development.mdx` 與 `.env.example` 標 `[@technical-writer]`。clarification 是本 change 的決議，以它為準；tasks 把這些文件放在後端群組最後一個 task（契約漂移檢查）之前，讓 technical-writer 依已完成的程式校正。`.env.example` 是編排與設定的一部分，但同樣交 technical-writer，並由後續的容器編排驗證證明可用。
+依 `rules.tasks`「依實作校正常駐文件由寫那段程式的實作角色在自己的 task 內完成」：
+
+- `docs/diagrams/architecture/backend-modules.mdx` 由 `[@backend-developer]` 在群組 2 契約漂移 task 之前的 task 內依實作校正（同群組寫了 `app/mail/`、`app/worker.py`、`app/core/celery_app.py`）
+- `.env.example` 由 `[@backend-developer]` 在 1.2 與新設定一起改，群組 3 的編排檔與容器編排驗證直接用到它
+- `architecture.mdx`、`backend-agent-rules`、ADR-003（含 Q8 的決定與 Q9 的決策紀錄）、ADR-008 D3、`local-development.mdx` 交 `[@technical-writer]`，排在實作群組最後一個 task（整合驗證）之前
+
+clarification「交給後續產出」列出的文件清單不變；沒有任何 Q 推翻 `rules.tasks` 的角色規則，所以角色以 `rules.tasks` 為準。
 
 ## Risks / Trade-offs
 
-- [Redis 單實例掉訊息時佇列中的信會遺失] → ADR-003 D8 已接受；消費者可保存 `enqueue` 回的 `mail_id` 自行追蹤
+- [Redis 單實例掉訊息時佇列中的信會遺失] → 這些信使用者都能重新觸發（重寄、重新邀請），不重開 ADR-003 D8（clarification Q9）；消費者可保存 `enqueue` 回的 `mail_id` 自行追蹤
 - [一次性連結在 worker 取走前以明文停在 Redis] → Redis 不發布埠、ack 後即刪、`argsrepr` 遮蔽、`ignore_result`（clarification Q3）
-- [只設 `RESEND_API_KEY` 的既有部署升級後拒絕啟動] → 錯誤訊息點名 `MAIL_FROM`；`.env.example` 與 `local-development.mdx` 寫明兩者一起設；PR 說明列為部署設定的 BREAKING
+- [只設 `RESEND_API_KEY` 的既有部署升級後拒絕啟動] → 錯誤訊息點名 `MAIL_FROM`；`.env.example` 與 `local-development.mdx` 寫明兩者一起設；PR 說明以升級注意事項列出這項部署設定的 BREAKING
 - [寄信服務冪等鍵的有效期短於整段重試（約 13 分鐘）時可能重寄] → apply 時先查證寄信服務文件，結果寫進 `backend-modules.mdx` 的「背景工作與寄信」一節；若有效期不足，屬故障類中斷，停下回報
 - [eager 下重試立即同步重跑、看不到退避] → 只在本機與 e2e；重試政策以 `send_mail.apply()` 的單元測試驗證
 - [本機設了 `DATABASE_URL` 指向本機 PostgreSQL 又沿用範例檔的 eager 時，`pnpm run dev` 拒絕啟動] → 錯誤訊息點名 `CELERY_TASK_ALWAYS_EAGER`；`local-development.mdx` 寫明要改走真佇列
@@ -159,7 +170,7 @@ CI `compose` job：
 
 資料庫：無 migration，Alembic revision 不變。
 
-回滾：還原本 change 的 commit 後重新 `up --build`；編排檔不再有 `redis` 與 `worker`，`docker compose up --remove-orphans` 移除兩個孤兒容器。`MAIL_FROM` 留在 `.env` 不影響舊版（舊版不讀它）。Redis 沒有掛 volume，回滾不留資料；回滾當下佇列裡還沒寄出的信會遺失，與 ADR-003 D8 接受的範圍相同。
+回滾：還原本 change 的 commit 後重新 `up --build`；編排檔不再有 `redis` 與 `worker`，`docker compose up --remove-orphans` 移除兩個孤兒容器。`MAIL_FROM` 留在 `.env` 不影響舊版（舊版不讀它）。Redis 沒有掛 volume，回滾不留資料；回滾當下佇列裡還沒寄出的信會遺失；使用者可重新觸發（clarification Q9）。
 
 ## Open Questions
 
