@@ -22,6 +22,9 @@
  * - The backend's allowed origin is derived from E2E_BASE_URL and the
  *   frontend's API base URL from E2E_API_URL, both passed explicitly through
  *   `webServer.env`; the root `.env` is never read (D8a point 3).
+ * - The backend runs background work in its own process
+ *   (CELERY_TASK_ALWAYS_EAGER=true), so no Redis or worker is needed; compose
+ *   mode starts no backend and passes no such value (email-celery-worker D12).
  * - The backend runs on a SQLite file under the Playwright output directory,
  *   which Playwright clears before it starts the web servers, so every run
  *   migrates a fresh database.
@@ -139,6 +142,9 @@ function devServerConfig(): PlaywrightTestConfig {
         env: {
           CORS_ALLOWED_ORIGINS: baseUrl.origin,
           SQLITE_PATH,
+          // Background work runs in the backend process: no Redis, no worker.
+          // Fixed here, never read from the root .env (e2e-testing spec).
+          CELERY_TASK_ALWAYS_EAGER: "true",
         },
         reuseExistingServer: !isCI,
         timeout: 120_000,

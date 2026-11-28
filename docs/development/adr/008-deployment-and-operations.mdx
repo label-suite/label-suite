@@ -109,14 +109,14 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；有 Cloudflare 時用�
 
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
-| A Resend | 來源記錄：有官方 SDK，免費額度每月 3,000 封、每日 100 封，設定只要一個 `RESEND_API_KEY` | 外部 SaaS 依賴；要設定 SPF 與 DKIM 才有送達率；要有 token 儲存 | 採用 |
+| A Resend | 來源記錄：有官方 SDK，免費額度每月 3,000 封、每日 100 封，設定只要一個 `RESEND_API_KEY`；現行以既有 HTTP 客戶端 `httpx` 呼叫寄信服務的 HTTP API，不用 SDK | 外部 SaaS 依賴；要設定 SPF 與 DKIM 才有送達率；要有 token 儲存 | 採用 |
 | B Brevo、SendGrid | 來源記錄：Brevo 走 SMTP relay | 來源記錄：設定更多，在這個規模沒有明顯優勢 | 不採用 |
 | C Gmail SMTP | 來源記錄：沒有記錄好處 | 來源記錄：綁個人帳號，要 2FA 加 App Password，Google 可能撤銷；有供應商政策風險 | 不採用 |
 | D 不寄信，由管理員重設 | 來源記錄：沒有記錄好處 | 來源記錄：運維負擔無法接受 | 不採用 |
 
 ### 決定
 
-用 Resend 寄信，`RESEND_API_KEY` 是可選設定；沒設 key 時，把設定密碼連結印在伺服器 log，由部署者轉給使用者，所以 Lite 層的 log 視為敏感，畫面也要讓管理員知道信沒有寄出去。降級路徑的形狀與 Google SSO 的可選整合一致（[ADR-004 的 D4](004-auth-and-security.mdx#d4-google-sso-直接走-oidc)），畫面條文見[規格 06-01 的 Q9 至 Q11](../../specs/06-admin/01-user-management.mdx#已確認決議)。信由 API 還是 worker 寄出，見 [architecture.mdx 的 §容器視圖](../architecture.mdx#容器視圖c4-第二層)；沒有 key 時關閉自行註冊，註冊頁與註冊的送出都拒絕，Lite 部署只能由系統管理員邀請帳號，見[規格 01-02 的 Q10](../../specs/01-account/02-register.mdx#已確認決議)。
+用 Resend 寄信，`RESEND_API_KEY` 是可選設定；沒設 key 時，把設定密碼連結印在伺服器 log，由部署者轉給使用者，所以 Lite 層的 log 視為敏感，畫面也要讓管理員知道信沒有寄出去。降級路徑的形狀與 Google SSO 的可選整合一致（[ADR-004 的 D4](004-auth-and-security.mdx#d4-google-sso-直接走-oidc)），畫面條文見[規格 06-01 的 Q9 至 Q11](../../specs/06-admin/01-user-management.mdx#已確認決議)。寄信有兩種寄法並存：當場寄由 API 在請求內寄一次，排入背景由 worker 依重試政策寄，見 [architecture.mdx 的 §容器視圖](../architecture.mdx#容器視圖c4-第二層)；設定了寄信服務但寄不出時，回報給呼叫端，不印連結；沒有 key 時關閉自行註冊，註冊頁與註冊的送出都拒絕，Lite 部署只能由系統管理員邀請帳號，見[規格 01-02 的 Q10](../../specs/01-account/02-register.mdx#已確認決議)。
 
 ### 後果
 
@@ -130,6 +130,7 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；有 Cloudflare 時用�
 - 要有 token 儲存
 - Lite 層的 log 含可用的設定密碼連結，必須當敏感資料處理
 - 沒有 key 時，連結要由部署者手動轉給使用者
+- 設定了寄信服務但寄不出時不印連結，由呼叫端決定怎麼告知使用者
 - 沒有設定寄信服務的 Lite 部署沒有自行註冊，帳號只能由系統管理員邀請（維護者 2026-11-26 裁定）
 
 ### 什麼情況要重新討論
@@ -466,6 +467,7 @@ Celery worker 維持 warm shutdown：收到 SIGTERM 後不再領新任務，把�
 | D1 | 個人 repo ADR-008（Context、Candidates、Consequences）與 ADR-023（Candidates、Cloudflare 的角色、Consequences）。選項 A 的好處取自兩份的 Decision；選項 B 至 F 的好處沒有記錄的，已在表內標明。「單人研究系統的 MVP 階段」「Demo Paper 一個指令啟動」「單人開發、沒有 Kubernetes 經驗」都依賴本 repo 沒有確認的前提（研究原型、論文與 demo）；本 repo 是否同樣認定，來源沒有記錄。ADR-023 的其餘內容本 repo 不採用：地端伺服器計畫與主機命名、staging 與 production 的政策（改由 [commit-and-release.md](../workflow/commit-and-release.md) 的三分支規劃管）、Nginx 路由契約、secrets 清單、以 image tag 回滾、延後的決定。本節的重新討論條件是推論，來源沒有記錄 |
 | D2 | 個人 repo ADR-008 的 Image Strategy。來源只記錄共用 image 的理由，沒有把另寫 Dockerfile 列為選項；選項 B 是推論。NLP 套件要宣告在同一份 `pyproject.toml` 出自 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務)。本節的重新討論條件是推論，來源沒有記錄 |
 | D3 | 個人 repo ADR-013（Candidates、Rejected、Consequences）。來源沒有降級路徑；降級路徑出自維護者裁定（#105 第 4 列，裁定記錄的理由是與 Google SSO 的可選整合形狀一致，並要求明寫 Lite 層 log 視為敏感，在規格與畫面讓管理員知道信沒有寄出），畫面條文出自規格 06-01 的 Q9 至 Q11。選項 B 的好處只記錄了「走 SMTP relay」。本節的重新討論條件中，免費額度取自來源，Lite 層 log 那一條是推論，來源沒有記錄 |
+| D3（寄信的兩種寄法） | email-celery-worker 的 clarification Q1（兩種寄法並存）、Q2（設定了但寄不出不印連結，以本節與規格 06-01 為準）、Q7（以 `httpx` 呼叫 HTTP API，不新增 SDK） |
 | D4 | 個人 repo ADR-018（Candidates Evaluated 與各項的 rejected 理由）、ADR-020（Candidates Evaluated 與各項的 rejected 理由）、維護者裁定（#105 第 6 列：`ai_runs` 不是運維工具而是研究可追溯性；代價是出錯時只能看 log、沒有告警），PRD 的定位出自 [architecture.mdx 的 §部署與維運](../architecture.mdx#部署與維運)。兩份來源本身是 Accepted，本 repo 本期不做它們。ADR-018 與 ADR-020 的儀表板、告警範圍、標籤隱私規則、Sentry 的脫敏與 source map 規則本 repo 不採用，因為本期不做。選項 F 的好處與維護者裁定的代價出自上述兩處。本節的重新討論條件中，第一條出自 PRD 的定位、第二條是推論，來源沒有記錄 |
 | D5 | 個人 repo ADR-019（Design Options Evaluated、Decision、Consequences）。分界出自 [architecture.mdx 的 §稽核與可追溯](../architecture.mdx#稽核與可追溯)。來源的資料模型把 `ai_runs` 列寫成有 `status` 與 `completed_at`，與本 repo 的「只新增」有出入，本 repo 改由 `ai_run_events` 表達這兩個值。來源的事件清單依賴 ADR-017 的 Planner、Generator、Evaluator 分層，ADR-017 在本 repo 的效力已改連到 [ADR-002 的 D4](002-development-workflow.mdx#d4-規劃實作審查與驗收由不同角色負責)，本 repo 不採用該事件清單；來源的角色存取表用的是個人 repo 的角色名稱，本 repo 不採用；快照的儲存後端在來源是延後的決定，本 repo 沒有核對。本節的重新討論條件是推論，來源沒有記錄 |
 | D6 | 個人 repo ADR-032（Options、Decision、Consequences）。同交易寫入對應 [backend-agent-rules.mdx 的 B4](../rules/backend-agent-rules.mdx#b4-交易的擁有層)；至少保留 1 個曆年出自規格 06-02。選項 A、B 的好處沒有記錄；選項 C 的好處取自來源的選擇理由。來源的存取角色（個人 repo 的角色名稱）、事件目錄、索引、候選 FK、系統行為人的 CHECK 與原型豁免本 repo 不採用，由資料表字典與規格管。本節的重新討論條件是推論，來源沒有記錄 |
@@ -503,3 +505,4 @@ Celery worker 維持 warm shutdown：收到 SIGTERM 後不再領新任務，把�
 | 2026-11-26 | 接受刪除請求在備份裡的七天曝險並寫進隱私說明；刪除請求另記小表，還原後先重新套用（[D9](#d9-資料備援只做正式層備份產出到獨立-volume)、[D7](#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)） | —（原為待決） | [#687](https://github.com/label-suite/label-suite/issues/687) |
 | 2026-11-26 | 六題欄位與表的細節：刪除請求小表放同一個 PostgreSQL、不對 `users` 加 FK、備份之外另留一份；匿名化時 `email` 改寫成 `deleted-<id>@invalid`、`name` 改寫成「已刪除的使用者」；`status` 為 `queued`／`running`／`succeeded`／`failed`／`cancelled`（後三者終態）；`ai_run_events` 加可為 null 的 `payload`，由終態事件帶（超出第 2 列字面的「status、at」，維護者已確認）；`dataset_version` 定版後只有撤回兩欄可從 null 寫一次；欄名與型別照草案（[D5](#d5-ai-可追溯用只新增的-ai_runs-表)、[D7](#d7-稽核保留至少一個曆年刪除請求就地匿名化同一列)） | —（補足上列八列未定的細節） | [#687 的回覆](https://github.com/label-suite/label-suite/issues/687#issuecomment-7183496309) |
 | 2026-11-26 | 沒設 key 時關閉自行註冊（[D3](#d3-寄信用-resend沒設-key-時把連結印到-log)） | —（原為 architecture §待決 第 2 列） | [#683](https://github.com/label-suite/label-suite/issues/683) |
+| 2026-11-28 | 寄信有當場寄與排入背景兩種寄法並存；設定了寄信服務但寄不出時不印連結；現行以 `httpx` 呼叫寄信服務的 HTTP API（[D3](#d3-寄信用-resend沒設-key-時把連結印到-log)） | D3 原本把「API 或 worker 寄」留給後端設計，也沒有寫設定了但寄不出的處理 | [#756](https://github.com/label-suite/label-suite/issues/756)；email-celery-worker clarification Q1、Q2、Q7 |

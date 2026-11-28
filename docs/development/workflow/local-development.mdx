@@ -33,7 +33,7 @@ cp .env.example .env           # 本機設定，.env 已被 Git 忽略；bootstr
 
 ## 用 Docker Compose 起整套
 
-Lite 層一條指令起 migrate、後端與前端，只有前端容器對外開埠：
+Lite 層一條指令起 migrate、後端、Redis、worker 與前端，只有前端容器對外開埠；兩層的容器裡一律是真的 Redis 加 worker，不開 `CELERY_TASK_ALWAYS_EAGER`：
 
 ```bash
 docker compose up --build --wait --wait-timeout 300
@@ -41,7 +41,7 @@ curl http://localhost:8080/api/v1/health   # data.status 與 data.database 都�
 docker compose down -v                     # 停掉並刪掉資料 volume
 ```
 
-正式層另有一份獨立的編排檔，多一個 PostgreSQL 容器，要先在 `.env` 填 `POSTGRES_PASSWORD`：
+正式層另有一份獨立的編排檔，多一個 PostgreSQL 容器（同樣有 `redis` 與 `worker`），要先在 `.env` 填 `POSTGRES_PASSWORD`：
 
 ```bash
 docker compose -f docker-compose.prod.yml up --build --wait --wait-timeout 300
@@ -86,6 +86,7 @@ VITE_API_BASE_URL=http://localhost:8000 pnpm --filter frontend dev
 
 只有 `pnpm run dev` 會讀根目錄 `.env`；分開起時兩個終端機都要自己帶變數：後端沒有 `CORS_ALLOWED_ORIGINS` 不會啟動，前端沒有 `VITE_API_BASE_URL` 會把 API 請求打到 `5173` 自己（Vite 沒有 proxy）。
 Lite 層的資料庫檔預設在 `backend/data/label_suite.db`，已被 Git 忽略；刪掉它就是重置資料。
+分開起時不會有 Redis 與 worker：要在行程內執行背景工作，後端那個終端機加 `CELERY_TASK_ALWAYS_EAGER=true`，或照 [§想走真佇列時](#想走真佇列時)起 Redis 與 worker。
 
 ### 讓 `pnpm run dev` 自動建立本機管理員
 
@@ -100,6 +101,21 @@ Lite 層的資料庫檔預設在 `backend/data/label_suite.db`，已被 Git 忽�
 | 同一個 Email 已是 Seeder 管理員 | `create_seeder` 退出碼 `0`、什麼都不改，所以每次啟動重跑是安全的 |
 
 三個變數只有 `pnpm run dev` 讀；Docker Lite 與正式層不讀。密碼只放你自己的 `.env`，`.env.example` 的值一律留空。
+
+### 想走真佇列時
+
+`pnpm run dev` 預設在後端行程內執行背景工作（寄信等），不需要 Redis 與 worker；想測真的排隊、重試與 worker，才改走真佇列：
+
+1. 清掉 `.env` 的 `CELERY_TASK_ALWAYS_EAGER`（刪掉那一行，或改成 `false`）
+2. 起 Redis：`docker run --rm -p 6379:6379 redis:7`
+3. 另開一個終端機起 worker：`cd backend && uv run celery -A app.worker worker`
+4. 照常 `pnpm run dev`
+
+Windows 的 worker 加 `--pool=solo`：`cd backend && uv run celery -A app.worker worker --pool=solo`。
+worker 只讀自己終端機的環境變數，不讀 `.env`；`REDIS_URL` 沒設時兩邊都用 `redis://localhost:6379`，要換位址、帶寄信設定（`RESEND_API_KEY` 與 `MAIL_FROM`）或 `DATABASE_URL` 時，後端與 worker 要設成同一組值。
+起好之後 `cd backend && uv run celery -A app.worker inspect ping` 回 `pong` 就是 worker 連上了。
+
+設了 `DATABASE_URL` 時不可開 `CELERY_TASK_ALWAYS_EAGER`，後端與 worker 都會拒絕啟動，錯誤訊息點名 `CELERY_TASK_ALWAYS_EAGER`；對本機 PostgreSQL 開發就要走真佇列。
 
 ## 建立第一位系統管理員
 
@@ -155,7 +171,10 @@ PostgreSQL 輪不應該有任何測試被跳過；CI 會用 `scripts/check-junit
 | `FORWARDED_ALLOW_IPS` | 後端信任哪些代理位址的 `X-Forwarded-For` 與 `X-Forwarded-Proto`；逗號分隔的單一 IP 或 CIDR，不得為 `*` 或涵蓋全部位址的網段，非法值讓後端拒絕啟動。後端只驗證，比對由 uvicorn 做 | 未設時只信任 loopback（`127.0.0.1,::1`），所以本機 `pnpm run dev` 不需設定，`.env.example` 也把它註解掉；兩份編排檔傳入並預設為 `frontend` 的固定位址 `10.77.250.10` | 後端、兩份編排檔 |
 | `AUTH_SECRET` | 簽登入用的 access token、CSRF 值與 Google 登入流程 cookie 的祕密，至少 32 字元；空字串等同沒設 | Lite 層可以不設：後端第一次啟動時產生一把，存成 `SQLITE_PATH` 同目錄的 `auth_secret`（權限 `0600`；容器裡在資料 volume），之後重用，刪掉 volume 或這個檔案等於所有人登出。正式層必填：`docker-compose.prod.yml` 沒有它就不建任何容器，設了 `DATABASE_URL` 的後端沒有它就拒絕啟動。`.env.example` 刻意留空 | 後端、兩份編排檔 |
 | `GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`、`GOOGLE_REDIRECT_URI` | Google 登入；三個一起設或都不設，只設一部分時後端拒絕啟動。`GOOGLE_REDIRECT_URI` 是前端的回調頁，例 `http://localhost:8080/account/google/callback` | 都不設：登入頁不顯示 Google 按鈕；空字串等同沒設 | 後端、兩份編排檔 |
-| `RESEND_API_KEY` | 寄信服務的金鑰；後端目前只看它有沒有設，有設時登入頁提供「前往註冊」 | 不設；空字串等同沒設 | 後端、兩份編排檔 |
+| `RESEND_API_KEY` | 寄信服務的金鑰；與 `MAIL_FROM` 都有設才算設定了寄信服務，設定了時登入頁提供「前往註冊」。**升級注意（BREAKING）**：只設它、沒設 `MAIL_FROM` 時後端與 worker 拒絕啟動，錯誤訊息點名缺的那個 | 不設；空字串等同沒設 | 後端、worker、兩份編排檔 |
+| `MAIL_FROM` | 每封信的寄件人，例 `Label Suite <noreply@example.com>`；與 `RESEND_API_KEY` 一起設或都不設，只設它也拒絕啟動；必須在同一行，含換行時拒絕啟動 | 不設；空字串等同沒設 | 後端、worker、兩份編排檔 |
+| `REDIS_URL` | 背景工作的佇列位址：`redis://` 或 `rediss://` 加主機，可帶埠、帳密與查詢字串，不帶資料庫編號（佇列固定用 DB 0、結果用 DB 1） | `redis://localhost:6379`；兩份編排檔固定為 `redis://redis:6379`，不讀它，所以 `.env.example` 把它註解掉 | 後端、worker（容器外跑時） |
+| `CELERY_TASK_ALWAYS_EAGER` | 為 `true` 時背景工作在後端行程內執行，不經 Redis 與 worker；與 `DATABASE_URL` 同時設時後端與 worker 拒絕啟動；編排檔不傳它，容器裡不得設。用法見 [§想走真佇列時](#想走真佇列時) | `false`；`.env.example` 給 `true`，只有 `pnpm run dev` 讀 | 後端、worker、`scripts/dev.mjs` |
 | `FRONTEND_PORT` | 前端容器在主機上公開的埠，是兩層唯一公開的埠 | `8080` | 兩份編排檔 |
 | `DEV_SEED_ADMIN_EMAIL`、`DEV_SEED_ADMIN_NAME`、`DEV_SEED_ADMIN_PASSWORD` | `pnpm run dev` 啟動前建立本機 Seeder 管理員；三個一起填才生效，行為見 [§讓 `pnpm run dev` 自動建立本機管理員](#讓-pnpm-run-dev-自動建立本機管理員) | 不填；`.env.example` 刻意留空 | `scripts/dev.mjs` |
 | `BACKEND_PORT` | `pnpm run dev` 啟動本機後端的埠；編排檔不讀，容器內的後端不對主機開埠 | `8000` | `scripts/dev.mjs` |

@@ -83,11 +83,11 @@ import ArchitectureContainerView from '@notes/components/architecture-container-
 | Nginx | 唯一的公開入口：服務前端的 `/dist`，把 `/api/v1` 反向代理到 API，擋安全標頭並隔離內部服務 |
 | 前端 SPA | 在瀏覽器執行，經 Nginx 以 JSON 呼叫 `/api/v1`，身分放在 httpOnly cookie |
 | API | 認證、授權、業務邏輯；評分只送進佇列再回查狀態；以 OIDC 驗證 Google 登入、透過 Resend 寄信 |
-| 背景 worker | 與 API 共用同一個 image，從 `scoring`、`default` 佇列取任務；只有它讀測試集答案 |
+| 背景 worker | 與 API 共用同一個 image，從 `scoring`、`default` 佇列取任務，包含排入背景的信；只有它讀測試集答案 |
 | Redis | broker、result backend、應用快取 |
 | 資料庫 | 業務資料與獨立、受存取控制的測試集答案表 |
 
-信由 API 直接寄出還是送進 `default` 佇列由 worker 寄，本文沒有規定，留給後端設計決定。
+寄信有兩種寄法並存，共用同一個寄信入口：當場寄由 API 在請求內寄一次、結果當下回報；排入背景則送進 `default` 佇列，由 worker 依重試政策寄。每個功能用哪一種由它的規格決定，流程見 [§寄信的共用流程](#寄信的共用流程)。
 
 ## 後端分層
 
@@ -116,7 +116,7 @@ import ArchitectureBackendLayers from '@notes/components/architecture-backend-la
 | Router | 路由、request／response schema、取得呼叫者、套用欄位遮蔽 | 不碰 Repository、不寫商業邏輯 |
 | Service | 查詢條件、狀態機轉移、權限以外的業務卡控、寫 `audit_events` | 不組 HTTP 回應、不自己讀 `Accept-Language` |
 | Repository 與 model | 資料存取；schema 只由 Alembic migration 管 | 不寫原生 SQL（migration DDL 例外） |
-| Celery task | 評分、IAA 計算、匯出等長時間工作 | 不處理 HTTP、不回傳使用者可見訊息 |
+| Celery task | 評分、IAA 計算、匯出等長時間工作；雜務（寄信）走 `default` 佇列 | 不處理 HTTP、不回傳使用者可見訊息 |
 
 任務狀態機只實作在 service 層，轉移條件以 `docs/specs/` 與 PRD §共用狀態機為準，不以個人 repo ADR-022 的表為準。
 反向轉移只允許 `waiting_iaa_confirmation` 回 `draft` 與回 `dry_run_in_progress` 兩條，其他一律丟 `InvalidTransitionError`。
@@ -233,7 +233,7 @@ Google 回報 `email_verified: true` 時才自動綁定既有 Email 帳號，並
 | Lite | SQLite | 本機試用、單人、評估 | 預設，不需設定 |
 | 正式 | PostgreSQL 16 | 多人、並發寫入、部署 | 設 `DATABASE_URL` |
 
-Lite 層的資料放在持久化的具名 volume `label-suite-data`（掛在 `/app/data`），目前由 `migrate` 與 `backend` 掛載；之後加入的 `worker` 也要掛同一個 volume，否則 worker 寫的資料 API 讀不到。
+Lite 層的資料放在持久化的具名 volume `label-suite-data`（掛在 `/app/data`），由 `migrate`、`backend` 與 `worker` 掛載，worker 寫的資料 API 才讀得到。
 
 :::note{title="驅動與設定存放" collapsible}
 同一層的 API 與 worker 用不同驅動，因為 Celery 跑在同步執行緒裡，不能用 async engine：
@@ -267,6 +267,35 @@ Redis 7 同時當 broker、result backend 與應用快取，用 DB 編號隔開�
 `worker` 與 `backend` 共用同一個 image，所以 NLP 評估套件（`krippendorff`、`seqeval`、`scipy`）要宣告在 `pyproject.toml` 裡。
 
 重試三次代表寫結果那一步會跑不只一次：背景計算的結果表要有「一份輸入最多一份結果」的唯一鍵，寫入用各 dialect 的 `on_conflict` 做 upsert，不先刪後寫（[ADR-003 的 D10](adr/003-backend-architecture.mdx#d10-背景計算的結果寫入做成冪等)）。
+:::
+
+### 寄信的共用流程
+
+所有寄信都經 `app/mail/` 這一個入口的 `MailService`，不經 `submission`，也不另開資料表。
+
+| 寄法 | 呼叫 | 結果 |
+| :--- | :--- | :--- |
+| 排入背景 | `enqueue`：送進 `default` 佇列，由 `send_mail` task 寄 | `QUEUED`；沒有設定寄信服務回 `NOT_CONFIGURED`；排不進佇列時丟 `MailQueueUnavailableError`，不自動改成當場寄 |
+| 當場寄 | `send_now`：在 worker thread 呼叫寄信服務一次，不重試、不經佇列 | `SENT`、`FAILED` 或 `NOT_CONFIGURED` |
+
+- 呼叫在交易 commit 之後，由消費者的 service 發出；router 不 import 寄信入口（[B4](rules/backend-agent-rules.mdx#b4-交易的擁有層)）
+- 沒有設定寄信服務（`RESEND_API_KEY` 與 `MAIL_FROM` 都沒設）時兩種寄法都不寄、不碰佇列；要不要把連結交給部署者由消費者依規格決定，用 `record_unsent_link` 寫進專用 logger `app.mail.unsent_link`，一般 log 管道看不到
+- 設定了但寄不出（寄信服務拒絕、重試用盡、排不進佇列）一律回報給呼叫端，不印連結
+- `send_mail` task 的參數是信件本身與 `mail_id`，不是資料庫識別資訊；task 不開資料庫連線、不 import 業務模組，所以不重查權限，這是 [B9](rules/backend-agent-rules.mdx#b9-celery-的界線) 的例外
+- 冪等靠冪等鍵：`mail_id`（UUID4）當寄信服務的 `Idempotency-Key`，重試重送同一封不會寄兩次
+- 最終失敗（永久性錯誤、重試用盡）只留一行 `ERROR` log，不寫進資料庫；信件不是需要事後查詢的業務資料
+
+:::note{title="寄信的重試與 log 欄位" collapsible}
+| 項目 | 值 |
+| :--- | :--- |
+| 暫時性失敗 | 連線錯誤、逾時、`429`、`5xx`、錯誤種類為 `concurrent_idempotent_requests` 的 `409`；依 60、180、540 秒最多重試三次 |
+| 永久性失敗 | 其他 `4xx`（含錯誤種類為 `invalid_idempotent_request` 的 `409`），不重試 |
+| 單次呼叫逾時 | 寄信服務 10 秒；佇列 socket 逾時 2 秒，排入的最壞情況約數秒 |
+| log 欄位 | 只有 `mailId`、`kind`、`mode`、`outcome`、`attempt` 或 `attempts`、固定字彙的 `reason`、`excType`、`providerMessageId`；不寫收件者、主旨、內文、連結、寄件人與寄信服務的錯誤本文；`httpx`、`httpcore` 的 logger 固定 `WARNING` |
+| 佇列中的明文 | 信件內容（含一次性連結）在 worker 取走前明文停在 Redis：Redis 不對外發布埠、ack 後即刪，Celery 的 `argsrepr` 遮蔽參數、`ignore_result` 不存結果 |
+| Redis 掉訊息 | 佇列中未寄出的信會遺失；這些信使用者都能重新觸發，不重開 [ADR-003 的 D8](adr/003-backend-architecture.mdx#d8-非同步任務用-celery-加-redis) |
+
+寄信 task 在 `app/mail/tasks.py`，由 `app/worker.py` 登記（[ADR-003 的 D15](adr/003-backend-architecture.mdx#d15-共用基礎建設的-celery-task-落在它的入口套件)）。
 :::
 
 ## i18n 兩層
@@ -357,7 +386,7 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，�
 
 | 面向 | 做法 |
 | :--- | :--- |
-| 本機與 CI | `docker compose up`；CI 的 `backend-postgres` job 用 workflow 的 `postgres:16` service container 跑 PostgreSQL 那一輪測試，沒有 Redis；`compose` job 只在 PR 動到編排、image 或它們執行的程式時跑，以 `docker compose up --build --wait` 實際啟動 Lite 與正式兩層，經 Nginx 檢查健康，並在兩層以 `scripts/check-security-headers.sh` 比對公開入口的安全標頭：頁面殼、前端路由深層路徑、建置資源、後端成功、後端錯誤、Nginx 自產的 405、停後端後的 502 或 504，外加帶身分憑證的兩個變體；正式層另以 `E2E_TARGET=compose` 跑一條瀏覽器檢查，確認 CSP 不擋前端自己的資源。`compose` 不列必過。本機對任一層起來後，執行 `scripts/check-security-headers.sh http://localhost:<埠>`（停掉後端後加 `--backend-down`）即可複查。本機的日常步驟見 [本機開發](workflow/local-development.mdx)與 [API 契約日常流程](workflow/api-contract-workflow.mdx) |
+| 本機與 CI | `docker compose up`；CI 的 `backend-postgres` job 用 workflow 的 `postgres:16` service container 跑 PostgreSQL 那一輪測試，沒有 Redis，寄信與背景工作的測試以 `.apply()` 加 `httpx` 替身在行程內跑；`pnpm run dev` 與 e2e 的後端預設 `CELERY_TASK_ALWAYS_EAGER=true`，背景工作在後端行程內執行，不需要 Redis 與 worker，容器裡不得設，設了 `DATABASE_URL` 時後端與 worker 拒絕啟動。兩層 Compose 都多 `redis` 與 `worker` 兩個服務（`redis:7-alpine` 不發布埠；`worker` 與 `backend` 同一個 image，Lite 層掛同一個資料 volume）；`compose` job 只在 PR 動到編排、image 或它們執行的程式時跑，以 `docker compose up --build --wait` 實際啟動 Lite 與正式兩層，結構斷言檢查兩層的 `redis`、`worker`、`REDIS_URL`、`RESEND_API_KEY`、`MAIL_FROM` 與沒有任何服務帶 `CELERY_TASK_ALWAYS_EAGER`，兩層起來後各跑一次 `docker compose exec -T worker celery -A app.worker inspect ping` 要回 `pong`，經 Nginx 檢查健康，並在兩層以 `scripts/check-security-headers.sh` 比對公開入口的安全標頭：頁面殼、前端路由深層路徑、建置資源、後端成功、後端錯誤、Nginx 自產的 405、停後端後的 502 或 504，外加帶身分憑證的兩個變體；正式層另以 `E2E_TARGET=compose` 跑一條瀏覽器檢查，確認 CSP 不擋前端自己的資源。`compose` 不列必過。本機對任一層起來後，執行 `scripts/check-security-headers.sh http://localhost:<埠>`（停掉後端後加 `--backend-down`）即可複查。本機的日常步驟見 [本機開發](workflow/local-development.mdx)與 [API 契約日常流程](workflow/api-contract-workflow.mdx) |
 | 正式環境 | Compose 加 Nginx；有的話用 Cloudflare 當 DNS、CDN 與 TLS 邊緣，Nginx 仍要擋安全標頭與隔離內部服務。HSTS 由 TLS 邊緣負責，Nginx 不發，所以正式層必須放在 TLS 後面（`Secure` 與 `__Host-` cookie 的前提）。邊緣代理可能改寫或移除 origin 的標頭，本 repo 只驗到 origin；部署後以 `curl -I https://<網域>/` 自查同一組標頭 |
 | 來源位址 | 後端只信任 Nginx 的 `X-Forwarded-For` 與 `X-Forwarded-Proto`：兩份編排檔把預設網路固定為子網段 `10.77.250.0/24`（動態配位限 `ip_range` `10.77.250.128/25`），`frontend` 釘在該網段內、`ip_range` 外的 `10.77.250.10`，後端的 `FORWARDED_ALLOW_IPS` 預設 `${FORWARDED_ALLOW_IPS:-10.77.250.10}`，所以只信任這一個位址，同網路其他容器偽造的標頭不被採信。比對由 uvicorn 內建的代理標頭處理做，取值是由右往左第一個不受信任的位址；`backend/Dockerfile` 的 `CMD` 不帶旗標。沒有 Nginx（本機 `pnpm run dev`、直接起後端）時未設變數，只信任 loopback。後端的 `Settings` 在啟動時驗證該變數，`*`、前綴長度 0、主機名稱與空項目讓服務拒絕啟動，錯誤訊息只含變數名；CI 的 `compose` job 靜態比對兩份編排檔的網路與預設值，並在 Lite 層送一般與偽造請求，確認回報的來源位址不是 `frontend` 的位址也不是偽造值 |
 | 登入的祕密 | 正式層必須設 `AUTH_SECRET`（至少 32 字元）：`docker-compose.prod.yml` 沒有它就不建任何容器，設了 `DATABASE_URL` 的後端沒有它就拒絕啟動。Lite 層可以不設：後端第一次啟動時產生一把，存成資料 volume `label-suite-data` 裡的 `/app/data/auth_secret`，之後重用；log 只寫來源與路徑。刪掉這個 volume（`docker compose down -v`）或這個檔案，所有登入狀態都驗不過，等於全部登出 |
@@ -365,10 +394,10 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，�
 | 第一位系統管理員 | 部署後執行一次初始化指令建立 Seeder 管理員：`docker compose run --rm -it backend python -m app.scripts.create_seeder --email <Email> --name <顯示名稱>`（正式層加 `-f docker-compose.prod.yml`），密碼問兩次、不顯示；同一個 Email 重跑什麼都不改。行為見 [本機開發的「建立第一位系統管理員」](workflow/local-development.mdx#建立第一位系統管理員) |
 | Google 登入 | 可選；要開時 `GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`、`GOOGLE_REDIRECT_URI` 三個一起設，只設一部分後端拒絕啟動，都不設時登入頁不顯示 Google 按鈕。`GOOGLE_REDIRECT_URI` 是前端回調頁的完整網址 `<公開入口>/account/google/callback`，例 Lite 層的 `http://localhost:8080/account/google/callback`，要和在 Google 登記的值相同 |
 | image | 後端與 worker 共用一個多階段 Dockerfile；前端 build 完由 `nginx:alpine` 服務 `/dist` |
-| 寄信 | Resend；沒設 key 時把設定密碼連結印在伺服器 log，由部署者轉給使用者，所以 Lite 層的 log 視為敏感，畫面要讓管理員知道信沒有寄出去（條文見[規格 06-01](../specs/06-admin/01-user-management.mdx#已確認決議) Q9–Q11）。沒設 key 時也關閉自行註冊：註冊頁與註冊的送出都拒絕，Lite 部署只能由系統管理員邀請（條文見[規格 01-02](../specs/01-account/02-register.mdx#已確認決議) Q10）。沒設 key 時也不開放自行換 Email：個人設定的「變更」不可點，要換請系統管理員改（條文見[規格 01-04](../specs/01-account/04-profile.mdx#已確認決議) Q21） |
+| 寄信 | Resend，以 `httpx` 呼叫它的 HTTP API；`RESEND_API_KEY` 與 `MAIL_FROM`（寄件人）一起設或都不設，只設一個時後端與 worker 拒絕啟動，所以已設 `RESEND_API_KEY` 的部署升級前要補 `MAIL_FROM`。兩條寄法與共用流程見 [§寄信的共用流程](#寄信的共用流程)。沒有設定寄信服務時把設定密碼連結印在伺服器 log，由部署者轉給使用者，所以 Lite 層的 log 視為敏感，畫面要讓管理員知道信沒有寄出去（條文見[規格 06-01](../specs/06-admin/01-user-management.mdx#已確認決議) Q9–Q11）。沒設 key 時也關閉自行註冊：註冊頁與註冊的送出都拒絕，Lite 部署只能由系統管理員邀請（條文見[規格 01-02](../specs/01-account/02-register.mdx#已確認決議) Q10）。沒設 key 時也不開放自行換 Email：個人設定的「變更」不可點，要換請系統管理員改（條文見[規格 01-04](../specs/01-account/04-profile.mdx#已確認決議) Q21）。設定了寄信服務但寄不出不屬於「沒有設定」，不印連結，由呼叫端回報 |
 | 監控 | Prometheus、Grafana、Sentry 本期不做，與 PRD「研究原型、不是生產規模服務」的定位一致；代價是出錯時只能看 log，沒有告警 |
 | 備援 | 只做正式層：每日一次 `pg_dump -Fc`，寫到獨立的 backups volume，滾動保留 7 份。Lite 層不做自動備援：資料在具名 volume `label-suite-data`（掛在 `/app/data`），停掉服務再用 `docker compose cp` 把 `backend` 服務的 `/app/data` 複製出來，或在執行中用 `sqlite3 <db> "VACUUM INTO '<path>'"` 取一致副本 —— **不要在服務執行中直接複製檔案，會得到壞檔**。**備份只放在主資料碟上不足以災難復原，異地複製是部署者的責任**；備份檔含測試集答案與個資，存取控制比照原資料庫。為什麼這樣選見 [ADR-008 的 D9](adr/008-deployment-and-operations.mdx#d9-資料備援只做正式層備份產出到獨立-volume) |
-| 停機 | `worker` 的 `stop_grace_period` 要大於單一評分上限 300 秒，不能留在 Compose 預設的 10 秒；收到 SIGTERM 後不再領新任務，手上的跑完才退。`backend` 只要讓進行中的 HTTP 請求收尾，不是 300 秒等級的工作，`30s` 就夠。見 [ADR-008 的 D10](adr/008-deployment-and-operations.mdx#d10-worker-收到-sigterm-先做完手上的任務) |
+| 停機 | `worker` 的 `stop_grace_period` 要大於單一評分上限 300 秒，不能留在 Compose 預設的 10 秒（實際為 `330s`）；收到 SIGTERM 後不再領新任務，手上的跑完才退。`backend` 只要讓進行中的 HTTP 請求收尾，不是 300 秒等級的工作，`30s` 就夠。見 [ADR-008 的 D10](adr/008-deployment-and-operations.mdx#d10-worker-收到-sigterm-先做完手上的任務) |
 | CI 安全掃描 | job `dependency-audit`：後端 `uv run pip-audit`（任何已知弱點都失敗）、前端 `pnpm audit --prod --audit-level high`。**後端比 high 嚴格**，因為 `pip-audit` 2.10.1 沒有嚴重度旗標。job `semgrep`：官方映像 `semgrep/semgrep:1.186.0`，`semgrep --test .semgrep/` 後跑 `semgrep scan --error --config .semgrep/label-suite.yml backend/ frontend/ e2e/` |
 | Compose 最低版本 | **v2.20.0**。`docker compose up --wait` 搭配一次性的 `migrate`（以 `service_completed_successfully` 被依賴）需要；較舊版本會把已結束的一次性容器當成 `--wait` 失敗。`.env.example`、兩份編排檔與 CI `compose` job 的版本檢查用同一個值；下限是保守值，實測在 v5.1.0（本機）與 v5.1.3（CI runner）通過 |
 | 相依套件 | dependabot 警示的升級邊界見 [相依套件政策](workflow/dependency-policy.mdx) |
@@ -401,7 +430,7 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，�
 | :--- | :--- | :--- |
 | [ADR-001](adr/001-agent-engineering.mdx) | Agent 工程 | D1–D5 |
 | [ADR-002](adr/002-development-workflow.mdx) | 開發流程 | D1–D7 |
-| [ADR-003](adr/003-backend-architecture.mdx) | 後端架構 | D1–D14 |
+| [ADR-003](adr/003-backend-architecture.mdx) | 後端架構 | D1–D15 |
 | [ADR-004](adr/004-auth-and-security.mdx) | 認證與安全 | D1–D7 |
 | [ADR-005](adr/005-frontend-architecture.mdx) | 前端架構 | D1–D6 |
 | [ADR-006](adr/006-task-config-and-answer-isolation.mdx) | 任務設定與答案隔離 | D1–D4 |
@@ -518,3 +547,6 @@ Compose 是預設 runtime，Nginx 是唯一公開入口；監控本期不做，�
 | 2026-11-27 | 後端業務模組的切分寫進 [ADR-003 的 D14](adr/003-backend-architecture.mdx#d14-後端業務模組的切分)，模組與資料表歸屬寫在 [backend-modules.mdx](../diagrams/architecture/backend-modules.mdx#預定模組與資料表歸屬)（[§ADR 效力總表](#adr-效力總表)） | — | [#750 留言](https://github.com/label-suite/label-suite/issues/750#issuecomment-7208259366) |
 | 2026-11-27 | 授權第 2 步的任務成員身分與第 4 步的附加條件，由持有資料的模組實作 `app/core/` 定義的 Protocol 提供（[§授權四步](#授權四步)） | §待決 第 2 列「第 2、4 步的資料由持有表的模組經 Protocol 提供，還是各模組在自己的 service 裡呼叫持有那些表的模組的 service」 | [#755](https://github.com/label-suite/label-suite/issues/755) |
 | 2026-11-28 | 語意色只來自 `tokens.css`；資料色（`--data-*`）另外來自 `data-palette.css`，不進對照層，原語不讀（[§前端](#前端)） | 「`tokens.css` 仍是唯一色值來源」的字面 | [#722](https://github.com/label-suite/label-suite/issues/722) 的 clarification Q8 補充決議 |
+| 2026-11-28 | 寄信有當場寄與排入背景兩種寄法並存，共用同一個寄信入口與失敗分類；沒有設定寄信服務才印連結，設定了但寄不出回報給呼叫端（[§容器視圖](#容器視圖c4-第二層)、[§寄信的共用流程](#寄信的共用流程)、[§部署與維運](#部署與維運)） | 「信由 API 直接寄出還是送進 `default` 佇列由 worker 寄，本文沒有規定」 | [#756](https://github.com/label-suite/label-suite/issues/756)；email-celery-worker clarification Q1、Q2 |
+| 2026-11-28 | 寄信 task 不寫資料庫、參數是信件本身、不重查權限，最終失敗只留 log；佇列中的信隨 Redis 遺失時不重開 ADR-003 D8（[§寄信的共用流程](#寄信的共用流程)） | —（B9 原本沒有寄信 task 的例外） | [#756](https://github.com/label-suite/label-suite/issues/756)；email-celery-worker clarification Q3、Q9 |
+| 2026-11-28 | 兩層 Compose 一律有 `redis` 與 `worker`；`pnpm run dev` 與 e2e 預設在後端行程內執行背景工作，容器不得設，`DATABASE_URL` 有設時拒絕；寄信設定 `RESEND_API_KEY` 與 `MAIL_FROM` 全有或全無（[§部署與維運](#部署與維運)） | 「不得有 Redis 或 worker」的範圍排除寫法；`RESEND_API_KEY` 單獨決定有沒有設定寄信服務 | [#756](https://github.com/label-suite/label-suite/issues/756)；email-celery-worker clarification P1、Q6 |

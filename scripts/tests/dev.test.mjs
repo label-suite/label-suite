@@ -175,6 +175,25 @@ describe("devCommands", () => {
   });
 });
 
+describe("loadDevEnv with the example settings file", () => {
+  test("hands the backend CELERY_TASK_ALWAYS_EAGER=true so background work needs no Redis", () => {
+    writeFileSync(join(dir, ".env"), readFileSync(join(ROOT, ".env.example"), "utf8"));
+    const env = loadDevEnv(dir, { PATH: "/bin" });
+    assert.equal(env.CELERY_TASK_ALWAYS_EAGER, "true");
+  });
+
+  test("pnpm run dev starts only the backend and the frontend, no worker", () => {
+    const commands = devCommands({ BACKEND_PORT: "8000" }, ROOT, "linux");
+    assert.deepEqual(
+      commands.map((command) => command.name),
+      ["backend", "frontend"],
+    );
+    for (const command of commands) {
+      assert.ok(!command.args.includes("celery"), `${command.name} must not start a celery worker`);
+    }
+  });
+});
+
 describe("loadDevEnv", () => {
   test("reads the root .env; a variable already in the environment wins", () => {
     writeFileSync(

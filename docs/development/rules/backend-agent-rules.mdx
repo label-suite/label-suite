@@ -13,7 +13,7 @@ updatedAt: '2026-11-28'
 跨領域的規範（先搜尋再新增、最小變更、衝突處理等）在 [agent-rules.mdx](agent-rules.mdx)，技術選型與 ADR 效力在 [architecture.mdx](../architecture.mdx)。
 後端落實 [R1](agent-rules.mdx#r1-先搜尋再新增) 時，新增 helper、util、常數、例外或依賴之前，先查 `app/core/` 的共用模組（清單見 [backend-modules.mdx 的 §`core/` 各模組](../../diagrams/architecture/backend-modules.mdx#core-各模組)）與相鄰模組；這一條靠人工／獨立審查，沒有自動檢查。
 
-**`backend/` 已存在，但只有 B1、B2、B6、B7、B11 與 B12 的一部分檢查在 CI 跑**（job 與指令寫在各條的「檢查方式」；B7 含資料庫表與欄位說明的覆蓋檢查）；B12 已建置的只有寄信、Google OIDC、對外 HTTP 客戶端三項入口契約與兩條跨模組契約，其餘四項仍標「待建置」；B8 與上面 R1 的後端落點靠人工／獨立審查，其餘各條仍標「待建置」。標「待建置」就是字面意思：那些檢查還沒有寫，**不得因為這份文件存在就宣稱架構已被強制**。
+**`backend/` 已存在，但只有 B1、B2、B6、B7、B11 與 B12 的一部分檢查在 CI 跑**（job 與指令寫在各條的「檢查方式」；B7 含資料庫表與欄位說明的覆蓋檢查）；B12 已建置的只有寄信、Google OIDC、對外 HTTP 客戶端三項入口契約、兩條跨模組契約與兩條寄信入口的依賴方向契約，其餘四項仍標「待建置」；B8 與上面 R1 的後端落點靠人工／獨立審查，其餘各條仍標「待建置」。標「待建置」就是字面意思：那些檢查還沒有寫，**不得因為這份文件存在就宣稱架構已被強制**。
 
 每條規範的反例與檢查方式收在摺疊區塊，預設收起；適用路徑、禁止、正例與例外在表裡。
 
@@ -63,10 +63,10 @@ API 一個請求一個 session、worker 一個 task 一個同步 session，用�
 
 | | |
 | :--- | :--- |
-| **適用路徑** | `backend/app/**`（含模組內的 Celery 進入點）。**不寫 `backend/worker/`**：`architecture.mdx` 的 `worker` 是與 `backend` 共用同一個 image 的 container，不是一個目錄；Celery 進入點落在 `app/modules/<module>/` |
+| **適用路徑** | `backend/app/**`（含模組內的 Celery 進入點）。**不寫 `backend/worker/`**：`architecture.mdx` 的 `worker` 是與 `backend` 共用同一個 image 的 container，不是一個目錄；業務的 Celery 進入點落在 `app/modules/<module>/`，共用基礎建設的 task 落在它的入口套件（寄信的 `send_mail` 在 `app/mail/tasks.py`），由組裝點 `app/worker.py` 登記 |
 | **禁止** | 跨請求或跨 task 共用同一個可變 session；把 session 存進模組層的全域變數；在 Celery task 裡用 async engine |
 | **正例** | API 用 `db: AsyncSession = Depends(get_db)`，一個請求一個 session；worker 用同步 session，一個 task 一個，結束就關 |
-| **例外** | 無。例外發生時一律 rollback 並釋放連線，不讓連線留在交易中回到 pool |
+| **例外** | 無。例外發生時一律 rollback 並釋放連線，不讓連線留在交易中回到 pool；寄信 task 不開 session（見 [B9](#b9-celery-的界線)） |
 
 理由：Celery 跑在同步執行緒裡，不能用 async engine，所以 API 與 worker 用不同的驅動（Lite 用 `sqlite+aiosqlite`／同步 URL；正式用 `postgresql+asyncpg`／`psycopg2`，見 [architecture.mdx](../architecture.mdx)）。
 
@@ -85,7 +85,7 @@ API 一個請求一個 session、worker 一個 task 一個同步 session，用�
 | **禁止** | Repository 自行 `commit`；在 DB 交易裡做外部網路呼叫；**在交易尚未 commit 前呼叫 `.delay()`／`.apply_async()`**；把「寄完信再 commit」當成預設做法 |
 | **正例** | **交易由 service 擁有**：多步寫入在同一個交易內，業務資料與必要稽核一起 commit；外部呼叫（寄信、第三方 API）**與 task 派送**都放在 commit 之後，失敗走補償路徑 |
 | **例外** | 稽核事件若規格要求「即使業務失敗也要留痕」，那一筆走獨立交易，而且要在程式註解寫明為什麼分開 |
-| **失敗補償要寫明** | commit 之後的每一個外部動作（寄信、派送 task）都要有**明確的補償路徑**：寄信失敗照[寄信降級的做法](../architecture.mdx)（連結印在伺服器 log）；**派送失敗**則由該筆資料的狀態欄留在「待派送」，由排程補送或人工重送——不得靜默吞掉 |
+| **失敗補償要寫明** | commit 之後的每一個外部動作（寄信、派送 task）都要有**明確的補償路徑**：**沒有設定寄信服務**才把連結印在伺服器 log（[寄信降級的做法](../architecture.mdx#部署與維運)），設定了但寄不出就回報給呼叫端，不印連結；**派送失敗**則由該筆資料的狀態欄留在「待派送」，由排程補送或人工重送——不得靜默吞掉 |
 
 理由：「寄完信再 commit」的順序會讓寄信失敗吃掉已成立的業務結果。
 
@@ -171,10 +171,11 @@ Celery task 只收可序列化的識別資訊，在自己的行程裡重新查�
 
 | | |
 | :--- | :--- |
-| **適用路徑** | 模組內的 Celery task 定義（落在 `app/modules/<module>/`）與所有 `.delay()`／`.apply_async()` 的呼叫點 |
+| **適用路徑** | Celery task 定義（業務 task 落在 `app/modules/<module>/`，共用基礎建設的 task 落在它的入口套件，例如 `app/mail/tasks.py`）與所有 `.delay()`／`.apply_async()` 的呼叫點 |
 | **禁止** | 把 HTTP 物件（request、response、`UploadFile`）或 DB session 塞進 task 參數；無界重試；task 的結果與失敗狀態不落地 |
 | **正例** | 只傳可序列化的識別資訊（`task_id`、`submission_id`）；task 在自己的行程裡**重新查權限與資料版本**；重試有上限、task 冪等（重跑同一個 task 不會產生第二筆結果）；結果與失敗狀態寫進資料庫 |
-| **既定界線** | Celery 只用於**長時間工作**（評分、IAA 計算、匯出）走 `scoring` 佇列；雜務走 `default`（`architecture.mdx`）。「重試有界」的數字也已定：**最多重試三次、退避 60／180／540 秒、單一評分工作硬上限 300 秒、結果在 result backend 留 24 小時**，不要另訂 |
+| **例外：寄信 task** | `app/mail/tasks.py` 的 `send_mail` 對三件事例外：失敗狀態不寫進資料庫，最終失敗只留一行不含信件內容的 `ERROR` log；參數是信件本身（`mail_id` 與組好的內容），不是識別資訊；不重查權限與資料版本。重試上限、冪等（以 `mail_id` 當寄信服務的冪等鍵）與結果不落地照 B9 的其他規定。理由：信件不是需要事後查詢的業務資料，task 不開資料庫連線也不 import 業務模組，到不了業務資料與測試集答案 |
+| **既定界線** | Celery 只用於**長時間工作**（評分、IAA 計算、匯出）走 `scoring` 佇列；雜務（含寄信）走 `default`（`architecture.mdx`）。「重試有界」的數字也已定：**最多重試三次、退避 60／180／540 秒、單一評分工作硬上限 300 秒、結果在 result backend 留 24 小時**，不要另訂 |
 
 「重新查權限」與授權規範相接，授權本身見 [security-agent-rules.mdx](security-agent-rules.mdx)。
 
@@ -228,7 +229,7 @@ Celery task 只收可序列化的識別資訊，在自己的行程裡重新查�
 | **適用路徑** | `backend/app/**`。`backend/alembic/` 與 `backend/tests/` 不在 import 檢查的圖內，不受檢 |
 | **禁止** | 單一入口清單（下表七項）中，入口以外的程式直接 import 該入口包裝的底層套件；任兩個業務模組（`app/modules/` 底下）互相 import，不分 router、service、repository、models、schemas（唯一的放行形式見「例外」）；組裝點以外的任何檔案 import router |
 | **正例** | 業務模組 import 入口，入口再 import 自己的套件（間接使用不算違規）；`app/main.py` 同時 import 多個模組的 router |
-| **例外** | 入口本身 import 自己的套件。今天 `backend/app/` 沒有任何入口，契約沒有 `ignore_imports`，也沒有白名單。第一個入口落地的 change 要在同一個 change 裡升級契約，二擇一：（a）入口是新的頂層套件：不動契約，把它登記進 `backend/tests/unit/import_tree.py` 的 `ENTRY_TOP_LEVEL_PACKAGES`，它因不在 `source_modules` 內而被放行；（b）入口在 `app/core/` 或 `app/modules/` 內：該契約改成 `source_modules = ["app"]` 加帶理由與來源的 `ignore_imports`。兩種都要同步 `backend/tests/unit/import_tree.py` 的 `ENTRY_THIRD_PARTY`。放行 import 的 `ignore_imports` 必須寫成多行陣列、每條各佔一行，緊接其上的註解寫明理由與來源（issue 編號或規則編號）；契約不得設定關閉「放行項已不存在」警示的選項，放行項過期時檢查就失敗。業務模組之間的例外只有一種形式：一個模組讀或寫另一個模組的資料，只由自己的 service 呼叫對方 service 公開的函式，router 只呼叫自己模組的 service；每一處在 `Modules do not import each other` 加一條 `ignore_imports`，寫成 `app.modules.<呼叫方>.service -> app.modules.<對方>.service`，兩邊都只准是 `service`，不准是 `router`、`repository` 或 `models`，寫法同上。跨模組寫入時，被呼叫的 service 不 commit，由發起動作的 service 在同一個交易裡 commit（見 [B4](#b4-交易的擁有層)）。模組之間允許雙向依賴；只 import 對方的模組（例如 `import app.modules.task.service as task_service`），不寫頂層的 `from app.modules.task.service import fn`（理由見 [ADR-003 的 D12](../adr/003-backend-architecture.mdx#d12-跨模組呼叫只走-service-對-service-的公開函式)）。稽核紀錄的寫入在 `app/core/`，任何模組直接 import（見 [ADR-003 的 D13](../adr/003-backend-architecture.mdx#d13-稽核紀錄的-model-與寫入函式放在-core)）；授權第 3、4 步的檢查在 `app/core/`，權限矩陣的資料經 `app/core/` 定義的 Protocol 提供（見 [ADR-004 的 D6](../adr/004-auth-and-security.mdx#d6-權限矩陣當授權輸入)）；兩者都不需要 `ignore_imports` |
+| **例外** | 入口本身 import 自己的套件。今天 `backend/app/` 有兩個入口，都是 (a) 寫法的頂層套件，登記在 `ENTRY_TOP_LEVEL_PACKAGES`：`app/oidc/`（Google OIDC）與 `app/mail/`（寄信）；契約沒有 `ignore_imports`，也沒有白名單。之後新入口落地的 change 要在同一個 change 裡升級契約，二擇一：（a）入口是新的頂層套件：不動契約，把它登記進 `backend/tests/unit/import_tree.py` 的 `ENTRY_TOP_LEVEL_PACKAGES`，它因不在 `source_modules` 內而被放行；（b）入口在 `app/core/` 或 `app/modules/` 內：該契約改成 `source_modules = ["app"]` 加帶理由與來源的 `ignore_imports`。兩種都要同步 `backend/tests/unit/import_tree.py` 的 `ENTRY_THIRD_PARTY`。放行 import 的 `ignore_imports` 必須寫成多行陣列、每條各佔一行，緊接其上的註解寫明理由與來源（issue 編號或規則編號）；契約不得設定關閉「放行項已不存在」警示的選項，放行項過期時檢查就失敗。業務模組之間的例外只有一種形式：一個模組讀或寫另一個模組的資料，只由自己的 service 呼叫對方 service 公開的函式，router 只呼叫自己模組的 service；每一處在 `Modules do not import each other` 加一條 `ignore_imports`，寫成 `app.modules.<呼叫方>.service -> app.modules.<對方>.service`，兩邊都只准是 `service`，不准是 `router`、`repository` 或 `models`，寫法同上。跨模組寫入時，被呼叫的 service 不 commit，由發起動作的 service 在同一個交易裡 commit（見 [B4](#b4-交易的擁有層)）。模組之間允許雙向依賴；只 import 對方的模組（例如 `import app.modules.task.service as task_service`），不寫頂層的 `from app.modules.task.service import fn`（理由見 [ADR-003 的 D12](../adr/003-backend-architecture.mdx#d12-跨模組呼叫只走-service-對-service-的公開函式)）。稽核紀錄的寫入在 `app/core/`，任何模組直接 import（見 [ADR-003 的 D13](../adr/003-backend-architecture.mdx#d13-稽核紀錄的-model-與寫入函式放在-core)）；授權第 3、4 步的檢查在 `app/core/`，權限矩陣的資料經 `app/core/` 定義的 Protocol 提供（見 [ADR-004 的 D6](../adr/004-auth-and-security.mdx#d6-權限矩陣當授權輸入)）；兩者都不需要 `ignore_imports` |
 
 單一入口清單（本文唯一定義處，其他規則只指向這裡）：
 
@@ -242,14 +243,14 @@ Celery task 只收可序列化的識別資訊，在自己的行程裡重新查�
 | 6 | CSRF 驗證 middleware | — | 待建置：同上 |
 | 7 | 資料庫 session 取得（`get_db`） | — | 待建置：同上 |
 
-三條入口契約的 `source_modules` 都是 `app.core`、`app.modules`、`app.main`、`app.scripts`，並帶 `allow_indirect_imports = true`，所以入口套件不在檢查來源內時可以 import 自己的套件，業務模組經由入口間接到達該套件也不算違規。跨模組有兩條契約：`Modules do not import each other`（`independence`，涵蓋 `app.modules.*`）與 `Only the assembly point imports routers`（`protected`，router 只准 `app.main` import）。
+三條入口契約的 `source_modules` 都是 `app.core`、`app.modules`、`app.main`、`app.scripts`、`app.worker`，並帶 `allow_indirect_imports = true`，所以入口套件不在檢查來源內時可以 import 自己的套件，業務模組經由入口間接到達該套件也不算違規。跨模組有兩條契約：`Modules do not import each other`（`independence`，涵蓋 `app.modules.*`）與 `Only the assembly point imports routers`（`protected`，router 只准 `app.main` import）。寄信入口另有兩條依賴方向契約：`Routers do not import the mail entry`（router 不得直接 import `app.mail`，經 service 間接到達不算違規）與 `Mail entry does not import modules`（`app.mail` 直接或間接都不得 import `app.modules`，使寄信與寄信 task 在 import 圖上到不了業務資料與測試集答案）。
 
 入口也是測試替身應該放的位置，見 [testing-agent-rules.mdx](testing-agent-rules.mdx) 的 T6。
 
 :::note{title="B12 的反例與檢查方式" collapsible}
 - **反例**：某模組的 service 裡 `import resend` 自己寄信；`health` 模組的 router import 另一個模組的 service；某模組的 service import 自己的 router
-- **檢查方式**：CI 的 `backend-sqlite` job 跑 `uv run lint-imports`，契約名稱與設定在 `backend/pyproject.toml`：`Mail only through its entry`、`OIDC only through its entry`、`Outbound HTTP only through its entry`、`Modules do not import each other`、`Only the assembly point imports routers`。兩個後端 job 的 pytest 另跑四個測試檔：`backend/tests/unit/test_entry_contracts.py` 以違規樣本驗證入口與跨模組契約真的會失敗，並守住「`app` 底下每個頂層套件不是列入每條入口契約的檢查來源，就是已登記的入口套件」；`backend/tests/unit/test_dependency_classification.py` 要求 `app` 實際 import 的每個第三方套件都已歸類，且入口的套件清單與契約的 `forbidden_modules` 一致；`backend/tests/unit/test_contract_exemptions.py` 守住 `ignore_imports` 的註解、多行寫法與不得關閉過期警示；`backend/tests/unit/test_layer_boundaries.py` 以契約數量與名稱集合比對 `pyproject.toml`，增、刪或改名契約而沒有同步預期名稱時失敗
-- **尚未檢查**：（1）取得目前使用者、發 session cookie 的 helper、CSRF 驗證 middleware、`get_db` 四項沒有機械檢查，標「待建置」，原因見上表，不用 Semgrep；（2）標準庫的 `urllib.request` 與 `http.client` 擋不了，外部套件只認根套件，`urllib` 整包會誤擋 `urllib.parse`；不宣稱 Ruff `S310` 補得上；（3）子模組與名稱擋不了，例如 `sqlalchemy.text`（見 [B5](#b5-資料存取一律走-sqlalchemy)）；（4）入口 A import 入口 B 的套件沒有契約，入口落地時再補；（5）新的第三方套件被歸為「一般套件」就不受入口限制，歸類本身靠審查；（6）跨模組 `ignore_imports` 的兩邊都只准是 `service`，沒有機械檢查：independence 契約只要放行條目存在就放行，`Routers do not use the data layer` 只擋 router 直接 import `repository` 與 `models`，router import 別的模組的 service 只要有放行條目就會通過；（7）跨模組寫入時被呼叫的 service 不 commit，沒有檢查（B4 的 commit 檢查也還待建置）；（8）只 import 模組、不寫頂層 `from … import` 的寫法，沒有檢查
+- **檢查方式**：CI 的 `backend-sqlite` job 跑 `uv run lint-imports`，契約名稱與設定在 `backend/pyproject.toml`：`Mail only through its entry`、`OIDC only through its entry`、`Outbound HTTP only through its entry`、`Modules do not import each other`、`Only the assembly point imports routers`、`Routers do not import the mail entry`、`Mail entry does not import modules`。兩個後端 job 的 pytest 另跑四個測試檔：`backend/tests/unit/test_entry_contracts.py` 以違規樣本驗證入口與跨模組契約真的會失敗，並守住「`app` 底下每個頂層套件不是列入每條入口契約的檢查來源，就是已登記的入口套件」；`backend/tests/unit/test_dependency_classification.py` 要求 `app` 實際 import 的每個第三方套件都已歸類，且入口的套件清單與契約的 `forbidden_modules` 一致；`backend/tests/unit/test_contract_exemptions.py` 守住 `ignore_imports` 的註解、多行寫法與不得關閉過期警示；`backend/tests/unit/test_layer_boundaries.py` 以契約數量與名稱集合比對 `pyproject.toml`，增、刪或改名契約而沒有同步預期名稱時失敗
+- **尚未檢查**：（1）取得目前使用者、發 session cookie 的 helper、CSRF 驗證 middleware、`get_db` 四項沒有機械檢查，標「待建置」，原因見上表，不用 Semgrep；（2）標準庫的 `urllib.request` 與 `http.client` 擋不了，外部套件只認根套件，`urllib` 整包會誤擋 `urllib.parse`；不宣稱 Ruff `S310` 補得上；（3）子模組與名稱擋不了，例如 `sqlalchemy.text`（見 [B5](#b5-資料存取一律走-sqlalchemy)）；（4）入口 A import 入口 B 的套件沒有契約，入口落地時再補；`app/mail/` 直接 import `httpx` 是允許的，因為每個整合自己的包裝就是它的入口（第 3 項），`app/oidc/` 仍只經 `authlib` 間接到達它；（5）新的第三方套件被歸為「一般套件」就不受入口限制，歸類本身靠審查；（6）跨模組 `ignore_imports` 的兩邊都只准是 `service`，沒有機械檢查：independence 契約只要放行條目存在就放行，`Routers do not use the data layer` 只擋 router 直接 import `repository` 與 `models`，router import 別的模組的 service 只要有放行條目就會通過；（7）跨模組寫入時被呼叫的 service 不 commit，沒有檢查（B4 的 commit 檢查也還待建置）；（8）只 import 模組、不寫頂層 `from … import` 的寫法，沒有檢查
 :::
 
 ## 附錄：刻意不採用的來源條文
@@ -353,3 +354,7 @@ Celery task 只收可序列化的識別資訊，在自己的行程裡重新查�
 | 2026-11-27 | B12 的例外補上跨模組寫入、雙向依賴與只 import 模組的寫法，放行的兩邊都只准是 `service`，router 只呼叫自己模組的 service（[B12](#b12-單一入口)） | 原本只限制放行的右邊，沒有寫寫入與 import 寫法 | [#749 留言](https://github.com/label-suite/label-suite/issues/749#issuecomment-7208259754) |
 | 2026-11-28 | 開頭補上 R1 的後端落點：新增前先查 `app/core/` 與相鄰模組，檢查方式維持人工／獨立審查 | 本文原本只在開頭指回 [agent-rules.mdx](agent-rules.mdx)，沒有後端的落點 | [#810](https://github.com/label-suite/label-suite/issues/810) |
 | 2026-11-28 | B7 補上資料庫表與欄位說明的覆蓋檢查：metadata 層與 PostgreSQL 層兩個測試檔；英文與品質仍靠審查 | B7 的檢查方式只管雙資料庫的跑法，沒有檢查說明是否存在；`dba` 的「每個欄位加英文 comment」沒有任何機械檢查 | [#822](https://github.com/label-suite/label-suite/issues/822)、[ADR-003 的 D7](../adr/003-backend-architecture.mdx#d7-資料庫分兩層) |
+| 2026-11-28 | 共用基礎建設的 task 落在它的入口套件，B3、B9 的適用路徑跟著寫（[B3](#b3-session-的生命週期)、[B9](#b9-celery-的界線)） | 適用路徑只寫「落在 `app/modules/<module>/`」 | [#756](https://github.com/label-suite/label-suite/issues/756)；email-celery-worker clarification Q8 |
+| 2026-11-28 | 寄信降級只在沒有設定寄信服務時印連結，設定了但寄不出就回報給呼叫端（[B4](#b4-交易的擁有層)） | 「寄信失敗照降級做法印連結」 | [#756](https://github.com/label-suite/label-suite/issues/756)；email-celery-worker clarification Q2 |
+| 2026-11-28 | 寄信 task 對 B9 的「結果寫進資料庫」「只傳識別資訊」「重查權限」三項例外（[B9](#b9-celery-的界線)） | —（B9 原本沒有例外） | [#756](https://github.com/label-suite/label-suite/issues/756)；email-celery-worker clarification Q3 |
+| 2026-11-28 | B12 的例外改寫成兩個入口 `app/oidc/` 與 `app/mail/`，新增兩條寄信入口的依賴方向契約；清單仍為七項，`app/mail/` 直接用 `httpx` 列為允許（[B12](#b12-單一入口)） | 「今天 `backend/app/` 沒有任何入口」 | [#756](https://github.com/label-suite/label-suite/issues/756)；email-celery-worker clarification P2、Q7 |
