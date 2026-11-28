@@ -97,7 +97,7 @@ frontend/
    │  └─ ui/                shadcn/ui 原語，匯出 variant 陣列
    ├─ api/                  mutator.ts（唯一出口）、session-refresh.ts、ApiError、外層判定、錯誤分類、config
    │  └─ generated/         Orval 產物，禁止手改
-   ├─ lib/                  i18n、theme（外觀偏好）、date（day.js 唯一入口）、abort、utils
+   ├─ lib/                  i18n、theme（外觀偏好）、date（day.js 唯一入口）、abort、utils、route-paths（全站共用的路由位址）
    ├─ styles/               theme.css：shadcn 變數對到 tokens.css 的變數名
    └─ test/                 Vitest setup、MSW server、外層 fixture
 ```
@@ -108,7 +108,7 @@ frontend/
 | `features/` | 一個功能一個資料夾，對外只從 `index.ts` 匯出 | 會送請求，或有自己的狀態轉換 |
 | `components/`（`ui/` 以外） | 共用元件：用到它的產品畫面分屬一個以上 feature 的設計系統元件，不認識業務 | 依 `docs/development/rules/frontend-agent-rules.mdx` 的 F5，由 `scripts/check-component-reuse.mjs` 檢查 |
 | `components/ui/` | 沒有業務的原語 | 換一個頁面也照樣能用 |
-| `api/`、`lib/` | 全站共用的基礎建設 | 不 import `pages/`、`features/` |
+| `api/`、`lib/` | 全站共用的基礎建設；`lib/route-paths` 是側欄與儀表板共用的路由位址（儀表板、任務清單、標記清單，與帶入口標記和選用角色的標記入口連結，不帶任務或任務類型） | 不 import `pages/`、`features/` |
 
 ### 單一 HTTP 邊界
 
@@ -147,7 +147,7 @@ frontend/
 
 | 元件 | 在哪裡 | 做什麼 |
 | :--- | :--- | :--- |
-| `useSessionState`、`sessionQueryOptions` | `features/auth/session-query.ts` | 以生成的 `getGetCurrentSessionQueryKey()` 為 key 查 `getCurrentSession`，`staleTime` 無限、視窗取得焦點不重查；查詢**不會失敗**：除了取消，每一種拒絕或沒有回應都轉成 `{ kind: "signedOut", notice }`，守門只看資料分支 |
+| `useSessionState`、`sessionQueryOptions` | `features/auth/session-query.ts` | 以生成的 `getGetCurrentSessionQueryKey()` 為 key 查 `getCurrentSession`，`staleTime` 無限、視窗取得焦點不重查；查詢**不會失敗**：除了取消，每一種拒絕或沒有回應都轉成 `{ kind: "signedOut", notice }`，守門只看資料分支。回 `200` 但 `data.user.role` 不是生成的 `SessionUserDataRole` 值（`user`、`super_admin`）時也轉成 `{ kind: "signedOut", notice: null }`：不登出、不送 `DELETE /api/v1/current-session`，三個守門與儀表板對同一個登入者給出同一個判定，只導向登入頁一次、不在登入頁與落點之間來回 |
 | `RequireAuthRoute`、`PublicOnlyRoute`、`RootRedirect` | `features/auth/route-guards.tsx` | 查詢回來前只畫頁面底色，避免頁面閃一下再跳走；之後以取代歷史紀錄的方式導向登入頁或落點 |
 | `sendWithSessionRefresh`、`refreshSession` | `src/api/session-refresh.ts` | 延續是 single-flight：同一時間只有一個 `createSessionRefresh`，其他被拒的請求共用它；整個流程延續至多 2 次、重送至多 2 次 |
 | `AppRoot` | `src/app/app-root.tsx` | 沒有 path、包住每一條路由（含開發頁與其他路徑）的根 layout，只畫 `<Outlet>`；整頁重新載入才重來。以 context 提供一個 ref：外殼上一次檢查登入狀態時的 `location.key`（`checkedKey`）、pathname（`checkedPathname`），與之後路由是否到過別的 pathname（`leftSince`）。目前的 pathname 不等於外殼記下的 `checkedPathname` 時把 `leftSince` 設為 true，比對的是外殼記下的值，不是它自己上一次看到的 pathname |
@@ -232,4 +232,4 @@ frontend/
 | 2026-11-27 | `components/` 加無權限與找不到的整頁畫面 `BlockedScreen`：只有標題、說明與一個寫出去處的返回連結，字面、去處與識別碼由使用它的頁面傳入，不送請求（[§目錄](#目錄)）；理由是規格 07-03 要全站共用同一個骨架，而 prototype 的任務詳情與標記清單分屬兩個 feature | 兩個模組各自畫自己的面板 | [#721](https://github.com/label-suite/label-suite/issues/721) |
 | 2026-11-27 | 「其他路徑」維持導回 `/`，不以找不到取代；`api-error.ts` 加錯誤分類；元件展示頁加「無權限與找不到」一節（[§路由](#路由)、[§單一 HTTP 邊界](#單一-http-邊界)、[§元件展示頁](#元件展示頁)）；理由是規格 07-03 只涵蓋網址定址到的那一筆，而正式路由還沒有頁面畫得出這兩種畫面 | 「其他路徑」預告由規格 07-03 的找不到頁取代 | [#721](https://github.com/label-suite/label-suite/issues/721) |
 | 2026-11-27 | 元件展示頁的測試改經共用的 `renderGallery()` 以 `MemoryRouter` 包住展示頁（[§元件展示頁](#元件展示頁)）；理由是「無權限與找不到」一節的返回連結是 React Router 的 `Link`，離開 Router 畫不出來 | 各測試檔直接 render `DevGalleryPage` | [#721](https://github.com/label-suite/label-suite/issues/721) |
-| 2026-11-28 | `/dashboard/dashboard` 換成儀表板 `DashboardPage`，路徑不變：頁首、其下的擋下說明、版面決定、骨架與錯誤、三張連到最終路徑的行動入口卡、系統管理員的「平台使用者統計」（固定示範值）；不新增請求，任務角色沿用前端的任務角色來源並補上讀取中與失敗兩種狀態；新增 `features/dashboard/`、預載 namespace `dashboard`、原語 `metric` 與骨架的光帶動畫；token 抽取加讀資料色 `data-palette.css`（[§路由](#路由)、[§頁面與功能元件](#頁面與功能元件)、[§前端骨架](#前端骨架)、[§已知限制](#已知限制)）；理由是規格 02-01 定了登入後第一頁的樣子，而任務成員資料與平台統計的算法都還不存在 | 暫時落點 `DashboardPlaceholderPage`（「你已登入」卡片）；token 抽取只讀 `tokens.css` | [#722](https://github.com/label-suite/label-suite/issues/722) |
+| 2026-11-28 | `/dashboard/dashboard` 換成儀表板 `DashboardPage`，路徑不變：頁首、其下的擋下說明、版面決定、骨架與錯誤、三張連到最終路徑的行動入口卡、系統管理員的「平台使用者統計」（固定示範值）；不新增請求，任務角色沿用前端的任務角色來源並補上讀取中與失敗兩種狀態；新增 `features/dashboard/`、預載 namespace `dashboard`、原語 `metric` 與骨架的光帶動畫；token 抽取加讀資料色 `data-palette.css`；側欄與儀表板共用的路由位址搬到 `lib/route-paths`；系統角色無效的 `200` 對成未登入（[§路由](#路由)、[§頁面與功能元件](#頁面與功能元件)、[§前端骨架](#前端骨架)、[§登入狀態與守門](#登入狀態與守門)、[§已知限制](#已知限制)）；理由是規格 02-01 定了登入後第一頁的樣子，而任務成員資料與平台統計的算法都還不存在；路由位址要讓兩個 feature 共用、只能往下放；任何 `200` 都當已登入時，角色無效的登入者會在登入頁與落點之間來回 | 暫時落點 `DashboardPlaceholderPage`（「你已登入」卡片）；token 抽取只讀 `tokens.css`；路由位址常數放在 `features/app-shell/`；任何 `200` 都對成已登入 | [#722](https://github.com/label-suite/label-suite/issues/722) |

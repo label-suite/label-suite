@@ -10,19 +10,16 @@ import type {
   ShellNavItem,
   ShellSubNavItem,
 } from "@/components/app-shell/types";
+import { DASHBOARD_HREF, TASK_LIST_HREF, annotationEntryHref } from "@/lib/route-paths";
 
 import type { BlockedNoticeKind } from "./blocked-notice-state";
 import type { TaskRole, TaskRoleAnswer } from "./task-role-source";
 
-/** The landing page (07-shared X1); where a blocked Annotation click lands. */
-export const DASHBOARD_HREF = "/dashboard/dashboard";
-/** The task list (X2); where a blocked Dataset Analytics click lands. */
-export const TASK_LIST_HREF = "/task-management/task-list";
 /**
  * The annotation list with the entry mark only (spec 07-01 Q6, Q17): never a
  * task, task type or output type (Hard Rule 5).
  */
-export const ANNOTATION_HREF = "/annotation/annotation-list?entry=nav";
+export const ANNOTATION_HREF = annotationEntryHref();
 const DATASET_HREF = "/dataset/dataset-analysis-list";
 const USER_MANAGEMENT_HREF = "/admin/user-management";
 const ROLE_SETTINGS_HREF = "/admin/role-settings";

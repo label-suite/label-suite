@@ -1,7 +1,9 @@
+import { DASHBOARD_HREF } from "@/lib/route-paths";
+
 /** The routes the guards send people to (ui-design §頁面與路由). */
 export const LOGIN_PATH = "/account/login";
-/** The temporary landing page; 02-01 replaces its page component, not its path. */
-export const LANDING_PATH = "/dashboard/dashboard";
+/** Where a signed-in visitor lands: the dashboard (spec 02-01). */
+export const LANDING_PATH = DASHBOARD_HREF;
 /** Google's redirect target, registered with Google (api-contract). */
 export const GOOGLE_CALLBACK_PATH = "/account/google/callback";
 /** "Forgot password?", the reset request page registered by 01-03. */

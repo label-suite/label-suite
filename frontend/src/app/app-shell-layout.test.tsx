@@ -17,6 +17,7 @@ import { StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { SessionUserData } from "@/api/generated/label-suite.schemas";
+import { TaskRoleSourceProvider, type TaskRoleSourceState } from "@/features/app-shell";
 import { errorBody } from "@/test/envelope-fixtures";
 import { server } from "@/test/msw-server";
 import {
@@ -164,6 +165,38 @@ describe("the temporary landing page in the shell (auth-guard 「暫時落點顯
       "個人設定",
     ]);
   });
+});
+
+describe("the sidebar while the task-role source is not ready (dashboard-shell design D2)", () => {
+  /** Opens the landing page with the task-role source fixed at `state`. */
+  async function openLandingWith(state: TaskRoleSourceState): Promise<void> {
+    window.history.replaceState(null, "", LANDING);
+    const current = createAppRouter();
+    router = current;
+    render(
+      <StrictMode>
+        <TaskRoleSourceProvider value={state}>
+          <App router={current} queryClient={createQueryClient()} />
+        </TaskRoleSourceProvider>
+      </StrictMode>,
+    );
+    await expectPath(current, LANDING);
+    await screen.findByRole("navigation", { name: "主導覽" });
+  }
+
+  it.each([
+    ["loading", { status: "loading" }],
+    ["error", { status: "error", retry: () => undefined }],
+  ] satisfies [string, TaskRoleSourceState][])(
+    "reads as a general user with 標記作業 while %s",
+    async (_name, state) => {
+      await openLandingWith(state);
+
+      const sidebar = screen.getByRole("banner");
+      expect(within(sidebar).getByTestId("role-indicator")).toHaveTextContent("一般使用者");
+      expect(navNames()).toEqual(["儀表板", "任務管理", "標記作業", "資料集分析", "個人設定"]);
+    },
+  );
 });
 
 describe("refetching the session on the next page (design D6, clarification Q11)", () => {
