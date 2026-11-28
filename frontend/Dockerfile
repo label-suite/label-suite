@@ -8,7 +8,7 @@
 # node_modules, no Playwright (system-design D6).
 
 # --- builder: install the locked workspace dependencies and build dist/ -------
-FROM node:22-alpine AS builder
+FROM node:22-alpine@sha256:1314fb30ec37592d5845e5a160d522c0e680972aa534549940b8d73bde88481a AS builder
 
 # pnpm comes from the packageManager field through Corepack, and the prompt is
 # turned off so the build is not interactive. Never npm install (Hard Rule 3).
@@ -53,7 +53,7 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 RUN pnpm --filter frontend build
 
 # --- runtime: nginx serves the build output and is the only public entrypoint -
-FROM nginx:alpine AS runtime
+FROM nginx:alpine@sha256:7fc0fb4af7bf006aeb31aea88069976060f8f0a0a86b667126742cc17f4e31ae AS runtime
 
 # One server block, dropped into the include directory the base image already
 # scans; it replaces the image's own default.conf.
