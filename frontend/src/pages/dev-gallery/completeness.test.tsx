@@ -16,6 +16,7 @@ import { alertVariantValues } from "@/components/ui/alert";
 import { badgeVariantValues } from "@/components/ui/badge";
 import { buttonSizeValues, buttonVariantValues } from "@/components/ui/button";
 import { separatorOrientationValues } from "@/components/ui/separator";
+import { skeletonAnimationValues } from "@/components/ui/skeleton";
 
 import { renderGallery } from "./render-gallery.test-helper";
 import {
@@ -26,7 +27,7 @@ import {
   emptySampleValues,
   inputStateValues,
   labelSampleValues,
-  skeletonSampleValues,
+  metricSampleValues,
   variantCatalog,
 } from "./variant-catalog";
 
@@ -41,6 +42,7 @@ const PRIMITIVE_SECTIONS: Record<string, string> = {
   "badge.tsx": "badge",
   "alert.tsx": "alert",
   "card.tsx": "card",
+  "metric.tsx": "metric",
   "separator.tsx": "separator",
   "dialog.tsx": "dialog",
   "skeleton.tsx": "states",
@@ -81,9 +83,10 @@ const DECLARED: Declared[] = [
   { component: "badge", axis: "variant", values: badgeVariantValues },
   { component: "alert", axis: "variant", values: alertVariantValues },
   { component: "card", axis: "part", values: cardPartValues },
+  { component: "metric", axis: "sample", values: metricSampleValues },
   { component: "separator", axis: "orientation", values: separatorOrientationValues },
   { component: "dialog", axis: "sample", values: dialogSampleValues },
-  { component: "skeleton", axis: "sample", values: skeletonSampleValues },
+  { component: "skeleton", axis: "animation", values: skeletonAnimationValues },
   { component: "empty", axis: "sample", values: emptySampleValues },
   { component: "blocked-screen", axis: "kind", values: blockedSampleValues },
 ];
@@ -130,9 +133,10 @@ describe("variant catalog (layer 1)", () => {
     ["badge variant", variantCatalog.badge.variant, badgeVariantValues],
     ["alert variant", variantCatalog.alert.variant, alertVariantValues],
     ["card part", variantCatalog.card.part, cardPartValues],
+    ["metric sample", variantCatalog.metric.sample, metricSampleValues],
     ["separator orientation", variantCatalog.separator.orientation, separatorOrientationValues],
     ["dialog sample", variantCatalog.dialog.sample, dialogSampleValues],
-    ["skeleton sample", variantCatalog.skeleton.sample, skeletonSampleValues],
+    ["skeleton animation", variantCatalog.skeleton.animation, skeletonAnimationValues],
     ["empty sample", variantCatalog.empty.sample, emptySampleValues],
   ] as const)("has exactly the declared %s values", (_label, demos, values) => {
     expect(new Set(Object.keys(demos))).toEqual(new Set(values));
@@ -185,6 +189,28 @@ describe("DevGalleryPage completeness (layer 2)", () => {
       if (item === null) continue;
       expect(within(item).getByLabelText(inputNames[value])).toBeInTheDocument();
     }
+    for (const value of skeletonAnimationValues) {
+      const item = page.querySelector(itemSelector("skeleton", "animation", value));
+      expect(item).toHaveTextContent(new RegExp(`^${value}$`));
+      const bars = item?.querySelectorAll(`[data-slot="skeleton"]`) ?? [];
+      expect(bars.length).toBeGreaterThan(0);
+      for (const bar of bars) {
+        expect(bar).toHaveAttribute("data-animation", value);
+      }
+    }
+  });
+
+  it("shows exactly one Metric sample in its section, label above value", () => {
+    renderGallery();
+
+    const section = screen.getByRole("region", { name: "Metric" });
+    const items = section.querySelectorAll("[data-gallery-item]");
+    expect(items).toHaveLength(1);
+    const tiles = section.querySelectorAll(`[data-slot="metric"]`);
+    expect(tiles).toHaveLength(1);
+    const label = within(section).getByText("總用戶");
+    const value = within(section).getByText("128 人");
+    expect(label.compareDocumentPosition(value) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("derives each section's count from the declared values", () => {
@@ -204,7 +230,7 @@ describe("DevGalleryPage completeness (layer 2)", () => {
     }
   });
 
-  it("names each of the eleven sections with an h2, in order", () => {
+  it("names each of the twelve sections with an h2, in order", () => {
     renderGallery();
 
     const titles = [
@@ -214,6 +240,7 @@ describe("DevGalleryPage completeness (layer 2)", () => {
       "Badge",
       "Alert",
       "Card",
+      "Metric",
       "Separator",
       "Dialog",
       "Skeleton · Empty",

@@ -4,13 +4,14 @@
  * a value added to a primitive must be added here too; the page renders from
  * these records, and the completeness test compares their keys with the
  * arrays at run time. The values below without a primitive array (Button
- * states, Input states, Card parts, the Dialog, Skeleton and Empty samples) are
+ * states, Input states, Card parts, the Metric, Dialog and Empty samples) are
  * declared by the catalog itself.
  */
 import type { AlertVariant } from "@/components/ui/alert";
 import type { BadgeVariant } from "@/components/ui/badge";
 import type { ButtonSize, ButtonVariant } from "@/components/ui/button";
 import type { SeparatorOrientation } from "@/components/ui/separator";
+import type { SkeletonAnimation } from "@/components/ui/skeleton";
 
 /** How the gallery shows one declared value. */
 export interface Demo {
@@ -28,10 +29,10 @@ export const inputStateValues = ["default", "invalid", "disabled"] as const;
 export const labelSampleValues = ["field"] as const;
 /** The Card sample's parts; the section count is these names joined. */
 export const cardPartValues = ["header", "content", "footer"] as const;
+/** The Metric sample: one tile with fixed label and value text (dashboard-shell D7). */
+export const metricSampleValues = ["tile"] as const;
 /** The Dialog sample: one button that opens a sample dialog. */
 export const dialogSampleValues = ["basic"] as const;
-/** The Skeleton sample: two bars. */
-export const skeletonSampleValues = ["lines"] as const;
 /** The Empty sample: the panel-sized empty state. */
 export const emptySampleValues = ["panel"] as const;
 /** The BlockedScreen samples (design D8): both kinds, then a long identifier. */
@@ -50,8 +51,8 @@ export type ButtonState = (typeof buttonStateValues)[number];
 export type InputState = (typeof inputStateValues)[number];
 export type LabelSample = (typeof labelSampleValues)[number];
 export type CardPart = (typeof cardPartValues)[number];
+export type MetricSample = (typeof metricSampleValues)[number];
 export type DialogSample = (typeof dialogSampleValues)[number];
-export type SkeletonSample = (typeof skeletonSampleValues)[number];
 export type EmptySample = (typeof emptySampleValues)[number];
 export type BlockedSample = (typeof blockedSampleValues)[number];
 
@@ -99,6 +100,9 @@ export const variantCatalog = {
   card: {
     part: { header: {}, content: {}, footer: {} } satisfies Record<CardPart, Demo>,
   },
+  metric: {
+    sample: { tile: {} } satisfies Record<MetricSample, Demo>,
+  },
   separator: {
     orientation: { horizontal: {}, vertical: {} } satisfies Record<SeparatorOrientation, Demo>,
   },
@@ -106,7 +110,7 @@ export const variantCatalog = {
     sample: { basic: {} } satisfies Record<DialogSample, Demo>,
   },
   skeleton: {
-    sample: { lines: {} } satisfies Record<SkeletonSample, Demo>,
+    animation: { pulse: {}, shimmer: {} } satisfies Record<SkeletonAnimation, Demo>,
   },
   empty: {
     sample: { panel: {} } satisfies Record<EmptySample, Demo>,
@@ -127,7 +131,7 @@ export function galleryItem(component: string, axis: string, value: string): str
   return `${component}:${axis}:${value}`;
 }
 
-/** The eleven sections, in page order; ids are the anchors the nav links to. */
+/** The twelve sections, in page order; ids are the anchors the nav links to. */
 export const gallerySections = [
   "button",
   "input",
@@ -135,6 +139,7 @@ export const gallerySections = [
   "badge",
   "alert",
   "card",
+  "metric",
   "separator",
   "dialog",
   "states",

@@ -12,6 +12,7 @@
     "badge": "Badge",
     "alert": "Alert",
     "card": "Card",
+    "metric": "Metric",
     "separator": "Separator",
     "dialog": "Dialog",
     "states": "Skeleton · Empty",
@@ -56,6 +57,11 @@
     "content": "Content area",
     "cancel": "Cancel",
     "confirm": "Confirm"
+  },
+  "metric": {
+    "meta": "Label above, value below",
+    "label": "Total users",
+    "value": "128 people"
   },
   "dialog": {
     "meta": "Focus stays inside; Esc closes it and returns focus to the opening button",

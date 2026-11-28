@@ -35,6 +35,20 @@ describe("DevGalleryPage interface language", () => {
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Component gallery");
     expect(screen.queryByRole("button", { name: /^(EN|ZH)$|language|語言/i })).toBeNull();
   });
+
+  it("shows the Metric sample and the Skeleton names in English too", async () => {
+    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, "en");
+    await i18n.changeLanguage(readStoredLanguage());
+
+    renderGallery();
+
+    const metric = screen.getByRole("region", { name: "Metric" });
+    expect(within(metric).getByText("Total users")).toBeInTheDocument();
+    expect(within(metric).getByText("128 people")).toBeInTheDocument();
+    const states = screen.getByRole("region", { name: "Skeleton · Empty" });
+    expect(within(states).getByText("pulse")).toBeInTheDocument();
+    expect(within(states).getByText("shimmer")).toBeInTheDocument();
+  });
 });
 
 /** Every control on the page that switches the appearance. */

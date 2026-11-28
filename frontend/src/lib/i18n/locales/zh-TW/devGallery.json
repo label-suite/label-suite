@@ -12,6 +12,7 @@
     "badge": "Badge",
     "alert": "Alert",
     "card": "Card",
+    "metric": "Metric",
     "separator": "Separator",
     "dialog": "Dialog",
     "states": "Skeleton · Empty",
@@ -56,6 +57,11 @@
     "content": "內容區",
     "cancel": "取消",
     "confirm": "確認"
+  },
+  "metric": {
+    "meta": "標籤在上、數值在下",
+    "label": "總用戶",
+    "value": "128 人"
   },
   "dialog": {
     "meta": "焦點鎖在對話框內，Esc 關閉後焦點回到開啟按鈕",

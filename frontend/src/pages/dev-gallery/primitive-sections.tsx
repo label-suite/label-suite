@@ -1,6 +1,7 @@
 /**
  * The gallery sections of the primitives added after the first gallery: Label
- * and Separator (login-auth-guard task 6.3) and Dialog (sidebar-nav task 1.5).
+ * and Separator (login-auth-guard task 6.3), Dialog (sidebar-nav task 1.5),
+ * Metric (dashboard-shell task 4.2) and the Skeleton animations (task 4.1).
  * Kept apart from dev-gallery-page.tsx so that page stays under its size
  * ceiling (eslint.config.js NAMED_EXEMPTIONS).
  */
@@ -20,7 +21,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Metric } from "@/components/ui/metric";
 import { Separator, separatorOrientationValues } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { GallerySection } from "./gallery-section";
 import { catalogEntries, galleryItem, variantCatalog } from "./variant-catalog";
@@ -45,6 +48,47 @@ export function LabelSection() {
         </div>
       ))}
     </GallerySection>
+  );
+}
+
+/** The Metric section (dashboard-shell D7): one tile, fixed label above fixed value. */
+export function MetricSection() {
+  const { t } = useTranslation(NAMESPACE);
+
+  return (
+    <GallerySection id="metric" title={t("sections.metric")} meta={t("metric.meta")}>
+      {catalogEntries(variantCatalog.metric.sample).map(([sample]) => (
+        <div
+          key={sample}
+          data-gallery-item={galleryItem("metric", "sample", sample)}
+          className="max-w-60"
+        >
+          <Metric label={t("metric.label")} value={t("metric.value")} />
+        </div>
+      ))}
+    </GallerySection>
+  );
+}
+
+/**
+ * The Skeleton samples (dashboard-shell D7): each declared animation once,
+ * named by its value, as two bars.
+ */
+export function SkeletonSamples() {
+  return (
+    <div className="grid grid-cols-1 gap-(--space-lg) md:grid-cols-2">
+      {catalogEntries(variantCatalog.skeleton.animation).map(([animation]) => (
+        <div
+          key={animation}
+          data-gallery-item={galleryItem("skeleton", "animation", animation)}
+          className="flex flex-col gap-(--space-sm)"
+        >
+          <span className="text-(length:--text-caption) text-muted-foreground">{animation}</span>
+          <Skeleton animation={animation} className="h-3.5 w-4/5" />
+          <Skeleton animation={animation} className="h-3.5 w-[55%]" />
+        </div>
+      ))}
+    </div>
   );
 }
 

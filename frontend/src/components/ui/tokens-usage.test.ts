@@ -25,7 +25,7 @@ const PALETTE_CLASS =
 
 /**
  * The primitives of system-design.md §目錄結構, plus label and separator
- * (login-auth-guard 6.3) and dialog (sidebar-nav D9).
+ * (login-auth-guard 6.3), dialog (sidebar-nav D9) and metric (dashboard-shell D7).
  */
 const PRIMITIVES = [
   "./alert.tsx",
@@ -36,6 +36,7 @@ const PRIMITIVES = [
   "./empty.tsx",
   "./input.tsx",
   "./label.tsx",
+  "./metric.tsx",
   "./separator.tsx",
   "./skeleton.tsx",
 ];
@@ -45,7 +46,7 @@ describe("components/ui uses only semantic variables", () => {
     .filter((path) => !path.endsWith(".test.tsx"))
     .sort();
 
-  it("holds exactly the ten primitives", () => {
+  it("holds exactly the eleven primitives", () => {
     expect(primitives).toEqual(PRIMITIVES);
   });
 
