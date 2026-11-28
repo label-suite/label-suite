@@ -2,7 +2,8 @@
 
 Covers the settings-validation part of spec ``runtime-config``: the start-up
 failure scenarios for ``CORS_ALLOWED_ORIGINS`` and ``DATABASE_URL``, the
-accepted PostgreSQL schemes, and the defaults.
+accepted PostgreSQL schemes, and the defaults. The queue, mail, eager and
+worker-layer settings are in ``test_worker_settings.py``.
 """
 
 from pathlib import Path
@@ -23,9 +24,13 @@ ENV_VARS = (
     "GOOGLE_CLIENT_SECRET",
     "GOOGLE_REDIRECT_URI",
     "RESEND_API_KEY",
+    "MAIL_FROM",
+    "REDIS_URL",
+    "CELERY_TASK_ALWAYS_EAGER",
 )
 GOOGLE_VARS = ("GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REDIRECT_URI")
 VALID_ORIGIN = "http://localhost:5173"
+VALID_MAIL_FROM = "Label Suite <noreply@example.test>"
 
 
 @pytest.fixture(autouse=True)
@@ -406,6 +411,7 @@ def test_secret_settings_are_hidden_from_the_settings_repr(
     monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "CANARY-google-secret")
     monkeypatch.setenv("GOOGLE_REDIRECT_URI", "http://localhost:8080/account/google/callback")
     monkeypatch.setenv("RESEND_API_KEY", "CANARY-resend")
+    monkeypatch.setenv("MAIL_FROM", VALID_MAIL_FROM)
 
     text = repr(load_settings(Settings))
 
@@ -454,9 +460,12 @@ def test_all_three_google_settings_mean_google_is_configured(
     assert load_settings(Settings).google_configured() is True
 
 
-def test_resend_api_key_means_mail_is_configured(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_api_key_and_sender_together_mean_mail_is_configured(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setenv("CORS_ALLOWED_ORIGINS", VALID_ORIGIN)
     monkeypatch.setenv("RESEND_API_KEY", "re_test")
+    monkeypatch.setenv("MAIL_FROM", VALID_MAIL_FROM)
 
     assert load_settings(Settings).mail_configured() is True
 

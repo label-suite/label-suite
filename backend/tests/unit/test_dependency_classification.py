@@ -25,10 +25,13 @@ from tests.unit.import_tree import (
 
 GENERAL_PACKAGES = {
     "argon2",
+    "celery",
     "fastapi",
     "jwt",
+    "kombu",
     "pydantic",
     "pydantic_settings",
+    "redis",
     "sqlalchemy",
     "starlette",
 }
@@ -210,3 +213,18 @@ def test_only_the_oidc_entry_imports_authlib() -> None:
     importers = direct_importers(BACKEND_DIR, "authlib")
 
     assert [m for m in importers if not m.startswith("app.oidc")] == []
+
+
+# --- the mail entry (email-celery-worker spec backend-code-boundaries) ------------------
+
+
+def test_only_the_mail_entry_imports_httpx_directly() -> None:
+    importers = direct_importers(BACKEND_DIR, "httpx")
+
+    assert importers, "app/mail/transport.py should import httpx directly"
+    assert [m for m in importers if not m.startswith("app.mail")] == []
+
+
+def test_no_module_imports_a_mail_sdk() -> None:
+    for package in ENTRY_THIRD_PARTY[MAIL]:
+        assert direct_importers(BACKEND_DIR, package) == [], package

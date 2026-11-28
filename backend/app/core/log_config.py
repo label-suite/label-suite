@@ -10,8 +10,13 @@ calls it right after reading the settings (request-access-log design D6). It
 - hangs one marked ``StreamHandler`` with ``KeyValueFormatter`` on the root
   logger at ``LOG_LEVEL``;
 - pins the database engine, pool and driver loggers to ``WARNING`` so SQL text
-  and parameters never reach the output, routes uvicorn's own records through
+  and parameters never reach the output, pins the outbound HTTP client loggers
+  (``httpx``, ``httpcore``) to ``WARNING`` so request headers such as
+  ``Authorization`` never reach it either, routes uvicorn's own records through
   the root handler and turns uvicorn's built-in access log off.
+
+The Celery worker calls it too, from the ``setup_logging`` signal
+(``app.core.celery_app``), so worker records share the same format.
 
 It also owns the "an error was already logged for this request" marker that the
 access log reads (design D2). It imports only ``app.core.envelope`` and
@@ -27,7 +32,7 @@ from typing import Any, TextIO
 
 from starlette.types import Scope
 
-from app.core.config import Settings
+from app.core.config import WorkerSettings
 from app.core.envelope import current_correlation_id
 
 __all__ = [
@@ -51,8 +56,12 @@ NO_TRACE_ID = "-"
 UNMATCHED_ROUTE = "<unmatched>"
 """``route`` of an access-log line whose request matched no route template (Q5)."""
 
-PINNED_WARNING_LOGGERS = ("sqlalchemy", "aiosqlite", "asyncpg")
-"""Database engine, pool and driver loggers that stay at ``WARNING`` whatever ``LOG_LEVEL`` is."""
+PINNED_WARNING_LOGGERS = ("sqlalchemy", "aiosqlite", "asyncpg", "httpx", "httpcore")
+"""Loggers that stay at ``WARNING`` whatever ``LOG_LEVEL`` is.
+
+The database engine, pool and driver loggers (SQL text and parameters) and the outbound
+HTTP client loggers (request URLs at ``INFO``, request headers at ``DEBUG``).
+"""
 
 _ERROR_LOGGED_KEY = "error_logged"
 _REPO_HANDLER_ATTRIBUTE = "_label_suite_root_handler"
@@ -172,11 +181,12 @@ def is_repo_handler(handler: logging.Handler) -> bool:
     return bool(getattr(handler, _REPO_HANDLER_ATTRIBUTE, False))
 
 
-def configure_logging(settings: Settings, *, stream: TextIO | None = None) -> None:
+def configure_logging(settings: WorkerSettings, *, stream: TextIO | None = None) -> None:
     """Set up the whole backend's log output; safe to call more than once.
 
     Args:
-        settings: Supplies ``log_level``.
+        settings: Supplies ``log_level``; the API passes ``Settings`` and the worker
+            ``WorkerSettings``.
         stream: Where the root handler writes; ``sys.stderr`` when ``None``.
             Tests pass a ``StringIO`` to read the formatted output.
 
@@ -185,7 +195,9 @@ def configure_logging(settings: Settings, *, stream: TextIO | None = None) -> No
         root handler a previous call installed, never any other handler, then
         adds one ``StreamHandler`` with ``KeyValueFormatter``; the root logger
         and that handler are set to ``settings.log_level``. Sets the
-        ``sqlalchemy``, ``aiosqlite`` and ``asyncpg`` loggers to ``WARNING``.
+        ``sqlalchemy``, ``aiosqlite``, ``asyncpg``, ``httpx`` and ``httpcore``
+        loggers to ``WARNING``. Handlers on other named loggers (such as
+        ``app.mail.unsent_link``) are left alone.
         Clears the ``uvicorn`` logger's handlers and makes it propagate, so
         uvicorn's records use the same format; clears ``uvicorn.access``'s
         handlers and stops it propagating, which turns uvicorn's built-in access

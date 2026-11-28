@@ -16,7 +16,7 @@ ADR 記錄「為什麼這樣決定」：當時的限制、比較過的選項、�
 | :--- | :--- | :--- | :--- |
 | [001](001-agent-engineering.mdx) | Agent 工程 | 生效 | D1 先搜尋再新增；D2 範圍內直接修正錯誤實作；D3 兩個平台的 hook 設定手寫兩份，不做生成器；D4 H3 只回報診斷，不自動修；D5 H2 失敗時由腳本 exit 2 擋下，Claude 另加 onFailure |
 | [002](002-development-workflow.mdx) | 開發流程 | 生效 | D1 完整九份產物流程一次導入；D2 人工停點只留一個；D3 授權放在專案自有的指令；D4 規劃、實作、審查與驗收由不同角色負責；D5 狀態只記在組織層專案板；D6 後端用 uv、前端用 pnpm；D7 開源開發放在組織的新倉庫 |
-| [003](003-backend-architecture.mdx) | 後端架構 | 生效 | D1 前後端放在同一個 repo；D2 後端框架用 FastAPI；D3 後端採模組內分層；D4 任務狀態機只放在 service 層；D5 API 路徑前綴與成功回應外層；D6 前端 client 用 Orval 產生；D7 資料庫分兩層；D8 非同步任務用 Celery 加 Redis；D9 Bruno 只當可選工具；D10 背景計算的結果寫入做成冪等；D11 i18n 分前端與後端兩層；D12 跨模組呼叫只走 service 對 service 的公開函式；D13 稽核紀錄的 model 與寫入函式放在 core；D14 後端業務模組的切分 |
+| [003](003-backend-architecture.mdx) | 後端架構 | 生效 | D1 前後端放在同一個 repo；D2 後端框架用 FastAPI；D3 後端採模組內分層；D4 任務狀態機只放在 service 層；D5 API 路徑前綴與成功回應外層；D6 前端 client 用 Orval 產生；D7 資料庫分兩層；D8 非同步任務用 Celery 加 Redis；D9 Bruno 只當可選工具；D10 背景計算的結果寫入做成冪等；D11 i18n 分前端與後端兩層；D12 跨模組呼叫只走 service 對 service 的公開函式；D13 稽核紀錄的 model 與寫入函式放在 core；D14 後端業務模組的切分；D15 共用基礎建設的 Celery task 落在它的入口套件 |
 | [004](004-auth-and-security.mdx) | 認證與安全 | 生效 | D1 認證 token 放在 httpOnly cookie；D2 授權用的角色每次從資料庫讀；D3 CSRF 用綁定 session 的 double-submit token；D4 Google SSO 直接走 OIDC；D5 Google 登入綁定既有帳號的條件；D6 權限矩陣當授權輸入；D7 不做全域速率限制，登入失敗鎖定用 Redis 計數 |
 | [005](005-frontend-architecture.mdx) | 前端架構 | 生效 | D1 前端是 React 加 Vite 的單頁應用；D2 目錄分層採 pages 加 features；D3 元件庫用 shadcn/ui；D4 design token 寫一層對照；D5 圖示只用 Lucide；D6 onboarding 只做空狀態與情境提示 |
 | [006](006-task-config-and-answer-isolation.mdx) | 任務設定與答案隔離 | 生效 | D1 任務類型由設定決定，核心不寫任務專屬邏輯；D2 任務設定用 input_type 加 outputs 組合；D3 序列標記用半開字元 offset span；D4 答案隔離涵蓋標記員能到達的每個出口 |

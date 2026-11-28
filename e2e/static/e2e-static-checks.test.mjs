@@ -4,6 +4,7 @@
 // The samples below build host names and ports from pieces on purpose: this
 // file is itself scanned by the "no host or port outside the config" check.
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -135,5 +136,52 @@ describe("the e2e package as it is", () => {
 
   it("places every spec at e2e/<module>/<page>.spec.ts", () => {
     assert.deepEqual(findMisplacedSpecs(files), []);
+  });
+});
+
+/**
+ * Resolves the Playwright config in a fresh Node process, so each call reads
+ * its own environment (the config reads it once, at import time).
+ *
+ * @param {Record<string, string>} env Variables to set on top of the current environment.
+ * @param {string[]} unset Variables to remove from the current environment.
+ * @returns {{ webServer?: { name: string, env?: Record<string, string> }[] }}
+ */
+function resolveConfig(env, unset = []) {
+  const childEnv = { ...process.env, ...env };
+  for (const name of unset) {
+    delete childEnv[name];
+  }
+  const script =
+    'const m = await import("./playwright.config.ts"); console.log(JSON.stringify(m.default));';
+  const out = execFileSync(process.execPath, ["--input-type=module", "-e", script], {
+    cwd: E2E_ROOT,
+    env: childEnv,
+    encoding: "utf8",
+  });
+  return JSON.parse(out);
+}
+
+describe("the background-work setting in the resolved config", () => {
+  const backendEnv = (/** @type {ReturnType<typeof resolveConfig>} */ config) =>
+    config.webServer?.find((server) => server.name === "backend")?.env;
+
+  it("starts the backend with eager background work", () => {
+    const config = resolveConfig({}, ["E2E_TARGET", "CELERY_TASK_ALWAYS_EAGER"]);
+    assert.equal(backendEnv(config)?.CELERY_TASK_ALWAYS_EAGER, "true");
+  });
+
+  it("does not let the surrounding environment override it", () => {
+    const config = resolveConfig({ CELERY_TASK_ALWAYS_EAGER: "false" }, ["E2E_TARGET"]);
+    assert.equal(backendEnv(config)?.CELERY_TASK_ALWAYS_EAGER, "true");
+  });
+
+  it("starts no server, so passes no eager value, when targeting compose", () => {
+    const config = resolveConfig({
+      E2E_TARGET: "compose",
+      E2E_BASE_URL: "http://example.test",
+    });
+    assert.equal(config.webServer, undefined);
+    assert.ok(!JSON.stringify(config).includes("CELERY_TASK_ALWAYS_EAGER"));
   });
 });

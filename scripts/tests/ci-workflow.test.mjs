@@ -440,6 +440,10 @@ describe("C7: changes and compose", () => {
     /POSTGRES_PASSWORD="?\$\{?[A-Z_]+\}?"? docker compose -f docker-compose\.prod\.yml stop backend/;
   const CHROMIUM = /\bplaywright install --with-deps chromium\b/;
   const RESTART = /^scripts\/check-login-survives-restart\.sh http:\/\/localhost:8080\s*$/m;
+  // email-celery-worker design D11: each tier proves its worker reaches the broker.
+  const LITE_PING = /^docker compose exec -T worker celery -A app\.worker inspect ping\s*$/m;
+  const PROD_PING =
+    /POSTGRES_PASSWORD="?\$\{?[A-Z_]+\}?"? docker compose -f docker-compose\.prod\.yml exec -T worker celery -A app\.worker inspect ping\s*$/m;
 
   const stepsOf = () => job("compose").steps;
   const indexes = (pattern) =>
@@ -493,6 +497,7 @@ describe("C7: changes and compose", () => {
       at(CHROMIUM),
       at(LITE_UP),
       at(HEALTH),
+      at(LITE_PING),
       indexes(HEADERS)[0],
       at(RESTART),
       at(LITE_STOP),
@@ -500,6 +505,7 @@ describe("C7: changes and compose", () => {
       at(LITE_DOWN),
       at(PROD_UP),
       indexes(HEALTH)[1],
+      at(PROD_PING),
       indexes(HEADERS)[1],
       at(BROWSER),
       at(PROD_STOP),
@@ -598,7 +604,46 @@ describe("C7: changes and compose", () => {
     assert.match(run, /service_healthy/);
     assert.match(run, /interval/);
     assert.match(run, /\/api\/v1\/health/);
-    assert.match(run, /redis\|worker/);
+  });
+
+  test("the static assertions require redis and worker with the designed structure", () => {
+    // email-celery-worker design D11; spec container-runtime and ci-quality-gates.
+    const run = stepsOf()[indexes(STATIC)[0]].run;
+    assert.doesNotMatch(run, /select\(test\("redis\|worker"\)\)\] \| length == 0/);
+    assert.match(run, /\.services\.redis\b/);
+    assert.match(run, /\.services\.worker\b/);
+    assert.match(run, /\.services\.worker\.image == \.services\.backend\.image/);
+    assert.match(run, /stop_grace_period/);
+    assert.match(run, /default,scoring/);
+    assert.match(run, /label-suite-data/);
+    assert.match(run, /redis-cli/);
+    assert.match(run, /inspect ping/);
+    for (const name of ["REDIS_URL", "RESEND_API_KEY", "MAIL_FROM", "CELERY_TASK_ALWAYS_EAGER"]) {
+      assert.match(run, new RegExp(name), name);
+    }
+  });
+
+  test("each tier pings its worker once, after its health check and before its headers", () => {
+    const [liteHealth, prodHealth] = indexes(HEALTH);
+    for (const [ping, health, headers, down] of [
+      [indexes(LITE_PING), liteHealth, indexes(HEADERS)[0], indexes(LITE_DOWN)[0]],
+      [indexes(PROD_PING), prodHealth, indexes(HEADERS)[1], indexes(PROD_DOWN)[0]],
+    ]) {
+      assert.equal(ping.length, 1, "exactly one worker ping per tier");
+      assert.ok(health < ping[0] && ping[0] < headers && headers < down);
+    }
+  });
+
+  test("the backend test jobs start no Redis and no worker", () => {
+    // Spec ci-quality-gates "後端測試不需要佇列服務".
+    for (const name of ["backend-sqlite", "backend-postgres"]) {
+      const found = job(name);
+      const services = JSON.stringify(found.services ?? {});
+      assert.doesNotMatch(services, /redis/i, name);
+      for (const step of found.steps) {
+        assert.doesNotMatch(String(step.run ?? ""), /celery[^\n]*\bworker\b|redis-server/, name);
+      }
+    }
   });
 
   test("every up waits with a timeout, and nothing in compose is allowed to fail silently", () => {

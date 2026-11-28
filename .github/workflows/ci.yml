@@ -789,9 +789,15 @@ jobs:
           }
 
       # Reads the resolved configuration; nothing is started. In both tiers only
-      # the frontend publishes a port and no Redis or worker service exists, the
-      # frontend waits for a healthy backend, and the backend health check polls
-      # /api/v1/health every 30 seconds.
+      # the frontend publishes a port, the frontend waits for a healthy backend, and
+      # the backend health check polls /api/v1/health every 30 seconds. Both tiers
+      # also run redis and a worker (email-celery-worker design D11): the worker
+      # uses the backend image, listens on default,scoring, gets more than 300
+      # seconds to stop, waits for redis and the migration, and pings itself every
+      # 30 seconds; backend and worker get REDIS_URL, RESEND_API_KEY and MAIL_FROM;
+      # no service gets CELERY_TASK_ALWAYS_EAGER, although .env.example sets it for
+      # `pnpm run dev`. The Lite worker mounts the backend's data volume; the
+      # production worker mounts no named volume.
       - name: Assert the structure of both orchestration files
         run: |
           docker compose config --format json > "$RUNNER_TEMP/lite.json"
@@ -799,10 +805,19 @@ jobs:
           for file in lite prod; do
             echo "checking the $file tier"
             jq -e '[.services | to_entries[] | select((.value.ports // []) | length > 0) | .key] == ["frontend"]' "$RUNNER_TEMP/$file.json" > /dev/null || { echo "::error::$file: only frontend may publish ports"; exit 1; }
-            jq -e '[.services | keys[] | select(test("redis|worker"))] | length == 0' "$RUNNER_TEMP/$file.json" > /dev/null || { echo "::error::$file: no redis or worker service is expected"; exit 1; }
+            jq -e '.services.redis != null and .services.worker != null' "$RUNNER_TEMP/$file.json" > /dev/null || { echo "::error::$file: a redis and a worker service are required"; exit 1; }
+            jq -e '.services.worker.image == .services.backend.image' "$RUNNER_TEMP/$file.json" > /dev/null || { echo "::error::$file: worker must use the backend image"; exit 1; }
+            jq -e 'def secs: capture("^((?<h>[0-9]+)h)?((?<m>[0-9]+)m)?((?<s>[0-9]+)s)?$") | ((.h // "0") | tonumber) * 3600 + ((.m // "0") | tonumber) * 60 + ((.s // "0") | tonumber); (.services.worker.stop_grace_period | secs) > 300' "$RUNNER_TEMP/$file.json" > /dev/null || { echo "::error::$file: worker stop_grace_period must be more than 300 seconds"; exit 1; }
+            jq -e '(.services.worker.command | join(" ") | contains("-Q default,scoring")) and (.services.worker.command | join(" ") | contains("--concurrency 2"))' "$RUNNER_TEMP/$file.json" > /dev/null || { echo "::error::$file: worker must listen on default,scoring with concurrency 2"; exit 1; }
+            jq -e '(.services.redis.healthcheck.test | join(" ") | contains("redis-cli ping")) and .services.worker.healthcheck.interval == "30s" and (.services.worker.healthcheck.test | join(" ") | contains("inspect ping"))' "$RUNNER_TEMP/$file.json" > /dev/null || { echo "::error::$file: redis must check redis-cli ping and worker must run inspect ping every 30s"; exit 1; }
+            jq -e '.services.worker.depends_on.redis.condition == "service_healthy" and .services.worker.depends_on.migrate.condition == "service_completed_successfully" and .services.backend.depends_on.redis.condition == "service_healthy"' "$RUNNER_TEMP/$file.json" > /dev/null || { echo "::error::$file: worker must wait for redis and migrate, backend for redis"; exit 1; }
+            jq -e '[.services.backend, .services.worker] | all(.environment.REDIS_URL == "redis://redis:6379" and (.environment | has("RESEND_API_KEY")) and (.environment | has("MAIL_FROM")))' "$RUNNER_TEMP/$file.json" > /dev/null || { echo "::error::$file: backend and worker need REDIS_URL, RESEND_API_KEY and MAIL_FROM"; exit 1; }
+            jq -e '[.services[] | (.environment // {}) | has("CELERY_TASK_ALWAYS_EAGER")] | any | not' "$RUNNER_TEMP/$file.json" > /dev/null || { echo "::error::$file: no container may get CELERY_TASK_ALWAYS_EAGER"; exit 1; }
             jq -e '.services.frontend.depends_on.backend.condition == "service_healthy"' "$RUNNER_TEMP/$file.json" > /dev/null || { echo "::error::$file: frontend must wait for a healthy backend"; exit 1; }
             jq -e '.services.backend.healthcheck.interval == "30s" and (.services.backend.healthcheck.test | join(" ") | contains("/api/v1/health"))' "$RUNNER_TEMP/$file.json" > /dev/null || { echo "::error::$file: backend health check must poll /api/v1/health every 30s"; exit 1; }
           done
+          jq -e '([.services.worker.volumes[]? | select(.type == "volume" and .source == "label-suite-data" and .target == "/app/data")] | length == 1) and .services.worker.environment.SQLITE_PATH == .services.backend.environment.SQLITE_PATH' "$RUNNER_TEMP/lite.json" > /dev/null || { echo "::error::lite: worker must mount label-suite-data at /app/data with the backend's SQLITE_PATH"; exit 1; }
+          jq -e '[.services.worker.volumes[]? | select(.type == "volume")] | length == 0' "$RUNNER_TEMP/prod.json" > /dev/null || { echo "::error::prod: worker must not mount a named volume"; exit 1; }
 
       # Trusted proxy (#566, design D2 and D4). Both tiers must pin the same fixed
       # subnet, a dynamic ip_range and a frontend address outside it, and the backend
@@ -902,6 +917,10 @@ jobs:
           echo "$body"
           jq -e '.data.status == "ok" and .data.database == "ok"' <<< "$body"
 
+      # The worker reaches the broker (email-celery-worker design D11).
+      - name: Check that the Lite worker answers a ping
+        run: docker compose exec -T worker celery -A app.worker inspect ping
+
       - name: Check the Lite security headers
         run: scripts/check-security-headers.sh http://localhost:8080
 
@@ -949,6 +968,9 @@ jobs:
           body=$(curl -fsS http://localhost:8080/api/v1/health)
           echo "$body"
           jq -e '.data.status == "ok" and .data.database == "ok"' <<< "$body"
+
+      - name: Check that the production worker answers a ping
+        run: AUTH_SECRET="$GENERATED_AUTH_SECRET" POSTGRES_PASSWORD="$GENERATED_POSTGRES_PASSWORD" docker compose -f docker-compose.prod.yml exec -T worker celery -A app.worker inspect ping
 
       - name: Check the production security headers
         run: scripts/check-security-headers.sh http://localhost:8080

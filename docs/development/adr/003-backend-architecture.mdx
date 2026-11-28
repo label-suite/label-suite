@@ -1,12 +1,12 @@
 ---
 title: ADR-003 後端架構
-description: 後端與 API 契約的決定：前後端同一個 repo、FastAPI、模組內分層、狀態機放 service 層、路徑前綴與回應 envelope、Orval 產生前端 client、SQLite 加 PostgreSQL 雙層、Celery 加 Redis、Bruno 降成可選工具、背景計算的結果寫入做成冪等、i18n 分前端與後端兩層、跨模組呼叫只走 service 對 service、稽核紀錄放在 core、業務模組怎麼切與資料表歸誰。
+description: 後端與 API 契約的決定：前後端同一個 repo、FastAPI、模組內分層、狀態機放 service 層、路徑前綴與回應 envelope、Orval 產生前端 client、SQLite 加 PostgreSQL 雙層、Celery 加 Redis、Bruno 降成可選工具、背景計算的結果寫入做成冪等、i18n 分前端與後端兩層、跨模組呼叫只走 service 對 service、稽核紀錄放在 core、業務模組怎麼切與資料表歸誰、共用基礎建設的 Celery task 放在哪裡。
 tags: [adr, backend, api, database, celery, i18n]
 ---
 
 # ADR-003 後端架構
 
-這份 ADR 管後端的骨架與它對外的契約：repo 怎麼分、用什麼框架、目錄怎麼分層、API 的前綴與回應外層、前端 client 怎麼產生、資料庫與背景工作用什麼、背景計算的結果怎麼寫才不會重複、使用者看得到的字串由哪一層決定語言、一個模組怎麼讀寫另一個模組的資料、稽核紀錄放在哪裡、業務模組怎麼切。認證與授權、測試、部署與前端的目錄不在這裡，測試見 [ADR-007](007-testing-strategy.mdx)。
+這份 ADR 管後端的骨架與它對外的契約：repo 怎麼分、用什麼框架、目錄怎麼分層、API 的前綴與回應外層、前端 client 怎麼產生、資料庫與背景工作用什麼、背景計算的結果怎麼寫才不會重複、使用者看得到的字串由哪一層決定語言、一個模組怎麼讀寫另一個模組的資料、稽核紀錄放在哪裡、業務模組怎麼切、共用基礎建設的 Celery task 放在哪裡。認證與授權、測試、部署與前端的目錄不在這裡，測試見 [ADR-007](007-testing-strategy.mdx)。
 規則本體在 [backend-agent-rules.mdx](../rules/backend-agent-rules.mdx) 與 [api-agent-rules.mdx](../rules/api-agent-rules.mdx)，落地的做法在 [architecture.mdx](../architecture.mdx)，本文只寫為什麼；衝突時的優先序見 [ADR 索引](index.mdx#衝突時以誰為準)。
 
 ## D1 前後端放在同一個 repo
@@ -644,6 +644,47 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 - 實際加進 `backend/pyproject.toml` 的跨模組 `ignore_imports` 超過 7 條：[backend-modules.mdx](../../diagrams/architecture/backend-modules.mdx#預期的跨模組呼叫) 的 5 條確定項，加上看設計（`account` → `task`）與以後才需要（`dashboard` → `account`）的兩處；07-04 通知或 `ai_runs` 落地時新增的呼叫不算在內
 - 03 與 04 的 issue 並行派工時反覆在 `app/modules/task/` 發生衝突
 
+## D15 共用基礎建設的 Celery task 落在它的入口套件
+
+### 背景
+
+要決定寄信這類不屬於任何業務模組的共用基礎建設，它的 Celery task 放在哪一個目錄。
+
+| 限制 | 對選擇的影響 |
+| :--- | :--- |
+| [B3](../rules/backend-agent-rules.mdx#b3-session-的生命週期)、[B9](../rules/backend-agent-rules.mdx#b9-celery-的界線) 的適用路徑原本只寫 Celery task 落在 `app/modules/<module>/` | 寄信 task 要有自己的落點，路徑文字要跟著改 |
+| 寄信入口 `app/mail/` 是頂層入口套件，不得 import `app.modules`（[B12](../rules/backend-agent-rules.mdx#b12-單一入口)） | task 放進入口套件，就到不了業務資料與測試集答案 |
+| task 要在 worker 裡執行，共用的 Celery app 在 `app/core/celery_app.py` | task 放進 `app/core/`，core 要依賴寄信入口 |
+
+### 考慮過的選項
+
+| 選項 | 好處 | 代價 | 結論 |
+| :--- | :--- | :--- | :--- |
+| A 放 `app/modules/mail/` | — | 五個消費者模組各要一條跨模組放行（[D12](#d12-跨模組呼叫只走-service-對-service-的公開函式)） | 不採用 |
+| B 放 `app/core/` | — | core 會依賴入口 | 不採用 |
+| C 放寄信入口 `app/mail/tasks.py` | task 與寄信的程式在同一個套件；`app.core.celery_app` 不 import 任何 task，task 清單由組裝點 `app/worker.py` 帶入 | 每個要有 task 的共用基礎建設都要有自己的入口套件 | 採用 |
+
+### 決定
+
+共用基礎建設的 Celery task 落在它的入口套件，寄信的 `send_mail` 在 `app/mail/tasks.py`，由 `app/worker.py` 登記。業務 task 仍落在 `app/modules/<module>/`；寄信 task 對 B9 的例外見 [B9](../rules/backend-agent-rules.mdx#b9-celery-的界線)，流程見 [architecture.mdx 的 §非同步任務](../architecture.mdx#非同步任務)。
+
+### 後果
+
+**變容易**
+
+- 消費者模組呼叫寄信不需要任何跨模組放行；router 不得 import 寄信入口，只有 service 呼叫
+- 寄信 task 在 import 圖上到不了業務資料與測試集答案
+
+**變困難**
+
+- 下一個要有 Celery task 的共用基礎建設要先有自己的入口套件，並同步 B12 的契約與登記
+- 入口套件裡的 task 不走「只傳識別資訊、重查權限」，每個例外都要像寄信 task 一樣在 B9 個別寫明
+
+### 什麼情況要重新討論
+
+- 第二個入口套件需要自己的 Celery task 時，確認 `app/worker.py` 的 `include` 清單與這個做法仍然適用
+- 入口套件裡的 task 需要讀業務資料時
+
 ## 附錄：來源對照
 
 比對的版本：個人 repo ADR-001、003、005、006、007、022、024、025、026 的現行內容（`docs/adr/` 最後異動的 commit 是 `9a5da8e`，2026-10-12）。D10 的來源也在其中，是 ADR-024 的 Dialect-Specific Paths，見下表。
@@ -665,6 +706,7 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 | D12 | 維護者 2026-11-27 的裁定 1，記在 [#749](https://github.com/label-suite/label-suite/issues/749) 本文（只記做法與不准的兩層，沒有記選項的好處與代價；選項表只填本節「後果」已有的事實，其餘留「—」）；契約原本的寫法出自 `backend/pyproject.toml` 跨模組契約上方的註解；`ignore_imports` 的寫法與檢查見 [B12](../rules/backend-agent-rules.mdx#b12-單一入口)；寫入、雙向依賴與 import 寫法、只准 service 對 service 三項，出自維護者 2026-11-27 對 [#749 檢查點](https://github.com/label-suite/label-suite/issues/749#issuecomment-7208259754)的補充裁定（只 import 模組的理由是避免循環 import，其餘只記做法，沒有記理由）；重新討論條件改寫自 [D3](#d3-後端採模組內分層) 原本的「跨模組共用的 service 或 schema 沒有合適的位置」，去掉其中已經過去的「第一批模組合併之後」 |
 | D13 | 維護者 2026-11-27 的裁定 2，記在 [#749](https://github.com/label-suite/label-suite/issues/749) 本文（只記做法與判準，沒有列出其他選項；選項 A 的代價取自本節「後果」）；`audit_events` 的性質見 [ADR-008 的 D6](008-deployment-and-operations.mdx#d6-使用者行為記在單一只新增的-audit_events-表)；model 的載入方式出自 `backend/alembic/env.py`；重新討論條件由裁定的判準反推，來源沒有記錄 |
 | D14 | 維護者 2026-11-27 選定方案 C 並把 06-01 放 `account`，記在 [#750 的檢查點](https://github.com/label-suite/label-suite/issues/750#issuecomment-7208259366)（只記選擇，沒有記理由）；四個選項與它們的好處、代價取自 #750 的方案比較（第二則檢查點所述、給維護者看過的 artifact），比較中的數字出自[資料表字典](../../diagrams/architecture/data-table-dictionary.mdx)的分組與關聯限制、各規格頁的資料欄位與 `backend/pyproject.toml` 的 independence 契約；九組各一個模組的 28–32 條是粗估，沒有逐項列；02-01 用獨立 `dashboard` 模組是維護者另一次的選擇，記在 [#750 的檢查點](https://github.com/label-suite/label-suite/issues/750#issuecomment-7208521478)（只記選擇，沒有記理由），三種取法取自方案比較 §八 第 7 題；重新討論的第 2 條的 7 取自方案比較 C 的範圍 5–8 扣掉 06-01 的 1 條；其餘兩條由「變困難」反推，來源沒有記錄 |
+| D15 | email-celery-worker 的 design D1（task 放 `app/modules/mail/` 與 `app/core/` 兩個替代方案的代價）與 clarification Q8（決議）；選項 C 的好處取自 design D1，選項 A、B 沒有記錄好處；重新討論條件由決定反推，來源沒有記錄 |
 
 ## 待決
 
@@ -697,3 +739,5 @@ Bruno 降成可選的手動工具，pre-PR 硬關卡取消；唯一的契約真�
 | 2026-11-27 | 跨模組寫入照讀取的規則，被呼叫的 service 不 commit、由發起的 service 在同一個交易 commit；允許雙向依賴，只 import 模組；只准 service 對 service，router 只呼叫自己模組的 service（[D12](#d12-跨模組呼叫只走-service-對-service-的公開函式)） | D12 原本只寫讀取，沒有限制放行的左邊 | [#749 留言](https://github.com/label-suite/label-suite/issues/749#issuecomment-7208259754) |
 | 2026-11-27 | 後端分成 `account`（含 06-01）、`dashboard`、`task`（03 加 04）、`dataset`、`admin`（06-02）五個業務模組，42 張表的歸屬寫進 backend-modules.mdx（[D14](#d14-後端業務模組的切分)） | — | [#750 留言](https://github.com/label-suite/label-suite/issues/750#issuecomment-7208259366) |
 | 2026-11-27 | 02-01 用獨立的 `dashboard` 模組，沒有表、只呼叫 `task` 的 service（[D14](#d14-後端業務模組的切分)） | 方案比較的另兩種取法：端點放進 `task`、前端直接組合既有端點 | [#750 留言](https://github.com/label-suite/label-suite/issues/750#issuecomment-7208521478) |
+| 2026-11-28 | 共用基礎建設的 Celery task 落在它的入口套件，寄信的 `send_mail` 在 `app/mail/tasks.py`（[D15](#d15-共用基礎建設的-celery-task-落在它的入口套件)） | B3、B9 的適用路徑只寫 `app/modules/<module>/` | [#756](https://github.com/label-suite/label-suite/issues/756)；email-celery-worker clarification Q8 |
+| 2026-11-28 | Redis 掉寄信工作不重開 [D8](#d8-非同步任務用-celery-加-redis)：這些信使用者都能重新觸發（重寄、重新邀請），D8「評分之外出現必須保證不掉的工作」的條件不因寄信成立 | —（D8 的重新討論條件原本只針對評分） | [#756](https://github.com/label-suite/label-suite/issues/756)；email-celery-worker clarification Q9 |

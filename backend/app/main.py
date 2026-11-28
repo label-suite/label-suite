@@ -14,6 +14,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.auth_secret import resolve_auth_secret
+from app.core.celery_app import create_celery_app
 from app.core.config import Settings, load_settings
 from app.core.csrf import CSRF_HEADER, CsrfMiddleware
 from app.core.db import create_engine, create_sessionmaker
@@ -36,6 +37,7 @@ from app.core.openapi import (
 from app.core.paths import API_V1_PREFIX
 from app.core.schemas import ErrorResponse
 from app.core.tokens import AccessTokenCodec, TokenKeys
+from app.mail import MailService
 from app.modules.account.router import router as account_router
 from app.modules.account.service import AccountPrincipalLoader
 from app.modules.admin.service import AdminPermissionMatrixProvider
@@ -86,6 +88,15 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
         await engine.dispose()
 
 
+def _attach_mail(app: FastAPI, settings: Settings) -> None:
+    """Put the default Celery app and the ``MailService`` in ``app.state``; no connection."""
+    celery_app = create_celery_app(settings)
+    celery_app.set_default()
+    app.state.celery_app = celery_app
+    # Consumers' services take it from here and call it after their commit (B4).
+    app.state.mail_service = MailService(settings, celery_app)
+
+
 def create_app(settings: Settings | None = None) -> FastAPI:
     """Build the API app.
 
@@ -102,7 +113,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         access-token codec in ``app.state.access_codec``, the account module's
         ``AccountPrincipalLoader`` in ``app.state.principal_loader`` and the admin
         module's ``AdminPermissionMatrixProvider`` in
-        ``app.state.permission_matrix_provider``. ``app.state.task_membership_reader``
+        ``app.state.permission_matrix_provider``. Builds the Celery app
+        (``create_celery_app``), makes it Celery's default app and puts it in
+        ``app.state.celery_app``, and puts the mail entry's ``MailService`` in
+        ``app.state.mail_service``; neither opens a connection. ``app.state.task_membership_reader``
         is not set: no module implements it yet, so a task-scoped permission check
         fails loudly with ``RuntimeError`` (authz-steps-3-4 design D7).
 
@@ -153,6 +167,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # core.authz only defines the protocol; the admin module owns the matrix. The admin
     # router has no route yet, so it is not mounted and no admin tag is declared.
     app.state.permission_matrix_provider = AdminPermissionMatrixProvider()
+    _attach_mail(app, resolved)
 
     # add_middleware puts each new layer outside the previous ones, so this runs
     # innermost first: Csrf, Locale, Unhandled, AccessLog, CORS, Correlation (design D3;

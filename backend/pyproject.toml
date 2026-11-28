@@ -9,17 +9,20 @@ dependencies = [
     "argon2-cffi>=25.1.0",
     "asyncpg>=0.32.0",
     "authlib>=1.9.10",
+    "celery[redis]>=5.7.0",
     "fastapi>=0.165.0",
     "httpx>=0.28.1",
     "pydantic>=2.11",
     "pydantic-settings>=2.16.3",
     "pyjwt>=2.15.1",
+    "redis>=8.2.0",
     "sqlalchemy[asyncio]>=2.1.9",
     "uvicorn[standard]>=0.54.0",
 ]
 
 [dependency-groups]
 dev = [
+    "celery-types>=0.26.0",
     "import-linter>=2.17",
     "mypy>=2.4.1",
     "pip-audit>=2.10.1",
@@ -117,25 +120,26 @@ allow_indirect_imports = true
 # listed in source_modules, so it may import its own SDK while every other top-level
 # package may not (L3). allow_indirect_imports is required: without it, a package that
 # uses an existing entry would fail too (L4). test_entry_contracts.py keeps
-# source_modules complete when a new top-level package appears.
+# source_modules complete when a new top-level package appears. app.worker, the worker's
+# assembly point, is checked like app.main; app.oidc and app.mail are entry packages.
 [[tool.importlinter.contracts]]
 name = "Mail only through its entry"
 type = "forbidden"
-source_modules = ["app.core", "app.modules", "app.main", "app.scripts"]
+source_modules = ["app.core", "app.modules", "app.main", "app.scripts", "app.worker"]
 forbidden_modules = ["resend", "smtplib", "aiosmtplib"]
 allow_indirect_imports = true
 
 [[tool.importlinter.contracts]]
 name = "OIDC only through its entry"
 type = "forbidden"
-source_modules = ["app.core", "app.modules", "app.main", "app.scripts"]
+source_modules = ["app.core", "app.modules", "app.main", "app.scripts", "app.worker"]
 forbidden_modules = ["authlib"]
 allow_indirect_imports = true
 
 [[tool.importlinter.contracts]]
 name = "Outbound HTTP only through its entry"
 type = "forbidden"
-source_modules = ["app.core", "app.modules", "app.main", "app.scripts"]
+source_modules = ["app.core", "app.modules", "app.main", "app.scripts", "app.worker"]
 forbidden_modules = ["httpx", "requests", "aiohttp", "urllib3"]
 allow_indirect_imports = true
 
@@ -154,6 +158,24 @@ name = "Only the assembly point imports routers"
 type = "protected"
 protected_modules = ["app.modules.*.router"]
 allowed_importers = ["app.main"]
+
+# Mail entry contracts (email-celery-worker design D9). A router never imports the mail
+# entry directly: mail goes out from a service, after its commit (B4); router -> service ->
+# app.mail is the intended path. The mail entry and its task never reach a business
+# module, directly or through another package, so they cannot reach test-set answers
+# (Hard Rule 6).
+[[tool.importlinter.contracts]]
+name = "Routers do not import the mail entry"
+type = "forbidden"
+source_modules = ["app.modules.*.router"]
+forbidden_modules = ["app.mail"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "Mail entry does not import modules"
+type = "forbidden"
+source_modules = ["app.mail"]
+forbidden_modules = ["app.modules"]
 
 [tool.coverage.run]
 source = ["app"]

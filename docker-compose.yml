@@ -1,5 +1,5 @@
-# Lite-tier orchestration: migrate, backend and frontend, with the database in a
-# file on a named volume (ADR-003 D7; system-design D1, D3). Copy .env.example to
+# Lite-tier orchestration: migrate, backend, redis, worker and frontend, with the
+# database in a file on a named volume (ADR-003 D7; system-design D1, D3). Copy .env.example to
 # .env and `docker compose up --build --wait --wait-timeout 300` then needs no
 # further arguments.
 #
@@ -48,6 +48,8 @@ services:
       # migrate log only (system-design D1).
       migrate:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
     environment:
       # No default on purpose: unset or empty makes Compose fail interpolation
       # before any container is created (system-design D6, D7; Hard Rule 7 -
@@ -68,7 +70,11 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-}
+      # Mail and queue (email-celery-worker design D11): the same values as the
+      # worker. Set both mail values or neither, or the backend refuses to start.
       RESEND_API_KEY: ${RESEND_API_KEY:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      REDIS_URL: redis://redis:6379
     volumes:
       - label-suite-data:/app/data
     healthcheck:
@@ -86,6 +92,53 @@ services:
     # No ports: the API is reachable only inside the Compose network, through
     # the frontend's reverse proxy (ADR-008 D1; system-design D6).
     stop_grace_period: 30s
+
+  # The Celery broker and result store (ADR-003 D8): database 0 for the queue,
+  # 1 for results. No ports - only the backend and the worker reach it, inside the
+  # Compose network - and no volume: losing queued mail on a restart is accepted,
+  # since every such mail can be triggered again (email-celery-worker design D11).
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
+      retries: 5
+
+  # The background worker: the backend image with Celery as the command
+  # (ADR-008 D2). It reads WorkerSettings only, so it needs neither
+  # CORS_ALLOWED_ORIGINS nor AUTH_SECRET. CELERY_TASK_ALWAYS_EAGER is never passed
+  # to any container: in-process tasks are for `pnpm run dev` and e2e only
+  # (email-celery-worker design D4, D11).
+  worker:
+    <<: *backend-image
+    command: ["celery", "-A", "app.worker", "worker", "-Q", "default,scoring", "--concurrency", "2"]
+    depends_on:
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      # The same database file as the backend, on the same volume below.
+      SQLITE_PATH: ${SQLITE_PATH:-./data/label_suite.db}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      REDIS_URL: redis://redis:6379
+      # Set both or neither: one without the other stops the worker at start-up.
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+    volumes:
+      - label-suite-data:/app/data
+    healthcheck:
+      # Pings this worker only; $$ keeps Compose from interpolating HOSTNAME.
+      test: ["CMD-SHELL", "celery -A app.worker inspect ping -d celery@$$HOSTNAME"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    # Warm shutdown: a running task gets up to 300 seconds to finish, plus a margin
+    # (ADR-008 D10; architecture.mdx §部署與維運).
+    stop_grace_period: 330s
 
   frontend:
     build:

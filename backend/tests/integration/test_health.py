@@ -273,6 +273,9 @@ def _clear_service_environment(monkeypatch: pytest.MonkeyPatch) -> None:
         "GOOGLE_CLIENT_SECRET",
         "GOOGLE_REDIRECT_URI",
         "RESEND_API_KEY",
+        "MAIL_FROM",
+        "REDIS_URL",
+        "CELERY_TASK_ALWAYS_EAGER",
     ):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("CORS_ALLOWED_ORIGINS", ALLOWED_ORIGIN)

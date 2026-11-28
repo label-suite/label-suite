@@ -17,7 +17,7 @@ from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.core.auth_secret import KEY_FILE_NAME
-from app.core.config import DatabaseSettings
+from app.core.config import ConfigError, DatabaseSettings
 from app.core.db import create_engine
 from app.main import create_app
 from tests.conftest import ALLOWED_ORIGIN, TEST_AUTH_SECRET, run_alembic
@@ -34,7 +34,11 @@ _ENV = (
     "GOOGLE_CLIENT_SECRET",
     "GOOGLE_REDIRECT_URI",
     "RESEND_API_KEY",
+    "MAIL_FROM",
+    "REDIS_URL",
+    "CELERY_TASK_ALWAYS_EAGER",
 )
+MAIL_FROM = "Label Suite <noreply@example.test>"
 
 
 @asynccontextmanager
@@ -63,7 +67,13 @@ async def _options() -> dict[str, bool]:
 
 
 async def test_mail_without_google(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    _environment(monkeypatch, tmp_path, AUTH_SECRET=TEST_AUTH_SECRET, RESEND_API_KEY="re_test")
+    _environment(
+        monkeypatch,
+        tmp_path,
+        AUTH_SECRET=TEST_AUTH_SECRET,
+        RESEND_API_KEY="re_test",
+        MAIL_FROM=MAIL_FROM,
+    )
 
     assert await _options() == {"selfRegistrationEnabled": True, "googleEnabled": False}
 
@@ -87,23 +97,44 @@ async def test_nothing_set_means_neither(monkeypatch: pytest.MonkeyPatch, tmp_pa
     assert await _options() == {"selfRegistrationEnabled": False, "googleEnabled": False}
 
 
-async def test_an_empty_mail_key_means_no_mail(
+async def test_empty_mail_settings_mean_no_mail(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    _environment(monkeypatch, tmp_path, AUTH_SECRET=TEST_AUTH_SECRET, RESEND_API_KEY="")
+    _environment(
+        monkeypatch, tmp_path, AUTH_SECRET=TEST_AUTH_SECRET, RESEND_API_KEY="", MAIL_FROM=""
+    )
 
     assert (await _options())["selfRegistrationEnabled"] is False
+
+
+async def test_a_mail_key_without_a_sender_stops_the_service(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _environment(monkeypatch, tmp_path, AUTH_SECRET=TEST_AUTH_SECRET, RESEND_API_KEY="re_CANARY")
+
+    with pytest.raises(ConfigError) as excinfo:
+        create_app()
+
+    assert "MAIL_FROM" in str(excinfo.value)
+    assert "re_CANARY" not in str(excinfo.value)
 
 
 async def test_options_need_no_cookie_and_reveal_no_settings(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    _environment(monkeypatch, tmp_path, AUTH_SECRET=TEST_AUTH_SECRET, RESEND_API_KEY="re_CANARY")
+    _environment(
+        monkeypatch,
+        tmp_path,
+        AUTH_SECRET=TEST_AUTH_SECRET,
+        RESEND_API_KEY="re_CANARY",
+        MAIL_FROM="CANARY-from@example.test",
+    )
 
     async with _serve(create_app()) as http:
         response = await http.get(OPTIONS)
 
     assert "re_CANARY" not in response.text
+    assert "CANARY-from" not in response.text
     assert set(response.json()["data"]) == {"selfRegistrationEnabled", "googleEnabled"}
 
 

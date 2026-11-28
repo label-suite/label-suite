@@ -39,7 +39,15 @@ from tests.probe import probe_router
 
 TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL") or None
 
-_CONFIGURED_LOGGERS = ("uvicorn", "uvicorn.access", "sqlalchemy", "aiosqlite", "asyncpg")
+_CONFIGURED_LOGGERS = (
+    "uvicorn",
+    "uvicorn.access",
+    "sqlalchemy",
+    "aiosqlite",
+    "asyncpg",
+    "httpx",
+    "httpcore",
+)
 """The named loggers ``configure_logging`` changes besides the root logger."""
 
 
@@ -168,6 +176,10 @@ def make_test_settings(tmp_path: Path) -> Settings:
         database_url=TEST_DATABASE_URL,
         sqlite_path=tmp_path / "test.db",
         auth_secret=SecretStr(TEST_AUTH_SECRET),
+        redis_url="redis://localhost:6379",
+        resend_api_key=None,
+        mail_from=None,
+        celery_task_always_eager=False,
     )
 
 

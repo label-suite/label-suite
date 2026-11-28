@@ -20,7 +20,9 @@ from tests.unit.import_tree import (
     INDEPENDENCE,
     LINT_IMPORTS,
     MAIL,
+    MAIL_MODULES,
     OIDC,
+    ROUTER_MAIL,
     ROUTER_PROTECTED,
     append,
     build_tree,
@@ -44,6 +46,8 @@ EXPECTED_CONTRACTS = {
     HTTP_CLIENT,
     INDEPENDENCE,
     ROUTER_PROTECTED,
+    ROUTER_MAIL,
+    MAIL_MODULES,
 }
 
 
@@ -224,3 +228,58 @@ def test_real_contract_names_equal_the_expected_set() -> None:
     missing, extra = contract_name_diff(load_contracts(), EXPECTED_CONTRACTS)
 
     assert (missing, extra) == ([], []), f"missing {missing}, unexpected {extra}"
+
+
+# --- the mail entry contracts (email-celery-worker D9) ---------------------------------
+
+
+def test_router_importing_the_mail_entry_fails_with_the_chain(tmp_path: Path) -> None:
+    build_tree(tmp_path)
+    append(tmp_path, "app/modules/health/router.py", "import app.mail")
+
+    result = run_lint_imports(tmp_path)
+
+    assert result.returncode != 0
+    assert f"{ROUTER_MAIL} BROKEN" in result.stdout
+    assert "app.modules.health.router -> app.mail" in result.stdout
+
+
+def test_router_reaching_the_mail_entry_through_its_service_is_allowed(tmp_path: Path) -> None:
+    build_tree(tmp_path)
+    append(tmp_path, "app/modules/health/service.py", "import app.mail")
+
+    result = run_lint_imports(tmp_path)
+
+    assert result.returncode == 0, result.stdout
+    assert f"{ROUTER_MAIL} KEPT" in result.stdout
+
+
+def test_mail_entry_importing_a_module_fails(tmp_path: Path) -> None:
+    build_tree(tmp_path)
+    write(tmp_path, "app/mail/tasks.py", "from app.modules.health import repository\n")
+
+    result = run_lint_imports(tmp_path)
+
+    assert result.returncode != 0
+    assert f"{MAIL_MODULES} BROKEN" in result.stdout
+
+
+def test_mail_entry_reaching_a_module_through_a_relay_package_fails(tmp_path: Path) -> None:
+    build_tree(tmp_path)
+    write(tmp_path, "app/relay/__init__.py", "from app.modules.health import repository\n")
+    write(tmp_path, "app/mail/tasks.py", "import app.relay\n")
+
+    result = run_lint_imports(tmp_path)
+
+    assert result.returncode != 0
+    assert f"{MAIL_MODULES} BROKEN" in result.stdout
+
+
+def test_worker_assembly_importing_httpx_fails(tmp_path: Path) -> None:
+    build_tree(tmp_path)
+    append(tmp_path, "app/worker.py", "import httpx")
+
+    result = run_lint_imports(tmp_path)
+
+    assert result.returncode != 0
+    assert f"{HTTP_CLIENT} BROKEN" in result.stdout
