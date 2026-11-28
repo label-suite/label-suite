@@ -5,13 +5,21 @@
 // both. Real uvicorn and Vite are replaced by fixtures/dev/fake-server.mjs.
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import { EventEmitter } from "node:events";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, test } from "node:test";
 
-import { devCommands, loadDevEnv, supervise } from "../dev.mjs";
+import {
+  descendantsOf,
+  devCommands,
+  loadDevEnv,
+  parseProcessList,
+  resolveSpawn,
+  supervise,
+} from "../dev.mjs";
 
 const ROOT = fileURLToPath(new URL("../..", import.meta.url));
 const FAKE = fileURLToPath(new URL("./fixtures/dev/fake-server.mjs", import.meta.url));
@@ -163,5 +171,237 @@ describe("loadDevEnv", () => {
       undefined,
       "the one required setting gets no invented default",
     );
+  });
+});
+
+describe("resolveSpawn", () => {
+  test("on win32 pnpm goes through cmd.exe, ComSpec first", () => {
+    assert.deepEqual(resolveSpawn("pnpm", ["--filter", "frontend", "dev"], "win32", {}), {
+      command: "cmd.exe",
+      args: ["/d", "/s", "/c", "pnpm", "--filter", "frontend", "dev"],
+    });
+    assert.equal(
+      resolveSpawn("pnpm", [], "win32", { ComSpec: "C:\\Windows\\cmd.exe" }).command,
+      "C:\\Windows\\cmd.exe",
+    );
+  });
+
+  test("on win32 other commands (uv.exe) are spawned directly, so no shell sees their args", () => {
+    assert.deepEqual(resolveSpawn("uv", ["run", "x & y"], "win32", {}), {
+      command: "uv",
+      args: ["run", "x & y"],
+    });
+  });
+
+  test("on POSIX nothing changes", () => {
+    assert.deepEqual(resolveSpawn("pnpm", ["a"], "linux", {}), { command: "pnpm", args: ["a"] });
+  });
+});
+
+describe("supervise on win32 (injected platform and spawn)", () => {
+  function fakeSpawn({ withPid = true } = {}) {
+    const calls = [];
+    let nextPid = 100;
+    const fn = (command, args, options) => {
+      const child = new EventEmitter();
+      child.pid = withPid ? nextPid++ : undefined; // no pid: POSIX kill() is skipped, never a real group
+      child.kill = () => {};
+      calls.push({ command, args, options, child });
+      return child;
+    };
+    return { fn, calls };
+  }
+  const commands = [
+    { name: "backend", command: "uv", args: ["run", "uvicorn"], cwd: "." },
+    { name: "frontend", command: "pnpm", args: ["--filter", "frontend", "dev"], cwd: "." },
+  ];
+
+  test("starts pnpm through cmd.exe without a process group, and taskkills the tree when one ends", async () => {
+    const { fn, calls } = fakeSpawn();
+    const done = supervise(commands, {
+      stdout: { write() {} },
+      env: {},
+      platform: "win32",
+      spawnFn: fn,
+      listProcesses: async () => [],
+    });
+    const [backend, frontend] = calls;
+    try {
+      assert.equal(backend.command, "uv");
+      assert.equal(frontend.command, "cmd.exe");
+      assert.deepEqual(frontend.args.slice(0, 4), ["/d", "/s", "/c", "pnpm"]);
+      assert.equal(frontend.options.detached, false);
+
+      frontend.child.exitCode = 2; // as Node sets it before emitting "exit"
+      frontend.child.emit("exit", 2, null);
+      const killed = calls.filter((c) => c.command === "taskkill");
+      // The running backend is stopped as a whole tree; the exited frontend's pid is left alone.
+      assert.ok(killed.every((c) => c.args.includes("/T") && c.args.includes("/F")));
+      assert.ok(killed.some((c) => c.args[1] === String(backend.child.pid)));
+      assert.ok(!killed.some((c) => c.args[1] === String(frontend.child.pid)));
+    } finally {
+      for (const c of [backend, frontend]) c.child.emit("exit", 1, null);
+    }
+    assert.equal(await done, 2);
+  });
+
+  test("SIGTERM to dev taskkills both trees and exits 143", async () => {
+    const { fn, calls } = fakeSpawn();
+    const done = supervise(commands, {
+      stdout: { write() {} },
+      env: {},
+      platform: "win32",
+      spawnFn: fn,
+      listProcesses: async () => [],
+    });
+    const servers = calls.slice(0, 2);
+    try {
+      process.emit("SIGTERM", "SIGTERM");
+      const pids = calls
+        .filter((c) => c.command === "taskkill")
+        .map((c) => c.args[1])
+        .sort();
+      assert.deepEqual(pids, servers.map((c) => String(c.child.pid)).sort());
+    } finally {
+      for (const c of servers) c.child.emit("exit", 1, null);
+    }
+    assert.equal(await done, 143);
+  });
+
+  describe("orphaned descendants", () => {
+    const row = (pid, ppid, created) => ({ pid, ppid, created });
+    // uv (100) -> reloader (200) -> worker (300); the frontend is cmd (101).
+    const full = [row(100, 1, "10"), row(200, 100, "20"), row(300, 200, "30"), row(101, 1, "40")];
+
+    // Record a snapshot of `full`, then kill uv and the reloader; `after` is the process list then.
+    async function run(after, { failList = false } = {}) {
+      const { fn, calls } = fakeSpawn();
+      let list = full;
+      let listed = 0;
+      const lines = [];
+      const done = supervise(commands, {
+        stdout: { write: (text) => lines.push(text) },
+        env: {},
+        platform: "win32",
+        spawnFn: fn,
+        listProcesses: async () => {
+          listed++;
+          if (failList && list !== full) throw new Error("powershell failed");
+          return list;
+        },
+        snapshotIntervalMs: 10,
+      });
+      const [backend, frontend] = calls;
+      try {
+        await waitFor(() => listed >= 1, "the first snapshot");
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        list = after;
+        backend.child.exitCode = 1;
+        backend.child.emit("exit", 1, null);
+      } finally {
+        frontend.child.emit("exit", 1, null);
+        backend.child.emit("exit", 1, null);
+      }
+      await done;
+      return {
+        killed: calls.filter((c) => c.command === "taskkill").map((c) => c.args[1]),
+        listed,
+        lines: lines.join(""),
+      };
+    }
+
+    test("a worker still alive with the same creation time is taskkilled after its root died", async () => {
+      const { killed } = await run([row(101, 1, "40"), row(300, 200, "30")]);
+      assert.ok(killed.includes("300"));
+      assert.ok(!killed.includes("100"), "the exited root is never targeted");
+    });
+
+    test("a recorded pid now showing a different creation time is a reused pid and is left alone", async () => {
+      const { killed } = await run([row(101, 1, "40"), row(300, 1, "99")]);
+      assert.ok(!killed.includes("300"));
+    });
+
+    test("a worker respawned after the last snapshot is reaped through its dead recorded parent", async () => {
+      const { killed } = await run([row(101, 1, "40"), row(400, 200, "25")]);
+      assert.ok(killed.includes("400"));
+    });
+
+    test("a child of the exited root itself is reaped too, but never the root", async () => {
+      const { killed } = await run([row(101, 1, "40"), row(500, 100, "15")]);
+      assert.ok(killed.includes("500"));
+      assert.ok(!killed.includes("100"));
+    });
+
+    test("a row whose parent pid matches but that started earlier than the parent is left alone", async () => {
+      const { killed } = await run([row(101, 1, "40"), row(401, 200, "15")]);
+      assert.ok(!killed.includes("401"));
+    });
+
+    test("a row under a pid that now belongs to another process is left alone", async () => {
+      const { killed } = await run([row(101, 1, "40"), row(200, 1, "50"), row(402, 200, "60")]);
+      assert.ok(!killed.includes("402") && !killed.includes("200"));
+    });
+
+    test("a failed process listing during the reap says so", async () => {
+      const { lines } = await run([], { failList: true });
+      assert.match(lines, /could not list processes; a backend child may still be running/);
+    });
+
+    test("the snapshot timer stops once supervise resolves", async () => {
+      const { listed } = await run([row(101, 1, "40")]);
+      await new Promise((resolve) => setTimeout(resolve, 60));
+      const after = listed;
+      await new Promise((resolve) => setTimeout(resolve, 60));
+      assert.equal(after, listed);
+    });
+  });
+
+  test("POSIX keeps detached process groups", () => {
+    const { fn, calls } = fakeSpawn({ withPid: false });
+    supervise(commands, { stdout: { write() {} }, env: {}, platform: "linux", spawnFn: fn });
+    assert.equal(calls[0].options.detached, true);
+    assert.equal(calls[1].command, "pnpm");
+    for (const c of calls) c.child.emit("exit", 0, null);
+  });
+});
+
+describe("descendantsOf", () => {
+  const row = (pid, ppid, created = "t") => ({ pid, ppid, created });
+
+  test("walks the whole tree below the root, not the root or siblings", () => {
+    const list = [row(1, 0), row(2, 1), row(3, 2), row(4, 2), row(9, 8)];
+    assert.deepEqual(
+      descendantsOf(list, 1)
+        .map((d) => d.pid)
+        .sort(),
+      [2, 3, 4],
+    );
+  });
+
+  test("a worker whose parent is gone is still found through an earlier snapshot", () => {
+    const earlier = [row(100, 1), row(200, 100, "b"), row(300, 200, "c")];
+    const recordedPids = descendantsOf(earlier, 100);
+    assert.deepEqual(recordedPids, [
+      { pid: 200, created: "b" },
+      { pid: 300, created: "c" },
+    ]);
+    // Later the root and reloader are gone: walking from the root finds nothing.
+    assert.deepEqual(descendantsOf([row(300, 200, "c")], 100), []);
+  });
+
+  test("a parent cycle from pid reuse does not loop forever", () => {
+    assert.deepEqual(
+      descendantsOf([row(2, 1), row(1, 2)], 1).map((d) => d.pid),
+      [2],
+    );
+  });
+});
+
+describe("parseProcessList", () => {
+  test("accepts an array and a lone object", () => {
+    assert.deepEqual(parseProcessList('[{"pid":1,"ppid":0,"created":5}]'), [
+      { pid: 1, ppid: 0, created: "5" },
+    ]);
+    assert.equal(parseProcessList('{"pid":2,"ppid":1,"created":6}')[0].pid, 2);
   });
 });
