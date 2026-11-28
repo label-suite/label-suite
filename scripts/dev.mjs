@@ -13,7 +13,7 @@
 // by SIGTTIN. Windows has no process groups: pnpm is started through cmd.exe
 // (it is pnpm.cmd there) and a stop runs `taskkill /T /F` on the whole tree.
 // Once a server's root dies its children are no longer reachable from it, so
-// every ~2.5 s dev records each server's descendants (pid + creation time) and,
+// every ~10 s dev records each server's descendants (pid + creation time) and,
 // when a server ends, taskkills the recorded ones that are still alive.
 import { execFile, spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
@@ -73,7 +73,10 @@ export function resolveSpawn(command, args, platform = process.platform, env = p
 }
 
 /** How often dev records each server's descendants on Windows. */
-const SNAPSHOT_INTERVAL_MS = 2500;
+const SNAPSHOT_INTERVAL_MS = 10_000;
+
+/** The first snapshot waits this long, so uvicorn has spawned its worker. */
+const FIRST_SNAPSHOT_MS = 2000;
 
 /**
  * Parse the JSON `listProcesses` gets from PowerShell into `{pid, ppid, created}` rows.
@@ -91,8 +94,8 @@ export function parseProcessList(json) {
 /** The process table on Windows: one PowerShell call. Rejects when PowerShell fails. */
 export function listWindowsProcesses() {
   const script =
-    "Get-CimInstance Win32_Process | ForEach-Object { [pscustomobject]@{ pid = $_.ProcessId; " +
-    "ppid = $_.ParentProcessId; created = $(if ($_.CreationDate) { $_.CreationDate.ToFileTimeUtc() } else { 0 }) } } " +
+    "Get-CimInstance Win32_Process -Property ProcessId,ParentProcessId,CreationDate | ForEach-Object { [pscustomobject]@{ pid = $_.ProcessId; " +
+    "ppid = $_.ParentProcessId; created = $(if ($_.CreationDate) { $_.CreationDate.ToFileTimeUtc().ToString() } else { '0' }) } } " +
     "| ConvertTo-Json -Compress";
   return new Promise((resolve, reject) => {
     execFile(
@@ -109,6 +112,15 @@ export function listWindowsProcesses() {
       },
     );
   });
+}
+
+/** Whether creation time `a` is later than `b` (FILETIME strings, compared exactly). */
+export function createdAfter(a, b) {
+  try {
+    return BigInt(a) > BigInt(b);
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -224,6 +236,8 @@ export function supervise(
         for (const [name, child] of running) {
           if (child.pid === undefined) continue;
           const known = recorded.get(name) ?? new Map();
+          const root = list.find((row) => row.pid === child.pid);
+          if (root) known.set(root.pid, root.created);
           for (const { pid, created } of descendantsOf(list, child.pid)) known.set(pid, created);
           recorded.set(name, known);
         }
@@ -234,21 +248,35 @@ export function supervise(
       }
     };
 
-    // A server's root is gone, so taskkill /T cannot reach its children: kill the recorded
-    // ones that are still alive with the same creation time (a different one is a reused pid).
-    const reapOrphans = async (name) => {
+    // A server's root is gone, so taskkill /T cannot reach its children. Kill (a) recorded
+    // pids still alive with the same creation time and (b) any process whose parent pid is a
+    // recorded one and that started later than it (a worker respawned between snapshots; its
+    // ParentProcessId outlives the parent). A pid shown with another creation time is reused.
+    // The exited root itself is never targeted; taskkill /T takes each target's subtree.
+    const reapOrphans = async (name, rootPid) => {
       const known = recorded.get(name);
       if (!known || known.size === 0) return;
       try {
         const list = await listProcesses();
-        for (const row of list) if (known.get(row.pid) === row.created) taskkillTree(row.pid);
+        const byPid = new Map(list.map((row) => [row.pid, row]));
+        for (const row of list) {
+          if (row.pid === rootPid) continue;
+          const sameProcess = known.get(row.pid) === row.created;
+          const parentCreated = known.get(row.ppid);
+          const parentNow = byPid.get(row.ppid);
+          const childOfRecorded =
+            parentCreated !== undefined &&
+            (parentNow === undefined || parentNow.created === parentCreated) &&
+            createdAfter(row.created, parentCreated);
+          if (sameProcess || childOfRecorded) taskkillTree(row.pid);
+        }
       } catch {
-        // Nothing more to do without the process table.
+        say(`could not list processes; a ${name} child may still be running`);
       }
     };
 
     if (win32) {
-      firstTimer = setTimeout(snapshot, Math.min(500, snapshotIntervalMs));
+      firstTimer = setTimeout(snapshot, Math.min(FIRST_SNAPSHOT_MS, snapshotIntervalMs));
       pollTimer = setInterval(snapshot, snapshotIntervalMs);
       firstTimer.unref();
       pollTimer.unref();
@@ -281,7 +309,7 @@ export function supervise(
       const child = running.get(name);
       running.delete(name);
       signalTree(child, "SIGTERM");
-      if (win32) pending.push(reapOrphans(name));
+      if (win32) pending.push(reapOrphans(name, child.pid));
       if (exitCode === undefined) {
         exitCode = code;
         if (running.size > 0)

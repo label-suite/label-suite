@@ -271,19 +271,22 @@ describe("supervise on win32 (injected platform and spawn)", () => {
   describe("orphaned descendants", () => {
     const row = (pid, ppid, created) => ({ pid, ppid, created });
     // uv (100) -> reloader (200) -> worker (300); the frontend is cmd (101).
-    const full = [row(100, 1, "a"), row(200, 100, "b"), row(300, 200, "c"), row(101, 1, "d")];
+    const full = [row(100, 1, "10"), row(200, 100, "20"), row(300, 200, "30"), row(101, 1, "40")];
 
-    async function run(workerAfter) {
+    // Record a snapshot of `full`, then kill uv and the reloader; `after` is the process list then.
+    async function run(after, { failList = false } = {}) {
       const { fn, calls } = fakeSpawn();
       let list = full;
       let listed = 0;
+      const lines = [];
       const done = supervise(commands, {
-        stdout: { write() {} },
+        stdout: { write: (text) => lines.push(text) },
         env: {},
         platform: "win32",
         spawnFn: fn,
         listProcesses: async () => {
           listed++;
+          if (failList && list !== full) throw new Error("powershell failed");
           return list;
         },
         snapshotIntervalMs: 10,
@@ -292,8 +295,7 @@ describe("supervise on win32 (injected platform and spawn)", () => {
       try {
         await waitFor(() => listed >= 1, "the first snapshot");
         await new Promise((resolve) => setTimeout(resolve, 50));
-        // The reloader and uv die; the worker is orphaned (its parent 200 is gone).
-        list = workerAfter ? [row(101, 1, "d"), workerAfter] : [row(101, 1, "d")];
+        list = after;
         backend.child.exitCode = 1;
         backend.child.emit("exit", 1, null);
       } finally {
@@ -304,22 +306,49 @@ describe("supervise on win32 (injected platform and spawn)", () => {
       return {
         killed: calls.filter((c) => c.command === "taskkill").map((c) => c.args[1]),
         listed,
+        lines: lines.join(""),
       };
     }
 
     test("a worker still alive with the same creation time is taskkilled after its root died", async () => {
-      const { killed } = await run(row(300, 200, "c"));
+      const { killed } = await run([row(101, 1, "40"), row(300, 200, "30")]);
       assert.ok(killed.includes("300"));
       assert.ok(!killed.includes("100"), "the exited root is never targeted");
     });
 
     test("a recorded pid now showing a different creation time is a reused pid and is left alone", async () => {
-      const { killed } = await run(row(300, 1, "other"));
+      const { killed } = await run([row(101, 1, "40"), row(300, 1, "99")]);
       assert.ok(!killed.includes("300"));
     });
 
+    test("a worker respawned after the last snapshot is reaped through its dead recorded parent", async () => {
+      const { killed } = await run([row(101, 1, "40"), row(400, 200, "25")]);
+      assert.ok(killed.includes("400"));
+    });
+
+    test("a child of the exited root itself is reaped too, but never the root", async () => {
+      const { killed } = await run([row(101, 1, "40"), row(500, 100, "15")]);
+      assert.ok(killed.includes("500"));
+      assert.ok(!killed.includes("100"));
+    });
+
+    test("a row whose parent pid matches but that started earlier than the parent is left alone", async () => {
+      const { killed } = await run([row(101, 1, "40"), row(401, 200, "15")]);
+      assert.ok(!killed.includes("401"));
+    });
+
+    test("a row under a pid that now belongs to another process is left alone", async () => {
+      const { killed } = await run([row(101, 1, "40"), row(200, 1, "50"), row(402, 200, "60")]);
+      assert.ok(!killed.includes("402") && !killed.includes("200"));
+    });
+
+    test("a failed process listing during the reap says so", async () => {
+      const { lines } = await run([], { failList: true });
+      assert.match(lines, /could not list processes; a backend child may still be running/);
+    });
+
     test("the snapshot timer stops once supervise resolves", async () => {
-      const { listed } = await run(undefined);
+      const { listed } = await run([row(101, 1, "40")]);
       await new Promise((resolve) => setTimeout(resolve, 60));
       const after = listed;
       await new Promise((resolve) => setTimeout(resolve, 60));
