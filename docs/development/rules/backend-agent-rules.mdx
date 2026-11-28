@@ -11,9 +11,9 @@ updatedAt: '2026-11-28'
 
 本文說明後端的十二條開發規範，由 `AGENTS.md` 的 Agent Rules Index 指過來；`AGENTS.md` 是規則本體，兩邊說法不同時以 `AGENTS.md` 為準，並回報給維護者。
 跨領域的規範（先搜尋再新增、最小變更、衝突處理等）在 [agent-rules.mdx](agent-rules.mdx)，技術選型與 ADR 效力在 [architecture.mdx](../architecture.mdx)。
-後端落實 [R1](agent-rules.mdx#r1-先搜尋再新增) 時，新增 helper、util、常數、例外或依賴之前，先查 `app/core/` 的共用模組（清單見 [backend-modules.mdx 的 §`core/` 各模組](../../diagrams/architecture/backend-modules.mdx)）與相鄰模組；這一條靠人工／獨立審查，沒有自動檢查。
+後端落實 [R1](agent-rules.mdx#r1-先搜尋再新增) 時，新增 helper、util、常數、例外或依賴之前，先查 `app/core/` 的共用模組（清單見 [backend-modules.mdx 的 §`core/` 各模組](../../diagrams/architecture/backend-modules.mdx#core-各模組)）與相鄰模組；這一條靠人工／獨立審查，沒有自動檢查。
 
-**`backend/` 已存在，但只有 B1、B2、B6、B7、B11 與 B12 的一部分檢查在 CI 跑**（job 與指令寫在各條的「檢查方式」）；B12 已建置的只有寄信、Google OIDC、對外 HTTP 客戶端三項入口契約與兩條跨模組契約，其餘四項仍標「待建置」；B8 靠人工／獨立審查，其餘各條仍標「待建置」。標「待建置」就是字面意思：那些檢查還沒有寫，**不得因為這份文件存在就宣稱架構已被強制**。
+**`backend/` 已存在，但只有 B1、B2、B6、B7、B11 與 B12 的一部分檢查在 CI 跑**（job 與指令寫在各條的「檢查方式」）；B12 已建置的只有寄信、Google OIDC、對外 HTTP 客戶端三項入口契約與兩條跨模組契約，其餘四項仍標「待建置」；B8 與上面 R1 的後端落點靠人工／獨立審查，其餘各條仍標「待建置」。標「待建置」就是字面意思：那些檢查還沒有寫，**不得因為這份文件存在就宣稱架構已被強制**。
 
 每條規範的反例與檢查方式收在摺疊區塊，預設收起；適用路徑、禁止、正例與例外在表裡。
 
