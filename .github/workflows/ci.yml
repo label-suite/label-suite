@@ -35,7 +35,7 @@ jobs:
     # free; the cross-platform requirement is issue #111's, not a nicety.
     name: hooks (${{ matrix.os }})
     needs: changes
-    if: needs.changes.outputs.hooks == 'true'
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.hooks == 'true') }}
     strategy:
       fail-fast: false
       matrix:
@@ -178,7 +178,7 @@ jobs:
   docs-site:
     name: docs-site
     needs: changes
-    if: needs.changes.outputs.docs_site == 'true'
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.docs_site == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -317,14 +317,14 @@ jobs:
   # The two backend jobs, frontend, coverage and e2e share the `code` condition
   # from `changes` (frontend and e2e widen it with their own paths), so a
   # docs-only pull request skips them; GitHub reports a job skipped by its `if`
-  # as passing. Each job writes its own coverage data file; the coverage job (a later task) combines
-  # them. upload-artifact v4.4.0 and later skip hidden files by default, and
+  # as passing. Each job writes its own coverage data file and the coverage job
+  # combines them. upload-artifact v4.4.0 and later skip hidden files by default, and
   # .coverage.* is hidden, so the uploads set include-hidden-files and fail when
   # the file is missing instead of silently uploading nothing.
   backend-sqlite:
     name: backend-sqlite
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.code == 'true') }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -379,7 +379,7 @@ jobs:
   backend-postgres:
     name: backend-postgres
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.code == 'true') }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -438,7 +438,7 @@ jobs:
   frontend:
     name: frontend
     needs: changes
-    if: needs.changes.outputs.frontend == 'true'
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.frontend == 'true') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -480,7 +480,7 @@ jobs:
   e2e:
     name: e2e
     needs: changes
-    if: needs.changes.outputs.e2e == 'true'
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.e2e == 'true') }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -527,7 +527,7 @@ jobs:
   api-contract:
     name: api-contract
     needs: changes
-    if: needs.changes.outputs.api_contract == 'true'
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.api_contract == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -645,7 +645,8 @@ jobs:
   # this workflow or a lockfile, answers "run" for every output rather than
   # failing. The conditional jobs use `needs: changes` and a job-level `if`,
   # never a workflow-level `paths` filter, so a skipped required check still
-  # reports as passing.
+  # reports as passing. Each `if` also runs its job when `changes` itself did
+  # not succeed: a failed `changes` must not skip everything as "passing".
   changes:
     name: changes
     runs-on: ubuntu-latest
@@ -676,14 +677,14 @@ jobs:
         run: node scripts/ci-changed-paths.mjs --base "$BASE" --head "$HEAD"
 
   # Builds and starts both tiers for real. Only pull requests that touch the
-  # orchestration, an image or the code it runs get here (see `changes`), so it
-  # is not a required check. The production password is generated inside the job
+  # orchestration, an image, the code it runs, or a global trigger such as this
+  # workflow get here (see `changes`), so it is not a required check. The production password is generated inside the job
   # and masked: the example file leaves it empty on purpose, and `${VAR:?}` rejects
   # an empty value as well as an unset one.
   compose:
     name: compose
     needs: changes
-    if: needs.changes.outputs.compose == 'true'
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.compose == 'true') }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -970,7 +971,14 @@ jobs:
     name: coverage
     runs-on: ubuntu-latest
     needs: [changes, backend-sqlite, backend-postgres, frontend]
-    if: needs.changes.outputs.code == 'true'
+    # The three test jobs must have succeeded, as before; a failed one is already
+    # a red required check, and its coverage data is missing anyway.
+    if: >-
+      ${{ !cancelled()
+      && needs.backend-sqlite.result == 'success'
+      && needs.backend-postgres.result == 'success'
+      && needs.frontend.result == 'success'
+      && (needs.changes.result != 'success' || needs.changes.outputs.code == 'true') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -1067,7 +1075,7 @@ jobs:
   scripts-tests:
     name: scripts-tests
     needs: changes
-    if: needs.changes.outputs.scripts == 'true'
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.scripts == 'true') }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -1101,7 +1109,7 @@ jobs:
   scripts-tests-windows:
     name: scripts-tests-windows
     needs: changes
-    if: needs.changes.outputs.scripts == 'true'
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.scripts == 'true') }}
     runs-on: windows-latest
     defaults:
       run:

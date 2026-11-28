@@ -16,7 +16,7 @@ import { parse } from "yaml";
 const WORKFLOW_PATH = fileURLToPath(new URL("../../.github/workflows/ci.yml", import.meta.url));
 const workflow = parse(readFileSync(WORKFLOW_PATH, "utf8"));
 
-/** The jobs that existed before #506; their blocks are never edited. */
+/** The jobs that existed before #506; C1 checks that they are still present. */
 const EXISTING_JOBS = ["commit-messages", "docs-site", "format", "specs"];
 
 /** Jobs that every pull request must run (C1; issue #823's approved path table). */
@@ -46,6 +46,13 @@ const CONDITIONAL_JOBS = {
   "scripts-tests-windows": "scripts",
   compose: "compose",
 };
+
+/**
+ * The job-level `if` of a conditional job: it runs when its output is true, and also
+ * when `changes` did not succeed, so a failed `changes` cannot skip it as passing.
+ */
+const changesCondition = (output) =>
+  `\${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.${output} == 'true') }}`;
 
 function job(name) {
   const found = workflow.jobs?.[name];
@@ -115,11 +122,13 @@ describe("conditional jobs read their own changes output (issue #823)", () => {
       const found = job(name);
       const needs = [].concat(found.needs ?? []);
       assert.ok(needs.includes("changes"), `${name} must need changes`);
-      assert.equal(
-        found.if,
-        `needs.changes.outputs.${output} == 'true'`,
-        `${name} must run on the ${output} output`,
-      );
+      if (name !== "coverage") {
+        assert.equal(
+          found.if,
+          changesCondition(output),
+          `${name} must run on the ${output} output or when changes did not succeed`,
+        );
+      }
       assert.equal("continue-on-error" in found, false, `${name} must not set continue-on-error`);
     }
   });
@@ -133,6 +142,17 @@ describe("conditional jobs read their own changes output (issue #823)", () => {
         `changes does not expose ${output}`,
       );
     }
+  });
+
+  test("coverage runs when the three test jobs succeeded and changes failed or said code", () => {
+    const condition = String(job("coverage").if).replace(/\s+/g, " ").trim();
+    assert.equal(
+      condition,
+      "${{ !cancelled() && needs.backend-sqlite.result == 'success'" +
+        " && needs.backend-postgres.result == 'success'" +
+        " && needs.frontend.result == 'success'" +
+        " && (needs.changes.result != 'success' || needs.changes.outputs.code == 'true') }}",
+    );
   });
 
   test("the five code-group jobs share the code condition, widened only for frontend and e2e", () => {

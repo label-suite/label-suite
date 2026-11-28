@@ -89,7 +89,8 @@ describe("matchOutputs: one positive and one negative example per output", () =>
     ["code", "frontend/src/main.tsx", "design/prototype/assets/tokens.css"],
     ["frontend", "design/prototype/assets/tokens.css", "design/prototype/pages/login.html"],
     ["frontend", "frontend/src/main.tsx", "e2e/x.spec.ts"],
-    ["e2e", "e2e/system-health/dev-health.spec.ts", "design/prototype/assets/tokens.css"],
+    ["e2e", "e2e/system-health/dev-health.spec.ts", "design/prototype/pages/login.html"],
+    ["e2e", "design/prototype/assets/data-palette.css", "docs/index.mdx"],
     ["e2e", "backend/app/main.py", "docs/index.mdx"],
     ["api_contract", "frontend/src/api/client.ts", "frontend/src/pages/Login.tsx"],
     [
@@ -98,6 +99,11 @@ describe("matchOutputs: one positive and one negative example per output", () =>
       "docs/diagrams/architecture/x.mdx",
     ],
     ["api_contract", "backend/app/main.py", "e2e/x.spec.ts"],
+    ["api_contract", "frontend/orval.config.ts", "frontend/vite.config.ts"],
+    ["api_contract", "frontend/package.json", "frontend/tsconfig.json"],
+    ["code", "scripts/check-coverage.mjs", "scripts/check-specs.mjs"],
+    ["code", "scripts/check-critical-coverage.mjs", "scripts/tests/check-coverage.test.mjs"],
+    ["code", "scripts/check-junit-skips.mjs", "scripts/dev.mjs"],
     ["docs_site", "docs/index.mdx", "backend/app/main.py"],
     ["docs_site", ".notecraft/components/x.tsx", "scripts/check-specs.mjs"],
     ["docs_site", "design/prototype/pages/login.html", "openspec/config.yaml"],
@@ -189,6 +195,7 @@ describe("CLI", () => {
   let docsHead;
   let backendHead;
   let lockHead;
+  let renameHead;
 
   const git = (...args) =>
     execFileSync(
@@ -222,6 +229,9 @@ describe("CLI", () => {
     docsHead = commitFile("docs/a.mdx", "a\n");
     backendHead = commitFile("backend/app/main.py", "print()\n");
     lockHead = commitFile("pnpm-lock.yaml", "lockfileVersion: 9\n");
+    git("mv", "backend/app/main.py", "docs/main.py");
+    git("commit", "-q", "-m", "move main.py out of backend/");
+    renameHead = git("rev-parse", "HEAD");
   });
 
   after(() => rmSync(repo, { recursive: true, force: true }));
@@ -263,6 +273,13 @@ describe("CLI", () => {
     assert.equal(r.status, 0, r.stderr);
     assert.equal(r.written, expected(...OUTPUTS));
     assert.match(r.stdout, /global-trigger list/);
+  });
+
+  test("a file moved out of backend/ into docs/ still runs the code group", () => {
+    const r = run(["--base", lockHead, "--head", renameHead]);
+    assert.equal(r.status, 0, r.stderr);
+    assert.match(r.written, /^code=true$/m);
+    assert.match(r.written, /^docs_site=true$/m);
   });
 
   test("without $GITHUB_OUTPUT the result goes to stdout", () => {

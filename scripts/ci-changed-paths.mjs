@@ -4,7 +4,8 @@
 //
 //   node scripts/ci-changed-paths.mjs --base <sha> --head <sha>
 //
-// Lists the files changed in `git diff --name-only <base>...<head>` and answers
+// Lists the files changed in `git diff --name-only --no-renames <base>...<head>`
+// (a renamed file counts under both its old and its new path) and answers
 // one `<output>=true|false` line per entry of OUTPUTS below, appended to
 // $GITHUB_OUTPUT, or printed to stdout when that is not set. The `changes` job
 // in ci.yml exposes each line, and every conditional job reads one of them.
@@ -49,19 +50,34 @@ const COMPOSE_EXACT = new Set([
 const COMPOSE_BASENAMES = new Set(["Dockerfile", ".dockerignore"]);
 const COMPOSE_PREFIXES = ["backend/", "frontend/", "e2e/public-entry/", "e2e/shared/"];
 
-/** The code group: backend-sqlite, backend-postgres, frontend, coverage and e2e share it. */
+/**
+ * The code group: backend-sqlite, backend-postgres, frontend, coverage and e2e share
+ * it. The three coverage and skip gates are in it so a change to one runs the real
+ * gate, not only its unit tests.
+ */
+const CODE_EXACT = [
+  "scripts/check-coverage.mjs",
+  "scripts/check-critical-coverage.mjs",
+  "scripts/check-junit-skips.mjs",
+];
 const CODE_PREFIXES = ["backend/", "frontend/"];
+/** Read by the frontend's token extraction and by the dashboard e2e journey. */
+const PROTOTYPE_ASSETS = "design/prototype/assets/";
 
 /**
  * The path table. Each output is true when a changed path equals one of
  * `exact` or starts with one of `prefixes`; `compose` keeps its own matcher.
  */
 const TABLE = {
-  code: { exact: [], prefixes: CODE_PREFIXES },
-  frontend: { exact: [], prefixes: [...CODE_PREFIXES, "design/prototype/assets/"] },
-  e2e: { exact: [], prefixes: [...CODE_PREFIXES, "e2e/"] },
+  code: { exact: CODE_EXACT, prefixes: CODE_PREFIXES },
+  frontend: { exact: CODE_EXACT, prefixes: [...CODE_PREFIXES, PROTOTYPE_ASSETS] },
+  e2e: { exact: CODE_EXACT, prefixes: [...CODE_PREFIXES, PROTOTYPE_ASSETS, "e2e/"] },
   api_contract: {
-    exact: ["docs/diagrams/architecture/api.openapi.json"],
+    exact: [
+      "docs/diagrams/architecture/api.openapi.json",
+      "frontend/orval.config.ts",
+      "frontend/package.json",
+    ],
     prefixes: ["backend/", "frontend/src/api/"],
   },
   docs_site: { exact: [], prefixes: ["docs/", ".notecraft/", "design/"] },
@@ -161,7 +177,9 @@ export function decide({ base, head, diff }) {
 }
 
 function gitDiff(base, head) {
-  const output = execFileSync("git", ["diff", "--name-only", `${base}...${head}`], {
+  // --no-renames lists a moved file under its old path as well as its new one, so
+  // moving a file out of backend/ still counts as a backend change.
+  const output = execFileSync("git", ["diff", "--name-only", "--no-renames", `${base}...${head}`], {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
   });
