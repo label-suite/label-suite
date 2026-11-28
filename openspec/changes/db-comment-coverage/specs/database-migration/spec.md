@@ -6,7 +6,7 @@
 
 系統 SHALL 要求共用資料模型內每一張資料表與每一個欄位都有非空的說明；純關聯表一律適用，MUST NOT 有豁免。說明為缺漏、或去除頭尾空白後為空，都視為缺漏。此檢查與資料庫無關，在 SQLite 與 PostgreSQL 兩輪測試都 MUST 執行。只檢查非空，不檢查說明是否為英文。
 
-來源：ADR-003 D7、backend-agent-rules B6、B7、testing-agent-rules T4、`.claude/agents/dba.md` 資料模型準則、clarification Q2、Q3。
+來源：`.claude/agents/dba.md` 資料模型準則、clarification Q2、Q3。
 
 #### Scenario: 所有表與欄位都有說明時通過
 
@@ -127,7 +127,7 @@
 - **THEN** PostgreSQL 層的說明檢查實際執行並通過
 - **AND** 該回合被略過的測試數為 0
 
-#### Scenario: PostgreSQL 回合的檢查被略過時回合失敗
+#### Scenario: 既有的略過檢查涵蓋 PostgreSQL 層的新測試
 
-- **WHEN** `backend-postgres` 回合因環境設定遺失而使 PostgreSQL 層的說明檢查被略過
-- **THEN** 該回合的略過檢查失敗，說明檢查不會悄悄停跑
+- **WHEN** `backend-postgres` 回合有任何測試被略過，包含 PostgreSQL 層的說明檢查
+- **THEN** 該回合既有的略過檢查失敗（本 change 依賴此既有保證，不新增機制）
