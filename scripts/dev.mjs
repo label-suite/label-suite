@@ -3,7 +3,8 @@
 //
 // Reads the root .env (a variable already in the environment wins), fills
 // BACKEND_PORT with 8000 when unset, and starts both servers. When either one
-// ends, the other is stopped and dev exits with the first one's exit code;
+// ends, the other is stopped and dev exits with the first one's exit code (except a
+// Windows backend that ends after a restart, below);
 // SIGINT or SIGTERM is forwarded to both and dev exits with 128 + the signal
 // number (spec workspace-commands, system-design §元件清單 scripts/dev.mjs).
 //
@@ -20,6 +21,7 @@
 // reloader never stops the old worker (its CTRL_C_EVENT does not arrive and it joins with
 // no timeout), so the backend starts without --reload and dev watches backend/app itself:
 // a `.py` change (debounced) taskkills the backend tree and starts it again.
+// A backend started by a restart that then exits leaves dev waiting for the next change.
 import { execFile, spawn } from "node:child_process";
 import { existsSync, readFileSync, watch } from "node:fs";
 import { constants } from "node:os";
@@ -409,7 +411,9 @@ export function supervise(
     // ParentProcessId outlives the parent). A pid shown with another creation time is reused.
     // The exited root itself is never targeted; taskkill /T takes each target's subtree.
     const reapOrphans = async (name, rootPid) => {
+      // Take the records first: a server started later records its own, and must not be reaped.
       const known = recorded.get(name);
+      recorded.delete(name);
       if (!known || known.size === 0) return;
       try {
         const list = await listProcesses();
@@ -484,6 +488,7 @@ export function supervise(
     const respawned = new Set();
     // Servers that ended after a restart and wait for the next watched change.
     const down = new Set();
+    const downReap = new Map();
     const watchLabel = (spec) => {
       const path = relative(ROOT, spec.watch).replaceAll("\\", "/");
       return path.startsWith("..") ? spec.watch : path;
@@ -539,8 +544,11 @@ export function supervise(
           say(`${name} exited with code ${code}; waiting for a change in ${watchLabel(spec)}`);
           running.delete(name);
           down.add(name);
+          exits.delete(child);
           signalTree(child, "SIGTERM");
-          pending.push(reapOrphans(name, child.pid).then(() => recorded.delete(name)));
+          const reaped = reapOrphans(name, child.pid);
+          downReap.set(name, reaped);
+          pending.push(reaped);
         } else finished(name, code);
       };
       child.on("error", (error) => {
@@ -569,9 +577,19 @@ export function supervise(
         // It ended after an earlier restart and has been waiting for this change.
         if (!down.delete(name)) return;
         say(`${watchLabel(spec)} changed; restarting ${name}`);
-        respawned.add(name);
-        attach(spec);
-        setTimeout(snapshot, Math.min(FIRST_SNAPSHOT_MS, snapshotIntervalMs)).unref();
+        restarting.add(name);
+        restarts++;
+        await downReap.get(name); // the crashed backend's leftovers go before the new one starts
+        downReap.delete(name);
+        restarting.delete(name);
+        if (exitCode === undefined) {
+          respawned.add(name);
+          attach(spec);
+          setTimeout(snapshot, Math.min(FIRST_SNAPSHOT_MS, snapshotIntervalMs)).unref();
+        }
+        restarts--;
+        if (again.delete(name) && exitCode === undefined) restart(spec);
+        maybeDone();
         return;
       }
       restarting.add(name);
@@ -589,7 +607,6 @@ export function supervise(
       if (result === "timeout")
         say(`old ${name} did not exit in ${killTimeoutMs / 1000} s; port may still be in use`);
       await reapOrphans(name, old.pid);
-      recorded.delete(name);
       restarting.delete(name);
       if (exitCode === undefined) {
         respawned.add(name);

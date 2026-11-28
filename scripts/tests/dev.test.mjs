@@ -286,7 +286,7 @@ describe("supervise on win32 (injected platform and spawn)", () => {
 
   describe("orphaned descendants", () => {
     const row = (pid, ppid, created) => ({ pid, ppid, created });
-    // uv (100) -> reloader (200) -> worker (300); the frontend is cmd (101).
+    // uv  -> reloader (200) -> worker (300); the frontend is cmd (101).
     const full = [row(100, 1, "10"), row(200, 100, "20"), row(300, 200, "30"), row(101, 1, "40")];
 
     // Record a snapshot of `full`, then kill uv and the reloader; `after` is the process list then.
@@ -460,7 +460,8 @@ describe("supervise restarts the backend on Windows when backend/app changes", (
       platform: options.platform ?? "win32",
       spawnFn,
       watchFn,
-      listProcesses: async () => [],
+      listProcesses: options.listProcesses ?? (async () => []),
+      snapshotIntervalMs: options.snapshotIntervalMs,
       reloadDebounceMs: 20,
       killTimeoutMs: 1000,
     });
@@ -577,6 +578,40 @@ describe("supervise restarts the backend on Windows when backend/app changes", (
     assert.equal(spawned("backend").length, 1);
   });
 
+  test("a restart from waiting first lets the crashed backend's reap finish and spares the new backend", async () => {
+    let backendPid = 100; // the backend root the fake process table currently shows
+    let slow = false;
+    const listProcesses = async () => {
+      if (slow) await sleep(120);
+      return [{ pid: backendPid, ppid: 1, created: String(backendPid) }];
+    };
+    const { watchers, done, spawned, killed, exit } = setup({
+      listProcesses,
+      snapshotIntervalMs: 10,
+    });
+    await sleep(30); // a snapshot records the first backend
+    watchers[0].listener("change", "a.py");
+    await sleep(60);
+    exit(spawned("backend")[0].child);
+    await sleep(5);
+    backendPid = spawned("backend")[1].child.pid;
+    await sleep(40); // the respawned backend is recorded
+    slow = true;
+    exit(spawned("backend")[1].child, 1); // crashes; its reap is slow
+    await sleep(10);
+    backendPid = 999; // what a new backend would look like to the slow reap
+    watchers[0].listener("change", "a.py");
+    await sleep(60);
+    assert.equal(spawned("backend").length, 2, "no new backend while the old reap runs");
+    await sleep(150);
+    assert.equal(spawned("backend").length, 3);
+    assert.ok(!killed().includes("999"), "the new backend is not taskkilled by the old reap");
+    slow = false;
+    process.emit("SIGTERM", "SIGTERM");
+    for (const c of [...spawned("backend"), ...spawned("frontend")]) exit(c.child);
+    await done;
+  });
+
   test("a null filename (watch buffer overflow) still restarts", async () => {
     const { watchers, done, spawned, killed, exit } = setup();
     watchers[0].listener("change", null);
@@ -605,7 +640,7 @@ describe("supervise restarts the backend on Windows when backend/app changes", (
       ),
     );
     assert.ok(!killed().includes(String(frontend.child.pid)));
-    assert.equal(frontend.child.exitCode, undefined);
+    assert.ok(!lines.some((l) => l.includes("stopping frontend")));
 
     watchers[0].listener("change", "a.py");
     await sleep(60);
