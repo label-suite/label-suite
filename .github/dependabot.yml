@@ -2,6 +2,12 @@
 # version fields (CITATION.cff, backend/pyproject.toml, frontend/package.json)
 # are never touched (AGENTS.md Hard Rule 4). Security updates are switched on
 # in the repository settings and ignore the schedule and limit below.
+#
+# Groups carry minor and patch updates only. Semver-major version updates are
+# not opened (the `ignore` entries below); each major upgrade gets its own
+# issue. `ignore` also filters security updates, so a vulnerability fixed only
+# by a major bump gets no Dependabot PR; handle it from the Dependabot alert as
+# its own issue.
 version: 2
 updates:
   - package-ecosystem: uv
