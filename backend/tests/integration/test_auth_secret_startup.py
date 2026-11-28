@@ -27,6 +27,7 @@ LOGIN_ENV_VARS = (
     "GOOGLE_CLIENT_SECRET",
     "GOOGLE_REDIRECT_URI",
     "RESEND_API_KEY",
+    "MAIL_FROM",
 )
 POSTGRES_URL = "postgresql://user:placeholder@127.0.0.1:5432/app"
 
@@ -34,7 +35,14 @@ POSTGRES_URL = "postgresql://user:placeholder@127.0.0.1:5432/app"
 @pytest.fixture(autouse=True)
 def clean_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Start from only a valid allowed origin and a Lite SQLite file under ``tmp_path``."""
-    for name in (*LOGIN_ENV_VARS, "DATABASE_URL", "LOG_LEVEL", "API_DOCS_ENABLED"):
+    for name in (
+        *LOGIN_ENV_VARS,
+        "DATABASE_URL",
+        "LOG_LEVEL",
+        "API_DOCS_ENABLED",
+        "REDIS_URL",
+        "CELERY_TASK_ALWAYS_EAGER",
+    ):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("CORS_ALLOWED_ORIGINS", ALLOWED_ORIGIN)
     monkeypatch.setenv("SQLITE_PATH", str(tmp_path / "a.db"))

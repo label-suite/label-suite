@@ -2,7 +2,7 @@
 
 本 change 是 issue #756：平台第一個背景工作程序（Celery worker）與它的佇列（Redis），加上所有功能共用的寄信入口。它沒有新的 HTTP 端點、沒有畫面、沒有權限矩陣的格；需求追溯到 ADR 與規則條號（spec-migration D4），脈絡基準是同目錄的 `system-analysis.md`。
 
-`system-analysis.md` 的兩項需求矛盾與 17 個待決問題，以及本文原本列的技術待決 T1 至 T11，**已全部在 `clarification.md` 決議或定案**（Q1 至 Q8、技術預設表、P1 至 P3）；本文只留採用的設計，被捨棄的做法各留一行。
+`system-analysis.md` 的兩項需求矛盾與 17 個待決問題，以及本文原本列的技術待決 T1 至 T11，**已全部在 `clarification.md` 決議或定案**（Q1 至 Q9、技術預設表、P1 至 P3）；本文只留採用的設計，被捨棄的做法各留一行。
 
 ## 設計前提與骨架
 

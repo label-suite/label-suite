@@ -10,7 +10,7 @@
 - `app/core/config.py` 兩層：`DatabaseSettings`（Alembic 讀）與 `Settings`（API 讀）；`mail_configured()` 目前在 `Settings`，只看 `RESEND_API_KEY`
 - 兩份編排檔、`container-runtime` 契約、CI `compose` job 都寫死「不得有 Redis 或 worker」（clarification P1）
 - `pyproject.toml` 有九條 import 契約；`test_layer_boundaries.py` 以名稱集合比對，`test_entry_contracts.py` 以 `CHECKED_PACKAGES` 與 `ENTRY_TOP_LEVEL_PACKAGES` 守頂層套件
-- `clarification.md` Q1–Q8 與技術預設是本文的上限：本文不新增它們沒有的功能
+- `clarification.md` Q1–Q9 與技術預設是本文的上限：本文不新增它們沒有的功能
 
 ## Goals / Non-Goals
 

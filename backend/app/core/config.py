@@ -1,14 +1,21 @@
 """The single settings entry point (backend-agent-rules B10).
 
 Settings come only from environment variables (Hard Rule 8). They are split in
-two layers so that migrations can run without app-only settings:
+three layers so that migrations and the worker can run without the settings only
+the API needs (email-celery-worker design D2):
 
 - ``DatabaseSettings`` holds ``DATABASE_URL`` and ``SQLITE_PATH`` and derives the
   async SQLAlchemy URL. Alembic's ``env.py`` reads only this class.
-- ``Settings`` extends it with the CORS, API-docs, log-level and login settings
-  the API needs (``AUTH_SECRET``, the three ``GOOGLE_*`` and ``RESEND_API_KEY``).
-  An empty string counts as unset for the login settings, because Compose passes
-  an unset ``${VAR:-}`` as an empty string (login-auth-guard design D4).
+- ``WorkerSettings`` extends it with what the Celery worker needs as well: the
+  queue address (``REDIS_URL``), the mail service (``RESEND_API_KEY`` and
+  ``MAIL_FROM``), the in-process switch ``CELERY_TASK_ALWAYS_EAGER`` and
+  ``LOG_LEVEL``. The worker reads only this class.
+- ``Settings`` extends that with the CORS, API-docs, proxy and sign-in settings
+  the API needs (``AUTH_SECRET`` and the three ``GOOGLE_*``).
+
+An empty string counts as unset for the optional secrets and the mail and queue
+settings, because Compose passes an unset ``${VAR:-}`` as an empty string
+(login-auth-guard design D4).
 
 Always build either class through ``load_settings`` so a validation failure turns
 into a ``ConfigError`` that names the environment variable and the reason but
@@ -18,12 +25,19 @@ never echoes the configured value (security-agent-rules S9).
 import ipaddress
 from pathlib import Path
 from typing import Annotated, Any, Literal
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urlunsplit
 
 from pydantic import SecretStr, ValidationError, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode
 
-__all__ = ["ConfigError", "DatabaseSettings", "LogLevel", "Settings", "load_settings"]
+__all__ = [
+    "ConfigError",
+    "DatabaseSettings",
+    "LogLevel",
+    "Settings",
+    "WorkerSettings",
+    "load_settings",
+]
 
 LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 """The accepted ``LOG_LEVEL`` values, upper case (clarification Q12)."""
@@ -34,6 +48,21 @@ _ORIGIN_SCHEMES = frozenset({"http", "https"})
 AUTH_SECRET_MIN_LENGTH = 32
 """The shortest accepted ``AUTH_SECRET``, in characters (login-auth-guard system-design)."""
 _GOOGLE_FIELDS = ("google_client_id", "google_client_secret", "google_redirect_uri")
+DEFAULT_REDIS_URL = "redis://localhost:6379"
+"""The queue address used when ``REDIS_URL`` is unset or empty (runtime-config)."""
+_REDIS_SCHEMES = frozenset({"redis", "rediss"})
+_BROKER_DATABASE = 0
+_RESULT_BACKEND_DATABASE = 1
+_MAIL_FIELDS = ("resend_api_key", "mail_from")
+
+
+def _empty_is_none(value: Any) -> Any:
+    """Return ``None`` for an empty string or an empty ``SecretStr``, else ``value``."""
+    if isinstance(value, str) and value == "":
+        return None
+    if isinstance(value, SecretStr) and value.get_secret_value() == "":
+        return None
+    return value
 
 
 class ConfigError(Exception):
@@ -90,8 +119,114 @@ class DatabaseSettings(BaseSettings):
         return f"sqlite+aiosqlite:///{self.sqlite_path}"
 
 
-class Settings(DatabaseSettings):
-    """Full API settings: the database layer plus CORS, API docs, log level and login.
+class WorkerSettings(DatabaseSettings):
+    """Settings the API and the Celery worker share: database, queue, mail and log level.
+
+    The worker builds this class (``load_settings(WorkerSettings)``), so it never
+    needs ``CORS_ALLOWED_ORIGINS`` or ``AUTH_SECRET`` (runtime-config "worker 只需要
+    自己的設定"). ``Settings`` extends it, so the API applies exactly the same checks.
+
+    Attributes:
+        redis_url: ``REDIS_URL``, ``redis://`` or ``rediss://`` plus a host, with an
+            optional port, credentials and query string, and an empty path or ``/``
+            (no database number); ``redis://localhost:6379`` when unset or empty.
+            Use ``broker_url`` and ``result_backend_url`` instead of reading it.
+        resend_api_key: ``RESEND_API_KEY``; ``None`` when unset or empty.
+        mail_from: ``MAIL_FROM``, the sender of every mail; ``None`` when unset or
+            empty. It must not contain CR or LF (sender-header injection, Hard Rule
+            9). ``RESEND_API_KEY`` and ``MAIL_FROM`` are set together or not at all;
+            a partial set is rejected, naming the missing variable.
+        celery_task_always_eager: ``CELERY_TASK_ALWAYS_EAGER``; when true,
+            background tasks run in the calling process instead of through the
+            queue. False by default, and rejected together with ``DATABASE_URL``,
+            so only the Lite tier can turn it on.
+        log_level: The lowest level the whole backend writes, from
+            ``LOG_LEVEL``; case-insensitive, normalised to upper case and
+            ``INFO`` by default. The database engine, pool and driver loggers do
+            not follow it (``configure_logging`` pins them to ``WARNING``), and
+            ``DatabaseSettings`` (Alembic) never reads it.
+    """
+
+    redis_url: str = DEFAULT_REDIS_URL
+    resend_api_key: SecretStr | None = None
+    mail_from: str | None = None
+    celery_task_always_eager: bool = False
+    log_level: LogLevel = "INFO"
+
+    @field_validator("resend_api_key", "mail_from", mode="before")
+    @classmethod
+    def _empty_is_unset(cls, value: Any) -> Any:
+        return _empty_is_none(value)
+
+    @field_validator("redis_url", mode="before")
+    @classmethod
+    def _empty_redis_url_is_default(cls, value: Any) -> Any:
+        if isinstance(value, str) and value == "":
+            return DEFAULT_REDIS_URL
+        return value
+
+    @field_validator("redis_url", mode="after")
+    @classmethod
+    def _plain_redis_url(cls, value: str) -> str:
+        if not _is_plain_redis_url(value):
+            raise ValueError(
+                "must be redis:// or rediss:// plus a host, with an optional port, "
+                'credentials and query string, and no path other than "/" '
+                "(the database numbers are fixed)"
+            )
+        return value
+
+    @field_validator("mail_from", mode="after")
+    @classmethod
+    def _single_line_mail_from(cls, value: str | None) -> str | None:
+        if value is not None and ("\r" in value or "\n" in value):
+            raise ValueError("must not contain a carriage return or a line feed")
+        return value
+
+    @field_validator("log_level", mode="before")
+    @classmethod
+    def _upper_case_log_level(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            return value.upper()
+        return value
+
+    @model_validator(mode="after")
+    def _worker_combinations(self) -> "WorkerSettings":
+        problems: list[str] = []
+        missing = [name for name in _MAIL_FIELDS if getattr(self, name) is None]
+        if 0 < len(missing) < len(_MAIL_FIELDS):
+            problems.extend(
+                f"{name.upper()}: required when any mail setting is set; set "
+                "RESEND_API_KEY and MAIL_FROM together, or neither"
+                for name in missing
+            )
+        if self.celery_task_always_eager and self.database_url is not None:
+            problems.append(
+                "CELERY_TASK_ALWAYS_EAGER: must not be true when DATABASE_URL is set; "
+                "running background tasks in the calling process is for the Lite tier only"
+            )
+        if problems:
+            raise ValueError("\n".join(problems))
+        return self
+
+    def mail_configured(self) -> bool:
+        """Return whether a mail service is configured: both ``RESEND_API_KEY`` and ``MAIL_FROM``.
+
+        The API (``selfRegistrationEnabled``) and the worker decide with this one check.
+        """
+        return self.resend_api_key is not None and self.mail_from is not None
+
+    def broker_url(self) -> str:
+        """Return the Celery broker URL: ``REDIS_URL`` with database 0, query string kept."""
+        return _with_redis_database(self.redis_url, _BROKER_DATABASE)
+
+    def result_backend_url(self) -> str:
+        """Return the Celery result backend URL: ``REDIS_URL`` with database 1, query kept."""
+        return _with_redis_database(self.redis_url, _RESULT_BACKEND_DATABASE)
+
+
+class Settings(WorkerSettings):
+    """Full API settings: the worker layer plus CORS, API docs, proxies and sign-in.
 
     Attributes:
         cors_allowed_origins: The explicit origin list (the only required
@@ -101,11 +236,6 @@ class Settings(DatabaseSettings):
         api_docs_enabled: Whether the built-in ``/docs``, ``/docs/oauth2-redirect``,
             ``/redoc`` and ``/openapi.json`` routes are served; the production
             compose file pins it to false.
-        log_level: The lowest level the whole backend writes, from
-            ``LOG_LEVEL``; case-insensitive, normalised to upper case and
-            ``INFO`` by default. The database engine, pool and driver loggers do
-            not follow it (``configure_logging`` pins them to ``WARNING``), and
-            ``DatabaseSettings`` (Alembic) never reads it.
         forwarded_allow_ips: The proxy addresses uvicorn trusts for
             ``X-Forwarded-For`` and ``X-Forwarded-Proto``, from
             ``FORWARDED_ALLOW_IPS``: a comma-separated list of single IP addresses or
@@ -123,36 +253,27 @@ class Settings(DatabaseSettings):
         google_redirect_uri: ``GOOGLE_REDIRECT_URI``; ``None`` when unset or empty.
             The three Google settings are set together or not at all; a partial set
             is rejected, naming each missing variable.
-        resend_api_key: ``RESEND_API_KEY``; ``None`` when unset or empty. Only
-            whether it is set matters today (``mail_configured``).
     """
 
     cors_allowed_origins: Annotated[list[str], NoDecode]
     cors_allow_credentials: bool = True
     api_docs_enabled: bool = True
-    log_level: LogLevel = "INFO"
     forwarded_allow_ips: Annotated[list[str], NoDecode] = ["127.0.0.1", "::1"]  # noqa: RUF012
     auth_secret: SecretStr | None = None
     google_client_id: str | None = None
     google_client_secret: SecretStr | None = None
     google_redirect_uri: str | None = None
-    resend_api_key: SecretStr | None = None
 
     @field_validator(
         "auth_secret",
         "google_client_id",
         "google_client_secret",
         "google_redirect_uri",
-        "resend_api_key",
         mode="before",
     )
     @classmethod
-    def _empty_is_unset(cls, value: Any) -> Any:
-        if isinstance(value, str) and value == "":
-            return None
-        if isinstance(value, SecretStr) and value.get_secret_value() == "":
-            return None
-        return value
+    def _empty_login_setting_is_unset(cls, value: Any) -> Any:
+        return _empty_is_none(value)
 
     @field_validator("auth_secret", mode="after")
     @classmethod
@@ -178,17 +299,6 @@ class Settings(DatabaseSettings):
     def google_configured(self) -> bool:
         """Return whether this deployment has Google sign-in configured (all three set)."""
         return all(getattr(self, name) is not None for name in _GOOGLE_FIELDS)
-
-    def mail_configured(self) -> bool:
-        """Return whether this deployment has a mail service, i.e. ``RESEND_API_KEY`` is set."""
-        return self.resend_api_key is not None
-
-    @field_validator("log_level", mode="before")
-    @classmethod
-    def _upper_case_log_level(cls, value: Any) -> Any:
-        if isinstance(value, str):
-            return value.upper()
-        return value
 
     @field_validator("cors_allowed_origins", mode="before")
     @classmethod
@@ -241,6 +351,28 @@ def _is_trusted_proxy_entry(item: str) -> bool:
         return False
 
 
+def _is_plain_redis_url(url: str) -> bool:
+    """Return whether ``url`` is ``redis(s)://[credentials@]host[:port][/][?query]``."""
+    try:
+        parts = urlsplit(url)
+        _ = parts.port  # raises ValueError for a non-numeric or out-of-range port
+    except ValueError:
+        return False
+    return (
+        parts.scheme in _REDIS_SCHEMES
+        and bool(parts.hostname)
+        and parts.path in ("", "/")
+        and parts.fragment == ""
+        and "#" not in url
+    )
+
+
+def _with_redis_database(url: str, database: int) -> str:
+    """Return the validated ``REDIS_URL`` with path ``/<database>`` and its query kept."""
+    parts = urlsplit(url)
+    return urlunsplit((parts.scheme, parts.netloc, f"/{database}", parts.query, ""))
+
+
 def _is_plain_origin(origin: str) -> bool:
     """Return whether ``origin`` is ``http(s)://host[:port]`` with nothing else."""
     try:
@@ -264,7 +396,7 @@ def load_settings[SettingsT: DatabaseSettings](cls: type[SettingsT]) -> Settings
     """Build ``cls`` from the environment, hiding values from any error.
 
     Args:
-        cls: ``DatabaseSettings`` or a subclass such as ``Settings``.
+        cls: ``DatabaseSettings`` or a subclass (``WorkerSettings``, ``Settings``).
 
     Returns:
         The validated settings instance.
@@ -285,8 +417,8 @@ def load_settings[SettingsT: DatabaseSettings](cls: type[SettingsT]) -> Settings
             if loc:
                 lines.append(f"{str(loc[0]).upper()}: {error['msg']}")
             elif error["type"] == "value_error" and "ctx" in error:
-                # A whole-model check (the Google all-or-nothing rule) already writes
-                # one "<ENV_VAR>: <reason>" line per problem.
+                # A whole-model check (the Google and mail all-or-nothing rules, the
+                # eager guard) already writes one "<ENV_VAR>: <reason>" line per problem.
                 lines.append(str(error["ctx"]["error"]))
             else:
                 lines.append(f"CONFIGURATION: {error['msg']}")

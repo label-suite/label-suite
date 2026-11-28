@@ -25,10 +25,13 @@ from tests.unit.import_tree import (
 
 GENERAL_PACKAGES = {
     "argon2",
+    "celery",
     "fastapi",
     "jwt",
+    "kombu",
     "pydantic",
     "pydantic_settings",
+    "redis",
     "sqlalchemy",
     "starlette",
 }
