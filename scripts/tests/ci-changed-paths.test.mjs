@@ -108,6 +108,7 @@ describe("matchOutputs: one positive and one negative example per output", () =>
     ["docs_site", ".notecraft/components/x.tsx", "scripts/check-specs.mjs"],
     ["docs_site", "design/prototype/pages/login.html", "openspec/config.yaml"],
     ["scripts", "scripts/check-specs.mjs", "docs/index.mdx"],
+    ["scripts", ".gitignore", ".gitattributes"],
     ["hooks", "docs/index.mdx", "design/prototype/pages/login.html"],
     ["hooks", "AGENTS.md", "README.md"],
     ["hooks", ".claude/settings.json", "openspec/config.yaml"],

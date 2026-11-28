@@ -126,7 +126,7 @@ updatedAt: '2026-11-28'
 | | |
 | :--- | :--- |
 | **目的** | 本機 hook 有**四條**被跳過的途徑——Git 的 `--no-verify`、Claude 的 `disableAllHooks`、Codex 的 `[features] hooks = false`，以及 Codex 的 hook 未被信任而 skipped——所以合併前的真正 gate 在 CI |
-| **事件** | `pull_request`（`.github/workflows/ci.yml`）。必要檢查包含 `commit-messages`、`format`、`specs`，以及沒有相關改動時會依路徑略過的 `docs-site` 和 `hooks`（在 ubuntu 與 macOS 兩個平台跑檢查器回歸測試）；Windows 跑不列入必過的 `scripts-tests-windows` |
+| **事件** | `pull_request`（`.github/workflows/ci.yml`）。必要檢查是每次都跑的 `commit-messages`、`format`、`specs`、`semgrep`，以及沒有相關改動時會依路徑略過的 `docs-site`、`backend-sqlite`、`backend-postgres`、`frontend`、`api-contract`、`coverage`、`scripts-tests`。在 ubuntu 與 macOS 兩個平台跑檢查器回歸測試的 `hooks`，以及 Windows 的 `scripts-tests-windows`，都不列入必過。矩陣 job 被 job 層 `if:` 略過時，回報的是未展開的名稱，所以 `hooks (...)` 的名稱不能設為必過，除非另加一個每次都跑的彙總 job |
 | **適用路徑／角色** | 整個 PR。`commit-messages`、`format`、`specs`、`semgrep`、`dependency-audit`、`changes` 每次都跑；其餘 job 只在相關路徑有改動時跑，見下方「依路徑略過的 job」 |
 | **payload 欄位** | GitHub 事件的 `base.sha` 與 `head.sha`（`commit-messages` 與 `changes` 都在用） |
 | **共用檢查器** | 與 H3、H4、H5 **同一組**。CI 與本機共用邏輯是防漂移的唯一辦法 |
@@ -147,7 +147,7 @@ updatedAt: '2026-11-28'
 | `e2e` | 同上，另加 `design/prototype/assets/**` 與 `e2e/**` |
 | `api-contract` | `backend/**`、`frontend/src/api/**`、`frontend/orval.config.ts`、`frontend/package.json`、`docs/diagrams/architecture/api.openapi.json` |
 | `docs-site` | `docs/**`、`.notecraft/**`、`design/**` |
-| `scripts-tests`、`scripts-tests-windows` | `scripts/**` |
+| `scripts-tests`、`scripts-tests-windows` | `scripts/**`、`.gitignore` |
 | `hooks` | `scripts/**`、`.claude/**`、`.codex/**`、`.semgrep/**`、`AGENTS.md`、`CLAUDE.md`、`backend/**`、`frontend/**`、`e2e/**`、`docs/**` |
 | `compose` | 編排檔、Dockerfile、`.dockerignore`、`frontend/nginx.conf`、`scripts/check-security-headers.sh`、`e2e/playwright.config.ts`、`backend/**`、`frontend/**`、`e2e/public-entry/**`、`e2e/shared/**` |
 

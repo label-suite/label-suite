@@ -81,7 +81,8 @@ const TABLE = {
     prefixes: ["backend/", "frontend/src/api/"],
   },
   docs_site: { exact: [], prefixes: ["docs/", ".notecraft/", "design/"] },
-  scripts: { exact: [], prefixes: ["scripts/"] },
+  // scripts/tests/check.test.mjs runs `git check-ignore`, so .gitignore is a scripts input.
+  scripts: { exact: [".gitignore"], prefixes: ["scripts/"] },
   hooks: {
     exact: ["AGENTS.md", "CLAUDE.md"],
     prefixes: [
