@@ -66,6 +66,14 @@ if [ "$REENTRY" = "true" ]; then
   FINISHED=1; hc_flush; exit 0
 fi
 
+# Every payload the reader accepts carries cwd, so a reader that exited 0
+# without one did not run (#830: on Windows its entry-point test never
+# matched). Carrying on would judge the hook's own directory instead.
+if [ -z "$CWD" ]; then
+  emit_err "BLOCK: payload 讀取器沒有回傳 cwd，本次完成宣告不判為通過"
+  FINISHED=1; hc_flush; exit "$EXIT_BLOCK"
+fi
+
 REPO=$(git -C "$CWD" rev-parse --show-toplevel 2>/dev/null)
 if [ -z "$REPO" ]; then
   emit_err "BLOCK: 無法從 $CWD 定位 git repo，本次完成宣告不判為通過"

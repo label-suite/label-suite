@@ -71,7 +71,7 @@ undecidable() { # undecidable <reason>
 }
 
 # ── Locate the checkout ──────────────────────────────────────────────
-CWD="$PWD"; EVENT_PATH=""; EVENT_TOOL=""; PATCH_PATHS=(); PATCH_HEADERS=0
+CWD="$PWD"; HAVE_CWD=0; EVENT_PATH=""; EVENT_TOOL=""; PATCH_PATHS=(); PATCH_HEADERS=0
 if [ "$MODE" = "event" ]; then
   payload=$(cat)
   if ! printf '%s' "$payload" | node "$HERE/lib/hook-payload.mjs" --event "$EVENT" \
@@ -81,13 +81,17 @@ if [ "$MODE" = "event" ]; then
   hc_read_nul_list RECS < "$HC_BUFFER_DIR/records"
   for rec in ${RECS+"${RECS[@]}"}; do
     case "${rec%%$'\x1F'*}" in
-      cwd)       CWD="${rec#*$'\x1F'}" ;;
+      cwd)       CWD="${rec#*$'\x1F'}"; HAVE_CWD=1 ;;
       tool_name) EVENT_TOOL="${rec#*$'\x1F'}" ;;
       tool_path) EVENT_PATH="${rec#*$'\x1F'}" ;;
       patch_path) PATCH_PATHS+=("${rec#*$'\x1F'}") ;;
       patch_headers) PATCH_HEADERS=1 ;;
     esac
   done
+  # Every payload the reader accepts carries cwd, so a reader that exited 0
+  # without one did not run (#830: on Windows its entry-point test never
+  # matched). The default $PWD would then stand in for a cwd nobody sent.
+  [ "$HAVE_CWD" = "1" ] || undecidable "payload 讀取器沒有回傳 cwd，本次沒有任何一項被判定"
 fi
 
 REPO=$(git -C "$CWD" rev-parse --show-toplevel 2>/dev/null)

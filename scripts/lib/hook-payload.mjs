@@ -10,6 +10,7 @@
 // unusable" apart from "the check said no".
 import { readSync, realpathSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 /** Exit code for a payload that cannot be parsed or is missing a field. */
 export const EXIT_BAD_PAYLOAD = 3;
@@ -271,6 +272,25 @@ function main(argv) {
   return 0;
 }
 
-if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
+// Whether node was started on this file, as opposed to it being imported.
+//
+// The comparison is between two filesystem paths, both put through realpath.
+// It used to test import.meta.url against "file://" + process.argv[1], a URL
+// against a path, which held only while the path needed no
+// percent-encoding and was already POSIX-shaped. On Windows argv[1] is
+// `D:\a\...` and the URL is `file:///D:/a/...`; on any platform a checkout
+// path with a space is encoded in one and not the other. In both cases the
+// test came out false, main() never ran, node exited 0 with no records, and
+// check-command.sh read "no command field" and allowed `rm -rf`.
+export function isEntryPoint(argv1, moduleUrl) {
+  if (!argv1) return false;
+  try {
+    return realpathSync(argv1) === realpathSync(fileURLToPath(moduleUrl));
+  } catch {
+    return false;
+  }
+}
+
+if (isEntryPoint(process.argv[1], import.meta.url)) {
   process.exitCode = main(process.argv.slice(2));
 }
