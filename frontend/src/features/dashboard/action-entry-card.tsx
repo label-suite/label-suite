@@ -84,6 +84,7 @@ export function ActionEntryCard({
             key={step.id}
             className="relative flex min-w-0 flex-1 flex-col items-center gap-1 text-center"
           >
+            {/* -left-4 relies on the <ol>'s gap-4 to centre the arrow in the gap */}
             {index > 0 && (
               <ArrowRight
                 aria-hidden="true"
