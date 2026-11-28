@@ -41,7 +41,7 @@ Scenario 20 與 07-01 那一條本次只驗連結去處、入口標記與「不�
 
 ### Modified Capabilities
 
-- `auth-guard`：REMOVED Requirement「暫時落點顯示目前登入者」（整條被儀表板取代）。角色無效時只導向登入頁一次（sa-7）：守門元件不改，`features/auth` 的登入狀態對照把系統角色無效的 `200` 當成未登入，行為寫在 `dashboard` Scenario「角色無效時導向登入頁」（design D11）
+- `auth-guard`：REMOVED Requirement「暫時落點顯示目前登入者」（整條被儀表板取代）。角色無效時只導向登入頁一次（sa-7）：守門元件不改，判定規則 MODIFIED（Requirement「守門查詢失敗時當成未登入」加入「`200` 但系統角色無效也當成未登入」，登入頁與根路徑兩個 Scenario）；頁面自己的部分仍寫在 `dashboard` Scenario「角色無效時導向登入頁」（design D11）
 - `app-shell-sidebar`：MODIFIED Requirement「沒有任務角色時從側欄進入標記作業被擋下」的擋下說明位置，由「內容區最上方」改為「頁首下方、版面內容之上」（Q4；規格 07-01 §進入模組的條件 第 3 條已回寫）。側欄的任務角色來源不改成新端點，Requirement「角色標示與第三個導覽項依任務角色來源」不動
 - `frontend-routing`：MODIFIED Requirement「每頁設定瀏覽器標題」，頁名清單的「暫時落點（你已登入）」改為「儀表板」
 - `component-gallery`：MODIFIED Requirement「原語宣告的 variant 集合固定」（骨架的兩種動畫）、「展示頁列出每個宣告的項目」（區塊數與順序加指標卡）與「目錄依網址錨點標示目前區塊」（錨點數加一）
