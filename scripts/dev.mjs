@@ -12,7 +12,10 @@
 // is closed: a background process group reading the terminal would be stopped
 // by SIGTTIN. Windows has no process groups: pnpm is started through cmd.exe
 // (it is pnpm.cmd there) and a stop runs `taskkill /T /F` on the whole tree.
-import { spawn } from "node:child_process";
+// Once a server's root dies its children are no longer reachable from it, so
+// every ~2.5 s dev records each server's descendants (pid + creation time) and,
+// when a server ends, taskkills the recorded ones that are still alive.
+import { execFile, spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { constants } from "node:os";
 import { join } from "node:path";
@@ -69,6 +72,67 @@ export function resolveSpawn(command, args, platform = process.platform, env = p
   return { command, args };
 }
 
+/** How often dev records each server's descendants on Windows. */
+const SNAPSHOT_INTERVAL_MS = 2500;
+
+/**
+ * Parse the JSON `listProcesses` gets from PowerShell into `{pid, ppid, created}` rows.
+ * PowerShell prints a lone object, not an array, when there is a single row.
+ */
+export function parseProcessList(json) {
+  const rows = [JSON.parse(json)].flat();
+  return rows.map((r) => ({
+    pid: Number(r.pid),
+    ppid: Number(r.ppid),
+    created: String(r.created),
+  }));
+}
+
+/** The process table on Windows: one PowerShell call. Rejects when PowerShell fails. */
+export function listWindowsProcesses() {
+  const script =
+    "Get-CimInstance Win32_Process | ForEach-Object { [pscustomobject]@{ pid = $_.ProcessId; " +
+    "ppid = $_.ParentProcessId; created = $(if ($_.CreationDate) { $_.CreationDate.ToFileTimeUtc() } else { 0 }) } } " +
+    "| ConvertTo-Json -Compress";
+  return new Promise((resolve, reject) => {
+    execFile(
+      "powershell",
+      ["-NoProfile", "-NonInteractive", "-Command", script],
+      { windowsHide: true, timeout: 10_000, maxBuffer: 16 * 1024 * 1024 },
+      (error, out) => {
+        if (error) return reject(error);
+        try {
+          resolve(parseProcessList(out));
+        } catch (parseError) {
+          reject(parseError);
+        }
+      },
+    );
+  });
+}
+
+/**
+ * Every descendant of `rootPid` in a process list, as `{pid, created}`.
+ *
+ * @param {{pid: number, ppid: number, created: string}[]} list
+ * @param {number} rootPid
+ */
+export function descendantsOf(list, rootPid) {
+  const found = [];
+  const seen = new Set([rootPid]);
+  const queue = [rootPid];
+  while (queue.length > 0) {
+    const parent = queue.shift();
+    for (const row of list) {
+      if (row.ppid !== parent || seen.has(row.pid)) continue;
+      seen.add(row.pid);
+      found.push({ pid: row.pid, created: row.created });
+      queue.push(row.pid);
+    }
+  }
+  return found;
+}
+
 /**
  * Signal a child's whole tree: the process group on POSIX, `taskkill /T /F` on Windows
  * (which has no groups and no graceful signal). Ignore a tree that is already gone.
@@ -110,6 +174,9 @@ function signalGroup(child, signal, { platform, spawnFn }) {
  * @param {number} [options.killTimeoutMs]
  * @param {NodeJS.Platform} [options.platform] the platform to behave as (tests inject win32)
  * @param {typeof spawn} [options.spawnFn] process starter (tests inject a fake)
+ * @param {() => Promise<{pid: number, ppid: number, created: string}[]>} [options.listProcesses]
+ *   the Windows process table (tests inject a fake)
+ * @param {number} [options.snapshotIntervalMs] how often Windows descendants are recorded
  * @returns {Promise<number>} the exit code dev should end with
  */
 export function supervise(
@@ -120,6 +187,8 @@ export function supervise(
     killTimeoutMs = KILL_TIMEOUT_MS,
     platform = process.platform,
     spawnFn = spawn,
+    listProcesses = listWindowsProcesses,
+    snapshotIntervalMs = SNAPSHOT_INTERVAL_MS,
   } = {},
 ) {
   return new Promise((resolve) => {
@@ -128,6 +197,63 @@ export function supervise(
     let killTimer;
 
     const signalTree = (child, signal) => signalGroup(child, signal, { platform, spawnFn });
+    const win32 = platform === "win32";
+    // Windows only: per server, descendant pid -> creation time seen while the root was alive.
+    const recorded = new Map();
+    const pending = [];
+    let snapshotting = false;
+    let pollTimer;
+    let firstTimer;
+
+    const taskkillTree = (pid) => {
+      try {
+        spawnFn("taskkill", ["/pid", String(pid), "/T", "/F"], {
+          stdio: "ignore",
+          windowsHide: true,
+        }).on?.("error", () => {});
+      } catch {
+        // Already gone.
+      }
+    };
+
+    const snapshot = async () => {
+      if (snapshotting || exitCode !== undefined) return;
+      snapshotting = true;
+      try {
+        const list = await listProcesses();
+        for (const [name, child] of running) {
+          if (child.pid === undefined) continue;
+          const known = recorded.get(name) ?? new Map();
+          for (const { pid, created } of descendantsOf(list, child.pid)) known.set(pid, created);
+          recorded.set(name, known);
+        }
+      } catch {
+        // PowerShell failed; the next poll tries again.
+      } finally {
+        snapshotting = false;
+      }
+    };
+
+    // A server's root is gone, so taskkill /T cannot reach its children: kill the recorded
+    // ones that are still alive with the same creation time (a different one is a reused pid).
+    const reapOrphans = async (name) => {
+      const known = recorded.get(name);
+      if (!known || known.size === 0) return;
+      try {
+        const list = await listProcesses();
+        for (const row of list) if (known.get(row.pid) === row.created) taskkillTree(row.pid);
+      } catch {
+        // Nothing more to do without the process table.
+      }
+    };
+
+    if (win32) {
+      firstTimer = setTimeout(snapshot, Math.min(500, snapshotIntervalMs));
+      pollTimer = setInterval(snapshot, snapshotIntervalMs);
+      firstTimer.unref();
+      pollTimer.unref();
+    }
+
     const say = (text) => stdout.write(`[dev] ${text}\n`);
 
     const stopAll = (signal) => {
@@ -155,6 +281,7 @@ export function supervise(
       const child = running.get(name);
       running.delete(name);
       signalTree(child, "SIGTERM");
+      if (win32) pending.push(reapOrphans(name));
       if (exitCode === undefined) {
         exitCode = code;
         if (running.size > 0)
@@ -163,9 +290,11 @@ export function supervise(
       }
       if (running.size === 0) {
         clearTimeout(killTimer);
+        clearTimeout(firstTimer);
+        clearInterval(pollTimer);
         process.off("SIGINT", onSigint);
         process.off("SIGTERM", onSigterm);
-        resolve(exitCode);
+        Promise.all(pending).then(() => resolve(exitCode));
       }
     };
 

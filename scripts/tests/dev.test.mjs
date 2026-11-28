@@ -12,7 +12,14 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, test } from "node:test";
 
-import { devCommands, loadDevEnv, resolveSpawn, supervise } from "../dev.mjs";
+import {
+  descendantsOf,
+  devCommands,
+  loadDevEnv,
+  parseProcessList,
+  resolveSpawn,
+  supervise,
+} from "../dev.mjs";
 
 const ROOT = fileURLToPath(new URL("../..", import.meta.url));
 const FAKE = fileURLToPath(new URL("./fixtures/dev/fake-server.mjs", import.meta.url));
@@ -216,6 +223,7 @@ describe("supervise on win32 (injected platform and spawn)", () => {
       env: {},
       platform: "win32",
       spawnFn: fn,
+      listProcesses: async () => [],
     });
     const [backend, frontend] = calls;
     try {
@@ -244,6 +252,7 @@ describe("supervise on win32 (injected platform and spawn)", () => {
       env: {},
       platform: "win32",
       spawnFn: fn,
+      listProcesses: async () => [],
     });
     const servers = calls.slice(0, 2);
     try {
@@ -259,11 +268,111 @@ describe("supervise on win32 (injected platform and spawn)", () => {
     assert.equal(await done, 143);
   });
 
+  describe("orphaned descendants", () => {
+    const row = (pid, ppid, created) => ({ pid, ppid, created });
+    // uv (100) -> reloader (200) -> worker (300); the frontend is cmd (101).
+    const full = [row(100, 1, "a"), row(200, 100, "b"), row(300, 200, "c"), row(101, 1, "d")];
+
+    async function run(workerAfter) {
+      const { fn, calls } = fakeSpawn();
+      let list = full;
+      let listed = 0;
+      const done = supervise(commands, {
+        stdout: { write() {} },
+        env: {},
+        platform: "win32",
+        spawnFn: fn,
+        listProcesses: async () => {
+          listed++;
+          return list;
+        },
+        snapshotIntervalMs: 10,
+      });
+      const [backend, frontend] = calls;
+      try {
+        await waitFor(() => listed >= 1, "the first snapshot");
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        // The reloader and uv die; the worker is orphaned (its parent 200 is gone).
+        list = workerAfter ? [row(101, 1, "d"), workerAfter] : [row(101, 1, "d")];
+        backend.child.exitCode = 1;
+        backend.child.emit("exit", 1, null);
+      } finally {
+        frontend.child.emit("exit", 1, null);
+        backend.child.emit("exit", 1, null);
+      }
+      await done;
+      return {
+        killed: calls.filter((c) => c.command === "taskkill").map((c) => c.args[1]),
+        listed,
+      };
+    }
+
+    test("a worker still alive with the same creation time is taskkilled after its root died", async () => {
+      const { killed } = await run(row(300, 200, "c"));
+      assert.ok(killed.includes("300"));
+      assert.ok(!killed.includes("100"), "the exited root is never targeted");
+    });
+
+    test("a recorded pid now showing a different creation time is a reused pid and is left alone", async () => {
+      const { killed } = await run(row(300, 1, "other"));
+      assert.ok(!killed.includes("300"));
+    });
+
+    test("the snapshot timer stops once supervise resolves", async () => {
+      const { listed } = await run(undefined);
+      await new Promise((resolve) => setTimeout(resolve, 60));
+      const after = listed;
+      await new Promise((resolve) => setTimeout(resolve, 60));
+      assert.equal(after, listed);
+    });
+  });
+
   test("POSIX keeps detached process groups", () => {
     const { fn, calls } = fakeSpawn({ withPid: false });
     supervise(commands, { stdout: { write() {} }, env: {}, platform: "linux", spawnFn: fn });
     assert.equal(calls[0].options.detached, true);
     assert.equal(calls[1].command, "pnpm");
     for (const c of calls) c.child.emit("exit", 0, null);
+  });
+});
+
+describe("descendantsOf", () => {
+  const row = (pid, ppid, created = "t") => ({ pid, ppid, created });
+
+  test("walks the whole tree below the root, not the root or siblings", () => {
+    const list = [row(1, 0), row(2, 1), row(3, 2), row(4, 2), row(9, 8)];
+    assert.deepEqual(
+      descendantsOf(list, 1)
+        .map((d) => d.pid)
+        .sort(),
+      [2, 3, 4],
+    );
+  });
+
+  test("a worker whose parent is gone is still found through an earlier snapshot", () => {
+    const earlier = [row(100, 1), row(200, 100, "b"), row(300, 200, "c")];
+    const recordedPids = descendantsOf(earlier, 100);
+    assert.deepEqual(recordedPids, [
+      { pid: 200, created: "b" },
+      { pid: 300, created: "c" },
+    ]);
+    // Later the root and reloader are gone: walking from the root finds nothing.
+    assert.deepEqual(descendantsOf([row(300, 200, "c")], 100), []);
+  });
+
+  test("a parent cycle from pid reuse does not loop forever", () => {
+    assert.deepEqual(
+      descendantsOf([row(2, 1), row(1, 2)], 1).map((d) => d.pid),
+      [2],
+    );
+  });
+});
+
+describe("parseProcessList", () => {
+  test("accepts an array and a lone object", () => {
+    assert.deepEqual(parseProcessList('[{"pid":1,"ppid":0,"created":5}]'), [
+      { pid: 1, ppid: 0, created: "5" },
+    ]);
+    assert.equal(parseProcessList('{"pid":2,"ppid":1,"created":6}')[0].pid, 2);
   });
 });
