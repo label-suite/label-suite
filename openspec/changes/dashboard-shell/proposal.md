@@ -44,9 +44,15 @@ Scenario 20 與 07-01 那一條本次只驗連結去處、入口標記與「不�
 - `auth-guard`：REMOVED Requirement「暫時落點顯示目前登入者」（整條被儀表板取代）。角色無效時只導向登入頁（sa-7），守門本身不改
 - `app-shell-sidebar`：MODIFIED Requirement「沒有任務角色時從側欄進入標記作業被擋下」的擋下說明位置，由「內容區最上方」改為「頁首下方、版面內容之上」（Q4；規格 07-01 §進入模組的條件 第 3 條已回寫）。側欄的任務角色來源不改成新端點，Requirement「角色標示與第三個導覽項依任務角色來源」不動
 - `frontend-routing`：MODIFIED Requirement「每頁設定瀏覽器標題」，頁名清單的「暫時落點（你已登入）」改為「儀表板」
-- `component-gallery`：MODIFIED Requirement「原語宣告的 variant 集合固定」（骨架的兩種動畫）與「展示頁列出每個宣告的項目」（區塊數與順序加指標卡）
+- `component-gallery`：MODIFIED Requirement「原語宣告的 variant 集合固定」（骨架的兩種動畫）、「展示頁列出每個宣告的項目」（區塊數與順序加指標卡）與「目錄依網址錨點標示目前區塊」（錨點數加一）
+- `auth-guard` 另 MODIFIED Requirement「畫面判定完成前不顯示任何頁面內容」：Scenario「判定中不顯示內容」的負向檢查由「你已登入」改看儀表板頁首
+- `app-shell-sidebar` 另 MODIFIED Requirement「側欄的語言切換讓整頁一起換」：Scenario 裡「頁面卡片標題變成 You're signed in」改為頁首主標題變成「Dashboard」
+- `frontend-routing` 另 MODIFIED Requirement「正式建置含登入相關頁面且不含開發頁與測試替身」：「暫時落點」改為「儀表板」
+- `frontend-i18n`：MODIFIED Requirement「介面文字只取自語言檔」，語言檔分組由五組加為六組（新增啟動時載入的 `dashboard`），`auth` 不再放暫時落點的文字；缺翻譯備用規則沿用、不改
+- `e2e-testing`：MODIFIED Requirement「登入到落點再登出的旅程」，到達落點後看的是儀表板的頁首與系統管理員的「平台使用者統計」，不再是「你已登入」與 Email
+- `design-token-mapping`：MODIFIED Requirement「建置只取 token 檔的自訂屬性」（也讀 `data-palette.css`，缺檔時建置失敗）；ADDED Requirement「資料色不進對照層也不給原語用」（Q8 與 ADR-005 D4 修訂）
 
-不改：`frontend-i18n`（新增 `dashboard` 語言檔屬既有規則的範圍，缺翻譯備用規則沿用）、`account-login`（登入後去處不變）、`denied-and-not-found-screens`（「回儀表板」去處不變）、`permission-authorization`、`role-permission-matrix`（畫面不讀矩陣）、`login-session`（角色無效不另外結束登入狀態）
+不改：`account-login`（登入後去處不變）、`denied-and-not-found-screens`（「回儀表板」去處不變）、`permission-authorization`、`role-permission-matrix`（畫面不讀矩陣）、`login-session`（角色無效不另外結束登入狀態）
 
 ## Impact
 
@@ -78,7 +84,7 @@ Scenario 20 與 07-01 那一條本次只驗連結去處、入口標記與「不�
 | Issue #722                                                         | 本文 §使用情境 / 功能範圍、§需求目標、§驗收條件；留言 2026-11-27（#720 移交）、2026-11-28 檢查點（維護者已決定三點：卡 B 用「提交」、系統管理員只有區塊 A、三種任務角色版面只有頁首）                                                                                                                                                                                                                                                                                                                   |
 | `design/system/brand.md`                                           | §按鈕用語（與卡 B「提交」的不一致，見 C-1）                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `openspec/changes/archive/2026-11-27-sidebar-nav/clarification.md` | Q1（任務角色來源固定回答）、Q2（未建置頁導回、不做「建置中」頁）、Q4（擋下說明以 navigation state 帶）                                                                                                                                                                                                                                                                                                                                                                                                  |
-| 既有 capability                                                    | `auth-guard`、`app-shell-sidebar`、`frontend-routing`、`frontend-i18n`、`component-gallery`、`permission-authorization`、`role-permission-matrix`                                                                                                                                                                                                                                                                                                                                                       |
+| 既有 capability                                                    | `auth-guard`、`app-shell-sidebar`、`frontend-routing`、`frontend-i18n`、`component-gallery`、`e2e-testing`、`design-token-mapping`、`permission-authorization`、`role-permission-matrix`                                                                                                                                                                                                                                                                                                                |
 | `openspec/changes/dashboard-shell/clarification.md`                | Q1～Q10 決議、「不需維護者決定」表、「移出本次的驗收標準」、「交給後續產出」                                                                                                                                                                                                                                                                                                                                                                                                                            |
 
 ## clarification 決議
@@ -101,6 +107,6 @@ clarification 已完成，決議如下，specs、design、tasks 依此撰寫，�
 
 後續產出的交付要求（clarification §交給後續產出）：
 
-- specs：新增 `dashboard`；`auth-guard` REMOVED；`app-shell-sidebar`、`frontend-routing`、`component-gallery` MODIFIED；測試集答案不外露要有負向 Scenario
+- specs：新增 `dashboard`；`auth-guard` REMOVED 加一條 MODIFIED；`app-shell-sidebar`、`frontend-routing`、`component-gallery`、`frontend-i18n`、`e2e-testing`、`design-token-mapping` MODIFIED（後者另 ADDED 一條）；測試集答案不外露要有負向 Scenario
 - design：不新增端點、不改資料模型；前端 token 抽取讀 `data-palette.css`；字級對應照 Q9；路徑常數層級依 F1 決定
 - tasks：沒有後端群組、沒有 `[@dba]`；前端群組含移除暫時落點頁、`signed-in-card.tsx` 與 `auth` 的 `dashboard.*` 語言鍵；元件展示頁補指標卡；`metric.md` 與 `screen-inventory.md` 的「程式實作」同一張 PR 更新
