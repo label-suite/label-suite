@@ -16,22 +16,43 @@ import { parse } from "yaml";
 const WORKFLOW_PATH = fileURLToPath(new URL("../../.github/workflows/ci.yml", import.meta.url));
 const workflow = parse(readFileSync(WORKFLOW_PATH, "utf8"));
 
-/** The jobs that existed before #506; their blocks are never edited. */
+/** The jobs that existed before #506; C1 checks that they are still present. */
 const EXISTING_JOBS = ["commit-messages", "docs-site", "format", "specs"];
 
-/** Jobs that every pull request must run (C1). Grows with each task that adds a job. */
+/** Jobs that every pull request must run (C1; issue #823's approved path table). */
 const ALWAYS_RUN_JOBS = [
-  "backend-sqlite",
-  "backend-postgres",
-  "frontend",
-  "api-contract",
+  "commit-messages",
+  "format",
+  "specs",
   "semgrep",
   "dependency-audit",
-  "e2e",
-  "coverage",
-  "scripts-tests",
-  "scripts-tests-windows",
+  "changes",
 ];
+
+/**
+ * Jobs that run only when `changes` says their paths changed, and the output each
+ * reads (issue #823). The five code-group jobs read `code` or a widening of it.
+ */
+const CONDITIONAL_JOBS = {
+  hooks: "hooks",
+  "docs-site": "docs_site",
+  "backend-sqlite": "code",
+  "backend-postgres": "code",
+  frontend: "frontend",
+  e2e: "e2e",
+  coverage: "code",
+  "api-contract": "api_contract",
+  "scripts-tests": "scripts",
+  "scripts-tests-windows": "scripts",
+  compose: "compose",
+};
+
+/**
+ * The job-level `if` of a conditional job: it runs when its output is true, and also
+ * when `changes` did not succeed, so a failed `changes` cannot skip it as passing.
+ */
+const changesCondition = (output) =>
+  `\${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.${output} == 'true') }}`;
 
 function job(name) {
   const found = workflow.jobs?.[name];
@@ -75,6 +96,14 @@ describe("C1: every pull request runs the always-on jobs", () => {
     }
   });
 
+  test("every job is either always-on or conditional, never both and never neither", () => {
+    for (const name of Object.keys(workflow.jobs)) {
+      const always = ALWAYS_RUN_JOBS.includes(name);
+      const conditional = name in CONDITIONAL_JOBS;
+      assert.ok(always !== conditional, `${name} must be in exactly one of the two lists`);
+    }
+  });
+
   test("on.pull_request has no paths or paths-ignore filter", () => {
     const trigger = workflow.on.pull_request;
     assert.ok(trigger === null || typeof trigger === "object");
@@ -84,6 +113,52 @@ describe("C1: every pull request runs the always-on jobs", () => {
 
   test("the four existing jobs are still present", () => {
     for (const name of EXISTING_JOBS) job(name);
+  });
+});
+
+describe("conditional jobs read their own changes output (issue #823)", () => {
+  test("each needs changes and has a job-level if on its output, with no continue-on-error", () => {
+    for (const [name, output] of Object.entries(CONDITIONAL_JOBS)) {
+      const found = job(name);
+      const needs = [].concat(found.needs ?? []);
+      assert.ok(needs.includes("changes"), `${name} must need changes`);
+      if (name !== "coverage") {
+        assert.equal(
+          found.if,
+          changesCondition(output),
+          `${name} must run on the ${output} output or when changes did not succeed`,
+        );
+      }
+      assert.equal("continue-on-error" in found, false, `${name} must not set continue-on-error`);
+    }
+  });
+
+  test("changes exposes every output a conditional job reads, from the paths step", () => {
+    const outputs = job("changes").outputs ?? {};
+    for (const output of new Set(Object.values(CONDITIONAL_JOBS))) {
+      assert.match(
+        String(outputs[output] ?? ""),
+        new RegExp(`steps\\.paths\\.outputs\\.${output}\\b`),
+        `changes does not expose ${output}`,
+      );
+    }
+  });
+
+  test("coverage runs when the three test jobs succeeded and changes failed or said code", () => {
+    const condition = String(job("coverage").if).replace(/\s+/g, " ").trim();
+    assert.equal(
+      condition,
+      "${{ !cancelled() && needs.backend-sqlite.result == 'success'" +
+        " && needs.backend-postgres.result == 'success'" +
+        " && needs.frontend.result == 'success'" +
+        " && (needs.changes.result != 'success' || needs.changes.outputs.code == 'true') }}",
+    );
+  });
+
+  test("the five code-group jobs share the code condition, widened only for frontend and e2e", () => {
+    for (const name of ["backend-sqlite", "backend-postgres", "frontend", "e2e", "coverage"]) {
+      assert.match(String(job(name).if), /needs\.changes\.outputs\.(code|frontend|e2e) == 'true'/);
+    }
   });
 });
 
@@ -642,10 +717,11 @@ describe("C2: the workflow reruns when a label is added or removed", () => {
 describe("C3: coverage", () => {
   const combine = /\bcoverage combine \.coverage\.sqlite \.coverage\.postgres\b/;
 
-  test("needs exactly the three test jobs", () => {
+  test("needs exactly changes and the three test jobs", () => {
     assert.deepEqual([...job("coverage").needs].sort(), [
       "backend-postgres",
       "backend-sqlite",
+      "changes",
       "frontend",
     ]);
   });
@@ -786,9 +862,9 @@ describe("C9: scripts-tests", () => {
     "ci-workflow",
   ];
 
-  test("has no needs, so it starts with the other jobs and a failed job cannot hide it", () => {
-    assert.equal("needs" in job("scripts-tests"), false);
-    assert.equal("if" in job("scripts-tests"), false);
+  test("needs only changes, so a failed test job cannot hide it", () => {
+    assert.deepEqual([].concat(job("scripts-tests").needs), ["changes"]);
+    assert.deepEqual([].concat(job("scripts-tests-windows").needs), ["changes"]);
   });
 
   test("installs dependencies, then runs every script test and the workflow test with node --test", () => {
