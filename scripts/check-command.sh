@@ -157,6 +157,14 @@ function tokenise(text) {
   for (let i = 0; i < text.length; i += 1) {
     const c = text[i];
     if (quote === "'") { if (c === "'") quote = null; else cur += c; continue; }
+    if (quote === '"' && c === '\\') {
+      // Inside double quotes a backslash escapes only $ ` " \ and newline, as
+      // in bash; anywhere else it is a literal, which is what keeps a quoted
+      // Windows path such as "C:\...\rm.exe" intact.
+      const next = text[i + 1] ?? '';
+      if ('$`"\\\n'.includes(next) && next !== '') { cur += next; i += 1; } else cur += c;
+      continue;
+    }
     if (c === '\\') { cur = (cur ?? '') + (text[i + 1] ?? ''); i += 1; continue; }
     if (quote === '"') {
       if (c === '"') { quote = null; continue; }
@@ -192,7 +200,10 @@ function judge(tokens, depthGuard) {
   while (tokens.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(tokens[0].value)) tokens.shift();
   if (!tokens.length) return;
   const argv = tokens.map((t) => t.value);
-  const name = argv[0].split('/').pop();
+  // The command's own name, whatever path or spelling reached it: Windows
+  // accepts `\` as a separator, an `.exe` suffix and any letter case, so
+  // `C:\...\RM.EXE` is rm there. Folding case blocks more on POSIX, never less.
+  const name = argv[0].split(/[\\/]/).pop().replace(/\.exe$/i, '').toLowerCase();
 
   if (['eval', 'sh', 'bash', 'zsh'].includes(name)) {
     const idx = name === 'eval' ? 1 : argv.indexOf('-c') + 1;

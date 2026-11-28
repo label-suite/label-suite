@@ -122,7 +122,10 @@ case "$MODE" in
       # leaves nothing to check, which ends as NA rather than in the git
       # fallback below.
       for p in ${PATCH_PATHS+"${PATCH_PATHS[@]}"}; do
-        case "$p" in /*) CANDIDATES+=("$p") ;; *) CANDIDATES+=("$CWD/$p") ;; esac
+        case "$p" in
+          /*|[A-Za-z]:[/\\]*) CANDIDATES+=("$p") ;;   # POSIX or Windows absolute
+          *) CANDIDATES+=("$CWD/$p") ;;
+        esac
       done
     elif [ "$EVENT_TOOL" = "apply_patch" ]; then
       # No Add, Update or Delete header at all: the patch text is in a shape this checker
@@ -178,7 +181,7 @@ EXCLUDED_RE="$HOOK_EXCLUDED_RE"
 PY_FILES=(); TS_FILES=(); DOC_FILES=(); DOC_HITS=0; SKIPPED=0
 for cand in ${CANDIDATES+"${CANDIDATES[@]}"}; do
   [ -n "$cand" ] || continue
-  case "$cand" in /*) abs="$cand" ;; *) abs="$REPO/$cand" ;; esac
+  case "$cand" in /*|[A-Za-z]:[/\\]*) abs="$cand" ;; *) abs="$REPO/$cand" ;; esac
   # Both sides must be resolved before they are compared. `git rev-parse
   # --show-toplevel` hands back a realpath while a payload's file_path keeps
   # whatever symlinked form the platform used, and on macOS $TMPDIR sits under
@@ -190,7 +193,7 @@ for cand in ${CANDIDATES+"${CANDIDATES[@]}"}; do
     const [root, target] = process.argv.slice(1);
     const { resolved, outsideWorkspace } = resolveTargetPath(target, root);
     let base = root;
-    try { base = require("node:fs").realpathSync(root); } catch { /* keep the literal root */ }
+    try { base = require("node:fs").realpathSync.native(root); } catch { /* keep the literal root */ }
     process.stdout.write(outsideWorkspace ? "" : path.relative(base, resolved).split(path.sep).join("/"));
   ' -- "$REPO" "$abs")
   if [ -z "$rel" ]; then

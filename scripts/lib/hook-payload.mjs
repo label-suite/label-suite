@@ -119,6 +119,11 @@ const FIELD_SEP = "\x1F";
  * actually lands, not where it was addressed. A path that does not exist yet is
  * still answerable: its nearest existing ancestor is resolved and the remainder
  * appended, so a write to a new file in a new directory is bounded correctly.
+ *
+ * `realpathSync.native`, not the JavaScript `realpathSync`: on Windows only the
+ * native one expands 8.3 short names, and the temporary directory arrives as
+ * `C:\Users\RUNNER~1\...` while git reports the same checkout as
+ * `C:/Users/runneradmin/...`, so every write looked like it left the workspace.
  */
 export function resolveTargetPath(target, workspaceRoot) {
   const absolute = path.resolve(workspaceRoot, target);
@@ -127,7 +132,7 @@ export function resolveTargetPath(target, workspaceRoot) {
   // Walk up until something exists, then resolve that and re-append the rest.
   for (let probe = absolute; ;) {
     try {
-      resolved = path.join(realpathSync(probe), remainder);
+      resolved = path.join(realpathSync.native(probe), remainder);
       break;
     } catch {
       const parent = path.dirname(probe);
@@ -141,7 +146,7 @@ export function resolveTargetPath(target, workspaceRoot) {
   }
   let root = workspaceRoot;
   try {
-    root = realpathSync(workspaceRoot);
+    root = realpathSync.native(workspaceRoot);
   } catch {
     /* keep the literal root */
   }
