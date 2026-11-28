@@ -25,6 +25,9 @@ HTTP_CLIENT = "Outbound HTTP only through its entry"
 INDEPENDENCE = "Modules do not import each other"
 ROUTER_PROTECTED = "Only the assembly point imports routers"
 
+ROUTER_MAIL = "Routers do not import the mail entry"
+MAIL_MODULES = "Mail entry does not import modules"
+
 # Third-party packages each entry owns; must equal that contract's forbidden_modules (design D4).
 ENTRY_THIRD_PARTY: dict[str, set[str]] = {
     MAIL: {"resend", "smtplib", "aiosmtplib"},
@@ -32,8 +35,8 @@ ENTRY_THIRD_PARTY: dict[str, set[str]] = {
     HTTP_CLIENT: {"httpx", "requests", "aiohttp", "urllib3"},
 }
 # Top-level packages registered as entries (design D3): app/oidc is the OIDC entry
-# (login-auth-guard PL5, design D5).
-ENTRY_TOP_LEVEL_PACKAGES: set[str] = {"oidc"}
+# (login-auth-guard PL5, design D5) and app/mail the mail entry (email-celery-worker D9).
+ENTRY_TOP_LEVEL_PACKAGES: set[str] = {"oidc", "mail"}
 
 MODULE_FILES = {
     "__init__.py": "",
@@ -53,12 +56,14 @@ def write(root: Path, relative: str, content: str) -> None:
 
 
 def build_tree(root: Path, modules: tuple[str, ...] = ("health", "other")) -> None:
-    """Write a clean ``app`` package with the given modules, ``scripts`` and a ``main.py``."""
+    """Write a clean ``app``: the modules, ``scripts``, ``mail``, ``main`` and ``worker``."""
     shutil.copy(PYPROJECT, root / "pyproject.toml")
     write(root, "app/__init__.py", "")
     write(root, "app/core/__init__.py", "")
     write(root, "app/core/base.py", "class Base: ...\n")
     write(root, "app/scripts/__init__.py", "")
+    write(root, "app/mail/__init__.py", "")
+    write(root, "app/worker.py", "")
     write(root, "app/modules/__init__.py", "")
     for module in modules:
         for name, content in MODULE_FILES.items():

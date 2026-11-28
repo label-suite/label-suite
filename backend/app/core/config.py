@@ -27,7 +27,7 @@ from pathlib import Path
 from typing import Annotated, Any, Literal
 from urllib.parse import urlsplit, urlunsplit
 
-from pydantic import SecretStr, ValidationError, field_validator, model_validator
+from pydantic import Field, SecretStr, ValidationError, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode
 
 __all__ = [
@@ -131,6 +131,7 @@ class WorkerSettings(DatabaseSettings):
             optional port, credentials and query string, and an empty path or ``/``
             (no database number); ``redis://localhost:6379`` when unset or empty.
             Use ``broker_url`` and ``result_backend_url`` instead of reading it.
+            Left out of ``repr``, because it may hold credentials.
         resend_api_key: ``RESEND_API_KEY``; ``None`` when unset or empty.
         mail_from: ``MAIL_FROM``, the sender of every mail; ``None`` when unset or
             empty. It must not contain CR or LF (sender-header injection, Hard Rule
@@ -147,7 +148,8 @@ class WorkerSettings(DatabaseSettings):
             ``DatabaseSettings`` (Alembic) never reads it.
     """
 
-    redis_url: str = DEFAULT_REDIS_URL
+    # Hidden from repr: the URL may hold Redis credentials (security-agent-rules S9).
+    redis_url: str = Field(default=DEFAULT_REDIS_URL, repr=False)
     resend_api_key: SecretStr | None = None
     mail_from: str | None = None
     celery_task_always_eager: bool = False

@@ -331,3 +331,16 @@ def test_database_settings_ignore_the_queue_and_mail_settings(
     settings = load_settings(DatabaseSettings)
 
     assert not hasattr(settings, "redis_url")
+
+
+def test_redis_credentials_are_hidden_from_the_settings_repr(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", VALID_ORIGIN)
+    monkeypatch.setenv("REDIS_URL", "redis://:CANARY-pw@redis:6379")
+
+    for cls in (Settings, WorkerSettings):
+        settings = load_settings(cls)
+        assert "CANARY-pw" not in repr(settings)
+        assert "CANARY-pw" not in str(settings)
+        assert settings.broker_url() == "redis://:CANARY-pw@redis:6379/0"

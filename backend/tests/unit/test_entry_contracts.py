@@ -28,7 +28,7 @@ from tests.unit.import_tree import (
 )
 
 SERVICE = "app/modules/health/service.py"
-CHECKED_PACKAGES = ["app.core", "app.modules", "app.main", "app.scripts"]
+CHECKED_PACKAGES = ["app.core", "app.modules", "app.main", "app.scripts", "app.worker"]
 CONTRACT_OF = {pkg: name for name, pkgs in ENTRY_THIRD_PARTY.items() for pkg in pkgs}
 
 
@@ -123,6 +123,7 @@ def sample(tmp_path: Path, extra: tuple[str, ...] = ()) -> Path:
     for name in ("core", "modules", "scripts", *extra):
         write(tmp_path, f"app/{name}/__init__.py", "")
     write(tmp_path, "app/main.py", "")
+    write(tmp_path, "app/worker.py", "")
     return tmp_path / "app"
 
 
@@ -152,7 +153,8 @@ def test_guard_names_a_registered_entry_listed_in_a_contract(tmp_path: Path) -> 
 
 def test_guard_names_the_contract_and_the_package_it_leaves_out(tmp_path: Path) -> None:
     app_dir = sample(tmp_path)
-    sources = full_sources(replace={OIDC: ["app.core", "app.modules", "app.main"]})
+    without_scripts = [pkg for pkg in CHECKED_PACKAGES if pkg != "app.scripts"]
+    sources = full_sources(replace={OIDC: without_scripts})
 
     problems = unclassified_top_level(app_dir, sources, set())
 
@@ -188,6 +190,18 @@ def test_oidc_is_a_registered_entry_package_of_the_real_app() -> None:
 
     assert "oidc" in names
     assert "oidc" in ENTRY_TOP_LEVEL_PACKAGES
+
+
+def test_mail_is_a_registered_entry_package_of_the_real_app() -> None:
+    names = {info.name for info in pkgutil.iter_modules(app.__path__)}
+
+    assert "mail" in names
+    assert "mail" in ENTRY_TOP_LEVEL_PACKAGES
+
+
+def test_every_entry_contract_checks_the_worker_assembly_point() -> None:
+    for contract, sources in sources_of(load_contracts()).items():
+        assert "app.worker" in sources, contract
 
 
 def test_router_importing_another_modules_service_fails_with_the_chain(tmp_path: Path) -> None:
