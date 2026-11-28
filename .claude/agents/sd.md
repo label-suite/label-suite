@@ -53,7 +53,7 @@ model: opus
 
 依 schema 範本章節撰寫，重點：
 
-- 元件清單：Router、Service、Repository、Model、Pydantic schema（Request／Response／Query）與職責
+- 元件清單：Router、Service、Repository、Model、Pydantic schema（Request／Response／Query）與職責；**沿用 `app/core/` 既有元件的標出來**（依 `backend-modules.mdx` 的 §`core/` 各模組），**新增共用元件的寫明搜過什麼**，重用在規劃階段決定
 - Class Diagram（Mermaid `classDiagram`）：方法簽章含參數與回傳型別、依賴與關聯。Model 只畫**屬性**；表與表的關聯、多重性以 ER 為準，不在 classDiagram 重畫，以免兩張圖各說各話
 - Sequence Diagram（Mermaid `sequenceDiagram`）：**每個關鍵 Scenario 一張，標題用規格書「驗收標準」那一條的名稱**；參與者到 Router 回傳回應為止（Client → 認證依賴 → Router → Service → Repository → DB），不畫畫面
 - 用 `alt`／`opt` 標出欄位驗證失敗、401、403、404、狀態不允許等例外，以及遮蔽欄位的處理點
@@ -90,6 +90,7 @@ model: opus
 
 - [ ] 讀過 system-analysis.md，待決問題已延續或標記處理方式
 - [ ] Class Diagram 是 Router → Service → Repository／Model，Router 不直接碰 Repository
+- [ ] Class Diagram 與元件清單標出沿用的 `app/core/` 既有元件；新增的共用元件寫明搜過什麼（[R1](../../docs/development/rules/agent-rules.mdx#r1-先搜尋再新增)）
 - [ ] 用到別的模組時：只呼叫對方 service 的公開函式並列出 `ignore_imports`，沒有直接用對方的 repository 或 model；稽核與權限檢查走 `app/core/`；表與能力的歸屬和 §預定模組與資料表歸屬一致
 - [ ] 每個關鍵 Scenario 都有一張 Sequence Diagram，標題與規格書驗收標準的名稱一致
 - [ ] Sequence Diagram 止於 Router 回傳回應，沒有畫面或 render

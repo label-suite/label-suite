@@ -93,6 +93,7 @@ model: opus
 - [ ] `openapi.json` 已重新匯出且與程式、與 `api-contract.md` 一致
 - [ ] 權限與遮蔽已用**多個角色**測過；看不到的資源回 404
 - [ ] **標記員視角的負向測試已存在**，答案與測試集辨識資訊都取不到
+- [ ] 新增 helper、util、常數、例外或依賴前，已搜尋 `app/core/`（[`core/` 各模組](../../docs/diagrams/architecture/backend-modules.mdx#core-各模組)）與相鄰模組，沒有重做已實作的；確實要新增時，commit body 或 PR 寫明搜過什麼（[R1](../../docs/development/rules/agent-rules.mdx#r1-先搜尋再新增) 的例外條件）
 - [ ] 沒有任務名稱特判、沒有寫死的 `task.type` 分支
 - [ ] 沒有 `pip install`、沒有拼接 SQL、沒有硬寫的祕密、CORS 沒有 `allow_origins=["*"]`
 - [ ] 沒有自己寫 Alembic migration（需要時已回報給 dba）
