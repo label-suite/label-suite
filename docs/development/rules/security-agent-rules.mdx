@@ -1,6 +1,6 @@
 ---
 title: '授權與答案隔離規範'
-description: '身分只來自 httpOnly cookie、token 不離開 cookie、CSRF 與 CORS 的統一位置、授權的四段順序、遮蔽與 allowlist 在後端、答案隔離的覆蓋面、受控答案表與 worker 邊界、設定驅動的界線、稽核與脫敏、驗收矩陣。附來源逐條對照。'
+description: '身分只來自 httpOnly cookie、token 不離開 cookie、CSRF 與 CORS 的統一位置、授權的四段順序、遮蔽與 allowlist 在後端、答案隔離的覆蓋面、受控答案表與 worker 邊界、設定驅動的界線、稽核與脫敏、驗收矩陣。附 OWASP Top 10:2025 對照與來源逐條對照。'
 category: '開發說明'
 tags: [開發說明, Agent, 規範, 安全]
 createdAt: '2026-11-10'
@@ -191,6 +191,23 @@ updatedAt: '2026-11-26'
 - **檢查方式**：**待建置**。測試分層與證據要求見 [testing-agent-rules.mdx](testing-agent-rules.mdx)，本條只定矩陣要蓋哪幾格
 :::
 
+## 附錄：OWASP Top 10:2025 對照
+
+對照的基準是 [OWASP Top 10:2025](https://top10.owasp.org/2025)（十個類別的名稱照該頁）；「已涵蓋」指本文或程式已有對應做法，「待建置」的檢查不因此算已強制。
+
+| 類別 | 狀態 | 對應與缺口 |
+| :--- | :--- | :--- |
+| A01 Broken Access Control | 已涵蓋 | 授權與遮蔽見 [S1](#s1-身分只來自驗證完成的-session)、[S3](#s3-授權的四段順序)、[S4](#s4-遮蔽與-allowlist-在後端)；答案隔離見 [S5](#s5-答案隔離的覆蓋面)、[S6](#s6-受控答案表與-worker-的讀取邊界)；CORS 來源逐一列出（`backend/app/main.py`，Semgrep 規則擋萬用來源）；CSRF 由 `backend/app/core/csrf.py` 單一 middleware 驗；無權限者看到的是 404（`backend/app/core/authz.py`）。S3 至 S6 的自動化檢查仍待建置 |
+| A02 Security Misconfiguration | 部分涵蓋 | `frontend/nginx.conf` 設 CSP、`X-Frame-Options`、`X-Content-Type-Options`、Referrer-Policy、COOP、Permissions-Policy 並關閉 `server_tokens`，CI 以 `scripts/check-security-headers.sh` 驗；HSTS 刻意交給 TLS 邊緣（`frontend/nginx.conf` 註解、[architecture.mdx](../architecture.mdx) §部署與維運），邊緣的實際標頭尚未驗證，追蹤見 [#695](https://github.com/label-suite/label-suite/issues/695) |
+| A03 Software Supply Chain Failures | 部分涵蓋 | CI 以 `uv sync --frozen`、`pnpm install --frozen-lockfile` 鎖版本，`dependency-audit` job 跑 `pip-audit` 與 `pnpm audit --prod --audit-level high`；沒有 PR 時不會偵測新漏洞、也沒有自動升級 PR，追蹤見 [#797](https://github.com/label-suite/label-suite/issues/797) |
+| A04 Cryptographic Failures | 部分涵蓋 | 密碼用 argon2id（`backend/app/core/passwords.py`）；session cookie 帶 `__Host-` 前綴、`Secure`、`HttpOnly`（`backend/app/core/cookies.py`）；金鑰只從環境變數或 `0600` 的檔案取得（`backend/app/core/auth_secret.py`），Semgrep 規則 `label-suite-hardcoded-secret` 擋寫死的 secret；傳輸加密由 TLS 邊緣負責，實際驗證追蹤見 [#695](https://github.com/label-suite/label-suite/issues/695) |
+| A05 Injection | 已涵蓋 | 輸入驗證是 `AGENTS.md` 硬性規則 9，請求 schema 在 `backend/app/modules/account/schemas.py` 限長度；`backend/app` 內沒有拼接字串的 SQL，一律走 SQLAlchemy；設定不得 `eval`／`exec`（[S8](#s8-設定的驗證與-span-的表示)，CI 的 Ruff `S307`、`S102` 擋）；XSS 靠輸出轉義、不改寫輸入（[S9](#s9-稽核脫敏與保留)），並有 nginx 的 CSP；log 內的請求值經 `backend/app/core/log_safety.py` 跳脫 |
+| A06 Insecure Design | 部分涵蓋 | 設計層的不變量寫在 [S3](#s3-授權的四段順序) 至 [S7](#s7-設定驅動的界線) 與 [S10](#s10-驗收矩陣)，每個 change 都走 SDD 的規劃審閱與驗收；這些規則大多沒有自動化檢查（各條「檢查方式」標待建置）；登入失敗鎖定這個設計缺口追蹤見 [#726](https://github.com/label-suite/label-suite/issues/726) |
+| A07 Authentication Failures | 部分涵蓋 | argon2id 加不存在帳號的假驗證，讓回應時間不洩漏帳號是否存在（`backend/app/core/passwords.py`）；停用帳號與敏感改動時 `credential_version` 加一並撤銷 refresh token（[S4](#s4-遮蔽與-allowlist-在後端)）；Google 登入走 PKCE、`state`、`nonce` 並驗 ID token（`backend/app/oidc/google.py`）。登入失敗鎖定與速率限制尚未實作，追蹤見 [#726](https://github.com/label-suite/label-suite/issues/726) |
+| A08 Software or Data Integrity Failures | 部分涵蓋 | access JWT 驗簽章與必要 claim（`backend/app/core/tokens.py`），CSRF token 綁 session 的 HMAC（`backend/app/core/csrf.py`），Google ID token 驗簽章與 `iss`、`aud`、`exp`、`nonce`，CI 用鎖定的 lockfile 與固定版本的 Semgrep 映像。GitHub Actions 與 Docker 基底映像以版本標籤、而非 commit SHA 或 digest 釘住；這一項沒有追蹤 issue |
+| A09 Security Logging and Alerting Failures | 部分涵蓋 | 未處理例外記成一筆 `ERROR`，不帶例外訊息、查詢、內文與 cookie（`UnhandledExceptionMiddleware`，`backend/app/core/middleware.py`），另有 `AccessLogMiddleware`；log 脫敏見 [S9](#s9-稽核脫敏與保留)。`audit_events` 的 model 與寫入函式尚未建立，追蹤見 [#757](https://github.com/label-suite/label-suite/issues/757)；異常告警沒有任何規則或實作，也沒有追蹤 issue |
+| A10 Mishandling of Exceptional Conditions | 已涵蓋 | 所有例外轉成統一的錯誤信封，未處理例外回 `500 INTERNAL_ERROR` 且不洩漏細節（`backend/app/core/errors.py`、`backend/app/core/middleware.py`）；授權的未知值與缺失一律拒絕（[S3](#s3-授權的四段順序)） |
+
 ## 附錄：刻意不採用的來源條文
 
 | 不採用 | 出處 | 為什麼 |
@@ -274,3 +291,4 @@ updatedAt: '2026-11-26'
 | 2026-11-19 | S1 至 S4 的認證與授權理由寫進 [ADR-004](../adr/004-auth-and-security.mdx)，本文只留規範與檢查方式 | —（理由原本只在個人 repo 的 ADR-021、035、037 與 #107 的留言） | [#450](https://github.com/label-suite/label-suite/issues/450) |
 | 2026-11-19 | S5 至 S8 的答案隔離與任務設定理由寫進 [ADR-006](../adr/006-task-config-and-answer-isolation.mdx)，本文只留規範與檢查方式 | —（理由原本只在個人 repo 的 ADR-005、007、010、029、031 與 architecture.mdx） | [#452](https://github.com/label-suite/label-suite/issues/452) |
 | 2026-11-26 | S4 的失效規則改成：系統角色變更不撤銷登入狀態，下一次操作用新角色；帳號停用與規格 01-05 列出的改動才加一 `credential_version` 並撤銷 | S4 原本的撤銷事件清單（帳號停用、系統角色變更、任務成員身分變更） | [#719](https://github.com/label-suite/label-suite/issues/719#issuecomment-7187190476) |
+| 2026-11-28 | 資安規則對照 OWASP Top 10:2025，放在本文附錄；ASVS 之後有需要再另開 | —（原本沒有任何 OWASP 對照） | [#796](https://github.com/label-suite/label-suite/issues/796#issuecomment-7235415173) |
