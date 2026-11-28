@@ -104,8 +104,9 @@ describe("the guard while the session is being checked", () => {
       expect(countOf(`GET ${CURRENT_SESSION_URL}`)).toBe(1);
     });
 
-    expect(screen.queryByText("你已登入")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "儀表板" })).not.toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "登入" })).not.toBeInTheDocument();
+    expect(document.body).not.toHaveTextContent(SPEC_MEMBER.name);
     expect(document.body).not.toHaveTextContent(SPEC_MEMBER.email);
   });
 });
@@ -180,7 +181,7 @@ describe("signed-out visitors", () => {
     await user.click(screen.getByRole("button", { name: "登入" }));
 
     await expectPath(current, "/dashboard/dashboard");
-    expect(await screen.findByRole("heading", { name: "你已登入" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "儀表板" })).toBeInTheDocument();
   });
 });
 
@@ -195,7 +196,7 @@ describe("signed-in visitors", () => {
     const current = openAt("/account/login");
 
     await expectPath(current, "/dashboard/dashboard");
-    expect(await screen.findByRole("heading", { name: "你已登入" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "儀表板" })).toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "登入" })).not.toBeInTheDocument();
     expect(window.history.length).toBe(before);
     expect(countOf(`GET ${CURRENT_SESSION_URL}`)).toBe(1);
@@ -211,7 +212,81 @@ describe("signed-in visitors", () => {
     const current = openAt("/");
 
     await expectPath(current, "/dashboard/dashboard");
-    expect(await screen.findByText("王小明（user@example.com）")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("region", { name: "開始你的第一個工作流程" }),
+    ).toBeInTheDocument();
+  });
+});
+
+describe("a session whose system role is not valid counts as signed out (design D11)", () => {
+  /** Every location the router moved to, in order, starting at the opened one. */
+  let visited: string[] = [];
+
+  beforeEach(() => {
+    visited = [];
+    // The generated type forbids an unknown role, so the body is written as plain JSON.
+    const body = sessionBody(SPEC_MEMBER);
+    server.use(
+      http.get(CURRENT_SESSION_URL, () =>
+        HttpResponse.json({ ...body, data: { user: { ...SPEC_MEMBER, role: "guest" } } }),
+      ),
+    );
+  });
+
+  /** Opens `path` and records every location change from then on. */
+  function openRecording(path: string): AppRouter {
+    const current = openAt(path);
+    visited.push(current.state.location.pathname);
+    current.subscribe((state) => {
+      if (visited.at(-1) !== state.location.pathname) {
+        visited.push(state.location.pathname);
+      }
+    });
+    return current;
+  }
+
+  /** Waits for the query and every redirect to finish, then checks the page stayed put. */
+  async function expectSettledAt(current: AppRouter, pathname: string): Promise<void> {
+    await expectPath(current, pathname);
+    expect(await screen.findByRole("region", { name: "登入" })).toBeInTheDocument();
+    await act(async () => {
+      await delay(50);
+    });
+    expect(current.state.location.pathname).toBe(pathname);
+  }
+
+  it("角色無效時導向登入頁: the landing page redirects once, without signing out", async () => {
+    const before = window.history.length;
+
+    const current = openRecording("/dashboard/dashboard");
+
+    await expectSettledAt(current, "/account/login");
+    expect(visited).toEqual(["/dashboard/dashboard", "/account/login"]);
+    expect(window.history.length).toBe(before);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.queryByText("你已登入")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "儀表板" })).not.toBeInTheDocument();
+    expect(countOf(`GET ${CURRENT_SESSION_URL}`)).toBe(1);
+    expect(countOf(`DELETE ${CURRENT_SESSION_URL}`)).toBe(0);
+  });
+
+  it("角色無效時登入頁不被帶走: the sign-in page stays", async () => {
+    const current = openRecording("/account/login");
+
+    await expectSettledAt(current, "/account/login");
+    expect(visited).toEqual(["/account/login"]);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(countOf(`GET ${CURRENT_SESSION_URL}`)).toBe(1);
+    expect(countOf(`DELETE ${CURRENT_SESSION_URL}`)).toBe(0);
+  });
+
+  it("角色無效時根路徑導向登入頁: / goes to the sign-in page and stays", async () => {
+    const current = openRecording("/");
+
+    await expectSettledAt(current, "/account/login");
+    expect(visited).not.toContain("/dashboard/dashboard");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(countOf(`DELETE ${CURRENT_SESSION_URL}`)).toBe(0);
   });
 });
 
@@ -319,13 +394,18 @@ describe("browser titles", () => {
     });
   });
 
-  it("names the landing page", async () => {
+  it("儀表板的瀏覽器標題: names the dashboard and follows the language", async () => {
     server.use(signedInHandler(SPEC_MEMBER));
+    const user = userEvent.setup();
 
     openAt("/dashboard/dashboard");
 
     await waitFor(() => {
-      expect(document.title).toBe("Label Suite — 你已登入");
+      expect(document.title).toBe("Label Suite — 儀表板");
+    });
+    await user.click(await screen.findByRole("button", { name: /ZH/ }));
+    await waitFor(() => {
+      expect(document.title).toBe("Label Suite — Dashboard");
     });
   });
 });

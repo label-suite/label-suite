@@ -20,12 +20,17 @@ import {
 } from "@/components/ui/card";
 import { Empty } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 
 import { BlockedSection } from "./blocked-section";
 import { GalleryNav } from "./gallery-nav";
 import { GallerySection } from "./gallery-section";
-import { DialogSection, LabelSection, SeparatorSection } from "./primitive-sections";
+import {
+  DialogSection,
+  LabelSection,
+  MetricSection,
+  SeparatorSection,
+  SkeletonSamples,
+} from "./primitive-sections";
 import { TokenMappingSection } from "./token-mapping-section";
 import {
   buttonStateValues,
@@ -249,19 +254,15 @@ export function DevGalleryPage() {
               </Card>
             </GallerySection>
 
-            <SeparatorSection />
+            <MetricSection />
           </div>
+
+          <SeparatorSection />
 
           <DialogSection />
 
           <GallerySection id="states" title={t("sections.states")} meta={t("states.meta")}>
-            <div
-              data-gallery-item={galleryItem("skeleton", "sample", "lines")}
-              className="flex flex-col gap-(--space-sm)"
-            >
-              <Skeleton className="h-3.5 w-4/5" />
-              <Skeleton className="h-3.5 w-[55%]" />
-            </div>
+            <SkeletonSamples />
             <Empty
               data-gallery-item={galleryItem("empty", "sample", "panel")}
               title={t("states.emptyTitle")}

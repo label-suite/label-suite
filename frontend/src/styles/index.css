@@ -20,9 +20,36 @@
 /* dark: utilities follow <html data-theme="dark">, the attribute tokens.css uses (Q13). */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-/* Stop spinners for users who ask for less motion; the status text stays (F9). */
+/*
+ * Skeleton B, shimmer (design D7, design/system Skeleton §變體 B): a highlight
+ * of the mapped --muted swept across the mapped --border, a fixed 1.5s that is
+ * a literal in the canonical Skeleton, not a token.
+ */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@utility animate-shimmer {
+  background-image: linear-gradient(90deg, var(--border) 25%, var(--muted) 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+}
+
+/*
+ * Stop spinners and the shimmer sweep for users who ask for less motion; the
+ * status text and the still gradient stay (F9).
+ */
 @media (prefers-reduced-motion: reduce) {
   .animate-spin {
+    animation: none;
+  }
+
+  .animate-shimmer {
     animation: none;
   }
 }

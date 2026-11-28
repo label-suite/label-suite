@@ -2,12 +2,14 @@
  * Vite plugin that serves only the custom properties of the prototype's
  * design tokens (design D8, clarification Q15).
  *
- * `design/prototype/assets/tokens.css` is the single source of colour, type,
- * radius and shadow values, but importing it whole would bring in a Google
- * Fonts request and global element rules (serif headings). This plugin reads
- * it at dev and build time, keeps only the `--*` declarations of the `:root`
- * and `html[data-theme="dark"]` rules, and serves them as the virtual module
- * `virtual:design-tokens.css`. Nothing is written to disk.
+ * `design/prototype/assets/tokens.css` is the source of semantic colour, type,
+ * radius and shadow values, and `data-palette.css` (loaded after it) is the
+ * source of data colours. Importing them whole would bring in a Google Fonts
+ * request and global element rules (serif headings). This plugin reads both
+ * at dev and build time, keeps only the `--*` declarations of the `:root`
+ * and `html[data-theme="dark"]` rules, and serves them, tokens first, as the
+ * virtual module `virtual:design-tokens.css`. Nothing is written to disk.
+ * Order matters: a data colour may reference a `tokens.css` variable.
  *
  * The result is plain, unlayered CSS on purpose: Tailwind's theme variables
  * live in `@layer theme`, and unlayered declarations always win over layered
@@ -22,9 +24,17 @@ import type { Plugin } from "vite";
 /** Repository-relative location of the token file, used in error messages. */
 const TOKENS_SOURCE = "design/prototype/assets/tokens.css";
 
+/** Repository-relative location of the data palette, used in error messages. */
+const DATA_PALETTE_SOURCE = "design/prototype/assets/data-palette.css";
+
 /** Absolute path of the prototype's tokens.css, resolved from this file. */
 export const DEFAULT_TOKENS_PATH = fileURLToPath(
   new URL(`../../${TOKENS_SOURCE}`, import.meta.url),
+);
+
+/** Absolute path of the prototype's data-palette.css, resolved from this file. */
+export const DEFAULT_DATA_PALETTE_PATH = fileURLToPath(
+  new URL(`../../${DATA_PALETTE_SOURCE}`, import.meta.url),
 );
 
 const VIRTUAL_ID = "virtual:design-tokens.css";
@@ -37,6 +47,8 @@ const KEPT_SELECTORS = new Set([":root", 'html[data-theme="dark"]']);
 export interface ExtractTokensOptions {
   /** Absolute path of the token file; defaults to the prototype's tokens.css. */
   tokensPath?: string;
+  /** Absolute path of the data palette; defaults to the prototype's data-palette.css. */
+  dataPalettePath?: string;
 }
 
 /** Normalises a selector so `html[data-theme='dark']` and extra spaces still match. */
@@ -118,11 +130,20 @@ export function extractCustomProperties(css: string): string {
  * loudly instead of shipping an unstyled app.
  */
 export async function readDesignTokens(path: string): Promise<string> {
+  return readSource(path, TOKENS_SOURCE, "colours, type and spacing");
+}
+
+/** Reads the data palette; a missing file fails the build the same way. */
+export async function readDataPalette(path: string): Promise<string> {
+  return readSource(path, DATA_PALETTE_SOURCE, "data colours");
+}
+
+async function readSource(path: string, source: string, what: string): Promise<string> {
   try {
     return await readFile(path, "utf8");
   } catch (error: unknown) {
     throw new Error(
-      `Design tokens not found at ${path}. The frontend reads its colours, type and spacing from ${TOKENS_SOURCE}; make sure that file is present (a Docker build context must include design/prototype/assets/).`,
+      `Design tokens not found at ${path}. The frontend reads its ${what} from ${source}; make sure that file is present (a Docker build context must include design/prototype/assets/).`,
       { cause: error },
     );
   }
@@ -131,6 +152,7 @@ export async function readDesignTokens(path: string): Promise<string> {
 /** Vite plugin serving `virtual:design-tokens.css` (see the module comment). */
 export function extractTokens(options: ExtractTokensOptions = {}): Plugin {
   const tokensPath = options.tokensPath ?? DEFAULT_TOKENS_PATH;
+  const dataPalettePath = options.dataPalettePath ?? DEFAULT_DATA_PALETTE_PATH;
   return {
     name: "label-suite:extract-tokens",
     resolveId(id) {
@@ -140,7 +162,10 @@ export function extractTokens(options: ExtractTokensOptions = {}): Plugin {
       if (id !== RESOLVED_VIRTUAL_ID) return null;
       // Reload in dev when the prototype's tokens change.
       this.addWatchFile(tokensPath);
-      return extractCustomProperties(await readDesignTokens(tokensPath));
+      this.addWatchFile(dataPalettePath);
+      const tokens = extractCustomProperties(await readDesignTokens(tokensPath));
+      const palette = extractCustomProperties(await readDataPalette(dataPalettePath));
+      return `${tokens}\n${palette}`;
     },
   };
 }

@@ -19,6 +19,7 @@ const LINKS = [
   ["Badge", "#badge"],
   ["Alert", "#alert"],
   ["Card", "#card"],
+  ["Metric", "#metric"],
   ["Separator", "#separator"],
   ["Dialog", "#dialog"],
   ["Skeleton · Empty", "#states"],
@@ -59,7 +60,7 @@ afterEach(() => {
 });
 
 describe("gallery nav", () => {
-  it("is a nav named 元件目錄 with the eyebrow and eleven section links", () => {
+  it("is a nav named 元件目錄 with the eyebrow and twelve section links", () => {
     openAt("/dev/gallery");
 
     const nav = screen.getByRole("navigation", { name: "元件目錄" });
@@ -77,17 +78,30 @@ describe("gallery nav", () => {
 
     expect(screen.getByRole("link", { name: "Badge" })).toHaveAttribute("aria-current");
     expect(currentLinks()).toEqual(["Badge"]);
-    expect(navLinks()).toHaveLength(11);
+    expect(navLinks()).toHaveLength(12);
   });
 
   it("marks the 無權限與找不到 link at #blocked, and it points at the section of that name", () => {
     openAt("/dev/gallery#blocked");
 
-    expect(navLinks()).toHaveLength(11);
+    expect(navLinks()).toHaveLength(12);
     expect(currentLinks()).toEqual(["無權限與找不到"]);
     const target = document.getElementById("blocked");
     expect(target?.tagName).toBe("SECTION");
     expect(screen.getByRole("region", { name: "無權限與找不到" })).toBe(target);
+  });
+
+  it("marks the Metric link at #metric, between Card and Separator, pointing at that section", () => {
+    openAt("/dev/gallery#metric");
+
+    expect(navLinks()).toHaveLength(12);
+    expect(currentLinks()).toEqual(["Metric"]);
+    const names = navLinks().map((link) => link.textContent);
+    expect(names.indexOf("Metric")).toBe(names.indexOf("Card") + 1);
+    expect(names.indexOf("Separator")).toBe(names.indexOf("Metric") + 1);
+    const target = document.getElementById("metric");
+    expect(target?.tagName).toBe("SECTION");
+    expect(screen.getByRole("region", { name: "Metric" })).toBe(target);
   });
 
   it("marks no link without an anchor", () => {

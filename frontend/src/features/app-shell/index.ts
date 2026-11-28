@@ -18,9 +18,6 @@ export {
   useShortcutOverviewKey,
 } from "./shortcut-registry";
 export {
-  ANNOTATION_HREF,
-  DASHBOARD_HREF,
-  TASK_LIST_HREF,
   buildSidebarNav,
   type SidebarNavBlock,
   type SidebarNavEntry,
@@ -28,7 +25,15 @@ export {
   type SidebarNavModel,
   type SidebarRouteDeclaration,
 } from "./sidebar-nav-model";
-export { useTaskRoleSource, type TaskRole, type TaskRoleAnswer } from "./task-role-source";
+export {
+  NO_TASK_ROLE,
+  TaskRoleSourceProvider,
+  useTaskRoleSource,
+  type TaskRole,
+  type TaskRoleAnswer,
+  type TaskRoleSourceProviderProps,
+  type TaskRoleSourceState,
+} from "./task-role-source";
 export {
   SIDEBAR_COLLAPSED_KEY,
   useSidebarCollapsed,

@@ -1,0 +1,95 @@
+{
+  "pageName": "儀表板",
+  "title": "儀表板",
+  "subtitle": "掌握任務進度與團隊協作狀態",
+  "loading": "載入中",
+  "error": {
+    "title": "儀表板載入失敗",
+    "description": "無法載入任務成員資格資料，請稍後再試。",
+    "retry": "重試"
+  },
+  "entry": {
+    "title": "開始你的第一個工作流程",
+    "subtitle": "從三個行動入口開始，快速達成第一個可交付成果",
+    "cards": {
+      "leader": {
+        "title": "建立標記專案",
+        "description": "上傳資料、設定標籤規則、指派團隊成員。",
+        "cta": "開始建立任務",
+        "steps": {
+          "step1": {
+            "name": "建立任務",
+            "description": "設定任務目標與標籤規則"
+          },
+          "step2": {
+            "name": "上傳資料",
+            "description": "上傳第一批資料，確認可被系統讀取"
+          },
+          "step3": {
+            "name": "指派人員",
+            "description": "指派至少 1 位標記員與 1 位審核員"
+          }
+        }
+      },
+      "annotator": {
+        "title": "進行資料標記",
+        "description": "查看待辦任務，完成資料標記並送出結果。",
+        "cta": "開始標記",
+        "steps": {
+          "step1": {
+            "name": "開啟任務",
+            "description": "進入標記工作區，查看待辦任務"
+          },
+          "step2": {
+            "name": "進行標記",
+            "description": "依照標籤規則，完成標記工作"
+          },
+          "step3": {
+            "name": "送出標記",
+            "description": "自我檢查標記一致性，送出標記結果"
+          }
+        }
+      },
+      "reviewer": {
+        "title": "進行標記審核",
+        "description": "逐標記員獨立審核，直接修正結果，歧異交付仲裁。",
+        "cta": "開始審核",
+        "steps": {
+          "step1": {
+            "name": "審核標記",
+            "description": "檢查標記內容，檢視標記與依據"
+          },
+          "step2": {
+            "name": "修正或仲裁",
+            "description": "通過、修正或無法裁決；歧異交付仲裁與例外池"
+          },
+          "step3": {
+            "name": "完成審核",
+            "description": "確認審核列表，標記任務完成"
+          }
+        }
+      }
+    }
+  },
+  "stats": {
+    "title": "平台使用者統計",
+    "subtitle": "系統概況",
+    "totalUsers": {
+      "label": "總用戶",
+      "value": "0 人"
+    },
+    "projectLeaders": {
+      "label": "專案負責人",
+      "value": "0 人"
+    },
+    "annotators": {
+      "label": "標記員",
+      "value": "0 人"
+    },
+    "reviewers": {
+      "label": "審核員",
+      "value": "0 人"
+    },
+    "demoNote": "示範用靜態值：這些指標卡尚未接上實際資料，算法另案定義。"
+  }
+}

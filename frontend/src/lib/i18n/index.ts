@@ -2,7 +2,8 @@
  * The i18n layer (design D7, clarification Q5; login-auth-guard D8).
  *
  * `common` (shared components), `auth` (the sign-in page, the Google callback
- * and the landing page) and `appShell` (the signed-in shell) are loaded at
+ * and the landing page), `appShell` (the signed-in shell) and `dashboard` (the
+ * landing page, dashboard-shell D8) are loaded at
  * start-up and ship in the production bundle (sidebar-nav D10). Development page
  * namespaces such as `systemHealth` and `devGallery` are added by their own
  * entry modules through registerNamespace, so their text ships only with the
@@ -21,9 +22,11 @@ import { initReactI18next } from "react-i18next";
 import enAppShell from "./locales/en/appShell.json";
 import enAuth from "./locales/en/auth.json";
 import enCommon from "./locales/en/common.json";
+import enDashboard from "./locales/en/dashboard.json";
 import zhTWAppShell from "./locales/zh-TW/appShell.json";
 import zhTWAuth from "./locales/zh-TW/auth.json";
 import zhTWCommon from "./locales/zh-TW/common.json";
+import zhTWDashboard from "./locales/zh-TW/dashboard.json";
 import { resolveLanguage, type AppLanguage } from "./resolve-language";
 
 export { resolveLanguage, type AppLanguage } from "./resolve-language";
@@ -60,8 +63,8 @@ function applyDocumentLanguage(language: AppLanguage): void {
 }
 
 /**
- * Initialises the i18n instance with the `common`, `auth` and `appShell`
- * namespaces, in the remembered language, and sets `<html lang>` to match.
+ * Initialises the i18n instance with the `common`, `auth`, `appShell` and
+ * `dashboard` namespaces, in the remembered language, and sets `<html lang>` to match.
  */
 export function initI18n(): I18nInstance {
   const language = readStoredLanguage();
@@ -69,11 +72,16 @@ export function initI18n(): I18nInstance {
     lng: language,
     supportedLngs: ["zh-TW", "en"],
     fallbackLng: "zh-TW",
-    ns: ["common", "auth", "appShell"],
+    ns: ["common", "auth", "appShell", "dashboard"],
     defaultNS: "common",
     resources: {
-      "zh-TW": { common: zhTWCommon, auth: zhTWAuth, appShell: zhTWAppShell },
-      en: { common: enCommon, auth: enAuth, appShell: enAppShell },
+      "zh-TW": {
+        common: zhTWCommon,
+        auth: zhTWAuth,
+        appShell: zhTWAppShell,
+        dashboard: zhTWDashboard,
+      },
+      en: { common: enCommon, auth: enAuth, appShell: enAppShell, dashboard: enDashboard },
     },
     initAsync: false,
     interpolation: { escapeValue: false },

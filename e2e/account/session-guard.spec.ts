@@ -114,12 +114,16 @@ test.describe("signed-out visitors", () => {
     });
     await page.goto(LANDING_PATH);
     await expect(page.locator("body")).toBeVisible();
-    await expect(page.getByText("你已登入")).toHaveCount(0);
+    await expect(page.getByRole("heading", { level: 1, name: "儀表板", exact: true })).toHaveCount(
+      0,
+    );
     await expect(page.getByRole("region", { name: "登入", exact: true })).toHaveCount(0);
     await expect(page.getByText(account.email)).toHaveCount(0);
     await expect(page.getByText(account.name)).toHaveCount(0);
     held.open();
-    await expect(page.getByRole("heading", { name: "你已登入" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "儀表板", exact: true }),
+    ).toBeVisible();
   });
 });
 
@@ -130,7 +134,9 @@ test.describe("signed-in visitors", () => {
     const queries = countFinished(page, "GET", CURRENT);
     await page.goto(LOGIN_PATH);
     await expect(page).toHaveURL(pathIs(LANDING_PATH));
-    await expect(page.getByRole("heading", { name: "你已登入" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "儀表板", exact: true }),
+    ).toBeVisible();
     await expect(page.getByRole("region", { name: "登入", exact: true })).toHaveCount(0);
     expect(queries()).toBe(1);
     await backDoesNotReturnTo(page, LOGIN_PATH);
@@ -233,7 +239,9 @@ test.describe("refresh conflicts (the 409 is stubbed; everything else is real)",
     const refreshes = countFinished(page, "POST", REFRESH);
     const originals = countFinished(page, "GET", CURRENT);
     await page.goto(LANDING_PATH);
-    await expect(page.getByRole("heading", { name: "你已登入" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "儀表板", exact: true }),
+    ).toBeVisible();
     await expect(page).toHaveURL(pathIs(LANDING_PATH));
     await expect(page.getByRole("alert")).toHaveCount(0);
     expect(refreshes()).toBe(1);
@@ -287,7 +295,9 @@ test.describe("refresh conflicts (the 409 is stubbed; everything else is real)",
     const refreshes = countFinished(page, "POST", REFRESH);
     const originals = countFinished(page, "GET", CURRENT);
     await page.goto(LANDING_PATH);
-    await expect(page.getByRole("heading", { name: "你已登入" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "儀表板", exact: true }),
+    ).toBeVisible();
     await expect(page.getByRole("alert")).toHaveCount(0);
     expect(refreshes()).toBe(2);
     expect(originals()).toBe(3);

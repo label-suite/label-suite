@@ -17,6 +17,7 @@ import { StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { SessionUserData } from "@/api/generated/label-suite.schemas";
+import { TaskRoleSourceProvider, type TaskRoleSourceState } from "@/features/app-shell";
 import { errorBody } from "@/test/envelope-fixtures";
 import { server } from "@/test/msw-server";
 import {
@@ -133,28 +134,32 @@ describe("one session query per page load (auth-guard 「兩種路由共用同�
   });
 });
 
-describe("the temporary landing page in the shell (auth-guard 「暫時落點顯示目前登入者」)", () => {
-  it("平台成員看到自己的身分: the card has no sign-out, the sidebar has it", async () => {
+describe("the dashboard in the shell (spec dashboard; auth-guard Migration)", () => {
+  it("沒有任務角色的人拿到行動入口: the page has no identity or sign-out, the sidebar has both", async () => {
     await openLanding();
 
-    const card = await screen.findByRole("region", { name: "你已登入" });
-    expect(within(card).getByText("王小明（user@example.com）")).toBeInTheDocument();
-    expect(within(card).getByText("平台成員")).toBeInTheDocument();
-    expect(within(card).queryByRole("button", { name: "登出" })).toBeNull();
+    const main = screen.getByRole("main");
+    expect(
+      await within(main).findByRole("region", { name: "開始你的第一個工作流程" }),
+    ).toBeInTheDocument();
+    expect(within(main).getByRole("heading", { level: 1, name: "儀表板" })).toBeInTheDocument();
+    expect(within(main).queryByText(SPEC_MEMBER.email)).toBeNull();
+    expect(within(main).queryByText("平台成員")).toBeNull();
+    expect(within(main).queryByRole("button", { name: "登出" })).toBeNull();
     const sidebar = screen.getByRole("banner");
     expect(within(sidebar).getByRole("button", { name: "登出" })).toBeInTheDocument();
     expect(within(sidebar).getByText("王小明")).toBeInTheDocument();
     expect(within(sidebar).getByTestId("role-indicator")).toHaveTextContent("一般使用者");
-    expect(within(sidebar).queryByText("平台成員")).toBeNull();
     expect(screen.getByRole("link", { name: "儀表板" })).toHaveAttribute("aria-current", "page");
-    expect(document.title).toBe("Label Suite — 你已登入");
+    expect(document.title).toBe("Label Suite — 儀表板");
   });
 
-  it("系統管理員看到系統管理員: the card shows the system role, the sidebar six items", async () => {
+  it("系統管理員的平台使用者統計: the page shows block A, the sidebar six items", async () => {
     account = SAMPLE_ADMIN;
     await openLanding();
 
-    expect(await screen.findByText("系統管理員")).toBeInTheDocument();
+    expect(await screen.findByRole("region", { name: "平台使用者統計" })).toBeInTheDocument();
+    expect(screen.queryByText("開始你的第一個工作流程")).toBeNull();
     expect(navNames()).toEqual([
       "儀表板",
       "任務管理",
@@ -164,6 +169,38 @@ describe("the temporary landing page in the shell (auth-guard 「暫時落點顯
       "個人設定",
     ]);
   });
+});
+
+describe("the sidebar while the task-role source is not ready (dashboard-shell design D2)", () => {
+  /** Opens the landing page with the task-role source fixed at `state`. */
+  async function openLandingWith(state: TaskRoleSourceState): Promise<void> {
+    window.history.replaceState(null, "", LANDING);
+    const current = createAppRouter();
+    router = current;
+    render(
+      <StrictMode>
+        <TaskRoleSourceProvider value={state}>
+          <App router={current} queryClient={createQueryClient()} />
+        </TaskRoleSourceProvider>
+      </StrictMode>,
+    );
+    await expectPath(current, LANDING);
+    await screen.findByRole("navigation", { name: "主導覽" });
+  }
+
+  it.each([
+    ["loading", { status: "loading" }],
+    ["error", { status: "error", retry: () => undefined }],
+  ] satisfies [string, TaskRoleSourceState][])(
+    "reads as a general user with 標記作業 while %s",
+    async (_name, state) => {
+      await openLandingWith(state);
+
+      const sidebar = screen.getByRole("banner");
+      expect(within(sidebar).getByTestId("role-indicator")).toHaveTextContent("一般使用者");
+      expect(navNames()).toEqual(["儀表板", "任務管理", "標記作業", "資料集分析", "個人設定"]);
+    },
+  );
 });
 
 describe("refetching the session on the next page (design D6, clarification Q11)", () => {

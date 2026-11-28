@@ -102,7 +102,9 @@ test("外觀設定值無效", async ({ page }) => {
   for (const value of ["sepia", "", "DARK"]) {
     await storeTheme(page, value);
     await page.goto(LANDING_PATH);
-    await expect(page.getByRole("region", { name: "你已登入" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "儀表板", exact: true }),
+    ).toBeVisible();
     await expect(html(page), `stored ${JSON.stringify(value)}`).toHaveAttribute(
       "data-theme",
       "dark",
@@ -125,7 +127,7 @@ test("跟隨系統依作業系統呈現", async ({ page }) => {
   await signIn(page, createAccount());
   await storeTheme(page, "system");
   await page.goto(LANDING_PATH);
-  await expect(page.getByRole("region", { name: "你已登入" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "儀表板", exact: true })).toBeVisible();
   await expect(html(page)).toHaveAttribute("data-theme", "dark");
 
   await page.emulateMedia({ colorScheme: "light" });

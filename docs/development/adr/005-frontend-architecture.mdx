@@ -155,23 +155,24 @@ tags: [adr, frontend, react, shadcn, design-token]
 
 | 選項 | 好處 | 代價 | 結論 |
 | :--- | :--- | :--- | :--- |
-| A 寫一層對照，`tokens.css` 仍是唯一色值來源 | 原語不必為了變數名被改寫，色值只存在 `tokens.css` 一處 | 映射前要逐一確認三件事，見 F6 | 採用 |
+| A 寫一層對照，語意色仍只來自 `tokens.css`；資料色另外來自 `data-palette.css`，不進對照層 | 原語不必為了變數名被改寫，語意色的色值只存在 `tokens.css` 一處 | 映射前要逐一確認三件事，見 F6 | 採用 |
 | B 元件直接用 Label Suite 的變數名，改寫 `components/ui/` 的 shadcn 元件 | 理由沒有記錄 | 要改寫 shadcn 元件；其餘理由沒有記錄 | 不採用 |
 | C 本期不決定，交給第一個前端 change | 理由沒有記錄 | 理由沒有記錄 | 不採用 |
 
 ### 決定
 
-`frontend/src/styles/` 定義 shadcn 的語意變數，指向 `tokens.css` 的值（例如 `--background: var(--color-surface)`），shadcn 的 dark variant 設成吃 `html[data-theme="dark"]`，原語只用語意變數、不讀 `tokens.css` 的變數名，`tokens.css` 是唯一色值來源；設計交接的 Design System Artifact 也只從它產生，單向，見 [設計交接的 §單向規則](../workflow/design-handoff.mdx#單向規則)。規則本體見 [frontend-agent-rules.mdx 的 F6](../rules/frontend-agent-rules.mdx#f6-視覺基準與-design-token-的映射)。
+`frontend/src/styles/` 定義 shadcn 的語意變數，指向 `tokens.css` 的值（例如 `--background: var(--color-surface)`），shadcn 的 dark variant 設成吃 `html[data-theme="dark"]`，原語只用語意變數、不讀 `tokens.css` 的變數名，語意色只來自 `tokens.css`；資料色（`--data-*`，角色色、圖表色）另外來自 `design/prototype/assets/data-palette.css`，不進對照層，`components/ui/` 的原語不讀；設計交接的 Design System Artifact 也只從它產生，單向，見 [設計交接的 §單向規則](../workflow/design-handoff.mdx#單向規則)。規則本體見 [frontend-agent-rules.mdx 的 F6](../rules/frontend-agent-rules.mdx#f6-視覺基準與-design-token-的映射)。
 
 ### 後果
 
 **變容易**
 
-- 色值只有 `tokens.css` 一個來源，換色只改一處
+- 語意色的色值只有 `tokens.css` 一個來源，換色只改一處
 - 元件只用語意 class，不必知道 Label Suite 的變數名
 
 **變困難**
 
+- 資料色的色值在 `data-palette.css`，不在 `tokens.css`，色值有兩個來源檔；資料色不進對照層、原語不讀，用到的地方要直接引用 `--data-*` 變數
 - 映射前要逐一確認的三件事（token 落點、Tailwind v4 theme namespace 同名、數字 spacing key）見 [frontend-agent-rules.mdx 的 F6](../rules/frontend-agent-rules.mdx#f6-視覺基準與-design-token-的映射)
 
 ### 什麼情況要重新討論
@@ -296,3 +297,4 @@ tags: [adr, frontend, react, shadcn, design-token]
 | 2026-11-20 | 原語只用語意變數、不讀 `tokens.css` 的變數名；為了加 variant 而改 `components/ui/` 是允許的（[D4](#d4-design-token-寫一層對照)） | D4 原本的「shadcn 元件不改寫」與選項 A 的好處「shadcn 元件一行都不改」 | [#505](https://github.com/label-suite/label-suite/issues/505) 的 Q9 裁定，記錄於 [#527](https://github.com/label-suite/label-suite/issues/527) |
 | 2026-11-10 | onboarding 只做空狀態與情境提示，不做導覽與角色導向漸進揭露（[D6](#d6-onboarding-只做空狀態與情境提示)） | 個人 repo ADR-015 的完整策略，改為部分採用 | [#105 的留言](https://github.com/label-suite/label-suite/issues/105#issuecomment-6755062393) |
 | 2026-11-23 | onboarding 選項 A 的其餘五個元件（歡迎面板、onboarding 清單、可重開的說明入口、引導狀態保存、事件追蹤）本期全部不做（[D6](#d6-onboarding-只做空狀態與情境提示)） | 原待決第 1 列：這五個元件算「情境提示」還是「導覽、漸進揭露」，裁定沒有逐項對到來源的元件 | [#514 的留言](https://github.com/label-suite/label-suite/issues/514#issuecomment-7090015171) |
+| 2026-11-28 | 語意色（shadcn 對照層）只來自 `tokens.css`；資料色（`--data-*`，角色色、圖表色）另外來自 `data-palette.css`，不進對照層，原語不讀（[D4](#d4-design-token-寫一層對照)） | D4 的「`tokens.css` 是唯一色值來源」字面 | [#722](https://github.com/label-suite/label-suite/issues/722) 的 clarification Q8 補充決議 |

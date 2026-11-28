@@ -72,12 +72,12 @@
 
 開啟 `/`、需要登入的路由或只給未登入的人的路由時，畫面 SHALL 先查目前的登入狀態，判定完成前只顯示頁面底色，不顯示登入卡、落點內容或任何帳號資訊。需要登入與只給未登入的人兩種路由 MUST 共用同一份查詢結果。
 
-來源：規格 01-01 §登入頁 第 9 條；規格 01-05 §已確認決議 Q11；ADR-004 D2；`ui-design.md` §元件樹 › 守門。
+來源：規格 01-01 §登入頁 第 9 條；規格 01-05 §已確認決議 Q11；ADR-004 D2；`ui-design.md` §元件樹 › 守門；dashboard-shell clarification「交給後續產出」（落點改為儀表板，判定中的負向檢查改看儀表板頁首）。
 
 #### Scenario: 判定中不顯示內容
 
 - **WHEN** 開啟 `/dashboard/dashboard`，目前登入狀態的查詢尚未回應
-- **THEN** 畫面沒有「你已登入」、沒有登入卡，也沒有任何名稱或 Email
+- **THEN** 畫面沒有主標題「儀表板」、沒有登入卡，也沒有任何名稱或 Email
 
 #### Scenario: 兩種路由共用同一次查詢
 
@@ -137,9 +137,9 @@
 
 ### Requirement: 守門查詢失敗時當成未登入
 
-目前登入狀態的查詢連線失敗、逾時、回應不是錯誤外層，或回 `5xx` 時，畫面 SHALL 當成未登入，前往 `/account/login` 並在錯誤橫幅顯示「平台暫時沒有回應，請稍後再試。」。
+目前登入狀態的查詢連線失敗、逾時、回應不是錯誤外層，或回 `5xx` 時，畫面 SHALL 當成未登入，前往 `/account/login` 並在錯誤橫幅顯示「平台暫時沒有回應，請稍後再試。」。查詢回 `200` 但 `data.user.role` 不是 `user` 或 `super_admin` 時，畫面 SHALL 同樣當成未登入：不顯示錯誤橫幅，MUST NOT 結束登入狀態（不送出 `DELETE /api/v1/current-session`）；只給未登入的人的路由與需要登入的路由對這個登入者的判定 MUST 一致。
 
-來源：Issue #719 決定表 U6；規格 01-01 §用 Email 與密碼登入 第 16 條、§已確認決議 Q13。
+來源：Issue #719 決定表 U6；規格 01-01 §用 Email 與密碼登入 第 16 條、§已確認決議 Q13；規格 02-01 §邊界情況「系統角色是空的或是未知的值」；clarification「不需維護者決定」表 sa-7、T-3；design D11。
 
 #### Scenario: 守門查詢遇到伺服器錯誤
 
@@ -151,25 +151,14 @@
 - **WHEN** 開啟 `/`，`GET /api/v1/current-session` 連線失敗
 - **THEN** 網址變成 `/account/login`，錯誤橫幅顯示「平台暫時沒有回應，請稍後再試。」
 
-### Requirement: 暫時落點顯示目前登入者
+#### Scenario: 角色無效時登入頁不被帶走
 
-`/dashboard/dashboard` SHALL 只給已登入的人，畫在登入後外殼裡（有側欄，不再沿用登入頁的頁首），卡片依序顯示「你已登入」、「{名稱}（{Email}）」、系統角色（`user` 顯示「平台成員」、`super_admin` 顯示「系統管理員」）與「儀表板還在建置中，完成後登入會直接帶你過去。」；卡片 MUST NOT 有登出鈕，登出由側欄提供。卡片 MUST NOT 顯示任何業務資料或任務角色。被側欄擋下帶回這一頁時，擋下說明顯示在卡片之上。
+- **WHEN** 開啟 `/account/login`，`GET /api/v1/current-session` 回覆 `200`，`data.user.role` 為 `"guest"`
+- **THEN** 網址停在 `/account/login`，沒有被帶到 `/dashboard/dashboard`，登入頁沒有錯誤橫幅
+- **AND** 整個過程只送出 1 次 `GET /api/v1/current-session`，沒有送出 `DELETE /api/v1/current-session`
 
-來源：Issue #719 決定表 sa-5／7 與落點確認（2026-11-26）；規格 01-01 §已確認決議 Q7；規格 01-05 §從這一台登出；PRD §使用者角色 §角色清單；規格 07-01 §導覽項目與可見性 第 1 條、§進入模組的條件 第 3 條；clarification Q2、Q4。
+#### Scenario: 角色無效時根路徑導向登入頁
 
-#### Scenario: 平台成員看到自己的身分
-
-- **WHEN** 平台成員「王小明」（`user@example.com`）登入後到達 `/dashboard/dashboard`
-- **THEN** 卡片標題為「你已登入」，身分列為「王小明（user@example.com）」，角色顯示「平台成員」
-- **AND** 卡片有說明「儀表板還在建置中，完成後登入會直接帶你過去。」，卡片裡沒有「登出」鈕
-- **AND** 頁面有側欄，側欄有登出控制項
-
-#### Scenario: 系統管理員看到系統管理員
-
-- **WHEN** 系統角色為 `super_admin` 的使用者到達 `/dashboard/dashboard`
-- **THEN** 角色顯示「系統管理員」
-
-#### Scenario: 落點的瀏覽器標題
-
-- **WHEN** 介面語言為繁體中文，到達 `/dashboard/dashboard`
-- **THEN** 瀏覽器標題為「Label Suite — 你已登入」
+- **WHEN** 開啟 `/`，`GET /api/v1/current-session` 回覆 `200`，`data.user.role` 為 `"guest"`
+- **THEN** 網址變成 `/account/login` 並停在那裡，登入頁沒有錯誤橫幅
+- **AND** 整個過程沒有送出 `DELETE /api/v1/current-session`

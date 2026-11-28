@@ -78,7 +78,8 @@ test.describe("元件展示頁的無權限與找不到", () => {
     await page.goto("/dev/gallery#blocked");
 
     const nav = page.getByRole("navigation", { name: "元件目錄" });
-    await expect(nav.getByRole("link")).toHaveCount(11);
+    // One link per gallery section (variant-catalog gallerySections); #metric made it 12.
+    await expect(nav.getByRole("link")).toHaveCount(12);
     const link = nav.getByRole("link", { name: SECTION_NAME, exact: true });
     await expect(link).toHaveAttribute("href", "#blocked");
     await expect(link).toHaveAttribute("aria-current", "location");

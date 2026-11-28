@@ -8,6 +8,7 @@ import { build } from "vite";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
+  DEFAULT_DATA_PALETTE_PATH,
   DEFAULT_TOKENS_PATH,
   extractCustomProperties,
   extractTokens,
@@ -16,6 +17,10 @@ import {
 
 const REAL_TOKENS_PATH = fileURLToPath(
   new URL("../../design/prototype/assets/tokens.css", import.meta.url),
+);
+
+const REAL_PALETTE_PATH = fileURLToPath(
+  new URL("../../design/prototype/assets/data-palette.css", import.meta.url),
 );
 
 const SAMPLE = `
@@ -91,6 +96,27 @@ describe("extractCustomProperties", () => {
   });
 });
 
+describe("data palette extraction", () => {
+  it("defaults to the prototype's data-palette.css", () => {
+    expect(DEFAULT_DATA_PALETTE_PATH).toBe(REAL_PALETTE_PATH);
+  });
+
+  it("defines the three role colours in both the :root and the dark block", async () => {
+    const result = extractCustomProperties(await readDesignTokens(REAL_PALETTE_PATH));
+
+    const light = blockBodies(result, ":root").join("");
+    const dark = blockBodies(result, 'html[data-theme="dark"]').join("");
+    for (const name of [
+      "--data-role-emerald-bg",
+      "--data-role-violet-bg",
+      "--data-role-indigo-bg",
+    ]) {
+      expect(light).toContain(`${name}:`);
+      expect(dark).toContain(`${name}:`);
+    }
+  });
+});
+
 describe("readDesignTokens", () => {
   it("throws an error naming design/prototype/assets/tokens.css when the file is missing", async () => {
     const missing = "/no/such/place/design/prototype/assets/tokens.css";
@@ -118,12 +144,18 @@ describe("extractTokens plugin", () => {
     await rm(root, { recursive: true, force: true });
   });
 
-  async function buildWith(tokensPath: string): Promise<string> {
+  async function buildWith(tokensPath: string, dataPalettePath?: string): Promise<string> {
+    // Default to an existing palette so tokens-only tests do not depend on it.
+    let palettePath = dataPalettePath;
+    if (palettePath === undefined) {
+      palettePath = join(root, "data-palette.css");
+      await writeFile(palettePath, ":root { --data-sample: #000000; }\n");
+    }
     const output = await build({
       root,
       configFile: false,
       logLevel: "silent",
-      plugins: [extractTokens({ tokensPath })],
+      plugins: [extractTokens({ tokensPath, dataPalettePath: palettePath })],
       build: {
         write: false,
         lib: { entry: join(root, "index.js"), formats: ["es"], fileName: "index" },
@@ -154,5 +186,28 @@ describe("extractTokens plugin", () => {
     const missing = join(root, "design/prototype/assets/tokens.css");
 
     await expect(buildWith(missing)).rejects.toThrow("design/prototype/assets/tokens.css");
+  });
+
+  it("serves the real tokens and data palette with every --data- declaration after the tokens.css ones", async () => {
+    const css = await buildWith(REAL_TOKENS_PATH, REAL_PALETTE_PATH);
+
+    for (const name of ["emerald", "violet", "indigo"]) {
+      expect(css.match(new RegExp(`--data-role-${name}-bg:`, "g"))?.length).toBe(2);
+    }
+    const firstData = css.indexOf("--data-");
+    expect(firstData).toBeGreaterThan(-1);
+    expect(firstData).toBeGreaterThan(css.indexOf("--color-surface"));
+    // Only references to tokens.css values (var(--color-...)) may follow it.
+    expect(css.slice(firstData).match(/--color-[a-z0-9-]+\s*:/g)).toBeNull();
+  });
+
+  it("fails the build naming data-palette.css when that file does not exist", async () => {
+    const tokensPath = join(root, "tokens.css");
+    await writeFile(tokensPath, SAMPLE);
+    const missing = join(root, "design/prototype/assets/data-palette.css");
+
+    await expect(buildWith(tokensPath, missing)).rejects.toThrow(
+      "design/prototype/assets/data-palette.css",
+    );
   });
 });

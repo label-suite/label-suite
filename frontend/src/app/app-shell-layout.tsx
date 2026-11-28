@@ -4,7 +4,7 @@ import { Outlet, useLocation, useMatches, useNavigate } from "react-router-dom";
 import { AppShell } from "@/components/app-shell/app-shell";
 import type { ShellNavClickHandler } from "@/components/app-shell/types";
 import {
-  DASHBOARD_HREF,
+  NO_TASK_ROLE,
   blockedNoticeState,
   buildSidebarNav,
   readRouteDeclaration,
@@ -16,6 +16,7 @@ import {
   type SidebarNavModel,
 } from "@/features/app-shell";
 import { useSessionState, useSignOut } from "@/features/auth";
+import { DASHBOARD_HREF } from "@/lib/route-paths";
 
 import { useSessionCheckOnArrival } from "./session-check";
 
@@ -60,7 +61,7 @@ export function AppShellLayout() {
   const session = useSessionState();
   const { refetch } = session;
   const { signOut, signingOut } = useSignOut();
-  const taskRoles = useTaskRoleSource();
+  const taskRoleSource = useTaskRoleSource();
   const viewport = useShellViewport();
   const { collapsed, toggle } = useSidebarCollapsed(viewport);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
@@ -80,7 +81,8 @@ export function AppShellLayout() {
   const signedInUser = session.data?.kind === "signedIn" ? session.data.user : null;
   const model = buildSidebarNav({
     systemRole: signedInUser?.role ?? "user",
-    taskRoles,
+    // Until the source has answered, the sidebar reads as holding no task role (dashboard-shell D2).
+    taskRoles: taskRoleSource.status === "ready" ? taskRoleSource.answer : NO_TASK_ROLE,
     route: readRouteDeclaration(handles),
   });
   const onNavClick = useBlockedClick(model);

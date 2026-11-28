@@ -33,18 +33,19 @@ test("signs in, reaches the landing page and signs out", async ({ page }) => {
 
   await signIn(page, account.email, account.passphrase);
   await expect(page).toHaveURL(pathIs(LANDING_PATH));
-  const card = page.getByRole("region", { name: "你已登入" });
-  await expect(card.getByRole("heading", { level: 1, name: "你已登入" })).toBeVisible();
-  await expect(card).toContainText(account.email);
-  await expect(card.getByText("系統管理員")).toBeVisible();
+  const main = page.getByRole("main");
+  await expect(main.getByRole("heading", { level: 1, name: "儀表板", exact: true })).toBeVisible();
+  // The Seeder admin is a system administrator: the platform layout's block A.
+  const stats = main.getByRole("region", { name: "平台使用者統計" });
+  await expect(stats).toBeVisible();
 
   // A signed-in person never sees the sign-in page.
   await page.goto(LOGIN_PATH);
   await expect(page).toHaveURL(pathIs(LANDING_PATH));
-  await expect(card).toBeVisible();
+  await expect(stats).toBeVisible();
 
-  // Signing out is the sidebar's job; the card has no button.
-  await expect(card.getByRole("button", { name: "登出" })).toHaveCount(0);
+  // Signing out is the sidebar's job; the page itself has no button for it.
+  await expect(main.getByRole("button", { name: "登出" })).toHaveCount(0);
   await page.getByRole("banner").getByRole("button", { name: "登出" }).click();
   await expect(page).toHaveURL(pathIs(LOGIN_PATH));
   await expect(page.getByRole("region", { name: "登入" })).toBeVisible();

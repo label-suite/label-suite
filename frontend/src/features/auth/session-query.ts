@@ -5,14 +5,18 @@
  *
  * The query never fails: a refused or unanswered check resolves to "signed
  * out" with the sentence the sign-in page should show, so the guards only
- * ever branch on data. Session lifetimes are never computed here; the backend
- * decides (spec 01-05 Q11).
+ * ever branch on data. A 200 whose system role is not one the contract
+ * defines also resolves to "signed out", with no sentence and without signing
+ * out on the server (dashboard-shell design D11): every guard and the
+ * dashboard then agree on one answer, so the page is redirected once instead
+ * of bouncing between the sign-in page and the dashboard. Session lifetimes
+ * are never computed here; the backend decides (spec 01-05 Q11).
  */
 import { useQuery, type QueryClient } from "@tanstack/react-query";
 
 import { isApiError } from "@/api/api-error";
 import { getCurrentSession, getGetCurrentSessionQueryKey } from "@/api/generated/label-suite";
-import type { SessionUserData } from "@/api/generated/label-suite.schemas";
+import { SessionUserDataRole, type SessionUserData } from "@/api/generated/label-suite.schemas";
 
 import { noticeForSessionError, type LoginNotice } from "./notice";
 
@@ -34,11 +38,27 @@ export type SessionState =
 /** The cache key, shared with the generated client. */
 export const sessionQueryKey = getGetCurrentSessionQueryKey();
 
-/** Asks the backend; maps every refusal or failure except a cancel to "signed out". */
+const SYSTEM_ROLES: readonly unknown[] = Object.values(SessionUserDataRole);
+
+/** Whether `role` is a system role the contract defines (`user`, `super_admin`). */
+function isSystemRole(role: unknown): role is SessionUserDataRole {
+  return SYSTEM_ROLES.includes(role);
+}
+
+/**
+ * Asks the backend; maps every refusal or failure except a cancel, and a 200
+ * with an unknown system role, to "signed out".
+ */
 async function fetchSessionState(signal: AbortSignal): Promise<SessionState> {
   try {
     const response = await getCurrentSession(undefined, signal);
-    return { kind: "signedIn", user: response.data.user };
+    const { user } = response.data;
+    // The body is not validated at runtime, so the generated type cannot vouch for the role.
+    const role: unknown = user.role;
+    if (!isSystemRole(role)) {
+      return { kind: "signedOut", notice: null };
+    }
+    return { kind: "signedIn", user };
   } catch (error: unknown) {
     if (isApiError(error) && error.kind === "aborted") {
       throw error;
