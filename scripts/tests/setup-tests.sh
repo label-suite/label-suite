@@ -60,10 +60,13 @@ grep -q 'scripts/git-hooks' "$TMP/out" || fail "the conflict report did not say 
 
 # …including one that lives at the user level, where it is easy to miss.
 d=$(fresh_repo conflict_global)
-git config --file "$TMP/gitconfig-global" core.hooksPath /somewhere/global
+# No leading `/`: Git Bash rewrites such an argument into a Windows path on
+# its way to git.exe, so the value read back would differ from the one this
+# test thinks it wrote (#830). What matters is that setup leaves it alone.
+git config --file "$TMP/gitconfig-global" core.hooksPath somewhere-global
 rc=$(run_setup "$d")
 grep -qi 'global\|使用者層\|全域' "$TMP/out" || fail "a user-level hooksPath was not reported"
-[ "$(git config --file "$TMP/gitconfig-global" --get core.hooksPath)" = "/somewhere/global" ] \
+[ "$(git config --file "$TMP/gitconfig-global" --get core.hooksPath)" = "somewhere-global" ] \
   || fail "setup modified the user-level configuration"
 git config --file "$TMP/gitconfig-global" --unset core.hooksPath
 

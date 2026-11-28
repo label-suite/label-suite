@@ -95,7 +95,10 @@ done
 
 # The payload's cwd must point at the harness repo, not the real one.
 cwd=$(harness_payload PreToolUse | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).cwd))')
-[ "$cwd" = "$HARNESS_REPO" ] || fail "payload cwd is $cwd, expected $HARNESS_REPO"
+# Same directory, not same spelling: on Git Bash node receives the variable
+# already converted, as `C:/Users/RUNNER~1/...` for `/tmp/...` (#830), which
+# is also the form a Windows agent would send.
+[ "$cwd" -ef "$HARNESS_REPO" ] || fail "payload cwd is $cwd, expected $HARNESS_REPO"
 
 # Overriding one field must be possible without rebuilding the whole payload.
 payload=$(harness_payload PreToolUse tool_name Write tool_path "$HARNESS_REPO/.env")

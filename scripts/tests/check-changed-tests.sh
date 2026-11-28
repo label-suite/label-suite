@@ -241,13 +241,18 @@ rc=$(files backend/app.py)
 [ "$rc" = "1" ] || fail "a blocking mode did not encode the violation as 1 (got $rc)"
 harness_set_tool uv 0 ''
 
+# bash is invoked by absolute path rather than found through the stripped
+# PATH: on Git Bash `ln -s` copies bash.exe away from the msys-2.0.dll it
+# needs, so the copy exits 127 before the checker runs (#830). The symlink
+# stays for POSIX, where the checker may still look bash up by name.
+BASH_BIN=$(command -v bash)
 mkdir -p "$TMP/onlybash" && ln -sf "$(command -v bash)" "$TMP/onlybash/bash"
 undecidable() { # undecidable <mode-args...> -> exit code
-  ( cd "$REPO" && PATH="$TMP/onlybash" "$CHECKER" "$@" >"$TMP/out" 2>"$TMP/err" ); echo $?
+  ( cd "$REPO" && PATH="$TMP/onlybash" "$BASH_BIN" "$CHECKER" "$@" >"$TMP/out" 2>"$TMP/err" ); echo $?
 }
 
 rc=$(printf '{"cwd":"%s","hook_event_name":"PostToolUse","tool_name":"Write","tool_input":{"file_path":"%s/backend/app.py"}}' "$REPO" "$REPO" \
-     | ( cd "$REPO" && PATH="$TMP/onlybash" "$CHECKER" --event PostToolUse >"$TMP/out" 2>"$TMP/err" ); echo $?)
+     | ( cd "$REPO" && PATH="$TMP/onlybash" "$BASH_BIN" "$CHECKER" --event PostToolUse >"$TMP/out" 2>"$TMP/err" ); echo $?)
 [ "$rc" = "0" ] || fail "--event did not stay out of the way when it could not decide (got $rc)"
 grep -q '^UNKNOWN:' "$TMP/err" || fail "--event did not name the item it could not decide"
 
@@ -364,7 +369,7 @@ staged >/dev/null
 grep -q 'git stash' "$ROOT/scripts/check-changed.sh" && fail "the checker reaches for git stash"
 
 # --staged fails closed, like the other blocking modes.
-rc=$( ( cd "$REPO" && PATH="$TMP/onlybash" "$CHECKER" --staged >"$TMP/out" 2>"$TMP/err" ); echo $? )
+rc=$( ( cd "$REPO" && PATH="$TMP/onlybash" "$BASH_BIN" "$CHECKER" --staged >"$TMP/out" 2>"$TMP/err" ); echo $? )
 [ "$rc" = "2" ] || fail "--staged did not fail closed when node was missing (got $rc)"
 
 git -C "$REPO" reset -q

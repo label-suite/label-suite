@@ -25,6 +25,11 @@ git -C "$REPO" config user.name Test
 printf 'rules\n' > "$REPO/AGENTS.md"
 git -C "$REPO" add -A >/dev/null; git -C "$REPO" commit -qm seed
 
+# bash is invoked by absolute path rather than found through the stripped
+# PATH: on Git Bash `ln -s` copies bash.exe away from the msys-2.0.dll it
+# needs, so the copy exits 127 before the checker runs (#830). The symlink
+# stays for POSIX, where the checker may still look bash up by name.
+BASH_BIN=$(command -v bash)
 mkdir -p "$TMP/onlybash" && ln -sf "$(command -v bash)" "$TMP/onlybash/bash"
 
 # A copy of the checkers with no lib/ beside them, for the missing-library guard.
@@ -66,7 +71,7 @@ drive() { # drive <checker-dir> <name> <argv> <event> <tool> <extra> <path-overr
   else
     : > "$TMP/p"
   fi
-  ( cd "$REPO" && PATH="$pathover" "$dir/$name.sh" ${args+"${args[@]}"} \
+  ( cd "$REPO" && PATH="$pathover" "$BASH_BIN" "$dir/$name.sh" ${args+"${args[@]}"} \
       < "$TMP/p" > "$TMP/out" 2>"$TMP/err" )
   echo $?
 }
