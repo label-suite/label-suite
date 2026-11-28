@@ -30,6 +30,7 @@ const ALWAYS_RUN_JOBS = [
   "e2e",
   "coverage",
   "scripts-tests",
+  "scripts-tests-windows",
 ];
 
 function job(name) {
@@ -798,5 +799,23 @@ describe("C9: scripts-tests", () => {
     for (const name of SCRIPT_TESTS) {
       assert.match(text, new RegExp(`scripts/tests/${name}\\.test\\.mjs`), `${name} is not run`);
     }
+  });
+});
+
+describe("C9: scripts-tests-windows", () => {
+  test("is a separate, non-matrix job on windows-latest so the required scripts-tests name is untouched", () => {
+    const windows = job("scripts-tests-windows");
+    assert.equal(windows.name, "scripts-tests-windows");
+    assert.equal(windows["runs-on"], "windows-latest");
+    assert.equal("strategy" in job("scripts-tests"), false);
+    assert.equal(job("scripts-tests")["runs-on"], "ubuntu-latest");
+  });
+
+  test("runs the same node --test command as scripts-tests, under bash", () => {
+    const windows = job("scripts-tests-windows");
+    assert.equal(windows.defaults?.run?.shell, "bash");
+    const a = job("scripts-tests").steps[requireStep("scripts-tests", /\bnode --test\b/)].run;
+    const b = windows.steps[requireStep("scripts-tests-windows", /\bnode --test\b/)].run;
+    assert.equal(b, a);
   });
 });

@@ -126,7 +126,7 @@ updatedAt: '2026-11-27'
 | | |
 | :--- | :--- |
 | **目的** | 本機 hook 有**四條**被跳過的途徑——Git 的 `--no-verify`、Claude 的 `disableAllHooks`、Codex 的 `[features] hooks = false`，以及 Codex 的 hook 未被信任而 skipped——所以合併前的真正 gate 在 CI |
-| **事件** | `pull_request`（`.github/workflows/ci.yml`，已存在五個 job：`commit-messages`、`docs-site`、`format`、`specs`，以及在 ubuntu、macOS 與 Windows 三個平台跑檢查器回歸測試的 `hooks`；Windows 那格不列入必過檢查，e2e 不跑 Windows） |
+| **事件** | `pull_request`（`.github/workflows/ci.yml`，已存在五個 job：`commit-messages`、`docs-site`、`format`、`specs`，以及在 ubuntu、macOS 與 Windows 三個平台跑檢查器回歸測試的 `hooks`；另有不列入必過的 `scripts-tests-windows` job；Windows 都不列入必過檢查，e2e 不跑 Windows） |
 | **適用路徑／角色** | 整個 PR |
 | **payload 欄位** | GitHub 事件的 `base.sha` 與 `head.sha`（現行 `commit-messages` job 已經在用） |
 | **共用檢查器** | 與 H3、H4、H5 **同一組**。CI 與本機共用邏輯是防漂移的唯一辦法 |
