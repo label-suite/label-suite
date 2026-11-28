@@ -66,6 +66,7 @@ model: opus
 
 - [ ] 跨模組取用照 ADR-003 [D12](../../docs/development/adr/003-backend-architecture.mdx#d12-跨模組呼叫只走-service-對-service-的公開函式)：只呼叫對方 service 的公開函式，要加的 `ignore_imports` 已列出；**沒有直接用別的模組的 repository 或 model**
 - [ ] 共用能力沒有放進單一模組：稽核寫入走 `app/core/`（[D13](../../docs/development/adr/003-backend-architecture.mdx#d13-稽核紀錄的-model-與寫入函式放在-core)），權限檢查走 `app/core/` 的 dependency（ADR-004 [D6](../../docs/development/adr/004-auth-and-security.mdx#d6-權限矩陣當授權輸入)）
+- [ ] 沿用的 `app/core/` 既有元件在 Class Diagram 與元件清單裡標出，新增的共用元件寫明搜過什麼，沒有重做 `backend-modules.mdx` §`core/` 各模組 已有的（[R1](../../docs/development/rules/agent-rules.mdx#r1-先搜尋再新增)）
 - [ ] 用到的表與能力歸哪個模組，和 `backend-modules.mdx` §預定模組與資料表歸屬（ADR-003 [D14](../../docs/development/adr/003-backend-architecture.mdx#d14-後端業務模組的切分)）一致
 
 **design 與 tasks**
