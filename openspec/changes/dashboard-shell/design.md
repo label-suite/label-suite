@@ -1,6 +1,6 @@
 # Design
 
-本份是 change `dashboard-shell`（Issue #722）的技術決策。動機見 `proposal.md` §Why；行為以同目錄 `specs/` 為準；後端現況與「不動後端」的論證見 `system-design.md`，契約見 `api-contract.md`，畫面、元件樹、文案與 token 對照見 `ui-design.md`。那幾份寫過的內容這裡只指過去，不重抄。所有決策都依 `clarification.md` 的決議（Q1–Q10、Q8 補充決議、「不需維護者決定」表）。
+本份是 change `dashboard-shell`（Issue #722）的技術決策。動機見 `proposal.md` §Why；行為以同目錄 `specs/` 為準；後端現況與「不動後端」的論證見 `system-design.md`，契約見 `api-contract.md`，畫面、元件樹、文案與 token 對照見 `ui-design.md`。那幾份寫過的內容這裡只指過去，不重抄。所有決策都依 `clarification.md` 的決議（Q1–Q12、Q8 補充決議、「不需維護者決定」表；Q12 取代 Q6、Q10）。
 
 ## Context
 
@@ -9,6 +9,7 @@
 - 卡片要用的三條路徑在 `features/app-shell/sidebar-nav-model.ts`（`DASHBOARD_HREF`、`TASK_LIST_HREF`、`ANNOTATION_HREF`），`features/auth/paths.ts` 另有一份同值的 `LANDING_PATH`
 - token 由 `frontend/build/extract-tokens.ts` 只從 `tokens.css` 取出、以虛擬模組 `virtual:design-tokens.css` 提供；`styles/theme.css` 是 shadcn 對照層；ADR-005 D4 與 frontend-agent-rules F6 寫著「`tokens.css` 是唯一色值來源」
 - 原語：`components/ui/skeleton.tsx` 只有 pulse；沒有 Metric
+- 登入狀態對照：`features/auth/session-query.ts` 的 `fetchSessionState` 把任何 `200` 都對成 `signedIn`，不看 `data.user.role`；三個守門（`RequireAuthRoute`、`PublicOnlyRoute`、`RootRedirect`）只看 `kind`
 - 限制：F1（`features/` 之間不互相 import，跨 feature 共用往下搬到 `components/ui/` 或 `lib/`）；F5（共用元件只放 `components/ui/`）；F6（原語只用語意變數）；本次沒有後端工作（`system-design.md` §設計結論）
 
 ## Goals / Non-Goals
@@ -60,7 +61,7 @@ type TaskRoleSourceState =
 - `resolveDashboardView(systemRole, taskRoleState)`（`features/dashboard/dashboard-view.ts`）回傳 `invalidRole`、`systemAdmin`、`loading`、`error`、`noTaskRole`、`projectLeader`、`reviewer`、`annotator` 之一（`ui-design.md` §狀態放哪裡）。判斷順序：角色不在允許清單 → `invalidRole`；`super_admin` → `systemAdmin`（不看第二個參數，滿足 specs `dashboard`「系統管理員不讀任務角色」）；接著 `loading`、`error`；`ready` 時依專案負責人 > 審核員 > 標記員取一種，空集合為 `noTaskRole`
 - `systemRole` 參數型別是 `string`，不是產物的 `SystemRole` 列舉：產物型別只描述契約，執行時仍可能收到契約外的值（02-01 第 4 條），純函式要能對它判斷
 - 三種任務角色版面本次只有頁首（維護者 2026-11-28），但優先序屬於這個函式，所以本次以單元測試逐條驗 02-01 第 1–4 條與優先序；它們的 02-01 Scenario 仍由 #733、#736 驗收
-- `pages/dashboard/dashboard-page.tsx` 向 `features/auth` 取系統角色與 `LOGIN_PATH`、向 `features/app-shell` 取任務角色狀態與 `BlockedNotice`，交給 `features/dashboard`（`ui-design.md` §元件樹「頁面是組合層」）。`invalidRole` 時頁面只回傳 `<Navigate to={LOGIN_PATH} replace />`，不呼叫 `useSignOut`、不送 `DELETE /api/v1/current-session`（clarification sa-7）
+- `pages/dashboard/dashboard-page.tsx` 向 `features/auth` 取系統角色與 `LOGIN_PATH`、向 `features/app-shell` 取任務角色狀態與 `BlockedNotice`，交給 `features/dashboard`（`ui-design.md` §元件樹「頁面是組合層」）。`invalidRole` 時頁面只回傳 `<Navigate to={LOGIN_PATH} replace />`，不呼叫 `useSignOut`、不送 `DELETE /api/v1/current-session`（clarification sa-7）。D11 之後，無效角色在登入狀態對照時就成了 `signedOut`，`RequireAuthRoute` 先導向登入頁，頁面收不到無效角色；這個分支留作防線（契約外的值仍可能從別的路徑進來），去處與守門一致，不會來回
 - 頁面的順序固定為頁首 → `BlockedNotice` → 版面區（Q4；`ui-design.md` §元件樹）；`BlockedNotice` 元件本身不改，只是被放在頁首之後
 - 替代方案：把版面判斷寫在頁面元件的 JSX 條件裡——三種任務角色版面本次在畫面上沒有差別，條件寫在 JSX 裡就只能靠 E2E 驗，而 E2E 在本次到不了那三種版面
 
@@ -77,7 +78,7 @@ type TaskRoleSourceState =
 
 - `extract-tokens.ts` 讀 `tokens.css` 之後再讀 `design/prototype/assets/data-palette.css`，兩份都只取 `:root` 與 `html[data-theme="dark"]` 的 `--*` 宣告，依此順序串成同一個 `virtual:design-tokens.css`；任一檔不存在時丟出含該路徑的錯誤，建置失敗。順序要緊：淺色的 `--data-role-emerald-fg` 是 `var(--color-cta-hover)`（`ui-design.md` §角色色的接法）
 - 資料色只給 `features/dashboard` 的角色圓形以引用變數的任意值使用（例如 `bg-[var(--data-role-violet-bg)]`，F6 摺疊區塊第 3 點允許引用變數的任意值）；`styles/theme.css` 不宣告、不引用 `--data-*`，`components/ui/` 也不讀。`components/ui/tokens-usage.test.ts` 的禁止樣式加上 `--data-`，讓原語讀資料色時測試失敗
-- 這樣 shadcn 的語意色仍只指向 `tokens.css`，資料色另有自己的來源檔，正是 Q8 補充決議修訂後的 D4。修訂由 `[@technical-writer]` 依 `doc-writing` 的 ADR 寫法改 `docs/development/adr/005-frontend-architecture.mdx` D4 的「決定」與「後果」並補一列決策紀錄，同時改 frontend-agent-rules F6 的開頭句與「正例」裡「色值只存在 `tokens.css` 一處」的字面，兩份同一張 PR、排在 token 抽取之前或同組
+- 這樣 shadcn 的語意色仍只指向 `tokens.css`，資料色另有自己的來源檔，正是 Q8 補充決議修訂後的 D4。修訂由 `[@technical-writer]` 依 `doc-writing` 的 ADR 寫法改 `docs/development/adr/005-frontend-architecture.mdx` D4 的「決定」與「後果」並補一列決策紀錄，同時改 `docs/development/architecture.mdx` §前端 與 frontend-agent-rules 裡所有把 `tokens.css` 寫成唯一色值來源的正文（逐處清單見 tasks 1.1；決策紀錄的歷史列保留不改），三份同一張 PR、排在 token 抽取之前或同組
 - 對照：`docs/diagrams/architecture/frontend-routes.mdx` §前端骨架「design token 怎麼進到元件」已依此寫好，實作完成後由實作角色依程式校正
 - 替代方案一：把三組角色色抄進 `tokens.css` 或對照層——改 `design/prototype/` 不在本次範圍，抄進對照層會讓對照層含色值（`design-token-mapping`「對照層不含色值」）
 - 替代方案二：在 `features/dashboard` 寫死六個色碼——違反 F6，深色主題也得自己切換
@@ -92,15 +93,17 @@ type TaskRoleSourceState =
 ### D7 原語擴充：新增 Metric、Skeleton 加 `animation`，Card 的陰影在呼叫端拿掉
 
 - `components/ui/metric.tsx`：收 `label`、`value` 兩個字串（呼叫端負責語言與單位，`ui-design.md` §元件樹「原語的兩處擴充」），不宣告 variant；展示頁一個樣本
+- 骨架的四格指標**不經 Metric**：`features/dashboard` 的骨架每一格只用 `Skeleton`，以 `className` 設成與 Metric 外框相同的尺寸、圓角、內距與排列（標籤一條、數值一條，上下排）；Metric 不為骨架加 `loading`、子元素或任何參數，API 維持只有 `label`、`value`。這樣骨架與完成後的指標卡外框對齊，Metric 也不必知道讀取狀態
 - `components/ui/skeleton.tsx`：加 `animation?: "pulse" | "shimmer"`，預設 `pulse`，並匯出 `skeletonAnimationValues` 讓展示頁的目錄以 `satisfies Record<…>` 綁定（`component-gallery`「原語宣告的 variant 集合固定」）。shimmer 的 `@keyframes` 寫在 `styles/index.css`，漸層用對照層既有的 `--border`（← `--color-border`）與 `--muted`（← `--color-border-muted`），不直接寫 `--color-*` 名稱，時間照 `skeleton.md` 固定 1.5s；`prefers-reduced-motion: reduce` 時不播
 - 展示頁：`variant-catalog.ts` 的 `skeleton` 由 `sample: lines` 改為 `animation: pulse | shimmer`，新增 `metric` 一節排在 Card 與 Separator 之間，目錄錨點 `#metric`（`component-gallery` 三條 MODIFIED）
 - Card 不帶陰影以 `className` 覆寫，不改 `card.tsx`、不加 variant（`ui-design.md` §元件樹「Card 不帶陰影」）
 - 替代方案：Metric 放 `features/dashboard`——它被三個 feature 用到（`screen-inventory.md`），依 F5 屬共用元件
+- 替代方案：Metric 加 `loading` 參數、讀取中自己畫佔位——讓原語帶讀取狀態，#733、#736 每一處都要決定何時傳它；骨架是版面層的事，用 Skeleton 對齊外框就夠
 
 ### D8 新增啟動時預載的 `dashboard` 語言檔，暫時落點的鍵一起刪
 
 - `lib/i18n` 的啟動預載清單加 `dashboard`（與 `common`、`auth`、`appShell` 同一批）：儀表板是正式建置的落點，不走開發頁的動態註冊（`frontend-routes.mdx` §前端骨架 › apiFetch 的細節）
-- 文案以 `ui-design.md` §文案 為準；區塊 A 的四個 `0 人` 與示範值標示也是語言檔字串（Q2、Q5），所以切換語言時數值的單位字一起換
+- 文案以 `ui-design.md` §文案 為準；卡 B 的說明、第 3 步名稱與第 3 步說明用「送出」（Q12）；骨架狀態提示的可存取名稱「載入中」是 `dashboard` 語言檔的 `loading` 鍵，不借用 `auth` 的字串；區塊 A 的四個 `0 人` 與示範值標示也是語言檔字串（Q2、Q5），所以切換語言時數值的單位字一起換
 - 刪 `auth` 語言檔兩份的 `dashboard.*` 鍵、`features/auth/signed-in-card.tsx`（含測試）與 `pages/dashboard-placeholder/`；`features/auth/role-names.ts` 只被 `SignedInCard` 使用，一併刪除，`features/auth/index.ts` 移除對應的匯出
 - 瀏覽器標題沿用 `common` 的 `documentTitle`，頁名取 `dashboard` 語言檔（`frontend-routing`「每頁設定瀏覽器標題」）
 
@@ -111,18 +114,31 @@ type TaskRoleSourceState =
 
 ### D10 測試分層
 
-| 層   | 涵蓋                                                                                                                                                                         | 做法                                                                                                                                                                                                                                   |
-| :--- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 單元 | `resolveDashboardView` 的八種結果與優先序；`annotationEntryHref`；`extract-tokens` 讀兩份檔、順序與缺檔錯誤                                                                  | Vitest，純函式                                                                                                                                                                                                                         |
-| 元件 | specs `dashboard` 的骨架、讀完切換、錯誤、重試與焦點、行動入口卡文案與連結、區塊 A、語言切換、缺翻譯、角色無效                                                               | Vitest + Testing Library；任務角色狀態以 `TaskRoleSourceProvider` 注入（D2）；`getCurrentSession` 以既有的 MSW handler 提供，角色無效改回 `role: "guest"`（clarification T-3，不在資料庫繞過約束）；缺翻譯以測試內移除一個 `en` 鍵製造 |
-| 元件 | 展示頁的 Metric、Skeleton 兩種動畫與完整性測試；`tokens-usage.test.ts` 擋 `--data-`                                                                                          | 既有的 `renderGallery()`                                                                                                                                                                                                               |
-| E2E  | 兩種到得了的版面（平台成員、系統管理員）、頁首、卡片連結與點擊後不出現擋下說明、窄螢幕兩欄、側欄收合、無水平捲動、鍵盤、請求只有 `GET /api/v1/current-session`、角色色隨主題 | Playwright，`e2e/dashboard/dashboard.spec.ts` 改寫；帳號由 `e2e/shared/accounts.ts` 的 `createAccount` 建立                                                                                                                            |
+| 層   | 涵蓋                                                                                                                                                                         | 做法                                                                                                                                                                                                                                                                        |
+| :--- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 單元 | `resolveDashboardView` 的八種結果與優先序；`annotationEntryHref`；`extract-tokens` 讀兩份檔、順序與缺檔錯誤                                                                  | Vitest，純函式                                                                                                                                                                                                                                                              |
+| 元件 | specs `dashboard` 的骨架、讀完切換、錯誤、重試與焦點、行動入口卡文案與連結、區塊 A、語言切換、缺翻譯、角色無效                                                               | Vitest + Testing Library；任務角色狀態以 `TaskRoleSourceProvider` 注入（D2）；`getCurrentSession` 以既有的 MSW handler 提供；角色無效以完整路由測試讓它回 `role: "guest"`，斷言只導向一次（D11；clarification T-3，不在資料庫繞過約束）；缺翻譯以測試內移除一個 `en` 鍵製造 |
+| 元件 | 展示頁的 Metric、Skeleton 兩種動畫與完整性測試；`tokens-usage.test.ts` 擋 `--data-`                                                                                          | 既有的 `renderGallery()`                                                                                                                                                                                                                                                    |
+| E2E  | 兩種到得了的版面（平台成員、系統管理員）、頁首、卡片連結與點擊後不出現擋下說明、窄螢幕兩欄、側欄收合、無水平捲動、鍵盤、請求只有 `GET /api/v1/current-session`、角色色隨主題 | Playwright，`e2e/dashboard/dashboard.spec.ts` 改寫；帳號由 `e2e/shared/accounts.ts` 的 `createAccount` 建立                                                                                                                                                                 |
 
 依賴「你已登入」的既有測試要一起改：前端 `app/app-shell-layout.test.tsx`、`app/router.test.tsx`、`lib/i18n/locales.test.ts`；E2E `account/login.spec.ts`、`account/session-guard.spec.ts`、`app-shell/appearance.spec.ts`、`app-shell/sidebar.spec.ts`、`dashboard/dashboard.spec.ts`。
+
+### D11 登入狀態對照把系統角色無效的 `200` 當成未登入（sa-7；ADR-001 D2）
+
+- **現況的錯**：`fetchSessionState` 對任何 `200` 都回 `signedIn`。`data.user.role` 不是 `user`／`super_admin` 時，`RequireAuthRoute` 放行、儀表板依 02-01 第 4 條導向 `/account/login`，`PublicOnlyRoute` 看到 `signedIn` 又送回 `/dashboard/dashboard`，兩個守門之間無限來回，違反 clarification sa-7「不會在登入頁與儀表板之間來回」
+- **決定**：`fetchSessionState` 收到 `200` 但 `role` 不在生成的 `SessionUserDataRole` 值（`user`、`super_admin`）裡時，回 `{ kind: "signedOut", notice: null }`。三個守門與儀表板因此對同一個登入者給出同一個判定：`RequireAuthRoute` 與 `RootRedirect` 導向登入頁，`PublicOnlyRoute` 留在登入頁，只導向一次。登入頁不顯示句子（02-01 第 4 條只寫導向，沒有提示句）
+- **仍只導向**：對照只改快取裡的判定，不呼叫 `useSignOut`、不送 `DELETE /api/v1/current-session`、不清 cookie（sa-7）
+- **依據**：ADR-001 D2——本次的儀表板要依角色導向，會呼叫並依賴這條對照，錯的實作在同一張 PR 修，PR 本文寫明原本錯在哪裡
+- **測試**：以完整路由（`app/router.test.tsx` 的 `App` 加 MSW）讓 `getCurrentSession` 回 `role: "guest"`，斷言只導向一次（clarification T-3：在前端假的工作階段驗，不在資料庫繞過約束）
+- 替代方案一：只在儀表板導向，`PublicOnlyRoute` 另外檢查角色——兩處各寫一份允許清單，守門與頁面仍可能不一致
+- 替代方案二：儀表板改呼叫 `useSignOut` 結束登入狀態再導向——sa-7 明定不另外結束登入狀態
 
 ## Risks / Trade-offs
 
 - [骨架、錯誤與重試在正式環境到不了，只在測試替身出現] → 以 D2 的 context 接縫在元件測試逐條驗；`acceptance.md` 標明這幾條在哪一層驗證。#766 接上真實讀取時，這些 Scenario 才第一次在正式環境發生，由 #766 在 E2E 補驗
+- [骨架與錯誤畫面在各寬度不需左右滑動、錯誤畫面的鍵盤走法，本次沒有驗收] → 02-01「任何寬度都不需左右滑動」「鍵盤可以走完整頁」寫的是「任一版面」，骨架與錯誤畫面不是版面，所以不放進這兩條 Scenario；它們要在真實瀏覽器量測，#766 接上讀取之後才做得出來。「重試」的鍵盤觸發與焦點已在 Scenario「重試後再失敗仍留在錯誤畫面」以元件測試驗
+- [「讀取失敗不清掉登入狀態」本次只驗一半] → 依 Q11，本次只驗錯誤畫面期間沒有 `DELETE /api/v1/current-session`、網址不變、登入狀態快取仍是已登入；「重新整理後仍是登入狀態」移交 #766
+- [D11 讓無效角色在登入頁不顯示任何句子，使用者可能不知道為什麼回到登入頁] → 02-01 第 4 條只要求導向；資料庫限制本來就擋下無效角色（clarification sa-7），要加句子先以 `spec-writing` 改規格
 - [三種任務角色版面只有頁首，使用者在本次到不了，但 #766 一接上讀取就會有人落進「只有頁首」的版面] → #766 依賴 #733、#736 的順序由 Epic #713 的 blocked-by 管；本次不加佔位（維護者 2026-11-28）
 - [區塊 A 的 `0 人` 可能被讀成真實統計] → 同一個區塊下方有看得見的示範值標示（Q5）；換成真實統計要先以 `spec-writing` 改 02-01（Q4）
 - [卡片按下去目前回到儀表板，看起來像沒反應] → Q3 已接受；去處頁面由 #730、#773 建置並補驗「實際到達入口頁」
@@ -133,7 +149,7 @@ type TaskRoleSourceState =
 ## Migration Plan
 
 - **部署**：純前端變更，沒有 Alembic migration、沒有資料異動，`backend/openapi.json` 與 `frontend/src/api/generated/` 不變；部署即生效
-- **順序**：ADR-005 D4 與 F6 修訂 → token 抽取讀資料色 → 路徑常數搬到 `lib` → 任務角色來源三態 → 原語（Metric、Skeleton）與展示頁 → 儀表板頁面與移除暫時落點 → E2E 改寫 → `design/system/` 的「程式實作」與常駐文件校正。實際分組由 tasks 定
+- **順序**：ADR-005 D4 與 F6 修訂 → token 抽取讀資料色 → 路徑常數搬到 `lib` → 任務角色來源三態 → 登入狀態對照（D11） → 原語（Metric、Skeleton）與展示頁 → 儀表板頁面與移除暫時落點 → E2E 改寫 → `design/system/` 的「程式實作」與常駐文件校正。實際分組由 tasks 定
 - **回滾**：revert 這張 PR 即回到暫時落點；沒有資料或 schema 要還原。ADR 與 F6 的修訂在同一張 PR，一起 revert，規則與程式不會分家
 - **相容性**：網址 `/dashboard/dashboard` 不變，登入後去處、`denied-and-not-found-screens` 的「回儀表板」與側欄的落點都不必改
 
