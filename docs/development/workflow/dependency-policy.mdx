@@ -6,7 +6,7 @@ tags: [dependencies, security, dependabot]
 
 # 相依套件政策
 
-dependabot 目前的警示接受風險、不升：它們全在 `development` scope，CI 的 `--prod` 閘門本來就不涵蓋，而且被 `notecraftapp` 鎖住升不上去（逐筆論證見 [PR #320](https://github.com/label-suite/label-suite/pull/320)）。
+Dependabot 目前的警示接受風險、不升：它們全在 `development` scope，CI 的 `--prod` 閘門本來就不涵蓋，而且被 `notecraftapp` 鎖住升不上去（逐筆論證見 [PR #320](https://github.com/label-suite/label-suite/pull/320)）。
 **這個取捨只在沒有部署、沒有產品相依時成立**：`backend/` 或 `frontend/` 一出現，[技術架構 §部署與維運](../architecture.mdx#部署與維運) 的兩道 CI 安全掃描就有東西可掃，要重新評估。
 
 ## 被擋住的套件
