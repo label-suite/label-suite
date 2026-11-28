@@ -93,6 +93,7 @@
 - **決議**：前端也讀 `data-palette.css`，照 prototype 的綠、紫、靛三色，淺深兩組都要；token 抽取與 theme 對照一併擴充，確認在 ADR-005 D4 的範圍內（不在範圍內就停下回報）。
 - **理由**：與 prototype 一致，且 #733、#736 之後也會用到角色色。
 - **已回修**：`ui-design.md` U2 與 token 表；`frontend-routes.mdx` §前端骨架「design token 怎麼進到元件」
+- **補充決議（同日）**：讀 `data-palette.css` 與 ADR-005 D4「`tokens.css` 是唯一色值來源」字面衝突。維護者決定**修訂 ADR-005 D4**：語意色（shadcn 對照層）仍只來自 `tokens.css`；資料色（角色色、圖表色）另外來自 `data-palette.css`，不進對照層，`components/ui/` 的原語不讀，並在 ADR 補一列決策紀錄。修訂與實作進同一張 PR
 - **日期**：2026-11-28
 
 ### Q9. 不在刻度上的字級（U3）
@@ -223,6 +224,7 @@
 - specs：區塊 A 的四張卡值為 `0 人`，示範值標示用 Q5 的句子；卡 B 標題與說明用「提交」（維護者 2026-11-28、Q6）
 - specs：測試集答案不外露要有負向 Scenario：儀表板的頁首、行動入口卡、區塊 A、錯誤畫面與它們發出的請求都不含答案（Scenario「儀表板不出現標準答案」本次部分）
 - design：不新增後端端點，不改資料模型；任務角色沿用前端既有來源並補讀取中、失敗、完成三種狀態（Q1）；前端 token 抽取讀 `data-palette.css`（Q8）；字級對應照 Q9；路徑常數的層級依 F1 決定（T-4）
+- tasks：一個 `[@technical-writer]` task 依 `doc-writing` 的 ADR 寫法修訂 `docs/development/adr/005-frontend-architecture.mdx` D4（Q8 補充決議），排在前端 token 抽取的群組之前或同組
 - tasks：沒有後端群組、沒有 `[@dba]`；前端群組含移除 `pages/dashboard-placeholder/`、`features/auth/signed-in-card.tsx` 與 `auth` 的 `dashboard.*` 語言鍵；元件展示頁補指標卡；`metric.md` 與 `screen-inventory.md` 的「程式實作」同一張 PR 更新
 - 規格書回寫（Q4、Q5）由 `spec-writing` 完成，在 specs 之前提交
 - Q10 的 `brand.md` 用語由 #814 處理，本次不改 `design/`
