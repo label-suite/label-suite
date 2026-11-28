@@ -187,7 +187,7 @@ for cand in ${CANDIDATES+"${CANDIDATES[@]}"}; do
     const { resolved, outsideWorkspace } = resolveTargetPath(target, root);
     let base = root;
     try { base = require("node:fs").realpathSync(root); } catch { /* keep the literal root */ }
-    process.stdout.write(outsideWorkspace ? "" : path.relative(base, resolved));
+    process.stdout.write(outsideWorkspace ? "" : path.relative(base, resolved).split(path.sep).join("/"));
   ' -- "$REPO" "$abs")
   if [ -z "$rel" ]; then
     emit_err "NA: $cand 在 workspace 之外，略過（不在本檢查的範圍內）"

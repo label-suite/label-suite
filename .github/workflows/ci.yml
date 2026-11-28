@@ -90,6 +90,19 @@ jobs:
       - name: Provision the frontend toolchain the TypeScript route runs in
         run: pnpm install --frozen-lockfile
 
+      # The suites build their JSON payloads with `python3`, which a Windows
+      # runner does not provide under that name. A shim for `python` keeps the
+      # suites unchanged; on the other platforms the step does nothing.
+      - name: Provide python3 on Windows
+        if: runner.os == 'Windows'
+        run: |
+          command -v python3 >/dev/null 2>&1 && python3 -c 'import json' 2>/dev/null && exit 0
+          shim="$RUNNER_TEMP/python3-shim"
+          mkdir -p "$shim"
+          printf '#!/bin/sh\nexec python "$@"\n' > "$shim/python3"
+          chmod +x "$shim/python3"
+          echo "$shim" >> "$GITHUB_PATH"
+
       # A glob, not a list. A suite that is added and not wired up is the
       # failure this job exists to prevent, and a list is the place that gets
       # forgotten. check-commit-msg-tests.sh runs here as well as in
