@@ -61,11 +61,12 @@ export function devCommands(env, root = ROOT) {
         "app.main:create_app",
         "--factory",
         "--reload",
-        // Watch only the source tree: the default is the whole cwd, which holds .venv, and on
-        // Windows that makes WatchFiles slow to notice a save (issue #805).
+        // Watch only the source tree. The default is the whole cwd, which holds .venv; that is
+        // the suspected cause of WatchFiles being slow to notice a save on Windows.
         "--reload-dir",
         "app",
-        // Bound the old worker's shutdown so one open connection cannot hold up a reload.
+        // Once the stop signal arrives, bound the old worker's shutdown so one open connection
+        // cannot hold up a reload. It does not help if Windows loses the CTRL_C_EVENT.
         "--timeout-graceful-shutdown",
         "5",
         "--port",

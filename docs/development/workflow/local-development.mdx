@@ -73,7 +73,7 @@ pnpm run dev
 
 建立系統管理員那一步只要做一次，行為見 [§建立第一位系統管理員](#建立第一位系統管理員)。
 
-`pnpm run dev` 會讀根目錄 `.env`，起後端（uvicorn，`--reload`，埠 `BACKEND_PORT`）與前端（Vite，固定 `5173`），任一個結束就把另一個也停掉，Ctrl-C 兩個一起停。後端只監看 `backend/app` 的 `.py` 變更，改 `backend/` 其他位置要自己重啟。
+`pnpm run dev` 會讀根目錄 `.env`，起後端（uvicorn，`--reload`，埠 `BACKEND_PORT`）與前端（Vite，固定 `5173`），任一個結束就把另一個也停掉，Ctrl-C 兩個一起停。後端只在 `backend/app` 的 `.py` 變更時重載；改其他檔案（含根目錄 `.env`、依賴）要重啟 `pnpm run dev`。
 也可以分兩個終端機各起一個，指令與它執行的相同：
 
 ```bash
