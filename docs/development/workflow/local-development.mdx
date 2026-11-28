@@ -87,6 +87,20 @@ VITE_API_BASE_URL=http://localhost:8000 pnpm --filter frontend dev
 只有 `pnpm run dev` 會讀根目錄 `.env`；分開起時兩個終端機都要自己帶變數：後端沒有 `CORS_ALLOWED_ORIGINS` 不會啟動，前端沒有 `VITE_API_BASE_URL` 會把 API 請求打到 `5173` 自己（Vite 沒有 proxy）。
 Lite 層的資料庫檔預設在 `backend/data/label_suite.db`，已被 Git 忽略；刪掉它就是重置資料。
 
+### 讓 `pnpm run dev` 自動建立本機管理員
+
+在自己的 `.env` 填好 `DEV_SEED_ADMIN_EMAIL`、`DEV_SEED_ADMIN_NAME`、`DEV_SEED_ADMIN_PASSWORD`，`pnpm run dev` 就會在起伺服器前建好管理員，不必先手動跑上面兩行指令。
+
+| 情況 | 行為 |
+| :--- | :--- |
+| 三個都沒填 | 與沒有這個功能時相同：不跑 migration、不建帳號、不印任何訊息 |
+| 三個都填了 | 先在 `backend/` 跑 `alembic upgrade head`，再跑 `create_seeder --password-stdin`；密碼只從標準輸入送入，不出現在命令列參數或任何輸出。伺服器起來後印一行提醒：可用該 Email 登入 `http://localhost:5173`，密碼見 `.env` |
+| 只填一部分 | 印警告並指出缺哪幾個變數，略過建立，照常啟動 |
+| migration 失敗，或 `create_seeder` 退出碼不是 `0`（例如已有另一位 Seeder 管理員，退出碼 `2`） | 印警告，略過或停止建立，照常啟動；不印提醒 |
+| 同一個 Email 已是 Seeder 管理員 | `create_seeder` 退出碼 `0`、什麼都不改，所以每次啟動重跑是安全的 |
+
+三個變數只有 `pnpm run dev` 讀；Docker Lite 與正式層不讀。密碼只放你自己的 `.env`，`.env.example` 的值一律留空。
+
 ## 建立第一位系統管理員
 
 沒有任何端點能建立帳號；第一位系統管理員只能由初始化指令 `app.scripts.create_seeder` 建立，兩種跑法各一行指令，見 [§用 Docker Compose 起整套](#用-docker-compose-起整套) 與 [§前後端分開起](#前後端分開起)。
@@ -143,6 +157,7 @@ PostgreSQL 輪不應該有任何測試被跳過；CI 會用 `scripts/check-junit
 | `GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`、`GOOGLE_REDIRECT_URI` | Google 登入；三個一起設或都不設，只設一部分時後端拒絕啟動。`GOOGLE_REDIRECT_URI` 是前端的回調頁，例 `http://localhost:8080/account/google/callback` | 都不設：登入頁不顯示 Google 按鈕；空字串等同沒設 | 後端、兩份編排檔 |
 | `RESEND_API_KEY` | 寄信服務的金鑰；後端目前只看它有沒有設，有設時登入頁提供「前往註冊」 | 不設；空字串等同沒設 | 後端、兩份編排檔 |
 | `FRONTEND_PORT` | 前端容器在主機上公開的埠，是兩層唯一公開的埠 | `8080` | 兩份編排檔 |
+| `DEV_SEED_ADMIN_EMAIL`、`DEV_SEED_ADMIN_NAME`、`DEV_SEED_ADMIN_PASSWORD` | `pnpm run dev` 啟動前建立本機 Seeder 管理員；三個一起填才生效，行為見 [§讓 `pnpm run dev` 自動建立本機管理員](#讓-pnpm-run-dev-自動建立本機管理員) | 不填；`.env.example` 刻意留空 | `scripts/dev.mjs` |
 | `BACKEND_PORT` | `pnpm run dev` 啟動本機後端的埠；編排檔不讀，容器內的後端不對主機開埠 | `8000` | `scripts/dev.mjs` |
 
 測試另外讀 `TEST_DATABASE_URL`（見 [§跑測試](#跑測試)）；它只給測試用，不放進 `.env`，後端應用程式不讀它。
