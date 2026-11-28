@@ -44,7 +44,7 @@ E2E 的範圍：本次只改「移除暫時落點之後，既有 E2E 才不會�
 
 ## 8. 整合檢查
 
-- [ ] 8.1 在工作區乾淨的狀態下跑完整的前端與文件檢查並把輸出附在回報裡：`pnpm --filter frontend lint`、`pnpm --filter frontend typecheck`、`pnpm --filter frontend test`、`pnpm --filter frontend build`、契約漂移 `pnpm --filter frontend api:generate && git diff --exit-code -- frontend/src/api/generated && test -z "$(git status --porcelain -- frontend/src/api/generated)"`（本次沒有後端變更，預期沒有任何差異；有差異就停下回報）、`node scripts/check-component-reuse.mjs`、`pnpm check:specs`、`pnpm exec notecraftapp build docs --rebuild`、E2E 全部。驗證：每一個指令都以 0 結束，`git status` 在跑完後仍是乾淨的 [@frontend-developer]
+- [x] 8.1 在工作區乾淨的狀態下跑完整的前端與文件檢查並把輸出附在回報裡：`pnpm --filter frontend lint`、`pnpm --filter frontend typecheck`、`pnpm --filter frontend test`、`pnpm --filter frontend build`、契約漂移 `pnpm --filter frontend api:generate && git diff --exit-code -- frontend/src/api/generated && test -z "$(git status --porcelain -- frontend/src/api/generated)"`（本次沒有後端變更，預期沒有任何差異；有差異就停下回報）、`node scripts/check-component-reuse.mjs`、`pnpm check:specs`、`pnpm exec notecraftapp build docs --rebuild`、E2E 全部。驗證：每一個指令都以 0 結束，`git status` 在跑完後仍是乾淨的 [@frontend-developer]
 
 ## Workflow follow-up
 
