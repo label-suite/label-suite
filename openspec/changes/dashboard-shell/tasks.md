@@ -12,8 +12,8 @@ E2E 的範圍：本次只改「移除暫時落點之後，既有 E2E 才不會�
 
 ## 2. token 抽取讀資料色
 
-- [ ] 2.1 擴充 `frontend/build/extract-tokens.ts`：讀 `tokens.css` 之後再讀 `design/prototype/assets/data-palette.css`，兩份都只取 `:root` 與 `html[data-theme="dark"]` 的 `--*` 宣告，依此順序串成同一個 `virtual:design-tokens.css`；任一檔不存在時丟出含該檔路徑的錯誤。先在 `build/extract-tokens.test.ts` 寫失敗的測試：實際兩份檔取出後 `:root` 與深色區塊都有 `--data-role-emerald-bg`、`--data-role-violet-bg`、`--data-role-indigo-bg`；第一個 `--data-` 宣告在最後一個 `tokens.css` 宣告之後；資料色檔不存在時錯誤訊息含 `design/prototype/assets/data-palette.css`（`design-token-mapping` Requirement「建置只取 token 檔的自訂屬性」的五個 Scenario）。驗證：測試通過，`pnpm --filter frontend build` 成功；依實作校正 `docs/diagrams/architecture/frontend-routes.mdx` §前端骨架「design token 怎麼進到元件」（design D5） [@frontend-developer]
-- [ ] 2.2 在 `frontend/src/components/ui/tokens-usage.test.ts` 的禁止樣式加上 `--data-`，並加一個測試讀 `frontend/src/styles/theme.css` 確認沒有 `--data-` 宣告或引用（`design-token-mapping` Requirement「資料色不進對照層也不給原語用」Scenario「對照層與原語都不引用資料色」）。先以一個暫時含 `--data-` 的字串確認測試會失敗再移除。驗證：`pnpm --filter frontend test` 通過（design D5） [@frontend-developer]
+- [x] 2.1 擴充 `frontend/build/extract-tokens.ts`：讀 `tokens.css` 之後再讀 `design/prototype/assets/data-palette.css`，兩份都只取 `:root` 與 `html[data-theme="dark"]` 的 `--*` 宣告，依此順序串成同一個 `virtual:design-tokens.css`；任一檔不存在時丟出含該檔路徑的錯誤。先在 `build/extract-tokens.test.ts` 寫失敗的測試：實際兩份檔取出後 `:root` 與深色區塊都有 `--data-role-emerald-bg`、`--data-role-violet-bg`、`--data-role-indigo-bg`；第一個 `--data-` 宣告在最後一個 `tokens.css` 宣告之後；資料色檔不存在時錯誤訊息含 `design/prototype/assets/data-palette.css`（`design-token-mapping` Requirement「建置只取 token 檔的自訂屬性」的五個 Scenario）。驗證：測試通過，`pnpm --filter frontend build` 成功；依實作校正 `docs/diagrams/architecture/frontend-routes.mdx` §前端骨架「design token 怎麼進到元件」（design D5） [@frontend-developer]
+- [x] 2.2 在 `frontend/src/components/ui/tokens-usage.test.ts` 的禁止樣式加上 `--data-`，並加一個測試讀 `frontend/src/styles/theme.css` 確認沒有 `--data-` 宣告或引用（`design-token-mapping` Requirement「資料色不進對照層也不給原語用」Scenario「對照層與原語都不引用資料色」）。先以一個暫時含 `--data-` 的字串確認測試會失敗再移除。驗證：`pnpm --filter frontend test` 通過（design D5） [@frontend-developer]
 
 ## 3. 路徑常數、任務角色來源與登入狀態對照
 

@@ -13,6 +13,9 @@ const sources = import.meta.glob<string>("./*.tsx", {
 /** A tokens.css variable name; components must use semantic variables (Q9). */
 const TOKEN_NAME = /--color-[a-z0-9-]+/;
 
+/** A data-palette.css variable; data colours belong to feature components, not primitives. */
+const DATA_TOKEN = /--data-[a-z0-9-]+/;
+
 /** Colour literals (F6). */
 const COLOUR_VALUE = /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color-mix)\(/i;
 
@@ -50,6 +53,7 @@ describe("components/ui uses only semantic variables", () => {
     expect("text-(--color-primary)").toMatch(TOKEN_NAME);
     expect("bg-[#4F46E5]").toMatch(COLOUR_VALUE);
     expect("bg-[rgb(0,0,0)]").toMatch(COLOUR_VALUE);
+    expect("bg-[var(--data-role-violet-bg)]").toMatch(DATA_TOKEN);
     expect("text-white").toMatch(PALETTE_CLASS);
     expect("hover:bg-slate-50").toMatch(PALETTE_CLASS);
     expect("text-success bg-error-bg border-border").not.toMatch(PALETTE_CLASS);
@@ -59,11 +63,34 @@ describe("components/ui uses only semantic variables", () => {
     expect(source).not.toMatch(TOKEN_NAME);
   });
 
+  it.each(Object.entries(sources))("%s names no data-palette.css variable", (_path, source) => {
+    expect(source).not.toMatch(DATA_TOKEN);
+  });
+
   it.each(Object.entries(sources))("%s writes no colour value", (_path, source) => {
     expect(source).not.toMatch(COLOUR_VALUE);
   });
 
   it.each(Object.entries(sources))("%s uses no Tailwind palette class", (_path, source) => {
     expect(source).not.toMatch(PALETTE_CLASS);
+  });
+});
+
+/** The shadcn mapping layer, read as text (a glob keeps it out of the import graph). */
+const themeSources = import.meta.glob<string>("../../styles/theme.css", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+});
+
+describe("the shadcn mapping layer", () => {
+  it("neither declares nor references a data-palette.css variable", () => {
+    const themes = Object.values(themeSources);
+
+    expect(themes).toHaveLength(1);
+    for (const theme of themes) {
+      expect(theme.length).toBeGreaterThan(0);
+      expect(theme).not.toMatch(DATA_TOKEN);
+    }
   });
 });
