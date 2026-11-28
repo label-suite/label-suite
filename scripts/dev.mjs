@@ -72,6 +72,12 @@ export function resolveSpawn(command, args, platform = process.platform, env = p
   return { command, args };
 }
 
+/** A copy of `env` without the seed password: no child process (servers, alembic, seeder) needs it. */
+export function withoutSeedPassword(env) {
+  const { DEV_SEED_ADMIN_PASSWORD: _omitted, ...rest } = env;
+  return rest;
+}
+
 const SEED_VARS = ["DEV_SEED_ADMIN_EMAIL", "DEV_SEED_ADMIN_NAME", "DEV_SEED_ADMIN_PASSWORD"];
 
 /**
@@ -133,7 +139,7 @@ export async function seedDevAdmin(
   const name = env.DEV_SEED_ADMIN_NAME;
   const password = env.DEV_SEED_ADMIN_PASSWORD;
   // The children need the database settings, not the password.
-  const { DEV_SEED_ADMIN_PASSWORD: _omitted, ...childEnv } = env;
+  const childEnv = withoutSeedPassword(env);
   const cwd = join(root, "backend");
 
   const migrated = await runToEnd(spawnFn, "uv", ["run", "alembic", "upgrade", "head"], {
@@ -447,11 +453,11 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const env = loadDevEnv(ROOT, process.env);
   const say = (text) => process.stdout.write(`[dev] ${text}\n`);
   const admin = await seedDevAdmin(env, { say });
-  // The servers never need the seed password; keep it out of their environment.
-  const { DEV_SEED_ADMIN_PASSWORD: _omitted, ...serverEnv } = env;
+  const serverEnv = withoutSeedPassword(env);
   process.exitCode = await supervise(devCommands(serverEnv), {
     env: serverEnv,
     onStarted: (log) => {
+      // 5173 is fixed in frontend/vite.config.ts (strictPort), so the URL is always this one.
       if (admin)
         log(
           `Sign in as ${admin.email} at http://localhost:5173; the password is DEV_SEED_ADMIN_PASSWORD in .env`,

@@ -74,6 +74,19 @@ pnpm run dev
 建立系統管理員那一步只要做一次，行為見 [§建立第一位系統管理員](#建立第一位系統管理員)。
 
 `pnpm run dev` 會讀根目錄 `.env`，起後端（uvicorn，`--reload`，埠 `BACKEND_PORT`）與前端（Vite，固定 `5173`），任一個結束就把另一個也停掉，Ctrl-C 兩個一起停。
+也可以分兩個終端機各起一個，指令與它執行的相同：
+
+```bash
+# 終端機一：後端
+(cd backend && CORS_ALLOWED_ORIGINS=http://localhost:5173 uv run uvicorn app.main:create_app --factory --reload --port 8000)
+
+# 終端機二：前端
+VITE_API_BASE_URL=http://localhost:8000 pnpm --filter frontend dev
+```
+
+只有 `pnpm run dev` 會讀根目錄 `.env`；分開起時兩個終端機都要自己帶變數：後端沒有 `CORS_ALLOWED_ORIGINS` 不會啟動，前端沒有 `VITE_API_BASE_URL` 會把 API 請求打到 `5173` 自己（Vite 沒有 proxy）。
+Lite 層的資料庫檔預設在 `backend/data/label_suite.db`，已被 Git 忽略；刪掉它就是重置資料。
+
 ### 讓 `pnpm run dev` 自動建立本機管理員
 
 在自己的 `.env` 填好 `DEV_SEED_ADMIN_EMAIL`、`DEV_SEED_ADMIN_NAME`、`DEV_SEED_ADMIN_PASSWORD`，`pnpm run dev` 就會在起伺服器前建好管理員，不必先手動跑上面兩行指令。
@@ -87,19 +100,6 @@ pnpm run dev
 | 同一個 Email 已是 Seeder 管理員 | `create_seeder` 退出碼 `0`、什麼都不改，所以每次啟動重跑是安全的 |
 
 三個變數只有 `pnpm run dev` 讀；Docker Lite 與正式層不讀。密碼只放你自己的 `.env`，`.env.example` 的值一律留空。
-
-也可以分兩個終端機各起一個，指令與它執行的相同：
-
-```bash
-# 終端機一：後端
-(cd backend && CORS_ALLOWED_ORIGINS=http://localhost:5173 uv run uvicorn app.main:create_app --factory --reload --port 8000)
-
-# 終端機二：前端
-VITE_API_BASE_URL=http://localhost:8000 pnpm --filter frontend dev
-```
-
-只有 `pnpm run dev` 會讀根目錄 `.env`；分開起時兩個終端機都要自己帶變數：後端沒有 `CORS_ALLOWED_ORIGINS` 不會啟動，前端沒有 `VITE_API_BASE_URL` 會把 API 請求打到 `5173` 自己（Vite 沒有 proxy）。
-Lite 層的資料庫檔預設在 `backend/data/label_suite.db`，已被 Git 忽略；刪掉它就是重置資料。
 
 ## 建立第一位系統管理員
 

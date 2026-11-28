@@ -20,6 +20,7 @@ import {
   resolveSpawn,
   seedDevAdmin,
   supervise,
+  withoutSeedPassword,
 } from "../dev.mjs";
 
 const ROOT = fileURLToPath(new URL("../..", import.meta.url));
@@ -463,6 +464,35 @@ describe("seedDevAdmin (injected spawn)", () => {
     assert.deepEqual(calls[1].written, [`${PASSWORD}\n`]);
     assert.deepEqual(calls[0].written, []);
     assert.ok(!lines.join("\n").includes(PASSWORD));
+  });
+
+  test("win32: uv is spawned directly and the password still arrives on stdin only", async () => {
+    const { fn, calls } = fakeRun([0, 0]);
+    const { lines, say } = collect();
+    const result = await seedDevAdmin(full, { say, spawnFn: fn, platform: "win32" });
+    assert.deepEqual(result, { email: "dev@example.com" });
+    for (const c of calls) {
+      assert.equal(c.command, "uv");
+      assert.ok(!c.args.some((a) => a.includes(PASSWORD)));
+    }
+    assert.deepEqual(calls[1].written, [`${PASSWORD}\n`]);
+    assert.ok(!lines.join("\n").includes(PASSWORD));
+  });
+
+  test("does not mutate the env it is given", async () => {
+    const { fn } = fakeRun([0, 0]);
+    const env = { ...full };
+    await seedDevAdmin(env, { say: () => {}, spawnFn: fn });
+    assert.deepEqual(env, full);
+  });
+
+  test("withoutSeedPassword drops only the password and returns a copy", () => {
+    const env = { ...full };
+    const copy = withoutSeedPassword(env);
+    assert.equal("DEV_SEED_ADMIN_PASSWORD" in copy, false);
+    assert.equal(copy.DEV_SEED_ADMIN_EMAIL, full.DEV_SEED_ADMIN_EMAIL);
+    assert.equal(copy.DATABASE_URL, full.DATABASE_URL);
+    assert.equal(env.DEV_SEED_ADMIN_PASSWORD, PASSWORD);
   });
 
   test("none set (or only blanks): neither command runs and nothing is said", async () => {
