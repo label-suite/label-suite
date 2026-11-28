@@ -76,6 +76,8 @@ export function resolveSpawn(command, args, platform = process.platform, env = p
 function signalGroup(child, signal, { platform, spawnFn }) {
   if (child.pid === undefined) return;
   if (platform === "win32") {
+    // An exited child's pid may be reused; taskkill must never aim at it.
+    if (child.exitCode != null || child.signalCode != null) return;
     try {
       const killer = spawnFn("taskkill", ["/pid", String(child.pid), "/T", "/F"], {
         stdio: "ignore",

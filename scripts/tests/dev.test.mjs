@@ -218,17 +218,22 @@ describe("supervise on win32 (injected platform and spawn)", () => {
       spawnFn: fn,
     });
     const [backend, frontend] = calls;
-    assert.equal(backend.command, "uv");
-    assert.equal(frontend.command, "cmd.exe");
-    assert.deepEqual(frontend.args.slice(0, 4), ["/d", "/s", "/c", "pnpm"]);
-    assert.equal(frontend.options.detached, false);
+    try {
+      assert.equal(backend.command, "uv");
+      assert.equal(frontend.command, "cmd.exe");
+      assert.deepEqual(frontend.args.slice(0, 4), ["/d", "/s", "/c", "pnpm"]);
+      assert.equal(frontend.options.detached, false);
 
-    frontend.child.emit("exit", 2, null);
-    const killed = calls.filter((c) => c.command === "taskkill");
-    // The exited frontend and the still-running backend are both stopped as whole trees.
-    assert.ok(killed.every((c) => c.args.includes("/T") && c.args.includes("/F")));
-    assert.ok(killed.some((c) => c.args[1] === String(backend.child.pid)));
-    backend.child.emit("exit", 1, null);
+      frontend.child.exitCode = 2; // as Node sets it before emitting "exit"
+      frontend.child.emit("exit", 2, null);
+      const killed = calls.filter((c) => c.command === "taskkill");
+      // The running backend is stopped as a whole tree; the exited frontend's pid is left alone.
+      assert.ok(killed.every((c) => c.args.includes("/T") && c.args.includes("/F")));
+      assert.ok(killed.some((c) => c.args[1] === String(backend.child.pid)));
+      assert.ok(!killed.some((c) => c.args[1] === String(frontend.child.pid)));
+    } finally {
+      for (const c of [backend, frontend]) c.child.emit("exit", 1, null);
+    }
     assert.equal(await done, 2);
   });
 
@@ -240,19 +245,17 @@ describe("supervise on win32 (injected platform and spawn)", () => {
       platform: "win32",
       spawnFn: fn,
     });
-    process.emit("SIGTERM", "SIGTERM");
-    const pids = calls
-      .filter((c) => c.command === "taskkill")
-      .map((c) => c.args[1])
-      .sort();
-    assert.deepEqual(
-      pids,
-      calls
-        .slice(0, 2)
-        .map((c) => String(c.child.pid))
-        .sort(),
-    );
-    for (const c of calls.slice(0, 2)) c.child.emit("exit", 1, null);
+    const servers = calls.slice(0, 2);
+    try {
+      process.emit("SIGTERM", "SIGTERM");
+      const pids = calls
+        .filter((c) => c.command === "taskkill")
+        .map((c) => c.args[1])
+        .sort();
+      assert.deepEqual(pids, servers.map((c) => String(c.child.pid)).sort());
+    } finally {
+      for (const c of servers) c.child.emit("exit", 1, null);
+    }
     assert.equal(await done, 143);
   });
 
