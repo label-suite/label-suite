@@ -1,0 +1,5 @@
+# Checked-out text files keep LF on every platform, so shell scripts and tests
+# that match on file text behave the same on Windows runners.
+* text=auto eol=lf
+*.pdf binary
+*.png binary

@@ -24,7 +24,7 @@ import {
   statSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, relative } from "node:path";
+import { join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -176,10 +176,13 @@ function listFiles(base, path) {
   const absolute = join(base, path);
   if (!existsSync(absolute)) return [];
   if (statSync(absolute).isFile()) return [path];
-  return readdirSync(absolute, { withFileTypes: true, recursive: true })
-    .filter((entry) => entry.isFile())
-    .map((entry) => relative(base, join(entry.parentPath, entry.name)))
-    .sort();
+  return (
+    readdirSync(absolute, { withFileTypes: true, recursive: true })
+      .filter((entry) => entry.isFile())
+      // Root-relative paths always use "/", as the callers compare and print them so.
+      .map((entry) => relative(base, join(entry.parentPath, entry.name)).split(sep).join("/"))
+      .sort()
+  );
 }
 
 function contractFiles(base) {

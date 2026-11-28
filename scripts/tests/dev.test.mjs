@@ -120,18 +120,26 @@ for (const [signal, expected] of [
   ["SIGINT", 130],
   ["SIGTERM", 143],
 ]) {
-  test(`${signal} to dev ends both servers, including the frontend's own child`, async () => {
-    const pids = ["backend.pid", "frontend.pid", "grandchild.pid"].map((name) => join(dir, name));
-    const dev = spawn(process.execPath, [HARNESS, ...pids], { stdio: "ignore" });
-    const exited = new Promise((resolve) => dev.on("exit", (code) => resolve(code)));
-    await waitFor(
-      () => pids.every((file) => existsSync(file) && readFileSync(file, "utf8") !== ""),
-      "all pids",
-    );
-    dev.kill(signal);
-    assert.equal(await exited, expected);
-    for (const file of pids) await waitFor(() => !isAlive(readPid(file)), `${file} to end`);
-  });
+  // Node cannot deliver a real SIGINT/SIGTERM to a child on win32: kill()
+  // terminates it unconditionally, so the 130/143 exit codes can never be
+  // observed. The win32 behaviour (taskkill of both trees, exit 143) is covered
+  // by the injected-platform tests in "supervise on win32" below.
+  test(
+    `${signal} to dev ends both servers, including the frontend's own child`,
+    { skip: process.platform === "win32" && "no real POSIX signals on win32" },
+    async () => {
+      const pids = ["backend.pid", "frontend.pid", "grandchild.pid"].map((name) => join(dir, name));
+      const dev = spawn(process.execPath, [HARNESS, ...pids], { stdio: "ignore" });
+      const exited = new Promise((resolve) => dev.on("exit", (code) => resolve(code)));
+      await waitFor(
+        () => pids.every((file) => existsSync(file) && readFileSync(file, "utf8") !== ""),
+        "all pids",
+      );
+      dev.kill(signal);
+      assert.equal(await exited, expected);
+      for (const file of pids) await waitFor(() => !isAlive(readPid(file)), `${file} to end`);
+    },
+  );
 }
 
 describe("devCommands", () => {
