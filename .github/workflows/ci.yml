@@ -34,6 +34,8 @@ jobs:
     # matrix because this repository is public and its runner minutes are
     # free; the cross-platform requirement is issue #111's, not a nicety.
     name: hooks (${{ matrix.os }})
+    needs: changes
+    if: needs.changes.outputs.hooks == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -175,6 +177,8 @@ jobs:
 
   docs-site:
     name: docs-site
+    needs: changes
+    if: needs.changes.outputs.docs_site == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -310,14 +314,17 @@ jobs:
       - name: Check that new screens reuse the design-system components
         run: node scripts/check-component-reuse.mjs
 
-  # The two backend jobs run on every pull request, with no path filter and no
-  # job-level condition, so a docs-only pull request still runs them. Each job
-  # writes its own coverage data file; the coverage job (a later task) combines
+  # The two backend jobs, frontend, coverage and e2e share the `code` condition
+  # from `changes` (frontend and e2e widen it with their own paths), so a
+  # docs-only pull request skips them; GitHub reports a job skipped by its `if`
+  # as passing. Each job writes its own coverage data file; the coverage job (a later task) combines
   # them. upload-artifact v4.4.0 and later skip hidden files by default, and
   # .coverage.* is hidden, so the uploads set include-hidden-files and fail when
   # the file is missing instead of silently uploading nothing.
   backend-sqlite:
     name: backend-sqlite
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -371,6 +378,8 @@ jobs:
 
   backend-postgres:
     name: backend-postgres
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -428,6 +437,8 @@ jobs:
   # steps. Every step stops the job on failure; none runs under always().
   frontend:
     name: frontend
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -463,11 +474,13 @@ jobs:
           path: frontend/coverage/coverage-summary.json
           if-no-files-found: error
 
-  # Runs on every pull request against the development servers and a SQLite
-  # file; CI=true (set by Actions) makes Playwright start fresh servers and
-  # retry once. The report is uploaded only when a journey fails.
+  # Runs when the code group or e2e/ changed, against the development servers
+  # and a SQLite file; CI=true (set by Actions) makes Playwright start fresh
+  # servers and retry once. The report is uploaded only when a journey fails.
   e2e:
     name: e2e
+    needs: changes
+    if: needs.changes.outputs.e2e == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -513,6 +526,8 @@ jobs:
   # api:sync` locally, then commit.
   api-contract:
     name: api-contract
+    needs: changes
+    if: needs.changes.outputs.api_contract == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -624,13 +639,24 @@ jobs:
       - name: Audit the frontend production dependencies
         run: pnpm audit --prod --audit-level high
 
-  # Decides whether the compose job has to run. It needs the full history for
-  # the merge base; a base it cannot diff answers "run compose" rather than
-  # failing (scripts/ci-changed-paths.mjs).
+  # Decides which path-conditioned jobs run, one output per entry of the path
+  # table in scripts/ci-changed-paths.mjs. It needs the full history for the
+  # merge base; a base it cannot diff, or a change to a global trigger such as
+  # this workflow or a lockfile, answers "run" for every output rather than
+  # failing. The conditional jobs use `needs: changes` and a job-level `if`,
+  # never a workflow-level `paths` filter, so a skipped required check still
+  # reports as passing.
   changes:
     name: changes
     runs-on: ubuntu-latest
     outputs:
+      code: ${{ steps.paths.outputs.code }}
+      frontend: ${{ steps.paths.outputs.frontend }}
+      e2e: ${{ steps.paths.outputs.e2e }}
+      api_contract: ${{ steps.paths.outputs.api_contract }}
+      docs_site: ${{ steps.paths.outputs.docs_site }}
+      scripts: ${{ steps.paths.outputs.scripts }}
+      hooks: ${{ steps.paths.outputs.hooks }}
       compose: ${{ steps.paths.outputs.compose }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -642,7 +668,7 @@ jobs:
           node-version: 22
           package-manager-cache: false
 
-      - name: Decide whether compose runs
+      - name: Decide which conditional jobs run
         id: paths
         env:
           BASE: ${{ github.event.pull_request.base.sha }}
@@ -943,7 +969,8 @@ jobs:
   coverage:
     name: coverage
     runs-on: ubuntu-latest
-    needs: [backend-sqlite, backend-postgres, frontend]
+    needs: [changes, backend-sqlite, backend-postgres, frontend]
+    if: needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -1034,10 +1061,13 @@ jobs:
           path: coverage-baseline-suggested.json
           if-no-files-found: ignore
 
-  # No needs and no if: it starts with the other jobs, so a broken script or a
-  # skipped CI check is reported even when a backend job fails (design D11).
+  # Needs only `changes`, never a test job, so a broken script or a skipped CI
+  # check is reported even when a backend job fails (design D11). It runs when
+  # scripts/ or a global trigger (this workflow included) changed.
   scripts-tests:
     name: scripts-tests
+    needs: changes
+    if: needs.changes.outputs.scripts == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -1070,6 +1100,8 @@ jobs:
   # not gate merging (maintainer ruling on #824); it reports only.
   scripts-tests-windows:
     name: scripts-tests-windows
+    needs: changes
+    if: needs.changes.outputs.scripts == 'true'
     runs-on: windows-latest
     defaults:
       run:
