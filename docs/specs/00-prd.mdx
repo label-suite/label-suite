@@ -4,12 +4,12 @@ description: '讓學術 NLP 研究團隊用設定建立標記任務，在同一�
 category: '產品'
 tags: [PRD, 定稿]
 createdAt: '2026-11-04'
-updatedAt: '2026-11-26'
+updatedAt: '2026-11-28'
 ---
 
 # Label Suite PRD
 
-:badge[定稿]{variant="success"} :badge[變更 #704]{variant="warning" href="https://github.com/label-suite/label-suite/issues/704"}
+:badge[定稿]{variant="success"} :badge[變更 #816]{variant="warning" href="https://github.com/label-suite/label-suite/issues/816"}
 
 Label Suite 是給學術 NLP 研究團隊用的資料標記與品質評估平台：研究人員用設定組出標記任務，再由團隊在同一個平台完成試標、正式標記、審核與資料品質分析。
 
@@ -22,7 +22,7 @@ Label Suite 是給學術 NLP 研究團隊用的資料標記與品質評估平台
 | 專案 | Label Suite（`label-suite`） |
 | 文件狀態 | 定稿 |
 | 負責人 | 論文作者（專案維護者） |
-| 最後更新 | 2026-11-26 |
+| 最後更新 | 2026-11-28 |
 
 ### 章節完成度
 
@@ -147,6 +147,7 @@ R：Read（可讀取）　C：Create（可新增）　E：Edit（可編輯）　
 - 開放其他系統串接與第三方整合：這期以展示平台能力為主
 - 手機原生 App：平台是網頁應用，行動裝置用瀏覽器操作
 - 說明按鈕（平台說明入口）：最新的 prototype 沒有這個入口，這期不做；下一期依 SUS 問卷是否反映需要說明入口再決定
+- <mark>AI 小幫手（以自然語言詢問並跳轉到相關功能頁）：列為未來工作，下一期與說明入口一起依 SUS 問卷結果再決定；它能讀到的資料與標記員相同，不得接觸正確答案</mark><sup>[#816](https://github.com/label-suite/label-suite/issues/816)</sup>
 
 ### 假設與限制
 
@@ -259,7 +260,7 @@ import PrdSystemContext from '@notes/components/prd-system-context'
 | :ref[系統管理員]{id="term.system-admin"} | 人 | 管理平台帳號、系統角色與角色權限；包含部署時建立的 :ref[Seeder 管理員]{id="term.seeder-admin"} |
 | 部署者 | 人，不是系統角色 | 部署平台、建立 Seeder 管理員、直接匯入批次資料；Resend 未設定時，從伺服器 log 取得設定密碼連結轉給使用者 |
 | Google（OIDC） | 外部系統，可選 | 登入頁的 Google SSO；`GOOGLE_CLIENT_ID` 沒設定時按鈕退回 no-op，Email 與密碼登入照常可用 |
-| Resend | 外部系統，可選 | 寄出註冊驗證信、忘記密碼信、設定密碼信與任務邀請信（專案負責人在任務的成員管理以 Email 邀請成員，見[規格 03-03](./03-task-management/03-task-detail.mdx#成員管理)）；沒有設定 key 時，設定密碼連結改印在伺服器 log，由部署者轉給使用者，並且關閉自行註冊（驗證信寄不出去，訪客也沒有人能轉交連結），這種部署只能由系統管理員邀請帳號<mark>；也不開放自行換 Email（驗證信寄不出去），個人設定的「變更」不可點，要換請系統管理員改</mark><sup>[#704](https://github.com/label-suite/label-suite/issues/704)</sup> |
+| Resend | 外部系統，可選 | 寄出註冊驗證信、忘記密碼信、設定密碼信與任務邀請信（專案負責人在任務的成員管理以 Email 邀請成員，見[規格 03-03](./03-task-management/03-task-detail.mdx#成員管理)）；沒有設定 key 時，設定密碼連結改印在伺服器 log，由部署者轉給使用者，並且關閉自行註冊（驗證信寄不出去，訪客也沒有人能轉交連結），這種部署只能由系統管理員邀請帳號；也不開放自行換 Email（驗證信寄不出去），個人設定的「變更」不可點，要換請系統管理員改 |
 
 - 範圍外的「開放其他系統串接與第三方整合」不在圖上：這期除了上面兩個可選整合，沒有其他外部系統
 - 平台內部的元件（前端、API、背景工作、資料庫）屬於 C4 第二層，見 [技術架構](../development/architecture.mdx)
