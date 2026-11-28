@@ -140,7 +140,20 @@ describe("devCommands", () => {
     assert.equal(backend.cwd, join(ROOT, "backend"));
     assert.deepEqual(
       [backend.command, ...backend.args],
-      ["uv", "run", "uvicorn", "app.main:create_app", "--factory", "--reload", "--port", "8123"],
+      [
+        "uv",
+        "run",
+        "uvicorn",
+        "app.main:create_app",
+        "--factory",
+        "--reload",
+        "--reload-dir",
+        "app",
+        "--timeout-graceful-shutdown",
+        "5",
+        "--port",
+        "8123",
+      ],
     );
     assert.equal(frontend.name, "frontend");
     assert.equal(frontend.cwd, ROOT);

@@ -55,7 +55,22 @@ export function devCommands(env, root = ROOT) {
     {
       name: "backend",
       command: "uv",
-      args: ["run", "uvicorn", "app.main:create_app", "--factory", "--reload", "--port", port],
+      args: [
+        "run",
+        "uvicorn",
+        "app.main:create_app",
+        "--factory",
+        "--reload",
+        // Watch only the source tree: the default is the whole cwd, which holds .venv, and on
+        // Windows that makes WatchFiles slow to notice a save (issue #805).
+        "--reload-dir",
+        "app",
+        // Bound the old worker's shutdown so one open connection cannot hold up a reload.
+        "--timeout-graceful-shutdown",
+        "5",
+        "--port",
+        port,
+      ],
       cwd: join(root, "backend"),
     },
     { name: "frontend", command: "pnpm", args: ["--filter", "frontend", "dev"], cwd: root },
