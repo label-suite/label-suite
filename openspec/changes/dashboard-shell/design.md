@@ -121,7 +121,7 @@ type TaskRoleSourceState =
 | 元件 | 展示頁的 Metric、Skeleton 兩種動畫與完整性測試；`tokens-usage.test.ts` 擋 `--data-`                                                                                          | 既有的 `renderGallery()`                                                                                                                                                                                                                                                    |
 | E2E  | 兩種到得了的版面（平台成員、系統管理員）、頁首、卡片連結與點擊後不出現擋下說明、窄螢幕兩欄、側欄收合、無水平捲動、鍵盤、請求只有 `GET /api/v1/current-session`、角色色隨主題 | Playwright，`e2e/dashboard/dashboard.spec.ts` 改寫；帳號由 `e2e/shared/accounts.ts` 的 `createAccount` 建立                                                                                                                                                                 |
 
-依賴「你已登入」的既有測試要一起改：前端 `app/app-shell-layout.test.tsx`、`app/router.test.tsx`、`lib/i18n/locales.test.ts`；E2E `account/login.spec.ts`、`account/session-guard.spec.ts`、`app-shell/appearance.spec.ts`、`app-shell/sidebar.spec.ts`、`dashboard/dashboard.spec.ts`。
+依賴「你已登入」的既有測試要一起改：前端 `app/app-shell-layout.test.tsx`、`app/router.test.tsx`、`lib/i18n/locales.test.ts`；E2E `account/login.spec.ts`、`account/session-guard.spec.ts`、`app-shell/appearance.spec.ts`、`app-shell/sidebar.spec.ts`、`dashboard/dashboard.spec.ts`。群組 7 實作時另外發現兩支既有 E2E 要一起改：E2E `account/google-callback.spec.ts`（斷言已移除的 SignedInCard 身分行 `name（email）`，改為斷言儀表板一級標題「儀表板」）；E2E `system-health/dev-gallery.spec.ts`（因群組 6 新增 `#metric` 段落，展示頁 TOC 連結數由 11 改為 12）。
 
 ### D11 登入狀態對照把系統角色無效的 `200` 當成未登入（sa-7；ADR-001 D2）
 

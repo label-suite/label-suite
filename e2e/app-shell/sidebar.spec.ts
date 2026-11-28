@@ -297,11 +297,15 @@ test.describe("current location and blocking", () => {
     expect(new URL(page.url()).search).toBe("");
     const alert = page.getByRole("alert");
     await expect(alert).toHaveText(BLOCKED_ANNOTATION);
-    const card = await boxOf(page.getByRole("region", { name: "你已登入" }));
-    expect((await boxOf(alert)).y).toBeLessThan(card.y);
+    // After the header (title and subtitle), before the layout (dashboard-shell Q4).
+    const header = await boxOf(page.getByRole("region", { name: "儀表板", exact: true }));
+    const layout = await boxOf(page.getByRole("region", { name: "開始你的第一個工作流程" }));
+    const notice = await boxOf(alert);
+    expect(notice.y).toBeGreaterThanOrEqual(header.y + header.height);
+    expect(notice.y + notice.height).toBeLessThanOrEqual(layout.y);
 
     await page.reload();
-    await expect(page.getByRole("region", { name: "你已登入" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "開始你的第一個工作流程" })).toBeVisible();
     await expect(page.getByText(BLOCKED_ANNOTATION)).toHaveCount(0);
   });
 
@@ -385,7 +389,7 @@ test.describe("language and appearance", () => {
       ["Dashboard", "Task Management", "Annotation", "Dataset Analytics", "Profile"],
       "Main navigation",
     );
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("You're signed in");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Dashboard");
     await expect(page.getByRole("button", { name: /^Switch to (dark|light) mode$/ })).toBeVisible();
     await expect(page.getByRole("button", { name: "Keyboard shortcuts" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
@@ -417,7 +421,7 @@ test.describe("language and appearance", () => {
     await page.reload();
 
     await expect(navItems(page, "Main navigation").first()).toHaveText("Dashboard");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("You're signed in");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Dashboard");
     await context.close();
   });
 });
@@ -485,7 +489,9 @@ test.describe("signing out", () => {
     const apiOrigin = new URL((await signOut).url()).origin;
     await expect(page).toHaveURL(pathIs(LOGIN_PATH));
     await page.goBack();
-    await expect(page.getByRole("region", { name: "你已登入" })).toHaveCount(0);
+    await expect(page.getByRole("heading", { level: 1, name: "儀表板", exact: true })).toHaveCount(
+      0,
+    );
     const oldCookies = await playwright.request.newContext({ storageState: before });
     const response = await oldCookies.get(`${apiOrigin}${CURRENT}`);
     expect(response.status()).toBe(401);

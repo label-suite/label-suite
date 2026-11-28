@@ -1,10 +1,11 @@
 /**
- * The temporary landing page /dashboard/dashboard, drawn in the signed-in
- * shell: spec auth-guard 「暫時落點顯示目前登入者」, login-session 「從這一台登出」
- * (signing out from the sidebar),
- * frontend-i18n 「切換後的語言跨頁沿用」, and the browser-side checks of the
- * acceptance (requests, credentials, no token in the page). Real backend and
- * Vite dev server (login-auth-guard acceptance).
+ * The dashboard /dashboard/dashboard, drawn in the signed-in shell: what the
+ * existing suites need once the temporary landing page is gone (dashboard-shell
+ * tasks 7.2). Arrival is judged by the dashboard header. Spec login-session
+ * 「從這一台登出」 (signing out from the sidebar), frontend-i18n 「切換後的語言
+ * 跨頁沿用」, and the browser-side checks of the acceptance (requests,
+ * credentials, no token in the page). Real backend and Vite dev server
+ * (login-auth-guard acceptance).
  */
 import type { BrowserContext, Page, Request } from "@playwright/test";
 
@@ -35,26 +36,6 @@ async function currentStatus(context: BrowserContext, apiOrigin: string): Promis
   return response.status();
 }
 
-test("平台成員看到自己的身分 / 落點的瀏覽器標題", async ({ page }) => {
-  const account = createAccount({ name: "王小明" });
-  await signIn(page, account);
-  const card = page.getByRole("region", { name: "你已登入" });
-  await expect(card.getByRole("heading", { level: 1 })).toHaveText("你已登入");
-  await expect(card.getByText(`王小明（${account.email}）`)).toBeVisible();
-  await expect(card.getByText("平台成員", { exact: true })).toBeVisible();
-  await expect(card.getByText("儀表板還在建置中，完成後登入會直接帶你過去。")).toBeVisible();
-  await expect(card.getByRole("button", { name: "登出" })).toHaveCount(0);
-  await expect(page.getByRole("navigation", { name: "主導覽" })).toBeVisible();
-  await expect(page.getByRole("banner").getByRole("button", { name: "登出" })).toBeVisible();
-  await expect(page).toHaveTitle("Label Suite — 你已登入");
-});
-
-test("系統管理員看到系統管理員", async ({ page }) => {
-  await signIn(page, createAccount({ name: "管理員", role: "super_admin" }));
-  await expect(page.getByText("系統管理員", { exact: true })).toBeVisible();
-  await expect(page.getByText("平台成員", { exact: true })).toHaveCount(0);
-});
-
 test("切換後的語言跨頁沿用", async ({ page }) => {
   const account = createAccount();
   await page.goto(LOGIN_PATH);
@@ -67,10 +48,11 @@ test("切換後的語言跨頁沿用", async ({ page }) => {
   await page.getByRole("button", { name: "Sign In", exact: true }).click();
   await expect(page).toHaveURL(pathIs(LANDING_PATH));
   expect((await query).headers()["accept-language"]).toBe("en");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("You're signed in");
-  await expect(page.getByText("Platform Member", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Dashboard", exact: true }),
+  ).toBeVisible();
   await expect(page.getByRole("banner").getByRole("button", { name: "Sign out" })).toBeVisible();
-  await expect(page).toHaveTitle("Label Suite — Signed In");
+  await expect(page).toHaveTitle("Label Suite — Dashboard");
 });
 
 test("從這一台登出只影響這一台 / 登出不影響其他裝置", async ({ browser, page }) => {
@@ -105,7 +87,7 @@ test("從這一台登出只影響這一台 / 登出不影響其他裝置", async
   expect(await currentStatus(page.context(), apiOrigin)).toBe(401);
   expect(await currentStatus(deviceB, apiOrigin)).toBe(200);
   await pageB.reload();
-  await expect(pageB.getByRole("heading", { name: "你已登入" })).toBeVisible();
+  await expect(pageB.getByRole("heading", { level: 1, name: "儀表板", exact: true })).toBeVisible();
   const rows = sessionsOf(account.email);
   expect(rows.filter((row) => row.loggedOutAt !== null)).toHaveLength(1);
   expect(rows.filter((row) => row.revokedAt === null)).toHaveLength(1);

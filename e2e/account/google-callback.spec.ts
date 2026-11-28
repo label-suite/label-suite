@@ -122,7 +122,7 @@ test("Google 登入成功後前往落點，沒有任何連結通知 (completion 
   });
   await page.goto(`${CALLBACK}?code=c1&state=s1`);
   await expect(page).toHaveURL(pathIs(LANDING_PATH));
-  await expect(page.getByText(`${account.name}（${account.email}）`)).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "儀表板", exact: true })).toBeVisible();
   await expect(page.getByRole("alert")).toHaveCount(0);
   await expect(page.getByText(/連結|link/i)).toHaveCount(0);
   expect(completions).toBeGreaterThanOrEqual(1);

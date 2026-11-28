@@ -117,15 +117,6 @@ describe("auth locale text", () => {
       "平台暫時沒有回應，請稍後再試。",
       "The platform is not responding. Please try again later.",
     ],
-    ["dashboard.title", "你已登入", "You're signed in"],
-    [
-      "dashboard.description",
-      "儀表板還在建置中，完成後登入會直接帶你過去。",
-      "The dashboard is still being built. Once it's ready, signing in will take you straight there.",
-    ],
-    ["dashboard.pageName", "你已登入", "Signed In"],
-    ["dashboard.role.user", "平台成員", "Platform Member"],
-    ["dashboard.role.super_admin", "系統管理員", "System Admin"],
   ])("has the approved text for %s (design D7, D12)", (key, zhTW, en) => {
     expect(text("zh-TW", key)).toBe(zhTW);
     expect(text("en", key)).toBe(en);
@@ -230,6 +221,16 @@ describe("appShell and common locale text", () => {
       `Sys${SHY}tem Admin${SHY}is${SHY}tra${SHY}tion`,
     );
     expect(text("en", "appShell", "navMobile.profile")).toBe("Profile");
+  });
+
+  it("儀表板的語言檔啟動時就在: auth no longer keeps the temporary landing page (dashboard-shell D8)", () => {
+    for (const language of LANGUAGES) {
+      expect(text(language, "auth", "dashboard")).toBeUndefined();
+      const all = JSON.stringify(files[`./locales/${language}/auth.json`]);
+      expect(all).not.toContain("你已登入");
+      expect(all).not.toContain("儀表板還在建置中");
+      expect(all).not.toContain("You're signed in");
+    }
   });
 
   it("no longer keeps the shared components' text under auth (design D10)", () => {

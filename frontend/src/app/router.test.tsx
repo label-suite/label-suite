@@ -104,8 +104,9 @@ describe("the guard while the session is being checked", () => {
       expect(countOf(`GET ${CURRENT_SESSION_URL}`)).toBe(1);
     });
 
-    expect(screen.queryByText("你已登入")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "儀表板" })).not.toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "登入" })).not.toBeInTheDocument();
+    expect(document.body).not.toHaveTextContent(SPEC_MEMBER.name);
     expect(document.body).not.toHaveTextContent(SPEC_MEMBER.email);
   });
 });
@@ -180,7 +181,7 @@ describe("signed-out visitors", () => {
     await user.click(screen.getByRole("button", { name: "登入" }));
 
     await expectPath(current, "/dashboard/dashboard");
-    expect(await screen.findByRole("heading", { name: "你已登入" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "儀表板" })).toBeInTheDocument();
   });
 });
 
@@ -195,7 +196,7 @@ describe("signed-in visitors", () => {
     const current = openAt("/account/login");
 
     await expectPath(current, "/dashboard/dashboard");
-    expect(await screen.findByRole("heading", { name: "你已登入" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "儀表板" })).toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "登入" })).not.toBeInTheDocument();
     expect(window.history.length).toBe(before);
     expect(countOf(`GET ${CURRENT_SESSION_URL}`)).toBe(1);
@@ -211,7 +212,9 @@ describe("signed-in visitors", () => {
     const current = openAt("/");
 
     await expectPath(current, "/dashboard/dashboard");
-    expect(await screen.findByText("王小明（user@example.com）")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("region", { name: "開始你的第一個工作流程" }),
+    ).toBeInTheDocument();
   });
 });
 
@@ -391,13 +394,18 @@ describe("browser titles", () => {
     });
   });
 
-  it("names the landing page", async () => {
+  it("儀表板的瀏覽器標題: names the dashboard and follows the language", async () => {
     server.use(signedInHandler(SPEC_MEMBER));
+    const user = userEvent.setup();
 
     openAt("/dashboard/dashboard");
 
     await waitFor(() => {
-      expect(document.title).toBe("Label Suite — 你已登入");
+      expect(document.title).toBe("Label Suite — 儀表板");
+    });
+    await user.click(await screen.findByRole("button", { name: /ZH/ }));
+    await waitFor(() => {
+      expect(document.title).toBe("Label Suite — Dashboard");
     });
   });
 });

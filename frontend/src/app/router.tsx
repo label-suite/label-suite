@@ -2,7 +2,7 @@
  * The app router (frontend-skeleton design D6; login-auth-guard ui-design
  * §頁面與路由, §元件樹 › 守門).
  *
- * The sign-in page, the Google callback, the temporary landing page and `/`
+ * The sign-in page, the Google callback, the dashboard and `/`
  * exist in every build and go through the page guards; the signed-in pages
  * are drawn inside the app shell (sidebar-nav D1, D4); any other path is
  * replaced by `/`, which redirects by session (U7, until 07-03's not-found
@@ -22,7 +22,7 @@ import {
   RootRedirect,
 } from "@/features/auth";
 import { LoginPage } from "@/pages/account-login";
-import { DashboardPlaceholderPage } from "@/pages/dashboard-placeholder";
+import { DashboardPage } from "@/pages/dashboard";
 import { GoogleCallbackPage } from "@/pages/google-callback";
 
 import { AppRoot } from "./app-root";
@@ -69,7 +69,7 @@ const appRoutes: RouteObject[] = [
         children: [
           {
             path: LANDING_PATH,
-            element: <DashboardPlaceholderPage />,
+            element: <DashboardPage />,
             handle: { navKey: "dashboard" },
           },
         ],
