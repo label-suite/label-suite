@@ -29,7 +29,7 @@ Dependabot PRs are ordinary pull requests with no shortcut: review them like any
 - **Not auto-merged.** Nothing merges them without a person or the main session doing it deliberately.
 - **Independent review.** A reviewer who did not write the change checks it, and every CI check must pass first.
 - **Merge commit only**, like every other PR.
-- **Commit messages.** The `commit-messages` job skips only commits authored by `dependabot[bot]` (exact noreply email, see `scripts/check-pr-commits.sh`); Dependabot cannot write the `(#N)` suffix or the bold-verb body. Its config in `.github/dependabot.yml` sets the `build(deps)` or `chore(deps)` prefix.
+- **Commit messages.** The `commit-messages` job skips a commit only when the PR was opened by `dependabot[bot]` and the commit author email is Dependabot's exact noreply address (see `scripts/check-pr-commits.sh`); Dependabot cannot write the `(#N)` suffix or the bold-verb body. Its config in `.github/dependabot.yml` sets the `build(deps)` or `chore(deps)` prefix.
 - **Version fields stay put.** Dependabot edits dependency declarations and lockfiles only, never the project versions listed under [Releases](#releases).
 
 ## Releases
