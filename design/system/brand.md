@@ -104,7 +104,7 @@ banner 與 social preview 上的產品副標是「NLP Annotation Portal」（`de
 
 ### 按鈕用語
 
-- **「送出」＋受詞，不用「提交」。**維護者裁定（2026-11-18）：標記員「送出標記」、審核員「送出審核」（`annotation-workspace.config.js:62` 已是這個寫法）、仲裁「送出仲裁」（`:86`）；狀態詞「已提交」改「已送出」，「提交時間」改「送出時間」。現況與這條不符的行數列在 [§與 prototype 的落差](#與-prototype-的落差)。
+- **「送出」＋受詞，不用「提交」。**維護者裁定（2026-11-18）：標記員「送出標記」、審核員「送出審核」（`annotation-workspace.config.js:62` 已是這個寫法）、仲裁「送出仲裁」（`:86`）；狀態詞「已提交」改「已送出」，「提交時間」改「送出時間」。現況與這條不符的行數列在 [§與 prototype 的落差](#與-prototype-的落差)。規格書（`docs/specs/`）把這個動作寫成「提交」時是業務用詞；畫面文案仍一律寫「送出」，實作照本條，不照規格書的字面。
 - **帳號流程用「動詞＋受詞」說出結果，不寫「確定」這種空動詞。**登入、建立帳號、寄送重設連結、更新密碼、重新寄送驗證信、前往登入（`register.html:572`、`forgot-password.html:441`、`reset-password.html:605`、`profile.html:1224`）。英文對應：Sign In、Create Account、Send Reset Link、Update Password（Title Case，無句點）。
 - **表單通用鈕是「儲存」與「取消」**（`user-management.html:678`–`:687`、`task-new.html:640`–`:641`）。標記員另有「儲存草稿」（`annotation-workspace.config.js:22`）。
 - **送出鈕旁說明後果。**審核送出旁會寫「送出後進入爭議池，待仲裁定案」或「送出後即定稿，成為最終答案」（`annotation-workspace.config.js:73`–`:74`，顯示在 `#wsReviewSubmitConsequence`，`annotation-workspace.html:1276`）。
