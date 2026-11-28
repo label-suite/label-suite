@@ -3,9 +3,11 @@
 ``ResendTransport.send`` makes one synchronous ``POST /emails`` and sorts the outcome:
 
 - accepted (``2xx``): returns the provider's message id;
-- worth a retry: a connection error, a timeout, ``429`` or ``5xx`` raise
-  ``TransientMailError``;
-- refused for good: any other status raises ``PermanentMailError``.
+- worth a retry: a connection error, a timeout, ``429``, ``5xx`` or a ``409`` whose
+  error name is ``concurrent_idempotent_requests`` (a request with the same key is
+  still in progress) raise ``TransientMailError``;
+- refused for good: any other status raises ``PermanentMailError``, including the
+  ``409`` named ``invalid_idempotent_request`` (the same key with a different payload).
 
 Every request carries ``Idempotency-Key: <mail_id>``, so the provider sends a retried
 mail once; Resend keeps a key for 24 hours, longer than the whole retry schedule. Errors
@@ -31,7 +33,9 @@ RESEND_EMAILS_URL = "https://api.resend.com/emails"
 TIMEOUT_SECONDS = 10.0
 """The connect, read, write and pool timeout of one request."""
 
+_CONFLICT = 409
 _TOO_MANY_REQUESTS = 429
+_CONCURRENT_IDEMPOTENT_REQUESTS = "concurrent_idempotent_requests"
 _SERVER_ERROR = 500
 _SAFE_PROVIDER_ID = re.compile(r"[A-Za-z0-9._-]{1,128}")
 _NO_PROVIDER_ID = "-"
@@ -91,7 +95,8 @@ class ResendTransport:
 
         Raises:
             TransientMailError: On a connection error (``connect_error``), a timeout
-                (``timeout``), ``429`` or ``5xx`` (``status_<code>``).
+                (``timeout``), ``429``, ``5xx`` or a ``409`` named
+                ``concurrent_idempotent_requests`` (``status_<code>``).
             PermanentMailError: On any other status outside ``2xx``.
         """
         try:
@@ -110,7 +115,7 @@ class ResendTransport:
             # Connection errors and every other failure to get an answer.
             raise TransientMailError(reason="connect_error") from None
         status = response.status_code
-        if status == _TOO_MANY_REQUESTS or status >= _SERVER_ERROR:
+        if status == _TOO_MANY_REQUESTS or status >= _SERVER_ERROR or _is_concurrent(response):
             raise TransientMailError(reason=f"status_{status}") from None
         if not response.is_success:
             raise PermanentMailError(provider_status=status) from None
@@ -126,6 +131,24 @@ class ResendTransport:
         if message.html is not None:
             body["html"] = message.html
         return body
+
+
+def _error_name(response: httpx.Response) -> str | None:
+    """Return the ``name`` of a Resend error answer, or ``None`` when it has none."""
+    try:
+        payload = response.json()
+    except ValueError:
+        return None
+    name = payload.get("name") if isinstance(payload, dict) else None
+    return name if isinstance(name, str) else None
+
+
+def _is_concurrent(response: httpx.Response) -> bool:
+    """Return whether ``response`` says a request with the same key is still in progress."""
+    return (
+        response.status_code == _CONFLICT
+        and _error_name(response) == _CONCURRENT_IDEMPOTENT_REQUESTS
+    )
 
 
 def _provider_id(response: httpx.Response) -> str:

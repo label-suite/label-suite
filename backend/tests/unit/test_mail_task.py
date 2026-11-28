@@ -121,16 +121,24 @@ def test_a_temporary_failure_is_retried_after_60_seconds_with_the_same_key(
     assert "attempt=2" in sent
 
 
+CONCURRENT_409 = (409, '{"statusCode": 409, "name": "concurrent_idempotent_requests"}')
+
+
 @pytest.mark.parametrize(
     ("answer", "reason"),
-    [(httpx.ConnectError, "connect_error"), (httpx.ReadTimeout, "timeout"), (429, "status_429")],
+    [
+        (httpx.ConnectError, "connect_error"),
+        (httpx.ReadTimeout, "timeout"),
+        (429, "status_429"),
+        (CONCURRENT_409, "status_409"),
+    ],
 )
 def test_connection_errors_timeouts_and_429_are_retried(
     tmp_path: Path,
     resend: FakeResend,
     retry_delays: list[float],
     caplog: pytest.LogCaptureFixture,
-    answer: int | type[httpx.TransportError],
+    answer: int | type[httpx.TransportError] | tuple[int, str],
     reason: str,
 ) -> None:
     caplog.set_level(logging.INFO)
@@ -161,6 +169,23 @@ def test_retries_wait_60_180_and_540_seconds_then_give_up(
     assert "attempts=4" in final.getMessage()
     assert "reason=retries_exhausted" in final.getMessage()
     assert "CANARY-link" not in caplog.text
+
+
+def test_an_invalid_idempotent_request_409_is_not_retried(
+    tmp_path: Path,
+    resend: FakeResend,
+    retry_delays: list[float],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.INFO)
+    resend.script((409, '{"statusCode": 409, "name": "invalid_idempotent_request"}'))
+
+    _run(create_celery_app(_settings(tmp_path)), str(uuid.uuid4()))
+
+    assert retry_delays == []
+    [line] = _mail_lines(caplog)
+    assert "outcome=failed" in line.getMessage()
+    assert "reason=status_409" in line.getMessage()
 
 
 @pytest.mark.parametrize("status", [401, 403, 422])

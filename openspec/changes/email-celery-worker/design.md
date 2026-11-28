@@ -56,7 +56,7 @@
 
 - `MailService.enqueue(message) -> MailDispatch`：`async`，回 `QUEUED` 或 `NOT_CONFIGURED`；排不進丟 `MailQueueUnavailableError`（eager 時的處理見 D4）
 - `MailService.send_now(message) -> MailOutcome`：`async`，以 `asyncio.to_thread` 執行 `ResendTransport.send`（與 `core/passwords.py` 同一種寫法），回 `SENT`／`NOT_CONFIGURED`／`FAILED`；`TransientMailError` 與 `PermanentMailError` 都轉成 `FAILED`，不重試
-- `ResendTransport` 是同步 `httpx.Client`、逾時 10 秒、`Authorization: Bearer`、`Idempotency-Key: <mail_id>`；把結果分類成成功（回訊息 id）、`TransientMailError`（連線錯誤、逾時、`429`、`5xx`）、`PermanentMailError`（其他 `4xx`），丟出時 `from None`（技術預設「重試政策」、clarification Q7）
+- `ResendTransport` 是同步 `httpx.Client`、逾時 10 秒、`Authorization: Bearer`、`Idempotency-Key: <mail_id>`；把結果分類成成功（回訊息 id）、`TransientMailError`（連線錯誤、逾時、`429`、`5xx`、錯誤種類為 `concurrent_idempotent_requests` 的 `409`）、`PermanentMailError`（其他 `4xx`，含錯誤種類為 `invalid_idempotent_request` 的 `409`），丟出時 `from None`（技術預設「重試政策」、clarification Q7）
 
 當場寄放 thread 的理由與 `core/passwords.py` 把 argon2 放進 thread 相同：`httpx.Client` 是同步呼叫，直接在 `async def` 裡跑會卡住 event loop。兩條路徑共用 transport，失敗分類只寫一次。
 

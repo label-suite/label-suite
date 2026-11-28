@@ -61,6 +61,18 @@ describe("touchesCompose", () => {
     }
   });
 
+  // email-celery-worker design D11: the compose job starts both tiers from
+  // .env.example, so the mail settings in it decide whether they can start.
+  test(".env.example alone: true", () => {
+    assert.equal(touchesCompose([".env.example"]), true);
+  });
+
+  test("look-alike env files do not match", () => {
+    for (const path of [".env", "docs/.env.example", ".env.example.bak"]) {
+      assert.equal(touchesCompose([path]), false, path);
+    }
+  });
+
   test("another e2e journey alone: false", () => {
     assert.equal(touchesCompose(["e2e/system-health/dev-health.spec.ts"]), false);
   });

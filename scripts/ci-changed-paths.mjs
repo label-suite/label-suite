@@ -43,6 +43,8 @@ const GLOBAL_PREFIXES = [".github/"];
 const COMPOSE_EXACT = new Set([
   "docker-compose.yml",
   "docker-compose.prod.yml",
+  // The compose job starts both tiers from it (email-celery-worker design D11).
+  ".env.example",
   "frontend/nginx.conf",
   "scripts/check-security-headers.sh",
   "e2e/playwright.config.ts",

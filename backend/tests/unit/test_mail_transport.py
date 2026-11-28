@@ -118,3 +118,36 @@ def test_an_accepted_answer_without_json_still_counts_as_sent(resend: FakeResend
 
 def test_the_api_key_stays_out_of_the_transport_repr() -> None:
     assert "re_test-key" not in repr(_transport())
+
+
+# --- the two 409 answers (clarification 技術預設, 2026-11-28) -----------------------------
+
+
+def test_a_concurrent_request_with_the_same_key_is_transient(resend: FakeResend) -> None:
+    resend.script(
+        (409, '{"statusCode": 409, "name": "concurrent_idempotent_requests", "message": "x"}')
+    )
+
+    with pytest.raises(TransientMailError) as excinfo:
+        _transport().send(_message(), MAIL_ID)
+
+    assert excinfo.value.reason == "status_409"
+
+
+def test_the_same_key_with_a_different_payload_is_permanent(resend: FakeResend) -> None:
+    resend.script(
+        (409, '{"statusCode": 409, "name": "invalid_idempotent_request", "message": "x"}')
+    )
+
+    with pytest.raises(PermanentMailError) as excinfo:
+        _transport().send(_message(), MAIL_ID)
+
+    assert excinfo.value.provider_status == 409
+
+
+@pytest.mark.parametrize("body", ["not json", '["concurrent_idempotent_requests"]', "{}"])
+def test_a_409_without_the_concurrent_name_is_permanent(resend: FakeResend, body: str) -> None:
+    resend.script((409, body))
+
+    with pytest.raises(PermanentMailError):
+        _transport().send(_message(), MAIL_ID)

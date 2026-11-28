@@ -74,9 +74,9 @@
 
 ### Requirement: 暫時性失敗以有界次數重試
 
-背景工作遇到連線錯誤、逾時、`429` 或 `5xx` 時 SHALL 視為暫時性失敗並重試，第 1、2、3 次重試分別在 60、180、540 秒後；最多重試 3 次，總共最多嘗試 4 次。每次重試寫一行結果為 `retry` 的紀錄。
+背景工作遇到連線錯誤、逾時、`429`、`5xx`，或錯誤種類為 `concurrent_idempotent_requests` 的 `409` 時 SHALL 視為暫時性失敗並重試，第 1、2、3 次重試分別在 60、180、540 秒後；最多重試 3 次，總共最多嘗試 4 次。每次重試寫一行結果為 `retry` 的紀錄。
 
-來源：backend-agent-rules B9；clarification 技術預設「重試政策與重複寄送」。
+來源：backend-agent-rules B9；clarification 技術預設「重試政策與重複寄送」（2026-11-28 依 Resend 文件加入 `409 concurrent_idempotent_requests` 例外）。
 
 #### Scenario: 暫時性失敗後重試寄出
 
@@ -93,6 +93,12 @@
 
 - **WHEN** 替身對同一封信每次都回 `503`
 - **THEN** 三次重試排定的延遲依序為 60、180、540 秒
+
+#### Scenario: 同鍵請求仍在處理的 409 視為暫時性失敗並重試
+
+- **WHEN** 替身第一次回 `409`，錯誤種類為 `concurrent_idempotent_requests`，第二次回 `200`
+- **THEN** 第一次失敗後排定 60 秒後重試，寫一行 `outcome=retry`、`attempt=1`、`reason=status_409` 的紀錄
+- **AND** 第二次寄出成功，寫一行 `outcome=sent`、`attempt=2` 的紀錄
 
 ### Requirement: 同一封信的每次嘗試帶同一個冪等鍵
 
@@ -112,7 +118,7 @@
 
 ### Requirement: 永久性失敗與重試用盡記為最終失敗
 
-寄信服務回 `429` 以外的 `4xx`、重試用盡，或背景工作端判斷沒有設定寄信服務時，背景工作 SHALL 記為最終失敗：不再重試，只寫一行結果為 `failed` 的紀錄，`reason` 分別為 `status_<狀態碼>`、`retries_exhausted`、`not_configured_in_worker`，且 MUST NOT 印出連結。寄信工作不論成敗都 MUST NOT 開啟資料庫連線、MUST NOT 存入工作結果儲存區；這是 B9「結果寫進資料庫」的例外。
+寄信服務回 `4xx`（`429`，以及錯誤種類為 `concurrent_idempotent_requests` 的 `409` 除外；錯誤種類為 `invalid_idempotent_request` 的 `409` 屬於最終失敗）、重試用盡，或背景工作端判斷沒有設定寄信服務時，背景工作 SHALL 記為最終失敗：不再重試，只寫一行結果為 `failed` 的紀錄，`reason` 分別為 `status_<狀態碼>`、`retries_exhausted`、`not_configured_in_worker`，且 MUST NOT 印出連結。寄信工作不論成敗都 MUST NOT 開啟資料庫連線、MUST NOT 存入工作結果儲存區；這是 B9「結果寫進資料庫」的例外。
 
 來源：backend-agent-rules B9；ADR-008 D3、D4；security-agent-rules S9；clarification Q2、Q3。
 
@@ -126,6 +132,11 @@
 
 - **WHEN** 替身分別以 `401`、`403`、`422` 回應第一次寄信請求
 - **THEN** 三種情況都不排定重試，各寫一行 `outcome=failed`、`attempts=1`、`reason` 依序為 `status_401`、`status_403`、`status_422` 的紀錄
+
+#### Scenario: 無效的冪等請求 409 記為最終失敗
+
+- **WHEN** 替身回應第一次寄信請求的 `409`，錯誤種類為 `invalid_idempotent_request`
+- **THEN** 不排定重試，寫一行 `outcome=failed`、`attempts=1`、`reason=status_409` 的紀錄
 
 #### Scenario: 背景工作端沒有設定寄信服務時記為最終失敗
 

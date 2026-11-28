@@ -889,7 +889,7 @@ cd backend && uv run python -m app.scripts.export_openapi
 | :--- | :--- |
 | `app/mail/service.py` | `MailService` 是消費者唯一用的門面。`enqueue` 排入 `default` 佇列，回 `QUEUED` 或 `NOT_CONFIGURED`；`send_now` 在 worker thread 呼叫寄信服務一次，回 `SENT`、`FAILED` 或 `NOT_CONFIGURED`，不重試、不經佇列。沒有設定寄信服務時兩者都不產生信件識別碼、不碰佇列與寄信服務 |
 | `app/mail/message.py` | `MailMessage` 是一封組好的信，建構時驗證：收件者經 `normalize_email`、不超過 254 字元、不得空白或換行；主旨 1–200 字元、不含 CR 與 LF；純文字內文不得為空；`kind` 符合 `^[a-z][a-z0-9_]{0,31}$`，只用來寫紀錄。錯誤只點名欄位、不帶值。`to_task_payload`、`from_task_payload` 轉成 task 參數並在 worker 端重新驗證 |
-| `app/mail/transport.py` | `ResendTransport` 是唯一碰寄信服務的地方：同步 `httpx.Client`、逾時 10 秒，`POST https://api.resend.com/emails`，帶 `Authorization: Bearer` 與 `Idempotency-Key: <mailId>`。連線錯誤、逾時、`429`、`5xx` 丟 `TransientMailError`，其他非 `2xx` 丟 `PermanentMailError`，一律 `from None`、不帶寄信服務的回應本文 |
+| `app/mail/transport.py` | `ResendTransport` 是唯一碰寄信服務的地方：同步 `httpx.Client`、逾時 10 秒，`POST https://api.resend.com/emails`，帶 `Authorization: Bearer` 與 `Idempotency-Key: <mailId>`。連線錯誤、逾時、`429`、`5xx` 與錯誤名稱為 `concurrent_idempotent_requests` 的 `409` 丟 `TransientMailError`，其他非 `2xx` 丟 `PermanentMailError`，一律 `from None`、不帶寄信服務的回應本文 |
 | `app/mail/tasks.py` | `send_mail(mail_id, payload)`：`ignore_result=True`、不回傳值、不開資料庫連線；在 worker 端再判斷一次 `mail_configured()`；暫時性失敗依 60、180、540 秒呼叫 `self.retry`，最多重試三次 |
 | `app/mail/errors.py` | `MailDeliveryError` 與它的子類 `TransientMailError`（`reason`）、`PermanentMailError`（`provider_status`、`reason`）、`MailQueueUnavailableError`；全都沒有文字，也不繼承 `AppError`：消費者自己決定要回什麼 |
 | `app/mail/unsent_link.py` | `record_unsent_link(kind, link)` 寫進專用 logger `app.mail.unsent_link`，見 [§log 安全規則](#log-安全規則) |
@@ -1015,7 +1015,7 @@ classDiagram
 | eager | `task_always_eager` 跟著 `CELERY_TASK_ALWAYS_EAGER`，`task_eager_propagates=False`；eager 時 `enqueue` 以 `asyncio.to_thread` 執行 `apply_async`，task 在 API 行程內同步跑、不連 Redis，重試也立刻同步重跑（看不到退避）。只有 Lite 層能開 |
 | log 接線 | `worker_hijack_root_logger=False`；`setup_logging` signal 接一個呼叫 `configure_logging(settings)` 的 receiver（以 `dispatch_uid` 只留最後一次建的那個） |
 
-重試的冪等靠寄信服務的冪等鍵：同一封信的每次嘗試都帶同一個 `Idempotency-Key`（信件識別碼），Resend 對同一個鍵 24 小時內只寄一次、重送時回原本的回應，比整段重試（約 13 分鐘）長得多。同一個鍵配不同內容、或前一個同鍵請求還在處理時，Resend 回 `409`，`ResendTransport` 把它當永久失敗。
+重試的冪等靠寄信服務的冪等鍵：同一封信的每次嘗試都帶同一個 `Idempotency-Key`（信件識別碼），Resend 對同一個鍵 24 小時內只寄一次、重送時回原本的回應，比整段重試（約 13 分鐘）長得多。前一個同鍵請求還在處理時，Resend 回 `409`、錯誤名稱 `concurrent_idempotent_requests`，`ResendTransport` 當成暫時性失敗重試；同一個鍵配不同內容時回 `409`、錯誤名稱 `invalid_idempotent_request`，當成永久失敗。
 
 #### 排入背景工作的信寄出成功
 
@@ -1053,7 +1053,7 @@ sequenceDiagram
   BR->>WK: 取出 send_mail（retries=n）
   WK->>TR: send(message, mail_id)（每次同一個 mail_id）
   TR->>RS: POST /emails（Idempotency-Key: mail_id）
-  alt 連線錯誤、逾時、429 或 5xx
+  alt 連線錯誤、逾時、429、5xx 或 concurrent_idempotent_requests 的 409
     RS--xTR: 失敗
     TR-->>WK: TransientMailError(reason) from None
     alt n < 3
@@ -1063,7 +1063,7 @@ sequenceDiagram
       WK->>WK: log ERROR outcome=failed attempts=4 reason=retries_exhausted
     end
   else 其他 4xx
-    RS--xTR: 401／403／409／422 …
+    RS--xTR: 401／403／422、invalid_idempotent_request 的 409 …
     TR-->>WK: PermanentMailError(provider_status) from None
     WK->>WK: log ERROR outcome=failed attempts=n+1 reason=status_<碼>，不重試
   end
@@ -1170,5 +1170,5 @@ worker 端的設定說沒有寄信服務時（API 與 worker 的設定不一致�
 | 2026-11-27 | 新增 `admin` 一節（兩張矩陣表、初始矩陣、讀矩陣，沒有端點）；模組一覽、預定模組歸屬、目錄、app factory、錯誤對照、檢查清單、測試輔助與已知限制跟著改（已落地並依實作校正；[§admin](#admin)） | 已知限制的「授權四步的第 3、4 步」縮成第 2 步的任務成員身分與第 4 步的業務條件 | [#755 的 clarification](https://github.com/label-suite/label-suite/issues/755) |
 | 2026-11-27 | 依實作校正 `admin` 一節與基礎建設：repository 讀版本列不帶條件、`cells_for` 不補缺列；檢查清單加上接 `task_membership_reader`；目錄與測試輔助加上 `tests/authz_probe.py`（直接加進 `probe_router`，不用 `include_router`）；已知限制寫明沒接 reader 時回 `500`（[§admin](#admin)、[§新增業務模組的檢查清單](#新增業務模組的檢查清單)、[§測試輔助](#測試輔助)、[§已知限制](#已知限制)） | 本文 2026-11-27 依設計寫成的 `admin` 一節與各節 | [#755](https://github.com/label-suite/label-suite/issues/755) |
 | 2026-11-28 | 新增背景工作與寄信：`app/mail/` 入口套件（`MailService` 的排入與當場寄、`MailMessage`、`ResendTransport`、`send_mail`、沒有文字的錯誤、專用 logger `app.mail.unsent_link`）、`app/core/celery_app.py`、`app/worker.py`；設定改成三層（`WorkerSettings`），新增 `REDIS_URL`、`MAIL_FROM`、`CELERY_TASK_ALWAYS_EAGER`，`mail_configured()` 改成金鑰與寄件人都設；`httpx`、`httpcore` 固定 `WARNING`；檢查清單、測試輔助與已知限制跟著改（已落地並依實作校正；[§背景工作與寄信](#背景工作與寄信)、[§設定](#設定)、[§log 安全規則](#log-安全規則)） | §log 安全規則末段「寄信失敗時把連結印在 log、logger 名稱留給寄信的 change 決定」；`RESEND_API_KEY` 只看有沒有設 | [#756](https://github.com/label-suite/label-suite/issues/756)；email-celery-worker clarification Q1、Q2、Q5、Q6、Q7、Q8 |
-| 2026-11-28 | Resend 的 `Idempotency-Key` 有效 24 小時（2026-11-28 查證 [Resend 文件](https://resend.com/docs/dashboard/emails/idempotency-keys)），長於整段重試，重試不會重寄；`409` 歸永久失敗（[§背景工作與寄信](#背景工作與寄信)） | — | [#756](https://github.com/label-suite/label-suite/issues/756) |
+| 2026-11-28 | Resend 的 `Idempotency-Key` 有效 24 小時（2026-11-28 查證 [Resend 文件](https://resend.com/docs/dashboard/emails/idempotency-keys)），長於整段重試，重試不會重寄；`409 concurrent_idempotent_requests`（同鍵請求還在處理）歸暫時性並重試，`409 invalid_idempotent_request`（同鍵不同內容）歸永久失敗（[§背景工作與寄信](#背景工作與寄信)） | — | [#756](https://github.com/label-suite/label-suite/issues/756) |
 | 2026-11-28 | 測試以 `ConnectionAttempts` 數 `kombu.Connection` 真正開連線的次數，不數建立的連線物件：Celery 5.7 的 eager `apply_async` 會建 producer 與連線物件，但不連線（[§測試輔助](#測試輔助)） | email-celery-worker design D8「數 `kombu.Connection` 的建立」 | [#756](https://github.com/label-suite/label-suite/issues/756) |
