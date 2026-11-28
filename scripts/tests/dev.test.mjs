@@ -15,6 +15,7 @@ import { afterEach, beforeEach, describe, test } from "node:test";
 import {
   descendantsOf,
   devCommands,
+  isReloadTrigger,
   loadDevEnv,
   parseProcessList,
   resolveSpawn,
@@ -135,7 +136,7 @@ for (const [signal, expected] of [
 
 describe("devCommands", () => {
   test("starts uvicorn with reload on BACKEND_PORT in backend/ and the frontend dev script", () => {
-    const [backend, frontend] = devCommands({ BACKEND_PORT: "8123" }, ROOT);
+    const [backend, frontend] = devCommands({ BACKEND_PORT: "8123" }, ROOT, "linux");
     assert.equal(backend.name, "backend");
     assert.equal(backend.cwd, join(ROOT, "backend"));
     assert.deepEqual(
@@ -161,7 +162,7 @@ describe("devCommands", () => {
   });
 
   test("BACKEND_PORT defaults to 8000", () => {
-    const [backend] = devCommands({}, ROOT);
+    const [backend] = devCommands({}, ROOT, "linux");
     assert.equal(backend.args.at(-1), "8000");
   });
 });
@@ -377,6 +378,254 @@ describe("supervise on win32 (injected platform and spawn)", () => {
     assert.equal(calls[0].options.detached, true);
     assert.equal(calls[1].command, "pnpm");
     for (const c of calls) c.child.emit("exit", 0, null);
+  });
+});
+
+describe("devCommands per platform", () => {
+  test("win32 starts the backend without --reload and names the directory to watch", () => {
+    const [backend] = devCommands({}, ROOT, "win32");
+    assert.ok(!backend.args.includes("--reload"));
+    assert.ok(!backend.args.includes("--reload-dir"));
+    assert.ok(backend.args.includes("--timeout-graceful-shutdown"));
+    assert.equal(backend.watch, join(ROOT, "backend", "app"));
+  });
+
+  test("POSIX keeps uvicorn --reload and has nothing for dev to watch", () => {
+    const [backend] = devCommands({}, ROOT, "linux");
+    assert.ok(backend.args.includes("--reload"));
+    assert.equal(backend.args[backend.args.indexOf("--reload-dir") + 1], "app");
+    assert.equal(backend.watch, undefined);
+  });
+});
+
+describe("isReloadTrigger", () => {
+  test("only .py files outside __pycache__, dotfiles and temp files", () => {
+    for (const ok of ["main.py", "core\\db.py", "modules/x/service.py"])
+      assert.equal(isReloadTrigger(ok), true, ok);
+    for (const no of [
+      "main.pyc",
+      "__pycache__/main.cpython-312.pyc",
+      "__pycache__\\x.py",
+      ".hidden.py",
+      ".git/x.py",
+      "~main.py",
+      "data.json",
+      null,
+      undefined,
+    ])
+      assert.equal(isReloadTrigger(no), false, String(no));
+  });
+});
+
+describe("supervise restarts the backend on Windows when backend/app changes", () => {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const commands = [
+    {
+      name: "backend",
+      command: "uv",
+      args: ["run", "uvicorn"],
+      cwd: ".",
+      watch: "/repo/backend/app",
+    },
+    { name: "frontend", command: "pnpm", args: ["dev"], cwd: "." },
+  ];
+
+  function setup(options = {}) {
+    const calls = [];
+    let nextPid = 100;
+    const spawnFn = (command, args, opts) => {
+      const child = new EventEmitter();
+      child.pid = options.noPid ? undefined : nextPid++; // no pid: POSIX never signals a real group
+      child.kill = () => {};
+      calls.push({ command, args, options: opts, child });
+      return child;
+    };
+    const watchers = [];
+    const watchFn = (dir, opts, listener) => {
+      const watcher = new EventEmitter();
+      watcher.dir = dir;
+      watcher.opts = opts;
+      watcher.listener = listener;
+      watcher.closed = false;
+      watcher.close = () => {
+        watcher.closed = true;
+      };
+      watchers.push(watcher);
+      return watcher;
+    };
+    const lines = [];
+    const done = supervise(options.commands ?? commands, {
+      stdout: { write: (text) => lines.push(text) },
+      env: {},
+      platform: options.platform ?? "win32",
+      spawnFn,
+      watchFn,
+      listProcesses: async () => [],
+      reloadDebounceMs: 20,
+      killTimeoutMs: 1000,
+    });
+    const spawned = (name) =>
+      calls.filter((c) => c.command === (name === "backend" ? "uv" : "cmd.exe"));
+    const killed = () => calls.filter((c) => c.command === "taskkill").map((c) => c.args[1]);
+    const exit = (child, code = 1) => {
+      child.exitCode = code;
+      child.emit("exit", code, null);
+    };
+    return { calls, watchers, lines, done, spawned, killed, exit };
+  }
+
+  test("a .py change taskkills the backend tree and starts it again, leaving the frontend alone", async () => {
+    const { calls, watchers, lines, done, spawned, killed, exit } = setup();
+    const [backend] = spawned("backend");
+    const [frontend] = spawned("frontend");
+    assert.equal(watchers.length, 1);
+    assert.equal(watchers[0].dir, "/repo/backend/app");
+    assert.equal(watchers[0].opts.recursive, true);
+
+    watchers[0].listener("change", "main.py");
+    await sleep(60);
+    assert.deepEqual(killed(), [String(backend.child.pid)]);
+    assert.ok(lines.some((l) => l.includes("backend/app changed; restarting backend")));
+    exit(backend.child, 1); // taskkill ended the old root
+    await sleep(20);
+
+    assert.equal(spawned("backend").length, 2);
+    const second = spawned("backend")[1];
+    assert.deepEqual(second.args, backend.args);
+    assert.equal(second.options.env, backend.options.env);
+    assert.ok(!killed().includes(String(frontend.child.pid)));
+
+    // The new backend is the one that counts from now on; the old exit was not "ended".
+    process.emit("SIGTERM", "SIGTERM");
+    exit(second.child, 1);
+    exit(frontend.child, 1);
+    assert.equal(await done, 143);
+    assert.equal(calls.filter((c) => c.command === "uv").length, 2);
+  });
+
+  test("a burst of saves is one restart", async () => {
+    const { watchers, done, spawned, killed, exit } = setup();
+    const [backend] = spawned("backend");
+    for (let i = 0; i < 5; i++) {
+      watchers[0].listener("change", `m${i}.py`);
+      await sleep(5);
+    }
+    await sleep(60);
+    assert.equal(killed().length, 1);
+    exit(backend.child);
+    await sleep(20);
+    assert.equal(spawned("backend").length, 2);
+    process.emit("SIGTERM", "SIGTERM");
+    for (const c of [...spawned("backend"), ...spawned("frontend")]) exit(c.child);
+    await done;
+  });
+
+  test("changes to non-.py files do nothing", async () => {
+    const { watchers, done, spawned, killed, exit } = setup();
+    for (const f of ["x.pyc", "__pycache__/x.cpython-312.pyc", ".x.py", "data.json", null])
+      watchers[0].listener("change", f);
+    await sleep(60);
+    assert.deepEqual(killed(), []);
+    assert.equal(spawned("backend").length, 1);
+    process.emit("SIGTERM", "SIGTERM");
+    for (const c of [...spawned("backend"), ...spawned("frontend")]) exit(c.child);
+    await done;
+  });
+
+  test("a change during a restart is a second restart after the first settles", async () => {
+    const { watchers, done, spawned, killed, exit } = setup();
+    watchers[0].listener("change", "a.py");
+    await sleep(60);
+    watchers[0].listener("change", "b.py");
+    await sleep(60);
+    assert.equal(killed().length, 1); // still waiting for the old root to end
+    exit(spawned("backend")[0].child);
+    await sleep(30);
+    assert.equal(spawned("backend").length, 2);
+    assert.equal(killed().length, 2); // the new backend is restarted too
+    exit(spawned("backend")[1].child);
+    await sleep(30);
+    assert.equal(spawned("backend").length, 3);
+    process.emit("SIGTERM", "SIGTERM");
+    for (const c of [...spawned("backend"), ...spawned("frontend")]) exit(c.child);
+    await done;
+  });
+
+  test("a signal while the old backend is stopping ends dev without respawning", async () => {
+    const { watchers, done, spawned, exit } = setup();
+    const [backend] = spawned("backend");
+    const [frontend] = spawned("frontend");
+    watchers[0].listener("change", "a.py");
+    await sleep(60);
+    process.emit("SIGINT", "SIGINT");
+    exit(frontend.child);
+    exit(backend.child);
+    assert.equal(await done, 130);
+    assert.equal(spawned("backend").length, 1);
+    assert.ok(watchers[0].closed);
+  });
+
+  test("the frontend ending during a restart ends dev without respawning the backend", async () => {
+    const { watchers, done, spawned, exit } = setup();
+    const [backend] = spawned("backend");
+    const [frontend] = spawned("frontend");
+    watchers[0].listener("change", "a.py");
+    await sleep(60);
+    exit(frontend.child, 7);
+    exit(backend.child);
+    assert.equal(await done, 7);
+    assert.equal(spawned("backend").length, 1);
+  });
+
+  test("a respawned backend that fails to start is the normal 'backend ended' path", async () => {
+    const { watchers, done, spawned, exit } = setup();
+    watchers[0].listener("change", "a.py");
+    await sleep(60);
+    exit(spawned("backend")[0].child);
+    await sleep(20);
+    const second = spawned("backend")[1];
+    exit(second.child, 3);
+    exit(spawned("frontend")[0].child);
+    assert.equal(await done, 3);
+  });
+
+  test("the watcher is closed when dev ends", async () => {
+    const { watchers, done, spawned, exit } = setup();
+    exit(spawned("frontend")[0].child, 2);
+    exit(spawned("backend")[0].child, 1);
+    assert.equal(await done, 2);
+    assert.ok(watchers[0].closed);
+  });
+
+  test("a directory that cannot be watched only warns", async () => {
+    const lines = [];
+    const children = [];
+    const done = supervise(commands, {
+      stdout: { write: (text) => lines.push(text) },
+      env: {},
+      platform: "win32",
+      spawnFn: () => {
+        const child = new EventEmitter();
+        child.pid = 1;
+        child.kill = () => {};
+        children.push(child);
+        return child;
+      },
+      watchFn: () => {
+        throw new Error("ENOENT");
+      },
+      listProcesses: async () => [],
+    });
+    assert.ok(lines.some((l) => l.includes("cannot watch") && l.includes("ENOENT")));
+    for (const c of children) c.emit("exit", 0, null);
+    assert.equal(await done, 0);
+  });
+
+  test("POSIX never watches", async () => {
+    const { calls, watchers, done, exit } = setup({ platform: "linux", noPid: true });
+    assert.equal(watchers.length, 0);
+    for (const c of calls) exit(c.child, 0);
+    assert.equal(await done, 0);
   });
 });
 
