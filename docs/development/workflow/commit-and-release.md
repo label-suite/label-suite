@@ -30,6 +30,7 @@ Dependabot PRs are ordinary pull requests with no shortcut: review them like any
 - **Independent review.** A reviewer who did not write the change checks it, and every CI check must pass first.
 - **Merge commit only**, like every other PR.
 - **Commit messages.** The `commit-messages` job skips a commit only when the PR was opened by `dependabot[bot]` and the commit author email is Dependabot's exact noreply address (see `scripts/check-pr-commits.sh`); Dependabot cannot write the `(#N)` suffix or the bold-verb body. Its config in `.github/dependabot.yml` sets the `build(deps)` or `chore(deps)` prefix.
+- **Minor and patch only.** Each Dependabot group carries minor and patch updates; semver-major version updates are not opened automatically and are handled as separate issues. GitHub does not document whether this `ignore` rule also hides security updates that need a major bump, so check the Dependabot alerts for those.
 - **Version fields stay put.** Dependabot edits dependency declarations and lockfiles only, never the project versions listed under [Releases](#releases).
 
 ## Releases
