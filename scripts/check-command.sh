@@ -57,6 +57,17 @@ for rec in ${RECS+"${RECS[@]}"}; do
   esac
 done
 
+# Every PreToolUse payload the reader accepts carries cwd, so a successful
+# reader that handed back no cwd did not do its job. Before this guard that
+# case fell through to the line below and was read as "no command field":
+# on Windows the reader's entry-point test never matched, node exited 0 with
+# no records, and `rm -rf` was allowed. Without cwd, "no command" is not a
+# finding this checker can trust.
+if [ -z "$CWD" ]; then
+  emit_err "BLOCK: payload 讀取器沒有回傳 cwd，無法確認這次呼叫有沒有命令，本次命令不判為通過"
+  FINISHED=1; hc_flush; exit "$EXIT_BLOCK"
+fi
+
 # No command field means this call is not the command half's business.
 [ "$HAS_COMMAND" = "1" ] || { FINISHED=1; hc_flush; exit 0; }
 
@@ -71,7 +82,14 @@ read -r -d '' ANALYSE_JS <<'JS'
 // is never executed. `git symbolic-ref` is the one thing spawned, and only
 // against a path resolved here, passed as argv so no shell sees it.
 const { execFileSync } = require('node:child_process');
-const [repo, source] = process.argv.slice(1);
+const { readFileSync } = require('node:fs');
+// Both inputs arrive as files, not argv. Git Bash rewrites an argument that
+// starts with `/` into a Windows path before node sees it, so `/bin/rm -rf x`
+// passed as argv reached the analyser as `C:/Program Files/Git/usr/bin/rm
+// -rf x`, whose first word is `C:/Program`. A file's content is never touched.
+const [repoFile, sourceFile] = process.argv.slice(2);
+const repo = readFileSync(repoFile, 'utf8');
+const source = readFileSync(sourceFile, 'utf8');
 
 const findings = [];
 const block = (rule, detail) => findings.push(['BLOCK', rule, detail]);
@@ -139,6 +157,14 @@ function tokenise(text) {
   for (let i = 0; i < text.length; i += 1) {
     const c = text[i];
     if (quote === "'") { if (c === "'") quote = null; else cur += c; continue; }
+    if (quote === '"' && c === '\\') {
+      // Inside double quotes a backslash escapes only $ ` " \ and newline, as
+      // in bash; anywhere else it is a literal, which is what keeps a quoted
+      // Windows path such as "C:\...\rm.exe" intact.
+      const next = text[i + 1] ?? '';
+      if ('$`"\\\n'.includes(next) && next !== '') { cur += next; i += 1; } else cur += c;
+      continue;
+    }
     if (c === '\\') { cur = (cur ?? '') + (text[i + 1] ?? ''); i += 1; continue; }
     if (quote === '"') {
       if (c === '"') { quote = null; continue; }
@@ -174,7 +200,10 @@ function judge(tokens, depthGuard) {
   while (tokens.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(tokens[0].value)) tokens.shift();
   if (!tokens.length) return;
   const argv = tokens.map((t) => t.value);
-  const name = argv[0].split('/').pop();
+  // The command's own name, whatever path or spelling reached it: Windows
+  // accepts `\` as a separator, an `.exe` suffix and any letter case, so
+  // `C:\...\RM.EXE` is rm there. Folding case blocks more on POSIX, never less.
+  const name = argv[0].split(/[\\/]/).pop().replace(/\.exe$/i, '').toLowerCase();
 
   if (['eval', 'sh', 'bash', 'zsh'].includes(name)) {
     const idx = name === 'eval' ? 1 : argv.indexOf('-c') + 1;
@@ -273,17 +302,38 @@ analyse(source, 2);
 // finding carries no rule, so its reason shifted into `rule` and `detail` read
 // empty, and the line came out as `無法判斷（），依規定不判為通過`.
 for (const [kind, rule, detail] of findings) process.stdout.write(`${kind}\x1f${rule}\x1f${detail}\n`);
+// The last line says the analysis ran to the end. Its absence is how the shell
+// tells an analyser that died, or never started, from one that found nothing.
+process.stdout.write('END\x1f\x1f\n');
 JS
+
+# The script, the repository and the command each go through a file; see the
+# comment at the top of ANALYSE_JS for why argv is not safe on Windows.
+printf '%s' "$ANALYSE_JS" > "$HC_BUFFER_DIR/analyse.cjs"
+printf '%s' "$REPO"       > "$HC_BUFFER_DIR/repo"
+printf '%s' "$COMMAND"    > "$HC_BUFFER_DIR/command"
+
+# Fail closed: the verdict is "allow" only when node exited 0 AND printed the
+# END line. Reading node's output through `< <(...)` discarded its exit status,
+# so an analyser that could not run produced no findings and was allowed.
+if ! node "$HC_BUFFER_DIR/analyse.cjs" "$HC_BUFFER_DIR/repo" "$HC_BUFFER_DIR/command" \
+     > "$HC_BUFFER_DIR/findings" 2>"$HC_BUFFER_DIR/aerr" \
+   || [ "$(tail -n 1 "$HC_BUFFER_DIR/findings")" != $'END\x1f\x1f' ]; then
+  emit_err "BLOCK: 命令分析沒有完整執行，本次命令不判為通過（$(head -1 "$HC_BUFFER_DIR/aerr" 2>/dev/null)）"
+  FINISHED=1; hc_flush; exit "$EXIT_BLOCK"
+fi
 
 verdict=0
 while IFS=$'\x1f' read -r kind rule detail; do
   [ -n "$kind" ] || continue
+  [ "$kind" = "END" ] && continue
   verdict=1
   case "$kind" in
     BLOCK)       emit_err "BLOCK: 觸犯 $rule — $detail" ;;
     UNDECIDABLE) emit_err "BLOCK: 無法判斷（${detail}），依規定不判為通過" ;;
+    *)           emit_err "BLOCK: 命令分析回傳了無法辨識的結果，本次命令不判為通過" ;;
   esac
-done < <(node -e "$ANALYSE_JS" -- "$REPO" "$COMMAND")
+done < "$HC_BUFFER_DIR/findings"
 
 if [ "$verdict" = "1" ]; then
   emit_err "  說明：這是字串比對，涵蓋不了變數展開、編碼過的命令與動態組出來的命令。真正的邊界在平台權限層與遠端的 branch protection，本檢查只擋明顯的寫法。"

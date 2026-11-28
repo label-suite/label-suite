@@ -10,6 +10,7 @@
 // unusable" apart from "the check said no".
 import { readSync, realpathSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 /** Exit code for a payload that cannot be parsed or is missing a field. */
 export const EXIT_BAD_PAYLOAD = 3;
@@ -118,6 +119,11 @@ const FIELD_SEP = "\x1F";
  * actually lands, not where it was addressed. A path that does not exist yet is
  * still answerable: its nearest existing ancestor is resolved and the remainder
  * appended, so a write to a new file in a new directory is bounded correctly.
+ *
+ * `realpathSync.native`, not the JavaScript `realpathSync`: on Windows only the
+ * native one expands 8.3 short names, and the temporary directory arrives as
+ * `C:\Users\RUNNER~1\...` while git reports the same checkout as
+ * `C:/Users/runneradmin/...`, so every write looked like it left the workspace.
  */
 export function resolveTargetPath(target, workspaceRoot) {
   const absolute = path.resolve(workspaceRoot, target);
@@ -126,7 +132,7 @@ export function resolveTargetPath(target, workspaceRoot) {
   // Walk up until something exists, then resolve that and re-append the rest.
   for (let probe = absolute; ;) {
     try {
-      resolved = path.join(realpathSync(probe), remainder);
+      resolved = path.join(realpathSync.native(probe), remainder);
       break;
     } catch {
       const parent = path.dirname(probe);
@@ -140,7 +146,7 @@ export function resolveTargetPath(target, workspaceRoot) {
   }
   let root = workspaceRoot;
   try {
-    root = realpathSync(workspaceRoot);
+    root = realpathSync.native(workspaceRoot);
   } catch {
     /* keep the literal root */
   }
@@ -271,6 +277,25 @@ function main(argv) {
   return 0;
 }
 
-if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
+// Whether node was started on this file, as opposed to it being imported.
+//
+// The comparison is between two filesystem paths, both put through realpath.
+// It used to test import.meta.url against "file://" + process.argv[1], a URL
+// against a path, which held only while the path needed no
+// percent-encoding and was already POSIX-shaped. On Windows argv[1] is
+// `D:\a\...` and the URL is `file:///D:/a/...`; on any platform a checkout
+// path with a space is encoded in one and not the other. In both cases the
+// test came out false, main() never ran, node exited 0 with no records, and
+// check-command.sh read "no command field" and allowed `rm -rf`.
+export function isEntryPoint(argv1, moduleUrl) {
+  if (!argv1) return false;
+  try {
+    return realpathSync(argv1) === realpathSync(fileURLToPath(moduleUrl));
+  } catch {
+    return false;
+  }
+}
+
+if (isEntryPoint(process.argv[1], import.meta.url)) {
   process.exitCode = main(process.argv.slice(2));
 }

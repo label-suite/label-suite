@@ -60,6 +60,14 @@ for rec in ${RECS+"${RECS[@]}"}; do
   esac
 done
 
+# Every payload the reader accepts carries cwd, so a reader that exited 0
+# without one did not run (#830: on Windows its entry-point test never
+# matched). Carrying on would judge the hook's own directory instead.
+if [ -z "$CWD" ]; then
+  emit_err "BLOCK: payload 讀取器沒有回傳 cwd，本次寫檔不判為通過"
+  FINISHED=1; hc_flush; exit "$EXIT_BLOCK"
+fi
+
 REPO=$(git -C "$CWD" rev-parse --show-toplevel 2>/dev/null)
 if [ -z "$REPO" ]; then
   emit_err "BLOCK: 無法從 $CWD 定位 git repo，本次寫檔不判為通過"
@@ -91,8 +99,8 @@ read -r -d '' DECIDE_JS <<'JS'
 // exceptions before the deny list. Matching is done on the repo-relative
 // path so a rule anchored at the root means what it says.
 // The library path travels in the environment, not in argv. Putting it at
-// argv[1] makes the module's own `import.meta.url === file://argv[1]` guard
-// true, so requiring it would also run its command-line entry point.
+// argv[1] makes the module's own isEntryPoint() guard true, so requiring it
+// would also run its command-line entry point.
 const path = require('node:path');
 const { resolveTargetPath } = require(process.env.HOOK_PAYLOAD_LIB);
 const [repo, target] = process.argv.slice(1);

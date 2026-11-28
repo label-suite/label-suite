@@ -75,12 +75,16 @@ allowed 'docs/specs/00-prd.mdx' 'H2 interfered with the PRD'
 # against the unresolved path would fail for a reason that is not a defect.
 # `pwd -P` rather than a helper process: it resolves symlinks in the shell, and
 # it cannot come back empty the way a captured command's output can.
-REAL_REPO=$(cd "$REPO" && pwd -P)
+REAL_REPO=$(cd "$REPO" && pwd -P); SEP=/
+# On Git Bash the checker names the path the way Windows does, `C:\...\repo\x`,
+# because that is the form node resolves to and the one a Windows user can act
+# on (#830). cygpath exists only there.
+if command -v cygpath >/dev/null 2>&1; then REAL_REPO=$(cygpath -w "$REAL_REPO"); SEP='\'; fi
 write '.env.local' >/dev/null
 # The message names what it refused, and the failure says what it said instead:
 # a one-runner-of-two failure here is a platform difference, and guessing at it
 # from the assertion's name alone costs another round trip.
-grep -qF "$REAL_REPO/.env.local" "$TMP/err" \
+grep -qF "$REAL_REPO$SEP.env.local" "$TMP/err" \
   || fail "the refusal did not name the path it refused; REPO=$REPO REAL_REPO=$REAL_REPO err=$(tr '\n' '|' < "$TMP/err" | cut -c1-300)"
 grep -q 'apply_patch' "$TMP/err" || fail "the refusal did not state the patch-tool gap"
 grep -q '讀取' "$TMP/err"        || fail "the refusal did not state the missing read interception"
@@ -120,9 +124,27 @@ rc=$(run Write "$(python3 -c 'import json; print(json.dumps({"file_path": "/tmp/
 
 # ── D7 guards ────────────────────────────────────────────────────────
 
+# bash is invoked by absolute path rather than found through the stripped
+# PATH: on Git Bash `ln -s` copies bash.exe away from the msys-2.0.dll it
+# needs, so the copy exits 127 before the checker runs (#830). The symlink
+# stays for POSIX, where the checker may still look bash up by name.
+BASH_BIN=$(command -v bash)
 mkdir -p "$TMP/onlybash" && ln -sf "$(command -v bash)" "$TMP/onlybash/bash"
-rc=$(payload Write '{"file_path":"x"}' | env PATH="$TMP/onlybash" "$CHECKER" >/dev/null 2>&1; echo $?)
+rc=$(payload Write '{"file_path":"x"}' | env PATH="$TMP/onlybash" "$BASH_BIN" "$CHECKER" >/dev/null 2>&1; echo $?)
 [ "$rc" = "2" ] || fail "D7: a missing node did not block (got $rc)"
+
+# #830: a reader that exits 0 and returns no records stands in for every way
+# the reader can fail to run (on Windows its entry-point test never matched).
+# The checker must not fall back to its own directory for a cwd nobody sent.
+# The message is asserted as well as the exit code: a reader with no records
+# also leaves the tool name empty, which blocks for that reason on its own.
+STUB="$TMP/stub-reader/scripts"
+mkdir -p "$STUB" && cp -R "$ROOT/scripts/lib" "$STUB/" && cp "$ROOT/scripts/check-write-target.sh" "$STUB/"
+printf 'process.exitCode = 0;\n' > "$STUB/lib/hook-payload.mjs"
+rc=$(payload Write '{"file_path":"x"}' \
+     | ( cd "$REPO" && bash "$STUB/check-write-target.sh" >/dev/null 2>"$TMP/err" ); echo $?)
+[ "$rc" = "2" ] || fail "#830: a reader that returned no records did not block (got $rc)"
+grep -q 'cwd' "$TMP/err" || fail "#830: the empty-reader refusal did not say what was missing: $(head -1 "$TMP/err")"
 
 rc=$(printf 'not json' | "$CHECKER" >/dev/null 2>&1; echo $?)
 [ "$rc" = "2" ] || fail "D7: an unparseable payload did not block (got $rc)"

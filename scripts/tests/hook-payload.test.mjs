@@ -6,10 +6,19 @@
 // in a command line. The cases below are therefore mostly about refusal.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, realpathSync, symlinkSync, writeFileSync, rmSync } from "node:fs";
+import {
+  copyFileSync,
+  mkdtempSync,
+  mkdirSync,
+  realpathSync,
+  symlinkSync,
+  writeFileSync,
+  rmSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   EXIT_BAD_PAYLOAD,
@@ -17,6 +26,7 @@ import {
   RECORD_NAMES,
   REQUIRED_FIELDS,
   formatRecords,
+  isEntryPoint,
   parsePayload,
   patchPaths,
   readPatch,
@@ -236,7 +246,9 @@ test("resolveTargetPath resolves symlinks and relative segments", () => {
     const r = resolveTargetPath(path.join(root, "link", "..", "link", "f.txt"), root);
     // realpathSync on the expectation too: on macOS /var is itself a symlink to
     // /private/var, and resolving that is the function working, not failing.
-    assert.equal(r.resolved, path.join(realpathSync(root), "real", "f.txt"));
+    // The native one, as the function uses: on Windows it also expands an 8.3
+    // short name such as RUNNER~1 in the temporary directory.
+    assert.equal(r.resolved, path.join(realpathSync.native(root), "real", "f.txt"));
     assert.equal(r.outsideWorkspace, false);
   } finally {
     rmSync(root, { recursive: true, force: true });
@@ -277,7 +289,9 @@ test("a path that merely shares a prefix with the workspace is outside it", () =
 
 // ── The command-line entry point, as the shell actually calls it ──────
 
-const CLI = new URL("../lib/hook-payload.mjs", import.meta.url).pathname;
+// fileURLToPath, not `.pathname`: on Windows the pathname is `/D:/a/...`,
+// which is not a path node can open.
+const CLI = fileURLToPath(new URL("../lib/hook-payload.mjs", import.meta.url));
 
 function runCli(args, stdin) {
   return spawnSync(process.execPath, [CLI, ...args], { input: stdin, encoding: "utf8" });
@@ -291,6 +305,37 @@ test("the CLI frames a valid payload on stdout and exits 0", () => {
   assert.equal(r.status, 0, r.stderr);
   assert.ok(r.stdout.includes(`tool_path\x1F/tmp/a.txt\0`));
   assert.ok(r.stdout.endsWith("\0"));
+});
+
+// #830. The entry-point test compared a file:// URL with a path, so it failed
+// on every Windows path and on any path with a space. main() then never ran,
+// node exited 0 with no records, and check-command.sh allowed `rm -rf`.
+test("isEntryPoint matches a path that needs percent-encoding as a URL", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "hook payload "));
+  try {
+    const file = path.join(dir, "entry 中.mjs");
+    writeFileSync(file, "");
+    assert.equal(isEntryPoint(file, pathToFileURL(file).href), true);
+    assert.equal(isEntryPoint(path.join(dir, "other.mjs"), pathToFileURL(file).href), false);
+    assert.equal(isEntryPoint(undefined, pathToFileURL(file).href), false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("the CLI still refuses a bad payload when it lives under a path with a space", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "hook payload "));
+  try {
+    const copy = path.join(dir, "hook-payload.mjs");
+    copyFileSync(CLI, copy);
+    const r = spawnSync(process.execPath, [copy, "--event", "PreToolUse"], {
+      input: "{nope",
+      encoding: "utf8",
+    });
+    assert.equal(r.status, EXIT_BAD_PAYLOAD, "the reader did not run as the entry point");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test("the CLI exits 3 on malformed JSON and explains on stderr", () => {

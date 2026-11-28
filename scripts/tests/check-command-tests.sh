@@ -36,10 +36,15 @@ WORK=$(make_repo work feature)
 ON_MAIN=$(make_repo onmain main)
 
 payload() { # payload <repo> <command>
-  REPO="$1" CMD="$2" python3 -c '
-import json, os
+  # The command goes in on stdin, not in the environment: Git Bash rewrites an
+  # environment value that starts with `/` on its way to a Windows program, so
+  # `/bin/rm -rf x` reached the payload as `C:/Program Files/Git/usr/bin/rm
+  # -rf x` (#830). The repository path is meant to be converted; it is the cwd
+  # a Windows agent would send.
+  printf '%s' "$2" | REPO="$1" python3 -c '
+import json, os, sys
 print(json.dumps({"cwd": os.environ["REPO"], "hook_event_name": "PreToolUse",
-                  "tool_name": "Bash", "tool_input": {"command": os.environ["CMD"]}}))'
+                  "tool_name": "Bash", "tool_input": {"command": sys.stdin.read()}}))'
 }
 
 run() { # run <repo> <command> -> exit code, stderr in $TMP/err
@@ -169,6 +174,39 @@ block "$WORK" 'pip3 install requests'           'D10: pip3 install was not block
 block "$WORK" 'npm i left-pad'                  'D10: npm i was not blocked'
 block "$WORK" 'npm add left-pad'                'D10: npm add was not blocked'
 
+# ═══ Windows (#830): the gaps that let `rm -rf` through on Git Bash ═══
+# All three run on every platform. Each reproduces, on POSIX, the mechanism
+# that failed on Windows, so a regression is red on the runner nearest to hand
+# rather than only on the one nobody develops on.
+
+# The payload reader decided whether it was the entry point by comparing a
+# file:// URL with a path. A Windows path never matched, and neither does a
+# POSIX path with a space, so the reader exited 0 with no records and the
+# checker allowed everything. A checkout under a spaced path is the POSIX
+# reproduction.
+SPACED="$TMP/with space/scripts"
+mkdir -p "$SPACED" && cp -R "$ROOT/scripts/lib" "$SPACED/" && cp "$CHECKER" "$SPACED/"
+rc=$(payload "$WORK" 'rm -rf /tmp/x' | bash "$SPACED/check-command.sh" >/dev/null 2>"$TMP/err"; echo $?)
+[ "$rc" = "2" ] || fail "#830: rm -rf was allowed when the checker lives under a path with a space (got $rc)"
+
+# Whatever the reason the reader returns no records, "no command field" is
+# not a verdict the checker may draw from that. A reader that exits 0 and says
+# nothing stands in for every such reason.
+STUB="$TMP/stub-reader/scripts"
+mkdir -p "$STUB" && cp -R "$ROOT/scripts/lib" "$STUB/" && cp "$CHECKER" "$STUB/"
+printf 'process.exitCode = 0;\n' > "$STUB/lib/hook-payload.mjs"
+rc=$(payload "$WORK" 'rm -rf /tmp/x' | bash "$STUB/check-command.sh" >/dev/null 2>"$TMP/err"; echo $?)
+[ "$rc" = "2" ] || fail "#830: a reader that returned no records did not block (got $rc)"
+grep -q 'cwd' "$TMP/err" || fail "#830: the empty-reader refusal did not say what was missing"
+
+# Git Bash rewrites an argv word that starts with `/` into a Windows path, so
+# a command handed to the analyser on argv lost its first word. The command
+# now travels through a file; an absolute path to rm must still be read as rm.
+block "$WORK" '/bin/rm -rf /tmp/x' '#830: rm -rf spelled with an absolute path was not blocked'
+# …and the Windows spellings of the same program are still rm.
+block "$WORK" '"C:\Program Files\Git\usr\bin\rm.exe" -rf x' '#830: rm.exe by a Windows path was not blocked'
+block "$WORK" 'RM.EXE -rf x' '#830: rm in another letter case was not blocked'
+
 # ═══ D7: the entry guards, all of which block ════════════════════════
 
 guard() { # guard <description> <env-prefix...> -- builds a crippled environment
@@ -177,8 +215,13 @@ guard() { # guard <description> <env-prefix...> -- builds a crippled environment
 
 # node missing — bash itself must stay reachable, or the test measures the
 # shebang failing to resolve rather than the guard.
+# bash is invoked by absolute path rather than found through the stripped
+# PATH: on Git Bash `ln -s` copies bash.exe away from the msys-2.0.dll it
+# needs, so the copy exits 127 before the checker runs (#830). The symlink
+# stays for POSIX, where the checker may still look bash up by name.
+BASH_BIN=$(command -v bash)
 mkdir -p "$TMP/onlybash" && ln -sf "$(command -v bash)" "$TMP/onlybash/bash"
-rc=$(payload "$WORK" 'ls' | env PATH="$TMP/onlybash" "$CHECKER" >/dev/null 2>"$TMP/err"; echo $?)
+rc=$(payload "$WORK" 'ls' | env PATH="$TMP/onlybash" "$BASH_BIN" "$CHECKER" >/dev/null 2>"$TMP/err"; echo $?)
 [ "$rc" = "2" ] || fail "D7: a missing node did not block (got $rc)"
 
 # payload that is not JSON

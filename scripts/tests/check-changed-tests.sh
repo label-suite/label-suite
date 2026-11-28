@@ -107,8 +107,15 @@ harness_reset_calls
 # way to drop `uv`, because on this machine they are installed side by side and
 # that is exactly how an earlier version of this test passed while measuring
 # nothing. A directory holding node alone is what makes the runner absent.
+# git has to be there too: Git for Windows keeps git.exe outside /usr/bin, so
+# without it this measured "cannot locate the repository" instead (#830).
+# Wrappers, not symlinks: Git Bash's `ln -s` makes a copy, and a copied
+# `node` with no `.exe` is not something it will run.
 NODE_ONLY="$TMP/node-only"; mkdir -p "$NODE_ONLY"
-ln -sf "$(command -v node)" "$NODE_ONLY/node"
+for tool in node git; do
+  printf '#!/bin/sh\nexec "%s" "$@"\n' "$(command -v "$tool")" > "$NODE_ONLY/$tool"
+  chmod +x "$NODE_ONLY/$tool"
+done
 command -v uv >/dev/null 2>&1 && PATH="$NODE_ONLY:/usr/bin:/bin" command -v uv >/dev/null 2>&1 \
   && fail "the stripped PATH still reaches uv, so this case measures nothing"
 rc=$( ( cd "$REPO" && PATH="$NODE_ONLY:/usr/bin:/bin" "$CHECKER" --files backend/app/x.py >"$TMP/out" 2>"$TMP/err" ); echo $? )
@@ -241,15 +248,32 @@ rc=$(files backend/app.py)
 [ "$rc" = "1" ] || fail "a blocking mode did not encode the violation as 1 (got $rc)"
 harness_set_tool uv 0 ''
 
+# bash is invoked by absolute path rather than found through the stripped
+# PATH: on Git Bash `ln -s` copies bash.exe away from the msys-2.0.dll it
+# needs, so the copy exits 127 before the checker runs (#830). The symlink
+# stays for POSIX, where the checker may still look bash up by name.
+BASH_BIN=$(command -v bash)
 mkdir -p "$TMP/onlybash" && ln -sf "$(command -v bash)" "$TMP/onlybash/bash"
 undecidable() { # undecidable <mode-args...> -> exit code
-  ( cd "$REPO" && PATH="$TMP/onlybash" "$CHECKER" "$@" >"$TMP/out" 2>"$TMP/err" ); echo $?
+  ( cd "$REPO" && PATH="$TMP/onlybash" "$BASH_BIN" "$CHECKER" "$@" >"$TMP/out" 2>"$TMP/err" ); echo $?
 }
 
 rc=$(printf '{"cwd":"%s","hook_event_name":"PostToolUse","tool_name":"Write","tool_input":{"file_path":"%s/backend/app.py"}}' "$REPO" "$REPO" \
-     | ( cd "$REPO" && PATH="$TMP/onlybash" "$CHECKER" --event PostToolUse >"$TMP/out" 2>"$TMP/err" ); echo $?)
+     | ( cd "$REPO" && PATH="$TMP/onlybash" "$BASH_BIN" "$CHECKER" --event PostToolUse >"$TMP/out" 2>"$TMP/err" ); echo $?)
 [ "$rc" = "0" ] || fail "--event did not stay out of the way when it could not decide (got $rc)"
 grep -q '^UNKNOWN:' "$TMP/err" || fail "--event did not name the item it could not decide"
+
+# #830: a reader that exits 0 and returns no records stands in for every way
+# the reader can fail to run (on Windows its entry-point test never matched).
+# The checker must not fall back to its own directory for a cwd nobody sent.
+# H3 is a reminder, so the cost is UNKNOWN and exit 0, not a block.
+STUB="$TMP/stub-reader/scripts"
+mkdir -p "$STUB" && cp -R "$ROOT/scripts/lib" "$STUB/" && cp "$ROOT/scripts/check-changed.sh" "$STUB/"
+printf 'process.exitCode = 0;\n' > "$STUB/lib/hook-payload.mjs"
+rc=$(printf '{"cwd":"%s","hook_event_name":"PostToolUse","tool_name":"Write","tool_input":{"file_path":"%s/backend/app.py"}}' "$REPO" "$REPO" \
+     | ( cd "$REPO" && bash "$STUB/check-changed.sh" --event PostToolUse >/dev/null 2>"$TMP/err" ); echo $?)
+[ "$rc" = "0" ] || fail "#830: --event blocked when the reader returned no records (got $rc)"
+grep -q '^UNKNOWN:.*cwd' "$TMP/err" || fail "#830: --event did not report the missing cwd as undecided: $(head -1 "$TMP/err")"
 
 for mode in "--files backend/app.py" "--range HEAD~1..HEAD" "--list-routes"; do
   rc=$(undecidable $mode)
@@ -364,7 +388,7 @@ staged >/dev/null
 grep -q 'git stash' "$ROOT/scripts/check-changed.sh" && fail "the checker reaches for git stash"
 
 # --staged fails closed, like the other blocking modes.
-rc=$( ( cd "$REPO" && PATH="$TMP/onlybash" "$CHECKER" --staged >"$TMP/out" 2>"$TMP/err" ); echo $? )
+rc=$( ( cd "$REPO" && PATH="$TMP/onlybash" "$BASH_BIN" "$CHECKER" --staged >"$TMP/out" 2>"$TMP/err" ); echo $? )
 [ "$rc" = "2" ] || fail "--staged did not fail closed when node was missing (got $rc)"
 
 git -C "$REPO" reset -q

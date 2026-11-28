@@ -73,6 +73,7 @@ undecidable() { # undecidable <reason>
 # ── Locate the checkout ──────────────────────────────────────────────
 CWD="$PWD"; EVENT_PATH=""; EVENT_TOOL=""; PATCH_PATHS=(); PATCH_HEADERS=0
 if [ "$MODE" = "event" ]; then
+  CWD=""   # only the payload may say where this event happened
   payload=$(cat)
   if ! printf '%s' "$payload" | node "$HERE/lib/hook-payload.mjs" --event "$EVENT" \
        > "$HC_BUFFER_DIR/records" 2>/dev/null; then
@@ -88,6 +89,11 @@ if [ "$MODE" = "event" ]; then
       patch_headers) PATCH_HEADERS=1 ;;
     esac
   done
+  # Every payload the reader accepts carries cwd, so a reader that exited 0
+  # without one did not run (#830: on Windows its entry-point test never
+  # matched). A missing record and an empty value mean the same here, as in
+  # the other three checkers: either way nobody said where the edit happened.
+  [ -n "$CWD" ] || undecidable "payload 讀取器沒有回傳 cwd，本次沒有任何一項被判定"
 fi
 
 REPO=$(git -C "$CWD" rev-parse --show-toplevel 2>/dev/null)
@@ -106,6 +112,18 @@ if [ "$MODE" = "list-routes" ]; then
 fi
 
 # ── The file list ────────────────────────────────────────────────────
+# A drive-letter path is absolute only on Windows. On POSIX `C:/x` is a
+# relative path like any other, and treating it as absolute there would move
+# a file out from under the repository root.
+ON_WINDOWS=0
+case "$(uname -s 2>/dev/null)" in MINGW*|MSYS*) ON_WINDOWS=1 ;; esac
+is_absolute() { # is_absolute <path>
+  case "$1" in /*) return 0 ;; esac
+  [ "$ON_WINDOWS" = "1" ] || return 1
+  case "$1" in [A-Za-z]:[/\\]*) return 0 ;; esac
+  return 1
+}
+
 CANDIDATES=()
 case "$MODE" in
   event)
@@ -118,7 +136,7 @@ case "$MODE" in
       # leaves nothing to check, which ends as NA rather than in the git
       # fallback below.
       for p in ${PATCH_PATHS+"${PATCH_PATHS[@]}"}; do
-        case "$p" in /*) CANDIDATES+=("$p") ;; *) CANDIDATES+=("$CWD/$p") ;; esac
+        if is_absolute "$p"; then CANDIDATES+=("$p"); else CANDIDATES+=("$CWD/$p"); fi
       done
     elif [ "$EVENT_TOOL" = "apply_patch" ]; then
       # No Add, Update or Delete header at all: the patch text is in a shape this checker
@@ -174,7 +192,7 @@ EXCLUDED_RE="$HOOK_EXCLUDED_RE"
 PY_FILES=(); TS_FILES=(); DOC_FILES=(); DOC_HITS=0; SKIPPED=0
 for cand in ${CANDIDATES+"${CANDIDATES[@]}"}; do
   [ -n "$cand" ] || continue
-  case "$cand" in /*) abs="$cand" ;; *) abs="$REPO/$cand" ;; esac
+  if is_absolute "$cand"; then abs="$cand"; else abs="$REPO/$cand"; fi
   # Both sides must be resolved before they are compared. `git rev-parse
   # --show-toplevel` hands back a realpath while a payload's file_path keeps
   # whatever symlinked form the platform used, and on macOS $TMPDIR sits under
@@ -186,7 +204,7 @@ for cand in ${CANDIDATES+"${CANDIDATES[@]}"}; do
     const [root, target] = process.argv.slice(1);
     const { resolved, outsideWorkspace } = resolveTargetPath(target, root);
     let base = root;
-    try { base = require("node:fs").realpathSync(root); } catch { /* keep the literal root */ }
+    try { base = require("node:fs").realpathSync.native(root); } catch { /* keep the literal root */ }
     process.stdout.write(outsideWorkspace ? "" : path.relative(base, resolved).split(path.sep).join("/"));
   ' -- "$REPO" "$abs")
   if [ -z "$rel" ]; then
