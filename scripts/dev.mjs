@@ -23,7 +23,7 @@
 import { execFile, spawn } from "node:child_process";
 import { existsSync, readFileSync, watch } from "node:fs";
 import { constants } from "node:os";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseEnv } from "node:util";
 
@@ -479,6 +479,15 @@ export function supervise(
     const exits = new Map();
     const restarting = new Set();
     const again = new Set();
+    // Servers a restart has started at least once: if one then ends, dev waits for the next
+    // change instead of stopping (a start that fails right away still ends dev).
+    const respawned = new Set();
+    // Servers that ended after a restart and wait for the next watched change.
+    const down = new Set();
+    const watchLabel = (spec) => {
+      const path = relative(ROOT, spec.watch).replaceAll("\\", "/");
+      return path.startsWith("..") ? spec.watch : path;
+    };
 
     const maybeDone = () => {
       if (finishedAll || running.size > 0 || restarts > 0) return;
@@ -508,7 +517,8 @@ export function supervise(
     };
 
     // A child replaced by a restart still emits "exit"; only the current one counts as ended.
-    const attach = ({ name, command, args, cwd }) => {
+    const attach = (spec) => {
+      const { name, command, args, cwd } = spec;
       const target = resolveSpawn(command, args, platform, env);
       const child = spawnFn(target.command, target.args, {
         cwd,
@@ -524,13 +534,22 @@ export function supervise(
           child.on("error", () => done());
         }),
       );
+      const ended = (code) => {
+        if (exitCode === undefined && respawned.has(name) && spec.watch) {
+          say(`${name} exited with code ${code}; waiting for a change in ${watchLabel(spec)}`);
+          running.delete(name);
+          down.add(name);
+          signalTree(child, "SIGTERM");
+          pending.push(reapOrphans(name, child.pid).then(() => recorded.delete(name)));
+        } else finished(name, code);
+      };
       child.on("error", (error) => {
         if (running.get(name) !== child) return;
         say(`${name} could not start: ${error.message}`);
-        finished(name, 127);
+        ended(127);
       });
       child.on("exit", (code, signal) => {
-        if (running.get(name) === child) finished(name, code ?? signalExitCode(signal));
+        if (running.get(name) === child) ended(code ?? signalExitCode(signal));
       });
     };
 
@@ -546,22 +565,34 @@ export function supervise(
         return;
       }
       const old = running.get(name);
-      if (!old) return;
+      if (!old) {
+        // It ended after an earlier restart and has been waiting for this change.
+        if (!down.delete(name)) return;
+        say(`${watchLabel(spec)} changed; restarting ${name}`);
+        respawned.add(name);
+        attach(spec);
+        setTimeout(snapshot, Math.min(FIRST_SNAPSHOT_MS, snapshotIntervalMs)).unref();
+        return;
+      }
       restarting.add(name);
       restarts++;
-      say(`${name}/app changed; restarting ${name}`);
+      say(`${watchLabel(spec)} changed; restarting ${name}`);
       running.delete(name);
       signalTree(old, "SIGTERM");
-      let timedOut;
+      let timer;
       const timeout = new Promise((done) => {
-        timedOut = setTimeout(done, killTimeoutMs);
+        timer = setTimeout(() => done("timeout"), killTimeoutMs);
       });
-      await Promise.race([exits.get(old), timeout]);
-      clearTimeout(timedOut);
+      const result = await Promise.race([exits.get(old), timeout]);
+      clearTimeout(timer);
+      exits.delete(old);
+      if (result === "timeout")
+        say(`old ${name} did not exit in ${killTimeoutMs / 1000} s; port may still be in use`);
       await reapOrphans(name, old.pid);
       recorded.delete(name);
       restarting.delete(name);
       if (exitCode === undefined) {
+        respawned.add(name);
         attach(spec);
         setTimeout(snapshot, Math.min(FIRST_SNAPSHOT_MS, snapshotIntervalMs)).unref();
       }
@@ -577,7 +608,8 @@ export function supervise(
         if (!spec.watch) continue;
         try {
           const watcher = watchFn(spec.watch, { recursive: true }, (_event, filename) => {
-            if (exitCode !== undefined || !isReloadTrigger(filename)) return;
+            // A null name (Windows buffer overflow, e.g. git checkout) may hide any change.
+            if (exitCode !== undefined || (filename != null && !isReloadTrigger(filename))) return;
             clearTimeout(debounce.get(spec.name));
             const timer = setTimeout(() => {
               debounce.delete(spec.name);

@@ -425,7 +425,7 @@ describe("supervise restarts the backend on Windows when backend/app changes", (
       command: "uv",
       args: ["run", "uvicorn"],
       cwd: ".",
-      watch: "/repo/backend/app",
+      watch: join(ROOT, "backend", "app"),
     },
     { name: "frontend", command: "pnpm", args: ["dev"], cwd: "." },
   ];
@@ -479,7 +479,7 @@ describe("supervise restarts the backend on Windows when backend/app changes", (
     const [backend] = spawned("backend");
     const [frontend] = spawned("frontend");
     assert.equal(watchers.length, 1);
-    assert.equal(watchers[0].dir, "/repo/backend/app");
+    assert.equal(watchers[0].dir, join(ROOT, "backend", "app"));
     assert.equal(watchers[0].opts.recursive, true);
 
     watchers[0].listener("change", "main.py");
@@ -522,7 +522,7 @@ describe("supervise restarts the backend on Windows when backend/app changes", (
 
   test("changes to non-.py files do nothing", async () => {
     const { watchers, done, spawned, killed, exit } = setup();
-    for (const f of ["x.pyc", "__pycache__/x.cpython-312.pyc", ".x.py", "data.json", null])
+    for (const f of ["x.pyc", "__pycache__/x.cpython-312.pyc", ".x.py", "data.json"])
       watchers[0].listener("change", f);
     await sleep(60);
     assert.deepEqual(killed(), []);
@@ -577,24 +577,92 @@ describe("supervise restarts the backend on Windows when backend/app changes", (
     assert.equal(spawned("backend").length, 1);
   });
 
-  test("a respawned backend that fails to start is the normal 'backend ended' path", async () => {
+  test("a null filename (watch buffer overflow) still restarts", async () => {
+    const { watchers, done, spawned, killed, exit } = setup();
+    watchers[0].listener("change", null);
+    await sleep(60);
+    assert.equal(killed().length, 1);
+    exit(spawned("backend")[0].child);
+    await sleep(20);
+    assert.equal(spawned("backend").length, 2);
+    process.emit("SIGTERM", "SIGTERM");
+    for (const c of [...spawned("backend"), ...spawned("frontend")]) exit(c.child);
+    await done;
+  });
+
+  test("a respawned backend that exits keeps dev up and the next change starts it again", async () => {
+    const { watchers, lines, done, spawned, killed, exit } = setup();
+    const [frontend] = spawned("frontend");
+    watchers[0].listener("change", "a.py");
+    await sleep(60);
+    exit(spawned("backend")[0].child);
+    await sleep(20);
+    exit(spawned("backend")[1].child, 1); // e.g. a syntax error
+    await sleep(20);
+    assert.ok(
+      lines.some((l) =>
+        l.includes("backend exited with code 1; waiting for a change in backend/app"),
+      ),
+    );
+    assert.ok(!killed().includes(String(frontend.child.pid)));
+    assert.equal(frontend.child.exitCode, undefined);
+
+    watchers[0].listener("change", "a.py");
+    await sleep(60);
+    assert.equal(spawned("backend").length, 3);
+    // Starting from "waiting" kills nothing new and does not touch the frontend.
+    assert.ok(!killed().includes(String(frontend.child.pid)));
+
+    process.emit("SIGTERM", "SIGTERM");
+    exit(spawned("backend")[2].child);
+    exit(frontend.child);
+    assert.equal(await done, 143);
+  });
+
+  test("a signal while the backend is down and waiting ends dev", async () => {
     const { watchers, done, spawned, exit } = setup();
     watchers[0].listener("change", "a.py");
     await sleep(60);
     exit(spawned("backend")[0].child);
     await sleep(20);
-    const second = spawned("backend")[1];
-    exit(second.child, 3);
+    exit(spawned("backend")[1].child, 1);
+    await sleep(20);
+    process.emit("SIGTERM", "SIGTERM");
     exit(spawned("frontend")[0].child);
-    assert.equal(await done, 3);
+    assert.equal(await done, 143);
+    assert.ok(watchers[0].closed);
   });
 
-  test("the watcher is closed when dev ends", async () => {
+  test("the frontend ending while the backend waits ends dev", async () => {
     const { watchers, done, spawned, exit } = setup();
-    exit(spawned("frontend")[0].child, 2);
-    exit(spawned("backend")[0].child, 1);
-    assert.equal(await done, 2);
-    assert.ok(watchers[0].closed);
+    watchers[0].listener("change", "a.py");
+    await sleep(60);
+    exit(spawned("backend")[0].child);
+    await sleep(20);
+    exit(spawned("backend")[1].child, 1);
+    await sleep(20);
+    exit(spawned("frontend")[0].child, 5);
+    assert.equal(await done, 5);
+  });
+
+  test("the first start failing still ends dev and stops the frontend", async () => {
+    const { done, spawned, killed, exit } = setup();
+    exit(spawned("backend")[0].child, 4);
+    assert.ok(killed().includes(String(spawned("frontend")[0].child.pid)));
+    exit(spawned("frontend")[0].child);
+    assert.equal(await done, 4);
+  });
+
+  test("an old backend that does not exit in time is reported before the respawn", async () => {
+    const { watchers, lines, done, spawned, exit } = setup();
+    watchers[0].listener("change", "a.py");
+    await sleep(60);
+    await sleep(1050); // killTimeoutMs is 1000 in these tests
+    assert.ok(lines.some((l) => l.includes("did not exit in 1 s; port may still be in use")));
+    assert.equal(spawned("backend").length, 2);
+    process.emit("SIGTERM", "SIGTERM");
+    for (const c of [...spawned("backend"), ...spawned("frontend")]) exit(c.child);
+    await done;
   });
 
   test("a directory that cannot be watched only warns", async () => {

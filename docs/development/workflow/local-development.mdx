@@ -73,8 +73,8 @@ pnpm run dev
 
 建立系統管理員那一步只要做一次，行為見 [§建立第一位系統管理員](#建立第一位系統管理員)。
 
-`pnpm run dev` 會讀根目錄 `.env`，起後端（uvicorn，`--reload`，埠 `BACKEND_PORT`）與前端（Vite，固定 `5173`），任一個結束就把另一個也停掉，Ctrl-C 兩個一起停。後端只在 `backend/app` 的 `.py` 變更時重載（macOS、Linux 由 uvicorn `--reload` 做；Windows 上 uvicorn 停不掉舊 worker，改由 `pnpm run dev` 自己監看並重啟後端）；改其他檔案（含根目錄 `.env`、依賴）要重啟 `pnpm run dev`。
-也可以分兩個終端機各起一個，指令與它執行的相同：
+`pnpm run dev` 會讀根目錄 `.env`，起後端（uvicorn，`--reload`，埠 `BACKEND_PORT`）與前端（Vite，固定 `5173`），任一個結束就把另一個也停掉，Ctrl-C 兩個一起停。後端只在 `backend/app` 的 `.py` 變更時重載（macOS、Linux 由 uvicorn `--reload` 做；Windows 上 uvicorn 停不掉舊 worker，改由 `pnpm run dev` 自己監看並重啟後端）；改其他檔案（含根目錄 `.env`、依賴）要重啟 `pnpm run dev`。Windows 上重啟後的後端若立刻結束（例如語法錯誤），`pnpm run dev` 不會跟著結束，印出原因後等下一次 `backend/app` 變更再啟動；第一次啟動就失敗仍會結束。
+也可以分兩個終端機各起一個，指令與它在 macOS、Linux 執行的相同；Windows 上 `pnpm run dev` 不帶 `--reload`，分開起時後端也要拿掉 `--reload`，改 `.py` 後自己重啟（或直接用 `pnpm run dev`）：
 
 ```bash
 # 終端機一：後端
