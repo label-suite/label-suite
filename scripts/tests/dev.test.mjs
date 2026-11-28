@@ -123,7 +123,7 @@ for (const [signal, expected] of [
   // Node cannot deliver a real SIGINT/SIGTERM to a child on win32: kill()
   // terminates it unconditionally, so the 130/143 exit codes can never be
   // observed. The win32 behaviour (taskkill of both trees, exit 143) is covered
-  // by the injected-platform tests in "supervise on win32" above and below.
+  // by the injected-platform tests in "supervise on win32" below.
   test(
     `${signal} to dev ends both servers, including the frontend's own child`,
     { skip: process.platform === "win32" && "no real POSIX signals on win32" },
