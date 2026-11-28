@@ -126,7 +126,7 @@ updatedAt: '2026-11-28'
 | | |
 | :--- | :--- |
 | **目的** | 本機 hook 有**四條**被跳過的途徑——Git 的 `--no-verify`、Claude 的 `disableAllHooks`、Codex 的 `[features] hooks = false`，以及 Codex 的 hook 未被信任而 skipped——所以合併前的真正 gate 在 CI |
-| **事件** | `pull_request`（`.github/workflows/ci.yml`）。必要檢查是每次都跑的 `commit-messages`、`format`、`specs`、`semgrep`，以及沒有相關改動時會依路徑略過的 `docs-site`、`backend-sqlite`、`backend-postgres`、`frontend`、`api-contract`、`coverage`、`scripts-tests`。在 ubuntu 與 macOS 兩個平台跑檢查器回歸測試的 `hooks`，以及 Windows 的 `scripts-tests-windows`，都不列入必過。矩陣 job 被 job 層 `if:` 略過時，回報的是未展開的名稱，所以 `hooks (...)` 的名稱不能設為必過，除非另加一個每次都跑的彙總 job |
+| **事件** | `pull_request`（`.github/workflows/ci.yml`）。必要檢查是每次都跑的 `commit-messages`、`format`、`specs`、`semgrep`，以及沒有相關改動時會依路徑略過的 `docs-site`、`backend-sqlite`、`backend-postgres`、`frontend`、`api-contract`、`coverage`、`scripts-tests`。在 ubuntu、macOS 與 Windows（Git Bash）三個平台跑檢查器回歸測試的 `hooks`，以及 Windows 的 `scripts-tests-windows`，都不列入必過。矩陣 job 被 job 層 `if:` 略過時，回報的是未展開的名稱，所以 `hooks (...)` 的名稱不能設為必過，除非另加一個每次都跑的彙總 job |
 | **適用路徑／角色** | 整個 PR。`commit-messages`、`format`、`specs`、`semgrep`、`dependency-audit`、`changes` 每次都跑；其餘 job 只在相關路徑有改動時跑，見下方「依路徑略過的 job」 |
 | **payload 欄位** | GitHub 事件的 `base.sha` 與 `head.sha`（`commit-messages` 與 `changes` 都在用） |
 | **共用檢查器** | 與 H3、H4、H5 **同一組**。CI 與本機共用邏輯是防漂移的唯一辦法 |
@@ -377,3 +377,4 @@ Codex 的 `command` 欄位是**字串，不是陣列**——官方文件的範�
 | 2026-11-27 | `.ts`／`.tsx` 路由另跑 `node scripts/check-component-reuse.mjs`（[§H3](#h3-編輯後按路徑跑快速檢查)） | 這條路由只跑 `tsc -b` 與 `eslint` | [#747](https://github.com/label-suite/label-suite/issues/747) |
 | 2026-11-28 | CI 新增不列入必過的 `scripts-tests-windows` job，`hooks` 維持 ubuntu 與 macOS，hook 檢查器移植到 Windows 另案處理，e2e 不跑 Windows（[§H7](#h7-ci重跑必要檢查)） | `scripts-tests` 與 `hooks` 都沒有 Windows 平台 | [#824](https://github.com/label-suite/label-suite/issues/824)、[#830](https://github.com/label-suite/label-suite/issues/830) |
 | 2026-11-28 | CI 的條件 job 依 `changes` job 的路徑表略過，只改文件的 PR 不跑後端、前端、`coverage` 與 `e2e`（[§H7](#h7-ci重跑必要檢查)） | 除 `compose` 外每個 job 每次都跑 | [#823](https://github.com/label-suite/label-suite/issues/823) |
+| 2026-11-28 | `hooks` 加跑 Windows（Git Bash），三個平台都不列入必過（[§H7](#h7-ci重跑必要檢查)） | `hooks` 只跑 ubuntu 與 macOS，hook 檢查器的 Windows 移植另案處理 | [#830](https://github.com/label-suite/label-suite/issues/830) |
