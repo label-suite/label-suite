@@ -3,7 +3,8 @@
 //
 // Reads the root .env (a variable already in the environment wins), fills
 // BACKEND_PORT with 8000 when unset, and starts both servers. When either one
-// ends, the other is stopped and dev exits with the first one's exit code;
+// ends, the other is stopped and dev exits with the first one's exit code (except a
+// Windows backend that ends after a restart, below);
 // SIGINT or SIGTERM is forwarded to both and dev exits with 128 + the signal
 // number (spec workspace-commands, system-design §元件清單 scripts/dev.mjs).
 //
@@ -15,10 +16,16 @@
 // Once a server's root dies its children are no longer reachable from it, so
 // every ~10 s dev records each server's descendants (pid + creation time) and,
 // when a server ends, taskkills the recorded ones that are still alive.
+//
+// Reload: POSIX leaves it to `uvicorn --reload --reload-dir app`. On Windows uvicorn's
+// reloader never stops the old worker (its CTRL_C_EVENT does not arrive and it joins with
+// no timeout), so the backend starts without --reload and dev watches backend/app itself:
+// a `.py` change (debounced) taskkills the backend tree and starts it again.
+// A backend started by a restart that then exits leaves dev waiting for the next change.
 import { execFile, spawn } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, watch } from "node:fs";
 import { constants } from "node:os";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseEnv } from "node:util";
 
@@ -47,19 +54,56 @@ export function loadDevEnv(root, env) {
 /**
  * The two servers `pnpm run dev` starts.
  *
- * @returns {{name: string, command: string, args: string[], cwd: string}[]}
+ * On Windows the backend has no `--reload` and carries `watch`, the directory supervise() watches.
+ *
+ * @returns {{name: string, command: string, args: string[], cwd: string, watch?: string}[]}
  */
-export function devCommands(env, root = ROOT) {
+export function devCommands(env, root = ROOT, platform = process.platform) {
   const port = env.BACKEND_PORT ?? "8000";
+  const win32 = platform === "win32";
   return [
     {
       name: "backend",
       command: "uv",
-      args: ["run", "uvicorn", "app.main:create_app", "--factory", "--reload", "--port", port],
+      args: [
+        "run",
+        "uvicorn",
+        "app.main:create_app",
+        "--factory",
+        // Windows: uvicorn's reloader cannot stop the old worker there (its CTRL_C_EVENT never
+        // arrives and it waits without a timeout), so supervise() watches `watch` and restarts.
+        ...(win32
+          ? []
+          : [
+              "--reload",
+              // Watch only the source tree. The default is the whole cwd, which holds .venv.
+              "--reload-dir",
+              "app",
+            ]),
+        // Bound the old worker's shutdown so one open connection cannot hold up a stop.
+        "--timeout-graceful-shutdown",
+        "5",
+        "--port",
+        port,
+      ],
       cwd: join(root, "backend"),
+      ...(win32 ? { watch: join(root, "backend", "app") } : {}),
     },
     { name: "frontend", command: "pnpm", args: ["--filter", "frontend", "dev"], cwd: root },
   ];
+}
+
+/**
+ * Whether a change under a watched directory should restart the server: a `.py` file, not in
+ * `__pycache__`, and not a dotfile or editor temp file (uvicorn's default include and excludes).
+ *
+ * @param {string | null | undefined} filename path relative to the watched directory
+ */
+export function isReloadTrigger(filename) {
+  if (typeof filename !== "string" || !filename.endsWith(".py")) return false;
+  return !filename
+    .split(/[\\/]/)
+    .some((part) => part === "__pycache__" || part.startsWith(".") || part.startsWith("~"));
 }
 
 /**
@@ -177,6 +221,9 @@ export async function seedDevAdmin(
 /** How often dev records each server's descendants on Windows. */
 const SNAPSHOT_INTERVAL_MS = 10_000;
 
+/** A burst of saves within this window is one backend restart on Windows. */
+const RELOAD_DEBOUNCE_MS = 300;
+
 /** The first snapshot waits this long, so uvicorn has spawned its worker. */
 const FIRST_SNAPSHOT_MS = 2000;
 
@@ -281,7 +328,9 @@ function signalGroup(child, signal, { platform, spawnFn }) {
 /**
  * Run the commands together until the first one ends or a signal arrives, then stop the rest.
  *
- * @param {{name: string, command: string, args: string[], cwd: string}[]} commands
+ * A command with `watch` (win32 only) is restarted when a `.py` file under that directory changes.
+ *
+ * @param {{name: string, command: string, args: string[], cwd: string, watch?: string}[]} commands
  * @param {object} [options]
  * @param {{write(text: string): void}} [options.stdout] where dev's own messages go
  * @param {Record<string, string | undefined>} [options.env] environment for the commands
@@ -291,6 +340,8 @@ function signalGroup(child, signal, { platform, spawnFn }) {
  * @param {() => Promise<{pid: number, ppid: number, created: string}[]>} [options.listProcesses]
  *   the Windows process table (tests inject a fake)
  * @param {number} [options.snapshotIntervalMs] how often Windows descendants are recorded
+ * @param {typeof watch} [options.watchFn] directory watcher (tests inject a fake)
+ * @param {number} [options.reloadDebounceMs] a burst of changes within this window is one restart
  * @param {(say: (text: string) => void) => void} [options.onStarted] called once both servers are spawned
  * @returns {Promise<number>} the exit code dev should end with
  */
@@ -304,6 +355,8 @@ export function supervise(
     spawnFn = spawn,
     listProcesses = listWindowsProcesses,
     snapshotIntervalMs = SNAPSHOT_INTERVAL_MS,
+    watchFn = watch,
+    reloadDebounceMs = RELOAD_DEBOUNCE_MS,
     onStarted,
   } = {},
 ) {
@@ -358,7 +411,9 @@ export function supervise(
     // ParentProcessId outlives the parent). A pid shown with another creation time is reused.
     // The exited root itself is never targeted; taskkill /T takes each target's subtree.
     const reapOrphans = async (name, rootPid) => {
+      // Take the records first: a server started later records its own, and must not be reaped.
       const known = recorded.get(name);
+      recorded.delete(name);
       if (!known || known.size === 0) return;
       try {
         const list = await listProcesses();
@@ -388,7 +443,22 @@ export function supervise(
 
     const say = (text) => stdout.write(`[dev] ${text}\n`);
 
+    const watchers = [];
+    const debounce = new Map();
+    const closeWatchers = () => {
+      for (const timer of debounce.values()) clearTimeout(timer);
+      debounce.clear();
+      for (const watcher of watchers.splice(0)) {
+        try {
+          watcher.close();
+        } catch {
+          // Already closed.
+        }
+      }
+    };
+
     const stopAll = (signal) => {
+      closeWatchers();
       for (const child of running.values()) signalTree(child, signal);
       if (killTimer === undefined && running.size > 0) {
         killTimer = setTimeout(() => {
@@ -408,6 +478,34 @@ export function supervise(
     process.on("SIGINT", onSigint);
     process.on("SIGTERM", onSigterm);
 
+    let finishedAll = false;
+    let restarts = 0;
+    const exits = new Map();
+    const restarting = new Set();
+    const again = new Set();
+    // Servers a restart has started at least once: if one then ends, dev waits for the next
+    // change instead of stopping (a start that fails right away still ends dev).
+    const respawned = new Set();
+    // Servers that ended after a restart and wait for the next watched change.
+    const down = new Set();
+    const downReap = new Map();
+    const watchLabel = (spec) => {
+      const path = relative(ROOT, spec.watch).replaceAll("\\", "/");
+      return path.startsWith("..") ? spec.watch : path;
+    };
+
+    const maybeDone = () => {
+      if (finishedAll || running.size > 0 || restarts > 0) return;
+      finishedAll = true;
+      closeWatchers();
+      clearTimeout(killTimer);
+      clearTimeout(firstTimer);
+      clearInterval(pollTimer);
+      process.off("SIGINT", onSigint);
+      process.off("SIGTERM", onSigterm);
+      Promise.all(pending).then(() => resolve(exitCode));
+    };
+
     const finished = (name, code) => {
       if (!running.has(name)) return;
       const child = running.get(name);
@@ -420,17 +518,12 @@ export function supervise(
           say(`${name} exited with code ${code}; stopping ${[...running.keys()].join(" and ")}`);
         stopAll("SIGTERM");
       }
-      if (running.size === 0) {
-        clearTimeout(killTimer);
-        clearTimeout(firstTimer);
-        clearInterval(pollTimer);
-        process.off("SIGINT", onSigint);
-        process.off("SIGTERM", onSigterm);
-        Promise.all(pending).then(() => resolve(exitCode));
-      }
+      maybeDone();
     };
 
-    for (const { name, command, args, cwd } of commands) {
+    // A child replaced by a restart still emits "exit"; only the current one counts as ended.
+    const attach = (spec) => {
+      const { name, command, args, cwd } = spec;
       const target = resolveSpawn(command, args, platform, env);
       const child = spawnFn(target.command, target.args, {
         cwd,
@@ -439,11 +532,116 @@ export function supervise(
         stdio: ["ignore", "inherit", "inherit"],
       });
       running.set(name, child);
+      exits.set(
+        child,
+        new Promise((done) => {
+          child.on("exit", () => done());
+          child.on("error", () => done());
+        }),
+      );
+      const ended = (code) => {
+        if (exitCode === undefined && respawned.has(name) && spec.watch) {
+          say(`${name} exited with code ${code}; waiting for a change in ${watchLabel(spec)}`);
+          running.delete(name);
+          down.add(name);
+          exits.delete(child);
+          signalTree(child, "SIGTERM");
+          const reaped = reapOrphans(name, child.pid);
+          downReap.set(name, reaped);
+          pending.push(reaped);
+        } else finished(name, code);
+      };
       child.on("error", (error) => {
+        if (running.get(name) !== child) return;
         say(`${name} could not start: ${error.message}`);
-        finished(name, 127);
+        ended(127);
       });
-      child.on("exit", (code, signal) => finished(name, code ?? signalExitCode(signal)));
+      child.on("exit", (code, signal) => {
+        if (running.get(name) === child) ended(code ?? signalExitCode(signal));
+      });
+    };
+
+    // Windows: stop the whole tree with taskkill, reap leftovers, then start the server again.
+    // The old child leaves `running` first, so its exit is not "a server ended". `restarts`
+    // keeps dev alive until the restart settles; a signal or the other server ending meanwhile
+    // sets exitCode and the respawn is skipped.
+    const restart = async (spec) => {
+      const { name } = spec;
+      if (exitCode !== undefined) return;
+      if (restarting.has(name)) {
+        again.add(name);
+        return;
+      }
+      const old = running.get(name);
+      if (!old) {
+        // It ended after an earlier restart and has been waiting for this change.
+        if (!down.delete(name)) return;
+        say(`${watchLabel(spec)} changed; restarting ${name}`);
+        restarting.add(name);
+        restarts++;
+        await downReap.get(name); // the crashed backend's leftovers go before the new one starts
+        downReap.delete(name);
+        restarting.delete(name);
+        if (exitCode === undefined) {
+          respawned.add(name);
+          attach(spec);
+          setTimeout(snapshot, Math.min(FIRST_SNAPSHOT_MS, snapshotIntervalMs)).unref();
+        }
+        restarts--;
+        if (again.delete(name) && exitCode === undefined) restart(spec);
+        maybeDone();
+        return;
+      }
+      restarting.add(name);
+      restarts++;
+      say(`${watchLabel(spec)} changed; restarting ${name}`);
+      running.delete(name);
+      signalTree(old, "SIGTERM");
+      let timer;
+      const timeout = new Promise((done) => {
+        timer = setTimeout(() => done("timeout"), killTimeoutMs);
+      });
+      const result = await Promise.race([exits.get(old), timeout]);
+      clearTimeout(timer);
+      exits.delete(old);
+      if (result === "timeout")
+        say(`old ${name} did not exit in ${killTimeoutMs / 1000} s; port may still be in use`);
+      await reapOrphans(name, old.pid);
+      restarting.delete(name);
+      if (exitCode === undefined) {
+        respawned.add(name);
+        attach(spec);
+        setTimeout(snapshot, Math.min(FIRST_SNAPSHOT_MS, snapshotIntervalMs)).unref();
+      }
+      restarts--;
+      if (again.delete(name) && exitCode === undefined) restart(spec);
+      maybeDone();
+    };
+
+    for (const spec of commands) attach(spec);
+
+    if (win32) {
+      for (const spec of commands) {
+        if (!spec.watch) continue;
+        try {
+          const watcher = watchFn(spec.watch, { recursive: true }, (_event, filename) => {
+            // A null name (Windows buffer overflow, e.g. git checkout) may hide any change.
+            if (exitCode !== undefined || (filename != null && !isReloadTrigger(filename))) return;
+            clearTimeout(debounce.get(spec.name));
+            const timer = setTimeout(() => {
+              debounce.delete(spec.name);
+              restart(spec);
+            }, reloadDebounceMs);
+            debounce.set(spec.name, timer);
+          });
+          watcher.on?.("error", (error) =>
+            say(`watching ${spec.watch} failed: ${error.message}; ${spec.name} will not restart`),
+          );
+          watchers.push(watcher);
+        } catch (error) {
+          say(`cannot watch ${spec.watch}: ${error.message}; ${spec.name} will not restart`);
+        }
+      }
     }
     onStarted?.(say);
   });
