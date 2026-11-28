@@ -263,6 +263,18 @@ rc=$(printf '{"cwd":"%s","hook_event_name":"PostToolUse","tool_name":"Write","to
 [ "$rc" = "0" ] || fail "--event did not stay out of the way when it could not decide (got $rc)"
 grep -q '^UNKNOWN:' "$TMP/err" || fail "--event did not name the item it could not decide"
 
+# #830: a reader that exits 0 and returns no records stands in for every way
+# the reader can fail to run (on Windows its entry-point test never matched).
+# The checker must not fall back to its own directory for a cwd nobody sent.
+# H3 is a reminder, so the cost is UNKNOWN and exit 0, not a block.
+STUB="$TMP/stub-reader/scripts"
+mkdir -p "$STUB" && cp -R "$ROOT/scripts/lib" "$STUB/" && cp "$ROOT/scripts/check-changed.sh" "$STUB/"
+printf 'process.exitCode = 0;\n' > "$STUB/lib/hook-payload.mjs"
+rc=$(printf '{"cwd":"%s","hook_event_name":"PostToolUse","tool_name":"Write","tool_input":{"file_path":"%s/backend/app.py"}}' "$REPO" "$REPO" \
+     | ( cd "$REPO" && bash "$STUB/check-changed.sh" --event PostToolUse >/dev/null 2>"$TMP/err" ); echo $?)
+[ "$rc" = "0" ] || fail "#830: --event blocked when the reader returned no records (got $rc)"
+grep -q '^UNKNOWN:.*cwd' "$TMP/err" || fail "#830: --event did not report the missing cwd as undecided: $(head -1 "$TMP/err")"
+
 for mode in "--files backend/app.py" "--range HEAD~1..HEAD" "--list-routes"; do
   rc=$(undecidable $mode)
   [ "$rc" = "2" ] || fail "a blocking mode did not fail closed: $mode (got $rc)"

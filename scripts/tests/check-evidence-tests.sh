@@ -223,6 +223,17 @@ rc=$(printf '{"cwd":"%s","hook_event_name":"Stop","stop_hook_active":false}' "$R
 rc=$(printf 'not json' | "$CHECKER" --event Stop >/dev/null 2>&1; echo $?)
 [ "$rc" = "2" ] || fail "D7: an unparseable payload did not block (got $rc)"
 
+# #830: a reader that exits 0 and returns no records stands in for every way
+# the reader can fail to run (on Windows its entry-point test never matched).
+# The checker must not fall back to its own directory for a cwd nobody sent.
+STUB="$TMP/stub-reader/scripts"
+mkdir -p "$STUB" && cp -R "$ROOT/scripts/lib" "$STUB/" && cp "$ROOT/scripts/check-evidence.sh" "$STUB/"
+printf 'process.exitCode = 0;\n' > "$STUB/lib/hook-payload.mjs"
+rc=$(printf '{"cwd":"%s","hook_event_name":"Stop","stop_hook_active":false}' "$REPO" \
+     | ( cd "$REPO" && bash "$STUB/check-evidence.sh" --event Stop >/dev/null 2>"$TMP/err" ); echo $?)
+[ "$rc" = "2" ] || fail "#830: a reader that returned no records did not block (got $rc)"
+grep -q 'cwd' "$TMP/err" || fail "#830: the empty-reader refusal did not say what was missing: $(head -1 "$TMP/err")"
+
 rc=$(printf '{"hook_event_name":"Stop"}' | "$CHECKER" --event Stop >/dev/null 2>&1; echo $?)
 [ "$rc" = "2" ] || fail "D7: a payload missing required fields did not block (got $rc)"
 
